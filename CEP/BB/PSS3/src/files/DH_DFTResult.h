@@ -20,8 +20,8 @@
 //#
 //# $Id$
 
-#ifndef BB_DH_OUTDFT_H
-#define BB_DH_OUTDFT_H
+#ifndef BB_DH_DFTRESULT_H
+#define BB_DH_DFTRESULT_H
 
 
 #include <Common/LofarTypes.h>
