@@ -28,8 +28,8 @@ using namespace LOFAR;
 int main(int argc, char * argv[]) {
 	INIT_LOGGER("ACCdemo.log_prop");
 
-	cout << "\nReading in parameterfile 'test.ps'\n";
-	ParameterSet		myPS("test.ps");
+	cout << "\nReading in parameterfile 'tParameterSet.ps'\n";
+	ParameterSet		myPS("tParameterSet.ps");
 
 	cout << "\nShowing some values\n";
 	cout << "a.b.c=" 			<< myPS.getInt("a.b.c") << endl;
