@@ -117,17 +117,13 @@ Socket::Socket (const string&	socketname,
 //
 Socket::~Socket()
 {
-	if (!itsIsInitialized) {
-		return;
-	}
-
 	LOG_TRACE_OBJ ("~Socket");
 
 	if (itsSocketID >=0) {
 		shutdown ();
 	}
 
-	if ((itsType == Socket::UNIX) && itsUnixAddr.sun_path[0]) {
+	if (itsIsServer && (itsType == Socket::UNIX) && itsUnixAddr.sun_path[0]) {
 		int32 result = unlink(itsUnixAddr.sun_path);
 		LOG_TRACE_FLOW(formatString("unlink(%s) = %d (%s)", itsUnixAddr.sun_path,
 						(result < 0) ? errno : result, 
@@ -157,14 +153,14 @@ int32 Socket::initServer (const string& service, int32 protocol, int32 backlog)
     itsPort		= service;
   
 	struct sockaddr*	addrPtr;
-  socklen_t addrLen;
+	socklen_t addrLen;
 	if (itsType == UNIX) {
 		itsHost = "unix";
 		if(initUnixSocket(itsIsServer) < 0) {
 			return(itsErrno);
 		}
 		addrPtr = (struct sockaddr*) &itsUnixAddr;
-    addrLen = sizeof(itsUnixAddr);
+   		addrLen = sizeof(itsUnixAddr);
 	} 
 	else  { 		// networked socket (type TCP or UDP)
     	itsHost		= "localhost";
@@ -172,7 +168,7 @@ int32 Socket::initServer (const string& service, int32 protocol, int32 backlog)
 			return(itsErrno);
 		}
 		addrPtr = (struct sockaddr*) &itsTCPAddr;
-    addrLen = sizeof(itsTCPAddr);
+		addrLen = sizeof(itsTCPAddr);
 	}
 		
 	// bind the socket (always blocking)
@@ -267,8 +263,8 @@ int32 Socket::initUnixSocket(bool		asServer)
     ASSERTSTR (path.length() < sizeof(itsUnixAddr.sun_path), 
 													"socket name too long");
 
+	memset (itsUnixAddr.sun_path, 0, sizeof(itsUnixAddr.sun_path));
     if (path[0] == '=')  { // abstract socket name
-		memset (itsUnixAddr.sun_path, 0, sizeof(itsUnixAddr.sun_path));
 		path.substr(1).copy(itsUnixAddr.sun_path+1, sizeof(itsUnixAddr.sun_path)-1);
     }
     else  { // socket in filesystem
@@ -389,14 +385,14 @@ int32 Socket::connect (int32 waitMs)
 	setBlocking(waitMs < 0 ? true : false);		// switch temp to non-blocking?
 
 	struct sockaddr*	addrPtr;				// get pointer to result struct
-  socklen_t addrLen;
+	socklen_t addrLen;
 	if (itsType == UNIX) {
 		addrPtr = (struct sockaddr*) &itsUnixAddr;
-    addrLen = sizeof(itsUnixAddr);
+		addrLen = sizeof(itsUnixAddr);
 	}
 	else {
 		addrPtr = (struct sockaddr*) &itsTCPAddr;
-    addrLen = sizeof(itsTCPAddr);
+		addrLen = sizeof(itsTCPAddr);
 	}
 
 	if (::connect(itsSocketID, addrPtr, addrLen ) >= 0) {
@@ -482,14 +478,14 @@ Socket* Socket::accept(int32	waitMs)
 	setBlocking(waitMs < 0 ? true : false);		// switch temp to non-blocking?
 
 	struct sockaddr*	addrPtr;
-  socklen_t addrLen;
+	socklen_t addrLen;
 	if (itsType == UNIX) {
 		addrPtr = (struct sockaddr*) &itsUnixAddr;
-    addrLen = sizeof(itsUnixAddr);
+		addrLen = sizeof(itsUnixAddr);
 	}
 	else {
 		addrPtr = (struct sockaddr*) &itsTCPAddr;
-    addrLen = sizeof(itsTCPAddr);
+		addrLen = sizeof(itsTCPAddr);
 	}
 
 	itsErrno = SK_OK;
