@@ -32,9 +32,13 @@
 #include <sys/socket.h>
 #include <netdb.h>
 #include <stdio.h>
+#include <sys/ioctl.h>
+#include <errno.h>
 
-GTMSocket::GTMSocket() :
-  _socketFD(-1)
+
+GTMSocket::GTMSocket(GCFRawPort& port) :
+  _socketFD(-1),
+  _port(port)
 {
 }
 
@@ -68,5 +72,33 @@ int GTMSocket::setFD(int fd)
     GTMSocketHandler::instance()->registerSocket(*this);
   }
   return (fd);    
+}
+
+void GTMSocket::workProc()
+{
+  unsigned long bytesRead;
+  if (ioctl(_socketFD, FIONREAD, &bytesRead) > -1)
+  {
+    if (bytesRead == 0)
+    {
+      GCFEvent e(F_DISCONNECTED_SIG);
+      _port.dispatch(e);    
+    }
+    else 
+    {
+      GCFEvent e(F_DATAIN_SIG);
+      _port.dispatch(e);
+    }
+  }
+  else
+  {
+    assert(_port.getTask());
+    LOFAR_LOG_FATAL(TM_STDOUT_LOGGER, (
+        "%s(%s): Error in 'ioctl' on socket fd %d: %s",
+        _port.getTask()->getName().c_str(), 
+        _port.getName().c_str(), 
+        _socketFD, 
+        strerror(errno)));        
+  }
 }
 

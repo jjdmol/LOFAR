@@ -26,30 +26,34 @@
 #include <GCF/GCF_Task.h>
 #include <GCF/GCF_TMProtocols.h>
 #include <GTM_Defines.h>
-#include <PortInterface/GTM_NameService.h>
-#include <PortInterface/GTM_TopologyService.h>
+#include <errno.h>
 
-#include <stdio.h>
-#include <unistd.h>
-#include <sys/ioctl.h>
-#include <string.h>
-#include <sys/types.h>
 
 GCFETHRawPort::GCFETHRawPort(GCFTask& task,
-			 string name,
-			 TPortType type) 
-    : GCFRawPort(task, name, type, 0), _ifname(0)
+                          	 string name,
+                          	 TPortType type, 
+                             bool transportRawData) : 
+   GCFRawPort(task, name, type, 0, transportRawData), 
+   _ifname(0), 
+   _destMacStr(0), 
+   _socket(*this)
 {
+  assert(MSPP != getType());
 }
 
-GCFETHRawPort::GCFETHRawPort()
-    : GCFRawPort(), _ifname(0)
+GCFETHRawPort::GCFETHRawPort() : 
+  GCFRawPort(),       
+  _ifname(0), 
+  _destMacStr(0), 
+  _socket(*this)
 {
+  assert(MSPP != getType());
 }
 
 GCFETHRawPort::~GCFETHRawPort()
 {
   if (_ifname) free(_ifname);
+  if (_destMacStr) free(_destMacStr);
 }
 
 int GCFETHRawPort::close()
@@ -65,7 +69,6 @@ int GCFETHRawPort::close()
 int GCFETHRawPort::open()
 {
   int retval = 0;
-  char destMac[ETH_ALEN];
 
   if (isConnected())
   {
@@ -83,17 +86,28 @@ int GCFETHRawPort::open()
     return -1;
   }
 
-  if (open())
+  if (_socket.open(_ifname, _destMacStr) < 0)
   {
+    _isConnected = false;
+    if (SAP == getType())
+    {
+      schedule_disconnected();
+    }
+    else
+    {
+      retval = 0;
+    }
   }
-  return retval; // RETURN
+  else
+  { 
+    schedule_connected();
+  }
+  return retval;
 }
 
 ssize_t GCFETHRawPort::send(const GCFEvent& e, void* buf, size_t count)
 {
   size_t written = 0;
-
-  assert(_pSocket);
 
   if (MSPP == getType())  
     return 0; // no messages can be send by this type of port
@@ -111,7 +125,7 @@ ssize_t GCFETHRawPort::send(const GCFEvent& e, void* buf, size_t count)
   }
   else
   {
-    if ((written = _pSocket->send(buf, count)) != count)
+    if ((written = _socket.send(buf, count)) != count)
     {
       LOFAR_LOG_DEBUG(TM_STDOUT_LOGGER, (
           "truncated send: %s",
@@ -119,7 +133,7 @@ ssize_t GCFETHRawPort::send(const GCFEvent& e, void* buf, size_t count)
           
       schedule_disconnected();
       
-      written = -1;
+      written = 0;
     }
   }
 
@@ -130,14 +144,13 @@ ssize_t GCFETHRawPort::sendv(const GCFEvent& e, const iovec buffers[], int n)
 {
   size_t written = 0;
   size_t count = 0;
-  assert(_pSocket);
   if (MSPP == getType())  
     return 0; // no messages can be send by this type of port
   
   if (F_RAW_SIG != e.signal)
   { 
     count = e.length;
-    if ((written = _pSocket->send((void*)&e, e.length)) != count)
+    if ((written = _socket.send((void*)&e, e.length)) != count)
     {
       LOFAR_LOG_DEBUG(TM_STDOUT_LOGGER, (
           "truncated send: %s",
@@ -148,7 +161,7 @@ ssize_t GCFETHRawPort::sendv(const GCFEvent& e, const iovec buffers[], int n)
   for (int i = 0; i < n; i++)
   {
     count += buffers[i].iov_len;
-    if ((written += _pSocket->send(buffers[i].iov_base, buffers[i].iov_len)) != count)
+    if ((written += _socket.send(buffers[i].iov_base, buffers[i].iov_len)) != count)
     {
       LOFAR_LOG_DEBUG(TM_STDOUT_LOGGER, (
           "truncated send: %s",
@@ -161,8 +174,7 @@ ssize_t GCFETHRawPort::sendv(const GCFEvent& e, const iovec buffers[], int n)
 
 ssize_t GCFETHRawPort::recv(void* buf, size_t count)
 {
-  assert(_pSocket);
-  return _pSocket->recv(buf, count);
+  return _socket.recv(buf, count);
 }
 
 ssize_t GCFETHRawPort::recvv(iovec /*buffers*/[], int /*n*/)
@@ -176,20 +188,6 @@ void GCFETHRawPort::setAddr(const char* ifname,
 			  const char* destMac)
 {
   // store for use in open
-  _ifname       = strdup(ifname);
+  _ifname     = strdup(ifname);
   _destMacStr = strdup(destMac);
-}
-
-void GCFETHRawPort::convertCcp2sllAddr(const char* destMacStr,
-				       char destMac[ETH_ALEN])
-{
-  unsigned int hx[ETH_ALEN] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
-
-  sscanf(destMacStr, "%x:%x:%x:%x:%x:%x",
-	 &hx[0], &hx[1], &hx[2], &hx[3], &hx[4], &hx[5]);
-	 
-  for (int i = 0; i < ETH_ALEN; i++)
-  {
-      destMac[i] = (char)hx[i];
-  }
 }

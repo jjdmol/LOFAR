@@ -33,8 +33,8 @@ GCFTCPPort::GCFTCPPort(GCFTask& task,
                        string name, 
                        TPortType type, 
                        int protocol, 
-                       bool exchangeRawData) 
-  : GCFRawPort(task, name, type, protocol, exchangeRawData),
+                       bool transportRawData) 
+  : GCFRawPort(task, name, type, protocol, transportRawData),
     _addrIsSet(false),
     _pSocket(0)
 {

@@ -101,7 +101,9 @@ void GTMTCPServerSocket::workProc()
     socklen_t clAddrLen = sizeof(clientAddress);
     if (_pTCPServerSocket == 0)
     {
-      _pTCPServerSocket = new GTMTCPSocket(_port);
+      GCFTCPPort* pPort = static_cast<GCFTCPPort*>(&_port);
+      assert(pPort);
+      _pTCPServerSocket = new GTMTCPSocket(*pPort);
     }
     if (_pTCPServerSocket->getFD() < 0)
       _pTCPServerSocket->setFD(::accept(_socketFD, 

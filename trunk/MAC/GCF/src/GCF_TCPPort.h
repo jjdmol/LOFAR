@@ -28,8 +28,8 @@
 
 // forward declaration
 class GCFTask;
-class GTMTCPSocket;
 class GCFEvent;
+class GTMTCPSocket;
 
 /**
  * This is the class, which implements the special port with the TCP message 
@@ -46,7 +46,7 @@ class GCFTCPPort : public GCFRawPort
           	    string name,
           	    TPortType type,
                 int protocol, 
-                bool exchangeRawData = false);
+                bool transportRawData = false);
     GCFTCPPort ();
   
     virtual ~GCFTCPPort ();
@@ -79,10 +79,6 @@ class GCFTCPPort : public GCFRawPort
     // addr is remote addres if getType == SAP
     void setAddr (const GCFPeerAddr& addr);
 
-  protected:
-    friend class GTMTCPSocket;
-    friend class GTMTCPServerSocket;
-  
   private:
     /**
      * Don't allow copying this object.

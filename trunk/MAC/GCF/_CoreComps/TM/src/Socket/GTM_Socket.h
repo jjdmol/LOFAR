@@ -29,6 +29,7 @@
 // forward declaration
 class GCFPeerAddr;
 class GTMSocketHandler;
+class GCFRawPort;
 
 /**
  * This class consists of the basic implementation of a socket. Beside that it 
@@ -38,7 +39,7 @@ class GTMSocketHandler;
 class GTMSocket
 {
   public:
-    GTMSocket ();
+    GTMSocket (GCFRawPort& port);
     virtual ~GTMSocket ();
   
     /**
@@ -54,13 +55,11 @@ class GTMSocket
 
     virtual inline int getFD () const {return _socketFD;}
     virtual int setFD (int fd);
+    virtual void workProc ();
     
   protected:
-    friend class GTMSocketHandler;
-
-    virtual void workProc () = 0;
-
     int           _socketFD;
+    GCFRawPort&   _port;    
   
   private:
     /**

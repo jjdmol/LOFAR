@@ -43,55 +43,57 @@ class GTMTimer;
  */
 class GCFRawPort : public GCFPortInterface
 {
- public:
-  /** @param protocol NOT USED */
-  GCFRawPort (GCFTask& task, 
-              string& name, 
-              TPortType type, 
-              int protocol, 
-              bool exchangeRawData = false);
-
-  GCFRawPort ();
-
-  virtual ~GCFRawPort ();
-
-  /** @param protocol NOT USED */
-  void init (GCFTask& task, 
-             string name, 
-             TPortType type, 
-             int protocol, 
-             bool exchangeRawData = false); 
-
-  /// GCFPortInterface methods
-
-   /**
-   * Timer functions.
-   * Upon expiration of a timer a F_TIMER_SIG will be
-   * received on the port.
-   */
-  virtual long setTimer (long  delay_sec,
-                         long  delay_usec    = 0,
-                         long  interval_sec  = 0,
-                         long  interval_usec = 0,
-                         const void* arg     = 0);
-
-  virtual long setTimer (double delay_seconds, 
-                  			 double interval_seconds = 0.0,
-                  			 const void*  arg        = 0);
-
-  virtual int  cancelTimer (long timerid,
-			                      const void** arg = 0);
-
-  virtual int  cancelAllTimers ();
-
-  virtual int  resetTimerInterval (long timerid,
-                        				   long sec,
-                        				   long usec = 0);
+  public:
+    /** @param protocol NOT USED */
+    GCFRawPort (GCFTask& task, 
+                string& name, 
+                TPortType type, 
+                int protocol, 
+                bool transportRawData = false);
+  
+    GCFRawPort ();
+  
+    virtual ~GCFRawPort ();
+  
+    /** @param protocol NOT USED */
+    void init (GCFTask& task, 
+               string name, 
+               TPortType type, 
+               int protocol, 
+               bool transportRawData = false); 
+  
+    /// GCFPortInterface methods
+  
+     /**
+     * Timer functions.
+     * Upon expiration of a timer a F_TIMER_SIG will be
+     * received on the port.
+     */
+    virtual long setTimer (long  delay_sec,
+                           long  delay_usec    = 0,
+                           long  interval_sec  = 0,
+                           long  interval_usec = 0,
+                           const void* arg     = 0);
+  
+    virtual long setTimer (double delay_seconds, 
+                    			 double interval_seconds = 0.0,
+                    			 const void*  arg        = 0);
+  
+    virtual int  cancelTimer (long timerid,
+  			                      const void** arg = 0);
+  
+    virtual int  cancelAllTimers ();
+  
+    virtual int  resetTimerInterval (long timerid,
+                          				   long sec,
+                          				   long usec = 0);
 
 
   protected:
     friend class GCFPort; // to access the setMaster method
     friend class GTMTimer;
+    friend class GTMSocket;
+    friend class GTMTCPServerSocket;
 
     void schedule_disconnected();
     void schedule_close();
@@ -101,10 +103,8 @@ class GCFRawPort : public GCFPortInterface
     virtual void                setMaster (GCFPort* pMaster);
     virtual GCFEvent::TResult   dispatch (GCFEvent& event);
     bool                        findAddr (GCFPeerAddr& addr);
-    inline const char* evtstr(const GCFEvent& e) const
-      { assert(_pTask); return _pTask->evtstr(e);}
 
- private:
+  private:
 
     /**
     * Don't allow copying this object.
@@ -113,6 +113,8 @@ class GCFRawPort : public GCFPortInterface
     GCFRawPort& operator= (const GCFRawPort&);
 
     GCFPort* _pMaster;
+
+    GCFEvent::TResult recvEvent();
 };
 
 #endif

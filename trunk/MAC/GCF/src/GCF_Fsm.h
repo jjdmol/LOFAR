@@ -45,7 +45,7 @@ class GCFDummyPort : public GCFPortInterface
     GCFDummyPort (GCFTask* pTask, 
                   string name, 
                   int protocol) : 
-      GCFPortInterface(pTask, name, SPP, protocol) 
+      GCFPortInterface(pTask, name, SPP, protocol, false) 
     {};
 
     inline int close () {return 0;}

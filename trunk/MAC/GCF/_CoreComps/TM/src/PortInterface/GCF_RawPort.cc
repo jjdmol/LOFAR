@@ -38,14 +38,14 @@ GCFRawPort::GCFRawPort(GCFTask& task,
                        string& name, 
                        TPortType type,  
                        int protocol,
-                       bool exchangeRawData) : 
-    GCFPortInterface(&task, name, type, protocol, exchangeRawData),   
+                       bool transportRawData) : 
+    GCFPortInterface(&task, name, type, protocol, transportRawData),   
     _pMaster(0)
 {
 }
 
 GCFRawPort::GCFRawPort() :
-    GCFPortInterface(0, "", SAP, 0),   
+    GCFPortInterface(0, "", SAP, 0, false),   
     _pMaster(0)
 {
 }
@@ -54,9 +54,9 @@ void GCFRawPort::init(GCFTask& task,
                       string name, 
                       TPortType type, 
                       int protocol,
-                      bool exchangeRawData)
+                      bool transportRawData)
 {
-    GCFPortInterface::init(task, name, type, protocol, exchangeRawData);
+    GCFPortInterface::init(task, name, type, protocol, transportRawData);
     _pMaster = 0;
 }
 
@@ -84,43 +84,57 @@ GCFEvent::TResult GCFRawPort::dispatch(GCFEvent& event)
         _pTask->getName().c_str(), _pTask->evtstr(event), _name.c_str()));    
   }
 
-  if (event.signal == F_CONNECTED_SIG)
+  switch (event.signal)
   {
-    _isConnected = true;
-  }
-  else if (event.signal == F_DISCONNECTED_SIG || event.signal == F_CLOSED_SIG)
-  {
-    _isConnected = false;
-  }
-  else if (event.signal == F_TIMER_SIG)
-  {
-    GCFTimerEvent* pTE = static_cast<GCFTimerEvent*>(&event);
-    if (&disconnected_event == pTE->arg || 
-        &connected_event == pTE->arg ||
-        &closed_event == pTE->arg)
-    {    
-      return dispatch(*((GCFEvent*) pTE->arg));
+    case F_CONNECTED_SIG:
+      _isConnected = true;
+      break;
+    case F_DISCONNECTED_SIG: 
+    case F_CLOSED_SIG:
+      _isConnected = false;
+      break;
+    case F_TIMER_SIG:
+    {
+      GCFTimerEvent* pTE = static_cast<GCFTimerEvent*>(&event);
+      if (&disconnected_event == pTE->arg || 
+          &connected_event == pTE->arg ||
+          &closed_event == pTE->arg)
+      {    
+        return dispatch(*((GCFEvent*) pTE->arg));
+      }
+      break;
     }
-  }
-  else if (SPP == getType() && (F_EVT_INOUT(event) == F_OUT)) 
-  {    
-    LOFAR_LOG_ERROR(TM_STDOUT_LOGGER, (
-        "Developer error in %s (port %s): received an OUT event (%s) in a SPP",
-        _pTask->getName().c_str(), 
-        _name.c_str(), 
-        _pTask->evtstr(event)
-        ));    
-    return status;
-  }
-  else if (SAP == getType() && (F_EVT_INOUT(event) == F_IN)) 
-  {
-    LOFAR_LOG_ERROR(TM_STDOUT_LOGGER, (
-        "Developer error in %s (port %s): received an IN event (%s) in a SAP",
-        _pTask->getName().c_str(), 
-        _name.c_str(), 
-        _pTask->evtstr(event)
-        ));    
-    return status;
+    case F_DATAIN_SIG:
+    {
+      if (!isTransportRawData())
+      {
+        status = recvEvent();
+        return status;
+      }
+      break;
+    }
+    default:        
+      if (SPP == getType() && (F_EVT_INOUT(event) == F_OUT)) 
+      {    
+        LOFAR_LOG_ERROR(TM_STDOUT_LOGGER, (
+            "Developer error in %s (port %s): received an OUT event (%s) in a SPP",
+            _pTask->getName().c_str(), 
+            _name.c_str(), 
+            _pTask->evtstr(event)
+            ));    
+        return status;
+      }
+      else if (SAP == getType() && (F_EVT_INOUT(event) == F_IN)) 
+      {
+        LOFAR_LOG_ERROR(TM_STDOUT_LOGGER, (
+            "Developer error in %s (port %s): received an IN event (%s) in a SAP",
+            _pTask->getName().c_str(), 
+            _name.c_str(), 
+            _pTask->evtstr(event)
+            ));    
+        return status;
+      }
+      break;
   }
 
   if (isSlave())
@@ -252,4 +266,52 @@ void GCFRawPort::schedule_close()
 void GCFRawPort::schedule_connected()
 {
   setTimer(0, 0, 0, 0, (void*)&connected_event);
+}
+
+GCFEvent::TResult GCFRawPort::recvEvent()
+{
+  GCFEvent::TResult status = GCFEvent::NOT_HANDLED;
+  GCFEvent e;
+  ssize_t bytesRead = recv(&e, sizeof(e));
+  assert(bytesRead == sizeof(e));
+  
+  if (e.length - sizeof(e) > 0)
+  {
+    GCFEvent* full_event = 0;
+    char*   event_buf  = 0;
+    event_buf = (char*)malloc(e.length);
+    full_event = (GCFEvent*)event_buf;
+    memcpy(event_buf, &e, sizeof(e));
+
+    // recv the rest of the message (payload)
+    ssize_t payloadLength = e.length - sizeof(e);
+        
+    do 
+    {
+      bytesRead += recv(event_buf + sizeof(e), payloadLength);
+      payloadLength = e.length - bytesRead;
+                          
+    } while (payloadLength > 0);
+    
+    status = dispatch(*full_event);
+    
+    free(event_buf);
+  }
+  else
+  {
+    status = dispatch(e);
+  }
+
+  if (status != GCFEvent::HANDLED)
+  {
+    assert(getTask());
+    LOFAR_LOG_INFO(TM_STDOUT_LOGGER, (
+      "Event %s for task %s on port %s not handled or an error occured",
+      getTask()->evtstr(e),
+      getTask()->getName().c_str(), 
+      getName().c_str()
+      ));
+  }
+
+  return status;
 }

@@ -50,7 +50,7 @@ class GCFPort : public GCFPortInterface
              string& name, 
              TPortType type, 
              int protocol, 
-             bool exchangeRawData = false);
+             bool transportRawData = false);
     
     GCFPort ();
     
@@ -64,7 +64,7 @@ class GCFPort : public GCFPortInterface
                string name, 
                TPortType type, 
                int protocol, 
-               bool exchangeRawData = false);
+               bool transportRawData = false);
     
     /**
     * open/close functions
