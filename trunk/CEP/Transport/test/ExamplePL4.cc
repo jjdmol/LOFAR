@@ -41,8 +41,10 @@ int main()
 
     TH_PL::useDatabase ("test");
 
+    // Connect to itself to attach the TH_PL to the data holder.
     DH_Example2 DH1("dh1", 1, true);
     DH1.setID(1);
+    DH1.connectTo(DH1, TH_PL("ExamplePL2"));
     DH1.init();
     
     // fill the DataHolders with some initial data
@@ -72,6 +74,7 @@ int main()
       ASSERT (found);
       string str;
       bis >> str;
+      bis.getEnd();
       ASSERT (str == "test1");
     }
     // update the record, read it back and check it.
@@ -87,6 +90,7 @@ int main()
       ASSERT (found);
       string str;
       bis >> str;
+      bis.getEnd();
       ASSERT (str == "test1");
     }
 
@@ -101,7 +105,8 @@ int main()
       ASSERT (found);
       float val;
       string str;
-      bis >> str;
+      bis >> val >> str;
+      bis.getEnd();
       ASSERT (val == 4.5  &&  str == "test1a");
     }
     // update the record, read it back and check it.
@@ -110,7 +115,7 @@ int main()
     DH1.updateDB();
     {
       ASSERT (DH1.queryDB ("counter=3") == 1);
-      ASSERT (DH1.getBuffer()[0] == fcomplex(-17,3.5)
+      ASSERT (DH1.getBuffer()[0] == fcomplex(-117,3.5)
 	      &&  DH1.getCounter() == 3);
       bool found;
       int version;
