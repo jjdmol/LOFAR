@@ -1,4 +1,9 @@
 
+=== Constant expressions ===
+Expr(1)                                            : 1
+Expr(3.14)                                         : 3.14
+Expr("Where's Johnny?!")                           : 'Where''s Johnny?!'
+
 === Arithmetic expressions ===
 +Expr()                                            : Null expression argument is not allowed
 -Expr()                                            : Null expression argument is not allowed
@@ -54,7 +59,6 @@ Expr(Expr(4) + Expr(3)).in(c)                      : (4+3) IN (2)
 Expr(Expr(3) * Expr(- Expr(4))).notIn(c)           : (3*-4) NOT IN (2,3,4)
 
 === SQL LIKE expressions ===
-('Hello'+'_World') LIKE 'Hello\\_%' ESCAPE '\\'
 Expr("Hello_World").like("Hello_*")                : 'Hello_World' LIKE 'Hello\\_%' ESCAPE '\\'
 Expr("Hello_World").like("*_World")                : 'Hello_World' LIKE '%\\_World' ESCAPE '\\'
 Expr("Hello_World").like("Hello_?")                : 'Hello_World' LIKE 'Hello\\__' ESCAPE '\\'
@@ -84,6 +88,12 @@ Expr("Hello\\\\World").like("*\\\\World")          : 'Hello\\World' LIKE '%\\\\W
 Expr("Hello\\\\World").like("Hello\\\\?")          : 'Hello\\World' LIKE 'Hello\\\\_' ESCAPE '\\'
 Expr("Hello\\\\World").like("?\\\\World")          : 'Hello\\World' LIKE '_\\\\World' ESCAPE '\\'
 Expr("Hello\\\\World").like("Hello?World")         : 'Hello\\World' LIKE 'Hello_World' ESCAPE '\\'
+
+Expr("Hello'World").notLike("Hello'*")             : 'Hello''World' NOT LIKE 'Hello''%' ESCAPE '\\'
+Expr("Hello'World").notLike("*'World")             : 'Hello''World' NOT LIKE '%''World' ESCAPE '\\'
+Expr("Hello'World").notLike("Hello'?")             : 'Hello''World' NOT LIKE 'Hello''_' ESCAPE '\\'
+Expr("Hello'World").notLike("?'World")             : 'Hello''World' NOT LIKE '_''World' ESCAPE '\\'
+Expr("Hello'World").notLike("Hello?World")         : 'Hello''World' NOT LIKE 'Hello_World' ESCAPE '\\'
 
 === Invalid composite expressions ===
 Expr(Expr(0).between(Expr(-1),Expr(2))) + Expr(3)  : ((0 BETWEEN -1 AND 2)+3)
