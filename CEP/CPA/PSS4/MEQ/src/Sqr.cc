@@ -34,7 +34,7 @@ Sqr::Sqr()
 Sqr::~Sqr()
 {}
 
-Vells Sqr::evaluate (const Request&,
+Vells Sqr::evaluate (const Request&,const LoShape &,
 		     const vector<Vells*>& values)
 {
   return sqr(*(values[0]));

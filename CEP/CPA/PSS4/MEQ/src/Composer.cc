@@ -37,41 +37,18 @@ Composer::~Composer()
 
 int Composer::getResultImpl (ResultSet::Ref &resref, const Request& request, bool)
 {
-  ResultSet::Ref childref[numChildren()];
-  int resflag=0,nres=0;
-  int have_fail=False;
-  // collect results from children
-  for( int i=0; i<numChildren(); i++ )
-  {
-    int flag = getChild(i).getResult(childref[i],request);
-    if( flag == RES_FAIL )
-      have_fail = True;
-    else
-    {
-      resflag |= flag;
-      if( !(flag&RES_WAIT) )
-        nres += childref[i]->numResults();
-    }
-  }
-  // fail if a child has failed, wait if a child indicates wait
-  if( have_fail )
-  {
-    ResultSet &result = resref <<= new ResultSet(-1); // -1 means a fail-set
-    // collect fails from failed children
-    for( int i=0; i<numChildren(); i++ )
-    {
-      const ResultSet &childres = *childref[i];
-      if( childres.isFail() )
-      {
-        for( int j=0; j<childres.numFails(); j++ )
-          result.addFail(&childres.getFail(j),DMI::READONLY);
-      }
-    }
+  std::vector<ResultSet::Ref> childref;
+  // get results from children, fail if failed
+  int resflag = getChildResults(childref,resref,request);
+  if( resflag == RES_FAIL )
     return RES_FAIL;
-  }
   // return wait if some child has returned a wait
   if( resflag&RES_WAIT )
     return resflag;
+  // count # of output planes
+  int nres = 0;
+  for( int i=0; i<childref.size(); i++ )
+    nres += childref[i]->numResults();
   // otherwise, compose result
   ResultSet &result = resref <<= new ResultSet(nres);
   result.setCells(request.cells()); 
