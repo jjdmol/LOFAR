@@ -28,8 +28,8 @@
 #include <MEQ/Vells.h>
 #include <MEQ/VellSet.h>
 
-#include <MeqNodes/TID-MeqNodes.h>
-#pragma aidgroup MeqNodes
+#include <MEQ/TID-Meq.h>
+#pragma aidgroup Meq
 #pragma type #Meq::Polc
 
 //# Forward declarations
