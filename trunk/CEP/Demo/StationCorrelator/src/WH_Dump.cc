@@ -111,8 +111,20 @@ void WH_Dump::process() {
 	}
       }
       written = write(itsOutputFile, freqBlock, itsNelements * itsNelements * itsNpolarisations * sizeof(DH_Vis::BufferPrimitive));
+      
+      if (written == -1) {
+	cerr<<"Something went wrong during write!"<<endl;
+      }
+      totalWritten += written;
+    }
+  }
 #define DUMP
 #ifdef DUMP
+  for (int i=0; i<itsNinputs; i++) {
+    dhp = (DH_Vis*)getDataManager().getInHolder(i);
+    recSize += dhp->getBufSize()*sizeof(DH_Vis::BufferType);
+    for (int channel=0; channel<itsNchannels; channel++) {
+      cout<<"channel: "<< channel <<" of input: "<<i<<endl;
       for (int el1=0; el1<itsNelements; el1++){
 	cout<<el1<<": ";
 	for (int el2=0; el2<itsNelements; el2++){
@@ -124,14 +136,9 @@ void WH_Dump::process() {
 	}
 	cout<<endl;
       }
-#endif
-      
-      if (written == -1) {
-	cerr<<"Something went wrong during write!"<<endl;
-      }
-      totalWritten += written;
     }
   }
+#endif
   recSize = recSize / 1024; // from now recSize is in kB
   totalWrittenKB = totalWritten / 1024;
   gettimeofday(&newTime, NULL);
