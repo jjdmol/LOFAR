@@ -46,12 +46,10 @@ AVTStationReceptorGroup::TStationReceptorConnection::TStationReceptorConnection(
       string&                        _name, 
       GCFPort::TPortType             _type, 
       int                            _protocol,
-      bool                           _connected,
-      TLogicalDeviceState            _ldState) :
+      bool                           _connected) :
   rcu(_rcu),
   clientPort(new APLInterTaskPort((GCFTask&)(*_rcu),_containerTask,_name,_type,_protocol)),
-  connected(_connected),
-  ldState(_ldState)
+  connected(_connected)
 {
   LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("TStationReceptorConnection(0x%x)::TStationReceptorConnection",this));
   rcu->addClientInterTaskPort(clientPort.get());
@@ -82,8 +80,7 @@ AVTStationReceptorGroup::AVTStationReceptorGroup(string& taskName,
                                     portName, 
                                     GCFPortInterface::SAP,
                                     LOGICALDEVICE_PROTOCOL,
-                                    false,
-                                    LOGICALDEVICE_STATE_IDLE);
+                                    false);
     m_stationReceptors.push_back(src);
   }
 }
@@ -92,6 +89,17 @@ AVTStationReceptorGroup::AVTStationReceptorGroup(string& taskName,
 AVTStationReceptorGroup::~AVTStationReceptorGroup()
 {
   LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTStationReceptorGroup(%s)::~AVTStationReceptorGroup",getName().c_str()));
+}
+
+bool AVTStationReceptorGroup::isPrepared(vector<string>& parameters)
+{
+  // compare all parameters with the parameters provided.
+  // if all are equal, then the LD is prepared.
+  bool isPrepared=true;
+  double frequency=atof(parameters[2].c_str());
+  isPrepared = (frequency == m_frequency);
+
+  return isPrepared;
 }
 
 bool AVTStationReceptorGroup::checkQualityRequirements(int maxFailedResources)
@@ -111,7 +119,7 @@ bool AVTStationReceptorGroup::checkQualityRequirements(int maxFailedResources)
     {
       failedResources++;
     }
-    requirementsMet = (failedResources < maxFailedResources);
+    requirementsMet = (failedResources <= maxFailedResources);
     it++;
   }
   
@@ -181,33 +189,13 @@ bool AVTStationReceptorGroup::allReceptorsConnected()
   return allConnected;
 }
 
-bool AVTStationReceptorGroup::setReceptorState(GCFPortInterface& port, TLogicalDeviceState state)
-{
-  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTStationReceptorGroup(%s,0x%x)::%s(0x%x,%d)",getName().c_str(),this,__func__,&port,state));
-  TStationReceptorVectorIter it = m_stationReceptors.begin();
-  bool found=false;
-  while(!found && it!=m_stationReceptors.end())
-  {
-    if((*it).clientPort.get() == &port) // comparing two pointers. yuck?
-    {
-      found = true;
-      (*it).ldState = state;
-    }
-    else
-    {
-      it++;
-    }
-  }
-  return found;
-}
-
 bool AVTStationReceptorGroup::allReceptorsInState(TLogicalDeviceState state)
 {
   bool allInState = true;
   TStationReceptorVectorIter it = m_stationReceptors.begin();
   while(allInState && it!=m_stationReceptors.end())
   {
-    allInState = ((*it).ldState==state);
+    allInState = ((*it).rcu->getLogicalDeviceState()==state);
     it++;
   }
   LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTStationReceptorGroup(%s,0x%x)::%s(%d): %s",getName().c_str(),this,__func__,state,(allInState?"true":"false")));
@@ -315,7 +303,7 @@ GCFEvent::TResult AVTStationReceptorGroup::concrete_initial_state(GCFEvent& even
   return status;
 }
 
-GCFEvent::TResult AVTStationReceptorGroup::concrete_claiming_state(GCFEvent& event, GCFPortInterface& port, bool& stateFinished)
+GCFEvent::TResult AVTStationReceptorGroup::concrete_claiming_state(GCFEvent& event, GCFPortInterface& /*port*/, bool& stateFinished)
 {
   LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTStationReceptorGroup(%s)::concrete_claiming_state (%s)",getName().c_str(),evtstr(event)));
   GCFEvent::TResult status = GCFEvent::HANDLED;
@@ -325,12 +313,9 @@ GCFEvent::TResult AVTStationReceptorGroup::concrete_claiming_state(GCFEvent& eve
     case LOGICALDEVICE_CLAIMED:
     {
       // claimed event is received from the station receptor
-      if(setReceptorState(port,LOGICALDEVICE_STATE_CLAIMED))
+      if(allReceptorsInState(LOGICALDEVICE_STATE_CLAIMED))
       {
-        if(allReceptorsInState(LOGICALDEVICE_STATE_CLAIMED))
-        {
-          stateFinished=true;
-        }
+        stateFinished=true;
       }
       break;
     }
@@ -344,7 +329,7 @@ GCFEvent::TResult AVTStationReceptorGroup::concrete_claiming_state(GCFEvent& eve
   return status;
 }
 
-GCFEvent::TResult AVTStationReceptorGroup::concrete_preparing_state(GCFEvent& event, GCFPortInterface& port, bool& stateFinished, bool& error)
+GCFEvent::TResult AVTStationReceptorGroup::concrete_preparing_state(GCFEvent& event, GCFPortInterface& /*port*/, bool& stateFinished, bool& error)
 {
   LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTStationReceptorGroup(%s)::concrete_preparing_state (%s)",getName().c_str(),evtstr(event)));
   GCFEvent::TResult status = GCFEvent::HANDLED;
@@ -356,12 +341,9 @@ GCFEvent::TResult AVTStationReceptorGroup::concrete_preparing_state(GCFEvent& ev
     case LOGICALDEVICE_PREPARED:
     {
       // prepared event is received from the station receptor
-      if(setReceptorState(port,LOGICALDEVICE_STATE_SUSPENDED))
+      if(allReceptorsInState(LOGICALDEVICE_STATE_SUSPENDED))
       {
-        if(allReceptorsInState(LOGICALDEVICE_STATE_SUSPENDED))
-        {
-          stateFinished=true;
-        }
+        stateFinished=true;
       }
       break;
     }
@@ -375,7 +357,13 @@ GCFEvent::TResult AVTStationReceptorGroup::concrete_preparing_state(GCFEvent& ev
   return status;
 }
 
-GCFEvent::TResult AVTStationReceptorGroup::concrete_releasing_state(GCFEvent& event, GCFPortInterface& port, bool& stateFinished)
+GCFEvent::TResult AVTStationReceptorGroup::concrete_active_state(GCFEvent& event, GCFPortInterface& /*port*/)
+{
+  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTStationReceptorGroup(%s)::%s (%s)",getName().c_str(),__func__,evtstr(event)));
+  return GCFEvent::NOT_HANDLED;
+}
+
+GCFEvent::TResult AVTStationReceptorGroup::concrete_releasing_state(GCFEvent& event, GCFPortInterface& /*port*/, bool& stateFinished)
 {
   LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTStationReceptorGroup(%s)::concrete_releasing_state (%s)",getName().c_str(),evtstr(event)));
   GCFEvent::TResult status = GCFEvent::HANDLED;
@@ -385,12 +373,9 @@ GCFEvent::TResult AVTStationReceptorGroup::concrete_releasing_state(GCFEvent& ev
     case LOGICALDEVICE_RELEASED:
     {
       // released event is received from the station receptor
-      if(setReceptorState(port,LOGICALDEVICE_STATE_RELEASED))
+      if(allReceptorsInState(LOGICALDEVICE_STATE_RELEASED))
       {
-        if(allReceptorsInState(LOGICALDEVICE_STATE_RELEASED))
-        {
-          stateFinished=true;
-        }
+        stateFinished=true;
       }
       break;
     }
@@ -420,7 +405,6 @@ void AVTStationReceptorGroup::handlePropertySetAnswer(GCFEvent& answer)
       // check which property changed
       GCFPropValueEvent* pPropAnswer = static_cast<GCFPropValueEvent*>(&answer);
       assert(pPropAnswer);
-/*
       if ((pPropAnswer->pValue->getType() == GCFPValue::LPT_STRING) &&
           (strstr(pPropAnswer->pPropName, "_command") != 0))
       {
@@ -440,14 +424,29 @@ void AVTStationReceptorGroup::handlePropertySetAnswer(GCFEvent& answer)
             AVTUtilities::encodeParameters(parameters,prepareParameters);
             
             // send message to myself using a dummyport. VT will send it to SBF and SRG
-            GCFDummyPort dummyPort(this,string("VT_command_dummy"),LOGICALDEVICE_PROTOCOL);
+            GCFDummyPort dummyPort(this,string("SRG_command_dummy"),LOGICALDEVICE_PROTOCOL);
             LOGICALDEVICEPrepareEvent prepareEvent;
             prepareEvent.parameters = prepareParameters;
             dispatch(prepareEvent,dummyPort);
           }
         }
+        // SUSPEND
+        else if(command==string(LD_COMMAND_SUSPEND))
+        {
+          // send prepare to myself using a dummyport
+          GCFDummyPort dummyPort(this,string("SRG_command_dummy"),LOGICALDEVICE_PROTOCOL);
+          LOGICALDEVICESuspendEvent suspendEvent;
+          dispatch(suspendEvent,dummyPort); // dummyport
+        }
+        // RESUME
+        else if(command==string(LD_COMMAND_RESUME))
+        {
+          // send prepare to myself using a dummyport
+          GCFDummyPort dummyPort(this,string("SRG_command_dummy"),LOGICALDEVICE_PROTOCOL);
+          LOGICALDEVICEResumeEvent resumeEvent;
+          dispatch(resumeEvent,dummyPort); // dummyport
+        }
       }
-*/
       break;
     }  
 
@@ -499,8 +498,8 @@ void AVTStationReceptorGroup::concretePrepare(GCFPortInterface& /*port*/,string&
   setStopTime(atoi(decodedParameters[1].c_str()));
   setFrequency(atof(decodedParameters[2].c_str()));
   
-  // send prepare message to BeamFormer
-  // all parameters are forwarded to the beamformer
+  // send prepare message to the receptors
+  // all parameters are forwarded to the receptors
   LOGICALDEVICEPrepareEvent prepareEvent;
   prepareEvent.parameters = parameters;
   sendToAllReceptors(prepareEvent);
@@ -511,7 +510,7 @@ void AVTStationReceptorGroup::concreteResume(GCFPortInterface& /*port*/)
   LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTStationReceptorGroup(%s)::concreteResume",getName().c_str()));
   // resume my own resources
   
-  // send resume message to BeamFormer
+  // send resume message to receptors
   LOGICALDEVICEResumeEvent resumeEvent;
   sendToAllReceptors(resumeEvent);
 }
@@ -521,7 +520,7 @@ void AVTStationReceptorGroup::concreteSuspend(GCFPortInterface& /*port*/)
   LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTStationReceptorGroup(%s)::concreteSuspend",getName().c_str()));
   // suspend my own resources
   
-  // send suspend message to BeamFormer
+  // send suspend message to receptors
   LOGICALDEVICESuspendEvent suspendEvent;
   sendToAllReceptors(suspendEvent);
 }
@@ -538,7 +537,7 @@ void AVTStationReceptorGroup::concreteRelease(GCFPortInterface& /*port*/)
     resourceManager->releaseResource(getName(),(*rIt).rcu->getName());
   }
   
-  // send release message to BeamFormer
+  // send release message to receptors
   LOGICALDEVICEReleaseEvent releaseEvent;
   sendToAllReceptors(releaseEvent);
 }

@@ -313,6 +313,12 @@ GCFEvent::TResult AVTStationBeamformer::concrete_preparing_state(GCFEvent& event
   return status;
 }
 
+GCFEvent::TResult AVTStationBeamformer::concrete_active_state(GCFEvent& event, GCFPortInterface& /*port*/)
+{
+  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTStationBeamformer(%s)::%s (%s)",getName().c_str(),__func__,evtstr(event)));
+  return GCFEvent::NOT_HANDLED;
+}
+
 GCFEvent::TResult AVTStationBeamformer::concrete_releasing_state(GCFEvent& event, GCFPortInterface& /*port*/, bool& stateFinished)
 {
   LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTStationBeamformer(%s)::concrete_releasing_state (%s)",getName().c_str(),evtstr(event)));

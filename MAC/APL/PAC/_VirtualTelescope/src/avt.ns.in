@@ -60,7 +60,7 @@ BeamServer.port=21040 				# MSPP
 
 [AVTTestMAC2]
 host=localhost
-timerPort.type=TCP      #MSPP
+timerPort.type=TCP      #SPP
 timerPort.port=21001
 
 [LogicalDeviceScheduler]

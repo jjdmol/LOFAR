@@ -40,6 +40,7 @@
 #include "AVTPropertySetAnswer.h"
 #include "AVTAPCAnswer.h"
 #include "../../../APLCommon/src/APLInterTaskPort.h"
+#include "AVTDefines.h"
 
 // forward declaration
 
@@ -61,6 +62,7 @@ namespace AVT
       string& getServerPortName();
       void addClientInterTaskPort(APLInterTaskPort* clientPort);
       virtual bool isPrepared(vector<string>& parameters);
+      TLogicalDeviceState getLogicalDeviceState() const;
 
       /**
       * The initial state handler. This handler is passed to the GCFTask constructor
@@ -131,6 +133,10 @@ namespace AVT
       */
       virtual GCFEvent::TResult concrete_preparing_state(GCFEvent& e, GCFPortInterface& p, bool& stateFinished, bool& error)=0;
       /**
+      * active state additional behaviour must be implemented in the derived classes. 
+      */
+      virtual GCFEvent::TResult concrete_active_state(GCFEvent& e, GCFPortInterface& p)=0;
+      /**
       * Releasing state additional behaviour must be implemented in the derived classes. 
       */
       virtual GCFEvent::TResult concrete_releasing_state(GCFEvent& e, GCFPortInterface& p, bool& stateFinished)=0;
@@ -180,6 +186,7 @@ namespace AVT
       GCFPort                         m_logicalDeviceServerPort;
       std::vector<APLInterTaskPort*>  m_clientInterTaskPorts;
       bool                            m_apcLoaded;
+      TLogicalDeviceState             m_logicalDeviceState;
   };
 };
 #endif

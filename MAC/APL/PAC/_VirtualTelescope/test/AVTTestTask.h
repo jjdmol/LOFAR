@@ -25,10 +25,12 @@
 
 //# Includes
 //# Common Includes
+#include <list>
 
 //# GCF Includes
 #include <GCF/GCF_Task.h>
 #include <GCF/GCF_Port.h>
+#include <GCF/GCF_TCPPort.h>
 #include <GCF/GCF_Property.h>
 #include <GCF/GCF_MyPropertySet.h>
 #include <boost/shared_ptr.hpp>
@@ -77,7 +79,7 @@ namespace AVT
       
       AVTTest<AVTTestTask>& m_tester;
       AVTTestAnswer         m_answer;
-      GCFPort               m_beamserver;
+      GCFTCPPort            m_beamserver;
   
       GCFProperty     m_propertyLDScommand;
       GCFProperty     m_propertyLDSstatus;
@@ -100,6 +102,8 @@ namespace AVT
       double m_beamAngle1;
       double m_beamAngle2;
       unsigned int m_seqnr;
+      std::list<GCFPortInterface*> m_client_list;  // list of beamserver clients
+      
   };
 };
 

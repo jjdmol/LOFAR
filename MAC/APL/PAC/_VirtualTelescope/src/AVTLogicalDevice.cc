@@ -50,7 +50,8 @@ AVTLogicalDevice::AVTLogicalDevice(string& taskName,
   m_serverPortName(taskName+string("_server")),
   m_logicalDeviceServerPort(*this, m_serverPortName, GCFPortInterface::SPP, LOGICALDEVICE_PROTOCOL),
   m_clientInterTaskPorts(),
-  m_apcLoaded(false)
+  m_apcLoaded(false),
+  m_logicalDeviceState(LOGICALDEVICE_STATE_IDLE)
 {
   registerProtocol(LOGICALDEVICE_PROTOCOL, LOGICALDEVICE_PROTOCOL_signalnames);
   LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTLogicalDevice(%s)::AVTLogicalDevice",getName().c_str()));
@@ -79,6 +80,11 @@ void AVTLogicalDevice::addClientInterTaskPort(APLInterTaskPort* clientPort)
 bool AVTLogicalDevice::isPrepared(vector<string>& /*parameters*/)
 {
   return false;
+}
+
+TLogicalDeviceState AVTLogicalDevice::getLogicalDeviceState() const
+{
+  return m_logicalDeviceState;
 }
 
 bool AVTLogicalDevice::_isLogicalDeviceServerPort(GCFPortInterface& /*port*/)
@@ -123,6 +129,7 @@ GCFEvent::TResult AVTLogicalDevice::initial_state(GCFEvent& event, GCFPortInterf
 
     case F_ENTRY:
     {
+      m_logicalDeviceState = LOGICALDEVICE_STATE_IDLE;
       GCFPVString status("Initial");
       m_properties.setValue("status",status);
       break;
@@ -161,6 +168,7 @@ GCFEvent::TResult AVTLogicalDevice::idle_state(GCFEvent& event, GCFPortInterface
       
     case F_ENTRY:
     {
+      m_logicalDeviceState = LOGICALDEVICE_STATE_IDLE;
       // open the server port to allow clients to connect
       m_logicalDeviceServerPort.open();
       LOGICALDEVICEInitializedEvent initializedEvent;
@@ -208,6 +216,7 @@ GCFEvent::TResult AVTLogicalDevice::claiming_state(GCFEvent& event, GCFPortInter
       
     case F_ENTRY:
     {
+      m_logicalDeviceState = LOGICALDEVICE_STATE_CLAIMING;
       GCFPVString status("Claiming");
       m_properties.setValue("status",status);
       break;
@@ -251,6 +260,7 @@ GCFEvent::TResult AVTLogicalDevice::claimed_state(GCFEvent& event, GCFPortInterf
       
     case F_ENTRY:
     {
+      m_logicalDeviceState = LOGICALDEVICE_STATE_CLAIMED;
       GCFPVString status("Claimed");
       m_properties.setValue("status",status);
 
@@ -307,6 +317,7 @@ GCFEvent::TResult AVTLogicalDevice::preparing_state(GCFEvent& event, GCFPortInte
       
     case F_ENTRY:
     {
+      m_logicalDeviceState = LOGICALDEVICE_STATE_PREPARING;
       GCFPVString status("Preparing");
       m_properties.setValue("status",status);
       break;
@@ -369,6 +380,7 @@ GCFEvent::TResult AVTLogicalDevice::suspended_state(GCFEvent& event, GCFPortInte
       
     case F_ENTRY:
     {
+      m_logicalDeviceState = LOGICALDEVICE_STATE_SUSPENDED;
       GCFPVString status("Suspended");
       m_properties.setValue("status",status);
       // send to all clients
@@ -422,9 +434,11 @@ GCFEvent::TResult AVTLogicalDevice::active_state(GCFEvent& event, GCFPortInterfa
   switch (event.signal)
   {
     case F_INIT:
+      break;      
       
     case F_ENTRY:
     {
+      m_logicalDeviceState = LOGICALDEVICE_STATE_ACTIVE;
       GCFPVString status("Active");
       m_properties.setValue("status",status);
 
@@ -457,7 +471,7 @@ GCFEvent::TResult AVTLogicalDevice::active_state(GCFEvent& event, GCFPortInterfa
 
     default:
       LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTLogicalDevice(%s)::active_state, default",getName().c_str()));
-      status = GCFEvent::NOT_HANDLED;
+      status = concrete_active_state(event,port);
       break;
   }
 
@@ -476,6 +490,7 @@ GCFEvent::TResult AVTLogicalDevice::releasing_state(GCFEvent& event, GCFPortInte
       
     case F_ENTRY:
     {
+      m_logicalDeviceState = LOGICALDEVICE_STATE_RELEASING;
       GCFPVString status("Releasing");
       m_properties.setValue("status",status);
       break;
