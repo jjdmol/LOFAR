@@ -65,9 +65,19 @@ class GCFTask;
 
 class GCFHandler
 {
-  private:
+  protected:
+    GCFHandler() {;}
+    virtual ~GCFHandler() {;}
+
     virtual void workProc () = 0;
     virtual void stop () = 0;
     friend GCFTask;
+
+  private:
+    //@{ 
+    /// Copy contructors. Don't allow copying this object.
+    GCFHandler (const GCFHandler&);
+    GCFHandler& operator= (const GCFHandler&);  
+    //@}
 };
 #endif

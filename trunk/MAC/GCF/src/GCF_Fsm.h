@@ -156,6 +156,7 @@ class GCFFsm
     volatile State _state;
   
   private:
+    GCFFsm();
     static GCFDummyPort _gcfPort;
 };
 

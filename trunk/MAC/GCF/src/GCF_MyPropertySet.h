@@ -118,6 +118,7 @@ class GCFMyPropertySet : public GCFPropertySetBase
     void dispatchAnswer (unsigned short sig, TGCFResult result);
     
   private:
+    GCFMyPropertySet ();
     //@{ 
     /// Copy contructors. Don't allow copying this object.
     GCFMyPropertySet (const GCFMyPropertySet&);

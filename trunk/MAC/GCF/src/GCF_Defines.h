@@ -25,6 +25,8 @@
 
 #include <LofarLogger/LofarLogger.h>
 
+#define GCF_PROP_NAME_SEP     '_'
+
 #define GCF_LOGGER_ROOT       (MAC_LOGGER_ROOT + string(".GCF"))
 #define GCF_STDOUT_LOGGER     (GCF_LOGGER_ROOT + string(".Logger"))
 
