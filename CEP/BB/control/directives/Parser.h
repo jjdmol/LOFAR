@@ -19,7 +19,12 @@ class Parser
   std::vector<Directive> *getNested();
 
  protected:
+    //##ModelId=3F53420E0177
   std::string txt;
+  private:
+    //##ModelId=3F53423103C8
+    std::vector<Directive> nested;
+
 
 };
 
