@@ -34,8 +34,7 @@ WH_Correlator::WH_Correlator(const string& name,
     itsNsamples (samples),
     itsNchannels(channels),
     itsNpolarisations(polarisations),
-    itsNtargets (targets),
-    itsResetBuffer(NULL)
+    itsNtargets (targets)
 {
 
   getDataManager().addInDataHolder(0, new DH_CorrCube("in", 
@@ -51,14 +50,9 @@ WH_Correlator::WH_Correlator(const string& name,
   t_start.tv_usec = 0;
 
   bandwidth=0.0;
-
-  itsResetBuffer = new DH_Vis::BufferType [itsNchannels*itsNelements*itsNelements*itsNpolarisations];
-  memset(itsResetBuffer, 0, itsNchannels*itsNelements*itsNelements*itsNpolarisations*sizeof(DH_Vis::BufferType));
- 
 }
 
 WH_Correlator::~WH_Correlator() {
-  free(itsResetBuffer);
 }
 
 WorkHolder* WH_Correlator::construct (const string& name, 
@@ -118,10 +112,11 @@ void WH_Correlator::process() {
   DH_Vis      *outDH = (DH_Vis*)(getDataManager().getOutHolder(0));
 
   // reset integrator.
-  memcpy(outDH->getBuffer(), 
-	 itsResetBuffer, 
-	 itsNchannels*itsNelements*itsNelements*itsNpolarisations);
- 
+  memset(outDH->getBuffer(), 
+	 0,
+	 itsNchannels*itsNelements*itsNelements*itsNpolarisations*sizeof(DH_Vis::BufferType));
+
+
 #ifdef DO_TIMING
   starttime = timer();
 #endif
@@ -143,10 +138,10 @@ void WH_Correlator::process() {
 	    // todo: do short-> float conversion only once
 	  
 	    // convert complex<short> to complex<float>
-	    s1_val = DH_Vis::BufferType((inDH->getBufferElement(fchannel, sample, station1, polarisation))->real(),
-					(inDH->getBufferElement(fchannel, sample, station1, polarisation)->imag()));
-	    s2_val = DH_Vis::BufferType((inDH->getBufferElement(fchannel, sample, station2, polarisation))->real(),
-					(inDH->getBufferElement(fchannel, sample, station2, polarisation)->imag()));
+// 	    s1_val = DH_Vis::BufferType((inDH->getBufferElement(fchannel, sample, station1, polarisation))->real(),
+// 					(inDH->getBufferElement(fchannel, sample, station1, polarisation)->imag()));
+// 	    s2_val = DH_Vis::BufferType((inDH->getBufferElement(fchannel, sample, station2, polarisation))->real(),
+// 					(inDH->getBufferElement(fchannel, sample, station2, polarisation)->imag()));
 	    
 	    outDH->addBufferElementVal(station1, station2, fchannel, polarisation,
 				       s1_val * s2_val
@@ -174,7 +169,7 @@ void WH_Correlator::process() {
   // transient effects on the nodes, so the maximum performance is a reasonable estimate of the real 
   // performance of the application.
   cmults = itsNsamples * itsNchannels * (itsNelements*itsNelements/2 + ceil(itsNelements/2.0));
-  MPI_Reduce(&min_time, &min_time, 1, MPI_DOUBLE, MPI_MIN, 0, MPI_COMM_WORLD);
+  MPI_Reduce(&time, &min_time, 1, MPI_DOUBLE, MPI_MIN, 0, MPI_COMM_WORLD);
   
   if ((TH_MPI::getCurrentRank() == 0) && (t_start.tv_sec != 0) && (t_start.tv_usec != 0)) {
     cout << 1.0e-6*cmults/min_time << " Mcprod/sec" << endl;

@@ -66,7 +66,6 @@ class WH_Correlator: public WorkHolder
 
   double bandwidth;
   
-  DH_Vis::BufferType* itsResetBuffer;
 };
 
  inline double WH_Correlator::getBandwidth() { return bandwidth; } 
