@@ -33,7 +33,7 @@
 
 #pragma aid DDID VDSID Selection Tile String Column Size Format 
 #pragma aid Vis Input Output Params Start End Write Flags Flag Mask
-#pragma aid Data Predict Residuals Column Name Message
+#pragma aid Time Data Predict Residuals Column Name Message
 #pragma aid Throw Error
 
 // this defines constants for field names used in parameter records
@@ -59,7 +59,7 @@ namespace MSVisAgent
        FDataColumnName    = AidData|AidColumn|AidName,
        FTileSize          = AidTile|AidSize,
        FTileFormat        = AidTile|AidFormat,
-       
+
                           
        FWriteFlags        = AidWrite|AidFlags,
        FFlagMask          = AidFlag|AidMask,

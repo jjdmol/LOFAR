@@ -155,6 +155,7 @@ void MSInputAgent::openMS (DataRecord &header,const DataRecord &select)
     FailWhen( !selms_.nrow(),"selection yields empty table" );
     tableiter_  = TableIterator(selms_, "TIME");
   } 
+  header[FTime] = ROScalarColumn<double>(selms_, "TIME")(0);
   dprintf(1)("MS selection yields %d rows\n",selms_.nrow());
   tableiter_.reset();
   current_timeslot_ = 0;
