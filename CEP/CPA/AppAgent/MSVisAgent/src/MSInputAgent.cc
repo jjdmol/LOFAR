@@ -49,6 +49,7 @@
 namespace MSVisAgent
 {
 using namespace VisAgent;
+using namespace AppEvent;
 
 static int dum = aidRegistry_MSVisAgent();
 

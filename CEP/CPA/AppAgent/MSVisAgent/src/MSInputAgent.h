@@ -27,6 +27,7 @@
 #include <MSVisAgent/MSVisAgentDebugContext.h>
 #include <MSVisAgent/MSVisAgentVocabulary.h>
 #include <VisCube/VisVocabulary.h>
+#include <VisCube/VisTile.h>
 
 #include <aips/MeasurementSets/MeasurementSet.h>
 #include <aips/Tables/TableIter.h>
@@ -67,7 +68,7 @@ class MSInputAgent : public VisAgent::FileInputAgent, public MSVisAgentDebugCont
       virtual void close ();
       
     //##ModelId=3DF9FECD021B
-      virtual int getNextTile (VisTile::Ref &tile,int wait = WAIT);
+      virtual int getNextTile (VisTile::Ref &tile,int wait = AppEvent::WAIT);
       
     //##ModelId=3DFDFC060373
       string sdebug ( int detail = 1,const string &prefix = "",
@@ -141,6 +142,7 @@ class MSInputAgent : public VisAgent::FileInputAgent, public MSVisAgentDebugCont
       TileCache tiles_;
     //##ModelId=3DF9FECD020D
       TileCache::iterator tileiter_;
+
       
 };
 

@@ -2,6 +2,8 @@
 
 namespace VisAgent
 {
+  
+using namespace AppEvent;
     
 //##ModelId=3E2C29B00086
 int FileOutputAgent::state() const

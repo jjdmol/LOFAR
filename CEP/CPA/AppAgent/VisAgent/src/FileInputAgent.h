@@ -57,7 +57,7 @@ class FileInputAgent : public InputAgent, public FileAgentBase
   public:
       
     //##ModelId=3DF9FECE03D1
-      virtual int getHeader (DataRecord::Ref &hdr,int wait = WAIT);
+      virtual int getHeader (DataRecord::Ref &hdr,int wait = AppEvent::WAIT);
   
     //##ModelId=3DF9FECF009D
       virtual int hasHeader ();

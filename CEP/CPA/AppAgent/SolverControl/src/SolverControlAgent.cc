@@ -25,6 +25,8 @@
 namespace SolverControl
 {
   
+using namespace AppState;
+  
 static int __dum = aidRegistry_SolverControl();
 
 InitDebugContext(SolverControlAgent,"SolverControl");
