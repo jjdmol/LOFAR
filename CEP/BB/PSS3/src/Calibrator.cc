@@ -290,6 +290,27 @@ void Calibrator::run (vector<string>& resultParmNames,
 }
 
 void Calibrator::showCurrentParms (void) {
+  vector <double> vals;
+  getParmValues (itsSolvableParms, vals);
+  char str [20];
+  char str2 [20];
+
+  vector<string> :: iterator i;
+  for (i = itsSolvableParms.begin (); i != itsSolvableParms.end (); ++ i) {
+    strcpy (str2, i -> c_str ());
+    str2[5] = 0;
+    sprintf (str, "%4s ", str2);
+    cout << str;
+  }
+  cout << endl;
+
+  vector<double> :: iterator j;
+  for (j = vals.begin (); j != vals.end (); ++ j) {
+    sprintf (str, "%1.3f ", * j);
+    cout << str;
+  }
+  cout << endl;
+
 }
 
 void Calibrator::subtractOptimizedSources (void) {
@@ -304,6 +325,7 @@ void Calibrator::commitOptimizedParameters (void) {
 void Calibrator::getParmValues (vector<string>& names, 
 				vector<double>& values) {
   itsPSS3CalibratorImpl -> getParmValues (names, values);
+
 }
 
 
