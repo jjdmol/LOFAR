@@ -49,4 +49,6 @@ enum TSAResult {
   SA_DP_ALREADY_EXISTS
 };
 
+#define PARAM_PVSS_CMDLINE "mac.%s.pvss.cmdline"
+#define PARAM_DEFAULT_PVSS_CMDLINE "mac.controller.pvss.cmdline"
 #endif

@@ -31,7 +31,6 @@ EXTRA_DIST = \
 	Echo_Protocol.ph \
 	echoapp.conf \
 	ping.conf \
-	ServiceBroker.conf \
 	log4cplus.properties
 
 MAC_CONFIG = $(top_srcdir)/../../Config

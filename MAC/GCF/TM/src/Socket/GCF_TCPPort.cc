@@ -42,7 +42,8 @@ GCFTCPPort::GCFTCPPort(GCFTask& task,
   : GCFRawPort(task, name, type, protocol, transportRawData),
     _pSocket(0),
     _addrIsSet(false),
-    _portNumber(0)
+    _portNumber(0),
+    _broker(0)
 {
   if (SPP == getType() || MSPP == getType())
   {
@@ -51,17 +52,16 @@ GCFTCPPort::GCFTCPPort(GCFTask& task,
   else if (SAP == getType())
   {
     _pSocket = new GTMTCPSocket(*this);
-  }
-  _broker = GTMServiceBroker::instance();
+  }  
 }
 
 GCFTCPPort::GCFTCPPort()
     : GCFRawPort(),
     _pSocket(0),
     _addrIsSet(false),
-    _portNumber(0)
+    _portNumber(0),
+    _broker(0)
 {
-  _broker = GTMServiceBroker::instance();
 }
 
 GCFTCPPort::~GCFTCPPort()
@@ -70,7 +70,11 @@ GCFTCPPort::~GCFTCPPort()
   {
     delete _pSocket;
     _pSocket = 0;
-    assert(_broker);
+    
+  }
+
+  if (_broker)
+  {
     _broker->deletePort(*this);
     GTMServiceBroker::release();
     _broker = 0;
@@ -110,6 +114,10 @@ bool GCFTCPPort::open()
   }
   
   setState(S_CONNECTING);
+  if (!_broker)
+  {
+    _broker = GTMServiceBroker::instance();
+  }
   if (SAP == getType()) 
   {
     TPeerAddr fwaddr;

@@ -95,6 +95,7 @@ bool GTMSBTCPPort::open()
   catch (...)
   {
     LOG_FATAL("Could not get special portnumber param or host param for the Service Broker");
+    GCFTask::stop();
     return false;
   }
   
