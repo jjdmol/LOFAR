@@ -54,16 +54,6 @@ namespace RSP_Protocol
       };
 
       /**
-       * Predefined settings.
-       *                                    bit 7 6 5 4 3 2 1 0
-       */
-      static const uint8 LBL_10_40  = 0xB9; //  1 0 1 1 1 0 0 1
-      static const uint8 LBL_30_90  = 0xB9; //  1 0 1 1 1 0 0 1
-      static const uint8 HB_110_190 = 0xC6; //  1 1 0 0 0 1 1 0
-      static const uint8 HB_170_230 = 0xCE; //  1 1 0 0 1 1 1 0
-      static const uint8 HB_210_240 = 0xD6; //  1 1 0 1 0 1 1 0
-      
-      /**
        * Constructors for a RCUSettings object.
        * Currently the tv_usec part is always set to 0 irrespective
        * of the value passed in.

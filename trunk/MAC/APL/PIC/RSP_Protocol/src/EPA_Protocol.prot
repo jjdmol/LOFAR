@@ -75,12 +75,9 @@ namespace EPA_Protocol
   
   typedef struct MEPStatus
   {
-      uint16 read_seqnr;  // sequence number of last received read message
-      uint8  read_error;     // error status of last received read message
+      uint16 seqnr;  // sequence number of previously received message
+      uint8  error;  // error status of previously received message
       uint8  ffi0;
-      uint16 write_seqnr; // sequence number of last received write message
-      uint8  write_error;    // error status of last received write message
-      uint8  ffi1;
   };
   
   typedef struct SYNCStatus
@@ -115,7 +112,10 @@ namespace EPA_Protocol
       FPGAStatus      fpga;
       ETHStatus       eth;
       MEPStatus       mep;
-      SYNCStatus      sync;
+      SYNCStatus      ap1_sync;
+      SYNCStatus      ap2_sync;
+      SYNCStatus      ap3_sync;
+      SYNCStatus      ap4_sync;
       BoardRCUStatus  ap1_rcu;
       BoardRCUStatus  ap2_rcu;
       BoardRCUStatus  ap3_rcu;
@@ -144,29 +144,36 @@ namespace EPA_Protocol
 	     << "nof_frames   =" << stat.eth.nof_frames         << ", " << std::endl
 	     << "nof_error    =" << stat.eth.nof_errors         << ", " << std::endl
 	     << "last_error   =" << int(stat.eth.last_error)    << ", " << std::endl
-	     << "read_seqnr   =" << stat.mep.read_seqnr         << ", " << std::endl
-	     << "read_error   =" << int(stat.mep.read_error)    << ", " << std::endl
-	     << "write_seqnr  =" << stat.mep.write_seqnr        << ", " << std::endl
-	     << "write_error  =" << int(stat.mep.write_error)   << ", " << std::endl
-	     << "sample_count =" << stat.sync.sample_count      << ", " << std::endl
-	     << "sync_count   ="  << stat.sync.sync_count       << ", " << std::endl
-	     << "error_count  ="  << stat.sync.error_count      << ", " << std::endl
-	     << "ap1_rcu.statusx      =" << stat.ap1_rcu.statusx       << ", " << std::endl
-	     << "ap1_rcu.statusy      =" << stat.ap1_rcu.statusy       << ", " << std::endl
-	     << "ap1_rcu.nof_overflowx=" << stat.ap1_rcu.nof_overflowx << ", " << std::endl
-	     << "ap1_rcu.nof_overflowy=" << stat.ap1_rcu.nof_overflowy << ", " << std::endl
-	     << "ap2_rcu.statusx      =" << stat.ap2_rcu.statusx       << ", " << std::endl
-	     << "ap2_rcu.statusy      =" << stat.ap2_rcu.statusy       << ", " << std::endl
-	     << "ap2_rcu.nof_overflowx=" << stat.ap2_rcu.nof_overflowx << ", " << std::endl
-	     << "ap2_rcu.nof_overflowy=" << stat.ap2_rcu.nof_overflowy << ", " << std::endl
-	     << "ap3_rcu.statusx      =" << stat.ap3_rcu.statusx       << ", " << std::endl
-	     << "ap3_rcu.statusy      =" << stat.ap3_rcu.statusy       << ", " << std::endl
-	     << "ap3_rcu.nof_overflowx=" << stat.ap3_rcu.nof_overflowx << ", " << std::endl
-	     << "ap3_rcu.nof_overflowy=" << stat.ap3_rcu.nof_overflowy << ", " << std::endl
-	     << "ap4_rcu.statusx      =" << stat.ap1_rcu.statusx       << ", " << std::endl
-	     << "ap4_rcu.statusy      =" << stat.ap1_rcu.statusy       << ", " << std::endl
-	     << "ap4_rcu.nof_overflowx=" << stat.ap1_rcu.nof_overflowx << ", " << std::endl
-	     << "ap4_rcu.nof_overflowy=" << stat.ap1_rcu.nof_overflowy << ", " << std::endl
+	     << "seqnr        =" << stat.mep.seqnr              << ", " << std::endl
+	     << "error        =" << int(stat.mep.error)         << ", " << std::endl
+	     << "ap1_sync.sample_count =" << stat.ap1_sync.sample_count << ", " << std::endl
+	     << "ap1_sync.sync_count   =" << stat.ap1_sync.sync_count   << ", " << std::endl
+	     << "ap1_sync.error_count  =" << stat.ap1_sync.error_count  << ", " << std::endl
+	     << "ap2_sync.sample_count =" << stat.ap2_sync.sample_count << ", " << std::endl
+	     << "ap2_sync.sync_count   =" << stat.ap2_sync.sync_count   << ", " << std::endl
+	     << "ap2_sync.error_count  =" << stat.ap2_sync.error_count  << ", " << std::endl
+	     << "ap3_sync.sample_count =" << stat.ap3_sync.sample_count << ", " << std::endl
+	     << "ap3_sync.sync_count   =" << stat.ap3_sync.sync_count   << ", " << std::endl
+	     << "ap3_sync.error_count  =" << stat.ap3_sync.error_count  << ", " << std::endl
+	     << "ap4_sync.sample_count =" << stat.ap4_sync.sample_count << ", " << std::endl
+	     << "ap4_sync.sync_count   =" << stat.ap4_sync.sync_count   << ", " << std::endl
+	     << "ap4_sync.error_count  =" << stat.ap4_sync.error_count  << ", " << std::endl
+	     << "ap1_rcu.statusx       =" << stat.ap1_rcu.statusx       << ", " << std::endl
+	     << "ap1_rcu.statusy       =" << stat.ap1_rcu.statusy       << ", " << std::endl
+	     << "ap1_rcu.nof_overflowx =" << stat.ap1_rcu.nof_overflowx << ", " << std::endl
+	     << "ap1_rcu.nof_overflowy =" << stat.ap1_rcu.nof_overflowy << ", " << std::endl
+	     << "ap2_rcu.statusx       =" << stat.ap2_rcu.statusx       << ", " << std::endl
+	     << "ap2_rcu.statusy       =" << stat.ap2_rcu.statusy       << ", " << std::endl
+	     << "ap2_rcu.nof_overflowx =" << stat.ap2_rcu.nof_overflowx << ", " << std::endl
+	     << "ap2_rcu.nof_overflowy =" << stat.ap2_rcu.nof_overflowy << ", " << std::endl
+	     << "ap3_rcu.statusx       =" << stat.ap3_rcu.statusx       << ", " << std::endl
+	     << "ap3_rcu.statusy       =" << stat.ap3_rcu.statusy       << ", " << std::endl
+	     << "ap3_rcu.nof_overflowx =" << stat.ap3_rcu.nof_overflowx << ", " << std::endl
+	     << "ap3_rcu.nof_overflowy =" << stat.ap3_rcu.nof_overflowy << ", " << std::endl
+	     << "ap4_rcu.statusx       =" << stat.ap1_rcu.statusx       << ", " << std::endl
+	     << "ap4_rcu.statusy       =" << stat.ap1_rcu.statusy       << ", " << std::endl
+	     << "ap4_rcu.nof_overflowx =" << stat.ap1_rcu.nof_overflowx << ", " << std::endl
+	     << "ap4_rcu.nof_overflowy =" << stat.ap1_rcu.nof_overflowy << ", " << std::endl
 	     << "]" << std::endl;
   }
   
