@@ -47,6 +47,7 @@ AC_FUNC_VPRINTF
 dnl
 dnl Check for LOFAR specific things
 dnl
+lofar_INIT
 lofar_DEBUG_OPTIMIZE
 dnl lofar_FIREWALLS
 lofar_CORBA
