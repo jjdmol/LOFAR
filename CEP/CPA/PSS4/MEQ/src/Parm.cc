@@ -158,7 +158,7 @@ int Parm::getResult (Result::Ref &resref,
   // A single polc can be evaluated immediately.
   if( itsPolcs.size() == 1 ) 
   {
-    itsPolcs[0].evaluate(vs,request);
+    itsPolcs[0].evaluate (vs, request);
     // no further dependencies (specifically, not on domain)
     return retcode;
   }
@@ -224,7 +224,7 @@ int Parm::getResult (Result::Ref &resref,
         partEndTime(j)   = cells.time(stTime+j) + cells.stepTime(stTime+j);
       }
       Cells partCells (partDom, nrFreq, partStartTime, partEndTime);
-      Request partReq(partCells);
+      Request partReq(partCells, request.calcDeriv());
       VellSet partRes;
       polc.evaluate (partRes, partReq);
       // Create the result matrix if it is the first Time.
