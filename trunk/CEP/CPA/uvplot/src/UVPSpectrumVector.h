@@ -20,7 +20,7 @@ class UVPSpectrumVector: public std::vector<UVPSpectrum>
   
  public:
 
-  UVPSpectrumVector(unsigned int numberOfChannels);
+  UVPSpectrumVector(unsigned int numberOfChannels=0);
   
   
   void add(const UVPSpectrum &spectrum);
