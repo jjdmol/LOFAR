@@ -1,9 +1,3 @@
-AUTOGEN = autogen
-SUFFIXES = .ph
-%.ph: %.prot
-	$(AUTOGEN) -L $(top_srcdir)/../../GCFCommon/autogen $< &&
-	chmod a+w $@
-
 DOCHDRS	=	\
 	GPM_Controller.h \
 	GCF_SupTask.h \
@@ -24,12 +18,5 @@ libpml_la_SOURCES= $(DOCHDRS) \
 	GPM_PropertyProxy.cc \
 	GCF_PropertyProxy.cc \
 	GPM_Service.cc 
-
-BUILT_SOURCES = \
-	PA_Protocol.ph
-
-EXTRA_DIST = \
-	PA_Protocol.ph
-
 include $(lofar_sharedir)/Makefile.common
 
