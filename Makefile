@@ -91,7 +91,7 @@ bootstrap:
 		( echo \
 		&& echo ":::::: BOOTSTRAPPING $$d" \
 		&& echo \
-		&& ( ( cd $$d && ./bootstrap && ./bootstrap ) \
+		&& ( ( cd $$d && ( ./bootstrap; ./bootstrap )) \
 			|| echo ":::::: ERROR" ) \
 		&& echo \
 		&& echo ":::::: DONE BOOTSTRAPPING $$d" \
