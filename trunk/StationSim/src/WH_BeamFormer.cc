@@ -75,11 +75,11 @@ WH_BeamFormer::WH_BeamFormer (const string& name,
   sample.resize(itsNrcu);
 
   //DEBUG
-  itsFileOutReal.open ((string ("/home/alex/gerdes/BF_real_") + name + string (".txt")).c_str ());
-  itsFileOutComplex.open ((string ("/home/alex/gerdes/BF_complex_") + name + string (".txt")).c_str ());
-  itsFileInput.open ("/home/alex/gerdes/testvector.txt");
-  itsTestVector.resize (itsNrcu);
-  itsFileInput >> itsTestVector;
+//   itsFileOutReal.open ((string ("/home/alex/gerdes/BF_real_") + name + string (".txt")).c_str ());
+//   itsFileOutComplex.open ((string ("/home/alex/gerdes/BF_complex_") + name + string (".txt")).c_str ());
+//   itsFileInput.open ("/home/alex/gerdes/testvector.txt");
+//   itsTestVector.resize (itsNrcu);
+//   itsFileInput >> itsTestVector;
 }
 
 
@@ -97,9 +97,9 @@ WH_BeamFormer::~WH_BeamFormer()
   delete [] itsOutHolders;
 
   // DEBUG
-  itsFileOutReal.close ();
-  itsFileOutComplex.close ();
-  itsFileInput.close ();
+//   itsFileOutReal.close ();
+//   itsFileOutComplex.close ();
+//   itsFileInput.close ();
 }
 
 
@@ -131,8 +131,8 @@ void WH_BeamFormer::process()
   if (getOutputs() > 0) {
     
     LoVec_dcomplex weight(itsWeight->getBuffer(), itsNrcu, duplicateData);    
-    //sample *= weight;
-	sample = itsTestVector * weight;
+    sample *= weight;
+    //	sample = itsTestVector * weight;
 
     for (int j = 0; j < itsNrcu; j++) {
       // copy the sample to the outHolders
@@ -141,8 +141,8 @@ void WH_BeamFormer::process()
 
 	// DEBUG
 	//	cout << sample << " " << real(sample(0)) << " " << imag(sample(0)) << endl;
-	itsFileOutReal << real(sample) << endl;
-	itsFileOutComplex << imag (sample) << " " << endl;
+// 	itsFileOutReal << real(sample) << endl;
+// 	itsFileOutComplex << imag (sample) << " " << endl;
 	//cout << sample << endl;	
   }
 }

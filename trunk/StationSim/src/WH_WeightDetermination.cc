@@ -36,9 +36,9 @@ WH_WeightDetermination::WH_WeightDetermination(const string& name, unsigned int 
     itsOutHolder (0),
     itsNrcu      (0),
     itsArray     (0),
-	itsArrayFile (s)
+    itsArrayFile (s)
 {
-  itsNrcu = nant; 
+  itsNrcu = nant;
   itsArray = new ArrayConfig (s);
 
   if (nout > 0) {
@@ -68,8 +68,8 @@ void WH_WeightDetermination::process()
 
   
   LoVec_dcomplex d(itsNrcu);
-  d = steerv(phi, theta, itsArray->getPointX(), itsArray->getPointY()); 
-  
+  d = steerv(phi, theta, itsArray->getPointX(), itsArray->getPointY());
+
   memcpy(itsOutHolder->getBuffer(), d.data(), itsNrcu * sizeof(DH_SampleC::BufferType));
 }
 
@@ -79,8 +79,8 @@ void WH_WeightDetermination::dump() const
 
   LoVec_dcomplex weight(itsOutHolder->getBuffer(), itsNrcu, duplicateData);    
 
-   cout << "Weight vector Buffer: " << endl;
-   cout << weight<< endl;
+  cout << "Weight vector Buffer: " << endl;
+  cout << weight<< endl;
 }
 
 

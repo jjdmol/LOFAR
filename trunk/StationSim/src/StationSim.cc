@@ -259,13 +259,15 @@ void StationSim::define (const ParamBlock& params)
     weight_det.setRate(nsubband);
     simul.addStep(weight_det);
  }
-	     
+    
   // the projection object
   for (int i = 0; i < nsubband; i++) {
     sprintf(suffix, "%d", i);
     Step projection (WH_Projection("prj", 2, 1, nrcu, maxNrfi), 
 		     string("projection_") + suffix, false);
     
+
+
     projection.getInData (0).setReadDelay (delaySubFilt);
     projection.getInData (1).setReadDelay (delaySubFilt);
     projection.getOutData (0).setWriteDelay (delaySubFilt);
