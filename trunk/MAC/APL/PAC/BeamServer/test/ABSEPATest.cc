@@ -154,8 +154,8 @@ GCFEvent::TResult EPATest::test001(GCFEvent& e, GCFPortInterface& /*port*/)
 	{
 	    alloc.subbands[i] = i;
 	}
-	//alloc.subbands[0]   = 6;
-	//alloc.subbands[127] = 6;
+	alloc.subbands[0]   = 6;
+	alloc.subbands[127] = 6;
 
 	_test(sizeof(alloc) == beam_server.send(alloc));
       }
@@ -210,6 +210,14 @@ GCFEvent::TResult EPATest::test001(GCFEvent& e, GCFPortInterface& /*port*/)
 	_test(beam_handle == ack->handle);
 
 	// test completed, next test
+	TRAN(EPATest::done);
+      }
+      break;
+
+      case F_DISCONNECTED_SIG:
+      {
+        _fail("disconnected");
+	port.close();
 	TRAN(EPATest::done);
       }
       break;

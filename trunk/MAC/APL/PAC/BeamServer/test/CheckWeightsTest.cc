@@ -81,7 +81,7 @@ public:
 
     void check_weights()
 	{
-	  set<unsigned short> subbands;
+	  set<int> subbands;
 	  Range all = Range::all();
 
 	  //

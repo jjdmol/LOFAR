@@ -94,6 +94,7 @@ GCFEvent::TResult AVTStub::initial(GCFEvent& e, GCFPortInterface& port)
 	      TRAN(AVTStub::done);
 	  }
 	  port.setTimer((long)2);
+	  port.close();
       }
       break;
 
@@ -169,6 +170,14 @@ GCFEvent::TResult AVTStub::test001(GCFEvent& e, GCFPortInterface& /*port*/)
 	// abort test
 	beam_server.close();
 	_fail("timeout");
+	TRAN(AVTStub::done);
+      }
+      break;
+
+      case F_DISCONNECTED_SIG:
+      {
+	_fail("disconnected");
+	port.close();
 	TRAN(AVTStub::done);
       }
       break;
@@ -255,6 +264,14 @@ GCFEvent::TResult AVTStub::test002(GCFEvent& e, GCFPortInterface& /*port*/)
 	// abort test
 	beam_server.close();
 	_fail("timeout");
+	TRAN(AVTStub::done);
+      }
+      break;
+
+      case F_DISCONNECTED_SIG:
+      {
+	_fail("disconnected");
+	port.close();
 	TRAN(AVTStub::done);
       }
       break;
@@ -367,6 +384,14 @@ GCFEvent::TResult AVTStub::test003(GCFEvent& e, GCFPortInterface& /*port*/)
       }
       break;
 
+      case F_DISCONNECTED_SIG:
+      {
+	_fail("disconnected");
+	port.close();
+	TRAN(AVTStub::done);
+      }
+      break;
+
       case F_EXIT_SIG:
       {
 	// before leaving, cancel the timer
@@ -471,6 +496,14 @@ GCFEvent::TResult AVTStub::test004(GCFEvent& e, GCFPortInterface& /*port*/)
       }
       break;
 
+      case F_DISCONNECTED_SIG:
+      {
+	_fail("disconnected");
+	port.close();
+	TRAN(AVTStub::done);
+      }
+      break;
+
       case F_EXIT_SIG:
       {
 	// before leaving, cancel the timer
@@ -561,6 +594,14 @@ GCFEvent::TResult AVTStub::test005(GCFEvent& e, GCFPortInterface& /*port*/)
 	_test(beam_handle == ack->handle);
 
 	// test completed, next test
+	TRAN(AVTStub::done);
+      }
+      break;
+
+      case F_DISCONNECTED_SIG:
+      {
+	_fail("disconnected");
+	port.close();
 	TRAN(AVTStub::done);
       }
       break;

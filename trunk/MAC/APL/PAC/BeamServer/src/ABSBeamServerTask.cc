@@ -392,8 +392,19 @@ void BeamServerTask::beamalloc_action(ABSBeamallocEvent* ba,
       return;                         // RETURN
   }
   
+  // create subband selection set
   set<int> subbands;
   for (int i = 0; i < ba->n_subbands; i++) subbands.insert(ba->subbands[i]);
+
+  // check if array of subbands did not contain any duplicate subband
+  // selection
+  if (ba->n_subbands != (int)subbands.size())
+  {
+    LOG_ERROR("subband selection contains duplicates");
+    ack.status = ERR_RANGE;
+    port.send(ack);
+    return;                          // RETURN
+  }
 
   // allocate the beam
 
