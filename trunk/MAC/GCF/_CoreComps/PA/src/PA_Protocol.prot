@@ -14,7 +14,7 @@ prelude = << PRELUDE_END
 enum {
 	PA_PROTOCOL = (F_GCF_PROTOCOL + 1)
 };
-#include <PA/GPA_Defines.h>
+#include <GPA_Defines.h>
 PRELUDE_END;
 
 //
@@ -29,6 +29,10 @@ event = {
 	param = {
 		name = "seqnr";
 		type = "unsigned int";
+	};
+	param = {
+		name = "loadDefaults";
+		type = "bool";
 	};
 };
 
@@ -59,7 +63,7 @@ event = {
 	};
 	param = {
 		name = "result";
-		type = "unsigned int";
+		type = "TPAResult";
 	};
 };
 
@@ -72,7 +76,7 @@ event = {
 	};
 	param = {
 		name = "result";
-		type = "unsigned int";
+		type = "TPAResult";
 	};
 };
 
@@ -85,7 +89,7 @@ event = {
 	};
 	param = {
 		name = "result";
-		type = "unsigned int";
+		type = "TPAResult";
 	};
 };
 
@@ -116,7 +120,7 @@ event = {
 	};
 	param = {
 		name = "result";
-		type = "int";
+		type = "TPAResult";
 	};
 };
 
@@ -129,7 +133,7 @@ event = {
 	};
 	param = {
 		name = "result";
-		type = "int";
+		type = "TPAResult";
 	};
 };
 
@@ -160,7 +164,7 @@ event = {
 	};
 	param = {
 		name = "result";
-		type = "int";
+		type = "TPAResult";
 	};
 };
 
@@ -173,6 +177,6 @@ event = {
 	};
 	param = {
 		name = "result";
-		type = "int";
+		type = "TPAResult";
 	};
 };

@@ -20,11 +20,11 @@
 //#
 //#  $Id$
 
-#include <PortInterface/GCF_RawPort.h>
-#include <PortInterface/GCF_Port.h>
-#include <PortInterface/GCF_PortInterface.h>
-#include <GCF_Task.h>
-#include <GCF_TMProtocols.h>
+#include <GCF/GCF_RawPort.h>
+#include <GCF/GCF_Port.h>
+#include <GCF/GCF_PortInterface.h>
+#include <GCF/GCF_Task.h>
+#include <GCF/GCF_TMProtocols.h>
 #include <PortInterface/GTM_NameService.h>
 #include <PortInterface/GTM_TopologyService.h>
 #include <GTM_Defines.h>

@@ -24,7 +24,7 @@
 #define GTM_SOCKET_H
 
 #include <unistd.h>
-#include <GCF_Event.h>
+#include <GCF/GCF_Event.h>
 
 // forward declaration
 class GCFTCPPort;

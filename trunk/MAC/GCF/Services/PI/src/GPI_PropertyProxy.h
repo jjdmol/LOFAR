@@ -24,7 +24,7 @@
 #define GPI_PROPERTYPROXY_H
 
 
-#include <PML/GCF_PropertyProxy.h>
+#include <GCF/GCF_PropertyProxy.h>
 
 class GCFPValue;
 class GPISupervisoryServer;

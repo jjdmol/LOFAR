@@ -24,8 +24,8 @@
 #define GPI_CONTROLLER_H
 
 #include <GPI_Defines.h>
-#include <PML/GCF_SupTask.h>
-#include <TM/Socket/GCF_TCPPort.h>
+#include <GCF/GCF_TCPPort.h>
+#include <GCF/GCF_Task.h>
 #include <Common/lofar_list.h>
 
 class GCFEvent;

@@ -25,8 +25,8 @@
 
 #include <GPI_Defines.h>
 #include <GPI_PropertyProxy.h>
-#include <TM/GCF_Task.h>
-#include <TM/Socket/GCF_TCPPort.h>
+#include <GCF/GCF_Task.h>
+#include <GCF/GCF_TCPPort.h>
 #include <Common/lofar_list.h>
 
 class GCFEvent;

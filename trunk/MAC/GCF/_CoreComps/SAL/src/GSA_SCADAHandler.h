@@ -24,9 +24,9 @@
 #ifndef GSA_SCADAHANDLER_H
 #define GSA_SCADAHANDLER_H
 
-#include <TM/GCF_Handler.h>
-#include <SAL/GSA_PvssApi.h>
-#include <SAL/GSA_Defines.h>
+#include <GCF/GCF_Handler.h>
+#include <GSA_PvssApi.h>
+#include <GSA_Defines.h>
 #include <Common/lofar_list.h>
 
 /**
@@ -43,7 +43,7 @@ class GSASCADAHandler : GCFHandler
     void stop ();
     TSAResult isOperational ();
     void registerTask (GCFTask& task);
-    void deregisterTask (GCFTask& task);
+    void unregisterTask (GCFTask& task);
 
   private:
     GSASCADAHandler ();

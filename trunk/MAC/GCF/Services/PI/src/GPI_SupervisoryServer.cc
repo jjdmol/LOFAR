@@ -33,17 +33,17 @@
 #include "SS/FPDynArrValue.h"
 #include "SS/FProperty.h"
 
-#include <SAL/GCF_PVBool.h>
-#include <SAL/GCF_PVChar.h>
-#include <SAL/GCF_PVInteger.h>
-#include <SAL/GCF_PVUnsigned.h>
-#include <SAL/GCF_PVDouble.h>
-#include <SAL/GCF_PVString.h>
-#include <SAL/GCF_PVDynArr.h>
+#include <GCF/GCF_PVBool.h>
+#include <GCF/GCF_PVChar.h>
+#include <GCF/GCF_PVInteger.h>
+#include <GCF/GCF_PVUnsigned.h>
+#include <GCF/GCF_PVDouble.h>
+#include <GCF/GCF_PVString.h>
+#include <GCF/GCF_PVDynArr.h>
 
 #define DECLARE_SIGNAL_NAMES
 #include "F_Supervisory_Protocol.ph"
-#include <PA/PA_Protocol.ph>
+#include <PA_Protocol.ph>
 
 static string sSSTaskName("SS");
 
@@ -312,13 +312,13 @@ TPIResult GPISupervisoryServer::unLinkProperties(list<string>& properties, bool 
       propName = _name + "_" + *iter;
       if (onOff)
       {
-        result = (_propProxy.subscribe(propName) == GCF_NO_ERROR ?
+        result = (_propProxy.subscribeProp(propName) == GCF_NO_ERROR ?
                   PI_NO_ERROR :
                   PI_SCADA_ERROR);
       }
       else
       {
-        result = (_propProxy.unsubscribe(propName) == GCF_NO_ERROR ?
+        result = (_propProxy.unsubscribeProp(propName) == GCF_NO_ERROR ?
                   PI_NO_ERROR :
                   PI_SCADA_ERROR);
       }
@@ -335,7 +335,7 @@ void GPISupervisoryServer::propSubscribed(const string& /*propName*/)
   _counter--;
   if (_counter == 0 && _propertyAgent.isConnected())
   {
-    PAPropertieslinkedEvent e(0, 1);
+    PAPropertieslinkedEvent e(0, PA_NO_ERROR);
     string allPropNames;
     // PA does expect but not use a property name list (for now)
     unsigned short bufLength(_name.size() + allPropNames.size() + 6);
@@ -353,7 +353,7 @@ void GPISupervisoryServer::propUnsubscribed(const string& /*propName*/)
   _counter--;
   if (_counter == 0 && _propertyAgent.isConnected())
   {
-    PAPropertiesunlinkedEvent e(0, 1);
+    PAPropertiesunlinkedEvent e(0, PA_NO_ERROR);
     string allPropNames;
     // PA does expect but not use a property name list (for now)
     unsigned short bufLength(_name.size() + allPropNames.size() + 6);
@@ -374,53 +374,53 @@ void GPISupervisoryServer::propValueChanged(const string& propName, const GCFPVa
   
   switch (value.getType())
   {
-    case GCFPValue::LPT_BOOL:
+    case GCFPValue::BOOL_VAL:
       pVal = new FPBoolValue(((GCFPVBool*)&value)->getValue());
       break;
-    case GCFPValue::LPT_CHAR:
+    case GCFPValue::CHAR_VAL:
       pVal = new FPCharValue(((GCFPVChar*)&value)->getValue());
       break;
-    case GCFPValue::LPT_INTEGER:
+    case GCFPValue::INTEGER_VAL:
       pVal = new FPIntegerValue(((GCFPVInteger*)&value)->getValue());
       break;
-    case GCFPValue::LPT_UNSIGNED:
+    case GCFPValue::UNSIGNED_VAL:
       pVal = new FPUnsignedValue(((GCFPVUnsigned*)&value)->getValue());
       break;
-    case GCFPValue::LPT_DOUBLE:
+    case GCFPValue::DOUBLE_VAL:
       pVal = new FPDoubleValue(((GCFPVDouble*)&value)->getValue());
       break;
-    case GCFPValue::LPT_STRING:
+    case GCFPValue::STRING_VAL:
       pVal = new FPStringValue(((GCFPVString*)&value)->getValue());
       break;
 
     default: 
-      if (value.getType() > GCFPValue::LPT_DYNARR && 
-          value.getType() <= (GCFPValue::LPT_DYNARR & GCFPValue::LPT_STRING))
+      if (value.getType() > GCFPValue::DYNARR_VAL && 
+          value.getType() <= (GCFPValue::DYNARR_VAL & GCFPValue::STRING_VAL))
       {
         FPValueArray arrayTo;
         FPValue* pItemValue;
-        FPValue::ValueType type(FPValue::NO_LPT);
+        FPValue::ValueType type(FPValue::NO_VAL);
         // the type for the new FPValue must be determined 
         // separat, because the array could be empty
         switch (value.getType())
         {
-          case GCFPValue::LPT_DYNBOOL:
-            type = FPValue::LPT_DYNBOOL;
+          case GCFPValue::DYNBOOL_VAL:
+            type = FPValue::DYNBOOL_VAL;
             break;
-          case GCFPValue::LPT_DYNCHAR:
-            type = FPValue::LPT_DYNCHAR;
+          case GCFPValue::DYNCHAR_VAL:
+            type = FPValue::DYNCHAR_VAL;
             break;
-          case GCFPValue::LPT_DYNINTEGER:
-            type = FPValue::LPT_DYNINTEGER;
+          case GCFPValue::DYNINTEGER_VAL:
+            type = FPValue::DYNINTEGER_VAL;
             break;
-          case GCFPValue::LPT_DYNUNSIGNED:
-            type = FPValue::LPT_DYNUNSIGNED;
+          case GCFPValue::DYNUNSIGNED_VAL:
+            type = FPValue::DYNUNSIGNED_VAL;
             break;
-          case GCFPValue::LPT_DYNDOUBLE:
-            type = FPValue::LPT_DYNDOUBLE;
+          case GCFPValue::DYNDOUBLE_VAL:
+            type = FPValue::DYNDOUBLE_VAL;
             break;
-          case GCFPValue::LPT_DYNSTRING:
-            type = FPValue::LPT_DYNSTRING;
+          case GCFPValue::DYNSTRING_VAL:
+            type = FPValue::DYNSTRING_VAL;
             break;
         }
         GCFPValue* pValue;
@@ -431,22 +431,22 @@ void GPISupervisoryServer::propValueChanged(const string& propName, const GCFPVa
           pValue = (*iter);
           switch (pValue->getType())
           {
-            case GCFPValue::LPT_BOOL:
+            case GCFPValue::BOOL_VAL:
               pItemValue  = new FPBoolValue(((GCFPVBool*)pValue)->getValue());
               break;
-            case GCFPValue::LPT_CHAR:
+            case GCFPValue::CHAR_VAL:
               pItemValue  = new FPCharValue(((GCFPVChar*)pValue)->getValue());
               break;
-            case GCFPValue::LPT_INTEGER:
+            case GCFPValue::INTEGER_VAL:
               pItemValue  = new FPIntegerValue(((GCFPVInteger*)pValue)->getValue());
               break;
-            case GCFPValue::LPT_UNSIGNED:
+            case GCFPValue::UNSIGNED_VAL:
               pItemValue  = new FPUnsignedValue(((GCFPVUnsigned*)pValue)->getValue());
               break;
-            case GCFPValue::LPT_DOUBLE:
+            case GCFPValue::DOUBLE_VAL:
               pItemValue  = new FPDoubleValue(((GCFPVDouble*)pValue)->getValue());
               break;
-            case GCFPValue::LPT_STRING:
+            case GCFPValue::STRING_VAL:
               pItemValue  = new FPStringValue(((GCFPVString*)pValue)->getValue());
               break;
           }
@@ -501,52 +501,52 @@ void GPISupervisoryServer::localValueChanged(GCFEvent& e)
    
   switch (pVal->getType())
   {
-    case FPValue::LPT_BOOL:
+    case FPValue::BOOL_VAL:
       pGCFVal = new GCFPVBool(((FPBoolValue*)pVal)->getValue());
       break;
-    case FPValue::LPT_INTEGER:
+    case FPValue::INTEGER_VAL:
       pGCFVal = new GCFPVInteger(((FPIntegerValue*)pVal)->getValue());
       break;
-    case FPValue::LPT_UNSIGNED:
+    case FPValue::UNSIGNED_VAL:
       pGCFVal = new GCFPVUnsigned(((FPUnsignedValue*)pVal)->getValue());
       break;
-    case FPValue::LPT_DOUBLE:
+    case FPValue::DOUBLE_VAL:
       pGCFVal = new GCFPVDouble(((FPDoubleValue*)pVal)->getValue());
       break;
-    case FPValue::LPT_STRING:
+    case FPValue::STRING_VAL:
       pGCFVal = new GCFPVString(((FPStringValue*)pVal)->getValue());
       break;
-    case FPValue::LPT_CHAR:
+    case FPValue::CHAR_VAL:
       pGCFVal = new GCFPVChar(((FPCharValue*)pVal)->getValue());
       break;
     default:
-      if (pVal->getType() > FPValue::LPT_DYNARR && 
-          pVal->getType() <= FPValue::LPT_DYNDATETIME)
+      if (pVal->getType() > FPValue::DYNARR_VAL && 
+          pVal->getType() <= FPValue::DYNDATETIME_VAL)
       {
         GCFPValueArray arrayTo;
         GCFPValue* pItemValue(0);
-        GCFPValue::TMACValueType type(GCFPValue::LPT_DYNARR);
+        GCFPValue::TMACValueType type(GCFPValue::DYNARR_VAL);
         // the type for the new FPValue must be determined 
         // separat, because the array could be empty
         switch (pVal->getType())
         {
-          case FPValue::LPT_DYNBOOL:
-            type = GCFPValue::LPT_DYNBOOL;
+          case FPValue::DYNBOOL_VAL:
+            type = GCFPValue::DYNBOOL_VAL;
             break;
-          case FPValue::LPT_DYNCHAR:
-            type = GCFPValue::LPT_DYNCHAR;
+          case FPValue::DYNCHAR_VAL:
+            type = GCFPValue::DYNCHAR_VAL;
             break;
-          case FPValue::LPT_DYNINTEGER:
-            type = GCFPValue::LPT_DYNINTEGER;
+          case FPValue::DYNINTEGER_VAL:
+            type = GCFPValue::DYNINTEGER_VAL;
             break;
-          case FPValue::LPT_DYNUNSIGNED:
-            type = GCFPValue::LPT_DYNUNSIGNED;
+          case FPValue::DYNUNSIGNED_VAL:
+            type = GCFPValue::DYNUNSIGNED_VAL;
             break;
-          case FPValue::LPT_DYNDOUBLE:
-            type = GCFPValue::LPT_DYNDOUBLE;
+          case FPValue::DYNDOUBLE_VAL:
+            type = GCFPValue::DYNDOUBLE_VAL;
             break;
-          case FPValue::LPT_DYNSTRING:
-            type = GCFPValue::LPT_DYNSTRING;
+          case FPValue::DYNSTRING_VAL:
+            type = GCFPValue::DYNSTRING_VAL;
             break;
         }
         FPValue* pValue(0);
@@ -557,22 +557,22 @@ void GPISupervisoryServer::localValueChanged(GCFEvent& e)
           pValue = (*iter);
           switch (pValue->getType())
           {
-            case FPValue::LPT_BOOL:
+            case FPValue::BOOL_VAL:
               pItemValue  = new GCFPVBool(((FPBoolValue*)pValue)->getValue());
               break;
-            case FPValue::LPT_CHAR:
+            case FPValue::CHAR_VAL:
               pItemValue  = new GCFPVChar(((FPCharValue*)pValue)->getValue());
               break;
-            case FPValue::LPT_INTEGER:
+            case FPValue::INTEGER_VAL:
               pItemValue  = new GCFPVInteger(((FPIntegerValue*)pValue)->getValue());
               break;
-            case FPValue::LPT_UNSIGNED:
+            case FPValue::UNSIGNED_VAL:
               pItemValue  = new GCFPVUnsigned(((FPUnsignedValue*)pValue)->getValue());
               break;
-            case FPValue::LPT_DOUBLE:
+            case FPValue::DOUBLE_VAL:
               pItemValue  = new GCFPVDouble(((FPDoubleValue*)pValue)->getValue());
               break;
-            case FPValue::LPT_STRING:
+            case FPValue::STRING_VAL:
               pItemValue  = new GCFPVString(((FPStringValue*)pValue)->getValue());
               break;
           }
@@ -585,7 +585,7 @@ void GPISupervisoryServer::localValueChanged(GCFEvent& e)
   
   if (pGCFVal)
   {
-    if (_propProxy.set(propName, *pGCFVal) != GCF_NO_ERROR)
+    if (_propProxy.setPropValue(propName, *pGCFVal) != GCF_NO_ERROR)
     {
       LOFAR_LOG_ERROR(PI_STDOUT_LOGGER, (
         "Value of property '%s' could not be set in the SCADA DB", 

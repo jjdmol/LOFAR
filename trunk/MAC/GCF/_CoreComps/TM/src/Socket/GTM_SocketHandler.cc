@@ -22,7 +22,7 @@
 
 #include "GTM_SocketHandler.h"
 #include "GTM_Socket.h"
-#include <GCF_Task.h>
+#include <GCF/GCF_Task.h>
 
 GTMSocketHandler* GTMSocketHandler::_pInstance = 0;
 

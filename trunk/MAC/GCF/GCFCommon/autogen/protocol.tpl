@@ -26,7 +26,7 @@
 #ifndef [+ protocol_name +]_H
 #define [+ protocol_name +]_H
 
-#include <TM/GCF_TMProtocols.h>
+#include <GCF/GCF_TMProtocols.h>
 [+ FOR include "" +]
 #include [+ (get "include") +][+ ENDFOR +]
 

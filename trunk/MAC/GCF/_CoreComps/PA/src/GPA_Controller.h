@@ -27,9 +27,9 @@
 #include <GPA_UsecountManager.h>
 #include <GPA_RequestManager.h>
 #include <GPA_ScopeManager.h>
-#include <GPA_APC.h>
-#include <TM/GCF_Task.h>
-#include <TM/Socket/GCF_TCPPort.h>
+#include <GPA_APCFileReader.h>
+#include <GCF/GCF_Task.h>
+#include <GCF/GCF_TCPPort.h>
 
 /**
    This is the main class of the Property Agent. It uses a number of helper 
@@ -68,10 +68,11 @@ class GPAController : public GCFTask
     void propertiesUnlinked(char* pResponseData);
     void sendAPCActionResponse(GCFEvent& e);
     void unpackAPCActionData(char* pActionData);
+    void unpackScope(char* pScopeData, string& scope);
     
 	private: // state methods
 		GCFEvent::TResult initial(GCFEvent& e, GCFPortInterface& p);
-		GCFEvent::TResult operational(GCFEvent& e, GCFPortInterface& p);
+		GCFEvent::TResult connected(GCFEvent& e, GCFPortInterface& p);
 
 	private: // data members
 		GPAUsecountManager 	_usecountManager;
@@ -89,7 +90,7 @@ class GPAController : public GCFTask
     bool                _isBusy;
     bool                _isRegistered;
     unsigned int        _counter;
-    GPAAPC              _apc;
+    GPAAPCFileReader    _apcFileReader;
 };
 
 #endif

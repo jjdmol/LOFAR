@@ -1,15 +1,4 @@
-include_HEADERS =	\
-  GCF_Control.h \
-  GCF_Event.h \
-  GCF_Fsm.h \
-  GCF_TMProtocols.h \
-  GCF_Task.h \
-  GCF_Handler.h \
-  PortInterface/GCF_PortInterface.h \
-  PortInterface/GCF_Port.h \
-  PortInterface/GCF_RawPort.h \
-  PortInterface/GCF_PeerAddr.h \
-  Socket/GCF_TCPPort.h
+include_HEADERS =	
  
 DOCHDRS = $(include_HEADERS) \
   GTM_Defines.h \
@@ -22,7 +11,7 @@ DOCHDRS = $(include_HEADERS) \
   Socket/GTM_ServerSocket.h \
   Socket/GTM_SocketHandler.h
     
-lib_LTLIBRARIES 	= libtm.la
+noinst_LTLIBRARIES 	= libtm.la
 
 libtm_la_SOURCES=  \
   GCF_Fsm.cc \
@@ -40,6 +29,8 @@ libtm_la_SOURCES=  \
   Socket/GTM_Socket.cc \
   Socket/GTM_ServerSocket.cc \
   Socket/GTM_SocketHandler.cc 
+
+libtm_la_CPPFLAGS=-I$(top_srcdir)/GCFCommon/src
 
 include $(lofar_sharedir)/Makefile.common
 

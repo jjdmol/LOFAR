@@ -22,11 +22,11 @@
 
 #include "GTM_Socket.h"
 #include "GTM_SocketHandler.h"
-#include "GCF_TCPPort.h"
-#include <GCF_Task.h>
+#include <GCF/GCF_TCPPort.h>
+#include <GCF/GCF_Task.h>
 #include <GTM_Defines.h>
-#include <GCF_TMProtocols.h>
-#include <PortInterface/GCF_PeerAddr.h>
+#include <GCF/GCF_TMProtocols.h>
+#include <GCF/GCF_PeerAddr.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <sys/socket.h>

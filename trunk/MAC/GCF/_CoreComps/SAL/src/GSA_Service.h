@@ -24,8 +24,8 @@
 #define  GSA_SERVICE_H
 
 #include <Common/lofar_string.h>
-#include <SAL/GSA_Defines.h>
-#include "GCF_PValue.h"
+#include <GSA_Defines.h>
+#include <GCF/GCF_PValue.h>
 
 class GSAWaitForAnswer;
 
@@ -50,6 +50,7 @@ class GSAService
   public:
     GSAService ();
     virtual ~GSAService ();
+    static bool validatePropName(const char* propName);
 
   protected:
     virtual TSAResult createProp (const string& propName, 
@@ -97,7 +98,7 @@ class GSAService
                              bool read);
     void convDpConfigToProp (const string& pvssDPEConfigName, 
                              string& propName);    
-
+    
   private: // data members    
     GSAWaitForAnswer* _pWFA;
 };                                 

@@ -24,7 +24,7 @@
 #include "GTM_TopologyService.h"
 #include "GTM_Config.h"
 #include "GTM_NameService.h"
-#include "GCF_PeerAddr.h"
+#include <GCF/GCF_PeerAddr.h>
 #include "GTM_Defines.h"
 
 GTMTopologyService* GTMTopologyService::_pInstance = 0;

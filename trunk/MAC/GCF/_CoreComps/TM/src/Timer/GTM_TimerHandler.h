@@ -23,7 +23,7 @@
 #ifndef GTM_TIMERHANDLER_H
 #define GTM_TIMERHANDLER_H
 
-#include <GCF_Handler.h>
+#include <GCF/GCF_Handler.h>
 #include <Common/lofar_map.h>
 #include <sys/time.h>
 #include <time.h>

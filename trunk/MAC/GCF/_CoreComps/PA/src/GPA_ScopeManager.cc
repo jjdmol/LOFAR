@@ -39,6 +39,7 @@ TPAResult GPAScopeManager::linkProperties(list<string>& propList)
 {
   TPAResult result(PA_NO_ERROR);
   _counter = 0;
+
   resetScopeList();
   result = fillScopeLists(propList);
   PALinkpropertiesEvent e(0);
@@ -86,32 +87,25 @@ void GPAScopeManager::propertiesUnlinked(const string& scope)
 
 TPAResult GPAScopeManager::registerScope(const string& scope, GCFPortInterface& port)
 {
-  TPAResult result(PA_NO_ERROR);
+  TPAResult result(PA_SCOPE_ALREADY_REGISTERED);
   TScopeListIter iter = _scopeList.find(scope);
   if (iter == _scopeList.end())
   {
     // creates a new scope entry
     _scopeList[scope].pPort = &port;
     _scopeList[scope].respond = true;    
+    result = PA_NO_ERROR;
   }
-  else
-    result = PA_SCOPE_ALREADY_REGISTERED;
   
   return result;
 }
 
-TPAResult GPAScopeManager::unregisterScope(const string& scope)
+void GPAScopeManager::unregisterScope(const string& scope)
 {
-  TPAResult result(PA_NO_ERROR);
   TScopeListIter iter = _scopeList.find(scope);
-  if (iter != _scopeList.end())
-  {
-    _scopeList.erase(scope);
-  }
-  else
-    result = PA_SCOPE_IS_NOT_REGISTERED;
-  
-  return result;
+  assert(iter != _scopeList.end());
+
+  _scopeList.erase(scope);
 }
 
 void GPAScopeManager::deleteScopesByPort(const GCFPortInterface& requestPort, 
@@ -147,7 +141,7 @@ void GPAScopeManager::getSubScopes(const string& scope, list<string>& subscopes)
   {
     pScope = &iter->first;
     subScopeLength = pScope->size();
-    if (pScope->find(scope) < subScopeLength)
+    if (pScope->find(scope) < subScopeLength && ((*pScope) != scope))
     {
       subscopes.push_back(*pScope);
     }
@@ -180,13 +174,13 @@ TPAResult GPAScopeManager::fillScopeLists(list<string>& propList)
   size_t propNameLength(0);
   size_t scopeNameLength(0);
   const string* pScope(0);
-  const string* pRightScope(0);
+  const string* pPropScope(0);
   for (list<string>::iterator pPropName = propList.begin();
        pPropName != propList.end(); ++pPropName)
   {
     propNameLength = pPropName->size();
     scopeNameLength = 0;
-    pRightScope = 0;
+    pPropScope = 0;
     for (TScopeListIter iter = _scopeList.begin(); 
          iter != _scopeList.end(); ++iter)
     {
@@ -195,17 +189,17 @@ TPAResult GPAScopeManager::fillScopeLists(list<string>& propList)
       {
         if (scopeNameLength < pScope->size())
         {
-          pRightScope = pScope;
+          pPropScope = pScope;
           scopeNameLength = pScope->size();
         }        
       }
     }
-    if (pRightScope)
+    if (pPropScope)
     {
       // plus 1 means erase the '_' after scope too
-      pPropName->erase(0, pRightScope->size() + 1); 
+      pPropName->erase(0, pPropScope->size() + 1); 
       
-      _scopeList[*pRightScope].propList.push_back(*pPropName);
+      _scopeList[*pPropScope].propList.push_back(*pPropName);
     }
     else
       result = PA_PROP_NOT_VALID;
@@ -243,6 +237,20 @@ void GPAScopeManager::sendUnLinkEvents(GCFEvent& e)
         {
           allPropNames += *pPropName;
           allPropNames += '|';
+        }
+        if (e.signal == PA_LINKPROPERTIES)
+        {
+          LOFAR_LOG_INFO(PA_STDOUT_LOGGER, ( 
+            "REQ: Link properties %s on scope %s",
+            allPropNames.c_str(),
+            pScope->c_str()));
+        }
+        else
+        {
+          LOFAR_LOG_INFO(PA_STDOUT_LOGGER, ( 
+            "REQ: Unlink properties %s on scope %s",
+            allPropNames.c_str(),
+            pScope->c_str()));
         }
         unsigned short bufLength(pScope->size() + allPropNames.size() + 6);
         char* buffer = new char[bufLength + 1];

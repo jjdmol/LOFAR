@@ -24,10 +24,9 @@
 #ifndef GPM_CONTROLLER_H
 #define GPM_CONTROLLER_H
 
-#include <TM/GCF_Task.h>
-#include <TM/PortInterface/GCF_Port.h>
+#include <GCF/GCF_Task.h>
+#include <GCF/GCF_Port.h>
 #include "GPM_Defines.h"
-#include "GPM_Service.h"
 #include <Common/lofar_map.h>
 #include <Common/lofar_list.h>
 
@@ -39,64 +38,57 @@
    property set or load APC).
 */
 
-class GCFSupervisedTask;
-class GPMPropertySet;
 class GCFPValue;
 class GCFEvent;
 class GCFPortInterface;
+class GCFMyPropertySet;
+class GCFApc;
 
 class GPMController : public GCFTask
 {
   public:
-    GPMController (GCFSupervisedTask& supervisedTask);
     ~GPMController ();
+    static GPMController* instance();
 
-  private: // member functions
-    friend class GCFSupervisedTask;
-    friend class GPMService;
-    friend class GPMPropertySet;
+  public: // member functions
+    TPMResult loadAPC (GCFApc& apc, bool loadDefaults);
+    TPMResult unloadAPC (GCFApc& apc);
+    TPMResult reloadAPC (GCFApc& apc);
+    void unregisterAPC (const GCFApc& apc);
     
-    TPMResult loadAPC (const string& apcName, const string& scope);
-    TPMResult unloadAPC (const string& apcName, const string& scope);
-    TPMResult reloadAPC (const string& apcName, const string& scope);
-    
-    TPMResult loadMyProperties (const TPropertySet& newSet);
-    TPMResult unloadMyProperties (const string& scope);
-    
-    TPMResult set (const string& propName, const GCFPValue& value);
-    TPMResult get (const string& propName);
-    
-    TPMResult getMyOldValue (const string& propName, GCFPValue** value);
-    void valueChanged (const string& propName, const GCFPValue& value);
-    void valueGet (const string& propName, const GCFPValue& value);
-    
-    void propertiesLinked (const string& scope, list<string>& notLinkedProps);
-    void propertiesUnlinked (const string& scope, list<string>& notUnlinkedProps);
+    TPMResult registerScope (GCFMyPropertySet& propSet);
+    TPMResult unregisterScope (GCFMyPropertySet& propSet, 
+                               bool permanent = false);
+       
+    void propertiesLinked (const string& scope, bool missingProps);
+    void propertiesUnlinked (const string& scope);
   
+  private:
+    GPMController ();
+    static GPMController* _pInstance;
+
   private: // state methods
     GCFEvent::TResult initial   (GCFEvent& e, GCFPortInterface& p);
     GCFEvent::TResult connected (GCFEvent& e, GCFPortInterface& p);
         
   private: // helper methods
-    GPMPropertySet* findPropertySet (const string& propName);
-    void registerScope (const string& scope);
-    void unpackPropertyList (char* pListData, list<string>& propertyList);
+    void unpackPropertyList (char* pListData, 
+                             list<string>& propertyList);
+    unsigned short getFreeSeqnrForApcRequest ()  const;
+    void sendAPCRequest (GCFEvent& e, 
+                         const GCFApc& apc);
     
-  private: // data members
-    GCFSupervisedTask&            _supervisedTask;
-    
+    void sendMyPropSetMsg (GCFEvent& e, 
+                           const string& scope);
+
+  private: // data members        
     GCFPort                       _propertyAgent;
-    GPMService                    _scadaService;
     bool                          _isBusy;
     bool                          _preparing;
     unsigned int                  _counter;
-    map<string, GPMPropertySet*>  _propertySets;
-    typedef map<string, GPMPropertySet*>::iterator TPropertySetIter;
-    
-    typedef struct
-    {
-      GCFPValue* pValue;
-      string propName;
-    } TGetData;
+    typedef map<string, GCFMyPropertySet*>  TPropertySets;
+    typedef map<unsigned short, GCFApc*>  TApcList;
+    TPropertySets _propertySets;
+    TApcList _apcList;
 };
 #endif

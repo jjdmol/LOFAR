@@ -23,7 +23,7 @@
 #ifndef GTM_SOCKETHANDLER_H
 #define GTM_SOCKETHANDLER_H
 
-#include <GCF_Handler.h>
+#include <GCF/GCF_Handler.h>
 #include <Common/lofar_map.h>
 #include <sys/time.h>
 

@@ -84,7 +84,7 @@ int CCmdLine::SplitLine(int argc, char **argv)
          }
 
          // add the CCmdParam to 'this'
-         pair<CCmdLine::iterator, bool> res = insert(CCmdLine::value_type(curParam, cmd));
+         insert(CCmdLine::value_type(curParam, cmd));
 
       }
       else

@@ -61,13 +61,13 @@ void Service::propUnsubscribed(const string& propName)
       "Property '%s' unsubscribed", propName.c_str()));
 }
 
-void Service::propValueGet(const string& propName, const GCFPValue& value)
+void Service::propValueGet(const string& propName, const GCFPValue& /*value*/)
 {
   LOFAR_LOG_TRACE(SAL_STDOUT_LOGGER, (
       "Value of property '%s' get", propName.c_str()));
 }
 
-void Service::propValueChanged(const string& propName, const GCFPValue& value)
+void Service::propValueChanged(const string& propName, const GCFPValue& /*value*/)
 {
   LOFAR_LOG_TRACE(SAL_STDOUT_LOGGER, (
       "Value of property '%s' changed", propName.c_str()));

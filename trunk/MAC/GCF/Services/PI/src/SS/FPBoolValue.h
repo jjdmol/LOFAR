@@ -28,7 +28,7 @@
 class FPBoolValue : public FPValue
 {
   public: 
-  	FPBoolValue(bool val = false) : FPValue(LPT_BOOL), value_(val) {;}
+  	FPBoolValue(bool val = false) : FPValue(BOOL_VAL), value_(val) {;}
   	virtual ~FPBoolValue() {;}
     
     /** Write property of bool value_. */

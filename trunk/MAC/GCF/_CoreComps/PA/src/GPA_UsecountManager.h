@@ -24,7 +24,7 @@
 #define GPA_USECOUNTMANAGER_H
 
 #include <GPA_Defines.h>
-#include <SAL/GSA_Service.h>
+#include <GSA_Service.h>
 #include <Common/lofar_map.h>
 #include <Common/lofar_list.h>
 

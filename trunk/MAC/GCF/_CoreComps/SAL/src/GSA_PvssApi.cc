@@ -25,7 +25,7 @@
 #include "GSA_PvssApi.h"
 
 // GCF/TM includes
-#include <TM/GCF_Task.h>
+#include <GCF/GCF_Task.h>
 
 // PVSS includes
 #include <CharString.hxx>
@@ -86,6 +86,6 @@ void GSAPvssApi::workProc()
 
 void GSAPvssApi::stop()
 {
-  // TODO: find out this is realy necessary
+  // TODO: Find out this is necessary or not
   // Manager::exit(1);
 }

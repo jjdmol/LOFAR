@@ -50,26 +50,26 @@ FPValue* FPValue::createValueObject(ValueType type)
   FPValue* pValue(0);
   switch (type)
   {
-    case LPT_BOOL:
+    case BOOL_VAL:
       pValue = new FPBoolValue();
       break;
-    case LPT_CHAR:
+    case CHAR_VAL:
       pValue = new FPCharValue();
       break;
-    case LPT_INTEGER:
+    case INTEGER_VAL:
       pValue = new FPIntegerValue();
       break;
-    case LPT_UNSIGNED:
+    case UNSIGNED_VAL:
       pValue = new FPUnsignedValue();
       break;
-    case LPT_STRING:
+    case STRING_VAL:
       pValue = new FPStringValue();
       break;
-    case LPT_DOUBLE:
+    case DOUBLE_VAL:
       pValue = new FPDoubleValue();
       break;
     default:
-      if (type > LPT_DYNARR && type <= LPT_DYNDATETIME)
+      if (type > DYNARR_VAL && type <= DYNDATETIME_VAL)
         pValue = new FPDynArrValue(type);
       break;
   }

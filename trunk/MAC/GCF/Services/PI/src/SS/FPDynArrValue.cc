@@ -23,16 +23,16 @@
 #include "FPDynArrValue.h"
 
 FPDynArrValue::FPDynArrValue(ValueType itemType, const FPValueArray& val) :
-  FPValue((ValueType) (LPT_DYNARR | itemType))
+  FPValue((ValueType) (DYNARR_VAL | itemType))
 {
-  assert(itemType != LPT_DYNARR);
+  assert(itemType != DYNARR_VAL);
   setValue(val);
 }
 
 FPDynArrValue::FPDynArrValue(ValueType itemType) :
-  FPValue((ValueType) (LPT_DYNARR | itemType))
+  FPValue((ValueType) (DYNARR_VAL | itemType))
 {
-  assert(itemType != LPT_DYNARR);
+  assert(itemType != DYNARR_VAL);
 }
 
 FPDynArrValue::~FPDynArrValue()
@@ -48,7 +48,7 @@ void FPDynArrValue::setValue(const FPValueArray& newVal)
        iter != newVal.end(); ++iter)
   {
     pValue = (*iter);
-    if (pValue->getType() == (getType() & ~LPT_DYNARR))
+    if (pValue->getType() == (getType() & ~DYNARR_VAL))
       values_.push_back(pValue->clone());
   }
 }
@@ -67,7 +67,7 @@ uint FPDynArrValue::unpack(const char* valBuf)
     unpackedBytes += sizeof(uint);
     for (uint i = 0; i < arraySize; i++)
     {
-      pNewValue = FPValue::createValueObject((ValueType) (getType() | LPT_DYNARR));
+      pNewValue = FPValue::createValueObject((ValueType) (getType() | DYNARR_VAL));
       unpackedBytes += pNewValue->unpack(valBuf + unpackedBytes);
     }
     result = unpackedBytes;

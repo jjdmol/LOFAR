@@ -20,42 +20,42 @@
 //#
 //#  $Id$
 
-#include "GCF_PropertyProxy.h"
-#include "GPM_PropertyProxy.h"
+#include <GCF/GCF_PropertyProxy.h>
+#include <GPM_PropertyService.h>
 
 GCFPropertyProxy::GCFPropertyProxy() :
-  _pPMProxy(0)
+  _pPMService(0)
 {
-  _pPMProxy = new GPMPropertyProxy(*this);
+  _pPMService = new GPMPropertyService(*this);
 }
 
 GCFPropertyProxy::~GCFPropertyProxy()
 {
-  delete _pPMProxy;
-  _pPMProxy = 0;
+  delete _pPMService;
+  _pPMService = 0;
 }
 
-TGCFResult GCFPropertyProxy::subscribe(const string& propName)
+TGCFResult GCFPropertyProxy::subscribeProp(const string& propName)
 {
-  return (_pPMProxy->subscribePM(propName) == SA_NO_ERROR ? GCF_NO_ERROR : GCF_PML_ERROR);
+  return (_pPMService->subscribePM(propName) == SA_NO_ERROR ? GCF_NO_ERROR : GCF_PML_ERROR);
 }
 
-TGCFResult GCFPropertyProxy::unsubscribe(const string& propName)
+TGCFResult GCFPropertyProxy::unsubscribeProp(const string& propName)
 {
-  return (_pPMProxy->unsubscribePM(propName) == SA_NO_ERROR ? GCF_NO_ERROR : GCF_PML_ERROR);
+  return (_pPMService->unsubscribePM(propName) == SA_NO_ERROR ? GCF_NO_ERROR : GCF_PML_ERROR);
 }
 
-TGCFResult GCFPropertyProxy::get(const string& propName)
+TGCFResult GCFPropertyProxy::requestPropValue(const string& propName)
 {
-  return (_pPMProxy->getPM(propName) == SA_NO_ERROR ? GCF_NO_ERROR : GCF_PML_ERROR);
+  return (_pPMService->getPM(propName) == SA_NO_ERROR ? GCF_NO_ERROR : GCF_PML_ERROR);
 }
 
-TGCFResult GCFPropertyProxy::set(const string& propName, const GCFPValue& value)
+TGCFResult GCFPropertyProxy::setPropValue(const string& propName, const GCFPValue& value)
 {
-  return (_pPMProxy->setPM(propName, value) == SA_NO_ERROR ? GCF_NO_ERROR : GCF_PML_ERROR);
+  return (_pPMService->setPM(propName, value) == SA_NO_ERROR ? GCF_NO_ERROR : GCF_PML_ERROR);
 }
 
 bool GCFPropertyProxy::exists(const string& propName)
 {
-  return _pPMProxy->existsPM(propName);
+  return _pPMService->existsPM(propName);
 }

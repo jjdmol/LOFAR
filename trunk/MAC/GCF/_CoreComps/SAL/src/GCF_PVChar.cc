@@ -21,7 +21,7 @@
 //#  $Id$
 
 
-#include "GCF_PVChar.h"
+#include <GCF/GCF_PVChar.h>
 
 /** No descriptions */
 TGCFResult GCFPVChar::setValue(const string valueData)
