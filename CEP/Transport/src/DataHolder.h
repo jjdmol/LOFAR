@@ -63,7 +63,8 @@ namespace LOFAR
   \endcode
 */
 
-class DataHolder: public BaseDataHolder
-{
-};
+  class DataHolder: public BaseDataHolder
+    {
+    };
+}
 #endif
