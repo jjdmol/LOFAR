@@ -35,7 +35,7 @@
 #include <Transport/Transporter.h>
 #include <CEPFrame/Step.h>
 #include <CEPFrame/ApplicationHolder.h>
-#include <CEPFrame/Profiler.h>
+#include <tinyCEP/Profiler.h>
 #include <Transport/TH_ShMem.h>
 #include <Transport/TH_Socket.h>
 #include <CEPFrame/WH_Empty.h>

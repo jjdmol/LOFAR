@@ -32,7 +32,7 @@
 #include <CEPFrame/Step.h>
 #include <CEPFrame/Composite.h>
 #include <CEPFrame/WH_Empty.h>
-#include <CEPFrame/Profiler.h>
+#include <tinyCEP/Profiler.h>
 #include <Transport/TH_ShMem.h>
 #include <EmptyAppl/EmptyAppl.h>
 #include <Common/KeyValueMap.h>
