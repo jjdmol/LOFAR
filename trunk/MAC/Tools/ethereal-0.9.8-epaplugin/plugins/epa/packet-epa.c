@@ -992,7 +992,7 @@ dissect_epa(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree)
       for (i = 0; i < 16; i++)
       {
 	guint64 val64 = tvb_get_ntohl(tvb, 12 + (i*sizeof(guint32)));
-	if ((1<<31) && val64) val64 <<= 25;
+	if ((1<<31) && val64) val64 = (val64 & ((1<<31)-1)) << 25;
 	double dval = (double)val64;
 	
 	proto_tree_add_double(newtree, hf_epa_double, tvb,
@@ -1005,7 +1005,7 @@ dissect_epa(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree)
       for (i = 0; i < 8; i++)
       {
 	guint64 val64 = tvb_get_ntohl(tvb, 12 + FRAGMENT_SIZE_BYTES - (8*sizeof(guint32)) + (i*sizeof(guint32)));
-	if ((1<<31) && val64) val64 <<= 25;
+	if ((1<<31) && val64) val64 = (val64 & ((1<<31)-1)) << 25;
 	double dval = (double)val64;
 
 	proto_tree_add_double(newtree, hf_epa_double, tvb,
