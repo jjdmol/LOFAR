@@ -13,4 +13,4 @@ libacc_la_SOURCES = $(DOCHDRS) \
 
 include $(lofar_sharedir)/Makefile.common
 
-AM_CPPFLAGS = -DMAKE_LOFAR_SYMBOLS_GLOBAL
+#AM_CPPFLAGS = -DMAKE_LOFAR_SYMBOLS_GLOBAL

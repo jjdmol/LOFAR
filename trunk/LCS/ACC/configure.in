@@ -54,9 +54,7 @@ lofar_DEBUG_OPTIMIZE
 lofar_QATOOLS
 lofar_DOCXX
 lofar_PACKAGE(LCS/Common)
-lofar_PACKAGE(CEP/Transport)
-dnl lofar_EXTERNAL(boost,1,boost/shared_ptr.hpp,"",$HOME/LOFAR/LCS/databases/AOD/src)
-dnl lofar_PACKAGE(LCS/databases/PL)
+dnl lofar_PACKAGE(CEP/Transport)
 
 dnl
 dnl Output Makefiles
