@@ -111,10 +111,14 @@ solve := function(fname='demo', ant=4*[0:20],
     ss := mc.getparmnames();
     print len(ss),'parmnames:',ss[1:10],'...';           # rather long!
 
+    note('mc.settimeinterval()');
     mc.settimeinterval(3600); # calibrate per 3600 seconds
+    note('mc.clearsolvableparms()');
     mc.clearsolvableparms();
+    note('mc.setsolvableparms("StokesI.*")');    
     mc.setsolvableparms("StokesI.*");
     #mc.setsolvableparms("RA.* DEC.*");
+    note('mc.setsolvableparms("DEC.* RA.*")');
     mc.setsolvableparms("DEC.* RA.*");
     #mc.setsolvableparms("Leakage.{11,22}.*");
 
@@ -123,9 +127,13 @@ solve := function(fname='demo', ant=4*[0:20],
     sleep_cmd := spaste('sleep ', sleeptime);
     if (sleep) shell(sleep_cmd);
 
+    note('mc.resetiterator()');
     mc.resetiterator();
+    
+    note('while(mc.nextinterval())');
     while (mc.nextinterval())
     {
+        note('mc.getsolvedomain()');
         d := mc.getsolvedomain();
         print 'solvedomain = ', d;
         
@@ -708,14 +716,24 @@ setparms := function(fname='demo')
     pt.putinit ('dell', values=0);
     pt.putinit ('gain.11', values=1);
     pt.putinit ('gain.22', values=0);
-    pt.putinit ('EJ11.real', values=1);
-    pt.putinit ('EJ12.real', values=0);
-    pt.putinit ('EJ21.real', values=0);
-    pt.putinit ('EJ22.real', values=1);
-    pt.putinit ('EJ11.imag', values=1);
-    pt.putinit ('EJ12.imag', values=0);
-    pt.putinit ('EJ21.imag', values=0);
-    pt.putinit ('EJ22.imag', values=1);
+    
+    pt.putinit ('EJ11.ampl', values=1);
+    pt.putinit ('EJ11.phase', values=0);
+    pt.putinit ('EJ12.ampl', values=1);
+    pt.putinit ('EJ12.phase', values=0);
+    pt.putinit ('EJ21.ampl', values=1);
+    pt.putinit ('EJ21.phase', values=0);
+    pt.putinit ('EJ22.ampl', values=1);
+    pt.putinit ('EJ22.phase', values=0);
+
+#    pt.putinit ('EJ11.real', values=1);
+#    pt.putinit ('EJ12.real', values=0);
+#    pt.putinit ('EJ21.real', values=0);
+#    pt.putinit ('EJ22.real', values=1);
+#    pt.putinit ('EJ11.imag', values=1);
+#    pt.putinit ('EJ12.imag', values=0);
+#    pt.putinit ('EJ21.imag', values=0);
+#    pt.putinit ('EJ22.imag', values=1);
     pt.done();
 }
 
@@ -740,6 +758,16 @@ lm_to_alpha_delta := function(l, m, alpha0, delta0)
 }
 
 
+
+
+alpha_delta_to_lm := function(alpha, delta, alpha0, delta0)
+{
+    lm := [0.0, 0.0];
+    da := alpha-alpha0;
+    lm[1] := cos(delta)*sin(da);
+    lm[2] := sin(delta)*cos(delta0) - sin(delta0)*cos(delta)*cos(da);
+    return lm;
+}
 
 
 
