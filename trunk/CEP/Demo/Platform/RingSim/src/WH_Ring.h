@@ -12,6 +12,7 @@
 #include "DH_Test.h"
 #include "DH_Ring.h"
 #include "Step.h"
+#include "firewalls.h"
 
 template <class T> 
 class WH_Ring:public WorkHolder
@@ -224,7 +225,7 @@ inline void WH_Ring<T>::process ()
   // prevent deadlock in the first call to a closed loop first element 
   // 
   
-  if (Step::EventCnt == 1) 
+  if (Step::getEventCount() == 1) 
     for (int channel=1; channel<getInputs(); channel++)
       getInHolder(channel)->setRead(true); 
 

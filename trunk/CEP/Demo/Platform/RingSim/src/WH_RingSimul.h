@@ -9,6 +9,9 @@
 #include "DH_Test.h"
 #include "DH_Ring.h"
 
+#include <vector>
+
+
 template <class T> 
 class WH_RingSimul:public WorkHolder
 {

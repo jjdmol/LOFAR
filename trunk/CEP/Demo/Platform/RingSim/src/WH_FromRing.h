@@ -9,6 +9,9 @@
 #include "DH_Test.h"
 #include "DH_Ring.h"
 
+#include <vector>
+
+
 class WH_FromRing:public WorkHolder
 {
  public:
