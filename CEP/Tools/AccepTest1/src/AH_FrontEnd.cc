@@ -96,20 +96,9 @@ void AH_FrontEnd::run(int nsteps) {
   double aggregate_bandwidth=0.0;
 
   for (int s = 0; s < nsteps; s++) {
-
-//     if (starttime.tv_sec != 0 && starttime.tv_usec !=0) {
-//       gettimeofday(&stoptime, NULL);
-      
-//       bandwidth = (8.0*itsNtargets*itsNchannels*itsNelements*itsNsamples*itsNpolarisations*sizeof(DH_CorrCube::BufferType))/
-// 	(stoptime.tv_sec + 1.0e-6*stoptime.tv_usec - starttime.tv_sec + 1.0e-6*starttime.tv_usec);
-      
-//       cout << bandwidth/(1024.0*1024.0) << " Mbit/sec    " ;
-//       cout << (100.0 * bandwidth)/(1024.0*1024.0*1024.0) << "% of theoretical peak (Gbit/sec)" << endl;
-//     }
-
     for (it = itsWHs.begin(); it != itsWHs.end(); it++) {
       (*it)->baseProcess();
-      aggregate_bandwidth += reinterpret_cast<WH_Random*>(*it)->getBandwidth();
+      aggregate_bandwidth += static_cast<WH_Random*>(*it)->getBandwidth();
     }
   }
   if (aggregate_bandwidth != 0.0) {

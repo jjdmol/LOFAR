@@ -129,7 +129,7 @@ void WH_Correlator::process() {
   //
   // this block of code does the cast from complex<uint16> to complex<float>
   // 
-  // This is a uint16 pointer
+  // This is an uint16 pointer
   DH_CorrCube::BufferPrimitive* in_ptr = (DH_CorrCube::BufferPrimitive*) inDH->getBuffer();
   // The float pointer is explicit, since DH_Vis is now complex<double>
   float*  in_buffer = new float[2*inDH->getBufSize()];
@@ -142,98 +142,93 @@ void WH_Correlator::process() {
 
   //
   // This is the actual correlator
-  // Note that there is both a general correlator as well as a BlueGene specific
-  // implementation.
+  // Note that there is both a machine independent correlator as well as a BlueGene
+  // specific implementation.
   // 
+
 #ifdef DO_TIMING
   starttime = timer();
 #endif
+#ifdef HAVE_BGL
+  
+  // BlueGene/L specific correlator code
+  // compared to earlier versions I have:
+  // * removed the prefetch statements since the compiler should be able to do this anyway
+  // * cleaned up the code by moving the platform independent stuff to it's own nested loop
+  // * changed the loop order to minimize stride size
+
+
+  __alignx(16, out_ptr);
+  __alignx(8 , in_buffer);
 
   for (int fchannel = 0; fchannel < itsNchannels; fchannel++) {
-#ifdef HAVE_MPE
-    MPE_Log_event(1, sample, "correlating"); 
-#endif
-    for (int sample = 0; sample < itsNsamples; sample++) {
-
-#ifdef HAVE_BGL
-      // complex<double> pointer to the output buffer
-      _Complex double * out_ptr = reinterpret_cast<_Complex double*> ( outDH->getBuffer() ) + fchannel*itsNelements*itsNelements*itsNpolarisations;
-#endif
-
-      int sample_addr = itsNpolarisations*itsNelements*itsNsamples*fchannel+
-	itsNpolarisations*itsNelements*sample;
-
-      for (int   station1 = 0; station1 < itsNelements; station1++) {
-	int s1_addr = sample_addr+itsNpolarisations*station1;
-#ifdef HAVE_BGL
-	// prefetch station1, both polarisation 0 and 1
-	s1_val_0 = reinterpret_cast<_Complex float*>( in_buffer + s1_addr );
-	s1_val_1 = reinterpret_cast<_Complex float*>( in_buffer + s1_addr + 1 );
-#else 
-	s1_val_0 = reinterpret_cast<complex<float>*>(in_buffer + s1_addr);
-	s1_val_1 = reinterpret_cast<complex<float>*>(in_buffer + s1_addr + 1);
-#endif
-	for (int station2 = 0; station2 <= station1; station2++) {
-	  int s2_addr = sample_addr+itsNpolarisations*station2;
-
-#ifdef HAVE_BGL
- 	    // prefetch station2, both polarisation 0 and 1
-  	    s2_val_0 = reinterpret_cast<_Complex float*>( in_buffer + s2_addr );
-	    s2_val_1 = reinterpret_cast<_Complex float*>( in_buffer + s2_addr + 1 ) ;
-
-	    // load prefetched values into FPU
-	    // (now done inside the intrinsic)
-//  	    __lfps((float*) s1_val_0);
-//   	    __lfps(&__real__ *s2_val_0);
-
-	    // do the actual complex fused multiply-add (polarisation 0)
-	    // note that s1_val and s2_val are pointer of the type complex<float>
-	    // this may be incompatible with the __real__ and __imag__ macro
-	    // - we may want to use the .real() and .imag() methods of the complex class instead
-	    // - if this is too slow, we should consider rewriting the correlator using the C complex.h header
-
-	    // here we do the loading into the FPU inside the intrinsics (as sugested by Mark Mendell)
-	    __alignx(16, out_ptr);
-	    __alignx(8, s1_val_0);
-	    __alignx(8, s2_val_0);
-
- 	    *out_ptr = __fxcpmadd( *out_ptr, __lfps((float*)s1_val_0), __real__ *s2_val_0);
-	    *out_ptr = __fxcxnpma( *out_ptr, __lfps((float*)s1_val_0), __imag__ *s2_val_0);
-	    out_ptr++;
-
-	    // note that the output buffer is assumed to be contiguous
-	    // also note that I'm trying to force a add-store by using the += in the intrinsic.
-	    // I don't know if this will work, since the first argument of the intrinsic may very well 
-	    // just overwrite the resulting value. According to Mike Mendell this is a double add, so I removed the +=.
-
-	    // now do the same thing for polarisation 1
-// 	    __lfps((float*) s1_val_1);
-//  	    __lfps(&__real__ *s2_val_1);
-
-	    // note that this may very well result in bogus answers. This is lots 'o hacks to get the intrinsics to compile
-	    __alignx(8,s1_val_1);
-	    __alignx(8,s2_val_1);
-
- 	    *out_ptr = __fxcpmadd( *out_ptr, __lfps((float*)s1_val_1), __real__ *s2_val_1) ;
- 	    *out_ptr = __fxcxnpma( *out_ptr, __lfps((float*)s1_val_1), __imag__ *s2_val_1) ;
-	    out_ptr++;
-#else 
-	    s2_val_0 = reinterpret_cast<complex<float>*>(in_buffer + s2_addr);
-	    s2_val_1 = reinterpret_cast<complex<float>*>(in_buffer + s2_addr + 1);
-	    // this is purely functional code, very expensive and slow as hell
-	    outDH->addBufferElementVal(station1, station2, fchannel, 0,
-				       *(s1_val_0) * *(s2_val_0));
-	    outDH->addBufferElementVal(station1, station2, fchannel, 1,
-				       *(s1_val_1) * *(s2_val_1));	    
-#endif 	    
-	}
-      }
-    }
-#ifdef HAVE_MPE
-    MPE_Log_event(2, sample, "correlated");
+    int c_addr = itsNpolarisations*itsNelements*itsNsamples*fchannel;
+    for (int station1 = 0; station1 < itsNelements; station1++) {
+      int s1_addr = c_addr+itsNsamples*itsNpolarisations*station1;
+      for (int station2 = 0; station2 <= station1; station2++) {
+	int s2_addr = c_addr+itsNsamples*itsNpolarisations*station2;
+	DH_Vis::BufferType* out_ptr = outDH->getBufferElement(station1, station2, fchannel, 0);
+	for (int sample = 0; sample < itsNsamples; sample++) {
+#if 0
+	  *out_ptr   += *(in_buffer+s1_addr) * *(in_buffer+s2_addr);     // XX
+	  out_ptr++;
+	  *out_ptr   += *(in_buffer+s1_addr) * *(in_buffer+s2_addr+1);   // XY
+	  out_ptr++;
+	  *out_ptr   += *(in_buffer+s1_addr+1) * *(in_buffer+s2_addr);   // YX
+	  *out_ptr++;
+	  *out_ptr   += *(in_buffer+s1_addr+1) * *(in_buffer+s2_addr+1); // YY
 #endif 
-  }
 
+#if 1 
+
+	  // XX
+	  *out_ptr = __fxcpmadd( *out_ptr, __lfps((float*)in_buffer+s1_addr), __real__ *(in_buffer+s2_addr) );
+	  *out_ptr = __fxcxnpma( *out_ptr, __lfps((float*)in_buffer+s1_addr), __imag__ *(in_buffer+s2_addr) );
+	  out_ptr++;
+	  // XY
+	  *out_ptr = __fxcpmadd( *out_ptr, __lfps((float*)in_buffer+s1_addr), __real__ *(in_buffer+s2_addr+1) );
+	  *out_ptr = __fxcxnpma( *out_ptr, __lfps((float*)in_buffer+s1_addr), __imag__ *(in_buffer+s2_addr+1) );
+	  out_ptr++;
+	  // YX
+	  *out_ptr = __fxcpmadd( *out_ptr, __lfps((float*)in_buffer+s1_addr+1), __real__ *(in_buffer+s2_addr) );
+	  *out_ptr = __fxcxnpma( *out_ptr, __lfps((float*)in_buffer+s1_addr+1), __imag__ *(in_buffer+s2_addr) );
+	  out_ptr++;
+	  // YY
+	  *out_ptr = __fxcpmadd( *out_ptr, __lfps((float*)in_buffer+s1_addr+1), __real__ *(in_buffer+s2_addr+1) );
+	  *out_ptr = __fxcxnpma( *out_ptr, __lfps((float*)in_buffer+s1_addr+1), __imag__ *(in_buffer+s2_addr+1) );
+#endif 
+
+	} // sample
+      } // station2
+    } // station1
+  } // fchannel
+
+
+#else
+
+  for (int fchannel = 0; fchannel < itsNchannels; fchannel++) {
+    int c_addr = itsNpolarisations*itsNelements*itsNsamples*fchannel;
+    for (int station1 = 0; station1 < itsNelements; station1++) {
+      int s1_addr = c_addr+itsNsamples*itsNpolarisations*station1;
+      for (int station2 = 0; station2 <= station1; station2++) {
+	int s2_addr = c_addr+itsNsamples*itsNpolarisations*station2;
+	DH_Vis::BufferType* out_ptr = outDH->getBufferElement(station1, station2, fchannel, 0);
+	for (int sample = 0; sample < itsNsamples; sample++) {
+
+	  *out_ptr   += *(in_buffer+s1_addr) * *(in_buffer+s2_addr);     // XX
+	  out_ptr++;
+	  *out_ptr   += *(in_buffer+s1_addr) * *(in_buffer+s2_addr+1);   // XY
+	  out_ptr++;
+	  *out_ptr   += *(in_buffer+s1_addr+1) * *(in_buffer+s2_addr);   // YX
+	  *out_ptr++;
+	  *out_ptr   += *(in_buffer+s1_addr+1) * *(in_buffer+s2_addr+1); // YY
+
+	} // sample
+      } // station2
+    } // station1
+  } // fchannel
+
+#endif // HAVE_BGL
 #ifdef DO_TIMING
   stoptime = timer();
 #endif
@@ -248,9 +243,9 @@ void WH_Correlator::process() {
   // transient effects on the nodes, so the maximum performance is a reasonable estimate of the real 
   // performance of the application.
 
-  cmults = itsNpolarisations * itsNsamples * itsNchannels * (itsNelements*itsNelements/2 + ceil(itsNelements/2.0));
+  cmults = itsNpolarisations * itsNpolarisations * itsNsamples * itsNchannels * itsNelements * itsNelements / 2;
   MPI_Reduce(&elapsed_time, &min_time, 1, MPI_DOUBLE, MPI_MIN, 0, MPI_COMM_WORLD);
-  
+
   if ((TH_MPI::getCurrentRank() == 0) && (t_start.tv_sec != 0) && (t_start.tv_usec != 0)) {
     corr_perf = 1.0e-6*cmults/min_time;
   }

@@ -88,7 +88,7 @@ namespace LOFAR
       // order of 1-2%
       gettimeofday(&stoptime, NULL);
 
-      bandwidth = (itsNchannels*itsNelements*itsNsamples*itsNpolarisations*sizeof(DH_CorrCube::BufferType))/
+      bandwidth = ((DH_CorrCube*)getDataManager().getOutHolder(0))->getBufSize()*sizeof(DH_CorrCube::BufferType)/
         (stoptime.tv_sec + 1.0e-6*stoptime.tv_usec -
          starttime.tv_sec + 1.0e-6*starttime.tv_usec);
     }
