@@ -344,11 +344,11 @@ MeqCalibrater::MeqCalibrater(const String& msName,
   itsGSM      (itsGSMTable),
   itsSolver   (1, LSQBase::REAL)
 {
-  cout << "MeqCalibrater constructor (";
-  cout << "'" << msName   << "', ";
-  cout << "'" << meqModel << "', ";
-  cout << "'" << skyModel << "', ";
-  cout << ddid << ")" << endl;
+  cdebug(1) << "MeqCalibrater constructor (";
+  cdebug(1) << "'" << msName   << "', ";
+  cdebug(1) << "'" << meqModel << "', ";
+  cdebug(1) << "'" << skyModel << "', ";
+  cdebug(1) << ddid << ")" << endl;
 
   // Get phase reference (for field 0).
   getPhaseRef();
@@ -385,16 +385,16 @@ MeqCalibrater::MeqCalibrater(const String& msName,
   // Set up the expression tree for all baselines.
   makeWSRTExpr();
 
-  cout << "MeqMat " << MeqMatrixRep::nctor << ' ' << MeqMatrixRep::ndtor
-       << ' ' << MeqMatrixRep::nctor + MeqMatrixRep::ndtor << endl;
-  cout << "MeqRes " << MeqResultRep::nctor << ' ' << MeqResultRep::ndtor
-       << ' ' << MeqResultRep::nctor + MeqResultRep::ndtor << endl;
+  cdebug(1) << "MeqMat " << MeqMatrixRep::nctor << ' ' << MeqMatrixRep::ndtor
+	    << ' ' << MeqMatrixRep::nctor + MeqMatrixRep::ndtor << endl;
+  cdebug(1) << "MeqRes " << MeqResultRep::nctor << ' ' << MeqResultRep::ndtor
+	    << ' ' << MeqResultRep::nctor + MeqResultRep::ndtor << endl;
 
   // Calculate frequency domain.
   getFreq (ddid);
-  cout << "Freq: " << itsStartFreq << ' ' << itsEndFreq << " (" <<
+  cdebug(1) << "Freq: " << itsStartFreq << ' ' << itsEndFreq << " (" <<
     itsEndFreq - itsStartFreq << " Hz) " << itsNrChan << " channels of "
-       << itsStepFreq << " Hz" << endl;
+	    << itsStepFreq << " Hz" << endl;
 
   // By default select all rows and all channels.
   // This also sets up the iterator.
@@ -410,7 +410,7 @@ MeqCalibrater::MeqCalibrater(const String& msName,
 //----------------------------------------------------------------------
 MeqCalibrater::~MeqCalibrater()
 {
-  cout << "MeqCalibrater destructor" << endl;
+  cdebug(1) << "MeqCalibrater destructor" << endl;
   for (vector<MeqJonesExpr*>::iterator iter = itsExpr.begin();
        iter != itsExpr.end();
        iter++) {
@@ -490,7 +490,7 @@ void MeqCalibrater::initParms (const MeqDomain& domain)
 //----------------------------------------------------------------------
 void MeqCalibrater::setTimeInterval (double secInterval)
 {
-  cout << "setTimeInterval = " << secInterval << endl;
+  cdebug(1) << "setTimeInterval = " << secInterval << endl;
   itsTimeInterval = secInterval;
 }
 
@@ -503,7 +503,7 @@ void MeqCalibrater::setTimeInterval (double secInterval)
 //----------------------------------------------------------------------
 void MeqCalibrater::resetIterator()
 {
-  cout << "resetTimeIterator" << endl;
+  cdebug(1) << "resetTimeIterator" << endl;
   itsIter.reset();
 }
 
@@ -563,7 +563,7 @@ void MeqCalibrater::clearSolvableParms()
 {
   const vector<MeqParm*>& parmList = MeqParm::getParmList();
 
-  cout << "clearSolvableParms" << endl;
+  cdebug(1) << "clearSolvableParms" << endl;
 
   for (vector<MeqParm*>::const_iterator iter = parmList.begin();
        iter != parmList.end();
@@ -594,8 +594,8 @@ void MeqCalibrater::setSolvableParms (Vector<String>& parmPatterns,
 
   const vector<MeqParm*>& parmList = MeqParm::getParmList();
 
-  cout << "setSolvableParms" << endl;
-  cout << "isSolvable = " << isSolvable << endl;
+  cdebug(1) << "setSolvableParms" << endl;
+  cdebug(1) << "isSolvable = " << isSolvable << endl;
 
   // Convert patterns to regexes.
   vector<Regex> parmRegex;
@@ -637,7 +637,7 @@ void MeqCalibrater::setSolvableParms (Vector<String>& parmPatterns,
 	    }
 	  }
 	  if (!parmExc) {
-	    cout << "setSolvable: " << (*iter)->getName() << endl;
+	    cdebug(1) << "setSolvable: " << (*iter)->getName() << endl;
 	    (*iter)->setSolvable(isSolvable);
 	  }
 	  break;
@@ -656,7 +656,7 @@ void MeqCalibrater::setSolvableParms (Vector<String>& parmPatterns,
 //----------------------------------------------------------------------
 Double MeqCalibrater::solve (const String& colName)
 {
-  cout << "solve using column " << colName << endl;
+  cdebug(1) << "solve using column " << colName << endl;
 
   if (itsNrScid == 0) {
     throw AipsError ("No parameters are set to solvable");
@@ -877,7 +877,7 @@ Double MeqCalibrater::solve (const String& colName)
       }
     }
   }
-  timer.show("fill ");
+  if (Debug(1)) timer.show("fill ");
 
   Assert (nrpoint >= itsNrScid);
   // Solve the equation.
@@ -885,18 +885,18 @@ Double MeqCalibrater::solve (const String& colName)
   double fit;
   vector<double> stddev(2*nrpoint);
   double mu[2];
-  cout << "Solution before: " << itsSolution << endl;
+  cdebug(1) << "Solution before: " << itsSolution << endl;
   double sol[200];
   complex<double>* solData = itsSolution.dcomplexStorage();
   for (int i=0; i<itsSolution.nelements(); i++) {
     sol[i] = solData[i].real();
   }
   Assert (itsSolver.solveLoop (fit, rank, sol, &(stddev[0]), mu));
-  timer.show("solve");
+  if (Debug(1)) timer.show("solve");
   for (int i=0; i<itsSolution.nelements(); i++) {
     solData[i] = complex<double>(sol[i], 0);
   }
-  cout << "Solution after:  " << itsSolution << endl;
+  cdebug(1) << "Solution after:  " << itsSolution << endl;
   
   // Update all parameters.
   const vector<MeqParm*>& parmList = MeqParm::getParmList();
@@ -925,7 +925,7 @@ void MeqCalibrater::saveParms()
 {
   const vector<MeqParm*>& parmList = MeqParm::getParmList();
 
-  cout << "saveParms" << endl;
+  cdebug(1) << "saveParms" << endl;
 
   Assert (!itsSolution.isNull()  &&  itsSolution.nx() == itsNrScid);
   int i=0;
@@ -967,7 +967,7 @@ void MeqCalibrater::saveParms()
 //----------------------------------------------------------------------
 void MeqCalibrater::predict (const String& modelDataColName)
 {
-  cout << "predict('" << modelDataColName << "')" << endl;
+  cdebug(1) << "predict('" << modelDataColName << "')" << endl;
 
   Timer timer;
 
@@ -976,7 +976,7 @@ void MeqCalibrater::predict (const String& modelDataColName)
   if (! itsMS.tableDesc().isColumn(modelDataColName)) {
     ArrayColumnDesc<Complex> mdcol(modelDataColName);
     itsMS.addColumn (mdcol);
-    cout << "Added column " << modelDataColName << " to the MS" << endl;
+    cdebug(1) << "Added column " << modelDataColName << " to the MS" << endl;
   }
 
   double startFreq = itsStartFreq + itsFirstChan*itsStepFreq;
@@ -1032,7 +1032,7 @@ void MeqCalibrater::predict (const String& modelDataColName)
     mdcol.put (rownr, data);
   }
 
-  timer.show();
+  if (Debug(1)) timer.show();
 }
 
 //----------------------------------------------------------------------
@@ -1078,8 +1078,8 @@ void MeqCalibrater::saveResidualData(const String& colAName,
   }
   itsMS.flush();
 
-  cout << "saveResidualData('" << colAName << "', '" << colBName << "', ";
-  cout << "'" << residualColName << "')" << endl;
+  cdebug(1) << "saveResidualData('" << colAName << "', '" << colBName << "', ";
+  cdebug(1) << "'" << residualColName << "')" << endl;
 }
 
 //----------------------------------------------------------------------
@@ -1140,7 +1140,7 @@ GlishRecord MeqCalibrater::getParms(Vector<String>& parmPatterns,
 
   const vector<MeqParm*>& parmList = MeqParm::getParmList();
 
-  cout << "getParms: " << endl;
+  cdebug(1) << "getParms: " << endl;
 
   // Convert patterns to regexes.
   vector<Regex> parmRegex;
@@ -1210,7 +1210,7 @@ GlishArray MeqCalibrater::getParmNames(Vector<String>& parmPatterns,
 
   const vector<MeqParm*>& parmList = MeqParm::getParmList();
 
-  cout << "getParmNames: " << endl;
+  cdebug(1) << "getParmNames: " << endl;
 
   // Convert patterns to regexes.
   vector<Regex> parmRegex;
@@ -1308,8 +1308,8 @@ Bool MeqCalibrater::select(const String& where, int firstChan, int lastChan)
   } else {
     itsLastChan = lastChan;
   }
-  cout << "select " << where << "  channels=[" << itsFirstChan
-       << ',' << itsLastChan << ']' << endl;
+  cdebug(1) << "select " << where << "  channels=[" << itsFirstChan
+	    << ',' << itsLastChan << ']' << endl;
   Assert (itsFirstChan <= itsLastChan);
   if (! where.empty()) {
     Table selms = tableCommand ("select from $1 where " + where, itsMS);
@@ -1335,7 +1335,7 @@ GlishRecord MeqCalibrater::getStatistics (bool detailed, bool clear)
 {
   GlishRecord rec;
 
-  cout << "getStatistics: " << endl;
+  cdebug(1) << "getStatistics: " << endl;
 
   // Get the total counts.
   rec.add ("timecellstotal", MeqHist::merge (itsCelltHist));
