@@ -1,20 +1,86 @@
 #!/bin/sh
 
-# this script can be used to fill the database before running the blackboard demo
-# you can change the SQLCLIENT and PARMDBCONNECT to match your database type (postgres or mysql)
-# and you database name
+# createtables: fill database for BlackBoardDemo
+#
+#  Copyright (C) 2004
+#  ASTRON (Netherlands Foundation for Research in Astronomy)
+#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+#
+#  This program is free software; you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either version 2 of the License, or
+#  (at your option) any later version.
+#
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program; if not, write to the Free Software
+#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#
+#  $Id$
 
+# the following options can be given:
+# -dbtype  Database type (right now only monet, postgres and mysql are supported)
+# -host    Host (default = localhost)
+# -user    User
+# -filler  Path to the program that puts the default parameters in the tables 
+#          (default is ./src/fillsqldb)
 
-
-# change this to your database/username
-# for postgres:
-#SQLCLIENT="psql -h dop50 -U postgres zwart"
-# for mysql:
-SQLCLIENT="mysql -h dop50 -u mysql zwart"
-
-PARMDBCONNECT="connect db='zwart', dbtype='mysql' "
-
+# this is 
 TABLEFILLER="src/fillsqldb"
+
+DBTYPE="mysql"
+HOST="localhost"
+USER="zwart"
+INDEXCMDSUFFIX="(name)"
+
+while [ 1 = 1 ]
+do
+  if [ "$1" = "-host" ]; then
+    shift
+    HOST="$1"
+    shift
+  elif [ "$1" = "-dbtype" ]; then
+    shift
+    DBTYPE="$1"
+    shift
+  elif [ "$1" = "-user" ]; then
+    shift
+    USER="$1"
+    shift
+  elif [ "$1" = "-filler" ]; then
+    shift
+    TABLEFILLER="$1"
+    shift
+  else
+    break;
+  fi
+done
+
+
+if [ "$DBTYPE" = "mysql" ]; then
+# for mysql
+    SQLCLIENT="mysql -h $HOST -u mysql $USER"
+    PARMDBCONNECT="connect db='$USER', dbtype='$DBTYPE', host='$HOST', user ='$USER'"
+    INDEXCMDSUFFIX="(name(30))"
+# memory tables do not support text fiels :(
+#    TABLECMDSUFFIX=" ENGINE = MEMORY "
+elif [ "$DBTYPE" = "postgres" ]; then
+# for postgres
+    SQLCLIENT="psql -h $HOST -U postgres $USER"
+    PARMDBCONNECT="connect db='$USER', dbtype='$DBTYPE', host='$HOST', user ='$USER'"
+    INDEXCMDSUFFIX="(name)"
+elif [ "$DBTYPE" = "monet" ]; then
+# for monet:
+    SQLCLIENT="MapiClient -h $HOST -l sql -u monetdb -P monetdb"
+    PARMDBCONNECT="connect db='$USER', dbtype='$DBTYPE', host='$HOST', user ='monetdb'"
+else
+    echo "Unkown dbtype"
+    exit 1
+fi
 
 for n in 1 2 3 4 5 6 
   do
@@ -24,38 +90,40 @@ for n in 1 2 3 4 5 6
 
 	echo " DROP TABLE ${tablename}; " >> sql_create
 	echo " DROP TABLE ${tablename}def; " >> sql_create
+	echo " COMMIT; " >> sql_create
         echo " CREATE TABLE ${tablename}def (
         	Coeff		text,
 		SimCoeff	text,
 		PertSimCoeff	text,
 		pertvalue	double precision,
-		isrelpert	int4,
+		isrelpert	integer,
 		t0		double precision,
 		f0		double precision,
-		normalized	int4,
+		normalized	integer,
 		name		text,
-		srcnr		int8,
-		statnr		int8
-		);" >> sql_create
-#	echo " CREATE INDEX ${tablename}def_name_idx ON ${tablename}def (name);" >> sql_create
+		srcnr		integer,
+		statnr		integer
+		) $TABLECMDSUFFIX ;" >> sql_create
+	echo " CREATE INDEX ${tablename}def_name_idx ON ${tablename}def $INDEXCMDSUFFIX ;" >> sql_create
         echo " CREATE TABLE ${tablename} (
         	Coeff		text,
 		SimCoeff	text,
 		PertSimCoeff	text,
 		pertvalue	double precision,
-		isrelpert	int4,
+		isrelpert	integer,
 		t0		double precision,
 		f0		double precision,
-		normalized	int4,
+		normalized	integer,
 		tb		double precision,
 		te		double precision,
 		fb		double precision,
 		fe		double precision,
 		name		text,
-		srcnr		int8,
-		statnr		int8
-		);" >> sql_create
-#	echo " CREATE INDEX ${tablename}_name_idx ON ${tablename} (name);" >> sql_create
+		srcnr		integer,
+		statnr		integer
+		) $TABLECMDSUFFIX ;" >> sql_create
+	echo " CREATE INDEX ${tablename}_name_idx ON ${tablename} $INDEXCMDSUFFIX ;" >> sql_create
+	echo " COMMIT; " >> sql_create
 
 	$SQLCLIENT < sql_create
 
@@ -94,38 +162,40 @@ for n in 1 2 3 4 5 6
 	echo " " > sql_create
 	echo "drop table ${tablename};" >> sql_create
 	echo "drop table ${tablename}def;" >> sql_create
+	echo " COMMIT; " >> sql_create
         echo " CREATE TABLE ${tablename}def (
         	Coeff		text,
 		SimCoeff	text,
 		PertSimCoeff	text,
 		pertvalue	double precision,
-		isrelpert	int4,
+		isrelpert	integer,
 		t0		double precision,
 		f0		double precision,
-		normalized	int4,
+		normalized	integer,
 		name		text,
-		srcnr		int8,
-		statnr		int8
-		);" >> sql_create
-#	echo " CREATE INDEX ${tablename}def_name_idx ON ${tablename}def (name);" >> sql_create
+		srcnr		integer,
+		statnr		integer
+		) $TABLECMDSUFFIX ;" >> sql_create
+	echo " CREATE INDEX ${tablename}def_name_idx ON ${tablename}def $INDEXCMDSUFFIX ;" >> sql_create
         echo " CREATE TABLE ${tablename} (
         	Coeff		text,
 		SimCoeff	text,
 		PertSimCoeff	text,
 		pertvalue	double precision,
-		isrelpert	int4,
+		isrelpert	integer,
 		t0		double precision,
 		f0		double precision,
-		normalized	int4,
+		normalized	integer,
 		tb		double precision,
 		te		double precision,
 		fb		double precision,
 		fe		double precision,
 		name		text,
-		srcnr		int8,
-		statnr		int8
-		);" >> sql_create
-#	echo " CREATE INDEX ${tablename}_name_idx ON ${tablename} (name);" >> sql_create
+		srcnr		integer,
+		statnr		integer
+		) $TABLECMDSUFFIX ;" >> sql_create
+	echo " CREATE INDEX ${tablename}_name_idx ON ${tablename} $INDEXCMDSUFFIX ;" >> sql_create
+	echo " COMMIT; " >> sql_create
 	$SQLCLIENT < sql_create
 
 	echo $PARMDBCONNECT ", tablename='${tablename}'" > fill.parmdb
@@ -205,6 +275,7 @@ done
 echo " " > sql_create
 echo " DROP TABLE bbsolutions;" >> sql_create
 echo " DROP TABLE bbworkorders;" >> sql_create
+echo " COMMIT; " >> sql_create
 echo " CREATE TABLE bbworkorders (
        ObjId BIGINT NOT NULL UNIQUE PRIMARY KEY, 
        Owner BIGINT NOT NULL, 
@@ -236,5 +307,6 @@ echo "create table bbsolutions (
       STDDEV DOUBLE PRECISION, 
       CHI DOUBLE PRECISION, 
       NUMBEROFPARAM INTEGER);" >> sql_create
+echo " COMMIT; " >> sql_create
 echo "\q" >> sql_create
 $SQLCLIENT < sql_create
