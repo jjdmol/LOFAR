@@ -28,8 +28,6 @@ AC.process[3].ID = tAnother[1]
 #
 # metadata about a proces
 testAppl.tPCClient[0].startstoptype = cmdline
-testAppl.tPCClient[0].start		    = ./startAP.sh <@procID@> ./APTest <@parameterfile@>
-testAppl.tPCClient[0].stop		    = ./stopAP.sh <@procID@>.pid
 testAppl.tPCClient[0].object = Cyg-A
 
 # Process related parameters
