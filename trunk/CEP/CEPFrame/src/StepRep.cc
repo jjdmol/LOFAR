@@ -29,7 +29,6 @@
 #include "CEPFrame/DataManager.h"
 #include TRANSPORTERINCLUDE
 #include "Transport/TH_Mem.h"
-#include "tinyCEP/Profiler.h"
 #include <Common/Debug.h>
 #include <Common/lofar_iostream.h>
 #include <Common/lofar_algorithm.h>    // for min,max
@@ -45,7 +44,6 @@ namespace LOFAR
 {
 
 // this will give all instances of Step the same event in the Profiling output
-int          StepRep::theirProcessProfilerState=0;
 unsigned int StepRep::theirNextID=0;
 unsigned int StepRep::theirEventCnt=0;
 
@@ -83,9 +81,6 @@ StepRep::StepRep (WorkHolder& worker,
 #endif 
   }
 
-  if (theirProcessProfilerState == 0) {
-    theirProcessProfilerState = Profiler::defineState("WH_Process","yellow");
-  }
   TRACER2("Create Step " << name << " ID = " << getID());
 
 }
@@ -124,9 +119,7 @@ void StepRep::process()
 {
   // Call the baseProcess() method in the WorkHolder
 
-  Profiler::enterState (theirProcessProfilerState);
   itsWorker->baseProcess();
-  Profiler::leaveState (theirProcessProfilerState);
 }
 
 void StepRep::postprocess()
