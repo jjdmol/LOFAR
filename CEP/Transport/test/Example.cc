@@ -35,11 +35,11 @@ int main()
     
   DH_Example DH1("dh1", 1);
   DH_Example DH2("dh2", 1);
+  Transporter& TR1 = DH1.getTransporter();
+  Transporter& TR2 = DH2.getTransporter();
     
   // Assign an ID for each transporter by hand for now
   // This will be done by the framework later on
-  Transporter& TR1 = DH1.getTransporter();
-  Transporter& TR2 = DH2.getTransporter();
   TR1.setItsID(1);
   TR2.setItsID(2);
 
@@ -54,7 +54,7 @@ int main()
   // connect DH1 to DH2
   TR2.connectTo(&TR1, TH_Mem::proto);
     
-  // initialize the DataHolders
+  // initialize the TransportHolders and DataHolders
   TR1.init();
   TR2.init();
     
