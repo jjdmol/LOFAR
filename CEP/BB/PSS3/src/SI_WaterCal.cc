@@ -61,7 +61,7 @@ bool SI_WaterCal::execute(vector<string>& parmNames,
     if (!itsInitialized)
     {
       itsCal->Initialize();
-      itsCal->ShowSettings();
+      //itsCal->ShowSettings();
       itsInitialized = true;
     }
     for (unsigned int i=0; i < parmNames.size(); i++)      // Add all parms
@@ -112,6 +112,8 @@ bool SI_WaterCal::execute(vector<string>& parmNames,
 
   itsCal->Run(resultParmNames, resultParmValues, resultQuality);
   //  itsCal->SubtractOptimizedSources();
+  itsCal->showCurrentParms ();
+
   itsCal->CommitOptimizedParameters();
   resultIterNo = itsCurIter;
   return true;
@@ -126,7 +128,7 @@ void SI_WaterCal::useParms (const vector<string>& parmNames,
 
   itsCal->Initialize();
   itsInitialized = true;
-  itsCal->ShowSettings();
+  //itsCal->ShowSettings();
   itsCal->resetTimeIntervalIterator();
   itsCal->advanceTimeIntervalIterator();
 
