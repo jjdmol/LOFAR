@@ -61,7 +61,9 @@ MAKE_OPTIONS = -j2
 #
 # Define defaults for crontab variables.
 #
-CRONMAILTO = schaaf@astron.nl
+CRONUSER = $$USER
+CRONMAILTO = $(CRONUSER)@astron.nl
+CRONCVSUSER = $(CRONUSER)
 CRONROOT = $$HOME
 
 #
@@ -276,7 +278,7 @@ crontab:
 	  exit 2; \
 	fi; \
 	crontab -l > $$HOME/crontab-$$pidnr-old; \
-	sed -e "s%LOFAR_CRONMAILTO%$(CRONMAILTO)%" -e "s%LOFAR_CRONROOT%$(CRONROOT)%" autoconf_share/crontab.builds > $$HOME/crontab-$$pidnr-new; \
+	sed -e "s%LOFAR_CRONMAILTO%$(CRONMAILTO)%" -e "s%LOFAR_CRONROOT%$(CRONROOT)%" -e "s%LOFAR_CRONCVSUSER%$(CRONCVSUSER)%" autoconf_share/crontab.builds > $$HOME/crontab-$$pidnr-new; \
 	if (diff $$HOME/crontab-$$pidnr-old $$HOME/crontab-$$pidnr-new > /dev/null); then \
 	  $(RM) $$HOME/crontab-$$pidnr-old; \
 	else \
