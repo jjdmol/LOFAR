@@ -39,9 +39,16 @@ server.type=TCP
 
 [PI]
 host=localhost
-server.port=20199 # MSPP
+client.type=TCP
+server.port=20041 # MSPP
 server.type=TCP
 
 [SS]
 host=localhost
 client.type=TCP
+server.port=20042 # MSPP
+server.type=TCP
+
+[PMLlite]
+host=localhost
+client.type=TCP # SAP
