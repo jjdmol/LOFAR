@@ -119,6 +119,9 @@ UVPMainWindow::UVPMainWindow(const std::string& hiidPrefix,
   connect(itsCanvas, SIGNAL(signal_mouseWorldPosChanged(double, double)),
           this, SLOT(slot_mouse_world_pos(double, double)));
 
+  connect(itsGraphSettingsWidget, SIGNAL(signalAntenna1Changed(unsigned int)),
+          this, SLOT(slot_redraw()));
+
   connect(itsGraphSettingsWidget, SIGNAL(signalAntenna2Changed(unsigned int)),
           this, SLOT(slot_redraw()));
 
@@ -793,7 +796,7 @@ try
               
                     LoVec_int      flags(iter.f_flags(corr));
                     
-                    LoVec_fcomplex data;
+                    LoVec_fcomplex data(nfreq);
                     if(ColumnName == "DATA") {
                       data = iter.f_data(corr);
                     } else if(ColumnName == "MODEL_DATA") {
