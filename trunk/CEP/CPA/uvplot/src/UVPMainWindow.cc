@@ -173,8 +173,8 @@ void UVPMainWindow::slot_plotTimeFrequencyImage()
     // Anonymous counted reference. No need to delete.
     UVPDataTransferWP *transfer = new UVPDataTransferWP(corr, baseline, patch);
     dispatcher.attach(transfer, DMI::ANON);
-    dispatcher.attach(new MSIntegratorWP("test.ms", 8, 1, 1), DMI::ANON);
-    initGateways(dispatcher);     // Octopussy
+    //    dispatcher.attach(new MSIntegratorWP("test.ms", 2, 1, 1), DMI::ANON);
+    initGateways(dispatcher);     // Octopussy     ^^^ Channels to average
     
     dispatcher.start();           // Octopussy
     
@@ -182,7 +182,7 @@ void UVPMainWindow::slot_plotTimeFrequencyImage()
     
     itsBusyPlotting = true;
 
-    itsCanvas->setChannels(16);
+    itsCanvas->setChannels(128); // Number of channels
     
     unsigned int spectraAdded(0);
     while(itsBusyPlotting) {
@@ -195,23 +195,21 @@ void UVPMainWindow::slot_plotTimeFrequencyImage()
 
       if(transfer->size() > spectraAdded) {doDraw = true;};
 
-      for(unsigned int i = spectraAdded; i < transfer->size(); i++)
-        {
-          const   UVPDataAtom *dataAtom = transfer->getRow(i);
-          double *Values = new double[dataAtom->getNumberOfChannels()];
-          for(unsigned int j = 0; j < dataAtom->getNumberOfChannels(); j++) {
-            Values[j] = sqrt(dataAtom->getData(j)->real()*dataAtom->getData(j)->real() +
-                             dataAtom->getData(j)->imag()*dataAtom->getData(j)->imag());
-          }
-          UVPSpectrum   Spectrum(dataAtom->getNumberOfChannels(), i, Values);
-          itsCanvas->slot_addSpectrum(Spectrum);
-          spectraAdded++;
-          delete[] Values;
+      for(unsigned int i = spectraAdded; i < transfer->size(); i++) {
+        const   UVPDataAtom *dataAtom = transfer->getRow(i);
+        double *Values = new double[dataAtom->getNumberOfChannels()];
+        for(unsigned int j = 0; j < dataAtom->getNumberOfChannels(); j++) {
+          Values[j] = sqrt(dataAtom->getData(j)->real()*dataAtom->getData(j)->real() +
+                           dataAtom->getData(j)->imag()*dataAtom->getData(j)->imag());
         }
-      if(doDraw)
-        {
-          itsCanvas->drawView();
-        }
+        UVPSpectrum   Spectrum(dataAtom->getNumberOfChannels(), i, Values);
+        itsCanvas->slot_addSpectrum(Spectrum);
+        spectraAdded++;
+        delete[] Values;
+      }
+      if(doDraw) {
+        itsCanvas->drawView();
+      }
     }
     
 #if(ARTIFICIAL_IMAGE_ASDJKNF)
@@ -230,7 +228,7 @@ void UVPMainWindow::slot_plotTimeFrequencyImage()
     slot_setProgress(0);
 
     m_plot_menu->setItemEnabled(itsMenuPlotImageID, true);
-    m_plot_menu->setItemEnabled(itsMenuPlotStopID, false);    
+    m_plot_menu->setItemEnabled(itsMenuPlotStopID, false);
   }
 
 }
