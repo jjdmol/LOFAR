@@ -16,10 +16,11 @@ InitDebugContext(UVPTimeFrequencyPlot, "DEBUG_CONTEXT");
 
 //============>>>  UVPTimeFrequencyPlot::UVPTimeFrequencyPlot  <<<============
 
-UVPTimeFrequencyPlot::UVPTimeFrequencyPlot(QWidget *parent,
-                                           int     numberOfChannels)
+UVPTimeFrequencyPlot::UVPTimeFrequencyPlot(QWidget *parent)
   : UVPDisplayArea(parent),
-    itsSpectrum(numberOfChannels)
+    itsSpectrum(0),
+    itsValueAxis()
+  
 {
 #if(DEBUG_MODE)
   TRACER1("UVPTimeFrequencyPlot::UVPTimeFrequencyPlot");
@@ -61,7 +62,6 @@ void UVPTimeFrequencyPlot::slot_addSpectrum(const UVPSpectrum &spectrum)
                                     itsSpectrum.max(),
                                     0,
                                     getNumberOfColors()-1);
-  //  drawView();
 }
 
 
@@ -89,6 +89,7 @@ void UVPTimeFrequencyPlot::drawView()
   TRACER2("N = " << N);
   TRACER2("Nch = " << Nch);
 #endif
+
   for(unsigned int i = 0; i < N && itsSpectrum.min()!=itsSpectrum.max(); i++) {
 
     const double*        spectrum(itsSpectrum[i].getValues());
@@ -106,3 +107,14 @@ void UVPTimeFrequencyPlot::drawView()
   bitBlt(this, 0, 0, &itsBuffer);
 }
 
+
+
+
+
+//================>>>  UVPTimeFrequencyPlot::setChannels  <<<================
+
+void UVPTimeFrequencyPlot::setChannels(unsigned int numberOfChannels)
+{
+  itsSpectrum  = UVPSpectrumVector(numberOfChannels);
+  itsValueAxis = UVPAxis();
+}

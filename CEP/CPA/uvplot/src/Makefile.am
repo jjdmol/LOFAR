@@ -20,7 +20,7 @@ UVPLOT_DIR := $(top_srcdir)/src
 #%.moc.cc: %.h
 #	$(MOC) $< -o $@
 
-CXXFLAGS += -O3 #-I$(QT_DIR)/include -L$(QT_DIR)/lib -lqt
+CXXFLAGS += -pg #-I$(QT_DIR)/include -L$(QT_DIR)/lib -lqt
 
 
 include $(lofar_sharedir)/Makefile.common
