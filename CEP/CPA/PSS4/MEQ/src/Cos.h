@@ -23,7 +23,7 @@
 #ifndef MEQ_COS_H
 #define MEQ_COS_H
     
-#include <MEQ/Function.h>
+#include <MEQ/Function1.h>
 
 #pragma aidgroup MEQ
 #pragma types #MEQ::Cos
@@ -31,18 +31,17 @@
 namespace MEQ {    
 
 
-class Cos : public Function
+class Cos : public Function1
 {
 public:
   Cos();
-
-  Cos (Function* ch1);
 
   virtual ~Cos();
 
   // Evaluate the value for the given request.
   virtual Vells evaluate (const Request&,
 			  const vector<Vells*>& values);
+
 };
 
 

@@ -28,12 +28,6 @@ namespace MEQ {
 Add::Add()
 {}
 
-Add::Add (Function* ch1, Function* ch2)
-{
-  children().push_back (ch1);
-  children().push_back (ch2);
-}
-
 Add::~Add()
 {}
 

@@ -23,7 +23,7 @@
 #ifndef MEQ_SQRT_H
 #define MEQ_SQRT_H
     
-#include <MEQ/Function.h>
+#include <MEQ/Function1.h>
 
 #pragma aidgroup MEQ
 #pragma types #MEQ::Sqrt
@@ -31,7 +31,7 @@
 namespace MEQ {    
 
 
-class Sqrt : public Function
+class Sqrt : public Function1
 {
 public:
   Sqrt();

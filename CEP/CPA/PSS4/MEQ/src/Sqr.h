@@ -23,7 +23,7 @@
 #ifndef MEQ_SQR_H
 #define MEQ_SQR_H
     
-#include <MEQ/Function.h>
+#include <MEQ/Function1.h>
 
 #pragma aidgroup MEQ
 #pragma types #MEQ::Sqr
@@ -31,7 +31,7 @@
 namespace MEQ {    
 
 
-class Sqr : public Function
+class Sqr : public Function1
 {
 public:
   Sqr();
