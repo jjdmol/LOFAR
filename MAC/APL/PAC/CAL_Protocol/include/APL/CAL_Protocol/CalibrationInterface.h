@@ -25,6 +25,7 @@
 #define CALIBRATIONINTERFACE_H_
 
 #include "SubArray.h"
+#include "ACC.h"
 #include "CalibrationResult.h"
 
 namespace CAL
@@ -40,7 +41,7 @@ namespace CAL
      * @param subarray The subarray to calibrate. Use SubArray methods to get relevant parameters.
      * @param result The calibration result should be stored in this object.
      */
-    virtual void calibrate(const SubArray& subarray, CalibrationResult& result) = 0;
+    virtual void calibrate(const SubArray& subarray, const ACC& acc, CalibrationResult& result) = 0;
   };
 };
 

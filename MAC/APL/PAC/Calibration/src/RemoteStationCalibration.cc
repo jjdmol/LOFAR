@@ -24,11 +24,13 @@
 #include "RemoteStationCalibration.h"
 
 #include <blitz/array.h>
+#include <complex>
 
 using namespace CAL;
 using namespace blitz;
+using namespace std;
 
-void RemoteStationCalibration::calibrate(const SubArray& subarray, CalibrationResult& result)
+void RemoteStationCalibration::calibrate(const SubArray& subarray, const ACC& acc, CalibrationResult& result)
 {
   /**
    * Parameter access:
@@ -43,6 +45,11 @@ void RemoteStationCalibration::calibrate(const SubArray& subarray, CalibrationRe
 
   const SpectralWindow&  spw = subarray.getSPW();
   const Array<double, 3> pos = subarray.getAntennaPos();
+
+  cout << "calibrate: spectral_window=" << spw.getName() << endl;
+  cout << "calibrate: subarray name=" << subarray.getName() << endl;
+  cout << "calibrate: num_antennas=" << subarray.getNumAntennas() << endl;
+  cout << "calibrate: sizeof(ACC)=" << acc.getSize() * sizeof(complex<double>) << endl;
 
   // when finished
   result.setComplete(true);

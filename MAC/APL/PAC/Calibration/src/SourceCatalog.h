@@ -34,7 +34,7 @@ namespace CAL
   class SourceCatalog
   {
   public:
-    SourceCatalog(std::string name, int numsources);
+    SourceCatalog(std::string name);
     virtual ~SourceCatalog();
 
     /**
@@ -48,7 +48,7 @@ namespace CAL
      * Dimensions: nsources x 2 (ra,dec)
      * @return The source positions as a two-dimensional blitz array (nsources x 2 (ra,dec)).
      */
-    const blitz::Array<double, 2>& getSourcePositions() const;
+    const blitz::Array<double, 2> getSourcePositions() const;
 
     /**
      * Get the number of sources.

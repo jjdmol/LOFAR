@@ -26,6 +26,9 @@
 
 #include "SpectralWindow.h"
 #include "AntennaArray.h"
+#include "SourceCatalog.h"
+#include "DipoleModel.h"
+#include "ACC.h"
 
 #include <GCF/TM/GCF_Control.h>
 
@@ -42,6 +45,14 @@ namespace CAL
      */
     CalServer(string name);
     virtual ~CalServer();
+
+    /**
+     * Calibrate function. This method is the temporary entry-point of the
+     * calibration server to call the calibrate method of the RemoteStationCalibration
+     * class.
+     * It loads all relevant configuration files and calls the calibration routine.
+     */
+    void calibrate();
 
     /**
      * Are all ports connected and are we ready to go to the
@@ -68,8 +79,10 @@ namespace CAL
     /**
      * List of defined spectral windows.
      */
-    std::vector<SpectralWindow*> m_spws;          // vector of spectral windows (read from config file)
-    std::vector<AntennaArray*>   m_antennaarrays; // vector of antenna arrays (read from config file)
+    std::vector<SpectralWindow> m_spws;   // vector of spectral windows (read from config file)
+    std::vector<AntennaArray>   m_arrays; // vector of antenna arrays (read from config file)
+    /*const*/ DipoleModel*          m_dipolemodel;   // dipole model
+    const ACC*                  m_acc;           // ACC matrix
 
     /**
      * Client/Server management member variables.

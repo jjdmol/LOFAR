@@ -39,7 +39,7 @@ namespace CAL
        */
       virtual ~RemoteStationCalibration() {}
 
-      virtual void calibrate(const SubArray& subarray, CalibrationResult& result) = 0;
+      virtual void calibrate(const SubArray& subarray, const ACC& acc, CalibrationResult& result) = 0;
       
     private:
       // any member variable needed to store local state

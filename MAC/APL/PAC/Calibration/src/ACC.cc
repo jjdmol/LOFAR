@@ -23,14 +23,14 @@
 
 #include "ACC.h"
 #include <blitz/array.h>
+#include <fstream>
 
 using namespace CAL;
 using namespace blitz;
 using namespace RSP_Protocol;
 using namespace std;
 
-ACC::ACC(int numantennas, int numsubbands)
-  : m_acc(numantennas, numantennas, numsubbands, 2, 2), m_time(numsubbands)
+ACC::ACC(Array<complex<double>, 5>& acc) : m_acc(acc), m_time(acc.extent(thirdDim))
 {
 }
 
@@ -54,6 +54,22 @@ const Array<complex<double>, 4> ACC::getACM(int subband, Timestamp& timestamp)
 
   return m_acc(Range::all(), Range::all(),
 	       subband, Range::all(), Range::all());
+}
+
+const ACC* ACCLoader::loadFromFile(string filename)
+{
+  ACC* acc = 0;
+  Array<complex<double>, 5> acc_array;
+
+  ifstream accstream(filename.c_str());
+
+  if (accstream.is_open())
+    {
+      accstream >> acc_array;
+      acc = new ACC(acc_array);
+    }
+
+  return acc;
 }
 
 
