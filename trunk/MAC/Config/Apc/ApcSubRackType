@@ -1,8 +1,0 @@
-<?xml version="1.0"?>
-
-<SubRackType>
-  <powerSupplyStatus> 
-  	<MACType> MACString  </MACType> 
-  	<MACDefault> </MACDefault> 
- 	</powerSupplyStatus>
-</SubRackType>
