@@ -297,9 +297,9 @@ void LOFARSim::run (int nsteps)
     while (1) {
 
     if (itsRunInApp[1]==0 && rank == 0)
-      ((WH_WAV*)antenna[0][0]->getWorker())->readFile(WAVE_FILE_1);
+      ((WH_WAV*)antenna[0][0]->getWorker())->takeSamples();
     if (itsRunInApp[1]==0 && rank == 1) 
-      ((WH_WAV*)antenna[1][0]->getWorker())->readFile(WAVE_FILE_1);
+      ((WH_WAV*)antenna[1][0]->getWorker())->takeSamples();
 
     //    nsteps = LAGS;
     if (itsRunInApp[2]==0 && rank == CORRNODE) {

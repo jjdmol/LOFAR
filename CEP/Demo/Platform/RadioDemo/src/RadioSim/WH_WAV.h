@@ -10,6 +10,7 @@
 #include "DH_Antenna.h"
 
 #include <vector>
+#include <stdio.h>
 
 
 class WH_WAV:public WorkHolder
@@ -21,7 +22,7 @@ public:
 
   void process ();
   void dump () const;
-  void readFile(char *filename);
+  void takeSamples();
 
   /// Retrieve a pointer to the input data holder for the given channel
   DH_Antenna* getInHolder (int channel); 
@@ -33,12 +34,12 @@ public:
   int itsOffset;
   int itsChannel;
   int itsWAVArray[1000];
-  bool itsFirstCall;
   unsigned short itsSampleBuffer[2*ANTSAMPLES];
 
   float itsDelay;
   float itsTime;
   unsigned int itsTimeStamp;
+  FILE *itsInfile;
 
   /** vector with pointers to the input dataholders
 	  The derived classes should add a similar typed vector for their 
