@@ -130,15 +130,23 @@ void WH_Correlator::process() {
   // this block of code does the cast from complex<uint16> to complex<float>
   // 
   // This is an uint16 pointer
-  DH_CorrCube::BufferPrimitive* in_ptr = (DH_CorrCube::BufferPrimitive*) inDH->getBuffer();
-  // The float pointer is explicit, since DH_Vis is now complex<double>
-  complex<float>*  in_buffer = new complex<float>[2*inDH->getBufSize()];
 
   // consider the input buffer of complex<uint16> to be uint16 of twice that size
   // we can now offer the compiler a single for loop which has great potential to unroll
+#ifdef HAVE_BGL
+  DH_CorrCube::BufferPrimitive* in_ptr = (DH_CorrCube::BufferPrimitive*) inDH->getBuffer();
+  _Complex float* in_buffer = new _Complex float[2*inDH->getBufSize()];
+  for ( unsigned int i = 0; i < inDH->getBufSize(); i++ ) {
+    *(in_buffer+i) = static_cast<_Complex float> ( *(in_ptr+i) ); 
+  }
+#else
+  DH_CorrCube::BufferPrimitive* in_ptr = (DH_CorrCube::BufferPrimitive*) inDH->getBuffer();
+  // The float pointer is explicit, since DH_Vis is now complex<double>
+  complex<float>*  in_buffer = new complex<float>[2*inDH->getBufSize()];
   for ( unsigned int i = 0; i < inDH->getBufSize(); i++ ) {
     *(in_buffer+i) = static_cast<complex<float> > ( *(in_ptr+i) ); 
   }
+#endif 
 
   //
   // This is the actual correlator
@@ -157,6 +165,7 @@ void WH_Correlator::process() {
   // * cleaned up the code by moving the platform independent stuff to it's own nested loop
   // * changed the loop order to minimize stride size
 
+  _Complex double * out_ptr;
 
   __alignx(16, out_ptr);
   __alignx(8 , in_buffer);
@@ -167,20 +176,19 @@ void WH_Correlator::process() {
       int s1_addr = c_addr+itsNsamples*itsNpolarisations*station1;
       for (int station2 = 0; station2 <= station1; station2++) {
 	int s2_addr = c_addr+itsNsamples*itsNpolarisations*station2;
-	DH_Vis::BufferType* out_ptr = outDH->getBufferElement(station1, station2, fchannel, 0);
+	out_ptr = reinterpret_cast<_Complex double*> (outDH->getBufferElement(station1, station2, fchannel, 0));
 	for (int sample = 0; sample < itsNsamples; sample++) {
 #if 0
 	  *out_ptr   += *(in_buffer+s1_addr) * *(in_buffer+s2_addr);     // XX
-	  out_ptr++;
+ 	  out_ptr++;
 	  *out_ptr   += *(in_buffer+s1_addr) * *(in_buffer+s2_addr+1);   // XY
-	  out_ptr++;
+ 	  out_ptr++;
 	  *out_ptr   += *(in_buffer+s1_addr+1) * *(in_buffer+s2_addr);   // YX
-	  *out_ptr++;
+ 	  *out_ptr++;
 	  *out_ptr   += *(in_buffer+s1_addr+1) * *(in_buffer+s2_addr+1); // YY
 #endif 
 
-#if 1 
-
+#if 1
 	  // XX
 	  *out_ptr = __fxcpmadd( *out_ptr, __lfps((float*)in_buffer+s1_addr), __real__ *(in_buffer+s2_addr) );
 	  *out_ptr = __fxcxnpma( *out_ptr, __lfps((float*)in_buffer+s1_addr), __imag__ *(in_buffer+s2_addr) );
