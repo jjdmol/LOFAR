@@ -31,15 +31,16 @@ int main (int argc, char *argv[]) {
 	// wait for a command
 	DH_Client.read();
 	hexdump (DH_Client.getDataPtr(), DH_Client.getDataSize());
+
 	// tell after a while we are ready with this command
 	sleep (3);
 	DH_Client.setCommand(static_cast<PCCmd>(DH_Client.getCommand() ^ PCCmdResult));
 	DH_Client.setResult (PcCmdMaskOk);
 	DH_Client.write();
-
+#if 0
 	// stay alive a while.
 	sleep (10);
-
+#endif
 	LOG_DEBUG("Disconnecting");
 
 }
