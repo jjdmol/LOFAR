@@ -8,7 +8,7 @@ EXES	= Simulate
 LIBNAME = lofarsim
 LIBS    = ../../BaseSim/$(ALIBDIR)/libbasesim.a
 
-AIPSPP  = 1
+#AIPSPP  = 1
 
 include ../../BaseSim/Makedefs 
 
