@@ -138,6 +138,9 @@ public:
   /// Get monitoring data
   virtual int getMonitorValue(const char* name);
 
+  /// Determine if the processing step needs to be called
+  bool doHandle();
+
 protected:
   MiniDataManager* itsDataManager;
 
@@ -160,6 +163,8 @@ private:
   mutable map<string,int> itsOutMap;
 /*   ParamManager itsParamManager; */
   bool itsFirstProcessCall;
+  
+  int itsProcessStep;
 
   static map<string,WHConstruct*>* itsConstructMap;
 };
@@ -181,7 +186,6 @@ inline void WorkHolder::setName (const string& name)
   { itsName = name; }
 inline const string& WorkHolder::getName() const
   { return itsName; }
-
 
 }
 
