@@ -531,6 +531,8 @@ MeqCalibrater::MeqCalibrater(const String& msName,
   // Unlock the parm tables.
   itsMEP.unlock();
   itsGSMMEP.unlock();
+
+  itsMS.unlock();
 }
 
 //----------------------------------------------------------------------
