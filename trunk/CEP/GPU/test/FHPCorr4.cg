@@ -1,0 +1,64 @@
+struct C2E2f_Output {
+	float4 color : COLOR;
+};
+
+C2E2f_Output fragmentMain(float2 realpos: TEXCOORD0,
+						  float2 imagpos: TEXCOORD1,
+						  float2 matrixpos: TEXCOORD2,
+						  uniform samplerRECT realStream : TEXUNIT0,
+						  uniform samplerRECT imagStream : TEXUNIT1,
+						  uniform samplerRECT matrixStream : TEXUNIT2)
+{
+	C2E2f_Output result;
+	float4		real_sum;
+	float4		imag_sum;
+	float2		i;
+	float2		j;
+	float4		xx;
+	float4		xy;
+	float4		yx;
+	float4		yy;
+
+	i = float2(matrixpos.x, 0);
+	j = float2(matrixpos.y, 0);
+	xx = texRECT (realStream, i);
+	xy = texRECT (imagStream, i);
+	yx = texRECT (realStream, j);
+	yy = texRECT (imagStream, j);
+	real_sum = xx * yx - xy * yy;
+	imag_sum = xx * yy + xy * yx;
+
+	i.y += 1;
+	j.y += 1;
+	xx = texRECT (realStream, i);
+	xy = texRECT (imagStream, i);
+	yx = texRECT (realStream, j);
+	yy = texRECT (imagStream, j);
+	real_sum += xx * yx - xy * yy;
+	imag_sum += xx * yy + xy * yx;
+
+	i.y += 1;
+	j.y += 1;
+	xx = texRECT (realStream, i);
+	xy = texRECT (imagStream, i);
+	yx = texRECT (realStream, j);
+	yy = texRECT (imagStream, j);
+	real_sum += xx * yx - xy * yy;
+	imag_sum += xx * yy + xy * yx;
+
+	i.y += 1;
+	j.y += 1;
+	xx = texRECT (realStream, i);
+	xy = texRECT (imagStream, i);
+	yx = texRECT (realStream, j);
+	yy = texRECT (imagStream, j);
+	real_sum += xx * yx - xy * yy;
+	imag_sum += xx * yy + xy * yx;
+
+	result.color.r = texRECT(matrixStream, matrixpos).r +
+					 real_sum.x + real_sum.y + real_sum.z + real_sum.w;
+	result.color.g = texRECT(matrixStream, matrixpos).g +
+					 imag_sum.x + imag_sum.y + imag_sum.y + imag_sum.w;
+
+	return result;
+}
