@@ -5,13 +5,6 @@ MEQ in general:
       01/01/04: done, need to test w/glish (glish not working on my laptop)
       16/01/04: tested with default tests; now need to make some nodes
                 with child labels
-    - Clear.Forest command 
-      04/01/04: done, need to test w/glish (glish not working on my laptop)
-  
-  * Persistent nodes: Save.Forest, Load.Forest, Clear.Cache commands
-    01/01/04: done, need to test w/glish (glish not working on my laptop)
-    16/01/04: MeqParm refuses to reload itself after a solve. Needs work.
-      
   
   * reconsider order or events in execute(): should cache be checked
     only after node_state and rider have been processed? Note that for
@@ -30,10 +23,18 @@ MEQ in general:
     issue as well; both need to be considered together. As an alternative, 
     perhaps there's a way for send() to block all updated recepients from 
     waking up until the entire send() cycle is complete.
+    
+        + Clear.Forest command 
+          04/01/04: done, need to test w/glish (glish not working on my laptop)
+  
+        + Persistent nodes: Save.Forest, Load.Forest, Clear.Cache commands
+          01/01/04: done, need to test w/glish (glish not working on my laptop)
+          16/01/04: MeqParm refuses to reload itself after a solve. Needs work.
+          19/01/04: done
       
         + Document the two types of node_state lookups
         + Document pollChildren()
-        12/12/03
+          12/12/03
   
         + re-work execute(). Make it possible to send up "empty" (command or
           state-only) requests.  
@@ -55,11 +56,18 @@ MEQ in general:
           implement simple copy-on-write as the default policy in DMI?
           27/11/03: good to go for now. Still thinking about COW.
           
+Solver:
+  
+  * Generate a valid RequestId even if the input request is NULL.
+    This ties in to hierarchical requests, so maybe something simple for now
+    (i.e., append iteration index or something?)
+          
 Spigot:
 
-    - In deliver, just stick the result in the cache and let the caching code
-      take care of everything else. 
-      10/01/04: done, needs testing
+        + In deliver, just stick the result in the cache and let the caching code
+          take care of everything else. 
+          10/01/04: done, needs testing
+          20/01/04: seems to work
     
         + Allow string specification for correlations
           09/01/04: no need, now that Spigots output all correlations at once.
@@ -95,29 +103,30 @@ Function:
         + Allow cases where a Result has 1 plane and another has N planes: treat
           the single-plane result as a scalar
           12/12/03 done
-
-General:
-    - How to use different (gcc-version-specific) libstdc++ versions?
-      This can be addressed via LD_LIBRARY_PATH; ideally, we'd like to list
-      all gcc/../lib dirs in /etc/ld.so.conf and not worry about it. Can we
-      make the binary select the correct library via DT_RUNPATH somehow (see
-      the ld.so(1) man page)?
-      + solution: pass the following flags to the linker: 
-          --enable-new-dtags -rpath /usr/local/gcc-x.y.z/lib/blahblahblah
-        This adds an RPATH section to the binary which makes it select the
-        correct library.
-
-        merged: * tDataArray segfaults (gcc 3.3.2)
-                  14/01/04: ldd was using wrong libstdc++ version.
+          
+DMI & Debug:
 
   * In Debug: add capability to redirect the debug message stream
 
   * Keep thinking about COWs. Perhaps make hooks implicit-COW? This would 
     mean declaring an operator [] on CountedRefs? 
+    
+  * DataField: getting a non-existing element as an ObjRef makes the
+    element MODIFIED. This can cause confusion later on. Perhaps it
+    should only be returned as MODIFIED if write-access is requested?
   
-  * Bug: MSOutputSink: output to new column doesn't work, column stays 'dummy'.
-    Ask Ger for help, since I'm obviously misusing tables somehow.
-  
+
+OCTOPUSSY:
+
+  * Bug: valgrind reports thread deadlock on the Dispatcher::startup_cond
+    and Dispatcher::repoll_cond condition vars. How is this even possible?
+    Perhaps related to problem below?
+    
+  * Bug: Figure out why the hell it freezes on a single-CPU machine sometimes. A
+    race condition somewhere? NB: a sure way to do it (on zeppelin) seems to
+    enable wait_reply=T in the Resolve.Children calls in meqtest.g.
+    
+
   * Bug: Check how a zero-length string or hiid array from Glish shows up in
     AppAgent -- because it looked like a 1-element DataField when 
     processing child specs.
@@ -127,15 +136,27 @@ General:
   * Check for USE_THREADS when playing with mutexes (or improve the definition
     of mutexes when compiling without threads: declare constructors for
     Mutex::Lock and all that crap)
-    
-  * Bug: Figure out why the hell it freezes on a single-CPU machine sometimes. A
-    race condition somewhere? NB: a sure way to do it (on zeppelin) seems to
-    enable wait_reply=T in the Resolve.Children calls in meqtest.g.
-    
-                
-  * DataField: getting a non-existing element as an ObjRef makes the
-    element MODIFIED. This can cause confusion later on. Perhaps it
-    should only be returned as MODIFIED if write-access is requested?
+
+
+General:
+
+        + Bug: MSOutputSink: output to new column doesn't work, column stays 'dummy'.
+          Ask Ger for help, since I'm obviously misusing tables somehow.
+          20/01/04: not a bug -- it actually works perfectly. It's the bloody table
+          browser that's broken!
+
+        + How to use different (gcc-version-specific) libstdc++ versions?
+          This can be addressed via LD_LIBRARY_PATH; ideally, we'd like to list
+          all gcc/../lib dirs in /etc/ld.so.conf and not worry about it. Can we
+          make the binary select the correct library via DT_RUNPATH somehow (see
+          the ld.so(1) man page)?
+        + solution: pass the following flags to the linker: 
+            --enable-new-dtags -rpath /usr/local/gcc-x.y.z/lib/blahblahblah
+          This adds an RPATH section to the binary which makes it select the
+          correct library.
+
+          merged: * tDataArray segfaults (gcc 3.3.2)
+                    14/01/04: ldd was using wrong libstdc++ version.
     
         + test_dmi fails (gcc 3.2.1, 3.3.2)
           14/01/04: fixed, see problem with DataField
