@@ -39,7 +39,7 @@ using namespace RSP_Protocol;
 using namespace blitz;
 
 WGWrite::WGWrite(GCFPortInterface& board_port, int board_id)
-  : SyncAction(board_port, board_id, GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL * 2)
+  : SyncAction(board_port, board_id, GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL /** 2*/)
 {
   memset(&m_hdr, 0, sizeof(MEPHeader));
 }

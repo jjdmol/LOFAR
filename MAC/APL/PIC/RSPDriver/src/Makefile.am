@@ -28,6 +28,7 @@ BUILT_SOURCES = \
 	RSPDriverPorts.conf \
 	RSPDriver.conf \
 	ViewStats.conf \
+	CaptureStats.conf \
 	SetWG.conf
 
 clean-local:
@@ -46,6 +47,7 @@ sysconf_DATA = \
 	RSPDriverPorts.conf \
 	RSPDriver.conf \
 	ViewStats.conf \
+	CaptureStats.conf \
 	SetWG.conf
 
 %.properties: $(MAC_CONFIG)/%.properties
@@ -105,6 +107,7 @@ libnetraw_la_SOURCES = \
 bin_PROGRAMS = \
 	RSPDriver \
 	ViewStats \
+	CaptureStats \
 	SetWG
 
 RSPDriver_SOURCES = \
@@ -186,6 +189,14 @@ ViewStats_SOURCES = \
 	ViewStats.cc
 
 ViewStats_LDADD = \
+	$(top_builddir)/src/librsp.la \
+	-lsuite
+
+CaptureStats_SOURCES = \
+	CaptureStats.h \
+	CaptureStats.cc
+
+CaptureStats_LDADD = \
 	$(top_builddir)/src/librsp.la \
 	-lsuite
 

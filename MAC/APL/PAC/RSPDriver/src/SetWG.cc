@@ -50,7 +50,7 @@ using namespace blitz;
 using namespace EPA_Protocol;
 using namespace RSP_Protocol;
 
-#define SAMPLE_FREQUENCY 120.0e6
+#define SAMPLE_FREQUENCY 160.0e6
 
 #define START_TEST(_test_, _descr_) \
   setCurSubTest(#_test_, _descr_)

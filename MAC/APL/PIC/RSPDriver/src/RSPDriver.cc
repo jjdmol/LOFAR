@@ -85,7 +85,7 @@ static const uint8 g_SOFTPPS_COMMAND = 0x1; // for [CRR|CRB]_SOFTPPS
 
 RSPDriver::RSPDriver(string name)
   : GCFTask((State)&RSPDriver::initial, name), m_board(0), m_scheduler(),
-    m_update_counter(0)
+    m_update_counter(0), m_n_updates(0), m_elapsed(0)
 {
   registerProtocol(RSP_PROTOCOL, RSP_PROTOCOL_signalnames);
   registerProtocol(EPA_PROTOCOL, EPA_PROTOCOL_signalnames);
@@ -149,7 +149,11 @@ bool RSPDriver::isEnabled()
     }
   }
 
-  enabled = enabled && m_clock.isConnected();
+  // m_clock is only used in SW_SYNC mode 0
+  if (0 == GET_CONFIG("RSPDriver.SW_SYNC", i))
+  {
+    enabled = enabled && m_clock.isConnected();
+  }
   
   return enabled;
 }
@@ -371,7 +375,10 @@ GCFEvent::TResult RSPDriver::initial(GCFEvent& event, GCFPortInterface& port)
 
     case F_ENTRY:
     {
-      if (!m_clock.isConnected()) m_clock.open();
+      if (0 == GET_CONFIG("RSPDriver.SW_SYNC", i))
+      {
+	if (!m_clock.isConnected()) m_clock.open();
+      }
       openBoards();
     }
     break;
@@ -577,22 +584,28 @@ GCFEvent::TResult RSPDriver::enabled(GCFEvent& event, GCFPortInterface& port)
     {
       if (&port == &m_board[0])
       {
-	if (1 == GET_CONFIG("RSPDriver.SW_SYNC", i) ||
-	    2 == GET_CONFIG("RSPDriver.SW_SYNC", i))
+	//
+	// If SYNC_MODE != 0 then run the scheduler
+	// directly on the software timer.
+	//
+	if (0 != GET_CONFIG("RSPDriver.SW_SYNC", i))
 	{
-	  /**
-	   * Trigger a clock signal by sending
-	   * an 's' character on the clock port.
-	   */
-	  EPATriggerClockEvent trigger;
-	  trigger.value = 's';
-	  m_clock.send(trigger);
+	  (void)clock_tick(m_clock); // force clock tick
 	}
       }
       else if (&port == &m_clock)
       {
 	// print average number of updates
 	cerr << "Updates per second = " << m_update_counter << endl;
+
+	if (m_update_counter > 0)
+	{
+	  m_n_updates += m_update_counter;
+	  m_elapsed++;
+	  
+	  cerr << "Average number of updates per second = " << (double)m_n_updates / m_elapsed << endl;
+	}
+	
 	m_update_counter = 0;
       }
     }
@@ -668,39 +681,39 @@ GCFEvent::TResult RSPDriver::clock_tick(GCFPortInterface& port)
 {
   GCFEvent::TResult status = GCFEvent::NOT_HANDLED;
 
-  uint8 count = 0;
-	
-  if (port.recv(&count, sizeof(uint8)) != 1)
+  uint8 count = '0';
+
+  if (0 == GET_CONFIG("RSPDriver.SW_SYNC", i))
   {
-    LOG_FATAL("We got a signal, but there is no clock pulse!");
-    exit(EXIT_FAILURE);
-  }
-  else
-  {
+    if (port.recv(&count, sizeof(uint8)) != 1)
+    {
+      LOG_WARN("We got a signal, but there is no clock pulse!");
+    }
+
     count -= '0'; // convert to integer
     if (count > 1)
     {
       LOG_WARN("Got more than one clock pulse: missed real-time deadline");
     }
-	  
-    struct timeval now;
-    (void)gettimeofday(&now, 0);
-
-    // print time, ugly
-    char timestr[32];
-    strftime(timestr, 32, "%T", localtime(&now.tv_sec));
-    LOG_INFO(formatString("TICK: time=%s.%d", timestr, now.tv_usec));
-
-    /* construct a timer event */
-    GCFTimerEvent timer;
-    timer.sec  = now.tv_sec;
-    timer.usec = now.tv_usec;
-    timer.id   = 0;
-    timer.arg  = 0;
-	  
-    /* run the scheduler with the timer event */
-    status = m_scheduler.run(timer, port);
   }
+	  
+  struct timeval now;
+  (void)gettimeofday(&now, 0);
+
+  // print time, ugly
+  char timestr[32];
+  strftime(timestr, 32, "%T", localtime(&now.tv_sec));
+  LOG_INFO(formatString("TICK: time=%s.%d", timestr, now.tv_usec));
+
+  /* construct a timer event */
+  GCFTimerEvent timer;
+  timer.sec  = now.tv_sec;
+  timer.usec = now.tv_usec;
+  timer.id   = 0;
+  timer.arg  = 0;
+	  
+  /* run the scheduler with the timer event */
+  status = m_scheduler.run(timer, port);
 
   return status;
 }

@@ -388,7 +388,7 @@ GCFEvent::TResult RawEvent::dispatch(GCFTask& task, GCFPortInterface& port)
   }
   else
   {
-    LOG_WARN("F_DATAIN: Discarding unknown message.");
+    LOG_DEBUG("F_DATAIN: Discarding unknown message.");
   }
 
   return status;
