@@ -30,7 +30,6 @@
 
 //# Includes
 #include <Common/lofar_map.h>
-#include <Common/lofar_string.h>
 #include <Common/lofar_vector.h>
 
 namespace LOFAR
@@ -39,7 +38,6 @@ namespace LOFAR
   // @{
   //# Forward Declarations
   class ParmData;
-  class ParmTable;
 
   // Description of class.
   class ParmWriter
@@ -51,17 +49,10 @@ namespace LOFAR
     // Destructor
     ~ParmWriter();
 
-    void useTable(const string& dbType, const string& tableName,
-		  const string& dbName, const string& pwd,
-		  const string& hostName);
-
     void write(vector<ParmData>& pData, double fStart, double fEnd, 
 	       double tStart, double tEnd);
 
   private:
-    typedef map<string, ParmTable*> ParmTableMap;
-
-    ParmTableMap itsTables;     // Map containing used ParmTables
 
   };
 

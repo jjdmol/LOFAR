@@ -31,6 +31,8 @@
 #include <MNS/ParmTable.h>
 #include <Common/LofarLogger.h>
 
+#include <BBS3/MNS/MeqStoredParmPolc.h>
+
 using namespace std;
 
 namespace LOFAR
@@ -39,65 +41,35 @@ ParmWriter::ParmWriter()
 {}
 
 ParmWriter::~ParmWriter()
-{
-  ParmTableMap::iterator iter;
-  for (iter=itsTables.begin(); iter!= itsTables.end(); iter++)
-  {
-    delete iter->second;
-  }
-  itsTables.clear();
-}
-
-void ParmWriter::useTable(const string& dbType, const string& tableName,
-			  const string& dbName, const string& pwd,
-			  const string& hostName)
-{
-  ParmTableMap::iterator iter;
-  iter = itsTables.find(tableName);
-  if (iter != itsTables.end())
-  {
-    LOG_WARN_STR("A table with name " << tableName << " and type "
-		 << dbType << " is already in use by ParmWriter.");
-    return;
-  }
-  // Create new ParmTable object and add to table map.
-  itsTables[tableName] = new ParmTable(dbType, tableName, dbName, pwd, hostName);
-
-}
+{}
 
 void ParmWriter::write(vector<ParmData>& pData, double fStart, double fEnd,
 		       double tStart, double tEnd)
 {
-  vector<ParmData>::iterator parmIter;
-  ParmTableMap::iterator tableIter;
   MeqDomain domain(fStart, fEnd, tStart, tEnd);
 
   // Store all parameters in their own ParmTable
-  for (parmIter = pData.begin(); parmIter != pData.end(); parmIter++)
-  {
-    // Look up table 
-    tableIter = itsTables.find(parmIter->getTableName());
-    DBGASSERTSTR(tableIter != itsTables.end(), "No table " 
-		 << parmIter->getTableName() << " in use by ParmWriter.");
-    DBGASSERTSTR(tableIter->second->getDBType() == parmIter->getDBType(),
-		 "No table " << parmIter->getTableName() << " of type " 
-		 << parmIter->getDBType() << " in use by ParmWriter. ");
 
-    MeqPolc polc;
-    polc.setCoeff(parmIter->getValues());
-    polc.setDomain(domain);
-    polc.setSimCoeff(parmIter->getValues());
-    polc.setPertSimCoeff(parmIter->getValues());
-    // Store
-    tableIter->second->putCoeff(parmIter->getName(), polc);
+  MeqParmGroup pgroup;
+  for (uint i=0; i<pData.size(); ++i) {
+    cout << "Writing parm " << pData[i].getName() << " into "
+	 << pData[i].getTableName() << ' ' << pData[i].getDBName()
+	 << " (" << pData[i].getDBType()
+	 << ") values=" << pData[i].getValues() << endl;
+    ParmTable ptab(pData[i].getDBType(), pData[i].getTableName(),
+		   pData[i].getDBName(), "");
+    MeqStoredParmPolc parm(pData[i].getName(), &pgroup, &ptab);
+    parm.readPolcs (domain);
+    parm.update (pData[i].getValues());
+    parm.save();
 
 //     streamsize prec = cout.precision();
 //     cout.precision(10);
-//     cout << "****Contr write: " << polc.getCoeff().getDouble()
-// 	 << " for parameter " << parmIter->getName() << endl;
+//     cout << "****Contr write: " << parm.getCoeffValues().getDouble()
+// 	 << " for parameter " << pData[i].getName() << endl;
 //     cout.precision (prec);
 
-    tableIter->second->unlock();
+    ptab.unlock();
   }
 }
 

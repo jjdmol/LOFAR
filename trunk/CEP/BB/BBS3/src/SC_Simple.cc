@@ -56,8 +56,6 @@ SC_Simple::SC_Simple(int id, DH_Solution* inDH, DH_WOPrediff* woPD,
   string dbName = msParams.getString("DBName", "notfound");
   string dbPwd = msParams.getString("DBPwd", "");
   string dbHost = msParams.getString("DBHost", "");
-  getParmWriter().useTable(dbType, meqTableName, dbName, dbPwd, dbHost);
-  getParmWriter().useTable(dbType, skyTableName, dbName, dbPwd, dbHost);
 
   itsControlParmUpd = itsArgs.getBool ("controlParmUpdate", false);
   itsStartTime = itsArgs.getFloat ("startTime", 0);
