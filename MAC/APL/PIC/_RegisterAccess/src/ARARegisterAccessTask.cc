@@ -131,6 +131,12 @@ RegisterAccessTask::RegisterAccessTask(string name)
       {
         sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN,rack,subrack,board);
         addMyPropertySet(PROPSET_Boards[board-1], scopeString);
+        sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_MEPReadStatus,rack,subrack,board);
+        addMyPropertySet(PROPSET_MEPReadStatus, scopeString);
+        sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_MEPWriteStatus,rack,subrack,board);
+        addMyPropertySet(PROPSET_MEPWriteStatus, scopeString);
+        sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_SYNCStatus,rack,subrack,board);
+        addMyPropertySet(PROPSET_SYNCStatus, scopeString);
         sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_Maintenance,rack,subrack,board);
         addMyPropertySet(PROPSET_Maintenance, scopeString);
         sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_Alert,rack,subrack,board);
@@ -191,6 +197,12 @@ RegisterAccessTask::RegisterAccessTask(string name)
       {
         sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN,rack,subrack,board);
         addAPC(APC_Board, scopeString);
+        sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_MEPReadStatus,rack,subrack,board);
+        addAPC(APC_MEPStatus, scopeString);
+        sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_MEPWriteStatus,rack,subrack,board);
+        addAPC(APC_MEPStatus, scopeString);
+        sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_SYNCStatus,rack,subrack,board);
+        addAPC(APC_SYNCStatus, scopeString);
         sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_Maintenance,rack,subrack,board);
         addAPC(APC_Maintenance, scopeString);
         sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_Alert,rack,subrack,board);
@@ -398,7 +410,6 @@ GCFEvent::TResult RegisterAccessTask::APCsLoaded(GCFEvent& e, GCFPortInterface& 
       // check which property changed
       GCFPropValueEvent* pPropAnswer = static_cast<GCFPropValueEvent*>(&e);
       assert(pPropAnswer);
-      LOG_INFO(formatString("property '%s' changed", pPropAnswer->pPropName));
 
       if(strstr(pPropAnswer->pPropName,"Maintenance") != 0)
       {
@@ -462,9 +473,10 @@ GCFEvent::TResult RegisterAccessTask::connected(GCFEvent& e, GCFPortInterface& p
         char version[20];
         for (int board = 0; board < ack.versions.rsp().extent(blitz::firstDim); board++)
         {
-          int rackNr          = board / (m_n_subracks_per_rack*m_n_boards_per_subrack) + 1;
-          int subRackNr       = board % (m_n_subracks_per_rack*m_n_boards_per_subrack) + 1;
-          int relativeBoardNr = board % m_n_boards_per_subrack + 1;
+          int rackNr;
+          int subRackNr;
+          int relativeBoardNr;
+          getBoardRelativeNumbers(board,rackNr,subRackNr,relativeBoardNr);
           sprintf(version,"%d.%d",ack.versions.rsp()(board) >> 4,ack.versions.rsp()(board) & 0xF);
           LOG_INFO(formatString("board[%d].version = 0x%x",board,ack.versions.rsp()(board)));
           sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN,rackNr,subRackNr,relativeBoardNr);
@@ -836,7 +848,6 @@ GCFEvent::TResult RegisterAccessTask::operational(GCFEvent& e, GCFPortInterface&
       // check which property changed
       GCFPropValueEvent* pPropAnswer = static_cast<GCFPropValueEvent*>(&e);
       assert(pPropAnswer);
-      LOG_INFO(formatString("property '%s' changed", pPropAnswer->pPropName));
 
       if(strstr(pPropAnswer->pPropName,"Maintenance") != 0)
       {
@@ -896,6 +907,7 @@ GCFEvent::TResult RegisterAccessTask::handleUpdStatus(GCFEvent& e, GCFPortInterf
     int boardNr;
     for(boardNr=boardStatus.lbound(blitz::firstDim); boardNr <= boardStatus.ubound(blitz::firstDim); ++boardNr)
     {
+      getBoardRelativeNumbers(boardNr,rackNr,subRackNr,relativeBoardNr);
       rackNr          = boardNr / (m_n_subracks_per_rack*m_n_boards_per_subrack) + 1;
       subRackNr       = boardNr % (m_n_subracks_per_rack*m_n_boards_per_subrack) + 1;
       relativeBoardNr = boardNr % m_n_boards_per_subrack + 1;
@@ -933,16 +945,26 @@ GCFEvent::TResult RegisterAccessTask::handleUpdStatus(GCFEvent& e, GCFPortInterf
       sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_ETH,rackNr,subRackNr,relativeBoardNr);
       updateETHproperties(scopeString,ethFrames,ethErrors,ethLastError,ethFfi0,ethFfi1,ethFfi2);  
   
-      uint16    readSeqnr = boardStatus(boardNr).read.seqnr;
+      uint32    readSeqnr = boardStatus(boardNr).read.seqnr;
       uint8     readError = boardStatus(boardNr).read.error;
       uint8     readFfi   = boardStatus(boardNr).read.ffi;
-      LOG_INFO(formatString("UpdStatus:\n\tREAD seqnr:\t%d\n\tREAD error:\t%d\n\tREAD ffr:\t%d",readSeqnr,readError,readFfi));
+      LOG_INFO(formatString("UpdStatus:\n\tREAD seqnr:\t%d\n\tREAD error:\t%d\n\tREAD ffi:\t%d",readSeqnr,readError,readFfi));
+      sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_MEPReadStatus,rackNr,subRackNr,relativeBoardNr);
+      updateMEPStatusProperties(scopeString,readSeqnr,readError,readFfi);  
       
-      uint16    writeSeqnr = boardStatus(boardNr).write.seqnr;
+      uint32    writeSeqnr = boardStatus(boardNr).write.seqnr;
       uint8     writeError = boardStatus(boardNr).write.error;
       uint8     writeFfi   = boardStatus(boardNr).write.ffi;
-      LOG_INFO(formatString("UpdStatus:\n\tWRITE seqnr:\t%d\n\tWRITE error:\t%d\n\tWRITE ffr:\t%d",writeSeqnr,writeError,writeFfi));
+      LOG_INFO(formatString("UpdStatus:\n\tWRITE seqnr:\t%d\n\tWRITE error:\t%d\n\tWRITE ffi:\t%d",writeSeqnr,writeError,writeFfi));
+      sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_MEPWriteStatus,rackNr,subRackNr,relativeBoardNr);
+      updateMEPStatusProperties(scopeString,writeSeqnr,writeError,writeFfi);  
 
+      uint32    syncClock_count = boardStatus(boardNr).sync.clock_count;
+      uint32    syncCount       = boardStatus(boardNr).sync.count;
+      uint32    syncErrors      = boardStatus(boardNr).sync.errors;
+      LOG_INFO(formatString("UpdStatus:\n\tSYNC clock_count:\t%d\n\tSYNC count:\t%d\n\tSYNC errors:\t%d",syncClock_count,syncCount,syncErrors));
+      sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_SYNCStatus,rackNr,subRackNr,relativeBoardNr);
+      updateSYNCStatusProperties(scopeString,syncClock_count,syncCount,syncErrors);  
     }
 
     for(int rcuNr=rcuStatus.lbound(blitz::firstDim); rcuNr <= rcuStatus.ubound(blitz::firstDim); ++rcuNr)
@@ -950,11 +972,8 @@ GCFEvent::TResult RegisterAccessTask::handleUpdStatus(GCFEvent& e, GCFPortInterf
       uint8   rcuStatusBits = rcuStatus(rcuNr).status;
       LOG_INFO(formatString("UpdStatus:\n\tRCU[%d] status:\t0x%x",rcuNr,rcuStatusBits));
       
-      int rackRelativeNr    = rcuNr / (m_n_rcus_per_ap*m_n_aps_per_board*m_n_boards_per_subrack*m_n_subracks_per_rack) + 1;
-      int subRackRelativeNr = ( rcuNr / (m_n_rcus_per_ap*m_n_aps_per_board*m_n_boards_per_subrack) ) % m_n_subracks_per_rack + 1;
-      int boardRelativeNr   = ( rcuNr / (m_n_rcus_per_ap*m_n_aps_per_board) ) % m_n_boards_per_subrack + 1;
-      int apRelativeNr      = ( rcuNr / (m_n_rcus_per_ap) ) % m_n_aps_per_board + 1;
-      int rcuRelativeNr     = ( rcuNr % m_n_rcus_per_ap) + 1;
+      int rackRelativeNr,subRackRelativeNr,boardRelativeNr,apRelativeNr,rcuRelativeNr;
+      getRCURelativeNumbers(rcuNr,rackRelativeNr,subRackRelativeNr,boardRelativeNr,apRelativeNr,rcuRelativeNr);
 
       sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN,rackRelativeNr,subRackRelativeNr,boardRelativeNr,apRelativeNr,rcuRelativeNr);
       LOG_DEBUG(formatString("RCU[%d]= %s",rcuNr,scopeString));
@@ -1119,6 +1138,45 @@ void RegisterAccessTask::updateETHproperties(string scope,
   }
 }
 
+/**
+ * update MEP status properties 
+ */
+void RegisterAccessTask::updateMEPStatusProperties(string scope,uint32 seqnr,
+                                                                uint8  error,
+                                                                uint8  ffi)
+{
+  TMyPropertySetMap::iterator it=m_myPropertySetMap.find(scope);
+  if(it != m_myPropertySetMap.end())
+  {
+    GCFPVUnsigned pvTemp(seqnr);
+    it->second->setValue(string(PROPNAME_SEQNR),pvTemp);
+    
+    pvTemp.setValue(error);
+    it->second->setValue(string(PROPNAME_ERROR),pvTemp);
+
+    pvTemp.setValue(ffi);
+    it->second->setValue(string(PROPNAME_FFI),pvTemp);
+  }
+}
+
+void RegisterAccessTask::updateSYNCStatusProperties(string scope,uint32 clock_count,
+                                                                 uint32 count,
+                                                                 uint32 errors)
+{
+  TMyPropertySetMap::iterator it=m_myPropertySetMap.find(scope);
+  if(it != m_myPropertySetMap.end())
+  {
+    GCFPVUnsigned pvTemp(clock_count);
+    it->second->setValue(string(PROPNAME_CLOCKCOUNT),pvTemp);
+    
+    pvTemp.setValue(count);
+    it->second->setValue(string(PROPNAME_COUNT),pvTemp);
+
+    pvTemp.setValue(errors);
+    it->second->setValue(string(PROPNAME_ERRORS),pvTemp);
+  }
+}
+                                             
 void RegisterAccessTask::updateFPGAproperties(string scope,uint8 status, uint8 temp)
 {
   // layout fpga status: 
@@ -1199,4 +1257,20 @@ void RegisterAccessTask::handleMaintenance(string propName, const GCFPValue& val
   int pos=propName.find_last_of("_.");
   string resource = propName.substr(0,pos);
   m_physicalModel.inMaintenance(maintenanceFlag,resource);
+}
+
+void RegisterAccessTask::getBoardRelativeNumbers(int boardNr,int& rackNr,int& subRackNr,int& relativeBoardNr)
+{
+  rackNr          = boardNr / (m_n_subracks_per_rack*m_n_boards_per_subrack) + 1;
+  subRackNr       = (boardNr / m_n_boards_per_subrack) % m_n_subracks_per_rack + 1;
+  relativeBoardNr = boardNr % m_n_boards_per_subrack + 1;
+}
+
+void RegisterAccessTask::getRCURelativeNumbers(int rcuNr,int& rackRelativeNr,int& subRackRelativeNr,int& boardRelativeNr,int& apRelativeNr,int& rcuRelativeNr)
+{
+  rackRelativeNr    = rcuNr / (m_n_rcus_per_ap*m_n_aps_per_board*m_n_boards_per_subrack*m_n_subracks_per_rack) + 1;
+  subRackRelativeNr = ( rcuNr / (m_n_rcus_per_ap*m_n_aps_per_board*m_n_boards_per_subrack) ) % m_n_subracks_per_rack + 1;
+  boardRelativeNr   = ( rcuNr / (m_n_rcus_per_ap*m_n_aps_per_board) ) % m_n_boards_per_subrack + 1;
+  apRelativeNr      = ( rcuNr / (m_n_rcus_per_ap) ) % m_n_aps_per_board + 1;
+  rcuRelativeNr     = ( rcuNr % m_n_rcus_per_ap) + 1;
 }

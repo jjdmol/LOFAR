@@ -57,11 +57,16 @@ const char APC_HFA[]            = "ApcHFAType";
 const char APC_ADCStatistics[]  = "ApcADCStatisticsType";
 const char APC_Maintenance[]    = "ApcMaintenanceType";
 const char APC_Alert[]          = "ApcAlertType";
+const char APC_MEPStatus[]      = "ApcMEPStatusType";
+const char APC_SYNCStatus[]     = "ApcSYNCStatusType";
 
 const char SCOPE_PIC[] =                                              "PIC";
 const char SCOPE_PIC_RackN[] =                                        "PIC_Rack%d";
 const char SCOPE_PIC_RackN_SubRackN[] =                               "PIC_Rack%d_SubRack%d";
 const char SCOPE_PIC_RackN_SubRackN_BoardN[] =                        "PIC_Rack%d_SubRack%d_Board%d";
+const char SCOPE_PIC_RackN_SubRackN_BoardN_MEPReadStatus[] =          "PIC_Rack%d_SubRack%d_Board%d_MEPReadStatus";
+const char SCOPE_PIC_RackN_SubRackN_BoardN_MEPWriteStatus[] =         "PIC_Rack%d_SubRack%d_Board%d_MEPWriteStatus";
+const char SCOPE_PIC_RackN_SubRackN_BoardN_SYNCStatus[] =             "PIC_Rack%d_SubRack%d_Board%d_SYNCStatus";
 const char SCOPE_PIC_RackN_SubRackN_BoardN_ETH[] =                    "PIC_Rack%d_SubRack%d_Board%d_ETH";
 const char SCOPE_PIC_RackN_SubRackN_BoardN_BP[] =                     "PIC_Rack%d_SubRack%d_Board%d_BP";
 const char SCOPE_PIC_RackN_SubRackN_BoardN_APN[] =                    "PIC_Rack%d_SubRack%d_Board%d_AP%d";
@@ -106,6 +111,11 @@ const char SCOPE_PIC_RackN_SubRackN_BoardN_Alert[] =                  "PIC_Rack%
 #define PROPNAME_STATISTICSSUBBANDPOWER "statisticsSubbandPower"
 #define PROPNAME_STATISTICSBEAMLETMEAN  "statisticsBeamletMean"
 #define PROPNAME_STATISTICSBEAMLETPOWER "statisticsBeamletPower"
+#define PROPNAME_SEQNR           "seqnr"
+#define PROPNAME_ERROR           "error"
+#define PROPNAME_CLOCKCOUNT      "clockCount"
+#define PROPNAME_COUNT           "count"
+#define PROPNAME_ERRORS          "errors"
 
 #define GCF_READWRITE_PROP (GCF_READABLE_PROP | GCF_WRITABLE_PROP)
 
@@ -246,6 +256,35 @@ const TProperty PROPS_ADCStatistics[] =
 const TPropertySet PROPSET_ADCStatistics = 
 {
   1, "ADCStatistics", PROPS_ADCStatistics
+};
+
+const TProperty PROPS_MEPStatus[] =
+{
+  {PROPNAME_SEQNR, GCFPValue::LPT_UNSIGNED, GCF_READABLE_PROP | GCF_WRITABLE_PROP, "0"},
+  {PROPNAME_ERROR, GCFPValue::LPT_UNSIGNED, GCF_READABLE_PROP | GCF_WRITABLE_PROP, "0"},
+  {PROPNAME_FFI,   GCFPValue::LPT_UNSIGNED, GCF_READABLE_PROP | GCF_WRITABLE_PROP, "0"},
+};
+
+const TPropertySet PROPSET_MEPReadStatus = 
+{
+  3, "MEPReadStatus", PROPS_MEPStatus
+};
+
+const TPropertySet PROPSET_MEPWriteStatus = 
+{
+  3, "MEPWriteStatus", PROPS_MEPStatus
+};
+
+const TProperty PROPS_SYNCStatus[] =
+{
+  {PROPNAME_CLOCKCOUNT, GCFPValue::LPT_UNSIGNED, GCF_READABLE_PROP | GCF_WRITABLE_PROP, "0"},
+  {PROPNAME_COUNT,      GCFPValue::LPT_UNSIGNED, GCF_READABLE_PROP | GCF_WRITABLE_PROP, "0"},
+  {PROPNAME_ERRORS,     GCFPValue::LPT_UNSIGNED, GCF_READABLE_PROP | GCF_WRITABLE_PROP, "0"},
+};
+
+const TPropertySet PROPSET_SYNCStatus = 
+{
+  3, "SYNCStatus", PROPS_SYNCStatus
 };
 
 const TProperty PROPS_Maintenance[] =
