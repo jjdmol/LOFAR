@@ -59,20 +59,20 @@ namespace LOFAR
     int totalNumberOfNodes = ( NoSplitsPerSplitter + 2 ) * NoSplitters + 3 * NoHeatLines + NoRndNodes;
     int MPINodes = TH_MPI::getNumberOfNodes();
     if (totalNumberOfNodes>MPINodes) {
-      cerr<<"This program was started on "<<TH_MPI::getNumberOfNodes()
-	  <<" nodes, but we need "<<totalNumberOfNodes<<" nodes. Aborting"<<endl;
+      cerr<<"This program was started with "<<TH_MPI::getNumberOfNodes()
+	  <<" processes, but we need "<<totalNumberOfNodes<<" processes. Aborting"<<endl;
       exit(1);
     } else if (totalNumberOfNodes<MPINodes) {
-      cerr<<"This program was started on "<<TH_MPI::getNumberOfNodes()
-	  <<" nodes, but we need only "<<totalNumberOfNodes<<" nodes."<<endl;
+      cerr<<"This program was started with "<<TH_MPI::getNumberOfNodes()
+	  <<" processes, but we need only "<<totalNumberOfNodes<<"."<<endl;
     };
 #endif
     
     // you can choose the output for the WH_Dump here
     // of course this can also be done per workholder
-    //ostream& myOutput = cout;
+    ostream& myOutput = cout;
     itsFileOutput = new fstream("/dev/null", fstream::out);
-    ostream& myOutput = *itsFileOutput;
+    //ostream& myOutput = *itsFileOutput;
 
     vector<WH_Random*> RandomNodes;
     vector<WH_Transpose*> TransposeNodes;
