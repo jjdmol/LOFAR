@@ -542,20 +542,16 @@ void BeamServerTask::wgenable_action()
     RSPSetwgEvent wg;
 
     wg.timestamp.setNow();
-    wg.blpmask.reset();
-#if 0
-    for (int i = 0; i < m_n_blps; i++) wg.blpmask.set(i);
-#else
-    wg.blpmask.set(0);
-#endif
+    wg.rcumask.reset();
+    for (int i = 0; i < m_n_blps * MEPHeader::N_POL; i++) wg.rcumask.set(i);
     wg.settings().resize(1);
     // scale and convert to uint16
     wg.settings()(0).freq = (uint16)(((m_wgsetting.frequency * (1 << 16)) / SYSTEM_CLOCK_FREQ) + 0.5);
     wg.settings()(0).ampl = m_wgsetting.amplitude;
     wg.settings()(0).phase = 0;
-    wg.settings()(0).nof_samples = 512;
-    wg.settings()(0).mode = WGSettings::MODE_REPEAT;
-    wg.settings()(0)._pad = 0; /* stop valgrind complaining */
+    wg.settings()(0).nof_samples = N_WAVE_SAMPLES;
+    wg.settings()(0).mode = WGSettings::MODE_CALC;
+    wg.settings()(0).preset = WGSettings::PRESET_SINE;
 
     m_rspdriver.send(wg);
   }
@@ -566,15 +562,15 @@ void BeamServerTask::wgdisable_action()
   RSPSetwgEvent wg;
   
   wg.timestamp.setNow();
-  wg.blpmask.reset();
-  for (int i = 0; i < m_n_blps; i++) wg.blpmask.set(i);
+  wg.rcumask.reset();
+  for (int i = 0; i < m_n_blps * MEPHeader::N_POL; i++) wg.rcumask.set(i);
   wg.settings().resize(1);
   wg.settings()(0).freq = 0;
   wg.settings()(0).ampl = 0;
   wg.settings()(0).phase = 0;
-  wg.settings()(0).nof_samples = 0;
+  wg.settings()(0).nof_samples = N_WAVE_SAMPLES;
   wg.settings()(0).mode = WGSettings::MODE_OFF;
-  wg.settings()(0)._pad = 0; /* stop valgrind complaining */
+  wg.settings()(0).preset = WGSettings::PRESET_SINE;
 
   m_rspdriver.send(wg);
 }
