@@ -24,7 +24,6 @@
 
 #include <BBS3/Prediffer.h>
 #include <BBS3/MMap.h>
-#include <BBS3/MNS/MeqJonesNode.h>
 #include <BBS3/MNS/MeqStatExpr.h>
 #include <BBS3/MNS/MeqMatrixTmp.h>
 #include <BBS3/MNS/MeqStoredParmPolc.h>
@@ -61,6 +60,7 @@
 #include <stdexcept>
 #include <iostream>
 #include <fstream>
+#include <malloc.h>
 
 using namespace casa;
 
@@ -97,6 +97,8 @@ Prediffer::Prediffer(const string& msName,
   itsNrBl         (0),
   itsTimeIndex    (0),
   itsNrTimes      (0),
+  itsNrTimesDone  (0),
+  itsBlNext       (0),
   itsDataMap      (0),
   itsLockMappedMem(lockMappedMem)
 {
@@ -175,6 +177,16 @@ Prediffer::~Prediffer()
   }
   for (vector<MeqStatSources*>::iterator iter = itsStatSrc.begin();
        iter != itsStatSrc.end();
+       iter++) {
+    delete *iter;
+  }
+  for (vector<MeqExpr*>::iterator iter = itsComplexConv.begin();
+       iter != itsComplexConv.end();
+       iter++) {
+    delete *iter;
+  }
+  for (vector<MeqJonesNode*>::iterator iter = itsJonesNodes.begin();
+       iter != itsJonesNodes.end();
        iter++) {
     delete *iter;
   }
@@ -346,11 +358,11 @@ void Prediffer::fillBaselines (const vector<int>& antnrs)
 void Prediffer::countBaselines()
 {
   itsNrSelBl = 0;
-  for (uint j=0; j<itsBLSelection.nrow(); ++j) {
-    for (uint i=0; i<itsBLSelection.nrow(); ++j) {
-      if (itsBLSelection(j,i)  &&  itsBLIndex(j,i) >= 0) {
-	itsNrSelBl++;
-      }
+  const bool* sel = itsBLSelection.data();
+  const int*  inx = itsBLIndex.data();
+  for (uint i=0; i<itsBLSelection.nelements(); ++i) {
+    if (sel[i]  &&  inx[i] >= 0) {
+      itsNrSelBl++;
     }
   }
 }
@@ -525,19 +537,25 @@ void Prediffer::makeLOFARExpr(Bool asAP)
 	MeqExpr* ej22i = new MeqStoredParmPolc ("EJ22." + ejname2 + nm,
 						j+1, i+1,
 						&itsMEP);
+	MeqExpr *ej11, *ej12, *ej21, *ej22;
 	if (asAP) {
-	  MeqExpr* ej11 = new MeqExprAPToComplex (ej11r, ej11i);
-	  MeqExpr* ej12 = new MeqExprAPToComplex (ej12r, ej12i);
-	  MeqExpr* ej21 = new MeqExprAPToComplex (ej21r, ej21i);
-	  MeqExpr* ej22 = new MeqExprAPToComplex (ej22r, ej22i);
-	  vec.push_back (new MeqJonesNode (ej11, ej12, ej21, ej22));
+	  ej11 = new MeqExprAPToComplex (ej11r, ej11i);
+	  ej12 = new MeqExprAPToComplex (ej12r, ej12i);
+	  ej21 = new MeqExprAPToComplex (ej21r, ej21i);
+	  ej22 = new MeqExprAPToComplex (ej22r, ej22i);
 	} else {
-	  MeqExpr* ej11 = new MeqExprToComplex (ej11r, ej11i);
-	  MeqExpr* ej12 = new MeqExprToComplex (ej12r, ej12i);
-	  MeqExpr* ej21 = new MeqExprToComplex (ej21r, ej21i);
-	  MeqExpr* ej22 = new MeqExprToComplex (ej22r, ej22i);
-	  vec.push_back (new MeqJonesNode (ej11, ej12, ej21, ej22));
+	  ej11 = new MeqExprToComplex (ej11r, ej11i);
+	  ej12 = new MeqExprToComplex (ej12r, ej12i);
+	  ej21 = new MeqExprToComplex (ej21r, ej21i);
+	  ej22 = new MeqExprToComplex (ej22r, ej22i);
 	}
+	itsComplexConv.push_back (ej11);
+	itsComplexConv.push_back (ej12);
+	itsComplexConv.push_back (ej21);
+	itsComplexConv.push_back (ej22);
+	MeqJonesNode* jonesNode = new MeqJonesNode (ej11, ej12, ej21, ej22);
+	itsJonesNodes.push_back (jonesNode);
+	vec.push_back (jonesNode);
       }
       itsLSSExpr[i] = new MeqLofarStatSources (vec, itsStatSrc[i]);
     }
@@ -621,12 +639,28 @@ void Prediffer::initParms (const MeqDomain& domain, bool readPolcs)
 vector<uint32> Prediffer::setDomain (double fstart, double flength,
 				     double tstart, double tlength)
 {
+  // Determine the first channel and nr of channels to process.
+  ASSERT (fstart <= itsEndFreq);
+  ASSERT (flength > 0  &&  tlength > 0);
+  if (fstart < itsStartFreq) {
+    itsFirstChan = 0;
+  } else {
+    itsFirstChan = int((fstart-itsStartFreq) / itsStepFreq);
+  }
+  double fend = fstart+flength;
+  if (fend >= itsEndFreq) {
+    itsLastChan = itsNrChan;
+  } else {
+    itsLastChan = int(0.5 + (fend-itsStartFreq) / itsStepFreq);
+  }
+  itsLastChan--;
+  ASSERT (itsFirstChan <= itsLastChan);
+
+  // Map the part of the file matching the given times.
   NSTimer mapTimer;
   mapTimer.start();
   itsDataMap->unmapFile();
-
-  cout << "BBSTest: EndOfInterval" << endl;
-
+  // Find the times matching the given time interval.
   // Normally the times are in sequential order, so we can continue searching.
   // Otherwise start the search at the start.
   if (tstart < itsTimes[itsTimeIndex]) {
@@ -634,7 +668,7 @@ vector<uint32> Prediffer::setDomain (double fstart, double flength,
   }
   // Find the time matching the start time.
   while (itsTimeIndex < itsTimes.nelements()
-	 && tstart < itsTimes[itsTimeIndex] - itsIntervals[itsTimeIndex]/2) {
+	 &&  tstart > itsTimes[itsTimeIndex]) {
     ++itsTimeIndex;
   }
   // Exit when no more chunks.
@@ -648,12 +682,15 @@ vector<uint32> Prediffer::setDomain (double fstart, double flength,
   int startIndex = itsTimeIndex;
   double startTime = itsTimes[itsTimeIndex] - itsIntervals[itsTimeIndex]/2;
   double endTime = tstart + tlength;
-  itsNrTimes = 0;
+  itsNrTimes     = 0;
+  itsNrTimesDone = 0;
+  itsBlNext      = 0;
   while (itsTimeIndex < itsTimes.nelements()
-	 && endTime <= itsTimes[itsTimeIndex] + itsIntervals[itsTimeIndex]/2) {
+	 && endTime >= itsTimes[itsTimeIndex]) {
     ++itsTimeIndex;
     ++itsNrTimes;
   }
+  ASSERT (itsNrTimes > 0);
   endTime = itsTimes[itsTimeIndex-1] + itsIntervals[itsTimeIndex-1]/2;
   
   // Map the correct data subset (this time interval)
@@ -671,18 +708,23 @@ vector<uint32> Prediffer::setDomain (double fstart, double flength,
 
   NSTimer parmTimer;
   parmTimer.start();
-  itsSolveDomain = MeqDomain(startTime, endTime,
-			     itsStartFreq + itsFirstChan*itsStepFreq,
-			     itsStartFreq + (itsLastChan+1)*itsStepFreq);
-  initParms (itsSolveDomain, true);
+  MeqDomain solveDomain(startTime, endTime,
+			itsStartFreq + itsFirstChan*itsStepFreq,
+			itsStartFreq + (itsLastChan+1)*itsStepFreq);
+  initParms (solveDomain, true);
   parmTimer.stop();
   cout << "BBSTest: initparms    " << parmTimer << endl;
 
   // Create the shape vector.
-  vector<uint32> shape(3);
-  shape[0] = itsNrTimes*itsNrChan*itsNPol;
-  shape[1] = itsNrScid;
-  shape[2] = itsNrSelBl;
+  vector<uint32> shape(4);
+  shape[0] = 2*(itsLastChan-itsFirstChan+1);
+  shape[1] = itsNrScid+1;
+  // Use a buffer of, say, up to 100 KBytes.
+  // All pol, freq and spid have to fit in it.
+  itsNrBufTB = std::max (1, int(0.5 + 100000. / (shape[0] * shape[1] * itsNPol)
+				/ sizeof(double)));
+  shape[2] = itsNrBufTB*itsNPol;
+  shape[3] = itsNPol * itsNrSelBl * itsNrTimes;   // total nr
 //   itsSolveColName = itsDataColName;
   return shape;
 }
@@ -720,8 +762,8 @@ void Prediffer::clearSolvableParms()
 // name matches the parmPatterns pattern.
 //
 //----------------------------------------------------------------------
-void Prediffer::setSolvableParms (vector<string>& parms,
-				  vector<string>& excludePatterns,
+void Prediffer::setSolvableParms (const vector<string>& parms,
+				  const vector<string>& excludePatterns,
 				  bool isSolvable)
 {
   LOG_INFO_STR( "setSolvableParms: "
@@ -776,310 +818,152 @@ void Prediffer::setSolvableParms (vector<string>& parms,
 
 //----------------------------------------------------------------------
 //
-// ~getCondeq
+// ~getEquations
 //
-// Get the condition equation for the given baseline.
+// Get the condition equations for the selected baselines and domain.
 //
 //----------------------------------------------------------------------
-vector<MeqResult> getCondeq (const MeqRequest& request,
-			     int bl, int ant1, int ant2,
-			     bool showd)
+bool Prediffer::getEquations (double* result, const vector<uint32>& shape)
 {
-  /*
-  NSTimer predTimer, eqTimer;
-  unsigned int blOffset = bl*itsNrChan*itsNPol;
+  ASSERT (itsNrTimesDone < itsNrTimes);
+  LOG_TRACE_FLOW("Prediffer::getEquations");
+  // Check if the shape is correct.
+  int nrchan = itsLastChan-itsFirstChan+1;
+  ASSERT (shape[2] == uint(itsNrBufTB*itsNPol)
+	  && shape[1] == uint(itsNrScid+1)
+	  && shape[0] == uint(2*nrchan));
+  double startFreq = itsStartFreq + itsFirstChan*itsStepFreq;
+  double endFreq   = itsStartFreq + (itsLastChan+1)*itsStepFreq;
   unsigned int freqOffset = itsFirstChan*itsNPol;
-  // Set the data pointer
+
+  // Get the pointer to the mapped data.
   fcomplex* dataStart = (fcomplex*)itsDataMap->getStart();
   ASSERTSTR(dataStart!=0, "No memory region mapped. Call map(..) first."
 	    << " Perhaps you have forgotten to call nextInterval().");
-  fcomplex* data = dataStart + timeOffset + blOffset + freqOffset;
-  
-  ASSERT (ant1 < itsBLIndex.nrow()  &&  ant2 < itsBLIndex.nrow()
-	  &&  itsBLIndex(ant1,ant2) >= 0);
-  int blindex = itsBLIndex(ant1,ant2);
-  ///    if (MeqPointDFT::doshow) {
-    ///      cout << "Info: " << ant1 << ' ' << ant2 << ' ' << blindex << endl;
-    ///    }
 
+  // Loop through all baselines/times and create a request.
+
+  uint nrDone = 0;
+  while (itsNrTimesDone<itsNrTimes) {
+    uint tStep = itsNrTimesDone;
+    //    malloc_stats();
+    //cout << "Before calc";
+    //char ch;
+    //cin >> ch;
+    unsigned int timeOffset = tStep*itsNrBl*itsNrChan*itsNPol;
+    double time = itsTimes[itsTimeIndex-itsNrTimes+tStep];
+    double interv = itsIntervals[itsTimeIndex-itsNrTimes+tStep];
+    
+    MeqDomain domain(time-interv/2, time+interv/2, startFreq, endFreq);
+    MeqRequest request(domain, 1, nrchan, itsNrScid);
+
+    // Loop through all baselines and get an equation if selected.
+    while (itsBlNext<itsNrBl) {
+      uint ant1 = itsAnt1[itsBlNext];
+      uint ant2 = itsAnt2[itsBlNext];
+      ASSERT (ant1 < itsBLIndex.nrow()  &&  ant2 < itsBLIndex.nrow());
+      if (itsBLSelection(ant1,ant2)  &&  itsBLIndex(ant1,ant2) >= 0) {
+	if (nrDone == itsNrBufTB) {
+	  break;
+	}
+	unsigned int blOffset = itsBlNext*itsNrChan*itsNPol;
+	fcomplex* data = dataStart + timeOffset + blOffset + freqOffset;
+	// Get an equation for this baseline.
+	int blindex = itsBLIndex(ant1,ant2);
+	getEquation (result, data, request, blindex, ant1, ant2);
+	result += 2*nrchan*itsNPol*(itsNrScid+1);
+	++nrDone;
+      }
+      ++itsBlNext;
+    }
+    if (itsBlNext == itsNrBl) {
+      // A baseline loop has been completed.
+      ++itsNrTimesDone;
+      itsBlNext = 0;
+    }
+    if (nrDone == itsNrBufTB) {
+      break;
+    }
+    //    malloc_stats();
+    //cout << "After calc";
+    //cin >> ch;
+  }
+  if (itsNrTimesDone == itsNrTimes) {
+    cout << "BBSTest: predict " << itsPredTimer << endl;
+    cout << "BBSTest: formeqs " << itsEqTimer << endl;
+    return false;
+  }
+  return true;
+}
+
+//----------------------------------------------------------------------
+//
+// ~getEquation
+//
+// Get the equation for the given baseline.
+//
+//----------------------------------------------------------------------
+void Prediffer::getEquation (double* result, const fcomplex* data,
+			     const MeqRequest& request,
+			     int blindex, int ant1, int ant2)
+{
+  itsPredTimer.start();
   MeqJonesExpr& expr = *(itsExpr[blindex]);
-  predTimer.start();
   expr.calcResult (request);         // This is the actual predict
-  predTimer.stop();
+  itsPredTimer.stop();
 
-  // Form the equations for this row.
-  // Make a default derivative vector with values 0.
-  MeqResult condeq[4];
-  ASSERT (itsNPol <= 4);
-  for (int i=0; i<itsNPol; i++) {
-    condeq[i] = MeqResult(nspid);
+  itsEqTimer.start();
+  int nrchan = request.ny();
+  bool showd = false;
+  ///  showd = (ant1==4 && ant2==8);
+  // Put the results in a single array for easier handling.
+  const MeqResult* predResults[4];
+  predResults[0] = &(expr.getResult11());
+  if (itsNPol == 2) {
+    predResults[1] = &(expr.getResult22());
+  } else if (itsNPol == 4) {
+    predResults[1] = &(expr.getResult12());
+    predResults[2] = &(expr.getResult21());
+    predResults[3] = &(expr.getResult22());
   }
-
-  MeqMatrix defaultDeriv (DComplex(0,0), 1, nrchan);
-  const complex<double>* defaultDerivPtr = defaultDeriv.dcomplexStorage();
-    
-  // >>>>>>>>>>>>>> Diff 
-  // Calculate the derivatives and get pointers to them.
-  // Use the default if no perturbed value defined.                    //>>>> uses predicted data
-  vector<const complex<double>*> derivs(itsNPol*itsNrScid);
-  bool foundDeriv = false;
-  if (showd) {
-    cout << "xx val " << expr.getResult11().getValue() << endl;;
-    cout << "xy val " << expr.getResult12().getValue() << endl;;
-    cout << "yx val " << expr.getResult21().getValue() << endl;;
-    cout << "yy val " << expr.getResult22().getValue() << endl;;
-  }
-  for (int scinx=0; scinx<itsNrScid; scinx++) {
-    MeqMatrix val;
-    if (expr.getResult11().isDefined(scinx)) {
-      val = expr.getResult11().getPerturbedValue(scinx);
-      if (showd) {
-	cout << "xx" << scinx << ' ' << val;
-      }
-      val -= expr.getResult11().getValue();
-      if (showd) {
-	cout << "  diff=" << val;
-      }
-      ///cout << "Diff  " << val << endl;
-      val /= expr.getResult11().getPerturbation(scinx);
-      if (showd) {
-	cout << "  der=" << val << endl;
-      }
-      ///cout << "Deriv " << val << endl;
-      derivs[scinx] = val.dcomplexStorage();
-      foundDeriv = true;
-    } else {
-      derivs[scinx] = defaultDerivPtr;
+  // Loop through the polarizations.
+  for (int pol=0; pol<itsNPol; ++pol) {
+    // Get the difference (measured - predicted) for all channels.
+    const MeqMatrix& val = predResults[pol]->getValue();
+    const double* vals = (const double*)(val.dcomplexStorage());
+    if (showd) {
+      cout << "pol=" << pol << ' ' << val << endl;
     }
-    if (itsNPol == 4) {
-      if (expr.getResult12().isDefined(scinx)) {
-	val = expr.getResult12().getPerturbedValue(scinx);
-	if (showd) {
-	  cout << "xy" << scinx << ' ' << val;
+    for (int ch=0; ch<nrchan; ++ch) {
+      *result++ = data[pol+ch*itsNPol].real() - vals[2*ch];
+      *result++ = data[pol+ch*itsNPol].imag() - vals[2*ch+1];
+      if (showd) cout << *(result-2) << ' ' << *(result-1) << ' ';
+    }
+    if (showd) cout << endl;
+    // Get the derivative for all solvable parameters.
+    for (int scinx=0; scinx<itsNrScid; ++scinx) {
+      if (! predResults[pol]->isDefined(scinx)) {
+	// Undefined, so set derivatives to 0.
+	for (int ch=0; ch<2*nrchan; ++ch) {
+	  *result++ = 0;
 	}
-	val -= expr.getResult12().getValue();
-	if (showd) {
-	  cout << "  diff=" << val;
-	}
-	val /= expr.getResult12().getPerturbation(scinx);
-	if (showd) {
-	  cout << "  der=" << val << endl;
-	}
-	derivs[scinx + itsNrScid] = val.dcomplexStorage();
-	foundDeriv = true;
       } else {
-	derivs[scinx + itsNrScid] = defaultDerivPtr;
-      }
-      if (expr.getResult21().isDefined(scinx)) {
-	val = expr.getResult21().getPerturbedValue(scinx);
+	// Calculate the derivative for each channel (real and imaginary part).
+	double pert = predResults[pol]->getPerturbation(scinx).getDouble();
+	const MeqMatrix& pertVal = predResults[pol]->getPerturbedValue(scinx);
+	const double* pertVals = (const double*)(pertVal.dcomplexStorage());
 	if (showd) {
-	  cout << "yx" << scinx << ' ' << val;
+	  cout << "pol=" << pol << " spid=" << scinx << ' ' << pertVal << endl;
 	}
-	val -= expr.getResult21().getValue();
-	if (showd) {
-	  cout << "  diff=" << val;
+	for (int ch=0; ch<2*nrchan; ++ch) {
+	  *result++ = (pertVals[ch] - vals[ch]) / pert;
+	  if (showd) cout << *(result-1) << ' ';
 	}
-	val /= expr.getResult21().getPerturbation(scinx);
-	if (showd) {
-	  cout << "  der=" << val << endl;
-	}
-	derivs[scinx + 2*itsNrScid] = val.dcomplexStorage();
-	foundDeriv = true;
-      } else {
-	derivs[scinx + 2*itsNrScid] = defaultDerivPtr;
-      }
-    }
-    if (itsNPol > 1) {
-      if (expr.getResult22().isDefined(scinx)) {
-	val = expr.getResult22().getPerturbedValue(scinx);
-	if (showd) {
-	  cout << "yy" << scinx << ' ' << val;
-	}
-	val -= expr.getResult22().getValue();
-	if (showd) {
-	  cout << "  diff=" << val;
-	}
-	val /= expr.getResult22().getPerturbation(scinx);
-	if (showd) {
-	  cout << "  der=" << val << endl;
-	}
-	derivs[scinx + (itsNPol-1)*itsNrScid] = val.dcomplexStorage();
-	foundDeriv = true;
-      } else {
-	derivs[scinx + (itsNPol-1)*itsNrScid] = defaultDerivPtr;
+	if (showd) cout << endl;
       }
     }
   }
-    
-  // Only add to solver if at least one derivative was found.
-  // Otherwise these data are not dependent on the solvable parameters.
-  if (foundDeriv) {
-    // Get pointer to array storage; the data in it is contiguous.    //>>>>>> uses MS data
-    Complex* dataPtr = data;
-    
-    // 	  cout << "First data element for time=" << time
-    // 	       << ", ant1=" << ant1 << ", ant2=" << ant2
-    // 	       << " : " << *dataPtr << endl;
-    
-    vector<double> derivVec(2*itsNrScid);
-    double* derivReal = &(derivVec[0]);
-    double* derivImag = &(derivVec[itsNrScid]);
-    // Fill in all equations.
-    if (itsNPol == 1) {
-      {
-	const MeqMatrix& xx = expr.getResult11().getValue();
-	for (int i=0; i<nrchan; i++) {
-	  for (int j=0; j<itsNrScid; j++) {
-	    derivReal[j] = derivs[j][i].real();
-	    derivImag[j] = derivs[j][i].imag();
-	  }
-	  DComplex diff (dataPtr[i].real(), dataPtr[i].imag());
-	  diff -= xx.getDComplex(0,i);
-	  double val = diff.real();
-	  itsSolver.makeNorm (derivReal, 1., val);
-	  val = diff.imag();
-	  itsSolver.makeNorm (derivImag, 1., val);
-	  nrpoint++;
-	}
-      }
-    } else if (itsNPol == 2) {
-      {
-	const MeqMatrix& xx = expr.getResult11().getValue();
-	for (int i=0; i<nrchan; i++) {
-	  for (int j=0; j<itsNrScid; j++) {
-	    derivReal[j] = derivs[j][i].real();
-	    derivImag[j] = derivs[j][i].imag();
-	  }
-	  DComplex diff (dataPtr[i*2].real(), dataPtr[i*2].imag());
-	  diff -= xx.getDComplex(0,i);
-	  double val = diff.real();
-	  itsSolver.makeNorm (derivReal, 1., val);
-	  val = diff.imag();
-	  itsSolver.makeNorm (derivImag, 1., val);
-	  nrpoint++;
-	}
-      }
-      {
-	const MeqMatrix& yy = expr.getResult22().getValue();
-	for (int i=0; i<nrchan; i++) {
-	  for (int j=0; j<itsNrScid; j++) {
-	    derivReal[j] = derivs[j+itsNrScid][i].real();
-	    derivImag[j] = derivs[j+itsNrScid][i].imag();
-	  }
-	  DComplex diff (dataPtr[i*2+1].real(), dataPtr[i*2+1].imag());
-	  diff -= yy.getDComplex(0,i);
-	  double val = diff.real();
-	  itsSolver.makeNorm (derivReal, 1., val);
-	  val = diff.imag();
-	  itsSolver.makeNorm (derivImag, 1., val);
-	  nrpoint++;
-	}
-      }
-    } else if (itsNPol == 4) {
-      {
-	const MeqMatrix& xx = expr.getResult11().getValue();
-	for (int i=0; i<nrchan; i++) {
-	  for (int j=0; j<itsNrScid; j++) {
-	    derivReal[j] = derivs[j][i].real();
-	    derivImag[j] = derivs[j][i].imag();
-	    ///cout << derivReal[j] << ' ' << derivImag[j] << ", ";
-	    if (showd) {
-	      cout << "derxx: " << j << ' '
-		   << derivReal[j] << ' ' << derivImag[j] << endl;
-	    }
-	  }
-	  ///cout << endl;
-	  DComplex diff (dataPtr[i*4].real(), dataPtr[i*4].imag());
-	  ///cout << "Value " << diff << ' ' << xx.getDComplex(0,i) << endl;
-	  diff -= xx.getDComplex(0,i);
-	  if (showd) {
-	    cout << "diffxx: " << i << ' '
-		 << diff.real() << ' ' << diff.imag() << endl;
-	  }
-	  double val = diff.real();
-	  itsSolver.makeNorm (derivReal, 1., val);
-	  val = diff.imag();
-	  itsSolver.makeNorm (derivImag, 1., val);
-	  nrpoint++;
-	}
-      }
-      {
-	const MeqMatrix& xy = expr.getResult12().getValue();
-	for (int i=0; i<nrchan; i++) {
-	  for (int j=0; j<itsNrScid; j++) {
-	    derivReal[j] = derivs[j+itsNrScid][i].real();
-	    derivImag[j] = derivs[j+itsNrScid][i].imag();
-	    if (showd) {
-	      cout << "derxy: " << i << ' '
-		   << derivReal[j] << ' ' << derivImag[j] << endl;
-	    }
-	  }
-	  DComplex diff (dataPtr[i*4+1].real(), dataPtr[i*4+1].imag());
-	  diff -= xy.getDComplex(0,i);
-	  if (showd) {
-	    cout << "diffxy: " << i << ' '
-		 << diff.real() << ' ' << diff.imag() << endl;
-	  }
-	  double val = diff.real();
-	  itsSolver.makeNorm (derivReal, 1., val);
-	  val = diff.imag();
-	  itsSolver.makeNorm (derivImag, 1., val);
-	  nrpoint++;
-	}
-      }
-      {
-	const MeqMatrix& yx = expr.getResult21().getValue();
-	for (int i=0; i<nrchan; i++) {
-	  for (int j=0; j<itsNrScid; j++) {
-	    derivReal[j] = derivs[j+2*itsNrScid][i].real();
-	    derivImag[j] = derivs[j+2*itsNrScid][i].imag();
-	    if (showd) {
-	      cout << "deryx: " << i << ' '
-		   << derivReal[j] << ' ' << derivImag[j] << endl;
-	    }
-	  }
-	  DComplex diff (dataPtr[i*4+2].real(), dataPtr[i*4+2].imag());
-	  diff -= yx.getDComplex(0,i);
-	  if (showd) {
-	    cout << "diffyx: " << i << ' '
-		 << diff.real() << ' ' << diff.imag() << endl;
-	  }
-	  double val = diff.real();
-	  itsSolver.makeNorm (derivReal, 1., val);
-	  val = diff.imag();
-	  itsSolver.makeNorm (derivImag, 1., val);
-	  nrpoint++;
-	}
-      }
-      {
-	const MeqMatrix& yy = expr.getResult22().getValue();
-	for (int i=0; i<nrchan; i++) {
-	  for (int j=0; j<itsNrScid; j++) {
-	    derivReal[j] = derivs[j+3*itsNrScid][i].real();
-	    derivImag[j] = derivs[j+3*itsNrScid][i].imag();
-	    if (showd) {
-	      cout << "deryy: " << i << ' '
-		   << derivReal[j] << ' ' << derivImag[j] << endl;
-	    }
-	  }
-	  DComplex diff (dataPtr[i*4+3].real(), dataPtr[i*4+3].imag());
-	  diff -= yy.getDComplex(0,i);
-	  if (showd) {
-	    cout << "diffyy: " << i << ' '
-		 << diff.real() << ' ' << diff.imag() << endl;
-	  }
-	  double val = diff.real();
-	  itsSolver.makeNorm (derivReal, 1., val);
-	  val = diff.imag();
-	  itsSolver.makeNorm (derivImag, 1., val);
-	  nrpoint++;
-	}
-      }
-    } else {
-      throw AipsError("Number of polarizations should be 1, 2, or 4");
-    }
-  }
-  */
+  itsEqTimer.stop();
 }
 
 
@@ -1110,7 +994,7 @@ void Prediffer::subtractPeelSources (bool write)
   cout << "saveResidualData to '" << itsDataMap->getFileName() << "'" << endl;
 
   // Map the correct data subset (this time interval) for writing
-  long long startOffset = (itsTimeIndex-itsNrTimes)*itsNrBl*itsNrChan*itsNPol*sizeof(fcomplex);
+  int64 startOffset = (itsTimeIndex-itsNrTimes)*itsNrBl*itsNrChan*itsNPol*sizeof(fcomplex);
   size_t nrBytes = itsNrTimes*itsNrBl*itsNrChan*itsNPol*sizeof(fcomplex);
   itsDataMap->mapFile(startOffset, nrBytes);
   if (itsLockMappedMem) {
@@ -1232,18 +1116,6 @@ void Prediffer::select (const vector<int>& ant1,
 			const vector<int>& ant2,
 			bool useAutoCorrelations)
 {
-//   if (firstChan < 0  ||  firstChan >= itsNrChan) {
-//     itsFirstChan = 0;
-//   } else {
-//     itsFirstChan = firstChan;
-//   }
-//   if (lastChan < 0  ||  lastChan >= itsNrChan) {
-//     itsLastChan = itsNrChan-1;
-//   } else {
-//     itsLastChan = lastChan;
-//   }
-//   ASSERT (itsFirstChan <= itsLastChan);
-
   ASSERT (ant1.size() == ant2.size());
   if (ant1.size() == 0) {
     // No baselines specified, select all baselines
@@ -1343,7 +1215,7 @@ void Prediffer::fillUVW()
       {
 	int a1 = itsAnt1[bl];
 	int a2 = itsAnt2[bl];
-	if (itsBLSelection(a1,a2) == true)
+	if (itsBLSelection(a1,a2)  &&  itsBLIndex(a1,a2) >= 0)
 	{
 	  if (!statDone[a2]) {
 	    if (statDone[a1]) {
@@ -1536,12 +1408,8 @@ void Prediffer::showSettings() const
 
 void Prediffer::updateSolvableParms()
 {
-
-}
-
-void Prediffer::getEquations (dcomplex*, const vector<uint32>& shape)
-{
-  LOG_TRACE_FLOW("Prediffer::getEquations");
+  itsNrTimesDone = 0;
+  itsBlNext      = 0;
 }
 
 } // namespace LOFAR

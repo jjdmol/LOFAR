@@ -79,6 +79,9 @@ const vector<MeqParm*>& MeqParm::getParmList()
 
 void MeqParm::clearParmList()
 {
+  for (uint i=0; i<theirParms->size(); ++i) {
+    delete (*theirParms)[i];
+  }
   delete theirParms;
   theirParms = 0;
   theirNparm = 0;

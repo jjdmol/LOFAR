@@ -68,7 +68,7 @@ void DH_Prediff::preprocess()
 {
   LOG_TRACE_FLOW("DH_Prediff preprocess");
   // Add the fields to the data definition.
-  addField ("DataBuf", BlobField<dcomplex>(1, 0, 0, 0, false));
+  addField ("DataBuf", BlobField<double>(1, 0, 0, 0, false));
 
   // Create the data blob (which calls fillPointers).
   createDataBlock();
@@ -77,7 +77,7 @@ void DH_Prediff::preprocess()
 void DH_Prediff::fillDataPointers()
 {
   // Fill in the pointers.
-  itsDataPtr = getData<dcomplex> ("DataBuf");
+  itsDataPtr = getData<double> ("DataBuf");
 }
 
 
@@ -140,7 +140,7 @@ void DH_Prediff::dump()
   cout << "Parm data : " << endl;
   vector<ParmData> pData;
   getParmData(pData);
-  for (int i=0; i<pData.size(); i++)
+  for (uint i=0; i<pData.size(); i++)
   {
     cout << pData[i] << endl;
   }

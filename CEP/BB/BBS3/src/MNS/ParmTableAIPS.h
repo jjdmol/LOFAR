@@ -98,13 +98,9 @@ private:
 
   casa::Table                  itsTable;
   casa::ColumnsIndex           itsIndex;
-  casa::RecordFieldPtr<casa::Int>    itsIndexSrcnr;
-  casa::RecordFieldPtr<casa::Int>    itsIndexStatnr;
   casa::RecordFieldPtr<casa::String> itsIndexName;
   casa::Table                  itsInitTable;
   casa::ColumnsIndex*          itsInitIndex;
-  casa::RecordFieldPtr<casa::Int>    itsInitIndexSrcnr;
-  casa::RecordFieldPtr<casa::Int>    itsInitIndexStatnr;
   casa::RecordFieldPtr<casa::String> itsInitIndexName;
 
   string itsTableName;

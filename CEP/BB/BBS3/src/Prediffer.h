@@ -30,6 +30,7 @@
 #include <BBS3/MNS/MeqDomain.h>
 #include <BBS3/MNS/MeqHist.h>
 #include <BBS3/MNS/MeqJonesExpr.h>
+#include <BBS3/MNS/MeqJonesNode.h>
 #include <BBS3/MNS/MeqMatrix.h>
 #include <BBS3/MNS/MeqParm.h>
 #include <BBS3/MNS/MeqPhaseRef.h>
@@ -41,6 +42,7 @@
 #include <BBS3/MNS/MeqStatUVW.h>
 #include <BBS3/MNS/ParmTable.h>
 
+#include <Common/Timer.h>
 #include <Common/LofarTypes.h>
 #include <Common/lofar_string.h>
 #include <list>
@@ -88,7 +90,9 @@ public:
 
   // Set the domain (in frequency and time).
   // Hereafter getSolvableParmData can be called.
-  // It returns a vector containing the 3-dim shape of the expected data.
+  // It returns a vector containing the 3-dim shape of the expected data
+  // (as nrchan-nrspid-nreq).
+  // The 4th element of the vector is the total number of equations.
   // The vector is empty if the domain is outside the observation domain.
   // Length is trimmed if beyond end of observation.
   vector<uint32> setDomain (double startFreq, double lengthFreq,
@@ -107,15 +111,16 @@ public:
 
   // Make specific parameters solvable (isSolvable = True) or
   // non-solvable (False).
-  void setSolvableParms (vector<string>& parms, 
-			 vector<string>& excludePatterns,
+  void setSolvableParms (const vector<string>& parms, 
+			 const vector<string>& excludePatterns,
 			 bool isSolvable);
 
   // Get the equations for all selected baselines.
   // The values are stored into the buffer as a 3-dim array with axes
   // nresult,nspid+1,nval.
   // It is checked if the shape of the buffer is correct.
-  void getEquations (dcomplex* buffer, const vector<uint32>& shape);
+  // The function should be called until a false status is returned.
+  bool getEquations (double* result, const vector<uint32>& shape);
 
   // Set the source numbers to use in this peel step.
   bool setPeelSources (const vector<int>& peelSources,
@@ -183,23 +188,20 @@ private:
   // The EJones can be expressed as real/imag or ampl/phase.
   void makeLOFARExpr (casa::Bool asAP);
 
-  MeqResult getEquation (const MeqRequest& request,
-			 int bl, int ant1, int ant2,
-			 bool showd);
+  // Get equations for a single time and baseline.
+  void getEquation (double* result, const fcomplex* data,
+		    const MeqRequest& request,
+		    int blindex, int ant1, int ant2);
 
 
-  string                itsMSName;      // Measurement set name
-  string                itsMEPName;     // Common parmtable name
+  string                itsMSName;      //# Measurement set name
+  string                itsMEPName;     //# Common parmtable name
   ParmTable             itsMEP;         //# Common parmtable
-  string                itsGSMMEPName;  // GSM parameters parmtable name
+  string                itsGSMMEPName;  //# GSM parameters parmtable name
   ParmTable             itsGSMMEP;      //# parmtable for GSM parameters
   bool                  itsCalcUVW;
 
-  int                   itsFirstChan;   //# first channel selected
-  int                   itsLastChan;    //# last channel selected
-
   MeqPhaseRef           itsPhaseRef;    //# Phase reference position in J2000
-  MeqDomain             itsSolveDomain;
 
   MeqSourceList         itsSources;
   casa::Vector<int>     itsPeelSourceNrs;
@@ -208,22 +210,26 @@ private:
   vector<MeqStatSources*> itsStatSrc;
   vector<MeqLofarStatSources*> itsLSSExpr; //# Lofar sources per station
   vector<MeqJonesExpr*> itsStatExpr;    //# Expression per station
+  vector<MeqExpr*>      itsComplexConv; //# Expression to convert to complex
+  vector<MeqJonesNode*> itsJonesNodes;  //# Jones nodes
   vector<casa::MVBaseline>     itsBaselines;
   vector<MeqHist>       itsCelltHist;   //# Histogram of #cells in time
   vector<MeqHist>       itsCellfHist;   //# Histogram of #cells in freq
   vector<MeqJonesExpr*> itsExpr;        //# solve expression tree per baseline
   vector<MeqJonesExpr*> itsResExpr;     //# residual expr tree per baseline
 
-  double itsStartFreq;
+  double itsStartFreq;                //# start frequency of observation
   double itsEndFreq;
   double itsStepFreq;
-  int    itsNrChan;
+  int    itsNrChan;                   //# nr of channels in observation
+  int    itsFirstChan;                //# first channel of selected domain
+  int    itsLastChan;                 //# last channel of selected domain
 
   string itsSolveFileName;            //# Data file used (.dat or .res)
 
   int          itsNrScid;             //# Nr of solvable parameter coeff.
   vector<bool> itsIsParmSolvable;     //# is corresponding parmlist solvable?
-  vector<ParmData> itsParmData;       // solvable parm info. 
+  vector<ParmData> itsParmData;       //# solvable parm info. 
 
   vector<int>          itsAnt1;        //# Antenna1 antenna numbers
   vector<int>          itsAnt2;        //# Antenna2 antenna numbers
@@ -235,11 +241,19 @@ private:
   casa::Matrix<bool>   itsBLSelection; //# true = baseline is selected
   casa::Matrix<int>    itsBLIndex;     //# baseline index of antenna pair
                                        //# -1 is baseline is absent
-  unsigned int         itsNrSelBl;     //# nr of selected baselines
-  unsigned int   itsTimeIndex;      //# The index of the current time
-  unsigned int   itsNrTimes;        //# The number of times in the time interval
-  MMap*          itsDataMap;        //# Data file to map
-  bool           itsLockMappedMem;  //# Lock memory immediately after mapping?
+  unsigned int   itsNrSelBl;       //# nr of selected baselines
+  unsigned int   itsTimeIndex;     //# The index of the current time
+  unsigned int   itsNrTimes;       //# The number of times in the time domain
+  unsigned int   itsNrBufTB;       //# Nr of times/baselines fitting in buffer
+  unsigned int   itsNrTimesDone;   //# The number of times done in time domain
+  unsigned int   itsBlNext;        //# Next baseline to do in time domain
+
+  MMap*          itsDataMap;       //# Data file to map
+  bool           itsLockMappedMem; //# Lock memory immediately after mapping?
+
+  NSTimer itsPredTimer;
+  NSTimer itsEqTimer;
+
 };
 
 } // namespace LOFAR

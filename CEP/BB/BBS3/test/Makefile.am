@@ -1,6 +1,8 @@
 common_top_builddir=@common_top_builddir@
 
-check_PROGRAMS = tBBS3
+check_PROGRAMS = tPredSolv tBBS3 tPredSolv
+
+tPredSolv_SOURCES = tPredSolv.cc
 
 tBBS3_SOURCES = tBBS3.cc
 
