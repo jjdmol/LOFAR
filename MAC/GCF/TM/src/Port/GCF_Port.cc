@@ -28,14 +28,10 @@
 #include <GCF/ParameterSet.h>
 #include <GTM_Defines.h>
 
-// all possible implementations are included here
 #include <GCF/TM/GCF_TCPPort.h>
+#include <GCF/TM/GCF_ETHRawPort.h>
+#include <GCF/TM/GCF_DevicePort.h>
 
-using namespace GCF;
-
-/**
- * ::GCFPort constructor
- */
 GCFPort::GCFPort(GCFTask& task, 
                  string& name, 
                  TPortType type, 
@@ -45,17 +41,11 @@ GCFPort::GCFPort(GCFTask& task,
 {
 }
 
-/**
- * ::GCFPort default constructor
- */
 GCFPort::GCFPort() :
     GCFPortInterface(0, "", SAP, 0, false), _pSlave(0)
 {
 }
 
-/**
- * ::~GCFPort destructor
- */
 GCFPort::~GCFPort()
 {
   //
@@ -66,9 +56,6 @@ GCFPort::~GCFPort()
   _pSlave = 0;
 }
 
-/**
- * ::init
- */
 void GCFPort::init(GCFTask& task,
 		 string name,
 		 TPortType type,
@@ -76,16 +63,19 @@ void GCFPort::init(GCFTask& task,
      bool transportRawData)
 {
   GCFPortInterface::init(task, name, type, protocol, transportRawData);
+  if (_pSlave) delete _pSlave;
   _pSlave = 0;
 }
 
-/**
- * ::open
- */
 bool GCFPort::open()
 {
-  if (_state != S_DISCONNECTED)
+  if (_state != S_DISCONNECTED && _state != S_CONNECTED)
   {
+    return false;
+  }
+  if (MSPP == getType())
+  {
+    LOG_ERROR("Ports of type MSPP should not be initialised directly via this common port");
     return false;
   }
   _state = S_CONNECTING;
@@ -106,23 +96,24 @@ bool GCFPort::open()
       PARAM_PORT_PROT_TYPE,
       _pTask->getName().c_str(),
       _name.c_str());
-  string type;
+  string protType;
   TPeerAddr addr;
   try
   {
-    type = ParameterSet::instance()->getString(typeParam);
+    protType = ParameterSet::instance()->getString(typeParam);
   }
   catch (...)
   {
     if (SAP == getType())
     {
-      // try to retrive the type via the remote server name
+      // try to retrive the protType via the remote server name
       string remoteServiceNameParam = formatString(
           PARAM_SERVER_SERVICE_NAME,
           _pTask->getName().c_str(),
           _name.c_str());
       try 
       {
+        // remote service is set by user?
         if (_remotetask.length() > 0 && _remoteport.length() > 0)
         {
           addr.taskname = _remotetask;
@@ -130,20 +121,24 @@ bool GCFPort::open()
         }
         else
         {
+          // retrieve remote service addr from parameter set
           string remoteAddr;
           remoteAddr += ParameterSet::instance()->getString(remoteServiceNameParam);
           const char* pRemoteTaskName = remoteAddr.c_str();
+          // format is: "<taskname>:<portname>"
           char* colon = strchr(pRemoteTaskName, ':');
           if (colon) *colon = '\0';
           addr.taskname = pRemoteTaskName;
           addr.portname = colon + 1;
         }
         
+        // now the protType of the remote service port can be retrieved from the
+        // parameter set
         typeParam = formatString(
             PARAM_PORT_PROT_TYPE,
             addr.taskname.c_str(),
             addr.portname.c_str());
-        type = ParameterSet::instance()->getString(typeParam);
+        protType = ParameterSet::instance()->getString(typeParam);
       }
       catch (...)
       {
@@ -162,12 +157,12 @@ bool GCFPort::open()
         "Could not find port info for port '%s' of task '%s'.", 
         _name.c_str(), _pTask->getName().c_str()));
         
-      return -1;        
+      return false;        
     }      
   }
 
   // Check for the various port types
-  if (type == "TCP")
+  if (protType == "TCP")
   {
     GCFTCPPort* pNewPort(0);
     string pseudoName = _name + "_TCP";
@@ -182,11 +177,29 @@ bool GCFPort::open()
 
     _pSlave = pNewPort;
   }
-  else
+  else if (protType == "ETH")
+  {
+    GCFETHRawPort* pNewPort(0);
+    string pseudoName = _name + "_ETH";
+    pNewPort = new GCFETHRawPort(*_pTask, pseudoName, _type, _transportRawData);
+    pNewPort->setMaster(this);    
+
+    _pSlave = pNewPort;
+  }
+  else if (protType == "DEV")
+  {
+    GCFDevicePort* pNewPort(0);
+    string pseudoName = _name + "_DEV";
+    pNewPort = new GCFDevicePort(*_pTask, pseudoName, 0, "", _transportRawData);
+    pNewPort->setMaster(this);    
+
+    _pSlave = pNewPort;
+  }
+  else  
   {
     LOG_ERROR(formatString (
-        "no implementation found for port type '%s'",
-	      type.c_str()));
+        "No implementation found for port protocol type '%s'. At this moment only TCP, DEV and ETH is supported!",
+	      protType.c_str()));
     
     return false;
   }
@@ -194,16 +207,12 @@ bool GCFPort::open()
   return _pSlave->open();
 }
 
-/**
- * ::close
- */
 bool GCFPort::close()
 {
   _state = S_CLOSING;
   if (!_pSlave)
   {
-    LOG_ERROR(formatString (
-        "GCFPort::close: _pSlave == 0"));
+    LOG_WARN("Was not opened!!!");
     
     return false;
   }
@@ -222,9 +231,6 @@ bool GCFPort::setRemoteAddr(const string& remotetask, const string& remoteport)
   return false;
 }
 
-/**
- * ::send
- */
 ssize_t GCFPort::send(GCFEvent& e)
 {
   if (SPP == _type)
@@ -236,7 +242,7 @@ ssize_t GCFPort::send(GCFEvent& e)
 		      "port '%s'; discarding this event.",
 		      getTask()->evtstr(e), _name.c_str()));
          
-      return -1; // RETURN
+      return -1;
     }
   }
   else if (SAP == _type)
@@ -247,7 +253,8 @@ ssize_t GCFPort::send(GCFEvent& e)
           "Trying to send OUT event '%s' on SAP "
 		      "port '%s'; discarding this event.",
 		      getTask()->evtstr(e), _name.c_str()));
-      return -1; // RETURN
+
+      return -1;
     }
   }
   else if (MSPP == _type)
@@ -256,75 +263,46 @@ ssize_t GCFPort::send(GCFEvent& e)
         "Trying to send event '%s' by means of the portprovider: %s (MSPP). "
         "Not supported yet",
          getTask()->evtstr(e), _name.c_str()));
-      return -1; // RETURN
+
+      return -1;
   }
   
   return _pSlave->send(e);
 
 }
 
-/**
- * ::recv
- */
 ssize_t GCFPort::recv(void* buf, size_t count)
 {
   if (!_pSlave) return -1;
   return _pSlave->recv(buf, count);
 }
 
-/**
- * ::setTimer
- */
 long GCFPort::setTimer(long delay_sec,    long delay_usec,
 		     long interval_sec, long interval_usec,
 		     void* arg)
 {
   if (!_pSlave) return -1;
-  return _pSlave->setTimer(delay_sec, delay_usec,
+  return _pSlave->setTimer(delay_sec, delay_usec, 
 			  interval_sec, interval_usec,
 			  arg);
 }
 
-/**
- * ::setTimer
- */
 long GCFPort::setTimer(double delay_seconds, 
 		     double interval_seconds,
 		     void* arg)
 {
   if (!_pSlave) return -1;
-  return _pSlave->setTimer(delay_seconds,
-			  interval_seconds,
-			  arg);
+  return _pSlave->setTimer(delay_seconds, interval_seconds, arg);
 }
 
-/**
- * ::cancelTimer
- */
 int GCFPort::cancelTimer(long timerid, void **arg)
 {
   if (!_pSlave) return -1;
   return _pSlave->cancelTimer(timerid, arg);
 }
 
-/**
- * ::cancelAllTimers
- */
 int GCFPort::cancelAllTimers()
 {
   if (!_pSlave) return -1;
   return _pSlave->cancelAllTimers();
-}
-
-/**
- * resetTimerInterval
- */
-int GCFPort::resetTimerInterval(long timerid,
-			      long interval_sec,
-			      long interval_usec)
-{
-  if (!_pSlave) return -1;
-  return _pSlave->resetTimerInterval(timerid,
-				    interval_sec,
-				    interval_usec);
 }

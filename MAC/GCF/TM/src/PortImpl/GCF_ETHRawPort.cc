@@ -30,9 +30,6 @@
 #include <errno.h>
 #include <GCF/ParameterSet.h>
 
-using namespace GCF;
-
-
 GCFETHRawPort::GCFETHRawPort(GCFTask& task,
                           	 string name,
                           	 TPortType type, 
@@ -54,14 +51,12 @@ GCFETHRawPort::GCFETHRawPort() :
 
 GCFETHRawPort::~GCFETHRawPort()
 {
-  if (_pSocket) delete _pSocket;
-  
+  if (_pSocket) delete _pSocket;  
 }
 
 bool GCFETHRawPort::close()
 {
-  LOG_DEBUG(formatString ( 
-      "close -> schedule_close"));
+  LOG_DEBUG("close -> schedule_close");
 
   setState(S_CLOSING);
   schedule_close();
@@ -73,12 +68,18 @@ bool GCFETHRawPort::open()
 {
   if (isConnected())
   {
-    LOG_WARN(formatString ( 
-        "already connected"));
+    LOG_WARN("already connected");
    
     return false;
   }
-  // check for if name
+  else if (MSPP == getType())
+  {
+    LOG_ERROR(formatString ( 
+        "ETH raw ports can not act as a MSPP (%s).",
+        getRealName().c_str()));
+    return false;
+  }
+  // check for ifname
   if (_ifname == "")
   {    
     try 
@@ -91,8 +92,7 @@ bool GCFETHRawPort::open()
     }
     catch (...)
     {
-      LOG_ERROR(formatString ( 
-          "no interface name specified"));
+      LOG_ERROR("no interface name specified");
       return false;
     }
   }
@@ -109,8 +109,7 @@ bool GCFETHRawPort::open()
     }
     catch (...)
     {
-      LOG_ERROR(formatString ( 
-          "no destination mac adres is specified"));
+      LOG_ERROR("no destination mac adres is specified");
       return false;
     }
   }
@@ -130,12 +129,12 @@ bool GCFETHRawPort::open()
       // is optional so no problem.
     }
   }
-  if (!_pSocket && isSlave())
+  if (!_pSocket)
   {
     if (isSlave())
     {
       LOG_ERROR(formatString (
-  			  "ERROR: Port %s is not initialised.",
+  			  "Port %s is not initialised.",
   			  getRealName().c_str()));
       return false;
     }
@@ -171,8 +170,14 @@ ssize_t GCFETHRawPort::send(GCFEvent& e)
 
   assert(_pSocket);
 
-  if (MSPP == getType())  
-    return 0; // no messages can be send by this type of port
+  if (!isConnected()) 
+  {
+    LOG_ERROR(formatString (
+        "Port '%s' on task '%s' not connected! Event not sent!",
+        getRealName().c_str(),
+        getTask()->getName().c_str()));
+    return 0;
+  }
 
   unsigned int packsize;
   void* buf = e.pack(packsize);
@@ -200,6 +205,8 @@ ssize_t GCFETHRawPort::send(GCFEvent& e)
 
 ssize_t GCFETHRawPort::recv(void* buf, size_t count)
 {
+  if (!isConnected()) return 0;
+  assert(_pSocket);
   return _pSocket->recv(buf, count);
 }
 
@@ -207,8 +214,8 @@ void GCFETHRawPort::setAddr(const char* ifname,
 			    const char* destMac)
 {
   // store for use in open
-  _ifname     = string(ifname);
-  _destMacStr = string(destMac);
+  _ifname     = ifname;
+  _destMacStr = destMac;
 }
 
 void GCFETHRawPort::setEtherType(unsigned short type)

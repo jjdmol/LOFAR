@@ -1,4 +1,4 @@
-//#  GTM_Device.h: base class for all sockets
+//#  GTM_TCPSocket.h: base class for all sockets
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,51 +20,47 @@
 //#
 //#  $Id$
 
-#ifndef GTM_DEVICE_H
-#define GTM_DEVICE_H
+#ifndef GTM_TCPSOCKET_H
+#define GTM_TCPSOCKET_H
 
-#include <unistd.h>
-#include <GCF/TM/GCF_Event.h>
-#include <Socket/GTM_Socket.h>
+#include "GTM_File.h"
 #include <Common/lofar_string.h>
 
 // forward declaration
-class GCFDevicePort;
-class GCFPeerAddr;
-class GTMSocketHandler;
+class GCFTCPPort;
 
 /**
- * This class consists of the basic implementation of a device (driver). Beside that it 
- * is the base class for the  class.
+ * This class consists of the basic implementation of a TCP socket. Beside that it 
+ * is the base class for the GTMTCPServerSocket class.
  */
 
-class GTMDevice : public GTMSocket
+class GTMTCPSocket : public GTMFile
 {
-  public:
-    GTMDevice (GCFDevicePort& port);
-    virtual ~GTMDevice ();
+  public: // constructors, destructors and default operators
+    GTMTCPSocket (GCFTCPPort& port);
+    virtual ~GTMTCPSocket ();
   
+  private:
+    GTMTCPSocket ();
+    /// Don't allow copying of the GTMTCPSocket object.
+    GTMTCPSocket (const GTMTCPSocket&);
+    GTMTCPSocket& operator= (const GTMTCPSocket&);
+
+  
+  public: // GTMTCPSocket specific member methods
     /**
-     * open/close functions
+     * open/close methods
      */
-    virtual int open (const string& deviceName);
+    virtual bool open (unsigned int portNumber);
+    virtual bool connect (unsigned int portNumber, const string& host);
   
     /**
-     * send/recv functions
+     * send/recv methods
      */
     virtual ssize_t send (void* buf, size_t count);
     virtual ssize_t recv (void* buf, size_t count);
 
-  protected:
-    friend class GTMSocketHandler;
-  
-  private:
-    GTMDevice ();
-    /**
-     * Don't allow copying of the GTMDevice object.
-     */
-    GTMDevice (const GTMDevice&);
-    GTMDevice& operator= (const GTMDevice&);
+  protected: // data member
 };
 
 #endif

@@ -30,7 +30,8 @@ GCFEvent::~GCFEvent()
 }
 
 void* GCFEvent::pack(unsigned int& packsize) 
-{        
+{   
+  // packs the base event fields     
   memcpy(_buffer, &signal, sizeof(signal));
   memcpy(_buffer + sizeof(signal), &length, sizeof(length));
   packsize = sizeof(signal) + sizeof(length);
@@ -39,6 +40,7 @@ void* GCFEvent::pack(unsigned int& packsize)
 
 void GCFEvent::resizeBuf(unsigned int requiredSize)
 {
+  // resizes the buffer if needed
   if (requiredSize > _upperbound && _buffer)
   {
     delete [] _buffer;

@@ -1,4 +1,4 @@
-//#  GTM_SocketHandler.cc: the specific handler for socket message production
+//#  GTM_FileHandler.cc: the specific handler for file message production
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,24 +20,24 @@
 //#
 //#  $Id$
 
-#include "GTM_SocketHandler.h"
-#include "GTM_Socket.h"
+#include "GTM_FileHandler.h"
+#include "GTM_File.h"
 #include <GCF/TM/GCF_Task.h>
 
-GTMSocketHandler* GTMSocketHandler::_pInstance = 0;
+GTMFileHandler* GTMFileHandler::_pInstance = 0;
 
-GTMSocketHandler* GTMSocketHandler::instance()
+GTMFileHandler* GTMFileHandler::instance()
 {
   if (0 == _pInstance)
   {
-    _pInstance = new GTMSocketHandler();
+    _pInstance = new GTMFileHandler();
     assert(!_pInstance->mayDeleted());
   }
   _pInstance->use();
   return _pInstance;
 }
 
-void GTMSocketHandler::release()
+void GTMFileHandler::release()
 {
   assert(_pInstance);
   assert(!_pInstance->mayDeleted());
@@ -49,29 +49,28 @@ void GTMSocketHandler::release()
   }
 }
 
-GTMSocketHandler::GTMSocketHandler() : _running(true)
+GTMFileHandler::GTMFileHandler() : _running(true)
 {
-  FD_ZERO(&_readFDs);  
-  GCFTask::registerHandler(*this);
+  FD_ZERO(&_readFDs);
 }
 
-void GTMSocketHandler::registerSocket(GTMSocket& socket)
+void GTMFileHandler::registerFile(GTMFile& file)
 {
-  FD_SET(socket.getFD(), &_readFDs);
-  _sockets[socket.getFD()] = &socket;
+  FD_SET(file.getFD(), &_readFDs);
+  _files[file.getFD()] = &file;
 }
 
-void GTMSocketHandler::deregisterSocket(GTMSocket& socket)
+void GTMFileHandler::deregisterFile(GTMFile& file)
 {
-  FD_CLR(socket.getFD(), &_readFDs);
-  _sockets.erase(socket.getFD());  
+  FD_CLR(file.getFD(), &_readFDs);
+  _files.erase(file.getFD());  
 }
 
-void GTMSocketHandler::workProc()
+void GTMFileHandler::workProc()
 {
   int result;
   int fd;
-  TSockets testSockets;
+  TFiles testFiles;
 
   struct timeval select_timeout;
 
@@ -86,10 +85,10 @@ void GTMSocketHandler::workProc()
   _running = true;
   fd_set testFDs;
   testFDs = _readFDs;
-  testSockets.insert(_sockets.begin(), _sockets.end());
+  testFiles.insert(_files.begin(), _files.end());
   result = ::select(FD_SETSIZE, &testFDs, (fd_set *) 0, (fd_set *) 0, &select_timeout);
 
-  if (_sockets.empty()) return;
+  if (_files.empty()) return;
   
   if (result >= 0)
   {
@@ -97,13 +96,13 @@ void GTMSocketHandler::workProc()
     {
       if (FD_ISSET(fd, &testFDs))
       {
-        testSockets[fd]->workProc();
+        testFiles[fd]->workProc();
       }
     }
   }
 }
 
-void GTMSocketHandler::stop()
+void GTMFileHandler::stop()
 {
   _running = false;
 }

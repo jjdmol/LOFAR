@@ -24,8 +24,6 @@
 #include <../SB_Protocol.ph>
 #include <GCF/ParameterSet.h>
 
-using namespace GCF;
-
 static string sSBTaskName("GCF-SB");
 
 GSBController::GSBController() : 

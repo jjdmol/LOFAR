@@ -1,4 +1,4 @@
-//#  GTM_SocketHandler.h: handles all socket communication
+//#  GTM_FileHandler.h: handles all socket communication
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -28,41 +28,47 @@
 #include <sys/time.h>
 
 // forward declaration
-class GTMSocket;
+class GTMFile;
 
 /**
  * This singleton class implements the main loop part of message exchange 
- * handling, which uses the socket pattern. It calls one select for all file 
- * descriptors of the registered sockets.
+ * handling, which uses the "file" pattern. It calls one select for all file 
+ * descriptors of the registered "files".
  */
-class GTMSocketHandler : public GCFHandler
+class GTMFileHandler : public GCFHandler
 {
-  public:
-    static GTMSocketHandler* instance ();
-    static void release ();
-    virtual ~GTMSocketHandler () { _pInstance = 0;};
+  public: // constructors, destructors and default operators
+    virtual ~GTMFileHandler () { _pInstance = 0;}
   
-    void workProc ();
+  private:
+    friend class GTMFile; // is not necessary but suppress a warning, which we can accept
+    GTMFileHandler ();
+    /// Don't allow copying of the GTMTimerHandler object.
+    GTMFileHandler (const GTMFileHandler&);
+    GTMFileHandler& operator= (const GTMFileHandler&);
+
+  public: // GTMFileHandler specific member methods
+    /// singleton pattern methods
+    static GTMFileHandler* instance ();
+    static void release ();
+
+    void workProc (); /// part of the mainloop
     void stop ();
-    void registerSocket (GTMSocket& timer);
-    void deregisterSocket (GTMSocket& timer); 
+    void registerFile (GTMFile& timer);
+    void deregisterFile (GTMFile& timer); 
 
   private:
-    GTMSocketHandler ();
-    /**
-     * Don't allow copying of the GTMTimerHandler object.
-     */
-    GTMSocketHandler (const GTMSocketHandler&);
-    GTMSocketHandler& operator= (const GTMSocketHandler&);
-    static GTMSocketHandler* _pInstance;
-    
-    typedef map<int, GTMSocket*> TSockets;
-    TSockets _sockets;
+    static GTMFileHandler* _pInstance; // singleton pointer
 
-    
+    /// all registered "files"
+    typedef map<int, GTMFile*> TFiles;
+    TFiles _files;
+   
+    /// needed for the "::select" method
     fd_set _readFDs;
     fd_set _writeFDs;
-    fd_set _errotFDs;
+    fd_set _errorFDs;
+    
     bool _running;    
 };
 

@@ -21,7 +21,7 @@
 //#  $Id$
 
 #include "GTM_TCPSocket.h"
-#include "GTM_SocketHandler.h"
+#include "GTM_FileHandler.h"
 #include <GCF/TM/GCF_TCPPort.h>
 #include <GCF/TM/GCF_Task.h>
 #include <GTM_Defines.h>
@@ -33,7 +33,7 @@
 #include <stdio.h>
 
 GTMTCPSocket::GTMTCPSocket(GCFTCPPort& port) :
-  GTMSocket(port)
+  GTMFile(port)
 {
 }
 
@@ -44,18 +44,18 @@ GTMTCPSocket::~GTMTCPSocket()
 
 ssize_t GTMTCPSocket::send(void* buf, size_t count)
 {
-  if (_socketFD > -1) 
+  if (_fd > -1) 
   {
     ssize_t countLeft(count);
     ssize_t written(0);
     do
     {
-      written = ::write(_socketFD, ((char*)buf) + (count - countLeft), countLeft);
+      written = ::write(_fd, ((char*)buf) + (count - countLeft), countLeft);
       if (written == -1)
       {
         if (errno != EINTR)
         {
-          LOG_FATAL(LOFAR::formatString (
+          LOG_WARN(LOFAR::formatString (
               "send, error: %s",
               strerror(errno)));
           return -1;
@@ -71,25 +71,25 @@ ssize_t GTMTCPSocket::send(void* buf, size_t count)
   }
   else
   {
-    LOG_FATAL("send, error: Socket not opend");
+    LOG_WARN("send, error: Socket not opend");
     return -1;
   }
 }
 
 ssize_t GTMTCPSocket::recv(void* buf, size_t count)
 {
-  if (_socketFD > -1) 
+  if (_fd > -1) 
   {
     ssize_t countLeft(count);
     ssize_t received(0);
     do
     {
-      received = ::read(_socketFD, ((char*)buf) + (count - countLeft), countLeft);
+      received = ::read(_fd, ((char*)buf) + (count - countLeft), countLeft);
       if (received == -1)
       {
         if (errno != EINTR)
         {
-          LOG_FATAL(LOFAR::formatString (
+          LOG_WARN(formatString (
               "recv, error: %s",
               strerror(errno)));
           return -1;
@@ -105,26 +105,29 @@ ssize_t GTMTCPSocket::recv(void* buf, size_t count)
   }
   else
   {
-    LOG_FATAL("recv, error: Socket not opend");
+    LOG_WARN("recv, error: Socket not opend");
     return -1;
   }
 }
 
-int GTMTCPSocket::open(unsigned int /*portNumber*/)
+bool GTMTCPSocket::open(unsigned int /*portNumber*/)
 {
-  if (_socketFD > -1)
-    return 0;
-  else
+  assert(_fd == -1);
+  _fd = ::socket(AF_INET, SOCK_STREAM, 0);
+  if (_fd < 0)
   {
-    _socketFD = ::socket(AF_INET, SOCK_STREAM, 0);
-    return (_socketFD < 0 ? -1 : 0);
+    LOG_WARN(formatString (
+            "::socket, error: %s",
+            strerror(errno)));
+    close();
   }
+  return (_fd > -1);
 }
 
-int GTMTCPSocket::connect(unsigned int portNumber, const string& host)  
+bool GTMTCPSocket::connect(unsigned int portNumber, const string& host)  
 {
-  int result(-2);
-  if (_socketFD >= -1)
+  bool result(false);
+  if (_fd >= -1)
   {
     struct sockaddr_in serverAddr;
     struct hostent *hostinfo;
@@ -132,18 +135,22 @@ int GTMTCPSocket::connect(unsigned int portNumber, const string& host)
     serverAddr.sin_family = AF_INET;
     serverAddr.sin_addr = *(struct in_addr *) *hostinfo->h_addr_list;
     serverAddr.sin_port = htons(portNumber);
-    result = ::connect(_socketFD, 
-              (struct sockaddr *)&serverAddr, 
-              sizeof(struct sockaddr_in));
-    if (result < 0)
+    result = (::connect(_fd, 
+                        (struct sockaddr *)&serverAddr, 
+                        sizeof(struct sockaddr_in)) 
+               == 0);
+    if (result)
     {
-      close();
+      assert(_pHandler);
+      _pHandler->registerFile(*this);
     }
     else
     {
-      assert(_pHandler);
-      _pHandler->registerSocket(*this);
+      LOG_WARN(formatString (
+              "connect, error: %s",
+              strerror(errno)));
+      close();
     }
   }
-  return (result > -1 ? 0 : -1);
+  return result;
 } 

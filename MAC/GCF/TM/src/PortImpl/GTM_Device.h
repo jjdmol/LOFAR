@@ -1,4 +1,4 @@
-//#  GTM_Socket.h: base class for all sockets
+//#  GTM_Device.h: base class for all sockets
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,54 +20,45 @@
 //#
 //#  $Id$
 
-#ifndef GTM_SOCKET_H
-#define GTM_SOCKET_H
+#ifndef GTM_DEVICE_H
+#define GTM_DEVICE_H
 
 #include <unistd.h>
 #include <GCF/TM/GCF_Event.h>
+#include "GTM_File.h"
+#include <Common/lofar_string.h>
 
 // forward declaration
-class GCFPeerAddr;
-class GTMSocketHandler;
-class GCFRawPort;
+class GCFDevicePort;
 
 /**
- * This class consists of the basic implementation of a socket. Beside that it 
- * is the base class for the GTMServerSocket class.
+ * This class consists of the basic implementation of a device (driver). 
  */
 
-class GTMSocket
+class GTMDevice : public GTMFile
 {
   public:
-    GTMSocket (GCFRawPort& port);
-    virtual ~GTMSocket ();
+    GTMDevice (GCFDevicePort& port);
+    virtual ~GTMDevice ();
   
     /**
-     * open/close functions
+     * open/close methods
      */
-    virtual int close ();
+    virtual bool open (const string& deviceName);
   
     /**
-     * send/recv functions
+     * send/recv methods
      */
-    virtual ssize_t send (void* buf, size_t count) = 0;
-    virtual ssize_t recv (void* buf, size_t count) = 0;
+    virtual ssize_t send (void* buf, size_t count);
+    virtual ssize_t recv (void* buf, size_t count);
 
-    virtual inline int getFD () const {return _socketFD;}
-    virtual int setFD (int fd);
-    virtual void workProc ();
-    
-  protected:
-    int               _socketFD;
-    GCFRawPort&       _port;  
-    GTMSocketHandler* _pHandler;  
-  
   private:
-    /**
-     * Don't allow copying of the GTMSocket object.
-     */
-    GTMSocket (const GTMSocket&);
-    GTMSocket& operator= (const GTMSocket&);
+    /// default contructor
+    GTMDevice ();
+
+    /// Don't allow copying of the GTMDevice object.
+    GTMDevice (const GTMDevice&);
+    GTMDevice& operator= (const GTMDevice&);
 };
 
 #endif

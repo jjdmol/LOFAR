@@ -29,11 +29,10 @@
 #include <Timer/GTM_TimerHandler.h>
 #include <GCF/ParameterSet.h>
 
+// static framework events
 static GCFEvent disconnectedEvent(F_DISCONNECTED);
 static GCFEvent connectedEvent   (F_CONNECTED);
 static GCFEvent closedEvent      (F_CLOSED);
-
-using namespace GCF;
 
 GCFRawPort::GCFRawPort(GCFTask& task, 
                        string& name, 
@@ -73,21 +72,19 @@ GCFRawPort::~GCFRawPort()
   _pTimerHandler = 0;
 }
 
-void GCFRawPort::setMaster(GCFPort* pMaster)
-{
-  _pMaster = pMaster;
-}
-
 GCFEvent::TResult GCFRawPort::dispatch(GCFEvent& event)
 {
   GCFEvent::TResult status = GCFEvent::NOT_HANDLED;
   assert(_pTask);
+  
+  // Test whether the event is a framework event or not
   if ((F_DATAIN != event.signal) && 
       (F_DATAOUT != event.signal) &&
       (F_EVT_PROTOCOL(event) != F_FSM_PROTOCOL) &&
       (F_EVT_PROTOCOL(event) != F_PORT_PROTOCOL))
   {
-    LOG_INFO(formatString (
+    // Inform about the fact of an incomming message
+    LOG_DEBUG(formatString (
         "%s was received on port '%s' in task '%s'",
         _pTask->evtstr(event), 
         getRealName().c_str(), 
@@ -102,6 +99,7 @@ GCFEvent::TResult GCFRawPort::dispatch(GCFEvent& event)
           getRealName().c_str(), _pTask->getName().c_str()));    
       _state = S_CONNECTED;
       break;
+      
     case F_DISCONNECTED: 
     case F_CLOSED:
       LOG_INFO(formatString (
@@ -110,8 +108,10 @@ GCFEvent::TResult GCFRawPort::dispatch(GCFEvent& event)
           (event.signal == F_CLOSED ? "closed" : "disconnected")));    
       _state = S_DISCONNECTED;
       break;
+      
     case F_TIMER:
     {
+      // result of the schedule_* methods
       GCFTimerEvent* pTE = static_cast<GCFTimerEvent*>(&event);
       if (&disconnectedEvent == pTE->arg || 
           &connectedEvent == pTE->arg ||
@@ -123,14 +123,16 @@ GCFEvent::TResult GCFRawPort::dispatch(GCFEvent& event)
     }
     case F_DATAIN:
     {
+      // the specific transport implementations informs the rawport about 
+      // incomming data
       if (!isTransportRawData())
       {
-        status = recvEvent();
-        return status;
+        // user of the port wants to receive GCFEvent formed events
+        return recvEvent(); // implicits indirect call of this dispatch 
       }
       break;
     }
-    default:        
+    default:
       if (SPP == getType() && (F_EVT_INOUT(event) == F_OUT)) 
       {    
         LOG_ERROR(formatString (
@@ -201,16 +203,6 @@ int GCFRawPort::cancelAllTimers()
   return _pTimerHandler->cancelAllTimers(*this);
 }
 
-int GCFRawPort::resetTimerInterval(long timerid,
-				 long interval_sec,
-				 long interval_usec)
-{
-  return 1;
-}
-
-/**
- * ::findAddr
- */
 bool GCFRawPort::findAddr(TPeerAddr& addr)
 {
   // find remote address
@@ -234,10 +226,12 @@ bool GCFRawPort::findAddr(TPeerAddr& addr)
       LOG_DEBUG(formatString (
           "No remote address found for port '%s' of task '%s'",
           getRealName().c_str(), _pTask->getName().c_str()));
+
       return false;
     }
     
     const char* pRemoteTaskName = remoteAddr.c_str();
+    // format is: "<taskname>:<portname>"
     char* colon = strchr(pRemoteTaskName, ':');
     if (colon) *colon = '\0';
     
@@ -245,23 +239,28 @@ bool GCFRawPort::findAddr(TPeerAddr& addr)
     addr.portname = colon + 1;
   }
   else 
+  {
     return false;
+  }
 
   return true;
 }
 
 void GCFRawPort::schedule_disconnected()
 {
+  // forces a context switch
   setTimer(0, 0, 0, 0, (void*)&disconnectedEvent);
 }
 
 void GCFRawPort::schedule_close()
 {
+  // forces a context switch
   setTimer(0, 0, 0, 0, (void*)&closedEvent);
 }
 
 void GCFRawPort::schedule_connected()
 {
+  // forces a context switch
   setTimer(0, 0, 0, 0, (void*)&connectedEvent);
 }
 

@@ -23,54 +23,49 @@
 #ifndef GTM_TCPSERVERSOCKET_H
 #define GTM_TCPSERVERSOCKET_H
 
-#include <Socket/GTM_TCPSocket.h>
+#include "GTM_TCPSocket.h"
 
 // forward declaration
-class GCFTCPPort;
-class GCFPeerAddr;
+
 /**
- * This class will be used by a port implementation when its type is (M)SPP. In 
+ * This class will be used by a TCP port implementation when its type is (M)SPP. In 
  * case the port type is MSPP it only acts as a provider/acceptor. Otherwise 
  * (SPP) it acts as the message exchange (send/receive) point for a P-t-P 
  * connection too.
  */
 class GTMTCPServerSocket : public GTMTCPSocket
 {
- public:
-
-    /// Construction methods
+  public: // constructors, destructors and default operators
     GTMTCPServerSocket (GCFTCPPort& port, 
-                     bool isProvider = false);
+                        bool isProvider = false);
   
     virtual ~GTMTCPServerSocket ();
   
+  private:
+    GTMTCPServerSocket();
+    /// Don't allow copying of the GTMTCPServerSocket object.
+    GTMTCPServerSocket (const GTMTCPServerSocket&);
+    GTMTCPServerSocket& operator= (const GTMTCPServerSocket&);
+
+  public: // GTMTCPServerSocket specific member methods
     /**
-     * open/close functions
+     * open/close methods
      */
-    virtual int open (unsigned int portNumber);
-    virtual int close ();
-    int accept (GTMSocket& newSocket);
+    virtual bool open (unsigned int portNumber);
+    virtual bool close ();
+    bool accept (GTMFile& newSocket);
     
     /**
-     * send/recv functions
+     * send/recv methods
      */
     virtual ssize_t send (void* buf, size_t count);
     virtual ssize_t recv (void* buf, size_t count);
 
   protected:
     virtual void workProc ();
-
-  private:
-    GTMTCPServerSocket();
-  
-    /**
-     * Don't allow copying of the GTMTCPServerSocket object.
-     */
-    GTMTCPServerSocket (const GTMTCPServerSocket&);
-    GTMTCPServerSocket& operator= (const GTMTCPServerSocket&);
     
     bool _isProvider;
-    GTMTCPSocket* _pTCPServerSocket;
+    GTMTCPSocket* _pDataSocket;
 };
 
 #endif

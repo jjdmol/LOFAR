@@ -24,8 +24,6 @@
 #include <SB_Protocol.ph>
 #include <GCF/ParameterSet.h>
 
-using namespace GCF;
-
 #include <unistd.h>
 
 static string sSBTaskName("GCF-SB");
@@ -35,7 +33,6 @@ extern void logResult(TSBResult result, const string& servicename);
 
 GTMSBHandler::GTMSBHandler()
 {
-  GCFTask::registerHandler(*this);
 }
 
 GTMServiceBroker::GTMServiceBroker() :

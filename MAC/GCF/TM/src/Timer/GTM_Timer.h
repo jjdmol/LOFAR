@@ -43,9 +43,8 @@ class GTMTimer
               unsigned long intervalTime = 0, 
               void* arg = 0);
     virtual ~GTMTimer () {};
-    inline unsigned long getTime () const {return _time;}
+    
     inline void* getTimerArg () const {return _arg;}
-    inline bool hasInterval () const { return _intervalTime > 0;}
     inline GCFRawPort& getPort () const {return _port;}
     inline bool isElapsed () const {return _elapsed;}
     inline bool isCanceled () const {return _canceled;}
