@@ -52,8 +52,8 @@ using namespace ABS;
 using namespace std;
 using namespace LOFAR;
 
-SweepTest::SweepTest(string name)
-  : GCFTask((State)&SweepTest::initial, name), Test("SweepTest")
+SweepTest::SweepTest(string name, int subband)
+    : GCFTask((State)&SweepTest::initial, name), Test("SweepTest"), m_subband(subband)
 {
   registerProtocol(ABS_PROTOCOL, ABS_PROTOCOL_signalnames);
 
@@ -135,7 +135,7 @@ GCFEvent::TResult SweepTest::test001(GCFEvent& e, GCFPortInterface& port)
 
 	// send wgenable
 	ABSWgsettingsEvent wgs;
-	wgs.frequency=1.5e6; // 1.5MHz
+	wgs.frequency=1.5625e6; // 1.5625MHz
 	wgs.amplitude=128; // was 128
 	wgs.sample_period=2;
 
@@ -161,7 +161,7 @@ GCFEvent::TResult SweepTest::test001(GCFEvent& e, GCFPortInterface& port)
 	  alloc.spectral_window = 0;
 	  alloc.n_subbands = 1;
 	  memset(alloc.subbands, 0, sizeof(alloc.subbands));
-	  alloc.subbands[0] = 10;
+	  alloc.subbands[0] = m_subband;
 	  
 	  _test(sizeof(alloc) == beam_server.send(alloc));
       }
@@ -184,7 +184,7 @@ GCFEvent::TResult SweepTest::test001(GCFEvent& e, GCFPortInterface& port)
 	  alloc.spectral_window = 0;
 	  alloc.n_subbands = 1;
 	  memset(alloc.subbands, 0, sizeof(alloc.subbands));
-	  alloc.subbands[0] = 10;
+	  alloc.subbands[0] = m_subband;
 	  
 	  _test(sizeof(alloc) == beam_server.send(alloc));
 	}
@@ -293,11 +293,19 @@ int main(int argc, char** argv)
   INIT_LOGGER(prop_path);
 #endif
   LOG_INFO(formatString("Program %s has started", argv[0]));
-
   GCFTask::init(argc, argv);
 
+  cout << "Subband index to plot: ";
+  char buf[32];
+  int subband = atoi(fgets(buf, 32, stdin));
+  if (subband < 0 || subband > N_BEAMLETS)
+  {
+      LOG_FATAL(formatString("Invalid subband index, should >= 0 && < %d", N_BEAMLETS));
+      exit(EXIT_FAILURE);
+  }
+
   Suite s("Beam Server Process Test Suite", &cerr);
-  s.addTest(new SweepTest("SweepTest"));
+  s.addTest(new SweepTest("SweepTest", subband));
   s.run();
   long nFail = s.report();
   s.free();
