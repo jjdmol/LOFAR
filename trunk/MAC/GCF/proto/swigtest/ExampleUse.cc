@@ -47,6 +47,9 @@ void test()
     memcpy(newbuf+sizeof(ba), buf, packsize);
 
     recv(*((Event*)newbuf));
+
+    delete [] newbuf;
+    delete [] bae.ext1;
 }
 
 int main(int, char**)
