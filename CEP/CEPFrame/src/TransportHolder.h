@@ -48,6 +48,8 @@
    improved in the future.
 */
 
+class Transport;
+
 class TransportHolder
 {
 public:
@@ -73,9 +75,15 @@ public:
 
   virtual bool connectionPossible (int srcRank, int dstRank) const;
 
-
+  Transport * getTransport () { return itsTransport; }
+  void setTransport (Transport * Trn) { 
+    itsTransport = Trn; 
+  }
 private:
+  Transport * itsTransport;
 };
+
+
 
 
 #endif
