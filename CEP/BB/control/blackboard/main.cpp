@@ -1,4 +1,8 @@
 #include "blackboard/BlackBoard.h"
+#include "control/TopLevelStrategy.h"
+#include "knowledge/WorkerWrapper.h"
+
+#include "blackboard/debug.h"
 
 #include <DTL.h>
 
@@ -6,9 +10,13 @@
 #include <string>
 #include <typeinfo>
 
-#define DEBUG(x) if(debug) std::cout << x << std::endl;
+//#include <mpi2c++/mpi++.h>
+#include <mpi.h>
 
-    //util consts
+//#define DEBUG(x) if(debug) std::cout << " rank(" << ::rank << "): " << x << std::endl;
+
+    //util vars
+int rank(-1);
 bool debug(true);
 
     // wants to use debug:
@@ -16,12 +24,13 @@ bool debug(true);
 
 const char *controlTableName = "controldata";
 const char *BlackBoardName = "BlackBoard";
-//const char *connectString = "UID=bb;DSN=lofar16";
-const char *connectString = "lofar17";
+const char *ControllerName = "Controller";
+const char *EngineName = "Engine";
+
+const char *connectString = "UID=bb;DSN=lofar16;";
 
     //forward declarations util functions
 void connect(void);
-void create(void);
 const std::string & getRole(const int rank);
 MPIProgramEntry *getObjectThatCanFulfill(const std::string &role);
 
@@ -76,15 +85,18 @@ public:
 };
     //END_DTL_NAMESPACE
 
-int main(char ** av, int ac)
+int main( int ac, char ** av)
 {
+  MPI_Init(&ac, &av);
+  MPI_Comm      comm = MPI_COMM_WORLD;
+  MPI_Comm_rank(comm, &rank);
+  //  int rank(MPI::COMM_WORLD.Get_rank());
+  DEBUG("My rank is: " << rank);
+
    connect();
        //<todo>How to handle none existend controldata table?</todo>
-   create();
 
        //<todo>MPI has been init'ed here</todo>
-   int rank(2);
-   DEBUG("My rank is: " << rank);
    
    std::string role(getRole(rank));
 
@@ -124,6 +136,7 @@ int main(char ** av, int ac)
       DEBUG("unhandled");
    }
 
+   MPI_Finalize();
    return 0;
 }
 
@@ -170,6 +183,15 @@ MPIProgramEntry *getObjectThatCanFulfill(const std::string &role)
       
       mpipe = new BlackBoard();
    }
+   else if(role == ControllerName)
+   {
+     MPIProgramEntry &mpip = TopLevelStrategy::Instance();
+     mpipe = & mpip;
+   }
+   else if(role == EngineName)
+   {
+     mpipe = new WorkerWrapper();
+   }
    else
    {
       NoSuchBlackBoardComponentException *ex = new NoSuchBlackBoardComponentException(role);
@@ -191,22 +213,6 @@ void connect()
       DEBUG("Got default connection..");
       dbcon.Connect(connectString);
       DEBUG("connection started");
-   }
-   catch(dtl::DBException dbex)
-   {
-      std::cerr << "wow!" << std::endl << dbex.what() << std::endl;
-   }
-}
-
-    //create the control data, it should allready exist
-void create()
-{
-   try {
-      DEBUG("Creating new table..");
-      dtl::DBStmt("CREATE TABLE controldata (\
-                rank INTEGER,\
-                role VARCHAR(30),\
-                master INTEGER)").Execute();
    }
    catch(dtl::DBException dbex)
    {

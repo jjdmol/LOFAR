@@ -1,28 +1,42 @@
 TARGET     = bb
 
 MPI_HOME   = /opt/scali
-MPI_LDLIBS = -lpthread -lmpi
-# -L/opt/scali/contrib/mpe/lib -lmpe -llmpe 
+MPI_LDLIBS = -lpthread -lmpi -L$(MPI_HOME)/contrib/mpe/lib -lmpe -llmpe -L$(MPI_HOME)/lib 
+MPI_CXX_LDLIBS = -L/opt/scali/contrib/mpich/lib/ -lpmpich++
+MPI_INCLUDES = -I$(MPI_HOME)/include
+MPI_CXX_INCLUDES = -I$(MPI_HOME)/contrib/mpich/include
 
 DTLINCLUDE = ${HOME}/include/dtl
 DTLLIBDIR  = ${HOME}/lib
 DTLLIB     = -lDTL
 
-SOURCES    = blackboard/MPIProgramEntry.cpp blackboard/BlackBoard.cpp blackboard/main.cpp
+SOURCES = \
+		blackboard/MPIProgramEntry.cpp \
+		blackboard/BlackBoard.cpp \
+		blackboard/main.cpp \
+		control/Control.cpp \
+		control/TopLevelStrategy.cpp \
+		knowledge/WorkerWrapper.cpp \
+
+
 OBJS       = $(SOURCES:.cpp=.o)
 
 CCC     = g++
 #OPT     = -O3
 OPT     = -pg -g
 
-CFLAGS     = -D_REENTRANT -I./ -I$(DTLINCLUDE) -I$(MPI_HOME)/include $(OPT) $(CC_MACH_FLAGS) 
+CFLAGS     = -D_REENTRANT -I./ -I$(DTLINCLUDE) $(MPI_INCLUDES) $(MPI_CXX_INCLUDES) $(OPT) $(CC_MACH_FLAGS) 
 
 %.o : %.cpp
 	$(CCC) -c $(CFLAGS) $< -o $@
 
 $(TARGET):   $(OBJS)
-	$(CCC) $(OBJS) -o $(TARGET) \
+	$(CCC)  $(MPI_CXX_LDLIBS) $(OBJS) -o $(TARGET) \
+	      $(MPI_LDLIBS) $(MPI_CXX_LDLIBS) $(MACH_LDFLAGS) -L$(DTLLIBDIR) $(DTLLIB) -lodbc
+
+bbdb:	blackboard/createdb.o
+	$(CCC) $< -o $@ \
 	      -L$(MPI_HOME)/lib $(MPI_LDLIBS) $(MACH_LDFLAGS) -L$(DTLLIBDIR) $(DTLLIB) -lodbc
 
 clean:
-	rm -f $(TARGET).o $(TARGET) core 
+	rm -f $(OBJS) $(TARGET).o $(TARGET) core 

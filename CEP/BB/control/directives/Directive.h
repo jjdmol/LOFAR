@@ -6,7 +6,7 @@ class Directive
 {
   public:
     //##ModelId=3F3B9602002E
-    virtual deploy() = 0;
+    virtual void deploy() = 0;
 
 };
 
