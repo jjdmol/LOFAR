@@ -5,7 +5,7 @@ AC_INIT(src/P2Perf.h)
 dnl AC_CONFIG_AUX_DIR(config)
 dnl AM_CONFIG_HEADER(config/config.h)
 AM_CONFIG_HEADER(config.h)
-AM_INIT_AUTOMAKE(CEP, 0.1)
+AM_INIT_AUTOMAKE(P2Perf, 0.1)
 
 dnl Checks for programs.
 AC_PROG_AWK
@@ -54,6 +54,7 @@ lofar_MATLAB
 lofar_AIPSPP
 lofar_MPI
 lofar_PURETOOLS
+lofar_BASESIM(P2Perf)
 
 dnl
 dnl Output Makefiles

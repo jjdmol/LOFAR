@@ -1,10 +1,7 @@
 if HAVE_CORBA
 INCLUDES 	= \
-	-I$(top_srcdir)/../../../../BaseSim/src \
-	-I$(top_srcdir)/../../../../BaseSim/src/Corba \
-	-I$(top_builddir)/BaseSim/src/Corba
-else
-INCLUDES	= -I$(top_srcdir)/../../../../BaseSim/src
+	-I$(basesim_top_srcdir)/Corba \
+	-I$(basesim_top_builddir)/src/Corba
 endif
 
 bin_PROGRAMS	= P2Perf
@@ -24,11 +21,6 @@ WH_Square.cc					\
 WH_Square.h
 
 if HAVE_CORBA
-P2Perf_LDADD = \
-	$(top_builddir)/../../../../../BaseSim/build/src/libbasesim.la \
-	$(top_builddir)/../../../../../BaseSim/build/src/Corba/libth_corba.la
-else
-P2Perf_LDADD = \
-	$(top_builddir)/../../../../../BaseSim/build/src/libbasesim.la
+P2Perf_LDADD = $(basesim_top_builddir)/src/Corba/libth_corba.la
 endif
 
