@@ -36,21 +36,18 @@
 
 using namespace std;
 
-namespace LOFAR
-{
-
-namespace ARA
-{
+using namespace LOFAR;
+using namespace ARA;
   
 int main(int argc, char* argv[])
 {
   int retval=-1;
   
-  LOG_INFO(formatString("Program %s has started", argv[0]));
-  
   {
     GCFTask::init(argc, argv);
 
+  LOG_INFO(formatString("Program %s has started", argv[0]));
+  
     CCmdLine cmdLine;
 
     bool noTest=false;
@@ -81,9 +78,4 @@ int main(int argc, char* argv[])
   return retval;
 }
 
-
-} // namespace ARA
-
-
-} // namespace LOFAR
 

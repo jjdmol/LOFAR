@@ -33,9 +33,9 @@ using namespace std;
 
 int main(int argc, char* argv[])
 {
-  LOG_INFO(formatString("Program %s has started", argv[0]));
-
   GCFTask::init(argc, argv);
+
+  LOG_INFO(formatString("Program %s has started", argv[0]));
 
   RegisterAccessTask ara("ARA");
 
