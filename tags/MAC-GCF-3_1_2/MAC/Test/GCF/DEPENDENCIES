@@ -1,0 +1,9 @@
+Compiler version:
+Default compiler of RedHat 8 (gcc3.x)
+
+EXTERNAL PACKAGES:
+PVSS II 3.0 (see MAC/GCF)
+LCS/Common
+MAC/Tools/LofarLogger
+MAC/GCF
+log4cplus (see LofarLogger)
