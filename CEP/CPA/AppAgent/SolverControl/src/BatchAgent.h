@@ -59,12 +59,12 @@ class BatchAgent : public SolverControlAgent
     //##Documentation
     //## Called by application to start solving for a new domain
     //## Resets to beginning of job queue
-    virtual SolutionState startDomain (const DataRecord::Ref &data = DataRecord::Ref());
+    virtual int startDomain (const DataRecord::Ref &data = DataRecord::Ref());
     
     //##ModelId=3E0098E90136
     //##Documentation
     //## Gets next solution from job queue
-    virtual SolutionState startSolution (DataRecord::Ref &params);
+    virtual int startSolution (DataRecord::Ref &params);
     
     //##ModelId=3E0060C50000
     //##Documentation
@@ -72,7 +72,7 @@ class BatchAgent : public SolverControlAgent
     //## initialized criteria. Once a criteria is hit, posts an EndSolveEvent
     //## to advertise this, calls stopSolution(), and returns False to wind
     //## things down.
-    virtual SolutionState endIteration(double conv);
+    virtual int endIteration(double conv);
     
     //##ModelId=3E009B2E01DF
     //##Documentation
@@ -104,6 +104,7 @@ class BatchAgent : public SolverControlAgent
     //##ModelId=3E00990E03DD
     std::vector<DataRecord::Ref> jobs_;
     
+    //##ModelId=3E3E55820037
     uint current_job_;
 
 };

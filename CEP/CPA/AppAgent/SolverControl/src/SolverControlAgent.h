@@ -33,28 +33,30 @@
     
 namespace SolverControl {
 
+using namespace AppControlAgentVocabulary;
+
 const HIID 
     // Constants for event names
     //    Posted at start of every solve domain
-    StartDomainEvent    = AidStart|AidDomain|AidEvent,
+    StartDomainEvent    = AidStart|AidDomain,
     //    Posted at start of every solution
-    StartSolutionEvent  = AidStart|AidSolution|AidEvent,
+    StartSolutionEvent  = AidStart|AidSolution,
     //    Posted at end of every iteration
-    EndIterationEvent   = AidEnd|AidIteration|AidEvent,
+    EndIterationEvent   = AidEnd|AidIteration,
     //    Posted when a solution is ended 
-    EndSolutionEvent    = AidEnd|AidSolution|AidEvent,
+    EndSolutionEvent    = AidEnd|AidSolution,
     //    Posted when a domain has been solved for
-    EndDomainEvent      = AidEnd|AidDomain|AidEvent,
+    EndDomainEvent      = AidEnd|AidDomain,
     //    Posted on close(), when the solver is finished
-    SolverEndEvent      = AidSolver|AidEnd|AidEvent,
+    SolverEndEvent      = AidSolver|AidEnd,
     
     //    Posted when a solution is interrupted 
-    StopSolutionEvent   = AidStop|AidSolution|AidEvent,
+    StopSolutionEvent   = AidStop|AidSolution,
     
     //    Returned to app to tell it to proceed with to the next solution
-    NextSolutionEvent   = AidNext|AidSolution|AidEvent,
+    NextSolutionEvent   = AidNext|AidSolution,
     //    Returned to app to tell it to proceed with to the next domain
-    NextDomainEvent     = AidNext|AidSolution|AidEvent,
+    NextDomainEvent     = AidNext|AidSolution,
     //    Returned to app to tell it to halt everything
     // AppControlAgent::StopEvent() 
 
@@ -70,16 +72,15 @@ const HIID
     //    Solution parameters (in status record)
     FSolutionParams     = AidSolution|AidParams;
     
-// this enum represents the possible solution states
+// define additional control states for the solver
 //##ModelId=3E00AA5100D5
 typedef enum
 {
-  CONTINUE       = 0,   // continue with current solution
-  NEXT_SOLUTION  = 1,   // stop and go on to next solution
-  NEXT_DOMAIN    = 2,   // stop and go on to next domain
-  HALT     = -1   // stop everything
+  NEXT_SOLUTION  = 0x100,   // should go on to next solution
+  NEXT_DOMAIN    = 0x101,   // should go on to next domain
+      
 }
-SolutionState;
+SolutionStates;
 
 
 //##ModelId=3DFF2B6D01FF
@@ -105,7 +106,7 @@ class SolverControlAgent : public AppControlAgent
     //## Should clear all parameters and reset the solution queue to beginning.
     //## Base version simply posts a StartDomainEvent with the specified
     //## data record. The record is meant to identify the domain.
-    virtual SolutionState startDomain   (const DataRecord::Ref &data = DataRecord::Ref());
+    virtual int startDomain   (const DataRecord::Ref &data = DataRecord::Ref());
   
     //##ModelId=3E01F9A203A4
     //##Documentation
@@ -114,7 +115,7 @@ class SolverControlAgent : public AppControlAgent
     //## (by calling initSolution(), below.)
     //## Returns a record of the solve parameters for the next solution job.
     //## Base version simply posts a StartSolutionEvent
-    virtual SolutionState startSolution (DataRecord::Ref &params) =0;
+    virtual int startSolution (DataRecord::Ref &params) =0;
     
     //##ModelId=3E01F9A302C5
     //##Documentation
@@ -122,7 +123,7 @@ class SolverControlAgent : public AppControlAgent
     //## domain.
     //## Base version simply posts a EndDomainEvent with the specified
     //## data record. The record is meant to identify the domain.
-    virtual void endDomain (const DataRecord::Ref &data = DataRecord::Ref());
+    virtual int endDomain (const DataRecord::Ref &data = DataRecord::Ref());
     
     //##ModelId=3E005C9C0382
     //##Documentation
@@ -139,24 +140,14 @@ class SolverControlAgent : public AppControlAgent
     //## by a child class, then stop_flag_ should also be raised. The
     //## application may watch for StopEvents() and/or check the isStopped()
     //## function and/or rely on the return code.
-    virtual SolutionState endIteration (double conv);
+    virtual int endIteration (double conv);
 
-    //##ModelId=3DFF2D4C0068
+    //##ModelId=3E3E52570074
     //##Documentation
-    //## As long as the stop_flag_ is raised, returns StopEvent(). Otherwise
-    //## returns no events.
-    virtual int getEvent (HIID &event, DataRecord::Ref &dataref, const HIID &mask, bool wait = False);
-  
-    //##ModelId=3DFF2D5F0008
-    //##Documentation
-    //## True for StopEvent() events as long as the stop_flag_ is raised.
-    virtual int hasEvent (const HIID &mask = HIID(), bool outOfSeq = False);
-  
-    //##ModelId=3E00C57E0304
-    //##Documentation
-    //## Base version does nothing except debug-print the event
-    virtual void postEvent(const HIID &, const DataRecord::Ref & = DataRecord::Ref());
-
+    //## Posts an event on behalf of the application.
+    //## Default version here simply debug-prints it
+    virtual void postEvent(const HIID &id, const DataRecord::Ref &data = DataRecord::Ref());
+    
     //##ModelId=3DFF2D6400EA
     //##Documentation
     //## Clears flags and solution parameters
@@ -168,19 +159,14 @@ class SolverControlAgent : public AppControlAgent
     //## the given event on behalf of the application. The current status 
     //## record will be attached to the event. If a message is supplied,
     //## it will be placed into the status record as [FMessage].
-    void stopSolution (const string &msg = "", SolutionState newstate = NEXT_DOMAIN,
-                       const HIID &event = StopSolutionEvent );
+    void stopSolution (const string &msg = "", int newstate = NEXT_DOMAIN,
+                        const HIID &event = StopSolutionEvent );
     
     //##ModelId=3E00650B036F
     //## Alias for stopSolution(msg,newstate,EndSolutionEvent)
     //## Meant to be called to end a successful (i.e. converged) solution
-    void endSolution  (const string &msg = "", SolutionState newstate = NEXT_SOLUTION)
+    void endSolution  (const string &msg = "", int newstate = NEXT_SOLUTION)
     { stopSolution(msg,newstate,EndSolutionEvent); }
-    
-    //##ModelId=3E005FB7018E
-    //##Documentation
-    //## Returns the solution state
-    SolutionState state () const;
     
     //##ModelId=3DFF37F3018B
     //##Documentation
@@ -216,12 +202,9 @@ class SolverControlAgent : public AppControlAgent
     //## Declares a local debug context for SolverControl
     LocalDebugContext;
     
-    
     //##ModelId=3E00C8540129
     string sdebug ( int detail = 1,const string &prefix = "",
                     const char *name = 0 ) const;
-
-    
     
   protected:
     //##ModelId=3E00592800CD
@@ -238,14 +221,8 @@ class SolverControlAgent : public AppControlAgent
     //## class's startSolution()
     void initSolution (const DataRecord::Ref &params);
     
-    //##ModelId=3E258E45023A
-    SolutionState state (SolutionState newstate);
 
   private:
-    //##ModelId=3E25905102E6
-    //##Documentation
-    //## Helper function for getEvent() and hasEvent()
-    int matchEvent (const HIID &event,DataRecord::Ref &dataref,const HIID &mask,int fail = OUTOFSEQ);
       
     //##ModelId=3E005C7A016B
     //##Documentation
@@ -263,10 +240,6 @@ class SolverControlAgent : public AppControlAgent
     //##Documentation
     //## Current convergence value
     double convergence_;
-    //##ModelId=3DFF5B4D00FE
-    //##Documentation
-    //## If raised, a StopEvent() will be returned to the application.
-    SolutionState state_;
     //##ModelId=3DFF5A88032E
     //##Documentation
     //## Mutex for thread-safety
@@ -310,16 +283,9 @@ inline DataRecord & SolverControlAgent::status ()
   return status_.dewr();
 }
 
-inline SolutionState SolverControlAgent::state() const
-{
-  return state_;
-}
 
-//##ModelId=3E258E45023A
-inline SolutionState SolverControlAgent::state (SolutionState newstate)
-{
-  return state_ = newstate;
-}
+
+
 
 
 } // namespace SolverControl
