@@ -33,8 +33,10 @@
 
 #pragma aid DDID VDSID Selection Tile String Column Size Format 
 #pragma aid Vis Input Output Params Start End Write Flags Flag Mask
-#pragma aid Time Data Predict Residuals Column Name Message
-#pragma aid Throw Error
+#pragma aid Time Data Predict Residuals Column Name Message Type
+#pragma aid Throw Error Domain
+
+#pragma aid MS Raw Non Calibrated Predict Residuals Iteration
 
 // this defines constants for field names used in parameter records
 namespace MSVisAgent
@@ -43,13 +45,14 @@ namespace MSVisAgent
   using namespace VisVocabulary;
   
   const HIID 
+       FDataType          = AidData|AidType,
+       FDomainIndex       = AidDomain|AidIndex,
       
        FDDID              = AidDDID|AidIndex,
        FSelection         = AidSelection,
        FPhaseRef          = AidPhase|AidRef,
        FAntennaPos        = AidAntenna|AidPos,
        FMSName            = AidMS|AidName,
-       FVDSID             = AidVDSID,
        FChannelStartIndex = AidChannel|AidStart|AidIndex,
        FChannelEndIndex   = AidChannel|AidEnd|AidIndex,
        FSelectionString   = AidSelection|AidString,
@@ -57,6 +60,7 @@ namespace MSVisAgent
        FTileSize          = AidTile|AidSize,
        FTileFormat        = AidTile|AidFormat,
 
+       FOutputParams      = AidMS|AidOutput|AidParams,
                           
        FWriteFlags        = AidWrite|AidFlags,
        FFlagMask          = AidFlag|AidMask,

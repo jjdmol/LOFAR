@@ -1,16 +1,16 @@
 #include "InputAgent.h"
 
-// ensures initialization of the VisAgent datamaps
+// ensures singleton initialization of the VisAgent datamaps
 void VisAgent::datamap_VisAgent_init ()
 {
   Thread::Mutex::Lock lock;
   if( !datamap_VisAgent.isInitialized(lock) )
   {
-    datamap_VisAgent.initialize(DataEventMask);
     datamap_VisAgent
-            .add(HEADER,HeaderEvent,TpDataRecord,False)
-            .add(DATA,TileEvent,TpVisTile,True)
-            .add(FOOTER,FooterEvent,TpDataRecord,False);
+            .add(HEADER,VisEventMask(HEADER),TpDataRecord,False)
+            .add(DATA,VisEventMask(DATA),TpVisTile,True)
+            .add(FOOTER,VisEventMask(FOOTER),TpDataRecord,False);
+    datamap_VisAgent.initialize();
   }
 }
 
@@ -63,10 +63,14 @@ int InputAgent::getNext (HIID &id,ObjRef &ref,int expect_type,int wait)
   if( expect_type <= 0 )
   {
     // loop forever until we get a valid data event 
-    while( (res = sink().getEvent(id,ref,datamap.eventMask(),wait)) == SUCCESS )
+    HIID event;
+    while( (res = sink().getEvent(event,ref,VisEventMask(),wait)) == SUCCESS )
     {
+      // split into class and identifier
+      int code = VisEventType(event);
+      id = VisEventInstance(event);
       // find this event in the data map
-      const DataStreamMap::Entry &entry = datamap.find(id);
+      const DataStreamMap::Entry &entry = datamap.find(code);
       if( entry.code ) // found valid entry?
       {
         // no data checking for this event? Return success already
@@ -77,19 +81,19 @@ int InputAgent::getNext (HIID &id,ObjRef &ref,int expect_type,int wait)
           if( ref->objectType() == entry.datatype )
             return entry.code;
           // else datatype mismatch, fall through for another event
-          cdebug(2)<<"datatype mismatch in event "<<id<<", dropping\n";
+          cdebug(2)<<"datatype mismatch in event "<<event<<", dropping\n";
         }
         else // no data with event
         {
           if( !entry.data_required ) // ... and none required, OK
             return entry.code;
           // else fall through for another go
-          cdebug(2)<<"missing data in event "<<id<<", dropping\n";
+          cdebug(2)<<"missing data in event "<<event<<", dropping\n";
         }
       }
       else
       {
-        cdebug(2)<<"unmapped event: "<<id<<", dropping\n";
+        cdebug(2)<<"unmapped event: "<<event<<", dropping\n";
       }
       // loop back for another try
     }
@@ -98,7 +102,7 @@ int InputAgent::getNext (HIID &id,ObjRef &ref,int expect_type,int wait)
   {
     const DataStreamMap::Entry &entry = datamap.find(expect_type);
     FailWhen( !entry.code,"unmapped data category "+codeToString(expect_type) );
-    while( (res = sink().getEvent(id,ref,entry.event,wait)) == SUCCESS )
+    while( (res = sink().getEvent(id,ref,entry.eventmask,wait)) == SUCCESS )
     {
       // no data checking for this event? Return success already
       if( entry.datatype == TpNull )
@@ -127,10 +131,10 @@ int InputAgent::getNext (HIID &id,ObjRef &ref,int expect_type,int wait)
 int InputAgent::hasNext () const
 {
   HIID id;
-  int res = sink().hasEvent(datamap.eventMask(),id);
+  int res = sink().hasEvent(VisEventMask(),id);
   if( res != SUCCESS )
     return res;
-  const DataStreamMap::Entry &entry = datamap.find(id);
+  const DataStreamMap::Entry &entry = datamap.find(VisEventType(id));
   if( !entry.code )
     return OUTOFSEQ;
   return entry.code;

@@ -1,5 +1,6 @@
+#include <VisCube/VisVocabulary.h>
 #include "OutputAgent.h"
-
+    
 namespace VisAgent
 {
 using namespace AppEvent;  
@@ -32,9 +33,18 @@ OutputAgent::OutputAgent(AppEventSink *sink, int dmiflags, const HIID &initf)
 //##ModelId=3EB244510086
 int OutputAgent::put (int type, const ObjRef::Xfer &ref)
 {
-  const DataStreamMap::Entry &entry = datamap.find(type);
-  FailWhen(!entry.code,"unknown data object code");
-  sink().postEvent(entry.event,ref);
+  HIID instance;
+  // attach object ID to event id
+  if( ref.valid() )
+  {
+    HIID subid;
+    const BlockableObject *pobj = ref.deref_p();
+    if( dynamic_cast<const DataRecord *>(pobj) )
+      instance = (*dynamic_cast<const DataRecord *>(pobj))[VisVocabulary::FVDSID].as<HIID>(HIID());
+    else if( dynamic_cast<const VisTile *>(pobj) )
+      instance = dynamic_cast<const VisTile *>(pobj)->tileId();
+  }
+  sink().postEvent(VisEventHIID(type,instance),ref);
   return SUCCESS;
 }
 

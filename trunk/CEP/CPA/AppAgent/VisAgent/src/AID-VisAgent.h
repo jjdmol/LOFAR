@@ -35,7 +35,7 @@ const int AidInput_int = -1075;
 #endif
 #ifndef _defined_id_AidOutput
 #define _defined_id_AidOutput 1
-const AtomicID AidOutput(-1130);                  // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/VisAgent/src/VisAgent.aidlist:4
+const AtomicID AidOutput(-1130);                  // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/VisAgent/src/VisAgent.aidlist:6
 const int AidOutput_int = -1130;
 #endif
 #ifndef _defined_id_AidParameters
@@ -45,22 +45,22 @@ const int AidParameters_int = -1282;
 #endif
 #ifndef _defined_id_AidResume
 #define _defined_id_AidResume 1
-const AtomicID AidResume(-1251);                  // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/VisAgent/src/VisAgent.aidlist:6
+const AtomicID AidResume(-1251);                  // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/VisAgent/src/VisAgent.aidlist:8
 const int AidResume_int = -1251;
 #endif
 #ifndef _defined_id_AidSuspend
 #define _defined_id_AidSuspend 1
-const AtomicID AidSuspend(-1252);                 // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/VisAgent/src/VisAgent.aidlist:7
+const AtomicID AidSuspend(-1252);                 // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/VisAgent/src/VisAgent.aidlist:9
 const int AidSuspend_int = -1252;
 #endif
 #ifndef _defined_id_AidTile
 #define _defined_id_AidTile 1
-const AtomicID AidTile(-1123);                    // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/VisAgent/src/VisAgent.aidlist:8
+const AtomicID AidTile(-1123);                    // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/VisAgent/src/VisAgent.aidlist:10
 const int AidTile_int = -1123;
 #endif
 #ifndef _defined_id_AidVis
 #define _defined_id_AidVis 1
-const AtomicID AidVis(-1116);                     // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/VisAgent/src/VisAgent.aidlist:9
+const AtomicID AidVis(-1116);                     // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/VisAgent/src/VisAgent.aidlist:11
 const int AidVis_int = -1116;
 #endif
 

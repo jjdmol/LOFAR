@@ -54,10 +54,13 @@
 #pragma aid Save Parms Residuals
 #pragma aid SolvParams Rank Fit Errors CoVar Flag Mu StdDev Chi
 
+#pragma aid Domain Peel Solve Iter Num Intermediate Final
+
 namespace SolverControl
 {
   using namespace ApplicationVocabulary;
   
+  // init, start-solution and end-solution record fields
   const HIID  FDomainSize         = AidDomain|AidSize;
 
   const HIID  FCalcUVW            = AidCalcUVW;
@@ -77,7 +80,17 @@ namespace SolverControl
 
   const HIID  SaveParms           = AidSave|AidParms;
   const HIID  SaveResiduals       = AidSave|AidResiduals;
-
+  
+  // additional dataset header fields
+  const HIID  FDomainStartTime    = AidDomain|AidStart|AidTime,
+              FDomainEndTime      = AidDomain|AidEnd|AidTime,
+              FSolveIterNum       = AidSolve|AidIter|AidNum,
+              
+              DataType_Intermediate = AidDomain|AidIntermediate|AidResiduals,
+              DataType_Final        = AidDomain|AidFinal|AidResiduals;
+  
+  
+  // status record fields
   const HIID  StSolutionSolvParams= AidSolution|AidSolvParams;
   const HIID  StSolutionRank      = AidSolution|AidRank;
   const HIID  StSolutionFit       = AidSolution|AidFit;
@@ -139,13 +152,13 @@ private:
 		    const vector<bool>& corrSel);
 
     //##ModelId=3EC9F6EC025A
-  void solve (bool useSVD, const DataRecord::Ref& header);
+  void solve (bool useSVD, DataRecord::Ref& header);
 
     //##ModelId=3EC9F6EC0260
   void saveParms();
 
     //##ModelId=3EC9F6EC0262
-  void saveResiduals (const DataRecord::Ref& header);
+  void saveResiduals (DataRecord::Ref& header);
 
 
     //##ModelId=3EC9F6EC0265
@@ -155,7 +168,7 @@ private:
     //##ModelId=3EC9F6EC026A
   void endDomain ();
     //##ModelId=3EC9F6EC026C
-  void endSolution (const DataRecord& endrec, const DataRecord::Ref& header);
+  void endSolution (const DataRecord& endrec,DataRecord::Ref& header);
 
     //##ModelId=3EC9F6EC01DF
   double domain_start;
@@ -165,6 +178,9 @@ private:
   double domain_size;
     //##ModelId=3EC9F6EC01E4
   bool in_domain;
+  
+  VisTile::Format::Ref tileformat_;
+  int  dataset_seq_num_;
     
     //##ModelId=3EC9F6EC01E6
   int ntiles;

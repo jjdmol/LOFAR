@@ -27,6 +27,7 @@
 #include <DMI/DataRecord.h>
 #include <DMI/DataArray.h>
 
+#include <AppAgent/BOIOSink.h>
 #include <MSVisAgent/MSInputSink.h>
 #include <MSVisAgent/MSOutputSink.h>
 
@@ -198,7 +199,9 @@ int main (int argc, const char *argv[])
         select[FSelectionString] = selstr;
     // setup output agent parameters 
     DataRecord &outpargs = rec[AidOutput] <<= new DataRecord;    
-      outpargs[FResidualsColumn] = "CORRECTED_DATA";
+//      outpargs[FResidualsColumn] = "CORRECTED_DATA";
+      outpargs[AppEvent::FBOIOFile] = "solver.out.boio";
+      outpargs[AppEvent::FBOIOMode] = "W";
         
     // setup batch control agent parameters 
     // use field of several records for several jobs
@@ -213,14 +216,17 @@ int main (int argc, const char *argv[])
         solveargs[FBatchJobs][0][SolvableFlag] = solvflag;
         solveargs[FBatchJobs][0][PeelNrs] = peelVec;
         solveargs[FBatchJobs][0][PredNrs] = LoVec_int();
+        solveargs[FBatchJobs][0][PredNrs] = vector<int>();
         solveargs[FBatchJobs][0][FWhenConverged] <<= new DataRecord;
         solveargs[FBatchJobs][0][FWhenMaxIter] <<= new DataRecord;
 
     cout<<"=================== creating agents ===========================\n";
     VisAgent::InputAgent::Ref inagent(
         new VisAgent::InputAgent(new MSVisAgent::MSInputSink,DMI::ANONWR),DMI::ANONWR);
+//    VisAgent::OutputAgent::Ref outagent(
+//        new VisAgent::OutputAgent(new MSVisAgent::MSOutputSink,DMI::ANONWR),DMI::ANONWR);
     VisAgent::OutputAgent::Ref outagent(
-        new VisAgent::OutputAgent(new MSVisAgent::MSOutputSink,DMI::ANONWR),DMI::ANONWR);
+        new VisAgent::OutputAgent(new BOIOSink,DMI::ANONWR),DMI::ANONWR);
     SolverControl::SolverControlAgent::Ref control( 
         new SolverControl::BatchAgent(AidControl),DMI::ANONWR);
     AppEventFlag::Ref evflag(DMI::ANONWR);

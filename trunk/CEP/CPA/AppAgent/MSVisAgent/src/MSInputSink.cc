@@ -135,8 +135,13 @@ void MSInputSink::openMS (DataRecord &header,const DataRecord &select)
   TableExprNode expr = ( ms_.col("FIELD_ID")==fieldid && ms_.col("DATA_DESC_ID") == ddid );
   selms_ = ms_(expr);
   
-  vdsid_ = VDSID(ddid,fieldid,obsid_++);
+  vdsid_ = VDSID(obsid_++,0,0);
   header[FVDSID] = static_cast<HIID&>(vdsid_);
+  header[FDDID] = ddid;
+  header[FFieldIndex] = fieldid;
+  header[FDataType] = HIID("MS.Non.Calibrated");
+  header[FDataColumnName] = dataColName_;
+  header[FDomainIndex] = -1; // negative domain index indicates full data
   
   // Get range of channels (default values: all channles)
   channels_[0] = header[FChannelStartIndex] = select[FChannelStartIndex].as<int>(0);
@@ -190,7 +195,7 @@ bool MSInputSink::init (const DataRecord &params)
   setState(HEADER);
 
   // put header on output stream
-  putOnStream(HeaderEvent,href);
+  putOnStream(VisEventHIID(HEADER,vdsid_),href);
 
   return True;
 }
@@ -227,7 +232,9 @@ int MSInputSink::refillStream ()
       if( tableiter_.pastEnd() )
       {
         setState(FOOTER);
-        putOnStream(FooterEvent,ObjRef(new DataRecord,DMI::ANONWR));
+        DataRecord::Ref footer(DMI::ANONWR);
+        footer()[FVDSID] = vdsid_; 
+        putOnStream(VisEventHIID(FOOTER,vdsid_),footer);
         return AppEvent::SUCCESS;
       }
       const LoRange ALL = LoRange::all();
@@ -292,7 +299,8 @@ int MSInputSink::refillStream ()
       {
         if( tiles_[i].valid() )
         {
-          putOnStream(TileEvent,tiles_[i]);
+          HIID id = VisEventHIID(DATA,tiles_[i]->tileId());
+          putOnStream(id,tiles_[i]);
           tiles_[i].detach();
           nout++;  // increment pointer so that we break out of loop
         }

@@ -11,8 +11,6 @@
     }
 
 static AtomicID::Register aid_reg_MS(-1120,"MS");
-static AtomicID::Register aid_reg_MSVisInputAgent(-1119,"MSVisInputAgent");
-static AtomicID::Register aid_reg_MSVisOutputAgent(-1118,"MSVisOutputAgent");
 static AtomicID::Register aid_reg_DDID(-1122,"DDID");
 static AtomicID::Register aid_reg_VDSID(-1121,"VDSID");
 static AtomicID::Register aid_reg_Selection(-1124,"Selection");
@@ -31,11 +29,18 @@ static AtomicID::Register aid_reg_Write(-1253,"Write");
 static AtomicID::Register aid_reg_Flags(-1255,"Flags");
 static AtomicID::Register aid_reg_Flag(-1207,"Flag");
 static AtomicID::Register aid_reg_Mask(-1254,"Mask");
+static AtomicID::Register aid_reg_Time(-1218,"Time");
 static AtomicID::Register aid_reg_Data(-1107,"Data");
 static AtomicID::Register aid_reg_Predict(-1256,"Predict");
 static AtomicID::Register aid_reg_Residuals(-1257,"Residuals");
 static AtomicID::Register aid_reg_Name(-1163,"Name");
 static AtomicID::Register aid_reg_Message(-1067,"Message");
+static AtomicID::Register aid_reg_Type(-1098,"Type");
 static AtomicID::Register aid_reg_Throw(-1305,"Throw");
 static AtomicID::Register aid_reg_Error(-1071,"Error");
+static AtomicID::Register aid_reg_Domain(-1144,"Domain");
+static AtomicID::Register aid_reg_Raw(-1159,"Raw");
+static AtomicID::Register aid_reg_Non(-1380,"Non");
+static AtomicID::Register aid_reg_Calibrated(-1379,"Calibrated");
+static AtomicID::Register aid_reg_Iteration(-1148,"Iteration");
 

@@ -73,12 +73,13 @@ void MSOutputSink::postEvent (const HIID &id, const ObjRef::Xfer &data, const HI
   try
   {
     ObjRef ref = data; // this detaches the ref nicely
-    if( id == HeaderEvent )
+    int code = VisEventType(id);
+    if( code == HEADER )
     {
       doPutHeader(ref.ref_cast<DataRecord>().deref());
       setState(DATA);
     }
-    else if( id == TileEvent )
+    else if( code == DATA )
     {
       if( state() != DATA )
       {
@@ -87,7 +88,7 @@ void MSOutputSink::postEvent (const HIID &id, const ObjRef::Xfer &data, const HI
       else
         doPutTile(ref.ref_cast<VisTile>().deref());
     }
-    else if( id == FooterEvent )
+    else if( code == FOOTER )
     {
       if( state() == DATA )
       {
@@ -118,7 +119,7 @@ void MSOutputSink::postEvent (const HIID &id, const ObjRef::Xfer &data, const HI
 //##ModelId=3EC25BF002E4
 bool MSOutputSink::isEventBound (const HIID &id)
 {
-  return id.matches(DataEventMask);
+  return id.matches(VisEventMask());
 }
 
 bool MSOutputSink::setupDataColumn (Column &col)

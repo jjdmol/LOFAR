@@ -4,6 +4,7 @@
 #include <AppAgent/FileSink.h>    
 #include <VisAgent/AID-VisAgent.h>
 #include <VisAgent/DataStreamMap.h>
+#include <VisCube/VisVocabulary.h>
     
 #pragma aidgroup VisAgent
 #pragma aid Vis Input Output Agent Parameters 
@@ -14,35 +15,35 @@ namespace VisAgent
 {
   using namespace AppState;
   
-  const HIID 
-      // parameter record fields
-      FInputParams    = AidVis|AidInput|AidParameters,
-      FOutputParams   = AidVis|AidOutput|AidParameters,
+  using VisVocabulary::FVDSID;
   
-      // data events
-      DataPrefix      = AidVis|AidData,
-        HeaderEvent   =   DataPrefix|AidHeader,
-        TileEvent     =   DataPrefix|AidTile,
-        FooterEvent   =   DataPrefix|AidFooter,
-      DataEventMask    = DataPrefix|AidWildcard,
-      
-      // suspend/resume events
-      SuspendEvent    = AidVis|AidSuspend,
-      ResumeEvent     = AidVis|AidResume;
+  const AtomicID VisEventPrefix = AidVis;
+  
+  const HIID  _VisEventMask = VisEventPrefix|AidWildcard;
+
+  inline const HIID & VisEventMask () 
+  { return _VisEventMask; }
+  
+  inline HIID VisEventHIID (int type,const HIID &instance)
+  { return VisEventPrefix|AtomicID(-type)|instance; }
+  
+  inline HIID VisEventMask (int type)
+  { return VisEventHIID(type,AidWildcard); }
+  
+  inline int VisEventType  (const HIID &event)
+  { return -( event[1].id() ); }
+  
+  inline HIID VisEventInstance (const HIID &event)
+  { return event.subId(2); }
+  
+  const HIID 
+       // suspend/resume events
+       SuspendEvent    = AidVis|AidSuspend,
+       ResumeEvent     = AidVis|AidResume;
       
   extern DataStreamMap datamap_VisAgent;
   void datamap_VisAgent_init ();
   
-// //##ModelId=3EB242520022
-//   typedef enum
-//   {
-//     // additional return codes indicate type of returned object
-//     HEADER   =     -AidHeader_int,   // received header
-//     TILE     =     -AidTile_int,     // received tile
-//     FOOTER   =     -AidFooter_int,   // received footer
-// 
-//   } VisAgent_DataEventCodes;
-//   
   inline string codeToString (int code)
   { return AtomicID(-code).toString(); }
 };
