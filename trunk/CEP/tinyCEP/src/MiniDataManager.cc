@@ -25,6 +25,8 @@
 namespace LOFAR
 {
 
+  int MiniDataManager::DataHolderID=0;
+
   MiniDataManager::MiniDataManager(int ninputs, int noutputs):
     itsNinputs(ninputs), 
     itsNoutputs(noutputs) {
@@ -58,11 +60,13 @@ namespace LOFAR
 
   void MiniDataManager::addInDataHolder(int channel, DataHolder* dhptr) {
     assertChannel(channel, true);
+    dhptr->setID(MiniDataManager::DataHolderID++);
     itsInDHs[channel] = dhptr;
   }
 
   void MiniDataManager::addOutDataHolder(int channel, DataHolder* dhptr) {
     assertChannel(channel, false);
+    dhptr->setID(MiniDataManager::DataHolderID++);
     itsOutDHs[channel] = dhptr;
   }
 

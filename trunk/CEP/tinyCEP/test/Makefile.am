@@ -22,8 +22,8 @@ check_PROGRAMS			= Example
 
 Example_SOURCES 		= Example.cc 
 
-LDADD				= ../src/libtinyframe.la
-DEPENDENCIES			= ../src/libtinyframe.la $(LOFAR_DEPEND)
+LDADD				= ../src/libtinycep.la
+DEPENDENCIES			= ../src/libtinycep.la $(LOFAR_DEPEND)
 
 TESTS_ENVIRONMENT		= top_srcdir=$(top_srcdir) \
 				  lofar_sharedir=$(lofar_sharedir) \
