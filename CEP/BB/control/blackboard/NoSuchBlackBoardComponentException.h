@@ -1,13 +1,17 @@
 #ifndef NOSUCHBLACKBOARDCOMPONENTEXCEPTION_H_HEADER_INCLUDED_C0BDD444
 #define NOSUCHBLACKBOARDCOMPONENTEXCEPTION_H_HEADER_INCLUDED_C0BDD444
-#include <exception>
+#include <stdexcept>
+
+#include <iostream>
 
 //##ModelId=3F422885004E
-class NoSuchBlackBoardComponentException:public virtual std::Exception
+class NoSuchBlackBoardComponentException:public std::runtime_error
 {
-  NoSuchBlackBoardComponentException(const string &txt):std:Exception(txt.c_str())
-    {
-    }
+   public:
+      NoSuchBlackBoardComponentException(const std::string &txt):std::runtime_error(txt.c_str())
+      {
+         DEBUG("creating my own " << typeid(NoSuchBlackBoardComponentException).name() << " what? " << what());
+      }
 };
 
 

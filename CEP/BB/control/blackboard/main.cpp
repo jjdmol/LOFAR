@@ -1,17 +1,27 @@
-#include "blackboard/MPIProgramEntry.h"
+#include "blackboard/BlackBoard.h"
 
 #include <DTL.h>
 
 #include <iostream>
 #include <string>
+#include <typeinfo>
+
+#define DEBUG(x) if(debug) std::cout << x << std::endl;
 
     //util consts
-const char *controlTableName = "controldata";
+bool debug(true);
+    // wants to use debug:
+#include "blackboard/NoSuchBlackBoardComponentException.h"
 
-    //util functions
+const char *controlTableName = "controldata";
+const char *BlackBoardName = "BlackBoard";
+
+    //forward declarations util functions
 void connect(void);
 void create(void);
 const std::string & getRole(const int rank);
+MPIProgramEntry *getObjectThatCanFulfill(const std::string &role);
+
 
     //the control data object
 class ControlData 
@@ -55,7 +65,9 @@ class ControlBCA {
 public:
       void operator() (dtl::BoundIOs &cols, 
                        ControlData  &rowbuf) {
-         std::cout << "##bind ControlBCA##" << std::endl;
+
+         DEBUG("bind ControlBCA");
+         
          cols["rank"] << rowbuf.rank;
          cols["role"] << rowbuf.role;
       }
@@ -66,17 +78,54 @@ int main(char ** av, int ac)
 {
    connect();
        //<todo>How to handle none existend controldata table?</todo>
-       //   create();
+   create();
 
        //<todo>MPI has been init'ed here</todo>
    int rank(2);
-   std::cout << "My rank is: " << rank << std::endl;
+   DEBUG("My rank is: " << rank);
    
    std::string role(getRole(rank));
 
-   std::cout << "My role is: " << role << std::endl;
+   DEBUG("My role is: " << role);
 
-   MPIProgramEntry * programCode;
+       /**
+          <todo>add code to map the returned role to a implementation
+          class.</todo>
+       */
+
+       /**
+          <todo>if we have more then one role we need to do something
+          about primary and secondary roles, or ..</todo>
+
+          <todo>May only the first role be implemented as an
+          MPIProgramEntry.</todo>
+       */
+
+   try
+   {
+      MPIProgramEntry *programCode = getObjectThatCanFulfill(role);
+       // g, i want metaclasses here.
+      DEBUG("about to run...");
+      
+      programCode->run();
+
+   }
+   catch(std::exception &e)
+          //   catch(std::runtime_error &e)
+   {
+      DEBUG("failed to create a program...");
+      
+      std::cerr << e.what() << std::endl;
+
+      std::exception *e2 = new std::exception();
+      DEBUG("standard exception: " << e2->what());
+      
+   }
+   catch(...)
+   {
+      DEBUG("unhandled");
+   }
+   
 
    return 0;
 }
@@ -85,22 +134,22 @@ const std::string & getRole(const int rank)
 {
    static std::string rc = "<none>";
    
-   std::cout << "accessing control-data.." << std::endl;
+   DEBUG("accessing control-data..");
 
    dtl::DBView<ControlData,RankClause> view(controlTableName,ControlBCA(),"WHERE rank = (?)",SelectOnRank());
-   std::cout << "creating iterator.." << std::endl;
+   DEBUG("creating iterator..");
 
    dtl::DBView<ControlData,RankClause>::select_iterator iter = view.begin();
    iter.Params().rank = rank;
 
-   std::cout << "looking for rank: " << rank << std::endl;
+   DEBUG("looking for rank: " << rank);
 
-   std::cout << "Reading element #" << iter.GetLastCount() << std::endl;
+   DEBUG("Reading element #" << iter.GetLastCount());
    ControlData dat;
    
    if (iter != view.end())
    {
-      std::cout <<"found: " << iter->role << std::endl;
+      DEBUG("found: " << iter->role);
       
           //<todo>What if more then onbe row can be returned? can "I" perform more then one role?</todo>
           //<todo>take good care of this former here memory leak</todo>
@@ -108,9 +157,31 @@ const std::string & getRole(const int rank)
    }
    else
    {
-      std::cout <<"not found!" << std::endl;
+      DEBUG("not found!");
    }
    return rc;
+}
+
+MPIProgramEntry *getObjectThatCanFulfill(const std::string &role)
+{
+   MPIProgramEntry * mpipe;
+
+   DEBUG("getting an object");
+   
+   if(role == BlackBoardName)
+   {
+      
+      mpipe = new BlackBoard();
+   }
+   else
+   {
+      std::exception *ex = new NoSuchBlackBoardComponentException(role);
+      DEBUG("throwing a " << typeid(NoSuchBlackBoardComponentException).name());
+      throw *ex;
+      
+   }
+
+   return mpipe;
 }
 
     // get connection
@@ -118,7 +189,7 @@ const std::string & getRole(const int rank)
 void connect()
 {
    try {
-      std::cout << "Connecting to database.." << std::endl;
+      DEBUG("Connecting to database..");
       dtl::DBConnection::GetDefaultConnection().Connect("UID=bb;DSN=pg49");
    }
    catch(dtl::DBException dbex)
@@ -131,10 +202,11 @@ void connect()
 void create()
 {
    try {
-      std::cout << "Creating new table.." << std::endl;
+      DEBUG("Creating new table..");
       dtl::DBStmt("CREATE TABLE controldata (\
                 rank INTEGER,\
-                role VARCHAR(30))").Execute();
+                role VARCHAR(30),\
+                master INTEGER)").Execute();
    }
    catch(dtl::DBException dbex)
    {
