@@ -27,10 +27,11 @@
 #include <aips/Tables/Table.h>
 #include <aips/Tables/ColumnsIndex.h>
 #include <aips/Containers/RecordField.h>
+#include <MNS/MeqPolc.h>
+#include <Common/lofar_vector.h>
 
 //# Forward Declarations
 class MeqDomain;
-class MeqMatrix;
 
 
 class ParmTable
@@ -41,24 +42,23 @@ public:
   // Get the parameter values for the given parameter and domain.
   // The matchDomain argument is set telling if the found parameter
   // matches the domain exactly.
-  MeqMatrix getValues (bool& matchDomain,
-		       const string& parmName, const MeqDomain& domain);
+  vector<MeqPolc> getPolcs (const string& parmName,
+			    const MeqDomain& domain);
 
-  // Put the parameter values for the given parameter and domain.
-  void putValues (const string& parmName,
-		  const MeqDomain& domain,
-		  const MeqMatrix& values);
+  // Get the initial polynomial coefficients for the given parameter.
+  MeqPolc getInitCoeff (const string& parmName);
 
-  // Get the initial parameter values for the given parameter.
-  MeqMatrix getInitValues (const string& parmName);
+  // Put the polynomial coefficient for the given parameter and domain.
+  void putCoeff (const string& parmName,
+		 const MeqDomain& domain,
+		 const MeqMatrix& values);
 
 private:
   // Find the table subset containing the parameter values for the
   // requested domain.
   // The matchDomain argument is set telling if the found parameter
   // matches the domain exactly.
-  Table find (bool& matchDomain,
-	      const string& parmName, const MeqDomain& domain);
+  Table find (const string& parmName, const MeqDomain& domain);
 
   Table                  itsTable;
   ColumnsIndex           itsNameIndex;

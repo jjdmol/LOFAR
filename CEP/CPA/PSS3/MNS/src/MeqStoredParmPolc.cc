@@ -23,6 +23,7 @@
 #include <MNS/MeqStoredParmPolc.h>
 #include <Common/Debug.h>
 #include <aips/Arrays/Matrix.h>
+#include <aips/Mathematics/Math.h>
 
 MeqStoredParmPolc::MeqStoredParmPolc (const string& name, ParmTable* table)
 : MeqParmPolc (name),
@@ -34,25 +35,35 @@ MeqStoredParmPolc::~MeqStoredParmPolc()
 
 int MeqStoredParmPolc::initDomain (const MeqDomain& domain, int spidIndex)
 {
-  bool matchDomain;
-  MeqMatrix values = itsTable->getValues (matchDomain, getName(), domain);
-  if (values.isNull()) {
-    values = itsTable->getInitValues (getName());
-    if (values.isNull()) {
-      Matrix<double> mat(3,1);
-      mat(0,0) = 1;
-      mat(1,0) = 2000;
-      mat(2,0) = 10;
-      values = mat;
+  // Find the polc(s) for the given domain.
+  vector<MeqPolc> polcs = itsTable->getPolcs (getName(), domain);
+  // If none found, try to get a default value.
+  // If no default found, use a 2nd order polynomial with values 1.
+  if (polcs.size() == 0) {
+    MeqPolc polc = itsTable->getInitCoeff (getName());
+    if (polc.getCoeff().isNull()) {
+      Matrix<double> defCoeff(3,3);
+      defCoeff = 1;
+      polc.setCoeff (defCoeff);
     }
+    polc.setDomain (domain);
+    polcs.push_back (polc);
   } else if (isSolvable()) {
-    AssertMsg (matchDomain, "Parameter " << getName() <<
-	       " can only be solvable if the domain is matching exactly");
+    AssertMsg (polcs.size() == 1, "Solvable parameter " << getName() <<
+	       " has multiple matching domains for time "
+	       << domain.startX() << ':' << domain.endX() << " and freq "
+	       << domain.startY() << ':' << domain.endY());
+    const MeqDomain& polDom = polcs[0].domain();
+    AssertMsg (near(domain.startX(), polDom.startX())  &&
+	       near(domain.endX(), polDom.endX())  &&
+	       near(domain.startY(), polDom.startY())  &&
+	       near(domain.endY(), polDom.endY()),
+	       "Solvable parameter " << getName() <<
+	       " has a partially instead of fully matching entry for time "
+		 << domain.startX() << ':' << domain.endX() << " and freq "
+		 << domain.startY() << ':' << domain.endY());
   }
-  vector<MeqPolc> polc(1);
-  polc[0].setDomain (domain);
-  polc[0].setCoeff (values);
-  setPolcs (polc);
+  setPolcs (polcs);
   return MeqParmPolc::initDomain (domain, spidIndex);
 }
 
@@ -60,7 +71,7 @@ void MeqStoredParmPolc::save()
 {
   const vector<MeqPolc>& polcs = getPolcs();
   for (unsigned int i=0; i<polcs.size(); i++) {
-    itsTable->putValues (getName(), polcs[i].domain(), polcs[i].getCoeff());
+    itsTable->putCoeff (getName(), polcs[i].domain(), polcs[i].getCoeff());
   }
   MeqParmPolc::save();
 }

@@ -22,47 +22,69 @@
 
 #include <MNS/ParmTable.h>
 #include <MNS/MeqDomain.h>
-#include <MNS/MeqMatrix.h>
 #include <Common/Debug.h>
 #include <aips/Tables/ExprNode.h>
 #include <aips/Tables/ScalarColumn.h>
 #include <aips/Tables/ArrayColumn.h>
 #include <aips/Tables/TableRecord.h>
 #include <aips/Arrays/Matrix.h>
+#include <aips/Mathematics/Math.h>
 
 ParmTable::ParmTable (const string& tableName)
-: itsTable         (tableName, Table::Update),
-  itsNameIndex     (itsTable, "Name"),
-  itsIndexField    (itsNameIndex.accessKey(), "Name"),
+: itsTable         (tableName),
+  itsNameIndex     (itsTable, "NAME"),
+  itsIndexField    (itsNameIndex.accessKey(), "NAME"),
   itsInitNameIndex (0)
 {
-  if (itsTable.keywordSet().isDefined ("InitialValues")) {
-    itsInitTable = itsTable.keywordSet().asTable ("InitialValues");
-    itsInitNameIndex = new ColumnsIndex (itsInitTable, "Name");
+  if (itsTable.keywordSet().isDefined ("INITIALVALUES")) {
+    itsInitTable = itsTable.keywordSet().asTable ("INITIALVALUES");
+    itsInitNameIndex = new ColumnsIndex (itsInitTable, "NAME");
     itsInitIndexField = RecordFieldPtr<String> (itsInitNameIndex->accessKey(),
-						"Name");
+						"NAME");
   }
 }
 
-MeqMatrix ParmTable::getValues (bool& matchDomain,
-				const string& parmName,
-				const MeqDomain& domain)
+vector<MeqPolc> ParmTable::getPolcs (const string& parmName,
+				     const MeqDomain& domain)
 {
-  MeqMatrix result;
-  Table sel = find (matchDomain, parmName, domain);
+  vector<MeqPolc> result;
+  Table sel = find (parmName, domain);
   if (sel.nrow() > 0) {
-    ROArrayColumn<Double> valCol (sel, "RValues");
+    ROScalarColumn<double> stCol (sel, "STARTTIME");
+    ROScalarColumn<double> etCol (sel, "ENDTIME");
+    ROScalarColumn<double> sfCol (sel, "STARTFREQ");
+    ROScalarColumn<double> efCol (sel, "ENDFREQ");
+    ROArrayColumn<bool> maskCol (sel, "MASK");
+    ROArrayColumn<Double> valCol (sel, "RVALUES");
     if (valCol.isDefined (0)) {
-      result = Matrix<double>(valCol(0));
+      for (unsigned int i=0; i<sel.nrow(); i++) {
+	MeqPolc polc;
+	if (maskCol.isDefined(i)) {
+	  polc.setCoeff (Matrix<double>(valCol(i)), maskCol(i));
+	} else {
+	  polc.setCoeff (Matrix<double>(valCol(i)));
+	}
+	polc.setDomain (MeqDomain(stCol(i), etCol(i), sfCol(i), efCol(i)));
+	result.push_back (polc);
+      }
     } else {
-      ROArrayColumn<DComplex> valDCol (sel, "CValues");
-      result = Matrix<DComplex>(valDCol(0));
+      ROArrayColumn<DComplex> valDCol (sel, "CVALUES");
+      for (unsigned int i=0; i<sel.nrow(); i++) {
+	MeqPolc polc;
+	if (maskCol.isDefined(i)) {
+	  polc.setCoeff (Matrix<DComplex>(valDCol(i)), maskCol(i));
+	} else {
+	  polc.setCoeff (Matrix<DComplex>(valDCol(i)));
+	}
+	polc.setDomain (MeqDomain(stCol(i), etCol(i), sfCol(i), efCol(i)));
+	result.push_back (polc);
+      }
     }
   }
   return result;
 }
 
-MeqMatrix ParmTable::getInitValues (const string& parmName)
+MeqPolc ParmTable::getInitCoeff (const string& parmName)
 {
   // Try to find the default initial values in the InitialValues subtable.
   // The parameter name consists of parts (separated by dots), so the
@@ -70,20 +92,30 @@ MeqMatrix ParmTable::getInitValues (const string& parmName)
   // An initial value can be defined for the full name or for a higher
   // category.
   // So look up until found or until no more parts are left.
-  MeqMatrix result;
+  MeqPolc result;
   if (itsInitNameIndex) {
     string name = parmName;
     while (true) {
       *itsInitIndexField = name;
-      Vector<uInt> rownrs = itsNameIndex.getRowNumbers();
+      Vector<uInt> rownrs = itsInitNameIndex->getRowNumbers();
       if (rownrs.nelements() > 0) {
 	Assert (rownrs.nelements() == 1);
-	ROArrayColumn<Double> valCol (itsInitTable, "RValues");
-	if (valCol.isDefined (rownrs(0))) {
-	  result = Matrix<double>(valCol(rownrs(0)));
+	int row = rownrs(0);
+	ROArrayColumn<bool> maskCol (itsInitTable, "MASK");
+	ROArrayColumn<Double> valCol (itsInitTable, "RVALUES");
+	if (valCol.isDefined (row)) {
+	  if (maskCol.isDefined(row)) {
+	    result.setCoeff (Matrix<double>(valCol(row)), maskCol(row));
+	  } else {
+	    result.setCoeff (Matrix<double>(valCol(row)));
+	  }
 	} else {
-	  ROArrayColumn<DComplex> valDCol (itsInitTable, "CValues");
-	  result = Matrix<DComplex>(valDCol(rownrs(0)));
+	  ROArrayColumn<DComplex> valDCol (itsInitTable, "CVALUES");
+	  if (maskCol.isDefined(row)) {
+	    result.setCoeff (Matrix<DComplex>(valDCol(row)), maskCol(row));
+	  } else {
+	    result.setCoeff (Matrix<DComplex>(valDCol(row)));
+	  }
 	}
 	break;
       }
@@ -97,84 +129,73 @@ MeqMatrix ParmTable::getInitValues (const string& parmName)
   return result;
 }
 				    
-void ParmTable::putValues (const string& parmName,
-			   const MeqDomain& domain,
-			   const MeqMatrix& values)
+void ParmTable::putCoeff (const string& parmName,
+			  const MeqDomain& domain,
+			  const MeqMatrix& values)
 {
-  bool matchDomain;
-  Table sel = find (matchDomain, parmName, domain);
-  if (matchDomain  &&  sel.nrow() > 0) {
+  itsTable.reopenRW();
+  Table sel = find (parmName, domain);
+  if (sel.nrow() > 0) {
+    AssertMsg (sel.nrow()==1, "Parameter " << parmName <<
+		 " has multiple entries for time "
+		 << domain.startX() << ':' << domain.endX() << " and freq "
+		 << domain.startY() << ':' << domain.endY());
+    ROScalarColumn<Double> stCol (sel, "STARTTIME");
+    ROScalarColumn<Double> etCol (sel, "ENDTIME");
+    ROScalarColumn<Double> sfCol (sel, "STARTFREQ");
+    ROScalarColumn<Double> efCol (sel, "ENDFREQ");
+    AssertMsg (near(domain.startX(), stCol(0))  &&
+	       near(domain.endX(), etCol(0))  &&
+	       near(domain.startY(), sfCol(0))  &&
+	       near(domain.endY(), efCol(0)),
+	       "Parameter " << parmName <<
+	       " has a partially instead of fully matching entry for time "
+		 << domain.startX() << ':' << domain.endX() << " and freq "
+		 << domain.startY() << ':' << domain.endY());
     if (values.isDouble()) {
-      ArrayColumn<Double> valCol (sel, "RValues");
+      ArrayColumn<Double> valCol (sel, "RVALUES");
       valCol.put (0, values.getDoubleMatrix());
     } else {
-      ArrayColumn<DComplex> valCol (sel, "CValues");
+      ArrayColumn<DComplex> valCol (sel, "CVALUES");
       valCol.put (0, values.getDComplexMatrix());
     }
   } else {
     uInt rownr = itsTable.nrow();
     itsTable.addRow();
-    ScalarColumn<String> namCol (itsTable, "Name");
-    ScalarColumn<Double> stCol (itsTable, "StartTime");
-    ScalarColumn<Double> etCol (itsTable, "EndTime");
-    ScalarColumn<Double> sfCol (itsTable, "StartFreq");
-    ScalarColumn<Double> efCol (itsTable, "EndFreq");
+    ScalarColumn<String> namCol (itsTable, "NAME");
+    ScalarColumn<Double> stCol (itsTable, "STARTTIME");
+    ScalarColumn<Double> etCol (itsTable, "ENDTIME");
+    ScalarColumn<Double> sfCol (itsTable, "STARTFREQ");
+    ScalarColumn<Double> efCol (itsTable, "ENDFREQ");
     namCol.put (rownr, parmName);
     stCol.put (rownr, domain.startX());
     etCol.put (rownr, domain.endX());
     sfCol.put (rownr, domain.startY());
     efCol.put (rownr, domain.endY());
     if (values.isDouble()) {
-      ArrayColumn<Double> valCol (itsTable, "RValues");
+      ArrayColumn<Double> valCol (itsTable, "RVALUES");
       valCol.put (rownr, values.getDoubleMatrix());
     } else {
-      ArrayColumn<DComplex> valCol (itsTable, "CValues");
+      ArrayColumn<DComplex> valCol (itsTable, "CVALUES");
       valCol.put (rownr, values.getDComplexMatrix());
     }
   }
 }
 
-Table ParmTable::find (bool& matchDomain, const string& parmName,
-		       const MeqDomain& domain)
+Table ParmTable::find (const string& parmName, const MeqDomain& domain)
 {
   // First see if the parameter name exists at all.
-  matchDomain = false;
   Table result;
   *itsIndexField = parmName;
   Vector<uInt> rownrs = itsNameIndex.getRowNumbers();
   if (rownrs.nelements() > 0) {
     Table sel = itsTable(rownrs);
-    // Now see if an exact domain match is found (and exactly 1).
-    Table sel2 = sel(near(domain.startX(), sel.col("StartTime"))  &&
-		     near(domain.endX(), sel.col("EndTime")) &&
-		     near(domain.startY(), sel.col("StartFreq"))  &&
-		     near(domain.endY(), sel.col("EndFreq")));
-    if (sel2.nrow() > 0) {
-      AssertMsg (sel2.nrow()==1, "Parameter " << parmName <<
-		 " has multiple exact entries for time "
-		 << domain.startX() << ':' << domain.endX() << " and freq "
-		 << domain.startY() << ':' << domain.endY());
-      result = sel2;
-      matchDomain = true;
-    } else {
-      // No exact domain match.
-      // Now see if a wider domain match is found (and exactly 1).
-      Table sel3 = sel((domain.startX() >= sel.col("StartTime")  ||
-			near(domain.startX(), sel.col("StartTime")))  && 
-		       (domain.endX() <= sel.col("StartTime")    ||
-			near(domain.endX(), sel.col("EndTime")))      &&
-		       (domain.startY() >= sel.col("StartFreq")  ||
-			near(domain.startY(), sel.col("StartFreq")))  && 
-		       (domain.endY() <= sel.col("StartFreq")    ||
-			near(domain.endY(), sel.col("EndFreq"))));
-      if (sel3.nrow() > 0) {
-	AssertMsg (sel3.nrow()==1, "Parameter " << parmName <<
-		   " has multiple wider entries for time "
-		   << domain.startX() << ':' << domain.endX() << " and freq "
-		   << domain.startY() << ':' << domain.endY());
-	result = sel3;
-      }
-    }
+    // Find all rows overlapping the requested domain.
+    Table sel3 = sel(domain.startX() < sel.col("ENDTIME")   &&
+		     domain.endX()   > sel.col("STARTTIME") &&
+		     domain.startY() < sel.col("ENDFREQ")   &&
+		     domain.endY()   > sel.col("STARTFREQ"));
+    result = sel3;
   }
   return result;
 }
