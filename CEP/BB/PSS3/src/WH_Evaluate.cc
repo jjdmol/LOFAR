@@ -77,11 +77,11 @@ WH_Evaluate* WH_Evaluate::make (const string& name)
 void WH_Evaluate::process()
 {
   TRACER3("WH_Evaluate process()");
-  if (itsEventCnt > 0)
-  {  readSolutions(); }
+//   if (itsEventCnt > 0)
+//   {  readSolutions(); }
 
-#define SIMPLE
-  int iter=100;
+#define WATERCAL
+  int iter=5;
 
 #ifdef PEEL
   if (itsEventCnt == 0)
@@ -97,13 +97,11 @@ void WH_Evaluate::process()
 
   // Set strategy arguments
   int size = sizeof(SI_Peeling::Peeling_data);
-  wo->setArgsSize(size);
-  SI_Peeling::Peeling_data* data = 
-    (SI_Peeling::Peeling_data*)(wo->getStrategyArgs());
-  data->nIter = iter;
-  data->nSources = 10;
-  data->startSource = 1;
-  data->timeInterval = 3600.;
+  SI_Peeling::Peeling_data data;
+  data.nIter = iter;
+  data.nSources = 10;
+  data.startSource = 1;
+  data.timeInterval = 3600.;
 
   // Set parameter names
   vector<string> pNames(3);
@@ -152,16 +150,18 @@ void WH_Evaluate::process()
 //   pNames[29] = "DEC.CP10";
 //   pNames[9] = "gain.11.SR1";
 //   pNames[10] = "gain.22.SR1";
-  wo->setParamNames(pNames);
+  wo->setVarData((char*)&data, size, pNames, itsStartSols);
 
   // Insert WorkOrder into database
   DH_PL* woPtr = dynamic_cast<DH_PL*>(wo);
   AssertStr(woPtr != 0, "OutHolder cannot be cast to a DH_PL");
   woPtr->insertDB(); 
+
+  wo->dump();
 }
 
 #elif defined WATERCAL
-  if (itsEventCnt < 2)
+  if (itsEventCnt < 30)
 {
   //   DbgAssert(itsNrKS==3);
    cout << "Strategy: WATERCAL with " << itsNrKS << " Knowledge Sources" <<endl;
@@ -178,43 +178,51 @@ void WH_Evaluate::process()
      wo->setStrategyNo(3);
      if ((step==0) && (itsEventCnt==0)) {
        //the very first step
-       wo->useSolutionNumbers(itsStartSols);
+       itsStartSols.clear();
      } else {
        int last_result_step = step        + (step==0 ? itsNrKS : 0);
        int last_result_Ecnt = itsEventCnt - (step==0 ? 1       : 0);
-       itsStartSols.push_back( last_result_step   *10000 
+       if (itsStartSols.size() >= 10)
+	 {                                           // Replace oldest value
+	 itsStartSols[itsOldestSolIdx] = last_result_step   *10000  + (last_result_Ecnt+1)*iter -1;
+	   itsOldestSolIdx++;
+	   if (itsOldestSolIdx >= 10)
+	   { itsOldestSolIdx = 0; }
+       }
+       else
+       {
+	 itsStartSols.push_back( last_result_step   *10000 
 			       + (last_result_Ecnt+1)*iter -1);
-       wo->useSolutionNumbers(itsStartSols);
+       }
      }						   
-     // Set arguments for watercal strategy
+     // Determine arguments for watercal strategy
      int size = sizeof(SI_WaterCal::WaterCal_data);
-     wo->setArgsSize(size);
-     SI_WaterCal::WaterCal_data* data = 
-       (SI_WaterCal::WaterCal_data*)wo->getStrategyArgs();
-     data->nIter = iter;
-     data->sourceNo = sourceno;
-     data->timeInterval = 3600.;
+     SI_WaterCal::WaterCal_data data;
+     data.nIter = iter;
+     int srcNr = itsEventCnt%10 + 1; 
+     data.sourceNo = srcNr;
+     data.timeInterval = 3600.;
 
-     // Set parameter names
+     // Determine parameter names
      vector<string> pNames(3);
      char param[16];
-     sprintf(param, "StokesI.CP%1i", sourceno);
-     cout << param << endl;
+     sprintf(param, "StokesI.CP%1i", srcNr);
      pNames[0] = param;
-     sprintf(param, "RA.CP%1i", sourceno);
-     cout << param << endl;
+     sprintf(param, "RA.CP%1i", srcNr);
      pNames[1] = param;
-     sprintf(param, "DEC.CP%1i", sourceno);
-     cout << param << endl;
+     sprintf(param, "DEC.CP%1i", srcNr);
      pNames[2] = param;
 //      pNames[3] = "gain.11.SR1";
 //      pNames[4] = "gain.22.SR1";
-     wo->setParamNames(pNames);
 
+     // Set variable size arguments
+     wo->setVarData((char*)&data, size, pNames, itsStartSols);
+     
      // Insert WorkOrder into database
      DH_PL* woPtr = dynamic_cast<DH_PL*>(wo);
      AssertStr(woPtr != 0, "OutHolder cannot be cast to a DH_PL");
      woPtr->insertDB(); 
+
    }
 }
 
@@ -235,24 +243,19 @@ int nrOfSources = 6;
      sprintf(ksname,"KS%1i",step);
      wo->setKSType(ksname);
      wo->setStrategyNo(4);
-     if ((step==1) && (itsEventCnt==0)) {
-       wo->useSolutionNumbers(itsStartSols);
-     } else {
+     if (!((step==1) && (itsEventCnt==0))) {
        int last_result_step = step-1      + (step==1 ? itsNrKS : 0);
        int last_result_Ecnt = itsEventCnt + (step==1 ? 0       : 1);
        itsStartSols.push_back( last_result_step   *10000 
 			       + last_result_Ecnt*iter -1);
-       wo->useSolutionNumbers(itsStartSols);
 
       }
      // Set arguments for peeling
      int size = sizeof(SI_Randomized::Randomized_data);
-     wo->setArgsSize(size);
-     SI_Randomized::Randomized_data* data = 
-	     (SI_Randomized::Randomized_data*)wo->getStrategyArgs();
-     data->nIter = iter;
-     data->sourceNo = rndSrc;
-     data->timeInterval = 3600.;
+     SI_Randomized::Randomized_data data;
+     data.nIter = iter;
+     data.sourceNo = rndSrc;
+     data.timeInterval = 3600.;
 
      // Set parameter names
      vector<string> pNames(3);
@@ -266,8 +269,8 @@ int nrOfSources = 6;
      sprintf(param, "DEC.CP%1i", rndSrc);
      cout << param << endl;
      pNames[2] = param;
-     wo->setParamNames(pNames);
-
+     // Set variable size arguments.
+     wo->setVarData((char*)&data, size, pNames, itsStartSols);
      wo->dump();
 
      // Insert WorkOrder into database
@@ -313,16 +316,13 @@ int nrOfSources = 6;
 	 }
        }
      }
-     wo->useSolutionNumbers(itsStartSols);
 
      // Set arguments for peeling
      int size = sizeof(SI_Randomized::Randomized_data);
-     wo->setArgsSize(size);
-     SI_Randomized::Randomized_data* data = 
-	     (SI_Randomized::Randomized_data*)wo->getStrategyArgs();
-     data->nIter = iter;
-     data->sourceNo = rndSrc;
-     data->timeInterval = 3600.;
+     SI_Randomized::Randomized_data data;
+     data.nIter = iter;
+     data.sourceNo = rndSrc;
+     data.timeInterval = 3600.;
 
      // Set parameter names
      vector<string> pNames(3);
@@ -336,14 +336,15 @@ int nrOfSources = 6;
      sprintf(param, "DEC.CP%1i", rndSrc);
      cout << param << endl;
      pNames[2] = param;
-     wo->setParamNames(pNames);
 
-     wo->dump();
+     wo->setVarData((char*)&data, size, pNames, itsStartSols);
 
-     // Insert WorkOrder into database
+      // Insert WorkOrder into database
      DH_PL* woPtr = dynamic_cast<DH_PL*>(wo);
      AssertStr(woPtr != 0, "OutHolder cannot be cast to a DH_PL");
      woPtr->insertDB(); 
+
+     wo->dump();
 }
 
 #else // default to SIMPLE
@@ -362,12 +363,10 @@ int nrOfSources = 6;
 
   // Set strategy arguments
   int size = sizeof(SI_Simple::Simple_data);
-  wo->setArgsSize(size);
-  SI_Simple::Simple_data* data = 
-    (SI_Simple::Simple_data*)(wo->getStrategyArgs());
-  data->nIter = iter;
-  data->nSources = 10;
-  data->timeInterval = 3600.;
+  SI_Simple::Simple_data data;
+  data.nIter = iter;
+  data.nSources = 10;
+  data.timeInterval = 3600.;
 
   // Set parameter names
   vector<string> pNames(30);
@@ -413,12 +412,15 @@ int nrOfSources = 6;
 
 //  pNames[9] = "gain.11.SR1";
 //  pNames[10] = "gain.22.SR1";
-  wo->setParamNames(pNames);
+
+  wo->setVarData((char*)&data, size, pNames, itsStartSols);
 
   // Insert WorkOrder into database
   DH_PL* woPtr = dynamic_cast<DH_PL*>(wo);
   AssertStr(woPtr != 0, "OutHolder cannot be cast to a DH_PL");
   woPtr->insertDB();
+
+  wo->dump();
 
 }
 
@@ -434,7 +436,6 @@ void WH_Evaluate::dump()
 
 void WH_Evaluate::postprocess()
 {
-  readSolutions();
 }
 
 void WH_Evaluate::readSolutions()

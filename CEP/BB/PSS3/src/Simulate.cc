@@ -51,7 +51,7 @@ int main (int argc, const char** argv)
   try {
     // To try out different (serial) experiments without the CEP
     // framework, use following two statements:
-    //  TryOut (); return 0;
+    //      TryOut (); return 0;
     BlackBoardDemo simulator;
 
     // Set trace level.
@@ -60,7 +60,7 @@ int main (int argc, const char** argv)
     simulator.setarg (argc, argv);
 
     simulator.baseDefine();
-    simulator.baseRun(2);
+    simulator.baseRun(3);
     simulator.baseQuit();
 
 

@@ -55,12 +55,12 @@ BlackBoardDemo::BlackBoardDemo()
     itsKSOutSteps(0),
     itsNumberKS(0)
 {
-  cout << ">>>>>>>> BlackBoardDemo constructor <<<<<<<<<<" << endl;
+  TRACER1(">>>>>>>> BlackBoardDemo constructor <<<<<<<<<<");
 }
 
 BlackBoardDemo::~BlackBoardDemo()
 {
-  cout << ">>>>>>>> BlackBoardDemo destructor <<<<<<<<<<" << endl;
+  TRACER1(">>>>>>>> BlackBoardDemo destructor <<<<<<<<<<");
   undefine();
 }
 
@@ -87,7 +87,7 @@ void BlackBoardDemo::define(const KeyValueMap& params)
 
   // Optional: Get any extra params from input
 
-  int itsNumberKS = 1;       // The total number of Knowledge Sources
+  int itsNumberKS = 4;       // The total number of Knowledge Sources
   char databaseName[10] = "meijeren";   // !!!! Change to own database !!!!
 
   TH_PL::useDatabase(databaseName); 
@@ -128,11 +128,7 @@ void BlackBoardDemo::define(const KeyValueMap& params)
     // Create the PSS3 Workholders and Steps
     ksID = i2string(ksNo);
 
-//     WH_PSS3 ksWH("KS"+ksID, "data/10Sources/demo"+ksID, meqModel+ksID, skyModel+ksID, 
-// 		 "postgres",  databaseName, "", ddID, modelType, calcUVW, 
-// 		 dataColName, residualColName, true, ksNo*9998);
-
-    WH_PSS3 ksWH("KS"+ksID, "data/10Sources/demo10", meqModel+ksID, skyModel+ksID, 
+    WH_PSS3 ksWH("KS"+ksID, "data/10Sources/demo10-"+ksID, meqModel+ksID, skyModel+ksID, 
 		 "postgres",  databaseName, "", ddID, modelType, calcUVW, 
 		 dataColName, residualColName, true, ksNo*10000);
 
@@ -176,7 +172,7 @@ void BlackBoardDemo::define(const KeyValueMap& params)
     itsKSSteps[index]->connect(itsKSInSteps[index], 0, 0, 1, TH_PL("BBWorkOrders"));
     itsKSSteps[index]->connect(itsKSInSteps[index], 1, 1, 1, TH_PL("BBSolutions"));
     itsKSOutSteps[index]->connect(itsKSSteps[index], 0, 0, 1, TH_PL("BBWorkOrders"));
-    itsKSOutSteps[index]->connect(itsKSSteps[index], 0, 0, 1, TH_PL("BBSolutions"));
+    itsKSOutSteps[index]->connect(itsKSSteps[index], 1, 1, 1, TH_PL("BBSolutions"));
   }
 
 }  

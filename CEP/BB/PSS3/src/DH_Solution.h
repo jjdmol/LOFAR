@@ -87,11 +87,14 @@ public:
   unsigned int getNumberOfParam() const;
   void setNumberOfParam(const unsigned int no);
 
-  void getParamValues(vector<double>& values) const;
-  void setParamValues(const vector<double>& values);
+  bool getSolution(vector<string>& names, vector<double>& values);
+  void setSolution(vector<string>& names, vector<double>& values);
 
-  void getParamNames(vector<string>& names) const;
-  void setParamNames(const vector<string>& names);
+/*   void getParamValues(vector<double>& values) const; */
+/*   void setParamValues(const vector<double>& values); */
+
+/*   void getParamNames(vector<string>& names) const; */
+/*   void setParamNames(const vector<string>& names); */
 
   // Resets (clears) the contents of its DataPacket 
   void clearData();
@@ -114,9 +117,7 @@ private:
   double*       itsStdDev;
   double*       itsChi;
   unsigned int* itsNumberOfParam;
-  double*       itsParamValues;
-  char*         itsParamNames;
-  
+   
   PO_DH_SOL*    itsPODHSOL; 
 
   int itsCurDataSize;

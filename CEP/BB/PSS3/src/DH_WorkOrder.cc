@@ -26,6 +26,8 @@
 
 #include <PSS3/DH_WorkOrder.h>
 #include <PL/TPersistentObject.h>
+#include <Common/BlobOStream.h>
+#include <Common/BlobIStream.h>
 #include <Common/Debug.h>
 #include <sstream>
 #include <unistd.h> 
@@ -48,13 +50,12 @@ DH_WorkOrder::DH_WorkOrder (const string& name)
     itsKSType          (0),
     itsStrategyNo      (0),
     itsNoStartSols     (0),
-    itsStartSolutions  (0),
     itsArgsSize        (0),
-    itsStrategyArgs    (0),
     itsNumberOfParam   (0),
-    itsParamNames      (0),
     itsPODHWO          (0)
-{}
+{
+  setExtraBlob("Extra", 1);
+}
 
 DH_WorkOrder::DH_WorkOrder(const DH_WorkOrder& that)
   : DH_PL(that),
@@ -63,13 +64,12 @@ DH_WorkOrder::DH_WorkOrder(const DH_WorkOrder& that)
     itsKSType          (0),
     itsStrategyNo      (0),
     itsNoStartSols     (0),
-    itsStartSolutions  (0),
     itsArgsSize        (0),
-    itsStrategyArgs    (0),
     itsNumberOfParam   (0),
-    itsParamNames      (0),
     itsPODHWO          (0)
-{}
+{
+ setExtraBlob("Extra", 1);
+}
 
 DH_WorkOrder::~DH_WorkOrder()
 {
@@ -101,12 +101,9 @@ void DH_WorkOrder::preprocess()
   addField ("KSType", BlobField<char>(1, MaxKSTypeLength));
   addField ("StrategyNo", BlobField<unsigned int>(1));
   addField ("NoStartSols", BlobField<int>(1));
-  addField ("StartSolutions", BlobField<int>(1, MaxNoStartSols));
   addField ("ArgsSize", BlobField<unsigned int>(1));
-  addField ("StrategyArgs", BlobField<char>(1, MaxArgsSize));
   addField ("NumberOfParam", BlobField<unsigned int> (1));
-  addField ("ParamNames", BlobField<char>(1, MaxParamNameLength,
-					  MaxNumberOfParam));
+
   // Create the data blob (which calls fillPointers).
   createDataBlock();
   // Initialize the buffers.
@@ -114,14 +111,7 @@ void DH_WorkOrder::preprocess()
   {
     itsKSType[k] = 0;
   }
-  for (unsigned int m=0; m<MaxNoStartSols; m++)
-  {
-    *itsStartSolutions = 0;
-  }
-  for (unsigned int i=0; i<MaxNumberOfParam; i++) 
-  {
-    itsParamNames[i]= 0;     
-  }
+
   *itsWOID = -1;
   *itsStatus = DH_WorkOrder::New;
   *itsStrategyNo = 0;
@@ -144,11 +134,8 @@ void DH_WorkOrder::fillDataPointers()
   itsKSType = getData<char> ("KSType");
   itsStrategyNo = getData<unsigned int> ("StrategyNo");
   itsNoStartSols = getData<int> ("NoStartSols");
-  itsStartSolutions = getData<int> ("StartSolutions");
   itsArgsSize = getData<unsigned int> ("ArgsSize");
-  itsStrategyArgs = getData<char> ("StrategyArgs");
   itsNumberOfParam = getData<unsigned int> ("NumberOfParam");
-  itsParamNames = getData<char> ("ParamNames");
 }
 
 void DH_WorkOrder::postprocess()
@@ -158,10 +145,8 @@ void DH_WorkOrder::postprocess()
   itsKSType = 0;
   itsStrategyNo = 0;
   itsNoStartSols = 0;
-  itsStartSolutions = 0;
-  itsStrategyArgs = 0;
+  itsArgsSize = 0;
   itsNumberOfParam = 0;
-  itsParamNames = 0;
 }
 
 void DH_WorkOrder::setKSType(const string& ksType)
@@ -172,62 +157,82 @@ void DH_WorkOrder::setKSType(const string& ksType)
   strcpy(ptr, ksType.c_str());
 }
 
-void DH_WorkOrder::useSolutionNumbers(const vector<int>& ids)
-{ 
-  unsigned int noSols = ids.size();
-  AssertStr(noSols <= MaxNoStartSols, "The number of start solutions "
-	    << noSols << " is larger than the maximum "
-	    << MaxNoStartSols );
-  for (unsigned int i = 0; i<noSols; i++)
-  {
-    itsStartSolutions[i] = ids[i];
-  }
-  setNoStartSolutions(noSols);
-}
-
-void DH_WorkOrder::getSolutionNumbers(vector<int>& ids) const
-{ 
-  ids.clear();
-  ids.resize(getNoStartSolutions());
-  for (int i=0; i<getNoStartSolutions(); i++)
-  {
-    ids[i] = itsStartSolutions[i];
-  }
-}
-
-void DH_WorkOrder::getParamNames(vector<string>& names) const
+void DH_WorkOrder::setVarData(char* stratArgs, int size,
+			      vector<string>& pNames, 
+			      vector<int>& startSols)
 {
-  names.clear();
-  names.resize(getNumberOfParam());
-  char* ptr = itsParamNames;
-  for (unsigned int i = 0; i < getNumberOfParam(); i++)
-  {
-     names[i] = ptr;
-     ptr += MaxParamNameLength;
+  BlobOStream& bos = createExtraBlob();
+  // Put strategy arguments into extra blob
+  for (int i=0; i<size; i++)
+  { 
+    bos << stratArgs[i];
   }
-}
+  setArgsSize(size);
 
-void DH_WorkOrder::setParamNames(vector<string>& names)
-{
-  AssertStr(names.size() <= MaxNumberOfParam, 
-	    "The number of work order parameters " << names.size() 
-	    << " is larger than the maximum " << MaxNumberOfParam);
-
+  // Put parameter names into extra blob
+  bos.putStart("names", 1);
   vector<string>::const_iterator iter;
-  int paramNo = 0;
-
-  char* ptr;
-  ptr = itsParamNames;
-  for (iter = names.begin(); iter != names.end(); iter++)
+  int paramNo = pNames.size();
+  for (iter = pNames.begin(); iter != pNames.end(); iter++)
   {
-    AssertStr(iter->length() < MaxParamNameLength, 
-	      "Parameter name " << *iter << " is longer than maximum "
-	      << MaxParamNameLength << ".");
-    strcpy(ptr, iter->c_str());
-    ptr += MaxParamNameLength;
-    paramNo++;
+    bos << *iter;
   }
   setNumberOfParam(paramNo);
+  bos.putEnd();
+
+  // Put start solutions into extra blob
+  bos.putStart("sols", 1);
+  unsigned int noSols = startSols.size();
+  for (unsigned int i = 0; i<noSols; i++)
+  {
+    bos << startSols[i];
+  }
+  setNoStartSolutions(noSols);
+  bos.putEnd();
+  
+}
+
+bool DH_WorkOrder::getVarData(char* stratArgs,
+			      vector<string>& pNames,
+			      vector<int>& startSols)
+{
+  bool found;
+  int version;
+  BlobIStream& bis = openExtraBlob(found, version);
+  if (!found) {
+    return false;
+  }
+  else
+  {
+    // Get strategy arguments
+    unsigned int size = getArgsSize();
+    for (unsigned int i=0; i<size; i++)
+    { 
+      bis >> stratArgs[i];
+    }
+    // Get parameter names.
+    bis.getStart("names");
+    pNames.clear();
+    int nr = getNumberOfParam();
+    pNames.resize(nr);
+    for (int i=0; i < nr; i++)
+    {
+      bis >> pNames[i];
+    }
+    bis.getEnd();
+    // Get start solutions
+    bis.getStart("sols");
+    startSols.clear();
+    int number = getNoStartSolutions();
+    startSols.resize(number);
+    for (int j=0; j < number; j++)
+    {
+      bis >> startSols[j];
+    }
+    bis.getEnd();
+    return true;
+  }  
+
 }
 
 void DH_WorkOrder::dump()
@@ -238,23 +243,25 @@ void DH_WorkOrder::dump()
   cout << "KS Type = " << getKSType() << endl;
   cout << "Strategy number = " << getStrategyNo() << endl;
   cout << "Number of start solutions = " << getNoStartSolutions() << endl;
-  vector<int> sols;
-  getSolutionNumbers(sols);
-  cout << "Start solutions : " << endl;
-  for (unsigned int i = 0; i < sols.size(); i++)
-  {
-    cout << sols[i] << endl;
-  }
-  cout << "Number of parameters = "  << getNumberOfParam() << endl;
+  int size = getArgsSize();
+  char data[size];
   vector<string> pNames;
-  getParamNames(pNames);
-  cout << "Parameter names : " << endl;
-  for (unsigned int i = 0; i < pNames.size(); i++)
-  {
-     cout <<  pNames[i] << endl ;
+  vector<int> sols;
+  if (getVarData(data, pNames, sols))
+  { 
+    cout << "Start solutions : " << endl;
+    for (unsigned int i = 0; i < sols.size(); i++)
+    {
+      cout << sols[i] << endl;
+    }
+    cout << "Number of parameters = "  << getNumberOfParam() << endl;
+    
+    cout << "Parameter names : " << endl;
+    for (unsigned int i = 0; i < pNames.size(); i++)
+    {
+      cout << pNames[i] << endl ;
+    }
   }
-  
-
 }
 
 namespace PL {

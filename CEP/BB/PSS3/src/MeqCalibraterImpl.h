@@ -23,18 +23,18 @@
 #ifndef BB_PSS3_MEQCALIBRATER_H
 #define BB_PSS3_MEQCALIBRATER_H
 
-#include <aips/Arrays/Matrix.h>
-#include <aips/Fitting/FitLSQ.h>
-#include <aips/MeasurementSets/MSMainColumns.h>
-#include <aips/MeasurementSets/MeasurementSet.h>
-#include <aips/Quanta/MVBaseline.h>
-#include <aips/Tables/Table.h>
-#include <aips/Tables/TableIter.h>
-#include <aips/Utilities/String.h>
-#include <aips/aips.h>
-#include <aips/Glish/GlishArray.h>
-#include <aips/Glish/GlishRecord.h>
-#include <aips/Glish/GlishValue.h>
+#include <casa/Arrays/Matrix.h>
+#include <scimath/Fitting/FitLSQ.h>
+#include <ms/MeasurementSets/MSMainColumns.h>
+#include <ms/MeasurementSets/MeasurementSet.h>
+#include <casa/Quanta/MVBaseline.h>
+#include <tables/Tables/Table.h>
+#include <tables/Tables/TableIter.h>
+#include <casa/BasicSL/String.h>
+#include <casa/aips.h>
+#include <tasking/Glish/GlishArray.h>
+#include <tasking/Glish/GlishRecord.h>
+#include <tasking/Glish/GlishValue.h>
 
 #include <MNS/MeqDomain.h>
 #include <MNS/MeqHist.h>
