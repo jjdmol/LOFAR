@@ -1,7 +1,7 @@
 bin_PROGRAMS   := mstopvd kuvplot mstouvp
 mstopvd_SOURCES := mstopvd.cc
 mstopvd_DEPENDENCIES :=  $(LOFAR_DEPEND)
-mstopvd_LDADD := ../src/libuvplot.la
+mstopvd_LDADD := $(to_builddir)/src/libuvplot.la
 
 kuvplot_SOURCES      := kuvplot_main.cc UVPKarmaViewer.cc
 kuvplot_DEPENDENCIES := $(LOFAR_DEPEND)
@@ -9,7 +9,7 @@ kuvplot_LDADD        := -L/usr/X11R6/lib -L$(KARMABASE)/lib -lkarmawidgets -lkar
 
 mstouvp_SOURCES := mstouvp.cc
 mstouvp_DEPENDENCIES :=  $(LOFAR_DEPEND)
-mstouvp_LDADD := ../src/libuvplot.la
+mstouvp_LDADD := $(top_builddir)/src/libuvplot.la
 
 
 # Your package's subdirectory
