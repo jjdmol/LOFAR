@@ -30,7 +30,7 @@
 
 namespace RSP_Test
 {
-  class EPAStub : public GCFTask
+  class EPAStub : public GCFTask, public Test
     {
     public:
       /**
@@ -45,23 +45,29 @@ namespace RSP_Test
       // state methods
 
       /**
-       * The initial state. In this state the beam_server port
-       * is opened.
+       * The initial and final state.
        */
+      /*@{*/
       GCFEvent::TResult initial(GCFEvent& e, GCFPortInterface &p);
+      GCFEvent::TResult final(GCFEvent& e, GCFPortInterface &p);
+      /*@}*/
 
       /**
-       * The enabled state. This state is reached when the
-       * beam_server port is connected.
+       * The stub states.
        */
-      GCFEvent::TResult enabled(GCFEvent& e, GCFPortInterface &p);
+      GCFEvent::TResult connected(GCFEvent& e, GCFPortInterface &p);
+
+      /**
+       * Run the tests.
+       */
+      void run();
 
     private:
       // member variables
 
     private:
       // ports
-      GCFPort m_client;
+      GCFPort m_server;
     };
 
 };

@@ -28,6 +28,7 @@ prelude = << PRELUDE_END
 namespace RSP_Protocol
 {
     static const int N_RCUBITS = 256;
+    static const int N_BEAMLETS = 128;
     static const int SUCCESS = 1;
     static const int FAILTURE = 0;
 };

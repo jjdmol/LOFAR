@@ -33,7 +33,8 @@ using namespace LOFAR;
 using namespace RSP_Protocol;
 
 Scheduler::Scheduler()
-{}
+{
+}
 
 Scheduler::~Scheduler()
 {
@@ -70,29 +71,21 @@ Scheduler::~Scheduler()
   }
 }
 
-void Scheduler::run(const GCFEvent& event, GCFPortInterface& /*port*/)
+void Scheduler::run(GCFEvent& event, GCFPortInterface& port)
 {
   const GCFTimerEvent* timeout = static_cast<const GCFTimerEvent*>(&event);
   
   if (F_TIMER == event.signal)
   {
-      /* adjust the current time */
-      struct timeval tv;
-      tv.tv_sec  = timeout->sec;
-      tv.tv_usec = 0;
-      m_current_time.set(tv);
+      LOG_INFO("Scheduler::run");
 
-      while (!m_later_queue.empty())
-      {
-	  Command* command = m_later_queue.top();
+      setCurrentTime(timeout->sec, 0);
 
-	  /**
-	   * Check later queue for events that need to be scheduled
-	   * to the now queue.
-	   */
-//	  if (timeout->sec + 1 == command->m_event
-      }
-
+      scheduleCommands();
+      processCommands();
+      syncCache(event, port);
+      m_cache.swapBuffers();
+      completeCommands();
   }
   else
   {
@@ -100,10 +93,9 @@ void Scheduler::run(const GCFEvent& event, GCFPortInterface& /*port*/)
   }
 }
 
-void Scheduler::dispatch(const GCFEvent& event, GCFPortInterface& port)
+void Scheduler::dispatch(GCFEvent& event, GCFPortInterface& port)
 {
-  //event = event;
-  port = port;
+  syncCache(event, port);
 }
 
 void Scheduler::addSyncAction(SyncAction* action)
@@ -117,6 +109,7 @@ Timestamp Scheduler::enter(Command* command)
   
   Timestamp t = command->getTimestamp();
 
+  /* determine at which time the command can actually be carried out */
   if (t.sec() < m_current_time.sec() + 10)
   {
 #if 0
@@ -130,3 +123,96 @@ Timestamp Scheduler::enter(Command* command)
 
   return t;
 }
+
+void Scheduler::setCurrentTime(long sec, long usec)
+{
+  /* adjust the current time */
+  struct timeval tv;
+  tv.tv_sec  = sec;
+  tv.tv_usec = usec;
+  m_current_time.set(tv);
+}
+
+void Scheduler::scheduleCommands()
+{
+  /* move appropriate client commands to the now queue */
+  while (!m_later_queue.empty())
+  {
+      Command* command = m_later_queue.top();
+
+      if (m_current_time > command->getTimestamp() + 1)
+      {
+	  /* discard old commands, the're too late! */
+	  LOG_WARN("discarding late command");
+
+	  m_later_queue.pop();
+	  delete command;
+      }
+      else if (m_current_time == command->getTimestamp() + 1)
+      {
+	  m_now_queue.push(command);
+	  m_later_queue.pop();
+      }
+      else break;
+  }
+
+#if 0
+  /* copy period commands to the now queue */
+  while (!m_period_queue.empty())
+  {
+      Command * command = m_period_queue.top();
+
+      struct timeval now;
+      m_current_time.get(&now);
+      if (0 == (now.tv_sec + 1 % command->getPeriod()))
+      {
+	  /* copy the command and push on the now queue */
+      }
+  }
+#endif
+}
+
+void Scheduler::processCommands()
+{
+  while (!m_now_queue.empty())
+  {
+      Command* command = m_now_queue.top();
+
+      /* let the command apply its changes to the cache */
+      command->apply(m_cache.getBack());
+
+      /* move from the now queue to the done queue */
+      m_now_queue.pop();
+      m_done_queue.push(command);
+  }
+}
+
+void Scheduler::syncCache(GCFEvent& event, GCFPortInterface& port)
+{
+  /* copy the m_syncactions queue */
+  std::priority_queue<SyncAction*> runqueue = m_syncactions;
+
+  while (!runqueue.empty())
+  {
+      SyncAction* action = runqueue.top();
+
+      action->dispatch(event, port);
+
+      if (action->isFinal()) runqueue.pop();
+      else break;
+  }
+}
+
+void Scheduler::completeCommands()
+{
+  while (!m_done_queue.empty())
+  {
+      Command* command = m_done_queue.top();
+
+      command->complete(m_cache.getFront());
+
+      m_done_queue.pop();
+      delete command;
+  }
+}
+

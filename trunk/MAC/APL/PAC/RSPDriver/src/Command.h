@@ -24,6 +24,7 @@
 #define COMMAND_H_
 
 #include "Timestamp.h"
+#include "Cache.h"
 
 #include <Common/LofarTypes.h>
 #include <GCF/GCF_Control.h>
@@ -51,33 +52,52 @@ namespace RSP
 	  /* Destructor for Command. */
 	  virtual ~Command();
 
+	  /*@{*/
 	  /**
-	   * Set the period (in seconds) with which this command should
+	   * Accessor methods for the period field.
+	   * The period (in seconds) with which this command should
 	   * be executed. The command will be executed every 'period' seconds.
 	   */
-	  void setPeriod(int16 period);
+	  void  setPeriod(int16 period);
+	  int16 getPeriod();
+	  /*@}*/
 
 	  /**
 	   * Set the type of operation READ/WRITE.
 	   */
 	  void setOperation(Operation oper);
 
+	  /*@{*/
+	  /**
+	   * Accessor methods for the port member.
+	   */
+	  void setPort(GCFPortInterface& port);
+	  GCFPortInterface* getPort();
+	  /*@}*/
+
 	  /**
 	   * Make necessary changes to the cache for the next synchronization.
 	   * Any changes will be sent to the RSP boards.
 	   */
-	  virtual void apply() = 0;
+	  virtual void apply(CacheBuffer& cache) = 0;
 
 	  /**
-	   * Return the timestamp of the event that corresponds to
-	   * this command.
+	   * Complete the command by sending the appropriate response on
+	   * the m_port;
+	   */
+	  virtual void complete(CacheBuffer& cache) = 0 ;
+
+	  /**
+	   * Get or set the timestamp of the underlying event
+	   * for a command.
 	   */
 	  virtual const RSP_Protocol::Timestamp& getTimestamp() = 0;
+	  virtual void setTimestamp(const RSP_Protocol::Timestamp& timestamp) = 0;
 
       private:
 	  int16              m_period;
 	  GCFEvent*          m_event;
-	  GCFPortInterface*  m_answerport;
+	  GCFPortInterface*  m_port;
 	  Operation          m_operation;
       };
 };

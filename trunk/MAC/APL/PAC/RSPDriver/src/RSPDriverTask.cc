@@ -49,7 +49,7 @@ RSPDriverTask::RSPDriverTask(string name)
   registerProtocol(EPA_PROTOCOL, EPA_PROTOCOL_signalnames);
 
   m_client.init(*this, "client", GCFPortInterface::SPP, RSP_PROTOCOL);
-//  m_board.init(*this, "board", GCFPortInterface::SAP, EPA_PROTOCOL /*, true*/);
+  m_board.init(*this, "board", GCFPortInterface::SAP, EPA_PROTOCOL /*, true*/);
 
   /**
    * Create synchronization action classes.
@@ -69,7 +69,7 @@ RSPDriverTask::~RSPDriverTask()
 
 bool RSPDriverTask::isEnabled()
 {
-  return m_client.isConnected(); // && m_board.isConnected();
+  return m_board.isConnected();
 }
 
 GCFEvent::TResult RSPDriverTask::initial(GCFEvent& event, GCFPortInterface& port)
@@ -85,9 +85,8 @@ GCFEvent::TResult RSPDriverTask::initial(GCFEvent& event, GCFPortInterface& port
 
       case F_ENTRY:
       {
-	  if (!m_client.isConnected()) m_client.open(); // need this otherwise GTM_Sockethandler is not called
 	  //m_board.setAddr("eth0", "aa:bb:cc:dd:ee:ff");
-	  //if (!m_board.isConnected()) m_board.open();
+	  if (!m_board.isConnected()) m_board.open();
       }
       break;
 
@@ -145,31 +144,41 @@ GCFEvent::TResult RSPDriverTask::enabled(GCFEvent& event, GCFPortInterface& port
 
   switch (event.signal)
   {
+      case F_ENTRY:
+      {
+	  if (!m_client.isConnected()) m_client.open(); // need this otherwise GTM_Sockethandler is not called
+
+	  /* Start the update timer */
+	  m_board.setTimer((long)1,0,1,0); // update every second
+      }
+      break;
+
 #if 0
       case F_ACCEPT_REQ:
 	  m_client.getPortProvider().accept();
 	  break;
-#endif
-      case F_ENTRY:
+#else
+      case F_CONNECTED:
       {
-	  /* Start the update timer */
-	  m_board.setTimer((long)1); // update every second
+	LOG_DEBUG(formatString("port '%s' connected", port.getName().c_str()));
       }
       break;
+#endif
 
       case RSP_SETWEIGHTS:
       {
 	  /* enter the command in the scheduler's queue */
 	  BWCommand* command = new BWCommand(event, port, Command::WRITE);
-	  /* reply */
-	  RSPSetweightsackEvent swack;
+
+	  /* acknowledgement */
+	  RSPSetweightsackEvent ack;
 
 	  /* enter into the scheduler's queue */
-	  swack.timestamp = m_scheduler.enter(command);
+	  ack.timestamp = m_scheduler.enter(command);
 
-	  swack.status = SUCCESS;
+	  ack.status = SUCCESS;
 
-	  m_client.send(swack);
+	  m_client.send(ack);
       }
       break;
 
@@ -206,7 +215,11 @@ GCFEvent::TResult RSPDriverTask::enabled(GCFEvent& event, GCFPortInterface& port
 	  LOG_DEBUG(formatString("port %s disconnected", port.getName().c_str()));
 	  port.close();
 
-	  TRAN(RSPDriverTask::initial);
+	  if (&port == &m_board)
+	  {
+	      TRAN(RSPDriverTask::initial);
+	  }
+	  else port.open(); // re-open for next client
       }
       break;
 

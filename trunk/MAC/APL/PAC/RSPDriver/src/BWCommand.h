@@ -48,12 +48,21 @@ namespace RSP
 	   * Make necessary changes to the cache for the next synchronization.
 	   * Any changes will be sent to the RSP boards.
 	   */
-	  virtual void apply();
+	  virtual void apply(CacheBuffer& cache);
 
+	  /**
+	   * Complete the command by sending the appropriate response on
+	   * the m_answerport;
+	   */
+	  virtual void complete(CacheBuffer& cache);
+
+	  /*@{*/
 	  /**
 	   * get timestamp of the event
 	   */
 	  virtual const Timestamp& getTimestamp();
+	  virtual void setTimestamp(const Timestamp& timestamp);
+	  /*@}*/
 
       private:
 	  BWCommand();
