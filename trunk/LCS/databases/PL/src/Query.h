@@ -52,15 +52,22 @@ namespace LOFAR
       // Default constructor. Creates an empty query object.
       QueryObject() {}
 
+      //@{
       // Constructor that takes an SQL string. 
       // \todo Do we want to do some sanity checking on \c aString ?
-//       explicit QueryObject(const std::string& aString) : 
-// 	itsSqlString(aString) 
-//       {}
+      QueryObject(const std::string& aString) : 
+ 	itsSqlString(aString) 
+      {}
+
+      QueryObject(const char* const aString) : 
+        itsSqlString(aString) 
+      {}
+      //@}
 
       // Constructor that takes a Query Expression.
       QueryObject(const Query::Expr& aExpr) : 
-        itsQueryExpr(aExpr) {}
+        itsQueryExpr(aExpr)
+      {}
 
       // Return the composed query as an SQL string.
       // \todo In a future version, we will probably not store the query
@@ -71,7 +78,7 @@ namespace LOFAR
 
     private:
       Query::Expr itsQueryExpr;
-//       std::string itsSqlString;
+      std::string itsSqlString;
 
     };
 

@@ -169,11 +169,11 @@ namespace LOFAR
       // Convert the data in our persistent object class to DBRep format,
       // which stores all data members contiguously in memory.
       template<typename U>
-      void toDatabaseRep(DBRep<U>& dest) const;
+      void toDBRep(DBRep<U>& dest) const;
 
       // Convert the data from DBRep format to our persistent object.
       template<typename U>
-      void fromDatabaseRep(const DBRep<U>& org);
+      void fromDBRep(const DBRep<U>& org);
 
     };
 

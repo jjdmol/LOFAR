@@ -30,8 +30,7 @@
 #endif
 
 //# Includes
-#include <PL/ObjectId.h>
-#include <PL/PersistentObject.h>
+#include <PL/DBRep.h>
 /* #include <dtl/DTL.h> */
 #include <dtl/DBView.h>
 #include <dtl/select_iterator.h>
@@ -40,9 +39,6 @@ namespace LOFAR
 {
   namespace PL
   {
-    //# Forward declaration
-    template<typename T> struct DBRep;
-
     // The BCA template class is a helper class. It provides a generic
     // interface for operator() by defining a typedef for DBRep<T>.
     template<typename T> 
@@ -63,42 +59,47 @@ namespace LOFAR
       void operator()(dtl::BoundIOs& boundIOs, ParamObj& paramObj);
     };
 
+
+    //@name Template specializations
+    //@{
+
     template<>
-    struct DBRep<ObjectId> {
-      ObjectId::oid_t itsOid;
+    class BCA<ObjectId>
+    {
+    public:
+      typedef DBRepOid DataObj;
+      void operator()(dtl::BoundIOs& cols, DataObj& rowbuf)
+      {
+        cols["ObjId"] == rowbuf.itsOid;
+      }
     };
 
     template<>
-    struct DBRep<PersistentObject::MetaData> {
-      ObjectId::oid_t itsOid;
-      ObjectId::oid_t itsOwner;
-      unsigned int    itsVersionNr;
+    class BPA<ObjectId>
+    {
+    public:
+      typedef DBRepOid ParamObj;
+      void operator()(dtl::BoundIOs& pos, ParamObj& param)
+      {
+        pos[0] == param.itsOid;
+      }
     };
 
     template<>
-    inline void 
-    BCA<ObjectId>::operator()(dtl::BoundIOs& cols, DataObj& rowbuf)
+    class BCA<PersistentObject::MetaData>
     {
-      cols["ObjId"] == rowbuf.itsOid;
-    }
+    public:
+      typedef DBRepMeta DataObj;
+      void operator()(dtl::BoundIOs& cols, DataObj& rowbuf)
+      {
+        cols["ObjId"] == rowbuf.itsOid;
+        cols["Owner"] == rowbuf.itsOwnerOid;
+        cols["VersionNr"] == rowbuf.itsVersionNr;
+      }
+    };
 
-    template<>
-    inline void 
-    BPA<ObjectId>::operator()(dtl::BoundIOs& pos, ParamObj& param)
-    {
-      pos[0] == param.itsOid;
-    }
-    
-    template<> 
-    inline void 
-    BCA<PersistentObject::MetaData>::operator()(dtl::BoundIOs& cols, 
-                                                DataObj& rowbuf)
-    {
-      cols["ObjId"] == rowbuf.itsOid;
-      cols["Owner"] == rowbuf.itsOwner;
-      cols["VersionNr"] == rowbuf.itsVersionNr;
-    }
-    
+    //@}
+
   } // namespace PL
   
 } // namespace LOFAR

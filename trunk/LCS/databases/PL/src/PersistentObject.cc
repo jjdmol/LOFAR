@@ -21,6 +21,7 @@
 //#  $Id$
 
 #include <PL/PersistentObject.h>
+#include <PL/DBRep.h>
 #include <PL/Exception.h>
 
 namespace LOFAR
@@ -127,6 +128,30 @@ namespace LOFAR
       for(it = itsOwnedPOs.begin(); it != itsOwnedPOs.end(); ++it) {
 	(*it)->update();
       }
+    }
+
+    std::string PersistentObject::tableNames() const
+    {
+      std::string nm(tableName());
+      POContainer::const_iterator it;
+      for(it = itsOwnedPOs.begin(); it != itsOwnedPOs.end(); ++it) {
+        nm += "," + (*it)->tableNames();
+      }
+      return nm;
+    }
+
+    void PersistentObject::toDBRepMeta(DBRepMeta& dest) const
+    {
+      dest.itsOid = metaData().oid()->get();
+      dest.itsOwnerOid = metaData().ownerOid()->get();
+      dest.itsVersionNr = metaData().versionNr();
+    }
+    
+    void PersistentObject::fromDBRepMeta(const DBRepMeta& org)
+    {
+      metaData().oid()->set(org.itsOid);
+      metaData().ownerOid()->set(org.itsOwnerOid);
+      metaData().versionNr() = org.itsVersionNr;
     }
 
   } // namespace PL
