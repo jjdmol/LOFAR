@@ -9,6 +9,12 @@ libsolver_la_SOURCES = \
   MeqCalSolver.cc \
   SolverControlAgent.cc \
   BatchAgent.cc
+  
+bin_PROGRAMS   		= applauncher
+  
+applauncher_SOURCES		    = applauncher.cc
+applauncher_LDADD		      = libsolver.la -lglish -lsos -lnpd
+applauncher_DEPENDENCIES	= libsolver.la $(LOFAR_DEPEND)
 
 # script used to generate AID maps
 MAPBUILDER = $(dmi_dir)/src/build_aid_maps.pl 

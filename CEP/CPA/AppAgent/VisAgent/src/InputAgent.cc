@@ -146,6 +146,7 @@ void InputAgent::suspend ()
   if( !suspended_ )
   {
     sink().postEvent(SuspendEvent);
+    sink().clearEventFlag();
     suspended_ = True; 
   }
 }
@@ -154,6 +155,7 @@ void InputAgent::suspend ()
 void InputAgent::resume ()
 {
   sink().postEvent(ResumeEvent);
+  sink().raiseEventFlag();
   suspended_ = False;
 }
 

@@ -215,6 +215,7 @@ void MeqCalSolver::run ()
       // check for a cached header (once a new header is received, it stays 
       // in cache until all solutions on the previous data set have been 
       // finished) and/or wait for a header to arrive
+      input().resume();
       while( !header.valid() && control().checkState() > 0 )
       {
         HIID id;
@@ -325,6 +326,9 @@ void MeqCalSolver::run ()
       domainheader()[FDomainStartTime] = domain_start;
       domainheader()[FDomainEndTime] = domain_end;
       domainheader()[FTileFormat] <<= tileformat_.copy(); 
+      
+      // suspend input until we go onto next domain
+      input().suspend();
       
       // We have a full domain of data now. Start the solution loop
       // control state ought to be IDLE at start of every solution. (Otherwise,
@@ -575,7 +579,7 @@ void MeqCalSolver::solve (bool useSVD, DataRecord::Ref& header)
       // update the tile ID with the new dataset ID
       visTile.setTileId(-1,-1,vdsid);
       
-      cout << "Tile: "<<visTile.sdebug(5)<<endl;
+      cdebug(3) << "Tile: "<<visTile.sdebug(5)<<endl;
       
       // Do a predict for the elements in this range.
       bool showd = false;

@@ -2,9 +2,11 @@ dmi_dir = $(lofar_sharedir)/../DMI
 
 CXXFLAGS += -D_GNU_SOURCE 
 
-check_PROGRAMS		= test_solver test_dummy
+check_PROGRAMS		= test_solver test_dummy glishsolver
 
-bin_PROGRAMS   		= glishsolver
+bin_PROGRAMS   		= 
+
+# glishwriter
 
 test_solver_SOURCES		    = test_solver.cc
 test_solver_LDADD		      = ../src/libsolver.la -lglish -lsos -lnpd
@@ -17,6 +19,10 @@ test_dummy_DEPENDENCIES	  = ../src/libsolver.la $(LOFAR_DEPEND)
 glishsolver_SOURCES		    = glishsolver.cc
 glishsolver_LDADD		      = ../src/libsolver.la -lglish -lsos -lnpd
 glishsolver_DEPENDENCIES	= ../src/libsolver.la $(LOFAR_DEPEND)
+
+# glishwriter_SOURCES		    = glishwriter.cc
+# glishwriter_LDADD		      = ../src/libsolver.la -lglish -lsos -lnpd
+# glishwriter_DEPENDENCIES	= ../src/libsolver.la $(LOFAR_DEPEND)
 
 TESTS				=  
 
