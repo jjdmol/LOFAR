@@ -21,6 +21,11 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.5  2002/05/23 15:36:59  schaaf
+//
+//  %[BugId: 11]%
+//  assert -> dbgassert
+//
 //  Revision 1.4  2002/05/16 15:12:00  schaaf
 //  removed bug in declaration of itsBuffer
 //
