@@ -11,7 +11,12 @@
 
 //! Base class of the familie of classes that make up the data cache tree.
 /*!
-  
+  Derived classes MUST override the abstract methods:
+  \- size()
+  \- resize()
+  \- addSpectrum()
+  \- getSpectrum()
+  \- getLocationOfSpectrum()
  */
 
 class UVPDataCacheElement
@@ -25,7 +30,11 @@ class UVPDataCacheElement
   virtual unsigned int size() const = 0;
 
   //! Sets the number of elements that this node manages.
-  /*! \param newSize The new number of elements.
+  /*! When extending or shrinking the current array, it keeps the old
+    data as much as possible. When shrinking it discards data from the
+    end of the array, when growing it keeps all present data.
+
+    \param newSize The new number of elements.
     \returns the previous number of elements.
   */
   virtual unsigned int resize(unsigned int newSize) = 0;
@@ -44,13 +53,13 @@ class UVPDataCacheElement
     the getSpectrum method of the child that does contain it.
     \returns 0 if there is no spectrum that matches the header.
    */
-  virtual const UVPDataAtom *getSpectrum(const UVPDataAtomHeader &header) = 0;
+  virtual const UVPDataAtom *getSpectrum(const UVPDataAtomHeader &header) const = 0;
 
 
   //!  \returns a pointer to the UVPDataCacheElement that owns the
   //! UVPDataAtom object described by the header.
   /*!
-    \returns 0 if there is no spectrum that matches the header.
+    returns 0 if there is no spectrum that matches the header.
    */
   virtual UVPDataCacheElement *getLocationOfSpectrum(const UVPDataAtomHeader &header) = 0;
   
