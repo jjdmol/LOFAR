@@ -41,7 +41,8 @@ public:
 				 DataGenerator * dg_config, 
 				 int nfft, 
 				 int source,
-				 int windowsize);
+				 int windowsize,
+				 string name);
 
   virtual ~WH_PhaseShift ();
 
@@ -66,6 +67,7 @@ private:
   int                  itsNfft;
   int                  itsSource;
   int                  itsPrevWindowSize;
+  string               itsName;
   int                  itsCount;
   DataGenerator*       itsConfig;
   FFTW::Plan           itsForwardPlan;
@@ -73,6 +75,8 @@ private:
   LoVec_double         itsInputBuffer;
   LoVec_double         itsFreqShift;
   LoMat_dcomplex       itsOutputBuffer;
+
+  int itsTrajectCount;
 };
 
 

@@ -39,6 +39,7 @@ public:
 			   double samp_freq, 
 			   double opt, 
 			   double amp, 
+			   string name,
 			   int window_size = 32);
 
   virtual ~WH_Modulate ();
@@ -71,6 +72,7 @@ private:
   double        itsP;
   double        itsp;
   string        itsModType;
+  string        itsName;
   LoVec_double  itsInputBuffer;
   LoVec_double  itsOutputBuffer;
 };

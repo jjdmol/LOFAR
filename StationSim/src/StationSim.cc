@@ -103,13 +103,10 @@ void StationSim::define (const ParamBlock& params)
   const bool tapDG                = params.getInt    ("tapdg", 0);
   const bool tapFB1               = params.getInt    ("tapfb1", 0);
   const bool tapBF                = params.getInt    ("tapbf", 0);
+  const int BF_Algorithm          = params.getInt    ("bfalg", 0);
 
   const int delayBeamForm         = 1;
 
-  const int EVD                   = 0;
-  const int SVD                   = 1;
-  const int PASTd                 = 2;
-  
   // Read in the configuration for the sources
   DataGenerator* DG_Config = new DataGenerator (datagenFileName);
 
@@ -146,6 +143,7 @@ void StationSim::define (const ParamBlock& params)
 								  DG_Config->itsSamplingFreq,
 								  DG_Config->itsSources[i]->itsSignals[j]->itsOpt,
 								  DG_Config->itsSources[i]->itsSignals[j]->itsAmplitude, 
+								  suffix,
 								  modulationWindowSize),
 					 string ("modulate_") + suffix, 
 					 false);
@@ -170,7 +168,8 @@ void StationSim::define (const ParamBlock& params)
 									 DG_Config,
 									 DG_Config->itsNumberOfFFT,
 									 i,
-									 modulationWindowSize),
+									 modulationWindowSize,
+									 suffix),
 					  string ("phase_shift_") + suffix, 
 					  false);
     
@@ -218,7 +217,7 @@ void StationSim::define (const ParamBlock& params)
 
 	
 	// The Space Time Analysis object
-    Step sta (WH_STA(suffix, nrcu, 2, nrcu, maxNrfi, buflength, SVD), 
+    Step sta (WH_STA(suffix, nrcu, 2, nrcu, maxNrfi, buflength, BF_Algorithm), 
 			  string ("sta_") + suffix, false);
 
 	sta.setRate(nsubband);

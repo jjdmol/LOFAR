@@ -30,6 +30,7 @@ WH_Modulate::WH_Modulate (int nin,
 						  double samp_freq, 
 						  double opt, 
 						  double amp, 
+						  string name,
 						  int window_size)
 : WorkHolder     (nin, nout, "aWorkHolder", "WH_Modulate"),
   itsWindowSize  (window_size),
@@ -42,7 +43,8 @@ WH_Modulate::WH_Modulate (int nin,
   itsPhi         (0),
   itsP           (0),
   itsp           (0),
-  itsModType     (mod_type)
+  itsModType     (mod_type),
+  itsName        (name)
 {
   AssertStr (itsTc > 0, 
 			 "The sampling frequency is smaller than the carrier frequency, cannot modulate!");
@@ -94,6 +96,7 @@ WH_Modulate* WH_Modulate::make (const string &) const
 						  itsSampFreq, 
 						  itsOpt, 
 						  itsAmp,
+						  itsName,
 						  itsWindowSize);
 }
 
