@@ -61,7 +61,7 @@ namespace RSP
        * The period (in seconds) with which this command should
        * be executed. The command will be executed every 'period' seconds.
        */
-      void  setPeriod(int16 period);
+      void  setPeriod(uint16 period);
       int16 getPeriod();
       /*@}*/
 
@@ -118,7 +118,7 @@ namespace RSP
       bool operator<(const Command& other);
 
     private:
-      int16              m_period;
+      uint16             m_period;
       GCFEvent*          m_event;
       GCFPortInterface*  m_port;
       Operation          m_operation;

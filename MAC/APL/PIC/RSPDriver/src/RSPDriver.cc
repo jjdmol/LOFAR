@@ -792,12 +792,14 @@ void RSPDriver::rsp_substatus(GCFEvent& event, GCFPortInterface& port)
     ack.handle = 0;
 
     port.send(ack);
+    return;
   }
   else
   {
     ack.timestamp = m_scheduler.getCurrentTime();
     ack.status = SUCCESS;
     ack.handle = (uint32)&(*command);
+    port.send(ack);
   }
 
   (void)m_scheduler.enter(Ptr<Command>(&(*command)),
@@ -857,12 +859,14 @@ void RSPDriver::rsp_substats(GCFEvent& event, GCFPortInterface& port)
     ack.handle = 0;
 
     port.send(ack);
+    return;
   }
   else
   {
     ack.timestamp = m_scheduler.getCurrentTime();
     ack.status = SUCCESS;
     ack.handle = (uint32)&(*command);
+    port.send(ack);
   }
 
   (void)m_scheduler.enter(Ptr<Command>(&(*command)),

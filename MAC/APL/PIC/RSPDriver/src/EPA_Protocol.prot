@@ -124,7 +124,7 @@ namespace EPA_Protocol
   
   inline std::ostream& operator<<(std::ostream& s, const EPA_Protocol::RCUStatus&  stat)
   {
-    return s << "[" << stat.status << "]";
+    return s << "[" << std::hex << "0x" << (int)stat.status << "]";
   }
   /*@}*/
 

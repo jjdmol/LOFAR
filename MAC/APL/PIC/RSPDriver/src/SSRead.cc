@@ -106,7 +106,7 @@ GCFEvent::TResult SSRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
   
     // unpack ss message
     EPASubbandselectEvent ss(event);
-
+  
     // create array point to data in the response event
     Array<uint16, 1> subbands((uint16*)&ss.ch,
 			      shape(RSP_Protocol::MAX_N_BEAMLETS),
