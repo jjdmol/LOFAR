@@ -24,16 +24,17 @@ MEQ in general:
   * BUG: see how domain deps are generated in the test scripts
     Setup mechanism to generate default dependencies during a resolve
 
-  * BUG:(?) WSRT MSs may have channels laid out by decreasing freq.
-    This screws up Domain/Cells -- somebody has to either reverse the freq axis,
-    or Domain/Cells need to be reimplemented to support reversed domains.
-
   * BUG: assigning requestIDs in VisDataMux: should be consistent with symdeps
     Add knowledge of symdeps to MeqServer itself
 
   * BUG: Sink does not handle a fail-result gracefully. Or does it?
     Actually, we need to regularize this whole fail business.
   
+      + BUG:(?) WSRT MSs may have channels laid out by decreasing freq.
+        This screws up Domain/Cells -- somebody has to either reverse the freq axis,
+        or Domain/Cells need to be reimplemented to support reversed domains.
+        + Added Flip_Freq to MSInput/Output
+
       + CRITICAL BUG: If spigot is created implicitly (via nested init-records), 
         it does not get added to the data mux!!! Same goes for loading a forest.
         Time to rethink this whole I/O business -- tie it to forest.
@@ -60,21 +61,18 @@ MEQ in general:
         11/07/05: fixed. See new DataList class, and dmi.list (aka meq.list)
         function, which ensures order. Old way is now deprecated.
 
-  * new name for Polc? Maybe Fitfunc? Repfunc?
-    Funklet!!
-    
+      + new name for Polc? Maybe Fitfunc? Repfunc?
+        + Funklet!!
+        
+  ----
   * revise auto_resample to support resolution drivers, compute Result cells,
     revise getResult() to take a Cells argument
 
   * make linearly interpolating upsampler
   
-  * change Result constructor to take a Cells argument; change it to do
-    copy-or-attach (perhaps move this function to CountedRef?)
+      + change Result constructor to take a Cells argument; change it to do
+        copy-or-attach (perhaps move this function to CountedRef?)
     
-  * Figure out the right value of epsilon for Cells comparisons
-  
-  * Align glish request_id with new C++ structure
-  
   * Add tests for all this crap
   
   * Update the default node defrec.g
@@ -96,12 +94,12 @@ MEQ in general:
   * Update documentation! (never goes away, does it?)
     Specifically, a Node construction checklist
   
-  * Specify child labels in node constructor; check them in init().
-    Process named children properly.
-    Re-opening: we want optional children, too (see, e.g., FlagSubtract)
-    01/01/04: done, need to test w/glish (glish not working on my laptop)
-    16/01/04: tested with default tests; now need to make some nodes
-              with child labels
+        + Specify child labels in node constructor; check them in init().
+          Process named children properly.
+          Re-opening: we want optional children, too (see, e.g., FlagSubtract)
+          01/01/04: done, need to test w/glish (glish not working on my laptop)
+          16/01/04: tested with default tests; now need to make some nodes
+                    with child labels
               
         - Add integrate/sample flag to Result -- not to VellSet
           13/04/04 done
@@ -230,7 +228,6 @@ MEQ in general:
           27/11/03: good to go for now. Still thinking about COW.
           
 Nodes:
-  
   * make WSum node
 
   * make ReqSeq node
@@ -240,16 +237,9 @@ Nodes:
   
   * review init()/reinit(): could they perhaps be merged? Can we serialize
     a node before a resolveChildren() call?
-      
-  * Start using the depmask in Node::getCacheResult()
-  
-  * Possibly use empty Cells to indicate constant values? Propagate these
-    properly.
-    
+
   * Add Integrator/Differencer node
   
-  * Look for const_cast in Solver and figure out why it's there!
-
       + Handle integrated flag in Compose  
         13/04/04: done
 
@@ -279,12 +269,6 @@ Nodes:
 
 Solver:
 
-  ? BUG: JEN has a problem after Clear.Polcs: execute returns a fail saying
-    "no cells in Meq::Request"
-    
-      [ Apply a gain factor to incremental value updates (perhaps both on the 
-        solver side, and on the parm side?) ]
-    
         + Implement request ID hierarchy
           28/01/04: done
   
@@ -295,15 +279,15 @@ Solver:
           
 
 Flagging:
-  
-      + add generic flag_mask functionality (a-la MergeFlags) to Function
-        23/03/04: done
 
-      + implement ZeroFlagger: flag where value <OP> 0 (OP is ==,!=,<,>,<=,>=)
-        23/03/04: done
+        + add generic flag_mask functionality (a-la MergeFlags) to Function
+          23/03/04: done
 
-      + implement MergeFlags: merge flags of all children
-        23/03/04: done
+        + implement ZeroFlagger: flag where value <OP> 0 (OP is ==,!=,<,>,<=,>=)
+          23/03/04: done
+
+        + implement MergeFlags: merge flags of all children
+          23/03/04: done
 
 
 Sink/Spigot:
@@ -327,8 +311,6 @@ Sink/Spigot:
 
 Parm:
 
-  * develop different strategies for handling multiple polcs
-  
         + for grow_domain: use the envelope domain, rather than checking for 
           strict supersets.
           01/03/04: done
@@ -354,9 +336,6 @@ Parm:
           28/01/04: emerged from discussions with JEN
 
 Request: 
-
-  * Buglet: when Jan supplied an illegal request (wrong fields, unmatched IDs), the 
-    error message was not exactly descriptive
     
         + BUG: Figure out why state_test() (meqtest.g) causes Requests to be
           fail to unpack upon the first invocation. Possibly related to problem
@@ -369,10 +348,8 @@ Request:
 
 Vells and VellSets and Results:
 
-  * think of extending the Vells math functions: median, etc.
-
-    - double-differencing?
-      02/02/04 done for VellSets, needs real testing
+        + double-differencing?
+          02/02/04 done for VellSets, needs real testing
     
         + Vells(DataArray*) constructor: if rank<2 but nelements==1, reform the 
           array (otherwise, won't instantiate from scalars!)
@@ -389,6 +366,8 @@ Function:
           12/12/03 done
           
 DMI & Debug:
+
+--->
 
   * add lazy unblocking to DataRecord
 
@@ -487,7 +466,7 @@ General:
 
         + How to use different (gcc-version-specific) libstdc++ versions?
           This can be addressed via LD_LIBRARY_PATH; ideally, we'd like to list
-          all gcc/../lib dirs in /etc/ld.so.conf and not worry about it. Can we
+          all gcc/../lib dirs in /etc/ld.so.conf and not worry abouAhhhht it. Can we
           make the binary select the correct library via DT_RUNPATH somehow (see
           the ld.so(1) man page)?
         + solution: pass the following flags to the linker: 
