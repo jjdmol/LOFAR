@@ -37,26 +37,29 @@ namespace LOFAR
 {
 
 WH_Solve::WH_Solve(const string& name, int nPrediffInputs)
-  : WorkHolder    (nPrediffInputs+1, 1, name, "WH_Solve"),
+  : WorkHolder    (nPrediffInputs+2, 2, name, "WH_Solve"),
     itsNPrediffers(nPrediffInputs),
     itsSolver     (0)
 {
   LOG_TRACE_FLOW("WH_Solve constructor");
   // Add workorder input
-  getDataManager().addInDataHolder(0, new DH_WOSolve(name+"_in"));
+  getDataManager().addInDataHolder(0, new DH_WOSolve(name+"_in0"));
+  getDataManager().addOutDataHolder(0, new DH_WOSolve(name+"_out0")); // dummy
+  // Add solution output
+  getDataManager().addInDataHolder(1, new DH_Solution(name+"_in1"));  // dummy
+  getDataManager().addOutDataHolder(1, new DH_Solution(name+"_out1"));
   // Switch input channel trigger off
   getDataManager().setAutoTriggerIn(0, false);
+  getDataManager().setAutoTriggerOut(0, false);
+  getDataManager().setAutoTriggerIn(1, false);
+  getDataManager().setAutoTriggerOut(1, false);
 
   // Add prediffer inputs
   for (int i=0; i<itsNPrediffers; i++)
   {
-    getDataManager().addInDataHolder(i+1, new DH_Prediff(name+"_in"));
-    getDataManager().setAutoTriggerIn(i+1, false);
+    getDataManager().addInDataHolder(i+2, new DH_Prediff(name+"_in"));
+    getDataManager().setAutoTriggerIn(i+2, false);
   }
-
-  // Add solution output
-  getDataManager().addOutDataHolder(0, new DH_Solution(name+"_out"));
-  getDataManager().setAutoTriggerOut(0, false);
 
 }
 
@@ -137,7 +140,7 @@ void WH_Solve::process()
 
   // Write result
   // Get solution dataholder DH_Solution* sol;
-  DH_Solution* sol = dynamic_cast<DH_Solution*>(getDataManager().getOutHolder(0));
+  DH_Solution* sol = dynamic_cast<DH_Solution*>(getDataManager().getOutHolder(1));
   sol->clearData();
   DH_PL* solPtr = dynamic_cast<DH_PL*>(sol);
   sol->setSolution(resultParmNames, resultParmValues);
@@ -160,7 +163,7 @@ void WH_Solve::createSolver(const KeyValueMap& args)
   delete itsSolver;
 
   // Create a Prediffer object
-  string msName = args.getString("MSName", "empty") + ".MS";
+  //  string msName = args.getString("MSName", "empty") + ".MS";
   string meqModel = args.getString("meqTableName", "meqmodel");
   string skyModel = args.getString("skyTableName", "skymodel");
   string dbType = args.getString("DBType", "postgres");
@@ -168,37 +171,39 @@ void WH_Solve::createSolver(const KeyValueMap& args)
   string dbHost = args.getString("DBHost", "dop50");
   string dbPwd = args.getString("DBPwd", "");
 
-  itsSolver = new Solver(msName, meqModel, skyModel, dbType, 
+  itsSolver = new Solver(meqModel, skyModel, dbType, 
 			 dbName, dbHost, dbPwd);
 }
 
 void WH_Solve::readInputs()
 {
-  for (int i=1; i<=itsNPrediffers; i++)
-  {
-    DH_Prediff* dh = dynamic_cast<DH_Prediff*>(getDataManager().getInHolder(i));
+  LOG_TRACE_FLOW("WH_Solve::readInputs");
+//   for (int i=1; i<=itsNPrediffers; i++)
+//   {
+//     DH_Prediff* dh = dynamic_cast<DH_Prediff*>(getDataManager().getInHolder(i));
 
-    itsSolver->setEquations(dh->getDataPtr(), dh->getNResults(), dh->getNspids(),
-                            dh->getNTimes(), dh->getNFreq(), i);     // id = i or from prediffer?
-  }
+//     itsSolver->setEquations(dh->getDataPtr(), dh->getNResults(), dh->getNspids(),
+//                             dh->getNTimes(), dh->getNFreq(), i);     // id = i or from prediffer?
+//   }
 }
 
 void WH_Solve::readInputsAndSetParmData()
 {
-  for (int i=1; i<=itsNPrediffers; i++)
-  {
-    DH_Prediff* dh = dynamic_cast<DH_Prediff*>(getDataManager().getInHolder(i));
-    vector<ParmData> pData;
-    dh->getParmData(pData);
-    vector<ParmData>::iterator iter;
-    for (iter=pData.begin(); iter!=pData.end(); iter++)
-    {
-      itsSolver->setSolvableParmData(*iter, i);           // id = i or from prediffer?
-    }
+  LOG_TRACE_FLOW("WH_Solve::readInputsAndSetParmData");
+//   for (int i=1; i<=itsNPrediffers; i++)
+//   {
+//     DH_Prediff* dh = dynamic_cast<DH_Prediff*>(getDataManager().getInHolder(i));
+//     vector<ParmData> pData;
+//     dh->getParmData(pData);
+//     vector<ParmData>::iterator iter;
+//     for (iter=pData.begin(); iter!=pData.end(); iter++)
+//     {
+//       itsSolver->setSolvableParmData(*iter, i);           // id = i or from prediffer?
+//     }
 
-    itsSolver->setEquations(dh->getDataPtr(), dh->getNResults(), dh->getNspids(),
-                            dh->getNTimes(), dh->getNFreq(), i);    // id = i or from prediffer?
-  }
+//     itsSolver->setEquations(dh->getDataPtr(), dh->getNResults(), dh->getNspids(),
+//                             dh->getNTimes(), dh->getNFreq(), i);    // id = i or from prediffer?
+//   }
 
 }
 

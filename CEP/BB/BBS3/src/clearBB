@@ -48,9 +48,10 @@ SQLCLIENT="psql -h $BBHOST -U postgres $BBUSER"
 
 #create the bb tables
 echo " " > sql_create
-echo " DROP TABLE bbsolutions;" >> sql_create
-echo " DROP TABLE bbworkorders;" >> sql_create
-echo " CREATE TABLE bbworkorders (
+echo " DROP TABLE bbs3solutions;" >> sql_create
+echo " DROP TABLE bbs3woprediffer;" >> sql_create
+echo " DROP TABLE bbs3wosolver;" >> sql_create
+echo " CREATE TABLE bbs3woprediffer (
        ObjId BIGINT NOT NULL UNIQUE PRIMARY KEY, 
        Owner BIGINT NOT NULL, 
        VersionNr INTEGER NOT NULL, 
@@ -61,11 +62,26 @@ echo " CREATE TABLE bbworkorders (
        WOID INTEGER, 
        STATUS INTEGER, 
        KSTYPE TEXT, 
-       STRATEGYNO INTEGER, 
-       NOSTARTSOLS INTEGER, 
-       ARGSSIZE INTEGER, 
-       NUMBEROFPARAM INTEGER);" >> sql_create
-echo "create table bbsolutions (
+       INITIALIZE INTEGER, 
+       NEXTINTERVAL INTEGER, 
+       FIRSTCHAN INTEGER,
+       LASTCHAN INTEGER, 
+       TIMEINTERVAL INTEGER);" >> sql_create
+echo " CREATE TABLE bbs3wosolver (
+       ObjId BIGINT NOT NULL UNIQUE PRIMARY KEY, 
+       Owner BIGINT NOT NULL, 
+       VersionNr INTEGER NOT NULL, 
+       ID INTEGER, 
+       TAG INTEGER, 
+       SEQNR BIGINT, 
+       DATA TEXT, 
+       WOID INTEGER, 
+       STATUS INTEGER, 
+       KSTYPE TEXT, 
+       INITIALIZE INTEGER, 
+       NEXTINTERVAL INTEGER, 
+       USESVD INTEGER);" >> sql_create
+echo "create table bbs3solutions (
       ObjId BIGINT NOT NULL UNIQUE PRIMARY KEY, 
       Owner BIGINT NOT NULL, 
       VersionNr INTEGER NOT NULL, 
@@ -73,9 +89,7 @@ echo "create table bbsolutions (
       TAG INTEGER, 
       SEQNR BIGINT, 
       DATA TEXT, 
-      BBID INTEGER, 
       WOID INTEGER, 
-      ITERATION INTEGER, 
       FIT DOUBLE PRECISION, 
       MU DOUBLE PRECISION, 
       STDDEV DOUBLE PRECISION, 

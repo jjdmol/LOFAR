@@ -52,14 +52,13 @@ bool SC_Simple::execute()
   {
     itsFirstCall = false;
     // Set prediffer workorder data
-    itsWOPD->clearData();
     itsWOPD->setInitialize(true);
     itsWOPD->setWorkOrderID(itsWOID);
     itsWOPD->setStatus(DH_WOPrediff::New);
     itsWOPD->setKSType("Prediff1");
     itsWOPD->setFirstChannel (itsArgs.getInt ("startChan", 0));
     itsWOPD->setLastChannel (itsArgs.getInt ("endChan", 0));
-    int timeInterval = itsArgs.getInt ("timeInterval", 10);
+    float timeInterval = itsArgs.getFloat ("timeInterval", 10);
     itsWOPD->setTimeInterval (timeInterval);
     itsWOPD->setDDID (itsArgs.getInt ("ddid", 0));
     itsWOPD->setModelType (itsArgs.getString ("modelType", "notfound"));
@@ -72,7 +71,6 @@ bool SC_Simple::execute()
     itsWOPD->setVarData (msParams, ant, pNames, srcs);
 
     // Set solver workorder data
-    itsWOSolve->clearData(); 
     itsWOSolve->setInitialize(true);
     itsWOSolve->setWorkOrderID(itsWOID);
     itsWOSolve->setStatus(DH_WOSolve::New);
@@ -94,10 +92,8 @@ bool SC_Simple::execute()
   itsWOSolve->dump();
 
   // Insert WorkOrders into database
-  DH_PL* woPD = dynamic_cast<DH_PL*>(itsWOPD);
-  woPD->insertDB();
-  DH_PL* woS = dynamic_cast<DH_PL*>(itsWOPD);
-  woS->insertDB();
+  itsWOPD->insertDB();
+  itsWOSolve->insertDB();
 
   return true;
 }

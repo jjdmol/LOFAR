@@ -37,7 +37,7 @@
 namespace LOFAR
 {
 
-const unsigned int MaxKSTypeLength = 8;
+const unsigned int MaxKSTypeLength = 16;
 const unsigned int MaxModelTypeLength = 16;
 
 DH_WOPrediff::DH_WOPrediff (const string& name)
@@ -319,18 +319,26 @@ void DH_WOPrediff::dump()
   vector<int> srcs;
   if (getVarData(sArguments, antNrs, pNames, srcs))
   { 
-    cout << "MS name = " << sArguments.getString ("MSName", "notfound");
-    cout << "Database host = " << sArguments.getString ("DBHost", "notfound");
-    cout << "Database type = " << sArguments.getString ("DBType", "notfound");
-    cout << "Database name = " << sArguments.getString ("DBName", "notfound");
-    cout << "Database password = " << sArguments.getString ("DBPwd", "notfound");
-    cout << "Meq table name = " << sArguments.getString ("meqTableName", "notfound");
-    cout << "Sky table name = " << sArguments.getString ("skyTableName", "notfound");
-    cout << "Antenna numbers : " << endl;
+    cout << "MS name = " << sArguments.getString ("MSName", "notfound") 
+	 << endl;
+    cout << "Database host = " << sArguments.getString ("DBHost", "notfound") 
+	 << endl;
+    cout << "Database type = " << sArguments.getString ("DBType", "notfound") 
+	 << endl;
+    cout << "Database name = " << sArguments.getString ("DBName", "notfound")
+	 << endl;
+    cout << "Database password = " << sArguments.getString ("DBPwd", "notfound")
+	 << endl;
+    cout << "Meq table name = " << sArguments.getString ("meqTableName", "notfound")
+	 << endl;
+    cout << "Sky table name = " << sArguments.getString ("skyTableName", "notfound")
+	 << endl;
+    cout << "Antenna numbers : [ " ;
     for (unsigned int i = 0; i < antNrs.size(); i++)
     {
-      cout << antNrs[i] << endl;
+      cout << antNrs[i] << ", ";
     }
+    cout << " ]" << endl;
     cout << "Number of parameters = "  << pNames.size() << endl;
     
     cout << "Parameter names : " << endl;

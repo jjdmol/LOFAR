@@ -14,7 +14,7 @@
 
 
 nrPrediffers=1,   // Number of Prediffers
-BBDBname="test",  // BlackBoard database name (must be a postgres database on dop50)
+BBDBname="meijeren",  // BlackBoard database name (must be a postgres database on dop50)
 
 CTRLparams=[
   nrStrategies=1,   // Number of Strategy Controllers
@@ -34,13 +34,13 @@ CTRLparams=[
     lockMappedMem=F,         // Call mlock immediately after mapping?
 
     MSDBparams=[
-      MSName="demo3-",         // Name of the Measurement Set
+      MSName="demo3-1",         // Name of the Measurement Set
       DBHost="dop50",          // Parameter database host name
       DBType="aips",           // Parameter database type
-      DBName="test",           // Parameter database name
+      DBName="meijeren",           // Parameter database name
       DBPwd="",                // Parameter database password
-      meqTableName="demo3-",   // Meq model table name *       
-      skyTableName="demo3_gsm-", // Sky model table name *
-    ],
+      meqTableName="demo3-1",   // Meq model table name *       
+      skyTableName="demo3_gsm-1" // Sky model table name *
+    ]
   ]
 ]

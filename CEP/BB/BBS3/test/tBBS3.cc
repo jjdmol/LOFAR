@@ -76,11 +76,11 @@ int main (int argc, const char** argv)
     // Parse the command.
     KeyValueMap params = KeyParser::parse (keyv);
     // Add the nriter if not defined.
-    KeyValueMap cmap(params["CTRLparams"].getValueMap());
-    KeyValueMap smap(cmap["STRATparams"].getValueMap());
+    KeyValueMap cmap(params["CTRLparams"].getValueMap());  // >>>Currenty only 1 strategy
+    KeyValueMap smap(cmap["SC1params"].getValueMap());
     if (! smap.isDefined("nrIterations")) {
       smap["nrIterations"] = nriter;
-      cmap["STRATparams"] = smap;
+      cmap["SC1params"] = smap;
       params["CTRLparams"] = cmap;
     }
     cout << params << endl;

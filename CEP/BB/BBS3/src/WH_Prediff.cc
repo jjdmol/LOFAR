@@ -35,17 +35,19 @@ namespace LOFAR
 {
 
 WH_Prediff::WH_Prediff(const string& name, int id)
-  : WorkHolder   (1, 1, name, "WH_Prediff"),
+  : WorkHolder   (1, 2, name, "WH_Prediff"),
     itsID        (id),
     itsPrediffer (0)
 {
   LOG_TRACE_FLOW("WH_Prediff constructor");
   getDataManager().addInDataHolder(0, new DH_WOPrediff(name+"_in"));
-  getDataManager().addOutDataHolder(0, new DH_Prediff(name+"_out"));
+  getDataManager().addOutDataHolder(0, new DH_WOPrediff(name+"_out0")); // dummy
+  getDataManager().addOutDataHolder(1, new DH_Prediff(name+"_out1"));
 
   // switch input and output channel trigger off
   getDataManager().setAutoTriggerIn(0, false);
   getDataManager().setAutoTriggerOut(0, false);
+  getDataManager().setAutoTriggerOut(1, false);
 }
 
 WH_Prediff::~WH_Prediff()
@@ -90,8 +92,7 @@ void WH_Prediff::process()
   woPtr->updateDB();
 
   DH_Prediff* dhRes = dynamic_cast<DH_Prediff*>(getDataManager().getOutHolder(0));
-  dhRes->clearData();
-  DH_PL* outPtr = dynamic_cast<DH_PL*>(dhRes);
+  //  dhRes->clearData();
 
   // Execute workorder
   if (wo->getInitialize())  // Initialize, nextInterval and getEquations (+send ParmData)
@@ -112,24 +113,24 @@ void WH_Prediff::process()
     itsPrediffer->resetIterator();
     itsPrediffer->nextInterval();
     itsPrediffer->updateSolvableParms(); //????
-    itsPrediffer->getEquations();        // returns a std::list<MeqResult>
+    //    itsPrediffer->getEquations();        // returns a std::list<MeqResult>
 
-    dhRes->setParmData(itsPrediffer->getSolvableParmData());
+    //    dhRes->setParmData(itsPrediffer->getSolvableParmData());
   }
   else if (wo->getNextInterval())  // nextInterval and getEquations (+send ParmData)
   {
     ASSERTSTR(itsPrediffer!=0, "The prediffer has not been created and initialized.");
     itsPrediffer->nextInterval();
     itsPrediffer->updateSolvableParms(); //????
-    itsPrediffer->getEquations();
+    //    itsPrediffer->getEquations();
 
-    itsPrediffer->getSolvableParmData();  // Returns a vector<ParmData>& -> set in output
+    //    itsPrediffer->getSolvableParmData();  // Returns a vector<ParmData>& -> set in dhRes
   }
   else                   // getEquations
   {
     ASSERTSTR(itsPrediffer!=0, "The prediffer has not been created and initialized.");
-    itsPrediffer->updateSolvableParms(); //????
-    itsPrediffer->getEquations();
+    //    itsPrediffer->updateSolvableParms(); //????
+    //    itsPrediffer->getEquations();
   }
 
   // write result

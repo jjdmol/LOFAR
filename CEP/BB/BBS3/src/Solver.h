@@ -42,8 +42,7 @@ class Solver
 
 public:
   // Create Solver object.
-  Solver (const string& msName,
-	  const string& meqModel,
+  Solver (const string& meqModel,
 	  const string& skyModel,
 	  const string& dbType,
 	  const string& dbName,
@@ -113,6 +112,8 @@ private:
   vector<complex<double> > itsDeriv;    //# derivatives of predict
   Quality itsSol;                       //# Solution quality
   Vector<String> itsSolvableParms;     // Solvable parameters
+
+  double  itsTimeInterval;
 };
 
 } // namespace LOFAR

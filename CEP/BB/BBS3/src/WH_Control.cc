@@ -39,7 +39,7 @@ namespace LOFAR
 {
 int WH_Control::theirNextWorkOrderID = 1;
 
-string i2string(int i) {
+string i2str(int i) {
   char str[32];
   sprintf(str, "%i", i);
   return string(str);
@@ -47,19 +47,26 @@ string i2string(int i) {
 
 WH_Control::WH_Control (const string& name,
 			const KeyValueMap& args)
-  : WorkHolder    (2, 2, name,"WH_Control"),
-    itsCurrentRun(0),
-    itsEventCnt(0),
+  : WorkHolder     (3, 3, name,"WH_Control"),
+    itsCurrentRun  (0),
+    itsEventCnt    (0),
     itsOldestSolIdx(0),
-    itsArgs(args)
+    itsArgs        (args),
+    itsFirstCall   (true)
 {
-  getDataManager().addInDataHolder(0, new DH_Solution("in_1")); 
-  getDataManager().addOutDataHolder(0, new DH_WOPrediff("out_0"));
-  getDataManager().addOutDataHolder(1, new DH_WOSolve("out_1")); 
+  getDataManager().addInDataHolder(0, new DH_Solution("in_0")); 
+  getDataManager().addInDataHolder(1, new DH_WOPrediff("in_1")); // dummy
+  getDataManager().addInDataHolder(2, new DH_WOSolve("in_2")); // dummy
+  getDataManager().addOutDataHolder(0, new DH_Solution("out_0"));  // dummy
+  getDataManager().addOutDataHolder(1, new DH_WOPrediff("out_1"));
+  getDataManager().addOutDataHolder(2, new DH_WOSolve("out_2")); 
   // switch output trigger of
   getDataManager().setAutoTriggerIn(0, false);
   getDataManager().setAutoTriggerOut(0, false);
+  getDataManager().setAutoTriggerIn(1, false);
   getDataManager().setAutoTriggerOut(1, false);
+  getDataManager().setAutoTriggerIn(2, false);
+  getDataManager().setAutoTriggerOut(2, false);
 }
 
 WH_Control::~WH_Control()
@@ -79,32 +86,7 @@ WorkHolder* WH_Control::construct (const string& name,
 }
 
 void WH_Control::preprocess()
-{
-  DH_Solution* inp = dynamic_cast<DH_Solution*>(getDataManager().getInHolder(0));
-  DH_WOPrediff* pd = dynamic_cast<DH_WOPrediff*>(getDataManager().getOutHolder(0));
-  DH_WOSolve* sv = dynamic_cast<DH_WOSolve*>(getDataManager().getOutHolder(1));
-  int nrStrat = itsArgs.getInt("nrPrediffers", 0);
-
-  for (int i=1; i<=nrStrat; i++)
-  {
-    // Get strategy type
-    string nr = i2string(i);
-    string name = "SC" + nr + "params";
-    KeyValueMap params = (const_cast<KeyValueMap&>(itsArgs))["name"].getValueMap();
-    string stratType = params.getString("strategy", "noneDefined");
-    // Create StrategyController and add to list
-    if (stratType == "Simple")
-    {
-      SC_Simple* sc = new SC_Simple(1, inp, pd, sv, params);
-      itsControllers.push_back(sc);
-    }
-    else
-    {
-      THROW(LOFAR::Exception, "Strategy type " << stratType 
-	    << " unknown or not defined");
-    }
-  }
-}
+{}
 
 WH_Control* WH_Control::make (const string& name)
 {
@@ -113,6 +95,12 @@ WH_Control* WH_Control::make (const string& name)
 
 void WH_Control::process()
 {
+  if (itsFirstCall)
+  {
+    itsFirstCall = false;
+    createStrategyControllers();
+  }
+
   list<StrategyController*>::iterator iter;
   for (iter=itsControllers.begin(); iter!=itsControllers.end(); iter++)
   {
@@ -135,6 +123,32 @@ void WH_Control::postprocess()
 {
 }
 
+void WH_Control::createStrategyControllers()
+{
+  DH_Solution* inp = dynamic_cast<DH_Solution*>(getDataManager().getInHolder(0));
+  DH_WOPrediff* pd = dynamic_cast<DH_WOPrediff*>(getDataManager().getOutHolder(1));
+  DH_WOSolve* sv = dynamic_cast<DH_WOSolve*>(getDataManager().getOutHolder(2));
+  int nrStrat = itsArgs.getInt("nrStrategies", 0);
 
+  for (int i=1; i<=nrStrat; i++)
+  {
+    // Get strategy type
+    string nr = i2str(i);
+    string name = "SC" + nr + "params";
+    KeyValueMap params = (const_cast<KeyValueMap&>(itsArgs))[name].getValueMap();
+    string stratType = params.getString("strategy", "noneDefined");
+    // Create StrategyController and add to list
+    if (stratType == "Simple")
+    {
+      SC_Simple* sc = new SC_Simple(1, inp, pd, sv, params);
+      itsControllers.push_back(sc);
+    }
+    else
+    {
+      THROW(LOFAR::Exception, "Strategy type " << stratType 
+	    << " unknown or not defined");
+    }
+  }
+}
 
 } // namespace LOFAR
