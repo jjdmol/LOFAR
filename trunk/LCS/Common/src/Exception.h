@@ -32,8 +32,8 @@
 #include <string>
 #include <iosfwd>
 
-// GCC 2.95.x does not declare ostringstream in iosfwd, 
-// so we must include sstream here :-(
+//# GCC 2.95.x does not declare ostringstream in iosfwd, 
+//# so we must include sstream here :-(
 #if defined(__GNUC__) && (__GNUC__ < 3)
 #include <sstream>
 #endif
@@ -41,6 +41,9 @@
 
 namespace LCS {
 
+  //
+  // This is the base class for all LCS related exceptions.
+  //
   class Exception : public std::exception
   {
   public:
