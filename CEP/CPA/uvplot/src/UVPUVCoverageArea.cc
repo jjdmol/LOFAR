@@ -54,18 +54,6 @@ void UVPUVCoverageArea::setData(const UVPImageCube* data=0)
 
 void UVPUVCoverageArea::slot_paletteChanged()
 {
-  if(itsCurrentQImage != 0) {
-    if(itsCurrentQImage->depth() < 32) {
-      itsCurrentQImage->setNumColors(getNumberOfColors());
-      
-      for(int i = 0; 
-          i < itsCurrentQImage->numColors() && i < getNumberOfColors();
-          i++) {
-        itsCurrentQImage->setColor(i, getColor(i)->rgb());
-      }
-    }
-  }
-
   drawView();
 }
 
@@ -80,37 +68,33 @@ void UVPUVCoverageArea::slot_paletteChanged()
 
 void UVPUVCoverageArea::drawView()
 {
-  if(itsCurrentQImage != 0) {
-
-    unsigned int nx =itsCurrentImage->getN(UVPImageCube::X);
-    unsigned int ny =itsCurrentImage->getN(UVPImageCube::Y);
-
-    
-    QPainter buffer_painter;
-    
-    buffer_painter.begin(&itsBuffer);
-    
-
-    for(int x = 0; x < nx; x++) {
-      for(int y = 0; y < ny; y++) {
-        int val = 128.0 + 127.0* *(itsCurrentImage->getPixel(x, y)->getAverageValue());
-        buffer_painter.setPen(*getColor(val));
-        buffer_painter.drawPoint(x, y);
-      }
+  unsigned int nx =itsCurrentImage->getN(UVPImageCube::X);
+  unsigned int ny =itsCurrentImage->getN(UVPImageCube::Y);
+  
+  
+  QPainter buffer_painter;
+  
+  buffer_painter.begin(&itsBuffer);
+  
+  
+  for(int x = 0; x < nx; x++) {
+    for(int y = 0; y < ny; y++) {
+      int val = 128.0 + 127.0* *(itsCurrentImage->getPixel(x, y)->getAverageValue());
+      buffer_painter.setPen(*getColor(val));
+      buffer_painter.drawPoint(x, y);
     }
-      
-
-
-
-    
-    buffer_painter.setPen(red);
-    
-    buffer_painter.drawLine(0, 0, width(), height());
-    buffer_painter.drawLine(0, height(), width(), 0);
-    
-    buffer_painter.end();
-    
-    bitBlt(this, 0, 0, &itsBuffer);
   }
-
+  
+  
+  
+  
+  
+  buffer_painter.setPen(red);
+  
+  buffer_painter.drawLine(0, 0, width(), height());
+  buffer_painter.drawLine(0, height(), width(), 0);
+  
+  buffer_painter.end();
+  
+  bitBlt(this, 0, 0, &itsBuffer);
 }
