@@ -555,7 +555,7 @@ tag:
 	rm -f /tmp/inputrc.$$PPID;\
 	echo ;\
 	echo -n "TAGGING (output to tag.log) ...";\
-	cvs tag $$tagname $(DEFAULT_FILES_TO_TAG) $$files > tag.log 2>&1 ;\
+	cvs tag -F $$tagname $(DEFAULT_FILES_TO_TAG) $$files > tag.log 2>&1 ;\
 	if test ! 0 -eq $$?; then\
 		echo "FAILURE: failed to tag, see tag.log for information.";\
 		exit;\
