@@ -42,12 +42,14 @@ parmtable := function (name, create=F)
 	d8 := tablecreatearraycoldesc  ('VALUES', as_double(0));
 	d9 := tablecreatearraycoldesc  ('SIM_VALUES', as_double(0));
 	d10:= tablecreatearraycoldesc  ('SIM_PERT', as_double(0));
-	d11:= tablecreatescalarcoldesc ('NORMALIZED', T);
-	d12:= tablecreatearraycoldesc  ('SOLVABLE', T);
-	d13:= tablecreatescalarcoldesc ('DIFF', as_double(0));
-	d14:= tablecreatescalarcoldesc ('DIFF_REL', T);
+	d11:= tablecreatescalarcoldesc ('TIME0', as_double(0));
+	d12:= tablecreatescalarcoldesc ('FREQ0', as_double(0));
+	d13:= tablecreatescalarcoldesc ('NORMALIZED', T);
+	d14:= tablecreatearraycoldesc  ('SOLVABLE', T);
+	d15:= tablecreatescalarcoldesc ('DIFF', as_double(0));
+	d16:= tablecreatescalarcoldesc ('DIFF_REL', T);
 	td := tablecreatedesc (d1, d2, d3, d4, d5, d6, d7, d8, d9, d10, d11,
-			       d12, d13, d14);
+			       d12, d13, d14, d15, d16);
 	self.tab := table (name, td);
 	if (is_fail(self.tab)) {
 	    fail;
@@ -59,7 +61,8 @@ parmtable := function (name, create=F)
 	
 	# Create the table with initial values.
 	itabname := spaste(name,'/DEFAULTVALUES');
-	td := tablecreatedesc (d1, d2, d3, d8, d9, d10, d11, d12, d13, d14);
+	td := tablecreatedesc (d1, d2, d3, d8, d9, d10, d11,
+			       d12, d13, d14, d15, d16);
 	self.itab := table (itabname, td);
 	if (is_fail(self.itab)) {
 	    fail;
@@ -99,12 +102,14 @@ parmtable := function (name, create=F)
 
     public.putinit := function (parmname='parmXXX', srcnr=-1, statnr=-1,
 				values=0, solvable=unset, normalize=unset,
-                                diff=1e-6, diffrelative=T, trace=T)
+                                diff=1e-6, diffrelative=T,
+				time0=0., freq0=0., trace=T)
     {
 	#----------------------------------------------------------------
 	funcname := paste('** parmtable.putinit(',parmname,'):');
 	input := [parmname=parmname, values=values, solvable=solvable,
-		  diff=diff, diffrelative=diffrelative];
+		  diff=diff, diffrelative=diffrelative,
+		  time0=time0, freq0=freq0];
 	if (trace) print funcname,' input=',input;
 	#----------------------------------------------------------------
 
@@ -145,6 +150,8 @@ parmtable := function (name, create=F)
 	if (is_boolean(normalize)) {
 	    nm := normalize;
 	}
+	self.itab.putcell ('TIME0', rownr, time0)
+	self.itab.putcell ('FREQ0', rownr, freq0)
 	self.itab.putcell ('NORMALIZED', rownr, nm);
 	vals := as_double(values);
 	self.itab.putcell ('VALUES', rownr, vals);
@@ -160,13 +167,14 @@ parmtable := function (name, create=F)
 			    timerange=[1,1e20], freqrange=[1,1e20], 
 			    values=0, solvable=unset, normalize=unset,
                             diff=1e-6, diffrelative=T,
-			    trace=F)
+			    time0=0., freq0=0., trace=T)
     {
 	#----------------------------------------------------------------
 	funcname := paste('** parmtable.put(',parmname,'):');
 	input := [parmname=parmname, values=values, solvable=solvable,
 		  timerange=timerange, freqrange=freqrange,
-		  diff=diff, diffrelative=diffrelative];
+		  diff=diff, diffrelative=diffrelative,
+		  time0=time0, freq0=freq0];
 	if (trace) print funcname,' input=',input;
 	#----------------------------------------------------------------
 
@@ -213,6 +221,8 @@ parmtable := function (name, create=F)
 	if (is_boolean(normalize)) {
 	    nm := normalize;
 	}
+	self.itab.putcell ('TIME0', rownr, time0)
+	self.itab.putcell ('FREQ0', rownr, freq0)
 	self.itab.putcell ('NORMALIZED', rownr, nm);
 	vals := as_double(values);
 	self.itab.putcell ('VALUES', rownr, vals);
@@ -224,7 +234,7 @@ parmtable := function (name, create=F)
 	return T;
     }
 
-    public.loadgsm := function(gsmname, where='')
+    public.loadgsm := function(gsmname, where='', time0=0., freq0=0.)
     {
 	t := table(gsmname);
 	if (is_fail(t)) fail;
@@ -237,23 +247,29 @@ parmtable := function (name, create=F)
 		public.putinit (spaste('RA.', name),
 				src, -1,
 				values=tab.getcell ('RAPARMS', row),
-				diff=1e-7, diffrelative=F);
+				diff=1e-7, diffrelative=F,
+				time0=time0, freq0=freq0);
 		public.putinit (spaste('DEC.', name),
 				src, -1,
 				values=tab.getcell ('DECPARMS', row),
-				diff=1e-7, diffrelative=F);
+				diff=1e-7, diffrelative=F,
+				time0=time0, freq0=freq0);
 		public.putinit (spaste('StokesI.', name),
 				src, -1,
-				values=tab.getcell ('IPARMS', row));
+				values=tab.getcell ('IPARMS', row),
+				time0=time0, freq0=freq0);
 		public.putinit (spaste('StokesQ.', name),
 				src, -1,
-				values=tab.getcell ('QPARMS', row));
+				values=tab.getcell ('QPARMS', row),
+				time0=time0, freq0=freq0);
 		public.putinit (spaste('StokesU.', name),
 				src, -1,
-				values=tab.getcell ('UPARMS', row));
+				values=tab.getcell ('UPARMS', row),
+				time0=time0, freq0=freq0);
 		public.putinit (spaste('StokesV.', name),
 				src, -1,
-				values=tab.getcell ('VPARMS', row));
+				values=tab.getcell ('VPARMS', row),
+				time0=time0, freq0=freq0);
 	    }
 	}
 	print 'Wrote',tab.nrows(),'sources into MEP';
