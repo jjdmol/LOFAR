@@ -41,23 +41,23 @@ namespace LOFAR
       void LogicalBinaryExprNode::print(std::ostream& os) const
       {
         if (isNull()) return;
-        Expr lhs(itsLeft.getConstraint());
-        Expr rhs(itsRight.getConstraint());
-//         os << "(";
-        if (!lhs.isNull()) {
-          lhs.print(os);
-          os << " AND ";
-        }
+
         os << "(";
         itsLeft.print(os);
         os << itsOperation;
         itsRight.print(os); 
         os << ")";
-        if (!rhs.isNull()) {
-          os << " AND ";
-          rhs.print(os);
-        }
-//         os << ")";
+
+        Expr lc(itsLeft.getConstraint());
+        Expr rc(itsRight.getConstraint());
+        bool lcNull(lc.isNull());
+        bool rcNull(rc.isNull());
+
+        if (lcNull && rcNull) return;
+        os << " AND ";
+        lc.print(os);
+        if (!lcNull && !rcNull) os << " AND ";
+        rc.print(os);
       }
 
       bool LogicalBinaryExprNode::isNull() const
