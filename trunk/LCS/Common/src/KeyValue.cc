@@ -336,6 +336,8 @@ float KeyValue::getFloat() const
     return *(int32*)itsValuePtr;
   case DTFloat:
     return *(float*)itsValuePtr;
+  case DTDouble:
+    return *(double*)itsValuePtr;
   default:
     throw std::runtime_error("KeyValue::getFloat - invalid data type");
   }
@@ -468,6 +470,15 @@ vector<float> KeyValue::getVecFloat() const
     }
   case DTVecFloat:
     return *(vector<float>*)itsValuePtr;
+  case DTVecDouble:
+    {
+      const vector<double>& vec1 = *(vector<double>*)itsValuePtr;
+      vector<float> vec2(vec1.size());
+      for (uint i=0; i<vec2.size(); i++) {
+	vec2[i] = vec1[i];
+      }
+      return vec2;
+    }
   case DTValueVector:
   {
     const vector<KeyValue>& kvvec = *(const vector<KeyValue>*)itsValuePtr;

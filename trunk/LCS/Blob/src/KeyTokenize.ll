@@ -27,6 +27,7 @@
 #include <KeyValueMap.h>
 #include <KeyParser.h>
 #include <KeyParse.h>     // output of bison
+#include <Common/lofar_iostream.h>
 using namespace LOFAR;
 
 #undef YY_INPUT
@@ -36,19 +37,16 @@ using namespace LOFAR;
 #define YY_DECL int yylex (YYSTYPE* lvalp)
 %}
 
-WHITE     [ \t]*
-NEWLINE   [\n]
+WHITE     [ \t\n]*
 DIGIT     [0-9]
 INT       [+-]?{DIGIT}+
-FEXP      [Ee][+-]?{INT}
-DEXP      [Dd][+-]?{INT}
-FLOAT     [+-]?{INT}{FEXP}|{INT}"."{DIGIT}*({FEXP})?|{DIGIT}*"."{INT}({FEXP})?
-DOUBLE    [+-]?{INT}{DEXP}|{INT}"."{DIGIT}*({DEXP})?|{DIGIT}*"."{INT}({DEXP})?
-FLINT     {FLOAT}|{INT}
+DEXP      [Ee][+-]?{INT}
+DOUBLE    [+-]?({INT}{DEXP}|{INT}"."{DIGIT}*({DEXP})?|{DIGIT}*"."{INT}({DEXP})?)
 DBINT     {DOUBLE}|{INT}
-COMPLEX   {FLINT}+{FLINT}"i"
-DCOMPLEX  {DBINT}+{DBINT}"i"
-IMAG      {FLINT}"i"
+FLOAT     {DBINT}[fF]
+COMPLEX   {FLOAT}"+"{FLOAT}"i"
+DCOMPLEX  {DBINT}"+"{DBINT}"i"
+IMAG      {FLOAT}"i"
 DIMAG     {DBINT}"i"
 TRUE      T
 FALSE     F
@@ -63,6 +61,7 @@ STRING    ({QSTRING}|{ASTRING})+
 USTRING   ({UQSTRING}|{UASTRING})+
 NAME      [A-Za-z_]([A-Za-z_0-9])*
 ESCNAME   ([A-Za-z0-9._~$]|(\\.))+
+COMMENT   "#".*"\n"
 
 
 %%
@@ -83,28 +82,50 @@ ESCNAME   ([A-Za-z0-9._~$]|(\\.))+
             lvalp->val = new KeyValue (KeyTokenizetext, KeyValue::HMS);
 	    return LITERAL;
 	  }
-{DCOMPLEX} {
-            KeyParser::position() += yyleng;
-            double value;
-	    sscanf (KeyTokenizetext, "%lf%*c", &value);
-            lvalp->val = new KeyValue (complex<double> (0, value));
-	    return LITERAL;
-	  }
 {COMPLEX} {
             KeyParser::position() += yyleng;
-            float value;
-	    sscanf (KeyTokenizetext, "%f%*c", &value);
-            lvalp->val = new KeyValue (complex<float> (0, value));
+	    std::cerr <<"complex"<< KeyTokenizetext << endl;
+            float valr,vali;
+	    sscanf(KeyTokenizetext, "%f%*c+%f%*ci", &valr, &vali);
+            lvalp->val = new KeyValue (complex<float> (valr, vali));
 	    return LITERAL;
 	  }
-{DOUBLE}  {
+{IMAG} {
             KeyParser::position() += yyleng;
-            lvalp->val = new KeyValue (atof(KeyTokenizetext));
+	    std::cerr <<"imag"<< KeyTokenizetext << endl;
+            float vali;
+	    sscanf(KeyTokenizetext, "%f%*ci", &vali);
+            lvalp->val = new KeyValue (complex<float> (0., vali));
+	    return LITERAL;
+	  }
+{DCOMPLEX} {
+            KeyParser::position() += yyleng;
+	    std::cerr <<"dcomplex"<< KeyTokenizetext << endl;
+            double valr,vali;
+	    sscanf(KeyTokenizetext, "%lf+%lfi", &valr, &vali);
+            lvalp->val = new KeyValue (complex<double> (valr, vali));
+	    return LITERAL;
+	  }
+{DIMAG} {
+            KeyParser::position() += yyleng;
+	    std::cerr <<"dimag"<< KeyTokenizetext << endl;
+            double vali;
+	    sscanf(KeyTokenizetext, "%lfi", &vali);
+            lvalp->val = new KeyValue (complex<double> (0., vali));
 	    return LITERAL;
 	  }
 {FLOAT}   {
             KeyParser::position() += yyleng;
-            lvalp->val = new KeyValue (float(atof(KeyTokenizetext)));
+            float val;
+	    sscanf(KeyTokenizetext, "%f%*c", &val);
+            lvalp->val = new KeyValue (val);
+	    return LITERAL;
+	  }
+{DOUBLE}  {
+            KeyParser::position() += yyleng;
+            double val;
+	    sscanf(KeyTokenizetext, "%lf", &val);
+            lvalp->val = new KeyValue (val);
 	    return LITERAL;
 	  }
 {INT}     {
@@ -162,6 +183,9 @@ ESCNAME   ([A-Za-z0-9._~$]|(\\.))+
 
  /* Whitespace is skipped */
 {WHITE}   { KeyParser::position() += yyleng; }
+
+ /* Comments are skipped */
+{COMMENT} { KeyParser::position() += yyleng; }
 
  /* An unterminated string is an error */
 {USTRING} { throw "KeyTokenize: Unterminated string"; }
