@@ -36,36 +36,42 @@
 
 InitDebugContext(Calibrator,"Calibrator");
 
-Calibrator::Calibrator (const string & MSName, const string & MEPName, 
-    const string & GSMName, const string & DBType, const string & DBName, 
-    const string & DBPasswd)
+Calibrator::Calibrator (const string & ObservationData, 
+  const string & CelestialSources, const string & DBName, 
+  const string & MEPName, const string & DBType, 
+  const string & DBPasswd)
 {
   // Initialize default values for the PSS3 Calibrater object.
   // These values are committed to itsMeqCalImpl when the Calibrator
   // ::Initialize () is called.
 
-  itsMSName              = MSName;		// MS  (glish table)
+  itsObservationData     = ObservationData;	// MS  (glish table)
+  itsCelestialSources    = CelestialSources;	// GSM (PL table)
+
   itsMEPName             = MEPName;		// MEQ (PL table)
-  itsGSMName             = GSMName;		// GSM (PL table)
   itsDBType              = DBType;		// Database type
   itsDBName              = DBName;		// Database account
   itsDBPasswd            = DBPasswd;
   itsModelType           = "LOFAR.RI";
-  itsDDID                = 0; // TODO: GvD What is this?
+  itsDDID                = 0;
   itsScenario            = "solve";
   itsSolvParms           = "{RA,DEC,StokesI}.*";
   itsStChan              = 0;
   itsEndChan             = 0;
   itsSelStr              = "all([ANTENNA1,ANTENNA2] in 4*[0:20])";
   itsCalcUVW             = false;
-  itsTimeInterval        = 3600.0;
+  itsTimeSlot        = 10.0;
   itsDataColumn          = "CORRECTED_DATA";
   itsCorrectedDataColumn = "CORRECTED_DATA";
 
   itsPSS3CalibratorImpl  = NULL;
 
-  std::cout << "***************" << itsMSName << "-" << itsMEPName << "-" << itsGSMName
-	    << "-" << DBType << "=" << itsDBType << "-" << itsDBName << "-" << itsDBPasswd << endl;
+  if (itsCelestialSources == "meqmodel") {
+    cout << "**Warning**: The signature of the Calibrator class constructor " 
+	 << "has changed. You should check your source code against "
+	 << "Calibrator.h. Continuing with probably unpredictable " 
+	 << "behaviour." << endl;
+   }
 }
 
 
@@ -76,20 +82,21 @@ Calibrator::~Calibrator () {
 }
 
 
-void Calibrator::setTimeInterval (double secs) {
-  itsTimeInterval = secs;
+void Calibrator::setTimeSlot (double secs) {
+  itsTimeSlot = secs;
 }
 
 
-void Calibrator::Initialize (void) {
+void Calibrator::initialize (void) {
+  cout << "==> Calling intialize ()." << endl;
   // Set up antennae
   Vector<Int> ant1, ant2;
   {
     Table tab;
     if (itsSelStr.empty()) {
-	tab = Table(itsMSName+".MS");
+	tab = Table(itsObservationData+".MS");
     } else {
-	tab = tableCommand("SELECT FROM " + itsMSName + 
+	tab = tableCommand("SELECT FROM " + itsObservationData + 
 			   ".MS WHERE " + itsSelStr);
     }
     Table sortab = tab.sort ("ANTENNA1", Sort::Ascending,
@@ -101,10 +108,10 @@ void Calibrator::Initialize (void) {
   }
 
   // Check if the database members have been initialized correctly.
-  if (itsDBName == "tanaka") {
+  if (itsDBName == "test") {
     cerr << "Calibrator::Initialize (); WARNING: You have possibly forgotten "
 	 << "to initialize the database type, name and password. Using "
-	 << "default values 'postgres', 'tanaka' and '' respectively. The "
+	 << "default values 'postgres', 'test' and '' respectively. The "
 	 << "program you are running may exhibit unpredictable behaviour "
 	 << "this way." << endl;
   }
@@ -114,9 +121,9 @@ void Calibrator::Initialize (void) {
   if (itsPSS3CalibratorImpl != NULL)
     delete itsPSS3CalibratorImpl;
 
-  itsPSS3CalibratorImpl = new MeqCalibrater (itsMSName+".MS", 
+  itsPSS3CalibratorImpl = new MeqCalibrater (itsObservationData+".MS", 
 					     itsMEPName, 
-					     itsGSMName, 
+					     itsCelestialSources, 
 					     itsDBType, 
 					     itsDBName, 
 					     itsDBPasswd,
@@ -141,23 +148,24 @@ void Calibrator::Initialize (void) {
   }
 
   // Choose domain
-  itsPSS3CalibratorImpl -> setTimeInterval (itsTimeInterval);
+  itsPSS3CalibratorImpl -> setTimeInterval (itsTimeSlot);
 
   // In the MeqCalImpl object, initialize the set of solvable parms to zero.
   itsPSS3CalibratorImpl -> clearSolvableParms ();
 }
 
 
-void Calibrator::ShowSettings (void) {
+void Calibrator::showSettings (void) {
     cout << "Calibrator settings:" << endl;
-    cout << "  msname:    " << itsMSName << endl;
+    cout << "  msname:    " << itsObservationData << endl;
     cout << "  mepname:   " << itsMEPName << endl;
-    cout << "  gsmname:   " << itsGSMName << endl;
-    cout << "  dbtype:    " << itsDBType << endl;
     cout << "  dbname:    " << itsDBName << endl;
+    cout << "  timeslot:  " << itsTimeSlot << endl;
+
+    cout << "  gsmname:   " << itsCelestialSources << endl;
+    cout << "  dbtype:    " << itsDBType << endl;
     cout << "  modeltype: " << itsModelType << endl;
     cout << "  scenario:  " << itsScenario << endl;
-    cout << "  solvparms: " << itsSolvParms << endl;
     cout << "  stchan:    " << itsStChan << endl;
     cout << "  endchan:   " << itsEndChan << endl;
     cout << "  selection: " << itsSelStr << endl;
@@ -209,7 +217,7 @@ void Calibrator::commitSolvableParms (void) {
 }
 
 
-void Calibrator::resetTimeIntervalIterator (void) {
+void Calibrator::selectFirstTimeSlot (void) {
   TRACERF2 ("MeqCalImpl -> resetIterator ()");
   itsPSS3CalibratorImpl -> resetIterator();
 }
@@ -270,22 +278,22 @@ void Calibrator::commitPeelSourcesAndMasks (void) {
 }
 
 
-void Calibrator::Run (void) {
+void Calibrator::run (void) {
   itsPSS3CalibratorImpl -> solve (true);
 }
 
-void Calibrator::Run (vector<string>& resultParmNames,
+void Calibrator::run (vector<string>& resultParmNames,
                       vector<double>& resultParmValues,
                       Quality& resultQuality) {
   itsPSS3CalibratorImpl -> solve (false, resultParmNames, resultParmValues, 
                                   resultQuality);
 }
 
-void Calibrator::SubtractOptimizedSources (void) {
+void Calibrator::subtractOptimizedSources (void) {
   itsPSS3CalibratorImpl -> saveResidualData ();
 }
 
-void Calibrator::CommitOptimizedParameters (void) {
+void Calibrator::commitOptimizedParameters (void) {
   itsPSS3CalibratorImpl -> saveParms ();
 }
 
