@@ -1,66 +1,16 @@
-  * what to do about too many events? One idea: add a silent flag to
-    each command: no reply if command is successful.
-    14/06/04: too many events either way make the system slow down.
-    still investigating.
+MEQ in general:
 
-  * add a create_or_link flag to initrecord: if the node already exists,
-    throw away the init record and link to it.
-    14/06/04: done, link_or_create
+  * new name for Polc? Maybe Fitfunc? Repfunc?
+    Funklet!!
     
-  * add Node.Exists command to MeqServer
-    14/06/04: done, Get.NodeIndex
-    
-  * allow initrec.children=F for no children
-    14/06/04: done
-
   * revise auto_resample to support resolution drivers, compute Result cells,
     revise getResult() to take a Cells argument
 
   * make linearly interpolating upsampler
-
-  * make WSum node
-
-  * make ReqSeq node
-
+  
   * change Result constructor to take a Cells argument; change it to do
     copy-or-attach (perhaps move this function to CountedRef?)
-
-  * add resampled child result caching to Node 
-  
-    - new name for Polc? Maybe Fitfunc? Repfunc?
-      Funclet!!
-      
-
-    - Add integrate/sample flag to Result -- not to VellSet
-      13/04/04 done
-
-    - Add flag to Cells for equisized cells
-      13/04/04 done: included in segment comparison
-   
-    - Handle integrated flag in Compose  
-      13/04/04: done
-
-    - Add handling of integrate to leaf nodes 
-      Spigot: set          impl 
-      Time/Freq: not set   impl
-      Const: from config   impl
-      Parm: from config?   impl
-      13/04/04: done
-      
-    - Add debug flag to Node that enables extra sanity checking
-      18/04/04: added, not really used yet
-      
-  * review init()/reinit(): could they perhaps be merged? Can we serialize
-    a node before a resolveChildren() call?
-      
-  * Start using the depmask in Node::getCacheResult()
-  
-  * Possibly use empty Cells to indicate constant values? Propagate these
-    properly.
-      
   * Work out caching issues with resampled children
-  
-  * Add Integrator/Differencer node
   
   * Figure out the right value of epsilon for Cells comparisons
   
@@ -70,9 +20,7 @@
   
   * Update the default node defrec.g
 
-  * Look for const_cast in Solver and figure out why it's there!
-
-MEQ in general:
+  * meqtypes.g: make all cells fields const, since they should not be changed
 
     * Think through some more RequestId issues:
       1) user-defined dependencies ("config" would fall into this category)
@@ -96,6 +44,13 @@ MEQ in general:
     16/01/04: tested with default tests; now need to make some nodes
               with child labels
               
+        - Add integrate/sample flag to Result -- not to VellSet
+          13/04/04 done
+
+        - Add flag to Cells for equisized cells
+          13/04/04 done: included in segment comparison
+   
+             
         + figure out caching of cells in ModRes: comparing rqid is wrong wrong wrong
           18/04/04: actually our own dependMask() is right -- the cached cells
           depend on request only
@@ -216,12 +171,52 @@ MEQ in general:
           27/11/03: good to go for now. Still thinking about COW.
           
 Nodes:
+  
+  * make WSum node
 
-    + review ModRes arguments (specifically, factor) for consistency 
-      with auto-resample
-      14/05/04: done
+  * make ReqSeq node
+  
+  * add resampled child result caching to Node 
+  
+  * review init()/reinit(): could they perhaps be merged? Can we serialize
+    a node before a resolveChildren() call?
+      
+  * Start using the depmask in Node::getCacheResult()
+  
+  * Possibly use empty Cells to indicate constant values? Propagate these
+    properly.
+    
+  * Add Integrator/Differencer node
+  
+  * Look for const_cast in Solver and figure out why it's there!
 
-          
+      + Handle integrated flag in Compose  
+        13/04/04: done
+
+      + Add handling of integrate to leaf nodes 
+        Spigot: set          impl 
+        Time/Freq: not set   impl
+        Const: from config   impl
+        Parm: from config?   impl
+        13/04/04: done
+
+      + Add debug flag to Node that enables extra sanity checking
+        18/04/04: added, not really used yet
+      
+      + review ModRes arguments (specifically, factor) for consistency 
+        with auto-resample
+        14/05/04: done
+      
+      - add a create_or_link flag to initrecord: if the node already exists,
+        throw away the init record and link to it.
+        14/06/04: done, link_or_create
+
+      - add Node.Exists command to MeqServer
+        14/06/04: done, Get.NodeIndex
+
+      - allow initrec.children=F for no children
+        14/06/04: done
+
 Solver:
 
   ? BUG: JEN has a problem after Clear.Polcs: execute returns a fail saying
@@ -415,6 +410,13 @@ General:
     (i.e. no install, no .glishrc, etc -- mostly related to include paths)
     10/02/04: symlinks to ../pkginc/*.g do part of the job. What do we do
     about *.g files installed in subdirectories though?
+
+        + what to do about too many events? One idea: add a silent flag to
+          each command: no reply if command is successful.
+          14/06/04: too many events either way make the system slow down.
+          still investigating.
+          22/06/04: revised GlishClientWP into a multithreaded thing, seems to
+          have helped
 
         + Bug: MSOutputSink: output to new column doesn't work, column stays
           'dummy'. Ask Ger for help, since I'm obviously misusing tables

@@ -63,13 +63,13 @@ if( !is_defined('_meqserver_binary') )
 }
 
 # define the server binary specification, using possible debug options set above
-const _meqserver_binary := 
-    define_octoserver(_meqserver_binary,
+const _meqserver := 
+    define_octoserver(default_octoserver_fifo,_meqserver_binary,
                       valgrind=use_valgrind,valgrind_opts=use_valgrind_opts,
-                      nostart=use_nostart,suspend=use_suspend);
+                      nostart=use_nostart);
   
 const meq.server := function (appid='MeqServer',
-    server=_meqserver_binary,options="-nogw -d0 -meq:M:M:MeqServer",
+    server=_meqserver,options="-nogw -d0 -meq:M:M:MeqServer",
     verbose=1,gui=F,ref parent_frame=F,ref widgetset=dws,
     ref self=[=],ref public=[=])
 {
@@ -99,6 +99,13 @@ const meq.server := function (appid='MeqServer',
       replyname := paste('app_result',replyname,rqid,sep='_');
       self.dprint(3,'sending command ',cmd_name);
       self.dprint(5,'arguments are ',args);
+      has_reply := F;
+      whenever self.relay->[replyname] do
+      {
+        has_reply := T;
+        reply := $value;
+        deactivate;
+      }
       res := public.command(reqname,[request_id=rqid,args=args]);
       if( is_fail(res) )
       {
@@ -106,8 +113,9 @@ const meq.server := function (appid='MeqServer',
         fail;
       }
       self.dprint(3,'awaiting reply ',replyname,' from relay');
-      await self.relay->[replyname];
-      return $value;
+      while( !has_reply )
+        await self.relay->[replyname];
+      return reply;
     }
     else
     {

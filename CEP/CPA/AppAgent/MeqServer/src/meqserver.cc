@@ -2,7 +2,7 @@
 #include <MSVisAgent/MSInputSink.h>
 #include <MSVisAgent/MSOutputSink.h>
 #include <OCTOPUSSY/Octopussy.h>
-#include <OCTOGlish/GlishClientWP.h>
+#include <OCTOGlish/GlishConnServerWP.h>
 #include <OctoAgent/EventMultiplexer.h>
 // #include <aips/Exceptions/Error.h>
 
@@ -146,7 +146,7 @@ int main (int argc,const char *argv[])
     {
       cout<<"=================== initializing Glish gateway =================\n";
       Octopussy::dispatcher().attach(
-          makeGlishClientWP(argc,argv,True),DMI::ANON);
+          new GlishConnServerWP,DMI::ANON);
     }
     
     cout<<"=================== starting OCTOPUSSY thread =================\n";
