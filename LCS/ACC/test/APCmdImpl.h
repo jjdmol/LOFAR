@@ -46,7 +46,6 @@ public:
 	virtual bool	init 	 (const time_t		scheduleTime) const;
 	virtual bool	run 	 (const time_t		scheduleTime) const;
 	virtual bool	pause  	 (const time_t		scheduleTime,
-							  const time_t		waitTime,
 							  const	string&		condition) 	  const;
 	virtual bool	quit  	 (const time_t		scheduleTime) const;
 	virtual bool	snapshot (const time_t		scheduleTime,

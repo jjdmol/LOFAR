@@ -55,7 +55,6 @@ bool	APCmdImpl::run 	 (const time_t		scheduleTime) const
 }
 
 bool	APCmdImpl::pause  	 (const time_t		scheduleTime,
-							  const time_t		waitTime,
 							  const	string&		condition) 	  const
 {
 	LOG_DEBUG("pause");
