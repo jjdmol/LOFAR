@@ -358,7 +358,8 @@ initSrcfile()
 		echo "#if !defined(${FileLabel})"
 		echo "#define ${FileLabel}"
 		echo ""
-		echo "#include \"${Class}.h\""
+		File=`grep ^${Class} ${MAPWRKFILE} | head -1 | cut -d':' -f8`
+		echo "#include \"${File}\""
 		echo "#include <PL/DBRep.h>"
 		echo ""
 	fi
@@ -409,10 +410,11 @@ cleanlist()
 #	Table	<TableName>
 #	File	<Filename>
 #	<Ctype>	<MemberName>	<ColumnName>	<DBtype>
-#	<Ctype>	<MemberName>	class			<ClassName>
+#	<Ctype>	<MemberName>	Class			<ClassName>
+#	<Ctype>	<MemberName>	BaseClass		<ClassName>
 #
 # Syntax of the constructed temp-file:
-# ClassName:TableName:Ctype:MemberName:ColumnName:SubclassName:DBtype
+# ClassName:TableName:Ctype:MemberName:ColumnName:SubclassName:DBtype:File
 #
 # NOTE: THIS ROUTINE ALSO EXISTS IN genDBsql
 #
@@ -445,9 +447,9 @@ convertMapfile()
 			if [ "${SubClass}" == "class" -o "${SubClass}" == "baseclass" ]; then
 				# it's a (sub)class, get its name.
 				SubClassName=`echo $fldtype | cut -d" " -f1`
-				echo "$CurClass:$CurTable:$ctype:$name:$dbname:$SubClassName:BIGINT"
+				echo "$CurClass:$CurTable:$ctype:$name:$dbname:$SubClassName:BIGINT:$CurFile"
 			else
-				echo "$CurClass:$CurTable:$ctype:$name:$dbname::$fldtype"
+				echo "$CurClass:$CurTable:$ctype:$name:$dbname::$fldtype:$CurFile"
 			fi
 			;;
 		esac
@@ -550,7 +552,7 @@ ALLCLASSESWRKFILE=/tmp/created.LCS.$$
 cleanupWorkFiles
 
 # Set trap handler before we create anything
-trap "cleanupWorkFiles ; exit" 1 2 3 13 15
+#trap "cleanupWorkFiles ; exit" 1 2 3 13 15
 
 # convert the human readable format of the mapfile into something
 # more convenient for shell-programming
@@ -625,4 +627,4 @@ if [ "${LAYER}" == "P" ]; then
 fi
 
 # Finally cleanup our mess
-cleanupWorkFiles
+#cleanupWorkFiles
