@@ -8,10 +8,10 @@ include 'mkimg.g'
 #
 # Demo function showing the predict functionality and creating an image of it.
 #
-predict := function(fname='michiel.demo')
+predict := function(fname='michiel.demo', ant=4*[0:20])
 {
     local mc := meqcalibrater(spaste(fname,'.MS'), 
-                              fname, fname);
+                              fname, fname, ant=ant);
     if (is_fail(mc)) {
         print "meqcalibratertest(): could not instantiate meqcalibrater";
         fail;
@@ -31,22 +31,29 @@ predict := function(fname='michiel.demo')
 
     mc.done();
 
-    mkimg(spaste(fname, '.MS'), spaste(fname, '.img'));
+    mssel := '';
+    if (len(ant) > 0) {
+      ant +:=1;               # msselect adds 1 to ANTENNA1,2
+      mssel := spaste('all([ANTENNA1,ANTENNA2] in ',substitutevar(ant), ')');
+    }
+    print mssel
+    mkimg(spaste(fname, '.MS'), spaste(fname, '.img'), msselect=mssel);
 
     return T;
 }
 
-solve := function(fname='michiel.demo', niter=1)
+solve := function(fname='michiel.demo', ant=4*[0:20], niter=1)
 {
     annotator := imgannotator(spaste(fname, '.img'), 'raster');
     
-    mc := meqcalibrater(spaste(fname,'.MS'), fname, fname);
+    mc := meqcalibrater(spaste(fname,'.MS'), fname, fname, ant=ant);
+
     if (is_fail(mc)) {
         print "meqcalibratertest(): could not instantiate meqcalibrater";
         fail;
     }
 
-    mc.select('all([ANTENNA1,ANTENNA2] in 4*[0:20])', 5, 5);
+    mc.select('', 5, 5);
 
     # Plot initial position
     parms := mc.getparms("GSM.*.RA GSM.*.DEC GSM.*.I");
@@ -72,6 +79,8 @@ solve := function(fname='michiel.demo', niter=1)
     mc.setsolvableparms("GSM.*.DEC GSM.*.RA");
     #mc.setsolvableparms("Leakage.{11,22}.*");
 
+    solverec := [=];
+
     mc.resetiterator()
     while (mc.nextinterval())
     {
@@ -80,7 +89,8 @@ solve := function(fname='michiel.demo', niter=1)
         
         for (i in [1:niter]) {
             print "iteration", i;
-            mc.solve('MODEL_DATA');
+            srec := mc.solve('MODEL_DATA');
+	    solverec[spaste("iter",i)] := srec;
             
             parms := mc.getparms("GSM.*.RA GSM.*.DEC GSM.*.I");
             nrpos := len(parms) / 3;
@@ -100,27 +110,21 @@ solve := function(fname='michiel.demo', niter=1)
         }
     
     mc.done();
-    
-    return ref annotator;
+
+    return solverec;    
+#    return ref annotator;
 }
 
-solvepos := function(fname='michiel.demo', niter=1)
+solvepos := function(fname='michiel.demo', ant=4*[0:20], niter=1)
 {
     annotator := imgannotator(spaste(fname, '.img'), 'raster');
 	
-    mc := meqcalibrater(spaste(fname,'.MS'), fname, fname);
+    mc := meqcalibrater(spaste(fname,'.MS'), fname, fname, ant=ant);
     if (is_fail(mc)) {
         print "meqcalibratertest(): could not instantiate meqcalibrater";
         fail;
     }
     
-    mc.select('all([ANTENNA1,ANTENNA2] in 4*[0:20])');
-    
-    if (is_fail(mc)) {
-        print "meqcalibratertest(): could not instantiate meqcalibrater";
-        fail;
-    }
-
     # Plot initial position
     parms := mc.getparms("GSM.*.RA GSM.*.DEC");
     nrpos := len(parms) / 2;
@@ -177,15 +181,15 @@ solvepos := function(fname='michiel.demo', niter=1)
     return ref annotator;
 }
 
-solvegain := function(fname='michiel.demo', niter=1)
+solvegain := function(fname='michiel.demo', ant=4*[0:20], niter=1)
 {
-    mc := meqcalibrater(spaste(fname,'.MS'), fname, fname);
+    mc := meqcalibrater(spaste(fname,'.MS'), fname, fname, ant=ant);
     if (is_fail(mc)) {
 	print "meqcalibratertest(): could not instantiate meqcalibrater"
 	fail
     }
 
-    mc.select('all([ANTENNA1,ANTENNA2] in [0:10])', 0, 0);
+    mc.select('', 0, 0);
 
     mc.settimeinterval(3600); # calibrate per 1 hour
     mc.clearsolvableparms();
