@@ -78,14 +78,50 @@ void WH_Correlate::process()
 {
   TRACER4("WH_Correlate::Process()");
 
-  // ToDo: set all output counters to zero
+  DH_CorrCube* InDHptr;
+  DH_Vis*      OutDHptr;
 
+  // ToDo: set all output counters to zero
+  
+  InDHptr = (DH_CorrCube*)getDataManager().getInHolder(0);
+  OutDHptr = (DH_Vis*)getDataManager().getOutHolder(0);
+
+  blitz::Array<complex<float>, 2> signal (itsNelements, itsNitems);
+  blitz::Array<complex<float>, 2> corr (itsNelements, itsNelements);
+
+  signal = *InDHptr->getBuffer();
+  corr = complex<float> (0,0);
+
+  WH_Correlate::correlator_core(signal, corr);
+  
+  // *OutDHptr->getBuffer() = corr.data();
+  
   // loop over the input cube and calculate the visibilities.
   // ToDo: ...
 }
 
+
 void WH_Correlate::dump()
 {
+}
+
+
+void WH_Correlate::correlator_core(blitz::Array<complex<float>, 2>& signal, 
+				   blitz::Array<complex<float>, 2>& corr) {
+
+  int x, y;
+
+  for (x = 0; x < itsNelements; x++) {
+    for (y = 0; y < x; y++) {
+      corr(x,y) += (
+		    signal(x, 0).real() * signal(y, 0).real() -  // real 
+		    signal(x, 0).imag() * signal(y, 0).imag(), 
+		    
+		    signal(x, 0).real() * signal(y, 0).imag() +  // imag
+		    signal(x, 0).imag() * signal(y, 0).real()
+		    );
+    }
+  }
 }
 
 }// namespace LOFAR

@@ -29,6 +29,9 @@
 #include "OnLineProto/DH_CorrCube.h"
 #include "OnLineProto/DH_Vis.h"
 
+#include <blitz/blitz.h>
+#include <Common/Lorrays.h>
+
 
 namespace LOFAR
 {
@@ -68,8 +71,22 @@ private:
 
   /// Forbid assignment.
   WH_Correlate& operator= (const WH_Correlate&);
-  
+
+  // main correlator routine
+  void correlator_core(blitz::Array<complex<float>, 2>& signal,
+		       blitz::Array<complex<float>, 2>& corr);
+    
   int itsFBW; // frequency bandwidth of the DH_Beamlet 
+
+  /// The input is assumed to be a matrix of N*M
+  /// N = the number of inputs (either antennas or stations)
+  /// M = the number of discreet samples to integrate over. This may 
+  ///     be frequency channels or time samples.
+  ///     M is defined to be 1000
+
+  static const int itsNelements = 100;  // number of stations/inputs
+  static const int itsNitems    = 1000; // number of frequency channels * number of time samples
+
 
 };
 

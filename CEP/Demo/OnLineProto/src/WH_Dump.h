@@ -68,6 +68,8 @@ private:
   
   int itsFBW; // frequency bandwidth of the DH_Beamlet 
 
+  ofstream itsOutputFile;
+  
 };
 
 }

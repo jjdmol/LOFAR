@@ -9,7 +9,8 @@ WH_SimStation.h					\
 WH_PreProcess.h					\
 WH_Transpose.h					\
 WH_Correlate.h					\
-WH_Dump.h					
+WH_Dump.h					\
+Correlator_test.h
 
 
 OnLineProto_SOURCES  	= $(DOCHDRS)		\
