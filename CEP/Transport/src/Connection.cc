@@ -33,25 +33,19 @@ namespace LOFAR
   Connection::~Connection() {
   }
 
-  bool Connection::connectTo(Transporter* sourceTP,
-			     Transporter* targetTP,
-			     const TransportHolder& prototype) {
-    bool result = false;
-    
-    result = connectData(sourceTP, targetTP, prototype);
-
-    return result;
+  bool Connection::connectTo(Transporter& sourceTP,
+			     Transporter& targetTP,
+			     const TransportHolder& prototype)
+  {
+    return connectData (&sourceTP, &targetTP, prototype);
   }
 
 
-  bool Connection::connectFrom(Transporter* sourceTP,
-			       Transporter* targetTP,
-			       const TransportHolder& prototype) {
-    bool result = false;
-    
-    result = connectData(sourceTP, targetTP, prototype);
-
-    return result;
+  bool Connection::connectFrom(Transporter& sourceTP,
+			       Transporter& targetTP,
+			       const TransportHolder& prototype)
+  {
+    return connectData (&sourceTP, &targetTP, prototype);
   }
 
 

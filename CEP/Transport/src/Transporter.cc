@@ -84,19 +84,19 @@ bool Transporter::init()
 }
 
 
-bool Transporter::connectTo (Transporter* that, 
-			     TransportHolder& prototype)
+bool Transporter::connectTo (Transporter& that, 
+			     const TransportHolder& prototype)
 {
-  bool result = itsConnection.connectTo(this, that, prototype); 
+  bool result = itsConnection.connectTo (*this, that, prototype); 
   // Init should not be done in the connection but seperate.
   //  result |= init();
   return result;
 }
 
-bool Transporter::connectFrom (Transporter* that, 
-			       TransportHolder& prototype) 
+bool Transporter::connectFrom (Transporter& that, 
+			       const TransportHolder& prototype) 
 { 
-  bool result = itsConnection.connectFrom(that, this, prototype);
+  bool result = itsConnection.connectFrom (that, *this, prototype);
   // Init should not be done in the connection but seperate.
   //  result  |= init();
   return result;
@@ -108,18 +108,18 @@ bool Transporter::read()
 
   if (getTransportHolder() && getReadTag() >= 0) {
     TRACER3("Transport::read; call recv(" << getDataPtr() << "," 
-	    << getDataPacketSize() << ",....)");
+	    << getDataSize() << ",....)");
     if (isBlocking())
     {
       result = getTransportHolder()->recvBlocking(getDataPtr(),
-						  getDataPacketSize(),
+						  getDataSize(),
 						  getSourceAddr()->getNode(),
 						  getReadTag());
     }
     else
     {
       result = getTransportHolder()->recvNonBlocking(getDataPtr(),
-						     getDataPacketSize(),
+						     getDataSize(),
 						     getSourceAddr()->getNode(),
 						     getReadTag());
     }      
@@ -137,18 +137,18 @@ bool Transporter::read()
 void Transporter::write()
 {
   if (getTransportHolder() && getWriteTag() >= 0) {
-    TRACER3("Transport::write; call send(" << getDataPtr() << "," << getDataPacketSize() << ",....)");
+    TRACER3("Transport::write; call send(" << getDataPtr() << "," << getDataSize() << ",....)");
     if (isBlocking())
     {
       getTransportHolder()->sendBlocking(getDataPtr(),
-					 getDataPacketSize(),
+					 getDataSize(),
 					 getTargetAddr()->getNode(),
 					 getWriteTag());
     }
     else
     {
       getTransportHolder()->sendNonBlocking(getDataPtr(),
-					    getDataPacketSize(),
+					    getDataSize(),
 					    getTargetAddr()->getNode(),
 					    getWriteTag());
     }
@@ -169,9 +169,9 @@ void* Transporter::getDataPtr()
   return itsBaseDataHolder->getDataPtr();
 }
 
-int Transporter::getDataPacketSize() const
+int Transporter::getDataSize() const
 {
-  return itsBaseDataHolder->getDataPacketSize();    //temporarily
+  return itsBaseDataHolder->getDataSize();    //temporarily
 }
 
 
