@@ -1,0 +1,234 @@
+//
+// Protocol definition for the PA server
+//
+autogen definitions protocol;
+
+description = "Protocol for the PA server";
+prefix = "PA"; // for the signal names
+id = "(LOFAR::GCF::TM::F_GCF_PROTOCOL + 2)";
+
+include = '<GCF/GCF_Defines.h>';
+
+prelude = << PRELUDE_END
+
+enum TPAResult 
+{
+  PA_NO_ERROR, 
+  PA_UNKNOWN_ERROR,
+  PA_WRONG_STATE,
+  PA_PS_GONE,
+  PA_MISSING_PROPS,
+  PA_PROP_SET_NOT_EXISTS,
+  PA_PROP_SET_ALREADY_EXISTS,
+  PA_DPTYPE_UNKNOWN,
+  PA_INTERNAL_ERROR,
+  PA_PI_INTERNAL_ERROR,
+  PA_APC_NOT_EXISTS,
+  PA_LINK_TIME_OUT,
+  PA_SERVER_GONE,
+};
+PRELUDE_END;
+//
+// An "event" has a "signal" and a "dir" (direction)
+// and zero or more "param"s.
+// "dir" can be one of "IN" or "OUT".
+// A "param" has a "name" and a "type".
+//
+event = {
+	signal = LOAD_PROP_SET;
+	dir = IN;
+	param = {
+		name = "seqnr";
+		type = "unsigned short";
+	};
+	param = {
+		name = "scope";
+		type = "string";
+	};
+};
+
+event = {
+	signal = UNLOAD_PROP_SET;
+	dir = IN;
+	param = {
+		name = "seqnr";
+		type = "unsigned short";
+	};
+	param = {
+		name = "scope";
+		type = "string";
+	};
+};
+
+event = {
+	signal = CONF_PROP_SET;
+	dir = IN;
+	param = {
+		name = "seqnr";
+		type = "unsigned short";
+	};
+	param = {
+		name = "scope";
+		type = "string";
+	};
+	param = {
+		name = "apcName";
+		type = "string";
+	};
+};
+
+event = {
+	signal = PROP_SET_LOADED;
+	dir = OUT;
+	param = {
+		name = "seqnr";
+		type = "unsigned short";
+	};
+	param = {
+		name = "result";
+		type = "TPAResult";
+	};
+};
+
+event = {
+	signal = PROP_SET_UNLOADED;
+	dir = OUT;
+	param = {
+		name = "seqnr";
+		type = "unsigned short";
+	};
+	param = {
+		name = "result";
+		type = "TPAResult";
+	};
+};
+
+event = {
+	signal = PROP_SET_CONF;
+	dir = OUT;
+	param = {
+		name = "seqnr";
+		type = "unsigned short";
+	};
+	param = {
+		name = "apcName";
+		type = "string";
+	};
+	param = {
+		name = "result";
+		type = "TPAResult";
+	};
+};
+
+event = {
+	signal = REGISTER_SCOPE;
+	dir = IN;
+	param = {
+		name = "seqnr";
+		type = "unsigned short";
+	};
+	param = {
+		name = "scope";
+		type = "string";
+	};
+	param = {
+		name = "type";
+		type = "string";
+	};
+	param = {
+		name = "category";
+		type = "LOFAR::GCF::Common::TPSCategory";
+	};
+};
+
+event = {
+	signal = UNREGISTER_SCOPE;
+	dir = IN;
+	param = {
+		name = "seqnr";
+		type = "unsigned short";
+	};
+	param = {
+		name = "scope";
+		type = "string";
+	};
+};
+
+event = {
+	signal = SCOPE_REGISTERED;
+	dir = OUT;
+	param = {
+		name = "seqnr";
+		type = "unsigned short";
+	};
+	param = {
+		name = "result";
+		type = "TPAResult";
+	};
+};
+
+event = {
+	signal = SCOPE_UNREGISTERED;
+	dir = OUT;
+	param = {
+		name = "result";
+		type = "TPAResult";
+	};
+	param = {
+		name = "seqnr";
+		type = "unsigned short";
+	};
+};
+
+event = {
+	signal = LINK_PROP_SET;
+	dir = OUT;
+	param = {
+		name = "scope";
+		type = "string";
+	};
+};
+
+event = {
+	signal = UNLINK_PROP_SET;
+	dir = OUT;
+	param = {
+		name = "scope";
+		type = "string";
+	};
+};
+
+event = {
+	signal = PROP_SET_LINKED;
+	dir = IN;
+	param = {
+		name = "scope";
+		type = "string";
+	};
+	param = {
+		name = "result";
+		type = "TPAResult";
+	};
+};
+
+event = {
+	signal = PROP_SET_UNLINKED;
+	dir = IN;
+	param = {
+		name = "scope";
+		type = "string";
+	};
+	param = {
+		name = "result";
+		type = "TPAResult";
+	};
+};
+
+event = {
+	signal = PROP_SET_GONE;
+	dir = OUT;
+	param = {
+		name = scope;
+		type = string;
+	};
+};
