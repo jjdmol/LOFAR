@@ -25,10 +25,10 @@
 #include <Common/lofar_string.h>
 #include <Coord/CoordClient.h>
 #include <Coord/Endian.h>
-#include <aips/Measures/MDirection.h>
-#include <aips/Measures/MEpoch.h>
-#include <aips/Measures/MPosition.h>
-#include <aips/Measures/MeasConvert.h>
+#include <measures/Measures/MDirection.h>
+#include <measures/Measures/MEpoch.h>
+#include <measures/Measures/MPosition.h>
+#include <measures/Measures/MeasConvert.h>
 
 #include <sys/types.h>
 #include <unistd.h>
