@@ -459,27 +459,31 @@ namespace LCSMath
     blitz::firstIndex i;
     blitz::secondIndex j;
 
-    int nant = a.rows (); // This is only an assumption for now. 
+    int nant = a.rows (); 
     int nsh  = a.cols ();
     int lb   = a.lbound(blitz::secondDim);
     int ub   = a.ubound(blitz::secondDim);
 
-    LoMat_double out(10,10);
+    double alpha = 0; // forgetting factor
 
-    LoMat_dcomplex eye(nant, nant);
+    LoMat_double out(nant, nant);
+
+    LoVec_dcomplex ones(nant);
+    LoMat_dcomplex eye = diag(ones); // Identity matrix
     LoMat_dcomplex ACM(nant, nant);
-
-    eye = 1;
 
     ACM = (dcomplex) 0;
 
     for (int k=lb; k<=ub; k++) {
-      ACM = ACM + matMult(a(blitz::Range::all(), k), 
-			  a(blitz::Range::all(), k).
-			      transpose(blitz::firstDim, blitz::secondDim)) ;
+      ACM = (1-alpha) * ACM + alpha * (matMult(a(blitz::Range::all(), k), 
+				       a(blitz::Range::all(), k))) ;
+
+//       ACM = ACM + matMult(a(blitz::Range::all(), k), 
+// 			  a(blitz::Range::all(), k).
+// 			      transpose(blitz::firstDim, blitz::secondDim)) ;
     }
     ACM = ACM/nsh;
-//    ACM = ACM-eye;
+    ACM = ACM-eye;
     return ACM;
   }
 
