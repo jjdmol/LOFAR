@@ -34,6 +34,7 @@ bool BatchAgent::init (const DataRecord::Ref &data)
 {
   if( !SolverControlAgent::init(data) )
     return False;
+  
   const DataRecord &rec = *data;
   cdebug(3)<<"init: "<<data->sdebug(6)<<endl;
   // get the sub-record of solution jobs
@@ -53,11 +54,11 @@ bool BatchAgent::init (const DataRecord::Ref &data)
 }
 
 //##ModelId=3E0060C50000
-SolutionState BatchAgent::endIteration (double conv)
+int BatchAgent::endIteration (double conv)
 {
   // call parent's endIteration
-  SolutionState st = SolverControlAgent::endIteration(conv);
-  if( st != CONTINUE )
+  int st = SolverControlAgent::endIteration(conv);
+  if( st != RUNNING )
     return st;
   
   // do we have another job queued up?
@@ -65,7 +66,7 @@ SolutionState BatchAgent::endIteration (double conv)
   
   // check for max iteration count -- interrupt if reached
   if( iterationNum() >= max_iterations_ )
-    stopSolution("Iteration count exceeded",st);
+    endSolution("Iteration count exceeded",st);
   
   // check for convergence -- end if reached
   if( convergence() <= conv_threshold_ )
@@ -75,18 +76,22 @@ SolutionState BatchAgent::endIteration (double conv)
 }
 
 //##ModelId=3E01FA8D02FF
-SolutionState BatchAgent::startDomain (const DataRecord::Ref &data)
+int BatchAgent::startDomain (const DataRecord::Ref &data)
 {
   SolverControlAgent::startDomain();
   current_job_ = 0;
-  return state(CONTINUE);
+  setState(RUNNING);
+  return state();
 }
 
 //##ModelId=3E0098E90136
-SolutionState BatchAgent::startSolution (DataRecord::Ref &params)
+int BatchAgent::startSolution (DataRecord::Ref &params)
 {
   if( current_job_ >= jobs_.size() )
-    return NEXT_DOMAIN;
+  {
+    setState(NEXT_DOMAIN);
+    return state();
+  }
   
   // get next set of solution parameters from job queue
   params = jobs_[current_job_].copy();
@@ -102,7 +107,8 @@ SolutionState BatchAgent::startSolution (DataRecord::Ref &params)
   // init the solution
   initSolution(params);
   
-  return state(CONTINUE);
+  setState(RUNNING);
+  return state();
 }
 
 //##ModelId=3E009B2E01DF
