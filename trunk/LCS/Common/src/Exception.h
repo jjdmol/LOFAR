@@ -25,7 +25,7 @@
 
 //# Includes
 #ifdef HAVE_CONFIG_H
-#include <config.h>
+#include <lofar_config.h>
 #endif
 
 #include <exception>
