@@ -19,15 +19,16 @@
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //
 //  $Id$
-
+//
+//////////////////////////////////////////////////////////////////////
 
 #include <stdio.h>             // for sprintf
 #include <unistd.h>
 #include <math.h>
 
-#include "BaseSim/Step.h"
-#include "BaseSim/Profiler.h"
-#include "BaseSim/CyclicBuffer.h"
+#include "CEPFrame/Step.h"
+#include "CEPFrame/Profiler.h"
+#include "CEPFrame/CyclicBuffer.h"
 #include "Common/Debug.h"
 
 #include "Transpose/WH_Delay.h"

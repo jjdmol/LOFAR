@@ -21,27 +21,6 @@
 //
 //  $Id$
 //
-//  $Log$
-//  Revision 1.5  2002/07/18 09:41:06  schaaf
-//  %[BugId: 11]%
-//  Added intermediate (delay) step
-//
-//  Revision 1.4  2002/06/07 11:43:33  schaaf
-//  %[BugId: 11]%
-//  Added flag for profiler
-//
-//  Revision 1.3  2002/05/23 15:38:57  schaaf
-//
-//  %[BugId: 11]%
-//  Add correlator steps
-//
-//  Revision 1.2  2002/05/14 11:39:41  gvd
-//  Changed for new build environment
-//
-//  Revision 1.1.1.1  2002/05/06 11:49:20  schaaf
-//  initial version
-//
-//
 //
 //////////////////////////////////////////////////////////////////////////
 
@@ -52,7 +31,7 @@
 #include <config.h>
 #endif
 
-#include "BaseSim/Simulator.h"
+#include "CEPFrame/Simulator.h"
 class WH_FillTFMatrix;
 class WH_Delay;
 class WH_Transpose;
