@@ -1,4 +1,4 @@
- use_suspend  := T;
+# use_suspend  := T;
 # use_nostart  := T;
 # use_valgrind := T;
 # "--skin=helgrind --logfile=hg.meqserver";
@@ -180,7 +180,7 @@ const state_test := function ()
   cells := meqcells(meqdomain(0,10,0,10),num_freq=20,times=[1.,2.,3.],time_steps=[1.,2.,3.]);
   request := meqrequest(cells);
   
-  # mqs.setdebug("DMI",5);
+  mqs.setdebug("DMI Glish MeqServer glishclientwp meqserver Dsp",5);
   res1 := mqs.meq('Node.Execute',[name='compose3',request=request],T);
   req1 := request;
   print res1;
