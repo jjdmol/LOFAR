@@ -42,6 +42,7 @@ global string   ELNAME_SELECTEDSUBVIEW          = "selectedSubView";
 global string   ELNAME_NROFSUBVIEWS             = "nrOfSubViews";
 global string   ELNAME_SUBVIEWS                 = "subViews";
 global string   ELNAME_CONFIGS                  = "configs";
+global string   ELNAME_TRIGGERUPDATE            = "triggerUpdate";
 global string   DPTYPENAME_NAVIGATOR_INSTANCE   = "GCFNavigatorInstance";
 global int      g_navigatorID = 0;
 
@@ -343,18 +344,17 @@ string navConfigGetViewConfig(string datapointPath)
   string datapointType;
   string dpViewConfig = "";
   
-  // check if a system root node is selected
-  string systemSub = dpSubStr(datapointPath,DPSUB_SYS);
-  if(systemSub == datapointPath)
-  {
-    // find __nav_<systemname>_viewconfig datapoint
-    dpViewConfig = "__nav_"+datapointPath+"_viewconfig";
-  }
-  else if(dpExists(datapointPath))
+  if(dpExists(datapointPath))
   {
     datapointType = dpTypeName(datapointPath);
     // find __nav_<datapointType>_viewconfig datapoint
     dpViewConfig = "__nav_"+datapointType+"_viewconfig";
+  }
+  else
+  {
+    // a system root node is selected
+    // find __nav_<systemname>_viewconfig datapoint
+    dpViewConfig = "__nav_"+datapointPath+"_viewconfig";
   }
   if(!dpExists(dpViewConfig))
   {
@@ -437,3 +437,117 @@ bool navConfigGetSubViewConfigElements(
   return success;
 }
 
+///////////////////////////////////////////////////////////////////////////
+//Function navConfigSanityCheck
+// 
+// returns true if the View configuration items are correct
+// returns false and a message otherwise
+///////////////////////////////////////////////////////////////////////////
+bool navConfigSanityCheck(string &message)
+{
+  bool sane = true;
+  dyn_dyn_anytype tab;
+  int i;
+  dpQuery("SELECT '_original.._value' FROM '__nav_*' WHERE _DPT=\"GCFNavViewConfiguration\" ",tab);
+  
+  int viewsIndex    = 4;
+  
+  while(viewsIndex <= dynlen(tab) && sane)
+  {
+    int subViewsIndex     = viewsIndex + 1;
+    int configsIndex      = viewsIndex + 2;
+    int nrOfSubviewsIndex = viewsIndex + 3;
+    
+    // check number of items in subviews, configs and nrOfSubViews
+    int nrOfViews = dynlen(tab[viewsIndex][2]);
+    sane = (nrOfViews == dynlen(tab[nrOfSubviewsIndex][2]));
+    DebugTN("check nrOfViews:",sane,nrOfViews,dynlen(tab[nrOfSubviewsIndex][2]));
+    if(!sane)
+    {
+      message = "Invalid view configuration\n#views and nrOfSubViews do not correspond\n(" + tab[viewsIndex][1] + ")";
+      DebugTN(message);
+    }
+    
+    if(sane)
+    {
+      int nrOfSubViews = 0;
+      for(i=1;i<=dynlen(tab[nrOfSubviewsIndex][2]);i++)
+        nrOfSubViews += tab[nrOfSubviewsIndex][2][i];
+      sane = (nrOfSubViews == dynlen(tab[subViewsIndex][2]) && nrOfSubViews == dynlen(tab[configsIndex][2]));
+      DebugTN("check nrOfSubViews:",sane,nrOfSubViews,dynlen(tab[subViewsIndex][2]),dynlen(tab[configsIndex][2]));
+      if(!sane)
+      {
+        message = "Invalid view configuration\n#subviews, #configs and total nrOfSubViews do not correspond\n(" + tab[viewsIndex][1] + ")";
+        DebugTN(message);
+      }
+    }
+    
+    if(sane)
+    {
+      for(i=1;i<=dynlen(tab[viewsIndex][2]) && sane;i++)
+      {
+        sane = dpExists(tab[viewsIndex][2][i]);
+        DebugTN("check view existance:",sane,tab[viewsIndex][2][i]);
+      }
+      if(!sane)
+      {
+        message = "Invalid view configuration\nview item (" + (i-1) + ") does not exist\n(" + tab[viewsIndex][1] + ")";
+        DebugTN(message);
+      }
+    }
+    
+    if(sane)
+    {
+      for(i=1;i<=dynlen(tab[subViewsIndex][2]) && sane;i++)
+      {
+        sane = dpExists(tab[subViewsIndex][2][i]);
+        DebugTN("check subview existance:",sane,tab[subViewsIndex][2][i]);
+      }
+      if(!sane)
+      {
+        message = "Invalid view configuration\nsubview item (" + (i-1) + ") does not exist\n(" + tab[viewsIndex][1] + ")";
+        DebugTN(message);
+      }
+    }
+    
+    if(sane)
+    {
+      for(i=1;i<=dynlen(tab[configsIndex][2]) && sane;i++)
+      {
+        sane = dpExists(tab[configsIndex][2][i]);
+        DebugTN("check configs existance:",sane,tab[configsIndex][2][i]);
+      }
+      if(!sane)
+      {
+        message = "Invalid view configuration\nconfig item (" + (i-1) + ") does not exist\n(" + tab[viewsIndex][1] + ")";
+        DebugTN(message);
+      }
+    }
+    
+    viewsIndex += 6;
+  }
+  
+  return sane;
+}
+
+///////////////////////////////////////////////////////////////////////////
+//Function navConfigSubscribeUpdateTrigger
+// 
+// subscribes to the update trigger datapoint
+///////////////////////////////////////////////////////////////////////////
+void navConfigSubscribeUpdateTrigger(string callback)
+{
+  dpConnect(callback,false,DPNAME_NAVIGATOR + g_navigatorID + "." + ELNAME_TRIGGERUPDATE);
+}
+
+///////////////////////////////////////////////////////////////////////////
+//Function navConfigTriggerNavigatorRefresh
+// 
+// writes a dummy value to the navigator configuration 
+// the navigator will refresh its views. This function is used
+// to trigger a refresh of the entire navigator from a subview.
+///////////////////////////////////////////////////////////////////////////
+void navConfigTriggerNavigatorRefresh()
+{
+  dpSet(DPNAME_NAVIGATOR + g_navigatorID + "." + ELNAME_TRIGGERUPDATE,0);
+}

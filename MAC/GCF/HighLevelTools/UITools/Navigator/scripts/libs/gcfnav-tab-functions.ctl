@@ -26,6 +26,7 @@
 
 #uses "gcf-util.ctl"
 #uses "gcfnav-configuration-functions.ctl"
+#uses "gcfnav-functions.ctl"
 
 global string  VIEW_COMBOBOX_CTRL      = "ComboBoxViews";
 global string  VIEW_TABS_CTRL          = "TabViews";
@@ -173,8 +174,12 @@ void ComboBoxViewsSelectionChanged()
   viewTabsCtrl.namedRegisterPanel(VIEW_TABS_VIEW_NAME,selectedPanel,panelParameters);
   
   string datapointTypeName = "";
+DebugTN("g_datapoint",g_datapoint);
   if(dpExists(g_datapoint))
     datapointTypeName = dpTypeName(g_datapoint);
+  else
+    datapointTypeName = g_datapoint;
+  
   dyn_string configPanelParameters = makeDynString(
     "$selectedView:" + g_selectedView,
     "$viewName:" + g_selectedViewName,
@@ -185,3 +190,64 @@ void ComboBoxViewsSelectionChanged()
   viewTabsCtrl.namedRegisterPanel(VIEW_TABS_CONFIG_NAME,g_configPanelFileName,configPanelParameters);
 }
 
+///////////////////////////////////////////////////////////////////////////
+//Function ConfigTabAddSubViewClicked
+//  
+// called when the "add subview" button is clicked
+//
+///////////////////////////////////////////////////////////////////////////
+bool ConfigTabAddSubViewClicked(string viewName, int selectedView, string selectedElementDpType, string configDatapoint, int &nrOfSubViews)
+{
+  bool success;
+  dyn_float resultFloat;
+  dyn_string resultString;
+  ChildPanelOnCentralModalReturn(
+    "navigator/navigator_newsubview.pnl",
+    "Add Sub-view",
+    makeDynString("$addView:TRUE", 
+                  "$viewName:" + viewName,
+                  "$selectedView:" + selectedView, 
+                  "$selectedElementDpType:" + selectedElementDpType, 
+                  "$configDatapoint:" + configDatapoint),
+    resultFloat,
+    resultString);
+    
+  success = resultFloat[1];
+  nrOfSubViews = resultFloat[2];
+  if(success)
+  {
+    navConfigTriggerNavigatorRefresh();
+  }
+  return success;
+}
+
+///////////////////////////////////////////////////////////////////////////
+//Function ConfigTabRemoveSubViewClicked
+//  
+// called when the "remove subview" button is clicked
+//
+///////////////////////////////////////////////////////////////////////////
+bool ConfigTabRemoveSubViewClicked(string viewName, int selectedView, string selectedElementDpType, string configDatapoint, int &nrOfSubViews)
+{
+  bool success;
+  dyn_float resultFloat;
+  dyn_string resultString;
+  ChildPanelOnCentralModalReturn(
+    "navigator/navigator_newsubview.pnl",
+    "Remove Sub-view",
+    makeDynString("$addView:FALSE", 
+                  "$viewName:" + viewName,
+                  "$selectedView:" + selectedView, 
+                  "$selectedElementDpType:" + selectedElementDpType, 
+                  "$configDatapoint:" + configDatapoint),
+    resultFloat,
+    resultString);
+
+  success = resultFloat[1];
+  nrOfSubViews = resultFloat[2];
+  if(success)
+  {
+    navConfigTriggerNavigatorRefresh();
+  }
+  return success;
+}

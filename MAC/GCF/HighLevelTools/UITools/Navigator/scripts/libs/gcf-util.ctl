@@ -23,7 +23,7 @@
 //#
 //# General util functions:
 //# - Logging facility
-//#
+//# - Message box function
 
 const string DPNAME_LOGLEVEL = "__loglevel";
 
@@ -43,6 +43,12 @@ const string LOGMESSAGE_TRACE = "TRACE";
 
 global bool g_logInitialized = false;
 global int  g_loglevel = 0;
+
+void gcfUtilMessageWarning(string caption, string message)
+{
+  dyn_string messageboxParams = makeDynString("$1:"+message);
+  ChildPanelOnCentral("vision/MessageWarning",caption, messageboxParams);
+}
 
 // helper function to convert arrays to strings
 string LOG_DYN(dyn_anytype array)
