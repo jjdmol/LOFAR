@@ -14,10 +14,12 @@ CXXFLAGS += \
 	-DMORECORE_CANNOT_TRIM=1 \
 	-DSHMEM_ALLOC
 
-check_PROGRAMS			= Example ExamplePL ExamplePL2 ExamplePL3 ExampleShMem ExampleSocket ExampleSocketPerf
+check_PROGRAMS			= Example ExampleMemBL ExamplePL ExamplePL2 ExamplePL3 ExampleShMem ExampleSocket ExampleSocketPerf
 
 
 Example_SOURCES 		= Example.cc DH_Example.cc
+
+ExampleMemBL_SOURCES 		= ExampleMemBL.cc DH_Example.cc
 
 ExamplePL_SOURCES 		= ExamplePL.cc DH_Example.cc
 
@@ -43,6 +45,7 @@ TESTS_ENVIRONMENT		= top_srcdir=$(top_srcdir) \
 
 TESTS	=					\
 	Example_test.sh				\
+	ExampleMemBL_test.sh			\
 	ExamplePL_test.sh			\
 	ExamplePL2_test.sh			\
 	ExamplePL3_test.sh			\
