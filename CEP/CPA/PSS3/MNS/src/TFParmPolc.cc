@@ -153,7 +153,7 @@ void TFParmPolc::update (const MnsMatrix& value)
   }
 }
 
-void TFParmPolc::save()
+void TFParmPolc::save (const TFDomain&)
 {
   itsInitialCoeff = itsCurCoeff;
 }

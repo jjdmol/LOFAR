@@ -57,7 +57,7 @@ void TFParmSingle::update (const MnsMatrix& value)
   }
 }
 
-void TFParmSingle::save()
+void TFParmSingle::save (const TFDomain&)
 {
   itsInitialValue = itsNewValue;
 }
