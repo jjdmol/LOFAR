@@ -283,7 +283,8 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_4_2(GCFEvent& event, GCFPortInterfac
       // check which property changed
       GCFPropValueEvent* pPropAnswer = static_cast<GCFPropValueEvent*>(&event);
       assert(pPropAnswer);
-      if(strstr(pPropAnswer->pPropName,PROPERTY_AP1_MAINTENANCE_STATUS)!=0)
+      if(strstr(pPropAnswer->pPropName,PROPERTY_AP1_RCU1_MAINTENANCE_STATUS)!=0 ||
+         strstr(pPropAnswer->pPropName,PROPERTY_AP1_RCU2_MAINTENANCE_STATUS)!=0)
       {
         GCFPVUnsigned inMaintenance;
         inMaintenance.copy(*pPropAnswer->pValue);

@@ -57,7 +57,7 @@ using namespace boost;
 
 string AVTLogicalDeviceScheduler::m_schedulerTaskName(LDSNAME);
 string g_bsName(BSNAME);
-
+string g_timerPortName("timerPort");
 
 AVTLogicalDeviceScheduler::AVTLogicalDeviceScheduler() :
   GCFTask((State)&AVTLogicalDeviceScheduler::initial_state,m_schedulerTaskName),
@@ -72,6 +72,8 @@ AVTLogicalDeviceScheduler::AVTLogicalDeviceScheduler() :
   m_WGsamplePeriod(0),
   m_logicalDeviceMap(),
   m_logicalDeviceSchedule(),
+  m_maintenanceSchedule(),
+  m_timerPort(*this, g_timerPortName, GCFPortInterface::SPP, LOGICALDEVICE_PROTOCOL),
   m_resourceManager(AVTResourceManager::instance())
 {
   registerProtocol(LOGICALDEVICE_PROTOCOL, LOGICALDEVICE_PROTOCOL_signalnames);
@@ -332,6 +334,36 @@ bool AVTLogicalDeviceScheduler::checkStopTimer(const string& deviceName, unsigne
   return isStopTimer;
 }
 
+bool AVTLogicalDeviceScheduler::checkMaintenanceStartTimer(unsigned long timerId, MaintenanceScheduleIterT& scheduleIt)
+{
+  bool isStartTimer=false;
+  scheduleIt = m_maintenanceSchedule.begin();
+  while(!isStartTimer && scheduleIt != m_maintenanceSchedule.end())
+  {
+    isStartTimer = (timerId == scheduleIt->second.startTimerId);
+    if(!isStartTimer)
+    {
+      ++scheduleIt;
+    }
+  }
+  return isStartTimer;
+}
+
+bool AVTLogicalDeviceScheduler::checkMaintenanceStopTimer(unsigned long timerId, MaintenanceScheduleIterT& scheduleIt)
+{
+  bool isStopTimer=false;
+  scheduleIt = m_maintenanceSchedule.begin();
+  while(!isStopTimer && scheduleIt != m_maintenanceSchedule.end())
+  {
+    isStopTimer = (timerId == scheduleIt->second.stopTimerId);
+    if(!isStopTimer)
+    {
+      ++scheduleIt;
+    }
+  }
+  return isStopTimer;
+}
+
 GCFEvent::TResult AVTLogicalDeviceScheduler::initial_state(GCFEvent& event, GCFPortInterface& port)
 {
   LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("%s(%s) (%s)",__func__,getName().c_str(),evtstr(event)));
@@ -499,6 +531,24 @@ GCFEvent::TResult AVTLogicalDeviceScheduler::initial_state(GCFEvent& event, GCFP
         {
           // not a start or stop timer
           port.open();
+        }
+      }
+      else if(&port == &m_timerPort)
+      {
+        // check maintenance timers:
+        MaintenanceScheduleIterT maintenanceIt;
+        if(checkMaintenanceStartTimer(timerEvent.id,maintenanceIt))
+        {
+          GCFPVUnsigned inMaintenance(1);
+          maintenanceIt->second.pMaintenanceProperty->setValue(inMaintenance);
+        }
+        else if(checkMaintenanceStopTimer(timerEvent.id,maintenanceIt))
+        {
+          GCFPVUnsigned outofMaintenance(0);
+          maintenanceIt->second.pMaintenanceProperty->setValue(outofMaintenance);
+          // also remove the schedule
+          maintenanceIt->second.pMaintenanceProperty.reset();
+          m_maintenanceSchedule.erase(maintenanceIt);
         }
       }
       break;
@@ -685,15 +735,100 @@ void AVTLogicalDeviceScheduler::handlePropertySetAnswer(GCFEvent& answer)
         // CANCEL <scheduleId>
         else if(command==string(LD_COMMAND_CANCEL))
         {
-          if(parameters.size()==1)
+          if(parameters.size()!=1)
+          {
+            // return error in status property
+            string statusString("Error ");
+            statusString += commandString + string(",incorrect number of parameters");
+            status.setValue(statusString);
+          }
+          else
           {
             char *endptr;
             unsigned long scheduleId = strtoul(parameters[0].c_str(),&endptr,10);
-            LogicalDeviceMapIterT it=findLogicalDevice(scheduleId);
-            if(it!=m_logicalDeviceMap.end())
+            LogicalDeviceScheduleIterT scheduleIt = m_logicalDeviceSchedule.find(scheduleId);
+            if(scheduleIt != m_logicalDeviceSchedule.end())
             {
-              // doe ietsjepietsjeflap
+              // find the logical device of the schedule
+              LogicalDeviceMapIterT ldIt=m_logicalDeviceMap.find(scheduleIt->second.deviceName);
+              if(ldIt != m_logicalDeviceMap.end())
+              {
+                // check begin time, if not yet begun, cancel timers and remove schedule
+                boost::posix_time::ptime currentTime  = boost::posix_time::second_clock::universal_time();
+                boost::posix_time::ptime startTime    = boost::posix_time::from_time_t(scheduleIt->second.startTime);
+                if(startTime > currentTime)
+                {
+                  ldIt->second.clientPort->cancelTimer(scheduleIt->second.prepareTimerId);
+                  ldIt->second.clientPort->cancelTimer(scheduleIt->second.startTimerId);
+                  ldIt->second.clientPort->cancelTimer(scheduleIt->second.stopTimerId);
+                  m_logicalDeviceSchedule.erase(scheduleIt);
+                }
+                else
+                {
+                  string statusString("Error ");
+                  statusString += commandString + string(",already started");
+                  status.setValue(statusString);
+                }
+              }
+              else
+              {
+                string statusString("Error ");
+                statusString += commandString + string(",unknown Logical Device");
+                status.setValue(statusString);
+              }
             }
+            else
+            {
+              string statusString("Error ");
+              statusString += commandString + string(",unknown schedule");
+              status.setValue(statusString);
+            }
+          } 
+        }
+        // MAINTENANCE <scheduleId>,<resource>,<fromTime>,<toTime>
+        else if(command==string(LD_COMMAND_MAINTENANCE))
+        {
+          if(parameters.size()!=4)
+          {
+            // return error in status property
+            string statusString("Error ");
+            statusString += commandString + string(",incorrect number of parameters");
+            status.setValue(statusString);
+          }
+          else
+          {
+            char *endptr;
+            unsigned long scheduleId = strtoul(parameters[0].c_str(),&endptr,10);
+            MaintenanceScheduleIterT it=m_maintenanceSchedule.find(scheduleId);
+            if(it!=m_maintenanceSchedule.end())
+            {
+              // schedule exists already. cancel timers, remove from schedule
+              m_timerPort.cancelTimer(it->second.startTimerId);
+              m_timerPort.cancelTimer(it->second.stopTimerId);
+              it->second.pMaintenanceProperty.reset();
+              m_maintenanceSchedule.erase(it);
+            }
+            
+            int rawStartTime = atoi(parameters[2].c_str()); // starttime
+            int rawStopTime  = atoi(parameters[3].c_str()); // stoptime
+            
+            boost::posix_time::ptime currentTime  = boost::posix_time::second_clock::universal_time();
+            boost::posix_time::ptime startTime    = boost::posix_time::from_time_t(rawStartTime);
+            boost::posix_time::ptime stopTime     = boost::posix_time::from_time_t(rawStopTime);
+            
+            MaintenanceScheduleInfoT scheduleInfo;
+            scheduleInfo.resource = parameters[1];
+            scheduleInfo.pMaintenanceProperty.reset(new GCFProperty(scheduleInfo.resource+string("_Maintenance_status")));
+            scheduleInfo.startTime = rawStartTime;
+            scheduleInfo.stopTime  = rawStopTime;
+            
+            boost::posix_time::time_duration delay;
+            delay = startTime - currentTime; 
+            scheduleInfo.startTimerId = m_timerPort.setTimer(static_cast<long int>(delay.total_seconds())); // set the startTimer
+            delay = stopTime - currentTime; 
+            scheduleInfo.stopTimerId = m_timerPort.setTimer(static_cast<long int>(delay.total_seconds())); // set the startTimer
+
+            m_maintenanceSchedule[scheduleId] = scheduleInfo;
           } 
         }
         else

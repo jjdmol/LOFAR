@@ -34,6 +34,7 @@
 #include <GCF/GCF_Task.h>
 #include <GCF/GCF_MyPropertySet.h>
 #include <GCF/GCF_Apc.h>
+#include <GCF/GCF_Property.h>
 
 //# local includes
 #include "AVTPropertySetAnswerHandlerInterface.h"
@@ -115,10 +116,30 @@ namespace AVT
         unsigned long                       stopTimerId;
       };
       
+      struct MaintenanceScheduleInfoT
+      {
+        // constructor: 
+        MaintenanceScheduleInfoT() :        resource(),
+                                            pMaintenanceProperty(),
+                                            startTime(0),
+                                            stopTime(0),
+                                            startTimerId(0),
+                                            stopTimerId(0) {};
+        
+        string                              resource;
+        boost::shared_ptr<GCFProperty>      pMaintenanceProperty;
+        int                                 startTime;
+        int                                 stopTime;
+        unsigned long                       startTimerId;
+        unsigned long                       stopTimerId;
+      };
+      
       typedef map<string,LogicalDeviceInfoT>                  LogicalDeviceMapT;
       typedef LogicalDeviceMapT::iterator                     LogicalDeviceMapIterT;
       typedef map<unsigned long,LogicalDeviceScheduleInfoT>   LogicalDeviceScheduleT;
       typedef LogicalDeviceScheduleT::iterator                LogicalDeviceScheduleIterT;
+      typedef map<unsigned long,MaintenanceScheduleInfoT>     MaintenanceScheduleT;
+      typedef MaintenanceScheduleT::iterator                  MaintenanceScheduleIterT;
 
       boost::shared_ptr<AVTStationReceptor> addReceptor(string srName,const TPropertySet& propertySet);
       void addReceptorGroup(string srName,const TPropertySet& propertySet, vector<boost::shared_ptr<AVTStationReceptor> >& receptors);
@@ -142,6 +163,15 @@ namespace AVT
        */
       bool checkStopTimer(const string& deviceName, unsigned long timerId);
       
+      /*
+       * returns true if the timerId is a startTimer for the maintenance schedule
+       */
+      bool checkMaintenanceStartTimer(unsigned long timerId, MaintenanceScheduleIterT& scheduleIt);
+      /*
+       * returns true if the timerId is a stopTimer for the maintenance schedule
+       */
+      bool checkMaintenanceStopTimer(unsigned long timerId, MaintenanceScheduleIterT& scheduleIt);
+      
       
       void sendWGsettings();
 
@@ -160,6 +190,9 @@ namespace AVT
 
       LogicalDeviceMapT       m_logicalDeviceMap;
       LogicalDeviceScheduleT  m_logicalDeviceSchedule;
+      MaintenanceScheduleT    m_maintenanceSchedule;
+      GCFPort                 m_timerPort;
+      
       AVTResourceManagerPtr   m_resourceManager;
   };
 };
