@@ -23,9 +23,11 @@
 #ifndef LOFAR_PL_TPERSISTENTOBJECT_TCC
 #define LOFAR_PL_TPERSISTENTOBJECT_TCC
 
-#include <PL/TPersistentObject.h>
 #include <PL/DTLBase.h>
+#include <PL/Exception.h>
+#include <PL/TPersistentObject.h>
 #include <Common/Debug.h>
+#include <iostream>
 
 namespace LOFAR
 {
@@ -34,7 +36,7 @@ namespace LOFAR
 
     template<typename T>
     Collection< TPersistentObject<T> > 
-    TPersistentObject<T>::retrieve(const Query& query, int maxObjects)
+    TPersistentObject<T>::retrieve(const QueryObject& query, int maxObjects)
     {
       typedef dtl::DBView< DBRep<T> >  DBViewType;
 
@@ -48,9 +50,9 @@ namespace LOFAR
 	tpo.tableName (tableName());
 	tpo.fromDatabaseRep(*iter);
         // If the object T is spread among several tables we must call
-        // retrieve() in order to get the data from all the tables. Otherwise,
-        // we will miss the data for the "owned" POs. This really isn't very
-        // efficient! However, currently there is no way to do things
+        // retrieve() in order to get the data from all the tables. If we
+        // don't, we will miss the data for the "owned" POs. This really isn't
+        // very efficient! However, currently there is no way to do things
         // better. We need a way to generate a better select query for this.
         if (!tpo.ownedPOs().empty()) {
           tpo.retrieve();
@@ -116,7 +118,8 @@ namespace LOFAR
       toDatabaseRep (rec);
 
       // setup the selection parameters
-      iter.Params().itsOid = rec.getOid();
+//       iter.Params().itsOid = rec.getOid(); // GvD
+      iter.Params().itsOid = rec.itsOid; 
 
       // save this record
       *iter = rec;
@@ -148,6 +151,23 @@ namespace LOFAR
       fromDatabaseRep(*iter);
 
     }
+
+    template<typename T>
+    const typename TPersistentObject<T>::attribmap_t& 
+    TPersistentObject<T>::attribMap() const
+    {
+      static bool initialized(false);
+      if (!initialized)
+      {
+        initAttribMap();
+        initialized = true;
+      }
+      return theirAttribMap; 
+    }
+
+    template<typename T> typename TPersistentObject<T>::attribmap_t
+    TPersistentObject<T>::theirAttribMap;
+
 
   } // namespace PL
 
