@@ -31,17 +31,14 @@
 
 //using namespace blitz;
 
-int mdl (const LoVec_double& input, int M, int N)
+int mdl (const LoVec_double& d, int M, int N)
 {
   double      nom;
   double      denom;
   double      mdlmin;
   int         min = 0;
 
-  LoVec_double MDL (input.size ());
-  LoVec_double d = input.copy();
-  //d = LCSMath::sort (d);
-  d.reverseSelf (blitz::firstDim);
+  LoVec_double MDL (d.size ());
 
   for (int Ns = 0; Ns < M; Ns++) 
 	{
@@ -52,18 +49,14 @@ int mdl (const LoVec_double& input, int M, int N)
 	  denom *= (1 / (double) (M - Ns));
 	  denom = pow (denom, (double) (M - Ns));
 
-	  //	  cout << denom << endl;
-
 	  nom = 1;
 	  for (int i = Ns; i < M; i++) {
 		nom *= d (i);
 	  }
+	  
+	  MDL (Ns) = -1 * N * log (abs (nom / denom)) + Ns / 2.0 * (2 * M - Ns) * log ((double) N); 
 
-	  //	  cout << nom << endl;
-
-	  MDL (Ns) = -1 * N * log (nom / denom) + Ns / 2 * (2 * M - Ns) * log (N); 
-
-	  cout << MDL (Ns) << endl;
+// 	  cout << nom << "    " << denom << "    " << MDL (Ns) << endl;
 
 	  if (Ns == 0) {
 		  mdlmin = MDL(Ns);
@@ -74,6 +67,5 @@ int mdl (const LoVec_double& input, int M, int N)
 		}
 	  }
 	}
-  //  cout << MDL << endl;
   return min;
 }

@@ -33,7 +33,7 @@
 
 
 WH_STA::WH_STA (const string& name,  int nin,  int nout,
-				 int nant,  int maxnrfi,  int buflength)
+				int nant,  int maxnrfi,  int buflength, int alg)
 : WorkHolder      (nin, nout, name, "WH_STA"),
   itsInHolders    (0),
   itsOutHolders   (0),
@@ -45,7 +45,8 @@ WH_STA::WH_STA (const string& name,  int nin,  int nout,
   itsPos          (0),
   itsEvectors     (nant,nant),
   itsEvalues      (nant),
-  itsAcm          (nant, nant)
+  itsAcm          (nant, nant),
+  itsAlg          (alg)
 {
   char str[8];
   if (nant > 0) {
@@ -65,7 +66,6 @@ WH_STA::WH_STA (const string& name,  int nin,  int nout,
     itsOutHolders[i] = new DH_SampleC (string("out_") + str, itsNrcu, itsMaxRFI);    
   }
   //DEBUG
-//   delay = 3;
   itsTestVector.resize(itsNrcu, 300);
   itsFileInput.open ("/home/alex/gerdes/test_vectorSTA_sin.txt");
   itsFileInput >> itsTestVector;
@@ -83,11 +83,12 @@ WH_STA::~WH_STA()
   delete itsOutHolders[i];
  }
  delete [] itsOutHolders;
+ itsFileInput.close ();
 }
 
 WH_STA* WH_STA::make (const string& name) const
 {
-  return new WH_STA (name, getInputs(), getOutputs(), itsNrcu, itsMaxRFI, itsBufLength);
+  return new WH_STA (name, getInputs(), getOutputs(), itsNrcu, itsMaxRFI, itsBufLength, itsAlg);
 }
 
 void WH_STA::preprocess()
@@ -103,70 +104,92 @@ void WH_STA::process()
   // Place the next incoming sample vector in the snapshot buffer 
   // Keep a cylic buffer for the input snapshots
   for (int i = 0; i < itsNrcu; i++) {
-	//itsBuffer(i, itsPos) = itsInHolders[i]->getBuffer()[0];
+// 	itsBuffer(i, itsPos) = itsInHolders[i]->getBuffer()[0];
 	itsBuffer(i, itsPos) = itsTestVector(i, itsCount);
   }
   itsPos = (itsPos + 1) % itsBuffer.cols();
   itsCount = (itsCount + 1) % itsTestVector.cols();
 
-//   // Select the appropriate algorithm
-//   // See if the PASTd algorithm need updating
-//   // Use either EVD or SVD for updating
+  // Select the appropriate algorithm
+  // See if the PASTd algorithm need updating
+  // Use either EVD or SVD for updating
 
   if (getOutHolder(0)->doHandle ()) {
 	// Create contigeous buffer
 	itsBuffer = CreateContigeousBuffer (itsBuffer, itsPos);
 	itsPos = 0; // Set cyclic buffer pointer to the first entry because it is ordered now
+	
+	switch (itsAlg) {
+	case 0 : // ACM and EVD
+	  {
+		itsAcm = LCSMath::acm (itsBuffer);		// calculate the ACM
+		LCSMath::eig (itsAcm, itsEvectors, itsEvalues);  // using the ACM, calc eigen vect/ values
+// 		itsEvectors.reverseSelf (firstDim);
+// 		itsEvalues.reverseSelf (firstDim);
+		// !!! make contigeous in mem
+		itsEvectors = ReverseMatrix (itsEvectors, firstDim);
+		itsEvalues = ReverseVector (itsEvalues);
+		break;
+	  }
+	case 1 : // SVD
+	  {
+// 		// DEBUG
+// 		itsEvalues.resize (4);
+// 		itsEvectors.resize (4, 4);
+// 		itsBuffer.resize (4, 8);
 
-	// calculate the ACM
- 	itsAcm = LCSMath::acm (itsBuffer);
+// 		for (int i = 0; i < 4; i++) {
+// 		  for (int j = 0; j < 8; j++) {
+// 			itsBuffer (i, j) = dcomplex (i + 1, j + 1);
+// 		  }
+// 		}
+		itsBuffer = itsTestVector (Range::all (), 
+								   Range(itsTestVector.lbound (blitz::secondDim), itsBufLength - 1));
+//  		cout << itsBuffer << endl;
+	
+		LoMat_dcomplex dummy (itsBuffer.extent(blitz::secondDim), itsBuffer.extent(blitz::secondDim));
+ 		LCSMath::svd (itsBuffer, itsEvectors, dummy, itsEvalues);
+		//itsEvalues = sqr(itsEvalues) - 1;
 
-	// using the ACM, calculate eigen vectors and values.
-	LCSMath::eig (itsAcm, itsEvectors, itsEvalues);
+//  		// DEBUG
+// 		cout << itsEvalues << endl;
+// 		cout << itsEvectors << endl;
+		break;
+	  }
+	case 2 : // PASTd
+	  {
+		break;
+	  }
+	default :
+	  itsAlg = 0;
+	  break;
+	}
 
 	// Determine the number of sources in the signal
-
-	// put in a vector with two large eigen values and see what MDL finds
-	itsEvalues = -1;
-//  	itsEvalues(itsNrcu-1) = 200000000.0;
-//    	itsEvalues(itsNrcu-2) = 100000000.0;
-//  	itsEvalues(itsNrcu-3) = 10000.0;
-	//	itsEvalues(itsNrcu-4) = 1000.0;
-
 	double RFI = (double) mdl (itsEvalues, itsNrcu, itsBufLength);
-	// 	cout << RFI << endl;
 	if (RFI > itsMaxRFI) RFI = itsMaxRFI;
 
-	// DEBUG
-//  	RFI = 1;
 
 // 	// DEBUG
 // 	for (int i = 0; i < itsNrcu; i++) {
-// 	  cout << itsEvalues(i) << endl;
-// 	  if (itsEvalues(i) > 10) {
-// 		for (int j = 0; j < itsNrcu; j++) {
-// 		  cout << itsEvectors(i, j) << endl;
-// 		}
-// 	  }
+// 	  cout << itsEvalues (i) << endl;
+// 	  cout << itsEvectors (Range::all (), i) << endl;
 // 	}
+
 	
 	// Find the appropriate Eigen vectors
-	LoMat_dcomplex B = itsEvectors(Range(itsEvectors.ubound(secondDim) - RFI + 1,
-										 itsEvectors.ubound(secondDim)), Range::all());
+// 	LoMat_dcomplex B = itsEvectors(Range(itsEvectors.lbound(firstDim), RFI - 1), Range::all());
+	LoMat_dcomplex B = itsEvectors(Range::all (), Range(itsEvectors.lbound(firstDim), RFI - 1));
 
-	// 	cout << B << endl;
-	//	cout << itsEvalues << endl;
+// 	cout << B << endl;
 	
 	// Now assign the Eigen vectors to the output
 	for (int i = 0; i < getOutputs() - 1; i++) {
-	  memcpy(itsOutHolders[i]->getBuffer(), B.data(), itsNrcu * (int)RFI * sizeof(DH_SampleC::BufferType));
+	  memcpy(itsOutHolders[i]->getBuffer(), B.data(), 
+			 itsNrcu * (int)RFI * sizeof(DH_SampleC::BufferType));
 	}
-	memcpy(itsNumberOfRFIs.getBuffer(), &RFI, sizeof(DH_SampleR::BufferType));	
-  }
-
-  // SVD 
-
-  // PASTd 
+	memcpy(itsNumberOfRFIs.getBuffer(), &RFI, sizeof(DH_SampleR::BufferType));
+  } 
 }
 
 void WH_STA::dump() const
@@ -203,4 +226,44 @@ LoMat_dcomplex WH_STA::CreateContigeousBuffer (const LoMat_dcomplex& aBuffer, in
 	output (all, p++) = aBuffer(all, i);
   }
   return output;
+}
+
+LoMat_dcomplex WH_STA::TransposeMatrix (const LoMat_dcomplex& aMat)
+{
+  LoMat_dcomplex invMat (aMat.cols (), aMat.rows ());
+  for (int i = aMat.lbound (blitz::firstDim); i < aMat.rows (); i++) {
+	for (int j = aMat.lbound (blitz::secondDim); j < aMat.cols (); j++) {
+	  invMat (j, i) = aMat (i, j);
+	}
+  }
+  return invMat;
+}
+
+LoVec_double WH_STA::ReverseVector (const LoVec_double& aVec)
+{
+  LoVec_double revVec (aVec.size ());
+  int j = 0;
+  for (int i = aVec.size () - 1; i >= aVec.lbound (blitz::firstDim); i--) {
+	revVec (i) = aVec (j++);
+  }
+  return revVec;
+}
+
+LoMat_dcomplex WH_STA::ReverseMatrix (const LoMat_dcomplex& aMat, int dim)
+{
+  LoMat_dcomplex revMat (aMat.shape ());
+  if (dim) {
+	for (int i = aMat.lbound (blitz::firstDim); i < aMat.rows (); i++) {
+	  for (int j = aMat.lbound (blitz::secondDim); j < aMat.cols (); j++) {
+		revMat (i, j) = aMat (i, aMat.cols () - j - 1);
+	  }
+	}
+  } else {
+	for (int i = aMat.lbound (blitz::firstDim); i < aMat.rows (); i++) {
+	  for (int j = aMat.lbound (blitz::secondDim); j < aMat.cols (); j++) {
+		revMat (i, j) = aMat (aMat.rows () - i - 1, j);
+	  }
+	}
+  }
+  return revMat;
 }

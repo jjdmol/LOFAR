@@ -90,7 +90,7 @@ void StationSim::define (const ParamBlock& params)
   const string datagenFileName    = params.getString ("datagenfilename", "");
   const string bfDipoleFile       = params.getString ("bffilename","");
   const int fifolength            = params.getInt    ("bf_fifolength", 512);
-  const int buflength             = params.getInt    ("bf_bufferlength", 256);
+  const int buflength             = params.getInt    ("bf_bufferlength", 100);
   const int modulationWindowSize  = params.getInt    ("modwindowsize", 32);
   const int nfft_phaseshift       = params.getInt    ("nfftphaseshift", 128);
   const int aweRate               = params.getInt    ("awerate", 1);
@@ -99,11 +99,16 @@ void StationSim::define (const ParamBlock& params)
   const int maxNrfi               = params.getInt    ("maxnrfi", 1);
   const int STArate               = params.getInt    ("starate", 100);
   const int WDrate                = params.getInt    ("wdrate", 10000);
+
   const int delayMod              = modulationWindowSize - 1;
   const int delayPhase            = nfft_phaseshift - 1;
   const int delaySubFilt          = nrcu * (nsubband - 1);
   const int delayBeamForm         = 1;
 
+  const int EVD                   = 0;
+  const int SVD                   = 1;
+  const int PASTd                 = 2;
+  
   // Read in the configuration for the sources
   DataGenerator* DG_Config = new DataGenerator (datagenFileName);
 
@@ -236,17 +241,18 @@ void StationSim::define (const ParamBlock& params)
 	  beam.getOutData (j).setWriteDelay (delaySubFilt + delayBeamForm);
 	}   
 	beam.getInData (nrcu).setReadDelay (delaySubFilt + delayBeamForm);
+
 	beam.setRate(nsubband);
 	if (STArate <= WDrate) {
-	  beam.setInRate (STArate, nrcu);
+	  beam.setInRate (STArate * nsubband, nrcu);
 	} else {
-	  beam.setInRate (WDrate, nrcu);
+	  beam.setInRate (WDrate * nsubband, nrcu);
 	}
     simul.addStep (beam);
 
 	
 	// The Space Time Analysis object
-    Step sta (WH_STA(suffix, nrcu, 2, nrcu, maxNrfi, buflength), 
+    Step sta (WH_STA(suffix, nrcu, 2, nrcu, maxNrfi, buflength, SVD), 
 			  string ("sta_") + suffix, false);
 
     for (int j = 0; j < nrcu; ++j) {
@@ -256,7 +262,7 @@ void StationSim::define (const ParamBlock& params)
 	  sta.getOutData (j).setWriteDelay (delaySubFilt);
 	}
 	sta.setRate(nsubband);
-	sta.setOutRate(nsubband + STArate);
+	sta.setOutRate(nsubband * STArate);
     simul.addStep (sta);
 
 	
@@ -265,7 +271,7 @@ void StationSim::define (const ParamBlock& params)
 					 string("weight_det_") + suffix, false);   
         
     weight_det.getOutData (0).setWriteDelay (delaySubFilt);
-    weight_det.setRate(nsubband + WDrate);
+    weight_det.setRate(nsubband * WDrate);
     simul.addStep(weight_det);
 
 // 	// Deterministic nulls should have the same rate as STA !!!!!!!
@@ -288,27 +294,29 @@ void StationSim::define (const ParamBlock& params)
 
 	
 	// the projection object
-	int noutProj = 3;
-    Step projection (WH_Projection(suffix, noutProj, 1, nrcu, maxNrfi), 
+	int ninProj = 3;
+    Step projection (WH_Projection(suffix, ninProj, 1, nrcu, maxNrfi), 
 					 string("projection_") + suffix, false);
 
-    for (int j = 0; j < noutProj; ++j) {    // One input + two det null + mdl + eigvectors
+    for (int j = 0; j < ninProj; ++j) {    // One input + two det null + mdl + eigvectors
       projection.getInData (j).setReadDelay (delaySubFilt);
     }
     for (int j = 0; j < 1; ++j) {                
 	  projection.getOutData (j).setWriteDelay (delaySubFilt);
 	}
     projection.setRate(nsubband);
-	for (int i = 0; i < noutProj - 2; ++i) {
-	  projection.setInRate (nsubband + WDrate);
+
+	for (int i = 0; i < ninProj - 2; ++i) {
+	  projection.setInRate (nsubband * WDrate, i);
 	}
-	for (int i = noutProj - 2; i < noutProj; ++i) {
-	  projection.setInRate(nsubband + STArate, i);
+	for (int i = ninProj - 2; i < ninProj; ++i) {
+	  projection.setInRate(nsubband * STArate, i);
 	}
+
 	if (STArate <= WDrate) {
-	  projection.setOutRate (STArate);
+	  projection.setOutRate (STArate * nsubband);
 	} else {
-	  projection.setOutRate (WDrate);
+	  projection.setOutRate (WDrate * nsubband);
 	}
     simul.addStep(projection); 
   }
