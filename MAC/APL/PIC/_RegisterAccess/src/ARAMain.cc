@@ -24,32 +24,15 @@
 #undef VERSION
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
-#include <APLConfig.h>
 
 #include "ARARegisterAccessTask.h"
 
+using namespace LOFAR;
+using namespace ARA;
 using namespace std;
-
-
-namespace LOFAR
-{
-
-namespace ARA
-{
 
 int main(int argc, char* argv[])
 {
-  printf("Hallooooo???\n");
-#if 0
-  char prop_path[PATH_MAX];
-  const char* mac_config = getenv("MAC_CONFIG");
-
-  snprintf(prop_path, PATH_MAX-1,
-     "%s/%s", (mac_config?mac_config:"."),
-    "log4cplus.properties");
-  INIT_LOGGER(prop_path);
-#endif
-
   LOG_INFO(formatString("Program %s has started", argv[0]));
 
   GCFTask::init(argc, argv);
@@ -63,10 +46,3 @@ int main(int argc, char* argv[])
   LOG_INFO(formatString("Normal termination of program %s", argv[0]));
   return 0;
 }
-
-
-} // namespace ARA
-
-
-} // namespace LOFAR
-
