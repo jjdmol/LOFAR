@@ -84,6 +84,7 @@ namespace LOFAR
   }
 
   void TinyApplicationHolder::baseQuit() {
+    quit();
   }
 
   void TinyApplicationHolder::define(const KeyValueMap& map) {
