@@ -175,48 +175,117 @@ void ParameterCollection::readBuffer(const	string&	theBuffer,
 void ParameterCollection::addStream(istream&	inputStream, bool	merge)
 {
 	char	paramLine[1024];
-	char*	separator;
+	char*	keyStr;
+	char*	valueStr;
+	bool	multiLine =false;			// current line is multiline
+	bool	addToPrev = false;			// previous line was multiline
+	string	lineColl;					// Collects multiline values
+	string	keyCopy;					// Saved key in multiline
 	//# Read the file line by line and convert it to Key Value pairs.
 	while (inputStream.getline (paramLine, 1024)) {
 		LOG_TRACE_LOOP(formatString("data:>%s<", paramLine));
 	
 		if (!paramLine[0] || paramLine[0] == '#') {		//# skip empty lines
 			continue;									//# and comment lines
+			// Note: this way empty and commentline do not interfere
+			// with multiline definitions.
 		}
 		
-		//# TODO: allow multiline parametervalues
-		//# line must have an equal-character ofcourse.
-		separator = strstr(paramLine, "=");
-		if (!separator) {
-			THROW (Exception, formatString("No '=' found in %s", paramLine));
+		if (addToPrev) {
+			valueStr = paramLine;		// whole line is value
 		}
-		*separator= '\0';					//# terminate key string
-		++separator;						//# place on 1st char of value-part
+		else {
+			// line must have an equal-character ofcourse.
+			char* separator = strstr(paramLine, "=");
+			if (!separator) {
+				THROW (Exception, formatString("No '=' found in %s", paramLine));
+			}
+			*separator= '\0';					//# terminate key string
+			valueStr = separator + 1;			// ValueStr starts after = sign
 
-		// TODO: cut of any comment from value part
-		// TODO: left+right trim key- and value part
+			// skip trailing spaces from key (allowing spaces before = sign)
+			keyStr = paramLine;
+			rtrim(keyStr);
+		}
 
-		//# check for quoted strings, cutoff quotes
-		int valueLen = strlen(separator)-1;
-		if ((valueLen > 0) && (*separator == '"' || *separator == '\'') &&
-									(*separator == separator[valueLen])) {
-			separator[valueLen] = '\0';
-			++separator;
+		// skip leading spaces from value (allowing space afer = sign)
+		// but don't strip multiline lines
+		if (!addToPrev) {
+			valueStr = ltrim(valueStr);
+		}
+		// skip trailing spaces from value
+		int32 valLen = rtrim(valueStr) - 1;
+
+		// cut of any comment from value part
+		char* hashPos = strchr(valueStr, '#');		// any # in valueStr?
+		if (hashPos) { 
+			// if valueStr is quoted don't bother about the #
+			bool quoted = ((valLen > 0) &&
+						   (*valueStr == '"' || *valueStr == '\'') &&
+						   (*valueStr == valueStr[valLen]));
+			if (!quoted) {
+				*hashPos = '\0';		// cut off at hash
+				// and skip trailing spaces again
+				// Note: valLen already points to '\0' char
+				valLen = rtrim(valueStr, valLen) - 1;
+			} // quoted
+		} // has hash
+
+		// If last char is a \ we enter multiline mode.
+		if (valueStr[valLen] == '\\') {
+			multiLine = true;
+			// cut of backslash and trailing spaces
+			valueStr[valLen] = '\0';
+			valLen = rtrim(valueStr, valLen) - 1;
+			if (!addToPrev) {			// first multiline?
+				keyCopy = keyStr;		// save copy of key
+			}
+		}
+		else {
+			multiLine = false;
+		}
+
+		// finally check (again) for quoted strings, cutoff quotes
+		valLen = strlen(valueStr)-1;
+		if ((valLen > 0) && (*valueStr == '"' || *valueStr == '\'') &&
+									(*valueStr == valueStr[valLen])) {
+			valueStr[valLen] = '\0';
+			++valueStr;
 		}
 	
-		LOG_TRACE_VAR(formatString("pair:[%s][%s]", paramLine, separator));
+		// if this or previous line is multiline, collect result
+		if (multiLine || addToPrev) {	
+			lineColl.append(valueStr);
+			LOG_TRACE_LOOP_STR("Multiline collecting:" << lineColl);
+		}
 
-		//# remove any existed value and insert this value
-		if ((erase(paramLine) > 0) && !merge) {
-			LOG_WARN (
+		// Store result if this line is not a multiline
+		if (!multiLine) {
+			if (addToPrev) {	// result in tmp strings?
+				valueStr = const_cast<char*>(lineColl.c_str());
+				keyStr   = const_cast<char*>(keyCopy.c_str());
+			}
+			LOG_TRACE_VAR(formatString("pair:[%s][%s]", keyStr, valueStr));
+
+			// remove any existed value and insert this value
+			if ((erase(keyStr) > 0) && !merge) {
+				LOG_WARN (
 				formatString("Key %s is defined twice. Ignoring first value.", 
-																  paramLine));
+																  keyStr));
+			}
+			// Finally add to map
+			pair< map<string, string>::iterator, bool>		result;
+			result = insert(std::make_pair(keyStr, valueStr)); 
+			if (!result.second) {
+				THROW (Exception, formatString("Key %s double defined?", keyStr));
+			}
+
+			// Clear tmp strings
+			lineColl.erase();
+			keyCopy.erase();
 		}
-		pair< map<string, string>::iterator, bool>		result;
-		result = insert(std::make_pair(paramLine, separator));  //# add to map
-		if (!result.second) {
-			THROW (Exception, formatString("Key %s double defined?", paramLine));
-		}
+
+		addToPrev = multiLine;
 	}
 }
 
@@ -331,6 +400,39 @@ string ParameterCollection::getString(const string& theKey) const
 		THROW (Exception, formatString("Key %s unknown", theKey.c_str()));
 	}
 	return (iter->second);
+}
+
+//#
+//#	getTime(key)
+//#
+time_t ParameterCollection::getTime(const string& theKey) const
+{
+	time_t				theTime;
+	char				unit[1024];
+	const_iterator	iter = find (theKey);
+
+	if (iter == end()) {
+		THROW (Exception, formatString("Key %s unknown", theKey.c_str()));
+	}
+	unit[0] = '\0';
+	if (sscanf (iter->second.c_str(), "%ld%s", &theTime, &unit) < 1) {
+		THROW (Exception, formatString("%s is not an time value", iter->second.c_str()));
+	}
+	switch (unit[0]) {
+	case 's':
+	case 'S':
+	case '\0':
+		break;
+	case 'm':
+	case 'M':
+		theTime *= 60;
+		break;
+	case 'h':
+	case 'H':
+		theTime *= 3600;
+		break;
+	}
+	return (theTime);
 }
 
 //#---------------------------- save functions -------------------------------
