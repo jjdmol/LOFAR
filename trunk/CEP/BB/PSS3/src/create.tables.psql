@@ -1,0 +1,26 @@
+create table meqmodel (ObjID bigint not null unique primary key, Owner bigint not null, VersionNr integer not null, NAME text, SRCNR integer,
+ STATNR integer, VALUES00 double precision, VALUES text, SIM_VALUES text, SIM_PERT text, TIME0 double precision, FREQ0 double precision, 
+NORMALIZED smallint, SOLVABLE text, DIFF double precision, DIFF_REL smallint, STARTTIME double precision, ENDTIME double precision, 
+STARTFREQ double precision, ENDFREQ double precision);
+
+create trigger meqmodel_updateversionnr before insert on meqmodel for each row execute procedure updateversionnr();
+
+create table meqmodelDef (ObjID bigint not null unique primary key, Owner bigint not null, VersionNr integer not null, NAME text, SRCNR integer, 
+STATNR integer, VALUES00 double precision, VALUES text, SIM_VALUES text, SIM_PERT text, TIME0 double precision, FREQ0 double precision, 
+NORMALIZED smallint, SOLVABLE text, DIFF double precision, DIFF_REL smallint);
+
+create trigger meqmodelDef_updateversionnr before insert on meqmodelDef for each row execute procedure updateversionnr();
+
+create table skymodel (ObjID bigint not null unique primary key, Owner bigint not null, VersionNr integer not null, NAME text, SRCNR integer, 
+STATNR integer, VALUES00 double precision, VALUES text, SIM_VALUES text, SIM_PERT text, TIME0 double precision, FREQ0 double precision, 
+NORMALIZED smallint, SOLVABLE text, DIFF double precision, DIFF_REL smallint, STARTTIME double precision, ENDTIME double precision, 
+STARTFREQ double precision, ENDFREQ double precision);
+
+create trigger skymodel_updateversionnr before insert on skymodel for each row execute procedure updateversionnr();
+
+create table skymodelDef (ObjID bigint not null unique primary key, Owner bigint not null, VersionNr integer not null, NAME text, SRCNR integer, 
+STATNR integer, VALUES00 double precision, VALUES text, SIM_VALUES text, SIM_PERT text, TIME0 double precision, FREQ0 double precision, 
+NORMALIZED smallint, SOLVABLE text, DIFF double precision, DIFF_REL smallint);
+
+create trigger skymodelDef_updateversionnr before insert on skymodelDef for each row execute procedure updateversionnr();
+
