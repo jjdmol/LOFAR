@@ -44,6 +44,8 @@ const char APC_Board[]          = "ApcBoardType";
 const char APC_Ethernet[]       = "ApcEthernetType";
 const char APC_FPGA[]           = "ApcFPGAType";
 const char APC_RCU[]            = "ApcRCUType";
+const char APC_LFA[]            = "ApcLFAType";
+const char APC_HFA[]            = "ApcHFAType";
 const char APC_ADCStatistics[]  = "ApcADCStatisticsType";
 const char APC_Maintenance[]    = "ApcMaintenanceType";
 const char APC_Alert[]          = "ApcAlertType";
@@ -56,12 +58,16 @@ const char SCOPE_PIC_RackN_SubRackN_BoardN_ETH[] =                    "PIC_Rack%
 const char SCOPE_PIC_RackN_SubRackN_BoardN_BP[] =                     "PIC_Rack%d_SubRack%d_Board%d_BP";
 const char SCOPE_PIC_RackN_SubRackN_BoardN_APN[] =                    "PIC_Rack%d_SubRack%d_Board%d_AP%d";
 const char SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN[] =               "PIC_Rack%d_SubRack%d_Board%d_AP%d_RCU%d";
+const char SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN_LFA[] =           "PIC_Rack%d_SubRack%d_Board%d_AP%d_RCU%d_LFA";
+const char SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN_HFA[] =           "PIC_Rack%d_SubRack%d_Board%d_AP%d_RCU%d_HFA";
 const char SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN_ADCStatistics[] = "PIC_Rack%d_SubRack%d_Board%d_AP%d_RCU%d_ADCStatistics";
 const char SCOPE_PIC_Maintenance[] =                                  "PIC_Maintenance";
 const char SCOPE_PIC_RackN_Maintenance[] =                            "PIC_Rack%d_Maintenance";
 const char SCOPE_PIC_RackN_SubRackN_Maintenance[] =                   "PIC_Rack%d_SubRack%d_Maintenance";
 const char SCOPE_PIC_RackN_SubRackN_BoardN_Maintenance[] =            "PIC_Rack%d_SubRack%d_Board%d_Maintenance";
 const char SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN_Maintenance[] =   "PIC_Rack%d_SubRack%d_Board%d_AP%d_RCU%d_Maintenance";
+const char SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN_LFA_Maintenance[] =  "PIC_Rack%d_SubRack%d_Board%d_AP%d_RCU%d_LFA_Maintenance";
+const char SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN_HFA_Maintenance[] =  "PIC_Rack%d_SubRack%d_Board%d_AP%d_RCU%d_HFA_Maintenance";
 const char SCOPE_PIC_RackN_Alert[] =                                  "PIC_Rack%d_Alert";
 const char SCOPE_PIC_RackN_SubRackN_Alert[] =                         "PIC_Rack%d_SubRack%d_Alert";
 const char SCOPE_PIC_RackN_SubRackN_BoardN_Alert[] =                  "PIC_Rack%d_SubRack%d_Board%d_Alert";
@@ -69,6 +75,9 @@ const char SCOPE_PIC_RackN_SubRackN_BoardN_Alert[] =                  "PIC_Rack%
 // the following constants cannot be defined as const char because they are used
 // as char* elsewhere
 #define PROPNAME_STATUS          "status"
+#define PROPNAME_VOLTAGE15       "voltage15"
+#define PROPNAME_VOLTAGE22       "voltage22"
+#define PROPNAME_FFI             "ffi"
 #define PROPNAME_PACKETSRECEIVED "packetsReceived"
 #define PROPNAME_PACKETSERROR    "packetsError"
 #define PROPNAME_LASTERROR       "lastError"
@@ -128,11 +137,14 @@ const TPropertySet PROPSET_SubRacks[] =
 const TProperty PROPS_Board[] =
 {
   {PROPNAME_STATUS, GCFPValue::LPT_UNSIGNED, GCF_READABLE_PROP | GCF_WRITABLE_PROP, "0"},
+  {PROPNAME_VOLTAGE15, GCFPValue::LPT_UNSIGNED, GCF_READABLE_PROP | GCF_WRITABLE_PROP, "0"},
+  {PROPNAME_VOLTAGE22, GCFPValue::LPT_UNSIGNED, GCF_READABLE_PROP | GCF_WRITABLE_PROP, "0"},
+  {PROPNAME_FFI, GCFPValue::LPT_UNSIGNED, GCF_READABLE_PROP | GCF_WRITABLE_PROP, "0"},
 };
 
 const TPropertySet PROPSET_Boards[] = 
 {
-  {1, "Board1", PROPS_Board},
+  {4, "Board1", PROPS_Board},
 };
 
 const TProperty PROPS_Ethernet[] =
@@ -185,6 +197,26 @@ const TPropertySet PROPSET_RCUs[] =
 {
   {5, "RCU1", PROPS_RCU},
   {5, "RCU2", PROPS_RCU},
+};
+
+const TProperty PROPS_LFA[] =
+{
+  {PROPNAME_STATUS, GCFPValue::LPT_UNSIGNED, GCF_READABLE_PROP | GCF_WRITABLE_PROP, "0"},
+};
+
+const TPropertySet PROPSET_LFA = 
+{
+  1, "LFA", PROPS_LFA,
+};
+
+const TProperty PROPS_HFA[] =
+{
+  {PROPNAME_STATUS, GCFPValue::LPT_UNSIGNED, GCF_READABLE_PROP | GCF_WRITABLE_PROP, "0"},
+};
+
+const TPropertySet PROPSET_HFA = 
+{
+  1, "HFA", PROPS_HFA,
 };
 
 const TProperty PROPS_ADCStatistics[] =

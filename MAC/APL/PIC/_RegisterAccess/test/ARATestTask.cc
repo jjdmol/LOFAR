@@ -63,7 +63,7 @@
 #include <Common/LofarLogger.h>
 
 #include <bitset>
-#include <boost/date_time/posix_time/posix_time.hpp>
+#include <time.h>
 
 using namespace LOFAR;
 using namespace ARA;
@@ -495,12 +495,13 @@ GCFEvent::TResult ARATestTask::test6(GCFEvent& event, GCFPortInterface& /*p*/)
       string resource(string(PROPERTY_AP1_RCU1)+string(","));
       
       // create time 10 seconds from now
-      boost::posix_time::ptime startTime(boost::posix_time::second_clock::universal_time());
-      startTime += boost::posix_time::seconds(10); // UTC + 10 seconds
-      boost::posix_time::ptime stopTime(startTime);
-      stopTime += boost::posix_time::seconds(10); // starttime + 10 seconds
+      time_t timeNow = time(0);
+      struct tm* utcTimeStruct = gmtime(&timeNow);
+      time_t utcTime = mktime(utcTimeStruct);
+      time_t startTime = utcTime + 10; // UTC + 10 seconds
+      time_t stopTime = startTime + 10; // starttime + 10 seconds
       char timesString[100];
-      sprintf(timesString,"%d,%d",startTime.time_of_day().seconds(),stopTime.time_of_day().seconds());
+      sprintf(timesString,"%d,%d",(int)startTime,(int)stopTime);
       
       string times(timesString);
       GCFPVString command(cmd+resource+times);
@@ -589,12 +590,13 @@ GCFEvent::TResult ARATestTask::test7(GCFEvent& event, GCFPortInterface& /*p*/)
       string cmd("MAINTENANCE 2,");
       string resource(string(PROPERTY_STATION_PIC)+string(","));
       // create time 10 seconds from now
-      boost::posix_time::ptime startTime(boost::posix_time::second_clock::universal_time());
-      startTime += boost::posix_time::seconds(10); // UTC + 10 seconds
-      boost::posix_time::ptime stopTime(startTime);
-      stopTime += boost::posix_time::seconds(10); // starttime + 10 seconds
+      time_t timeNow = time(0);
+      struct tm* utcTimeStruct = gmtime(&timeNow);
+      time_t utcTime = mktime(utcTimeStruct);
+      time_t startTime = utcTime + 10; // UTC + 10 seconds
+      time_t stopTime = startTime + 10; // starttime + 10 seconds
       char timesString[100];
-      sprintf(timesString,"%d,%d",startTime.time_of_day().seconds(),stopTime.time_of_day().seconds());
+      sprintf(timesString,"%d,%d",(int)startTime,(int)stopTime);
       
       string times(timesString);
       GCFPVString command(cmd+resource+times);
@@ -689,10 +691,10 @@ GCFEvent::TResult ARATestTask::test8(GCFEvent& event, GCFPortInterface& /*p*/)
       
       EPA_Protocol::BoardStatus boardStatus;
       memset(&boardStatus,0,sizeof(boardStatus));
-      boardStatus.ap[0].temp = 28;
-      boardStatus.ap[1].temp = 29;
-      boardStatus.ap[2].temp = 30;
-      boardStatus.ap[3].temp = 31;
+      boardStatus.ap[0].temp = 2850;
+      boardStatus.ap[1].temp = 2902;
+      boardStatus.ap[2].temp = 2953;
+      boardStatus.ap[3].temp = 3005;
 
       EPA_Protocol::RCUStatus rcuStatus;
       std::bitset<8> rcuBitStatus;

@@ -110,6 +110,10 @@ namespace ARA
        */
       void addAPC(string apc,string scope);
 
+      void updateBoardProperties(string scope,
+                                 uint8  voltage_15,
+                                 uint8  voltage_22,
+                                 uint8  ffi);
       /**
        * update eth properties based on status bits
        */

@@ -123,6 +123,14 @@ RegisterAccessTask::RegisterAccessTask(string name)
             addMyPropertySet(PROPSET_ADCStatistics, scopeString);
             sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN_Maintenance,rack,subrack,board,ap,rcu);
             addMyPropertySet(PROPSET_Maintenance, scopeString);
+            sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN_LFA,rack,subrack,board,ap,rcu);
+            addMyPropertySet(PROPSET_LFA, scopeString);
+            sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN_HFA,rack,subrack,board,ap,rcu);
+            addMyPropertySet(PROPSET_HFA, scopeString);
+            sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN_LFA_Maintenance,rack,subrack,board,ap,rcu);
+            addMyPropertySet(PROPSET_Maintenance, scopeString);
+            sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN_HFA_Maintenance,rack,subrack,board,ap,rcu);
+            addMyPropertySet(PROPSET_Maintenance, scopeString);
           }
         }
       }
@@ -170,9 +178,17 @@ RegisterAccessTask::RegisterAccessTask(string name)
           {
             sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN,rack,subrack,board,ap,rcu);
             addAPC(APC_RCU, scopeString);
+            sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN_LFA,rack,subrack,board,ap,rcu);
+            addAPC(APC_LFA, scopeString);
+            sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN_HFA,rack,subrack,board,ap,rcu);
+            addAPC(APC_HFA, scopeString);
             sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN_ADCStatistics,rack,subrack,board,ap,rcu);
             addAPC(APC_ADCStatistics, scopeString);
             sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN_Maintenance,rack,subrack,board,ap,rcu);
+            addAPC(APC_Maintenance, scopeString);
+            sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN_LFA_Maintenance,rack,subrack,board,ap,rcu);
+            addAPC(APC_Maintenance, scopeString);
+            sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN_HFA_Maintenance,rack,subrack,board,ap,rcu);
             addAPC(APC_Maintenance, scopeString);
           }
         }
@@ -468,11 +484,12 @@ GCFEvent::TResult RegisterAccessTask::handleUpdStatus(GCFEvent& e, GCFPortInterf
       uint8   rspVoltage_22 = boardStatus(boardNr).rsp.voltage_22;
       uint16  rspFfi        = boardStatus(boardNr).rsp.ffi;
       LOG_INFO(formatString("UpdStatus:\n\tRSP voltage_15:\t%d\n\tRSP voltage_22:\t%d\n\tRSP ffi\t%d",rspVoltage_15,rspVoltage_22,rspFfi));
+      sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN,rackNr,subRackNr,relativeBoardNr);
+      updateBoardProperties(scopeString,rspVoltage_15,rspVoltage_22,rspFfi);
       
       uint8   bpStatus  = boardStatus(boardNr).bp.status;
       uint8   bpTemp    = boardStatus(boardNr).bp.temp;
       LOG_INFO(formatString("UpdStatus:\n\tBP status:\t%d\n\tBP temp:\t%d",bpStatus,bpTemp));
-      
       sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_BP,rackNr,subRackNr,relativeBoardNr);
       updateFPGAproperties(scopeString,bpStatus,bpTemp);
 
@@ -481,7 +498,6 @@ GCFEvent::TResult RegisterAccessTask::handleUpdStatus(GCFEvent& e, GCFPortInterf
         uint8   apStatus  = boardStatus(boardNr).ap[apNr].status;
         uint8   apTemp    = boardStatus(boardNr).ap[apNr].temp;
         LOG_INFO(formatString("UpdStatus:\n\tAP[%d] status:\t%d\n\tAP[%d] temp:\t%d",apNr,apStatus,apNr,apTemp));
-
         sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN,rackNr,subRackNr,relativeBoardNr,apNr+1);
         updateFPGAproperties(scopeString,apStatus,apTemp);
       }      
@@ -493,7 +509,6 @@ GCFEvent::TResult RegisterAccessTask::handleUpdStatus(GCFEvent& e, GCFPortInterf
       uint8     ethFfi1       = boardStatus(boardNr).eth.ffi1;
       uint8     ethFfi2       = boardStatus(boardNr).eth.ffi2;
       LOG_INFO(formatString("UpdStatus:\n\tETH frames:\t%d\n\tETH errors:\t%d\n\tETH last_error:\t%d\n\tETH ffi0:\t%d\n\tETH ffi1:\t%d\n\tETH ffi2:\t%d",ethFrames,ethErrors,ethLastError,ethFfi0,ethFfi1,ethFfi2));
-
       sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_ETH,rackNr,subRackNr,relativeBoardNr);
       updateETHproperties(scopeString,ethFrames,ethErrors,ethLastError,ethFfi0,ethFfi1,ethFfi2);  
   
@@ -525,6 +540,25 @@ GCFEvent::TResult RegisterAccessTask::handleUpdStatus(GCFEvent& e, GCFPortInterf
   }
   
   return status;
+}
+
+void RegisterAccessTask::updateBoardProperties(string scope,
+                                               uint8  voltage_15,
+                                               uint8  voltage_22,
+                                               uint8  ffi)
+{
+  TMyPropertySetMap::iterator it=m_myPropertySetMap.find(scope);
+  if(it != m_myPropertySetMap.end())
+  {
+    GCFPVUnsigned pvTemp(voltage_15);
+    it->second->setValue(string(PROPNAME_VOLTAGE15),pvTemp);
+    
+    pvTemp.setValue(voltage_22);
+    it->second->setValue(string(PROPNAME_VOLTAGE22),pvTemp);
+
+    pvTemp.setValue(ffi);
+    it->second->setValue(string(PROPNAME_FFI),pvTemp);
+  }
 }
 
 void RegisterAccessTask::updateETHproperties(string scope,
