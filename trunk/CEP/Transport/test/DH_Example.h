@@ -27,6 +27,7 @@
 #include <lofar_config.h>
 #include "libTransport/DH_PL.h"
 #include <Common/lofar_complex.h>
+#include <PL/DBRep.h>
 
 namespace LOFAR
 {
