@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 10 Subrack_AP
-PANEL,296 108 184 83 N "_3DFace" 2
+PANEL,288 282 184 83 N "_3DFace" 2
 "$APNr"
 "$datapoint"
 "main()
@@ -111,41 +111,9 @@ main(int iType)
 
  "main()
 {
-
-		// Local data
-  	dyn_string txt;
-  	int iAnswer;
-  	bool bOK;				//Variable with value FALSE
-  	
-		txt = makeDynString(
-//    	\"PUSH_BUTTON, Set to 0 -> Disconnected, 2, 1\",
-//    	\"PUSH_BUTTON, set to 1 -> Available, 3, 1\", 
-//    	\"PUSH_BUTTON, set to 2 -> Error, 4, 1\",
-//    	\"SEPARATOR\", 
-	   	\"PUSH_BUTTON, Set status to -> OK, 2, 1\",
-  	 	\"PUSH_BUTTON, Set status to -> Error, 3, 1\"  );
-    
-//		dynInsertAt(txt, makeDynString(\"PUSH_BUTTON, Trend, 1, 1\", \"SEPARATOR\"), 1);
- 
-  	popupMenu(txt, iAnswer);
-
-//########################################################
-//
-//	Compute the chosen option
-//
-//########################################################
-  	switch (iAnswer)
-  	{
-  	case 2:
-			  dpSetWait($datapoint + \"_Board1_AP\"+ $APNr +\".status:_original.._value\", 0);
-  			break;
-   	case 3:
-			  dpSetWait($datapoint + \"_Board1_AP\"+ $APNr +\".status:_original.._value\", 1);
-  			break;
-    default:
-    	break;
-  	}       
-}" 0
+  APContextMenu();
+}
+" 0
  E
 1 0 0 0 0 0
 EE E

@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,394 286 95 62 N "_3DFace" 4
+PANEL,585 441 95 62 N "_3DFace" 4
 "$APNr"
 "$RCUNr"
 "$RackNr"
@@ -22,43 +22,7 @@ LANG:1 6 Layer1
 1 10 40 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
  "main()
 {
-
-		// Local data
-  	dyn_string txt;
-  	int iAnswer;
-  	bool bOK;				//Variable with value FALSE
-  	
-		txt = makeDynString(
-   	\"PUSH_BUTTON, Turn on maintenance, 11, 1\",
-   	\"PUSH_BUTTON, Turn off maintenance, 10, 1\" ,
-   	\"SEPARATOR\",
-   	\"PUSH_BUTTON, Set status to -> OK, 2, 1\",
-   	\"PUSH_BUTTON, Set status to -> Error, 3, 1\" );
- 
-  	popupMenu(txt, iAnswer);
-
-	//########################################################
-	//
-	//	Compute the chosen option
-	//
-	//########################################################
-  	switch (iAnswer)
-  	{
-		case 2:
-			  dpSetWait(\"System1:PIC_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board1_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\"_LFA.status:_original.._value\", 0);
-				break;
-		case 3:
-			  dpSetWait(\"System1:PIC_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board1_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\"_LFA.status:_original.._value\", 1);
-				break;
-   	case 10:
-			  dpSetWait(\"System1:PIC_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board1_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\"_LFA_Maintenance.status:_original.._value\", 0);
-      	break;
-   	case 11:
-			  dpSetWait(\"System1:PIC_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board1_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\"_LFA_Maintenance.status:_original.._value\", 1);
-     	break;
-    default:
-    	break;
-  	}       
+  AntennaContextMenu(\"LFA\");
 }" 0
  E
 6 0 0 0 0 0
@@ -111,7 +75,11 @@ EP_setBackColorCB(string dpSource1, unsigned LFA_main,
 "Line2"
 ""
 1 25 18 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
+ "main()
+{
+  AntennaContextMenu(\"LFA\");
+}" 0
+ E
 3 0 0 0 0 0
 EE E
 0
@@ -124,7 +92,11 @@ E E 0 1 1 0 1 E  25 35 25 18
 "Line1"
 ""
 1 18 29 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
+ "main()
+{
+  AntennaContextMenu(\"LFA\");
+}" 0
+ E
 8 0 0 0 0 0
 EE E
 0
@@ -137,7 +109,11 @@ E E 0 1 1 0 1 E  18 30 24 18
 "Line7"
 ""
 1 26 18 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
+ "main()
+{
+  AntennaContextMenu(\"LFA\");
+}" 0
+ E
 11 0 0 0 0 0
 EE E
 0
@@ -189,7 +165,11 @@ E E 0 1 1 0 1 E  27 18 23 18
 "Border3"
 ""
 1 23 18 E E E 1 E 1 E N "_WindowText" E N {0,0,0} E E
- E E
+ "main()
+{
+  AntennaContextMenu(\"LFA\");
+}" 0
+ E
 18 0 0 0 0 0
 EE E
 0
