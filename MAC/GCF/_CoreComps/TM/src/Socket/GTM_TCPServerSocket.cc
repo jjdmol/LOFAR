@@ -21,6 +21,7 @@
 //#  $Id$
 
 #include "GTM_TCPServerSocket.h"
+#include <GCF/GCF_Defines.h>
 #include <GCF/GCF_TCPPort.h>
 #include <GCF/GCF_TMProtocols.h>
 #include <GCF/GCF_PeerAddr.h>
