@@ -322,7 +322,7 @@ namespace LOFAR
       // oid refers to the object itself or to its owner.
       virtual void doRetrieve(const ObjectId& oid, bool isOwnerOid) = 0;
 
-      // This method is responsible for actually erasing the \e primitive
+      // This method is responsible for actually updating the \e primitive
       // data members of \c T.
       virtual void doUpdate() const = 0;
 
