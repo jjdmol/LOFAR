@@ -199,23 +199,14 @@ public:
       setRate calls both setInRate and setOutRate and also sets the
       Step::itsRate.
   */
-  bool setRate (int rate, int dhIndex);
+  bool setProcessRate (int rate);
   bool setInRate (int rate, int dhIndex);
   bool setOutRate (int rate, int dhIndex);
-
-  /// Get the rate of this Step.
-  int getRate() const;
 
   /// Get the application number of the current run.
   static int getCurAppl();
 
-  /** Decide whether to handle this event or not based on itsRate and
-      theirEventCnt
-  */
-  bool doHandle() const
-    { return theirEventCnt % itsRate == 0; } 
-
-  /// Get the event count.
+   /// Get the event count.
   static unsigned int getEventCount();
 
   /// Clear the event count.
@@ -258,8 +249,6 @@ private:
   int                 itsID;   // the ID of the step
   int                 itsNode; // the node to run this step on
   int                 itsAppl; // the application to run this step in
-  // The rate at which process() has to be called.
-  int                 itsRate;
   // Add the seqnr as the name suffix?
   bool                itsAddSuffix;
   // Sequence number in the Composite. Used to know the Step order.
@@ -292,9 +281,6 @@ inline const string& StepRep::getName() const
 
 inline void StepRep::setName (const string& name)
   { itsName = name; }
-
-inline int StepRep::getRate() const
-  { return itsRate; } 
 
 inline int StepRep::getID() const
   { return itsID; }
