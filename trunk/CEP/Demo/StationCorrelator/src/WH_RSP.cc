@@ -33,31 +33,43 @@
 
 using namespace LOFAR;
 
-WH_RSP::WH_RSP(const string& name, 
-               const int elements) 
-  : WorkHolder (1, 1, name, "WH_RSP"),
-    itsInElements (elements)
-{
 
-  // Create cyclic buffer for incoming dataholders 
-  getDataManager().addInDataHolder(0, new DH_RSP("in", elements));  // where to add bool synchronous = false???
+WH_RSP::WH_RSP(const string& name, 
+               const KeyValueMap kvm) 
+  : WorkHolder (1, 1, name, "WH_RSP"),
+    itsKVM (kvm)
+{
+  char str[5];
   
-  // Create outgoing dataholder
-  getDataManager().addOutDataHolder(0, new DH_StationData("out"));
+  int beamletsinpacket   = kvm.getInt("NoRSPbeamlets", 92);
+  int packetsinframe     = kvm.getInt("NoPacketsInFrame", 8);
+  int stationdataholders = kvm.getInt("NoDH_StationData", 7);
+  int polarisations      = kvm.getInt("polarisations",2);
+  
+  // Create buffer for incoming dataholders 
+  // Use a cyclic buffer?
+  getDataManager().addInDataHolder(0, new DH_RSP("DH_in", kvm.getInt("SzDH_RSP",6000))); 
+  
+  // Create outgoing dataholders
+  int bufsize = (beamletsinpacket / stationdataholders) * polarisations * packetsinframe;
+  for (int i=0; i < stationdataholders; i++) {
+    sprintf(str, "DH_out_%d", i);
+    getDataManager().addOutDataHolder(i, new DH_StationData(str, bufsize));
+  }
 }
 
 WH_RSP::~WH_RSP() {
 }
 
 WorkHolder* WH_RSP::construct(const string& name,
-                              const int elements) 
+                              const KeyValueMap kvm) 
 {
-  return new WH_RSP(name, elements);
+  return new WH_RSP(name, kvm);
 }
 
 WH_RSP* WH_RSP::make(const string& name)
 {
-  return new WH_RSP(name, itsInElements);
+  return new WH_RSP(name, itsKVM);
 }
 
 void WH_RSP::process() {

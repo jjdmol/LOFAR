@@ -24,6 +24,8 @@
 #ifndef STATIONCORRELATOR_WH_RSP_H
 #define STATIONCORRELATOR_WH_RSP_H
 
+
+#include <Common/KeyValueMap.h>
 #include <tinyCEP/WorkHolder.h>
 
 namespace LOFAR
@@ -33,10 +35,11 @@ namespace LOFAR
   public:
 
     explicit WH_RSP(const string& name, 
-                    const int elements);
+                    const KeyValueMap kvm);
     virtual ~WH_RSP();
+    
     static WorkHolder* construct(const string& name, 
-                                 const int elements);
+                                 const KeyValueMap kvm);
     virtual WH_RSP* make(const string& name);
 
     virtual void process();
@@ -46,8 +49,7 @@ namespace LOFAR
     /// forbid assignment
     WH_RSP& operator= (const WH_RSP&);
 
-    int itsInElements;
-   
+    KeyValueMap itsKVM;
   };
 
 } // namespace LOFAR

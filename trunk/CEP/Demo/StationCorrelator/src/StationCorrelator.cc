@@ -81,7 +81,7 @@ void StationCorrelator::define(const KeyValueMap& itsKVM) {
   /// Create the WorkHolders 
   for (unsigned int i = 0; i < itsNrsp; i++) {
     snprintf(H_name, 128, "RSPNode_%d_of_%d", i, itsNrsp);
-    Step step(new WH_RSP(H_name));
+    Step step(new WH_RSP(H_name, itsKVM));
     comp.addStep(step); // gaat dit goed?
   }
 

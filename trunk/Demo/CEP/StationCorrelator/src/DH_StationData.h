@@ -35,7 +35,8 @@ class DH_StationData: public DataHolder
  public:
   typedef complex<uint16> BufferType;
 
-  explicit DH_StationData (const string& name);
+  explicit DH_StationData (const string& name,
+                           const unsigned int bufsize);
   virtual ~DH_StationData();
 
   DH_StationData(const DH_StationData&);
@@ -57,7 +58,8 @@ class DH_StationData: public DataHolder
   void setFlag(int);
   BufferType* getBuffer(); 
 
-  
+  unsigned int itsBufSize; 
+ 
  private:
   /// forbid assignment
   DH_StationData& operator= (const DH_StationData&);
@@ -68,7 +70,6 @@ class DH_StationData: public DataHolder
   int* itsFlagptr;
   BufferType* itsBuffer;
   
-  unsigned int itsBufSize;
   void fillDataPointers();
 
 };
