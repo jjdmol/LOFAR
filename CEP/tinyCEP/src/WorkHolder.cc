@@ -158,9 +158,9 @@ void WorkHolder::baseProcess ()
 	 if (getDataManager().doAutoTriggerIn(input)) { 
 	   // signal the DM that we're done with the input channel.
 	   // The DM will initiate the read sequence now.
-	   getDataManager().readyWithInHolder(input); 
-	  
+	   getDataManager().readyWithInHolder(input); 	  
 	 }
+	 getDataManager().clearReadyInFlag(input);  // remove the readyInFlag in DataManager
        } else {
 	 LOG_TRACE_COND_STR("WorkHolder " << getName() << " << skipped input handling;  step = " 
 			    << itsProcessStep << "   rate = " << getDataManager().getInputRate(input));
@@ -186,7 +186,7 @@ void WorkHolder::baseProcess ()
        if (getDataManager().doAutoTriggerOut(output)) { 
 	 getDataManager().readyWithOutHolder(output); // Will cause writing of data
        }
-       
+       getDataManager().clearReadyOutFlag(output);  // remove the readyInFlag in DataManager
      } else {
        LOG_TRACE_COND_STR("WorkHolder" << getName() << " << skipped output handling;  step = " 
 			  << itsProcessStep << "   rate = " << getDataManager().getOutputRate(output));

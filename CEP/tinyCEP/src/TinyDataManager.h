@@ -92,6 +92,12 @@ namespace LOFAR
     bool hasInputSelector();
     bool hasOutputSelector();
 
+    void setReadyInFlag(int channel);
+    void setReadyOutFlag(int channel);
+    bool getReadyInFlag(int channel);
+    bool getReadyOutFlag(int channel);
+    void clearReadyInFlag(int channel);
+    void clearReadyOutFlag(int channel);
   protected:  
     int itsNinputs;
     int itsNoutputs;
@@ -122,6 +128,8 @@ namespace LOFAR
 
     /// A static to keep track of the DataHolderID's
     static int DataHolderID;
+    bool* itsReadyInFlag;
+    bool* itsReadyOutFlag;
   };
 
 inline int TinyDataManager::getInputs() const { 
@@ -135,6 +143,20 @@ inline void TinyDataManager::setProcessRate(int rate)
 
 inline int TinyDataManager::getProcessRate()
 { return itsProcessRate; }
+
+inline void TinyDataManager::setReadyInFlag(int channel)
+{ itsReadyInFlag[channel] = true;}
+inline void TinyDataManager::setReadyOutFlag(int channel)
+{ itsReadyOutFlag[channel] = true;}
+inline bool TinyDataManager::getReadyInFlag(int channel)
+{ return itsReadyInFlag[channel];}
+inline bool TinyDataManager::getReadyOutFlag(int channel)
+{ return itsReadyOutFlag[channel];}
+inline void TinyDataManager::clearReadyInFlag(int channel)
+{ itsReadyInFlag[channel] = false;}
+inline void TinyDataManager::clearReadyOutFlag(int channel)
+{ itsReadyOutFlag[channel] = false;}
+
 
 
 } // namespace LOFAR
