@@ -95,7 +95,7 @@ const _define_meqcalibrater := function(ref agent, id) {
     }
     
     self.predictRec := [_method="predict", _sequence=self.id._sequence]
-    public.predict := function(modeldatacolname) {
+    public.predict := function(modeldatacolname = 'MODEL_DATA') {
     
         wider self;
         
@@ -122,18 +122,6 @@ const _define_meqcalibrater := function(ref agent, id) {
         
         # return
         return defaultservers.run(self.agent, self.saveparmsRec);
-    }
-    
-    self.savepredicteddataRec := [_method="savepredicteddata", _sequence=self.id._sequence]
-    public.savepredicteddata := function(modeldatacolname) {
-    
-        wider self;
-        
-        # argument assignment
-        self.savepredicteddataRec.modeldatacolname := modeldatacolname
-        
-        # return
-        return defaultservers.run(self.agent, self.savepredicteddataRec);
     }
     
     self.saveresidualdataRec := [_method="saveresidualdata", _sequence=self.id._sequence]
@@ -228,15 +216,14 @@ const meqcalibratertest := function()
 	print 'solvedomain = ', d;
 
  	fit := 1.0;
-#	while (fit > 0.0001 || fit < -0.0001)
-#	{
-#	  mc.predict('MODEL_DATA');
-#	  fit := mc.solve();
-#
-#	  print 'iteration = ', i, ' fit = ', fit
-#	}
+	while (fit > 0.0001 || fit < -0.0001)
+	{
+	  fit := mc.solve();
+	  print 'iteration = ', i, ' fit = ', fit
+	}
 
-	mc.savepredicteddata('MODEL_DATA');
+	mc.predict('MODEL_DATA');
+
 	# mc.saveresidualdata('DATA', 'MODEL_DATA', 'RESIDUAL_DATA');
 	# mc.saveparms();
 	

@@ -89,8 +89,8 @@ public:
    */
   void setSolvableParms (Vector<String>& parmPatterns, Bool isSolvable);
 
-  //! Predict visibilities for the current domain
-  void predict();
+  //! Predict visibilities for the current domain and store in column
+  void predict(const String& modelDataColName);
   
   /*!
    * Solve for the current domain.
@@ -101,9 +101,6 @@ public:
 
   //! Save solved parameters to the MEP database.
   void saveParms();
-
-  //! Save the predicted data to the named column of the MeasurementSet.
-  void savePredictedData (const String& dataColName);
 
   /*!
    * Save residual data in the named column (residualColName) by substracting
