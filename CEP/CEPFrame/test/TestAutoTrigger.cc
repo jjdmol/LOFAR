@@ -30,6 +30,7 @@
 #include <tinyCEP/SimulatorParseClass.h>
 #include <CEPFrame/Step.h>
 #include <Transport/TH_Mem.h>
+#include <Transport/TH_MPI.h>
 #include <CEPFrame/Composite.h>
 #include <CEPFrame/WH_Empty.h>
 #include <CEPFrame/WH_TestAutoTrigger.h>
@@ -49,8 +50,8 @@ void TestAutoTrigger::define (const KeyValueMap& params)
   int rank = TRANSPORTER::getCurrentRank ();
   unsigned int size = TRANSPORTER::getNumberOfNodes();
   int appl = Step::getCurAppl ();
-  cout << "CEPFrame Processor " << rank << " of " << size
-       << " operational  (appl=" << appl << ')' << endl;
+//   cout << "CEPFrame Processor " << rank << " of " << size
+//        << " operational  (appl=" << appl << ')' << endl;
 
   // define the top-level simul object
   WH_Empty topSimulWH("TestAutoTrigger");
@@ -69,8 +70,11 @@ void TestAutoTrigger::define (const KeyValueMap& params)
 
   comp.addStep(step1);
   comp.addStep(step2);
-  step2.connectInput(&step1, TRANSPORTER(), false);
-
+// #ifdef HAVE_MPI
+//   step2.connectInput(&step1, TH_MPI(0,0), false);
+// #else
+  step2.connectInput(&step1, TH_Mem(), false);
+// #endif
 
   //////////////////////////////////////////////////////////////////////
   //
@@ -103,9 +107,7 @@ void TestAutoTrigger::dump() const
 void TestAutoTrigger::quit()
 {
 
-  cout << endl << "END OF SIMUL on node " 
-       << TRANSPORTER::getCurrentRank() 
-       << endl;
+  cout << endl << "END OF SIMUL" << endl;
 }
 
 

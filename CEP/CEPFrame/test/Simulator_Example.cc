@@ -134,7 +134,7 @@ int main (int argc, const char* argv[])
 
     Simulator_Example simulator;
     simulator.setarg (argc, argv);
-#ifndef HAVE_MPI
+// #ifndef HAVE_MPI
     cout << endl;
     cout << "  * Type 'define;' to define the simulation" << endl;
     cout << "  * Type 'run;'    to run the simulation" << endl;
@@ -148,23 +148,23 @@ int main (int argc, const char* argv[])
     }
     cout << endl;
     cout << "It was a pleasure working with you!" << endl << endl;
-#else
-    cout << "Welcome to LOFARSim" <<endl;
-    cout << "Running in batch mode " << endl;
-    cout << endl;
-    cout << "Call define" << endl;
-    simulator.baseDefine();
-    cout << endl;
-    cout << "Call run" << endl;
-    simulator.baseRun();
-    cout << endl;
-    cout << "Call dump " << endl;
-    simulator.baseDump();
-    cout << "Call quit " << endl;
-    simulator.baseQuit();
-    cout << endl;
-    cout << "Good Bye!" << endl;
-#endif
+// #else
+//     cout << "Welcome to LOFARSim" <<endl;
+//     cout << "Running in batch mode " << endl;
+//     cout << endl;
+//     cout << "Call define" << endl;
+//     simulator.baseDefine();
+//     cout << endl;
+//     cout << "Call run" << endl;
+//     simulator.baseRun();
+//     cout << endl;
+//     cout << "Call dump " << endl;
+//     simulator.baseDump();
+//     cout << "Call quit " << endl;
+//     simulator.baseQuit();
+//     cout << endl;
+//     cout << "Good Bye!" << endl;
+// #endif
   } catch (...) {
     cout << "Unexpected exception";
   }

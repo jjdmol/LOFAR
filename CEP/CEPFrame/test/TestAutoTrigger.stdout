@@ -2,7 +2,6 @@ Welcome to CEPFrame
 Running in batch mode 
 
 Call define
-CEPFrame Processor -1 of 1 operational  (appl=0)
 
 Call run
 
@@ -71,6 +70,6 @@ Call dump
 Cnt=25,  Input buffer=0   Cnt=25,  Input buffer=24   
 Call quit 
 
-END OF SIMUL on node -1
+END OF SIMUL
 
 Good Bye!

@@ -27,6 +27,7 @@
 // 
 
 #include <Transport/TH_Mem.h>
+#include <Transport/TH_MPI.h>
 #include <CEPFrame/Step.h>
 #include <CEPFrame/Composite.h>
 #include <CEPFrame/DH_Tester.h>
@@ -45,8 +46,8 @@ int main (int argc, const char *argv[])
   int rank = TRANSPORTER::getCurrentRank ();
   unsigned int size = TRANSPORTER::getNumberOfNodes();
   int appl = Step::getCurAppl ();
-  cout << "CEPFrame Processor " << rank << " of " << size
-       << " operational  (appl=" << appl << ')' << endl;
+//   cout << "CEPFrame Processor " << rank << " of " << size
+//        << " operational  (appl=" << appl << ')' << endl;
 
   // create the main Simul; Steps and Simuls will be added to this one
   WH_Tester tester;
@@ -57,23 +58,28 @@ int main (int argc, const char *argv[])
   // First put the antennas in the Station Simul
   WH_Tester tester1;
   Step step1(&tester1, "step1", false);
-  step1.runOnNode(0);
+//   step1.runOnNode(0);
   
   WH_Tester tester2;
   Step step2(&tester2, "step2", false);
-  step2.runOnNode(1);
+//   step2.runOnNode(1);
   
 
   WH_Tester tester3;
   Step step3(&tester3, "step3", false);
-  step3.runOnNode(2);
+//   step3.runOnNode(2);
 
   testerSim.addStep (&step1);
   testerSim.addStep (&step2);
   testerSim.addStep (&step3);
 
-  testerSim.connect ("step1", "step2", TRANSPORTER(), false);
-  testerSim.connect ("step2", "step3", TRANSPORTER(), false);
+// #ifdef HAVE_MPI
+//   testerSim.connect ("step1", "step2", TH_MPI(0,1), false);
+//   testerSim.connect ("step2", "step3", TH_MPI(1,2), false);
+// #else
+  testerSim.connect ("step1", "step2", TH_Mem(), false);
+  testerSim.connect ("step2", "step3", TH_Mem(), false);
+// #endif
 
   //  testerSim.connectOutputToArray(fft,ELEMENTS);
   //////////////////////////////////////////////////////////////////////
@@ -101,7 +107,7 @@ int main (int argc, const char *argv[])
 
   testerSim.postprocess();
 
-  cout << endl << "END OF SIMUL on node " << rank << endl;
+  cout << endl << "END OF SIMUL" << endl;
  
  
   //     close MPI environment
