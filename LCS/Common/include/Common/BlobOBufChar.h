@@ -97,7 +97,7 @@ protected:
 
 private:
   // Expand the buffer if new size > current size.
-  bool expandIfNeeded (uint newSize);
+  bool resizeIfNeeded (uint newSize);
 
   // Try to expand the buffer to at least the given size.
   bool expand (uint minSize);
@@ -132,7 +132,7 @@ inline uint BlobOBufChar::expandSize() const
   return itsExpandSize;
 }
 
-inline bool BlobOBufChar::expandIfNeeded (uint newSize)
+inline bool BlobOBufChar::resizeIfNeeded (uint newSize)
 {
   return (newSize > itsSize  ?  expand(newSize) : true);
 }
@@ -146,11 +146,6 @@ inline U* BlobOBufChar::getPointer (uint position)
 {
   DbgAssert(position < itsSize);
   return (U*)(itsBuffer + position);
-}
-
-inline void BlobOBufChar::reserve (uint newReservedSize)
-{
-  doExpand (newReservedSize, itsSize);
 }
 
 
