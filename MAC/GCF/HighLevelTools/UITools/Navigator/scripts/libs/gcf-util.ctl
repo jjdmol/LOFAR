@@ -44,6 +44,19 @@ const string LOGMESSAGE_TRACE = "TRACE";
 global bool g_logInitialized = false;
 global int  g_loglevel = 0;
 
+// helper function to convert arrays to strings
+string LOG_DYN(dyn_anytype array)
+{
+  int i;
+  string result = "[";
+  for(i=1;i<dynlen(array);i++)
+    result += array[i] + ",";
+  if(i<=dynlen(array))
+    result += array[i];
+  result += "]";
+  return result;
+}
+
 void LOG_FATAL(string prefix, ...) // the prefix is necessary, otherwise PVSS won't eat it!
 {
   dyn_anytype message;

@@ -39,7 +39,6 @@ global string   ELNAME_FILENAME                 = "filename";
 global string   ELNAME_CONFIGPANEL              = "configPanel";
 global string   ELNAME_SELECTEDVIEW             = "selectedView";
 global string   ELNAME_SELECTEDSUBVIEW          = "selectedSubView";
-global string   ELNAME_VIEWS                    = "views";
 global string   ELNAME_NROFSUBVIEWS             = "nrOfSubViews";
 global string   ELNAME_SUBVIEWS                 = "subViews";
 global string   ELNAME_CONFIGS                  = "configs";
@@ -262,27 +261,54 @@ string navConfigGetViewConfigPanel(string dpView)
 
 ///////////////////////////////////////////////////////////////////////////
 //Function navConfigGetResources
+//
+// parameters: parentDatapoint - get the children of this datapoint
+//             depth           - how many levels of children to get
 // 
 // returns the names of the resources that are added to the tree
 ///////////////////////////////////////////////////////////////////////////
-dyn_string navConfigGetResources()
+dyn_string navConfigGetResources(string parentDatapoint, int depth)
 {
   dyn_string resources;
   dyn_string resourceRoots;
   dyn_errClass err;
+  int maxDepth;
   
-  // read the roots from the configuration
-  dpGet(DPNAME_NAVIGATOR+"." + ELNAME_RESOURCEROOTS,resourceRoots);
-  err = getLastError();
-  if(dynlen(err)>0)
+  if(parentDatapoint == "")
   {
-    // if nothing specified, take the local PIC and PAC trees
-    resourceRoots = makeDynString("PIC","PAC");
-  }  
+    maxDepth = depth;
+    // read the roots from the configuration
+    dpGet(DPNAME_NAVIGATOR+"." + ELNAME_RESOURCEROOTS,resourceRoots);
+    err = getLastError();
+    if(dynlen(err)>0)
+    {
+      // if nothing specified, take the local PIC and PAC trees
+      resourceRoots = makeDynString("PIC","PAC");
+    }  
+  }
+  else
+  {
+    dyn_string dpPathElements = strsplit(parentDatapoint,"_");
+    maxDepth = depth + dynlen(dpPathElements);
+    resourceRoots = makeDynString(parentDatapoint);
+  }
   for(int i=1;i<=dynlen(resourceRoots);i++)
   {
     // query the database for all resources under the given root
     dynAppend(resources,dpNames(resourceRoots[i]+"*"));
+  }
+  
+  int i=1;
+  while(i<=dynlen(resources))
+  {
+    dyn_string dpPathElements = strsplit(resources[i],"_");
+    if(dynlen(dpPathElements)>maxDepth)
+    {
+      LOG_TRACE("Removing: ",resources[i]);
+      dynRemove(resources,i);
+    }
+    else
+      i++;
   }
   return resources;
 }

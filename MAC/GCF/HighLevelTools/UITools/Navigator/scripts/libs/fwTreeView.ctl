@@ -139,6 +139,131 @@ fwTreeView_appendNode(string name, anytype value, anytype handle, int level, str
 }
 
 
+/** Function to call successively to construct in an easy way the tree.
+ * This function inserts a node at a given index in the tree
+ * This function takes in charge the update of node states update.
+ * The state of the appended node is set to set hidden collapsed leaf.
+ * The state of the node preceding the appended node is updated:
+ * levels are compared to determine the relationship of the two nodes
+ * <p>Usage: JCOP framework internal, public
+ *
+ * @param index position in the tree where to insert the node
+ * @param name name of the node to append
+ * @param value value of the node to append.
+ * @param handle user handle of the node to append. If you don't need
+ * a such handle, just put 0.
+ * @param level (or generation) of the node inside the tree, 0 for root,
+ * 1 for root's children, 2 for chidren of a root's chid... 
+ */
+fwTreeView_insertTreeNode(unsigned index, string name, anytype value, anytype handle, int level, string referenceName = "")
+{
+  dyn_anytype node;
+  dyn_anytype previousNode;
+  
+  DebugTN("in fwTreeView_insertTreeNode:", index,name, value, handle, level);
+  
+  // update state of the last node of the tree:
+  // branch if the appended node is a child of this node.
+  if(index > 1)
+  { // the tree is not empty
+    previousNode = fwTreeView_getNode(index-1, referenceName);
+    if(previousNode[2] == level - 1)
+    {
+     previousNode[fwTreeView_STATE] |= fwTreeView_BRANCH;
+    }
+    fwTreeView_replaceNode(previousNode, index-1, referenceName);
+  }
+ 
+  node[fwTreeView_HANDLE] = handle;
+  node[fwTreeView_LEVEL] = level;
+  node[fwTreeView_NAME] = name;
+ 
+  // set state and handle:
+  // only root visible:
+  if(level == 0)  // root => visible
+  { 
+    // visible collapsed leaf
+    node[fwTreeView_STATE] = 0; 
+  }
+  else  // not root => not visible
+  {
+    // hidden collapsed leaf
+    node[fwTreeView_STATE] = fwTreeView_HIDDEN; 
+  }
+ 
+  node[fwTreeView_VALUE] = value;
+ 
+  // append the node to the tree:
+  fwTreeView_insertNode(node, index, referenceName);
+}
+
+/** Function to call successively to construct in an easy way the tree.
+ * This function appends a node to a parent. The node is appended to the existing 
+ * childs of the parent.
+ * This function takes in charge the update of node states update.
+ * The state of the appended node is set to set hidden collapsed leaf.
+ * The state of the node preceding the appended node is updated:
+ * levels are compared to determine the relationship of the two nodes
+ * <p>Usage: JCOP framework internal, public
+ *
+ * @param parentIndex position in the tree of the parent to which to append the node
+ * @param name name of the node to append
+ * @param value value of the node to append.
+ * @param handle user handle of the node to append. If you don't need
+ * a such handle, just put 0.
+ * @param level (or generation) of the node inside the tree, 0 for root,
+ * 1 for root's children, 2 for chidren of a root's chid... 
+ */
+unsigned fwTreeView_appendToParentNode(unsigned parentIndex, string name, anytype value, anytype handle, int level, string referenceName = "")
+{
+  dyn_anytype node;
+  dyn_anytype parentNode;
+  dyn_anytype testNode;
+  unsigned nodeId;
+  
+  DebugTN("in fwTreeView_appendToParentNode:", parentIndex,name, value, handle, level);
+  
+  if(parentIndex <= 1 || parentIndex > fwTreeView_getNodeCount(referenceName))
+  { // simply append it to the tree, because the parent is the root or undefined
+    fwTreeView_appendNode(name,value,handle,level,referenceName);
+    nodeId = fwTreeView_getNodeCount(referenceName);
+    DebugTN("in fwTreeView_appendToParentNode: node appended, parent is root or illegal");
+  }
+  else
+  {
+    // check the requested level against the the level of the parent
+    parentNode = fwTreeView_getNode(parentIndex, referenceName);
+    if(level != (parentNode[fwTreeView_LEVEL] + 1))
+    { // append node because parent is not exactly one level higher than the level of the node.
+      fwTreeView_appendNode(name,value,handle,level,referenceName);
+      nodeId = fwTreeView_getNodeCount(referenceName);
+      DebugTN("in fwTreeView_appendToParentNode: requested level is not parent level + 1");
+    }
+    else
+    {
+      // insert the node after the last direct child of the parent
+      int i=1;
+      if(parentIndex+i <= fwTreeView_getNodeCount(referenceName))
+      {
+        testNode = fwTreeView_getNode(parentIndex+i,referenceName);
+        while(testNode[fwTreeView_LEVEL] > parentNode[fwTreeView_LEVEL] && 
+               parentIndex+i <= fwTreeView_getNodeCount(referenceName))
+        {
+          i++;
+          if(parentIndex+i <= fwTreeView_getNodeCount(referenceName))
+          {
+            testNode = fwTreeView_getNode(parentIndex+i,referenceName);
+          }
+        }
+      }      
+      fwTreeView_insertTreeNode(parentIndex+i,name,value,handle,level,referenceName);
+      nodeId = parentIndex+i;
+    }
+  }
+  return nodeId;
+}
+
+
 /** Function to call before closing a
  * panel referencing one or several tree/treeView.pnl.
  * This function remove the tree from memory.

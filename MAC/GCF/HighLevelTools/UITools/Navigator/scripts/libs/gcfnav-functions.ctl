@@ -35,7 +35,7 @@ global string   TAB_VIEWS_CTRL_NAME    = "TabViews";
 global string   NAVIGATOR_TAB_FILENAME = "navigator/navigator_tab.pnl";
 global bool     ACTIVEX_SUPPORTED      = false;
 global int      NR_OF_VIEWS            = 10;
-global mapping  g_itemID2datapoint;
+global dyn_string  g_itemID2datapoint;
 global mapping  g_datapoint2itemID;
 global bool     g_initializing         = true;
 global int      g_curSelNode = 0;
@@ -60,8 +60,8 @@ bool ActiveXSupported()
 void setActiveXSupported() 
 {
   idispatch activeXctrl = 0;
-  if(isFunctionDefined("createComObject"))
-    activeXctrl = createComObject(ACTIVEX_TREE_CTRL);
+//  if(isFunctionDefined("createComObject"))
+//    activeXctrl = createComObject(ACTIVEX_TREE_CTRL);
   if(activeXctrl==0)
   {
     LOG_TRACE("I cannot create a COM object!? What the ....?? You must be running Linux or something.","");
@@ -234,8 +234,14 @@ long treeAddNode(long parentId,int level,string text)
   }
   else
   {
-    fwTreeView_appendNode(text,"",0,level);
-    nodeId = fwTreeView_getNodeCount();
+    if(parentId==-1)
+    {
+      nodeId = fwTreeView_appendToParentNode(0,text,"",0,level);
+    }
+    else
+    {
+      nodeId = fwTreeView_appendToParentNode(parentId,text,"",0,level);
+    }
   }
   return nodeId;
 }
@@ -243,6 +249,8 @@ long treeAddNode(long parentId,int level,string text)
 ///////////////////////////////////////////////////////////////////////////
 //Function treeAddDatapoints()
 //      
+// parameters: names           - names of the datapoints to add
+//
 // Adds names of datapoints and their elements to the treeview
 ///////////////////////////////////////////////////////////////////////////
 void treeAddDatapoints(dyn_string names)
@@ -267,8 +275,7 @@ void treeAddDatapoints(dyn_string names)
 	  {
 		  addedNode = treeAddNode(-1,0,systemName);
 		  LOG_TRACE("Added root node: ",addedNode,systemName);
-		  g_itemID2datapoint[addedNode] = systemName;
-		  g_datapoint2itemID[systemName] = addedNode;
+      insertDatapointNodeMapping(addedNode,systemName);
     }  
     
 	  // go through the list of datapoint names
@@ -278,7 +285,7 @@ void treeAddDatapoints(dyn_string names)
 	    dyn_string dpPathElements;
 	    string datapointName;
 	    int parentId;
-	    // get the System part of the datapoint name
+	    // remove the System part from the datapoint name
 	    datapointName = dpSubStr(names[namesIndex],DPSUB_DP);
 	    
 	    // only add ENABLED datapoints
@@ -302,8 +309,7 @@ void treeAddDatapoints(dyn_string names)
 		        {
 		          addedNode = treeAddNode(parentId,pathIndex,dpPathElements[pathIndex]); 
               LOG_TRACE("Added node: ",addedNode,parentId,pathIndex,dpPathElements[pathIndex]);
-		          g_itemID2datapoint[addedNode] = addingDPpart;
-		          g_datapoint2itemID[addingDPpart] = addedNode;
+              insertDatapointNodeMapping(addedNode,addingDPpart);
 		          if(dpPathElements[pathIndex] == "Alert")
 		          {
 		            // subscribe to Alert status
@@ -347,12 +353,18 @@ void treeAddDatapoints(dyn_string names)
             // file:///opt/pvss/pvss2_v3.0/help/en_US.iso88591/WebHelp/ControlA_D/dpTypeGet.htm
             int elementLevel = dynlen(elementNames[elementIndex])-1; // how deep is the element?
             string elementName = elementNames[elementIndex][elementLevel+1];
-           
-            addedNode = treeAddNode(parentIds[elementLevel],pathIndex-1+elementLevel,elementName); 
+            
             string fullDPname = addingDPpart+parentNodes[elementLevel]+"."+elementName;
-            LOG_TRACE("Added element node: ",addedNode,parentIds[elementLevel],pathIndex-1+elementLevel,fullDPname);
-            g_itemID2datapoint[addedNode] = fullDPname;
-            g_datapoint2itemID[fullDPname] = addedNode;
+            if(mappingHasKey(g_datapoint2itemID,fullDPname))
+            {
+              addedNode = g_datapoint2itemID[fullDPname];
+            }
+            else
+            {
+              addedNode = treeAddNode(parentIds[elementLevel],pathIndex-1+elementLevel,elementName); 
+              LOG_TRACE("Added element node: ",addedNode,parentIds[elementLevel],pathIndex-1+elementLevel,fullDPname);
+              insertDatapointNodeMapping(addedNode,fullDPname);
+            }
             
             parentIds[elementLevel+1] = addedNode; // remember this node as parent at its level in case there are elements below this one
             parentNodes[elementLevel+1] = parentNodes[elementLevel]+"."+elementName;
@@ -361,6 +373,11 @@ void treeAddDatapoints(dyn_string names)
 	    }
 	  }
   }
+/*
+  // dump mapping contents:
+  DebugTN("g_itemID2datapoint:",g_itemID2datapoint);
+  DebugTN("g_datapoint2itemID:",g_datapoint2itemID);
+*/
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -391,6 +408,31 @@ long getNodeFromDatapoint(string dpe)
   }
   LOG_TRACE("found??? nodeId= ",nodeId);
   return nodeId;
+}
+
+///////////////////////////////////////////////////////////////////////////
+//Function insertDatapointNodeMapping
+// 
+// inserts the node and dp in their mappings. Because it is an insert,
+// existing mappings with the same and higher node-id's must be updated.
+///////////////////////////////////////////////////////////////////////////
+void insertDatapointNodeMapping(int node, string dp)
+{
+  for(int i=dynlen(g_itemID2datapoint); i>=node && i>=1; i--)
+  {
+    g_itemID2datapoint[i+1] = g_itemID2datapoint[i];
+  }
+  g_itemID2datapoint[node] = dp;
+  
+  for(int i=1;i<=mappinglen(g_datapoint2itemID);i++)
+  {
+    int value = mappingGetValue(g_datapoint2itemID,i);
+    if(value >= node)
+    {
+      g_datapoint2itemID[mappingGetKey(g_datapoint2itemID,i)] = value+1;
+    }
+  }
+  g_datapoint2itemID[dp] = node;
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -524,11 +566,6 @@ void Navigator_HandleEventInitialize()
   
   navPMLinitialize();
   
-  mapping empty;
-  g_itemID2datapoint = empty;
-  g_datapoint2itemID = empty;
-  LOG_TRACE("global stuff lengths:",mappinglen(g_itemID2datapoint),mappinglen(g_datapoint2itemID));
-  
   g_initializing=true;
   
   setActiveXSupported();
@@ -548,15 +585,16 @@ void Navigator_HandleEventInitialize()
     treeList.visible    = TRUE;
   }
   
-  
   // manually control the initialization of the tree and tabviews
   InitializeTabViews();
-  InitializeTree();
+//  InitializeTree(); cannot do it here because tree will not be visible initially, only after double click. Strange but true
   
-  delay(1); // wait for the tree control to complete initialization
+//  delay(1); // wait for the tree control to complete initialization
   
   g_initializing = false;
 
+  TabViews_HandleEventSelectionChanged();
+  
   LOG_DEBUG("~Navigator_HandleEventInitialize()");
 }
 
@@ -605,9 +643,8 @@ void TabViews_HandleEventInitialize()
 ///////////////////////////////////////////////////////////////////////////
 void InitializeTabViews()
 {
-  LOG_TRACE("InitializeTabViews()");
+  LOG_DEBUG("InitializeTabViews()");
   shape tabCtrl = getTabCtrl();
-  tabCtrl.visible=FALSE;
   // hide all tabs
   int i=0;
   dyn_errClass err;
@@ -619,7 +656,7 @@ void InitializeTabViews()
     LOG_TRACE("registerVisible",i,setValueResult,err);
     i++;
   } while(dynlen(err)==0 && i<NR_OF_VIEWS && setValueResult==0);
-  LOG_TRACE("~InitializeTabViews()");
+  LOG_DEBUG("~InitializeTabViews()");
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -649,6 +686,10 @@ void TabViews_HandleEventSelectionChanged()
       }
     }
   }
+  else
+  {
+    LOG_DEBUG("TabViews_HandleEventSelectionChanged suppressed while initializing");
+  }
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -658,8 +699,7 @@ void TabViews_HandleEventSelectionChanged()
 ///////////////////////////////////////////////////////////////////////////
 void TreeCtrl_HandleEventInitialize()
 {
-  // the initialization of the main panel initializes the tree
-  // nothing should be done here
+  InitializeTree();
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -669,8 +709,13 @@ void TreeCtrl_HandleEventInitialize()
 ///////////////////////////////////////////////////////////////////////////
 void InitializeTree()
 {
-  LOG_TRACE("InitializeTree()");
+  LOG_DEBUG("InitializeTree()");
   dyn_errClass err;
+
+  mapping empty;
+  g_datapoint2itemID = empty;
+  dynClear(g_itemID2datapoint);
+  LOG_TRACE("global stuff lengths:",dynlen(g_itemID2datapoint),mappinglen(g_datapoint2itemID));
   
   shape treeCtrl = getTreeCtrl();
   idispatch items;
@@ -683,11 +728,11 @@ void InitializeTree()
   }
   else
   {
-//    treeCtrl.visible = false;
     fwTreeView_watchDog(); // prevent memory leak when closing controlling window
   }
   
-  dyn_string resources = navConfigGetResources();
+  // get top level resources. "" means no parent, 1 means: 1 level deep
+  dyn_string resources = navConfigGetResources("",1);
   LOG_TRACE("adding resources: ",resources);
   treeAddDatapoints(resources);
 
@@ -697,11 +742,9 @@ void InitializeTree()
   }
   else
   {
-    treeCtrl.visible = true;
   }
   
-  TabViews.visible=TRUE;
-  LOG_TRACE("~InitializeTree()");
+  LOG_DEBUG("~InitializeTree()");
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -714,39 +757,52 @@ void TreeCtrl_HandleEventOnSelChange(long Node)
 {
   if(g_curSelNode != Node)
   {
-	  g_curSelNode = Node;
-	  
-	  if(!g_initializing)
-	  {
-	    LOG_TRACE("TreeCtrl_HandleEventOnSelChange  ",Node);
-	    if(Node != 0)
-	    {
-	      string datapointPath;
-	      buildPathFromNode(Node, datapointPath);
-	      string dpViewConfig = navConfigGetViewConfig(datapointPath);
-	
-	      showView(dpViewConfig,datapointPath);
-	    }
-	  }
-	}
+    g_curSelNode = Node;
+   
+    if(!g_initializing)
+    {
+      LOG_TRACE("TreeCtrl_HandleEventOnSelChange  ",Node);
+      if(Node != 0)
+      {
+        string datapointPath;
+        buildPathFromNode(Node, datapointPath);
+        string dpViewConfig = navConfigGetViewConfig(datapointPath);
+ 
+        showView(dpViewConfig,datapointPath);
+      }
+    }
+    else
+    {
+      LOG_DEBUG("TreeCtrl_HandleEventOnSelChange suppressed while initializing ");
+    }
+  }
 }
 
 ///////////////////////////////////////////////////////////////////////////
-//Function TreeCtrl_EventOnCollapsed(long Node)
+//Function TreeCtrl_EventOnExpand(long Node)
 // 
-// called when a node is collapsed
+// expands a node in the Resources treeview
 ///////////////////////////////////////////////////////////////////////////
-void TreeCtrl_EventOnCollapsed(long Node)
+void TreeCtrl_HandleEventOnExpand(long Node)
 {
-}
-
-///////////////////////////////////////////////////////////////////////////
-//Function TreeCtrl_EventOnExpanded(long Node)
-// 
-// called when a node is expanded
-///////////////////////////////////////////////////////////////////////////
-void TreeCtrl_HandleEventOnExpanded(long Node)
-{
+  if(!g_initializing)
+  {
+    LOG_DEBUG("TreeCtrl_HandleEventOnExpand ",Node);
+    if(Node != 0)
+    {
+      string datapointPath;
+      buildPathFromNode(Node, datapointPath);
+ 
+      // get top level resources. "" means no parent, 1 means: 1 level deep
+      dyn_string resources = navConfigGetResources(datapointPath,1);
+      LOG_TRACE("adding resources: ",LOG_DYN(resources));
+      treeAddDatapoints(resources);
+    }
+  }
+  else
+  {
+    LOG_DEBUG("TreeCtrl_HandleEventOnExpand suppressed while initializing ");
+  }
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -852,40 +908,6 @@ void ButtonMaximize_HandleEventClick()
 }
 
 ///////////////////////////////////////////////////////////////////////////
-// TreeView_OnCollapse
-// 
-// called when an item is collapsed
-///////////////////////////////////////////////////////////////////////////
-TreeView_OnCollapse(unsigned pos)
-{
-  LOG_DEBUG("TreeView_OnCollapse",pos);
-	TreeCtrl_EventOnCollapsed(pos);
-
-  // call the default implementation?
-//  fwTreeView_defaultCollapse(pos);
-  
-  // the last line of code of each fwTreeView event handler MUST be the following:
-  id = -1; 
-}
-
-///////////////////////////////////////////////////////////////////////////
-// TreeView_OnExpand
-// 
-// called when an item is expanded
-///////////////////////////////////////////////////////////////////////////
-TreeView_OnExpand(unsigned pos)
-{
-  LOG_DEBUG("TreeView_OnExpand",pos);
-	TreeCtrl_EventOnExpanded(pos);
-
-  // call the default implementation?
-//  fwTreeView_defaultExpand(pos);
-  
-  // the last line of code of each fwTreeView event handler MUST be the following:
-  id = -1; 
-}
-
-///////////////////////////////////////////////////////////////////////////
 // TreeView_OnInit
 // 
 // called when the list is initialized
@@ -915,15 +937,18 @@ TreeView_OnSelect(unsigned pos)
 }
 
 ///////////////////////////////////////////////////////////////////////////
-// TreeView_OnRightClick
+// TreeView_OnExpand
 // 
-// called when the right mouse button is clicked on an item 
+// called when an item is expanded
 ///////////////////////////////////////////////////////////////////////////
-TreeView_OnRightClick(unsigned pos)
+TreeView_OnExpand(unsigned pos)
 {
-  LOG_DEBUG("TreeView_OnRightClick",pos);
+  LOG_DEBUG("TreeView_OnExpand",pos);
+  TreeCtrl_HandleEventOnExpand(pos);
+
+  // also call the default OnExpand implementation to expand the node
+  fwTreeView_defaultExpand(pos);
 
   // the last line of code of each fwTreeView event handler MUST be the following:
   id = -1; 
 }
-
