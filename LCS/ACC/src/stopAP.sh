@@ -1,3 +1,3 @@
-echo -n "Killing process "; cat $1
-kill -9 `cat $1`
-rm -f $1
+echo -n "Killing process "; cat $1.pid
+kill -9 `cat $1.pid`
+rm -f $1.pid $1.ps

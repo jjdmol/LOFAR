@@ -18,7 +18,7 @@
 //#  along with this program; if not, write to the Free Software
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
-//#  Note: This source is best read with tabstop 4.
+//#  Note: This source is read best with tabstop 4.
 //#
 //#  $Id$
 
@@ -41,11 +41,10 @@ namespace LOFAR {
 
 // define application controller states.
 enum ACState {  StateNone = 0, StateInitController,
-		StatePowerUpNodes, StatePowerDownNodes, StateCreatePSubset,
-	    StateStartupAppl,  StateDefineCmd,      StateInitCmd,
-	    StateRunCmd,       StatePauseCmd,       StateRecoverCmd, 
-		StateSnapshotCmd,  StateReinitCmd,      StateInfoCmd,
-		StateQuitCmd,      StateKillAppl,
+		StateCreatePSubset, StateStartupAppl,  StateDefineCmd,
+		StateInitCmd,		StateRunCmd,       StatePauseCmd,
+		StateRecoverCmd, 	StateSnapshotCmd,  StateReinitCmd,
+		StateInfoCmd,		StateQuitCmd,      StateKillAppl,
 		NR_OF_STATES
 };
 
@@ -98,8 +97,6 @@ private:
 	time_t	itsStateExpireTime;		
 
 	// (constant) timer values for the states
-	time_t	itsPowerUpNodesTime;
-	time_t	itsPowerDownNodesTime;
 	time_t	itsCreatePSubsetTime;
     time_t	itsStartupApplTime;
 	time_t	itsDefineCmdTime;

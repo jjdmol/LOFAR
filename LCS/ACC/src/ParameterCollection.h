@@ -18,13 +18,7 @@
 //#  along with this program; if not, write to the Free Software
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
-//#  Abstract:
-//#
-//#	 This class implements a container of key-value pairs. The KV pairs can
-//#  be read from a file or be merged with the values in another file.
-//#  The class also support the creation of subsets.
-//#
-//#  Note: This source is best read with tabstop 4.
+//#  Note: This source is read best with tabstop 4.
 //#
 //#  $Id$
 
@@ -111,7 +105,7 @@ public:
 	// @{
 
 	// Writes the Key-Values pair from the current ParCollection to the file.
-	void	writeFile   (const string& theFilename) const;
+	void	writeFile   (const string& theFilename, bool append = false) const;
 
 	// Writes the Key-Values pair from the current ParCollection to the 
 	// string buffer.

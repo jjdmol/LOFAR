@@ -39,12 +39,14 @@ libacc_la_SOURCES = \
 bin_PROGRAMS = ApplController ACDaemon
 
 ### ApplController ###
-ApplController_SOURCES      = ACCmdImpl.cc \
+ApplController_SOURCES      = ACDaemonComm.cc \
+							  ACCmdImpl.cc \
 							  CmdStack.cc \
 							  StateEngine.cc \
 							  APAdmin.cc \
 							  APAdminPool.cc \
 							  ProcRule.cc \
+							  PR_Shell.cc \
 							  ProcRuler.cc \
 							  ItemList.cc \
 							  ApplController.cc \

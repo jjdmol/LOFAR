@@ -18,7 +18,7 @@
 //#  along with this program; if not, write to the Free Software
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
-//#  Note: This source is best read with tabstop 4.
+//#  Note: This source is read best with tabstop 4.
 //#
 //#  $Id$
 
@@ -37,6 +37,7 @@
 #include <Transport/TH_Socket.h>
 #include <ACC/ApplControlServer.h>	//# communication stub
 #include <ACC/ACCmdImpl.h>			//# the real implementation
+#include <ACC/ACDaemonComm.h>
 #include <ACC/CmdStack.h>
 #include <ACC/StateEngine.h>
 #include <ACC/APAdminPool.h>
@@ -92,7 +93,7 @@ private:
 	Socket*				itsProcListener;	// For AP's to connect to
 	APAdminPool*		itsAPAPool;			// Communication with all AP's
 	ApplControlServer*	itsServerStub;		// Communication with AM
-	Socket*				itsDaemonSocket;	// Communication with ACDaemon
+	ACDaemonComm*		itsDaemonComm;    	// Communication with ACDaemon
 	time_t				itsCurTime;			// Current timestamp
 	bool				itsIsRunning;		// Alive or not
 

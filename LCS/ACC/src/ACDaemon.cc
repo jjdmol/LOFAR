@@ -27,8 +27,9 @@
 #include <arpa/inet.h>			// inet_ntoa
 #include <Common/LofarLogger.h>
 #include <Common/hexdump.h>		// TEMP!!!
-#include <ACC/ACDaemon.h>
 #include <ACC/ACRequest.h>
+#include <ACC/ACDaemon.h>
+#include <ACC/ACDaemonComm.h>
 
 namespace LOFAR {
   namespace ACC {
@@ -127,27 +128,34 @@ void ACDaemon::handlePingMessage()
 	LOG_TRACE_FLOW("Ping???");
 
 	// Read name of AC from ping message
-	char	buffer[ACREQUESTNAMESIZE];
+	char	buffer[ACREQUESTNAMESIZE+1];
 	int32 btsRead = itsPingSocket->read(static_cast<void*>(&buffer), 
-								  		ACREQUESTNAMESIZE);
-	if (btsRead != ACREQUESTNAMESIZE) {
+								  		ACREQUESTNAMESIZE+1);
+	if (btsRead != ACREQUESTNAMESIZE+1) {
 		LOG_TRACE_STAT_STR("Read on ping port retured: " << btsRead <<
-					   	   " iso " << ACREQUESTNAMESIZE);
+					   	   " iso " << ACREQUESTNAMESIZE+1);
 		return;
 	}
 
 	// search name in pool
-	ACRequest*	ACRPtr = itsACPool->search(buffer);
+	ACRequest*	ACRPtr = itsACPool->search(&buffer[1]);
 	if (!ACRPtr) {
 		LOG_TRACE_RTTI_STR ("Received ping from unknown applicationcontroller: " 
 					  << buffer << " (ignoring)");
 		return;
 	}
 
-	// remember ping time, update state.
+	if (buffer[0] == AC_LEAVING_SIGN) {
+		LOG_DEBUG_STR(&buffer[1] << " leaves ACDaemon pool");
+		itsACPool->remove(&buffer[1]);
+		return;
+	}
+
+	// assume first char is a AC_ALIVE_SIGN, remember ping time, update state.
 	LOG_TRACE_COND_STR("AC " << ACRPtr->itsRequester << " is alive");
 	ACRPtr->itsPingtime = time(0);
 	ACRPtr->itsState    = ACRok;
+	
 }
 
 //
@@ -169,6 +177,7 @@ void ACDaemon::handleACRequest()
 	if (btsRead != reqSize) {
 		LOG_INFO_STR ("ILLEGAL REQUEST SIZE (" << btsRead << 
 								" iso " << reqSize << "), IGNORING REQUEST");
+		delete dataSocket;
 		return;
 	}
 	aRequest.itsRequester[ACREQUESTNAMESIZE-1] = '\0'; // be save
@@ -217,8 +226,9 @@ void ACDaemon::handleACRequest()
 		LOG_WARN_STR ("REQUEST FOR " << aRequest.itsRequester << 
 					  " COULD NOT BE WRITTEN (" << btsWritten << " iso "  <<
 					  reqSize << ")");
-		return;
 	}
+
+	delete dataSocket;
 }
 
 //

@@ -18,7 +18,7 @@
 //#  along with this program; if not, write to the Free Software
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
-//#  Note: This source is best read with tabstop 4.
+//#  Note: This source is read best with tabstop 4.
 //#
 //#  $Id$
 
@@ -42,37 +42,35 @@ namespace LOFAR {
 class ProcRule
 {
 public:
-	ProcRule(const string&	aName,
-			 const string&  aStartCmd,
-			 const string&  aStopCmd,
-			 const string&  aNodeName);
-	~ProcRule() {};
+	ProcRule(const string&	aNodeName,
+			 const string&  aProcName,
+			 const string&  aParamfile);
+	virtual ~ProcRule() {};
 
-	//# Copying is allowed
-	//# ProcRule(const ProcRule&	that);
-	//# ProcRule& operator=(const ProcRule& that);
+	// The start and stop commands to be implemented.
+	virtual bool  		start() = 0;
+	virtual bool  		stop()  = 0;
+	virtual string		getType() const = 0;
+	virtual ProcRule*	clone()   const = 0;
 
-	// The start and stop commands.
-	bool start();
-	bool stop();
-	bool isStarted() const;
-
-	string	getName() const;
-	void	markAsStopped();
+	const string&	getName()   const;
+	bool 			isStarted() const;
+	void 			markAsStopped();
 
 
 	friend std::ostream& operator<<(std::ostream& os, const ProcRule& aPR);
 
-private:
+protected:
 	// Default construction not allowed
 	ProcRule();
 
 
 	//# --- Datamembers ---
-	string		itsName;
+	string		itsNodeName;
+	string		itsProcName;
+	string		itsParamfile;
 	string		itsStartCmd;
 	string		itsStopCmd;
-	string		itsNodeName;
 	bool		itsIsStarted;
 };
 
@@ -81,9 +79,9 @@ inline bool ProcRule::isStarted() const
 	return (itsIsStarted);
 }
 
-inline string ProcRule::getName() const
+inline const string& ProcRule::getName() const
 {
-	return (itsName);
+	return (itsProcName);
 }
 
 inline void	ProcRule::markAsStopped()

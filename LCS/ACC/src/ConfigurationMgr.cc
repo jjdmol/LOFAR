@@ -22,7 +22,7 @@
 //#
 //#  Note: TRACE_CALC level is used for database queries
 //#
-//#  This source is best read with tabstop = 4
+//#  Note:This source is read best with tabstop 4.
 //#
 //#  $Id$
 

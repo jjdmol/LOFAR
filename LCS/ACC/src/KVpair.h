@@ -18,7 +18,7 @@
 //#  along with this program; if not, write to the Free Software
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
-//#  Note: This source is best read with tabstop 4.
+//#  Note: This source is read best with tabstop 4.
 //#
 //#  $Id$
 
@@ -41,12 +41,12 @@ namespace LOFAR {
 class KVpair : public pair<string, string>
 {
 public:
-	KVpair(const string&	aKey, const string&		aValue);
-	KVpair(const string&	aKey, bool				aValue);
-	KVpair(const string&	aKey, int				aValue);
-	KVpair(const string&	aKey, double			aValue);
-	KVpair(const string&	aKey, float				aValue);
-	KVpair(const string&	aKey, time_t			aValue);
+	KVpair(const string& aKey, const string& aValue, bool genTimestamp = false);
+	KVpair(const string& aKey, bool			 aValue, bool genTimestamp = false);
+	KVpair(const string& aKey, int			 aValue, bool genTimestamp = false);
+	KVpair(const string& aKey, double		 aValue, bool genTimestamp = false);
+	KVpair(const string& aKey, float		 aValue, bool genTimestamp = false);
+	KVpair(const string& aKey, time_t		 aValue, bool genTimestamp = false);
 
 	~KVpair();
 

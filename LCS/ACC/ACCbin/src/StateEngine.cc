@@ -41,7 +41,7 @@ static CmdSeq_t theirCmdSeqTable[] = {
 { ACCmdNone,	
 	{ StateNone,		   StateNone,		  StateNone,          StateNone } },
 { ACCmdBoot,	
-	{ StateInitController, StatePowerUpNodes, StateCreatePSubset, StateNone } },
+	{ StateInitController, StateCreatePSubset,StateNone,          StateNone } },
 { ACCmdDefine,	
 	{ StateStartupAppl,	   StateDefineCmd,	  StateNone,          StateNone } },
 { ACCmdInit,	
@@ -61,9 +61,7 @@ static CmdSeq_t theirCmdSeqTable[] = {
 { ACCmdInfo,	
 	{ StateInfoCmd,		   StateNone,		  StateNone,          StateNone } },
 { ACCmdQuit,	
-	{ StateQuitCmd,		   StateKillAppl,	  StateNone,          StateNone } },
-{ ACCmdShutdown,
-	{ StatePowerDownNodes, StateNone,		  StateNone,          StateNone } }
+	{ StateQuitCmd,		   StateKillAppl,	  StateNone,          StateNone } }
 };
 
 // Array with the max lifetime times of the states
@@ -87,20 +85,18 @@ StateEngine::~StateEngine()
 void StateEngine::init(const ParameterSet*	aPS)
 {
 	// (constant) timer values for the states
-	StateLifeTime[StatePowerUpNodes]  = aPS->getTime("AC.timeout.powerup");
-	StateLifeTime[StatePowerDownNodes]= aPS->getTime("AC.timeout.powerdown");
-	StateLifeTime[StateCreatePSubset] = aPS->getTime("AC.timeout.createsubsets");
-    StateLifeTime[StateStartupAppl]	  = aPS->getTime("AC.timeout.startup");
-	StateLifeTime[StateDefineCmd]	  = aPS->getTime("AC.timeout.define");
-	StateLifeTime[StateInitCmd]		  = aPS->getTime("AC.timeout.init");
-    StateLifeTime[StateRunCmd]		  = aPS->getTime("AC.timeout.run");
-	StateLifeTime[StatePauseCmd]	  = aPS->getTime("AC.timeout.pause");
-	StateLifeTime[StateRecoverCmd]	  = aPS->getTime("AC.timeout.recover");
-	StateLifeTime[StateSnapshotCmd]	  = aPS->getTime("AC.timeout.snapshot");
-	StateLifeTime[StateReinitCmd]	  = aPS->getTime("AC.timeout.reinit");
-	StateLifeTime[StateInfoCmd]		  = aPS->getTime("AC.timeout.info");
-	StateLifeTime[StateQuitCmd]		  = aPS->getTime("AC.timeout.quit");
-	StateLifeTime[StateKillAppl]	  = aPS->getTime("AC.timeout.kill");
+	StateLifeTime[StateCreatePSubset]= aPS->getTime("AC.timeout.createsubsets");
+    StateLifeTime[StateStartupAppl]	 = aPS->getTime("AC.timeout.startup");
+	StateLifeTime[StateDefineCmd]	 = aPS->getTime("AC.timeout.define");
+	StateLifeTime[StateInitCmd]		 = aPS->getTime("AC.timeout.init");
+    StateLifeTime[StateRunCmd]		 = aPS->getTime("AC.timeout.run");
+	StateLifeTime[StatePauseCmd]	 = aPS->getTime("AC.timeout.pause");
+	StateLifeTime[StateRecoverCmd]	 = aPS->getTime("AC.timeout.recover");
+	StateLifeTime[StateSnapshotCmd]	 = aPS->getTime("AC.timeout.snapshot");
+	StateLifeTime[StateReinitCmd]	 = aPS->getTime("AC.timeout.reinit");
+	StateLifeTime[StateInfoCmd]		 = aPS->getTime("AC.timeout.info");
+	StateLifeTime[StateQuitCmd]		 = aPS->getTime("AC.timeout.quit");
+	StateLifeTime[StateKillAppl]	 = aPS->getTime("AC.timeout.kill");
 }
 
 void StateEngine::reset()
@@ -173,8 +169,6 @@ string StateEngine::stateStr(uint16	stateNr) const
 	static char* const stateNames[] = {
 		"Idle",
 		"InitController",
-		"PowerUpNodes",
-		"PowerDownNodes",
 		"CreatePSubset",
 		"StartupAppl",
 		"DefineCmd",
