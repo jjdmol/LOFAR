@@ -133,11 +133,13 @@ void WH_PSS3::process()
   vector<int> antennas =                                   // Should this be a KS parameter?
     (const_cast<KeyValueMap&>(stratArgs))["antennas"].getVecInt();
   bool calcUVW = itsArgs.getBool("calcUVW", false);
+  bool lockMappedMem = itsArgs.getBool("lockMappedMem", false);
 
   bool outputAllIter = itsArgs.getBool("writeAllSols", true);
   itsCal = new MeqCalibrater(msName, meqModel, skyModel, dbType, 
 			     dbName, dbHost, dbPwd, itsDDID,
-			     antennas, itsModelType, calcUVW);
+			     antennas, itsModelType, calcUVW,
+			     lockMappedMem);
   
   // Create a strategy object
   LOG_TRACE_OBJ_STR("Strategy number: " << wo->getStrategyNo());
