@@ -25,7 +25,7 @@
 #include <Common/lofar_iostream.h>
 #include <CEPFrame/Step.h>
 #include <CEPFrame/Composite.h>
-#include <Transport/BaseSim.h>
+#include <Transport/TH_Mem.h>
 #include <CEPFrame/WH_Example.h>
 #include <CEPFrame/Profiler.h>
 #include <Common/Debug.h>
@@ -51,9 +51,6 @@ void doIt (Composite& comp, const std::string& name, int nsteps)
 
     cout << endl << "DUMP Data from last Processing step: " << endl;
     comp.dump ();
-    cout << endl << "END OF COMPOSIT on node " 
-       << TRANSPORTER::getCurrentRank () 
-       << endl;
  
     comp.postprocess();
   }
@@ -76,13 +73,6 @@ int main (int argc, const char *argv[])
 {
   // Set trace level.
   Debug::initLevels (argc, argv);
-  // initialise MPI environment
-  TRANSPORTER::init(argc,argv);
-  int rank = TRANSPORTER::getCurrentRank ();
-  unsigned int size = TRANSPORTER::getNumberOfNodes();
-  int appl = Step::getCurAppl();
-  cout << "CEPFrame Processor " << rank << " of " << size
-       << " operational  (appl=" << appl << ')' << endl;
 
   // A simple example. Four steps connected to each other.
   // Each WorkHolder has a single DataHolder.
@@ -106,12 +96,12 @@ int main (int argc, const char *argv[])
     comp1.addStep (step2);
     comp1.addStep (step3);
     comp1.addStep (step4);
-    step4.connectInput (&step3, TRANSPORTER(), false);
-    step3.connectInput (&step2, TRANSPORTER(), false );
-    step2.connectInput (&step1, TRANSPORTER(), false);
+    step4.connectInput (&step3, TH_Mem(), false);
+    step3.connectInput (&step2, TH_Mem(), false );
+    step2.connectInput (&step1, TH_Mem(), false);
     // Connect the output of the last step to the overall Simul WorkHolder.
     Step* stepPtr = &step4;
-    comp1.connectOutputToArray (&stepPtr, 1,0,0, TRANSPORTER(), false);
+    comp1.connectOutputToArray (&stepPtr, 1,0,0, TH_Mem(), false);
     // Run the simulation.
     doIt (comp1, whex.getName(), 10);
   }
@@ -134,10 +124,10 @@ int main (int argc, const char *argv[])
     comp1.addStep (step1);
     comp1.addStep (step2);
     comp1.addStep (step3);
-    step3.connectInput (&step2, TRANSPORTER(), false);
-    step2.connectInput (&step1, TRANSPORTER(), false);
+    step3.connectInput (&step2, TH_Mem(), false);
+    step2.connectInput (&step1, TH_Mem(), false);
     Step* stepPtr = &step3;
-    comp1.connectOutputToArray (&stepPtr, 1, 0, 0, TRANSPORTER(), false);
+    comp1.connectOutputToArray (&stepPtr, 1, 0, 0, TH_Mem(), false);
     doIt (comp1, whex.getName(), 5);
   }
 
@@ -164,10 +154,10 @@ int main (int argc, const char *argv[])
     Step* stepPtrs[2];
     stepPtrs[0] = &step2a;
     stepPtrs[1] = &step2b;
-    step3.connectInputArray (stepPtrs, 2, TRANSPORTER(), false);
-    step1.connectOutputArray (stepPtrs, 2, TRANSPORTER(), false);
+    step3.connectInputArray (stepPtrs, 2, TH_Mem(), false);
+    step1.connectOutputArray (stepPtrs, 2, TH_Mem(), false);
     stepPtrs[0] = &step3;
-    comp1.connectOutputToArray (stepPtrs, 1, 0, 0, TRANSPORTER(), false);
+    comp1.connectOutputToArray (stepPtrs, 1, 0, 0, TH_Mem(), false);
     doIt (comp1, whex.getName(), 5);
   }
 
@@ -190,27 +180,27 @@ int main (int argc, const char *argv[])
     Composite composite1 (whcomp1, "simcomp1", false);
     composite1.addStep (step2);
     composite1.addStep (step3);
-    step3.connectInput (&step2, TRANSPORTER(), false);
+    step3.connectInput (&step2, TH_Mem(), false);
     Step* stepPtr = &step2;
-    composite1.connectInputToArray (&stepPtr, 1, 0, 0, TRANSPORTER(), false);
+    composite1.connectInputToArray (&stepPtr, 1, 0, 0, TH_Mem(), false);
     stepPtr = &step3;
-    composite1.connectOutputToArray (&stepPtr, 1, 0, 0, TRANSPORTER(), false);
+    composite1.connectOutputToArray (&stepPtr, 1, 0, 0, TH_Mem(), false);
     // Create the second composite and fill it
     WH_Example whcomp2("Composite2");
     Composite composite2 (whcomp2, "simcomp2", false);
     composite2.addStep (composite1);
     composite2.addStep (step4);
-    step4.connectInput (&composite1, TRANSPORTER(), false);
+    step4.connectInput (&composite1, TH_Mem(), false);
     stepPtr = &composite1;
-    composite2.connectInputToArray (&stepPtr, 1, 0, 0, TRANSPORTER(), false);
+    composite2.connectInputToArray (&stepPtr, 1, 0, 0, TH_Mem(), false);
     stepPtr = &step4;
-    composite2.connectOutputToArray (&stepPtr, 1, 0, 0, TRANSPORTER(), false);
+    composite2.connectOutputToArray (&stepPtr, 1, 0, 0, TH_Mem(), false);
     // Finally create the total Simul.
     comp1.addStep (step1);
     comp1.addStep (composite2);
-    composite2.connectInput (&step1, TRANSPORTER(), false);
+    composite2.connectInput (&step1, TH_Mem(), false);
     stepPtr = &composite2;
-    comp1.connectOutputToArray (&stepPtr, 1, 0, 0, TRANSPORTER(), false);
+    comp1.connectOutputToArray (&stepPtr, 1, 0, 0, TH_Mem(), false);
     doIt (comp1, whex.getName(), 10);
   }
 
@@ -235,11 +225,11 @@ int main (int argc, const char *argv[])
     comp1.addStep (step2);
     comp1.addStep (step3);
     comp1.addStep (step4);
-    comp1.connect ("aStep_0", "aStep_1", TRANSPORTER(), false);
-    comp1.connect ("aStep_1", "aStep_2", TRANSPORTER(), false);
-    comp1.connect ("aStep_2", "aStep_3", TRANSPORTER(), false);
+    comp1.connect ("aStep_0", "aStep_1", TH_Mem(), false);
+    comp1.connect ("aStep_1", "aStep_2", TH_Mem(), false);
+    comp1.connect ("aStep_2", "aStep_3", TH_Mem(), false);
     // Connect the output of the last step to the overall Simul WorkHolder.
-    comp1.connect ("aStep_3", ".", TRANSPORTER(), false);
+    comp1.connect ("aStep_3", ".", TH_Mem(), false);
     // Run the simulation.
     doIt (comp1, whex.getName(), 10);
   }
@@ -262,9 +252,9 @@ int main (int argc, const char *argv[])
     comp1.addStep (step1);
     comp1.addStep (step2);
     comp1.addStep (step3);
-    comp1.connect ("aStep_0", "aStep_1", TRANSPORTER(), false);
-    comp1.connect ("aStep_1", "aStep_2", TRANSPORTER(), false);
-    comp1.connect ("aStep_2", ".", TRANSPORTER(), false);
+    comp1.connect ("aStep_0", "aStep_1", TH_Mem(), false);
+    comp1.connect ("aStep_1", "aStep_2", TH_Mem(), false);
+    comp1.connect ("aStep_2", ".", TH_Mem(), false);
     doIt (comp1, whex.getName(), 5);
   }
 
@@ -288,11 +278,11 @@ int main (int argc, const char *argv[])
     comp1.addStep (step2a);
     comp1.addStep (step2b);
     comp1.addStep (step3);
-    comp1.connect ("aStep_0.out_0", "aStep_1", TRANSPORTER(), false);
-    comp1.connect ("aStep_0.out_1", "aStep_2", TRANSPORTER(), false);
-    comp1.connect ("aStep_1", "aStep_3.in_0", TRANSPORTER(), false);
-    comp1.connect ("aStep_2", "aStep_3.in_1", TRANSPORTER(), false);
-    comp1.connect ("aStep_3.out_0", ".out_0", TRANSPORTER(), false);
+    comp1.connect ("aStep_0.out_0", "aStep_1", TH_Mem(), false);
+    comp1.connect ("aStep_0.out_1", "aStep_2", TH_Mem(), false);
+    comp1.connect ("aStep_1", "aStep_3.in_0", TH_Mem(), false);
+    comp1.connect ("aStep_2", "aStep_3.in_1", TH_Mem(), false);
+    comp1.connect ("aStep_3.out_0", ".out_0", TH_Mem(), false);
     doIt (comp1, whex.getName(), 5);
   }
 
@@ -315,25 +305,23 @@ int main (int argc, const char *argv[])
     Composite composite1 (whcomp1, "simcomp1", false);
     composite1.addStep (step2);
     composite1.addStep (step3);
-    composite1.connect (".", "Step2", TRANSPORTER(), false);
-    composite1.connect ("Step2", "Step3", TRANSPORTER(), false);
-    composite1.connect ("Step3", ".", TRANSPORTER(), false);
+    composite1.connect (".", "Step2", TH_Mem(), false);
+    composite1.connect ("Step2", "Step3", TH_Mem(), false);
+    composite1.connect ("Step3", ".", TH_Mem(), false);
     // Create the second composite and fill it
     WH_Example whcomp2("Composite2");
     Composite composite2 (whcomp2, "simcomp2", false);
     composite2.addStep (composite1);
     composite2.addStep (step4);
-    composite2.connect (".", "simcomp1", TRANSPORTER(), false);
-    composite2.connect ("simcomp1", "Step4", TRANSPORTER(), false);
-    composite2.connect ("Step4", ".", TRANSPORTER(), false);
+    composite2.connect (".", "simcomp1", TH_Mem(), false);
+    composite2.connect ("simcomp1", "Step4", TH_Mem(), false);
+    composite2.connect ("Step4", ".", TH_Mem(), false);
     // Finally create the total Simul.
     comp1.addStep (step1);
     comp1.addStep (composite2);
-    comp1.connect ("Step1", "simcomp2", TRANSPORTER(), false);
-    comp1.connect ("simcomp2", ".", TRANSPORTER(), false);
+    comp1.connect ("Step1", "simcomp2", TH_Mem(), false);
+    comp1.connect ("simcomp2", ".", TH_Mem(), false);
     doIt (comp1, whex.getName(), 10);
   }
 
-  //     close environment
-  TRANSPORTER::finalize();
 }
