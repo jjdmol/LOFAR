@@ -1,6 +1,6 @@
-connect db='tanaka', dbtype='postgres', tablename='meqmodel'
+connect db='schaaf', dbtype='postgres', tablename='meqmodel'
 remove *
-connect db='tanaka', dbtype='postgres', tablename='skymodel'
+connect db='schaaf', dbtype='postgres', tablename='skymodel'
 remove *
 removedef *
 adddef RA.CP1 values=2.73403

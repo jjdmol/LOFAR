@@ -91,8 +91,8 @@ void BlackBoardDemo::define(const KeyValueMap& params)
   // Optional: Get any extra params from input
   int controlRead = params.getInt("cRead", 0);  // If 1: Controller reads from 
                                                 // database
-  int itsNumberKS = 2;       // The total number of Knowledge Sources
-  char databaseName[10] = "meijeren";   // !!!! Change to own database !!!!
+  int itsNumberKS = 6;       // The total number of Knowledge Sources
+  char databaseName[10] = "schaaf";   // !!!! Change to own database !!!!
 
   DH_Postgresql::UseDatabase("10.87.2.50", databaseName, "postgres"); 
 

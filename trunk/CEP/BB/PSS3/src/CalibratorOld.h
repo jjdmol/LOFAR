@@ -18,7 +18,7 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //
-// $Id: 
+// $Id$
 
 // The CalibratorOld class is a wrapper class for MeqCallibratorImpl.
 // It hides all AIPS details in its implementation to blackboard.

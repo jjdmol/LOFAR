@@ -61,7 +61,7 @@ bool SI_WaterCal::execute(vector<string>& parmNames,
     if (!itsInitialized)
     {
       itsCal->Initialize();
-      //itsCal->ShowSettings();
+      itsCal->ShowSettings();
       itsInitialized = true;
     }
     for (unsigned int i=0; i < parmNames.size(); i++)      // Add all parms
