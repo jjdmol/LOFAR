@@ -63,7 +63,6 @@ void MeqStoredParmPolc::readPolcs (const MeqDomain& domain)
     // do not overlap.
     // Not implemented yet!!!
   }
-  cout << "Parm " << getName() << ' ' << polcs[0].getCoeff() << endl;
   setPolcs (polcs);
   itsDomain = domain;
 }
