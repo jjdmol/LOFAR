@@ -56,7 +56,8 @@ int main (int argc, const char** argv) {
 
   kvm.show(cout);
 
-  INIT_LOGGER(loggerfile);
+  //INIT_LOGGER(loggerfile);
+  INIT_LOGGER("CorrelatorLogger");
 
 #ifdef HAVE_MPI
   TH_MPI::init(argc, argv);
