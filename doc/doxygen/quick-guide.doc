@@ -104,7 +104,7 @@ please refer to the Doxygen User Manual.
   \ref dqg_cmdingroup "\\ingroup" command. To avoid putting a 
   \ref dqg_cmdingroup "\\ingroup" command in the documentation of each member,
   you can also group members together using the open and close group markers
-  <code>@{</code> and <code>@}</code>.
+  <code>\@{</code> and <code>\@}</code>.
 
   You can use \ref dqg_cmdaddtogroup "\\addtogroup" instead of 
   \ref dqg_cmddefgroup "\\defgroup"; in that case Doxygen will not enforce
@@ -130,7 +130,7 @@ please refer to the Doxygen User Manual.
   that that default grouping is wrong.
 
   A member group is defined by the pair of open and close group markers
-  <code>@{</code> and <code>@}</code> and anything that goes in
+  <code>\@{</code> and <code>\@}</code> and anything that goes in
   between. Nesting of member groups is not allowed.
 
   \par Example:
@@ -247,7 +247,7 @@ used when documenting LOFAR software. It contains the following subsections:
 
   This command turns a comment block into a header definition of a 
   \ref dqg_memgroup "member group". The comment block should be followed by a 
-  <code>//\@{ ... //\@}</code> block containing the members of the group.
+  <code>// \@{ ... // \@}</code> block containing the members of the group.
 
 
 \ref dqg_contents "[Back to Contents]"
