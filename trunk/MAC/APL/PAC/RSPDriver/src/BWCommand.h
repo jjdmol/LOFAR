@@ -1,3 +1,5 @@
+//#  -*- mode: c++ -*-
+//#
 //#  BWCommand.h: Beamformer Weights settings command.
 //#
 //#  Copyright (C) 2002-2004

@@ -106,13 +106,14 @@ GCFEvent::TResult EPAStub::connected(GCFEvent& e, GCFPortInterface& port)
   
   switch (e.signal)
   {
-      case F_ENTRY:
+  case F_ENTRY:
       {
 	  START_TEST("connected", "The connected state of the EPAStub");
       }
       break;
 
-      case F_DISCONNECTED:
+
+  case F_DISCONNECTED:
       {
 	  port.close();
 
@@ -120,15 +121,15 @@ GCFEvent::TResult EPAStub::connected(GCFEvent& e, GCFPortInterface& port)
       }
       break;
 
-      case F_EXIT:
+  case F_EXIT:
       {
 	  STOP_TEST();
       }
       break;
 
-      default:
-	  status = GCFEvent::NOT_HANDLED;
-	  break;
+  default:
+      status = GCFEvent::NOT_HANDLED;
+      break;
   }
 
   return status;

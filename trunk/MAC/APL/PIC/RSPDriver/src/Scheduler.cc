@@ -40,35 +40,35 @@ Scheduler::~Scheduler()
 {
   /* clear the various queues */
   while (!m_later_queue.empty())
-  {
+    {
       Command* c = m_later_queue.top();
       delete c;
       m_later_queue.pop();
-  }
+    }
   while (!m_now_queue.empty())
-  {
+    {
       Command* c = m_now_queue.top();
       delete c;
       m_now_queue.pop();
-  }
+    }
   while (!m_periodic_queue.empty())
-  {
+    {
       Command* c = m_periodic_queue.top();
       delete c;
       m_periodic_queue.pop();
-  }
+    }
   while (!m_done_queue.empty())
-  {
+    {
       Command* c = m_done_queue.top();
       delete c;
       m_done_queue.pop();
-  }
+    }
   while (!m_syncactions.empty())
-  {
+    {
       SyncAction* sa = m_syncactions.top();
       delete sa;
       m_syncactions.pop();
-  }
+    }
 }
 
 GCFEvent::TResult Scheduler::run(GCFEvent& event, GCFPortInterface& port)
@@ -77,7 +77,7 @@ GCFEvent::TResult Scheduler::run(GCFEvent& event, GCFPortInterface& port)
   const GCFTimerEvent* timeout = static_cast<const GCFTimerEvent*>(&event);
   
   if (F_TIMER == event.signal)
-  {
+    {
       LOG_INFO("Scheduler::run");
 
       setCurrentTime(timeout->sec, 0);
@@ -87,11 +87,11 @@ GCFEvent::TResult Scheduler::run(GCFEvent& event, GCFPortInterface& port)
       status = syncCache(event, port);
       m_cache.swapBuffers();
       completeCommands();
-  }
+    }
   else
-  {
+    {
       LOG_ERROR("received invalid event != F_TIMER");
-  }
+    }
 
   return status;
 }
@@ -114,7 +114,7 @@ Timestamp Scheduler::enter(Command* command)
 
   /* determine at which time the command can actually be carried out */
   if (t.sec() < m_current_time.sec() + 10)
-  {
+    {
 #if 0
       struct timeval tv;
       m_current_time.get(&tv);
@@ -122,7 +122,7 @@ Timestamp Scheduler::enter(Command* command)
       t.set(tv);
 #endif
       t = m_current_time + 10;
-  }
+    }
 
   return t;
 }
@@ -140,45 +140,45 @@ void Scheduler::scheduleCommands()
 {
   /* move appropriate client commands to the now queue */
   while (!m_later_queue.empty())
-  {
+    {
       Command* command = m_later_queue.top();
 
       if (m_current_time > command->getTimestamp() + 1)
-      {
+	{
 	  /* discard old commands, the're too late! */
 	  LOG_WARN("discarding late command");
 
 	  m_later_queue.pop();
 	  delete command;
-      }
+	}
       else if (m_current_time == command->getTimestamp() + 1)
-      {
+	{
 	  m_now_queue.push(command);
 	  m_later_queue.pop();
-      }
+	}
       else break;
-  }
+    }
 
 #if 0
   /* copy period commands to the now queue */
   while (!m_period_queue.empty())
-  {
+    {
       Command * command = m_period_queue.top();
 
       struct timeval now;
       m_current_time.get(&now);
       if (0 == (now.tv_sec + 1 % command->getPeriod()))
-      {
+	{
 	  /* copy the command and push on the now queue */
-      }
-  }
+	}
+    }
 #endif
 }
 
 void Scheduler::processCommands()
 {
   while (!m_now_queue.empty())
-  {
+    {
       Command* command = m_now_queue.top();
 
       /* let the command apply its changes to the cache */
@@ -187,7 +187,7 @@ void Scheduler::processCommands()
       /* move from the now queue to the done queue */
       m_now_queue.pop();
       m_done_queue.push(command);
-  }
+    }
 }
 
 GCFEvent::TResult Scheduler::syncCache(GCFEvent& event, GCFPortInterface& port)
@@ -198,13 +198,13 @@ GCFEvent::TResult Scheduler::syncCache(GCFEvent& event, GCFPortInterface& port)
   std::priority_queue<SyncAction*> runqueue = m_syncactions;
 
   if (!runqueue.empty())
-  {
+    {
       SyncAction* action = runqueue.top();
 
       status = action->dispatch(event, port);
 
       if (action->isFinal()) runqueue.pop();
-  }
+    }
 
   return status;
 }
@@ -212,13 +212,13 @@ GCFEvent::TResult Scheduler::syncCache(GCFEvent& event, GCFPortInterface& port)
 void Scheduler::completeCommands()
 {
   while (!m_done_queue.empty())
-  {
+    {
       Command* command = m_done_queue.top();
 
       command->complete(m_cache.getFront());
 
       m_done_queue.pop();
       delete command;
-  }
+    }
 }
 
