@@ -125,7 +125,7 @@ BlobOStream& operator<< (BlobOStream& bs, const blitz::Array<T,NDIM>& arr)
 }
 
 template<typename T, uint NDIM>
-BlobIStream& operator>> (BlobIStream& bs, blitz::array<T,NDIM>& arr)
+BlobIStream& operator>> (BlobIStream& bs, blitz::Array<T,NDIM>& arr)
 {
   bs.getStart (LOFAR::typeName((const T**)0));
   bool fortranOrder;
@@ -139,7 +139,7 @@ BlobIStream& operator>> (BlobIStream& bs, blitz::array<T,NDIM>& arr)
   if (arr.isStorageContiguous()) {
     getBlobArrayData (bs, arr.dataFirst(), arr.numElements());
   } else {
-    blitz::array<T,NDIM>& arrc(shape);
+    blitz::Array<T,NDIM>& arrc(shape);
     getBlobArrayData (bs, arrc.dataFirst(), arrc.numElements());
     arr = arrc;
   }
