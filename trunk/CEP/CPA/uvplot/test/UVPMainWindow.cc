@@ -755,10 +755,8 @@ try
               std::cout << "Receiving DATA " << id.toString() << std::endl;
               tile = ref;
               LoCube_fcomplex data = tile->data();
-              //              int ncorr = tile.deref().ncorr();
-              //int nfreq = tile.deref().nfreq();
-              int ncorr = data.shape()[0];
-              int nfreq = data.shape()[1];
+              int ncorr = tile.deref().ncorr();
+              int nfreq = tile.deref().nfreq();
               int ntime = tile.deref().ntime();
               int ant1  = tile.deref().antenna1();
               int ant2  = tile.deref().antenna2();
@@ -801,7 +799,7 @@ try
                     } else if(ColumnName == "MODEL_DATA") {
                       data = iter.f_predict(corr);
                     } else if(ColumnName == "RESIDUAL_DATA"){
-                      //data = iter.f_residuals(corr);
+                      data = iter.f_residuals(corr);
                     } else if(ColumnName == ""){
                       data = iter.f_data(corr);                      
                     }
