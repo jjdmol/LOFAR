@@ -36,6 +36,13 @@ namespace LCS
       return TPersistentObject<T>::retrieve(query, maxObjects);
     }
 
+    template <typename T>
+    TPersistentObject<T> 
+    PersistenceBroker::retrieve(const ObjectId& oid) const
+    {
+      return TPersistentObject<T>::retrieve(oid);
+    }
+
   } // namespace PL
 
 } // namespace LCS
