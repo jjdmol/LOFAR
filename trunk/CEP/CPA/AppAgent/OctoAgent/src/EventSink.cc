@@ -69,32 +69,57 @@ void EventSink::close ()
 }
 
 //##ModelId=3E26CAE001BA
-bool EventSink::mapReceiveEvent(HIID &out, const HIID &in) const
+bool EventSink::mapReceiveEvent (HIID &out, const HIID &in) const
 {
+  // check the receive map
   EMCI iter = receive_map.find(in);
-  // is it in the input map?
-  if( iter == receive_map.end() )
+  if( iter != receive_map.end() )
+  {
+    out = iter->second.id; // found it
+    return True;
+  }
+  // not explicitly mapped -- have we got a matching default prefix then
+  if( default_receive_prefix.size() && in.prefixedBy(default_receive_prefix) )
+  {
+    // strip off prefix and return
+    out = in.subId(default_receive_prefix.size());
+    return True;
+  }
+  else
     return False;
-  out = iter->second.id;
-  return True;
 }
 
 //##ModelId=3E2FEAD10188
-bool EventSink::mapPostEvent(HIID &out, const HIID &in) const
+bool EventSink::mapPostEvent (HIID &out, const HIID &in) const
 {
+  // is the event explicitly in the post map?
   EMCI iter = post_map.find(in);
-  // is it in the input map?
-  if( iter == post_map.end() )
+  if( iter != post_map.end() )
+  {
+    out = iter->second.id;
+    return True;
+  }
+  // have we got a default prefix?
+  if( default_post_prefix.size() )
+  {
+    out = default_post_prefix | in;
+    return True;
+  }
+  else
     return False;
-  out = iter->second.id;
-  return True;
+}
+
+//##ModelId=3E8C47930062
+void EventSink::solicitEvent (const HIID &mask)
+{
+  // check if mask is a real 
 }
 
 //##ModelId=3E096F2103B3
-int EventSink::getEvent (HIID &id,ObjRef &data, const HIID &mask, int wait)
+int EventSink::getEvent (HIID &id,ObjRef &data,const HIID &mask,int wait,HIID &source)
 {
   FailWhen(!multiplexer,"no mux attached");
-  return multiplexer->getEvent(id,data,mask,wait,my_multiplex_id);
+  return multiplexer->getEvent(id,data,mask,wait,source,my_multiplex_id);
 }
 
 //##ModelId=3E0918BF02F0
@@ -105,7 +130,8 @@ int EventSink::hasEvent (const HIID &mask)
 }
 
 //##ModelId=3E2FD67D0246
-void EventSink::postEvent (const HIID &id,const ObjRef::Xfer &data)
+void EventSink::postEvent (const HIID &id,const ObjRef::Xfer &data,
+                           const HIID &dest)
 {
   cdebug(3)<<"postEvent("<<id<<")\n";
   // find event in output map
@@ -115,13 +141,13 @@ void EventSink::postEvent (const HIID &id,const ObjRef::Xfer &data)
   if( iter == post_map.end() )
   {
     // not found - do we publish with a default prefix then?
-    if( !publish_unmapped_events )
+    if( !default_post_prefix.size() )
     {
       cdebug(3)<<"unmapped event posted, dropping\n";
       return;
     }
-    mref <<= new Message(unmapped_prefix|id,unmapped_priority);
-    scope = unmapped_scope;
+    mref <<= new Message(default_post_prefix|id,default_post_priority);
+    scope = default_post_scope;
   }
   else // get ID and scope from map
   {
@@ -136,9 +162,30 @@ void EventSink::postEvent (const HIID &id,const ObjRef::Xfer &data)
   }
   // attach payload to message
   mref().payload() = data;
-  cdebug(3)<<"publishing as "<<mref->sdebug(2)<<", scope "<<scope<<endl;
-  multiplexer->publish(mref,scope);
+  if( dest.size() )
+  {
+    cdebug(3)<<"sending "<<mref->sdebug(2)<<", to "<<dest<<endl;
+    multiplexer->send(mref,dest);
+  }
+  else
+  {
+    cdebug(3)<<"publishing as "<<mref->sdebug(2)<<", scope "<<scope<<endl;
+    multiplexer->publish(mref,scope);
+  }
 }
+
+//##ModelId=3E8C47930088
+bool EventSink::isEventBound (const HIID &id)
+{
+  HIID out;
+  // event not mapped at all? Return False
+  if( !mapPostEvent(out,id) )
+    return False;
+  // else true
+  // BUG! actually we need a haveSubscribers() call here
+  return True;
+}
+
 
 //##ModelId=3E0A34E7020E
 int EventSink::getDefaultScope (const DataRecord &map)
@@ -240,20 +287,30 @@ void EventSink::setReceiveMap (const DataRecord &map)
   receive_map.clear();
   // interpret Default.Scope argument
   int defscope = getDefaultScope(map);
+  // check for a default subscribe prefix
+  default_receive_prefix = map[FDefaultPrefix].as<HIID>(HIID());
+  default_receive_scope  = resolveScope(default_receive_prefix,defscope); 
+  if( default_receive_prefix.size() )
+  {
+    cdebug(1)<<"subscribing with default receive prefix: "<<default_receive_prefix<<".*\n";
+    multiplexer->subscribe(default_receive_prefix|AidWildcard,default_receive_scope);
+  }
   // translate map, and subscribe multiplexer to all input events
   DataRecord::Iterator iter = map.initFieldIter();
   HIID event; TypeId type; int size;
   int nevents = 0;
-  while( map.getFieldIter(iter,event,type,size) )
+  NestableContainer::Ref ncref;
+  while( map.getFieldIter(iter,event,ncref) )
   {
-    // ignore Default.Scope argument
-    if( event == FDefaultScope )
+    // ignore Default.Scope and Prefix arguments
+    if( event == FDefaultScope || event == FDefaultPrefix )
       continue;
+    const NestableContainer &nc = *ncref;
     // all other fields must be event IDs (HIIDs)
-    FailWhen(type != TpHIID,"illegal input map entry "+event.toString());
-    for( int i=0; i<size; i++ )
+    FailWhen(nc.type() != TpHIID,"illegal input map entry "+event.toString());
+    for( int i=0; i<nc.size(); i++ )
     {
-      HIID msgid = map[event][i];
+      HIID msgid = nc[i];
       int scope = resolveScope(msgid,defscope);
       // add to event map and subscribe
       EventMapEntry &ee = receive_map[msgid];
@@ -263,7 +320,7 @@ void EventSink::setReceiveMap (const DataRecord &map)
       cdebug(2)<<"subscribing to "<<msgid<<" (scope "<<scope<<") for event "<<event<<endl;
     }
   }
-  dprintf(1)("subscribed to %d input events\n",nevents);
+  dprintf(1)("subscribed to %d explicit input events\n",nevents);
 }
 
 //##ModelId=3E0A296A02C8
@@ -274,42 +331,41 @@ void EventSink::setPostMap (const DataRecord &map)
   int defscope = getDefaultScope(map);
   // interpret Default.Priority argument
   int defpri = getDefaultPriority(map);
+  // check for a default posting prefix
+  default_post_prefix   = map[FDefaultPrefix].as<HIID>(HIID());
+  default_post_scope    = resolveScope(default_post_prefix,defscope); 
+  default_post_priority = resolvePriority(default_post_prefix,defpri); 
+  if( default_post_prefix.size() )
+  {
+    cdebug(1)<<"default posting prefix: "<<default_post_prefix<<endl;
+  }
   // translate the map
   publish_unmapped_events = False;
   DataRecord::Iterator iter = map.initFieldIter();
   HIID id; TypeId type; int size;
   int nevents = 0;
-  while( map.getFieldIter(iter,id,type,size) )
+  NestableContainer::Ref ncref;
+  while( map.getFieldIter(iter,id,ncref) )
   {
     // ignore Default.Scope argument
-    if( id == FDefaultScope || id == FDefaultPriority )
+    if( id == FDefaultScope || id == FDefaultPriority || id == FDefaultPrefix )
       continue;
-    FailWhen(type != TpHIID || size != 1,"illegal output map entry "+id.toString());
-    HIID msgid = map[id].as<HIID>();
+    const NestableContainer &nc = *ncref;
+    FailWhen(nc.type() != TpHIID || nc.size() != 1,"illegal output map entry "+id.toString());
+    HIID msgid = nc[HIID()].as<HIID>();
     int scope = resolveScope(msgid,defscope);
     int priority = resolvePriority(msgid,defpri);
-    // interpret Unmapped.Prefix argument
-    if( id == FUnmappedPrefix )
+    EventMapEntry &ee = post_map[id];
+    ee.id = msgid; ee.scope = scope; ee.priority = priority;
+    nevents++;
+    if( msgid.empty() )
     {
-      unmapped_prefix = msgid;
-      unmapped_scope = scope;
-      unmapped_priority = priority;
-      publish_unmapped_events = True;
+      cdebug(2)<<"disabling output event "<<id<<endl;
     }
     else
     {
-      EventMapEntry &ee = post_map[id];
-      ee.id = msgid; ee.scope = scope; ee.priority = priority;
-      nevents++;
-      if( msgid.empty() )
-      {
-        cdebug(2)<<"disabling output event "<<id<<endl;
-      }
-      else
-      {
-        cdebug(2)<<"mapping event "<<id<<" to message "<<msgid
-                 <<" (S"<<scope<<"P"<<priority<<")\n";
-      }
+      cdebug(2)<<"mapping event "<<id<<" to message "<<msgid
+               <<" (S"<<scope<<"P"<<priority<<")\n";
     }
   }
   dprintf(1)("mapped %d output events\n",nevents);

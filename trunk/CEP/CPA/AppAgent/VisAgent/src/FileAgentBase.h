@@ -7,6 +7,7 @@ using std::string;
 
 namespace AppState
 {
+//##ModelId=3E8C1A5B00B0
   typedef enum 
   {
     CLOSED    =     -100

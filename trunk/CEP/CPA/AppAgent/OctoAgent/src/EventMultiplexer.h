@@ -47,7 +47,8 @@ class EventMultiplexer : public WorkProcess
     void close();
     
     //##ModelId=3E26D2D6021D
-    int   getEvent (HIID& id,ObjRef& data,const HIID& mask,int wait,int sink_id);
+    int   getEvent (HIID& id,ObjRef& data,const HIID& mask,int wait,
+                    HIID &source,int sink_id);
     //##ModelId=3E3FC3A601B0
     int   hasEvent (const HIID& mask,int sink_id);
     
@@ -61,6 +62,9 @@ class EventMultiplexer : public WorkProcess
 
     //##ModelId=3E53599A0049
     LocalDebugContext;
+    
+    //##ModelId=3E9BD63F0297
+    DefineRefTypes(EventMultiplexer,Ref);
     
   protected:
     //##ModelId=3E47C84502CD
@@ -86,6 +90,7 @@ class EventMultiplexer : public WorkProcess
     int assigned_sink;
     //##ModelId=3E3FC3A6004B
     HIID assigned_event;
+    HIID assigned_source;
     //##ModelId=3E50E2D3025D
     ObjRef assigned_data;
     //##ModelId=3E50E2D801A4

@@ -31,17 +31,19 @@ class AppEventSink;
 #pragma aidgroup Solver
 #pragma aid Start End Stop Iteration Solution Solver Control Message Convergence 
 #pragma aid Next Step Domain Data Num All Params Solved Index Peel Accept
-#pragma aid When Max Converged Iter Command Add Queue Size
+#pragma aid When Max Converged Iter Command Add Queue Size Single Step
+
 
 namespace AppState
 {
   // define additional control states for the solver
-  //##ModelId=3E00AA5100D5
+  #pragma aid IDLE ENDSOLVE NEXT_DOMAIN
+  //##ModelId=3E8C1A5B009F
   typedef enum
   {
-    IDLE        = 0x100,    // waiting for start of solution
-    ENDSOLVE    = 0x101,    // waiting for end of solution
-    NEXT_DOMAIN = 0x102     // waiting for startDomain
+    IDLE        = -AidIDLE_int,        // waiting for start of solution
+    ENDSOLVE    = -AidENDSOLVE_int,    // waiting for end of solution
+    NEXT_DOMAIN = -AidNEXT_DOMAIN_int  // waiting for startDomain
   }
   ExtraSolverControlStates;
 };
@@ -53,7 +55,7 @@ namespace SolverControl
 using namespace AppControlAgentVocabulary;
 
 const HIID 
-    FSolverControlParams = AidSolver|FControlParams,
+//    FSolverControlParams = AidSolver|FControlParams,
     
     FStopWhenEnd         = AidStop|AidWhen|AidEnd, 
     
@@ -72,6 +74,8 @@ const HIID
     SolverEndEvent      = AidSolver|AidEnd,
     //    Normally posted when the application indicates end-of-data
     EndDataEvent        = AidEnd|AidData,
+    //    Posted when the solver auto-pauses itself
+    SolverPausedEvent   = AidSolver|AidPaused,
     
     //    Posted when a solution is terminated with an external event
     StopSolutionEvent   = AidStop|AidSolution,
@@ -90,6 +94,8 @@ const HIID
     //    External command to end solution
     EndSolutionCommand  = SolverControlPrefix|AidEnd|AidSolution,
     //      Field names within EndSolutionCommand's data record
+        FPause          = AidPause,       // bool: pause at end
+    
         FAcceptSolution = AidAccept,            // bool: accept solution? (bool)
         FPeel           = AidPeel,              // record?: peel sources (optional, only if accepted)
         FNextDomain     = AidNext|AidDomain,    // bool: go to next domain (can be set instead of giving a NextDomainCommand)
@@ -101,29 +107,39 @@ const HIID
         
     // Solution parameter record fields
     //    Max number of iterations
-    FMaxIterations  = AidMax|AidIter,
+    FMaxIterations      = AidMax|AidIter,
     //    Desired convergence
     FConvergence        = AidConvergence,
+    //    Enable iteration stepping mode (i.e. will pause after this many
+    //    iterations, 0 for disable)
+    FIterStep           = AidIter|AidStep,
     //    ending record to generate when max iter count exceeded
-    FWhenMaxIter   = AidWhen|AidMax|AidIter,
+    //    (if not specified, will pause and wait for an end command)
+    FWhenMaxIter        = AidWhen|AidMax|AidIter,
     //    ending record to generate when convergence reached
-    FWhenConverged = AidWhen|AidConverged,
+    //    (if not specified, will pause and wait for an end command)
+    FWhenConverged      = AidWhen|AidConverged,
+
+    // current iteration number
+    FIterationNumber    = AidIteration|AidNum,
     
     // Field names for status record
+    //    Solution parameters subrecord 
+    StSolutionParams     = AidSolution|AidParams,
+    // solution status sub-record
+    StSolution           = AidSolution,
+      //    Iteration number 
+    StIterationNumber    = StSolution|AidSlash|FIterationNumber,
     //    Convergence parameter
-//    FConvergence        = AidConvergence,     already defined above
-    //    Iteration number 
-    FIterationNumber    = AidIteration|AidNum,
-    //    Iteration number
-    FDomainNumber       = AidDomain|AidIndex,
+    StConvergence        = StSolution|AidSlash|FConvergence,
+    //    Domain number
+    StDomainNumber       = AidDomain|AidIndex,
     //    Ending message
-    FMessage            = AidMessage,
+    StMessage            = AidMessage,
     //    End of data condition
-    FEndData            = AidEnd|AidData,
-    //    Solution parameters 
-    FSolutionParams     = AidSolution|AidParams,
+    StEndData            = AidEnd|AidData,
     //    # of jobs left in solution queue
-    FQueueSize          = AidQueue|AidSize;
+    StQueueSize          = AidQueue|AidSize;
     
     
 //##ModelId=3DFF2B6D01FF
@@ -172,6 +188,7 @@ class SolverControlAgent : public AppControlAgent
     SolverControlAgent(AppEventSink *sink, int dmiflags, const HIID &initf = AidControl)
       : AppControlAgent(sink,dmiflags,initf) {}
     
+    //##ModelId=3E8C1A5D0385
     int start (DataRecord::Ref &initrec);
     
     //##ModelId=3DFF2D300027
@@ -327,6 +344,10 @@ class SolverControlAgent : public AppControlAgent
     //## inits various counters
     virtual bool init (const DataRecord &data);
   
+    virtual int processCommand (const HIID &id,const DataRecord::Ref &data,
+                                const HIID &source);
+
+    int pauseSolution (const string &msg);
   
     //##ModelId=3E56097E00FD
     //##Documentation
@@ -334,6 +355,10 @@ class SolverControlAgent : public AppControlAgent
     //## a StartSolutionEvent. Meant to be called from a child
     //## class's startSolution()
     void initSolution (const DataRecord::Ref &params);
+
+    //##Documentation
+    //## Processes parameters from the control record
+    void processControlRecord (const DataRecord &rec);
   
     //##ModelId=3E70A2C703BA
     std::deque<DataRecord::Ref> & solveQueue ();
@@ -357,7 +382,9 @@ class SolverControlAgent : public AppControlAgent
     //##ModelId=3E56097603C9
     //##Documentation
     //## Current iteration number
-    int iterationNum_;
+    int iter_count_;
+    int iter_step_;
+    int pause_at_iter_;
     //##ModelId=3E56097700E7
     //##Documentation
     //## Current convergence value
@@ -431,7 +458,7 @@ inline double SolverControlAgent::convergence() const
 //##ModelId=3E560979034A
 inline int SolverControlAgent::iterationNum() const
 {
-    return iterationNum_;
+    return iter_count_;
 }
 
 //##ModelId=3E56097903D4

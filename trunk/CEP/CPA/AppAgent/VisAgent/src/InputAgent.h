@@ -123,6 +123,9 @@ class InputAgent : public AppEventAgentBase
       
     //##ModelId=3E41141D029F
       virtual string sdebug(int detail = 1, const string &prefix = "", const char *name = 0) const;
+      
+    //##ModelId=3E9BD6400048
+      DefineRefTypes(InputAgent,Ref);
 
   private:
     //##ModelId=3E4165150313

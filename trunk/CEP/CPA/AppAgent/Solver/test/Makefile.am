@@ -4,11 +4,15 @@ CXXFLAGS += -D_GNU_SOURCE
 
 check_PROGRAMS		= test_solver
 
-bin_PROGRAMS   		= 
+bin_PROGRAMS   		= glishsolver
 
 test_solver_SOURCES		    = test_solver.cc
-test_solver_LDADD		      = ../src/libsolver.la
+test_solver_LDADD		      = ../src/libsolver.la -lglish -lsos -lnpd
 test_solver_DEPENDENCIES	  = ../src/libsolver.la $(LOFAR_DEPEND)
+
+glishsolver_SOURCES		    = glishsolver.cc
+glishsolver_LDADD		      = ../src/libsolver.la -lglish -lsos -lnpd
+glishsolver_DEPENDENCIES	= ../src/libsolver.la $(LOFAR_DEPEND)
 
 TESTS				=  
 

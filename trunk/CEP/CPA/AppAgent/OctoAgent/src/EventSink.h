@@ -23,7 +23,8 @@ const HIID
 
     FDefaultScope     = AidDefault | AidScope,
     FDefaultPriority  = AidDefault | AidPriority,
-    FUnmappedPrefix   = AidUnmapped | AidPrefix;
+    
+    FDefaultPrefix    = AidDefault | AidPrefix;
   
 class EventMultiplexer;
 
@@ -79,12 +80,21 @@ class EventSink : public AppEventSink
     //##ModelId=3E2FEAD10188
     bool mapPostEvent     (HIID &out, const HIID &in) const;
     
+    //##ModelId=3E8C47930062
+    //##Documentation
+    //## Advertises the fact that an app is interested in a specific
+    //## event or set of events (wildcards may be employed). This corresponds
+    //## to subscribing to events in the OctoAgent implementation.
+    virtual void solicitEvent (const HIID &mask);
+    
     //##ModelId=3E096F2103B3
     //##Documentation
     //## Gets next event from proxy's message queue. This version will return
     //## any type of payload, not just DataRecords, hence the ObjRef data
     //## argument.
-    virtual int getEvent (HIID &id, ObjRef &data, const HIID &mask, int wait = AppEvent::WAIT);
+    virtual int getEvent (HIID &id,ObjRef &data,const HIID &mask,
+                          int wait = AppEvent::WAIT,
+                          HIID &source = _dummy_hiid );
     
     //##ModelId=3E0918BF02F0
     //##Documentation
@@ -94,7 +104,15 @@ class EventSink : public AppEventSink
     //##ModelId=3E2FD67D0246
     //##Documentation
     //## Publishes an event as a message on behalf of the proxy. 
-    virtual void postEvent (const HIID &id, const ObjRef::Xfer &data = ObjRef());
+    virtual void postEvent (const HIID &id, 
+                            const ObjRef::Xfer &data = ObjRef(),
+                            const HIID &destination = HIID());
+    
+    //##ModelId=3E8C47930088
+    //##Documentation
+    //## Checks whether a specific event is bound to any output. I.e., checks
+    //## for subscribers to the event.
+    virtual bool isEventBound (const HIID &id);
     
     //##ModelId=3E3FC3E00194
     void setMultiplexId (int id);
@@ -104,7 +122,9 @@ class EventSink : public AppEventSink
     
     //##ModelId=3E428EA60051
     DefineRefTypes(EventSink,Ref);
+
     
+
   protected:
     // helper functions for parsing the event maps. These look up default
     // arguments in the maps
@@ -148,11 +168,15 @@ class EventSink : public AppEventSink
     //## (as unmapped_prefix.event_id, with unmapped_scope and _priority)
     bool publish_unmapped_events;
     //##ModelId=3E0A367402F0
-    HIID unmapped_prefix;
+    HIID default_receive_prefix;
+    //##ModelId=3E9BD63F0330
+    HIID default_post_prefix;
     //##ModelId=3E0A3A980187
-    int unmapped_scope;
+    int default_receive_scope;
+    //##ModelId=3E9BD63F035D
+    int default_post_scope;
     //##ModelId=3E0A4C7A0008
-    int unmapped_priority;
+    int default_post_priority;
     
     //##ModelId=3E428C4D0237
     EventMultiplexer *multiplexer;

@@ -39,7 +39,6 @@ bool BatchAgent::init (const DataRecord &data)
     
     // get the sub-record of solution jobs
     int nparams = rec[FBatchJobs].size();
-    FailWhen( !nparams,"no job sub-records in in "+FBatchJobs.toString()+" field" );
     // copy all solution jobs to the queue
     jobs_.resize(nparams);
     for( int i=0; i<nparams; i++ )

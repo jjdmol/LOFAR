@@ -42,4 +42,8 @@ static AtomicID::Register aid_reg_Iter(-1334,"Iter");
 static AtomicID::Register aid_reg_Command(-1338,"Command");
 static AtomicID::Register aid_reg_Add(-1087,"Add");
 static AtomicID::Register aid_reg_Queue(-1339,"Queue");
+static AtomicID::Register aid_reg_Single(-1354,"Single");
+static AtomicID::Register aid_reg_IDLE(-1340,"IDLE");
+static AtomicID::Register aid_reg_ENDSOLVE(-1341,"ENDSOLVE");
+static AtomicID::Register aid_reg_NEXT_DOMAIN(-1342,"NEXT_DOMAIN");
 

@@ -1,5 +1,7 @@
 #include "DummySolver.h"
 
+#include <unistd.h>
+    
 using namespace AppState;
 using namespace SolverVocabulary;
     
@@ -52,7 +54,7 @@ void DummySolver::checkInputState (int instat)
   else if( instat == AppEvent::CLOSED )
   {
     cdebug(2)<<"input closed: "<<input().stateString()<<endl;
-    control().endData(InputErrorEvent);
+    control().endData(InputClosedEvent);
     endDomain();
   }
 }
@@ -200,6 +202,7 @@ void DummySolver::run ()
         do
         {
           converge /= 10;
+          sleep(1); // Jesus is coming... Look busy!
           niter++;
         }
         while( control().endIteration(converge) == AppState::RUNNING );
