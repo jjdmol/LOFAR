@@ -42,6 +42,7 @@ namespace LOFAR {
   {
     u_int32_t oFlags = DB_CREATE;
     string dbfilename = "/tmp/" + userName + "." + tableName + ".bdb";
+    itsDb.set_flags(DB_DUPSORT);
     //  if (itsDb.open(transid, filename, database, dbtype, flags, mode) !=0) {
     if (itsDb.open(NULL, dbfilename.c_str(), NULL, DB_BTREE, oFlags, 0) != 0 ) {
       itsDb.close(0);
@@ -122,7 +123,6 @@ namespace LOFAR {
       // couldn't find the polc in the database
       putNewCoeff (parmName, srcnr, statnr, polc);
     } else {
-      const MeqDomain& pdomain = set[0].getPolc().domain();
       // For Berkeley DB there is no difference between insert and update
       putNewCoeff (parmName, srcnr, statnr, polc);
     }
