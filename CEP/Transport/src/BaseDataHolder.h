@@ -25,7 +25,7 @@
 
 //# Includes
 #include <lofar_config.h>
-#include <libTransport/Transporter.h>
+#include <Transport/Transporter.h>
 #include <Common/lofar_string.h>
 #include <Common/lofar_fstream.h>
 #include <Common/BlobFieldSet.h>

@@ -31,7 +31,7 @@
 
 #ifdef HAVE_MPI
 
-#include <libTransport/TransportHolder.h>
+#include <Transport/TransportHolder.h>
 #include <Common/lofar_map.h>
 #include <Common/shmem/shmem_alloc.h>
 

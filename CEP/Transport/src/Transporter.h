@@ -26,9 +26,9 @@
 #include <lofar_config.h>
 
 //# Includes
-#include <libTransport/TransportHolder.h>
-#include <libTransport/Connection.h>
-#include <libTransport/BaseSim.h>
+#include <Transport/TransportHolder.h>
+#include <Transport/Connection.h>
+#include <Transport/BaseSim.h>
 
 namespace LOFAR
 {

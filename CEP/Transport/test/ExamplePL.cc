@@ -20,8 +20,8 @@
 //#
 //# $Id$
 
-#include <libTransport/Transporter.h>
-#include <libTransport/TH_PL.h>
+#include <Transport/Transporter.h>
+#include <Transport/TH_PL.h>
 #include <DH_Example.h>
 #include <iostream>
 
@@ -31,7 +31,7 @@ using namespace LOFAR;
 int main()
 {
   try {
-    cout << "libTransport ExamplePL test program" << endl;
+    cout << "Transport ExamplePL test program" << endl;
 
     TH_PL::useDatabase ("test");
 

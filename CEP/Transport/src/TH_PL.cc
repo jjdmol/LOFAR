@@ -23,8 +23,8 @@
 //////////////////////////////////////////////////////////////////////////
 
 
-#include <libTransport/TH_PL.h>
-#include <libTransport/Transporter.h>
+#include <Transport/TH_PL.h>
+#include <Transport/Transporter.h>
 #include <PL/PersistenceBroker.h>
 #include <PL/TPersistentObject.h>
 #include <PL/DBRepHolder.h>    // needed to see ObjectId specialization

@@ -26,7 +26,7 @@
 #include <Common/lofar_iostream.h>
 #include <stdexcept>
 
-#include <libTransport/BaseDataHolder.h>
+#include <Transport/BaseDataHolder.h>
 #include <Common/BlobField.h>
 #include <Common/BlobStringType.h>
 #include <Common/BlobIBufString.h>

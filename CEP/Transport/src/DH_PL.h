@@ -25,7 +25,7 @@
 #ifndef LIBTRANSPORT_DH_PL_H
 #define LIBTRANSPORT_DH_PL_H
 
-#include <libTransport/DataHolder.h>		// for super-class definition
+#include <Transport/DataHolder.h>		// for super-class definition
 #include <Common/LofarTypes.h>			// for int64
 #include <PL/PLfwd.h>
 

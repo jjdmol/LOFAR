@@ -1,4 +1,4 @@
-//# Example.cc: Test program for basic libTransport classes
+//# Example.cc: Test program for basic Transport classes
 //#
 //# Copyright (C) 2004
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -22,8 +22,8 @@
 
 #include <iostream>
 
-#include <libTransport/Transporter.h>
-#include <libTransport/TH_Mem.h>
+#include <Transport/Transporter.h>
+#include <Transport/TH_Mem.h>
 #include <DH_Example.h>
 
 using namespace LOFAR;
@@ -31,7 +31,7 @@ using namespace LOFAR;
 int main()
 {
     
-  cout << "libTransport Example test program" << endl;
+  cout << "Transport Example test program" << endl;
     
   DH_Example DH1("dh1", 1);
   DH_Example DH2("dh2", 1);
