@@ -67,9 +67,9 @@ void WH_FFT::process ()
 	}
 
 
-#if 0
 	// Call 1D-fft function four1
 	four1(fft_data-1,(ANTSAMPLES),1);
+#if 0
 #endif
 
 	// Put fft-data back in output buffer
