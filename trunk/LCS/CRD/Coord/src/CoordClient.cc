@@ -25,7 +25,7 @@
 #include <Coord/EarthCoord.h>
 #include <Coord/TimeCoord.h>
 #include <Coord/Endian.h>
-#include <Common/Debug.h>
+#include <Common/LofarLogger.h>
 
 
 CoordClient::CoordClient (const string& host, const string& port)
@@ -38,7 +38,7 @@ CoordClient::CoordClient (const string& host, const string& port)
   while (sts == 0) {
     sts = itsSocket.connect();
   }
-  AssertMsg (sts == 1,
+  ASSERTSTR (sts == 1,
 	     "CoordClient could not connect to server on host " << host
 	     << ", port " << port);
   // Make sure the buffer is long enough for a single conversion
@@ -53,7 +53,7 @@ CoordClient::CoordClient (const string& host, const string& port)
   itsSocket.readblock (itsBuffer, 2*sizeof(double));
   // Determine if data has to be swapped.
   itsSwap = getEndian() != isLittle;
-  Assert (getVersion() == 1);
+  ASSERT (getVersion() == 1);
 }
 
 CoordClient::~CoordClient()
@@ -108,7 +108,7 @@ SkyCoord CoordClient::j2000ToAzel (const SkyCoord& radec,
   putCommand (J2000ToAzel);
   itsSocket.writeblock (itsBuffer, (7+itsNrStart)*sizeof(double));
   itsSocket.readblock (itsBuffer, sizeof(double));
-  Assert (getInt(itsBuffer) == 1);
+  ASSERT (getInt(itsBuffer) == 1);
   itsSocket.readblock (itsPosBuffer, 2*sizeof(double));
   return SkyCoord (itsPosBuffer[0], itsPosBuffer[1]);
 }
@@ -180,7 +180,7 @@ vector<SkyCoord> CoordClient::j2000ToAzel (const vector<SkyCoord>& radec,
   putCommand (J2000ToAzel);
   itsSocket.writeblock (itsBuffer, (nr+itsNrStart)*sizeof(double));
   itsSocket.readblock (itsBuffer, sizeof(double));
-  Assert (getInt(itsBuffer) == nrval);
+  ASSERT (getInt(itsBuffer) == nrval);
   itsSocket.readblock (itsPosBuffer, 2*nrval*sizeof(double));
   result.reserve (nrval);
   for (int i=0; i<nrval; i++) {
@@ -207,7 +207,7 @@ SkyCoord CoordClient::azelToJ2000 (const SkyCoord& azel,
   putCommand (AzelToJ2000);
   itsSocket.writeblock (itsBuffer, (7+itsNrStart)*sizeof(double));
   itsSocket.readblock (itsBuffer, sizeof(double));
-  Assert (getInt(itsBuffer) == 1);
+  ASSERT (getInt(itsBuffer) == 1);
   itsSocket.readblock (itsPosBuffer, 2*sizeof(double));
   return SkyCoord (itsPosBuffer[0], itsPosBuffer[1]);
 }
@@ -243,7 +243,7 @@ vector<SkyCoord> CoordClient::azelToJ2000 (const vector<SkyCoord>& azel,
   putCommand (AzelToJ2000);
   itsSocket.writeblock (itsBuffer, (nr+itsNrStart)*sizeof(double));
   itsSocket.readblock (itsBuffer, sizeof(double));
-  Assert (getInt(itsBuffer) == nrval);
+  ASSERT (getInt(itsBuffer) == nrval);
   itsSocket.readblock (itsPosBuffer, 2*nrval*sizeof(double));
   result.reserve (nrval);
   for (int i=0; i<nrval; i++) {
@@ -256,7 +256,7 @@ vector<SkyCoord> CoordClient::azelToJ2000 (const vector<SkyCoord>& azel,
 					   const vector<EarthCoord>& pos,
 					   const vector<TimeCoord>& time)
 {
-  Assert (azel.size() == pos.size()  &&  azel.size() == time.size());
+  ASSERT (azel.size() == pos.size()  &&  azel.size() == time.size());
   vector<SkyCoord> result;
   if (azel.size() == 0) {
     return result;
@@ -292,7 +292,7 @@ vector<SkyCoord> CoordClient::azelToJ2000 (const vector<SkyCoord>& azel,
   putCommand (AzelToJ2000);
   itsSocket.writeblock (itsBuffer, (nr+itsNrStart)*sizeof(double));
   itsSocket.readblock (itsBuffer, sizeof(double));
-  Assert (getInt(itsBuffer) == nrval);
+  ASSERT (getInt(itsBuffer) == nrval);
   itsSocket.readblock (itsPosBuffer, 2*nrval*sizeof(double));
   result.reserve (nrval);
   for (int i=0; i<nrval; i++) {
