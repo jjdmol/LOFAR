@@ -38,7 +38,7 @@ namespace LOFAR {
 // Setup (wait for an) connection with the AC client
 //
 ApplControlServer::ApplControlServer(const uint16			portnr,
-									 const ApplControl*		ACImpl) :
+									 ApplControl*			ACImpl) :
 	itsACImpl(ACImpl)
 {
 	DH_ApplControl	DH_AC_Client;
@@ -64,11 +64,10 @@ ApplControlServer::~ApplControlServer()
 	}
 }
 
-// Returns a string containing the IP address and portnumber of the
-// Application controller the class is connected to.
 string		ApplControlServer::askInfo(const string&	keylist) const
 {
-	if (!itsCommChan->doRemoteCmd (CmdInfo, 0, 0, keylist))
+	// TODO: handle keylist self first, pass unknown stuff to upperlayer
+	if (!itsCommChan->doRemoteCmd (ACCmdInfo, 0, 0, keylist))
 		return (keylist);
 
 	return (itsCommChan->getDataHolder()->getOptions());
@@ -106,64 +105,56 @@ bool ApplControlServer::handleMessage(ACCommand*	theMsg)
 				  		 << ", options=[" << procList << "]"
 				  		 << ", options=[" << nodeList << "]" << endl);
 
-	bool	sendAnswer = true;
 	bool	result 	   = false;
 
 	switch (cmdType) {
-	case CmdInfo:		
-		sendResult(AcCmdMaskOk, "Not yet implemented");
+	case ACCmdInfo:		
+		// TODO: this command should answer by the AC.
+		itsCommChan->sendCmd (ACCmdAnswer, 0, 0, 
+								"ApplControlServer says:Not yet implemented");
 		return (true); 								
-	case CmdAnswer:	
-		sendAnswer = false; 
+	case ACCmdAnswer:	
 		//TODO ???
 		break;
-	case CmdBoot:		
+	case ACCmdBoot:		
 		result = itsACImpl->boot(scheduleTime, options);	
 		break;
-	case CmdDefine:		
+	case ACCmdDefine:		
 		result = itsACImpl->define(scheduleTime);			
 		break;
-	case CmdInit:		
+	case ACCmdInit:		
 		result = itsACImpl->init(scheduleTime);			
 		break;
-	case CmdRun:		
+	case ACCmdRun:		
 		result = itsACImpl->run(scheduleTime);			
 		break;
-	case CmdPause:		
+	case ACCmdPause:		
 		result = itsACImpl->pause(scheduleTime, waitTime, options);	
 		break;
-	case CmdQuit:		
+	case ACCmdQuit:		
 		itsACImpl->quit(scheduleTime);
 		result = true;
 		break;
-	case CmdSnapshot:	
+	case ACCmdSnapshot:	
 		result = itsACImpl->snapshot(scheduleTime, options);	
 		break;
-	case CmdRecover:	
+	case ACCmdRecover:	
 		result = itsACImpl->recover (scheduleTime, options);	
 		break;
-	case CmdReinit:		
+	case ACCmdReinit:		
 		result = itsACImpl->reinit (scheduleTime, options);	
 		break;
-	case CmdResult:		
+	case ACCmdResult:		
 		handleAckMessage(); 
-		sendAnswer = false;
+		result = true;
 		break;
 	default:
-		//TODO
+		//TODO: optional other handling unknown command?:w
 		LOG_DEBUG_STR ("Message type " << cmdType << " not supported!\n");
 		break;
 	}
 
-#if 0
-	// DO NOT send respons: this depends on all received acks from AP's
-	if (sendAnswer) {
-		sendResult(result ? AcCmdMaskOk : 0);
-	}
-#endif
-
-
-	return (true);
+	return (result);
 }
 
 
@@ -176,7 +167,7 @@ void ApplControlServer::sendResult(uint16	aResult, const string&	someOptions)
 {
 	itsCommChan->getDataHolder()->setResult(aResult);
 	ACCmd command = itsCommChan->getDataHolder()->getCommand();
-	itsCommChan->sendCmd (static_cast<ACCmd>(command | CmdResult), 0, 0, someOptions);
+	itsCommChan->sendCmd (static_cast<ACCmd>(command | ACCmdResult), 0, 0, someOptions);
 }
 
 } // namespace ACC

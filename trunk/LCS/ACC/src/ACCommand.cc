@@ -43,10 +43,8 @@ ACCommand::ACCommand   (int16			aCommand,
 	itsProcList    (aProcessList),
 	itsNodeList    (aNodeList)
 {
-	LOG_TRACE_RTTI("Create ACCommand object");
+	LOG_TRACE_RTTI("Create filled ACCommand object");
 };
-
-
 
 
   } // namespace ACC

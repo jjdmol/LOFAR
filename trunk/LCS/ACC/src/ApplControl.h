@@ -56,26 +56,26 @@ public:
 	//				command anymore.
 	// Call commandInfo to obtain extra info about the command condition.
 	virtual bool	boot 	 (const time_t		scheduleTime,
-							  const string&		configID) 	  const = 0;
-	virtual bool	define 	 (const time_t		scheduleTime) const = 0;
-	virtual bool	init 	 (const time_t		scheduleTime) const = 0;
-	virtual bool	run 	 (const time_t		scheduleTime) const = 0;
+							  const string&		configID) 	  = 0;
+	virtual bool	define 	 (const time_t		scheduleTime) = 0;
+	virtual bool	init 	 (const time_t		scheduleTime) = 0;
+	virtual bool	run 	 (const time_t		scheduleTime) = 0;
 	virtual bool	pause  	 (const time_t		scheduleTime,
 							  const time_t		waitTime,
-							  const	string&		condition) 	  const = 0;
-	virtual bool	quit  	 (const time_t		scheduleTime) const = 0;
-	virtual bool	shutdown (const time_t		scheduleTime) const = 0;
+							  const	string&		condition) 	  = 0;
+	virtual bool	quit  	 (const time_t		scheduleTime) = 0;
+	virtual bool	shutdown (const time_t		scheduleTime) = 0;
 	virtual bool	snapshot (const time_t		scheduleTime,
-							  const string&		destination)  const = 0;
+							  const string&		destination)  = 0;
 	virtual bool	recover  (const time_t		scheduleTime,
-							  const string&		source) 	  const = 0;
+							  const string&		source) 	  = 0;
 
 	virtual bool	reinit	 (const time_t		scheduleTime,
-							  const string&		configID)	  const = 0;
+							  const string&		configID)	  = 0;
 	virtual bool	replace	 (const time_t		scheduleTime,
 							  const string&		processList,
 							  const string&		nodeList,
-							  const string&		configID)	  const = 0;
+							  const string&		configID)	  = 0;
 
 	// Define a generic way to exchange info between client and server.
 	virtual string	askInfo   (const string& 	keylist) const = 0;

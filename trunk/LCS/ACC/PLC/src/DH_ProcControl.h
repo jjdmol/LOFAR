@@ -39,14 +39,14 @@ namespace LOFAR {
 //class forward;
 
 // Make list of supported commands.
-enum PCCmd { PCCmdNone = 0, 
+enum PCCmd {    PCCmdNone = 0, 
 				PCCmdStart = 100, PCCmdQuit, 
-				PCCmdDefine, PCCmdInit,
-				PCCmdPause, PCCmdRun,
-				PCCmdSnapshot, PCCmdRecover, 
+				PCCmdDefine,      PCCmdInit,
+				PCCmdPause,       PCCmdRun,
+				PCCmdSnapshot,    PCCmdRecover, 
 				PCCmdReinit, 
-				PCCmdInfo, PCCmdAnswer,
-				PCCmdReport, PCCmdAsync,
+				PCCmdInfo,        PCCmdAnswer,
+				PCCmdReport,      PCCmdAsync,
 				PCCmdResult = 0x1000
 //				PCCmdCheckParSet, PCCmdLoadParSet
 };

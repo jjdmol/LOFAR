@@ -60,19 +60,20 @@ bool	ACAsyncClient::processACmsgFromServer()	const
 	}
 
 	ACCmd	cmdType = DHPtr->getCommand();
+	LOG_TRACE_VAR_STR ("ACASyncClient:proccessACmsgFromServer:cmdType=" << cmdType);
 	switch (cmdType) {
-	case CmdInfo:		
-		itsCommChan->sendCmd(CmdAnswer, 0, 0, supplyInfo(DHPtr->getOptions()));
+	case ACCmdInfo:		
+		itsCommChan->sendCmd(ACCmdAnswer, 0, 0, supplyInfo(DHPtr->getOptions()));
 		break;
-	case CmdAnswer:		
+	case ACCmdAnswer:		
 		handleAnswerMessage(DHPtr->getOptions());
 		break;
 	default:
-		if (cmdType & CmdResult) {
+		if (cmdType & ACCmdResult) {
 			handleAckMessage();
 		}
 		else {
-			//TODO
+			//TODO: optionally other handling of unknown messages?
 			LOG_DEBUG_STR ("Message type " << cmdType << " not supported!\n");
 		}
 		break;

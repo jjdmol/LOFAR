@@ -77,26 +77,26 @@ public:
 	//				command anymore.
 	// Call commandInfo to obtain extra info about the command condition.
 	bool	boot 	 (const time_t		scheduleTime,
-					  const string&		configID) 	  const;
-	bool	define 	 (const time_t		scheduleTime) const;
-	bool	init  	 (const time_t		scheduleTime) const;
-	bool	run  	 (const time_t		scheduleTime) const;
+					  const string&		configID) 	 ;
+	bool	define 	 (const time_t		scheduleTime);
+	bool	init  	 (const time_t		scheduleTime);
+	bool	run  	 (const time_t		scheduleTime);
 	bool	pause  	 (const time_t		scheduleTime,
 					  const time_t		maxWaitTime,
-					  const string&		condition)	  const;
-	bool	quit  	 (const time_t		scheduleTime) const;
-	bool	shutdown (const time_t		scheduleTime) const;
+					  const string&		condition)	 ;
+	bool	quit  	 (const time_t		scheduleTime);
+	bool	shutdown (const time_t		scheduleTime);
 	bool	snapshot (const time_t		scheduleTime,
-					  const string&		destination)  const;
+					  const string&		destination) ;
 	bool	recover  (const time_t		scheduleTime,
-					  const string&		source) 	  const;
+					  const string&		source) 	 ;
 
 	bool	reinit	 (const time_t		scheduleTime,
-					  const string&		configID) 	  const;
+					  const string&		configID) 	 ;
 	bool	replace	 (const time_t		scheduleTime,
 					  const string&		processList,
 					  const string&		nodeList,
-					  const string&		configID) 	  const;
+					  const string&		configID) 	 ;
 
 	// -------------------- Async support --------------------
 	// Make it an ABC by defining a pure virtual function.

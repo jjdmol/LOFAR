@@ -40,14 +40,15 @@ namespace LOFAR {
 //class forward;
 
 // Make list of supported commands.
-enum ACCmd { CmdBoot = 1, CmdShutdown, CmdQuit, 
-				CmdDefine, CmdInit,
-				CmdPause, CmdRun, 
-				CmdSnapshot, CmdRecover, 
-				CmdReinit, CmdReplace,
-				CmdInfo, CmdAnswer,
-				CmdReport, CmdAsync,
-				CmdResult = 0x1000
+enum ACCmd {    ACCmdNone = 0, ACCmdBoot, 
+				ACCmdShutdown, ACCmdQuit, 
+				ACCmdDefine,   ACCmdInit,
+				ACCmdPause,    ACCmdRun, 
+				ACCmdSnapshot, ACCmdRecover, 
+				ACCmdReinit,   ACCmdReplace,
+				ACCmdInfo,     ACCmdAnswer,
+				ACCmdReport,   ACCmdAsync,
+				ACCmdResult = 0x1000
 };
 
 
@@ -66,11 +67,15 @@ public:
 
 	// Copying is allowed.
 	DH_ApplControl*		clone() const;
+	DH_ApplControl*		makeDataCopy(DH_ApplControl	&that);
 
 	// Redefines the preprocess function.
 	virtual void 	preprocess();
 	virtual bool	read();
 	virtual bool	write();
+
+	// construction of the blob
+	void pack();
 
 	// The real data-accessor functions
 	void	setCommand		(const ACCmd		theCmd);
@@ -182,6 +187,11 @@ inline uint16	DH_ApplControl::getResult		() const
 {
 	// no version support necc. yet.
 	return (*itsResult);
+}
+
+inline void DH_ApplControl::pack() 
+{
+	writeExtra();
 }
 
 

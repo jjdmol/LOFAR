@@ -119,72 +119,72 @@ ApplControlClient& 	ApplControlClient::operator=(const ApplControlClient& that)
 }
 #endif
 bool	ApplControlClient::boot (const time_t		scheduleTime,
-							  	 const string&		configID) const
+							  	 const string&		configID)
 {
-	return(itsCommChan->doRemoteCmd (CmdBoot, scheduleTime, 0, configID));
+	return(itsCommChan->doRemoteCmd (ACCmdBoot, scheduleTime, 0, configID));
 }
 
-bool	ApplControlClient::define(const time_t		scheduleTime) const
+bool	ApplControlClient::define(const time_t		scheduleTime)
 {
-	return(itsCommChan->doRemoteCmd (CmdDefine, scheduleTime, 0, ""));
+	return(itsCommChan->doRemoteCmd (ACCmdDefine, scheduleTime, 0, ""));
 }
 
-bool	ApplControlClient::init	 (const time_t	scheduleTime) const
+bool	ApplControlClient::init	 (const time_t	scheduleTime)
 {
-	return(itsCommChan->doRemoteCmd (CmdInit, scheduleTime, 0, ""));
+	return(itsCommChan->doRemoteCmd (ACCmdInit, scheduleTime, 0, ""));
 }
 
-bool	ApplControlClient::run 	 (const time_t	scheduleTime) const
+bool	ApplControlClient::run 	 (const time_t	scheduleTime)
 {
-	return(itsCommChan->doRemoteCmd (CmdRun, scheduleTime, 0, ""));
+	return(itsCommChan->doRemoteCmd (ACCmdRun, scheduleTime, 0, ""));
 }
 
 bool	ApplControlClient::pause (const time_t	scheduleTime,
 								  const time_t	maxWaitTime,
-								  const string&	condition) const
+								  const string&	condition)
 {
-	return(itsCommChan->doRemoteCmd (CmdPause, scheduleTime, maxWaitTime, condition));
+	return(itsCommChan->doRemoteCmd (ACCmdPause, scheduleTime, maxWaitTime, condition));
 }
 
-bool	ApplControlClient::quit  (const time_t	scheduleTime) const
+bool	ApplControlClient::quit  (const time_t	scheduleTime)
 {
-	return(itsCommChan->doRemoteCmd (CmdQuit, scheduleTime, 0, ""));
+	return(itsCommChan->doRemoteCmd (ACCmdQuit, scheduleTime, 0, ""));
 }
 
-bool	ApplControlClient::shutdown  (const time_t	scheduleTime) const
+bool	ApplControlClient::shutdown  (const time_t	scheduleTime)
 {
-	return(itsCommChan->doRemoteCmd (CmdQuit, scheduleTime, 0, ""));
+	return(itsCommChan->doRemoteCmd (ACCmdQuit, scheduleTime, 0, ""));
 }
 
 bool	ApplControlClient::snapshot (const time_t	scheduleTime,
-								  	 const string&	destination) const
+								  	 const string&	destination)
 {
-	return(itsCommChan->doRemoteCmd (CmdSnapshot, scheduleTime, 0, destination));
+	return(itsCommChan->doRemoteCmd (ACCmdSnapshot, scheduleTime, 0, destination));
 }
 
 bool	ApplControlClient::recover  (const time_t	scheduleTime,
-							  		 const string&	source) const
+							  		 const string&	source)
 {
-	return(itsCommChan->doRemoteCmd (CmdRecover, scheduleTime, 0, source));
+	return(itsCommChan->doRemoteCmd (ACCmdRecover, scheduleTime, 0, source));
 }
 
 bool	ApplControlClient::reinit(const time_t	scheduleTime,
-							  	  const string&	configID) const
+							  	  const string&	configID)
 {
-	return(itsCommChan->doRemoteCmd (CmdReinit, scheduleTime, 0, configID));
+	return(itsCommChan->doRemoteCmd (ACCmdReinit, scheduleTime, 0, configID));
 }
 
 bool	ApplControlClient::replace(const time_t	 scheduleTime,
 								   const string& processList,
 								   const string& nodeList,
-							  	   const string& configID) const
+							  	   const string& configID)
 {
-	return(itsCommChan->doRemoteCmd (CmdReplace, scheduleTime, 0, configID));
+	return(itsCommChan->doRemoteCmd (ACCmdReplace, scheduleTime, 0, configID));
 }
 
 string	ApplControlClient::askInfo(const string&	keyList) const 
 {
-	if (!itsCommChan->doRemoteCmd (CmdInfo, 0, 0, keyList))
+	if (!itsCommChan->doRemoteCmd (ACCmdInfo, 0, 0, keyList))
 		return (keyList);
 
 	return(itsCommChan->getDataHolder()->getOptions());
@@ -197,10 +197,13 @@ string	ApplControlClient::supplyInfo(const string&	keyList) const
 
 void	ApplControlClient::handleAckMessage() const
 {
+	LOG_DEBUG("ApplControlClient:handleAckMessage()");
 }
 
 void	ApplControlClient::handleAnswerMessage(const string&	answer) const
 {
+	LOG_DEBUG("ApplControlClient:handleAsnwerMessage()");
+	LOG_DEBUG_STR("Answer=" << itsCommChan->getDataHolder()->getOptions());
 }
 
 // Implement the default for the syncClient. The AsyncClient will

@@ -55,8 +55,8 @@ public:
 	// machine) may decide that the AC should run on another node.
 	// The returned AC object knows who its AC is and is already connected to 
 	// it. Call serverInfo if you are interested in this information.
-	ApplControlServer(uint16				portNr,
-					  const ApplControl*	ACimpl);
+	ApplControlServer(uint16			portNr,
+					  ApplControl*		ACimpl);
 
 	// Destructor;
 	~ApplControlServer();
@@ -84,7 +84,7 @@ private:
 	ApplControlServer(const ApplControlServer& that);
 	ApplControlServer& 	operator=(const ApplControlServer& that);
 
-	const ApplControl*		itsACImpl;
+	ApplControl*			itsACImpl;
 	ApplControlComm*		itsCommChan;
 };
 

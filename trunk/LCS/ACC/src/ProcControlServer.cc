@@ -111,7 +111,8 @@ bool ProcControlServer::handleMessage(ACCommand*	theMsg)
 
 	switch (cmdType) {
 	case PCCmdInfo:		
-		sendResult(PcCmdMaskOk, "Not yet implemented");
+		// TODO: make a real implementation.
+		sendResult(PcCmdMaskOk, "ProcControlServer says:Not yet implemented");
 		return (true); 								
 	case PCCmdAnswer:	
 		sendAnswer = false; 

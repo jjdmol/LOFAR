@@ -45,7 +45,7 @@ public:
 				const string&	aNodeList = "");
 
 	~ACCommand() {};
-
+	
 	int16		itsCommand;
 	time_t		itsScheduleTime;
 	time_t		itsWaitTime;
