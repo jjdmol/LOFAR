@@ -41,7 +41,7 @@ namespace MSVisAgent
 using namespace VisVocabulary;
 
 //##ModelId=3E02FF340070
-class MSOutputSink : public FileSink, public MSVisAgentDebugContext
+class MSOutputSink : public FileSink
 {
   public:
     //##ModelId=3E2831C7010D
@@ -78,6 +78,8 @@ class MSOutputSink : public FileSink, public MSVisAgentDebugContext
     
     //##ModelId=3E283172001B
     string sdebug(int detail = 1, const string &prefix = "", const char *name = 0) const;
+    
+    ImportDebugContext(MSVisAgentDebugContext);
     
   protected:
     //##ModelId=3EC25F74033F
