@@ -24,11 +24,10 @@
 #include <StationSim/DH_Weight.h>
 
 
-DH_Weight::DH_Weight (const string& name, unsigned int nbeam)
+DH_Weight::DH_Weight (const string& name)
 : DataHolder    (name, "DH_Weight"),
   itsDataPacket (0),
-  itsBuffer     (0),
-  itsNbeam      (nbeam)
+  itsBuffer     (0)
 {}
 
 DH_Weight::~DH_Weight()
@@ -41,7 +40,7 @@ void DH_Weight::preprocess()
   // First delete possible buffers.
   postprocess();
   // Determine the number of bytes needed for DataPacket and buffer.
-  unsigned int size = sizeof(DataPacket) + itsNbeam * sizeof(BufferType);
+  unsigned int size = sizeof(DataPacket) + sizeof(BufferType);
   itsDataPacket = allocate(size);
   // Fill in the data packet pointer and initialize the memory.
   DataPacket* dpPtr = static_cast<DataPacket*>(itsDataPacket);
@@ -49,9 +48,6 @@ void DH_Weight::preprocess()
   // Fill in the buffer pointer and initialize the buffer.
   char* ptr = static_cast<char*>(itsDataPacket);
   itsBuffer = (BufferType*)(ptr + sizeof(DataPacket));
-  for (unsigned int i=0; i<itsNbeam; i++) {
-    itsBuffer[i] = 1;
-  }
   // Initialize base class.
   setDataPacket (dpPtr, size);
 }

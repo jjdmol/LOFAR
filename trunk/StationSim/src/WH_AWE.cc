@@ -18,43 +18,50 @@
 //#  along with this program; if not, write to the Free Software
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
+//#  Chris Broekema, november 2002.
+//#
 //#  $Id$
 //#
 
 #include <stdio.h>             // for sprintf
+#include <blitz/blitz.h>
 
 #include <StationSim/WH_AWE.h>
 #include <BaseSim/ParamBlock.h>
 #include <Common/Debug.h>
-#include <Common/lofar_vector.h>
+#include <Common/lofar_mdl.h>
+#include <Common/lofar_pastd.h>
+#include <Common/Lorrays.h>
+#include <Common/ArrayOperations.h>
 
-
-WH_AWE::WH_AWE (const string& name,
-		unsigned int nout,
-		unsigned int nsubband,
-		unsigned int nbeam)
-: WorkHolder    (1, nout, name, "WH_AWE"),
-  itsInHolder   ("in", nbeam, nsubband),
-  itsOutHolders (0),
-  itsNsubband   (nsubband),
-  itsNbeam      (nbeam)
+WH_AWE::WH_AWE (const string& name, unsigned int nin, unsigned int nout,
+		unsigned int nant, unsigned int buflength)
+: WorkHolder    (nin, nout, name, "WH_AWE"),
+  itsInHolder   ("in", nant, buflength),
+  itsOutHolder  ("out"),
+  itsNrcu       (nant),
+  itsBufLength  (buflength)
 {
-  if (nout > 0) {
-    itsOutHolders = new DH_Weight* [nout];
-  }
-  char str[8];
-  for (unsigned int i=0; i<nout; i++) {
-    sprintf (str, "%d", i);
-    itsOutHolders[i] = new DH_Weight (string("out_") + str, nbeam);
-  }
+
+  // Read the dipole positions from file
+  cerr << "Reading array configuration\n";
+  std::ifstream arrfile(itsDipoleName.c_str());
+  FailWhen1( !arrfile,"can't open dipole file" );
+  int n;
+  arrfile >> n;
+  dprintf1(1)("Expecting %d antennas\n",n);
+  px.resize(n);
+  py.resize(n);
+  arrfile >> px;
+  arrfile >> py;
+  dprintf1(1)("Read %d antenna coordinates\n",px.size());
+  arrfile.close();
+  cout << px << endl;
+  cout << py << endl;
 }
 
 WH_AWE::~WH_AWE()
 {
-  for (int i=0; i<getOutputs(); i++) {
-    delete itsOutHolders[i];
-  }
-  delete [] itsOutHolders;
 }
 
 WorkHolder* WH_AWE::construct (const string& name,
@@ -62,52 +69,135 @@ WorkHolder* WH_AWE::construct (const string& name,
 			       const ParamBlock& params)
 {
   Assert (ninput == 1);
-  return new WH_AWE (name, noutput,
-		     params.getInt ("nsubband", 10),
-		     params.getInt ("nbeam", 10));
+  return new WH_AWE (name, ninput, noutput, 
+		     params.getInt ("nant", 10), params.getInt ("buffer_length", 100));
 }
 
 WH_AWE* WH_AWE::make (const string& name) const
 {
-  return new WH_AWE (name, getOutputs(),
-		     itsNsubband, itsNbeam);
+  return new WH_AWE (name, getInputs(), getOutputs(), itsNrcu, itsBufLength);
 }
+
+void WH_AWE::preprocess()
+{
+  // Find the snapshot array for the current AWE snapshot
+  itsBuffer.resize(itsNrcu, itsBufLength);
+  itsBuffer = -1;
+
+  DH_SampleC::BufferType* bufin = itsInHolder.getBuffer();
+
+  itsBuffer = *bufin;
+
+}
+
 
 void WH_AWE::process()
 {
-  if (getOutputs() > 0) {
-    //    DH_SampleC::BufferType* bufin = itsInHolder.getBuffer();
-    DH_Weight::BufferType* bufout = itsOutHolders[0]->getBuffer();
-    for (int i=0; i<itsNbeam; i++) {
-      bufout[i] += 1;
-    }
-    // Copy the output if multiple outputs are used.
-    for (int i=1; i<getOutputs(); i++) {
-      memcpy (itsOutHolders[i]->getBuffer(), bufout,
-	      itsNbeam * sizeof(DH_Weight::BufferType));
-    }
-  }
+  /// REMOVE ME!!
+  double phi = 0.33;
+  double theta = -0.67;
+
+  // Select the appropriate algorithm
+  // See if the PASTd algorithm need updating
+  // Use either EVD or SVD for updating
+
+  // EVD - first calculate the ACM
+  LoMat_dcomplex itsAcm (itsNrcu, itsNrcu) ;
+  itsAcm = ArrayOperations::acm(itsBuffer);
+  
+  // EVD - using the ACM, calculate eigen vectors and values.
+  LoMat_dcomplex itsEvectors;
+  LoVec_double   itsEvalues;
+  ArrayOperations::eig(itsAcm, itsEvectors, itsEvalues);
+
+  // EVD - Determine the number of sources in the signal
+  // TODO: fit MDL into Common library.
+  unsigned int RFI = mdl(itsEvalues, itsNrcu, itsBufLength);
+  
+  // EVD - Find the appropriate Eigen vectors
+  // Assume the most powerfull sources are in front. This may not be true!!
+  // TODO check if this is a good assumption -- possible overflow
+  LoMat_dcomplex B(itsNrcu, RFI);
+  B = itsEvectors(Range::all(), Range(itsEvectors.lbound(firstDim), 
+				     itsEvectors.lbound(firstDim) + RFI - 1));
+
+  LoVec_dcomplex w (itsNrcu) ; // the weight vector
+  dcomplex *w_ptr = w.data() ;
+
+  LoVec_dcomplex d(itsNrcu);
+  d = steerv(phi, theta, px, py); 
+  w = getWeights(B, d);
+  
+  // Now assign the calculated weight vector to the output
+  memcpy(itsOutHolder.getBuffer(), w_ptr, itsNrcu * sizeof(LoVec_dcomplex));
+  
+  
+  cout << itsBuffer << endl;
+  cout << itsAcm << endl;
+
+  
+
+  // SVD 
+
+  // PASTd
+ 
 }
 
 void WH_AWE::dump() const
 {
-  cout << "WH_AWE " << getName() << " Buffers:" << endl;
-  if (getOutputs() > 0) {
-    cout << itsOutHolders[0]->getBuffer()[0] << ','
-	 << itsOutHolders[0]->getBuffer()[itsNbeam-1] << endl;
-  }
+
 }
 
 
 DH_SampleC* WH_AWE::getInHolder (int channel)
 {
-  AssertStr (channel < 1,
-	     "input channel too high");
   return &itsInHolder;
 }
+
 DH_Weight* WH_AWE::getOutHolder (int channel)
 {
   AssertStr (channel < getOutputs(),
 	     "output channel too high");
-  return itsOutHolders[channel];
+  return &itsOutHolder;
+}
+
+LoVec_dcomplex WH_AWE::steerv (double phi, double theta, LoVec_double px, LoVec_double py) {
+  
+  FailWhen1( px.size() != py.size(),"vector size mismatch" );
+  LoVec_dcomplex res( px.size() );
+  dcomplex i = dcomplex (0,1);
+
+  res = i * -2*M_PI*( px*sin(theta)*cos(phi) + py*sin(theta)*sin(phi) );
+  
+  return res;
+}
+
+LoVec_dcomplex WH_AWE::getWeights (LoVec_dcomplex B, LoVec_dcomplex d) {
+  LoVec_dcomplex w (B.size());
+  
+  if (B.size() != d.size()) {
+    cout << "Error. WH_AWE::getWeights() encountered non equal size arrays" << endl;
+  } else {
+    LoVec_dcomplex temp(B.size());
+    
+    temp = ArrayOperations::MatMult(B, 1/ArrayOperations::MatMultReduce(B, B)) ;
+    w = d - ArrayOperations::MatMult( ArrayOperations::MatMult( B, temp ), d );
+  }
+  return w;
+}
+
+LoVec_dcomplex WH_AWE::getWeights (LoMat_dcomplex B, LoVec_dcomplex d) {
+  LoVec_dcomplex w (B.rows());
+  
+  if (B.rows() != d.size()) {
+    cout << "Error. WH_AWE::getWeights() encountered non equal size arrays" << endl;
+  } else {
+    LoMat_dcomplex temp(B.cols(),B.rows());
+
+    temp = ArrayOperations::MatMult(pow(ArrayOperations::MatMult(B.transpose(firstDim, secondDim), B), -1), 
+				    B.transpose(firstDim,secondDim)) ;
+
+    w = d - ArrayOperations::MatMult( ArrayOperations::MatMult( B, temp ), d );
+  }
+  return w;
 }
