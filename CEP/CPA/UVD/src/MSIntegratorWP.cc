@@ -319,7 +319,7 @@ void MSIntegratorWP::initSegment (ROVisibilityIterator &vi)
       // add fields specific to the patch/correlation
       rec[FCorr] = corrtype[icorr];
       rec[FReceptorIndex] = receptor_ref;
-      rec[FData] <<= new DataArray(TpArray_dcomplex,IPosition(2,num_integrated_channels,num_ifrs),DMI::ZERO);
+      rec[FData] <<= new DataArray(TpArray_fcomplex,IPosition(2,num_integrated_channels,num_ifrs),DMI::ZERO);
       rec[FNumIntPixels] <<= new DataArray(TpArray_int,IPosition(2,num_integrated_channels,num_ifrs),DMI::ZERO);
       pdata[iacc] = &rec[FData];
       if( Debug(2) && !iacc )
@@ -363,7 +363,7 @@ void MSIntegratorWP::finishIntegration (bool reset)
       rec[FPatchIndex] = ipatch;
       rec[FCorr] = corrtype[icorr];
       // average the visibilities
-      dcomplex *pd = pdata[iacc];
+      ComplexType *pd = pdata[iacc];
       int *pn = pnumpixels[iacc];
       for( int j=0; j < num_points; j++ )
         if( pn[j] )
@@ -452,7 +452,7 @@ void MSIntegratorWP::integrate (ROVisibilityIterator &vi,VisBuffer &vb)
         {
           const Complex *pvp0 = pvisplane + icorr;
           const Bool *pfp0 = pflagplane + icorr;
-          dcomplex *pdata0 = pdata[iacc];
+          ComplexType *pdata0 = pdata[iacc];
           int *pnp0 = pnumpixels[iacc];
           for( int ichan = 0; ichan < num_integrated_channels; ichan++ )
           {
@@ -461,7 +461,7 @@ void MSIntegratorWP::integrate (ROVisibilityIterator &vi,VisBuffer &vb)
             if( ichan == num_integrated_channels-1 && num_channels%window_chan )
               window = num_channels%window_chan;
             int j0 = ifr*num_integrated_channels+ichan;
-            dcomplex &pd = pdata0[j0];
+            ComplexType &pd = pdata0[j0];
             int &pn = pnp0[j0];
             for( int j=0; j<window; j++,pvp0+=num_corrs,pfp0+=num_corrs )
               if( ignore_flags || !*pfp0 )
