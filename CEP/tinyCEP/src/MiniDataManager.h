@@ -83,6 +83,9 @@ namespace LOFAR
     DataHolder** itsOutDHs;
     
     void assertChannel(int channel, bool input);
+
+    /// A static to keep track of the DataHolderID's
+    static int DataHolderID;
   };
 
 inline int MiniDataManager::getInputs() const

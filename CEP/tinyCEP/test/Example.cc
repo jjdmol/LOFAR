@@ -43,9 +43,9 @@ int main(int argc, const char** argv)
   MyExample EX1(1, 1);
   EX1.setarg(argc, argv);
 
-#if 0
+#if 1
   try {
-    //    LOFAR::SimulatorParse::parse(EX1);
+    LOFAR::SimulatorParse::parse(EX1);
   } catch (LOFAR::SimulatorParseError x) {
     //    cout << x.getMesg() << endl;
     cout << x.what() << endl;
