@@ -98,7 +98,7 @@ public:
 	double	getDouble(const string& theKey) const;
 	float	getFloat (const string& theKey) const;
 	string	getString(const string& theKey) const;
-//	time_t	getTime  (const string& theKey) const;
+	time_t	getTime  (const string& theKey) const;
 
 	// Allow printing the whole parameter collection.
 	friend std::ostream& operator<<(std::ostream& os, const ParameterCollection &thePS);

@@ -1,22 +1,28 @@
 AC.portnr=3801						# for AC user
-AC.procPortnr=3802					# for AP's
 AC.backlog=20						# large queue for fast startup
-AC.timeout.define=20
-AC.timeout.init=20
-AC.timeout.run=5
-AC.timeout.pause=20
-AC.timeout.quit=10
-AC.timeout.snapshot=20
-AC.timeout.recover=20
+#
+# Overall process values.
+AC.process.APportnr=3802
+AC.process.timeout.define=20
+AC.process.timeout.init=20
+AC.process.timeout.run=5
+AC.process.timeout.pause=20
+AC.process.timeout.quit=10
+AC.process.timeout.snapshot=20
+AC.process.timeout.recover=20
+#
 AC.application=testAppl
 #
 # Application structure parameters
 testAppl.versionnr=1.1.10
 #
-testAppl.process.1.name=tPCClient
-testAppl.process.1.start=tPCClient
-testAppl.process.1.stop=kill <pid>
-testAppl.process.1.node=1
+testAppl.tPCClient.1.versionnr=1.2.3
+testAppl.tPCClient.1.startstoptype=cmdline
+testAppl.tPCClient.1.start=tPCClient <@parameterfile@>
+testAppl.tPCClient.1.stop=kill <@pid@>
+testAppl.tPCClient.1.node=1
+# Process related parameters
+testAppl.tPCClient.1.APsOwnParam=myOwn
 #
 testAppl.node.1.name=lofar17
 testAppl.node.2.name=lofar4
@@ -25,6 +31,3 @@ testAppl.node.4.name=lofar6
 testAppl.node.5.name=lofar7
 testAppl.node.6.name=lofar8
 #
-# Process related parameters
-testAppl.tPCClient.1.APsOwnParam=myOwn
-
