@@ -8,3 +8,9 @@ board=EPAStub:client
 [EPAStub]
 #intenionally left empty
 
+[SS]
+client=PI:server
+
+[PMLlite]
+client=SS:server
+

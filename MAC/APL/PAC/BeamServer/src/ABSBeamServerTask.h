@@ -26,6 +26,8 @@
 #include "ABSSpectralWindow.h"
 #include "ABS_Protocol.ph"
 #include "ABSBeamlet.h"
+#include "ABSAnswer.h"
+#include "ABSSubbandStats.h"
 
 #include <GCF/GCF_Control.h>
 #include <GCF/GCF_ETHRawPort.h>
@@ -81,6 +83,12 @@ namespace ABS
 	virtual ~BeamServerTask();
 
 	// state methods
+
+	/**
+	 * @return true if ready to transition to the enabled
+	 * state.
+	 */
+	bool isEnabled();
 
 	/**
 	 * The initial state. This state is used to connect the client
@@ -190,6 +198,12 @@ namespace ABS
 	 */
 	blitz::Array<std::complex<W_TYPE>,  4> m_weights;
 	blitz::Array<std::complex<int16_t>, 4> m_weights16;
+
+	/**
+	 * Subband statistics object to aggregate statistics
+	 * and to export the statistics as a property.
+	 */
+	SubbandStats m_stats;
 
     private:
 	// ports

@@ -44,11 +44,11 @@
 #undef VERSION
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
-using namespace LOFAR;
 
 #include <blitz/array.h>
-using namespace blitz;
 
+using namespace LOFAR;
+using namespace blitz;
 using namespace ABS;
 using namespace std;
 using namespace boost::posix_time;
@@ -67,6 +67,7 @@ BeamServerTask::BeamServerTask(string name)
       m_pos(N_ELEMENTS, N_POLARIZATIONS, 3),
       m_weights(COMPUTE_INTERVAL, N_ELEMENTS, N_SUBBANDS, N_POLARIZATIONS),
       m_weights16(COMPUTE_INTERVAL, N_ELEMENTS, N_SUBBANDS, N_POLARIZATIONS),
+      m_stats(N_SUBBANDS, 10),
       board(*this, "board", GCFPortInterface::SAP, true)
 {
   registerProtocol(ABS_PROTOCOL, ABS_PROTOCOL_signalnames);
@@ -97,6 +98,11 @@ BeamServerTask::BeamServerTask(string name)
 BeamServerTask::~BeamServerTask()
 {}
 
+bool BeamServerTask::isEnabled()
+{
+  return client.isConnected() && board.isConnected();
+}
+
 GCFEvent::TResult BeamServerTask::initial(GCFEvent& e, GCFPortInterface& port)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
@@ -124,7 +130,7 @@ GCFEvent::TResult BeamServerTask::initial(GCFEvent& e, GCFPortInterface& port)
       case F_CONNECTED_SIG:
       {
 	LOG_DEBUG(formatString("port '%s' connected", port.getName().c_str()));
-	if (client.isConnected() && board.isConnected())
+	if (isEnabled())
 	{
 	  TRAN(BeamServerTask::enabled);
 	}
@@ -200,6 +206,8 @@ GCFEvent::TResult BeamServerTask::enabled(GCFEvent& e, GCFPortInterface& port)
 	GCFTimerEvent* timer = static_cast<GCFTimerEvent*>(&e);
 
 	LOG_DEBUG(formatString("timer=(%d,%d)", timer->sec, timer->usec));
+
+	m_stats.updateRaw(0, 0);
 
 	if (0 == (period % COMPUTE_INTERVAL))
 	{
@@ -288,6 +296,9 @@ GCFEvent::TResult BeamServerTask::enabled(GCFEvent& e, GCFPortInterface& port)
 	static char data[ETH_DATA_LEN];
 
 	ssize_t length = board.recv(data, ETH_DATA_LEN);
+
+	//m_stats.updateRaw(data, length);
+
 	if (sizeof(EPADataEvent)-sizeof(GCFEvent) == length)
 	{
 	  EPADataEvent de;
@@ -412,7 +423,7 @@ void BeamServerTask::beampointto_action(ABSBeampointtoEvent* pt,
       if (beam->addPointing(Pointing(Direction(pt->angle1,
 					       pt->angle2,
 					       (Direction::Types)pt->type),
-				     pt->time)) < 0)
+				     from_time_t(pt->time))) < 0)
       {
 	  LOG_ERROR("beam not allocated");
       }
