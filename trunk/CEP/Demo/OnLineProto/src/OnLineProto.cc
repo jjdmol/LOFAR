@@ -112,41 +112,41 @@ void OnLineProto::define(const KeyValueMap& params)
   // create the station steps
   //
   ////////////////////////////////////////////////////////////////
-  WH_SimStation* myWHStations[NStations];
-  Step*          myStationSteps[NStations];
+//   WH_SimStation* myWHStations[NStations];
+//   Step*          myStationSteps[NStations];
 
-  for (int s=0; s < NStations; s++) {
-    // ToDo: pass stationID, freq offset etc. to DH
-    myWHStations[s] = new WH_SimStation("noname",  // name,
-					NBeamlets,  // nout
-					myFBW);
+//   for (int s=0; s < NStations; s++) {
+//     // ToDo: pass stationID, freq offset etc. to DH
+//     myWHStations[s] = new WH_SimStation("noname",  // name,
+// 					NBeamlets,  // nout
+// 					myFBW);
 
 
-    myStationSteps[s] = new Step(myWHStations[s],"noname");
-    myStationSteps[s]->runOnNode(0,0);
-    app.addStep(myStationSteps[s]);
-  }
+//     myStationSteps[s] = new Step(myWHStations[s],"noname");
+//     myStationSteps[s]->runOnNode(0,0);
+//     app.addStep(myStationSteps[s]);
+//   }
   ////////////////////////////////////////////////////////////////
   //
   // create the preproces steps
   //
   ////////////////////////////////////////////////////////////////
-  WH_PreProcess* myWHPreProcess[NStations];
-  Step*          myPreProcessSteps[NStations];
+//   WH_PreProcess* myWHPreProcess[NStations];
+//   Step*          myPreProcessSteps[NStations];
 
-  for (int s=0; s < NStations; s++) {
-    // ToDo: pass stationID, freq offset etc. to DH
-    myWHPreProcess[s] = new WH_PreProcess("noname",  // name,
-					  NBeamlets,  // channels
-					  myFBW);
+//   for (int s=0; s < NStations; s++) {
+//     // ToDo: pass stationID, freq offset etc. to DH
+//     myWHPreProcess[s] = new WH_PreProcess("noname",  // name,
+// 					  NBeamlets,  // channels
+// 					  myFBW);
 
 
-    myPreProcessSteps[s] = new Step(myWHPreProcess[s],"noname");
-    myPreProcessSteps[s]->runOnNode(0,0);
-    app.addStep(myPreProcessSteps[s]);
-    // connect the preprocess step to the station step
-    myPreProcessSteps[s]->connectInput(myStationSteps[s]);
-  }
+//     myPreProcessSteps[s] = new Step(myWHPreProcess[s],"noname");
+//     myPreProcessSteps[s]->runOnNode(0,0);
+//     app.addStep(myPreProcessSteps[s]);
+//     // connect the preprocess step to the station step
+//     myPreProcessSteps[s]->connectInput(myStationSteps[s]);
+//   }
   
   ////////////////////////////////////////////////////////////////
   //
@@ -178,12 +178,12 @@ void OnLineProto::define(const KeyValueMap& params)
   // connection scheme implements transpose function
   //
   ////////////////////////////////////////////////////////////////
-  for (int b = 0; b < NBeamlets; b++) {
-    for (int s = 0; s < NStations; s++) {
-      TRACER2("Pipeline; try to connect " << b << "   " << s);    
-      myTransposeSteps[b]->connect(myPreProcessSteps[s],s,b,1);
-    }
-  }
+//   for (int b = 0; b < NBeamlets; b++) {
+//     for (int s = 0; s < NStations; s++) {
+//       TRACER2("Pipeline; try to connect " << b << "   " << s);    
+//       myTransposeSteps[b]->connect(myPreProcessSteps[s],s,b,1);
+//     }
+//   }
   
   ////////////////////////////////////////////////////////////////
   //
@@ -211,14 +211,14 @@ void OnLineProto::define(const KeyValueMap& params)
   // connect the preprocess step to the station step
   //
   ////////////////////////////////////////////////////////////////
-  int correlator=0;
-  for (int t=0; t<NBeamlets; t++) {
-    for (int c=0; c<NVis; c++) {
-      myCorrelatorSteps[correlator]->connect(myTransposeSteps[t],0,c,1);
-      correlator++;
-    }
-  }
-  DbgAssertStr(correlator == NCorr,"error in correlator connection logic");
+//   int correlator=0;
+//   for (int t=0; t<NBeamlets; t++) {
+//     for (int c=0; c<NVis; c++) {
+//       myCorrelatorSteps[correlator]->connect(myTransposeSteps[t],0,c,1);
+//       correlator++;
+//     }
+//   }
+//   DbgAssertStr(correlator == NCorr,"error in correlator connection logic");
 
 
 
