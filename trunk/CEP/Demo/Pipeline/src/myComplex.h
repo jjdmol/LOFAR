@@ -9,6 +9,9 @@ class myComplex8 {
   myComplex8(int r, int i) {real = r; imag = i;}
   ~myComplex8() {};
 
+  void  mult(const myComplex8 &a, const myComplex8 &b);
+  void cmult(const myComplex8 &a, const myComplex8 &b);
+  
   friend ostream &operator<<(ostream &s, const myComplex8 &a) {
     return s << "(" << (int)a.real << "," << (int)a.imag << ")";
   }
@@ -65,6 +68,16 @@ class myComplex32 {
 
 };
 
+
+inline void myComplex8::cmult(const myComplex8 &a, const myComplex8 &b) {
+  real = a.real*b.real + a.imag*b.imag;
+  imag = a.imag*b.real - a.real*b.imag;
+}
+
+inline void myComplex8::mult(const myComplex8 &a, const myComplex8 &b) {
+  real = a.real*b.real - a.imag*b.imag;
+  imag = a.imag*b.real + a.real*b.imag;
+}
 
 inline void myComplex16::cmult(const myComplex8 &a, const myComplex8 &b) {
   real = a.real*b.real + a.imag*b.imag;
