@@ -35,13 +35,11 @@ WH_WeightDetermination::WH_WeightDetermination(const string& name, unsigned int 
   : WorkHolder (nin, nout, name, "WH_WeightDetermination"),
     itsOutHolder (0),
     itsNrcu      (0),
-    itsArray     (0)
+    itsArray     (0),
+	itsArrayFile (s)
 {
-  itsNrcu = nant;
-  
-  string s = "/home/chris/DG_input/array-92.txt";
+  itsNrcu = nant; 
   itsArray = new ArrayConfig (s);
-
 
   if (nout > 0) {
     itsOutHolder = new DH_SampleC("out", itsNrcu, 1);
@@ -55,7 +53,7 @@ WH_WeightDetermination::~WH_WeightDetermination()
 
 WH_WeightDetermination* WH_WeightDetermination::make (const string& name) const
 {
-  return new WH_WeightDetermination (name, getInputs(), getOutputs(), itsNrcu, itsConfigFile);
+  return new WH_WeightDetermination (name, getInputs(), getOutputs(), itsNrcu, itsArrayFile);
 }
 
 void WH_WeightDetermination::preprocess()
@@ -65,8 +63,8 @@ void WH_WeightDetermination::preprocess()
 
 void WH_WeightDetermination::process()
 {
-  double phi = 0.33;
-  double theta = -0.67;
+  double phi = 0.2;
+  double theta = 0.4;
 
   
   LoVec_dcomplex d(itsNrcu);
