@@ -21,6 +21,9 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.2  2001/09/19 08:00:13  wierenga
+//  Added code to do performance tests.
+//
 //  Revision 1.1  2001/08/16 15:14:22  wierenga
 //  Implement GrowSize DH and WH for performance measurements. Timing code still needs to be added.
 //
@@ -30,7 +33,7 @@
 
 
 #include "DH_GrowSize.h"
-#include "firewalls.h"
+#include "Debug.h"
 
 DH_GrowSize::DH_GrowSize (const string& name, unsigned int nbuffer)
 : DataHolder (name, "DH_GrowSize")
@@ -39,8 +42,10 @@ DH_GrowSize::DH_GrowSize (const string& name, unsigned int nbuffer)
   unsigned int size = sizeof(DataPacket) + (nbuffer * sizeof(BufferType));
   char* ptr = new char[size];
 
-  //cout << "size = " << size << endl;
+  cout << "nbuffer = " << nbuffer;
+  cout << "DH_GrowSize buffersize = " << size << endl;
   //cout << "sizeof(BufferType) = " << sizeof(BufferType) << endl;
+  //cout << "sizeof(DataPacket) = " << sizeof(DataPacket) << endl;
 
   // Fill in the data packet pointer and initialize the memory.
   itsDataPacket = (DataPacket*)(ptr);
@@ -50,13 +55,13 @@ DH_GrowSize::DH_GrowSize (const string& name, unsigned int nbuffer)
   itsBuffer = (BufferType*)(ptr + sizeof(DataPacket));
 
   for (unsigned int i=0; i<nbuffer; i++) {
-    itsBuffer[i] = 0;
+    itsBuffer[i] = reportedDataPacketSize + sizeof(DataPacket);
   }
   // Initialize base class.
   setDataPacket (itsDataPacket, size);
 
-  reportedDataPacketSize = sizeof(DataPacket); /* initial packet size */
-  floatDataPacketSize = (float)reportedDataPacketSize;
+  reportedDataPacketSize = 8; // initial size
+  floatDataPacketSize = (int)reportedDataPacketSize;
 }
 
 DH_GrowSize::~DH_GrowSize()

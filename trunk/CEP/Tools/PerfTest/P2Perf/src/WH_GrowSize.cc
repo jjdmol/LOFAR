@@ -21,6 +21,9 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.9  2001/12/18 12:57:58  schaaf
+//  Added tag for performance measurement report
+//
 //  Revision 1.8  2001/12/17 16:30:00  schaaf
 //  new logic in process() measurements counting
 //
@@ -52,7 +55,7 @@
 #include <math.h>
 
 #include "Step.h"
-#include "firewalls.h"
+#include "Debug.h"
 
 #include "WH_GrowSize.h"
 #include "StopWatch.h"
@@ -72,15 +75,10 @@ WH_GrowSize::WH_GrowSize (const string& name, bool first,
   itsIteration(itsMeasurements),
   itsTime(0)
 {
-  Firewall::Assert (nin > 0,
-		    __HERE__,
-		    "0 input DH_IntArray is not possible");
-  Firewall::Assert (nout > 0,
-		    __HERE__,
-		    "0 output DH_IntArray is not possible");
-  Firewall::Assert (nout == nin,
-		    __HERE__,
-		    "number of inputs and outputs must match");
+  AssertStr (nin > 0,     "0 input DH_IntArray is not possible");
+  AssertStr (nout > 0,    "0 output DH_IntArray is not possible");
+  AssertStr (nout == nin, "number of inputs and outputs must match");
+
   itsInHolders  = new DH_GrowSize* [nin];
   itsOutHolders = new DH_GrowSize* [nout];
   char str[8];
@@ -145,10 +143,10 @@ void WH_GrowSize::process()
 	  cout << itsInHolders[0]->getDataPacketSize() << " "
 	      << log10(itsInHolders[0]->getDataPacketSize()) << " ";
 	}
-	cout << (itsInHolders[0]->getDataPacketSize() / (1024. * 1024.) / watch.elapsed()) 
-	     << "  "
-	     << watch.elapsed()
-	     << "  "
+	//cout << (itsInHolders[0]->getDataPacketSize() / (1024. * 1024.) / watch.elapsed()) 
+	//     << "  "
+	//     << watch.elapsed()
+	//     << "  "
 ;
       }
     watch.start();
@@ -188,15 +186,11 @@ void WH_GrowSize::dump() const
 
 DH_GrowSize* WH_GrowSize::getInHolder (int channel)
 {
-  Firewall::Assert (channel < getInputs(),
-		    __HERE__,
-		    "input channel too high");
+  AssertStr (channel < getInputs(), "input channel too high");
   return itsInHolders[channel];
 }
 DH_GrowSize* WH_GrowSize::getOutHolder (int channel)
 {
-  Firewall::Assert (channel < getOutputs(),
-		    __HERE__,
-		    "output channel too high");
+  AssertStr (channel < getOutputs(), "output channel too high");
   return itsOutHolders[channel];
 }

@@ -21,12 +21,15 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.1  2001/08/09 15:48:48  wierenga
+//  Implemented first version of TH_Corba and test program
+//
 //
 //////////////////////////////////////////////////////////////////////
 
 
 #include "DH_IntArray.h"
-#include "firewalls.h"
+#include "Debug.h"
 
 
 DH_IntArray::DH_IntArray (const string& name, unsigned int nbuffer)

@@ -21,12 +21,15 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.1  2001/08/09 15:48:48  wierenga
+//  Implemented first version of TH_Corba and test program
+//
 //
 //////////////////////////////////////////////////////////////////////
 
 #include "WH_Square.h"
 #include "Step.h"
-#include "firewalls.h"
+#include "Debug.h"
 #include <stdio.h>             // for sprintf
 
 
@@ -39,15 +42,10 @@ WH_Square::WH_Square (const string& name, bool first,
   itsBufLength  (nbuffer),
   itsFirst      (first)
 {
-  Firewall::Assert (nin > 0,
-		    __HERE__,
-		    "0 input DH_IntArray is not possible");
-  Firewall::Assert (nout > 0,
-		    __HERE__,
-		    "0 output DH_IntArray is not possible");
-  Firewall::Assert (nout == nin,
-		    __HERE__,
-		    "number of inputs and outputs must match");
+  AssertStr (nin > 0,     "0 input DH_IntArray is not possible");
+  AssertStr (nout > 0,    "0 output DH_IntArray is not possible");
+  AssertStr (nout == nin, "number of inputs and outputs must match");
+
   itsInHolders  = new DH_IntArray* [nin];
   itsOutHolders = new DH_IntArray* [nout];
   char str[8];
@@ -120,15 +118,11 @@ void WH_Square::dump() const
 
 DH_IntArray* WH_Square::getInHolder (int channel)
 {
-  Firewall::Assert (channel < getInputs(),
-		    __HERE__,
-		    "input channel too high");
+  AssertStr (channel < getInputs(), "input channel too high");
   return itsInHolders[channel];
 }
 DH_IntArray* WH_Square::getOutHolder (int channel)
 {
-  Firewall::Assert (channel < getOutputs(),
-		    __HERE__,
-		    "output channel too high");
+  AssertStr (channel < getOutputs(), "output channel too high");
   return itsOutHolders[channel];
 }
