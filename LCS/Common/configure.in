@@ -58,7 +58,6 @@ lofar_DOCXX
 lofar_LOG4CPLUS
 lofar_BLITZ
 lofar_MPI
-lofar_AIPSPP(0)
 dnl
 dnl Output Makefiles
 dnl
