@@ -8,7 +8,6 @@
 //#  $Id$
 
 #include <stdio.h>                // for sprintf
-#include <sys/time.h>             // for gettimeofday
 
 #include <Common/LofarLogger.h>
 #include <Common/KeyValueMap.h>
@@ -43,7 +42,16 @@ namespace LOFAR
     timeval tv;
     gettimeofday(&tv, NULL);
     srandom(tv.tv_sec);
-  }
+
+    // not really necessary, but used later to detect initial loop
+    starttime.tv_sec = 0;
+    starttime.tv_usec = 0;
+    
+    stoptime.tv_sec = 0;
+    stoptime.tv_usec = 0;
+  
+    bandwidth = 0.0;
+}
 
 
 
@@ -75,6 +83,17 @@ namespace LOFAR
   
   void WH_Random::process() {
     
+    if (starttime.tv_sec != 0 && starttime.tv_usec != 0) {
+      // determine the approximate bandwidth. This does include some overhead 
+      // incurred by the framework, but earlier measurements put this in the 
+      // order of 1-2%
+      gettimeofday(&stoptime, NULL);
+
+      bandwidth = (itsNchannels*itsNelements*itsNsamples*itsNpolarisations*sizeof(DH_CorrCube::BufferType))/
+	(stoptime.tv_sec + 1.0e-6*stoptime.tv_usec -
+	 starttime.tv_sec + 1.0e-6*starttime.tv_usec);
+    }
+
     DH_Vis::BufferType acc = DH_Vis::BufferType(0,0);
     float seed = rand();
     seed = seed/(RAND_MAX);
@@ -84,7 +103,7 @@ namespace LOFAR
 	for (int sample = 0; sample < itsNsamples; sample++) {
 	  for (int polarisation = 0; polarisation < itsNpolarisations; polarisation++) {
 	    DH_CorrCube::BufferType rval = DH_CorrCube::BufferType ((DH_CorrCube::BufferPrimitive) round(10*seed) , (DH_CorrCube::BufferPrimitive) round(2*seed));
-	    if (channel == 0 && station == 0 && polarisation == 0) {
+// 	    if (channel == 0 && station == 0 && polarisation == 0) {
 // 	      acc += DH_CorrCube::BufferType(
 // 					     rval.real() * rval.real() - 
 // 					     rval.imag() * rval.imag(), 
@@ -93,8 +112,8 @@ namespace LOFAR
 // 					     rval.imag() * rval.real() 
 // 					     );
 
-	      acc += rval * rval;
-	    }
+// 	      acc += rval * rval;
+// 	    }
 	  
 
 	  
@@ -107,11 +126,11 @@ namespace LOFAR
 	}
       }
     }
-    cout << "REF [" << itsIndex++ <<"]: " << acc << endl;
+
+    gettimeofday(&starttime, NULL);
   }
 
 
   void WH_Random::dump() {
   }
-
 } // namespace LOFAR

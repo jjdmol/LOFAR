@@ -62,7 +62,7 @@ void AH_FrontEnd::define(const KeyValueMap& /*params*/) {
       
     itsWHs.back()->getDataManager().getOutHolder(0)->connectTo
       ( *myWHCorrelator.getDataManager().getInHolder(0),
-	TH_Socket(LOCALHOST_IP, LOCALHOST_IP, itsPort+cn, true) );
+	TH_Socket(LOCALHOST_IP, LOCALHOST_IP, itsPort+cn, false) );
     
   }
 }
@@ -86,11 +86,15 @@ void AH_FrontEnd::run(int nsteps) {
   vector<WorkHolder*>::iterator it;
 
   for (int s = 0; s < nsteps; s++) {
+    double aggregate_bandwidth=0;
     for (it = itsWHs.begin(); it != itsWHs.end(); it++) {
       (*it)->baseProcess();
+            
+      aggregate_bandwidth += reinterpret_cast<WH_Random*>(*it)->getBandwidth();
     }
+    cout << "Total bandwidth: "<< 8.0*aggregate_bandwidth/(1024.0*1024.0) << "Mbit/sec   " ;
+    cout << (800.0*aggregate_bandwidth/(1024.0*1024.0))/(1024.0*1024.0*1024.0*8.0) << "% of theoretical peak" << endl;
   }
-
 }
 
 void AH_FrontEnd::dump() const {
