@@ -84,7 +84,7 @@ int main (int argc, char *argv[]) {
 
 	// Read in the log-environment configuration
 	// We should always start with this.
-	INIT_LOGGER_AND_WATCH("testlogger.properties", 10000);
+	INIT_LOGGER_AND_WATCH("testLogger.log_prop", 10000);
 
 	// Show operator were are on the air
 	LOG_INFO (formatString("Program %s has started", argv[0]));
