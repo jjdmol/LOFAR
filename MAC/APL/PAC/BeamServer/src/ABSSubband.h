@@ -68,7 +68,7 @@ namespace ABS
 
       protected:
 	  Subband(); // no direct construction
-	  ~Subband();
+	  virtual ~Subband();
 
       private:
 	  //@{

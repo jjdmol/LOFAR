@@ -1,5 +1,5 @@
 //#
-//#  BeamServerTestSimple.cc: class definition for the Beam Server task.
+//#  BeamServerTest.cc: class definition for the Beam Server task.
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -24,8 +24,14 @@
 #include "ABSSpectralWindow.h"
 #include "ABSBeam.h"
 
-#include "../../../APLCommon/src/test.cpp"
-#include "../../../APLCommon/src/suite.cpp"
+#include <cppunit/TestAssert.h>
+#include <cppunit/TestFixture.h>
+#include <cppunit/TestSuite.h>
+#include <cppunit/TestResult.h>
+#include <cppunit/TestCaller.h>
+#include <cppunit/ui/text/TestRunner.h>
+#include <cppunit/extensions/HelperMacros.h>
+#include <cppunit/extensions/TestFactoryRegistry.h>
 
 #include <iostream>
 
@@ -36,8 +42,21 @@
 using namespace ABS;
 using namespace std;
 
-class BeamServerTestSimple : public Test
+class BeamServerTest : public CppUnit::TestFixture
 {
+    CPPUNIT_TEST_SUITE(BeamServerTest);
+    // order is important here
+    // testAllocate must be before testDeallocate
+    CPPUNIT_TEST(allocate);
+    CPPUNIT_TEST(deallocate);
+    // uses testAllocate and testDeallocate
+    CPPUNIT_TEST(subbandSelection);
+    CPPUNIT_TEST(oneTooManyBeam);
+    CPPUNIT_TEST(oneTooManyBeamlet);
+    CPPUNIT_TEST(emptyBeam);
+    CPPUNIT_TEST(doubleAllocate);
+    CPPUNIT_TEST_SUITE_END();
+
 private:
     Beam*          m_beam[N_BEAMS];
     SpectralWindow m_spw;
@@ -49,7 +68,7 @@ public:
 	  for (int i = 0; i < N_BEAMS; i++)
 	  {
 	      m_beam[i] = Beam::getInstance(i);
-	      _test(m_beam[i] != 0);
+	      CPPUNIT_ASSERT(m_beam[i] != 0);
 	  }
 	}
 
@@ -59,24 +78,7 @@ public:
 	  // nothing needed
 	}
 
-    void run()
-	{
-	  setUp();
-	  
-	  allocate();
-	  deallocate();
-	  subbandSelection();
-	  oneTooManyBeam();
-	  oneTooManyBeamlet();
-	  emptyBeam();
-	  doubleAllocate();
-
-	  tearDown();
-	}
-
-    BeamServerTestSimple() :
-	Test("BeamServerTestSimple"),
-	m_spw(10e6, 256*1e3, 80*(1000/256))
+    BeamServerTest() : m_spw(10e6, 256*1e3, 80*(1000/256))
 	{
 	  //cerr << "c";
 	  Beam::setNInstances(N_BEAMS);
@@ -98,7 +100,7 @@ public:
 	  }
 	  for (int i = 0; i < N_BEAMS; i++)
 	  {
-	      _test(m_beam[i]->allocate(m_spw, subbands) == 0);
+	      CPPUNIT_ASSERT(m_beam[i]->allocate(m_spw, subbands) == 0);
 	  }
 	}
 
@@ -106,7 +108,7 @@ public:
 	{
 	  for (int i = 0; i < N_BEAMS; i++)
 	  {
-	      _test(m_beam[i]->deallocate() == 0);
+	      CPPUNIT_ASSERT(m_beam[i]->deallocate() == 0);
 	  }
 	}
 
@@ -121,7 +123,7 @@ public:
 	      m_beam[i]->getSubbandSelection(selection);
 	  }
 
-	  _test(selection.size() == N_BEAMS*N_SUBBANDS_PER_BEAM);
+	  CPPUNIT_ASSERT(selection.size() == N_BEAMS*N_SUBBANDS_PER_BEAM);
 
 	  deallocate();
 	}
@@ -129,10 +131,10 @@ public:
     void oneTooManyBeam()
 	{
 	  // try to get N_BEAMS instance, should fail
-	  _test(Beam::getInstance(N_BEAMS) == 0);
+	  CPPUNIT_ASSERT(Beam::getInstance(N_BEAMS) == 0);
 	 
 	  // try to get -1 instance, should fail
-	  _test(Beam::getInstance(-1) == 0);
+	  CPPUNIT_ASSERT(Beam::getInstance(-1) == 0);
 	}
 
     void oneTooManyBeamlet()
@@ -144,34 +146,33 @@ public:
 	  {
 	      subbands.insert(i);
 	  }
-	  _test(m_beam[0]->allocate(m_spw, subbands) < 0);
+	  CPPUNIT_ASSERT(m_beam[0]->allocate(m_spw, subbands) < 0);
 	}
 
     void emptyBeam()
 	{
 	  set<int> subbands;
 	  subbands.clear();
-	  _test(m_beam[0]->allocate(m_spw, subbands) == 0);
-	  _test(m_beam[0]->deallocate() == 0);
+	  CPPUNIT_ASSERT(m_beam[0]->allocate(m_spw, subbands) == 0);
+	  CPPUNIT_ASSERT(m_beam[0]->deallocate() == 0);
 	}
 
     void doubleAllocate()
 	{
 	  set<int> subbands;
 	  subbands.clear();
-	  _test(m_beam[0]->allocate(m_spw, subbands) == 0);
-	  _test(m_beam[0]->allocate(m_spw, subbands) < 0);
-	  _test(m_beam[0]->deallocate() == 0);
+	  CPPUNIT_ASSERT(m_beam[0]->allocate(m_spw, subbands) == 0);
+	  CPPUNIT_ASSERT(m_beam[0]->allocate(m_spw, subbands) < 0);
+	  CPPUNIT_ASSERT(m_beam[0]->deallocate() == 0);
 	}
 };
 
+CPPUNIT_TEST_SUITE_REGISTRATION( BeamServerTest );
+
 int main(int /*argc*/, char** /*argv*/)
 {
-  Suite s("BeamServerTestSimple Suite", &cout);
-
-  s.addTest(new BeamServerTestSimple);
-  s.run();
-  long nFail = s.report();
-  s.free();
-  return nFail;
+  CppUnit::TextUi::TestRunner runner;
+  CppUnit::TestFactoryRegistry &registry = CppUnit::TestFactoryRegistry::getRegistry();
+  runner.addTest( registry.makeTest() );
+  return !runner.run("", false); // return 0 on success, 1 on failure
 }

@@ -49,7 +49,9 @@ namespace ABS
 
 	  Direction(double angle1 = 0.0,
 		    double angle2 = 0.0,
-		    Types type = J2000);
+		    Types type = AZEL);
+
+	  virtual ~Direction();
 
 	  //@{
 	  /**

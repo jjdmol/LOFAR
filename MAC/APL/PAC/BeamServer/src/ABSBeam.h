@@ -23,7 +23,6 @@
 #ifndef ABSBEAM_H_
 #define ABSBEAM_H_
 
-#include "ABSDirection.h"
 #include "ABSPointing.h"
 #include "ABSSpectralWindow.h"
 #include "ABSBeamlet.h"
@@ -67,7 +66,7 @@ namespace ABS
 	   */
 	  int allocate(SpectralWindow const & spw, std::set<int> subbands);
 	  int deallocate();
-	  int addPointing();
+	  void addPointing(const Pointing& pointing);
 	  int convertPointings();
 	  int getPointings();
 
@@ -83,7 +82,7 @@ namespace ABS
 
       protected:
 	  Beam(); // no construction outside class
-	  ~Beam();
+	  virtual ~Beam();
 
       private:
 	  /** is this beam in use? */

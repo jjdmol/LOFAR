@@ -27,3 +27,6 @@ using namespace ABS;
 Direction::Direction(double angle1, double angle2, Types type) :
     m_angle1(angle1), m_angle2(angle2), m_type(type)
 {}
+
+Direction::~Direction()
+{}

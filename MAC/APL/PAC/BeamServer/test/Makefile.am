@@ -7,7 +7,7 @@ BeamServerTest_SOURCES = \
 	BeamServerTest.cc
 
 BeamServerTest_LDADD = \
-	$(top_builddir)/src/libabs.la -lcppunit
+	$(top_builddir)/src/libabs.la
 
 TESTS = \
 	BeamServerTest
