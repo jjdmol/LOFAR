@@ -53,7 +53,7 @@ def attach_filter(s, iface, filter):
     # work... one solution could be to use "any" interface and translate
     # the filter from cooked mode to raw mode
     # mode
-    f = os.popen("tcpdump -i %s -ddd -s 1600 '%s'" % (iface,filter))
+    f = os.popen("/usr/sbin/tcpdump -i %s -ddd -s 1600 '%s'" % (iface,filter))
     lines = f.readlines()
     if f.close():
         raise Exception("Filter parse error")
