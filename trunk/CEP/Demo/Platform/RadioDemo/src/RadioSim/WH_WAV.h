@@ -31,7 +31,7 @@ public:
 
  private:
   int itsOffset;
-  int itsLags;
+  int itsChannel;
   int itsWAVArray[1000];
   bool itsFirstCall;
   unsigned short itsSampleBuffer[2*ANTSAMPLES];

@@ -139,11 +139,11 @@ void WH_Corr::process () {
 void WH_Corr::openFile(char* filename)
 {
   //cout << "open file " << filename << " on Correlator " << getName() << endl;
-  itsFile = fopen(filename, "w");
+  itsFile = fopen(filename, "a");
 
   Firewall::Assert(NULL != itsFile, __HERE__, "WH_Corr::openFile");
 
-  itsXOffset = (-LAGS) / 2;
+  //itsXOffset = (-LAGS) / 2;
 }
 
 void WH_Corr::closeFile(void)
@@ -158,7 +158,7 @@ void WH_Corr::writeFile(float y)
 		   __HERE__,
 		   "file pointer == NULL");
   fprintf(itsFile, "%d, %f\n", ++itsXOffset, y);
-  //printf("%d, %f\n", ++itsXOffset, y);
+  printf("%d, %f\n", ++itsXOffset, y);
 }
 
 void WH_Corr::dump () const
