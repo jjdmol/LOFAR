@@ -29,6 +29,9 @@
 //  Defines mappings from result planes to correlations. If empty, then
 //  a default one-to-one mapping is used. Otherwise, should contain one
 //  correlation index (1-based) per each result plane.
+//field: uwv_node_name ''
+//     
+//field: uwv_node_group ''
 //defrec end
     
 namespace Meq {
@@ -88,6 +91,9 @@ class Sink : public VisHandlerNode
     
     int flag_mask;
     int row_flag_mask;
+    
+    HIID uvw_node_group;
+    string uvw_node_name;
     
 };
 

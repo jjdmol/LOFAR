@@ -53,6 +53,9 @@ void Sink::setStateImpl (DataRecord &rec,bool initializing)
   // get flag masks
   rec[FFlagMask].get(flag_mask,initializing);
   rec[FRowFlagMask].get(row_flag_mask,initializing);
+  // get UVW nodes
+  rec[FUVWNodeGroup].get(uvw_node_group,initializing);
+  rec[FUVWNodeName].get(uvw_node_name,initializing);
 }
 
 //##ModelId=3F9509770277

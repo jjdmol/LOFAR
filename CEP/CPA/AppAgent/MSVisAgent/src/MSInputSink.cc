@@ -93,9 +93,19 @@ void MSInputSink::fillHeader (DataRecord &hdr,const DataRecord &select)
     int spw = mssub1c.spectralWindowId()(ddid);
     MSSpectralWindow mssub(ms_.spectralWindow());
     ROMSSpWindowColumns mssubc(mssub);
-    hdr[FChannelFreq]  = mssubc.chanFreq()(spw);
-    hdr[FChannelWidth] = mssubc.chanWidth()(spw);
-    num_channels_ = hdr[FChannelFreq].size();
+    // get freqs
+    Array<Double> ch_freq  = mssubc.chanFreq()(spw);
+    Array<Double> ch_width = mssubc.chanWidth()(spw);
+    num_channels_ = ch_freq.nelements();
+    if( channels_[0]<0 )
+      channels_[0] = 0; 
+    if( channels_[1]<0 )
+      channels_[1] = num_channels_; 
+    FailWhen(channels_[1] < channels_[0] || channels_[1]>=num_channels_,
+          "illegal channel selection");
+    hdr[FChannelFreq]  = ch_freq(IPosition(1,channels_[0]),IPosition(1,channels_[1]));
+    hdr[FChannelWidth] = ch_width(IPosition(1,channels_[0]),IPosition(1,channels_[1]));
+        
     // now get the correlations & their types
     int polzn = mssub1c.polarizationId()(ddid);
     MSPolarization mssub2(ms_.polarization());
@@ -129,6 +139,9 @@ void MSInputSink::openMS (DataRecord &header,const DataRecord &select)
   // get DDID and Field ID (default is 0)
   int ddid = select[FDDID].as<int>(0);        
   int fieldid = select[FFieldIndex].as<int>(0);        
+  // Get range of channels (default values: all channles)
+  channels_[0] = select[FChannelStartIndex].as<int>(0);
+  channels_[1] = select[FChannelStartIndex].as<int>(-1);
   
   // fill header from MS
   fillHeader(header,select);
@@ -150,14 +163,6 @@ void MSInputSink::openMS (DataRecord &header,const DataRecord &select)
   header[FDataColumnName] = dataColName_;
   header[FDomainIndex] = -1; // negative domain index indicates full data
   
-  // Get range of channels (default values: all channles)
-  channels_[0] = select[FChannelStartIndex].as<int>(0);
-  channels_[1] = select[FChannelEndIndex].as<int>(-1);
-  if( channels_[0] < 0 )
-    channels_[0] = 0;
-  if( channels_[1] < 0 )
-    channels_[1] = header[FChannelFreq].size()-1;
-  FailWhen( channels_[1] < channels_[0],"illegal channel selection");
   header[FChannelStartIndex] = channels_[0];
   header[FChannelEndIndex]   = channels_[1];
   

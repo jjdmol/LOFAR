@@ -424,6 +424,8 @@ void MeqServer::run ()
             cdebug(2)<<"received header"<<endl;
             reading_data = False;
             header = ref;
+            eventrec <<= new DataRecord;
+            eventrec[AidHeader] <<= header.copy();
             data_mux.deliverHeader(*header);
             output_event = DataSetHeader;
             output_message = "received header for dataset "+id.toString();

@@ -8,6 +8,7 @@
 #pragma aid VisHandlerNode 
 #pragma aid Station Index Data Id Num Antenna Tile Format Input 
 #pragma aid Output Col Corr Next Read Flag Flags Mask Row Mandate Regular Grid
+#pragma aid UVW Node Name Group
     
 namespace Meq {
   
@@ -23,6 +24,8 @@ const HIID  FStation1Index = AidStation|1|AidIndex,
             FRowFlagMask  = AidRow|AidFlag|AidMask,
             FCorrIndex    = AidCorr|AidIndex,
             FNext         = AidNext,
+            FUVWNodeName  = AidUVW|AidNode|AidName,
+            FUVWNodeGroup = AidUVW|AidNode|AidGroup,
             
 // this is a MeqServer config flag, default True
             FMandateRegularGrid = AidMandate|AidRegular|AidGrid;
