@@ -47,7 +47,7 @@ using namespace boost::posix_time;
 // using half of the beamlets should allow two AVTStub clients
 // to connect to the BeamServer
 //
-#define TEST_N_BEAMLETS ( N_BEAMLETS / 2 )
+#define TEST_N_BEAMLETS ( MEPHeader::N_BEAMLETS / 2 )
 
 using namespace ABS;
 using namespace std;

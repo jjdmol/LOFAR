@@ -47,7 +47,7 @@ event = {
       };
       param = {
 	    name = "subbands";
-	    type = "int[N_BEAMLETS]";
+	    type = "int[MEPHeader::N_BEAMLETS]";
       };
 };
 
