@@ -147,6 +147,8 @@ private:
   
     //##ModelId=400E535100D0
   Domain       itsCurrentDomain;
+  
+  HIID         itsCurrentDomainId;
 };
 
 
