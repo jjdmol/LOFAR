@@ -22,6 +22,15 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.28  2002/06/07 10:44:54  schaaf
+//
+//  %[BugId: 36]%
+//
+//  Use ParameterBlock for:
+//  sources            -> the number of source steps
+//  destinations       -> the number of destination steps
+//  destside           -> flag for selecting destination side application (needed for Corba connections)
+//
 //  Revision 1.27  2002/05/23 08:50:50  wierenga
 //  %[BugId: 4]%
 //  Adapt to new location of shmem_alloc.
@@ -165,7 +174,8 @@ void P2Perf::define(const ParamBlock& params)
 #ifdef HAVE_MPI
   // TH_ShMem only works in combination with MPI
   // initialize TH_ShMem
-  TH_ShMem::init(0, NULL);
+  int useShMem = params.getInt("shmem",1);
+  if (useShMem) TH_ShMem::init(0, NULL);
 #endif
   
   char name[20];  // name used during Step/WH creation
@@ -190,7 +200,8 @@ void P2Perf::define(const ParamBlock& params)
   simul.setCurAppl(0);
 
   itsSourceSteps = params.getInt("sources",1);  
-  itsDestSteps   = params.getInt("destinations",1);  
+  itsDestSteps   = params.getInt("destinations",1);
+
   bool  WithMPI=false;
 
 #ifdef HAVE_MPI    
@@ -291,7 +302,7 @@ void P2Perf::define(const ParamBlock& params)
   
 #ifdef HAVE_MPI
   // TH_ShMem only works in combination with MPI
-  simul.optimizeConnectionsWith(TH_ShMem::proto);
+  if (useShMem) simul.optimizeConnectionsWith(TH_ShMem::proto);
 #endif
 }
 
