@@ -1,6 +1,7 @@
 #ifndef MEQSERVER_SRC_MEQSERVER_H_HEADER_INCLUDED_D338579D
 #define MEQSERVER_SRC_MEQSERVER_H_HEADER_INCLUDED_D338579D
 
+#include <DMI/Events.h>
 #include <MEQ/Forest.h>
 #include <AppUtils/VisPipe.h>
 #include <MeqServer/VisDataMux.h>
@@ -10,19 +11,29 @@
 #pragma aid Node Name NodeIndex MeqServer
 #pragma aid Create Delete Get Set State Request Resolve Child Children List
 #pragma aid App Command Args Result Data Processing Error Message Code
-#pragma aid Execute Clear Cache Save Load Forest Recursive
+#pragma aid Execute Clear Cache Save Load Forest Recursive 
+#pragma aid Publish Results Enable Event Id
 #pragma aid addstate
     
 namespace Meq
 {
   const HIID  
-    FRecursive       = AidRecursive, 
-    FFileName        = AidFile|AidName;
+    FArgs             = AidArgs,
+      
+    FRecursive        = AidRecursive, 
+    FFileName         = AidFile|AidName,
+      
+    FEnable           = AidEnable,
+    FEventId          = AidEvent|AidId,
+    FEventData        = AidEvent|AidData,
+      
+    EvNodeResult      = AidNode|AidResult;
+  
+  
 
 //##ModelId=3F5F195E013B
 //##Documentation
-//## Returns True if a valid node exists for the given index
-class MeqServer : public VisRepeater
+class MeqServer : public VisRepeater, public EventRecepient
 {
   public:
     //##ModelId=3F5F195E0140
@@ -54,7 +65,11 @@ class MeqServer : public VisRepeater
     void loadForest (DataRecord::Ref &out,DataRecord::Ref::Xfer &in);
     //##ModelId=400E5B6C0324
     void clearForest (DataRecord::Ref &out,DataRecord::Ref::Xfer &in);
-      
+    
+    void publishResults (DataRecord::Ref &out,DataRecord::Ref::Xfer &in);
+    
+    virtual int receiveEvent (const EventIdentifier &evid,const ObjRef::Xfer &evdata);
+    
     //##ModelId=3F5F195E0156
     virtual string sdebug(int detail = 1, const string &prefix = "", const char *name = 0) const;
 

@@ -78,10 +78,20 @@ const int AidData_int = -1116;
 const AtomicID AidDelete(-1335);                  // from /home/oms/LOFAR/CEP/CPA/AppAgent/MeqServer/src/MeqServer.h:11
 const int AidDelete_int = -1335;
 #endif
+#ifndef _defined_id_AidEnable
+#define _defined_id_AidEnable 1
+const AtomicID AidEnable(-1406);                  // from /home/oms/LOFAR/CEP/CPA/AppAgent/MeqServer/src/MeqServer.h:15
+const int AidEnable_int = -1406;
+#endif
 #ifndef _defined_id_AidError
 #define _defined_id_AidError 1
 const AtomicID AidError(-1084);                   // from /home/oms/LOFAR/CEP/CPA/OCTOPUSSY/src/Gateways.h:19
 const int AidError_int = -1084;
+#endif
+#ifndef _defined_id_AidEvent
+#define _defined_id_AidEvent 1
+const AtomicID AidEvent(-1070);                   // from /home/oms/LOFAR/CEP/CPA/OCTOPUSSY/src/WPInterface.h:19
+const int AidEvent_int = -1070;
 #endif
 #ifndef _defined_id_AidExecute
 #define _defined_id_AidExecute 1
@@ -183,6 +193,11 @@ const int AidOutput_int = -1282;
 const AtomicID AidProcessing(-1333);              // from /home/oms/LOFAR/CEP/CPA/AppAgent/MeqServer/src/MeqServer.h:12
 const int AidProcessing_int = -1333;
 #endif
+#ifndef _defined_id_AidPublish
+#define _defined_id_AidPublish 1
+const AtomicID AidPublish(-1055);                 // from /home/oms/LOFAR/CEP/CPA/OCTOPUSSY/src/MsgAddress.h:12
+const int AidPublish_int = -1055;
+#endif
 #ifndef _defined_id_AidRecursive
 #define _defined_id_AidRecursive 1
 const AtomicID AidRecursive(-1392);               // from /home/oms/LOFAR/CEP/CPA/AppAgent/MeqServer/src/MeqServer.h:13
@@ -202,6 +217,11 @@ const int AidResolve_int = -1331;
 #define _defined_id_AidResult 1
 const AtomicID AidResult(-1228);                  // from /home/oms/LOFAR/CEP/CPA/PSS4/MEQ/src/Node.h:33
 const int AidResult_int = -1228;
+#endif
+#ifndef _defined_id_AidResults
+#define _defined_id_AidResults 1
+const AtomicID AidResults(-1245);                 // from /home/oms/LOFAR/CEP/CPA/PSS4/MEQ/src/ResultSet.h:33
+const int AidResults_int = -1245;
 #endif
 #ifndef _defined_id_AidSave
 #define _defined_id_AidSave 1
