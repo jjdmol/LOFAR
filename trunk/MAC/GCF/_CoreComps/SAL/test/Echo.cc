@@ -22,6 +22,7 @@
 //  $Id$
 
 #include "Echo.h"
+#include <SAL/GCF_PVBool.h>
 #define DECLARE_SIGNAL_NAMES
 #include "Echo_Protocol.ph"
 
@@ -44,8 +45,6 @@ int Echo::initial(GCFEvent& e, GCFPortInterface& /*p*/)
   {
     case F_INIT_SIG:
     {
-      string propType("BOOL_VAL");
-      service.createProp(propType, propName);
       break;
     }
     case F_ENTRY_SIG:
@@ -53,10 +52,18 @@ int Echo::initial(GCFEvent& e, GCFPortInterface& /*p*/)
       break;
 
     case F_CONNECTED_SIG:
+    {
+      GCFPVBool testVal(true);
+      string propType("BOOL_VAL");
       TRAN(&Echo::connected);
-      service.subscribe(propName);
+      service.createProp(propType, propName);
+      service.createProp(propType, propName + "_test");
+      //service.subscribe(propName);
+      service.subscribe(propName + "_test");
+      //service.get(propName);
+      service.set(propName + "_test", testVal);
       break;
-
+    }
     case F_DISCONNECTED_SIG:
       server.setTimer(1.0); // try again after 1 second
       break;
@@ -76,10 +83,13 @@ int Echo::initial(GCFEvent& e, GCFPortInterface& /*p*/)
 int Echo::connected(GCFEvent& e, GCFPortInterface& /*p*/)
 {
   int status = GCFEvent::HANDLED;
+  string propName("Test_Prop");
 
   switch (e.signal)
   {
     case F_DISCONNECTED_SIG:
+      service.unsubscribe(propName + "_test");
+      //service.deleteProp(propName);
       cout << "Lost connection to client" << endl;
       TRAN(&Echo::initial);
       break;
