@@ -22,6 +22,11 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.12  2002/11/12 14:24:20  schaaf
+//
+//  %[BugId: 11]%
+//  ongoing development
+//
 //  Revision 1.11  2002/09/04 11:20:51  schaaf
 //  %[BugId: 91]%
 //  Added extra #ifdef HAVE_MPI
@@ -198,24 +203,6 @@ void Transpose::define(const ParamBlock& params)
     Ssteps[iStep]->runOnNode(iStep ,0); // run in App 0
   }
 
-//    // The intermediate steps
-//    for (int iStep = 0; iStep < itsSourceSteps; iStep++) {
-//      sprintf(name, "Delay[%d]", iStep);
-//      Iworkholders[iStep] = new WH_Delay(name,
-//  				       itsSourceSteps, //nin
-//  				       itsSourceSteps, // nout
-//  				       timeDim,
-//  				       freqDim); 
-    
-//      Isteps[iStep] = new Step(Iworkholders[iStep], "DelayStep", iStep);
-
-//      // Determine the node and process to run in
-//      // ... sory, this should go in a private method later
-//      Isteps[iStep]->runOnNode(iStep ,0); // run in App 0
-//      Isteps[iStep]->connectInput(Ssteps[iStep]);
-//    }
-
-
   // Create the destination steps
   for (int iStep = 0; iStep < itsDestSteps; iStep++) {
     
@@ -235,10 +222,7 @@ void Transpose::define(const ParamBlock& params)
 #else 
    int node = iStep+itsSourceSteps;
 #endif
-
    Dsteps[iStep]->runOnNode(node,0); 
-
-
 
     // Create the correlator step
     sprintf(name, "Correlator[%d]", iStep);
