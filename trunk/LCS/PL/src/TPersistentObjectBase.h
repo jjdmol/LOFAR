@@ -57,8 +57,8 @@ namespace LCS
 
       // Return a reference to the contained persistent object.
       // \note This is a \e non-const reference, because we want to allow
-      // modification of *itsObject.
-      T& value() { return *itsObject; }
+      // modification of *itsObjectPtr.
+      T& value() { return *itsObjectPtr; }
 
     protected:
   
