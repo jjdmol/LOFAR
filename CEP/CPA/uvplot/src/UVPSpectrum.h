@@ -7,12 +7,23 @@
 #define UVPSPECTRUM_H
 
 
+#if(DEBUG_MODE)
+#include <Common/Debug.h>
+#endif
+
+
+
 // The UVPSpectrum class offers UNPROTECTED, fast access to spectral
 // data. This class will come in handy for internal data storage for
 // something-versus-time-versus-frequency plots. It does NOT maintain
 // what "something" is.
 class UVPSpectrum
 {
+#if(DEBUG_MODE)
+  LocalDebugContext;            /* Common/Debug.h */
+#endif
+
+
  public:
 
   // Constructor. numberOfChannels must always be defined.
