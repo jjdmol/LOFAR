@@ -1447,9 +1447,11 @@ GCFEvent::TResult Application::test306(GCFEvent& e, GCFPortInterface& p)
       {
         nrOfFaults++;
       }
+      cerr << "Received nr " << (unsigned int)((GCFPVInteger*)pResponse->pValue)->getValue() << " from A_K_P1 (" << _counter << ")" << endl;
       _counter++;
       GCFPVInteger iv;
       iv.copy(*(pResponse->pValue));
+      cerr << "Send nr " << iv.getValue() << " to A_K_P1 (" << _counter << ")" << endl;
       if (_supTask3.getProxy().setPropValue("A_C_P1", iv) != GCF_NO_ERROR)
       {
         failed(306);
