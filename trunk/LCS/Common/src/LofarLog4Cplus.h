@@ -27,7 +27,6 @@
 #include <Common/lofar_iostream.h>
 #include <Common/lofar_string.h>
 #include <Common/Exception.h>
-#include <Common/StringUtil.h>
 
 //# Includes
 #include <log4cplus/logger.h>
