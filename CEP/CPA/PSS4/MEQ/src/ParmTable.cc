@@ -62,6 +62,8 @@ const String KeywordDefValues = "DEFAULTVALUES";
 //##ModelId=3F95060D031A
 std::map<string, ParmTable*> ParmTable::theirTables;
 
+Thread::Mutex ParmTable::theirMutex;
+
 
 Matrix<double> toParmMatrix (const Vells& values)
 {
@@ -81,22 +83,26 @@ Vells fromParmMatrix (const Array<double>& values)
 
 //##ModelId=3F86886F02B7
 ParmTable::ParmTable (const string& tableName)
-: itsTable       (tableName, TableLock(TableLock::UserLocking)),
-  itsIndex       (itsTable, ColName),
-  itsIndexName   (itsIndex.accessKey(), ColName),
-  itsInitIndex   (0)
+: constructor_lock(theirMutex),
+  itsTable    (tableName, TableLock(TableLock::UserLocking)),
+  itsIndex    (itsTable,ColName),
+  itsIndexName(itsIndex.accessKey(),ColName),
+  itsInitIndex(0)
 {
-  if (itsTable.keywordSet().isDefined (KeywordDefValues)) {
+  if(itsTable.keywordSet().isDefined (KeywordDefValues)) 
+  {
     itsInitTable = itsTable.keywordSet().asTable (KeywordDefValues);
     itsInitIndex = new ColumnsIndex (itsInitTable, ColName);
     itsInitIndexName = RecordFieldPtr<String> (itsInitIndex->accessKey(),
                                                ColName);
   }
+  constructor_lock.release();
 }
 
 //##ModelId=3F86886F02BC
 ParmTable::~ParmTable()
 {
+  Thread::Mutex::Lock lock(theirMutex);
   delete itsInitIndex;
 }
 
@@ -104,6 +110,7 @@ ParmTable::~ParmTable()
 int ParmTable::getPolcs (vector<Polc::Ref> &polcs,
                          const string& parmName,const Domain& domain)
 {
+  Thread::Mutex::Lock lock(theirMutex);
   TableLocker locker(itsTable, FileLocker::Read);
   Table sel = find (parmName, domain);
   polcs.resize(sel.nrow());
@@ -120,10 +127,11 @@ int ParmTable::getPolcs (vector<Polc::Ref> &polcs,
     ROScalarColumn<double> tsCol (sel, ColTimeScale);
     ROScalarColumn<double> diffCol (sel, ColPerturbation);
     ROScalarColumn<double> weightCol (sel, ColWeight);
+    Vector<uInt> rowNums = sel.rowNumbers(itsTable);
     for( uint i=0; i<sel.nrow(); i++ )
     {
       Polc &polc = polcs[i] <<= new Polc(fromParmMatrix(valCol(i)),
-          f0Col(i),fsCol(i),t0Col(i),tsCol(i),diffCol(i),weightCol(i));
+          f0Col(i),fsCol(i),t0Col(i),tsCol(i),diffCol(i),weightCol(i),rowNums(i));
       polc.setDomain(Domain(stCol(i), etCol(i), sfCol(i), efCol(i)));
     }
   }
@@ -133,6 +141,7 @@ int ParmTable::getPolcs (vector<Polc::Ref> &polcs,
 //##ModelId=3F86886F02C3
 int ParmTable::getInitCoeff (Polc::Ref &polcref,const string& parmName)
 {
+  Thread::Mutex::Lock lock(theirMutex);
   // Try to find the default initial values in the InitialValues subtable.
   // The parameter name consists of parts (separated by dots), so the
   // parameters are categorised in that way.
@@ -173,61 +182,91 @@ int ParmTable::getInitCoeff (Polc::Ref &polcref,const string& parmName)
   return 0;
 }
                                     
-//##ModelId=3F86886F02C8
-void ParmTable::putCoeff (const string& parmName, const Polc& polc)
+void ParmTable::putCoeff1 (const string & parmName,Polc &polc,
+                           bool domain_is_key)
 {
+  polc.setDbId(putCoeff(parmName,polc,domain_is_key));
+}
+    
+    
+//##ModelId=3F86886F02C8
+Polc::DbId ParmTable::putCoeff (const string & parmName,const Polc & polc,
+                                bool domain_is_key)
+{
+  Thread::Mutex::Lock lock(theirMutex);
   itsTable.reopenRW();
   TableLocker locker(itsTable, FileLocker::Write);
+  ScalarColumn<String> namCol (itsTable, ColName);
+  ArrayColumn<double> valCol (itsTable, ColValues);
+  ScalarColumn<double> sfCol (itsTable, ColStartFreq);
+  ScalarColumn<double> efCol (itsTable, ColEndFreq);
+  ScalarColumn<double> stCol (itsTable, ColStartTime);
+  ScalarColumn<double> etCol (itsTable, ColEndTime);
+  ScalarColumn<double> f0Col (itsTable, ColFreq0);
+  ScalarColumn<double> t0Col (itsTable, ColTime0);
+  ScalarColumn<double> fsCol (itsTable, ColFreqScale);
+  ScalarColumn<double> tsCol (itsTable, ColTimeScale);
+  ScalarColumn<double> diffCol (itsTable, ColPerturbation);
+  ScalarColumn<double> weightCol (itsTable, ColWeight);
   const Domain& domain = polc.domain();
   const Vells& values = polc.getCoeff();
-  Table sel = find (parmName, domain);
-  if (sel.nrow() > 0) {
-    AssertMsg (sel.nrow()==1, "Parameter " << parmName <<
-                 " has multiple entries for freq "
-                 << domain.startFreq() << ':' << domain.endFreq()
-                 << " and time "
-                 << domain.startTime() << ':' << domain.endTime());
-    ROScalarColumn<double> sfCol (sel, ColStartFreq);
-    ROScalarColumn<double> efCol (sel, ColEndFreq);
-    ROScalarColumn<double> stCol (sel, ColStartTime);
-    ROScalarColumn<double> etCol (sel, ColEndTime);
-    AssertMsg (near(domain.startFreq(), sfCol(0))  &&
-               near(domain.endFreq(), efCol(0))  &&
-               near(domain.startTime(), stCol(0))  &&
-               near(domain.endTime(), etCol(0)),
-               "Parameter " << parmName <<
-               " has a partially instead of fully matching entry for freq "
-                 << domain.startFreq() << ':' << domain.endFreq()
-                 << " and time "
-                 << domain.startTime() << ':' << domain.endTime());
-    ArrayColumn<double> valCol (sel, ColValues);
-    valCol.put (0, toParmMatrix(values));
-  } else {
-    uInt rownr = itsTable.nrow();
-    itsTable.addRow();
-    ScalarColumn<String> namCol (itsTable, ColName);
-    ScalarColumn<double> sfCol (itsTable, ColStartFreq);
-    ScalarColumn<double> efCol (itsTable, ColEndFreq);
-    ScalarColumn<double> stCol (itsTable, ColStartTime);
-    ScalarColumn<double> etCol (itsTable, ColEndTime);
-    ScalarColumn<double> f0Col (itsTable, ColFreq0);
-    ScalarColumn<double> t0Col (itsTable, ColTime0);
-    ScalarColumn<double> fsCol (itsTable, ColFreqScale);
-    ScalarColumn<double> tsCol (itsTable, ColTimeScale);
-    ScalarColumn<double> diffCol (itsTable, ColPerturbation);
-    namCol.put (rownr, parmName);
-    sfCol.put (rownr, domain.startFreq());
-    efCol.put (rownr, domain.endFreq());
-    stCol.put (rownr, domain.startTime());
-    etCol.put (rownr, domain.endTime());
-    ArrayColumn<double> valCol (itsTable, ColValues);
-    valCol.put (rownr, toParmMatrix(values));
-    f0Col.put   (rownr, polc.getFreq0());
-    t0Col.put   (rownr, polc.getTime0());
-    fsCol.put   (rownr, polc.getFreqScale());
-    tsCol.put   (rownr, polc.getTimeScale());
-    diffCol.put (rownr, polc.getPerturbation());
+  int rownr = polc.getDbId();
+  // have a row number? check name, etc.
+  if( rownr >= 0 )
+  {
+    String name;
+    namCol.get(rownr,name);
+    AssertMsg(string(name)==parmName,"Polc for parameter "<<
+              parmName<<" already has a DbId "<<" and belongs to parameter "<<name);
   }
+  else // no assigned row number? Look for one
+  {
+    if( domain_is_key )
+    {
+      Table sel = find(parmName,domain);
+      if( sel.nrow() > 0 )
+      {
+        AssertMsg(sel.nrow()==1, "Parameter " << parmName <<
+                     " has multiple entries for freq "
+                     << domain.startFreq() << ':' << domain.endFreq()
+                     << " and time "
+                     << domain.startTime() << ':' << domain.endTime());
+        rownr = sel.rowNumbers(itsTable)(0);
+        AssertMsg (near(domain.startFreq(), sfCol(rownr)) &&
+                   near(domain.endFreq(), efCol(rownr)) &&
+                   near(domain.startTime(), stCol(rownr)) &&
+                   near(domain.endTime(), etCol(rownr)),
+                   "Parameter " << parmName <<
+                   " has a partially instead of fully matching entry for freq "
+                     << domain.startFreq() << ':' << domain.endFreq()
+                     << " and time "
+                     << domain.startTime() << ':' << domain.endTime());
+        ArrayColumn<double> valCol (sel, ColValues);
+        valCol.put (0, toParmMatrix(values));
+      }
+    }
+    // still unassigned? add to end of table then
+    if( rownr < 0 ) 
+    {
+      rownr = itsTable.nrow();
+      itsTable.addRow();
+      namCol.put(rownr,parmName);
+    }
+  }
+  // At this point, rownr corresponds to a valid row. Write the polc to 
+  // that row
+  valCol.put  (rownr, toParmMatrix(values));
+  sfCol.put   (rownr, domain.startFreq());
+  efCol.put   (rownr, domain.endFreq());
+  stCol.put   (rownr, domain.startTime());
+  etCol.put   (rownr, domain.endTime());
+  f0Col.put   (rownr, polc.getFreq0());
+  t0Col.put   (rownr, polc.getTime0());
+  fsCol.put   (rownr, polc.getFreqScale());
+  tsCol.put   (rownr, polc.getTimeScale());
+  diffCol.put (rownr, polc.getPerturbation());
+  weightCol.put(rownr, polc.getWeight());
+  return rownr;
 }
 
 //##ModelId=3F86886F02CE
@@ -253,6 +292,7 @@ Table ParmTable::find (const string& parmName,
 //##ModelId=3F95060D033E
 ParmTable* ParmTable::openTable (const String& tableName)
 {
+  Thread::Mutex::Lock lock(theirMutex);
   std::map<string,ParmTable*>::const_iterator p = theirTables.find(tableName);
   if (p != theirTables.end()) {
     return p->second;
@@ -265,6 +305,7 @@ ParmTable* ParmTable::openTable (const String& tableName)
 //##ModelId=3F95060D0372
 void ParmTable::closeTables()
 {
+  Thread::Mutex::Lock lock(theirMutex);
   for (std::map<string,ParmTable*>::const_iterator iter = theirTables.begin();
        iter != theirTables.end();
        ++iter) {
@@ -276,6 +317,7 @@ void ParmTable::closeTables()
 //##ModelId=400E535402E7
 void ParmTable::createTable (const String& tableName)
 {
+  Thread::Mutex::Lock lock(theirMutex);
   TableDesc tdesc;
   tdesc.addColumn (ScalarColumnDesc<String>(ColName));
   tdesc.addColumn (ScalarColumnDesc<Double>(ColEndTime));
@@ -294,6 +336,7 @@ void ParmTable::createTable (const String& tableName)
 
 void ParmTable::unlock()
 {
+  Thread::Mutex::Lock lock(theirMutex);
   itsTable.unlock();
   if (! itsInitTable.isNull()) {
     itsInitTable.unlock();
@@ -302,11 +345,13 @@ void ParmTable::unlock()
 
 void ParmTable::lock()
 {
+  Thread::Mutex::Lock lock(theirMutex);
   itsTable.lock();
 }
 
 void ParmTable::lockTables()
 {
+  Thread::Mutex::Lock lock(theirMutex);
   for (std::map<string,ParmTable*>::const_iterator iter = theirTables.begin();
        iter != theirTables.end();
        ++iter) {
@@ -316,6 +361,7 @@ void ParmTable::lockTables()
 
 void ParmTable::unlockTables()
 {
+  Thread::Mutex::Lock lock(theirMutex);
   for (std::map<string,ParmTable*>::const_iterator iter = theirTables.begin();
        iter != theirTables.end();
        ++iter) {

@@ -41,15 +41,22 @@
 //  value must then be supplied), or read from a MEP database.
 //  A MeqParm cannot have any children.
 //field: polcs [=]
-//  one or more meqpolc() objects may be provided
-//field: default 0.0  
-//  default parameter value - expected double/complex double, scalar or
-//  2D array
+//  active polcs. One or more meqpolc() objects may be provided. These
+//  will be reused for subsequent requests if the domains match, or
+//  if the inf_domain or grow_domain attributes are specified.
+//field: default [=]
+//  default polc. A meqpolc() object. This is used when an applicable
+//  polc is not found in the table, or a table is not provided.
 //field: table_name '' 
 //  MEP table name. If empty, then the default parameter value is used
 //field: parm_name '' 
 //  MEP parm name used to look inside the table. If empty, then the node 
-//  name is used.
+//  name is used instead.
+//field: auto_save F 
+//  if T, then any updates to a polc are saved into the MEP table 
+//  automatically (for example, after each solve iteration). Default 
+//  behaviour is to only save when specified via a request rider (e.g.,
+//  at the end of a solve).
 //defrec end
 
 namespace Meq {
@@ -117,9 +124,14 @@ public:
   LocalDebugContext;
 
 protected:
-  // initializes polcs based on value of solvable flag
     //##ModelId=400E5353019E
-  int initSolvable ();
+  // finds polcs in table or uses the default
+  void findRelevantPolcs (vector<Polc::Ref> &polcs,const Domain &domain);
+  // initializes polcs based on value of solvable flag
+  int  initSolvable  (const Domain &domain);
+  // assigns spids to solvable polcs. Called from initSolvable()
+  int  initSpids     ();
+    
 
   // Set the polynomials.
     //##ModelId=400E535301F7
@@ -140,16 +152,23 @@ protected:
 //  virtual void checkInitState (DataRecord &rec);
     //##ModelId=400E5353033A
   virtual void setStateImpl (DataRecord &rec,bool initializing);
+  
+  // process parm-specific rider commands
+  virtual void processRider (const DataRecord &);
 
 private:
+    
     //##ModelId=3F86886F0215
-  unsigned int parmid_;
+  uint parmid_;
     //##ModelId=3F86886F0216
-  bool         solvable_;
+  bool solvable_;
+  bool auto_save_;
+  
     //##ModelId=3F86886F0213
-  string       name_;
+  string name_;
+  
     //##ModelId=400E535000A3
-  ParmTable*   parmtable_;
+  ParmTable * parmtable_;
   
   //##ModelId=400E535000B2
   //##Documentation
