@@ -55,9 +55,9 @@ using namespace LOFAR;
 StationCorrelator::StationCorrelator(KeyValueMap kvm) 
   : itsKVM(kvm)
 {
-  itsNrsp = itsKVM.getInt("rsps", 2);
-  itsNcorrelator = itsKVM.getInt("correlators", 7);
-  itsNdump = itsKVM.getInt("dumps", 1);
+  itsNrsp = itsKVM.getInt("NoWH_RSP", 2);
+  itsNcorrelator = itsKVM.getInt("NoWH_Correlator", 7);
+  itsNdump = itsKVM.getInt("NoWH_Dump", 1);
 }
 
 StationCorrelator::~StationCorrelator() {
@@ -75,55 +75,85 @@ void StationCorrelator::undefine() {
 void StationCorrelator::define(const KeyValueMap& /*kvm*/) {
 
   char H_name[128];
-  char old_name[128];
+  int fast_rate = itsKVM.getInt("samples",256000)/itsKVM.getInt("NoPacketsInFrame",8);
 
-  vector<WH_RSP*>        RSPNodes;
-  vector<WH_Transpose*>  TransposeNodes;
-  vector<WH_Correlator*> CorrelatorNodes;
-  vector<WH_Dump*>       DumpNodes;   
-  
   WH_Empty empty;
   Composite comp(empty);
   setComposite(comp);
   comp.runOnNode(0);
 
   /// Create the WorkHolders 
+  Step** itsRSPsteps = new Step*[itsNrsp];
   for (unsigned int i = 0; i < itsNrsp; i++) {
     snprintf(H_name, 128, "RSPNode_%d_of_%d", i, itsNrsp);
     
-    WH_RSP whRSP(H_name, itsKVM);
-    Step step(whRSP, H_name, false);
-    comp.addStep(step); 
+    WH_RSP* whRSP; 
+
+    if (i == 0) {
+      whRSP = new WH_RSP(H_name, itsKVM, true);
+    } else {
+      whRSP = new WH_RSP(H_name, itsKVM, false);
+    }
+    itsRSPsteps[i] = new Step(*whRSP, H_name, false);
+
+    // set the rates of this Step.
+    itsRSPsteps[i]->setInRate(fast_rate);
+    itsRSPsteps[i]->setProcessRate(fast_rate);
+    itsRSPsteps[i]->setOutRate(fast_rate);
+
+    comp.addStep(itsRSPsteps[i]); 
+
+    if (i != 0) {
+      // we're a syncSlave. Connect the second input to an appropriate output.
+      itsRSPsteps[i]->connect(itsRSPsteps[0], 1, itsNcorrelator, 1, TH_Mem(), true);
+    }
   }
 
+  Step** itsTsteps = new Step*[itsNcorrelator];
+  Step** itsCsteps = new Step*[itsNcorrelator];
   for (unsigned int i = 0; i < itsNcorrelator; i++) {
     // we create a transpose workholder for every correlator workholder
     // to rearrange the data coming from the RSP boards.
     sprintf(H_name, "TransposeNode_%d_of_%d", i, itsNcorrelator);
 
     WH_Transpose whTranspose(H_name, itsKVM);
-    Step step1(whTranspose);
-    comp.addStep(step1);
+    itsTsteps[i] = new Step(whTranspose, H_name, false);
+    // the transpose collects data to intergrate over, so only the input 
+    // and process methods run fast
+    itsTsteps[i]->setInRate(fast_rate);
+    itsTsteps[i]->setProcessRate(fast_rate);
 
-//     step1.connect("");
+    comp.addStep(itsTsteps[i]);
 
+    // connect the Transpose step just created to the correct RSP outputs
+    for (unsigned int rsp = 0; rsp < itsNrsp; rsp++) {
+      //      itsRSPsteps[rsp]->connect(itsTsteps[i], i+1, rsp, 1, TH_Mem(), true);
+      itsTsteps[i]->connect(itsRSPsteps[rsp], rsp, i, 1, TH_Mem(), true);
+    }
+
+
+    // now create the Correlator workholder
     sprintf(H_name, "CorrelatorNode_%d_of_%d", i, itsNcorrelator);
-
+    
     WH_Correlator whCorrelator(H_name, itsKVM);
-    Step step2(whCorrelator);
-    comp.addStep(step2);
-
-    step2.connectInput(&step1, TH_Mem());
+    itsCsteps[i] = new Step(whCorrelator, H_name, false);
+    comp.addStep(itsCsteps[i]);
+    
+    itsCsteps[i]->connectInput(itsTsteps[i], TH_Mem(), true);
   }
-
+  
+  
+  unsigned int c_index = 0;
   for (unsigned int i = 0; i < itsNdump; i++) {
     sprintf(H_name, "DumpNode_%d_of_%d", i, itsNdump);
 
     WH_Dump whDump(H_name, itsKVM);
     Step step(whDump);
     comp.addStep(step);
-
-//    step.connectInput();
+    
+    for (unsigned int in = 0; in < (itsNcorrelator/itsNdump); in++) {
+      step.connect(itsCsteps[c_index++], in, 0, 1, TH_Mem(), true);
+    }
   }
 }
 
@@ -170,8 +200,9 @@ int main (int argc, const char** argv) {
     correlator.baseDump();
     correlator.baseQuit();
 
-  } catch (...) {
+  } catch (std::exception& x) {
     cout << "Unexpected exception" << endl;
+    cerr << x.what() << endl; 
   }
   return 0;
 }
