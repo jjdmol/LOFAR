@@ -25,7 +25,7 @@ RECaddBCA()
 	echo "public:"
 	echo "	void operator()(BoundIOs& cols, ${Class}& rowbuf) {"
 	# get all 'basic' members of the class
-	grep ^$Class ${TMPFILE} | grep "::" | while read line
+	grep ^$Class ${MAPWRKFILE} | grep "::" | while read line
 	do
 		ColName=`echo $line | cut -d":" -f5`
 		Member=`echo $line | cut -d":" -f4`
@@ -41,7 +41,7 @@ RECaddBCA()
 RECaddInsertRoutine()
 {
 	Class=$1
-	Table=`grep ^$Class ${TMPFILE} | head -1 | cut -d":" -f2`
+	Table=`grep ^$Class ${MAPWRKFILE} | head -1 | cut -d":" -f2`
 
 	echo "//"
 	echo "// Routine for insert this ${Class} object in the database."
@@ -61,7 +61,7 @@ RECaddSearchRoutine()
 {
 	Class=$1
 	Clause=$2
-	Table=`grep ^$Class ${TMPFILE} | head -1 | cut -d":" -f2`
+	Table=`grep ^$Class ${MAPWRKFILE} | head -1 | cut -d":" -f2`
 
 	echo "vector<${Class}> read_${Class}() {"
 	echo "	vector<${Class}> 		results;"
@@ -82,7 +82,7 @@ RECaddUpdateRoutine()
 {
 	Class=$1
 	Clause=$2
-	Table=`grep ^$Class ${TMPFILE} | head -1 | cut -d":" -f2`
+	Table=`grep ^$Class ${MAPWRKFILE} | head -1 | cut -d":" -f2`
 
 	echo "//"
 	echo "// Routine for updating this ${Class} object in the database."
@@ -211,11 +211,22 @@ TPOaddRoutineRedefinitions()
 		S)	FunctionName="doRetrieve"	;;
 		esac
 
-		if [ ${ROLLBACKCODE} = true ]; then
-			echo "void TPersistentObject<${Class}>::${FunctionName}(const long			theState,"
-			echo "								MetaData&	mdOwner) const;"
+		# Construct function prototype
+		if [ ${theAction} == "S" ]; then
+			echo -n "Collection<TPersistentObject<${Class}> > TPersistentObject<${Class}>::${FunctionName}("
 		else
-			echo "void TPersistentObject<${Class}>::${FunctionName}(MetaData&	mdOwner) const;"
+			echo -n "void TPersistentObject<${Class}>::${FunctionName}("
+		fi
+
+		if [ ${ROLLBACKCODE} = true ]; then
+			echo "const long			theState,"
+		fi
+
+		if [ ${theAction} == "S" ]; then
+			echo "							const Query&	query,"
+			echo "							int				maxObjects);"
+		else
+			echo "							MetaData&	mdOwner) const;"
 		fi
 	done
 
@@ -240,25 +251,29 @@ TPOaddClassRedefinition()
 	echo "{"
 	echo "public:"
 
+	echo "	TPersistentObject() : TPersistentObjectBase<${Class}>() {};"
 	echo "	explicit TPersistentObject(${Class}&	t) : TPersistentObjectBase<${Class}>(t)"
 	# This is where it all about:
-	grep ^$Class ${TMPFILE} | grep -v "::" | while read line
+	grep ^$Class ${MAPWRKFILE} | grep -v "::" | while read line
 	do
 		MemberName=`echo $line | cut -d':' -f4`
 		echo "	, its${MemberName}TPO(t.${MemberName})"
 	done
-	echo "{}"
+	echo "{};"
 
 	echo "	~TPersistentObject() {};"
+	echo "	static Collection<TPersistentObject<${Class}> >  "
+	echo "						retrieve(const Query& query,int maxObjects) "
+	echo "		{ return doRetrieve(query, maxObjects); };"
 	echo "public:"
 	echo "	virtual void doInsert  (MetaData& md) const;"
 	echo "	virtual void doUpdate  (MetaData& md) const;"
 	echo "	virtual void doErase   (MetaData& md) const;"
-	echo "	virtual void doRetrieve(MetaData& md) const;"
+	echo "	static Collection<TPersistentObject<${Class}> >  doRetrieve(const Query& query, int maxObjects);"
 	echo "private:"
 
 	# This is where it all about:
-	grep ^$Class ${TMPFILE} | grep -v "::" | while read line
+	grep ^$Class ${MAPWRKFILE} | grep -v "::" | while read line
 	do
 		MemberType=`echo $line | cut -d':' -f3`
 		MemberName=`echo $line | cut -d':' -f4`
@@ -299,7 +314,7 @@ TPOaddDTLstruct()
 	echo "	SQLTimeStamp		TimeStamp;"
 
 	# add all 'basic' members of the DataObj
-	grep ^$Class ${TMPFILE} | grep "::" | while read line
+	grep ^$Class ${MAPWRKFILE} | grep "::" | while read line
 	do
 		MemType=`echo $line | cut -d":" -f3`
 		Member=`echo $line | cut -d":" -f4`
@@ -335,7 +350,7 @@ TPOaddBCA()
 	echo "		cols[\"ModTime\"]	== rowbuf.TimeStamp;"
 
 	# add all 'basic' members of the class
-	grep ^$Class ${TMPFILE} | grep "::" | while read line
+	grep ^$Class ${MAPWRKFILE} | grep "::" | while read line
 	do
 		ColName=`echo $line | cut -d":" -f5`
 		Member=`echo $line | cut -d":" -f4`
@@ -375,7 +390,7 @@ TPOaddToDatabaseRep()
 	echo "	// Finally copy the info from ${Class}"
 
 	# add all 'basic' members of the Dataobj
-	grep ^$Class ${TMPFILE} | grep "::" | while read line
+	grep ^$Class ${MAPWRKFILE} | grep "::" | while read line
 	do
 		Member=`echo $line | cut -d":" -f4`
 		echo "	dest.${Member}	= itsObjectPtr->${Member};"
@@ -412,7 +427,7 @@ TPOaddFromDatabaseRep()
 	echo "	// Finally copy the info from ${Class}"
 
 	# add all 'basic' members of the Dataobj
-	grep ^$Class ${TMPFILE} | grep "::" | while read line
+	grep ^$Class ${MAPWRKFILE} | grep "::" | while read line
 	do
 		Member=`echo $line | cut -d":" -f4`
 		echo "	itsObjectPtr->${Member}	= org.${Member};"
@@ -463,7 +478,7 @@ TPOcodeHandleAllSubclasses()
 
 	# Grep all subclasses of this class.
 	# Note: grep returns 0 if something found, 1 or -1 if not.
-	grep ^$Class ${TMPFILE} | grep -v "::" >>/dev/null
+	grep ^$Class ${MAPWRKFILE} | grep -v "::" >>/dev/null
 	GrepOk=`echo $?`
 	
 	if [ ${GrepOk} != "0" ]; then			# nothing found?
@@ -478,7 +493,7 @@ TPOcodeHandleAllSubclasses()
 	echo "	try {"
 
 	# Call all subclasses
-	grep ^$Class ${TMPFILE} | grep -v "::" | while read line
+	grep ^$Class ${MAPWRKFILE} | grep -v "::" | while read line
 	do
 		Member=`echo $line | cut -d':' -f4`
 		echo "		its${Member}TPO.do${Action}(metaData());"
@@ -490,7 +505,7 @@ TPOcodeHandleAllSubclasses()
 	if [ "${Action}" == "Erase" ]; then
 		echo "		DBConnection::GetDefaultConnection().RollbackAll();"
 	fi
-	grep ^$Class ${TMPFILE} | grep -v "::" | while read line
+	grep ^$Class ${MAPWRKFILE} | grep -v "::" | while read line
 	do
 		Member=`echo $line | cut -d':' -f4`
 #		echo "		PO_${Member}.rollback(theState);"
@@ -560,7 +575,7 @@ TPOcodeUpdateCurrentState()
 TPOaddInsertRoutine()
 {
 	Class=$1
-	Table=`grep ^$Class ${TMPFILE} | head -1 | cut -d":" -f2`
+	Table=`grep ^$Class ${MAPWRKFILE} | head -1 | cut -d":" -f2`
 
 	# generate a DBview with table and standard BCA
 	echo "//"
@@ -611,7 +626,7 @@ TPOaddUpdateRoutine()
 {
 	Class=$1
 	Clause=$2
-	Table=`grep ^$Class ${TMPFILE} | head -1 | cut -d":" -f2`
+	Table=`grep ^$Class ${MAPWRKFILE} | head -1 | cut -d":" -f2`
 
 	# generate a DBview with table and standard BCA
 	echo "//"
@@ -666,7 +681,7 @@ TPOaddDeleteRoutine()
 {
 	Class=$1
 	Clause=$2
-	Table=`grep ^$Class ${TMPFILE} | head -1 | cut -d":" -f2`
+	Table=`grep ^$Class ${MAPWRKFILE} | head -1 | cut -d":" -f2`
 
 	# generate a DBview with table and standard BCA
 	echo "//"
@@ -717,7 +732,7 @@ TPOaddDeleteRoutine()
 TPOaddSearchRoutine()
 {
 	Class=$1
-	Table=`grep ^$Class ${TMPFILE} | head -1 | cut -d":" -f2`
+	Table=`grep ^$Class ${MAPWRKFILE} | head -1 | cut -d":" -f2`
 
 	# generate a DBview with table and standard BCA
 	echo "//"
@@ -726,13 +741,15 @@ TPOaddSearchRoutine()
 	if [ ${RedefineTPOclass} == false ]; then
 		echo "template<>"
 	fi
-	echo -n "void TPersistentObject<${Class}>::doRetrieve("
+	echo -n "Collection<TPersistentObject<${Class}> > TPersistentObject<${Class}>::doRetrieve("
 	if [ ${ROLLBACKCODE} == true ]; then
 		echo "const long			theState,\n							"
 	fi
-	echo "MetaData&	mdOwner) const {"
-	echo "	DBView<${Class}_DBRep>	selView(\"${Table}\", ${Class}_DTL_BCA());"
+	echo "const Query&	query, int maxObjects) {"
+	echo "	DBView<${Class}_DBRep>	selView(\"${Table}\", ${Class}_DTL_BCA(),"
+	echo "													query.getSql());"
 	echo "	DBView<${Class}_DBRep>::select_iterator	selIter = selView;"
+	echo "	Collection<TPersistentObject<${Class}> > 	selResult;"
 	echo ""
 
 	if [ ${ROLLBACKCODE} == true ]; then
@@ -740,13 +757,19 @@ TPOaddSearchRoutine()
 		echo ""
 	fi
 
-	echo "	// @@@ TO BE DEFINED @@@"
+	echo "	for (int nrRecs = 0; selIter != selView.end() && nrRecs < maxObjects; ++selIter, ++nrRecs) {"
+	echo "		TPersistentObject<${Class}>		TPO${Class};"
+	echo "		TPO${Class}.fromDatabaseRep(*selIter);"
+	echo "		selResult.add(TPO${Class});"
+	echo "	}"
+	echo "		// @@@ TO BE DEFINED @@@"
 	echo ""
 
 	if [ ${ROLLBACKCODE} == true ]; then
 		TPOcodeUpdateCurrentState insert
 	fi
 
+	echo "	return (selResult);"
 	echo "}\n"
 }
 
@@ -784,12 +807,13 @@ initSrcfile()
 
 	# include the headerfiles in the C++ sourcefile
 	if [ "${FileType}" == "cc" ]; then
-		echo "#include \"PL/TPersistentObject.h\""
+		echo "#include <PL/TPersistentObject.h>"
+		echo "#include <PL/Query.h>"
 		echo "#include \"LCS_base.h\""
 		echo "#include \"${Class}.h\""
 		echo "#include \"${FILEPREFIX}${Class}.h\""
 		# Grep all subclasses of this class and include those headerfiles also.
-		grep ^${Class} ${TMPFILE} | grep -v "::" | while read line
+		grep ^${Class} ${MAPWRKFILE} | grep -v "::" | while read line
 		do
 			subClass=`echo $line | cut -d':' -f6`
 			echo "#include \"${FILEPREFIX}${subClass}.h\""
@@ -804,15 +828,15 @@ initSrcfile()
 		echo "#define ${FileLabel}"
 		echo ""
 		if [ "${Class}" == "lcs_base" ]; then
-			echo "#include \"DTL.h\""
+			echo "#include <dtl/DTL.h>"
 		else
-			echo "#include \"PL/TPersistentObject.h\""
-			echo "#include \"PL/SQLTimeStamp.h\""
+			echo "#include <PL/TPersistentObject.h>"
+			echo "#include <PL/SQLTimeStamp.h>"
 			echo "#include \"${Class}.h\""
 		fi
 
 		# Grep all subclasses of this class and include those headerfiles also.
-		grep ^${Class} ${TMPFILE} | grep -v "::" | while read line
+		grep ^${Class} ${MAPWRKFILE} | grep -v "::" | while read line
 		do
 			subClass=`echo $line | cut -d':' -f6`
 			echo "#include \"${subClass}.h\""
@@ -834,6 +858,16 @@ closeHeaderfile()
 	echo "#include \"${FILEPREFIX}${Class}.tcc\"	// Include template code"
 	echo ""
 	echo "#endif"
+}
+
+#
+# cleanupWorkFiles
+#
+# Removes all temporary workfiles
+#
+cleanupWorkFiles()
+{
+	rm -f ${MAPWRKFILE} ${ALLCLASSESWRKFILE}
 }
 
 #
@@ -906,7 +940,7 @@ hasSubClasses()
 	Class=$1
 
 	# Note: grep returns 0 if something found, 1 or -1 if not.
-	grep ^$Class ${TMPFILE} | grep -v "::" >>/dev/null
+	grep ^$Class ${MAPWRKFILE} | grep -v "::" >>/dev/null
 	GrepOk=`echo $?`
 	
 	if [ ${GrepOk} == "0" ]; then			# something found?
@@ -918,8 +952,25 @@ hasSubClasses()
 }
 #------------------------------- MAIN program ---------------------------------
 #
-# Check invocation syntax: genDTL mapfile cmdfile layer [class]
+# Check invocation syntax: [-d destdir] genDTL mapfile cmdfile layer [class]
 #
+
+# Check option argument
+DESTDIR="./"						# assume no destination directory
+eval set argv=`getopt "d:" $*`		# reformat arguments
+shift
+case "$1" in
+	-d)	DESTDIR=$2
+		if [ ! -d ${DESTDIR} ]; then
+			echo "Destination directory >${DESTDIR}< does not exist"
+			exit 1
+		fi
+		shift 2
+		;;
+esac
+shift								# remove --
+
+# Check other arguments
 case $# in
 	3)	MAPFILE=$1					# genDTL mapfile funfile layer
 		FUNFILE=$2
@@ -967,15 +1018,21 @@ esac
 # Initialize some variables
 #
 ROLLBACKCODE=false				# whether or not generate rollback code
-LCSBASEFILE="LCS_base.h"
-TMPFILE=map.genDTL.$$
-ALLCLASSESTMPFILE=tcc.genDTL.$$
+LCSBASEFILE=${DESTDIR}/LCS_base.h
+MAPWRKFILE=/tmp/mapinfo.LCS.$$
+ALLCLASSESWRKFILE=/tmp/created.LCS.$$
+
+# Make sure there are no old workfiles left
+cleanupWorkFiles
+
+# Set trap handler before we create anything
+trap "cleanupWorkFiles ; exit" 1 2 3 13 15
 
 # convert the human readable format of the mapfile into something
 # more convenient for shell-programming
 echo "Analysing mapfile"
-initTmpfile					> ${TMPFILE}
-convertMapfile ${MAPFILE}	>>${TMPFILE}
+initTmpfile					> ${MAPWRKFILE}
+convertMapfile ${MAPFILE}	>>${MAPWRKFILE}
 
 #
 # Build the sourcecode for the record- or the persistency-layer
@@ -1003,15 +1060,15 @@ do
 		#RedefineTPOclass=`hasSubClasses ${class}`
 		RedefineTPOclass=true
 		case ${LAYER} in
-		R) 	SOURCEFILE=${FILEPREFIX}${class}.cc
-			HEADERFILE=${FILEPREFIX}${class}.h
+		R) 	SOURCEFILE=${DESTDIR}/${FILEPREFIX}${class}.cc
+			HEADERFILE=${DESTDIR}/${FILEPREFIX}${class}.h
 			initSrcfile "cc" ${class}  > ${SOURCEFILE}
 			RECaddBCA 	     ${class}  >>${SOURCEFILE}
 			;;
 		P) 	# start a new headerfile and sourcefile
-			SOURCEFILE=${FILEPREFIX}${class}.tcc
-			HEADERFILE=${FILEPREFIX}${class}.h
-			echo ${class}	 							>>${ALLCLASSESTMPFILE}
+			SOURCEFILE=${DESTDIR}/${FILEPREFIX}${class}.tcc
+			HEADERFILE=${DESTDIR}/${FILEPREFIX}${class}.h
+			echo ${class}	 							>>${ALLCLASSESWRKFILE}
 			initSrcfile "cc"				${class} 	> ${SOURCEFILE}
 			TPOopenNamespace							>>${SOURCEFILE}
 			TPOaddBCA 						${class} 	>>${SOURCEFILE}
@@ -1058,11 +1115,13 @@ do
 	esac
 done
 
+# Finish all created .tcc files
 if [ "${LAYER}" == "P" ]; then
-	cat ${ALLCLASSESTMPFILE} | while read Class
+	cat ${ALLCLASSESWRKFILE} | while read Class
 	do
-		TPOcloseSrcFile	${Class} >>${FILEPREFIX}${Class}.tcc
+		TPOcloseSrcFile	${Class} >>${DESTDIR}/${FILEPREFIX}${Class}.tcc
 	done
 fi
 
-rm -f ${TMPFILE} ${ALLCLASSESTMPFILE}
+# Finally cleanup our mess
+cleanupWorkFiles
