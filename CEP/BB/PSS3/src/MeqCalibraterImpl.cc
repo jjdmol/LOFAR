@@ -2418,15 +2418,14 @@ void MeqCalibrater::showParmValues()
     parms[i] = itsSolvableParms[i];
   }
 
-  vector <double> vals;
+  vector <MeqMatrix> vals;
   getParmValues (parms, vals);
 
   vector<string> :: iterator i;
   char str [20];
-  vector<double> :: iterator j = vals.begin();
+  vector<MeqMatrix> :: iterator j = vals.begin();
   for (i = parms.begin (); i != parms.end (); ++i, ++j) {
-    sprintf (str, "%12.9f ", *j);
-    cout << "BBSTest: parm " << *i << " = " << str << endl;
+    cout << "BBSTest: parm " << *i << " = " << *j << endl;
   }
 }
 
