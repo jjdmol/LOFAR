@@ -39,7 +39,7 @@ class CaptureStats : public GCFTask, public Test
      * GTMTopologyService classes.
      */
     CaptureStats(string name, int type, std::bitset<MAX_N_RCUS> device_set, int n_devices = 1,
-		 int duration = 1, int integration = 1, uint8 rcucontrol = 0xB9);
+		 int duration = 1, int integration = 1, uint8 rcucontrol = 0xB9, bool onfile = false);
     virtual ~CaptureStats();
 
     // state methods
@@ -87,6 +87,8 @@ class CaptureStats : public GCFTask, public Test
 
     blitz::Array<double, 2> m_values;
     int m_nseconds;
+    FILE** m_file;  // array of file descriptors
+    bool m_onefile; // output one big file? if false output separate file for each capture
 };
      
 #endif /* CAPTURESTATS_H_ */

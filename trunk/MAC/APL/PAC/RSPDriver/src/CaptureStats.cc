@@ -82,19 +82,29 @@ do { \
 } while(0)
 
 CaptureStats::CaptureStats(string name, int type, bitset<MAX_N_RCUS> device_set, int n_devices,
-			   int duration, int integration, uint8 rcucontrol)
+			   int duration, int integration, uint8 rcucontrol, bool onefile)
   : GCFTask((State)&CaptureStats::initial, name), Test(name),
     m_type(type), m_device_set(device_set), m_n_devices(n_devices),
     m_duration(duration), m_integration(integration), m_rcucontrol(rcucontrol),
-    m_nseconds(0)
+    m_nseconds(0), m_file(0), m_onefile(onefile)
 {
   registerProtocol(RSP_PROTOCOL, RSP_PROTOCOL_signalnames);
 
+  m_file = new (FILE*)[m_n_devices];
+  if (!m_file)
+  {
+    cerr << "Error: failed to allocate memory for file handles." << endl;
+    exit(EXIT_FAILURE);
+  }
+  for (int i = 0; i < m_n_devices; i++) m_file[i] = 0;
+  
   m_server.init(*this, "server", GCFPortInterface::SAP, RSP_PROTOCOL);
 }
 
 CaptureStats::~CaptureStats()
-{}
+{
+  if (m_file) delete [] m_file;
+}
 
 GCFEvent::TResult CaptureStats::initial(GCFEvent& e, GCFPortInterface& port)
 {
@@ -377,14 +387,46 @@ void CaptureStats::capture_statistics(Array<double, 2>& stats)
 
   if (0 == m_nseconds % m_integration)
   {
-    m_values /= m_integration;
-    write_statistics(m_values);
+    if (m_integration > 0) 
+    {
+      m_values /= m_integration;
+
+      write_statistics(m_values); // write (optionally integrated) statistics
+
+      if (!m_onefile)
+      {
+	for (int i = 0; i < m_n_devices; i++)
+	{
+	  if (m_file[i]) fclose(m_file[i]);
+	  m_file[i] = 0;
+	}
+      }
+    }
+    else
+    {
+      write_statistics(stats); // write interval sampled statistics
+
+      if (!m_onefile)
+      {
+	for (int i = 0; i < m_n_devices; i++)
+	{
+	  if (m_file[i]) fclose(m_file[i]);
+	  m_file[i] = 0;
+	}
+      }
+    }
+    
     m_values = 0.0;
   }
 
   // check if duration has been reached
   if (m_nseconds >= m_duration)
   {
+    for (int i = 0; i < m_n_devices; i++)
+    {
+      if (m_file[i]) fclose(m_file[i]);
+      m_file[i] = 0;
+    }
     exit(EXIT_SUCCESS);
   }
 }
@@ -405,41 +447,44 @@ void CaptureStats::write_statistics(Array<double, 2>& stats)
       exit(EXIT_FAILURE);
     }
 
-    char filename[PATH_MAX];
-    switch (m_type)
+    if (!m_file[device])
     {
-      case Statistics::SUBBAND_POWER:
-	snprintf(filename, PATH_MAX, "%04d%02d%02d_%02d%02d%02d_sst_rcu%02d.dat",
-		 t->tm_year + 1900, t->tm_mon + 1, t->tm_mday,
-		 t->tm_hour, t->tm_min, t->tm_sec, device);
-	break;
-      case Statistics::BEAMLET_POWER:
-	snprintf(filename, PATH_MAX, "%04d%02d%02d_%02d%02d%02d_bst_pol%02d.dat",
-		 t->tm_year + 1900, t->tm_mon + 1, t->tm_mday,
-		 t->tm_hour, t->tm_min, t->tm_sec, device);
-	break;
-      default:
-	cerr << "Error: invalid m_type" << endl;
+      char filename[PATH_MAX];
+      switch (m_type)
+      {
+	case Statistics::SUBBAND_POWER:
+	  snprintf(filename, PATH_MAX, "%04d%02d%02d_%02d%02d%02d_sst_rcu%02d.dat",
+		   t->tm_year + 1900, t->tm_mon + 1, t->tm_mday,
+		   t->tm_hour, t->tm_min, t->tm_sec, device);
+	  break;
+	case Statistics::BEAMLET_POWER:
+	  snprintf(filename, PATH_MAX, "%04d%02d%02d_%02d%02d%02d_bst_pol%02d.dat",
+		   t->tm_year + 1900, t->tm_mon + 1, t->tm_mday,
+		   t->tm_hour, t->tm_min, t->tm_sec, device);
+	  break;
+	default:
+	  cerr << "Error: invalid m_type" << endl;
+	  exit(EXIT_FAILURE);
+	  break;
+      }
+      m_file[device] = fopen(filename, "w");
+
+      if (!m_file[device])
+      {
+	cerr << "Error: Failed to open file: " << filename << endl;
 	exit(EXIT_FAILURE);
-	break;
-    }
-
-    FILE* ofile = fopen(filename, "w");
-
-    if (!ofile)
-    {
-      cerr << "Error: Failed to open file: " << filename << endl;
-      exit(EXIT_FAILURE);
+      }
     }
     
     if (stats.extent(secondDim)
 	!= (int)fwrite(stats(result_device, Range::all()).data(), sizeof(double),
-		       stats.extent(secondDim), ofile))
+		       stats.extent(secondDim), m_file[device]))
     {
       perror("fwrite");
       exit(EXIT_FAILURE);
     }
-    (void)fclose(ofile);
+
+    //(void)fclose(ofile);
 
     result_device++; // next
   }
@@ -472,9 +517,11 @@ void usage()
   cout << "    --duration=N             # or -d; default 1, number of seconds to capture" << endl;
   cout << endl;
   cout << "    --integration[=N]        # or -i; default equal to duration" << endl;
-  cout << "        Note: integration must be a divisor of duration" << endl;
+  cout << "        Note: integration < 0 means don't itegrate but sample with the specified interval." << endl;
   cout << endl;
   cout << "    --statstype=0|1          # or -s; default 0, 0 = subbands, 1 = beamlets" << endl;
+  cout << endl;
+  cout << "    --onefile                # or -o; default off, output one big file or file per interval." << endl;
   cout << endl;
   cout << "    --help                   # or -h; this help" << endl;
   cout << endl;
@@ -484,6 +531,9 @@ void usage()
   cout << endl;
   cout << "  CaptureStats -r=-1 -d=10 -i" << endl;
   cout << "   # capture from all RCUs for 10 seconds integrating 10 seconds; results in one output file for each RCU." << endl;
+  cout << endl;
+  cout << "  CaptureStats -r=-1 -d=10 -i=-2" << endl;
+  cout << "   # capture from all RCUs for 10 seconds only storing every second result in a separate file for each RCU." << endl;
 }
 
 std::bitset<MAX_N_RCUS> strtoset(char* str, unsigned int max)
@@ -552,9 +602,10 @@ int main(int argc, char** argv)
   int type        = 0;
   bitset<MAX_N_RCUS> device_set = 0;
   int duration    = 1;
-  int integration = -1;
+  int integration = 0;
   unsigned long controlopt = 0xB9;
   uint8 rcucontrol = 0xB9;
+  bool onefile = false;
   
   // default is rcu 0
   device_set.set(0);
@@ -587,13 +638,14 @@ int main(int argc, char** argv)
 	{ "integration",  optional_argument, 0, 'i' },
 	{ "statstype",    required_argument, 0, 's' },
 	{ "help",         no_argument,       0, 'h' },
+	{ "onefile",      no_argument,       0, 'o' },
 	  
 	{ 0, 0, 0, 0 },
       };
 
     int option_index = 0;
     int c = getopt_long_only(argc, argv,
-			     "r:d:i::s:h", long_options, &option_index);
+			     "r:d:i::s:ho", long_options, &option_index);
     
     if (c == -1) break;
     
@@ -638,6 +690,10 @@ int main(int argc, char** argv)
 	usage();
 	exit(EXIT_SUCCESS);
 	break;
+	
+      case 'o':
+	onefile = true;
+	break;
 
       case '?':
 	cerr << "Error: error in option '" << char(optopt) << "'." << endl;
@@ -664,17 +720,17 @@ int main(int argc, char** argv)
     exit(EXIT_FAILURE);
   }
 
-  if (integration <= 0) integration = duration;
+  if (0 == integration) integration = duration;
 
   // check for valid integration
-  if ( (integration > duration) || (0 != duration % integration) )
+  if ( (abs(integration) > duration) )
   {
-    cerr << "Error: integration must be > 0 and <= duration and a divisor of duration" << endl;
+    cerr << "Error: abs(integration) must be <= duration" << endl;
     exit(EXIT_FAILURE);
   }
 
   Suite s("CaptureStats", &cerr);
-  s.addTest(new CaptureStats("CaptureStats", type, device_set, n_devices, duration, integration, rcucontrol));
+  s.addTest(new CaptureStats("CaptureStats", type, device_set, n_devices, duration, integration, rcucontrol, onefile));
   try
   {
     s.run();
