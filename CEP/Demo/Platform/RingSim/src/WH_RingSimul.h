@@ -24,6 +24,8 @@ class WH_RingSimul:public WorkHolder
   /// Retrieve a pointer to the output data holder for the given channel
   DH_Ring<T>* getOutHolder (int channel); 
 
+  void addOutDataHolder(DataHolder* aDH) {itsOutDataHolders.push_back((DH_Ring<DH_Test>*)aDH);
+                                          itsNoutputs++;}
  private:
   
    /** vector with pointers to the input dataholders
@@ -63,8 +65,8 @@ WorkHolder (channels,channels)
   }
   
   for (int ch = 0; ch < getOutputs(); ch++)    {
-    DH_Ring<DH_Test>* aDH = new DH_Ring<DH_Test>();
-    itsOutDataHolders.push_back(aDH);
+            DH_Ring<DH_Test>* aDH = new DH_Ring<DH_Test>();
+            itsOutDataHolders.push_back(aDH);
   }
 }
 
