@@ -1,4 +1,4 @@
-//#  RCUSettings.h: RCU control information
+//#  WGSetting.h: Waveform Generator control information
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,8 +20,8 @@
 //#
 //#  $Id$
 
-#ifndef RCUSETTINGS_H_
-#define RCUSETTINGS_H_
+#ifndef WGSETTING_H_
+#define WGSETTING_H_
 
 #include <complex>
 #include <blitz/array.h>
@@ -29,18 +29,18 @@
 
 namespace RSP_Protocol
 {
-  class RCUSettings
+  class WGSetting
       {
       public:
 	  /**
-	   * Constructors for a RCUSettings object.
+	   * Constructors for a WGSetting object.
 	   * Currently the tv_usec part is always set to 0 irrespective
 	   * of the value passed in.
 	   */
-	  RCUSettings() { }
+	  WGSetting() { }
 	  
-	  /* Destructor for RCUSettings. */
-	  virtual ~RCUSettings() {}
+	  /* Destructor for WGSetting. */
+	  virtual ~WGSetting() {}
 
       public:
 	  /**
@@ -54,29 +54,17 @@ namespace RSP_Protocol
 
       private:
 	  /**
-	   * Setting bitfield for an RCU.
+	   * Settings of the Waveform Generator
 	   */
-	  union RCURegisterType
+	  typedef struct WGRegister
 	  {
-	      typedef struct
-	      {
-		  uint8 filter_0:1;
-		  uint8 filter_1:1;
-		  uint8 filter_2:1;
-		  uint8 filter_3:1;
-		  uint8 lba_pwr:1;
-		  uint8 hba_pwr:1;
-		  uint8 rcu_pwr:1;
-		  uint8 ovrflw:1;
-	      } RCUBits;
-	  
-	      RCUBits Bits; 
-	      uint8   Register;
-
+	      uint16 mode;
+	      uint16 frequency;
+	      uint16 amplitude;
 	  };
 
-	  blitz::Array<RCURegisterType, 1> settings;
+	  blitz::Array<WGRegister, 1> registers;
       };
 };
      
-#endif /* RCUSETTING_H_ */
+#endif /* WGSETTING_H_ */

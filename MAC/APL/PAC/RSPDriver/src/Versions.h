@@ -1,4 +1,4 @@
-//#  RCUSettings.h: RCU control information
+//#  Versions.h: FPGA firmware version information from the RSP board.
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,27 +20,28 @@
 //#
 //#  $Id$
 
-#ifndef RCUSETTINGS_H_
-#define RCUSETTINGS_H_
+#ifndef VERSIONS_H_
+#define VERSIONS_H_
 
 #include <complex>
+#include <string>
 #include <blitz/array.h>
 #include <Common/LofarTypes.h>
 
 namespace RSP_Protocol
 {
-  class RCUSettings
+  class Versions
       {
       public:
 	  /**
-	   * Constructors for a RCUSettings object.
+	   * Constructors for a Versions object.
 	   * Currently the tv_usec part is always set to 0 irrespective
 	   * of the value passed in.
 	   */
-	  RCUSettings() { }
+	  Versions() { }
 	  
-	  /* Destructor for RCUSettings. */
-	  virtual ~RCUSettings() {}
+	  /* Destructor for Versions. */
+	  virtual ~Versions() {}
 
       public:
 	  /**
@@ -54,29 +55,10 @@ namespace RSP_Protocol
 
       private:
 	  /**
-	   * Setting bitfield for an RCU.
+	   * Versions
 	   */
-	  union RCURegisterType
-	  {
-	      typedef struct
-	      {
-		  uint8 filter_0:1;
-		  uint8 filter_1:1;
-		  uint8 filter_2:1;
-		  uint8 filter_3:1;
-		  uint8 lba_pwr:1;
-		  uint8 hba_pwr:1;
-		  uint8 rcu_pwr:1;
-		  uint8 ovrflw:1;
-	      } RCUBits;
-	  
-	      RCUBits Bits; 
-	      uint8   Register;
-
-	  };
-
-	  blitz::Array<RCURegisterType, 1> settings;
+	  blitz::Array<std::string, 1> m_versions;
       };
 };
      
-#endif /* RCUSETTING_H_ */
+#endif /* STATISTICS_H_ */

@@ -79,4 +79,4 @@ namespace RSP_Protocol
       };
 };
      
-#endif /* SUBBANDSELECTION_H_ */
+#endif /* RCUSETTING_H_ */

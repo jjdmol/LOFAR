@@ -1,4 +1,4 @@
-//#  RCUSettings.h: RCU control information
+//#  SystemStatus.h: System status information
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,8 +20,8 @@
 //#
 //#  $Id$
 
-#ifndef RCUSETTINGS_H_
-#define RCUSETTINGS_H_
+#ifndef SYSTEMSTATUS_H_
+#define SYSTEMSTATUS_H_
 
 #include <complex>
 #include <blitz/array.h>
@@ -29,18 +29,18 @@
 
 namespace RSP_Protocol
 {
-  class RCUSettings
+  class SystemStatus
       {
       public:
 	  /**
-	   * Constructors for a RCUSettings object.
+	   * Constructors for a SystemStatus object.
 	   * Currently the tv_usec part is always set to 0 irrespective
 	   * of the value passed in.
 	   */
-	  RCUSettings() { }
+	  SystemStatus() { }
 	  
-	  /* Destructor for RCUSettings. */
-	  virtual ~RCUSettings() {}
+	  /* Destructor for SystemStatus. */
+	  virtual ~SystemStatus() {}
 
       public:
 	  /**
@@ -54,29 +54,18 @@ namespace RSP_Protocol
 
       private:
 	  /**
-	   * Setting bitfield for an RCU.
+	   * System status fields
+	   * Dimension of each array is eaqual to the
+	   * number of configured hardware resources.
+	   * The dimension of the m_rcu_status array
+	   * is dependent on the number of bits set
+	   * in the rcumask parameter.
 	   */
-	  union RCURegisterType
-	  {
-	      typedef struct
-	      {
-		  uint8 filter_0:1;
-		  uint8 filter_1:1;
-		  uint8 filter_2:1;
-		  uint8 filter_3:1;
-		  uint8 lba_pwr:1;
-		  uint8 hba_pwr:1;
-		  uint8 rcu_pwr:1;
-		  uint8 ovrflw:1;
-	      } RCUBits;
-	  
-	      RCUBits Bits; 
-	      uint8   Register;
-
-	  };
-
-	  blitz::Array<RCURegisterType, 1> settings;
+	  blitz::Array<uint16, 1> m_ap_status;
+	  blitz::Array<uint16, 1> m_bp_status;
+	  blitz::Array<uint32, 1> m_eth_status;
+	  blitz::Array<uint16, 1> m_rcu_status;
       };
 };
      
-#endif /* RCUSETTING_H_ */
+#endif /* SYSTEMSTATUS_H_ */
