@@ -122,8 +122,23 @@ namespace LOFAR
         friend Expr operator|| (const Expr& lhs, const Expr& rhs);
         //@}
 
-        // I/O stream operators
+        // @name I/O stream operators
+        //@{
+
+        // Print the expression \a exp onto the output stream \a os.
+        //
+        // \warning operator<<() will \e not always print the constraints
+        // associated with the expression onto the output stream. If you want
+        // to make sure that the constraints are always printed, use the
+        // method Expr::print().
+        //
+        // \todo Modify operator<<() so that it always prints both the
+        // expression and the constraints associated with the expression. This
+        // change implies a modification to the print methods of all the
+        // expression node, because they use operator<<() to print their
+        // expression objects onto the output stream.
         friend std::ostream& operator<< (std::ostream& os, const Expr& exp);
+        //@}
 
         // The actual node of the expression query.
         boost::shared_ptr<ExprNode> itsNode;
