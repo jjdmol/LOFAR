@@ -175,6 +175,7 @@ key1=[a=1, b=2], key2=abc
 key1=3.29407, key2=-0.219605
 key1=3.14165, key2=-0.209443
 key1=3.14159, key2=-0.20944
+keyb=1, keybv=[1,0], keyc=1+2i, keyd=-1435, keydc=3.5+-4.6i, keydv=[3000,0.3,3,3.3,3000,300,-0.0033], keyf=243, keyfv=[200,0.2,2,2.2,200,20,-0.022], keyi=34, keyiv=[2,3,4,-5], keymv=[24.3,-1435,1+2i,3.5+-460i,0+20i,0+30i,string], keys=string, keyx=ab#cd, keyy=[aa=1, bb=2, dd="bc"]
 KeyParser: parse error at position 7 (at or near '12a')
 KeyValue: 12a:34:56.78 is an invalid HMS or DMS value at part 12a
 OK
