@@ -21,6 +21,12 @@
 #include <DH_CorrCube.h>
 #include <WH_Correlator.h>
 
+#ifdef HAVE_BGL
+// cheat by including the entire hummer_builtin.h file
+#include <hummer_builtin.h>
+#endif 
+
+
 #define DO_TIMING
 
 using namespace LOFAR;
@@ -173,16 +179,20 @@ void WH_Correlator::process() {
 #ifdef HAVE_BGL
 	    // load prefetched values into FPU
 	    __lfps((float*) s1_val_0);
-	    __lfps((float*) __real__ s2_val_0.real());
+	    __lfps((float*) s2_val_0);
+// 	     __lfps((float*) __real__ s2_val_0);
 
-	    // do the actual complex fused multiply-add (polarisation 0)
-	    // note that s1_val and s2_val are pointer of the type complex<float>
-	    // this may be incompatible with the __real__ and __imag__ macro
-	    // - we may want to use the .real() and .imag() methods of the complex class instead
-	    // - if this is too slow, we should consider rewriting the correlator using the C complex.h header
-	    out_ptr += __fxcpmadd(out_ptr, s1_val_0, __real__ s2_val_0) ;
-	    __lfps((float *) __imag__ s2_val_0);
-	    out_ptr += __fxcxnpma(out_ptr, s1_val_0, __imag__ s2_val_0);
+// 	    // do the actual complex fused multiply-add (polarisation 0)
+// 	    // note that s1_val and s2_val are pointer of the type complex<float>
+// 	    // this may be incompatible with the __real__ and __imag__ macro
+// 	    // - we may want to use the .real() and .imag() methods of the complex class instead
+// 	    // - if this is too slow, we should consider rewriting the correlator using the C complex.h header
+// 	    out_ptr += __fxcpmadd( (__complex__ double) out_ptr, (__complex__ double) s1_val_0, (double)  s2_val_0) ;
+// 	    __lfps((float *) s2_val_0);
+// 	    out_ptr += __fxcxnpma(out_ptr, s1_val_0, s2_val_0);
+// 	    out_ptr += __fxcpmadd(out_ptr, s1_val_0, __real__ s2_val_0) ;
+// 	    __lfps((float *) __imag__ s2_val_0);
+// 	    out_ptr += __fxcxnpma(out_ptr, s1_val_0, __imag__ s2_val_0);
 
 	    // note that the output buffer is assumed to be contiguous
 	    // also note that I'm trying to force a add-store by using the += in the intrinsic.
@@ -191,11 +201,16 @@ void WH_Correlator::process() {
 
 	    out_ptr++;
 	    // now do the same thing for polarisation 1
+// 	    __lfps((float*) s1_val_1);
+// 	    __lfps((float*) __real__ s2_val_1);
+// 	    out_ptr += __fxcpmadd(out_ptr, s1_val_1, __real__ s2_val_1) ;
+// 	    __lfps((float*) __imag__ s2_val_1);
+// 	    out_ptr += __fxcxnpma(out_ptr, s1_val_1, __imag__ s2_val_1);
 	    __lfps((float*) s1_val_1);
-	    __lfps((float*) __real__ s2_val_2);
-	    out_ptr += __fxcpmadd(out_ptr, s1_val_1, __real__ s2_val_1) ;
-	    __lfps((float*) __imag__ s2_val_1);
-	    out_ptr += __fxcxnpma(out_ptr, s1_val_1, __imag__ s2_val_1);
+	    __lfps((float*) s2_val_1);
+	    out_ptr += __fxcpmadd(*out_ptr, s1_val_1, s2_val_1) ;
+	    __lfps((float*) s2_val_1);
+	    out_ptr += __fxcxnpma(*out_ptr, s1_val_1, s2_val_1);
 	    
 	    out_ptr++;
 #else 
@@ -203,11 +218,8 @@ void WH_Correlator::process() {
 	    outDH->addBufferElementVal(station1, station2, fchannel, 0,
 				       *(s1_val_0) * *(s2_val_0));
 	    outDH->addBufferElementVal(station1, station2, fchannel, 1,
-				       *(s1_val_1) * *(s2_val_1));
-	    
-	    
+				       *(s1_val_1) * *(s2_val_1));	    
 #endif 	    
-//  	  }
 	}
       }
     }
@@ -240,7 +252,7 @@ void WH_Correlator::process() {
 #endif // HAVE_MPI
   gettimeofday(&t_start, NULL);
 #endif // DO_TIMING
-}				     
+}
 
 void WH_Correlator::dump() {
 
