@@ -4,7 +4,7 @@
 #include <OCTOPUSSY/Octopussy.h>
 #include <OCTOGlish/GlishClientWP.h>
 #include <OctoAgent/EventMultiplexer.h>
-#include <aips/Exceptions/Error.h>
+// #include <aips/Exceptions/Error.h>
 
 #include <AppUtils/VisRepeater.h>
 #include <MeqServer/MeqServer.h>
@@ -187,11 +187,11 @@ int main (int argc,const char *argv[])
     cout<<"Exiting with exception: "<<exc.what()<<endl;  
     return 1;
   }
-  catch ( AipsError &err ) 
-  {
-    cout<<"Exiting with AIPS++ exception: "<<err.getMesg()<<endl;  
-    return 1;
-  }
+//  catch ( AipsError &err ) 
+//  {
+//    cout<<"Exiting with AIPS++ exception: "<<err.getMesg()<<endl;  
+//    return 1;
+//  }
   catch( ... )
   {
     cout<<"Exiting with unknown exception\n";  

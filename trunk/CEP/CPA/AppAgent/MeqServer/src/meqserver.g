@@ -153,9 +153,9 @@ const meqsink_test := function ()
 {
   global mqs;
   # create meqserver object
-  mqs := meqserver(verbose=4,options="-d0 -meq:M:M:MeqServer",suspend=F);
+  mqs := meqserver(verbose=4,options="-d0 -meq:M:M:MeqServer",suspend=T);
   # set verbose debugging messages
-  mqs.setdebug("MeqNode MeqForest MeqSink MeqSpigot MeqNode MeqVisHandler MeqServ",5);
+  mqs.setdebug("MeqNode MeqForest MeqSink MeqSpigot",5);
   mqs.setdebug("MeqServ MeqVisHandler",3);
   mqs.setdebug("MeqServer",1);
   # initialize meqserver
