@@ -192,16 +192,6 @@ namespace LOFAR
     void 
     TPersistentObject<ObjectId>::fromDBRep(const DBRepHolder<ObjectId>& src);
 
-
-//     template<>
-//     void TPersistentObject<ObjectId>::
-//     bindCols(dtl::BoundIOs& cols, DBRep<ObjectId>& rowbuf) const;
-
-
-//     template<>
-//     void TPersistentObject<ObjectId>::
-//     bindCols(dtl::BoundIOs& cols, DBRepHolder<ObjectId>& rowbuf) const;
-
   } // namespace PL
 
 } // namespace LOFAR
