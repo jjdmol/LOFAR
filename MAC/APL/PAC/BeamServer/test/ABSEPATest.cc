@@ -128,7 +128,7 @@ GCFEvent::TResult EPATest::test001(GCFEvent& e, GCFPortInterface& port)
 
 	// send wgenable
 	ABSWgsettingsEvent wgs;
-	wgs.frequency=1.5e6; // 1.5MHz
+	wgs.frequency=1.5625e6; // 1.5625MHz
 	wgs.amplitude=128; // was 128
 	wgs.sample_period=2;
 

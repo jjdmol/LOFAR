@@ -229,7 +229,7 @@ void BeamletStats::update(Array<unsigned int,3>& power_sum, unsigned int seqnr)
 			  "Power per beamlet y-polarization");
       }
 
-#if 0
+#if 1
       power_t(snapshot_time) = m_beamlet_power(PLOT_BIN_NR, 0);
       snapshot_time = (snapshot_time + 1) % N_TIME;
 
