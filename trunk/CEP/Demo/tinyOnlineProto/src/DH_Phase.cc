@@ -33,26 +33,16 @@ namespace LOFAR
   DH_Phase::DH_Phase (const string& name, 
 		      const int StationID)
 : DataHolder            (name, "DH_Phase"),
-  itsBuffer             (0)
+  itsBuffer             (0),
+  itsElapsedTime        (0),
+  itsStationID          (StationID)
 {
   // First delete possible buffers.
   postprocess();
 
   // Determine the number of bytes needed for DataPacket and buffer.
   itsBufSize = 1;
-//   unsigned int size = sizeof(DataPacket) + itsBufSize;
-//   char* ptr = new char[size];
-//   // Fill in the data packet pointer and initialize the memory.
-//   itsDataPacket = (DataPacket*)(ptr);
-//   *itsDataPacket = DataPacket();
-//   // Fill in the buffer pointer and initialize the buffer.
-//   itsBuffer = (BufferType*)(ptr + sizeof(DataPacket));
 
-//   // Initialize base class.
-//   setDataPacket (itsDataPacket, size);
-
-  *itsStationID        = StationID;
-  *itsElapsedTime      = -1;
 }
 
 DH_Phase::DH_Phase(const DH_Phase& that)
@@ -64,18 +54,9 @@ DH_Phase::DH_Phase(const DH_Phase& that)
 
   // Determine the number of bytes needed for DataPacket and buffer.
   itsBufSize = 1;
-//   unsigned int size = sizeof(DataPacket) + itsBufSize;
-//   char* ptr = new char[size];
-//   // Fill in the data packet pointer and initialize the memory.
-//   itsDataPacket = (DataPacket*)(ptr);
-//   *itsDataPacket = DataPacket();
-//   // Fill in the buffer pointer and initialize the buffer.
-//   itsBuffer = (BufferType*)(ptr + sizeof(DataPacket));
-
-//   // Initialize base class.
-//   setDataPacket (itsDataPacket, size);
-  *itsStationID        = that.getStationID();
-  *itsElapsedTime      = that.getElapsedTime();
+  
+  itsElapsedTime = that.itsElapsedTime;
+  itsStationID   = that.itsStationID;
 }
 
 DH_Phase::~DH_Phase()
@@ -91,8 +72,6 @@ DataHolder* DH_Phase::clone() const
 void DH_Phase::preprocess()
 {
   addField("Buffer",BlobField<BufferType>(1));
-  addField("StationID",BlobField<int>(1));
-  addField("ElapsedTime",BlobField<float>(1));
 
   createDataBlock();
   for (unsigned int i=0; i<itsBufSize; i++) {
@@ -103,14 +82,10 @@ void DH_Phase::preprocess()
 void DH_Phase::postprocess()
 {
   itsBuffer       = 0;
-  *itsStationID   = -1;
-  *itsElapsedTime = -1;
 }
 
 void DH_Phase::fillDataPointers() {
   itsBuffer = getData<BufferType> ("Buffer");
-  itsStationID = getData<int> ("StationID");
-  itsElapsedTime = getData<float> ("ElapsedTime");
 }
 
 }
