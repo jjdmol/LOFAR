@@ -45,10 +45,12 @@ void Quality::init() {
 }
 
 void Quality::show(ostream& os) const {
+/*
   os << "itsSolFlag: " <<  itsSolFlag << endl;
   os << "itsRank   : " <<  itsRank    << endl;
   os << "itsFit    : " <<  itsFit     << endl;
   os << "itsMu     : " <<  itsMu      << endl;
   os << "itsStddev : " <<  itsStddev  << endl;
   os << "itsChi    : " <<  itsChi     << endl;
+*/
 }
