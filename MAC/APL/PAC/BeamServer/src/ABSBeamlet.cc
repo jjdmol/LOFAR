@@ -190,13 +190,13 @@ void Beamlet::calculate_weights(const Array<W_TYPE, 3>&          pos,
 	      weights(all, si, bi, pol) =
 		(pos(si, pol, 0) * (*lmn)(all, 1))
 		- (pos(si, pol, 1) * (*lmn)(all, 0))
-		- (pos(si, pol, 2) * (*lmn)(all, 2));
+		+ (pos(si, pol, 2) * (*lmn)(all, 2));
 	      
 	      // y-polarization
 	      weights(all, si, bi, pol) =
 		(pos(si, pol, 0) * (*lmn)(all, 1))
 		- (pos(si, pol, 1) * (*lmn)(all, 0))
-		- (pos(si, pol, 2) * (*lmn)(all, 2));
+		+ (pos(si, pol, 2) * (*lmn)(all, 2));
 	    }
 	  }
 
