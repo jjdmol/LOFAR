@@ -118,10 +118,10 @@ namespace LOFAR
 
         friend std::ostream& operator<<(std::ostream& os, const MetaData& md)
         {
-          os << "itsOid       = " << md.itsOid->get() << std::endl
-             << "itsOwnerOid  = " << md.itsOwnerOid->get() << std::endl
-             << "itsVersionNr = " << *md.itsVersionNr << std::endl
-             << "itsTableName = " << *md.itsTableName << std::endl;
+          os << std::endl << "itsOid       = " << md.itsOid->get()
+             << std::endl << "itsOwnerOid  = " << md.itsOwnerOid->get()
+             << std::endl << "itsVersionNr = " << *md.itsVersionNr
+             << std::endl << "itsTableName = " << *md.itsTableName;
           return os;
         }
 
