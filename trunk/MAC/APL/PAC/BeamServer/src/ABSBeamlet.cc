@@ -125,14 +125,16 @@ const Beam* Beamlet::getBeam() const
 }
 
 void Beamlet::calculate_weights(const Array<W_TYPE, 2>&          pos,
-				      Array<complex<W_TYPE>, 3>& weights)
+				      Array<complex<W_TYPE>, 4>& weights)
 {
   const Array<W_TYPE,2>* lmn = 0;
   int compute_interval = weights.extent(firstDim);
-  int nsignals         = weights.extent(secondDim);
+  int nelements        = weights.extent(secondDim);
+  int npolarizations   = weights.extent(fourthDim);
+  Range all = Range::all();
 
   if ((weights.extent(thirdDim) != m_ninstances)
-      || (pos.extent(firstDim) != nsignals))
+      || (pos.extent(firstDim) != nelements * npolarizations))
   {
       LOG_ERROR("mismatching pos and weight array shapes");
       return;
@@ -159,6 +161,8 @@ void Beamlet::calculate_weights(const Array<W_TYPE, 2>&          pos,
 	      continue;
 	  }
 
+	  LOG_DEBUG_STR("lmn(t=0)=" << (*lmn)(0,all));
+
 	  if (compute_interval != lmn->extent(firstDim))
 	  {
 	      LOG_ERROR(formatString("lmn vector length (%d) != compute_interval (%d)",
@@ -172,19 +176,28 @@ void Beamlet::calculate_weights(const Array<W_TYPE, 2>&          pos,
 	      freq = beamlet->spw()->getFrequency(beamlet->subband());
 	  }
 
-  	  for (int si = 0; si < nsignals; si++)
+  	  for (int si = 0; si < nelements; si++)
 	  {
 	      //
-	      // calculate (xm - yl -zn)
+	      // calculate (xm - yl -zn) for both polarizations
+	      // of all elements
 	      //
-	      weights(Range::all(), si, bi) =
-		  (pos(si, 0) * (*lmn)(Range::all(), 1))
-		  - (pos(si, 1) * (*lmn)(Range::all(), 0))
-		  - (pos(si, 2) * (*lmn)(Range::all(), 2));
+
+	      // x-polarization
+	      weights(all, si, bi, 0) =
+		  (pos(si*2, 0) * (*lmn)(all, 1))
+		  - (pos(si*2, 1) * (*lmn)(all, 0))
+		  - (pos(si*2, 2) * (*lmn)(all, 2));
+
+	      // y-polarization
+	      weights(all, si, bi, 1) =
+		  (pos(si*2+1, 0) * (*lmn)(all, 1))
+		  - (pos(si*2+1, 1) * (*lmn)(all, 0))
+		  - (pos(si*2+1, 2) * (*lmn)(all, 2));
 	  }
 
-	  weights(Range::all(), Range::all(), bi) *= exp((I_COMPLEX * ((W_TYPE)2.0) * ((W_TYPE)M_PI) * freq)
-							 / SPEED_OF_LIGHT_MS);
+	  weights(all, all, bi, all) *=
+	      exp((I_COMPLEX * ((W_TYPE)2.0) * ((W_TYPE)M_PI) * freq) / SPEED_OF_LIGHT_MS);
 
 	  //LOG_TRACE(formatString("calculating weights for frequency %f",
 	  //freq));

@@ -9,6 +9,8 @@ prefix = "EPA"; // for the signal names
 // specify extra include files
 // e.g.
 include = '<sys/time.h>';
+include = '<linux/types.h>';
+include = '"ABS_Protocol.ph"';
 
 prelude = << PRELUDE_END
 enum {
@@ -18,8 +20,8 @@ enum {
 namespace EPA_Protocol
 {
 	static double const SYSTEM_CLOCK_FREQ = 80e6; // 80 MHz
-	static int const N_ANTENNAS = 1;
-	static int const N_PHASEPOL = 2;
+	static int const N_ELEMENTS      = 1;
+	static int const N_POLARIZATIONS = 2;
 };
 
 PRELUDE_END;
@@ -169,8 +171,8 @@ event = {
       param = {
 	    // beamformer weights
 	    name = "coeff";
-	    type = "signed short";
-	    dim = 512;
+	    type = "int16_t";
+	    dim = "N_BEAMLETS * N_POLARIZATIONS * 2";
       };
 };
 

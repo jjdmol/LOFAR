@@ -28,7 +28,14 @@
 #include <blitz/array.h>
 
 // define the datatype for the weight calculation
+#define W_TYPE_DOUBLE
+#ifdef W_TYPE_DOUBLE
 #define W_TYPE double
+#define W_TYPE_DOUBLE
+#else
+#define W_TYPE float
+#define W_TYPE_FLOAT
+#endif
 
 namespace ABS
 {
@@ -105,7 +112,7 @@ namespace ABS
 	   * for the specified number of time steps.
 	   */
 	  static void calculate_weights(const blitz::Array<W_TYPE, 2>&               pos,
-					      blitz::Array<std::complex<W_TYPE>, 3>& weights);
+					      blitz::Array<std::complex<W_TYPE>, 4>& weights);
 
       protected:
 	  Beamlet(); // no direct construction
