@@ -24,7 +24,6 @@
 
 #include <BBS3/BlackBoardDemo.h>
 #include <Common/KeyParser.h>
-#include <Common/Debug.h>
 #include <string>
 #include <iostream>
 #include <fstream>
@@ -41,9 +40,6 @@ int main (int argc, const char** argv)
 
     BlackBoardDemo simulator;
     
-    // Set trace level.
-    Debug::initLevels (argc, argv);
-
     simulator.setarg (argc, argv);
 
     // Get input script.
@@ -88,19 +84,23 @@ int main (int argc, const char** argv)
       params["CTRLparams"] = cmap;
     }
     // Add the dbname if not defined.
-    KeyValueMap ksmap(params["KSparams"].getValueMap());
-    if (! ksmap.isDefined("DBName")) {
-      ksmap["DBName"] = usernm;
-      params["KSparams"] = ksmap;
+    KeyValueMap msdbmap(smap["MSDBparams"].getValueMap());
+    if (! msdbmap.isDefined("DBName")) {
+      msdbmap["DBName"] = usernm;
+      smap["MSDBparams"] = msdbmap;
+      cmap["SC1params"] = smap; 
+      params["CTRLparams"] = cmap;     
     }
-    if (! ksmap.isDefined("BBDBname")) {
+    if (! params.isDefined("BBDBname")) {
       params["BBDBname"] = usernm;
     }
 
     cout << params << endl;
 
+    int nrRuns = params.getInt("nrRuns", 1);
+
     simulator.baseDefine(params);
-    simulator.baseRun(1);
+    simulator.baseRun(nrRuns);
     simulator.baseQuit();
 
   }
