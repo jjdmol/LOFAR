@@ -2,7 +2,7 @@
 // macro defined in QT :-)
 #include <OCTOPUSSY/Dispatcher.h> 
 #include <OCTOPUSSY/Gateways.h>
-#include <UVD/MSIntegratorWP.h>
+//#include <UVD/MSIntegratorWP.h>
 
 #include <UVPMainWindow.h>
 #include <UVPDataTransferWP.h>    // Communications class
@@ -54,7 +54,7 @@ UVPMainWindow::UVPMainWindow()
 
 
   itsHelpMenu = new QPopupMenu;
-  itsHelpMenu->insertItem("&About uvplot", this, SLOT(slot_about_uvplot()), 0, mc_help_about);
+  itsHelpMenu->insertItem("&About uvplot", this, SLOT(slot_about_uvplot()));
 
   itsMenuBar = new QMenuBar(this);
   itsMenuBar->insertItem("&File", itsFileMenu);
@@ -131,7 +131,6 @@ void UVPMainWindow::resizeEvent(QResizeEvent */*event*/)
   QWidget* CentralWidget = this->centralWidget();
   itsScrollView->setGeometry(0, 0, CentralWidget->width() - itsGraphSettingsWidget->width(), CentralWidget->height());
   itsCanvas->setGeometry(0, 0, itsNumberOfChannels, itsNumberOfTimeslots);
-  //  itsCanvas->setGeometry(0, 0/*itsMenuBar->height()*/, width(), height() /*-itsMenuBar->height()*/-itsStatusBar->height());
 }
 
 
@@ -142,7 +141,7 @@ void UVPMainWindow::resizeEvent(QResizeEvent */*event*/)
 void UVPMainWindow::slot_about_uvplot()
 {
   QMessageBox::information(this, "About uvplot",
-                           "UV data visualiser for the LOFAR project\n"
+                           "UV data visualizer for the LOFAR project\n"
                            "by Michiel Brentjens (brentjens@astron.nl)");
 }
 
@@ -210,8 +209,7 @@ void UVPMainWindow::slot_plotTimeFrequencyImage()
     // Anonymous counted reference. No need to delete.
     UVPDataTransferWP *transfer = new UVPDataTransferWP(patch, &itsDataSet);
     dispatcher.attach(transfer, DMI::ANON);
-    //    dispatcher.attach(new MSIntegratorWP("test.ms", 2, 1, 1), DMI::ANON);
-    initGateways(dispatcher);     // Octopussy     ^^^ Channels to average
+    initGateways(dispatcher);     // Octopussy
     
     dispatcher.start();           // Octopussy
     
@@ -281,16 +279,6 @@ void UVPMainWindow::slot_plotTimeFrequencyImage()
       
     } // while
     
-#if(ARTIFICIAL_IMAGE_ASDJKNF)
-    for(unsigned int t = 0; t < 600; t++) {
-      for(unsigned int i = 0; i < Channels; i++) {
-        Values[i] = sin(double(i)*double(t)/30.0);
-      }
-      Spectrum.copyFast(Values);
-      itsCanvas->slot_addSpectrum(Spectrum);
-      slot_setProgress(t+1);
-    }
-#endif //ARTIFICIAL_IMAGE_ASDJKNF
 
     dispatcher.stop();
     itsCanvas->drawView();
@@ -429,10 +417,11 @@ void UVPMainWindow::slot_readMeasurementSet(const std::string& msName)
 
   
 #if(DEBUG_MODE)
-  TRACER1("Selection.nrow();" <<   Selection.nrow());
-  TRACER1("NumRows     : " << NumRows);
-  TRACER1("NumBaselines: " << NumBaselines);
-  TRACER1("NumTimeslots: " << NumTimeslots << std::flush);
+  TRACER1("Selection.nrow(); " <<   Selection.nrow());
+  TRACER1("NumRows         : " << NumRows);
+  TRACER1("NumBaselines    : " << NumBaselines);
+  TRACER1("NumPolarizations: " << NumPolarizations);
+  TRACER1("NumTimeslots    : " << NumTimeslots << std::flush);
 #endif
 
 }
@@ -531,9 +520,6 @@ void UVPMainWindow::slot_readPVD(const std::string& pvdName)
         delete[] Values;
       }
       itsNumberOfTimeslots = spectraAdded;
-      //        itsScrollView->removeChild(itsCanvas);
-      //      itsCanvas->setGeometry(0, 0, itsNumberOfChannels, itsNumberOfTimeslots);
-      //        itsScrollView->addChild(itsCanvas);
       itsCanvas->drawView();
     }
     pass++;
