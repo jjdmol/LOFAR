@@ -1,3 +1,5 @@
+//#  -*- mode: c++ -*-
+//#
 //#  BWSync.h: Synchronize beamformer weights with RSP hardware.
 //#
 //#  Copyright (C) 2002-2004
@@ -28,23 +30,23 @@
 namespace RSP
 {
   class BWSync : public SyncAction
-      {
-      public:
-	  /**
-	   * Constructors for a BWSync object.
-	   */
-	  BWSync();
+  {
+    public:
+      /**
+       * Constructors for a BWSync object.
+       */
+      BWSync();
 	  
-	  /* Destructor for BWSync. */
-	  virtual ~BWSync();
+      /* Destructor for BWSync. */
+      virtual ~BWSync();
 
-	  /**
-	   * Initial state handler.
-	   */
-	  GCFEvent::TResult initial_state(GCFEvent& event, GCFPortInterface& port);
+      /**
+       * Initial state handler.
+       */
+      GCFEvent::TResult initial_state(GCFEvent& event, GCFPortInterface& port);
 
-      private:
-      };
+    private:
+  };
 };
      
 #endif /* BWSYNC_H_ */
