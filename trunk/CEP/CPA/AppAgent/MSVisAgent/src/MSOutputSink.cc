@@ -72,11 +72,11 @@ void MSOutputSink::postEvent (const HIID &id, const ObjRef::Xfer &data, const HI
 {
   try
   {
-    ObjRef ref = data; // this detaches the ref nicely
     int code = VisEventType(id);
     if( code == HEADER )
     {
-      doPutHeader(ref.ref_cast<DataRecord>().deref());
+      DataRecord::Ref ref = data;
+      doPutHeader(*ref);
       setState(DATA);
     }
     else if( code == DATA )
@@ -86,15 +86,21 @@ void MSOutputSink::postEvent (const HIID &id, const ObjRef::Xfer &data, const HI
         cdebug(3)<<"got tile but state is not DATA, ignoring\n";
       }
       else
-        doPutTile(ref.ref_cast<VisTile>().deref());
+      {
+        VisTile::Ref ref = data;
+        // get read-only snapshot
+        ref.privatize(DMI::READONLY|DMI::DEEP);
+        doPutTile(*ref);
+      }
     }
     else if( code == FOOTER )
     {
       if( state() == DATA )
       {
-        cdebug(2)<<"got footer event, flushing ms\n";
+        cdebug(2)<<"got footer event, flushing & closing ms\n";
         setState(CLOSED);
-        ms_.flush();
+        ms_.unlock();
+        ms_ = MeasurementSet();
       }
       else
       {
@@ -130,10 +136,12 @@ bool MSOutputSink::setupDataColumn (Column &col)
   // add column to MS, if it doesn't exist
   if( !ms_.tableDesc().isColumn(col.name) ) 
   {
+    cdebug(2)<<"creating new column "<<col.name<<endl;
     ArrayColumnDesc<Complex> coldesc(col.name);
     ms_.addColumn(coldesc);
   }
   // init the column
+  cdebug(2)<<"attaching to column "<<col.name<<endl;
   col.col.attach(ms_,col.name);
   return col.valid = True;
 }
@@ -150,7 +158,7 @@ void MSOutputSink::doPutHeader (const DataRecord &header)
   // open the MS named in the header (incidentally, this will also
   // flush & close any previously named MS)
   msname_ = header[FMSName].as<string>();
-  ms_ = MeasurementSet(msname_,Table::Update);
+  ms_ = MeasurementSet(msname_,TableLock(TableLock::AutoNoReadLocking),Table::Update);
   // get range of channels from header and setup slicer
   int chan0 = header[FChannelStartIndex].as<int>(),
       chan1 = header[FChannelEndIndex].as<int>();
@@ -184,13 +192,13 @@ void MSOutputSink::doPutHeader (const DataRecord &header)
   }
 
   cdebug(2)<<"got header for MS "<<msname_<<endl;
-  cdebug(4)<<"  channels: "<<chan0<<"-"<<chan1<<endl;
-  cdebug(4)<<"  correlations: "<<ncorr<<endl;
-  cdebug(4)<<"  write_flags: "<<write_flags_<<endl;
-  cdebug(4)<<"  flagmask: "<<flagmask_<<endl;
-  cdebug(4)<<"  colname_data: "<<datacol_.name<<endl;
-  cdebug(4)<<"  colname_predict: "<<predictcol_.name<<endl;
-  cdebug(4)<<"  colname_residuals: "<<rescol_.name<<endl;
+  cdebug(2)<<"  channels: "<<chan0<<"-"<<chan1<<endl;
+  cdebug(2)<<"  correlations: "<<ncorr<<endl;
+  cdebug(2)<<"  write_flags: "<<write_flags_<<endl;
+  cdebug(2)<<"  flagmask: "<<flagmask_<<endl;
+  cdebug(2)<<"  colname_data: "<<datacol_.name<<endl;
+  cdebug(2)<<"  colname_predict: "<<predictcol_.name<<endl;
+  cdebug(2)<<"  colname_residuals: "<<rescol_.name<<endl;
   // set state to indicate success
   tilecount_ = rowcount_ = 0;
 }
@@ -220,18 +228,31 @@ void MSOutputSink::doPutTile (const VisTile &tile)
     if( write_flags_ )
     {
       rowFlagCol_.put(irow,rowflag&flagmask_ != 0);
-
       LoMat_bool flags( iter.flags().shape() );
       flags = blitz::cast<bool>(iter.flags() & flagmask_ );
-      flagCol_.putSlice(irow,column_slicer_,refBlitzToAips(flags));
+      Matrix<Bool> aflags = refBlitzToAips(flags);
+      cdebug(6)<<"writing to FLAG column: "<<aflags<<endl;
+      flagCol_.putSlice(irow,column_slicer_,aflags);
     }
     // write data columns
     if( tile.defined(VisTile::DATA) && datacol_.valid )
-      datacol_.col.putSlice(irow,column_slicer_,copyBlitzToAips(iter.data()));
+    {
+      Matrix<Complex> adata = copyBlitzToAips(iter.data());
+      cdebug(6)<<"writing data: "<<adata<<endl;
+      datacol_.col.putSlice(irow,column_slicer_,adata);
+    }
     if( tile.defined(VisTile::PREDICT) && predictcol_.valid )
-      predictcol_.col.putSlice(irow,column_slicer_,copyBlitzToAips(iter.predict()));
+    {
+      Matrix<Complex> apredict = copyBlitzToAips(iter.predict());
+      cdebug(6)<<"writing predict: "<<apredict<<endl;
+      predictcol_.col.putSlice(irow,column_slicer_,apredict);
+    }
     if( tile.defined(VisTile::RESIDUALS) && rescol_.valid )
-      rescol_.col.putSlice(irow,column_slicer_,copyBlitzToAips(iter.residuals()));
+    {
+      Matrix<Complex> ares = copyBlitzToAips(iter.residuals());
+      cdebug(6)<<"writing residuals: "<<ares<<endl;
+      rescol_.col.putSlice(irow,column_slicer_,ares);
+    }
   }
   cdebug(4)<<"  wrote "<<count<<"/"<<tile.nrow()<<" rows\n";
 }

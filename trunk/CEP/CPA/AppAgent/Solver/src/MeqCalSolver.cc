@@ -1453,7 +1453,7 @@ void MeqCalSolver::saveParms()
 //##ModelId=3EC9F6EC0262
 void MeqCalSolver::saveResiduals (DataRecord::Ref& header)
 {
-  cout << "saveResidualData" << endl;
+  cdebug(1) << "saveResidualData" << endl;
 
   // generate new vdsid for the data set
   HIID &vdsid = header()[FVDSID];
@@ -1465,11 +1465,11 @@ void MeqCalSolver::saveResiduals (DataRecord::Ref& header)
   // write the header
   output().put(HEADER,header.copy());
   
-  cout << "Using peel sources ";
+  cdebug(2) << "Using peel sources ";
   for (unsigned int i=0; i<itsPeelSourceNrs.size(); i++) {
-    cout << itsPeelSourceNrs[i] << ',';
+    cdebug(2) << itsPeelSourceNrs[i] << ',';
   }
-  cout << endl;
+  cdebug(2) << endl;
   itsSources.setSelected (itsPeelSourceNrs);
 
   Timer timer;
@@ -1485,7 +1485,7 @@ void MeqCalSolver::saveResiduals (DataRecord::Ref& header)
     if( !visTile.format().defined(VisTile::RESIDUALS) )
       visTile.changeFormat(tileformat_);
       
-    cout << "Tile: "<<visTile.sdebug(5)<<endl;
+    cdebug(3) << "Tile: "<<visTile.sdebug(5)<<endl;
     // Do a predict for the elements in this range.
     int ant1 = visTile.antenna1();
     int ant2 = visTile.antenna2();
