@@ -57,27 +57,50 @@ LOFARDIR = $(shell pwd)
 MAKE_OPTIONS = -j2
 
 #
-# all target: build all specified variants and check these variants
+# all: Target to compile the specified variants of all packages
 #
-all: start bootstrap $(VARIANTS) check stop
+all: build
 
-build: start $(VARIANTS) stop
+#
+# daily,weekly: Target to drive daily and weekly builds
+#
+daily: start_daily bootstrap $(VARIANTS) check stop_daily
 
+weekly: start_weekly bootstrap $(VARIANTS) check stop_weekly
+
+#
+# build: Target to compile in a bootstrapped and configured tree
+#
+build: start_build $(VARIANTS:.variant=.variant_build) stop_build
+
+#
+# rebuild: Target to compile from scratch in a bootstrapped and configured tree
+#
 rebuild: start_rebuild $(VARIANTS:.variant=.variant_rebuild) stop_rebuild
 
-nobootstrap: start $(VARIANTS) check stop
-
-start:
+start_build:
 	@echo && echo ":::::: BUILD START" && echo
 
 start_rebuild:
 	@echo && echo ":::::: REBUILD START" && echo
 
-stop:
+start_daily:
+	@echo && echo ":::::: DAILY BUILD START" && echo
+
+start_weekly:
+	@echo && echo ":::::: WEEKLY BUILD START" && echo
+
+stop_build:
 	@echo && echo ":::::: BUILD COMPLETE" && echo
 
 stop_rebuild:
 	@echo && echo ":::::: REBUILD COMPLETE" && echo
+
+stop_daily:
+	@echo && echo ":::::: DAILY BUILD COMPLETE" && echo
+
+stop_weekly:
+	@echo && echo ":::::: WEEKLY BUILD COMPLETE" && echo
 
 #
 # check target: check all variants that have been specified in the
@@ -86,9 +109,12 @@ stop_rebuild:
 check: $(VARIANTS:.variant=.variant_check)
 
 #
-# Bootstrap all packages, only needed once, not for every variant
+# Bootstrap and configure all packages. Bootstrapping is only needed once,
+# configuration is needed for each variant
 #
-bootstrap:
+bootstrap: bootstrap_rule $(VARIANTS:.variant=.variant_configure)
+
+bootstrap_rule:
 	@for d in $(PACKAGES); do \
 		( echo \
 		&& echo ":::::: BOOTSTRAPPING $$d" \
@@ -101,7 +127,30 @@ bootstrap:
 	done
 
 #
-# Rule to build variant
+# Rule to configure variants
+#	- Configure package for variant
+#
+%.variant_configure:
+	@date; \
+	variant=`basename $@ .variant_configure`; \
+	for pkg in $(PACKAGES); do \
+		( echo \
+		&& echo ":::::: CONFIGURING VARIANT $$variant FOR PACKAGE $$pkg" \
+		&& echo \
+		&& date \
+		&& (( $(RM) -rf $$pkg/build/$$variant \
+		&& mkdir -p $$pkg/build/$$variant \
+		&& cd $$pkg/build/$$variant \
+		&& $(LOFARDIR)/autoconf_share/lofarconf ) \
+			|| echo ":::::: ERROR" ) \
+		&& echo \
+		&& echo ":::::: FINISHED CONFIGURING VARIANT $$variant FOR PACKAGE $$pkg" \
+		&& echo ; ) \
+	done; \
+	date
+
+#
+# Rule to build variant for daily or weekly build
 #	- Remove previous variant build directory
 #	- Recreate variant build directory
 #	- Configure package for variant
@@ -115,10 +164,7 @@ bootstrap:
 		&& echo ":::::: BUILDING VARIANT $$variant FOR PACKAGE $$pkg" \
 		&& echo \
 		&& date \
-		&& (( $(RM) -rf $$pkg/build/$$variant \
-		&& mkdir -p $$pkg/build/$$variant \
-		&& cd $$pkg/build/$$variant \
-		&& $(LOFARDIR)/autoconf_share/lofarconf \
+		&& (( cd $$pkg/build/$$variant \
 		&& make -k $(MAKE_OPTIONS) `cat makeoptions` ) \
 			|| echo ":::::: ERROR" ) \
 		&& echo \
@@ -127,6 +173,32 @@ bootstrap:
 	done; \
 	date
 
+#
+# Rule to build variant 
+#	- Compile variant
+#
+%.variant_build:
+	@date; \
+	variant=`basename $@ .variant_build`; \
+	for pkg in $(PACKAGES); do \
+		( echo \
+		&& echo ":::::: BUILDING VARIANT $$variant FOR PACKAGE $$pkg" \
+		&& echo \
+		&& date \
+		&& (( cd $$pkg/build/$$variant \
+		&& make -k $(MAKE_OPTIONS) `cat makeoptions` ) \
+			|| echo ":::::: ERROR" ) \
+		&& echo \
+		&& echo ":::::: FINISHED BUILDING VARIANT $$variant FOR PACKAGE $$pkg" \
+		&& echo ; ) \
+	done; \
+	date
+
+#
+# Rule to rebuild variant 
+#	- Clean variant
+#	- Compile variant
+#
 %.variant_rebuild:
 	@date; \
 	variant=`basename $@ .variant_rebuild`; \
@@ -136,6 +208,7 @@ bootstrap:
 		&& echo \
 		&& date \
 		&& ((cd $$pkg/build/$$variant \
+		&& make -k clean $(MAKE_OPTIONS) `cat makeoptions` \
 		&& make -k $(MAKE_OPTIONS) `cat makeoptions` ) \
 			|| echo ":::::: ERROR" ) \
 		&& echo \
