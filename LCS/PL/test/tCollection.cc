@@ -1,5 +1,4 @@
 #include <PL/Collection.h>
-#include <PL/Exception.h>
 #include <PL/ObjectId.h>
 #include <PL/TPersistentObject.h>
 #include <boost/shared_ptr.hpp>
@@ -14,12 +13,16 @@ public:
   X(int i=0) : _oid(new ObjectId()),_i(i) {}
   void print(ostream& os) const { os << "oid = " << _oid->get() << endl; }
   friend bool operator==(const X& lhs, const X& rhs) 
-  { return *(lhs._oid) == *(rhs._oid); }
+  { return *lhs._oid == *rhs._oid; }
 private:
   boost::shared_ptr<ObjectId> _oid;
   int _i;
 };
 
+template<> void TPersistentObject<X>::doErase() const {}
+template<> void TPersistentObject<X>::doInsert() const {}
+template<> void TPersistentObject<X>::doUpdate() const {}
+template<> void TPersistentObject<X>::init() {}
 
 int main()
 {
@@ -38,13 +41,14 @@ int main()
   for(Collection<X>::iterator it=cx.begin(); it!=cx.end(); ++it) {
     it->print(cout);
   }
-  cout << "Trying to add first element again ... (this should throw)" << endl;
-  try {
-    cx.add(x1);
+  cout << "Trying to add first element again ..." << endl;
+  cx.add(x1);
+  for(Collection<X>::iterator it=cx.begin(); it!=cx.end(); ++it) {
+    it->print(cout);
   }
-  catch (PLException& e) {
-    cerr << e << endl;
-  }
+
+  cout << "Removing all elements that match with first element ..." << endl;
+  cx.remove(x1);
   for(Collection<X>::iterator it=cx.begin(); it!=cx.end(); ++it) {
     it->print(cout);
   }
@@ -58,24 +62,25 @@ int main()
   cpox.add(pox2);
   for(Collection<TPersistentObject<X> >::iterator it=cpox.begin(); 
       it!=cpox.end(); ++it) {
-    it->value().print(cout);
+    it->data().print(cout);
   }
   cout << "Removing second element ..." << endl;
   cpox.remove(pox2);
   for(Collection<TPersistentObject<X> >::iterator it=cpox.begin(); 
       it!=cpox.end(); ++it) {
-    it->value().print(cout);
+    it->data().print(cout);
   }
-  cout << "Trying to add first element again ... (this should throw)" << endl;
-  try {
-    cpox.add(pox1);
-  }
-  catch (PLException& e) {
-    cerr << e << endl;
-  }
+  cout << "Trying to add first element again ... " << endl;
+  cpox.add(pox1);
   for(Collection<TPersistentObject<X> >::iterator it=cpox.begin(); 
       it!=cpox.end(); ++it) {
-    it->value().print(cout);
+    it->data().print(cout);
+  }
+  cout << "Removing all elements that match with first element ..." << endl;
+  cpox.remove(pox1);
+  for(Collection<TPersistentObject<X> >::iterator it=cpox.begin(); 
+      it!=cpox.end(); ++it) {
+    it->data().print(cout);
   }
 
   return 0;
