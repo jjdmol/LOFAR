@@ -51,7 +51,7 @@ bool TransportHolder::recvBlocking (void*, int, int)
 	+ getType());
 }
 
-bool TransportHolder::recvVarBlocking (int tag)
+bool TransportHolder::recvVarBlocking (int /*tag*/)
 {
   THROW(LOFAR::Exception, "No recvVarBlocking method implemented in this TransportHolder: " 
 	+ getType());
@@ -63,7 +63,7 @@ bool TransportHolder::recvNonBlocking (void*, int, int)
 	+ getType());
 }
 
-bool TransportHolder::recvVarNonBlocking (int tag)
+bool TransportHolder::recvVarNonBlocking (int /*tag*/)
 {
   THROW(LOFAR::Exception, "No recvVarNonBlocking method implemented in this TransportHolder: " 
 	+ getType());
