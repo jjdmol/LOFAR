@@ -76,6 +76,12 @@ public:
   void setDomain (const MeqDomain& domain)
     { itsDomain = domain; }
 
+  // Get the perturbation.
+  double getPerturbation() const
+    { return itsPertValue; }
+  bool isRelativePerturbation() const
+    { return itsIsRelPert; }
+
   void setPerturbation (double perturbation = 1e-6,
 			bool isRelativePerturbation = true)
     { itsPertValue = perturbation; itsIsRelPert = isRelativePerturbation; }
@@ -94,7 +100,7 @@ public:
 
   // Get the current value of the solvable parameter and store it
   // in the argument.
-  void getCurrentValue(MeqMatrix& value) const;
+  void getCurrentValue (MeqMatrix& value) const;
 
   // Update the solvable parameters with the new values.
   void update (const MeqMatrix& value);

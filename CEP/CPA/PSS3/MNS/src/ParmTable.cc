@@ -56,6 +56,8 @@ vector<MeqPolc> ParmTable::getPolcs (const string& parmName,
     ROScalarColumn<double> efCol (sel, "ENDFREQ");
     ROArrayColumn<bool> maskCol (sel, "MASK");
     ROArrayColumn<Double> valCol (sel, "RVALUES");
+    ROScalarColumn<double> pertCol (sel, "PERTURBATION");
+    ROScalarColumn<bool> prelCol (sel, "PERT_REL");
     if (valCol.isDefined (0)) {
       for (unsigned int i=0; i<sel.nrow(); i++) {
 	MeqPolc polc;
@@ -65,6 +67,7 @@ vector<MeqPolc> ParmTable::getPolcs (const string& parmName,
 	  polc.setCoeff (Matrix<double>(valCol(i)));
 	}
 	polc.setDomain (MeqDomain(stCol(i), etCol(i), sfCol(i), efCol(i)));
+	polc.setPerturbation (pertCol(i), prelCol(i));
 	result.push_back (polc);
       }
     } else {
@@ -77,6 +80,7 @@ vector<MeqPolc> ParmTable::getPolcs (const string& parmName,
 	  polc.setCoeff (Matrix<DComplex>(valDCol(i)));
 	}
 	polc.setDomain (MeqDomain(stCol(i), etCol(i), sfCol(i), efCol(i)));
+	polc.setPerturbation (pertCol(i), prelCol(i));
 	result.push_back (polc);
       }
     }
@@ -103,6 +107,8 @@ MeqPolc ParmTable::getInitCoeff (const string& parmName)
 	int row = rownrs(0);
 	ROArrayColumn<bool> maskCol (itsInitTable, "MASK");
 	ROArrayColumn<Double> valCol (itsInitTable, "RVALUES");
+	ROScalarColumn<double> pertCol (itsInitTable, "PERTURBATION");
+	ROScalarColumn<bool> prelCol (itsInitTable, "PERT_REL");
 	if (valCol.isDefined (row)) {
 	  if (maskCol.isDefined(row)) {
 	    result.setCoeff (Matrix<double>(valCol(row)), maskCol(row));
@@ -117,6 +123,7 @@ MeqPolc ParmTable::getInitCoeff (const string& parmName)
 	    result.setCoeff (Matrix<DComplex>(valDCol(row)));
 	  }
 	}
+	result.setPerturbation (pertCol(row), prelCol(row));
 	break;
       }
       string::size_type idx = name.rfind ('.');
@@ -130,10 +137,11 @@ MeqPolc ParmTable::getInitCoeff (const string& parmName)
 }
 				    
 void ParmTable::putCoeff (const string& parmName,
-			  const MeqDomain& domain,
-			  const MeqMatrix& values)
+			  const MeqPolc& polc)
 {
   itsTable.reopenRW();
+  const MeqDomain& domain = polc.domain();
+  const MeqMatrix& values = polc.getCoeff();
   Table sel = find (parmName, domain);
   if (sel.nrow() > 0) {
     AssertMsg (sel.nrow()==1, "Parameter " << parmName <<
@@ -167,6 +175,8 @@ void ParmTable::putCoeff (const string& parmName,
     ScalarColumn<Double> etCol (itsTable, "ENDTIME");
     ScalarColumn<Double> sfCol (itsTable, "STARTFREQ");
     ScalarColumn<Double> efCol (itsTable, "ENDFREQ");
+    ScalarColumn<double> pertCol (itsTable, "PERTURBATION");
+    ScalarColumn<bool> prelCol (itsTable, "PERT_REL");
     namCol.put (rownr, parmName);
     stCol.put (rownr, domain.startX());
     etCol.put (rownr, domain.endX());
@@ -179,6 +189,8 @@ void ParmTable::putCoeff (const string& parmName,
       ArrayColumn<DComplex> valCol (itsTable, "CVALUES");
       valCol.put (rownr, values.getDComplexMatrix());
     }
+    pertCol.put (rownr, polc.getPerturbation());
+    prelCol.put (rownr, polc.isRelativePerturbation());
   }
 }
 

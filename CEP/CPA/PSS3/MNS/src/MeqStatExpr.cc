@@ -67,16 +67,15 @@ void MeqStatExpr::calcResult (const MeqRequest& request)
   // Precalculate the multiplications and put them in a MeqMatrixTmp.
   // This has the advantage that the - operation reuses the object.
   // So use those - operations only when the Tmp objects are not used further.
-  MeqMatrix cdecdr = cosdell * cosdrot;
-  MeqMatrix sdesdr = sindell * sindrot;
-  MeqMatrix cdesdr = cosdell * sindrot;
-  MeqMatrix sdecdr = sindell * cosdrot;
+  MeqMatrixTmp cdecdr = cosdell * cosdrot;
+  MeqMatrixTmp sdesdr = sindell * sindrot;
+  MeqMatrixTmp cdesdr = cosdell * sindrot;
+  MeqMatrixTmp sdecdr = sindell * cosdrot;
   MeqMatrix d12 = tocomplex( cdesdr,  sdecdr);
   MeqMatrix d21 = tocomplex(-cdesdr,  sdecdr);
   MeqMatrix d22 = tocomplex( cdecdr,  sdesdr);
   MeqMatrix d11 = tocomplex( cdecdr, -sdesdr);
-  MeqMatrix df11 = tocomplex (cdecdr * cosfrot + cdesdr * sinfrot,
-			      sdesdr * sinfrot - sdesdr * cosfrot);
+  MeqMatrix df11 = d11 * cosfrot - d21 * sinfrot;
   MeqMatrix df12 = d11 * sinfrot + d21 * cosfrot;
   MeqMatrix df21 = d12 * cosfrot - d22 * sinfrot;
   MeqMatrix df22 = d12 * sinfrot + d22 * cosfrot;
@@ -104,10 +103,6 @@ void MeqStatExpr::calcResult (const MeqRequest& request)
 	MeqMatrix pdf12 = df12;
 	MeqMatrix pdf21 = df21;
 	MeqMatrix pdf22 = df22;
-	MeqMatrix pgdf11 = gdf11;
-	MeqMatrix pgdf12 = gdf12;
-	MeqMatrix pgdf21 = gdf21;
-	MeqMatrix pgdf22 = gdf22;
 	MeqMatrix perturbation;
 	bool eval = false;
 	if (drot.isDefined(spinx)) {

@@ -50,8 +50,7 @@ public:
 
   // Put the polynomial coefficient for the given parameter and domain.
   void putCoeff (const string& parmName,
-		 const MeqDomain& domain,
-		 const MeqMatrix& values);
+		 const MeqPolc& polc);
 
 private:
   // Find the table subset containing the parameter values for the
