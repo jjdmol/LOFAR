@@ -61,13 +61,23 @@ MAKE_OPTIONS = -j2
 #
 all: start bootstrap $(VARIANTS) check stop
 
+build: start $(VARIANTS) stop
+
+rebuild: start_rebuild $(VARIANTS:.variant=.variant_rebuild) stop_rebuild
+
 nobootstrap: start $(VARIANTS) check stop
 
 start:
 	@echo && echo ":::::: BUILD START" && echo
 
+start_rebuild:
+	@echo && echo ":::::: REBUILD START" && echo
+
 stop:
 	@echo && echo ":::::: BUILD COMPLETE" && echo
+
+stop_rebuild:
+	@echo && echo ":::::: REBUILD COMPLETE" && echo
 
 #
 # check target: check all variants that have been specified in the
