@@ -82,7 +82,8 @@ void TH_MPI::unlock()
 bool TH_MPI::recvBlocking(void* buf, int nbytes, int tag)
 {
   LOG_TRACE_RTTI_STR("TH_MPI recvBlocking(" << buf << "," 
-		     << nbytes << ",...)");
+		     << nbytes << ", MPI_BYTE, " << itsSourceNode 
+		     << ", " << tag << ",... )");
   int result = MPI_SUCCESS;
   
   MPI_Status status;
@@ -138,7 +139,8 @@ bool TH_MPI::waitForReceived(void*, int, int)
 bool TH_MPI::sendBlocking(void* buf, int nbytes, int tag)
 {
   LOG_TRACE_RTTI_STR("TH_MPI::sendBlocking(" << buf << "," 
-		     << nbytes << ",....)");
+		     << nbytes << ",MPI_BYTE, " << itsTargetNode 
+		     << ", " << tag << ", MPI_COMM_WORLD)");
   int result;
   
   lock();

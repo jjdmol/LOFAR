@@ -165,7 +165,7 @@ bool Transporter::read (bool fixedSized)
 
   if (getTransportHolder() && getReadTag() >= 0) {
     LOG_TRACE_COND_STR("Transport::read; call recv(" << getDataPtr() << "," 
-		       << getDataSize() << ",....)");
+		       << getDataSize() << ", " << getReadTag() << ")");
     if (isBlocking()) {
       if (fixedSized) {
 	result = getTransportHolder()->recvBlocking(getDataPtr(),
@@ -200,7 +200,7 @@ void Transporter::write (bool fixedSized)
   LOG_TRACE_FLOW("Transporter write()");
   if (getTransportHolder() && getWriteTag() >= 0) {
     LOG_TRACE_COND_STR("Transport::write; call send(" << getDataPtr() 
-		       << "," << getDataSize() << ",....)");
+		       << "," << getDataSize() << ", " << getWriteTag() << ")");
     if (fixedSized) {
       if (isBlocking()) {
 	getTransportHolder()->sendBlocking(getDataPtr(),
