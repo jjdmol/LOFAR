@@ -24,6 +24,8 @@
 #include <casa/Arrays/Slice.h>
 #include <casa/Arrays/ArrayMath.h>
 
+using namespace casa;
+
 namespace LOFAR {
 
 void MeqHist::update (unsigned int bucket)

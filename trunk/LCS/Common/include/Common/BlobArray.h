@@ -121,13 +121,13 @@ BlobIStream& operator>> (BlobIStream&, blitz::Array<T,N>&);
 #if defined(HAVE_AIPSPP) 
 // Write an AIPS++ array (which can be non-contiguous).
 template<typename T>
-BlobOStream& operator<< (BlobOStream&, const Array<T>&);
+BlobOStream& operator<< (BlobOStream&, const casa::Array<T>&);
 
 // Read back an AIPS++ array.
 // If the shape mismatches, the array is resized.
 // If the shape matches, the array can be non-contiguous.
 template<typename T>
-BlobIStream& operator>> (BlobIStream&, Array<T>&);
+BlobIStream& operator>> (BlobIStream&, casa::Array<T>&);
 #endif
 
 // Write a vector of objects.

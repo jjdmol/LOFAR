@@ -46,7 +46,7 @@ public:
 
   // Calculate the polynomial coefficients by fitting to the given values.
   // It results in a polynomial for the given times and all frequencies.
-  void calcCoeff (const Vector<double>& times, const Matrix<double>& uvws,
+  void calcCoeff (const casa::Vector<double>& times, const casa::Matrix<double>& uvws,
 		  bool addPolc = true);
 
   // Calculate the UVW for the given domain.
@@ -70,8 +70,8 @@ public:
   void setName(const string& name);
 
 private:
-  Polynomial<AutoDiff<double> > itsPoly;
-  LinearFit<Double> itsFitter;
+  casa::Polynomial<casa::AutoDiff<double> > itsPoly;
+  casa::LinearFit<casa::Double> itsFitter;
   MeqParmPolc  itsUCoeff;
   MeqParmPolc  itsVCoeff;
   MeqParmPolc  itsWCoeff;

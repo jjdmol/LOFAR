@@ -23,6 +23,7 @@
 #include <PSS3/MNS/MeqMatrixRep.h>
 #include <casa/Exceptions/Error.h>
 
+using namespace casa;
 
 namespace LOFAR {
 

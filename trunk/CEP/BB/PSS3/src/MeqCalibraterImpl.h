@@ -56,7 +56,7 @@ namespace LOFAR
   class MMap;
 
 /*!
- * Class to perform self-calibration on a MeasurementSet using the
+ * Class to perform self-calibration on a casa::MeasurementSet using the
  * MeqTree approach.
  */
 class MeqCalibrater
@@ -73,17 +73,17 @@ public:
    * Currently model types WSRT and LOFAR are recognized.
    * The UVW coordinates can be recalculated or taken from the MS.
    */ 
-  MeqCalibrater (const String& msName,
-		 const String& meqModel,
-		 const String& skyModel,
-		 const String& dbType,
-		 const String& dbName,
-		 const String& dbHost,
-		 const String& dbPwd,
-		 uInt ddid,
+  MeqCalibrater (const casa::String& msName,
+		 const casa::String& meqModel,
+		 const casa::String& skyModel,
+		 const casa::String& dbType,
+		 const casa::String& dbName,
+		 const casa::String& dbHost,
+		 const casa::String& dbPwd,
+		 casa::uInt ddid,
 		 const vector<int>& ant,
-		 const String& modelType,
-		 Bool calcUVW,
+		 const casa::String& modelType,
+		 casa::Bool calcUVW,
 		 bool lockMappedMem);
 
   //! Destructor
@@ -120,12 +120,12 @@ public:
    * \returns Returns fit value to indicate fitness of the solution and
    * updates the parameters for which to solve.
    */
-  GlishRecord solve (Bool useSVD);
+  casa::GlishRecord solve (casa::Bool useSVD);
 
   /*! Solve which returns solved parameter values in a vector and fit value 
    * in Quality object.
    */
-  void solve (Bool useSVD,
+  void solve (casa::Bool useSVD,
 	      vector<string>& resultParmNames, 
 	      vector<double>& resultParmValues,
 	      Quality& resultQuality);
@@ -145,29 +145,29 @@ public:
 
   /*!
    * Get info about the parameters whose name matches one of the parameter
-   * patterns in a GlishRecord, exclude parameters matching one of the
+   * patterns in a casa::GlishRecord, exclude parameters matching one of the
    * exclude pattterns.
    * isSolvable < 0  all matching parms
    *            = 0  only non-solvable parms
    *            > 0  only solvable parms
    */
-  GlishRecord getParms (Vector<String>& parmPatterns,
-			Vector<String>& excludePatterns,
-			int isSolvable, bool denormalize);
+  casa::GlishRecord getParms (casa::Vector<casa::String>& parmPatterns,
+			      casa::Vector<casa::String>& excludePatterns,
+			      int isSolvable, bool denormalize);
 
   /*!
    * Get the names of the parameters whose name matches the parmPatterns,
    * but does not match the excludePatterns.
    * E.g. getParmNames("*") returns all parameter names.
    */
-  GlishArray getParmNames(Vector<String>& parmPatterns,
-			  Vector<String>& excludePatterns);
+  casa::GlishArray getParmNames(casa::Vector<casa::String>& parmPatterns,
+				casa::Vector<casa::String>& excludePatterns);
 
   /*!
    * Get a description of the current solve domain, which changes
    * after each call to nextTimeIteration.
    */
-  GlishRecord getSolveDomain();
+  casa::GlishRecord getSolveDomain();
 
   /*!
    * Set the source numbers to use in this peel step.
@@ -185,7 +185,7 @@ public:
    * Return some statistics (optionally detailed (i.e. per baseline)).
    * If clear is true, the statistics are cleared thereafter.
    */
-  GlishRecord getStatistics (bool detailed, bool clear);
+  casa::GlishRecord getStatistics (bool detailed, bool clear);
 
   // Set the names and values of all solvable parms for the current domain.
   // The double version can only be used if all parms are 0th-order
@@ -249,11 +249,11 @@ private:
 
   //! Create the LOFAR expressions for each baseline.
   // The EJones can be expressed as real/imag or ampl/phase.
-  void makeLOFARExpr (Bool asAP);
+  void makeLOFARExpr (casa::Bool asAP);
 
   //! Append the current value of the parameters (as MeqMatrix) to rec
   void MeqCalibrater::addParm(const MeqParm& parm, bool denormalize,
-			      GlishRecord& rec);
+			      casa::GlishRecord& rec);
 
   /**
    * \defgroup PrivVariable Private variables
@@ -272,15 +272,15 @@ private:
   MeqPhaseRef           itsPhaseRef;    //# Phase reference position in J2000
   MeqDomain             itsSolveDomain;
 
-  Matrix<int>           itsBLIndex;     //# baseline index of antenna pair
+  casa::Matrix<int>           itsBLIndex;     //# baseline index of antenna pair
   MeqSourceList         itsSources;
-  Vector<Int>           itsPeelSourceNrs;
+  casa::Vector<casa::Int>           itsPeelSourceNrs;
   vector<MeqStation*>   itsStations;
   vector<MeqStatUVW*>   itsStatUVW;
   vector<MeqStatSources*> itsStatSrc;
   vector<MeqLofarStatSources*> itsLSSExpr; //# Lofar sources per station
   vector<MeqJonesExpr*> itsStatExpr;    //# Expression per station
-  vector<MVBaseline>    itsBaselines;
+  vector<casa::MVBaseline>    itsBaselines;
   vector<MeqHist>       itsCelltHist;   //# Histogram of #cells in time
   vector<MeqHist>       itsCellfHist;   //# Histogram of #cells in freq
   vector<MeqJonesExpr*> itsExpr;        //# solve expression tree per baseline
@@ -295,7 +295,7 @@ private:
 
   string itsSolveFileName;              //# Data file used in solve (.dat or .res)
 
-  LSQaips      itsSolver;
+  casa::LSQaips      itsSolver;
   int          itsNrScid;               //# Nr of solvable parameter coeff.
   vector<bool> itsIsParmSolvable;       //# is corresponding parmlist solvable?
   MeqMatrix    itsSolution;             //# Solution as complex numbers
@@ -304,16 +304,16 @@ private:
   
   Quality itsSol;                       //# Solution quality
 
-  Vector<String> itsSolvableParms;     // Solvable parameters
+  casa::Vector<casa::String> itsSolvableParms;     // Solvable parameters
 
-  Vector<int>    itsAnt1Data;          // Antenna 1 data
-  Vector<int>    itsAnt2Data;          // Antenna 2 data
+  casa::Vector<int>    itsAnt1Data;          // Antenna 1 data
+  casa::Vector<int>    itsAnt2Data;          // Antenna 2 data
   int            itsNPol;              // Number of polarisations
-  Vector<double> itsTimes;             // All times in MS
-  Vector<double> itsIntervals;         // All intervals in MS
-  Matrix<double> itsAntPos;            // All antenna positions
+  casa::Vector<double> itsTimes;             // All times in MS
+  casa::Vector<double> itsIntervals;         // All intervals in MS
+  casa::Matrix<double> itsAntPos;            // All antenna positions
   unsigned int   itsNrBl;              // Total number of unique baselines
-  Matrix<bool>   itsBLSelection;       // Matrix to indicate which baselines are selected
+  casa::Matrix<bool>   itsBLSelection;       // Matrix to indicate which baselines are selected
   vector<int>    itsSelAnt;            // The selected antennas
 
 

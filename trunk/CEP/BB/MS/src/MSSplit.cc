@@ -48,6 +48,7 @@
 #include <unistd.h>
 
 using namespace LOFAR;
+using namespace casa;
 using namespace std;
 
 void getFreq (MS& ms, int ddid, int& nrchan,

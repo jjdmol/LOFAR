@@ -34,6 +34,8 @@
 #include <Common/BlobOStream.h>
 #include <Common/BlobString.h>
 
+using namespace casa;
+
 namespace LOFAR {
 
 #define PRECISION 20

@@ -86,7 +86,7 @@ private:
   MeqResult    itsV;
   MeqResult    itsW;
   MeqRequestId itsLastReqId;
-  MeasFrame    itsFrame;
+  casa::MeasFrame    itsFrame;
   map<MeqTime,MeqUVW> itsUVW;    // association of time and UVW coordinates
 };
 

@@ -81,7 +81,7 @@ public:
 
   // Solve which returns solved parameter values in a vector and fit value 
   // in Quality object.
-  void solve (Bool useSVD,
+  void solve (casa::Bool useSVD,
 	      vector<string>& resultParmNames, 
 	      vector<double>& resultParmValues,
 	      Quality& resultQuality);
@@ -105,13 +105,13 @@ private:
   string                itsGSMMEPName;  // GSM parameters parmtable name
   ParmTable             itsGSMMEP;      //# parmtable for GSM parameters
   MeqDomain             itsSolveDomain;
-  LSQaips      itsSolver;
+  casa::LSQaips      itsSolver;
   int          itsNrScid;               //# Nr of solvable parameter coeff.
   MeqMatrix    itsSolution;             //# Solution as complex numbers
   vector<double> itsFitME;
   vector<complex<double> > itsDeriv;    //# derivatives of predict
   Quality itsSol;                       //# Solution quality
-  Vector<String> itsSolvableParms;     // Solvable parameters
+  casa::Vector<casa::String> itsSolvableParms;     // Solvable parameters
 
   double  itsTimeInterval;
 };

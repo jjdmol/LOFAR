@@ -151,7 +151,7 @@ BlobIStream& operator>> (BlobIStream& bs, blitz::Array<T,NDIM>& arr)
 
 #if defined(HAVE_AIPSPP) 
 template<typename T>
-BlobOStream& operator<< (BlobOStream& bs, const Array<T>& arr)
+BlobOStream& operator<< (BlobOStream& bs, const casa::Array<T>& arr)
 {
   bool deleteIt;
   const T* data = arr.getStorage(deleteIt);
@@ -165,7 +165,7 @@ BlobOStream& operator<< (BlobOStream& bs, const Array<T>& arr)
 }
 
 template<typename T>
-BlobIStream& operator>> (BlobIStream& bs, Array<T>& arr)
+BlobIStream& operator>> (BlobIStream& bs, casa::Array<T>& arr)
 {
   bs.getStart (LOFAR::typeName((const T**)0));
   bool fortranOrder;
@@ -173,7 +173,7 @@ BlobIStream& operator>> (BlobIStream& bs, Array<T>& arr)
   uint nalign = getBlobArrayStart (bs, fortranOrder, ndim);
   vector<uint32> shp(ndim);
   getBlobArrayShape (bs, &shp[0], ndim, !fortranOrder, nalign);
-  IPosition shape(ndim);
+  casa::IPosition shape(ndim);
   for (uint i=0; i<arr.ndim(); i++) {
     shape[i] = shp[i];
   }

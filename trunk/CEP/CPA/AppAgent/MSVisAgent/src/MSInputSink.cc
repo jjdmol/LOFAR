@@ -48,6 +48,7 @@
 #include <tables/Tables/TableParse.h>
 
 using namespace LOFAR;
+using namespace casa;
 
 namespace MSVisAgent
 {

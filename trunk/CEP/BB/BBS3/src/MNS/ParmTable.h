@@ -28,12 +28,15 @@
 #include <BBS3/MNS/MeqSourceList.h>
 #include <Common/lofar_vector.h>
 
+//# Forward Declarations
+namespace casa {
 template<class T> class Vector;
+}
+namespace LOFAR {
+class MeqDomain;
+}
 
 namespace LOFAR {
-
-//# Forward Declarations
-class MeqDomain;
 
 class ParmTableRep
 {
@@ -79,7 +82,8 @@ public:
   // otherwise a database of the given type.
   // For an AIPS++ table, the extension .MEP is added to the table name.
   ParmTable (const string& dbType, const string& tableName,
-	     const string& dbName, const string& pwd, const string& hostName = "localhost");
+	     const string& dbName, const string& pwd,
+	     const string& hostName = "localhost");
 
   ~ParmTable()
     { delete itsRep; }
@@ -109,8 +113,8 @@ public:
   // In the 2nd version the pointers to the created MeqParm objects
   // are added to the vector of objects to be deleted.
   // <group>
-  MeqSourceList getPointSources (const Vector<int>& sourceNrs);
-  MeqSourceList getPointSources (const Vector<int>& sourceNrs,
+  MeqSourceList getPointSources (const casa::Vector<int>& sourceNrs);
+  MeqSourceList getPointSources (const casa::Vector<int>& sourceNrs,
 				 vector<MeqExpr*>& exprDel);
   // </group>
 

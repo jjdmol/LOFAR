@@ -186,7 +186,7 @@ private:
 
   // Create the LOFAR expressions for each baseline.
   // The EJones can be expressed as real/imag or ampl/phase.
-  void makeLOFARExpr (Bool asAP);
+  void makeLOFARExpr (casa::Bool asAP);
 
   MeqResult getEquation (const MeqRequest& request,
 			 int bl, int ant1, int ant2,
@@ -206,15 +206,15 @@ private:
   MeqPhaseRef           itsPhaseRef;    //# Phase reference position in J2000
   MeqDomain             itsSolveDomain;
 
-  Matrix<int>           itsBLIndex;     //# baseline index of antenna pair
+  casa::Matrix<int>           itsBLIndex;     //# baseline index of antenna pair
   MeqSourceList         itsSources;
-  Vector<Int>           itsPeelSourceNrs;
+  casa::Vector<casa::Int>           itsPeelSourceNrs;
   vector<MeqStation*>   itsStations;
   vector<MeqStatUVW*>   itsStatUVW;
   vector<MeqStatSources*> itsStatSrc;
   vector<MeqLofarStatSources*> itsLSSExpr; //# Lofar sources per station
   vector<MeqJonesExpr*> itsStatExpr;    //# Expression per station
-  vector<MVBaseline>    itsBaselines;
+  vector<casa::MVBaseline>    itsBaselines;
   vector<MeqHist>       itsCelltHist;   //# Histogram of #cells in time
   vector<MeqHist>       itsCellfHist;   //# Histogram of #cells in freq
   vector<MeqJonesExpr*> itsExpr;        //# solve expression tree per baseline
@@ -231,17 +231,17 @@ private:
 
   int          itsNrScid;             //# Nr of solvable parameter coeff.
   vector<bool> itsIsParmSolvable;     //# is corresponding parmlist solvable?
-  Vector<String> itsSolvableParms;    // Solvable parameters
+  casa::Vector<casa::String> itsSolvableParms;    // Solvable parameters
   vector<ParmData> itsParmData;       // solvable parm info. 
 
-  Vector<int>    itsAnt1Data;         // Antenna 1 data
-  Vector<int>    itsAnt2Data;         // Antenna 2 data
+  casa::Vector<int>    itsAnt1Data;         // Antenna 1 data
+  casa::Vector<int>    itsAnt2Data;         // Antenna 2 data
   int            itsNPol;             // Number of polarisations
-  Vector<double> itsTimes;            // All times in MS
-  Vector<double> itsIntervals;        // All intervals in MS
-  Matrix<double> itsAntPos;           // All antenna positions
+  casa::Vector<double> itsTimes;            // All times in MS
+  casa::Vector<double> itsIntervals;        // All intervals in MS
+  casa::Matrix<double> itsAntPos;           // All antenna positions
   unsigned int   itsNrBl;             // Total number of unique baselines
-  Matrix<bool>   itsBLSelection;      // Matrix to indicate which baselines are selected
+  casa::Matrix<bool>   itsBLSelection;      // Matrix to indicate which baselines are selected
   vector<int>    itsSelAnt;           // The selected antennas
 
   unsigned int   itsTimeIndex;        // The index of the current time

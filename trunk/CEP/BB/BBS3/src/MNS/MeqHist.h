@@ -45,17 +45,17 @@ public:
     { itsVec.resize(0); }
 
   // Get the histogram.
-  const Vector<int>& get() const
+  const casa::Vector<int>& get() const
     { return itsVec; }
 
   // Add 1 to the given bucket.
   void update (unsigned int bucket);
 
   // Merge the list of histograms into one.
-  static Vector<int> merge (const vector<MeqHist>&);
+  static casa::Vector<int> merge (const vector<MeqHist>&);
 
 private:
-  Vector<int> itsVec;
+  casa::Vector<int> itsVec;
 };
 
 }

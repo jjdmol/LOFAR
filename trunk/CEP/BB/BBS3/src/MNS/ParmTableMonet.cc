@@ -28,6 +28,8 @@
 #include <stdlib.h>
 #include <sstream>
 
+using namespace casa;
+
 namespace LOFAR {
 
 ParmTableMonet::ParmTableMonet (const string& hostName, const string& userName, const string& tableName, bool autocommit) : itsTableName (tableName)

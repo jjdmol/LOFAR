@@ -34,7 +34,7 @@
 #endif
     
 #include <Common/Lorrays.h>
-#include <casa/Arrays.h>
+#include <casa/Arrays/Array.h>
 
 #ifndef LORRAYS_USE_BLITZ
 #error Must use Blitz Lorrays
@@ -44,7 +44,7 @@ namespace LOFAR
 {
    
   template<int N>
-  void convertShape (IPosition &ipos,const blitz::TinyVector<int,N> &tv)
+  void convertShape (casa::IPosition &ipos,const blitz::TinyVector<int,N> &tv)
   {
     ipos.resize(N);
     for( int i=0; i<N; i++ )
@@ -52,7 +52,7 @@ namespace LOFAR
   }
 
   template<int N>
-  void convertShape( blitz::TinyVector<int,N> &tv,const IPosition &ipos)
+  void convertShape( blitz::TinyVector<int,N> &tv,const casa::IPosition &ipos)
   {
     FailWhen(ipos.nelements() != N,"IPosition size mismatch");
     for( int i=0; i<N; i++ )
@@ -61,15 +61,15 @@ namespace LOFAR
 
   // Versions of the above that return result by value
   template<int N>
-  IPosition blitzToAips (const blitz::TinyVector<int,N> &tv)
+  casa::IPosition blitzToAips (const blitz::TinyVector<int,N> &tv)
   {
-    IPosition ret;
+    casa::IPosition ret;
     convertShape(ret,tv);
     return ret;
   }
 
   template<int N>
-  blitz::TinyVector<int,N> aipsToBlitz (const IPosition &ipos)
+  blitz::TinyVector<int,N> aipsToBlitz (const casa::IPosition &ipos)
   {
     blitz::TinyVector<int,N> ret;
     convertShape(ret,tv);
@@ -80,14 +80,14 @@ namespace LOFAR
   // Makes the AIPS++ array "out" a copy of the blitz array "in".
   // The data is always copied.
   template<class T1,class T2,int N>
-  void copyArray ( Array<T1> &out,const blitz::Array<T2,N> &in )
+  void copyArray ( casa::Array<T1> &out,const blitz::Array<T2,N> &in )
   {
     T1 *data = new T1[in.size()],*ptr = data;
     if( in.size() )
       for( typename blitz::Array<T2,N>::const_iterator iter = in.begin();
            iter != in.end(); iter++,ptr++ )
         *ptr = static_cast<T1>(*iter);
-    IPosition shape;
+    casa::IPosition shape;
     convertShape(shape,in.shape());
     out.takeStorage(shape,data,TAKE_OVER);
   }
@@ -97,13 +97,13 @@ namespace LOFAR
   // caller to ensure that the "in" object outlives the out object.
   // The blitz array must be contiguous for this (otherwise a copy is made) 
   template<class T1,class T2,int N>
-  void refArray ( Array<T1> &out,blitz::Array<T2,N> &in )
+  void refArray ( casa::Array<T1> &out,blitz::Array<T2,N> &in )
   {
     if( !in.isStorageContiguous() )
       copyArray(out,in);
     else
     {
-      IPosition shape;
+      casa::IPosition shape;
       convertShape(shape,in.shape());
       out.takeStorage(shape,reinterpret_cast<T1*>(in.data()),SHARE);
     }
@@ -111,17 +111,17 @@ namespace LOFAR
 
   // Versions of the above that return result by value
   template<class T,int N>
-  Array<T> copyBlitzToAips ( const blitz::Array<T,N> &in )
+  casa::Array<T> copyBlitzToAips ( const blitz::Array<T,N> &in )
   {
-    Array<T> out;
+    casa::Array<T> out;
     copyArray(out,in);
     return out;
   }
 
   template<class T,int N>
-  Array<T> refBlitzToAips ( blitz::Array<T,N> &in )
+  casa::Array<T> refBlitzToAips ( blitz::Array<T,N> &in )
   {
-    Array<T> out;
+    casa::Array<T> out;
     refArray(out,in);
     return out;
   }
@@ -130,7 +130,7 @@ namespace LOFAR
   // Helper function for converting AIPS++ arrays to blitz (refArray() and 
   // copyArray() below use it)
   template<class T,int N>
-  void aipsToBlitz ( blitz::Array<T,N> &out,Array<T> &in,blitz::preexistingMemoryPolicy policy )
+  void aipsToBlitz ( blitz::Array<T,N> &out,casa::Array<T> &in,blitz::preexistingMemoryPolicy policy )
   {
     FailWhen( in.ndim() != N,"array rank mismatch" );
     blitz::TinyVector<int,N> shape;
@@ -146,10 +146,10 @@ namespace LOFAR
   // Makes the blitz array "out" a copy of the AIPS++ array "in".
   // The data is always copied.
   template<class T,int N>
-  void copyArray ( blitz::Array<T,N> &out,const Array<T> &in )
+  void copyArray ( blitz::Array<T,N> &out,const casa::Array<T> &in )
   {
     // cast away const but that's OK since data will be duplicated
-    aipsToBlitz(out,const_cast<Array<T>&>(in),blitz::duplicateData);
+    aipsToBlitz(out,const_cast<casa::Array<T>&>(in),blitz::duplicateData);
   }
 
   // Makes the Blitz array "out" a reference to the AIPS++ array "in".
@@ -157,14 +157,14 @@ namespace LOFAR
   // caller to ensure that the "in" object outlives the out object.
   // The AIPS++ array must be contiguous for this (otherwise a copy is always made) 
   template<class T,int N>
-  void refArray ( blitz::Array<T,N> &out,Array<T> &in )
+  void refArray ( blitz::Array<T,N> &out,casa::Array<T> &in )
   {
     aipsToBlitz(out,in,blitz::neverDeleteData);
   }
 
   // Versions of the above that return result by value
   template<class T,int N>
-  blitz::Array<T,N> copyAipsToBlitz ( const Array<T> &in )
+  blitz::Array<T,N> copyAipsToBlitz ( const casa::Array<T> &in )
   {
     blitz::Array<T,N> out;
     copyArray(out,in);
@@ -172,7 +172,7 @@ namespace LOFAR
   }
 
   template<class T,int N>
-  blitz::Array<T,N> refAipsToBlitz ( Array<T> &in )
+  blitz::Array<T,N> refAipsToBlitz ( casa::Array<T> &in )
   {
     blitz::Array<T,N> out;
     refArray(out,in);
@@ -182,7 +182,7 @@ namespace LOFAR
 
   // Copies data between arrays. Shapes must match to begin with
   template<class T,int N>
-  void assignArray( Array<T> &to,const blitz::Array<T,N> &from )
+  void assignArray( casa::Array<T> &to,const blitz::Array<T,N> &from )
   {
     FailWhen( to.ndim() != N,"array rank mismatch" );
     for( int i=0; i<N; i++ )
@@ -205,7 +205,7 @@ namespace LOFAR
   }
 
   template<class T,int N>
-  void assignArray( blitz::Array<T,N> &to,const Array<T> &from )
+  void assignArray( blitz::Array<T,N> &to,const casa::Array<T> &from )
   {
     FailWhen( to.ndim() != N,"array rank mismatch" );
     for( int i=0; i<N; i++ )

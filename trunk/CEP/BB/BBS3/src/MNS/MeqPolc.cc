@@ -29,6 +29,7 @@
 #include <Common/Debug.h>
 #include <casa/Arrays/Matrix.h>
 
+using namespace casa;
 
 namespace LOFAR {
 
@@ -56,7 +57,7 @@ void MeqPolc::setCoeff (const MeqMatrix& values)
 }
 
 void MeqPolc::setCoeff (const MeqMatrix& values,
-			const Matrix<Bool>& mask)
+			const Matrix<bool>& mask)
 {
   Assert (values.nx()==mask.shape()(0) && values.ny()==mask.shape()(1));
   itsCoeff = values.clone();
@@ -79,7 +80,7 @@ void MeqPolc::setCoeffOnly (const MeqMatrix& values)
 MeqResult MeqPolc::getResult (const MeqRequest& request)
 {
   PERFPROFILE(__PRETTY_FUNCTION__);
-  Bool makeDiff = itsMaxNrSpid > 0  &&  request.nspid() > 0;
+  bool makeDiff = itsMaxNrSpid > 0  &&  request.nspid() > 0;
   // It is not checked if the domain is valid.
   // In that way any value can be used for the default domain [-1,1].
   // Because the values are calculated for the center of each cell,

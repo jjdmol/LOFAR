@@ -32,13 +32,15 @@
 #include <Common/lofar_string.h>
 #include <db_cxx.h>
 
-
-template<class T> class Vector;
+//# Forward Declarations
+namespace casa {
+  template<class T> class Vector;
+}
+namespace LOFAR {
+  class MeqDomain;
+}
 
 namespace LOFAR {
-
-  //# Forward Declarations
-  class MeqDomain;
 
   class ParmTableBDB : public ParmTableRep{
   public:
