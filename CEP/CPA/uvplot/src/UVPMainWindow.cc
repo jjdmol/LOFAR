@@ -598,6 +598,7 @@ try
   ROScalarColumn<Int>    FieldColumn   (Selection, "FIELD_ID");
   ROArrayColumn<Bool>    FlagColumn    (Selection, "FLAG");
   ROScalarColumn<Double> ExposureColumn(Selection, "EXPOSURE");
+  ROArrayColumn<Double>  UVWColumn     (Selection, "UVW");
 
   unsigned int NumPolarizations = DataColumn(0).shape()[0];
   unsigned int NumChannels      = DataColumn(0).shape()[1];
@@ -657,6 +658,15 @@ try
       Headers[k].itsAntenna2     = Antenna2Column(i);
       Headers[k].itsExposureTime = ExposureColumn(i);
       Headers[k].itsFieldID      = FieldColumn(i);
+
+      Array<Double> UVWArray;
+      bool          DeleteUVW;
+      UVWColumn.get(i, UVWArray, true);
+      const Double* UVW = UVWArray.getStorage(DeleteUVW);
+      Headers[k].itsUVW[0]       = UVW[0];
+      Headers[k].itsUVW[1]       = UVW[1];
+      Headers[k].itsUVW[2]       = UVW[2];
+      UVWArray.freeStorage(UVW, DeleteUVW);
       Atoms[k].setHeader(Headers[k]);
       itsDataSet[Headers[k]]= Atoms[k];
     }      
