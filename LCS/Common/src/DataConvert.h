@@ -42,6 +42,23 @@ namespace LOFAR
 // \defgroup DataConvert global conversion functions
 // <group>
 
+  // Convert the possible native types.
+  // These functions can be used in templates.
+  // <group>
+  void dataConvert (DataFormat, char* inout, uint nrval);
+  void dataConvert (DataFormat, uchar* inout, uint nrval);
+  void dataConvert (DataFormat, int16* inout, uint nrval);
+  void dataConvert (DataFormat, uint16* inout, uint nrval);
+  void dataConvert (DataFormat, int32* inout, uint nrval);
+  void dataConvert (DataFormat, uint32* inout, uint nrval);
+  void dataConvert (DataFormat, int64* inout, uint nrval);
+  void dataConvert (DataFormat, uint64* inout, uint nrval);
+  void dataConvert (DataFormat, float* inout, uint nrval);
+  void dataConvert (DataFormat, double* inout, uint nrval);
+  void dataConvert (DataFormat, fcomplex* inout, uint nrval);
+  void dataConvert (DataFormat, dcomplex* inout, uint nrval);
+  // <group>
+
   // Convert 16 bit integers.
   // <group>
   int16 dataConvert (DataFormat, int16 in);
@@ -132,6 +149,31 @@ namespace LOFAR
 
 namespace LOFAR
 {
+  inline void dataConvert (DataFormat, char*, uint)
+    {}
+  inline void dataConvert (DataFormat, uchar*, uint)
+    {}
+  inline void dataConvert (DataFormat fmt, int16* inout, uint nrval)
+    { dataConvert16 (fmt, inout, nrval); }
+  inline void dataConvert (DataFormat fmt, uint16* inout, uint nrval)
+    { dataConvert16 (fmt, inout, nrval); }
+  inline void dataConvert (DataFormat fmt, int32* inout, uint nrval)
+    { dataConvert32 (fmt, inout, nrval); }
+  inline void dataConvert (DataFormat fmt, uint32* inout, uint nrval)
+    { dataConvert32 (fmt, inout, nrval); }
+  inline void dataConvert (DataFormat fmt, int64* inout, uint nrval)
+    { dataConvert64 (fmt, inout, nrval); }
+  inline void dataConvert (DataFormat fmt, uint64* inout, uint nrval)
+    { dataConvert64 (fmt, inout, nrval); }
+  inline void dataConvert (DataFormat fmt, float* inout, uint nrval)
+    { dataConvert32 (fmt, inout, nrval); }
+  inline void dataConvert (DataFormat fmt, double* inout, uint nrval)
+    { dataConvert64 (fmt, inout, nrval); }
+  inline void dataConvert (DataFormat fmt, fcomplex* inout, uint nrval)
+    { dataConvert32 (fmt, inout, 2*nrval); }
+  inline void dataConvert (DataFormat fmt, dcomplex* inout, uint nrval)
+    { dataConvert64 (fmt, inout, 2*nrval); }
+
   inline int16 dataConvert (DataFormat, int16 in)
     { return byteSwap (in); }
   inline uint16 dataConvert (DataFormat, uint16 in)
