@@ -1,12 +1,12 @@
 MEQ in general:
 
+  * Add centralized reporting of FAILs via the forest
+  
+  * Add breakpoints on fail  
+
   * FFT nodes
 
   * BUG in build system: liboctopython vs octopython
-
-  * In VellSet and other DataRecord-derived types, consider filling the data
-    record itself on-demand (i.e. during a toBlock operation or some such).
-    This ought to make storage of scalar Vells way more efficient.
 
   * BUG: in Gateway reader thread, if a data structure fails unpacking, drop
     the message instead of terminating the thread (this also includes
