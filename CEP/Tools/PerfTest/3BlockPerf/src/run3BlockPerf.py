@@ -65,9 +65,8 @@ def main(maxSize = 100000000, maxFlop = 100, sizesteps = 10, flopsteps = 10):
   # create a grid for the measurement points
 
   # we want the number of flop linear and the packet sizes exponential
-  flopsPerByte = [(x * maxFlop/(flopsteps-1)) for x in range(0, flopsteps)
-  factor = 1.0 * maxSize / (sizesteps * sizesteps)
-  packetSizes = [int(factor *x*x) for x in range(1, sizesteps + 1)] # here we do not start at 0!
+  flopsPerByte = [(x * maxFlop/(flopsteps-1)) for x in range(0, flopsteps)]
+  packetSizes = [(x * maxSize/(sizesteps)) for x in range(1, sizesteps + 1)]
 
   # clear file
   file = open("3BlockPerfAll.out", 'w')
