@@ -75,9 +75,16 @@ namespace LCS {
 
     //
     // This exception is thrown when an error occurs within the 
-    // PersistenceBroker.
+    // PersistenceBroker class.
     //
     EXCEPTION_CLASS(BrokerException, PLException);
+
+    //
+    // This exception is thrown when an error occurs within the 
+    // Collection class.
+    //
+    EXCEPTION_CLASS(CollectionException, PLException);
+
   }
 
 }    
