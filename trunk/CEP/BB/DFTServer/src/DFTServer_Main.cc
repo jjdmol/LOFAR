@@ -55,7 +55,7 @@ int main (int argc, const char** argv)
   	theApp.baseRun(1); 
   	theApp.baseDump();
   	theApp.baseQuit();
-  } catch (...) {
-    cout << "Unexpected exception" << endl;
+  } catch (Exception &e) {
+    cout << "Unexpected exception " << e.text() << endl;
   }
 }
