@@ -13,3 +13,5 @@ libmsvisagent_la_SOURCES = \
 include $(lofar_sharedir)/Makefile.common
 include $(lofar_sharedir)/Makefile.aids
 
+
+AM_CPPFLAGS = -DMAKE_LOFAR_SYMBOLS_GLOBAL

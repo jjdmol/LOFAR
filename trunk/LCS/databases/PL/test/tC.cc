@@ -30,6 +30,7 @@
 #include <sstream>
 
 using namespace std;
+using namespace LOFAR;
 using namespace LOFAR::PL;
 
 int main(int argc, const char* argv[])

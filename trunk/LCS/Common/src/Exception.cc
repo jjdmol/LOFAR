@@ -48,7 +48,7 @@ namespace LOFAR {
   
   const char* Exception::what() const throw()
   {
-    return itsText.c_str();
+    return text().c_str();
   }
 
 } // namespace LOFAR

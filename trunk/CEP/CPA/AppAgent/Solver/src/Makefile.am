@@ -27,3 +27,5 @@ dist_glish_SCRIPTS = glishsolver.g
 include $(lofar_sharedir)/Makefile.common
 include $(lofar_sharedir)/Makefile.aids
 
+
+AM_CPPFLAGS = -DMAKE_LOFAR_SYMBOLS_GLOBAL

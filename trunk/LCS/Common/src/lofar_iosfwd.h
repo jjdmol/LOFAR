@@ -24,8 +24,19 @@
 #define COMMON_IOSFWD_H
 
 #include <iosfwd>
-using std::istream;
-using std::ostream;
-using std::iostream;
+
+namespace LOFAR
+{
+  using std::istream;
+  using std::ostream;
+  using std::iostream;
+}
+
+#ifdef MAKE_LOFAR_SYMBOLS_GLOBAL
+#include <Common/lofar_global_symbol_warning.h>
+using LOFAR::istream;
+using LOFAR::ostream;
+using LOFAR::iostream;
+#endif
 
 #endif

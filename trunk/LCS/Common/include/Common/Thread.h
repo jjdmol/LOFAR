@@ -20,14 +20,13 @@
 //
 //  $Id$
 
-#ifndef _COMMON_Thread_h
-#define _COMMON_Thread_h 1
+#ifndef LOFAR_COMMON_THREAD_H
+#define LOFAR_COMMON_THREAD_H
     
-#include "Common/Thread/Thread.h"
-#include "Common/Thread/Key.h"
-#include "Common/Thread/Mutex.h"
-    
-#include "Common/CheckConfig.h"
+#include <Common/Thread/Thread.h>
+#include <Common/Thread/Key.h>
+#include <Common/Thread/Mutex.h>
+#include <Common/CheckConfig.h>
     
 // You should invoke CHECK_CONFIG_THREADS(id) in every header file 
 // that defines a data structure that depends on USE_THREADs.

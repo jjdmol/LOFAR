@@ -24,7 +24,17 @@
 #define COMMON_FSTREAM_H
 
 #include <fstream>
-using std::ifstream;
-using std::ofstream;
+
+namespace LOFAR
+{
+  using std::ifstream;
+  using std::ofstream;
+}
+
+#ifdef MAKE_LOFAR_SYMBOLS_GLOBAL
+#include <Common/lofar_global_symbol_warning.h>
+using LOFAR::ifstream;
+using LOFAR::ofstream;
+#endif
 
 #endif

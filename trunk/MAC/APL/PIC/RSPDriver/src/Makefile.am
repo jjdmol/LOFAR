@@ -1,5 +1,5 @@
 
-AM_CXXFLAGS = \
+AM_CPPFLAGS = \
 	-I$(top_srcdir)/src \
 	-DTOGGLE_LEDS \
 	-DWRITE_ACK_VERREAD

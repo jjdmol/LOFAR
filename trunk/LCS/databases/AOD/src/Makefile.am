@@ -48,3 +48,5 @@ DTLdemo_no_index_LDADD			= -L../../../src/DTL/lib/release -lDTL -lodbc
 DTLdemo_no_index_DEPENDENCIES	= $(LOFAR_DEPEND)
 
 include $(lofar_sharedir)/Makefile.common
+
+AM_CPPFLAGS = -DMAKE_LOFAR_SYMBOLS_GLOBAL

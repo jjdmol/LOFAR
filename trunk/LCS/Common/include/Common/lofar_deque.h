@@ -24,6 +24,15 @@
 #define COMMON_DEQUE_H
 
 #include <deque>
-using std::deque;
+
+namespace LOFAR
+{
+  using std::deque;
+}
+
+#ifdef MAKE_LOFAR_SYMBOLS_GLOBAL
+#include <Common/lofar_global_symbol_warning.h>
+using LOFAR::deque;
+#endif
 
 #endif

@@ -24,6 +24,7 @@
 #define LOFAR_PL_TEST_TATTRIB_H
 
 #include <PL/PLfwd.h>
+#include <string>
 
 //@defgroup tAttrib tAttrib: User-defined classes
 //@{
@@ -34,7 +35,7 @@ public:
   A() : s("A") {}
 private:
   friend class LOFAR::PL::TPersistentObject<A>;
-  string s;
+  std::string s;
 };
 
 class B
@@ -43,7 +44,7 @@ public:
   B() : s("B") {}
 private:
   friend class LOFAR::PL::TPersistentObject<B>;
-  string s;
+  std::string s;
 };
 
 class C : public A
@@ -52,7 +53,7 @@ public:
   C() : s("C") {}
 private:
   friend class LOFAR::PL::TPersistentObject<C>;
-  string s;
+  std::string s;
 };
 
 class D : public B
@@ -61,7 +62,7 @@ public:
   D() : s("D") {}
 private:
   friend class LOFAR::PL::TPersistentObject<D>;
-  string s;
+  std::string s;
   C c;
 };
 
@@ -71,7 +72,7 @@ public:
   E() : s("E") {}
 private:
   friend class LOFAR::PL::TPersistentObject<E>;
-  string s;
+  std::string s;
 };
 
 class F
@@ -80,7 +81,7 @@ public:
   F() : s("F") {}
 private:
   friend class LOFAR::PL::TPersistentObject<F>;
-  string s;
+  std::string s;
   E e;
 };
 
@@ -90,7 +91,7 @@ public:
   G() : s("G") {}
 private:
   friend class LOFAR::PL::TPersistentObject<G>;
-  string s;
+  std::string s;
   F f;
 };
 

@@ -41,98 +41,95 @@
 // Define the LOFAR::Exception class
 namespace LOFAR 
 {
-  EXCEPTION_CLASS(AssertError,Exception)  
-}
+    //      =====[ Declaring and implementing debugging contexts ]=====
+    //      ===========================================================
+    //
+    // The system supports multiple debugging contexts. Each context has 
+    // its own debug message level, which may be initialized from the
+    // command line and changed at run time. Debug messages (see below)
+    // are generated only if the level of the message is <= the current
+    // level of the current debug context.
+    // 
+    // A debugging context is identified by a name, and implemented via a 
+    // Debug::Context object. All debugging macros call the getDebugContext()
+    // function to determine the current Debug::Context object. Thus, judicious 
+    // use of namespaces allows these macros to pick the right context depending
+    // on current program scope.
+    // 
+    // You can define a debugging context by placing the appropriate
+    // magic invocationas in a namespace or a class declaration.
+    // The following macro, when placed in a header _inside_ your class or
+    // namespace declarations (.h file), will declare a local debug context:
+    //
+    //    LocalDebugContext;
+    //
+    // Alternatively, use
+    //
+    //    ImportDebugContext(other_class_or_namespace);
+    //
+    // to use the same context as that of another class or namespace.
+    //
+    // If you declare a local context, your .cc file must define an 
+    // implementation. To do so, insert this macro:
+    //
+    //    InitDebugContext(scope,"contextname");
+    //
+    // where "scope" is the class or namespace. This will add the functions 
+    // and data objects required to implement the context.
+    //
+    // In addition, you can declare debug subcontexts. A subcontext has 
+    // a parent context; debug messages are generated if the level of the 
+    // message is <= the subcontext debug level _OR_ <= the parent's debug 
+    // level. Subcontexts may be nested to any depth. This allows for more
+    // fine-grained debug levels within class hierarchies.
+    //
+    // A subcontext is declared in an .h file (inside class or namespace):
+    //
+    //    LocalDebugSubContext;
+    //
+    // and implementations are inserted ina  .cc file via:
+    //
+    //    InitDebugSubContext(scope,parent_scope,"contextname");
+    // 
 
-//      =====[ Declaring and implementing debugging contexts ]=====
-//      ===========================================================
-//
-// The system supports multiple debugging contexts. Each context has 
-// its own debug message level, which may be initialized from the
-// command line and changed at run time. Debug messages (see below)
-// are generated only if the level of the message is <= the current
-// level of the current debug context.
-// 
-// A debugging context is identified by a name, and implemented via a 
-// Debug::Context object. All debugging macros call the getDebugContext()
-// function to determine the current Debug::Context object. Thus, judicious 
-// use of namespaces allows these macros to pick the right context depending
-// on current program scope.
-// 
-// You can define a debugging context by placing the appropriate
-// magic invocationas in a namespace or a class declaration.
-// The following macro, when placed in a header _inside_ your class or
-// namespace declarations (.h file), will declare a local debug context:
-//
-//    LocalDebugContext;
-//
-// Alternatively, use
-//
-//    ImportDebugContext(other_class_or_namespace);
-//
-// to use the same context as that of another class or namespace.
-//
-// If you declare a local context, your .cc file must define an 
-// implementation. To do so, insert this macro:
-//
-//    InitDebugContext(scope,"contextname");
-//
-// where "scope" is the class or namespace. This will add the functions 
-// and data objects required to implement the context.
-//
-// In addition, you can declare debug subcontexts. A subcontext has 
-// a parent context; debug messages are generated if the level of the 
-// message is <= the subcontext debug level _OR_ <= the parent's debug 
-// level. Subcontexts may be nested to any depth. This allows for more
-// fine-grained debug levels within class hierarchies.
-//
-// A subcontext is declared in an .h file (inside class or namespace):
-//
-//    LocalDebugSubContext;
-//
-// and implementations are inserted ina  .cc file via:
-//
-//    InitDebugSubContext(scope,parent_scope,"contextname");
-// 
-
-// This macro declares a local debug context within a class or namespace.
+    // This macro declares a local debug context within a class or namespace.
 #define LocalDebugContext \
-  static ::Debug::Context DebugContext; \
-  static inline ::Debug::Context & getDebugContext() \
+  static LOFAR::Debug::Context DebugContext; \
+  static inline LOFAR::Debug::Context & getDebugContext() \
             { return DebugContext; }
-// This macro declares a local debug context within a namespace.
+    // This macro declares a local debug context within a namespace.
 #define LocalDebugContext_ns \
-  extern ::Debug::Context DebugContext; \
-  inline ::Debug::Context & getDebugContext() \
+  extern LOFAR::Debug::Context DebugContext; \
+  inline LOFAR::Debug::Context & getDebugContext() \
             { return DebugContext; }
-// This macro declares a local sub-context within a class or namespace
+    // This macro declares a local sub-context within a class or namespace
 #define LocalDebugSubContext LocalDebugContext
-// This macro declares that this class uses the same context as declared
-// in another class or namespace.
+    // This macro declares that this class uses the same context as declared
+    // in another class or namespace.
 #define ImportDebugContext(other) \
-  static inline ::Debug::Context & getDebugContext() \
+  static inline LOFAR::Debug::Context & getDebugContext() \
   { return other::getDebugContext(); }
-// This macro adds necessary implementation of a local debug context. If you
-// declare a local context, then this must be inserted in a .cc file
-// somewhere.
+    // This macro adds necessary implementation of a local debug context. If you
+    // declare a local context, then this must be inserted in a .cc file
+    // somewhere.
 #define InitDebugContext(scope,name) \
-  ::Debug::Context scope::DebugContext(name)
-// This macro adds necessary implementation of a local debug subcontext
+  LOFAR::Debug::Context scope::DebugContext(name)
+    // This macro adds necessary implementation of a local debug subcontext
 #define InitDebugSubContext(scope,parent_scope,name) \
-  ::Debug::Context scope::DebugContext(name,&(parent_scope::getDebugContext()))
+  LOFAR::Debug::Context scope::DebugContext(name,&(parent_scope::getDebugContext()))
 
-//
-//      =====[ Checking state of debugging contexts ]=====
-//      ==================================================
-//
-// DebugName expands to the name of current context (a const std::string &)
-// DebugLevel expands to the debugging level of current context (an int)
-//
+    //
+    //      =====[ Checking state of debugging contexts ]=====
+    //      ==================================================
+    //
+    // DebugName expands to the name of current context (a const std::string &)
+    // DebugLevel expands to the debugging level of current context (an int)
+    //
 #define DebugName       (getDebugContext().name())
-//
-// Debug(level) is True if the debugging level of the current context
-// is >= the specified level.
-//
+    //
+    // Debug(level) is True if the debugging level of the current context
+    // is >= the specified level.
+    //
 #if !defined(LOFAR_DEBUG)
 #undef DISABLE_DEBUG_OUTPUT 
 #define DISABLE_DEBUG_OUTPUT 1
@@ -146,81 +143,81 @@ namespace LOFAR
 #define Debug(level) getDebugContext().check(level)
 #endif
 
-//      =====[ Generating debugging messages ]=====
-//      ===========================================
-//
-// NB: the macros below make use of some synctatic trickery -- if you use
-// them in the body of an if/else statement, make sure you enclose the body
-// within {...} to avoid problems.
-//
-// cdebug(level) 
-// cdebug1(level)
-//
-//    These macros conditionally produce a debugging message on the debugging
-//    stream (i.e., stream  only if the current level is >= specified level).
-//    Use, e.g.: 
-//          cdebug(1)<<"event X, value is "<<value<<endl;
-//    The normal cdebug() version precedes the message with whatever is
-//    returned by a call to sdebug(0). There is a global sdebug() function 
-//    (defined in  this file) which simply returns an empty string.
-//    The idea here is that classes can redefine sdebug() to generate a 
-//    short string identifying the current class and/or object and/or state, 
-//    this can make it easier to identify the source of a debugging message
-//    (see, e.g., the DMI package for examples of use).
-//
-//    If for whatever reason you don't want to call sdebug() here, use the
-//    cdebug1() macro.
-// 
-#define cdebug1(level)  if( Debug(level) && Debug::stream_time() ) ::Debug::getDebugStream()
+    //      =====[ Generating debugging messages ]=====
+    //      ===========================================
+    //
+    // NB: the macros below make use of some synctatic trickery -- if you use
+    // them in the body of an if/else statement, make sure you enclose the body
+    // within {...} to avoid problems.
+    //
+    // cdebug(level) 
+    // cdebug1(level)
+    //
+    //    These macros conditionally produce a debugging message on the debugging
+    //    stream (i.e., stream  only if the current level is >= specified level).
+    //    Use, e.g.: 
+    //          cdebug(1)<<"event X, value is "<<value<<endl;
+    //    The normal cdebug() version precedes the message with whatever is
+    //    returned by a call to sdebug(0). There is a global sdebug() function 
+    //    (defined in  this file) which simply returns an empty string.
+    //    The idea here is that classes can redefine sdebug() to generate a 
+    //    short string identifying the current class and/or object and/or state, 
+    //    this can make it easier to identify the source of a debugging message
+    //    (see, e.g., the DMI package for examples of use).
+    //
+    //    If for whatever reason you don't want to call sdebug() here, use the
+    //    cdebug1() macro.
+    // 
+#define cdebug1(level)  if( Debug(level) && LOFAR::Debug::stream_time() ) LOFAR::Debug::getDebugStream()
 #define cdebug(level)  cdebug1(level)<<sdebug(0)<<": "
 
-//
-// dprintf(level) 
-// dprintf1(level) 
-//
-//      These macros conditionally printf a debugging message.
-//      Use, e.g.: 
-//            dprintf(1)("event X, value is %d",value);
-//
-//      The difference between dprintf/dprintf1 is just like cdebug/cdebug1.
-//
-#define dprintf1(level) cdebug1(level)<<Debug::ssprintf
-#define dprintf(level) cdebug(level)<<Debug::ssprintf
+    //
+    // dprintf(level) 
+    // dprintf1(level) 
+    //
+    //      These macros conditionally printf a debugging message.
+    //      Use, e.g.: 
+    //            dprintf(1)("event X, value is %d",value);
+    //
+    //      The difference between dprintf/dprintf1 is just like cdebug/cdebug1.
+    //
+#define dprintf1(level) cdebug1(level)<<LOFAR::Debug::ssprintf
+#define dprintf(level) cdebug(level)<<LOFAR::Debug::ssprintf
 
 
 
-namespace Debug
-{
-  extern ostream * dbg_stream_p;
+    namespace Debug
+    {
+      extern ostream * dbg_stream_p;
   
-  inline ostream & getDebugStream ()
-  { return *dbg_stream_p; }
+      inline ostream & getDebugStream ()
+      { return *dbg_stream_p; }
 
 #ifdef ENABLE_LATENCY_STATS
-  extern struct timeval tv_init;
-  inline int printf_time ()
-  { 
-    struct timeval tv; gettimeofday(&tv,0);
-    printf("%ld.%06ld ",tv.tv_sec-tv_init.tv_sec,tv.tv_usec);
-    return 1;
-  }
-  inline int stream_time ()
-  {
-    struct timeval tv; gettimeofday(&tv,0);
-    getDebugStream()<<tv.tv_sec-tv_init.tv_sec<<"."<<tv.tv_usec;
-    return 1;
-  }
+      extern struct timeval tv_init;
+      inline int printf_time ()
+      { 
+        struct timeval tv; gettimeofday(&tv,0);
+        printf("%ld.%06ld ",tv.tv_sec-tv_init.tv_sec,tv.tv_usec);
+        return 1;
+      }
+      inline int stream_time ()
+      {
+        struct timeval tv; gettimeofday(&tv,0);
+        getDebugStream()<<tv.tv_sec-tv_init.tv_sec<<"."<<tv.tv_usec;
+        return 1;
+      }
 #else
-  inline int printf_time () { return 1; };
-  inline int stream_time () { return 1; };
+      inline int printf_time () { return 1; };
+      inline int stream_time () { return 1; };
 #endif
-};
+    };
 
-// Use this macro to write trace output.
-// Similar as dprintf, but uses iostream instead of printf.
-// Optionally it can be compiled out.
-// A trace message is printed if its level is <= the runtime trace level.
-// Thus the lower the message level, the more often it gets printed.
+  // Use this macro to write trace output.
+  // Similar as dprintf, but uses iostream instead of printf.
+  // Optionally it can be compiled out.
+  // A trace message is printed if its level is <= the runtime trace level.
+  // Thus the lower the message level, the more often it gets printed.
 #ifdef ENABLE_TRACER
 # define TRACER(level,stream) cdebug1(level) << "trace" << level << ": " << stream << endl
 #else
@@ -231,7 +228,7 @@ namespace Debug
 #define TRACER3(stream) TRACER(3,stream)
 #define TRACER4(stream) TRACER(4,stream)
 
-// Use this macro to write file and line (and possibly function) as well.
+  // Use this macro to write file and line (and possibly function) as well.
 #ifdef ENABLE_TRACER
 # if defined(HAVE_PRETTY_FUNCTION)
 #  define TRACERF(level,stream) cdebug1(level) << "trace" << level << ' ' << __FILE__ << ':' << __LINE__ << '(' << __PRETTY_FUNCTION__ << "): " << stream << endl
@@ -248,14 +245,14 @@ namespace Debug
 #define TRACERF3(stream) TRACERF(3,stream)
 #define TRACERF4(stream) TRACERF(3,stream)
 
-// This macro creates a Tracer object, so you get an automatic trace
-// message at the end of a scope.
-// objname gives the name of the Tracer object to create.
-// Usually only one Tracer object will be used in a scope. In such a case
-// the macro TRACERPF can be used (which uses a standard object name).
+  // This macro creates a Tracer object, so you get an automatic trace
+  // message at the end of a scope.
+  // objname gives the name of the Tracer object to create.
+  // Usually only one Tracer object will be used in a scope. In such a case
+  // the macro TRACERPF can be used (which uses a standard object name).
 #ifdef ENABLE_TRACER
 # define TRACERPFN_INTERNAL(objname,level,funcName,objPtr,stream) \
-    ::Debug::Tracer objname; \
+    LOFAR::Debug::Tracer objname; \
     if( Debug(level) ) { \
       std::ostringstream trace_oss; \
       trace_oss << stream; \
@@ -289,19 +286,19 @@ namespace Debug
 #define TRACERPF4(stream) TRACERPF(4,stream)
 
 
-// The SourceFileLine macro creates a string containing the current
-// filename and line number.
-// The CodeStatus1 macro adds the debug context, plus a message. This is 
-// handy for forming error and exception messages.
-// If your class defines a "sdebug()" method returning the current object
-// status (as string or char *), then use CodeStatus instead, to include 
-// sdebug() info in your message.
+  // The SourceFileLine macro creates a string containing the current
+  // filename and line number.
+  // The CodeStatus1 macro adds the debug context, plus a message. This is 
+  // handy for forming error and exception messages.
+  // If your class defines a "sdebug()" method returning the current object
+  // status (as string or char *), then use CodeStatus instead, to include 
+  // sdebug() info in your message.
 #if defined(HAVE_PRETTY_FUNCTION)
-# define SourceFileLine ::Debug::ssprintf("%s:%d(%s)",__FILE__,__LINE__,__PRETTY_FUNCTION__)
+# define SourceFileLine LOFAR::Debug::ssprintf("%s:%d(%s)",__FILE__,__LINE__,__PRETTY_FUNCTION__)
 #elif defined(HAVE_FUNCTION)
-# define SourceFileLine ::Debug::ssprintf("%s:%d(%s)",__FILE__,__LINE__,__FUNCTION__)
+# define SourceFileLine LOFAR::Debug::ssprintf("%s:%d(%s)",__FILE__,__LINE__,__FUNCTION__)
 #else
-# define SourceFileLine ::Debug::ssprintf("%s:%d",__FILE__,__LINE__)
+# define SourceFileLine LOFAR::Debug::ssprintf("%s:%d",__FILE__,__LINE__)
 #endif
 
 #define CodeStatus_nf1(msg) ((msg)+string(" (context: ")+DebugName+")")
@@ -310,45 +307,45 @@ namespace Debug
 #define CodeStatus1(msg) ((msg)+string(" (context: ")+DebugName+", at "+ SourceFileLine + ")")
 #define CodeStatus(msg) ("["+string(sdebug())+"] "+CodeStatus1(msg))
 
-// This inserts declarations of the sdebug() and debug() methods into your class.
-// Use DeclareDebugInfo(virtual) to declare a virtual sdebug().
-// Else use DeclareDebugInfo().
-// The following method declarations are inserted:
-//    [qualifiers] string sdebug ( int detail = 1,const string &prefix = "",
-//              const char *name = 0 ) const;
-//    const char * debug ( int detail = 1,const string &prefix = "",
-//                         const char *name = 0 ) const
-//    { return Debug::staticBuffer(sdebug(detail,prefix,name)); }
-//
+  // This inserts declarations of the sdebug() and debug() methods into your class.
+  // Use DeclareDebugInfo(virtual) to declare a virtual sdebug().
+  // Else use DeclareDebugInfo().
+  // The following method declarations are inserted:
+  //    [qualifiers] string sdebug ( int detail = 1,const string &prefix = "",
+  //              const char *name = 0 ) const;
+  //    const char * debug ( int detail = 1,const string &prefix = "",
+  //                         const char *name = 0 ) const
+  //    { return Debug::staticBuffer(sdebug(detail,prefix,name)); }
+  //
 #define Declare_sdebug(qualifiers) qualifiers string sdebug ( int detail = 1,const string &prefix = "",const char *name = 0 ) const; 
-#define Declare_debug(qualifiers) qualifiers const char * debug ( int detail = 1,const string &prefix = "",const char *name = 0 ) const { return Debug::staticBuffer(sdebug(detail,prefix,name)); }
+#define Declare_debug(qualifiers) qualifiers const char * debug ( int detail = 1,const string &prefix = "",const char *name = 0 ) const { return LOFAR::Debug::staticBuffer(sdebug(detail,prefix,name)); }
 
-// this global definition of sdebug allows the use of cdebug/dprintf macros 
-// everywhere
-inline string sdebug (int=0) { return ""; };
+  // this global definition of sdebug allows the use of cdebug/dprintf macros 
+  // everywhere
+  inline string sdebug (int=0) { return ""; };
 
-// The ThrowExc macro throws an exception of the specified type, using
-// CodeStatus to add on filename, line, current debugging context, and 
-// possible object debug status. 
-const char exception_message[] = "\n==================================== EXCEPTION ================================\n";
+  // The ThrowExc macro throws an exception of the specified type, using
+  // CodeStatus to add on filename, line, current debugging context, and 
+  // possible object debug status. 
+  const char exception_message[] = "\n==================================== EXCEPTION ================================\n";
 #define ThrowExc(exc,msg)  { cdebug(1)<<exception_message<<SourceFileLine<<" "<<CodeStatus(msg)<<endl; throw(exc(CodeStatus_nf(msg),__HERE__)); }
 #define ThrowExc1(exc,msg)  { cdebug1(1)<<exception_message<<SourceFileLine<<" "<<CodeStatus1(msg)<<endl; throw(exc(CodeStatus_nf1(msg),__HERE__)); }
 
-// Retain old Throw/Throw1 for compatibility. Throws LOFAR::Exception.
+  // Retain old Throw/Throw1 for compatibility. Throws LOFAR::Exception.
 #define Throw(msg)  ThrowExc(LOFAR::Exception,msg)
 #define Throw1(msg) ThrowExc1(LOFAR::Exception,msg)
 
-// The Assert macro will Throw an AssertError if condition is FALSE.
-#define Assert(cond)  { if( !(cond) ) ThrowExc(LOFAR::AssertError,"Assert failed: " #cond); }
-#define Assert1(cond)  { if( !(cond) ) ThrowExc1(LOFAR::AssertError,"Assert failed: " #cond); }
+  // The Assert macro will Throw an AssertError if condition is FALSE.
+#define Assert(cond)  { if( !(cond) ) ThrowExc(LOFAR::Debug::AssertError,"Assert failed: " #cond); }
+#define Assert1(cond)  { if( !(cond) ) ThrowExc1(LOFAR::Debug::AssertError,"Assert failed: " #cond); }
 
-// The FailWhen macro will Throw a Debug::Fail if condition is TRUE
-// Always defined (even with debugging off)
-#define FailWhen(cond,msg)  { if( cond ) ThrowExc(Debug::Fail,msg); }
-#define FailWhen1(cond,msg)  { if( cond ) ThrowExc1(Debug::Fail,msg); }
+  // The FailWhen macro will Throw a Debug::Fail if condition is TRUE
+  // Always defined (even with debugging off)
+#define FailWhen(cond,msg)  { if( cond ) ThrowExc(LOFAR::Debug::Fail,msg); }
+#define FailWhen1(cond,msg)  { if( cond ) ThrowExc1(LOFAR::Debug::Fail,msg); }
 
-// The DbgFailWhen macro is like FailWhen, but defined to do nothing if 
-// debugging is off.
+  // The DbgFailWhen macro is like FailWhen, but defined to do nothing if 
+  // debugging is off.
 #ifdef ENABLE_DBGASSERT
 # define DbgFailWhen(cond,msg)  FailWhen(cond,msg)
 # define DbgFailWhen1(cond,msg)  FailWhen1(cond,msg)
@@ -357,217 +354,224 @@ const char exception_message[] = "\n==================================== EXCEPTI
 # define DbgFailWhen1(cond,msg)  
 #endif
 
-// The DbgAssert macro is like Assert, but defined to do nothing if 
-// debugging is off.
+  // The DbgAssert macro is like Assert, but defined to do nothing if 
+  // debugging is off.
 #ifdef ENABLE_DBGASSERT
-# define DbgAssert(cond) { if( !(cond) ) ThrowExc(LOFAR::AssertError,"DbgAssert failed: " #cond); }
-# define DbgAssert1(cond) { if( !(cond) ) ThrowExc1(LOFAR::AssertError,"DbgAssert failed: " #cond); }
+# define DbgAssert(cond) { if( !(cond) ) ThrowExc(LOFAR::Debug::AssertError,"DbgAssert failed: " #cond); }
+# define DbgAssert1(cond) { if( !(cond) ) ThrowExc1(LOFAR::Debug::AssertError,"DbgAssert failed: " #cond); }
 #else
 # define DbgAssert(cond)
 # define DbgAssert1(cond)
 #endif
 
-// The AssertStr macro makes it possible to put arbitrary data in
-// the exception message.
-// E.g.
-//   AssertStr (n < 10, "value " << n << " exceeds maximum");
+  // The AssertStr macro makes it possible to put arbitrary data in
+  // the exception message.
+  // E.g.
+  //   AssertStr (n < 10, "value " << n << " exceeds maximum");
 #define AssertStr(cond,stream) \
  { if( !(cond) ) { \
      std::ostringstream oss; \
      oss << stream; \
-     ThrowExc(LOFAR::AssertError,"Assertion `" #cond "' failed: " + oss.str()); \
+     ThrowExc(LOFAR::Debug::AssertError,"Assertion `" #cond "' failed: " + oss.str()); \
  }}
 
-// The DbgAssertStr macro is like AssertStr, but
-// defined to do nothing if debugging is off.
+  // The DbgAssertStr macro is like AssertStr, but
+  // defined to do nothing if debugging is off.
 #ifdef ENABLE_DBGASSERT
 # define DbgAssertStr(cond,stream) \
  { if( !(cond) ) { \
      std::ostringstream oss; \
      oss << stream; \
-     ThrowExc(LOFAR::AssertError,"DbgAssert `" #cond "' failed: " + oss.str()); \
+     ThrowExc(LOFAR::Debug::AssertError,"DbgAssert `" #cond "' failed: " + oss.str()); \
  }}
 #else
 # define DbgAssertStr(cond,stream)
 #endif
 
-// The AssertMsg macro is similar to AssertStr, but it does not
-// include source and line number in the message.
-// It can be used for generating 'normal' error messages.
+  // The AssertMsg macro is similar to AssertStr, but it does not
+  // include source and line number in the message.
+  // It can be used for generating 'normal' error messages.
 #define AssertMsg(cond,stream) \
  { if( !(cond) ) { \
      std::ostringstream oss; \
      oss << stream; \
-     ::Debug::getDebugStream()<<oss.str()<<std::endl; \
-     throw LOFAR::AssertError(oss.str()); \
+     LOFAR::Debug::getDebugStream()<<oss.str()<<std::endl; \
+     throw LOFAR::Debug::AssertError(oss.str()); \
  }}
 
 
 
-namespace Debug
-{
-  // Typedef the exception type, so we can change whenever needed.
-//##ModelId=3DB9546401F6
-  EXCEPTION_CLASS(Fail,LOFAR::Exception);
-
-  // sets level of given context
-  bool setLevel (const string &context,int level);
-      
-  // initializes debug levels from command line (looks for options of
-  // the form -dContext=#, or -d# for all levels, or filename.debug
-  // to load from file, or -dl to load from default progname.debug file)
-  void initLevels   (int argc,const char *argv[],bool save=true);
-  // saves debug to file (default: progname.debug) 
-  bool saveLevels ( string fname = "" );
-  // loads debug levels from file (default: progname.debug) 
-  void loadLevels ( string fname = "" );
-  // redirects debug output to file
-  int redirectOutput (const string &fname);
-
-  // copies string into static buffer. Thread-safe (i.e. each thread
-  // has its own buffer)
-  const char * staticBuffer( const string &str );
-
-  // appends strings and inserts a space, if needed
-  string& append( string &str,const string &str2,const string &sep = " " );
-  // sprintfs to a string object, returns it
-  const string ssprintf( const char *format,... );
-  // sprintfs to a string, with append & insertion of spaces
-  int appendf( string &str,const char *format,... );
-  
-//  // helper functions and declarations
-//  int dbg_printf( const char *format,... );
-
-
-//##ModelId=3C21B55E02FC
-  class Context 
+  namespace Debug
   {
-  public:
-    //##ModelId=3C21B594005B
-    Context (const string &name, Context *parent_ = 0);
+    // Exception class for Debug::Assert errors.
+    EXCEPTION_CLASS(AssertError,Exception)  
 
-    //##ModelId=3DB95464028D
-    ~Context();
+    // Typedef the exception type, so we can change whenever needed.
+    //##ModelId=3DB9546401F6
+    EXCEPTION_CLASS(Fail,LOFAR::Exception);
+
+    // sets level of given context
+    bool setLevel (const string &context,int level);
+      
+    // initializes debug levels from command line (looks for options of
+    // the form -dContext=#, or -d# for all levels, or filename.debug
+    // to load from file, or -dl to load from default progname.debug file)
+    void initLevels   (int argc,const char *argv[],bool save=true);
+    // saves debug to file (default: progname.debug) 
+    bool saveLevels ( string fname = "" );
+    // loads debug levels from file (default: progname.debug) 
+    void loadLevels ( string fname = "" );
+    // redirects debug output to file
+    int redirectOutput (const string &fname);
+
+    // copies string into static buffer. Thread-safe (i.e. each thread
+    // has its own buffer)
+    const char * staticBuffer( const string &str );
+
+    // appends strings and inserts a space, if needed
+    string& append( string &str,const string &str2,const string &sep = " " );
+    // sprintfs to a string object, returns it
+    const string ssprintf( const char *format,... );
+    // sprintfs to a string, with append & insertion of spaces
+    int appendf( string &str,const char *format,... );
+  
+    //  // helper functions and declarations
+    //  int dbg_printf( const char *format,... );
+
+
+    //##ModelId=3C21B55E02FC
+    class Context 
+    {
+    public:
+      //##ModelId=3C21B594005B
+      Context (const string &name, Context *parent_ = 0);
+
+      //##ModelId=3DB95464028D
+      ~Context();
     
+      //##ModelId=3C21B9750352
+      bool check (int level) const;
+
+      //##ModelId=3DB954640293
+      int level () const;
+      //##ModelId=3DB95464029E
+      int setLevel (int value);
+
+      //##ModelId=3DB9546402B5
+      const string& name () const;
+
+      //##ModelId=3DB9546402C2
+      static void initialize ();
+        
+    private:
+        
+      //##ModelId=3DB954640264
+      static bool initialized;
+      //##ModelId=3C21B57C027D
+      int debug_level;
+      //##ModelId=3C21B5800193
+      string context_name;
+      //##ModelId=3CD68637038B
+      Context *parent;
+    };
+
+
     //##ModelId=3C21B9750352
-    bool check (int level) const;
+    //## Other Operations (inline)
+    inline bool Context::check (int level) const
+    {
+      if( !initialized )
+        return false;
+      if( parent && parent->check(level) )
+        return true;
+      return level <= debug_level;
+    }
 
     //##ModelId=3DB954640293
-    int level () const;
+    inline int Context::level () const
+    {
+      return debug_level;
+    }
+
     //##ModelId=3DB95464029E
-    int setLevel (int value);
+    inline int Context::setLevel (int value)
+    {
+      debug_level = value;
+      return value;
+    }
 
     //##ModelId=3DB9546402B5
-    const string& name () const;
-
-    //##ModelId=3DB9546402C2
-    static void initialize ();
-        
-  private:
-        
-    //##ModelId=3DB954640264
-    static bool initialized;
-    //##ModelId=3C21B57C027D
-    int debug_level;
-    //##ModelId=3C21B5800193
-    string context_name;
-    //##ModelId=3CD68637038B
-    Context *parent;
-  };
-
-
-//##ModelId=3C21B9750352
-  //## Other Operations (inline)
-  inline bool Context::check (int level) const
-  {
-    if( !initialized )
-      return false;
-    if( parent && parent->check(level) )
-      return true;
-    return level <= debug_level;
-  }
-
-//##ModelId=3DB954640293
-  inline int Context::level () const
-  {
-    return debug_level;
-  }
-
-//##ModelId=3DB95464029E
-  inline int Context::setLevel (int value)
-  {
-    debug_level = value;
-    return value;
-  }
-
-//##ModelId=3DB9546402B5
-  inline const string& Context::name () const
-  {
-    return context_name;
-  }
+    inline const string& Context::name () const
+    {
+      return context_name;
+    }
   
-//##ModelId=3DB9546402C2
-  inline void Context::initialize ()
-  {
-    initialized = true;
-  }
+    //##ModelId=3DB9546402C2
+    inline void Context::initialize ()
+    {
+      initialized = true;
+    }
 
 #ifdef ENABLE_TRACER
-//##ModelId=3DB954640201
-  class Tracer
-  {
-  public:
-    //##ModelId=3DB9546402E2
-    Tracer() : itsDo(false) {}
+    //##ModelId=3DB954640201
+    class Tracer
+    {
+    public:
+      //##ModelId=3DB9546402E2
+      Tracer() : itsDo(false) {}
 
-    //##ModelId=3DB9546402E3
-    void startMsg (int level,
-		   const char* file, int line, const char* func,
-		   const char* msg, const void* objPtr);
+      //##ModelId=3DB9546402E3
+      void startMsg (int level,
+                     const char* file, int line, const char* func,
+                     const char* msg, const void* objPtr);
 
-    //##ModelId=3DB9546402EA
-    ~Tracer()
-          { if (itsDo) endMsg(); }
+      //##ModelId=3DB9546402EA
+      ~Tracer()
+      { if (itsDo) endMsg(); }
 
-  private:
-    //##ModelId=3DB9546402EB
-    Tracer(const Tracer&);
-    //##ModelId=3DB9546402ED
-    Tracer& operator= (const Tracer&);
-    //##ModelId=3DB9546402EF
-    void endMsg();
+    private:
+      //##ModelId=3DB9546402EB
+      Tracer(const Tracer&);
+      //##ModelId=3DB9546402ED
+      Tracer& operator= (const Tracer&);
+      //##ModelId=3DB9546402EF
+      void endMsg();
 
-    //##ModelId=3DB9546402DE
-    bool    itsDo;
-    //##ModelId=3DB9546402DF
-    int     itsLevel;
-    //##ModelId=3DB9546402E1
-    string  itsMsg;
-  };
+      //##ModelId=3DB9546402DE
+      bool    itsDo;
+      //##ModelId=3DB9546402DF
+      int     itsLevel;
+      //##ModelId=3DB9546402E1
+      string  itsMsg;
+    };
 #endif
 
-} // namespace Debug
+  } // namespace Debug
 
 
-namespace Debug {
-  extern Context DebugContext;
-  inline Context & getDebugContext ()  { return DebugContext; }
-}
+  namespace Debug {
+    extern Context DebugContext;
+    inline Context & getDebugContext ()  { return DebugContext; }
+  }
 
-// Default DebugContext is the one in Debug.
-using Debug::getDebugContext;
-
-
-// inline functions for converting scalars to strings
-inline string num2str (int x)
-{
-  return Debug::ssprintf("%d",x);
-}
-inline string num2str (double x)
-{
-  return Debug::ssprintf("%f",x);
-}
+  // Default DebugContext is the one in Debug.
+  using Debug::getDebugContext;
 
 
+  // inline functions for converting scalars to strings
+  inline string num2str (int x)
+  {
+    return LOFAR::Debug::ssprintf("%d",x);
+  }
+  inline string num2str (double x)
+  {
+    return LOFAR::Debug::ssprintf("%f",x);
+  }
+
+} // namespace LOFAR
+
+using LOFAR::getDebugContext;
+using LOFAR::sdebug;
+using LOFAR::exception_message;
 
 #endif

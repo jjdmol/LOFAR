@@ -24,6 +24,15 @@
 #define COMMON_STRING_H
 
 #include <string>
-using std::string;
+
+namespace LOFAR
+{
+  using std::string;
+}
+
+#ifdef MAKE_LOFAR_SYMBOLS_GLOBAL
+#include <Common/lofar_global_symbol_warning.h>
+using LOFAR::string;
+#endif
 
 #endif

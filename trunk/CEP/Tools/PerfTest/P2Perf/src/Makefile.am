@@ -1,5 +1,4 @@
 bin_PROGRAMS	= P2Perf
-P2Perf_CXXFLAGS	=
 
 DOCHDRS 	=				\
 DH_VarSize.h					\
@@ -21,3 +20,5 @@ DHGrowStrategy.cc
 P2Perf_DEPENDENCIES = $(LOFAR_DEPEND)
 
 include $(lofar_sharedir)/Makefile.common
+
+AM_CPPFLAGS = -DMAKE_LOFAR_SYMBOLS_GLOBAL

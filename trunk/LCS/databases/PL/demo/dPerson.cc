@@ -30,8 +30,9 @@
 #include <PL/Query/Expr.h>
 #include <iostream>
 
-using namespace LOFAR::PL;    // All classes of PL reside in this namespace.
 using namespace std;
+using namespace LOFAR;
+using namespace LOFAR::PL;    // All classes of PL reside in this namespace.
 
 int main(int argc, const char* argv[])
 {

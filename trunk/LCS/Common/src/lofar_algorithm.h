@@ -25,8 +25,17 @@
 
 #include <algorithm>
 
-using std::max;
-using std::min;
+namespace LOFAR
+{
+  using std::max;
+  using std::min;
+}
+
+#ifdef MAKE_LOFAR_SYMBOLS_GLOBAL
+#include <Common/lofar_global_symbol_warning.h>
+using LOFAR::max;
+using LOFAR::min;
+#endif
 
 #endif
 

@@ -108,6 +108,9 @@ LogLevel string2TraceLevel (const tstring& lname) {
 	return NOT_SET_LOG_LEVEL;			// not found
 }
 
+LOFAR::LoggerReference	theirTraceLoggerRef("TRC");		// create the tracelogger
+
+#endif // HAVE_LOG4CPLUS
 
 // initTracemodule
 //
@@ -117,6 +120,7 @@ LogLevel string2TraceLevel (const tstring& lname) {
 // Attached to the trace-logger is one Appender that logs to stderr.
 //
 void initTraceModule (void) {
+#ifdef HAVE_LOG4CPLUS
 	//# register our own loglevels
 	getLogLevelManager().pushToStringMethod(traceLevel2String);
 	getLogLevelManager().pushFromStringMethod(string2TraceLevel);
@@ -134,8 +138,7 @@ void initTraceModule (void) {
 	PropertyConfigurator(traceProp).configure();
 	Logger::getInstance("TRC").forcedLog(0, "TRACE module activated");
 
-}
-LOFAR::LoggerReference	theirTraceLoggerRef("TRC");		// create the tracelogger
 #endif // HAVE_LOG4CPLUS
+}
 
 }	// namespace LOFAR

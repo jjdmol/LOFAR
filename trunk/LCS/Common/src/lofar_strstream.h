@@ -23,6 +23,13 @@
 #ifndef COMMON_STRSTREAM_H
 #define COMMON_STRSTREAM_H
 
+// The strstream classes are considered deprecated. The are not supported
+// anymore in GCC 3.3 and higher.
+#ifdef __DEPRECATED
+#warning The file lofar_strstream.h is deprecated. \
+         You should use lofar_sstream.h instead.
+#endif
+
 // strstream.h is only available in the old STL (version 2, which comes
 // by default with gcc-2.95.x -- this does not define __GLIBCPP__), and in 
 // STL version 3 supplied with gcc-3.1, where it's provided for backwards
@@ -33,9 +40,17 @@
 #endif
 
 #include <sstream>
-using std::istringstream;
-using std::ostringstream;
 
+namespace LOFAR 
+{
+  using std::istringstream;
+  using std::ostringstream;
+}
 
+#ifdef MAKE_LOFAR_SYMBOLS_GLOBAL
+#include <Common/lofar_global_symbol_warning.h>
+using LOFAR::istringstream;
+using LOFAR::ostringstream;
+#endif
 
 #endif

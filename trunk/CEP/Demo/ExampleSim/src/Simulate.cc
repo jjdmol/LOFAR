@@ -34,6 +34,8 @@
 #include <mpi.h>
 #endif
 
+using namespace LOFAR;
+
 int main (int argc, const char** argv)
 {
 
