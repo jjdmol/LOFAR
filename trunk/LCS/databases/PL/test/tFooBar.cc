@@ -108,16 +108,15 @@ namespace LOFAR {
 using namespace LOFAR::PL;
 using namespace LOFAR;
 
-int main()
+int main(int argc, const char* argv[])
 {
+  Debug::initLevels(argc, argv);
+
   Foo foo(1,"Hello");
   Bar bar("World");
 
   TPersistentObject<Foo> tpoFoo(foo);
   TPersistentObject<Bar> tpoBar(bar);
-
-//   cout << tpoFoo.data() << endl;
-//   cout << tpoBar.data() << endl;
 
   try {
     cout << "attrib<Foo>(\"bar.text\") = " 

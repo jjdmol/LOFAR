@@ -49,7 +49,9 @@ tObjectId_DEPENDENCIES	= ../src/libpl.la $(LOFAR_DEPEND)
 #			  SQLTimeStampCxxTest.hh \
 #			  SQLTimeStampCxxTest.cc
 
-#TESTS			= tSQLTimeStamp.sh
+TESTS			= \
+			  tExpr.sh
+#			  tSQLTimeStamp.sh
 
 TESTS_ENVIRONMENT	= lofar_sharedir=$(lofar_sharedir)
 
