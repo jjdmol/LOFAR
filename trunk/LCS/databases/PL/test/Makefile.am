@@ -1,18 +1,11 @@
 check_PROGRAMS		= \
-			  tFooBar \
 			  tExpr \
-			  tAttrib \
 			  tA \
 			  tC \
-			  tTPO \
+			  tAttrib \
 			  tCollection \
 			  tObjectId \
 			  tQuery
-#			  tSQLTimeStamp
-
-tFooBar_SOURCES		= tFooBar.cc
-tFooBar_LDADD		= ../src/libpl.la
-tFooBar_DEPENDENCIES	= ../src/libpl.la $(LOFAR_DEPEND)
 
 tA_SOURCES              = tA.cc
 tA_LDADD		= ../src/libpl.la
@@ -21,10 +14,6 @@ tA_DEPENDENCIES		= ../src/libpl.la $(LOFAR_DEPEND)
 tC_SOURCES              = tC.cc
 tC_LDADD		= ../src/libpl.la
 tC_DEPENDENCIES		= ../src/libpl.la $(LOFAR_DEPEND)
-
-tTPO_SOURCES		= tTPO.cc
-tTPO_LDADD		= ../src/libpl.la
-tTPO_DEPENDENCIES	= ../src/libpl.la $(LOFAR_DEPEND)
 
 tExpr_SOURCES		= tExpr.cc
 tExpr_LDADD		= ../src/libpl.la
@@ -46,19 +35,14 @@ tQuery_SOURCES              = tQuery.cc
 tQuery_LDADD		= ../src/libpl.la
 tQuery_DEPENDENCIES		= ../src/libpl.la $(LOFAR_DEPEND)
 
-#tSQLTimeStamp_SOURCES	= SQLTimeStampTest.cc	\
-#			  SQLTimeStampTest.h	\
-#			  tSQLTimeStamp.cc
-
-#SQLTimeStampCxxTest_SOURCES = \
-#			  SQLTimeStampCxxTest.hh \
-#			  SQLTimeStampCxxTest.cc
-
 TESTS			= \
+			  tA_test.sh \
+			  tC_test.sh \
 			  tExpr.sh \
 			  tAttrib.sh \
+			  tObjectId.sh \
+			  tCollection.sh \
 			  tQuery.sh
-#			  tSQLTimeStamp.sh
 
 TESTS_ENVIRONMENT	= lofar_sharedir=$(lofar_sharedir)
 

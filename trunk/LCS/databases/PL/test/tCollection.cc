@@ -53,23 +53,33 @@ int main()
   cx.add(x1);
   cx.add(x2);
   for(Collection<X>::iterator it=cx.begin(); it!=cx.end(); ++it) {
+    cout << ">>>" << endl;
     it->print(cout);
+    cout << "<<<" << endl;
   }
+
   cout << "Removing second element ..." << endl;
   cx.remove(x2);
   for(Collection<X>::iterator it=cx.begin(); it!=cx.end(); ++it) {
+    cout << ">>>" << endl;
     it->print(cout);
+    cout << "<<<" << endl;
+
   }
   cout << "Trying to add first element again ..." << endl;
   cx.add(x1);
   for(Collection<X>::iterator it=cx.begin(); it!=cx.end(); ++it) {
+    cout << ">>>" << endl;
     it->print(cout);
+    cout << "<<<" << endl;
   }
 
   cout << "Removing all elements that match with first element ..." << endl;
   cx.remove(x1);
   for(Collection<X>::iterator it=cx.begin(); it!=cx.end(); ++it) {
+    cout << ">>>" << endl;
     it->print(cout);
+    cout << "<<<" << endl;
   }
 
   cout << endl << "*** Using Collection<TPersistentObject<X> > ***" << endl;
@@ -81,25 +91,33 @@ int main()
   cpox.add(pox2);
   for(Collection<TPersistentObject<X> >::iterator it=cpox.begin(); 
       it!=cpox.end(); ++it) {
+    cout << ">>>" << endl;
     it->data().print(cout);
+    cout << "<<<" << endl;
   }
   cout << "Removing second element ..." << endl;
   cpox.remove(pox2);
   for(Collection<TPersistentObject<X> >::iterator it=cpox.begin(); 
       it!=cpox.end(); ++it) {
+    cout << ">>>" << endl;
     it->data().print(cout);
+    cout << "<<<" << endl;
   }
   cout << "Trying to add first element again ... " << endl;
   cpox.add(pox1);
   for(Collection<TPersistentObject<X> >::iterator it=cpox.begin(); 
       it!=cpox.end(); ++it) {
+    cout << ">>>" << endl;
     it->data().print(cout);
+    cout << "<<<" << endl;
   }
   cout << "Removing all elements that match with first element ..." << endl;
   cpox.remove(pox1);
   for(Collection<TPersistentObject<X> >::iterator it=cpox.begin(); 
       it!=cpox.end(); ++it) {
+    cout << ">>>" << endl;
     it->data().print(cout);
+    cout << "<<<" << endl;
   }
 
   return 0;
