@@ -1,4 +1,4 @@
-//#  DTLTypes.h: definition of DTL specific types used within PL
+//#  DTLHelperClasses.h: definition of DTL helper classes for use within PL.
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,8 +20,8 @@
 //#
 //#  $Id$
 
-#ifndef LOFAR_PL_DTLTYPES_H
-#define LOFAR_PL_DTLTYPES_H
+#ifndef LOFAR_PL_DTLHELPERCLASSES_H
+#define LOFAR_PL_DTLHELPERCLASSES_H
 
 #if defined(HAVE_CONFIG_H)
 #include <config.h>
