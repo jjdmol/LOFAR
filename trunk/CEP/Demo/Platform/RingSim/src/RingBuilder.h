@@ -43,6 +43,9 @@ template <class DH_T>
 inline void RingBuilder<DH_T>::buildSimul(Simul* aSimul) {
   cout << "Build the RingSimul..." << endl;
 
+  // Creates and connects two rings of 5 nodes each 
+  // (so a 2x5 torus) 
+
   aSimul->runOnNode(0);
   aSimul->setRate(itsChannels+1);
 
@@ -54,7 +57,7 @@ inline void RingBuilder<DH_T>::buildSimul(Simul* aSimul) {
   int firstringend = itsChannels/2-1;
   int ringsize = firstringend-firstringstart+1;
   for (int stepnr=firstringstart; stepnr<=firstringend; stepnr++) {
-    RingStep[stepnr] = new Step(new WH_Ring<DH_Test>());
+    RingStep[stepnr] = new Step(new WH_Ring<DH_T>());
     RingStep[stepnr]->runOnNode(stepnr+1);
     RingStep[stepnr]->setInRate(itsChannels+1,0); // set inrate for channel 0
     if (stepnr >  firstringstart) {
@@ -63,24 +66,30 @@ inline void RingBuilder<DH_T>::buildSimul(Simul* aSimul) {
     }
     aSimul->addStep (RingStep[stepnr]);
     // Prevent deadlock in first step
-    // after the first step, this flag will be set back to normal (in WH_Ring::process())
-    RingStep[stepnr]->getWorker()->getInHolder(2)->setRead(false); // switch off read from second ring
+    // after the first step, this flag will be set back to normal 
+    // (in WH_Ring::process())
+
+    // switch off read from second ring
+    RingStep[stepnr]->getWorker()->getInHolder(2)->setRead(false); 
   }
   
   // Prevent deadlock in first step
-  // after the first step, this flag will be set back to normal (in WH_Ring::process())
+  // after the first step, this flag will be set back to normal 
+  // (in WH_Ring::process())
   RingStep[firstringstart]->getWorker()->getInHolder(1)->setRead(false);
 
 
   // connect last element to first one to close the ring.
-  RingStep[firstringstart]->connect(RingStep[firstringend],1,1,1); // close forwards loop
+  
+  // close forwards loop
+  RingStep[firstringstart]->connect(RingStep[firstringend],1,1,1); 
   cout << firstringstart << "<--" << firstringend << endl;
   cout << "Created first ring" << endl;
 
   int secondringstart=itsChannels/2;
   int secondringend = itsChannels-1;
   for (int stepnr=secondringstart; stepnr<=secondringend; stepnr++) {
-    RingStep[stepnr] = new Step(new WH_Ring<DH_Test>());
+    RingStep[stepnr] = new Step(new WH_Ring<DH_T>());
     RingStep[stepnr]->runOnNode(stepnr-secondringstart+1);
     RingStep[stepnr]->setInRate(itsChannels+1,0); // set inrate for channel 0
     if (stepnr >  secondringstart) {
@@ -94,7 +103,9 @@ inline void RingBuilder<DH_T>::buildSimul(Simul* aSimul) {
   RingStep[secondringstart]->getWorker()->getInHolder(1)->setRead(false);
 
   // connect last element to first one to close the ring.
-  RingStep[secondringstart]->connect(RingStep[secondringend],1,1,1); // close forwards loop
+
+  // close forwards loop
+  RingStep[secondringstart]->connect(RingStep[secondringend],1,1,1); 
   cout << secondringstart << "<--" << secondringend << endl;
 
   cout << "Created second ring" << endl;
@@ -110,9 +121,9 @@ inline void RingBuilder<DH_T>::buildSimul(Simul* aSimul) {
   cout << "Created ring elements" << endl;
 
   aSimul->connectInputToArray(RingStep,
-				itsChannels,
-				2); // only connect the first DataHolder from the ring elements 
-
+			      itsChannels,
+			      2); // only connect the first DataHolder from the ring elements 
+  
   cout << "connected ring elements to input" << endl;
 
   for (int stepnr=0; stepnr<itsChannels; stepnr++) {
