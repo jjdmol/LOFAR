@@ -258,6 +258,14 @@ void MeqCalSolver::run ()
                             tileformat_->shape(VisTile::DATA));
         // this will be applied to each tile as necessary later on
       }
+      if( !tileformat_->defined(VisTile::PREDICT) ) 
+      {
+        tileformat_.privatize(DMI::WRITE);
+        tileformat_().add(VisTile::PREDICT,
+                            tileformat_->type(VisTile::DATA),
+                            tileformat_->shape(VisTile::DATA));
+        // this will be applied to each tile as necessary later on
+      }
       
       // --------- read full domain from input ---------------------------
       in_domain = True;
@@ -870,6 +878,7 @@ void MeqCalSolver::solve (bool useSVD, DataRecord::Ref& header)
         }
         // Subtract the predicted data from the measured data
         // and return it to the output stream.
+        LoMat_fcomplex predata (iter.predict());
         LoMat_fcomplex resdata (iter.residuals());
         int nchan = resdata.shape()[1];
         // Make Blitz vectors of the predicted data.
@@ -889,18 +898,19 @@ void MeqCalSolver::solve (bool useSVD, DataRecord::Ref& header)
                            (expr.getResult22().getValue().dcomplexStorage()),
                            blitz::shape(nchan),
                            blitz::neverDeleteData);
-        resdata = data;
+	// Subtract 0 to 'cast' from dcomplex to fcomplex.
         if (1 == npol) {
-          resdata(0,blitz::Range::all()) -= xx;
+          predata(0,blitz::Range::all()) = xx - 0.;
         } else if (2 == npol) {
-          resdata(0,blitz::Range::all()) -= xx;
-          resdata(1,blitz::Range::all()) -= yy;
+          predata(0,blitz::Range::all()) = xx - 0.;
+          predata(1,blitz::Range::all()) = yy - 0.;
         } else if (4 == npol) {
-          resdata(0,blitz::Range::all()) -= xx;
-          resdata(1,blitz::Range::all()) -= xy;
-          resdata(2,blitz::Range::all()) -= yx;
-          resdata(3,blitz::Range::all()) -= yy;
+          predata(0,blitz::Range::all()) = xx - 0.;
+          predata(1,blitz::Range::all()) = xy - 0.;
+          predata(2,blitz::Range::all()) = yx - 0.;
+          predata(3,blitz::Range::all()) = yy - 0.;
         }
+        resdata = data - predata;
       } // end iteration over current tile
       // change the tile back to read-only
       itsVisTiles[i].privatize(DMI::READONLY|DMI::DEEP);
@@ -1161,6 +1171,7 @@ void MeqCalSolver::makeExpr()
   itsStartTime = 1e30;
   itsEndTime = 0;
   Bool wsrtModel = (itsModelType == "WSRT");
+  Bool asAP = (itsModelType != "LOFAR.RI");
   int nrbl = 0;
   for (unsigned int i=0; i<itsVisTiles.size(); i++) {
     const VisTile& visTile = *(itsVisTiles[i]);
@@ -1172,8 +1183,8 @@ void MeqCalSolver::makeExpr()
     if (itsBLIndex[blnr] < 0) {
       nrbl++;
       itsBLIndex[blnr] = ant1*16384 + ant2;  // indicate baseline will be used.
-      if (itsStatUVW[ant1] == 0) makeStatExpr (ant1, wsrtModel);
-      if (itsStatUVW[ant2] == 0) makeStatExpr (ant2, wsrtModel);
+      if (itsStatUVW[ant1] == 0) makeStatExpr (ant1, wsrtModel, asAP);
+      if (itsStatUVW[ant2] == 0) makeStatExpr (ant2, wsrtModel, asAP);
     }
     for (VisTile::const_iterator iter = visTile.begin();
          iter != visTile.end();
@@ -1197,7 +1208,7 @@ void MeqCalSolver::makeExpr()
 }
 
 //##ModelId=3EC9F6EC0243
-void MeqCalSolver::makeStatExpr (int ant, bool wsrtModel)
+void MeqCalSolver::makeStatExpr (int ant, bool wsrtModel, bool asAP)
 {
   // Expression to calculate UVW per station
   if (itsCalcUVW) {
@@ -1237,47 +1248,61 @@ void MeqCalSolver::makeStatExpr (int ant, bool wsrtModel)
   if (!wsrtModel) {
     // Make a LOFAR expression for all source parameters for this station.
     vector<MeqJonesExpr*> vec;
+    string ejname1 = "real.";
+    string ejname2 = "imag.";
+    if (asAP) {
+      ejname1 = "ampl.";
+      ejname2 = "phase.";
+    }
     for (int j=0; j<itsSources.size(); j++) {
       string nm = itsStations[ant]->getName() + '.' +  itsSources[j].getName();
-      MeqExpr* ej11r = new MeqStoredParmPolc ("EJ11.real." + nm,
+      MeqExpr* ej11r = new MeqStoredParmPolc ("EJ11." + ejname1 + nm,
                                               j+1, ant+1,
                                               itsMEP);
       itsExprDel.push_back (ej11r);
-      MeqExpr* ej11i = new MeqStoredParmPolc ("EJ11.imag." + nm,
+      MeqExpr* ej11i = new MeqStoredParmPolc ("EJ11." + ejname2 + nm,
                                               j+1, ant+1,
                                               itsMEP);
       itsExprDel.push_back (ej11i);
-      MeqExpr* ej12r = new MeqStoredParmPolc ("EJ12.real." + nm,
+      MeqExpr* ej12r = new MeqStoredParmPolc ("EJ12." + ejname1 + nm,
                                               j+1, ant+1,
                                               itsMEP);
       itsExprDel.push_back (ej12r);
-      MeqExpr* ej12i = new MeqStoredParmPolc ("EJ12.imag." + nm,
+      MeqExpr* ej12i = new MeqStoredParmPolc ("EJ12." + ejname2 + nm,
                                               j+1, ant+1,
                                               itsMEP);
       itsExprDel.push_back (ej12i);
-      MeqExpr* ej21r = new MeqStoredParmPolc ("EJ21.real." + nm,
+      MeqExpr* ej21r = new MeqStoredParmPolc ("EJ21." + ejname1 + nm,
                                               j+1, ant+1,
                                               itsMEP);
       itsExprDel.push_back (ej21r);
-      MeqExpr* ej21i = new MeqStoredParmPolc ("EJ21.imag." + nm,
+      MeqExpr* ej21i = new MeqStoredParmPolc ("EJ21." + ejname2 + nm,
                                               j+1, ant+1,
                                               itsMEP);
       itsExprDel.push_back (ej21i);
-      MeqExpr* ej22r = new MeqStoredParmPolc ("EJ22.real." + nm,
+      MeqExpr* ej22r = new MeqStoredParmPolc ("EJ22." + ejname1 + nm,
                                               j+1, ant+1,
                                               itsMEP);
       itsExprDel.push_back (ej22r);
-      MeqExpr* ej22i = new MeqStoredParmPolc ("EJ22.imag." + nm,
+      MeqExpr* ej22i = new MeqStoredParmPolc ("EJ22." + ejname2 + nm,
                                               j+1, ant+1,
                                               itsMEP);
       itsExprDel.push_back (ej22i);
-      MeqExpr* ej11 = new MeqExprToComplex (ej11r, ej11i);
+      MeqExpr *ej11, *ej12, *ej21, *ej22;
+      if (asAP) {
+	ej11 = new MeqExprAPToComplex (ej11r, ej11i);
+	ej12 = new MeqExprAPToComplex (ej12r, ej12i);
+	ej21 = new MeqExprAPToComplex (ej21r, ej21i);
+	ej22 = new MeqExprAPToComplex (ej22r, ej22i);
+      } else {
+	ej11 = new MeqExprToComplex (ej11r, ej11i);
+	ej12 = new MeqExprToComplex (ej12r, ej12i);
+	ej21 = new MeqExprToComplex (ej21r, ej21i);
+	ej22 = new MeqExprToComplex (ej22r, ej22i);
+      }
       itsExprDel.push_back (ej11);
-      MeqExpr* ej12 = new MeqExprToComplex (ej12r, ej12i);
       itsExprDel.push_back (ej12);
-      MeqExpr* ej21 = new MeqExprToComplex (ej21r, ej21i);
       itsExprDel.push_back (ej21);
-      MeqExpr* ej22 = new MeqExprToComplex (ej22r, ej22i);
       itsExprDel.push_back (ej22);
       MeqJonesExpr* mjn = new MeqJonesNode (ej11, ej12, ej21, ej22);
       itsJExprDel.push_back (mjn);
