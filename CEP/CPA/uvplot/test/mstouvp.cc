@@ -102,7 +102,6 @@ void readMeasurementSet(const std::string& msName,
       Headers[k].itsAntenna2     = Antenna2Column(i);
       Headers[k].itsExposureTime = ExposureColumn(i);
       Headers[k].itsFieldID      = FieldColumn(i);
-      Headers[k].sortAntennae();
       Atoms[k].setHeader(Headers[k]);
       Atoms[k].store(out);
     }      
