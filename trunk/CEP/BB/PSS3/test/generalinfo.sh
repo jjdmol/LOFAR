@@ -9,6 +9,9 @@ echo "GENERAL INFORMATION FOR BBSTESTANALYZER" > $FILE
 echo "BBSTest: hostname" >> $FILE
 hostname >> $FILE
 
+echo "BBSTest: working_directory" >> $FILE
+pwd >> $FILE
+
 echo "BBSTest: runDate" >> $FILE
 date >> $FILE
 
