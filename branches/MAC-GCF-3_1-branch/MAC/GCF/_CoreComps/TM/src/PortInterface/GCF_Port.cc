@@ -155,7 +155,7 @@ int GCFPort::open()
   {
     GCFTCPPort* pNewPort(0);
     string pseudoName = _name + "_TCP";
-    pNewPort = new GCFTCPPort(*_pTask, pseudoName, _type, _protocol);
+    pNewPort = new GCFTCPPort(*_pTask, pseudoName, _type, _protocol, _transportRawData);
     pNewPort->setMaster(this);
 
     if (SAP == _type) pNewPort->setAddr(_remoteAddr);
