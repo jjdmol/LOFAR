@@ -89,8 +89,7 @@ class GTMSBHandler : public GCFHandler
     
   private:
     friend class GTMServiceBroker;
-    GTMSBHandler()
-    { GCFTask::registerHandler(*this);}
+    GTMSBHandler();
 
     static GTMSBHandler* _pInstance;
     GTMServiceBroker _controller;

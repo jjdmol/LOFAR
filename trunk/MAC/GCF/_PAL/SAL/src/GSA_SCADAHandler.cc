@@ -24,6 +24,9 @@
 #include "GSA_SCADAHandler.h"
 #include <GSA_Resources.h>
 #include <GCF/TM/GCF_Task.h>
+#include <GCF/ParameterSet.h>
+
+using namespace GCF;
 
 GSASCADAHandler* GSASCADAHandler::_pInstance = 0;
 
@@ -31,11 +34,67 @@ GSASCADAHandler* GSASCADAHandler::instance()
 {
   if (0 == _pInstance)
   {
-    char buf[100];
-    snprintf(buf, 100, "%s/LCU/config/config", getenv("LOFARHOME"));
-    setenv("PVSS_II", buf, true);
+    string cmdline;
+    string pvssCmdLineParam = PARAM_DEFAULT_PVSS_CMDLINE;
+    if (!ParameterSet::instance()->isDefined(pvssCmdLineParam))
+    {
+      char* appName = strrchr(GCFTask::_argv[0], '/');      
+      pvssCmdLineParam = formatString(PARAM_PVSS_CMDLINE, (appName ? appName + 1 : GCFTask::_argv[0]));
+    }
+    try 
+    {
+      cmdline = ParameterSet::instance()->getString(pvssCmdLineParam);
+    }
+    catch (...)
+    {
+      cmdline = "-num 1 -proj LCU";
+      LOG_WARN(formatString (
+          "Specify the requested (see above) key in your '%s.conf.in' file. Used default",
+          strrchr(GCFTask::_argv[0], '/') + 1));
+    }
+    // The PVSS API 3.0.1 redirects stdout and stderr output automatically to 
+    // a file created by the API
+    // We don't want this, so we have to repair this    
+    cmdline += " -log +stderr";
+    unsigned int offset(0);
+    int nrOfWords(1);
+    int argc;
+    char* argv[20];
+    char* words = new char[strlen(GCFTask::_argv[0]) + 1 + cmdline.length() + 1];
+    memcpy(words, GCFTask::_argv[0], strlen(GCFTask::_argv[0]));
+    offset = strlen(GCFTask::_argv[0]); 
+    words[offset] = 0;
+    offset++;
+    argv[0] = words;
+    string::size_type indexf(0), indexl(0);
+    do 
+    {
+      indexf = cmdline.find_first_not_of(' ', indexl);
+      if (indexf < string::npos)
+      {
+        indexl = cmdline.find_first_of(' ', indexf);
+        if (indexl == string::npos)
+        {
+          indexl = cmdline.length();
+        }
+        //char* word = new char[indexl - indexf + 1];
+        argv[nrOfWords] = words + offset;
+        memcpy(words + offset, cmdline.c_str() + indexf, indexl - indexf);
+        offset += indexl - indexf;
+        words[offset] = 0;
+        offset++;
+        nrOfWords++;
+      } 
+      else
+      {
+        indexl = indexf;
+      }
+    } while (indexl < cmdline.length());
+    argc = nrOfWords;
+    GSAResources::init(argc, argv);
     
-    GSAResources::init(GCFTask::_argc, GCFTask::_argv);
+    
+    delete [] words;
         
     _pInstance = new GSASCADAHandler();
     assert(!_pInstance->mayDeleted());

@@ -63,17 +63,6 @@ void GCFTask::init(int argc, char** argv)
   
   string serviceFilesPrefix("mac");
   string serviceFilesPath(".");
-  if (_argv != 0)
-  {
-    CCmdLine cmdLine;
-
-    // parse argc,argv 
-    if (cmdLine.SplitLine(_argc, _argv) > 0)
-    {
-      serviceFilesPrefix = cmdLine.GetSafeArgument("-sfp", 0, "mac");
-      serviceFilesPath = cmdLine.GetSafeArgument("-p", 0, "./");
-    }            
-  }
   
   if (serviceFilesPath.rfind("/") != (serviceFilesPath.length() - 1))
     serviceFilesPath += '/';

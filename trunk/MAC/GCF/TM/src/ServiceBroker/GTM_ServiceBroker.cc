@@ -33,6 +33,11 @@ GTMSBHandler* GTMSBHandler::_pInstance = 0;
 
 extern void logResult(TSBResult result, const string& servicename);
 
+GTMSBHandler::GTMSBHandler()
+{
+  GCFTask::registerHandler(*this);
+}
+
 GTMServiceBroker::GTMServiceBroker() :
   GCFTask((State)&GTMServiceBroker::initial, sSBTaskName)
 {

@@ -8,3 +8,5 @@ mac.top.ST1.mclient.remoteservice=ST3:provider
 mac.top.ST2.mclient.remoteservice=ST3:provider
 mac.top.RTPING1.client.remoteservice=RTECHO1:server
 mac.top.RTPING2.client.remoteservice=RTECHO2:server
+mac.Application1.pvss.cmdline=-num 3 -proj LCU
+mac.Application2.pvss.cmdline=-num 4 -proj LCU
