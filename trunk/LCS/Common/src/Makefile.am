@@ -28,11 +28,15 @@ INSTHDRS = \
         BlobStringTraits.h \
         BlobStringType.h \
         CheckConfig.h \
+	ComplexBuiltinFP.h \
+	ComplexBuiltinInt.h \
+	ComplexC99.h \
+	ComplexStdFP.h \
+	ComplexStdInt.h \
         DataConvert.h \
         DataFormat.h \
         Debug.h \
         Exception.h \
-	Net/FdSet.h \
         hexdump.h \
         KeyParser.h \
         KeyValue.h \
@@ -50,6 +54,7 @@ INSTHDRS = \
         LofarLogCout.h \
         LofarLogger.h \
         lofar_map.h \
+	lofar_set.h \
         lofar_sstream.h \
         lofar_stack.h \
         lofar_string.h \
@@ -64,16 +69,17 @@ INSTHDRS = \
         Stopwatch.h \
         StringUtil.h \
         Thread.h \
+	Timer.h \
         TypeNames.h \
 	VectorUtil.h \
+	Net/FdSet.h \
         Net/Socket.h \
         Profiling/PerfProfile.h \
         Thread/Condition.h \
         Thread/Key.h \
         Thread/Mutex.h \
         Thread/SmartLock.h \
-        Thread/Thread.h \
-	Timer.h
+        Thread/Thread.h 
 
 NOINSTHDRS =
 
@@ -110,7 +116,6 @@ libcommon_la_SOURCES 	= \
         DataConvert.cc \
         Debug.cc \
         Exception.cc \
-	Net/FdSet.cc \
         hexdump.cc \
         KeyParse.yy \
         KeyTokenize.ll \
@@ -122,12 +127,13 @@ libcommon_la_SOURCES 	= \
         RunOnNode.cc \
         Stopwatch.cc \
         StringUtil.cc \
+	Timer.cc \
         TypeNames.cc \
+	Net/FdSet.cc \
         Net/Socket.cc \
         Profiling/PerfProfile.cc \
         Thread/SmartLock.cc \
-        Thread/Thread.cc \
-	Timer.cc
+        Thread/Thread.cc 
 
 AM_YFLAGS		= -d -p KeyParse
 AM_LFLAGS		= -PKeyTokenize
