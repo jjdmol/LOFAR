@@ -57,7 +57,6 @@ protected:
      */
     int compareTimeStamp(const DataPacket& that) const;
 
-    void setTransporter(Transporter& aTransporter);
   private:
     unsigned long itsTimeStamp;
   };
@@ -174,6 +173,7 @@ public:
       to/from the BaseDataHolder connected to this one.
   */
   Transporter& getTransporter();
+  void setTransporter(Transporter& aTransporter);
 
 protected:
   /** Set the pointer to the data packet and set the packet's size.
@@ -282,7 +282,7 @@ inline void BaseDataHolder::setType(const string& type)
   { itsType = type; }
 
 inline void BaseDataHolder::setTransporter(Transporter& aTransporter)
-{ itsTransporter = aTransporter; }
+{ itsTransporter = &aTransporter; }
 
 }
 
