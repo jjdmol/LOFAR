@@ -25,6 +25,8 @@
 #include <stdio.h>
 #include <unistd.h>
 
+using LOFAR::map;
+
 /* sorted list of segment base addresses */
 static map<void*, void*> segbase;
 
