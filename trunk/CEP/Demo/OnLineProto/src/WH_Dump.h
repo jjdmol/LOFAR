@@ -27,6 +27,13 @@
 
 #include "CEPFrame/WorkHolder.h"
 
+#include <blitz/blitz.h>
+#include <blitz/array.h>
+//#include <Common/Lorrays.h>
+
+// GnuPlot Interface
+#include <OnLineProto/GnuPlotInterface.h>
+
 namespace LOFAR
 {
 
@@ -69,7 +76,12 @@ private:
   int itsFBW; // frequency bandwidth of the DH_Beamlet 
 
   ofstream itsOutputFile;
+  int itsIndex;
+  int itsCounter;
   
+  blitz::Array<std::complex<float>, 1> itsBuffer;
+
+  gnuplot_ctrl* handle;
 };
 
 }

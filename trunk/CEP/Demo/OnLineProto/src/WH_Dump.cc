@@ -35,12 +35,20 @@
 #include "OnLineProto/WH_Dump.h"
 #include "OnLineProto/DH_Vis.h"
 
+
+// Print interval
+#define INTERVAL 10
+
 namespace LOFAR
 {
 
 WH_Dump::WH_Dump (const string& name,
 			      unsigned int nin)
-  : WorkHolder    (nin, 1, name,"WH_Dump")
+  : WorkHolder    (nin, 1, name,"WH_Dump"),
+    itsIndex   (0),
+    itsCounter (0),
+    itsBuffer  (0),
+    handle     (0)
 {
   char str[8];
   // create the dummy input dataholder
@@ -58,7 +66,13 @@ WH_Dump::WH_Dump (const string& name,
 				      true);
     // open output file. filename is hardcoded.
     itsOutputFile.open("output.out");
+
+    itsBuffer.resize(NSTATIONS);
+    itsBuffer = complex<float> (0,0);
+
+    handle = gnuplot_init ();
 }
+
 
 WH_Dump::~WH_Dump()
 {
@@ -78,12 +92,50 @@ WH_Dump* WH_Dump::make (const string& name)
 
 void WH_Dump::process()
 {
+  blitz::Array<complex<float>, 2> corr(NSTATIONS, NSTATIONS);
+  blitz::Array<float, 1> plotBuffer (NSTATIONS) ;
+  corr = complex<float> (0,0);
+
   TRACER4("WH_Dump::Process()");
+  
 
+  itsCounter++;
   DH_Vis *InDHptr = (DH_Vis*)getDataManager().getInHolder(0);
+  if (itsCounter % INTERVAL == 0) {
+    memcpy (corr.data(), 
+	    InDHptr->getBuffer(), 
+	    NSTATIONS*NSTATIONS*sizeof(DH_Vis::BufferType));
 
-  // dump output to file
-  itsOutputFile << InDHptr->getBuffer();
+    cout << corr(blitz::Range(0,9), blitz::Range(0,9)) << endl;
+    
+    itsBuffer(itsIndex % NSTATIONS) = corr (0,NSTATIONS-1);
+    
+    if (itsIndex >= NSTATIONS) {
+      // the buffer is filled, we can plot the resulting graph
+      
+//       gnuplot_plot_x ( handle,
+// 		       sqrt ( sqr ( real ( itsBuffer ) ) +
+// 			      sqr ( imag ( itsBuffer ) ) ).data(),
+// 		       itsBuffer.size(),
+// 		       "Power of correlation between station 0 and 99 over time" );
+
+      plotBuffer = sqrt ( sqr ( imag ( itsBuffer ) ) +
+			  sqr ( real ( itsBuffer ) ) );
+		    
+
+      gnuplot_plot_x ( handle, 
+		       plotBuffer.data(),
+		       itsBuffer.size(),
+		       "Power of correlation between station 0 and 99 over time" );
+
+//       gnuplot_plot_x ( handle, 
+// 		       real ( itsBuffer ).data(),
+// 		       itsBuffer.size(), 
+// 		       "Real part of correlation between station 0 and 99 over time" );
+    }
+
+    itsIndex++;
+  }
 }
 
 void WH_Dump::dump()
