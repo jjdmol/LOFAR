@@ -153,9 +153,13 @@ int Parm::getResult (Result::Ref &resref,
                      const std::vector<Result::Ref> &,
                      const Request &request,bool newreq)
 {
-  const Domain & domain = request.cells().domain();
-  if( domain != itsCurrentDomain )
+  const Domain &domain = request.cells().domain();
+  HIID domain_id = getDomainId(request.id()); 
+  if( domain_id != itsCurrentDomainId )
+  {
     initDomain(domain);
+    wstate()[FDomainId] = domain_id;
+  }
   // Create result object and attach to the ref that was passed in
   Result &result = resref <<= new Result(1,request); // result has one vellset
   // *** NB: Should pass in the proper # of spids here, because
@@ -163,7 +167,7 @@ int Parm::getResult (Result::Ref &resref,
   VellSet & vs = result.setNewVellSet(0);
   // return depencies: depends on parm value, if solvable
   // NB: should set UPDATED here if we've received a new parm value
-  int retcode = itsIsSolvable ? RES_DEP_VALUE : 0;
+  int retcode = itsIsSolvable ? RES_DEP_ITER : 0;
   // A single polc can be evaluated immediately.
   if( itsPolcs.size() == 1 ) 
   {
@@ -297,6 +301,7 @@ void Parm::setStateImpl (DataRecord& rec, bool initializing)
   if (oldSolvable != itsIsSolvable) {
     itsCurrentDomain = Domain();
   }
+  getStateField(itsCurrentDomainId,rec,FDomainId);
   // Are polcs directly specified? 
   if( rec[FPolcs].exists() )
   {

@@ -107,9 +107,11 @@ int Solver::getResult (Result::Ref &resref,
   std::vector<Result::Ref> child_results(nrch);
   // Copy the request and attach the solvable parms to it.
   Request newReq = request;
-  // setup request ID by adding an extra zero to the incoming request
-  HIID rqid = newReq.id();
-  rqid.push_back(0);
+  // normalize the request ID to make sure iteration counters, etc,
+  // are part of it
+  HIID rqid = makeNormalRequestId(request.id());
+  newReq.setId(rqid);
+  
   if (state()[FSolvableParm].exists()) {
     if (! newReq[FNodeState].exists()) {
       newReq[FNodeState] <<= new DataRecord();
@@ -246,8 +248,7 @@ int Solver::getResult (Result::Ref &resref,
     DataRecord& dr2 = dr1[FByNodeIndex] <<= new DataRecord;
     fillSolution (dr2, spids, solution);
     // update request ID
-    rqid.back() = AtomicID(step+1);
-    newReq.setId(rqid);
+    newReq.setId(nextIterationId(rqid));
     // Unlock all parm tables used.
     ParmTable::unlockTables();
   }
