@@ -102,8 +102,13 @@ namespace LOFAR
       Collection< TPersistentObject<T> > 
       retrieve(const QueryObject& query, int maxObjects=INT_MAX);
 
+      // Get the instances matching the query and store the first result
+      // in this object. It returns the number of matching objects.
+      virtual int retrieveInPlace(const QueryObject& q,
+				  int maxObjects = INT_MAX);
+
       // Return the attribute map for this TPersistentObject.
-      const attribmap_t& attribMap() const;
+      virtual const attribmap_t& attribMap() const;
 
       // Initialize the attribute map for this TPersistentObject.
       static void initAttribMap();
@@ -122,7 +127,7 @@ namespace LOFAR
       // associated MetaData objects.
       // \attention This method must be implemented using template
       // specialization.
-      void init();
+      virtual void init();
 
       // This method is responsible for actually erasing the \e primitive
       // data members of \c T.
@@ -183,6 +188,16 @@ namespace LOFAR
       void fromDBRep(const DBRep<T>& src);
 
     };
+
+    // Specializations for ObjectId.
+    template<>
+    void TPersistentObject<ObjectId>::initAttribMap();
+    template<>
+    void TPersistentObject<ObjectId>::init();
+    template<>
+    void TPersistentObject<ObjectId>::toDBRep(DBRepHolder<ObjectId>& dest) const;
+    template<>
+    void TPersistentObject<ObjectId>::fromDBRep(const DBRepHolder<ObjectId>& src);
 
   } // namespace PL
 

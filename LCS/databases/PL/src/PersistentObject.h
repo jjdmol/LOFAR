@@ -29,6 +29,7 @@
 #include <boost/shared_ptr.hpp>
 #include <vector>
 #include <string>
+#include <climits>
 #include <map>
 #include <iostream>
 
@@ -38,6 +39,7 @@ namespace LOFAR
   {
 
     //# Forward Declarations
+    class QueryObject;
     struct DBRepMeta;
 
     //
@@ -93,6 +95,11 @@ namespace LOFAR
       // Set the data in this PersistentObject equal to the data in the
       // database belonging to the object with the specified ObjectId.
       void retrieve(const ObjectId& oid);
+
+      // Get the instances matching the query and store the first result
+      // in this object. It returns the number of matching objects.
+      virtual int retrieveInPlace(const QueryObject& q,
+				  int maxObjects = INT_MAX) = 0;
 
       // Store the PersistentObject into the database. This method will
       // typically be called by the PersistenceBroker, because at this level 

@@ -66,7 +66,6 @@ namespace LOFAR
       void bindCols(dtl::BoundIOs& cols) { cols["ObjId"] == itsOid; }
       ObjectId::oid_t itsOid;
     };
-    
     //@}
 
   } // namespace PL
