@@ -23,6 +23,4 @@
 
 #include <lofar_config.h>
 
-//#include "BaseSim/CyclicBuffer.h"
-
 // since CylicBuffer is a templated class, all code is in the header file    
