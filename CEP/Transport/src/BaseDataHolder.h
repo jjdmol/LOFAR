@@ -29,7 +29,7 @@
 #include <Common/lofar_string.h>
 #include <Common/lofar_fstream.h>
 
-#include <Transporter.h>
+#include <libTransport/Transporter.h>
 
 namespace LOFAR
 {
