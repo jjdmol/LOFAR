@@ -23,6 +23,9 @@
 #ifndef LCS_PL_OBJECTID_H
 #define LCS_PL_OBJECTID_H
 
+#include <Common/LofarTypes.h>
+#include <boost/shared_ptr.hpp>
+
 namespace LCS
 {
   namespace PL
@@ -35,10 +38,7 @@ namespace LCS
     {
     public:
       // We will be using a 64-bit integer for our unique key
-      typedef unsigned long long oid_t;
-
-      // NullId represents a (default) null object-id value.
-      static const oid_t NullId;
+      typedef uint64 oid_t;
 
       // Default constructor. If \c doGenerate is true, \c itsOid will be
       // lazily initialized when get() is called, else \c itsOid will be 
@@ -46,6 +46,10 @@ namespace LCS
       explicit ObjectId(bool doGenerate = true) : 
 	itsOid(NullId), itsOidIsSet(!doGenerate) 
       {}
+
+      // Return a shared pointer to a "global" null object-id.
+      // \warning This method is currently \e not thread-safe.
+      static boost::shared_ptr<ObjectId> nullId();
 
       // Return the stored object-id.
       // \post \c itsOid will have been set if it wasn't already.
@@ -69,6 +73,9 @@ namespace LCS
       ObjectId& operator=(const ObjectId&);
       //@}
 
+      // NullId represents a (default) null object-id value.
+      static const oid_t NullId;
+
       // Flag indicating whether the random generator has been initialized.
       static bool theirRandomGeneratorIsInitialized;
 
@@ -87,6 +94,9 @@ namespace LCS
     };
 
     // Compare two ObjectIds.
+    // \note If any of the two ObjectIds \c lhs or \c rhs was not set,
+    // the action of comparing the two will set the ObjectId, because
+    // the get() method will do this.
     inline bool operator==(const ObjectId& lhs, const ObjectId& rhs)
     {
       return lhs.get() == rhs.get();
