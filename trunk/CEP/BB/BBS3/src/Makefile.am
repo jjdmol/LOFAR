@@ -50,11 +50,7 @@ MNS/MeqUVWPolc.h \
 MNS/MeqWsrtInt.h \
 MNS/MeqWsrtPoint.h \
 MNS/ParmTableAIPS.h \
-MNS/ParmTablePGSQL.h \
-MNS/ParmTableMySQL.h \
-MNS/ParmTableMonet.h \
 MNS/ParmTableBDB.h\
-MNS/ParmTableSQLHelper.h \
 MNS/ParmTable.h
 
 NOINSTHDRS =
@@ -118,11 +114,7 @@ MNS/MeqUVWPolc.cc \
 MNS/MeqWsrtInt.cc \
 MNS/MeqWsrtPoint.cc \
 MNS/ParmTableAIPS.cc \
-MNS/ParmTableMySQL.cc \
-MNS/ParmTableMonet.cc \
-MNS/ParmTablePGSQL.cc \
 MNS/ParmTableBDB.cc\
-MNS/ParmTableSQLHelper.cc \
 MNS/ParmTable.cc
 
 
