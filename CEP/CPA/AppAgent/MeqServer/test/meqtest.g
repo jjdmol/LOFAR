@@ -610,3 +610,47 @@ const ars_test := function ()
   print res;
 }
 
+const stress_test := function (n=10000)
+{
+  if( is_fail(mqsinit(verbose=0,gui=gui)) )
+  {
+    print mqs;
+    fail;
+  }
+  mqs.setdebug('MeqNode',0);
+  mqs.setdebug('MeqForest',0);
+  mqs.setdebug('MeqSink',0);
+  mqs.setdebug('MeqSpigot',0);
+  mqs.setdebug('MeqVisHandler',0);
+  mqs.setdebug('MeqServer',0);
+  mqs.setdebug('meqserver',0);
+  
+  mqs.setdebug('Glish',3);
+  mqs.setdebug('OctoEventSink',3);
+  mqs.setdebug('OctoEventMux',3);
+  
+  global domain,cells,req,cells,res;
+  
+  # create record for small subtree
+  rec := [ class='MeqAdd',children=
+          [ a=[class='MeqAdd',children=[a=[class='MeqConstant',value=0]]],
+            b=[class='MeqAdd',children="c"],
+            c=[class='MeqAdd',children="c"],
+            d=[class='MeqAdd',children="c"] ] ];
+  for( i in 1:n )
+  {
+    print 'Creating tree ',i;
+    rec.name := spaste('root',i);
+    rec.children.a.children.a.name := 
+      rec.children.b.children :=
+      rec.children.c.children :=
+      rec.children.d.children := spaste('const',i);
+    mqs.meq('Create.Node',rec,wait_reply=((i%100)==0),silent=T);
+  }
+  list := mqs.getnodelist();
+  for( i in 1:len(list) )
+  {
+    print list[i];
+  }
+}
+

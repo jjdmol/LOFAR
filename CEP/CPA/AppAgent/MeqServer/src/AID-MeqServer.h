@@ -263,6 +263,11 @@ const int AidSave_int = -1391;
 const AtomicID AidSet(-1316);                     // from /home/oms/LOFAR/CEP/CPA/AppAgent/AppUtils/src/VisRepeater.h:10
 const int AidSet_int = -1316;
 #endif
+#ifndef _defined_id_AidSilent
+#define _defined_id_AidSilent 1
+const AtomicID AidSilent(-1459);                  // from /home/oms/LOFAR/CEP/CPA/AppAgent/MeqServer/src/MeqServer.h:15
+const int AidSilent_int = -1459;
+#endif
 #ifndef _defined_id_AidSink
 #define _defined_id_AidSink 1
 const AtomicID AidSink(-1337);                    // from /home/oms/LOFAR/CEP/CPA/AppAgent/MeqServer/src/Sink.h:7

@@ -167,7 +167,7 @@ if( any(argv == '-runtest' ) )
   global use_suspend,use_nostart;
   use_suspend := use_nostart := F;
   for( stage in 0:2 )
-    if( !solver_test(stage=stage,gui=F,debug=F,verbose=0) )
+    if( !solver_test(stage=stage,gui=F,debug=[MeqNode=5],verbose=0) )
       exit 1;
   exit 0;
 }

@@ -1,3 +1,14 @@
+  * added Get.NodeIndex (mqs.getnodeindex()) function, returns node index
+    from name, or <0 if no such node exists
+    
+  * Allowed initrec.children = F as an indication of no children
+  
+  * Added child_initrec.link_or_create flag (default F), which permits 
+    a child to be re-used if it already exists, rather than throw an error.
+
+
+Committed before 06/2004:
+
   * Parm ignores the default depend_mask_, instead it returns a combination
     of its own domain_depend_mask and solve_depend_mask, depending on
     what kind of polc is being evaluated. 
