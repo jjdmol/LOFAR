@@ -5,7 +5,7 @@
 #include <PL/Query.h>
 #include <PL/Attrib.h>
 #include <iostream>
-#include <pwd.h>
+#include <sstream>
 
 using namespace std;
 using namespace LOFAR::PL;
@@ -22,6 +22,8 @@ int main()
   C c;
   C c1(a1, b1, "CU soon");
   C c2(a2, b2, "C4Y2");
+
+  int ret;
   
   try {
 
@@ -35,48 +37,116 @@ int main()
     // Connect to the database
     broker.connect("test","postgres");
 
-    // Should call insert(), saving data in c
+    // Should call insert(), saving data in c1
     broker.save(tpoc1); 
-    cout << "Saved tpoc1 <-- tpoc1 = " 
-         << tpoc1.metaData() << tpoc1.data() << endl;
+    cout << "Saved tpoc1 <-- tpoc1 : " << endl;
+    cout << ">>>" << endl; 
+    cout << tpoc1.metaData() << endl;
+    cout << "<<<" << endl;
+    cout << tpoc1.data() << endl;
 
-    cout << "Press <Enter> to continue";
-    cin.get();
+    // Systemcall to extract c1 from database outside this program
+    // c1 should contain the c1 initial data mentioned above
+    cout << endl << "Retrieving tpoc1 (c1) from database: " << endl;
+    oid.set(tpoc1.metaData().oid()->get());
+    {
+      stringstream oss;
+      oss << "./tC.in_sqld " << oid.get();
 
-    // Should call insert(), saving data in c
+      ret = system(oss.str().c_str());
+
+      cout << "System call >>>" << oss.str() << "<<< returned : " << ret << endl;
+    }
+
+    // Should call insert(), saving c in database
     broker.save(tpoc); 
-    cout << "Saved tpoc <-- tpoc = " 
-         << tpoc.metaData() << tpoc.data() << endl;
+    cout << "Saved tpoc <-- tpoc : " << endl;
+    cout << ">>>" << endl; 
+    cout << tpoc.metaData() << endl;
+    cout << "<<<" << endl;
+    cout << tpoc.data() << endl;
 
-    cout << "Press <Enter> to continue";
-    cin.get();
+    // Systemcall to extract c from database outside this program
+    // c should be empty
+    cout << endl << "Retrieving tpoc (empty) from database: " << endl;
+    oid.set(tpoc.metaData().oid()->get());
+    {
+      stringstream oss;
+      oss << "./tC.in_sqld " << oid.get();
 
-    // Should call update(), saving data in c2
+      ret = system(oss.str().c_str());
+
+      cout << "System call >>>" << oss.str() << "<<< returned : " << ret << endl;
+    }
+
+
+    // Should call update(), saving c2 data in c
     tpoc.data() = c2;
     broker.save(tpoc);
-    cout << "Updated tpoc <-- tpoc = " 
-         << tpoc.metaData() << tpoc.data() << endl;
-    
-    cout << "Press <Enter> to continue";
-    cin.get();
+    cout << "Saved tpoc <-- tpoc : " << endl;
+    cout << ">>>" << endl; 
+    cout << tpoc.metaData() << endl;
+    cout << "<<<" << endl;
+    cout << tpoc.data() << endl;
 
-    // Should call retrieve(ObjectId&), returning a TPO that contains a1
+    // Systemcall to extract c from database outside this program
+    // c should contain c2 data
+    cout << endl << "Retrieving tpoc (c2) from database: " << endl;
+    oid.set(tpoc.metaData().oid()->get());
+    {
+      stringstream oss;
+      oss << "./tC.in_sqld " << oid.get();
+
+      ret = system(oss.str().c_str());
+
+      cout << "System call >>>" << oss.str() << "<<< returned : " << ret << endl;
+    }
+
+
+    // Should call retrieve(ObjectId&), returning a TPO that contains c1
     oid.set(tpoc1.metaData().oid()->get());
     tpoc2.retrieve(oid);
-    cout << "Retrieved tpoc1 --> tpoc2 = " 
-         << tpoc2.metaData() << tpoc2.data() << endl;
+    cout << "Retrieved tpoc1 --> tpoc2 : " << endl;
+    cout << ">>>" << endl; 
+    cout << tpoc2.metaData() << endl;
+    cout << "<<<" << endl;
+    cout << tpoc2.data() << endl;
 
-    cout << "Press <Enter> to continue";
-    cin.get();
+    // Systemcall to extract c2 from database outside this program
+    // c2 should contain c1 data
+    cout << endl << "Retrieving tpoc2 (c1) from database: " << endl;
+    oid.set(tpoc2.metaData().oid()->get());
+    {
+      stringstream oss;
+      oss << "./tC.in_sqld " << oid.get();
 
-    // Should call retrieve(ObjectId&), returning a TPO that contains a2
+      ret = system(oss.str().c_str());
+
+      cout << "System call >>>" << oss.str() << "<<< returned : " << ret << endl;
+    }
+
+
+    // Should call retrieve(ObjectId&), returning a TPO that contains c2
     oid.set(tpoc.metaData().oid()->get());
     tpoc2.retrieve(oid);
-    cout << "Retrieved tpoc --> tpoc2 = " 
-         << tpoc2.metaData() << tpoc2.data() << endl;
-    
-    cout << "Press <Enter> to continue";
-    cin.get();
+    cout << "Retrieved tpoc --> tpoc2 : " << endl;
+    cout << ">>>" << endl; 
+    cout << tpoc2.metaData() << endl;
+    cout << "<<<" << endl;
+    cout << tpoc2.data() << endl;
+
+    // Systemcall to extract c2 from database outside this program
+    // c2 should contain c
+    cout << endl << "Retrieving tpoc2 (c) from database: " << endl;
+    oid.set(tpoc2.metaData().oid()->get());
+    {
+      stringstream oss;
+      oss << "./tC.in_sqld " << oid.get();
+
+      ret = system(oss.str().c_str());
+
+      cout << "System call >>>" << oss.str() << "<<< returned : " << ret << endl;
+    }
 
     QueryObject q(attrib<C>("itsString") == "C4Y2");
     cout << "Retrieve collection of tpoc using query: " << q.getSql() << endl;
@@ -85,9 +155,24 @@ int main()
     cout << "Found " << ctpoc.size() << " matches ..." << endl;
     Collection< TPersistentObject<C> >::const_iterator iter;
     for(iter = ctpoc.begin(); iter != ctpoc.end(); ++iter) {
-      cout << "Press <Enter> to continue";
-      cin.get();
-      cout << iter->metaData() << iter->data() << endl;
+      cout << ">>>" << endl; 
+      cout << iter->metaData() << endl;
+      cout << "<<<" << endl;
+      cout << iter->data() << endl;
+
+    // Systemcall to extract iter from database outside this program
+    // c should be empty
+    cout << endl << "Retrieving all from database where itsString=C4Y2 : " << endl;
+    oid.set(iter->metaData().oid()->get());
+    {
+      stringstream oss;
+      oss << "./tC.in_sqld " << oid.get();
+
+      ret = system(oss.str().c_str());
+
+      cout << "System call >>>" << oss.str() << "<<< returned : " << ret << endl;
+    }
+
     }
 
   }

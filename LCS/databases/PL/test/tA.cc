@@ -6,7 +6,7 @@
 #include <Common/Exception.h>
 #include <complex>
 #include <iostream>
-#include <pwd.h>
+#include <sstream>
 
 using namespace std;
 using namespace LOFAR::PL;
@@ -18,6 +18,7 @@ int main()
 
     ObjectId oid;
     PersistenceBroker broker;
+    int ret;
 
     A a;
     A a1(42, 3.14, "Hello", complex<double>(2.818, -2.818), 
@@ -32,59 +33,146 @@ int main()
     // Connect to the database
     broker.connect("test","postgres");
 
-    // Should call insert(), saving data in a
+    // Should call insert(), saving a1 in database
     broker.save(tpoa1); 
-    cout << "Saved tpoa1 <-- tpoa1 = " 
-         << tpoa1.metaData() << tpoa1.data() << endl;
+    cout << "Saved tpoa1 <-- tpoa1 : " << endl;
+    cout << ">>>" << endl; 
+    cout << tpoa1.metaData() << endl;
+    cout << "<<<" << endl;
+    cout << tpoa1.data() << endl;
 
-    cout << "Press <Enter> to continue";
-    cin.get();
+    // Systemcall to extract a1 from database outside this program
+    // a1 should contain the a1 initial data mentioned above
+    cout << endl << "Retrieving tpoa1 (a1) from database: " << endl;
+    oid.set(tpoa1.metaData().oid()->get());
+    {
+      stringstream oss;
+      oss << "./tA.in_sqld " << oid.get();
+    
+      ret = system(oss.str().c_str());
 
-    // Should call insert(), saving data in a
+      cout << "System call >>>" << oss.str() << "<<< returned : " << ret << endl;
+    }
+
+
+    // Should call insert(), saving a in the database
     broker.save(tpoa); 
-    cout << "Saved tpoa <-- tpoa = " 
-         << tpoa.metaData() << tpoa.data() << endl;
+    cout << "Saved tpoa <-- tpoa : " << endl;
+    cout << ">>>" << endl; 
+    cout << tpoa.metaData() << endl;
+    cout << "<<<" << endl;
+    cout << tpoa.data() << endl;
 
-    cout << "Press <Enter> to continue";
-    cin.get();
+    // Systemcall to extract a from database outside this program
+    // a should be empty
+    cout << endl << "Retrieving tpoa (empty) from database: " << endl;
+    oid.set(tpoa.metaData().oid()->get());
 
-    // Should call update(), saving data in a2
+    {
+      stringstream oss;
+      oss << "./tA.in_sqld " << oid.get();
+      
+      ret = system(oss.str().c_str());
+      
+      cout << "System call >>>" << oss.str() << "<<< returned : " << ret << endl;
+    }
+
+    // fill a with a2 data
     tpoa.data() = a2;
+    // Should call update(), saving a2 data in a
     broker.save(tpoa);
-    cout << "Updated tpoa <-- tpoa = " 
-         << tpoa.metaData() << tpoa.data() << endl;
+    cout << "Updated tpoa <-- tpoa : " << endl;
+    cout << ">>>" << endl; 
+    cout << tpoa.metaData() << endl;
+    cout << "<<<" << endl;
+    cout << tpoa.data() << endl;
 
-    cout << "Press <Enter> to continue";
-    cin.get();
+    // Systemcall to extract a from database outside this program
+    // a should contain a2 initial data mentioned above
+    cout << endl << "Retrieving tpoa (a2) from database: " << endl;
+    oid.set(tpoa.metaData().oid()->get());
+    {
+      stringstream oss;
+      oss << "./tA.in_sqld " << oid.get();
+      
+      ret = system(oss.str().c_str());
+      
+      cout << "System call >>>" << oss.str() << "<<< returned : " << ret << endl;
+    }
+
 
     // Should call retrieve(ObjectId&), returning a TPO that contains a1
     oid.set(tpoa1.metaData().oid()->get());
-//     tpoa2 = broker.retrieve<A>(oid);
     tpoa2.retrieve(oid);
-    cout << "Retrieved tpoa1 --> tpoa2 = " 
-         << tpoa2.metaData() << tpoa2.data() << endl;
 
-    cout << "Press <Enter> to continue";
-    cin.get();
+    cout << "Retrieved tpoa1 --> tpoa2 : " << endl; 
+    cout << ">>>" << endl; 
+    cout << tpoa2.metaData() << endl;
+    cout << "<<<" << endl;
+    cout << tpoa2.data() << endl;
 
-    // Should call retrieve(ObjectId&), returning a TPO that contains a2
+    // Systemcall to extract a2 from database outside this program
+    // a2 should contain a1 initial data mentioned above
+    cout << endl << "Retrieving tpoa2 (a1) from database: " << endl;
+    oid.set(tpoa2.metaData().oid()->get());
+    {
+      stringstream oss;
+      oss << "./tA.in_sqld " << oid.get();
+      
+      ret = system(oss.str().c_str());
+      
+      cout << "System call >>>" << oss.str() << "<<< returned : " << ret << endl;
+    }
+
+
+    // Should call retrieve(ObjectId&), returning a TPO that contains a
     oid.set(tpoa.metaData().oid()->get());
-//     tpoa2 = broker.retrieve<A>(oid);
+
     tpoa2.retrieve(oid);
-    cout << "Retrieved tpoa --> tpoa2 = " 
-         << tpoa2.metaData() << tpoa2.data() << endl;
+    cout << "Retrieved tpoa --> tpoa2 : " << endl; 
+    cout << ">>>" << endl; 
+    cout << tpoa2.metaData() << endl;
+    cout << "<<<" << endl;
+    cout << tpoa2.data() << endl;
     
-    cout << "Press <Enter> to continue";
-    cin.get();
+    // Systemcall to extract a from database outside this program
+    // a should contain a2 initial data mentioned above
+    cout << endl << "Retrieving tpoa2 (a2) from database: " << endl;
+    oid.set(tpoa2.metaData().oid()->get());
+    {
+      stringstream oss;
+      oss << "./tA.in_sqld " << oid.get();
+      
+      ret = system(oss.str().c_str());
+      
+      cout << "System call >>>" << oss.str() << "<<< returned : " << ret << endl;
+    }
+
 
     // Should erase the database entry for a2
-    cout << "Erasing a in tpoa2.data() -- tpoa2 = "
-         << tpoa2.metaData() << tpoa2.data() << endl;
+    cout << "Erasing a in tpoa2.data() -- tpoa2 : " << endl;
+    cout << ">>>" << endl; 
+    cout << tpoa2.metaData() << endl;
+    cout << "<<<" << endl;
+    cout << tpoa2.data() << endl;
+
     tpoa2.erase();
 
-    cout << "Press <Enter> to continue";
-    cin.get();
+    // Systemcall to extract a2 from database outside this program
+    // a2 should be empty
+    cout << endl << "Retrieving tpoa2 (empty) from database: " << endl;
+    oid.set(tpoa2.metaData().oid()->get());
+    {
+      stringstream oss;
+      oss << "./tA.in_sqld " << oid.get();
+      
+      ret = system(oss.str().c_str());
+      
+      cout << "System call >>>" << oss.str() << "<<< returned : " << ret << endl;
+    }
 
+
+    // retrieve  collection from database where itsInt == 42
     QueryObject q(attrib<A>("itsInt") == 42);
     cout << "Retrieve collection of tpoa using query: " << q.getSql() << endl;
     Collection< TPersistentObject<A> > ctpoa;
@@ -92,9 +180,24 @@ int main()
     cout << "Found " << ctpoa.size() << " matches ..." << endl;
     Collection< TPersistentObject<A> >::const_iterator iter;
     for(iter = ctpoa.begin(); iter != ctpoa.end(); ++iter) {
-      cout << "Press <Enter> to continue";
-      cin.get();
-      cout << iter->metaData() << iter->data() << endl;
+
+      cout << ">>>" << endl; 
+      cout << iter->metaData() << endl;
+      cout << "<<<" << endl;
+      cout << iter->data() << endl;
+
+      // Systemcall to extract iter from database outside this program
+      // a should show all entries that have itsInt=42 (
+      cout << endl << "Retrieving all from database where itsInt=42 (1) : " << endl;
+      oid.set(iter->metaData().oid()->get());
+      {
+	stringstream oss;
+	oss << "./tA.in_sqld " << oid.get();
+    
+	ret = system(oss.str().c_str());
+	
+	cout << "System call >>>" << oss.str() << "<<< returned : " << ret << endl;
+      }
     }
 
   }
