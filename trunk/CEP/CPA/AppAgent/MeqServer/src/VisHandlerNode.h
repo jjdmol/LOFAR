@@ -59,8 +59,10 @@ class VisHandlerNode : public Node
     LocalDebugContext;
     
   protected:
+    //##ModelId=400E5B6E00CD
     virtual void checkInitState (DataRecord &rec);
     
+    //##ModelId=400E5B6E01FA
     virtual void setStateImpl (DataRecord &rec,bool initializing);
     
   private:

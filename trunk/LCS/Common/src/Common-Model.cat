@@ -3569,27 +3569,6 @@
 			    concurrency 	"Sequential"
 			    opExportControl 	"Public"
 			    uid        	0)
-			(object Operation "operator pthread_attr_type &"
-			    attributes 	(list Attribute_Set
-				(object Attribute
-				    tool       	"Cplusplus"
-				    name       	"Inline"
-				    value      	TRUE))
-			    quid       	"3E43C78A02C2"
-			    concurrency 	"Sequential"
-			    opExportControl 	"Public"
-			    uid        	0)
-			(object Operation "operator const pthread_attr_type &"
-			    attributes 	(list Attribute_Set
-				(object Attribute
-				    tool       	"Cplusplus"
-				    name       	"Inline"
-				    value      	TRUE))
-			    quid       	"3E43C78A02CB"
-			    stereotype 	"const"
-			    concurrency 	"Sequential"
-			    opExportControl 	"Public"
-			    uid        	0)
 			(object Operation "detachState"
 			    attributes 	(list Attribute_Set
 				(object Attribute
@@ -3665,16 +3644,70 @@
 			    concurrency 	"Sequential"
 			    opExportControl 	"Public"
 			    uid        	0
-			    quidu      	"3E43C77403C5"))
+			    quidu      	"3E43C77403C5")
+			(object Operation "operator pthread_attr_t &"
+			    attributes 	(list Attribute_Set
+				(object Attribute
+				    tool       	"Cplusplus"
+				    name       	"Inline"
+				    value      	TRUE))
+			    quid       	"400E4E110200"
+			    concurrency 	"Sequential"
+			    opExportControl 	"Public"
+			    uid        	0)
+			(object Operation "operator const pthread_attr_t &"
+			    attributes 	(list Attribute_Set
+				(object Attribute
+				    tool       	"Cplusplus"
+				    name       	"Inline"
+				    value      	TRUE))
+			    quid       	"400E4E110207"
+			    stereotype 	"const"
+			    concurrency 	"Sequential"
+			    opExportControl 	"Public"
+			    uid        	0)
+			(object Operation "operator pthread_attr_t *"
+			    attributes 	(list Attribute_Set
+				(object Attribute
+				    tool       	"Cplusplus"
+				    name       	"Inline"
+				    value      	TRUE))
+			    quid       	"400E4E110214"
+			    concurrency 	"Sequential"
+			    opExportControl 	"Public"
+			    uid        	0)
+			(object Operation "operator const pthread_attr_t *"
+			    attributes 	(list Attribute_Set
+				(object Attribute
+				    tool       	"Cplusplus"
+				    name       	"Inline"
+				    value      	TRUE))
+			    quid       	"400E4E11021B"
+			    stereotype 	"const"
+			    concurrency 	"Sequential"
+			    opExportControl 	"Public"
+			    uid        	0)
+			(object Operation "Null"
+			    attributes 	(list Attribute_Set
+				(object Attribute
+				    tool       	"Cplusplus"
+				    name       	"Inline"
+				    value      	TRUE))
+			    quid       	"400E4E110229"
+			    stereotype 	"static"
+			    result     	"const Attributes &"
+			    concurrency 	"Sequential"
+			    opExportControl 	"Public"
+			    uid        	0))
 		    class_attributes 	(list class_attribute_list
 			(object ClassAttribute "attr"
 			    quid       	"3E43C7750020"
-			    type       	"pthread_attr_type"))
+			    type       	"pthread_attr_t"))
 		    module     	"Component View::Common"
 		    quidu      	"3DB9359F015F"
 		    language   	"ANSI C++"
 		    nestedClasses 	(list nestedClasses
-			(object Class "AttrbuteCode"
+			(object Class "AttributeCode"
 			    attributes 	(list Attribute_Set
 				(object Attribute
 				    tool       	"Cplusplus"
@@ -3690,7 +3723,7 @@
 |              DETACHED  = PTHREAD_CREATE_DETACHED
 |        }
 				    ))
-			    quid       	"3E43C77403CF"
+			    quid       	"400E4E110181"
 			    stereotype 	"typedef"
 			    module     	"Component View::Common"
 			    quidu      	"3DB9359F015F")))
@@ -3797,23 +3830,6 @@
 			    icon_style 	"Icon"
 			    fill_color 	13434879
 			    quidu      	"3D1049B401F1"
-			    compartment 	(object Compartment
-				Parent_View 	@1
-				location   	(99, 206)
-				font       	(object Font
-				    size       	9
-				    face       	"arial"
-				    bold       	FALSE
-				    italics    	FALSE
-				    underline  	FALSE
-				    strike     	FALSE
-				    color      	0
-				    default_color 	TRUE)
-				icon_style 	"Icon"
-				fill_color 	16777215
-				anchor     	2
-				nlines     	18
-				max_width  	794)
 			    width      	940
 			    height     	946
 			    annotation 	8
@@ -3844,23 +3860,6 @@
 			    icon_style 	"Icon"
 			    fill_color 	13434879
 			    quidu      	"3D1049B402A5"
-			    compartment 	(object Compartment
-				Parent_View 	@2
-				location   	(1719, 172)
-				font       	(object Font
-				    size       	9
-				    face       	"arial"
-				    bold       	FALSE
-				    italics    	FALSE
-				    underline  	FALSE
-				    strike     	FALSE
-				    color      	0
-				    default_color 	TRUE)
-				icon_style 	"Icon"
-				fill_color 	16777215
-				anchor     	2
-				nlines     	10
-				max_width  	865)
 			    width      	964
 			    height     	1015
 			    annotation 	8
@@ -3894,7 +3893,7 @@
 			    quidu      	"3E43C77403C5"
 			    compartment 	(object Compartment
 				Parent_View 	@3
-				location   	(332, 1401)
+				location   	(332, 1396)
 				font       	(object Font
 				    size       	10
 				    face       	"arial"
@@ -3907,7 +3906,7 @@
 				icon_style 	"Icon"
 				fill_color 	13434879
 				anchor     	2
-				nlines     	13
+				nlines     	16
 				max_width  	1015)
 			    width      	1243
 			    height     	941
@@ -3948,23 +3947,6 @@
 			    line_color 	3342489
 			    fill_color 	13434879
 			    quidu      	"3D1049B40332"
-			    compartment 	(object Compartment
-				Parent_View 	@4
-				location   	(252, 242)
-				font       	(object Font
-				    size       	10
-				    face       	"arial"
-				    bold       	FALSE
-				    italics    	FALSE
-				    underline  	FALSE
-				    strike     	FALSE
-				    color      	0
-				    default_color 	TRUE)
-				icon_style 	"Icon"
-				fill_color 	13434879
-				anchor     	2
-				nlines     	12
-				max_width  	1568)
 			    width      	1562
 			    height     	725
 			    annotation 	8)
@@ -3995,23 +3977,6 @@
 			    line_color 	3342489
 			    fill_color 	13434879
 			    quidu      	"3D1049B40396"
-			    compartment 	(object Compartment
-				Parent_View 	@5
-				location   	(267, 1317)
-				font       	(object Font
-				    size       	10
-				    face       	"arial"
-				    bold       	FALSE
-				    italics    	FALSE
-				    underline  	FALSE
-				    strike     	FALSE
-				    color      	0
-				    default_color 	TRUE)
-				icon_style 	"Icon"
-				fill_color 	13434879
-				anchor     	2
-				nlines     	18
-				max_width  	1568)
 			    width      	1916
 			    height     	1131
 			    annotation 	8)
@@ -4089,23 +4054,6 @@
 			    line_color 	3342489
 			    fill_color 	13434879
 			    quidu      	"3D1049B50012"
-			    compartment 	(object Compartment
-				Parent_View 	@9
-				location   	(2410, 180)
-				font       	(object Font
-				    size       	10
-				    face       	"arial"
-				    bold       	FALSE
-				    italics    	FALSE
-				    underline  	FALSE
-				    strike     	FALSE
-				    color      	0
-				    default_color 	TRUE)
-				icon_style 	"Icon"
-				fill_color 	13434879
-				anchor     	2
-				nlines     	13
-				max_width  	1565)
 			    width      	894
 			    height     	816
 			    annotation 	8)
@@ -4363,21 +4311,6 @@
 			    name       	"ImplementationType"
 			    value      	"map<string,int>"))
 		    quid       	"3DB954640131"
-		    stereotype 	"typedef"
-		    module     	"Component View::Common"
-		    quidu      	"3DB9359F015F"
-		    language   	"ANSI C++")
-		(object Class "Error"
-		    attributes 	(list Attribute_Set
-			(object Attribute
-			    tool       	"Cplusplus"
-			    name       	"HeaderSourceFile"
-			    value      	"Debug.h")
-			(object Attribute
-			    tool       	"Cplusplus"
-			    name       	"ImplementationType"
-			    value      	"std::logic_error"))
-		    quid       	"3DB9546401F6"
 		    stereotype 	"typedef"
 		    module     	"Component View::Common"
 		    quidu      	"3DB9359F015F"

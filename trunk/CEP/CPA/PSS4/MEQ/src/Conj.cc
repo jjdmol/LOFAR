@@ -27,12 +27,15 @@ using namespace Meq::VellsMath;
 
 namespace Meq {    
 
+//##ModelId=400E53050072
 Conj::Conj()
 {}
 
+//##ModelId=400E53050073
 Conj::~Conj()
 {}
 
+//##ModelId=400E53050077
 Vells Conj::evaluate (const Request&,const LoShape &,
 		      const vector<Vells*>& values)
 {

@@ -10,7 +10,9 @@ namespace MSVisAgent
 class MSVisAgentDebugContext 
 {
     //##ModelId=3E4273B2022E
-  public: LocalDebugContext;
+  public:
+    //##ModelId=3E4273B2022E
+    LocalDebugContext;
 };
 
 

@@ -28,12 +28,15 @@
 
 namespace Meq {    
 
+//##ModelId=400E5355022C
 Selector::Selector()
 {}
 
+//##ModelId=400E5355022D
 Selector::~Selector()
 {}
 
+//##ModelId=400E53550233
 void Selector::setStateImpl (DataRecord &rec,bool initializing)
 {
   Node::setStateImpl(rec,initializing);
@@ -41,6 +44,7 @@ void Selector::setStateImpl (DataRecord &rec,bool initializing)
     selection = rec[FIndex].as_vector<int>();
 }
 
+//##ModelId=400E53550237
 int Selector::getResult (Result::Ref &resref, 
                          const std::vector<Result::Ref> &childref,
                          const Request &request,bool)

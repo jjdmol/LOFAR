@@ -31,17 +31,22 @@
 namespace Meq {    
 
 
+//##ModelId=400E530400A3
 class Subtract : public Function2
 {
 public:
+    //##ModelId=400E5355029C
   Subtract();
 
+    //##ModelId=400E5355029D
   virtual ~Subtract();
 
+    //##ModelId=400E5355029F
     virtual TypeId objectType() const
     { return TpMeqSubtract; }
 
   // Evaluate the value for the given request.
+    //##ModelId=400E535502A1
   virtual Vells evaluate (const Request&,const LoShape &,
 			  const vector<Vells*>& values);
 };

@@ -59,7 +59,9 @@ class VisDataMux
     //##ModelId=3FAA52A6018C
     VisTile::Format::Ref out_format_;
     
+    //##ModelId=400E5B6D0151
     double minfreq;
+    //##ModelId=400E5B6D0177
     double maxfreq;
 };
 

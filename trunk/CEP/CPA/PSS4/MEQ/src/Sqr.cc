@@ -28,12 +28,15 @@ using namespace Meq::VellsMath;
 
 namespace Meq {    
 
+//##ModelId=400E5355027D
 Sqr::Sqr()
 {}
 
+//##ModelId=400E5355027E
 Sqr::~Sqr()
 {}
 
+//##ModelId=400E53550282
 Vells Sqr::evaluate (const Request&,const LoShape &,
 		     const vector<Vells*>& values)
 {

@@ -25,12 +25,15 @@
 namespace Meq {    
 
 
+//##ModelId=400E530A0105
 Multiply::Multiply()
 {}
 
+//##ModelId=400E530A0106
 Multiply::~Multiply()
 {}
 
+//##ModelId=400E530A010A
 Vells Multiply::evaluate (const Request&, const LoShape&,
 			  const vector<Vells*>& values)
 {

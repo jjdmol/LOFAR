@@ -32,15 +32,18 @@
 
 namespace Meq {
 
+//##ModelId=400E53550260
 Solver::Solver()
 : itsSolver  (1, LSQBase::REAL),
   itsNumStep (1),
   itsEpsilon (0)
 {}
 
+//##ModelId=400E53550261
 Solver::~Solver()
 {}
 
+//##ModelId=400E53550263
 TypeId Solver::objectType() const
 {
   return TpMeqSolver;
@@ -53,6 +56,7 @@ TypeId Solver::objectType() const
 // }
 // 
 
+//##ModelId=400E53550265
 void Solver::checkChildren()
 {
   // Copy all Condeq nodes to the vector.
@@ -68,6 +72,7 @@ void Solver::checkChildren()
 }
 
 // do nothing here -- we'll do it manually in getResult()
+//##ModelId=400E5355026B
 int Solver::pollChildren (std::vector<Result::Ref> &,
                           Result::Ref &,const Request &)
 {
@@ -75,6 +80,7 @@ int Solver::pollChildren (std::vector<Result::Ref> &,
 }
 
 // Get the result for the given request.
+//##ModelId=400E53550270
 int Solver::getResult (Result::Ref &resref, 
                        const std::vector<Result::Ref> &,
                        const Request &request, bool newreq)
@@ -247,6 +253,7 @@ int Solver::getResult (Result::Ref &resref,
   return RES_DEP_DOMAIN|RES_UPDATED;
 }
 
+//##ModelId=400E53550276
 void Solver::fillSolution (DataRecord& rec, const vector<int> spids,
                            const Vector<double>& solution)
 {
@@ -269,6 +276,7 @@ void Solver::fillSolution (DataRecord& rec, const vector<int> spids,
   drp[FValue] = parmSol;
 }
 
+//##ModelId=400E53550267
 void Solver::setStateImpl (DataRecord& newst,bool initializing)
 {
   Node::setStateImpl(newst,initializing);

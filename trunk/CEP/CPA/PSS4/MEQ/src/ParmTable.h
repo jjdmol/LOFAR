@@ -39,23 +39,29 @@ namespace Meq {
 class Domain;
 
 
+//##ModelId=3F86886E01E4
 class ParmTable
 {
 public:
+    //##ModelId=3F86886F02B7
   explicit ParmTable (const string& tableName);
 
+    //##ModelId=3F86886F02BC
   ~ParmTable();
 
   // Get the parameter values for the given parameter and domain.
   // The matchDomain argument is set telling if the found parameter
   // matches the domain exactly.
   // Note that the requested domain may contain multiple polcs.
+    //##ModelId=3F86886F02BD
   vector<Polc> getPolcs (const string& parmName, const Domain& domain);
 
   // Get the initial polynomial coefficients for the given parameter.
+    //##ModelId=3F86886F02C3
   Polc getInitCoeff (const string& parmName);
 
   // Put the polynomial coefficient for the given parameter and domain.
+    //##ModelId=3F86886F02C8
   void putCoeff (const string& parmName, const Polc& polc);
 
   // Return point sources for the given source numbers.
@@ -67,29 +73,41 @@ public:
   //				 vector<MeqExpr*>& exprDel);
 
   // Open the table if not opened yet. If opened, it is added to the map.
+    //##ModelId=3F95060D033E
   static ParmTable* openTable (const String& tableName);
   // Close all tables in the map.
+    //##ModelId=3F95060D0372
   static void closeTables();
 
   // Get the name of the ParmTable.
+    //##ModelId=3F95060D0388
   const string& name() const
     { return itsTable.tableName(); }
 
   // Create a new table.
+    //##ModelId=400E535402E7
   static void createTable (const String& tableName);
 
 private:
   // Find the table subset containing the parameter values for the
   // requested domain.
+    //##ModelId=3F86886F02CE
   Table find (const string& parmName, const Domain& domain);
 
+    //##ModelId=3F86886F0297
   Table                  itsTable;
+    //##ModelId=3F86886F029C
   ColumnsIndex           itsIndex;
+    //##ModelId=3F86886F02A1
   RecordFieldPtr<String> itsIndexName;
+    //##ModelId=3F86886F02A6
   Table                  itsInitTable;
+    //##ModelId=3F86886F02AB
   ColumnsIndex*          itsInitIndex;
+    //##ModelId=3F86886F02B0
   RecordFieldPtr<String> itsInitIndexName;
 
+    //##ModelId=3F95060D031A
   static std::map<string, ParmTable*> theirTables;
 };
 

@@ -27,22 +27,27 @@
 
 namespace Meq {
 
+//##ModelId=400E5305005F
 Condeq::Condeq()
 {}
 
+//##ModelId=400E53050060
 Condeq::~Condeq()
 {}
 
+//##ModelId=400E53050062
 TypeId Condeq::objectType() const
 {
   return TpMeqCondeq;
 }
 
+//##ModelId=400E53050064
 void Condeq::checkChildren()
 {
   Assert (numChildren() == 2);
 }
 
+//##ModelId=400E53050066
 int Condeq::getResult (Result::Ref &resref, 
                        const std::vector<Result::Ref> &child_result,
                        const Request &request,bool)

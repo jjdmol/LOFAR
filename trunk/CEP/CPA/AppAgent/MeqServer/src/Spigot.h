@@ -55,8 +55,10 @@ class Spigot : public VisHandlerNode
                            const std::vector<Result::Ref> &childres,
                            const Request &req,bool newreq);
   
+    //##ModelId=400E5B6D00BF
     virtual void checkInitState (DataRecord &rec);
     
+    //##ModelId=3F9FF6AA03D2
     virtual void setStateImpl (DataRecord &rec,bool initializing);
 
   private:

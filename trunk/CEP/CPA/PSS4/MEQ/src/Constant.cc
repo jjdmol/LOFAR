@@ -31,25 +31,30 @@
 
 namespace Meq {
 
+//##ModelId=400E5305008F
 Constant::Constant (double value)
 : Function (),
   itsValue (value, false)
 {}
 
+//##ModelId=400E53050094
 Constant::Constant (const dcomplex& value)
 : Function (),
   itsValue (value, false)
 {}
 
+//##ModelId=400E53050098
 Constant::~Constant()
 {}
 
+//##ModelId=400E530500A6
 void Constant::init (DataRecord::Ref::Xfer& initrec, Forest* frst)
 {
   // do parent init (this will call our setStateImpl())
   Node::init (initrec, frst);
 }
 
+//##ModelId=400E5305009C
 int Constant::getResult (Result::Ref& resref,
 			 const std::vector<Result::Ref>&,
 			 const Request& request, bool)
@@ -61,6 +66,7 @@ int Constant::getResult (Result::Ref& resref,
   return 0;
 }
 
+//##ModelId=400E530500B5
 void Constant::setStateImpl (DataRecord& rec, bool initializing)
 {
   Function::setStateImpl (rec,initializing);
@@ -75,6 +81,7 @@ void Constant::setStateImpl (DataRecord& rec, bool initializing)
   }
 }
 
+//##ModelId=400E530500AD
 string Constant::sdebug (int detail, const string &prefix,const char* nm) const
 {
   return Node::sdebug(detail,prefix,nm);

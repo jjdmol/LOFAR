@@ -28,23 +28,28 @@
 
 namespace Meq {    
 
+//##ModelId=400E53050042
 Composer::Composer()
 {}
 
+//##ModelId=400E53050043
 Composer::~Composer()
 {}
 
+//##ModelId=400E53050047
 void Composer::checkInitState (DataRecord &rec)
 {
   defaultInitField(rec,FContagiousFail,false);
 }
     
+//##ModelId=400E5305004A
 void Composer::setStateImpl (DataRecord &rec,bool initializing)
 {
   Node::setStateImpl(rec,initializing);
   getStateField(contagious_fail,rec,FContagiousFail);
 }
 
+//##ModelId=400E5305004F
 int Composer::getResult (Result::Ref &resref, 
                          const std::vector<Result::Ref> &childres,
                          const Request &request,bool)

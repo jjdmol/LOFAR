@@ -44,10 +44,15 @@ class MeqServer : public VisRepeater
     //##ModelId=3F98D91B0064
     void getNodeList (DataRecord::Ref &out,DataRecord::Ref::Xfer &in);
     
+    //##ModelId=400E5B6C015E
     void nodeExecute (DataRecord::Ref &out,DataRecord::Ref::Xfer &in);
+    //##ModelId=400E5B6C01DD
     void nodeClearCache (DataRecord::Ref &out,DataRecord::Ref::Xfer &in);
+    //##ModelId=400E5B6C0247
     void saveForest (DataRecord::Ref &out,DataRecord::Ref::Xfer &in);
+    //##ModelId=400E5B6C02B3
     void loadForest (DataRecord::Ref &out,DataRecord::Ref::Xfer &in);
+    //##ModelId=400E5B6C0324
     void clearForest (DataRecord::Ref &out,DataRecord::Ref::Xfer &in);
       
     //##ModelId=3F5F195E0156

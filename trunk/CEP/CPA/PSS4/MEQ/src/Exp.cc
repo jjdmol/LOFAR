@@ -28,12 +28,15 @@ using namespace Meq::VellsMath;
 
 namespace Meq {    
 
+//##ModelId=400E53050139
 Exp::Exp()
 {}
 
+//##ModelId=400E5305013A
 Exp::~Exp()
 {}
 
+//##ModelId=400E5305013E
 Vells Exp::evaluate (const Request&,const LoShape &,
 		     const vector<Vells*>& values)
 {

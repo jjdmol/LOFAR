@@ -31,6 +31,7 @@
 
 namespace Meq {
 
+//##ModelId=3F86886F021B
 Parm::Parm()
 : Function      (),
   itsParmId     (0),
@@ -38,6 +39,7 @@ Parm::Parm()
   itsTable      (0)
 {}
 
+//##ModelId=3F86886F0242
 Parm::Parm (const string& name, ParmTable* table,
 	    const Vells& defaultValue)
 : Function      (),
@@ -48,9 +50,11 @@ Parm::Parm (const string& name, ParmTable* table,
   itsDefault    (defaultValue)
 {}
 
+//##ModelId=3F86886F021E
 Parm::~Parm()
 {}
 
+//##ModelId=400E5352023D
 void Parm::init (DataRecord::Ref::Xfer& initrec, Forest* frst)
 {
   // do parent init (this will call our setStateImpl())
@@ -60,6 +64,7 @@ void Parm::init (DataRecord::Ref::Xfer& initrec, Forest* frst)
     wstate()[FParmName] = itsName = name(); 
 }
 
+//##ModelId=3F86886F0226
 int Parm::initDomain (const Domain& domain)
 {
   itsCurrentDomain = domain;
@@ -122,6 +127,7 @@ int Parm::initDomain (const Domain& domain)
   return nr;
 }
 
+//##ModelId=400E5353019E
 int Parm::initSolvable ()
 {
   int nr = 0;
@@ -145,6 +151,7 @@ int Parm::initSolvable ()
   return nr;
 }
 
+//##ModelId=3F86886F022E
 int Parm::getResult (Result::Ref &resref,
                      const std::vector<Result::Ref> &,
                      const Request &request,bool newreq)
@@ -266,6 +273,7 @@ int Parm::getResult (Result::Ref &resref,
   return retcode;
 }
 
+//##ModelId=3F86886F023C
 void Parm::save()
 {
   const vector<Polc>& polcs = getPolcs();
@@ -276,6 +284,7 @@ void Parm::save()
   }
 }
 
+//##ModelId=400E5353033A
 void Parm::setStateImpl (DataRecord& rec, bool initializing)
 {
   // inhibit changing of FPolcs field
@@ -336,6 +345,7 @@ void Parm::setStateImpl (DataRecord& rec, bool initializing)
   getStateField(itsName,rec,FParmName);
 }
 
+//##ModelId=400E53520391
 string Parm::sdebug (int detail, const string &prefix,const char* nm) const
 {
   string out = Node::sdebug(detail,prefix,nm);

@@ -42,6 +42,7 @@
 
 namespace Meq {
 
+//##ModelId=3F95060D031A
 std::map<string, ParmTable*> ParmTable::theirTables;
 
 
@@ -61,6 +62,7 @@ Vells fromParmMatrix (const Array<double>& values)
   return Vells(mat);
 }
 
+//##ModelId=3F86886F02B7
 ParmTable::ParmTable (const string& tableName)
 : itsTable       (tableName),
   itsIndex       (itsTable, "NAME"),
@@ -75,11 +77,13 @@ ParmTable::ParmTable (const string& tableName)
   }
 }
 
+//##ModelId=3F86886F02BC
 ParmTable::~ParmTable()
 {
   delete itsInitIndex;
 }
 
+//##ModelId=3F86886F02BD
 vector<Polc> ParmTable::getPolcs (const string& parmName,
 				  const Domain& domain)
 {
@@ -119,6 +123,7 @@ vector<Polc> ParmTable::getPolcs (const string& parmName,
   return result;
 }
 
+//##ModelId=3F86886F02C3
 Polc ParmTable::getInitCoeff (const string& parmName)
 {
   // Try to find the default initial values in the InitialValues subtable.
@@ -170,6 +175,7 @@ Polc ParmTable::getInitCoeff (const string& parmName)
   return result;
 }
 				    
+//##ModelId=3F86886F02C8
 void ParmTable::putCoeff (const string& parmName, const Polc& polc)
 {
   itsTable.reopenRW();
@@ -233,6 +239,7 @@ void ParmTable::putCoeff (const string& parmName, const Polc& polc)
   }
 }
 
+//##ModelId=3F86886F02CE
 Table ParmTable::find (const string& parmName,
 		       const Domain& domain)
 {
@@ -252,6 +259,7 @@ Table ParmTable::find (const string& parmName,
   return result;
 }
 
+//##ModelId=3F95060D033E
 ParmTable* ParmTable::openTable (const String& tableName)
 {
   std::map<string,ParmTable*>::const_iterator p = theirTables.find(tableName);
@@ -263,6 +271,7 @@ ParmTable* ParmTable::openTable (const String& tableName)
   return tab;
 }
 
+//##ModelId=3F95060D0372
 void ParmTable::closeTables()
 {
   for (std::map<string,ParmTable*>::const_iterator iter = theirTables.begin();
@@ -273,6 +282,7 @@ void ParmTable::closeTables()
   theirTables.clear();
 }
 
+//##ModelId=400E535402E7
 void ParmTable::createTable (const String& tableName)
 {
   TableDesc tdesc;

@@ -66,19 +66,24 @@ namespace Meq {
 class Request;
 
 
+//##ModelId=400E5304008C
 class Solver : public Node
 {
 public:
+    //##ModelId=400E53550260
   Solver();
 
+    //##ModelId=400E53550261
   virtual ~Solver();
 
   // Returns the class TypeId
+    //##ModelId=400E53550263
   virtual TypeId objectType() const;
 
   // Check the children after they have been resolved in class Node.
   // The order of the children is the order as given when the Node object
   // was created.
+    //##ModelId=400E53550265
   virtual void checkChildren();
 
 // no need for now
@@ -86,28 +91,38 @@ public:
 
 protected:
   // virtual void checkInitState (DataRecord &rec);
+    //##ModelId=400E53550267
   virtual void setStateImpl (DataRecord& rec,bool initializing);
   
   // override this, since we poll children ourselves
+    //##ModelId=400E5355026B
   virtual int pollChildren (std::vector<Result::Ref> &child_results,
                             Result::Ref &resref,
                             const Request &req);
   
   // Get the result for the given request.
+    //##ModelId=400E53550270
   virtual int getResult (Result::Ref &resref, 
                          const std::vector<Result::Ref> &childres,
                          const Request &req,bool newreq);
 
 private:
   // Fill the solution (per parmid) in the DataRecord.
+    //##ModelId=400E53550276
   void fillSolution (DataRecord& rec, const vector<int> spids,
 		     const Vector<double>& solution);
 
+    //##ModelId=400E53550257
   vector<Condeq*> itsCondeqs;
+    //##ModelId=400E53550259
   DataRecord::Ref itsSolvableParms;
+    //##ModelId=400E5355025A
   FitLSQ          itsSolver;
+    //##ModelId=400E5355025C
   int             itsNumStep;
+    //##ModelId=400E5355025D
   double          itsEpsilon;
+    //##ModelId=400E5355025F
   bool            itsUseSVD;
 };
 

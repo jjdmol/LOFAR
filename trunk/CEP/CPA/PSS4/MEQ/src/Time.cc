@@ -28,18 +28,22 @@
 namespace Meq {    
 
 
+//##ModelId=400E535502AC
 Time::Time()
 {}
 
+//##ModelId=400E535502AD
 Time::~Time()
 {}
 
+//##ModelId=400E535502AF
 void Time::init (DataRecord::Ref::Xfer &initrec, Forest* frst)
 {
   Node::init(initrec,frst);
   FailWhen(numChildren(),"Time node cannot have children");
 }
 
+//##ModelId=400E535502B5
 int Time::getResult (Result::Ref &resref, 
                      const std::vector<Result::Ref> &,
                      const Request &request,bool newreq)

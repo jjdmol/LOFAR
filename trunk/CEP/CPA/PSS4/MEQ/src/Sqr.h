@@ -31,17 +31,22 @@
 namespace Meq {    
 
 
+//##ModelId=400E53040093
 class Sqr : public Function1
 {
 public:
+    //##ModelId=400E5355027D
   Sqr();
 
+    //##ModelId=400E5355027E
   virtual ~Sqr();
 
+    //##ModelId=400E53550280
     virtual TypeId objectType() const
     { return TpMeqSqr; }
 
   // Evaluate the value for the given request.
+    //##ModelId=400E53550282
   virtual Vells evaluate (const Request&,const LoShape &,
 			  const vector<Vells*>& values);
 };

@@ -34,25 +34,31 @@ namespace Meq {
 class Request;
 
 
+//##ModelId=400E53030272
 class Condeq : public Node
 {
 public:
+    //##ModelId=400E5305005F
   Condeq();
 
+    //##ModelId=400E53050060
   virtual ~Condeq();
 
 
   // Returns the class TypeId
+    //##ModelId=400E53050062
   virtual TypeId objectType() const;
 
   // Check the children after they have been resolved in class Node.
   // The order of the children is the order as given when the Node object
   // was created.
+    //##ModelId=400E53050064
   virtual void checkChildren();
 
 protected:
     
   // Get the result for the given request.
+    //##ModelId=400E53050066
   virtual int getResult (Result::Ref &resref, 
                          const std::vector<Result::Ref> &childres,
                          const Request &req,bool newreq);
