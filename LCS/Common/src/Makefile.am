@@ -40,9 +40,6 @@ Profiling/PerfProfile.cc
 
 libcommon_la_LIBADD	= shmem/libshmem.la
 
-glishdir = $(libexecdir)/glish
-dist_glish_SCRIPTS = debug_methods.g
-
 EXTRA_DIST = assay
 
 bin_PROGRAMS		= LimitExec
