@@ -68,6 +68,7 @@ void BaseTransport::makeTransportHolder (const TransportHolder& prototype)
   delete itsTransportHolder;
   itsTransportHolder = 0;
   itsTransportHolder = prototype.make();
+  itsTransportHolder -> setBaseTransport (this);
 }
 
 void BaseTransport::dump() const
