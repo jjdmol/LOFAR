@@ -1,7 +1,7 @@
 //#  Socket.h:  Creates an object used to access the sys/socket
 //#             system calls. Extra checks and administration is 
 //#             added to these access methods for  ease of use.
-Implements a connection over a TCP/IP socket
+//#             Implements a connection over a TCP/IP socket
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
