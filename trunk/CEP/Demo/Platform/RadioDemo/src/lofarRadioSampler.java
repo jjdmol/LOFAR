@@ -145,28 +145,32 @@ public class lofarRadioSampler extends JPanel
       gridbag.setConstraints(filler4,constraints);
       add(filler4);
 
-      JPanel actionPanel = new JPanel();
-      actionPanel.setLayout(new GridLayout(2,3));
+      JPanel linePanel1 = new JPanel();
+      linePanel1.setLayout(new GridLayout(2,1));
 
-      buildConstraints(constraints,1,2,3,1,100,100);
-      gridbag.setConstraints(actionPanel,constraints);
-      add(actionPanel);
+      buildConstraints(constraints,1,2,1,1,100,100);
+      gridbag.setConstraints(linePanel1,constraints);
+      add(linePanel1);
 
-      // LineLabel1
-      actionPanel.add(lineLabel1);
+      // LineLabel1 && 2
+      linePanel1.add(lineLabel1);
+      linePanel1.add(lineLabel2);
+
       // PC label
-      //      buildConstraints(constraints,2,2,1,1,100,100);
-      //      gridbag.setConstraints(pcLabel1,constraints);
-      actionPanel.add(pcLabel1);
+      buildConstraints(constraints,2,2,1,1,100,100);
+      gridbag.setConstraints(pcLabel1,constraints);
+      add(pcLabel1);
+
+      JPanel linePanel2 = new JPanel();
+      linePanel2.setLayout(new GridLayout(2,1));
+      buildConstraints(constraints,3,2,1,1,100,100);
+      gridbag.setConstraints(linePanel2,constraints);
+      add(linePanel2);
 
       // LineLabel3
-      //      buildConstraints(constraints,3,2,1,1,100,100);
-      //      gridbag.setConstraints(lineLabel3,constraints);
-      actionPanel.add(lineLabel3);
-
-      actionPanel.add(lineLabel2);
-      actionPanel.add(pcLabel2);
-      actionPanel.add(lineLabel4);
+      linePanel2.add(lineLabel3);
+      // LineLabel4
+      linePanel2.add(lineLabel4);
 
       // clusterLabel
       buildConstraints(constraints,4,2,1,1,100,100);
