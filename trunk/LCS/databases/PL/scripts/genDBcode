@@ -455,7 +455,7 @@ initSrcfile()
 		echo ""
 	else	# its a headerfile
 		TimeStamp=`date +%y%m%d%H%M%S`
-		typeset -u FileLabel=${FILEPREFIX}${TimeStamp}_${Class}_H
+		typeset -u FileLabel=${FILEPREFIX}${TimeStamp}_${File}_H
 		echo "//# only include this file once"
 		echo "#if !defined(${FileLabel})"
 		echo "#define ${FileLabel}"
