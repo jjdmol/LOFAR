@@ -87,9 +87,10 @@ AbstractSource::AbstractSource(SourceType          type,
 
   RaPolcs [0].setCoeff(RaMatrix);
   RaPolcs [0].setDomain(Domain);
+  RaPolcs [0].setPerturbation(1e-7, false);
   DecPolcs[0].setCoeff(DecMatrix);
   DecPolcs[0].setDomain(Domain);
-  
+  DecPolcs[0].setPerturbation(1e-7, false);
   
   std::string ParmName(createParmName());
 
