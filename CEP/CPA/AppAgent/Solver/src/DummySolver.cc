@@ -201,7 +201,7 @@ void DummySolver::run ()
       // it's either NEXT_DOMAIN, or a terminal state)
       while( control().state() == IDLE )
       {
-        DataRecord::Ref params,endrec;
+        DataRecord::Ref params,endrec,solution(DMI::ANONWR);
         // get solution parameters, break out if none
         if( control().startSolution(params) != RUNNING )
           break;
@@ -211,17 +211,17 @@ void DummySolver::run ()
         // iterate the solution until stopped
         do
         {
-          converge /= 10;
+          solution()[FConvergence] = converge /= 10;
           sleep(1); // Jesus is coming... Look busy!
           niter++;
         }
-        while( control().endIteration(converge) == AppState::RUNNING );
+        while( control().endIteration(solution) == AppState::RUNNING );
         
         // if state is ENDSOLVE, end the solution properly
         if( control().state() == ENDSOLVE )
         {
           cdebug(2)<<"ENDSOLVE after "<<niter<<" iterations, converge="<<converge<<endl;
-          int res = control().endSolution(endrec);
+          int res = control().endSolution(solution,endrec);
           endSolution(*endrec);
         }
         // else we were probably interrupted

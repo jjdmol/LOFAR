@@ -1,117 +1,150 @@
 pragma include once
 
-const val2lines := function (x,indent="",maxlen=60)
+# returns array of strings in the form of 'string' (one element),
+# or "x y z", or ['x','y','z'], depending on whitespace content
+const str2string := function (x,skip_braces)
+{
+  if( len(x) == 1 )
+    return spaste("'",x,"'");
+  else
+  {
+    # do the individual strings contain whitespace?
+    for( str in x )
+      if( str ~ m/[ \t]/ )  # got whitespace -- return as explicit array
+      {
+        out := spaste("'",paste(x,sep="','"),"'");
+        if( !skip_braces )
+          out := spaste('[',out,']');
+        return out;
+      }
+    # no whitespace -- return in "x y z" form
+    return spaste('"',paste(x),'"');
+  }
+}
+
+# Converts a value to a string (or an array of strings, if dealing with
+# a long record that won't fit around maxlen characters).
+# If skip_braces=F, then braces will be added around the value as needed
+# (i.e. if record or array)
+const val2string := function (x,maxlen=60,skip_braces=F)
 {
   if( is_numeric(x) )
   {
     if( len(x) == 1 )
       return as_string(x);
     else
-      return paste('[',paste(as_string(x),sep=','),']');
+    {
+      out := paste(as_string(x),sep=',');
+      if( has_field(x::,'shape') )  # multi-dimensional array?
+        return spaste('array([',out,'],',paste(as_string(x::shape),sep=','),')');
+      else
+      {
+        if( !skip_braces )
+          out := paste('[',out,']');
+        return out;
+      }
+    }
   }
   else if( is_string(x) )
   {
-    if( x::is_hiid )
-      return spaste('hiid("',paste(x),'")');
-    else
-    {
-      if( len(x) == 1 )
-        return spaste("'",x,"'");
-      else
-        return spaste("['",paste(rec[f],sep="','"),"']");
-    }
+    multidim := has_field(x::,'shape');
+    is_hiid := has_field(x::,'is_hiid') && x::is_hiid;
+    # convert to string form -- skip braces if hiid, add braces if multidim
+    out := str2string(x,is_hiid || (skip_braces && !multidim));
+    # add 'hiid(x)' if hiid
+    if( is_hiid )
+      out := spaste("hiid(",out,")");
+    # if multidimensional, add 'array(x,shape)'
+    if( multidim )
+      return spaste('array(',out,',',paste(as_string(x::shape),sep=','),')');
   }
   else if( is_record(x) )
-    return rec2lines(rec);
-}
-
-const rec2lines := function (rec,indent="",maxlen=60)
-{
-  out := "";
-  for( f in field_names(rec) )
   {
-    iout := len(out)+1;
-    if( is_numeric(rec[f]) )
+    out := rec2lines(x,maxlen);
+    # one line, or several short lines? Return inline form
+    if( len(out) == 1 || sum(strlen(out)) <= maxlen )
     {
-      if( len(rec[f]) == 1 )
-        out[iout] := paste(f,'=',rec[f]);
-      else
-        out[iout] := paste(f,'= [',paste(as_string(rec[f]),sep=','),']');
+      out := paste(out);
+      if( !skip_braces )
+        return paste('[',out,']');
     }
-    else if( is_string(rec[f]) )
+    else if( !skip_braces) # multiple lines, gotta add braces/indent
     {
-      if( rec[f]::is_hiid )
-        out[iout] := paste(f,'=',spaste('hiid("',paste(rec[f]),'")'));
-      else
-      {
-        if( len(rec[f]) == 1 )
-          out[iout] := spaste(f,' = ',"'",rec[f],"'");
-        else
-          out[iout] := spaste(f,' = [',"'",paste(rec[f],sep="','"),"']");
-      }
+      out[1] := spaste('[ ',out[1]);
+      for( i in 2:len(out) )
+        out[i] := spaste('  ',out[i]);
+      out[len(out)] := spaste(out[len(out)],' ]');
     }
-    else if( is_record(rec[f]) )
-    {
-      reclines := rec2lines(rec[f],spaste(indent,'  '));
-      if( len(reclines) )
-      {
-        if( sum(strlen(reclines)) <= maxlen )
-          out[iout] := paste(f,'= [',paste(reclines,sep=','),']');
-        else
-        {
-          out[iout] := paste(f,'= [');
-          indent1 := spaste(array(' ',strlen(out[iout])+1));
-          first := T;
-          for( l in reclines )
-          {
-            if( first )
-            {
-              out[iout] := paste(out[iout],l);
-              first := F;
-            }
-            else
-            {
-              iout+:=1;
-              out[iout] := spaste(indent1,l);
-            }
-          }
-          out[iout] := paste(out[iout],']');
-        }
-      }
-      else
-        out[iout] := paste(f,"= [=]");
-    }
-#    print iout,f,out[iout];
   }
-  #  print paste(out,sep='\n')
   return out;
 }
 
-const rec2string := function (rec)
+# Helper function: returns record as
+#   'a = value,'
+#   'b = [ x=value,y=value],'
+#   'd = [ x=really long value,
+#   '      y=another really long value ],
+#   'c = value'
+# i.e. with no indents or surrounding braces
+const rec2lines := function (rec,maxlen)
 {
-  lines := rec2lines(rec);
-  if( sum(strlen(lines)) <= maxlen )
-    return paste(lines,sep=', ');
-  else
-    return paste(lines,sep=',\n');
+  # handle empty record
+  fields := field_names(rec);
+  nf := len(fields);
+  if( !nf )
+    return '=';
+  # convert each record field into a separate line
+  out := "";
+  for( f in 1:nf )
+  {
+    prefix := spaste(fields[f],' = ');
+    # convert field value into lines, with braces
+    lines := val2string(rec[f],maxlen,F);
+    if( len(lines) > 1 ) comma := ','; else comma := '';
+    for( i in 1:len(lines) )
+    {
+      # change prefix starting at line 2
+      if( i==2 )  
+        prefix := spaste(array(' ',strlen(prefix)));
+      out[len(out)+1] := spaste(prefix,lines[i]);
+    }
+    # add traling comma if not last field
+    if( f < nf )
+      out[len(out)] := spaste(out[len(out)],',');
+  }
+  return out;
 }
 
-const string2rec := function(str)
+const string2val := function(str)
 {
+  str := paste(str);
+  # trim leading/traling whitespaces
   str =~ s/^\s+//;
   str =~ s/\s+$//;
-  if( !strlen(str) )
-    return [=];
-  else
-    return eval(spaste("[",str,"]"));
+  # if no leading brace, surround with braces
+  if( !(str ~ m/^\[/) )
+    str := spaste('[',str,']');
+  return eval(str);
 }
 
 ## include 'octopussy.g'
-## 
+##  
 ## d := "jdhdhjdfhdfjfjd dsfjjsdfsdfjdfsjhjf sdfjsfdjkfsdjdfsjk";
-## rec := [ a="help me",b=[1,2,3],c=hiid("x.y.z"), d=[x=d,y=d,z=d] ];
+## arr1 := array('x',2,2);
+## arr2 := array('f g',2,2);
+## arr3 := arr2;
+## arr3::is_hiid := T;
+## arr4 := "a.1 b.2 c.3 d.4";
+## arr4::is_hiid := T;
+## rec := [ a="help me",b=[1,2,3],c=hiid("x.y.z"), d=[x=d,y=d,z=d],
+##          e=[a=0,b=1],f=array(2,3,3,3),
+##          g=arr1,h=arr2,i=arr3,j=arr4 ];#
 ## 
-## print paste(rec2lines(rec),sep='\n')
+## str := val2string(rec,skip_braces=T);
 ## 
-## s := rec2string(rec);
-## print s;
+## print paste(str,sep='\n');
+## 
+## print string2val(str);
+## 
+## 
+##  

@@ -100,6 +100,7 @@ void MeqCalSolver::run ()
       // run main loop
       DataRecord::Ref header,new_header;
       VisTile::Ref tile;
+      control().setStatus(StDomain,DataRecord::Ref(DMI::ANONWR));
       while( control().checkState() > 0 )  // while in a running state
       {
         int instat;
@@ -169,8 +170,8 @@ void MeqCalSolver::run ()
         // --------- read full domain from input ---------------------------
         in_domain = True;
         domain_start = 0;
-        itsVisTiles.resize(ntiles=0);
-        control().setStatus(StTileCount,0);
+        itsVisTiles.resize(ntiles_=0);
+        control().setStatus(StDomain,StTileCount,0);
         while( in_domain && control().checkState() > 0 )
         {
           // a tile may be left over from the previous iteration
@@ -256,29 +257,35 @@ void MeqCalSolver::run ()
           try
           {
             cdebug(2)<< "startSolution: "<<paramrec->sdebug(3)<<endl;
+            solution_.unlock() <<= new DataRecord;
+            solution_.lock();
             const DataRecord& params = *paramrec;
-            if (params[SolvableParm].exists()) {
-              setSolvable (params[SolvableParm], params[SolvableFlag]);
+            if (params[SolvableParm].exists()) 
+            {
+              setSolvable(params[SolvableParm], params[SolvableFlag]);
               initParms();
             }
-            if (params[PeelNrs].exists()) {
+            if (params[PeelNrs].exists()) 
+            {
               setPeel (params[PeelNrs],
                        params[PredNrs].as_vector<int>(vector<int>()));
             }
-            if (params[Ant1].exists()) {
-              solveSelect (params[Ant1], params[Ant2], params[AntMode][0],
-                           params[CorrSel]);
+            if (params[Ant1].exists()) 
+            {
+              solveSelect(params[Ant1], params[Ant2], params[AntMode][0],
+                          params[CorrSel]);
             }
     //        int niter = params[Niter].as<int>(0);
     //        cdebug(2) << "niter=" << niter << endl;
+            control().setStatus(StSolution,solution_.copy());
             bool useSVD = params[UseSVD].as<bool>(false);
             // iterate the solution until stopped
             do 
             {
-              solve (useSVD, domainheader);
+              solve (useSVD,domainheader);
               converge -= 1;
             }
-            while( control().endIteration(converge) == AppState::RUNNING );
+            while( control().endIteration(solution_) == AppState::RUNNING );
           }
           catch( std::exception &exc )
           {
@@ -289,7 +296,7 @@ void MeqCalSolver::run ()
           {
             cdebug(2)<<"ENDSOLVE, converge="
                      <<converge<<endl;
-            int res = control().endSolution(endrec);
+            int res = control().endSolution(solution_,endrec);
             endSolution(*endrec, domainheader);
           }
           // else we were probably interrupted
@@ -337,14 +344,14 @@ void MeqCalSolver::addTileToDomain (VisTile::Ref &tileref)
   const VisTile &tile = *tileref;
   double tiletime = tile.time(0);
   // first tile of new domain
-  if( !ntiles )
+  if( !ntiles_ )
   {
     control().startDomain();
-    control().setStatus(StDomainStart,domain_start = tiletime);
-    control().setStatus(StDomainEnd,domain_end = domain_start + domain_size);
+    control().setStatus(StDomain,StDomainStart,domain_start = tiletime);
+    control().setStatus(StDomain,StDomainEnd,domain_end = domain_start + domain_size);
     cdebug(2)<<"starting new domain with Tstart="<<domain_start<<endl;
     in_domain = True;
-    itsVisTiles.resize(ntiles=0);
+    itsVisTiles.resize(ntiles_=0);
   }
   // does tile belong to next domain?
   else
@@ -360,15 +367,15 @@ void MeqCalSolver::addTileToDomain (VisTile::Ref &tileref)
   // so at this point the tile fully belongs to our domain
   // Xfer the tile to the internal container .
   itsVisTiles.push_back (tileref);
-  ntiles++;
-  if( !(ntiles%100) )
+  ntiles_++;
+  if( !(ntiles_%100) )
   {
-    control().setStatus(StTileCount,ntiles);
-    control().setStatus(StDomainCurrent,tiletime);
+    control().setStatus(StDomain,StTileCount,ntiles_);
+    control().setStatus(StDomain,StDomainCurrent,tiletime);
   }
-  cdebug(3)<<"added tile #"<<ntiles<<" to domain"<<endl;
-  if (ntiles%500 == 0) {
-    cdebug(2) << "#tiles = " << ntiles << endl;
+  cdebug(3)<<"added tile #"<<ntiles_<<" to domain"<<endl;
+  if (ntiles_%500 == 0) {
+    cdebug(2) << "#tiles = " << ntiles_ << endl;
   }
 }
 
@@ -381,7 +388,7 @@ void MeqCalSolver::checkInputState (int instat)
   {
     cdebug(2)<<"error on input: "<<input().stateString()<<endl;
     control().endData(InputErrorEvent);
-    if( ntiles )
+    if( ntiles_ )
       endDomain();
     else
       control().setState(STOPPED);
@@ -391,7 +398,7 @@ void MeqCalSolver::checkInputState (int instat)
   {
     cdebug(2)<<"input closed: "<<input().stateString()<<endl;
     control().endData(InputClosedEvent);
-    if( ntiles )
+    if( ntiles_ )
       endDomain();
     else
       control().setState(STOPPED);
@@ -401,7 +408,7 @@ void MeqCalSolver::checkInputState (int instat)
 //##ModelId=3EC9F6EC026A
 void MeqCalSolver::endDomain ()
 {
-  control().setStatus(StTileCount,ntiles);
+  control().setStatus(StDomain,StTileCount,ntiles_);
   if( in_domain )
   {
     control().endDomain();
@@ -441,9 +448,22 @@ void MeqCalSolver::endSolution (const DataRecord& endrec,
   try
   {
     if( endrec[SaveParms].as<bool>(False) )
+    {
       saveParms();
+      control().postEvent(SolverNotifyEvent,"parameters saved");
+    }
+    else
+      control().postEvent(SolverNotifyEvent,"parameters not saved");
+    bool do_peel = endrec[ApplyPeel].as<bool>(False);
     if( endrec[SaveResiduals].as<bool>(False) ) 
-      saveResiduals(header,endrec[ApplyPeel].as<bool>(False));
+    {
+      control().postEvent(SolverNotifyEvent,
+          string(do_peel ? "peeling and " : "" ) + "generating residuals");
+      saveResiduals(header,do_peel);
+      control().postEvent(SolverNotifyEvent,"residuals generated");
+    }
+    else
+      control().postEvent(SolverNotifyEvent,"no residuals generated");
   }
   catch( std::exception &exc )
   {
@@ -625,7 +645,10 @@ void MeqCalSolver::solve (bool useSVD, DataRecord::Ref& header)
 
   int nrpoint = 0;
   Timer timer;
-  for (unsigned int i=0; i<itsVisTiles.size(); i++) {
+  for (unsigned int i=0; i<itsVisTiles.size(); i++) 
+  {
+    if( !(i%100) )
+      control().setStatus(StSolverControl,StSolutionTileCount,int(i));
     if (itsVisTilesSel[i]) {
       // Privatize the tile for writing (this is a no-op if we have the only
       // copy). This is good practice to minimize data copying between
@@ -971,11 +994,7 @@ void MeqCalSolver::solve (bool useSVD, DataRecord::Ref& header)
       output().put(DATA,itsVisTiles[i].copy());
     } // end if( itsVisTileSel[i] )
   } // end loop over tiles
-  
-  // write footer to output stream
-  DataRecord::Ref footer(DMI::ANONWR);
-  footer()[FVDSID] = vdsid;
-  output().put(FOOTER,footer);
+  control().setStatus(StSolverControl,StSolutionTileCount,int(itsVisTiles.size()));
   
   if (Debug(1)) timer.show("fill ");
 
@@ -1006,16 +1025,22 @@ void MeqCalSolver::solve (bool useSVD, DataRecord::Ref& header)
   tmpSolver.getErrors (errors);
   if (Debug(1)) timer.show("solve");
   cdebug(1) << "Solution after:  " << itsSolution << endl;
-
-  control().setStatus (StSolution, sol);
-  control().setStatus (StSolutionRank  , rank);
-  control().setStatus (StSolutionFit   , fit);
-  //  control().setStatus (StSolutionErrors, errors);
-  //  control().setStatus (StSolutionCoVar , covar); 
-  control().setStatus (StSolutionFlag  , solFlag); 
-  control().setStatus (StSolutionMu    , mu);
-  control().setStatus (StSolutionStdDev, stddev);
-  //  control().setStatus (StSolutionChi   , itsSolver.getChi());
+  DataRecord &solrec = solution_();
+  solrec[StParamValues].replace() = sol;
+  solrec[StRank] = int(rank);   // glish only recognizes int, not uint
+  solrec[StFit] = fit;
+  //  solrec[StErrors] = errors;
+  //  solrec[StCoVar ] = covar; 
+  solrec[StFlag] = solFlag; 
+  solrec[StMu] = mu;
+  solrec[StStdDev] = stddev;
+  //  solrec[StChi   ] = itsSolver.getChi());
+  
+  // write footer to output stream
+  DataRecord::Ref footer(DMI::ANONWR);
+  footer()[StSolution] <<= solution_.copy();
+  footer()[FVDSID] = vdsid;
+  output().put(FOOTER,footer);
 
   // Update all parameters.
   const vector<MeqParm*>& parmList = MeqParm::getParmList();
@@ -1433,7 +1458,7 @@ void MeqCalSolver::initParms()
     // Initialize the solver.
     itsSolver.set (itsNrScid, 1, 0);
     // Put names of all solvable parms in status record.
-    control().setStatus (StSolutionSolvParams, names);
+    solution_()[StParamNames] = names;
   }
 }
 
@@ -1631,5 +1656,6 @@ void MeqCalSolver::saveResiduals (DataRecord::Ref& header,bool apply_peel)
   // write footer to output stream
   DataRecord::Ref footer(DMI::ANONWR);
   footer()[FVDSID] = vdsid;
+  footer()[StSolution] <<= solution_.copy();
   output().put(FOOTER,footer);
 }

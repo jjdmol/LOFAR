@@ -23,115 +23,90 @@ const int AidDefault_int = -1327;
 const AtomicID AidGlobal(-1313);                  // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/OctoAgent/src/OctoAgent.aidlist:3
 const int AidGlobal_int = -1313;
 #endif
-#ifndef _defined_id_AidHeader
-#define _defined_id_AidHeader 1
-const AtomicID AidHeader(-1133);                  // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/VisAgent/src/VisAgent.aidlist:7
-const int AidHeader_int = -1133;
-#endif
 #ifndef _defined_id_AidHigh
 #define _defined_id_AidHigh 1
-const AtomicID AidHigh(-1324);                    // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/OctoAgent/src/OctoAgent.aidlist:5
+const AtomicID AidHigh(-1324);                    // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/OctoAgent/src/OctoAgent.aidlist:4
 const int AidHigh_int = -1324;
 #endif
 #ifndef _defined_id_AidHigher
 #define _defined_id_AidHigher 1
-const AtomicID AidHigher(-1318);                  // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/OctoAgent/src/OctoAgent.aidlist:6
+const AtomicID AidHigher(-1318);                  // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/OctoAgent/src/OctoAgent.aidlist:5
 const int AidHigher_int = -1318;
 #endif
 #ifndef _defined_id_AidHost
 #define _defined_id_AidHost 1
-const AtomicID AidHost(-1083);                    // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/OctoAgent/src/OctoAgent.aidlist:7
+const AtomicID AidHost(-1083);                    // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/OCTOPUSSY/src/OCTOPUSSY.aidlist:37
 const int AidHost_int = -1083;
 #endif
 #ifndef _defined_id_AidIn
 #define _defined_id_AidIn 1
-const AtomicID AidIn(-1312);                      // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/OctoAgent/src/OctoAgent.aidlist:8
+const AtomicID AidIn(-1312);                      // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/OctoAgent/src/OctoAgent.aidlist:7
 const int AidIn_int = -1312;
 #endif
 #ifndef _defined_id_AidLocal
 #define _defined_id_AidLocal 1
-const AtomicID AidLocal(-1059);                   // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/OctoAgent/src/OctoAgent.aidlist:9
+const AtomicID AidLocal(-1059);                   // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/OCTOPUSSY/src/OCTOPUSSY.aidlist:47
 const int AidLocal_int = -1059;
 #endif
 #ifndef _defined_id_AidLow
 #define _defined_id_AidLow 1
-const AtomicID AidLow(-1315);                     // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/OctoAgent/src/OctoAgent.aidlist:10
+const AtomicID AidLow(-1315);                     // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/OctoAgent/src/OctoAgent.aidlist:9
 const int AidLow_int = -1315;
 #endif
 #ifndef _defined_id_AidLower
 #define _defined_id_AidLower 1
-const AtomicID AidLower(-1322);                   // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/OctoAgent/src/OctoAgent.aidlist:11
+const AtomicID AidLower(-1322);                   // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/OctoAgent/src/OctoAgent.aidlist:10
 const int AidLower_int = -1322;
 #endif
 #ifndef _defined_id_AidLowest
 #define _defined_id_AidLowest 1
-const AtomicID AidLowest(-1321);                  // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/OctoAgent/src/OctoAgent.aidlist:12
+const AtomicID AidLowest(-1321);                  // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/OctoAgent/src/OctoAgent.aidlist:11
 const int AidLowest_int = -1321;
 #endif
 #ifndef _defined_id_AidMap
 #define _defined_id_AidMap 1
-const AtomicID AidMap(-1320);                     // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/OctoAgent/src/OctoAgent.aidlist:13
+const AtomicID AidMap(-1320);                     // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/OctoAgent/src/OctoAgent.aidlist:12
 const int AidMap_int = -1320;
 #endif
 #ifndef _defined_id_AidNormal
 #define _defined_id_AidNormal 1
-const AtomicID AidNormal(-1323);                  // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/OctoAgent/src/OctoAgent.aidlist:14
+const AtomicID AidNormal(-1323);                  // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/OctoAgent/src/OctoAgent.aidlist:13
 const int AidNormal_int = -1323;
 #endif
 #ifndef _defined_id_AidOut
 #define _defined_id_AidOut 1
-const AtomicID AidOut(-1314);                     // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/OctoAgent/src/OctoAgent.aidlist:15
+const AtomicID AidOut(-1314);                     // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/OctoAgent/src/OctoAgent.aidlist:14
 const int AidOut_int = -1314;
 #endif
 #ifndef _defined_id_AidPost
 #define _defined_id_AidPost 1
-const AtomicID AidPost(-1326);                    // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/OctoAgent/src/OctoAgent.aidlist:16
+const AtomicID AidPost(-1326);                    // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/OctoAgent/src/OctoAgent.aidlist:15
 const int AidPost_int = -1326;
 #endif
 #ifndef _defined_id_AidPrefix
 #define _defined_id_AidPrefix 1
-const AtomicID AidPrefix(-1325);                  // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/OctoAgent/src/OctoAgent.aidlist:17
+const AtomicID AidPrefix(-1325);                  // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/OctoAgent/src/OctoAgent.aidlist:16
 const int AidPrefix_int = -1325;
 #endif
 #ifndef _defined_id_AidPriority
 #define _defined_id_AidPriority 1
-const AtomicID AidPriority(-1317);                // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/OctoAgent/src/OctoAgent.aidlist:18
+const AtomicID AidPriority(-1317);                // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/OctoAgent/src/OctoAgent.aidlist:17
 const int AidPriority_int = -1317;
 #endif
 #ifndef _defined_id_AidReceive
 #define _defined_id_AidReceive 1
-const AtomicID AidReceive(-1319);                 // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/OctoAgent/src/OctoAgent.aidlist:19
+const AtomicID AidReceive(-1319);                 // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/OctoAgent/src/OctoAgent.aidlist:18
 const int AidReceive_int = -1319;
-#endif
-#ifndef _defined_id_AidResume
-#define _defined_id_AidResume 1
-const AtomicID AidResume(-1251);                  // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/AppAgent/src/AppAgent.aidlist:19
-const int AidResume_int = -1251;
 #endif
 #ifndef _defined_id_AidScope
 #define _defined_id_AidScope 1
-const AtomicID AidScope(-1234);                   // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/OctoAgent/src/OctoAgent.aidlist:21
+const AtomicID AidScope(-1234);                   // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/OCTOPUSSY/src/OCTOPUSSY.aidlist:63
 const int AidScope_int = -1234;
-#endif
-#ifndef _defined_id_AidSuspend
-#define _defined_id_AidSuspend 1
-const AtomicID AidSuspend(-1252);                 // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/VisAgent/src/VisAgent.aidlist:13
-const int AidSuspend_int = -1252;
-#endif
-#ifndef _defined_id_AidTile
-#define _defined_id_AidTile 1
-const AtomicID AidTile(-1123);                    // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/MSVisAgent/src/MSVisAgent.aidlist:25
-const int AidTile_int = -1123;
 #endif
 #ifndef _defined_id_AidUnmapped
 #define _defined_id_AidUnmapped 1
-const AtomicID AidUnmapped(-1316);                // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/OctoAgent/src/OctoAgent.aidlist:24
+const AtomicID AidUnmapped(-1316);                // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/OctoAgent/src/OctoAgent.aidlist:20
 const int AidUnmapped_int = -1316;
-#endif
-#ifndef _defined_id_AidVis
-#define _defined_id_AidVis 1
-const AtomicID AidVis(-1116);                     // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/MSVisAgent/src/MSVisAgent.aidlist:27
-const int AidVis_int = -1116;
 #endif
 
 

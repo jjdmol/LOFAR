@@ -45,6 +45,9 @@ int main (int argc, const char *argv[])
   
   try 
   {
+    HIID check1("Domain");
+    HIID check2("Time");
+    
     Debug::setLevel("MSVisAgent",2);
     Debug::setLevel("SolverControl",2);
     Debug::setLevel("Solver",2);
@@ -220,7 +223,7 @@ int main (int argc, const char *argv[])
         solveargs[FBatchJobs][0][PredNrs] = vector<int>();
         solveargs[FBatchJobs][0][FWhenConverged] <<= new DataRecord;
         solveargs[FBatchJobs][0][FWhenMaxIter] <<= new DataRecord;
-	solveargs[FBatchJobs][0][FWhenMaxIter][SaveResiduals] = True;
+	solveargs[FBatchJobs][0][FWhenMaxIter][SaveResiduals] = False;
 	solveargs[FBatchJobs][0][FWhenMaxIter][SaveParms] = False;
 
     cout<<"=================== creating agents ===========================\n";
