@@ -31,11 +31,13 @@
 
 #include <sys/time.h>
 
-#define REQUEST_SIZE 1030
+#define DEFAULT_REQUEST_SIZE 2
 #define RESPONSE_SIZE 42
 
 #define MAX_IFNAME_LEN 64
 #define HWADDR_LEN 17
+
+#define MAX(a,b) ((a) > (b) ? (a) : (b))
 
 using namespace std;
 
@@ -44,7 +46,7 @@ class ETH_realtime : public GCFTask
 public:
 
     ETH_realtime(const char* name, bool isClient,
-		 const char* ifname, const char* dest_mac = "");
+		 const char* ifname, const char* dest_mac = "", int request_size = DEFAULT_REQUEST_SIZE, bool cycle = false);
 
 private:
 
@@ -55,11 +57,14 @@ private:
 
     GCFETHRawPort channel;
     bool          m_isClient;
+    int           m_requestSize;
+    bool          m_cycle;
 };
 
 ETH_realtime::ETH_realtime(const char* name, bool isClient,
-		   const char* ifname, const char* dest_mac) :
-    GCFTask((State)&ETH_realtime::initial_state, name), channel(), m_isClient(isClient)
+		   const char* ifname, const char* dest_mac, int request_size, bool cycle) :
+  GCFTask((State)&ETH_realtime::initial_state, name), channel(), m_isClient(isClient),
+  m_requestSize(request_size), m_cycle(cycle)
 {
   // client or server?
   channel.init(*this, "channel", (isClient ? GCFPortInterface::SAP : GCFPortInterface::SPP), 0, true);
@@ -80,99 +85,90 @@ int ETH_realtime::initial_state(GCFEvent& e, GCFPortInterface& /*port*/)
 
   switch (e.signal)
   {
-      case F_INIT:
-      {
-	  // open the ctrl_ port
-	  channel.open();
+    case F_INIT:
+    {
+      // open the ctrl_ port
+      channel.open();
 	  
-	  // initialize buffers
-	  memset(ETH_sendpacket, 0, ETH_DATA_LEN);
-	  memset(ETH_recvpacket, 0, ETH_DATA_LEN);
-      }
-      break;
+      // initialize buffers
+      memset(ETH_sendpacket, 0, ETH_DATA_LEN);
+      memset(ETH_recvpacket, 0, ETH_DATA_LEN);
+    }
+    break;
       
-      case F_CONNECTED:
-      {
-	  cout << "connected" << endl;
+    case F_CONNECTED:
+    {
+      cout << "connected" << endl;
 
-	  if (m_isClient)
-	  {
-	      send_message(sequence_number++, REQUEST_SIZE);
-	      channel.setTimer((long)0, 0, 1, 0);
-	  }
+      if (m_isClient)
+      {
+	send_message(sequence_number++, m_requestSize);
+	channel.setTimer((long)0, 0, 1, 0);
       }
-      break;
+    }
+    break;
 
-      case F_DATAIN:
+    case F_DATAIN:
+    {
+      int n;
+
+      if ((n = channel.recv(ETH_recvpacket, ETH_DATA_LEN)) < 0)
       {
-	  int n;
+	perror("channel.recv");
+	exit(EXIT_FAILURE);
+      }
+      if (n == 0) status = GCFEvent::ERROR;
+      else
+      {
+	// server checks and responds
+	unsigned long* hdr = (unsigned long*)&ETH_recvpacket[0];
 
-	  if ((n = channel.recv(ETH_recvpacket, ETH_DATA_LEN)) < 0)
+	if (*hdr++ == 0xdeadbeaf)
+	{
+	  if (!m_isClient)
 	  {
-	      perror("channel.recv");
-	      exit(EXIT_FAILURE);
+	    send_message(*hdr, 2*sizeof(unsigned long));
 	  }
-	  if (n == 0) status = GCFEvent::ERROR;
 	  else
 	  {
-	      // server checks and responds
-	      unsigned long* hdr = (unsigned long*)&ETH_recvpacket[0];
+	    if (*hdr != sequence_number-1) cerr << "seqnr mismatch" << endl;
 
-	      if (*hdr++ == 0xdeadbeaf)
-	      {
-#if 0
-		  cout << "Received matching packet " << *hdr << "; ";
-		  cout << "Received " << n << " bytes." << endl;
-#endif
+	    if (m_cycle && 0 == packetcount)
+	    {
+	      m_requestSize *= 2;
+	      if (m_requestSize > ETH_DATA_LEN) m_requestSize = 2;
+	    }
 
-		  if (!m_isClient)
-		  {
-		      send_message(*hdr, 2*sizeof(unsigned long));
-		  }
-		  else
-		  {
-		      if (*hdr != sequence_number-1) cerr << "seqnr mismatch" << endl;
+	    packetcount++;
+	    // receive ack, stop timer
+	    gettimeofday(&stop, 0);
 
-		      packetcount++;
-		      // receive ack, stop timer
-		      gettimeofday(&stop, 0);
-
-#if 0
-		      // print delay
-		      double delay = (stop.tv_sec - start.tv_sec)*1.0e6 + (stop.tv_usec - start.tv_usec);
-		      cout << "delay = " << delay << " microseconds" << endl;
-#endif
-		      // immediately send next packet
-		      gettimeofday(&start, 0);
-		      send_message(sequence_number++, REQUEST_SIZE);
-		  }
-	      }
+	    // immediately send next packet
+	    gettimeofday(&start, 0);
+	    send_message(sequence_number++, m_requestSize);
 	  }
+	}
       }
-      break;
+    }
+    break;
 
-      //case F_DATAOUT:
-      case F_TIMER:
-      {
-#if 0
-	  gettimeofday(&start, 0);
-	  send_message(sequence_number++, REQUEST_SIZE);
-#else
-	  cerr << "packets/sec = " << packetcount << endl;
-	  packetcount = 0;
-#endif
-      }
-      break;
-      case F_DISCONNECTED:
-      {
-	  // reopen the port
-	  channel.open();
-      }
-      break;
+    //case F_DATAOUT:
+    case F_TIMER:
+    {
+      cerr << "request_size; " << m_requestSize << "; packets/sec; " << packetcount << endl;
+      packetcount = 0;
+    }
+    break;
+    case F_DISCONNECTED:
+    {
+      // reopen the port
+      channel.open();
+    }
+    break;
 
-      default:
-	  status = GCFEvent::NOT_HANDLED;
-	  break;
+    default:
+      status = GCFEvent::NOT_HANDLED;
+      break;
   }
   
   return status;
@@ -187,16 +183,13 @@ void ETH_realtime::send_message(unsigned long sequence_number, size_t size)
   *hdr++ = sequence_number;
 
   static DataEvent data;
-  data.payload.setBuffer(ETH_sendpacket, size);
+  data.payload.setBuffer(ETH_sendpacket, MAX(size, 2 * sizeof(unsigned long)));
 
   if ((n = channel.send(data)) < 0)
   {
       perror("channel.send");
       exit(EXIT_FAILURE);
   }
-#if 0
-  cout << "Sent " << n << " bytes." << endl;
-#endif
 }
 
 //
@@ -218,8 +211,10 @@ void usage(const char* progname)
 int main(int argc, char* argv[])
 {
   bool isClient = false;
+  bool cycle = false;
   char ifname[MAX_IFNAME_LEN + 1];
   char dest_mac[HWADDR_LEN + 1];
+  int  request_size = DEFAULT_REQUEST_SIZE;
 
   char progname[100];
 
@@ -236,8 +231,10 @@ int main(int argc, char* argv[])
     static struct option long_options[] = 
       {
 	{ "client",       no_argument, 0, 'c' },
+	{ "cycle",        no_argument, 0, 'y' },
 	{ "if",     required_argument, 0, 'i' },
         { "peer",   required_argument, 0, 'p' },
+	{ "size",   required_argument, 0, 's' },
 	{ "help",         no_argument, 0, 'h' },
 	{ 0, 0, 0, 0 },
       };
@@ -253,6 +250,10 @@ int main(int argc, char* argv[])
       case 'c':
 	isClient = true;
 	break;
+
+      case 'y':
+	cycle = true;
+	break;
 	
       case 'i':
 	strncpy(ifname, optarg, MAX_IFNAME_LEN);
@@ -261,6 +262,11 @@ int main(int argc, char* argv[])
       case 'p':
 	memset(dest_mac, 0, HWADDR_LEN + 1);
 	strncpy(dest_mac, optarg, HWADDR_LEN);
+	break;
+
+      case 's':
+	request_size = atoi(optarg);
+	printf("request_size = %d\n", request_size);
 	break;
 
       case 'h':
@@ -288,7 +294,7 @@ int main(int argc, char* argv[])
       exit(EXIT_FAILURE);
   }
 
-  ETH_realtime ethtask("ETH_realtime", isClient, ifname, dest_mac);
+  ETH_realtime ethtask("ETH_realtime", isClient, ifname, dest_mac, request_size, cycle);
   ethtask.start();
 
   GCFTask::run();
