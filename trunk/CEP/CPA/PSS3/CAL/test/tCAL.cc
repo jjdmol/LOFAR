@@ -120,7 +120,7 @@ int main(int argc, char* argv[])
       gsmname = argv[3];
     }
     if ("0" == gsmname  ||  "" == gsmname) {
-      gsmname = msname;
+      gsmname = mepname;
     }
 
     string modelType;
