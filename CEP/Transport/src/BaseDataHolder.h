@@ -138,7 +138,6 @@ public:
   // for operation with variable datas
   int getDataSize();
 
-#ifdef abc_0
   /** 
       Get the size of the CURRENT data block (in bytes)
       For non-flexible data blocks, this is the same as 
@@ -153,7 +152,6 @@ public:
   */
   virtual int getMaxDataSize();
 
-#endif
 
   // Get a pointer to the data (in the blob).
   void* getDataPtr();
@@ -270,7 +268,7 @@ private:
 inline int BaseDataHolder::getDataSize()
   { return itsData->size(); }
 
-#ifdef abc_0
+#ifndef abc_0
 inline int BaseDataHolder::getCurDataSize(){
   // overload in flexible datas
   return getDataSize(); 
