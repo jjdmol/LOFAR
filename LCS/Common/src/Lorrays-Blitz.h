@@ -213,7 +213,7 @@ class VariVector : public std::vector<int>
       operator blitz::TinyVector<int,N> () const
       { 
         blitz::TinyVector<int,N> tvec(0);
-        for( int i = 0; i < min(N,(int)size()); i++ )
+        for( int i = 0; i < std::min(N,(int)size()); i++ )
           tvec[i] = (*this)[i];
         return tvec;
       }
