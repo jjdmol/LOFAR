@@ -21,6 +21,10 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.5  2002/08/19 20:41:36  schaaf
+//  %[BugId: 11]%
+//  Memory allocation in preprocess method
+//
 //  Revision 1.4  2002/05/24 08:08:32  schaaf
 //  %[BugId: 11]%
 //  remove ^M characters
@@ -39,6 +43,8 @@
 
 
 #include "Transpose/DH_2DMatrix.h"
+
+using namespace LOFAR;
 
 DH_2DMatrix::DataPacket::DataPacket() {
 }
@@ -60,6 +66,16 @@ DH_2DMatrix::DH_2DMatrix (const string& name,
   itsZName = std::string(Zname);
   
   TRACER4("End of C'tor");
+}
+
+DH_2DMatrix::DH_2DMatrix(const DH_2DMatrix& that)
+  : DataHolder(that),
+    itsXSize(that.itsXSize),
+    itsYSize(that.itsYSize),
+    itsXName(that.itsXName),
+    itsYName(that.itsYName),
+    itsZName(that.itsZName)
+{
 }
 
 void DH_2DMatrix::preprocess(){
@@ -88,6 +104,11 @@ void DH_2DMatrix::preprocess(){
 
 DH_2DMatrix::~DH_2DMatrix()
 {
+}
+
+DataHolder* DH_2DMatrix::clone() const
+{
+  return new DH_2DMatrix(*this);
 }
 
 const int DH_2DMatrix::getXSize(){

@@ -35,10 +35,10 @@
 #include "CEPFrame/DH_Empty.h"
 
 /**
-   The WH_Tranpose
+   The WH_Transpose
  */
 
-class WH_Transpose: public WorkHolder
+class WH_Transpose: public LOFAR::WorkHolder
 {
 public:
 
@@ -50,7 +50,7 @@ public:
   
   virtual ~WH_Transpose();
 
-  virtual WorkHolder* make(const string& name) const;
+  virtual WorkHolder* make(const string& name);
 
   virtual void preprocess();
 
@@ -58,13 +58,7 @@ public:
   virtual void process();
 
   /// Show the work holder on stdout.
-  virtual void dump() const;
-
-  /// Get a pointer to the i-th input DataHolder.
-  virtual DH_2DMatrix* getInHolder (int channel);
-
-  /// Get a pointer to the i-th output DataHolder.
-  virtual DH_2DMatrix* getOutHolder (int channel);
+  virtual void dump();
 
 private:
   /// Forbid copy constructor.
@@ -72,12 +66,6 @@ private:
 
   /// Forbid assignment.
   WH_Transpose& operator= (const WH_Transpose&);
-
-
-  /// Pointer to the array of input DataHolders.
-  DH_2DMatrix** itsInHolders;
-  /// Pointer to the array of output DataHolders.
-  DH_2DMatrix** itsOutHolders;
 
   int itsTimeDim;
   int itsFreqDim;

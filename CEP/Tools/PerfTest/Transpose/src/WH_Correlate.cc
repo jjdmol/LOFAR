@@ -32,6 +32,7 @@
 
 #include "Transpose/WH_Correlate.h"
 
+using namespace LOFAR;
 
 // Set static variables
 int WH_Correlate::theirProcessProfilerState=0; 
@@ -42,27 +43,23 @@ WH_Correlate::WH_Correlate (const string& name,
 			    int stationDim,
 			    int freqDim)
 : WorkHolder    (nin, nout, name),
-  itsInHolders  (0),
-  itsOutHolders (0),
   itsTime       (0),  
   itsStationDim (stationDim),
   itsFreqDim    (freqDim)
 {
-  itsInHolders  = new DH_2DMatrix* [nin];
-  itsOutHolders = new DH_Empty* [nout];
   char str[8];
   for (unsigned int i=0; i<nin; i++) {
     sprintf (str, "%d", i);
     TRACER3("Create WH_Correlate InhHolder[" << i << "]");
-    itsInHolders[i] = new DH_2DMatrix (std::string("in_") + str,
+    getDataManager().addInDataHolder(i, new DH_2DMatrix (std::string("in_") + str,
 				       stationDim, std::string("Station"),
 				       freqDim, std::string("Frequency"),
-				       std::string("Time"));
+				       std::string("Time")));
   }
   for (unsigned int i=0; i<nout; i++) {
     sprintf (str, "%d", i);
     TRACER3("Create WH_Correlate OutHolder[" << i << "]");
-    itsOutHolders[i] = new DH_Empty();
+    getDataManager().addOutDataHolder(i, new DH_Empty());
   }
 
   if (theirProcessProfilerState == 0) {
@@ -73,21 +70,13 @@ WH_Correlate::WH_Correlate (const string& name,
 
 WH_Correlate::~WH_Correlate()
 {
-  for (int i=0; i<getInputs(); i++) {
-    delete itsInHolders[i];
-  }
-  for (int i=0; i<getOutputs(); i++) {
-    delete itsOutHolders[i];
-  }
-  delete [] itsInHolders;
-  delete [] itsOutHolders;
 }
 
-WorkHolder* WH_Correlate::make(const string& name) const
+WorkHolder* WH_Correlate::make(const string& name)
 {
   return new WH_Correlate(name, 
-			  getInputs(), 
-			  getOutputs(),
+			  getDataManager().getInputs(), 
+			  getDataManager().getOutputs(),
 			  itsStationDim,
 			  itsFreqDim);
 }
@@ -105,8 +94,8 @@ void WH_Correlate::process()
    int vis;
    int *RowStartptrA, *RowStartptrB;
    DH_2DMatrix *InDHptr;
-   for (int time=0; time<getOutputs(); time++) {
-      InDHptr = getInHolder(time);
+   for (int time=0; time<getDataManager().getOutputs(); time++) {
+      InDHptr = (DH_2DMatrix*)getDataManager().getInHolder(time);
       Stations = InDHptr->getXSize();
       Frequencies = InDHptr->getYSize();
       for (int stationA = 0; stationA < Stations; stationA++) {
@@ -122,27 +111,27 @@ void WH_Correlate::process()
    Profiler::leaveState (theirProcessProfilerState);
 }
 
-void WH_Correlate::dump() const
+void WH_Correlate::dump()
 {
   cout << "WH_Correlate " << getName() << " ::dump()" << endl;
-  for (int outch=0; outch<std::min(10,getInputs()); outch++) {
+  for (int outch=0; outch<std::min(10,getDataManager().getInputs()); outch++) {
     cout << "Input " << outch << "   "
-	 << (const_cast<WH_Correlate*>(this))->getInHolder(outch)->getZName() << " "
-	 << (const_cast<WH_Correlate*>(this))->getInHolder(outch)->getZ() << "   "
-	 << (const_cast<WH_Correlate*>(this))->getInHolder(outch)->getXName() << "Offset = "  
-	 << (const_cast<WH_Correlate*>(this))->getInHolder(outch)->getXOffset() << "    "
-	 << (const_cast<WH_Correlate*>(this))->getInHolder(outch)->getYName() << "Offset = "  
-	 << (const_cast<WH_Correlate*>(this))->getInHolder(outch)->getYOffset() ;
+	 << ((DH_2DMatrix*)getDataManager().getInHolder(outch))->getZName() << " "
+	 << ((DH_2DMatrix*)getDataManager().getInHolder(outch))->getZ() << "   "
+	 << ((DH_2DMatrix*)getDataManager().getInHolder(outch))->getXName() << "Offset = "  
+	 << ((DH_2DMatrix*)getDataManager().getInHolder(outch))->getXOffset() << "    "
+	 << ((DH_2DMatrix*)getDataManager().getInHolder(outch))->getYName() << "Offset = "  
+	 << ((DH_2DMatrix*)getDataManager().getInHolder(outch))->getYOffset() ;
     for (int x=0; 
-	 x < std::min(10,(const_cast<WH_Correlate*>(this))->getInHolder(outch)->getXSize());
+	 x < std::min(10,((DH_2DMatrix*)getDataManager().getInHolder(outch))->getXSize());
 		 x++) {
 	   cout << endl 
-		<< (const_cast<WH_Correlate*>(this))->getInHolder(outch)->getXName()
+		<< ((DH_2DMatrix*)getDataManager().getInHolder(outch))->getXName()
 		<< x << "   ";
       for (int y=0; 
-	   y < std::min(10,(const_cast<WH_Correlate*>(this))->getInHolder(outch)->getYSize());
+	   y < std::min(10,((DH_2DMatrix*)getDataManager().getInHolder(outch))->getYSize());
 	   y++) {
-	cout << *(const_cast<WH_Correlate*>(this))->getInHolder(outch)->getBuffer(x,y) << " ";
+	cout << *((DH_2DMatrix*)getDataManager().getInHolder(outch))->getBuffer(x,y) << " ";
       }
     }
     cout << endl;
@@ -151,16 +140,3 @@ void WH_Correlate::dump() const
 
 }
 
-DH_2DMatrix* WH_Correlate::getInHolder (int channel)
-{
-  DbgAssertStr (channel >= 0,          "input channel too low");
-  DbgAssertStr (channel < getInputs(), "input channel too high");
-  return itsInHolders[channel];
-}
-
-DH_Empty* WH_Correlate::getOutHolder (int channel)
-{
-  DbgAssertStr (channel >= 0,           "output channel too low");
-  DbgAssertStr (channel < getOutputs(), "output channel too high");
-  return itsOutHolders[channel];
-}

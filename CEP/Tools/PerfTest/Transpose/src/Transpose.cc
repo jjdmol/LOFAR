@@ -50,6 +50,7 @@
 
 #include "CEPFrame/ShMem/TH_ShMem.h"
 
+using namespace LOFAR;
 
 Transpose::Transpose():
   itsSourceSteps(0),
@@ -70,7 +71,7 @@ Transpose::~Transpose()
    define function for the Transpose simulation. It defines a list
    of steps that each process a part of the data.
  */
-void Transpose::define(const ParamBlock& params)
+void Transpose::define(const LOFAR::ParamBlock& params)
 {
 #ifdef HAVE_CORBA
   // Start Orb Environment

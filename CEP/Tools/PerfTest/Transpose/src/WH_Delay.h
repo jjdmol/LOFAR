@@ -35,7 +35,7 @@
 #include "CEPFrame/DH_Empty.h"
 #include "CEPFrame/CyclicBuffer.h"
 
-class WH_Delay: public WorkHolder
+class WH_Delay: public LOFAR::WorkHolder
 {
 public:
 
@@ -48,7 +48,7 @@ public:
   
   virtual ~WH_Delay();
 
-  virtual WorkHolder* make(const string& name) const;
+  virtual WorkHolder* make(const string& name);
 
   virtual void preprocess();
 
@@ -56,13 +56,7 @@ public:
   virtual void process();
 
   /// Show the work holder on stdout.
-  virtual void dump() const;
-
-  /// Get a pointer to the i-th input DataHolder.
-  virtual DH_2DMatrix* getInHolder (int channel);
-
-  /// Get a pointer to the i-th output DataHolder.
-  virtual DH_2DMatrix* getOutHolder (int channel);
+  virtual void dump();
 
   void setDelay(const int delay);
 
@@ -73,12 +67,6 @@ private:
   /// Forbid assignment.
   WH_Delay& operator= (const WH_Delay&);
 
-
-  /// Pointer to the array of input DataHolders.
-  DH_2DMatrix** itsInHolders;
-  /// Pointer to the array of output DataHolders.
-  DH_2DMatrix** itsOutHolders;
-
   /// Profiling States
   static int          theirProcessProfilerState; 
   
@@ -88,7 +76,7 @@ private:
   int itsTimeDim;
   int itsFreqDim;
 
-  CyclicBuffer<DH_2DMatrix*> *itsBuffer;
+  LOFAR::CyclicBuffer<DH_2DMatrix*> *itsBuffer;
 };
 
 #endif

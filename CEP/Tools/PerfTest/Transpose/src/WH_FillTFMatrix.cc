@@ -32,6 +32,8 @@
 
 #include "Transpose/WH_FillTFMatrix.h"
 
+using namespace LOFAR;
+
 // Set static variables
 int WH_FillTFMatrix::theirProcessProfilerState=0; 
 
@@ -42,8 +44,6 @@ WH_FillTFMatrix::WH_FillTFMatrix (const string& name,
 				  int timeDim,
 				  int freqDim)
 : WorkHolder    (nin, nout, name),
-  itsInHolders  (0),
-  itsOutHolders (0),
   itsTime       (0),
   itsTimeDim    (timeDim),
   itsFreqDim    (freqDim),
@@ -52,19 +52,17 @@ WH_FillTFMatrix::WH_FillTFMatrix (const string& name,
   TRACER4("Enter WH_FillTFMatrix C'tor " << name);
   DbgAssertStr (nout > 0,    "0 output DH_IntArray is not possible");
   
-  itsInHolders  = new DH_Empty* [nin];
-  itsOutHolders = new DH_2DMatrix* [nout];
   char str[8];
   for (unsigned int i=0; i<nin; i++) {
     sprintf (str, "%d", i);
-    itsInHolders[i] = new DH_Empty (std::string("in_") + str);
+    getDataManager().addInDataHolder(i, new DH_Empty (std::string("in_") + str));
   }
   for (unsigned int i=0; i<nout; i++) {
     sprintf (str, "%d", i);
-    itsOutHolders[i] = new DH_2DMatrix (std::string("out_") + str,
+    getDataManager().addOutDataHolder(i, new DH_2DMatrix (std::string("out_") + str,
 					timeDim, std::string("Time"),
 					freqDim, std::string("Frequency"),
-					std::string("Station"));
+							  std::string("Station")));
   }
   if (theirProcessProfilerState == 0) {
     theirProcessProfilerState = Profiler::defineState("WH_FillTFMatrix",
@@ -77,22 +75,14 @@ WH_FillTFMatrix::WH_FillTFMatrix (const string& name,
 
 WH_FillTFMatrix::~WH_FillTFMatrix()
 {
-  for (int i=0; i<getInputs(); i++) {
-    delete itsInHolders[i];
-  }
-  for (int i=0; i<getOutputs(); i++) {
-    delete itsOutHolders[i];
-  }
-  delete [] itsInHolders;
-  delete [] itsOutHolders;
 }
 
-WorkHolder* WH_FillTFMatrix::make(const string& name) const
+WorkHolder* WH_FillTFMatrix::make(const string& name)
 {
   return new WH_FillTFMatrix(name, 
 			     itsSourceID,
-			     getInputs(), 
-			     getOutputs(),
+			     getDataManager().getInputs(), 
+			     getDataManager().getOutputs(),
 			     itsTimeDim,
 			     itsFreqDim);
 }
@@ -113,8 +103,8 @@ void WH_FillTFMatrix::process()
   DH_2DMatrix *DHptr;
   int Xsize,Ysize; 
   // the time step is the Xsize; 
-  for (int outch=0; outch<getOutputs(); outch++) {
-    DHptr = getOutHolder(outch);
+  for (int outch=0; outch<getDataManager().getOutputs(); outch++) {
+    DHptr = (DH_2DMatrix*)getDataManager().getOutHolder(outch);
     AssertStr(DHptr != 0, "GetOutHolder returned NULL");
     //    DHptr->setZ(itsSourceID);      
     //    DHptr->setYOffset(DHptr->getYSize()*outch);
@@ -137,12 +127,12 @@ void WH_FillTFMatrix::process()
     int timestep;
     DH_2DMatrix *DHptr;
     
-    itsTime += (timestep = getOutHolder(0)->getXSize()); // increase local clock
+    itsTime += (timestep = ((DH_2DMatrix*)getDataManager().getOutHolder(0))->getXSize()); // increase local clock
     // the time step is the Xsize; 
-    for (int outch=0; outch<getOutputs(); outch++) {
-      DbgAssertStr(timestep == getOutHolder(0)->getXSize(),
+    for (int outch=0; outch<getDataManager().getOutputs(); outch++) {
+      DbgAssertStr(timestep == ((DH_2DMatrix*)getDataManager().getOutHolder(0))->getXSize(),
 		   "All Output DataHolders must have the same time (X) dimension");
-      DHptr = getOutHolder(outch);
+      DHptr = (DH_2DMatrix*)getDataManager().getOutHolder(outch);
       DHptr->setZ(itsSourceID);      
       DHptr->setYOffset(DHptr->getYSize()*outch);
       DHptr->setTimeStamp(itsTime);
@@ -153,27 +143,27 @@ void WH_FillTFMatrix::process()
 }
 
 
-void WH_FillTFMatrix::dump() const
+void WH_FillTFMatrix::dump()
 {
   cout << "WH_FillTFMatrix " << getName() << " ::dump()" << endl;
-  for (int outch=0; outch<std::min(10,getOutputs()); outch++) {
+  for (int outch=0; outch<std::min(10,getDataManager().getOutputs()); outch++) {
     cout << "Output " << outch << "   "
-	 << (const_cast<WH_FillTFMatrix*>(this))->getOutHolder(outch)->getZName() << " "
-	 << (const_cast<WH_FillTFMatrix*>(this))->getOutHolder(outch)->getZ() << "   "
-	 << (const_cast<WH_FillTFMatrix*>(this))->getOutHolder(outch)->getXName() << "Offset = "  
-	 << (const_cast<WH_FillTFMatrix*>(this))->getOutHolder(outch)->getXOffset() << "    "
-	 << (const_cast<WH_FillTFMatrix*>(this))->getOutHolder(outch)->getYName() << "Offset = "  
-	 << (const_cast<WH_FillTFMatrix*>(this))->getOutHolder(outch)->getYOffset() ;
+	 << ((DH_2DMatrix*)getDataManager().getOutHolder(outch))->getZName() << " "
+	 << ((DH_2DMatrix*)getDataManager().getOutHolder(outch))->getZ() << "   "
+	 << ((DH_2DMatrix*)getDataManager().getOutHolder(outch))->getXName() << "Offset = "  
+	 << ((DH_2DMatrix*)getDataManager().getOutHolder(outch))->getXOffset() << "    "
+	 << ((DH_2DMatrix*)getDataManager().getOutHolder(outch))->getYName() << "Offset = "  
+	 << ((DH_2DMatrix*)getDataManager().getOutHolder(outch))->getYOffset() ;
     for (int x=0; 
-	 x < std::min(10,(const_cast<WH_FillTFMatrix*>(this))->getOutHolder(outch)->getXSize());
+	 x < std::min(10,((DH_2DMatrix*)getDataManager().getOutHolder(outch))->getXSize());
 		 x++) {
 	   cout << endl 
-		<< (const_cast<WH_FillTFMatrix*>(this))->getOutHolder(outch)->getXName()
+		<< ((DH_2DMatrix*)getDataManager().getOutHolder(outch))->getXName()
 		<< x << "   ";
       for (int y=0; 
-	   y < std::min(10,(const_cast<WH_FillTFMatrix*>(this))->getOutHolder(outch)->getYSize());
+	   y < std::min(10,((DH_2DMatrix*)getDataManager().getOutHolder(outch))->getYSize());
 	   y++) {
-	cout << *(const_cast<WH_FillTFMatrix*>(this))->getOutHolder(outch)->getBuffer(x,y) << " ";
+	cout << *((DH_2DMatrix*)getDataManager().getOutHolder(outch))->getBuffer(x,y) << " ";
       }
     }
     cout << endl;
@@ -181,20 +171,4 @@ void WH_FillTFMatrix::dump() const
   cout << "=====================================" <<endl;
 }
 
-DH_Empty* WH_FillTFMatrix::getInHolder (int channel)
-{
-  AssertStr (channel >= 0,          "input channel too low");
-  AssertStr (channel < getInputs(), "input channel too high");
-  AssertStr (itsInHolders[channel] != 0, "InHolder does not exist");
-  return itsInHolders[channel];
-}
-DH_2DMatrix* WH_FillTFMatrix::getOutHolder (int channel)
-{
-  AssertStr (channel >= 0,           "output channel too low");
-  AssertStr (channel < getOutputs(), 
-	     "output channel too high; name = " << getName() 
-	     << " channel = " << channel);
-  AssertStr (itsOutHolders[channel] != NULL, "OutHolder does not exist");
-  return itsOutHolders[channel];
-}
  

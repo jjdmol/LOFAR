@@ -38,7 +38,7 @@
    DataPacket buffer.
 */
 
-class DH_2DMatrix: public DataHolder
+class DH_2DMatrix: public LOFAR::DataHolder
 {
 public:
 
@@ -48,6 +48,8 @@ public:
 			const string& Zname);
 
   virtual ~DH_2DMatrix();
+
+  DataHolder* clone() const;
 
   /// Allocate the buffers.
   virtual void preprocess();
@@ -86,8 +88,7 @@ protected:
   };
 
 private:
-  /// Forbid copy constructor.
-  DH_2DMatrix (const DH_2DMatrix&);
+  DH_2DMatrix (const DH_2DMatrix& that);
   /// Forbid assignment.
   DH_2DMatrix& operator= (const DH_2DMatrix&);
 

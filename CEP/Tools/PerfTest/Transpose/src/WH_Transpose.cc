@@ -32,6 +32,7 @@
 
 #include "Transpose/WH_Transpose.h"
 
+using namespace LOFAR;
 
 // Set static variables
 int WH_Transpose::theirProcessProfilerState=0; 
@@ -42,8 +43,6 @@ WH_Transpose::WH_Transpose (const string& name,
 			    int timeDim,
 			    int freqDim)
 : WorkHolder    (nin, nout, name),
-  itsInHolders  (0),
-  itsOutHolders (0),
   itsTimeDim    (timeDim),
   itsFreqDim    (freqDim)
 {
@@ -51,24 +50,22 @@ WH_Transpose::WH_Transpose (const string& name,
   AssertStr (nout > 0,    "0 output for WH_Transpose is not possible");
   //   AssertStr (nout == nin, "number of inputs and outputs must match");
   
-  itsInHolders  = new DH_2DMatrix* [nin];
-  itsOutHolders = new DH_2DMatrix* [nout];
   char str[8];
   for (unsigned int i=0; i<nin; i++) {
     sprintf (str, "%d", i);
     TRACER3("Create WH_Transpose InhHolder[" << i << "]");
-    itsInHolders[i] = new DH_2DMatrix (std::string("in_") + str,
+    getDataManager().addInDataHolder(i, new DH_2DMatrix (std::string("in_") + str,
 				       timeDim, std::string("Time"),
 				       freqDim, std::string("Frequency"),
-				       std::string("Station"));
+							 std::string("Station")));
   }
   for (unsigned int i=0; i<nout; i++) {
     sprintf (str, "%d", i);
     TRACER3("Create WH_Transpose OutHolder[" << i << "]");
-    itsOutHolders[i] = new DH_2DMatrix (std::string("out_") + str,
+    getDataManager().addOutDataHolder(i, new DH_2DMatrix (std::string("out_") + str,
 				       nin, std::string("Station"),
 				       freqDim, std::string("Frequency"),
-				       std::string("Time"));
+				       std::string("Time")));
   }
 
   if (theirProcessProfilerState == 0) {
@@ -79,21 +76,13 @@ WH_Transpose::WH_Transpose (const string& name,
 
 WH_Transpose::~WH_Transpose()
 {
-  for (int i=0; i<getInputs(); i++) {
-    delete itsInHolders[i];
-  }
-  for (int i=0; i<getOutputs(); i++) {
-    delete itsOutHolders[i];
-  }
-  delete [] itsInHolders;
-  delete [] itsOutHolders;
 }
 
-WorkHolder* WH_Transpose::make(const string& name) const
+WorkHolder* WH_Transpose::make(const string& name)
 {
   return new WH_Transpose(name, 
-			  getInputs(), 
-			  getOutputs(),
+			  getDataManager().getInputs(), 
+			  getDataManager().getOutputs(),
 			  itsTimeDim,
 			  itsFreqDim);
 }
@@ -107,36 +96,40 @@ void WH_Transpose::process()
 {  
 
   // check wheteher all timestamps of the inputs are the same
-  for (int input=1; input<getInputs(); input++) {
-    AssertStr(getInHolder(0)->compareTimeStamp (*getInHolder(input)) == 0,
+  for (int input=1; input<getDataManager().getInputs(); input++) {
+    AssertStr(getDataManager().getInHolder(0)->compareTimeStamp 
+	      (*getDataManager().getInHolder(input)) == 0,
 	      "Input timestamps must be the same!");
   }
-  unsigned long localtime = getInHolder(0)->getTimeStamp();
+  unsigned long localtime = getDataManager().getInHolder(0)->getTimeStamp();
 
   Profiler::enterState (theirProcessProfilerState);
   
   DH_2DMatrix *InDHptr, *OutDHptr;
-  DbgAssertStr(getOutHolder(0)->getXSize() == getInputs(),
-	       "nr of stations not correct");
-  DbgAssertStr(getOutHolder(0)->getYSize() == getInHolder(0)->getYSize(),
+  DbgAssertStr(((DH_2DMatrix*)getDataManager().getOutHolder(0))->getXSize() == 
+	       getDataManager().getInputs(),"nr of stations not correct");
+  DbgAssertStr(((DH_2DMatrix*)getDataManager().getOutHolder(0))->getYSize() 
+	       == ((DH_2DMatrix*)getDataManager().getInHolder(0))->getYSize(),
 	       "nr of freqs not correct");
-  DbgAssertStr(getOutputs() == getInHolder(0)->getXSize(),
+  DbgAssertStr(getDataManager().getOutputs() == 
+	       ((DH_2DMatrix*)getDataManager().getInHolder(0))->getXSize(),
 	       "nr of times not correct");
-  DbgAssertStr(getInHolder(0)->getYSize() == getOutHolder(0)->getYSize(),
+  DbgAssertStr(((DH_2DMatrix*)getDataManager().getInHolder(0))->getYSize() == 
+	       ((DH_2DMatrix*)getDataManager().getOutHolder(0))->getYSize(),
 	       "Y sizes not equal");
   
   // The X and Y sizes are the same for all outputs (see C'tor),
   //   so we can obtain them outside the loop
-  int Xsize = getOutHolder(0)->getXSize();
-  int Ysize = getOutHolder(0)->getYSize();
+  int Xsize = ((DH_2DMatrix*)getDataManager().getOutHolder(0))->getXSize();
+  int Ysize = ((DH_2DMatrix*)getDataManager().getOutHolder(0))->getYSize();
   int Ysize_bytes = Ysize*sizeof(int); // OK; hard coded data type==int
-  int StationOffset = getInHolder(0)->getZ();
+  int StationOffset = ((DH_2DMatrix*)getDataManager().getInHolder(0))->getZ();
   
-  for (int time=0; time<getOutputs(); time++) {
-    OutDHptr = getOutHolder(time); 
+  for (int time=0; time<getDataManager().getOutputs(); time++) {
+    OutDHptr = (DH_2DMatrix*)getDataManager().getOutHolder(time); 
     OutDHptr->setTimeStamp(localtime);
     for (int station=0; station < Xsize; station++) {
-      InDHptr = getInHolder (station);
+      InDHptr = (DH_2DMatrix*)getDataManager().getInHolder (station);
       // DH_2DMatrix::getBuffer(x,y) contiguous for fixed x.
       memcpy(OutDHptr->getBuffer(station,0),
              InDHptr->getBuffer(time,0),
@@ -152,45 +145,31 @@ void WH_Transpose::process()
 
 }
 
-void WH_Transpose::dump() const
+void WH_Transpose::dump()
 {
   cout << "WH_Transpose " << getName() << " ::dump()" << endl;
-  for (int outch=0; outch<std::min(10,getOutputs()); outch++) {
+  for (int outch=0; outch<std::min(10,getDataManager().getOutputs()); outch++) {
     cout << "Output " << outch << "   "
-	 << (const_cast<WH_Transpose*>(this))->getOutHolder(outch)->getZName() << " "
-	 << (const_cast<WH_Transpose*>(this))->getOutHolder(outch)->getZ() << "   "
-	 << (const_cast<WH_Transpose*>(this))->getOutHolder(outch)->getXName() << "Offset = "  
-	 << (const_cast<WH_Transpose*>(this))->getOutHolder(outch)->getXOffset() << "    "
-	 << (const_cast<WH_Transpose*>(this))->getOutHolder(outch)->getYName() << "Offset = "  
-	 << (const_cast<WH_Transpose*>(this))->getOutHolder(outch)->getYOffset() ;
+	 << ((DH_2DMatrix*)getDataManager().getOutHolder(outch))->getZName() << " "
+	 << ((DH_2DMatrix*)getDataManager().getOutHolder(outch))->getZ() << "   "
+	 << ((DH_2DMatrix*)getDataManager().getOutHolder(outch))->getXName() << "Offset = "  
+	 << ((DH_2DMatrix*)getDataManager().getOutHolder(outch))->getXOffset() << "    "
+	 << ((DH_2DMatrix*)getDataManager().getOutHolder(outch))->getYName() << "Offset = "  
+	 << ((DH_2DMatrix*)getDataManager().getOutHolder(outch))->getYOffset() ;
     for (int x=0; 
-	 x < std::min(10,(const_cast<WH_Transpose*>(this))->getOutHolder(outch)->getXSize());
+	 x < std::min(10,((DH_2DMatrix*)getDataManager().getOutHolder(outch))->getXSize());
 		 x++) {
 	   cout << endl 
-		<< (const_cast<WH_Transpose*>(this))->getOutHolder(outch)->getXName()
+		<< ((DH_2DMatrix*)getDataManager().getOutHolder(outch))->getXName()
 		<< x << "   ";
       for (int y=0; 
-	   y < std::min(10,(const_cast<WH_Transpose*>(this))->getOutHolder(outch)->getYSize());
+	   y < std::min(10,((DH_2DMatrix*)getDataManager().getOutHolder(outch))->getYSize());
 	   y++) {
-	cout << *(const_cast<WH_Transpose*>(this))->getOutHolder(outch)->getBuffer(x,y) << " ";
+	cout << *((DH_2DMatrix*)getDataManager().getOutHolder(outch))->getBuffer(x,y) << " ";
       }
     }
     cout << endl;
   }
   cout << "=====================================" <<endl;
 
-}
-
-DH_2DMatrix* WH_Transpose::getInHolder (int channel)
-{
-  DbgAssertStr (channel >= 0,          "input channel too low");
-  DbgAssertStr (channel < getInputs(), "input channel too high");
-  return itsInHolders[channel];
-}
-
-DH_2DMatrix* WH_Transpose::getOutHolder (int channel)
-{
-  DbgAssertStr (channel >= 0,           "output channel too low");
-  DbgAssertStr (channel < getOutputs(), "output channel too high");
-  return itsOutHolders[channel];
 }
