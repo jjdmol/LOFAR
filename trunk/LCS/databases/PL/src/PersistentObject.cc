@@ -88,11 +88,7 @@ namespace LOFAR
 
     void PersistentObject::retrieve()
     {
-      doRetrieve(*metaData().oid(), isOwned());
-      POContainer::const_iterator it;
-      for(it = itsOwnedPOs.begin(); it != itsOwnedPOs.end(); ++it) {
-	(*it)->retrieve(*metaData().oid());
-      }
+      retrieve(*metaData().oid());
     }
 
     void PersistentObject::retrieve(const ObjectId& oid)
