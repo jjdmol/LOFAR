@@ -25,6 +25,7 @@
 
 //# Includes
 //# Common Includes
+#include <Common/LofarLogger.h>
 #include <Common/lofar_string.h>
 #include <Common/lofar_map.h>
 #include <boost/shared_ptr.hpp>
@@ -100,6 +101,8 @@ namespace AVT
       typedef ResourceRequestsT::iterator             ResourceRequestsIterT;
       
       ResourceRequestsT                               m_resourceRequests;
+
+      ALLOC_TRACER_CONTEXT  
   };
 
 };//AVT

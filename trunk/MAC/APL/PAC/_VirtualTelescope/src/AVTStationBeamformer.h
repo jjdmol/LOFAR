@@ -25,6 +25,7 @@
 
 //# Includes
 //# Common Includes
+#include <Common/LofarLogger.h>
 #include <Common/lofar_string.h>
 #include <set>
 #include <boost/shared_ptr.hpp>
@@ -114,6 +115,8 @@ namespace AVT
       double          m_directionAngle1;
       double          m_directionAngle2;
       int             m_beamID;
+
+      ALLOC_TRACER_CONTEXT  
   };
 };//AVT
 };//LOFAR

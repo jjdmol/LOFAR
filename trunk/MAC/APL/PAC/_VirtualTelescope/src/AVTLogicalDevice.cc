@@ -40,6 +40,8 @@ namespace LOFAR
 namespace AVT
 {
 
+INIT_TRACER_CONTEXT(AVTLogicalDevice,LOFARLOGGER_PACKAGE);
+
 AVTLogicalDevice::AVTLogicalDevice(string& taskName, 
                                    const string& scope,
                                    const string& type,
@@ -47,7 +49,7 @@ AVTLogicalDevice::AVTLogicalDevice(string& taskName,
   GCFTask((State)&AVTLogicalDevice::initial_state,taskName),
   AVTPropertySetAnswerHandlerInterface(),
   m_propertySetAnswer(*this),
-  m_properties(scope.c_str(),type.c_str(),false,&m_propertySetAnswer),
+  m_properties(scope.c_str(),type.c_str(),PS_CAT_PERMANENT,&m_propertySetAnswer),
   m_APC(APCName),
   m_serverPortName(taskName+string("_server")),
   m_logicalDeviceServerPort(*this, m_serverPortName, GCFPortInterface::SPP, LOGICALDEVICE_PROTOCOL),
@@ -55,8 +57,8 @@ AVTLogicalDevice::AVTLogicalDevice(string& taskName,
   m_apcLoaded(false),
   m_logicalDeviceState(LOGICALDEVICE_STATE_IDLE)
 {
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
   registerProtocol(LOGICALDEVICE_PROTOCOL, LOGICALDEVICE_PROTOCOL_signalnames);
-  LOG_DEBUG(formatString("AVTLogicalDevice(%s)::AVTLogicalDevice",getName().c_str()));
   
   m_properties.enable();
 }
@@ -64,7 +66,7 @@ AVTLogicalDevice::AVTLogicalDevice(string& taskName,
 
 AVTLogicalDevice::~AVTLogicalDevice()
 {
-  LOG_DEBUG(formatString("AVTLogicalDevice(%s)::~AVTLogicalDevice",getName().c_str()));
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
   m_properties.disable();
 }
 
@@ -119,7 +121,7 @@ void AVTLogicalDevice::apcLoaded()
 
 GCFEvent::TResult AVTLogicalDevice::initial_state(GCFEvent& event, GCFPortInterface& port)
 {
-  LOG_DEBUG(formatString("AVTLogicalDevice(%s)::initial_state (%s)",getName().c_str(),evtstr(event)));
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
 
   GCFEvent::TResult status = GCFEvent::HANDLED;
   
@@ -160,7 +162,7 @@ GCFEvent::TResult AVTLogicalDevice::initial_state(GCFEvent& event, GCFPortInterf
 
 GCFEvent::TResult AVTLogicalDevice::idle_state(GCFEvent& event, GCFPortInterface& port)
 {
-  LOG_DEBUG(formatString("AVTLogicalDevice(%s)::idle_state (%s)",getName().c_str(),evtstr(event)));
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (event.signal)
@@ -208,7 +210,7 @@ GCFEvent::TResult AVTLogicalDevice::idle_state(GCFEvent& event, GCFPortInterface
 
 GCFEvent::TResult AVTLogicalDevice::claiming_state(GCFEvent& event, GCFPortInterface& port)
 {
-  LOG_DEBUG(formatString("AVTLogicalDevice(%s)::claiming_state (%s)",getName().c_str(),evtstr(event)));
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (event.signal)
@@ -252,7 +254,7 @@ GCFEvent::TResult AVTLogicalDevice::claiming_state(GCFEvent& event, GCFPortInter
 
 GCFEvent::TResult AVTLogicalDevice::claimed_state(GCFEvent& event, GCFPortInterface& port)
 {
-  LOG_DEBUG(formatString("AVTLogicalDevice(%s)::claimed_state (%s)",getName().c_str(),evtstr(event)));
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (event.signal)
@@ -309,7 +311,7 @@ GCFEvent::TResult AVTLogicalDevice::claimed_state(GCFEvent& event, GCFPortInterf
 
 GCFEvent::TResult AVTLogicalDevice::preparing_state(GCFEvent& event, GCFPortInterface& port)
 {
-  LOG_DEBUG(formatString("AVTLogicalDevice(%s)::preparing_state (%s)",getName().c_str(),evtstr(event)));
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (event.signal)
@@ -372,7 +374,7 @@ GCFEvent::TResult AVTLogicalDevice::preparing_state(GCFEvent& event, GCFPortInte
 
 GCFEvent::TResult AVTLogicalDevice::suspended_state(GCFEvent& event, GCFPortInterface& port)
 {
-  LOG_DEBUG(formatString("AVTLogicalDevice(%s)::suspended_state (%s)",getName().c_str(),evtstr(event)));
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (event.signal)
@@ -430,7 +432,7 @@ GCFEvent::TResult AVTLogicalDevice::suspended_state(GCFEvent& event, GCFPortInte
 
 GCFEvent::TResult AVTLogicalDevice::active_state(GCFEvent& event, GCFPortInterface& port)
 {
-  LOG_DEBUG(formatString("AVTLogicalDevice(%s)::active_state (%s)",getName().c_str(),evtstr(event)));
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (event.signal)
@@ -482,7 +484,7 @@ GCFEvent::TResult AVTLogicalDevice::active_state(GCFEvent& event, GCFPortInterfa
 
 GCFEvent::TResult AVTLogicalDevice::releasing_state(GCFEvent& event, GCFPortInterface& port)
 {
-  LOG_DEBUG(formatString("AVTLogicalDevice(%s)::releasing_state (%s)",getName().c_str(),evtstr(event)));
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (event.signal)

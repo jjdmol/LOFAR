@@ -20,7 +20,14 @@
 //#
 //#  $Id$
 
+#include <stdio.h>
 #include <math.h>
+
+#undef PACKAGE
+#undef VERSION
+#include <lofar_config.h>
+#include <Common/LofarLogger.h>
+
 #include <GCF/GCF_PValue.h>
 #include <GCF/GCF_PVUnsigned.h>
 #include <GCF/GCF_PVString.h>
@@ -29,22 +36,10 @@
 #include "AVTTestTask.h"
 #include "../src/AVTPropertyDefines.h" 
 
-#undef PACKAGE
-#undef VERSION
 #define DECLARE_SIGNAL_NAMES
 #include "../src/LogicalDevice_Protocol.ph"
 #include <ABS_Protocol.ph>
 
-#include <stdio.h>
-
-#undef PACKAGE
-#undef VERSION
-#include <lofar_config.h>
-#include <Common/LofarLogger.h>
-
-using namespace LOFAR;
-using namespace AVT;
-using namespace std;
 
 #define NEXT_TEST(_test_, _descr_) \
   { \
@@ -83,6 +78,10 @@ using namespace std;
     ABORT_TESTS; \
     break; \
   }
+
+using namespace LOFAR;
+using namespace AVT;
+using namespace std;
 
 string AVTTestTask::m_taskName("AVTTest");
 bool   AVTTestTask::m_sBeamServerOnly(false);

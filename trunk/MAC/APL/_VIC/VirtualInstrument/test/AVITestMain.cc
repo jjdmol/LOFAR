@@ -44,9 +44,11 @@ int main(int argc, char* argv[])
   int retval=-1;
   
   {
+    INIT_LOGGER(argv[0]);
+    
     GCFTask::init(argc, argv);
 
-  LOG_INFO(formatString("Program %s has started", argv[0]));
+    LOG_INFO(formatString("Program %s has started", argv[0]));
   
     CCmdLine cmdLine;
 

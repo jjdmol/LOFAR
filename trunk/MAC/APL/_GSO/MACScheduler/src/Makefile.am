@@ -10,6 +10,7 @@ MACScheduler_CPPFLAGS= \
   -Wno-deprecated \
 	-fmessage-length=0 \
 	-fdiagnostics-show-location=once \
+	-DUSE_TCPPORT_INSTEADOF_PVSSPORT \
 	-DACC_CONFIGURATIONMGR_UNAVAILABLE
 
 MACScheduler_SOURCES 		= \

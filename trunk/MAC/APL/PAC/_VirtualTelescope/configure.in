@@ -10,9 +10,9 @@ AM_INIT_AUTOMAKE(LogicalDeviceScheduler, 1.0)
 dnl Initialize for LOFAR (may set compilers)
 lofar_INIT
 
-AC_DEFINE_UNQUOTED([ARA_SYSCONF],["${prefix}/etc"],[Path to ARA install prefix directory.])
-RSP_SYSCONF="${prefix}/etc"
-AC_SUBST([ARA_SYSCONF])
+AC_DEFINE_UNQUOTED([AVT_SYSCONF],["${prefix}/etc"],[Path to AVT install prefix directory.])
+AVT_SYSCONF="${prefix}/etc"
+AC_SUBST([AVT_SYSCONF])
 
 dnl Checks for programs.
 AC_PROG_AWK
@@ -55,6 +55,7 @@ dnl
 dnl Check for LOFAR specific things
 dnl
 lofar_DEBUG_OPTIMIZE
+lofar_CHECK_PRETTY_FUNCTION
 #lofar_QT
 lofar_QATOOLS
 lofar_DOCXX

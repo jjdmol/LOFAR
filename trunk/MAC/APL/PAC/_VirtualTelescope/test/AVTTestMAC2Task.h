@@ -38,12 +38,19 @@
 
 // forward declaration
 class GCFEvent;
+
+namespace LOFAR
+{
 namespace AVT
 {
   
   class AVTTestMAC2Task : public GCFTask, public Test
   {
     public:
+      // as of GCF_Fsm.h version 1.4, the GCFFsm::State typedef is protected.
+      // The workaround is simple yet highly undesirable: copy & paste
+      typedef GCFEvent::TResult (AVTTestMAC2Task::*State)(GCFEvent& event, GCFPortInterface& port); // ptr to state handler type
+
       AVTTestMAC2Task();
       virtual ~AVTTestMAC2Task();
       virtual void run();
@@ -96,6 +103,7 @@ namespace AVT
 		  int 									m_nrOfPropsets;
       
   };  
+};
 };
 
 #endif

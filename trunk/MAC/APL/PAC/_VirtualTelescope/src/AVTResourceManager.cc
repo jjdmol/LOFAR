@@ -37,6 +37,8 @@ using namespace AVT;
 using namespace std;
 using namespace boost;
 
+INIT_TRACER_CONTEXT(AVTResourceManager,LOFARLOGGER_PACKAGE);
+
 AVTResourceManager::AVTResourceManagerPtrInternal AVTResourceManager::s_avtResourceManagerInstance;
 
 void AVTResourceManager::checked_deleter::operator() (AVTResourceManager* _p)
@@ -48,17 +50,17 @@ void AVTResourceManager::checked_deleter::operator() (AVTResourceManager* _p)
 AVTResourceManager::AVTResourceManager() : boost::noncopyable(),
   m_resourceRequests()
 {
-  LOG_DEBUG(formatString("%s",__func__));
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,"resourceManager");
 }
 
 AVTResourceManager::~AVTResourceManager()
 {
-  LOG_DEBUG(formatString("%s",__func__));
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,"resourceManager");
 }
 
 AVTResourceManagerPtr AVTResourceManager::instance()
 {
-  LOG_DEBUG(formatString("%s",__func__));
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,"resourceManager");
   
   AVTResourceManagerPtr tmp;
   if(s_avtResourceManagerInstance.expired())
@@ -79,6 +81,7 @@ AVTResourceManagerPtr AVTResourceManager::instance()
 */
 void AVTResourceManager::requestResource(const string& taskName, const string& resourceName)
 {
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("task=%s,resource=%s",taskName.c_str(),resourceName.c_str()).c_str());
   ResourceRequestsIterT requestsIt = m_resourceRequests.find(resourceName);
   if(requestsIt != m_resourceRequests.end())
   {
@@ -99,6 +102,7 @@ void AVTResourceManager::requestResource(const string& taskName, const string& r
 */
 void AVTResourceManager::releaseResource(const string& taskName, const string& resourceName)
 {
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("task=%s,resource=%s",taskName.c_str(),resourceName.c_str()).c_str());
   ResourceRequestsIterT requestsIt = m_resourceRequests.find(resourceName);
   if(requestsIt != m_resourceRequests.end())
   {

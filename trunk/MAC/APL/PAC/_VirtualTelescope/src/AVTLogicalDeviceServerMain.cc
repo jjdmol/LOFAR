@@ -20,14 +20,19 @@
 //#
 //#  $Id$
 
+#include <Common/LofarLogger.h>
 #include "AVTLogicalDeviceScheduler.h"
 #include <GCF/ParameterSet.h>
 
+using namespace LOFAR;
 using namespace GCF;
 using namespace AVT;
 
 int main(int argc, char* argv[])
 {
+  INIT_LOGGER(argv[0]);
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,"LogicalDeviceScheduler");
+  
   GCFTask::init(argc, argv);
   
   ParameterSet::instance()->adoptFile("LogicalDeviceServer.conf");

@@ -23,6 +23,9 @@
 #include "AVTTestAnswer.h"
 #include <GCF/TM/GCF_Task.h>
 
+using namespace LOFAR;
+using namespace AVT;
+
 AVTTestAnswer::AVTTestAnswer() : 
   m_dummyPort(),
   m_task(0)

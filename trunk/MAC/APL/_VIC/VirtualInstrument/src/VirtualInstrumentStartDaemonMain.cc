@@ -31,6 +31,8 @@ using namespace AVI;  // A)pplication layer V)irtual I)nstrument
 
 int main(int argc, char* argv[])
 {
+  INIT_LOGGER(argv[0]);
+
   GCFTask::init(argc, argv);
   
   boost::shared_ptr<VirtualInstrumentFactory> viFactory(new VirtualInstrumentFactory);

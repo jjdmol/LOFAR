@@ -32,12 +32,12 @@ namespace AVT
 const char SCOPESEPARATOR[] = "_";
 const char PROPERTYSEPARATOR[] = ".";
   
-const char APC_SBF[]                      = "ApcStationBeamformer";
-const char APC_VT[]                       = "ApcVirtualTelescope";
-const char APC_SR[]                       = "ApcStationReceptor";
-const char APC_SRG[]                      = "ApcStationReceptorGroup";
-const char APC_LogicalDeviceScheduler[]   = "ApcLogicalDeviceScheduler";
-const char APC_WaveformGenerator[]        = "ApcWaveformGenerator";
+const char APC_SBF[]                      = "ApcStationBeamformer.xml";
+const char APC_VT[]                       = "ApcVirtualTelescope.xml";
+const char APC_SR[]                       = "ApcStationReceptor.xml";
+const char APC_SRG[]                      = "ApcStationReceptorGroup.xml";
+const char APC_LogicalDeviceScheduler[]   = "ApcLogicalDeviceScheduler.xml";
+const char APC_WaveformGenerator[]        = "ApcWaveformGenerator.xml";
 
 const char SCOPE_PAC[]                        = "PAC";
 const char SCOPE_PAC_VTn[]                    = "PAC_VT%d";

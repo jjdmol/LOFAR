@@ -51,7 +51,7 @@ dnl
 dnl Check for LOFAR specific things
 dnl
 lofar_DEBUG_OPTIMIZE
-#lofar_QT
+lofar_CHECK_PRETTY_FUNCTION
 lofar_QATOOLS
 lofar_DOCXX
 lofar_COMPILETOOLS

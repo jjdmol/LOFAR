@@ -24,16 +24,16 @@ avttest_LDADD		= \
 	-labs
 	
 BUILT_SOURCES = \
-	avttest.conf \
   ../src/LogicalDevice_Protocol.ph \
-	log4cplus.properties	
+	avttest.conf \
+	avttest.log_prop
 
 EXTRA_DIST = \
-	avttest.conf \
   ../LogicalDevice_Protocol.ph \
-	log4cplus.properties
+	avttest.conf \
+	avttest.log_prop
 	
-%.properties: $(MAC_CONFIG)/%.properties
+%.log_prop: %.log_prop.in
 	cp $< $@
 	
 %.conf: %.conf.in

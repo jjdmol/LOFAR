@@ -29,17 +29,24 @@
 class GCFEvent;
 class GCFTask;
 
-class AVTTestAnswer : public GCFAnswer
+namespace LOFAR
 {
-  public:
-    AVTTestAnswer();
-    ~AVTTestAnswer();
-
-    void setTask(GCFTask* t);
-    void handleAnswer(GCFEvent& answer);
-    
-  private:    
-    GCFPort  m_dummyPort;
-    GCFTask* m_task;
+namespace AVT
+{
+  
+  class AVTTestAnswer : public GCFAnswer
+  {
+    public:
+      AVTTestAnswer();
+      ~AVTTestAnswer();
+  
+      void setTask(GCFTask* t);
+      void handleAnswer(GCFEvent& answer);
+      
+    private:    
+      GCFPort  m_dummyPort;
+      GCFTask* m_task;
+  };
+};
 };
 #endif

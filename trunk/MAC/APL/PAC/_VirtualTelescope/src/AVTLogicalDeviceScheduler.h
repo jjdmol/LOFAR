@@ -25,6 +25,7 @@
 
 //# Includes
 //# Common Includes
+#include <Common/LofarLogger.h>
 #include <Common/lofar_string.h>
 #include <Common/lofar_map.h>
 #include <boost/shared_ptr.hpp>
@@ -201,6 +202,8 @@ namespace AVT
       GCFPort                 m_timerPort;
       
       AVTResourceManagerPtr   m_resourceManager;
+
+      ALLOC_TRACER_CONTEXT  
   };
 };//AVT
 };//LOFAR
