@@ -83,6 +83,11 @@ namespace RSP
       /*@}*/
 
     private:
+      /**
+       * Constants from the config file converted to the correct type.
+       */
+
+      static int SYNC_INTERVAL_INT;
       /*@{*/
       /**
        * Helper methods for the Scheduler::run method.

@@ -46,6 +46,8 @@ using namespace std;
 using namespace LOFAR;
 using namespace blitz;
 
+#define N_BEAMLETS 256
+
 RSPTest::RSPTest(string name)
     : GCFTask((State)&RSPTest::initial, name), Test(name)
 {
@@ -76,7 +78,7 @@ GCFEvent::TResult RSPTest::initial(GCFEvent& e, GCFPortInterface& port)
 
       case F_CONNECTED:
       {
-	  TRAN(RSPTest::test005);
+	  TRAN(RSPTest::test001);
       }
       break;
 

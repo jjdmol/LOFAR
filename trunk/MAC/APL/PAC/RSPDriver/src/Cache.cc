@@ -21,7 +21,7 @@
 //#  $Id$
 
 #include "Cache.h"
-#include "RSPDriverTask.h"
+#include "RSPConfig.h"
 
 #undef PACKAGE
 #undef VERSION
@@ -50,28 +50,31 @@ CacheBuffer::CacheBuffer()
   tv.tv_sec = 0; tv.tv_usec = 0;
   m_timestamp.set(tv);
 
-  m_subbandselection().resize(RSPDriverTask::N_RCU, MAX_N_BEAMLETS);
-  m_subbandselection.nrsubbands().resize(RSPDriverTask::N_RCU);
+  m_subbandselection().resize(GET_CONFIG(N_RCU), MAX_N_BEAMLETS);
+  m_subbandselection.nrsubbands().resize(GET_CONFIG(N_RCU));
 
   m_subbandselection() = 0;
   m_subbandselection.nrsubbands() = 0;
     
-  m_rcusettings.resize(RSPDriverTask::N_RCU);
-  m_wgsettings.resize(RSPDriverTask::N_RCU);
-  m_statistics.resize(RSPDriverTask::N_RCU);
+  m_rcusettings.resize(GET_CONFIG(N_RCU));
+  m_wgsettings.resize(GET_CONFIG(N_RCU));
+  m_statistics.resize(GET_CONFIG(N_RCU));
 
   m_beamletweights().resize(BeamletWeights::SINGLE_TIMESTEP,
-			    RSPDriverTask::N_RCU,
-			    N_BEAMLETS);
+			    GET_CONFIG(N_RCU),
+			    MAX_N_BEAMLETS);
 
   m_beamletweights()(Range::all(), Range::all(), Range::all()) = complex<int16>(0,0);
 }
 
 CacheBuffer::~CacheBuffer()
 {
+  m_subbandselection().free();
+  m_subbandselection.nrsubbands().free();
   m_rcusettings.free();
   m_wgsettings.free();
   m_statistics.free();
+  m_beamletweights().free();
 }
 
 BeamletWeights&   CacheBuffer::getBeamletWeights()
@@ -117,7 +120,7 @@ Cache& Cache::getInstance()
 {
   if (0 == m_instance)
   {
-    m_instance = new Cache();
+    m_instance = new Cache;
     return *m_instance;
   }
   else return *m_instance;

@@ -41,13 +41,6 @@ namespace RSP
   {
     public:
       /**
-       * Constants. Should probably be moved somewhere else at some point.
-       */
-      static const int N_RSPBOARDS = 2; // eventually this should be 24
-      static const int N_RCU = N_RSPBOARDS * N_BLP; // eventually should be 24 * 8 = 192
-
-    public:
-      /**
        * The constructor of the RSPDriver task.
        * @param name The name of the task. The name is used for looking
        * up connection establishment information using the GTMNameService and
@@ -120,7 +113,7 @@ namespace RSP
     private:
       // ports
       GCFTCPPort m_acceptor; // listen for clients on this port
-      GCFPort m_board[N_RSPBOARDS];
+      GCFPort*   m_board;
       std::list<GCFPortInterface*> m_client_list;  // list of clients
       std::list<GCFPortInterface*> m_garbage_list; // list of clients to cleanup
 

@@ -201,7 +201,7 @@ void BWSync::writedata(uint8 blp)
 
   // copy weights from the cache to the message
   Array<int16, 1> weights((int16*)&bfcoefs.coef,
-			  shape(RSP_Protocol::N_BEAMLETS),
+			  shape(RSP_Protocol::MAX_N_BEAMLETS),
 			  neverDeleteData);
   
   //

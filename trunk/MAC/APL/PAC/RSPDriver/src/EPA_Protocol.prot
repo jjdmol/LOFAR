@@ -31,7 +31,6 @@ namespace EPA_Protocol
   static const int N_BLP         = N_AP*2;
   static const int N_COEF        = MEPHeader::BFCOEFS_SIZE / sizeof(uint16);      /* should be 512 */
   static const int N_USERSAMPLES = MEPHeader::WGUSER_SIZE / sizeof(uint16);       /* should be 512 */
-  static const int N_SUBBANDS    = MEPHeader::SUBBANDSELECT_SIZE / sizeof(uint8); /* should be 256 */
   static const int N_STATS       = MEPHeader::STSTATS_SIZE / sizeof(uint16);      /* should be 512 */
   /*@}*/
 
