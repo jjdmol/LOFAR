@@ -170,10 +170,11 @@ const meq.server := function (appid='MeqServer',
   
   # ------ getnodelist()
   
-  const public.getnodelist := function ()
+  const public.getnodelist := function (name=T,nodeindex=T,class=T,children=F)
   {
     wider self,public;
-    return public.meq('Get.Node.List',[=],wait_reply=T);
+    rec := [ name=name,nodeindex=nodeindex,class=class,children=children ];
+    return public.meq('Get.Node.List',rec,wait_reply=T);
   }
   
   # ------ execute()
