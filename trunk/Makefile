@@ -355,8 +355,13 @@ configure: $(VARIANTNAMES:.variant=.variant_configure)
 
 # Rules for building documentation using doxygen or doc++.
 # Default output directory is docxxhtml.
-DOCDIR := /data/LOFAR/installed/docxxhtml
-DOXYGEN := /usr/bin/doxygen
+ifeq "$(DOCDIR)"  "" 
+   DOCDIR := /data/LOFAR/installed/docxxhtml
+endif
+
+ifeq "$(DOXYGEN)" ""
+   DOXYGEN := /usr/bin/doxygen
+endif
 
 docxx:
 	@cp autoconf_share/doxygen.cfg doxygen.cfg ; \
