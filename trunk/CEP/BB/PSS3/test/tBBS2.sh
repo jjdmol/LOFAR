@@ -22,9 +22,11 @@ if [ "$usernm" = "" ]; then
   usernm=$USER
 fi
 
+echo "gathering info about run environment"	 
+./generalinfo.sh
+
 cdir=`pwd`
 echo "Doing tBBS2 tests in $cdir with niter=$niter and usernm=$usernm"
-
 rm -rf /tmp/$usernm.*
 
 # Do test1
@@ -208,5 +210,20 @@ echo "  Preparing BlackBoard ..."
 time ./prepareBBD >> test13.log
 echo "  Starting solve ..."
 time ./tBBS2 tBBS2.test13 $niter $usernm >& test13.out
+
+# Do test14
+echo ""
+echo "Doing test14"
+echo "  Generating parm tables ..."
+time ( glish initgsm3.g; glish setgsm3.g; glish initparms.g ) >& test14.log
+rm -f /tmp/$usernm.demo3_gsm-1.MEP
+rm -f /tmp/$usernm.demo3-1.MEP
+ln -s $cdir/demo3_gsm.MEP /tmp/$usernm.demo3_gsm-1.MEP
+ln -s $cdir/demo.MEP /tmp/$usernm.demo3-1.MEP
+echo "  Preparing BlackBoard ..."
+time ./prepareBBD >> test14.log
+echo "  Starting solve ..."
+time ./tBBS2 tBBS2.test14 $niter $usernm >& test14.out
+
 
 rm -rf /tmp/$usernm.*
