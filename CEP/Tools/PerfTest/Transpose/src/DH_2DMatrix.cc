@@ -21,6 +21,9 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.3  2002/05/16 15:14:02  schaaf
+//  Removed explicit setting of itsBuffer
+//
 //  Revision 1.2  2002/05/14 11:39:41  gvd
 //  Changed for new build environment
 //
