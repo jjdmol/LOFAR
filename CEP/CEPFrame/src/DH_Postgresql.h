@@ -28,7 +28,10 @@
 
 #include <CEPFrame/DH_Database.h>		// for class definition
 #include <Common/LofarTypes.h>			// for ulong
-#include <libpq-fe.h>				// for PGconn et al
+#include <pgsql/libpq-fe.h>				// for PGconn et al
+#include <sstream>
+
+using namespace std;
 
 
 class DH_Postgresql : public DH_Database {
@@ -49,13 +52,15 @@ private:
   void ConnectDatabase (void);
   void DisconnectDatabase (void);
 
-  static ulong theirInstanceCount;
+  bool ExecuteSQLCommand (char * str);
+  bool ExecuteSQLCommand (ostringstream & q);
 
   ulong itsReadSeqNo;
   ulong itsWriteSeqNo;
 
   bool isConnected;
 
+  static ulong theirInstanceCount;
   static PGconn * theirConnection;
 
 };
