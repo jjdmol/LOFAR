@@ -240,10 +240,6 @@ void ETI_Map::build()
     TypeTranslation(typeid(long).name(), C_LONG, SQL_INTEGER, SQL_C_SLONG, TypeTranslation::TYPE_PRIMITIVE, sizeof(long));
   (*this)[typeid(unsigned long).name()] =
     TypeTranslation(typeid(unsigned long).name(), C_ULONG, SQL_INTEGER, SQL_C_ULONG, TypeTranslation::TYPE_PRIMITIVE, sizeof(unsigned long));
-
-// ASTRON added long long support.
-//    TypeTranslation(typeid(long long).name(), C_INT64, SQL_BIGINT, SQL_C_SBIGINT, TypeTranslation::TYPE_PRIMITIVE, sizeof(long long));
-
   (*this)[typeid(double).name()] =
     TypeTranslation(typeid(double).name(), C_DOUBLE, SQL_DOUBLE, SQL_C_DOUBLE, TypeTranslation::TYPE_PRIMITIVE, sizeof(double));
   (*this)[typeid(float).name()] = TypeTranslation(typeid(float).name(), C_FLOAT, SQL_REAL, SQL_C_FLOAT, TypeTranslation::TYPE_PRIMITIVE, sizeof(float));

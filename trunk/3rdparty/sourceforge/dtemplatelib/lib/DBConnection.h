@@ -50,6 +50,10 @@ public:
 	void Share(HENV new_henv);
 	void init(); 
 	HENV GetHENV() const;
+	HENV GetHENV_NoThrow() const
+	{
+		return henv;
+	}
 };
 
 class DBConnection : public ValidatedObject
@@ -59,7 +63,7 @@ public:
   enum ConnState { CONN_UNALLOCATED, CONN_ALLOCATED, CONNECTED };
   // type of database
   enum DBType { DB_UNKNOWN, DB_ORACLE, DB_SQL_SERVER, DB_MYSQL, DB_OPENRDA,
-				DB_ACCESS
+				DB_ACCESS, DB_EXCEL
   };
 
 protected:
