@@ -11,22 +11,22 @@ include 'mkimg.g'
 predict := function(fname='michiel.demo')
 {
     local mc := meqcalibrater(spaste(fname,'.MS'), 
-			      fname, fname);
+                              fname, fname);
     if (is_fail(mc)) {
-	print "meqcalibratertest(): could not instantiate meqcalibrater"
-	fail
+        print "meqcalibratertest(): could not instantiate meqcalibrater";
+        fail;
     }
-
+    
     mc.settimeinterval(3600); # calibrate per 1 hour
     mc.clearsolvableparms();
     
     mc.resetiterator()
     while (mc.nextinterval())
     {
-	d := mc.getsolvedomain();
-	print 'solvedomain = ', d;
-
-	mc.predict('MODEL_DATA');
+        d := mc.getsolvedomain();
+        print 'solvedomain = ', d;
+        
+        mc.predict('MODEL_DATA');
     }
 
     mc.done();
@@ -39,14 +39,14 @@ predict := function(fname='michiel.demo')
 solve := function(fname='michiel.demo', niter=1)
 {
     annotator := imgannotator(spaste(fname, '.img'), 'raster');
-	
+    
     mc := meqcalibrater(spaste(fname,'.MS'), fname, fname);
     if (is_fail(mc)) {
-	print "meqcalibratertest(): could not instantiate meqcalibrater"
-	fail
+        print "meqcalibratertest(): could not instantiate meqcalibrater";
+        fail;
     }
 
-    mc.select('all([ANTENNA1,ANTENNA2] in 4*[0:20])', 0, 0);
+    mc.select('all([ANTENNA1,ANTENNA2] in 4*[0:20])', 5, 5);
 
     # Plot initial position
     parms := mc.getparms("GSM.*.RA GSM.*.DEC");
@@ -64,7 +64,7 @@ solve := function(fname='michiel.demo', niter=1)
         }
     }
 
-    mc.settimeinterval(3600); # calibrate per 1 hour
+    mc.settimeinterval(3); # calibrate per 3 seconds
     mc.clearsolvableparms();
     mc.setsolvableparms("GSM.*.I");
     #mc.setsolvableparms("GSM.*.RA GSM.*.DEC");
@@ -74,31 +74,31 @@ solve := function(fname='michiel.demo', niter=1)
     mc.resetiterator()
     while (mc.nextinterval())
     {
-	d := mc.getsolvedomain();
-	print 'solvedomain = ', d;
-
-	for (i in [1:niter]) {
-	    print "iteration", i
-	    mc.solve('MODEL_DATA');
-
-	    parms := mc.getparms("GSM.*.RA GSM.*.DEC");
-	    nrpos := len(parms) / 2;
-	    if (nrpos > 0) {
-	        for (j in [1:nrpos]) {
-	            ra  := parms[spaste('GSM.',j,'.RA')].value[1];
-	            dec := parms[spaste('GSM.',j,'.DEC')].value[1];
-	            print 'src =', j, ' ra =', ra, ' dec =', dec;
-
-		    if (is_fail(annotator)) fail;
-	            annotator.add_marker(j, real(ra), real(dec), j==nrpos);
+        d := mc.getsolvedomain();
+        print 'solvedomain = ', d;
+        
+        for (i in [1:niter]) {
+            print "iteration", i;
+            mc.solve('MODEL_DATA');
+            
+            parms := mc.getparms("GSM.*.RA GSM.*.DEC");
+            nrpos := len(parms) / 2;
+            if (nrpos > 0) {
+                for (j in [1:nrpos]) {
+                    ra  := parms[spaste('GSM.',j,'.RA')].value[1];
+                    dec := parms[spaste('GSM.',j,'.DEC')].value[1];
+                    print 'src =', j, ' ra =', ra, ' dec =', dec;
+                    
+                    if (is_fail(annotator)) fail;
+                    annotator.add_marker(j, real(ra), real(dec), j==nrpos);
                 }
             }
         }
-	print mc.getstatistics()
-    }
-
+        print mc.getstatistics()
+        }
+    
     mc.done();
-
+    
     return ref annotator;
 }
 
@@ -108,15 +108,15 @@ solvepos := function(fname='michiel.demo', niter=1)
 	
     mc := meqcalibrater(spaste(fname,'.MS'), fname, fname);
     if (is_fail(mc)) {
-	print "meqcalibratertest(): could not instantiate meqcalibrater"
-	fail
+        print "meqcalibratertest(): could not instantiate meqcalibrater";
+        fail;
     }
-
+    
     mc.select('all([ANTENNA1,ANTENNA2] in 4*[0:20])');
-
+    
     if (is_fail(mc)) {
-	print "meqcalibratertest(): could not instantiate meqcalibrater"
-	fail
+        print "meqcalibratertest(): could not instantiate meqcalibrater";
+        fail;
     }
 
     # Plot initial position
@@ -133,45 +133,45 @@ solvepos := function(fname='michiel.demo', niter=1)
         }
     }
 
-    mc.settimeinterval(3600); # calibrate per 1 hour
+    mc.settimeinterval(3); # calibrate per 3 seconds (1 timeslot = 2 sec)
     for (i in [1:niter]) {
         print "iteration", i
         mc.clearsolvableparms();
-	print 'Solving for RA ...'
+        print 'Solving for RA ...';
         mc.setsolvableparms("GSM.*.RA");
-    
-        mc.resetiterator()
+        
+        mc.resetiterator();
         while (mc.nextinterval())
         {
-	    mc.solve('MODEL_DATA');
+            mc.solve('MODEL_DATA');
         }
-
+        
         mc.clearsolvableparms();
-	print 'Solving for DEC ...'
+        print 'Solving for DEC ...';
         mc.setsolvableparms("GSM.*.DEC");
-    
-        mc.resetiterator()
+        
+        mc.resetiterator();
         while (mc.nextinterval())
         {
-	    mc.solve('MODEL_DATA');
-
-	    parms := mc.getparms("GSM.*.RA GSM.*.DEC");
-	    nrpos := len(parms) / 2;
-	    if (nrpos > 0) {
-	        for (j in [1:nrpos]) {
-	            ra  := parms[spaste('GSM.',j,'.RA')].value[1];
-	            dec := parms[spaste('GSM.',j,'.DEC')].value[1];
-	            print 'src =', j, ' ra =', ra, ' dec =', dec;
-
-		    if (is_fail(annotator)) fail;
-	            annotator.add_marker(j, real(ra), real(dec), j==nrpos);
+            mc.solve('MODEL_DATA');
+            
+            parms := mc.getparms("GSM.*.RA GSM.*.DEC");
+            nrpos := len(parms) / 2;
+            if (nrpos > 0) {
+                for (j in [1:nrpos]) {
+                    ra  := parms[spaste('GSM.',j,'.RA')].value[1];
+                    dec := parms[spaste('GSM.',j,'.DEC')].value[1];
+                    print 'src =', j, ' ra =', ra, ' dec =', dec;
+                    
+                    if (is_fail(annotator)) fail;
+                    annotator.add_marker(j, real(ra), real(dec), j==nrpos);
                 }
             }
         }
     }
-
+    
     mc.done();
-
+    
     return ref annotator;
 }
 
@@ -196,12 +196,12 @@ setparms := function(fname='michiel.demo')
   pt.putinit ('dell', 0);
   pt.putinit ('gain.11', 1);
   pt.putinit ('gain.22', 0);
-  pt.done()
+  pt.done();
 }
 
-initgsm := function()
+initgsm := function(fname='michiel.demo')
 {
-  tg := gsm('michiel.demo.GSM', T);
+  tg := gsm(spaste(fname,'.GSM'), T);
   if (is_fail(tg)) fail;
   tg.addpointsource ('src0', [0,1e20], [0,1e20],
 		     2.734, 0.45379, 1, 0, 0, 0);
@@ -212,9 +212,9 @@ initgsm := function()
   tg.done()
 }
 
-setgsm := function()
+setgsm := function(fname='michiel.demo')
 {
-  tg := gsm('michiel.demo.GSM', T);
+  tg := gsm(spaste(fname,'.GSM'), T);
   if (is_fail(tg)) fail;
   tg.addpointsource ('src0', [0,1e20], [0,1e20],
 		     2.734030, 0.453785, 1, 0, 0, 0);
@@ -223,21 +223,19 @@ setgsm := function()
   tg.addpointsource ('src2', [0,1e20], [0,1e20],
 		     2.73399, 0.4537525, 1, 0, 0, 0);
   tg.done();
-#  t.putcell ('RAPARMS', 1, array(as_double(-2.744002744),1,1))
-#  t.putcell ('DECPARMS', 1, array(as_double(0.5325005325),1,1))
-#  t.putcell ('IPARMS', 1, array(as_double(1.2),1,1))
 }
 
-initchan := function()
+initchan := function(fname='michiel.demo')
 {
-  t := table('michiel.demo.MS/SPECTRAL_WINDOW',readonly=F)
+  t := table(spaste(fname, '.MS/SPECTRAL_WINDOW'),readonly=F)
   if (is_fail(t)) fail;
   t.putcell ('CHAN_WIDTH', 1, array(1e7,1));
   t.close()
 }
-setchan := function()
+
+setchan := function(fname='michiel.demo')
 {
-  t := table('michiel.demo.MS/SPECTRAL_WINDOW',readonly=F)
+  t := table(spaste(fname, '.MS/SPECTRAL_WINDOW'),readonly=F)
   if (is_fail(t)) fail;
   t.putcell ('CHAN_WIDTH', 1, array(1e6,1));
   t.close()
@@ -250,18 +248,19 @@ init := function()
 	predict();
 }
 
-demo := function(solver=0,niter=10)
+demo := function(solver=0,niter=10,fname='michiel.demo')
 {
 	global annotator;
-	setparms();
-	setgsm();
+
+	setparms(fname);
+	setgsm(fname);
 	if (0 == solver)
 	{
-		annotator:=solve(niter=niter);
+		annotator:=solve(fname=fname, niter=niter);
 	}
 	else
 	{
-		annotator:=solvepos(niter=niter);
+		annotator:=solvepos(fname=fname, niter=niter);
 	}
 }
 
