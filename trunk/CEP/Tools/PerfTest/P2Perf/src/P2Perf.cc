@@ -39,7 +39,7 @@
 #include <Transport/TH_ShMem.h>
 #include <Transport/TH_Socket.h>
 #include <CEPFrame/WH_Empty.h>
-#include <Common/Debug.h>
+#include <Common/LofarLogger.h>
 
 #include TRANSPORTERINCLUDE
 
