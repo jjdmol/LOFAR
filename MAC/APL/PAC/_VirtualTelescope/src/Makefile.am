@@ -3,9 +3,9 @@ bin_PROGRAMS 		= LogicalDeviceServer
 AUTOGEN = autogen
 SUFFIXES = .ph
 %.ph: %.prot
-	$(AUTOGEN) --writable -L $(top_srcdir)/../MACCommon/autogen $<
+	$(AUTOGEN) --writable -L $(top_srcdir)/../../../MACCommon/autogen $<
 %.cc: %.prot
-	$(AUTOGEN) --writable -L $(top_srcdir)/../MACCommon/autogen $<
+	$(AUTOGEN) --writable -L $(top_srcdir)/../../../MACCommon/autogen $<
 
 LogicalDeviceServer_CPPFLAGS= \
 	-DBOOST_DISABLE_THREADS \
@@ -15,7 +15,6 @@ LogicalDeviceServer_CPPFLAGS= \
 
 LogicalDeviceServer_SOURCES 		= \
 	AVTUtilities.cc \
-	AVTAPCAnswer.cc \
 	AVTLogicalDevice.cc \
 	AVTLogicalDeviceScheduler.cc \
 	AVTResourceManager.cc \
@@ -25,12 +24,15 @@ LogicalDeviceServer_SOURCES 		= \
 	AVTStationReceptor.cc \
 	AVTStationReceptorGroup.cc \
 	AVTLogicalDeviceServerMain.cc \
-	LogicalDevice_Protocol.cc
+	$(top_builddir)/src/LogicalDevice_Protocol.cc
 	
 LogicalDeviceServer_LDADD		= \
 	-labs \
 	-lboost_date_time-gcc-1_31
 	
+include_HEADERS = \
+	$(top_builddir)/src/LogicalDevice_Protocol.ph
+
 BUILT_SOURCES = \
 	LogicalDevice_Protocol.ph
 	
@@ -40,7 +42,7 @@ EXTRA_DIST = \
 #in case of make install these files will be copied to the bindir beside the test apps
 configfilesdir=$(bindir)
 configfiles_DATA= \
-	RegisterAccess.conf \
+	LogicalDeviceScheduler.conf \
 	log4cplus.properties
 	
 %.properties: $(MAC_CONFIG)/%.properties

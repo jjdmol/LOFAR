@@ -24,20 +24,21 @@
 #define AVTLogicalDevice_H
 
 //# Includes
-//# Common Includes
-#include <Common/lofar_string.h>
-#include <vector>
 
 //# GCF Includes
+#include <GCF/PAL/GCF_MyPropertySet.h>
 #include <GCF/TM/GCF_Port.h>
 #include <GCF/TM/GCF_Task.h>
-#include <GCF/PAL/GCF_MyPropertySet.h>
 
 //# local includes
 #include "AVTPropertySetAnswerHandlerInterface.h"
 #include "AVTPropertySetAnswer.h"
 #include <APLCommon/APLInterTaskPort.h>
 #include "AVTDefines.h"
+
+//# Common Includes
+#include <Common/lofar_string.h>
+#include <vector>
 
 // forward declaration
 

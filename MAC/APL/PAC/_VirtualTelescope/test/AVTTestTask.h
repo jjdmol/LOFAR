@@ -33,7 +33,7 @@
 #include <GCF/TM/GCF_Port.h>
 #include <GCF/TM/GCF_TCPPort.h>
 #include <GCF/PAL/GCF_Property.h>
-#include <GCF/PAL/GCF_MyPropertySet.h>
+#include <GCF/PAL/GCF_ExtPropertySet.h>
 #include <boost/shared_ptr.hpp>
 
 #include "AVTTestAnswer.h"
@@ -47,8 +47,9 @@ namespace AVT
   class AVTTestTask : public GCFTask, public Test
   {
     public:
-      AVTTestTask(AVTTest<AVTTestTask>& tester);
+      AVTTestTask();
       virtual ~AVTTestTask();
+       virtual void run();
   
       static bool   m_sBeamServerOnly;
   

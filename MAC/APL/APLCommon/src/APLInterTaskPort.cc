@@ -67,6 +67,17 @@ bool APLInterTaskPort::close()
   return true;
 }
 
+bool APLInterTaskPort::setRemoteAddr(const string& remotetask, const string& remoteport)
+{
+  if (_type == SAP)
+  {
+    _remotetask = remotetask;
+    _remoteport = remoteport;
+    return (_remotetask.length() > 0 && _remoteport.length() > 0);
+  }
+  return false;
+}
+
 /**
  * ::send
  */

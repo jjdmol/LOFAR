@@ -37,6 +37,7 @@
 #include "AVTStationBeamformer.h"
 #include "LogicalDevice_Protocol.ph"
 #include "AVTUtilities.h"
+#include "AVTPropertyDefines.h"
 #include "ABS_Protocol.ph"
 
 using namespace LOFAR;
@@ -47,7 +48,7 @@ AVTStationBeamformer::AVTStationBeamformer(string& taskName,
                                            const string& scope,
                                            const string& APCName,
                                            string& beamServerPortName) :
-  AVTLogicalDevice(taskName,scope,TYPE_BF,APCName),
+  AVTLogicalDevice(taskName,scope,TYPE_LCU_PAC_BF,APCName),
   m_beamServer(*this, beamServerPortName, GCFPortInterface::SAP, ABS_PROTOCOL),
   m_beamServerConnected(false),
   m_numAPCsLoaded(0),
@@ -62,14 +63,14 @@ AVTStationBeamformer::AVTStationBeamformer(string& taskName,
   m_beamID(-1)
 {
   registerProtocol(ABS_PROTOCOL, ABS_PROTOCOL_signalnames);
-  LOG_TRACE(formatString("AVTStationBeamformer(%s)::%s",getName().c_str(),__func__));
+  LOG_TRACE_FLOW(formatString("AVTStationBeamformer(%s)::%s",getName().c_str(),__func__));
   
 }
 
 
 AVTStationBeamformer::~AVTStationBeamformer()
 {
-  LOG_TRACE(formatString("AVTStationBeamformer(%s)::%s",getName().c_str(),__func__));
+  LOG_TRACE_FLOW(formatString("AVTStationBeamformer(%s)::%s",getName().c_str(),__func__));
 }
 
 int AVTStationBeamformer::convertDirection(const string type) const
@@ -133,7 +134,7 @@ bool AVTStationBeamformer::isPrepared(vector<string>& parameters)
 
 bool AVTStationBeamformer::checkQualityRequirements()
 {
-  LOG_TRACE(formatString("AVTStationBeamformer(%s)::%s",getName().c_str(),__func__));
+  LOG_TRACE_FLOW(formatString("AVTStationBeamformer(%s)::%s",getName().c_str(),__func__));
   bool requirementsMet=false;
   
   // quality requirements for this BeamFormer:
@@ -152,7 +153,7 @@ bool AVTStationBeamformer::_isBeamServerPort(GCFPortInterface& port)
 
 void AVTStationBeamformer::concreteDisconnected(GCFPortInterface& port)
 {
-  LOG_TRACE(formatString("AVTStationBeamformer(%s)::concreteDisconnected",getName().c_str()));
+  LOG_TRACE_FLOW(formatString("AVTStationBeamformer(%s)::concreteDisconnected",getName().c_str()));
   // go to initial state only if the connection with the beamformer is lost.
   if(_isBeamServerPort(port))
   {
@@ -163,7 +164,7 @@ void AVTStationBeamformer::concreteDisconnected(GCFPortInterface& port)
 
 GCFEvent::TResult AVTStationBeamformer::concrete_initial_state(GCFEvent& event, GCFPortInterface& port)
 {
-  LOG_TRACE(formatString("AVTStationBeamformer(%s)::concrete_initial_state (%s)",getName().c_str(),evtstr(event)));
+  LOG_TRACE_FLOW(formatString("AVTStationBeamformer(%s)::concrete_initial_state (%s)",getName().c_str(),evtstr(event)));
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (event.signal)
@@ -223,7 +224,7 @@ GCFEvent::TResult AVTStationBeamformer::concrete_initial_state(GCFEvent& event, 
       break;
 
     default:
-      LOG_TRACE(formatString("AVTStationBeamformer(%s)::concrete_initial_state, default",getName().c_str()));
+      LOG_TRACE_FLOW(formatString("AVTStationBeamformer(%s)::concrete_initial_state, default",getName().c_str()));
       status = GCFEvent::NOT_HANDLED;
       break;
   }
@@ -233,7 +234,7 @@ GCFEvent::TResult AVTStationBeamformer::concrete_initial_state(GCFEvent& event, 
 
 GCFEvent::TResult AVTStationBeamformer::concrete_claiming_state(GCFEvent& event, GCFPortInterface& /*port*/, bool& stateFinished)
 {
-  LOG_TRACE(formatString("AVTStationBeamformer(%s)::concrete_claiming_state (%s)",getName().c_str(),evtstr(event)));
+  LOG_TRACE_FLOW(formatString("AVTStationBeamformer(%s)::concrete_claiming_state (%s)",getName().c_str(),evtstr(event)));
   GCFEvent::TResult status = GCFEvent::HANDLED;
   
   switch (event.signal)
@@ -243,7 +244,7 @@ GCFEvent::TResult AVTStationBeamformer::concrete_claiming_state(GCFEvent& event,
       break;
       
     default:
-      LOG_TRACE(formatString("AVTStationBeamformer(%s)::concrete_claiming_state, default",getName().c_str()));
+      LOG_TRACE_FLOW(formatString("AVTStationBeamformer(%s)::concrete_claiming_state, default",getName().c_str()));
       status = GCFEvent::NOT_HANDLED;
       break;
   }
@@ -253,7 +254,7 @@ GCFEvent::TResult AVTStationBeamformer::concrete_claiming_state(GCFEvent& event,
 
 GCFEvent::TResult AVTStationBeamformer::concrete_preparing_state(GCFEvent& event, GCFPortInterface& port, bool& stateFinished, bool& error)
 {
-  LOG_TRACE(formatString("AVTStationBeamformer(%s)::concrete_preparing_state (%s)",getName().c_str(),evtstr(event)));
+  LOG_TRACE_FLOW(formatString("AVTStationBeamformer(%s)::concrete_preparing_state (%s)",getName().c_str(),evtstr(event)));
   GCFEvent::TResult status = GCFEvent::HANDLED;
   stateFinished=true;
   error=false;
@@ -293,7 +294,7 @@ GCFEvent::TResult AVTStationBeamformer::concrete_preparing_state(GCFEvent& event
       break;
     
     default:
-      LOG_TRACE(formatString("AVTStationBeamformer(%s)::concrete_preparing_state, default",getName().c_str()));
+      LOG_TRACE_FLOW(formatString("AVTStationBeamformer(%s)::concrete_preparing_state, default",getName().c_str()));
       status = GCFEvent::NOT_HANDLED;
       break;
   }
@@ -303,13 +304,13 @@ GCFEvent::TResult AVTStationBeamformer::concrete_preparing_state(GCFEvent& event
 
 GCFEvent::TResult AVTStationBeamformer::concrete_active_state(GCFEvent& event, GCFPortInterface& /*port*/)
 {
-  LOG_TRACE(formatString("AVTStationBeamformer(%s)::%s (%s)",getName().c_str(),__func__,evtstr(event)));
+  LOG_TRACE_FLOW(formatString("AVTStationBeamformer(%s)::%s (%s)",getName().c_str(),__func__,evtstr(event)));
   return GCFEvent::NOT_HANDLED;
 }
 
 GCFEvent::TResult AVTStationBeamformer::concrete_releasing_state(GCFEvent& event, GCFPortInterface& /*port*/, bool& stateFinished)
 {
-  LOG_TRACE(formatString("AVTStationBeamformer(%s)::concrete_releasing_state (%s)",getName().c_str(),evtstr(event)));
+  LOG_TRACE_FLOW(formatString("AVTStationBeamformer(%s)::concrete_releasing_state (%s)",getName().c_str(),evtstr(event)));
   GCFEvent::TResult status = GCFEvent::HANDLED;
   
   switch (event.signal)
@@ -327,7 +328,7 @@ GCFEvent::TResult AVTStationBeamformer::concrete_releasing_state(GCFEvent& event
     }
         
     default:
-      LOG_TRACE(formatString("AVTStationBeamformer(%s)::concrete_releasing_state, default",getName().c_str()));
+      LOG_TRACE_FLOW(formatString("AVTStationBeamformer(%s)::concrete_releasing_state, default",getName().c_str()));
       status = GCFEvent::NOT_HANDLED;
       break;
   }
@@ -341,25 +342,25 @@ void AVTStationBeamformer::handlePropertySetAnswer(GCFEvent& answer)
   {
     case F_MYPS_ENABLED:
     {
-      GCFPropSetAnswerEvent propAnswer(answer);
-      if(propAnswer.result == GCF_NO_ERROR)
+      GCFPropSetAnswerEvent* pPropAnswer=static_cast<GCFPropSetAnswerEvent*>(&answer);
+      if(pPropAnswer->result == GCF_NO_ERROR)
       {
         // property set loaded, now load apc
         m_properties.configure(m_APC);
       }
       else
       {
-        LOG_ERROR(formatString("%s : PropertySet %s NOT ENABLED",getName().c_str(),propAnswer.pScope));
+        LOG_ERROR(formatString("%s : PropertySet %s NOT ENABLED",getName().c_str(),pPropAnswer->pScope));
       }
       break;
     }
     
     case F_PS_CONFIGURED:
     {
-      GCFConfAnswerEvent propAnswer(answer);
-      if(propAnswer.result == GCF_NO_ERROR)
+      GCFConfAnswerEvent* pConfAnswer=static_cast<GCFConfAnswerEvent*>(&answer);
+      if(pConfAnswer->result == GCF_NO_ERROR)
       {
-        LOG_TRACE(formatString("%s : apc %s Loaded",getName().c_str(),propAnswer.pApcName));
+        LOG_TRACE_FLOW(formatString("%s : apc %s Loaded",getName().c_str(),pConfAnswer->pApcName));
         // used during startup to check if all necessary APC's have been loaded.
         // not used when loading the statistics APC's
         m_numAPCsLoaded++;
@@ -370,7 +371,7 @@ void AVTStationBeamformer::handlePropertySetAnswer(GCFEvent& answer)
       }
       else
       {
-        LOG_ERROR(formatString("%s : apc %s NOT LOADED",getName().c_str(),propAnswer.pApcName));
+        LOG_ERROR(formatString("%s : apc %s NOT LOADED",getName().c_str(),pConfAnswer->pApcName));
       }
       break;
     }
@@ -378,12 +379,12 @@ void AVTStationBeamformer::handlePropertySetAnswer(GCFEvent& answer)
     case F_VCHANGEMSG:
     {
       // check which property changed
-      GCFPropValueEvent propAnswer(answer);
-      if (propAnswer.pValue->getType() == LPT_STRING &&
-          strstr(propAnswer.pPropName, PROPNAME_COMMAND) != 0)
+      GCFPropValueEvent* pPropAnswer=static_cast<GCFPropValueEvent*>(&answer);
+      if (pPropAnswer->pValue->getType() == LPT_STRING &&
+          strstr(pPropAnswer->pPropName, PROPNAME_COMMAND) != 0)
       {
         // command received
-        string commandString(((GCFPVString*)propAnswer.pValue)->getValue());
+        string commandString(((GCFPVString*)pPropAnswer->pValue)->getValue());
         vector<string> parameters;
         string command;
         AVTUtilities::decodeCommand(commandString,command,parameters);
@@ -421,11 +422,11 @@ void AVTStationBeamformer::handlePropertySetAnswer(GCFEvent& answer)
           dispatch(resumeEvent,dummyPort); // dummyport
         }
       }
-      else if ((propAnswer.pValue->getType() == LPT_STRING) &&
-               (strstr(propAnswer.pPropName, PROPNAME_DIRECTIONTYPE) != 0))
+      else if ((pPropAnswer->pValue->getType() == LPT_STRING) &&
+               (strstr(pPropAnswer->pPropName, PROPNAME_DIRECTIONTYPE) != 0))
       {
         // directionType received
-        string typeString(((GCFPVString*)propAnswer.pValue)->getValue());
+        string typeString(((GCFPVString*)pPropAnswer->pValue)->getValue());
         int newType=convertDirection(typeString);
         if(newType!=m_directionType)
         {
@@ -441,11 +442,11 @@ void AVTStationBeamformer::handlePropertySetAnswer(GCFEvent& answer)
           m_beamServer.send(beamPointToEvent);
         }
       }      
-      else if ((propAnswer.pValue->getType() == LPT_DOUBLE) &&
-               (strstr(propAnswer.pPropName, PROPNAME_DIRECTIONANGLE1) != 0))
+      else if ((pPropAnswer->pValue->getType() == LPT_DOUBLE) &&
+               (strstr(pPropAnswer->pPropName, PROPNAME_DIRECTIONANGLE1) != 0))
       {
         // directionAngle1 received
-        double angle1(((GCFPVDouble*)propAnswer.pValue)->getValue());
+        double angle1(((GCFPVDouble*)pPropAnswer->pValue)->getValue());
         if(angle1!=m_directionAngle1)
         {
           m_directionAngle1 = angle1;
@@ -460,11 +461,11 @@ void AVTStationBeamformer::handlePropertySetAnswer(GCFEvent& answer)
           m_beamServer.send(beamPointToEvent);
         }
       }      
-      else if ((propAnswer.pValue->getType() == LPT_DOUBLE) &&
-               (strstr(propAnswer.pPropName, PROPNAME_DIRECTIONANGLE2) != 0))
+      else if ((pPropAnswer->pValue->getType() == LPT_DOUBLE) &&
+               (strstr(pPropAnswer->pPropName, PROPNAME_DIRECTIONANGLE2) != 0))
       {
         // directionAngle2 received
-        double angle2(((GCFPVDouble*)propAnswer.pValue)->getValue());
+        double angle2(((GCFPVDouble*)pPropAnswer->pValue)->getValue());
         if(angle2!=m_directionAngle2)
         {
           m_directionAngle2 = angle2;
@@ -489,7 +490,7 @@ void AVTStationBeamformer::handlePropertySetAnswer(GCFEvent& answer)
 
 void AVTStationBeamformer::concreteClaim(GCFPortInterface& port)
 {
-  LOG_TRACE(formatString("AVTStationBeamformer(%s)::concreteClaim",getName().c_str()));
+  LOG_TRACE_FLOW(formatString("AVTStationBeamformer(%s)::concreteClaim",getName().c_str()));
   // claim my own resources
   
   // send claim message to BeamServer
@@ -503,7 +504,7 @@ void AVTStationBeamformer::concreteClaim(GCFPortInterface& port)
 
 void AVTStationBeamformer::concretePrepare(GCFPortInterface& /*port*/,string& parameters)
 {
-  LOG_TRACE(formatString("AVTStationBeamformer(%s)::concretePrepare",getName().c_str()));
+  LOG_TRACE_FLOW(formatString("AVTStationBeamformer(%s)::concretePrepare",getName().c_str()));
   // prepare my own resources
   vector<string> decodedParameters;
   AVTUtilities::decodeParameters(parameters,decodedParameters);
@@ -548,7 +549,7 @@ void AVTStationBeamformer::concretePrepare(GCFPortInterface& /*port*/,string& pa
   }
   
   
-  LOG_TRACE(formatString("AVTStationBeamformer(%s)::allocate %d subbands: %s",getName().c_str(),n_subbands,tempLogStr));
+  LOG_TRACE_FLOW(formatString("AVTStationBeamformer(%s)::allocate %d subbands: %s",getName().c_str(),n_subbands,tempLogStr));
   ABSBeamallocEvent beamAllocEvent;
   beamAllocEvent.spectral_window = spectral_window;
   beamAllocEvent.n_subbands = n_subbands;
@@ -558,7 +559,7 @@ void AVTStationBeamformer::concretePrepare(GCFPortInterface& /*port*/,string& pa
 
 void AVTStationBeamformer::concreteResume(GCFPortInterface& /*port*/)
 {
-  LOG_TRACE(formatString("AVTStationBeamformer(%s)::concreteResume",getName().c_str()));
+  LOG_TRACE_FLOW(formatString("AVTStationBeamformer(%s)::concreteResume",getName().c_str()));
   // resume my own resources
   
   // send resume message to BeamFormer
@@ -569,7 +570,7 @@ void AVTStationBeamformer::concreteResume(GCFPortInterface& /*port*/)
 
 void AVTStationBeamformer::concreteSuspend(GCFPortInterface& /*port*/)
 {
-  LOG_TRACE(formatString("AVTStationBeamformer(%s)::concreteSuspend",getName().c_str()));
+  LOG_TRACE_FLOW(formatString("AVTStationBeamformer(%s)::concreteSuspend",getName().c_str()));
   // suspend my own resources
   
   // send suspend message to BeamFormer
@@ -579,7 +580,7 @@ void AVTStationBeamformer::concreteSuspend(GCFPortInterface& /*port*/)
 
 void AVTStationBeamformer::concreteRelease(GCFPortInterface& /*port*/)
 {
-  LOG_TRACE(formatString("AVTStationBeamformer(%s)::concreteRelease",getName().c_str()));
+  LOG_TRACE_FLOW(formatString("AVTStationBeamformer(%s)::concreteRelease",getName().c_str()));
   // release my own resources
   
   // send release message to BeamFormer

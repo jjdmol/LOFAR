@@ -28,12 +28,12 @@ AVTPropertySetAnswer::AVTPropertySetAnswer(AVTPropertySetAnswerHandlerInterface&
   GCFAnswer(),
   m_handler(handler)
 {
-  LOG_TRACE(formatString("AVTPropertySetAnswer::AVTPropertySetAnswer"));
+  LOG_TRACE_FLOW(formatString("AVTPropertySetAnswer::AVTPropertySetAnswer"));
 }
 
 AVTPropertySetAnswer::~AVTPropertySetAnswer()
 {
-  LOG_TRACE(formatString("AVTPropertySetAnswer::~AVTPropertySetAnswer"));
+  LOG_TRACE_FLOW(formatString("AVTPropertySetAnswer::~AVTPropertySetAnswer"));
 }
 
 void AVTPropertySetAnswer::handleAnswer(GCFEvent& answer)

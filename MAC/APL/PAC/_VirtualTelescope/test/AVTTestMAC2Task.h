@@ -25,11 +25,12 @@
 
 //# Includes
 //# Common Includes
+#include <Suite/test.h>
 
 //# GCF Includes
 #include <GCF/TM/GCF_Task.h>
 #include <GCF/TM/GCF_Port.h>
-#include <GCF/PAL/GCF_ExtProperty.h>
+#include <GCF/PAL/GCF_ExtPropertySet.h>
 #include <boost/shared_ptr.hpp>
 #include <vector>
 
@@ -39,7 +40,7 @@ typedef struct
 {
   GCFFsm::State target;
   const char*   targetName;
-  int           testNum;
+  const char*   testNum;
   const char*   description;
 } TTranTarget;
 
@@ -48,11 +49,12 @@ class GCFEvent;
 namespace AVT
 {
   
-  class AVTTestMAC2Task : public GCFTask
+  class AVTTestMAC2Task : public GCFTask, public Test
   {
     public:
-      AVTTestMAC2Task(AVTTest<AVTTestMAC2Task>& tester);
+      AVTTestMAC2Task();
       virtual ~AVTTestMAC2Task();
+      virtual void run();
   
     protected:
       // protected copy constructor
@@ -85,25 +87,21 @@ namespace AVT
       
       std::vector<TTranTarget>            m_testSequence;
       std::vector<TTranTarget>::iterator  m_testSequenceIt;
-      AVTTest<AVTTestMAC2Task>&           m_tester;
       AVTTestAnswer                       m_answer;
       GCFPort                             m_timerPort;
       
-      GCFExtProperty     m_propertyLDScommand;
-      GCFExtProperty     m_propertyLDSstatus;
-      GCFExtProperty     m_propBoard1MaintenanceStatus;
-      GCFExtProperty     m_propAP1RCU1MaintenanceStatus;
-      GCFExtProperty     m_propAP1RCU2MaintenanceStatus;
-      GCFExtProperty     m_propAP1RCU1Status;
-      GCFExtProperty     m_propAP2RCU1Status;
-      GCFExtProperty     m_propAP3RCU1Status;
-      GCFExtProperty     m_propVT1Command;
-      GCFExtProperty     m_propVT1Status;
-      GCFExtProperty     m_propVT2Command;
-      GCFExtProperty     m_propVT2Status;
-      GCFExtProperty     m_propVT3Status;
-      int                m_maintenanceChangedCounter;
-      int                m_suspendedCounter;
+      GCFExtPropertySet     m_propertysetLDS;
+      GCFExtPropertySet     m_propertysetBoard1Maintenance;
+      GCFExtPropertySet     m_propertysetAP1RCU1Maintenance;
+      GCFExtPropertySet     m_propertysetAP1RCU2Maintenance;
+      GCFExtPropertySet     m_propertysetAP1RCU1;
+      GCFExtPropertySet     m_propertysetAP2RCU1;
+      GCFExtPropertySet     m_propertysetAP3RCU1;
+      GCFExtPropertySet     m_propertysetVT1;
+      GCFExtPropertySet     m_propertysetVT2;
+      GCFExtPropertySet     m_propertysetVT3;
+      int                   m_maintenanceChangedCounter;
+      int                   m_suspendedCounter;
   };  
 };
 

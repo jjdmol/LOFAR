@@ -12,6 +12,10 @@ mac.LogicalDeviceScheduler.pvss.cmdline=-proj MAC
 
 mac.apl.avt.PREPARETIME=5
 mac.apl.avt.BEAMSERVERPORT=BeamServer
+# number of resources used by a station receptor that may be unavailable
+mac.apl.avt.MAX_SR_RESOURCES_UNAVAILABLE=1
+# number of station receptors used by a station receptor group that may be unavailable
+mac.apl.avt.MAX_SRG_RESOURCES_UNAVAILABLE=1
 mac.apl.avt.APC_VT1=ApcStationBeamformer_VT1
 mac.apl.avt.APC_BF1=ApcStationBeamformer_BF1
 

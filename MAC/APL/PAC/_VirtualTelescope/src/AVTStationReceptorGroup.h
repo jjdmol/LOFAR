@@ -55,7 +55,7 @@ namespace AVT
       virtual ~AVTStationReceptorGroup();
 
       virtual bool isPrepared(vector<string>& parameters);
-      bool checkQualityRequirements(int maxFailedResources);
+      bool checkQualityRequirements();
       void setStartTime(const time_t startTime);
       void setStopTime(const time_t stopTime);
       void setFrequency(const double frequency);

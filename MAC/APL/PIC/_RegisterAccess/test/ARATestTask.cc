@@ -100,10 +100,10 @@ ARATestTask::ARATestTask() :
   m_RSPserver(),
   m_test_passCounter(0),
   m_propsetLoadedCounter(0),
-  m_extPropSetAP1(SCOPE_PIC_Rack1_SubRack1_Board1_AP1,TYPE_AP,&m_answer),
-  m_extPropSetAP1RCUmaintenance(SCOPE_PIC_Rack1_SubRack1_Board1_AP1_RCU1_Maintenance,TYPE_Maintenance,&m_answer),
-  m_extPropSetAP1RCUalert(SCOPE_PIC_Rack1_SubRack1_Board1_AP1_RCU1_Alert,TYPE_Alert,&m_answer),
-  m_extPropSetStationMaintenance(SCOPE_PIC_Maintenance,TYPE_Maintenance,&m_answer),
+  m_extPropSetAP1(SCOPE_PIC_Rack1_SubRack1_Board1_AP1,TYPE_LCU_PIC_FPGA,&m_answer),
+  m_extPropSetAP1RCUmaintenance(SCOPE_PIC_Rack1_SubRack1_Board1_AP1_RCU1_Maintenance,TYPE_LCU_PIC_Maintenance,&m_answer),
+  m_extPropSetAP1RCUalert(SCOPE_PIC_Rack1_SubRack1_Board1_AP1_RCU1_Alert,TYPE_LCU_PIC_Alert,&m_answer),
+  m_extPropSetStationMaintenance(SCOPE_PIC_Maintenance,TYPE_LCU_PIC_Maintenance,&m_answer),
   m_extPropSetLDS(SCOPE_PAC_LDS,"TLOFAR_LDS",&m_answer)
 {
   registerProtocol(RSP_PROTOCOL, RSP_PROTOCOL_signalnames);
