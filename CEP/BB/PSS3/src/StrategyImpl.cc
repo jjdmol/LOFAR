@@ -21,6 +21,7 @@
 //#  $Id$
 
 #include <PSS3/StrategyImpl.h>
+#include <Common/Debug.h>
 
 StrategyImpl::StrategyImpl()
 {}
@@ -28,3 +29,10 @@ StrategyImpl::StrategyImpl()
 StrategyImpl::~StrategyImpl()
 {}
 
+bool StrategyImpl::useParms(const vector<string>&,
+			    const vector<double>&,
+			    const vector<int>&)
+{
+  TRACER1("This strategy does not support the useParms() method");
+  return false;
+}

@@ -54,9 +54,9 @@ public:
   /// Get strategy implementation type
   virtual string getType() const = 0;
 
-  virtual void useParms(const vector<string>& parmNames,
+  virtual bool useParms(const vector<string>& parmNames,
 			const vector<double>& parmValues,
-			const vector<int>& srcNumbers) {};// Use these 
+			const vector<int>& srcNumbers);// Use these 
                                                           // parameter 
                                                           // values
 

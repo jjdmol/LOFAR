@@ -29,10 +29,10 @@
 #include <Common/lofar_vector.h>
 #include <Common/lofar_string.h>
 #include <PSS3/Quality.h>
+#include <PSS3/StrategyImpl.h>
 
 //# Forward Declarations
 class CalibratorOld;
-class StrategyImpl;
 
 // This class defines an interface to calibration strategies. It creates
 // and contains a reference to a concrete calibration strategy implementation 
@@ -61,5 +61,9 @@ public:
   StrategyImpl* itsImpl;      // The strategy implementation
 };
 
+inline bool Strategy::useParms(const vector<string>& pNames,
+			       const vector<double>& pValues,
+			       const vector<int>& srcNumbers)
+{  return itsImpl->useParms(pNames, pValues, srcNumbers);  }
 
 #endif

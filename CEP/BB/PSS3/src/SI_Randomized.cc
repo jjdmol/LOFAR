@@ -117,7 +117,7 @@ bool SI_Randomized::execute(vector<string>& parmNames,
   return true;
 }
 
-void SI_Randomized::useParms (const vector<string>& parmNames, 
+bool SI_Randomized::useParms (const vector<string>& parmNames, 
 			    const vector<double>& parmValues, 
 			    const vector<int>& srcNumbers)
 {
@@ -150,5 +150,5 @@ void SI_Randomized::useParms (const vector<string>& parmNames,
     TRACER1("SI_Randomized::useParms : Using a start solution for source " 
 	    << srcNumbers[i]);
   }
-
+  return true;
 }
