@@ -26,16 +26,7 @@
 #define CACHE_H_
 
 #include "RSP_Protocol.ph"
-#if 0
-#include "Timestamp.h"
-#include "BeamletWeights.h"
-#include "SubbandSelection.h"
-#include "RCUSettings.h"
-#include "WGSettings.h"
-#include "SystemStatus.h"
-#include "Statistics.h"
-#include "Versions.h"
-#endif
+#include <blitz/array.h>
 
 namespace RSP
 {
@@ -55,25 +46,26 @@ namespace RSP
 	  /**
 	   * Data access methods.
 	   */
-	  RSP_Protocol::BeamletWeights&   getBeamletWeights();
-	  RSP_Protocol::SubbandSelection& getSubbandSelection();
-	  RSP_Protocol::RCUSettings&      getRCUSettings();
-	  RSP_Protocol::WGSettings&       getWGSettings();
+	  RSP_Protocol::BeamletWeights&   getBeamletWeights(int rcu);
+	  RSP_Protocol::SubbandSelection& getSubbandSelection(int rcu);
+	  RSP_Protocol::RCUSettings&      getRCUSettings(int rcu);
+	  RSP_Protocol::WGSettings&       getWGSettings(int rcu);
 	  RSP_Protocol::SystemStatus&     getSystemStatus();
-	  RSP_Protocol::Statistics&       getStatistics();
+	  RSP_Protocol::Statistics&       getStatistics(int rcu);
 	  RSP_Protocol::Versions&         getVersions();
 	  /*@}*/
 
       private:
 	  RSP_Protocol::Timestamp        m_timestamp;
 
-	  RSP_Protocol::BeamletWeights   m_beamletweights;
-	  RSP_Protocol::SubbandSelection m_subbandselection;
-	  RSP_Protocol::RCUSettings      m_rcusettings;
-	  RSP_Protocol::WGSettings       m_wgsettings;
-	  RSP_Protocol::SystemStatus     m_systemstatus;
-	  RSP_Protocol::Statistics       m_statistics;
-	  RSP_Protocol::Versions         m_versions;
+	  blitz::Array<RSP_Protocol::BeamletWeights, 1>   m_beamletweights;
+	  blitz::Array<RSP_Protocol::SubbandSelection, 1> m_subbandselection;
+	  blitz::Array<RSP_Protocol::RCUSettings, 1>      m_rcusettings;
+	  blitz::Array<RSP_Protocol::WGSettings, 1>       m_wgsettings;
+	  blitz::Array<RSP_Protocol::Statistics, 1>       m_statistics;
+
+	  RSP_Protocol::SystemStatus m_systemstatus;
+	  RSP_Protocol::Versions     m_versions;
       };
 
   /**
@@ -86,7 +78,7 @@ namespace RSP
 	  /**
 	   * Constructor/destructor
 	   */
-	  Cache();
+	  static Cache& getInstance();
 	  virtual ~Cache();
 	  /*@}*/
 
@@ -103,6 +95,11 @@ namespace RSP
 
       private:
 
+	  /**
+	   * Direct construction not allowed.
+	   */
+	  Cache();
+
 	  /*@{*/
 	  /**
 	   * Front and back buffers.
@@ -110,6 +107,11 @@ namespace RSP
 	  CacheBuffer* m_front;
 	  CacheBuffer* m_back;
 	  /*@}*/
+
+	  /**
+	   * Singleton class.
+	   */
+	  static Cache* m_instance;
       };
 };
      

@@ -216,7 +216,7 @@ void Scheduler::processCommands()
     Command* command = m_now_queue.top();
 
     /* let the command apply its changes to the cache */
-    command->apply(m_cache.getBack());
+    command->apply(Cache::getInstance().getBack());
 
     /* move from the now queue to the done queue */
     m_now_queue.pop();
@@ -251,7 +251,7 @@ void Scheduler::initiateSync(GCFEvent& event)
 
 void Scheduler::completeSync()
 {
-  m_cache.swapBuffers();
+  Cache::getInstance().swapBuffers();
   completeCommands();
 }
 
@@ -293,7 +293,7 @@ void Scheduler::completeCommands()
   {
     Command* command = m_done_queue.top();
 
-    command->complete(m_cache.getFront());
+    command->complete(Cache::getInstance().getFront());
 
     m_done_queue.pop();
     delete command;

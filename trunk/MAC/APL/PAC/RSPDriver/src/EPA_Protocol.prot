@@ -173,7 +173,7 @@ event = {
   };
   param = {
     name = "coef";
-    type = "uint16[N_COEF]";
+    type = "int16[N_COEF]";
   };
 };
 
@@ -187,7 +187,7 @@ event = {
   };
   param = {
     name = "stat";
-    type = "uint16[N_STATS]";
+    type = "int16[N_STATS]";
   };
 };
 

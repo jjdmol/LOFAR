@@ -26,6 +26,7 @@
 #define RSPDRIVERTASK_H_
 
 #include "RSP_Protocol.ph"
+#include "EPA_Protocol.ph"
 
 #include <GCF/GCF_Control.h>
 #include <GCF/GCF_ETHRawPort.h>
@@ -41,6 +42,7 @@ namespace RSP
        * Constants. Should probably be moved somewhere else at some point.
        */
       static const int N_RSPBOARDS = 2; // eventually this should be 24
+      static const int N_RCU = N_RSPBOARDS * N_BLP; // eventually should be 24 * 8 = 192
 
     public:
       /**
@@ -51,6 +53,11 @@ namespace RSP
        */
       RSPDriverTask(string name);
       virtual ~RSPDriverTask();
+      
+      /**
+       * Add all required synchronization actions.
+       */
+      void addAllSyncActions();
 
       /**
        * Open all ports to boards.
