@@ -157,12 +157,14 @@ int32 Socket::initServer (const string& service, int32 protocol, int32 backlog)
     itsPort		= service;
   
 	struct sockaddr*	addrPtr;
+  socklen_t addrLen;
 	if (itsType == UNIX) {
 		itsHost = "unix";
 		if(initUnixSocket(itsIsServer) < 0) {
 			return(itsErrno);
 		}
 		addrPtr = (struct sockaddr*) &itsUnixAddr;
+    addrLen = sizeof(itsUnixAddr);
 	} 
 	else  { 		// networked socket (type TCP or UDP)
     	itsHost		= "localhost";
@@ -170,10 +172,11 @@ int32 Socket::initServer (const string& service, int32 protocol, int32 backlog)
 			return(itsErrno);
 		}
 		addrPtr = (struct sockaddr*) &itsTCPAddr;
+    addrLen = sizeof(itsTCPAddr);
 	}
 		
 	// bind the socket (always blocking)
-	if ((::bind (itsSocketID, addrPtr, sizeof(*addrPtr))) < 0) {
+	if ((::bind (itsSocketID, addrPtr,addrLen )) < 0) {
 		LOG_DEBUG(formatString("Socket:Bind error for port %s, err = %d", 
 													itsPort.c_str(), errno));
 		close(itsSocketID);
@@ -194,7 +197,7 @@ int32 Socket::initServer (const string& service, int32 protocol, int32 backlog)
 		LOG_DEBUG(formatString("Socket:Listener started at port %s", itsPort.c_str()));
 	}
 	else {	// UDP socket
-		memset(addrPtr, 0, sizeof(*addrPtr));
+		memset(addrPtr, 0, addrLen);
     }
   
 	return (SK_OK);
@@ -386,14 +389,17 @@ int32 Socket::connect (int32 waitMs)
 	setBlocking(waitMs < 0 ? true : false);		// switch temp to non-blocking?
 
 	struct sockaddr*	addrPtr;				// get pointer to result struct
+  socklen_t addrLen;
 	if (itsType == UNIX) {
 		addrPtr = (struct sockaddr*) &itsUnixAddr;
+    addrLen = sizeof(itsUnixAddr);
 	}
 	else {
 		addrPtr = (struct sockaddr*) &itsTCPAddr;
+    addrLen = sizeof(itsTCPAddr);
 	}
 
-	if (::connect(itsSocketID, addrPtr, sizeof(*addrPtr)) >= 0) {
+	if (::connect(itsSocketID, addrPtr, addrLen ) >= 0) {
 		LOG_DEBUG("Socket:connect() successful");
 		itsIsConnected = true;
 		setBlocking (blockingMode);
@@ -476,13 +482,15 @@ Socket* Socket::accept(int32	waitMs)
 	setBlocking(waitMs < 0 ? true : false);		// switch temp to non-blocking?
 
 	struct sockaddr*	addrPtr;
+  socklen_t addrLen;
 	if (itsType == UNIX) {
 		addrPtr = (struct sockaddr*) &itsUnixAddr;
+    addrLen = sizeof(itsUnixAddr);
 	}
 	else {
 		addrPtr = (struct sockaddr*) &itsTCPAddr;
+    addrLen = sizeof(itsTCPAddr);
 	}
-	socklen_t		addrLen = sizeof(*addrPtr);
 
 	itsErrno = SK_OK;
 	errno 	 = 0;
