@@ -114,7 +114,7 @@ void WH_Prediff::process()
   // Execute workorder
   if (wo->getNewBaselines())
   {
-    pred->select(ant, ant);
+    pred->select(ant, ant, wo->getUseAutoCorrelations());
     vector<uint32> dataShape;
     dataShape = pred->setDomain(wo->getStartFreq(), wo->getFreqLength(), 
 				wo->getStartTime(), wo->getTimeLength());
