@@ -111,7 +111,7 @@ namespace LOFAR
 	Socket*		getDataSocket() const; 
     bool		connectToServer(int32	waitMs = -1);
     bool		connectToClient(int32	waitMs = -1);
-  private:
+//  private:
 	typedef enum {
 		CmdNone = 0,
 		CmdRecvNonBlock,
