@@ -1,4 +1,4 @@
- use_suspend  := T;
+#  use_suspend  := T;
 # use_nostart  := T;
 # use_valgrind := T;
 use_valgrind_opts := [ "",

@@ -5,7 +5,9 @@
 #include <MeqGen/AID-MeqGen.h>
 #include <MEQ/Request.h>
 #include <MEQ/Result.h>
+#include <MEQ/ParmTable.h>
 #include <DMI/BOIO.h>
+
     
 using Debug::ssprintf;
 using namespace AppControlAgentVocabulary;
@@ -250,6 +252,10 @@ void MeqServer::clearForest (DataRecord::Ref &out,DataRecord::Ref::Xfer &)
 {
   cdebug(1)<<"clearing forest: deleting all nodes"<<endl;
   forest.clear();
+// ****
+// **** added this to relinquish parm tables --- really ought to go away
+  ParmTable::closeTables();
+// ****
   out()[AidMessage] = "all nodes deleted";
 }
 
