@@ -25,10 +25,9 @@
 
 #include <stdio.h>             // for sprintf
 
-#include "CEPFrame/WH_Example.h"
-#include "CEPFrame/Step.h"
+#include <CEPFrame/WH_Example.h>
+#include <CEPFrame/Step.h>
 #include <Common/KeyValueMap.h>
-#include <Common/Debug.h>
 
 namespace LOFAR
 {

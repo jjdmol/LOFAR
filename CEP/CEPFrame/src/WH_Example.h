@@ -25,8 +25,8 @@
 
 #include <lofar_config.h>
 
-#include "tinyCEP/WorkHolder.h"
-#include "CEPFrame/DH_Example.h"
+#include <tinyCEP/WorkHolder.h>
+#include <CEPFrame/DH_Example.h>
 
 namespace LOFAR
 {

@@ -26,7 +26,7 @@
 
 #include <lofar_config.h>
 
-#include "Transport/DataHolder.h"
+#include <Transport/DataHolder.h>
 #include <Common/lofar_complex.h>
 
 namespace LOFAR
@@ -101,7 +101,7 @@ inline int DH_Example::getCurDataSize()
    
 inline void DH_Example::setCurDataSize(const int nbytes)
   {  
-    //! DbgAssertStr(nbytes <= (int)itsBufSize); 
+    //! DBGASSERTSTR(nbytes <= (int)itsBufSize); 
     itsCurDataPacketSize = nbytes;
     return ;
   }

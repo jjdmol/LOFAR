@@ -24,8 +24,8 @@
 //
 //////////////////////////////////////////////////////////////////////
 
-#include "CEPFrame/CycBufferManager.h"
-#include <Common/Debug.h>
+#include <CEPFrame/CycBufferManager.h>
+#include <Common/LofarLogger.h>
 
 namespace LOFAR
 {
@@ -46,7 +46,7 @@ DataHolder* CycBufferManager::getWriteLockedDH(int* id)
 {
   if (itsBuf.GetCount() == itsBuf.GetSize())    //check if buffer is full
   {
-    TRACER4("Cyclic buffer is full");
+    LOG_WARN("Cyclic buffer is full");
     //increase buffer til max size? 
   }
   return itsBuf.GetWriteLockedDataItem(id);
@@ -74,7 +74,7 @@ void CycBufferManager::readUnlock(int id)
 
 void CycBufferManager::preprocess()
 {
-  AssertStr(itsDataHolder!=0, "DataHolder has not been set");
+  ASSERTSTR(itsDataHolder!=0, "DataHolder has not been set");
   itsDataHolder->init(); 
   for (int i = 0; i < size; i++)   // Fill buffer
   {

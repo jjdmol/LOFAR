@@ -32,7 +32,7 @@
 #include <CEPFrame/WH_Example.h>
 #include <tinyCEP/Profiler.h>
 #include <Common/KeyValueMap.h>
-#include <Common/Debug.h>
+#include <Common/LofarLogger.h>
 #include <Common/lofar_iostream.h>
 
 using namespace LOFAR;
@@ -93,7 +93,7 @@ void Simulator_Example::run (int nsteps)
   if (nsteps < 0) {
     nsteps = 10;
   }
-  TRACER2("Ready with definition of configuration");
+  LOG_TRACE_FLOW("Ready with definition of configuration");
   Profiler::init();
 
   cout << endl <<  "Start Process" << endl;    
@@ -121,14 +121,14 @@ void Simulator_Example::quit()
 int main (int argc, const char* argv[])
 {
   // Set trace level.
-  Debug::initLevels (argc, argv);
+  INIT_LOGGER("SimulatorExample.log_prop");
   try {
     // First test some Parse functions.
     // Note that C++ also requires a \ to escape special characters.
-    AssertStr (SimulatorParse::removeQuotes ("'abcd\"e'\"fgh'i\"'j'")
+    ASSERTSTR (SimulatorParse::removeQuotes ("'abcd\"e'\"fgh'i\"'j'")
 	       == string("abcd\"efgh'ij"),
 	       "SimulatorParse::removeQuotes fails");
-    AssertStr (SimulatorParse::removeEscapes ("\\ab\\\\cd\\efghij\\")
+    ASSERTSTR (SimulatorParse::removeEscapes ("\\ab\\\\cd\\efghij\\")
 	       == string("ab\\cdefghij"),
 	       "SimulatorParse::removeEscapes fails");
 

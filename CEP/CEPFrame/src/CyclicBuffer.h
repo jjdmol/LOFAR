@@ -25,7 +25,7 @@
 
 #include <lofar_config.h>
 
-#include "CEPFrame/Lock.h"
+#include <CEPFrame/Lock.h>
 //#include <Common/lofar_deque.h>
 #include <Common/lofar_vector.h>
 
@@ -169,7 +169,7 @@ TYPE& CyclicBuffer<TYPE>::GetWriteLockedDataItem(int* ID)
   // wait until space becomes available
   while (itsCount >= (int)itsBuffer.size())
   {
-    AssertStr(itsCount == (int)itsBuffer.size(),
+    ASSERTSTR(itsCount == (int)itsBuffer.size(),
 	      "itsCount=" << itsCount << " out of range (" << itsBuffer.size() << ")");
     pthread_cond_wait(&space_available, &buffer_mutex);
   }
@@ -207,7 +207,7 @@ TYPE& CyclicBuffer<TYPE>::GetRWLockedDataItem(int* ID)
   // wait until data becomes available
   while (itsCount <= 0)
   {
-    AssertStr(0 == itsCount, "itsCount=" << itsCount << " out of range (min=0)");
+    ASSERTSTR(0 == itsCount, "itsCount=" << itsCount << " out of range (min=0)");
     pthread_cond_wait(&data_available, &buffer_mutex);
   }
   
@@ -236,7 +236,7 @@ const TYPE& CyclicBuffer<TYPE>::GetReadDataItem(int* ID)
   // wait until data becomes available
   while (itsCount <= 0)
   {
-    AssertStr(0 == itsCount, "itsCount=" << itsCount << " out of range (min=0)");
+    ASSERTSTR(0 == itsCount, "itsCount=" << itsCount << " out of range (min=0)");
     pthread_cond_wait(&data_available, &buffer_mutex);
   }
   

@@ -22,8 +22,8 @@
 //
 //////////////////////////////////////////////////////////////////////
 
-#include "CEPFrame/VirtualMachine.h"
-#include <Common/Debug.h>
+#include <CEPFrame/VirtualMachine.h>
+#include <Common/LofarLogger.h>
 
 namespace LOFAR
 {
@@ -32,12 +32,12 @@ VirtualMachine::VirtualMachine():
   itsState(running),
   itsStatus(unknown)
 {
-  TRACER2("VirtualMachine Constructor");
+  LOG_TRACE_FLOW("VirtualMachine Constructor");
 }
 
 VirtualMachine::~VirtualMachine() 
 {
-  TRACER2("VirtualMachine Destructor");
+  LOG_TRACE_FLOW("VirtualMachine Destructor");
 }
 
 void VirtualMachine::trigger (VirtualMachine::Trigger aTrig)
@@ -57,7 +57,7 @@ void VirtualMachine::trigger (VirtualMachine::Trigger aTrig)
       itsState = aborting;
       break;
     default:
-      FailWhen(true, "Unknown Trigger");
+      THROW(LOFAR::Exception, "Unknown Trigger");
       break;
     }
     break;
@@ -74,7 +74,7 @@ void VirtualMachine::trigger (VirtualMachine::Trigger aTrig)
       itsState = aborting;
       break;
     default:
-      FailWhen(true, "Unknown Trigger");
+      THROW(LOFAR::Exception, "Unknown Trigger");
       break;
     }
     break;
@@ -91,7 +91,7 @@ void VirtualMachine::trigger (VirtualMachine::Trigger aTrig)
       itsState = aborting;
       break;
     default:
-      FailWhen(true, "Unknown Trigger");
+      THROW(LOFAR::Exception, "Unknown Trigger");
       break;
     }
     break;
@@ -108,18 +108,18 @@ void VirtualMachine::trigger (VirtualMachine::Trigger aTrig)
       itsState = aborting;
       break;
     default:
-      FailWhen(true, "Unknown Trigger");
+      THROW(LOFAR::Exception, "Unknown Trigger");
       break;
     }
     break;
     
   default:
-    FailWhen(true, "Unknown State");
+    THROW(LOFAR::Exception, "Unknown State");
     break;
 
   }
   // complete output
-  TRACER1 ("Called VM::trigger(" 
+  LOG_TRACE_FLOW_STR ("Called VM::trigger(" 
 	   << asString(oldState) << '/'
 	   << asString(aTrig)    << '/' 
 	   << asString(itsState) << ')');

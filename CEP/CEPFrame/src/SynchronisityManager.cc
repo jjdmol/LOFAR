@@ -24,10 +24,10 @@
 //
 //////////////////////////////////////////////////////////////////////
 
-#include "CEPFrame/SynchronisityManager.h"
-#include "CEPFrame/DHPoolManager.h"
-#include "CEPFrame/CycBufferManager.h"
-#include <Common/Debug.h>
+#include <CEPFrame/SynchronisityManager.h>
+#include <CEPFrame/DHPoolManager.h>
+#include <CEPFrame/CycBufferManager.h>
+#include <Common/LofarLogger.h>
 #include <unistd.h>
 
 namespace LOFAR
@@ -41,7 +41,7 @@ SynchronisityManager::SynchronisityManager (int inputs, int outputs)
   : itsNinputs(inputs),
     itsNoutputs(outputs)
 {
-  TRACER2("SynchronisityManager constructor");
+  LOG_TRACE_FLOW("SynchronisityManager constructor");
   itsInManagers = new DHPoolManager*[inputs];
   itsOutManagers = new DHPoolManager*[outputs];
   itsInSynchronisities = new bool[inputs];
@@ -56,7 +56,7 @@ SynchronisityManager::SynchronisityManager (int inputs, int outputs)
     itsInManagers[i] = new DHPoolManager();
     itsInSynchronisities[i] = true;
     int status = pthread_mutex_init(&itsReadersData[i].mutex, NULL);
-    DbgAssertStr(status == 0, "Init reader mutex failed");
+    DBGASSERTSTR(status == 0, "Init reader mutex failed");
     itsReadersData[i].manager = 0;
     itsReadersData[i].stopThread = true;
   }
@@ -66,7 +66,7 @@ SynchronisityManager::SynchronisityManager (int inputs, int outputs)
     itsOutManagers[j] = new DHPoolManager();
     itsOutSynchronisities[j] = true;
     int status = pthread_mutex_init(&itsWritersData[j].mutex, NULL);
-    DbgAssertStr(status == 0, "Init writer mutex failed");
+    DBGASSERTSTR(status == 0, "Init writer mutex failed");
     itsWritersData[j].manager = 0;
     itsWritersData[j].stopThread = true;
   }
@@ -76,7 +76,7 @@ SynchronisityManager::~SynchronisityManager()
 {
   // Termination of all active reader and writer threads
 
-  TRACER4("SynchronisityManager postprocess");
+  LOG_TRACE_FLOW("SynchronisityManager destructor");
   for (int i = 0; i < itsNinputs; i++)
   {
     pthread_mutex_lock(&itsReadersData[i].mutex);
@@ -126,13 +126,13 @@ void SynchronisityManager::preprocess()
 {
   for (int i = 0; i < itsNinputs; i++)
   {
-    DbgAssertStr(itsInManagers[i]!=0, "No DHPoolManager constructed");
+    DBGASSERTSTR(itsInManagers[i]!=0, "No DHPoolManager constructed");
     itsInManagers[i]->preprocess();
   }
 
   for (int j = 0; j < itsNoutputs; j++)
   {
-    DbgAssertStr(itsOutManagers[j]!=0, "No DHPoolManager constructed");
+    DBGASSERTSTR(itsOutManagers[j]!=0, "No DHPoolManager constructed");
     itsOutManagers[j]->preprocess();
   }
 }
@@ -143,7 +143,7 @@ void SynchronisityManager::postprocess()
 
 void* SynchronisityManager::startReaderThread(void* thread_arg)
 {
-  TRACER2("In reader thread ID " << pthread_self());
+  LOG_TRACE_RTTI_STR("In reader thread ID " << pthread_self());
   thread_data* data = (thread_data*)thread_arg;
   DHPoolManager* manager = data->manager;
   
@@ -153,12 +153,12 @@ void* SynchronisityManager::startReaderThread(void* thread_arg)
     if (data->stopThread == true)
     {
       pthread_mutex_unlock(&data->mutex);
-      TRACER2("Reader thread " << pthread_self() << " exiting");
+      LOG_TRACE_RTTI_STR("Reader thread " << pthread_self() << " exiting");
       pthread_exit(NULL);
     }
     pthread_mutex_unlock(&data->mutex);
     int id;
-    TRACER2("Thread " << pthread_self() << " attempting to read");
+    LOG_TRACE_RTTI_STR("Thread " << pthread_self() << " attempting to read");
 
     DataHolder* dh = manager->getWriteLockedDH(&id);
 
@@ -169,7 +169,7 @@ void* SynchronisityManager::startReaderThread(void* thread_arg)
       {
 	manager->writeUnlock(id);
 	pthread_mutex_unlock(&data->mutex);
-	TRACER2("Reader thread " << pthread_self() << " exiting");
+	LOG_TRACE_RTTI_STR("Reader thread " << pthread_self() << " exiting");
 	pthread_exit(NULL);
       }
       pthread_mutex_unlock(&data->mutex);
@@ -181,7 +181,7 @@ void* SynchronisityManager::startReaderThread(void* thread_arg)
 
 void* SynchronisityManager::startWriterThread(void* thread_arg)
 {
-  TRACER2("In writer thread ID " << pthread_self());
+  LOG_TRACE_RTTI_STR("In writer thread ID " << pthread_self());
   thread_data* data = (thread_data*)thread_arg;
 
   DHPoolManager* manager = data->manager;
@@ -192,12 +192,12 @@ void* SynchronisityManager::startWriterThread(void* thread_arg)
     if (data->stopThread == true)               /// Check stop condition
     {
       pthread_mutex_unlock(&data->mutex);
-      TRACER2("Writer thread " << pthread_self() << " exiting");
+      LOG_TRACE_RTTI_STR("Writer thread " << pthread_self() << " exiting");
       pthread_exit(NULL);
     }
     pthread_mutex_unlock(&data->mutex);
     int id;
-    TRACER2("Thread " << pthread_self() << " attempting to write");
+    LOG_TRACE_RTTI_STR("Thread " << pthread_self() << " attempting to write");
     manager->getReadLockedDH(&id)->write();
     manager->readUnlock(id);
   
@@ -263,7 +263,7 @@ void SynchronisityManager::readAsynchronous(int channel)
     itsReadersData[channel].manager = itsInManagers[channel];
     itsReadersData[channel].stopThread = false;
     pthread_create(&itsReaders[channel], NULL, startReaderThread, &itsReadersData[channel]);
-    TRACER4("Reader thread " << itsReaders[channel] << " created");
+    LOG_TRACE_RTTI_STR("Reader thread " << itsReaders[channel] << " created");
   }
 
   pthread_mutex_unlock(&itsReadersData[channel].mutex);
@@ -277,7 +277,7 @@ void SynchronisityManager::writeAsynchronous(int channel)
   {                                              // Thread creation
     itsWritersData[channel].manager = itsOutManagers[channel];
     itsWritersData[channel].stopThread = false;
-    TRACER4("Writer thread creation");
+    LOG_TRACE_RTTI_STR("Writer thread creation");
     pthread_create(&itsWriters[channel], NULL, startWriterThread, &itsWritersData[channel]);
   }
 

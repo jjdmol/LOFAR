@@ -29,9 +29,9 @@
 #include <config.h>
 #endif
 
-#include "Common/Debug.h"
-#include "CEPFrame/CyclicBuffer.h"
-#include "CEPFrame/Lock.h"
+#include <Common/LofarLogger.h>
+#include <CEPFrame/CyclicBuffer.h>
+#include <CEPFrame/Lock.h>
 #include <stdio.h>
 #include <pthread.h>
 #include <sys/time.h>
@@ -73,8 +73,6 @@ int main(int argc, char** argv)
   pthread_cond_t  condition = PTHREAD_COND_INITIALIZER;
   struct timeval starttime;
 
-  Debug::initLevels(argc, (const char**)argv);
-
   int myint[CYCLIC_SIZE];
 
   // start multiple threads, all accessing the same CyclicBuffer.
@@ -83,7 +81,7 @@ int main(int argc, char** argv)
     myint[i] = i;
     id = buf.AddBufferElement(&myint[i]);
 
-    AssertStr(id == i, "id != i");
+    ASSERTSTR(id == i, "id != i");
   }
 
   // start NTHREADS threads

@@ -23,8 +23,8 @@
 //
 //////////////////////////////////////////////////////////////////////
 
-#include "CEPFrame/WH_Empty.h"
-#include <Common/Debug.h>
+#include <CEPFrame/WH_Empty.h>
+#include <Common/LofarLogger.h>
 
 namespace LOFAR
 {
@@ -55,7 +55,7 @@ void WH_Empty::process()
 
 void WH_Empty::dump()
 {
-  TRACER2("WH_Empty Dump");
+  LOG_TRACE_FLOW("WH_Empty Dump");
 }
 
 
@@ -65,14 +65,14 @@ void WH_Empty::dump()
    "one" : return 1
  */
 int WH_Empty::getMonitorValue(const char* name){
-  TRACER2("Called WH_Empty::getMonitorValue");
+  LOG_TRACE_FLOW("Called WH_Empty::getMonitorValue");
   int result =0;
   if (strcmp(name,"hi") == 0) {
     cout << "Hi I'm " << getName() << endl;  
   } else if (strcmp(name,"one") == 0) {
     result = 1;
   }
-  TRACER2("WH_Empty::getMonitorValue resturns " << result);
+  LOG_TRACE_FLOW_STR("WH_Empty::getMonitorValue returns " << result);
   return result;
 }
 
