@@ -25,12 +25,9 @@
 //#
 //# $Id$
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
+#include <lofar_config.h>
 
 #include <CAL/MeqCalibraterImpl.h>
-#include <Common/lofar_strstream.h>
 #include <aips/Tables/Table.h>
 #include <aips/Tables/ScalarColumn.h>
 #include <aips/Tables/TableParse.h>
@@ -38,6 +35,7 @@
 #include <aips/Arrays/ArrayUtil.h>
 #include <aips/Exceptions/Error.h>
 #include <Common/Profiling/PerfProfile.h>
+#include <sstream>
 
 void predict (MeqCalibrater& mc)
 {
@@ -78,19 +76,21 @@ void solve(MeqCalibrater& mc, int loopcnt, bool realsol)
 
 int main(int argc, char* argv[])
 {
-  // run ../../gnu_opt/demo/michiel.demo 0 ../../gnu_opt/demo/michiel.demo_gsm  LOFAR solve 1 0 0 "all([ANTENNA1,ANTENNA2] in 4*[0:20])" 0,1,2 0
-  // run ../../gnu_opt/demo/michiel.demo 0 ../../gnu_opt/demo/michiel.demo_gsm  LOFAR solve 1 0 0 "all([ANTENNA1,ANTENNA2] in 4*[0:1])" 0,1,2 0
-  // run ../../gnu_opt/demo/michiel.demo 0 ../../gnu_opt/demo/michiel.demo_gsm  WSRT solve 1 0 0 "all([ANTENNA1,ANTENNA2] in 4*[0:20])" 0,1,2 0
+  // run ../../gnu_opt/demo/michiel.demo 0 ../../gnu_opt/demo/michiel.demo_gsm  LOFAR.RI solve 0 1 0 0 "all([ANTENNA1,ANTENNA2] in 4*[0:20])" 0,1,2 0
+  // run ../../gnu_opt/demo/michiel.demo 0 ../../gnu_opt/demo/michiel.demo_gsm  LOFAR.RI solve 0 1 0 0 "all([ANTENNA1,ANTENNA2] in 4*[0:1])" 0,1,2 0
+  // run ../../gnu_opt/demo/michiel.demo 0 ../../gnu_opt/demo/michiel.demo_gsm  WSRT solve 0 1 0 0 "all([ANTENNA1,ANTENNA2] in 4*[0:20])" 0,1,2 0
 
   PerfProfile::init(&argc, &argv, PP_LEVEL_2);
 
   try {
     if (argc < 2) {
-      cerr << "Run as:  tCAL msname mepname gsmname scenario loopcnt "
-	   << "stchan endchan selection calcuvw" << endl;
+      cerr << "Run as:  tCAL msname mepname gsmname dbtype dbname scenario "
+	   << "loopcnt stchan endchan selection calcuvw" << endl;
       cerr << " msname:    name of MS without .MS extension" << endl;
       cerr << " mepname:   name of MEP table   (default is msname)" << endl;
       cerr << " gsmname:   name of GSM table   (default is msname)" << endl;
+      cerr << " dbtype:    database type       ([aips], postgres)" << endl;
+      cerr << " dbname:    database name       (default is test)" << endl;
       cerr << " modeltype: WSRT or LOFAR       (default is LOFAR)" << endl;
       cerr << " scenario:  scenario to execute (default is predict)" << endl;
       cerr << " solvparms: solvable parms pattern ({RA,DEC,StokesI}.*)"
@@ -123,69 +123,85 @@ int main(int argc, char* argv[])
       gsmname = mepname;
     }
 
-    string modelType;
+    string dbtype;
     if (argc > 4) {
-      modelType = argv[4];
+      dbtype = argv[4];
+    }
+    if ("0" == dbtype  ||  "" == dbtype) {
+      dbtype = "aips";
+    }
+
+    string dbname;
+    if (argc > 5) {
+      gsmname = argv[5];
+    }
+    if ("0" == dbname  ||  "" == dbname) {
+      dbname = "test";
+    }
+
+    string modelType;
+    if (argc > 6) {
+      modelType = argv[6];
     }
     if ("0" == modelType  ||  "" == modelType) {
       modelType = "LOFAR";
     }
 
     string scenario;
-    if (argc > 5) {
-      scenario = argv[5];
+    if (argc > 7) {
+      scenario = argv[7];
     }
     if ("0" == scenario  ||  "" == scenario) {
       scenario = "predict";
     }
 
     string solvparms;
-    if (argc > 6) {
-      solvparms = argv[6];
+    if (argc > 8) {
+      solvparms = argv[8];
     }
     if ("0" == solvparms  ||  "" == solvparms) {
       solvparms = "{RA,DEC,StokesI}.*";
     }
 
     int loopcnt = 1;
-    if (argc > 7) {
-      loopcnt = atoi(argv[7]);
+    if (argc > 9) {
+      loopcnt = atoi(argv[9]);
       if (0 == loopcnt) loopcnt = 1;
     }
 
     int stchan = -1;
-    if (argc > 8) {
-      istringstream iss(argv[8]);
+    if (argc > 10) {
+      std::istringstream iss(argv[10]);
       iss >> stchan;
     }
     int endchan = stchan;
-    if (argc > 9) {
-      istringstream iss(argv[9]);
+    if (argc > 11) {
+      std::istringstream iss(argv[11]);
       iss >> endchan;
     }
 
     string selstr;
-    if (argc > 10) {
-      selstr = argv[10];
+    if (argc > 12) {
+      selstr = argv[12];
     }
 
     string peelstr;
-    if (argc > 11) {
-      peelstr = argv[11];
+    if (argc > 13) {
+      peelstr = argv[13];
     }
     Vector<Int> peelVec;
     if (!peelstr.empty()) {
       Vector<String> peels = stringToVector (peelstr);
       peelVec.resize (peels.nelements());
       for (unsigned int i=0; i<peels.nelements(); i++) {
-	istringstream iss(peels(i));
+	std::istringstream iss(peels(i));
 	iss >> peelVec(i);
       }
     }
 
     bool calcuvw=true;
-    if (argc > 11) {
-      istringstream iss(argv[11]);
+    if (argc > 14) {
+      std::istringstream iss(argv[14]);
       iss >> calcuvw;
     }
 
@@ -193,6 +209,8 @@ int main(int argc, char* argv[])
     cout << " msname:    " << msname << endl;
     cout << " mepname:   " << mepname << endl;
     cout << " gsmname:   " << gsmname << endl;
+    cout << " dbtype:    " << dbtype << endl;
+    cout << " dbname:    " << dbname << endl;
     cout << " modeltype: " << modelType << endl;
     cout << " scenario:  " << scenario << endl;
     cout << " solvparms: " << solvparms << endl;
@@ -219,8 +237,9 @@ int main(int argc, char* argv[])
 			 Sort::QuickSort | Sort::NoDuplicates);
       ant2 = ROScalarColumn<Int>(sortab, "ANTENNA2").getColumn();
     }
-    MeqCalibrater meqcal (msname+".MS", mepname, gsmname, 0, ant1, ant2,
-			  modelType, calcuvw, "MODEL_DATA", "CORRECTED_DATA");
+    MeqCalibrater meqcal (msname+".MS", mepname, gsmname, dbtype, dbname, "",
+			  0, ant1, ant2, modelType, calcuvw,
+			  "MODEL_DATA", "CORRECTED_DATA");
 
     if (stchan >= 0  ||  endchan >= 0  ||  !selstr.empty()) {
       if (stchan < 0) {
