@@ -134,7 +134,7 @@ bool MSOutputSink::setupDataColumn (Column &col)
   if( !ms_.tableDesc().isColumn(col.name) ) 
   {
     cdebug(2)<<"creating new column "<<col.name<<", shape "<<null_cell_.shape()<<endl;
-    ArrayColumnDesc<Complex> coldesc(col.name,"added by MSOutputAgent",2);
+    ArrayColumnDesc<Complex> coldesc(col.name,"added by MSOutputAgent",null_cell_.shape(),ColumnDesc::Direct);
     ms_.addColumn(coldesc);
   }
   // init the column
@@ -212,7 +212,7 @@ void MSOutputSink::putColumn (Column &col,int irow,const LoMat_fcomplex &data)
   if( !col.col.isDefined(irow) )
     col.col.put(irow,null_cell_);
   col.col.putSlice(irow,column_slicer_,aips_data);
-}    
+}
 
 //##ModelId=3E28316B012D
 void MSOutputSink::doPutTile (const VisTile &tile)
