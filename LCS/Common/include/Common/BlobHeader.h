@@ -86,8 +86,7 @@ public:
   BlobHeader (const char* objectType, int version, uint level=0);
 
   // Check if the magic value is correct.
-  bool checkMagicValue() const
-    { return itsMagicValue == 0xbebebebe; }
+  bool checkMagicValue() const;
 
   bool checkType (const char* objectType) const
     { return itsNameLength==strlen(objectType)
@@ -96,6 +95,9 @@ public:
   // Get the data format.
   LOFAR::DataFormat getDataFormat() const
     { return LOFAR::DataFormat (itsDataFormat); }
+
+  // Set the data format to local. Useful after data is converted in place.
+  void setLocalDataFormat();
 
   // Get the version. Data will be converted if needed.
   int getVersion() const
@@ -136,7 +138,7 @@ protected:
 };
 
 
-class BlobHeaderBase : BlobHeader<0>
+class BlobHeaderBase : public BlobHeader<0>
 {
 friend class BlobOStream;
 friend class BlobIStream;
@@ -146,7 +148,21 @@ public:
   explicit BlobHeaderBase (int version=0, uint level=0)
     : BlobHeader<0> ("", version, level)
     {}
+
+  // Get the begin-of-blob magic value.
+  static uint32 bobMagicValue()
+    { return 0xbebebebe; }
+
+  // Get the end-of-blob magic value.
+  static uint32 eobMagicValue()
+    { return 0xbfbfbfbf; }
 };
+
+
+template<uint NAMELENGTH>
+bool BlobHeader<NAMELENGTH>::checkMagicValue() const
+  { return itsMagicValue == BlobHeaderBase::bobMagicValue(); }
+
 
 } // end namespace
 
