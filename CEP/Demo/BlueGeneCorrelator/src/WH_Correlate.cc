@@ -40,7 +40,12 @@ WH_Correlate::WH_Correlate(const string& name,
 			   unsigned int nin)
   : WorkHolder(nin, nin, name, "WH_Correlate"),
     myrank(0),
-    mysize(0)
+    mysize(0),
+    task_id(0),
+    active_nodes(0),    
+    received_blocks(0),
+    pre_received_blocks(0),
+    firstProcess(true)
 {
 
   char str[8];
@@ -59,6 +64,7 @@ WH_Correlate::WH_Correlate(const string& name,
     (void*)sig_buf  = malloc(NSTATIONS*NSAMPLES*NCHANNELS*sizeof(DH_CorrCube::BufferType));
     (void*)corr_buf = malloc(NSTATIONS*NSTATIONS*NCHANNELS*sizeof(DH_Vis::BufferType));
 
+    (void*)temp_buffer = malloc(NSTATIONS*NSTATIONS*NCHANNELS*sizeof(DH_Vis::BufferType));
   }
 }
 
@@ -83,22 +89,31 @@ void WH_Correlate::preprocess() {
   // Define global MPI complex float datatype
   MPI_Type_contiguous(2, MPI_FLOAT, &my_complex);
   MPI_Type_commit(&my_complex);
-  
 #endif
+
+
+    MPE_Describe_state( 1,  2, "SendToSlave", "red");
+    MPE_Describe_state( 3,  4, "ReceiveFromSlave","blue");
+    MPE_Describe_state( 5,  6, "ReceiveFromSocket","green");
+    MPE_Describe_state( 7,  8, "SendToSocket", "yellow");
+    MPE_Describe_state( 9, 10, "CorrectBuffer", "orange");
+
+    MPE_Describe_state(11, 12, "ReceiveFromMaster", "gray");
+    MPE_Describe_state(13, 14, "SendToMaster", "purple");
+    MPE_Describe_state(15, 16, "ComputeCM", "black");
+
+
+
 }
 
 void WH_Correlate::process() {
 
-  if (myrank == 0) {
-
-    memcpy(sig_buf, 
-	   ((DH_CorrCube*)getDataManager().getInHolder(0))->getBuffer(),
-	   NSTATIONS*NCHANNELS*NSAMPLES*sizeof(DH_CorrCube::BufferType));
-
+   if (myrank == 0) {
+      
     WH_Correlate::master();
 
     memcpy(((DH_Vis*)getDataManager().getOutHolder(0))->getBuffer(),
-	   sig_buf,
+	   corr_buf,
 	   NSTATIONS*NSTATIONS*NCHANNELS*sizeof(DH_Vis::BufferType));
 
   } else {
@@ -107,6 +122,25 @@ void WH_Correlate::process() {
 
   }
 }
+
+void WH_Correlate::postprocess() {
+
+  if (myrank == 0) {
+
+    int dummy;
+
+    for (int slave = 1; slave < mysize; slave++) {
+
+      MPI_Send(&dummy,
+	       1, 
+	       MPI_INT,
+	       slave,
+	       STOP_TAG,
+	       MPI_COMM_WORLD);
+    }
+  }
+}
+
 
 void WH_Correlate::dump() {
 }
@@ -362,89 +396,147 @@ void WH_Correlate::correlator_core_unrolled(complex<float> s[NSTATIONS][NSAMPLES
 
 void WH_Correlate::master() {
 
-  int task_id      = 0;
   int result_id    = 0;
-  int active_nodes = 0;
   int sending_node = 0;
 #ifdef __BLRTS__
 
   MPI_Status status;
-  
-  /* Send all nodes with (rank > 0) a TASK id and the corresponding data */ 
-  for (int i = 1; i < mysize; i++) {           
-    MPI_Send(&task_id, 
-	     1, 
-	     MPI_INT, 
-	     i, 
-	     SEND_TASK_ID, 
-	     MPI_COMM_WORLD);
 
-    MPI_Send(sig_buf+task_id*NSTATIONS*NSAMPLES,
-	     NSTATIONS*NSAMPLES,
-	     my_complex,
-	     i, 
-	     SEND_TASK_DATA,
-	     MPI_COMM_WORLD);
+  if (firstProcess) {
+    firstProcess = false;
+
+    // read signal buffer from socket
+    memcpy(sig_buf, 
+	   ((DH_CorrCube*)getDataManager().getInHolder(0))->getBuffer(),
+	   NSTATIONS*NCHANNELS*NSAMPLES*sizeof(DH_CorrCube::BufferType));
     
-    task_id++;
-    active_nodes++;
-  }
-
-  while (active_nodes > 0) {
-
-    if (task_id < NCHANNELS) {
-      /* There are still frequency channels to process */
-      MPI_Recv(&result_id, 
+    // trigger inHolder to allow second read later on in this process step
+    getDataManager().readyWithInHolder(0);
+    
+    /* Send all nodes with (rank > 0) a TASK id and the corresponding data */ 
+    for (int i = 1; i < mysize; i++) {           
+#ifdef __MPE_LOGGING__
+      MPE_Log_event(1, i, "send");
+#endif
+      MPI_Send(&task_id, 
 	       1, 
-	       MPI_INT,
-	       MPI_ANY_SOURCE,
-	       SEND_RESULT_ID,
-	       MPI_COMM_WORLD,
-	       &status);
-      
-      sending_node = status.MPI_SOURCE;
-
-      MPI_Recv(corr_buf+result_id*NSTATIONS*NSTATIONS, 
-	       NSTATIONS*NSTATIONS,
-	       my_complex,
-	       sending_node,
-	       SEND_RESULT_DATA,
-	       MPI_COMM_WORLD,
-	       &status);
-
-      /* Give the slave a new task id and corresponding data right away */
-      MPI_Send(&task_id,
-	       1, 
-	       MPI_INT,
-	       sending_node,
-	       SEND_TASK_ID,
+	       MPI_INT, 
+	       i, 
+	       SEND_TASK_ID, 
 	       MPI_COMM_WORLD);
-
+      
       MPI_Send(sig_buf+task_id*NSTATIONS*NSAMPLES,
-	       NSTATIONS*NSAMPLES, 
+	       NSTATIONS*NSAMPLES,
 	       my_complex,
-	       sending_node,
+	       i, 
 	       SEND_TASK_DATA,
 	       MPI_COMM_WORLD);
+#ifdef __MPE_LOGGING__
+      MPE_Log_event(2, i, "send");
+#endif
 
       task_id++;
+      active_nodes++;
+      cout << "NODES ACTIVE: " << active_nodes << endl;
+      pre_received_blocks = 0;
+    }
+  } else {
 
-    } else {
+    if (pre_received_blocks > 0) {
+      // update correlation buffer with precalculated values from previous process step
+#ifdef __MPE_LOGGING__
+      MPE_Log_event(9, 0, "correct");
+#endif
+      for (int i = 0; i < pre_received_blocks; i++) {
+	memcpy(corr_buf+buffer_indeces[i]*NSTATIONS*NSTATIONS,
+	       temp_buffer,
+	       NSTATIONS*NSTATIONS*sizeof(DH_Vis::BufferType));
+	
+      }
+#ifdef __MPE_LOGGING__
+      MPE_Log_event(10, 0, "correct");
+#endif
+      // reset block counters
+      received_blocks = pre_received_blocks;
+      pre_received_blocks = 0;
+    }
+  }
+
+  while (task_id < NCHANNELS) {
+#ifdef __MPE_LOGGING__
+    MPE_Log_event(3, 0, "recv");
+#endif
+    /* There are still frequency channels to process */
+    /* Receive a result id from any source */
+    MPI_Recv(&result_id, 
+	     1, 
+	     MPI_INT,
+	     MPI_ANY_SOURCE,
+	     SEND_RESULT_ID,
+	     MPI_COMM_WORLD,
+	     &status);
       
-      /* all data has been sent to the slaves. Any slave that transmits data  */
-      /* is stopped once the data has been received.                          */ 
-      
-      /* Receive a result id from any source */
-      MPI_Recv(&result_id, 
-	       1, 
-	       MPI_INT,
-	       MPI_ANY_SOURCE,
-	       SEND_RESULT_ID,
-	       MPI_COMM_WORLD,
-	       &status);
+    sending_node = status.MPI_SOURCE;
+    
+    MPI_Recv(corr_buf+result_id*NSTATIONS*NSTATIONS, 
+	     NSTATIONS*NSTATIONS,
+	     my_complex,
+	     sending_node,
+	     SEND_RESULT_DATA,
+	     MPI_COMM_WORLD,
+	     &status);
+    received_blocks++;
+#ifdef __MPE_LOGGING__
+    MPE_Log_event(4, sending_node, "recv");
+    MPE_Log_event(1, sending_node, "send");
+#endif
+    
+    /* Give the slave a new task id and corresponding data right away */
+    MPI_Send(&task_id,
+	     1, 
+	     MPI_INT,
+	     sending_node,
+	     SEND_TASK_ID,
+	     MPI_COMM_WORLD);
+    
+    MPI_Send(sig_buf+task_id*NSTATIONS*NSAMPLES,
+	     NSTATIONS*NSAMPLES, 
+	     my_complex,
+	     sending_node,
+	     SEND_TASK_DATA,
+	     MPI_COMM_WORLD);
+#ifdef __MPE_LOGGING__
+    MPE_Log_event(2, 0, "send");
+#endif
 
-      sending_node = status.MPI_SOURCE;
+    task_id++;
+  }    
 
+  /* The data buffer is empty. */
+  /* Read new data from socket and reset the task_id counter */ 
+  memcpy(sig_buf, 
+	 ((DH_CorrCube*)getDataManager().getInHolder(0))->getBuffer(),
+	 NSTATIONS*NCHANNELS*NSAMPLES*sizeof(DH_CorrCube::BufferType));
+  task_id = 0;
+
+  while (received_blocks < NCHANNELS) {
+#ifdef __MPE_LOGGING__
+    MPE_Log_event(3, 0, "recv");
+#endif
+    /* Now wait for all remaining blocks from this iterations to complete */ 
+    /* Receive a result id from any source */
+    MPI_Recv(&result_id, 
+	     1, 
+	     MPI_INT,
+	     MPI_ANY_SOURCE,
+	     SEND_RESULT_ID,
+	     MPI_COMM_WORLD,
+	     &status);
+
+    sending_node = status.MPI_SOURCE;
+    
+    if (result_id < task_id) {
+      received_blocks++;
       /* Receive the corresponding result matrix */ 
       MPI_Recv(corr_buf+result_id*NSTATIONS*NSTATIONS,
 	       NSTATIONS*NSTATIONS,
@@ -453,24 +545,56 @@ void WH_Correlate::master() {
 	       SEND_RESULT_DATA,
 	       MPI_COMM_WORLD,
 	       &status);
+#ifdef __MPE_LOGGING__
+      MPE_Log_event(4, sending_node, "recv");
+#endif
 
-      /* Once the data has been received, stop the slave */
-      MPI_Send(&task_id,
-	       1, 
-	       MPI_INT,
-	       sending_node,
-	       STOP_TAG,
-	       MPI_COMM_WORLD);
-      active_nodes--;
+    } else {
+      // this result is premature. It should be stored in a temporary buffer until the current corr_buf is flushed
+      MPI_Recv(temp_buffer+pre_received_blocks*NSTATIONS*NSTATIONS,
+	       NSTATIONS*NSTATIONS,
+	       my_complex,
+	       sending_node, 
+	       SEND_RESULT_DATA,
+	       MPI_COMM_WORLD,
+	       &status);
+#ifdef __MPE_LOGGING__
+    MPE_Log_event(4, sending_node, "recv");
+#endif
+
+      buffer_indeces[pre_received_blocks] = result_id;
+      pre_received_blocks++;
     }
+
+#ifdef __MPE_LOGGING__
+    MPE_Log_event(1, sending_node, "send");
+#endif
+    MPI_Send(&task_id,
+	     1, 
+	     MPI_INT,
+	     sending_node,
+	     SEND_TASK_ID,
+	     MPI_COMM_WORLD);
+    
+    MPI_Send(sig_buf+task_id*NSTATIONS*NSAMPLES,
+	     NSTATIONS*NSAMPLES, 
+	     my_complex,
+	     sending_node,
+	     SEND_TASK_DATA,
+	     MPI_COMM_WORLD);
+#ifdef __MPE_LOGGING__
+    MPE_Log_event(2, sending_node, "send");
+#endif
+    task_id++;
   }
+  //  cout << "Blocks to be corrected later: "<< pre_received_blocks << endl;
 #endif
 }
 
 void WH_Correlate::slave(const int rank) {
 
   complex<float> signal_buffer[NSTATIONS][NSAMPLES];
-  complex<float> corr_buffer  [NSTATIONS][NSTATIONS];
+//   complex<float> corr_buffer  [NSTATIONS][NSTATIONS];
   
   int id;
 
@@ -479,6 +603,10 @@ void WH_Correlate::slave(const int rank) {
   MPI_Status status;
   
   while (1) {
+
+#ifdef __MPE_LOGGING__
+    MPE_Log_event(11, 0, "recv");
+#endif
 
     /* receive a task id number */
     MPI_Recv(&id,
@@ -500,13 +628,24 @@ void WH_Correlate::slave(const int rank) {
 	       MPI_COMM_WORLD,
 	       &status);
 
+#ifdef __MPE_LOGGING__
+      MPE_Log_event(12, id, "recv");
+      MPE_Log_event(15, id, "compute");
+#endif
+      /* Since the slave only does one process step, we create a fresh corr */
+      /* buffer here to prevent old values to pollute our data              */
+      complex<float> corr_buffer  [NSTATIONS][NSTATIONS];
       /* Compute complete integrated correlation matrix */      
-//       WH_Correlate::correlator_core(signal_buffer, corr_buffer);
+      //      WH_Correlate::correlator_core(signal_buffer, corr_buffer);
       WH_Correlate::correlator_core_unrolled(signal_buffer, corr_buffer);
-      
-      /* Send result ID to master */
 
-      
+#ifdef __MPE_LOGGING__
+      MPE_Log_event(16, id, "compute");
+      MPE_Log_event(13, id, "send");
+#endif
+      /* Send result ID to master */
+     
+
       MPI_Send(&id,
 	       1,
 	       MPI_INT,
@@ -521,9 +660,15 @@ void WH_Correlate::slave(const int rank) {
 	       0,
 	       SEND_RESULT_DATA,
 	       MPI_COMM_WORLD);
+#ifdef __MPE_LOGGING__
+      MPE_Log_event(14, id, "send");
+#endif
     } else {
       /* status.MPI_TAG == STOP_TAG */
       /* all data has been processed, stop the slave */ 
+#ifdef __MPE_LOGGING__
+      MPE_Log_event(12, 0, "quit");
+#endif
       break;
     }
   }

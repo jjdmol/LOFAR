@@ -56,7 +56,7 @@ namespace LOFAR
 
     int itsFBW;
     int itsIntegrationTime;
-    float index;
+    int itsIndex;
   };
 
 } // namespace LOFAR

@@ -39,7 +39,7 @@ WH_Dump::WH_Dump(const string& name,
 		 unsigned int nin, 
 		 unsigned int nout) 
   : WorkHolder(nin, nout, name, "WH_Dump"),
-    itsIndex   (1),
+    itsIndex   (0),
     itsCounter (0)  
 {
   char str[8];
@@ -79,7 +79,9 @@ void WH_Dump::process() {
 	  ((DH_Vis*)getDataManager().getInHolder(0))->getBuffer(),
 	  NSTATIONS*NSTATIONS*NCHANNELS*sizeof(DH_Vis::BufferType));
 
-  cout << "corr: "<< corr[0][0][0] << endl;
+  // negative indices are invalid. This are results calculated from 
+  // uninitialized values.
+  cout << "COR [" << -2+itsIndex++ <<"]: "<< corr[0][0][0] << endl;
 }
 
 void WH_Dump::dump() {

@@ -34,6 +34,10 @@
 #include <mpi.h>
 #endif
 
+#ifdef __MPE_LOGGING__
+#include <mpe.h>
+#endif 
+
 namespace LOFAR
 {
 
@@ -66,6 +70,8 @@ public:
   /// Do a process step.
   virtual void process();
 
+  virtual void postprocess();
+
   /// Show the work holder on stdout.
   virtual void dump();
 
@@ -77,8 +83,18 @@ private:
   int myrank;
   int mysize;
 
+  int task_id;              // index of the next task to be send to a slave.
+  int active_nodes;         // the number of slaves currently active
+  int received_blocks;      // correlation matrices received from slaves
+  int pre_received_blocks;  // correlation matrices received from slave in previous process step
+
   complex<float> *sig_buf ;
   complex<float> *corr_buf ;
+
+  complex<float> *temp_buffer;
+  int            buffer_indeces[NCHANNELS];
+
+  bool firstProcess;
    
   /// Forbid copy constructor.
   WH_Correlate (const WH_Correlate&);

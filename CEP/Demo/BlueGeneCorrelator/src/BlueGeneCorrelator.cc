@@ -110,6 +110,12 @@ void BlueGeneCorrelator::dump () const {
 
 }
 
+void BlueGeneCorrelator::postrun() {
+
+  itsWHs[0]->basePostprocess();
+
+}
+
 void BlueGeneCorrelator::quit () {
 
 }

@@ -40,7 +40,7 @@ namespace LOFAR
     : WorkHolder (nin, nout, name, "WH_Random"),
       itsFBW             (FBW) ,
       itsIntegrationTime (0),
-      index(0.0){
+      itsIndex(0){
 
     char str[8];
 
@@ -94,6 +94,8 @@ namespace LOFAR
   void WH_Random::process() {
     TRACER4("WH_Random::Process()");
     
+    complex<float> acc = complex<float> (0,0);
+
     for (int channel = 0; channel < NCHANNELS; channel++) {
       for (int station = 0; station < NSTATIONS; station++) {
 	for (int sample = 0; sample < NSAMPLES; sample++) {
@@ -101,7 +103,15 @@ namespace LOFAR
 	  complex<float> rval = complex<float> (-2.5 + 5.0*rand()/(RAND_MAX),
 						-2.5 + 5.0*rand()/(RAND_MAX));
 	  
-	  if (channel == 0 && station == 0 && sample == 0) cout << rval << endl;
+	  if (channel == 0 && station == 0) {
+	    acc += complex<float> (
+				   rval.real() * rval.real() - 
+				   rval.imag() * rval.imag(), 
+				   
+				   rval.real() * rval.imag() +
+				   rval.imag() * rval.real() 
+				   );
+	  }
 	  // 	  complex<float> rval = complex<float> (index++, 0);
 	  
 	  ((DH_CorrCube*)getDataManager().getOutHolder(0))
@@ -112,6 +122,7 @@ namespace LOFAR
 	}
       }
     }
+    cout << "REF [" << itsIndex++ <<"]: " << acc << endl;
   }
 
 

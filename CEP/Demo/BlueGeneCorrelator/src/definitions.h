@@ -2,6 +2,8 @@
 #define BLUEGENE_CORRELATOR_DEFINITIONS_H
 
 #define __BLRTS__
+#define __MPE_LOGGING__
+
 
 // the frontend ip 
 #define FRONTEND_IP  "127.0.0.1"
@@ -13,17 +15,6 @@
 #define NSAMPLES  100
 
 #define RUNS      500
-
-/* #define SAMPLES  100 */
-/* #define TSIZE SAMPLES */
-/* #define BFBW 16 */
-
-/* #define CHANNELS 128 */
-/* #define NBEAMLETS 1 */
-/* #define NVis (BFBW/FSIZE) */
-/* #define TFACTOR (BFBW/FSIZE) */
-/* #define NCorr (NBEAMLETS*BFBW) */
-/* #define ENABLE_FS 1 */
 
 #ifdef __BLRTS__
 #include <mpi.h>
