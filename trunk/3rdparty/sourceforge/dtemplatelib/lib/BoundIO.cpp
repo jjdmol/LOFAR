@@ -41,6 +41,83 @@ It is provided "as is" without express or implied warranty.
 
 BEGIN_DTL_NAMESPACE
 
+#ifdef POSTGRES_BLOB_PATCH
+// Postgres doesn't support BLOB-fields: blobs are closely coupled to
+// files in postgres, and stored in a seperate table with special
+// io-functions.
+// This patch makes it possible to store BLOBs in TEXT fields in Postgres.
+// A TEXT field can store everything except a null-byte.
+// Two conversion routines are made to convert raw-blobs to postgres-'blobs'
+// and viceversa. In a Postgres-blob the null-bytes are converted to 0xB1
+// bytes, real 0xB1 bytes are escaped.
+// Note: 0xB1 is a byte that is not often used in e.g. executable so this
+// byte was choosen as a null-byte substitute.
+//
+const unsigned char		LUB = 0xB1;			// least used byte
+const unsigned char		ESC = 0xAD;			// used as escape character
+const unsigned char		RNB = '\0';			// real null byte
+
+blob &DTLblob2Postgres(const blob &org) {
+	blob			*dest = new blob();				// on the heap
+	int				org_sz = org.size();
+
+	dest->reserve((long) floor(1.1 * org_sz));		// pre-size larger than original
+
+	dest->append(&ESC, 1);							// ESC byte first
+	dest->append(&LUB, 1);							// LUB byte secondly
+	
+	const unsigned char		*p = org.data();		// append cvt data
+	for (int i = 0; i < org_sz; ++i) {	// scan whole original
+		switch (*(p+i)) {
+		case RNB:						// 0 --> LUB
+			dest->append(&LUB, 1);
+			break;
+		case LUB:						// LUB --> ESC LUB
+			dest->append(&ESC, 1);
+			dest->append(&LUB, 1);
+			break;
+		case ESC:						// ESC --> ESC ESC
+			dest->append(&ESC, 1);
+			dest->append(&ESC, 1);
+			break;
+		default:
+			dest->append(p+i, 1);
+		}
+	}
+
+	return *dest;
+}
+
+blob &Postgresblob2DTL(const blob &org) {
+	blob			*dest = new blob();			// on the heap
+	int				org_sz = org.size();
+
+	dest->reserve(org_sz);						// pre-size to original size
+	
+	const unsigned char		*p = org.data();
+	const unsigned char		esc = *(p++);		// strip off esc-byte
+	const unsigned char		lub = *(p++);		// strip off lub-byte
+	org_sz -= 2;								// correct total size
+
+	for (int i = 0; i < org_sz; ++i) {		// scan whole original
+		unsigned char	c = *(p+i);
+		if (c == esc) {
+			// ESC ESC --> ESC and ESC LUB --> LUB
+			if ((*(p+i+1) == esc) || (*(p+i+1) == lub)) {
+				++i;						// skip over ESC
+				dest->append(p+i, 1);
+			}
+		} else 
+		if (c == lub) {						// LUB --> 0
+			dest->append(&RNB, 1);
+		} else {
+			dest->append(&c, 1);
+		}
+	}
+
+	return *dest;
+}
+#endif
 // ************ Implementation code for BoundIO ****************
 
 
@@ -538,8 +615,13 @@ void BoundIO::MoveRead(DBStmt &stmt)
 			if (tmp.size() > 0)
 				*GetBytesFetchedPtr() = tmp.size();
 
-
+#ifdef POSTGRES_BLOB_PATCH
+			blob	converted_blob = Postgresblob2DTL(tmp);
+			perm_str_ptr->swap(converted_blob);
+	        converted_blob.clear();			// release allocated memory.
+#else
 			perm_str_ptr->swap(tmp); // now we can commit the results to memory
+#endif
 
 		}
 
@@ -1376,7 +1458,7 @@ void BoundIO::MoveWriteAfterExec(SQLQueryType sqlQryType, DBStmt &stmt)
     	  if (total_len == 0)
     	  {
     		std_strncpy(reinterpret_cast<char *>(strbuf.get()), "\0", 1);
-    		stmt.PutData(GetRawPtr(), SQL_NTS);
+    		stmt.PutData(GetRawPtr(), 1);
     		return;
     	  }
 
@@ -1414,7 +1496,12 @@ void BoundIO::MoveWriteAfterExec(SQLQueryType sqlQryType, DBStmt &stmt)
     	else if (typeId == C_BLOB)
     	{
     	  // type is blob, cast is OK
+#ifdef POSTGRES_BLOB_PATCH
+	      blob	converted_blob = DTLblob2Postgres(*((blob*) addr));
+		  blob *perm_str_ptr = &converted_blob;
+#else
     	  blob *perm_str_ptr = (blob *) addr;
+#endif
 
     	  const size_t total_len = perm_str_ptr->length();
 
@@ -1423,7 +1510,7 @@ void BoundIO::MoveWriteAfterExec(SQLQueryType sqlQryType, DBStmt &stmt)
     	  if (total_len == 0)
     	  {
     		std_memcpy(strbuf.get(), "\0", size_t(1));
-    		stmt.PutData(GetRawPtr(), SQL_NTS);
+    		stmt.PutData(GetRawPtr(), 1);
     		return;
     	  }
 
@@ -1456,6 +1543,9 @@ void BoundIO::MoveWriteAfterExec(SQLQueryType sqlQryType, DBStmt &stmt)
     		start_pos = end_pos;
     	  }
 
+#ifdef POSTGRES_BLOB_PATCH
+	      converted_blob.clear();			// release allocated memory.
+#endif
     	}
 
 #ifndef DTL_NO_UNICODE
@@ -1472,7 +1562,7 @@ void BoundIO::MoveWriteAfterExec(SQLQueryType sqlQryType, DBStmt &stmt)
     	  if (total_len == 0)
     	  {
     		std_wcsncpy(reinterpret_cast<wchar_t *>(strbuf.get()), L"\0", 1);
-    		stmt.PutData(GetRawPtr(), SQL_NTS);
+    		stmt.PutData(GetRawPtr(), sizeof(wchar_t));
     		return;
     	  }
 
