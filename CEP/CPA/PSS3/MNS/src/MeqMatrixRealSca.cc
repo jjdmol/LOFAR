@@ -25,8 +25,8 @@
 #include <MNS/MeqMatrixRealArr.h>
 #include <MNS/MeqMatrixComplexSca.h>
 #include <MNS/MeqMatrixComplexArr.h>
-#include <aips/Mathematics/Math.h>
-#include <aips/Mathematics/Constants.h>
+#include <casa/BasicMath/Math.h>
+#include <casa/BasicSL/Constants.h>
 #include <Common/lofar_iostream.h>
 
 

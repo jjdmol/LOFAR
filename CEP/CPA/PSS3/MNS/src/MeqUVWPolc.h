@@ -27,9 +27,9 @@
 #include <MNS/MeqResult.h>
 #include <MNS/MeqRequestId.h>
 #include <MNS/MeqParmPolc.h>
-#include <aips/Functionals/Polynomial.h>
-#include <aips/Mathematics/AutoDiff.h>
-#include <trial/Fitting/LinearFit.h>
+#include <scimath/Functionals/Polynomial.h>
+#include <scimath/Mathematics/AutoDiff.h>
+#include <scimath/Fitting/LinearFit.h>
 #include <Common/lofar_string.h>
 
 //# Forward Declarations

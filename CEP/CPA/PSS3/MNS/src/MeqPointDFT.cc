@@ -27,7 +27,7 @@
 #include <MNS/MeqResult.h>
 #include <MNS/MeqMatrixTmp.h>
 #include <Common/Debug.h>
-#include <aips/Mathematics/Constants.h>
+#include <casa/BasicSL/Constants.h>
 
 
 bool MeqPointDFT::doshow = false;

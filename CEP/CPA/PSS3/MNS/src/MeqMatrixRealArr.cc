@@ -26,7 +26,7 @@
 #include <MNS/MeqMatrixComplexSca.h>
 #include <MNS/MeqMatrixComplexArr.h>
 #include <Common/Debug.h>
-#include <aips/Mathematics/Constants.h>
+#include <casa/BasicSL/Constants.h>
 
 
 MeqMatrixRealArr::MeqMatrixRealArr (int nx, int ny)

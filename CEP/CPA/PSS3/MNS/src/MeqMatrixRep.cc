@@ -21,7 +21,7 @@
 //# $Id$
 
 #include <MNS/MeqMatrixRep.h>
-#include <aips/Exceptions/Error.h>
+#include <casa/Exceptions/Error.h>
 
 
 int MeqMatrixRep::nctor = 0;

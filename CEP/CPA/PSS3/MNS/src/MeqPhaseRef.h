@@ -24,8 +24,8 @@
 #define MNS_MEQPHASEREF_H
 
 //# Includes
-#include <aips/Measures/MDirection.h>
-#include <aips/Measures/MPosition.h>
+#include <measures/Measures/MDirection.h>
+#include <measures/Measures/MPosition.h>
 
 //# Forward Declarations
 class MDirection;

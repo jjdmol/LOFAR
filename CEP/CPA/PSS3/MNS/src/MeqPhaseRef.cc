@@ -22,15 +22,15 @@
 
 #include <MNS/MeqPhaseRef.h>
 #include <Common/Debug.h>
-#include <aips/Measures/MDirection.h>
-#include <aips/Measures/MPosition.h>
-#include <aips/Measures/MEpoch.h>
-#include <aips/Measures/MeasConvert.h>
-#include <aips/Measures/MeasTable.h>
-#include <aips/Quanta/MVPosition.h>
-#include <aips/Quanta/Quantum.h>
-#include <aips/Arrays/Vector.h>
-#include <aips/Mathematics/Constants.h>
+#include <measures/Measures/MDirection.h>
+#include <measures/Measures/MPosition.h>
+#include <measures/Measures/MEpoch.h>
+#include <measures/Measures/MeasConvert.h>
+#include <measures/Measures/MeasTable.h>
+#include <casa/Quanta/MVPosition.h>
+#include <casa/Quanta/Quantum.h>
+#include <casa/Arrays/Vector.h>
+#include <casa/BasicSL/Constants.h>
 
 
 MeqPhaseRef::MeqPhaseRef (const MDirection& phaseRef, double startTime)

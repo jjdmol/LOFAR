@@ -27,7 +27,7 @@
 #include <MNS/MeqResult.h>
 #include <MNS/MeqMatrixTmp.h>
 #include <Common/Debug.h>
-#include <aips/Arrays/Matrix.h>
+#include <casa/Arrays/Matrix.h>
 
 
 double MeqPolc::theirPascal[10][10];

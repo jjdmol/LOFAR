@@ -30,7 +30,7 @@
 #include <MNS/MeqMatrix.h>
 #include <MNS/MeqMatrixTmp.h>
 #include <Common/Debug.h>
-#include <aips/Arrays/Matrix.h>
+#include <casa/Arrays/Matrix.h>
 
 
 MeqWsrtPoint::MeqWsrtPoint (MeqSourceList* sources,

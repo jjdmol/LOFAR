@@ -28,12 +28,12 @@
 #include <lofar_config.h>
 
 #include <CAL/MeqCalibraterImpl.h>
-#include <aips/Tables/Table.h>
-#include <aips/Tables/ScalarColumn.h>
-#include <aips/Tables/TableParse.h>
-#include <aips/Arrays/Vector.h>
-#include <aips/Arrays/ArrayUtil.h>
-#include <aips/Exceptions/Error.h>
+#include <tables/Tables/Table.h>
+#include <tables/Tables/ScalarColumn.h>
+#include <tables/Tables/TableParse.h>
+#include <casa/Arrays/Vector.h>
+#include <casa/Arrays/ArrayUtil.h>
+#include <casa/Exceptions/Error.h>
 #include <Common/Profiling/PerfProfile.h>
 #include <sstream>
 

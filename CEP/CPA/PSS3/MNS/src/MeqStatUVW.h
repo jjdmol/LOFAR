@@ -27,7 +27,7 @@
 #include <MNS/MeqResult.h>
 #include <MNS/MeqRequest.h>
 #include <Common/lofar_map.h>
-#include <aips/Measures/MeasFrame.h>
+#include <measures/Measures/MeasFrame.h>
 
 //# Forward declarations
 class MeqStation;

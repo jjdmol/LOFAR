@@ -1,8 +1,8 @@
 #include <CAL/MeqCalibraterImpl.h>
-#include <trial/Tasking.h>
+#include <tasking/Tasking.h>
 
-#include <aips/Glish/GlishRecord.h>
-#include <aips/Glish/GlishValue.h>
+#include <tasking/Glish/GlishRecord.h>
+#include <tasking/Glish/GlishValue.h>
 
 int main(int argc, char** argv)
 {

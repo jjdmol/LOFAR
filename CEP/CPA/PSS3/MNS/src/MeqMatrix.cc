@@ -31,7 +31,7 @@
 #include <Common/BlobOStream.h>
 #include <Common/BlobIStream.h>
 #include <Common/Debug.h>
-#include <aips/Arrays/Matrix.h>
+#include <casa/Arrays/Matrix.h>
 
 
 MeqMatrix::MeqMatrix (double value)
