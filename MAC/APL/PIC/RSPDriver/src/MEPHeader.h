@@ -158,7 +158,7 @@ namespace EPA_Protocol
        * number of beamlets.
        */
       static const uint16 N_SUBBANDS = 512;
-      static const uint16 N_BEAMLETS = 256; //128; // FTS-1 spec, final remote station will be 256
+      static const uint16 N_BEAMLETS = 128; // FTS-1 spec, final remote station will be 256
       static const uint16 N_POL      = 2;                // number of polarizations
       static const uint16 N_PHASE    = 2;                // number of phases in a complex number
       static const uint16 N_PHASEPOL = N_PHASE * N_POL;  // number of phase polarizations

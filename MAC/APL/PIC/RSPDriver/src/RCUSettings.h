@@ -39,14 +39,14 @@ namespace RSP_Protocol
      */
     typedef struct RCURegisterType
     {
-      uint8 filter_0:1;
-      uint8 filter_1:1;
-      uint8 filter_2:1;
-      uint8 filter_3:1;
-      uint8 lba_pwr:1;
-      uint8 hba_pwr:1;
-      uint8 rcu_pwr:1;
-      uint8 ovrflw:1;
+      uint8 lba_enable:1;
+      uint8 hba_enable:1;
+      uint8 bandsel:1;
+      uint8 filsel_a:1;
+      uint8 filsel_b:1;
+      uint8 vl_enable:1;
+      uint8 vh_enable:1;
+      uint8 vddvcc_en:1;
     };
 
     /**

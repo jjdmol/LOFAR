@@ -29,6 +29,9 @@
 
 #include "SetWG.h"
 
+#include <PSAccess.h>
+#include <GCF/ParameterSet.h>
+
 #include <Suite/suite.h>
 #include <iostream>
 #include <sys/time.h>
@@ -46,12 +49,6 @@ using namespace LOFAR;
 using namespace blitz;
 using namespace EPA_Protocol;
 using namespace RSP_Protocol;
-
-//
-// These are the parameters for the MAC-EPA increment 2
-//
-#define N_RSPBOARDS 3
-#define N_BLPS      2
 
 #define START_TEST(_test_, _descr_) \
   setCurSubTest(#_test_, _descr_)
@@ -161,7 +158,7 @@ GCFEvent::TResult SetWG::enabled(GCFEvent& e, GCFPortInterface& port)
       }
       else
       {
-	for (int i = 0; i < N_RSPBOARDS * N_BLPS; i++)
+	for (int i = 0; i < GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i); i++)
 	  wg.blpmask.set(i);
       }
 	
@@ -278,6 +275,20 @@ int main(int argc, char** argv)
   char buf[32];
 
   //
+  // Read parameters
+  //
+  try
+  {
+    GCF::ParameterSet::instance()->adoptFile("RSPDriverPorts.conf");
+    GCF::ParameterSet::instance()->adoptFile("RemoteStation.conf");
+  }
+  catch (Exception e)
+  {
+    cerr << "Failed to load configuration files: " << e.text() << endl;
+    exit(EXIT_FAILURE);
+  }
+
+  //
   // Read amplitude
   //
   cout << "Amplitude (1e4 == 0dB):";
@@ -304,14 +315,14 @@ int main(int argc, char** argv)
   //
   cout << "Which BLP? (-1 means all): ";
   int blp = atoi(fgets(buf, 32, stdin));
-  if (blp < -1 || blp >= N_RSPBOARDS * N_BLPS)
+  if (blp < -1 || blp >= GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i))
   {
-    LOG_FATAL(formatString("Invalid BLP index, should be >= -1 && < %d; -1 indicates all BLP's", N_RSPBOARDS * N_BLPS));
+    LOG_FATAL(formatString("Invalid BLP index, should be >= -1 && < %d; -1 indicates all BLP's", GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i)));
     exit(EXIT_FAILURE);
   }
   
   Suite s("SetWG", &cerr);
-  s.addTest(new SetWG("SetWG", blp, (uint8)0, (uint8)ampl, freq));
+  s.addTest(new SetWG("SetWG", blp, (uint8)0, (uint8)ampl, freq)); // set phase to 0 for now
   s.run();
   long nFail = s.report();
   s.free();

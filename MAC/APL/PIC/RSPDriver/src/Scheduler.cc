@@ -339,6 +339,8 @@ void Scheduler::scheduleCommands()
   {
     Ptr<Command> command = m_later_queue.top();
 
+/* Never discard commands */
+#if 0
     if (command->getTimestamp() < m_current_time)
     {
       /* discard old commands, the're too late! */
@@ -347,7 +349,15 @@ void Scheduler::scheduleCommands()
       m_later_queue.pop();
       //delete command;
     }
-    else if (command->getTimestamp() <= m_current_time + SYNC_INTERVAL_INT)
+    else
+#else
+    if (command->getTimestamp() < m_current_time)
+    {
+      LOG_WARN_STR("command is late, timestamp=" << command->getTimestamp()
+		   << ", current_time=" << m_current_time);
+    }
+#endif
+    if (command->getTimestamp() <= m_current_time + SYNC_INTERVAL_INT)
     {
       LOG_INFO_STR("scheduling command with time=" << command->getTimestamp());
 
