@@ -25,6 +25,11 @@
 
 //# Includes
 #include <MNS/MeqExpr.h>
+#include <MNS/MeqResult.h>
+#include <MNS/MeqRequest.h>
+
+//# Forward Declarations
+class MeqPhaseRef;
 
 
 class MeqPointSource
@@ -45,18 +50,38 @@ public:
     { return itsU; }
   MeqExpr* getV()
     { return itsV; }
-  MeqExpr* getRa()
-    { return itsRa; }
-  MeqExpr* getDec()
-    { return itsDec; }
+
+  // Set the source nr.
+  void setSourceNr (int sourceNr)
+    { itsSourceNr = sourceNr; }
+
+  // Set the phase reference position.
+  void setPhaseRef (const MeqPhaseRef* phaseRef)
+    { itsPhaseRef = phaseRef; }
+
+  // Get the precalculated result of l, m, or n.
+  const MeqResult& getL (const MeqRequest& request)
+    { if (request.getId() != itsLastReqId) calculate(request); return itsL; }
+  const MeqResult& getM (const MeqRequest& request)
+    { if (request.getId() != itsLastReqId) calculate(request); return itsM; }
+  const MeqResult& getN (const MeqRequest& request)
+    { if (request.getId() != itsLastReqId) calculate(request); return itsN; }
+  
+  void calculate (const MeqRequest&);
 
 private:
+  int       itsSourceNr;
   MeqExpr*  itsI;
   MeqExpr*  itsQ;
   MeqExpr*  itsU;
   MeqExpr*  itsV;
   MeqExpr*  itsRa;
   MeqExpr*  itsDec;
+  const MeqPhaseRef* itsPhaseRef;
+  MeqResult itsL;
+  MeqResult itsM;
+  MeqResult itsN;
+  MeqRequestId itsLastReqId;
 };
 
 

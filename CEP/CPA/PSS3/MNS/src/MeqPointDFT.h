@@ -25,13 +25,10 @@
 
 //# Includes
 #include <MNS/MeqExpr.h>
-#include <MNS/MeqUVWPolc.h>
 #include <Common/lofar_vector.h>
 
 //# Forward declarations
-class MeqPointSource;
-class MeqDomain;
-class MDirection;
+class MeqStatSources;
 
 
 // This class is the (abstract) base class for an expression.
@@ -40,30 +37,20 @@ class MeqPointDFT: public MeqExpr
 {
 public:
   // Construct from source list, pahse reference position and uvw.
-  MeqPointDFT (const vector<MeqPointSource>& sources,
-	       const MDirection& phaseRef,
-	       MeqUVWPolc* uvw);
+  MeqPointDFT (MeqStatSources* left, MeqStatSources* right);
 
   virtual ~MeqPointDFT();
 
   // Get the result of the expression for the given domain.
   virtual MeqResult getResult (const MeqRequest&);
 
-  // Calculate the UVW coordinates.
-  void calcUVW (const MeqRequest& request)
-    { itsUVW->calcUVW (request); }
-
   // Find nr of cells to use for the given source and domain.
-  vector<int> ncells (MeqPointSource&, const MeqDomain&);
+  vector<int> ncells (int sourceNr, const MeqRequest&);
 
   static bool doshow;
 private:
-  double itsRefRa;
-  double itsRefDec;
-  double itsCosRefDec;
-  double itsSinRefDec;
-  vector<MeqPointSource> itsSources;
-  MeqUVWPolc* itsUVW;
+  MeqStatSources* itsLeft;
+  MeqStatSources* itsRight;
 };
 
 

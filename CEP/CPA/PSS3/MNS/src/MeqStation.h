@@ -1,4 +1,4 @@
-//# MeqStation.h: Class holding an interferometer
+//# MeqStation.h: Class holding the ITRF position expressions of a station
 //#
 //# Copyright (C) 2002
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -27,7 +27,7 @@
 #include <MNS/MeqExpr.h>
 #include <Common/lofar_string.h>
 
-// Class to hold the station position in meters in ITRF coordinates.
+// Class holding the ITRF position expressions of a station.
 
 class MeqStation
 {
@@ -46,6 +46,7 @@ public:
 
   const string& getName() const
     { return itsName; }
+
 
 private:
   MeqExpr* itsX;

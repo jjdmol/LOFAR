@@ -20,150 +20,146 @@
 //#
 //# $Id$
 
+#include <MNS/MeqPointDFT.h>
+#include <MNS/MeqStatSources.h>
+#include <MNS/MeqStatUVW.h>
 #include <MNS/MeqRequest.h>
 #include <MNS/MeqResult.h>
-#include <MNS/MeqPointDFT.h>
-#include <MNS/MeqUVWPolc.h>
-#include <MNS/MeqPointSource.h>
 #include <MNS/MeqMatrixTmp.h>
 #include <Common/Debug.h>
-#include <aips/Measures/MDirection.h>
 #include <aips/Mathematics/Constants.h>
+
 
 bool MeqPointDFT::doshow = false;
 
 
-MeqPointDFT::MeqPointDFT (const vector<MeqPointSource>& sources,
-			  const MDirection& phaseRef,
-			  MeqUVWPolc* uvw)
-: itsSources (sources),
-  itsUVW     (uvw)
-{
-  Quantum<Vector<Double> > angles = phaseRef.getAngle();
-  itsRefRa  = angles.getBaseValue()(0);
-  itsRefDec = angles.getBaseValue()(1);
-  itsCosRefDec = cos(itsRefDec);
-  itsSinRefDec = sin(itsRefDec);
-  // cout << "MeqPointDFT phaseRef: " << itsRefRa << ' ' << itsRefDec << endl;
-}
+MeqPointDFT::MeqPointDFT (MeqStatSources* left, MeqStatSources* right)
+: itsLeft  (left),
+  itsRight (right)
+{}
 
 MeqPointDFT::~MeqPointDFT()
 {}
 
-vector<int> MeqPointDFT::ncells (MeqPointSource& src,
-				 const MeqDomain& domain)
+vector<int> MeqPointDFT::ncells (int sourceNr,
+				 const MeqRequest& request)
 {
-  MeqRequest request (domain, 1, 1, 0);
-  vector<int> ncell(2,1);
-  double u = itsUVW->getU().getValue().getDouble();
-  double v = itsUVW->getV().getValue().getDouble();
-  double w = itsUVW->getW().getValue().getDouble();
-  double rak  = src.getRa()->getResult(request).getValue().getDouble();
-  double deck  = src.getDec()->getResult(request).getValue().getDouble();
-  double cosdec = cos(deck);
-  double radiff = rak - itsRefRa;
-  double lk = cosdec * sin(radiff);
-  double mk = sin(deck)*itsCosRefDec - cosdec*itsSinRefDec*cos(radiff);
-  double nks = 1. - lk*lk - mk*mk;
-  AssertStr (nks > 0, "source too far from phaseref "
-             << itsRefRa << ", " << itsRefDec);
-  double nk = sqrt(nks);
-  double tmpphi = C::_2pi * abs(u*lk + v*mk + w*nk);
+  const MeqDomain& domain = request.domain();
+  int ncell = 1;
+  double tmpphi = C::_2pi * (itsLeft->getExponent(sourceNr, request) -
+			     itsRight->getExponent(sourceNr, request));
   double cellWidth = C::c / (2*tmpphi);
-  ncell[1] = 2*(1 + int((domain.endY() - domain.startY()) / cellWidth));
-    //  double stphi = 2 * tmpphi * domain.startY() / C::c;
-    //  double endphi = 2 * tmpphi * domain.endY() / C::c;
-    //  ncell[1] = 10 * (1 + int(abs(endphi - stphi)));
-  if (doshow) {
-    cout << "MeqPointDFT: " << u << ' ' << v << ' ' << w << ' ' << rak << ' ' << deck << ' ' << ncell[0] << ' ' << ncell[1] << endl;
+  double step = request.stepY();
+  double freq0 = domain.startY();
+  double freq1 = freq0 + step;
+  for (int i=0; i<request.ny(); i++) {
+    //int nc = 2*(1 + int((freq1 - freq0) / cellWidth));
+    int nc = (1 + int((freq1 - freq0) / cellWidth));
+    if (nc > ncell) {
+      ncell = nc;
+    }
+    freq0 = freq1;
+    freq1 += step;
   }
-  return ncell;
+  vector<int> nc(2,1);
+  nc[1] = ncell;
+  return nc;
 }
 
 MeqResult MeqPointDFT::getResult (const MeqRequest& request)
 {
   const MeqDomain& domain = request.domain();
-  MeqPointSource& src = itsSources[request.getSourceNr()];
-  MeqMatrix u = itsUVW->getU().getValue();
-  MeqMatrix v = itsUVW->getV().getValue();
-  MeqMatrix w = itsUVW->getW().getValue();
-  MeqResult rak  = src.getRa()->getResult(request);
-  MeqResult deck = src.getDec()->getResult(request);
-  MeqMatrix cosdec = cos(deck.getValue());
-  MeqMatrix radiff = rak.getValue() - itsRefRa;
-  MeqMatrix lk = cosdec * sin(radiff);
-  MeqMatrix mk = sin(deck.getValue())*itsCosRefDec -
-                 cosdec*itsSinRefDec*cos(radiff);
-  MeqMatrixTmp nks = MeqMatrixTmp(1.) - sqr(lk) - sqr(mk);
-  AssertStr (min(nks).getDouble() > 0, "source " << request.getSourceNr()
-	     << " too far from phaseref " << itsRefRa << ", " << itsRefDec);
-  MeqMatrix nk = sqrt(nks);
-  ///  cout << "lk=" << lk << ", mk=" << mk << ", nk=" << nk << endl;
-  ///  cout << "MeqPointDFT u: " << u << endl;
-    ///  cout << "MeqPointDFT v: " << v << endl;
-    ///  cout << "MeqPointDFT w: " << w << endl;
-    ///  cout << "MeqPointDFT lk: " << lk << endl;
-    ///  cout << "MeqPointDFT mk: " << mk << endl;
-    ///  cout << "MeqPointDFT nk: " << nk << endl;
   MeqResult result(request.nspid());
-  MeqMatrixTmp tmp = u*lk + v*mk + w*nk;
+  const MeqResult& left = itsLeft->getResult (request);
+  const MeqResult& right = itsRight->getResult (request);
+  const MeqResult& nk = itsLeft->getN (request);
+  // dft = exp(2i.pi(ul+vm+wn)) / n                 (with u,v,w in wavelengths)
+  //     = (exp(2i.pi((u1.l+v1.m+w1.n) - (u2.l+v2.m+w2.n))/wvl))/n (u,v,w in m)
+  //     = ((exp(i(u1.l+v1.m+w1.n)) / exp(i(u2.l+v2.m+w2.m))) ^ (2.pi/wvl)) / n
+  // So left and right return the exp values independent of wavelength.
+  // Thereafter they are scaled to the freq domain by raising the values
+  // for each time to the appropriate powers.
+  // That is expensive. However, because the frequencies are regularly
+  // strided, it is possible to use multiplication.
+  // So it gets
+  // dft(f0) = ((left/right)^(2pi.f0/c)) / n
+  // dft(fj) = ((left/right)^(2pi.f0/c + 2pi.j.df/c)) / n
+  //         = dft(fj-1) * (left/right)^(2pi.df/c)
+  {
+    const MeqResult& ul = itsLeft->uvw().getU(request);
+    const MeqResult& vl = itsLeft->uvw().getV(request);
+    const MeqResult& wl = itsLeft->uvw().getW(request);
+    const MeqResult& ur = itsRight->uvw().getU(request);
+    const MeqResult& vr = itsRight->uvw().getV(request);
+    const MeqResult& wr = itsRight->uvw().getW(request);
+    //cout << "U: " << ur.getValue() - ul.getValue() << endl;
+    //cout << "V: " << vr.getValue() - vl.getValue() << endl;
+    //cout << "W: " << wr.getValue() - wl.getValue() << endl;
+    TRACER1 ("U: " << ur.getValue() - ul.getValue());
+    TRACER1 ("V: " << vr.getValue() - vl.getValue());
+    TRACER1 ("W: " << wr.getValue() - wl.getValue());
+  }
+  const complex<double>* tmpl = left.getValue().dcomplexStorage();
+  const complex<double>* tmpr = right.getValue().dcomplexStorage();
+  const double* tmpnk = nk.getValue().doubleStorage();
+  double wavel0 = C::_2pi * domain.startY() / C::c;       // 2*pi/wavelength
+  double dwavel = C::_2pi * request.stepY() / C::c;
   MeqMatrix res(complex<double>(0,0), request.nx(), request.ny(), false);
-  const double* tmpdata = tmp.doubleStorage();
   complex<double>* resdata = res.dcomplexStorage();
-  double freq = domain.startY();
-  // Note that exp(ix) = cos(x) + i*sin(x)
-  for (int j=0; j<request.ny(); j++) {
-    double wavel = C::_2pi * freq / C::c;          // 2*pi/wavelength
-    const double* tmpd = tmpdata;
-    for (int i=0; i<request.nx(); i++) {
-      double val = wavel * *tmpd++;
-      *resdata++ = complex<double> (cos(val), sin(val));
+  complex<double> dval, val0;
+  for (int i=0; i<request.nx(); i++) {
+    complex<double> val (tmpr[i] / tmpl[i]);
+    if (nk.getValue().nx() == 1) {
+      val0 = pow(val, wavel0) / tmpnk[0];
+    } else {
+      val0 = pow(val, wavel0) / tmpnk[i];
+    }
+    resdata[i] = val0;
+    if (request.ny() > 1) {
+      dval = pow(val, dwavel);
+      for (int j=1; j<request.ny(); j++) {
+	val0 *= dval;
+	resdata[i + j*request.nx()] = val0;
+      }
+    }
+  }
       ///      if (i==0) {
 	///	cout << "abs dft " << abs(*(resdata-1)) << endl;
 	///      }
-    }
-    freq += request.stepY();
-  }
   ///  cout << "Res: " << res << endl;
-  result.setValue (res/nk);
+  result.setValue (res);
 
   // Evaluate (if needed) for the perturbed parameter values.
-  // Only RA and DEC can be perturbed.
-  // In the future that might also be the case for UVW.
+  // Note that we do not have to test for perturbed values in nk,
+  // because the left and right value already depend on nk.
   MeqMatrix perturbation;
   for (int spinx=0; spinx<request.nspid(); spinx++) {
-    if (rak.isDefined(spinx)  ||  deck.isDefined(spinx)) {
-      MeqMatrix pcosdec = cosdec;
-      MeqMatrix pradiff = radiff;
-      if (rak.isDefined(spinx)) {
-	perturbation = rak.getPerturbation(spinx);
-	pradiff = rak.getPerturbedValue(spinx) - itsRefRa;
+    if (left.isDefined(spinx)  ||  right.isDefined(spinx)) {
+      if (left.isDefined(spinx)) {
+	perturbation = left.getPerturbation(spinx);
+      } else {
+	perturbation = right.getPerturbation(spinx);
       }
-      if (deck.isDefined(spinx)) {
-	perturbation = deck.getPerturbation(spinx);
-	pcosdec = cos(deck.getPerturbedValue(spinx));
-      }
-      lk = pcosdec * sin(pradiff);
-      mk = sin(deck.getPerturbedValue(spinx))*itsCosRefDec -
-	   pcosdec*itsSinRefDec*cos(pradiff);
-      MeqMatrixTmp nks = MeqMatrixTmp(1.) - sqr(lk) - sqr(mk);
-      AssertStr (min(nks).getDouble() > 0, "source " << request.getSourceNr()
-	     << " too far from phaseref " << itsRefRa << ", " << itsRefDec);
-      nk = sqrt(nks);
-      tmp = u*lk + v*mk + w*nk;
-      tmpdata = tmp.doubleStorage();
-      resdata = res.dcomplexStorage();
-      double freq = domain.startY();
-      for (int j=0; j<request.ny(); j++) {
-	double wavel = C::_2pi * freq / C::c;          // 2*pi/wavelength
-	const double* tmpd = tmpdata;
-	for (int i=0; i<request.nx(); i++) {
-	  double val = wavel * *tmpd++;
-	  *resdata++ = complex<double> (cos(val), sin(val));
+      tmpl = left.getPerturbedValue(spinx).dcomplexStorage();
+      tmpr = right.getPerturbedValue(spinx).dcomplexStorage();
+      tmpnk = nk.getPerturbedValue(spinx).doubleStorage();
+      for (int i=0; i<request.nx(); i++) {
+	complex<double> val (tmpr[i] / tmpl[i]);
+	if (nk.getValue().nx() == 1) {
+	  val0 = pow(val, wavel0) / tmpnk[0];
+	} else {
+	  val0 = pow(val, wavel0) / tmpnk[i];
 	}
-	freq += request.stepY();
+	resdata[i] = val0;
+	if (request.ny() > 1) {
+	  dval = pow(val, dwavel);
+	  for (int j=1; j<request.ny(); j++) {
+	    val0 *= dval;
+	    resdata[i + j*request.nx()] = val0;
+	  }
+	}
       }
-      result.setPerturbedValue (spinx, res/nk);
+      result.setPerturbedValue (spinx, res);
       result.setPerturbation (spinx, perturbation);
     }
   }
