@@ -141,6 +141,130 @@ void writeJS (const string& pkg, UsedMap& dep, const string& parent,
   }
 }
 
+void writeXHTMLHeader()
+{
+  cout << "<html xmlns='http://www.w3.org/1999/xhtml' xml:lang='en' lang='en'>" << endl;
+  cout << "  <head>" << endl;
+  cout << "    <meta http-equiv='Content-Type' content='text/xhtml;charset='iso-8859-1' />" << endl;
+  cout << "    <meta http-equiv='Content-Style-Type' content='text/css' />" << endl;
+  cout << "    <meta http-equiv='Content-Language' content='en' />" << endl;
+  cout << "    <link rel='stylesheet' href='doxygen.css'>" << endl;
+  cout << "    <title>TreeView</title>" << endl;
+  cout << "    <style type='text/css'>" << endl;
+  cout << "    <!--" << endl;
+  cout << "    .directory { font-size: 10pt; font-weight: bold; }" << endl;
+  cout << "    .directory h3 { margin: 0px; margin-top: 1em; font-size: 11pt; }" << endl;
+  cout << "    .directory p { margin: 0px; white-space: nowrap; }" << endl;
+  cout << "    .directory div { display: none; margin: 0px; }" << endl;
+  cout << "    .directory img { vertical-align: middle; }" << endl;
+  cout << "    -->" << endl;
+  cout << "    </style>" << endl;
+  cout << "    <script type='text/javascript'>" << endl;
+  cout << "    <!-- // Hide script from old browsers" << endl;
+  cout << "    " << endl;
+  cout << "    function findChildNode(node, name) " << endl;
+  cout << "    {" << endl;
+  cout << "      var temp;" << endl;
+  cout << "      if (node == null) " << endl;
+  cout << "      {" << endl;
+  cout << "        return null;" << endl;
+  cout << "      } " << endl;
+  cout << "      node = node.firstChild;" << endl;
+  cout << "      while (node != null) " << endl;
+  cout << "      {" << endl;
+  cout << "        if (node.nodeName == name) " << endl;
+  cout << "        {" << endl;
+  cout << "          return node;" << endl;
+  cout << "        }" << endl;
+  cout << "        temp = findChildNode(node, name);" << endl;
+  cout << "        if (temp != null) " << endl;
+  cout << "        {" << endl;
+  cout << "          return temp;" << endl;
+  cout << "        }" << endl;
+  cout << "        node = node.nextSibling;" << endl;
+  cout << "      }" << endl;
+  cout << "      return null;" << endl;
+  cout << "    }" << endl;
+  cout << "" << endl;
+  cout << "    function toggleFolder(id, imageNode) " << endl;
+  cout << "    {" << endl;
+  cout << "      var folder = document.getElementById(id);" << endl;
+  cout << "      var l = 0;" << endl;
+  cout << "      var vl = 'ftv2vertline.png';" << endl;
+  cout << "      if (imageNode != null && imageNode.nodeName != 'IMG') " << endl;
+  cout << "      {" << endl;
+  cout << "        imageNode = findChildNode(imageNode, 'IMG');" << endl;
+  cout << "        if (imageNode!=null) l = imageNode.src.length;" << endl;
+  cout << "      }" << endl;
+  cout << "      if (folder == null) " << endl;
+  cout << "      {" << endl;
+  cout << "      } " << endl;
+  cout << "      else if (folder.style.display == 'block') " << endl;
+  cout << "      {" << endl;
+  cout << "        while (imageNode != null && " << endl;
+  cout << "               imageNode.src.substring(l-vl.length,l) == vl)" << endl;
+  cout << "        {" << endl;
+  cout << "          imageNode = imageNode.nextSibling;" << endl;
+  cout << "          l = imageNode.src.length;" << endl;
+  cout << "        }" << endl;
+  cout << "        if (imageNode != null) " << endl;
+  cout << "        {" << endl;
+  cout << "          l = imageNode.src.length;" << endl;
+  cout << "          imageNode.nextSibling.src = 'ftv2folderclosed.png';" << endl;
+  cout << "          if (imageNode.src.substring(l-13,l) == 'ftv2mnode.png')" << endl;
+  cout << "          {" << endl;
+  cout << "            imageNode.src = 'ftv2pnode.png';" << endl;
+  cout << "          }" << endl;
+  cout << "          else if (imageNode.src.substring(l-17,l) == 'ftv2mlastnode.png')" << endl;
+  cout << "          {" << endl;
+  cout << "            imageNode.src = 'ftv2plastnode.png';" << endl;
+  cout << "          }" << endl;
+  cout << "        }" << endl;
+  cout << "        folder.style.display = 'none';" << endl;
+  cout << "      } " << endl;
+  cout << "      else " << endl;
+  cout << "      {" << endl;
+  cout << "        while (imageNode != null && " << endl;
+  cout << "               imageNode.src.substring(l-vl.length,l) == vl)" << endl;
+  cout << "        {" << endl;
+  cout << "          imageNode = imageNode.nextSibling;" << endl;
+  cout << "          l = imageNode.src.length;" << endl;
+  cout << "        }" << endl;
+  cout << "        if (imageNode != null)" << endl; 
+  cout << "        {" << endl;
+  cout << "          l = imageNode.src.length;" << endl;
+  cout << "          imageNode.nextSibling.src = 'ftv2folderopen.png';" << endl;
+  cout << "          if (imageNode.src.substring(l-13,l) == 'ftv2pnode.png')" << endl;
+  cout << "          {" << endl;
+  cout << "            imageNode.src = 'ftv2mnode.png';" << endl;
+  cout << "          }" << endl;
+  cout << "          else if (imageNode.src.substring(l-17,l) == 'ftv2plastnode.png')" << endl;
+  cout << "          {" << endl;
+  cout << "            imageNode.src = 'ftv2mlastnode.png';" << endl;
+  cout << "          }" << endl;
+  cout << "        }" << endl;
+  cout << "        folder.style.display = 'block';" << endl;
+  cout << "      }" << endl;
+  cout << "    }" << endl;
+  cout << "" << endl;
+  cout << "    // End script hiding --> " << endl;       
+  cout << "    </script>" << endl;
+  cout << "  </head>" << endl;
+  cout << "" << endl;
+  cout << "  <body>" << endl;
+  cout << "    <div class='directory'>" << endl;
+  cout << "      <h3>LCS/Common</h3>" << endl;
+  cout << "      <div style='display: block;'>" << endl;
+}
+
+void writeXHTMLFooter()
+{
+  cout << "      </div>" << endl;
+  cout << "    </div>" << endl;
+  cout << "  </body>" << endl;
+  cout << "</html>" << endl;
+}
+
 // Write the dependency tree in XHTML format.
 void writeXHTML (const string& pkg, UsedMap& dep, const string& parent,
 		 int depth, int maxdepth, int seqnr)
@@ -267,6 +391,8 @@ int main(int argc, const char* argv[])
   if (outtype == JS) {
     string name(argv[1]);
     writeJSHeader(name.substr(name.find('.') + 1));
+  } else if (outtype == XHTML) {
+    writeXHTMLHeader();
   }
   // Write the dependencies starting at all root packages
   // (i.e. packages not used by others).
@@ -299,5 +425,7 @@ int main(int argc, const char* argv[])
   }
   if (outtype == JS) {
     writeJSFooter();
+  } else if (outtype == XHTML) {
+    writeXHTMLFooter();
   }
 }
