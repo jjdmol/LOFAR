@@ -11,6 +11,7 @@ DH_Empty.h					\
 DH_Example.h					\
 DH_Tester.h					\
 DataHolder.h					\
+Transportable.h					\
 PHEX_Antenna.h					\
 ParamBlock.h					\
 ParamHolder.h					\
@@ -49,6 +50,7 @@ DH_Empty.cc					\
 DH_Example.cc					\
 DH_Tester.cc					\
 DataHolder.cc					\
+Transportable.cc				\
 PHEX_Antenna.cc					\
 ParamBlock.cc					\
 ParamHolder.cc					\
