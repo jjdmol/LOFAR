@@ -29,35 +29,80 @@ using namespace LOFAR::PL;
 using namespace dtl;
 using namespace std;
 
+//
+//  This test program tests the conversion of a C++-like attribute
+//  specification into an SQL-like WHERE clause. You should understand
+//  the concept of "ownership" as it is used by the TPersistentObject
+//  class. The generated attrib<>() method will convert inheritance and
+//  composite relationships into ownership constraints.
+//
+//  For example:
+//  \code
+//      cout << attrib<D>("c.A::s") << endl;
+//  \endcode
+//  should produce the following output:
+//  \verbatim
+//      A.S AND ((C.OBJID=A.OWNER) AND (D.OBJID=C.OWNER))
+//  \endverbatim
+//
 int main(int argc, const char* argv[])
 {
-
   Debug::initLevels(argc, argv);
-
   try {
+    cout << endl;
+    cout << "attrib<A>(\"s\")         == \"A\" --> " 
+         << (attrib<A>("s") == "A") << endl;
+    cout << "attrib<C>(\"A::s\")      == \"A\" --> " 
+         << (attrib<C>("A::s") == "A") << endl;
+    cout << "attrib<D>(\"c.A::s\")    == \"A\" --> " 
+         << (attrib<D>("c.A::s") == "A") << endl;
+    cout << "attrib<G>(\"D::c.A::s\") == \"A\" --> " 
+         << (attrib<G>("D::c.A::s") == "A") << endl;
 
-    cout << "attrib<Z>(\"s\")       = " << attrib<Z>("s")       << endl;
-    cout << "attrib<Y>(\"s\")       = " << attrib<Y>("s")       << endl;
-    cout << "attrib<Y>(\"z.s\")     = " << attrib<Y>("z.s")     << endl;
-    cout << "attrib<X>(\"s\")       = " << attrib<X>("s")       << endl;
+    cout << endl;
+    cout << "attrib<B>(\"s\")         == \"B\" --> "
+         << (attrib<B>("s") == "B") << endl;
+    cout << "attrib<D>(\"B::s\")      == \"B\" --> " 
+         << (attrib<D>("B::s") == "B") << endl;
+    cout << "attrib<G>(\"D::B::s\")   == \"B\" --> "
+         << (attrib<G>("D::B::s") == "B") << endl;
 
-    cout << "attrib<A>(\"s\")       = " << attrib<A>("s")       << endl;
-    cout << "attrib<B>(\"s\")       = " << attrib<B>("s")       << endl;
-    cout << "attrib<B>(\"x.s\")     = " << attrib<B>("x.s")     << endl;
-    cout << "attrib<B>(\"A::s\")    = " << attrib<B>("A::s")    << endl;
+    cout << endl;
+    cout << "attrib<C>(\"s\")         == \"C\" --> "
+         << (attrib<C>("s") == "C") << endl;
+    cout << "attrib<D>(\"c.s\")       == \"C\" --> "
+         << (attrib<D>("c.s") == "C") << endl;
+    cout << "attrib<G>(\"D::c.s\")    == \"C\" --> "
+         << (attrib<G>("D::c.s") == "C") << endl;
 
-    cout << "attrib<C>(\"s\")       = " << attrib<C>("s")       << endl;
-    cout << "attrib<C>(\"y.s\")     = " << attrib<C>("y.s")     << endl;
-    cout << "attrib<C>(\"y.z.s\")   = " << attrib<C>("y.z.s")   << endl;
-    cout << "attrib<C>(\"B::s\")    = " << attrib<C>("B::s")    << endl;
-    cout << "attrib<C>(\"B::x.s\")  = " << attrib<C>("B::x.s")  << endl;
-    cout << "attrib<C>(\"B::A::s\") = " << attrib<C>("B::A::s") << endl;
+    cout << endl;
+    cout << "attrib<D>(\"s\")         == \"D\" --> " 
+         << (attrib<D>("s") == "D") << endl;
+    cout << "attrib<G>(\"D::s\")      == \"D\" --> "
+         << (attrib<G>("D::s") == "D") << endl;
 
+    cout << endl;
+    cout << "attrib<E>(\"s\")         == \"E\" --> "
+         << (attrib<E>("s") == "E") << endl;
+    cout << "attrib<F>(\"e.s\")       == \"E\" --> " 
+         << (attrib<F>("e.s") == "E") << endl;
+    cout << "attrib<G>(\"f.e.s\")     == \"E\" --> " 
+         << (attrib<G>("f.e.s") == "E") << endl;
+
+    cout << endl;
+    cout << "attrib<F>(\"s\")         == \"F\" --> "
+         << (attrib<F>("s") == "F") << endl;
+    cout << "attrib<G>(\"f.s\")       == \"F\" --> "
+         << (attrib<G>("f.s") == "F") << endl;
+
+    cout << endl;
+    cout << "attrib<G>(\"s\")         == \"G\" --> "
+         << (attrib<G>("s") == "G") << endl;
+
+    cout << endl;
   }
-
   catch (LOFAR::Exception& e) {
     cerr << e << endl;
   }
-
   return 0;
 }

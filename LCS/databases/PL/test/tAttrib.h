@@ -25,47 +25,8 @@
 
 #include <PL/PLfwd.h>
 
-/****************      User-defined classes      ****************\
-|*                                                              *|
-|*    Here are the user-defined classes. Note the addition of   *|
-|*    the friendship declaration.                               *|
-|*                                                              *|
-\****************************************************************/
-
-class Y;
-
-class Z
-{
-public:
-  Z() : s("Z") {}
-//   void set(const string& arg) { s = arg; }
-//   const string get() const { return s; }
-//   string& s_ref() { return s; }
-//   const string& s_ref() const { return s; }
-private:
-  friend class LOFAR::PL::TPersistentObject<Z>;
-//   friend class LOFAR::PL::TPersistentObject<Y>;
-  string s;
-};
-
-class Y
-{
-public:
-  Y() : s("Y") {}
-private:
-  friend class LOFAR::PL::TPersistentObject<Y>;
-  string s;
-  Z z;
-};
-
-class X
-{
-public:
-  X() : s("X") {}
-private:
-  friend class LOFAR::PL::TPersistentObject<X>;
-  string s;
-};
+//@defgroup tAttrib tAttrib: User-defined classes
+//@{
 
 class A
 {
@@ -76,24 +37,63 @@ private:
   string s;
 };
 
-class B : public A
+class B
 {
 public:
   B() : s("B") {}
 private:
   friend class LOFAR::PL::TPersistentObject<B>;
   string s;
-  X x;
 };
 
-class C : public B
+class C : public A
 {
 public:
   C() : s("C") {}
 private:
   friend class LOFAR::PL::TPersistentObject<C>;
   string s;
-  Y y;
 };
+
+class D : public B
+{
+public:
+  D() : s("D") {}
+private:
+  friend class LOFAR::PL::TPersistentObject<D>;
+  string s;
+  C c;
+};
+
+class E
+{
+public:
+  E() : s("E") {}
+private:
+  friend class LOFAR::PL::TPersistentObject<E>;
+  string s;
+};
+
+class F
+{
+public:
+  F() : s("F") {}
+private:
+  friend class LOFAR::PL::TPersistentObject<F>;
+  string s;
+  E e;
+};
+
+class G : public D
+{
+public:
+  G() : s("G") {}
+private:
+  friend class LOFAR::PL::TPersistentObject<G>;
+  string s;
+  F f;
+};
+
+//@}
 
 #endif
