@@ -27,9 +27,6 @@
 #include <measures/Measures/MDirection.h>
 #include <measures/Measures/MPosition.h>
 
-//# Forward Declarations
-class MDirection;
-
 
 class MeqPhaseRef
 {
@@ -37,7 +34,7 @@ public:
   // The default constructor.
   MeqPhaseRef() {};
 
-  MeqPhaseRef (const MDirection& phaseRef, double startTime);
+  MeqPhaseRef (const casa::MDirection& phaseRef, double startTime);
 
   double getRa() const
     { return itsRa; }
@@ -54,9 +51,9 @@ public:
   double getScaleHA() const
     { return itsScaleHA; }
 
-  const MDirection& direction() const
+  const casa::MDirection& direction() const
     { return itsDir; }
-  const MPosition& earthPosition() const
+  const casa::MPosition& earthPosition() const
     { return itsEarthPos; }
 
 private:
@@ -67,8 +64,8 @@ private:
   double itsStartTime;
   double itsStartHA;
   double itsScaleHA;
-  MDirection itsDir;
-  MPosition  itsEarthPos;
+  casa::MDirection itsDir;
+  casa::MPosition  itsEarthPos;
 };
 
 

@@ -29,6 +29,8 @@
 #include <Common/Debug.h>
 #include <casa/Arrays/Matrix.h>
 
+using namespace casa;
+
 
 double MeqPolc::theirPascal[10][10];
 bool   MeqPolc::theirPascalFilled = false;

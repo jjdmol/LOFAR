@@ -25,6 +25,8 @@
 
 #include <MNS/MeqPointDFT.h>
 
+using namespace casa;
+
 MeqUVWPolc::MeqUVWPolc()
 : itsPoly   (3),
   itsUCoeff ("u"),

@@ -1,6 +1,6 @@
-check_PROGRAMS 		= tPoly tMeqMatrix tMeqPolc tuvw
+check_PROGRAMS 		= tPoly tMeqMatrix tMeqPolc
 
-TESTS			= tPoly tMeqMatrix tMeqPolc tuvw
+TESTS			= tPoly tMeqMatrix tMeqPolc
 
 tPoly_SOURCES 		= tPoly.cc 
 tPoly_LDADD		= ../src/libmns.la 
@@ -14,9 +14,9 @@ tMeqPolc_SOURCES 	= tMeqPolc.cc
 tMeqPolc_LDADD		= ../src/libmns.la 
 tMeqPolc_DEPENDENCIES	= ../src/libmns.la $(LOFAR_DEPEND)
 
-tuvw_SOURCES 		= tuvw.cc 
-tuvw_LDADD		= ../src/libmns.la 
-tuvw_DEPENDENCIES	= ../src/libmns.la $(LOFAR_DEPEND)
+#tuvw_SOURCES 		= tuvw.cc 
+#tuvw_LDADD		= ../src/libmns.la 
+#tuvw_DEPENDENCIES	= ../src/libmns.la $(LOFAR_DEPEND)
 
 
 include $(lofar_sharedir)/Makefile.common

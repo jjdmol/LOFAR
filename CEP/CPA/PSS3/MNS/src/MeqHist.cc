@@ -24,6 +24,8 @@
 #include <casa/Arrays/Slice.h>
 #include <casa/Arrays/ArrayMath.h>
 
+using namespace casa;
+
 void MeqHist::update (unsigned int bucket)
 {
   if (bucket >= itsVec.nelements()) {

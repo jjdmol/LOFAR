@@ -23,6 +23,7 @@
 #include <MNS/MeqMatrixRep.h>
 #include <casa/Exceptions/Error.h>
 
+using namespace casa;
 
 int MeqMatrixRep::nctor = 0;
 int MeqMatrixRep::ndtor = 0;

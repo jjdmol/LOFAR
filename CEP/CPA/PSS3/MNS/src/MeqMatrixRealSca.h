@@ -49,34 +49,34 @@ public:
   virtual double getDouble (int x, int y) const;
   virtual complex<double> getDComplex (int x, int y) const;
 
-  virtual MeqMatrixRep* add      (MeqMatrixRep& right, Bool rightTmp);
-  virtual MeqMatrixRep* subtract (MeqMatrixRep& right, Bool rightTmp);
-  virtual MeqMatrixRep* multiply (MeqMatrixRep& right, Bool rightTmp);
-  virtual MeqMatrixRep* divide   (MeqMatrixRep& right, Bool rightTmp);
+  virtual MeqMatrixRep* add      (MeqMatrixRep& right, bool rightTmp);
+  virtual MeqMatrixRep* subtract (MeqMatrixRep& right, bool rightTmp);
+  virtual MeqMatrixRep* multiply (MeqMatrixRep& right, bool rightTmp);
+  virtual MeqMatrixRep* divide   (MeqMatrixRep& right, bool rightTmp);
   virtual MeqMatrixRep* posdiff  (MeqMatrixRep& right);
   virtual MeqMatrixRep* tocomplex(MeqMatrixRep& right);
 
 
 private:
-  virtual MeqMatrixRep* addRep (MeqMatrixRealSca& left, Bool rightTmp);
-  virtual MeqMatrixRep* addRep (MeqMatrixComplexSca& left, Bool rightTmp);
-  virtual MeqMatrixRep* addRep (MeqMatrixRealArr& left, Bool rightTmp);
-  virtual MeqMatrixRep* addRep (MeqMatrixComplexArr& left, Bool rightTmp);
+  virtual MeqMatrixRep* addRep (MeqMatrixRealSca& left, bool rightTmp);
+  virtual MeqMatrixRep* addRep (MeqMatrixComplexSca& left, bool rightTmp);
+  virtual MeqMatrixRep* addRep (MeqMatrixRealArr& left, bool rightTmp);
+  virtual MeqMatrixRep* addRep (MeqMatrixComplexArr& left, bool rightTmp);
 
-  virtual MeqMatrixRep* subRep (MeqMatrixRealSca& left, Bool rightTmp);
-  virtual MeqMatrixRep* subRep (MeqMatrixRealArr& left, Bool rightTmp);
-  virtual MeqMatrixRep* subRep (MeqMatrixComplexSca& left, Bool rightTmp);
-  virtual MeqMatrixRep* subRep (MeqMatrixComplexArr& left, Bool rightTmp);
+  virtual MeqMatrixRep* subRep (MeqMatrixRealSca& left, bool rightTmp);
+  virtual MeqMatrixRep* subRep (MeqMatrixRealArr& left, bool rightTmp);
+  virtual MeqMatrixRep* subRep (MeqMatrixComplexSca& left, bool rightTmp);
+  virtual MeqMatrixRep* subRep (MeqMatrixComplexArr& left, bool rightTmp);
 
-  virtual MeqMatrixRep* mulRep (MeqMatrixRealSca& left, Bool rightTmp);
-  virtual MeqMatrixRep* mulRep (MeqMatrixRealArr& left, Bool rightTmp);
-  virtual MeqMatrixRep* mulRep (MeqMatrixComplexSca& left, Bool rightTmp);
-  virtual MeqMatrixRep* mulRep (MeqMatrixComplexArr& left, Bool rightTmp);
+  virtual MeqMatrixRep* mulRep (MeqMatrixRealSca& left, bool rightTmp);
+  virtual MeqMatrixRep* mulRep (MeqMatrixRealArr& left, bool rightTmp);
+  virtual MeqMatrixRep* mulRep (MeqMatrixComplexSca& left, bool rightTmp);
+  virtual MeqMatrixRep* mulRep (MeqMatrixComplexArr& left, bool rightTmp);
 
-  virtual MeqMatrixRep* divRep (MeqMatrixRealSca& left, Bool rightTmp);
-  virtual MeqMatrixRep* divRep (MeqMatrixRealArr& left, Bool rightTmp);
-  virtual MeqMatrixRep* divRep (MeqMatrixComplexSca& left, Bool rightTmp);
-  virtual MeqMatrixRep* divRep (MeqMatrixComplexArr& left, Bool rightTmp);
+  virtual MeqMatrixRep* divRep (MeqMatrixRealSca& left, bool rightTmp);
+  virtual MeqMatrixRep* divRep (MeqMatrixRealArr& left, bool rightTmp);
+  virtual MeqMatrixRep* divRep (MeqMatrixComplexSca& left, bool rightTmp);
+  virtual MeqMatrixRep* divRep (MeqMatrixComplexArr& left, bool rightTmp);
 
   virtual MeqMatrixRep* posdiffRep (MeqMatrixRealSca& left);
   virtual MeqMatrixRep* posdiffRep (MeqMatrixRealArr& left);

@@ -30,7 +30,9 @@
 
 //# Forward Declarations
 class MeqDomain;
-template<class T> class Vector;
+namespace casa {
+  template<class T> class Vector;
+}
 
 
 class ParmTableRep
@@ -107,8 +109,8 @@ public:
   // In the 2nd version the pointers to the created MeqParm objects
   // are added to the vector of objects to be deleted.
   // <group>
-  MeqSourceList getPointSources (const Vector<int>& sourceNrs);
-  MeqSourceList getPointSources (const Vector<int>& sourceNrs,
+  MeqSourceList getPointSources (const casa::Vector<int>& sourceNrs);
+  MeqSourceList getPointSources (const casa::Vector<int>& sourceNrs,
 				 vector<MeqExpr*>& exprDel);
   // </group>
 

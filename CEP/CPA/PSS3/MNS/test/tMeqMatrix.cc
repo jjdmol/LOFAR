@@ -25,7 +25,6 @@
 //#
 //# $Id$
 
-
 #include <MNS/MeqMatrix.h>
 #include <MNS/MeqMatrixTmp.h>
 #include <MNS/MeqResult.h>
@@ -36,6 +35,8 @@
 #include <casa/Exceptions/Error.h>
 #include <iostream>
 #include <sstream>
+
+using namespace casa;
 
 
 void showDouble (const MeqMatrixTmp& v)

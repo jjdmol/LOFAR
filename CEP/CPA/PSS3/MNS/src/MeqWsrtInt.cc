@@ -33,6 +33,7 @@
 
 #include <MNS/MeqPointDFT.h>
 
+using namespace casa;
 
 MeqWsrtInt::MeqWsrtInt (MeqJonesExpr* vis, MeqJonesExpr* station1,
 			MeqJonesExpr* station2)

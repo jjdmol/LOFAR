@@ -31,6 +31,7 @@
 #include <Common/Debug.h>
 #include <casa/BasicSL/Constants.h>
 
+using namespace casa;
 
 MeqStatSources::MeqStatSources (MeqStatUVW* statUVW,
 				MeqSourceList* sources)

@@ -40,6 +40,7 @@
 #include <Common/lofar_iostream.h>
 #include <stdexcept>
 
+using namespace casa;
 
 // Solve for a single 3rd-order polynomial.
 void doIt1 (const string& dbtype, const string& dbname,
