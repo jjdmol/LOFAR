@@ -760,9 +760,8 @@ try
         
         ColumnName = itsGraphSettingsWidget->getSettings().getColumnName();	
         intype     = itsInputAgent->getNext(id, ref, 0, AppEvent::NOWAIT);
-        std::cout << ColumnName<<std::endl;
         
-        if(intype <= 0) {
+        if(intype < 0) {
           std::cout << "intype: " << intype << std::endl;
         } else {
           
@@ -777,8 +776,11 @@ try
             {
               std::cout << "Receiving DATA " << id.toString() << std::endl;
               tile = ref;
-              int ncorr = tile.deref().ncorr();
-              int nfreq = tile.deref().nfreq();
+              LoCube_fcomplex data = tile->data();
+              //              int ncorr = tile.deref().ncorr();
+              //int nfreq = tile.deref().nfreq();
+              int ncorr = data.shape()[0];
+              int nfreq = data.shape()[1];
               int ntime = tile.deref().ntime();
               int ant1  = tile.deref().antenna1();
               int ant2  = tile.deref().antenna2();
@@ -848,7 +850,7 @@ try
             
           default:
             {//just wait
-	      qApp->processEvents();
+              qApp->processEvents();
             }
             break;
           }//switch intype
