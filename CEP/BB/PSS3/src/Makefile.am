@@ -1,5 +1,4 @@
 INSTHDRS         =                                \
-DFTAll.h \
 DH_Solution.h                                   \
 DH_WorkOrder.h                                  \
 WH_Evaluate.h                                   \
@@ -71,7 +70,6 @@ DOCHDRS	= $(INSTHDRS) $(NOINSTHDRS)
 lib_LTLIBRARIES = libpss3.la
 
 libpss3_la_SOURCES = \
-DFTAll.cc \
 Simulate.cc                                             \
 DH_Solution.cc                                          \
 DH_WorkOrder.cc                                         \
@@ -141,5 +139,3 @@ BlackBoardDemo_DEPENDENCIES = libpss3.la $(LOFAR_DEPEND)
 
 
 include $(lofar_sharedir)/Makefile.common
-
-AM_CPPFLAGS = -DMAKE_LOFAR_SYMBOLS_GLOBAL
