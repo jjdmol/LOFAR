@@ -24,11 +24,12 @@
 #include <StationSim/DH_Weight.h>
 
 
-DH_Weight::DH_Weight (const string& name)
+DH_Weight::DH_Weight (const string& name, int nrcu)
 : DataHolder    (name, "DH_Weight"),
-  itsDataPacket (0),
-  itsBuffer     (0)
-{}
+  itsDataPacket (0)
+{
+  itsBuffer.resize(nrcu);
+}
 
 DH_Weight::~DH_Weight()
 {
