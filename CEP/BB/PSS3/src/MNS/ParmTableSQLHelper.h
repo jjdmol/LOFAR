@@ -26,10 +26,8 @@ public:
   static   MeqParmHolder readMeqParmHolder(char** resRow);
 
 private:
-  static string quote (unsigned char* src, int length);
-  static int unquote (unsigned char* src, char* dst, int length);
-  static int seven2eightbits (unsigned char* dest, unsigned char* src, int length);
-  static int eight2sevenbits (unsigned char* dest, unsigned char* src, int length);
+  static string quote (char* src, int length);
+  static int unquote (char* src, char* dst, int length);
 
   static   MeqMatrix getMeqMatrix(char** resRow, int column);
   static   double getDouble(char** resRow, int column);
