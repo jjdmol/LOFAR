@@ -30,8 +30,8 @@ int main (int argc, const char** argv)
 //  	cout <<	"  * Type 'quit'    to quit" << endl;
 //  	cout << endl;
 	try {
-	  SimulatorParse::parse (simulator);
-	} catch (SimulatorParseError x) {
+	  LOFAR::SimulatorParse::parse (simulator);
+	} catch (LOFAR::SimulatorParseError x) {
 
 	  //cout << x.getMesg() << endl;
 	  //cout << x.what() << endl;

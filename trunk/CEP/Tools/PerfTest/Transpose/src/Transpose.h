@@ -32,6 +32,7 @@
 #endif
 
 #include "CEPFrame/Simulator.h"
+
 class WH_FillTFMatrix;
 class WH_Delay;
 class WH_Transpose;
@@ -44,14 +45,14 @@ class ParamBlock ;
    ....
 */
 
-class Transpose: public Simulator
+class Transpose: public LOFAR::Simulator
 {
  public:
   Transpose();
   virtual ~Transpose();
   
   // overloaded methods from the Simulator base class
-  virtual void define(const ParamBlock& params = ParamBlock());
+  virtual void define(const LOFAR::ParamBlock& params = LOFAR::ParamBlock());
   virtual void run(int);
   virtual void dump() const;
   virtual void quit();
@@ -64,10 +65,10 @@ class Transpose: public Simulator
     WH_Delay        **Iworkholders;
     WH_Transpose    **Dworkholders;
     WH_Correlate    **Cworkholders;
-    Step            **Ssteps;
-    Step            **Isteps;
-    Step            **Dsteps;
-    Step            **Csteps;
+    LOFAR::Step     **Ssteps;
+    LOFAR::Step     **Isteps;
+    LOFAR::Step     **Dsteps;
+    LOFAR::Step     **Csteps;
     
     /// Number of source steps
    int itsSourceSteps;

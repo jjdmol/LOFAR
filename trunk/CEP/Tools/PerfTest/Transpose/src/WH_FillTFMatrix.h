@@ -39,7 +39,7 @@
    objects as outputs. The process() method fills the dataholder
  */
 
-class WH_FillTFMatrix: public WorkHolder
+class WH_FillTFMatrix: public LOFAR::WorkHolder
 {
 public:
 
@@ -52,7 +52,7 @@ public:
   
   virtual ~WH_FillTFMatrix();
 
-  virtual WorkHolder* make(const string& name) const;
+  virtual WorkHolder* make(const string& name);
 
   virtual void preprocess();
 
@@ -60,13 +60,7 @@ public:
   virtual void process();
 
   /// Show the work holder on stdout.
-  virtual void dump() const;
-  
-  /// Get a pointer to the i-th input DataHolder.
-  virtual DH_Empty* getInHolder (int channel);
-    
-  /// Get a pointer to the i-th output DataHolder.
-  virtual DH_2DMatrix* getOutHolder (int channel);
+  virtual void dump();
       
 private:
   /// Forbid copy constructor.
@@ -74,12 +68,6 @@ private:
 
   /// Forbid assignment.
   WH_FillTFMatrix& operator= (const WH_FillTFMatrix&);
-
-
-  /// Pointer to the array of input DataHolders.
-  DH_Empty** itsInHolders;
-  /// Pointer to the array of output DataHolders.
-  DH_2DMatrix** itsOutHolders;
 
   int itsTime;
   int itsTimeDim;

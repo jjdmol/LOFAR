@@ -33,6 +33,7 @@
 
 #include "Transpose/WH_Delay.h"
 
+using namespace LOFAR;
 
 // Set static variables
 int WH_Delay::theirProcessProfilerState=0; 
@@ -43,8 +44,6 @@ WH_Delay::WH_Delay (const string& name,
 		    int timeDim,
 		    int freqDim)
   : WorkHolder    (nin, nout, name),
-    itsInHolders  (0),
-    itsOutHolders (0),
     itsTimeDim    (timeDim),
     itsFreqDim    (freqDim)
 {
@@ -53,16 +52,14 @@ WH_Delay::WH_Delay (const string& name,
   AssertStr (nout == nin, "number of inputs and outputs must match");
 
   itsBuffer = new CyclicBuffer<DH_2DMatrix*>[10];
-  itsInHolders  = new DH_2DMatrix* [nin];
-  itsOutHolders = new DH_2DMatrix* [nout];
   char str[8];
   for (unsigned int i=0; i<nin; i++) {
     sprintf (str, "%d", i);
     TRACER3("Create WH_Delay InhHolder[" << i << "]");
-    itsInHolders[i] = new DH_2DMatrix (std::string("in_") + str,
+    getDataManager().addInDataHolder(i,new DH_2DMatrix (std::string("in_") + str,
 				       timeDim, std::string("Time"),
 				       freqDim, std::string("Frequency"),
-				       std::string("Station"));
+				       std::string("Station")));
 
     
     for (int i=0;i<10;i++) {
@@ -75,10 +72,10 @@ WH_Delay::WH_Delay (const string& name,
   for (unsigned int i=0; i<nout; i++) {
     sprintf (str, "%d", i);
     TRACER3("Create WH_Delay OutHolder[" << i << "]");
-    itsOutHolders[i] = new DH_2DMatrix (std::string("out_") + str,
+    getDataManager().addOutDataHolder(i,new DH_2DMatrix (std::string("out_") + str,
 				       timeDim, std::string("Time"),
 				       freqDim, std::string("Frequency"),
-				       std::string("Station"));
+				       std::string("Station")));
   }
 
   if (theirProcessProfilerState == 0) {
@@ -89,21 +86,13 @@ WH_Delay::WH_Delay (const string& name,
 
 WH_Delay::~WH_Delay()
 {
-  for (int i=0; i<getInputs(); i++) {
-    delete itsInHolders[i];
-  }
-  for (int i=0; i<getOutputs(); i++) {
-    delete itsOutHolders[i];
-  }
-  delete [] itsInHolders;
-  delete [] itsOutHolders;
 }
 
-WorkHolder* WH_Delay::make(const string& name) const
+WorkHolder* WH_Delay::make(const string& name)
 {
   return new WH_Delay(name, 
-			  getInputs(), 
-			  getOutputs(),
+			  getDataManager().getInputs(), 
+			  getDataManager().getOutputs(),
 			  itsTimeDim,
 			  itsFreqDim);
 }
@@ -115,63 +104,49 @@ void WH_Delay::preprocess() {
 
 void WH_Delay::process()
 {  
-  for (int input=0; input<getInputs(); input++) {
+  for (int input=0; input<getDataManager().getInputs(); input++) {
     
     void* bufferptr;
     int ID;
     bufferptr = (void*) itsBuffer[input].GetWriteLockedDataItem(&ID);
     memcpy (bufferptr,
-	    getInHolder(input)->getDataPtr(),
-	    getInHolder(input)->getCurDataPacketSize());
+	    getDataManager().getInHolder(input)->getDataPtr(),
+	    getDataManager().getInHolder(input)->getCurDataPacketSize());
     itsBuffer[input].WriteUnlockElement(ID);
     
     bufferptr = (void*) itsBuffer[input].GetReadDataItem(&ID);
-    memcpy (getOutHolder(input)->getDataPtr(),
+    memcpy (getDataManager().getOutHolder(input)->getDataPtr(),
 	    bufferptr,
-	    getInHolder(input)->getCurDataPacketSize());  
+	    getDataManager().getInHolder(input)->getCurDataPacketSize());  
     itsBuffer[input].ReadUnlockElement(ID);
   }
 }
 
-void WH_Delay::dump() const
+void WH_Delay::dump()
 {
   cout << "WH_Delay " << getName() << " ::dump()" << endl;
-  for (int outch=0; outch<std::min(10,getOutputs()); outch++) {
+  for (int outch=0; outch<std::min(10,getDataManager().getOutputs()); outch++) {
     cout << "Output " << outch << "   "
-	 << (const_cast<WH_Delay*>(this))->getOutHolder(outch)->getZName() << " "
-	 << (const_cast<WH_Delay*>(this))->getOutHolder(outch)->getZ() << "   "
-	 << (const_cast<WH_Delay*>(this))->getOutHolder(outch)->getXName() << "Offset = "  
-	 << (const_cast<WH_Delay*>(this))->getOutHolder(outch)->getXOffset() << "    "
-	 << (const_cast<WH_Delay*>(this))->getOutHolder(outch)->getYName() << "Offset = "  
-	 << (const_cast<WH_Delay*>(this))->getOutHolder(outch)->getYOffset() ;
+	 << ((DH_2DMatrix*)getDataManager().getOutHolder(outch))->getZName() << " "
+	 << ((DH_2DMatrix*)getDataManager().getOutHolder(outch))->getZ() << "   "
+	 << ((DH_2DMatrix*)getDataManager().getOutHolder(outch))->getXName() << "Offset = "  
+	 << ((DH_2DMatrix*)getDataManager().getOutHolder(outch))->getXOffset() << "    "
+	 << ((DH_2DMatrix*)getDataManager().getOutHolder(outch))->getYName() << "Offset = "  
+	 << ((DH_2DMatrix*)getDataManager().getOutHolder(outch))->getYOffset() ;
     for (int x=0; 
-	 x < std::min(10,(const_cast<WH_Delay*>(this))->getOutHolder(outch)->getXSize());
+	 x < std::min(10,((DH_2DMatrix*)getDataManager().getOutHolder(outch))->getXSize());
 		 x++) {
 	   cout << endl 
-		<< (const_cast<WH_Delay*>(this))->getOutHolder(outch)->getXName()
+		<< ((DH_2DMatrix*)getDataManager().getOutHolder(outch))->getXName()
 		<< x << "   ";
       for (int y=0; 
-	   y < std::min(10,(const_cast<WH_Delay*>(this))->getOutHolder(outch)->getYSize());
+	   y < std::min(10,((DH_2DMatrix*)getDataManager().getOutHolder(outch))->getYSize());
 	   y++) {
-	cout << *(const_cast<WH_Delay*>(this))->getOutHolder(outch)->getBuffer(x,y) << " ";
+	cout << *((DH_2DMatrix*)getDataManager().getOutHolder(outch))->getBuffer(x,y) << " ";
       }
     }
     cout << endl;
   }
   cout << "=====================================" <<endl;
 
-}
-
-DH_2DMatrix* WH_Delay::getInHolder (int channel)
-{
-  DbgAssertStr (channel >= 0,          "input channel too low");
-  DbgAssertStr (channel < getInputs(), "input channel too high");
-  return itsInHolders[channel];
-}
-
-DH_2DMatrix* WH_Delay::getOutHolder (int channel)
-{
-  DbgAssertStr (channel >= 0,           "output channel too low");
-  DbgAssertStr (channel < getOutputs(), "output channel too high");
-  return itsOutHolders[channel];
 }

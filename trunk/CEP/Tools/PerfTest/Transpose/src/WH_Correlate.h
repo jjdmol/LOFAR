@@ -38,7 +38,7 @@
    The WH_Tranpose
  */
 
-class WH_Correlate: public WorkHolder
+class WH_Correlate: public LOFAR::WorkHolder
 {
 public:
 
@@ -50,7 +50,7 @@ public:
   
   virtual ~WH_Correlate();
 
-  virtual WorkHolder* make(const string& name) const;
+  virtual WorkHolder* make(const string& name);
 
   virtual void preprocess();
 
@@ -58,13 +58,7 @@ public:
   virtual void process();
 
   /// Show the work holder on stdout.
-  virtual void dump() const;
-
-  /// Get a pointer to the i-th input DataHolder.
-  virtual DH_2DMatrix* getInHolder (int channel);
-
-  /// Get a pointer to the i-th output DataHolder.
-  virtual DH_Empty* getOutHolder (int channel);
+  virtual void dump();
 
 private:
   /// Forbid copy constructor.
@@ -72,12 +66,6 @@ private:
 
   /// Forbid assignment.
   WH_Correlate& operator= (const WH_Correlate&);
-
-
-  /// Pointer to the array of input DataHolders.
-  DH_2DMatrix** itsInHolders;
-  /// Pointer to the array of output DataHolders.
-  DH_Empty** itsOutHolders;
 
   int itsTime;
   int itsStationDim;
