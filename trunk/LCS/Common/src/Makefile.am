@@ -67,7 +67,8 @@ INSTHDRS = \
         Thread/Key.h \
         Thread/Mutex.h \
         Thread/SmartLock.h \
-        Thread/Thread.h
+        Thread/Thread.h \
+	Timer.h
 
 NOINSTHDRS =
 
@@ -119,7 +120,8 @@ libcommon_la_SOURCES 	= \
         Net/Socket.cc \
         Profiling/PerfProfile.cc \
         Thread/SmartLock.cc \
-        Thread/Thread.cc
+        Thread/Thread.cc \
+	Timer.cc
 
 AM_YFLAGS		= -d -p KeyParse
 AM_LFLAGS		= -PKeyTokenize
