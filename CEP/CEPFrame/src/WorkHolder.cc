@@ -117,16 +117,24 @@ void WorkHolder::baseProcess ()
     getDataManager().initializeInputs();
     itsFirstProcessCall = false;
   }
-  else
-  {
+  else     // the getDM::initializeInputs() method also performs 
+           // the first read action.
+   {
+
     for (int input=0; input<itsNinputs; input++) {
       if (getDataManager().getGeneralInHolder(input)->doHandle()) {
+	
+	// for selector type handle locking
 	if (getDataManager().hasInputSelector() == false) {
 	  // wait for unlocking if needed
 	  getDataManager().getInHolder(input);
 	}
+
 	if (getDataManager().doAutoTriggerIn(input)) { 
-	  getDataManager().readyWithInHolder(input); // Will cause reading of new data
+	  // signal the DM that we're done with the input channel.
+	  // The DM will initiate the read sequence now.
+	  getDataManager().readyWithInHolder(input); 
+	  
 	}
       }
     }
