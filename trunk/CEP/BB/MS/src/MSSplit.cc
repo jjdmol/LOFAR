@@ -145,7 +145,10 @@ void doIt (const string& in, const string& out)
 	ASSERT (npol == data.shape()[0]  &&  nfreq == data.shape()[1]);
       }
     }
-    // Write all UVW coordinates.
+  }
+  {
+    // Write all UVW coordinates in a separate file .
+    RegularFileIO fil(RegularFile(out+".uvw"), ByteIO::New);
     ROArrayColumn<double> coluvw(tab,"UVW");
     Array<double> uvw(coluvw.getColumn());
     fil.write (uvw.nelements()*sizeof(double), uvw.data());
@@ -166,6 +169,9 @@ void doIt (const string& in, const string& out)
     bos << a1 << a2;
     bos << tim2;
     bos << interval2;
+    MSAntenna mssub(ms.antenna());
+    ROMSAntennaColumns mssubc(mssub);
+    bos << mssubc.position().getColumn();
     bos.putEnd();
   }
   cout << "Wrote " << npol << " polarizations" << endl;
