@@ -206,7 +206,7 @@ void OnLineProto::define(const KeyValueMap& params)
     // ToDo: pass stationID, freq offset etc. to DH
     myWHTranspose[b] = new WH_Transpose("mytranspose",  // name,
 					myPS.getInt("general.nstations"),  // nin
-					myPS.getInt("corr.nvis"), //nout
+					myPS.getInt("corr.ncorr"),         //nout
 					myPS
 					);
 
@@ -214,8 +214,6 @@ void OnLineProto::define(const KeyValueMap& params)
     myTransposeSteps[b] = new Step(myWHTranspose[b],"mytranspose_step");
     myTransposeSteps[b]->runOnNode(0,0);
 
-
-    myTransposeSteps[b]->setOutRate(myPS.getInt("corr.tsize"));
     app.addStep(myTransposeSteps[b]);
   }
 
@@ -238,38 +236,37 @@ void OnLineProto::define(const KeyValueMap& params)
   // create the Correlator steps
   //
   ////////////////////////////////////////////////////////////////
-  WH_Correlate*  myWHCorrelators[myPS.getInt("corr.ncorr")];
-  Step*          myCorrelatorSteps[myPS.getInt("corr.ncorr")];
+  WH_Correlate*  myWHCorrelators[myPS.getInt("station.nbeamlets") * myPS.getInt("corr.ncorr")];
+  Step*          myCorrelatorSteps[myPS.getInt("station.nbeamlets") * myPS.getInt("corr.ncorr")];
 
-  for (int c=0; c <myPS.getInt("station.nbeamlets")* myPS.getInt("corr.ncorr"); c++) {
-    // ToDo: pass stationID, freq offset etc. to DH
-    myWHCorrelators[c] = new WH_Correlate("mycorrelate",     // name,
-					  1,             // channels
-					  myPS
-					  );
-    
+  for (int b=0; b < myPS.getInt("station.nbeamlets"); b++) { //NBeamlets
+    for (int f=0; f < myPS.getInt("corr.ncorr"); f++) {
+      int correlator = b * myPS.getInt("corr.ncorr") + f;
+      
+      // ToDo: pass stationID, freq offset etc. to DH
+      myWHCorrelators[correlator] = new WH_Correlate("mycorrelate",     // name,
+						     1,                 // channels (=nin=nout)
+						     myPS
+						     );
+      
 
-    myCorrelatorSteps[c] = new Step(myWHCorrelators[c],"mycorrelate_step");
-    myCorrelatorSteps[c]->runOnNode(0,0);
-    // todo: only output rate?
-    myCorrelatorSteps[c]->getWorker()->getDataManager().setOutputRate(myPS.getInt("corr.tsize"));
-    app.addStep(myCorrelatorSteps[c]);
-  }
+      myCorrelatorSteps[correlator] = new Step(myWHCorrelators[correlator],"mycorrelate_step");
+      myCorrelatorSteps[correlator]->runOnNode(0,0);
+      // todo: only output rate?
+      myCorrelatorSteps[correlator]->getWorker()->getDataManager().setOutputRate(myPS.getInt("corr.tsize"));
+      app.addStep(myCorrelatorSteps[correlator]);
 
-  ////////////////////////////////////////////////////////////////
-  //
-  // connect the correlator steps to the transpose steps
-  //
-  ////////////////////////////////////////////////////////////////
-  int correlator=0;
-  for (int b=0; b<myPS.getInt("station.nbeamlets"); b++) { //NBeamlets
-    for (int f=0; f< /*BFBW*/ myPS.getInt("corr.ncorr"); f++) {
+      ////////////////////////////////////////////////////////////////
+      //
+      // connect the correlator steps to the transpose steps
+      // each Transpose step will be connected to "corr.ncorr" 
+      // correlator steps.
+      ////////////////////////////////////////////////////////////////
+      LOG_TRACE_LOOP_STR("Call: myCorrelatorSteps["<<correlator<<"]->connect(myTransposeSteps["
+			 <<b<<"],"<<f<<",0,1, THproto, nonblocking)");
       myCorrelatorSteps[correlator]->connect(myTransposeSteps[b],0,f,1, THproto, nonblocking);
-      correlator++;
     }
   }
-  DbgAssertStr(correlator == myPS.getInt("corr.ncorr"),"error in correlator connection logic");
-
 
 
   ////////////////////////////////////////////////////////////////
@@ -281,7 +278,7 @@ void OnLineProto::define(const KeyValueMap& params)
   Step*     myDumpSteps[myPS.getInt("corr.ncorr")];
 
 
-  for (int s=0; s < myPS.getInt("corr.ncorr"); s++) {
+  for (int s=0; s < myPS.getInt("corr.ncorr") * myPS.getInt("station.nbeamlets"); s++) {
     // ToDo: pass stationID, freq offset etc. to DH
 
     myWHDumps[s] = new WH_Dump("mydump",1,myPS,s);
