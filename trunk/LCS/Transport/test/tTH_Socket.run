@@ -4,6 +4,7 @@
 # Once as server and once as client.
 
 echo "Run1 (takes about 30 seconds) ..."
+rm -f tTH_Socket_tmp.result
 (./tTH_Socket -s 1>tTH_Socket_tmp.outs1 2>&1 ; echo $? >>tTH_Socket_tmp.result )&
 echo "CLIENT OUTPUT"
  ./tTH_Socket -c ; echo $? >>tTH_Socket_tmp.result
@@ -18,6 +19,7 @@ fi
 
 # Do another run with starting the client before the server.
 echo "Run2 (takes about 30 seconds) ..."
+rm -f tTH_Socket_tmp.result
 (./tTH_Socket -c 1>tTH_Socket_tmp.outc2 2>&1 ; echo $? >>tTH_Socket_tmp.result )&
 echo "SERVER OUTPUT"
  ./tTH_Socket -s ; echo $? >>tTH_Socket_tmp.result
