@@ -18,7 +18,7 @@ CXXFLAGS += \
 	-DMORECORE_CANNOT_TRIM=1 \
 	-DSHMEM_ALLOC
 
-check_PROGRAMS			= Example Example2
+check_PROGRAMS			= Example Example2 Example3
 
 
 Example_SOURCES 		= \
@@ -32,6 +32,12 @@ Example2_SOURCES           	= \
                                 WH_Example.cc \
                                 MySecondExample.cc \
                                 Example2.cc
+
+Example3_SOURCES		= \
+				DH_Example.cc \
+				WH_Example.cc \
+				MySocketExample.cc \
+				Example3.cc
 
 LDADD				= ../src/libtinycep.la
 DEPENDENCIES			= ../src/libtinycep.la $(LOFAR_DEPEND)
