@@ -1,4 +1,4 @@
-//#  DTLHelperClasses.h: definition of DTL helper classes for use within PL.
+//#  DTLBase.h: Base classes and methods for use of DTL within PL.
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,8 +20,8 @@
 //#
 //#  $Id$
 
-#ifndef LOFAR_PL_DTLHELPERCLASSES_H
-#define LOFAR_PL_DTLHELPERCLASSES_H
+#ifndef LOFAR_PL_DTLBASE_H
+#define LOFAR_PL_DTLBASE_H
 
 #if defined(HAVE_CONFIG_H)
 #include <config.h>
@@ -32,13 +32,16 @@
 #endif
 
 //# Includes
+#include <PL/ObjectId.h>
+#include <PL/PersistentObject.h>
 #include <dtl/DTL.h>
+// #include <dtl/DBView.h>
+// #include <dtl/select_iterator.h>
 
 namespace LOFAR
 {
   namespace PL
   {
-
     //# Forward declaration
     template<typename T> struct DBRep;
 
@@ -62,6 +65,42 @@ namespace LOFAR
       void operator()(dtl::BoundIOs& boundIOs, ParamObj& paramObj);
     };
 
+    template<>
+    struct DBRep<ObjectId> {
+      ObjectId::oid_t itsOid;
+    };
+
+    template<>
+    struct DBRep<PersistentObject::MetaData> {
+      ObjectId::oid_t itsOid;
+      ObjectId::oid_t itsOwner;
+      unsigned int    itsVersionNr;
+    };
+
+    template<>
+    inline void 
+    BCA<ObjectId>::operator()(dtl::BoundIOs& cols, DataObj& rowbuf)
+    {
+      cols["ObjId"] == rowbuf.itsOid;
+    }
+
+    template<>
+    inline void 
+    BPA<ObjectId>::operator()(dtl::BoundIOs& pos, ParamObj& param)
+    {
+      pos[0] == param.itsOid;
+    }
+    
+    template<> 
+    inline void 
+    BCA<PersistentObject::MetaData>::operator()(dtl::BoundIOs& cols, 
+                                                DataObj& rowbuf)
+    {
+      cols["ObjId"] == rowbuf.itsOid;
+      cols["Owner"] == rowbuf.itsOwner;
+      cols["VersionNr"] == rowbuf.itsVersionNr;
+    }
+    
   } // namespace PL
   
 } // namespace LOFAR

@@ -51,10 +51,10 @@ namespace LOFAR
     {
     public:
 
-      // We need a default constructor, because we want to be able to
-      // create e.g. a Collection of TPersistentObject<T>. The default
-      // constructor of will create a default constructed object \c T on
-      // the free store, which will be deleted when \c *this is destroyed.
+      // We need a default constructor, because we want to be able to create
+      // e.g. a Collection of TPersistentObject<T>. The default constructor
+      // will create a default constructed object \c T on the free store,
+      // which will be deleted when \c *this is destroyed.
       TPersistentObject() :
         itsObjectPtr(new T()), itsObjectSharedPtr(itsObjectPtr)
       {
@@ -62,11 +62,11 @@ namespace LOFAR
       }
 
       // \c T is passed by refererence, not const reference, because this
-      // documents more explicitly that \c t can be easily changed, using
-      // the data() method, which also returns a reference, instead of a 
-      // const reference. Internally we keep a pointer to the instance of T;
-      // we need a pointer because pointer can have a null value, whereas 
-      // a reference cannot.
+      // documents more explicitly that \c t can be easily changed, using the
+      // data() method, which also returns a reference, instead of a const
+      // reference. Internally we keep a pointer to the instance of T; we need
+      // a pointer because a pointer can have a null value, whereas a
+      // reference cannot.
       explicit TPersistentObject(T& t) : 
 	itsObjectPtr(&t)
       { 
@@ -86,22 +86,13 @@ namespace LOFAR
       // \todo Maybe this should be done completely different. It will depend
       // on how we can best iterate over the query result. We might e.g.
       // instantiate our persistent objects using their unique object-ids
-      // which we're returned by the query. Then we could call the
-      // retrieve(ObjectId&) member function using to initialize an already 
-      // existing PersistentObject. We will have at least one existing
+      // which were returned by the query. Then we could call the
+      // retrieve(ObjectId&) member function to initialize an already existing
+      // PersistentObject. We will have at least one existing
       // TPersistentObject<T> anyway, because we can only add instances of
       // TPersistentObject<T> to our Collection.
-      static Collection<TPersistentObject<T> > 
-      retrieve(const Query& query, int maxObjects)
-      {
-  	STATIC_CHECK(0, _Use_Explicit_Member_Specialization_);
-      }
-      
-//       static TPersistentObject<T>
-//       retrieve(const ObjectId& oid)
-//       {
-// 	return doRetrieve(oid);
-//       }
+      static Collection< TPersistentObject<T> > 
+      retrieve(const Query& query, int maxObjects);
 
     private:
       
@@ -110,79 +101,40 @@ namespace LOFAR
       // method in this class.
       using PersistentObject::retrieve;
 
-      // @name Methods that must be implemented using template specialization
-      // The implementation of the following methods will depend on the
-      // class type \c T. Therefore, there is no default implementation 
-      // available. 
-
-      //@{
- 
-      // This method \e must be called by every constructor. It ensures that
-      // the POContainer in the base class PersistentObject is initialized
-      // properly and that the ownership relations between the
+      // This method will be called by every TPersistentObject constructor. It
+      // ensures that the POContainer in the base class PersistentObject is
+      // initialized properly and that the ownership relations between the
       // PersistentObjects in this container are properly set in their
       // associated MetaData objects.
+      // \attention This method must be implemented using template
+      // specialization.
       void init()
       {
   	STATIC_CHECK(0, _Use_Explicit_Member_Specialization_);
-//  	THROW(NotImplemented, 
-// 	      "Method should be implemented using template specialization"); 
       }
 
       // This method is responsible for actually erasing the \e primitive
       // data members of \c T.
-      virtual void doErase() const 
-      {
-	STATIC_CHECK(0, _Use_Explicit_Member_Specialization_);
-//  	THROW(NotImplemented, 
-// 	      "Method should be implemented using template specialization"); 
-      }
+      virtual void doErase() const;
 
       // This method is responsible for actually inserting the \e primitive
       // data members of \c T.
-      virtual void doInsert() const 
-      {
-	STATIC_CHECK(0, _Use_Explicit_Member_Specialization_);
-//  	THROW(NotImplemented, 
-// 	      "Method should be implemented using template specialization"); 
-      }
+      virtual void doInsert() const;
 
       // This method is responsible for actually retrieving the \e primitive
       // data members of \c T. \c isOwnerOid is used to indicate whether \c
       // oid refers to the object itself or to its owner.
-      virtual void doRetrieve(const ObjectId& oid, bool isOwnerOid)
-      {
-  	STATIC_CHECK(0, _Use_Explicit_Member_Specialization_);
-//   	THROW(NotImplemented, 
-//  	      "Method should be implemented using template specialization"); 
-      }
+      virtual void doRetrieve(const ObjectId& oid, bool isOwnerOid);
 
       // This method is responsible for actually erasing the \e primitive
       // data members of \c T.
-      virtual void doUpdate() const 
-      {
-	STATIC_CHECK(0, _Use_Explicit_Member_Specialization_);
-//  	THROW(NotImplemented, 
-// 	      "Method should be implemented using template specialization"); 
-      }
-
-      // This method is responsible for actually retrieving the \e primitive
-      // data members of \c T.
-//       static Collection<TPersistentObject<T> > 
-//       doRetrieve(const Query& query, int maxObjects)
-//       {
-//   	STATIC_CHECK(0, _Use_Explicit_Member_Specialization_);
-// //   	THROW(NotImplemented, 
-// //  	      "Method should be implemented using template specialization"); 
-//       }
-
-      //@}
+      virtual void doUpdate() const;
 
       // Here we keep a pointer to the instance of T.
       T* itsObjectPtr;
 
       // The boost::shared_ptr will be used to keep track of instances of T
-      // that we've created ourselves. Because copying a TPersistentObject 
+      // that we've created ourselves. Because copying a TPersistentObject
       // implies copying the pointer to the instance of T, we must somehow
       // keep track of the number of pointers pointing to this object. When
       // the count drops to zero, boost::shared_ptr will delete the object.
@@ -190,12 +142,9 @@ namespace LOFAR
       // did not create ourselves. If we're not the creator, then we're not
       // the owner, hence we should never ever delete the object! Therefore,
       // we will only transfer ownership of itsObjectPtr to the
-      // boost::shared_ptr when \e we are the creator/owner of the object
-      // that itsObjectPtr points to.
+      // boost::shared_ptr when \e we are the creator/owner of the object that
+      // itsObjectPtr points to.
       boost::shared_ptr<T> itsObjectSharedPtr;
-
-      // @name The DBRep classes.
-      //@{
 
       // The DBRep<T> struct needs to have access to our private data members,
       // because it will update them when e.g. data is read form the database.
@@ -210,12 +159,12 @@ namespace LOFAR
       template<typename U>
       void fromDatabaseRep(const DBRep<U>& org);
 
-      //@}
-
     };
 
-  }
+  } // namespace PL
 
-}
+} // namespace LOFAR
+
+#include <PL/TPersistentObject.tcc>
 
 #endif
