@@ -73,14 +73,14 @@ class GCFRawPort : public GCFPortInterface
                            long  delay_usec    = 0,
                            long  interval_sec  = 0,
                            long  interval_usec = 0,
-                           const void* arg     = 0);
+                           void* arg     = 0);
   
     virtual long setTimer (double delay_seconds, 
                     			 double interval_seconds = 0.0,
-                    			 const void*  arg        = 0);
+                    			 void*  arg        = 0);
   
     virtual int  cancelTimer (long timerid,
-  			                      const void** arg = 0);
+  			                      void** arg = 0);
   
     virtual int  cancelAllTimers ();
   
