@@ -1,4 +1,4 @@
-# use_suspend  := T;
+ use_suspend  := T;
 # use_gui := T;
 # use_nostart  := T;
 # use_valgrind := T;
@@ -50,6 +50,7 @@ const mqsinit := function (verbose=3,debug=[=],gui=use_gui)
 const meqsink_test := function (gui=use_gui)
 {
   # remove output column from table
+  print'Removing PREDICTED_DATA column, please ignore error messages'
   tbl := table('test.ms',readonly=F);
   tbl.removecols('PREDICTED_DATA');
   tbl.done();
@@ -75,6 +76,8 @@ const meqsink_test := function (gui=use_gui)
   spigrec1.input_col := 'DATA';
   spigrec1.station_1_index := 1;
   spigrec1.station_2_index := 2;
+#  spigrec.flag_mask := -1;
+#  spigrec.row_flag_mask := -1;
   print mqs.meq('Create.Node',spigrec1);
   spigrec2 := meq.node('MeqSpigot','spigot2');
   spigrec2.input_col := 'DATA';
