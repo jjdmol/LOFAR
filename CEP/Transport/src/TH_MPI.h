@@ -20,8 +20,8 @@
 //#
 //# $Id$
 
-#ifndef LIBTRANSPORT_TH_MPI_H
-#define LIBTRANSPORT_TH_MPI_H
+#ifndef TRANSPORT_TH_MPI_H
+#define TRANSPORT_TH_MPI_H
 
 #include <lofar_config.h>
 

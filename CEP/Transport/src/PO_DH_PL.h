@@ -1,4 +1,4 @@
-//# DH_PL_PO.h: Persistency object for DH_PL
+//# PO_DH_PL.h: Persistency object for DH_PL
 //#
 //# Copyright (C) 2004
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,8 +20,8 @@
 //#
 //# $Id$
 
-#ifndef LIBTRANSPORT_PO_DH_PL_H
-#define LIBTRANSPORT_PO_DH_PL_H
+#ifndef TRANSPORT_PO_DH_PL_H
+#define TRANSPORT_PO_DH_PL_H
 
 #include <lofar_config.h>
 

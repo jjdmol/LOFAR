@@ -1,4 +1,4 @@
-//# DH_PL_PO,cc.cc: Persistency object for DH_PL
+//# PO_DH_PL.cc: Persistency object for DH_PL
 //#
 //# Copyright (C) 2004
 //# ASTRON (Netherlands Foundation for Research in Astronomy)

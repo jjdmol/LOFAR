@@ -20,8 +20,8 @@
 //#
 //# $Id$
 
-#ifndef LIBTRANSPORT_TH_FILE_H
-#define LIBTRANSPORT_TH_FILE_H
+#ifndef TRANSPORT_TH_FILE_H
+#define TRANSPORT_TH_FILE_H
 
 #include <lofar_config.h>
 

@@ -20,8 +20,8 @@
 //#
 //#  $Id$
 
-#ifndef LIBTRANSPORT_CONNECTION_H
-#define LIBTRANSPORT_CONNECTION_H
+#ifndef TRANSPORT_CONNECTION_H
+#define TRANSPORT_CONNECTION_H
 
 #include <lofar_config.h>
 

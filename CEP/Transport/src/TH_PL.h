@@ -1,4 +1,4 @@
-//# TH_PL.h: An example simulator
+//# TH_PL.h: TransportHolder using the Persistency Layer
 //#
 //# Copyright (C) 2000, 2002
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,8 +20,8 @@
 //#
 //# $Id$
 
-#ifndef LIBTRANSPORT_TH_PL_H
-#define LIBTRANSPORT_TH_PL_H
+#ifndef TRANSPORT_TH_PL_H
+#define TRANSPORT_TH_PL_H
 
 #include <Transport/TransportHolder.h>
 #include <Transport/DH_PL.h>
