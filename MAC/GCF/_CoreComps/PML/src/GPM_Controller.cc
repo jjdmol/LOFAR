@@ -40,7 +40,7 @@ GPMController::GPMController(GCFSupervisedTask& supervisedTask) :
   registerProtocol(PA_PROTOCOL, PA_PROTOCOL_signalnames);
 
   // initialize the port
-  _propertyAgent.init(*this, "pml", GCFPortInterface::SAP, PA_PROTOCOL);
+  _propertyAgent.init(*this, "client", GCFPortInterface::SAP, PA_PROTOCOL);
 }
 
 GPMController::~GPMController()

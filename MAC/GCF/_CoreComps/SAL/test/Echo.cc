@@ -119,23 +119,9 @@ int Echo::connected(GCFEvent& e, GCFPortInterface& /*p*/)
   return status;
 }
 
-int main(int argc, char** argv)
+int main(int argc, char* argv[])
 {
-  const char* ns_file  = "tutorial";
-
-  if (GTMNameService::instance()->init(ns_file) < 0)
-  {
-    cerr << "Could not open NameService configuration file: " << ns_file << endl;
-    exit(1);
-  }
-  if (GTMTopologyService::instance()->init(ns_file) < 0)
-  {
-    cerr << "Could not open TopologyService configuration file: " << ns_file << endl;
-    exit(1);
-  }
-  
-  GCFTask::_argc = argc;
-  GCFTask::_argv = argv;
+  GCFTask::init(argc, argv);
   
   Echo echo_task("ECHO");  
   echo_task.start(); // make initial transition

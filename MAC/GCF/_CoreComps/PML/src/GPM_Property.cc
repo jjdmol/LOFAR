@@ -22,6 +22,7 @@
 
 #include "GPM_Property.h"
 #include <SAL/GCF_PVBool.h>
+#include <SAL/GCF_PVDouble.h>
 
 GPMProperty::GPMProperty(GCFPValue::TMACValueType type, string name) :
   _isLinked(false), _name(name)
@@ -129,31 +130,31 @@ GCFPValue* GPMProperty::createValue(GCFPValue::TMACValueType type) const
       pResult = new GCFPVBool();
       break;
 /*    case GCFPValue::BIT32_VAL:
-      *pVar = new GCFPVBit32();
+      pResult = new GCFPVBit32();
       break;
     case GCFPValue::CHAR_VAL:
-      *pVar = new GCFPVChar();
+      pResult = new GCFPVChar();
       break;
     case GCFPValue::UNSIGNED_VAL:
-      *pVar = new GCFPVUnsigned();
+      pResult = new GCFPVUnsigned();
       break;
     case GCFPValue::INTEGER_VAL:
-      *pVar = new GCFVPInteger();
+      pResult = new GCFVPInteger();
+      break;*/
+    case GCFPValue::DOUBLE_VAL:
+      pResult = new GCFPVDouble();
       break;
-    case GCFPValue::FLOAT_VAL:
-      *pVar = new GCFPVFloat();
-      break;
-    case GCFPValue::STRING_VAL:
-      *pVar = new GCFPVString();
+/*    case GCFPValue::STRING_VAL:
+      pResult = new GCFPVString();
       break;
     case GCFPValue::REF_VAL:
-      *pVar = new GCFPVRef();
+      pResult = new GCFPVRef();
       break;
     case GCFPValue::BLOB_VAL:
-      *pVar = new GCFPVBlob();
+      pResult = new GCFPVBlob();
       break;
     case GCFPValue::DATETIME_VAL:
-      *pVar = new GCFPVDateTime();
+      pResult = new GCFPVDateTime();
       break;*/
     default:
       LOFAR_LOG_ERROR(PML_STDOUT_LOGGER, (

@@ -64,19 +64,28 @@ int GCFTCPPort::open()
   if (isConnected())
   {
     LOFAR_LOG_ERROR(TM_STDOUT_LOGGER, ( 
-        "ERROR: Port %s already open.\n",
+        "ERROR: Port %s already open.",
 	      _name.c_str()));
     result = 0;
   }
-  else if (!_pSocket)
+  else if (!_pSocket && isSlave())
   {
     LOFAR_LOG_ERROR(TM_STDOUT_LOGGER, ( 
-        "ERROR: Port %s not initialised.\n",
+        "ERROR: Port %s not initialised.",
         _name.c_str()));
     result = 0;
   }
   else if (!_addrIsSet && !isSlave())
   {
+    if (SPP == getType() || MSPP == getType())
+    {
+      _pSocket = new GTMServerSocket(*this, (MSPP == getType()));
+    }
+    else if (SAP == getType())
+    {
+      _pSocket = new GTMSocket(*this);
+    }
+    
     if (findAddr(fwaddr))
     {
       setAddr(fwaddr);
@@ -84,7 +93,7 @@ int GCFTCPPort::open()
     else
     {
       LOFAR_LOG_ERROR(TM_STDOUT_LOGGER, (
-          "Could not get address info for port '%s' of task '%s'\n",
+          "Could not get address info for port '%s' of task '%s'",
 		      _name.c_str(), _pTask->getName().c_str()));
       result = 0;
     }
@@ -141,7 +150,7 @@ ssize_t GCFTCPPort::send(const GCFEvent& e, void* buf, size_t count)
   {
     if ((written = _pSocket->send(buf, count)) != count)
     {
-      LOFAR_LOG_DEBUG(TM_STDOUT_LOGGER, ("truncated send\n"));
+      LOFAR_LOG_DEBUG(TM_STDOUT_LOGGER, ("truncated send"));
     }
   }
 
@@ -160,7 +169,7 @@ ssize_t GCFTCPPort::sendv(const GCFEvent& e, const iovec buffers[], int n)
     count = e.length;
     if ((written = _pSocket->send((void*)&e, e.length)) != count)
     {
-      LOFAR_LOG_DEBUG(TM_STDOUT_LOGGER, ("truncated sendv\n"));
+      LOFAR_LOG_DEBUG(TM_STDOUT_LOGGER, ("truncated sendv"));
     }
   }
 
@@ -169,7 +178,7 @@ ssize_t GCFTCPPort::sendv(const GCFEvent& e, const iovec buffers[], int n)
     count += buffers[i].iov_len;
     if ((written += _pSocket->send(buffers[i].iov_base, buffers[i].iov_len)) != count)
     {
-      LOFAR_LOG_DEBUG(TM_STDOUT_LOGGER, ("truncated sendv\n"));
+      LOFAR_LOG_DEBUG(TM_STDOUT_LOGGER, ("truncated sendv"));
     }
   }
 
@@ -202,4 +211,14 @@ void GCFTCPPort::setAddr(const GCFPeerAddr& addr)
 {
   _addr = addr;
   _addrIsSet = true;
+}
+
+int GCFTCPPort::accept(GCFTCPPort& port)
+{
+  if (MSPP == getType() && SPP == port.getType())
+  {
+    GTMServerSocket* pProvider = static_cast<GTMServerSocket*>(_pSocket);
+    return pProvider->accept(*port._pSocket);
+  }
+  return -1;
 }

@@ -13,7 +13,7 @@ ping_DEPENDENCIES	= ../src/libtm.la $(LOFAR_DEPEND)
 AUTOGEN = autogen
 SUFFIXES = .ph
 %.ph: %.prot
-	$(AUTOGEN) -L $(top_srcdir)/../../Common/autogen $<
+	$(AUTOGEN) -L $(top_srcdir)/../../GCFCommon/autogen $<
 
 BUILT_SOURCES = \
 	Echo_Protocol.ph

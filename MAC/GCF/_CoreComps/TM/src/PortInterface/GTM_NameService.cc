@@ -59,7 +59,7 @@ int GTMNameService::init(const char *ns_config_file)
   catch (...)
   {
     LOFAR_LOG_ERROR(TM_STDOUT_LOGGER, (
-	     "Failed to open NameService config file '%s'\n",
+	     "Failed to open NameService config file '%s'",
 	     fname));
     return -1;
   }

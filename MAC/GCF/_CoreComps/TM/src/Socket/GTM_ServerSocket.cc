@@ -22,7 +22,6 @@
 
 #include "GTM_ServerSocket.h"
 #include "GCF_TCPPort.h"
-//#include <GCF_Event.h>
 #include <GCF_TMProtocols.h>
 #include <PortInterface/GCF_PeerAddr.h>
 #include <netinet/in.h>

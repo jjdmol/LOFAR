@@ -59,7 +59,7 @@ lofar_PVSS(1)
 lofar_PACKAGE(LCS/Common)
 lofar_PACKAGE(MAC/GCF/CoreComps/TM)
 lofar_PACKAGE(MAC/Tools/LofarLogger)
-lofar_EXTERNAL(log4cplus,1,logger.h,log4cplus,"/usr/local/include/log4cplus")
+lofar_EXTERNAL(log4cplus,1,log4cplus/logger.h,log4cplus,)
 
                        
 dnl

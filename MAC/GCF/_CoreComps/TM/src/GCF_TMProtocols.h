@@ -92,17 +92,17 @@ enum {
     F_ACCEPT_REQ_ID,           // this event will be used by the port provider to indicate the user that there is one more connect request of a client (SAP)
 };
 
-#define F_CONNECT_SIG				F_SIGNAL(F_PORT_PROTOCOL, F_CONNECT_ID,      			F_IN)
-#define F_CONNECTED_SIG			F_SIGNAL(F_PORT_PROTOCOL, F_CONNECTED_ID,    		F_IN)
-#define F_DISCONNECTED_SIG 	F_SIGNAL(F_PORT_PROTOCOL, F_DISCONNECTED_ID, 	F_IN)
-#define F_CLOSED_SIG       			F_SIGNAL(F_PORT_PROTOCOL, F_CLOSED_ID,       			F_IN)
-#define F_TIMER_SIG        				F_SIGNAL(F_PORT_PROTOCOL, F_TIMER_ID,        				F_IN)
-#define F_DATAIN_SIG       			F_SIGNAL(F_PORT_PROTOCOL, F_DATAIN_ID,       				F_IN)
-#define F_DATAOUT_SIG      			F_SIGNAL(F_PORT_PROTOCOL, F_DATAOUT_ID,      			F_IN)
-#define F_RAW_SIG          				F_SIGNAL(F_PORT_PROTOCOL, F_RAW_ID,          				F_INOUT)
-#define F_ACCEPT_REQ_SIG        F_SIGNAL(F_PORT_PROTOCOL, F_ACCEPT_REQ_ID,		F_IN)
+#define F_CONNECT_SIG       F_SIGNAL(F_PORT_PROTOCOL, F_CONNECT_ID,       F_IN)
+#define F_CONNECTED_SIG     F_SIGNAL(F_PORT_PROTOCOL, F_CONNECTED_ID,     F_IN)
+#define F_DISCONNECTED_SIG  F_SIGNAL(F_PORT_PROTOCOL, F_DISCONNECTED_ID,  F_IN)
+#define F_CLOSED_SIG        F_SIGNAL(F_PORT_PROTOCOL, F_CLOSED_ID,        F_IN)
+#define F_TIMER_SIG         F_SIGNAL(F_PORT_PROTOCOL, F_TIMER_ID,         F_IN)
+#define F_DATAIN_SIG        F_SIGNAL(F_PORT_PROTOCOL, F_DATAIN_ID,        F_IN)
+#define F_DATAOUT_SIG       F_SIGNAL(F_PORT_PROTOCOL, F_DATAOUT_ID,       F_IN)
+#define F_RAW_SIG           F_SIGNAL(F_PORT_PROTOCOL, F_RAW_ID,           F_INOUT)
+#define F_ACCEPT_REQ_SIG    F_SIGNAL(F_PORT_PROTOCOL, F_ACCEPT_REQ_ID,    F_IN)
 
-extern const char* F_PORT_PROTOCOL_names[]; // defined in GCF_Protocols.cxx
+extern const char* F_PORT_PROTOCOL_names[]; // defined in GCF_TMProtocols.cc
 
 struct GCFTimerEvent : public GCFEvent
 {
