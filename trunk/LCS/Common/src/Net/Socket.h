@@ -23,7 +23,6 @@
 #if !defined(COMMON_SOCKET_H)
 #define COMMON_SOCKET_H
 
-#include <lofar_config.h>
 #include <Common/lofar_string.h>
 #include <Common/LofarTypes.h>
 
