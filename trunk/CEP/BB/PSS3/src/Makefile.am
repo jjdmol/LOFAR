@@ -31,7 +31,13 @@ SI_Peeling.cc						\
 SI_Simple.cc						\
 SI_WaterCal.cc		   			        \
 MeqCalibraterImpl.cc					\
-CalibratorOld.cc						
+CalibratorOld.cc					\
+Calibrator.cc					\
+TryOut.cc						\
+origCal.cc \
+SI_WaterCal.cc \
+SI_Randomized.cc \
+SI_Simple.cc
 
 BlackBoardDemo_DEPENDENCIES = $(LOFAR_DEPEND)
 
