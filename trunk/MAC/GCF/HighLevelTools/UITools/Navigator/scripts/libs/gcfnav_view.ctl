@@ -139,6 +139,28 @@ setBackGroundColorAEM(string dp1, unsigned maintenance,
 	
 }
 
+//////////////////////////////////////////////////////////////////////////////////
+// FunctionName: jump2Station
+//
+// jumps/load the Station.pnl
+///////////////////////////////////////////////////////////////////////////////////
+void jump2Station()
+{
+  if(dpExists($datapoint + "_Station01"))
+  {
+    if ("LOFAR Navigator" == myPanelName())
+    {
+      navConfigTriggerNavigatorRefreshWithDP($datapoint + "_Station01");
+    }
+    else
+    {  
+      RootPanelOn("navigator/views/Station.pnl",
+                  "Station ",
+                  makeDynString("$datapoint:" + $datapoint + "_Station01"));
+    }
+  }
+}
+
 
 //////////////////////////////////////////////////////////////////////////////////
 // FunctionName: jump2StationSubrack
