@@ -1,3 +1,9 @@
+AUTOGEN = autogen
+SUFFIXES = .ph
+%.ph: %.prot
+	$(AUTOGEN) -L $(top_srcdir)/../../GCFCommon/autogen $< && \
+	chmod a+w *.ph
+
 DOCHDRS	=	\
   GPI_Defines.h \
   GPI_Controller.h \
@@ -36,10 +42,10 @@ PropertyInterface_LDADD		      = libpi.la
 PropertyInterface_DEPENDENCIES	= libpi.la $(LOFAR_DEPEND)
 
 BUILT_SOURCES = \
-	F_Supervisory_Protocol.ph
+	SS/F_Supervisory_Protocol.ph
 
 EXTRA_DIST = \
-	F_Supervisory_Protocol.ph \
+	SS/F_Supervisory_Protocol.ph \
 	mac.ns \
 	mac.top \
 	log4cplus.properties
