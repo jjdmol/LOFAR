@@ -151,11 +151,11 @@ const meqnode := function (class,name,children=F,default=[=],config_groups="")
 
 const is_dmi_type := function (obj,type)
 {
-  return has_field(obj,'dmi_actual_type') &&
+  return has_field(obj::,'dmi_actual_type') &&
          to_lower(obj::dmi_actual_type) == to_lower(type);
 }
 
-const meqpolc := function (coeff,freq0=0,freqsc=1,time0=0,timesc=1,pert=1e-6,
+const meqpolc := function (coeff,freq0=0,freqsc=1,time0=0,timesc=1,pert=F,
                            domain=F)
 {
   rec := [ freq_0=freq0,time_0=time0,freq_scale=freqsc,time_scale=timesc ];
