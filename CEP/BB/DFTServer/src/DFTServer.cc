@@ -34,10 +34,12 @@
 #include <Transport/TH_Mem.h>
 #include <CEPFrame/Step.h>
 #include <CEPFrame/Composite.h>
-#include <CEPFrame/WH_Example.h>
+#include <CEPFrame/WH_Empty.h>
 #include <CEPFrame/Profiler.h>
 
-#include <WH_DFTServer.h>
+#include <DFTServer/WH_DFTServer.h>
+#include <DFTServer/DFTServer_ClientStub.h>
+#include <DFTServer/DFTServer_ServerStub.h>
 
 using namespace LOFAR;
 
@@ -63,16 +65,16 @@ void DFTServer::define (const KeyValueMap& params)
   
   LOG_TRACE_FLOW_STR("Now start filling the simulation.toplevel composite");
   WH_DFTServer whserver("DFTServer");
-  Step Serverstep(whserver);
-  comp.addStep(composite2);   // Add the step to the toplevel composite
+  Step ServerStep(whserver);
+  toplevelcomp.addStep(ServerStep);   // Add the step to the toplevel composite
 
 
   LOG_TRACE_FLOW_STR("Connect the DFTServer to the external application");
   /// The DFTServer_ClientStub.cc file is used to connect to
   /// the DataHolders in the Client application.
   DFTServer_ClientStub myClientStub;
-  ServerStep->getOutData(0).connectTo(myClientStub.itsInDH,  myClientStub->itsTHProtoOut);
-  myClientStub.itsOutDH->connectTo(ServerStep->getInData(0), myClientStub->itsTHProtoIn);
+  ServerStep.getOutData(0).connectTo(myClientStub.itsResultDH,  *(myClientStub.itsTHProtoRequest));
+  myClientStub.itsRequestDH.connectTo(ServerStep.getInData(0),  *(myClientStub.itsTHProtoResult ));
  
 
   //////////////////////////////////////////////////////////////////////
@@ -111,5 +113,3 @@ void DFTServer::quit()
 }
 
 
-
-}

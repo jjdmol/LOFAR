@@ -1,33 +1,36 @@
 
 #include <ACC/ParameterSet.h>
-#include <PSS3/DH_InDFT.h>
-#include <PSS3/DH_OutDFT.h>
+#include <PSS3/DH_DFTRequest.h>
+#include <PSS3/DH_DFTResult.h>
 #include <Transport/TH_Socket.h>
 
- 
-class DFTServer_ClientStub() 
+namespace LOFAR { 
+
+class DFTServer_ServerStub
 {
 public:
-  DFTServer() {
+  DFTServer_ServerStub() {
     const ParameterSet myPS("params.ps");
     itsTHProtoIn = new TH_Socket(myPS.getString("DFTConnection.ServerHost"),   // sendhost
 				 myPS.getString("DFTConnection.ServerHost"),   // recvhost
-				 myPS.getString("DFTConnection.ServerPort")    // port
+				 myPS.getInt("DFTConnection.ServerPort")    // port
                         );    
     itsTHProtoOut = new TH_Socket(myPS.getString("DFTConnection.ServerHost"),   // sendhost
 				  myPS.getString("DFTConnection.ServerHost"),   // recvhost
-				  myPS.getString("DFTConnection.ServerPort")    // port
+				  myPS.getInt("DFTConnection.ServerPort")    // port
                         );    
     
   };
-  ~DFTServer() {};
+  ~DFTServer_ServerStub() {};
   
-  DH_InDFT      itsInDH();  
-  DH_OutDFT     itsOutDH(); 
+  DH_DFTRequest      itsRequestDH;  
+  DH_DFTResult     itsResultDH; 
   
   TH_Socket *itsTHProtoIn;
   TH_Socket *itsTHProtoOut;
   bool      itsSynchronisity;
+};
+
 }
 
 

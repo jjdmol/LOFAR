@@ -9,8 +9,6 @@ DFTServer.h
 
 DFTServer_SOURCES          = $(DOCHDRS)                \
 WH_DFTServer.cc                                  \
-DFTServer_ClientStub.cc				\
-DFTServer_ServerStub.cc				\
 DFTServer.cc	                                \
 DFTServer_Main.cc
 
