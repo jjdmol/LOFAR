@@ -35,92 +35,74 @@ namespace LOFAR
   {
 
     
-    ConverterClient::ConverterClient(const string& server, ushort port)
+    ConverterClient::ConverterClient(const string& server, uint16 port)
     {
+      // \todo A lot of code that handles setting up the connection with the
+      // server, using the Transport library, in particular TH_Socket.
     }
 
 
     SkyCoord 
-    ConverterClient::j2000ToAzel (const SkyCoord& radec, 
-                                  const EarthCoord& pos, 
-                                  const TimeCoord& time)
+    ConverterClient::j2000ToAzel (const SkyCoord& skyCoord, 
+                                  const EarthCoord& earthCoord, 
+                                  const TimeCoord& timeCoord)
     {
-      vector<SkyCoord> sc;
-      vector<EarthCoord> ec;
-      vector<TimeCoord> tc;
-
-      sc.push_back(radec);
-      ec.push_back(pos);
-      tc.push_back(time);
-
-      return j2000ToAzel(sc, ec, tc)[0];
+      return j2000ToAzel(vector<SkyCoord>  (1, skyCoord),
+                         vector<EarthCoord>(1, earthCoord),
+                         vector<TimeCoord> (1, timeCoord)) [0];
     }
 
 
     vector<SkyCoord> 
-    ConverterClient::j2000ToAzel (const vector<SkyCoord>& radec,
-                                  const EarthCoord& pos,
-                                  const TimeCoord& time)
+    ConverterClient::j2000ToAzel (const vector<SkyCoord>& skyCoord,
+                                  const EarthCoord& earthCoord,
+                                  const TimeCoord& timeCoord)
     {
-      vector<EarthCoord> ec;
-      vector<TimeCoord> tc;
-      
-      ec.push_back(pos);
-      tc.push_back(time);
-      
-      return j2000ToAzel(radec, ec, tc);
+      return j2000ToAzel(skyCoord, 
+                         vector<EarthCoord>(1, earthCoord),
+                         vector<TimeCoord> (1, timeCoord));
     }
 
 
     vector<SkyCoord> 
-    ConverterClient::j2000ToAzel (const SkyCoord& radec,
-                                  const vector<EarthCoord>& pos,
-                                  const TimeCoord& time)
+    ConverterClient::j2000ToAzel (const SkyCoord& skyCoord,
+                                  const vector<EarthCoord>& earthCoord,
+                                  const TimeCoord& timeCoord)
     {
-      vector<SkyCoord> sc;
-      vector<TimeCoord> tc;
-
-      sc.push_back(radec);
-      tc.push_back(time);
-      
-      return j2000ToAzel(sc, pos, tc);
+      return j2000ToAzel(vector<SkyCoord> (1, skyCoord),
+                         earthCoord, 
+                         vector<TimeCoord>(1, timeCoord));
     }
 
 
     vector<SkyCoord> 
-    ConverterClient::j2000ToAzel (const SkyCoord& radec,
-                                  const EarthCoord& pos,
-                                  const vector<TimeCoord>& time)
+    ConverterClient::j2000ToAzel (const SkyCoord& skyCoord,
+                                  const EarthCoord& earthCoord,
+                                  const vector<TimeCoord>& timeCoord)
     {
-      vector<SkyCoord> sc;
-      vector<EarthCoord> ec;
-
-      sc.push_back(radec);
-      ec.push_back(pos);
-
-      return j2000ToAzel(sc, ec, time);
+      return j2000ToAzel(vector<SkyCoord>  (1, skyCoord),
+                         vector<EarthCoord>(1, earthCoord),
+                         timeCoord);
     }
 
 
     vector<SkyCoord> 
-    ConverterClient::j2000ToAzel (const vector<SkyCoord>& radec,
-                                  const vector<EarthCoord>& pos,
-                                  const vector<TimeCoord>& time)
+    ConverterClient::j2000ToAzel (const vector<SkyCoord>& skyCoord,
+                                  const vector<EarthCoord>& earthCoord,
+                                  const vector<TimeCoord>& timeCoord)
     {
       // Set the value of ConverterOperation equal to J2000->AZEL
       ConverterOperation op; /* (to be done) */
                                 
       // Send the request to the server
-      itsRequest.send(op, radec, pos, time);
+      itsRequest.send(op, skyCoord, earthCoord, timeCoord);
 
       // Vectors to hold the conversion result.
       vector<SkyCoord> sc;
-      vector<EarthCoord> ec; // dummy
-      vector<TimeCoord> tc; // dummy
 
       // Receive the result from the server.
       // \note This method is blocking.
-      itsResult.receive(sc, ec, tc);
+      itsResult.receive(sc);
 
       // Return the result of the conversion.
       return sc;
@@ -128,56 +110,44 @@ namespace LOFAR
 
 
     SkyCoord 
-    ConverterClient::azelToJ2000 (const SkyCoord& azel,
-                                  const EarthCoord& pos,
-                                  const TimeCoord& time)
+    ConverterClient::azelToJ2000 (const SkyCoord& skyCoord,
+                                  const EarthCoord& earthCoord,
+                                  const TimeCoord& timeCoord)
     {
-      vector<SkyCoord> sc;
-      vector<EarthCoord> ec;
-      vector<TimeCoord> tc;
-
-      sc.push_back(azel);
-      ec.push_back(pos);
-      tc.push_back(time);
-
-      return azelToJ2000(sc, ec, tc)[0];
+      return azelToJ2000(vector<SkyCoord>  (1, skyCoord),
+                         vector<EarthCoord>(1, earthCoord),
+                         vector<TimeCoord> (1, timeCoord)) [0];
     }
 
 
     vector<SkyCoord>
-    ConverterClient::azelToJ2000 (const vector<SkyCoord>& azel,
-                                  const EarthCoord& pos,
-                                  const TimeCoord& time)
+    ConverterClient::azelToJ2000 (const vector<SkyCoord>& skyCoord,
+                                  const EarthCoord& earthCoord,
+                                  const TimeCoord& timeCoord)
     {
-      vector<EarthCoord> ec;
-      vector<TimeCoord> tc;
-
-      ec.push_back(pos);
-      tc.push_back(time);
-
-      return azelToJ2000(azel, ec, tc);
+      return azelToJ2000(skyCoord, 
+                         vector<EarthCoord>(1, earthCoord),
+                         vector<TimeCoord> (1, timeCoord));
     }
 
 
     vector<SkyCoord>
-    ConverterClient::azelToJ2000 (const vector<SkyCoord>& azel,
-                                  const vector<EarthCoord>& pos,
-                                  const vector<TimeCoord>& time)
+    ConverterClient::azelToJ2000 (const vector<SkyCoord>& skyCoord,
+                                  const vector<EarthCoord>& earthCoord,
+                                  const vector<TimeCoord>& timeCoord)
     {
       // Set the value of ConverterOperation equal to AZEL->J2000
-      ConverterOperation op; /* (to be done) */
+      ConverterOperation operation; /* (to be done) */
                                 
       // Send the request to the server
-      itsRequest.send(op, azel, pos, time);
+      itsRequest.send(operation, skyCoord, earthCoord, timeCoord);
 
       // Vectors to hold the conversion result.
       vector<SkyCoord> sc;
-      vector<EarthCoord> ec; // dummy
-      vector<TimeCoord> tc; // dummy
 
       // Receive the result from the server.
       // \note This method is blocking.
-      itsResult.receive(sc, ec, tc);
+      itsResult.receive(sc);
 
       // Return the result of the conversion.
       return sc;

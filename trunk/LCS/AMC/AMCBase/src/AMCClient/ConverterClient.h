@@ -40,7 +40,7 @@ namespace LOFAR
     {
     public:
       ConverterClient(const string& server = "localhost", 
-                      ushort port = 31137);
+                      uint16 port = 31137);
 
       virtual ~ConverterClient() {}
 
@@ -76,11 +76,17 @@ namespace LOFAR
                                             const vector<EarthCoord>& pos,
                                             const vector<TimeCoord>& time);
     private:
-      void sendRequest(const vector<SkyCoord>& azel,
-                       const vector<EarthCoord>& pos,
-                       const vector<TimeCoord>& time);
+      //@{
+      // Make this class non-copyable.
+      ConverterClient(const ConverterClient&);
+      ConverterClient operator=(const ConverterClient&);
+      //@}
 
-      void recvResult(vector<SkyCoord>& azel);
+      void sendRequest(const vector<SkyCoord>&,
+                       const vector<EarthCoord>&,
+                       const vector<TimeCoord>&);
+
+      void recvResult(vector<SkyCoord>&);
 
       // Data holder holding the request data to be sent to the server.
       DH_Converter itsRequest;
