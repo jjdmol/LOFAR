@@ -1,8 +1,8 @@
 V 10
 2
-LANG:0 9 InfoPanel
 LANG:1 9 infoPanel
-PANEL,810 280 994 100 N "_3DFace" 0
+LANG:0 9 InfoPanel
+PANEL,252 108 994 100 N "_3DFace" 0
 "main()
 {
 }" 0
@@ -15,8 +15,7 @@ EE 2
 NC
 DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
 LAYER, 0 
-2
-LANG:0 6 Layer1
+1
 LANG:1 6 Layer1
 4 78
 "Line3"
@@ -27,8 +26,8 @@ LANG:1 6 Layer1
 EE E
 0
 2
-LANG:0 0 
 LANG:1 0 
+LANG:0 0 
 1
 "dashclr"N "_Transparent"
 E E 0 1 1 0 1 E  1070 80 1070 0
@@ -104,38 +103,31 @@ E E 0 1 1 0 1 E  1070 80 1070 0
 0
 0
 LAYER, 1 
-2
-LANG:0 6 Layer2
+1
 LANG:1 6 Layer2
 0
 LAYER, 2 
-2
-LANG:0 6 Layer3
+1
 LANG:1 6 Layer3
 0
 LAYER, 3 
-2
-LANG:0 6 Layer4
+1
 LANG:1 6 Layer4
 0
 LAYER, 4 
-2
-LANG:0 6 Layer5
+1
 LANG:1 6 Layer5
 0
 LAYER, 5 
-2
-LANG:0 6 Layer6
+1
 LANG:1 6 Layer6
 0
 LAYER, 6 
-2
-LANG:0 6 Layer7
+1
 LANG:1 6 Layer7
 0
 LAYER, 7 
-2
-LANG:0 6 Layer8
+1
 LANG:1 6 Layer8
 0
 3 17 ""

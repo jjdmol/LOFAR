@@ -1,12 +1,12 @@
 V 10
 1
 LANG:1 5 panel
-PANEL,321 171 1006 750 N "_3DFace" 2
+PANEL,252 108 1006 750 N "_3DFace" 2
 "$configDatapoint"
 "$datapoint"
 "main()
 {
-
+ DebugTN(\"Initialize view\");
   // Is it a datapoint element? then disable control
 	// This includes that this control is only suitable for DP-Types
 	if (dpGetElementName($datapoint)==\"\")
@@ -101,12 +101,12 @@ ArrangeTableContent(string dp1, dyn_string Column1Titles,
       {
         connectDatapoint = $datapoint + \"_\" + Column1dpNames[ConvIndex(i)];// + \":_online.._value\";
       }
-      
+      //DebugN(\"## ConnectDP: \" + connectDatapoint + \":_alert_hdl.._act_state_color\");
       if (Column1dpNames[ConvIndex(i)] == CellContent)
       {
         if ((\"\" != Column1dpNames[ConvIndex(i)]) && (\"0\" != Column1dpNames[ConvIndex(i)]))
         {
-          dpConnect(\"UpdateCell\", connectDatapoint + \":_online.._value\", dp2);
+          dpConnect(\"UpdateCell\", connectDatapoint + \":_alert_hdl.._act_state_color\", dp2);
 	        setValue (\"Table\"+TableNumber+\"_dpNames\", \"cellValueRC\", i, ColumnTitle+\"Titles\", Column1dpNames[ConvIndex(i)]);
   	    }
 	      else
@@ -118,7 +118,7 @@ ArrangeTableContent(string dp1, dyn_string Column1Titles,
       {
         if (dpExists(CellContent))
         {
-          dpDisconnect(\"UpdateCell\", CellContent + \":_online.._value\", dp2);
+          dpDisconnect(\"UpdateCell\", CellContent + \":_alert_hdl.._act_state_color\", dp2);
         }
         if ((\"\" == Column1dpNames[ConvIndex(i)]) || (\"0\" == Column1dpNames[ConvIndex(i)]))
         {
@@ -128,7 +128,7 @@ ArrangeTableContent(string dp1, dyn_string Column1Titles,
         {
           if (dpExists(connectDatapoint)) //Exists the configured datapoint? 
           {
-            dpConnect(\"UpdateCell\", connectDatapoint + \":_online.._value\", dp2);            
+            dpConnect(\"UpdateCell\", connectDatapoint + \":_alert_hdl.._act_state_color\", dp2);            
             setValue (\"Table\"+TableNumber+\"_dpNames\", \"cellValueRC\", i, ColumnTitle+\"Titles\", Column1dpNames[ConvIndex(i)]);
           }
           else //No, display color DpDoesNotExist
@@ -164,19 +164,21 @@ void UpdateCell(string dpName, string value,
   string ColumnTitle, connectDatapoint;
   getTableNumber(dp1, TableNumber);
   getColumnTitle(dp1, ColumnTitle);
-  
   for(i=0; i<dynlen(ColumndpNames) ; i++)
   {
     if (1==dynlen(strsplit(ColumndpNames[ConvIndex(i)], \".\"))) //check or the last part only a dpe is
       connectDatapoint = $datapoint + \".\" + ColumndpNames[ConvIndex(i)];
     else
       connectDatapoint = $datapoint + \"_\" + ColumndpNames[ConvIndex(i)];
-  
-    if (dpName == connectDatapoint + \":_online.._value\")
+    //DebugN(\"## dpName: \" + dpName);
+    //System1:PIC_CEP_StorageNode10.status:_alert_hdl.._act_state_color
+    //This check is overruled by AdB 20050218 
+    if (dpName == connectDatapoint + \":_alert_hdl.._act_state_color\") 
     {
+      
       Row=i;
-      dpGet(connectDatapoint + \":_alert_hdl.._act_state_color\", AlertColor);
-      setValue (\"Table\"+TableNumber, \"cellBackColRC\", Row, ColumnTitle+\"Titles\", AlertColor);
+      //dpGet(connectDatapoint + \":_alert_hdl.._act_state_color\", AlertColor);
+      setValue (\"Table\"+TableNumber, \"cellBackColRC\", Row, ColumnTitle+\"Titles\", value);
     }
   }
 }
@@ -255,7 +257,7 @@ PostitionObjects(string dp1, int Area1Active,
   setValue(\"Table2\"      , \"visible\", Area2Active);
   setValue(\"Table3_title\", \"visible\", Area3Active);
   setValue(\"Table3\"      , \"visible\", Area3Active);
-  setValue(\"AlertList\"   , \"visible\", ListActive);
+  //setValue(\"AlertList\"   , \"visible\", ListActive);
   
   //Show a warning on the panel when panelheight is exceeded.
 /*  if (panelHeigth < (120 + space + label + (space+label+Area1nrOfRows*26)*Area1Active + (space+label+Area2nrOfRows*26)*Area2Active + (space+label+Area3nrOfRows*26)*Area3Active))
@@ -299,7 +301,7 @@ E E 0 1 1 0 1 E U  0 E 2 3 538 19
 0 2 0 "s" 0 0 0 64 0 0  2 3
  1
 1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+LANG:1 105 -microsoft windows-Arial-bold-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,700,0,0,0,0,3,2,1,34,Arial
 0 ""
 1
 LANG:1 1 .
@@ -319,7 +321,7 @@ E E 0 1 1 0 1 E U  0 E 13 269 549 285
 0 2 0 "s" 0 0 0 64 0 0  13 269
  1
 1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+LANG:1 105 -microsoft windows-Arial-bold-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,700,0,0,0,0,3,2,1,34,Arial
 0 ""
 1
 LANG:1 1 .
@@ -339,7 +341,7 @@ E E 0 1 1 0 1 E U  0 E 12 402 658 418
 0 2 0 "s" 0 0 0 64 0 0  12 402
  1
 1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+LANG:1 105 -microsoft windows-Arial-bold-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,700,0,0,0,0,3,2,1,34,Arial
 0 ""
 1
 LANG:1 0 
@@ -510,7 +512,7 @@ LANG:1 106 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-
 25 2
 "AlertList"
 "AlertRow"
-1 0 0 E E E 1 E 0 E N "STD_text" E N "_3DFace" E "// SimpleCtrlScriptStart {valid}
+1 0 0 E E E 1 E 1 E N "STD_text" E N "_3DFace" E "// SimpleCtrlScriptStart {valid}
 // SimpleCtrlScript {alertConfirm}
 // dp {dpid}
 // time {time}
@@ -597,7 +599,7 @@ main()
   as_init();
 }
 " 0
- E 1 0 1 22 3 "_abbr" 0 1 -1 "s" 1
+ E 1 0 1 22 3 "_abbr" 0 0 0 "s" 1
 LANG:1 5 Abbr.
 "main(int row, string col)
 {
@@ -605,15 +607,15 @@ LANG:1 5 Abbr.
 }" 0
 1
 LANG:1 0 
- 34 "_prior" 0 1 -1 "s" 1
-LANG:1 8 Priority
+ 34 "_prior" 0 1 0 "s" 1
+LANG:1 4 Prio
 "main(int row, string col)
 {
   as_cellAction(row, col);
 }" 0
 1
 LANG:1 0 
- 24 "timeStr" 0 1 0 "s" 1
+ 36 "timeStr" 0 1 0 "s" 1
 LANG:1 4 Time
 "main(int row, string col)
 {
@@ -621,7 +623,7 @@ LANG:1 4 Time
 }" 0
 1
 LANG:1 0 
- 130 "dpElement" 0 0 0 "s" 1
+ 144 "dpElement" 0 0 0 "s" 1
 LANG:1 10 DP element
 "main(int row, string col)
 {
@@ -629,7 +631,7 @@ LANG:1 10 DP element
 }" 0
 1
 LANG:1 0 
- 200 "dpComment" 0 1 -1 "s" 1
+ 200 "dpComment" 0 1 0 "s" 1
 LANG:1 9 Datapoint
 "main(int row, string col)
 {
@@ -637,7 +639,7 @@ LANG:1 9 Datapoint
 }" 0
 1
 LANG:1 0 
- 308 "_text" 0 1 0 "s" 1
+ 345 "_text" 0 1 0 "s" 1
 LANG:1 10 Alert text
 "main(int row, string col)
 {
@@ -645,7 +647,7 @@ LANG:1 10 Alert text
 }" 0
 1
 LANG:1 0 
- 132 "direction" 0 1 0 "s" 1
+ 215 "direction" 0 0 0 "s" 1
 LANG:1 9 Direction
 "main(int row, string col)
 {
@@ -662,14 +664,14 @@ LANG:1 5 Value
 1
 LANG:1 0 
  120 "ack" 0 1 0 "s" 1
-LANG:1 15 Acknowledgement
+LANG:1 3 Ack
 "main(int row, string col)
 {
   as_cellAction(row, col);
 }" 0
 1
 LANG:1 0 
- 24 "commentStr" 0 0 0 "s" 1
+ 34 "commentStr" 0 0 0 "s" 1
 LANG:1 7 Comment
 "main(int row, string col)
 {
@@ -677,7 +679,7 @@ LANG:1 7 Comment
 }" 0
 1
 LANG:1 0 
- 56 "_ack_time" 0 0 0 "s" 1
+ 56 "_ack_time" 0 -1 0 "s" 1
 LANG:1 8 Ack.time
 "main(int row, string col)
 {
@@ -685,7 +687,7 @@ LANG:1 8 Ack.time
 }" 0
 1
 LANG:1 0 
- 112 "_partner" 0 0 0 "s" 1
+ 144 "_partner" 0 0 0 "s" 1
 LANG:1 12 Partner time
 "main(int row, string col)
 {
@@ -759,7 +761,7 @@ LANG:1 2 #3
 LANG:1 106 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,0,0,0,0,Arial
 LANG:0 106 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,0,0,0,0,Arial
 0 ""
-0 0 0 3 0
+0 1 0 3 0
 1 0
 25 1
 "Table1"
@@ -767,18 +769,17 @@ LANG:0 106 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-
 1 0 0 E E E 1 E 0 E N "_WindowText" E N {255,255,255} E E
  E "main()
 {
-
   int Row, Column;
   dyn_string ColumndpNames;
 
   getValue(\"\", \"currentCell\", Row, Column);
   dpGet($configDatapoint + \".1.Column\" + Column + \"dpNames\", ColumndpNames); 
   string newDatapoint = $datapoint + \"_\" + ColumndpNames[ConvIndex(Row)];
-  DebugN(\"newDatapoint: \" + newDatapoint);
+  DebugTN(\"newDatapoint: \" + newDatapoint);
   if (dpExists(newDatapoint))
   {
-    DebugN(\"Jumping to: \"+ $datapoint + \"_\" + ColumndpNames[ConvIndex(Row)]);
-    DebugN(\"altered: \" + dpSubStr(newDatapoint, DPSUB_SYS_DP));
+    DebugTN(\"Jumping to: \"+ $datapoint + \"_\" + ColumndpNames[ConvIndex(Row)]);
+    DebugTN(\"altered: \" + dpSubStr(newDatapoint, DPSUB_SYS_DP));
     navConfigTriggerNavigatorRefreshWithDP(dpSubStr(newDatapoint, DPSUB_SYS_DP));
   }
 }" 0
@@ -864,7 +865,24 @@ LANG:1 106 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-
 "Table2"
 ""
 1 0 0 E E E 1 E 0 E N "_WindowText" E N {255,255,255} E E
- E E
+ E "main()
+{
+  int Row, Column;
+  dyn_string ColumndpNames;
+
+  getValue(\"\", \"currentCell\", Row, Column);
+  dpGet($configDatapoint + \".2.Column\" + Column + \"dpNames\", ColumndpNames); 
+  string newDatapoint = $datapoint + \"_\" + ColumndpNames[ConvIndex(Row)];
+  DebugN(\"newDatapoint: \" + newDatapoint);
+  if (dpExists(newDatapoint))
+  {
+    DebugN(\"Jumping to: \"+ $datapoint + \"_\" + ColumndpNames[ConvIndex(Row)]);
+    DebugN(\"altered: \" + dpSubStr(newDatapoint, DPSUB_SYS_DP));
+    navConfigTriggerNavigatorRefreshWithDP(dpSubStr(newDatapoint, DPSUB_SYS_DP));
+  }
+
+}" 0
+
 86 0 0 0 0 0
 EE E
 0
@@ -946,7 +964,24 @@ LANG:1 106 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-
 "Table3"
 ""
 1 0 0 E E E 1 E 0 E N "_WindowText" E N {255,255,255} E E
- E E
+ E "main()
+{
+  int Row, Column;
+  dyn_string ColumndpNames;
+
+  getValue(\"\", \"currentCell\", Row, Column);
+  dpGet($configDatapoint + \".3.Column\" + Column + \"dpNames\", ColumndpNames); 
+  string newDatapoint = $datapoint + \"_\" + ColumndpNames[ConvIndex(Row)];
+  DebugN(\"newDatapoint: \" + newDatapoint);
+  if (dpExists(newDatapoint))
+  {
+    DebugN(\"Jumping to: \"+ $datapoint + \"_\" + ColumndpNames[ConvIndex(Row)]);
+    DebugN(\"altered: \" + dpSubStr(newDatapoint, DPSUB_SYS_DP));
+    navConfigTriggerNavigatorRefreshWithDP(dpSubStr(newDatapoint, DPSUB_SYS_DP));
+  }
+
+}" 0
+
 93 0 0 0 0 0
 EE E
 0

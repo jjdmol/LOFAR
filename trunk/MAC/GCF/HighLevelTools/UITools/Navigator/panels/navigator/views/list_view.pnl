@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 17 NavigatorListView
-PANEL,258 138 950 740 N "_3DFace" 2
+PANEL,391 108 950 740 N "_3DFace" 2
 "$configDatapoint"
 "$datapoint"
 "main()
@@ -54,11 +54,11 @@ loadTable(string dp1, bool customList,
       TableProperties.appendLine(\"propertyName\", temp , \"value\", \"\");
       propNames[i-1] = $datapoint + \".\" + temp + \":_online.._value\";
     }
-    setValue (\"btn_default\", \"visible\", TRUE);
+    //setValue (\"btn_default\", \"visible\", TRUE);
   }
   else if (customList)
   {
-    setValue (\"btn_default\", \"visible\", FALSE);
+    //setValue (\"btn_default\", \"visible\", FALSE);
 /*    if (trigger != 0) // triggered by the textbox on the view panel
     {
       getValue(\"txt_selectionQuery\", \"text\", newSelectionQuery);
@@ -307,7 +307,7 @@ LANG:1 25 Amount results retrieved:
 2 75
 "label_datapoint"
 ""
-1 340 681 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
+1 450 681 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
  E E
 88 0 0 0 0 0
 EE E
@@ -316,8 +316,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 436 683 530 699
-0 2 0 "s" 0 0 0 194 0 0  436 683
+E E 0 1 1 0 1 E U  0 E 546 683 640 699
+0 2 0 "s" 0 0 0 194 0 0  546 683
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
@@ -383,7 +383,11 @@ E E 0 1 1 0 1 E U  0 E 10 670 944 740
 1 9 40 E E E 1 E 0 E N "_WindowText" E N {255,255,255} E E
  E E
 72 0 0 0 0 0
-EE E
+E"main()
+{
+DebugN(\"Lost Focus\");
+}" 0
+ E
 0
 1
 LANG:1 0 
@@ -397,21 +401,16 @@ E "main(int row, string column, string value)
   dyn_anytype queryResult;
   anytype newValue;
   string currentDp;
-//  DebugTN(\"TableProperties_EventColumnCommand()\",row,column,value);
+
   if(column==\"value\")
   {
-
- 
-//  DebugN(\"dpSet: \" + currentDp);
-//  DebugN(\"value: \" + value + \"   |newValue:\" + newValue);
+    dpGet($configDatapoint + \".queryResult\", queryResult);
+    currentDp = substr(queryResult[ConvIndex(row)], 0, strlen(queryResult[ConvIndex(row)]) - strlen(\":_online.._value\"));
+    DebugN(\"## currentDp: \" + currentDp);
     if(elementTypeValid(currentDp))
     {
-      dpGet($configDatapoint + \".queryResult\", queryResult);
-      //DebugN(queryResult);
-      currentDp = substr(queryResult[ConvIndex(row)], 0, strlen(queryResult[ConvIndex(row)]) - strlen(\":_online.._value\"));
       dpSet(currentDp, value);
       dpGet(currentDp, newValue);
-    
       if (value == newValue) // if the set is OK
       {
         TableProperties.cellValueRC(row, \"value\", \"Ok\");
@@ -432,50 +431,6 @@ E "main(int row, string column, string value)
       TableProperties.cellValueRC(row, \"value\", \"Cannot display complex type\");
     }
   }
-
-  
-  
-  
-//  TableProperties.cellValueRC((dynContains(queryResult,(dp1))-1), \"value\", \"Cannot display complex type\");
-
-
-//    string InsertedText;
-//  string CombinedText;
-  
-//  getValue(\"\", \"text\", InsertedText);
-//  dpSet($configDatapoint + \".\" + $elementName, InsertedText);
- 	//DisplayText(\"\", \" Ok\", value);
- 	
- 	
-/*
-	shape tableProperties=getShape(\"TableProperties\");
-	dyn_anytype line;
-  string dpPath;
-
-	line = tableProperties.getLineN(row);
-  dpPath = line[1];
-  
-	dyn_errClass err;
-	string sFormat, sDp;
-
-  sDp = dpSubStr(dpPath + \":_original.._value\",  DPSUB_SYS_DP_EL);
-  if ( strpos(sDp,\".\") < 1 )
-    sDp += \".\";
-
-  sFormat = dpGetFormat( sDp );
-  if( !checkStringFormat(value, sFormat) )
-  {
-    ChildPanelOnCentral( \"vision/MessageWarning\",
-                         getCatStr( \"e_para\", \"warning\" ),
-                         makeDynString( getCatStr( \"e_para\", \"wrongFormat\" )));
-    return;
-  }
-
-  dpSetWait(dpPath + \":_original.._value\", value);
-  err = getLastError();
-  if (dynlen(err) > 0)
-    errorDialog(err);
-    */
 }" 0
  1 0 1 4 35 "propertyPath" 0 0 0 "s" 1
 LANG:1 13 Property path
@@ -571,7 +526,7 @@ LANG:1 106 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-
 14 55
 "txt_selectionQuery"
 ""
-1 440 680 E E E 1 E 0 E N "_WindowText" E N "_Window" E E
+1 550 680 E E E 1 E 0 E N "_WindowText" E N "_Window" E E
  E E
 73 0 0 0 0 0
 EE E
@@ -582,7 +537,7 @@ LANG:1 0
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
-438 678 932 705
+548 678 932 705
 3 "s" 0 0 0 0 0 0 
 E
 "main()
@@ -715,7 +670,7 @@ E
 13 73
 "btn_default"
 ""
-1 20 710 E E E 1 E 0 E N "_3DText" E N "_3DFace" E E
+1 20 710 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
  E E
 86 0 0 0 0 0
 EE E
@@ -729,10 +684,12 @@ LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-
 18 708 142 735
 T 
 1
-LANG:1 15 Back to default
+LANG:1 11 Reset query
 "main()
 {
  dpSet($configDatapoint + \".trigger\", 0);
+ setValue(\"txt_amountRetrieved\", \"text\", \"\");
+ setValue(\"txt_selectionQuery\", \"text\", \"\");
 }" 0
  E E E
 0

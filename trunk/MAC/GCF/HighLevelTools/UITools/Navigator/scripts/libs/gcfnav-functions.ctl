@@ -340,6 +340,7 @@ void treeAddDatapoints(dyn_string names)
   dyn_string addedDatapoints;
   string systemName;
   long addedNode=0;
+
   g_parentIndex = 0;           // variable used in function fwTreeView_appendToParentNode
   g_nodeID  = 0;  // to increase performance
   if(dynlen(names)>0)
@@ -431,6 +432,7 @@ void treeAddDatapoints(dyn_string names)
         // get the datapoint structure
         dynClear(elementNames);
         dynClear(elementTypes);
+        
         dpTypeGet(dpTypeName(names[namesIndex]),elementNames,elementTypes);
    
         // add elements of this datapoint, if any, skip system stuff
@@ -442,7 +444,13 @@ void treeAddDatapoints(dyn_string names)
           parentIds[1]   = addedNode;
           parentNodes[1] = "";
           // skip the first element in the array because it contains the datapoint type name
-          for(elementIndex=2;elementIndex<=dynlen(elementNames);elementIndex++) 
+          
+          
+          //for(elementIndex=2;elementIndex<=dynlen(elementNames);elementIndex++) 
+          int max;
+          if (namesIndex == 1)  max = dynlen(elementNames);
+          else max = 2;
+          for(elementIndex=2;elementIndex<=max;elementIndex++) 
           {
             // every last item of each array contains an element name (see help on dpTypeGet())
             // file:///opt/pvss/pvss2_v3.0/help/en_US.iso88591/WebHelp/ControlA_D/dpTypeGet.htm
@@ -457,15 +465,16 @@ void treeAddDatapoints(dyn_string names)
             {
               addedNode = treeAddNode(parentIds[elementLevel],pathIndex-1+elementLevel,elementName); 
               LOG_TRACE("Added element node: ",addedNode,parentIds[elementLevel],pathIndex-1+elementLevel,fullDPname);
-			  if (addedNode!=0)
-			  {
-			    internalNodeMapping[dynlen(internalNodeMapping)+1]=addedNode;
-			    internalFullDPName[dynlen(internalFullDPName)+1] = fullDPname;
-			  }
+			        if (addedNode!=0)
+ 		       	  {
+    			       internalNodeMapping[dynlen(internalNodeMapping)+1]=addedNode;
+        			   internalFullDPName[dynlen(internalFullDPName)+1] = fullDPname;
+			        }
             }
             parentIds[elementLevel+1] = addedNode; // remember this node as parent at its level in case there are elements below this one
             parentNodes[elementLevel+1] = parentNodes[elementLevel]+"."+elementName;
           }
+         
          }
 	    }
 	  }
@@ -1126,11 +1135,30 @@ void changeSelectedPosition(string newDatapoint)
   int i;
   long nodeID;
   dyn_string datapointPath = splitDatapointPath(newDatapoint);
-  setSelectedPosition2Expand(1); //Expand Toplevel
+  
+  if(g_datapoint=="System1")
+    setSelectedPosition2Expand(1); //Expand if currect is Toplevel
 
   string temp = "";
   string temp_dpe = "";
-  for (i=1 ; i<=dynlen(datapointPath); i++)
+
+  dyn_string dcurrent = splitDatapointPath(g_datapoint);
+  dyn_string dnew     = splitDatapointPath(newDatapoint);
+  int Index;
+  for(int i=1; i<=dynlen(dcurrent); i++)  //get the identical datapointPath
+  {
+    if(dcurrent==dnew);
+      Index++;
+  }
+  for(int p=1 ; p<Index; p++) //build the identical datapointPath
+  {
+    if(1==p)
+      temp = datapointPath[p]; //build datapoint
+    else
+      temp = temp + "_" + datapointPath[p]; //build datapoint
+  }
+
+  for (i=Index ; i<=dynlen(datapointPath); i++) //navigate from this point on
   {
     if (i==1)
     {
@@ -1145,18 +1173,22 @@ void changeSelectedPosition(string newDatapoint)
       temp = temp + "_" + datapointPath[i]; //build datapoint
     }
     nodeID = getNodeFromDatapoint(temp);
-    if (nodeID !=0)
+    
+    if (i!=dynlen(datapointPath)) // do not expand last node, costs to much time/performance!!!!
     {
-      setSelectedPosition2Expand(nodeID);
-    }
-	else
-	{
-      nodeID = getNodeFromDatapoint(temp_dpe); //nodeID not found, try the datapoint element
-	  if (nodeID !=0)
-	  {
+      if (nodeID !=0)
+      {
+        setSelectedPosition2Expand(nodeID);
+      }
+      else
+      {
+        nodeID = getNodeFromDatapoint(temp_dpe); //nodeID not found, try the datapoint element
+        if (nodeID !=0)
+  	  {
 	    setSelectedPosition2Expand(nodeID);
 	  }
-	}
+      }
+    }
   }
   fwTreeView_draw(); 
   g_curSelNode = nodeID; //update global info

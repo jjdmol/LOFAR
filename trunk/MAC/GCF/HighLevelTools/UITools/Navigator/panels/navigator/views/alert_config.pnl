@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,467 216 800 679 N "_3DFace" 5
+PANEL,394 286 800 679 N "_3DFace" 5
 "$configDatapoint"
 "$datapoint"
 "$selectedElementDpType"
@@ -103,8 +103,6 @@ LANG:1 6 Layer1
 1 195 9 "" 22
 0
 1 196 9 "" 13
-0
-1 202 10 "" 2
 0
 1 203 7 "5" 2
 0
@@ -272,6 +270,8 @@ LANG:1 0
 0
 1 223 13 "" 0
 0
+1 224 13 "" 4
+0
 1 224 13 "" 1
 0
 1 225 13 "" 2
@@ -279,6 +279,8 @@ LANG:1 0
 1 226 13 "" 3
 0
 1 227 14 "" 0
+0
+1 228 14 "" 4
 0
 1 228 14 "" 1
 0
@@ -315,8 +317,6 @@ LANG:1 0
 1 201 9 "2" 0
 0
 1 208 9 "5" 1
-0
-1 203 10 "" 1
 0
 1 209 11 "" 0
 0
@@ -373,12 +373,6 @@ LANG:1 6 Layer8
 "$AreaNr""3"
 "$configDatapoint""$configDatapoint"
 "$datapoint""$datapoint"
-3 10 ""
-"objects\\Nav\\nav_radiobutton_dp.pnl" 309 502 T 86 1 0 1  -9 -11  
-3
-"$datapoint""$datapoint"
-"$dp""$configDatapoint + \".ListActive\""
-"$label""Display alert-list"
 3 12 ""
 "navigator\\navigator_config_tab.pnl" 30 520 T 96 1 0 1  -11 -476  
 4

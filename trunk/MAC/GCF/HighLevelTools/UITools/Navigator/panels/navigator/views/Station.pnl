@@ -1,9 +1,13 @@
 V 10
 1
 LANG:1 7 Station
-PANEL,343 200 994 514 N "_3DFace" 1
+PANEL,417 141 994 514 N "_3DFace" 1
 "$datapoint"
-EEE E E 1 -1 -1 0  188 128
+"main()
+{
+  DebugTN(\"Jump ended\");
+}" 0
+EE E E 1 -1 -1 0  188 128
 "" 0 1
 E"#uses \"gcfnav_view.ctl\"" 0
  2

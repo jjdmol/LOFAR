@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 19 Trace configuration
-PANEL,499 188 502 255 N "_3DFace" 5
+PANEL,350 228 502 255 N "_3DFace" 5
 "$AreaNr"
 "$Column"
 "$Row"
@@ -35,25 +35,34 @@ void FillSelectionList()
   if ($datapoint==\"\")
   {
     dpQuery(\"SELECT '_online.._value' FROM 'PIC*' \", tab);
-    //DebugN(\"Query is PIC*\");
+    dpQuery(\"SELECT '_alert_hdl.._active' FROM 'PIC*' WHERE ('_alert_hdl.._active' > 0)\", tab);
+    DebugN(\"Query is PIC*\");
   }
   else
   {
-    dpQuery(\"SELECT '_online.._value' FROM '\" + $datapoint + \"*' \", tab);
+   //dpQuery(\"SELECT '_online.._value' FROM '\" + $datapoint + \"*' \", tab);
+   dpQuery(\"SELECT '_alert_hdl.._active' FROM '\" + $datapoint + \"*' WHERE ('_alert_hdl.._active' > 0)\", tab);
   }
   //DebugTN(\"## stop  dpQuery\");
   SelectionList1.deleteAllItems();
   TotalDPE = dynlen(tab);
+  bool AlertActive;
   for (i=2; i<=TotalDPE ; i++)
   {
     if (\"\" != tab[i][1])
     {
       //DebugTN(\"-----------------------\");
       //DebugTN(\"----- get ------\");
-      dpGet(tab[i][1] + \":_alert_hdl.._class\", CurrentAlertClass); // Get the alertclass of the DPE
+      //System1:PIC_WAN_Switch01.status:_alert_hdl.._class
+      //dpGet(tab[i][1] + \":_alert_hdl.._class\", CurrentAlertClass); // Get the alertclass of the DPE
+      //dpGet(tab[i][1] + \":_alert_hdl.._active\", AlertActive);
+      
+      
+      
       //DebugTN(\"-- get ready ---\");
-      if (CurrentAlertClass !=\"\")                                  // If \"\" there is no alertclass
-      {                                                            // configured!
+      //if (AlertActive ==TRUE)                                  // If \"\" there is no alertclass
+      //{                                                            // configured!
+        DebugN(\"##alertclass found: \"+i);
         //////////////////////////////////
         //string hulp, EntryForSelectionList;
         //hulp=dpSubStr(tab[i][1]  , DPSUB_DP_EL_CONF_DET_ATT);
@@ -70,7 +79,7 @@ void FillSelectionList()
         
         j++;
 
-      }
+      //}
       ProgressBar(TotalDPE, i);
     }
   }

@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,284 171 950 740 N "_3DFace" 0
+PANEL,258 108 950 740 N "_3DFace" 0
 EEE E E 1 -1 -1 0  108 128
 "" 0 1
 EE 2
@@ -103,7 +103,7 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 20 40 90 60
+E E 0 1 1 0 1 E U  1 E 20 40 170 60
 2 25
 "Text14"
 ""
@@ -136,7 +136,7 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E  20 60 90 60
+E E 0 1 1 0 1 E  20 60 170 60
 6 48
 "Border16"
 ""
@@ -485,7 +485,7 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 20 520 120 540
+E E 0 1 1 0 1 E U  1 E 20 520 170 540
 2 77
 "Text36"
 ""
@@ -518,24 +518,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E  120 540 20 540
-6 92
-"Border32"
-""
-1 20 447 E E E 1 E 1 E N "_WindowText" E N {51,102,255} E E
- E E
-92 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 20 437 452 447
+E E 0 1 1 0 1 E  170 540 20 540
 6 93
 "Border33"
 ""
-1 20 437 E E E 1 E 1 E N "_WindowText" E N {51,102,255} E E
+1 20 440 E E E 1 E 1 E N "_WindowText" E N {51,102,255} E E
  E E
 93 0 0 0 0 0
 EE E
@@ -544,7 +531,7 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 20 417 90 437
+E E 0 1 1 0 1 E U  1 E 20 417 170 440
 2 94
 "Text41"
 ""
@@ -578,6 +565,45 @@ LANG:1 0
 1
 "dashclr"N "_Transparent"
 E E 0 1 1 0 1 E  90 437 20 437
+4 102
+"Line5"
+""
+1 20 440 E E E 1 E 1 E N {51,102,255} E N "_Transparent" E E
+ E E
+102 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  170 440 20 440
+6 92
+"Border32"
+""
+1 20 447 E E E 1 E 1 E N "_WindowText" E N {51,102,255} E E
+ E E
+92 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 20 437 452 447
+4 103
+"Line6"
+""
+1 20 437 E E E 1 E 1 E N {51,102,255} E N "_Transparent" E E
+ E E
+103 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  170 437 20 437
 14 101
 "TextField14"
 ""
@@ -793,7 +819,7 @@ LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-
 E
 "main()
 {
- setValue(\"\", \"text\", \"Heliospheric observation of Mars\");
+ setValue(\"\", \"text\", \"EOR 2006\");
  setValue(\"\", \"editable\", FALSE);
 }" 0
 

@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,295 138 343 81 N "_3DFace" 2
+PANEL,394 286 343 81 N "_3DFace" 2
 "$configDatapoint"
 "$datapoint"
 "main()
@@ -44,7 +44,7 @@ CheckHeigth(string dp1, int Area1Active,
 {
   int label=20, space=10;
   int panelHeigth = 746;
-// 120 + verwijderd
+  ListActive =1; //AlertList is always visible
   if (panelHeigth < ( space + label + (space+label+Area1nrOfRows*26)*Area1Active +
                     (space+label+Area2nrOfRows*26)*Area2Active + (space+label+Area3nrOfRows*26)*Area3Active)+
                     (space+label+nrOfRowsList*26)*ListActive)
