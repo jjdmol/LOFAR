@@ -34,9 +34,6 @@
 #include <fstream>
 #include <vector>
 
-//# Needed for instantiating BlobField<XX>
-#include <Common/BlobField.cc>
-
 
 using namespace LOFAR;
 
@@ -59,6 +56,9 @@ namespace LOFAR {
     }
   }
 }
+
+//# Needed for instantiating BlobField<XX>
+#include <Common/BlobField.cc>
 
 // Instantiate the template.
 template class BlobField<XX>;
