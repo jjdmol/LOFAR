@@ -86,5 +86,7 @@ class APLInterTaskPort : public GCFRawPort
     GCFTask&                            m_slaveTask;
     boost::scoped_array<unsigned char>  m_toClientBuffer;
     boost::scoped_array<unsigned char>  m_toServerBuffer;
+    long                                m_toClientTimerId;
+    long                                m_toServerTimerId;
 };
 #endif
