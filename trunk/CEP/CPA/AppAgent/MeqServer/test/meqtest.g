@@ -18,13 +18,13 @@ default_debuglevels := [  MeqNode       =3,
                           MeqServer     =3,
                           meqserver     =1      ];
 
-# inits a meqserver
+# inits a meq.server
 const mqsinit := function (verbose=3,debug=[=],gui=F)
 {
   global mqs;
   if( !is_record(mqs) )
   {
-    mqs := meqserver(verbose=verbose,options="-d0 -nogw -meq:M:O:MeqServer",gui=gui);
+    mqs := meq.server(verbose=verbose,options="-d0 -nogw -meq:M:O:MeqServer",gui=gui);
     if( is_fail(mqs) )
       fail;
     mqs.init([output_col="PREDICT"],wait=T);
@@ -48,7 +48,7 @@ const meqsink_test := function ()
   tbl.removecols('PREDICTED_DATA');
   tbl.done()
 
-  # initialize meqserver
+  # initialize meq.server
   mqs.init([output_col="PREDICT"],
       output=[write_flags=F,predict_column='PREDICTED_DATA'],
       wait=T);
@@ -56,21 +56,21 @@ const meqsink_test := function ()
   # create a small subtree
   defval1 := array(as_double(1),2,2);
   defval2 := array(as_double(2),1,1);
-  addrec := meqnode('MeqSubtract','compare',children="spigot1 spigot2");
+  addrec := meq.node('MeqSubtract','compare',children="spigot1 spigot2");
   print mqs.meq('Create.Node',addrec);
   # create spigot (note! for now, a spigot MUST be created first)
-  spigrec1 := meqnode('MeqSpigot','spigot1');
+  spigrec1 := meq.node('MeqSpigot','spigot1');
   spigrec1.input_col := 'DATA';
   spigrec1.station_1_index := 1;
   spigrec1.station_2_index := 2;
   print mqs.meq('Create.Node',spigrec1);
-  spigrec2 := meqnode('MeqSpigot','spigot2');
+  spigrec2 := meq.node('MeqSpigot','spigot2');
   spigrec2.input_col := 'DATA';
   spigrec2.station_1_index := 1;
   spigrec2.station_2_index := 2;
   print mqs.meq('Create.Node',spigrec2);
   # create sink
-  sinkrec := meqnode('MeqSink','sink1',children="compare");
+  sinkrec := meq.node('MeqSink','sink1',children="compare");
   sinkrec.output_col := 'PREDICT'; 
   sinkrec.station_1_index := 1;
   sinkrec.station_2_index := 2;
@@ -97,22 +97,22 @@ const meqsel_test := function ()
   defval1 := array(as_double(1),2,2);
   defval2 := array(as_double(2),1,1);
   defval3 := array(as_double(3),1,1);
-  print mqs.meq('Create.Node',meqparm('parm1',defval1));
-  print mqs.meq('Create.Node',meqparm('parm2',defval2));
-  print mqs.meq('Create.Node',meqparm('parm3',defval3));
-  print mqs.meq('Create.Node',meqparm('parm4',defval1));
-  print mqs.meq('Create.Node',meqparm('parm5',defval2));
-  print mqs.meq('Create.Node',meqparm('parm6',defval3));
-  print mqs.meq('Create.Node',meqnode('MeqComposer','compose1',children="parm1 parm2 parm3"));
-  print mqs.meq('Create.Node',meqnode('MeqComposer','compose2',children="parm3 parm5 parm6"));
-  rec := meqnode('MeqSelector','select1',children="compose1");
+  print mqs.meq('Create.Node',meq.parm('parm1',defval1));
+  print mqs.meq('Create.Node',meq.parm('parm2',defval2));
+  print mqs.meq('Create.Node',meq.parm('parm3',defval3));
+  print mqs.meq('Create.Node',meq.parm('parm4',defval1));
+  print mqs.meq('Create.Node',meq.parm('parm5',defval2));
+  print mqs.meq('Create.Node',meq.parm('parm6',defval3));
+  print mqs.meq('Create.Node',meq.node('MeqComposer','compose1',children="parm1 parm2 parm3"));
+  print mqs.meq('Create.Node',meq.node('MeqComposer','compose2',children="parm3 parm5 parm6"));
+  rec := meq.node('MeqSelector','select1',children="compose1");
   rec.index := [1,5];
   print mqs.meq('Create.Node',rec);
-  rec := meqnode('MeqSelector','select2',children="compose2");
+  rec := meq.node('MeqSelector','select2',children="compose2");
   rec.index := [1,5];
   print mqs.meq('Create.Node',rec);
-  print mqs.meq('Create.Node',meqnode('MeqComposer','compose3',children="select1 select2"));
-  rec := meqnode('MeqSelector','select3',children="compose3");
+  print mqs.meq('Create.Node',meq.node('MeqComposer','compose3',children="select1 select2"));
+  rec := meq.node('MeqSelector','select3',children="compose3");
   rec.index := [2,3,4];
   print mqs.meq('Create.Node',rec);
   
@@ -120,8 +120,8 @@ const meqsel_test := function ()
   print mqs.meq('Resolve.Children',[name='select3']);
   
   global cells,request,res;
-  cells := meqcells(meqdomain(0,10,0,10),num_freq=20,times=[1.,2.,3.],time_steps=[1.,2.,3.]);
-  request := meqrequest(cells);
+  cells := meq.cells(meq.domain(0,10,0,10),num_freq=20,times=[1.,2.,3.],time_steps=[1.,2.,3.]);
+  request := meq.request(cells);
   res := mqs.meq('Node.Execute',[name='select3',request=request],T);
   print res;
 }
@@ -138,23 +138,23 @@ const state_test_init := function ()
   defval1 := array(as_double(1),1,1);
   defval2 := array(as_double(2),1,1);
   defval3 := array(as_double(3),1,1);
-  print mqs.meq('Create.Node',meqparm('parm1',defval1));
-  print mqs.meq('Create.Node',meqparm('parm2',defval2));
-  print mqs.meq('Create.Node',meqparm('parm3',defval3));
-  print mqs.meq('Create.Node',meqparm('parm4',defval1));
-  print mqs.meq('Create.Node',meqparm('parm5',defval2));
-  print mqs.meq('Create.Node',meqparm('parm6',defval3));
-  print mqs.meq('Create.Node',meqnode('MeqComposer','compose1',children="parm1 parm2 parm3"));
-  print mqs.meq('Create.Node',meqnode('MeqComposer','compose2',children="parm4 parm5 parm6"));
-  rec := meqnode('MeqSelector','select1',children="compose1");
+  print mqs.meq('Create.Node',meq.parm('parm1',defval1));
+  print mqs.meq('Create.Node',meq.parm('parm2',defval2));
+  print mqs.meq('Create.Node',meq.parm('parm3',defval3));
+  print mqs.meq('Create.Node',meq.parm('parm4',defval1));
+  print mqs.meq('Create.Node',meq.parm('parm5',defval2));
+  print mqs.meq('Create.Node',meq.parm('parm6',defval3));
+  print mqs.meq('Create.Node',meq.node('MeqComposer','compose1',children="parm1 parm2 parm3"));
+  print mqs.meq('Create.Node',meq.node('MeqComposer','compose2',children="parm4 parm5 parm6"));
+  rec := meq.node('MeqSelector','select1',children="compose1");
   rec.index := 1;
   rec.config_groups := hiid("a b");
   print mqs.meq('Create.Node',rec);
-  rec := meqnode('MeqSelector','select2',children="compose2");
+  rec := meq.node('MeqSelector','select2',children="compose2");
   rec.index := 1;
   rec.config_groups := hiid("a b");
   print mqs.meq('Create.Node',rec);
-  print mqs.meq('Create.Node',meqnode('MeqComposer','compose3',children="select1 select2"));
+  print mqs.meq('Create.Node',meq.node('MeqComposer','compose3',children="select1 select2"));
   
   # resolve children
   print mqs.meq('Resolve.Children',[name='compose3']);
@@ -170,28 +170,28 @@ const state_test := function ()
   ni_sel2 := mqs.getnodestate('select2').nodeindex;
   
   global cells,request,res;
-  cells := meqcells(meqdomain(0,10,0,10),num_freq=20,times=[1.,2.,3.],time_steps=[1.,2.,3.]);
-  request := meqrequest(cells);
+  cells := meq.cells(meq.domain(0,10,0,10),num_freq=20,times=[1.,2.,3.],time_steps=[1.,2.,3.]);
+  request := meq.request(cells);
   
-#  mqs.setdebug("DMI Glish MeqServer glishclientwp meqserver Dsp",5);
+#  mqs.setdebug("DMI Glish MeqServer glishclientwp meq.server Dsp",5);
   res1 := mqs.meq('Node.Execute',[name='compose3',request=request],T);
   req1 := request;
   print res1;
   
-  request := meqrequest(cells);
+  request := meq.request(cells);
   request.addstate('a','select1',[index=2]);
   request.addstate('b',ni_sel2,[index=3]);
   res2 := mqs.meq('Node.Execute',[name='compose3',request=request],T);
   req2 := request;
   print res2;
   
-  request := meqrequest(cells);
+  request := meq.request(cells);
   request.addstate('a',"select1 select2",[index=3]);
   res3 := mqs.meq('Node.Execute',[name='compose3',request=request],T);
   req3 := request;
   print res3;
   
-  request := meqrequest(cells);
+  request := meq.request(cells);
   request.addstate('b','select1',[index=2]);
   request.addstate('b','*',[index=1]);
   res4 := mqs.meq('Node.Execute',[name='compose3',request=request],T);
@@ -209,10 +209,10 @@ const freq_test := function ()
   meqsel_test();
   mqs.setverbose(5);
   mqs.setdebug("MeqNode",4);
-  dom:=meqdomain(10,20,10,20);
-  cells:=meqcells(dom,10,[11.0,12,13],[1.,1,1]);
+  dom:=meq.domain(10,20,10,20);
+  cells:=meq.cells(dom,10,[11.0,12,13],[1.,1,1]);
   mqs.meq('Create.Node',[class='MeqFreq',name='f']);
-  print a:=mqs.meq('Node.Execute',[name='f',request=meqrequest(cells)],T);
+  print a:=mqs.meq('Node.Execute',[name='f',request=meq.request(cells)],T);
 }
 
 const solver_test := function ()
@@ -225,24 +225,24 @@ const solver_test := function ()
   # create parms and condeq
   defval1 := array([3.,0.5,0.5,0.1],2,2);
   defval2 := array([2.,10.,2.,10. ],2,2);
-  print mqs.meq('Create.Node',meqparm('parm1',defval1,config_groups='Solvable.Parm'));
-  print mqs.meq('Create.Node',meqparm('parm2',defval2,config_groups='Solvable.Parm'));
-  print mqs.meq('Create.Node',meqnode('MeqCondeq','condeq1',children=[a='parm1',b='parm2']));
+  print mqs.meq('Create.Node',meq.parm('parm1',defval1,config_groups='Solvable.Parm'));
+  print mqs.meq('Create.Node',meq.parm('parm2',defval2,config_groups='Solvable.Parm'));
+  print mqs.meq('Create.Node',meq.node('MeqCondeq','condeq1',children=[a='parm1',b='parm2']));
   # create solver
   global rec;
-  rec := meqnode('MeqSolver','solver1',children="condeq1");
+  rec := meq.node('MeqSolver','solver1',children="condeq1");
   rec.num_steps := 3;
-  rec.solvable_parm := [ by_list=meqinitstatelist() ];
-  meqaddstatelist(rec.solvable_parm.by_list,"parm2",[solvable=T]); 
-  meqaddstatelist(rec.solvable_parm.by_list,"*",[solvable=F]); 
+  rec.solvable_parm := [ by_list=meq.initstatelist() ];
+  meq.addstatelist(rec.solvable_parm.by_list,"parm2",[solvable=T]); 
+  meq.addstatelist(rec.solvable_parm.by_list,"*",[solvable=F]); 
   print mqs.meq('Create.Node',rec);
   
   # resolve children
   print mqs.meq('Resolve.Children',[name='solver1']);
   
   global cells,request,res;
-  cells := meqcells(meqdomain(1,4,-2,3),num_freq=4,times=[0.,1.,2.,3.],time_steps=[1.,1.,1.,1.]);
-  request := meqrequest(cells,calc_deriv=1);
+  cells := meq.cells(meq.domain(1,4,-2,3),num_freq=4,times=[0.,1.,2.,3.],time_steps=[1.,1.,1.,1.]);
+  request := meq.request(cells,calc_deriv=1);
   
   res := mqs.meq('Node.Publish.Results',[name='condeq1'],T);
   res := mqs.meq('Node.Execute',[name='solver1',request=request],T);
@@ -285,13 +285,13 @@ const mep_test := function ()
   }
   mqs.setdebug('MeqParm',5);
   
-  defrec := meqparm('a',config_groups='Solvable.Parm');
+  defrec := meq.parm('a',config_groups='Solvable.Parm');
   defrec.table_name := tablename;
   print mqs.meq('Create.Node',defrec);
   
   global cells,request,res;
-  cells := meqcells(meqdomain(0,1,0,1),num_freq=4,times=[.1,.2,.3,.4],time_steps=[.1,.1,.1,.1]);
-  request := meqrequest(cells,calc_deriv=0);
+  cells := meq.cells(meq.domain(0,1,0,1),num_freq=4,times=[.1,.2,.3,.4],time_steps=[.1,.1,.1,.1]);
+  request := meq.request(cells,calc_deriv=0);
   
   res := mqs.meq('Node.Publish.Results',[name='a'],T);
   res := mqs.meq('Node.Execute',[name='a',request=request],T);
@@ -306,25 +306,25 @@ const mep_grow_test := function ()
   }
   mqs.setdebug('MeqParm',5);
   
-  polc := meqpolc(array([1,1,1,0],2,2),domain=meqdomain(0,1,0,1));
+  polc := meq.polc(array([1,1,1,0],2,2),domain=meq.domain(0,1,0,1));
   polc.grow_domain := T;
   print 'Polc is ',polc;
-  defrec := meqparm('a',polc,config_groups='Solvable.Parm');
+  defrec := meq.parm('a',polc,config_groups='Solvable.Parm');
   mqs.meq('Create.Node',defrec,T);
   
   global cells,request,res1,res2;
-  cells := meqcells(meqdomain(0,1,0,1),num_freq=4,times=[.1,.2,.3,.4],time_steps=[.1,.1,.1,.1]);
-  request := meqrequest(cells,calc_deriv=0);
+  cells := meq.cells(meq.domain(0,1,0,1),num_freq=4,times=[.1,.2,.3,.4],time_steps=[.1,.1,.1,.1]);
+  request := meq.request(cells,calc_deriv=0);
   
   mqs.meq('Node.Publish.Results',[name='a'],T);
   res1 := mqs.meq('Node.Execute',[name='a',request=request],T);
 
-  cells := meqcells(meqdomain(0,2,0,2),num_freq=4,times=[.2,.4,.6,.8],time_steps=[.1,.1,.1,.1]);
-  request := meqrequest(cells,calc_deriv=0);
+  cells := meq.cells(meq.domain(0,2,0,2),num_freq=4,times=[.2,.4,.6,.8],time_steps=[.1,.1,.1,.1]);
+  request := meq.request(cells,calc_deriv=0);
   
   res2 := mqs.meq('Node.Execute',[name='a',request=request],T);
 }
 
-# cells := meqcells(meqdomain(0,10,0,10),num_freq=20,times=[1.,2.,3.],time_steps=[1.,2.,3.]);
-# request := meqrequest(cells,1);
+# cells := meq.cells(meq.domain(0,10,0,10),num_freq=20,times=[1.,2.,3.],time_steps=[1.,2.,3.]);
+# request := meq.request(cells,1);
 

@@ -32,7 +32,7 @@ if( has_field(lofar_software,'print_versions') &&
 include 'table.g'
 include 'meq/meqtypes.g'
 
-const meptable := function (name, create=F)
+const meq.meptable := function (name,create=F)
 {
     self:=[=];
     public:=[=];
@@ -92,7 +92,7 @@ const meptable := function (name, create=F)
         }
     }
 
-    public.done := function()
+    const public.done := function()
     {
         wider self, public;
         self.tab.close();
@@ -102,7 +102,7 @@ const meptable := function (name, create=F)
         return T;
     }
 
-    public.putdef1 := function (parmname,
+    const public.putdef1 := function (parmname,
                                 value, nfreq, ntime, perturbation=1e-6, 
                                 freq0=0., time0=4.56e9, 
                                 freqscale=1e6, timescale=1., 
@@ -114,7 +114,7 @@ const meptable := function (name, create=F)
                        freqscale, timescale, trace);
     }
 
-    public.putdef := function (parmname,
+    const public.putdef := function (parmname,
                                values=1, perturbation=1e-6, 
                                freq0=0., time0=4.56e9, 
                                freqscale=1e6, timescale=1., 
@@ -156,12 +156,12 @@ const meptable := function (name, create=F)
         return T;
     }
 
-    public.put := function (parmname,
+    const public.put := function (parmname,
                             freqrange=[1,1e20], timerange=[1,1e20], 
                             values=1, perturbation=1e-6, weight=1,
                             freq0=0., time0=4.56e9, 
                             freqscale=1e6, timescale=1,
-                            rownr=-1,trace=T,uniq=T)
+                            ref rownr=-1,trace=T,uniq=T)
     {
         #----------------------------------------------------------------
         funcname := paste('** meptable.put(',parmname,'):');
@@ -204,7 +204,7 @@ const meptable := function (name, create=F)
         if( rownr <= 0 )
         {
           self.tab.addrows(1);
-          rownr := self.tab.nrows();
+          val rownr := self.tab.nrows();
         }
         self.tab.putcell ('NAME', rownr, parmname);
         self.tab.putcell ('STARTFREQ', rownr, freqrange[1]);
@@ -221,11 +221,11 @@ const meptable := function (name, create=F)
         return T;
     }
     
-    public.putpolc := function (parmname,polc,uniq=T)
+    const public.putpolc := function (parmname,ref polc,uniq=T)
     {
       wider self,public;
       if( !is_dmi_type(polc,'MeqPolc') )
-        fail 'polc argument must be a meqpolc object';
+        fail 'polc argument must be a meq.polc object';
       if( has_field(polc,'domain') )
         dom := polc.domain;
       else
@@ -239,7 +239,7 @@ const meptable := function (name, create=F)
                   rownr=polc.dbid_index,uniq=uniq);
     }
     
-    public.getpolcs := function (parmname)
+    const public.getpolcs := function (parmname)
     {
       wider self,public;
       t1 := self.tab.query(spaste('NAME=="',parmname,'" '));
@@ -259,16 +259,48 @@ const meptable := function (name, create=F)
       rownums := t1.rownumbers(self.tab);
       for( i in 1:t1.nrows() )
       {
-        polcs[i] := meqpolc(t1.getcell('VALUES',i),
-                            domain=meqdomain(df0c[i],df1c[i],dt0c[i],dt1c[i]),
+        polcs[i] := meq.polc(t1.getcell('VALUES',i),
+                            domain=meq.domain(df0c[i],df1c[i],dt0c[i],dt1c[i]),
                             freq0=fq0c[i],time0=tm0c[i],
                             freqsc=fqsc[i],timesc=tmsc[i],pert=pertc[i],
-                            weight=weightc[i],dbid=rownrs[i]);
+                            weight=weightc[i],dbid=rownums[i]);
       }
       return polcs;
     }
+
+    # meptable.summary([parmname])
+    #   Provides a summary of MEP table contents.
+    #   If called with no arguments, provides an overall summary.
+    #   If called with parmnames as arguments, summarizes parms.
+    const public.summary := function (...)
+    {
+      wider self,public;
+      names := self.tab.getcol("NAME");
+      dnames := self.dtab.getcol("NAME");
+      if( !num_args(...) )
+      {
+        self.tab.summary();
+        if( is_record(self.tab) )
+          self.dtab.summary();
+        print 'MEP names:',unique(sort(names));
+        print 'Defaults available for:',unique(sort(dnames));
+      }
+      else
+      {
+        print 'MEP table:',self.tab.name()
+        for( i in 1:num_args(...) )
+          for( p in nth_arg(i,...) )
+          {
+            polcs := public.getpolcs(p);
+            t1 := self.dtab.query(spaste('NAME=="',p,'"'));
+            print p,':',len(polcs),'polcs,',t1.nrows(),'default(s)';
+            t1.close();
+          }
+      }
+      return T;
+    }
     
-    self.perturb := function (tab, where, perturbation)
+    const self.perturb := function (tab, where, perturbation)
     {
         t1 := ref tab;
         if (where != '') {
@@ -288,7 +320,7 @@ const meptable := function (name, create=F)
         return T;
     }
 
-    public.perturb := function (where='', perturbation=1e-6,
+    const public.perturb := function (where='', perturbation=1e-6,
                                 trace=F)
     {
         #----------------------------------------------------------------
@@ -305,12 +337,12 @@ const meptable := function (name, create=F)
         return T;
     }
 
-    public.table := function()
+    const public.table := function()
     {
         return ref self.tab;
     }
 
-    public.deftable := function()
+    const public.deftable := function()
     {
         return ref self.dtab;
     }

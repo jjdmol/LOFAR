@@ -68,7 +68,7 @@ const _meqserver_binary :=
                       nostart=use_nostart,suspend=use_suspend);
   
 
-const meqserver := function (appid='MeqServer',
+const meq.server := function (appid='MeqServer',
     server=_meqserver_binary,options="-nogw -d0 -meq:M:M:MeqServer",
     verbose=1,gui=F,ref parent_frame=F,ref widgetset=dws,
     ref self=[=],ref public=[=])
@@ -166,7 +166,7 @@ const default_meqserver := function (verbose=3,debug=[=],gui=F)
   global _default_mqs;
   if( !is_record(_default_mqs) )
   {
-    _default_mqs := meqserver(verbose=verbose,options="-d0 -nogw -meq:M:O:MeqServer",gui=gui);
+    _default_mqs := meq.server(verbose=verbose,options="-d0 -nogw -meq:M:O:MeqServer",gui=gui);
     if( is_fail(_default_mqs) )
       fail;
     _default_mqs.init([output_col="PREDICT"],wait=T);

@@ -31,7 +31,7 @@ const mqsinit := function (verbose=3,debug=[=],gui=F)
   global mqs;
   if( !is_record(mqs) )
   {
-    mqs := meqserver(verbose=verbose,options="-d0 -nogw -meq:M:O:MeqServer",gui=gui);
+    mqs := meq.server(verbose=verbose,options="-d0 -nogw -meq:M:O:MeqServer",gui=gui);
     if( is_fail(mqs) )
       fail;
     mqs.init([output_col="PREDICT"],wait=T);
@@ -67,20 +67,20 @@ const solver_test := function (stage=0,gui=T,debug=[=],verbose=1)
   if( stage == 0 )
   {
     # use default record for parms
-    print mqs.meq('Create.Node',meqparm('x',meqpolc(0),config_groups='Solvable.Parm'));
-    print mqs.meq('Create.Node',meqparm('y',meqpolc(0),config_groups='Solvable.Parm'));
+    print mqs.meq('Create.Node',meq.parm('x',meq.polc(0),config_groups='Solvable.Parm'));
+    print mqs.meq('Create.Node',meq.parm('y',meq.polc(0),config_groups='Solvable.Parm'));
   }
   else if( stage == 1 )
   {
     # use table for parms
     tablename := 'test.mep';
-    pt := meptable(tablename,create=T);
+    pt := meq.meptable(tablename,create=T);
     pt.putdef('x',0);
     pt.putdef('y',0);
     pt.done();
-    x := meqparm('x',config_groups='Solvable.Parm');
+    x := meq.parm('x',config_groups='Solvable.Parm');
     x.table_name := tablename;
-    y := meqparm('y',config_groups='Solvable.Parm');
+    y := meq.parm('y',config_groups='Solvable.Parm');
     y.table_name := tablename;
     print mqs.meq('Create.Node',x);
     print mqs.meq('Create.Node',y);
@@ -93,22 +93,22 @@ const solver_test := function (stage=0,gui=T,debug=[=],verbose=1)
     cc.c1 := cc.a1*x0 + cc.b1*y0;
     cc.c2 := cc.a2*x0 + cc.b2*y0;
     for( f in field_names(cc) )
-      print mqs.meq('Create.Node',meqparm(f,array(as_double(cc[f]),1,1)));
-    print mqs.meq('Create.Node',meqnode('MeqMultiply','a1x',children="a1 x"));
-    print mqs.meq('Create.Node',meqnode('MeqMultiply','a2x',children="a2 x"));
-    print mqs.meq('Create.Node',meqnode('MeqMultiply','b1y',children="b1 y"));
-    print mqs.meq('Create.Node',meqnode('MeqMultiply','b2y',children="b2 y"));
-    print mqs.meq('Create.Node',meqnode('MeqAdd','lhs1',children="a1x b1y"));
-    print mqs.meq('Create.Node',meqnode('MeqAdd','lhs2',children="a2x b2y"));
-    print mqs.meq('Create.Node',meqnode('MeqCondeq','eq1',children="lhs1 c1"));
-    print mqs.meq('Create.Node',meqnode('MeqCondeq','eq2',children="lhs2 c2"));
+      print mqs.meq('Create.Node',meq.parm(f,array(as_double(cc[f]),1,1)));
+    print mqs.meq('Create.Node',meq.node('MeqMultiply','a1x',children="a1 x"));
+    print mqs.meq('Create.Node',meq.node('MeqMultiply','a2x',children="a2 x"));
+    print mqs.meq('Create.Node',meq.node('MeqMultiply','b1y',children="b1 y"));
+    print mqs.meq('Create.Node',meq.node('MeqMultiply','b2y',children="b2 y"));
+    print mqs.meq('Create.Node',meq.node('MeqAdd','lhs1',children="a1x b1y"));
+    print mqs.meq('Create.Node',meq.node('MeqAdd','lhs2',children="a2x b2y"));
+    print mqs.meq('Create.Node',meq.node('MeqCondeq','eq1',children="lhs1 c1"));
+    print mqs.meq('Create.Node',meq.node('MeqCondeq','eq2',children="lhs2 c2"));
     # create solver
     global rec;
-    rec := meqnode('MeqSolver','solver',children="eq1 eq2");
+    rec := meq.node('MeqSolver','solver',children="eq1 eq2");
     rec.num_steps := 5;
-    rec.solvable_parm := [ by_list=meqinitstatelist() ];
-    meqaddstatelist(rec.solvable_parm.by_list,"x y",[solvable=T]); 
-    meqaddstatelist(rec.solvable_parm.by_list,"*",[solvable=F]); 
+    rec.solvable_parm := [ by_list=meq.initstatelist() ];
+    meq.addstatelist(rec.solvable_parm.by_list,"x y",[solvable=T]); 
+    meq.addstatelist(rec.solvable_parm.by_list,"*",[solvable=F]); 
     print mqs.meq('Create.Node',rec);
 
     # resolve children
@@ -122,8 +122,8 @@ const solver_test := function (stage=0,gui=T,debug=[=],verbose=1)
 
     # execute request on x and y parms to load polcs and get original values
     global cells,request,res;
-    cells := meqcells(meqdomain(0,1,0,1),num_freq=4,times=[0.,0.1,0.2,0.3],time_steps=[.1,.1,.1,.1]);
-    request := meqrequest(cells,calc_deriv=0);
+    cells := meq.cells(meq.domain(0,1,0,1),num_freq=4,num_time=4);
+    request := meq.request(cells,calc_deriv=0);
     res := mqs.meq('Node.Execute',[name='x',request=request],T);
     res := mqs.meq('Node.Execute',[name='y',request=request],T);
    
@@ -148,8 +148,8 @@ const solver_test := function (stage=0,gui=T,debug=[=],verbose=1)
   
   # execute request on solver
   global cells,request,res;
-  cells := meqcells(meqdomain(0,1,0,1),num_freq=4,times=[0.,0.1,0.2,0.3],time_steps=[.1,.1,.1,.1]);
-  request := meqrequest(cells,calc_deriv=2);
+  cells := meq.cells(meq.domain(0,1,0,1),num_freq=4,num_time=4);
+  request := meq.request(cells,calc_deriv=2);
   res := mqs.meq('Node.Execute',[name='solver',request=request],T);
   print res;
   
