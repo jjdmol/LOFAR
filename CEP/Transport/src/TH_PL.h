@@ -61,6 +61,8 @@ public:
 
   virtual bool connectionPossible (int srcRank, int dstRank) const;
 
+  virtual bool isBidirectional() const;
+
   static void finalize ();
   static void waitForBroadCast ();
   static void waitForBroadCast (unsigned long& aVar);
@@ -103,6 +105,9 @@ private:
                       // This is used in the counting of initialized instances.
 };
  
+inline bool TH_PL::isBidirectional() const
+  { return true; }
+
 } // end namespace
 
 #endif

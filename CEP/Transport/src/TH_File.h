@@ -49,8 +49,8 @@ public:
      The constructor.
      Arguments:
         filename:    The file name, including path, to/from which the data is 
-	             writen/read
-	aDirection:  Defines whether data is written(onle send() method active)
+	             written/read
+	aDirection:  Defines whether data is written(only send() method active)
 	             or read (only recv method active)
   **/
   TH_File(string    aFileName, direction aDirection);

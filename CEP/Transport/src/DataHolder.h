@@ -44,8 +44,7 @@ class DataBlobExtra;
 /**
   Class DataHolder is the abstract base class for all data holders
   in the CEPFrame environment. Its main purpose is to offer a common interface
-  to a class like WorkHolder. Apart from that it also offers some common
-  functionality to the classes derived from it.
+  to the data and common functionality to derived classes.
   The data (defined in derived classes) is stored in a blob.
 
   Prove \code list<table> \endcode or \<table\>.
