@@ -130,7 +130,8 @@ LEX_OUTPUT_ROOT		= lex.KeyTokenize
 
 libcommon_la_LIBADD	= shmem/libshmem.la
 
-bin_PROGRAMS		= LimitExec
+bin_PROGRAMS		= LimitExec pkgdep
 LimitExec_SOURCES	= LimitExec.cc
+pkgdep_SOURCES		= pkgdep.cc
 
 include $(lofar_sharedir)/Makefile.common
