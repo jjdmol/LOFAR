@@ -100,6 +100,11 @@ namespace LOFAR
   static ::Debug::Context DebugContext; \
   static inline ::Debug::Context & getDebugContext() \
             { return DebugContext; }
+// This macro declares a local debug context within a namespace.
+#define LocalDebugContext_ns \
+  extern ::Debug::Context DebugContext; \
+  inline ::Debug::Context & getDebugContext() \
+            { return DebugContext; }
 // This macro declares a local sub-context within a class or namespace
 #define LocalDebugSubContext LocalDebugContext
 // This macro declares that this class uses the same context as declared
