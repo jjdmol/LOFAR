@@ -56,7 +56,7 @@ namespace ABS
 	/**
 	 * All the test states
 	 */
-	GCFEvent::TResult test001(GCFEvent& e, GCFPortInterface &p);
+	GCFEvent::TResult enabled(GCFEvent& e, GCFPortInterface &p);
 	GCFEvent::TResult done(GCFEvent& e, GCFPortInterface &p);
 	//@}
 
