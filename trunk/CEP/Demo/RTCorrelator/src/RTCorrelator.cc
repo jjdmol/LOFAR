@@ -47,6 +47,8 @@ void RTCorrelator::define(const KeyValueMap& /*params*/) {
 					    nelements, nsamples, nchannels, nruns);
     
     WH_Correlator aSlave("noname", 1, 1, nelements, nsamples, nchannels, nruns);
+    WH_Random     aRandom("noname", 0, 1, nelements, nsamples, nchannels);
+    WH_Dump       aDump("noname", 1, 0);
 
     /* The correlator cannot accept connections because of the limitations   */
     /* of the BG/L socket implementation. Therefore all connections are      */
@@ -54,6 +56,13 @@ void RTCorrelator::define(const KeyValueMap& /*params*/) {
     TH_Socket fe_input(frontend_ip, frontend_ip, baseport, true);
     TH_Socket fe_output(frontend_ip, frontend_ip, baseport+1, false);
 
+    aRandom.getDataManager().getOutHolder(0)->connectTo 
+      ( *itsWH->getDataManager().getInHolder(0), 
+	fe_input );
+    
+    itsWH->getDataManager().getOutHolder(0)->connectTo
+      ( *aDump.getDataManager().getInHolder(0), 
+	fe_output );
 
     for (int i = 1; i<TH_MPI::getNumberOfNodes(); i++) {
       /* [CHECKME] needs to be defined at global scope? */
