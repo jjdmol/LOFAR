@@ -40,9 +40,9 @@ class SI_Simple : public StrategyImpl
 public:
 
  typedef struct {       // Struct containing data specific for simple strategy
-   int    nIter;
-   int    nSources;
-   double timeInterval;
+   int    nIter;         // Number of iterations
+   int    nSources;      // Number of sources
+   double timeInterval;  // Time interval
  }Simple_data;
 
   SI_Simple(CalibratorOld* cal, int argSize, char* args);
