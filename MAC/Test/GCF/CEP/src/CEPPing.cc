@@ -41,6 +41,10 @@ static double time_elapsed(timeval* start, timeval* stop)
 
 void ping ()
 {
+  CEPPropertySet pingPS("C", "TTypeF", PS_CAT_TEMPORARY);
+  
+  pingPS.enable();
+
   DH_EchoPing DH_Echo("echo");
   DH_EchoPing DH_Ping("ping");
   DH_Ping.setID(1);
@@ -49,11 +53,7 @@ void ping ()
   TH_Socket proto2("", "localhost", 8923, true);
   DH_Ping.connectBidirectional (DH_Echo, proto, proto2, true);
   DH_Ping.init();
-  
-  CEPPropertySet pingPS("C", "TTypeF", PS_CAT_TEMPORARY);
-  
-  pingPS.enable();
-  
+    
   sleep(1);
   uint seqnr(0);
   uint max(200);
@@ -70,8 +70,17 @@ void ping ()
 
     usleep(300000);
     DH_Ping.write();
-    if (seqnr >= max) seqnr = 0;
+    if (seqnr >= max) 
+    {
+      pingPS.disable();
+      seqnr = 0;
+    }
 
+    if (seqnr == 10)
+    {
+      pingPS.enable();
+    }
+    
     if (pingPS.isMonitoringOn())
     {
       pingPS["sn"].setValue(GCFPVInteger(DH_Ping.getSeqNr()));
