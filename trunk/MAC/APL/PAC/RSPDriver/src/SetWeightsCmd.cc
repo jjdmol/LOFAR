@@ -60,7 +60,7 @@ void SetWeightsCmd::setWeights(Array<complex<int16>, BeamletWeights::NDIM> weigh
   RSPSetweightsEvent* event = static_cast<RSPSetweightsEvent*>(m_event);
   
   event->weights().resize(BeamletWeights::SINGLE_TIMESTEP,
-			  event->blpmask.count(), weights.extent(thirdDim), EPA_Protocol::N_POL);
+			  event->blpmask.count(), weights.extent(thirdDim), MEPHeader::N_POL);
   event->weights() = weights;
 }
 

@@ -46,8 +46,8 @@ VersionsRead::~VersionsRead()
 void VersionsRead::sendrequest()
 {
   // send version read request
-  EPAFwversionReadEvent versionread;
-  MEP_FWVERSION(versionread.hdr, MEPHeader::READ);
+  EPAReadEvent versionread;
+  versionread.hdr.set(MEPHeader::RSR_VERSION_HDR);
 
   getBoardPort().send(versionread);
 }
@@ -59,26 +59,19 @@ void VersionsRead::sendrequest_status()
 
 GCFEvent::TResult VersionsRead::handleack(GCFEvent& event, GCFPortInterface& port)
 {
-  if (event.signal != EPA_FWVERSION) return GCFEvent::HANDLED;
+  if (event.signal != EPA_RSR_VERSION) return GCFEvent::HANDLED;
   
-  EPAFwversionEvent ack(event);
+  EPARsrVersionEvent ack(event);
 
-  LOG_DEBUG(formatString("Firmware versions on board '%s' are [rsp:%d.%d, bp:%d.%d, ap[0]:%d.%d, ap[1]:%d.%d, ap[2]:%d.%d, ap[3]:%d.%d",
-			port.getName().c_str(),
-			ack.rsp_version   >> 4, ack.rsp_version   & 0xF,
-			ack.bp_version    >> 4, ack.bp_version    & 0xF,
-			ack.ap_version[0] >> 4, ack.ap_version[0] & 0xF,
-			ack.ap_version[1] >> 4, ack.ap_version[1] & 0xF,
-			ack.ap_version[2] >> 4, ack.ap_version[2] & 0xF,
-			ack.ap_version[3] >> 4, ack.ap_version[3] & 0xF));
+  LOG_DEBUG(formatString("Firmware versions on board '%s' are [rsp:%d.%d, bp:%d.%d, ap:%d.%d",
+			 port.getName().c_str(),
+			 ack.rsp_version   >> 4, ack.rsp_version   & 0xF,
+			 ack.bp_version    >> 4, ack.bp_version    & 0xF,
+			 ack.ap_version    >> 4, ack.ap_version    & 0xF));
   
   Cache::getInstance().getBack().getVersions().rsp()(getBoardId()) = ack.rsp_version;
   Cache::getInstance().getBack().getVersions().bp()(getBoardId())  = ack.bp_version;  
-  for (int i = 0; i < EPA_Protocol::N_AP; i++)
-  {
-    Cache::getInstance().getBack().getVersions().ap()((getBoardId() * EPA_Protocol::N_AP) + i)
-      = ack.ap_version[i];
-  }
+  Cache::getInstance().getBack().getVersions().ap()(getBoardId())  = ack.ap_version;  
 
   return GCFEvent::HANDLED;
 }

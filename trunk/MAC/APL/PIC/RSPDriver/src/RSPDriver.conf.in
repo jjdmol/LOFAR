@@ -20,9 +20,41 @@ RSPDriver.SYNC_INTERVAL=1.0
 RSPDriver.SOFTPPS=0
 
 #
-# Base index of the RSP board ethernet address
+# Specify the base index of the RSP board ethernet MAC address
+# The RSP boards addresses will be numbered consecutively.
 #
-RSPDriver.MAC_BASE=1 # Start from address: 00:00:00:00:00:MAC_BASE
+# RSPDriver.MAC_BASE=1 # Start from address: 00:00:00:00:00:MAC_BASE
+
+#
+# Alternatively specify all MAC addresses explicitly
+# as MAC_ADDR0..MAC_ADDR23
+# In this case you must leave RSPDriver.MAC_BASE unspecified
+#
+RSPDriver.MAC_ADDR_LCU=00:60:97:09:C5:B0 # lofar26 MAC address
+RSPDriver.MAC_ADDR_0=00:0A:5E:46:5D:ED   # lofar27 MAC address
+RSPDriver.MAC_ADDR_1=00:00:00:00:00:AF
+RSPDriver.MAC_ADDR_2=00:00:00:00:00:BB
+RSPDriver.MAC_ADDR_3=00:00:00:00:00:04
+RSPDriver.MAC_ADDR_4=00:00:00:00:00:05
+RSPDriver.MAC_ADDR_5=00:00:00:00:00:06
+RSPDriver.MAC_ADDR_6=00:00:00:00:00:07
+RSPDriver.MAC_ADDR_7=00:00:00:00:00:08
+RSPDriver.MAC_ADDR_8=00:00:00:00:00:09
+RSPDriver.MAC_ADDR_9=00:00:00:00:00:10
+RSPDriver.MAC_ADDR_10=00:00:00:00:00:0A
+RSPDriver.MAC_ADDR_11=00:00:00:00:00:0B
+RSPDriver.MAC_ADDR_12=00:00:00:00:00:0C
+RSPDriver.MAC_ADDR_13=00:00:00:00:00:0D
+RSPDriver.MAC_ADDR_14=00:00:00:00:00:0E
+RSPDriver.MAC_ADDR_15=00:00:00:00:00:0F
+RSPDriver.MAC_ADDR_16=00:00:00:00:00:10
+RSPDriver.MAC_ADDR_17=00:00:00:00:00:11
+RSPDriver.MAC_ADDR_18=00:00:00:00:00:12
+RSPDriver.MAC_ADDR_19=00:00:00:00:00:13
+RSPDriver.MAC_ADDR_20=00:00:00:00:00:14
+RSPDriver.MAC_ADDR_21=00:00:00:00:00:15
+RSPDriver.MAC_ADDR_22=00:00:00:00:00:16
+RSPDriver.MAC_ADDR_23=00:00:00:00:00:17
 
 #
 # Ethernet interface on which to contact the RSP boards.

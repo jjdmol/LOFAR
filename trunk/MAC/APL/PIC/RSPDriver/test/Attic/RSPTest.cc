@@ -47,8 +47,6 @@ using namespace blitz;
 using namespace EPA_Protocol;
 using namespace RSP_Protocol;
 
-#define N_BEAMLETS 128
-
 RSPTest::RSPTest(string name)
     : GCFTask((State)&RSPTest::initial, name), Test(name)
 {
@@ -120,7 +118,7 @@ GCFEvent::TResult RSPTest::test001(GCFEvent& e, GCFPortInterface& port)
       sw.timestamp.setNow(10);
       LOG_INFO_STR("sw.time=" << sw.timestamp);
       sw.blpmask.reset();
-      sw.weights().resize(1, 1, N_BEAMLETS, N_POL);
+      sw.weights().resize(1, 1, MEPHeader::N_BEAMLETS, MEPHeader::N_POL);
 
       sw.weights()(0, 0, Range::all(), Range::all()) = complex<int16>(0xdead, 0xbeaf);
 	  
@@ -235,7 +233,7 @@ GCFEvent::TResult RSPTest::test003(GCFEvent& e, GCFPortInterface& port)
       sw.timestamp = Timestamp(0,0);
       LOG_INFO_STR("sw.time=" << sw.timestamp);
       sw.blpmask.reset();
-      sw.weights().resize(1, 1, N_BEAMLETS, N_POL);
+      sw.weights().resize(1, 1, MEPHeader::N_BEAMLETS, MEPHeader::N_POL);
 
       sw.weights()(0, 0, Range::all(), Range::all()) = complex<int16>(0xdead, 0xbeaf);
 	  
@@ -297,7 +295,7 @@ GCFEvent::TResult RSPTest::test004(GCFEvent& e, GCFPortInterface& port)
       sw.blpmask.reset();
 
       // send weights for 10 timesteps
-      sw.weights().resize(10, 1, N_BEAMLETS, N_POL);
+      sw.weights().resize(10, 1, MEPHeader::N_BEAMLETS, MEPHeader::N_POL);
 
       sw.weights()(Range::all(), 0, Range::all(), Range::all()) = complex<int16>(0xdead, 0xbeaf);
 	  
@@ -433,7 +431,6 @@ GCFEvent::TResult RSPTest::test006(GCFEvent& e, GCFPortInterface& port)
       LOG_INFO_STR("ack.time=" << ack.timestamp);
 
       LOG_INFO_STR("board=" << ack.sysstatus.board());
-      LOG_INFO_STR("rcu="   << ack.sysstatus.rcu());
       
       TRAN(RSPTest::test007);
     }
@@ -606,8 +603,9 @@ GCFEvent::TResult RSPTest::test009(GCFEvent& e, GCFPortInterface& port)
       wgset.blpmask.set(0);
       wgset.settings().resize(1);
       wgset.settings()(0).freq            = 0xaabb;
+      wgset.settings()(0).phase           = 0;
       wgset.settings()(0).ampl            = 0xccdd;
-      wgset.settings()(0).nof_usersamples = 0x1122;
+      wgset.settings()(0).nof_samples     = 0x1122;
       wgset.settings()(0).mode            = 0;
       wgset.settings()(0)._pad            = 0; // keep valgrind happy
       
@@ -642,8 +640,9 @@ GCFEvent::TResult RSPTest::test009(GCFEvent& e, GCFPortInterface& port)
       LOG_INFO_STR("ack.time=" << ack.timestamp);
       
       LOG_INFO_STR("freq            =" << ack.settings()(0).freq << endl << 
+		   "phase           =" << ack.settings()(0).phase << endl <<
 		   "ampl            =" << ack.settings()(0).ampl << endl <<
-		   "nof_usersamples =" << ack.settings()(0).nof_usersamples << endl <<
+		   "nof_usersamples =" << ack.settings()(0).nof_samples << endl <<
 		   "mode            =" << ack.settings()(0).mode << endl);
 
       TRAN(RSPTest::test010);
@@ -714,7 +713,6 @@ GCFEvent::TResult RSPTest::test010(GCFEvent& e, GCFPortInterface& port)
       LOG_INFO_STR("upd.handle=" << upd.handle);
       
       LOG_INFO_STR("upd.sysstatus.board=" << upd.sysstatus.board());
-      LOG_INFO_STR("upd.sysstatus.rcu(0)=" << upd.sysstatus.rcu()(0));
 
       if (updcount++ > 20)
       {

@@ -35,7 +35,7 @@ using namespace EPA_Protocol;
 using namespace LOFAR;
 
 /**
- * Lookup table to map MEP message header to GCFEvent signal.
+ * Lookup table to map MEP message header (addr.[pid,reg]) to GCFEvent signal.
  */
 static unsigned short signal_lut[MEPHeader::MAX_PID + 1][MEPHeader::MAX_REGID + 1][MEPHeader::MAX_TYPE + 1] = 
 {
@@ -43,18 +43,18 @@ static unsigned short signal_lut[MEPHeader::MAX_PID + 1][MEPHeader::MAX_REGID + 
   {
     /* reg = 0x00 (RSP Status) */
     { 0,
-      EPA_RSPSTATUS_READ, /* READ    */
-      EPA_RSPSTATUS,      /* WRITE   */
-      EPA_RSPSTATUS,      /* READRES */
-      EPA_READERR, /* READERR */
+      EPA_READ,           /* READ      */
+      0,
+      EPA_RSR_STATUS,     /* READACK   */
+      0,
     },
 
     /* reg = 0x01 (Version) */
     { 0,
-      EPA_FWVERSION_READ, /* READ    */
-      0,                  /* WRITE   */
-      EPA_FWVERSION,      /* READRES */
-      EPA_READERR, /* READERR */
+      EPA_READ,           /* READ    */
+      0,
+      EPA_RSR_VERSION,    /* READACK */
+      0,
     },
   },
 
@@ -62,10 +62,10 @@ static unsigned short signal_lut[MEPHeader::MAX_PID + 1][MEPHeader::MAX_REGID + 
   {
     /* reg = 0x00 (Selftest) */
     { 0,
-      0,            /* READ    */
-      EPA_SELFTEST, /* WRITE   */
-      0,            /* READRES */
-      EPA_READERR, /* READERR */
+      EPA_READ,         /* READ */
+      EPA_TST_SELFTEST, /* WRITE   */
+      EPA_TST_SELFTEST, /* READACK */
+      EPA_WRITEACK,     /* WRITEACK */
     },
   },
 
@@ -73,126 +73,134 @@ static unsigned short signal_lut[MEPHeader::MAX_PID + 1][MEPHeader::MAX_REGID + 
   {
     /* reg = 0x00 (Reset) */
     { 0,
-      0,         /* READ    */
-      EPA_RESET, /* WRITE   */
-      0,         /* READRES */
-      EPA_READERR, /* READERR */
+      EPA_READ,         /* READ */
+      EPA_CFG_RESET,    /* WRITE   */
+      EPA_CFG_RESET,    /* READACK */
+      EPA_WRITEACK,     /* WRITEACK */
     },
 
     /* reg = 0x01 (Reprogram) */
     { 0,
-      0,             /* READ    */
-      EPA_REPROGRAM, /* WRITE   */
-      0,             /* READRES */
-      EPA_READERR, /* READERR */
+      EPA_READ,          /* READ */
+      EPA_CFG_REPROGRAM, /* WRITE   */
+      EPA_CFG_REPROGRAM, /* READACK */
+      EPA_WRITEACK,      /* WRITEACK */
     },
   },
 
   /* pid = 0x03 (WG) */
   {
-    /* reg = 0x00 (Waveform generator settings) */
+    /* reg = 0x00 (Waveform generator settings X polarization) */
     { 0,
-      EPA_WGSETTINGS_READ, /* READ    */
-      EPA_WGSETTINGS,      /* WRITE   */
-      EPA_WGSETTINGS,      /* READRES */
-      EPA_READERR, /* READERR */
+      EPA_READ,        /* READ */
+      EPA_WG_SETTINGS, /* WRITE   */
+      EPA_WG_SETTINGS, /* READACK */
+      EPA_WRITEACK,    /* WRITEACK */
     },
 
-    /* reg = 0x01 (User waveform) */
+    /* reg = 0x01 (Waveform generator settings Y polarization) */
     { 0,
-      EPA_WGUSER_READ, /* READ    */
-      EPA_WGUSER,      /* WRITE   */
-      EPA_WGUSER,      /* READRES */
-      EPA_READERR, /* READERR */
+      EPA_READ,       /* READ */
+      EPA_WG_SETTINGS,/* WRITE   */
+      EPA_WG_SETTINGS,/* READACK */
+      EPA_WRITEACK,   /* WRITEACK */
+    },
+
+    /* reg = 0x02 (User waveform X polarization) */
+    { 0,
+      EPA_READ,     /* READ    */
+      EPA_WG_WAVE,  /* WRITE   */
+      EPA_WG_WAVE,  /* READACK */
+      EPA_WRITEACK, /* WRITEACK */
+    },
+
+    /* reg = 0x03 (User waveform Y polarization) */
+    { 0,
+      EPA_READ,     /* READ    */
+      EPA_WG_WAVE,  /* WRITE   */
+      EPA_WG_WAVE,  /* READACK */
+      EPA_WRITEACK, /* WRITEACK */
     },
   },
 
   /* pid = 0x04 (SS) */
   {
-    /* reg = 0x00 (Number of selected subbands) */
+    /* reg = 0x00 (Subband Select parameters) */
     { 0,
-      EPA_NRSUBBANDS_READ, /* READ    */
-      EPA_NRSUBBANDS,      /* WRITE   */
-      EPA_NRSUBBANDS,      /* READRES */
-      EPA_READERR, /* READERR */
-    },
-
-    /* reg = 0x01 (Subband Select parameters) */
-    { 0,
-      EPA_SUBBANDSELECT_READ, /* READ    */
-      EPA_SUBBANDSELECT,      /* WRITE   */
-      EPA_SUBBANDSELECT,      /* READRES */
-      EPA_READERR, /* READERR */
+      EPA_READ,      /* READ    */
+      EPA_SS_SELECT, /* WRITE   */
+      EPA_SS_SELECT, /* READRES */
+      EPA_WRITEACK,  /* READERR */
     },
   },
 
   /* pid = 0x05 (BF) */
   {
-    /* reg = 0x00 (Coefs Xre) */
+    /* reg = 0x00 (Coefs XR output) */
     { 0,
-      EPA_BFCOEFS_READ, /* READ    */
-      EPA_BFCOEFS,      /* WRITE   */
-      EPA_BFCOEFS,      /* READRES */
-      EPA_READERR, /* READERR */
+      EPA_READ,     /* READ    */
+      EPA_BF_COEFS, /* WRITE   */
+      EPA_BF_COEFS, /* READACK */
+      EPA_WRITEACK, /* WRITEACK */
     },
-    /* reg = 0x01 (Coefs Xim) */
+    /* reg = 0x01 (Coefs XI output) */
     { 0,
-      EPA_BFCOEFS_READ, /* READ    */
-      EPA_BFCOEFS,      /* WRITE   */
-      EPA_BFCOEFS,      /* READRES */
-      EPA_READERR, /* READERR */
+      EPA_READ,     /* READ    */
+      EPA_BF_COEFS, /* WRITE   */
+      EPA_BF_COEFS, /* READACK */
+      EPA_WRITEACK, /* WRITEACK */
     },
-    /* reg = 0x02 (Coefs Yre) */
+    /* reg = 0x02 (Coefs YR output ) */
     { 0,
-      EPA_BFCOEFS_READ, /* READ    */
-      EPA_BFCOEFS,      /* WRITE   */
-      EPA_BFCOEFS,      /* READRES */
-      EPA_READERR, /* READERR */
+      EPA_READ,     /* READ    */
+      EPA_BF_COEFS, /* WRITE   */
+      EPA_BF_COEFS, /* READACK */
+      EPA_WRITEACK, /* WRITEACK */
     },
-    /* reg = 0x03 (Coefs Yim) */
+    /* reg = 0x03 (Coefs YI output) */
     { 0,
-      EPA_BFCOEFS_READ, /* READ    */
-      EPA_BFCOEFS,      /* WRITE   */
-      EPA_BFCOEFS,      /* READRES */
-      EPA_READERR, /* READERR */
+      EPA_READ,     /* READ    */
+      EPA_BF_COEFS, /* WRITE   */
+      EPA_BF_COEFS, /* READACK */
+      EPA_WRITEACK, /* WRITEACK */
     },
   },
 
-  /* pid = 0x06 (ST) */
+  /* pid = 0x06 (BST) */
   {
     /* reg = 0x00 (Mean) */
     { 0,
-      EPA_STSTATS_READ, /* READ    */
-      EPA_STSTATS,      /* WRITE   */
-      EPA_STSTATS,      /* READRES */
-      EPA_READERR, /* READERR */
+      EPA_READ,      /* READ    */
+      0,
+      EPA_STATS,     /* READACK */
+      0,
     },
 
     /* reg = 0x01 (Power) */
     { 0,
-      EPA_STSTATS_READ, /* READ    */
-      EPA_STSTATS,      /* WRITE   */
-      EPA_STSTATS,      /* READRES */
-      EPA_READERR, /* READERR */
+      EPA_READ,      /* READ    */
+      0,
+      EPA_STATS,     /* READACK */
+      0,
     },
   },
 
-  /* pid = 0x07 (STSUB) */
+  /* pid = 0x07 (SST) */
   {
     /* reg = 0x00 (Mean) */
     { 0,
-      EPA_STSUBSTATS_READ, /* READ    */
-      EPA_STSUBSTATS,      /* WRITE   */
-      EPA_STSUBSTATS,      /* READRES */
-      EPA_READERR, /* READERR */
+      EPA_READ,      /* READ */
+      0,
+      EPA_STATS,     /* READACK */
+      0,
     },
 
     /* reg = 0x01 (Power) */
     { 0,
-      EPA_STSUBSTATS_READ, /* READ    */
-      EPA_STSUBSTATS,      /* WRITE   */
-      EPA_STSUBSTATS,      /* READRES */
-      EPA_READERR, /* READERR */
+      EPA_READ,      /* READ */
+      0,
+      EPA_STATS,     /* READACK */
+      0,
     },
   },
 
@@ -200,10 +208,59 @@ static unsigned short signal_lut[MEPHeader::MAX_PID + 1][MEPHeader::MAX_REGID + 
   {
     /* reg = 0x00 (RCU Settings) */
     { 0,
-      EPA_RCUSETTINGS_READ, /* READ    */
-      EPA_RCUSETTINGS,      /* WRITE   */
-      EPA_RCUSETTINGS,      /* READRES */
-      EPA_READERR, /* READERR */
+      EPA_READ,         /* READ     */
+      EPA_RCU_SETTINGS, /* WRITE    */
+      EPA_RCU_SETTINGS, /* READACK  */
+      EPA_WRITEACK,     /* WRITEACK */
+    },
+  },
+
+  /* pid = 0x09 (CRR) */
+  {
+    /* reg = 0x00 (Soft Reset) */
+    { 0,
+      EPA_READ,          /* READ     */
+      EPA_CRR_SOFTRESET, /* WRITE    */
+      EPA_CRR_SOFTRESET, /* READACK  */
+      EPA_WRITEACK,      /* WRITEACK */
+    },
+
+    /* reg = 0x01 (Soft PPS) */
+    { 0,
+      EPA_READ,          /* READ     */
+      EPA_CRR_SOFTPPS,   /* WRITE    */
+      EPA_CRR_SOFTPPS,   /* READACK  */
+      EPA_WRITEACK,      /* WRITEACK */
+    },
+  },
+
+  /* pid = 0x0A (CRB) */
+  {
+    /* reg = 0x00 (Soft Reset) */
+    { 0,
+      EPA_READ,          /* READ     */
+      EPA_CRB_SOFTRESET, /* WRITE    */
+      EPA_CRB_SOFTRESET, /* READACK  */
+      EPA_WRITEACK,      /* WRITEACK */
+    },
+
+    /* reg = 0x01 (Soft PPS) */
+    { 0,
+      EPA_READ,          /* READ     */
+      EPA_CRB_SOFTPPS,   /* WRITE    */
+      EPA_CRB_SOFTPPS,   /* READACK  */
+      EPA_WRITEACK,      /* WRITEACK */
+    },
+  },
+
+  /* pid = 0x0B (CDO) */
+  {
+    /* reg = 0x00 (Settings) */
+    { 0,
+      EPA_READ,         /* READ     */
+      EPA_CDO_SETTINGS, /* WRITE    */
+      EPA_CDO_SETTINGS, /* READACK  */
+      EPA_WRITEACK,     /* WRITEACK */
     },
   },
 };
@@ -230,26 +287,43 @@ GCFEvent::TResult RawEvent::dispatch(GCFTask& task, GCFPortInterface& port)
   memcpy(&hdr.m_fields, buf + offset, sizeof(hdr.m_fields));
   offset += sizeof(hdr.m_fields);
 
-  LOG_DEBUG(formatString("F_DATAIN: type=0x%02x, addr=(0x%02x 0x%02x 0x%02x 0x%02x), size=%d",
+  LOG_DEBUG(formatString("F_DATAIN: type=0x%02x, error=%d, seqnr=%d, addr=(0x%02x 0x%02x 0x%02x), size=%d",
 			 hdr.m_fields.type,
+			 hdr.m_fields.error,
+			 hdr.m_fields.seqnr,
 			 hdr.m_fields.addr.dstid,
 			 hdr.m_fields.addr.pid,
 			 hdr.m_fields.addr.regid,
-			 hdr.m_fields.addr.pageid,
 			 hdr.m_fields.size));
+
+  unsigned short signal = 0; // signal == 0 indicates unrecognised or invalid MEP message
 
   //
   // Decode the header fields
   //
-  unsigned short signal = 0;
   if (   hdr.m_fields.addr.pid   <= MEPHeader::MAX_PID
       && hdr.m_fields.addr.regid <= MEPHeader::MAX_REGID
       && hdr.m_fields.type       <= MEPHeader::MAX_TYPE)
   {
-    signal = signal_lut[hdr.m_fields.addr.pid][hdr.m_fields.addr.regid][hdr.m_fields.type];
+    //
+    // If no error, lookup signal number, else assign ACK_ERROR signal number
+    //
+    if (0 == hdr.m_fields.error)
+    {
+      signal = signal_lut[hdr.m_fields.addr.pid][hdr.m_fields.addr.regid][hdr.m_fields.type];      
+    }
+    else 
+    {
+      if (MEPHeader::READACK == hdr.m_fields.type) signal = EPA_READACK_ERROR;
+      else if (MEPHeader::WRITEACK == hdr.m_fields.type) signal = EPA_WRITEACK_ERROR;
+      else 
+      {
+	LOG_WARN("Protocol violation: received message other than MEPHeader::READACK or MEPHeader::WRITEACK with error != 0 set.");
+      }
+    }
   }
   
-  if (signal) // status == 0 indicates unrecognised or invalid MEP message
+  if (signal) // signal == 0 indicates unrecognised or invalid MEP message
   {
     GCFEvent e(signal);
 
@@ -267,19 +341,23 @@ GCFEvent::TResult RawEvent::dispatch(GCFTask& task, GCFPortInterface& port)
     memcpy(event, &e, sizeof(GCFEvent));
     event->length = sizeof(hdr.m_fields) + hdr.m_fields.size;
     memcpy((char*)event + sizeof(GCFEvent), &hdr.m_fields, sizeof(hdr.m_fields));
-    
-    //
-    // Get the payload
-    //
-#if 0
-    size = port.recv((char*)event + sizeof(GCFEvent) + sizeof(hdr.m_fields), hdr.m_fields.size);
-#endif
-    if (size - offset >= hdr.m_fields.size)
-    {
-      memcpy((char*)event + sizeof(GCFEvent) + sizeof(hdr.m_fields), buf + offset, hdr.m_fields.size);
-      offset += hdr.m_fields.size;
-    }
 
+    //
+    // If there was an error, there won't be a payload
+    // despite what the size field suggests.
+    //
+    if (0 == hdr.m_fields.error)
+    {
+      //
+      // Get the payload
+      //
+      if (size - offset >= hdr.m_fields.size)
+      {
+	memcpy((char*)event + sizeof(GCFEvent) + sizeof(hdr.m_fields), buf + offset, hdr.m_fields.size);
+	offset += hdr.m_fields.size;
+      }
+    }
+    
     if (size - offset > 0)
     {
       LOG_DEBUG(formatString("discarding %d bytes", size - offset));

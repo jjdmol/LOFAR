@@ -38,7 +38,7 @@ using namespace EPA_Protocol;
 using namespace RSP_Protocol;
 
 WGRead::WGRead(GCFPortInterface& board_port, int board_id)
-  : SyncAction(board_port, board_id, GET_CONFIG("RS.N_BLPS", i))
+  : SyncAction(board_port, board_id, GET_CONFIG("RS.N_BLPS", i) * 2)
 {
 }
 
@@ -49,28 +49,40 @@ WGRead::~WGRead()
 
 void WGRead::sendrequest()
 {
-  EPAWgsettingsReadEvent wgsettingsread;
-  MEP_WGSETTINGS(wgsettingsread.hdr, MEPHeader::READ, getCurrentBLP());
+  EPAReadEvent wgsettingsread;
+
+  if (0 == getCurrentBLP() % MEPHeader::N_POL)
+  {
+    wgsettingsread.hdr.set(MEPHeader::WG_XSETTINGS_HDR,
+			   getCurrentBLP() / 2,
+			   MEPHeader::READ);
+  }
+  else
+  {
+    wgsettingsread.hdr.set(MEPHeader::WG_YSETTINGS_HDR,
+			   getCurrentBLP() / 2,
+			   MEPHeader::READ);
+  }
   
   getBoardPort().send(wgsettingsread);
 }
 
 void WGRead::sendrequest_status()
 {
-  /* intentionally left empty */
+  // intentionally left empty
 }
 
 GCFEvent::TResult WGRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
 {
-  if (event.signal != EPA_WGSETTINGS) return GCFEvent::HANDLED;
+  if (event.signal != EPA_WG_SETTINGS) return GCFEvent::HANDLED;
   
-  uint8 global_blp = (getBoardId() * GET_CONFIG("RS.N_BLPS", i)) + getCurrentBLP();
+  uint8 global_rcu = (getBoardId() * GET_CONFIG("RS.N_BLPS", i)) + getCurrentBLP();
 
-  EPAWgsettingsEvent wgsettings(event);
+  EPAWgSettingsEvent wgsettings(event);
 
   WGSettings& w = Cache::getInstance().getBack().getWGSettings();
 
-  memcpy(&(w()(global_blp)), &wgsettings.freq, sizeof(WGSettings::WGRegisterType));
+  memcpy(&(w()(global_rcu)), &wgsettings.freq, sizeof(WGSettings::WGRegisterType));
 
   return GCFEvent::HANDLED;
 }

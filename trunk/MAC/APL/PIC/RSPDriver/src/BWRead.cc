@@ -57,7 +57,7 @@ void BWRead::sendrequest()
 {
   uint8 global_blp = (getBoardId() * GET_CONFIG("RS.N_BLPS", i)) + getCurrentBLP();
 
-  if (m_regid < MEPHeader::BFXRE || m_regid > MEPHeader::BFYIM)
+  if (m_regid < MEPHeader::BF_XROUT || m_regid > MEPHeader::BF_YIOUT)
   {
     LOG_FATAL("invalid regid");
     exit(EXIT_FAILURE);
@@ -69,9 +69,27 @@ void BWRead::sendrequest()
 			 m_regid));
   
   // send next BF configure message
-  EPABfcoefsReadEvent bfcoefsread;
+  EPABfCoefsEvent bfcoefsread;
       
-  MEP_BF(bfcoefsread.hdr, MEPHeader::READ, getCurrentBLP(), m_regid);
+  switch (m_regid)
+  {
+    case MEPHeader::BF_XROUT:
+      bfcoefsread.hdr.m_fields = MEPHeader::BF_XROUT_HDR;
+      break;
+    case MEPHeader::BF_XIOUT:
+      bfcoefsread.hdr.m_fields = MEPHeader::BF_XIOUT_HDR;
+      break;
+    case MEPHeader::BF_YROUT:
+      bfcoefsread.hdr.m_fields = MEPHeader::BF_YROUT_HDR;
+      break;
+    case MEPHeader::BF_YIOUT:
+      bfcoefsread.hdr.m_fields = MEPHeader::BF_YIOUT_HDR;
+      break;
+  }
+  
+  // set dstid
+  bfcoefsread.hdr.m_fields.addr.dstid = getCurrentBLP();
+  bfcoefsread.hdr.m_fields.type = MEPHeader::READ;
 
   getBoardPort().send(bfcoefsread);
 
@@ -84,15 +102,15 @@ void BWRead::sendrequest_status()
 
 GCFEvent::TResult BWRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
 {
-  if (event.signal != EPA_BFCOEFS) return GCFEvent::HANDLED;
+  if (event.signal != EPA_BF_COEFS) return GCFEvent::HANDLED;
 
   uint8 global_blp = (getBoardId() * GET_CONFIG("RS.N_BLPS", i)) + getCurrentBLP();
 
-  EPABfcoefsEvent bfcoefs(event);
+  EPABfCoefsEvent bfcoefs(event);
   
   // copy weights from the message to the cache
   Array<int16, 1> weights((int16*)&bfcoefs.coef,
-			  shape(N_BEAMLETS),
+			  shape(MEPHeader::N_BEAMLETS),
 			  neverDeleteData);
 
   if (0 == (m_regid % 2))

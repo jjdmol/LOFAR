@@ -30,9 +30,7 @@
 #define __psaccess__convert_i getInt
 #define __psaccess__convert_f getFloat
 #define __psaccess__convert_d getDouble
-#define GET_CONFIG(var, type) (GCF::ParameterSet::instance()->__psaccess__convert_##type(var))
-
+#define GET_CONFIG(var, type)  (GCF::ParameterSet::instance()->__psaccess__convert_##type(var))
 #define GET_CONFIG_STRING(var) (GCF::ParameterSet::instance()->getString(var).c_str())
-
 
 #endif /* PSACCESS_H_ */

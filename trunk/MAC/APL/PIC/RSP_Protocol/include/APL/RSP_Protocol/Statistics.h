@@ -84,8 +84,7 @@ namespace RSP_Protocol
     private:
       /**
        * Statistics
-       * First dimension is the number of bits in
-       * the rcumask.
+       * Dimensions are: (2, N_RCU, N_SUBBANDS); 2 for MEAN and POWER
        * 
        */
       blitz::Array<std::complex<double>, 3> m_statistics;

@@ -92,7 +92,7 @@ GCFEvent::TResult SyncAction::sendrequest_state(GCFEvent& event, GCFPortInterfac
     case F_ENTRY:
     {
       // send next set of coefficients
-      sendrequest();//m_current_blp);
+      sendrequest();
 
       TRAN(SyncAction::waitack_state);
     }
@@ -138,8 +138,9 @@ GCFEvent::TResult SyncAction::waitack_state(GCFEvent& event, GCFPortInterface& p
     case F_EXIT:
       break;
 
-    case EPA_READERR:
-      LOG_ERROR("\nRead error during SyncAction. Aborting sync action.\n");
+    case EPA_READACK_ERROR:
+    case EPA_WRITEACK_ERROR:
+      LOG_ERROR("\nRead/write error during SyncAction. Aborting sync action.\n");
 
       setCompleted(true); // done with this statemachine
       TRAN(SyncAction::idle_state);

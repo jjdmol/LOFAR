@@ -40,7 +40,7 @@ namespace RSP
        */
       WriteReg(GCFPortInterface& board_port, int board_id,
 	       uint8 dstid, uint8 pid, uint8 regid, uint16 size,
-	       uint16 offset = 0, uint8 pageid = EPA_Protocol::MEPHeader::PAGE_INACTIVE);
+	       uint16 offset = 0);
 	  
       /* Destructor for WriteReg. */
       virtual ~WriteReg();
@@ -72,7 +72,6 @@ namespace RSP
       uint8  m_regid;
       uint16 m_size;
       uint16 m_offset;
-      uint8  m_pageid;
       void*  m_source_address;
   };
 };
