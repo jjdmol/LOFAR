@@ -267,6 +267,8 @@ void MSIntegratorWP::initSegment (ROVisibilityIterator &vi)
   }
   
   // setup shared fields
+  (*shrec)[FUVSetIndex] = msid;
+  (*shrec)[FSegmentIndex] = nchunk;
   (*shrec)[FSPWIndex] = vi.spectralWindow();
   (*shrec)[FFieldIndex] = vi.fieldId();
   (*shrec)[FFieldName] = vi.fieldName();
