@@ -1,27 +1,39 @@
 #include <PL/TPersistentObject.h>
 
+
 namespace LCS
 {
   namespace PL
   {
 
+
     template<typename T>
     inline void TPersistentObject<T>::insert(const PersistenceBroker* const b)
     {
-      // Insert implies that a new object must be inserted into the database.
-      // So, we need to have a new ObjectId.
+      itsOid.get();    // This effectively initializes itsOid
+      insert(itsOid);
     }
+
+
+    template<typename T>
+    inline void TPersistentObject<T>::update(const PersistenceBroker* const b)
+    {
+      update(itsOid);
+    }
+
 
     template<typename T>
     inline void TPersistentObject<T>::save(const PersistenceBroker* const b)
     {
-      if (isPersistent) {
-	update(b);
+      if (isPersistent()) {
+	  update(b);
       }
       else {
-	insert(b);
+	  insert(b);
       }
+      isPersistent(true);
     }
+
 
   } // namespace PL
 
