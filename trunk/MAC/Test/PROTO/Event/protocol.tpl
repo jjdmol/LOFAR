@@ -51,7 +51,7 @@ const char* [+ protocol_name +]_signalnames[] =
 [+ FOR include "" +]
 %include [+ (get "include") +][+ ENDFOR +]
 [+ FOR unbounded_array_types "" +][+ FOR type "" +]
-%array_class([+ (get "type") +], [+ (get "type") +]_array)
+%array_class([+ (get "type") +], [+ (string-substitute (get "type") '( " " )' ( "_" )) +]_array)
 [+ ENDFOR +][+ ENDFOR +]
 %{
 #include "[+ (base-name) +].ph"[+ FOR include "" +]

@@ -11,14 +11,9 @@ id = "(F_GCF_PROTOCOL + 3)";
 // e.g.
 include = "<TransObject.h>";
 
-bounded_array_types = {
-	type = int;
-	type = float;
-	type = double;
-};
-
 unbounded_array_types = {
 	type = int;
+	type = "unsigned int";
 };
 
 //
