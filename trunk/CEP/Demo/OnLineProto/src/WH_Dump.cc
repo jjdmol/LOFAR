@@ -37,18 +37,21 @@
 
 
 // Print interval
-#define INTERVAL 10
+#define INTERVAL 1
+#define PLOTSIZE 20
 
 namespace LOFAR
 {
 
 WH_Dump::WH_Dump (const string& name,
-			      unsigned int nin)
+		  unsigned int  nin,
+		  bool          active)
   : WorkHolder    (nin, 1, name,"WH_Dump"),
     itsIndex   (0),
     itsCounter (0),
     itsBuffer  (0),
-    handle     (0)
+    handle     (0),
+    itsActive  (active)
 {
   char str[8];
   // create the dummy input dataholder
@@ -70,7 +73,7 @@ WH_Dump::WH_Dump (const string& name,
     itsBuffer.resize(NSTATIONS);
     itsBuffer = complex<float> (0,0);
 
-    handle = gnuplot_init ();
+    if (itsActive) handle = gnuplot_init ();
 }
 
 
@@ -93,7 +96,7 @@ WH_Dump* WH_Dump::make (const string& name)
 void WH_Dump::process()
 {
   blitz::Array<complex<float>, 2> corr(NSTATIONS, NSTATIONS);
-  blitz::Array<float, 1> plotBuffer (NSTATIONS) ;
+  blitz::Array<float, 1> plotBuffer (PLOTSIZE) ;
   corr = complex<float> (0,0);
 
   TRACER4("WH_Dump::Process()");
@@ -101,16 +104,19 @@ void WH_Dump::process()
 
   itsCounter++;
   DH_Vis *InDHptr = (DH_Vis*)getDataManager().getInHolder(0);
-  if (itsCounter % INTERVAL == 0) {
+
+  if ((itsCounter % INTERVAL == 0) && (itsActive)) {
+    cout << "DUMPING" << endl;
+
     memcpy (corr.data(), 
 	    InDHptr->getBuffer(), 
 	    NSTATIONS*NSTATIONS*sizeof(DH_Vis::BufferType));
 
-    cout << corr(blitz::Range(0,9), blitz::Range(0,9)) << endl;
+    cout << corr(blitz::Range(0,4), blitz::Range(0,4)) << endl;
     
-    itsBuffer(itsIndex % NSTATIONS) = corr (0,NSTATIONS-1);
+    itsBuffer(itsIndex % PLOTSIZE) = corr (0,NSTATIONS-1);
     
-    if (itsIndex >= NSTATIONS) {
+    if (itsIndex >= PLOTSIZE) {
       // the buffer is filled, we can plot the resulting graph
       
 //       gnuplot_plot_x ( handle,
@@ -119,19 +125,19 @@ void WH_Dump::process()
 // 		       itsBuffer.size(),
 // 		       "Power of correlation between station 0 and 99 over time" );
 
-      plotBuffer = sqrt ( sqr ( imag ( itsBuffer ) ) +
-			  sqr ( real ( itsBuffer ) ) );
+//       plotBuffer = sqrt ( sqr ( imag ( itsBuffer ) ) +
+// 			  sqr ( real ( itsBuffer ) ) );
 		    
 
-      gnuplot_plot_x ( handle, 
-		       plotBuffer.data(),
-		       itsBuffer.size(),
-		       "Power of correlation between station 0 and 99 over time" );
-
 //       gnuplot_plot_x ( handle, 
-// 		       real ( itsBuffer ).data(),
-// 		       itsBuffer.size(), 
-// 		       "Real part of correlation between station 0 and 99 over time" );
+// 		       plotBuffer.data(),
+// 		       itsBuffer.size(),
+// 		       "Power of correlation between station 0 and 99 over time" );
+
+      gnuplot_plot_x ( handle, 
+		       real ( itsBuffer ).data(),
+		       itsBuffer.size(), 
+		       "Real part of correlation between station 0 and 99 over time" );
     }
 
     itsIndex++;
