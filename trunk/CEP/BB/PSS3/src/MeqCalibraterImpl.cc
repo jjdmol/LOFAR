@@ -533,6 +533,8 @@ MeqCalibrater::MeqCalibrater(const String& msName,
   // 1 is the number of time steps. this code is limited to one timestep only
   MeqMatrixComplexArr::poolActivate(itsNrChan * 1);
 
+  itsMEP.unlock();
+  itsGSMMEP.unlock();
   itsMS.unlock ();
 }
 

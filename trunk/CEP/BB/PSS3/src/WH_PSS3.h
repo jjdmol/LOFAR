@@ -26,9 +26,7 @@
 #ifndef PSS3_WH_PSS3_H
 #define PSS3_WH_PSS3_H
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
+#include <lofar_config.h>
 
 #include "CEPFrame/WorkHolder.h"
 

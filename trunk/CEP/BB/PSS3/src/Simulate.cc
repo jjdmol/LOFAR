@@ -22,9 +22,7 @@
 //
 /////////////////////////////////////////////////////////////////
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
+#include <lofar_config.h>
 
 #include "CEPFrame/SimulatorParseClass.h"
 #include <Common/lofar_iostream.h>

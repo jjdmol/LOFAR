@@ -27,7 +27,6 @@
 
 #include "PSS3/WH_PSS3.h"
 #include "CEPFrame/Step.h"
-#include "CEPFrame/ParamBlock.h"
 #include "Common/Debug.h"
 #include "PSS3/DH_WorkOrder.h"
 #include "PSS3/DH_Parms.h"

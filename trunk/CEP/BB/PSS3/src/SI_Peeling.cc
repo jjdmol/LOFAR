@@ -28,13 +28,14 @@ SI_Peeling::SI_Peeling(Calibrator* cal, int argSize, char* args)
   : StrategyImpl(),
     itsCal(cal),
     itsCurIter(-1),
-    itsCurSource(1),
     itsFirstCall(true)
 {
   AssertStr(argSize == sizeof(Peeling_data), "Incorrect argument list");
   SI_Peeling::Peeling_data* pData = (SI_Peeling::Peeling_data*)args;
   itsNIter = pData->nIter;
   itsNSources = pData->nSources;
+  itsStartSource = pData->startSource;
+  itsCurSource = itsStartSource;
   itsTimeInterval = pData->timeInterval;
   TRACER1("Creating Peeling strategy implementation with " 
 	  << "number of iterations = " << itsNIter << ", "
@@ -82,10 +83,10 @@ bool SI_Peeling::execute(vector<string>& parmNames,
     if (itsCal->advanceTimeIntervalIterator() == false) // Next time interval
     {                                    // Finished with all time intervals
       cout << "Next source: " << itsCurSource+1 << endl;
-     if (++itsCurSource > itsNSources)  // Next source
+     if (++itsCurSource >= itsStartSource+itsNSources)  // Next source
       {
 	itsCurIter = -1;
-	itsCurSource = 1;
+	itsCurSource = itsStartSource;
 	itsFirstCall = true;
 	return false;                    // Finished with all sources
       }
