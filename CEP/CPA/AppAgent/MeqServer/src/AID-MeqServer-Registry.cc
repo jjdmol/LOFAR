@@ -5,6 +5,10 @@
     #include <DMI/DynamicTypeManager.h>
     #include <DMI/Packer.h>
     
+#include "Sink.h"
+BlockableObject * __construct_MEQSink (int n) { return n>0 ? new MEQ::Sink [n] : new MEQ::Sink; }
+#include "Spigot.h"
+BlockableObject * __construct_MEQSpigot (int n) { return n>0 ? new MEQ::Spigot [n] : new MEQ::Spigot; }
   
     int aidRegistry_MeqServer ()
     {
@@ -27,9 +31,28 @@
         AtomicID::registerId(-1338,"Command")+
         AtomicID::registerId(-1422,"Args")+
         AtomicID::registerId(-1421,"Result")+
+        AtomicID::registerId(-1107,"Data")+
+        AtomicID::registerId(-1494,"Processing")+
         AtomicID::registerId(-1071,"Error")+
         AtomicID::registerId(-1067,"Message")+
         AtomicID::registerId(-1222,"Code")+
+        AtomicID::registerId(-1464,"Sink")+
+        AtomicID::registerId(-1130,"Output")+
+        AtomicID::registerId(-1463,"Col")+
+        AtomicID::registerId(-1111,"Corr")+
+        AtomicID::registerId(-1045,"Index")+
+        AtomicID::registerId(-1462,"MEQSink")+
+        TypeInfoReg::addToRegistry(-1462,TypeInfo(TypeInfo::DYNAMIC,0))+
+        DynamicTypeManager::addToRegistry(-1462,__construct_MEQSink)+
+        AtomicID::registerId(-1493,"Spigot")+
+        AtomicID::registerId(-1075,"Input")+
+        AtomicID::registerId(-1150,"Next")+
+        AtomicID::registerId(-1457,"Id")+
+        AtomicID::registerId(-1492,"MEQSpigot")+
+        TypeInfoReg::addToRegistry(-1492,TypeInfo(TypeInfo::DYNAMIC,0))+
+        DynamicTypeManager::addToRegistry(-1492,__construct_MEQSpigot)+
+        AtomicID::registerId(-1167,"Station")+
+        AtomicID::registerId(-1459,"VisHandlerNode")+
     0;
     return res;
   }
