@@ -650,9 +650,9 @@ const stress_test := function (n=10000,verbose=0)
       rec.children.c.children :=
       rec.children.d.children := spaste('const',i);
     mqs.meq('Create.Node',rec,wait_reply=F); # wait_reply=((i%10)==0),silent=T); 
-    print 'Message sent';
+    mqs.meq('Resolve.Children',[name=rec.name],wait_reply=F);
   }
-  print 'getting node list'
+  print 'getting node list';
   list := mqs.getnodelist();
   print 'got it'
   for( i in 1:len(list) )
