@@ -1,6 +1,7 @@
 SUBDIRS= \
   APLCommon \
+  PIC \
 	PAC \
-  PIC
+  VIC
   
 include $(lofar_sharedir)/Makefile.common
