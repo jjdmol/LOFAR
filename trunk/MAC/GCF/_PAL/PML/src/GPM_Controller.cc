@@ -304,11 +304,11 @@ GCFEvent::TResult GPMController::initial(GCFEvent& e, GCFPortInterface& p)
       break;
 
     case F_ENTRY:
-      if (_propertyAgent.isConnected())
+      if (!_propertyAgent.isConnected())
       {
         _propertyAgent.open();
       }
-      if (_distPropertyAgent.isConnected())
+      if (!_distPropertyAgent.isConnected())
       {
         _distPropertyAgent.open();
       }
