@@ -1,5 +1,6 @@
 [ctrl]
-LoadCtrlLibs = "std.ctl, libCTRL.ctl, hosts.ctl, va.ctl, archiv.ctl, mp.ctl, gcfpa-cwd.ctl, gcfpa-com.ctl"
+LoadCtrlLibs = "std.ctl, libCTRL.ctl, hosts.ctl, va.ctl, archiv.ctl, mp.ctl"
+LoadCtrlLibs = "gcfpa-cwd.ctl, gcfpa-com.ctl"
 
 [ui_extend]
 LoadCtrlLibs = "para.ctl, ep.ctl, csg.ctl, ngedi.ctl, ini.ctl"
@@ -10,7 +11,8 @@ LoadCtrlLibs = "login.ctl, panel.ctl, std.ctl, dist.ctl"
 LoadCtrlLibs = "hosts.ctl, va.ctl, ac.ctl, dpGroups.ctl"
 LoadCtrlLibs = "pager.ctl, archiv.ctl, Clk.ctl, tools.ctl, mp.ctl, ax.ctl"
 LoadCtrlLibs = "pmon.ctl, userMan.ctl"
-LoadCtrlLibs = "ft.ctl, pt.ctl, gcfpa-pml.ctl, gcfpa-com.ctl"
+LoadCtrlLibs = "ft.ctl, pt.ctl"
+LoadCtrlLibs = "gcfpa-pml.ctl, gcfpa-com.ctl"
 
 [event]
 LoadCtrlLibs = "STD_Symbols.ctl"

@@ -1,12 +1,5 @@
 main()
 {
-  deleteDPs("LPT_CHAR");
-  deleteDPs("LPT_BOOL");
-  deleteDPs("LPT_STRING");
-  deleteDPs("LPT_DOUBLE");
-  deleteDPs("LPT_INTEGER");
-  deleteDPs("LPT_UNSIGNED");
-  deleteDPs("GCFTempRef");
   deleteDPs("TTypeA");
   deleteDPs("TTypeB");
   deleteDPs("TTypeC");
