@@ -1,0 +1,940 @@
+# ascii dump of database
+
+# AlertValue
+ElementName	TypeName	DetailNr	_alert_hdl.._type	_alert_hdl.._l_limit	_alert_hdl.._u_limit	_alert_hdl.._l_incl	_alert_hdl.._u_incl	_alert_hdl.._panel	_alert_hdl.._panel_param	_alert_hdl.._help	_alert_hdl.._min_prio	_alert_hdl.._class	_alert_hdl.._text	_alert_hdl.._active	_alert_hdl.._orig_hdl	_alert_hdl.._ok_range	_alert_hdl.._hyst_type	_alert_hdl.._hyst_time	_alert_hdl.._l_hyst_limit	_alert_hdl.._u_hyst_limit	_alert_hdl.._text1	_alert_hdl.._text0	_alert_hdl.._ack_has_prio	_alert_hdl.._order	_alert_hdl.._dp_pattern	_alert_hdl.._dp_list	_alert_hdl.._prio_pattern	_alert_hdl.._abbr_pattern	_alert_hdl.._ack_deletes	_alert_hdl.._non_ack	_alert_hdl.._came_ack	_alert_hdl.._pair_ack	_alert_hdl.._both_ack
+PIC_Rack1_SubRack1_Board1_AP1_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack1_SubRack1_Board1_AP1_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack1_SubRack1_Board1_AP1_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_AP_Error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack1_SubRack1_Board1_AP2_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack1_SubRack1_Board1_AP2_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack1_SubRack1_Board1_AP2_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_AP_Error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack1_SubRack1_Board1_AP3_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack1_SubRack1_Board1_AP3_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack1_SubRack1_Board1_AP3_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_AP_Error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack1_SubRack1_Board1_AP4_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack1_SubRack1_Board1_AP4_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack1_SubRack1_Board1_AP4_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_AP_Error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack1_SubRack1_Board1_BP_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack1_SubRack1_Board1_BP_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack1_SubRack1_Board1_BP_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_BP_Error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack1_SubRack2_Board1_AP1_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack1_SubRack2_Board1_AP1_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack1_SubRack2_Board1_AP1_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_AP_Error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack1_SubRack2_Board1_AP2_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack1_SubRack2_Board1_AP2_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack1_SubRack2_Board1_AP2_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_AP_Error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack1_SubRack2_Board1_AP3_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack1_SubRack2_Board1_AP3_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack1_SubRack2_Board1_AP3_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_AP_Error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack1_SubRack2_Board1_AP4_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack1_SubRack2_Board1_AP4_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack1_SubRack2_Board1_AP4_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_AP_Error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack1_SubRack2_Board1_BP_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack1_SubRack2_Board1_BP_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack1_SubRack2_Board1_BP_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_BP_Error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack1_SubRack3_Board1_AP1_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack1_SubRack3_Board1_AP1_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack1_SubRack3_Board1_AP1_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_AP_Error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack1_SubRack3_Board1_AP2_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack1_SubRack3_Board1_AP2_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack1_SubRack3_Board1_AP2_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_AP_Error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack1_SubRack3_Board1_AP3_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack1_SubRack3_Board1_AP3_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack1_SubRack3_Board1_AP3_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_AP_Error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack1_SubRack3_Board1_AP4_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack1_SubRack3_Board1_AP4_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack1_SubRack3_Board1_AP4_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_AP_Error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack1_SubRack3_Board1_BP_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack1_SubRack3_Board1_BP_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack1_SubRack3_Board1_BP_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_BP_Error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack1_SubRack4_Board1_AP1_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack1_SubRack4_Board1_AP1_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack1_SubRack4_Board1_AP1_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_AP_Error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack1_SubRack4_Board1_AP2_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack1_SubRack4_Board1_AP2_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack1_SubRack4_Board1_AP2_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_AP_Error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack1_SubRack4_Board1_AP3_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack1_SubRack4_Board1_AP3_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack1_SubRack4_Board1_AP3_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_AP_Error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack1_SubRack4_Board1_AP4_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack1_SubRack4_Board1_AP4_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack1_SubRack4_Board1_AP4_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_AP_Error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack1_SubRack4_Board1_BP_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack1_SubRack4_Board1_BP_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack1_SubRack4_Board1_BP_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_BP_Error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack2_SubRack1_Board1_AP1_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack2_SubRack1_Board1_AP1_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack2_SubRack1_Board1_AP1_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_AP_Error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack2_SubRack1_Board1_AP2_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack2_SubRack1_Board1_AP2_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack2_SubRack1_Board1_AP2_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_AP_Error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack2_SubRack1_Board1_AP3_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack2_SubRack1_Board1_AP3_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack2_SubRack1_Board1_AP3_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_AP_Error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack2_SubRack1_Board1_AP4_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack2_SubRack1_Board1_AP4_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack2_SubRack1_Board1_AP4_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_AP_Error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack2_SubRack1_Board1_BP_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack2_SubRack1_Board1_BP_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack2_SubRack1_Board1_BP_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_BP_Error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack2_SubRack2_Board1_AP1_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack2_SubRack2_Board1_AP1_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack2_SubRack2_Board1_AP1_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_AP_Error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack2_SubRack2_Board1_AP2_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack2_SubRack2_Board1_AP2_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack2_SubRack2_Board1_AP2_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_AP_Error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack2_SubRack2_Board1_AP3_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack2_SubRack2_Board1_AP3_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack2_SubRack2_Board1_AP3_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_AP_Error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack2_SubRack2_Board1_AP4_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack2_SubRack2_Board1_AP4_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack2_SubRack2_Board1_AP4_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_AP_Error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack2_SubRack2_Board1_BP_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack2_SubRack2_Board1_BP_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack2_SubRack2_Board1_BP_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_BP_Error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack2_SubRack3_Board1_AP1_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack2_SubRack3_Board1_AP1_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack2_SubRack3_Board1_AP1_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_AP_Error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack2_SubRack3_Board1_AP2_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack2_SubRack3_Board1_AP2_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack2_SubRack3_Board1_AP2_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_AP_Error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack2_SubRack3_Board1_AP3_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack2_SubRack3_Board1_AP3_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack2_SubRack3_Board1_AP3_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_AP_Error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack2_SubRack3_Board1_AP4_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack2_SubRack3_Board1_AP4_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack2_SubRack3_Board1_AP4_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_AP_Error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack2_SubRack3_Board1_BP_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack2_SubRack3_Board1_BP_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack2_SubRack3_Board1_BP_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_BP_Error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack2_SubRack4_Board1_AP1_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack2_SubRack4_Board1_AP1_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack2_SubRack4_Board1_AP1_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_AP_Error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack2_SubRack4_Board1_AP2_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack2_SubRack4_Board1_AP2_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack2_SubRack4_Board1_AP2_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_AP_Error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack2_SubRack4_Board1_AP3_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack2_SubRack4_Board1_AP3_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack2_SubRack4_Board1_AP3_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_AP_Error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack2_SubRack4_Board1_AP4_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack2_SubRack4_Board1_AP4_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack2_SubRack4_Board1_AP4_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_AP_Error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack2_SubRack4_Board1_BP_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack2_SubRack4_Board1_BP_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack2_SubRack4_Board1_BP_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_BP_Error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack3_SubRack1_Board1_AP1_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack3_SubRack1_Board1_AP1_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack3_SubRack1_Board1_AP1_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_AP_Error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack3_SubRack1_Board1_AP2_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack3_SubRack1_Board1_AP2_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack3_SubRack1_Board1_AP2_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_AP_Error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack3_SubRack1_Board1_AP3_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack3_SubRack1_Board1_AP3_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack3_SubRack1_Board1_AP3_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_AP_Error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack3_SubRack1_Board1_AP4_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack3_SubRack1_Board1_AP4_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack3_SubRack1_Board1_AP4_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_AP_Error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack3_SubRack1_Board1_BP_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack3_SubRack1_Board1_BP_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack3_SubRack1_Board1_BP_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_BP_Error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack3_SubRack2_Board1_AP1_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack3_SubRack2_Board1_AP1_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack3_SubRack2_Board1_AP1_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_AP_Error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack3_SubRack2_Board1_AP2_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack3_SubRack2_Board1_AP2_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack3_SubRack2_Board1_AP2_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_AP_Error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack3_SubRack2_Board1_AP3_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack3_SubRack2_Board1_AP3_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack3_SubRack2_Board1_AP3_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_AP_Error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack3_SubRack2_Board1_AP4_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack3_SubRack2_Board1_AP4_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack3_SubRack2_Board1_AP4_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_AP_Error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack3_SubRack2_Board1_BP_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack3_SubRack2_Board1_BP_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack3_SubRack2_Board1_BP_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_BP_Error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack3_SubRack3_Board1_AP1_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack3_SubRack3_Board1_AP1_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack3_SubRack3_Board1_AP1_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_AP_Error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack3_SubRack3_Board1_AP2_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack3_SubRack3_Board1_AP2_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack3_SubRack3_Board1_AP2_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_AP_Error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack3_SubRack3_Board1_AP3_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack3_SubRack3_Board1_AP3_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack3_SubRack3_Board1_AP3_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_AP_Error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack3_SubRack3_Board1_AP4_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack3_SubRack3_Board1_AP4_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack3_SubRack3_Board1_AP4_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_AP_Error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack3_SubRack3_Board1_BP_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack3_SubRack3_Board1_BP_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack3_SubRack3_Board1_BP_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_BP_Error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack3_SubRack4_Board1_AP1_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			0	0							
+PIC_Rack3_SubRack4_Board1_AP1_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack3_SubRack4_Board1_AP1_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_AP_Error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack3_SubRack4_Board1_AP2_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			0	0							
+PIC_Rack3_SubRack4_Board1_AP2_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack3_SubRack4_Board1_AP2_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_AP_Error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack3_SubRack4_Board1_AP3_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			0	0							
+PIC_Rack3_SubRack4_Board1_AP3_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack3_SubRack4_Board1_AP3_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_AP_Error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack3_SubRack4_Board1_AP4_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			0	0							
+PIC_Rack3_SubRack4_Board1_AP4_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack3_SubRack4_Board1_AP4_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_AP_Error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack3_SubRack4_Board1_BP_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			0	0							
+PIC_Rack3_SubRack4_Board1_BP_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack3_SubRack4_Board1_BP_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_BP_Error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack4_SubRack1_Board1_AP1_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack4_SubRack1_Board1_AP1_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack4_SubRack1_Board1_AP1_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_AP_Error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack4_SubRack1_Board1_AP2_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack4_SubRack1_Board1_AP2_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack4_SubRack1_Board1_AP2_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_AP_Error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack4_SubRack1_Board1_AP3_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack4_SubRack1_Board1_AP3_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack4_SubRack1_Board1_AP3_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_AP_Error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack4_SubRack1_Board1_AP4_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack4_SubRack1_Board1_AP4_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack4_SubRack1_Board1_AP4_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_AP_Error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack4_SubRack1_Board1_BP_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack4_SubRack1_Board1_BP_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack4_SubRack1_Board1_BP_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_BP_Error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack4_SubRack2_Board1_AP1_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack4_SubRack2_Board1_AP1_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack4_SubRack2_Board1_AP1_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_AP_Error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack4_SubRack2_Board1_AP2_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack4_SubRack2_Board1_AP2_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack4_SubRack2_Board1_AP2_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_AP_Error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack4_SubRack2_Board1_AP3_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack4_SubRack2_Board1_AP3_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack4_SubRack2_Board1_AP3_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_AP_Error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack4_SubRack2_Board1_AP4_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack4_SubRack2_Board1_AP4_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack4_SubRack2_Board1_AP4_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_AP_Error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack4_SubRack2_Board1_BP_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack4_SubRack2_Board1_BP_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack4_SubRack2_Board1_BP_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_BP_Error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack4_SubRack3_Board1_AP1_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack4_SubRack3_Board1_AP1_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack4_SubRack3_Board1_AP1_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_AP_Error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack4_SubRack3_Board1_AP2_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack4_SubRack3_Board1_AP2_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack4_SubRack3_Board1_AP2_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_AP_Error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack4_SubRack3_Board1_AP3_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack4_SubRack3_Board1_AP3_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack4_SubRack3_Board1_AP3_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_AP_Error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack4_SubRack3_Board1_AP4_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack4_SubRack3_Board1_AP4_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack4_SubRack3_Board1_AP4_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_AP_Error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack4_SubRack3_Board1_BP_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack4_SubRack3_Board1_BP_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack4_SubRack3_Board1_BP_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_BP_Error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack4_SubRack4_Board1_AP1_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack4_SubRack4_Board1_AP1_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack4_SubRack4_Board1_AP1_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_AP_Error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack4_SubRack4_Board1_AP2_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack4_SubRack4_Board1_AP2_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack4_SubRack4_Board1_AP2_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_AP_Error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack4_SubRack4_Board1_AP3_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack4_SubRack4_Board1_AP3_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack4_SubRack4_Board1_AP3_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_AP_Error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack4_SubRack4_Board1_AP4_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack4_SubRack4_Board1_AP4_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack4_SubRack4_Board1_AP4_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_AP_Error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack4_SubRack4_Board1_BP_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack4_SubRack4_Board1_BP_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack4_SubRack4_Board1_BP_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_BP_Error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack5_SubRack1_Board1_AP1_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack5_SubRack1_Board1_AP1_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack5_SubRack1_Board1_AP1_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_AP_Error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack5_SubRack1_Board1_AP2_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack5_SubRack1_Board1_AP2_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack5_SubRack1_Board1_AP2_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_AP_Error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack5_SubRack1_Board1_AP3_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack5_SubRack1_Board1_AP3_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack5_SubRack1_Board1_AP3_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_AP_Error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack5_SubRack1_Board1_AP4_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack5_SubRack1_Board1_AP4_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack5_SubRack1_Board1_AP4_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_AP_Error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack5_SubRack1_Board1_BP_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack5_SubRack1_Board1_BP_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack5_SubRack1_Board1_BP_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_BP_Error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack5_SubRack2_Board1_AP1_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack5_SubRack2_Board1_AP1_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack5_SubRack2_Board1_AP1_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_AP_Error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack5_SubRack2_Board1_AP2_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack5_SubRack2_Board1_AP2_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack5_SubRack2_Board1_AP2_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_AP_Error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack5_SubRack2_Board1_AP3_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack5_SubRack2_Board1_AP3_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack5_SubRack2_Board1_AP3_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_AP_Error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack5_SubRack2_Board1_AP4_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack5_SubRack2_Board1_AP4_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack5_SubRack2_Board1_AP4_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_AP_Error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack5_SubRack2_Board1_BP_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack5_SubRack2_Board1_BP_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack5_SubRack2_Board1_BP_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_BP_Error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack5_SubRack3_Board1_AP1_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			0	0							
+PIC_Rack5_SubRack3_Board1_AP1_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack5_SubRack3_Board1_AP1_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_AP_Error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack5_SubRack3_Board1_AP2_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			0	0							
+PIC_Rack5_SubRack3_Board1_AP2_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack5_SubRack3_Board1_AP2_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_AP_Error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack5_SubRack3_Board1_AP3_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			0	0							
+PIC_Rack5_SubRack3_Board1_AP3_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack5_SubRack3_Board1_AP3_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_AP_Error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack5_SubRack3_Board1_AP4_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			0	0							
+PIC_Rack5_SubRack3_Board1_AP4_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack5_SubRack3_Board1_AP4_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_AP_Error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack5_SubRack3_Board1_BP_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			0	0							
+PIC_Rack5_SubRack3_Board1_BP_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack5_SubRack3_Board1_BP_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_BP_Error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack5_SubRack4_Board1_AP1_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack5_SubRack4_Board1_AP1_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack5_SubRack4_Board1_AP1_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_AP_Error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack5_SubRack4_Board1_AP2_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack5_SubRack4_Board1_AP2_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack5_SubRack4_Board1_AP2_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_AP_Error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack5_SubRack4_Board1_AP3_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack5_SubRack4_Board1_AP3_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack5_SubRack4_Board1_AP3_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_AP_Error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack5_SubRack4_Board1_AP4_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack5_SubRack4_Board1_AP4_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack5_SubRack4_Board1_AP4_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_AP_Error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack5_SubRack4_Board1_BP_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack5_SubRack4_Board1_BP_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack5_SubRack4_Board1_BP_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_BP_Error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack6_SubRack1_Board1_AP1_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack6_SubRack1_Board1_AP1_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack6_SubRack1_Board1_AP1_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_AP_Error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack6_SubRack1_Board1_AP2_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack6_SubRack1_Board1_AP2_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack6_SubRack1_Board1_AP2_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_AP_Error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack6_SubRack1_Board1_AP3_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack6_SubRack1_Board1_AP3_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack6_SubRack1_Board1_AP3_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_AP_Error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack6_SubRack1_Board1_AP4_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack6_SubRack1_Board1_AP4_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack6_SubRack1_Board1_AP4_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_AP_Error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack6_SubRack1_Board1_BP_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack6_SubRack1_Board1_BP_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack6_SubRack1_Board1_BP_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_BP_Error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack6_SubRack2_Board1_AP1_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack6_SubRack2_Board1_AP1_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack6_SubRack2_Board1_AP1_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_AP_Error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack6_SubRack2_Board1_AP2_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack6_SubRack2_Board1_AP2_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack6_SubRack2_Board1_AP2_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_AP_Error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack6_SubRack2_Board1_AP3_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack6_SubRack2_Board1_AP3_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack6_SubRack2_Board1_AP3_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_AP_Error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack6_SubRack2_Board1_AP4_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack6_SubRack2_Board1_AP4_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack6_SubRack2_Board1_AP4_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_AP_Error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack6_SubRack2_Board1_BP_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack6_SubRack2_Board1_BP_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack6_SubRack2_Board1_BP_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_AP_Error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack6_SubRack3_Board1_AP1_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack6_SubRack3_Board1_AP1_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack6_SubRack3_Board1_AP1_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_AP_Error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack6_SubRack3_Board1_AP2_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack6_SubRack3_Board1_AP2_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack6_SubRack3_Board1_AP2_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_AP_Error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack6_SubRack3_Board1_AP3_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack6_SubRack3_Board1_AP3_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack6_SubRack3_Board1_AP3_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_AP_Error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack6_SubRack3_Board1_AP4_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack6_SubRack3_Board1_AP4_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack6_SubRack3_Board1_AP4_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_AP_Error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack6_SubRack3_Board1_BP_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack6_SubRack3_Board1_BP_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack6_SubRack3_Board1_BP_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_BP_Error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack6_SubRack4_Board1_AP1_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack6_SubRack4_Board1_AP1_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack6_SubRack4_Board1_AP1_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_AP_Error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack6_SubRack4_Board1_AP2_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack6_SubRack4_Board1_AP2_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack6_SubRack4_Board1_AP2_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_AP_Error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack6_SubRack4_Board1_AP3_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack6_SubRack4_Board1_AP3_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack6_SubRack4_Board1_AP3_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_AP_Error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack6_SubRack4_Board1_AP4_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			0	1							
+PIC_Rack6_SubRack4_Board1_AP4_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack6_SubRack4_Board1_AP4_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack6_SubRack4_Board1_BP_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack6_SubRack4_Board1_BP_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack6_SubRack4_Board1_BP_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_BP_Error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack1_SubRack1_Board1_AP1_RCU1_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack1_SubRack1_Board1_AP1_RCU1_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack1_SubRack1_Board1_AP1_RCU1_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack1_SubRack1_Board1_AP1_RCU2_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack1_SubRack1_Board1_AP1_RCU2_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack1_SubRack1_Board1_AP1_RCU2_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack1_SubRack1_Board1_AP2_RCU1_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack1_SubRack1_Board1_AP2_RCU1_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack1_SubRack1_Board1_AP2_RCU1_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack1_SubRack1_Board1_AP2_RCU2_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			0	0							
+PIC_Rack1_SubRack1_Board1_AP2_RCU2_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack1_SubRack1_Board1_AP2_RCU2_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack1_SubRack1_Board1_AP3_RCU1_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack1_SubRack1_Board1_AP3_RCU1_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack1_SubRack1_Board1_AP3_RCU1_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack1_SubRack1_Board1_AP3_RCU2_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack1_SubRack1_Board1_AP3_RCU2_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack1_SubRack1_Board1_AP3_RCU2_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack1_SubRack1_Board1_AP4_RCU1_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack1_SubRack1_Board1_AP4_RCU1_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 ""				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack1_SubRack1_Board1_AP4_RCU1_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					alert.	lt:1 LANG:1 "RCU Alarm"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack1_SubRack1_Board1_AP4_RCU2_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack1_SubRack1_Board1_AP4_RCU2_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 ""				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack1_SubRack1_Board1_AP4_RCU2_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					alert.	lt:1 LANG:1 "RCU Alarm"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack1_SubRack2_Board1_AP1_RCU1_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack1_SubRack2_Board1_AP1_RCU1_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack1_SubRack2_Board1_AP1_RCU1_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack1_SubRack2_Board1_AP1_RCU2_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack1_SubRack2_Board1_AP1_RCU2_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack1_SubRack2_Board1_AP1_RCU2_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack1_SubRack2_Board1_AP2_RCU1_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack1_SubRack2_Board1_AP2_RCU1_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack1_SubRack2_Board1_AP2_RCU1_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack1_SubRack2_Board1_AP2_RCU2_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack1_SubRack2_Board1_AP2_RCU2_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack1_SubRack2_Board1_AP2_RCU2_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack1_SubRack2_Board1_AP3_RCU1_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack1_SubRack2_Board1_AP3_RCU1_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack1_SubRack2_Board1_AP3_RCU1_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack1_SubRack2_Board1_AP3_RCU2_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack1_SubRack2_Board1_AP3_RCU2_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack1_SubRack2_Board1_AP3_RCU2_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack1_SubRack2_Board1_AP4_RCU1_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack1_SubRack2_Board1_AP4_RCU1_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack1_SubRack2_Board1_AP4_RCU1_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack1_SubRack2_Board1_AP4_RCU2_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack1_SubRack2_Board1_AP4_RCU2_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack1_SubRack2_Board1_AP4_RCU2_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack1_SubRack3_Board1_AP1_RCU1_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack1_SubRack3_Board1_AP1_RCU1_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack1_SubRack3_Board1_AP1_RCU1_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack1_SubRack3_Board1_AP1_RCU2_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack1_SubRack3_Board1_AP1_RCU2_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack1_SubRack3_Board1_AP1_RCU2_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack1_SubRack3_Board1_AP2_RCU1_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack1_SubRack3_Board1_AP2_RCU1_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack1_SubRack3_Board1_AP2_RCU1_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack1_SubRack3_Board1_AP2_RCU2_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack1_SubRack3_Board1_AP2_RCU2_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack1_SubRack3_Board1_AP2_RCU2_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack1_SubRack3_Board1_AP3_RCU1_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack1_SubRack3_Board1_AP3_RCU1_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack1_SubRack3_Board1_AP3_RCU1_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack1_SubRack3_Board1_AP3_RCU2_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack1_SubRack3_Board1_AP3_RCU2_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack1_SubRack3_Board1_AP3_RCU2_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack1_SubRack3_Board1_AP4_RCU1_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack1_SubRack3_Board1_AP4_RCU1_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack1_SubRack3_Board1_AP4_RCU1_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack1_SubRack3_Board1_AP4_RCU2_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack1_SubRack3_Board1_AP4_RCU2_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack1_SubRack3_Board1_AP4_RCU2_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack1_SubRack4_Board1_AP1_RCU1_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack1_SubRack4_Board1_AP1_RCU1_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack1_SubRack4_Board1_AP1_RCU1_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack1_SubRack4_Board1_AP1_RCU2_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack1_SubRack4_Board1_AP1_RCU2_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack1_SubRack4_Board1_AP1_RCU2_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack1_SubRack4_Board1_AP2_RCU1_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack1_SubRack4_Board1_AP2_RCU1_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack1_SubRack4_Board1_AP2_RCU1_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack1_SubRack4_Board1_AP2_RCU2_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack1_SubRack4_Board1_AP2_RCU2_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack1_SubRack4_Board1_AP2_RCU2_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack1_SubRack4_Board1_AP3_RCU1_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack1_SubRack4_Board1_AP3_RCU1_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack1_SubRack4_Board1_AP3_RCU1_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack1_SubRack4_Board1_AP3_RCU2_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack1_SubRack4_Board1_AP3_RCU2_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack1_SubRack4_Board1_AP3_RCU2_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack1_SubRack4_Board1_AP4_RCU1_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack1_SubRack4_Board1_AP4_RCU1_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack1_SubRack4_Board1_AP4_RCU1_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack1_SubRack4_Board1_AP4_RCU2_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack1_SubRack4_Board1_AP4_RCU2_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack1_SubRack4_Board1_AP4_RCU2_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack2_SubRack1_Board1_AP1_RCU1_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack2_SubRack1_Board1_AP1_RCU1_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack2_SubRack1_Board1_AP1_RCU1_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack2_SubRack1_Board1_AP1_RCU2_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack2_SubRack1_Board1_AP1_RCU2_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack2_SubRack1_Board1_AP1_RCU2_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack2_SubRack1_Board1_AP2_RCU1_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack2_SubRack1_Board1_AP2_RCU1_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack2_SubRack1_Board1_AP2_RCU1_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack2_SubRack1_Board1_AP2_RCU2_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack2_SubRack1_Board1_AP2_RCU2_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack2_SubRack1_Board1_AP2_RCU2_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack2_SubRack1_Board1_AP3_RCU1_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack2_SubRack1_Board1_AP3_RCU1_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack2_SubRack1_Board1_AP3_RCU1_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack2_SubRack1_Board1_AP3_RCU2_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack2_SubRack1_Board1_AP3_RCU2_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack2_SubRack1_Board1_AP3_RCU2_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack2_SubRack1_Board1_AP4_RCU1_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack2_SubRack1_Board1_AP4_RCU1_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack2_SubRack1_Board1_AP4_RCU1_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack2_SubRack1_Board1_AP4_RCU2_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack2_SubRack1_Board1_AP4_RCU2_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack2_SubRack1_Board1_AP4_RCU2_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack2_SubRack2_Board1_AP1_RCU1_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack2_SubRack2_Board1_AP1_RCU1_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack2_SubRack2_Board1_AP1_RCU1_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack2_SubRack2_Board1_AP1_RCU2_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack2_SubRack2_Board1_AP1_RCU2_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack2_SubRack2_Board1_AP1_RCU2_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack2_SubRack2_Board1_AP2_RCU1_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack2_SubRack2_Board1_AP2_RCU1_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack2_SubRack2_Board1_AP2_RCU1_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack2_SubRack2_Board1_AP2_RCU2_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack2_SubRack2_Board1_AP2_RCU2_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack2_SubRack2_Board1_AP2_RCU2_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack2_SubRack2_Board1_AP3_RCU1_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack2_SubRack2_Board1_AP3_RCU1_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack2_SubRack2_Board1_AP3_RCU1_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack2_SubRack2_Board1_AP3_RCU2_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack2_SubRack2_Board1_AP3_RCU2_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack2_SubRack2_Board1_AP3_RCU2_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack2_SubRack2_Board1_AP4_RCU1_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack2_SubRack2_Board1_AP4_RCU1_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack2_SubRack2_Board1_AP4_RCU1_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack2_SubRack2_Board1_AP4_RCU2_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack2_SubRack2_Board1_AP4_RCU2_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack2_SubRack2_Board1_AP4_RCU2_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack2_SubRack3_Board1_AP1_RCU1_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack2_SubRack3_Board1_AP1_RCU1_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack2_SubRack3_Board1_AP1_RCU1_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack2_SubRack3_Board1_AP1_RCU2_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack2_SubRack3_Board1_AP1_RCU2_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack2_SubRack3_Board1_AP1_RCU2_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack2_SubRack3_Board1_AP2_RCU1_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack2_SubRack3_Board1_AP2_RCU1_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack2_SubRack3_Board1_AP2_RCU1_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack2_SubRack3_Board1_AP2_RCU2_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack2_SubRack3_Board1_AP2_RCU2_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack2_SubRack3_Board1_AP2_RCU2_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack2_SubRack3_Board1_AP3_RCU1_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack2_SubRack3_Board1_AP3_RCU1_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack2_SubRack3_Board1_AP3_RCU1_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack2_SubRack3_Board1_AP3_RCU2_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack2_SubRack3_Board1_AP3_RCU2_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack2_SubRack3_Board1_AP3_RCU2_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack2_SubRack3_Board1_AP4_RCU1_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack2_SubRack3_Board1_AP4_RCU1_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack2_SubRack3_Board1_AP4_RCU1_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack2_SubRack3_Board1_AP4_RCU2_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack2_SubRack3_Board1_AP4_RCU2_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack2_SubRack3_Board1_AP4_RCU2_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack2_SubRack4_Board1_AP1_RCU1_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack2_SubRack4_Board1_AP1_RCU1_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack2_SubRack4_Board1_AP1_RCU1_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack2_SubRack4_Board1_AP1_RCU2_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack2_SubRack4_Board1_AP1_RCU2_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack2_SubRack4_Board1_AP1_RCU2_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack2_SubRack4_Board1_AP2_RCU1_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack2_SubRack4_Board1_AP2_RCU1_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack2_SubRack4_Board1_AP2_RCU1_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack2_SubRack4_Board1_AP2_RCU2_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack2_SubRack4_Board1_AP2_RCU2_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack2_SubRack4_Board1_AP2_RCU2_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack2_SubRack4_Board1_AP3_RCU1_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack2_SubRack4_Board1_AP3_RCU1_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack2_SubRack4_Board1_AP3_RCU1_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack2_SubRack4_Board1_AP3_RCU2_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack2_SubRack4_Board1_AP3_RCU2_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack2_SubRack4_Board1_AP3_RCU2_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack2_SubRack4_Board1_AP4_RCU1_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack2_SubRack4_Board1_AP4_RCU1_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack2_SubRack4_Board1_AP4_RCU1_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack2_SubRack4_Board1_AP4_RCU2_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack2_SubRack4_Board1_AP4_RCU2_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack2_SubRack4_Board1_AP4_RCU2_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack3_SubRack1_Board1_AP1_RCU1_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack3_SubRack1_Board1_AP1_RCU1_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack3_SubRack1_Board1_AP1_RCU1_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack3_SubRack1_Board1_AP1_RCU2_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack3_SubRack1_Board1_AP1_RCU2_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack3_SubRack1_Board1_AP1_RCU2_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack3_SubRack1_Board1_AP2_RCU1_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack3_SubRack1_Board1_AP2_RCU1_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack3_SubRack1_Board1_AP2_RCU1_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack3_SubRack1_Board1_AP2_RCU2_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack3_SubRack1_Board1_AP2_RCU2_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack3_SubRack1_Board1_AP2_RCU2_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack3_SubRack1_Board1_AP3_RCU1_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack3_SubRack1_Board1_AP3_RCU1_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack3_SubRack1_Board1_AP3_RCU1_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack3_SubRack1_Board1_AP3_RCU2_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack3_SubRack1_Board1_AP3_RCU2_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack3_SubRack1_Board1_AP3_RCU2_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack3_SubRack1_Board1_AP4_RCU1_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack3_SubRack1_Board1_AP4_RCU1_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack3_SubRack1_Board1_AP4_RCU1_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack3_SubRack1_Board1_AP4_RCU2_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack3_SubRack1_Board1_AP4_RCU2_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack3_SubRack1_Board1_AP4_RCU2_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack3_SubRack2_Board1_AP2_RCU1_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack3_SubRack2_Board1_AP2_RCU1_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack3_SubRack2_Board1_AP2_RCU1_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack3_SubRack2_Board1_AP2_RCU2_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack3_SubRack2_Board1_AP2_RCU2_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack3_SubRack2_Board1_AP2_RCU2_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack3_SubRack2_Board1_AP3_RCU1_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack3_SubRack2_Board1_AP3_RCU1_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack3_SubRack2_Board1_AP3_RCU1_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack3_SubRack2_Board1_AP3_RCU2_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack3_SubRack2_Board1_AP3_RCU2_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack3_SubRack2_Board1_AP3_RCU2_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack3_SubRack2_Board1_AP4_RCU1_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack3_SubRack2_Board1_AP4_RCU1_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack3_SubRack2_Board1_AP4_RCU1_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack3_SubRack2_Board1_AP4_RCU2_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack3_SubRack2_Board1_AP4_RCU2_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack3_SubRack2_Board1_AP4_RCU2_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack3_SubRack3_Board1_AP1_RCU1_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack3_SubRack3_Board1_AP1_RCU1_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack3_SubRack3_Board1_AP1_RCU1_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack3_SubRack3_Board1_AP1_RCU2_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack3_SubRack3_Board1_AP1_RCU2_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack3_SubRack3_Board1_AP1_RCU2_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack3_SubRack3_Board1_AP2_RCU1_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack3_SubRack3_Board1_AP2_RCU1_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack3_SubRack3_Board1_AP2_RCU1_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack3_SubRack3_Board1_AP2_RCU2_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack3_SubRack3_Board1_AP2_RCU2_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack3_SubRack3_Board1_AP2_RCU2_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack3_SubRack3_Board1_AP3_RCU1_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack3_SubRack3_Board1_AP3_RCU1_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack3_SubRack3_Board1_AP3_RCU1_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack3_SubRack3_Board1_AP3_RCU2_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack3_SubRack3_Board1_AP3_RCU2_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack3_SubRack3_Board1_AP3_RCU2_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack3_SubRack3_Board1_AP4_RCU1_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack3_SubRack3_Board1_AP4_RCU1_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack3_SubRack3_Board1_AP4_RCU1_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack3_SubRack3_Board1_AP4_RCU2_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack3_SubRack3_Board1_AP4_RCU2_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack3_SubRack3_Board1_AP4_RCU2_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack3_SubRack4_Board1_AP1_RCU1_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			0	1							
+PIC_Rack3_SubRack4_Board1_AP1_RCU1_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack3_SubRack4_Board1_AP1_RCU1_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack3_SubRack4_Board1_AP1_RCU2_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			0	1							
+PIC_Rack3_SubRack4_Board1_AP1_RCU2_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack3_SubRack4_Board1_AP1_RCU2_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack3_SubRack4_Board1_AP2_RCU1_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			0	1							
+PIC_Rack3_SubRack4_Board1_AP2_RCU1_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack3_SubRack4_Board1_AP2_RCU1_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack3_SubRack4_Board1_AP2_RCU2_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			0	1							
+PIC_Rack3_SubRack4_Board1_AP2_RCU2_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack3_SubRack4_Board1_AP2_RCU2_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack3_SubRack4_Board1_AP3_RCU1_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			0	1							
+PIC_Rack3_SubRack4_Board1_AP3_RCU1_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack3_SubRack4_Board1_AP3_RCU1_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack3_SubRack4_Board1_AP3_RCU2_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			0	1							
+PIC_Rack3_SubRack4_Board1_AP3_RCU2_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack3_SubRack4_Board1_AP3_RCU2_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack3_SubRack4_Board1_AP4_RCU1_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			0	1							
+PIC_Rack3_SubRack4_Board1_AP4_RCU1_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack3_SubRack4_Board1_AP4_RCU1_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack3_SubRack4_Board1_AP4_RCU2_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			0	1							
+PIC_Rack3_SubRack4_Board1_AP4_RCU2_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack3_SubRack4_Board1_AP4_RCU2_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack4_SubRack1_Board1_AP1_RCU1_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack4_SubRack1_Board1_AP1_RCU1_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack4_SubRack1_Board1_AP1_RCU1_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack4_SubRack1_Board1_AP1_RCU2_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack4_SubRack1_Board1_AP1_RCU2_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack4_SubRack1_Board1_AP1_RCU2_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack4_SubRack1_Board1_AP2_RCU1_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack4_SubRack1_Board1_AP2_RCU1_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack4_SubRack1_Board1_AP2_RCU1_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack4_SubRack1_Board1_AP2_RCU2_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack4_SubRack1_Board1_AP2_RCU2_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack4_SubRack1_Board1_AP2_RCU2_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack4_SubRack1_Board1_AP3_RCU1_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack4_SubRack1_Board1_AP3_RCU1_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack4_SubRack1_Board1_AP3_RCU1_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack4_SubRack1_Board1_AP3_RCU2_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack4_SubRack1_Board1_AP3_RCU2_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack4_SubRack1_Board1_AP3_RCU2_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack4_SubRack1_Board1_AP4_RCU1_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack4_SubRack1_Board1_AP4_RCU1_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack4_SubRack1_Board1_AP4_RCU1_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack4_SubRack1_Board1_AP4_RCU2_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack4_SubRack1_Board1_AP4_RCU2_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack4_SubRack1_Board1_AP4_RCU2_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack4_SubRack2_Board1_AP1_RCU1_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack4_SubRack2_Board1_AP1_RCU1_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack4_SubRack2_Board1_AP1_RCU1_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack4_SubRack2_Board1_AP1_RCU2_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack4_SubRack2_Board1_AP1_RCU2_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack4_SubRack2_Board1_AP1_RCU2_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack4_SubRack2_Board1_AP2_RCU1_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack4_SubRack2_Board1_AP2_RCU1_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack4_SubRack2_Board1_AP2_RCU1_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack4_SubRack2_Board1_AP2_RCU2_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack4_SubRack2_Board1_AP2_RCU2_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack4_SubRack2_Board1_AP2_RCU2_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack4_SubRack2_Board1_AP3_RCU1_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack4_SubRack2_Board1_AP3_RCU1_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack4_SubRack2_Board1_AP3_RCU1_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack4_SubRack2_Board1_AP3_RCU2_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack4_SubRack2_Board1_AP3_RCU2_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack4_SubRack2_Board1_AP3_RCU2_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack4_SubRack2_Board1_AP4_RCU1_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack4_SubRack2_Board1_AP4_RCU1_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack4_SubRack2_Board1_AP4_RCU1_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack4_SubRack2_Board1_AP4_RCU2_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack4_SubRack2_Board1_AP4_RCU2_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack4_SubRack2_Board1_AP4_RCU2_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack3_SubRack2_Board1_AP1_RCU1_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack3_SubRack2_Board1_AP1_RCU1_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack3_SubRack2_Board1_AP1_RCU1_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack3_SubRack2_Board1_AP1_RCU2_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack3_SubRack2_Board1_AP1_RCU2_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack3_SubRack2_Board1_AP1_RCU2_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack4_SubRack3_Board1_AP1_RCU1_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack4_SubRack3_Board1_AP1_RCU1_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack4_SubRack3_Board1_AP1_RCU1_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack4_SubRack3_Board1_AP1_RCU2_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack4_SubRack3_Board1_AP1_RCU2_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack4_SubRack3_Board1_AP1_RCU2_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack4_SubRack3_Board1_AP2_RCU1_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack4_SubRack3_Board1_AP2_RCU1_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack4_SubRack3_Board1_AP2_RCU1_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack4_SubRack3_Board1_AP2_RCU2_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack4_SubRack3_Board1_AP2_RCU2_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack4_SubRack3_Board1_AP2_RCU2_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack4_SubRack3_Board1_AP3_RCU1_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack4_SubRack3_Board1_AP3_RCU1_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack4_SubRack3_Board1_AP3_RCU1_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack4_SubRack3_Board1_AP3_RCU2_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack4_SubRack3_Board1_AP3_RCU2_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack4_SubRack3_Board1_AP3_RCU2_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack4_SubRack3_Board1_AP4_RCU1_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack4_SubRack3_Board1_AP4_RCU1_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack4_SubRack3_Board1_AP4_RCU1_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack4_SubRack3_Board1_AP4_RCU2_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack4_SubRack3_Board1_AP4_RCU2_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack4_SubRack3_Board1_AP4_RCU2_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack4_SubRack4_Board1_AP1_RCU1_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack4_SubRack4_Board1_AP1_RCU1_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack4_SubRack4_Board1_AP1_RCU1_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack4_SubRack4_Board1_AP1_RCU2_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack4_SubRack4_Board1_AP1_RCU2_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack4_SubRack4_Board1_AP1_RCU2_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack4_SubRack4_Board1_AP2_RCU1_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack4_SubRack4_Board1_AP2_RCU1_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack4_SubRack4_Board1_AP2_RCU1_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack4_SubRack4_Board1_AP2_RCU2_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack4_SubRack4_Board1_AP2_RCU2_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack4_SubRack4_Board1_AP2_RCU2_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack4_SubRack4_Board1_AP3_RCU1_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack4_SubRack4_Board1_AP3_RCU1_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack4_SubRack4_Board1_AP3_RCU1_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack4_SubRack4_Board1_AP3_RCU2_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack4_SubRack4_Board1_AP3_RCU2_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack4_SubRack4_Board1_AP3_RCU2_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack4_SubRack4_Board1_AP4_RCU1_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack4_SubRack4_Board1_AP4_RCU1_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack4_SubRack4_Board1_AP4_RCU1_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack4_SubRack4_Board1_AP4_RCU2_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack4_SubRack4_Board1_AP4_RCU2_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack4_SubRack4_Board1_AP4_RCU2_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack5_SubRack1_Board1_AP1_RCU1_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack5_SubRack1_Board1_AP1_RCU1_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack5_SubRack1_Board1_AP1_RCU1_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack5_SubRack1_Board1_AP1_RCU2_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack5_SubRack1_Board1_AP1_RCU2_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack5_SubRack1_Board1_AP1_RCU2_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack5_SubRack1_Board1_AP2_RCU1_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack5_SubRack1_Board1_AP2_RCU1_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack5_SubRack1_Board1_AP2_RCU1_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack5_SubRack1_Board1_AP2_RCU2_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack5_SubRack1_Board1_AP2_RCU2_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack5_SubRack1_Board1_AP2_RCU2_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack5_SubRack1_Board1_AP3_RCU1_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack5_SubRack1_Board1_AP3_RCU1_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack5_SubRack1_Board1_AP3_RCU1_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack5_SubRack1_Board1_AP3_RCU2_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack5_SubRack1_Board1_AP3_RCU2_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack5_SubRack1_Board1_AP3_RCU2_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack5_SubRack1_Board1_AP4_RCU1_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack5_SubRack1_Board1_AP4_RCU1_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack5_SubRack1_Board1_AP4_RCU1_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack5_SubRack1_Board1_AP4_RCU2_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack5_SubRack1_Board1_AP4_RCU2_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack5_SubRack1_Board1_AP4_RCU2_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack5_SubRack2_Board1_AP1_RCU1_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack5_SubRack2_Board1_AP1_RCU1_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack5_SubRack2_Board1_AP1_RCU1_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack5_SubRack2_Board1_AP1_RCU2_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack5_SubRack2_Board1_AP1_RCU2_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack5_SubRack2_Board1_AP1_RCU2_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack5_SubRack2_Board1_AP2_RCU1_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack5_SubRack2_Board1_AP2_RCU1_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack5_SubRack2_Board1_AP2_RCU1_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack5_SubRack2_Board1_AP2_RCU2_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack5_SubRack2_Board1_AP2_RCU2_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack5_SubRack2_Board1_AP2_RCU2_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack5_SubRack2_Board1_AP3_RCU1_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack5_SubRack2_Board1_AP3_RCU1_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack5_SubRack2_Board1_AP3_RCU1_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack5_SubRack2_Board1_AP3_RCU2_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack5_SubRack2_Board1_AP3_RCU2_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack5_SubRack2_Board1_AP3_RCU2_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack5_SubRack2_Board1_AP4_RCU1_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack5_SubRack2_Board1_AP4_RCU1_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack5_SubRack2_Board1_AP4_RCU1_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack5_SubRack2_Board1_AP4_RCU2_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	1							
+PIC_Rack5_SubRack2_Board1_AP4_RCU2_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack5_SubRack2_Board1_AP4_RCU2_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack5_SubRack3_Board1_AP1_RCU1_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			0	1							
+PIC_Rack5_SubRack3_Board1_AP1_RCU1_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack5_SubRack3_Board1_AP1_RCU1_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack5_SubRack3_Board1_AP1_RCU2_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			0	0							
+PIC_Rack5_SubRack3_Board1_AP1_RCU2_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack5_SubRack3_Board1_AP1_RCU2_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack5_SubRack3_Board1_AP2_RCU1_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			0	0							
+PIC_Rack5_SubRack3_Board1_AP2_RCU1_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack5_SubRack3_Board1_AP2_RCU1_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack5_SubRack3_Board1_AP2_RCU2_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			0	0							
+PIC_Rack5_SubRack3_Board1_AP2_RCU2_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack5_SubRack3_Board1_AP2_RCU2_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack5_SubRack3_Board1_AP3_RCU1_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			0	0							
+PIC_Rack5_SubRack3_Board1_AP3_RCU1_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack5_SubRack3_Board1_AP3_RCU1_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack5_SubRack3_Board1_AP3_RCU2_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			0	0							
+PIC_Rack5_SubRack3_Board1_AP3_RCU2_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack5_SubRack3_Board1_AP3_RCU2_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack5_SubRack3_Board1_AP4_RCU1_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			0	0							
+PIC_Rack5_SubRack3_Board1_AP4_RCU1_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack5_SubRack3_Board1_AP4_RCU1_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack5_SubRack3_Board1_AP4_RCU2_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			0	0							
+PIC_Rack5_SubRack3_Board1_AP4_RCU2_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack5_SubRack3_Board1_AP4_RCU2_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack5_SubRack4_Board1_AP1_RCU1_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack5_SubRack4_Board1_AP1_RCU1_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack5_SubRack4_Board1_AP1_RCU1_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack5_SubRack4_Board1_AP1_RCU2_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack5_SubRack4_Board1_AP1_RCU2_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack5_SubRack4_Board1_AP1_RCU2_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack5_SubRack4_Board1_AP2_RCU1_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack5_SubRack4_Board1_AP2_RCU1_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack5_SubRack4_Board1_AP2_RCU1_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack5_SubRack4_Board1_AP2_RCU2_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack5_SubRack4_Board1_AP2_RCU2_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack5_SubRack4_Board1_AP2_RCU2_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack5_SubRack4_Board1_AP3_RCU1_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack5_SubRack4_Board1_AP3_RCU1_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack5_SubRack4_Board1_AP3_RCU1_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack5_SubRack4_Board1_AP3_RCU2_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack5_SubRack4_Board1_AP3_RCU2_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack5_SubRack4_Board1_AP3_RCU2_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack5_SubRack4_Board1_AP4_RCU1_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack5_SubRack4_Board1_AP4_RCU1_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack5_SubRack4_Board1_AP4_RCU1_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack5_SubRack4_Board1_AP4_RCU2_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack5_SubRack4_Board1_AP4_RCU2_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack5_SubRack4_Board1_AP4_RCU2_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack6_SubRack1_Board1_AP1_RCU1_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack6_SubRack1_Board1_AP1_RCU1_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack6_SubRack1_Board1_AP1_RCU1_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack6_SubRack1_Board1_AP1_RCU2_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack6_SubRack1_Board1_AP1_RCU2_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack6_SubRack1_Board1_AP1_RCU2_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack6_SubRack1_Board1_AP2_RCU1_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack6_SubRack1_Board1_AP2_RCU1_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack6_SubRack1_Board1_AP2_RCU1_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack6_SubRack1_Board1_AP2_RCU2_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack6_SubRack1_Board1_AP2_RCU2_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack6_SubRack1_Board1_AP2_RCU2_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack6_SubRack1_Board1_AP3_RCU1_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack6_SubRack1_Board1_AP3_RCU1_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack6_SubRack1_Board1_AP3_RCU1_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack6_SubRack1_Board1_AP3_RCU2_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack6_SubRack1_Board1_AP3_RCU2_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack6_SubRack1_Board1_AP3_RCU2_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack6_SubRack1_Board1_AP4_RCU1_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack6_SubRack1_Board1_AP4_RCU1_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack6_SubRack1_Board1_AP4_RCU1_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack6_SubRack1_Board1_AP4_RCU2_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack6_SubRack1_Board1_AP4_RCU2_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack6_SubRack1_Board1_AP4_RCU2_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack6_SubRack2_Board1_AP1_RCU1_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack6_SubRack2_Board1_AP1_RCU1_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack6_SubRack2_Board1_AP1_RCU1_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack6_SubRack2_Board1_AP1_RCU2_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack6_SubRack2_Board1_AP1_RCU2_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack6_SubRack2_Board1_AP1_RCU2_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack6_SubRack2_Board1_AP2_RCU1_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack6_SubRack2_Board1_AP2_RCU1_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack6_SubRack2_Board1_AP2_RCU1_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack6_SubRack2_Board1_AP2_RCU2_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack6_SubRack2_Board1_AP2_RCU2_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack6_SubRack2_Board1_AP2_RCU2_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack6_SubRack2_Board1_AP3_RCU1_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack6_SubRack2_Board1_AP3_RCU1_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack6_SubRack2_Board1_AP3_RCU1_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack6_SubRack2_Board1_AP3_RCU2_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack6_SubRack2_Board1_AP3_RCU2_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack6_SubRack2_Board1_AP3_RCU2_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack6_SubRack2_Board1_AP4_RCU1_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack6_SubRack2_Board1_AP4_RCU1_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack6_SubRack2_Board1_AP4_RCU1_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack6_SubRack2_Board1_AP4_RCU2_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack6_SubRack2_Board1_AP4_RCU2_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack6_SubRack2_Board1_AP4_RCU2_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack6_SubRack3_Board1_AP1_RCU1_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack6_SubRack3_Board1_AP1_RCU1_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack6_SubRack3_Board1_AP1_RCU1_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack6_SubRack3_Board1_AP1_RCU2_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack6_SubRack3_Board1_AP1_RCU2_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack6_SubRack3_Board1_AP1_RCU2_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack6_SubRack3_Board1_AP2_RCU1_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack6_SubRack3_Board1_AP2_RCU1_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack6_SubRack3_Board1_AP2_RCU1_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack6_SubRack3_Board1_AP2_RCU2_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack6_SubRack3_Board1_AP2_RCU2_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack6_SubRack3_Board1_AP2_RCU2_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack6_SubRack3_Board1_AP3_RCU1_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack6_SubRack3_Board1_AP3_RCU1_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack6_SubRack3_Board1_AP3_RCU1_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack6_SubRack3_Board1_AP3_RCU2_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack6_SubRack3_Board1_AP3_RCU2_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack6_SubRack3_Board1_AP3_RCU2_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack6_SubRack3_Board1_AP4_RCU1_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack6_SubRack3_Board1_AP4_RCU1_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack6_SubRack3_Board1_AP4_RCU1_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack6_SubRack3_Board1_AP4_RCU2_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack6_SubRack3_Board1_AP4_RCU2_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack6_SubRack3_Board1_AP4_RCU2_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack6_SubRack4_Board1_AP1_RCU1_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack6_SubRack4_Board1_AP1_RCU1_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack6_SubRack4_Board1_AP1_RCU1_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack6_SubRack4_Board1_AP1_RCU2_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack6_SubRack4_Board1_AP1_RCU2_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack6_SubRack4_Board1_AP1_RCU2_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_AP_Error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack6_SubRack4_Board1_AP2_RCU1_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack6_SubRack4_Board1_AP2_RCU1_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack6_SubRack4_Board1_AP2_RCU1_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack6_SubRack4_Board1_AP2_RCU2_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack6_SubRack4_Board1_AP2_RCU2_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack6_SubRack4_Board1_AP2_RCU2_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack6_SubRack4_Board1_AP3_RCU1_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack6_SubRack4_Board1_AP3_RCU1_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack6_SubRack4_Board1_AP3_RCU1_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack6_SubRack4_Board1_AP3_RCU2_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack6_SubRack4_Board1_AP3_RCU2_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack6_SubRack4_Board1_AP3_RCU2_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack6_SubRack4_Board1_AP4_RCU1_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack6_SubRack4_Board1_AP4_RCU1_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack6_SubRack4_Board1_AP4_RCU1_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		
+PIC_Rack6_SubRack4_Board1_AP4_RCU2_status.	LPT_UNSIGNED		13					""		lt:1 LANG:1 ""	\0			1	0							
+PIC_Rack6_SubRack4_Board1_AP4_RCU2_status.	LPT_UNSIGNED	1	4	0	1	1	0						lt:1 LANG:1 "Ok"				0	01.01.1970 00:00:00.000	0	1		
+PIC_Rack6_SubRack4_Board1_AP4_RCU2_status.	LPT_UNSIGNED	2	4	1	4294967295	1	1					al_RCU_error.	lt:1 LANG:1 "Error"				0	01.01.1970 00:00:00.000	1	4294967295		

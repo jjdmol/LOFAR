@@ -1,0 +1,30 @@
+[ABS]
+rspdriver=RSP:acceptor
+
+[ViewStats]
+server=RSP:acceptor
+
+[SetWG]
+server=RSP:acceptor
+
+[RSP]
+#intentially left empty
+
+[EPATest]
+beam_server=ABS:acceptor
+
+[SweepTest]
+beam_server=ABS:acceptor
+
+[SetFreq]
+beam_server=ABS:acceptor
+
+[EPAStub]
+#intenionally left empty
+
+[SS]
+client=PI:server
+
+[PMLlite]
+client=SS:server
+
