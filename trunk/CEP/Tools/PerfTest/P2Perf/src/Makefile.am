@@ -21,7 +21,7 @@ P2Perf.cc					\
 Simulate.cc					\
 StopWatch.cc					\
 WH_GrowSize.cc					\
-WH_Square.cc					\
+WH_Square.cc					
 
 if HAVE_CORBA
 P2Perf_LDADD = $(basesim_top_builddir)/src/Corba/libth_corba.la
