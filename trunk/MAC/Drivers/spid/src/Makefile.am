@@ -14,4 +14,9 @@ spid_o_CFLAGS = \
 	-D__KERNEL__ \
 	-DMODULE \
 	-I$(KERNELDIR)/include \
-	-O2
+	-O2 
+#
+# To enable the PPSAPI support in the spid driver add
+# -DCONFIG_NTP_PPS_SPID to the spid_o_CFLAGS
+#
+#	-DCONFIG_NTP_PPS_SPID
