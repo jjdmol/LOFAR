@@ -54,7 +54,7 @@ public:
     { return itsValue; }
 
   // Is the i-th perturbed value defined?
-  bool isDefined (int i) const
+  inline bool isDefined (int i) const
     { return i<int(itsPerturbedValues.size()) && itsPerturbedValues[i] != 0; }
 
   // Get the i-th perturbed value.
@@ -151,7 +151,7 @@ public:
     { return itsRep->getValueRW(); }
 
   // Is the i-th perturbed value defined?
-  bool isDefined (int i) const
+  inline bool isDefined (int i) const
     { return itsRep->isDefined(i); }
 
   // Get the i-th perturbed value.
