@@ -39,7 +39,7 @@ using namespace RSP_Protocol;
 using namespace blitz;
 
 StatusRead::StatusRead(GCFPortInterface& board_port, int board_id)
-  : SyncAction(board_port, board_id, 1)
+  : SyncAction(board_port, board_id, GET_CONFIG("N_BLPS", i))
 {
 }
 
@@ -64,9 +64,23 @@ void StatusRead::sendrequest_status()
 
 GCFEvent::TResult StatusRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
 {
+  // if this is not the signal we expect, simply discard it
+  if (event.signal != EPA_RSPSTATUS) return GCFEvent::HANDLED;
+
   EPARspstatusEvent ack(event);
 
-  Cache::update_status(ack, getBoardId());
+  SystemStatus& status = Cache::getInstance().getBack().getSystemStatus();
+
+  // copy board status
+  memcpy(&status.board()(getBoardId()), &ack.board,
+	 sizeof(BoardStatus));
+
+  uint8 global_blp = (getBoardId() * GET_CONFIG("N_BLPS", i)) + getCurrentBLP();
+
+  // copy x and y-polarization
+  status.rcu()(global_blp * N_POL)     = ack.rcu[0];
+  status.rcu()(global_blp * N_POL + 1) = ack.rcu[1];
 
   return GCFEvent::HANDLED;
 }
+

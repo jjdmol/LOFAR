@@ -59,6 +59,8 @@ void VersionsRead::sendrequest_status()
 
 GCFEvent::TResult VersionsRead::handleack(GCFEvent& event, GCFPortInterface& port)
 {
+  if (event.signal != EPA_FWVERSION) return GCFEvent::HANDLED;
+  
   EPAFwversionEvent ack(event);
 
   LOG_DEBUG(formatString("Firmware versions on board '%s' are [rsp:%d.%d, bp:%d.%d, ap[0]:%d.%d, ap[1]:%d.%d, ap[2]:%d.%d, ap[3]:%d.%d",

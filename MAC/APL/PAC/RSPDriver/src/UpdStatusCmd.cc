@@ -95,6 +95,8 @@ void UpdStatusCmd::complete(CacheBuffer& cache)
     }
   }
 
+  LOG_DEBUG_STR("rcustatus=" << ack.sysstatus.rcu());
+
   getPort()->send(ack);
 }
 

@@ -78,6 +78,8 @@ GCFEvent::TResult SSRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
 
   if (0 == (getCurrentBLP() % 2))
   {
+    if (event.signal != EPA_NRSUBBANDS) return GCFEvent::HANDLED;
+
     // unpack nrsubbands message
     EPANrsubbandsEvent nrsubbands(event);
 
@@ -86,6 +88,8 @@ GCFEvent::TResult SSRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
   }
   else
   {
+    if (event.signal != EPA_SUBBANDSELECT) return GCFEvent::HANDLED;
+
     uint8 global_blp = (getBoardId() * GET_CONFIG("N_BLPS", i)) + (getCurrentBLP() / 2);
 
     LOG_DEBUG("handleack");

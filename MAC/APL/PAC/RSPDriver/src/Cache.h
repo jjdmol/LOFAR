@@ -95,10 +95,13 @@ namespace RSP
       CacheBuffer& getFront();
       CacheBuffer& getBack();
 
+#ifdef TOGGLE_LEDS
       /**
-       * Update the statusus of all boards and all RCU's.
+       * ledstatus, used to blink the LED's
        */
-      static void update_status(EPARspstatusEvent& ack, int boardid);
+      bool ledstatus();
+      void ledflip();
+#endif
 
     private:
 
@@ -119,6 +122,13 @@ namespace RSP
        * Singleton class.
        */
       static Cache* m_instance;
+
+#ifdef TOGGLE_LEDS
+      /**
+       * LedStatus
+       */
+      static bool m_ledstatus;
+#endif
   };
 };
      

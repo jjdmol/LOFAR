@@ -181,17 +181,17 @@ static unsigned short signal_lut[MEPHeader::MAX_PID + 1][MEPHeader::MAX_REGID + 
   {
     /* reg = 0x00 (Mean) */
     { 0,
-      EPA_STSTATS_READ, /* READ    */
-      EPA_STSTATS,      /* WRITE   */
-      EPA_STSTATS,      /* READRES */
+      EPA_STSUBSTATS_READ, /* READ    */
+      EPA_STSUBSTATS,      /* WRITE   */
+      EPA_STSUBSTATS,      /* READRES */
       EPA_READERR, /* READERR */
     },
 
     /* reg = 0x01 (Power) */
     { 0,
-      EPA_STSTATS_READ, /* READ    */
-      EPA_STSTATS,      /* WRITE   */
-      EPA_STSTATS,      /* READRES */
+      EPA_STSUBSTATS_READ, /* READ    */
+      EPA_STSUBSTATS,      /* WRITE   */
+      EPA_STSUBSTATS,      /* READRES */
       EPA_READERR, /* READERR */
     },
   },
@@ -230,12 +230,13 @@ GCFEvent::TResult RawEvent::dispatch(GCFTask& task, GCFPortInterface& port)
   memcpy(&hdr.m_fields, buf + offset, sizeof(hdr.m_fields));
   offset += sizeof(hdr.m_fields);
 
-  LOG_DEBUG(formatString("F_DATAIN: type=0x%02x, addr=(0x%02x 0x%02x 0x%02x 0x%02x)",
+  LOG_DEBUG(formatString("F_DATAIN: type=0x%02x, addr=(0x%02x 0x%02x 0x%02x 0x%02x), size=%d",
 			 hdr.m_fields.type,
 			 hdr.m_fields.addr.dstid,
 			 hdr.m_fields.addr.pid,
 			 hdr.m_fields.addr.regid,
-			 hdr.m_fields.addr.pageid));
+			 hdr.m_fields.addr.pageid,
+			 hdr.m_fields.size));
 
   //
   // Decode the header fields
@@ -285,7 +286,7 @@ GCFEvent::TResult RawEvent::dispatch(GCFTask& task, GCFPortInterface& port)
     }
 
     //
-    // Print debuggin info
+    // Print debugging info
     // 
     if ((F_DATAIN != event->signal) && 
 	(F_DATAOUT != event->signal) &&
