@@ -1,6 +1,11 @@
 #!/bin/sh
 # This script must be called from the "..build/<variant>" directory
-# with input argument: usernm
+# with input argument: username
+
+# This script creates symbolic links in /tmp to parameter tables
+# and then fills these tables with default values.
+# Then it creates the necessary postgres database tables on dop50.
+# (BlackBoard tables)
 
 if [ "$#" != "1" ]; then
  echo "This script should be called with user name as input argument"
