@@ -12,6 +12,7 @@
 #include <qwidget.h>
 #include <qpixmap.h>
 
+#include <UVPAxis.h>
 
 
 
@@ -28,8 +29,14 @@ class UVPDisplayArea : public QWidget
                             double center);
 
  unsigned int  getNumberOfColors() const;
- const QColor *getColor(unsigned int color) const;
+ inline const QColor *getColor(unsigned int color) const;
+
+ const UVPAxis *getXAxis() const;
+ const UVPAxis *getYAxis() const;
  
+ void  setXAxis(const UVPAxis &axis);
+ void  setYAxis(const UVPAxis &axis);
+
 
  virtual void drawView();
 
@@ -37,9 +44,10 @@ class UVPDisplayArea : public QWidget
  signals:
 
  // Emitted when mouse position changes
- void signal_mouse_world_pos_changed(double x,
-                                     double y);
-   
+ void signal_mouseWorldPosChanged(double x,
+                                  double y);
+ 
+ void signal_paletteChanged();
 
  protected:                     /* Protected part */
 
@@ -53,9 +61,24 @@ class UVPDisplayArea : public QWidget
  private:
   
   std::vector<QColor> itsColormap;
-
+  UVPAxis             itsXAxis;
+  UVPAxis             itsYAxis;
 };
 
+
+
+
+
+//====================>>>  UVPDisplayArea::getColor  <<<====================
+
+inline const QColor *UVPDisplayArea::getColor(unsigned int color) const
+{
+#if(DEBUG_MODE)
+  assert(color >= 0 && color < itsColormap.size());
+#endif(DEBUG_MODE)
+  
+  return &(itsColormap[color]);
+}
 
 
 #endif // UVPDISPLAYAREA_H

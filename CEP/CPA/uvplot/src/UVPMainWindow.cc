@@ -24,15 +24,6 @@ UVPMainWindow::UVPMainWindow():QMainWindow()
   m_menu_bar->insertItem("&Help", m_help_menu);
 
 
-  // Small example view
-
-  itsCube = new UVPImageCube(500, 800);
-  for(int x = 0; x < 500; x++) {
-    for(int y = 0; y < 800; y++) {
-      itsCube->getPixel(x, y)->addPointUniform(sin(double(x)*double(y)/30.0), x*y);
-    }
-  }
-
   itsStatusBar   = new QStatusBar(this);
   itsProgressBar = new QProgressBar(itsStatusBar);
   itsXPosLabel   = new QLabel(itsStatusBar);
@@ -44,16 +35,30 @@ UVPMainWindow::UVPMainWindow():QMainWindow()
   
   itsStatusBar->show();
 
+  // Small example view
+
+  itsCube = new UVPImageCube(500, 800);
+
   // End small example view
+
   itsCanvas = new UVPUVCoverageArea(this, itsCube);
   itsCanvas->setGeometry(0, m_menu_bar->height(), width(), height()-m_menu_bar->height() -itsStatusBar->height());
   itsCanvas->show();
 
-  itsProgressBar->setTotalSteps(100);
-  itsProgressBar->setProgress(40);
-
-  connect(itsCanvas, SIGNAL(signal_mouse_world_pos_changed(double, double)),
+  connect(itsCanvas, SIGNAL(signal_mouseWorldPosChanged(double, double)),
           this, SLOT(slot_mouse_world_pos(double, double)));
+
+  // Update itsCube
+  slot_setProgressTotalSteps(500);
+
+  for(int x = 0; x < 500; x++) {
+    slot_setProgress(x+1);
+    for(int y = 0; y < 800; y++) {
+      itsCube->getPixel(x, y)->addPointUniform(sin(double(x)*double(y)/30.0), x*y);
+    }
+  }
+  itsCanvas->drawView();
+  // End update itsCube
 }
 
 
@@ -93,8 +98,12 @@ void UVPMainWindow::slot_mouse_world_pos(double x,
   std::ostringstream x_out;
   std::ostringstream y_out;
 
-  x_out << "X: " << x;
-  y_out << "Y: " << y;
+  x_out << itsCanvas->getXAxis()->getType()<< ": " << x
+        << " " << itsCanvas->getXAxis()->getUnit();
+
+  y_out << itsCanvas->getYAxis()->getType()<< ": " << y
+        << " " << itsCanvas->getYAxis()->getUnit();
+
 
   itsXPosLabel->setText(x_out.str().c_str());
   itsYPosLabel->setText(y_out.str().c_str());
