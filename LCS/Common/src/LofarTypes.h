@@ -28,7 +28,7 @@
 // Define some unsigned only if not already done is /usr/include/sys/types.h
 
 using LOFAR::uchar;
-#ifndef __USE_MISC
+#if !defined(_SYS_TYPES_H) || !defined(__USE_MISC)
 using LOFAR::ushort;
 using LOFAR::uint;
 using LOFAR::ulong;

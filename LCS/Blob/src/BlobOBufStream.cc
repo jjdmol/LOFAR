@@ -21,7 +21,7 @@
 //# $Id$
 
 #include <Common/BlobOBufStream.h>
-#include <istream>
+#include <iostream>
 
 
 BlobOBufStream::BlobOBufStream (std::ostream& os)
