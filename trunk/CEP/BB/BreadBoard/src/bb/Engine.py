@@ -9,7 +9,7 @@ $Id$
 
 import pg;
 
-db = pg.DB(dbname="bb");
+#db = pg.DB(dbname="bb");
 
 import string
 
@@ -28,21 +28,32 @@ debug = False;
 class Engine(Dataclass,KnowledgeSource):
   """a predict/solver"""
 
-  def __init__(self):
+  def __init__(self, id = None):
     self.tablename = "engines";
+    self.id = id;
     Dataclass.__init__(self);
     KnowledgeSource.__init__(self);
     self.engineStub = selfcal.SelfcalEngineStub()
 
   def action(self):
+    debug = True;
     """ find an assigned action and perform """
-    debug = True
-    result = db.get("workloads", self.id , "engine_id");
-    if(debug):
-      print "results: " , result.keys();
-    if(string.find(result["status"],'new') > -1):
+    import pgdb
+    """pgdb must be patched not to search for typprtlen in pg_type"""
+    newdb = pgdb.connect(database="bb")
+    cursor = newdb.cursor();
+    cursor.execute("SELECT oid FROM workloads WHERE engine_id = " + str(self.id) + " AND status = 'new'")
+    record = cursor.fetchone();
+##    result = self.db.get("workloads", self.id , "engine_id");
+    cursor.close();
+    newdb.close();
+
+    if record != None:
+      record_id = record[0];
+      result = self.db.get("workloads", record_id, "oid" );
+    
       if(debug):
-        print result["parameterset"], result["jobassignment"];
+        print "parameterset: " , result["parameterset"], " -- assignment: ", result["jobassignment"];
       ps = pgArray2list(result["parameterset"])[0];
       ja = pgArray2booleanList(result["jobassignment"]);
       if(debug):
@@ -50,11 +61,16 @@ class Engine(Dataclass,KnowledgeSource):
       params = list2ParamSet(ps);
       self.engineStub.init(params["length"],params["data"]);
       job = list2JobAssignment(ja);
-      outp = self.engineStub.Solve(job["data"],params["data"]);
-      if debug:
-        print "-- " , outp, " --";
-      wl = Workload(id = result["oid"]);
+      outp = {};
+      outp["length"] = params["length"]
+      
+      outp["data"] = selfcal.pars_frompointer(self.engineStub.Solve(job["data"],params["data"]));
+      wl = Workload(id = record_id);
       wl.status("done");
+      debug = True;
+      if debug:
+        print "paramset: ", outp ;
       wl.parameters(ParamSet2list(outp));
       if debug:
         print "done";
+      debug = False;

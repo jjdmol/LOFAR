@@ -26,7 +26,7 @@
 #include <iostream.h>
 
 
-SelfcalEngineStub::SelfcalEngineStub() {
+SelfcalEngineStub::SelfcalEngineStub():itsParamValues(NULL) {
   cout << "SelfcalEngineStub Constructor " << endl;
 }
 
@@ -37,7 +37,7 @@ SelfcalEngineStub::~SelfcalEngineStub() {
 
 void SelfcalEngineStub::init(int len,
 			     float parameters[]) {
-  //  if (itsParamValues != NULL) delete[] itsParamValues;
+  if (itsParamValues != NULL) delete[] itsParamValues;
   itsLen = len;
 
   itsParamValues = new float[len];
@@ -55,7 +55,7 @@ float * SelfcalEngineStub::Solve(bool    *workdef,
     cout << "." << flush;
 
     if (workdef[i] == true) {
-      outparams[i] = itsParamValues[i] = 0.5*(itsParamValues[i] + i);
+      outparams[i] = itsParamValues[i] = 0.8*(itsParamValues[i] + i + 1);
       cout << i << " " << outparams[i] << "  ";
     }
   }

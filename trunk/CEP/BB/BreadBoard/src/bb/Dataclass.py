@@ -9,8 +9,6 @@ $Id$
 
 import pg;
 
-db = pg.DB(dbname="bb");
-
 debug = False;
 class Dataclass:
   """ something to do """
@@ -19,15 +17,20 @@ class Dataclass:
   id = None;
 
   def __init__(self):
+    self.db = pg.DB(dbname="bb");
+
     if(self.tablename):
       if(self.id == None):
-        self.id = db.query("INSERT INTO " + self.tablename + " DEFAULT VALUES");
+        self.id = self.db.query("INSERT INTO " + self.tablename + " DEFAULT VALUES");
       self.refresh_data();
+
+  def __del__(self):
+    self.db.close();
 
   def refresh_data(self):
     debug = True;
     if debug:
       print self.tablename, " - ", self.id;
-    self.record = db.get(self.tablename, self.id, "oid");
+    self.record = self.db.get(self.tablename, self.id, "oid");
 
 

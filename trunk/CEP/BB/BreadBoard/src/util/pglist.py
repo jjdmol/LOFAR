@@ -10,7 +10,7 @@ $Id$
 import datetime;
 import string;
 
-debug = None;
+debug = False;
 
 def pgArray2list(s):
   """ not done yet """
@@ -111,7 +111,11 @@ def find_matching_bracket(s):
 
 def list2pgArray(l):
   """ not done yet """
-  if(isList(l)):
+  if debug:
+    print "list to convert to pgArray: ", l;
+  if l == None:
+    return "";
+  if(isList(l) != 0):
     tmplst = [];
     for elem in l:
       tmplst.append(list2pgArray(elem));

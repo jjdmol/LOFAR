@@ -11,6 +11,8 @@ some util funcs for selfcal engines
 #
 import selfcal;
 
+debug = False;
+
 def list2ParamSet(lst):
   """ """
   num = len(lst);
@@ -25,11 +27,17 @@ def list2ParamSet(lst):
   return myparams;
 
 def ParamSet2list(paramset):
+  debug = True;
   lst = [];
+  if debug :
+    print "paramset: " , paramset;
   num = paramset["length"];
   i = 0;
   while (i < num):
-    lst.append(paramset["data"].__getitem__(i));
+    if debug:
+      print "getting parameter number " , i;
+    a = paramset["data"].__getitem__(i);
+    lst.append(a)
     i = i + 1;
   return lst;
 

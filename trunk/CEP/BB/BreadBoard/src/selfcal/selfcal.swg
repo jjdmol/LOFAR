@@ -5,11 +5,12 @@
 #include <string>
 %}
 
-%include selfcal.h
 %include carrays.i
 %include cpointer.i
-%include typemaps.i
 %array_class(float,pars);
 %array_class(bool,bools);
+%pointer_functions(float,floatp);
 
+%include selfcal.h
 %include "../SelfcalEngineStub.h"
+
