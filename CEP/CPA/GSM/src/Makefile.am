@@ -1,11 +1,6 @@
-lib_LTLIBRARIES   := libgsm.la
-libgsm_la_SOURCES := AbstractSource.cc    \
-                     PointSource.cc       \
-                     SkyModel.cc
 
-# Your package's subdirectory
-GSM_DIR := $(top_srcdir)/src
+glishdir = $(libexecdir)/glish/gsm
 
-
-CXXFLAGS += -DDEBUG_MODE=1
+glish_SCRIPTS = gsm.g gsm_definitions.g skymodel.g skymep.g \
+  meqnodes.g mep_database.g
 
