@@ -172,4 +172,9 @@ key2=abc
 key1=1, key2=abc
 key1=[1,1.3], key2=abc
 key1=[a=1, b=2], key2=abc
+key1=3.29407, key2=-0.219605
+key1=3.14165, key2=-0.209443
+key1=3.14159, key2=-0.20944
+KeyParser: parse error at position 7 (at or near '12a')
+KeyValue: 12a:34:56.78 is an invalid HMS or DMS value at part 12a
 OK
