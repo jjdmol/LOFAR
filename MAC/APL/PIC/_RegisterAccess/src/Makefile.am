@@ -1,12 +1,5 @@
 bin_PROGRAMS 		= RegisterAccess
 
-AUTOGEN = autogen
-SUFFIXES = .ph
-%.ph: %.prot
-	$(AUTOGEN) --writable -L $(top_srcdir)/../MACCommon/autogen  $<
-%.cc: %.prot
-	$(AUTOGEN) --writable -L $(top_srcdir)/../MACCommon/autogen $<
-
 RegisterAccess_CPPFLAGS= \
   -Wno-deprecated \
 	-fmessage-length=0 \
