@@ -335,7 +335,8 @@ int main (int argc, const char* argv[])
       for (uint i=0; i<antVec2.size(); ++i) {
 	antVec2[i] = 4*i;
       }
-      pre1.select (antVec2, antVec2, false);    // no autocorrelations
+      vector<int> corr;
+      pre1.select (antVec2, antVec2, false, corr);    // no autocorrelations
       vector<string> solv(3);
       solv[0] = "RA.*";
       solv[1] = "DEC.*";
@@ -359,8 +360,9 @@ int main (int argc, const char* argv[])
       for (uint i=0; i<antVec2.size(); ++i) {
 	antVec2[i] = 4*i;
       }
-      pre1.select (antVec2, antVec2, false);    // no autocorrelations
-      pre2.select (antVec2, antVec2, false);    // no autocorrelations
+      vector<int> corr;
+      pre1.select (antVec2, antVec2, false, corr);    // no autocorrelations
+      pre2.select (antVec2, antVec2, false, corr);    // no autocorrelations
       vector<string> solv(3);
       solv[0] = "RA.*";
       solv[1] = "DEC.*";
@@ -377,7 +379,10 @@ int main (int argc, const char* argv[])
       }
       Prediffer pre1(argv[2], argv[3], argv[4], "aips", argv[1], "", "",
 		     antVec, "LOFAR.RI", false, true);
-      pre1.select (antVec, antVec, false);    // no autocorrelations
+      // Only use first correlation.
+      vector<int> corrVec(1, 0);
+      vector<int> antVec2;
+      pre1.select (antVec2, antVec2, false, corrVec);    // no autocorrelations
       vector<string> solv(3);
       solv[0] = "RA.*";
       solv[1] = "DEC.*";
@@ -400,7 +405,8 @@ int main (int argc, const char* argv[])
       for (uint i=0; i<antVec2.size(); ++i) {
 	antVec2[i] = 4*i;
       }
-      pre1.select (antVec2, antVec2, false);    // no autocorrelations
+      vector<int> corr;
+      pre1.select (antVec2, antVec2, false, corr);    // no autocorrelations
       vector<string> solv(3);
       solv[0] = "RA.*";
       solv[1] = "DEC.*";
