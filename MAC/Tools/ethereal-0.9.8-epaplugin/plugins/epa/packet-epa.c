@@ -158,15 +158,16 @@
  * number of beamlets.
  */
 #define N_SUBBANDS 512
-#define N_BEAMLETS 256 //128; // FTS-1 spec, final remote station will be 256
-#define N_POL      2                // number of polarizations
-#define N_PHASE    2                // number of phases in a complex number
-#define N_PHASEPOL (N_PHASE * N_POL)  // number of phase polarizations
+#define N_BEAMLETS 128;               /* FTS-1 spec, final remote station will be 256 */
+#define N_POL      2                  /* number of polarizations */
+#define N_PHASE    2                  /* number of phases in a complex number */
+#define N_PHASEPOL (N_PHASE * N_POL)  /* number of phase polarizations */
 
-//
-// Registers too large to send in a single ethernet frame
-// (> 1500 bytes) will be sent in a number of fragments of this size.
-//
+
+/**
+ * Registers too large to send in a single ethernet frame
+ * (> 1500 bytes) will be sent in a number of fragments of this size.
+ */
 #define FRAGMENT_SIZE 1024
 
 /**
@@ -691,7 +692,7 @@ dissect_epa(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree)
 
     if (READACK == type && RSR == pid && RSR_STATUS == reg)
     {
-      // READACK RSR_STATUS
+      /* READACK RSR_STATUS */
       newitem = proto_tree_add_text(epa_tree, tvb, 12, RSR_STATUS_SIZE, "RSP Status register");
       newtree = proto_item_add_subtree(newitem, ett_rspstatus);
 
@@ -888,7 +889,7 @@ dissect_epa(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree)
     }
     else if (READACK == type && RSR == pid && RSR_VERSION == reg)
     {
-      // READACK RSR_VERSION
+      /* READACK RSR_VERSION */
       newitem = proto_tree_add_text(epa_tree, tvb, 12, RSR_VERSION_SIZE, "RSP Version register");
       newtree = proto_item_add_subtree(newitem, ett_rspversion);
 
@@ -898,7 +899,7 @@ dissect_epa(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree)
     }
     else if ( (WRITE == type || READACK == type) && WG == pid && (WG_XSETTINGS == reg || WG_YSETTINGS == reg))
     {
-      // WRITE or READACK WG_[X|Y]SETTINGS
+      /* WRITE or READACK WG_[X|Y]SETTINGS */
       if (WG_XSETTINGS == reg)
 	newitem = proto_tree_add_text(epa_tree, tvb, 12, WG_XSETTINGS_SIZE, "Waveform generator settings X-polarization");
       else
@@ -913,7 +914,7 @@ dissect_epa(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree)
     }
     else if ( (WRITE == type || READACK == type) && WG == pid && (WG_XWAVE == reg || WG_YWAVE == reg))
     {
-      // WRITE or READACK WG_[X|Y]WAVE
+      /* WRITE or READACK WG_[X|Y]WAVE */
       if (WG_XWAVE == reg)
 	newitem = proto_tree_add_text(epa_tree, tvb, 12, WG_XWAVE_SIZE, "User waveform X-polarization");
       else
@@ -937,7 +938,7 @@ dissect_epa(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree)
     }
     else if ( (WRITE == type || READACK == type) && BF == pid)
     {
-      // WRITE BF_*
+      /* WRITE BF_* */
 
       newitem = proto_tree_add_text(epa_tree, tvb, 12, -1, "Beamformer Payload");
       newtree = proto_item_add_subtree(newitem, ett_payload);
@@ -959,7 +960,7 @@ dissect_epa(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree)
     }
     else if ( (WRITE == type || READACK == type) && SS == pid && SS_SELECT == reg)
     {
-      // WRITE SS_SELECT
+      /* WRITE SS_SELECT */
 
       newitem = proto_tree_add_text(epa_tree, tvb, 12, -1, "Subband Select Payload");
       newtree = proto_item_add_subtree(newitem, ett_payload);
@@ -1014,7 +1015,7 @@ dissect_epa(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree)
     }
     else if ( (WRITE == type || READACK == type) && RCU == pid && RCU_SETTINGS == reg)
     {
-      // WRITE or READACK RCU_SETTINGS
+      /* WRITE or READACK RCU_SETTINGS */
       newitem = proto_tree_add_text(epa_tree, tvb, 12, 2, "RCU status");
       newtree = proto_item_add_subtree(newitem, ett_rcusettings);
       {
@@ -1377,42 +1378,42 @@ proto_register_epa(void)
   static hf_register_info rcusettings_fields[] = {
     { &df_vddvcc_en,
       { "vddvcc_en",           "epa.data.vddvcc_en",
-	FT_UINT8, BASE_HEX, NULL, 0x80, // bit 7
+	FT_UINT8, BASE_HEX, NULL, 0x80, /* bit 7 */
 	"VDDVCC_EN", HFILL }
     },
     { &df_vh_enable,
       { "vh_enable",           "epa.data.vh_enable",
-	FT_UINT8, BASE_HEX, NULL, 0x40, // bit 6
+	FT_UINT8, BASE_HEX, NULL, 0x40, /* bit 6 */
 	"VH_ENABLE", HFILL }
     },
     { &df_vl_enable,
       { "vl_enable",           "epa.data.vl_enable",
-	FT_UINT8, BASE_HEX, NULL, 0x20, // bit 5
+	FT_UINT8, BASE_HEX, NULL, 0x20, /* bit 5 */
 	"VL_ENABLE", HFILL }
     },
     { &df_filsel_b,
       { "filsel_b",           "epa.data.filsel_b",
-	FT_UINT8, BASE_HEX, NULL, 0x10, // bit 4
+	FT_UINT8, BASE_HEX, NULL, 0x10, /* bit 4 */
 	"FILSEL_B", HFILL }
     },
     { &df_filsel_a,
       { "filsel_a",           "epa.data.filsel_a",
-	FT_UINT8, BASE_HEX, NULL, 0x08, // bit 3
+	FT_UINT8, BASE_HEX, NULL, 0x08, /* bit 3 */
 	"FILSEL_A", HFILL }
     },
     { &df_bandsel,
       { "bandsel",           "epa.data.bandsel",
-	FT_UINT8, BASE_HEX, NULL, 0x04, // bit 2
+	FT_UINT8, BASE_HEX, NULL, 0x04, /* bit 2 */
 	"BANDSEL", HFILL }
     },
     { &df_hba_enable,
       { "hba_enable",           "epa.data.hba_enable",
-	FT_UINT8, BASE_HEX, NULL, 0x02, // bit 1
+	FT_UINT8, BASE_HEX, NULL, 0x02, /* bit 1 */
 	"HBA_ENABLE", HFILL }
     },
     { &df_lba_enable,
       { "lba_enable",           "epa.data.lba_enable",
-	FT_UINT8, BASE_HEX, NULL, 0x01, // bit 0
+	FT_UINT8, BASE_HEX, NULL, 0x01, /* bit 0 */
 	"LBA_ENABLE", HFILL }
     },
     { &df_nof_overflow,
