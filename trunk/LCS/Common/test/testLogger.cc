@@ -20,8 +20,8 @@
 //#
 //#  $Id$
 #include <Common/lofar_iostream.h>
-#include <lofar_config.h>
-#include "Common/LofarLogger.h"			// contains the API of the LofarLogger
+#include <Common/LofarLogger.h>			// contains the API of the LofarLogger
+#include <Common/StringUtil.h>
 
 #include <sys/time.h>					// gettimeofday
 
@@ -81,10 +81,15 @@ int	myFunc (int param1) {
 
 
 int main (int, char *argv[]) {
+	int		maxLoop = 1;
 
 	// Read in the log-environment configuration
 	// We should always start with this.
+#ifdef HAVE_LOG4CPLUS
 	INIT_LOGGER_AND_WATCH("testLogger.log_prop", 10000);
+#else
+	INIT_LOGGER_AND_WATCH("testLogger.debug", 10000);
+#endif
 
 	// Show operator were are on the air
 	LOG_INFO (formatString("Program %s has started", argv[0]));
@@ -101,35 +106,39 @@ int main (int, char *argv[]) {
 	LOG_INFO ("Visible because of inheritance from 'foo'");
 
 	LOG_TRACE_FLOW("Demo of the time is takes to log a message");
-#if 0
+#if 1
 	struct timeval		startTime, endTime;
 	LOG_INFO ("Log without any arguments");
 	gettimeofday(&startTime, 0L);
-	for (int i = 0; i < 1000; ++i) {
+	for (int i = 0; i < maxLoop; ++i) {
 		LOG_INFO ("Log without any arguments");
 	}
 	gettimeofday(&endTime, 0L);
 	LOG_INFO (formatString("This took %f milliseconds", 
-									timeDiff(&startTime, &endTime) * 1000));
+									timeDiff(&startTime, &endTime) * maxLoop));
 
 	LOG_INFO ("Log with printf-like arguments");
 	gettimeofday(&startTime, 0L);
-	for (int i = 0; i < 1000; ++i) {
+	for (int i = 0; i < maxLoop; ++i) {
 		LOG_INFO (formatString("Log with %s arguments", "printf-like"));
 	}
 	gettimeofday(&endTime, 0L);
 	LOG_INFO (formatString("This took %f milliseconds", 
-									timeDiff(&startTime, &endTime) * 1000));
+									timeDiff(&startTime, &endTime) * maxLoop));
 
 	LOG_INFO ("Log with leftshift arguments");
 	gettimeofday(&startTime, 0L);
-	for (int i = 0; i < 1000; ++i) {
+	for (int i = 0; i < maxLoop; ++i) {
 		LOG_INFO_STR ("Log with " << "leftshift" << " arguments");
 	}
 	gettimeofday(&endTime, 0L);
-	LOG_INFO (formatString("This took %f milliseconds", 
-									timeDiff(&startTime, &endTime) * 1000));
+	LOG_INFO_STR ("This took "  << timeDiff(&startTime, &endTime) * maxLoop <<
+					" milliseconds");
 #endif
+
+	LOG_DEBUG("Also show some debug output");
+	LOG_DEBUG_STR("Debug lines should contain" << "'file' and 'line' information");
+
 	LOG_TRACE_FLOW("About to call myFunc which has a lifetime tracer");
 	int		dummyVar = myFunc(5);
 	LOG_TRACE_VAR(formatString("myFunc returned %d", dummyVar));
@@ -150,6 +159,8 @@ int main (int, char *argv[]) {
 #ifdef HAVE_LOG4CPLUS
 	// You normally do this by editing your propertyfile.
 	log4cplus::Logger::getInstance("TRC").setLogLevel(TRACE_LEVEL_VAR);
+#else
+	getDebugContext().setLevel(TRACE_LEVEL_VAR);
 #endif // HAVE_LOG4CPLUS
 
 	for (int i = 0; i < 5; ++i) {
