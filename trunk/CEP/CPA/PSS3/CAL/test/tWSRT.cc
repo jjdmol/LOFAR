@@ -65,6 +65,7 @@
 #include <MNS/MeqUVWPolc.h>
 #include <MNS/MeqParmSingle.h>
 #include <MNS/MeqMatrixTmp.h>
+#include <MNS/MeqHist.h>
 #include <MNS/ParmTable.h>
 #include <GSM/SkyModel.h>
 #include <Common/Debug.h>
@@ -152,7 +153,9 @@ vector<MVBaseline> fillBaselines (Matrix<int>& index,
 
 // Make the expression tree for a single baseline.
 MeqJonesExpr* makeExpr (const MDirection& phaseRef, MeqUVWPolc* uvw,
-			ParmTable&, GSM::SkyModel& gsm)
+			ParmTable&, GSM::SkyModel& gsm,
+			MeqHist& celltHist,
+			MeqHist& cellfHist)
 {
   // Represent the stations by constant parms.
   MeqExpr* stat1_11 = new MeqParmSingle ("Station.RT_0.11",
@@ -180,7 +183,8 @@ MeqJonesExpr* makeExpr (const MDirection& phaseRef, MeqUVWPolc* uvw,
   gsm.getPointSources (src);
   // Create the DFT kernel.
   MeqPointDFT* dft = new MeqPointDFT (src, phaseRef, uvw);
-  MeqWsrtPoint* pnt = new MeqWsrtPoint (src, dft);
+  MeqWsrtPoint* pnt = new MeqWsrtPoint (src, dft,
+					&celltHist, &cellfHist);
   return new MeqWsrtInt (pnt, stat1, stat2);
 }
 
@@ -237,7 +241,10 @@ int main(int argc, char* argv[])
 			TableIterator::NoSort);
     // Set up the expression tree for a single baseline.
     MeqUVWPolc uvwpolc;
-    MeqJonesExpr* expr = makeExpr (phaseRef, &uvwpolc, ptable, gsm);
+    MeqHist celltHist;
+    MeqHist cellfHist;
+    MeqJonesExpr* expr = makeExpr (phaseRef, &uvwpolc, ptable, gsm,
+				   celltHist, cellfHist);
     vector<double> diffu, diffv, diffw;
     int cnt = 0;
     cout << "MeqMat " << MeqMatrixRep::nctor << ' ' << MeqMatrixRep::ndtor
