@@ -9,6 +9,7 @@ INSTHDRS = \
 BaseSim.h \
 CyclicBuffer.h \
 DataHolder.h \
+DataBlobExtra.h \
 Socket.h \
 DH_PL.h \
 PO_DH_PL.h \
@@ -38,6 +39,7 @@ lib_LTLIBRARIES 	= libtransport.la
 libtransport_la_SOURCES = \
 CyclicBuffer.cc \
 DataHolder.cc \
+DataBlobExtra.cc \
 Socket.cc \
 DH_PL.cc \
 PO_DH_PL.cc \

@@ -55,7 +55,7 @@ class Transporter
   void write();
 
   /// Read the data from the connected Transport object.
-  bool read();
+  bool read (bool fixedSized);
 
   /// Write the Transporter definition to stdout.
   void dump() const;

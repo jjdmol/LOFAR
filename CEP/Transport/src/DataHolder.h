@@ -26,19 +26,21 @@
 #include <lofar_config.h>
 
 //# Includes
-#include <Common/lofar_string.h>
 #include <Transport/Transporter.h>
-#include <Common/lofar_string.h>
-#include <Common/lofar_fstream.h>
 #include <Common/BlobFieldSet.h>
+#include <Common/BlobHeader.h>
 #include <Common/BlobString.h>
 #include <Common/BlobOBufString.h>
 #include <Common/DataConvert.h>
+#include <Common/lofar_string.h>
 
 namespace LOFAR
 {
 
 //# Forward Declarations
+class BlobOStream;
+class BlobIStream;
+class DataBlobExtra;
 
 /**
   Class DataHolder is the abstract base class for all data holders
@@ -68,6 +70,8 @@ namespace LOFAR
 
 class DataHolder
 {
+friend class DataBlobExtra;
+
 public:
   // Standard data containing a timestamp.
   struct DataPacket
@@ -101,7 +105,7 @@ public:
 public:
   // Construct a DataHolder with a default name.
   DataHolder (const string& name="aDataHolder",
-		  const string& type="DH");
+	      const string& type="DH");
 
   virtual ~DataHolder();
 
@@ -131,10 +135,7 @@ public:
   /// Write the packet data.
   void write();
 
-  // Does the data has to be handled? 
-  // It returns true if the 
-  //#// bool doHandle() const;
-
+  /// Is the Transporter of this DataHolder valid?
   bool isValid() const;
 
   /// Connect to another DataHolder.
@@ -157,22 +158,17 @@ public:
   // for operation with variable datas
   int getDataSize();
 
-  /** 
-      Get the size of the CURRENT data block (in bytes)
-      For non-flexible data blocks, this is the same as 
-      getDataSize()
-  */
+  // Get the size of the CURRENT data block (in bytes)
+  // For non-flexible data blocks, this is the same as 
+  // getDataSize()
   virtual int getCurDataSize();
 
-  /** 
-      Get the MAXIMUM data block size supported (in bytes)
-      For non-flexible data blocks, this is the same as 
-      getDataSize()
-  */
+  // Get the MAXIMUM data block size supported (in bytes)
+  // For non-flexible data blocks, this is the same as 
+  // getDataSize()
   virtual int getMaxDataSize();
 
-
-  // Get a pointer to the data (in the blob).
+  // Get a pointer to the data (the beginning of the blob).
   void* getDataPtr();
 
   // Get the data packet
@@ -219,9 +215,10 @@ protected:
   // all data fields have a fixed shape.
   // It fields have a variable shape, the function has to be called again
   // (in process) when a shape changes.
+  // <group>
   void createDataBlock();
   void openDataBlock();
-  // 
+  // </group>
 
   // Get access to the BlobField.
   // It makes it possible to get the shape of a variable shaped input array
@@ -237,22 +234,38 @@ protected:
   template<typename T> T* getData (const std::string& fieldName);
   // </group>
 
-/*   /\** Set the pointer to the data packet and set the packet's size. */
-/*       This function has to be called by the constructor of derived */
-/*       DataHolder classes. */
-/*   *\/ */
-/*   void setDataPacket (DataPacket* ptr, int size); */
-
-/*   /// Set the data packet to the default data packet.. */
-/*   void setDefaultDataPacket(); */
-
+  // If told in the DataHolder constructor, it is possible to add
+  // arbitrary fields to the data blob using the ordinary operator<<
+  // functions on blob streams. Operator>> functions can be used to read them.
+  // An exception is thrown if these functions are used without telling the
+  // constructor that 
+  // Tell that the extra data block will be used.
+  void setExtraBlob (const string& name, int version);
 
 public:
+  // Initialize the extra output blob holding arbitrary fields.
+  // The return reference can be used to store the fields in.
+  // It is meant for DataHolders writing data.
+  BlobOStream& createExtraBlob();
+  // Get access to the extra input blob holding arbitrary fields.
+  // It is meant for DataHolders reading data.
+  // It fills the version of the extra data blob.
+  BlobIStream& openExtraBlob (int& version);
+
   // Get access to the data blob.
   // <group>
   BlobString& getDataBlock();
   const BlobString& getDataBlock() const;
   // </group>
+
+  // Get the size of a blob header.
+  uint getHeaderSize() const;
+
+  // Extract the size from the blob header in the buffer.
+  uint getDataLength (const void* buffer) const;
+
+  // Resize the buffer to the given size (if needed).
+  void resizeBuffer (uint newSize);
 
 protected:
   // Handle the data read (check and convert it as needed).
@@ -268,6 +281,14 @@ private:
   // Initialize the data field set.
   void initDataFields();
 
+  // Put the extra data block into the main data blob.
+  // If possible and needed the buffer is resized.
+  // If resized, the data pointers are refilled.
+  void putExtra (const void* data, uint size);
+
+  // Fill all data pointers (of DataPacket and in derived class).
+  void fillAllDataPointers();
+
   // Let the derived class fill its pointers to the data in the blob.
   // This function is called when the blob is created and when its layout
   // has changed.
@@ -278,17 +299,13 @@ private:
   BlobFieldSet    itsDataFields;
   BlobString*     itsData;
   BlobOBufString* itsDataBlob;
-/*   DataPacket   itsDefaultPacket; */
   DataPacket*  itsDataPacketPtr;
-  //  int          itsDataPacketSize; 
   Transporter  itsTransporter;
   string       itsName;
   string       itsType;
-  int          itsReadConvert;  //# conversion needed after a read?
-                                //# 0=no, 1=yes, else=not known yet
-
-
-
+  int          itsReadConvert;   //# data conversion needed after a read?
+                                 //# 0=no, 1=yes, else=not known yet
+  DataBlobExtra* itsExtraPtr;
 };
 
 
@@ -309,7 +326,6 @@ inline int DataHolder::getMaxDataSize(){
 
 inline void* DataHolder::getDataPtr()
   { return itsData->data(); }
-
 
 inline const DataHolder::DataPacket& DataHolder::getDataPacket() const
   { return *itsDataPacketPtr; }
@@ -407,8 +423,23 @@ inline void dataConvert (DataFormat fmt,
   }
 }
 
+inline void DataHolder::fillAllDataPointers()
+{
+  itsDataPacketPtr = itsDataFields[0].getData<DataPacket> (*itsDataBlob);
+  fillDataPointers();
+}
+
+inline uint DataHolder::getHeaderSize() const
+{
+  return sizeof(BlobHeader);
+}
+
+inline uint DataHolder::getDataLength (const void* buffer) const
+{
+  return static_cast<const BlobHeader*>(buffer)->getLength();
+}
+
 
 } // end namespace
 
 #endif
-

@@ -63,7 +63,10 @@ public:
      by memcpy'ing the data from the sender and sending out a
      received notification.
   */
-  virtual bool recvBlocking(void* buf, int nbytes, int source, int tag);
+  virtual bool recvBlocking(void* buf, int nbytes, int tag);
+
+  /// Get the length in case of a variable length send.
+  virtual int recvLengthBlocking (int tag);
 
   /**
      Send the data.
@@ -73,7 +76,7 @@ public:
      The only things it does are setting the status and waiting for
      a notification of the receiver.
   */
-  virtual bool sendBlocking(void* buf, int nbytes, int destination, int tag);
+  virtual bool sendBlocking(void* buf, int nbytes, int tag);
 
   /** 
      Wait for a previous send with the same tag to finish and send the data.
@@ -82,13 +85,13 @@ public:
      which can be matched by the recv call.
      The only thing it does is setting the status. 
   */
-  virtual bool sendNonBlocking(void* buf, int nbytes, int destination, int tag);
+  virtual bool sendNonBlocking(void* buf, int nbytes, int tag);
   // Wait until the data has been sent.
-  virtual bool waitForSent(void* buf, int nbytes, int destination, int tag);
+  virtual bool waitForSent(void* buf, int nbytes, int tag);
 
   // Wait for a notification that the receiving party has received the data.
   // (i.e. recv has performed the memcpy)
-  virtual bool waitForRecvAck(void* buf, int nbytes, int destination, int tag);
+  virtual bool waitForRecvAck(void* buf, int nbytes, int tag);
 
   /// Get the type of transport.
   virtual string getType() const;
