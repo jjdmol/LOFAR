@@ -40,14 +40,16 @@ parmtable := function (name, create=F)
 	d6 := tablecreatescalarcoldesc ('STARTFREQ', as_double(0));
 	d7 := tablecreatescalarcoldesc ('ENDFREQ', as_double(0));
 	d8 := tablecreatearraycoldesc  ('RVALUES', as_double(0));
-	d9 := tablecreatearraycoldesc  ('ORIG_RVALUES', as_double(0));
-	d10:= tablecreatearraycoldesc  ('CVALUES', as_dcomplex(0));
-	d11:= tablecreatearraycoldesc  ('ORIG_CVALUES', as_dcomplex(0));
-	d12:= tablecreatearraycoldesc  ('MASK', T);
-	d13:= tablecreatescalarcoldesc ('PERTURBATION', as_double(0));
-	d14:= tablecreatescalarcoldesc ('PERT_REL', T);
+	d9 := tablecreatearraycoldesc  ('SIM_RVALUES', as_double(0));
+	d10:= tablecreatearraycoldesc  ('SIM_RPERT', as_double(0));
+	d11:= tablecreatearraycoldesc  ('CVALUES', as_dcomplex(0));
+	d12:= tablecreatearraycoldesc  ('SIM_CVALUES', as_dcomplex(0));
+	d13:= tablecreatearraycoldesc  ('SIM_CPERT', as_dcomplex(0));
+	d14:= tablecreatearraycoldesc  ('MASK', T);
+	d15:= tablecreatescalarcoldesc ('DIFF', as_double(0));
+	d16:= tablecreatescalarcoldesc ('DIFF_REL', T);
 	td := tablecreatedesc (d1, d2, d3, d4, d5, d6, d7, d8, d9, d10, d11,
-			       d12, d13, d14);
+			       d12, d13, d14, d15, d16);
 	self.tab := table (name, td);
 	if (is_fail(self.tab)) {
 	    fail;
@@ -58,8 +60,9 @@ parmtable := function (name, create=F)
 	self.tab.addreadmeline ('PSS ME parameter values');
 	
 	# Create the table with initial values.
-	itabname := spaste(name,'/INITIALVALUES');
-	td := tablecreatedesc (d1, d2, d3, d8, d9, d10, d11, d12, d13, d14);
+	itabname := spaste(name,'/DEFAULTVALUES');
+	td := tablecreatedesc (d1, d2, d3, d8, d9, d10, d11, d12, d13, d14,
+			       d15, d16);
 	self.itab := table (itabname, td);
 	if (is_fail(self.itab)) {
 	    fail;
@@ -70,13 +73,13 @@ parmtable := function (name, create=F)
 	self.itab.addreadmeline ('Initial PSS ME parameter values');
 	
 	# Make it a subtable of the main table.
-	self.tab.putkeyword ('INITIALVALUES', spaste('Table: ',itabname));
+	self.tab.putkeyword ('DEFAULTVALUES', spaste('Table: ',itabname));
     } else {
 	self.tab := table (name, readonly=F);
 	if (is_fail(self.tab)) {
 	    fail;
 	}
-	self.itab := table (self.tab.getkeyword ('INITIALVALUES'), readonly=F);
+	self.itab := table (self.tab.getkeyword ('DEFAULTVALUES'), readonly=F);
 	if (is_fail(self.itab)) {
 	    fail;
 	}
@@ -94,12 +97,12 @@ parmtable := function (name, create=F)
 
     public.putinit := function (parmname='parmXXX', srcnr=-1, statnr=-1,
 				values=0, mask=unset,
-                                perturbation=1e-6, pertrelative=T, trace=T)
+                                diff=1e-6, diffrelative=T, trace=T)
     {
 	#----------------------------------------------------------------
-	funcname := paste('** pamtable.putinit(',parmname,'):');
+	funcname := paste('** parmtable.putinit(',parmname,'):');
 	input := [parmname=parmname, values=values, mask=mask,
-		  perturbation=perturbation, pertrelative=pertrelative];
+		  diff=diff, diffrelative=diffrelative];
 	if (trace) print funcname,' input=',input;
 	#----------------------------------------------------------------
 
@@ -133,28 +136,34 @@ parmtable := function (name, create=F)
 	    self.itab.putcell ('MASK', rownr, mask);
 	}
 	if (is_dcomplex(values) || is_complex(values)) {
-	    self.itab.putcell ('CVALUES', rownr, as_dcomplex(values));
-	    self.itab.putcell ('ORIG_CVALUES', rownr, as_dcomplex(values));
+	    vals := as_dcomplex(values);
+	    self.itab.putcell ('CVALUES', rownr, vals);
+	    self.itab.putcell ('SIM_CVALUES', rownr, vals);
+	    vals[,] := as_dcomplex(0);
+	    self.itab.putcell ('SIM_CPERT', rownr, vals);
 	} else {
-	    self.itab.putcell ('RVALUES', rownr, as_double(values));
-	    self.itab.putcell ('ORIG_RVALUES', rownr, as_double(values));
+	    vals := as_double(values);
+	    self.itab.putcell ('RVALUES', rownr, vals);
+	    self.itab.putcell ('SIM_RVALUES', rownr, vals);
+	    vals[,] := as_double(0);
+	    self.itab.putcell ('SIM_RPERT', rownr, vals);
 	}
-	self.itab.putcell ('PERTURBATION', rownr, perturbation);
-	self.itab.putcell ('PERT_REL', rownr, pertrelative);
+	self.itab.putcell ('DIFF', rownr, diff);
+	self.itab.putcell ('DIFF_REL', rownr, diffrelative);
 	return T;
     }
 
     public.put := function (parmname='parmYYY', srcnr=-1, statnr=-1,
 			    timerange=[1,1e20], freqrange=[1,1e20], 
 			    values=0, mask=unset,
-                            perturbation=1e-6, pertrelative=T,
+                            diff=1e-6, diffrelative=T,
 			    trace=F)
     {
 	#----------------------------------------------------------------
-	funcname := paste('** pamtable.put(',parmname,'):');
+	funcname := paste('** parmtable.put(',parmname,'):');
 	input := [parmname=parmname, values=values, mask=mask,
 		  timerange=timerange, freqrange=freqrange,
-		  perturbation=perturbation, pertrelative=pertrelative];
+		  diff=diff, diffrelative=diffrelative];
 	if (trace) print funcname,' input=',input;
 	#----------------------------------------------------------------
 
@@ -197,14 +206,20 @@ parmtable := function (name, create=F)
 	    self.tab.putcell ('MASK', rownr, mask);
 	}
 	if (is_dcomplex(values) || is_complex(values)) {
-	    self.tab.putcell ('CVALUES', rownr, as_dcomplex(values));
-	    self.tab.putcell ('ORIG_CVALUES', rownr, as_dcomplex(values));
+	    vals := as_dcomplex(values);
+	    self.tab.putcell ('CVALUES', rownr, vals);
+	    self.tab.putcell ('SIM_CVALUES', rownr, vals);
+	    vals[,] := as_dcomplex(0);
+	    self.tab.putcell ('SIM_CPERT', rownr, vals);
 	} else {
-	    self.tab.putcell ('RVALUES', rownr, as_double(values));
-	    self.tab.putcell ('ORIG_RVALUES', rownr, as_double(values));
+	    vals := as_double(values);
+	    self.tab.putcell ('RVALUES', rownr, vals);
+	    self.tab.putcell ('SIM_RVALUES', rownr, vals);
+	    vals[,] := as_double(0);
+	    self.tab.putcell ('SIM_RPERT', rownr, vals);
 	}
-	self.tab.putcell ('PERTURBATION', rownr, perturbation);
-	self.tab.putcell ('PERT_REL', rownr, pertrelative);
+	self.tab.putcell ('DIFF', rownr, diff);
+	self.tab.putcell ('DIFF_REL', rownr, diffrelative);
 	return T;
     }
 
@@ -216,30 +231,28 @@ parmtable := function (name, create=F)
 	fnd := tab.nrows() > 0;
 	if (fnd) {
 	    for (row in [1:tab.nrows()]) {
-		tdom := tab.getcell ('TDOMAIN', row);
-		fdom := tab.getcell ('FDOMAIN', row);
 		src := tab.getcell ('NUMBER', row);
-		name := spaste('GSM.', tab.getcell('NAME', row), '.');
-		public.put (spaste(name, 'RA'),
-			    src, -1, tdom, fdom,
-			    values=tab.getcell ('RAPARMS', row),
-			    perturbation=1e-7, pertrelative=F);
-		public.put (spaste(name, 'DEC'),
-			    src, -1, tdom, fdom,
-			    values=tab.getcell ('DECPARMS', row),
-			    perturbation=1e-7, pertrelative=F);
-		public.put (spaste(name, 'I'),
-			    src, -1, tdom, fdom,
-			    values=tab.getcell ('IPARMS', row));
-		public.put (spaste(name, 'Q'),
-			    src, -1, tdom, fdom,
-			    values=tab.getcell ('QPARMS', row));
-		public.put (spaste(name, 'U'),
-			    src, -1, tdom, fdom,
-			    values=tab.getcell ('UPARMS', row));
-		public.put (spaste(name, 'V'),
-			    src, -1, tdom, fdom,
-			    values=tab.getcell ('VPARMS', row));
+		name := tab.getcell('NAME', row);
+		public.putinit (spaste('RA.', name),
+				src, -1,
+				values=tab.getcell ('RAPARMS', row));
+#				diff=1e-7, diffrelative=F);
+		public.putinit (spaste('DEC.', name),
+				src, -1,
+				values=tab.getcell ('DECPARMS', row));
+#				diff=1e-7, diffrelative=F);
+		public.putinit (spaste('StokesI.', name),
+				src, -1,
+				values=tab.getcell ('IPARMS', row));
+		public.putinit (spaste('StokesQ.', name),
+				src, -1,
+				values=tab.getcell ('QPARMS', row));
+		public.putinit (spaste('StokesU.', name),
+				src, -1,
+				values=tab.getcell ('UPARMS', row));
+		public.putinit (spaste('StokesV.', name),
+				src, -1,
+				values=tab.getcell ('VPARMS', row));
 	    }
 	}
 	print 'Wrote',tab.nrows(),'sources into MEP';
@@ -256,7 +269,7 @@ parmtable := function (name, create=F)
 				trace=F)
     {
 	#----------------------------------------------------------------
-	funcname := paste('** pamtable.perturb(',where,'):');
+	funcname := paste('** parmtable.perturb(',where,'):');
 	input := [where=where,
 		  perturbation=perturbation, pertrelative=pertrelative];
 	if (trace) print funcname,' input=',input;
@@ -275,24 +288,27 @@ parmtable := function (name, create=F)
 		    t1 := ref self.tab;
 		}
 	    }
+	    if (is_fail(t1)) fail;
 	    if (t1.nrows() > 0) {
 		for (row in [1:t1.nrows()]) {
 		    if (t1.iscelldefined ('RVALUES',row)) {
-			a := t1.getcell ('RVALUES', row);
+			vals := t1.getcell ('SIM_RVALUES', row);
 			if (pertrelative) {
-			    a *:= perturbation;
+			    valp := vals * perturbation;
 			} else {
-			    a +:= perturbation;
+			    valp := vals + perturbation;
 			}
-			t1.putcell ('RVALUES', row, a);
+			t1.putcell ('RVALUES', row, valp);
+			t1.putcell ('SIM_RPERT', row, valp-vals);
 		    } else {
-			a := t1.getcell ('CVALUES', row);
+			vals := t1.getcell ('SIM_CVALUES', row);
 			if (pertrelative) {
-			    a *:= perturbation;
+			    valp := vals * perturbation;
 			} else {
-			    a +:= perturbation;
+			    valp := vals + perturbation;
 			}
-			t1.putcell ('CVALUES', row, a);
+			t1.putcell ('CVALUES', row, valp);
+			t1.putcell ('SIM_CPERT', row, valp-vals);
 		    }
 		}
 	    }

@@ -74,7 +74,9 @@ public:
 		 const Vector<Int>& ant1,
 		 const Vector<Int>& ant2,
 		 const String& modelType,
-		 Bool calcUVW);
+		 Bool calcUVW,
+		 const String& dataColName,
+		 const String& residualColName);
 
   //! Destructor
   ~MeqCalibrater();
@@ -109,24 +111,28 @@ public:
   void predict(const String& modelDataColName);
   
   /*!
-   * Solve for the data in the given column in the current domain.
+   * Solve for the data in the itsSolveColName column in the current domain.
    * \returns Returns fit value to indicate fitness of the solution and
    * updates the parameters for which to solve.
    */
-  GlishRecord solve (const String& colName);
+  GlishRecord solve (Bool realsol);
 
   //! Save solved parameters to the MEP database.
   void saveParms();
 
   /*!
-   * Save residual data in the named column (residualColName).
+   * Save residual data in the itsResColName column.
+   * It does a predict for the sources to be peeled off and subtracts
+   * the results from the itsSolveColName column.
    */
-  void saveResidualData (const String& colName, const String& residualColName);
+  void saveResidualData();
 
   /*!
    * Get the residual data.
+   * It does a predict for the sources to be peeled off and subtracts
+   * the results from the itsSolveColName column.
    */
-  GlishArray getResidualData();
+  GlishRecord getResidualData();
 
   /*!
    * Get info about the parameters whose name matches one of the parameter
@@ -153,14 +159,21 @@ public:
   /*!
    * Set the source numbers to use in this peel step.
    */
-  Bool peel (const Vector<int>& sourceNrs);
+  Bool peel (const Vector<int>& peelSourceNrs,
+	     const Vector<Int>& extraSourceNrs);
+
+  /*!
+   * Make a selection of the MS to be used in the domain iteration.
+   * The 'where' string selects the rows.
+   * itsLastChan<0 means until the last channel.
+   */
+  Int select(const String& where, int itsFirstChan, int itsLastChan);
 
   /*!
    * Make a selection of the MS to be used in the solve.
    * The 'where' string selects the rows.
-   * itsLastChan<0 means until the last channel.
    */
-  Bool select(const String& where, int itsFirstChan, int itsLastChan);
+  Int solveselect(const String& where);
 
   /*!
    * Return some statistics (optionally detailed (i.e. per baseline)).
@@ -211,6 +224,9 @@ private:
   //! Get all baseline info.
   void fillBaselines(const Vector<int>& ant1, const Vector<int>& ant2);
 
+  //! Fill all UVW coordinates if they are not calculated.
+  void fillUVW();
+
   //! Create the WSRT expressions for each baseline.
   void makeWSRTExpr ();
 
@@ -232,6 +248,7 @@ private:
   bool                  itsCalcUVW;
 
   Vector<uInt>          itsCurRows;     //# Rows in the current iter step
+  Vector<uInt>          itsSolveRows;   //# Rows to use in solve function
   TableIterator         itsIter;        //# Iterator on selected part of MS
   int                   itsFirstChan;   //# first channel selected
   int                   itsLastChan;    //# last channel selected
@@ -241,6 +258,7 @@ private:
 
   Matrix<int>           itsBLIndex;     //# baseline index of antenna pair
   MeqSourceList         itsSources;
+  Vector<Int>           itsPeelSourceNrs;
   vector<MeqStation*>   itsStations;
   vector<MeqStatUVW*>   itsStatUVW;
   vector<MeqStatSources*> itsStatSrc;
@@ -249,7 +267,8 @@ private:
   vector<MVBaseline>    itsBaselines;
   vector<MeqHist>       itsCelltHist;   //# Histogram of #cells in time
   vector<MeqHist>       itsCellfHist;   //# Histogram of #cells in freq
-  vector<MeqJonesExpr*> itsExpr;        //# expression tree per baseline
+  vector<MeqJonesExpr*> itsExpr;        //# solve expression tree per baseline
+  vector<MeqJonesExpr*> itsResExpr;     //# residual expr tree per baseline
 
   double itsTimeInterval;
 
@@ -257,6 +276,11 @@ private:
   double itsEndFreq;
   double itsStepFreq;
   int    itsNrChan;
+
+  String itsDataColName;                //# column containing data
+  String itsResColName;                 //# column to store residuals in
+  String itsSolveColName;               //# column to be used in solve
+                                        //# (is dataColName or resColName)
 
   FitLSQ       itsSolver;
   int          itsNrScid;               //# Nr of solvable parameter coeff.

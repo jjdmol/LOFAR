@@ -71,7 +71,6 @@
 #include <aips/Tables/SetupNewTab.h>
 #include <aips/Tables/TableParse.h>
 #include <aips/Utilities/Regex.h>
-#include <trial/Fitting/LinearFit.h>
 #include <trial/Tasking/MethodResult.h>
 #include <trial/Tasking/Parameter.h>
 
@@ -141,6 +140,7 @@ void MeqCalibrater::fillStations (const Vector<Int>& ant1,
   int nrant = mssub.nrow();
   itsStations = vector<MeqStation*>(nrant, (MeqStation*)0);
   // Get all stations actually used.
+  char str[8];
   for (uInt i=0; i<ant1.nelements(); i++) {
     for (int j=0; j<2; j++) {
       int ant = ant1(i);
@@ -150,7 +150,8 @@ void MeqCalibrater::fillStations (const Vector<Int>& ant1,
 	// Store each position as a constant parameter.
 	// Use the antenna name as the parameter name.
 	Vector<Double> antpos = mssubc.position()(ant);
-	String name = mssubc.name()(ant);
+	sprintf (str, "%d", ant+1);
+	String name = string("SR") + str;
 	MeqParmSingle* px = new MeqParmSingle ("AntPosX." + name,
 					       antpos(0));
 	MeqParmSingle* py = new MeqParmSingle ("AntPosY." + name,
@@ -237,23 +238,23 @@ void MeqCalibrater::makeWSRTExpr()
       // Expression representing station parameters.
       MeqExpr* frot = new MeqStoredParmPolc ("frot." +
 					     itsStations[i]->getName(),
-					     -1, i,
+					     -1, i+1,
 					     &itsMEP);
       MeqExpr* drot = new MeqStoredParmPolc ("drot." +
 					     itsStations[i]->getName(),
-					     -1, i,
+					     -1, i+1,
 					     &itsMEP);
       MeqExpr* dell = new MeqStoredParmPolc ("dell." +
 					     itsStations[i]->getName(),
-					     -1, i,
+					     -1, i+1,
 					     &itsMEP);
       MeqExpr* gain11 = new MeqStoredParmPolc ("gain.11." +
 					       itsStations[i]->getName(),
-					       -1, i,
+					       -1, i+1,
 					       &itsMEP);
       MeqExpr* gain22 = new MeqStoredParmPolc ("gain.22." +
 					       itsStations[i]->getName(),
-					       -1, i,
+					       -1, i+1,
 					       &itsMEP);
       itsStatExpr[i] = new MeqStatExpr (frot, drot, dell, gain11, gain22);
     }
@@ -261,6 +262,7 @@ void MeqCalibrater::makeWSRTExpr()
 
   // Make an expression for each baseline.
   itsExpr.resize (itsBaselines.size());
+  itsResExpr.resize (itsBaselines.size());
   // Create the histogram object for couting of used #cells in time and freq
   itsCelltHist.resize (itsBaselines.size());
   itsCellfHist.resize (itsBaselines.size());
@@ -272,10 +274,11 @@ void MeqCalibrater::makeWSRTExpr()
 	// Create the DFT kernel.
 	MeqPointDFT* dft = new MeqPointDFT (itsStatSrc[ant1],
 					    itsStatSrc[ant2]);
-	MeqWsrtPoint* pnt = new MeqWsrtPoint (&itsSources, dft,
-					      &itsCelltHist[blindex],
-					      &itsCellfHist[blindex]);
-	itsExpr[blindex] = new MeqWsrtInt (pnt, itsStatExpr[ant1],
+	itsResExpr[blindex] = new MeqWsrtPoint (&itsSources, dft,
+						&itsCelltHist[blindex],
+						&itsCellfHist[blindex]);
+	itsExpr[blindex] = new MeqWsrtInt (itsResExpr[blindex],
+					   itsStatExpr[ant1],
 					   itsStatExpr[ant2]);
       }
     }
@@ -316,45 +319,42 @@ void MeqCalibrater::makeLOFARExpr()
       // Expression representing station parameters.
       MeqExpr* frot = new MeqStoredParmPolc ("frot." +
 					     itsStations[i]->getName(),
-					     -1, i,
+					     -1, i+1,
 					     &itsMEP);
       MeqExpr* drot = new MeqStoredParmPolc ("drot." +
 					     itsStations[i]->getName(),
-					     -1, i,
+					     -1, i+1,
 					     &itsMEP);
       MeqExpr* dell = new MeqStoredParmPolc ("dell." +
 					     itsStations[i]->getName(),
-					     -1, i,
+					     -1, i+1,
 					     &itsMEP);
       MeqExpr* gain11 = new MeqStoredParmPolc ("gain.11." +
 					       itsStations[i]->getName(),
-					       -1, i,
+					       -1, i+1,
 					       &itsMEP);
       MeqExpr* gain22 = new MeqStoredParmPolc ("gain.22." +
 					       itsStations[i]->getName(),
-					       -1, i,
+					       -1, i+1,
 					       &itsMEP);
       itsStatExpr[i] = new MeqStatExpr (frot, drot, dell, gain11, gain22);
       // Make an expression for all source parameters for this station.
       vector<MeqJonesExpr*> vec;
       for (int j=0; j<itsSources.size(); j++) {
-	MeqExpr* gc11 = new MeqStoredParmPolc ("gc.11." +
-					       itsStations[i]->getName(),
-					       j, i,
+	string nm = itsStations[i]->getName() + '.' +  itsSources[j].getName();
+	MeqExpr* ej11 = new MeqStoredParmPolc ("EJ11." + nm,
+					       j+1, i+1,
 					       &itsMEP);
-	MeqExpr* gc12 = new MeqStoredParmPolc ("gc.12." +
-					       itsStations[i]->getName(),
-					       j, i,
+	MeqExpr* ej12 = new MeqStoredParmPolc ("EJ12." + nm,
+					       j+1, i+1,
 					       &itsMEP);
-	MeqExpr* gc21 = new MeqStoredParmPolc ("gc.21." +
-					       itsStations[i]->getName(),
-					       j, i,
+	MeqExpr* ej21 = new MeqStoredParmPolc ("EJ21." + nm,
+					       j+1, i+1,
 					       &itsMEP);
-	MeqExpr* gc22 = new MeqStoredParmPolc ("gc.22." +
-					       itsStations[i]->getName(),
-					       j, i,
+	MeqExpr* ej22 = new MeqStoredParmPolc ("EJ22." + nm,
+					       j+1, i+1,
 					       &itsMEP);
-	vec.push_back (new MeqJonesNode (gc11, gc12, gc21, gc22));
+	vec.push_back (new MeqJonesNode (ej11, ej12, ej21, ej22));
       }
       itsLSSExpr[i] = new MeqLofarStatSources (vec, itsStatSrc[i]);
     }
@@ -362,6 +362,7 @@ void MeqCalibrater::makeLOFARExpr()
 
   // Make an expression for each baseline.
   itsExpr.resize (itsBaselines.size());
+  itsResExpr.resize (itsBaselines.size());
   // Create the histogram object for couting of used #cells in time and freq
   itsCelltHist.resize (itsBaselines.size());
   itsCellfHist.resize (itsBaselines.size());
@@ -371,12 +372,13 @@ void MeqCalibrater::makeLOFARExpr()
       int blindex = itsBLIndex(ant1,ant2);
       if (blindex >= 0) {
 	// Create the DFT kernel.
-	MeqLofarPoint* pnt = new MeqLofarPoint (&itsSources,
-						itsLSSExpr[ant1],
-						itsLSSExpr[ant2],
-						&itsCelltHist[blindex],
-						&itsCellfHist[blindex]);
-	itsExpr[blindex] = new MeqWsrtInt (pnt, itsStatExpr[ant1],
+	itsResExpr[blindex] = new MeqLofarPoint (&itsSources,
+						 itsLSSExpr[ant1],
+						 itsLSSExpr[ant2],
+						 &itsCelltHist[blindex],
+						 &itsCellfHist[blindex]);
+	itsExpr[blindex] = new MeqWsrtInt (itsResExpr[blindex],
+					   itsStatExpr[ant1],
 					   itsStatExpr[ant2]);
       }
     }
@@ -400,13 +402,17 @@ MeqCalibrater::MeqCalibrater(const String& msName,
 			     const Vector<Int>& ant1,
 			     const Vector<Int>& ant2,
 			     const String& modelType,
-			     bool calcUVW)
+			           bool    calcUVW,
+			     const String& dataColName,
+			     const String& residualColName)
   :
   itsMS       (msName, Table::Update),
   itsMSCol    (itsMS),
   itsMEP      (meqModel + ".MEP"),
   itsGSMMEP   (skyModel + ".MEP"),
   itsCalcUVW  (calcUVW),
+  itsDataColName (dataColName),
+  itsResColName  (residualColName),
   itsSolver   (1, LSQBase::REAL)
 {
   cdebug(1) << "MeqCalibrater constructor (";
@@ -416,9 +422,6 @@ MeqCalibrater::MeqCalibrater(const String& msName,
   cdebug(1) << ddid << ", " << endl;
   cdebug(1) << itsCalcUVW << ")" << endl;
 
-  if (!itsCalcUVW) {
-    AssertStr (modelType=="LOFAR", "calcUVW=F only possible for WSRT model");
-  }
   // Get phase reference (for field 0).
   getPhaseRef();
 
@@ -481,6 +484,11 @@ MeqCalibrater::MeqCalibrater(const String& msName,
   // This also sets up the iterator.
   select ("", 0, -1);
 
+  if (!itsCalcUVW) {
+    // Fill the UVW coordinates from the MS instead of calculating them.
+    fillUVW();
+  }
+
   // initialize the ComplexArr pool with the most frequently used size
   // itsNrChan is the numnber frequency channels
   // 1 is the number of time steps. this code is limited to one timestep only
@@ -499,6 +507,11 @@ MeqCalibrater::~MeqCalibrater()
   cdebug(1) << "MeqCalibrater destructor" << endl;
   for (vector<MeqJonesExpr*>::iterator iter = itsExpr.begin();
        iter != itsExpr.end();
+       iter++) {
+    delete *iter;
+  }
+  for (vector<MeqJonesExpr*>::iterator iter = itsResExpr.begin();
+       iter != itsResExpr.end();
        iter++) {
     delete *iter;
   }
@@ -649,10 +662,12 @@ bool MeqCalibrater::nextInterval()
     nrtim++;
     itsIter++;
   }
+  itsSolveRows.reference (itsCurRows);
   itsSolveDomain = MeqDomain(timeStart, timeStart + nrtim*timeStep,
 			     itsStartFreq + itsFirstChan*itsStepFreq,
 			     itsStartFreq + (itsLastChan+1)*itsStepFreq);
   initParms (itsSolveDomain);
+  itsSolveColName = itsDataColName;
   return true;
 }
 
@@ -757,32 +772,40 @@ void MeqCalibrater::setSolvableParms (Vector<String>& parmPatterns,
 // Solve for the solvable parameters on the current time domain.
 //
 //----------------------------------------------------------------------
-GlishRecord MeqCalibrater::solve (const String& colName)
+GlishRecord MeqCalibrater::solve(Bool realsol)
 {
-  cdebug(1) << "solve using column " << colName << endl;
+  cdebug(1) << "solve using column " << itsSolveColName << endl;
+  cout << "solve using column " << itsSolveColName << " (realsol="
+       << realsol << ')' << endl;
 
-  if (itsCurRows.nelements() == 0) {
+  if (itsSolveRows.nelements() == 0) {
     throw AipsError("nextInterval needs to be done before solve");
   }
   if (itsNrScid == 0) {
     throw AipsError ("No parameters are set to solvable");
   }
   int nrpoint = 0;
+//   if (realsol) {
+//     itsSolver.set (LSQBase::REAL);
+//   } else {
+//     itsSolver.set (LSQBase::COMPLEX);
+//   }
   Timer timer;
 
-  Vector<Double> uvw(3);
   double startFreq = itsStartFreq + itsFirstChan*itsStepFreq;
   double endFreq   = itsStartFreq + (itsLastChan+1)*itsStepFreq;
   int nrchan = 1+itsLastChan-itsFirstChan;
   Slicer dataSlicer (IPosition(2,0,itsFirstChan),
 		     IPosition(2,Slicer::MimicSource,nrchan));
 
-  ROArrayColumn<Complex> dataCol (itsMS, colName);
+  ROArrayColumn<Complex> dataCol (itsMS, itsSolveColName);
   // Complex values are separated in real and imaginary.
   // Loop through all rows in the current solve domain.
-  for (unsigned int rowinx=0; rowinx<itsCurRows.nelements(); rowinx++) {
+  for (unsigned int rowinx=0; rowinx<itsSolveRows.nelements(); rowinx++) {
+    bool showd = false;
+    //bool showd = rowinx==0;
     ///for (unsigned int rowinx=0; rowinx<5; rowinx++) {
-    int rownr = itsCurRows(rowinx);
+    int rownr = itsSolveRows(rowinx);
     ///    MeqPointDFT::doshow = rownr==44;
     uInt ant1 = itsMSCol.antenna1()(rownr);
     uInt ant2 = itsMSCol.antenna2()(rownr);
@@ -794,24 +817,13 @@ GlishRecord MeqCalibrater::solve (const String& colName)
       ///    }
     double time = itsMSCol.time()(rownr);
     double step = itsMSCol.interval()(rownr);
-    if (!itsCalcUVW) {
-      // Use from MS instead of calculating.
-      // Put them in station 2 and set first one to 0.
-      itsMSCol.uvw().get (rownr, uvw);
-      itsStatUVW[ant1]->set (time, 0, 0, 0);
-      itsStatUVW[ant2]->set (time, uvw(0), uvw(1), uvw(2));
-    }
     MeqDomain domain(time-step/2, time+step/2, startFreq, endFreq);
     MeqRequest request(domain, 1, nrchan, itsNrScid);
     MeqJonesExpr& expr = *(itsExpr[blindex]);
     expr.calcResult (request);
-    if (!itsCalcUVW) {
-      itsStatUVW[ant1]->clear();
-      itsStatUVW[ant2]->clear();
-    }
     // Form the equations for this row.
     // Make a default derivative vector with values 0.
-    MeqMatrix defaultDeriv (Matrix<DComplex> (1, nrchan, DComplex()));
+    MeqMatrix defaultDeriv (DComplex(0,0), 1, nrchan);
     const complex<double>* defaultDerivPtr = defaultDeriv.dcomplexStorage();
     // Get the data of this row for the given channels.
     Matrix<Complex> data = dataCol.getSlice (rownr, dataSlicer);
@@ -820,14 +832,28 @@ GlishRecord MeqCalibrater::solve (const String& colName)
     // Use the default if no perturbed value defined.
     vector<const complex<double>*> derivs(npol*itsNrScid);
     bool foundDeriv = false;
+    if (showd) {
+      cout << "xx val " << expr.getResult11().getValue() << endl;;
+      cout << "xy val " << expr.getResult12().getValue() << endl;;
+      cout << "yx val " << expr.getResult21().getValue() << endl;;
+      cout << "yy val " << expr.getResult22().getValue() << endl;;
+    }
     for (int scinx=0; scinx<itsNrScid; scinx++) {
       MeqMatrix val;
       if (expr.getResult11().isDefined(scinx)) {
 	val = expr.getResult11().getPerturbedValue(scinx);
-	///cout << "Pert  " << val << endl;
+ 	if (showd) {
+ 	  cout << "xx" << scinx << ' ' << val;
+ 	}
 	val -= expr.getResult11().getValue();
+ 	if (showd) {
+ 	  cout << "  diff=" << val;
+ 	}
 	///cout << "Diff  " << val << endl;
 	val /= expr.getResult11().getPerturbation(scinx);
+ 	if (showd) {
+ 	  cout << "  der=" << val << endl;
+ 	}
 	///cout << "Deriv " << val << endl;
 	derivs[scinx] = val.dcomplexStorage();
 	foundDeriv = true;
@@ -837,8 +863,17 @@ GlishRecord MeqCalibrater::solve (const String& colName)
       if (npol == 4) {
 	if (expr.getResult12().isDefined(scinx)) {
 	  val = expr.getResult12().getPerturbedValue(scinx);
+	  if (showd) {
+	    cout << "xy" << scinx << ' ' << val;
+	  }
 	  val -= expr.getResult12().getValue();
+	  if (showd) {
+	    cout << "  diff=" << val;
+	  }
 	  val /= expr.getResult12().getPerturbation(scinx);
+	  if (showd) {
+	    cout << "  der=" << val << endl;
+	  }
 	  derivs[scinx + itsNrScid] = val.dcomplexStorage();
 	  foundDeriv = true;
 	} else {
@@ -846,8 +881,17 @@ GlishRecord MeqCalibrater::solve (const String& colName)
 	}
 	if (expr.getResult21().isDefined(scinx)) {
 	  val = expr.getResult21().getPerturbedValue(scinx);
+	  if (showd) {
+	    cout << "yx" << scinx << ' ' << val;
+	  }
 	  val -= expr.getResult21().getValue();
+	  if (showd) {
+	    cout << "  diff=" << val;
+	  }
 	  val /= expr.getResult21().getPerturbation(scinx);
+	  if (showd) {
+	    cout << "  der=" << val << endl;
+	  }
 	  derivs[scinx + 2*itsNrScid] = val.dcomplexStorage();
 	  foundDeriv = true;
 	} else {
@@ -857,8 +901,17 @@ GlishRecord MeqCalibrater::solve (const String& colName)
       if (npol > 1) {
 	if (expr.getResult22().isDefined(scinx)) {
 	  val = expr.getResult22().getPerturbedValue(scinx);
+	  if (showd) {
+	    cout << "yy" << scinx << ' ' << val;
+	  }
 	  val -= expr.getResult22().getValue();
+	  if (showd) {
+	    cout << "  diff=" << val;
+	  }
 	  val /= expr.getResult22().getPerturbation(scinx);
+	  if (showd) {
+	    cout << "  der=" << val << endl;
+	  }
 	  derivs[scinx + (npol-1)*itsNrScid] = val.dcomplexStorage();
 	  foundDeriv = true;
 	} else {
@@ -871,123 +924,243 @@ GlishRecord MeqCalibrater::solve (const String& colName)
     if (foundDeriv) {
       // Get pointer to array storage; the data in it is contiguous.
       Complex* dataPtr = &(data(0,0));
-      vector<double> derivReal(itsNrScid);
-      vector<double> derivImag(itsNrScid);
+      vector<double> derivVec(2*itsNrScid);
+      double* derivReal = &(derivVec[0]);
+      double* derivImag = &(derivVec[itsNrScid]);
+      complex<double>* derivCmpl = (complex<double>*)derivReal;
       // Fill in all equations.
       if (npol == 1) {
-	const MeqMatrix& xx = expr.getResult11().getValue();
-	for (int i=0; i<nrchan; i++) {
-	  for (int j=0; j<itsNrScid; j++) {
-	    derivReal[j] = derivs[j][i].real();
-	    derivImag[j] = derivs[j][i].imag();
+	{
+	  const MeqMatrix& xx = expr.getResult11().getValue();
+	  if (realsol) {
+	    for (int i=0; i<nrchan; i++) {
+	      for (int j=0; j<itsNrScid; j++) {
+		derivReal[j] = derivs[j][i].real();
+		derivImag[j] = derivs[j][i].imag();
+	      }
+	      DComplex diff (dataPtr[i].real(), dataPtr[i].imag());
+	      diff -= xx.getDComplex(0,i);
+	      double val = diff.real();
+	      itsSolver.makeNorm (derivReal, 1., &val);
+	      val = diff.imag();
+	      itsSolver.makeNorm (derivImag, 1., &val);
+	      nrpoint++;
+	    }
+	  } else {
+	    for (int i=0; i<nrchan; i++) {
+	      for (int j=0; j<itsNrScid; j++) {
+		derivCmpl[j] = derivs[j][i];
+	      }
+	      DComplex diff (dataPtr[i].real(), dataPtr[i].imag());
+	      diff -= xx.getDComplex(0,i);
+	      itsSolver.makeNorm (derivCmpl, 1., diff);
+	      nrpoint++;
+	    }
 	  }
-	  DComplex diff (dataPtr[i].real(), dataPtr[i].imag());
-	  diff -= xx.getDComplex(0,i);
-	  double val = diff.real();
-	  itsSolver.makeNorm (&(derivReal[0]), 1., &val);
-	  val = diff.imag();
-	  itsSolver.makeNorm (&(derivImag[0]), 1., &val);
-	  nrpoint++;
 	}
       } else if (npol == 2) {
 	{
 	  const MeqMatrix& xx = expr.getResult11().getValue();
-	  for (int i=0; i<nrchan; i++) {
-	    for (int j=0; j<itsNrScid; j++) {
-	      derivReal[j] = derivs[j][i].real();
-	      derivImag[j] = derivs[j][i].imag();
+	  if (realsol) {
+	    for (int i=0; i<nrchan; i++) {
+	      for (int j=0; j<itsNrScid; j++) {
+		derivReal[j] = derivs[j][i].real();
+		derivImag[j] = derivs[j][i].imag();
+	      }
+	      DComplex diff (dataPtr[i*2].real(), dataPtr[i*2].imag());
+	      diff -= xx.getDComplex(0,i);
+	      double val = diff.real();
+	      itsSolver.makeNorm (derivReal, 1., &val);
+	      val = diff.imag();
+	      itsSolver.makeNorm (derivImag, 1., &val);
+	      nrpoint++;
 	    }
-	    DComplex diff (dataPtr[i*2].real(), dataPtr[i*2].imag());
-	    diff -= xx.getDComplex(0,i);
-	    double val = diff.real();
-	    itsSolver.makeNorm (&(derivReal[0]), 1., &val);
-	    val = diff.imag();
-	    itsSolver.makeNorm (&(derivImag[0]), 1., &val);
-	    nrpoint++;
+	  } else {
+	    for (int i=0; i<nrchan; i++) {
+	      for (int j=0; j<itsNrScid; j++) {
+		derivCmpl[j] = derivs[j][i];
+	      }
+	      DComplex diff (dataPtr[i*2].real(), dataPtr[i*2].imag());
+	      diff -= xx.getDComplex(0,i);
+	      itsSolver.makeNorm (derivCmpl, 1., &diff);
+	      nrpoint++;
+	    }
 	  }
 	}
 	{
 	  const MeqMatrix& yy = expr.getResult22().getValue();
-	  for (int i=0; i<nrchan; i++) {
-	    for (int j=0; j<itsNrScid; j++) {
-	      derivReal[j] = derivs[j+itsNrScid][i].real();
-	      derivImag[j] = derivs[j+itsNrScid][i].imag();
+	  if (realsol) {
+	    for (int i=0; i<nrchan; i++) {
+	      for (int j=0; j<itsNrScid; j++) {
+		derivReal[j] = derivs[j+itsNrScid][i].real();
+		derivImag[j] = derivs[j+itsNrScid][i].imag();
+	      }
+	      DComplex diff (dataPtr[i*2+1].real(), dataPtr[i*2+1].imag());
+	      diff -= yy.getDComplex(0,i);
+	      double val = diff.real();
+	      itsSolver.makeNorm (derivReal, 1., &val);
+	      val = diff.imag();
+	      itsSolver.makeNorm (derivImag, 1., &val);
+	      nrpoint++;
 	    }
-	    DComplex diff (dataPtr[i*2+1].real(), dataPtr[i*2+1].imag());
-	    diff -= yy.getDComplex(0,i);
-	    double val = diff.real();
-	    itsSolver.makeNorm (&(derivReal[0]), 1., &val);
-	    val = diff.imag();
-	    itsSolver.makeNorm (&(derivImag[0]), 1., &val);
-	    nrpoint++;
+	  } else {
+	    for (int i=0; i<nrchan; i++) {
+	      for (int j=0; j<itsNrScid; j++) {
+		derivCmpl[j] = derivs[j+itsNrScid][i];
+	      }
+	      DComplex diff (dataPtr[i*2+1].real(), dataPtr[i*2+1].imag());
+	      diff -= yy.getDComplex(0,i);
+	      itsSolver.makeNorm (derivCmpl, 1., &diff);
+	      nrpoint++;
+	    }
 	  }
 	}
       } else if (npol == 4) {
 	{
 	  const MeqMatrix& xx = expr.getResult11().getValue();
-	  for (int i=0; i<nrchan; i++) {
-	    for (int j=0; j<itsNrScid; j++) {
-	      derivReal[j] = derivs[j][i].real();
-	      derivImag[j] = derivs[j][i].imag();
-	      ///cout << derivReal[j] << ' ' << derivImag[j] << ", ";
-	    }
+	  if (realsol) {
+	    for (int i=0; i<nrchan; i++) {
+	      for (int j=0; j<itsNrScid; j++) {
+		derivReal[j] = derivs[j][i].real();
+		derivImag[j] = derivs[j][i].imag();
+		///cout << derivReal[j] << ' ' << derivImag[j] << ", ";
+// 	      if (showd) {
+// 		cout << "derxx: " << i << ' '
+// 		     << derivReal[j] << ' ' << derivImag[j] << endl;
+// 	      }
+	      }
 	    ///cout << endl;
-	    DComplex diff (dataPtr[i*2].real(), dataPtr[i*2].imag());
+	      DComplex diff (dataPtr[i*4].real(), dataPtr[i*4].imag());
 	    ///cout << "Value " << diff << ' ' << xx.getDComplex(0,i) << endl;
-	    diff -= xx.getDComplex(0,i);
-	    double val = diff.real();
-	    itsSolver.makeNorm (&(derivReal[0]), 1., &val);
-	    val = diff.imag();
-	    itsSolver.makeNorm (&(derivImag[0]), 1., &val);
-	    nrpoint++;
+	      diff -= xx.getDComplex(0,i);
+// 	    if (showd) {
+// 	      cout << "diffxx: " << i << ' '
+// 		   << diff.real() << ' ' << diff.imag() << endl;
+// 	    }
+	      double val = diff.real();
+	      itsSolver.makeNorm (derivReal, 1., &val);
+	      val = diff.imag();
+	      itsSolver.makeNorm (derivImag, 1., &val);
+	      nrpoint++;
+	    }
+	  } else {
+	    for (int i=0; i<nrchan; i++) {
+	      for (int j=0; j<itsNrScid; j++) {
+		derivCmpl[j] = derivs[j][i];
+	      }
+	      DComplex diff (dataPtr[i*4].real(), dataPtr[i*4].imag());
+	      diff -= xx.getDComplex(0,i);
+	      itsSolver.makeNorm (derivCmpl, 1., &diff);
+	      nrpoint++;
+	    }
 	  }
 	}
 	{
 	  const MeqMatrix& xy = expr.getResult12().getValue();
-	  for (int i=0; i<nrchan; i++) {
-	    for (int j=0; j<itsNrScid; j++) {
-	      derivReal[j] = derivs[j+itsNrScid][i].real();
-	      derivImag[j] = derivs[j+itsNrScid][i].imag();
+	  if (realsol) {
+	    for (int i=0; i<nrchan; i++) {
+	      for (int j=0; j<itsNrScid; j++) {
+		derivReal[j] = derivs[j+itsNrScid][i].real();
+		derivImag[j] = derivs[j+itsNrScid][i].imag();
+// 	      if (showd) {
+// 		cout << "derxy: " << i << ' '
+// 		     << derivReal[j] << ' ' << derivImag[j] << endl;
+// 	      }
+	      }
+	      DComplex diff (dataPtr[i*4+1].real(), dataPtr[i*4+1].imag());
+	      diff -= xy.getDComplex(0,i);
+// 	    if (showd) {
+// 	      cout << "diffxy: " << i << ' '
+// 		   << diff.real() << ' ' << diff.imag() << endl;
+// 	    }
+	      double val = diff.real();
+	      itsSolver.makeNorm (derivReal, 1., &val);
+	      val = diff.imag();
+	      itsSolver.makeNorm (derivImag, 1., &val);
+	      nrpoint++;
 	    }
-	    DComplex diff (dataPtr[i*2+1].real(), dataPtr[i*2+1].imag());
-	    diff -= xy.getDComplex(0,i);
-	    double val = diff.real();
-	    itsSolver.makeNorm (&(derivReal[0]), 1., &val);
-	    val = diff.imag();
-	    itsSolver.makeNorm (&(derivImag[0]), 1., &val);
-	    nrpoint++;
+	  } else {
+	    for (int i=0; i<nrchan; i++) {
+	      for (int j=0; j<itsNrScid; j++) {
+		derivCmpl[j] = derivs[j+itsNrScid][i];
+	      }
+	      DComplex diff (dataPtr[i*4+1].real(), dataPtr[i*4+1].imag());
+	      diff -= xy.getDComplex(0,i);
+	      itsSolver.makeNorm (derivCmpl, 1., &diff);
+	      nrpoint++;
+	    }
 	  }
 	}
 	{
 	  const MeqMatrix& yx = expr.getResult21().getValue();
-	  for (int i=0; i<nrchan; i++) {
-	    for (int j=0; j<itsNrScid; j++) {
-	      derivReal[j] = derivs[j+2*itsNrScid][i].real();
-	      derivImag[j] = derivs[j+2*itsNrScid][i].imag();
+	  if (realsol) {
+	    for (int i=0; i<nrchan; i++) {
+	      for (int j=0; j<itsNrScid; j++) {
+		derivReal[j] = derivs[j+2*itsNrScid][i].real();
+		derivImag[j] = derivs[j+2*itsNrScid][i].imag();
+// 	      if (showd) {
+// 		cout << "deryx: " << i << ' '
+// 		     << derivReal[j] << ' ' << derivImag[j] << endl;
+// 	      }
+	      }
+	      DComplex diff (dataPtr[i*4+2].real(), dataPtr[i*4+2].imag());
+	      diff -= yx.getDComplex(0,i);
+// 	    if (showd) {
+// 	      cout << "diffyx: " << i << ' '
+// 		   << diff.real() << ' ' << diff.imag() << endl;
+// 	    }
+	      double val = diff.real();
+	      itsSolver.makeNorm (derivReal, 1., &val);
+	      val = diff.imag();
+	      itsSolver.makeNorm (derivImag, 1., &val);
+	      nrpoint++;
 	    }
-	    DComplex diff (dataPtr[i*2+2].real(), dataPtr[i*2+2].imag());
-	    diff -= yx.getDComplex(0,i);
-	    double val = diff.real();
-	    itsSolver.makeNorm (&(derivReal[0]), 1., &val);
-	    val = diff.imag();
-	    itsSolver.makeNorm (&(derivImag[0]), 1., &val);
-	    nrpoint++;
+	  } else {
+	    for (int i=0; i<nrchan; i++) {
+	      for (int j=0; j<itsNrScid; j++) {
+		derivCmpl[j] = derivs[j+2*itsNrScid][i];
+	      }
+	      DComplex diff (dataPtr[i*4+2].real(), dataPtr[i*4+2].imag());
+	      diff -= yx.getDComplex(0,i);
+	      itsSolver.makeNorm (derivCmpl, 1., &diff);
+	      nrpoint++;
+	    }
 	  }
 	}
 	{
 	  const MeqMatrix& yy = expr.getResult22().getValue();
-	  for (int i=0; i<nrchan; i++) {
-	    for (int j=0; j<itsNrScid; j++) {
-	      derivReal[j] = derivs[j+3*itsNrScid][i].real();
-	      derivImag[j] = derivs[j+3*itsNrScid][i].imag();
+	  if (realsol) {
+	    for (int i=0; i<nrchan; i++) {
+	      for (int j=0; j<itsNrScid; j++) {
+		derivReal[j] = derivs[j+3*itsNrScid][i].real();
+		derivImag[j] = derivs[j+3*itsNrScid][i].imag();
+// 	      if (showd) {
+// 		cout << "deryy: " << i << ' '
+// 		     << derivReal[j] << ' ' << derivImag[j] << endl;
+// 	      }
+	      }
+	      DComplex diff (dataPtr[i*4+3].real(), dataPtr[i*4+3].imag());
+	      diff -= yy.getDComplex(0,i);
+// 	    if (showd) {
+// 	      cout << "diffyy: " << i << ' '
+// 		   << diff.real() << ' ' << diff.imag() << endl;
+// 	    }
+	      double val = diff.real();
+	      itsSolver.makeNorm (derivReal, 1., &val);
+	      val = diff.imag();
+	      itsSolver.makeNorm (derivImag, 1., &val);
+	      nrpoint++;
 	    }
-	    DComplex diff (dataPtr[i*2+3].real(), dataPtr[i*2+3].imag());
-	    diff -= yy.getDComplex(0,i);
-	    double val = diff.real();
-	    itsSolver.makeNorm (&(derivReal[0]), 1., &val);
-	    val = diff.imag();
-	    itsSolver.makeNorm (&(derivImag[0]), 1., &val);
-	    nrpoint++;
+	  } else {
+	    for (int i=0; i<nrchan; i++) {
+	      for (int j=0; j<itsNrScid; j++) {
+		derivCmpl[j] = derivs[j+3*itsNrScid][i];
+	      }
+	      DComplex diff (dataPtr[i*4+3].real(), dataPtr[i*4+3].imag());
+	      diff -= yy.getDComplex(0,i);
+	      itsSolver.makeNorm (derivCmpl, 1., &diff);
+	      nrpoint++;
+	    }
 	  }
 	}
       } else {
@@ -1004,23 +1177,36 @@ GlishRecord MeqCalibrater::solve (const String& colName)
   double stddev;
   double mu;
   cdebug(1) << "Solution before: " << itsSolution << endl;
-  int nrs = itsSolution.nelements();
-  Vector<double> sol(nrs);
-  complex<double>* solData = itsSolution.dcomplexStorage();
   // It looks as if LSQ has a bug so that solveLoop and getCovariance
   // interact badly (maybe both doing an invert).
   // So make a copy to separate them.
   Matrix<double> covar;
+  Vector<double> errors;
   FitLSQ tmpSolver = itsSolver;
   tmpSolver.getCovariance (covar);
-  for (int i=0; i<nrs; i++) {
-    sol[i] = solData[i].real();
+  tmpSolver.getErrors (errors);
+  Vector<double> solut;
+  if (realsol) {
+    int nrs = itsSolution.nelements();
+    Vector<double> sol(nrs);
+    complex<double>* solData = itsSolution.dcomplexStorage();
+    for (int i=0; i<itsSolution.nelements(); i++) {
+      sol[i] = solData[i].real();
+    }
+    Assert (itsSolver.solveLoop (fit, rank, sol, stddev, mu));
+    for (int i=0; i<itsSolution.nelements(); i++) {
+      solData[i] = complex<double>(sol[i], 0);
+    }
+    solut.reference (sol);
+  } else {
+    int nrs = itsSolution.nelements();
+    complex<double>* solData = itsSolution.dcomplexStorage();
+    Vector<complex<double> > sol(IPosition(1,nrs), solData, SHARE);
+    Assert (itsSolver.solveLoop (fit, rank, sol, stddev, mu));
+    Vector<double> tmp(IPosition(1,2*nrs), (double*)solData, SHARE);
+    solut.reference(tmp);
   }
-  Assert (itsSolver.solveLoop (fit, rank, sol, stddev, mu));
   if (Debug(1)) timer.show("solve");
-  for (int i=0; i<nrs; i++) {
-    solData[i] = complex<double>(sol[i], 0);
-  }
   cdebug(1) << "Solution after:  " << itsSolution << endl;
   
   // Update all parameters.
@@ -1037,10 +1223,10 @@ GlishRecord MeqCalibrater::solve (const String& colName)
   }
 
   GlishRecord rec;
-  rec.add ("sol", GlishArray(sol));
+  rec.add ("sol", GlishArray(solut));
   rec.add ("rank", Int(rank));
   rec.add ("fit", fit);
-  rec.add ("diag", GlishArray(covar.diagonal()));
+  rec.add ("diag", GlishArray(errors));
   rec.add ("covar", GlishArray(covar));
   rec.add ("mu", mu);
   rec.add ("stddev", stddev);
@@ -1069,7 +1255,7 @@ void MeqCalibrater::saveParms()
        iter++)
   {
     if (itsIsParmSolvable[i]) {
-      (*iter)->update (itsSolution);
+      (*iter)->save();
     }
     i++;
   }
@@ -1100,7 +1286,6 @@ void MeqCalibrater::predict (const String& modelDataColName)
     cdebug(1) << "Added column " << modelDataColName << " to the MS" << endl;
   }
 
-  Vector<Double> uvw(3);
   double startFreq = itsStartFreq + itsFirstChan*itsStepFreq;
   double endFreq   = itsStartFreq + (itsLastChan+1)*itsStepFreq;
   int nrchan = 1+itsLastChan-itsFirstChan;
@@ -1123,20 +1308,9 @@ void MeqCalibrater::predict (const String& modelDataColName)
       ///    }
     double time = itsMSCol.time()(rownr);
     double step = itsMSCol.interval()(rownr);
-    if (!itsCalcUVW) {
-      // Use from MS instead of calculating.
-      // Put them in station 2 and set first one to 0.
-      itsMSCol.uvw().get (rownr, uvw);
-      itsStatUVW[ant1]->set (time, 0, 0, 0);
-      itsStatUVW[ant2]->set (time, uvw(0), uvw(1), uvw(2));
-    }
     MeqDomain domain(time-step/2, time+step/2, startFreq, endFreq);
     MeqRequest request(domain, 1, nrchan, itsNrScid);
     itsExpr[blindex]->calcResult (request);
-    if (!itsCalcUVW) {
-      itsStatUVW[ant1]->clear();
-      itsStatUVW[ant2]->clear();
-    }
     // Write the requested data into the MS.
     // Use the same polarizations as for the original data.
     IPosition shp = itsMSCol.data().shape(rownr);
@@ -1179,35 +1353,44 @@ void MeqCalibrater::predict (const String& modelDataColName)
 // Save the colA - colB in residualCol.
 //
 //----------------------------------------------------------------------
-void MeqCalibrater::saveResidualData(const String& colName,
-				     const String& residualColName)
+void MeqCalibrater::saveResidualData()
 {
+  cout << "saveResidualData to '" << itsResColName << "', data in '";
+  cout << itsSolveColName << "')" << endl;
+
   // Make sure the MS is writable.
-  itsSelMS.reopenRW();
+  itsMS.reopenRW();
   // Create the column if it does not exist yet.
   // Make it an indirect variable shaped column.
-  if (! itsMS.tableDesc().isColumn (residualColName)) {
-    ArrayColumnDesc<Complex> cdesc(residualColName);
+  if (! itsMS.tableDesc().isColumn (itsResColName)) {
+    ArrayColumnDesc<Complex> cdesc(itsResColName);
     itsMS.addColumn (cdesc);
     itsMS.flush();
   }
 
-  Vector<Double> uvw(3);
+  vector<int> src(itsPeelSourceNrs.nelements());
+  cout << "Using peel sources ";
+  for (unsigned int i=0; i<src.size(); i++) {
+    src[i] = itsPeelSourceNrs[i];
+    cout << src[i] << ',';
+  }
+  cout << endl;
+  itsSources.setSelected (src);
+
   double startFreq = itsStartFreq + itsFirstChan*itsStepFreq;
   double endFreq   = itsStartFreq + (itsLastChan+1)*itsStepFreq;
   int nrchan = 1+itsLastChan-itsFirstChan;
   Slicer dataSlicer (IPosition(2,0,itsFirstChan),
 		     IPosition(2,Slicer::MimicSource,nrchan));
 
-  Matrix<Complex> tmp;
-  ROArrayColumn<Complex> dataCol(itsMS, colName);
-  ArrayColumn<Complex> rescol(itsMS, residualColName);
+  ROArrayColumn<Complex> dataCol(itsMS, itsSolveColName);
+  ArrayColumn<Complex> rescol(itsMS, itsResColName);
 
   // Loop through all rows in the current solve domain.
-  for (unsigned int i=0; i<itsCurRows.nelements(); i++) {
-    int rownr = itsCurRows(i);
+  for (unsigned int i=0; i<itsSolveRows.nelements(); i++) {
+    int rownr = itsSolveRows(i);
     ///    cout << "Processing row " << rownr << " out of "
-      ///	 << itsCurRows.nelements() << endl;
+      ///	 << itsSolveRows.nelements() << endl;
     ///    MeqPointDFT::doshow = rownr==44;
     uInt ant1 = itsMSCol.antenna1()(rownr);
     uInt ant2 = itsMSCol.antenna2()(rownr);
@@ -1219,28 +1402,19 @@ void MeqCalibrater::saveResidualData(const String& colName,
       ///    }
     double time = itsMSCol.time()(rownr);
     double step = itsMSCol.interval()(rownr);
-    if (!itsCalcUVW) {
-      // Use from MS instead of calculating.
-      // Put them in station 2 and set first one to 0.
-      itsMSCol.uvw().get (rownr, uvw);
-      itsStatUVW[ant1]->set (time, 0, 0, 0);
-      itsStatUVW[ant2]->set (time, uvw(0), uvw(1), uvw(2));
-    }
     MeqDomain domain(time-step/2, time+step/2, startFreq, endFreq);
     MeqRequest request(domain, 1, nrchan, itsNrScid);
     itsExpr[blindex]->calcResult (request);
-    if (!itsCalcUVW) {
-      itsStatUVW[ant1]->clear();
-      itsStatUVW[ant2]->clear();
-    }
+    //    itsResExpr[blindex]->calcResult (request);
     // Set shape of residual data cell to that of the data.
     rescol.setShape (rownr, dataCol.shape(rownr));
     // Subtract predicted from data and write into the MS.
     // Use the same polarizations as for the original data.
     Matrix<Complex> data = dataCol.getSlice (rownr, dataSlicer);
     int npol = data.shape()(0);
-    Slice sliceFreq(itsFirstChan, nrchan);
+    Slice sliceFreq(0, nrchan);
     // Convert the DComplex results to a Complex data array.
+    Matrix<Complex> tmp(IPosition(2,1,nrchan));
     convertArray (tmp,
       itsExpr[blindex]->getResult11().getValue().getDComplexMatrix());
     Matrix<Complex> tmp0 (data(Slice(0,1), sliceFreq));
@@ -1269,10 +1443,9 @@ void MeqCalibrater::saveResidualData(const String& colName,
     ///    if (MeqPointDFT::doshow) cout << "result: " << data << endl;
     rescol.putSlice (rownr, dataSlicer, data);
   }
-  itsSelMS.flush();
-
-  cdebug(1) << "saveResidualData('" << colName << "', '";
-  cdebug(1) << "'" << residualColName << "')" << endl;
+  itsMS.flush();
+  // From now on the residual column name has to be used in the solve.
+  itsSolveColName = itsResColName;
 }
 
 //----------------------------------------------------------------------
@@ -1489,9 +1662,10 @@ GlishRecord MeqCalibrater::getSolveDomain()
 // Create a subset of the MS using the given selection string
 // (which must be the WHERE part of a TaQL command).
 // Also the channels to be used can be specified.
+// This selection has to be done before the loop over domains.
 //
 //----------------------------------------------------------------------
-Bool MeqCalibrater::select(const String& where, int firstChan, int lastChan)
+Int MeqCalibrater::select(const String& where, int firstChan, int lastChan)
 {
   if (firstChan < 0  ||  firstChan >= itsNrChan) {
     itsFirstChan = 0;
@@ -1506,15 +1680,15 @@ Bool MeqCalibrater::select(const String& where, int firstChan, int lastChan)
   cdebug(1) << "select " << where << "  channels=[" << itsFirstChan
 	    << ',' << itsLastChan << ']' << endl;
   Assert (itsFirstChan <= itsLastChan);
-  if (! where.empty()) {
-    Table selms = tableCommand ("select from $1 where " + where, itsSelMS);
-    Assert (selms.nrow() > 0);
-    itsIter = TableIterator (selms, "TIME");
-  } else {
+  if (where.empty()  ||  where == "*") {
     itsIter = TableIterator (itsSelMS, "TIME");
+  } else {
+    Table selms = tableCommand ("select from $1 where " + where, itsSelMS);
+    AssertMsg (selms.nrow() > 0, "No matching rows found in select");
+    itsIter = TableIterator (selms, "TIME");
   }  
   resetIterator();
-  return True;
+  return itsCurRows.nelements();
 }
 
 //----------------------------------------------------------------------
@@ -1524,31 +1698,251 @@ Bool MeqCalibrater::select(const String& where, int firstChan, int lastChan)
 // Create a subset of the MS using the given selection string
 // (which must be the WHERE part of a TaQL command).
 // Also the channels to be used can be specified.
+// This selection can be done before each solve.
 //
 //----------------------------------------------------------------------
-Bool MeqCalibrater::peel(const Vector<Int>& sourceNrs)
+Int MeqCalibrater::solveselect(const String& where)
 {
-  cdebug(1) << "peel: sources=" << sourceNrs << endl;
+  cdebug(1) << "solveselect " << where << endl;
+  if (where.empty()  ||  where == "*") {
+    itsSolveRows.reference (itsCurRows);
+  } else {
+    Table curms (itsMS(itsCurRows));
+    Table selms = tableCommand ("select from $1 where " + where, curms);
+    AssertMsg (selms.nrow() > 0, "No matching rows found in solveselect");
+    Vector<uInt> rownrs (selms.rowNumbers(itsMS));
+    itsSolveRows.reference (rownrs);
+  }  
+  return itsSolveRows.nelements();
+}
+
+//----------------------------------------------------------------------
+//
+// ~fillUVW
+//
+// Calculate the station UVW coordinates from the MS.
+//
+//----------------------------------------------------------------------
+void MeqCalibrater::fillUVW()
+{
+  cdebug(1) << "get UVW coordinates from MS" << endl;
+  int nant = itsStatUVW.size();
+  vector<bool> statFnd (nant);
+  vector<bool> statDone (nant);
+  vector<double> statuvw(3*nant);
+  // Step time by time through the MS.
+  TableIterator iter(itsSelMS, "TIME");
+  while (!iter.pastEnd()) {
+    Table tab = iter.table();
+    ROScalarColumn<double> timeCol (tab, "TIME");
+    ROScalarColumn<int>    ant1Col (tab, "ANTENNA1");
+    ROScalarColumn<int>    ant2Col (tab, "ANTENNA2");
+    ROArrayColumn<double>  uvwCol  (tab, "UVW");
+    double time = timeCol(0);
+    statFnd.assign (statFnd.size(), false);
+    int nfnd = 0;
+    Vector<int> ant1d = ant1Col.getColumn();
+    Vector<int> ant2d = ant2Col.getColumn();
+    int* ant1 = &(ant1d(0));
+    int* ant2 = &(ant2d(0));
+    for (unsigned int i=0; i<ant1d.nelements(); i++) {
+      if (!statFnd[ant1[i]]) {
+	nfnd++;
+	statFnd[ant1[i]] = true;
+      }
+      if (!statFnd[ant2[i]]) {
+	nfnd++;
+	statFnd[ant2[i]] = true;
+      }
+    }
+    // Set UVW of first station to 0 (UVW coordinates are relative!).
+    Matrix<double> uvwd = uvwCol.getColumn();
+    double* uvw = &(uvwd(0,0));
+    statDone.assign (statDone.size(), false);
+    statuvw[3*ant1[0]]   = 0;
+    statuvw[3*ant1[0]+1] = 0;
+    statuvw[3*ant1[0]+2] = 0;
+    statDone[ant1[0]] = true;
+    itsStatUVW[ant1[0]]->set (time, 0, 0, 0);
+    int ndone = 1;
+    // Loop until all found stations are handled.
+    while (ndone < nfnd) {
+      int nd = 0;
+      for (unsigned int i=0; i<ant1d.nelements(); i++) {
+	int a1 = ant1[i];
+	int a2 = ant2[i];
+	if (!statDone[a2]) {
+	  if (statDone[a1]) {
+	    statuvw[3*a2]   = uvw[3*i]   - statuvw[3*a1];
+	    statuvw[3*a2+1] = uvw[3*i+1] - statuvw[3*a1+1];
+	    statuvw[3*a2+2] = uvw[3*i+2] - statuvw[3*a1+2];
+	    statDone[a2] = true;
+	    itsStatUVW[a2]->set (time, statuvw[3*a2], statuvw[3*a2+1],
+				 statuvw[3*a2+2]);
+	    ndone++;
+	    nd++;
+	  }
+	} else if (!statDone[a1]) {
+	  if (statDone[a2]) {
+	    statuvw[3*a1]   = statuvw[3*a2]   - uvw[3*i];
+	    statuvw[3*a1+1] = statuvw[3*a2+1] - uvw[3*i+1];
+	    statuvw[3*a1+2] = statuvw[3*a2+2] - uvw[3*i+2];
+	    statDone[a1] = true;
+	    itsStatUVW[a1]->set (time, statuvw[3*a1], statuvw[3*a1+1],
+				 statuvw[3*a1+2]);
+	    ndone++;
+	    nd++;
+	  }
+	}
+	if (ndone == nfnd) {
+	  break;
+	}
+      }
+      Assert (nd > 0);
+    }
+    iter++;
+  }
+}
+
+//----------------------------------------------------------------------
+//
+// ~peel
+//
+// Define the source numbers to use in a peel step.
+//
+//----------------------------------------------------------------------
+Bool MeqCalibrater::peel(const Vector<Int>& peelSourceNrs,
+			 const Vector<Int>& extraSourceNrs)
+{
+  // Make a shallow copy to get a non-const object.
+  Vector<Int> tmpPeel(peelSourceNrs);
+  Vector<Int> sourceNrs;
+  if (extraSourceNrs.nelements() == 0) {
+    sourceNrs.reference (tmpPeel);
+  } else {
+    sourceNrs.resize (peelSourceNrs.nelements() + extraSourceNrs.nelements());
+    sourceNrs(Slice(0,peelSourceNrs.nelements())) = peelSourceNrs;
+    sourceNrs(Slice(peelSourceNrs.nelements(), extraSourceNrs.nelements())) =
+      extraSourceNrs;
+  }
+  cdebug(1) << "peel: sources " << peelSourceNrs << " predicting sources "
+	    << sourceNrs << endl;
+  Assert (peelSourceNrs.nelements() > 0);
   vector<int> src(sourceNrs.nelements());
   for (unsigned int i=0; i<src.size(); i++) {
     src[i] = sourceNrs[i];
   }
   itsSources.setSelected (src);
-  return true;
+  itsPeelSourceNrs.reference (tmpPeel);
+  return True;
 }
 
 //----------------------------------------------------------------------
 //
-// ~getStatistics
+// ~getResidualData
 //
 // Get a description of the parameters whose name matches the
 // parmPatterns pattern. The description shows the result of the
 // evaluation of the parameter on the current time domain.
 //
 //----------------------------------------------------------------------
-GlishArray MeqCalibrater::getResidualData()
+GlishRecord MeqCalibrater::getResidualData()
 {
-  return Array<Complex>();
+  cout << "getResidualData, data in '";
+  cout << itsSolveColName << "'" << endl;
+
+  vector<int> src(itsPeelSourceNrs.nelements());
+  cout << "Using peel sources ";
+  for (unsigned int i=0; i<src.size(); i++) {
+    src[i] = itsPeelSourceNrs[i];
+    cout << src[i] << ',';
+  }
+  cout << endl;
+  itsSources.setSelected (src);
+
+  double startFreq = itsStartFreq + itsFirstChan*itsStepFreq;
+  double endFreq   = itsStartFreq + (itsLastChan+1)*itsStepFreq;
+  int nrchan = 1+itsLastChan-itsFirstChan;
+  Slicer dataSlicer (IPosition(2,0,itsFirstChan),
+		     IPosition(2,Slicer::MimicSource,nrchan));
+
+  ROArrayColumn<Complex> dataCol(itsMS, itsSolveColName);
+
+  // Size the result.
+  IPosition dataShp = dataCol.shape(itsSolveRows[0]);
+  dataShp(1) = nrchan;
+  Array<Complex> result(IPosition(3,dataShp(0),nrchan,itsSolveRows.nelements()));
+  Vector<Int> ant1Res(itsSolveRows.nelements());
+  Vector<Int> ant2Res(itsSolveRows.nelements());
+  Vector<Double> timeRes(itsSolveRows.nelements());
+  IPosition blcRes(3,0,0,0);
+  IPosition trcRes = result.shape() - 1;
+  // Loop through all rows in the current solve domain.
+  for (unsigned int i=0; i<itsSolveRows.nelements(); i++) {
+    int rownr = itsSolveRows(i);
+    ///    cout << "Processing row " << rownr << " out of "
+      ///	 << itsSolveRows.nelements() << endl;
+    ///    MeqPointDFT::doshow = rownr==44;
+    uInt ant1 = itsMSCol.antenna1()(rownr);
+    uInt ant2 = itsMSCol.antenna2()(rownr);
+    Assert (ant1 < itsBLIndex.nrow()  &&  ant2 < itsBLIndex.nrow()
+	    &&  itsBLIndex(ant1,ant2) >= 0);
+    int blindex = itsBLIndex(ant1,ant2);
+    ///    if (MeqPointDFT::doshow) {
+      ///      cout << "Info: " << ant1 << ' ' << ant2 << ' ' << blindex << endl;
+      ///    }
+    double time = itsMSCol.time()(rownr);
+    double step = itsMSCol.interval()(rownr);
+    ant1Res[i] = ant1;
+    ant2Res[i] = ant2;
+    timeRes[i] = time;
+    MeqDomain domain(time-step/2, time+step/2, startFreq, endFreq);
+    MeqRequest request(domain, 1, nrchan, itsNrScid);
+    // Predict.
+    itsExpr[blindex]->calcResult (request);
+    // Read the appropriate slice of data and convert to a 2D array.
+    blcRes(2) = i;
+    trcRes(2) = i;
+    Array<Complex> subRes = result(blcRes, trcRes);
+    Matrix<Complex> data = subRes.reform (dataShp);
+    dataCol.getSlice (rownr, dataSlicer, data);
+    int npol = data.shape()(0);
+    // Convert the DComplex results to a Complex data array.
+    // Subtract predicted from data.
+    // Use the same polarizations as for the original data.
+    Matrix<Complex> tmp(IPosition(2,1,nrchan));
+    convertArray (tmp,
+      itsExpr[blindex]->getResult11().getValue().getDComplexMatrix());
+    Matrix<Complex> tmp0 (data(Slice(0,1), Slice(0,nrchan)));
+    tmp0 -= tmp;
+    if (4 == npol) {
+      convertArray (tmp,
+	itsExpr[blindex]->getResult12().getValue().getDComplexMatrix());
+      Matrix<Complex> tmp1 (data(Slice(1,1), Slice(0,nrchan)));
+      tmp1 -= tmp;
+      convertArray (tmp,
+	itsExpr[blindex]->getResult21().getValue().getDComplexMatrix());
+      Matrix<Complex> tmp2 (data(Slice(2,1), Slice(0,nrchan)));
+      tmp2 -= tmp;
+      convertArray (tmp,
+	itsExpr[blindex]->getResult22().getValue().getDComplexMatrix());
+      Matrix<Complex> tmp3 (data(Slice(3,1), Slice(0,nrchan)));
+      tmp3 -= tmp;
+    } else if (2 == npol) {
+      convertArray (tmp,
+	itsExpr[blindex]->getResult22().getValue().getDComplexMatrix());
+      Matrix<Complex> tmp1 (data(Slice(1,1), Slice(0,nrchan)));
+      tmp1 -= tmp;
+    } else if (1 != npol) {
+      throw AipsError("Number of polarizations should be 1, 2, or 4");
+    }
+  }
+  GlishRecord rec;
+  rec.add ("residuals", GlishArray(result));
+  rec.add ("ant1", GlishArray(ant1Res));
+  rec.add ("ant2", GlishArray(ant2Res));
+  rec.add ("time", GlishArray(timeRes));
+  return rec;
 }
 
 //----------------------------------------------------------------------
@@ -1622,7 +2016,7 @@ String MeqCalibrater::className() const
 //----------------------------------------------------------------------
 Vector<String> MeqCalibrater::methods() const
 {
-  Vector<String> method(16);
+  Vector<String> method(17);
 
   method(0)  = "settimeinterval";
   method(1)  = "resetiterator";
@@ -1636,10 +2030,11 @@ Vector<String> MeqCalibrater::methods() const
   method(9)  = "getparms";
   method(10) = "getsolvedomain";
   method(11) = "select";
-  method(12) = "peel";
-  method(13) = "getresidualdata";
-  method(14) = "getstatistics";
-  method(15) = "getparmnames";
+  method(12) = "solveselect";
+  method(13) = "peel";
+  method(14) = "getresidualdata";
+  method(15) = "getstatistics";
+  method(16) = "getparmnames";
 
   return method;
 }
@@ -1722,12 +2117,12 @@ MethodResult MeqCalibrater::runMethod(uInt which,
 
   case 6: // solve
     {
-      Parameter<String> colName(inputRecord, "datacolname",
-				ParameterSet::In);
+      Parameter<Bool> realsol(inputRecord, "realsol",
+			      ParameterSet::In);
       Parameter<GlishRecord> returnval(inputRecord, "returnval",
 				       ParameterSet::Out);
 
-      if (runMethod) returnval() = solve (colName());
+      if (runMethod) returnval() = solve (realsol());
     }
     break;
 
@@ -1739,13 +2134,7 @@ MethodResult MeqCalibrater::runMethod(uInt which,
 
   case 8: // saveresidualdata
     {
-      Parameter<String> colName(inputRecord, "datacolname",
-				ParameterSet::In);
-      Parameter<String> residualColName(inputRecord, "residualcolname",
-					ParameterSet::In);
-
-      if (runMethod) saveResidualData(colName(),
-				      residualColName());
+      if (runMethod) saveResidualData();
     }
     break;
 
@@ -1779,21 +2168,36 @@ MethodResult MeqCalibrater::runMethod(uInt which,
 			       ParameterSet::In);
       Parameter<Int> lastChan(inputRecord, "lastchan",
 			      ParameterSet::In);
+      Parameter<Int> returnval(inputRecord, "returnval",
+			       ParameterSet::Out);
 
-      if (runMethod) select(where(), firstChan(), lastChan());
+      if (runMethod) returnval() = select(where(), firstChan(), lastChan());
     }
     break;
 
-  case 12: // peel
+  case 12: // solveselect
     {
-      Parameter<Vector<Int> > sourceNrs(inputRecord, "sourcenrs",
-					ParameterSet::In);
+      Parameter<String> where(inputRecord, "where",
+			      ParameterSet::In);
+      Parameter<Int> returnval(inputRecord, "returnval",
+			       ParameterSet::Out);
 
-      if (runMethod) peel(sourceNrs());
+      if (runMethod) returnval() = solveselect(where());
     }
     break;
 
-  case 13: // getresidualdata
+  case 13: // peel
+    {
+      Parameter<Vector<Int> > peelSourceNrs(inputRecord, "peelsourcenrs",
+					    ParameterSet::In);
+      Parameter<Vector<Int> > extraSourceNrs(inputRecord, "extrasourcenrs",
+					     ParameterSet::In);
+
+      if (runMethod) peel(peelSourceNrs(), extraSourceNrs());
+    }
+    break;
+
+  case 14: // getresidualdata
     {
       Parameter<GlishRecord> returnval(inputRecord, "returnval",
 				       ParameterSet::Out);
@@ -1802,7 +2206,7 @@ MethodResult MeqCalibrater::runMethod(uInt which,
     }
     break;
 
-  case 14: // getstatistics
+  case 15: // getstatistics
     {
       Parameter<Bool> detailed(inputRecord, "detailed",
 			       ParameterSet::In);
@@ -1815,7 +2219,7 @@ MethodResult MeqCalibrater::runMethod(uInt which,
     }
     break;
 
-  case 15: // getparmnames
+  case 16: // getparmnames
     {
       Parameter<Vector<String> > parmPatterns(inputRecord, "parmpatterns",
 					      ParameterSet::In);
@@ -1860,13 +2264,18 @@ MethodResult MeqCalibraterFactory::make(ApplicationObject*& newObject,
       Parameter<Vector<Int> > ant2(inputRecord, "ant2",   ParameterSet::In);
       Parameter<String> modelType(inputRecord, "modeltype", ParameterSet::In);
       Parameter<Bool>     calcUVW(inputRecord, "calcuvw", ParameterSet::In);
+      Parameter<String> dataColName(inputRecord, "datacolname",
+				    ParameterSet::In);
+      Parameter<String> resColName(inputRecord, "residualcolname",
+				    ParameterSet::In);
 
       if (runConstructor)
 	{
 	  newObject = new MeqCalibrater(msName(), meqModel(),
 					skyModel(), ddid(),
 					ant1(), ant2(), modelType(),
-					calcUVW());
+					calcUVW(),
+					dataColName(), resColName());
 	}
     }
   else

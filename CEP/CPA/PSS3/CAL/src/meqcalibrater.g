@@ -37,7 +37,7 @@ const _define_meqcalibrater := function(ref agent, id) {
     public     := defaultservers.init_object(self)
     
     
-    self.settimeintervalRec := [_method="settimeinterval",
+    self.settimeintervalRec := [_method='settimeinterval',
 			        _sequence=self.id._sequence]
     public.settimeinterval := function(secondsinterval) {
     
@@ -50,7 +50,7 @@ const _define_meqcalibrater := function(ref agent, id) {
         return defaultservers.run(self.agent, self.settimeintervalRec);
     }
     
-    self.resetiteratorRec := [_method="resetiterator",
+    self.resetiteratorRec := [_method='resetiterator',
 			      _sequence=self.id._sequence]
     public.resetiterator := function() {
     
@@ -60,7 +60,7 @@ const _define_meqcalibrater := function(ref agent, id) {
         return defaultservers.run(self.agent, self.resetiteratorRec);
     }
     
-    self.nextintervalRec := [_method="nextinterval",
+    self.nextintervalRec := [_method='nextinterval',
 			     _sequence=self.id._sequence]
     public.nextinterval := function() {
     
@@ -70,7 +70,7 @@ const _define_meqcalibrater := function(ref agent, id) {
 	return defaultservers.run(self.agent, self.nextintervalRec);
     }
     
-    self.clearsolvableparmsRec := [_method="clearsolvableparms",
+    self.clearsolvableparmsRec := [_method='clearsolvableparms',
 				   _sequence=self.id._sequence]
     public.clearsolvableparms := function() {
     
@@ -80,9 +80,9 @@ const _define_meqcalibrater := function(ref agent, id) {
         return defaultservers.run(self.agent, self.clearsolvableparmsRec);
     }
     
-    self.setsolvableparmsRec := [_method="setsolvableparms",
+    self.setsolvableparmsRec := [_method='setsolvableparms',
 				 _sequence=self.id._sequence]
-    public.setsolvableparms := function(parmpatterns, excludepatterns="", issolvable=T) {
+    public.setsolvableparms := function(parmpatterns, excludepatterns='', issolvable=T) {
     
         wider self;
         
@@ -95,7 +95,7 @@ const _define_meqcalibrater := function(ref agent, id) {
         return defaultservers.run(self.agent, self.setsolvableparmsRec);
     }
     
-    self.predictRec := [_method="predict", _sequence=self.id._sequence]
+    self.predictRec := [_method='predict', _sequence=self.id._sequence]
     public.predict := function(modeldatacolname = 'MODEL_DATA') {
     
         wider self;
@@ -107,8 +107,8 @@ const _define_meqcalibrater := function(ref agent, id) {
         return defaultservers.run(self.agent, self.predictRec);
     }
     
-    self.selectRec := [_method="select", _sequence=self.id._sequence]
-    public.select := function (where="", firstchan=0, lastchan=-1) {
+    self.selectRec := [_method='select', _sequence=self.id._sequence]
+    public.select := function (where='', firstchan=0, lastchan=-1) {
     
         wider self;
         
@@ -121,31 +121,44 @@ const _define_meqcalibrater := function(ref agent, id) {
         return defaultservers.run(self.agent, self.selectRec);
     }
     
-    self.peelRec := [_method="peel", _sequence=self.id._sequence]
-    public.peel := function (sourcenrs) {
+    self.solveselectRec := [_method='solveselect', _sequence=self.id._sequence]
+    public.solveselect := function (where='') {
     
         wider self;
         
         # argument assignment
-        self.solveRec.sourcenrs := sourcenrs
+        self.solveselectRec.where := where
+
+        # return
+        return defaultservers.run(self.agent, self.solveselectRec);
+    }
+    
+    self.peelRec := [_method='peel', _sequence=self.id._sequence]
+    public.peel := function (peelsourcenrs, extrasourcenrs) {
+    
+        wider self;
+        
+        # argument assignment
+        self.peelRec.peelsourcenrs  := peelsourcenrs
+        self.peelRec.extrasourcenrs := extrasourcenrs
+
+        # return
+        return defaultservers.run(self.agent, self.peelRec);
+    }
+    
+    self.solveRec := [_method='solve', _sequence=self.id._sequence]
+    public.solve := function(realsol=T) {
+    
+        wider self;
+
+        # argument assignment
+        self.solveRec.realsol  := realsol
 
         # return
         return defaultservers.run(self.agent, self.solveRec);
     }
     
-    self.solveRec := [_method="solve", _sequence=self.id._sequence]
-    public.solve := function (datacolname = "DATA") {
-    
-        wider self;
-        
-        # argument assignment
-        self.solveRec.datacolname := datacolname
-
-        # return
-        return defaultservers.run(self.agent, self.solveRec);
-    }
-    
-    self.saveparmsRec := [_method="saveparms", _sequence=self.id._sequence]
+    self.saveparmsRec := [_method='saveparms', _sequence=self.id._sequence]
     public.saveparms := function() {
     
         wider self;
@@ -154,30 +167,31 @@ const _define_meqcalibrater := function(ref agent, id) {
         return defaultservers.run(self.agent, self.saveparmsRec);
     }
     
-    self.saveresidualdataRec := [_method="saveresidualdata",
+    self.saveresidualdataRec := [_method='saveresidualdata',
 				 _sequence=self.id._sequence]
-    public.saveresidualdata := function(residualcolname='CORRECTED_DATA') {
+    public.saveresidualdata := function() {
     
         wider self;
-        
-        # argument assignment
-        self.saveresidualdataRec.residualcolname := residualcolname
         
         # return
         return defaultservers.run(self.agent, self.saveresidualdataRec);
     }
     
-    self.getresidualdataRec := [_method="getresidualdata",
+    self.getresidualdataRec := [_method='getresidualdata',
 				_sequence=self.id._sequence]
     public.getresidualdata := function() {
     
         wider self;
+        
+        # argument assignment
+        self.getresidualdataRec.datacolname := datacolname
+
         # return
         return defaultservers.run(self.agent, self.getresidualdataRec);
     }
     
-    self.getparmsRec := [_method="getparms", _sequence=self.id._sequence]
-    public.getparms := function(parmpatterns, excludepatterns="") {
+    self.getparmsRec := [_method='getparms', _sequence=self.id._sequence]
+    public.getparms := function(parmpatterns, excludepatterns='') {
     
         wider self;
         
@@ -189,7 +203,7 @@ const _define_meqcalibrater := function(ref agent, id) {
         return defaultservers.run(self.agent, self.getparmsRec);
     }
 
-    self.getsolvedomainRec := [_method="getsolvedomain", _sequence=self.id._sequence]
+    self.getsolvedomainRec := [_method='getsolvedomain', _sequence=self.id._sequence]
     public.getsolvedomain := function() {
     
         wider self;
@@ -198,7 +212,7 @@ const _define_meqcalibrater := function(ref agent, id) {
         return defaultservers.run(self.agent, self.getsolvedomainRec);
     }
 
-    self.getstatisticsRec := [_method="getstatistics", _sequence=self.id._sequence]
+    self.getstatisticsRec := [_method='getstatistics', _sequence=self.id._sequence]
     public.getstatistics := function (detailed=F, clear=T) {
     
         wider self;
@@ -211,8 +225,9 @@ const _define_meqcalibrater := function(ref agent, id) {
         return defaultservers.run(self.agent, self.getstatisticsRec);
     }
     
-    self.getparmnamesRec := [_method="getparmnames", _sequence=self.id._sequence]
-    public.getparmnames := function(parmpatterns="*", excludepatterns="u.* v.* w.*") {
+    self.getparmnamesRec := [_method='getparmnames', _sequence=self.id._sequence]
+    public.getparmnames := function(parmpatterns='*',
+				    excludepatterns="u.* v.* w.*") {
     
         wider self;
         
@@ -249,6 +264,8 @@ const _define_meqcalibrater := function(ref agent, id) {
 const meqcalibrater := function(msname, meqmodel = 'LOFAR', skymodel = 'GSM',
                                 ddid = 0, ant=[], ant1=[], ant2=[], 
 				modeltype='LOFAR', calcuvw=T, 
+				datacolname='MODEL_DATA',
+				residualcolname='CORRECTED_DATA',
 				host='', forcenewserver=F) {
     if (len(ant1) == 0) ant1:=ant;
     if (len(ant2) == 0) ant2:=ant;
@@ -257,7 +274,8 @@ const meqcalibrater := function(msname, meqmodel = 'LOFAR', skymodel = 'GSM',
                                 [msname=msname, meqmodel=meqmodel,
 				 skymodel=skymodel, ddid=ddid,
 				 ant1=ant1, ant2=ant2, modeltype=modeltype,
-				 calcuvw=calcuvw]);
+				 calcuvw=calcuvw, datacolname=datacolname,
+				 residualcolname=residualcolname]);
     return ref _define_meqcalibrater(agent, id);
 }
 
@@ -269,7 +287,7 @@ const meqcalibratertest := function()
     local mc := meqcalibrater('myms.ms', 'TEST', 'TEST');
 
     if (is_fail(mc)) {
-	print "meqcalibratertest(): could not instantiate meqcalibrater"
+	print 'meqcalibratertest(): could not instantiate meqcalibrater'
 	fail
     }
 

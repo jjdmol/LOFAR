@@ -31,9 +31,12 @@
 
 #include <CAL/MeqCalibraterImpl.h>
 #include <Common/lofar_strstream.h>
-#include <aips/Exceptions/Error.h>
+#include <aips/Tables/Table.h>
+#include <aips/Tables/ScalarColumn.h>
+#include <aips/Tables/TableParse.h>
 #include <aips/Arrays/Vector.h>
 #include <aips/Arrays/ArrayUtil.h>
+#include <aips/Exceptions/Error.h>
 #include <Common/Profiling/PerfProfile.h>
 
 void predict (MeqCalibrater& mc)
@@ -44,20 +47,18 @@ void predict (MeqCalibrater& mc)
   }
 }
 
-void setsolvable(MeqCalibrater& mc)
+void setsolvable(MeqCalibrater& mc, const String& pattern)
 {
-  Vector<String> parmPatterns(3);
+  Vector<String> parmPatterns(1);
   Vector<String> excludePatterns(0);
 
   mc.clearSolvableParms();
 
-  parmPatterns[0] = "GSM.*.I";
-  parmPatterns[1] = "GSM.*.DEC";
-  parmPatterns[2] = "GSM.*.RA";
+  parmPatterns[0] = pattern;
   mc.setSolvableParms(parmPatterns, excludePatterns, true);
 }
 
-void solve(MeqCalibrater& mc, int loopcnt)
+void solve(MeqCalibrater& mc, int loopcnt, bool realsol)
 {
   double fit;
 
@@ -68,7 +69,7 @@ void solve(MeqCalibrater& mc, int loopcnt)
       PERFPROFILE("solve");
 
       cout << "solve " << endl;
-      GlishRecord rec = mc.solve("MODEL_DATA");
+      GlishRecord rec = mc.solve(realsol);
       GlishArray(rec.get("fit")).get(fit);
       cout << "fit = " << fit << endl;
     }
@@ -77,6 +78,10 @@ void solve(MeqCalibrater& mc, int loopcnt)
 
 int main(int argc, char* argv[])
 {
+  // run ../../gnu_opt/demo/michiel.demo 0 ../../gnu_opt/demo/michiel.demo_gsm  LOFAR solve 1 0 0 "all([ANTENNA1,ANTENNA2] in 4*[0:20])" 0,1,2 0
+  // run ../../gnu_opt/demo/michiel.demo 0 ../../gnu_opt/demo/michiel.demo_gsm  LOFAR solve 1 0 0 "all([ANTENNA1,ANTENNA2] in 4*[0:1])" 0,1,2 0
+  // run ../../gnu_opt/demo/michiel.demo 0 ../../gnu_opt/demo/michiel.demo_gsm  WSRT solve 1 0 0 "all([ANTENNA1,ANTENNA2] in 4*[0:20])" 0,1,2 0
+
   PerfProfile::init(&argc, &argv, PP_LEVEL_2);
 
   try {
@@ -88,6 +93,8 @@ int main(int argc, char* argv[])
       cerr << " gsmname:   name of GSM table   (default is msname)" << endl;
       cerr << " modeltype: WSRT or LOFAR       (default is LOFAR)" << endl;
       cerr << " scenario:  scenario to execute (default is predict)" << endl;
+      cerr << " solvparms: solvable parms pattern ({RA,DEC,StokesI}.*)"
+	   << endl;
       cerr << " loopcnt:   number of scenario loops (default is 1)" << endl;
       cerr << " stchan:    first channel       (default is -1 (first channel)"
 	   << endl;
@@ -132,31 +139,39 @@ int main(int argc, char* argv[])
       scenario = "predict";
     }
 
-    int loopcnt = 1;
+    string solvparms;
     if (argc > 6) {
-      loopcnt = atoi(argv[6]);
+      solvparms = argv[6];
+    }
+    if ("0" == solvparms  ||  "" == solvparms) {
+      solvparms = "{RA,DEC,StokesI}.*";
+    }
+
+    int loopcnt = 1;
+    if (argc > 7) {
+      loopcnt = atoi(argv[7]);
       if (0 == loopcnt) loopcnt = 1;
     }
 
     int stchan = -1;
-    if (argc > 7) {
-      istringstream iss(argv[7]);
+    if (argc > 8) {
+      istringstream iss(argv[8]);
       iss >> stchan;
     }
     int endchan = stchan;
-    if (argc > 8) {
-      istringstream iss(argv[8]);
+    if (argc > 9) {
+      istringstream iss(argv[9]);
       iss >> endchan;
     }
 
     string selstr;
-    if (argc > 9) {
-      selstr = argv[9];
+    if (argc > 10) {
+      selstr = argv[10];
     }
 
     string peelstr;
-    if (argc > 10) {
-      peelstr = argv[10];
+    if (argc > 11) {
+      peelstr = argv[11];
     }
     Vector<Int> peelVec;
     if (!peelstr.empty()) {
@@ -180,6 +195,7 @@ int main(int argc, char* argv[])
     cout << " gsmname:   " << gsmname << endl;
     cout << " modeltype: " << modelType << endl;
     cout << " scenario:  " << scenario << endl;
+    cout << " solvparms: " << solvparms << endl;
     cout << " loopcnt:   " << loopcnt << endl;
     cout << " stchan:    " << stchan << endl;
     cout << " endchan:   " << endchan << endl;
@@ -187,16 +203,31 @@ int main(int argc, char* argv[])
     cout << " peel:      " << peelVec << endl;
     cout << " calcuvw  : " << calcuvw << endl;
 
-    Vector<Int> ant;
-    MeqCalibrater meqcal (msname+".MS", mepname, gsmname, 0, ant, ant,
-			  modelType, calcuvw);
+    // Get the antennas from the selection.
+    Vector<Int> ant1, ant2;
+    {
+      Table tab;
+      if (selstr.empty()) {
+	tab = Table(msname+".MS");
+      } else {
+	tab = tableCommand("SELECT FROM " + msname + ".MS WHERE " + selstr);
+      }
+      Table sortab = tab.sort ("ANTENNA1", Sort::Ascending,
+			       Sort::QuickSort | Sort::NoDuplicates);
+      ant1 = ROScalarColumn<Int>(sortab, "ANTENNA1").getColumn();
+      sortab = tab.sort ("ANTENNA2", Sort::Ascending,
+			 Sort::QuickSort | Sort::NoDuplicates);
+      ant2 = ROScalarColumn<Int>(sortab, "ANTENNA2").getColumn();
+    }
+    MeqCalibrater meqcal (msname+".MS", mepname, gsmname, 0, ant1, ant2,
+			  modelType, calcuvw, "MODEL_DATA", "CORRECTED_DATA");
 
     if (stchan >= 0  ||  endchan >= 0  ||  !selstr.empty()) {
       if (stchan < 0) {
 	stchan = 0;
       }
       if (endchan < 0) {
-	endchan = meqcal.getNrChan();
+	endchan = meqcal.getNrChan() - 1;
 	cout << " endchan (modified): " << endchan << endl;
       }
       meqcal.select (selstr, stchan, endchan);
@@ -212,16 +243,17 @@ int main(int argc, char* argv[])
     else
     {
       if ("predict" == scenario) {
-	meqcal.peel (peelVec);
 	for (int i = 0; i < loopcnt; i++)
 	{
 	  PERFPROFILE("predict");
 	  predict (meqcal);
 	}
       } else if ("solve" == scenario) {
-	meqcal.peel (peelVec);
-	setsolvable (meqcal);
-	solve (meqcal, loopcnt);
+	meqcal.peel (peelVec, Vector<Int>());
+	setsolvable (meqcal, solvparms);
+	solve (meqcal, loopcnt, true);
+      } else if ("saveresidual" == scenario) {
+	meqcal.saveResidualData();
       } else {
 	cerr << "Invalid scenario; valid are:  predict,solve" << endl;
       }
