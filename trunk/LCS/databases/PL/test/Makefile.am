@@ -5,6 +5,7 @@ check_PROGRAMS		= \
 			  tAttrib \
 			  tCollection \
 			  tObjectId \
+			  tAttr1 \
 			  tQuery
 
 tA_SOURCES              = tA.cc
@@ -23,6 +24,10 @@ tAttrib_SOURCES		= tAttrib.cc
 tAttrib_LDADD		= ../src/libpl.la
 tAttrib_DEPENDENCIES	= ../src/libpl.la $(LOFAR_DEPEND)
 
+tAttr1_SOURCES		= tAttr1.cc
+tAttr1_LDADD		= ../src/libpl.la
+tAttr1_DEPENDENCIES	= ../src/libpl.la $(LOFAR_DEPEND)
+
 tCollection_SOURCES	= tCollection.cc
 tCollection_LDADD	= ../src/libpl.la
 tCollection_DEPENDENCIES= ../src/libpl.la $(LOFAR_DEPEND)
@@ -31,9 +36,13 @@ tObjectId_SOURCES	= tObjectId.cc
 tObjectId_LDADD		= ../src/libpl.la
 tObjectId_DEPENDENCIES	= ../src/libpl.la $(LOFAR_DEPEND)
 
-tQuery_SOURCES              = tQuery.cc
+tAttr1_SOURCES		= tAttr1.cc
+tAttr1_LDADD		= ../src/libpl.la
+tAttr1_DEPENDENCIES	= ../src/libpl.la $(LOFAR_DEPEND)
+
+tQuery_SOURCES		= tQuery.cc
 tQuery_LDADD		= ../src/libpl.la
-tQuery_DEPENDENCIES		= ../src/libpl.la $(LOFAR_DEPEND)
+tQuery_DEPENDENCIES	= ../src/libpl.la $(LOFAR_DEPEND)
 
 TESTS			= \
 			  tA_test.sh \
@@ -42,6 +51,7 @@ TESTS			= \
 			  tAttrib.sh \
 			  tObjectId.sh \
 			  tCollection.sh \
+			  tAttr1.sh \
 			  tQuery.sh
 
 TESTS_ENVIRONMENT	= lofar_sharedir=$(lofar_sharedir)

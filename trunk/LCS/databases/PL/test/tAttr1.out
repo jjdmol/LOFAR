@@ -1,0 +1,32 @@
+Query: s=0
+   found 64 matches
+Query: e.s=0
+   found 64 matches
+Query: e.d.s=1
+   found 64 matches
+Query: C::s=0
+   found 64 matches
+Query: C::b.s=0
+   found 64 matches
+Query: C::A::s=0
+   found 64 matches
+Query: C::b.A::s=0
+   found 64 matches
+Query: C::b.A::s=2
+   found 0 matches
+Query: C::s=0 && e.s=1
+   found 32 matches
+Query: C::b.A::s=0 && e.d.s=1
+   found 32 matches
+Query: C::b.A::s+e.s=1
+   found 64 matches
+Query: C::A::s+C::s=2
+   found 32 matches
+Query: C::b.s+C::A::s=C::s
+   found 48 matches
+Query: s=0 || s=1
+   found 128 matches
+Query: e.s=0 || e.s=1
+   found 128 matches
+Query: C::b.A::s=0 || C::b.A::s=1
+   found 128 matches
