@@ -27,24 +27,6 @@
 
 namespace LOFAR {
 
-//#------------------------- Global user functions -------------------------------
-//
-// formatString(format, ...) --> string
-//
-// Define a global function the accepts printf like arguments and returns a string.
-//
-const std::string formatString(const	char* format, ...) {
-	char		tmp_cstring[1024];
-	va_list		ap;
-
-	va_start (ap, format);
-	vsnprintf(tmp_cstring, sizeof(tmp_cstring), format, ap);
-	va_end   (ap);
-
-	return   std::string(tmp_cstring);
-}
-
-
 //#------------------------- Internal implementation -----------------------------
 //
 // lofarLoggerInitNode()
