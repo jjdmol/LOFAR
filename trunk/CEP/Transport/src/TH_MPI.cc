@@ -30,7 +30,7 @@
 #endif
 
 #include <Transport/TH_MPI.h>
-#include <mpi.h>
+#include <Transport/BaseSim.h>
 #include <Common/Debug.h>
 #include <Common/lofar_deque.h>
 #include <Common/lofar_list.h>
@@ -59,17 +59,6 @@ TH_MPI* TH_MPI::make() const
 string TH_MPI::getType() const
 {
     return "TH_MPI";
-}
-
-void* TH_MPI::allocate (size_t size)
-{
-  itsMaxSize = size;
-  return TransportHolder::allocate(size);
-}
-
-void  TH_MPI::deallocate (void*& ptr)
-{
-  TransportHolder::deallocate(ptr);
 }
 
 void TH_MPI::lock()
