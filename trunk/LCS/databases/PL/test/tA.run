@@ -1,4 +1,8 @@
 #!/bin/sh
+
+# Remove srcdir from argument list
+shift
+
 psql -h dop50 -U postgres test <<_EOF_ > tA_tmp.psql_out 2>&1
 \i ../../../test/ABC.sql
 \q
