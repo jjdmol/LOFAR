@@ -105,8 +105,8 @@ Socket& Socket::operator=(const Socket& that)
 //#			service		Service name or portnumber to connect to.
 //#	Out:	--
 //#	Return:	bool indicating the result of the connection request.
-bool Socket::connect (const string&			hostname,
-			  		  const int16			portnr) 
+bool Socket::connect (const string&	hostname,
+		      const int16	portnr) 
 {
 	//# Try to resolve the hostname, it may be a quartet of digits but
 	//# also a name to be resolve by /etc/hosts or NIS.
@@ -230,8 +230,7 @@ bool Socket::openListener (const int16		portnr)
 //#	Out:	--
 //#	Return:				Socket of the new connection
 
-Socket	 Socket::accept(int   buffersize, 
-			char* bufferptr)
+Socket	 Socket::accept()
 {
 	struct sockaddr_in  sockAddr;
 	socklen_t	    len = sizeof (sockAddr);
@@ -254,22 +253,33 @@ Socket	 Socket::accept(int   buffersize,
 
 	//# create the new data socket
 	Socket		dataSocket;
-	
-	// set or create output buffer 
-	if (bufferptr != NULL) {
-	   cout << "accept: reuse buffer  " << endl;
-	   dataSocket.itsData = bufferptr;
-	  dataSocket.itsBufferSize = buffersize;
-	} else {
-	  cout << "accept: create new buffer" << endl;
-	  dataSocket.allocBuffer(buffersize);
-	}
 	dataSocket.itsSocketID 	= hostSock;
 	dataSocket.itsConnected = true;
 
 	//	LOG_TRACE_LOOP_STR("successfull connect at sid:" << itsSocketID);
 
 	return (dataSocket);
+}
+
+//#
+//# TBW
+//#
+//#
+void Socket::setBuffer( int   buffersize, 
+			char* bufferptr) {
+ 	// set or create output buffer 
+  if (bufferptr != NULL) {
+    // external puffer ptr specified; we will use that buffer
+    // address and available length are copied into our own variables
+    //cout << "accept: reuse buffer  " << endl;
+    itsData = bufferptr;
+    itsBufferSize = buffersize;
+  } else {
+    // no external puffer specified, so we will
+    // allocate our own buffer
+    //cout << "accept: create new buffer" << endl;
+    allocBuffer(buffersize);
+  }
 }
 
 //#
@@ -393,6 +403,7 @@ int32 Socket::recv (char*		buf,
   // DbgAssert(len > 0)
 
   if (!itsConnected && !connect(itsHostname, itsPortnr)) {
+    cout << "no connection" << endl;
     //LOG_DEBUG(formatString("Write:no connection on %s:%d\n",
     //							itsHostname.c_str(), itsPortnr));
   }
@@ -401,12 +412,12 @@ int32 Socket::recv (char*		buf,
   itsWptr = 0;
   if (itsData == 0) {
     // LOG_ERROR("itsData buffer not initialised");
+    cout << "itsData buffer not initialised" << endl;
     return 0;
   }
   buf[0] = '\0';
   
   //# Setup variables for the read
-  
   if ((buf != NULL) && (len>0)) {
     // probably new values are supplied for the buffer address and length
     itsData = buf;
@@ -428,7 +439,8 @@ int32 Socket::recv (char*		buf,
       
       //# Check for errors
       if (!errno && (newBytes > 0)) {
-	 //DbgAssertStr(len == newBytes,"did not read all data");
+	//DbgAssertStr(len == newBytes,"did not read all data");
+	if (len != newBytes) cout << "did not read all data" << endl;
 	 //itsData[itsWptr] = '\0';	//# always terminate buf
       }
       else {

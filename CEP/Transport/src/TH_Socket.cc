@@ -42,7 +42,7 @@ namespace LOFAR
     isConnected (false),
     itsServerAtSender(ServerAtSender)
 {
-    cout << "Creating a socket..." << endl;
+  cout << "Creating a socket...(" << (ServerAtSender ? "SS" : "SC" ) << ")"<< endl;
 }
 
 TH_Socket::~TH_Socket()
@@ -69,7 +69,6 @@ TH_Socket::~TH_Socket()
   
   bool TH_Socket::recvBlocking (void * buf, int nbytes, int /*tag*/)
   { 
-    cout << "recvBlocking " << endl;
     if (! isConnected) {
       if (itsServerAtSender) {
 	// Client side behaviour (default)
@@ -79,7 +78,7 @@ TH_Socket::~TH_Socket()
 	ConnectToClient ();
       } 
     }// Now we should have a connection
-    
+        
     int received_len = itsDataSocket.recv((char *) buf, nbytes);
     //cout << "TH_Socket received " << received_len << "/" <<nbytes<<endl; 
     bool result = received_len == nbytes;
@@ -118,7 +117,6 @@ TH_Socket::~TH_Socket()
 	ConnectToServer ();
       } 
     }// Now we should have a connection
-     cout << "Sending..." << endl;
     int sent_len=0;
     sent_len = itsDataSocket.send ((char *) buf, nbytes);
     //cout << "TH_Socket sent " << sent_len << "/" << nbytes << " bytes" << endl;
@@ -168,10 +166,11 @@ TH_Socket::~TH_Socket()
     // The port number of the connection must be based the tag after
     // succesful testing.
   
-    cout << "Connecting..." << endl;
     itsDataSocket.connect (itsSendingHostName, itsPortNo);
-    cout << "Connected" << endl;
-
+    // tell the Socket object where to store data (e.g. in recv calls)
+    itsDataSocket.setBuffer(getTransporter()->getMaxDataSize(), 
+			    (char*)(getTransporter()->getDataPtr()));
+    
     isConnected = true;
     return true;
   }
@@ -183,8 +182,9 @@ TH_Socket::~TH_Socket()
       
       
       cout << "Waiting to accept connection..." << endl;
-     itsDataSocket = itsServerSocket.accept (getTransporter()->getMaxDataSize(), 
-					     (char*)(getTransporter()->getDataPtr()));
+      itsDataSocket = itsServerSocket.accept();
+      itsDataSocket.setBuffer(getTransporter()->getMaxDataSize(), 
+			      (char*)(getTransporter()->getDataPtr()));
       cout << "Accepted connection" << endl;
       isConnected = true;
       return true;

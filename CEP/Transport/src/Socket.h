@@ -70,8 +70,13 @@ public:
 	// Returns the new socket to continue with, the user should check the
 	// connectionstate of the returned socket because it is set to not-conn.
 	// when a serious error occured.
-	Socket	accept			(int   buffersize=4096,      // specify receive buffer size
-					 char* bufferptr =NULL);     // address of exteral receive buffer
+	Socket	accept();	
+
+	// set the data buffer used in recv calls.
+	// the default values will result in a newly allocated buffer with the default size
+	// When an external bufferptr is passed, that buffer will be used
+	void setBuffer(int   buffersize=4096,      // specify receive buffer size
+			 char* bufferptr =NULL);     // address of exteral receive buffer
 
 	// Closes the connection in a nice way and releases the memory of the
 	// connection.
