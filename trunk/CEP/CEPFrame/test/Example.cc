@@ -32,6 +32,7 @@
 #include "CEPFrame/Profiler.h"
 #include "Common/Debug.h"
 
+using namespace LOFAR;
 
 void doIt (Simul& simul, const std::string& name, int nsteps)
 {

@@ -35,6 +35,8 @@
 #include "CEPFrame/Profiler.h"
 #include "Common/Debug.h"
 
+using namespace LOFAR;
+
 int main (int argc, const char *argv[])
 {
   // Set trace level.

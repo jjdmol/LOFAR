@@ -38,6 +38,8 @@
 #include <unistd.h>
 #include <sched.h>
 
+using namespace LOFAR;
+
 #define CYCLIC_SIZE    100
 #define NWRITERTHREADS 8
 #define NREADERTHREADS 8

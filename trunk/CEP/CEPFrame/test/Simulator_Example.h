@@ -36,12 +36,12 @@
    This class is an example of a concrete Simulator.
 */
 
-class Simulator_Example: public Simulator
+class Simulator_Example: public LOFAR::Simulator
 {
 public:
   virtual ~Simulator_Example();
 
-  virtual void define (const ParamBlock&);
+  virtual void define (const LOFAR::ParamBlock&);
   virtual void run (int nsteps);
   virtual void dump() const;
   virtual void quit();
