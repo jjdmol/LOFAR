@@ -737,7 +737,7 @@ TSAResult GSAService::convertMACToPVSS(const GCFPValue& macValue,
         res));   
     //return SA_DPTYPE_UNKNOWN;
   }
-  fprintf(stderr, "ElTypeId: %d MacValueTypeId: %d\n", elTypeId, macValue.getType());
+  //fprintf(stderr, "ElTypeId: %d MacValueTypeId: %d\n", elTypeId, macValue.getType());
   switch (macValue.getType())
   {
     case LPT_BOOL:

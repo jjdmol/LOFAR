@@ -47,6 +47,7 @@ GPAController::GPAController() :
   // initialize the TCP port provider
   _pmlPortProvider.init(*this, "provider", GCFPortInterface::MSPP, PA_PROTOCOL);
   // initialize the PVSS port for distributed communication between CCU and LCU
+  _distPmlPortProvider.setConverter(_converter);
   _distPmlPortProvider.init(*this, "DPA-server", GCFPortInterface::MSPP, PA_PROTOCOL);
 
   // To force a connection with the PVSS system at start-up of the PA 

@@ -505,10 +505,11 @@ void GCFRTMyPropertySet::setAllAccessModes(TAccessMode mode, bool on)
   }
 }
 
-void GCFRTMyPropertySet::initProperties(const TPropertyConfig config[], unsigned int nrOfConfigs)
+void GCFRTMyPropertySet::initProperties(const TPropertyConfig config[])
 {
   GCFRTMyProperty* pProperty;
-  for (unsigned int i = 0; i < nrOfConfigs; i++)
+  unsigned int i = 0;
+  while (config[i].propName != 0)
   {
     pProperty = getProperty(config[i].propName);
     if (pProperty)
@@ -522,6 +523,7 @@ void GCFRTMyPropertySet::initProperties(const TPropertyConfig config[], unsigned
       if (~config[i].accessMode & GCF_WRITABLE_PROP)
         pProperty->setAccessMode(GCF_WRITABLE_PROP, false);    
     }
+    i++;
   }
 }
 

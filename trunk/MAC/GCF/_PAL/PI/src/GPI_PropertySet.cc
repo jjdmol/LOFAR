@@ -290,7 +290,7 @@ bool GPIPropertySet::propSetLinkedInRTC(PIPropSetLinkedEvent& responseIn)
     assert(_counter == 0);
     if (responseIn.result != PI_PS_GONE)
     {
-      Utils::getPropertyListFromString(_propsSubscribed, responseIn.propList);
+      Utils::convStringToList(_propsSubscribed, responseIn.propList);
       _tmpPIResult = responseIn.result;
       return trySubscribing();
     }

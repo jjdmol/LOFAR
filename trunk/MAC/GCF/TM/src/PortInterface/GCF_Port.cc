@@ -107,6 +107,7 @@ bool GCFPort::open()
       _pTask->getName().c_str(),
       _name.c_str());
   string type;
+  TPeerAddr addr;
   try
   {
     type = ParameterSet::instance()->getString(typeParam);
@@ -115,21 +116,28 @@ bool GCFPort::open()
   {
     if (SAP == getType())
     {
-      // try to retrive the type from via the remote server name
+      // try to retrive the type via the remote server name
       string remoteServiceNameParam = formatString(
           PARAM_SERVER_SERVICE_NAME,
           _pTask->getName().c_str(),
           _name.c_str());
-      TPeerAddr addr;
       try 
       {
-        string remoteAddr;
-        remoteAddr += ParameterSet::instance()->getString(remoteServiceNameParam);
-        const char* pRemoteTaskName = remoteAddr.c_str();
-        char* colon = strchr(pRemoteTaskName, ':');
-        if (colon) *colon = '\0';
-        addr.taskname = pRemoteTaskName;
-        addr.portname = colon + 1;
+        if (_remotetask.length() > 0 && _remoteport.length() > 0)
+        {
+          addr.taskname = _remotetask;
+          addr.portname = _remoteport;
+        }
+        else
+        {
+          string remoteAddr;
+          remoteAddr += ParameterSet::instance()->getString(remoteServiceNameParam);
+          const char* pRemoteTaskName = remoteAddr.c_str();
+          char* colon = strchr(pRemoteTaskName, ':');
+          if (colon) *colon = '\0';
+          addr.taskname = pRemoteTaskName;
+          addr.portname = colon + 1;
+        }
         
         typeParam = formatString(
             PARAM_PORT_PROT_TYPE,
@@ -164,6 +172,12 @@ bool GCFPort::open()
     GCFTCPPort* pNewPort(0);
     string pseudoName = _name + "_TCP";
     pNewPort = new GCFTCPPort(*_pTask, pseudoName, _type, _protocol, _transportRawData);
+    if (_remotetask.length() > 0 && _remoteport.length() > 0)
+    {
+      addr.taskname = _remotetask;
+      addr.portname = _remoteport;
+      pNewPort->setAddr(addr);    
+    }
     pNewPort->setMaster(this);    
 
     _pSlave = pNewPort;

@@ -139,7 +139,7 @@ class GCFRTMyPropertySet
     //@}
               
     void setAllAccessModes(TAccessMode mode, bool on);
-    void initProperties(const TPropertyConfig config[], unsigned int nrOfConfigs);
+    void initProperties(const TPropertyConfig config[]);
              
   private: // interface methods
     friend class GCFRTMyProperty;

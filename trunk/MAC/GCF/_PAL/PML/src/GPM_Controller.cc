@@ -46,8 +46,7 @@ GPMController::GPMController() :
   // initialize the port
   _propertyAgent.init(*this, "client", GCFPortInterface::SAP, PA_PROTOCOL);
 
-  string portName = formatString("DPA-client%d", Resources::getManNum());
-  _distPropertyAgent.init(*this, portName, GCFPortInterface::SAP, PA_PROTOCOL);
+  _distPropertyAgent.init(*this, "DPA-client", GCFPortInterface::SAP, PA_PROTOCOL);
   
   ParameterSet::instance()->adoptFile("gcf-pml.conf");
   ParameterSet::instance()->adoptFile("PropertyAgent.conf");
