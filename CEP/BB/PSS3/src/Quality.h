@@ -1,4 +1,4 @@
-//#  StrategyImpl.h: A base class for all calibration strategies
+//#  Quality.h: 
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,42 +20,44 @@
 //#
 //#  $Id$
 
-#ifndef PSS3_STRATEGYIMPL_H
-#define PSS3_STRATEGYIMPL_H
+#ifndef PSS3_QUALITY_H
+#define PSS3_QUALITY_H
 
 #include <lofar_config.h>
 
 //# Includes
-#include <Common/lofar_vector.h>
-#include <Common/lofar_string.h>
-#include <PSS3/Quality.h>
+#include <Common/lofar_iostream.h>
 
 //# Forward Declarations
-class Calibrator;
 
-// This is a base class for all calibration strategies.
 
-class StrategyImpl
-{
-public:
-  StrategyImpl();
 
-  virtual ~StrategyImpl();
+// Description of class.
+class Quality {
+    
+ public:
+  Quality();
+  ~Quality();
+  
+  //! reset all attributed to zero
+  void init();
 
-  /// Execute the strategy
-  virtual bool execute(vector<string>& parmNames,      // Parameters for which 
-		                                       // to solve 
- 		       vector<string>& resultParmNames,// Solved parameters
-		       vector<double>& resultParmValues, // Solved parameter values
-		       Quality& resultQuality,        // Fitness of solution
-		       int& resultIterNo) = 0;       // Source number of solution
-   
-  /// Get strategy implementation type
-  virtual string getType() const = 0;
+  //  ostream& operator<<(ostream& os, const Quality& solution);
 
- private:
-
+  void show(ostream& os) const;
+  
+  bool   itsSolFlag;
+  int    itsRank;
+  double itsFit;
+  double itsMu;
+  double itsStddev;
+  double itsChi;
 };
 
+inline ostream& operator<< (ostream& os, const Quality& qual) {
+  qual.show(os); 
+  return os; 
+}
 
 #endif
+

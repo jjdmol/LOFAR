@@ -49,11 +49,12 @@ public:
   virtual ~SI_Peeling();
 
   /// Execute the strategy
-   virtual bool execute(vector<string>& parmNames,    // Parameters for which
+  virtual bool execute(vector<string>& parmNames,      // Parameters for which
 		                                       // to solve  
-		        vector<float>& parmValues,    // Parameter values
-			Solution& solutionQuality,
-			int& source);
+		       vector<string>& resultParmNames,// Solved parameters
+		       vector<double>& resultParmValues, // Solved parameter values
+		       Quality& resultQuality,        // Fitness of solution
+		       int& resultIterNo);           // Source number of solution
     
   /// Get strategy type
   virtual string getType() const;

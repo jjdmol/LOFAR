@@ -28,6 +28,7 @@
 
 #include <lofar_config.h>
 
+#include <Common/lofar_vector.h>
 #include "CEPFrame/WorkHolder.h"
 
 
@@ -42,17 +43,16 @@ class WH_PSS3: public LOFAR::WorkHolder
 {
 public:
   /// Construct the work holder and give it a name.
-  /// Note: antenna numbers arguments must currently be passed as an 
-  /// aips++ vector!
+/*   explicit WH_PSS3(const string& name, bool outputAllIter, int number); */
 
-  explicit WH_PSS3(const string& name, bool outputAllIter, int number);
-
-/*   explicit WH_PSS3(const string& name, const String& msName, */
-/* 		   const String& meqModel, const String& skyModel, */
-/* 		   uInt ddid, const Vector<int>& ant1, */
-/* 		   const Vector<int>& ant2, const String& modelType, */
-/* 		   bool calcUVW, const String& dataColName, */
-/* 		   const String& residualColName, bool outputAllIter); */
+  explicit WH_PSS3(const string& name, const string& msName,
+		   const string& meqModel, const string& skyModel,
+		   const string& dbType, const string& dbName,
+		   const string& dbPwd, unsigned int ddid, 
+		   const string& modelType, bool calcUVW, 
+		   const string& dataColName,
+		   const string& residualColName, bool outputAllIter,
+		   int number);
 
   virtual ~WH_PSS3();
 
@@ -76,16 +76,19 @@ private:
   WH_PSS3& operator= (const WH_PSS3&);
   
   Calibrator* itsCal;
-/*   String itsMSName; */
-/*   String itsMeqModel; */
-/*   String itsSkyModel; */
-/*   unsigned int itsDDID; */
-/*   Vector<int> itsAnt1;        // Aips vector type for antenna numbers */
-/*   Vector<int> itsAnt2;        // Aips vector type for antenna numbers */
-/*   String itsModelType; */
-/*   bool itsCalcUVW; */
-/*   String itsDataColName; */
-/*   String itsResidualColName; */
+  string itsMSName;
+  string itsMeqModel;
+  string itsSkyModel;
+  unsigned int itsDDID;
+  string itsDbType;
+  string itsDbName;
+  string itsDbPwd;
+  vector<int> itsAnt1;        // Aips vector type for antenna numbers
+  vector<int> itsAnt2;        // Aips vector type for antenna numbers
+  string itsModelType;
+  bool itsCalcUVW;
+  string itsDataColName;
+  string itsResidualColName;
 
   bool itsOutputAllIter;     // Send the results of all iterations to the
                              // database

@@ -50,8 +50,22 @@ public:
   LocalDebugContext
 
   // Initialize all Calibrator members to their default values. 
-  // Note: This method does not affect the MeqCalImpl object. 
-  Calibrator ();
+  // Note: This method does not affect the MeqCalImpl object.
+/*   Calibrator (); */
+ 
+  Calibrator (const string& msName,
+	      const string& meqModel,
+	      const string& skyModel,
+	      const string& dbType,
+	      const string& dbName,
+	      const string& dbPwd,
+              unsigned int ddid,
+              const vector<int>& ant1,
+              const vector<int>& ant2,
+              const string& modelType,
+              bool calcUVW,
+              const string& dataColName,
+              const string& residualColName);
 
   // Destroys the MeqCalImpl object.
   virtual ~Calibrator ();
@@ -115,7 +129,8 @@ public:
   // using addPeelMask (), for the current interval as advanced using
   // advanceTimeIntervalIterator (). The Run () method executes the
   // PSS3 algorithm for exactly one iteration.
-  void Run (void);
+  void Run (vector<string>& resultParmNames, vector<double>& resultParmValues, 
+	    Quality& resultQuality);
 
   // After optimization, subtracts the calculated sources from the model
   // as optimized during the previous call to Run ().
@@ -145,19 +160,18 @@ private:
   // The Calibrator members contain values which are used to initialize
   // and control the MeqCalImpl object:
 
-  vector<int> itsPrimaryAntennae;
-  vector<int> itsSecondaryAntennae;
-
-  int itsNrOfIterations;
-
   MeqCalibrater * itsPSS3CalibratorImpl;
 
   string itsTblMeasurementSet;
   string itsTblMeqModel;
   string itsTblSkyModel;
-
+  string itsDbType;
+  string itsDbName;
+  string itsDbPwd;
   uint   itsDDID;
 
+  const vector<int>& itsPrimaryAntennae;
+  const vector<int>& itsSecondaryAntennae;
   string itsModelType;
 
   bool   itsCalcUVW;

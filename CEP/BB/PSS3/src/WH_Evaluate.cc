@@ -25,21 +25,20 @@
 
 #include <stdio.h>             // for sprintf
 
-#include "PSS3/WH_Evaluate.h"
-#include "CEPFrame/Step.h"
-#include "Common/Debug.h"
-#include "PSS3/DH_WorkOrder.h"
-#include "PSS3/SI_Peeling.h"
+#include <PSS3/WH_Evaluate.h>
+#include <CEPFrame/Step.h>
+#include <Common/Debug.h>
+#include <PSS3/DH_WorkOrder.h>
+#include <PSS3/DH_Solution.h>
+#include <PSS3/SI_Peeling.h>
 
 using namespace LOFAR;
 
 WH_Evaluate::WH_Evaluate (const string& name)
 : WorkHolder    (1, 1, name,"WH_Evaluate")
 {
-  getDataManager().addInDataHolder(0, new DH_WorkOrder("in_0", "Control"), 
- 				   true); 
-  getDataManager().addOutDataHolder(0, new DH_WorkOrder("out_0", "Control"), 
-				    true);
+  getDataManager().addInDataHolder(0, new DH_Solution("in_0", "Control"), true); 
+  getDataManager().addOutDataHolder(0, new DH_WorkOrder("out_0"), true);
   // switch output trigger of
   getDataManager().setAutoTriggerOut(0, false);
 }
@@ -56,11 +55,6 @@ WH_Evaluate* WH_Evaluate::make (const string& name)
 void WH_Evaluate::process()
 {
   TRACER3("WH_Evaluate process()");
-  DH_WorkOrder* inp = (DH_WorkOrder*)getDataManager().getInHolder(0);
-  cout << "Controller reads results : [" 
-       << inp->getParam1Value() <<", "
-       << inp->getParam2Value() <<", "
-       << inp->getParam3Value() << "]" << endl;
 
   // Define new work order
   DH_WorkOrder* outp = (DH_WorkOrder*)getDataManager().getOutHolder(0);
@@ -72,9 +66,9 @@ void WH_Evaluate::process()
   outp->setArgSize(size);
   SI_Peeling::Peeling_data* data = 
     (SI_Peeling::Peeling_data*)outp->getVarArgsPtr();
-  data->nIter = 2;
-  data->nSources = 2;
-  data->startSource = 2;
+  data->nIter = 15;
+  data->nSources = 1;
+  data->startSource = 1;
   data->timeInterval = 3600.;
   // To be added: Set parameter names
   getDataManager().readyWithOutHolder(0);
@@ -88,9 +82,9 @@ void WH_Evaluate::process()
   size = sizeof(SI_Peeling::Peeling_data);
   outp->setArgSize(size);
   data = (SI_Peeling::Peeling_data*)outp->getVarArgsPtr();
-  data->nIter = 1;
-  data->nSources = 3;
-  data->startSource = 1;
+  data->nIter = 15;
+  data->nSources = 1;
+  data->startSource = 2;
   data->timeInterval = 3600.;
   // To be added: set parameter names
   getDataManager().readyWithOutHolder(0);

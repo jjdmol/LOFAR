@@ -50,6 +50,7 @@
 #include <MNS/MeqLofarStatSources.h>
 #include <MNS/MeqStatUVW.h>
 #include <MNS/ParmTable.h>
+#include "PSS3/Quality.h"
 
 /*!
  * Class to perform self-calibration on a MeasurementSet using the
@@ -121,6 +122,14 @@ public:
    * updates the parameters for which to solve.
    */
   GlishRecord solve (Bool useSVD);
+
+  /*! Solve which returns solved parameter values in a vector and fit value 
+   * in Quality object.
+   */
+  void solve (Bool useSVD,
+	      vector<string>& resultParmNames, 
+	      vector<double>& resultParmValues,
+	      Quality& resultQuality);
 
   //! Save solved parameters to the MEP database.
   void saveParms();
@@ -300,6 +309,8 @@ private:
   vector<double> itsFitME;
   vector<complex<double> > itsDeriv;   //# derivatives of predict
   
+  Quality      itsSol;                  //# Solution quality
+
   /*@}*/
 };
 

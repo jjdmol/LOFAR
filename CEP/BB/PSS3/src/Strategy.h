@@ -28,7 +28,7 @@
 //# Includes
 #include <Common/lofar_vector.h>
 #include <Common/lofar_string.h>
-#include <PSS3/Solution.h>
+#include <PSS3/Quality.h>
 
 //# Forward Declarations
 class Calibrator;
@@ -47,10 +47,12 @@ public:
   virtual ~Strategy();
 
   /// Execute the strategy
-  bool execute(vector<string>& parmNames,       // Parameters for which to solve                
-	       vector<float>& parmValues,       // Parameter values
-	       Solution& solutionQuality,       // Solution quality
-	       int& source);                    // Source number
+  bool execute(vector<string>& parmNames,      // Parameters for which to solve
+	       vector<string>& resultParmNames,// Solved parameters
+	       vector<double>& resultParmValues, // Solved parameter values
+	       Quality& resultQuality,        // Fitness of solution
+	       int& resultIterNo);           // Source number of solution    
+
  private:
   StrategyImpl* itsImpl;      // The strategy implementation
 };

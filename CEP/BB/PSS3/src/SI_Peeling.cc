@@ -42,20 +42,16 @@ SI_Peeling::SI_Peeling(Calibrator* cal, int argSize, char* args)
 	  << "number of sources = " << itsNSources << ", "
 	  << " time interval = " << itsTimeInterval);
 
-  cout <<  "Creating Peeling strategy implementation with " 
-	  << "number of iterations = " << itsNIter << ", "
-	  << "number of sources = " << itsNSources << ", "
-	  << " time interval = " << itsTimeInterval;
-
 }
 
 SI_Peeling::~SI_Peeling()
 {}
 
 bool SI_Peeling::execute(vector<string>& parmNames, 
-			 vector<float>& parmValues,
-			 Solution& solutionQuality,
-			 int& sourceNo)
+			 vector<string>& resultParmNames,
+			 vector<double>& resultParmValues,
+			 Quality& resultQuality,
+			 int& resultIterNo)
 {
   AssertStr(itsCal != 0, 
 	    "Calibrator pointer not set for this peeling strategy");
@@ -71,18 +67,18 @@ bool SI_Peeling::execute(vector<string>& parmNames,
     itsCal->commitSolvableParms();
     itsCal->resetTimeIntervalIterator();
     itsCal->advanceTimeIntervalIterator();
-    cout << "Next interval" << endl;
+    TRACER1("Next interval");
    
     itsFirstCall = false;
   }
 
-  cout << "Next iteration: " << itsCurIter+1 << endl;
+  TRACER1("Next iteration: " << itsCurIter+1);
   if (++itsCurIter >= itsNIter)          // Next iteration
   {                                      // Finished with all iterations
-    cout << "Next interval" << endl;
+    TRACER1("Next interval");
     if (itsCal->advanceTimeIntervalIterator() == false) // Next time interval
     {                                    // Finished with all time intervals
-      cout << "Next source: " << itsCurSource+1 << endl;
+      TRACER1("Next source: " << itsCurSource+1);
      if (++itsCurSource >= itsStartSource+itsNSources)  // Next source
       {
 	itsCurIter = -1;
@@ -101,22 +97,22 @@ bool SI_Peeling::execute(vector<string>& parmNames,
 	itsCal->resetTimeIntervalIterator();
 
 	itsCal->advanceTimeIntervalIterator();
-	cout << "Next interval" << endl;
+	TRACER1("Next interval");
       }
     }
     itsCurIter = 0;                      // Reset iterator
   }
 
   // The actual solve
-  cout << "Solve for source = " << itsCurSource << " of " << itsNSources 
-       << " iteration = " << itsCurIter << " of " << itsNIter << endl;
+  TRACER1("Solve for source = " << itsCurSource << " of " << itsNSources 
+       << " iteration = " << itsCurIter << " of " << itsNIter);
   itsCal->clearPeelSources();
   itsCal->addPeelSource(itsCurSource);
   itsCal->clearPeelMasks();
   itsCal->commitPeelSourcesAndMasks();
-  itsCal->Run();
+  itsCal->Run(resultParmNames, resultParmValues, resultQuality);
   itsCal->SubtractOptimizedSources();
   itsCal->CommitOptimizedParameters();
-  sourceNo = itsCurSource;
+  resultIterNo = itsCurIter;
   return true;
 }
