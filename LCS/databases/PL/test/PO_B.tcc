@@ -16,35 +16,31 @@ namespace LOFAR {
 
     // The BCA<B> structure 'binds' the database columns
     // to the members of the DBRep<B> class.
-    template<>
-    void BCA<B>::operator()(BoundIOs& cols, DataObj& rowbuf)
+    void DBRep<B>::bindCols(BoundIOs& cols)
     {
-      BCA<PersistentObject::MetaData>()(cols,rowbuf);
-      cols["ItsBool"]   == rowbuf.itsBool;
-      cols["ItsShort"]  == rowbuf.itsShort;
-      cols["ItsFloat"]  == rowbuf.itsFloat;
-      cols["ItsString"] == rowbuf.itsString;
+      cols["ItsBool"]   == itsBool;
+      cols["ItsShort"]  == itsShort;
+      cols["ItsFloat"]  == itsFloat;
+      cols["ItsString"] == itsString;
     }
 
     // toDBRep copies the fields of the B class to the DBRep<B> structure.
-    template<>
-    void TPersistentObject<B>::toDBRep(DBRep<B>& dest) const
+    void DBRep<B>::toDBRep(const B& src)
     {
-      dest.itsBool = itsObjectPtr->itsBool;
-      dest.itsShort  = itsObjectPtr->itsShort;
-      dest.itsFloat  = itsObjectPtr->itsFloat;
-      dest.itsString  = itsObjectPtr->itsString;
+      itsBool = src.itsBool;
+      itsShort  = src.itsShort;
+      itsFloat  = src.itsFloat;
+      itsString  = src.itsString;
     }
 
 
     // fromDBRep copies the fields of the DBRep<B> structure to the B class.
-    template<>
-    void TPersistentObject<B>::fromDBRep(const DBRep<B>& org)
+    void DBRep<B>::fromDBRep(B& dest) const
     {
-      itsObjectPtr->itsBool  = org.itsBool;
-      itsObjectPtr->itsShort  = org.itsShort;
-      itsObjectPtr->itsFloat  = org.itsFloat;
-      itsObjectPtr->itsString  = org.itsString;
+      dest.itsBool  = itsBool;
+      dest.itsShort  = itsShort;
+      dest.itsFloat  = itsFloat;
+      dest.itsString  = itsString;
     }
 
     // Initialize the internals of TPersistentObject<B>
@@ -56,7 +52,6 @@ namespace LOFAR {
     }
 
     // Initialize the attribute map for TPersistentObject<B>
-    template<>
     void TPersistentObject<B>::initAttribMap()
     {
       theirAttribMap["itsBool"]   = "ITSBOOL";

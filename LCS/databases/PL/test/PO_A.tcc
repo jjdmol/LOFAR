@@ -17,36 +17,31 @@ namespace LOFAR {
 
     // The BCA<A> structure 'binds' the database columns
     // to the members of the DBRep<A> class.
-    template<>
-    void BCA<A>::operator()(BoundIOs& cols, DataObj& rowbuf)
+    void DBRep<A>::bindCols(BoundIOs& cols)
     {
-      BCA<PersistentObject::MetaData>()(cols,rowbuf);
-      cols["ITSINT"]  == rowbuf.itsInt;
-      cols["ITSDOUBLE"]  == rowbuf.itsDouble;
-      cols["ITSSTRING"]  == rowbuf.itsString;
+      cols["ITSINT"]  == itsInt;
+      cols["ITSDOUBLE"]  == itsDouble;
+      cols["ITSSTRING"]  == itsString;
     }
 
     // toDBRep copies the fields of the A class to the DBRep<A> structure.
-    template<>
-    void TPersistentObject<A>::toDBRep(DBRep<A>& dest) const
+    void DBRep<A>::toDBRep(const A& src)
     {
-      dest.itsInt  = itsObjectPtr->itsInt;
-      dest.itsDouble  = itsObjectPtr->itsDouble;
-      dest.itsString  = itsObjectPtr->itsString;
+      itsInt  = src.itsInt;
+      itsDouble  = src.itsDouble;
+      itsString  = src.itsString;
     }
 
 
     // fromDBRep copies the fields of the DBRep<A> structure to the A class.
-    template<>
-    void TPersistentObject<A>::fromDBRep(const DBRep<A>& org)
+    void DBRep<A>::fromDBRep(A& dest) const
     {
-      itsObjectPtr->itsInt  = org.itsInt;
-      itsObjectPtr->itsDouble  = org.itsDouble;
-      itsObjectPtr->itsString  = org.itsString;
+      dest.itsInt  = itsInt;
+      dest.itsDouble  = itsDouble;
+      dest.itsString  = itsString;
     }
 
     // Initialize the internals of TPersistentObject<A>
-    template<>
     void TPersistentObject<A>::init()
     {
       // create new TPersistentObject for B.

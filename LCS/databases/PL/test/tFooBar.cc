@@ -1,6 +1,7 @@
 #include <Common/fwd/PL.h>
 #include <PL/TPersistentObject.h>
 #include <PL/PersistenceBroker.h>
+#include <PL/DBRep.h>
 #include <PL/Attrib.h>
 #include <iostream>
 #include <typeinfo>
@@ -40,32 +41,13 @@ namespace LOFAR {
 
   namespace PL {
 
-    template<> struct DBRep<Bar> : public DBRepMeta
+    template<> class DBRep<Bar> : public DBRepMeta
     {
-//       ObjectId::oid_t  itsOid;
-//       ObjectId::oid_t  itsOwnerOid;
+    public:
+      void bindCols(dtl::BoundIOs& cols) {}
+      void toDBRep(const Bar& src) {}
+      void fromDBRep(Bar& dest) const {}
     };
-
-    template<>
-    void BCA<Bar>::operator()(BoundIOs& cols, DataObj& rowbuf) 
-    {
-// 	  cols["ObjID"]  == rowbuf.itsOid;
-// 	  cols["Owner"]  == rowbuf.itsOwnerOid;
-    }
-    
-    template<>
-    void TPersistentObject<Bar>::fromDBRep(const DBRep<Bar>& org)
-    {
-//       metaData().oid()->set(org.itsOid);
-//       metaData().ownerOid()->set(org.itsOwnerOid);
-    }
-
-    template<>
-    void TPersistentObject<Bar>::toDBRep(DBRep<Bar>& dest) const
-    {
-//       dest.itsOid   = metaData().oid()->get();
-//       dest.itsOwnerOid = metaData().ownerOid()->get();
-    }
 
     template<>
     void TPersistentObject<Bar>::initAttribMap()
@@ -80,32 +62,13 @@ namespace LOFAR {
     }
 
     
-    template<> struct DBRep<Foo> : public DBRepMeta
+    template<> class DBRep<Foo> : public DBRepMeta
     {
-//       ObjectId::oid_t  itsOid;
-//       ObjectId::oid_t  itsOwnerOid;
+    public:
+      void bindCols(dtl::BoundIOs& cols) {}
+      void toDBRep(const Foo& src) {}
+      void fromDBRep(Foo& dest) const {}
     };
-
-    template<>
-    void BCA<Foo>::operator()(BoundIOs& cols, DataObj& rowbuf) 
-    {
-// 	  cols["ObjID"]  == rowbuf.itsOid;
-// 	  cols["Owner"]  == rowbuf.itsOwnerOid;
-    }
-    
-    template<>
-    void TPersistentObject<Foo>::fromDBRep(const DBRep<Foo>& org)
-    {
-//       metaData().oid()->set(org.itsOid);
-//       metaData().ownerOid()->set(org.itsOwnerOid);
-    }
-
-    template<>
-    void TPersistentObject<Foo>::toDBRep(DBRep<Foo>& dest) const
-    {
-//       dest.itsOid   = metaData().oid()->get();
-//       dest.itsOwnerOid = metaData().ownerOid()->get();
-    }
 
     template<>
     void TPersistentObject<Foo>::initAttribMap()

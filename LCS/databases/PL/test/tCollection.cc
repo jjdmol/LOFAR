@@ -19,10 +19,32 @@ private:
   int _i;
 };
 
-template<> void TPersistentObject<X>::doErase() const {}
-template<> void TPersistentObject<X>::doInsert() const {}
-template<> void TPersistentObject<X>::doUpdate() const {}
-template<> void TPersistentObject<X>::init() {}
+namespace LOFAR
+{
+namespace PL
+{
+
+  template<>
+  class DBRep<X> : public DBRepMeta
+  {
+  public:
+    void bindCols(dtl::BoundIOs& cols) {}
+    void toDBRep(const X& src) {}
+    void fromDBRep(X& dest) const {}
+  };
+
+  void TPersistentObject<X>::init() {}
+
+  void TPersistentObject<X>::initAttribMap() {}
+
+} // namespace PL
+
+} // namespace LOFAR
+
+// template<> void TPersistentObject<X>::doErase() const {}
+// template<> void TPersistentObject<X>::doInsert() const {}
+// template<> void TPersistentObject<X>::doUpdate() const {}
+// template<> void TPersistentObject<X>::init() {}
 
 int main()
 {
