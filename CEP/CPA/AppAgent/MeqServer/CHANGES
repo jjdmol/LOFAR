@@ -1,3 +1,4 @@
+  * stuffed everything into namespace meq.
 
   * Renamed parmtable.g to meptable.g; the object is now called 'meptable()'
   

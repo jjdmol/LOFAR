@@ -40,7 +40,8 @@ all install: defrecs
 
 # more glish scripts here
 glishdir = $(libexecdir)/glish/meq
-dist_glish_SCRIPTS = $(DEFREC_MAP) meqserver.g defrecs.g
+dist_glish_SCRIPTS = $(DEFREC_MAP) meqserver.g defrecs.g \
+  meptools.g fitpolcs_mqs.g fitpolcs_wlc.g
 
 include $(lofar_sharedir)/Makefile.common
 include $(lofar_sharedir)/Makefile.aids
