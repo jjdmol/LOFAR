@@ -57,11 +57,17 @@ WH_RSP::WH_RSP(const string& name,
   itsNbeamlets     = kvm.getInt("NoRSPBeamlets", 92) / itsNCorrOutputs; // number of EPA-packet beamlets per OutDataholder
   itsNpackets      = kvm.getInt("NoPacketsInFrame", 8);             // number of EPA-packets in RSP-ethernetframe
   itsSzEPAheader   = kvm.getInt("SzEPAheader", 14);                 // headersize in bytes
-  itsSzEPApacket   = (8 * itsNbeamlets) + itsSzEPAheader;           // packetsize in bytes
+  itsSzEPApacket   = (itsPolarisations * sizeof(complex<uint16>) * itsNbeamlets) + itsSzEPAheader;           // packetsize in bytes
 
   // create buffer for incoming dataholders 
   // implement a cyclic buffer later !!!
-  getDataManager().addInDataHolder(0, new DH_RSP("DH_RSP_in", kvm.getInt("SzDH_RSP",6000))); // buffer of char
+  int DHSize = kvm.getInt("NoPacketsInFrame", 8)       // number of EPA-packets in RSP-ethernetframe
+               * (kvm.getInt("SzEPAheader", 14)        // headersize in bytes
+                  + (kvm.getInt("polarisations",2)     // number of polarisations
+		     * kvm.getInt("NoRSPBeamlets", 92) // number of beamlets per packet
+		     * sizeof(complex<uint16>)));
+
+  getDataManager().addInDataHolder(0, new DH_RSP("DH_RSP_in", DHSize)); // buffer of char
   
   // create outgoing dataholders
   int bufsize =  itsPolarisations * itsNbeamlets * itsNpackets;
