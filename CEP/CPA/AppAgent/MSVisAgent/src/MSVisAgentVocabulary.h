@@ -50,6 +50,7 @@ namespace MSVisAgent
        FDDID              = AidDDID|AidIndex,
        FSelection         = AidSelection,
        FPhaseRef          = AidPhase|AidRef,
+       FNumAntenna        = AidNum|AidAntenna,
        FAntennaPos        = AidAntenna|AidPos,
        FMSName            = AidMS|AidName,
        FChannelStartIndex = AidChannel|Aidstart|AidIndex,
