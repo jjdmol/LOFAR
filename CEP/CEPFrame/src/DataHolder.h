@@ -314,13 +314,16 @@ inline int DataHolder::getMaxDataPacketSize(){
 }
 
 inline Transport& DataHolder::getTransport()
-  { return *itsTransportPtr; }
+{ return *itsTransportPtr; }
 
 inline const DataHolder::DataPacket& DataHolder::getDataPacket() const
-  { return *itsDataPacketPtr; }
+{ return *itsDataPacketPtr; }
 
 inline void* DataHolder::getDataPtr()
-  { return itsDataPacketPtr; }
+{ return itsDataPacketPtr; }
+
+inline bool DataHolder::doHandle() const
+{ return itsTransportPtr->doHandle(); }
 
 inline void DataHolder::setTimeStamp (unsigned long aTimeStamp)
   { itsDataPacketPtr->setTimeStamp (aTimeStamp); }

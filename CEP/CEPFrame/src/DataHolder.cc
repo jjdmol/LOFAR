@@ -261,10 +261,6 @@ bool DataHolder::doFsWrite (ofstream&) const
   return true;
 }
 
-bool DataHolder::doHandle() const
-{
-  return itsTransportPtr->doHandle();
-}
 
 bool DataHolder::isValid() const
 {
