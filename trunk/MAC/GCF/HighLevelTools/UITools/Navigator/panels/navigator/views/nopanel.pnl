@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,224 138 865 580 N "_3DFace" 0
+PANEL,621 137 865 580 N "_3DFace" 0
 EEE E E 1 -1 -1 0  100 190
 "" 0 1
 EE 2
@@ -12,39 +12,6 @@ DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
 LAYER, 0 
 1
 LANG:1 6 Layer1
-6 0
-"Border1"
-""
-1 240 370 E E E 1 E 1 E N "_Transparent" E N "_Transparent" E E
- E E
-1 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  2 0 3 "pictures/icon_warning.bmp" 13434828 E 240 330 280 370
-2 1
-"Text1"
-""
-1 300 335 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-2 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 302 337 694 369
-0 2 0 "s" 0 0 0 192 0 0  302 337
- 1
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-240-100-100-*-*-iso8859-1|-27,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-1
-LANG:1 31 Empty panel, under construction
 0
 LAYER, 1 
 1
