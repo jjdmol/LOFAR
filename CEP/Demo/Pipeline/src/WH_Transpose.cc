@@ -162,7 +162,7 @@ void WH_Transpose::process()
 void WH_Transpose::dump() const
 {
   cout << "WH_Transpose " << getName() << " ::dump()" << endl;
-  for (int outch=0; outch<min(10,getOutputs()); outch++) {
+  for (int outch=0; outch<std::min(10,getOutputs()); outch++) {
     cout << "Output " << outch << "   "
 	 << (const_cast<WH_Transpose*>(this))->getOutHolder(outch)->getZName() << " "
 	 << (const_cast<WH_Transpose*>(this))->getOutHolder(outch)->getZ() << "   "

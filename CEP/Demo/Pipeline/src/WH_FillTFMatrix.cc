@@ -124,8 +124,8 @@ void WH_FillTFMatrix::process()
   itsTime += (timestep = getOutHolder(0)->getXSize()); // increase local clock
   
   // initialise the counters
-  cnt_real=(int)(127.0*random()/RAND_MAX+1.0);
-  cnt_imag=(int)(127.0*random()/RAND_MAX+1.0);;
+  //cnt_real=(int)(127.0*random()/RAND_MAX+1.0);
+  //cnt_imag=(int)(127.0*random()/RAND_MAX+1.0);;
   
   for (int outch=0; outch<getOutputs(); outch++) {
     DHptr = getOutHolder(outch);
@@ -137,7 +137,8 @@ void WH_FillTFMatrix::process()
       Ysize = DHptr->getYSize();
       for (int y=0; y < Ysize; y++) {
 	for (int pol=0; pol<itsPols; pol++) {
-	  *DHptr->getBuffer(x,y,pol) = DH_2DMatrix::DataType(cnt_real++,cnt_imag++);
+	  // *DHptr->getBuffer(x,y,pol) = DH_2DMatrix::DataType(cnt_real++,cnt_imag++);
+	  *DHptr->getBuffer(x,y,pol) = DH_2DMatrix::DataType(cnt_real++ + itsSourceID +pol, 0);
 	}
       }
       
@@ -156,7 +157,7 @@ void WH_FillTFMatrix::process()
 void WH_FillTFMatrix::dump() const
 {
   cout << "WH_FillTFMatrix " << getName() << " ::dump() " << itsSourceID<< endl;
-  for (int outch=0; outch<min(10,getOutputs()); outch++) {
+  for (int outch=0; outch<std::min(10,getOutputs()); outch++) {
     cout << "Output " << outch << "   "
 	 << (const_cast<WH_FillTFMatrix*>(this))->getOutHolder(outch)->getZName() << " "
 	 << (const_cast<WH_FillTFMatrix*>(this))->getOutHolder(outch)->getZ() << "   "
