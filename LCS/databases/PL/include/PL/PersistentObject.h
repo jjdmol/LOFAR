@@ -29,6 +29,7 @@
 #include <boost/shared_ptr.hpp>
 #include <vector>
 #include <string>
+#include <map>
 
 namespace LOFAR
 {
@@ -51,6 +52,14 @@ namespace LOFAR
       // We will often need shared pointers to this base class, hence
       // this typedef.
       typedef boost::shared_ptr<PersistentObject> Pointer;
+
+      // This is the type of map we're gonna use for storing the relation
+      // between our attributes and the table columns.
+      typedef std::map<std::string, std::string> attribmap_t;
+
+      // This is the type of container that will hold the shared pointers
+      // to the PersistentObjects that we "own".
+      typedef std::vector<Pointer> POContainer;
 
       // The meta data for our persistent object will be stored in a separate
       // class MetaData. We do not want to keep these meta data inside our
@@ -221,6 +230,16 @@ namespace LOFAR
         metaData().tableName() = aName; 
       }
 
+      // Return a reference to the container of "owned" PersistentObjects.
+      POContainer& ownedPOs() { return itsOwnedPOs; }
+
+      // Return a const reference to the container of "owned"
+      // PersistentObjects.
+      const POContainer& ownedPOs() const { return itsOwnedPOs; }
+
+      // Return the attribute map for this PersistentObject.
+      virtual const attribmap_t& attribMap() const = 0;
+
     protected:
 
       // Default constructor.
@@ -234,13 +253,6 @@ namespace LOFAR
       // relations between the PersistentObjects in this container are
       // properly set in their associated MetaData objects.
       virtual void init() = 0;
-
-      // This is the type of container that will hold the shared pointers
-      // to the PersistentObjects that we "own".
-      typedef std::vector<Pointer> POContainer;
-
-      // Return a reference to the container of "owned" PersistentObjects.
-      POContainer& ownedPOs() { return itsOwnedPOs; }
 
     private:
 
