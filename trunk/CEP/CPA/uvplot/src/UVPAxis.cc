@@ -56,7 +56,6 @@ void UVPAxis::calcTransferFunction(double worldMin,
                                    double axisMax)
 {
   #if(DEBUG_MODE)
-  assert(worldMin != worldMax);
   assert(axisMin != axisMax);
   #endif
 
@@ -72,6 +71,10 @@ void UVPAxis::calcTransferFunction(double worldMin,
 
 double UVPAxis::worldToAxis(double world) const
 {
+#if(DEBUG_MODE)
+  assert(itsScale != 0);
+#endif
+
   return (world - itsOffset)/itsScale;
 }
 

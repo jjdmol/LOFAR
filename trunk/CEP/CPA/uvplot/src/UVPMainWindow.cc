@@ -7,6 +7,10 @@
 
 #include <sstream>              // std::ostringstream
 
+#if(DEBUG_MODE)
+InitDebugContext(UVPMainWindow, "DEBUG_CONTEXT");
+#endif
+
 //====================>>>  UVPMainWindow::UVPMainWindow  <<<====================
 
 UVPMainWindow::UVPMainWindow():QMainWindow()
@@ -35,6 +39,7 @@ UVPMainWindow::UVPMainWindow():QMainWindow()
   
   itsStatusBar->show();
 
+#ifdef UVC_PLOT_FSBKB
   // Small example view
 
   itsCube = new UVPImageCube(500, 800);
@@ -44,10 +49,26 @@ UVPMainWindow::UVPMainWindow():QMainWindow()
   itsCanvas = new UVPUVCoverageArea(this, itsCube);
   itsCanvas->setGeometry(0, m_menu_bar->height(), width(), height()-m_menu_bar->height() -itsStatusBar->height());
   itsCanvas->show();
+#endif
 
-  connect(itsCanvas, SIGNAL(signal_mouseWorldPosChanged(double, double)),
-          this, SLOT(slot_mouse_world_pos(double, double)));
+  // First experiment to see how fast I can paint...
+  const unsigned int Channels = 128;
+  double     Values[Channels];
+  UVPSpectrum   Spectrum(Channels);
 
+  TRACER1("itsCanvas = new UVPTimeFrequencyPlot(this, Channels);");
+
+  itsCanvas = new UVPTimeFrequencyPlot(this, Channels);
+
+  for(unsigned int t = 0; t < 600; t++) {
+    for(unsigned int i = 0; i < Channels; i++) {
+      Values[i] = sin(double(i)*double(t)/30.0);
+    }
+    Spectrum.copyFast(Values);
+    itsCanvas->slot_addSpectrum(Spectrum);
+  }
+
+#ifdef UVC_PLOT_FSBKB
   // Update itsCube
   slot_setProgressTotalSteps(500);
 
@@ -57,15 +78,24 @@ UVPMainWindow::UVPMainWindow():QMainWindow()
       itsCube->getPixel(x, y)->addPointUniform(sin(double(x)*double(y)/30.0), x*y);
     }
   }
+#endif
+
   itsCanvas->drawView();
-  // End update itsCube
+
+  connect(itsCanvas, SIGNAL(signal_mouseWorldPosChanged(double, double)),
+          this, SLOT(slot_mouse_world_pos(double, double)));
+
+    // End update itsCube
 }
 
 
 UVPMainWindow::~UVPMainWindow()
 {
+#ifdef UVC_PLOT_FSBKB
   itsCanvas->setData(0);
   delete itsCube;
+#endif
+
 }
 
 

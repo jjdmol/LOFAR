@@ -73,11 +73,6 @@ bool UVPPixel::addPoint(double value,
 bool UVPPixel::addPointUniform(double value,
                                int    rowIndex)
 {
-  #if(DEBUG_MODE)
-  assert(weight > 0);
-  #endif
-
-  double CumulativeWeight = 0.0;
   int    NumberOfPoints = itsRowIndex.size();
 
   itsRowIndex.push_back(rowIndex);

@@ -205,7 +205,7 @@ void UVPDisplayArea::drawView()
   buffer_painter.begin(&itsBuffer);
 
   for(int y = 0; y < height(); y++) {
-    int val = 128.0 + 127.0*sin(double(y)/100.0);
+    int val = int(128.0 + 127.0*sin(double(y)/100.0));
     
     buffer_painter.setPen(itsColormap[val]);
     buffer_painter.drawLine(0, y, width(), y);

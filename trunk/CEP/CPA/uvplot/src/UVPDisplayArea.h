@@ -74,7 +74,7 @@ class UVPDisplayArea : public QWidget
 inline const QColor *UVPDisplayArea::getColor(unsigned int color) const
 {
 #if(DEBUG_MODE)
-  assert(color >= 0 && color < itsColormap.size());
+  assert(color < itsColormap.size());
 #endif(DEBUG_MODE)
   
   return &(itsColormap[color]);

@@ -92,9 +92,9 @@ inline UVPPixel *UVPImageCube::getPixel(unsigned int x,
                                         unsigned int z)
 {
 #if(DEBUG_MODE)
-  assert( x >= 0 && x < itsNx);
-  assert( y >= 0 && y < itsNy);
-  assert( z >= 0 && z < itsNz);
+  assert(x < itsNx);
+  assert(y < itsNy);
+  assert(z < itsNz);
 #endif
 
   return &(itsCube[x][y][z]);
@@ -108,9 +108,9 @@ inline const UVPPixel *UVPImageCube::getPixel(unsigned int x,
                                               unsigned int z) const
 {
 #if(DEBUG_MODE)
-  assert( x >= 0 && x < itsNx);
-  assert( y >= 0 && y < itsNy);
-  assert( z >= 0 && z < itsNz);
+  assert(x < itsNx);
+  assert(y < itsNy);
+  assert(z < itsNz);
 #endif
 
   return &(itsCube[x][y][z]);
