@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 12 trend_config
-PANEL,511 187 879 700 N "_3DFace" 5
+PANEL,410 315 879 700 N "_3DFace" 5
 "$configDatapoint"
 "$datapoint"
 "$selectedElementDpType"
@@ -672,7 +672,21 @@ LANG:1 0
     else if (Standard && Trend2Active && !Dedicated)
       SelectedItem = 1;
     else if (!Standard && Dedicated)
+    {
       SelectedItem = 2;
+      string DedicatedPanelName, subViewName;
+      getSubviewName(subViewName);
+      dpGet($configDatapoint + \".DedicatedPanelName:_online.._value\", DedicatedPanelName);
+      if (\"\" == DedicatedPanelName)
+      {
+      dpSet(\"System1:__nav_subview_Trend_\" + subViewName + \".filename\", \"error_no_panel.pnl\");
+      DebugN(\"dpSet error panel\");
+    }
+    else
+    {
+      dpSet(\"System1:__nav_subview_Trend_\" + subViewName + \".filename\", DedicatedPanelName);
+    }
+    }
     else if (!Standard && !Trend2Active && !Dedicated)
     {
       SelectedItem = 0;
@@ -731,6 +745,7 @@ LANG:1 0
     else
     {
       dpSet(\"System1:__nav_subview_Trend_\" + subViewName + \".filename\", DedicatedPanelName);
+      //navConfigTriggerNavigatorRefresh(); Later on
     }
 
   }
@@ -840,14 +855,21 @@ LANG:1 4 Load
   string subViewName, pad;
 
   pad = getPath(PANELS_REL_PATH)+\"navigator/views/\";
-  DebugN(\"pad: \"+ pad);
+  //DebugN(\"pad: \"+ pad);
   fileSelector(fileName, pad , TRUE, \"*.pnl\");
 
  	if (fileName!=\"\")
  	{
     SplitfileName = strsplit(fileName, \"/\");
     dpSet($configDatapoint + \".DedicatedPanelName\", SplitfileName[dynlen(SplitfileName)]);
-    //:_online.._value
+    bool Dedicated;
+    dpGet($configDatapoint + \".Dedicated\", Dedicated);
+    if(Dedicated==TRUE)
+    {
+      navConfigTriggerNavigatorRefresh();
+    }
+    
+    
   }
 }" 0
  E E "main()

@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,391 108 950 740 N "_3DFace" 1
+PANEL,565 219 950 740 N "_3DFace" 1
 "$datapoint"
 "main()
 {
@@ -99,7 +99,7 @@ E E 0 1 1 0 1 E U  0 E 10 470 930 730
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-130-100-100-*-*-iso8859-1|-15,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
 1
-LANG:1 28  Average port daterate [bps]
+LANG:1 29  Average port daterate [Mbps]
 6 201
 "Border1"
 ""
@@ -129,7 +129,7 @@ E E 0 1 1 0 1 E U  0 E 10 180 930 440
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-130-100-100-*-*-iso8859-1|-15,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
 1
-LANG:1 29 Average daterate port 1 [bps]
+LANG:1 30 Average daterate port 1 [Mbps]
 1 245 31 "" 0
 0
 1 246 31 "" 1
