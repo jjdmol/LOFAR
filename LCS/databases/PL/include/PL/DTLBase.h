@@ -32,9 +32,9 @@
 //# Includes
 #include <PL/ObjectId.h>
 #include <PL/PersistentObject.h>
-#include <dtl/DTL.h>
-// #include <dtl/DBView.h>
-// #include <dtl/select_iterator.h>
+/* #include <dtl/DTL.h> */
+#include <dtl/DBView.h>
+#include <dtl/select_iterator.h>
 
 namespace LOFAR
 {
