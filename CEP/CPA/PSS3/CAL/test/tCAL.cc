@@ -1,4 +1,4 @@
-//# tWSRT.cc: Test program for WSRT model classes
+//# tCAL.cc: Test program for WSRT or LOFAR model type
 //# Copyright (C) 2002,2003
 //# Associated Universities, Inc. Washington DC, USA.
 //#
@@ -80,11 +80,12 @@ int main(int argc, char* argv[])
 
   try {
     if (argc < 2) {
-      cerr << "Run as:  tWSRT msname mepname gsmname scenario loopcnt "
+      cerr << "Run as:  tCAL msname mepname gsmname scenario loopcnt "
 	   << "stchan endchan selection" << endl;
       cerr << " msname:    name of MS without .MS extension" << endl;
       cerr << " mepname:   name of MEP table   (default is msname)" << endl;
       cerr << " gsmname:   name of GSM table   (default is msname)" << endl;
+      cerr << " modeltype: WSRT or LOFAR       (default is LOFAR)" << endl;
       cerr << " scenario:  scenario to execute (default is predict)" << endl;
       cerr << " loopcnt:   number of scenario loops (default is 1)" << endl;
       cerr << " stchan:    first channel       (default is -1 (first channel)"
@@ -111,40 +112,49 @@ int main(int argc, char* argv[])
       gsmname = msname;
     }
 
-    string scenario;
+    string modelType;
     if (argc > 4) {
-      scenario = argv[4];
+      modelType = argv[4];
+    }
+    if ("0" == modelType) {
+      modelType = "LOFAR";
+    }
+
+    string scenario;
+    if (argc > 5) {
+      scenario = argv[5];
     }
     if ("0" == scenario) {
       scenario = "predict";
     }
 
     int loopcnt = 1;
-    if (argc > 5) {
-      loopcnt = atoi(argv[5]);
+    if (argc > 6) {
+      loopcnt = atoi(argv[6]);
       if (0 == loopcnt) loopcnt = 1;
     }
 
     int stchan = -1;
-    if (argc > 6) {
-      istringstream iss(argv[6]);
+    if (argc > 7) {
+      istringstream iss(argv[7]);
       iss >> stchan;
     }
     int endchan = stchan;
-    if (argc > 7) {
-      istringstream iss(argv[7]);
+    if (argc > 8) {
+      istringstream iss(argv[8]);
       iss >> endchan;
     }
 
     string selstr;
-    if (argc > 8) {
-      selstr = argv[8];
+    if (argc > 9) {
+      selstr = argv[9];
     }
 
-    cout << "tWSRT parameters:" << endl;
+    cout << "tCAL parameters:" << endl;
     cout << " msname:    " << msname << endl;
     cout << " mepname:   " << mepname << endl;
     cout << " gsmname:   " << gsmname << endl;
+    cout << " modeltype: " << modelType << endl;
     cout << " scenario:  " << scenario << endl;
     cout << " loopcnt:   " << loopcnt << endl;
     cout << " stchan:    " << stchan << endl;
@@ -152,7 +162,8 @@ int main(int argc, char* argv[])
     cout << " selection: " << selstr << endl;
 
     Vector<Int> ant;
-    MeqCalibrater meqcal (msname+".MS", mepname, gsmname, 0, ant, ant);
+    MeqCalibrater meqcal (msname+".MS", mepname, gsmname, 0, ant, ant,
+			  modelType);
 
     if (stchan >= 0  ||  endchan >= 0  ||  !selstr.empty()) {
       if (stchan < 0) {
