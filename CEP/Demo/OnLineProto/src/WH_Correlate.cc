@@ -76,13 +76,14 @@ WH_Correlate* WH_Correlate::make (const string& name)
 
 void WH_Correlate::process()
 {
+  
   TRACER4("WH_Correlate::Process()");
 
   DH_CorrCube* InDHptr;
   DH_Vis*      OutDHptr;
 
   // ToDo: set all output counters to zero
-  
+
   InDHptr = (DH_CorrCube*)getDataManager().getInHolder(0);
   OutDHptr = (DH_Vis*)getDataManager().getOutHolder(0);
 
@@ -92,11 +93,10 @@ void WH_Correlate::process()
   signal = *InDHptr->getBuffer();
   corr = complex<float> (0,0);
 
-  WH_Correlate::correlator_core(signal, corr);
+  WH_Correlate::correlator_core_unrolled(signal, corr);
   
-  // *OutDHptr->getBuffer() = corr.data();
+  //  *OutDHptr->getBuffer() = corr.data();
   
-  // loop over the input cube and calculate the visibilities.
   // ToDo: ...
 }
 
@@ -104,6 +104,247 @@ void WH_Correlate::process()
 void WH_Correlate::dump()
 {
 }
+
+
+void WH_Correlate::correlator_core(blitz::Array<complex<float>, 2>& signal, 
+				   blitz::Array<complex<float>, 2>& corr) {
+
+  int x, y;
+
+  for (x = 0; x < itsNelements; x++) {
+    for (y = 0; y <= x; y++) {
+      corr(x,y) += (
+		    signal(x, 0).real() * signal(y, 0).real() -  // real 
+		    signal(x, 0).imag() * signal(y, 0).imag(), 
+		    
+		    signal(x, 0).real() * signal(y, 0).imag() +  // imag
+		    signal(x, 0).imag() * signal(y, 0).real()
+		    );
+    }
+  }
+}
+
+void WH_Correlate::correlator_core_unrolled(blitz::Array<complex<float>, 2>& s,
+					    blitz::Array<complex<float>, 2>& c) {
+
+  int loop = 5;
+  int x, y;
+
+  for ( x = 0; x < itsNelements; x+= loop ) {
+    for ( y = 0; y <= x; y += loop ) {
+
+      c(x  ,y  ) += (
+		     s(x  ,0).real() * s(y  ,0).real() - s(x  ,0).imag() * s(y  ,0).imag(),
+		     s(x  ,0).real() * s(y  ,0).imag() + s(x  ,0).imag() * s(y  ,0).real()
+		     );
+      
+      c(x  ,y+1) += (
+		     s(x  ,0).real() * s(y+1,0).real() - s(x  ,0).imag() * s(y+1,0).imag(),
+		     s(x  ,0).real() * s(y+1,0).imag() + s(x  ,0).imag() * s(y+1,0).real()
+		     );
+      
+      c(x  ,y+2) += (
+		     s(x  ,0).real() * s(y+2,0).real() - s(x  ,0).imag() * s(y+2,0).imag(),
+		     s(x  ,0).real() * s(y+2,0).imag() + s(x  ,0).imag() * s(y+2,0).real()
+		     );
+      
+      c(x  ,y+3) += (
+		     s(x  ,0).real() * s(y+3,0).real() - s(x  ,0).imag() * s(y+3,0).imag(),
+		     s(x  ,0).real() * s(y+3,0).imag() + s(x  ,0).imag() * s(y+3,0).real()
+		     );
+      
+      c(x  ,y+4) += (
+		     s(x  ,0).real() * s(y+4,0).real() - s(x  ,0).imag() * s(y+4,0).imag(),
+		     s(x  ,0).real() * s(y+4,0).imag() + s(x  ,0).imag() * s(y+4,0).real() 
+		     );
+      
+      
+      
+      c(x+1,y  ) += (
+		     s(x+1,0).real() * s(y  ,0).real() - s(x+1,0).imag() * s(y  ,0).imag(),
+		     s(x+1,0).real() * s(y  ,0).imag() + s(x+1,0).imag() * s(y  ,0).real()
+		     );
+      
+      c(x+1,y+1) += (
+		     s(x+1,0).real() * s(y+1,0).real() - s(x+1,0).imag() * s(y+1,0).imag(),
+		     s(x+1,0).real() * s(y+1,0).imag() + s(x+1,0).imag() * s(y+1,0).real()
+		     );
+      
+      c(x+1,y+2) += (
+		     s(x+1,0).real() * s(y+2,0).real() - s(x+1,0).imag() * s(y+2,0).imag(),
+		     s(x+1,0).real() * s(y+2,0).imag() + s(x+1,0).imag() * s(y+2,0).real()
+		     );
+      
+      c(x+1,y+3) += (
+		     s(x+1,0).real() * s(y+3,0).real() - s(x+1,0).imag() * s(y+3,0).imag(),
+		     s(x+1,0).real() * s(y+3,0).imag() + s(x+1,0).imag() * s(y+3,0).real() 
+		     );
+      
+      c(x+1,y+4) += (
+		     s(x+1,0).real() * s(y+4,0).real() - s(x+1,0).imag() * s(y+4,0).imag(),
+		     s(x+1,0).real() * s(y+4,0).imag() + s(x+1,0).imag() * s(y+4,0).real()
+		     );
+      
+      
+      c(x+2,y  ) += (
+		     s(x+2,0).real() * s(y  ,0).real() - s(x+2,0).imag() * s(y  ,0).imag(),
+		     s(x+2,0).real() * s(y  ,0).imag() + s(x+2,0).imag() * s(y  ,0).real()
+		     );
+      
+      c(x+2,y+1) += (
+		     s(x+2,0).real() * s(y+1,0).real() - s(x+2,0).imag() * s(y+1,0).imag(),
+		     s(x+2,0).real() * s(y+1,0).imag() + s(x+2,0).imag() * s(y+1,0).real()
+		     );
+      
+      c(x+2,y+2) += (
+		     s(x+2,0).real() * s(y+2,0).real() - s(x+2,0).imag() * s(y+2,0).imag(),
+		     s(x+2,0).real() * s(y+2,0).imag() + s(x+2,0).imag() * s(y+2,0).real()
+		     );
+      
+      c(x+2,y+3) += (
+		     s(x+2,0).real() * s(y+3,0).real() - s(x+2,0).imag() * s(y+3,0).imag(),
+		     s(x+2,0).real() * s(y+3,0).imag() + s(x+2,0).imag() * s(y+3,0).real()
+		     );
+      
+      c(x+2,y+4) += (
+		     s(x+2,0).real() * s(y+4,0).real() - s(x+2,0).imag() * s(y+4,0).imag(),
+		     s(x+2,0).real() * s(y+4,0).imag() + s(x+2,0).imag() * s(y+4,0).real()
+		     );
+      
+      
+      c(x+3,y  ) += (
+		     s(x+3,0).real() * s(y  ,0).real() - s(x+3,0).imag() * s(y  ,0).imag(),
+		     s(x+3,0).real() * s(y  ,0).imag() + s(x+3,0).imag() * s(y  ,0).real()
+		     );
+      
+      c(x+3,y+1) += (
+		     s(x+3,0).real() * s(y+1,0).real() - s(x+3,0).imag() * s(y+1,0).imag(),
+		     s(x+3,0).real() * s(y+1,0).imag() + s(x+3,0).imag() * s(y+1,0).real()
+		     );
+      
+      c(x+3,y+2) += (
+		     s(x+3,0).real() * s(y+2,0).real() - s(x+3,0).imag() * s(y+2,0).imag(),
+		     s(x+3,0).real() * s(y+2,0).imag() + s(x+3,0).imag() * s(y+2,0).real()
+		     );
+      
+      c(x+3,y+3) += (
+		     s(x+3,0).real() * s(y+3,0).real() - s(x+3,0).imag() * s(y+3,0).imag(),
+		     s(x+3,0).real() * s(y+3,0).imag() + s(x+3,0).imag() * s(y+3,0).real()
+		     );
+      
+      c(x+3,y+4) += (
+		     s(x+3,0).real() * s(y+4,0).real() - s(x+3,0).imag() * s(y+4,0).imag(),
+		     s(x+3,0).real() * s(y+4,0).imag() + s(x+3,0).imag() * s(y+4,0).real()
+		     );
+      
+      
+      c(x+4,y  ) += (
+		     s(x+4,0).real() * s(y  ,0).real() - s(x+4,0).imag() * s(y  ,0).imag(),
+		     s(x+4,0).real() * s(y  ,0).imag() + s(x+4,0).imag() * s(y  ,0).real()
+		     );
+      
+      c(x+4,y+1) += (
+		     s(x+4,0).real() * s(y+1,0).real() - s(x+4,0).imag() * s(y+1,0).imag(),
+		     s(x+4,0).real() * s(y+1,0).imag() + s(x+4,0).imag() * s(y+1,0).real()
+		     );
+      
+      c(x+4,y+2) += (
+		     s(x+4,0).real() * s(y+2,0).real() - s(x+4,0).imag() * s(y+2,0).imag(),
+		     s(x+4,0).real() * s(y+2,0).imag() + s(x+4,0).imag() * s(y+2,0).real()
+		     );
+      
+      c(x+4,y+3) += (
+		     s(x+4,0).real() * s(y+3,0).real() - s(x+4,0).imag() * s(y+3,0).imag(),
+		     s(x+4,0).real() * s(y+3,0).imag() + s(x+4,0).imag() * s(y+3,0).real()
+		     );
+      
+      c(x+4,y+4) += (
+		     s(x+4,0).real() * s(y+4,0).real() - s(x+4,0).imag() * s(y+4,0).imag(),
+		     s(x+4,0).real() * s(y+4,0).imag() + s(x+4,0).imag() * s(y+4,0).real()
+		     );
+      
+    }
+    /* Process the leftovers */
+    c(x  ,y  ) += (
+		   s(x  ,0).real() * s(y  ,0).real() - s(x  ,0).imag() * s(y  ,0).imag(),
+		   s(x  ,0).real() * s(y  ,0).imag() + s(x  ,0).imag() * s(y  ,0).real()
+		   );
+    
+    c(x+1,y  ) += (
+		   s(x+1,0).real() * s(y  ,0).real() - s(x+1,0).imag() * s(y  ,0).imag(),
+		   s(x+1,0).real() * s(y  ,0).imag() + s(x+1,0).imag() * s(y  ,0).real()
+		   );
+    
+    c(x+1,y+1) += (
+		   s(x+1,0).real() * s(y+1,0).real() - s(x+1,0).imag() * s(y+1,0).imag(),
+		   s(x+1,0).real() * s(y+1,0).imag() + s(x+1,0).imag() * s(y+1,0).real()
+		   );
+    
+    c(x+2,y  ) += (
+		   s(x+2,0).real() * s(y  ,0).real() - s(x+2,0).imag() * s(y  ,0).imag(),
+		   s(x+2,0).real() * s(y  ,0).imag() + s(x+2,0).imag() * s(y  ,0).real()
+		   );
+    
+    c(x+2,y+1) += (
+		   s(x+2,0).real() * s(y+1,0).real() - s(x+2,0).imag() * s(y+1,0).imag(),
+		   s(x+2,0).real() * s(y+1,0).imag() + s(x+2,0).imag() * s(y+1,0).real()
+		   );
+    
+    c(x+2,y+2) += (
+		   s(x+2,0).real() * s(y+2,0).real() - s(x+2,0).imag() * s(y+2,0).imag(),
+		   s(x+2,0).real() * s(y+2,0).imag() + s(x+2,0).imag() * s(y+2,0).real()
+		   );
+    
+    
+    c(x+3,y  ) += (
+		   s(x+3,0).real() * s(y  ,0).real() - s(x+3,0).imag() * s(y  ,0).imag(),
+		   s(x+3,0).real() * s(y  ,0).imag() + s(x+3,0).imag() * s(y  ,0).real()
+		   );
+    
+    c(x+3,y+1) += (
+		   s(x+3,0).real() * s(y+1,0).real() - s(x+3,0).imag() * s(y+1,0).imag(),
+		   s(x+3,0).real() * s(y+1,0).imag() + s(x+3,0).imag() * s(y+1,0).real()
+		   );
+    
+    c(x+3,y+2) += (
+		   s(x+3,0).real() * s(y+2,0).real() - s(x+3,0).imag() * s(y+2,0).imag(),
+		   s(x+3,0).real() * s(y+2,0).imag() + s(x+3,0).imag() * s(y+2,0).real()
+		   );
+    
+    c(x+3,y+3) += (
+		   s(x+3,0).real() * s(y+3,0).real() - s(x+3,0).imag() * s(y+3,0).imag(),
+		   s(x+3,0).real() * s(y+3,0).imag() + s(x+3,0).imag() * s(y+3,0).real()
+		   );
+    
+    c(x+4,y  ) += (
+		   s(x+4,0).real() * s(y  ,0).real() - s(x+4,0).imag() * s(y  ,0).imag(),
+		   s(x+4,0).real() * s(y  ,0).imag() + s(x+4,0).imag() * s(y  ,0).real()
+		   );
+    
+    c(x+4,y+1) += (
+		   s(x+4,0).real() * s(y+1,0).real() - s(x+4,0).imag() * s(y+1,0).imag(),
+		   s(x+4,0).real() * s(y+1,0).imag() + s(x+4,0).imag() * s(y+1,0).real()
+		   );
+    
+    c(x+4,y+2) += (
+		   s(x+4,0).real() * s(y+2,0).real() - s(x+4,0).imag() * s(y+2,0).imag(),
+		   s(x+4,0).real() * s(y+2,0).imag() + s(x+4,0).imag() * s(y+2,0).real()
+		   );
+    
+    c(x+4,y+3) += (
+		   s(x+4,0).real() * s(y+3,0).real() - s(x+4,0).imag() * s(y+3,0).imag(),
+		   s(x+4,0).real() * s(y+3,0).imag() + s(x+4,0).imag() * s(y+3,0).real()
+		   );
+    
+    c(x+4,y+4) += (
+		   s(x+4,0).real() * s(y+4,0).real() - s(x+4,0).imag() * s(y+4,0).imag(),
+		   s(x+4,0).real() * s(y+4,0).imag() + s(x+4,0).imag() * s(y+4,0).real()
+		   );
+    
+  }
+}
+
+} // namespace LOFAR
 
 
 void WH_Correlate::correlator_core(blitz::Array<complex<float>, 2>& signal, 
