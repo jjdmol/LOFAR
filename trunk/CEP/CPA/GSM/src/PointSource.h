@@ -52,8 +52,8 @@ public:
   virtual MeqDomain store(Table&       table,
                           unsigned int row);
 
-  virtual unsigned int getParameters(std::vector<MeqParm*> &parameters);
-  virtual unsigned int getParameters(std::vector<const MeqParm*> &parameters) const;
+  virtual unsigned int getParameters(std::vector<MeqParmPolc*> &parameters);
+  virtual unsigned int getParameters(std::vector<const MeqParmPolc*> &parameters) const;
 
   //! Makes deep copy of parameters;
   /*! 
@@ -62,7 +62,7 @@ public:
            Flux (NUMBER_OF_POLARIZATIONS times)
 
   */
-  virtual unsigned int setParameters(const std::vector<MeqParm*> &parameters);
+  virtual unsigned int setParameters(const std::vector<MeqParmPolc*> &parameters);
 
   virtual unsigned int getNumberOfParameters() const;
 
@@ -71,7 +71,7 @@ public:
 protected:
 private:
 
-  MeqParm*  itsFlux[NUMBER_OF_POLARIZATIONS];
+  MeqParmPolc* itsFlux[NUMBER_OF_POLARIZATIONS];
 };
 
 

@@ -29,7 +29,7 @@
 
 
 #include <MNS/MeqExpr.h>
-#include <MNS/MeqParm.h>
+#include <MNS/MeqParmPolc.h>
 
 
 class Table;
@@ -173,13 +173,13 @@ public:
   /*! first param always is Ra, second is dec. Then the rest of the
     parameters follows.
   */
-  virtual unsigned int  getParameters(std::vector<MeqParm* > &parameters);
-  virtual unsigned int  getParameters(std::vector<const MeqParm* > &parameters) const;
+  virtual unsigned int  getParameters(std::vector<MeqParmPolc* > &parameters);
+  virtual unsigned int  getParameters(std::vector<const MeqParmPolc* > &parameters) const;
   
   //! Makes deep copy of parameters.
   /*! First is Ra, second is Dec, then the other ones.
    */
-  virtual unsigned int setParameters(const std::vector<MeqParm* > &parameters);
+  virtual unsigned int setParameters(const std::vector<MeqParmPolc* > &parameters);
 
 
   //! Construct parmname "GSM.sourcenr."
@@ -203,8 +203,8 @@ private:
   std::string  itsName;
   SourceType   itsSourceType;
 
-  MeqParm*     itsRa;
-  MeqParm*     itsDec;
+  MeqParmPolc* itsRa;
+  MeqParmPolc* itsDec;
 
 };
 

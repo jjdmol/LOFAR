@@ -55,7 +55,7 @@ PointSource::PointSource(double                     startTime,
     Polcs[0].setCoeff(matrix);
     Polcs[0].setDomain(Domain);
     itsFlux[i] =  new MeqParmPolc(ParmName + itsStokesNames[i]);
-    dynamic_cast<MeqParmPolc*>(itsFlux[i])->setPolcs(Polcs);
+    itsFlux[i]->setPolcs(Polcs);
   }
 }
 
@@ -93,22 +93,22 @@ MeqDomain PointSource::load(const Table& table,
   IParms.get(row, coef);
   Polcs[0].setCoeff(coef);
   Polcs[0].setDomain(Domain);
-  dynamic_cast<MeqParmPolc*>(itsFlux[I])->setPolcs(Polcs);
+  itsFlux[I]->setPolcs(Polcs);
 
   QParms.get(row, coef);
   Polcs[0].setCoeff(coef);
   Polcs[0].setDomain(Domain);
-  dynamic_cast<MeqParmPolc*>(itsFlux[Q])->setPolcs(Polcs);
+  itsFlux[Q]->setPolcs(Polcs);
 
   UParms.get(row, coef);
   Polcs[0].setCoeff(coef);
   Polcs[0].setDomain(Domain);
-  dynamic_cast<MeqParmPolc*>(itsFlux[U])->setPolcs(Polcs);
+  itsFlux[U]->setPolcs(Polcs);
 
   VParms.get(row, coef);
   Polcs[0].setCoeff(coef);
   Polcs[0].setDomain(Domain);
-  dynamic_cast<MeqParmPolc*>(itsFlux[V])->setPolcs(Polcs);
+  itsFlux[V]->setPolcs(Polcs);
   
   return Domain;
 }
@@ -129,16 +129,16 @@ MeqDomain PointSource::store(Table&       table,
   ArrayColumn<double> UParms(table, "UPARMS");
   ArrayColumn<double> VParms(table, "VPARMS");
   
-  Polcs = dynamic_cast<MeqParmPolc*>(itsFlux[I])->getPolcs();
+  Polcs = itsFlux[I]->getPolcs();
   IParms.put(row, Polcs[0].getCoeff().getDoubleMatrix());
 
-  Polcs = dynamic_cast<MeqParmPolc*>(itsFlux[Q])->getPolcs();
+  Polcs = itsFlux[Q]->getPolcs();
   QParms.put(row, Polcs[0].getCoeff().getDoubleMatrix());
 
-  Polcs = dynamic_cast<MeqParmPolc*>(itsFlux[U])->getPolcs();
+  Polcs = itsFlux[U]->getPolcs();
   UParms.put(row, Polcs[0].getCoeff().getDoubleMatrix());
 
-  Polcs = dynamic_cast<MeqParmPolc*>(itsFlux[V])->getPolcs();
+  Polcs = itsFlux[V]->getPolcs();
   VParms.put(row, Polcs[0].getCoeff().getDoubleMatrix());
 
   return Domain;
@@ -150,7 +150,7 @@ MeqDomain PointSource::store(Table&       table,
 
 //====================>>>  PointSource::getParameters  <<<====================
 
-unsigned int PointSource::getParameters(std::vector<MeqParm*> &parameters)
+unsigned int PointSource::getParameters(std::vector<MeqParmPolc*> &parameters)
 {
 
   unsigned int i = AbstractSource::getParameters(parameters);
@@ -169,7 +169,7 @@ unsigned int PointSource::getParameters(std::vector<MeqParm*> &parameters)
 
 //====================>>>  PointSource::getParameters  <<<====================
 
-unsigned int PointSource::getParameters(std::vector<const MeqParm*> &parameters) const
+unsigned int PointSource::getParameters(std::vector<const MeqParmPolc*> &parameters) const
 {
 
   unsigned int i = AbstractSource::getParameters(parameters);
@@ -187,14 +187,14 @@ unsigned int PointSource::getParameters(std::vector<const MeqParm*> &parameters)
 
 //====================>>>  PointSource::setParameters  <<<====================
 
-unsigned int PointSource::setParameters(const std::vector<MeqParm*> &parameters)
+unsigned int PointSource::setParameters(const std::vector<MeqParmPolc*> &parameters)
 {
   unsigned int         i = AbstractSource::setParameters(parameters);
   std::vector<MeqPolc> Polcs;
   
   for(unsigned int j = 0; j < NUMBER_OF_POLARIZATIONS; j++) {
-    Polcs = dynamic_cast<MeqParmPolc*>(parameters[i+j])->getPolcs();
-    dynamic_cast<MeqParmPolc*>(itsFlux[j])->setPolcs(Polcs);
+    Polcs = parameters[i+j]->getPolcs();
+    itsFlux[j]->setPolcs(Polcs);
   }
   i += NUMBER_OF_POLARIZATIONS;
   return i;
