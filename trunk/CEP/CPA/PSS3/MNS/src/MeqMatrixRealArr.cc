@@ -128,7 +128,7 @@ MeqMatrixRep* MeqMatrixRealArr::NAME (MeqMatrixRealSca& left, \
 MeqMatrixRep* MeqMatrixRealArr::NAME (MeqMatrixComplexSca& left, \
 				      bool) \
 { \
-  MeqMatrixComplexArr* v = MeqMatrixComplexArr::poolNew (left.nx(), left.ny()); \
+  MeqMatrixComplexArr* v = MeqMatrixComplexArr::poolNew (nx(), ny()); \
   complex<double>* value = v->itsValue; \
   double* value2 = itsValue; \
   complex<double> lvalue = left.itsValue; \
