@@ -67,7 +67,7 @@ WH_RSP::WH_RSP(const string& name,
 		     * kvm.getInt("NoRSPBeamlets", 92) // number of beamlets per packet
 		     * sizeof(complex<uint16>)));
 
-  getDataManager().addInDataHolder(0, new DH_RSP("DH_RSP_in", DHSize)); // buffer of char
+  getDataManager().addInDataHolder(0, new DH_RSP("DH_RSP_in", itsKVM)); // buffer of char
   
   // create outgoing dataholders
   int bufsize =  itsPolarisations * itsNbeamlets * itsNpackets;
@@ -152,7 +152,8 @@ void WH_RSP::process()
     inDHp = (DH_RSP*)getDataManager().getInHolder(0);
     thisStamp.setStamp(inDHp->getSeqID(), inDHp->getBlockID());
     
-    cout<<"next timestamp: "<<thisStamp<<endl;
+//     cout<<"next timestamp: "<<thisStamp<<endl;
+//  Do this only to bypass the syncronisation
     thisStamp=itsNextStamp;
 
     if (thisStamp < itsNextStamp) {

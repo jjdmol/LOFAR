@@ -27,16 +27,24 @@ namespace LOFAR
 {
 
 DH_RSP::DH_RSP (const string& name, 
-                const unsigned int bufsize)
+                const KeyValueMap& kvm)
 : DataHolder (name, "DH_RSP"),
-  itsBuffer  (0),
-  itsBufSize (bufsize)
-{}
+  itsBuffer  (0)
+{
+  itsEPAheaderSize = kvm.getInt("SzEPAheader", 14);
+  itsNoBeamlets = kvm.getInt("NoRSPBeamlets", 92) ;
+  itsNoPolarisations = kvm.getInt("polarisations", 2);
+  itsBufSize = kvm.getInt("NoPacketsInFrame", 8) * 
+    (itsEPAheaderSize + itsNoBeamlets * itsNoPolarisations * sizeof(complex<uint16>));
+}
 
 DH_RSP::DH_RSP(const DH_RSP& that)
-: DataHolder (that),
-  itsBuffer  (0),
-  itsBufSize (that.itsBufSize)
+: DataHolder         (that),
+  itsBuffer          (0),
+  itsEPAheaderSize   (that.itsEPAheaderSize),
+  itsNoBeamlets      (that.itsNoBeamlets),
+  itsNoPolarisations (that.itsNoPolarisations),
+  itsBufSize         (that.itsBufSize)
 {}
 
 DH_RSP::~DH_RSP()
@@ -77,11 +85,5 @@ void DH_RSP::postprocess()
 {
   itsBuffer = 0;
 }
-
-//DH_RSP::BufferType& DH_RSP::getBufferElement(unsigned int element)
-//{
-// ASSERT(element < itsBufSize); 
-//return itsBuffer[element];
-//}
 
 } // end namespace
