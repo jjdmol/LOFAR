@@ -20,6 +20,8 @@
 //#
 //# $Id$
 
+#include <lofar_config.h>
+
 #include <Common/Net/Socket.h>
 #include <Common/LofarLogger.h>
 #include <Common/StringUtil.h>
@@ -481,21 +483,21 @@ int32 Socket::connect (int32 waitMs)
 #ifdef HAVE_BGL
 	errno = 0;
 #else
-# if defined(__sun)
+#if defined(__sun)
 	char		connRes [16];
 	int			resLen = sizeof(connRes);
 	if ((getsockopt(itsSocketID, SOL_SOCKET, SO_ERROR, connRes, &resLen))) {
 		return (setErrno(CONNECT));		// getsockopt failed, assume conn failed
 	}
 	errno = atoi(connRes);				// put it were it belongs
-# else
+#else
 	int32		connRes;				// check for sys errors
 	socklen_t	resLen = sizeof(connRes);
 	if ((getsockopt(itsSocketID, SOL_SOCKET, SO_ERROR, &connRes, &resLen))) {
 		return (setErrno(CONNECT));		// getsockopt failed, assume conn failed
 	}
 	errno = connRes;					// put it were it belongs
-# endif
+#endif
 #endif	// HAVE_BGL
 
 	if (errno != 0) {					// not yet connected
