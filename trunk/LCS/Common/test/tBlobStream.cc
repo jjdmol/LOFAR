@@ -130,14 +130,14 @@ int main()
 	std::ofstream os ("tBlobStream_tmp.dat");
 	BlobOBufStream bob(os);
         len = doOut (&bob);
-	Assert (os.tellp() == std::ios::pos_type(len));
+	Assert (int(os.tellp()) == len);
       }
       {
 	// Use the file as input.
 	std::ifstream is ("tBlobStream_tmp.dat");
 	BlobIBufStream bib(is);
 	doIn (&bib);
-	Assert (is.tellg() == std::ios::pos_type(len));
+	Assert (int(is.tellg()) == len);
       }
     }
     {
