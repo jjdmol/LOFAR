@@ -35,12 +35,18 @@
 //////////////////////////////////////////////////////////////////////
 
 #include <stdio.h>             // for sprintf
+#include <unistd.h>
 #include <math.h>
 
 #include "BaseSim/Step.h"
+#include "BaseSim/Profiler.h"
 #include "Common/Debug.h"
 
 #include "Transpose/WH_Transpose.h"
+
+
+// Set static variables
+int WH_Transpose::theirProcessProfilerState=0; 
 
 WH_Transpose::WH_Transpose (const string& name, 
 			    unsigned int nin, 
@@ -54,8 +60,8 @@ WH_Transpose::WH_Transpose (const string& name,
   itsTimeDim    (timeDim),
   itsFreqDim    (freqDim)
 {
-  AssertStr (nin > 0,     "0 input DH_IntArray is not possible");
-  AssertStr (nout > 0,    "0 output DH_IntArray is not possible");
+  AssertStr (nin > 0,     "0 input for WH_Transpose is not possible");
+  AssertStr (nout > 0,    "0 output for WH_Transpose is not possible");
   //   AssertStr (nout == nin, "number of inputs and outputs must match");
   
   itsInHolders  = new DH_2DMatrix* [nin];
@@ -63,6 +69,7 @@ WH_Transpose::WH_Transpose (const string& name,
   char str[8];
   for (unsigned int i=0; i<nin; i++) {
     sprintf (str, "%d", i);
+    TRACER3("Create WH_Transpose InhHolder[" << i << "]");
     itsInHolders[i] = new DH_2DMatrix (std::string("in_") + str,
 				       timeDim, std::string("Time"),
 				       freqDim, std::string("Frequency"),
@@ -70,10 +77,15 @@ WH_Transpose::WH_Transpose (const string& name,
   }
   for (unsigned int i=0; i<nout; i++) {
     sprintf (str, "%d", i);
+    TRACER3("Create WH_Transpose OutHolder[" << i << "]");
     itsOutHolders[i] = new DH_2DMatrix (std::string("out_") + str,
 				       nin, std::string("Station"),
 				       freqDim, std::string("Frequency"),
 				       std::string("Time"));
+  }
+
+  if (theirProcessProfilerState == 0) {
+    theirProcessProfilerState = Profiler::defineState("WH_Transpose","green");
   }
 }
 
@@ -106,10 +118,10 @@ void WH_Transpose::preprocess() {
 
 void WH_Transpose::process()
 {  
-  itsOutHolders[0]->setTimeStamp(itsTime++);
 
+  Profiler::enterState (theirProcessProfilerState);
+  itsOutHolders[0]->setTimeStamp(itsTime++);
   {
-    int cnt=0;
     int Xsize,Ysize;
     int Ysize_bytes;
     DH_2DMatrix *InDHptr, *OutDHptr;
@@ -119,6 +131,8 @@ void WH_Transpose::process()
 		 "nr of freqs not correct");
     DbgAssertStr(getOutputs() == getInHolder(0)->getXSize(),
 		 "nr of times not correct");
+    DbgAssertStr(getInHolder(0)->getYSize() == getOutHolder(0)->getYSize(),
+		 "Y sizes not equal");
 
     for (int time=0; time<getOutputs(); time++) {
       OutDHptr = getOutHolder(time); 
@@ -126,25 +140,29 @@ void WH_Transpose::process()
       Ysize = OutDHptr->getYSize();
       Ysize_bytes = Ysize*sizeof(int);
       for (int station=0; station < Xsize; station++) {
-#ifndef noncontiguous
 	InDHptr = getInHolder (station);
+#ifndef noncontiguous
 	// DH_2DMatrix::getBuffer(x,y) contiguous for fixed x.
 	memcpy(OutDHptr->getBuffer(station,0),
 	       InDHptr->getBuffer(time,0),
 	       Ysize_bytes   );
 #else
 	for (int freq=0; freq < Ysize; freq++) {
-	    *( OutDHptr->getBuffer(station,freq)) = 
-	      *(InDHptr->getBuffer(time,   freq));
-	  // set time
-	  // set freq
-	  // set station
+	  *( OutDHptr->getBuffer(station,freq)) = 
+	    *(InDHptr->getBuffer(time,   freq));
+	  //if (freq < 10 ) cout << *( OutDHptr->getBuffer(station,freq)) << " " << endl;
 	}
+	//cout << endl;
 #endif
+	OutDHptr->setXOffset(getInHolder(0)->getZ());   //set station offset
+	OutDHptr->setYOffset(InDHptr->getYOffset());   // set freq offset
+	OutDHptr->setZ(InDHptr->getXOffset()); 	    // set time
       }
     }
   }
+  Profiler::leaveState (theirProcessProfilerState);
   //dump();
+
 }
 
 void WH_Transpose::dump() const
