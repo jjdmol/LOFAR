@@ -293,6 +293,7 @@ GCFEvent::TResult EPAStub::connected(GCFEvent& event, GCFPortInterface& port)
     case EPA_CDO_SETTINGS:
     {
       EPAWriteEvent write(event);
+
       LOG_INFO(formatString("Received event (pid=0x%02x, regid=0x%02x)",
 			    write.hdr.m_fields.addr.pid,
 			    write.hdr.m_fields.addr.regid));
@@ -317,7 +318,16 @@ GCFEvent::TResult EPAStub::connected(GCFEvent& event, GCFPortInterface& port)
 	ASSERT(offset + size <= m_reg[pid][regid].size * (int16)GET_CONFIG("RS.N_BLPS", i));
       }
 
-      memcpy(m_reg[pid][regid].addr + offset, write.payload.getBuffer(), size);
+      cout << "sizeof(GCFEvent)=" << sizeof(GCFEvent) << endl;
+      cout << "sizeof(MEPHeader::FieldsType)=" << sizeof(MEPHeader::FieldsType) << endl;
+
+      write.payload.setBuffer(m_reg[pid][regid].addr + offset, size); 
+      write.payload.unpack((char*)&event
+			   + sizeof(GCFEvent)
+			   + sizeof(MEPHeader::FieldsType));
+
+      //memcpy(m_reg[pid][regid].addr + offset,
+      //       write.payload.getBuffer(), size);
 
       EPAWriteackEvent writeack;
       
