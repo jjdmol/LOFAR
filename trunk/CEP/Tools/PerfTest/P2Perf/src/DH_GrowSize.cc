@@ -97,7 +97,7 @@ void DH_GrowSize::postprocess()
 {
   // delete the allocated memory for the DataPacket object, 
   // including the buffer
-  deallocate((void*)itsDataPacket);
+  // deallocate((void*)itsDataPacket);
 }
 
 void DH_GrowSize::dump()const
