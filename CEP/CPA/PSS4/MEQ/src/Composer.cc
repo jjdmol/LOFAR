@@ -47,7 +47,7 @@ int Composer::getResultImpl (ResultSet::Ref &resref, const Request& request, boo
     return resflag;
   // count # of output planes
   int nres = 0;
-  for( int i=0; i<childref.size(); i++ )
+  for( uint i=0; i<childref.size(); i++ )
     nres += childref[i]->numResults();
   // otherwise, compose result
   ResultSet &result = resref <<= new ResultSet(nres);

@@ -41,11 +41,29 @@ int ResultSet::ndtor = 0;
 
 static NestableContainer::Register reg(TpMeqResultSet,True);
 
-
 ResultSet::ResultSet (int nresults)
 : itsCells(0)
 {
   nctor++;
+  initNumResults(nresults);
+}
+
+ResultSet::ResultSet (int nresults,const Cells &cells,int flags)
+{
+  nctor++;
+  initNumResults(nresults);
+  setCells(cells,flags);
+}
+  
+ResultSet::ResultSet (const Cells &cells,int flags)
+{
+  nctor++;
+  initNumResults(0);
+  setCells(cells,flags);
+}
+
+void ResultSet::initNumResults (int nresults)
+{
   if( nresults >= 0 )
   {
     itsIsFail = false;
@@ -72,6 +90,16 @@ ResultSet::~ResultSet()
   ndtor--;
 }
 
+
+//  implement privatize
+void ResultSet::privatize (int flags, int depth)
+{
+  // if deep-privatizing, detach shortcuts
+  if( flags&DMI::DEEP || depth>0 )
+    itsResults.detach();
+  DataRecord::privatize(flags,depth);
+}
+
 void ResultSet::validateContent ()
 {
   // ensure that our record contains all the right fields, and that they're
@@ -92,7 +120,7 @@ void ResultSet::validateContent ()
       // get pointer to results field
       if( DataRecord::hasField(FResults) )
       {
-        itsResults <<= (*this)[FResults].privatize(DMI::WRITE).as_wp<DataField>();
+        itsResults <<= (*this)[FResults].ref(DMI::PRESERVE_RW);
         FailWhen(itsResults->type()!=TpMeqResult,"illegal results field");
       }
     }
@@ -109,6 +137,7 @@ void ResultSet::validateContent ()
 
 void ResultSet::addFail (const DataRecord *rec,int flags)
 {
+  FailWhen(!isWritable(),"r/w access violation");
   itsIsFail = true;
   // clear out results
   itsResults.detach();
@@ -154,27 +183,35 @@ const DataRecord & ResultSet::getFail (int i) const
 
 void ResultSet::setCells (const Cells *cells,int flags)
 {
+  FailWhen(!isWritable(),"r/w access violation");
   itsCells = flags&DMI::CLONE ? new Cells(*cells) : cells;
   DataRecord::replace(FCells,itsCells,flags|DMI::READONLY);
 }
 
-void ResultSet::setResult (int i,Result *result)
+Result & ResultSet::setResult (int i,Result *result)
 {
+  FailWhen(!isWritable(),"r/w access violation");
   DbgFailWhen(isFail(),"ResultSet marked as a fail, can't set result");
   itsResults().put(i,result,DMI::ANONWR);
+  return *result;
 }
   
-void ResultSet::setResult (int i,Result::Ref::Xfer &result)
+Result & ResultSet::setResult (int i,Result::Ref::Xfer &result)
 {
+  FailWhen(!isWritable(),"r/w access violation");
   DbgFailWhen(isFail(),"ResultSet marked as a fail, can't set result");
-  itsResults().put(i,result.dewr_p(),DMI::ANONWR);
+  Result *res;
+  itsResults().put(i,res=result.dewr_p(),DMI::ANONWR);
   result.detach();
+  return *res;
 }
 
 void ResultSet::show (std::ostream& os) const
 {
   if( isFail() )
     os << "FAIL";
+  if( !isWritable() )
+    os << "(readonly)";
   for( int i=0; i<numResults(); i++ )
   {
     os << "Result "<<i<<endl;

@@ -34,10 +34,14 @@ Multiply::~Multiply()
 void Multiply::evaluateVells (Vells& result, const Request&,
 			      const vector<Vells*>& values)
 {
-  result.init (1.);
-  for (unsigned int i=0; i<values.size(); i++) {
-    result *= *(values[i]);
+  if( values.size() )
+  {
+    result = *(values[0]);
+    for (uint i=1; i<values.size(); i++) 
+      result *= *(values[i]);
   }
+  else
+    result = Vells(1.);
 }
 
 
