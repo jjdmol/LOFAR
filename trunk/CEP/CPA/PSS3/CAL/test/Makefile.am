@@ -14,10 +14,13 @@ uvw_DEPENDENCIES	= $(LOFAR_DEPEND)
 
 include $(lofar_sharedir)/Makefile.common
 
-# MPE_LOG_FORMAT=SLOG $(lofar_sharedir)/profiletool tCAL
 profile: tCAL
 	MPIBIN=$(MPIBIN) MPE_LOG_FORMAT=CLOG $(lofar_sharedir)/profiletool tCAL \
 		$(MPIBIN)/mpirun -np 1 ./tCAL \
 		$(lofar_sharedir)/../data/pss1.demo/pss1.demo 0 0 LOFAR predict 5
 
+profile2:
+	MPIBIN=$(MPIBIN) MPE_LOG_FORMAT=CLOG $(lofar_sharedir)/profiletool tCAL \
+		$(MPIBIN)/mpirun -np 1 ./tCAL \
+		$(lofar_sharedir)/../data/6365.data/10206365 0 0 LOFAR solve 5
 
