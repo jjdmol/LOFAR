@@ -1,4 +1,4 @@
-//# tBlobArray.cc: Test program for BlobFieldSet class
+//# tBlobField.cc: Test program for BlobField(Set) classes
 //#
 //# Copyright (C) 2004
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
