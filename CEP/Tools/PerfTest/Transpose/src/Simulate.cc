@@ -13,6 +13,9 @@ int atexit(void (*function)(void))
 
 int main (int argc, char** argv)
 {
+#ifdef HAVE_MPI
+  MPI_Init(&argc,&argv);
+#endif
   // Set trace level.
   Debug::initLevels (argc, (const char* [])argv);
 
@@ -41,7 +44,8 @@ int main (int argc, char** argv)
 
 #else
 	simulator.baseDefine();
-	simulator.baseRun(3651);
+	//simulator.baseRun(3651);
+	simulator.baseRun(1000); // 1 sec worth of data
 	simulator.baseDump();
 	simulator.baseQuit();
 #endif
