@@ -118,6 +118,16 @@ EPAStub::EPAStub(string name)
       {
 	if (m_reg[pid][regid].addr) memset(m_reg[pid][regid].addr, 0, m_reg[pid][regid].size);
       }
+
+    //
+    // Initialize read-only registers to some test pattern
+    //
+    for (int i = 0; i < MEPHeader::RSR_STATUS_SIZE; i++)  m_reg[MEPHeader::RSR][MEPHeader::RSR_STATUS].addr[i]  = i;
+    for (int i = 0; i < MEPHeader::RSR_VERSION_SIZE; i++) m_reg[MEPHeader::RSR][MEPHeader::RSR_VERSION].addr[i] = i;
+    for (int i = 0; i < MEPHeader::BST_MEAN_SIZE; i++)    m_reg[MEPHeader::BST][MEPHeader::BST_MEAN].addr[i]    = i;
+    for (int i = 0; i < MEPHeader::BST_POWER_SIZE; i++)   m_reg[MEPHeader::BST][MEPHeader::BST_POWER].addr[i]   = i;
+    for (int i = 0; i < MEPHeader::SST_MEAN_SIZE; i++)    m_reg[MEPHeader::SST][MEPHeader::SST_MEAN].addr[i]    = i;
+    for (int i = 0; i < MEPHeader::SST_POWER_SIZE; i++)   m_reg[MEPHeader::SST][MEPHeader::SST_POWER].addr[i]   = i;
   }
 }
 
@@ -227,135 +237,6 @@ GCFEvent::TResult EPAStub::connected(GCFEvent& event, GCFPortInterface& port)
       port.send(ack);
     }
     break;
-    
-#if 0  
-    switch (pid)
-    {
-      case MEPHeader::RSR:
-	switch (regid)
-	{
-	  case MEPHeader::RSR_STATUS:
-	    LOG_INFO("READ RSR_STATUS");
-	    status = read_rsr_status(read, port);
-	    break;
-	  case MEPHeader::RSR_VERSION:
-	    LOG_INFO("READ RSR_VERSION");
-	    status = read_rsr_version(read, port);
-	    break;
-	}
-	break;
-
-      case MEPHeader::TST:
-	switch (regid)
-	{
-	  case MEPHeader::TST_SELFTEST:
-	    LOG_INFO("READ TST_SELFTEST");
-	    break;
-	}
-	break;
-
-      case MEPHeader::CFG:
-	switch (regid)
-	{
-	  case MEPHeader::CFG_RESET:
-	    LOG_INFO("READ CFG_RESET");
-	    break;
-	  case MEPHeader::CFG_REPROGRAM:
-	    LOG_INFO("READ CFG_REPROGRAM");
-	    break;
-	}
-	break;
-
-      case MEPHeader::WG:
-	switch (regid)
-	{
-	  case MEPHeader::WG_XSETTINGS:
-	  case MEPHeader::WG_YSETTINGS:
-	    LOG_INFO("READ WG_SETTINGS");
-	    break;
-
-	  case MEPHeader::WG_XWAVE:
-	  case MEPHeader::WG_YWAVE:
-	    LOG_INFO("READ WG_WAVE");
-	    break;
-	}
-	break;
-
-      case MEPHeader::SS:
-	switch (regid)
-	{
-	  case MEPHeader::SS_SELECT:
-	    LOG_INFO("READ SS_SELECT");
-	    break;
-	}
-	break;
-
-      case MEPHeader::BF:
-	switch (regid)
-	{
-	  case MEPHeader::BF_XROUT:
-	  case MEPHeader::BF_XIOUT:
-	    LOG_INFO("READ BF_XOUT");
-	    break;
-
-	  case MEPHeader::BF_YROUT:
-	  case MEPHeader::BF_YIOUT:
-	    LOG_INFO("READ BF_YOUT");
-	    break;
-	}
-	break;
-
-      case MEPHeader::BST:
-      case MEPHeader::SST:
-      {
-	LOG_INFO("READ STATS");
-	status = read_stats(read, port);
-      }
-      break;
-
-      case MEPHeader::RCU:
-	switch (regid)
-	{
-	  case MEPHeader::RCU_SETTINGS:
-	    LOG_INFO("READ RCU_SETTINGS");
-	    break;
-	}
-	break;
-
-      case MEPHeader::CRR:
-	switch (regid)
-	{
-	  case MEPHeader::CRR_SOFTRESET:
-	    LOG_INFO("READ CRR_SOFTRESET");
-	    break;
-	  case MEPHeader::CRR_SOFTPPS:
-	    LOG_INFO("READ CRR_SOFTPPS");
-	    break;
-	}
-	break;
-
-      case MEPHeader::CRB:
-	switch (regid)
-	{
-	  case MEPHeader::CRB_SOFTRESET:
-	    LOG_INFO("READ CRB_SOFTRESET");
-	    break;
-	  case MEPHeader::CRB_SOFTPPS:
-	    LOG_INFO("READ CRB_SOFTPPS");
-	    break;
-	}
-	break;
-
-      case MEPHeader::CDO:
-	switch (regid)
-	{
-	  case MEPHeader::CDO_SETTINGS:
-	    LOG_INFO("READ CDO_SETTINGS");
-	    break;
-	}
-	break;
-    }
-#endif
       
     //
     // All register write requests arrive as specific signals
