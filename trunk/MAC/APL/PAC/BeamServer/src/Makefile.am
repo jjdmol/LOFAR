@@ -14,7 +14,6 @@ SUFFIXES = .ph
 	$(AUTOGEN) --writable -L $(top_srcdir)/../../../MACCommon/autogen $<
 
 BUILT_SOURCES = \
-	log4cplus.properties \
 	ABS_Protocol.ph \
 	beamserver.conf \
 	BeamServerPorts.conf \
@@ -24,7 +23,6 @@ EXTRA_DIST = \
 	ABS_Protocol.ph
 
 sysconf_DATA = \
-	log4cplus.properties \
 	beamserver.conf \
 	BeamServerPorts.conf \
 	BeamServer.conf
