@@ -43,6 +43,8 @@
 #include <tinyCEP/TinyApplicationHolder.h>
 
 #include <WH_Correlator.h>
+#include <WH_Random.h>
+#include <WH_Dump.h>
 
 #include <Config.h>
 

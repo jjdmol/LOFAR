@@ -138,7 +138,6 @@ void WH_Correlator::master() {
     //     (complex<float>*)getDataManager().getOutHolder(i)->getDataPtr() = 
     //       (complex<float>*)getDataManager().getInHolder(0)->getDataPtr()
     //       + i*itsNelements*itsNsamples;
-
     
   }
 }
