@@ -23,6 +23,7 @@
 #include <iostream>
 
 #include <Transport/TH_ShMem.h>
+#include <Transport/TH_Mem.h>
 #include <DH_Example.h>
 
 using namespace LOFAR;
@@ -36,12 +37,12 @@ int main(int argc, const char* argv[])
   try {  
     cout << "Transport ExampleShMem test program" << endl;
 
+#ifdef HAVE_MPI
     TH_ShMem::init (argc, argv);
+#endif
     
     DH_Example DH1("dh1", 1);
-    DH1.runOnNode (0);
     DH_Example DH2("dh2", 1);
-    DH2.runOnNode (1);
     
     // Assign an ID for each transporter by hand for now
     // This will be done by the framework later on
@@ -52,7 +53,11 @@ int main(int argc, const char* argv[])
     DH2.setBlocking(false);
 
     // connect DH1 to DH2
-    DH1.connectTo(DH2, TH_ShMem());
+#ifdef HAVE_MPI
+    DH1.connectTo(DH2, TH_ShMem(0,1));
+#else
+    DH1.connectTo(DH2, TH_Mem());
+#endif
     
     // initialize the DataHolders
     DH1.init();
@@ -64,7 +69,12 @@ int main(int argc, const char* argv[])
     DH1.setCounter(2);
     DH2.setCounter(0);
 
+#ifdef HAVE_MPI
     int rank = TH_ShMem::getCurrentRank();
+#else
+    int rank = -1;
+#endif
+
     cout << rank << endl;
     int sts=0;
     if (rank <= 0 ) {
@@ -91,7 +101,9 @@ int main(int argc, const char* argv[])
 	sts = 1;
       }
     }
+#ifdef HAVE_MPI
     TH_ShMem::finalize();
+#endif
     return sts;
 
   } catch (std::exception& x) {

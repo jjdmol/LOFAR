@@ -41,12 +41,7 @@ BaseDataHolder::BaseDataHolder(const string& name, const string& type)
     itsTransporter    (this),
     itsName           (name),
     itsType           (type),
-    itsReadConvert    (-1),
-    itsNode           (-1),
-    itsReadDelay      (0),
-    itsWriteDelay     (0),
-    itsReadDelayCount (0),
-    itsWriteDelayCount(0)
+    itsReadConvert    (-1)
 {
   initDataFields();
 }
@@ -58,12 +53,7 @@ BaseDataHolder::BaseDataHolder(const BaseDataHolder& that)
     itsTransporter    (that.itsTransporter, this),
     itsName           (that.itsName),
     itsType           (that.itsType),
-    itsReadConvert    (that.itsReadConvert),
-    itsNode           (that.itsNode),
-    itsReadDelay      (that.itsReadDelay),
-    itsWriteDelay     (that.itsWriteDelay),
-    itsReadDelayCount (that.itsReadDelayCount),
-    itsWriteDelayCount(that.itsWriteDelayCount)
+    itsReadConvert    (that.itsReadConvert)
 {
   // Copying is always done before preprocess is called, so there is
   // no need to copy the data buffers.
@@ -91,8 +81,6 @@ void BaseDataHolder::init() {
 
 void BaseDataHolder::basePreprocess()
 {
-  itsReadDelayCount = itsReadDelay;
-  itsWriteDelayCount = itsWriteDelay;
   preprocess();
 }
 
@@ -101,14 +89,6 @@ void BaseDataHolder::preprocess()
 
 void BaseDataHolder::basePostprocess()
 {
-  // Read the possible outstanding buffers.
-  for (int i=0; i<itsReadDelay; i++) {
-    itsTransporter.read();
-  }
-  // Write the possible outstanding buffers.
-  for (int i=0; i<itsWriteDelay; i++) {
-    itsTransporter.write();
-  }
   postprocess();
   // Delete the memory.
   delete itsData;
@@ -134,62 +114,57 @@ void BaseDataHolder::dump() const
 bool BaseDataHolder::read()
 {
   bool result = false;
-  if (itsReadDelayCount > 0) {
-    itsReadDelayCount--;
+  // If the data block is fixed shape and has version 1, we can simply read.
+  if (itsDataFields.hasFixedShape()  &&  itsDataFields.version() == 1) {
+    result = itsTransporter.read();
   } else {
-    // If the data block is fixed shape and has version 1, we can simply read.
-    if (itsDataFields.hasFixedShape()  &&  itsDataFields.version() == 1) {
-      result = itsTransporter.read();
-    } else {
-      // Otherwise do 2 separate reads (one for header and one for data).
-      ////result = itsTransporter.readHeader();
+    // Otherwise do 2 separate reads (one for header and one for data).
+    ////result = itsTransporter.readHeader();
       ////result = itsTransporter.readData();
     }
     // Check the data header in debug mode.
 #ifdef ENABLE_DBGASSERT
-    BlobIBufChar bibc(itsData->data(), itsData->size());
-    itsDataFields.checkHeader (bibc, itsType.c_str(),
-			       itsDataFields.version(), 0);
+  BlobIBufChar bibc(itsData->data(), itsData->size());
+  itsDataFields.checkHeader (bibc, itsType.c_str(),
+			     itsDataFields.version(), 0);
 #endif
-    // Convert the data (swap bytes) if needed.
-    if (itsReadConvert) {
-      BlobIBufChar bib(itsData->data(), itsData->size());
-      if (itsReadConvert != 1) {
-	// Not known yet if conversion is needed. So determine it.
-	// At the same time the header is checked.
-	// For the time being, only version 1 sets are supported.
-	itsReadConvert = 0;
-	if (itsDataFields.checkHeader(bib, itsType.c_str(), 1, 0)) {
-	  itsReadConvert = 1;
-	}
-      }
-      if (itsReadConvert) {
-	itsDataFields.convertData (bib);
+  // Convert the data (swap bytes) if needed.
+  if (itsReadConvert) {
+    BlobIBufChar bib(itsData->data(), itsData->size());
+    if (itsReadConvert != 1) {
+      // Not known yet if conversion is needed. So determine it.
+      // At the same time the header is checked.
+      // For the time being, only version 1 sets are supported.
+      itsReadConvert = 0;
+      if (itsDataFields.checkHeader(bib, itsType.c_str(), 1, 0)) {
+	itsReadConvert = 1;
       }
     }
+    if (itsReadConvert) {
+      itsDataFields.convertData (bib);
+    }
   }
+
   return result;
 }
 
 void BaseDataHolder::write()
 { 
-  if (itsWriteDelayCount > 0) {
-    itsWriteDelayCount--;
-  } else {
-    itsTransporter.write();
-  }
+  itsTransporter.write();
 }
 
 bool BaseDataHolder::connectTo(BaseDataHolder& thatDH,
 			       const TransportHolder& prototype)
 {
-  return itsTransporter.connectTo(thatDH.getTransporter(), prototype);
+  return itsTransporter.connect(itsTransporter, thatDH.getTransporter(), 
+				prototype);
 }
 
 bool BaseDataHolder::connectFrom(BaseDataHolder& thatDH,
 				 const TransportHolder& prototype)
 {
-  return itsTransporter.connectFrom(thatDH.getTransporter(), prototype);
+  return itsTransporter.connect(thatDH.getTransporter(), itsTransporter, 
+				prototype);
 }
 
 int BaseDataHolder::DataPacket::compareTimeStamp (const DataPacket& that) const
@@ -202,25 +177,10 @@ int BaseDataHolder::DataPacket::compareTimeStamp (const DataPacket& that) const
   return 1;
 }
 
-
 bool BaseDataHolder::isValid() const
 {
   return itsTransporter.isValid();
 }
-
-void BaseDataHolder::setReadDelay (int delay)
-{
-  itsReadDelay = delay;
-  itsReadDelayCount = delay;
-}
-
-void BaseDataHolder::setWriteDelay (int delay)
-{
-  itsWriteDelay = delay;
-  itsWriteDelayCount = delay;
-}
-
-
 
 void BaseDataHolder::initDataFields()
 {

@@ -63,29 +63,29 @@ public:
      Receive the data. If the Direction is defined as Read, this method reads 
      the next DataHolder from file.
   */
-  virtual bool recvBlocking(void* buf, int nbytes, int source, int tag);
+  virtual bool recvBlocking(void* buf, int nbytes, int tag);
 
   /**
      This method calls the blocking receive method.
   */
-  virtual bool recvNonBlocking(void* buf, int nbytes, int source, int tag);  
+  virtual bool recvNonBlocking(void* buf, int nbytes, int tag);  
 
   /**
      Send the data. If the Direction is defined as Write, this method writes 
      the next DataHolder to file.
   */
-  virtual bool sendBlocking(void* buf, int nbytes, int source, int tag);
+  virtual bool sendBlocking(void* buf, int nbytes, int tag);
 
   /**
      This method calls the blocking receive method.
   */
-  virtual bool sendNonBlocking(void* buf, int nbytes, int source, int tag);
+  virtual bool sendNonBlocking(void* buf, int nbytes,int tag);
 
   // Wait until the data has been sent
-  virtual bool waitForSent(void* buf, int nbytes, int source, int tag); 
+  virtual bool waitForSent(void* buf, int nbytes, int tag); 
 
   // Wait until the data has been received
-  virtual bool waitForReceived(void* bug, int nbytes, int source, int tag);
+  virtual bool waitForReceived(void* bug, int nbytes, int tag);
 
   /// Get the type of transport, i.e. "TH_File"
   virtual string getType() const;

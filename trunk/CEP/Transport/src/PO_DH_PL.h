@@ -41,7 +41,6 @@ namespace LOFAR {
 
     private:
       long      itsSeqNr;
-      int       itsId;
       int       itsTag;
       dtl::blob itsData;
     };

@@ -65,26 +65,26 @@ public:
 
   /// Recv the data sent by the connected TransportHolder and wait
   /// until data has been received into buf.
-  virtual bool recvBlocking (void* buf, int nbytes, int source, int tag);
+  virtual bool recvBlocking (void* buf, int nbytes, int tag);
 
   /// Start receiving the data sent by the connected TransportHolder.
-  virtual bool recvNonBlocking (void* buf, int nbytes, int source, int tag);
+  virtual bool recvNonBlocking (void* buf, int nbytes, int tag);
 
   /// Wait until data has been received into buf.
-  virtual bool waitForReceived(void* buf, int nbytes, int source, int tag);
+  virtual bool waitForReceived(void* buf, int nbytes, int tag);
 
   /// Send the data to the connected TransportHolder and wait until data
   /// has been sent.
-  virtual bool sendBlocking (void* buf, int nbytes, int destination, int tag);
+  virtual bool sendBlocking (void* buf, int nbytes, int tag);
 
   /// Send the data to the connected TransportHolder.
-  virtual bool sendNonBlocking (void* buf, int nbytes, int destination, int tag);
+  virtual bool sendNonBlocking (void* buf, int nbytes, int tag);
 
   /// Wait until the data has been sent.
-  virtual bool waitForSent(void* buf, int nbytes, int destination, int tag);
+  virtual bool waitForSent(void* buf, int nbytes, int tag);
 
   /// Wait until the receiving TransportHolder has received the data.
-  virtual bool waitForRecvAck(void* buf, int nbytes, int destination, int tag);
+  virtual bool waitForRecvAck(void* buf, int nbytes, int tag);
 
   /// Get the type of transport as a string.
   virtual string getType() const = 0;

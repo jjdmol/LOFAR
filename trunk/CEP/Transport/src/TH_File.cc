@@ -77,7 +77,7 @@ bool TH_File::connectionPossible(int, int) const
   return true; //srcRank == dstRank;
 }
 
-bool TH_File::recvBlocking(void* buf, int nbytes, int, int)
+bool TH_File::recvBlocking(void* buf, int nbytes, int)
 { 
   bool result = true;
   if (itsDirection == Read) {
@@ -119,14 +119,14 @@ bool TH_File::recvBlocking(void* buf, int nbytes, int, int)
   return result;
 }
 
-bool TH_File::recvNonBlocking(void* buf, int nbytes, int, int)
+bool TH_File::recvNonBlocking(void* buf, int nbytes, int)
 { 
   cerr << "**Warning** TH_File::recvNonBlocking() is not implemented. " 
        << "recvBlocking() is used instead." << endl;    
-  return recvBlocking(buf, nbytes, 0, 0);
+  return recvBlocking(buf, nbytes, 0);
 }
 
-bool TH_File::sendBlocking(void* buf, int nbytes, int, int)
+bool TH_File::sendBlocking(void* buf, int nbytes, int)
 {
   bool result = true;
   if (itsDirection == Write) {
@@ -167,19 +167,19 @@ bool TH_File::sendBlocking(void* buf, int nbytes, int, int)
   return result;
 }
 
-bool TH_File::sendNonBlocking(void* buf, int nbytes, int, int)
+bool TH_File::sendNonBlocking(void* buf, int nbytes, int)
 {
   cerr << "**Warning** TH_File::sendNonBlocking() is not implemented. " 
        << "The sendBlocking() method is used instead." << endl;    
-  return sendBlocking(buf, nbytes, 0, 0);
+  return sendBlocking(buf, nbytes, 0);
 }
 
-bool TH_File::waitForSent(void*, int, int, int)
+bool TH_File::waitForSent(void*, int, int)
 {
   return true;
 }
 
-bool TH_File::waitForReceived(void*, int, int, int)
+bool TH_File::waitForReceived(void*, int, int)
 {
   return true;
 }

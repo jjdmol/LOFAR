@@ -59,11 +59,14 @@ namespace LOFAR
 char* TH_ShMem::hostNames = 0;
 
 
-TH_ShMem::TH_ShMem()
-  : itsFirstCall (true),
+TH_ShMem::TH_ShMem(int sourceNode, int targetNode)
+  : itsSourceNode(sourceNode),
+    itsTargetNode(targetNode),
+    itsFirstCall (true),
     itsSendBuf   (0),
     itsRecvBuf   (0)
-{}
+{
+}
 
 TH_ShMem::~TH_ShMem()
 {
@@ -77,7 +80,7 @@ TH_ShMem::~TH_ShMem()
 
 TH_ShMem* TH_ShMem::make() const
 {
-  return new TH_ShMem();
+  return new TH_ShMem(itsSourceNode, itsTargetNode);
 }
 
 string TH_ShMem::getType() const
@@ -147,10 +150,10 @@ bool TH_ShMem::connectionPossible(int srcRank, int dstRank) const
 		  TH_SHMEM_MAX_HOSTNAME_SIZE);
 }
 
-void TH_ShMem::initRecv(void* buf, int source, int tag)
+void TH_ShMem::initRecv(void* buf, int tag)
 {
     itsRecvBuf = ShMemBuf::toBuf(buf);
-    itsRecvContext.setArgs(buf, source, tag);
+    itsRecvContext.setArgs(buf, itsSourceNode, tag);
     
     // only do this if buffer was allocated with shmem_malloc
     if (itsRecvBuf->matchMagicCookie())
@@ -169,7 +172,7 @@ void TH_ShMem::initRecv(void* buf, int source, int tag)
 	cout << "count " << cnt << ' '<<itsRecvContext.handle.getShmid()
 	     <<' ' <<itsRecvContext.handle.getOffset()<< endl;
 	
-	DbgAssertStr(status.MPI_SOURCE == source
+	DbgAssertStr(status.MPI_SOURCE == itsSourceNode
 		     && status.MPI_TAG == tag,
 		     "incorrect status");
 	DbgAssertStr(MPI_SUCCESS == result, "MPI_Recv failed");
@@ -185,7 +188,7 @@ void TH_ShMem::initRecv(void* buf, int source, int tag)
     }
 }
 
-bool TH_ShMem::recvBlocking(void* buf, int nbytes, int source, int tag)
+bool TH_ShMem::recvBlocking(void* buf, int nbytes, int tag)
 { 
     int        mpi_result;
     MPI_Status mpi_status;
@@ -194,12 +197,12 @@ bool TH_ShMem::recvBlocking(void* buf, int nbytes, int source, int tag)
     {
       cout << TH_ShMem::getCurrentRank() << "recv firstCall" << endl;
 	itsFirstCall = false;
-	initRecv(buf, source, tag);
+	initRecv(buf, tag);
 	/* initRecv sets itsSendBuf (remote, connected) and itsRecvBuf (local) */
     }
 
     // all calls must have the same arguments except for nbytes
-    DbgAssertStr(itsRecvContext.matchArgs(buf, source, tag),
+    DbgAssertStr(itsRecvContext.matchArgs(buf, itsSourceNode, tag),
     		 "Arguments don't match");
 
     // check whether allocated with TH_ShMem::allocate
@@ -221,16 +224,16 @@ bool TH_ShMem::recvBlocking(void* buf, int nbytes, int source, int tag)
 	int sendReady;
 	int ack = TH_SHMEM_ACK_MAGIC;
 
-	mpi_result = MPI_Recv(&sendReady, 1, MPI_INT, source, tag, MPI_COMM_WORLD, &mpi_status);
+	mpi_result = MPI_Recv(&sendReady, 1, MPI_INT, itsSourceNode, tag, MPI_COMM_WORLD, &mpi_status);
 	DbgAssertStr(MPI_SUCCESS == mpi_result, "MPI_Recv(sync) failed");
-	DbgAssertStr(mpi_status.MPI_SOURCE == source && mpi_status.MPI_TAG == tag,
+	DbgAssertStr(mpi_status.MPI_SOURCE == itsSourceNode && mpi_status.MPI_TAG == tag,
 		     "incorrect status");
 	DbgAssertStr(TH_SHMEM_SENDREADY_MAGIC == sendReady, "sendReady mismatch");
 
 	/// do the memcpy
 	memcpy(itsRecvBuf->getDataAddress(), itsSendBuf->getDataAddress(), nbytes);
 
-	mpi_result = MPI_Rsend(&ack, 1, MPI_INT, source, tag, MPI_COMM_WORLD);
+	mpi_result = MPI_Rsend(&ack, 1, MPI_INT, itsSourceNode, tag, MPI_COMM_WORLD);
 	DbgAssertStr(MPI_SUCCESS == mpi_result, "MPI_Send(sync) failed");	
 
 #endif
@@ -242,7 +245,7 @@ bool TH_ShMem::recvBlocking(void* buf, int nbytes, int source, int tag)
 	mpi_result = MPI_Recv(itsRecvContext.buf, nbytes, MPI_BYTE,
 			      itsRecvContext.remote, itsRecvContext.tag,
 			      MPI_COMM_WORLD, &mpi_status);
-	DbgAssertStr(mpi_status.MPI_SOURCE == source
+	DbgAssertStr(mpi_status.MPI_SOURCE == itsSourceNode
 		     && mpi_status.MPI_TAG == tag,
 		     "incorrect status");
 	DbgAssertStr(MPI_SUCCESS == mpi_result, "MPI_Recv (small) failed");
@@ -251,13 +254,25 @@ bool TH_ShMem::recvBlocking(void* buf, int nbytes, int source, int tag)
     return true;
 }
 
-void TH_ShMem::initSend(void* buf, int destination, int tag)
+bool TH_ShMem::recvNonBlocking(void* buf, int nbytes, int tag)
+{
+  cerr << "**Warning** TH_ShMem::recvNonBlocking() is not implemented. " 
+       << "recvBlocking() is used instead." << endl;    
+  return recvBlocking(buf, nbytes, tag);
+} 
+
+bool TH_ShMem::waitForReceived(void*, int, int)
+{
+  return true;
+}
+
+void TH_ShMem::initSend(void* buf, int tag)
 {
     void *itsSendBufPtr = 0;
 
     itsSendBuf    = ShMemBuf::toBuf(buf);
     itsSendBufPtr = (void*)itsSendBuf;
-    itsSendContext.setArgs(buf, destination, tag);
+    itsSendContext.setArgs(buf, itsTargetNode, tag);
 
     if (itsSendBuf->matchMagicCookie())
     {
@@ -267,9 +282,9 @@ void TH_ShMem::initSend(void* buf, int destination, int tag)
 				  shmem_offset(itsSendBufPtr));
 
 	// send info about buffer
-	cout << "sendinit mpi to " << destination << ' ' << tag << endl;
+	cout << "sendinit mpi to " << itsTargetNode << ' ' << tag << endl;
 	result = MPI_Send(&(itsSendContext.handle),
-			  sizeof(ShMemHandle), MPI_BYTE, destination, tag,
+			  sizeof(ShMemHandle), MPI_BYTE, itsTargetNode, tag,
 			  MPI_COMM_WORLD);
 	DbgAssertStr(MPI_SUCCESS == result, "MPI_Send failed");
 	cout << "sendinit mpi done" << endl;
@@ -281,7 +296,7 @@ void TH_ShMem::initSend(void* buf, int destination, int tag)
 /**
    The send function must now add the buffer to messages map
  */
-bool TH_ShMem::sendBlocking(void* buf, int nbytes, int destination, int tag)
+bool TH_ShMem::sendBlocking(void* buf, int nbytes, int tag)
 {
     int         mpi_result;
 
@@ -290,14 +305,14 @@ bool TH_ShMem::sendBlocking(void* buf, int nbytes, int destination, int tag)
       cout << TH_ShMem::getCurrentRank() << "send firstcall " << endl;
 	itsFirstCall = false;
 
-	initSend(buf, destination, tag);
+	initSend(buf, tag);
 	/* sets itsSendContext, itsSendBuf (local); itsRecvBuf == 0 */
 
 	DbgAssertStr(0 == itsRecvBuf, "itsRecvBuf not 0");
     }
 
     // all calls must have the same arguments except for nbytes
-    DbgAssertStr(itsSendContext.matchArgs(buf, destination, tag),
+    DbgAssertStr(itsSendContext.matchArgs(buf, itsTargetNode, tag),
     		 "arguments don't match");
 
     if (itsSendBuf->matchMagicCookie())
@@ -322,17 +337,17 @@ cout << TH_ShMem::getCurrentRank() << "send matchcookie mpi" << endl;
 
 	// post the receive
 	mpi_result = MPI_Irecv(&ack, 1, MPI_INT,
-			       destination, tag, MPI_COMM_WORLD, &mpi_request);
+			       itsTargetNode, tag, MPI_COMM_WORLD, &mpi_request);
 	DbgAssertStr(MPI_SUCCESS == mpi_result, "MPI_Irecv failed");
 
 	mpi_result = MPI_Send (&sendReady, 1, MPI_INT,
-			       destination, tag, MPI_COMM_WORLD);
+			       itsTargetNode, tag, MPI_COMM_WORLD);
 	DbgAssertStr(MPI_SUCCESS == mpi_result, "MPI_Send failed");
 
 	mpi_result = MPI_Wait (&mpi_request, &mpi_status);
 	DbgAssertStr(MPI_SUCCESS == mpi_result, "MPI_Wait failed");
 	DbgAssertStr(TH_SHMEM_ACK_MAGIC == ack, "ack mismatch");
-	DbgAssertStr(mpi_status.MPI_SOURCE == destination
+	DbgAssertStr(mpi_status.MPI_SOURCE == itsTargetNode
 		     && mpi_status.MPI_TAG == tag,
 		     "incorrect status");
 
@@ -348,6 +363,18 @@ cout << TH_ShMem::getCurrentRank() << "send no matchcookie mpi" << endl;
     }
 
     return true;
+}
+
+bool TH_ShMem::sendNonBlocking(void* buf, int nbytes, int tag)
+{
+  cerr << "**Warning** TH_ShMem::sendNonBlocking() is not implemented. " 
+       << "The sendBlocking() method is used instead." << endl;    
+  return sendBlocking(buf, nbytes, tag);
+}
+
+bool TH_ShMem::waitForSent(void*, int, int)
+{
+  return true;
 }
 
 void TH_ShMem::waitForBroadCast()
@@ -444,6 +471,7 @@ void TH_ShMem::init(int argc, const char* argv[])
     MPI_Allgather(&myHostName, TH_SHMEM_MAX_HOSTNAME_SIZE, MPI_BYTE,
 		  hostNames,   TH_SHMEM_MAX_HOSTNAME_SIZE, MPI_BYTE,
 		  MPI_COMM_WORLD);
+    
 #else
 void TH_ShMem::init(int, const char* [])
 #endif

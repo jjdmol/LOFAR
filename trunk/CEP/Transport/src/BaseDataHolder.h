@@ -161,13 +161,7 @@ public:
   // Get the data packet
   const DataPacket& getDataPacket() const;
 
-  /// Set the node number the BaseDataHolder runs on.
-  void runOnNode(int aNode);
-
-  // Get the node the BaseDataHolder runs on.
-  int getNode() const;
-
-  // Set/get the ID
+   // Set/get the ID
   void setID(int aID);
   int getID() const;
 
@@ -186,11 +180,6 @@ public:
 
   // Set the name of the BaseDataHolder.
   void setName (const string& name);
-
-  // Set the read delay for the BaseDataHolder.
-  // Only after 'delay' times an actual read is done.
-  void setReadDelay (int delay);
-  void setWriteDelay (int delay);
 
   // Get the Transport object used to send the data
   // to/from the BaseDataHolder connected to this one.
@@ -263,13 +252,6 @@ private:
   int          itsReadConvert;  //# conversion needed after a read?
                                 //# 0=no, 1=yes, else=not known yet
 
-  int          itsNode;  // Node number on which this BaseDataHolder runs.
-
-  // The read delay for a BaseDataHolder.
-  int itsReadDelay;
-  int itsWriteDelay;
-  int itsReadDelayCount;
-  int itsWriteDelayCount;
 };
 
 
@@ -338,12 +320,6 @@ inline const string& BaseDataHolder::getType () const
 
 inline void BaseDataHolder::setType(const string& type)
   { itsType = type; }
-
-inline void BaseDataHolder::runOnNode(int aNode)
-  { itsNode = aNode; }
-
-inline int BaseDataHolder::getNode() const
-  { return itsNode; } 
 
 inline void BaseDataHolder::setID(int aID)
   { itsTransporter.setItsID(aID); }

@@ -61,7 +61,7 @@ public:
      Receive the data. This call does the actual data transport
      by memcpy'ing the data from the sender.
   */
-  virtual bool recvNonBlocking(void* buf, int nbytes, int source, int tag);
+  virtual bool recvNonBlocking(void* buf, int nbytes, int tag);
 
   /**
      Send the data.
@@ -70,7 +70,7 @@ public:
      which can be matched by the recv call.
      The only thing it does is setting the status.
   */
-  virtual bool sendNonBlocking(void* buf, int nbytes, int destination, int tag);
+  virtual bool sendNonBlocking(void* buf, int nbytes, int tag);
 
   /// Get the type of transport.
   virtual string getType() const;

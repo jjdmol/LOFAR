@@ -48,7 +48,7 @@ namespace LOFAR
 class TH_MPI: public TransportHolder
 {
 public:
-  TH_MPI();
+  TH_MPI(int sourceNode, int targetNode);
   virtual ~TH_MPI();
 
   virtual TH_MPI* make() const;
@@ -57,16 +57,16 @@ public:
   void unlock();
 
   /// Read the data.
-  virtual bool recvBlocking(void* buf, int nbytes, int source, int tag);
-  virtual bool recvNonBlocking(void* buf, int nbytes, int source, int tag);
-  /// Wait foe the data to be received
-  virtual bool waitForReceived(void* buf, int nbytes, int source, int tag);
+  virtual bool recvBlocking(void* buf, int nbytes, int tag);
+  virtual bool recvNonBlocking(void* buf, int nbytes, int tag);
+  /// Wait for the data to be received
+  virtual bool waitForReceived(void* buf, int nbytes, int tag);
 
   /// Write the data.
-  virtual bool sendBlocking(void* buf, int nbytes, int destination, int tag);
-  virtual bool sendNonBlocking(void* buf, int nbytes, int destination, int tag);
+  virtual bool sendBlocking(void* buf, int nbytes, int tag);
+  virtual bool sendNonBlocking(void* buf, int nbytes, int tag);
   /// Wait for the data to be sent
-  virtual bool wairForSent(void* buf, int nbytes, int destination, int tag);
+  virtual bool waitForSent(void* buf, int nbytes, int tag);
 
   /// Get the type of transport.
   virtual string getType() const;
@@ -98,7 +98,9 @@ public:
   };
 
 private:  
-  int                    itsMaxSize;
+  int itsSourceNode;
+  int itsTargetNode;
+  int itsMaxSize;
   int itsSource;
   int itsTag;
 
@@ -112,10 +114,6 @@ private:
   static int  theirBytesWritten;
 
  public:
-  /// Declare static prototype variable that
-  /// can be used to pass to functions requiring
-  /// a TransportHolder prototype.
-  static TH_MPI proto;
 
 };
 

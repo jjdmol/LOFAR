@@ -66,7 +66,7 @@ bool TH_Mem::connectionPossible(int srcRank, int dstRank) const
   return srcRank == dstRank;
 }
 
-bool TH_Mem::recvNonBlocking(void* buf, int nbytes, int, int tag)
+bool TH_Mem::recvNonBlocking(void* buf, int nbytes, int tag)
 { 
   if (itsFirstRecvCall) 
   {
@@ -113,7 +113,7 @@ bool TH_Mem::recvNonBlocking(void* buf, int nbytes, int, int tag)
    The send function must now add the buffer to the map
    containing messages.
  */
-bool TH_Mem::sendNonBlocking(void* buf, int nbytes, int, int tag)
+bool TH_Mem::sendNonBlocking(void* buf, int nbytes, int tag)
 {
 
   if (itsFirstSendCall)
