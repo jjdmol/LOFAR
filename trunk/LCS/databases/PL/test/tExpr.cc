@@ -2,70 +2,174 @@
 #include <PL/Query/ColumnExprNode.h>
 #include <PL/Collection.h>
 #include <iostream>
+#include <sstream>
+#include <iomanip>
 
-using namespace LOFAR::PL::Query;
-using namespace LOFAR::PL;
+#define WRITE(os, strm, width) \
+  do { \
+    ostringstream oss; \
+    oss << strm; \
+    string s(oss.str()); \
+    os << setw(width) << left << s; \
+    if (0 < width && width < s.size()) os << endl << string(width, ' '); \
+  } while(0)
+
+#define WRITELN(os, strm, width) \
+  WRITE(os, strm, width); \
+  os << endl
+
+#define UNARY(oper, arg) \
+  oper Expr(arg)
+
+#define UNARY_STR(oper, arg) \
+  #oper << "Expr(" << #arg << ")"
+  
+#define UNARY_EXPR(oper, arg) \
+  WRITE(cout, UNARY_STR(oper, arg), 50); \
+  WRITELN(cout, " : " << UNARY(oper, arg), 0)
+
+#define BINARY(lhs, oper, rhs) \
+  Expr(lhs) oper Expr(rhs)
+
+#define BINARY_STR(lhs, oper, rhs) \
+  "Expr(" << #lhs << ") " << #oper << " Expr(" << #rhs << ")"
+
+#define BINARY_EXPR(lhs, oper, rhs) \
+  WRITE(cout, BINARY_STR(lhs, oper, rhs), 50); \
+  WRITELN(cout, " : " << (BINARY(lhs, oper, rhs)), 0)
+
+#define SQL_UNARY(expr, oper, arg) \
+  Expr(expr).oper(arg)
+
+#define SQL_UNARY_STR(expr, oper, arg) \
+  "Expr(" << #expr << ")." << #oper << "(" << #arg << ")"
+
+#define SQL_UNARY_EXPR(expr, oper, arg) \
+  WRITE(cout, SQL_UNARY_STR(expr, oper, arg), 50); \
+  WRITELN(cout, " : " << SQL_UNARY(expr, oper, arg), 0)
+
+#define SQL_BINARY(expr, oper, lhs, rhs) \
+  Expr(expr).oper(Expr(lhs),Expr(rhs))
+
+#define SQL_BINARY_STR(expr, oper, lhs, rhs) \
+  "Expr(" << #expr << ")." << #oper \
+          << "(Expr(" << #lhs << "),Expr(" << #rhs << "))"
+
+#define SQL_BINARY_EXPR(expr, oper, lhs, rhs) \
+  WRITE(cout, SQL_BINARY_STR(expr, oper, lhs, rhs), 50); \
+  WRITELN(cout, " : " << SQL_BINARY(expr, oper, lhs, rhs), 0)
+
 using namespace std;
+using namespace LOFAR::PL;
+using namespace LOFAR::PL::Query;
 
 int main()
 {
-  ColumnExprNode* ab = new ColumnExprNode("A","B");
-  ColumnExprNode* ac = new ColumnExprNode("A","C");
-  ColumnExprNode* xy = new ColumnExprNode("X","Y");
-  ColumnExprNode* xz = new ColumnExprNode("X","Z");
+  // Arithmetic expressions
+  {
+    cout << endl << "=== Arithmetic expressions ===" << endl;
+    UNARY_EXPR(+,);
+    UNARY_EXPR(-,);
+    UNARY_EXPR(+,1);
+    UNARY_EXPR(-,2.0);
+    BINARY_EXPR(,+,);
+    BINARY_EXPR(0,-,);
+    BINARY_EXPR(,*,0);
+    BINARY_EXPR(0,/,0);
+    BINARY_EXPR(1,+,-2);
+    BINARY_EXPR(2.0,-,3);
+    BINARY_EXPR(-3,*,-4.2);
+    BINARY_EXPR(-4.1,/,2.7);
+    BINARY_EXPR(BINARY(3,+,4),*,BINARY(5,-,6));
+  }
 
-  ab->addConstraint(Expr(new ColumnExprNode("A","B")) && 
-                    Expr(new ColumnExprNode("A","C")));
-  xy->addConstraint(Expr(new ColumnExprNode("X","Y")) &&
-                    Expr(new ColumnExprNode("X","Z")));
+  // Comparison expressions
+  {
+    cout << endl << "=== Comparison expressions ===" << endl;
+    BINARY_EXPR(,<,);
+    BINARY_EXPR(0,>,);
+    BINARY_EXPR(0,==,0);
+    BINARY_EXPR(-1,!=,1);
+    BINARY_EXPR(2.0,>=,3);
+    BINARY_EXPR(4,>,2.7);
+    BINARY_EXPR(-1.5,<=,3);
+    BINARY_EXPR(3,<,-2.7);
+  }
 
-  Expr eab(ab);
-  Expr eac(ac);
-  Expr exy(xy);
-  Expr exz(xz);
+  // Logical expressions
+  {
+    cout << endl << "=== Logical expressions ===" << endl;
+    UNARY_EXPR(!,0);
+    BINARY_EXPR(,||,);
+    BINARY_EXPR(,||,0);
+    BINARY_EXPR(0,&&,);
+    BINARY_EXPR(0,&&,0);
+    BINARY_EXPR(BINARY(,==,),&&,BINARY(0,!=,0));
+    BINARY_EXPR(BINARY(,<,0),||,BINARY(0,>,));
+    BINARY_EXPR(BINARY(0,<=,1),&&,BINARY(1,>=,0));
+    BINARY_EXPR(UNARY(!,1),||,UNARY(!,-1));
+    BINARY_EXPR("hello",!=,"world");
+  }
 
-  cout << (Expr("hello") != Expr("world")) << endl;
-  cout << (!(Expr(5.0)+ -Expr(3.1)/4.7) == 2.0) << endl;
-  cout << (!(Expr(5.0)+ -Expr(3.1)/4.7) == 2.0 && 
-           (Expr("a")<=Expr("b") || Expr("b'\"s")>=Expr("c")) && 
-           Expr(new ColumnExprNode("A","itsInt"))==42)
-       << endl;
+  // SQL-like expressions
+  {
+    cout << endl << "=== SQL BETWEEN expressions ===" << endl; 
+    SQL_BINARY_EXPR(,between,,);
+    SQL_BINARY_EXPR(,between,0,);
+    SQL_BINARY_EXPR(,between,-1,1);
+    SQL_BINARY_EXPR(0,between,,);
+    SQL_BINARY_EXPR(0,between,-1,);
+    SQL_BINARY_EXPR(0,between,UNARY(-,1),1);
+    SQL_BINARY_EXPR(BINARY(5,-,2),between,2,4);
+    SQL_BINARY_EXPR(BINARY(2,-,5),notBetween,2,4);
 
-  Collection<Expr> c;
-  c.add(2);
-  c.add(3);
-  c.add(4);
+    cout << endl << "=== SQL IN expressions ===" << endl;
+    Collection<Expr> c;
+    c.add(2);
+    SQL_UNARY_EXPR(BINARY(4,+,3),in,c);
+    c.add(3);
+    c.add(4);
+    SQL_UNARY_EXPR(BINARY(3,*,UNARY(-,4)),notIn,c);
 
-  cout << (Expr(4)+3).in(c) << endl;
-  cout << (Expr(3)+4).notIn(c) << endl;
-  cout << (Expr(5)-2).between(2,4) << endl;
-  cout << (Expr(2)-5).notBetween(2,4) << endl;
-  cout << endl;
+    cout << endl << "=== SQL LIKE expressions ===" << endl;
+    cout << (Expr("Hello")+"_World").like("Hello_*") << endl;
 
-  cout << exy.like("10*") << endl;
-  cout << exy.like("10\\*") << endl;
-  cout << exy.like("10\\\\*") << endl;
-  cout << exy.like("10?") << endl;
-  cout << exy.like("10\\?") << endl;
-  cout << exy.like("10\\\\?") << endl;
-  cout << exy.like("10a") << endl;
-  cout << exy.like("10\\a") << endl;
-  cout << exy.like("10\\\\a") << endl;
-  cout << exy.like("10*\\") << endl;
-  cout << exy.like("10\\*\\") << endl;
-  cout << exy.like("10\\\\*\\") << endl;
-  cout << exy.like("10_*") << endl;
-  cout << exy.like("10\\\\*") << endl;
-  cout << exy.like("10_??") << endl;
-  cout << exy.like("10%*") << endl;
-  cout << exy.like("10\\\\??") << endl;
-  cout << exy.like("10*\\\\*") << endl;
-  cout << exy.notLike("10*") << endl;
-  cout << endl;
+    SQL_UNARY_EXPR("Hello_World",like,"Hello_*");         // true
+    SQL_UNARY_EXPR("Hello_World",like,"*_World");         // true
+    SQL_UNARY_EXPR("Hello_World",like,"Hello_?");         // false
+    SQL_UNARY_EXPR("Hello_World",like,"?_World");         // false
+    SQL_UNARY_EXPR("Hello_World",like,"Hello?World");     // true
+    cout << endl;
+    SQL_UNARY_EXPR("Hello%World",notLike,"Hello%*");      // false
+    SQL_UNARY_EXPR("Hello%World",notLike,"*%World");      // false
+    SQL_UNARY_EXPR("Hello%World",notLike,"Hello%?");      // true
+    SQL_UNARY_EXPR("Hello%World",notLike,"?%World");      // true
+    SQL_UNARY_EXPR("Hello%World",notLike,"Hello?World");  // false
+    cout << endl;
+    SQL_UNARY_EXPR("Hello*World",like,"Hello\\**");       // true
+    SQL_UNARY_EXPR("Hello*World",like,"*\\*World");       // true
+    SQL_UNARY_EXPR("Hello*World",like,"Hello\\*?");       // false
+    SQL_UNARY_EXPR("Hello*World",like,"?\\*World");       // false
+    SQL_UNARY_EXPR("Hello*World",like,"Hello?World");     // true
+    cout << endl;
+    SQL_UNARY_EXPR("Hello?World",notLike,"Hello\\?*");    // false
+    SQL_UNARY_EXPR("Hello?World",notLike,"*\\?World");    // false
+    SQL_UNARY_EXPR("Hello?World",notLike,"Hello\\??");    // true
+    SQL_UNARY_EXPR("Hello?World",notLike,"?\\?World");    // true
+    SQL_UNARY_EXPR("Hello?World",notLike,"Hello?World");  // false
+    cout << endl;
+    SQL_UNARY_EXPR("Hello\\\\World",like,"Hello\\\\*");   // true
+    SQL_UNARY_EXPR("Hello\\\\World",like,"*\\\\World");   // true
+    SQL_UNARY_EXPR("Hello\\\\World",like,"Hello\\\\?");   // false
+    SQL_UNARY_EXPR("Hello\\\\World",like,"?\\\\World");   // false
+    SQL_UNARY_EXPR("Hello\\\\World",like,"Hello?World");  // true
+  }
 
-  cout << (eab + eac/exy - exz > 20) << endl;
-  cout << (eab + eac < 10 || exy - exz > 20) << endl;
-  cout << (eab == 10 || exy != 20 && eac < 30 || exz > 40) << endl;
+  {
+    cout << endl << "=== Invalid composite expressions ===" << endl;
+    BINARY_EXPR(SQL_BINARY(0,between,-1,2),+,3);
+    SQL_UNARY_EXPR(BINARY("Hello",+,"World"),like,"Hello*");
+  }
 
   return 0;
 }
