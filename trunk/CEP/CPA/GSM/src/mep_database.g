@@ -9,6 +9,17 @@ const mep_database := function (tablename='mep.db',readonly=T,create=F,
   public := [ self=ref self ];
   define_debug_methods(self,public,verbose);
   
+  # this record maps table columns to meprec fields 
+  const self.col_to_rec := [ ID='name',VALUE='polc',
+      FREQ_DOMAIN='freq',TIME_DOMAIN='time',
+      VERSION='version',COMMENT='comment' ];
+  # this record maps meprec fields to table columns
+  # (constructed automatically) 
+  self.rec_to_col := [=];
+  for( col in field_names(self.col_to_rec) )
+    self.rec_to_col[self.col_to_rec[col]] := col; 
+  const self.rec_to_col := self.rec_to_col;
+  
   # internal table initializer
   const self.init_table := function ()
   {
@@ -65,30 +76,81 @@ const mep_database := function (tablename='mep.db',readonly=T,create=F,
   }
   
   # get_mep()
-  #   Gets the mep record for a MEP specified by name or #
-  const public.get_mep := function (parm)
+  #   Gets the mep record for an existing MEP, specified by name or #
+  const public.get_mep := function (parm,fields="name polc")
   {
     wider self,public;
     if( is_string(parm) )
       parm := public.lookup_id(parm);
     if( parm<1 )
       fail 'parameter not found';
-    meprec := self.tbl_row.get(parm);
-    meprec._dbid := parm;
-    return meprec;
+    self.dprintf(3,'reading mep from row %d',parm);
+    # this translates a table row into a meprec
+    prec := self.tbl_row.get(parm);
+    meprec := [ _dbid=parm ];
+    for( f in fields )
+      if( has_field(self.rec_to_col,f) )
+      {
+        col := self.rec_to_col[f];
+        if( has_field(prec,col) )
+          meprec[f] := prec[col];
+      }
+    return ref meprec;
   }
   
-  # add_parm():
-  #   adds a single MEP
-  const public.add_parm := function (id,value,freq=F,time=F,
-                                     version='1',comment='')
+  # commit_mep()
+  #   Commits a MEP to the database, if the MEP is marked as updated:
+  #     meprec._updated = 0 (or undefined): no commit
+  #                     > 0: commit polcs
+  #                     > 1: commit everything
+  #   If force>0, then this overrides meprec._updated
+  #   If MEP is new (meprec._new_mep=T), then a new row is inserted,
+  #   and a commit of everything is forced.
+  const public.commit_mep := function (ref meprec,force=0)
   {
     wider self,public;
-    nparms := len(id);
-    # check for existing instances of this parameter
-    nrow := self.tbl.nrows()+1;
-    self.tbl.add
-    return nrow;
+    # allocate new row if just creating the mep
+    if( has_field(meprec,'_new_mep') && meprec._new_mep )
+    {
+      res := self.tbl.addrows(1);
+      if( is_fail(res) )
+        fail res;
+      meprec._dbid := self.tbl.nrows();
+      meprec._new_mep := F;
+      if( !has_field(meprec,'freq') )
+        meprec.freq := [0.,0.];
+      if( !has_field(meprec,'time') )
+        meprec.time := [0.,0.];
+      if( !has_field(meprec,'version') )
+        meprec.version := '0';
+      force := 10;
+      self.dprintf(2,'commit_mep: created new mep at row %d',meprec._dbid);
+    }
+    # write table if forced or updated
+    if( has_field(meprec,'_updated') && meprec._updated > force )
+      force := meprec_.updated;
+    if( force>0 )
+    {
+      if( !has_field(meprec,'_dbid') )
+        fail 'confusion, no dbid field in mep record';
+      irow := meprec._dbid;
+      self.dprintf(2,'commit_mep: writing %s to row %d',meprec.name,irow);
+      self.dprint(4,'commit_mep: value is ',meprec.polc);
+#      # this translates a meprec into a table row
+#      prec := [ ID=meprec.name,VALUE=meprec.polc ];  
+#      res := self.tbl_row.put(irow,prec);
+      res := force>0 && self.tbl.putcell('VALUE',irow,meprec.polc);
+      if( force>1 )
+        for( f in "name freq time version comment" )
+          if( has_field(meprec,f) )
+            res +:= self.tbl.putcell(self.rec_to_col[f],irow,meprec[f]);
+      if( is_fail(res) )
+        fail res;
+      meprec._updated := F;
+    }
+    else
+      self.dprintf(4,'commit_mep: skipping %s: not updated',meprec.name);
+    return ref meprec;
   }
   
   # add_parm_batch()

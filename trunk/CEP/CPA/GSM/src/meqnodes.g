@@ -5,16 +5,35 @@ pragma include once
 
 # meqparm
 #   Returns a defrec describing a MeqParm node
-const meqparm := function (name,polc,solvable=F,dbid=F,new_mep=F)
+const meqparm := function (name=F,polc=F,meprec=[=],solvable=F,new_mep=F)
 {
-  defrec := [ class='meqparm',name=name,solvable=solvable,polc=polc ];
-  if( !is_boolean(dbid) )
-    defrec._dbid := dbid;
-  if( new_mep )
-    defrec._new_mep := T;
+  defrec := meprec;
+  # put in name and polc arguments
+  if( is_string(name) )
+    defrec.name := name;
+  if( !is_boolean(polc) )
+    defrec.polc := polc;
+  defrec.class := 'meqparm';
+  defrec.solvable := solvable;
+  # either a DBID must be available, or creation of a new MEP requested
+  if( !has_field(defrec,'_dbid') )
+  {
+    if( new_mep )
+      defrec._new_mep := T;
+    else if( is_string(name) )
+      fail 'must create meqparm from valid meprec, or use unnamed, or use new_mep=T';
+  }
   return ref defrec;
 }
 
+# meqconst
+#   Returns a defrec describing a MeqConst node (a t,f polynomical with constant
+#   coefficients)
+#   params is an optional record of constant parameters
+const meqconst := function (polc,name='')
+{
+  return ref [ class='meqconst',polc=polc,name=name ];
+}
 # meqexpr
 #   Returns a defrec describing a MeqExpression node
 #   args is a record of refs to expression arguments

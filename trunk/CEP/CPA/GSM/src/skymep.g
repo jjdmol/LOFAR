@@ -7,7 +7,8 @@ include 'gsm/meqnodes.g'
 #
 # skymep_tool is a helper class that (hopefully) encapsulates all
 #     knowledge about GSM parameters, and building sub-trees for GSM 
-#     source components.
+#     source components. This is a glue layer between the MEP database
+#     and the skymodel functions.
 #     It's only meant for use within the skymodel class.
 #
 const skymep_tool := function (ref lsm,ref mepdb,
@@ -15,7 +16,13 @@ const skymep_tool := function (ref lsm,ref mepdb,
 {
   self := [ appid=appid,lsm=ref lsm,mepdb=ref mepdb ];
   public := [ self=ref self ];
-  define_debug_methods(self,public,verbose);
+  
+  # use lsm parent's debug methods
+  for( method in "dprint dprintf" )
+  {
+    const self[method] := ref lsm[method];
+    const public[method] := ref lsm[method];
+  }
 
   # destructor    
   const public.done := function ()
@@ -34,31 +41,36 @@ const skymep_tool := function (ref lsm,ref mepdb,
   const self.get_mep_defrec := function(ref srcrec,parm,solvable)
   {
     wider self,public;
-    mep := F;
-    # if we have a source ID, go to MEP database
+    # if we have a source ID, try looking for the parameter in the MEP database
     if( srcrec.ID != '' )
     {
       name := public.parm_name(srcrec.ID,parm);
       mep := self.mepdb.get_mep(name);
       if( is_fail(mep) )
         mep := F;
+      else
+        self.dprintf(3,'loaded mep %s from MEP DB',name);
     }
-      
-    # if it's a new source then we won't have MEPs for it in the DB yet,
-    # so generate a new defrec on-the-fly
-    if( has_field(srcrec,'_new_src') && srcrec._new_src )
+    else
     {
+      # if no source ID is defined, use %s -- it will later be replaced with
+      # the real source ID (during commit) using sprintf 
+      name := public.parm_name('%s',parm);
+      mep := F;
+    }
+    # if mep=F, then the MEP doesn't exist in the DB yet,
+    # so generate a new one on-the-fly
+    if( is_boolean(mep) )
+    {
+      self.dprintf(3,'creating new MEP %s',name);
       x := self.lsm.get_source_field(srcrec,parm);
       if( is_fail(x) )
         fail x;
-      defrec := meqparm(name,polc=x,solvable=solvable,new_mep=T);
-      return ref defrec;
+      # the %s instead of source ID is a little hack to 
+      return ref meqparm(name=name,polc=x,solvable=solvable,new_mep=T);
     }
-    # else go to MEP db to get the MeqParm
-    mep := self.mepdb.get_mep(name);
-    if( is_fail(mep) )
-      fail mep;
-    return meqparm(name=mep.ID,polc=mep.VALUE,solvable=solvable,dbid=mep._dbid);
+    else
+      return ref meqparm(meprec=mep,solvable=solvable);
   }
   
   # create_defrec:
@@ -79,18 +91,27 @@ const skymep_tool := function (ref lsm,ref mepdb,
     wider self,public;
     freq0 := self.lsm.get_source_field(srcrec,'FREQ0');
     return ref 
-      meqexpr2('pow',meqparm('',polc=[0,1/freq0],solvable=F),
+      meqexpr2('pow',meqconst([0,1/freq0],name='f/f0'),
                      public.get_node_defrec(srcrec,'SP_INDEX',solvable=solvable));
   }
   
-  # create_defrec('I'): implements Stokes I as I0*FPL
+  # create_defrec('I'): implements Stokes I as I0 (for null spectral index)
+  # or, I0*FPL
   const self.create_defrec.I := function(ref srcrec,nodetype,solvable)
   {
     wider self,public;
-    return ref 
-      meqexpr2('product',
-                public.get_node_defrec(srcrec,'I0',solvable=solvable),
-                public.get_node_defrec(srcrec,'FPL',solvable=solvable)); 
+    # Note that SP_INDEX will be not solvable by default (unless it's 
+    # already been marked as such by a previous call)
+    spi := ref public.get_node_defrec(srcrec,'SP_INDEX',solvable=F);
+    i0  := ref public.get_node_defrec(srcrec,'I0',solvable=solvable);
+    # if sp_index is 0 and non-solvable, use simple representation for I 
+    if( !spi.solvable && len(spi.polc) == 1 && spi.polc == 0 )
+      return ref i0;
+    # otherwise use frequency power-law
+    else
+      return ref 
+        meqexpr2('product',i0,
+                  public.get_node_defrec(srcrec,'FPL',solvable=F)); 
   }
   
   # get_node_defrec 
@@ -99,7 +120,7 @@ const skymep_tool := function (ref lsm,ref mepdb,
   const public.get_node_defrec := function (ref srcrec,nodetype,solvable=F)
   {
     wider self,public;
-    # return cached reference from source record, if available, otherwise
+    # return cached reference from source record (if available), otherwise
     # call internal function to create the defrec
     if( !has_field(srcrec,'nodes') )
       srcrec.nodes := [=];
@@ -126,16 +147,25 @@ const skymep_tool := function (ref lsm,ref mepdb,
   
   # commit_source()
   #   commits all updated MEPs associated with source.
-  #   If newsource=T, populates with all-new MEPs for the source
-  const public.commit_source := function (ref srcrec,force=F)
+  #   If force=T, commits everything regardless of the updated flag
+  const public.commit_source_meps := function (ref srcrec,force=F)
   {
     wider self,public;
-    # new source? Create MEPs for defined fields
-    if( has_field(srcrec,'_new_src') && srcrec._new_src )
+    if( !has_field(srcrec,'nodes') )
+      return F;
+    for( i in 1:len(srcrec.nodes) )
     {
+      node := ref srcrec.nodes[i];
+      if( node.class == 'meqparm' && has_field(node,'name') )
+      {
+        if( node.name =~ m/%s/ )
+          node.name := sprintf(node.name,srcrec.ID);
+        res := self.mepdb.commit_mep(node,force=force);
+        if( is_fail(res) )
+          fail res;
+      }
     }
-    
-    
+    return T;
   }
   
   # populate_mepdb():
@@ -146,6 +176,12 @@ const skymep_tool := function (ref lsm,ref mepdb,
   const public.populate_mepdb := function (sources=[],version='1')
   {
     wider self,public;
+    # does the lsm contain any sources at all?
+    if( !self.lsm.table().nrows() )
+    {
+      self.dprint(1,'populate_mepdb: lsm has 0 sources');
+      return 0;      
+    }
     # has a subset been specified?
     subset := 1:self.lsm.table().nrows();
     if( len(sources) > 0 )
@@ -199,7 +235,7 @@ const skymep_tool := function (ref lsm,ref mepdb,
           add_parm(rowrec,p);
     }
     tabrow.done();
-    self.dprintf(1,'%d total params to be added',len(parm_id));
+    self.dprintf(1,'%d total params will be added',len(parm_id));
     # pass to mepdb
     res := self.mepdb.add_parm_batch(parm_id,parm_val,versions=version);
     if( is_fail(res) )

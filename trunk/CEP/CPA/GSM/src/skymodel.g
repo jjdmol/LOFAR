@@ -132,7 +132,7 @@ const skymodel := function ( tablename='',readonly=T,
   }
   
   # get_source_field():
-  #   this gets a specific source field for a source
+  #   this gets a specific record field for a source
   #   source can be a source record (in which case the field will be looked
   #   up in or added to the record), a source ID, or a _dbid
   const public.get_source_field := function (ref source,field)
@@ -149,7 +149,7 @@ const skymodel := function ( tablename='',readonly=T,
         x := self.tbl.getcell(field,source._dbid);
         if( is_fail(x) )
           fail x;
-      } 
+      }
       else # else must be a new (uncommitted) source -- use default value
         x := GSM.row_template[field];
       source[field] := x;
@@ -181,6 +181,7 @@ const skymodel := function ( tablename='',readonly=T,
     # check for ID uniqueness, if one is supplied
     if( id != '' && public.lookup_id(id)>0 )
       fail paste('source id',id,'already exists');
+    self.dprintf(2,'creating source record for \'%s\'',id);
     # create source record
     srcrec := GSM.make_source(id,ra,dec,flux,other);
     srcrec._new_src := T;
@@ -201,24 +202,28 @@ const skymodel := function ( tablename='',readonly=T,
     # no row number in source record? Must be a new source then
     if( has_field(srcrec,'_new_src') && srcrec._new_src )
     {
-      self.tbl.addrows(1);
+      res := self.tbl.addrows(1);
+      if( is_fail(res) )
+        fail res;
       srcrec._dbid := self.tbl.nrows();
       # allocate new ID if none has been given 
-      srcrec.
       if( !has_field(srcrec,'ID') || srcrec.ID == '' )
         srcrec.ID := spaste('new',srcrec._dbid);
-      srcrec.updated := T;
+      srcrec._new_src := F;
+      srcrec._updated := T;
+      self.dprintf(2,'commit_source: creating new source %s at row %d',srcrec.ID,srcrec._dbid);
     }
     # write out to table if updated
-    if( has_field(srcrec,'updated') && srcrec.updated )
+    if( force || (has_field(srcrec,'_updated') && srcrec._updated) )
     {
-      self.tbl_row.put(srcrec);
-      srcrec.updated := F;
+      self.dprintf(2,'commit_source: writing %s at row %d',srcrec.ID,srcrec._dbid);
+      res := self.tbl_row.put(srcrec._dbid,srcrec);
+      if( is_fail(res) )
+        fail res;
+      srcrec._updated := F;
     }
-    # write out MEPs
-    self.skymep.commit_source(srcrec,force);
-    srcrec._new_src := F;
-    return T;
+    # write out component MEPs, if any
+    return self.skymep.commit_source_meps(srcrec,force);
   }
 
   # attach_mepdb():
