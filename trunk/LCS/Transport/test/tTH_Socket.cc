@@ -108,11 +108,18 @@ int32 doTest(int32	testnr)
 		DH_Source.connectBidirectional(DH_Dest, TCPproto1, TCPproto2, blocking);
 	}
 
+	LOG_INFO("Setting up connection...");
 	if (serverRole) {
-		DH_Dest.init();
+		while(!DH_Dest.init()) {
+			LOG_INFO("no connection yet, retry in 1 second");
+			sleep(1);
+		}
 	}
 	else {
-		DH_Source.init();
+		while(!DH_Source.init()) {
+			LOG_INFO("no connection yet, retry in 1 second");
+			sleep(1);
+		}
 	}
 	LOG_INFO("Connection made succesfully");
 
