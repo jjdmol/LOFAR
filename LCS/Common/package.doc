@@ -1,0 +1,36 @@
+
+// \defgroup Common Common
+// The Common package contains pieces of software that are very
+// reusable. Hence the name "common"
+
+// @{
+
+//   \defgroup BlitzToAips Blitz++ to AIPS++ conversion functions
+//   Conversion methods for Blitz++ and AIPS++ data structures.
+
+//   \defgroup Blob Binary Large Objects (Blob)
+//   Classes for serializing one or more objects into a blob and
+//   de-serializingthe blob to objects.
+
+//   @{
+
+//     \defgroup BlobArray Global BlobArray functions
+
+//   @}
+
+//   \defgroup DataConvert Data conversion functions
+
+//   \defgroup LofarLogger Logging package
+
+//   \defgroup Profiling MPI Profiling
+
+//   \defgroup Socket Socket package
+
+//   \defgroup shmem Shared Memory
+
+//   \defgroup Thread Thread package
+
+//   \defgroup TypeNames Type name functions
+
+// @}
+
