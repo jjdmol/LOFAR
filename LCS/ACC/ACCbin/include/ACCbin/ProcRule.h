@@ -32,7 +32,7 @@ namespace LOFAR {
   namespace ACC {
 
 // The ProcRule class contains all information to (over)rule a process.
-// Its known how to start and stop a process.
+// Its known how to start and stop a process and knows its current state.
 class ProcRule
 {
 public:
@@ -40,7 +40,11 @@ public:
 			 const string&  aStartCmd,
 			 const string&  aStopCmd,
 			 const string&  aNodeName);
-	//~ProcRule();
+	~ProcRule() {};
+
+	//# Copying is allowed
+	//# ProcRule(const ProcRule&	that);
+	//# ProcRule& operator=(const ProcRule& that);
 
 	// The start and stop commands.
 	bool start();
@@ -50,17 +54,15 @@ public:
 	string	getName() const;
 	void	markAsStopped();
 
-	// Copying is allowed
-//	ProcRule(const ProcRule&	that);
-//	ProcRule& operator=(const ProcRule& that);
 
 	friend std::ostream& operator<<(std::ostream& os, const ProcRule& aPR);
 
 private:
-	// defaultconstruction not allowed
+	// Default construction not allowed
 	ProcRule();
 
-	//# Datamembers
+
+	//# --- Datamembers ---
 	string		itsName;
 	string		itsStartCmd;
 	string		itsStopCmd;

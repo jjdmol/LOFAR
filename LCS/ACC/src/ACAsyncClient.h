@@ -1,4 +1,4 @@
-//#  ACAsyncClient.h: Synchrone version of a Appl. Control client
+//#  ACAsyncClient.h: Asynchrone version of a Appl. Control client
 //#
 //#  Copyright (C) 2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -36,46 +36,51 @@
 namespace LOFAR {
   namespace ACC {
 
-//# Define a helper class needed in the constructor from the ACAsyncClient.
-
+// ACClientFunctions is a helper class needed in the constructor from the 
+// ACAsyncClient. When the client uses asynchrone communication it must supply 
+// three routines that may be called when calling 'processACmsgFromServer'.
 class ACClientFunctions {
 public:
-	// When the client uses asynchrone communication is must supply three 
-	// routines that may be called when calling 'processACmsgFromServer'.
+	// An ACK of NACK message was received for command \c cmd. The \c result
+	// argument tell if it is an ACK or NACK, the \c info argument may contain
+	// extra information about the result.
 	virtual void 	handleAckMsg 	(ACCmd         cmd, 
 									 uint16        result,
 									 const string& info) = 0;
+
+	// An answer on a former called askInfo method has arrived. The \c answer
+	// arguments contains the key-value pairs.
 	virtual void 	handleAnswerMsg	(const string& answer)  = 0;
+
+	// Should parse the keyList and provide the values for the keys when
+	// possible.
 	virtual string	supplyInfoFunc	(const string& keyList) = 0;
 };
 
 
 //# Description of class.
-// The ApplControl class implements the interface the Application Controller
-// will support.
+// The ACAsyncClient class implements the interface of the Application 
+// Controller for asynchrone communication.
 //
 class ACAsyncClient : public ApplControlClient 
 {
 public:
-	// Note: default constructor is private
-	// With this call an ApplController is created. It is most likely the
-	// AC is created on the machine you passed as an argument but this is not
-	// guaranteed. The AC server who handles the request (and does run on this
-	// machine) may decide that the AC should run on another node.
+	// When constructing an ApplControllerClient object an Application
+	// Controller process is started on a runtime determined host.
+	// The \c hostIDFrontEnd argument of th constructor is the hostname
+	// of the machine on which the AC-daemon runs which launches the AC
+	// for this ApplControlClient object. <br>
 	// The returned AC object knows who its AC is and is already connected to 
-	// it. Call serverInfo if you are interested in this information.
+	// it. The \c ACClientFuncts argument is a reference to a helper class
+	// to be implemented by the ACuser that wants the asynchroon connection.
 	ACAsyncClient(ACClientFunctions*	ACClntFuncts,
 				  const string&			hostIDFrontEnd);
 
 	// Destructor;
 	virtual ~ACAsyncClient();
 
-	// Copying is allowed.
-	ACAsyncClient(const ACAsyncClient& that);
-	ACAsyncClient& 	operator=(const ACAsyncClient& that);
 
-	// ---------- support for asynchrone communication ----------
-	// Make it an ABC by defining a pure virtual function.
+	// Always returns 'true'.
 	inline bool isAsync() const 
 		{ return (true);	}
 
@@ -90,14 +95,22 @@ public:
 	inline void	ACAsyncClient::handleAnswerMessage(const string&	answer) const
 		{ itsClientFuncts->handleAnswerMsg(answer); }
 
-	// Call this routine to handle incoming messages. It dispatches the
-	// received message to handleAck- or supplyInfo.
 	bool	processACmsgFromServer()					  const;
 
 private:
 	// NOT default constructable;
 	ACAsyncClient();
 
+	// Copying is not allowed.
+	ACAsyncClient(const ACAsyncClient& that);
+
+	// Copying is not allowed.
+	ACAsyncClient& 	operator=(const ACAsyncClient& that);
+
+	//#--- Datamembers ---
+	// Pointer to an aCCLientFunction class in which the ACuser has implemented
+	// the functions handleAckMsg, handleAnswerMsg and supplyInfo to be able
+	// use the asynchrone flavor of the ApplControlClient.
 	ACClientFunctions*	itsClientFuncts;
 };
 

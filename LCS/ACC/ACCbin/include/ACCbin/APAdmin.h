@@ -32,72 +32,118 @@
 namespace LOFAR {
   namespace ACC {
 
+// The APAdmin class uses a internal variable to register the state of the
+// Socket.
 enum APAState {
 		APSconn, APSdiscon, APSread, APSwrite, APSfail
 };
 
 // The APAdmin class is a collection of information the Application Controller
-// needs for its administration of the AP's. It consists of a dataholder for
-// reading data from the AP, a Socket to AP is connected to, and some less
-// important flags and values.
+// needs for its administration of the Application Processes (AP's). 
+// It consists of a dataholder for reading data from the AP, a Socket the AP 
+// is connected to, and some less important flags and values.
 class APAdmin
 {
 public:
 	// An APAdmin is always needed after a new Socket was created after a
-	// call to a listener socket. So the constructor always needs this Socket.
+	// call on a listener socket. So the constructor always needs this Socket.
 	// An empty dataholder for the AP is constructed automatically.
 	explicit APAdmin (Socket*	aSocket);
+	
 	~APAdmin();
 
-	// Functions for reading and writing to the AP.
+	// \name Functions for reading and writing to the AP.
+	// @{
+
+	// Tries to read the missing bytes from the Socket into the DataHolder.
+	// When the dataholder is full \c true is returned, otherwise \c false.
 	bool 	read();
+
+	// Writes the contents of the dataHolder to the Socket. Returns \c false
+	// if the Socket is/turns out to be disconnected.
 	bool 	write(void*		aBuffer,
 				  int32		aSize);
+	// @}
 
-	// Accessor functions.
+	// \name Accessor functions.
+	// @{
 	void				setName(const string&	aName);
 	string				getName()     const;
 	DH_ProcControl*		getDH()		  const;
 	int32				getSocketID() const;
 	APAState			getState()	  const;
+	// @}
 
 private:
-	// Never need those functions.
+	// Not default constructable;
 	APAdmin();
+
+	// Copying is not allowed
 	APAdmin(const APAdmin&	that);
+
+	// Copying is not allowed
 	APAdmin& operator=(const APAdmin& that);
 
-	string				itsName;			// name of AP
-	DH_ProcControl*		itsDHPC;			// the dataholder
-	Socket*				itsSocket;			// the socket
-	uint32				itsBytesToRead;		// bytes still to read
-	uint32				itsReadOffset;		// offset in read buffer
-	bool				itsReadingHeader;	// reading header or data part
-	APAState			itsState;			// state of APAdmin;
+	//# --- datamembers ---
+	// name of application process
+	string				itsName;			
+
+	// The dataholder used for reading from the AP.
+	DH_ProcControl*		itsDHPC;			
+
+	// Socket to AP is connected to
+	Socket*				itsSocket;			
+
+	// Number of bytes still to read
+	uint32				itsBytesToRead;		
+
+	// Readoffset in the buffer
+	uint32				itsReadOffset;		
+
+	// Reading header or data part
+	bool				itsReadingHeader;	
+
+	// State of APAdmin
+	APAState			itsState;			
 };
 
-// -------------------- inline functions --------------------
+//# -------------------- inline functions --------------------
+//#
+//# getDH()
+//#
 inline DH_ProcControl* APAdmin::getDH() const
 {
 	return (itsDHPC);
 }
 
+//#
+//# getSocketID()
+//#
 inline int32 APAdmin::getSocketID() const
 {
 	return (itsSocket->getSid());
 }
 
+//#
+//# getState()
+//#
 inline APAState APAdmin::getState() const
 {
 	return (itsState);
 }
 
+//#
+//# setName(name)
+//#
 inline void APAdmin::setName(const string&	aName) 
 {
 	itsName = aName;
 	itsState = APSconn;
 }
 
+//#
+//# getName()
+//#
 inline string	APAdmin::getName() const
 {
 	return (itsName);

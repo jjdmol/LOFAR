@@ -32,11 +32,12 @@
 namespace LOFAR {
   namespace ACC {
 
-//# Forward Declarations
-//class forward;
-
-
-// Description of class.
+// The APAdminPool object manages a pool of APAdmin objects. An APAdmin object
+// is a pair of a DataHolder and a Socket. The surplus value of the APAdminPool
+// is that is can perform an action of all the APAdmin objects it holds.
+// Since the APAdminPool has knowledge of all the Processes and its connection
+// state it is extended with administrative functions for collecting ACK
+// messages.
 class APAdminPool
 {
 	typedef vector<APAdmin*>			APAList;
@@ -47,39 +48,116 @@ public:
 	static APAdminPool&		getInstance();
 	virtual 				~APAdminPool();
 
-	// add/remove an APAdmin to/from the pool
-	void add   (APAdmin*	anAPAdmin);
-	void remove(APAdmin*	anAPAdmin) throw(Exception);
-	
-	// given APAdmin is ready to receive commands
-	void APAdminPool::markAsOnline (APAdmin*		anAPAdmin);
-	void APAdminPool::markAsOffline(APAdmin*		anAPAdmin);
+	// \name Maintenance on the APAdmin members
+	// Functions for maintaining the pool of APAdmin objects.
+	// @{
 
-	// functions for Ack administration
+	// Adds the given APAdmin to the pool.
+	void add   (APAdmin*	anAPAdmin);
+
+	// Removes the given APAdmin from the pool. Throws an exception if the
+	// APAdmin is not in the pool.
+	void remove(APAdmin*	anAPAdmin) throw(Exception);
+	// @}
+	
+	// \Managing process state
+	// The APAdminPool knows of every connected process if it is ready to
+	// receive messages of not.
+	// @{
+	
+	// The given APAdmin is ready to receive commands
+	void APAdminPool::markAsOnline (APAdmin*		anAPAdmin);
+
+	// Don't send any more messages to this APAdmin.
+	void APAdminPool::markAsOffline(APAdmin*		anAPAdmin);
+	// @}
+
+	// \name Functions for Ack administration
+	// @{
+
+	// When calling \c startAckCollection all processes that are marked as
+	// 'online' are also marked 'shouldSendAnAck'. The Acks that are send by
+	// the processes should be a respons on command \c aCommand.
 	void startAckCollection(PCCmd			aCommand);
+
+	// Tell the APAdminPool that on this APAdmin an Ack message was received
+	// for the given command. Tell the APAdminPool that on this APAdmin an Ack
+	// message was received. Registering an Ack for the wrong command has no 
+	// effect.
 	void registerAck       (PCCmd			aCommand,
 							APAdmin*		anAPAdmin);
-	void stopAckCollection ();
-	bool allAcksReceived   ();
 
+	// Cancel the collection of Acks. When Acks are registered after this call
+	// they have no effect anymore.
+	void stopAckCollection ();
+
+	// Check if all Acks are received.
+	bool allAcksReceived   ();
+	// @}
+
+	// \name Actions on the pool
+	// The following actions are executed on all elements of the pool.
+	// @{
+
+	// Continues its previous poll-sequence on the elements in its pool.
+	// Returns with a pointer to the APAdmin that has received a complete
+	// message. Returns 0 if the end of the pool is reached.<br>
+	// To do a single read on all elements of the pool:
+	// \code
+	//   while ((activeAP = myAPAdminPool.poll()) {
+	//      ... do something with the data of the 'activeAP'
+	//   }
+	// \endcode
 	APAdmin*	poll        (time_t			waitTime);
+
+	// Continues its previous cleanup-sequence on the elements in its pool.
+	// Returns with a pointer to the APAdmin that has received a complete
+	// message. Returns 0 if the end of the pool is reached.<br>
+	// To do a single read on all elements of the pool:
+	// \code
+	//   while ((deadAP = myAPAdminPool.cleanup()) {
+	//      ... do some final task with 'deadAP'
+	//      delete deadAP
+	//   }
+	// \endcode
 	APAdmin*	cleanup     ();
-	uint16		processCount();
-	uint16		onlineCount ();
+
+	// Contructs a DH_ProcControl object from the passed arguments and sends
+	// this dataholder to all elements in its pool.
+	// After sending it to all elements \c startAckCollection is called to
+	// remember from with processes a respons is expected.
 	void 		writeToAll(PCCmd			command,
 						   time_t			waitTime,
 						   const string&	options);
+	// @}
+
+	// \name Accessor methods
+	// @{
+
+	// Returns the number of processes in its pool.
+	uint16		processCount();
+
+	// Returns the number of processes in its pool that have told that they
+	// are ready to receive data.
+	uint16		onlineCount ();
+	// @}
 
 	friend std::ostream& operator<< (std::ostream& os, const APAdminPool& anAPAP);
 
 private:
+	// Not default contructable.
 	APAdminPool();
+
+	// Copying is not allowed.
 	APAdminPool(const APAdminPool&	that);
+
+	// Copying is not allowed.
 	APAdminPool& operator=(const APAdminPool& that);
 
+	// Internal command for adjusting the index for the poll method.
 	void setCurElement(uint16	aValue);
 
-	// for singleton
+	// The APAdminPool is a singleton.
 	static		APAdminPool*		theirAPAdminPool;
 
 	APAList		itsAPAPool;			// vector of APAdmin objects
@@ -90,11 +168,13 @@ private:
 	uint16		itsNrAcksToRecv;	// Nr of Acks still to receive.
 	fd_set		itsAckList;			// Procs still to receive an Ack from
 	PCCmd		itsLastCmd;			// Last/current outstanding AP command
-
-	uint16		itsCurElement;		// TODO to be deleted
+	uint16		itsCurElement;		// Last element we polled.
 };
 
-// -------------------- inline functions --------------------
+//# -------------------- inline functions --------------------
+//#
+//# setCurElement(value)
+//#
 inline void APAdminPool::setCurElement(uint16	aValue)
 {
 	if (aValue >= itsNrElements) {				// check upper boundary
@@ -105,28 +185,34 @@ inline void APAdminPool::setCurElement(uint16	aValue)
 	}
 }
 
+//#
+//# processCount
+//#
 inline uint16 APAdminPool::processCount()
 {
 	return (itsNrElements);
 }
 
+//#
+//# onlineCount
+//#
 inline uint16 APAdminPool::onlineCount()
 {
 	return (itsNrOnline);
 }
 
-//
-// void markAsOnline(APAdmin*)
-//
+//#
+//# markAsOnline(APAdmin*)
+//#
 inline void APAdminPool::markAsOnline(APAdmin*		anAPAdmin)
 {
 	FD_SET(anAPAdmin->getSocketID(), &itsOnlineMask);		// schedule for writes
 	++itsNrOnline;
 }
 	
-//
-// void markAsOfline(APAdmin*)
-//
+//#
+//# markAsOffLine(apadmin)
+//#
 inline void APAdminPool::markAsOffline(APAdmin*		anAPAdmin)
 {
 	if (FD_ISSET(anAPAdmin->getSocketID(), &itsOnlineMask)) {
@@ -135,6 +221,9 @@ inline void APAdminPool::markAsOffline(APAdmin*		anAPAdmin)
 	}
 }
 	
+//#
+//# startAckColection(command)
+//#
 inline void APAdminPool::startAckCollection(PCCmd  aCommand) 
 {
 	itsAckList      = itsOnlineMask;
@@ -142,6 +231,9 @@ inline void APAdminPool::startAckCollection(PCCmd  aCommand)
 	itsLastCmd      = aCommand;
 }
 
+//#
+//# registerAck(command, apadmin)
+//#
 inline void APAdminPool::registerAck(PCCmd			aCommand,
 									 APAdmin*		anAPAdmin)
 {
@@ -158,6 +250,9 @@ inline void APAdminPool::registerAck(PCCmd			aCommand,
 	}
 }
 
+//#
+//# stopAckCollection()
+//#
 inline void APAdminPool::stopAckCollection()
 {
 	FD_ZERO(&itsAckList);
@@ -165,6 +260,9 @@ inline void APAdminPool::stopAckCollection()
 	itsLastCmd      = PCCmdNone;
 }
 
+//#
+//# allAcksReceived
+//#
 inline bool APAdminPool::allAcksReceived()
 {
 	return (itsLastCmd != PCCmdNone && itsNrAcksToRecv == 0);

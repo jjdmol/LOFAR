@@ -36,10 +36,11 @@
 namespace LOFAR {
   namespace ACC {
 
-//# Forward Declarations
-//class forward;
 
-// Make list of supported commands.
+// The ACCmd enumeration is a list of command(numbers) that are used to
+// tell the ApplControl server-side what command should be invoked.
+// In a result message the command value is OR'ed with the \c ACCmdResult
+// mask.
 enum ACCmd {    ACCmdNone = 0, ACCmdBoot, 
 				ACCmdShutdown, ACCmdQuit, 
 				ACCmdDefine,   ACCmdInit,
@@ -55,7 +56,6 @@ enum ACCmd {    ACCmdNone = 0, ACCmdBoot,
 //# Description of class.
 // The DH_ApplControl class is responsible for packing and unpacking
 // Application Control commands.
-//
 class DH_ApplControl : public DataHolder
 {
 public:
@@ -65,19 +65,37 @@ public:
 	// Destructor
 	virtual ~DH_ApplControl();
 
-	// Copying is allowed.
-	DH_ApplControl*		clone()        const;
-	DH_ApplControl*		makeDataCopy() const;
+	// \name libTransport methods
+	// @{ 
 
-	// Redefines the preprocess function.
+	// Register the fixed size variables to the dataholderblob.
 	virtual void 	preprocess();
+
+	// Tries to fill its buffer with new data. Returns \c true is a complete
+	// message is received.
 	virtual bool	read();
+
+	// Write the current contents to the network.
 	virtual bool	write();
 
-	// construction of the blob
-	void pack();
+	// The clone function is neccesary to meet the libTransport requirements,
+	// it copies everything but the data. Something we never need.
+	DH_ApplControl*		clone()        const;
+	// @}
 
-	// The real data-accessor functions
+	// \name Additional methods
+	// @{
+
+	// \c makeDataCopy is the counterpart of clone: it copies the data.
+	DH_ApplControl*		makeDataCopy() const;
+
+	// Construction of the blob
+	void pack();
+	// @}
+
+	// \name Data-accessor methods
+	// @{
+
 	void	setCommand		(const ACCmd		theCmd);
 	void	setScheduleTime	(const time_t		theTime);
 	void	setWaitTime		(const time_t		theWaitTime);
@@ -93,16 +111,19 @@ public:
 	string	getProcList		() const;
 	string	getNodeList		() const;
 	uint16	getResult		() const;
+	// @}
 
 private:
-	// forbit default construction and assignment operator
+	// Copying is not allowed this way.
 	DH_ApplControl(const DH_ApplControl& that);
+
+	// Copying is not allowed this way.
 	DH_ApplControl& 	operator=(const DH_ApplControl& that);
 
 	// Implement the initialisation of the pointers
 	virtual void	fillDataPointers();
 
-	// fields transferred between the server and the client
+	//# --- DataMembers ---
 	uint16		*itsVersionNumber;
 	int16		*itsCommand;
 	time_t		*itsScheduleTime;
@@ -113,82 +134,126 @@ private:
 	string		itsNodeList;
 };
 
-// The real data-accessor functions
+//#
+//# setScheduleTime(GMTtime)
+//#
 inline void	DH_ApplControl::setScheduleTime	(const time_t		theTime)
 {
 	*itsScheduleTime = theTime;
 }
 
+//#
+//# setWaitTime(waittime)
+//#
 inline void	DH_ApplControl::setWaitTime	(const time_t		theWaitTime)
 {
 	*itsWaitTime = theWaitTime;
 }
 
+//#
+//# setCommnad(command)
+//#
 inline void	DH_ApplControl::setCommand		(const ACCmd		theCmd)
 {
 	*itsCommand = theCmd;
 }
 
+//#
+//# setOptions(options)
+//#
 inline void	DH_ApplControl::setOptions		(const string&		theOptions)
 {
 	itsOptions = theOptions;
 }
 
+//#
+//# setProcList(procList)
+//#
 inline void	DH_ApplControl::setProcList		(const string&		theProcList)
 {
 	itsProcList = theProcList;
 }
 
+//#
+//# setNodeList(nodeList)
+//#
 inline void	DH_ApplControl::setNodeList		(const string&		theNodeList)
 {
 	itsNodeList = theNodeList;
 }
 
+//#
+//# setResult(result)
+//#
 inline void	DH_ApplControl::setResult		(const uint16			theResult)
 {
 	*itsResult = theResult;
 }
 
 
+//#
+//# getScheduleTime()
+//#
 inline time_t	DH_ApplControl::getScheduleTime	() const
 {
-	// no version support necc. yet.
+	//# no version support necc. yet.
 	return (*itsScheduleTime);
 }
 
+//#
+//# getWaitTime()
+//#
 inline time_t	DH_ApplControl::getWaitTime	() const
 {
-	// no version support necc. yet.
+	//# no version support necc. yet.
 	return (*itsWaitTime);
 }
 
+//#
+//# getCommand()
+//#
 inline ACCmd	DH_ApplControl::getCommand		() const
 {
-	// no version support necc. yet.
+	//# no version support necc. yet.
 	return static_cast<ACCmd>(*itsCommand);
 }
 
+//#
+//# getOptions()
+//#
 inline string	DH_ApplControl::getOptions		() const
 {
 	return (itsOptions);
 }
 
+//#
+//# getProcList()
+//#
 inline string	DH_ApplControl::getProcList		() const
 {
 	return (itsProcList);
 }
 
+//#
+//# getNodeList()
+//#
 inline string	DH_ApplControl::getNodeList		() const
 {
 	return (itsNodeList);
 }
 
+//#
+//# getResult()
+//#
 inline uint16	DH_ApplControl::getResult		() const
 {
-	// no version support necc. yet.
+	//# no version support necc. yet.
 	return (*itsResult);
 }
 
+//#
+//# pack()
+//#
 inline void DH_ApplControl::pack() 
 {
 	writeExtra();

@@ -47,16 +47,18 @@ ApplControlServer::ApplControlServer(const uint16			portnr,
 	DH_AC_Server->setID(4);
 
 	DH_AC_Client.connectBidirectional(*DH_AC_Server, 
-					 			TH_Socket("", "localhost", portnr, false, false),
-					 			TH_Socket("localhost", "", portnr, true,  false),
-								false);	// blocking
+				 			TH_Socket("", "localhost", portnr, false, false),
+				 			TH_Socket("localhost", "", portnr, true,  false),
+							false);	// blocking
 	DH_AC_Server->init();
 
 	itsCommChan = new ApplControlComm(false);		// async
 	itsCommChan->setDataHolder(DH_AC_Server);
 }
 
+//
 // Destructor
+//
 ApplControlServer::~ApplControlServer() 
 {
 	if (itsCommChan) {
@@ -64,6 +66,9 @@ ApplControlServer::~ApplControlServer()
 	}
 }
 
+//
+// askInfo (keyList)
+//
 string		ApplControlServer::askInfo(const string&	keylist) const
 {
 	// TODO: handle keylist self first, pass unknown stuff to upperlayer
@@ -73,6 +78,9 @@ string		ApplControlServer::askInfo(const string&	keylist) const
 	return (itsCommChan->getDataHolder()->getOptions());
 }
 
+//
+// pollForMessage()
+//
 bool	ApplControlServer::pollForMessage() const
 {
 	LOG_TRACE_FLOW("ApplControlServer:pollForMessage");
@@ -80,6 +88,9 @@ bool	ApplControlServer::pollForMessage() const
 	return (itsCommChan->getDataHolder()->read());
 }
 
+//
+// handleMessage(aMsg)
+//
 bool ApplControlServer::handleMessage(DH_ApplControl*	theMsg) 
 {
 	int16	cmdType 	 = theMsg->getCommand();
@@ -133,10 +144,6 @@ bool ApplControlServer::handleMessage(DH_ApplControl*	theMsg)
 	case ACCmdReinit:		
 		result = itsACImpl->reinit (scheduleTime, options);	
 		break;
-	case ACCmdResult:		
-		handleAckMessage(); 
-		result = true;
-		break;
 	default:
 		//TODO: optional other handling unknown command?:w
 		LOG_DEBUG_STR ("Message type " << cmdType << " not supported!\n");
@@ -147,16 +154,16 @@ bool ApplControlServer::handleMessage(DH_ApplControl*	theMsg)
 }
 
 
-void	ApplControlServer::handleAckMessage(void)
-{
-//	handleAckMessage();
-}
-
+//
+// sendResult(aResult, someOptions)
+//
 void ApplControlServer::sendResult(uint16	aResult, const string&	someOptions) 
 {
 	itsCommChan->getDataHolder()->setResult(aResult);
 	ACCmd command = itsCommChan->getDataHolder()->getCommand();
-	itsCommChan->sendCmd (static_cast<ACCmd>(command | ACCmdResult), 0, 0, someOptions);
+	itsCommChan->sendCmd (static_cast<ACCmd>(command | ACCmdResult), 
+												0, 0, someOptions);
+
 }
 
 } // namespace ACC

@@ -38,11 +38,11 @@ namespace LOFAR {
 
 
 //# Description of class.
-// The TemplateUnion class is a ParameterCollection that is used during runtime
-// to feed an application with its runtime values.
-// The restrictions of this collections are:
-// 1. The firstline must be a versionnr key with a valid versionnumber.
-// 2. All values must be filled in.
+// The TemplateUnion class is a ParameterCollection that is used by SAS to fill
+// in the runtime values for an application.
+// The restrictions of this collections are:<br>
+// 1. It must contain a \c versionnr key with a valid versionnumber.<br>
+// 2. All values must be filled in.<br>
 //
 class TemplateUnion : public ParameterCollection
 {
@@ -61,6 +61,8 @@ public:
 	TemplateUnion(const TemplateUnion& that);
 	TemplateUnion& 	operator=(const TemplateUnion& that);
 
+	// Check if the contents of the TemplateUnion meets the restrictions.
+	// The \c errorReport string contains the violations that were found.
 	bool check(string&	errorReport) const;
 
 	friend std::ostream& operator<<(std::ostream& os, const ParameterCollection &thePS);

@@ -37,45 +37,41 @@ namespace LOFAR {
   namespace ACC {
 
 //# Forward Declarations
-//class forward;
+//#class forward;
 
 
 //# Description of class.
-// The ApplControl class implements the interface the Application Controller
-// will support.
+// The ApplControlClient class implements the commands that are defined in the
+// abstract base class \c ApplControl. It adds some extra methods that are
+// needed for asynchrone communication. <br>
+// This class is used as base class for ACAsyncClient for asynchrone
+// communication and ACSyncClient for the synchroon variant of the client.
 //
 class ApplControlClient : public ApplControl
 {
 public:
-	// Note: default constructor is private
-	// With this call an ApplController is created. It is most likely the
-	// AC is created on the machine you passed as an argument but this is not
-	// guaranteed. The AC server who handles the request (and does run on this
-	// machine) may decide that the AC should run on another node.
+	// \name Construction and Destruction
+	// @{
+
+	// When constructing an ApplControllerClient object an Application
+	// Controller process is started on a runtime determined host.
+	// The \c hostIDFrontEnd argument of th constructor is the hostname
+	// of the machine on which the AC-daemon runs which launches the AC
+	// for this ApplControlClient object. <br>
 	// The returned AC object knows who its AC is and is already connected to 
-	// it. Call serverInfo if you are interested in this information.
+	// it. 
 	ApplControlClient(const string&	hostIDFrontEnd,
 					  bool			syncClient);
 
-	// Destructor;
+	// Closes the connection with the server.
 	virtual ~ApplControlClient();
+	// @}
+	
+	// \name Commands to control the application
+	// The following group of commands are used to control the processes of the
+	// application.
+	// @{
 
-	// Define a generic way to exchange info between client and server.
-	string	askInfo   (const string& 	keylist) const;
-
-	// Commands to control the application
-	// The scheduleTime parameter used in all commands may be set to 0 to 
-	// indicate immediate execution. Note that the AC does NOT have a command
-	// stack so it is not possible to send a series of command in advance. 
-	// The AC only handles the last sent command.
-	// Return values for immediate commands: 
-	//		True  - Command executed succesfully
-	//		False - Command could not be executed
-	// Return values for delayed commands:
-	//		True  - Command is scheduled succesfully
-	//		False - Command could not be scheduled, there is no scheduled 
-	//				command anymore.
-	// Call commandInfo to obtain extra info about the command condition.
 	bool	boot 	 (const time_t		scheduleTime,
 					  const string&		configID) 	 const ;
 	bool	define 	 (const time_t		scheduleTime)const ;
@@ -97,31 +93,65 @@ public:
 					  const string&		processList,
 					  const string&		nodeList,
 					  const string&		configID) 	 const ;
+	// @}
 
-	// -------------------- Async support --------------------
-	// Make it an ABC by defining a pure virtual function.
-	// Only the derived classes ACSyncClient and ACAsyncClient may be
-	// used as end-user class.
+	
+	// \name Exchanging information
+	// Although it is not implemented yet, there is a way defined through which
+	// the ACuser and the Application Controller exchange information.
+	// @{
+
+	string	askInfo   (const string& 	keylist) const;
+	// @}
+
+	// \name Async support
+	// For the async flavor of the ApplControlClient a couple of extra methods
+	// are neccesary for handling the asynchroon respons on the commands.
+	// @{
+
+	// When having a pointer to the baseclass ApplControl you can test
+	// if the flavor the pointer points to is a ACSyncClient or ACAsyncClient
+	// class.
 	virtual bool isAsync() const = 0;
 
-	// To be implemented by the Async variant of the AC client
+	// \c processACmsgFromServer does a read on the connection with the server
+	// to see if a message has arived. If so, the message is analysed and the
+	// corresponding method (supplyInfo, handleAckMessage or handleAnswerMsg)
+	// is called to handle the received message.
+	virtual bool    processACmsgFromServer() const;
+
+	// To be implemented by the Async variant of the ApplControl client
+	// Should parse the keyList and provide the values for the keys when
+	// possible.
 	virtual string  supplyInfo            (const string& keyList) const;
+
+	// To be implemented by the Async variant of the ApplControl client
+	// An ACK of NACK message was received for command \c cmd. The \c result
+	// argument tell if it is an ACK or NACK, the \c info argument may contain
+	// extra information about the result.
 	virtual void    handleAckMessage      (ACCmd 		 cmd, 
 										   uint16 		 result,
 										   const string& info) const;
+
+	// To be implemented by the Async variant of the ApplControl client
+	// An answer on a former called askInfo method has arrived. The \c answer
+	// arguments contains the key-value pairs.
 	virtual void    handleAnswerMessage   (const string& answer) const;
-	virtual bool    processACmsgFromServer() const;
+
+	// @}
 
 protected:
 	// NOT default constructable;
 	ApplControlClient();
 
-	// Communication with other side.
+	// All communication with other side is done by a communication object.
 	ApplControlComm*	itsCommChan;
 
 private:
 	// Copying is not allowed.
 	ApplControlClient(const ApplControlClient& that);
+
+	// Copying is not allowed.
 	ApplControlClient& 	operator=(const ApplControlClient& that);
 };
 

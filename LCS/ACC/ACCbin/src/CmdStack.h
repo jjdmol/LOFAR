@@ -33,7 +33,7 @@
 namespace LOFAR {
   namespace ACC {
 
-// Description of class.
+// Time-ordered stack of DH_ApplControl structure pointers.
 class CmdStack
 {
 public:
@@ -44,14 +44,24 @@ public:
 	CmdStack ();
 	~CmdStack();
 
+	// Add the given DH_ApplControl pointer to the stack with the given time.
 	void			add(time_t	scheduleTime, DH_ApplControl*	aDHAC);
+
+	// Remove the top element from the stack and return a pointer to it.
 	DH_ApplControl*	pop();
+
+	// Returns true is the time of the top-element lays in the past.
 	bool			timeExpired();
 
 private:
+	// Who wants to copy a CmdStack?
 	CmdStack(const CmdStack&	that);
+
+	// Who wants to copy a CmdStack?
 	CmdStack& operator= (const CmdStack&	that);
 
+	//# --- DataMembers ---
+	// The map used for the storage.
 	DHACStack		itsStack;
 };
 

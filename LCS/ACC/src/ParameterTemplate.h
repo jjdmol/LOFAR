@@ -43,12 +43,13 @@ namespace LOFAR {
 // world. In a ParameterTemplate the value-field can be used the define a 
 // default value, a value range or both.
 //
-// The restrictions of a ParameterTemplate are:
-// 1. The firstline must be a versionnr key with a valid versionnumber.
-// 2. The secondline should be the qualification key. When it is missing the
-//    value 'development' is assumed.
-// 3. The first part of the keyname must be the same for all keys because they
-//    all belong to the same module.
+// The restrictions of a ParameterTemplate are: <br>
+// 1) It must contain a \c versionnr key with a valid versionnumber.<br>
+// 2) It should contain a \c qualification key. When it is missing the
+//    value 'development' is assumed. <br>
+// 3) The first part of the keyname must be the same for all keys because they
+//    all belong to the same module. <br>
+// 4) All versionnumber references must have a valid format. <br>
 //
 class ParameterTemplate : public ParameterCollection
 {
@@ -67,8 +68,11 @@ public:
 	ParameterTemplate(const ParameterTemplate& that);
 	ParameterTemplate& 	operator=(const ParameterTemplate& that);
 
-	// Check if the contents is a valid ParameterTemplate.
+	// Check if the contents of the ParameterTemplate meets the restrictions.
+	// The \c errorReport string contains the violations that were found.
 	bool check(string&	errorReport) const;
+
+	// Returns the qualification string of the ParameterTemplate.
 	string	getQualification() const;
 
 	friend std::ostream& operator<<(std::ostream& os, const ParameterCollection &thePS);

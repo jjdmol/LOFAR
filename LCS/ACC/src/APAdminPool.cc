@@ -156,8 +156,8 @@ void APAdminPool::writeToAll(PCCmd			command,
 // NOTE: the algorithm is not very efficient because it exits on the first
 // APAdmin that is disconnected. Repeated calls to this routine will repeatedly
 // check the front of the pool.
-// An efficient way to solve this is passing a function pointer to cleanup that
-// can be called the do the user-cleanup.
+// A more efficient way to do this is with a 'cur' variable as it is solved
+// in the poll method.
 APAdmin* 	APAdminPool::cleanup()
 {
 	APAdmin*		anAPA;

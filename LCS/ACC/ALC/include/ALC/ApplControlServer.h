@@ -41,19 +41,19 @@ namespace LOFAR {
 
 
 //# Description of class.
-// The ApplControl class implements the service the Application Controller
-// will support.
+// The ApplControlServer class provides some functions for the server-side
+// program for easy handling and dispatching the commands that are received
+// from the client.
 //
 class ApplControlServer
 {
 public:
-	// Note: default constructor is private
-	// With this call an ApplController is created. It is most likely the
-	// AC is created on the machine you passed as an argument but this is not
-	// guaranteed. The AC server who handles the request (and does run on this
-	// machine) may decide that the AC should run on another node.
-	// The returned AC object knows who its AC is and is already connected to 
-	// it. Call serverInfo if you are interested in this information.
+	// The ApplControlServer object opens a TCP listener on port \c portNr
+	// and waits for a connection from the client. The \c ACimpl argument
+	// is a pointer to an ApplControl(impl) object in which the control-
+	// command from the ApplControl class are implemented.
+	// When \c handleMessage is called the message is dispatched to one of the
+	// functions in the ACimpl object.
 	ApplControlServer(uint16			portNr,
 					  ApplControl*		ACimpl);
 
@@ -64,25 +64,36 @@ public:
 	// Define a generic way to exchange info between client and server.
 	string	askInfo   (const string& 	keylist) const;
 
-	// Called in Async comm. to handle the (delayed) result of the command.
-	void	handleAckMessage();
-
-	// Function to read a message an call the corresponding function.
+	// Does a read on the communication channel and returns true if a
+	// new message is available.
 	bool	pollForMessage() const;
+
+	// Dispatches the given message to the right method of the ApplControl(impl)
+	// object that was passed during construction of the ApplControlServer.
 	bool 	handleMessage(DH_ApplControl*	theMsg);
+
+	// Constructs a result message for the current command and sends it to
+	// the client side.
 	void	sendResult(uint16	aResult, const string&	someOptions = "");
 
+	// Get pointer to dataHolder
 	inline DH_ApplControl*	getDataHolder() const;
 
 private:
 	// NOT default constructable;
 	ApplControlServer() {};
 
-	// Copying is allowed.
+	// Copying is not allowed.
 	ApplControlServer(const ApplControlServer& that);
+
+	// Copying is not allowed.
 	ApplControlServer& 	operator=(const ApplControlServer& that);
 
+	//# --- Datamembers ---
+	// Pointer to the implementation of the commands
 	ApplControl*			itsACImpl;
+
+	// Pointer to the communication channel.
 	ApplControlComm*		itsCommChan;
 };
 

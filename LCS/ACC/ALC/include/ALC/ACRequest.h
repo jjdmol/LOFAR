@@ -1,4 +1,4 @@
-//#  ACRequest.h: one line description
+//#  ACRequest.h: small structure used for comm. with ACDaemon
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -33,11 +33,17 @@ namespace LOFAR {
 
 #define	ACREQUESTNAMESIZE 80
 
-// Description of class.
+// The ACRequest structure is exchanged with the ACDaemon to request an
+// Application Controller.
 struct ACRequest
 {
+	// Uniq request information sent by the client
 	char	itsRequester [ACREQUESTNAMESIZE];
+
+	// Address of the machine the AP is started on (htonl format)
 	uint32	itsAddr;			// in_addr_t
+
+	// portnr the AP will be listening on (htons format)
 	uint16	itsPort;			// in_port_t
 };
 

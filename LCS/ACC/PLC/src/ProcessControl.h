@@ -32,11 +32,12 @@ namespace LOFAR {
   namespace ACC {
 
 //# Description of class.
-// The ProcessControl class defines the interface of the Application
-// processes. All functions in this class are abstract and need to be
+// The ProcessControl class defines the command interface that can be used
+// to control the processes of an application.<br>
+// All functions in this class are abstract and need to be
 // implemented on both the client and the server-side. On the client side
 // the implementation will only forward the function-call, on the server
-// side the real implementation must be done.
+// side (= the application process) the real implementation must be done.
 //
 class ProcessControl 
 {
@@ -44,21 +45,63 @@ public:
 	// Destructor
 	virtual ~ProcessControl() { };
 
-	// Command to control the application processes.
+	// \name Command to control the processes.
+	// There are a dozen commands that can be sent to a application process
+	// to control its flow. The return values for these command are:<br>
+	// - True   - Command executed succesfully.
+	// - False  - Command could not be executed.
+	// 
+	// @{
+
+	// During the \c define state the process check the contents of the
+	// ParameterSet it received during start-up. When everthing seems ok the
+	// process constructs the communication channels for exchanging data
+	// with the other processes. The connection are NOT made in the stage.
 	virtual bool	define 	 (const time_t		scheduleTime) const = 0;
+
+	// When a process receives an \c init command it allocates the buffers it
+	// needs an makes the connections with the other processes. When the
+	// process succeeds in this it is ready for dataprocessing (or whatever
+	// task the process has).
 	virtual bool	init 	 (const time_t		scheduleTime) const = 0;
+
+	// During the \c run phase the process does the work it is designed for.
+	// The run phase stays active until another command is send.
 	virtual bool	run 	 (const time_t		scheduleTime) const = 0;
+
+	// With the \c pause command the process stops its run phase and starts
+	// waiting for another command. The \c condition argument contains the
+	// contition the process should use for ending the run phase. This
+	// condition is a key-value pair that can eg. contain a timestamp or a
+	// number of a datasample.
 	virtual bool	pause  	 (const time_t		scheduleTime,
-							  const time_t		waitTime,
 							  const	string&		condition) 	  const = 0;
+
+	// \c Quit stops the process.
+	// TODO: The process may send a last ParameterCollection to the ACuser
+	// that contains important information that should be save somewhere in
+	// a logfile or database.
 	virtual bool	quit  	 (const time_t		scheduleTime) const = 0;
+
+	// With the \c snapshot command the process is instructed to save itself
+	// in a database is such a way that on another moment in time it can
+	// be reconstructed and can continue it task.<br>
+	// The \c destination argument contains database info the process
+	// must use to save itself.
 	virtual bool	snapshot (const time_t		scheduleTime,
 							  const string&		destination)  const = 0;
+
+	// \c Recover reconstructs the process as it was saved some time earlier.
+	// The \c source argument contains the database info the process must use
+	// to find the information it needs.
 	virtual bool	recover  (const time_t		scheduleTime,
 							  const string&		source) 	  const = 0;
 
+	// With \c reinit the process receives a new ParameterSet that it must use
+	// to reinitialize itself.
 	virtual bool	reinit	 (const time_t		scheduleTime,
 							  const string&		configID)	  const = 0;
+	// @}
 
 	// Define a generic way to exchange info between client and server.
 	virtual string	askInfo   (const string& 	keylist) const = 0;

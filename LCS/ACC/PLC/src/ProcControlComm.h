@@ -31,13 +31,15 @@
 namespace LOFAR {
   namespace ACC {
 
+// The result field that is passed from an application process is a bitmask
+// representing the result of the command.<br>
+// See \c resultInfo method for more information.
 typedef enum { PcCmdMaskOk 	 	  = 0x0001,
-			   PcCmdMaskCommError = 0x8000 } CmdResultMask;
+			   PcCmdMaskCommError = 0x8000 } PcCmdResultMask;
 
 //# Description of class.
-// The ProcControlComm class implements the Control communication with the 
-// Application Processes.
-//
+// The ProcControlComm class implements the communication between the 
+// Application Controller and the Application Processes.
 class ProcControlComm 
 {
 public:
@@ -70,26 +72,45 @@ public:
 					    const time_t		theWaitTime = 0,
 						const string&		theOptions = "") const;
 
+	// Returns a pointer to the dataholder.
 	DH_ProcControl*		getDataHolder() const;
+
+	// Install a pointer to the DataHolder that is used to hold the data
+	// that must be exchanged.
 	void				setDataHolder(DH_ProcControl*	aDHPtr);
 
 private:
-	//# datamembers
-	DH_ProcControl*		itsDataHolder;
-	bool				itsSyncComm;
-
 	// Not default constructable
 	ProcControlComm() {}
-	// Copying is also not allowed.
+
+	// Copying is not allowed this way.
 	ProcControlComm(const ProcControlComm& that);
+
+	// Copying is not allowed this way.
 	ProcControlComm&	operator= (const ProcControlComm&	that);
+
+	//# --- datamembers ---
+
+	// Pointer to a dataholder that is used for packing and unpacking the
+	// information when it is sent or read.
+	DH_ProcControl*		itsDataHolder;
+
+	// Synchrone or asynchrone communication.
+	bool				itsSyncComm;
+
 };
 
+//#
+//# getDataHolder()
+//#
 inline DH_ProcControl*	ProcControlComm::getDataHolder() const
 {
 	return itsDataHolder;
 }
 
+//#
+//# setDataHolder(aDHpointer)
+//#
 inline void ProcControlComm::setDataHolder(DH_ProcControl*	aDHPtr)
 {
 	itsDataHolder = aDHPtr;

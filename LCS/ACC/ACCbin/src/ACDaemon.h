@@ -33,26 +33,37 @@
 namespace LOFAR {
   namespace ACC {
 
-//# Forward Declarations
-//class forward;
 
-
-// Description of class.
+// The ACDaemon class implements a small daemon that wait for a request message
+// and starts up an Application controller according to the request.
+// The ACDaemon is fully controlled by the ParameterSet it receives during
+// startup.
 class ACDaemon
 {
 public:
+	// Creates an ACDaemon object that start listening on the port mentioned
+	// in the ParameterSet.
 	explicit ACDaemon(string	ParameterFile);
+
+	// Destructor.
 	~ACDaemon();
 
+	// Its normal (never ending) loop.
 	void doWork() throw (Exception);
 
 private:
 	// Copying is not allowed
 	ACDaemon(const ACDaemon&	that);
+
+	// Copying is not allowed
 	ACDaemon& operator=(const ACDaemon& that);
 
-	//# Datamembers
+	//# --- Datamembers --- 
+
+	// The listener socket to receive the requests on.
 	Socket*			itsListener;
+
+	// The parameterSet that was received during start up.
 	ParameterSet*	itsParamSet;
 };
 

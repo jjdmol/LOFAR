@@ -31,19 +31,22 @@
 namespace LOFAR {
   namespace ACC {
 
+// The result field that is passed from the Application Controller to the 
+// ACuser is a bitmask that represents the result of the command. See
+// \c resultInfo method for more information.
 typedef enum { AcCmdMaskOk 	 	  = 0x0001,
 			   AcCmdMaskScheduled = 0x0002,
 			   AcCmdMaskOverruled = 0x0004,
-			   AcCmdMaskCommError = 0x8000 } CmdResultMask;
+			   AcCmdMaskCommError = 0x8000 } AcCmdResultMask;
 
 //# Description of class.
-// The ApplControlComm class implements the communication the Application Controller
-// will support.
+// The ApplControlComm class implements the communication between the 
+// Application Controller and the ACuser.
 //
 class ApplControlComm 
 {
 public:
-	// The only constructor
+	// The only constructor.
 	explicit ApplControlComm(bool	syncComm);
 
 	// Destructor;
@@ -66,13 +69,13 @@ public:
 					const string&		theProcList = "",
 					const string&		theNodeList = "") const;
 
-	// Is called after a message is sent to the server. Returns true in async
+	// Is called after a message is sent to the server. Returns \c true in async
 	// comm, does a read on the socket in sync comm. and returns the analysed
 	// result.
 	bool	waitForResponse() const;
 
 	// Executes the given command: fills a dataholder, send it to the sender,
-	// and do a 'waitForResponse'.
+	// and does a 'waitForResponse'.
 	bool	doRemoteCmd(const ACCmd			theCmd,
 					    const time_t		theScheduleTime,
 					    const time_t		theWaitTime,
@@ -80,20 +83,30 @@ public:
 						const string&		theProcList = "",
 						const string&		theNodeList = "") const;
 
+	// Returns a pointer to the dataholder.
 	DH_ApplControl*		getDataHolder() const;
+
+	// Install a pointer to the DataHolder that can be used to hold the data
+	// that must be exchanged.
 	void				setDataHolder(DH_ApplControl*	aDHPtr);
 
 private:
-	//# datamembers
-	DH_ApplControl*		itsDataHolder;
-	bool				itsSyncComm;
-
 	// Not default constructable
 	ApplControlComm() {}
+
 	// Copying is also not allowed.
 	ApplControlComm(const ApplControlComm& that);
+
+	// Copying is also not allowed.
 	ApplControlComm& 	operator=(const ApplControlComm& that);
 
+	//# --- Datamembers ---
+	// Pointer to a dataholder (=buffer) that is used for packing and unpacking
+	// the information when it is send or read.
+	DH_ApplControl*		itsDataHolder;
+
+	// Synchrone or Asynchrone communication.
+	bool				itsSyncComm;
 };
 
 inline DH_ApplControl*	ApplControlComm::getDataHolder() const
