@@ -1,6 +1,6 @@
 include 'sdemo-common.g'
 
-demo(verbose=0,suspend=T,rpt=T)
+demo(verbose=0,suspend=F,rpt=T)
 
 solverec_peel := 
   [ iter_step=0,
