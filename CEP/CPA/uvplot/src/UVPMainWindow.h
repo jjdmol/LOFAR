@@ -13,11 +13,11 @@
 #include <qstatusbar.h>
 #include <qprogressbar.h>
 #include <qlabel.h>
+#include <qscrollview.h>
 
 //#include <UVPUVCoverageArea.h>
 #include <UVPTimeFrequencyPlot.h>
 #include <UVPGraphSettingsWidget.h>
-
 #include <UVPDataSet.h>
 
 
@@ -75,6 +75,10 @@ class UVPMainWindow:public QMainWindow
   QProgressBar*   itsProgressBar; /* Resides in Status bar */
   QLabel*         itsXPosLabel;
   QLabel*         itsYPosLabel;
+
+  QScrollView*    itsScrollView;
+  unsigned int    itsNumberOfChannels;
+  unsigned int    itsNumberOfTimeslots;
 
   UVPTimeFrequencyPlot*  itsCanvas;
   UVPGraphSettingsWidget* itsGraphSettingsWidget;

@@ -74,24 +74,34 @@ UVPMainWindow::UVPMainWindow()
   itsStatusBar->show();
   itsBusyPlotting = false;
 
-#if(DEBUG_MODE)
-  TRACER1("itsCanvas = new UVPTimeFrequencyPlot(this, Channels);");
-#endif
+  itsNumberOfChannels  = 0;
+  itsNumberOfTimeslots = 0;
+
   QWidget  *CentralWidget = new QWidget(this);
   setCentralWidget(CentralWidget);
+  itsGraphSettingsWidget = new UVPGraphSettingsWidget(30, CentralWidget);
 
+  itsScrollView = new QScrollView(CentralWidget);
+  
   QHBoxLayout *hLayout = new QHBoxLayout(CentralWidget);
 
-  itsCanvas              = new UVPTimeFrequencyPlot(CentralWidget);
-  itsCanvas->drawView();
-  itsGraphSettingsWidget = new UVPGraphSettingsWidget(CentralWidget);
+#if(DEBUG_MODE)
+  TRACER1("itsCanvas = new UVPTimeFrequencyPlot(itsScrollView->viewport());");
+#endif
+  itsCanvas              = new UVPTimeFrequencyPlot(itsScrollView->viewport());
 
-  hLayout->addWidget(itsCanvas, 10);
+  hLayout->addWidget(itsScrollView, 5);
   hLayout->addWidget(itsGraphSettingsWidget, 1);
 
+  itsScrollView->addChild(itsCanvas);
   CentralWidget->show();
+  hLayout->activate();
+
   connect(itsCanvas, SIGNAL(signal_mouseWorldPosChanged(double, double)),
           this, SLOT(slot_mouse_world_pos(double, double)));
+
+  resizeEvent(0);
+  itsCanvas->drawView();
 
     // End update itsCube
 }
@@ -116,6 +126,9 @@ UVPMainWindow::~UVPMainWindow()
 
 void UVPMainWindow::resizeEvent(QResizeEvent */*event*/)
 {
+  QWidget* CentralWidget = this->centralWidget();
+  itsScrollView->setGeometry(0, 0, CentralWidget->width() - itsGraphSettingsWidget->width(), CentralWidget->height());
+  itsCanvas->setGeometry(0, 0, itsNumberOfChannels, itsNumberOfTimeslots);
   //  itsCanvas->setGeometry(0, 0/*itsMenuBar->height()*/, width(), height() /*-itsMenuBar->height()*/-itsStatusBar->height());
 }
 
@@ -210,11 +223,11 @@ void UVPMainWindow::slot_plotTimeFrequencyImage()
     UVPDataAtomHeader FromHeader;
     UVPDataAtomHeader ToHeader;
 
-    FromHeader.itsAntenna1 = 0;
-    FromHeader.itsAntenna2 = 6;
+    FromHeader.itsAntenna1 = itsGraphSettingsWidget->getSettings().getAntenna1();
+    FromHeader.itsAntenna2 = itsGraphSettingsWidget->getSettings().getAntenna2();;
     
-    ToHeader.itsAntenna1 = 0;
-    ToHeader.itsAntenna2 = 7;
+    ToHeader.itsAntenna1 = FromHeader.itsAntenna1;
+    ToHeader.itsAntenna2 = FromHeader.itsAntenna2 + 1;
       
     while(itsBusyPlotting) {
       dispatcher.poll(50);
@@ -233,6 +246,7 @@ void UVPMainWindow::slot_plotTimeFrequencyImage()
       }
 
       if(doDraw) {
+        itsNumberOfChannels = itsDataSet.begin()->second.getNumberOfChannels();
         itsCanvas->setChannels(itsDataSet.begin()->second.getNumberOfChannels()); // Number of channels. Clears buffer.
         spectraAdded = 0;
         for(UVPDataSet::iterator p = itsDataSet.upper_bound(FromHeader);
@@ -257,7 +271,9 @@ void UVPMainWindow::slot_plotTimeFrequencyImage()
             spectraAdded++;
           }
           delete[] Values;
-        }        
+        }
+        itsNumberOfTimeslots = spectraAdded;
+        itsCanvas->setGeometry(0, 0, itsNumberOfChannels, itsNumberOfTimeslots);
         itsCanvas->drawView();
       }
       
@@ -323,8 +339,21 @@ void UVPMainWindow::slot_readMeasurementSet(const std::string& msName)
   MSField        FieldTable(ms.field());
   
   std::cout << "=========>>> Table thing  <<<=========" << std::endl;
+  Int ant1 = Int(itsGraphSettingsWidget->getSettings().getAntenna1());
+  Int ant2 = Int(itsGraphSettingsWidget->getSettings().getAntenna2());
+
+#if(DEBUG_MODE)
+  TRACER1("Ant1: " << ant1);
+  TRACER1("Ant2: " << ant2);
+#endif
+
+
   Table        msTable(msName);
-  Table        Selection(msTable(msTable.col("ANTENNA1") == 0 && msTable.col("ANTENNA2") == 6));
+  Table        Selection(msTable((msTable.col("ANTENNA1") == ant1 &&
+                                  msTable.col("ANTENNA2") == ant2) ||
+                                 (msTable.col("ANTENNA1") == ant2 &&
+                                  msTable.col("ANTENNA2") == ant1) )
+                         );
 
   ROArrayColumn<Complex> DataColumn(Selection, "DATA");
   //  ROScalarColumn<Float>  TimeColumn(Selection, "TIME");
@@ -336,7 +365,14 @@ void UVPMainWindow::slot_readMeasurementSet(const std::string& msName)
   unsigned int NumChannels      = DataColumn(0).shape()[1];
   unsigned int NumTimeslots     = Selection.nrow();
 
+  itsNumberOfChannels  = NumChannels;
+  itsNumberOfTimeslots = NumTimeslots;
+  
   itsCanvas->setChannels(NumChannels);
+  itsScrollView->removeChild(itsCanvas);
+  itsScrollView->addChild(itsCanvas);
+  resizeEvent(0);
+
   slot_setProgressTotalSteps(NumTimeslots);
   for(unsigned int i = 0; i < NumTimeslots; i++) {
     double*     Values = new double[NumChannels];
@@ -355,6 +391,7 @@ void UVPMainWindow::slot_readMeasurementSet(const std::string& msName)
     slot_setProgress(i+1);
     if(i % 3 == 0) {
       itsCanvas->drawView();
+      qApp->processEvents();
     }
   }
   itsCanvas->drawView();
