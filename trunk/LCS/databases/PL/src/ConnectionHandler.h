@@ -30,12 +30,10 @@ namespace LOFAR
 {
   namespace PL
   {
-
-    //
     // This class is responsible for handling the connection to the database.
-    // Currently, its sole is to decouple the PersistenceBroker from the
-    // Database Template Library (DTL), which we use to access our databases.
-    //
+    // It is an adapter class, because is decouples the PersistenceBroker from
+    // the Database Template Library (DTL). As such, this class will not be of
+    // interest to ordinary users of the PL library.
     class ConnectionHandler
     {
     public:
