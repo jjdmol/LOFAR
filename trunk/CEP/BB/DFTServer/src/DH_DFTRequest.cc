@@ -53,8 +53,8 @@ void DH_DFTRequest::preprocess()
   addField ("UVW", BlobField<double>(1, 0u, 0u));
   addField ("StartFreq", BlobField<double>(1));
   addField ("StepFreq", BlobField<double>(1));
-  addField ("NFreq", BlobField<int32>(1));
-  addField ("NTime", BlobField<int32>(1));
+  addField ("NFreq", BlobField<uint32>(1));
+  addField ("NTime", BlobField<uint32>(1));
   addField ("StartTime", BlobField<double>(1));
   addField ("StepTime", BlobField<double>(1));
   addField ("L", BlobField<double>(1));
@@ -65,6 +65,12 @@ void DH_DFTRequest::preprocess()
   addField ("Ant1", BlobField<int32> (1, 0u));
   addField ("Ant2", BlobField<int32> (1, 0u));
   createDataBlock();
+}
+
+void DH_DFTRequest::setLM (double L, double M)
+{
+  *itsL = L;
+  *itsM = M;
 }
 
 void DH_DFTRequest::set (double startFreq, double stepFreq, int nFreq,
@@ -92,15 +98,14 @@ void DH_DFTRequest::fillDataPointers()
 {
   // Fill in the data pointers.
   itsUVW = getData<double> ("UVW");
-  itsNFreq     = getData<int32> ("NFreq");
+  itsNFreq     = getData<uint32> ("NFreq");
   itsStartFreq = getData<double> ("StartFreq");
   itsStepFreq  = getData<double> ("StepFreq");
   itsStartTime = getData<double> ("StartTime");
   itsStepTime  = getData<double> ("StepTime");
-  itsNTime     = getData<int32> ("NTime");
+  itsNTime     = getData<uint32> ("NTime");
   itsL         = getData<double> ("L");
   itsM         = getData<double> ("M");
-  itsN         = getData<double> ("N");
   itsAnt       = getData<int32>  ("Ant");
   itsNAnt      = getDataField("Ant").getNelem();
   itsAnt1      = getData<int32>  ("Ant1");
@@ -109,7 +114,6 @@ void DH_DFTRequest::fillDataPointers()
   ASSERT (itsNBaseline == getDataField("Ant2").getNelem());
   const std::vector<uint32>& shape = getDataField("UVW").getShape();
   ASSERT (shape.size() == 2);
-  ASSERT (*itsNTime == shape[0]);
   ASSERT (itsNAnt == shape[1]);
 }
 

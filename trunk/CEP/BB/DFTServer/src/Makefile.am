@@ -1,12 +1,12 @@
 INSTHDRS = \
 DH_DFTRequest.h \
-DH_DFTResult.h
+DH_DFTResult.h \
+DFTStub.h	 \
+DFTServer.h \
+DFTAll.h                           
 
 NOINSTHDRS = \
-WH_DFTServer.h                                  \
-DFTServer_ClientStub.h				\
-DFTServer_ServerStub.h				\
-DFTServer.h	                                
+WH_DFTServer.h
 
 TCCHDRS =
 
@@ -20,7 +20,9 @@ lib_LTLIBRARIES = libdftserver.la
 
 libdftserver_la_SOURCES = \
 DH_DFTRequest.cc \
-DH_DFTResult.cc
+DH_DFTResult.cc \
+DFTStub.cc \
+DFTAll.cc
 
 
 bin_PROGRAMS = DFTServer
