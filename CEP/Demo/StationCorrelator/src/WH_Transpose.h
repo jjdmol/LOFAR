@@ -44,6 +44,7 @@ namespace LOFAR
     virtual WH_Transpose* make(const string& name);
 
     virtual void process();
+    virtual void dump();
   private:
     /// forbid copy constructor
     WH_Transpose (const WH_Transpose&);
