@@ -66,6 +66,7 @@ private:
 
   MAC itsMac;
   int itsStationID;
+  int itsCounter;
 };
 
 }

@@ -81,6 +81,8 @@ public:
    // Station related parameters
    Station* itsStations[NSTATIONS];          // the stationpositions 
    int itsNumberOfStations;
+
+   int itsDataIteration;
 };
 
 
@@ -145,6 +147,7 @@ inline int MAC::getNumberOfBeamlets ()
 
 inline void MAC::setNumberOfBeamlets (int nb)
   { itsNumberOfBeamlets = nb; }
+
 
 } //end namespace LOFAR
 

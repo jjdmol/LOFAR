@@ -92,6 +92,7 @@ void WH_PreProcess::process()
   for (int i = 0; i < itsMac.getNumberOfBeamlets (); i++) {
     // set elapsed time
     ((DH_Beamlet*)getDataManager().getOutHolder(i))->setElapsedTime(((DH_Beamlet*)getDataManager().getInHolder(i))->getElapsedTime());
+    // cout << "WH_PreProcess : " << ((DH_Beamlet*)getDataManager().getOutHolder(i))->getElapsedTime() << endl;
     for (int j = 1; j < itsMac.getBeamletSize (); j++) { 
       *((DH_Beamlet*)getDataManager().getOutHolder(i))->getBufferElement(j) 
 	= *((DH_Beamlet*)getDataManager().getInHolder(i))->getBufferElement(j);
@@ -104,7 +105,7 @@ void WH_PreProcess::dump()
   cout << "WH_PreProcess " << getName () << " Buffers:" << endl;
   //  for (int i = 0; i < itsMac.getNumberOfBeamlets(); i++) {
     for (int j = 0; j < itsMac.getBeamletSize(); j++) {
-      cout << *((DH_Beamlet*)getDataManager().getInHolder(0))->getBufferElement(j) << ' ';
+      cout << *((DH_Beamlet*)getDataManager().getOutHolder(0))->getBufferElement(j) << ' '; //beamlet 0
     }
     cout << endl;
     //}

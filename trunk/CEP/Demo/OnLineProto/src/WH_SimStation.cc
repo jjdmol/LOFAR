@@ -70,6 +70,7 @@ namespace LOFAR
     // so the structure is t0 c1 ... cn  
     //                     t1 c1 ... cn  where n is the total number of channels
     itsData = (complex<float>*)malloc((mac.getNumberOfBeamlets()*mac.getBeamletSize()+1) * sizeof (complex<float>));
+    itsCounter = 0;
   }
   
   WH_SimStation::~WH_SimStation()
@@ -96,10 +97,18 @@ namespace LOFAR
   {
     TRACER4("WH_SimStation::Process()");  
 
-    ReadData ();
+    if (itsCounter == 0) {
+      ReadData ();
+      itsCounter = DATA_ITERATION;
+    } else {
+      itsCounter--;
+    }
+
+    float t = (float)(itsData[0].real())+
+      (0.05*(DATA_ITERATION-itsCounter)/DATA_ITERATION);
     
     for (int i = 0; i < itsMac.getNumberOfBeamlets(); ++i) {
-      ((DH_Beamlet*)getDataManager().getOutHolder(i))->setElapsedTime((float)(itsData[0].real()));
+      ((DH_Beamlet*)getDataManager().getOutHolder(i))->setElapsedTime(t);
       for (int j = 0; j < itsMac.getBeamletSize(); j++) { 
 	*((DH_Beamlet*)getDataManager().getOutHolder(i))->getBufferElement(j) 
 	  = itsData[i * itsMac.getBeamletSize() + j + 1];
