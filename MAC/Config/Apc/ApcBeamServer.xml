@@ -389,6 +389,7 @@
 	<y><MACType>MACDouble</MACType></y></power126>
 <power127>
 	<x><MACType>MACDouble</MACType></x>
+	<y><MACType>MACDouble</MACType></y></power127>
 
   <!-- "BeamServer_seqnr" is the sequence number of the last
        block from the FPGA whose statistics are included
