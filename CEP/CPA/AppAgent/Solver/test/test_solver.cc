@@ -21,7 +21,7 @@
 //  $Id$
 
 #include <MSVisAgent/MSVisInputAgent.h>
-#include <VisAgent/VisOutputAgent.h>
+#include <MSVisAgent/MSVisOutputAgent.h>
 #include <SolverControl/BatchAgent.h>
 #include "../src/DummySolver.h"
 
@@ -72,7 +72,7 @@ int main (int argc,const char *argv[])
 
     cout<<"=================== creating agents ===========================\n";
     MSVisInputAgent in;
-    VisOutputAgent  out;
+    MSVisOutputAgent out;
     SolverControl::BatchAgent control;
     cout<<"=================== creating solver ===========================\n";
     DummySolver solver(in,out,control);
