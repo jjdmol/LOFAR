@@ -22,7 +22,7 @@ class DH_Vis: public DataHolder
 public:
   typedef complex<float> BufferType;
 
-  explicit DH_Vis (const string& name, const int stations, const int channel);
+  explicit DH_Vis (const string& name, const int stations, const int channel, const int polarisations);
 
   DH_Vis(const DH_Vis&);
 
@@ -41,9 +41,9 @@ public:
   BufferType* getBuffer();
   /// Get read access to the Buffer in the DataPacket.
   const BufferType* getBuffer() const;
-  BufferType*       getBufferElement(int station1, int station2, int channel);
-  void              addBufferElementVal(int station1, int station2, int channel, BufferType value);
-  void              setBufferElement(int station1, int station2, int channel, BufferType* valueptr);
+  BufferType*       getBufferElement(int station1, int station2, int channel, int polarisation);
+  void              addBufferElementVal(int station1, int station2, int channel, int polarisation, BufferType value);
+  void              setBufferElement(int station1, int station2, int channel, int polarisation, BufferType* valueptr);
   const int         getFBW() const;
 
 
@@ -57,6 +57,7 @@ private:
 
   int nstations;
   int nchannels;
+  int npolarisations;
 
   void fillDataPointers();
 };
@@ -68,19 +69,31 @@ inline const DH_Vis::BufferType* DH_Vis::getBuffer() const
   { return itsBuffer; }
 
 
-inline DH_Vis::BufferType* DH_Vis::getBufferElement(int station1, int station2, int channel)
+inline DH_Vis::BufferType* DH_Vis::getBufferElement(int station1, int station2, int channel, int polarisation)
   { 
-    return itsBuffer+station1*nstations*nchannels+station2*nchannels+channel;
+    return itsBuffer +
+      station1*nstations*nchannels*npolarisations +
+      station2*nchannels*npolarisations +
+      channel*npolarisations +
+      polarisation;
   }
  
-inline void DH_Vis::setBufferElement(int station1, int station2, int channel, BufferType* valueptr)
+inline void DH_Vis::setBufferElement(int station1, int station2, int channel, int polarisation, BufferType* valueptr)
 {
-  *(itsBuffer+station1*nstations*nchannels+station2*nchannels+channel) = *valueptr;
+  *( itsBuffer + 
+     station1*nstations*nchannels*npolarisations +
+     station2*nchannels*npolarisations +
+     channel*npolarisations +
+     polarisation) = *valueptr;
 };
 
-inline void DH_Vis::addBufferElementVal(int station1, int station2, int channel, BufferType value)
+inline void DH_Vis::addBufferElementVal(int station1, int station2, int channel, int polarisation, BufferType value)
 {
-  *(itsBuffer+station1*nstations*nchannels+station2*nchannels+channel) += value;
+  *( itsBuffer +
+     station1*nstations*nchannels*npolarisations +
+     station2*nchannels*npolarisations +
+     channel*npolarisations +
+     polarisation) += value;
 };
 
 inline const int DH_Vis::getFBW() const

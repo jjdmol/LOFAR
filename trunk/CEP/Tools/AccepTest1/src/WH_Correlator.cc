@@ -23,21 +23,24 @@ WH_Correlator::WH_Correlator(const string& name,
 			     const int    elements,
 			     const int    samples,
 			     const int    channels, 
+			     const int    polarisations,
 			     const int    targets) 
   : WorkHolder( 1, 1, name, "WH_Correlator"),
     itsNelements(elements),
     itsNsamples (samples),
     itsNchannels(channels),
+    itsNpolarisations(polarisations),
     itsNtargets (targets)
 {
 
   getDataManager().addInDataHolder(0, new DH_CorrCube("in", 
 						      elements, 
 						      samples, 
-						      channels));
+						      channels,
+						      polarisations));
 
   getDataManager().addOutDataHolder(0, new DH_Vis("out", 
-						  elements, channels));
+						  elements, channels, polarisations));
 
 }
 
@@ -45,12 +48,13 @@ WH_Correlator::~WH_Correlator() {
 }
 
 WorkHolder* WH_Correlator::construct (const string& name, 
-				     const int    nelements, 
-				     const int    nsamples,
-				     const int    nchannels, 
-				     const int    ntargets)
+				      const int    nelements, 
+				      const int    nsamples,
+				      const int    nchannels,
+				      const int    npolarisations,
+				      const int    ntargets)
 {
-  return new WH_Correlator(name, nelements, nsamples, nchannels, ntargets);
+  return new WH_Correlator(name, nelements, nsamples, nchannels, npolarisations, ntargets);
 }
 
 WH_Correlator* WH_Correlator::make (const string& name) {
@@ -58,6 +62,7 @@ WH_Correlator* WH_Correlator::make (const string& name) {
 			   itsNelements,
 			   itsNsamples,
 			   itsNchannels, 
+			   itsNpolarisations,
 			   itsNtargets);
 }
 
@@ -76,7 +81,9 @@ void WH_Correlator::process() {
     for (int fchannel = 0; fchannel < itsNchannels; fchannel++) {
       for (int   station1 = 0; station1 < itsNelements; station1++) {
 	for (int station2 = 0; station2 <= station1;    station2++) {
-	  outDH->setBufferElement(station1, station2, fchannel,zero);
+	  for (int polarisation = 0; polarisation < itsNpolarisations; polarisation++) {
+	    outDH->setBufferElement(station1, station2, fchannel, polarisation, zero);
+	  }
 	}
       }
     }
@@ -86,26 +93,35 @@ void WH_Correlator::process() {
   starttime = timer();
 #endif
   
+
+  // This is wrong at the moment. The Correlator assumed that it
+  // received a single frequency band to process. Looping over the
+  // number of frequency bands will create a factor difference between
+  // the real answer and the actual expected answer. -- Chris.
+
   // calculate the correlations and add to output DataHolder.
   DH_Vis::BufferType s1_val, s2_val;
   for (int sample = 0; sample < itsNsamples; sample++) {
     for (int fchannel = 0; fchannel < itsNchannels; fchannel++) {
       for (int   station1 = 0; station1 < itsNelements; station1++) {
 	for (int station2 = 0; station2 <= station1;    station2++) {
+
+	  for (int polarisation = 0; polarisation < itsNpolarisations; polarisation++) {
 	  // todo: use copy-free multiplication
 	  // todo: remove inner loop getBufferElement calls; consecutive adressing
 	  // todo: do short-> float conversion only once
 	  
 	  // convert complex<short> to complex<float>
-	  s1_val = DH_Vis::BufferType((inDH->getBufferElement(sample, fchannel, station1))->real(),
-				      (inDH->getBufferElement(sample, fchannel, station1)->imag()));
-	  s2_val = DH_Vis::BufferType((inDH->getBufferElement(sample, fchannel, station2))->real(),
-				      (inDH->getBufferElement(sample, fchannel, station2)->imag()));
+	    s1_val = DH_Vis::BufferType((inDH->getBufferElement(sample, fchannel, station1, polarisation))->real(),
+					(inDH->getBufferElement(sample, fchannel, station1, polarisation)->imag()));
+	    s2_val = DH_Vis::BufferType((inDH->getBufferElement(sample, fchannel, station2, polarisation))->real(),
+					(inDH->getBufferElement(sample, fchannel, station2, polarisation)->imag()));
+	    
+	    outDH->addBufferElementVal(station1, station2, fchannel, polarisation,
+				       s1_val * s2_val
+				       );
 
-	  outDH->addBufferElementVal(station1, station2, fchannel, 
-				     s1_val * s2_val
-				     );
-
+ 	  }
 	}
       }
     }
@@ -116,9 +132,9 @@ void WH_Correlator::process() {
 #endif
 
 #ifdef DO_TIMING
-  cmults = itsNsamples * (itsNelements*itsNelements/2 + ceil(itsNelements/2.0));
+  cmults = itsNsamples * itsNchannels * (itsNelements*itsNelements/2 + ceil(itsNelements/2.0));
   cout << "Performance: " << 10e-6*cmults/(stoptime-starttime) << " Mcprod/sec" << endl;
-  cout << itsNsamples << " " << itsNelements << " " << 10e-6*cmults/(stoptime-starttime) << endl;
+//   cout << itsNsamples << " " << itsNelements << " " << 10e-6*cmults/(stoptime-starttime) << endl;
 #endif
 }				     
 

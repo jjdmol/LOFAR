@@ -19,12 +19,14 @@ namespace LOFAR
 DH_CorrCube::DH_CorrCube (const string& name, 
 			  const int stations, 
 			  const int samples, 
-			  const int channels)
-: DataHolder    (name, "DH_CorrCube"),
-  itsBuffer     (0),
-  nstations     (stations),
-  nchannels     (channels),
-  nsamples      (samples)
+			  const int channels,
+			  const int polarisations)
+: DataHolder     (name, "DH_CorrCube"),
+  itsBuffer      (0),
+  nstations      (stations),
+  nchannels      (channels),
+  nsamples       (samples),
+  npolarisations (polarisations)
 {
 
 }
@@ -52,7 +54,7 @@ void DH_CorrCube::preprocess()
   postprocess();
 
   // Determine the number of bytes needed for DataPacket and buffer.
-  itsBufSize = nstations * nchannels * nsamples ;
+  itsBufSize = 2 * nstations * nchannels * nsamples ;
 
   addField ("Buffer", BlobField<BufferType>(1, itsBufSize));
   

@@ -23,11 +23,13 @@
 using namespace LOFAR;
 
 AH_FrontEnd::AH_FrontEnd (int port, int elements, 
-		    int samples, int channels, int runs, int targets):
+			  int samples, int channels, int polarisations, 
+			  int runs, int targets):
   itsPort     (port),
   itsNelements(elements),
   itsNsamples (samples),
   itsNchannels(channels),
+  itsNpolarisations(polarisations),
   itsNruns    (runs),
   itsNtargets (targets)
 {
@@ -46,6 +48,7 @@ void AH_FrontEnd::define(const KeyValueMap& /*params*/) {
 			       itsNelements, 
 			       itsNsamples,
 			       itsNchannels, 
+			       itsNpolarisations,
 			       itsNtargets
 			       );
 
@@ -54,7 +57,8 @@ void AH_FrontEnd::define(const KeyValueMap& /*params*/) {
 		     new WH_Random("noname",
 				   itsNelements,
 				   itsNsamples,
-				   itsNchannels));
+				   itsNchannels, 
+				   itsNpolarisations));
       
     itsWHs.back()->getDataManager().getOutHolder(0)->connectTo
       ( *myWHCorrelator.getDataManager().getInHolder(0),

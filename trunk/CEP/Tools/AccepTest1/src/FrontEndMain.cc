@@ -25,7 +25,7 @@ int main (int argc, const char** argv) {
     for (int elements = min_elements; elements <= max_elements; elements++) {
       
       try {		
-	AH_FrontEnd frontend(port, elements, samples,channels, runs, targets);
+	AH_FrontEnd frontend(port, elements, samples,channels, polarisations, runs, targets);
 	
 	frontend.setarg(argc, argv);
 	frontend.baseDefine();
