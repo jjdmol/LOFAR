@@ -42,7 +42,6 @@ PACKAGE = \
 	 LCS/CRD/CoordServer \
          CEP/Tools/PerfTest/P2Perf \
          CEP/CPA/OCTOPUSSY \
-         CEP/CPA/UVD \
          CEP/CPA/uvplot \
          CEP/CPA/MNS \
          CEP/CPA/GSM \
