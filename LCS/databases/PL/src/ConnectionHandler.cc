@@ -42,6 +42,7 @@ namespace LOFAR
         ostringstream oss;
         oss << "DSN=" << aDsn << ";UID=" << aUid << ";PWD=" << aPwd << ";";
         DBConnection::GetDefaultConnection().Connect(oss.str());
+        DBConnection::GetDefaultConnection().SetAutoCommit(true);
       }
       catch (DBException& e) {
         THROW(PLException,"Failed to connect to database.\n" << e.what());
