@@ -1,1 +1,0 @@
-test/test_solver demo 0 demo_gsm LOFAR.RI solve {RA,DEC,StokesI}.* 2 0 2 all([ANTENNA1,ANTENNA2] in 4*[0:2]) 0,1,2 0
