@@ -219,15 +219,26 @@ int Beam::convertPointings(time_period period)
 
       if (pointing.time() < period.begin())
       {
+	//
+	// Deadline missed, print warning but execute the command anyway
+	// as soon as possible.
+	//
 	LOG_WARN(formatString("Deadline missed by %d seconds(%f,%f) @ %s",
 			      (period.begin() - pointing.time()).seconds(),
 			      pointing.direction().angle1(),
 			      pointing.direction().angle2(),
 			      to_simple_string(pointing.time()).c_str()));
 
+	pointing.time() = period.begin();
+      }
+
+#if 0
 	m_pointing_queue.pop(); // discard pointing
       }
-      else if (pointing.time() < period.end())
+      else
+#endif
+      
+      if (pointing.time() < period.end())
       {
 	  m_pointing_queue.pop(); // remove from queue
 

@@ -1,9 +1,18 @@
 [BEAMSERVER]
+
+#
+# Number of RSP boards
+#
+N_RSPBOARDS=3
+
+#
+# Number of BLP's per board
+#
 N_BLPS=1
 
 SYNC_INTERVAL=1.0
 SW_CLOCK=0
 SOFTPPSF=0
-MAC_BASE=1 # Start from address: 00:00:00:00:00:MAC_BASE
+
 
 

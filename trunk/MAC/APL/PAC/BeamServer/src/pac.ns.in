@@ -1,8 +1,8 @@
 [ABS]
 cmd=../src/BeamServer
 host=localhost
-client.type=TCP
-client.port=30229
+acceptor.type=TCP
+acceptor.port=30229
 rspdriver.type=TCP # SAP
 
 [RSP]
