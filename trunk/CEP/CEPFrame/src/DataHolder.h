@@ -1,0 +1,403 @@
+//# DataHolder.h: Abstract base class for the data holders
+//#
+//#  Copyright (C) 2000, 2001
+//#  ASTRON (Netherlands Foundation for Research in Astronomy)
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+//#
+//#  This program is free software; you can redistribute it and/or modify
+//#  it under the terms of the GNU General Public License as published by
+//#  the Free Software Foundation; either version 2 of the License, or
+//#  (at your option) any later version.
+//#
+//#  This program is distributed in the hope that it will be useful,
+//#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//#  GNU General Public License for more details.
+//#
+//#  You should have received a copy of the GNU General Public License
+//#  along with this program; if not, write to the Free Software
+//#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+//#
+//#  $Id$
+//#
+//#  $Log$
+//#  Revision 1.26  2002/12/13 14:01:24  schaaf
+//#
+//#  %[BugId: 146]%
+//#  Added the writedelay counter
+//#
+//#  Revision 1.25  2002/06/10 09:44:15  diepen
+//#
+//#  %[BugId: 37]%
+//#  setRead and setWrite have been replaced by setReadDelay.
+//#
+//#  Revision 1.24  2002/05/08 14:11:07  wierenga
+//#  Added allocate/deallocate methods
+//#
+//#  Revision 1.23  2002/05/03 11:21:31  gvd
+//#  Changed for new build environment (mostly added package name to include)
+//#
+//#  Revision 1.22  2002/03/27 09:44:08  schaaf
+//#  Support Flexible DataHolder sizes
+//#
+//#  Revision 1.21  2002/03/14 14:18:56  wierenga
+//#  system include before local includes
+//#
+//#  Revision 1.20  2002/03/01 08:27:56  gvd
+//#  Replaced firewall by Debug and changed code accordingly
+//#  Added lofar_*.h for correct use of namespaces (for KAI and Intel C++)
+//#
+//#  Revision 1.19  2002/01/08 09:59:25  gvd
+//#  Added setName to DataHolder.h
+//#
+//#  Revision 1.18  2001/12/20 08:08:19  gvd
+//#  Use lofar_sharedir to include Makefile.common
+//#  Remove typo for doxygen
+//#
+//#  Revision 1.17  2001/10/26 10:06:27  wierenga
+//#  Wide spread changes to convert from Makedefs to autoconf/automake/libtool build environment
+//#
+//#  Revision 1.16  2001/09/24 14:04:08  gvd
+//#  Added preprocess and postprocess functions
+//#
+//#  Revision 1.15  2001/08/16 15:11:12  wierenga
+//#  Make getDataPacketSize virtual to make implementation of performance test DH/WH_GrowSize possible
+//#
+//#  Revision 1.14  2001/08/16 14:33:07  gvd
+//#  Determine TransportHolder at runtime in the connect
+//#
+//#  Revision 1.13  2001/03/23 10:00:40  gvd
+//#  Improved documentation and test programs
+//#  Added clearEventCount function to Step
+//#
+//#  Revision 1.12  2001/03/01 13:15:47  gvd
+//#  Added type argument in DataHolder constructor which is used in
+//#  the connect functions to check if the DH types match
+//#  Improved the simulator parser
+//#  Improved documentation
+//#
+//#  Revision 1.11  2001/02/05 15:42:15  gvd
+//#  Added copyright header again
+//#
+//#  Revision 1.9  2001/02/05 14:53:05  loose
+//#  Added GPL headers
+//#
+//#////////////////////////////////////////////////////////////////////
+
+#ifndef BASESIM_DATAHOLDER_H
+#define BASESIM_DATAHOLDER_H
+
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
+//# Includes
+#include <Common/lofar_string.h>
+#include <Common/lofar_fstream.h>
+
+#include "BaseSim/BaseSim.h"
+#include "BaseSim/TransportHolder.h"
+
+//# Forward Declarations
+class Transport;
+
+/**
+  Class DataHolder is the abstract base class for all data holders
+  in the BaseSim environment. Its main purpose is to offer a common interface
+  to a class like WorkHolder. Apart from that it also offers some common
+  functionality to the classes derived from it.
+
+  DataHolder has an internal class called DataPacket. This class holds
+  the data of a DataHolder class. A Class derived from DataHolder
+  should also have an internal class to hold its data. That class should
+  be derived from DataHolder::DataPacket.
+  The basic DataPacket class offers some functions to set, get, and
+  compare the timestamp of a data packet.
+
+  The constructors of a class derived from DataHolder should always
+  call the function setDataPacket in order to make their DataPacket object
+  known to this base class.
+
+  Prove \code list<table> \endcode or \<table\>.
+  \code
+    main()
+    {
+       list<table> l;
+    }
+  \endcode
+*/
+
+class DataHolder
+{
+protected:
+  /** Standard data type class
+      It is the base class for datapackets in classes derived from DataHolder.
+      It offers functionality to deal with the time stamp of a data packet.
+  */
+  struct DataPacket
+  {
+  public:
+    DataPacket();
+
+    /// Set the time stamp.
+    void setTimeStamp (unsigned long aTimeStamp);
+
+    /// Get the time stamp.
+    unsigned long getTimeStamp() const;
+
+    /// Copy the time stamp from another DataPacket to this one.
+    void copyTimeStamp (const DataPacket& that);
+
+    /** Compare the time stamp of this and that DataPacket.
+        It returns -1, 0, or 1 (for <,==,>).
+    */
+    int compareTimeStamp (const DataPacket& that) const;
+  private:
+    unsigned long itsTimeStamp;
+  };
+
+
+public:
+  /// Construct a DataHolder with a default name.
+  DataHolder (const string& name="aDataHolder",
+	      const string& type="DH");
+
+  virtual ~DataHolder();
+
+  /** The allocate/deallocate methods are used to manage memory for a
+      DataHolder. This memory is used to send from/receive into. To
+      optimize communication the malloc and free routines of the
+      specified transportholder are used.
+      The allocate and deallocate methods are called when a
+      DataHolder is connected to another DataHolder for
+      communication.
+  */
+  void* allocate  (size_t size);
+  void  deallocate(void*& ptr);
+
+  /** The preprocess method is called before process is done, thus
+      before any read or write is done.
+      It can be used to initialize the DataHolder.
+      The default implementation does nothing.
+  */
+  void basePreprocess();
+  virtual void preprocess();
+
+  /** The postprocess method is called after process is done.
+      It can be used to clean up the DataHolder.
+      The default implementation does nothing.
+  */
+  void basePostprocess();
+  virtual void postprocess();
+
+  /** Dump the DataHolder contents to cout.
+      The default implementation does nothing.
+  */
+  virtual void dump() const;
+
+  /// Read the packet data.
+  void read();
+
+  /// Write the packet data.
+  void write();
+
+  /// Fill the packet data with zeroes.
+  virtual void setZeroes();
+
+  /// Fill the packet data with ones.
+  virtual void setOnes();
+
+  /** Does the data has to be handled? 
+      It returns true if the 
+  */
+  bool doHandle() const;
+
+  bool isValid() const;
+
+  void setTimeStamp (unsigned long aTimeStamp);
+  unsigned long getTimeStamp() const;
+  void copyTimeStamp (const DataHolder& that);
+  void copyTimeStamp (const DataHolder* that);
+  /// Functions to deal with handling the time stamp 
+  int compareTimeStamp (const DataHolder& that) const;
+
+  /** 
+      Get Data Packet size (in bytes);
+      See also getCurDataPacketSize() and getMaxDataPacketSize 
+      for operation with variable datapackets
+  */
+  virtual int getDataPacketSize();
+
+  /** 
+      Get the size of the CURRENT data packet (in bytes)
+      For non-flexible datapackets, this is the same as 
+      getDataPacketSize()
+  */
+  virtual int getCurDataPacketSize();
+
+  /** 
+      Get the MAXIMUM data packet size supported(in bytes)
+      For non-flexible datapackets, this is the same as 
+      getDataPacketSize()
+  */
+  virtual int getMaxDataPacketSize();
+
+  /// Get the data packet
+  const DataPacket& getDataPacket() const;
+  void* getDataPtr();
+
+  /// Get the type of the DataHolder.
+  const string& getType() const;
+
+  /// Get the name of the DataHolder.
+  const string& getName() const;
+
+  /// Set the name of the DataHolder.
+  void setName (const string& name);
+
+  /** Set the read delay for the DataHolder.
+      Only after 'delay' times an actual read is done.
+  */
+  void setReadDelay (int delay);
+  void setWriteDelay (int delay);
+
+  /** Force the data holder to read input from the file #inFile#.
+      @exception runtime_error: "File not found"
+  */
+  void setInFile(const string& inFile);
+
+  /** Force the data holder to write output to the file #outFile#.
+      #setOutFile# returns false if the output file could not be created,
+      otherwise it returns true.
+  */
+  bool setOutFile(const string& outFile);
+
+  /// Stop reading input data from file.
+  void unsetInFile();
+
+  /// Stop writing output data to file.
+  void unsetOutFile();
+    
+  /** Get a pointer to the Transport object used to send the data
+      to/from the DataHolder connected to this one.
+  */
+  Transport& getTransport();
+
+protected:
+  /** Set the pointer to the data packet and set the packet's size.
+      This function has to be called by the constructor of derived
+      DataHolder classes.
+  */
+  void setDataPacket (DataPacket* ptr, int size);
+
+  /// Set the data packet to the default data packet..
+  void setDefaultDataPacket();
+
+private:
+  DataPacket  itsDefaultPacket;
+  DataPacket* itsDataPacketPtr;
+  int         itsDataPacketSize; // (Max) size in bytes
+  Transport*  itsTransportPtr;
+  string      itsName;
+  string      itsType;
+
+  /// The read delay for a DataHolder.
+  int         itsReadDelay;
+  int         itsWriteDelay;
+  int         itsReadDelayCount;
+  int         itsWriteDelayCount;
+
+  /// Pointer to input file stream object. Used when reading input from file.
+  ifstream*    itsIfsPtr;
+
+  /// Pointer to output file stream object. Used when writing to output file.
+  ofstream*    itsOfsPtr;
+
+  /** Read from the input file stream. 
+      Return true if the read operation was successful.
+      #doFsRead()# should be implemented in the derived data holder classes. 
+  */
+  virtual bool doFsRead (ifstream&);
+
+  /** Write to the output file stream.
+      Return true if the write operation was successful.
+      #doFsWrite()# should be implemented in the derived data holder classes.
+  */
+  virtual bool doFsWrite (ofstream&) const;
+   
+};
+
+
+inline int DataHolder::getDataPacketSize()
+  { return itsDataPacketSize; }
+
+inline int DataHolder::getCurDataPacketSize(){
+  // overload in flexible datapackets
+  return getDataPacketSize(); 
+}
+
+inline int DataHolder::getMaxDataPacketSize(){
+  // overload in flexible datapackets
+  return getDataPacketSize(); 
+}
+
+inline Transport& DataHolder::getTransport()
+  { return *itsTransportPtr; }
+
+inline const DataHolder::DataPacket& DataHolder::getDataPacket() const
+  { return *itsDataPacketPtr; }
+
+inline void* DataHolder::getDataPtr()
+  { return itsDataPacketPtr; }
+
+inline void DataHolder::setTimeStamp (unsigned long aTimeStamp)
+  { itsDataPacketPtr->setTimeStamp (aTimeStamp); }
+
+inline unsigned long DataHolder::getTimeStamp() const
+  { return itsDataPacketPtr->getTimeStamp(); }
+
+inline void DataHolder::copyTimeStamp (const DataHolder& that)
+  { itsDataPacketPtr->copyTimeStamp (that.getDataPacket()); }
+
+inline void DataHolder::copyTimeStamp (const DataHolder* that)
+  { itsDataPacketPtr->copyTimeStamp (that->getDataPacket()); }
+
+inline int DataHolder::compareTimeStamp (const DataHolder& that) const
+  { return itsDataPacketPtr->compareTimeStamp (that.getDataPacket()); }
+
+
+inline DataHolder::DataPacket::DataPacket()
+: itsTimeStamp (0)
+{}
+
+inline void DataHolder::DataPacket::setTimeStamp (unsigned long aTimeStamp)
+  { itsTimeStamp = aTimeStamp; }
+
+inline unsigned long DataHolder::DataPacket::getTimeStamp() const
+  { return itsTimeStamp; }
+
+inline void DataHolder::DataPacket::copyTimeStamp (const DataPacket& that)
+  { itsTimeStamp = that.itsTimeStamp; }
+
+inline void DataHolder::setDefaultDataPacket()
+{
+  setDataPacket (&itsDefaultPacket, sizeof(DataPacket));
+}
+
+inline void DataHolder::setDataPacket (DataPacket* ptr, int size)
+{
+  itsDataPacketPtr = ptr;
+  itsDataPacketSize = size;
+}
+
+inline const string& DataHolder::getName() const
+  { return itsName; }
+
+inline void DataHolder::setName (const string& name)
+  { itsName = name; }
+
+inline const string& DataHolder::getType () const
+  { return itsType; }
+
+
+#endif

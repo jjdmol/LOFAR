@@ -1,0 +1,12 @@
+#!/bin/sh
+
+#
+# Check to see if there are no IPC resource left allocated
+#
+declare -i nlines
+nlines=`ipcs -m | fgrep "  0  " | wc -l`
+if [ $nlines -eq 0 ]; then
+    exit 0;
+else
+    exit 1;
+fi
