@@ -6,12 +6,13 @@
        //#define DEBUG(x) if(debug_flag_on) std::cout << x << std::endl;
 #define DEBUG(x) if(debug_flag_on) fprintf(stdout,"%s\n",x);
        //bool debug_flag_on(true);
-   int debug_flag_on = 1;
+       //static int debug_flag_on = 1;
 
 #include "parser/selfparse.h"
 
-
 unsigned long long int line_no = 0;
+
+#define YY_INPUT(buf,result,max_size) result = selfparseGetChars(buf,max_size);
 
 %}
 /*
@@ -21,11 +22,13 @@ unsigned long long int line_no = 0;
 %option yylineno
 %option noyywrap
 
-digit    [0-9]
-number   [0-9]+
-real     [0-9]+\.[0-9]+
-id       [a-z][a-z0-9]*
-branch   start(\.[0-9]+)+
+digit     [0-9]
+number    [0-9]+
+real      [0-9]+\.[0-9]+
+id        [a-z][a-z0-9]*
+branch    start(\.[0-9]+)+
+ref       script(\.[A-Za-z][0-9A-Za-z_]*)+
+refbranch script(\.[A-Za-z][0-9A-Za-z_]*)+(\.[0-9]+)+
 
 ws       [ \t]+
 nl       \n
@@ -101,6 +104,18 @@ dimension "frequency"|"time"|"baseline"|"source"|"field"
    return BRANCH;
 }
 
+{ref}                   {
+   ECHO;
+   selfparselvalp->branchId = strdup(yytext);
+   return REF;
+}
+
+{refbranch}                   {
+   ECHO;
+   selfparselvalp->branchId = strdup(yytext);
+   return REF;
+}
+
 {comma}                    { return COMMA; }
 
 {lbracket}                 { return LBRACKET; }
@@ -129,38 +144,3 @@ dimension "frequency"|"time"|"baseline"|"source"|"field"
 .                          ECHO;
 
 %%
-
-char * filename ="stdin";
-int main(int ac, char ** av )
-{
-   ++av, --ac;  // skip over program name
-   if ( ac > 0 )
-      do
-      {
-         filename = av[0];
-         yyin = fopen( filename, "r" );
-         selfparseparse();
-         fclose(yyin);
-         ++av;
-      }while(--ac > 0);
-   else
-   {
-      selfparseparse();
-   }
-   return 0;
-}
-
-char *  progname = "selfcalparse";
-#ifdef __cplusplus
-extern "C"
-{
-#endif
-   int selfparseerror(char * s)
-   {
-      fprintf(stderr,"%s:%s:%u:%s\n",progname,filename,yylineno,s);
-      return 0;
-   }
-
-#ifdef __cplusplus
-}
-#endif

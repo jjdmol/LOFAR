@@ -1,6 +1,6 @@
 calibrate_observation {
   collaboration {
-    part {}
+    part devide {}
     part start.1
   }
 }

@@ -1,28 +1,8 @@
 calibrate_observation {
   competition {
-    part start.0
-    part peeling [ source 2 + /* syntax error '+' instead of '-' */ 5 , 6 , 1 ] {
+    part peeling [ source 1, 2 , 3:6 ] {
       collaboration {
-        part start.1.0  // some controversial comment
-/*
- some traditional comment
-*/
         part devide [ time  0 , 2385789023 , 127638076 ] {
-// this should become part start.1.1
-        }
-      }
-    }
-    part brute_force {
-      collaboration {
-        part devide [ frequency 21.3 , 22 , 40-42 ] {
-            /*
-               A division in a collaboration having responcibility
-               over three frequency ranges
-            */
-        }
-        part devide [ frequency 30-39.9 , 50-80 ] {
-            // another division
-
         }
       }
     }

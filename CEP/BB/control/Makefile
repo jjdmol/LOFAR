@@ -1,3 +1,25 @@
+#//  Makefile: is to be Makefile.am
+#//
+#//  Copyright (C) 2002
+#//  ASTRON (Netherlands Foundation for Research in Astronomy)
+#//  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+#//
+#//  This program is free software; you can redistribute it and/or modify
+#//  it under the terms of the GNU General Public License as published by
+#//  the Free Software Foundation; either version 2 of the License, or
+#//  (at your option) any later version.
+#//
+#//  This program is distributed in the hope that it will be useful,
+#//  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#//  GNU General Public License for more details.
+#//
+#//  You should have received a copy of the GNU General Public License
+#//  along with this program; if not, write to the Free Software
+#//  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#//
+#//  $Id$
+
 TARGET     = bb
 
 MPI_HOME   = /opt/scali
@@ -34,6 +56,7 @@ CC      = gcc
 COPT     = -pg -g
 
 BISONFLAGS = --defines --debug --locations --graph --token-table --report=all
+#BISONFLAGS = --defines --debug --locations --graph --token-table --report=all
 FLEXFLAGS  = # --bison-bridge --bison-locations --trace --yylineno --nodefault #--debug --verbose
 CFLAGS     = -Wall -D_REENTRANT -I./ -I$(DTLINCLUDE) $(MPI_INCLUDES) $(MPI_CXX_INCLUDES) $(COPT) $(CC_MACH_FLAGS) 
 
@@ -80,10 +103,12 @@ lex.%.cc:	%.l Makefile
 %.tab.c:	parser/%.y Makefile
 	$(BISON) -p$* $(BISONFLAGS) parser/$*.y
 
-read_script:	selfparse.tab.o lex.selfparse.o
+read_script:	parser/parse_util.o parser/main.o selfparse.tab.o lex.selfparse.o
 	$(CXX) $+ -o $@ -lfl -ly
 
 lex.selfparse.o:	lex.selfparse.c
+
+.PRECIOUS:	selfparse.tab.c
 
 %.d:	confdata/%.selfcal read_script
 	./read_script $<
