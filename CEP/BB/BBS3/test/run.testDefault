@@ -29,4 +29,4 @@ applyfile
 echo "  Preparing BlackBoard ..."
 time ./clearBB -user $usernm
 echo "  Starting solve ..."
-time ./tBBS2 tBBS2.testDefault $niter $usernm >& testDefault.out
+time ./tBBS3 tBBS3.testDefault $niter $usernm >& testDefault.out
