@@ -104,7 +104,7 @@ inline DH_CorrCube::BufferType* DH_CorrCube::getBufferElement(int station,
 							      int time, 
 							      int freq)
 { 
-  return itsBuffer+station*TSIZE*FSIZE+time*BFBW*NSTATIONS+freq;
+  return itsBuffer+station*TSIZE*FSIZE+time*FSIZE+freq;
 }
    
 inline void DH_CorrCube::setBufferElement(int station, 
@@ -112,7 +112,7 @@ inline void DH_CorrCube::setBufferElement(int station,
 			     int freq, 
   			     DH_CorrCube::BufferType* valueptr) 
 {
-   DH_CorrCube::BufferType* ptr= itsBuffer+station*TSIZE*FSIZE+time*BFBW*NSTATIONS+freq;
+   DH_CorrCube::BufferType* ptr= itsBuffer+station*TSIZE*FSIZE+time*FSIZE+freq;
    *ptr = *valueptr;
 }
    
