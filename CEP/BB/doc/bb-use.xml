@@ -1,0 +1,62 @@
+<?xml version="1.0"?>
+<!DOCTYPE article PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
+ "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd" 
+ >
+
+<!-- $Id$ -->
+<!-- look at bottom for revision Log. -->
+<article lang="nl">
+ <artheader>
+  <title></title>
+  <author>
+   <firstname>Daan</firstname>
+   <surname>Hoogland</surname>
+  </author>
+  <releaseinfo>
+   <para>
+    $Id$
+   </para>
+  </releaseinfo>
+
+  <!-- makes a summary from the content -->
+  <abstract>
+   <para>
+
+    For the LOFAR project a self-calibration program shall be written
+    <xref linkend="LOFAR-ASTRON-ADD-006"/>. The idea is that this
+    program will have the architectural structure of a
+    "BlackBoard". The applicability of this design pattern will be
+    investigated and a rapport hereof will be included in this
+    document.
+
+   </para>
+  </abstract>
+ </artheader>
+
+ <appendix>
+
+  <title>revision log</title>
+
+  <para>
+
+   Hand copy log entries from the cvs log, or make up your own.
+
+  </para>
+
+  <para>
+
+   <itemizedlist>
+
+    <listitem></listitem>
+
+   </itemizedlist>
+
+  </para>
+
+ </appendix>
+
+</article>
+<!--
+$Log$
+ -->
+<!-- eof $Id$ -->
