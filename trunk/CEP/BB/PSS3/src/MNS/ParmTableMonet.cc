@@ -1,4 +1,4 @@
-//# ParmTableMySQL.cc: Object to hold parameters in a mysql database table.
+//# ParmTableMonet.cc: Object to hold parameters in a mysql database table.
 //#
 //# Copyright (C) 2002
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,7 +20,7 @@
 //#
 //# $Id$
 
-#include <MNS/ParmTableMySQL.h>
+#include <MNS/ParmTableMonet.h>
 #include <MNS/ParmTableSQLHelper.h>
 #include <MNS/MeqDomain.h>
 #include <Common/LofarLogger.h>
@@ -30,52 +30,63 @@
 
 using namespace LOFAR;
 
-
-ParmTableMySQL::ParmTableMySQL (const string& hostName, const string& userName, const string& tableName) : itsTableName (tableName)
+ParmTableMonet::ParmTableMonet (const string& hostName, const string& userName, const string& tableName, bool autocommit) : itsTableName (tableName)
 {
-  mysql_init(&itsDB);
-  //MYSQL *mysql_real_connect(MYSQL *mysql, const char *host, const char *user, const char *passwd, const char *db, unsigned int port, const char *unix_socket, unsigned long client_flag) 
-  if (mysql_real_connect(           &itsDB, "lofar6",          "mysql",               NULL, userName.c_str(),               0,                    NULL,                         0)==NULL)
+  //                     host    , port , user, pass?,  query language
+  itsDB = mapi_connect(hostName.c_str(), 45123, userName.c_str(), "monetdb", "sql");
+  if (mapi_error(itsDB))
   {
-    ASSERTSTR(false, "no connection to database");
+    LOG_FATAL_STR("no connection to database"<<"error: "<<mapi_error_str(itsDB));
+    exit(1);
   }
-  LOG_TRACE_STAT("connected to database");
+  // set autocommit off (0)
+  if (autocommit) {
+    if (mapi_setAutocommit(itsDB, 1) == MERROR)
+      LOG_WARN("error setting autocommit"); 
+  } else {
+    if (mapi_setAutocommit(itsDB, 0) == MERROR)
+      LOG_WARN("error unsetting autocommit"); 
+  };
+  LOG_TRACE_STAT_STR("connected to monet database on "<<hostName<<" with user "<<userName);
 }
 
-ParmTableMySQL::~ParmTableMySQL()
+ParmTableMonet::~ParmTableMonet()
 {
-  mysql_close(&itsDB);
+  MapiHdl hdl = mapi_query(itsDB, "commit;");
+  mapi_close_handle(hdl);
+  mapi_destroy(itsDB);
 }
 
-vector<MeqPolc> ParmTableMySQL::getPolcs (const string& parmName,
+vector<MeqPolc> ParmTableMonet::getPolcs (const string& parmName,
 				       int, int,
 				       const MeqDomain& domain)
 {
-  LOG_TRACE_STAT("retreiving polynomial coefficients");
+  LOG_TRACE_STAT_STR("retreiving polynomial coefficients "<<parmName<<" from "<<itsTableName);
   string query = ParmTableSQLHelper::getGetPolcsQuery(parmName, domain, itsTableName);
   LOG_TRACE_VAR_STR("query: "<<query);
   vector<MeqPolc> result;
 
-  if (mysql_query(&itsDB, query.c_str()))
+  MapiHdl hdl;
+  if ((hdl = mapi_query(itsDB, query.c_str()))==NULL)
   {
     ASSERTSTR(false, "Couldn't find polynomial coefficients");
   } else
   {
-    MYSQL_RES* queryResult = mysql_store_result (&itsDB);
+    mapi_fetch_all_rows(hdl);
 
-    for (unsigned int row=0; row<mysql_num_rows(queryResult); row++)
+    while (mapi_fetch_row(hdl))
     {
-      MYSQL_ROW resRow = mysql_fetch_row(queryResult);
+      char** resRow = mapi_fetch_field_array(hdl);
       result.push_back ( ParmTableSQLHelper::readMeqPolc(resRow));
     }
-    mysql_free_result(queryResult);
+    mapi_close_handle(hdl);
   }
 
   LOG_TRACE_STAT_STR("finished retreiving polc: "<<result.size()<<" polcs found.");
   return result;
 }
 
-MeqPolc ParmTableMySQL::getInitCoeff (const string& parmName,
+MeqPolc ParmTableMonet::getInitCoeff (const string& parmName,
 				   int srcnr, int statnr)
 {
   // Try to find the default initial values in the InitialValues subtable.
@@ -84,29 +95,29 @@ MeqPolc ParmTableMySQL::getInitCoeff (const string& parmName,
   // An initial value can be defined for the full name or for a higher
   // category.
   // So look up until found or until no more parts are left.
-  LOG_TRACE_STAT_STR("retreiving intital coefficients for "<<parmName);
+  LOG_TRACE_STAT_STR("retreiving intital coefficients for "<<parmName<<" from "<<itsTableName);
   MeqPolc result;
+  MapiHdl hdl;
 
   string name = parmName;
   while (true) {
     string query = ParmTableSQLHelper::getGetInitCoeffQuery(name, itsTableName);
     LOG_TRACE_VAR_STR("query: "<<query);
-    if (! mysql_query(&itsDB, query.c_str()))
-    {
-      LOG_TRACE_VAR("query succeeded");
-      MYSQL_RES* queryResult;
-      queryResult = mysql_store_result (&itsDB);
-      ASSERTSTR(queryResult != NULL, "Initial coeff could not be retreived from the database")
-      LOG_TRACE_VAR("results stored");
 
-      if (mysql_num_rows(queryResult)>0)
+    if ((hdl =  mapi_query(itsDB, query.c_str())) != NULL)
+    {
+      LOG_TRACE_VAR_STR("query succeeded");
+      int num_rows = mapi_fetch_all_rows(hdl);
+
+      if (num_rows>0)
       {
-	ASSERTSTR (mysql_num_rows(queryResult)== 1,"too many matches for default value");
-	MYSQL_ROW resRow = mysql_fetch_row(queryResult);
-	LOG_TRACE_VAR("reading columns");
+	mapi_fetch_row(hdl);
+	ASSERTSTR (num_rows== 1,"too many matches for default value");
+	char** resRow = mapi_fetch_field_array(hdl);
+	LOG_TRACE_VAR_STR("reading columns");
 	result = ParmTableSQLHelper::readDefMeqPolc(resRow);
-	LOG_TRACE_VAR("columns read");
-	mysql_free_result (queryResult); // clear query before break;
+	LOG_TRACE_VAR_STR("columns read");
+	mapi_close_handle (hdl); // clear query before break;
 	break;
       } else 
       {
@@ -114,30 +125,30 @@ MeqPolc ParmTableMySQL::getInitCoeff (const string& parmName,
 	// Exit loop if no more name parts.
 	if (idx == string::npos) 
 	{
-	  LOG_TRACE_VAR("no match for default value");
-	  mysql_free_result (queryResult); // clear query before break;
+	  LOG_TRACE_VAR_STR("no match for default value");
+	  mapi_close_handle (hdl); // clear query before break;
 	  break;
 	}
 	// Remove last part and try again.
 	name = name.substr (0, idx);
       }
-      mysql_free_result (queryResult); // clear query before next query
+      mapi_close_handle (hdl); // clear query before next query
     } else {
       ASSERTSTR(false, "Couldn't execute query for initial coefficients");
       break;
     }
   }
 
-  LOG_TRACE_STAT("finished retreiving intital coefficients");
+  LOG_TRACE_STAT_STR("finished retreiving intital coefficients");
   return result;
 }
 				    
-void ParmTableMySQL::putCoeff (const string& parmName,
+void ParmTableMonet::putCoeff (const string& parmName,
 			    int srcnr, int statnr,
 			    const MeqPolc& polc)
 {
   const MeqDomain& domain = polc.domain();
-  VMParm set = find (parmName, domain);
+  vector<MeqParmHolder> set = find (parmName, domain);
   if (! set.empty()) {
     ASSERTSTR (set.size()==1, "Parameter " << parmName <<
 		 " has multiple entries for time "
@@ -158,83 +169,94 @@ void ParmTableMySQL::putCoeff (const string& parmName,
     newPolc.setCoeff (polc.getCoeff());
     parm.setPolc (newPolc);
     string query = ParmTableSQLHelper::getUpdateQuery(parm, itsTableName);
-    mysql_query(&itsDB, query.c_str());
+    MapiHdl hdl = mapi_query(itsDB, query.c_str());
+    mapi_close_handle (hdl);
   } else {
     putNewCoeff (parmName, srcnr, statnr, polc);
   }
 }
 
-void ParmTableMySQL::putNewCoeff (const string& parmName,
+void ParmTableMonet::putNewCoeff (const string& parmName,
 			    int srcnr, int statnr,
 			    const MeqPolc& polc)
 {
   MeqParmHolder parm(parmName, srcnr, statnr, polc);
   string query = ParmTableSQLHelper::getInsertQuery(parm, itsTableName);
-  mysql_query(&itsDB, query.c_str());
+  MapiHdl hdl = mapi_query(itsDB, query.c_str());
+  mapi_close_handle (hdl);
 }
 
-void ParmTableMySQL::putNewDefCoeff (const string& parmName,
+void ParmTableMonet::putNewDefCoeff (const string& parmName,
 			    int srcnr, int statnr,
 			    const MeqPolc& polc)
 {
+  LOG_TRACE_STAT_STR("putnewdefcoeff called for parm: "<<parmName<<flush);
+
   MeqParmHolder parm(parmName, srcnr, statnr, polc);
   string query = ParmTableSQLHelper::getDefInsertQuery(parm, itsTableName);
-  mysql_query(&itsDB, query.c_str());
+  MapiHdl hdl = mapi_query(itsDB, query.c_str());
+  if (hdl == NULL){
+    LOG_WARN_STR("db error: "<<mapi_error_str(itsDB));
+  }
+  LOG_TRACE_VAR_STR("result error: "<<mapi_result_error(hdl));
+  mapi_close_handle (hdl);
 }
 
-VMParm ParmTableMySQL::find (const string& parmName,
+vector<MeqParmHolder> ParmTableMonet::find (const string& parmName,
 			    const MeqDomain& domain)
 {
-  LOG_TRACE_STAT("searching for MParms");
-  VMParm set;
+  LOG_TRACE_STAT_STR("find "<<parmName<<" in "<<itsTableName);
+  vector<MeqParmHolder> set;
 
   string query;
   query = ParmTableSQLHelper::getFindQuery(parmName, domain, itsTableName);
   LOG_TRACE_VAR_STR("query: "<<query);
 
-  if (! mysql_query ( &itsDB, query.c_str()))
+  MapiHdl hdl = mapi_query(itsDB, query.c_str());
+  if (hdl != NULL)
   {
-    MYSQL_RES* queryResult = mysql_store_result(&itsDB);
-  
-    for (unsigned int row=0; row<mysql_num_rows(queryResult); row++)
+    mapi_fetch_all_rows(hdl);
+
+    while (mapi_fetch_row(hdl))
     {
-      MYSQL_ROW resRow = mysql_fetch_row(queryResult);
+      char** resRow = mapi_fetch_field_array(hdl);
       set.push_back( ParmTableSQLHelper::readMeqParmHolder(resRow) );
     }
-    mysql_free_result (queryResult);
+    mapi_close_handle (hdl);
   };
 
   return set;
 }
 
-vector<string> ParmTableMySQL::getSources()
+vector<string> ParmTableMonet::getSources()
 {
-  LOG_TRACE_STAT("retreiving sources");
+  LOG_TRACE_STAT_STR("retreiving sources from "<<itsTableName);
   vector<string> nams;
   string query = ParmTableSQLHelper::getSourcesQuery(itsTableName);
-  LOG_TRACE_VAR_STR("Query: "<<query.c_str());
-  if (mysql_query ( &itsDB, query.c_str()))
+  MapiHdl hdl = mapi_query(itsDB, query.c_str());
+  if (hdl == NULL)
   {
-    LOG_TRACE_VAR_STR("Could not retreive sources from database: "<<mysql_error(&itsDB));
-    LOG_TRACE_VAR_STR("MySQL status: "<<mysql_stat(&itsDB));
     ASSERTSTR(false, "database error, quitting");
   } else
   {
-    MYSQL_RES* queryResult = mysql_store_result(&itsDB);  
-    ASSERTSTR(queryResult != NULL, "names of sources could not be retreived from the database");
-    ASSERTSTR(mysql_num_rows(queryResult)>0,"no sources found in database");
-    for (unsigned int row=0; row<mysql_num_rows(queryResult); row++)
+    int num_rows = mapi_fetch_all_rows(hdl);
+    ASSERTSTR(num_rows>0,"no sources found in database");
+    char * ers = mapi_error_str(itsDB);
+    if (ers != NULL) LOG_WARN_STR("database error: "<<ers);
+    ers = mapi_result_error(hdl);
+    if (ers != NULL) LOG_WARN_STR("database error: "<<ers);
+
+    while (mapi_fetch_row(hdl))
     {
-      MYSQL_ROW resRow = mysql_fetch_row(queryResult);
+      char** resRow = mapi_fetch_field_array(hdl);
       string s(resRow[0]);
       nams.push_back (s);
     }
-    mysql_free_result (queryResult);
-  };
+    mapi_close_handle (hdl);
+  }
   LOG_TRACE_STAT_STR("finished retreiving "<<nams.size()<<" sources from "<<itsTableName);
   return nams;
 }
 
-void ParmTableMySQL::unlock()
+void ParmTableMonet::unlock()
   {};
-

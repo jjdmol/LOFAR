@@ -1,4 +1,4 @@
-//# ParmTableMySQL.h: Object to hold parameters in a database table.
+//# ParmTableMonet.h: Object to hold parameters in a database table.
 //#
 //# Copyright (C) 2002
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,8 +20,8 @@
 //#
 //# $Id$
 
-#if !defined(MNS_PARMTABLEMYSQL_H)
-#define MNS_PARMTABLEMYSQL_H
+#if !defined(MNS_PARMTABLEMONET_H)
+#define MNS_PARMTABLEMONET_H
 
 //# Includes
 #include <MNS/ParmTable.h>
@@ -32,9 +32,7 @@
 
 #include <lofar_config.h>
 
-#include <mysql/mysql.h>
-
-typedef vector<MeqParmHolder> VMParm;
+#include <MonetDB/C/Mapi.h>
 
 //# Forward Declarations
 class MeqDomain;
@@ -42,15 +40,15 @@ template<class T> class Vector;
 
 using namespace std;
 
-class ParmTableMySQL : public ParmTableRep, public ParmTableFiller
+class ParmTableMonet : public ParmTableRep, public ParmTableFiller
 {
 public:
   // Create the ParmTable object.
   // The dbType argument gives the database type.
   // It can be postgres.
-  ParmTableMySQL (const string& hostName, const string& userName, const string& tableName);
+  ParmTableMonet (const string& hostName, const string& userName, const string& tableName, bool autocommit=false);
 
-  virtual ~ParmTableMySQL();
+  virtual ~ParmTableMonet();
 
   // Get the parameter values for the given parameter and domain.
   // The matchDomain argument is set telling if the found parameter
@@ -84,12 +82,13 @@ public:
 
 private:
 
-  MYSQL itsDB;
+  Mapi itsDB;
 
-  VMParm find (const string& parmName, 
+  vector<MeqParmHolder> find (const string& parmName, 
 		 const MeqDomain& domain);
 
   string itsTableName;
+
 };
 
 #endif

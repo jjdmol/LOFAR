@@ -25,6 +25,7 @@
 
 //# Includes
 #include <MNS/ParmTable.h>
+#include <MNS/ParmTableFiller.h>
 #include <MNS/MeqParmHolder.h>
 #include <MNS/MeqPolc.h>
 #include <Common/lofar_vector.h>
@@ -41,7 +42,7 @@ template<class T> class Vector;
 
 using namespace std;
 
-class ParmTablePGSQL : public ParmTableRep
+class ParmTablePGSQL : public ParmTableRep, public ParmTableFiller
 {
 public:
   // Create the ParmTable object.
