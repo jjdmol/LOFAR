@@ -80,6 +80,11 @@ CacheBuffer::CacheBuffer()
   m_rcusettings().resize(GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL);
   m_rcusettings() = RCUSettings::RCURegisterType();
 
+  for (int i = 0; i < GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL; i++)
+  {
+    m_rcusettings()(i).value = 82;
+  }
+  
   m_wgsettings().resize(GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL);
   
   WGSettings::WGRegisterType init;

@@ -50,6 +50,8 @@ using namespace blitz;
 using namespace EPA_Protocol;
 using namespace RSP_Protocol;
 
+#define SYSTEM_CLOCK 120.0e6
+
 #define START_TEST(_test_, _descr_) \
   setCurSubTest(#_test_, _descr_)
 
@@ -166,11 +168,11 @@ GCFEvent::TResult SetWG::enabled(GCFEvent& e, GCFPortInterface& port)
 
       if (m_freq > 10e-6)
       {
-	wg.settings()(0).freq = (uint16)(((m_freq * (1 << 16)) / 80.0e6) + 0.5);
+	wg.settings()(0).freq = (uint16)(((m_freq * (1 << 16)) / SYSTEM_CLOCK) + 0.5);
 	wg.settings()(0).phase = m_phase;
 	wg.settings()(0).ampl = m_ampl;
 	wg.settings()(0).nof_samples = 512;
-	wg.settings()(0).mode = WGSettings::MODE_REPEAT;
+	wg.settings()(0).mode = WGSettings::MODE_CALC;
 	wg.settings()(0)._pad = 0; // keep valgrind happy
       }
       else
@@ -291,11 +293,11 @@ int main(int argc, char** argv)
   //
   // Read amplitude
   //
-  cout << "Amplitude (1e4 == 0dB):";
+  cout << "Amplitude % (0-100):";
   double ampl = atof(fgets(buf, 32, stdin));
-  if (ampl < 0 || ampl > 1.0*(1<<16))
+  if (ampl < 0 || ampl > 100.0)
   {
-    LOG_FATAL(formatString("Invalid amplitude specification should be between 0 and %d", (1<<16)));
+    LOG_FATAL(formatString("Invalid amplitude specification should be between 0 and 100"));
     exit(EXIT_FAILURE);
   }
 
@@ -322,7 +324,7 @@ int main(int argc, char** argv)
   }
   
   Suite s("SetWG", &cerr);
-  s.addTest(new SetWG("SetWG", blp, (uint8)0, (uint8)ampl, freq)); // set phase to 0 for now
+  s.addTest(new SetWG("SetWG", blp, (uint8)0, (uint8)(ampl*(double)(1<<7)/100.0), freq)); // set phase to 0 for now
   s.run();
   long nFail = s.report();
   s.free();
