@@ -25,7 +25,7 @@
 #include <stdio.h>
 #include <PA_Protocol.ph>
 
-#define CHECK_REQUEST(p, e)  \
+#define QUEUE_REQUEST(p, e)  \
   if (!mayContinue(e, p)) break;
 
 static string sPATaskName("PA");
@@ -34,13 +34,21 @@ GPAController::GPAController() :
   GCFTask((State)&GPAController::initial, sPATaskName),
   _isBusy(false),
   _isRegistered(false),
-  _counter(0)
+  _counter(0),
+  _pCurPropSet(0)
 {
   // register the protocol for debugging purposes
   registerProtocol(PA_PROTOCOL, PA_PROTOCOL_signalnames);
 
   // initialize the port
   _pmlPortProvider.init(*this, "server", GCFPortInterface::MSPP, PA_PROTOCOL);
+
+  // To force a connection with the PVSS system at start-up of the PA 
+  // a dummy property set will be created temporary. 
+  // The GPAPropertySet class inherits from the GSAService class which initiates
+  // the connection with the PVSS system on construction. Because it will managed
+  // by a singleton the property set only needs to be temporary.
+  GPAPropertySet dummy(*this, _pmlPortProvider);  
 }
 
 GPAController::~GPAController()
@@ -62,7 +70,7 @@ GCFEvent::TResult GPAController::initial(GCFEvent& e, GCFPortInterface& p)
       break;
 
     case F_CONNECTED:
-      TRAN(GPAController::connected);
+      TRAN(GPAController::operational);
       break;
 
     case F_DISCONNECTED:
@@ -78,51 +86,35 @@ GCFEvent::TResult GPAController::initial(GCFEvent& e, GCFPortInterface& p)
   return status;
 }
 
-GCFEvent::TResult GPAController::connected(GCFEvent& e, GCFPortInterface& p)
+GCFEvent::TResult GPAController::operational(GCFEvent& e, GCFPortInterface& p)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (e.signal)
   {
-    case F_DISCONNECTED:      
-      if (&p == &_pmlPortProvider)
-      {
-        //TODO: find out this can realy happend
-      }
-      else
-      {
-        p.close();
-      }
-      break;
-    
-    case F_CLOSED:
-    {
-      CHECK_REQUEST(p, e)
-      GPAPropertySet* pPropSet(0);
-      _counter = 0;
-      for (TPropertySets::iterator iter = _propertySets.begin();
-           iter != _propertySets.end(); ++iter)
-      {
-        pPropSet = iter->second;
-        assert(pPropSet);
-        if (pPropSet->isOwner(p) || pPropSet->knowsClient(p))
-        {
-          // these property sets will be deleted after they will be unregistered
-          // correctly
-          _counter++;
-        }
-        pPropSet->deleteClient(p);        
-      }
-      _pmlPortProvider.setTimer(0, 0, 0, 0, (void*) &p);
-      break;
-    }
     case F_CONNECTED:   
       _pmlPorts.push_back(&p);
       break;
 
+    case F_ACCEPT_REQ:
+      acceptConnectRequest();
+      break;
+
+    case F_DISCONNECTED:      
+      if (&p != &_pmlPortProvider) p.close();
+      // else //TODO: find out this can realy happend
+      break;
+
+    case F_CLOSED:
+    {
+      QUEUE_REQUEST(p, e);
+      closeConnection(p);
+      break;
+    }
+
     case PA_LOAD_PROP_SET:
     {
-      CHECK_REQUEST(p, e)
+      QUEUE_REQUEST(p, e);
       PALoadPropSetEvent request(e);
       GPAPropertySet* pPropSet = findPropSet(request.scope);
       if (pPropSet)
@@ -140,7 +132,7 @@ GCFEvent::TResult GPAController::connected(GCFEvent& e, GCFPortInterface& p)
     }
     case PA_UNLOAD_PROP_SET:
     {
-      CHECK_REQUEST(p, e)
+      QUEUE_REQUEST(p, e);
       PAUnloadPropSetEvent request(e);
       GPAPropertySet* pPropSet = findPropSet(request.scope);
       if (pPropSet)
@@ -158,7 +150,7 @@ GCFEvent::TResult GPAController::connected(GCFEvent& e, GCFPortInterface& p)
     }
     case PA_CONF_PROP_SET:
     {
-      CHECK_REQUEST(p, e)
+      QUEUE_REQUEST(p, e)
       PAConfPropSetEvent request(e);
       GPAPropertySet* pPropSet = findPropSet(request.scope);
       if (pPropSet)
@@ -177,7 +169,7 @@ GCFEvent::TResult GPAController::connected(GCFEvent& e, GCFPortInterface& p)
     }
     case PA_REGISTER_SCOPE:
     {
-      CHECK_REQUEST(p, e)
+      QUEUE_REQUEST(p, e)
       PARegisterScopeEvent request(e);
       GPAPropertySet* pPropSet = findPropSet(request.scope);
       if (pPropSet)
@@ -191,13 +183,17 @@ GCFEvent::TResult GPAController::connected(GCFEvent& e, GCFPortInterface& p)
       {
         pPropSet = new GPAPropertySet(*this, p);
         _propertySets[request.scope] = pPropSet;
-        pPropSet->enable(request);
+        if (!pPropSet->enable(request))
+        {
+          delete pPropSet;
+          _propertySets.erase(request.scope);
+        }
       }
       break;
     }
     case PA_UNREGISTER_SCOPE:
     {
-      CHECK_REQUEST(p, e)
+      QUEUE_REQUEST(p, e)
       PAUnregisterScopeEvent request(e);
       GPAPropertySet* pPropSet = findPropSet(request.scope);
       if (pPropSet)
@@ -213,7 +209,7 @@ GCFEvent::TResult GPAController::connected(GCFEvent& e, GCFPortInterface& p)
       }
       break;
     }
-    case PA_PROP_SET_LINKED:
+    /*case PA_PROP_SET_LINKED:
     {
       PAPropSetLinkedEvent response(e);
       GPAPropertySet* pPropSet = findPropSet(response.scope);
@@ -228,19 +224,32 @@ GCFEvent::TResult GPAController::connected(GCFEvent& e, GCFPortInterface& p)
       assert(pPropSet);
       pPropSet->unlinked(response); 
       break;
-    }
-    case F_ACCEPT_REQ:
+    }*/
+    case PA_LINK_PROP_SET:
     {
-      GCFTCPPort* pNewPMLPort = new GCFTCPPort();
-      pNewPMLPort->init(*this, "pa", GCFPortInterface::SPP, PA_PROTOCOL);
-      _pmlPortProvider.accept(*pNewPMLPort);
+      PALinkPropSetEvent* pRequest = (PALinkPropSetEvent*) (&e);
+      _pCurPropSet = findPropSet(pRequest->scope);
+      assert(_pCurPropSet);
+      _pmlPortProvider.setTimer(0, 0, 0, 0, &p); // pass the server port
+      p.send(e);
+      TRAN(GPAController::linking);
       break;
-    }    
+    }
+    case PA_UNLINK_PROP_SET:
+    {
+      PALinkPropSetEvent* pRequest = (PALinkPropSetEvent*) (&e);
+      _pCurPropSet = findPropSet(pRequest->scope);
+      assert(_pCurPropSet);
+      _pmlPortProvider.setTimer(0, 0, 0, 0, &p); // pass the server port
+      p.send(e);
+      TRAN(GPAController::unlinking);
+      break;
+    }
     case F_TIMER:
     {
+      GCFTimerEvent* pTimer = (GCFTimerEvent*)(&e);
       if (&p == &_pmlPortProvider)
       {
-        GCFTimerEvent* pTimer = (GCFTimerEvent*)(&e);
         if (_deletePortTimId == pTimer->id)
         {
           GCFPortInterface* pPort = (GCFPortInterface*)(pTimer->arg);
@@ -272,7 +281,181 @@ GCFEvent::TResult GPAController::connected(GCFEvent& e, GCFPortInterface& p)
           }
           
         }
-      }      
+      }
+      else
+      {
+        GCFEvent* pEvent = _requestManager.getOldestRequest();
+        PAUnregisterScopeEvent request(*pEvent);
+        GPAPropertySet* pPropSet = findPropSet(request.scope);
+        if (pPropSet)
+        { 
+          delete pPropSet;
+        }
+        _propertySets.erase(request.scope);
+        PAScopeUnregisteredEvent response;
+        response.seqnr = request.seqnr;
+        response.result = (TPAResult) (unsigned int) (pTimer->arg);
+        if (p.isConnected())
+        {
+          p.send(response);
+        }
+        doNextRequest();
+      }
+      
+      break;
+    }
+ 
+    default:
+      status = GCFEvent::NOT_HANDLED;
+      break;
+  }
+
+  return status;
+}
+
+GCFEvent::TResult GPAController::linking(GCFEvent& e, GCFPortInterface& p)
+{
+  GCFEvent::TResult status = GCFEvent::HANDLED;
+  static GCFPortInterface* pPort = 0;
+  
+  switch (e.signal)
+  {
+    case F_ENTRY:
+      pPort = 0;
+      break;
+      
+    case F_CONNECTED:   
+      _pmlPorts.push_back(&p);
+      break;
+
+    case F_ACCEPT_REQ:
+      acceptConnectRequest();
+      break;
+
+    case F_DISCONNECTED:      
+      if (&p != &_pmlPortProvider) p.close();
+      // else //TODO: find out this can realy happend
+      break;
+    
+    case F_CLOSED:
+      if (&p == pPort)
+      {
+        // this closed event came from the port wherefrom a link response were expected
+        // the response will not come anymore, so we can continue with an error
+        // it also registers this event for further handling (closeConnection)
+        TRAN(GPAController::operational);
+        PAPropSetLinkedEvent response;
+        response.result = PA_SERVER_GONE;
+        _requestManager.registerRequest(p, e);
+        assert(_pCurPropSet);
+        _pCurPropSet->linked(response);
+        break;
+      }
+      // intentional fall through      
+    case PA_LOAD_PROP_SET:
+    case PA_UNLOAD_PROP_SET:
+    case PA_CONF_PROP_SET:
+    case PA_REGISTER_SCOPE:
+    case PA_UNREGISTER_SCOPE:
+    {
+      QUEUE_REQUEST(p, e);
+      // should not passes the check because in this state it is always busy
+      assert(0); 
+      break;
+    }
+    case PA_PROP_SET_LINKED:
+    {
+      PAPropSetLinkedEvent response(e);
+      _pmlPortProvider.cancelAllTimers();
+      TRAN(GPAController::operational);
+      assert(_pCurPropSet);
+      _pCurPropSet->linked(response); 
+      break;
+    }
+    case F_TIMER:
+    {
+      assert(&p == &_pmlPortProvider);
+
+      GCFTimerEvent* pTimer = (GCFTimerEvent*)(&e);
+      
+      pPort = (GCFPortInterface*)(pTimer->arg);
+      break;
+    }
+ 
+    default:
+      status = GCFEvent::NOT_HANDLED;
+      break;
+  }
+
+  return status;
+}
+
+GCFEvent::TResult GPAController::unlinking(GCFEvent& e, GCFPortInterface& p)
+{
+  GCFEvent::TResult status = GCFEvent::HANDLED;
+  static GCFPortInterface* pPort = 0;
+
+  switch (e.signal)
+  {
+    case F_ENTRY:
+      pPort = 0;
+      break;
+      
+    case F_CONNECTED:   
+      _pmlPorts.push_back(&p);
+      break;
+
+    case F_ACCEPT_REQ:
+      acceptConnectRequest();
+      break;
+
+    case F_DISCONNECTED:      
+      if (&p != &_pmlPortProvider) p.close();
+      // else //TODO: find out this can realy happend
+      break;
+    
+    case F_CLOSED:
+      if (&p == pPort)
+      {
+        // this closed event came from the port wherefrom a link response is expected
+        // the response will not come anymore, so we can continue with an error
+        // it also registers this event for further handling (closeConnection)
+        TRAN(GPAController::operational);
+        PAPropSetUnlinkedEvent response;
+        response.result = PA_SERVER_GONE;
+        _requestManager.registerRequest(p, e);
+        assert(_pCurPropSet);
+        _pCurPropSet->unlinked(response);
+        break;
+      }
+      // intentional fall through      
+    case PA_LOAD_PROP_SET:
+    case PA_UNLOAD_PROP_SET:
+    case PA_CONF_PROP_SET:
+    case PA_REGISTER_SCOPE:
+    case PA_UNREGISTER_SCOPE:
+    {
+      QUEUE_REQUEST(p, e);
+      // should always be queued because in this state PA is always busy
+      assert(0); 
+      break;
+    }
+    case PA_PROP_SET_UNLINKED:
+    {
+      PAPropSetUnlinkedEvent response(e);
+      _pmlPortProvider.cancelAllTimers();
+      TRAN(GPAController::operational);
+      assert(_pCurPropSet);
+      _pCurPropSet->unlinked(response); 
+      break;
+    }
+    case F_TIMER:
+    {
+      assert(&p == &_pmlPortProvider);
+
+      GCFTimerEvent* pTimer = (GCFTimerEvent*)(&e);
+            
+      pPort = (GCFPortInterface*)(pTimer->arg);
       break;
     }
  
@@ -309,7 +492,7 @@ void GPAController::sendAndNext(GCFEvent& e)
   {
     // all responses, which are the result of a closed port will handled here
     assert (e.signal == PA_PROP_SET_UNLOADED || e.signal == PA_SCOPE_UNREGISTERED);
-    _counter--; // counter was set in connected method (signal F_CLOSED)
+    _counter--; // counter was set in operational method (signal F_CLOSED)
     if (_counter == 0)
     {
       // all responses are received now
@@ -329,7 +512,7 @@ void GPAController::sendAndNext(GCFEvent& e)
           _counter++;
           // add the scope of the prop. set to be deleted
           propSetsToDelete.push_back(iter->first); 
-          _pmlPortProvider.setTimer(0, 0, 0, 0, (void*) pPropSet);
+          _pmlPortProvider.setTimer(0, 0, 0, 0, (void*) (unsigned int) pPropSet);
         }
       }
       for (list<string>::iterator iter = propSetsToDelete.begin();
@@ -345,6 +528,14 @@ void GPAController::sendAndNext(GCFEvent& e)
       // reuses the counter for counting started timers
       _counter++;
     }
+  }
+  else if (e.signal == PA_SCOPE_UNREGISTERED)
+  {
+    // prop. set may be deleted now
+    // this is only possible after a context switch
+    // this can be forced by means of the 0 timer
+    PAScopeUnregisteredEvent* pE = (PAScopeUnregisteredEvent*) &e;    
+    pPort->setTimer(0,0,0,0, (void*) pE->result);
   }
   else
   {
@@ -374,4 +565,40 @@ GPAPropertySet* GPAController::findPropSet(const string& scope) const
 {
   TPropertySets::const_iterator iter = _propertySets.find(scope);  
   return (iter != _propertySets.end() ? iter->second : 0);
+}
+
+void GPAController::acceptConnectRequest()
+{
+  GCFTCPPort* pNewPMLPort = new GCFTCPPort();
+  pNewPMLPort->init(*this, "pa", GCFPortInterface::SPP, PA_PROTOCOL);
+  _pmlPortProvider.accept(*pNewPMLPort);
+}
+
+void GPAController::closeConnection(GCFPortInterface& p)
+{
+  GPAPropertySet* pPropSet(0);
+  _counter = 0;
+  for (TPropertySets::iterator iter = _propertySets.begin();
+       iter != _propertySets.end(); ++iter)
+  {
+    pPropSet = iter->second;
+    assert(pPropSet);
+    if (pPropSet->isOwner(p) || pPropSet->knowsClient(p))
+    {
+      // these property sets will be deleted after they will be unregistered
+      // correctly
+      _counter++;
+    }
+    pPropSet->deleteClient(p);        
+  }
+  if (_counter == 0)
+  {
+    // nothing needed to be done for any prop. set 
+    // so the port can be deleted
+    // this is only possible after a context switch
+    // this can be forced by means of the 0 timer
+    _counter = 1;
+    _requestManager.deleteRequestsOfPort(p);
+    _deletePortTimId = _pmlPortProvider.setTimer(0, 0, 0, 0, (void*) &p);
+  }
 }

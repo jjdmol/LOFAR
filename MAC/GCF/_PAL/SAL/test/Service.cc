@@ -1,73 +1,73 @@
 #include "Service.h"
 
-TSAResult Service::createProp(const string& propName, 
-                                 GCFPValue::TMACValueType macType)
+TSAResult Service::dpCreate(const string& propName, 
+                            const string& macType)
 {
-  return GSAService::createProp(propName, macType);
+  return GSAService::dpCreate(propName, macType);
 }
 
-TSAResult Service::deleteProp(const string& propName)
+TSAResult Service::dpDelete(const string& propName)
 {
-  return GSAService::deleteProp(propName);
+  return GSAService::dpDelete(propName);
 }
 
-TSAResult Service::subscribe(const string& propName)
+TSAResult Service::dpeSubscribe(const string& propName)
 {
-  return GSAService::subscribe(propName);
+  return GSAService::dpeSubscribe(propName);
 }
 
-TSAResult Service::unsubscribe(const string& propName)
+TSAResult Service::dpeUnsubscribe(const string& propName)
 {
-  return GSAService::unsubscribe(propName);
+  return GSAService::dpeUnsubscribe(propName);
 }
 
-TSAResult Service::get(const string& propName)
+TSAResult Service::dpeGet(const string& propName)
 {
-  return GSAService::get(propName);
+  return GSAService::dpeGet(propName);
 }
 
-TSAResult Service::set(const string& propName, const GCFPValue& value)
+TSAResult Service::dpeSet(const string& propName, const GCFPValue& value)
 {
-  return GSAService::set(propName, value);
+  return GSAService::dpeSet(propName, value);
 }
 
-bool Service::exists(const string& propName)
+bool Service::dpeExists(const string& propName)
 {
-  return GSAService::exists(propName);
+  return GSAService::dpeExists(propName);
 }
 
     
-void Service::propCreated(const string& propName)
+void Service::dpCreated(const string& propName)
 {
   LOG_DEBUG(LOFAR::formatString (
       "Property '%s' created", propName.c_str()));
 }
 
-void Service::propDeleted(const string& propName)
+void Service::dpDeleted(const string& propName)
 {
   LOG_DEBUG(LOFAR::formatString (
       "Property '%s' deleted", propName.c_str()));
 }
 
-void Service::propSubscribed(const string& propName)
+void Service::dpeSubscribed(const string& propName)
 {
   LOG_DEBUG(LOFAR::formatString (
       "Property '%s' subscribed", propName.c_str()));
 }
 
-void Service::propUnsubscribed(const string& propName)
+void Service::dpeUnsubscribed(const string& propName)
 {
   LOG_DEBUG(LOFAR::formatString (
       "Property '%s' unsubscribed", propName.c_str()));
 }
 
-void Service::propValueGet(const string& propName, const GCFPValue& /*value*/)
+void Service::dpeValueGet(const string& propName, const GCFPValue& /*value*/)
 {
   LOG_DEBUG(LOFAR::formatString (
       "Value of property '%s' get", propName.c_str()));
 }
 
-void Service::propValueChanged(const string& propName, const GCFPValue& /*value*/)
+void Service::dpeValueChanged(const string& propName, const GCFPValue& /*value*/)
 {
   LOG_DEBUG(LOFAR::formatString (
       "Value of property '%s' changed", propName.c_str()));

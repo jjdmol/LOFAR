@@ -22,6 +22,7 @@
 //#  $Id$
 
 // GCF/SAL includes
+#include "GSA_Defines.h"
 #include "GSA_PvssApi.h"
 
 // GCF/TM includes
@@ -65,8 +66,12 @@ void GSAPvssApi::init()
   // This call will succeed or the manager will exit
   connectToEvent();
 
-  // We are now in STATE_RUNNING. This is a good time to connect 
-  // to our Datapoints
+  if (getManagerState() == STATE_RUNNING)
+  {
+    LOG_INFO("Application connected to PVSS system");
+  }
+  
+  // We are now hopefully in STATE_RUNNING. 
 }
 
 void GSAPvssApi::workProc()

@@ -114,7 +114,7 @@ struct GCFTimerEvent : public GCFEvent
   long        sec;
   long        usec;
   unsigned long id;
-  const void* arg;
+  void* arg;
 };
 
 #endif

@@ -25,30 +25,47 @@
 #include <GPM_Controller.h>
 #include <GCF/PAL/GCF_Answer.h>
 #include <GCF/Utils.h>
+#include <GCF/GCF_Defines.h>
 
 GCFMyPropertySet::GCFMyPropertySet(const char* name,
                                    const TPropertySet& typeInfo,                                   
-                                   GCFAnswer* pAnswerObj) : 
+                                   GCFAnswer* pAnswerObj,
+                                   TDefaultUse defaultUse) : 
   GCFPropertySet(name, typeInfo, pAnswerObj),
+  _state(S_DISABLED),
+  _defaultUse(defaultUse),
   _counter(0),
-  _missing(0), 
-  _state(S_DISABLED)
+  _missing(0)
 {
   loadPropSetIntoRam();
 }
 
+GCFMyPropertySet::GCFMyPropertySet(const char* name,
+                                   const TPropertySet& typeInfo,
+                                   TDefaultUse defaultUse) : 
+  GCFPropertySet(name, typeInfo, 0),
+  _state(S_DISABLED),
+  _defaultUse(defaultUse),
+  _counter(0),
+  _missing(0)
+{
+  loadPropSetIntoRam();
+}
 
 GCFMyPropertySet::~GCFMyPropertySet ()
 {
-  GPMController* pController = GPMController::instance();
-  assert(pController);
-  // delete this set from the controller permanent
-  // this means no response will be send to this object
-  // on response of the PA
-  pController->unregisterScope(*this, true); 
+  if (_state != S_DISABLED)
+  {
+    GPMController* pController = GPMController::instance();
+    assert(pController);
+    // delete this set from the controller permanent
+    // this means no response will be send to this object
+    // on response of the PA
+    pController->unregisterScope(*this); 
+  }
 }
 
-GCFProperty* GCFMyPropertySet::createPropObject(TProperty& propInfo)
+GCFProperty* GCFMyPropertySet::createPropObject(const TProperty& propInfo)
 {
   return new GCFMyProperty(propInfo, *this);
 }
@@ -67,15 +84,6 @@ TGCFResult GCFMyPropertySet::enable ()
     LOG_INFO(LOFAR::formatString ( 
         "REQ: Register scope %s",
         getScope().c_str()));
-    const TProperty* pPropertyFields;
-    for (unsigned int i = 0; i < _propSetInfo.nrOfProperties; i++)
-    {
-      pPropertyFields = &_propSetInfo.properties[i];
-      if (pPropertyFields->defaultValue)
-      {
-        setValue(pPropertyFields->propName, pPropertyFields->defaultValue);
-      }
-    }
     GPMController* pController = GPMController::instance();
     assert(pController);
     TPMResult pmResult = pController->registerScope(*this);
@@ -126,23 +134,9 @@ TGCFResult GCFMyPropertySet::disable ()
     TPMResult pmResult = pController->unregisterScope(*this);
     assert(pmResult == PM_NO_ERROR);
 
-    _state = 
+    _state = S_DISABLING;
   }
   return result;
-}
-
-TGCFResult GCFMyPropertySet::setValue (const string propName, 
-                                       const string value)
-{
-  GCFMyProperty* pProperty = (GCFMyProperty*)getProperty(propName);
-  if (pProperty)
-  {
-    return pProperty->setValue(value);    
-  }
-  else 
-  {
-    return GCF_PROP_NOT_IN_SET;
-  }
 }
 
 GCFPValue* GCFMyPropertySet::getValue (const string propName)
@@ -183,10 +177,10 @@ void GCFMyPropertySet::scopeRegistered (TGCFResult result)
   }
   else
   {
-    _state == S_DISABLED;
+    _state = S_DISABLED;
   }
 
-  dispatchAnswer(F_MYPS_ENDABLED, result);
+  dispatchAnswer(F_MYPS_ENABLED, result);
 }
 
 void GCFMyPropertySet::scopeUnregistered (TGCFResult result)
@@ -201,10 +195,11 @@ void GCFMyPropertySet::scopeUnregistered (TGCFResult result)
   dispatchAnswer(F_MYPS_DISABLED, result);
 }
 
-void GCFMyPropertySet::linkProperties()
+bool GCFMyPropertySet::linkProperties()
 {
   GPMController* pController = GPMController::instance();
   assert(pController);
+  bool successful(true);
   switch (_state)
   {
     case S_ENABLING:
@@ -215,75 +210,88 @@ void GCFMyPropertySet::linkProperties()
       break;
     case S_DISABLED:
     case S_DISABLING:
-      pController->propertiesLinked(getScope(), PA_PROP_SET_GONE);
+      pController->propertiesLinked(getScope(), PA_PS_GONE);
       break;
     case S_ENABLED:
       assert(_counter == 0);
       _missing = 0;
       _state = S_LINKING;
-      retryLinking();
+      successful = tryLinking();
       break;
   }
+  return successful;
 }
 
-void GCFMyPropertySet::retryLinking()
+bool GCFMyPropertySet::tryLinking()
 {
   GPMController* pController = GPMController::instance();
   assert(pController);
+  bool successful(true);
   switch (_state)
   {
     case S_ENABLING:
     case S_LINKED:
     case S_ENABLED:
-      wrongState("retryLinking");
+      wrongState("tryLinking");
       pController->propertiesLinked(getScope(), PA_WRONG_STATE);
       break;
     case S_DISABLED:
     case S_DISABLING:
-      pController->propertiesLinked(getScope(), PA_PROP_SET_GONE);
+      pController->propertiesLinked(getScope(), PA_PS_GONE);
       break;
     case S_LINKING:
     {
-      TPropertyList::iterator iter = _properties.begin();
-      pProperty = (GCFMyProperty*) iter->second;
-      assert(pProperty);
-      if (pProperty->exists())
+      GCFMyProperty* pProperty(0);
+      TGCFResult result;
+      for(TPropertyList::iterator iter = _properties.begin(); 
+          iter != _properties.end(); ++iter)
       {
-        for(;iter != _properties.end(); ++iter)
+        pProperty = (GCFMyProperty*) iter->second;
+        assert(pProperty);
+        if (pProperty->exists())
         {
-          pProperty = (GCFMyProperty*) iter->second;
-          assert(pProperty);
-          if (pProperty->exists())
+                 
+          if (pProperty->link((_defaultUse == USE_MY_DEFAULTS), result)) 
           {
-            if (pProperty->link()) 
-            {
-              _counter++;
-            }
+            _counter++;
           }
-          else 
+          if (result != GCF_NO_ERROR)
           {
             _missing++;
           }
         }
-        if (_counter == 0)
+        else 
         {
-          // no more asyncronous link responses will be expected and 
-          // no more properties needed to be linked 
-          // so we can return a response to the controller
-          _state = S_LINKED;
-          if (_missing > 0)
-          {
-            pController->propertiesLinked(getScope(), PA_MISSING_PROPS);
-          }
-          else
-          {        
-            pController->propertiesLinked(getScope(), PA_NO_ERROR);
-          }
+          _missing++;
+        }
+      }      
+      if (_counter == 0)
+      {
+        if (_missing == _properties.size())
+        {
+          // propset is not yet known in this application, retry it with a 
+          // 0 timer
+          _missing = 0;
+          successful = false;
+          break;
+        }
+        // no more asyncronous link responses will be expected and 
+        // no more properties needed to be linked 
+        // so we can return a response to the controller
+        _state = S_LINKED;
+        if (_missing > 0)
+        {
+          pController->propertiesLinked(getScope(), PA_MISSING_PROPS);
+        }
+        else
+        {        
+          pController->propertiesLinked(getScope(), PA_NO_ERROR);
         }
       }
       break;
     }
   }
+  return successful;
 }
 
 void GCFMyPropertySet::linked (GCFMyProperty& prop)
@@ -305,7 +313,7 @@ void GCFMyPropertySet::linked (GCFMyProperty& prop)
       case S_DISABLED:
       case S_DISABLING:
         prop.unlink();
-        pController->propertiesLinked(getScope(), PA_PROP_SET_GONE);
+        pController->propertiesLinked(getScope(), PA_PS_GONE);
         break;
       case S_LINKING:
       {
@@ -335,20 +343,19 @@ void GCFMyPropertySet::unlinkProperties()
   switch (_state)
   {
     case S_ENABLING:
-    case S_LINKED:
+    case S_LINKING:
     case S_ENABLED:
       wrongState("unlinkProperties");
-      prop.unlink();
       pController->propertiesUnlinked(getScope(), PA_WRONG_STATE);
       break;
     case S_DISABLED:
     case S_DISABLING:
-      prop.unlink();
-      pController->propertiesUnlinked(getScope(), PA_PROP_SET_GONE);
+      pController->propertiesUnlinked(getScope(), PA_PS_GONE);
       break;
     case S_LINKED:
     {
       _state = S_ENABLED;
+      GCFMyProperty* pProperty(0);
       for (TPropertyList::iterator iter = _properties.begin(); 
            iter != _properties.end(); ++iter)
       {
@@ -385,8 +392,9 @@ void GCFMyPropertySet::wrongState(const char* request)
       stateString = "LINKED";
       break;
   }
-  LOFAR_LOG_WARN(PML_STDOUT_LOGGER, ( 
+  LOG_WARN(LOFAR::formatString ( 
         "Could not perform '%s' on property set '%s'. Wrong state: %s",
         request,
+        getScope().c_str(),
         stateString));  
 }

@@ -90,7 +90,9 @@ class GCFMyProperty : public GCFProperty
                    GCFMyPropertySet& propertySet);
     virtual ~GCFMyProperty ();
     
-    bool link ();
+    /// @param setDefault true => use my defaults (set value), false => use DB defaults (get value)
+    /// @return true if is an asynchronous action, false if not
+    bool link (bool setDefault, TGCFResult& result); 
     void unlink ();    
     
   private: // overrides base class methods

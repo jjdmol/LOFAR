@@ -1,9 +1,9 @@
 #include "SupervisedTask.h"
-#include <GCF/GCF_Answer.h>
+#include <GCF/PAL/GCF_Answer.h>
 #include "TST_Protocol.ph"
 
-SupervisedTask::SupervisedTask(GCFTask& a, string taskName) : 
-  GCFTask((State)&SupervisedTask::initial, taskName),
+Task::Task(GCFTask& a, string taskName) : 
+  GCFTask((State)&Task::initial, taskName),
   _application(a),
   _proxy(*this),
   _answer(*this)
@@ -14,30 +14,30 @@ SupervisedTask::SupervisedTask(GCFTask& a, string taskName) :
   registerProtocol(TST_PROTOCOL, TST_PROTOCOL_signalnames);  
 }
 
-SupervisedTask::~SupervisedTask()
+Task::~Task()
 {
 }
 
-int SupervisedTask::initial(GCFEvent& e, GCFPortInterface& p)
+int Task::initial(GCFEvent& e, GCFPortInterface& p)
 {
   return _application.dispatch(e, p);
 }
 
-void SupervisedTask::propSubscribed(const string& propName)
+void Task::propSubscribed(const string& propName)
 {
   GCFPropAnswerEvent  e(F_SUBSCRIBED);
   e.pPropName = propName.c_str();
   _application.dispatch(e, _port);
 }
 
-void SupervisedTask::propUnsubscribed(const string& propName)
+void Task::propUnsubscribed(const string& propName)
 {
   GCFPropAnswerEvent  e(F_UNSUBSCRIBED);
   e.pPropName = propName.c_str();
   _application.dispatch(e, _port);
 }
 
-void SupervisedTask::propValueChanged(const string& propName, const GCFPValue& value)
+void Task::propValueChanged(const string& propName, const GCFPValue& value)
 {
   GCFPropValueEvent e(F_VCHANGEMSG);
   e.pValue = &value;
@@ -46,7 +46,7 @@ void SupervisedTask::propValueChanged(const string& propName, const GCFPValue& v
   _application.dispatch(e, _port);
 }
 
-void SupervisedTask::valueGet(const string& propName, const GCFPValue& value)
+void Task::valueGet(const string& propName, const GCFPValue& value)
 {
   GCFPropValueEvent e(F_VGETRESP);
   e.pValue = &value;

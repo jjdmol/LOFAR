@@ -48,7 +48,7 @@ class GPAPropertySet : public GSAService
       unsigned short count;
     } TPSClient;
 
-    void enable(PARegisterScopeEvent& request);
+    bool enable(PARegisterScopeEvent& request);
     void disable(PAUnregisterScopeEvent& request);
     void load(PALoadPropSetEvent& request, GCFPortInterface& p);
     void unload(PAUnloadPropSetEvent& request, const GCFPortInterface& p);
@@ -72,9 +72,8 @@ class GPAPropertySet : public GSAService
     inline void dpeUnsubscribed(const string& /*propName*/) {};
 
   private: // helper methods
-
-    void linkPropSet();
-    void unlinkPropSet();
+    void link();
+    void unlink();
     void wrongState(const char* request);
     TPSClient* findClient(const GCFPortInterface& p);
 

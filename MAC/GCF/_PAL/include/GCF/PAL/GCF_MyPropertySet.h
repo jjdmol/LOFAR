@@ -44,6 +44,8 @@ class GCFAnswer;
 class GCFMyPropertySet : public GCFPropertySet
 {
   public:
+    typedef enum {USE_DB_DEFAULTS, USE_MY_DEFAULTS} TDefaultUse;
+
     /**
      * Constructor
      * Creates an property set with owned properties
@@ -51,11 +53,17 @@ class GCFMyPropertySet : public GCFPropertySet
      * @param scope explicite specified scope
      * @param answerObj the call back object for answers on property set actions
      */
-    GCFMyPropertySet (const char* name,
+    explicit GCFMyPropertySet (const char* name,
                       const TPropertySet& propSet, 
-                      GCFAnswer* pAnswerObj = 0);
-    virtual ~GCFMyPropertySet ();
+                      GCFAnswer* pAnswerObj,
+                      TDefaultUse defaultUse = USE_MY_DEFAULTS);
+                      
+    explicit GCFMyPropertySet (const char* name,
+                      const TPropertySet& propSet, 
+                      TDefaultUse defaultUse = USE_MY_DEFAULTS);
 
+    virtual ~GCFMyPropertySet ();
+    
     /**
      * Asynchronous method
      * In fact it registers the scope on the Property Agent.
@@ -86,10 +94,7 @@ class GCFMyPropertySet : public GCFPropertySet
 
     inline bool isEnabled () 
       { return (_state == S_ENABLED || _state == S_LINKING || _state == S_LINKED); }
-    
-    TGCFResult setValue (const string propName, ///< can be specified with or without the scope
-                         const string value);
-                               
+                                   
     //@{
     /**
      * @param propName can be specified with or without the scope
@@ -108,13 +113,13 @@ class GCFMyPropertySet : public GCFPropertySet
     friend class GPMController;
     void scopeRegistered (TGCFResult result);
     void scopeUnregistered (TGCFResult result);
-    void linkProperties ();
+    bool linkProperties ();
     void unlinkProperties ();
+    bool tryLinking ();
 
   private: // helper methods
-    void retryLinking ();
-    void init();
-    GCFProperty* createPropObject(TProperty& propInfo);    
+    GCFProperty* createPropObject(const TProperty& propInfo);    
+    void wrongState(const char* request);
     
   private:
     GCFMyPropertySet ();
@@ -125,12 +130,12 @@ class GCFMyPropertySet : public GCFPropertySet
     //@}
 
   private: // attribute members
-    bool _isEnabled;
     typedef enum TSTATE {S_DISABLED, S_DISABLING, S_ENABLING, S_ENABLED, S_LINKING, S_LINKED};
     TSTATE _state;
+    TDefaultUse _defaultUse;
+    
   private: // administrative members
     unsigned short _counter;
-    unsigned short _missing;
-    const TPropertySet& _propSet;        
+    unsigned short _missing;    
 };
 #endif

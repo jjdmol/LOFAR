@@ -88,7 +88,7 @@ class GSAService
     TSAResult convertMACToPVSS (const GCFPValue& macValue, 
                                 Variable** pVar,
                                 const DpIdentifier& dpId) const;
-    bool getPVSSType (GCFPValue::TMACValueType macType, 
+    bool getPVSSType (TMACValueType macType, 
                       CharString& pvssTypeName) const;
 
     // helper methods

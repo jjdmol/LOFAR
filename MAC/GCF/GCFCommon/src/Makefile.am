@@ -9,7 +9,8 @@ pkginclude_HEADERS = \
 	../include/GCF/GCF_PVUnsigned.h \
 	../include/GCF/GCF_PVDynArr.h \
 	../include/GCF/CmdLine.h \
-	../include/GCF/Utils.h
+	../include/GCF/Utils.h \
+	../include/GCF/GCF_Defines.h
 
 DOCHDRS	=	$(pkginclude_HEADERS)
       
@@ -27,5 +28,7 @@ libgcfcommon_la_SOURCES= $(DOCHDRS) \
 	GCF_PVUnsigned.cc \
 	GCF_PVDynArr.cc
 	
+libgcfcommon_la_CPPFLAGS=-I$(top_srcdir)/include
+
 include $(lofar_sharedir)/Makefile.common
 

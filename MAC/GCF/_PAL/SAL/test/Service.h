@@ -6,22 +6,22 @@ class Service : public GSAService
     Service() {};
     virtual ~Service() {};
 
-    virtual TSAResult createProp(const string& propName, 
-                                 GCFPValue::TMACValueType macType);
-    virtual TSAResult deleteProp(const string& propName);
-    virtual TSAResult subscribe(const string& propName);
-    virtual TSAResult unsubscribe(const string& propName);
-    virtual TSAResult get(const string& propName);
-    virtual TSAResult set(const string& propName, const GCFPValue& value);
-    virtual bool exists(const string& propName);
+    virtual TSAResult dpCreate(const string& propName, 
+                               const string& macType);
+    virtual TSAResult dpDelete(const string& propName);
+    virtual TSAResult dpeSubscribe(const string& propName);
+    virtual TSAResult dpeUnsubscribe(const string& propName);
+    virtual TSAResult dpeGet(const string& propName);
+    virtual TSAResult dpeSet(const string& propName, const GCFPValue& value);
+    virtual bool dpeExists(const string& propName);
     
   protected:
-    virtual void propCreated(const string& propName);
-    virtual void propDeleted(const string& propName);
-    virtual void propSubscribed(const string& propName);
-    virtual void propUnsubscribed(const string& propName);
-    virtual void propValueGet(const string& propName, const GCFPValue& value);
-    virtual void propValueChanged(const string& propName, const GCFPValue& value);
+    virtual void dpCreated(const string& propName);
+    virtual void dpDeleted(const string& propName);
+    virtual void dpeSubscribed(const string& propName);
+    virtual void dpeUnsubscribed(const string& propName);
+    virtual void dpeValueGet(const string& propName, const GCFPValue& value);
+    virtual void dpeValueChanged(const string& propName, const GCFPValue& value);
   
   private:
 };

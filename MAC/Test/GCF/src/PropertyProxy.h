@@ -23,14 +23,14 @@
 #ifndef PROPERTYPROXY_H
 #define PROPERTYPROXY_H
 
-#include <GCF/GCF_PropertyProxy.h>
+#include <GCF/PAL/GCF_PropertyProxy.h>
 
-class SupervisedTask;
+class Task;
 
 class PropertyProxy : public GCFPropertyProxy
 {
   public:
-    PropertyProxy(SupervisedTask& task) : _task(task) {};
+    PropertyProxy(Task& task) : _task(task) {};
     virtual ~PropertyProxy() {};
 
   protected:
@@ -41,6 +41,6 @@ class PropertyProxy : public GCFPropertyProxy
     void propValueChanged(const string& propName, const GCFPValue& value);
   
   private:
-    SupervisedTask& _task;
+    Task& _task;
 };
 #endif

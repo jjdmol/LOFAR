@@ -69,6 +69,13 @@ class GCFProperty
       
     /**
      * Synchronous (!) action
+     * Performs a set operation on the SCADA DB
+     * @return can be GCF_NO_ERROR or GCF_PML_ERROR
+     */ 
+    virtual TGCFResult setValue(const string& value);
+
+    /**
+     * Synchronous (!) action
      * Checks whether the property exists in the SCADA DB or not
      */ 
     virtual bool exists ();
@@ -130,7 +137,6 @@ class GCFProperty
   private: // data members
     GCFPropertySet*     _pPropertySet;
     GCFAnswer*          _pAnswerObj;
-    string              _name;
     GPMPropertyService* _pPropService;
 
   private: // admin. data members

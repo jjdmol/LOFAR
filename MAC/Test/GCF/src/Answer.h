@@ -1,15 +1,15 @@
 #ifndef ANSWER_H
 #define ANSWER_H
 
-#include <GCF/GCF_Answer.h>
+#include <GCF/PAL/GCF_Answer.h>
 
 class GCFEvent;
-class SupervisedTask;
+class Task;
 
 class Answer : public GCFAnswer
 {
   public:
-    Answer(SupervisedTask& st) : 
+    Answer(Task& st) : 
       _st(st)
       {;}
       
@@ -18,6 +18,6 @@ class Answer : public GCFAnswer
     void handleAnswer(GCFEvent& answer);
     
   private:    
-    SupervisedTask& _st;
+    Task& _st;
 };
 #endif

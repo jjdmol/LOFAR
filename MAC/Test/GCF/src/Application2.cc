@@ -2,42 +2,28 @@
 #include "Defines.h"
 #include <GCF/GCF_PVInteger.h>
 #include <GCF/GCF_PVDouble.h>
-#include <GCF/GCF_Property.h>
+#include <GCF/PAL/GCF_Property.h>
 #include <math.h>
 #include <stdio.h>
-#define DECLARE_SIGNAL_NAMES
 #include "TST_Protocol.ph"
-
-#ifdef WAIT_FOR_INPUT
-#define CHECK_DB \
-          { \
-            string input; \
-            cout << "Check SCADA DB content: "; \
-            cin >> input; \
-          }
-#else
-#define CHECK_DB {}
-#endif
+#include <Suite/suite.h>
 
 static string sTaskName = "TA2";
 
 Application::Application() :
   GCFTask((State)&Application::initial, sTaskName),
+  Test("TestApplication2"),
   _supTask3(*this, "ST3"),
-  _passed(0),
-  _failed(0),
   _counter(0),
   _curRemoteTestNr(0),
   _pSTPort1(0),
   _pSTPort2(0),
-  _propertySetC1(propertySetC1, &_supTask3.getAnswerObj()),
-  _propertySetD1(propertySetD1, &_supTask3.getAnswerObj()),
-  _propertySetB4(propertySetB4, &_supTask3.getAnswerObj()),
-  _apcT1("ApcT1", "A_C", &_supTask3.getAnswerObj()),
-  _apcT1K("ApcT1", "A_K", &_supTask3.getAnswerObj()),
-  _apcT1a("ApcT1a", "A_C", &_supTask3.getAnswerObj()),
-  _apcT1b("ApcT1b", "A", &_supTask3.getAnswerObj()),
-  _apcT3("ApcT3", "A_H", &_supTask3.getAnswerObj())
+  _propertySetC1("A_H_I", propertySetC1, &_supTask3.getAnswerObj()),
+  _propertySetD1("A_H",   propertySetD1, &_supTask3.getAnswerObj()),  
+  _propertySetB4("A_K",   propertySetB4, &_supTask3.getAnswerObj(), GCFMyPropertySet::USE_DB_DEFAULTS),
+  _ePropertySetAC("A_C",  propertySetB1, &_supTask3.getAnswerObj()), 
+  _ePropertySetAH("A_H",  propertySetD1, &_supTask3.getAnswerObj()), 
+  _ePropertySetAK("A_K",  propertySetB4, &_supTask3.getAnswerObj()) 
 {
     // register the protocol for debugging purposes
   registerProtocol(TST_PROTOCOL, TST_PROTOCOL_signalnames);  
@@ -51,7 +37,7 @@ GCFEvent::TResult Application::initial(GCFEvent& e, GCFPortInterface& /*p*/)
   {
     case F_INIT:
       _supTask3.getPort().init(_supTask3, "server", GCFPortInterface::SPP, TST_PROTOCOL);
-      TRAN(Application::test401);
+      NEXT_TEST(1_1);
       break;
 
     default:
@@ -62,23 +48,38 @@ GCFEvent::TResult Application::initial(GCFEvent& e, GCFPortInterface& /*p*/)
   return status;
 }
 
-GCFEvent::TResult Application::test101(GCFEvent& e, GCFPortInterface& /*p*/)
+GCFEvent::TResult Application::test1_1(GCFEvent& e, GCFPortInterface& p)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (e.signal)
   {
     case F_ENTRY:
-      skipped(101);
-      TRAN(Application::test102);
+      _supTask3.getPort().init(_supTask3, "server", GCFPortInterface::SPP, TST_PROTOCOL);
+      TESTC(1 == _supTask3.getPort().open());
       break;
 
-    case TST_TESTREADY:
+    case F_TIMER:
+      TESTC(1 == _supTask3.getPort().open());
+      break;
+
+    case F_CONNECTED:
+      break;
+
+    case F_DISCONNECTED:
+      if (&p == &_supTask3.getPort())
+        _supTask3.getPort().setTimer(1.0); // try again after 1 second
+      break;
+
+    case TST_TESTREQ:
     {
-      TSTTestreadyEvent indicationIn(e);
-      _curRemoteTestNr = indicationIn.testnr;
+      TSTTestrespEvent r;
+      r.testnr = 101;
+      TESTC(_supTask3.getPort().send(r) == SIZEOF_EVENT(r));
+      NEXT_TEST(1_2);
       break;
     }
+     
     default:
       status = GCFEvent::NOT_HANDLED;
       break;
@@ -87,232 +88,210 @@ GCFEvent::TResult Application::test101(GCFEvent& e, GCFPortInterface& /*p*/)
   return status;
 }
 
-GCFEvent::TResult Application::test102(GCFEvent& e, GCFPortInterface& /*p*/)
+GCFEvent::TResult Application::test1_2(GCFEvent& e, GCFPortInterface& p)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
+  
+  
+  static bool closing = true;
 
   switch (e.signal)
   {
     case F_ENTRY:
-      skipped(102);
-      TRAN(Application::test103);
+      closing = true;
+      _supTask3.getPort().close();
       break;
 
-    case TST_TESTREADY:
-    {
-      TSTTestreadyEvent indicationIn(e);
-      _curRemoteTestNr = indicationIn.testnr;
-      break;
-    }
-    default:
-      status = GCFEvent::NOT_HANDLED;
-      break;
-  }
-
-  return status;
-}
-
-GCFEvent::TResult Application::test103(GCFEvent& e, GCFPortInterface& /*p*/)
-{
-  GCFEvent::TResult status = GCFEvent::HANDLED;
-
-  switch (e.signal)
-  {
-    case F_ENTRY:
-      skipped(103);
-      TRAN(Application::test104);
+    case F_TIMER:
+      TESTC(1 == _port.open());
       break;
 
-    case TST_TESTREADY:
-    {
-      TSTTestreadyEvent indicationIn(e);
-      _curRemoteTestNr = indicationIn.testnr;
+    case F_CONNECTED:
+      _counter = 0;
       break;
-    }
-    default:
-      status = GCFEvent::NOT_HANDLED;
-      break;
-  }
-
-  return status;
-}
-
-GCFEvent::TResult Application::test104(GCFEvent& e, GCFPortInterface& p)
-{
-  GCFEvent::TResult status = GCFEvent::HANDLED;
-
-  static bool ready = false; 
-
-  switch (e.signal)
-  {
-    case TST_TESTREADY:
-    {
-      TSTTestreadyEvent indicationIn(e);
-      if (_curRemoteTestNr == 0)
-        _curRemoteTestNr = indicationIn.testnr;
-        //intentional fall through        
-      else
-        break;
-    }
-    case F_ENTRY:
-      if (_curRemoteTestNr == 0) break;
-      if (_propertySetC1.load() != GCF_NO_ERROR)
+      
+    case F_ACCEPT_REQ:
+      if (_pSTPort1 == 0)
       {
-        failed(104);
-        TRAN(Application::test105);
+        _pSTPort1 = new GCFTCPPort();
+        _pSTPort1->init(_supTask3, "server", GCFPortInterface::SPP, TST_PROTOCOL);
+        TESTC(0 == _port.accept(*_pSTPort1));
       }
+      else
+      {
+        _pSTPort2 = new GCFTCPPort();
+        _pSTPort2->init(_supTask3, "server", GCFPortInterface::SPP, TST_PROTOCOL);
+        TESTC(0 == _port.accept(*_pSTPort2));
+      }
+      break;
+      
+    case F_DISCONNECTED:
+      if (closing)
+      {
+        _port.init(_supTask3, "server", GCFPortInterface::MSPP, TST_PROTOCOL);
+        TESTC(1 == _port.open());
+        closing = false;
+      }
+      else
+      {
+        if (&p == &_port)
+          _port.setTimer(1.0); // try again after 1 second
+      }      
+      break;
+
+    case F_CLOSED:
+      _port.init(_supTask3, "server", GCFPortInterface::MSPP, TST_PROTOCOL);
+      TESTC(1 == _port.open());
+      closing = false;
+      break;
+
+    case TST_TESTREQ:
+    {
+      TSTTestrespEvent r;
+      r.testnr = 102;
+      _counter++;
+      if (_counter == 1)
+      {
+        if (TESTC(_pSTPort1))
+          TESTC(_pSTPort1->send(r) == SIZEOF_EVENT(r));
+        else
+          FAIL_AND_DONE("Pointer error");
+      }
+      else if (_counter == 2)
+      {
+        if (TESTC(_pSTPort2))
+          TESTC(_pSTPort2->send(r) == SIZEOF_EVENT(r));
+        else
+          FAIL_AND_DONE("Pointer error");
+      }
+      break;
+    }  
+    case TST_TESTREADY:
+    {
+      TSTTestreadyEvent r(e);
+      assert(_pSTPort1);
+      if (TESTC(_pSTPort1))
+      {
+        TESTC(_pSTPort1->send(r) == SIZEOF_EVENT(r));
+        NEXT_TEST(2_5);
+      }  
+      else
+        FAIL_AND_DONE("Pointer error");
+      break;
+    } 
+    default:
+      status = GCFEvent::NOT_HANDLED;
+      break;
+  }
+
+  return status;
+}
+
+
+GCFEvent::TResult Application::test2_5(GCFEvent& e, GCFPortInterface& p)
+{
+  GCFEvent::TResult status = GCFEvent::HANDLED;
+
+  switch (e.signal)
+  {
+    case TST_TESTREADY:
+    {
+      TSTTestreadyEvent indicationIn(e);
+      _curRemoteTestNr = indicationIn.testnr;
+      //intentional fall through        
+    }
+    case F_ENTRY:
+      if (_curRemoteTestNr != 203) break;
+      _counter = 2;
+      if (!TESTC(_propertySetC1.enable() == GCF_NO_ERROR))
+      {
+        FAIL_AND_DONE("Could not enable propset C1");
+      }      
+      else if (!TESTC(_propertySetD1.enable() == GCF_NO_ERROR))
+      {
+        FAIL_AND_DONE("Could not enable propset D1");
+      }      
       else
       {
         _supTask3.getPort().setTimer(10.0);
-        _counter = 1;
-      }      
-      break;
-
-    case F_MYPLOADED:
-    {
-      GCFMYPropAnswerEvent* pResponse = static_cast<GCFMYPropAnswerEvent*>(&e);
-      assert(pResponse);
-      switch (_counter)
-      {
-        case 1:
-          if ((strcmp(pResponse->pScope, propertySetC1.scope) == 0) &&
-              (pResponse->result == GCF_NO_ERROR) &&
-              (&p == &_supTask3.getPort()))
-          {
-            if (_propertySetD1.load() != GCF_NO_ERROR)
-            {
-              failed(104);
-              TRAN(Application::test105);
-            }
-            else _counter++;
-          }          
-          break;
-
-        case 2:
-          if ((strcmp(pResponse->pScope, propertySetD1.scope) == 0) &&
-              (pResponse->result == GCF_NO_ERROR) &&
-              (&p == &_supTask3.getPort()))
-          {
-            if (_propertySetC1.unload() != GCF_NO_ERROR)
-            {
-              failed(104);
-              TRAN(Application::test105);
-            }
-            else _counter++;
-          }
-          break;
       }
       break;
-    }      
-    case F_MYPUNLOADED:
+
+    case F_MYPS_ENABLED:
     {
-      GCFMYPropAnswerEvent* pResponse = static_cast<GCFMYPropAnswerEvent*>(&e);
-      assert(pResponse);
-      switch (_counter)
+      _counter--;
+      GCFPropSetAnswerEvent* pResponse = (GCFPropSetAnswerEvent*)(&e);
+      if (TESTC(pResponse))
       {
-        case 3:
-          if ((strcmp(pResponse->pScope, propertySetC1.scope) == 0) &&
-              (pResponse->result == GCF_NO_ERROR) &&
-              (&p == &_supTask3.getPort()))
-          {
-            if (_propertySetD1.unload() != GCF_NO_ERROR)
-            {
-              failed(104);
-              TRAN(Application::test105);
-            }
-            else _counter++;
-          }
-          break;
-          
-        case 4:
-          if ((strcmp(pResponse->pScope, propertySetD1.scope) == 0) &&
-              (pResponse->result == GCF_NO_ERROR) &&
-              (&p == &_supTask3.getPort()))
-          {
-            if (!ready)
-            {
-              passed(104);
-              ready = true;
-            }
-            else TRAN(Application::test105)
-          }
-          break;          
+        TESTC(pResponse->result == GCF_NO_ERROR);
+        if (strcmp(pResponse->pScope, "A_H_I") == 0)
+        {
+          TESTC(strcmp(pResponse->pScope, _propertySetC1.getScope().c_str()) == 0);
+          TESTC(&p == &_supTask3.getPort());
+          TESTC(_propertySetC1.isEnabled());
+          TESTC(_supTask3.getProxy().exists("A_H_I_temp"));
+        }
+        else if (strcmp(pResponse->pScope, "A_H") == 0)
+        {
+          TESTC(strcmp(pResponse->pScope, _propertySetD1.getScope().c_str()) == 0);
+          TESTC(&p == &_supTask3.getPort());
+          TESTC(_propertySetD1.isEnabled());
+          TESTC(_supTask3.getProxy().exists("A_H_temp"));
+        }
+      }
+      
+      if (_counter == 0)
+      {
+        _counter = 2;
+        _supTask3.getPort().cancelAllTimers();        
+        if (!TESTC(_propertySetC1.disable() == GCF_NO_ERROR))
+        {
+          FAIL_AND_DONE("Could not disable propset C1");
+        }      
+        else if (!TESTC(_propertySetD1.disable() == GCF_NO_ERROR))
+        {
+          FAIL_AND_DONE("Could not disable propset D1");
+        }      
+        else
+        {
+          _supTask3.getPort().setTimer(10.0);
+        }
       }
       break;
     }  
-    case F_TIMER:
-      if (!ready) {failed(104); ready = true;}
-      else TRAN(Application::test105);
-      break;
-
-
-    default:
-      status = GCFEvent::NOT_HANDLED;
-      break;
-  }
-
-  return status;
-}
-
-GCFEvent::TResult Application::test105(GCFEvent& e, GCFPortInterface& p)
-{
-  GCFEvent::TResult status = GCFEvent::HANDLED;
-
-  switch (e.signal)
-  {
-    case F_ENTRY:
-      if (_propertySetC1.load() != GCF_NO_ERROR)
+    case F_MYPS_DISABLED:
+    {
+      _counter--;
+      GCFPropSetAnswerEvent* pResponse = (GCFPropSetAnswerEvent*)(&e);
+      if (TESTC(pResponse))
       {
-        failed(105);
-        TRAN(Application::test201);
-      }
-      else
-      {
-        _counter = 1;
+        TESTC(pResponse->result == GCF_NO_ERROR);
+        if (strcmp(pResponse->pScope, "A_H_I") == 0)
+        {
+          TESTC(strcmp(pResponse->pScope, _propertySetC1.getScope().c_str()) == 0);
+          TESTC(&p == &_supTask3.getPort());
+          TESTC(!_propertySetC1.isEnabled());
+          TESTC(!_supTask3.getProxy().exists("A_H_I_temp"));
+        }
+        else if (strcmp(pResponse->pScope, "A_H") == 0)
+        {
+          TESTC(strcmp(pResponse->pScope, _propertySetD1.getScope().c_str()) == 0);
+          TESTC(&p == &_supTask3.getPort());
+          TESTC(!_propertySetD1.isEnabled());
+          TESTC(!_supTask3.getProxy().exists("A_H_temp"));
+        }
       }      
-      break;
-
-    case F_MYPLOADED:
-    {
-      GCFMYPropAnswerEvent* pResponse = static_cast<GCFMYPropAnswerEvent*>(&e);
-      assert(pResponse);
-      switch (_counter)
+      if (_counter == 0)
       {
-        case 1:
-          if ((strcmp(pResponse->pScope, propertySetC1.scope) == 0) &&
-              (pResponse->result == GCF_NO_ERROR) &&
-              (&p == &_supTask3.getPort()))
-          {
-            if (_propertySetD1.load() != GCF_NO_ERROR)
-            {
-              failed(105);
-              TRAN(Application::test201);
-            }
-            else _counter++;
-          }          
-          break;
-
-        case 2:
-          if ((strcmp(pResponse->pScope, propertySetD1.scope) == 0) &&
-              (pResponse->result == GCF_NO_ERROR) &&
-              (&p == &_supTask3.getPort()))
-          {
-            passed(105);
-          }
-          else 
-            failed(105);
-          TRAN(Application::test201);            
-          break;          
-      }
-      break;
-    }  
-
-    case TST_TESTREADY:
-    {
-      TSTTestreadyEvent indicationIn(e);
-      _curRemoteTestNr = indicationIn.testnr;
+        _supTask3.getPort().cancelAllTimers();        
+        NEXT_TEST(3_1);
+      }      
       break;
     }
+    case F_TIMER:
+      FAIL_AND_DONE("Gets not response on disable request in time.");
+      break;
+
     default:
       status = GCFEvent::NOT_HANDLED;
       break;
@@ -321,10 +300,9 @@ GCFEvent::TResult Application::test105(GCFEvent& e, GCFPortInterface& p)
   return status;
 }
 
-GCFEvent::TResult Application::test201(GCFEvent& e, GCFPortInterface& p)
+GCFEvent::TResult Application::test3_1(GCFEvent& e, GCFPortInterface& p)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
-  static bool ready = false; 
 
   switch (e.signal)
   {
@@ -335,69 +313,27 @@ GCFEvent::TResult Application::test201(GCFEvent& e, GCFPortInterface& p)
       //intentional fall through
     }
     case F_ENTRY:
-      if (_curRemoteTestNr != 105) break;
-      if (_apcT1.load() != GCF_NO_ERROR)
+      if (_curRemoteTestNr != 205) break;           
+      if (!TESTC(_propertySetB4.enable() == GCF_NO_ERROR))
       {
-        failed(201);
-        TRAN(Application::test202);
-      }
-      else
-      {
-        _supTask3.getPort().setTimer(15.0);
-        _counter = 1;
+        FAIL_AND_DONE("Could not enable propset B4");
       }      
       break;
 
-    case F_APCLOADED:
+    case F_MYPS_ENABLED:
     {
-      GCFAPCAnswerEvent* pResponse = static_cast<GCFAPCAnswerEvent*>(&e);
-      assert(pResponse);
-      switch (_counter)
+      GCFPropSetAnswerEvent* pResponse = (GCFPropSetAnswerEvent*)(&e);
+      if (TESTC(pResponse))
       {
-        case 1:
-          if ((strcmp(pResponse->pScope, "A_C") == 0) &&
-              (strcmp(pResponse->pApcName, "ApcT1") == 0) &&
-              (pResponse->result == GCF_NO_ERROR) &&
-              (&p == &_supTask3.getPort()))
-          {
-            if (_apcT1.unload() != GCF_NO_ERROR)
-            {
-              failed(201);
-              TRAN(Application::test202);
-            }
-            else _counter++;
-          }
-          break;
+        TESTC(strcmp(pResponse->pScope, _propertySetB4.getScope().c_str()) == 0);
+        TESTC(pResponse->result == GCF_NO_ERROR);
       }
-      break;
-    }      
-    case F_APCUNLOADED:
-    {
-      GCFAPCAnswerEvent* pResponse = static_cast<GCFAPCAnswerEvent*>(&e);
-      assert(pResponse);
-      switch (_counter)
-      {
-        case 2:
-          if ((strcmp(pResponse->pScope, "A_C") == 0) &&
-              (strcmp(pResponse->pApcName, "ApcT1") == 0) &&
-              (pResponse->result == GCF_NO_ERROR) &&
-              (&p == &_supTask3.getPort()))
-          {
-            if (!ready)
-            {
-              passed(201);
-              ready = true;
-            }
-            else TRAN(Application::test202);            
-          }
-          break;          
-      }
+      TESTC(&p == &_supTask3.getPort());
+      TESTC(_propertySetB4.isEnabled());
+      TESTC(!_supTask3.getProxy().exists("A_K_temp"));
+      NEXT_TEST(3_2);
       break;
     }  
-    case F_TIMER:
-      if (!ready) {failed(201); ready = true;}
-      else TRAN(Application::test202);
-      break;
 
     default:
       status = GCFEvent::NOT_HANDLED;
@@ -407,53 +343,156 @@ GCFEvent::TResult Application::test201(GCFEvent& e, GCFPortInterface& p)
   return status;
 }
 
-GCFEvent::TResult Application::test202(GCFEvent& e, GCFPortInterface& p)
+GCFEvent::TResult Application::test3_2(GCFEvent& e, GCFPortInterface& p)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
-  static bool ready = false; 
 
   switch (e.signal)
   {
     case F_ENTRY:
-      if (_apcT1.load(false) != GCF_NO_ERROR)
+      if (!TESTC(_propertySetB4.disable() == GCF_NO_ERROR))
       {
-        failed(202);
-        TRAN(Application::test203);
+        FAIL_AND_DONE("Could not disable propset B4");
+      }      
+      break;
+
+    case F_MYPS_DISABLED:
+    {
+      GCFPropSetAnswerEvent* pResponse = (GCFPropSetAnswerEvent*)(&e);
+      if (TESTC(pResponse))
+      {
+        TESTC(strcmp(pResponse->pScope, _propertySetB4.getScope().c_str()) == 0);
+        TESTC(pResponse->result == GCF_NO_ERROR);
       }
+      TESTC(&p == &_supTask3.getPort());
+      TESTC(!_propertySetB4.isEnabled());
+      TESTC(!_supTask3.getProxy().exists("A_K_temp"));
+      NEXT_TEST(3_3);
+      break;
+    }  
+
+    default:
+      status = GCFEvent::NOT_HANDLED;
+      break;
+  }
+
+  return status;
+}
+
+GCFEvent::TResult Application::test3_3(GCFEvent& e, GCFPortInterface& /*p*/)
+{
+  GCFEvent::TResult status = GCFEvent::HANDLED;
+
+  switch (e.signal)
+  {
+    case TST_TESTREADY:
+    {
+      TSTTestreadyEvent indicationIn(e);
+      _curRemoteTestNr = indicationIn.testnr;
+      //intentional fall through
+    }
+    case F_ENTRY:
+      if (_curRemoteTestNr != 205) break;           
+      if (!TESTC(_propertySetB4.enable() == GCF_NO_ERROR))
+      {
+        FAIL_AND_DONE("Could not enable propset B4");
+      }      
+      break;
+
+    case F_MYPS_ENABLED:
+    {
+      GCFPropSetAnswerEvent* pResponse = (GCFPropSetAnswerEvent*)(&e);
+      if (TESTC(pResponse))
+      {
+        TESTC(strcmp(pResponse->pScope, _propertySetB4.getScope().c_str()) == 0);
+        TESTC(pResponse->result == GCF_NO_ERROR);
+      }
+            
+      if (!TESTC(_propertySetB4.disable() == GCF_NO_ERROR))
+      {
+        FAIL_AND_DONE("Could not disable propset B4");
+      }      
+      break;
+    }
+    
+    case F_MYPS_DISABLED:   
+    {   
+      GCFPropSetAnswerEvent* pResponse = (GCFPropSetAnswerEvent*)(&e);
+      if (TESTC(pResponse))
+      {
+        TESTC(strcmp(pResponse->pScope, _propertySetB4.getScope().c_str()) == 0);
+        TESTC(pResponse->result == GCF_NO_ERROR);
+      }      
+      
+      if (!TESTC(_propertySetB4.disable() != GCF_NO_ERROR))
+      {
+        FAIL_AND_DONE("This should not be possible");
+      }      
+      else
+      {
+        TSTTestreadyEvent r;
+        r.testnr = 303;
+        _pSTPort1->send(r);        
+        NEXT_TEST(4_1);
+      }
+      break;
+    }  
+
+    default:
+      status = GCFEvent::NOT_HANDLED;
+      break;
+  }
+
+  return status;
+}
+
+GCFEvent::TResult Application::test4_1(GCFEvent& e, GCFPortInterface& /*p*/)
+{
+  GCFEvent::TResult status = GCFEvent::HANDLED;
+
+  switch (e.signal)
+  {
+    case TST_TESTREADY:
+    {
+      TSTTestreadyEvent indicationIn(e);
+      _curRemoteTestNr = indicationIn.testnr;
+      //intentional fall through
+    }
+    case F_ENTRY:
+      if (_curRemoteTestNr != 401) break;           
+      if (!TESTC(_ePropertySetAC.load() == GCF_NO_ERROR))
+      {
+        FAIL_AND_DONE("Could not load propset A_C");
+      }      
       else
       {
         _supTask3.getPort().setTimer(10.0);
-        _counter = 1;
-      }      
-      break;
-
-    case F_APCLOADED:
-    {
-      GCFAPCAnswerEvent* pResponse = static_cast<GCFAPCAnswerEvent*>(&e);
-      assert(pResponse);
-      switch (_counter)
-      {
-        case 1:
-          if ((strcmp(pResponse->pScope, "A_C") == 0) &&
-              (strcmp(pResponse->pApcName, "ApcT1") == 0) &&
-              (pResponse->result == GCF_NO_ERROR) &&
-              (&p == &_supTask3.getPort()))
-          {           
-            CHECK_DB
-            if (!ready)
-            {
-              passed(202);
-              ready = true;
-            }
-            else TRAN(Application::test203);
-          }
-          break;
       }
       break;
-    }      
+
+    case F_EXTPS_LOADED:
+    {
+      GCFPropSetAnswerEvent* pResponse = (GCFPropSetAnswerEvent*)(&e);
+      if (TESTC(pResponse))
+      {
+        TESTC(strcmp(pResponse->pScope, _ePropertySetAC.getScope().c_str()) == 0);
+        TESTC(pResponse->result == GCF_NO_ERROR);
+      }
+            
+      _supTask3.getPort().cancelAllTimers();        
+      if (TESTC(_ePropertySetAC.isLoaded()))
+      {
+        NEXT_TEST(4_2);
+      }      
+      else
+      {
+        FAIL_AND_DONE("Could not load propset A_C");
+      }
+      break;
+    }
+    
     case F_TIMER:
-      if (!ready) {failed(202); ready = true;}
-      else TRAN(Application::test203);
+      FAIL_AND_DONE("Gets not response on load request in time.");
       break;
 
     default:
@@ -464,116 +503,50 @@ GCFEvent::TResult Application::test202(GCFEvent& e, GCFPortInterface& p)
   return status;
 }
 
-GCFEvent::TResult Application::test203(GCFEvent& e, GCFPortInterface& p)
-{
-  GCFEvent::TResult status = GCFEvent::HANDLED;
-
-  switch (e.signal)
-  {
-    case F_ENTRY:    
-      if (_apcT1.unload() != GCF_NO_ERROR)
-      {
-        failed(203);
-        TRAN(Application::test204);
-      }
-      else
-      {
-        _counter = 1;
-      }      
-      break;
-
-    case F_APCUNLOADED:
-    {
-      GCFAPCAnswerEvent* pResponse = static_cast<GCFAPCAnswerEvent*>(&e);
-      assert(pResponse);
-      if (_counter == 1)
-      {
-        if ((strcmp(pResponse->pScope, "A_C") == 0) &&
-            (strcmp(pResponse->pApcName, "ApcT1") == 0) &&
-            (pResponse->result == GCF_NO_ERROR) &&
-            (&p == &_supTask3.getPort()))
-        {           
-          CHECK_DB
-          passed(203);          
-        }
-        else 
-          failed(203);
-
-        TRAN(Application::test204);
-      }
-      break;
-    }      
-
-    default:
-      status = GCFEvent::NOT_HANDLED;
-      break;
-  }
-
-  return status;
-}
-
-GCFEvent::TResult Application::test204(GCFEvent& e, GCFPortInterface& p)
+GCFEvent::TResult Application::test4_2(GCFEvent& e, GCFPortInterface& /*p*/)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (e.signal)
   {
     case F_ENTRY:
-      if (_apcT1.load() != GCF_NO_ERROR)
+      if (!TESTC(_ePropertySetAC.unload() == GCF_NO_ERROR))
       {
-        failed(204);
-        TRAN(Application::test205);
-      }
+        FAIL_AND_DONE("Could not unload propset A_C");
+      }      
       else
       {
-        _counter = 1;
-      }      
+        _supTask3.getPort().setTimer(10.0);
+      }
       break;
 
-    case F_APCLOADED:
+    case F_EXTPS_UNLOADED:
     {
-      GCFAPCAnswerEvent* pResponse = static_cast<GCFAPCAnswerEvent*>(&e);
-      assert(pResponse);
-      switch (_counter)
+      GCFPropSetAnswerEvent* pResponse = (GCFPropSetAnswerEvent*)(&e);
+      if (TESTC(pResponse))
       {
-        case 1:
-          if ((strcmp(pResponse->pScope, "A_C") == 0) &&
-              (strcmp(pResponse->pApcName, "ApcT1") == 0) &&
-              (pResponse->result == GCF_NO_ERROR) &&
-              (&p == &_supTask3.getPort()))
-          {
-            if (_apcT1.reload() != GCF_NO_ERROR)
-            {
-              failed(204);
-              TRAN(Application::test205);
-            }
-            else _counter++;
-          }
-          break;
+        TESTC(strcmp(pResponse->pScope, _ePropertySetAC.getScope().c_str()) == 0);
+        TESTC(pResponse->result == GCF_NO_ERROR);
+      }
+            
+      _supTask3.getPort().cancelAllTimers();        
+      if (TESTC(!_ePropertySetAC.isLoaded()))
+      {
+        TSTTestreadyEvent r;
+        r.testnr = 402;
+        _pSTPort1->send(r);        
+        NEXT_TEST(4_3);
+      }      
+      else
+      {
+        FAIL_AND_DONE("Could not unload propset A_C");
       }
       break;
-    }      
-    case F_APCRELOADED:
-    {
-      GCFAPCAnswerEvent* pResponse = static_cast<GCFAPCAnswerEvent*>(&e);
-      assert(pResponse);
-      switch (_counter)
-      {
-        case 2:
-          if ((strcmp(pResponse->pScope, "A_C") == 0) &&
-              (strcmp(pResponse->pApcName, "ApcT1") == 0) &&
-              (pResponse->result == GCF_NO_ERROR) &&
-              (&p == &_supTask3.getPort()))
-          {
-            passed(204);
-          }
-          else
-            failed(204);
-          TRAN(Application::test205);
-          break;          
-      }
+    }
+    
+    case F_TIMER:
+      FAIL_AND_DONE("Gets not response on unload request in time.");
       break;
-    }  
 
     default:
       status = GCFEvent::NOT_HANDLED;
@@ -583,69 +556,87 @@ GCFEvent::TResult Application::test204(GCFEvent& e, GCFPortInterface& p)
   return status;
 }
 
-GCFEvent::TResult Application::test205(GCFEvent& e, GCFPortInterface& p)
+GCFEvent::TResult Application::test4_3(GCFEvent& e, GCFPortInterface& /*p*/)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
-  static bool ready = false;
-  static bool started = false;
-  
+  static bool delayedUnload = false;
+
   switch (e.signal)
   {
     case F_ENTRY:
-    {
-      TSTTestreadyEvent r;
-      r.testnr = 204;
-      assert(_pSTPort1);
-      _pSTPort1->send(r);      
+      if (!TESTC(_ePropertySetAC.load() == GCF_NO_ERROR))
+      {
+        FAIL_AND_DONE("Could not load propset A_C");
+      }      
       break;
-    } 
+
+    case F_EXTPS_LOADED:
+    {
+      GCFPropSetAnswerEvent* pResponse = (GCFPropSetAnswerEvent*)(&e);
+      if (TESTC(pResponse))
+      {
+        TESTC(strcmp(pResponse->pScope, _ePropertySetAC.getScope().c_str()) == 0);
+        TESTC(pResponse->result == GCF_NO_ERROR);
+      }
+            
+      if (TESTC(_ePropertySetAC.isLoaded()))
+      {
+        TSTTestreadyEvent r;
+        r.testnr = 403;
+        _pSTPort1->send(r); 
+               
+        if (_curRemoteTestNr != 402) 
+        {
+          delayedUnload = true;
+          break;       
+        }    
+        if (!TESTC(_ePropertySetAC.unload() == GCF_NO_ERROR))
+        {
+          FAIL_AND_DONE("Could not unload propset A_C");
+        }                
+      }      
+      else
+      {
+        FAIL_AND_DONE("Could not load propset A_C");
+      }
+      break;
+    }
+
+    case F_EXTPS_UNLOADED:
+    {
+      GCFPropSetAnswerEvent* pResponse = (GCFPropSetAnswerEvent*)(&e);
+      if (TESTC(pResponse))
+      {
+        TESTC(strcmp(pResponse->pScope, _ePropertySetAC.getScope().c_str()) == 0);
+        TESTC(pResponse->result == GCF_NO_ERROR);
+      }
+            
+      if (TESTC(!_ePropertySetAC.isLoaded()))
+      {
+        TSTTestreadyEvent r;
+        r.testnr = 403;
+        //_pSTPort1->send(r);          
+        NEXT_TEST(4_4);
+      }      
+      else
+      {
+        FAIL_AND_DONE("Could not unload propset A_C");
+      }
+      break;
+    }
+
     case TST_TESTREADY:
     {
       TSTTestreadyEvent indicationIn(e);
       _curRemoteTestNr = indicationIn.testnr;
-      if (started)
+      if (!delayedUnload) break;           
+      if (_curRemoteTestNr != 402) break;  
+      if (!TESTC(_ePropertySetAC.unload() == GCF_NO_ERROR))
       {
-        if (ready) TRAN(Application::test206)
-        else ready = true;
-      }
-      else
-      {
-        started = true;
-        if (_apcT1.unload() != GCF_NO_ERROR)
-        {
-          failed(205);
-          TRAN(Application::test206);
-        }
-        else
-        {
-          _counter = 1;
-        }      
+        FAIL_AND_DONE("Could not unload propset A_C");
       }
       break;
     }
-    case F_APCUNLOADED:
-    {
-      GCFAPCAnswerEvent* pResponse = static_cast<GCFAPCAnswerEvent*>(&e);
-      assert(pResponse);
-      switch (_counter)
-      {
-        case 1:
-          if ((strcmp(pResponse->pScope, "A_C") == 0) &&
-              (strcmp(pResponse->pApcName, "ApcT1") == 0) &&
-              (pResponse->result == GCF_NO_ERROR) &&
-              (&p == &_supTask3.getPort()))
-          {    
-            CHECK_DB
-            passed(205);
-          }
-          else
-            failed(205);
-          if (ready) TRAN(Application::test206)
-          else ready = true;          
-          break;
-      }
-      break;
-    }      
 
     default:
       status = GCFEvent::NOT_HANDLED;
@@ -655,268 +646,124 @@ GCFEvent::TResult Application::test205(GCFEvent& e, GCFPortInterface& p)
   return status;
 }
 
-GCFEvent::TResult Application::test206(GCFEvent& e, GCFPortInterface& p)
+GCFEvent::TResult Application::test4_4(GCFEvent& e, GCFPortInterface& /*p*/)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (e.signal)
   {
-    case F_ENTRY:
-      _counter = 0;
-      if (_apcT1.load() != GCF_NO_ERROR)
-      {
-        failed(204);
-        TRAN(Application::test205);
-      }
-      else
-      {
-        _counter = 1;
-      }
-      break;
-      
     case TST_TESTREADY:
     {
       TSTTestreadyEvent indicationIn(e);
       _curRemoteTestNr = indicationIn.testnr;
-      if (_counter == 2)
+      //intentional fall through
+    }
+    case F_ENTRY:
+      if (_curRemoteTestNr != 403) break;           
+      if (!TESTC(_propertySetB4.enable() == GCF_NO_ERROR))
       {
-        if (_apcT1.unload() != GCF_NO_ERROR)
-        {
-          failed(206);
-          TRAN(Application::test207);
-        }
-        else _counter++;
+        FAIL_AND_DONE("Could not enable propset B4");
+      }
+      else if (!TESTC(_propertySetD1.enable() == GCF_NO_ERROR))
+      {
+        FAIL_AND_DONE("Could not enable propset D1");
       }
       break;
-    }
-    case F_APCLOADED:
+
+    case F_MYPS_ENABLED:
     {
-      GCFAPCAnswerEvent* pResponse = static_cast<GCFAPCAnswerEvent*>(&e);
-      assert(pResponse);
-      if (_counter == 1)
+      GCFPropSetAnswerEvent* pResponse = (GCFPropSetAnswerEvent*)(&e);
+      if (TESTC(pResponse))
       {
-        if ((strcmp(pResponse->pScope, "A_C") == 0) &&
-            (strcmp(pResponse->pApcName, "ApcT1") == 0) &&
-            (pResponse->result == GCF_NO_ERROR) &&
-            (&p == &_supTask3.getPort()))
+        TESTC(pResponse->result == GCF_NO_ERROR);
+      }
+      if (_propertySetB4.isEnabled() && _propertySetD1.isEnabled())
+      {
+        _counter = 0;
+        if (!TESTC(_ePropertySetAC.load() == GCF_NO_ERROR)) 
         {
-          if (_apcT1.reload() != GCF_NO_ERROR)
+          FAIL_AND_DONE("Could not load propset A_C");
+        }
+        else if (!TESTC(_ePropertySetAH.load() == GCF_NO_ERROR)) 
+        {
+          FAIL_AND_DONE("Could not load propset A_H");
+        }         
+        else if (!TESTC(_ePropertySetAK.load() == GCF_NO_ERROR)) 
+        {
+          FAIL_AND_DONE("Could not load propset A_K");
+        }
+      }            
+      break;
+    }
+
+    case F_EXTPS_LOADED:
+    {
+      GCFPropSetAnswerEvent* pResponse = (GCFPropSetAnswerEvent*)(&e);
+      if (TESTC(pResponse))
+      {
+        TESTC(pResponse->result == GCF_NO_ERROR);
+      }
+      if (_ePropertySetAC.isLoaded() && 
+          _ePropertySetAH.isLoaded() && 
+          _ePropertySetAK.isLoaded())
+      {
+        if (!TESTC(_ePropertySetAC.unload() == GCF_NO_ERROR)) 
+        {
+          FAIL_AND_DONE("Could not unload propset A_C");
+        }
+        else if (!TESTC(_ePropertySetAH.unload() == GCF_NO_ERROR)) 
+        {
+          FAIL_AND_DONE("Could not unload propset A_H");
+        }         
+        else if (!TESTC(_ePropertySetAK.unload() == GCF_NO_ERROR)) 
+        {
+          FAIL_AND_DONE("Could not unload propset A_K");
+        }
+      }
+      break;    
+    }
+    case F_EXTPS_UNLOADED:
+    {
+      GCFPropSetAnswerEvent* pResponse = (GCFPropSetAnswerEvent*)(&e);
+      if (TESTC(pResponse))
+      {
+        TESTC(pResponse->result == GCF_NO_ERROR);
+      }
+      if (!_ePropertySetAC.isLoaded() && 
+          !_ePropertySetAH.isLoaded() && 
+          !_ePropertySetAK.isLoaded())
+      {
+        _counter++;
+        if (_counter < 100)
+        {
+          if (!TESTC(_ePropertySetAC.load() == GCF_NO_ERROR)) 
           {
-            failed(206);
-            TRAN(Application::test207);
+            FAIL_AND_DONE("Could not load propset A_C");
           }
-          else _counter++;
-        }
-      }
-      break;
-    }      
-    case F_APCRELOADED:
-    {
-   
-      GCFAPCAnswerEvent* pResponse = static_cast<GCFAPCAnswerEvent*>(&e);
-      assert(pResponse);
-      if (_counter == 2)
-      {
-        if ((strcmp(pResponse->pScope, "A_C") == 0) &&
-            (strcmp(pResponse->pApcName, "ApcT1") == 0) &&
-            (pResponse->result == GCF_NO_ERROR) &&
-            (&p == &_supTask3.getPort()))
-        {
-          TSTTestreadyEvent r;
-          r.testnr = 206;
-          assert(_pSTPort1);
-          _pSTPort1->send(r);      
-        }
-      }
-      break;
-    }
-    case F_APCUNLOADED:
-    {
-      GCFAPCAnswerEvent* pResponse = static_cast<GCFAPCAnswerEvent*>(&e);
-      assert(pResponse);
-      if (_counter == 3)
-      {
-        if ((strcmp(pResponse->pScope, "A_C") == 0) &&
-            (strcmp(pResponse->pApcName, "ApcT1") == 0) &&
-            (pResponse->result == GCF_NO_ERROR) &&
-            (&p == &_supTask3.getPort()))
-        {           
-          CHECK_DB
-          passed(206);
+          else if (!TESTC(_ePropertySetAH.load() == GCF_NO_ERROR)) 
+          {
+            FAIL_AND_DONE("Could not load propset A_H");
+          }         
+          else if (!TESTC(_ePropertySetAK.load() == GCF_NO_ERROR)) 
+          {
+            FAIL_AND_DONE("Could not load propset A_K");
+          }
         }
         else
-          failed(206);
-        TRAN(Application::test207);
+        {
+          NEXT_TEST(5_3);
+        }
       }
-      break;
-    }      
-
-    default:
-      status = GCFEvent::NOT_HANDLED;
-      break;
-  }
-
-  return status;
-}
-
-GCFEvent::TResult Application::test207(GCFEvent& e, GCFPortInterface& p)
-{
-  GCFEvent::TResult status = GCFEvent::HANDLED;
-
-  switch (e.signal)
-  {
-    case TST_TESTREADY:
-    {
-      TSTTestreadyEvent indicationIn(e);
-      if (_curRemoteTestNr == 0)
-        _curRemoteTestNr = indicationIn.testnr;
-        //intentional fall through
-      else
-        break;
-    }    
-    case F_ENTRY:
-      if (_curRemoteTestNr == 0) break;
-      if (_apcT1a.load(false) != GCF_NO_ERROR)
-      {
-        failed(207);
-        TRAN(Application::test208);
-      }
-      else
-      {
-        _counter = 1;
-      }      
-      break;
-
-    case F_APCLOADED:
-    {
-      GCFAPCAnswerEvent* pResponse = static_cast<GCFAPCAnswerEvent*>(&e);
-      assert(pResponse);
-      switch (_counter)
-      {
-        case 1:
-          if ((strcmp(pResponse->pScope, "A_C") == 0) &&
-              (strcmp(pResponse->pApcName, "ApcT1a") == 0) &&
-              (pResponse->result == GCF_NO_ERROR) &&
-              (&p == &_supTask3.getPort()))
-          {
-            if (_apcT1a.unload() != GCF_NO_ERROR)
-            {
-              failed(207);
-              TRAN(Application::test208);
-            }
-            else _counter++;
-          }
-          break;
-      }
-      break;
-    }      
-    case F_APCUNLOADED:
-    {
-      GCFAPCAnswerEvent* pResponse = static_cast<GCFAPCAnswerEvent*>(&e);
-      assert(pResponse);
-      switch (_counter)
-      {
-        case 2:
-          if ((strcmp(pResponse->pScope, "A_C") == 0) &&
-              (strcmp(pResponse->pApcName, "ApcT1a") == 0) &&
-              (pResponse->result == GCF_NO_ERROR) &&
-              (&p == &_supTask3.getPort()))
-          {
-            passed(207);
-          }
-          else
-            failed(207);
-          TRAN(Application::test208);
-          break;          
-      }
-      break;
-    }  
-
-    default:
-      status = GCFEvent::NOT_HANDLED;
-      break;
-  }
-
-  return status;
-}
-
-GCFEvent::TResult Application::test208(GCFEvent& e, GCFPortInterface& p)
-{
-  GCFEvent::TResult status = GCFEvent::HANDLED;
-
-  switch (e.signal)
-  {
-    case F_ENTRY:      
-      if (_apcT1b.load(false) != GCF_NO_ERROR)
-      {
-        failed(208);
-        TRAN(Application::test301);
-      }
-      else
-      {
-        _counter = 1;
-      }      
-      break;
-
-    case F_APCLOADED:
-    {
-      GCFAPCAnswerEvent* pResponse = static_cast<GCFAPCAnswerEvent*>(&e);
-      assert(pResponse);
-      switch (_counter)
-      {
-        case 1:
-          if ((strcmp(pResponse->pScope, "A") == 0) &&
-              (strcmp(pResponse->pApcName, "ApcT1b") == 0) &&
-              (pResponse->result == GCF_NO_ERROR) &&
-              (&p == &_supTask3.getPort()))
-          {
-            if (_apcT1b.unload() != GCF_NO_ERROR)
-            {
-              failed(208);
-              TRAN(Application::test301);
-            }
-            else _counter++;
-          }
-          else
-          {
-            failed(208);
-            TRAN(Application::test301);
-          }          
-          break;
-      }
-      break;
-    }      
-    case F_APCUNLOADED:
-    {
-      GCFAPCAnswerEvent* pResponse = static_cast<GCFAPCAnswerEvent*>(&e);
-      assert(pResponse);
-      switch (_counter)
-      {
-        case 2:
-          if ((strcmp(pResponse->pScope, "A") == 0) &&
-              (strcmp(pResponse->pApcName, "ApcT1b") == 0) &&
-              (pResponse->result == GCF_NO_ERROR) &&
-              (&p == &_supTask3.getPort()))
-          {
-            passed(208);
-          }
-          else
-            failed(208);
-          TRAN(Application::test301);
-          break;          
-      }
-      break;
-    }  
-
+      break;   
+    }
     case F_EXIT:
     {
       TSTTestreadyEvent r;
-      r.testnr = 208;
-      assert(_pSTPort1);
-      _pSTPort1->send(r);      
+      r.testnr = 404;
+      if (_pSTPort1->isConnected())
+        _pSTPort1->send(r);
       break;
-    }
-
+    } 
     default:
       status = GCFEvent::NOT_HANDLED;
       break;
@@ -925,98 +772,52 @@ GCFEvent::TResult Application::test208(GCFEvent& e, GCFPortInterface& p)
   return status;
 }
 
-// Will be skipped due to problems in the design 
-GCFEvent::TResult Application::test209(GCFEvent& e, GCFPortInterface& p)
+GCFEvent::TResult Application::test5_3(GCFEvent& e, GCFPortInterface& /*p*/)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (e.signal)
   {
-    case F_ENTRY:
-      break;
-
     case TST_TESTREADY:
     {
       TSTTestreadyEvent indicationIn(e);
       _curRemoteTestNr = indicationIn.testnr;
-      _apcT3.setScope("A_C");
-      if (_apcT3.load(false) != GCF_NO_ERROR)
+      //intentional fall through
+    }
+    case F_ENTRY:
+      if (_curRemoteTestNr != 501) break;           
+      _ePropertySetAK.configure("e2");
+      break;
+    case F_PS_CONFIGURED:
+    {
+      GCFConfAnswerEvent* pResponse = (GCFConfAnswerEvent*)(&e);
+      if (TESTC(pResponse))
       {
-        failed(209);
-        TRAN(Application::test210);
+        TESTC(strcmp(pResponse->pScope, _ePropertySetAK.getScope().c_str()) == 0);
+        TESTC(strcmp(pResponse->pApcName, "e2") == 0);
+        if (!TESTC(pResponse->result != GCF_NO_ERROR))
+        {
+          FAIL_AND_DONE("PA has not reported configure error: e2.apc does not exist");
+        }
+        else
+        {
+          FINISHED;
+        }
       }
       else
       {
-        _counter = 1;
-      }      
-      break;
-    }
-    case F_APCLOADED:
-    {
-      GCFAPCAnswerEvent* pResponse = static_cast<GCFAPCAnswerEvent*>(&e);
-      assert(pResponse);
-      switch (_counter)
-      {
-        case 1:
-          if ((strcmp(pResponse->pScope, "A_C") == 0) &&
-              (strcmp(pResponse->pApcName, "ApcT3") == 0) &&
-              (pResponse->result != GCF_NO_ERROR) &&
-              (&p == &_supTask3.getPort()))
-          {
-            passed(209);
-          }
-          else
-            failed(209);
-          TRAN(Application::test210);
-          break;          
+        FAIL_AND_DONE("Event problems");
       }
       break;
-    }  
-      
-    default:
-      status = GCFEvent::NOT_HANDLED;
-      break;
-  }
-
-  return status;
-}
-
-// Will be skipped due to combinations of other tests coverts this test
-GCFEvent::TResult Application::test210(GCFEvent& e, GCFPortInterface& /*p*/)
-{
-  GCFEvent::TResult status = GCFEvent::HANDLED;
-
-  switch (e.signal)
-  {
-    case F_ENTRY:
-      break;
-
-    default:
-      status = GCFEvent::NOT_HANDLED;
-      break;
-  }
-
-  return status;
-}
-
-GCFEvent::TResult Application::test301(GCFEvent& e, GCFPortInterface& /*p*/)
-{
-  GCFEvent::TResult status = GCFEvent::HANDLED;
-
-  switch (e.signal)
-  {
-    case F_ENTRY:
-      skipped(301);
-      TRAN(Application::test302);
-      break;
-
-    case TST_TESTREADY:
+    }    
+    case F_EXIT:
     {
-      TSTTestreadyEvent indicationIn(e);
-      _curRemoteTestNr = indicationIn.testnr;
+      TSTTestreadyEvent r;
+      r.testnr = 503;
+      if (_pSTPort1->isConnected())
+        _pSTPort1->send(r);
       break;
-    }
-
+    } 
     default:
       status = GCFEvent::NOT_HANDLED;
       break;
@@ -1025,33 +826,7 @@ GCFEvent::TResult Application::test301(GCFEvent& e, GCFPortInterface& /*p*/)
   return status;
 }
 
-GCFEvent::TResult Application::test302(GCFEvent& e, GCFPortInterface& /*p*/)
-{
-  GCFEvent::TResult status = GCFEvent::HANDLED;
-
-  switch (e.signal)
-  {
-    case F_ENTRY:
-      skipped(302);
-      TRAN(Application::test303);
-      break;
-
-    case TST_TESTREADY:
-    {
-      TSTTestreadyEvent indicationIn(e);
-      _curRemoteTestNr = indicationIn.testnr;
-      break;
-    }
-
-    default:
-      status = GCFEvent::NOT_HANDLED;
-      break;
-  }
-
-  return status;
-}
-
-GCFEvent::TResult Application::test303(GCFEvent& e, GCFPortInterface& p)
+/*GCFEvent::TResult Application::test303(GCFEvent& e, GCFPortInterface& p)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
@@ -1485,139 +1260,7 @@ GCFEvent::TResult Application::test306(GCFEvent& e, GCFPortInterface& p)
 
   return status;
 }
-
-GCFEvent::TResult Application::test401(GCFEvent& e, GCFPortInterface& p)
-{
-  GCFEvent::TResult status = GCFEvent::HANDLED;
-
-  switch (e.signal)
-  {
-    case F_ENTRY:
-      _supTask3.getPort().init(_supTask3, "server", GCFPortInterface::SPP, TST_PROTOCOL);
-      _supTask3.getPort().open();
-      break;
-
-    case F_TIMER:
-      _supTask3.getPort().open();
-      break;
-
-    case F_CONNECTED:
-      break;
-
-    case F_DISCONNECTED:
-      if (&p == &_supTask3.getPort())
-        _supTask3.getPort().setTimer(1.0); // try again after 1 second
-      break;
-
-    case TST_TESTREQ:
-    {
-      TSTTestrespEvent r;
-      r.testnr = 401;
-      _supTask3.getPort().send(r);
-      passed(401);
-      TRAN(Application::test402);
-      break;
-    }
-     
-    default:
-      status = GCFEvent::NOT_HANDLED;
-      break;
-  }
-
-  return status;
-}
-
-GCFEvent::TResult Application::test402(GCFEvent& e, GCFPortInterface& p)
-{
-  GCFEvent::TResult status = GCFEvent::HANDLED;
-  
-  
-  static bool closing = true;
-
-  switch (e.signal)
-  {
-    case F_ENTRY:
-      closing = true;
-      _supTask3.getPort().close();
-      break;
-
-    case F_TIMER:
-      _port.open();
-      break;
-
-    case F_CONNECTED:
-      _counter = 0;
-      break;
-      
-    case F_ACCEPT_REQ:
-      if (_pSTPort1 == 0)
-      {
-        _pSTPort1 = new GCFTCPPort();
-        _pSTPort1->init(_supTask3, "server", GCFPortInterface::SPP, TST_PROTOCOL);
-        _port.accept(*_pSTPort1);
-      }
-      else
-      {
-        _pSTPort2 = new GCFTCPPort();
-        _pSTPort2->init(_supTask3, "server", GCFPortInterface::SPP, TST_PROTOCOL);
-        _port.accept(*_pSTPort2);
-      }
-      break;
-      
-    case F_DISCONNECTED:
-      if (closing)
-      {
-        _port.init(_supTask3, "server", GCFPortInterface::MSPP, TST_PROTOCOL);
-        _port.open();
-        closing = false;
-      }
-      else
-      {
-        if (&p == &_port)
-          _port.setTimer(1.0); // try again after 1 second
-      }      
-      break;
-
-    case F_CLOSED:
-      _port.init(_supTask3, "server", GCFPortInterface::MSPP, TST_PROTOCOL);
-      _port.open();
-      closing = false;
-      break;
-
-    case TST_TESTREQ:
-    {
-      TSTTestrespEvent r;
-      r.testnr = 402;
-      _counter++;
-      if (_counter == 1)
-      {
-        assert(_pSTPort1);
-        _pSTPort1->send(r);
-      }
-      else if (_counter == 2)
-      {
-        assert(_pSTPort2);
-        _pSTPort2->send(r);
-      }
-      break;
-    }  
-    case TST_TESTREADY:
-    {
-      TSTTestreadyEvent r(e);
-      assert(_pSTPort1);
-      _pSTPort1->send(r);      
-      passed(402);
-      TRAN(Application::test101);
-      break;
-    } 
-    default:
-      status = GCFEvent::NOT_HANDLED;
-      break;
-  }
-
-  return status;
-}
-
+*/
 GCFEvent::TResult Application::finished(GCFEvent& e, GCFPortInterface& /*p*/)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
@@ -1631,11 +1274,15 @@ GCFEvent::TResult Application::finished(GCFEvent& e, GCFPortInterface& /*p*/)
       //intentional fall through
     }
     case F_ENTRY:
-      if (_curRemoteTestNr != 501) break;     
-      fprintf(stderr, "Ready with tests: passed %d, failed %d\n", _passed, _failed);    
+    {
+      //if (_curRemoteTestNr != 999) break;           
+      TSTTestreadyEvent r;
+      r.testnr = 999;
+      if (_pSTPort1->isConnected())
+        _pSTPort1->send(r);
       GCFTask::stop();    
       break;
-
+    }
     default:
       status = GCFEvent::NOT_HANDLED;
       break;
@@ -1644,15 +1291,21 @@ GCFEvent::TResult Application::finished(GCFEvent& e, GCFPortInterface& /*p*/)
   return status;
 }
 
+void Application::run()
+{
+  start(); // make initial transition
+  GCFTask::run();
+}
+
 int main(int argc, char* argv[])
 {
   GCFTask::init(argc, argv);
   
-  Application a;
-
-  a.start();
-
-  GCFTask::run();
+  Suite s("GCF Test", &cerr);
+  s.addTest(new Application);
+  s.run();
+  s.report();
+  s.free();
   
   return 0;  
 }

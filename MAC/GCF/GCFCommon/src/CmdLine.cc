@@ -32,7 +32,7 @@
 // if you're using MFC, you'll need to un-comment this line
 // #include "stdafx.h"
 
-#include "CmdLine.h"
+#include <GCF/CmdLine.h>
 #include <ctype.h>
 
 /*------------------------------------------------------

@@ -37,14 +37,18 @@ PropertyAgent_CPPFLAGS= -I$(top_srcdir)/include/GCF/PAL \
 BUILT_SOURCES = \
 	PA_Protocol.ph \
 	mac.ns \
-	mac.top \
-	log4cplus.properties
+	mac.top
 
 EXTRA_DIST = \
 	PA_Protocol.ph \
 	mac.ns \
-	mac.top \
-	log4cplus.properties
+	mac.top
+
+#in case of make install these files will be copied to the bindir beside the test apps
+configfilesdir=$(bindir)
+configfiles_DATA= \
+	loadAPC
+
 	
 %.properties: $(MAC_CONFIG)/%.properties
 	cp $< $@

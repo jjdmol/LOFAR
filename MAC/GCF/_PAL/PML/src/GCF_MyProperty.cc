@@ -34,8 +34,8 @@ GCFMyProperty::GCFMyProperty(const TProperty& propInfo,
   _isLinked(false),
   _propertySet(propertySet)
 {
-  assert(!exists());
-  _pCurValue = GCFPValue::createMACTypeObject((GCFPValue::TMACValueType) propInfo.type);
+  if (propertySet.isTemporary()) assert(!exists());
+  _pCurValue = GCFPValue::createMACTypeObject(propInfo.type);
   assert(_pCurValue);
   _pOldValue = _pCurValue->clone();
   if (propInfo.defaultValue)
@@ -111,29 +111,34 @@ GCFPValue* GCFMyProperty::getOldValue() const
     return 0;
 }
 
-bool GCFMyProperty::link()
+bool GCFMyProperty::link(bool setDefault, TGCFResult& result)
 {
   bool isAsync(false);
   assert(!_isLinked);  
 
-  TGCFResult result(GCF_NO_ERROR);
+  result = GCF_NO_ERROR;
   assert(exists());
   assert(!_isBusy);
-  if (_accessMode & GCF_READABLE_PROP)
+  if (_accessMode & GCF_READABLE_PROP && setDefault)
   {
     assert(_pCurValue);
     result = GCFProperty::setValue(*_pCurValue);    
-    assert(result == GCF_NO_ERROR);
   }
-  if (_accessMode & GCF_WRITABLE_PROP )
+  if (_accessMode & GCF_WRITABLE_PROP && result == GCF_NO_ERROR)
   {
     _changingAccessMode = false;
+    if (!setDefault) // getDefault from DB
+    {
+      requestValue();
+    }
     result = subscribe();
-    assert(result == GCF_NO_ERROR);
-    isAsync = true;
-    _isBusy = true;
+    if (result == GCF_NO_ERROR)
+    {
+      isAsync = true;
+      _isBusy = true;
+    }
   }
-  if (!isAsync)
+  if (!isAsync && result == GCF_NO_ERROR)
     _isLinked = true;
   return isAsync;
 }
@@ -209,7 +214,12 @@ void GCFMyProperty::subscribed ()
 
 void GCFMyProperty::valueGet (const GCFPValue& value)
 {
-  valueChanged(value);
+  TGCFResult result;
+  assert(_pOldValue && _pCurValue);
+  result = _pOldValue->copy(*_pCurValue);
+  assert(result == GCF_NO_ERROR);
+  result = _pCurValue->copy(value);
+  assert(result == GCF_NO_ERROR);
 }
                                
 void GCFMyProperty::valueChanged (const GCFPValue& value)

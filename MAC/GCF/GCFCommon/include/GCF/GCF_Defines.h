@@ -27,17 +27,17 @@
 
 #include <assert.h>
 
-#define GCF_PROP_NAME_SEP     '_'
+#define GCF_PROP_NAME_SEP     '.'
 
 enum TGCFResult {
   GCF_NO_ERROR, 
   GCF_UNKNOWN_ERROR,
   GCF_PML_ERROR, 
-  GCF_APCLOAD_ERROR,
-  GCF_APCRELOAD_ERROR,
-  GCF_APCUNLOAD_ERROR,
-  GCF_MYPROPSLOAD_ERROR,
-  GCF_MYPROPSUNLOAD_ERROR,
+  GCF_EXTPS_LOAD_ERROR,
+  GCF_PS_CONFIGURE_ERROR,
+  GCF_EXTPS_UNLOAD_ERROR,
+  GCF_MYPS_ENABLE_ERROR,
+  GCF_MYPS_DISABLE_ERROR,
   GCF_VALUESTRING_NOT_VALID,
   GCF_DIFFERENT_TYPES,
   GCF_BUSY,
@@ -50,18 +50,25 @@ enum TGCFResult {
   GCF_NO_PROPER_DATA,
   GCF_SCOPE_ALREADY_REG,
   GCF_ALREADY_SUBSCRIBED,
-  GCF_NOT_SUBSCRIBED
+  GCF_NOT_SUBSCRIBED,
+  GCF_WRONG_STATE
 };
 
 typedef unsigned char TAccessMode;
 
 #define GCF_READABLE_PROP 1
 #define GCF_WRITABLE_PROP 2
-
+typedef enum TMACValueType {NO_LPT, LPT_BOOL, LPT_CHAR, LPT_UNSIGNED, LPT_INTEGER, 
+                    LPT_BIT32, LPT_BLOB, LPT_REF, LPT_DOUBLE, LPT_DATETIME,
+                    LPT_STRING, LPT_DYNARR = 0x80,
+                    LPT_DYNBOOL, LPT_DYNCHAR, LPT_DYNUNSIGNED, LPT_DYNINTEGER, 
+                    LPT_DYNBIT32, LPT_DYNBLOB, LPT_DYNREF, LPT_DYNDOUBLE, LPT_DYNDATETIME,
+                    LPT_DYNSTRING };
+ 
 typedef struct
 {
   char*         propName;
-  unsigned int  type;
+  TMACValueType  type;
   TAccessMode   accessMode;
   char*         defaultValue;
 }

@@ -41,7 +41,7 @@ const char* [+ protocol_name +]_signalnames[] =
 
 #ifdef SWIG
 %module [+ (base-name) +]
-%include GCF/GCF_Event.h
+%include GCF/TM/GCF_Event.h
 %include carrays.i
 %include std_string.i
 %include typemaps.i
@@ -54,12 +54,12 @@ const char* [+ protocol_name +]_signalnames[] =
 %{
 #include "[+ (base-name) +].ph"[+ FOR include "" +]
 #include [+ (get "include") +][+ ENDFOR +]
-#include <GCF/GCF_TMProtocols.h>
+#include <GCF/TM/GCF_Protocols.h>
 %}
 #else
 [+ FOR include "" +]
 #include [+ (get "include") +][+ ENDFOR +]
-#include <GCF/GCF_TMProtocols.h>
+#include <GCF/TM/GCF_Protocols.h>
 #include <string>
 #endif
 
@@ -135,11 +135,11 @@ void* [+ event_class_name +]::pack(unsigned int& packsize)
 {
   [+ FOR param "" +][+ IF (or (*== (get "type") "[]") (*== (get "type") "*")) +]assert([+ (get "name") +]);[+ ENDIF +]
   [+ ENDFOR +]
-  unsigned int requiredSize = [+ IF (not (exist? "noheader")) +]sizeof(signal) + sizeof(length) + [+ ENDIF +][+ FOR param " +" +]
-    [+ IF (exist? "userdefined") +][+ (get "name") +][+ IF (*== (get "type") "*") +]->[+ ELSE +].[+ ENDIF +]getSize()
-    [+ ELIF (not (*== (get "type") "]")) +][+ IF (== (get "type") "string") +][+ (get "name") +].length() + sizeof(unsigned int)[+ ELSE +]sizeof([+ (get "name") +])[+ ENDIF+]
-    [+ ELIF (*== (get "type") "[]") +]sizeof([+ (get "name") +]Dim) + ([+ (get "name") +]Dim * sizeof([+ (get "name") +][0]))
-    [+ ELSE +]sizeof([+ (get "name") +])[+ ENDIF +][+ ENDFOR +];
+  unsigned int requiredSize = [+ IF (not (exist? "noheader")) +]sizeof(signal) + sizeof(length)[+ ENDIF +][+ FOR param "" +]
+    [+ IF (exist? "userdefined") +]+ [+ (get "name") +][+ IF (*== (get "type") "*") +]->[+ ELSE +].[+ ENDIF +]getSize()
+    [+ ELIF (not (*== (get "type") "]")) +]+ [+ IF (== (get "type") "string") +][+ (get "name") +].length() + sizeof(unsigned int)[+ ELSE +]sizeof([+ (get "name") +])[+ ENDIF+]
+    [+ ELIF (*== (get "type") "[]") +]+ sizeof([+ (get "name") +]Dim) + ([+ (get "name") +]Dim * sizeof([+ (get "name") +][0]))
+    [+ ELSE +]+ sizeof([+ (get "name") +])[+ ENDIF +][+ ENDFOR +];
 
   resizeBuf(requiredSize);
   unsigned int offset = 0;

@@ -21,8 +21,8 @@
 //#  $Id$
 
 #include <GCF/PAL/GCF_ExtPropertySet.h>
-#include <GCF/PAL/GCF_Property.h>
 #include <GCF/PAL/GCF_ExtProperty.h>
+#include <GCF/PAL/GCF_Answer.h>
 #include "GPM_Controller.h"
 #include <GCF/Utils.h>
 
@@ -35,7 +35,18 @@ GCFExtPropertySet::GCFExtPropertySet(const char* name,
   loadPropSetIntoRam();
 }
 
-GCFProperty* GCFExtPropertySet::createPropObject(TProperty& propInfo)
+GCFExtPropertySet::~GCFExtPropertySet()
+{
+  if (_isLoaded)
+  {
+    GPMController* pController = GPMController::instance();  
+    assert(pController);
+  
+    pController->unloadPropSet(*this);  
+  }
+}
+
+GCFProperty* GCFExtPropertySet::createPropObject(const TProperty& propInfo)
 {
   return new GCFExtProperty(propInfo, *this);
 }
@@ -83,6 +94,74 @@ TGCFResult GCFExtPropertySet::load()
   return result;
 }
 
+void GCFExtPropertySet::loaded(TGCFResult result)
+{
+  assert(_isBusy);
+  assert(!_isLoaded);
+  _isBusy = false;
+  if (result == GCF_NO_ERROR)
+  {
+    LOG_INFO(LOFAR::formatString ( 
+        "PA-RESP: Prop. set '%s' is loaded",
+        getScope().c_str()));
+    _isLoaded = true;
+  }
+
+  dispatchAnswer(F_EXTPS_LOADED, result);
+}
+
+void GCFExtPropertySet::unloaded(TGCFResult result)
+{
+  assert(_isBusy);
+  assert(_isLoaded);
+  _isBusy = false;
+  if (result == GCF_NO_ERROR)
+  {
+    LOG_INFO(LOFAR::formatString ( 
+        "PA-RESP: Prop. set '%s' is unloaded",
+        getScope().c_str()));
+  }
+  _isLoaded = false;
+  
+  GCFExtProperty* pProperty(0);
+  for (TPropertyList::iterator iter = _properties.begin();
+       iter != _properties.end(); ++iter)
+  {
+    pProperty = (GCFExtProperty*) iter->second;
+    assert(pProperty);
+    if (pProperty->isSubscribed())
+    {
+      pProperty->unsubscribe();
+    }
+  }
+
+  dispatchAnswer(F_EXTPS_UNLOADED, result);  
+}
+
+void GCFExtPropertySet::serverIsGone()
+{
+  assert(_isLoaded);
+
+  LOG_INFO(LOFAR::formatString ( 
+      "PA-IND: Server for prop. set '%s' is gone",
+      getScope().c_str()));
+  _isLoaded = false;
+
+  GCFExtProperty* pProperty(0);
+  for (TPropertyList::iterator iter = _properties.begin();
+       iter != _properties.end(); ++iter)
+  {
+    pProperty = (GCFExtProperty*) iter->second;
+    assert(pProperty);
+    if (pProperty->isSubscribed())
+    {
+      pProperty->unsubscribe();
+    }
+  }
+
+  dispatchAnswer(F_SERVER_GONE, GCF_NO_ERROR);  
+}
+
 TGCFResult GCFExtPropertySet::unload()
 {  
   TGCFResult result(GCF_NO_ERROR);
@@ -101,20 +180,18 @@ TGCFResult GCFExtPropertySet::unload()
         getScope().c_str()));
     result = GCF_NOT_LOADED;
   }
-  else if (_name.length() == 0 || 
-           _scope.length() == 0 || 
-           !Utils::isValidPropName(_scope.c_str()))
+  else if (getScope().length() == 0 || 
+           !Utils::isValidPropName(getScope().c_str()))
   {
     LOG_INFO(LOFAR::formatString ( 
-        "APC name or scope not set or scope (%s) meets not the naming convention. Ignored!",
-        _scope.c_str()));
+        "Instance name not set or meets not the naming convention (%s). Ignored!",
+        getScope().c_str()));
     result = GCF_NO_PROPER_DATA;
   }
   else
   {    
     GPMController* pController = GPMController::instance();
     assert(pController);
-    _loadDefaults = false;
     LOG_INFO(LOFAR::formatString ( 
         "REQ: Unload ext. property set %s",
         getScope().c_str()));
@@ -143,7 +220,7 @@ TGCFResult GCFExtPropertySet::requestValue(const string propName) const
   }
 }
 
-TGCFResult GCFExtPropertySet::subscribe(const string propName) const
+TGCFResult GCFExtPropertySet::subscribeProp(const string propName) const
 {
   GCFExtProperty* pProperty = (GCFExtProperty*) getProperty(propName);
   if (pProperty)
@@ -159,7 +236,7 @@ TGCFResult GCFExtPropertySet::subscribe(const string propName) const
   }
 }
 
-TGCFResult GCFExtPropertySet::unsubscribe(const string propName) const
+TGCFResult GCFExtPropertySet::unsubscribeProp(const string propName) const
 {
   GCFExtProperty* pProperty = (GCFExtProperty*) getProperty(propName);
   if (pProperty)

@@ -1,19 +1,19 @@
-#ifndef SUPERVISEDTASK_H
-#define SUPERVISEDTASK_H
+#ifndef TASK_H
+#define TASK_H
 
-#include <GCF/GCF_Task.h>
-#include <GCF/GCF_TCPPort.h>
-#include <GCF/GCF_TMProtocols.h>
+#include <GCF/TM/GCF_Task.h>
+#include <GCF/TM/GCF_TCPPort.h>
+#include <GCF/TM/GCF_Protocols.h>
 #include <GCF/GCF_Defines.h>
 #include "PropertyProxy.h"
 #include "Answer.h"
 #include <Common/lofar_iostream.h>
 
-class SupervisedTask : public GCFTask
+class Task : public GCFTask
 {
   public:
-    SupervisedTask(GCFTask& a, string taskName);
-    ~SupervisedTask();
+    Task(GCFTask& a, string taskName);
+    ~Task();
     
     inline GCFTCPPort& getPort() {return _port;}
     inline PropertyProxy& getProxy() {return _proxy;}
