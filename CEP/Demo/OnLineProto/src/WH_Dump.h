@@ -49,7 +49,8 @@ public:
   /// are created and how many elements there are in the buffer.
   /// The first WorkHolder should have nin=0.
   explicit WH_Dump (const string& name,
-		    unsigned int nin);
+		    unsigned int nin,
+		    bool active = false);
 
   virtual ~WH_Dump();
 
@@ -82,6 +83,8 @@ private:
   blitz::Array<std::complex<float>, 1> itsBuffer;
 
   gnuplot_ctrl* handle;
+  
+  bool itsActive;
 };
 
 }
