@@ -34,8 +34,6 @@
 
 // RMME: const int DefaultAntennaCount = 21;
 
-InitDebugContext(Calibrator,"Calibrator");
-
 Calibrator::Calibrator (const string & ObservationData, 
   const string & CelestialSources, const string & DBName, 
   const string & MEPName, const string & DBType, 
