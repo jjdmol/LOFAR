@@ -20,25 +20,11 @@
 //
 //  $Id$
 //
-//  $Log$
-//  Revision 1.3  2002/06/19 10:39:59  wierenga
-//  %[BugId: 48]%
-//
-//  Compiler warnings fixed.
-//
-//  Revision 1.2  2002/05/03 11:21:31  gvd
-//  Changed for new build environment (mostly added package name to include)
-//
-//  Revision 1.1  2002/03/15 13:28:08  gvd
-//  Added construct function to WH classes (for XML parser)
-//  Added getX functions to ParamBlock
-//  Added SAX classes for XML parser
-//  Improved testing scripts (added .run)
 //
 //
 //////////////////////////////////////////////////////////////////////
 
-#include "BaseSim/SAXSimulParser.h"
+#include "CEPFrame/SAXSimulParser.h"
 #include "Common/Debug.h"
 
 SAXSimulParser::SAXSimulParser (const string& fileName)

@@ -20,56 +20,14 @@
 //
 //  $Id$
 //
-//  $Log$
-//  Revision 1.17  2002/05/03 11:21:32  gvd
-//  Changed for new build environment (mostly added package name to include)
-//
-//  Revision 1.16  2002/03/15 13:28:09  gvd
-//  Added construct function to WH classes (for XML parser)
-//  Added getX functions to ParamBlock
-//  Added SAX classes for XML parser
-//  Improved testing scripts (added .run)
-//
-//  Revision 1.15  2002/03/14 14:25:27  wierenga
-//  system includes before local includes
-//
-//  Revision 1.14  2002/03/01 08:27:57  gvd
-//  Replaced firewall by Debug and changed code accordingly
-//  Added lofar_*.h for correct use of namespaces (for KAI and Intel C++)
-//
-//  Revision 1.13  2002/01/02 14:02:00  rdam
-//  Made getType() return class name
-//
-//  Revision 1.12  2001/10/19 06:01:46  gvd
-//  Added checkConnections
-//  Cleaned up Transport and StepRep classes
-//
-//  Revision 1.11  2001/09/24 14:04:09  gvd
-//  Added preprocess and postprocess functions
-//
-//  Revision 1.10  2001/09/21 12:19:02  gvd
-//  Added make functions to WH classes to fix memory leaks
-//
-//  Revision 1.9  2001/03/23 10:00:40  gvd
-//  Improved documentation and test programs
-//  Added clearEventCount function to Step
-//
-//  Revision 1.8  2001/03/01 13:15:47  gvd
-//  Added type argument in DataHolder constructor which is used in
-//  the connect functions to check if the DH types match
-//  Improved the simulator parser
-//  Improved documentation
-//
-//  Revision 1.7  2001/02/05 14:53:05  loose
-//  Added GPL headers
 //
 //////////////////////////////////////////////////////////////////////
 
 #include <stdio.h>             // for sprintf
 
-#include "BaseSim/WH_Example.h"
-#include "BaseSim/Step.h"
-#include "BaseSim/ParamBlock.h"
+#include "CEPFrame/WH_Example.h"
+#include "CEPFrame/Step.h"
+#include "CEPFrame/ParamBlock.h"
 #include "Common/Debug.h"
 
 WH_Example::WH_Example (const string& name,

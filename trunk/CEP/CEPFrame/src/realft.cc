@@ -20,17 +20,11 @@
 //
 //  $Id$
 //
-//  $Log$
-//  Revision 1.3  2002/05/03 11:21:32  gvd
-//  Changed for new build environment (mostly added package name to include)
-//
-//  Revision 1.2  2001/02/05 14:53:05  loose
-//  Added GPL headers
-//
+///////////////////////////////////////////////////////////////////////////
 
 #include <math.h>
-#include "BaseSim/four1.h"
-#include "BaseSim/realft.h"
+#include "CEPFrame/four1.h"
+#include "CEPFrame/realft.h"
 
 void realft(float data[], unsigned long n, int isign)
 {

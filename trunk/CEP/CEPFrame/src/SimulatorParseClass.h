@@ -20,32 +20,11 @@
 //
 //  $Id$
 //
-//  $Log$
-//  Revision 1.3  2002/05/03 11:21:31  gvd
-//  Changed for new build environment (mostly added package name to include)
-//
-//  Revision 1.2  2002/03/01 08:27:57  gvd
-//  Replaced firewall by Debug and changed code accordingly
-//  Added lofar_*.h for correct use of namespaces (for KAI and Intel C++)
-//
-//  Revision 1.1  2001/10/26 10:06:27  wierenga
-//  Wide spread changes to convert from Makedefs to autoconf/automake/libtool build environment
-//
-//  Revision 1.3  2001/08/16 14:33:07  gvd
-//  Determine TransportHolder at runtime in the connect
-//
-//  Revision 1.2  2001/03/23 10:00:40  gvd
-//  Improved documentation and test programs
-//  Added clearEventCount function to Step
-//
-//  Revision 1.1  2001/03/01 13:17:03  gvd
-//  New parser source files
-//
 //
 /////////////////////////////////////////////////////////////////////////////
 
-#ifndef BASESIM_SIMULATORPARSE_H
-#define BASESIM_SIMULATORPARSE_H
+#ifndef CEPFRAME_SIMULATORPARSE_H
+#define CEPFRAME_SIMULATORPARSE_H
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>

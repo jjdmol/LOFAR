@@ -20,47 +20,18 @@
 //
 //  $Id$
 //
-//  $Log$
-//  Revision 1.14  2002/05/03 11:21:32  gvd
-//  Changed for new build environment (mostly added package name to include)
-//
-//  Revision 1.13  2002/03/15 13:28:09  gvd
-//  Added construct function to WH classes (for XML parser)
-//  Added getX functions to ParamBlock
-//  Added SAX classes for XML parser
-//  Improved testing scripts (added .run)
-//
-//  Revision 1.12  2001/10/26 10:06:27  wierenga
-//  Wide spread changes to convert from Makedefs to autoconf/automake/libtool build environment
-//
-//  Revision 1.11  2001/10/19 06:01:46  gvd
-//  Added checkConnections
-//  Cleaned up Transport and StepRep classes
-//
-//  Revision 1.10  2001/09/21 12:19:02  gvd
-//  Added make functions to WH classes to fix memory leaks
-//
-//  Revision 1.9  2001/03/23 10:00:40  gvd
-//  Improved documentation and test programs
-//  Added clearEventCount function to Step
-//
-//  Revision 1.8  2001/03/01 13:15:47  gvd
-//  Added type argument in DataHolder constructor which is used in
-//  the connect functions to check if the DH types match
-//  Improved the simulator parser
-//  Improved documentation
 //
 //////////////////////////////////////////////////////////////////////
 
-#ifndef BASESIM_WH_EXAMPLE_H
-#define BASESIM_WH_EXAMPLE_H
+#ifndef CEPFRAME_WH_EXAMPLE_H
+#define CEPFRAME_WH_EXAMPLE_H
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
 
-#include "BaseSim/WorkHolder.h"
-#include "BaseSim/DH_Example.h"
+#include "CEPFrame/WorkHolder.h"
+#include "CEPFrame/DH_Example.h"
 
 
 /**

@@ -20,88 +20,6 @@
 //
 //  $Id$
 //
-//  $Log$
-//  Revision 1.17  2002/06/10 09:44:15  diepen
-//
-//  %[BugId: 37]%
-//  setRead and setWrite have been replaced by setReadDelay.
-//
-//  Revision 1.16  2002/05/16 15:17:56  schaaf
-//  modified TRACER levels and output
-//
-//  Revision 1.15  2002/05/15 14:54:53  wierenga
-//  Replace cout's with cdebug(x)'s.
-//
-//  Revision 1.14  2002/05/08 14:16:38  wierenga
-//  Added optimizeConnectionsWith method
-//
-//  Revision 1.13  2002/05/03 11:21:32  gvd
-//  Changed for new build environment (mostly added package name to include)
-//
-//  Revision 1.12  2002/05/02 12:17:55  schaaf
-//  Added CorbaMonitor object
-//
-//  Revision 1.11  2002/03/14 14:21:00  wierenga
-//  system include before local includes
-//
-//  Revision 1.10  2002/03/04 12:54:01  gvd
-//  Let WorkHolder copy the name of DataHolders; done by creating baseMake
-//
-//  Revision 1.9  2002/03/01 08:27:57  gvd
-//  Replaced firewall by Debug and changed code accordingly
-//  Added lofar_*.h for correct use of namespaces (for KAI and Intel C++)
-//
-//  Revision 1.8  2002/01/09 09:56:35  gvd
-//  Added getParent to Step (for Robbert)
-//
-//  Revision 1.7  2001/12/07 13:58:20  gvd
-//  Changes to make connect by name possible
-//  Avoid leaks in firewall
-//  Replace resolveComm by a new simplifyConnections
-//
-//  Revision 1.6  2001/10/19 14:24:42  gvd
-//  Added function getSteps and shortcutConnections
-//  Removed dataMap from SimulRep
-//
-//  Revision 1.5  2001/10/19 06:01:46  gvd
-//  Added checkConnections
-//  Cleaned up Transport and StepRep classes
-//
-//  Revision 1.4  2001/09/24 14:36:11  gvd
-//  Also use applnr in test on process to run
-//
-//  Revision 1.3  2001/09/24 14:04:09  gvd
-//  Added preprocess and postprocess functions
-//
-//  Revision 1.2  2001/09/21 12:19:02  gvd
-//  Added make functions to WH classes to fix memory leaks
-//
-//  Revision 1.1  2001/09/18 12:07:28  gvd
-//  Changed to resolve Step and Simul memory leaks
-//  Introduced ref.counted StepRep and SimulRep classes for that purposes
-//  Changed several functions to pass by reference instead of pass by pointer
-//
-//  Revision 1.17  2001/09/05 15:00:58  wierenga
-//  Replace !defined(NOMPI_) with defined(MPI_)
-//
-//  Revision 1.16  2001/08/16 14:33:07  gvd
-//  Determine TransportHolder at runtime in the connect
-//
-//  Revision 1.15  2001/08/09 15:48:48  wierenga
-//  Implemented first version of TH_Corba and test program
-//
-//  Revision 1.14  2001/06/22 09:09:30  schaaf
-//  Use TRANSPORTERINCLUDE to select the TH_XXX.h include files
-//
-//  Revision 1.13  2001/03/23 10:00:40  gvd
-//  Improved documentation and test programs
-//  Added clearEventCount function to Step
-//
-//  Revision 1.12  2001/03/01 13:32:32  gvd
-//  Improved error message in Step.cc when comparing DH types
-//
-//  Revision 1.10  2001/02/05 14:53:05  loose
-//  Added GPL headers
 //
 //////////////////////////////////////////////////////////////////////
 
@@ -109,16 +27,16 @@
 #include <Common/lofar_strstream.h>
 #include <Common/lofar_algorithm.h>    // for min,max
 
-#include "BaseSim/StepRep.h"
-#include "BaseSim/SimulRep.h"
-#include "BaseSim/Step.h"
+#include "CEPFrame/StepRep.h"
+#include "CEPFrame/SimulRep.h"
+#include "CEPFrame/Step.h"
 #include TRANSPORTERINCLUDE
-#include "BaseSim/TH_Mem.h"
-#include "BaseSim/Profiler.h"
+#include "CEPFrame/TH_Mem.h"
+#include "CEPFrame/Profiler.h"
 #include "Common/Debug.h"
 #ifdef HAVE_CORBA
-#include "BaseSim/Corba/BS_Corba.h"
-#include "BaseSim/Corba/CorbaMonitor.h"
+#include "CEPFrame/Corba/BS_Corba.h"
+#include "CEPFrame/Corba/CorbaMonitor.h"
 #endif 
 
 // this will give all instances of Step the same event in the Profiling output

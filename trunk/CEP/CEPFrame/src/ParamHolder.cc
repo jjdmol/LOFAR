@@ -20,34 +20,12 @@
 //
 //  $Id$
 //
-//  $Log$
-//  Revision 1.7  2002/05/03 11:21:31  gvd
-//  Changed for new build environment (mostly added package name to include)
-//
-//  Revision 1.6  2002/03/01 08:27:57  gvd
-//  Replaced firewall by Debug and changed code accordingly
-//  Added lofar_*.h for correct use of namespaces (for KAI and Intel C++)
-//
-//  Revision 1.5  2001/03/23 10:00:40  gvd
-//  Improved documentation and test programs
-//  Added clearEventCount function to Step
-//
-//  Revision 1.4  2001/03/01 13:15:47  gvd
-//  Added type argument in DataHolder constructor which is used in
-//  the connect functions to check if the DH types match
-//  Improved the simulator parser
-//  Improved documentation
-//
-//  Revision 1.3  2001/02/05 14:53:04  loose
-//  Added GPL headers
-//
-
 // ParamHolder.cpp: implementation of the ParamHolder class.
 //
 //////////////////////////////////////////////////////////////////////
 
 
-#include "BaseSim/ParamHolder.h"
+#include "ParamHolder.h"
 #include <Common/lofar_iostream.h>
 
 int ParamHolder::theirSerial = 0;

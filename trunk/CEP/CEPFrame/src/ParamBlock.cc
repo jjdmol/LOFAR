@@ -20,31 +20,12 @@
 //
 //  $Id$
 //
-//  $Log$
-//  Revision 1.5  2002/05/03 11:21:31  gvd
-//  Changed for new build environment (mostly added package name to include)
-//
-//  Revision 1.4  2002/03/15 13:28:08  gvd
-//  Added construct function to WH classes (for XML parser)
-//  Added getX functions to ParamBlock
-//  Added SAX classes for XML parser
-//  Improved testing scripts (added .run)
-//
-//  Revision 1.3  2002/03/01 08:27:57  gvd
-//  Replaced firewall by Debug and changed code accordingly
-//  Added lofar_*.h for correct use of namespaces (for KAI and Intel C++)
-//
-//  Revision 1.2  2001/09/24 14:04:08  gvd
-//  Added preprocess and postprocess functions
-//
-//  Revision 1.1  2001/08/16 14:33:07  gvd
-//  Determine TransportHolder at runtime in the connect
 //
 //
 //////////////////////////////////////////////////////////////////////
 
 
-#include "BaseSim/ParamBlock.h"
+#include "ParamBlock.h"
 #include <Common/lofar_iostream.h>
 
 ParamBlock::ParamBlock()

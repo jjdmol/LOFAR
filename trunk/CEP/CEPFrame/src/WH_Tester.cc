@@ -20,42 +20,10 @@
 //
 //  $Id$
 //
-//  $Log$
-//  Revision 1.11  2002/06/27 10:49:33  schaaf
-//  %[BugId: 57]%
-//  Modified getIn/OutHolder methods and use in process() and dump() methods.
-//
-//  Revision 1.10  2002/05/03 11:21:32  gvd
-//  Changed for new build environment (mostly added package name to include)
-//
-//  Revision 1.9  2002/03/15 13:28:09  gvd
-//  Added construct function to WH classes (for XML parser)
-//  Added getX functions to ParamBlock
-//  Added SAX classes for XML parser
-//  Improved testing scripts (added .run)
-//
-//  Revision 1.8  2002/03/01 08:27:57  gvd
-//  Replaced firewall by Debug and changed code accordingly
-//  Added lofar_*.h for correct use of namespaces (for KAI and Intel C++)
-//
-//  Revision 1.7  2002/01/02 14:02:00  rdam
-//  Made getType() return class name
-//
-//  Revision 1.6  2001/09/21 12:19:02  gvd
-//  Added make functions to WH classes to fix memory leaks
-//
-//  Revision 1.5  2001/03/01 13:15:47  gvd
-//  Added type argument in DataHolder constructor which is used in
-//  the connect functions to check if the DH types match
-//  Improved the simulator parser
-//  Improved documentation
-//
-//  Revision 1.4  2001/02/05 14:53:05  loose
-//  Added GPL headers
 //
 //////////////////////////////////////////////////////////////////////
 
-#include "BaseSim/WH_Tester.h"
+#include "CEPFrame/WH_Tester.h"
 
 
 WH_Tester::WH_Tester (const string& name)

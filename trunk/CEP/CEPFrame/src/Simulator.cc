@@ -19,10 +19,11 @@
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //
 //  $Id$
+//
+/////////////////////////////////////////////////////////////////////////////
 
-
-#include "BaseSim/Simulator.h"
-#include "BaseSim/SimulatorParseClass.h"
+#include "CEPFrame/Simulator.h"
+#include "CEPFrame/SimulatorParseClass.h"
 #include TRANSPORTERINCLUDE
 
 Simulator::Simulator()

@@ -20,10 +20,10 @@
 //
 //////////////////////////////////////////////////////////////////////
 
-#ifndef BASESIM_SIMULATOR2XML_H
-#define BASESIM_SIMULATOR2XML_H
+#ifndef CEPFRAME_SIMULATOR2XML_H
+#define CEPFRAME_SIMULATOR2XML_H
 
-#include "BaseSim/Simul.h"
+#include "CEPFrame/Simul.h"
 #include <Common/lofar_fstream.h>
 
 /** The Simul2XML class outputs a Simul to an XML file */

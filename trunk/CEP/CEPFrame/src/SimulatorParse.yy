@@ -22,6 +22,9 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.1.1.1  2003/02/21 11:14:36  schaaf
+//  copy from BaseSim tag "CEPFRAME"
+//
 //  Revision 1.2  2002/05/08 14:15:57  wierenga
 //  Added correct include paths
 //
@@ -39,8 +42,8 @@
 */
 
 %{
-#include "BaseSim/SimulatorParseClass.h"
-#include "BaseSim/ParamBlock.h"
+#include "CEPFrame/SimulatorParseClass.h"
+#include "CEPFrame/ParamBlock.h"
 %}
 
 %pure_parser                /* make parser re-entrant */

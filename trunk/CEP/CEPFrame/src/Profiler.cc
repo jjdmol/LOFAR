@@ -20,47 +20,14 @@
 //
 //  $Id$
 //
-//  $Log$
-//  Revision 1.12  2002/12/19 10:25:54  schaaf
 //
-//  %[BugId: 150]%
-//  Modified debug levels
-//
-//  Revision 1.11  2002/05/16 15:21:01  schaaf
-//  added MPE calls for ScaMPI
-//
-//  Revision 1.10  2002/05/03 11:21:31  gvd
-//  Changed for new build environment (mostly added package name to include)
-//
-//  Revision 1.9  2002/03/01 08:27:57  gvd
-//  Replaced firewall by Debug and changed code accordingly
-//  Added lofar_*.h for correct use of namespaces (for KAI and Intel C++)
-//
-//  Revision 1.8  2001/10/26 10:06:27  wierenga
-//  Wide spread changes to convert from Makedefs to autoconf/automake/libtool build environment
-//
-//  Revision 1.7  2001/09/05 08:49:20  wierenga
-//  Profiler.cc
-//
-//  Revision 1.6  2001/03/23 10:00:40  gvd
-//  Improved documentation and test programs
-//  Added clearEventCount function to Step
-//
-//  Revision 1.5  2001/03/01 13:15:47  gvd
-//  Added type argument in DataHolder constructor which is used in
-//  the connect functions to check if the DH types match
-//  Improved the simulator parser
-//  Improved documentation
-//
-//  Revision 1.4  2001/02/05 14:53:04  loose
-//  Added GPL headers
-//
+/////////////////////////////////////////////////////////////////////////////////////
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
 
-#include "BaseSim/Profiler.h"
+#include "CEPFrame/Profiler.h"
 #include "Common/Debug.h"
 #include <Common/lofar_iostream.h>
 

@@ -20,29 +20,13 @@
 //
 //  $Id$
 //
-//  $Log$
-//  Revision 1.5  2002/05/03 11:21:31  gvd
-//  Changed for new build environment (mostly added package name to include)
-//
-//  Revision 1.4  2002/03/01 08:27:57  gvd
-//  Replaced firewall by Debug and changed code accordingly
-//  Added lofar_*.h for correct use of namespaces (for KAI and Intel C++)
-//
-//  Revision 1.3  2001/09/24 14:04:08  gvd
-//  Added preprocess and postprocess functions
-//
-//  Revision 1.2  2001/09/04 10:08:57  gvd
-//  Added support for vectors
-//
-//  Revision 1.1  2001/08/16 14:33:07  gvd
-//  Determine TransportHolder at runtime in the connect
 //
 //
 //////////////////////////////////////////////////////////////////////
 
 
-#include "BaseSim/ParamValue.h"
-#include "BaseSim/ParamBlock.h"
+#include "CEPFrame/ParamValue.h"
+#include "CEPFrame/ParamBlock.h"
 #include <stdexcept>
 
 

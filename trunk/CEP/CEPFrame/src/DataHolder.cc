@@ -20,60 +20,15 @@
 //#
 //#  $Id$
 //#
-//#  $Log$
-//#  Revision 1.19  2002/12/13 14:01:25  schaaf
-//#
-//#  %[BugId: 146]%
-//#  Added the writedelay counter
-//#
-//#  Revision 1.18  2002/06/10 09:44:15  diepen
-//#
-//#  %[BugId: 37]%
-//#  setRead and setWrite have been replaced by setReadDelay.
-//#
-//#  Revision 1.17  2002/05/15 14:54:53  wierenga
-//#  Replace cout's with cdebug(x)'s.
-//#
-//#  Revision 1.16  2002/05/08 14:10:57  wierenga
-//#  Added allocate/deallocate methods
-//#
-//#  Revision 1.15  2002/05/03 11:21:31  gvd
-//#  Changed for new build environment (mostly added package name to include)
-//#
-//#  Revision 1.14  2002/03/14 14:18:56  wierenga
-//#  system include before local includes
-//#
-//#  Revision 1.13  2002/03/01 08:27:56  gvd
-//#  Replaced firewall by Debug and changed code accordingly
-//#  Added lofar_*.h for correct use of namespaces (for KAI and Intel C++)
-//#
-//#  Revision 1.12  2001/09/24 14:04:08  gvd
-//#  Added preprocess and postprocess functions
-//#
-//#  Revision 1.11  2001/09/21 12:19:02  gvd
-//#  Added make functions to WH classes to fix memory leaks
-//#
-//#  Revision 1.10  2001/03/23 10:00:40  gvd
-//#  Improved documentation and test programs
-//#  Added clearEventCount function to Step
-//#
-//#  Revision 1.9  2001/03/01 13:15:47  gvd
-//#  Added type argument in DataHolder constructor which is used in
-//#  the connect functions to check if the DH types match
-//#  Improved the simulator parser
-//#  Improved documentation
-//#
-//#  Revision 1.8  2001/02/05 14:53:04  loose
-//#  Added GPL headers
 //#
 //#////////////////////////////////////////////////////////////////////
 
 #include <Common/lofar_iostream.h>
 #include <stdexcept>
 
-#include "BaseSim/Transport.h"
-#include "BaseSim/DataHolder.h"
-#include "BaseSim/Transport.h"
+#include "CEPFrame/Transport.h"
+#include "CEPFrame/DataHolder.h"
+#include "CEPFrame/Transport.h"
 #include "Common/Debug.h"
 
 //////////////////////////////////////////////////////////////////////

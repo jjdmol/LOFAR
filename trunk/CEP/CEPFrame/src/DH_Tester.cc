@@ -20,23 +20,11 @@
 //
 //  $Id$
 //
-//  $Log$
-//  Revision 1.6  2002/05/03 11:21:31  gvd
-//  Changed for new build environment (mostly added package name to include)
-//
-//  Revision 1.5  2001/03/01 13:15:47  gvd
-//  Added type argument in DataHolder constructor which is used in
-//  the connect functions to check if the DH types match
-//  Improved the simulator parser
-//  Improved documentation
-//
-//  Revision 1.4  2001/02/05 14:53:04  loose
-//  Added GPL headers
 //
 //////////////////////////////////////////////////////////////////////
 
 
-#include "BaseSim/DH_Tester.h"
+#include "DH_Tester.h"
 
 
 DH_Tester::DH_Tester (const string& name)

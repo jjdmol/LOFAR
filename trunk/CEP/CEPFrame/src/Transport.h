@@ -20,66 +20,20 @@
 //
 //  $Id$
 //
-//  $Log$
-//  Revision 1.13  2002/06/19 10:49:06  wierenga
-//  %[BugId: 33]%
-//
-//  First version of buffered MPI transportholder.
-//
-//  Revision 1.12  2002/05/08 14:19:56  wierenga
-//  Moved setReadTag and setWriteTag into .cc file.
-//
-//  Revision 1.11  2002/05/03 11:21:32  gvd
-//  Changed for new build environment (mostly added package name to include)
-//
-//  Revision 1.10  2002/03/14 14:23:05  wierenga
-//  Adapted to use the new TransportHolder interface. Transport must
-//  now pass more information to TransportHolder send and recv calls
-//  which was previously queries by the TransportHolder itself via a
-//  backreference to the containing Transport class.
-//
-//  Revision 1.9  2001/10/26 10:06:27  wierenga
-//  Wide spread changes to convert from Makedefs to autoconf/automake/libtool build environment
-//
-//  Revision 1.8  2001/10/19 06:01:46  gvd
-//  Added checkConnections
-//  Cleaned up Transport and StepRep classes
-//
-//  Revision 1.7  2001/09/24 14:04:09  gvd
-//  Added preprocess and postprocess functions
-//
-//  Revision 1.6  2001/08/16 14:33:07  gvd
-//  Determine TransportHolder at runtime in the connect
-//
-//  Revision 1.5  2001/08/09 15:48:48  wierenga
-//  Implemented first version of TH_Corba and test program
-//
-//  Revision 1.4  2001/03/23 10:00:40  gvd
-//  Improved documentation and test programs
-//  Added clearEventCount function to Step
-//
-//  Revision 1.3  2001/03/01 13:15:47  gvd
-//  Added type argument in DataHolder constructor which is used in
-//  the connect functions to check if the DH types match
-//  Improved the simulator parser
-//  Improved documentation
-//
-//  Revision 1.2  2001/02/05 14:53:05  loose
-//  Added GPL headers
 //
 //////////////////////////////////////////////////////////////////////
 
-#ifndef BASESIM_TRANSPORT_H
-#define BASESIM_TRANSPORT_H
+#ifndef CEPFRAME_TRANSPORT_H
+#define CEPFRAME_TRANSPORT_H
  
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
 
 //# Includes
-#include "BaseSim/DataHolder.h"
-#include "BaseSim/TransportHolder.h"
-#include "BaseSim/BaseSim.h"
+#include "CEPFrame/DataHolder.h"
+#include "CEPFrame/TransportHolder.h"
+#include "CEPFrame/BaseSim.h"
 
 //# Forward Declarations
 class StepRep;

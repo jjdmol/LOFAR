@@ -20,39 +20,17 @@
 //
 //  $Id$
 //
-//  $Log$
-//  Revision 1.9  2002/05/03 11:21:31  gvd
-//  Changed for new build environment (mostly added package name to include)
-//
-//  Revision 1.8  2001/10/26 10:06:27  wierenga
-//  Wide spread changes to convert from Makedefs to autoconf/automake/libtool build environment
-//
-//  Revision 1.7  2001/09/24 14:04:08  gvd
-//  Added preprocess and postprocess functions
-//
-//  Revision 1.6  2001/03/23 10:00:40  gvd
-//  Improved documentation and test programs
-//  Added clearEventCount function to Step
-//
-//  Revision 1.5  2001/03/01 13:15:47  gvd
-//  Added type argument in DataHolder constructor which is used in
-//  the connect functions to check if the DH types match
-//  Improved the simulator parser
-//  Improved documentation
-//
-//  Revision 1.4  2001/02/05 14:53:05  loose
-//  Added GPL headers
 //
 //////////////////////////////////////////////////////////////////////
 
-#ifndef BASESIM_PARAMHOLDER_H
-#define BASESIM_PARAMHOLDER_H
+#ifndef CEPFRAME_PARAMHOLDER_H
+#define CEPFRAME_PARAMHOLDER_H
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
 
-#include "BaseSim/BaseSim.h"
+#include "CEPFrame/BaseSim.h"
 
 /**
    The ParamHolder class is the interface to a set of parameters

@@ -20,48 +20,19 @@
 //
 //  $Id$
 //
-//  $Log$
-//  Revision 1.12  2002/05/03 11:21:31  gvd
-//  Changed for new build environment (mostly added package name to include)
-//
-//  Revision 1.11  2002/03/14 14:18:56  wierenga
-//  system include before local includes
-//
-//  Revision 1.10  2002/03/01 08:27:56  gvd
-//  Replaced firewall by Debug and changed code accordingly
-//  Added lofar_*.h for correct use of namespaces (for KAI and Intel C++)
-//
-//  Revision 1.9  2001/10/26 10:06:27  wierenga
-//  Wide spread changes to convert from Makedefs to autoconf/automake/libtool build environment
-//
-//  Revision 1.8  2001/09/21 12:19:02  gvd
-//  Added make functions to WH classes to fix memory leaks
-//
-//  Revision 1.7  2001/03/23 10:00:40  gvd
-//  Improved documentation and test programs
-//  Added clearEventCount function to Step
-//
-//  Revision 1.6  2001/03/01 13:15:47  gvd
-//  Added type argument in DataHolder constructor which is used in
-//  the connect functions to check if the DH types match
-//  Improved the simulator parser
-//  Improved documentation
-//
-//  Revision 1.5  2001/02/05 14:53:05  loose
-//  Added GPL headers
 //
 //////////////////////////////////////////////////////////////////////
 
-#ifndef BASESIM_DH_TESTER_H
-#define BASESIM_DH_TESTER_H
+#ifndef CEPFRAME_DH_TESTER_H
+#define CEPFRAME_DH_TESTER_H
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
 
 #include <Common/lofar_complex.h>
-#include "BaseSim/DataHolder.h"
-#include "BaseSim/BaseSim.h"
+#include "CEPFrame/DataHolder.h"
+#include "CEPFrame/BaseSim.h"
 
 /**
    This class is a simple DataHolder test class for the program Tester.

@@ -19,16 +19,17 @@
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //
 //  $Id$
+//
+/////////////////////////////////////////////////////////////////////////////
 
-
-#ifndef BASESIM_TH_MEM_H
-#define BASESIM_TH_MEM_H
+#ifndef CEPFRAME_TH_MEM_H
+#define CEPFRAME_TH_MEM_H
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
 
-#include "BaseSim/TransportHolder.h"
+#include "CEPFrame/TransportHolder.h"
 #include "Common/lofar_map.h"
 
 /**
