@@ -33,7 +33,7 @@ namespace LOFAR
 
 /**
    This class defines the transport mechanism between data holders
-   that have been connected using the TH_Mem::proto prototype. This can
+   that have been connected using the TH_Mem prototype. This can
    only be done when both data holder reside within the same address
    space.  It uses memcpy to transport the data.
   
@@ -77,11 +77,10 @@ public:
 
   virtual bool connectionPossible(int srcRank, int dstRank) const;
 
-  /// Declare a TH_Mem prototype variable
-  /// that can be used in functions
-  /// requiring a TransportHolder prototype
-  static TH_Mem proto;
-  
+
+  // Static functions which are the same as those in TH_ShMem and TH_MPI.
+  // They don't do anything. In this way templating on TH type can be done.
+  // <group>
   static void init (int argc, const char *argv[]);
   static void finalize();
   static void waitForBroadCast();
@@ -90,6 +89,7 @@ public:
   static int getCurrentRank();
   static int getNumberOfNodes();
   static void synchroniseAllProcesses();
+  // </group>
 
  protected:
 
