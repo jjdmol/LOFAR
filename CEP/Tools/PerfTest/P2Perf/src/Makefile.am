@@ -17,4 +17,6 @@ StopWatch.cc					\
 WH_GrowSize.cc					\
 WH_Square.cc					
 
+P2Perf_DEPENDENCIES = $(LOFAR_DEPEND)
+
 include $(lofar_sharedir)/Makefile.common
