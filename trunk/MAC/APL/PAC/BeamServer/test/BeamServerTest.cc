@@ -41,17 +41,16 @@ using namespace blitz;
 using namespace LOFAR;
 
 #define N_BEAMS              (8)
-#define N_BEAMLETS           (2)
+#define N_BEAMLETS           (128)
 #define N_SUBBANDS_PER_BEAM  (N_BEAMLETS/N_BEAMS)
 
 using namespace ABS;
 using namespace std;
 
 #define UPDATE_INTERVAL  1
-#define COMPUTE_INTERVAL 7
-#define N_ELEMENTS      2
-#define N_POLARIZATIONS 2
-#define N_SIGNALS (N_ELEMENTS * N_POLARIZATIONS)
+#define COMPUTE_INTERVAL 10
+#define N_ELEMENTS       100
+#define N_POLARIZATIONS  2
 
 class BeamServerTest : public Test
 {
@@ -75,28 +74,8 @@ public:
 	  Beamlet::init(N_BEAMLETS);
 	}
 
-    void setUp()
-	{
-#if 0
-	  //cerr << "s";
-	  for (int i = 0; i < N_BEAMS; i++)
-	  {
-	      m_beam[i] = Beam::getInstance();
-	      _test(m_beam[i] != 0);
-	  }
-#endif
-	}
-
-    void tearDown()
-	{
-	  //cerr << "t";
-	  // nothing needed
-	}
-
     void run()
 	{
-	  setUp();
-	  
 	  allocate();
 	  deallocate();
 	  subbandSelection();
@@ -105,9 +84,6 @@ public:
 	  emptyBeam();
 	  pointing();
 	  convert_pointings();
-	  check_weights();
-
-	  tearDown();
 	}
 
     void allocate()
@@ -205,6 +181,8 @@ public:
 
     void convert_pointings()
 	{
+	  Range all = Range::all();
+
 	  allocate();
 
 	  ptime now = from_time_t(time(0));
@@ -230,11 +208,11 @@ public:
 	  period = time_period(now + seconds(COMPUTE_INTERVAL), seconds(COMPUTE_INTERVAL));
 	  _test(0 == m_beam[0]->convertPointings(period));
 
-	  Array<W_TYPE, 2>          pos(N_SIGNALS, 3);
+	  Array<W_TYPE, 3>          pos(N_ELEMENTS, N_POLARIZATIONS, 3);
 	  Array<complex<W_TYPE>, 4> weights(COMPUTE_INTERVAL, N_ELEMENTS, N_BEAMLETS, N_POLARIZATIONS);
 
-	  pos(0,Range::all()) = 1.0;
-	  pos(1,Range::all()) = 0.5;
+	  pos = 1.0; // x,y coordiante = 1
+	  pos(all, all, 2) = 0.0; // z-coordinate = 0
 
 	  Beamlet::calculate_weights(pos, weights);
 	  gettimeofday(&delay, 0);
@@ -254,78 +232,6 @@ public:
 	  deallocate();
 	}
 
-    void check_weights()
-	{
-	  set<int> subbands;
-
-	  subbands.clear();
-	  subbands.insert(0);
-	  subbands.insert(1);
-	  _test(0 != (m_beam[0] = Beam::allocate(m_spw, subbands)));
-
-	  ptime now = from_time_t(time(0));
-
-	  // add a few pointings
-	  _test(m_beam[0]->addPointing(Pointing(Direction(
-			    0.0, 0.0,
-			    Direction::LOFAR_LMN), now + seconds(0))) == 0);
-	  _test(m_beam[0]->addPointing(Pointing(Direction(
-			    0.0, 1.0,
-			    Direction::LOFAR_LMN), now + seconds(1))) == 0);
-	  _test(m_beam[0]->addPointing(Pointing(Direction(
-			    1.0, 0.0,
-			    Direction::LOFAR_LMN), now + seconds(2))) == 0);
-	  _test(m_beam[0]->addPointing(Pointing(Direction(
-			    sin(M_PI/4.0), sin(M_PI/4.0),
-			    Direction::LOFAR_LMN), now + seconds(3))) == 0);
-	  _test(m_beam[0]->addPointing(Pointing(Direction(
-			    sin(M_PI/4.0), 0.0,
-			    Direction::LOFAR_LMN), now + seconds(4))) == 0);
-	  _test(m_beam[0]->addPointing(Pointing(Direction(
-			    0.0, sin(M_PI/4.0),
-			    Direction::LOFAR_LMN), now + seconds(5))) == 0);
-	  _test(m_beam[0]->addPointing(Pointing(Direction(
-			    sqrt(1.0/3.0), sqrt(1.0/3.0),
-			    Direction::LOFAR_LMN), now + seconds(6))) == 0);
-
-	  struct timeval start, delay;
-	  gettimeofday(&start, 0);
-	  // iterate over all beams
-	  time_period period(now, seconds(COMPUTE_INTERVAL));
-
-	  _test(0 == m_beam[0]->convertPointings(period));
-//	  period = time_period(now + seconds(COMPUTE_INTERVAL), seconds(COMPUTE_INTERVAL));
-//	  _test(0 == m_beam[0]->convertPointings(period));
-
-	  Array<W_TYPE, 2>          pos(N_SIGNALS, 3);
-	  Array<complex<W_TYPE>, 4> weights(COMPUTE_INTERVAL, N_ELEMENTS, N_BEAMLETS, N_POLARIZATIONS);
-
-	  pos(0,Range::all()) = 0.0, 0.0, 0.0;
-	  pos(1,Range::all()) = 0.0, 0.0, 1.0;
-	  pos(2,Range::all()) = 0.0, 1.0, 0.0;	  
-	  pos(3,Range::all()) = 1.0, 0.0, 0.0;
-
-	  cout << "pos = " << pos << endl;
-
-	  cout << "lmn = " << m_beam[0]->getLMNCoordinates() << endl;
-
-	  Beamlet::calculate_weights(pos, weights);
-	  gettimeofday(&delay, 0);
-
-	  cout << "weights(:,:,:,0) = " << weights(Range::all(),Range::all(),Range::all(), 0) << endl;
-	  cout << "weights(:,:,:,1) = " << weights(Range::all(),Range::all(),Range::all(), 1) << endl;
-
-	  delay.tv_sec -= start.tv_sec;
-	  delay.tv_usec -= start.tv_usec;
-	  if (delay.tv_usec < 0)
-	  {
-	      delay.tv_sec -= 1;
-	      delay.tv_usec = 1000000 + delay.tv_usec;
-	  }
-	  LOG_INFO(formatString("calctime = %d sec %d msec", delay.tv_sec, delay.tv_usec/1000));
-
-	  _test(m_beam[0]->deallocate() == 0);
-	}
 };
 
 int main(int /*argc*/, char** /*argv*/)

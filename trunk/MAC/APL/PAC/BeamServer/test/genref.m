@@ -1,16 +1,24 @@
 
 %
-% station local coordinates for 7 timesteps
+% station direction coordinates for 7 timesteps
 % 7 x 3 matrix
 %
-lmn_t=[ 0 0 1; 0 1 0; 1 0 0; sin(pi/4) sin(pi/4) 0; sin(pi/4) 0 sin(pi/4); 0 sin(pi/4) sin(pi/4); sqrt(1/3) sqrt(1/3) sqrt(1/3) ]
-lmn_t(4,:)
+lmn_t=[                               % pointing towards
+       0 0 1;                         % zenith
+       0 1 0;                         % northern horizon
+       1 0 0;                         % eastern horizon
+       sin(pi/4) sin(pi/4) 0;         % north-eastern horizon
+       sin(pi/4) 0 sin(pi/4);         % east-45 degrees elevation
+       0 sin(pi/4) sin(pi/4);         % north-45 degrees elevation
+       sqrt(1/3) sqrt(1/3) sqrt(1/3); % north-east-45 degrees elevation
+]
 size(lmn_t)
 
 %
-% antenna locations 4 x 3 matrix
+% antenna locations 7 x 3 matrix for 7 elements
 %
-pos=[ 0 0 0; 0 0 1; 0 1 0; 1 0 0]
+pos=[ 0 0 0; 0 0 1; 0 1 0; 1 0 0; 1 1 0; 0 1 1; 1 0 1 ]
+%pos=[0 0 0]
 size(pos)
 
 %
@@ -19,8 +27,8 @@ size(pos)
 % 2 vector
 %
 freq=[0:1];
-freq*=256e3;
-freq+=10e6
+freq *= 256e3;
+freq += 10e6
 
 %
 % speed of light
@@ -28,17 +36,23 @@ freq+=10e6
 c=299792458.0;
 
 %
-% calculate weights dimensions 7 timesteps, 4 signals, 2 subbands
+% calculate weights dimensions 7 timesteps, 7 elements, 2 subbands
 %
-M0 = zeros(7,4);
+M0 = zeros(7,7);
 M0 = lmn_t(:,2) * pos(:,1)' - lmn_t(:,1) * pos(:,2)' - lmn_t(:,3) * pos(:,3)';
-weights_1 = M0*exp(2*pi*i*freq(1)/c)
-weights_2 = M0*exp(2*pi*i*freq(2)/c)
-factor=2*pi*i/c;
-weights_3 = M0*exp(factor*freq(1))
-weights_4 = M0*exp(factor*freq(2))
+% M0(1,:)
 
-sum(sum(weights_1 - weights_3))
-sum(sum(weights_2 - weights_4))
-
-
+%
+% Calculate weights for the subbands and write to file
+%
+wfile = fopen ("weights.dat", "w")
+for subband=1:2
+  weights = exp(2*pi*j*freq(subband)*M0/c);
+  weights = reshape(weights.', 49,1)
+  w = zeros(49,2);
+  w(:,1) = real(weights)
+  w(:,2) = imag(weights)
+  size(w)
+  fwrite(wfile, w.', "double")
+endfor
+fclose(wfile)

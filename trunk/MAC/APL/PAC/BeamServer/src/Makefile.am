@@ -19,6 +19,11 @@ EXTRA_DIST = \
 	abs.ns \
 	abs.top
 
+include_HEADERS = \
+	ABSConstants.h \
+	ABS_Protocol.ph \
+	EPA_Protocol.ph
+
 %.properties: $(MAC_CONFIG)/%.properties
 	cp $< $@
 

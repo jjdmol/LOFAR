@@ -11,6 +11,7 @@ prefix = "ABS"; // for the signal names
 include = '<sys/time.h>';
 include = '<boost/date_time/gregorian/gregorian.hpp>';
 include = '<boost/date_time/posix_time/posix_time.hpp>';
+include = '"ABSConstants.h"';
 
 prelude = << PRELUDE_END
 enum {
@@ -19,19 +20,6 @@ enum {
 
 namespace ABS_Protocol
 {
-	/** Maximum number of beamlets produced by
-	 * the system. The number of beamlets of
-	 * all beams together can not be larger
-	 * than this value.
-	 */
-	static const int N_BEAMLETS = 128;
-
-	/** Maximum number of input subbands of the
-	 * system. Each spectral window should have
-	 * n_subbands <= N_SUBBANDS.
-	 */
-	static const int N_SUBBANDS = 128;
-
 	enum {
 	     SUCCESS = 0,
 	     ERR_RANGE,     // range error in message parameters
@@ -64,7 +52,7 @@ event = {
       param = {
 	    name = "subbands";
 	    type = "int";
-	    dim = N_BEAMLETS;
+	    dim = "ABS::N_BEAMLETS";
       };
 };
 

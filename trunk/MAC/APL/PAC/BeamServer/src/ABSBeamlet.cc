@@ -124,7 +124,7 @@ const Beam* Beamlet::getBeam() const
   return m_beam;
 }
 
-void Beamlet::calculate_weights(const Array<W_TYPE, 2>&          pos,
+void Beamlet::calculate_weights(const Array<W_TYPE, 3>&          pos,
 				      Array<complex<W_TYPE>, 4>& weights)
 {
   const Array<W_TYPE,2>* lmn = 0;
@@ -134,7 +134,8 @@ void Beamlet::calculate_weights(const Array<W_TYPE, 2>&          pos,
   Range all = Range::all();
 
   if ((weights.extent(thirdDim) != m_ninstances)
-      || (pos.extent(firstDim) != nelements * npolarizations))
+      || (pos.extent(firstDim) != nelements)
+      || (pos.extent(secondDim) != npolarizations))
   {
       LOG_ERROR("mismatching pos and weight array shapes");
       return;
@@ -143,7 +144,7 @@ void Beamlet::calculate_weights(const Array<W_TYPE, 2>&          pos,
   for (int bi = 0; bi < m_ninstances; bi++)
   {
       Beamlet* beamlet = &m_beamlets[bi];
-      if (beamlet->allocated())
+      if (beamlet && beamlet->allocated())
       {
 	  const Beam* beam = beamlet->getBeam();
 
@@ -178,43 +179,58 @@ void Beamlet::calculate_weights(const Array<W_TYPE, 2>&          pos,
 
   	  for (int si = 0; si < nelements; si++)
 	  {
-	      //
-	      // calculate (xm - yl - zn) for both polarizations
-	      // of all elements
-	      //
-
+	    //
+	    // calculate (xm - yl - zn) for both polarizations
+	    // of all elements
+	    //
+	    
+	    for (int pol = 0; pol < npolarizations; pol++)
+	    {
 	      // x-polarization
-	      for (int t = 0; t < compute_interval; t++)
-	      {
-	      weights(t, si, bi, 0) =
-		  (pos(si*2, 0) * (*lmn)(t, 1))
-		  - (pos(si*2, 1) * (*lmn)(t, 0))
-		  - (pos(si*2, 2) * (*lmn)(t, 2));
-
+	      weights(all, si, bi, pol) =
+		(pos(si, pol, 0) * (*lmn)(all, 1))
+		- (pos(si, pol, 1) * (*lmn)(all, 0))
+		- (pos(si, pol, 2) * (*lmn)(all, 2));
+	      
 	      // y-polarization
-	      weights(t, si, bi, 1) =
-		  (pos(si*2+1, 0) * (*lmn)(t, 1))
-		  - (pos(si*2+1, 1) * (*lmn)(t, 0))
-		  - (pos(si*2+1, 2) * (*lmn)(t, 2));
-	      }
-
-	      if (bi == 0 && si == 0)
-	      {
-		  LOG_DEBUG_STR("weights=" << weights(all, si, bi, 0));
-	      }
+	      weights(all, si, bi, pol) =
+		(pos(si, pol, 0) * (*lmn)(all, 1))
+		- (pos(si, pol, 1) * (*lmn)(all, 0))
+		- (pos(si, pol, 2) * (*lmn)(all, 2));
+	    }
 	  }
 
-	  weights(all, all, bi, all) *=
-	      exp((I_COMPLEX * ((W_TYPE)2.0) * ((W_TYPE)M_PI) * freq) / SPEED_OF_LIGHT_MS);
-
-	  //LOG_TRACE(formatString("calculating weights for frequency %f",
-	  //freq));
+#if 1
+	  weights(all, all, bi, all) =
+	      exp((I_COMPLEX * ((W_TYPE)2.0) * ((W_TYPE)M_PI) * freq) * weights(all, all, bi, all) / SPEED_OF_LIGHT_MS);
+#endif
       }
       else
       {
-	  weights(all, all, bi, all) = complex<W_TYPE>(100.0, 100.0);
+	  weights(all, all, bi, all) = complex<W_TYPE>(0.0, 0.0);
       }
   }
+  
+  //cout << "M0(t=0) = " << weights(0, all, 0, 0) << endl;
+
+#if 0
+  for (int bi = 0; bi < m_ninstances; bi++)
+  {
+    Beamlet* beamlet = &m_beamlets[bi];
+    if (beamlet && beamlet->allocated())
+    {
+      W_TYPE freq = 0.0;
+      if (beamlet->spw())
+	{
+	  freq = beamlet->spw()->getFrequency(beamlet->subband());
+	}
+      weights(all, all, bi, all) =
+	exp((I_COMPLEX * ((W_TYPE)2.0) * ((W_TYPE)M_PI) * freq) * weights(all, all, bi, all) / SPEED_OF_LIGHT_MS);
+    }
+  }
+#endif
+
+  //cout << "weights(t=0) = " << weights(0,all,0,0) << endl;
 
   LOG_DEBUG(formatString("sizeof weights() = %d bytes", weights.size()*sizeof(complex<W_TYPE>)));
   LOG_DEBUG(formatString("contiguous storage? %s", (weights.isStorageContiguous()?"yes":"no")));
