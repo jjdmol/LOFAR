@@ -33,6 +33,7 @@
 #include <Common/lofar_vector.h>
 #include <Math/LCSMath.h>
 
+#define TOSCREEN 1
 
 using namespace blitz;
 
@@ -49,7 +50,7 @@ WH_BeamFormer::WH_BeamFormer (const string& name,
   : WorkHolder    (nin, nout, name,"WH_BeamFormer"),  // Check number of inputs and outputs
   itsInHolders  (0),
   itsOutHolders (0),
-  itsWeight     ("weights", nrcu, 1),
+  itsWeight     ("weights", nrcu, 2),
   itsNrcu       (nrcu),
   itsNbeam      (nbeam),
   itsMaxNtarget (maxNtarget),
@@ -98,20 +99,23 @@ WH_BeamFormer::WH_BeamFormer (const string& name,
   int itsBufferSize = 100;
   itsBuffer.resize(itsNrcu, itsBufferSize);
   itsBuffer=0;
-  itsBeamBuffer.resize(itsBufferSize);
-  itsBeamBuffer=0;
 
   qm.resize(QM_BASE_SIZE);
   qm = qminterface(qms);
 
-  if (qm(0)) {
-    handle_bp = gnuplot_init();
-  }
-
   if (qm(1)) {
+    // Spectrum plot variables, buffers and handles
+    itsBeamBuffer.resize(itsBufferSize);
+    itsBeamBuffer = 0;
+    itsLookBuffer.resize(itsBufferSize);
+    itsLookBuffer = 0;
     handle_sp = gnuplot_init();
   }
 
+  if (qm(0)) {
+    // Beamplot handles
+    handle_bp = gnuplot_init();
+  }
 }
 
 
@@ -128,7 +132,7 @@ WH_BeamFormer::~WH_BeamFormer()
 
 //  gnuplot_close (handle);
   //  DEBUG
-  itsFileInput.close ();
+  //  itsFileInput.close ();
 }
 
 
@@ -169,19 +173,31 @@ void WH_BeamFormer::process()
       //    }
     //    itsPos = (itsPos + 1) % itsBuffer.cols();
 
-    dcomplex temp;
+    LoVec_dcomplex weight(itsNrcu);
+    LoVec_dcomplex lookdir(itsNrcu);
+    LoMat_dcomplex jVec(itsWeight.getBuffer(), shape (itsNrcu, 2), duplicateData);
+
+    weight = jVec (Range::all(), 0);
+    lookdir = jVec (Range::all(), 1);
+
     for (int i = 0; i < itsNrcu; i++) {
       sample(i) = (dcomplex)itsInHolders[i]->getBuffer()[0]; 
     }
+
     itsBuffer(Range::all(), itsPos) = sample;
 
-    LoVec_dcomplex weight(itsWeight.getBuffer(), itsNrcu, duplicateData);   
-    
     dcomplex output = 0; 
+    dcomplex output2 = 0;
     for (int i = 0; i < itsNrcu; i++) {
-      output += (2 * real(weight(i)) - weight(i)) * sample(i); // w^H * x(t)
+      output += conj(weight(i)) * sample(i); // w^H * x(t)
+      output2 += conj(lookdir(i)) * sample(i);
     }
-    itsBeamBuffer(itsPos) = output;
+    
+    if (qm(1)) {
+      itsBeamBuffer(itsPos) = output;
+      itsLookBuffer(itsPos) = output2;
+    }
+
     //    itsBeamBuffer(itsPos) = sum( LCSMath::conj( weight ) * itsBuffer(Range::all(), itsPos));
     itsPos = (itsPos + 1) % itsBuffer.cols();
 
@@ -190,18 +206,32 @@ void WH_BeamFormer::process()
       itsOutHolders[j]->getBuffer ()[0] = output;
     }
     
+    //    cout << iCount << endl;
     string n = getName ();
-    if (iCount++ % 50 == 0 && n == "0" ) {
+
+    if (iCount++ % 10 == 0 && n == "0" && iCount > 100) {
       if (qm(0)) {
 	beamplot (handle_bp, weight, itsNrcu);
       }
       if (qm(1)) {
-	spectrumplot(handle_sp, itsBuffer, itsBeamBuffer);
+	spectrumplot(handle_sp, itsLookBuffer, itsBeamBuffer, itsPos-1);
       }
+      plotCount++ ;
     }
+
+    // Validating the chain
+//      char str[8];
+//      if (iCount >= 100 && iCount % 10 == 0) {
+//        // after init (first 100 snapshots) save every 10th weightvector to file
+//        // compare these weigths with ones from the Matlab simulation
+//        sprintf(str, "%d", iCount);
+//        ofWeights.open((string("weights_") + str + string(".dat")).c_str ());
+//        ofWeights << weight ;
+//        ofWeights.close();
+//      }
+	
   }
 }
-
 
 void WH_BeamFormer::dump() const
 {
@@ -238,37 +268,48 @@ void WH_BeamFormer::beamplot (gnuplot_ctrl* handle, const LoVec_dcomplex& w,
 {
   const int N = 180;                 // The resolution of the sky scan 
   LoMat_double UVpower(N,N);
+
+#ifndef TOSCREEN
+  gnuplot_close(handle);
+#endif
+
   UVpower = beam_pattern(w, nrcu, N);
 
   // plot to file
+#ifndef TOSCREEN
+  handle = gnuplot_init ();
+  gnuplot_cmd(handle, "set terminal png");
+  char filename[25];
+  sprintf (filename, "set output \"beamshape_%d.png\"", plotCount);
+  gnuplot_cmd(handle, filename);
+#endif
 
-    gnuplot_close(handle);
-    handle = gnuplot_init ();
-//    gnuplot_cmd(handle, "set terminal png");
-//    char filename[8];
-//    sprintf (filename, "set output \"beamshape_%d.png\"", plotCount++);
-//    gnuplot_cmd(handle, filename);
-    gnuplot_cmd(handle, "set view 0,0");
-    gnuplot_splot (handle, UVpower, "Beam pattern");
-  //  gnuplot_close(handle);
+  gnuplot_cmd(handle, "set view 0,0");
+  gnuplot_splot (handle, UVpower, "Beam pattern");
+
   //gnuplot_contour_plot (handle, UVpower, "Beam pattern");
 }
 
-
-void WH_BeamFormer::spectrumplot (gnuplot_ctrl* handle, const LoMat_dcomplex& buffer, 
-				  const LoVec_dcomplex& beam_buf)
+void WH_BeamFormer::spectrumplot (gnuplot_ctrl* handle, const LoVec_dcomplex& look_buf, 
+				  const LoVec_dcomplex& null_buf, const int pos)
 {
-  // TODO: Resort the buffer from oldest to newest. Use itsPos. Expensive, but might be
-  // necessary.
-
-  // First check the (first element) of the weight vector for useful info
-  // Do nothing if it contains only zero
-  //  if ( beam_buf(0) != 0 ) {
-
-  int nr = buffer.rows();
-  int nc = buffer.cols();
+  int nc = look_buf.size();
   LoMat_dcomplex o_spec (1, nc); 
   LoMat_dcomplex b_spec (1, nc);
+
+  LoVec_dcomplex cont_look_buf(look_buf.shape());
+  LoVec_dcomplex cont_null_buf(null_buf.shape());
+
+  // create the contigeous buffers
+  cont_look_buf(Range(0, nc - pos - 2)) = 
+    look_buf(Range(pos + 1, nc - 1)) ;
+  cont_look_buf(Range(nc - pos - 1, nc - 1)) =
+    look_buf(Range(0, pos)) ;
+
+  cont_null_buf(Range(0, nc - pos - 2)) = 
+    null_buf(Range(pos + 1, nc - 1)) ;
+  cont_null_buf(Range(nc - pos - 1, nc - 1)) =
+    null_buf(Range(0, pos)) ;
 
   LoMat_double res0 (1,nc);
   LoMat_double res1 (1,nc);
@@ -276,31 +317,30 @@ void WH_BeamFormer::spectrumplot (gnuplot_ctrl* handle, const LoMat_dcomplex& bu
   o_spec = 0;
   b_spec = 0;
   
-  for (int i = 0; i < nr; i++) {
-    // power spectrum of input signal (add for all antennas)
-    // power spectrum = buffer * conj(buffer)
-    o_spec (0, Range::all()) += (buffer(i, Range::all()) * (2 * real(buffer(i, Range::all())) - buffer(i, Range::all()))) ;
-  }
+
+  o_spec (0, Range::all()) = (cont_look_buf * (2 * real(cont_look_buf) - cont_look_buf)) ;
 
   // power spectrum of beamformed signal
-  b_spec (0, Range::all()) = (beam_buf * (2 * real(beam_buf) - beam_buf)) ;
+  b_spec (0, Range::all()) = (cont_null_buf * (2 * real(cont_null_buf) - cont_null_buf)) ;
 
-  // Normalize over a single antenna
-  o_spec /= nr;
-  b_spec /= nr;
+
+//    res0(0, Range::all()) = 20 * log10 ( sqrt( sqr( real( o_spec( 0, Range::all() ))) + 
+//  					     sqr( imag( o_spec( 0, Range::all() )))));
 
   // Power spectrum before beamforming over first antenna
-  res0(0, Range::all()) = 20 * log10 ( sqrt( sqr( real( o_spec( 0, Range::all() ))) + 
-					     sqr( imag( o_spec( 0, Range::all() )))));
+  res0 = 20 * log10 ( sqrt ( sqr ( real ( o_spec )) +
+			     sqr ( imag ( o_spec )))) ;
+
   // Power spectrum after beamforming
-  res1 = 20 * log10 ( sqrt( sqr( real( b_spec  )) + sqr( imag( b_spec ))));
+  res1 = 20 * log10 ( sqrt ( sqr ( real( b_spec  )) + 
+			     sqr( imag( b_spec ))));
     
   for (int i = 0; i < nc; i++) {
-    if ((isnan( res0(0,i) )) || (res0(0,i) < -700)) {
-      res0(0,i) = -700;
+    if ((isnan( res0(0,i) ))) { // || (res0(0,i) < -70)) {
+      res0(0,i) = -70;
     }
-    if ((isnan( res1(0,i) )) || (res1(0,i) < -700)) {
-      res1(0,i) = -700;
+    if ((isnan( res1(0,i) ))) { // || (res1(0,i) < -70)) {
+      res1(0,i) = -70;
     }
   }
   
@@ -318,22 +358,24 @@ void WH_BeamFormer::spectrumplot (gnuplot_ctrl* handle, const LoMat_dcomplex& bu
   }
   
   // saving pictures to file
+
+#ifndef TOSCREEN 
   gnuplot_close(handle);
   handle = gnuplot_init ();
-  gnuplot_setstyle(handle, "lines");
-  
-  //      gnuplot_cmd(handle, "set terminal png");
-  //      char filename[8];
-  //      sprintf (filename, "set output \"spectrum_%d.png\"", plotCount++);
-  //      gnuplot_cmd(handle, filename);
+  gnuplot_cmd(handle, "set terminal png");
+  char filename[8];
+  sprintf (filename, "set output \"spectrum_%d.png\"", plotCount);
+  gnuplot_cmd(handle, filename);
   gnuplot_cmd(handle, "set multiplot");
-  gnuplot_cmd(handle, "set yrange [-350:000]");
+#endif
+  gnuplot_setstyle(handle, "lines");
+  gnuplot_cmd(handle, "set yrange [-400:200]");
   
-  gnuplot_plot_x(handle, res0.data(), nc,  "Spectrum before beamforming");
-  gnuplot_plot_x(handle, res1.data(), nc,  "Spectrum after beamforming");
-  //      gnuplot_cmd(handle, "set nomultiplot");
-  //      gnuplot_close(handle);
-  //  }
+  gnuplot_plot_x(handle, res0.data(), nc,  "Spectrum before nulling");
+  gnuplot_plot_x(handle, res1.data(), nc,  "Spectrum after nulling");
+#ifndef TOSCREEN
+  gnuplot_cmd(handle, "set nomultiplot");
+#endif
 }
 
 void WH_BeamFormer::ml_trans_edge (const LoVec_dcomplex& w, LoMat_double& ref, const int time, 
@@ -391,7 +433,7 @@ LoMat_double WH_BeamFormer::beam_pattern (const LoVec_dcomplex& w, const int nrc
 	  // dcomplex pwr = exp(-1*j*2*M_PI*(px(k)*sin(theta)*cos(phi)+py(k)*sin(phi)*sin(theta)));
 	  // px(k)*sin(theta) * cos(phi) + py(k)*sin(phi)*sin(theta)) = 
 	  // sin(theta) * ( px (k) * cos(phi) + py(k)*sin(phi) )
-	  pwr = exp(-1*j*2*M_PI*(sintheta * (px(k)*cosphi+py(k)*sinphi)));
+	  pwr = exp(-2*M_PI*j*(sintheta * (px(k)*cosphi+py(k)*sinphi)));
 
 	  UVplane (u, v) += pwr * conj (w (k)); 
 	}

@@ -28,6 +28,8 @@
 
 // 1 = Plot beamshape
 // 2 = Plot spectrum before and after beamforming
+// 3 = Plot time frequency spectrum at filterbank output
+//     Use this to check which subband contains signal
 
 
 #include <QMinterface.h>

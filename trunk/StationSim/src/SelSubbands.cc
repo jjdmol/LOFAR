@@ -24,7 +24,6 @@
 
 LoVec_bool SelSubbands(const string& selfilename, const int& nselsubband)
 {
-  cout << "SelSubbands" << endl;
   ifstream selfile;
   LoVec_bool temp(nselsubband);
   selfile.open(selfilename.data());

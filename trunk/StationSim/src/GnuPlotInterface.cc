@@ -748,7 +748,7 @@ void gnuplot_splot(
 //     gnuplot_cmd(h, "set isosamples 20");
 //     gnuplot_cmd(h, "set ticslevel 0");
 	gnuplot_cmd(h, "set title '%s'", title);
-	gnuplot_cmd(h, "set view 61,338");
+	//	gnuplot_cmd(h, "set view 61,338");
     gnuplot_cmd(h, "splot '/tmp/temp.dat' matrix") ;
 }
 

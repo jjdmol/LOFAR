@@ -71,6 +71,7 @@ void WH_SubBandSel::process()
     }
     AssertStr (!itsFile.fail(), "File " << itsFileName << " has wrong format");
   }
+
 }
 
 void WH_SubBandSel::dump() const

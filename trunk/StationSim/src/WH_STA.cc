@@ -79,7 +79,6 @@ WH_STA::WH_STA (const string& name,  int nin,  int nout,
 //    itsTestVector.resize(itsNrcu, 300);
 //    itsFileInput.open ("/home/chris/PASTD-validation/test_vectorSTA.txt");
 //    itsFileInput >> itsTestVector;
-
   itsBuffer = 0;
   itsRFI = 0;
   itsCount = 0;
@@ -121,22 +120,23 @@ void WH_STA::process()
 
   // Place the next incoming sample vector in the snapshot buffer 
   // Keep a cylic buffer for the input snapshots
+  
   for (int i = 0; i < itsNrcu; i++) {
-    itsBuffer(i, itsPos) = itsInHolders[i]->getBuffer()[0];
-    
-    // 	// DEBUG
-    //    itsBuffer.resize(itsNrcu,300);
-    //    itsBuffer = itsTestVector;
-    //itsBuffer(i, itsPos) = itsTestVector(i, itsCount);
+    itsBuffer(i, itsPos) = itsInHolders[i]->getBuffer()[0];    
   }
-  itsPos = (itsPos + 1) % itsBuffer.cols();
+  if (itsCount < itsBufLength) {
+    // Buffer not yet filled.. Do nothing
+    itsCount++;
+  } else {
+    
+
   // DEBUG
   //  itsCount = (itsCount + 1) % itsTestVector.cols();
 
   if (getOutHolder(0)->doHandle ()) {
-	// Create contigeous buffer
-    itsBuffer = CreateContigeousBuffer (itsBuffer, itsPos);
-    itsPos = 0; // Set cyclic buffer pointer to the first entry because it is ordered now
+      // Create contigeous buffer   
+    itsBuffer = CreateContigeousBuffer(itsBuffer, itsPos);
+    itsPos = itsBuffer.lbound(secondDim);
     
     switch (itsAlg) {
         case -1 : // Skip the adaptive beamforming 
@@ -149,7 +149,6 @@ void WH_STA::process()
         case 0 : // ACM and EVD
 	  {
 	    // DEBUG
-
 //          itsBuffer.resize(itsNrcu, 100);
 //  	    itsBuffer = itsTestVector(Range::all(), Range(0, 99)) ;
 
@@ -188,6 +187,7 @@ void WH_STA::process()
 	      itsCount = (itsCount + 1) % itsUpdateRate;
 	    } else if (itsCount > 0) {
 	    // PASTd step
+	      cout << itsBuffer(Range(0,10), Range(0,10)) << endl;
 	      pastd(itsBuffer, itsBufLength, itsPASTdInterval, itsPASTdBeta, itsEvalues, itsEvectors);
 	      itsCount = (itsCount + 1) % itsUpdateRate;
 	    }
@@ -216,23 +216,21 @@ void WH_STA::process()
 	  if (RFI > itsMaxRFI) RFI = itsMaxRFI;
 	  // maxNRFI for PASTd is sqrt(N)
 	  // all other eigen vectors may result in NaN
-	  if (RFI > ceil(sqrt(itsNrcu)) && itsAlg == 2) RFI = ceil(sqrt(itsNrcu));
+	  if (RFI > ceil(sqrt((double)itsNrcu)) && itsAlg == 2) RFI = ceil(sqrt((double)itsNrcu));
 	  // maxNRFI for EVD and SVD are N
 	  // this check should not be needed
 	  if (RFI > itsNrcu) RFI = itsNrcu;
 
 	  itsRFI = RFI;
-	  //	cout << "RFI's detected : "<< itsRFI << endl;
+//	  cout << "RFI's detected : "<< itsRFI << endl;
 	} else {
 	  // no adaptive algorithm used
 	  itsRFI = 0;
 	}
-   
-	cout << "Number of detected RFI sources: " << itsRFI << endl;
 	// Select the appropriate Eigen vectors corresponding to the detected sources
 	LoMat_dcomplex B (itsNrcu, itsRFI);
-	B = itsEvectors (Range::all (), Range(itsEvectors.lbound(firstDim), itsRFI - 1));
-	
+	B = itsEvectors (Range::all(), Range(itsEvectors.lbound(secondDim), itsRFI-1));
+
 	// Now assign the Eigen vectors to the output
 	for (int i = 0; i < getOutputs() - 1; i++) {
 	  memcpy(itsOutHolders[i]->getBuffer(), B.data(), 
@@ -244,6 +242,8 @@ void WH_STA::process()
     if (itsCount != 0 && itsAlg == 2) {
       itsCount = (itsCount + 1) % itsUpdateRate;
     }
+  }
+  itsPos = (itsPos + itsBuffer.cols() - 1) % itsBuffer.cols();
   }
 }
 
@@ -268,19 +268,17 @@ DataHolder* WH_STA::getOutHolder (int channel)
 
 LoMat_dcomplex WH_STA::CreateContigeousBuffer (const LoMat_dcomplex& aBuffer, int pos)
 {
-  using namespace blitz;
-  AssertStr (pos <= aBuffer.ubound(secondDim), "Can't create contigeous buffer, pos too high!");
-  Range all = Range::all();
-  LoMat_dcomplex output (aBuffer.shape());
+    using namespace blitz;
+    AssertStr (pos <= aBuffer.ubound(secondDim), "Can't create contigeous buffer, pos too high!");
 
-  int p = 0;
-  for (int i = pos - 1; i >= 0; i--) {
-	output (all, p++) = aBuffer(all, i);
-  }
-  for (int i = aBuffer.ubound(secondDim); i >= pos; i--) {
-	output (all, p++) = aBuffer(all, i);
-  }
-  return output;
+    Range all = Range::all();
+    int ub = aBuffer.ubound(secondDim) ;
+    LoMat_dcomplex output (aBuffer.shape());
+
+    output (all, Range(fromStart, ub - pos) ) = aBuffer (all, Range(pos, toEnd) );
+    output (all, Range(ub - pos + 1, toEnd ) )    = aBuffer (all, Range(fromStart, pos - 1) ) ;
+    
+   return output;
 }
 
 LoMat_dcomplex WH_STA::TransposeMatrix (const LoMat_dcomplex& aMat)

@@ -217,7 +217,7 @@ void StationSim::define (const ParamBlock& params)
     for (int i = 0; i < nrcu; ++i) {
       sprintf (suffix, "%d", i);
       
-      Step subband_filter (WH_BandSep(suffix,	nsubband, coeffFileNameSub, nout, (bool) tapFB1),
+      Step subband_filter (WH_BandSep(suffix,	nsubband, coeffFileNameSub, nout, (bool) tapFB1, QMs),
 			   string ("subband_filter_") + suffix,
 			   false);
       
@@ -236,14 +236,14 @@ void StationSim::define (const ParamBlock& params)
     for (int i = 0; i < nselsubband; ++i) {
       sprintf (suffix, "%d", i);
       
-      // The beamformer object    
+      // The beamformer object
       Step beam (WH_BeamFormer(suffix, nrcu + 1, 1, nrcu, nbeam, maxNtarget, maxNrfi, 
 			       (bool) tapBF, bfDipoleFile, QMs), 
 		 string("beam_former_") + suffix, false);
       
       beam.getInData (nrcu).setReadDelay (delayBeamForm);
       beam.setRate(nsubband);
-      beam.setInRate (PROJrate * nsubband, nrcu);	
+      beam.setInRate (PROJrate * nsubband, nrcu);
       simul.addStep (beam);
       
 	  
@@ -260,7 +260,6 @@ void StationSim::define (const ParamBlock& params)
       // the Weight Determination Object
       Step weight_det (WH_WeightDetermination(suffix, 0, 1, nrcu, bfDipoleFile, beamtrajectfile),
 		       string("weight_det_") + suffix, false);   
-      
       weight_det.setRate(nsubband * WDrate);
       simul.addStep(weight_det);
       
@@ -274,18 +273,18 @@ void StationSim::define (const ParamBlock& params)
 
       // Deterministic nulls should have the same rate as STA !!!!!!!
       // add a deterministic null
-     //   Step det_null (WH_WeightDetermination(suffix, 0, 1, nrcu, bfDipoleFile, 2.583, 0.8238),
-//  		     string("det_null_") + suffix, false);
-//        //     det_null.getOutData (0).setWriteDelay (delaySubFilt);
-//        det_null.setRate(nsubband + STArate);
-//        simul.addStep(det_null);
+      //   Step det_null (WH_WeightDetermination(suffix, 0, 1, nrcu, bfDipoleFile, 2.583, 0.8238),
+      //  		     string("det_null_") + suffix, false);
+      //        //     det_null.getOutData (0).setWriteDelay (delaySubFilt);
+      //        det_null.setRate(nsubband + STArate);
+      //        simul.addStep(det_null);
       
       
+
       // the projection object
       int ninProj = 4;
       Step projection (WH_Projection(suffix, ninProj, 1, nrcu, maxNrfi, ndetnulls, tapPRJ, bfDipoleFile), 
 		       string("projection_") + suffix, false);
-      
       for (int i = 0; i < ninProj - 2; ++i) {
 	projection.setInRate (nsubband * WDrate, i);
       }
@@ -293,7 +292,6 @@ void StationSim::define (const ParamBlock& params)
 	projection.setInRate(nsubband * STArate, i);
       }
       projection.setOutRate (PROJrate * nsubband);
-      
       simul.addStep(projection); 
     }
   }
@@ -360,6 +358,9 @@ void StationSim::define (const ParamBlock& params)
   if (enableBF) {	  
     // Connect the Beamformer objects
     for (int s = 0; s < nsubband; ++s) {
+      // Connect only the selected subbands to a Beamformer
+      // This will cause unconnected outholder warnings to appear 
+      // at startup.
       if (selsubbands(s)) {
 	cout << "Creating connections for subband : " << s << endl;
 	sprintf(suffix2, "%d", s);
@@ -368,8 +369,8 @@ void StationSim::define (const ParamBlock& params)
 	  sprintf(suffix, "%d", r);
 	  
 	  // connect the subband filterbank to the Beamformer
-	  simul.connect (string ("subband_filter_") + suffix + string (".out0_") + suffix2,
-			 string ("beam_former_") + suffix3 + string(".in_") + suffix);
+  	  simul.connect (string ("subband_filter_") + suffix + string (".out0_") + suffix2,
+  			 string ("beam_former_") + suffix3 + string(".in_") + suffix);
 	  
 	  // connect the subband filterbank to STA
 	  simul.connect (string ("subband_filter_") + suffix + string (".out1_") + suffix2,
@@ -377,9 +378,9 @@ void StationSim::define (const ParamBlock& params)
 	}
 	
 	// connect Projection to Beamformer
-	simul.connect (string ("projection_") + suffix3 + string (".out_0"),
-		       string ("beam_former_") + suffix3 + string (".weights"));
-	
+      	simul.connect (string ("projection_") + suffix3 + string (".out_0"),
+      		       string ("beam_former_") + suffix3 + string (".weights"));
+
 	// connect the STA to Projection
 	simul.connect (string ("sta_") + suffix3 + string (".out_0"),
 		       string ("projection_") + suffix3 + string (".in_rfi"));
@@ -389,7 +390,6 @@ void StationSim::define (const ParamBlock& params)
 	// connect the Weight determinator to Projection
 	simul.connect (string ("weight_det_") + suffix3 + string (".out_0"),
 		       string ("projection_") + suffix3 + string (".in_0"));
-	
 
 	// connect the deterministic nulls to Projection
 	simul.connect (string ("det_nulls_") + suffix3 + string (".out_0") ,

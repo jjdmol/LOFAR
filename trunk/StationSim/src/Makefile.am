@@ -21,7 +21,6 @@ WH_ReadSignal.h					\
 WH_BandSep.h					\
 GnuPlotInterface.h				\
 WH_BeamFormer.h					\
-WH_DataReader.h					\
 WH_STA.h					\
 WH_WeightDetermination.h			\
 WH_Projection.h					\
@@ -57,7 +56,6 @@ WH_ReadSignal.cc				\
 WH_BandSep.cc					\
 GnuPlotInterface.cc				\
 WH_BeamFormer.cc				\
-WH_DataReader.cc				\
 WH_STA.cc					\
 WH_WeightDetermination.cc			\
 WH_Projection.cc				\

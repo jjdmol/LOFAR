@@ -25,10 +25,12 @@
 #include <BaseSim/ParamBlock.h>
 #include <StationSim/WH_BandSep.h>
 #include <stdio.h>                        // for sprintf
+#include <Math/LCSMath.h>
 
 
 WH_BandSep::WH_BandSep (const string& name, unsigned int nsubband,
-						const string& coeffFileName, int nout, bool tapstream)
+			const string& coeffFileName, int nout, 
+			bool tapstream, int qms)
 : WorkHolder   (1, nsubband * nout, name, "WH_BandSep"),
   itsInHolder  ("in", 1, 1),
   itsOutHolders(0),
@@ -36,7 +38,8 @@ WH_BandSep::WH_BandSep (const string& name, unsigned int nsubband,
   itsCoeffName (coeffFileName),
   itsPos       (0),
   itsNout      (nout),
-  itsTapStream (tapstream)
+  itsTapStream (tapstream),
+  itsQms       (qms)
 {
   // Allocate blocks to hold pointers to input and output DH-s.
   if (nsubband > 0) {
@@ -47,18 +50,31 @@ WH_BandSep::WH_BandSep (const string& name, unsigned int nsubband,
   char str2[8];
 
   // Create the output DH-s.
-  for (unsigned int j = 0; j < nout; j++) {
+  for (int j = 0; j < nout; j++) {
     for (unsigned int i = 0; i < nsubband; i++) {
       sprintf (str, "%d", i);
       sprintf (str2, "%d", j);
       itsOutHolders[i + j * nsubband] = new DH_SampleC (string ("out") + 
 							str2 + string("_") + str, 1, 1);
 
-	  if (itsTapStream) {
-		itsOutHolders [i + j * nsubband]->setOutFile (string ("FB1_") + str2 + 
-													  string ("_") + str + string (".dat"));
-	  }
+      if (itsTapStream) {
+	itsOutHolders [i + j * nsubband]->setOutFile (string ("FB1_") + str2 + 
+						      string ("_") + str + string (".dat"));
+      }
     }
+  }
+  qm.resize(QM_BASE_SIZE);
+  qm = qminterface(itsQms);
+
+  
+  if (qm(2) && name =="1") {
+    plot = true;
+    handle = gnuplot_init ();
+    buffersize=200;
+    buffer.resize(nsubband, buffersize);
+    buffer_pos = 0;
+  } else {
+    plot = false;
   }
 }
 
@@ -79,12 +95,13 @@ WH_BandSep::~WH_BandSep()
 WorkHolder* WH_BandSep::construct(const string& name, int ninput, int noutput, const ParamBlock& params)
 {
   return new WH_BandSep(name, params.getInt("nsubband", 10), 
-						params.getString("coeffname", "filter.coeff"), ninput, false);
+			params.getString("coeffname", "filter.coeff"), ninput, false,
+			params.getInt("qms",0));
 }
 
 WH_BandSep* WH_BandSep::make(const string& name) const
 {
-  return new WH_BandSep (name, itsNsubband, itsCoeffName, itsNout, itsTapStream);
+  return new WH_BandSep (name, itsNsubband, itsCoeffName, itsNout, itsTapStream, itsQms);
 }
 
 void WH_BandSep::preprocess()
@@ -118,22 +135,33 @@ void WH_BandSep::process()
 	  // !DEBUG
 
 	  //AG: Do a fftshift, put the DC component in the middle of the band
-	  int nfft = itsNsubband;	  
-	  LoMat_dcomplex temp (itsNsubband, 1);
-	  LoMat_dcomplex cdata(itsNsubband, 1);
-	  cdata = subbandSignals;
-
-	  temp = cdata (Range (nfft / 2, nfft - 1));
-	  cdata (Range (nfft / 2, nfft - 1)) = cdata (Range (0, nfft / 2 - 1));
-	  cdata (Range (0, nfft / 2 - 1)) = temp;
+  	  int nfft = itsNsubband;	
 	  
-	  subbandSignals=cdata;
+  	  LoMat_dcomplex temp (nfft / 2, 1);
+  	  LoMat_dcomplex cdata(itsNsubband, 1);
+  	  cdata = subbandSignals;
+
+  	  temp = cdata (Range (nfft / 2, nfft - 1));
+  	  cdata (Range (nfft / 2, nfft - 1)) = cdata (Range (0, nfft / 2 - 1));
+  	  cdata (Range (0, nfft / 2 - 1)) = temp;
+	  
+  	  subbandSignals=cdata;
+	  
+	  if (qm(2) && plot) {
+	    // Plot only the spectrum for the first antenna
+	    buffer(Range::all(), buffer_pos) = subbandSignals(Range::all(), 0);
+	    buffer_pos = (buffer_pos + 1) % buffersize; 
+	    
+	    if (buffer_pos % 50 == 0) {
+	      plot_freq_spectrum(buffer, buffer_pos);
+	    }
+	  }
 	  
 	  // Copy to other output buffers.
 	  for (int j = 0; j < itsNout; j++) {
-		for (int i = 0; i < itsNsubband; i++) {
- 		  getOutHolder (i + j * itsNsubband)->getBuffer ()[0] = subbandSignals (i, 0);
-		}
+	    for (int i = 0; i < itsNsubband; i++) {
+	      getOutHolder (i + j * itsNsubband)->getBuffer ()[0] = subbandSignals (i, 0);
+	    }
 	  }
 	}
   }
@@ -160,4 +188,45 @@ DH_SampleC* WH_BandSep::getOutHolder(int channel)
 {
   AssertStr (channel < getOutputs(), "output channel too high");
   return itsOutHolders[channel];
+}
+
+void WH_BandSep::plot_freq_spectrum(const LoMat_dcomplex& sb_signals, const int pos) 
+{
+
+  // create the contigeous buffers
+  LoMat_dcomplex cont_sb_signals (sb_signals.shape());
+  int nc = cont_sb_signals.cols();
+
+//   cont_sb_signals(Range(0, nc - pos - 2)) = 
+//     sb_signals(Range(pos + 1, nc - 1)) ;
+//   cont_sb_signals(Range(nc - pos - 1, nc - 1)) =
+//     sb_signals(Range(0, pos)) ;
+
+
+  cont_sb_signals(Range::all(), Range(fromStart, nc - pos - 2)) = 
+    sb_signals(Range::all(), Range(pos+1, toEnd)) ;
+  cont_sb_signals(Range::all(), Range(nc - pos - 1, toEnd)) = 
+    sb_signals(Range::all(), Range(fromStart, pos)) ;
+
+
+  LoMat_dcomplex spectrum (sb_signals.shape());
+  LoMat_double pwr(spectrum.shape());
+
+  spectrum = cont_sb_signals * LCSMath::conj (cont_sb_signals );
+  pwr = 20 * log10( sqrt ( sqr ( real ( spectrum ) ) + sqr ( imag( spectrum ) ) ) );
+  
+  // scale -inf to -70 to allow gnuplot to plot something
+  // This is ugly as hell, I know..
+  for (int i = 0; i < pwr.rows(); i++) {
+    for (int j = 0; j < pwr.cols(); j++) {
+      if (pwr(i,j) < -70) {
+	pwr(i,j) = -70;
+      }
+    }
+  }
+
+  //  gnuplot_close(handle);
+  //handle = gnuplot_init ();
+  gnuplot_cmd(handle, "set view 61,336");
+  gnuplot_splot (handle, pwr, "Frequency power spectrum over time");  
 }
