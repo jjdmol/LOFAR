@@ -24,7 +24,8 @@
 
 
 #include <TH_Database.h>
-#include <CEPFrame/Transport.h>
+#include <BaseTransport.h>
+#include <Transportable.h>
 
 TH_Database TH_Database::proto;
 
@@ -43,8 +44,8 @@ bool TH_Database::connectionPossible(int srcRank, int dstRank) const
 
 bool TH_Database::recv(void* buf, int nbytes, int, int tag)
 { 
-  if (getTransport () -> getSourceAddr () != 0) {
-    (getTransport () -> getSourceAddr ())
+  if (getBaseTransport () -> getSourceTransportable () != 0) {
+    (getBaseTransport () -> getSourceTransportable ())
       -> RetrieveFromDatabase (0, tag, (char *) buf, nbytes);
   }
 
@@ -54,8 +55,8 @@ bool TH_Database::recv(void* buf, int nbytes, int, int tag)
 
 bool TH_Database::send(void* buf, int nbytes, int, int tag)
 {
-  if (getTransport () -> getTargetAddr () != 0) {
-    (getTransport () -> getTargetAddr ())
+  if (getBaseTransport () -> getTargetTransportable () != 0) {
+    (getBaseTransport () -> getTargetTransportable ())
       -> StoreInDatabase (0, tag, (char *) buf, nbytes);
   }
 
