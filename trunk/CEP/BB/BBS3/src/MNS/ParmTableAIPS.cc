@@ -20,8 +20,8 @@
 //#
 //# $Id$
 
-#include <PSS3/MNS/ParmTableAIPS.h>
-#include <PSS3/MNS/MeqDomain.h>
+#include <BBS3/MNS/ParmTableAIPS.h>
+#include <BBS3/MNS/MeqDomain.h>
 #include <Common/LofarLogger.h>
 #include <tables/Tables/TableDesc.h>
 #include <tables/Tables/SetupNewTab.h>

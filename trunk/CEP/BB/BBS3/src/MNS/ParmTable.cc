@@ -20,10 +20,10 @@
 //#
 //# $Id$
 
-#include <PSS3/MNS/ParmTable.h>
-#include <PSS3/MNS/ParmTableAIPS.h>
-#include <PSS3/MNS/ParmTableBDB.h>
-#include <PSS3/MNS/MeqStoredParmPolc.h>
+#include <BBS3/MNS/ParmTable.h>
+#include <BBS3/MNS/ParmTableAIPS.h>
+#include <BBS3/MNS/ParmTableBDB.h>
+#include <BBS3/MNS/MeqStoredParmPolc.h>
 #include <Common/Debug.h>
 #include <casa/Arrays/Vector.h>
 #include <casa/Utilities/GenSort.h>
