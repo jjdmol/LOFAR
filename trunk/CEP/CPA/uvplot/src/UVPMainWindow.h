@@ -119,6 +119,7 @@ class UVPMainWindow:public QMainWindow
 
   InputType       itsInputType;
   std::string     itsInputFilename;
+  std::string     itsMSColumnName;
 
   virtual void resizeEvent  (QResizeEvent* event);
   virtual void keyPressEvent(QKeyEvent*    event);

@@ -24,6 +24,7 @@
 // $Id$
 
 #include <vector>
+#include <string>
 #include <UVPDataAtomHeader.h>
 
 
@@ -36,16 +37,18 @@ public:
   enum PlotType {e2D, e3D};
 
 
-  UVPGraphSettings(unsigned int antenna1                 = 0,
-                   unsigned int antenna2                 = 0,
+  UVPGraphSettings(unsigned int       antenna1           = 0,
+                   unsigned int       antenna2           = 0,
                    UVPDataAtomHeader::Correlation  corr  = UVPDataAtomHeader::None,
-                   ValueType    valueType                = eAbs,
-                   PlotType     plotType                 = e2D,
+                   const std::string& columnName         = "",
+                   ValueType          valueType          = eAbs,
+                   PlotType           plotType           = e2D,
                    const std::vector<bool>& fieldsToPlot = std::vector<bool>(0));
 
   unsigned int                    getAntenna1() const;
   unsigned int                    getAntenna2() const;
   UVPDataAtomHeader::Correlation  getCorrelation() const;
+  std::string                     getColumnName() const;
   ValueType                       getValueType() const;
   PlotType                        getPlotType() const;
   bool                            mustPlotField(unsigned int fieldIndex) const;
@@ -54,6 +57,7 @@ public:
   void         setAntenna1(unsigned int antenna1);
   void         setAntenna2(unsigned int antenna2);
   void         setCorrelation(UVPDataAtomHeader::Correlation corr);
+  void         setColumnName(const std::string& columnName);
   void         setValueType(ValueType valueType);
   void         setPlotType(PlotType plotType);
   void         setPlotField(unsigned int fieldIndex,
@@ -73,6 +77,7 @@ private:
   unsigned int                   itsAntenna1;
   unsigned int                   itsAntenna2;
   UVPDataAtomHeader::Correlation itsCorrelation;
+  std::string                    itsColumnName;
   ValueType                      itsValueType;
   PlotType                       itsPlotType;
   std::vector<bool>              itsPlotFields;
