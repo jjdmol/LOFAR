@@ -40,7 +40,7 @@ namespace LOFAR
     //    virtual void preprocess();
     virtual void process();
     virtual void dump();
-   
+
     float getBandwidth();
 
   private:

@@ -52,6 +52,11 @@ namespace LOFAR
     int         itsNpolarisations;
     int         itsNruns;
     int         itsNtargets;
+
+    struct timeval starttime;
+    struct timeval stoptime;
+    
+    double bandwidth;
   };
 
 } // namespace

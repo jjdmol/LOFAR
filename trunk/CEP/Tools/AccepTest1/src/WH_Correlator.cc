@@ -46,6 +46,10 @@ WH_Correlator::WH_Correlator(const string& name,
   getDataManager().addOutDataHolder(0, new DH_Vis("out", 
 						  elements, channels, polarisations));
 
+  t_start.tv_sec = 0;
+  t_start.tv_usec = 0;
+
+  bandwidth=0.0;
 }
 
 WH_Correlator::~WH_Correlator() {
@@ -72,8 +76,29 @@ WH_Correlator* WH_Correlator::make (const string& name) {
 
 void WH_Correlator::process() {
   
-  int x, y, z;
   double starttime, stoptime, cmults;
+#define DO_TIMING
+
+#ifdef DO_TIMING
+  double agg_bandwidth = 0.0;
+  if (t_start.tv_sec != 0 && t_start.tv_usec != 0) {
+    gettimeofday(&t_stop, NULL);
+    
+    bandwidth = 8.0 *
+      ((itsNchannels*itsNelements*itsNsamples*itsNpolarisations*sizeof(DH_CorrCube::BufferType)) +
+       (itsNchannels*itsNelements*itsNelements*itsNpolarisations*sizeof(DH_Vis::BufferType))) /
+      (t_stop.tv_sec + 1.0e-6*t_stop.tv_usec - 
+       t_start.tv_sec + 1.0e-6*t_start.tv_usec);
+
+
+    MPI_Reduce(&bandwidth, &agg_bandwidth, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+//    cout << "(" << TH_MPI::getCurrentRank() <<") " << bandwidth/(1024.0*1024.0) << " Mbit/sec" << endl;
+    if (TH_MPI::getCurrentRank() == 0) {
+      cout << agg_bandwidth/(1024.0*1024.0) << " Mbit/sec     " ;
+      cout << (100.0*agg_bandwidth)/(1024.0*1024.0*1024.0)<< "% of theoretical peak (Gbit/sec)" << endl;
+    }
+  }
+#endif 
 
 
   DH_CorrCube *inDH  = (DH_CorrCube*)(getDataManager().getInHolder(0));
@@ -92,7 +117,6 @@ void WH_Correlator::process() {
       }
     }
 
-#define DO_TIMING
 #ifdef DO_TIMING
   starttime = timer();
 #endif
@@ -139,8 +163,10 @@ void WH_Correlator::process() {
 
 #ifdef DO_TIMING
   cmults = itsNsamples * itsNchannels * (itsNelements*itsNelements/2 + ceil(itsNelements/2.0));
-  cout << "Performance: " << 10e-6*cmults/(stoptime-starttime) << " Mcprod/sec" << endl;
+//   cout << "Performance: " << 10e-6*cmults/(stoptime-starttime) << " Mcprod/sec" << endl;
 //   cout << itsNsamples << " " << itsNelements << " " << 10e-6*cmults/(stoptime-starttime) << endl;
+
+  gettimeofday(&t_start, NULL);
 #endif
 }				     
 

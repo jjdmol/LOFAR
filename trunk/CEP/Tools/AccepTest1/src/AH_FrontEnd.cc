@@ -7,7 +7,7 @@
 //#
 //#  $Id$
 
-
+#include <sys/time.h>
 
 // TransportHolders
 #include <Common/lofar_iostream.h>
@@ -15,6 +15,7 @@
 #include <Transport/TH_Socket.h>
 #include <tinyCEP/SimulatorParseClass.h>
 
+#include <DH_CorrCube.h>
 #include <AH_FrontEnd.h>
 
 #define LOCALHOST_IP "127.0.0.1"
@@ -33,6 +34,13 @@ AH_FrontEnd::AH_FrontEnd (int port, int elements,
   itsNruns    (runs),
   itsNtargets (targets)
 {
+
+  starttime.tv_sec = 0;
+  starttime.tv_usec = 0;
+  stoptime.tv_sec = 0;
+  stoptime.tv_usec = 0;
+
+  bandwidth = 0.0;
 }
 
 
@@ -62,7 +70,7 @@ void AH_FrontEnd::define(const KeyValueMap& /*params*/) {
       
     itsWHs.back()->getDataManager().getOutHolder(0)->connectTo
       ( *myWHCorrelator.getDataManager().getInHolder(0),
-	TH_Socket(LOCALHOST_IP, LOCALHOST_IP, itsPort+cn, false) );
+	TH_Socket(LOCALHOST_IP, LOCALHOST_IP, itsPort+cn, false, true) );
     
   }
 }
@@ -84,18 +92,31 @@ void AH_FrontEnd::init() {
 
 void AH_FrontEnd::run(int nsteps) {
   vector<WorkHolder*>::iterator it;
+  double aggregate_bandwidth=0.0;
 
   for (int s = 0; s < nsteps; s++) {
-    double aggregate_bandwidth=0;
+
+//     if (starttime.tv_sec != 0 && starttime.tv_usec !=0) {
+//       gettimeofday(&stoptime, NULL);
+      
+//       bandwidth = (8.0*itsNtargets*itsNchannels*itsNelements*itsNsamples*itsNpolarisations*sizeof(DH_CorrCube::BufferType))/
+// 	(stoptime.tv_sec + 1.0e-6*stoptime.tv_usec - starttime.tv_sec + 1.0e-6*starttime.tv_usec);
+      
+//       cout << bandwidth/(1024.0*1024.0) << " Mbit/sec    " ;
+//       cout << (100.0 * bandwidth)/(1024.0*1024.0*1024.0) << "% of theoretical peak (Gbit/sec)" << endl;
+//     }
+
     for (it = itsWHs.begin(); it != itsWHs.end(); it++) {
       (*it)->baseProcess();
-            
       aggregate_bandwidth += reinterpret_cast<WH_Random*>(*it)->getBandwidth();
     }
-    cout << "Total bandwidth: "<< 8.0*aggregate_bandwidth/(1024.0*1024.0) << " Mbit/sec   " ;
+
+    cout << (8.0*aggregate_bandwidth)/(1024.0*1024.0) << " Mbit/sec       ";
     cout << (800.0*aggregate_bandwidth)/(1024.0*1024.0*1024.0) << "% of theoretical peak (Gbit/sec)" << endl;
+//     gettimeofday(&starttime, NULL);
   }
 }
+
 
 void AH_FrontEnd::dump() const {
 //   vector<WorkHolder*>::iterator it = itsWHs.begin();

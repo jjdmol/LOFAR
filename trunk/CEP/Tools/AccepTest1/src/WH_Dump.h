@@ -10,6 +10,8 @@
 #ifndef BG_CORRELATOR_WH_DUMP_H
 #define BG_CORRELATOR_WH_DUMP_H
 
+#include <sys/time.h>
+
 #include <lofar_config.h>
 #include <tinyCEP/WorkHolder.h>
 
@@ -46,6 +48,8 @@ public:
   /// Show the work holder on stdout.
   virtual void dump();
 
+  float getBandwidth();
+
 private:
   /// Forbid copy constructor.
   WH_Dump (const WH_Dump&);
@@ -63,8 +67,14 @@ private:
   int itsNchannels;
   int itsNpolarisations;
     
+  struct timeval starttime;
+  struct timeval stoptime;
+
+  float bandwidth;    // stores 'measured' bandwidth in bytes/sec
+
 };
 
-}
+ inline float WH_Dump::getBandwidth() { return bandwidth; } 
+} // namespace LOFAR
 
 #endif

@@ -43,6 +43,8 @@ class WH_Correlator: public WorkHolder
   virtual void process();
   virtual void dump();
 
+  double getBandwidth() ;
+
  private:
   /// forbid copy constructor
   WH_Correlator (const WH_Correlator&);
@@ -56,8 +58,14 @@ class WH_Correlator: public WorkHolder
   int itsNtargets;
 
   int itsRank;
+
+  struct timeval t_start;
+  struct timeval t_stop;
+
+  double bandwidth;
 };
 
+ inline double WH_Correlator::getBandwidth() { return bandwidth; } 
 } // namespace LOFAR
 
 double timer();
