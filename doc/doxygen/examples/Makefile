@@ -4,6 +4,10 @@
 
 DOXYGEN=`which doxygen`
 
+# Determine the "root" directory of the LOFAR tree.
+LOFAR=`pwd | sed 's|/LOFAR/.*|/LOFAR|'`
+export LOFAR
+
 doc: group/html/index.html \
      memgrp/html/index.html
 
