@@ -22,8 +22,8 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef CEPFRAME_DH_PL_H
-#define CEPFRAME_DH_PL_H
+#ifndef LIBTRANSPORT_DH_PL_H
+#define LIBTRANSPORT_DH_PL_H
 
 #include <libTransport/DataHolder.h>		// for super-class definition
 #include <Common/LofarTypes.h>			// for ulong
@@ -48,13 +48,15 @@ public:
   virtual DataHolder* clone() const;
 
   // Get a reference to the PersistentObject.
-  PL::PersistentObject& getPO() const;		       
+  // It should be overidden in a derived class defining its own TPO object.
+  virtual PL::PersistentObject& getPO() const;		       
 
   // Pass the seqnr and get a reference to the PersistentObject.
-  PL::PersistentObject& preparePO (int seqnr);		       
+  PL::PersistentObject& preparePO (int id, int tag, int seqnr);		       
   
-  // Let the Transporter initialize the object.
-  void initPO (int tag, int id);
+  // Create a TPO object and set the table name in it.
+  // It should be overidden in a derived class having its own TPO object.
+  virtual void initPO (const string& tableName);
 
   // Get the variable values.
   // <group>
@@ -77,16 +79,19 @@ private:
   int itsAppId;
   int itsTag;
   int itsSeqNr;
-
   PO_DH_PL* itsPODHPL;
 };
  
  
- 
+inline PL::PersistentObject& DH_PL::preparePO (int id, int tag, int seqnr)
+{
+  itsAppId = id;
+  itsTag   = tag;
+  itsSeqNr = seqnr;
+  return getPO();
+} 
+
 
 }// namespace LOFAR
 
 #endif
-
-
-

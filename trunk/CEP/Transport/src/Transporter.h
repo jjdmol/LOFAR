@@ -36,12 +36,9 @@ namespace LOFAR
 class BaseDataHolder;
 class Connection;
 
-/**
-   This is a class which handles data transport between BaseDataHolders.
-   It uses an instance of the TransportHolder class to do
-   the actual transport between two connected BaseDataHolders.
-
-*/
+// This is a class which handles data transport between BaseDataHolders.
+// It uses an instance of the TransportHolder class to do
+// the actual transport between two connected BaseDataHolders.
 
 class Transporter
 {
@@ -50,7 +47,7 @@ class Transporter
   /// Construct the Transporter object.
   Transporter(BaseDataHolder*);
 
-  virtual ~Transporter();
+  ~Transporter();
 
   Transporter* clone() const;
 
@@ -127,7 +124,6 @@ class Transporter
 
 
 protected:
-
   /// Copy constructor.
   Transporter (const Transporter&);
 
@@ -240,6 +236,20 @@ inline int Transporter::getRate() const
 inline bool Transporter::isBlocking() const
   { return itsIsBlocking; }
 
-}
+inline void Transporter::setReadTag (int tag)
+  { itsReadTag = tag; }
+
+inline void Transporter::setWriteTag (int tag)
+  { itsWriteTag = tag; }
+
+inline void Transporter::setSourceAddr (BaseDataHolder* addr)
+  { itsSourceAddr = addr; }
+
+inline void Transporter::setTargetAddr (BaseDataHolder* addr)
+  { itsTargetAddr = addr; }
+
+
+} // end namespace
+
 
 #endif 

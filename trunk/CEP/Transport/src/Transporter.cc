@@ -34,48 +34,40 @@ namespace LOFAR
 {
 
 Transporter::Transporter (BaseDataHolder* dataHolderPtr)
-: itsBaseDataHolder  (dataHolderPtr),
-  itsTransportHolder (0),
-  itsID              (-1),
-  itsReadTag         (-1),
-  itsWriteTag        (-1),
-  itsStatus          (Unknown),
-  itsSourceAddr      (0),
-  itsTargetAddr      (0),
-  itsRate            (1),
-  itsConnection      (0),
-  itsIsBlocking      (true)
+  : itsBaseDataHolder  (dataHolderPtr),
+    itsTransportHolder (0),
+    itsID              (-1),
+    itsReadTag         (-1),
+    itsWriteTag        (-1),
+    itsStatus          (Unknown),
+    itsSourceAddr      (0),
+    itsTargetAddr      (0),
+    itsRate            (1),
+    itsConnection      (0),
+    itsIsBlocking      (true)
 {}
+
+Transporter::Transporter(const Transporter& that)
+  : itsBaseDataHolder  (that.itsBaseDataHolder),
+    itsTransportHolder (that.itsTransportHolder),
+    itsID              (that.itsID),
+    itsNode            (that.itsNode),
+    itsReadTag         (that.itsReadTag),
+    itsWriteTag        (that.itsWriteTag),
+    itsStatus          (that.itsStatus),
+    itsSourceAddr      (that.itsSourceAddr),
+    itsTargetAddr      (that.itsTargetAddr),
+    itsRate            (that.itsRate),
+    itsIsBlocking      (that.itsIsBlocking)
+{
+  if (itsTransportHolder != 0) {
+    itsTransportHolder = that.itsTransportHolder->make();
+  }  
+}
 
 Transporter::~Transporter()
 {
-  if (itsTransportHolder != 0)
-  {
-    delete itsTransportHolder;
-  }
-}
-
-Transporter::Transporter(const Transporter& that)
-  : itsBaseDataHolder(0),
-    itsTransportHolder(that.itsTransportHolder),
-    itsID(that.itsID),
-    itsNode(that.itsNode),
-    itsReadTag(that.itsReadTag),
-    itsWriteTag(that.itsWriteTag),
-    itsStatus(that.itsStatus),
-    itsSourceAddr(that.itsSourceAddr),
-    itsTargetAddr(that.itsTargetAddr),
-    itsRate(that.itsRate),
-    itsIsBlocking(that.itsIsBlocking)
-{
-  if (that.itsTransportHolder == 0)
-  {
-    itsTransportHolder = 0;
-  }
-  else
-  {
-    itsTransportHolder = that.itsTransportHolder->make();
-  }  
+  delete itsTransportHolder;
 }
 
 Transporter* Transporter::clone() const
@@ -92,7 +84,6 @@ void Transporter::makeTransportHolder (const TransportHolder& prototype)
 }
 
 
-
 bool Transporter::init()
 {
   itsTransportHolder->init();
@@ -107,7 +98,6 @@ bool Transporter::connectTo (Transporter* that,
   bool result = itsConnection->connectTo(this, that, prototype); 
   result |= init();
   return result;
-  
 }
 
 bool Transporter::connectFrom (Transporter* that, 
@@ -117,16 +107,6 @@ bool Transporter::connectFrom (Transporter* that,
   result  |= init();
   return result;
 } 
-
-void Transporter::setReadTag (int tag)
-{
-    itsReadTag = tag; 
-}
-
-void Transporter::setWriteTag (int tag)
-{
-    itsWriteTag = tag; 
-}
 
 bool Transporter::read()
 {
@@ -190,15 +170,5 @@ void Transporter::dump() const
   
 }
 
-void Transporter::setSourceAddr (BaseDataHolder* addr)
-{ 
-  itsSourceAddr = addr;
-}
 
-void Transporter::setTargetAddr (BaseDataHolder* addr)
-{ 
-  itsTargetAddr = addr;
-}
-
-
-}
+} // end namespace
