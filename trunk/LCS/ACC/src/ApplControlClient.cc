@@ -119,57 +119,57 @@ ApplControlClient& 	ApplControlClient::operator=(const ApplControlClient& that)
 }
 #endif
 bool	ApplControlClient::boot (const time_t		scheduleTime,
-							  	 const string&		configID)
+							  	 const string&		configID) const
 {
 	return(itsCommChan->doRemoteCmd (ACCmdBoot, scheduleTime, 0, configID));
 }
 
-bool	ApplControlClient::define(const time_t		scheduleTime)
+bool	ApplControlClient::define(const time_t		scheduleTime) const
 {
 	return(itsCommChan->doRemoteCmd (ACCmdDefine, scheduleTime, 0, ""));
 }
 
-bool	ApplControlClient::init	 (const time_t	scheduleTime)
+bool	ApplControlClient::init	 (const time_t	scheduleTime) const
 {
 	return(itsCommChan->doRemoteCmd (ACCmdInit, scheduleTime, 0, ""));
 }
 
-bool	ApplControlClient::run 	 (const time_t	scheduleTime)
+bool	ApplControlClient::run 	 (const time_t	scheduleTime) const
 {
 	return(itsCommChan->doRemoteCmd (ACCmdRun, scheduleTime, 0, ""));
 }
 
 bool	ApplControlClient::pause (const time_t	scheduleTime,
 								  const time_t	maxWaitTime,
-								  const string&	condition)
+								  const string&	condition) const
 {
 	return(itsCommChan->doRemoteCmd (ACCmdPause, scheduleTime, maxWaitTime, condition));
 }
 
-bool	ApplControlClient::quit  (const time_t	scheduleTime)
+bool	ApplControlClient::quit  (const time_t	scheduleTime) const
 {
 	return(itsCommChan->doRemoteCmd (ACCmdQuit, scheduleTime, 0, ""));
 }
 
-bool	ApplControlClient::shutdown  (const time_t	scheduleTime)
+bool	ApplControlClient::shutdown  (const time_t	scheduleTime) const
 {
 	return(itsCommChan->doRemoteCmd (ACCmdQuit, scheduleTime, 0, ""));
 }
 
 bool	ApplControlClient::snapshot (const time_t	scheduleTime,
-								  	 const string&	destination)
+								  	 const string&	destination) const
 {
 	return(itsCommChan->doRemoteCmd (ACCmdSnapshot, scheduleTime, 0, destination));
 }
 
 bool	ApplControlClient::recover  (const time_t	scheduleTime,
-							  		 const string&	source)
+							  		 const string&	source) const
 {
 	return(itsCommChan->doRemoteCmd (ACCmdRecover, scheduleTime, 0, source));
 }
 
 bool	ApplControlClient::reinit(const time_t	scheduleTime,
-							  	  const string&	configID)
+							  	  const string&	configID) const
 {
 	return(itsCommChan->doRemoteCmd (ACCmdReinit, scheduleTime, 0, configID));
 }
@@ -177,7 +177,7 @@ bool	ApplControlClient::reinit(const time_t	scheduleTime,
 bool	ApplControlClient::replace(const time_t	 scheduleTime,
 								   const string& processList,
 								   const string& nodeList,
-							  	   const string& configID)
+							  	   const string& configID) const
 {
 	return(itsCommChan->doRemoteCmd (ACCmdReplace, scheduleTime, 0, configID));
 }
@@ -195,9 +195,12 @@ string	ApplControlClient::supplyInfo(const string&	keyList) const
 	return ("ERROR: The supplyInfo function is not implemented");
 }
 
-void	ApplControlClient::handleAckMessage() const
+void	ApplControlClient::handleAckMessage(ACCmd 			cmd, 
+											uint16 			result,
+											const string&	info) const
 {
-	LOG_DEBUG("ApplControlClient:handleAckMessage()");
+	LOG_DEBUG_STR ("ApplControlClient:handleAckMessage(" << cmd 
+									<< "," << result << "," << info << ")");
 }
 
 void	ApplControlClient::handleAnswerMessage(const string&	answer) const

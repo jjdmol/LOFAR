@@ -77,26 +77,26 @@ public:
 	//				command anymore.
 	// Call commandInfo to obtain extra info about the command condition.
 	bool	boot 	 (const time_t		scheduleTime,
-					  const string&		configID) 	 ;
-	bool	define 	 (const time_t		scheduleTime);
-	bool	init  	 (const time_t		scheduleTime);
-	bool	run  	 (const time_t		scheduleTime);
+					  const string&		configID) 	 const ;
+	bool	define 	 (const time_t		scheduleTime)const ;
+	bool	init  	 (const time_t		scheduleTime)const ;
+	bool	run  	 (const time_t		scheduleTime)const ;
 	bool	pause  	 (const time_t		scheduleTime,
 					  const time_t		maxWaitTime,
-					  const string&		condition)	 ;
-	bool	quit  	 (const time_t		scheduleTime);
-	bool	shutdown (const time_t		scheduleTime);
+					  const string&		condition)	 const ;
+	bool	quit  	 (const time_t		scheduleTime)const ;
+	bool	shutdown (const time_t		scheduleTime)const ;
 	bool	snapshot (const time_t		scheduleTime,
-					  const string&		destination) ;
+					  const string&		destination) const ;
 	bool	recover  (const time_t		scheduleTime,
-					  const string&		source) 	 ;
+					  const string&		source) 	 const ;
 
 	bool	reinit	 (const time_t		scheduleTime,
-					  const string&		configID) 	 ;
+					  const string&		configID) 	 const ;
 	bool	replace	 (const time_t		scheduleTime,
 					  const string&		processList,
 					  const string&		nodeList,
-					  const string&		configID) 	 ;
+					  const string&		configID) 	 const ;
 
 	// -------------------- Async support --------------------
 	// Make it an ABC by defining a pure virtual function.
@@ -106,7 +106,9 @@ public:
 
 	// To be implemented by the Async variant of the AC client
 	virtual string  supplyInfo            (const string& keyList) const;
-	virtual void    handleAckMessage      () const;
+	virtual void    handleAckMessage      (ACCmd 		 cmd, 
+										   uint16 		 result,
+										   const string& info) const;
 	virtual void    handleAnswerMessage   (const string& answer) const;
 	virtual bool    processACmsgFromServer() const;
 

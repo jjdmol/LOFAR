@@ -70,7 +70,9 @@ bool	ACAsyncClient::processACmsgFromServer()	const
 		break;
 	default:
 		if (cmdType & ACCmdResult) {
-			handleAckMessage();
+			handleAckMessage(static_cast<ACCmd>(cmdType^ACCmdResult), 
+							 DHPtr->getResult(),
+							 DHPtr->getOptions());
 		}
 		else {
 			//TODO: optionally other handling of unknown messages?

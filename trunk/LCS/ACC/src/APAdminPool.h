@@ -123,8 +123,10 @@ inline void APAdminPool::markAsOnline(APAdmin*		anAPAdmin)
 //
 inline void APAdminPool::markAsOffline(APAdmin*		anAPAdmin)
 {
-	FD_CLR(anAPAdmin->getSocketID(), &itsOnlineMask);		// schedule for writes
-	--itsNrOnline;
+	if (FD_ISSET(anAPAdmin->getSocketID(), &itsOnlineMask)) {
+		FD_CLR(anAPAdmin->getSocketID(), &itsOnlineMask);
+		--itsNrOnline;
+	}
 }
 	
 inline void APAdminPool::startAckCollection(PCCmd  aCommand) 

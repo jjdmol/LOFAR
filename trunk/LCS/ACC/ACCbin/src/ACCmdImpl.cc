@@ -34,17 +34,8 @@ namespace LOFAR {
   namespace ACC {
 
 ACCmdImpl::ACCmdImpl(ParameterSet*	aPS) :
-	ApplControl(),
-	itsCmdExpireTime (0)
+	ApplControl()
 {
-	itsDefineLifeTime   = aPS->getInt("AC.process.timeout.define");
-	itsInitLifeTime     = aPS->getInt("AC.process.timeout.init");
-	itsRunLifeTime      = aPS->getInt("AC.process.timeout.run");
-	itsPauseLifeTime    = aPS->getInt("AC.process.timeout.pause");
-	itsQuitLifeTime     = aPS->getInt("AC.process.timeout.quit");
-	itsSnapshotLifeTime = aPS->getInt("AC.process.timeout.snapshot");
-	itsRecoverLifeTime  = aPS->getInt("AC.process.timeout.recover");
-	itsReinitLifeTime   = aPS->getInt("AC.process.timeout.init");		// Reinit??
 }
 
 // Destructor;
@@ -53,96 +44,89 @@ ACCmdImpl::~ACCmdImpl() { };
 
 // Commands to control the application
 bool	ACCmdImpl::boot  (const time_t	/* scheduleTime */,
-						  const string& /* configID */ )
+						  const string& /* configID */ ) const
 {
 	LOG_WARN("boot: Should have been implemented in the statemachine");
 	return (true);
 }
 
-bool	ACCmdImpl::define(const time_t		scheduleTime)
+bool	ACCmdImpl::define(const time_t		scheduleTime) const
 {
 	LOG_DEBUG(formatString("define(%s)", timeString(scheduleTime).c_str()));
 	APAdminPool::getInstance().writeToAll(PCCmdDefine, scheduleTime, "");
-	setCmdLifeTime(itsDefineLifeTime);
 	return (true);
 }
 
-bool	ACCmdImpl::init  (const time_t		scheduleTime)
+bool	ACCmdImpl::init  (const time_t		scheduleTime) const
 {
 	LOG_DEBUG(formatString("init(%s)", timeString(scheduleTime).c_str()));
 	APAdminPool::getInstance().writeToAll(PCCmdInit, scheduleTime, "");
-	setCmdLifeTime(itsInitLifeTime);
 	return (true);
 }
 
-bool	ACCmdImpl::run 	 (const time_t		scheduleTime)
+bool	ACCmdImpl::run 	 (const time_t		scheduleTime) const
 {
 	LOG_DEBUG(formatString("run(%s)", timeString(scheduleTime).c_str()));
 	APAdminPool::getInstance().writeToAll(PCCmdRun, scheduleTime, "");
-	setCmdLifeTime(itsRunLifeTime);
 	return (true);
 }
 
 bool	ACCmdImpl::pause (const time_t		scheduleTime,
 						  const time_t		waitTime,
-						  const	string&		condition)
+						  const	string&		condition) const
 {
 	LOG_DEBUG(formatString("pause(%s,%d,%s)", timeString(scheduleTime).c_str(),
 												waitTime, condition.c_str()));
 	APAdminPool::getInstance().writeToAll(PCCmdPause, scheduleTime, "");
-	setCmdLifeTime(waitTime ? waitTime : itsPauseLifeTime);
+	// TODO: How to set the right stateLifeTIme?????
 	return (true);
 }
 
-bool	ACCmdImpl::quit  (const time_t		scheduleTime)
+bool	ACCmdImpl::quit  (const time_t		scheduleTime) const
 {
 	LOG_DEBUG(formatString("quit(%s)", timeString(scheduleTime).c_str()));
 	APAdminPool::getInstance().writeToAll(PCCmdQuit, scheduleTime, "");
-	setCmdLifeTime(itsQuitLifeTime);
 	return (true);
 }
 
-bool	ACCmdImpl::shutdown (const time_t/*	scheduleTime*/)
+bool	ACCmdImpl::shutdown (const time_t/*	scheduleTime*/) const
 {
 	LOG_WARN("shutdown: Should have been implemented in the statemachine");
 	return (true);
 }
 
 bool	ACCmdImpl::snapshot (const time_t		scheduleTime,
-						     const string&		destination)
+						     const string&		destination) const
 {
 	LOG_DEBUG(formatString("snapshot(%s,%s)", timeString(scheduleTime).c_str(),
 														destination.c_str()));
 	APAdminPool::getInstance().writeToAll(PCCmdSnapshot, scheduleTime, destination);
-	setCmdLifeTime(itsSnapshotLifeTime);
 	return (true);
 }
 
 bool	ACCmdImpl::recover  (const time_t		scheduleTime,
-						     const string&		source)
+						     const string&		source) const
 {
 	LOG_DEBUG(formatString("recover(%s,%s)", timeString(scheduleTime).c_str(),
 														source.c_str()));
 	APAdminPool::getInstance().writeToAll(PCCmdRecover, scheduleTime, source);
-	setCmdLifeTime(itsRecoverLifeTime);
 	return (true);
 }
 
 
 bool	ACCmdImpl::reinit (const time_t		scheduleTime,
-						   const string&	configID)
+						   const string&	configID) const
 {
 	LOG_DEBUG(formatString("reinit(%s,%s)", timeString(scheduleTime).c_str(),
 													configID.c_str()));
 	APAdminPool::getInstance().writeToAll(PCCmdReinit, scheduleTime, configID);
-	setCmdLifeTime(itsReinitLifeTime);
 	return (true);
 }
 
 bool	ACCmdImpl::replace	 (const time_t		scheduleTime,
 						  const string&		processList,
 						  const string&		nodeList,
-						  const string&		configID)
+						  const string&		configID) const
 {
 	// TODO
 	return (true);

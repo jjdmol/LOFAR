@@ -64,25 +64,32 @@ public:
 	ParameterCollection();
 	~ParameterCollection();
 
-	// The ParameterCollection may be construction by reading a parameter file.
+	// The ParameterCollection may be construction by reading a param. file.
 	explicit ParameterCollection(const string&	theFilename);
 
 	// Copying is allowed.
 	ParameterCollection(const ParameterCollection& that);
 	ParameterCollection& 	operator=(const ParameterCollection& that);
 
-	// Adds the Key-Values pair in the given file to the current ParameterCollection.
+	// Adds the Key-Values pair in the given file to the current ParCollection.
 	void	adoptFile  (const string& theFilename);
 	void	adoptBuffer(const string& theBuffer);
 
-	// Writes the Key-Values pair from the current ParameterCollection to the file.
+	// Writes the Key-Values pair from the current ParCollection to the file.
 	void	writeFile   (const string& theFilename) const;
 	void	writeBuffer (      string& theBuffer) const;
 
 	// Creates a subset from the current ParameterCollection containing all the 
 	// parameters that start with the given baseKey. The baseKey is cut off 
-	// from the Keynames in the created subset.
-	ParameterCollection	makeSubset(const string& baseKey) const;
+	// from the Keynames in the created subset, the optional prefix is put
+	// before all keys in the subset.
+	ParameterCollection	makeSubset(const string& baseKey,
+								   const string& prefix = "") const;
+
+	// Routines for adding/replacing single pairs.
+	void	add    (const string& aKey, const string& aValue);
+	void	replace(const string& aKey, const string& aValue);
+	void	remove (const string& aKey);
 
 	// Checks if the given Key is defined in the ParameterCollection.
 	bool	isDefined (const string& searchKey) const

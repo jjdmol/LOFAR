@@ -42,7 +42,9 @@ class ACClientFunctions {
 public:
 	// When the client uses asynchrone communication is must supply three 
 	// routines that may be called when calling 'processACmsgFromServer'.
-	virtual void 	handleAckMsg 	() = 0;
+	virtual void 	handleAckMsg 	(ACCmd         cmd, 
+									 uint16        result,
+									 const string& info) = 0;
 	virtual void 	handleAnswerMsg	(const string& answer)  = 0;
 	virtual string	supplyInfoFunc	(const string& keyList) = 0;
 };
@@ -80,8 +82,10 @@ public:
 	inline string	ACAsyncClient::supplyInfo(const string&	keyList) const 
 		{ return (itsClientFuncts->supplyInfoFunc(keyList)); }
 
-	inline void	ACAsyncClient::handleAckMessage() const
-		{ itsClientFuncts->handleAckMsg(); }
+	inline void	ACAsyncClient::handleAckMessage(ACCmd			cmd, 
+												uint16			result,
+											    const string&	info) const
+		{ itsClientFuncts->handleAckMsg(cmd, result, info); }
 
 	inline void	ACAsyncClient::handleAnswerMessage(const string&	answer) const
 		{ itsClientFuncts->handleAnswerMsg(answer); }

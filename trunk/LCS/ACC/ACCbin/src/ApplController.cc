@@ -27,7 +27,7 @@
 #include <Common/LofarLogger.h>
 #include <Common/hexdump.h>			// TODO: remove in final version
 #include <ACC/ApplController.h>
-#include <ACC/ProcList.h>			// @@
+#include <ACC/ItemList.h>			// @@
 
 namespace LOFAR {
   namespace ACC {
@@ -37,6 +37,8 @@ namespace LOFAR {
 //
 ApplController::ApplController(const string&	configID) :
 	itsParamSet		(new ParameterSet),
+	itsProcList		(0),
+	itsNodeList     (0),
 	itsACCmdImpl    (0),
 	itsCmdStack     (new CmdStack),
     itsAPAPool      (0),
@@ -44,6 +46,7 @@ ApplController::ApplController(const string&	configID) :
 	itsProcListener (0),
 	itsCurTime      (0),
 	itsIsRunning    (false),
+	itsStateEngine  (0),
 	itsCurState     (StateNone),
 	itsCurACMsg		(0)
 {
@@ -58,8 +61,10 @@ ApplController::ApplController(const string&	configID) :
 	// Get pointer to singleton APAdminPool
     itsAPAPool = &(APAdminPool::getInstance());
 
-	ProcList		myPL(*itsParamSet);
+	itsProcList = new ItemList(*itsParamSet, "AC.process");
+//	itsNodeList = new ItemList(*itsParamSet, "AC.node");  // OBSOLETE 030105
 
+	itsStateEngine = new StateEngine(itsParamSet);
 }
 
 
@@ -71,12 +76,15 @@ ApplController::~ApplController()
 	LOG_TRACE_OBJ ("ApplController destructor");
 
 	if (itsParamSet)     {	delete itsParamSet;     }
+	if (itsProcList)     {	delete itsProcList;     }
+	if (itsNodeList)     {	delete itsNodeList;     }
 	if (itsACCmdImpl)    {	delete itsACCmdImpl;    }
 	if (itsCmdStack)     {	delete itsCmdStack;     }
     if (itsAPAPool)      {	delete itsAPAPool;      }
 	if (itsServerStub)   {	delete itsServerStub;   }
 	if (itsProcListener) {	delete itsProcListener; }
 	if (itsCurACMsg)	 {	delete itsCurACMsg; 	}
+	if (itsStateEngine)	 {	delete itsStateEngine; 	}
 
 }
 
@@ -116,12 +124,17 @@ void ApplController::handleProcMessage(APAdmin*	anAP)
 
 	DH_ProcControl*		DHProcPtr = anAP->getDH();
 	PCCmd				command   = DHProcPtr->getCommand();
+	bool				ack       = false;
 
-	hexdump (DHProcPtr->getDataPtr(), DHProcPtr->getDataSize());
-	if (command & PCCmdResult)
-		cout << "Ack on command: " << (command^PCCmdResult);
-	else
+//	hexdump (DHProcPtr->getDataPtr(), DHProcPtr->getDataSize());
+	if (command & PCCmdResult) {
+		command = static_cast<PCCmd>(command ^ PCCmdResult);
+		ack = true;
+		cout << "Ack on command: " << command;
+	}
+	else {
 		cout << "command=" << command << endl;
+	}
 	cout << "options=" << DHProcPtr->getOptions() << endl;
 
 	switch (command) {
@@ -142,17 +155,22 @@ void ApplController::handleProcMessage(APAdmin*	anAP)
 	case PCCmdAsync:
 		// TODO: implement this
 		break;
+	case PCCmdQuit:
+		LOG_TRACE_OBJ("PCCmdQuit received");
+		itsAPAPool->markAsOffline(anAP);		// don't send new commands
+		itsAPAPool->registerAck(command, anAP);
+		break;
 
 	default:
 		// The rest of the command should be an Ack on the outstanding command.
-		if (command & PCCmdResult) {
+		if (ack) {
 			uint16	result  = DHProcPtr->getResult();
 			if (result & AcCmdMaskOk) {
 				itsAPAPool->registerAck(
-								static_cast<PCCmd>(command^PCCmdResult), anAP);
+								static_cast<PCCmd>(command), anAP);
 			}
 			else {			// result is a NACK!
-				sendExecutionResult(AcCmdMaskOk, "Nack");	
+				sendExecutionResult(0, "Nack from process");	
 			}
 		}
 		else {
@@ -172,20 +190,86 @@ void ApplController::handleProcMessage(APAdmin*	anAP)
 void ApplController::sendExecutionResult(uint16			result,
 										 const string&	comment)
 {
-	LOG_TRACE_FLOW_STR("ApplController:sendExecutionResult(" << result << "," 
+	LOG_DEBUG_STR("ApplController:sendExecutionResult(" << result << "," 
 															<< comment << ")");
 
-	itsServerStub->sendResult(result, comment);		// notify user
-	itsAPAPool   ->stopAckCollection();				// stop collecting
-	itsACCmdImpl ->resetCmdExpireTime();			// stop timer
-	itsCurState	 = StateNone;						// reset Cmd state
-	itsStateEngine.reset();							// reset state Engine
+	itsServerStub ->sendResult(result, comment);	// notify user
+	itsAPAPool    ->stopAckCollection();			// stop collecting
+	itsCurState	  = StateNone;						// reset Cmd state
+	itsStateEngine->reset();						// reset state Engine
 	if (itsCurACMsg) {								// delete old command
 		delete itsCurACMsg;
 		itsCurACMsg = 0;
 	}
 }
 
+//
+// createParSubsets()
+//
+// Creates for each process of its ProcList a parameter file containing its
+// own parameters. All the parameters from one process are in the masterPS
+// at <applname>.<procname_from_proclist>.xxx
+//
+//
+void ApplController::createParSubsets()
+{
+	ItemList::iterator		iter;
+	string		applName = itsParamSet->getString("AC.application");
+	int32		procNr;
+
+	// make a subset for all process in the process list.
+	for (iter = itsProcList->begin(), procNr = 1; iter != itsProcList->end(); 
+															++iter, ++procNr) {
+		// First construct some names
+		string procName = *iter;			// = procname[n]
+		rtrim(procName, "0123456789[]");	// strip off seqnr.
+		procName = formatString("%s%d", procName.c_str(), procNr);
+		string fileName = procName+".ps";
+		LOG_DEBUG_STR("Creating parameterfile for process" << procName);
+
+		// construct parameter subset with prefix = procname
+		ParameterSet	procPS = itsParamSet->makeSubset(
+							applName+"."+*iter+".", procName+".");
+
+		// remove the meta data from the subset and store it in a ProcRule
+		string	stopCmd  = procPS.getString(procName+".stop");
+		string	nodeName = procPS.getString(procName+".node");
+		string	startCmd = procPS.getString(procName+".start");
+
+		// substitute <@paramfile@> in start command
+		uint32	pos;
+		string	pfLabel  = "<@parameterfile@>";
+		while ((pos = startCmd.find(pfLabel, 0)) != string::npos) {
+			startCmd.replace(pos, pfLabel.length(), fileName);
+		}
+		// substitute <@procID@> in start and stop command
+		pfLabel  = "<@procID@>";
+		while ((pos = startCmd.find(pfLabel, 0)) != string::npos) {
+			startCmd.replace(pos, pfLabel.length(), procName);
+		}
+		while ((pos = stopCmd.find(pfLabel, 0)) != string::npos) {
+			stopCmd.replace(pos, pfLabel.length(), procName);
+		}
+		// Add proc ruling info in separate map
+		itsProcRuler.add(ProcRule(*iter, startCmd, stopCmd, nodeName));
+
+		// remove meta data from set
+		procPS.remove(procName+".start");
+		procPS.remove(procName+".stop");
+		procPS.remove(procName+".node");
+		procPS.remove(procName+".startstoptype");
+
+		// TODO: add AC parameters of any interest to process
+		procPS.add("process.name", procName);
+
+
+		// Finally write to file.
+		procPS.writeFile(fileName);
+	}
+
+	// @@@@
+	itsProcRuler.show();
+}
 //
 // startState (newMsg)
 //
@@ -203,7 +287,7 @@ void ApplController::startCmdState(DH_ApplControl*		newMsg)
 			delete itsCurACMsg;			// delete previous message
 		}
 		itsCurACMsg = newMsg->makeDataCopy(*newMsg);
-		itsCurState = itsStateEngine.getState();
+		itsCurState = itsStateEngine->getState();
 	}
 	else {
 		newMsg = itsCurACMsg;			// recall last message
@@ -211,7 +295,7 @@ void ApplController::startCmdState(DH_ApplControl*		newMsg)
 
 	LOG_TRACE_FLOW_STR ("ApplController:startCmdState(" << newMsg << "," 
 										<< itsCurState << ")");
-	hexdump (newMsg->getDataPtr(), newMsg->getDataSize());
+//	hexdump (newMsg->getDataPtr(), newMsg->getDataSize());
 
 	// execute the new state
 	switch (itsCurState) {
@@ -219,28 +303,32 @@ void ApplController::startCmdState(DH_ApplControl*		newMsg)
 		break;
 	case StatePowerUpNodes:
 		// TODO: Communicate with Node Manager
-		itsStateEngine.ready();				// report this state is ready.
+		itsStateEngine->ready();				// report this state is ready.
 		break;
 	case StatePowerDownNodes:
 		// TODO: Communicate with Node Manager
-		itsStateEngine.ready();				// report this state is ready.
+		itsStateEngine->ready();				// report this state is ready.
 		break;
 	case StateCreatePSubset:
-		// TODO: implement this
-		itsStateEngine.ready();				// report this state is ready.
+		createParSubsets();
+		itsStateEngine->ready();				// report this state is ready.
 		break;
     case StateStartupAppl:
-		// TODO: do the real startup = command(appl.exe paramfile);
-		//       for all processes found in the paramfile.
-		itsStateEngine.ready();				// report this state is ready.
+		if (!itsProcRuler.startAll()) {
+			sendExecutionResult(0, "Startup failures");
+			itsStateEngine->reset();			// no further processing
+	 	}
+		else {
+			itsStateEngine->ready();			// report this state is ready.
+		}
 		break;
 	case StateKillAppl:
-		// TODO: hard kill the AP's that did not reported themselves ready
-		itsStateEngine.ready();				// report this state is ready.
+		itsProcRuler.stopAll();
+		itsStateEngine->ready();				// report this state is ready.
 		break;
 	case StateInfoCmd:
 		itsServerStub->handleMessage(newMsg);
-		itsStateEngine.reset();				// no further processing
+		itsStateEngine->reset();				// no further processing
 		break;
 
 	case StateDefineCmd:
@@ -251,9 +339,15 @@ void ApplController::startCmdState(DH_ApplControl*		newMsg)
 	case StateSnapshotCmd:
 	case StateReinitCmd:
 	case StateQuitCmd:
+		if (itsCurState == StatePauseCmd) {
+			itsStateEngine->setStateLifeTime(newMsg->getWaitTime());
+		}
+
 		// All these command must be sent to the AP's and the responses
 		// that com back will finally result in a Nack of the next state.
 		itsServerStub->handleMessage(newMsg);
+		break;
+	case NR_OF_STATES:		// satisfy compiler
 		break;
 	}
 }
@@ -319,7 +413,7 @@ void ApplController::checkForACCommands()
 				}
 			}
 			// A command may exist of several states, start with first.
-			itsStateEngine.startSequence(newCmd);
+			itsStateEngine->startSequence(newCmd);
 			startCmdState(newMsg);
 			// start expire timer for this command
 			// TODO:How to get the right expire time
@@ -393,6 +487,7 @@ void ApplController::checkForDisconnectingAPs()
 	while(APAdmin*	anAPA = itsAPAPool->cleanup()) {
 		// TODO: AM.report(anAPA->getName() << " has disconnected");
 		LOG_DEBUG_STR (anAPA->getName() << " has disconnected");
+		itsProcRuler.markAsStopped(anAPA->getName());
 		delete anAPA;		// finally delete it.
 	}
 }
@@ -409,7 +504,7 @@ void ApplController::checkAckCompletion()
 	LOG_DEBUG("All ack's received?");
 
 	if (itsAPAPool->allAcksReceived()) {
-		itsStateEngine.ready();		// report we are ready with this state.
+		itsStateEngine->ready();		// report we are ready with this state.
 	}
 }
 
@@ -424,7 +519,7 @@ void ApplController::checkCmdTimer()
 {
 	LOG_DEBUG("Command timer still running?");
 
-	if (itsACCmdImpl->IsCmdExpired()) {
+	if (itsStateEngine->IsStateExpired()) {
 		sendExecutionResult(0, "timed out");
 	}
 }
@@ -457,13 +552,13 @@ void ApplController::checkCmdStack()
 void ApplController::checkStateEngine()
 {
 	LOG_DEBUG("Time for next commmand phase?");
-	if (!itsStateEngine.isNextStateWaiting()) {	
+	if (!itsStateEngine->isNextStateWaiting()) {	
 		return;
 	}
 
 	// State was flagged ready, check if there is another state we should 
 	// execute.
-	itsCurState = itsStateEngine.nextState();
+	itsCurState = itsStateEngine->nextState();
 	if (itsCurState == StateNone) {
 		sendExecutionResult(AcCmdMaskOk, "Command ready");		// No more states
 		return;

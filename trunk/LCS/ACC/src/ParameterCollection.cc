@@ -83,24 +83,27 @@ std::ostream&	operator<< (std::ostream& os, const ParameterCollection &thePS)
 
 //#-------------------------- merge and split --------------------------------
 //#
-//# makeSubset(baseKey)
+//# makeSubset(baseKey [, prefix])
 //#
 // Creates a Subset from the current ParameterCollection containing all the parameters
 // that start with the given baseKey. The baseKey is cut off from the Keynames
-// in the created subset.
+// in the created subset, the optional prefix is pit before the keynames.
 //
-ParameterCollection ParameterCollection::makeSubset(const string& baseKey) const
+ParameterCollection ParameterCollection::makeSubset(const string& baseKey,
+												    const string& prefix) const
 {
 	const_iterator			scanner    = begin();
 	int						baseKeyLen = strlen(baseKey.c_str());
 	ParameterCollection		subSet;
 
+	LOG_TRACE_CALC_STR("makeSubSet(" << baseKey << "," << prefix << ")");
+
 	//# Scan through whole ParameterCollection
 	while (scanner != end()) {
 		//# starts with basekey?
-		if (!strncmp(baseKey.c_str(), scanner->first.c_str(), baseKeyLen)) {
-			//# cut off and copy to subset
-			subSet.insert(make_pair(scanner->first.c_str()+baseKeyLen,
+		if (!scanner->first.compare(0, baseKeyLen, baseKey)) {
+			//# cut off baseString and copy to subset
+			subSet.insert(make_pair(prefix+scanner->first.substr(baseKeyLen),
 									scanner->second));
 		}
 		scanner++;
@@ -289,6 +292,41 @@ void ParameterCollection::addStream(istream&	inputStream, bool	merge)
 	}
 }
 
+//#-------------------------- single pair functions -----------------------------
+//
+// add (key, value)
+//
+void ParameterCollection::add(const string& aKey, const string& aValue)
+{
+	pair< map<string, string>::iterator, bool>		result;
+
+	result = insert(std::make_pair(aKey, aValue)); 
+
+	if (!result.second) {
+		THROW (Exception, formatString("add:Key %s double defined?", aKey.c_str()));
+	}
+}
+
+//
+// replace (key, value)
+//
+void ParameterCollection::replace(const string& aKey, const string& aValue)
+{
+	// remove any existed value
+	erase(aKey);
+
+	add (aKey, aValue);
+}
+
+//
+// remove (key)
+//
+void ParameterCollection::remove(const string& aKey)
+{
+	// remove any existed value
+	erase(aKey);
+}
+
 //#-------------------------- retrieve functions -----------------------------
 //#
 //# getName
@@ -415,7 +453,7 @@ time_t ParameterCollection::getTime(const string& theKey) const
 		THROW (Exception, formatString("Key %s unknown", theKey.c_str()));
 	}
 	unit[0] = '\0';
-	if (sscanf (iter->second.c_str(), "%ld%s", &theTime, &unit) < 1) {
+	if (sscanf (iter->second.c_str(), "%ld%s", &theTime, unit) < 1) {
 		THROW (Exception, formatString("%s is not an time value", iter->second.c_str()));
 	}
 	switch (unit[0]) {

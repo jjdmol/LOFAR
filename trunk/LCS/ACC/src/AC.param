@@ -1,33 +1,40 @@
-AC.portnr=3801						# for AC user
-AC.backlog=20						# large queue for fast startup
+AC.portnr  = 3801					# for AC user
+AC.backlog = 20						# large queue for fast startup
 #
 # Overall process values.
-AC.process.APportnr=3802
-AC.process.timeout.define=20
-AC.process.timeout.init=20
-AC.process.timeout.run=5
-AC.process.timeout.pause=20
-AC.process.timeout.quit=10
-AC.process.timeout.snapshot=20
-AC.process.timeout.recover=20
+AC.process.APportnr         = 3802
+#
+AC.process.timeout.define   = 20
+AC.process.timeout.init     = 20
+AC.process.timeout.run      = 5
+AC.process.timeout.pause    = 20
+AC.process.timeout.quit     = 10
+AC.process.timeout.snapshot = 20
+AC.process.timeout.recover  = 20
 #
 AC.application=testAppl
 #
 # Application structure parameters
 testAppl.versionnr=1.1.10
 #
-testAppl.tPCClient.1.versionnr=1.2.3
-testAppl.tPCClient.1.startstoptype=cmdline
-testAppl.tPCClient.1.start=tPCClient <@parameterfile@>
-testAppl.tPCClient.1.stop=kill <@pid@>
-testAppl.tPCClient.1.node=1
-# Process related parameters
-testAppl.tPCClient.1.APsOwnParam=myOwn
+AC.process[0].count = 2
+AC.process[1].ID = tPCClient[1]
+AC.process[2].ID = tPCClient[2]
+AC.process[3].ID = tAnother[1]
 #
-testAppl.node.1.name=lofar17
-testAppl.node.2.name=lofar4
-testAppl.node.3.name=lofar5
-testAppl.node.4.name=lofar6
-testAppl.node.5.name=lofar7
-testAppl.node.6.name=lofar8
+# metadata about a proces
+testAppl.tPCClient[1].startstoptype = cmdline
+testAppl.tPCClient[1].start		    = ./startAP.sh <@procID@> ./tPCClient <@parameterfile@>
+testAppl.tPCClient[1].stop		    = ./stopAP.sh <@procID@>.pid
+testAppl.tPCClient[1].node		    = lofar17
+# Process related parameters
+testAppl.tPCClient[1].versionnr	    = 1.2.3
+testAppl.tPCClient[1].APsOwnParam   = myOwn
+#
+# idem for next process
+testAppl.tPCClient[2].startstoptype = cmdline
+testAppl.tPCClient[2].start		    = tPCClient <@parameterfile@>
+testAppl.tPCClient[2].stop		    = kill <@pid@>
+testAppl.tPCClient[2].node		    = lofar4
+testAppl.tPCClient[2].versionnr	    = 1.0.3
 #
