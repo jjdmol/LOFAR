@@ -184,10 +184,10 @@ int main (int32	argc, char*argv[]) {
 	
 	switch (argc) {
 	case 2:
-		testSock = new Socket("testServer", argv[1]);
+		testSock = new Socket("testServer", argv[1], Socket::TCP);
 		break;
 	case 3:
-		testSock = new Socket("testClient", argv[1], argv[2]);
+		testSock = new Socket("testClient", argv[1], argv[2], Socket::TCP);
 		break;
 	default:
 		cout <<"Syntax: " << argv[0] << " service port   - be a client" << endl;
@@ -227,6 +227,10 @@ int main (int32	argc, char*argv[]) {
 			break;
 		}
 	}
+
+	if (dataSock)
+		delete dataSock;
+	delete testSock;
 
 	return (0);
 }
