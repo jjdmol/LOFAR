@@ -33,6 +33,7 @@
 #include "CEPFrame/BaseSim.h"
 #include <Common/lofar_string.h>
 #include "CEPFrame/Lock.h"
+#include "CEPFrame/Transportable.h"
 
 //Forward declarations
 class StepRep;
@@ -55,7 +56,7 @@ class ParamTransportManager;
 
 */
 
-class ParamHolder
+class ParamHolder : public Transportable
 {
 public:
   /// Standard Parameter type class
