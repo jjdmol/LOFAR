@@ -30,9 +30,9 @@
 
 global unsigned g_PAclientId = 0;  // client ID used during all communication with the PML
 global string    NAVPML_DPNAME_ENABLED   = "__enabled";
-global string    NAVPML_ENABLED_PERM     =  "perm";
-global string    NAVPML_ENABLED_TEMP     =  "temp";
-global string    NAVPML_ENABLED_AUTOLOAD =  "autoload";
+global string    NAVPML_ENABLED_PERM     =  "permanent";
+global string    NAVPML_ENABLED_TEMP     =  "temporary";
+global string    NAVPML_ENABLED_AUTOLOAD =  "autoloaded";
 
 ///////////////////////////////////////////////////////////////////////////
 //Function navPMLinitialize
