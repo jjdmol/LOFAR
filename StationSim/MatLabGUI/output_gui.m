@@ -3,14 +3,12 @@ function varargout = output_gui(varargin)
 %    FIG = OUTPUT_GUI launch output_gui GUI.
 %    OUTPUT_GUI('callback_name', ...) invoke the named callback.
 
-% Last Modified by GUIDE v2.0 06-Aug-2002 11:30:08
+% Last Modified by GUIDE v2.0 19-Mar-2003 11:59:17
 
 if nargin == 0  % LAUNCH GUI
 
 	fig = openfig(mfilename,'reuse');
 
-	% Use system color scheme for figure:
-	set(fig,'Color',get(0,'defaultUicontrolBackgroundColor'));
 
 	% Generate a structure of handles to pass to callbacks, and store it. 
 	handles = guihandles(fig);
@@ -41,19 +39,23 @@ if nargin == 0  % LAUNCH GUI
         
     signal_eigen_sv = get(findobj(fig,'Tag','SignalEigenSteeringCheck'),'Value');
     signal_eigen_acm= get(findobj(fig,'Tag','SignalEigenACMCheck'),'Value');
-    signal_spectrum = get(findobj(fig,'Tag','SignalSpectrumCheck'),'Value');
+    Polyphase_spectrum = get(findobj(fig,'Tag','SignalSpectrumCheck'),'Value');
+    OutputSignal = get(findobj(fig,'Tag','Output_spectrum'),'Value');
+    
     
     
     bf_power = get(findobj(fig,'Tag','BFpowerCheck'),'Value');
     bf_3dplot = get(findobj(fig,'Tag','BF3dCheck'),'Value');
     bf_side  = get(findobj(fig,'Tag','BFsideCheck'),'Value');
+    bf_diffplot = get(findobj(fig,'Tag','DiffPlotCheck'),'Value');
     
     rfi_mit_power = get(findobj(fig,'Tag','RFImitPowerCheck'),'Value');
     
-    save([dirpath '\output_options.mat'],'beam_side','beam_top','beam_contour','beam_3d',...
-        'signal_eigen_sv','signal_eigen_acm','signal_spectrum','bf_power','bf_3dplot','bf_side',...
-        'ad_beam_side','ad_beam_top','ad_beam_contour','ad_beam_3d','rfi_mit_power');
-    
+    save([dirpath '/output_options.mat'],'beam_side','beam_top','beam_contour','beam_3d',...
+        'signal_eigen_sv','signal_eigen_acm','Polyphase_spectrum','bf_power','bf_3dplot','bf_side','bf_diffplot',...
+        'ad_beam_side','ad_beam_top','ad_beam_contour','ad_beam_3d','rfi_mit_power','OutputSignal');
+    h=get(findobj('Tag','StationSimGUI'));
+    set(findobj(h.Children,'tag','OutputButton'),'BackgroundColor',[0.11 0.36 0.59]);
     % file saved, close the gui
     handles = guidata(fig);
     delete(fig);    
@@ -74,27 +76,27 @@ end
 
 function restore_options(fig)
     dirpath = 'data';
-    load([dirpath '\output_options.mat']);
-    
-    set(findobj(fig,'Tag','BeamSideCheck'), 'Value',beam_side);
-    set(findobj(fig,'Tag','BeamTopCheck'), 'Value', beam_top);
-    set(findobj(fig,'Tag','BeamContourCheck'), 'Value', beam_contour);
-    set(findobj(fig,'Tag','Beam3dCheck'), 'Value', beam_3d);
+    if exist([dirpath '/output_options.mat']);
+        load([dirpath '/output_options.mat']);
+        set(findobj(fig,'Tag','Beam3dCheck'), 'Value', beam_3d);
 
-    set(findobj(fig,'Tag','AdBeamSideCheck'), 'Value',ad_beam_side);
-    set(findobj(fig,'Tag','AdBeamTopCheck'), 'Value', ad_beam_top);
-    set(findobj(fig,'Tag','AdBeamContourCheck'), 'Value', ad_beam_contour);
-    set(findobj(fig,'Tag','AdBeam3dCheck'), 'Value', ad_beam_3d);
+        set(findobj(fig,'Tag','AdBeamSideCheck'), 'Value',ad_beam_side);
+        set(findobj(fig,'Tag','AdBeamTopCheck'), 'Value', ad_beam_top);
+        set(findobj(fig,'Tag','AdBeamContourCheck'), 'Value', ad_beam_contour);
+        set(findobj(fig,'Tag','AdBeam3dCheck'), 'Value', ad_beam_3d);
 
-    set(findobj(fig,'Tag','SignalEigenSteeringCheck'),'Value',signal_eigen_sv);
-    set(findobj(fig,'Tag','SignalEigenACMCheck'),'Value',signal_eigen_acm);
-    set(findobj(fig,'Tag','SignalSpectrumCheck'),'Value',signal_spectrum);
+        set(findobj(fig,'Tag','SignalEigenSteeringCheck'),'Value',signal_eigen_sv);
+        set(findobj(fig,'Tag','SignalEigenACMCheck'),'Value',signal_eigen_acm);
+        set(findobj(fig,'Tag','SignalSpectrumCheck'),'Value',Polyphase_spectrum);
+        set(findobj(fig,'Tag','Output_spectrum'),'Value',OutputSignal);
 
-    set(findobj(fig,'Tag','BFpowerCheck'),'Value',bf_power);
-    set(findobj(fig,'Tag','BF3dCheck'),'Value',bf_3dplot);
-    set(findobj(fig,'Tag','BFsideCheck'),'Value',bf_side);
+        set(findobj(fig,'Tag','BFpowerCheck'),'Value',bf_power);
+        set(findobj(fig,'Tag','BF3dCheck'),'Value',bf_3dplot);
+        set(findobj(fig,'Tag','BFsideCheck'),'Value',bf_side);
+        set(findobj(fig,'Tag','DiffPlotCheck'),'Value',bf_diffplot);
   
-    set(findobj(fig,'Tag','RFImitPowerCheck'),'Value',rfi_mit_power);    
+        set(findobj(fig,'Tag','RFImitPowerCheck'),'Value',rfi_mit_power);    
+    end;    
     
 %| ABOUT CALLBACKS:
 %| GUIDE automatically appends subfunction prototypes to this file, and 
@@ -225,4 +227,16 @@ function varargout = BFavgCheck_Callback(h, eventdata, handles, varargin)
 
 % --------------------------------------------------------------------
 function varargout = RFImitPowerCheck_Callback(h, eventdata, handles, varargin)
+
+
+
+
+% --------------------------------------------------------------------
+function varargout = DiffPlotCheck_Callback(h, eventdata, handles, varargin)
+
+
+
+
+% --------------------------------------------------------------------
+function varargout = Output_spectrum_Callback(h, eventdata, handles, varargin)
 

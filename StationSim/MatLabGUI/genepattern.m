@@ -1,45 +1,53 @@
 % Generate a beam pattern according to the selected antenna configuration 
 % and antenna signals
 
-function genepattern
+function genepattern(px,py,Beam_Phi_theta,dirpath,N)
  
-      dirpath = 'data';
       
-      load([dirpath '\antenna_signals.mat'])
-      load([dirpath '\antenna_config.mat'])
+%Taper window 
 
-      %
-      % Generate thea tile beam pattern
-      %
-      sc=.5;
-      xx = [ 0:1:7 ];  
-      yy = ones(1,8);
-      
-      %
-      % Generate Digital beamforming window 
-      %
-      % window type and size is currently hardcoded..
-      % Needs to be variable?
       digwin = taper(px, py, 1, 128);
- 
-      %
-      % Generate beam pattern of the array
-      %
-      
-      % hard code some variables. To be validated.
-      patend  = 90;
-      patstep = 1;
-      relfreq = 1;
 
+     % Generate beam pattern in the cartesian coordinates
+      relfreq=1;
+      i = 0;
+      U = 0;
+      V = 0;
+      pat=[];
+      fin=N*N;
       
-      a=[-1*patend:patstep:patend]*pi/180;
-      b=[-1*patend:patstep:patend]*pi/180;
-      pat = zeros(length(a),length(b)); % preallocate to speed up
-      for j=1:length(a)
-         for k=1:length(b)
-            pat(j,k) = exp(-1*sqrt(-1)*2*pi*relfreq* ...
-                      (px*sin(a(j))*cos(b(k))+py*sin(b(k))))*digwin;
-         end
-      end
-      BeamPattern = abs(pat)/max(max(abs(pat)));
-      save([dirpath '\beam_pattern.mat'],'digwin','BeamPattern');
+      for u = 0:N
+         u1 = (-1 + 2*u/N);
+         for v = 0:N
+         v1 = (-1 + 2*v/N);
+             if (sqrt(u1^2+v1^2) <= sin(90/180*pi));
+             i = i + 1;
+             U(i) = u;
+             V(i) = v;
+             theta = asin(sqrt(u1^2+v1^2));
+             phi= atan2(u1,v1);
+             pat(u+1,v+1) = exp(-1*sqrt(-1)*2*pi*relfreq* ...
+                      (px*cos(phi)*sin(theta)+py*sin(phi)*sin(theta)))*digwin;
+             if mod(i,1000)==0
+                 disp(['Status : ' num2str(i) ' - ' num2str(fin)]);
+             end
+             end;
+         end;
+       end;
+       BeamPattern=[];
+       BeamPattern = abs(pat)/max(max(abs(pat)));
+      
+       %built the beampattern in angle coordinates    
+       patend=90;
+       patstep=4;
+       a=[-patend:patstep/2:patend]*pi/180;
+       b=[-patend:patstep/2:patend]*pi/180;
+       for k=1:length(a)
+             for j=1:length(b)
+                   pattern(j,k) = exp(-1*sqrt(-1)*2*pi*relfreq* ...
+                      (px*cos(a(j))*sin(b(k))+py*sin(a(j))*sin(b(k))))*digwin;
+             end;
+       end;
+       Rect_pattern=abs(pattern)/max(max(abs(pattern)));
+
+       save([dirpath 'data/' 'beam_pattern.mat'],'digwin','N','BeamPattern','Rect_pattern','a','b','patend');

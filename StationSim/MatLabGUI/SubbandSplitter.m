@@ -1,10 +1,10 @@
 function SubbandSplitter
 
   dirpath='data';
-  load([dirpath '\antenna_signals.mat']);
-  load([dirpath '\antenna_config.mat']);
-  load([dirpath '\subband_options.mat']);
-  load([dirpath '\signal_options.mat']);
+  load([dirpath '/antenna_signals.mat']);
+  load([dirpath '/antenna_config.mat']);
+  load([dirpath '/subband_options.mat']);
+  load([dirpath '/signal_options.mat']);
 
   DFTSystemResponse = DFTFilterBankInitialization(SubbandFilterLength, NumberSubBands);
   SelectedSubBandSignals = SubbandSeparator(AntennaSignals, SelectedSubBands, DFTSystemResponse, ...
@@ -24,4 +24,4 @@ function SubbandSplitter
     SelectedSubBandSignals = CleanSelectedSubbandSignals;
   end
   
-  save([dirpath '\antenna_signals.mat'], 'AntennaSignals','SelectedSubBandSignals','DFTSystemResponse','FlaggingCube');
+  save([dirpath '/antenna_signals.mat'], 'AntennaSignals','SelectedSubBandSignals','DFTSystemResponse','FlaggingCube');

@@ -1,6 +1,6 @@
 function DFTFilterBankTest
 
-dirpath='data\';
+dirpath='data/';
 
 load([dirpath 'dft_filterbank_testset.mat']);
 

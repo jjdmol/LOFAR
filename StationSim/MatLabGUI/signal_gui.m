@@ -4,7 +4,7 @@ function varargout = signal_gui(varargin)
 %    FIG = SIGNAL_GUI launch signal_gui GUI.
 %    SIGNAL_GUI('callback_name', ...) invoke the named callback.
 
-% Last Modified by GUIDE v2.0 18-Jul-2002 15:38:29
+% Last Modified by GUIDE v2.0 03-Oct-2002 10:51:24
     if nargin == 0  % LAUNCH GUI
 
 	fig = openfig(mfilename,'reuse');
@@ -54,6 +54,8 @@ function varargout = signal_gui(varargin)
             rfi_ampl                = str2num(get(findobj(fig,'Tag','RFIAmplEdit'),'String'));
             rfi_freq                = str2num(get(findobj(fig,'Tag','RFIfreqEdit'),'String'));
             
+            patstep                 = str2num(get(findobj(fig,'Tag','StepEdit'),'String'));
+            
             if (size(rfi_phi) ~= rfi_number)
                 [rfi_phi,rfi_theta] = randomRFI_main(fig);
             end;
@@ -87,32 +89,36 @@ function varargout = signal_gui(varargin)
  
             % currently, the RFI signals are randomized as 0 < rfi < rfi_max where rfi_max can be specified
             % Should be more flexible.. TODO
-            FreqRFIbase=rfi_freq;
-            AmplRFIbase=rfi_ampl;
-            
-            rfi_freq = FreqRFIbase * rand(1,rfi_number);
-            rfi_ampl = AmplRFIbase * rand(1,rfi_number);
+            if (length(rfi_freq) ~= rfi_number)         
+                FreqRFIbase=rfi_freq;    
+                rfi_freq = FreqRFIbase * (0.95 + ( 0.1 * rand(1,rfi_number)));
+            end
 
+            if (length(rfi_ampl) ~= rfi_number) 
+                AmplRFIbase=rfi_ampl;
+                rfi_ampl = AmplRFIbase * (0.95 + ( 0.1 * rand(1,rfi_number)));
+            end
+            
+            sinus=1;
             if ~sinus
+                % The old signal generator : wideband CW signals 
                 AntennaSignals = GenerateData(NumberOfAntennas, snapshot_number, rfi_number, look_dir_phi,look_dir_theta, ...
                     signal_freq, rfi_phi, rfi_theta, px, py, rfi_ampl, rfi_freq);
             else
-                % generate a sinus signal for each antenna
-                AntennaSignals=zeros(NumberOfAntennas,snapshot_number);
-                sinus_type=get(findobj(fig,'Tag','SinusTypePop'),'Value');
+                % The new signal generator : narrow band signals based on a sample combined sinus.
+                % cfreq = center frequency (f_0)
+                % Nfft  = Number of FFT points used in de FFT -> iFFT
+                % bandwidth = bandwidth of the signal (signal spans f_0 - bandwidth/2 ... f_0 + bandwidth/2)
                 
-                fprintf('Selected Sinus type is %d\n',sinus_type);
+                % Hardcode until the GUI is modified.
+                cfreq=1500000;
+                Nfft=128;
+                bandwidth=3000000;
                 
-                sig_freq=signal_freq;
-                for i=1:NumberOfAntennas
-                    if (sinus_type==2)
-                        sig_freq=signal_freq/i;
-                    elseif (sinus_type==3)
-                        sig_freq=signal_freq*rand;
-                    end
-                    AntennaSignals(i,:)=1*sin(2*pi*[1:1:snapshot_number]/sig_freq);
-                end
-
+                fprintf('Using new signal generator.\n');
+                fprintf('\tHardcoded: cfreq=%d; Nfft=%d; bandwidth=%d.. \n',cfreq,Nfft,bandwidth);
+                AntennaSignals = nband_siggen2(NumberOfAntennas, rfi_number, look_dir_phi, look_dir_theta, cfreq, bandwidth, Nfft, ...
+                    rfi_phi, rfi_theta, px, py);
             end
             
             if NullGrid
@@ -132,10 +138,10 @@ function varargout = signal_gui(varargin)
         % save the signal data so we can use it without having to assign them to the output
         % not used : signal_ampl
         dirpath = 'data';
-        save([dirpath '\signal_options.mat'],'look_dir_phi','look_dir_theta','signal_freq','signal_type','array_type', ...
-            'rfi_number','rfi_phi','rfi_theta','rfi_freq','rfi_ampl','snapshot_number','NumberOfAntennas','SnapToGrid','NullGrid');            
-        save([dirpath '\antenna_signals.mat'],'AntennaSignals');
-        save([dirpath '\antenna_config.mat'],'array_type','px','py','GridSize','SnapToGrid','null_mask','NullGrid','xg','yg');
+    save([dirpath '/signal_options.mat'],'look_dir_phi','look_dir_theta','signal_freq','signal_type','array_type', ...
+        'rfi_number','rfi_phi','rfi_theta','rfi_freq','rfi_ampl','snapshot_number','NumberOfAntennas','SnapToGrid','NullGrid');            
+    save([dirpath '/antenna_signals.mat'],'AntennaSignals');
+    save([dirpath '/antenna_config.mat'],'array_type','px','py','GridSize','SnapToGrid','null_mask','NullGrid','xg','yg','patstep');
         
         % so, we need to delete the window.   
         handles = guidata(fig);
@@ -159,15 +165,15 @@ end
 function [phiRFI,thetaRFI] = randomRFI_main(f)
     g = findobj(f,'Tag','NumberRFIEdit');
     i = str2num(get(g, 'String'));
-    phiRFI = pi * rand(1,i);
-    thetaRFI = pi * rand(1,i);
+    phiRFI = pi * (rand(1,i) - 0.5);
+    thetaRFI = pi * (rand(1,i) - 0.5);
 
 
 function [phiRFI,thetaRFI] = randomRFI
     g = findobj('Tag','NumberRFIEdit');
     i = str2num(get(g, 'String'));
-    phiRFI = pi * rand(1,i);
-    thetaRFI = pi * rand(1,i);
+    phiRFI = pi * (rand(1,i) - 0.5);
+    thetaRFI = pi * (rand(1,i) - 0.5);
 
 
 %| ABOUT CALLBACKS:
@@ -285,8 +291,17 @@ function varargout = DataLengthEdit_Callback(h, eventdata, handles, varargin)
 
 % --------------------------------------------------------------------
 function varargout = OkButton_Callback(h, eventdata, handles, varargin)
-    guidata(h, handles);
-    uiresume;
+    
+    g = findobj('Tag','WarnTextArea');
+    i = findobj('Tag','DataLengthEdit');
+    j = findobj('Tag','AntennaEdit');
+    
+    if (str2num(get(i, 'String')) < str2num(get(j, 'String')))
+        set(g, 'String','Number of Snapshots should be larger than the number of Antennas');
+    else
+        guidata(h, handles);
+        uiresume;
+    end;
 
 % --------------------------------------------------------------------
 function varargout = ThetaEdit_Callback(h, eventdata, handles, varargin)
@@ -328,8 +343,8 @@ function varargout = edit17_Callback(h, eventdata, handles, varargin)
 function varargout = RandomRFIButton_Callback(h, eventdata, handles, varargin)
     g = findobj('Tag','NumberRFIEdit');
     i = str2num(get(g, 'String'));
-    ph = pi * rand(1,i);
-    th = pi * rand(1,i);
+    ph = pi * (rand(1,i) - 0.5);
+    th = pi * (rand(1,i) - 0.5);
     i = findobj('Tag','phiRFIEdit');
     set(i,'String',mat2str(ph,2));
     i = findobj('Tag','thetaRFIEdit');
@@ -365,7 +380,7 @@ function varargout = PlotArrayButton_Callback(h, eventdata, handles, varargin)
     %
     % Snap to grid if requested to
     %
-    SnapToGrid = get(findobj('Tag', 'SnapToCheck'),'Value');
+     SnapToGrid = get(findobj('Tag', 'SnapToCheck'),'Value');
     NullGrid= get(findobj('Tag','NullGridCheck'),'Value');
     null=ones(1,size(x,2));
     if (SnapToGrid)
@@ -376,8 +391,9 @@ function varargout = PlotArrayButton_Callback(h, eventdata, handles, varargin)
         yg=1;
         [x,y,xg,yg,null] = Fitgrid(x,y,GridSize,NullGrid);
     end
-    
+   
     % visualize the array without the nulled antennas
+    
     x = x .* null;
     y = y .* null;
     
@@ -391,7 +407,7 @@ function varargout = PlotArrayButton_Callback(h, eventdata, handles, varargin)
     else
        
     end
-    xlabel('x-location (\lambda)'), ylabel('y-location (\lambda)')
+    xlabel('x-location (/lambda)'), ylabel('y-location (/lambda)')
 
     if NullGrid
         title('Array Configuration - grid nulled');
@@ -438,4 +454,10 @@ function varargout = SinusRadio_Callback(h, eventdata, handles, varargin)
 
 % --------------------------------------------------------------------
 function varargout = SinusTypePop_Callback(h, eventdata, handles, varargin)
+
+
+
+
+% --------------------------------------------------------------------
+function varargout = StepEdit_Callback(h, eventdata, handles, varargin)
 
