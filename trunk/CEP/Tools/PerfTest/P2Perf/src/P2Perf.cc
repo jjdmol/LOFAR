@@ -21,6 +21,9 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.12  2001/11/05 17:02:38  schaaf
+//  set divisor variable for MPI
+//
 //  Revision 1.11  2001/10/31 11:34:18  wierenga
 //  LOFAR CVS Repository structure change and transition to autotools (autoconf, automake and libtool).
 //
@@ -125,10 +128,10 @@ void P2Perf::define(const ParamBlock& params)
   getarg(&argc, &argv);
 
 #ifdef HAVE_MPI
-  Firewall::Assert( size == 2,
-		    __HERE__,
-		    "number of processes must equal 2");
-  divisor = rank;
+  if (size == 2) {
+    cout << "Divide in two" << endl;
+    divisor = rank;
+  }
 #else
   if (argc == 2 )
   {
@@ -167,7 +170,8 @@ void P2Perf::define(const ParamBlock& params)
 
     steps[iStep] = new Step(workholders[iStep], "GrowSizeStep", iStep);
 
-    steps[iStep]->runOnNode(iStep);
+    //steps[iStep]->runOnNode(0); // MPICH 1 process
+       steps[iStep]->runOnNode(iStep);
 
     if ( ((iStep % 2) == divisor) || (divisor < 0))
     {
@@ -180,7 +184,8 @@ void P2Perf::define(const ParamBlock& params)
 #ifdef HAVE_CORBA
       steps[iStep]->connectInput(steps[iStep-1], corbaProto);
 #else
-      steps[iStep]->runOnNode(iStep);
+      //     steps[iStep]->runOnNode(0); //MPICH 1 process
+        steps[iStep]->runOnNode(iStep);
       steps[iStep]->connectInput(steps[iStep-1]);
 #endif
     }
