@@ -32,20 +32,8 @@
 # It kan be overridden on the make line.
 # Note that PACKAGE and PACKAGES are synonyms.
 #
-PACKAGE = \
-         LCS \
-         DMI \
-         BaseSim \
-	 CEP/CEPFrame \
-         CEP/Tools/PerfTest/P2Perf \
-         CEP/CPA/OCTOPUSSY \
-         CEP/CPA/OCTOGlish \
-         CEP/CPA/VisCube \
-         CEP/CPA/GSM \
-         CEP/CPA/PSS3/MNS \
-         CEP/CPA/PSS3/CAL \
-	 CEP/CPA/PSS4 \
-         CEP/CPA/AppAgent 
+
+PACKAGE =$(shell if [ -f lofarconf.in ]; then cat lofarconf.in;else echo""; fi)
 PACKAGES = $(PACKAGE)
 #
 
