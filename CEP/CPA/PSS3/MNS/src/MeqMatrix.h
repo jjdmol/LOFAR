@@ -28,10 +28,12 @@
 #include <MNS/MeqMatrixRep.h>
 
 //# Forward Declarations
+namespace LOFAR {
+  class BlobOStream;
+  class BlobIStream;
+}
 class MeqMatrixTmp;
 template<class T> class Matrix;
-class BlobOStream;
-class BlobIStream;
 
 
 class MeqMatrix
@@ -203,9 +205,9 @@ private:
 inline ostream& operator<< (ostream& os, const MeqMatrix& vec)
   { vec.show (os); return os; }
 
-BlobOStream& operator<< (BlobOStream& os, const MeqMatrix& vec);
+LOFAR::BlobOStream& operator<< (LOFAR::BlobOStream& os, const MeqMatrix& vec);
 
-BlobIStream& operator>> (BlobIStream& os, MeqMatrix& vec);
+LOFAR::BlobIStream& operator>> (LOFAR::BlobIStream& os, MeqMatrix& vec);
 
 
 #endif
