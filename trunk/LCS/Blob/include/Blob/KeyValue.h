@@ -61,6 +61,9 @@ public:
 		 DTVecBool, DTVecInt, DTVecFloat, DTVecDouble,
 		 DTVecFComplex, DTVecDComplex, DTVecString};
 
+  //#  enum AngleType {DMS, HMS, TIME};
+  enum AngleType {DMS, HMS};
+
   /** \name Constructors
       Construct value with given type. Default is empty vector<KeyValue>.
   */
@@ -84,6 +87,13 @@ public:
   KeyValue (const vector<KeyValue>&);
   KeyValue (const KeyValueMap&);
   //@}
+
+  // Construct from a string representing a time or angle resulting in
+  // a double value.
+  // <br>HMS has to look as HH:MM:SS.S and is converted to radians.
+  // <br>DMS has to look as DD.MM.SS.S and is converted to radians.
+  //# <br>TIME has to look as YYYY/MM/DD/HH:MM:SS.S and is converted to MJD.
+  KeyValue (const string&, AngleType);
 
   /// Copy constructor (copy semantics).
   KeyValue (const KeyValue&);
@@ -172,13 +182,19 @@ public:
   friend BlobOStream& operator<< (BlobOStream&, const KeyValue&);
   friend BlobIStream& operator>> (BlobIStream&, KeyValue&);
 
+  // Parse a position value and return the value in radians.
+  // <group>
+  static double KeyValue::parsePos (const string& value,
+				    KeyValue::AngleType atype);
+  static double KeyValue::parse (const string& value, char sep, double factor);
+  // </group>
+
 private:
   /// Remove the value.
   void clear();
 
   /// Copy the value from another one.
   void copyValue (const KeyValue& that);
-
 
   DataType itsDataType;
   DataType itsExtDT;
