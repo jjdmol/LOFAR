@@ -31,9 +31,6 @@
 
 #ifdef HAVE_MPI_PROFILER
 
-int  Profiler::theirNextFreeState=1001;
-bool Profiler::theirIsActive=false;    // start in de-activate state
-
 #include "mpi.h"
 
 #ifdef HAVE_MPI
@@ -42,6 +39,9 @@ bool Profiler::theirIsActive=false;    // start in de-activate state
 
 namespace LOFAR
 {
+
+int  Profiler::theirNextFreeState=1001;
+bool Profiler::theirIsActive=false;    // start in de-activate state
 
 void Profiler::init() {
   MPE_Init_log();
