@@ -1,0 +1,8 @@
+define 	freqbandsize=10, 
+	times=1, 
+	stations=10, 
+	correlators=1, 
+	log=0;
+run 50;
+dump;
+quit
