@@ -31,14 +31,6 @@ namespace LCS {
   {
   }  
   
-
-  Exception::Exception(const std::ostringstream& oss, const std::string& file,
-		       int line, const std::string& func) :
-    itsText(oss.str()), itsFile(file), itsLine(line), itsFunction(func)
-  {
-  }
-
-  
   Exception::~Exception() throw()
   {
   }
