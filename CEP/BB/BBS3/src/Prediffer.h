@@ -120,7 +120,10 @@ public:
   // nresult,nspid+1,nval.
   // It is checked if the shape of the buffer is correct.
   // The function should be called until a false status is returned.
-  bool getEquations (double* result, const vector<uint32>& shape);
+  // In nresult it returns the number of results put in the buffer.
+  // Normally this is shape(2), but for the last time it can be less.
+  bool getEquations (double* result, const vector<uint32>& shape,
+		     int& nresult);
 
   // Set the source numbers to use in this peel step.
   bool setPeelSources (const vector<int>& peelSources,
