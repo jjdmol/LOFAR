@@ -25,7 +25,7 @@
 
 //# Includes
 #include <MNS/MeqJonesExpr.h>
-#include <MNS/MeqPointSource.h>
+#include <MNS/MeqSourceList.h>
 #include <MNS/MeqResult.h>
 #include <Common/lofar_vector.h>
 
@@ -37,7 +37,7 @@ class MeqLofarStatSources;
 class MeqLofarPoint: public MeqJonesExpr
 {
 public:
-  MeqLofarPoint (vector<MeqPointSource>* sources,
+  MeqLofarPoint (MeqSourceList* sources,
 		 MeqLofarStatSources* left, MeqLofarStatSources* right,
 		 MeqHist* celltHistogram, MeqHist* cellfHistogram);
        
@@ -51,12 +51,12 @@ public:
     { return itsNcell; }
 
 private:
-  vector<MeqPointSource>* itsSources;
-  MeqLofarStatSources*    itsLeft;
-  MeqLofarStatSources*    itsRight;
-  MeqHist*                itsCelltHist;
-  MeqHist*                itsCellfHist;
-  vector<int>             itsNcell;
+  MeqSourceList*       itsSources;
+  MeqLofarStatSources* itsLeft;
+  MeqLofarStatSources* itsRight;
+  MeqHist*             itsCelltHist;
+  MeqHist*             itsCellfHist;
+  vector<int>          itsNcell;
 };
 
 

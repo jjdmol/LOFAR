@@ -25,6 +25,7 @@ MeqPolc.h					\
 MeqRequest.h					\
 MeqRequestId.h					\
 MeqResult.h					\
+MeqSourceList.h					\
 MeqStatExpr.h					\
 MeqStation.h					\
 MeqStatSources.h				\
@@ -61,6 +62,7 @@ MeqPointSource.cc				\
 MeqPolc.cc					\
 MeqRequest.cc					\
 MeqResult.cc					\
+MeqSourceList.cc				\
 MeqStatExpr.cc					\
 MeqStation.cc					\
 MeqStatSources.cc				\

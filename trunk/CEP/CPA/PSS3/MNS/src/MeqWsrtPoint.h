@@ -25,7 +25,7 @@
 
 //# Includes
 #include <MNS/MeqJonesExpr.h>
-#include <MNS/MeqPointSource.h>
+#include <MNS/MeqSourceList.h>
 #include <MNS/MeqResult.h>
 #include <Common/lofar_vector.h>
 
@@ -39,7 +39,7 @@ class MeqWsrtPoint: public MeqJonesExpr
 public:
   // The expressions give the coefficients of the 2-dim polynomial.
   // nx and ny give the number of coefficients in x and y.
-  MeqWsrtPoint (const vector<MeqPointSource>& sources, MeqPointDFT* dft,
+  MeqWsrtPoint (MeqSourceList* sources, MeqPointDFT* dft,
 		MeqHist* celltHistogram, MeqHist* cellfHistogram);
        
   ~MeqWsrtPoint();
@@ -52,11 +52,11 @@ public:
     { return itsNcell; }
 
 private:
-  vector<MeqPointSource> itsSources;
-  MeqPointDFT*           itsDFT;
-  MeqHist*               itsCelltHist;
-  MeqHist*               itsCellfHist;
-  vector<int>            itsNcell;
+  MeqSourceList* itsSources;
+  MeqPointDFT*   itsDFT;
+  MeqHist*       itsCelltHist;
+  MeqHist*       itsCellfHist;
+  vector<int>    itsNcell;
 };
 
 

@@ -1,4 +1,4 @@
-//# MeqSourceList.h: List of sources
+//# MeqSourceList.cc: List of sources
 //#
 //# Copyright (C) 2002
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,40 +20,27 @@
 //#
 //# $Id$
 
-#if !defined(MNS_MEQSOURCELIST_H)
-#define MNS_MEQSOURCELIST_H
-
-//# Includes
-#include <MNS/MeqPointSource.h>
-#include <Common/lofar_vector.h>
+#include <MNS/MeqSourceList.h>
+#include <Common/Debug.h>
 
 
-class MeqSourceList
+void MeqSourceList::add (const MeqPointSource& source)
 {
-public:
-  // The default constructor.
-  MeqSourceList()
-    {};
+  itsSelected.push_back (itsSources.size());
+  itsSources.push_back (source);
+}
 
-  // Add a source.
-  void add (const MeqPointSource&);
-
-  // Get the number of sources to be used.
-  int size() const
-    { return itsSelected.size(); }
-
-  // Get the i-th selected source.
-  MeqPointSource& operator[] (int i)
-    { return itsSources[itsSelected[i]]; }
-
-  // Set the sources to be actually used.
-  // An empty vector selects all sources.
-  void setSelected (const vector<int>&);
-  
-private:
-  vector<MeqPointSource> itsSources;
-  vector<int>            itsSelected;
-};
-
-
-#endif
+void MeqSourceList::setSelected (const vector<int>& sel)
+{
+  if (sel.size() == 0) {
+    itsSelected.resize (itsSources.size());
+    for (unsigned int i=0; i<itsSources.size(); i++) {
+      itsSelected[i] = i;
+    }
+  } else {
+    for (unsigned int i=0; i<sel.size(); i++) {
+      Assert (sel[i] >= 0  &&  sel[i] < int(itsSources.size()));
+    }
+    itsSelected = sel;
+  }
+}

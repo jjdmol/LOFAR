@@ -77,6 +77,7 @@ void MeqStatUVW::calculate (const MeqRequest& request)
     }
   }
   // Calculate the UVW coordinates using the AIPS++ code.
+  AssertStr (itsStation, "UVW coordinates cannot be calculated");
   MeqResult posx = itsStation->getPosX()->getResult (request);
   MeqResult posy = itsStation->getPosY()->getResult (request);
   MeqResult posz = itsStation->getPosZ()->getResult (request);
@@ -188,4 +189,9 @@ void MeqStatUVW::calculate (const MeqRequest& request)
 //     }
 //   }
   itsLastReqId = request.getId();
+}
+
+void MeqStatUVW::set (double time, double u, double v, double w)
+{
+  itsUVW[MeqTime(time)] = MeqUVW(u,v,w);
 }

@@ -26,7 +26,7 @@
 //# Includes
 #include <MNS/MeqResult.h>
 #include <MNS/MeqRequest.h>
-#include <MNS/MeqPointSource.h>
+#include <MNS/MeqSourceList.h>
 #include <Common/lofar_vector.h>
 
 //# Forward declarations
@@ -41,8 +41,7 @@ public:
   MeqStatSources()
     {};
 
-  MeqStatSources (MeqStatUVW*,
-		  vector<MeqPointSource>*);
+  MeqStatSources (MeqStatUVW*, MeqSourceList*);
 
   void calculate (const MeqRequest&);
 
@@ -72,11 +71,11 @@ public:
     { return itsSources->size(); }
 
 private:
-  MeqStatUVW*  itsUVW;
-  vector<MeqPointSource>* itsSources;
+  MeqStatUVW*       itsUVW;
+  MeqSourceList*    itsSources;
   vector<MeqResult> itsResults;
   vector<MeqResult> itsDeltas;
-  MeqRequestId itsLastReqId;
+  MeqRequestId      itsLastReqId;
 };
 
 
