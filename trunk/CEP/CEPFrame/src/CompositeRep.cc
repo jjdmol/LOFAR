@@ -411,7 +411,7 @@ void CompositeRep::process()
     onRightNode = false;     
   }
 	
-  if (! shouldProcess()) {
+  if (! (getWorker()->shouldProcess())) {
     onRightNode = false;     
     TRACER4("Not on right node/appl; will skip Read & Write, and proceed substeps.");
   }

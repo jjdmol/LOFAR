@@ -48,7 +48,6 @@ namespace LOFAR
 int          StepRep::theirProcessProfilerState=0;
 unsigned int StepRep::theirNextID=0;
 unsigned int StepRep::theirEventCnt=0;
-int          StepRep::theirCurAppl=0;
 
 
 StepRep::StepRep (WorkHolder& worker, 
@@ -60,8 +59,6 @@ StepRep::StepRep (WorkHolder& worker,
   itsDataManager(0),
   itsParent     (0),
   itsID         (-1),
-  itsNode       (0),
-  itsAppl       (0),
   itsAddSuffix  (addNameSuffix),
   itsSeqNr      (-1),
   itsName       (name),
@@ -73,7 +70,6 @@ StepRep::StepRep (WorkHolder& worker,
   itsDataManager = new DataManager(itsWorker->getDataManager());
   itsWorker->setDataManager(itsDataManager);
 
-  itsCurRank = TRANSPORTER::getCurrentRank();
   if (monitor) {
     TRACER2("Create controllable Composite " << name);
 #ifdef HAVE_CORBA
@@ -121,25 +117,11 @@ void StepRep::setSeqNr (int seqNr)
 
 void StepRep::preprocess()
 {
-  if (shouldProcess()) {
-    TRACER3("Preprocess Step " << getName() << " on node/appl (" 
-	   << getNode() << '/' << getAppl() << ')');
-    itsWorker->basePreprocess();
-  }
+  itsWorker->basePreprocess();
 }
 
 void StepRep::process()
 {
-  // extra check if process is on the right node
-  if (getNode() < 0) {
-    cout << "StepRep::Process Node < 0 for Step " << getName() << endl;
-    return;
-  }
-  if (! shouldProcess()) {
-    TRACER4("Step " << getName() << " Not on right node/appl(" 
-	   << getNode() << '/' << getAppl() << "); will skip Process");
-    return;
-  }  
   // Call the baseProcess() method in the WorkHolder
   Profiler::enterState (theirProcessProfilerState);
   itsWorker->baseProcess();
@@ -148,19 +130,9 @@ void StepRep::process()
 
 void StepRep::postprocess()
 {
-  if (shouldProcess()) {
-    TRACER3("Postprocess Step " << getName() << " on node/appl (" 
-	   << getNode() << '/' << getAppl() << ')');
-    itsWorker->basePostprocess();
-  }
+  itsWorker->basePostprocess();
 }
-
-void StepRep::runOnNode (int aNode, int applNr)
-{ 
-  itsNode = aNode;
-  itsAppl = applNr;
-}
-		       
+	       
 bool StepRep::connectData (const TransportHolder& prototype,
 			   DataHolder& sourceData, 
 			   DataHolder& targetData,
@@ -287,7 +259,9 @@ void StepRep::replaceConnectionsWith(const TransportHolder& newTH,
 void StepRep::dump() const
 {
   // cout << "StepRep::dump " << itsName << endl;
-  if (shouldProcess()) itsWorker->dump();
+  if (itsWorker->shouldProcess() ){
+    itsWorker->dump();
+  }
 }
 
 bool StepRep::setProcessRate (int rate)

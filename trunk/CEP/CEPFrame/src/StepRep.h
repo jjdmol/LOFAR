@@ -222,9 +222,6 @@ protected:
   /// Set ID of the StepRep and all its Transports.
   void setID();
 
-  /// Execute process here?
-  bool shouldProcess() const;
-
   /// Connect 2 transports with the given transport prototype.
   static bool connectData (const TransportHolder& prototype,
 			   DataHolder& sourceData, DataHolder& targetData,
@@ -233,22 +230,17 @@ protected:
 private:
 
   int         itsRefCount;
+
   WorkHolder* itsWorker;
   DataManager* itsDataManager;
   // The parent Composite.
   CompositeRep*   itsParent;
-  // Rank of the current run from MPI::Get_Rank()
-  int         itsCurRank;
-  // The application number of this run.
-  static int          theirCurAppl;
-  static unsigned int theirEventCnt;
   // This will give all instances of Step the same event in the
   // Profiling output
   static int          theirProcessProfilerState; 
   static unsigned int theirNextID;
+  static unsigned int theirEventCnt;
   int                 itsID;   // the ID of the step
-  int                 itsNode; // the node to run this step on
-  int                 itsAppl; // the application to run this step in
   // Add the seqnr as the name suffix?
   bool                itsAddSuffix;
   // Sequence number in the Composite. Used to know the Step order.
@@ -286,16 +278,19 @@ inline int StepRep::getID() const
   { return itsID; }
 
 inline int StepRep::getNode() const
-  { return itsNode; } 
+  { return itsWorker->getNode(); } 
 
 inline int StepRep::getAppl() const
-  { return itsAppl; } 
+  { return itsWorker->getAppl(); } 
 
 inline int StepRep::getCurAppl()
-  { return theirCurAppl; } 
+  { return WorkHolder::getCurAppl(); } 
 
 inline void StepRep::setCurAppl (int applNr)
-  { theirCurAppl = applNr; } 
+  { WorkHolder::setCurAppl(applNr); } 
+
+inline void StepRep::runOnNode (int aNode, int applNr)
+  { itsWorker->runOnNode(aNode, applNr); }
 
 inline unsigned int StepRep::getEventCount()
   { return theirEventCnt; }
@@ -305,12 +300,6 @@ inline void StepRep::clearEventCount()
 
 inline void StepRep::incrementEventCount()
   { theirEventCnt++; } 
-
-inline bool StepRep::shouldProcess() const
-{
-  return (itsNode == itsCurRank  ||  itsCurRank < 0)
-    && itsAppl == theirCurAppl;
-}
 
 inline CompositeRep* StepRep::getParent() const
   { return itsParent; }
