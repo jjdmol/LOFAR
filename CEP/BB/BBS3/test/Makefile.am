@@ -1,7 +1,4 @@
-check_PROGRAMS = tBBS3 tPredSolv tPerturbed t3C343
-
-tBBS3_SOURCES = tBBS3.cc
-tBBS3_DEPENDENCIES = ../src/libbbs3.la $(LOFAR_DEPEND)
+check_PROGRAMS = tPredSolv tPerturbed t3C343
 
 tPredSolv_SOURCES = tPredSolv.cc
 tPredSolv_DEPENDENCIES = ../src/libbbs3.la $(LOFAR_DEPEND)

@@ -1,0 +1,35 @@
+// Example input file with:
+
+nrPrediffers=1,              // Number of Prediffers
+nrRuns=9,                    // Number of (CEPFrame) runs
+
+CTRLparams=[
+  nrStrategies=1,            // Number of Strategy Controllers
+
+  SC1params=[
+    strategy="Simple",       // Strategy type
+    nrIterations=9,          // Number of iterations per time interval
+    controlParmUpdate=F,     // Does the controller update the parameters?
+    solvableParams=["StokesI.*","RA.*","DEC.*"],
+    startTime=0.0e0,         // Start time
+    timeLength=1.0e12,       // Time interval (float)
+    antennas=[0,4,8,12,16],
+    startFreq=137500000,     // Start frequency
+    freqLength=1000000,      // Size of frequency interval
+    sources=[],              // Solvable source numbers (0 based)
+    modelType="LOFAR.RI",    // Model type
+    calcUVW=F,               // Calculate UVW coordinates?
+    useAutoCorr=F,           // Use auto correlations
+    lockMappedMem=T,         // Call mlock immediately after mapping?
+    useSVD=F,                // Use Singular Value Decomposition in solve?
+
+    MSDBparams=[
+      MSName="/data/PSS3/diepen/BBS2/demo3_p1.MS", // Measurement Set name
+      DBHost="dop50.astron.nl",      // Parameter database host name
+      DBType="aips",          // Parameter database type
+      DBPwd="",               // Parameter database password
+      meqTableName="demo",    // Meq model table name in /tmp (without ".MEP" extension)       
+      skyTableName="demo_gsm" // Sky model table name in /tmp (without ".MEP" extension)
+    ]
+  ]
+]

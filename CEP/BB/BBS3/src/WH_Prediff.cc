@@ -220,7 +220,7 @@ Prediffer* WH_Prediff::getPrediffer(int id, const KeyValueMap& args,
   else
   {
     // Create a Prediffer object
-    string msName = args.getString("MSName", "empty") + ".MS";
+    string msName = args.getString("MSName", "empty");
     string meqModel = args.getString("meqTableName", "meqmodel");
     string skyModel = args.getString("skyTableName", "skymodel");
     string dbType = args.getString("DBType", "postgres");

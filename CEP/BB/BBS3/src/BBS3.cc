@@ -1,4 +1,4 @@
-//  tBBS3.cc:
+//  BBS3.cc:
 //
 //  Copyright (C) 2004
 //  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -40,16 +40,17 @@
 using namespace LOFAR;
 using namespace std;
 
+// This program can be called with input file name(1) and user name(2)
+
 int main (int argc, const char** argv)
 {
   try {
     // To try out different (serial) experiments without the CEP
     // framework, use following two statements:
-    INIT_LOGGER("tBBS3Logger");
+    INIT_LOGGER("BBS3Logger");
 
     // Set default values
-    string name = "tBBS3.inputDefault";
-    int nriter = 1;
+    string name = "BBS3.inputDefault";
     const char *userName = getenv("USER");
     if (userName == 0) {
       cerr << "$USER not in environment\n";
@@ -70,17 +71,13 @@ int main (int argc, const char** argv)
       {
 	// Get input file name.
 	name = argv[1];
-	// Get number of iterations
-	istringstream istr(argv[2]);
-	istr >> nriter;
 	// Get user name
-	usernm = argv[3];
+	usernm = argv[2];
 	BlobOBufChar bufo;
 	// Fill the buffer
 	BlobOStream bos(bufo);
 	bos.putStart ("InputArgs", 1);
 	bos << name;
-	bos << nriter;
 	bos << usernm;
 	bos.putEnd();
 	uint64 bufSize = bufo.size();
@@ -101,7 +98,6 @@ int main (int argc, const char** argv)
 	BlobIStream bis(bufi);
 	bis.getStart ("InputArgs");
 	bis >> name;
-	bis >> nriter;
 	bis >> usernm;
 	bis.getEnd();
       }
@@ -113,24 +109,17 @@ int main (int argc, const char** argv)
     if (argc > 1) {
       name = argv[1];
     }
-    // Get number of iterations
-    if (argc > 2) {
-      istringstream istr(argv[2]);
-      istr >> nriter;
-    }
     // Get user name
-    if (argc > 3) {
-      usernm = argv[3];
+    if (argc > 2) {
+      usernm = argv[2];
     }
       
 #endif
 
     BlackBoardDemo simulator;
 
-    cout << "input arguments: " << endl;
-    cout << "Input file name = " << name << endl;
-    cout << "Number of iterations = " << nriter << endl;
-    cout << "User name = " << usernm << endl;
+    cout << "Input arguments: " << "Input file name = " << name 
+	 << ", User name = " << usernm << endl;
     
     simulator.setarg (argc, argv);
 
@@ -163,13 +152,7 @@ int main (int argc, const char** argv)
       char nrStr[32];
       sprintf(nrStr, "%i", i);
       string name = "SC" + string(nrStr) + "params";
-      // Add the nriter if not defined.   
       KeyValueMap smap(cmap[name].getValueMap());
-      if (! smap.isDefined("nrIterations")) {
-	smap["nrIterations"] = nriter;
-	cmap[name] = smap;
-	params["CTRLparams"] = cmap;
-      }
       // Add the dbname if not defined.
       KeyValueMap msdbmap(smap["MSDBparams"].getValueMap());
       if (! msdbmap.isDefined("DBName")) {
@@ -200,7 +183,7 @@ int main (int argc, const char** argv)
     cout << "Standard exception: " << e.what() << endl;
   }
   catch (...) {
-    cout << "Unexpected exception in tBBS3" << endl;
+    cout << "Unexpected exception in BBS3" << endl;
   }
 
 }
