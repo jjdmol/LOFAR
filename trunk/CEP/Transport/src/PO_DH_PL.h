@@ -41,8 +41,7 @@ namespace LOFAR {
 
     private:
       int       itsSeqNr;
-      int       itsSource;
-      int       itsDest;
+      int       itsId;
       int       itsTag;
       dtl::blob itsData;
     };
@@ -56,9 +55,9 @@ namespace LOFAR {
       { dest.toDBRep (data()); }
 
     // Copy the fields from the DBRep<DH_PL> structure to the DH_PL object.
-    template<>
-    inline void TPersistentObject<DH_PL>::fromDBRep
-                                  (const DBRep<DH_PL>& src)
+    template<typename DH_T>
+    inline void TPersistentObject<DH_T>::fromDBRep
+                                  (const DBRep<DH_T>& src)
       { src.fromDBRep (data()); }
 
     // Initialize the internals of TPersistentObject<DH_PL>

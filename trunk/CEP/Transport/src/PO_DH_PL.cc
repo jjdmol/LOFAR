@@ -36,29 +36,27 @@ namespace LOFAR {
 
 void DBRep<DH_PL>::bindCols (dtl::BoundIOs& cols)
 {
-  cols["TIMESTAMP"]  == itsTimeStamp;
-  cols["SEQNR"]      == itsSeqNr;
-  cols["TAG"]        == itsTag;
-  cols["DATA"]       == itsData;
+  cols["ID"]    == itsId;
+  cols["SEQNR"] == itsSeqNr;
+  cols["TAG"]   == itsTag;
+  cols["DATA"]  == itsData;
 }
 
 void DBRep<DH_PL>::toDBRep (const DH_PL& obj)
 {
   // Copy the info from DH_PL
-  itsTimeStamp = obj.getName();
-  itsSeqNr     = obj.getSourceNr();
-  itsTag       = obj.getStation();
-  itsData      = obj.getPolc().getCoeff().getDouble();
+  itsId    = obj.getId();
+  itsSeqNr = obj.getSeqNr();
+  itsTag   = obj.getTag();
+  itsData  = obj.getDataBlock().getString();
 }
 
 // fromDatabaseRep copies the fields of the DBRep<MeqParmHolder> structure
 // to the persistency layer and the MeqParmHolder class.
 void DBRep<DH_PL>::fromDBRep (DH_PL& obj) const
 {
-  // Finally copy the info to DH_PL
-  obj.setData     (itsName);
-  obj.setSourceNr (itsSrcNr);
-  obj.setStation  (itsStatNr);
+  obj.getDataBlock().resize (itsData.size());
+  obj.getDataBlock().getString() = itsData;
 }
 
 
@@ -70,5 +68,3 @@ template class DBRep<DH_PL>;
 
   }  // end namespace PL
 }    // end namespace LOFAR
-
-#endif

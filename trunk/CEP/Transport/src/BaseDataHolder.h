@@ -213,6 +213,13 @@ protected:
   template<typename T> T* getData (const std::string& fieldName);
   // </group>
 
+public:
+  // Get access to the data blob.
+  // <group>
+  BlobString& getDataBlock();
+  const BlobString& getDataBlock() const;
+  // </group>
+
 private:
   // Get the type of BlobString needed from the transport holder.
   virtual BlobStringType blobStringType();
@@ -302,6 +309,12 @@ inline const string& BaseDataHolder::getType () const
 inline void BaseDataHolder::setType(const string& type)
   { itsType = type; }
 
+inline void BaseDataHolder::setTransporter(Transporter& aTransporter)
+{
+  itsTransporter = &aTransporter;
+}
+
+
 inline BlobFieldBase& BaseDataHolder::getDataField (uint fieldIndex)
 {
   return itsDataFields[fieldIndex];
@@ -322,6 +335,10 @@ inline T* BaseDataHolder::getData (const std::string& fieldName)
   return itsDataFields[fieldName].getData<T> (*itsDataBlob);
 }
 
+inline BlobString& BaseDataHolder::getDataBlock()
+{
+  return *itsData;
+}
 
 inline void dataConvert (DataFormat fmt,
 			 BaseDataHolder::DataPacket* buf, uint nrval)
@@ -329,11 +346,6 @@ inline void dataConvert (DataFormat fmt,
   for (uint i=0; i<nrval ;i++) {
     dataConvertDouble (fmt, &(buf[i].itsTimeStamp));
   }
-}
-
-inline void BaseDataHolder::setTransporter(Transporter& aTransporter)
-{
-  itsTransporter = &aTransporter;
 }
 
 

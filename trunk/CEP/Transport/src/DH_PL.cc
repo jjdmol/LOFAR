@@ -22,7 +22,8 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include <libTransport/DH_PL.h>				// for class definition
+#include <libTransport/DH_PL.h>		        // for class definition
+#include <libTransport/PO_DH_PL.h>
 #include <Common/lofar_iostream.h>		// for cout, cerr
 #include <Common/Debug.h>			// for AssertStr
 #include <sstream>				// for ostrstream
@@ -31,23 +32,42 @@ namespace LOFAR {
 
 
 DH_PL::DH_PL (const string& name, const string& type)
-  : DataHolder (name, type) 
+  : DataHolder (name, type),
+    itsPODHPL  (0)
+{}
+
+DH_PL::DH_PL (const DH_PL& that)
+  : DataHolder (that),
+    itsPODHPL  (0)
+{}
+
+DH_PL::~DH_PL ()
 {
-  itsDHPLPO = new DH_PL_PO(); 
+  delete itsPODHPL;
+}
+
+DH_PL* DH_PL::clone() const
+{
+  return new DH_PL (*this);
+}
+
+
+void DH_PL::initPO (int tag, int id)
+{
+  itsPODHPL = new PO_DH_PL();
+  itsTag    = tag;
+  itsAppId  = id;
 } 
 
-
-DH_PL::~DH_PL () {
+PL::PersistentObject& DH_PL::getPO() const
+{
+  return *itsPODHPL;
 }
 
-
-PL::PersistentObject& DH_PL::getTPO() const{
-  return itsDHPLPO->getTPO();
-}
-
-PL::PersistentObject& DH_PL::prepareTPO(int aSeqNo) {
-  itsSeqNo = aSeqNo;
-  return itsDHPLPO->getTPO();
+PL::PersistentObject& DH_PL::preparePO (int seqnr)
+{
+  itsSeqNr = seqnr;
+  return *itsPODHPL;
 }
 
 }
