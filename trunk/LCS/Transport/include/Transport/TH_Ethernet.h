@@ -44,14 +44,15 @@ namespace LOFAR
 #define MIN_FRAME_LEN 200
 
 // This class defines the transport mechanism for RAW Ethernet 
-// communication between dataholders.
-
-#define MIN_FRAME_LEN 200
 
 class TH_Ethernet: public TransportHolder
 {
 public:
-  TH_Ethernet(char* ifname, char* rMac, char* oMac, uint16 etype = 0x0000, bool dhcheck = true);
+  TH_Ethernet(char* ifname, 
+              char* rMac, 
+              char* oMac, 
+              uint16 etype  = 0x0000, 
+              bool dhheader = true);
   
   virtual ~TH_Ethernet();
 
@@ -83,22 +84,24 @@ public:
   virtual bool isBidirectional() const;
   
  private:  
-  int32 _socketFD;
-  int32 _maxdatasize;
-  int32 _maxframesize;
-  bool _dhcheck;
+  int32 itsSocketFD;
+  int32 itsMaxdatasize;
+  int32 itsMaxframesize;
+  int32 itsDHheaderSize;
+  bool  itsDHheader;
   
-  bool _initDone;
-  char* _ifname;
-  char* _remoteMac;
-  char* _ownMac;
-  char* _recvPacket; 
-  char* _sendPacket; 
-  char* _sendPacketData;
+  bool itsInitDone;
   
-  uint16 _ethertype;
+  char* itsIfname;
+  char* itsRemoteMac;
+  char* itsOwnMac;
+  char* itsRecvPacket; 
+  char* itsSendPacket; 
+  char* itsSendPacketData;
   
-  struct sockaddr_ll _sockaddr;
+  uint16 itsEthertype;
+  
+  struct sockaddr_ll itsSockaddr;
 
   void Init();
  
