@@ -24,6 +24,7 @@
 #include <Common/LofarLogger.h>
 
 using namespace LOFAR;
+using namespace LOFAR::ACC;
 
 int main(int argc, char * argv[]) {
 	INIT_LOGGER("ACCdemo.log_prop");
