@@ -63,9 +63,9 @@ solve := function(fname='demo', ant=4*[0:20],
     # MEP is sorted, thus order is DEC,RA,StokesI
     annotator.hold();
     for (i in [1:(t1.nrows()/3)]) {
-	dec := t1.getcell("SIM_RVALUES", 3*i-2)[1,1];
-	ra  := t1.getcell("SIM_RVALUES", 3*i-1)[1,1];
-	stk := t1.getcell("SIM_RVALUES", 3*i)[1,1];
+	dec := t1.getcell("SIM_VALUES", 3*i-2)[1,1];
+	ra  := t1.getcell("SIM_VALUES", 3*i-1)[1,1];
+	stk := t1.getcell("SIM_VALUES", 3*i)[1,1];
 	print stk;
 	src_mrk[i] := annotator.add_marker(1, ra, dec, F, F, 1,
 					   as_integer(100*stk), 3);
@@ -205,7 +205,7 @@ solveej := function(fname='demo', ant=4*[0:20],
 
     mc.settimeinterval(3600); # calibrate per 3600 seconds
     mc.clearsolvableparms();
-    mc.setsolvableparms("EJ11*");
+    mc.setsolvableparms("EJ11.imag*");
 #    mc.setsolvableparms("EJ11.SR{1,5,9,13,17,21,25,29,33,37}.*");
 #    print mc.getparmnames();
 
@@ -220,7 +220,7 @@ solveej := function(fname='demo', ant=4*[0:20],
         d := mc.getsolvedomain();
         print 'solvedomain = ', d;
 
-        parms := mc.getparms("EJ11.SR{5,9}.*");
+        parms := mc.getparms("EJ11.{real,imag}.SR{5,9}.*");
 	nrp := len(parms);
 	if (nrp > 0) {
 	    for (nm in field_names(parms)) {
@@ -234,7 +234,7 @@ solveej := function(fname='demo', ant=4*[0:20],
             srec := mc.solve();
 	    solverec[spaste("iter",i)] := srec;
             
-	    parms := mc.getparms("EJ11.SR{5,9}.*");
+	    parms := mc.getparms("EJ11.{real,imag}.SR{5,9}.*");
 	    nrp := len(parms);
 	    if (nrp > 0) {
 		for (nm in field_names(parms)) {
@@ -282,9 +282,9 @@ peel := function(fname='demo', src=1, predsrc=[], ant=4*[0:20],
     # MEP is sorted, thus order is DEC,RA,StokesI
     annotator.hold();
     for (i in [1:(t1.nrows()/3)]) {
-	dec := t1.getcell("SIM_RVALUES", 3*i-2)[1,1];
-	ra  := t1.getcell("SIM_RVALUES", 3*i-1)[1,1];
-	stk := t1.getcell("SIM_RVALUES", 3*i)[1,1];
+	dec := t1.getcell("SIM_VALUES", 3*i-2)[1,1];
+	ra  := t1.getcell("SIM_VALUES", 3*i-1)[1,1];
+	stk := t1.getcell("SIM_VALUES", 3*i)[1,1];
 	print stk;
 	src_mrk[i] := annotator.add_marker(1, ra, dec, F, F, 1,
 					   as_integer(100*stk), 3);
@@ -441,18 +441,18 @@ peelej := function(fname='demo', src=1, predsrc=[], ant=4*[0:20],
         d := mc.getsolvedomain();
         print 'solvedomain = ', d;
 
-        parms := mc.getparms("EJ11.SR{5,9}.*");
+        parms := mc.getparms("EJ11.{real,imag}.SR{5,9}.*");
 #        parms := mc.getparms("EJ*");
         print parms
         
         for (i in [1:niter]) {
             print "iteration", i;
 
-            srec := mc.solve(realsol=T);
+            srec := mc.solve();
 	    solverec[spaste("iter",i)] := srec;
             
 	    for (j in src) {
-		parms := mc.getparms("EJ11.SR{5,9}.*");
+		parms := mc.getparms("EJ11.{real,imag}.SR{5,9}.*");
 #		parms := mc.getparms(spaste('EJ*.CP', src, '*'));
 		nrp := len(parms);
 		if (nrp > 0) {
@@ -612,24 +612,28 @@ initparms := function(fname='demo')
   pt.putinit ('frot', values=0);
   pt.putinit ('drot', values=0);
   pt.putinit ('dell', values=0);
-  pt.putinit ('gain.11', values=1+0i);
-  pt.putinit ('gain.22', values=1+0i);
-  pt.putinit ('EJ11.SR1.CP1', values=1+0i);
-  pt.putinit ('EJ11.SR1.CP2', values=1+0i);
-  pt.putinit ('EJ11.SR1.CP3', values=1+0i);
-  pt.putinit ('EJ11.SR2.CP1', values=1+0i);
-  pt.putinit ('EJ11.SR2.CP2', values=1+0i);
-  pt.putinit ('EJ11.SR2.CP3', values=1+0i);
-  pt.putinit ('EJ11.SR5.CP1', values=1+0i);
-  pt.putinit ('EJ11.SR5.CP2', values=1+0i);
-  pt.putinit ('EJ11.SR5.CP3', values=1+0i);
-  pt.putinit ('EJ11.SR9.CP1', values=1+0i);
-  pt.putinit ('EJ11.SR9.CP2', values=1+0i);
-  pt.putinit ('EJ11.SR9.CP3', values=1+0i);
-  pt.putinit ('EJ11', values=1+0i);
-  pt.putinit ('EJ12', values=0+0i);
-  pt.putinit ('EJ21', values=0+0i);
-  pt.putinit ('EJ22', values=1+0i);
+  pt.putinit ('gain.11', values=1);
+  pt.putinit ('gain.22', values=1);
+  pt.putinit ('EJ11.real.SR1.CP1', values=1);
+  pt.putinit ('EJ11.real.SR1.CP2', values=1);
+  pt.putinit ('EJ11.real.SR1.CP3', values=1);
+  pt.putinit ('EJ11.real.SR2.CP1', values=1);
+  pt.putinit ('EJ11.real.SR2.CP2', values=1);
+  pt.putinit ('EJ11.real.SR2.CP3', values=1);
+  pt.putinit ('EJ11.real.SR5.CP1', values=1);
+  pt.putinit ('EJ11.real.SR5.CP2', values=1);
+  pt.putinit ('EJ11.real.SR5.CP3', values=1);
+  pt.putinit ('EJ11.real.SR9.CP1', values=1);
+  pt.putinit ('EJ11.real.SR9.CP2', values=1);
+  pt.putinit ('EJ11.real.SR9.CP3', values=1);
+  pt.putinit ('EJ11.real', values=1);
+  pt.putinit ('EJ12.real', values=0);
+  pt.putinit ('EJ21.real', values=0);
+  pt.putinit ('EJ22.real', values=1);
+  pt.putinit ('EJ11.imag', values=1);
+  pt.putinit ('EJ12.imag', values=0);
+  pt.putinit ('EJ21.imag', values=0);
+  pt.putinit ('EJ22.imag', values=1);
   pt.done();
 }
 
@@ -640,12 +644,16 @@ setparms := function(fname='demo')
   pt.putinit ('frot', values=0);
   pt.putinit ('drot', values=0);
   pt.putinit ('dell', values=0);
-  pt.putinit ('gain.11', values=1+0i);
-  pt.putinit ('gain.22', values=0+0i);
-  pt.putinit ('EJ11', values=1+0i);
-  pt.putinit ('EJ12', values=0+0i);
-  pt.putinit ('EJ21', values=0+0i);
-  pt.putinit ('EJ22', values=1+0i);
+  pt.putinit ('gain.11', values=1);
+  pt.putinit ('gain.22', values=0);
+  pt.putinit ('EJ11.real', values=1);
+  pt.putinit ('EJ12.real', values=0);
+  pt.putinit ('EJ21.real', values=0);
+  pt.putinit ('EJ22.real', values=1);
+  pt.putinit ('EJ11.imag', values=1);
+  pt.putinit ('EJ12.imag', values=0);
+  pt.putinit ('EJ21.imag', values=0);
+  pt.putinit ('EJ22.imag', values=1);
   pt.done();
 }
 
@@ -668,12 +676,13 @@ initgsm := function(fname='demo')
 setej := function(fname='demo', mode=1, fact=1)
 {
   pt := parmtable(spaste(fname,'.MEP'));
-  pt.perturb ('NAME==pattern("EJ11*")', 0.5, F);
+#  pt.perturb ('NAME==pattern("EJ11.real*")', 0.5, F);
+  pt.perturb ('NAME==pattern("EJ11.imag*")', -0.5, F);
 #  pt.perturb ('NAME==pattern("EJ11.SR{1,5,9}.CP{1}")', 0.5*fact, F);
   if (mode==2) {
-#      pt.perturb ('NAME==pattern("EJ11.SR2.CP1")', 0.5000015+1e-06i, F);
-#      pt.perturb ('NAME==pattern("EJ11.SR2.CP2")', 0.5000015+1e-06i, F);
-      pt.perturb ('NAME==pattern("EJ11.SR2.CP3")', 0.5000015+1e-06i, F);
+#      pt.perturb ('NAME==pattern("EJ11.SR2.CP1")', 0.5000015, F);
+#      pt.perturb ('NAME==pattern("EJ11.SR2.CP2")', 0.5000015, F);
+      pt.perturb ('NAME==pattern("EJ11.SR2.CP3")', 0.5000015, F);
   }
   pt.done();
 }
