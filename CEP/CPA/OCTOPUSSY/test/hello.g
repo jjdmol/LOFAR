@@ -6,6 +6,7 @@ test_hello := function (server="./test_glish",options="")
   if( is_fail(oct) || !oct.connected() )
     fail 'unable to connect to server';
 
+#  oct.subscribe("GW.Remote.Up.*");
   oct.subscribe("IMTestWP.HelloWorld.*");
   oct.subscribe("WP.Hello.IMTestWP.*");
  
