@@ -41,7 +41,7 @@ int main (int argc, const char** argv) {
   std::string frontend_ip = kvm.getString("frontend_ip", "192.168.100.31");
   std::string backend_ip = kvm.getString("backend_ip", "192.168.100.32");
   std::string loggerfile = kvm.getString("loggerfile", "CorrelatorLogger.prop");
-  kvm.show(cout);
+//   kvm.show(cout);
 
   INIT_LOGGER(loggerfile);
 

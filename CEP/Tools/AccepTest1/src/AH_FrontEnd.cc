@@ -83,7 +83,7 @@ void AH_FrontEnd::define(const KeyValueMap& /*params*/) {
       
     itsWHs.back()->getDataManager().getOutHolder(0)->connectTo
       ( *myWHCorrelator.getDataManager().getInHolder(0),
-	TH_Socket(LOCALHOST_IP, LOCALHOST_IP, itsPort+cn, false, false) );
+	TH_Socket(LOCALHOST_IP, LOCALHOST_IP, itsPort+cn, false, true) );
     
   }
 }
@@ -100,8 +100,6 @@ void AH_FrontEnd::init() {
   vector<WorkHolder*>::iterator it = itsWHs.begin();
   for (; it != itsWHs.end(); it++) {
     cout << "init FE WH " << (*it)->getName() << endl;
-    // somehow the isBlocking flag is forgotten
-    (*it)->getDataManager().getOutHolder(0)->getTransporter().setIsBlocking(false);
     (*it)->basePreprocess();
     
   }
