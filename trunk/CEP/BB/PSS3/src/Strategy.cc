@@ -57,13 +57,14 @@ Strategy::~Strategy()
   }
 }
 
-bool Strategy::execute(Vector<String>& paramNames,                 
-		       Vector<float>& paramValues,
-		       Solution& solutionQuality)
+bool Strategy::execute(vector<string>& parmNames,                 
+		       vector<float>& parmValues,
+		       Solution& solutionQuality,
+		       int& source)
 {
   if (itsImpl != 0)
   {
-    return itsImpl->execute(paramNames, paramValues, solutionQuality);
+    return itsImpl->execute(parmNames, parmValues, solutionQuality, source);
   }
   else
   {

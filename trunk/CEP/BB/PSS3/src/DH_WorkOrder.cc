@@ -30,7 +30,6 @@
 using namespace LOFAR;
 
 int DH_WorkOrder::theirWriteCount = 0;
-int DH_WorkOrder::theirReadCount = 0;
 
 DH_WorkOrder::DH_WorkOrder (const string& name, const string& type)
   : DH_Postgresql(name, "DH_WorkOrder"),
@@ -65,11 +64,11 @@ void DH_WorkOrder::postprocess()
 }
 
 DH_WorkOrder::DataPacket::DataPacket()
-  : itsParam1Name("StokesI.CP"),
+  : itsParam1Name("StokesI"),
     itsParam1Value(0),
-    itsParam2Name("RA.CP"),
+    itsParam2Name("RA"),
     itsParam2Value(0),
-    itsParam3Name("DEC.CP"),
+    itsParam3Name("DEC"),
     itsParam3Value(0),
     itsSrcNo(-1),
     itsStatus(New),
@@ -82,7 +81,7 @@ DH_WorkOrder::DataPacket::DataPacket()
 void DH_WorkOrder::setArgSize(int size)
 { 
   AssertStr(size > 0, "Size is not greater than zero");
-  AssertStr(size <= MAX_STRAT_ARGS_SIZE, "Size is greater than buffer size,increase buffer size");
+  AssertStr(size <= MAX_STRAT_ARGS_SIZE, "Size is greater than buffer size,increase buffer size (MAX_STRAT_ARGS_SIZE)");
   itsDataPacket.itsArgSize = size;
 }
 
@@ -94,12 +93,10 @@ bool DH_WorkOrder::StoreInDatabase(int, int, char*, int)
     int i;
     ostringstream ostr;
 
-    // To do: add blob header
-
     // Put varArgs in blob
     char hexrep [getArgSize()];
     for (i = 0; i < getArgSize(); i ++) {  
-      sprintf (hexrep, "%02X ", (unsigned char) (itsDataPacket.itsVarArgs[i]));
+      sprintf (hexrep, "%02X ", itsDataPacket.itsVarArgs[i]);
       ostr << hexrep;
     }
 
@@ -138,20 +135,23 @@ bool DH_WorkOrder::StoreInDatabase(int, int, char*, int)
   else if (itsType == "KS")
   {
     ostringstream q1;
-    q1 << "UPDATE BBSolutions SET "
-       << "P1Value = " << "'" << getParam1Value() << "', "
-       << "P2Value = " << "'" << getParam2Value() << "', "
-       << "P3Value = " << "'" << getParam3Value() << "', "
-       << "SrcNo = " << getSourceNo() << " , " 
-       << "SolQual = " << getSolution()->itsMu << " "
-       << "WHERE ID = " << getID() << " ;";
+    q1 << "INSERT INTO BBSolutions VALUES ("
+       << getID() << ", "
+       << "'" << getParam1Name() << "', "
+       << "'" << getParam2Name() << "', "
+       << "'" << getParam3Name() << "', " 
+       << getParam1Value() << ", "
+       << getParam2Value() << ", "
+       << getParam3Value() << ", "
+       << getSourceNo() << ", "
+       << getSolution()->itsMu << "); ";
 
-    cout << "DH_WorkOrder::StoreInDatabase <<< Update Solution QUERY: " << q1.str () << endl;
+    cout << "DH_WorkOrder::StoreInDatabase <<< Insert Solution QUERY: " << q1.str () << endl;
 
     ostringstream q2;
     q2 << "UPDATE BBWorkOrders SET "
        << "Status = " << getStatus() << " "
-       << "WHERE ID = " << getID() << " ;";
+       << "WHERE ID = " << getID() << " AND Status = 1 ;";
 
     cout << "DH_WorkOrder::StoreInDatabase <<< Update WorkOrder status QUERY: " << q2.str () << endl;
     
@@ -170,97 +170,116 @@ bool DH_WorkOrder::RetrieveFromDatabase(int, int, char*, int)
 {
   if (itsType == "KS")
   {
-    // Construct workorder query in table BBWorkOrders
-    ostringstream q1;
-
-    q1 << "SELECT * FROM BBWorkOrders WHERE "
-       << "id = " << theirReadCount << " AND "
-       << "status = 0 AND "
-       << "kstype = 'PSS3' " << ";";
-
-    cout << "DH_WorkOrder::RetrieveFromDatabase <<< WorkOrder QUERY: " << q1.str () << endl;
-
-    PGresult * res1;
-
-    // Block until a packet appears in the table
-    do
+    bool selectedWorkOrder = false;
+    PGresult* resWO;
+    PGresult* resSol;
+    PGresult* resUpd;
+    while (!selectedWorkOrder)   // Do this until a valid (single) workorder is found
     {
-      cerr << '.';
-      res1 = PQexec (DH_Postgresql::theirConnection, (q1.str ()).c_str ());
-  
-      AssertStr (PQresultStatus (res1) == PGRES_TUPLES_OK,
-		 "DH_Postgressql::Retrieve (); Select query failed.")
-    } while (PQntuples (res1) == 0);
+      // Construct workorder query in table BBWorkOrders
+      ostringstream q1;
 
-    int nRows;
-    nRows = PQntuples (res1);
-    AssertStr (nRows == 1, "DH_Postgresql::Retrieve ();"
-	       << "ERROR: Found less or more than 1 message in database.")
- 
+      q1 << "SELECT * FROM BBWorkOrders WHERE "
+	 << "status = 0 AND "
+	 << "kstype = 'PSS3' " << " ORDER BY id ;";
+
+      cout << "DH_WorkOrder::RetrieveFromDatabase <<< WorkOrder QUERY: " << q1.str () << endl;
+
+      // Block until a packet appears in the table
+      do
+      {
+	cerr << '.';
+	resWO = PQexec (DH_Postgresql::theirConnection, (q1.str ()).c_str ());
+	  
+	AssertStr (PQresultStatus (resWO) == PGRES_TUPLES_OK,
+		   "DH_Postgressql::Retrieve (); Select query failed.")
+       } while (PQntuples (resWO) == 0);
+
+      int identifier = atoi(PQgetvalue(resWO, 0, 0));    
+
+      // Construct query for parameter names in table BBSolutions
+      ostringstream q2;
+
+      q2 << "SELECT * FROM BBSolutions WHERE "
+	 << "id = " << identifier << ";";
+
+      cout << "DH_WorkOrder::RetrieveFromDatabase <<< Params QUERY: " << q2.str () << endl;
+
+      // Block until a packet appears in the table
+      do 
+      {
+	cerr << '.';
+	resSol = PQexec (DH_Postgresql::theirConnection, (q2.str ()).c_str ());
+  
+	AssertStr (PQresultStatus (resSol) == PGRES_TUPLES_OK,
+		   "DH_Postgressql::Retrieve (); Select query failed.")
+      } while (PQntuples (resSol) == 0);
+
+      int nRows = PQntuples (resSol);
+      AssertStr (nRows == 1, "DH_Postgresql::Retrieve ();"
+	       << "ERROR: Found less or more than 1 message in database.");
+
+
+      // Update WorkOrder status in table BBWorkOrders
+      ostringstream q3;
+
+      q3 << "UPDATE BBWorkOrders SET "
+	 << "Status = 1" << " "
+	 << "WHERE id = " << identifier << " AND "
+	 << "Status = 0" << " ;";
+
+      cout << "DH_WorkOrder::RetrieveFromDatabase <<< UPDATE COMMAND: " << q3.str () << endl;
+
+      resUpd = PQexec (DH_Postgresql::theirConnection, ((q3.str ()).c_str ()));
+
+      AssertStr (PQresultStatus (resUpd) == PGRES_COMMAND_OK,
+		 "ERROR: ExecuteCommand () Failed (" 
+		 << PQresStatus (PQresultStatus (resUpd)) 
+		 << "): " << q3.str ())
+	
+
+      if (atoi(PQcmdTuples(resUpd)) == 1)
+      {
+	selectedWorkOrder = true;                      // Found a valid entry in database
+	cout << "Found WorkOrder with id " << identifier << endl;
+      }
+      else
+      {
+	TRACER1("Update of WorkOrder failed. Number of rows affected by " 
+		<< q3.str () << " is " << PQcmdTuples(resUpd) << ". Trying again all queries.");
+	cout << "Update of WorkOrder failed. Number of rows affected by " 
+	     << q3.str () << " is " << PQcmdTuples(resUpd) 
+	     << ". Trying again all queries." << endl;
+	PQclear(resWO);
+	PQclear(resSol);
+      }
+      PQclear (resUpd);
+
+    }
+
+
     // Put results in DataPacket
-    setStatus((DH_WorkOrder::woStatus) atoi(PQgetvalue(res1, 0, 1)));
-    setKSType(PQgetvalue(res1, 0, 2));
-    setStrategyNo(atoi(PQgetvalue(res1, 0, 3)));
-    setArgSize(atoi(PQgetvalue(res1, 0, 4)));
+    setStatus((DH_WorkOrder::woStatus) atoi(PQgetvalue(resWO, 0, 1)));
+    setKSType(PQgetvalue(resWO, 0, 2));
+    setStrategyNo(atoi(PQgetvalue(resWO, 0, 3)));
+    setArgSize(atoi(PQgetvalue(resWO, 0, 4)));
 
     char token[getArgSize()];
      
-    istringstream istr (PQgetvalue (res1, 0, 5));
+    istringstream istr (PQgetvalue (resWO, 0, 5));
     for (int k = 0; k < getArgSize(); k ++) {
       istr >> token;
       itsDataPacket.itsVarArgs[k] = (char) strtoul (token, NULL, 16);
     }
 
-    PQclear(res1);
+    PQclear(resWO);
 
-    // Construct query for parameter names in table BBSolutions
-    ostringstream q2;
+    setID(atoi(PQgetvalue(resSol, 0, 0)));
+    setParam1Name(PQgetvalue(resSol, 0, 1));
+    setParam2Name(PQgetvalue(resSol, 0, 2));
+    setParam3Name(PQgetvalue(resSol, 0, 3));
 
-    q2 << "SELECT * FROM BBSolutions WHERE "
-       << "id = " << theirReadCount << ";";
-
-    cout << "DH_WorkOrder::RetrieveFromDatabase <<< Params QUERY: " << q2.str () << endl;
-
-    PGresult * res2;
-
-    // Block until a packet appears in the table
-    do 
-    {
-      cerr << '.';
-      res2 = PQexec (DH_Postgresql::theirConnection, (q2.str ()).c_str ());
-  
-      AssertStr (PQresultStatus (res2) == PGRES_TUPLES_OK,
-		 "DH_Postgressql::Retrieve (); Select query failed.")
-     } while (PQntuples (res2) == 0);
-
-    nRows = PQntuples (res2);
-    AssertStr (nRows == 1, "DH_Postgresql::Retrieve ();"
-	       << "ERROR: Found less or more than 1 message in database.");
-
-
-    // Update WorkOrder status in table BBWorkOrders
-    ostringstream q3;
-
-    q3 << "UPDATE BBWorkOrders SET "
-       << "Status = 1" << " "
-       << "WHERE id = " << theirReadCount << " AND "
-       << "Status = 0" << " ;";
-
-    cout << "DH_WorkOrder::RetrieveFromDatabase <<< UPDATE COMMAND: " << q3.str () << endl;
-
-    ExecuteSQLCommand(q3);
-
-
-    // Put results in DataPacket
-
-    setID(atoi(PQgetvalue(res2, 0, 0)));
-    setParam1Name(PQgetvalue(res2, 0, 1));
-    setParam2Name(PQgetvalue(res2, 0, 2));
-    setParam3Name(PQgetvalue(res2, 0, 3));
-
-    PQclear(res2);
-
-    theirReadCount++;
+    PQclear(resSol);
 
     cout << "------ End of Knowledge Source read from database --------" << endl;
     cout << endl;

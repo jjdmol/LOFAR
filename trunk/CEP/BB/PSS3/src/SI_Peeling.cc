@@ -36,82 +36,86 @@ SI_Peeling::SI_Peeling(Calibrator* cal, int argSize, char* args)
   itsNIter = pData->nIter;
   itsNSources = pData->nSources;
   itsTimeInterval = pData->timeInterval;
+  TRACER1("Creating Peeling strategy implementation with " 
+	  << "number of iterations = " << itsNIter << ", "
+	  << "number of sources = " << itsNSources << ", "
+	  << " time interval = " << itsTimeInterval);
 
-//   mc->setTimeInterval(itsTimeInterval);
-//   mc->clearSolvableParms();
+  cout <<  "Creating Peeling strategy implementation with " 
+	  << "number of iterations = " << itsNIter << ", "
+	  << "number of sources = " << itsNSources << ", "
+	  << " time interval = " << itsTimeInterval;
+
 }
 
 SI_Peeling::~SI_Peeling()
 {}
 
-bool SI_Peeling::execute(Vector<String>& paramNames, 
-			 Vector<float>& paramValues,
-			 Solution& solutionQuality)
+bool SI_Peeling::execute(vector<string>& parmNames, 
+			 vector<float>& parmValues,
+			 Solution& solutionQuality,
+			 int& sourceNo)
 {
   AssertStr(itsCal != 0, 
 	    "Calibrator pointer not set for this peeling strategy");
-  if (itsCurSource > itsNSources)
-  {
-    return false;                   // Finished with all sources.
-  }
-  else
+
+  if (itsFirstCall)
   {
     itsCal->Initialize();
-    itsCal->OptimizeSource(itsCurSource, itsNIter);
-    itsCurSource++;
-    return true;
+    itsCal->clearSolvableParms();
+    for (unsigned int i=0; i < parmNames.size(); i++)      // Add all parms
+    { 
+      itsCal->addSolvableParm(parmNames[i], itsCurSource);
+    }
+    itsCal->commitSolvableParms();
+    itsCal->resetTimeIntervalIterator();
+    itsCal->advanceTimeIntervalIterator();
+    cout << "Next interval" << endl;
+   
+    itsFirstCall = false;
   }
 
-//   if (itsFirstCall)
-//   {
-//     Vector<String> pp(3);
-//     Vector<String> ep(3);
-//     ostringstream oss[3];
-//     oss[0] << paramNames[0] << itsCurSource;        pp[0] = oss[0].str();
-//     oss[1] << paramNames[1] << itsCurSource;        pp[1] = oss[1].str();
-//     oss[2] << paramNames[2] << itsCurSource;        pp[2] = oss[2].str();
-//     itsMC->setSolvableParms (pp,ep,true);
-//     itsMC->resetIterator();
-//     itsMC->nextInterval();
-//     cout << "Next interval" << endl;
-//     itsFirstCall = false;
-//   }
+  cout << "Next iteration: " << itsCurIter+1 << endl;
+  if (++itsCurIter >= itsNIter)          // Next iteration
+  {                                      // Finished with all iterations
+    cout << "Next interval" << endl;
+    if (itsCal->advanceTimeIntervalIterator() == false) // Next time interval
+    {                                    // Finished with all time intervals
+      cout << "Next source: " << itsCurSource+1 << endl;
+     if (++itsCurSource > itsNSources)  // Next source
+      {
+	itsCurIter = -1;
+	itsCurSource = 1;
+	itsFirstCall = true;
+	return false;                    // Finished with all sources
+      }
+      else
+      {
+	itsCal->clearSolvableParms();
+	for (unsigned int i=0; i < parmNames.size(); i++) // Add all parms
+	{ 
+	  itsCal->addSolvableParm(parmNames[i], itsCurSource);
+	}
+	itsCal->commitSolvableParms();
+	itsCal->resetTimeIntervalIterator();
 
-//   // Temporary code to get an idea:
-//   if (++itsCurIter >= itsNIter)          // Peeling strategy: 
-//   {                                     // inner loop over iterations, outer
-//     cout << "Next interval" << endl;    // over sources.
-//     if (itsMC->nextInterval() == false)    
-//     {
-//       if (++itsCurSource > itsNSources)
-//       {
-// 	return false;                   // Finished with all iterations,
-//       }                                 // intervals and sources
-//       else
-//       {
-// 	cout << "Next source" << endl;
-// 	itsMC->clearSolvableParms();
-// 	Vector<String> pp(3);
-// 	Vector<String> ep(3);
-// 	ostringstream oss[3];
-// 	oss[0] << paramNames[0] << itsCurSource;        pp[0] = oss[0].str();
-// 	oss[1] << paramNames[1] << itsCurSource;        pp[1] = oss[1].str();
-// 	oss[2] << paramNames[2] << itsCurSource;        pp[2] = oss[2].str();
-// 	itsMC->setSolvableParms (pp,ep,true);
-// 	itsMC->resetIterator();
-// 	itsMC->nextInterval();
-// 	cout << "Next interval" << endl;
-//       }
-//     }
-//     itsCurIter = 0;                   // Reset iterator
-//   }
-//   cout << "Next iteration: " << itsCurIter << endl;    
-//   itsMC->solve(false);                      
-//   itsMC->updateParms();
-//   itsMC->saveResidualData();
-//   itsMC->saveParms();
-      
-//   Vector<String> solution(3*itsNSources + 6);  // Output from the solve call
- 
-//   return true;
+	itsCal->advanceTimeIntervalIterator();
+	cout << "Next interval" << endl;
+      }
+    }
+    itsCurIter = 0;                      // Reset iterator
+  }
+
+  // The actual solve
+  cout << "Solve for source = " << itsCurSource << " of " << itsNSources 
+       << " iteration = " << itsCurIter << " of " << itsNIter << endl;
+  itsCal->clearPeelSources();
+  itsCal->addPeelSource(itsCurSource);
+  itsCal->clearPeelMasks();
+  itsCal->commitPeelSourcesAndMasks();
+  itsCal->Run();
+  //  itsCal->SubtractOptimizedSources();
+  //  itsCal->CommitOptimizedParameters();
+  sourceNo = itsCurSource;
+  return true;
 }
