@@ -10,18 +10,20 @@
 
     //util consts
 bool debug(true);
+
     // wants to use debug:
 #include "blackboard/NoSuchBlackBoardComponentException.h"
 
 const char *controlTableName = "controldata";
 const char *BlackBoardName = "BlackBoard";
+//const char *connectString = "UID=bb;DSN=lofar16";
+const char *connectString = "lofar17";
 
     //forward declarations util functions
 void connect(void);
 void create(void);
 const std::string & getRole(const int rank);
 MPIProgramEntry *getObjectThatCanFulfill(const std::string &role);
-
 
     //the control data object
 class ControlData 
@@ -106,16 +108,15 @@ int main(char ** av, int ac)
       MPIProgramEntry *programCode = getObjectThatCanFulfill(role);
        // g, i want metaclasses here.
       DEBUG("about to run...");
-      
-      programCode->run();
 
+      programCode->run();
    }
        //   catch(std::exception &e)
        //   catch(std::runtime_error &e)
    catch(NoSuchBlackBoardComponentException &e)
    {
       DEBUG("failed to create a program...");
-      
+
       std::cerr << e.what() << std::endl;
    }
    catch(...)
@@ -129,7 +130,7 @@ int main(char ** av, int ac)
 const std::string & getRole(const int rank)
 {
    static std::string rc = "<none>";
-   
+
    DEBUG("accessing control-data..");
 
    dtl::DBView<ControlData,RankClause> view(controlTableName,ControlBCA(),"WHERE rank = (?)",SelectOnRank());
@@ -142,11 +143,11 @@ const std::string & getRole(const int rank)
 
    DEBUG("Reading element #" << iter.GetLastCount());
    ControlData dat;
-   
+
    if (iter != view.end())
    {
       DEBUG("found: " << iter->role);
-      
+
           //<todo>What if more then onbe row can be returned? can "I" perform more then one role?</todo>
           //<todo>take good care of this former here memory leak</todo>
       rc = iter->role;
@@ -186,7 +187,10 @@ void connect()
 {
    try {
       DEBUG("Connecting to database..");
-      dtl::DBConnection::GetDefaultConnection().Connect("UID=bb;DSN=pg49");
+      dtl::DBConnection &dbcon = dtl::DBConnection::GetDefaultConnection();
+      DEBUG("Got default connection..");
+      dbcon.Connect(connectString);
+      DEBUG("connection started");
    }
    catch(dtl::DBException dbex)
    {
