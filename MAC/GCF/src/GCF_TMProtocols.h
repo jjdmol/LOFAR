@@ -113,9 +113,10 @@ struct GCFTimerEvent : public GCFEvent
     length = sizeof(GCFTimerEvent);
   }
 
-  long        sec;
-  long        usec;
-  const void* arg;
+  long          sec;
+  long          usec;
+  unsigned long id;
+  const void*   arg;
 };
 
 #endif
