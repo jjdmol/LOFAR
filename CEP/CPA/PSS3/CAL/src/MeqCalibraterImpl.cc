@@ -528,7 +528,7 @@ bool MeqCalibrater::nextInterval()
   }
   double timeSize = 0;
   double timeStart = 0;
-  double timeStep;
+  double timeStep = 0;
   int nrtim = 0;
   // Get the next chunk until the time interval size is exceeded.
   while (timeSize < itsTimeInterval  &&  !itsIter.pastEnd()) {
