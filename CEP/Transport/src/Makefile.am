@@ -4,9 +4,6 @@ lib_LTLIBRARIES 	= libtransport.la
 
 libtransport_la_SOURCES = 	\
 $(DOCHDRS)			\
-AppControllerParse.yy		\
-AppControllerTokenize.ll 	\
-AppControllerParseClass.cc 	\
 Transporter.cc			\
 BaseDataHolder.cc		\
 ParamHolder.cc			\

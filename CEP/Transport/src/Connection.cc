@@ -58,14 +58,18 @@ namespace LOFAR
  	      targetTP.getTransportHolder()->getType() << 
 	      " not equal!");
     
+    // Make a new TransportHolder for both the target and 
+    // the source Transporter.
     sourceTP.makeTransportHolder (prototype);
     targetTP.makeTransportHolder (prototype);
 
     DbgAssert (sourceTP.getItsID() >= 0);
 
+    // Use the source ID as the tag for MPI send/receive.
     sourceTP.setWriteTag (sourceTP.getItsID());
     targetTP.setReadTag (sourceTP.getItsID());
 
+    // Set the source and target DataHolder 
     targetTP.setSourceAddr(sourceTP.getSourceAddr());
     sourceTP.setTargetAddr(targetTP.getSourceAddr());
     
