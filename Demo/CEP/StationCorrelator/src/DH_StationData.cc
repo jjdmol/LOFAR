@@ -63,8 +63,6 @@ void DH_StationData::preprocess() {
   // Create the data blob
   createDataBlock();
 
-  // use memset to null the buffer instead of a for loop
-  memset(itsBuffer, 0, itsBufSize*sizeof(BufferType));
 }
 
 void DH_StationData::postprocess() 
@@ -78,4 +76,7 @@ void DH_StationData::fillDataPointers()
   itsBlockIDptr   = getData<int> ("BlockID");
   itsFlagptr      = getData<int> ("Flag"); 
   itsBuffer       = getData<BufferType> ("Buffer");
+
+  // use memset to null the buffer instead of a for loop
+  memset(itsBuffer, 0, itsBufSize*sizeof(BufferType));
 }
