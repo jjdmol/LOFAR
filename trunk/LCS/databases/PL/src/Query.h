@@ -59,7 +59,7 @@ namespace LOFAR
 //       {}
 
       // Constructor that takes a Query Expression.
-      explicit QueryObject(const Query::Expr& aExpr) : 
+      QueryObject(const Query::Expr& aExpr) : 
         itsQueryExpr(aExpr) {}
 
       // Return the composed query as an SQL string.
