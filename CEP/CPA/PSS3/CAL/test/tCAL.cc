@@ -133,7 +133,7 @@ int main(int argc, char* argv[])
 
     string dbname;
     if (argc > 5) {
-      gsmname = argv[5];
+      dbname = argv[5];
     }
     if ("0" == dbname  ||  "" == dbname) {
       dbname = "test";
