@@ -142,7 +142,7 @@ long getSelectedNode()
   }
   else
   {
-    unsigned selectedPos;
+    int selectedPos;
     fwTreeView_getSelectedPosition(selectedPos);
     LOG_TRACE("selected pos:",selectedPos);
     if(selectedPos >= 1)
