@@ -23,7 +23,7 @@
 using namespace LOFAR;
 
 
-WH_Dump::WH_Dump(const string& name, KeyValueMap& kvm)
+WH_Dump::WH_Dump(const string& name, const KeyValueMap& kvm)
   : WorkHolder(kvm.getInt("NoWH_Correlator",1)/kvm.getInt("NoWH_Dump", 1), 0, name, "WH_Dump"),
     itsOutputFile(0),
     itsBandwidth(0),
@@ -81,9 +81,16 @@ void WH_Dump::process() {
   long totalWrittenKB = 0;
   DH_Vis* dhp;
 
-  // Right now we write to disk per frequency block
-  // If the data is sorted in DH_Vis in the right way, we could also read blocks
-  //   of memory from it.
+  // Right now we write to disk per frequency channel
+  // The file consists of a multidimensional array: channels*station*station*npolariations
+  // Every block of stations*stations holds the real values in the upper triangle and the 
+  // imaginary values in the lower triangle. 
+
+  // This will probably give some performance problems. If it does we can do the following improvements:
+  // 1 Put the real and imaginairy values together and make the dimensions of the array dynamic. This way no
+  //   extra memory is used and we can read the complex numbers as one.
+  // 2 Make the format at the output of the correlator the same as in the file or vice versa. Then we read
+  //   and write the data in very large blocks.
   DH_Vis::BufferPrimitive freqBlock[itsNelements*itsNelements*itsNpolarisations];
   
   for (int i=0; i<itsNinputs; i++) {
