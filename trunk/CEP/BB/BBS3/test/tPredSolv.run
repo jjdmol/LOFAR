@@ -1,9 +1,11 @@
 #!/bin/sh
 
-\rm -rf /tmp/test.demo*
-a_wd=`pwd`
-ln -s /data/PSS3/diepen/BBS2/demo3 /tmp/test.demo
-ln -s $a_wd/diepen.demo3-1.MEP /tmp/test.demo.MEP
-ln -s $a_wd/diepen.demo3_gsm-1.MEP /tmp/test.demo_gsm.MEP
+\rm -rf /tmp/$USER.demo*
+ln -s /data/PSS3/diepen/BBS2/demo3 /tmp/$USER.demo
+ln -s /data/PSS3/diepen/BBS2/demo3.MEP /tmp/$USER.demo.MEP
+ln -s /data/PSS3/diepen/BBS2/demo3_gsm.MEP /tmp/$USER.demo_gsm.MEP
 
-./tPredSolv /tmp/test.demo/demo demo demo_gsm
+./tPredSolv $USER /tmp/$USER.demo/demo demo demo_gsm
+status=$?
+\rm -rf /tmp/$USER.demo*
+exit $status
