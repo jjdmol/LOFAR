@@ -27,9 +27,10 @@
 //# Common Includes
 
 //# GCF Includes
-#include <GCF/GCF_Task.h>
-#include <GCF/GCF_ExtPropertySet.h>
+#include <GCF/TM/GCF_Task.h>
+#include <GCF/PAL/GCF_ExtPropertySet.h>
 #include <boost/shared_ptr.hpp>
+#include <Suite/test.h>
 
 #include "ARATestAnswer.h"
 
@@ -37,13 +38,12 @@
 class GCFEvent;
 namespace ARA
 {
-  class ARATest;
-  
-  class ARATestTask : public GCFTask
+  class ARATestTask : public GCFTask, public Test
   {
     public:
-      ARATestTask(ARATest& tester);
+      ARATestTask();
       virtual ~ARATestTask();
+      void run();
   
     protected:
       // protected copy constructor
@@ -70,7 +70,6 @@ namespace ARA
       static string m_taskName;
       static string m_RATestServerName;
       
-      ARATest&        m_tester;
       ARATestAnswer   m_answer;
       GCFPort         m_RSPserver;
       

@@ -22,16 +22,18 @@
 
 #include "ARAPhysicalModel.h"
 #include "ARAPropertyDefines.h"
+#include "ARAConstants.h"
 
 #undef PACKAGE
 #undef VERSION
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
-#include <GCF/GCF_Property.h>
+#include <GCF/PAL/GCF_ExtProperty.h>
 #include <GCF/GCF_PVUnsigned.h>
-#include <APLConfig.h>
+#include <GCF/ParameterSet.h>
 
 using namespace LOFAR;
+using namespace GCF;
 using namespace ARA;
 using namespace std;
 using namespace boost;
@@ -42,11 +44,13 @@ ARAPhysicalModel::ARAPhysicalModel() :
 {
   int rack,subrack,board,ap,rcu;
 
-  int n_racks               = GET_CONFIG("N_RACKS",i);
-  int n_subracks_per_rack   = GET_CONFIG("N_SUBRACKS_PER_RACK",i);
-  int n_boards_per_subrack  = GET_CONFIG("N_BOARDS_PER_SUBRACK",i);
-  int n_aps_per_board       = GET_CONFIG("N_APS_PER_BOARD",i);
-  int n_rcus_per_ap         = GET_CONFIG("N_RCUS_PER_AP",i);
+  ParameterSet::instance()->adoptFile("RegisterAccess.conf");
+
+  int n_racks               = ParameterSet::instance()->getInt(PARAM_N_RACKS);
+  int n_subracks_per_rack   = ParameterSet::instance()->getInt(PARAM_N_SUBRACKS_PER_RACK);
+  int n_boards_per_subrack  = ParameterSet::instance()->getInt(PARAM_N_BOARDS_PER_SUBRACK);
+  int n_aps_per_board       = ParameterSet::instance()->getInt(PARAM_N_APS_PER_BOARD);
+  int n_rcus_per_ap         = ParameterSet::instance()->getInt(PARAM_N_RCUS_PER_AP);
 
   char tempString[200];
   vector<string> childrenPIC,childrenRack,childrenSubRack,childrenBoard;
@@ -103,9 +107,14 @@ void ARAPhysicalModel::inMaintenance(bool maintenance, string& resource)
       vector<string>::iterator mIt;
       for(mIt=pIt->second.begin();mIt!=pIt->second.end();++mIt)
       {
-        GCFProperty maintenanceProp(*mIt);
+        TPropertyInfo propInfo = 
+        {
+          *mIt + string(".") + string(PROPNAME_STATUS),
+          LPT_UNSIGNED
+        };
+        GCFExtProperty extPropMaintenance(propInfo);
         GCFPVUnsigned inMaintenance(1);
-        maintenanceProp.setValue(inMaintenance);
+        extPropMaintenance.setValue(inMaintenance);
       }
     }
   }
@@ -125,9 +134,14 @@ void ARAPhysicalModel::inMaintenance(bool maintenance, string& resource)
         if(fIt == m_maintenanceFlags.end())
         {
           // maintenance of resource is not individually set
-          GCFProperty maintenanceProp(*mIt);
+          TPropertyInfo propInfo = 
+          {
+            *mIt + string(".") + string(PROPNAME_STATUS),
+            LPT_UNSIGNED
+          };
+          GCFExtProperty extPropMaintenance(propInfo);
           GCFPVUnsigned inMaintenance(0);
-          maintenanceProp.setValue(inMaintenance);
+          extPropMaintenance.setValue(inMaintenance);
         }
       }
     }

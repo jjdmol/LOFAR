@@ -41,17 +41,18 @@
 #include <lofar_config.h>
 #include <GCF/ParameterSet.h>
 #include <Common/LofarLogger.h>
+#include <GCF/GCF_Defines.h>
 #include <GCF/GCF_PValue.h>
 #include <GCF/GCF_PVUnsigned.h>
 #include <GCF/GCF_PVBool.h>
 #include <GCF/GCF_PVDouble.h>
 #include <GCF/GCF_PVString.h>
 #include <GCF/GCF_PVDynArr.h>
-#include <APLConfig.h>
 #include "ARAPropertyDefines.h"
 #include "ARAPhysicalModel.h"
 
 using namespace LOFAR;
+using namespace GCF;
 using namespace ARA;
 using namespace std;
 using namespace boost::posix_time;
@@ -248,7 +249,7 @@ RegisterAccessTask::~RegisterAccessTask()
 {
 }
 
-void RegisterAccessTask::addMyPropertySet(const char* scope,const char* type, const TPropertyConfig& propconfig)
+void RegisterAccessTask::addMyPropertySet(const char* scope,const char* type, const TPropertyConfig propconfig[])
 {
   boost::shared_ptr<GCFMyPropertySet> propsPtr(new GCFMyPropertySet(scope,type,false,&m_answer));
   m_myPropertySetMap[scope]=propsPtr;
@@ -1056,7 +1057,7 @@ GCFEvent::TResult RegisterAccessTask::handleUpdStats(GCFEvent& e, GCFPortInterfa
       }
 
       // convert the vector of unsigned values to a dynamic array
-      GCFPVDynArr dynamicArray(GCFPValue::LPT_DOUBLE,valuePointerVector);
+      GCFPVDynArr dynamicArray(LPT_DOUBLE,valuePointerVector);
       
       // set the property
       TMyPropertySetMap::iterator propSetIt=m_myPropertySetMap.find(string(SCOPE_PIC));

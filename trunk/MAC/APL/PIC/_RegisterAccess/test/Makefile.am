@@ -16,32 +16,8 @@ aratest_CPPFLAGS= \
 
 aratest_SOURCES 		= \
 	ARATestAnswer.cc \
-	ARATest.cc \
 	ARATestTask.cc \
 	ARATestDriverTask.cc \
 	ARATestMain.cc
 	
-aratest_LDADD		= \
-	$(top_builddir)/APLCommon/src/libaplcommon.la \
-	-lrsp \
-	-lgcf 
-	
-aratest_DEPENDENCIES	= \
-	$(top_builddir)/APLCommon/src/libaplcommon.la
-
-BUILT_SOURCES = \
-	log4cplus.properties	
-
-EXTRA_DIST = \
-	log4cplus.properties
-	
-%.properties: ../src/%.properties.in
-	cp $< $@
-	
-%.ns: %.ns.in
-	cp $< $@
-
-%.top: %.top.in
-	cp $< $@
-
 include $(lofar_sharedir)/Makefile.common

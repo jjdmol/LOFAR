@@ -25,9 +25,9 @@
 #define DECLARE_SIGNAL_NAMES
 #include "RSP_Protocol.ph"
 
-#include "ARAConstants.h"
-#include "ARAPropertyDefines.h"
-#include "../../../APLCommon/src/APL_Defines.h"
+#include "../src/ARAConstants.h"
+#include "../src/ARAPropertyDefines.h"
+#include "APLCommon/APL_Defines.h"
 #include "ARATestDriverTask.h"
 
 #include <stdio.h>
@@ -43,9 +43,10 @@
 #include <GCF/GCF_PVString.h>
 #include <GCF/GCF_PVBool.h>
 #include <GCF/GCF_PVDouble.h>
-#include <APLConfig.h>
+#include <GCF/ParameterSet.h>
 
 using namespace LOFAR;
+using namespace GCF;
 using namespace ARA;
 using namespace std;
 
@@ -76,11 +77,13 @@ ARATestDriverTask::ARATestDriverTask() :
   registerProtocol(RSP_PROTOCOL, RSP_PROTOCOL_signalnames);
   m_answer.setTask(this);
 
-  n_racks               = GET_CONFIG("N_RACKS",i);
-  n_subracks_per_rack   = GET_CONFIG("N_SUBRACKS_PER_RACK",i);
-  n_boards_per_subrack  = GET_CONFIG("N_BOARDS_PER_SUBRACK",i);
-  n_aps_per_board       = GET_CONFIG("N_APS_PER_BOARD",i);
-  n_rcus_per_ap         = GET_CONFIG("N_RCUS_PER_AP",i);
+  ParameterSet::instance()->adoptFile("RegisterAccess.conf");
+
+  n_racks               = ParameterSet::instance()->getInt(PARAM_N_RACKS);
+  n_subracks_per_rack   = ParameterSet::instance()->getInt(PARAM_N_SUBRACKS_PER_RACK);
+  n_boards_per_subrack  = ParameterSet::instance()->getInt(PARAM_N_BOARDS_PER_SUBRACK);
+  n_aps_per_board       = ParameterSet::instance()->getInt(PARAM_N_APS_PER_BOARD);
+  n_rcus_per_ap         = ParameterSet::instance()->getInt(PARAM_N_RCUS_PER_AP);
   n_rcus                = n_rcus_per_ap*
                               n_aps_per_board*
                               n_boards_per_subrack*
@@ -117,25 +120,6 @@ ARATestDriverTask::ARATestDriverTask() :
 //  m_stats() = 0;
 //  m_stats().reference(m_stats().copy()); // make sure array is contiguous
 
-  // fill APCs map
-  addPropertySet(SCOPE_PIC);
-  addPropertySet(SCOPE_PIC_Maintenance);
-  addPropertySet(SCOPE_PIC_RackN);
-  addPropertySet(SCOPE_PIC_RackN_Alert);
-  addPropertySet(SCOPE_PIC_RackN_Maintenance);
-  addPropertySet(SCOPE_PIC_RackN_SubRackN);
-  addPropertySet(SCOPE_PIC_RackN_SubRackN_Maintenance);
-  addPropertySet(SCOPE_PIC_RackN_SubRackN_Alert);
-  addPropertySet(SCOPE_PIC_RackN_SubRackN_BoardN);
-  addPropertySet(SCOPE_PIC_RackN_SubRackN_BoardN_Maintenance);
-  addPropertySet(SCOPE_PIC_RackN_SubRackN_BoardN_Alert);
-  addPropertySet(SCOPE_PIC_RackN_SubRackN_BoardN_ETH);
-  addPropertySet(SCOPE_PIC_RackN_SubRackN_BoardN_BP);
-  addPropertySet(SCOPE_PIC_RackN_SubRackN_BoardN_APN);
-  addPropertySet(SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN);
-  addPropertySet(SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN_ADCStatistics);
-  addPropertySet(SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN_Maintenance);
-  
   m_RSPserver.init(*this, "ARAtestRSPserver", GCFPortInterface::SPP, RSP_PROTOCOL);
   
 }
@@ -155,14 +139,26 @@ void ARATestDriverTask::addPropertySet(string scope)
 
   if(scope == string(SCOPE_PIC))
   {
-    addAllProperties(scope,static_cast<TProperty*>(PROPS_Station),sizeof(PROPS_Station)/sizeof(PROPS_Station[0]));
+    boost::shared_ptr<GCFExtPropertySet> propSetPtr(new GCFExtPropertySet(scope.c_str(),TYPE_PIC,&m_answer));
+    propSetPtr->load();
+    for(unsigned int i=0;i<sizeof(PROPS_Station)/sizeof(PROPS_Station[0]);i++)
+    {
+      propSetPtr->subscribeProp(PROPS_Station[i].propName);
+    }
+    m_propMap[scope]=propSetPtr;
   }
   else if(scope == string(SCOPE_PIC_RackN))
   {
     for(rack=1;rack<=n_racks;rack++)
     {
       sprintf(scopeString,scope.c_str(),rack);
-      addAllProperties(scopeString,static_cast<TProperty*>(PROPS_Rack),sizeof(PROPS_Rack)/sizeof(PROPS_Rack[0]));
+      boost::shared_ptr<GCFExtPropertySet> propSetPtr(new GCFExtPropertySet(scopeString,TYPE_Rack,&m_answer));
+      propSetPtr->load();
+      for(unsigned int i=0;i<sizeof(PROPS_Rack)/sizeof(PROPS_Rack[0]);i++)
+      {
+        propSetPtr->subscribeProp(PROPS_Rack[i].propName);
+      }
+      m_propMap[scopeString]=propSetPtr;
     }
   }
   else if(scope == string(SCOPE_PIC_RackN_SubRackN))
@@ -172,7 +168,13 @@ void ARATestDriverTask::addPropertySet(string scope)
       for(subrack=1;subrack<=n_subracks_per_rack;subrack++)
       {
         sprintf(scopeString,scope.c_str(),rack,subrack);
-        addAllProperties(scopeString,static_cast<TProperty*>(PROPS_SubRack),sizeof(PROPS_SubRack)/sizeof(PROPS_SubRack[0]));
+        boost::shared_ptr<GCFExtPropertySet> propSetPtr(new GCFExtPropertySet(scopeString,TYPE_SubRack,&m_answer));
+        propSetPtr->load();
+        for(unsigned int i=0;i<sizeof(PROPS_SubRack)/sizeof(PROPS_SubRack[0]);i++)
+        {
+          propSetPtr->subscribeProp(PROPS_SubRack[i].propName);
+        }
+        m_propMap[scopeString]=propSetPtr;
       }
     }
   }
@@ -185,7 +187,13 @@ void ARATestDriverTask::addPropertySet(string scope)
         for(board=1;board<=n_boards_per_subrack;board++)
         {
           sprintf(scopeString,scope.c_str(),rack,subrack,board);
-          addAllProperties(scopeString,static_cast<TProperty*>(PROPS_Board),sizeof(PROPS_Board)/sizeof(PROPS_Board[0]));
+          boost::shared_ptr<GCFExtPropertySet> propSetPtr(new GCFExtPropertySet(scopeString,TYPE_Board,&m_answer));
+          propSetPtr->load();
+          for(unsigned int i=0;i<sizeof(PROPS_Board)/sizeof(PROPS_Board[0]);i++)
+          {
+            propSetPtr->subscribeProp(PROPS_Board[i].propName);
+          }
+          m_propMap[scopeString]=propSetPtr;
         }
       }
     }
@@ -199,7 +207,13 @@ void ARATestDriverTask::addPropertySet(string scope)
         for(board=1;board<=n_boards_per_subrack;board++)
         {
           sprintf(scopeString,scope.c_str(),rack,subrack,board);
-          addAllProperties(scopeString,static_cast<TProperty*>(PROPS_Ethernet),sizeof(PROPS_Ethernet)/sizeof(PROPS_Ethernet[0]));
+          boost::shared_ptr<GCFExtPropertySet> propSetPtr(new GCFExtPropertySet(scopeString,TYPE_ETH,&m_answer));
+          propSetPtr->load();
+          for(unsigned int i=0;i<sizeof(PROPS_Ethernet)/sizeof(PROPS_Ethernet[0]);i++)
+          {
+            propSetPtr->subscribeProp(PROPS_Ethernet[i].propName);
+          }
+          m_propMap[scopeString]=propSetPtr;
         }
       }
     }
@@ -213,7 +227,13 @@ void ARATestDriverTask::addPropertySet(string scope)
         for(board=1;board<=n_boards_per_subrack;board++)
         {
           sprintf(scopeString,scope.c_str(),rack,subrack,board);
-          addAllProperties(scopeString,static_cast<TProperty*>(PROPS_FPGA),sizeof(PROPS_FPGA)/sizeof(PROPS_FPGA[0]));
+          boost::shared_ptr<GCFExtPropertySet> propSetPtr(new GCFExtPropertySet(scopeString,TYPE_BP,&m_answer));
+          propSetPtr->load();
+          for(unsigned int i=0;i<sizeof(PROPS_FPGA)/sizeof(PROPS_FPGA[0]);i++)
+          {
+            propSetPtr->subscribeProp(PROPS_FPGA[i].propName);
+          }
+          m_propMap[scopeString]=propSetPtr;
         }
       }
     }
@@ -231,7 +251,13 @@ void ARATestDriverTask::addPropertySet(string scope)
             for(rcu=1;rcu<=n_rcus_per_ap;rcu++)
             {
               sprintf(scopeString,scope.c_str(),rack,subrack,board,ap,rcu);
-              addAllProperties(scopeString,static_cast<TProperty*>(PROPS_RCU),sizeof(PROPS_RCU)/sizeof(PROPS_RCU[0]));
+              boost::shared_ptr<GCFExtPropertySet> propSetPtr(new GCFExtPropertySet(scopeString,TYPE_RCU,&m_answer));
+              propSetPtr->load();
+              for(unsigned int i=0;i<sizeof(PROPS_RCU)/sizeof(PROPS_RCU[0]);i++)
+              {
+                propSetPtr->subscribeProp(PROPS_RCU[i].propName);
+              }
+              m_propMap[scopeString]=propSetPtr;
             }
           }
         }
@@ -251,7 +277,13 @@ void ARATestDriverTask::addPropertySet(string scope)
             for(rcu=1;rcu<=n_rcus_per_ap;rcu++)
             {
               sprintf(scopeString,scope.c_str(),rack,subrack,board,ap,rcu);
-              addAllProperties(scopeString,static_cast<TProperty*>(PROPS_ADCStatistics),sizeof(PROPS_ADCStatistics)/sizeof(PROPS_ADCStatistics[0]));
+              boost::shared_ptr<GCFExtPropertySet> propSetPtr(new GCFExtPropertySet(scopeString,TYPE_ADCStatistics,&m_answer));
+              propSetPtr->load();
+              for(unsigned int i=0;i<sizeof(PROPS_ADCStatistics)/sizeof(PROPS_ADCStatistics[0]);i++)
+              {
+                propSetPtr->subscribeProp(PROPS_ADCStatistics[i].propName);
+              }
+              m_propMap[scopeString]=propSetPtr;
             }
           }
         }
@@ -260,14 +292,26 @@ void ARATestDriverTask::addPropertySet(string scope)
   }
   else if(scope == string(SCOPE_PIC_Maintenance))
   {
-    addAllProperties(scope,static_cast<TProperty*>(PROPS_Maintenance),sizeof(PROPS_Maintenance)/sizeof(PROPS_Maintenance[0]));
+    boost::shared_ptr<GCFExtPropertySet> propSetPtr(new GCFExtPropertySet(scope.c_str(),TYPE_Maintenance,&m_answer));
+    propSetPtr->load();
+    for(unsigned int i=0;i<sizeof(PROPS_Maintenance)/sizeof(PROPS_Maintenance[0]);i++)
+    {
+      propSetPtr->subscribeProp(PROPS_Maintenance[i].propName);
+    }
+    m_propMap[scope]=propSetPtr;
   }
   else if(scope == string(SCOPE_PIC_RackN_Maintenance))
   {
     for(rack=1;rack<=n_racks;rack++)
     {
       sprintf(scopeString,scope.c_str(),rack);
-      addAllProperties(scopeString,static_cast<TProperty*>(PROPS_Maintenance),sizeof(PROPS_Maintenance)/sizeof(PROPS_Maintenance[0]));
+      boost::shared_ptr<GCFExtPropertySet> propSetPtr(new GCFExtPropertySet(scopeString,TYPE_Maintenance,&m_answer));
+      propSetPtr->load();
+      for(unsigned int i=0;i<sizeof(PROPS_Maintenance)/sizeof(PROPS_Maintenance[0]);i++)
+      {
+        propSetPtr->subscribeProp(PROPS_Maintenance[i].propName);
+      }
+      m_propMap[scopeString]=propSetPtr;
     }
   }
   else if(scope == string(SCOPE_PIC_RackN_SubRackN_Maintenance))
@@ -277,7 +321,13 @@ void ARATestDriverTask::addPropertySet(string scope)
       for(subrack=1;subrack<=n_subracks_per_rack;subrack++)
       {
         sprintf(scopeString,scope.c_str(),rack,subrack);
-        addAllProperties(scopeString,static_cast<TProperty*>(PROPS_Maintenance),sizeof(PROPS_Maintenance)/sizeof(PROPS_Maintenance[0]));
+        boost::shared_ptr<GCFExtPropertySet> propSetPtr(new GCFExtPropertySet(scopeString,TYPE_Maintenance,&m_answer));
+        propSetPtr->load();
+        for(unsigned int i=0;i<sizeof(PROPS_Maintenance)/sizeof(PROPS_Maintenance[0]);i++)
+        {
+          propSetPtr->subscribeProp(PROPS_Maintenance[i].propName);
+        }
+        m_propMap[scopeString]=propSetPtr;
       }
     }
   }
@@ -290,7 +340,13 @@ void ARATestDriverTask::addPropertySet(string scope)
         for(board=1;board<=n_boards_per_subrack;board++)
         {
           sprintf(scopeString,scope.c_str(),rack,subrack,board);
-          addAllProperties(scopeString,static_cast<TProperty*>(PROPS_Maintenance),sizeof(PROPS_Maintenance)/sizeof(PROPS_Maintenance[0]));
+          boost::shared_ptr<GCFExtPropertySet> propSetPtr(new GCFExtPropertySet(scopeString,TYPE_Maintenance,&m_answer));
+          propSetPtr->load();
+          for(unsigned int i=0;i<sizeof(PROPS_Maintenance)/sizeof(PROPS_Maintenance[0]);i++)
+          {
+            propSetPtr->subscribeProp(PROPS_Maintenance[i].propName);
+          }
+          m_propMap[scopeString]=propSetPtr;
         }
       }
     }
@@ -308,7 +364,13 @@ void ARATestDriverTask::addPropertySet(string scope)
             for(rcu=1;rcu<=n_rcus_per_ap;rcu++)
             {
               sprintf(scopeString,scope.c_str(),rack,subrack,board,ap,rcu);
-              addAllProperties(scopeString,static_cast<TProperty*>(PROPS_Maintenance),sizeof(PROPS_Maintenance)/sizeof(PROPS_Maintenance[0]));
+              boost::shared_ptr<GCFExtPropertySet> propSetPtr(new GCFExtPropertySet(scopeString,TYPE_Maintenance,&m_answer));
+              propSetPtr->load();
+              for(unsigned int i=0;i<sizeof(PROPS_Maintenance)/sizeof(PROPS_Maintenance[0]);i++)
+              {
+                propSetPtr->subscribeProp(PROPS_Maintenance[i].propName);
+              }
+              m_propMap[scopeString]=propSetPtr;
             }
           }
         }
@@ -320,7 +382,13 @@ void ARATestDriverTask::addPropertySet(string scope)
     for(rack=1;rack<=n_racks;rack++)
     {
       sprintf(scopeString,scope.c_str(),rack);
-      addAllProperties(scopeString,static_cast<TProperty*>(PROPS_Alert),sizeof(PROPS_Alert)/sizeof(PROPS_Alert[0]));
+      boost::shared_ptr<GCFExtPropertySet> propSetPtr(new GCFExtPropertySet(scopeString,TYPE_Alert,&m_answer));
+      propSetPtr->load();
+      for(unsigned int i=0;i<sizeof(PROPS_Alert)/sizeof(PROPS_Alert[0]);i++)
+      {
+        propSetPtr->subscribeProp(PROPS_Alert[i].propName);
+      }
+      m_propMap[scopeString]=propSetPtr;
     }
   }
   else if(scope == string(SCOPE_PIC_RackN_SubRackN_Alert))
@@ -330,7 +398,13 @@ void ARATestDriverTask::addPropertySet(string scope)
       for(subrack=1;subrack<=n_subracks_per_rack;subrack++)
       {
         sprintf(scopeString,scope.c_str(),rack,subrack);
-        addAllProperties(scopeString,static_cast<TProperty*>(PROPS_Alert),sizeof(PROPS_Alert)/sizeof(PROPS_Alert[0]));
+        boost::shared_ptr<GCFExtPropertySet> propSetPtr(new GCFExtPropertySet(scopeString,TYPE_Alert,&m_answer));
+        propSetPtr->load();
+        for(unsigned int i=0;i<sizeof(PROPS_Alert)/sizeof(PROPS_Alert[0]);i++)
+        {
+          propSetPtr->subscribeProp(PROPS_Alert[i].propName);
+        }
+        m_propMap[scopeString]=propSetPtr;
       }
     }
   }
@@ -343,30 +417,16 @@ void ARATestDriverTask::addPropertySet(string scope)
         for(board=1;board<=n_boards_per_subrack;board++)
         {
           sprintf(scopeString,scope.c_str(),rack,subrack,board);
-          addAllProperties(scopeString,static_cast<TProperty*>(PROPS_Alert),sizeof(PROPS_Alert)/sizeof(PROPS_Alert[0]));
+          boost::shared_ptr<GCFExtPropertySet> propSetPtr(new GCFExtPropertySet(scopeString,TYPE_Alert,&m_answer));
+          propSetPtr->load();
+          for(unsigned int i=0;i<sizeof(PROPS_Alert)/sizeof(PROPS_Alert[0]);i++)
+          {
+            propSetPtr->subscribeProp(PROPS_Alert[i].propName);
+          }
+          m_propMap[scopeString]=propSetPtr;
         }
       }
     }
-  }
-}
-
-void ARATestDriverTask::addAllProperties(string scope, TProperty* ptp, int numProperties)
-{
-  for(int i=0;i<numProperties;i++)
-  {
-    string propName = scope+string("_")+string(ptp[i].propName);
-    boost::shared_ptr<GCFProperty> propPtr(new GCFProperty(propName));
-    propPtr->setAnswer(&m_answer);
-    m_propMap[propName]=propPtr;
-  }
-}
-
-void ARATestDriverTask::subscribeAllProperties()
-{
-  TPropertyMap::iterator it;
-  for(it=m_propMap.begin();it!=m_propMap.end();++it)
-  {
-    it->second->subscribe();
   }
 }
 
@@ -646,12 +706,31 @@ bool ARATestDriverTask::isEnabled()
 
 GCFEvent::TResult ARATestDriverTask::initial(GCFEvent& event, GCFPortInterface& port)
 {
-  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("ARATestDriverTask(%s)::initial (%s)",getName().c_str(),evtstr(event)));
+  LOG_DEBUG(formatString("ARATestDriverTask(%s)::initial (%s)",getName().c_str(),evtstr(event)));
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (event.signal)
   {
     case F_INIT:
+      // fill APCs map
+      addPropertySet(SCOPE_PIC);
+      addPropertySet(SCOPE_PIC_Maintenance);
+      addPropertySet(SCOPE_PIC_RackN);
+      addPropertySet(SCOPE_PIC_RackN_Alert);
+      addPropertySet(SCOPE_PIC_RackN_Maintenance);
+      addPropertySet(SCOPE_PIC_RackN_SubRackN);
+      addPropertySet(SCOPE_PIC_RackN_SubRackN_Maintenance);
+      addPropertySet(SCOPE_PIC_RackN_SubRackN_Alert);
+      addPropertySet(SCOPE_PIC_RackN_SubRackN_BoardN);
+      addPropertySet(SCOPE_PIC_RackN_SubRackN_BoardN_Maintenance);
+      addPropertySet(SCOPE_PIC_RackN_SubRackN_BoardN_Alert);
+      addPropertySet(SCOPE_PIC_RackN_SubRackN_BoardN_ETH);
+      addPropertySet(SCOPE_PIC_RackN_SubRackN_BoardN_BP);
+      addPropertySet(SCOPE_PIC_RackN_SubRackN_BoardN_APN);
+      addPropertySet(SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN);
+      addPropertySet(SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN_ADCStatistics);
+      addPropertySet(SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN_Maintenance);
+      
       break;
 
     case F_ENTRY:
@@ -694,7 +773,7 @@ GCFEvent::TResult ARATestDriverTask::initial(GCFEvent& event, GCFPortInterface& 
     }
       
     default:
-      LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("ARATestDriverTask(%s)::initial, default",getName().c_str()));
+      LOG_DEBUG(formatString("ARATestDriverTask(%s)::initial, default",getName().c_str()));
       status = GCFEvent::NOT_HANDLED;
       break;
   }
@@ -707,7 +786,7 @@ GCFEvent::TResult ARATestDriverTask::initial(GCFEvent& event, GCFPortInterface& 
  */
 GCFEvent::TResult ARATestDriverTask::enabled(GCFEvent& event, GCFPortInterface& port)
 {
-  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("ARATestDriverTask(%s)::enabled (%s)",getName().c_str(),evtstr(event)));
+  LOG_DEBUG(formatString("ARATestDriverTask(%s)::enabled (%s)",getName().c_str(),evtstr(event)));
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (event.signal)
@@ -717,8 +796,6 @@ GCFEvent::TResult ARATestDriverTask::enabled(GCFEvent& event, GCFPortInterface& 
 
     case F_ENTRY:
     {
-      // subscribe to all properties of all property sets.
-      //subscribeAllProperties();
       break;
     }
 
@@ -876,40 +953,40 @@ GCFEvent::TResult ARATestDriverTask::enabled(GCFEvent& event, GCFPortInterface& 
       GCFPVString   pvString;
       switch(pPropAnswer->pValue->getType())
       {
-        case GCFPValue::LPT_BOOL:
+        case LPT_BOOL:
           pvBool.copy(*pPropAnswer->pValue);
           LOG_INFO(formatString("property value: %d", pvBool.getValue()));
           break;
-        case GCFPValue::LPT_UNSIGNED:
+        case LPT_UNSIGNED:
           pvUnsigned.copy(*pPropAnswer->pValue);
           LOG_INFO(formatString("property changed: %d", pvUnsigned.getValue()));
           break;
-        case GCFPValue::LPT_DOUBLE:
+        case LPT_DOUBLE:
           pvDouble.copy(*pPropAnswer->pValue);
           LOG_INFO(formatString("property changed: %f", pvDouble.getValue()));
           break;
-        case GCFPValue::LPT_STRING:
+        case LPT_STRING:
           pvString.copy(*pPropAnswer->pValue);
           LOG_INFO(formatString("property changed: %s", pvString.getValue().c_str()));
           break;
-        case GCFPValue::NO_LPT:
-        case GCFPValue::LPT_CHAR:
-        case GCFPValue::LPT_INTEGER:
-        case GCFPValue::LPT_BIT32:
-        case GCFPValue::LPT_BLOB:
-        case GCFPValue::LPT_REF:
-        case GCFPValue::LPT_DATETIME:
-        case GCFPValue::LPT_DYNARR:
-        case GCFPValue::LPT_DYNBOOL:
-        case GCFPValue::LPT_DYNCHAR:
-        case GCFPValue::LPT_DYNUNSIGNED:
-        case GCFPValue::LPT_DYNINTEGER:
-        case GCFPValue::LPT_DYNBIT32:
-        case GCFPValue::LPT_DYNBLOB:
-        case GCFPValue::LPT_DYNREF:
-        case GCFPValue::LPT_DYNDOUBLE:
-        case GCFPValue::LPT_DYNDATETIME:
-        case GCFPValue::LPT_DYNSTRING:
+        case NO_LPT:
+        case LPT_CHAR:
+        case LPT_INTEGER:
+        case LPT_BIT32:
+        case LPT_BLOB:
+        case LPT_REF:
+        case LPT_DATETIME:
+        case LPT_DYNARR:
+        case LPT_DYNBOOL:
+        case LPT_DYNCHAR:
+        case LPT_DYNUNSIGNED:
+        case LPT_DYNINTEGER:
+        case LPT_DYNBIT32:
+        case LPT_DYNBLOB:
+        case LPT_DYNREF:
+        case LPT_DYNDOUBLE:
+        case LPT_DYNDATETIME:
+        case LPT_DYNSTRING:
         default:
           break;
       }
@@ -954,7 +1031,7 @@ GCFEvent::TResult ARATestDriverTask::enabled(GCFEvent& event, GCFPortInterface& 
     }
 
     default:
-      LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("ARATestDriverTask(%s)::enabled, default",getName().c_str()));
+      LOG_DEBUG(formatString("ARATestDriverTask(%s)::enabled, default",getName().c_str()));
       status = GCFEvent::NOT_HANDLED;
       break;
   }
