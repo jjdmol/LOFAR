@@ -20,39 +20,17 @@
 //
 //  $Id$
 //
-//  $Log$
-//  Revision 1.6  2002/05/24 08:41:23  schaaf
-//  %[BugId: 11]%
-//  removed ^M characters
-//
-//  Revision 1.5  2002/05/23 15:36:59  schaaf
-//
-//  %[BugId: 11]%
-//  assert -> dbgassert
-//
-//  Revision 1.4  2002/05/16 15:12:00  schaaf
-//  removed bug in declaration of itsBuffer
-//
-//  Revision 1.3  2002/05/14 11:39:41  gvd
-//  Changed for new build environment
-//
-//  Revision 1.2  2002/05/07 11:16:20  schaaf
-//  changed indexing mistake in getBuffer()
-//
-//  Revision 1.1.1.1  2002/05/06 11:49:20  schaaf
-//  initial version
-//
 //
 //////////////////////////////////////////////////////////////////////
 
-#ifndef BASESIM_DH_2DMATRIX_H
-#define BASESIM_DH_2DMATRIX_H
+#ifndef CEP_DH_2DMATRIX_H
+#define CEP_DH_2DMATRIX_H
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
 
-#include "BaseSim/DataHolder.h"
+#include "CEPFrame/DataHolder.h"
 #include "Common/Debug.h"
 
 /**

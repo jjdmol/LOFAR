@@ -20,13 +20,6 @@
 //
 //  $Id$
 //
-//  $Log$
-//  Revision 1.2  2002/05/14 11:39:41  gvd
-//  Changed for new build environment
-//
-//  Revision 1.1.1.1  2002/05/06 11:49:20  schaaf
-//  initial version
-//
 //
 //////////////////////////////////////////////////////////////////////
 
@@ -37,9 +30,9 @@
 #include <config.h>
 #endif
 
-#include "BaseSim/WorkHolder.h"
+#include "CEPFrame/WorkHolder.h"
 #include "Transpose/DH_2DMatrix.h"
-#include "BaseSim/DH_Empty.h"
+#include "CEPFrame/DH_Empty.h"
 
 /**
    The WH_FillTFMatrix class implements a workholder with DH_TFMatrix

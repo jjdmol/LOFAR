@@ -20,8 +20,6 @@
 //
 //  $Id$
 //
-//  $Log$
-//
 //
 //////////////////////////////////////////////////////////////////////
 
@@ -32,9 +30,9 @@
 #include <config.h>
 #endif
 
-#include "BaseSim/WorkHolder.h"
+#include "CEPFrame/WorkHolder.h"
 #include "Transpose/DH_2DMatrix.h"
-#include "BaseSim/DH_Empty.h"
+#include "CEPFrame/DH_Empty.h"
 
 /**
    The WH_Tranpose

@@ -21,59 +21,6 @@
 //
 //  $Id$
 //
-//  $Log$
-//  Revision 1.12  2002/11/12 14:24:20  schaaf
-//
-//  %[BugId: 11]%
-//  ongoing development
-//
-//  Revision 1.11  2002/09/04 11:20:51  schaaf
-//  %[BugId: 91]%
-//  Added extra #ifdef HAVE_MPI
-//
-//  Revision 1.10  2002/08/19 20:33:44  schaaf
-//  %[BugId: 11]%
-//  Use input parameters
-//  Modified deployment (correlator)
-//  Performance output
-//
-//  Revision 1.9  2002/07/18 09:39:40  schaaf
-//  %[BugId: 11]%
-//  Input parameter handling (a.o. profiling)
-//  deployment
-//
-//  Revision 1.8  2002/06/07 11:40:47  schaaf
-//  %[BugId: 11]%
-//  removed unused dummy in/out holders
-//  modified run() method
-//
-//  Revision 1.7  2002/06/06 07:45:25  wierenga
-//  %[BugId:11]%
-//  Add TH_ShMem support.
-//
-//  Revision 1.6  2002/05/24 14:17:18  schaaf
-//  %[BugId: 11]%
-//  Use Parameter block for definition of source/dest steps etc.
-//
-//  Revision 1.5  2002/05/23 15:38:57  schaaf
-//
-//  %[BugId: 11]%
-//  Add correlator steps
-//
-//  Revision 1.4  2002/05/16 15:08:00  schaaf
-//  overall update; removed command line arguments
-//
-//  Revision 1.3  2002/05/14 11:39:41  gvd
-//  Changed for new build environment
-//
-//  Revision 1.2  2002/05/07 11:15:38  schaaf
-//  minor
-//
-//  Revision 1.1.1.1  2002/05/06 11:49:20  schaaf
-//  initial version
-//
-//
-//
 //////////////////////////////////////////////////////////////////////////
 
 #include <stdio.h>
@@ -82,26 +29,26 @@
 #include <Common/lofar_string.h>
 
 #include "Common/Debug.h"
-#include "BaseSim/Transport.h"
-#include "BaseSim/Step.h"
+#include "CEPFrame/Transport.h"
+#include "CEPFrame/Step.h"
 #include "Transpose/Transpose.h"
-#include "BaseSim/Simul.h"
-#include "BaseSim/Profiler.h"
+#include "CEPFrame/Simul.h"
+#include "CEPFrame/Profiler.h"
 #include "Transpose/WH_FillTFMatrix.h"
 #include "Transpose/WH_Delay.h"
 #include "Transpose/WH_Transpose.h"
 #include "Transpose/WH_Correlate.h"
-#include "BaseSim/WH_Empty.h"
-#include "BaseSim/ShMem/TH_ShMem.h"
-#include "BaseSim/TH_Mem.h"
+#include "CEPFrame/WH_Empty.h"
+#include "CEPFrame/ShMem/TH_ShMem.h"
+#include "CEPFrame/TH_Mem.h"
 #include TRANSPORTERINCLUDE
 
 #ifdef HAVE_CORBA
-#include "BaseSim/Corba/BS_Corba.h"
-#include "BaseSim/Corba/TH_Corba.h"
+#include "CEPFrame/Corba/BS_Corba.h"
+#include "CEPFrame/Corba/TH_Corba.h"
 #endif
 
-#include "BaseSim/ShMem/TH_ShMem.h"
+#include "CEPFrame/ShMem/TH_ShMem.h"
 
 
 Transpose::Transpose():
