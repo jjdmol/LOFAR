@@ -48,6 +48,11 @@ class VisDataMux
     //## delivers visdata footer to data mux
     //## control agent may be used to post error events
     int deliverFooter (const DataRecord &footer);
+    
+    // helper func:
+    // returns Meq::Cells object corresponding to a VisTile
+    //##ModelId=3F9FF6970269
+    void fillCells (Cells &cells,const VisTile &tile);
 
     AppControlAgent &       control()   { return *control_; }
     VisAgent::InputAgent &  input()     { return *input_;   }
@@ -86,11 +91,15 @@ class VisDataMux
     DataRecord::Ref cached_header_;
     // flag: tiles are being written
     bool writing_data_;
-    
+
+    LoVec_double channel_freqs;
+    LoVec_double channel_widths;  
+    // flag: require a fully regular cells (single-segment)
+    bool force_regular_grid;
     //##ModelId=400E5B6D0151
-    double minfreq;
+//    double minfreq;
     //##ModelId=400E5B6D0177
-    double maxfreq;
+//    double maxfreq;
     
     AppControlAgent       * control_;
     VisAgent::InputAgent  * input_;
