@@ -106,8 +106,8 @@ fwTreeView_appendNode(string name, anytype value, anytype handle, int level, str
 	dyn_anytype node;
 	dyn_anytype previousNode;
   
-	//DebugN("in fwTreeView_appendNode:", name, value, handle, level);
-	
+	//DebugTN("in fwTreeView_appendNode:", name, value, handle, level);
+		
 	// update state of the last node of the tree:
 	// branch if the appended node is a child of this node.
 	if(i = fwTreeView_getNodeCount(referenceName))
@@ -165,7 +165,7 @@ fwTreeView_insertTreeNode(unsigned index, string name, anytype value, anytype ha
   dyn_anytype node;
   dyn_anytype previousNode;
   
-  DebugTN("in fwTreeView_insertTreeNode:", index,name, value, handle, level);
+  //DebugTN("in fwTreeView_insertTreeNode:", index,name, value, handle, level);
   
   // update state of the last node of the tree:
   // branch if the appended node is a child of this node.
@@ -226,8 +226,8 @@ unsigned fwTreeView_appendToParentNode(unsigned parentIndex, string name, anytyp
   dyn_anytype testNode;
   unsigned nodeId;
   
-  DebugTN("in fwTreeView_appendToParentNode:", parentIndex,name, value, handle, level);
-  
+  //DebugTN("in fwTreeView_appendToParentNode:", parentIndex,name, value, handle, level);
+  //DebugTN("name:" + name + " |value:" + value + " |handle:" + handle + " |level:"+ level);
   if(parentIndex <= 1 || parentIndex > fwTreeView_getNodeCount(referenceName))
   { // simply append it to the tree, because the parent is the root or undefined
     fwTreeView_appendNode(name,value,handle,level,referenceName);
@@ -247,24 +247,50 @@ unsigned fwTreeView_appendToParentNode(unsigned parentIndex, string name, anytyp
     else
     {
       // insert the node after the last direct child of the parent
+	  //DebugTN("____________________________________");
       int i=1;
-      if(parentIndex+i <= fwTreeView_getNodeCount(referenceName))
-      {
-        testNode = fwTreeView_getNode(parentIndex+i,referenceName);
-        while(testNode[fwTreeView_LEVEL] > parentNode[fwTreeView_LEVEL] && 
-               parentIndex+i <= fwTreeView_getNodeCount(referenceName))
-        {
-          i++;
-          if(parentIndex+i <= fwTreeView_getNodeCount(referenceName))
+
+	  if (g_parentIndex==parentIndex)
+	  {
+		  g_nodeID = g_nodeID + 1;
+		  i = g_nodeID;
+		  //DebugTN("##____skip_while_loop_____##");
+	  }
+	  else
+	  {
+        if(parentIndex+i <= fwTreeView_getNodeCount(referenceName))
+        {       
+          testNode = fwTreeView_getNode(parentIndex+i,referenceName);
+		  //DebugTN("##____start_while_loop_______##");
+		  int nodeCount = fwTreeView_getNodeCount(referenceName); // nodeCount retreived from outside the while loop.
+          while(testNode[fwTreeView_LEVEL] > parentNode[fwTreeView_LEVEL] && 
+                parentIndex+i <= nodeCount)
           {
-            testNode = fwTreeView_getNode(parentIndex+i,referenceName);
+            i++;
+            if(parentIndex+i <= nodeCount)
+            {
+              testNode = fwTreeView_getNode(parentIndex+i,referenceName);
+            }
+			//DebugTN(fwTreeView_getNodeCount(referenceName));
           }
         }
-      }      
+		g_nodeID = i;
+        //DebugTN("##____NOT skipping_while_loop_____##");
+      }
+
+/*	    DebugTN("_____parentIndex____");
+        DebugTN("__C__ "+ parentIndex );
+	    DebugTN("__N__ "+ g_parentIndex);
+        DebugTN("_____nodeID____");
+        DebugTN("__C__ "+ i );
+	    DebugTN("__N__ "+ g_nodeID );
+*/
       fwTreeView_insertTreeNode(parentIndex+i,name,value,handle,level,referenceName);
-      nodeId = parentIndex+i;
+	  nodeId = parentIndex+i;
+	  g_parentIndex = parentIndex;
     }
   }
+
   return nodeId;
 }
 

@@ -41,6 +41,10 @@ global bool     g_initializing         = true;
 global int      g_curSelNode = 0;
 global int      STARTUP_DELAY = 1;
 global int      id;                    //needed for changing the selection in the tree (panel navigation, ER 218)
+global int      treeAddCount = 0;      //test teller for performance issue
+//global dyn_string g_HiddenNodeMapping;
+global unsigned g_nodeID               = 0;
+global unsigned g_parentIndex          = 0;
 
 ///////////////////////////////////////////////////////////////////////////
 //Function ActiveXSupported
@@ -308,27 +312,15 @@ long treeAddNode(long parentId,int level,string text)
 { 
   long nodeId=0;
   shape treeCtrl = getTreeCtrl();
-  if(ActiveXSupported())
+
+  if(parentId==-1)
   {
-    if(parentId == -1)
-    {
-      nodeId = treeCtrl.Items.Add(text); // adds a root item
-    }
-    else
-    {
-      nodeId = treeCtrl.ExtractNode(parentId).Add(text); 
-    }
+    nodeId = fwTreeView_appendToParentNode(0,text,"",0,level);
   }
   else
   {
-    if(parentId==-1)
-    {
-      nodeId = fwTreeView_appendToParentNode(0,text,"",0,level);
-    }
-    else
-    {
-      nodeId = fwTreeView_appendToParentNode(parentId,text,"",0,level);
-    }
+    nodeId = fwTreeView_appendToParentNode(parentId,text,"",0,level);
+	treeAddCount++;
   }
   return nodeId;
 }
@@ -348,7 +340,8 @@ void treeAddDatapoints(dyn_string names)
   dyn_string addedDatapoints;
   string systemName;
   long addedNode=0;
-
+  g_parentIndex = 0;           // variable used in function fwTreeView_appendToParentNode
+  g_nodeID  = 0;  // to increase performance
   if(dynlen(names)>0)
   {
     systemName = strrtrim(dpSubStr(names[1],DPSUB_SYS),":");
@@ -360,43 +353,53 @@ void treeAddDatapoints(dyn_string names)
 	  }
 	  else
 	  {
-		  addedNode = treeAddNode(-1,0,systemName);
-		  LOG_TRACE("Added root node: ",addedNode,systemName);
-      insertDatapointNodeMapping(addedNode,systemName);
-    }  
-    
+		addedNode = treeAddNode(-1,0,systemName);
+		LOG_TRACE("Added root node: ",addedNode,systemName);
+        insertDatapointNodeMapping(addedNode,systemName);
+      }  
+	  
+      dyn_int internalNodeMapping;
+      dyn_string internalFullDPName;    
 	  // go through the list of datapoint names
 	  for(namesIndex=1;namesIndex<=dynlen(names);namesIndex++)
 	  {
+	    //DebugTN("## Marker 0  ##");
 	    int pathIndex;
 	    dyn_string dpPathElements;
 	    string datapointName;
 	    int parentId;
 	    // remove the System part from the datapoint name
 	    datapointName = dpSubStr(names[namesIndex],DPSUB_DP);
-      if(datapointName == "")
-      {
-        datapointName = names[namesIndex];
-        // cut system name myself. Necessary for datapoint parts that are not datapoints themselves
-        int sepPos = strpos(datapointName,":");
-        if(sepPos >= 0)
+        if(datapointName == "")
         {
-          datapointName = substr(datapointName,sepPos+1);
+          datapointName = names[namesIndex];
+          // cut system name myself. Necessary for datapoint parts that are not datapoints themselves
+          int sepPos = strpos(datapointName,":");
+          if(sepPos >= 0)
+          {
+            datapointName = substr(datapointName,sepPos+1);
+          }
         }
-      }
-	    
+        //DebugTN("## Marker 0.0  ##");
 	    // only add ENABLED datapoints
-      if(navConfigCheckEnabled(datapointName))
+        if(navConfigCheckEnabled(datapointName))
 	    {
+		    //DebugTN("## dpName: " + datapointName);
+            //DebugTN("## Marker 0.0.0  ##");
 		    // split the datapoint path in elements
 		    dpPathElements = strsplit(datapointName,"_");
 		    string addingDPpart = systemName;
+			//DebugTN("## Marker 1  ##");
+			//DebugTN(dpPathElements);
+            //######################################################### Begin of for loop
 		    for(pathIndex=0;pathIndex<=dynlen(dpPathElements);pathIndex++)
 		    {
+			  //DebugTN("## Marker 1.1");
 		      // Check if the item already exists
 		      if(mappingHasKey(g_datapoint2itemID,addingDPpart))
 		      {
 		        addedNode = g_datapoint2itemID[addingDPpart];
+                //DebugTN("Node al");
 		      }
 		      else
 		      {
@@ -404,37 +407,45 @@ void treeAddDatapoints(dyn_string names)
 		        dynAppend(addedDatapoints,addingDPpart);
 		        if(addingDPpart != systemName)
 		        {
+				  //DebugTN("## Marker 1.1__________begin treeAddNode");
 		          addedNode = treeAddNode(parentId,pathIndex,dpPathElements[pathIndex]); 
-              LOG_TRACE("Added node: ",addedNode,parentId,pathIndex,dpPathElements[pathIndex]);
-              insertDatapointNodeMapping(addedNode,addingDPpart);
-		          if(dpPathElements[pathIndex] == "Alert")
-		          {
-		            // subscribe to Alert status
-		            LOG_TRACE("subscribing to: ",names[namesIndex]);
-		            dpConnect("AlertStatusHandler",TRUE,names[namesIndex] + ".status:_online.._value");
-		          }
+ 				  //DebugTN("## Marker 1.1____________end treeAddNode");
+				  if (addedNode!=0)
+			      {
+			        internalNodeMapping[dynlen(internalNodeMapping)+1]=addedNode;
+			        internalFullDPName[dynlen(internalFullDPName)+1] = addingDPpart;
+			      }
+                  LOG_TRACE("Added node: ",addedNode,parentId,pathIndex,dpPathElements[pathIndex]);
+				  //# This is not used until further order. Alert displays NOT in tree control
+		          //if(dpPathElements[pathIndex] == "Alert")
+		          //{
+		          //  // subscribe to Alert status
+		          //  LOG_TRACE("subscribing to: ",names[namesIndex]);
+		          //  dpConnect("AlertStatusHandler",TRUE,names[namesIndex] + ".status:_online.._value");
+		          //}
 		        }
-          }
-		        
+               }
+		      //DebugTN("## Marker 1.1.1");
 		      parentId = addedNode;
-          if(pathIndex<dynlen(dpPathElements))
-          {
-  		      if(pathIndex==0)
-  		      {
-  		        addingDPpart = addingDPpart + ":" + dpPathElements[pathIndex+1];
-  		      }
-  		      else if(pathIndex<dynlen(dpPathElements))
-  		      {
-  		        addingDPpart = addingDPpart + "_" + dpPathElements[pathIndex+1];
-  		      }
-          }
+              if(pathIndex<dynlen(dpPathElements))
+              {
+  		        if(pathIndex==0)
+  		        {
+  		          addingDPpart = addingDPpart + ":" + dpPathElements[pathIndex+1];
+  		        }
+  		        else if(pathIndex<dynlen(dpPathElements))
+  		        {
+  		          addingDPpart = addingDPpart + "_" + dpPathElements[pathIndex+1];
+  		        }
+              }
+			  //DebugTN("## Marker 1.1.1.1");
 		    }
-
+        //######################################################### End of for loop	
         // get the datapoint structure
         dynClear(elementNames);
         dynClear(elementTypes);
         dpTypeGet(dpTypeName(names[namesIndex]),elementNames,elementTypes);
-        
+   
         // add elements of this datapoint, if any, skip system stuff
         if(addedNode != 0 && addingDPpart != systemName && dynlen(elementNames) > 1)
         {
@@ -444,13 +455,13 @@ void treeAddDatapoints(dyn_string names)
           parentIds[1]   = addedNode;
           parentNodes[1] = "";
           // skip the first element in the array because it contains the datapoint type name
+		  //DebugTN("## Marker 2");
           for(elementIndex=2;elementIndex<=dynlen(elementNames);elementIndex++) 
           {
             // every last item of each array contains an element name (see help on dpTypeGet())
             // file:///opt/pvss/pvss2_v3.0/help/en_US.iso88591/WebHelp/ControlA_D/dpTypeGet.htm
             int elementLevel = dynlen(elementNames[elementIndex])-1; // how deep is the element?
             string elementName = elementNames[elementIndex][elementLevel+1];
-            
             string fullDPname = addingDPpart+parentNodes[elementLevel]+"."+elementName;
             if(mappingHasKey(g_datapoint2itemID,fullDPname))
             {
@@ -458,23 +469,73 @@ void treeAddDatapoints(dyn_string names)
             }
             else
             {
+			  //DebugTN("## Marker 2.1"); 
               addedNode = treeAddNode(parentIds[elementLevel],pathIndex-1+elementLevel,elementName); 
+			  //DebugTN("## Marker 2.2");
+			  //addedNode =fwTreeView_appendToParentNode(parentIds[elementLevel],elementName,"",0,pathIndex-1+elementLevel);
               LOG_TRACE("Added element node: ",addedNode,parentIds[elementLevel],pathIndex-1+elementLevel,fullDPname);
-              insertDatapointNodeMapping(addedNode,fullDPname);
+			  if (addedNode!=0)
+			  {
+			    internalNodeMapping[dynlen(internalNodeMapping)+1]=addedNode;
+			    internalFullDPName[dynlen(internalFullDPName)+1] = fullDPname;
+			  }
             }
-            
             parentIds[elementLevel+1] = addedNode; // remember this node as parent at its level in case there are elements below this one
             parentNodes[elementLevel+1] = parentNodes[elementLevel]+"."+elementName;
           }
-        }
+		  //DebugTN("## Marker 2.3");
+		  //############## End of for loop ## Marker 2
+         }
 	    }
 	  }
+	  //DebugTN("## Marker 3 - length="+ dynlen(internalNodeMapping));
+	  if(dynlen(internalNodeMapping)!=0)
+	  { 
+	    insertInternalNodeMapping(internalNodeMapping, internalFullDPName);
+      }
+	  //DebugTN("## Marker 4");
   }
-/*
-  // dump mapping contents:
-  DebugTN("g_itemID2datapoint:",g_itemID2datapoint);
-  DebugTN("g_datapoint2itemID:",g_datapoint2itemID);
-*/
+}
+
+///////////////////////////////////////////////////////////////////////////
+//Function insertInternalNodeMapping()
+// 
+// gathers all insertions for a datapoint and then handles is in one time,
+// this to increase performance.
+///////////////////////////////////////////////////////////////////////////
+insertInternalNodeMapping(dyn_int internalNodeMapping, dyn_string fullDPname)
+{
+  int length=mappinglen(g_datapoint2itemID);
+  int teller=0;
+  int fullDPNameLength = dynlen(internalNodeMapping);
+
+  //# If the first node number is equal or smaller than the last node number id
+  //# the global list, this function must be called;
+  if (internalNodeMapping[1]<=mappinglen(g_datapoint2itemID)) 
+  {
+    for(int i= (length+ dynlen(internalNodeMapping)); i>=internalNodeMapping[1]; i--)
+    {
+	  if (i > internalNodeMapping[dynlen(internalNodeMapping)])
+	  {
+	    g_itemID2datapoint[i] = g_itemID2datapoint[(i-dynlen(internalNodeMapping))];
+        g_datapoint2itemID[g_itemID2datapoint[(i-dynlen(internalNodeMapping))]] = i;
+	  }
+	  else if (i>=internalNodeMapping[1] && i<=internalNodeMapping[dynlen(internalNodeMapping)])
+	  {
+	    g_itemID2datapoint[i] = fullDPname[dynlen(fullDPname) + teller];
+		g_datapoint2itemID[fullDPname[dynlen(fullDPname) + teller]] = i;
+		teller--;
+	  }
+    }
+  }
+  else
+  {
+    for(int j=1; j<=dynlen(internalNodeMapping); j++)
+    {
+      g_itemID2datapoint[internalNodeMapping[j]] = fullDPname[j];
+	  g_datapoint2itemID[fullDPname[j]] = internalNodeMapping[j];
+    }
+  }
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -917,9 +978,12 @@ void TreeCtrl_HandleEventOnExpand(long Node)
       string datapointPath = buildPathFromNode(Node);
  
       // get top level resources. "" means no parent, 1 means: 1 level deep
+	  //DebugTN("start navConfigGetResources");
       dyn_string resources = navConfigGetResources(datapointPath,1);
       LOG_DEBUG("adding resources: ",LOG_DYN(resources));
+	  DebugTN("start treeAddDatapoints");
       treeAddDatapoints(resources);
+ 	  DebugTN("stop treeAddDatapoints");
     }
   }
   else
@@ -1065,12 +1129,17 @@ TreeView_OnSelect(unsigned pos)
 ///////////////////////////////////////////////////////////////////////////
 TreeView_OnExpand(unsigned pos)
 {
+  //DebugTN("## start TreeView_OnExpand");
   LOG_DEBUG("TreeView_OnExpand",pos);
+  //DebugTN("## start TreeCtrl_HandleEventOnExpand");
   TreeCtrl_HandleEventOnExpand(pos);
+  //DebugTN("## stop TreeCtrl_HandleEventOnExpand");
 
   // also call the default OnExpand implementation to expand the node
+  //DebugTN("## start fwTreeView_defaultExpand");
   fwTreeView_defaultExpand(pos);
-
+  //DebugTN("## stop fwTreeView_defaultExpand");
+  //DebugTN("## start TreeView_OnExpand");
   // the last line of code of each fwTreeView event handler MUST be the following:
   id = -1; 
 }
@@ -1085,11 +1154,14 @@ TreeView_OnExpand(unsigned pos)
 void changeSelectedPosition(string newDatapoint)
 {
 //int id;
+  DebugN("-------------------------------");
+  DebugTN("changeSelectedPosition started");
   int i;
   long nodeID;
-  setSelectedPosition2Expand(1);
   dyn_string datapointPath = splitDatapointPath(newDatapoint);
+  //DebugTN("start setSelectedPosition2Expand(1)");
   setSelectedPosition2Expand(1); //Expand Toplevel
+  //DebugTN("stop setSelectedPosition2Expand(1)");
   string temp = "";
   string temp_dpe = "";
   for (i=1 ; i<=dynlen(datapointPath); i++)
@@ -1105,7 +1177,7 @@ void changeSelectedPosition(string newDatapoint)
 	   temp_dpe = temp + "." + datapointPath[i];
 	  }
       temp = temp + "_" + datapointPath[i]; //build datapoint
-	  
+//	  DebugTN("temp: "+ temp + "  |nodeID: " + nodeID);
     }
     nodeID = getNodeFromDatapoint(temp);
     if (nodeID !=0)
@@ -1165,9 +1237,13 @@ void setSelectedPosition2Expand(long pos)
 {
   if(fwTreeView_getNode(pos)[fwTreeView_STATE] & fwTreeView_BRANCH)
 	{
-	// the folder is a branch => to expand
-	id = startThread("TreeView_OnExpand" == "" ? "fwTreeView_defaultExpand": "TreeView_OnExpand", pos);
-	while(id != -1)
-		delay(0,100);
-	}
+	  // the folder is a branch => to expand
+	  DebugTN("## start TreeView_OnExpand");
+	  id = startThread("TreeView_OnExpand" == "" ? "fwTreeView_defaultExpand": "TreeView_OnExpand", pos);
+	  while(id != -1)
+      {
+        delay(0,10);
+      }
+	  DebugTN("## stop TreeView_OnExpand");
+    }
 }
