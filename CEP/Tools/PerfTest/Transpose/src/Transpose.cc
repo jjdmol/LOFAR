@@ -22,6 +22,9 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.3  2002/05/14 11:39:41  gvd
+//  Changed for new build environment
+//
 //  Revision 1.2  2002/05/07 11:15:38  schaaf
 //  minor
 //
@@ -88,6 +91,9 @@ void Transpose::define(const ParamBlock& params)
 #ifdef HAVE_CORBA
   TH_Corba corbaProto;
 #endif
+#ifdef HAVE_MPI
+  TH_MPI mpiProto;
+#endif
 
   int rank = TRANSPORTER::getCurrentRank();
   unsigned int size = TRANSPORTER::getNumberOfNodes();
@@ -102,56 +108,14 @@ void Transpose::define(const ParamBlock& params)
   Simul simul(empty, "Transpose",true,true);
   setSimul(simul);
   simul.runOnNode(0);
-
-
-  getarg(&argc, &argv);
-  AssertStr (argc >= 3,"Need nr of inputs and nr of outputs as argument"); 
-  // start looking at the command line arguments;
-  // first two arguments are nr of inputs/outputs
-  // -odd and -even are used to have all Sources in one application 
-  //                and all destinations in the other
-
-  // determine the number of source/destination steps
-  itsSourceSteps = atoi(argv[1]);
-  itsDestSteps   = atoi(argv[2]);
-
-  bool RunInOneAppl = false;
-  bool SplitInTwoApps = false;
-  bool OddSide=false;
-  bool UseMPIRanks = true;
-  if ((argc == 4 )
-      && (((!strncmp(argv[3], "-odd", 4))) ||  ((!strncmp(argv[3], "-odd", 4)))) ){
-    TRACER4("Split in Two Apps");
-    if ((!strncmp(argv[3], "-odd", 4))) {
-      SplitInTwoApps = true;
-      OddSide = true;
-      simul.setCurAppl(0);
-    } else if (!strncmp(argv[3], "-even", 5) ) {
-      SplitInTwoApps = true;
-      OddSide = false;
-      simul.setCurAppl(1);
-    } 
-  } else if ((argc == 2 )
-	     && ((!strncmp(argv[3], "-one", 4))) ){
-    TRACER4("Run in One Appl");
-    simul.setCurAppl(0);
-    RunInOneAppl = true;
-  } else  if ((argc == 2 )
-	      && ((!strncmp(argv[3], "-mpi", 4))) ){
-    TRACER4("Split in MPI applications");
-#ifdef HAVE_MPI    
-    UseMPIRanks = true;
-    simul.setCurAppl(rank);
-#else
-    AssertStr (false,"Need MPI for -mpi flag"); 
-#endif
-  } else {
-    simul.setCurAppl(0);
-    RunInOneAppl = true;
-  }
-
-
-
+  
+  
+  TRACER2("Default settings");
+  simul.setCurAppl(0);
+  itsSourceSteps = 2;
+  itsDestSteps   = 2;
+  
+  
   // Create the Workholders and Steps
   Sworkholders = new (WH_FillTFMatrix*)[itsSourceSteps];
   Ssteps       = new (Step*)[itsSourceSteps];
@@ -182,18 +146,12 @@ void Transpose::define(const ParamBlock& params)
     // Determine the node and process to run in
     // ... sory, this should go in a private method later
     //Ssteps[iStep]->runOnNode(0); // MPI 1 process
-    if (SplitInTwoApps) {
-      Ssteps[iStep]->runOnNode(iStep  ,0); // run in App 0
-    } else if (RunInOneAppl) {
-      Ssteps[iStep]->runOnNode(iStep  ,0); // run in App 0
-    } else if (UseMPIRanks) {
-      Ssteps[iStep]->runOnNode(iStep  ,iStep); // run in App 0
-    }    
+       Ssteps[iStep]->runOnNode(iStep ,0); // run in App 0
   }
   
   // Create the destination steps
   for (int iStep = 0; iStep < itsDestSteps; iStep++) {
-
+    
     // Create the Destination Step
     sprintf(name, "Transpose[%d]", iStep);
     Dworkholders[iStep] = new WH_Transpose(name, 
@@ -207,13 +165,7 @@ void Transpose::define(const ParamBlock& params)
     // Determine the node and process to run in
     // ... sory, this should go in a private method later
     //Ssteps[iStep]->runOnNode(0); // MPI 1 process
-    if (SplitInTwoApps) {
-      Dsteps[iStep]->runOnNode(iStep,1); // run in App 1
-    } else if (RunInOneAppl) {
-      Dsteps[iStep]->runOnNode(iStep,0); // run in App 0
-    } else if (UseMPIRanks) {
-      Dsteps[iStep]->runOnNode(iStep,0); // run in App 0
-    }    
+      Dsteps[iStep]->runOnNode(iStep+itsSourceSteps,0); 
   }
   
 
@@ -238,9 +190,13 @@ void Transpose::define(const ParamBlock& params)
 #ifdef HAVE_CORBA
       Dsteps[step]->connect(Ssteps[ch],ch,step,1,corbaProto);
 #else
-      //Dsteps[DStep]->connectInput(Ssteps[DStep]);
+#ifdef HAVE_MPI
+      TRACER2("Transpose; try to connect " << step << "   " << ch);
+      Dsteps[step]->connect(Ssteps[ch],ch,step,1,mpiProto);
+#else
       TRACER2("Transpose; try to connect " << step << "   " << ch);
       Dsteps[step]->connect(Ssteps[ch],ch,step,1);
+#endif
 #endif
     }
   }
@@ -256,8 +212,10 @@ void doIt (Simul& simul, const std::string& name, int nsteps) {
 
   TRACER4("Start Processing simul " << name);    
   for (int i=0; i<nsteps; i++) {
+#ifdef HAVE_MPI
+//      TH_MPI::synchroniseAllProcesses();
+#endif
     if (i==2) Profiler::activate();
-    TRACER2("Call simul.process() ");
     simul.process();
     if (i==5) Profiler::deActivate();
   }
@@ -265,7 +223,7 @@ void doIt (Simul& simul, const std::string& name, int nsteps) {
   TRACER4("END OF SIMUL on node " << TRANSPORTER::getCurrentRank () );
  
   //     close environment
-  TRANSPORTER::finalize();
+  //  TRANSPORTER::finalize();
 }
 
 void Transpose::run(int nSteps) {
