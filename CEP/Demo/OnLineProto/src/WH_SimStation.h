@@ -47,7 +47,7 @@ public:
   /// The first WorkHolder should have nin=0.
   explicit WH_SimStation (const string& name,
 			  const int nout,
-			  const string fileName,
+			  const string& fileName,
 			  const ACC::ParameterSet& ps,
 			  const int ID);
 

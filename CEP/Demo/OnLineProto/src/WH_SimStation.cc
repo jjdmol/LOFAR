@@ -38,7 +38,7 @@ namespace LOFAR
 {
   WH_SimStation::WH_SimStation (const string& name,
 				const int nout,
-				const string fileName,
+				const string& fileName,
 				const ACC::ParameterSet& ps,
 				const int ID)
     : WorkHolder   (1, nout, name,"WH_SimStation"),
@@ -131,6 +131,10 @@ namespace LOFAR
   void WH_SimStation::ReadData ()
   {
     complex<float> InputData[NINPUT_BEAMLETS*itsPS.getInt("station.nchannels")+1];
+
+    ASSERTSTR( itsInputFile.is_open(), "WH_SimStation input file " 
+	       << itsFileName << " could not be opened.");
+
 
     // Read the data
     if (!itsInputFile.eof()) {
