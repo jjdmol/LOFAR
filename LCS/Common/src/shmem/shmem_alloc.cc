@@ -36,6 +36,8 @@
 #include <unistd.h>
 #include <Common/lofar_map.h>
 
+using namespace LOFAR;
+
 // needs to be defined
 union semun {
     int val;

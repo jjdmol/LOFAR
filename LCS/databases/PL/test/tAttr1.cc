@@ -25,6 +25,7 @@
 #include <PL/PersistenceBroker.h>
 #include <PL/Attrib.h>
 
+using namespace LOFAR;
 using namespace LOFAR::PL;
 using namespace dtl;
 using namespace std;

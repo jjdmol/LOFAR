@@ -24,3 +24,5 @@ tDemoAC_DEPENDENCIES	        = $(LOFAR_DEPEND)
 tDemoAC_LDADD			= libacc.la
 
 include $(lofar_sharedir)/Makefile.common
+
+AM_CPPFLAGS = -DMAKE_LOFAR_SYMBOLS_GLOBAL

@@ -2,7 +2,7 @@
 INCLUDES		 = -I$(top_srcdir)/src -I$(top_srcdir)/config
 
 AM_CFLAGS		 = # -DDEBUG
-AM_CXXFLAGS		 = # -DDEBUG
+AM_CPPFLAGS		 = # -DDEBUG
 
 bin_PROGRAMS		 = wrapexec_wrapper
 wrapexec_wrapper_SOURCES = wrapexec.cc ArgList.cc ArgList.h

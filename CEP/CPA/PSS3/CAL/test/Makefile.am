@@ -35,3 +35,5 @@ profile4:
 		$(lofar_sharedir)/../data/test/CAL/10206365/10206365 0 0 LOFAR predict 1
 
 
+
+AM_CPPFLAGS = -DMAKE_LOFAR_SYMBOLS_GLOBAL

@@ -24,6 +24,15 @@
 #define COMMON_LIST_H
 
 #include <list>
-using std::list;
+
+namespace LOFAR
+{
+  using std::list;
+}
+
+#ifdef MAKE_LOFAR_SYMBOLS_GLOBAL
+#include <Common/lofar_global_symbol_warning.h>
+using LOFAR::list;
+#endif
 
 #endif

@@ -29,8 +29,9 @@
 #include <Common/Debug.h>
 #include <iostream>
 
-using namespace LOFAR::PL;
 using namespace std;
+using namespace LOFAR;
+using namespace LOFAR::PL;
 
 //
 // This demo program shows how the Persistence Layer can be used to save and

@@ -25,14 +25,31 @@
 
 #include <Common/lofar_iosfwd.h>
 #include <iostream>
-using std::istream;
-using std::ostream;
-using std::iostream;
-using std::cin;
-using std::cout;
-using std::cerr;
-using std::endl;
-using std::ends;
-using std::flush;
+
+namespace LOFAR
+{
+  using std::istream;
+  using std::ostream;
+  using std::iostream;
+  using std::cin;
+  using std::cout;
+  using std::cerr;
+  using std::endl;
+  using std::ends;
+  using std::flush;
+}
+
+#ifdef MAKE_LOFAR_SYMBOLS_GLOBAL
+#include <Common/lofar_global_symbol_warning.h>
+using LOFAR::istream;
+using LOFAR::ostream;
+using LOFAR::iostream;
+using LOFAR::cin;
+using LOFAR::cout;
+using LOFAR::cerr;
+using LOFAR::endl;
+using LOFAR::ends;
+using LOFAR::flush;
+#endif
 
 #endif

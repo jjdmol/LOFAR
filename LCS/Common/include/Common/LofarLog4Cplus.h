@@ -277,10 +277,6 @@ void	initTraceModule(void);
 //# Note: only THROW needs to be defines here, the others are build on THROW
 //# in the LofarLogger.h file.
 
-namespace LOFAR {
-	EXCEPTION_CLASS(ASSERTError,Exception)
-}
-
 // The macro THROW first sends a logrequest to logger <module>.EXCEPTION
 // before executing the real throw.
 #undef THROW

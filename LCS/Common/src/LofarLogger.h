@@ -33,13 +33,18 @@
 #include <Common/LofarLogCout.h>
 #endif //HAVE_LOG4CPLUS
 
+namespace LOFAR 
+{
+  // Define the LOFAR::Exception class.
+  EXCEPTION_CLASS(AssertError,Exception)  
+}
+
 //# --------------------- Common definitions ---------------
 
 //# Make sure that LOFARLOGGER_PACKAGE is defined.
 #ifndef LOFARLOGGER_PACKAGE
 # define LOFARLOGGER_PACKAGE "Unknown_package"
 #endif
-
 
 //#
 //# AUTO_FUNCTION_NAME
@@ -59,14 +64,14 @@
 // If the condition of assert is NOT met a logrequest is sent to the logger
 // <module>.EXCEPTION and an AsserError exception is thrown.
 #define ASSERT(cond) \
-	if (!(cond))  THROW(LOFAR::ASSERTError, "Assertion: " #cond)
+	if (!(cond))  THROW(LOFAR::AssertError, "Assertion: " #cond)
 #define ASSERTSTR(cond,stream) \
-	if (!(cond))  THROW(LOFAR::ASSERTError, "Assertion: " #cond "; " << stream)
+	if (!(cond))  THROW(LOFAR::AssertError, "Assertion: " #cond "; " << stream)
 
 // If the condition of failwhen is met a logrequest is sent to the logger
 // <module>.EXCEPTION and an AsserError exception is thrown.
 #define FAILWHEN(cond) \
-	if (cond)  THROW(LOFAR::ASSERTError, "Failtest: " #cond)
+	if (cond)  THROW(LOFAR::AssertError, "Failtest: " #cond)
 
 // The DBG... version of ASSERT and FAILWHEN will only be in your compiled
 // code when the (pre)compiler flag ENABLE_DBGASSERT is defined.

@@ -24,6 +24,20 @@
 #define COMMON_COMPLEX_H
 
 #include <complex>
+
+namespace LOFAR
+{
+  using std::complex;
+  using std::sin;
+  using std::cos;
+  using std::tan;
+  using std::exp;
+  using std::sqrt;
+  using std::conj;
+}
+
+#ifdef MAKE_LOFAR_SYMBOLS_GLOBAL
+#include <Common/lofar_global_symbol_warning.h>
 using std::complex;
 using std::sin;
 using std::cos;
@@ -31,5 +45,6 @@ using std::tan;
 using std::exp;
 using std::sqrt;
 using std::conj;
+#endif
 
 #endif

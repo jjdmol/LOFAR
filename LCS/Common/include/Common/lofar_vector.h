@@ -24,6 +24,15 @@
 #define COMMON_VECTOR_H
 
 #include <vector>
-using std::vector;
+
+namespace LOFAR
+{
+  using std::vector;
+}
+
+#ifdef MAKE_LOFAR_SYMBOLS_GLOBAL
+#include <Common/lofar_global_symbol_warning.h>
+using LOFAR::vector;
+#endif
 
 #endif

@@ -20,3 +20,5 @@ TESTS_ENVIRONMENT		= lofar_sharedir=$(lofar_sharedir)
 
 
 include $(lofar_sharedir)/Makefile.common
+
+AM_CPPFLAGS = -DMAKE_LOFAR_SYMBOLS_GLOBAL

@@ -92,15 +92,15 @@
 #ifdef ENABLE_TRACER
 #define ALLOC_TRACER_CONTEXT  \
 public:	\
-  static ::Debug::Context DebugContext; \
-  static inline ::Debug::Context & getDebugContext() \
+  static Debug::Context DebugContext; \
+  static inline Debug::Context & getDebugContext() \
             { return DebugContext; }
 
 #define INIT_TRACER_CONTEXT(scope, contextname)  \
-  ::Debug::Context scope::DebugContext(contextname)
+  Debug::Context scope::DebugContext(contextname)
 
 #define ALLOC_TRACER_ALIAS(other)  \
-  static inline ::Debug::Context & getDebugContext() \
+  static inline Debug::Context & getDebugContext() \
   { return other::getDebugContext(); }
 
 #define LOG_TRACE_LOOP(message)		ctrace(TRACE_LEVEL_LOOP, message)
@@ -132,7 +132,7 @@ public:	\
 //# LOG_TRACE_LIFETIME(_STR) (level, message|stream)
 //#
 #define LOG_TRACE_LIFETIME_STR(level, stream) \
-	::Debug::Tracer objname; \
+	Debug::Tracer objname; \
     if( Debug(level) ) { \
 		constructStream(stream) \
 		objname.startMsg (level, __FILE__, __LINE__, \
@@ -190,12 +190,6 @@ public:	\
 //# Note: only THROW needs to be defines here, the others are buiold on THROW
 //# in the LofarLogger.h file.
 
-// Define the LOFAR::Exception class
-namespace LOFAR 
-{
-  EXCEPTION_CLASS(ASSERTError,Exception)  
-}
-
 #undef THROW
 // possible object debug status. 
 #define THROW(exc,msg)  { \
@@ -209,7 +203,7 @@ namespace LOFAR
 #define Debug(level)	getDebugContext().check(level)
 
 #define DebugTestAndLog(level)	if (Debug(level) && Debug::stream_time()) \
-									::Debug::getDebugStream()
+									Debug::getDebugStream()
 #define	constructStream(stream) \
 	std::ostringstream	oss; \
 	oss << stream;
@@ -235,143 +229,149 @@ namespace LOFAR
 	}
 
 
-namespace Debug
+//#-------------------- END OF MACRO DEFINITIONS --------------------#//
+
+namespace LOFAR
 {
-  extern ostream * dbg_stream_p;
+
+  namespace Debug
+  {
+    extern ostream * dbg_stream_p;
   
-  inline ostream & getDebugStream () { return *dbg_stream_p; }
+    inline ostream & getDebugStream () { return *dbg_stream_p; }
 
 #ifdef ENABLE_LATENCY_STATS
-  extern struct timeval tv_init;
-  inline int printf_time ()
-  { 
-    struct timeval tv; gettimeofday(&tv,0);
-    printf("%ld.%06ld ",tv.tv_sec-tv_init.tv_sec,tv.tv_usec);
-    return 1;
-  }
-  inline int stream_time ()
-  {
-    struct timeval tv; gettimeofday(&tv,0);
-    getDebugStream()<<tv.tv_sec-tv_init.tv_sec<<"."<<tv.tv_usec;
-    return 1;
-  }
+    extern struct timeval tv_init;
+    inline int printf_time ()
+    { 
+      struct timeval tv; gettimeofday(&tv,0);
+      printf("%ld.%06ld ",tv.tv_sec-tv_init.tv_sec,tv.tv_usec);
+      return 1;
+    }
+    inline int stream_time ()
+    {
+      struct timeval tv; gettimeofday(&tv,0);
+      getDebugStream()<<tv.tv_sec-tv_init.tv_sec<<"."<<tv.tv_usec;
+      return 1;
+    }
 #else
-  inline int printf_time () { return 1; };
-  inline int stream_time () { return 1; };
+    inline int printf_time () { return 1; };
+    inline int stream_time () { return 1; };
 #endif
-};
-
-
-namespace Debug
-{
-  // Typedef the exception type, so we can change whenever needed.
-  EXCEPTION_CLASS(Fail,LOFAR::Exception);
-
-  // sets level of given context
-  bool setLevel (const string &context,int level);
-     
-  void	initLevels (int argc,const char *argv[], bool save=true);
-  // saves debug to file (default: progname.debug) 
-  bool saveLevels ( string fname = "" );
-  // loads debug levels from file (default: progname.debug) 
-  void loadLevels ( string fname = "" );
-  // redirects debug output to file
-  int redirectOutput (const string &fname);
-
-  // copies string into static buffer. Thread-safe (i.e. each thread
-  // has its own buffer)
-  const char * staticBuffer( const string &str );
-
-  // appends strings and inserts a space, if needed
-  string& append( string &str,const string &str2,const string &sep = " " );
-  // sprintfs to a string object, returns it
-  const string ssprintf( const char *format,... );
-  // sprintfs to a string, with append & insertion of spaces
-  int appendf( string &str,const char *format,... );
-  
-  class Context 
-  {
-  public:
-    Context (const string &name, Context *parent_ = 0);
-    ~Context();
-    
-    bool check (int level) const;
-    int level () const;
-    int setLevel (int value);
-    const string& name () const;
-    static void initialize ();
-        
-  private:
-    static bool initialized;
-    int debug_level;
-    string context_name;
-    Context *parent;
   };
 
-  //## Other Operations (inline)
-  inline bool Context::check (int level) const
+  namespace Debug
   {
-    if( !initialized )
-      return false;
-    if( parent && parent->check(level) )
-      return true;
-    return level <= debug_level;
-  }
+    // Typedef the exception type, so we can change whenever needed.
+    EXCEPTION_CLASS(Fail,LOFAR::Exception);
 
-  inline int Context::level () const
-  {
-    return debug_level;
-  }
+    // sets level of given context
+    bool setLevel (const string &context,int level);
+     
+    void	initLevels (int argc,const char *argv[], bool save=true);
+    // saves debug to file (default: progname.debug) 
+    bool saveLevels ( string fname = "" );
+    // loads debug levels from file (default: progname.debug) 
+    void loadLevels ( string fname = "" );
+    // redirects debug output to file
+    int redirectOutput (const string &fname);
 
-  inline int Context::setLevel (int value)
-  {
-    debug_level = value;
-    return value;
-  }
+    // copies string into static buffer. Thread-safe (i.e. each thread
+    // has its own buffer)
+    const char * staticBuffer( const string &str );
 
-  inline const string& Context::name () const
-  {
-    return context_name;
-  }
+    // appends strings and inserts a space, if needed
+    string& append( string &str,const string &str2,const string &sep = " " );
+    // sprintfs to a string object, returns it
+    const string ssprintf( const char *format,... );
+    // sprintfs to a string, with append & insertion of spaces
+    int appendf( string &str,const char *format,... );
   
-  inline void Context::initialize ()
-  {
-    initialized = true;
-  }
+    class Context 
+    {
+    public:
+      Context (const string &name, Context *parent_ = 0);
+      ~Context();
+    
+      bool check (int level) const;
+      int level () const;
+      int setLevel (int value);
+      const string& name () const;
+      static void initialize ();
+        
+    private:
+      static bool initialized;
+      int debug_level;
+      string context_name;
+      Context *parent;
+    };
+
+    //## Other Operations (inline)
+    inline bool Context::check (int level) const
+    {
+      if( !initialized )
+        return false;
+      if( parent && parent->check(level) )
+        return true;
+      return level <= debug_level;
+    }
+
+    inline int Context::level () const
+    {
+      return debug_level;
+    }
+
+    inline int Context::setLevel (int value)
+    {
+      debug_level = value;
+      return value;
+    }
+
+    inline const string& Context::name () const
+    {
+      return context_name;
+    }
+  
+    inline void Context::initialize ()
+    {
+      initialized = true;
+    }
 
 #ifdef ENABLE_TRACER
-  class Tracer
-  {
-  public:
-    Tracer() : itsDo(false) {}
+    class Tracer
+    {
+    public:
+      Tracer() : itsDo(false) {}
 
-    void startMsg (int level,
-		   const char* file, int line, const char* func,
-		   const char* msg, const void* objPtr);
+      void startMsg (int level,
+                     const char* file, int line, const char* func,
+                     const char* msg, const void* objPtr);
 
-    ~Tracer()
-          { if (itsDo) endMsg(); }
+      ~Tracer()
+      { if (itsDo) endMsg(); }
 
-  private:
-    Tracer(const Tracer&);
-    Tracer& operator= (const Tracer&);
-    void endMsg();
+    private:
+      Tracer(const Tracer&);
+      Tracer& operator= (const Tracer&);
+      void endMsg();
 
-    bool    itsDo;
-    int     itsLevel;
-    string  itsMsg;
-  };
+      bool    itsDo;
+      int     itsLevel;
+      string  itsMsg;
+    };
 #endif
 
-} // namespace Debug
+  } // namespace Debug
 
 
-namespace Debug {
-  extern Context DebugContext;
-  inline Context & getDebugContext ()  { return DebugContext; }
-}
+  namespace Debug {
+    extern Context DebugContext;
+    inline Context & getDebugContext ()  { return DebugContext; }
+  }
 
-// Default DebugContext is the one in Debug.
-using Debug::getDebugContext;
+  // Default DebugContext is the one in Debug.
+  using Debug::getDebugContext;
+
+} // namespace LOFAR
 
 #endif	// file read before

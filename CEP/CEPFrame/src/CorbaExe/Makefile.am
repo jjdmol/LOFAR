@@ -15,3 +15,5 @@ CorbaMonitorClient_LDADD = \
       $(top_builddir)/src/libbasesim.la
 
 include $(lofar_sharedir)/Makefile.common
+
+AM_CPPFLAGS = -DMAKE_LOFAR_SYMBOLS_GLOBAL

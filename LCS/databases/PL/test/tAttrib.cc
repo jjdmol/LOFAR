@@ -25,6 +25,7 @@
 #include <PL/Attrib.h>
 #include "PO_tAttrib.h"
 
+using namespace LOFAR;
 using namespace LOFAR::PL;
 using namespace dtl;
 using namespace std;

@@ -1,6 +1,6 @@
 
 
-AM_CXXFLAGS = \
+AM_CPPFLAGS = \
 	-I$(top_srcdir)/src \
 	-DEPA_Y_POL_IMAG_FIX \
 	-DWEIGHTS_IN_NETWORK_ORDER \

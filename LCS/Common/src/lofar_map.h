@@ -24,8 +24,19 @@
 #define COMMON_MAP_H
 
 #include <map>
-using std::map;
-using std::multimap;
-using std::pair;
+
+namespace LOFAR
+{
+  using std::map;
+  using std::multimap;
+  using std::pair;
+}
+
+#ifdef MAKE_LOFAR_SYMBOLS_GLOBAL
+#include <Common/lofar_global_symbol_warning.h>
+using LOFAR::map;
+using LOFAR::multimap;
+using LOFAR::pair;
+#endif
 
 #endif

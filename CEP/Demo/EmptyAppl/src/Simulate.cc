@@ -34,6 +34,8 @@
 #include <mpi.h>
 #endif
 
+using namespace LOFAR;
+
 #ifdef HAVE_CORBA
 int atexit(void (*function)(void))
 {
