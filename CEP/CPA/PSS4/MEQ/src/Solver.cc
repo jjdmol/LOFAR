@@ -109,14 +109,16 @@ int Solver::getResult (Result::Ref &resref,
   // normalize the request ID to make sure iteration counters, etc,
   // are part of it
   HIID rqid = makeNormalRequestId(request.id());
-  // Copy the request and attach the solvable parm specification
+  // Copy the request and attach the solvable parm specification if needed.
   Request::Ref reqref;
   Request & newReq = reqref <<= new Request(request.cells(),calcDeriv,rqid);
-  if( state()[FSolvable].exists() )
+  newReq[FRider] <<= new DataRecord;
+  if( itsSpids.empty()  &&  state()[FSolvable].exists() )
   {
-    newReq[FRider] <<= new DataRecord;
     newReq[FRider][itsParmGroup] <<= wstate()[FSolvable].as_wp<DataRecord>();
     newReq.validateRider();
+  } else {
+    newReq[FRider][itsParmGroup] <<= new DataRecord;
   }
   // Iterate as many times as needed.
   int step;
@@ -143,10 +145,10 @@ int Solver::getResult (Result::Ref &resref,
         }
       }
     spids = Function::findSpids (chvellsets);
+    nspid = spids.size();
     // It first time, initialize the solver.
     // Otherwise check if spids are still the same.
     if (itsSpids.empty()) {
-      nspid = spids.size();
       AssertStr (nspid > 0,
 		 "No solvable parameters found in solver " << name());
       itsSolver.set (nspid, 1u, 0u);
