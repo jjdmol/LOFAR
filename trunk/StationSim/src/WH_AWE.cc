@@ -76,7 +76,7 @@ WH_AWE* WH_AWE::make (const string& name) const
 void WH_AWE::process()
 {
   if (getOutputs() > 0) {
-    DH_SampleC::BufferType* bufin = itsInHolder.getBuffer();
+    //    DH_SampleC::BufferType* bufin = itsInHolder.getBuffer();
     DH_Weight::BufferType* bufout = itsOutHolders[0]->getBuffer();
     for (int i=0; i<itsNbeam; i++) {
       bufout[i] += 1;
