@@ -24,7 +24,7 @@
 #define LIBTRANSPORT_CONNECTION_H
 
 #include <lofar_config.h>
-#include <Transporter.h>
+#include <libTransport/Transporter.h>
 
 // I should not have to include this, right? -- CB
 #include <Common/Debug.h>
@@ -41,15 +41,18 @@ namespace LOFAR
     virtual ~Connection();
 
     bool connectTo(Transporter* sourceTP,
-		   Transporter* targetTP);
+		   Transporter* targetTP,
+		   const TransportHolder& prototype);
     
     bool connectFrom(Transporter* sourceTP, 
-		     Transporter* targetTP);
+		     Transporter* targetTP,
+		     const TransportHolder& prototype);
 
   private:
 
     bool connectData(Transporter* sourceTP, 
-		     Transporter* targetTP);
+		     Transporter* targetTP,
+		     const TransportHolder& prototype);
 
   };
 

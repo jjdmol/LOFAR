@@ -29,27 +29,30 @@ namespace LOFAR
   }
 
   bool Connection::connectTo(Transporter* sourceTP,
-			     Transporter* targetTP) {
+			     Transporter* targetTP,
+			     const TransportHolder& prototype) {
     bool result = false;
     
-    result = connectData(sourceTP, targetTP);
+    result = connectData(sourceTP, targetTP, prototype);
 
     return result;
   }
 
 
   bool Connection::connectFrom(Transporter* sourceTP,
-			       Transporter* targetTP) {
+			       Transporter* targetTP,
+			       const TransportHolder& prototype) {
     bool result = false;
     
-    result = connectData(sourceTP, targetTP);
+    result = connectData(sourceTP, targetTP, prototype);
 
     return result;
   }
 
 
   bool Connection::connectData(Transporter* sourceTP,
-			       Transporter* targetTP) {
+			       Transporter* targetTP,
+			       const TransportHolder& prototype) {
 
     AssertStr(sourceTP->getRate() == targetTP->getRate(), 
 	      "Connection::connectData; inRate " << 
@@ -66,8 +69,8 @@ namespace LOFAR
     
     // Make a new TransportHolder for both the target and 
     // the source Transporter.
-    sourceTP->makeTransportHolder(*(sourceTP->getTransportHolder()));
-    targetTP->makeTransportHolder(*(sourceTP->getTransportHolder()));
+    sourceTP->makeTransportHolder (prototype);
+    targetTP->makeTransportHolder (prototype);
 
     DbgAssert (sourceTP->getItsID() >= 0);
 
