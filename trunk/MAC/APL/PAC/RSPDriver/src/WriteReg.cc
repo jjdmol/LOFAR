@@ -108,6 +108,13 @@ void WriteReg::sendrequest_status()
 {
   LOG_DEBUG("sendrequest_status");
 
+#if WRITE_ACK_VERREAD
+  // send version read request
+  EPAFwversionReadEvent versionread;
+  MEP_FWVERSION(versionread.hdr, MEPHeader::READ);
+
+  getBoardPort().send(versionread);
+#else
   // send read status request to check status of the write
   EPARspstatusReadEvent rspstatus;
   MEP_RSPSTATUS(rspstatus.hdr, MEPHeader::READ);
@@ -115,15 +122,20 @@ void WriteReg::sendrequest_status()
   rspstatus.hdr.m_fields.addr.dstid = 0x00;
 
   getBoardPort().send(rspstatus);
+#endif
 }
 
 GCFEvent::TResult WriteReg::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
 {
+#if WRITE_ACK_VERREAD
+  EPAFwversionEvent ack(event);
+#else
   EPARspstatusEvent rspstatus(event);
 
   LOG_DEBUG(formatString("**  readerror:%d", rspstatus.board.read.error));
   LOG_DEBUG(formatString("** writeerror:%d", rspstatus.board.write.error));  
-
+#endif
+ 
   return GCFEvent::HANDLED;
 }
 

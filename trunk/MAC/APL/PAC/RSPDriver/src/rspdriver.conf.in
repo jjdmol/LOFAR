@@ -50,10 +50,10 @@ IDENTITY_WEIGHTS=1
 # The order of these config variables does not
 # alter the order the update actions are performed.
 #
+READ_STATUS=1
 WRITE_BF=1
 WRITE_SS=1
 WRITE_RCU=1
-READ_STATUS=1
 READ_ST=1
 WRITE_WG=1
 READ_VERSION=1

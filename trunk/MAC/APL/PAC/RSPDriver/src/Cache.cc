@@ -223,4 +223,22 @@ CacheBuffer& Cache::getBack()
   return *m_back;
 }
 
+void Cache::update_status(EPARspstatusEvent& ack, int boardid)
+{
+  SystemStatus& status = Cache::getInstance().getBack().getSystemStatus();
+
+  // copy board status
+  memcpy(&status.board()(boardid),
+	 &ack.board,
+	 sizeof(BoardStatus));
+
+  // copy rcu status
+  for (int blp = 0; blp < GET_CONFIG("N_BLPS", i); blp++)
+  {
+    memcpy(&status.rcu()((boardid * GET_CONFIG("N_BLPS", i)) + blp),
+	   &ack.rcu[blp],
+	   sizeof(RCUStatus));
+  }
+}
+
 

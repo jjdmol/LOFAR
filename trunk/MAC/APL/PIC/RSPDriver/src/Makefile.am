@@ -1,7 +1,8 @@
 
 AM_CXXFLAGS = \
 	-I$(top_srcdir)/src \
-	-DTOGGLE_LEDS
+	-DTOGGLE_LEDS \
+	-DWRITE_ACK_VERREAD
 
 AUTOGEN = autogen
 SUFFIXES = .ph

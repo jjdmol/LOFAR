@@ -66,20 +66,7 @@ GCFEvent::TResult StatusRead::handleack(GCFEvent& event, GCFPortInterface& /*por
 {
   EPARspstatusEvent ack(event);
 
-  SystemStatus& status = Cache::getInstance().getBack().getSystemStatus();
-
-  // copy board status
-  memcpy(&status.board()(getBoardId()),
-	 &ack.board,
-	 sizeof(BoardStatus));
-
-  // copy rcu status
-  for (int blp = 0; blp < GET_CONFIG("N_BLPS", i); blp++)
-  {
-    memcpy(&status.rcu()((getBoardId() * GET_CONFIG("N_BLPS", i)) + blp),
-	   &ack.rcu[blp],
-	   sizeof(RCUStatus));
-  }
+  Cache::update_status(ack, getBoardId());
 
   return GCFEvent::HANDLED;
 }
