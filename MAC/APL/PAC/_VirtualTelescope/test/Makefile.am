@@ -35,13 +35,16 @@ EXTRA_DIST = \
     $(top_builddir)/PAC/VirtualTelescope/src/LogicalDevice_Protocol.ph \
 	log4cplus.properties
 	
+#in case of make install these files will be copied to the bindir beside the test apps
+configfilesdir=$(bindir)
+configfiles_DATA= \
+	log4cplus.properties
+	
+MAC_CONFIG = $(top_srcdir)/../../Config
+%.properties: $(MAC_CONFIG)/%.properties
+	cp $< $@
+
 %.properties: ../src/%.properties.in
 	cp $< $@
 	
-%.ns: %.ns.in
-	cp $< $@
-
-%.top: %.top.in
-	cp $< $@
-
 include $(lofar_sharedir)/Makefile.common
