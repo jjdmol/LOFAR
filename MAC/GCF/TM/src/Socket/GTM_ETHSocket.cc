@@ -45,6 +45,7 @@
 #include <asm/types.h>
 #include <linux/if_packet.h>
 #include <linux/if_ether.h>   /* The L2 protocols */
+#include <linux/filter.h>
 #endif
 
 
@@ -60,14 +61,25 @@ GTMETHSocket::~GTMETHSocket()
 
 ssize_t GTMETHSocket::send(void* buf, size_t count)
 {
-  ssize_t result = 0;
+  ssize_t result   = 0;
+  ssize_t newcount = count;
   memcpy(_sendPacketData, (char*)buf, count);
+
+  /**
+   * Make sure the Ethernet packet is at
+   * least 60 bytes long (excluding FCS)
+   * by making the payload at least 46 bytes long.
+   * ETH_ZLEN - EHT_HLEN = 60 - 14 = 46
+   */
+  if (newcount < ETH_ZLEN - ETH_HLEN) newcount = ETH_ZLEN - ETH_HLEN;
+
   result = sendto(_socketFD, 
                   _sendPacket, 
-                  count + sizeof(struct ethhdr), 0,
+                  newcount + sizeof(struct ethhdr), 0,
                  (struct sockaddr*)&_sockaddr,
                   sizeof(struct sockaddr_ll));
-  return result - sizeof(struct ethhdr);
+
+  return result - sizeof(struct ethhdr) - (newcount - count);
 }
 
 ssize_t GTMETHSocket::recv(void* buf, size_t count)
@@ -89,8 +101,22 @@ ssize_t GTMETHSocket::recv(void* buf, size_t count)
 }
 
 int GTMETHSocket::open(const char* ifname,
-		       const char* destMacStr)
+		       const char* destMacStr,
+		       unsigned short ethertype)
 {
+  struct sock_fprog  filter;
+  struct sock_filter mac_filter_insn[] = 
+    {
+      { 0x20, 0, 0, 0x00000008 },
+      { 0x15, 0, 3, 0x00000000 }, // this is changed to match MAC address
+      { 0x28, 0, 0, 0x00000006 },
+      { 0x15, 0, 1, 0x00000000 },
+      { 0x6,  0, 0, 0x0000ffff }, // snapshot length (0x0000ffff == all data)
+      { 0x6,  0, 0, 0x00000000 },
+    };
+
+  filter.len = sizeof(mac_filter_insn) / sizeof(struct sock_filter);
+
   if (_socketFD > -1)
     return 0;
   else
@@ -102,7 +128,7 @@ int GTMETHSocket::open(const char* ifname,
     socketFD = socket(PF_PACKET, SOCK_RAW, htons(ETH_P_ALL));
     if (socketFD < 0)
     {
-    	LOG_ERROR(LOFAR::formatString ( 
+      LOG_ERROR(LOFAR::formatString ( 
     			"open(PF_PACKET): %s", 
           strerror(errno)));
     	return socketFD;
@@ -154,6 +180,21 @@ int GTMETHSocket::open(const char* ifname,
     // convert HWADDR string to sll_addr
     convertCcp2sllAddr(destMacStr, destMac);
   
+    // store the destMac address in the filter
+    memcpy(&mac_filter_insn[1].k, destMac + 2, sizeof(__u32));
+    mac_filter_insn[1].k = htonl(mac_filter_insn[1].k);
+    memcpy((char*)(&mac_filter_insn[3].k) + 2, destMac, sizeof(__u16));
+    mac_filter_insn[3].k = htonl(mac_filter_insn[3].k);
+    filter.filter = mac_filter_insn;
+    if (setsockopt(socketFD,
+		   SOL_SOCKET, SO_ATTACH_FILTER,
+		   &filter, sizeof(struct sock_fprog)) < 0)
+    {
+      LOFAR_LOG_ERROR(TM_STDOUT_LOGGER, ("setsockopt(SO_ATTACH_FILTER) failed"));
+      close();
+      return -1;
+    }
+  
     // print MAC address for destination
     printf("DEST HWADDR: ");
     macAddress = "";
@@ -172,16 +213,16 @@ int GTMETHSocket::open(const char* ifname,
     struct ethhdr* hdr = (struct ethhdr*)_sendPacket;
     memcpy(&hdr->h_dest[0],   &destMac[0],                ETH_ALEN);
     memcpy(&hdr->h_source[0], &ifr.ifr_hwaddr.sa_data[0], ETH_ALEN);
-    hdr->h_proto = 0x0000;
+    hdr->h_proto = htons(ethertype);
   
     // get interface index number
     strncpy(ifr.ifr_name, ifname, IFNAMSIZ-1);
     if (ioctl(socketFD, SIOCGIFINDEX, &ifr) < 0)
     {
-        LOG_FATAL(LOFAR::formatString ( 
-            "ioctl(SIOCGIFINDEX)"));
-        close();
-        return -1;
+      LOG_FATAL(LOFAR::formatString ( 
+          "ioctl(SIOCGIFINDEX)"));
+      close();
+      return -1;
     }
     int ifindex = ifr.ifr_ifindex;
   

@@ -11,7 +11,8 @@ pkginclude_HEADERS = \
 	../include/GCF/TM/GCF_Task.h \
 	../include/GCF/TM/GCF_Handler.h \
 	../include/GCF/TM/GCF_Fsm.h \
-	../include/GCF/TM/GCF_Control.h
+	../include/GCF/TM/GCF_Control.h \
+	../include/GCF/TM/GCF_DevicePort.h \
  
 DOCHDRS = $(pkginclude_HEADERS) \
   GTM_Defines.h \
@@ -24,7 +25,8 @@ DOCHDRS = $(pkginclude_HEADERS) \
   Socket/GTM_TCPSocket.h \
   Socket/GTM_TCPServerSocket.h \
   Socket/GTM_SocketHandler.h \
-  Socket/GTM_ETHSocket.h
+  Socket/GTM_ETHSocket.h \
+  Socket/GTM_Device.h
     
 lib_LTLIBRARIES 	= libgcftm.la
 
@@ -47,7 +49,9 @@ libgcftm_la_SOURCES= $(DOCHDRS) \
   Socket/GTM_TCPServerSocket.cc \
   Socket/GTM_SocketHandler.cc \
   Socket/GTM_ETHSocket.cc \
-  Socket/GCF_ETHRawPort.cc
+  Socket/GCF_ETHRawPort.cc \
+  Socket/GCF_DevicePort.cc \
+  Socket/GTM_Device.cc
 
 libgcftm_la_CPPFLAGS=-I$(top_srcdir)/include
 

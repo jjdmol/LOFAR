@@ -1,4 +1,4 @@
-//#  GTM_ETHSocket.h: base class for all sockets
+//#  GTM_Device.h: base class for all sockets
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,41 +20,33 @@
 //#
 //#  $Id$
 
-#ifndef GTM_ETHSOCKET_H
-#define GTM_ETHSOCKET_H
+#ifndef GTM_DEVICE_H
+#define GTM_DEVICE_H
 
 #include <unistd.h>
-#include <GCF/TM/GCF_Event.h>
+#include <GCF/GCF_Event.h>
 #include <Socket/GTM_Socket.h>
 
-#include <linux/if_packet.h>
-#include <linux/if_ether.h>
-
-
 // forward declaration
-class GCFETHRawPort;
+class GCFDevicePort;
 class GCFPeerAddr;
 class GTMSocketHandler;
 
 /**
- * This class consists of the basic implementation of a ETH socket. 
+ * This class consists of the basic implementation of a device (driver). Beside that it 
+ * is the base class for the  class.
  */
 
-class GTMETHSocket : public GTMSocket
+class GTMDevice : public GTMSocket
 {
   public:
-    GTMETHSocket (GCFETHRawPort& port);
-    virtual ~GTMETHSocket ();
+    GTMDevice (GCFDevicePort& port);
+    virtual ~GTMDevice ();
   
     /**
      * open/close functions
-     *
-     * Added ethertype argument to set the type
-     * of Ethernet frames being sent.
      */
-    virtual int open (const char* ifname,
-                      const char* destMac,
-		                  unsigned short ethertype = 0x0000);
+    virtual int open (GCFPeerAddr& addr);
   
     /**
      * send/recv functions
@@ -62,22 +54,16 @@ class GTMETHSocket : public GTMSocket
     virtual ssize_t send (void* buf, size_t count);
     virtual ssize_t recv (void* buf, size_t count);
 
+  protected:
+    friend class GTMSocketHandler;
+  
   private:
-    GTMETHSocket ();
+    GTMDevice ();
     /**
-     * Don't allow copying of the GTMETHSocket object.
+     * Don't allow copying of the GTMDevice object.
      */
-    GTMETHSocket (const GTMETHSocket&);
-    GTMETHSocket& operator= (const GTMETHSocket&);
-
-    void convertCcp2sllAddr(const char* destMacStr,
-                            char destMac[ETH_ALEN]);
-    
-  private:
-    char  _recvPacket[ETH_FRAME_LEN];   
-    char  _sendPacket[ETH_FRAME_LEN];
-    char* _sendPacketData; // pointer to start of packet payload data
-    struct sockaddr_ll _sockaddr;
+    GTMDevice (const GTMDevice&);
+    GTMDevice& operator= (const GTMDevice&);
 };
 
 #endif

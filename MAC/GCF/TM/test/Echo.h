@@ -26,6 +26,7 @@
 #define _ECHO_H_
 
 #include <GCF/TM/GCF_Control.h>
+#include <GCF/GCF_DevicePort.h>
 #include <Common/lofar_string.h>
 
 /**
@@ -67,6 +68,7 @@ class Echo : public GCFTask
    * are sent through the server port.
    */
   GCFPort server;
+  GCFDevicePort spidDriver;
 };
 
 #endif

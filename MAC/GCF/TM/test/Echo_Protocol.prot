@@ -45,3 +45,13 @@ event = {
 		type = "timeval";
 	};
 };
+
+event = {
+  signal = CLOCK;
+  dir = OUT;
+  noheader;
+  param = {
+    name = clockpulse;
+    type = char;
+  };
+};
