@@ -144,10 +144,13 @@ public:
 
   // Update the solvable parm values (reread from table).
   void updateSolvableParms();
-  // </group>
 
   // Show the settings of the Prediffer.
   void showSettings() const;
+
+  // Get the results instead of the equations.
+  // This is mainly used for test purposes.
+  vector<MeqResult> getResults (bool calcDeriv=true);
 
 private:
   // Copy constructor and assignment are not allowed.
