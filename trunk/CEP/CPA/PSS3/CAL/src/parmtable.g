@@ -215,20 +215,20 @@ parmtable := function (name, create=F)
 	self.tab.putcell ('ENDFREQ', rownr, freqrange[2]);
 	nm := T;
 	if (is_boolean(solvable)) {
-	    self.itab.putcell ('SOLVABLE', rownr, solvable);
+	    self.tab.putcell ('SOLVABLE', rownr, solvable);
 	    nm := all(solvable);
 	}
 	if (is_boolean(normalize)) {
 	    nm := normalize;
 	}
-	self.itab.putcell ('TIME0', rownr, time0)
-	self.itab.putcell ('FREQ0', rownr, freq0)
-	self.itab.putcell ('NORMALIZED', rownr, nm);
+	self.tab.putcell ('TIME0', rownr, time0)
+	self.tab.putcell ('FREQ0', rownr, freq0)
+	self.tab.putcell ('NORMALIZED', rownr, nm);
 	vals := as_double(values);
-	self.itab.putcell ('VALUES', rownr, vals);
-	self.itab.putcell ('SIM_VALUES', rownr, vals);
+	self.tab.putcell ('VALUES', rownr, vals);
+	self.tab.putcell ('SIM_VALUES', rownr, vals);
 	vals[,] := as_double(0);
-	self.itab.putcell ('SIM_PERT', rownr, vals);
+	self.tab.putcell ('SIM_PERT', rownr, vals);
 	self.tab.putcell ('DIFF', rownr, diff);
 	self.tab.putcell ('DIFF_REL', rownr, diffrelative);
 	return T;
