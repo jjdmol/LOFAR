@@ -22,6 +22,10 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.4  2002/06/07 11:43:33  schaaf
+//  %[BugId: 11]%
+//  Added flag for profiler
+//
 //  Revision 1.3  2002/05/23 15:38:57  schaaf
 //
 //  %[BugId: 11]%
@@ -46,6 +50,7 @@
 
 #include "BaseSim/Simulator.h"
 class WH_FillTFMatrix;
+class WH_Delay;
 class WH_Transpose;
 class WH_Correlate;
 class ParamBlock ;
@@ -73,9 +78,11 @@ class Transpose: public Simulator
  private:
   /// Define pointers to the arrays with steps and workholders.
     WH_FillTFMatrix **Sworkholders;
+    WH_Delay        **Iworkholders;
     WH_Transpose    **Dworkholders;
     WH_Correlate    **Cworkholders;
     Step            **Ssteps;
+    Step            **Isteps;
     Step            **Dsteps;
     Step            **Csteps;
     
