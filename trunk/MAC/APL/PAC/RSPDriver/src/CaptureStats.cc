@@ -1,5 +1,5 @@
 //#
-//#  ViewStats.cc: implementation of ViewStats class
+//#  CaptureStats.cc: implementation of CaptureStats class
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -27,7 +27,7 @@
 #include "RSP_Protocol.ph"
 #include "EPA_Protocol.ph"
 
-#include "ViewStats.h"
+#include "CaptureStats.h"
 
 #include "PSAccess.h"
 
@@ -36,7 +36,7 @@
 #include <sys/time.h>
 #include <string.h>
 #include <blitz/array.h>
-#include <gnuplot_i.h>
+#include <getopt.h>
 
 #undef PACKAGE
 #undef VERSION
@@ -81,19 +81,19 @@ do { \
   } \
 } while(0)
 
-ViewStats::ViewStats(string name, int type, int device, int n_devices)
-  : GCFTask((State)&ViewStats::initial, name), Test(name),
-    m_type(type), m_device(device), m_n_devices(n_devices)
+CaptureStats::CaptureStats(string name, int type, int device, int n_devices, int duration)
+  : GCFTask((State)&CaptureStats::initial, name), Test(name),
+    m_type(type), m_device(device), m_n_devices(n_devices), m_duration(duration)
 {
   registerProtocol(RSP_PROTOCOL, RSP_PROTOCOL_signalnames);
 
   m_server.init(*this, "server", GCFPortInterface::SAP, RSP_PROTOCOL);
 }
 
-ViewStats::~ViewStats()
+CaptureStats::~CaptureStats()
 {}
 
-GCFEvent::TResult ViewStats::initial(GCFEvent& e, GCFPortInterface& port)
+GCFEvent::TResult CaptureStats::initial(GCFEvent& e, GCFPortInterface& port)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
@@ -112,7 +112,7 @@ GCFEvent::TResult ViewStats::initial(GCFEvent& e, GCFPortInterface& port)
 
     case F_CONNECTED:
     {
-      TRAN(ViewStats::enabled);
+      TRAN(CaptureStats::enabled);
     }
     break;
 
@@ -138,7 +138,7 @@ GCFEvent::TResult ViewStats::initial(GCFEvent& e, GCFPortInterface& port)
   return status;
 }
 
-GCFEvent::TResult ViewStats::enabled(GCFEvent& e, GCFPortInterface& port)
+GCFEvent::TResult CaptureStats::enabled(GCFEvent& e, GCFPortInterface& port)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
   
@@ -169,7 +169,7 @@ GCFEvent::TResult ViewStats::enabled(GCFEvent& e, GCFPortInterface& port)
       
       if (!m_server.send(substats))
       {
-	LOG_FATAL("failed to subscribe");
+	cerr << "Error: failed to subscribe" << endl;
 	exit(EXIT_FAILURE);
       }
     }
@@ -181,10 +181,9 @@ GCFEvent::TResult ViewStats::enabled(GCFEvent& e, GCFPortInterface& port)
 
       if (SUCCESS != ack.status)
       {
-	LOG_FATAL("failed to subscribe");
+	cerr << "Error: failed to subscribe" << endl;
 	exit(EXIT_FAILURE);
       }
-      LOG_INFO_STR("ack.time=" << ack.timestamp);
     }
     break;
 
@@ -194,16 +193,18 @@ GCFEvent::TResult ViewStats::enabled(GCFEvent& e, GCFPortInterface& port)
 
       if (SUCCESS != upd.status)
       {
-	LOG_FATAL("invalid update");
+	cerr << "Error: invalid update" << endl;
 	exit(EXIT_FAILURE);
       }
 
+#if 0
       LOG_INFO_STR("upd.time=" << upd.timestamp);
       LOG_INFO_STR("upd.handle=" << upd.handle);
       
       LOG_DEBUG_STR("upd.stats=" << upd.stats());
+#endif
 
-      plot_statistics(upd.stats());
+      capture_statistics(upd.stats());
     }
     break;
     
@@ -213,23 +214,24 @@ GCFEvent::TResult ViewStats::enabled(GCFEvent& e, GCFPortInterface& port)
 
       if (SUCCESS != ack.status)
       {
-	LOG_FATAL("unsubscribe failure");
+	cerr << "Error: unsubscribe failure" << endl;
 	exit(EXIT_FAILURE);
       }
 
+#if 0
       LOG_INFO_STR("ack.time=" << ack.timestamp);
-
       LOG_INFO_STR("ack.handle=" << ack.handle);
+#endif
 
       port.close();
-      TRAN(ViewStats::initial);
+      TRAN(CaptureStats::initial);
     }
     break;
 
     case F_DISCONNECTED:
     {
       port.close();
-      TRAN(ViewStats::initial);
+      TRAN(CaptureStats::initial);
     }
     break;
 
@@ -247,9 +249,11 @@ GCFEvent::TResult ViewStats::enabled(GCFEvent& e, GCFPortInterface& port)
   return status;
 }
 
-void ViewStats::plot_statistics(Array<double, 2>& stats)
+void CaptureStats::capture_statistics(Array<double, 2>& stats)
 {
-  static gnuplot_ctrl* handle = 0;
+  static int nseconds = 0;
+  
+  // send data to stdout
   int n_freqbands = stats.extent(secondDim);
 
   Array<double, 1> freq(n_freqbands);
@@ -258,85 +262,89 @@ void ViewStats::plot_statistics(Array<double, 2>& stats)
   // initialize the freq array
   firstIndex i;
   
-  if (!handle)
-  {
-    handle = gnuplot_init();
-    if (!handle) return;
-
-    gnuplot_setstyle(handle, "steps");
-    gnuplot_cmd(handle, "set grid x y");
-    //gnuplot_cmd(handle, "set bmargin 1");
-    gnuplot_cmd(handle, "set tmargin .05");
-  }
-
-#if 1
-  gnuplot_cmd(handle, "set size 1,1");
-  gnuplot_cmd(handle, "set origin 0,0");
-  gnuplot_cmd(handle, "set multiplot");
-  gnuplot_cmd(handle, "set size 1,%f", 1.0 / stats.extent(firstDim));
-#endif
   for (int device = stats.lbound(firstDim);
        device <= stats.ubound(firstDim);
        device++)
   {
-    gnuplot_resetplot(handle); // try here
-    gnuplot_cmd(handle, "set origin 0,%f", 1.0 * device / stats.extent(firstDim));
-
-    if (device == stats.lbound(firstDim))
-    {
-      gnuplot_cmd(handle, "set xtics axis");
-      gnuplot_cmd(handle, "set xtics 0,20");
-    }
-    else
-    {
-      gnuplot_cmd(handle, "set noxtics");
-    }
-    
     // compute logarithm of values
     value  = stats(device, Range::all());
 
-    // add 1 to prevent -inf result
-    // 46 bits precision
-    value = 10.0 * log10(value + 1.0); // / (1.0*((uint64)1<<46))) * 10.0;
-
-    // set yrange for power
-    gnuplot_cmd(handle, "set ytics 0,20");
-    gnuplot_cmd(handle, "set yrange [0:120]");
-    gnuplot_cmd(handle, "set xrange [0:%f]", SAMPLE_FREQUENCY / 2.0);
-
     freq = i * (SAMPLE_FREQUENCY / (n_freqbands * 2.0)); // calculate frequency in MHz
-    gnuplot_cmd(handle, "set xlabel \"Frequency (MHz)\" 0, 1.5");
 
-    // gnuplot_resetplot(handle);
+    time_t now = time(0);
+    struct tm* t = localtime(&now);
 
-    char title[128];
+    if (!t)
+    {
+      cerr << "Error: localtime?" << endl;
+      exit(EXIT_FAILURE);
+    }
+
+    char filename[PATH_MAX];
     switch (m_type)
     {
       case Statistics::SUBBAND_POWER:
-	snprintf(title, 128, "(RCU=%d)", (m_device < 0 ? device : m_device));
+	snprintf(filename, PATH_MAX, "%04d%02d%02d_%02d%02d%02d_sst_rcu%02d.dat",
+		 t->tm_year + 1900, t->tm_mon + 1, t->tm_mday,
+		 t->tm_hour, t->tm_min, t->tm_sec,
+		 (m_device < 0 ? device : m_device));
 	break;
       case Statistics::BEAMLET_POWER:
-	snprintf(title, 128, "Beamlet Power (RSP board=%d)", (m_device < 0 ? device : m_device));
+	snprintf(filename, PATH_MAX, "%04d%02d%02d_%02d%02d%02d_bst_rcu%02d.dat",
+		 t->tm_year + 1900, t->tm_mon + 1, t->tm_mday,
+		 t->tm_hour, t->tm_min, t->tm_sec,
+		 (m_device < 0 ? device : m_device));
 	break;
       default:
-	snprintf(title, 128, "ERROR: Invalid m_type");
+	cerr << "Error: invalid m_type" << endl;
+	exit(EXIT_FAILURE);
 	break;
     }
 
-    gnuplot_plot_xy(handle, freq.data(), value.data(), n_freqbands, title);
+    FILE* ofile = fopen(filename, "w");
+
+    if (!ofile)
+    {
+      cerr << "Error: Failed to open file: " << filename << endl;
+      exit(EXIT_FAILURE);
+    }
+    
+    if (n_freqbands != (int)fwrite(stats.data(), sizeof(double), n_freqbands, ofile))
+    {
+      perror("fwrite");
+      exit(EXIT_FAILURE);
+    }
+    (void)fclose(ofile);
   }
 
-  gnuplot_cmd(handle, "set nomultiplot");
+  if (++nseconds >= m_duration)
+  {
+    exit(EXIT_SUCCESS);
+  }
 }
 
-void ViewStats::run()
+void CaptureStats::run()
 {
   start(); // make initial transition
   GCFTask::run();
 }
 
+void usage()
+{
+  cout << "Usage: CaptureStats [arguments]" << endl;
+  cout << "arguments (all optional):" << endl;
+  cout << "    --rcu=0..N_AVAIABLE_RCUS # or -r; default 0, -1 means ALL RCUs" << endl;
+  cout << "    --duration=N             # or -d; default 1, number of seconds to capture" << endl;
+  cout << "    --statstype=0|1          # or -s; default 0, 0 = subband statistics, 1 = beamlets statistics" << endl;
+  cout << "    --help                   # or -h; this help" << endl;
+}
+
 int main(int argc, char** argv)
 {
+  int type     = 0;
+  int device   = 0;
+  int duration = 1;
+
   GCFTask::init(argc, argv);
 
   LOG_INFO(formatString("Program %s has started", argv[0]));
@@ -347,41 +355,78 @@ int main(int argc, char** argv)
   }
   catch (Exception e)
   {
-    LOG_ERROR_STR("Failed to load configuration files: " << e.text());
-    exit(EXIT_FAILURE);
-  }
-
-  char buf[32];
-
-  cout << "Type of stat [0==SUBBAND_POWER, 1=BEAMLET_POWER]:";
-  int type = atoi(fgets(buf, 32, stdin));
-  if (type < 0 || type >= Statistics::N_STAT_TYPES)
-  {
-    LOG_FATAL(formatString("Invalid type of stat, should be >= 0 && < %d",
-			   Statistics::N_STAT_TYPES));
+    cerr << "Error: failed to load configuration files: " << e.text() << endl;
     exit(EXIT_FAILURE);
   }
 
   int n_devices = ((type <= Statistics::SUBBAND_POWER) ? GET_CONFIG("RS.N_BLPS", i) * GET_CONFIG("RS.N_RSPBOARDS", i) : 1) * GET_CONFIG("RS.N_RSPBOARDS", i) * MEPHeader::N_POL;
-
-  cout << "Which device (RCU's for subband stats, RSP boards for beamlet stats (-1 means all):";
-  int device = atoi(fgets(buf, 32, stdin));
-  if (device < -1 || device >= n_devices)
+  while (1)
   {
-    LOG_FATAL(formatString("Invalid device index, should be >= -1 && < %d; -1 indicates all devices",
-			   n_devices));
-    exit(EXIT_FAILURE);
+    static struct option long_options[] = 
+      {
+        { "rcu",       required_argument, 0, 'r' },
+	{ "duration",  required_argument, 0, 'd' },
+	{ "statstype", required_argument, 0, 't' },
+	{ "help",      no_argument,       0, 'h' },
+	{ 0, 0, 0, 0 },
+      };
+
+    int option_index = 0;
+    int c = getopt_long_only(argc, argv,
+			     "ci:p:h", long_options, &option_index);
+    
+    if (c == -1) break;
+    
+    switch (c)
+    {
+      case 'r':
+	device = atoi(optarg);
+	if (device < -1 || device >= n_devices)
+	{
+	  cerr << formatString("Invalid device index, should be >= -1 && < %d; -1 indicates all devices", n_devices) << endl;
+	  exit(EXIT_FAILURE);
+	}
+	break;
+
+      case 'd':
+	duration = atoi(optarg);
+	if (duration <= 0)
+	{
+	  cerr << "Error: duration must be > 0" << endl;
+	  exit(EXIT_FAILURE);
+	}
+	break;
+	
+      case 't':
+	type = atoi(optarg);
+
+	if (type < 0 || type >= Statistics::N_STAT_TYPES)
+	{
+	  cerr << formatString("Invalid type of stat, should be >= 0 && < %d", Statistics::N_STAT_TYPES) << endl;
+	  exit(EXIT_FAILURE);
+	}
+	break;
+	
+      case 'h':
+	usage();
+	exit(EXIT_SUCCESS);
+	break;
+
+      default:
+	printf ("?? getopt returned character code 0%o ??\n", c);
+	break;
+    }
   }
-  
-  Suite s("ViewStats", &cerr);
-  s.addTest(new ViewStats("ViewStats", type, device, n_devices));
+
+  Suite s("CaptureStats", &cerr);
+  s.addTest(new CaptureStats("CaptureStats", type, device, n_devices, duration));
   try
   {
     s.run();
   }
   catch (Exception e)
   {
-    LOG_ERROR_STR("Exception: " << e.text());
+    cerr << "Error: exception: " << e.text() << endl;
     exit(EXIT_FAILURE);
   }
   long nFail = s.report();

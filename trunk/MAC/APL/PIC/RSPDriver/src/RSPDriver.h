@@ -130,7 +130,9 @@ namespace RSP
       std::list<GCFPortInterface*> m_garbage_list; // list of clients to cleanup
 
       Scheduler m_scheduler;
-      int m_update_counter; // nr of updates completed
+      int m_update_counter; // nr of updates completed in one second
+      int m_n_updates;      // number of completed updates
+      int m_elapsed;        // elapsed number of seconds
   };
 
 };

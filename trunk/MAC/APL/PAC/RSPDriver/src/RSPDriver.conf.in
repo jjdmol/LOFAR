@@ -33,8 +33,8 @@ RSPDriver.SOFTPPS=0
 #
 RSPDriver.MAC_ADDR_LCU=00:60:97:09:C5:B0 # lofar26 MAC address
 #RSPDriver.MAC_ADDR_0=00:60:97:09:C5:B0 # lofar26 MAC address
-RSPDriver.MAC_ADDR_0=00:0A:5E:46:5D:ED   # lofar27 MAC address
-#RSPDriver.MAC_ADDR_0=00:00:00:00:00:01
+#RSPDriver.MAC_ADDR_0=00:0A:5E:46:5D:ED   # lofar27 MAC address
+RSPDriver.MAC_ADDR_0=00:00:00:00:00:01
 RSPDriver.MAC_ADDR_1=00:00:00:00:00:02
 RSPDriver.MAC_ADDR_2=00:00:00:00:00:03
 RSPDriver.MAC_ADDR_3=00:00:00:00:00:04
@@ -70,6 +70,7 @@ RSPDriver.IF_NAME=eth0
 # beamlet statistics match the subband statistics
 #
 RSPDriver.IDENTITY_WEIGHTS=1
+RSPDriver.FIRST_SUBBAND=300
 
 #
 # Select LOOPBACK_MODE mode
@@ -108,10 +109,10 @@ RSPDriver.READ_VERSION=1
 #
 # Optionally read RW-registers.
 #
-RSPDriver.READ_BF=1
-RSPDriver.READ_SS=1
-RSPDriver.READ_RCU=1
-RSPDriver.READ_WG=1
+RSPDriver.READ_BF=0
+RSPDriver.READ_SS=0
+RSPDriver.READ_RCU=0
+RSPDriver.READ_WG=0
 
 #
 # Swap RCU bits? (for older firmware)
