@@ -30,8 +30,8 @@
 	clipIconLabels 	TRUE
 	autoResize 	TRUE
 	snapToGrid 	TRUE
-	gridX      	15
-	gridY      	15
+	gridX      	16
+	gridY      	16
 	defaultFont 	(object Font
 	    size       	10
 	    face       	"arial"
@@ -10897,11 +10897,6 @@
 		is_loaded  	FALSE
 		file_name  	"$LOFAR/DMI/src/DMI-Model.cat"
 		quid       	"3BEAB1F2006B")
-	    (object Class_Category "UVD"
-		is_unit    	TRUE
-		is_loaded  	FALSE
-		file_name  	"$LOFAR/CEP/CPA/UVD/src/UVD-Model.cat"
-		quid       	"3CD130710240")
 	    (object Class_Category "Common"
 		is_unit    	TRUE
 		is_loaded  	FALSE
@@ -10930,7 +10925,7 @@
 		max_height 	28350
 		max_width  	21600
 		origin_x   	900
-		origin_y   	11656
+		origin_y   	11657
 		items      	(list diagram_item_list
 		    (object CategoryView "Logical View::OCTOPUSSY" @539
 			location   	(1050, 330)
@@ -10945,12 +10940,21 @@
 			    default_color 	TRUE)
 			label      	(object ItemLabel
 			    Parent_View 	@539
-			    location   	(906, 246)
+			    location   	(906, 296)
 			    fill_color 	13434879
 			    nlines     	2
 			    max_width  	288
 			    justify    	0
 			    label      	"OCTOPUSSY")
+			stereotype 	(object ItemLabel
+			    Parent_View 	@539
+			    location   	(906, 246)
+			    fill_color 	13434879
+			    anchor     	10
+			    nlines     	1
+			    max_width  	288
+			    justify    	0
+			    label      	"<<subsystem>>")
 			icon_style 	"Icon"
 			line_color 	3342489
 			fill_color 	13434879
@@ -10958,7 +10962,7 @@
 			width      	300
 			height     	180)
 		    (object CategoryView "Logical View::DOMIN0" @540
-			location   	(615, 330)
+			location   	(608, 336)
 			font       	(object Font
 			    size       	10
 			    face       	"arial"
@@ -10970,7 +10974,7 @@
 			    default_color 	TRUE)
 			label      	(object ItemLabel
 			    Parent_View 	@540
-			    location   	(461, 272)
+			    location   	(454, 278)
 			    fill_color 	13434879
 			    nlines     	2
 			    max_width  	308
@@ -10978,7 +10982,7 @@
 			    label      	"DOMIN0")
 			stereotype 	(object ItemLabel
 			    Parent_View 	@540
-			    location   	(461, 222)
+			    location   	(454, 228)
 			    fill_color 	13434879
 			    anchor     	10
 			    nlines     	1
@@ -10992,7 +10996,7 @@
 			width      	320
 			height     	228)
 		    (object CategoryView "Logical View::VisCube" @541
-			location   	(375, 1875)
+			location   	(368, 1872)
 			font       	(object Font
 			    size       	10
 			    face       	"arial"
@@ -11004,7 +11008,7 @@
 			    default_color 	TRUE)
 			label      	(object ItemLabel
 			    Parent_View 	@541
-			    location   	(231, 1791)
+			    location   	(224, 1788)
 			    fill_color 	13434879
 			    nlines     	2
 			    max_width  	288
@@ -11016,8 +11020,8 @@
 			quidu      	"3DB9650B037E"
 			width      	300
 			height     	180)
-		    (object CategoryView "Logical View::UVD" @542
-			location   	(885, 1875)
+		    (object CategoryView "Logical View::OCTOGlish" @542
+			location   	(1664, 1408)
 			font       	(object Font
 			    size       	10
 			    face       	"arial"
@@ -11029,32 +11033,7 @@
 			    default_color 	TRUE)
 			label      	(object ItemLabel
 			    Parent_View 	@542
-			    location   	(741, 1791)
-			    fill_color 	13434879
-			    nlines     	2
-			    max_width  	288
-			    justify    	0
-			    label      	"UVD")
-			icon_style 	"Icon"
-			line_color 	3342489
-			fill_color 	13434879
-			quidu      	"3CD130710240"
-			width      	300
-			height     	180)
-		    (object CategoryView "Logical View::OCTOGlish" @543
-			location   	(1665, 1410)
-			font       	(object Font
-			    size       	10
-			    face       	"arial"
-			    bold       	FALSE
-			    italics    	FALSE
-			    underline  	FALSE
-			    strike     	FALSE
-			    color      	0
-			    default_color 	TRUE)
-			label      	(object ItemLabel
-			    Parent_View 	@543
-			    location   	(1521, 1326)
+			    location   	(1520, 1324)
 			    fill_color 	13434879
 			    nlines     	2
 			    max_width  	288
@@ -11066,8 +11045,8 @@
 			quidu      	"3DF4674C0240"
 			width      	300
 			height     	180)
-		    (object CategoryView "Logical View::Common" @544
-			location   	(345, 915)
+		    (object CategoryView "Logical View::Common" @543
+			location   	(352, 912)
 			font       	(object Font
 			    size       	10
 			    face       	"arial"
@@ -11078,8 +11057,8 @@
 			    color      	0
 			    default_color 	TRUE)
 			label      	(object ItemLabel
-			    Parent_View 	@544
-			    location   	(201, 831)
+			    Parent_View 	@543
+			    location   	(208, 828)
 			    fill_color 	13434879
 			    nlines     	2
 			    max_width  	288
@@ -11091,8 +11070,8 @@
 			quidu      	"3D1047C0035B"
 			width      	300
 			height     	180)
-		    (object CategoryView "Logical View::AppAgents" @545
-			location   	(1470, 1875)
+		    (object CategoryView "Logical View::AppAgents" @544
+			location   	(1472, 1872)
 			font       	(object Font
 			    size       	10
 			    face       	"arial"
@@ -11103,8 +11082,8 @@
 			    color      	0
 			    default_color 	TRUE)
 			label      	(object ItemLabel
-			    Parent_View 	@545
-			    location   	(1326, 1791)
+			    Parent_View 	@544
+			    location   	(1328, 1788)
 			    fill_color 	13434879
 			    nlines     	2
 			    max_width  	288
@@ -11138,22 +11117,22 @@
 			tool       	"Cplusplus"
 			name       	"FilesEncoding"
 			value      	(value Text 
-|v1:LAtomicID.cc,3db948a8,A
-|KAtomicID.h,3db948a8,A
+|v1:LAtomicID.cc,3e01bc7a,A
+|KAtomicID.h,3e01bd03,A
 |HBOIO.cc,3db94bde,A
 |GBOIO.h,3ddca84c,A
 |LBlockSet.cc,3dda4252,A
 |KBlockSet.h,3dbeb87c,A
-|SBlockableObject.cc,3db948a8,A
-|RBlockableObject.h,3db9643d,A
+|SBlockableObject.cc,3e01d38b,A
+|RBlockableObject.h,3e01d34c,A
 |ICommon.h,3d468efb,A
 |MConfigMgr.cc,3db948a8,A
 |LConfigMgr.h,3db948a8,A
-|MCountedRef.h,3dfdb290,A
-|RCountedRefBase.cc,3dd4e821,A
-|QCountedRefBase.h,3dd4e821,A
-|TCountedRefTarget.cc,3db948a8,A
-|SCountedRefTarget.h,3df8bb63,A
+|MCountedRef.h,3e01cb7a,A
+|RCountedRefBase.cc,3e01be9f,A
+|QCountedRefBase.h,3e01be1f,A
+|TCountedRefTarget.cc,3e01bcce,A
+|SCountedRefTarget.h,3e01d2af,A
 |GDMI.cc,3cd7c1a9,A
 |FDMI.h,3dee2ab4,A
 |MDataArray.cc,3df452c7,A
@@ -11164,13 +11143,13 @@
 |MDataRecord.h,3db948a8,A
 |VDynamicTypeManager.cc,3db948a8,A
 |UDynamicTypeManager.h,3db948a8,A
-|HHIID.cc,3dc7fdab,A
-|GHIID.h,3db948a8,A
+|HHIID.cc,3e01de8a,A
+|GHIID.h,3e01da4a,A
 |KHIIDSet.cc,3db948a8,A
 |JHIIDSet.h,3db948a8,A
 |INCIter.h,3dda3e0d,A
 |UNestableContainer.cc,3dee3e18,A
-|TNestableContainer.h,3dfdb391,A
+|TNestableContainer.h,3e01e4d4,A
 |IPacker.h,3db948a8,A
 |KRegistry.h,3df8bb3b,A
 |NSmartBlock.cc,3dc96547,A
@@ -11178,7 +11157,7 @@
 |MTimestamp.cc,3db948a8,A
 |LTimestamp.h,3db948a8,A
 |ITypeId.h,3dde5469,A
-|LTypeInfo.cc,3deb87b4,A
+|LTypeInfo.cc,3e01f45f,A
 |KTypeInfo.h,3decdb96,A
 |
 			))
@@ -11202,37 +11181,38 @@
 			tool       	"Cplusplus"
 			name       	"CodeItemsEncoding"
 			value      	(value Text 
-|v3:AidIndex,t,C,3C553F440092,A,b9e,cad
-|AidIndex::AidIndex,f,C,3C553F7100D2,Eint,,14a4,14ff
+|v3:AidIndex,t,C,3C553F440092,A,113b,124c
+|AidIndex::AidIndex,f,C,3C553F7100D2,Eint,,1a53,1aaf
 |ArrayPacker,t,i,3CAB35D201F8,A,fa8,1362
 |ArrayPacker::allocate,f,i,3DB9344000E1,Yconst void*,size_t,int&,,4ba8,4d34
 |ArrayPacker::pack,f,i,3CAB35D20234,bconst T*,int,void*,size_t&,,41e1,45ed
 |ArrayPacker::packSize,f,i,3CAB35D20248,Nconst T*,int,,49c5,4ba4
 |ArrayPacker::unpack,f,i,3CAB35D2023F,aT*,int,const void*,size_t,,45f1,49c1
-|AtomicID,t,C,3BE970170297,A,100,a7a
-|AtomicID::AtomicID,f,C,3BE970C40246,Eint,,cc7,d15
-|AtomicID::AtomicID,f,C,3C5E74CB0112,Oconst string&,,d19,dd4
-|AtomicID::AtomicID,f,C,3C68D5220318,Mconst char*,,dd8,e3c
-|AtomicID::findName,f,B,3C68D5ED01F8,Oconst string&,,715,925
-|AtomicID::id,f,C,3DB9344201DE,Fconst,143c,148a
-|AtomicID::index,f,C,3C553EC402AA,Fconst,1307,1368
-|AtomicID::isAny,f,C,3C1A28850258,Fconst,122f,1292
-|AtomicID::isWildcard,f,C,3C1A288F0342,Fconst,1296,1303
-|AtomicID::matches,f,C,3C1DFD1A0235,Vconst AtomicID&,const,136c,1438
-|AtomicID::operator !,f,C,3C596562005C,A,11d9,122b
-|AtomicID::operator =,f,C,3C1A1A9000DD,Eint,,116b,11d5
-|AtomicID::operator int,f,C,3C0F8D1102B6,Fconst,1113,1167
-|AtomicID::operator!=,f,C,3DB93440036C,Vconst AtomicID&,const,ebe,f36
-|AtomicID::operator!=,f,C,3DB9344203E7,Jint,const,156f,15d7
-|AtomicID::operator<,f,C,3DB934410088,Vconst AtomicID&,const,f3c,fb2
-|AtomicID::operator<,f,C,3DB934430199,Jint,const,15d9,163f
-|AtomicID::operator<=,f,C,3DB9344102E1,Vconst AtomicID&,const,1017,108f
-|AtomicID::operator<=,f,C,3DB934440119,Jint,const,1690,16f8
-|AtomicID::operator==,f,C,3DB93440027B,Vconst AtomicID&,const,e42,eba
-|AtomicID::operator==,f,C,3DB934420274,Jint,const,1505,156d
-|AtomicID::operator>=,f,C,3DB934420043,Vconst AtomicID&,const,1093,110b
-|AtomicID::operator>=,f,C,3DB9344402F9,Jint,const,16fa,1762
-|AtomicID::toString,f,B,3BE9709700A7,Fconst,48e,711
+|AtomicID,t,C,3BE970170297,A,4f0,fab
+|AtomicID::AtomicID,f,C,3BE970C40246,Eint,,1266,12b5
+|AtomicID::AtomicID,f,C,3C5E74CB0112,Oconst string&,,12b9,1375
+|AtomicID::AtomicID,f,C,3C68D5220318,Mconst char*,,1379,13de
+|AtomicID::findName,f,B,3C68D5ED01F8,Oconst string&,,6bc,85c
+|AtomicID::id,f,C,3DB9344201DE,Fconst,19ea,1a39
+|AtomicID::index,f,C,3C553EC402AA,Fconst,18b3,1915
+|AtomicID::isAny,f,C,3C1A28850258,Fconst,17d9,183d
+|AtomicID::isWildcard,f,C,3C1A288F0342,Fconst,1841,18af
+|AtomicID::matches,f,C,3C1DFD1A0235,Vconst AtomicID&,const,1919,19e6
+|AtomicID::operator !,f,C,3C596562005C,A,1782,17d5
+|AtomicID::operator =,f,C,3C1A1A9000DD,Eint,,1713,177e
+|AtomicID::operator int,f,C,3C0F8D1102B6,Fconst,16ba,170f
+|AtomicID::operator!=,f,C,3DB93440036C,Vconst AtomicID&,const,1461,14da
+|AtomicID::operator!=,f,C,3DB9344203E7,Jint,const,1b20,1b89
+|AtomicID::operator<,f,C,3DB934410088,Vconst AtomicID&,const,14e0,1557
+|AtomicID::operator<,f,C,3DB934430199,Jint,const,1b8b,1bf2
+|AtomicID::operator<=,f,C,3DB9344102E1,Vconst AtomicID&,const,15bc,1635
+|AtomicID::operator<=,f,C,3DB934440119,Jint,const,1c43,1cac
+|AtomicID::operator==,f,C,3DB93440027B,Vconst AtomicID&,const,13e4,145d
+|AtomicID::operator==,f,C,3DB934420274,Jint,const,1ab5,1b1e
+|AtomicID::operator>=,f,C,3DB934420043,Vconst AtomicID&,const,1639,16b2
+|AtomicID::operator>=,f,C,3DB9344402F9,Jint,const,1cae,1d17
+|AtomicID::print,f,B,3E01B4A900A8,Fconst,651,6b8
+|AtomicID::toString,f,B,3BE9709700A7,Fconst,4b3,64d
 |BOIO,t,E,3DB949AE0042,A,99,79c
 |BOIO::BOIO,f,D,3DB949AE024E,A,52,88
 |BOIO::BOIO,f,D,3DB949AE024F,Sconst string&,int,,d3,13f
@@ -11287,12 +11267,13 @@
 |BlockSet::sdebug,f,F,3DB9344A009F,jint,const string&,const char*,const,104e,1387
 |BlockSet::size,f,G,3C1E1B0B014A,Fconst,14d7,152f
 |BlockSet::~BlockSet,f,F,3DB93448029B,A,142,174
-|BlockableObject,t,I,3BB1F71F03C9,A,15f,d18
-|BlockableObject::clone,f,H,,Nint,int,const,396,628
-|BlockableObject::isNestable,f,I,3BFA7DBF00D7,Fconst,df6,e56
-|BlockableObject::isPersistent,f,I,3BFA7DC8017B,A,e5a,eb8
-|BlockableObject::privatize,f,H,3CAB088100C3,Iint,int,,62c,77d
-|BlockableObject::~BlockableObject,f,I,3DB9344C035B,A,da5,dee
+|BlockableObject,t,I,3BB1F71F03C9,A,504,1170
+|BlockableObject::clone,f,H,,Nint,int,const,42e,516
+|BlockableObject::isNestable,f,I,3BFA7DBF00D7,Fconst,124f,12b0
+|BlockableObject::isPersistent,f,I,3BFA7DC8017B,A,12b4,1313
+|BlockableObject::print,f,H,,Tstd::ostream&,const,5e3,634
+|BlockableObject::privatize,f,H,3CAB088100C3,Iint,int,,518,5e1
+|BlockableObject::~BlockableObject,f,I,3DB9344C035B,A,11fd,1247
 |ConfigMgr,t,L,3CCFFDC300DA,A,a8,a1d
 |ConfigMgr::ConfigMgr,f,K,EA0590B8FEED,Tconst string&,bool,,451,6a2
 |ConfigMgr::clear,f,K,6B6C3E18FEED,A,796,84e
@@ -11312,95 +11293,92 @@
 |ConfigMgr::set,f,K,593209CEFEED,Sconst string&,int,,1ce7,1ddb
 |ConfigMgr::set,f,K,D175196EFEED,Vconst string&,string,,1ddf,1eb7
 |ConfigMgr::size,f,K,0778FED4FEED,Fconst,6aa,792
-|CountedRef,t,M,3BEFECFF0287,A,c1,1a27
-|CountedRef::CountedRef,f,M,3BF9396D01A7,A,1a51,1abd
-|CountedRef::CountedRef,f,M,3BF93C020247,Vconst CountedRef<T>&,,1ac1,1b4c
-|CountedRef::CountedRef,f,M,3BF93D620128,dconst CountedRef<T>&,int,int,,1b50,1bfe
-|CountedRef::CountedRef,f,M,3BF93F8D0054,HT&,int,,1c02,1c99
-|CountedRef::CountedRef,f,M,3BF93F9702C5,Nconst T&,int,,1c9d,1d48
-|CountedRef::CountedRef,f,M,3DB934560267,HT*,int,,1d4c,1e19
-|CountedRef::CountedRef,f,M,3DB934570236,Nconst T*,int,,1e1d,1efe
-|CountedRef::CountedRef,f,M,3DB9345A02BD,Eint,,3208,32e2
-|CountedRef::attach,f,M,3BFA4DF4027D,HT&,int,,2cb7,2d4b
-|CountedRef::attach,f,M,3BFA4E070216,Nconst T&,int,,2d4f,2de9
-|CountedRef::attach,f,M,3C179D9E027E,HT*,int,,2ded,2e9a
-|CountedRef::attach,f,M,3C179DA9016B,Nconst T*,int,,2e9e,2f51
-|CountedRef::change,f,M,3C1897A5032E,Eint,,2b6b,2c09
-|CountedRef::copy,f,M,3BF93A170291,Nint,int,const,259f,2650
-|CountedRef::copy,f,M,3C1F2DB802D2,dconst CountedRef<T>&,int,int,,2654,2721
-|CountedRef::deref,f,M,3BEFED870110,Fconst,20eb,2162
-|CountedRef::deref_p,f,M,3C8F61C80241,Fconst,2054,20e7
-|CountedRef::dewr,f,M,3BEFF73602B0,Fconst,22d3,2342
-|CountedRef::dewr_p,f,M,3C8F61D10199,Fconst,2249,22cf
-|CountedRef::lock,f,M,3C187F270346,A,2917,29a3
-|CountedRef::operator (),f,M,3C0F806901C1,Fconst,2346,23b9
-|CountedRef::operator *,f,M,3C5FBE030173,Fconst,21cc,2245
-|CountedRef::operator <<=,f,M,3CBEE39B0011,Jconst T*,,30bd,3163
-|CountedRef::operator <<=,f,M,3CBEE3AC0105,DT*,,3167,3204
-|CountedRef::operator T&,f,M,3C0F80B501D4,Fconst,24b5,2525
-|CountedRef::operator T*,f,M,3C0F80C0020C,Fconst,2529,259b
-|CountedRef::operator const T&,f,M,3C0F808100DF,Fconst,23bd,2434
-|CountedRef::operator const T*,f,M,3C0F80A50055,Fconst,2438,24b1
-|CountedRef::operator!=,f,M,3DB934590329,aconst CountedRef<T>&,const,3024,30b5
-|CountedRef::operator=,f,M,3DB934580238,Vconst CountedRef<T>&,,1f04,204c
-|CountedRef::operator==,f,M,3DB934590080,aconst CountedRef<T>&,const,2f7b,3020
-|CountedRef::persist,f,M,3C501A15015C,A,2a3b,2acd
-|CountedRef::privatize,f,M,3C17A06901DC,Iint,int,,27d5,2913
-|CountedRef::setExclusiveWrite,f,M,3C1897B50178,A,2c0d,2cb3
-|CountedRef::unlock,f,M,3C187F2E0291,A,29a7,2a37
-|CountedRef::unpersist,f,M,3C501A1C01FD,A,2ad1,2b67
-|CountedRef::xfer,f,M,3C1F2DD30353,Vconst CountedRef<T>&,,2725,27d1
-|CountedRefBase,t,O,3C0CDEE200FE,A,1e5,2758
-|CountedRefBase::CountedRefBase,f,O,3C0CE1C10277,A,2778,27f2
-|CountedRefBase::CountedRefBase,f,O,3DB9345D022B,econst CountedRefBase&,int,int,,27f6,2a58
-|CountedRefBase::attach,f,N,3C0CDEE20171,WCountedRefTarget*,int,,2f5a,363b
-|CountedRefBase::attach,f,O,3C0CDEE20178,cconst CountedRefTarget*,int,,32b3,3437
-|CountedRefBase::change,f,N,3C18873600E9,Eint,,2930,2cfa
-|CountedRefBase::cloneTarget,f,N,3DB9346500B5,Fconst,7e5,af6
-|CountedRefBase::copy,f,N,3C0CDEE2018A,econst CountedRefBase&,int,int,,d9a,181b
-|CountedRefBase::copy,f,O,3C0CDEE20162,Nint,int,const,2f7c,301c
-|CountedRefBase::detach,f,N,3C1612A60137,A,363f,3bce
-|CountedRefBase::empty,f,O,3C161C330291,A,34a2,3541
-|CountedRefBase::getNext,f,O,3DB934600236,Fconst,37d0,383d
-|CountedRefBase::getNext,f,O,3DB9346102B9,A,38a4,3905
-|CountedRefBase::getPrev,f,O,3DB93460013B,Fconst,375f,37cc
-|CountedRefBase::getPrev,f,O,3DB934610364,A,3841,38a2
-|CountedRefBase::getTarget,f,O,3C0CDEE2015B,Fconst,2c8e,2e14
-|CountedRefBase::getTargetWr,f,O,3C0CE2970094,Fconst,2e18,2f78
-|CountedRefBase::hasOtherWriters,f,N,3C583B9F03B8,A,3bd2,3d84
-|CountedRefBase::isAnonObject,f,O,3DB9345F0343,Fconst,367f,36f1
-|CountedRefBase::isExclusiveWrite,f,O,3DB9345F025C,Fconst,360d,367b
-|CountedRefBase::isLocked,f,O,3DB9345F0072,Fconst,3545,35a3
-|CountedRefBase::isPersistent,f,O,3DB93460004B,Fconst,36f5,375b
-|CountedRefBase::isWritable,f,O,3DB9345F0180,Fconst,35a7,3609
-|CountedRefBase::isWrite,f,O,3C19F62B0137,Fconst,343b,349e
-|CountedRefBase::lock,f,O,3C187D92023F,A,3020,30b9
-|CountedRefBase::operator=,f,O,3DB9345E0297,Wconst CountedRefBase&,,2afa,2c22
-|CountedRefBase::persist,f,O,3C5019FB0000,A,315f,3203
-|CountedRefBase::privatize,f,N,3C0CDEE20164,Iint,int,,1d09,292c
-|CountedRefBase::privatizeOther,f,N,3C1611C702DB,econst CountedRefBase&,int,int,,3d88,3f02
-|CountedRefBase::sdebug,f,N,3DB934620030,jint,const string&,const char*,const,3f22,4586
-|CountedRefBase::setExclusiveWrite,f,N,3C1888B001A1,A,2cfe,2f56
-|CountedRefBase::unlock,f,O,3C187D9A022C,A,30bd,315b
-|CountedRefBase::unpersist,f,O,3C501A0201A5,A,3207,32af
-|CountedRefBase::valid,f,O,3C0CDEE2015A,Fconst,2c2a,2c8a
-|CountedRefBase::verify,f,N,3DB934600330,Wconst CountedRefBase*,,b38,d96
-|CountedRefBase::xfer,f,N,3C0CDEE20180,Wconst CountedRefBase&,,181f,1d05
-|CountedRefBase::~CountedRefBase,f,O,3DB9345E0229,A,2a5e,2af4
-|CountedRefTarget,t,Q,3C0CDF41029F,A,115,1465
-|CountedRefTarget::CountedRefTarget,f,P,3DB93466002B,A,18e,1ef
-|CountedRefTarget::CountedRefTarget,f,P,3DB934660053,Yconst CountedRefTarget&,,1f3,271
-|CountedRefTarget::crefMutex,f,Q,3DB9346602A2,A,1c0f,1c79
-|CountedRefTarget::getOwner,f,Q,3DB934660201,Fconst,1a72,1ae8
-|CountedRefTarget::getOwner,f,Q,3DB934660265,A,1ba0,1c0b
-|CountedRefTarget::hasAnonRefs,f,P,3C63BA8800B9,Fconst,91a,981
-|CountedRefTarget::hasExternalRefs,f,P,3C63B97601B9,Fconst,8aa,916
-|CountedRefTarget::privatize,f,P,3C3EDD7D0301,Iint,int,,579,5cf
-|CountedRefTarget::refCount,f,P,3C18899002BB,Fconst,5d3,6aa
-|CountedRefTarget::refCountWrite,f,P,3C18C69A0120,Fconst,6ae,7a9
-|CountedRefTarget::refWriteExclusions,f,P,3C18C6A603DA,Fconst,7ad,8a6
-|CountedRefTarget::sdebug,f,P,3DB9346602E8,jint,const string&,const char*,const,985,c5b
-|CountedRefTarget::~CountedRefTarget,f,P,3DB9346600F3,A,277,571
+|CountedRef,t,M,3BEFECFF0287,A,485,2121
+|CountedRef::CountedRef,f,M,3BF9396D01A7,A,214b,21b7
+|CountedRef::CountedRef,f,M,3BF93C020247,Vconst CountedRef<T>&,,21bb,2246
+|CountedRef::CountedRef,f,M,3BF93D620128,dconst CountedRef<T>&,int,int,,224a,22f8
+|CountedRef::CountedRef,f,M,3BF93F8D0054,HT&,int,,22fc,2393
+|CountedRef::CountedRef,f,M,3BF93F9702C5,Nconst T&,int,,2397,2442
+|CountedRef::CountedRef,f,M,3DB934560267,HT*,int,,2446,2513
+|CountedRef::CountedRef,f,M,3DB934570236,Nconst T*,int,,2517,25f8
+|CountedRef::CountedRef,f,M,3DB9345A02BD,Eint,,34ef,35c9
+|CountedRef::change,f,M,3C1897A5032E,Eint,,3265,3303
+|CountedRef::copy,f,M,3BF93A170291,Nint,int,const,2c99,2d4a
+|CountedRef::copy,f,M,3C1F2DB802D2,dconst CountedRef<T>&,int,int,,2d4e,2e1b
+|CountedRef::deref,f,M,3BEFED870110,Fconst,27e5,285c
+|CountedRef::deref_p,f,M,3C8F61C80241,Fconst,274e,27e1
+|CountedRef::dewr,f,M,3BEFF73602B0,Fconst,29cd,2a3c
+|CountedRef::dewr_p,f,M,3C8F61D10199,Fconst,2943,29c9
+|CountedRef::lock,f,M,3C187F270346,A,3011,309d
+|CountedRef::operator (),f,M,3C0F806901C1,Fconst,2a40,2ab3
+|CountedRef::operator *,f,M,3C5FBE030173,Fconst,28c6,293f
+|CountedRef::operator T&,f,M,3C0F80B501D4,Fconst,2baf,2c1f
+|CountedRef::operator T*,f,M,3C0F80C0020C,Fconst,2c23,2c95
+|CountedRef::operator const T&,f,M,3C0F808100DF,Fconst,2ab7,2b2e
+|CountedRef::operator const T*,f,M,3C0F80A50055,Fconst,2b32,2bab
+|CountedRef::operator!=,f,M,3DB934590329,aconst CountedRef<T>&,const,345a,34eb
+|CountedRef::operator=,f,M,3DB934580238,Vconst CountedRef<T>&,,25fe,2746
+|CountedRef::operator==,f,M,3DB934590080,aconst CountedRef<T>&,const,33b1,3456
+|CountedRef::persist,f,M,3C501A15015C,A,3135,31c7
+|CountedRef::privatize,f,M,3C17A06901DC,Iint,int,,2ecf,300d
+|CountedRef::setExclusiveWrite,f,M,3C1897B50178,A,3307,33ad
+|CountedRef::unlock,f,M,3C187F2E0291,A,30a1,3131
+|CountedRef::unpersist,f,M,3C501A1C01FD,A,31cb,3261
+|CountedRef::xfer,f,M,3C1F2DD30353,Vconst CountedRef<T>&,,2e1f,2ecb
+|CountedRefBase,t,O,3C0CDEE200FE,A,5bf,2c5c
+|CountedRefBase::CountedRefBase,f,O,3C0CE1C10277,A,2cdb,2d56
+|CountedRefBase::CountedRefBase,f,O,3DB9345D022B,econst CountedRefBase&,int,int,,2d5a,2fbd
+|CountedRefBase::attach,f,N,3C0CDEE20171,WCountedRefTarget*,int,,2ce5,334e
+|CountedRefBase::attach,f,O,3C0CDEE20178,cconst CountedRefTarget*,int,,3822,39a7
+|CountedRefBase::change,f,N,3C18873600E9,Eint,,27c1,2b13
+|CountedRefBase::cloneTarget,f,N,3DB9346500B5,Fconst,837,b49
+|CountedRefBase::copy,f,N,3C0CDEE2018A,econst CountedRefBase&,int,int,,dee,179e
+|CountedRefBase::copy,f,O,3C0CDEE20162,Nint,int,const,34e6,3587
+|CountedRefBase::detach,f,N,3C1612A60137,A,3352,3869
+|CountedRefBase::empty,f,O,3C161C330291,A,3a13,3ab3
+|CountedRefBase::getNext,f,O,3DB934600236,Fconst,3d48,3db6
+|CountedRefBase::getNext,f,O,3DB9346102B9,A,3e1e,3e80
+|CountedRefBase::getPrev,f,O,3DB93460013B,Fconst,3cd6,3d44
+|CountedRefBase::getPrev,f,O,3DB934610364,A,3dba,3e1c
+|CountedRefBase::getTarget,f,O,3C0CDEE2015B,Fconst,31f6,337d
+|CountedRefBase::getTargetWr,f,O,3C0CE2970094,Fconst,3381,34e2
+|CountedRefBase::hasOtherWriters,f,N,3C583B9F03B8,A,386d,3995
+|CountedRefBase::isAnonObject,f,O,3DB9345F0343,Fconst,3bf4,3c67
+|CountedRefBase::isExclusiveWrite,f,O,3DB9345F025C,Fconst,3b81,3bf0
+|CountedRefBase::isLocked,f,O,3DB9345F0072,Fconst,3ab7,3b16
+|CountedRefBase::isPersistent,f,O,3DB93460004B,Fconst,3c6b,3cd2
+|CountedRefBase::isWritable,f,O,3DB9345F0180,Fconst,3b1a,3b7d
+|CountedRefBase::isWrite,f,O,3C19F62B0137,Fconst,39ab,3a0f
+|CountedRefBase::lock,f,O,3C187D92023F,A,358b,3625
+|CountedRefBase::operator=,f,O,3DB9345E0297,Wconst CountedRefBase&,,3060,3189
+|CountedRefBase::persist,f,O,3C5019FB0000,A,36cc,3771
+|CountedRefBase::print,f,N,,Tstd::ostream&,const,40d4,419a
+|CountedRefBase::print,f,N,,Fconst,419e,41f2
+|CountedRefBase::privatize,f,N,3C0CDEE20164,Iint,int,,1c18,27bd
+|CountedRefBase::privatizeOther,f,N,3C1611C702DB,econst CountedRefBase&,int,int,,3999,3a8b
+|CountedRefBase::sdebug,f,N,3DB934620030,jint,const string&,const char*,const,3aaf,40d0
+|CountedRefBase::setExclusiveWrite,f,N,3C1888B001A1,A,2b17,2ce1
+|CountedRefBase::unlock,f,O,3C187D9A022C,A,3629,36c8
+|CountedRefBase::unpersist,f,O,3C501A0201A5,A,3775,381e
+|CountedRefBase::valid,f,O,3C0CDEE2015A,Fconst,3191,31f2
+|CountedRefBase::verify,f,N,3DB934600330,Wconst CountedRefBase*,,b8b,dea
+|CountedRefBase::xfer,f,N,3C0CDEE20180,Wconst CountedRefBase&,,17a2,1c14
+|CountedRefBase::~CountedRefBase,f,O,3DB9345E0229,A,2fc3,305a
+|CountedRefTarget,t,Q,3C0CDF41029F,A,500,199e
+|CountedRefTarget::CountedRefTarget,f,P,3DB93466002B,A,4fe,560
+|CountedRefTarget::CountedRefTarget,f,P,3DB934660053,Yconst CountedRefTarget&,,564,5e3
+|CountedRefTarget::crefMutex,f,Q,3DB9346602A2,A,21af,2219
+|CountedRefTarget::getOwner,f,Q,3DB934660201,Fconst,2012,2088
+|CountedRefTarget::getOwner,f,Q,3DB934660265,A,2140,21ab
+|CountedRefTarget::hasAnonRefs,f,P,3C63BA8800B9,Fconst,c92,cfa
+|CountedRefTarget::hasExternalRefs,f,P,3C63B97601B9,Fconst,c21,c8e
+|CountedRefTarget::print,f,P,,Fconst,cfe,d54
+|CountedRefTarget::privatize,f,P,3C3EDD7D0301,Iint,int,,8ec,943
+|CountedRefTarget::refCount,f,P,3C18899002BB,Fconst,947,a1f
+|CountedRefTarget::refCountWrite,f,P,3C18C69A0120,Fconst,a23,b1f
+|CountedRefTarget::refWriteExclusions,f,P,3C18C6A603DA,Fconst,b23,c1d
+|CountedRefTarget::sdebug,f,P,3DB9346602E8,jint,const string&,const char*,const,d59,1030
+|CountedRefTarget::~CountedRefTarget,f,P,3DB9346600F3,A,5e9,8e4
 |DMI::DMIFlags,t,S,3DB949AE00AC,A,14d,a5a
 |DMI::DebugContext,f,S,,A,a64,a7c
 |DMI::EXTERNAL,f,V,,A,4cd,506
@@ -11506,43 +11484,44 @@
 |DataRecord::size,f,X,3C7A16C4023F,MTypeId,const,3c9b,3daf
 |DataRecord::toBlock,f,X,3C5821630371,PBlockSet&,const,229e,27a7
 |DataRecord::~DataRecord,f,X,3DB93482018E,A,99e,a7b
-|Debug::ssprintf,f,h,,A,675,68b
+|Debug::ssprintf,f,h,,A,63e,654
 |Dummy,t,g,,A,5943,5965
 |DynamicTypeManager,t,a,3BE96C040003,A,11a,6c3
 |DynamicTypeManager::construct,f,Z,3BE96C5F03A7,VTypeId,BlockSet&,int,,41e,61c
 |DynamicTypeManager::construct,f,Z,3BE96C7402D5,LTypeId,int,,620,83b
 |DynamicTypeManager::isRegistered,f,Z,3BF905EE020E,HTypeId,,83f,940
-|HIID,t,c,3BE96FE601C5,A,118,12b6
-|HIID::HIID,f,c,3BE9774C003C,A,19a9,19e9
-|HIID::HIID,f,c,3C5E7527020F,JAtomicID,,19ed,1a58
-|HIID::HIID,f,c,3C6141BA03B4,Oconst string&,,1a5c,1ab3
-|HIID::HIID,f,c,3C556A470346,Mconst char*,,1ab7,1b1b
-|HIID::HIID,f,c,,GIn,In,,1f07,1f78
-|HIID::HIID,f,b,3DB934880197,Qconst void*,int,,0,5d3
-|HIID::add,f,c,3BE97792003D,JAtomicID,,1cbc,1d25
-|HIID::add,f,b,3BE977510397,Mconst HIID&,,5db,774
-|HIID::addString,f,b,3DB9348C0305,Oconst string&,,1b9c,1f19
-|HIID::findFirstSlash,f,b,3C7A1B6500C9,Fconst,10f9,1241
-|HIID::length,f,c,3C1A187E018C,Fconst,1d29,1d7a
-|HIID::matches,f,b,3BE9792B0135,Rconst HIID&,const,8d4,b5a
-|HIID::operator <,f,b,3DB9348B01E2,Rconst HIID&,const,1937,1b96
-|HIID::operator |=,f,c,3DB934890383,Mconst HIID&,,1453,14b9
-|HIID::operator |=,f,c,3DB9348B0051,Mconst char*,,14bd,1529
-|HIID::operator |=,f,c,3DB9348A0118,JAtomicID,,152d,158c
-|HIID::operator |=,f,c,3DB9348A029E,Eint,,1590,15f4
-|HIID::operator!=,f,c,3DB9348901D5,Rconst HIID&,const,1c3e,1cb4
-|HIID::operator==,f,c,3DB9348803AA,Rconst HIID&,const,1b21,1c3a
-|HIID::pack,f,b,3C5912FE0134,Tvoid*,size_t&,const,15fc,1791
-|HIID::packSize,f,c,3C591278038A,Fconst,1ea1,1f03
-|HIID::popLeadIndex,f,b,3C59522600D6,A,ea5,fca
-|HIID::popLeadSlashes,f,c,3C6B9FDD02FD,A,1dfd,1e9d
-|HIID::popTrailIndex,f,b,3C6B86D5003A,A,fce,10f5
-|HIID::prefixedBy,f,c,3CBEB7E2034E,Rconst HIID&,const,1d7e,1df9
-|HIID::splitAtSlash,f,b,3CAD7B2901CA,A,1245,13b3
-|HIID::subId,f,b,3C55695F00CC,Nint,int,const,778,8d0
-|HIID::subsetOf,f,b,3C99A0400186,Rconst HIID&,const,b5e,ea1
-|HIID::toString,f,b,3C0F8BD5004F,Fconst,13b7,15f8
-|HIID::unpack,f,b,3C970F91006F,Tconst void*,size_t,,1795,1917
+|HIID,t,c,3BE96FE601C5,A,4ec,17ab
+|HIID::HIID,f,b,,Qconst void*,int,,3f4,463
+|HIID::HIID,f,c,3BE9774C003C,A,1f26,1f67
+|HIID::HIID,f,c,3C5E7527020F,JAtomicID,,1f6b,1fd7
+|HIID::HIID,f,c,3C6141BA03B4,Oconst string&,,1fdb,2033
+|HIID::HIID,f,c,3C556A470346,Mconst char*,,2037,209c
+|HIID::HIID,f,c,,GIn,In,,2371,23e2
+|HIID::add,f,b,3BE977510397,Mconst HIID&,,467,570
+|HIID::add,f,c,3BE97792003D,JAtomicID,,2121,218b
+|HIID::addString,f,b,3DB9348C0305,Oconst string&,,1703,1a66
+|HIID::findFirstSlash,f,b,3C7A1B6500C9,Fconst,d5a,e26
+|HIID::length,f,c,3C1A187E018C,Fconst,218f,21e1
+|HIID::matches,f,b,3BE9792B0135,Rconst HIID&,const,664,906
+|HIID::operator <,f,b,3DB9348B01E2,Rconst HIID&,const,14be,1700
+|HIID::operator |=,f,c,3DB934890383,Mconst HIID&,,19cc,1a33
+|HIID::operator |=,f,c,3DB9348B0051,Mconst char*,,1a37,1aa4
+|HIID::operator |=,f,c,3DB9348A0118,JAtomicID,,1aa8,1b08
+|HIID::operator |=,f,c,3DB9348A029E,Eint,,1b0c,1b71
+|HIID::operator!=,f,c,3DB9348901D5,Rconst HIID&,const,20a2,2119
+|HIID::operator==,f,b,3DB9348803AA,Rconst HIID&,const,1389,14bc
+|HIID::pack,f,b,3C5912FE0134,Tvoid*,size_t&,const,1129,1254
+|HIID::packSize,f,c,3C591278038A,Fconst,230a,236d
+|HIID::popLeadIndex,f,b,3C59522600D6,A,c00,cab
+|HIID::popLeadSlashes,f,c,3C6B9FDD02FD,A,2265,2306
+|HIID::popTrailIndex,f,b,3C6B86D5003A,A,cad,d58
+|HIID::prefixedBy,f,c,3CBEB7E2034E,Rconst HIID&,const,21e5,2261
+|HIID::print,f,b,,Fconst,10e1,1127
+|HIID::splitAtSlash,f,b,3CAD7B2901CA,A,e28,f17
+|HIID::subId,f,b,3C55695F00CC,Nint,int,const,572,662
+|HIID::subsetOf,f,b,3C99A0400186,Rconst HIID&,const,908,bfe
+|HIID::toString,f,b,3C0F8BD5004F,Fconst,f19,10df
+|HIID::unpack,f,b,3C970F91006F,Tconst void*,size_t,,1256,136c
 |HIIDSet,t,e,3BFBAC350085,A,b9,8d7
 |HIIDSet::HIIDSet,f,d,,A,353,5e7
 |HIIDSet::HIIDSet,f,d,3C98D01B036C,Pconst HIIDSet&,,5eb,7d0
@@ -11597,84 +11576,86 @@
 |NCIter::NCIter,f,f,3DB951DE0128,kconst NestableContainer::Hook&,bool,,1b44,1c53
 |NCIter::next,f,f,3DB951DE012D,CT,,1cd4,1d45
 |NCIter::operator =,f,f,3DB951DE012B,CT,,1c5b,1cd0
-|NestableContainer,t,h,3BE97CE100AF,A,6be,963e
-|NestableContainer::ConstHook::ConstHook,f,h,3C87374503C2,lconst NestableContainer&,const HIID&,,966c,979e
-|NestableContainer::ConstHook::ConstHook,f,h,3C87375E01CA,dconst NestableContainer&,int,,97a2,98b8
+|NestableContainer,t,h,3BE97CE100AF,A,687,9585
+|NestableContainer::ConstHook::ConstHook,f,h,3C87374503C2,lconst NestableContainer&,const HIID&,,95b3,96e5
+|NestableContainer::ConstHook::ConstHook,f,h,3C87375E01CA,dconst NestableContainer&,int,,96e9,97ff
 |NestableContainer::ConstHook::_dum_info,f,g,,A,106,14d
 |NestableContainer::ConstHook::_dum_int,f,g,,A,d9,104
-|NestableContainer::ConstHook::actualType,f,h,3C8737F702D8,Fconst,9f14,9fdd
+|NestableContainer::ConstHook::actualType,f,h,3C8737F702D8,Fconst,9e5b,9f24
 |NestableContainer::ConstHook::asNestable,f,g,3DB934A002CB,Yconst void*,TypeId,const,2083,23e8
 |NestableContainer::ConstHook::asNestableWr,f,g,3DB934A200F8,Svoid*,TypeId,const,2414,26be
-|NestableContainer::ConstHook::asRef,f,h,3DB9349E0198,Kbool,const,b732,b8cb
-|NestableContainer::ConstHook::as_vector,f,h,,Fconst,c18a,c262
-|NestableContainer::ConstHook::collapseIndex,f,h,3DB934A30258,dContentInfo&,TypeId,int,const,bb34,bd33
-|NestableContainer::ConstHook::containerType,f,h,3C876AFC0254,Fconst,9fe1,a09e
-|NestableContainer::ConstHook::exists,f,h,3C8737D30041,Fconst,9d56,9dec
+|NestableContainer::ConstHook::asRef,f,h,3DB9349E0198,Kbool,const,b679,b812
+|NestableContainer::ConstHook::as_vector,f,h,,Fconst,c0d1,c1a9
+|NestableContainer::ConstHook::collapseIndex,f,h,3DB934A30258,dContentInfo&,TypeId,int,const,ba7b,bc7a
+|NestableContainer::ConstHook::containerType,f,h,3C876AFC0254,Fconst,9f28,9fe5
+|NestableContainer::ConstHook::exists,f,h,3C8737D30041,Fconst,9c9d,9d33
 |NestableContainer::ConstHook::get_address,f,g,3DB934A90100,0QContentInfo&,TypeId,bool,bool,const void*,Thread::Mutex::Lock*,const,2c6c,3331
-|NestableContainer::ConstHook::get_pointer,f,h,3DB934AC03C2,0Iint&,TypeId,bool,bool,const void*,Thread::Mutex::Lock*,const,b92e,bae8
+|NestableContainer::ConstHook::get_pointer,f,h,3DB934AC03C2,0Iint&,TypeId,bool,bool,const void*,Thread::Mutex::Lock*,const,b875,ba2f
 |NestableContainer::ConstHook::get_scalar,f,g,3DB934A603C2,Xvoid*,TypeId,bool,const,2704,2bf4
-|NestableContainer::ConstHook::isContainer,f,h,3C873800017C,Fconst,a0a2,a11d
-|NestableContainer::ConstHook::isRef,f,h,3C876FF50114,Fconst,a121,a1e9
-|NestableContainer::ConstHook::nextIndex,f,h,3DB934A50226,Fconst,bdc3,bf32
-|NestableContainer::ConstHook::nextNC,f,h,3DB934A60032,econst NestableContainer*,const,bf81,c0b5
-|NestableContainer::ConstHook::operator &,f,h,3C87364902B3,Fconst,9c76,9d52
-|NestableContainer::ConstHook::operator [],f,h,3C87377803A8,Rconst HIID&,const,98c0,9b80
-|NestableContainer::ConstHook::operator [],f,h,3C8737C80081,Jint,const,9b84,9c72
-|NestableContainer::ConstHook::ref,f,h,3C87703E03D6,Fconst,a29f,a32e
+|NestableContainer::ConstHook::isContainer,f,h,3C873800017C,Fconst,9fe9,a064
+|NestableContainer::ConstHook::isRef,f,h,3C876FF50114,Fconst,a068,a130
+|NestableContainer::ConstHook::nextIndex,f,h,3DB934A50226,Fconst,bd0a,be79
+|NestableContainer::ConstHook::nextNC,f,h,3DB934A60032,econst NestableContainer*,const,bec8,bffc
+|NestableContainer::ConstHook::operator &,f,h,3C87364902B3,Fconst,9bbd,9c99
+|NestableContainer::ConstHook::operator [],f,h,3C87377803A8,Rconst HIID&,const,9807,9ac7
+|NestableContainer::ConstHook::operator [],f,h,3C8737C80081,Jint,const,9acb,9bb9
+|NestableContainer::ConstHook::ref,f,h,3C87703E03D6,Fconst,a1e6,a275
 |NestableContainer::ConstHook::sdebug,f,g,3DB9349A0087,jint,const string&,const char*,const,5c02,5d7b
 |NestableContainer::ConstHook::size,f,g,,MTypeId,const,155,302
-|NestableContainer::ConstHook::size,f,h,3CAAE98D037C,Rint&,TypeId,const,a1ed,a29b
-|NestableContainer::ConstHook::type,f,h,3C8737E002A3,Fconst,9df0,9f10
-|NestableContainer::Hook::Hook,f,h,3C8739B50153,jNestableContainer&,const HIID&,int,,a357,a41c
-|NestableContainer::Hook::Hook,f,h,3C8739B5015E,bNestableContainer&,int,int,,a420,a4c9
+|NestableContainer::ConstHook::size,f,h,3CAAE98D037C,Rint&,TypeId,const,a134,a1e2
+|NestableContainer::ConstHook::type,f,h,3C8737E002A3,Fconst,9d37,9e57
+|NestableContainer::Hook::Hook,f,h,3C8739B50153,jNestableContainer&,const HIID&,int,,a29e,a363
+|NestableContainer::Hook::Hook,f,h,3C8739B5015E,bNestableContainer&,int,int,,a367,a410
 |NestableContainer::Hook::assign_arrayable,f,g,,Wconst vector<T>&,const,488f,50b1
 |NestableContainer::Hook::assign_object,f,g,3DB934C30364,hBlockableObject*,TypeId,int,const,3d27,3e82
-|NestableContainer::Hook::assign_object,f,h,3DB934C600BA,nconst BlockableObject*,TypeId,int,const,c2b7,c3fb
+|NestableContainer::Hook::assign_object,f,h,3DB934C600BA,nconst BlockableObject*,TypeId,int,const,c1fe,c342
 |NestableContainer::Hook::assign_objref,f,g,3DB934C801DF,Xconst ObjRef&,int,const,3eb1,40bc
 |NestableContainer::Hook::assign_vector,f,g,,dconst vector<T>&,TypeId,const,5535,5684
 |NestableContainer::Hook::detach,f,g,3C876E140018,NObjRef*,const,ddd,1068
 |NestableContainer::Hook::init,f,g,3C8739B5017B,MTypeId,const,7f9,962
 |NestableContainer::Hook::isWritable,f,g,3C87665E0178,Fconst,322,7f5
-|NestableContainer::Hook::operator &,f,h,3C8739B50176,Fconst,a635,a6d5
-|NestableContainer::Hook::operator <<=,f,h,3C873AB8008D,Tconst ObjRef&,const,a9aa,aa3d
-|NestableContainer::Hook::operator <<=,f,h,3C87864D031A,WBlockableObject*,const,aa41,aaed
-|NestableContainer::Hook::operator <<=,f,h,3C8786A30223,cconst BlockableObject*,const,aaf1,aba6
-|NestableContainer::Hook::operator =,f,h,3DB934CF0101,Tconst ObjRef&,const,a820,a90c
-|NestableContainer::Hook::operator =,f,h,,econst blitz::Array<T,N>&,const,c416,c76a
-|NestableContainer::Hook::operator [],f,h,3C8739B50167,Rconst HIID&,const,a4d1,a585
-|NestableContainer::Hook::operator [],f,h,3C8739B50174,Jint,const,a589,a631
+|NestableContainer::Hook::operator &,f,h,3C8739B50176,Fconst,a57c,a61c
+|NestableContainer::Hook::operator <<=,f,h,3C873AB8008D,Tconst ObjRef&,const,a8f1,a984
+|NestableContainer::Hook::operator <<=,f,h,3C87864D031A,WBlockableObject*,const,a988,aa34
+|NestableContainer::Hook::operator <<=,f,h,3C8786A30223,cconst BlockableObject*,const,aa38,aaed
+|NestableContainer::Hook::operator <<=,f,h,,aconst CountedRef<T>&,const,c585,c844
+|NestableContainer::Hook::operator =,f,h,3DB934CF0101,Tconst ObjRef&,const,a767,a853
+|NestableContainer::Hook::operator =,f,h,,aconst CountedRef<T>&,const,c346,c581
+|NestableContainer::Hook::operator =,f,h,,econst blitz::Array<T,N>&,const,c863,cbb7
+|NestableContainer::Hook::operator [],f,h,3C8739B50167,Rconst HIID&,const,a418,a4cc
+|NestableContainer::Hook::operator [],f,h,3C8739B50174,Jint,const,a4d0,a578
 |NestableContainer::Hook::prepare_assign_array,f,g,,hbool&,TypeId,const LoShape&,const,4142,4790
 |NestableContainer::Hook::prepare_put,f,g,3DB934C00071,ZContentInfo&,TypeId,const,354c,3ac7
 |NestableContainer::Hook::prepare_vector,f,g,3DB934CA0142,QTypeId,int,const,512e,552f
 |NestableContainer::Hook::privatize,f,g,3C8739B5017C,Jint,const,966,b3c
-|NestableContainer::Hook::put,f,h,3C873AE302FC,aBlockableObject&,int,const,abaa,ac75
-|NestableContainer::Hook::put,f,h,3C873B8F01C2,gconst BlockableObject&,int,const,ac79,ad4a
-|NestableContainer::Hook::put,f,h,3C873B980248,Xconst ObjRef&,int,const,ad4e,ae04
+|NestableContainer::Hook::put,f,h,3C873AE302FC,aBlockableObject&,int,const,aaf1,abbc
+|NestableContainer::Hook::put,f,h,3C873B8F01C2,gconst BlockableObject&,int,const,abc0,ac91
+|NestableContainer::Hook::put,f,h,3C873B980248,Xconst ObjRef&,int,const,ac95,ad4b
 |NestableContainer::Hook::put_scalar,f,g,3DB934C102D5,fconst void*,TypeId,size_t,const,3b0b,3cf8
-|NestableContainer::Hook::ref,f,h,3C8770A70215,Jint,const,ae08,ae93
+|NestableContainer::Hook::ref,f,h,3C8770A70215,Jint,const,ad4f,adda
 |NestableContainer::Hook::remove,f,g,3C876DCE0266,Fconst,b40,dd9
-|NestableContainer::Hook::size,f,h,3CAB0A3500AC,MTypeId,const,a6d9,a754
-|NestableContainer::Hook::size,f,h,3CAAE9BB0332,Rint&,TypeId,const,a758,a807
-|NestableContainer::NestableContainer,f,h,3C7F928D00C0,Fbool,,aeb6,af23
+|NestableContainer::Hook::size,f,h,3CAB0A3500AC,MTypeId,const,a620,a69b
+|NestableContainer::Hook::size,f,h,3CAAE9BB0332,Rint&,TypeId,const,a69f,a74e
+|NestableContainer::NestableContainer,f,h,3C7F928D00C0,Fbool,,adfd,ae6a
 |NestableContainer::clearSelection,f,g,3BFBDC0D025A,A,1e93,1f6b
-|NestableContainer::getn,f,h,3C7A13C90269,hint,ContentInfo&,TypeId,int,const,af2b,afe1
-|NestableContainer::insertn,f,h,3C7A140A003C,Tint,TypeId,TypeId&,,afe5,b07b
-|NestableContainer::isNestable,f,h,3BFCD8180044,Fconst,b499,b4fd
-|NestableContainer::isNestable,f,h,3C5551E201AE,HTypeId,,b501,b575
-|NestableContainer::isWritable,f,h,3DB934D201C2,Fconst,b5ea,b650
-|NestableContainer::mutex,f,h,3DB934E10329,Fconst,b668,b6d7
-|NestableContainer::operator [],f,h,3C8742310264,Rconst HIID&,const,b1ef,b287
-|NestableContainer::operator [],f,h,3C874250006A,Jint,const,b28b,b321
-|NestableContainer::operator [],f,h,3C874267026C,Mconst HIID&,,b325,b3dc
-|NestableContainer::operator [],f,h,3C874251027E,Eint,,b3e0,b495
-|NestableContainer::remove,f,h,3C87752F031F,Mconst HIID&,,b07f,b117
-|NestableContainer::removen,f,h,3C87753803B8,Eint,,b11b,b184
+|NestableContainer::getn,f,h,3C7A13C90269,hint,ContentInfo&,TypeId,int,const,ae72,af28
+|NestableContainer::insertn,f,h,3C7A140A003C,Tint,TypeId,TypeId&,,af2c,afc2
+|NestableContainer::isNestable,f,h,3BFCD8180044,Fconst,b3e0,b444
+|NestableContainer::isNestable,f,h,3C5551E201AE,HTypeId,,b448,b4bc
+|NestableContainer::isWritable,f,h,3DB934D201C2,Fconst,b531,b597
+|NestableContainer::mutex,f,h,3DB934E10329,Fconst,b5af,b61e
+|NestableContainer::operator [],f,h,3C8742310264,Rconst HIID&,const,b136,b1ce
+|NestableContainer::operator [],f,h,3C874250006A,Jint,const,b1d2,b268
+|NestableContainer::operator [],f,h,3C874267026C,Mconst HIID&,,b26c,b323
+|NestableContainer::operator [],f,h,3C874251027E,Eint,,b327,b3dc
+|NestableContainer::remove,f,h,3C87752F031F,Mconst HIID&,,afc6,b05e
+|NestableContainer::removen,f,h,3C87753803B8,Eint,,b062,b0cb
 |NestableContainer::select,f,g,3BE982760231,Pconst HIIDSet&,,1daf,1e8f
 |NestableContainer::selectionToBlock,f,g,3BFBDC1D028F,KBlockSet&,,1f6f,2063
 |NestableContainer::setBranch,f,g,3CB2B438020F,Qconst HIID&,int,,1088,1dab
-|NestableContainer::setWritable,f,h,3C9AEE7C01BD,Fbool,,b579,b5e6
-|NestableContainer::type,f,h,3C7A1552012E,Fconst,b188,b1eb
-|ObjRef,t,I,3DB963E102B7,A,ebe,efb
+|NestableContainer::setWritable,f,h,3C9AEE7C01BD,Fbool,,b4c0,b52d
+|NestableContainer::type,f,h,3C7A1552012E,Fconst,b0cf,b132
+|ObjRef,t,I,3DB963E102B7,A,1319,1357
 |Packer,t,i,3CA2EF59021E,A,d1,6a6
 |Packer::binary,f,i,3DB934E3035F,A,2105,2167
 |Packer::pack,f,i,3CA2F01D003F,Xconst T&,void*,size_t&,,1f50,1fec
@@ -11684,15 +11665,15 @@
 |Packer::unpack,f,i,3CA2F0240180,WT&,const void*,size_t,,1ff0,2080
 |Packer::unpack,f,i,,bstring&,const void*,size_t,,2955,29dc
 |Registrar,t,j,3C5E8E9D011D,A,1344,1528
-|Registrar::Registrar,f,B,,Zconst int&,const string&,,9b4,a5d
 |Registrar::Registrar,f,j,3DB934E303D6,Wconst Key&,const Val&,,20ff,21d8
+|Registrar::Registrar,f,B,,Zconst int&,const string&,,8ad,956
 |SeqPacker,t,i,3CA2F25D0160,A,6aa,ad6
 |SeqPacker::binary,f,i,3DB934E400C0,A,33f0,346f
 |SeqPacker::pack,f,i,3CA2F2A9034A,Zconst Seq&,void*,size_t&,,2a78,2e4a
 |SeqPacker::packSize,f,i,3CA2F327003E,Lconst Seq&,,31e8,33ec
 |SeqPacker::unpack,f,i,3CA2F2C3006C,YSeq&,const void*,size_t,,2e4e,31e4
-|SingularRefTarget,t,Q,3C8CDBB901EB,A,1469,1a50
-|SingularRefTarget::clone,f,Q,3C8CDBF40236,Nint,int,const,1b0d,1b9c
+|SingularRefTarget,t,Q,3C8CDBB901EB,A,19a2,1f89
+|SingularRefTarget::clone,f,Q,3C8CDBF40236,Nint,int,const,20ad,213c
 |SmartBlock,t,l,3BEAACAB0041,A,12f,101b
 |SmartBlock::SmartBlock,f,k,3BEBD44D0103,A,0,c7
 |SmartBlock::SmartBlock,f,k,3BFE299902D7,Rvoid*,size_t,int,,c9,1bd
@@ -11760,7 +11741,7 @@
 |UniRegistry::add,f,j,3C5A72C7006A,Wconst Key&,const Val&,,1760,1959
 |UniRegistry::find,f,j,3C5A7307013F,Lconst Key&,,195d,1aac
 |UniRegistry::~UniRegistry,f,j,3DB934FD0326,A,16d8,1758
-|Vector_AtomicID,t,c,3C55652D01B8,A,d3,116
+|Vector_AtomicID,t,c,3C55652D01B8,A,4a1,4e8
 |dcomplex,t,o,3DB9343E03CB,A,360,39a
 |fcomplex,t,o,3DB9343F0015,A,326,35f
 |ldouble,t,o,3DB9343F0051,A,2f0,325
@@ -12441,63 +12422,7 @@
 		    (object Attribute
 			tool       	"Cplusplus"
 			name       	"CodeItemsEncoding"
-			value      	(value Text 
-|v3:DataTable,t,J,3DB95AB40235,A,3c3,3f8
-|DataTableRow,t,J,3DB95AB4023E,A,3f9,432
-|MSFiller,t,C,3CEA4A9E0070,A,b8,a96
-|MSFiller::MSFiller,f,B,3CEB5F5A027D,gconst string&,const DataRecord&,,edc,1169
-|MSFiller::addChunk,f,B,3CEB5E3E00C6,Sconst DataRecord&,,1cf2,2e4c
-|MSFiller::allocateDDI,f,B,3DB9388102D7,Xint,const vector<int>&,,30cb,36c5
-|MSFiller::close,f,B,3CECBBD102DA,A,2f14,30ab
-|MSFiller::create,f,B,3CEA4AFB02B9,gconst string&,const DataRecord&,,129e,1b48
-|MSFiller::endSegment,f,B,3CEB5E4F01CF,A,2e50,2f10
-|MSFiller::fillAntenna,f,B,3DB938820075,Sconst DataRecord&,,36c9,3adc
-|MSFiller::fillFeed,f,B,3DB9388201A2,Sconst DataRecord&,,4993,4fc7
-|MSFiller::fillField,f,B,3DB9388300D1,Sconst DataRecord&,,4558,498f
-|MSFiller::fillSource,f,B,3DB938820379,Sconst DataRecord&,,3ae0,3f7a
-|MSFiller::fillSpectralWindow,f,B,3DB938830225,Sconst DataRecord&,,3f7e,4554
-|MSFiller::startSegment,f,B,3CEB5AA201D5,Sconst DataRecord&,,1b4c,1cee
-|MSFiller::~MSFiller,f,B,3DB9387F02EB,A,116f,1296
-|MSFillerWP,t,E,3CEA38B303B4,A,d9,5c0
-|MSFillerWP::MSFillerWP,f,D,3DB93884015F,A,0,62e
-|MSFillerWP::init,f,D,3CEA38C50374,A,cef,e76
-|MSFillerWP::receive,f,D,3CEA38CD00E0,MMessageRef&,,e7a,1893
-|MSFillerWP::setChunk,f,D,3CF60D5602F0,Mconst HIID&,,9aa,ada
-|MSFillerWP::setFooter,f,D,3CF6215402A9,Mconst HIID&,,ade,c14
-|MSFillerWP::setHeader,f,D,3CEA38D802A9,Mconst HIID&,,6f9,84e
-|MSFillerWP::setMSName,f,D,3CF60D670394,Oconst string&,,c18,ceb
-|MSFillerWP::setSegmentHeader,f,D,3CF60D490192,Mconst HIID&,,852,9a6
-|MSFillerWP::~MSFillerWP,f,D,3DB938840187,A,634,6f1
-|MSIntegratorWP,t,G,3CD133700076,A,198,b4d
-|MSIntegratorWP::MSIntegratorWP,f,F,3CD781CA01B8,fstring,const HIID&,int,int,int,,5ae,a49
-|MSIntegratorWP::finishIntegration,f,F,3DB9388E0005,Fbool,,2f87,37fa
-|MSIntegratorWP::init,f,F,3CD133A303B9,A,b2c,daf
-|MSIntegratorWP::initMS,f,F,3DB9388C02FB,fconst Message&,MeasurementSet&,,14d1,1e43
-|MSIntegratorWP::initSegment,f,F,3DB9388D01F8,WROVisibilityIterator&,,1e82,2f24
-|MSIntegratorWP::integrate,f,F,3DB9388E020E,hROVisibilityIterator&,VisBuffer&,,3828,45b4
-|MSIntegratorWP::receive,f,F,3CD133AB011C,MMessageRef&,,e7b,14b1
-|MSIntegratorWP::start,f,F,3CD1339B0349,A,db3,e77
-|MSIntegratorWP::~MSIntegratorWP,f,F,3DB9388B0277,A,a4f,b24
-|MSReader,t,I,3CF237080203,A,a1,4d2
-|MSReader::MSReader,f,H,3CF237080217,A,416,628
-|MSReader::MSReader,f,H,3DB9388F01AB,Wconst MeasurementSet&,,62c,7f3
-|MSReader::attach,f,H,3CF4A1F100DC,Wconst MeasurementSet&,,8b2,9a3
-|MSReader::makeHeader,f,H,3CF4AC140048,MDataRecord&,,9a7,af7
-|MSReader::readAntenna,f,H,3DB9388F02A5,MDataRecord&,,d81,10d3
-|MSReader::readFeed,f,H,3DB9389000E4,MDataRecord&,,2284,284a
-|MSReader::readField,f,H,3DB93890003A,MDataRecord&,,1ee2,2280
-|MSReader::readSource,f,H,3DB9388F031D,MDataRecord&,,10d7,14ff
-|MSReader::readSpectralWindow,f,H,3DB9388F0396,MDataRecord&,,1780,1c91
-|MSReader::~MSReader,f,H,3DB9388F01DD,A,7f9,8aa
-|Optional,t,B,3DB95AB4027C,A,bff,ed8
-|UVSorterWP,t,L,3CD79D3D0227,A,b1,6a8
-|UVSorterWP::UVSorterWP,f,K,3CD7CF6E020D,Iint,int,,449,6e3
-|UVSorterWP::init,f,K,3CD79D680391,A,7ae,a45
-|UVSorterWP::receive,f,K,3CD79D7301B7,MMessageRef&,,a49,28a6
-|UVSorterWP::~UVSorterWP,f,K,3DB93892008E,A,6e9,7a6
-|Virtual,t,B,3DB95AB40296,A,827,b80
-|
-			)))
+			value      	"v3:"))
 		quid       	"3DB9387B01ED"
 		stereotype 	""
 		language   	"ANSI C++")
@@ -12532,7 +12457,7 @@
 |NVisCubeSet.cc,3df9fdd5,A
 |MVisCubeSet.h,3df9ffbc,A
 |KVisTile.cc,3dfa05c4,A
-|JVisTile.h,3dfa0040,A
+|JVisTile.h,3dff2696,A
 |
 			))
 		    (object Attribute
@@ -12665,7 +12590,7 @@
 |TableTile::toBlock,f,F,3DB964F40126,PBlockSet&,const,23bf,24d1
 |TableTile::wpdata,f,F,3DB964F4007A,A,1b4d,1c5e
 |TableTile::~TableTile,f,F,3DB964F4003E,A,1784,183c
-|VDSID,t,O,3DB964F20079,A,402,6c6
+|VDSID,t,O,3DB964F20079,A,529,a56
 |VDSID::VDSID,f,N,3DB964F40176,Mint,int,int,,7c,116
 |VDSID::VDSID,f,N,3DB964F40177,Mconst HIID&,,11a,1a3
 |VisCube,t,K,3DB964F200B3,A,130,82c2
@@ -12777,7 +12702,7 @@
 |VisCubeSet::setWritable,f,L,3DC675980286,Fbool,,4b5,6ad
 |VisCubeSet::toBlock,f,L,3DC672EB001E,PBlockSet&,const,1158,13d1
 |VisCubeSet::~VisCubeSet,f,L,3DB964F401FB,A,13f,175
-|VisTile,t,O,3DB964F200EE,A,6cc,652e
+|VisTile,t,O,3DB964F200EE,A,a5c,67b5
 |VisTile::ConstIterator::ConstIterator,f,N,3DB964F701E6,A,1d0,221
 |VisTile::ConstIterator::ConstIterator,f,N,,econst VisTile::ConstIterator&,,223,286
 |VisTile::ConstIterator::ConstIterator,f,N,3DB964F70241,Pconst VisTile&,,288,2f0
@@ -12785,14 +12710,14 @@
 |VisTile::ConstIterator::attach,f,N,3DB964F70322,Pconst VisTile&,,59c,675
 |VisTile::ConstIterator::attach,f,N,3DB964F70368,Sconst VisTileRef&,,677,76e
 |VisTile::ConstIterator::detach,f,N,3DB964F80132,A,78b,805
-|VisTile::ConstIterator::end,f,O,3DB964F800F1,Fconst,67ab,681f
-|VisTile::ConstIterator::next,f,O,3DB964F8010A,A,6823,6889
-|VisTile::ConstIterator::operator !=,f,O,3DD25CB20000,Vconst ConstIterator&,,660d,669a
-|VisTile::ConstIterator::operator ++,f,O,3DD25CC20012,A,669e,671f
-|VisTile::ConstIterator::operator ++,f,O,3DD25CD90071,Eint,,6723,67a7
-|VisTile::ConstIterator::operator ==,f,O,3DD25CA501CD,Vconst ConstIterator&,,6536,6609
+|VisTile::ConstIterator::end,f,O,3DB964F800F1,Fconst,6a32,6aa6
+|VisTile::ConstIterator::next,f,O,3DB964F8010A,A,6aaa,6b10
+|VisTile::ConstIterator::operator !=,f,O,3DD25CB20000,Vconst ConstIterator&,,6894,6921
+|VisTile::ConstIterator::operator ++,f,O,3DD25CC20012,A,6925,69a6
+|VisTile::ConstIterator::operator ++,f,O,3DD25CD90071,Eint,,69aa,6a2e
+|VisTile::ConstIterator::operator ==,f,O,3DD25CA501CD,Vconst ConstIterator&,,67bd,6890
 |VisTile::ConstIterator::operator=,f,N,3DB964F702D0,econst VisTile::ConstIterator&,,35d,4fe
-|VisTile::ConstIterator::reset,f,O,3DB964F8011E,A,688d,68e7
+|VisTile::ConstIterator::reset,f,O,3DB964F8011E,A,6b14,6b6e
 |VisTile::ConstIterator::sdebug,f,N,3DD3CB0003D0,jint,const string&,const char*,const,1de0,2101
 |VisTile::ConstIterator::~ConstIterator,f,N,3DF9FDD2025D,A,500,59a
 |VisTile::Iterator::Iterator,f,N,3DB964F8019C,A,808,856
@@ -12809,21 +12734,21 @@
 |VisTile::VisTile,f,N,3DB964F900E4,econst VisTile&,const VisTile&,,dac,ed0
 |VisTile::addRows,f,N,3DB964F90184,Eint,,188a,194c
 |VisTile::applyFormat,f,N,3DB964F9013F,Rconst FormatRef&,,1498,1545
-|VisTile::begin,f,O,3DD2594A034B,Jint,const,6aba,6b68
-|VisTile::begin,f,O,3DD25962035B,Eint,,6b6c,6c3a
+|VisTile::begin,f,O,3DD2594A034B,Jint,const,6d41,6def
+|VisTile::begin,f,O,3DD25962035B,Eint,,6df3,6ec1
 |VisTile::changeFormat,f,N,3DB964F90147,Rconst FormatRef&,,1547,15f6
 |VisTile::clone,f,N,3DB964F901D6,Nint,int,const,1a1d,1aa0
 |VisTile::copy,f,N,3DB964F9014F,bint,const VisTile&,int,int,,15f8,1888
-|VisTile::copy,f,O,3DB964F9016D,Xconst VisTile&,int,int,,6916,699c
-|VisTile::end,f,O,3DD2598802C0,Fconst,6c3e,6cfa
+|VisTile::copy,f,O,3DB964F9016D,Xconst VisTile&,int,int,,6b9d,6c23
+|VisTile::end,f,O,3DD2598802C0,Fconst,6ec5,6f81
 |VisTile::fromBlock,f,N,3DB964F901CD,KBlockSet&,,194e,1a1b
 |VisTile::init,f,N,3DB964F90117,Mint,int,int,,11ae,127d
 |VisTile::init,f,N,3DB964F9012E,Vconst FormatRef&,int,,127f,1405
 |VisTile::initArrays,f,N,3DB964F901F6,A,1abd,1d22
 |VisTile::makeDefaultFormat,f,N,3DB964F90100,QFormat&,int,int,,103a,11ac
-|VisTile::ncorr,f,O,3DB964F901E6,Fconst,69f8,6a4c
-|VisTile::nfreq,f,O,3DB964F901E8,Fconst,6a50,6aa4
-|VisTile::ntime,f,O,3DB964F9018D,Fconst,69a0,69f4
+|VisTile::ncorr,f,O,3DB964F901E6,Fconst,6c7f,6cd3
+|VisTile::nfreq,f,O,3DB964F901E8,Fconst,6cd7,6d2b
+|VisTile::ntime,f,O,3DB964F9018D,Fconst,6c27,6c7b
 |VisTile::operator=,f,N,3DB964F900F7,Pconst VisTile&,,f06,1036
 |VisTile::reset,f,N,3DB964F9013E,A,1407,1496
 |VisTile::sdebug,f,N,3DD3C6CB02E9,jint,const string&,const char*,const,1d24,1dd9
@@ -12857,13 +12782,24 @@
 			tool       	"Cplusplus"
 			name       	"FilesEncoding"
 			value      	(value Text 
-|v1:XAppAgent/src/AppAgent.h,3dfdff37,A
-|hMSVisAgent/src/MSVisInputAgent.cc,3dfdfc07,A
-|gMSVisAgent/src/MSVisInputAgent.h,3dfe061c,A
+|v1:XAppAgent/src/AppAgent.h,3e00afb3,A
+|fAppAgent/src/AppControlAgent.cc,3dff30a1,A
+|eAppAgent/src/AppControlAgent.h,3dff3601,A
+|hMSVisAgent/src/MSVisInputAgent.cc,3e01ec81,A
+|gMSVisAgent/src/MSVisInputAgent.h,3e01ebe6,A
 |ZOctoAgent/src/OctoAgent.h,3df9fed0,A
-|hVisAgent/src/VisFileInputAgent.cc,3dfdfc07,A
-|gVisAgent/src/VisFileInputAgent.h,3dfe0349,A
-|cVisAgent/src/VisInputAgent.h,3dfe02eb,A
+|YSolver/src/BaseSolver.cc,3e00be5b,A
+|XSolver/src/BaseSolver.h,3e00c7dd,A
+|ZSolver/src/DummySolver.cc,3e0207bd,A
+|YSolver/src/DummySolver.h,3e00b211,A
+|fSolverControl/src/BatchAgent.cc,3e0201d4,A
+|eSolverControl/src/BatchAgent.h,3e0201e0,A
+|nSolverControl/src/SolverControlAgent.cc,3e0203d5,A
+|mSolverControl/src/SolverControlAgent.h,3e0207a7,A
+|hVisAgent/src/VisFileInputAgent.cc,3dfdfc83,A
+|gVisAgent/src/VisFileInputAgent.h,3e00aa52,A
+|cVisAgent/src/VisInputAgent.h,3e00aa52,A
+|dVisAgent/src/VisOutputAgent.h,3e00b985,A
 |
 			))
 		    (object Attribute
@@ -12893,29 +12829,68 @@
 			tool       	"Cplusplus"
 			name       	"CodeItemsEncoding"
 			value      	(value Text 
-|v3:AppAgent,t,B,3DF9FEEC0043,A,49d,ddc
-|MSVisInputAgent,t,D,3DF9FECD013C,A,970,1891
-|MSVisInputAgent::MSVisInputAgent,f,C,3DF9FECD0219,A,83e,8a7
-|MSVisInputAgent::close,f,C,3DF9FECD0244,A,1c55,1d25
-|MSVisInputAgent::fillHeader,f,C,3DF9FECD0285,eDataRecord&,const DataRecord&,,8ad,1167
-|MSVisInputAgent::getNextTile,f,C,3DF9FECD021B,TVisTile::Ref&,bool,,1d27,2d40
-|MSVisInputAgent::init,f,C,3DF9FECD0235,Xconst DataRecord::Ref&,,17f4,1c52
-|MSVisInputAgent::openMS,f,C,3DF9FECD025E,eDataRecord&,const DataRecord&,,116a,17f2
-|MSVisInputAgent::sdebug,f,C,3DFDFC060373,jint,const string&,const char*,const,2d43,2f7e
-|OctoAgent,t,E,3DF9FECD014B,A,69,52d
-|VisFileInputAgent,t,G,3DF9FECD0159,A,46f,d8e
-|VisFileInputAgent::fileStateString,f,F,3DFDFC07004C,Fconst,8e5,a30
-|VisFileInputAgent::generateEvent,f,F,3DF9FECE024A,Mconst HIID&,,789,814
-|VisFileInputAgent::generateEvent,f,F,3DF9FECE02BA,dconst HIID&,DataRecord::Ref&,,816,8e2
-|VisFileInputAgent::getEvent,f,F,3DF9FECF00DB,cHIID&,DataRecord::Ref&,bool,,da1,f39
-|VisFileInputAgent::getHeader,f,F,3DF9FECE03D1,WDataRecord::Ref&,bool,,5a5,6bd
-|VisFileInputAgent::hasEvent,f,F,3DF9FECF01DA,Rconst HIID&,bool,,f41,1004
-|VisFileInputAgent::hasHeader,f,F,3DF9FECF009D,Fconst,4dc,5a3
-|VisFileInputAgent::hasTile,f,F,3DF9FECF00BF,Fconst,6c0,787
-|VisFileInputAgent::initHeader,f,F,3DF9FECE03AB,A,44a,4da
-|VisFileInputAgent::setErrorState,f,F,3DF9FECE01CA,Oconst string&,,cba,d9f
-|VisFileInputAgent::setFileState,f,F,3DF9FECE0154,KFileState,,a33,cb8
-|VisInputAgent,t,H,3DF9FECD0169,A,64c,1714
+|v3:AppAgent,t,B,3DF9FEEC0043,A,4a0,f80
+|AppControlAgent,t,D,3DFF2FC1009C,A,21e,45b
+|BaseSolver,t,I,3E00AA510095,A,11d,648
+|BaseSolver::BaseSolver,f,H,,zVisInputAgent&,VisOutputAgent&,SolverControlAgent&,,49,fc
+|BaseSolver::init,f,H,,Xconst DataRecord::Ref&,,fe,1a1
+|BaseSolver::sdebug,f,H,,jint,const string&,const char*,const,1a4,410
+|DummySolver,t,K,3E00ACBD03DD,A,99,190
+|DummySolver::DummySolver,f,J,3E00ACF002AB,zVisInputAgent&,VisOutputAgent&,SolverControlAgent&,,1a,b5
+|DummySolver::run,f,J,3E00ACED00BB,A,b9,4df
+|MSVisInputAgent,t,F,3DF9FECD013C,A,962,181f
+|MSVisInputAgent::MSVisInputAgent,f,E,3DF9FECD0219,A,81e,887
+|MSVisInputAgent::close,f,E,3DF9FECD0244,A,1b40,1c3f
+|MSVisInputAgent::fillHeader,f,E,3DF9FECD0285,eDataRecord&,const DataRecord&,,88d,1022
+|MSVisInputAgent::getNextTile,f,E,3DF9FECD021B,TVisTile::Ref&,bool,,1c41,2c5a
+|MSVisInputAgent::init,f,E,3DF9FECD0235,Xconst DataRecord::Ref&,,16a0,1b3d
+|MSVisInputAgent::openMS,f,E,3DF9FECD025E,eDataRecord&,const DataRecord&,,1025,169e
+|MSVisInputAgent::sdebug,f,E,3DFDFC060373,jint,const string&,const char*,const,2c5d,2e98
+|OctoAgent,t,G,3DF9FECD014B,A,69,52d
+|SolverControl::BatchAgent,t,M,3DFF2C0700D8,A,690,dc8
+|SolverControl::BatchAgent::BatchAgent,f,L,3DFF2CCD01A1,A,414,449
+|SolverControl::BatchAgent::close,f,L,3E009B2E01DF,A,ce0,d46
+|SolverControl::BatchAgent::endIteration,f,L,3E0060C50000,Hdouble,,717,980
+|SolverControl::BatchAgent::init,f,L,3E005A8403E5,Xconst DataRecord::Ref&,,44b,715
+|SolverControl::BatchAgent::sdebug,f,L,3E00C7F3027E,jint,const string&,const char*,const,d49,f12
+|SolverControl::BatchAgent::startDomain,f,L,3E01FA8D02FF,Xconst DataRecord::Ref&,,982,a35
+|SolverControl::BatchAgent::startSolution,f,L,3E0098E90136,RDataRecord::Ref&,,a37,cde
+|SolverControl::SolutionState,t,O,3E00AA5100D5,A,c4f,d5a
+|SolverControl::SolverControlAgent,f,I,,A,f3,11b
+|SolverControl::SolverControlAgent,t,O,3DFF2B6D01FF,A,d5d,283b
+|SolverControl::SolverControlAgent::close,f,N,3DFF2D6400EA,A,dad,e6d
+|SolverControl::SolverControlAgent::convergence,f,O,3DFF37F3018B,Fconst,283f,28aa
+|SolverControl::SolverControlAgent::domainNum,f,O,3E01FD0E011A,Fconst,2919,297d
+|SolverControl::SolverControlAgent::endDomain,f,N,3E01F9A302C5,Xconst DataRecord::Ref&,,61d,723
+|SolverControl::SolverControlAgent::endIteration,f,N,3E005C9C0382,Hdouble,,725,87e
+|SolverControl::SolverControlAgent::getEvent,f,N,3DFF2D4C0068,cHIID&,DataRecord::Ref&,bool,,880,aec
+|SolverControl::SolverControlAgent::hasEvent,f,N,3DFF2D5F0008,Rconst HIID&,bool,,aee,d00
+|SolverControl::SolverControlAgent::init,f,N,3E01FD1D03DB,Xconst DataRecord::Ref&,,49a,523
+|SolverControl::SolverControlAgent::initSolution,f,N,3E0095CB0143,Xconst DataRecord::Ref&,,1025,123d
+|SolverControl::SolverControlAgent::iterationNum,f,O,3DFF37F30341,Fconst,28ad,2917
+|SolverControl::SolverControlAgent::mutex,f,O,3DFF5AAE0003,Fconst,297f,29e7
+|SolverControl::SolverControlAgent::postEvent,f,N,3E00C57E0304,jconst HIID&,const DataRecord::Ref&,,d02,daa
+|SolverControl::SolverControlAgent::sdebug,f,N,3E00C8540129,jint,const string&,const char*,const,123f,149e
+|SolverControl::SolverControlAgent::startDomain,f,N,3DFF2D300027,Xconst DataRecord::Ref&,,526,61b
+|SolverControl::SolverControlAgent::state,f,O,,Fconst,2ac8,2b13
+|SolverControl::SolverControlAgent::state,f,O,,OSolutionState,,2b15,2b7c
+|SolverControl::SolverControlAgent::status,f,O,3E005CBB0301,Fconst,29e9,2a5d
+|SolverControl::SolverControlAgent::status,f,O,3E005CCD0018,A,2a5f,2ac6
+|SolverControl::SolverControlAgent::stopSolution,f,N,3DFF5B240397,oconst string&,SolutionState,const HIID&,,e6f,1023
+|VisFileInputAgent,t,Q,3DF9FECD0159,A,47b,d9a
+|VisFileInputAgent::fileStateString,f,P,3DFDFC07004C,Fconst,8f1,a3c
+|VisFileInputAgent::generateEvent,f,P,3DF9FECE024A,Mconst HIID&,,795,820
+|VisFileInputAgent::generateEvent,f,P,3DF9FECE02BA,dconst HIID&,DataRecord::Ref&,,822,8ee
+|VisFileInputAgent::getEvent,f,P,3DF9FECF00DB,cHIID&,DataRecord::Ref&,bool,,dad,f45
+|VisFileInputAgent::getHeader,f,P,3DF9FECE03D1,WDataRecord::Ref&,bool,,5b1,6c9
+|VisFileInputAgent::hasEvent,f,P,3DF9FECF01DA,Rconst HIID&,bool,,f4d,1010
+|VisFileInputAgent::hasHeader,f,P,3DF9FECF009D,Fconst,4e8,5af
+|VisFileInputAgent::hasTile,f,P,3DF9FECF00BF,Fconst,6cc,793
+|VisFileInputAgent::initHeader,f,P,3DF9FECE03AB,A,456,4e6
+|VisFileInputAgent::setErrorState,f,P,3DF9FECE01CA,Oconst string&,,cc6,dab
+|VisFileInputAgent::setFileState,f,P,3DF9FECE0154,KFileState,,a3f,cc4
+|VisInputAgent,t,R,3DF9FECD0169,A,654,1718
+|VisOutputAgent,t,S,3E00AA5100F9,A,a3,146
 |
 			)))
 		quid       	"3DF9FDED0011"
@@ -12929,12 +12904,16 @@
 		realized_interfaces 	(list realize_rel_list
 		    (object Realize_Relationship
 			quid       	"3DFF294300BF"
-			supplier   	"Logical View::AppAgents::VisInputAgent"
+			supplier   	"Logical View::AppAgents::VisAgent::VisInputAgent"
 			quidu      	"3DF9FECD0169")
 		    (object Realize_Relationship
 			quid       	"3DFF294300D6"
 			supplier   	"Logical View::AppAgents::AppAgent"
-			quidu      	"3DF9FEEC0043"))
+			quidu      	"3DF9FEEC0043")
+		    (object Realize_Relationship
+			quid       	"3E00AA9201AF"
+			supplier   	"Logical View::AppAgents::VisAgent::VisOutputAgent"
+			quidu      	"3E00AA5100F9"))
 		language   	"ANSI C++"))
 	physical_presentations 	(list unit_reference_list
 	    (object Module_Diagram "Main"
@@ -12947,8 +12926,8 @@
 		origin_x   	0
 		origin_y   	0
 		items      	(list diagram_item_list
-		    (object ModView "Component View::AppAgent" "NotAModuleType" "NotAModulePart" @546
-			location   	(975, 1065)
+		    (object ModView "Component View::AppAgent" "NotAModuleType" "NotAModulePart" @545
+			location   	(976, 1072)
 			font       	(object Font
 			    size       	10
 			    face       	"arial"
@@ -12959,8 +12938,8 @@
 			    color      	0
 			    default_color 	TRUE)
 			label      	(object ItemLabel
-			    Parent_View 	@546
-			    location   	(940, 1040)
+			    Parent_View 	@545
+			    location   	(941, 1047)
 			    fill_color 	13434879
 			    anchor_loc 	3
 			    nlines     	2
@@ -12974,7 +12953,7 @@
 			autoResize 	TRUE
 			width      	224
 			height     	156)
-		    (object InterfaceView "Logical View::AppAgents::VisInputAgent" @547
+		    (object InterfaceView "Logical View::AppAgents::VisAgent::VisInputAgent" @546
 			location   	(1410, 900)
 			font       	(object Font
 			    size       	10
@@ -12986,7 +12965,7 @@
 			    color      	0
 			    default_color 	TRUE)
 			label      	(object ItemLabel
-			    Parent_View 	@547
+			    Parent_View 	@546
 			    location   	(1409, 1005)
 			    anchor_loc 	1
 			    nlines     	2
@@ -13001,14 +12980,14 @@
 			width      	52
 			height     	52
 			autoResize 	TRUE)
-		    (object RealizeView "" @548
+		    (object RealizeView "" @547
 			stereotype 	TRUE
 			line_color 	3342489
 			quidu      	"3DFF294300BF"
-			client     	@546
-			supplier   	@547
+			client     	@545
+			supplier   	@546
 			line_style 	0)
-		    (object InterfaceView "Logical View::AppAgents::AppAgent" @549
+		    (object InterfaceView "Logical View::AppAgents::AppAgent" @548
 			location   	(1425, 1200)
 			font       	(object Font
 			    size       	10
@@ -13020,7 +12999,7 @@
 			    color      	0
 			    default_color 	TRUE)
 			label      	(object ItemLabel
-			    Parent_View 	@549
+			    Parent_View 	@548
 			    location   	(1424, 1305)
 			    anchor_loc 	1
 			    nlines     	2
@@ -13035,14 +13014,14 @@
 			width      	52
 			height     	52
 			autoResize 	TRUE)
-		    (object RealizeView "" @550
+		    (object RealizeView "" @549
 			stereotype 	TRUE
 			line_color 	3342489
 			quidu      	"3DFF294300D6"
-			client     	@546
-			supplier   	@549
+			client     	@545
+			supplier   	@548
 			line_style 	0)
-		    (object ModView "Component View::Common" "NotAModuleType" "NotAModulePart" @551
+		    (object ModView "Component View::Common" "NotAModuleType" "NotAModulePart" @550
 			location   	(300, 195)
 			font       	(object Font
 			    size       	10
@@ -13054,7 +13033,7 @@
 			    color      	0
 			    default_color 	TRUE)
 			label      	(object ItemLabel
-			    Parent_View 	@551
+			    Parent_View 	@550
 			    location   	(265, 170)
 			    fill_color 	13434879
 			    anchor_loc 	3
@@ -13069,8 +13048,8 @@
 			autoResize 	TRUE
 			width      	224
 			height     	156)
-		    (object ModView "Component View::DMI" "NotAModuleType" "NotAModulePart" @552
-			location   	(960, 210)
+		    (object ModView "Component View::DMI" "NotAModuleType" "NotAModulePart" @551
+			location   	(960, 208)
 			font       	(object Font
 			    size       	10
 			    face       	"arial"
@@ -13081,8 +13060,8 @@
 			    color      	0
 			    default_color 	TRUE)
 			label      	(object ItemLabel
-			    Parent_View 	@552
-			    location   	(925, 185)
+			    Parent_View 	@551
+			    location   	(925, 183)
 			    fill_color 	13434879
 			    anchor_loc 	3
 			    nlines     	2
@@ -13096,7 +13075,7 @@
 			autoResize 	TRUE
 			width      	224
 			height     	156)
-		    (object ModView "Component View::OCTOPUSSY" "NotAModuleType" "NotAModulePart" @553
+		    (object ModView "Component View::OCTOPUSSY" "NotAModuleType" "NotAModulePart" @552
 			location   	(330, 645)
 			font       	(object Font
 			    size       	10
@@ -13108,7 +13087,7 @@
 			    color      	0
 			    default_color 	TRUE)
 			label      	(object ItemLabel
-			    Parent_View 	@553
+			    Parent_View 	@552
 			    location   	(290, 620)
 			    fill_color 	13434879
 			    anchor_loc 	3
@@ -13123,7 +13102,7 @@
 			autoResize 	TRUE
 			width      	262
 			height     	156)
-		    (object ModView "Component View::UVD" "NotAModuleType" "NotAModulePart" @554
+		    (object ModView "Component View::UVD" "NotAModuleType" "NotAModulePart" @553
 			location   	(1815, 1050)
 			font       	(object Font
 			    size       	10
@@ -13135,7 +13114,7 @@
 			    color      	0
 			    default_color 	TRUE)
 			label      	(object ItemLabel
-			    Parent_View 	@554
+			    Parent_View 	@553
 			    location   	(1780, 1025)
 			    fill_color 	13434879
 			    anchor_loc 	3
@@ -13150,7 +13129,7 @@
 			autoResize 	TRUE
 			width      	224
 			height     	156)
-		    (object ModView "Component View::VisCube" "NotAModuleType" "NotAModulePart" @555
+		    (object ModView "Component View::VisCube" "NotAModuleType" "NotAModulePart" @554
 			location   	(735, 660)
 			font       	(object Font
 			    size       	10
@@ -13162,7 +13141,7 @@
 			    color      	0
 			    default_color 	TRUE)
 			label      	(object ItemLabel
-			    Parent_View 	@555
+			    Parent_View 	@554
 			    location   	(700, 635)
 			    fill_color 	13434879
 			    anchor_loc 	3
@@ -13177,46 +13156,80 @@
 			autoResize 	TRUE
 			width      	224
 			height     	156)
-		    (object ModVisView "" @556
+		    (object ModVisView "" @555
 			stereotype 	TRUE
 			line_color 	3342489
 			quidu      	"3DFF297801A8"
-			client     	@555
-			supplier   	@552
+			client     	@554
+			supplier   	@551
 			vertices   	(list Points
-			    (736, 580)
-			    (736, 280)
-			    (845, 280))
+			    (735, 580)
+			    (735, 247)
+			    (844, 247))
 			line_style 	3
-			origin_attachment 	(736, 580)
-			terminal_attachment 	(845, 280))
-		    (object ModVisView "" @557
+			origin_attachment 	(735, 580)
+			terminal_attachment 	(844, 247))
+		    (object ModVisView "" @556
 			stereotype 	TRUE
 			line_color 	3342489
 			quidu      	"3DFF297403D1"
-			client     	@552
-			supplier   	@551
+			client     	@551
+			supplier   	@550
 			line_style 	3
 			origin_attachment 	(846, 202)
 			terminal_attachment 	(412, 202))
-		    (object ModVisView "" @558
+		    (object ModVisView "" @557
 			stereotype 	TRUE
 			line_color 	3342489
 			quidu      	"3DFF2972019A"
-			client     	@553
-			supplier   	@551
+			client     	@552
+			supplier   	@550
 			line_style 	3
 			origin_attachment 	(305, 564)
 			terminal_attachment 	(305, 273))
-		    (object ModVisView "" @559
+		    (object ModVisView "" @558
 			stereotype 	TRUE
 			line_color 	3342489
 			quidu      	"3DFF2989000E"
-			client     	@546
-			supplier   	@552
+			client     	@545
+			supplier   	@551
 			line_style 	3
-			origin_attachment 	(967, 984)
-			terminal_attachment 	(967, 288))))))
+			origin_attachment 	(967, 991)
+			terminal_attachment 	(967, 286))
+		    (object InterfaceView "Logical View::AppAgents::VisAgent::VisOutputAgent" @559
+			location   	(1024, 1472)
+			font       	(object Font
+			    size       	10
+			    face       	"arial"
+			    bold       	FALSE
+			    italics    	FALSE
+			    underline  	FALSE
+			    strike     	FALSE
+			    color      	0
+			    default_color 	TRUE)
+			label      	(object ItemLabel
+			    Parent_View 	@559
+			    location   	(1023, 1577)
+			    anchor_loc 	1
+			    nlines     	2
+			    max_width  	237
+			    justify    	0
+			    label      	"VisOutputAgent")
+			icon       	"Interface"
+			icon_style 	"Icon"
+			line_color 	3342489
+			fill_color 	13434879
+			quidu      	"3E00AA5100F9"
+			width      	52
+			height     	52
+			autoResize 	TRUE)
+		    (object RealizeView "" @560
+			stereotype 	TRUE
+			line_color 	3342489
+			quidu      	"3E00AA9201AF"
+			client     	@545
+			supplier   	@559
+			line_style 	0)))))
     process_structure 	(object Processes
 	quid       	"3BB1F5C80211"
 	ProcsNDevs 	(list
