@@ -28,7 +28,7 @@
 // STL version 3 supplied with gcc-3.1, where it's provided for backwards
 // compatibility.
 // In the STLv3 snapshot we use with gcc-2.95, strstream.h is not available.
-#if !defined(__GLIBCPP__) || __GNUC__ >= 3 && __GNUC_MINOR__ < 3
+#if !defined(__GLIBCPP__) || __GNUC__ >= 3 && __GNUC_MINOR__ <= 1
 #include <strstream.h>
 #endif
 
