@@ -32,6 +32,15 @@ if( has_field(lofar_software,'print_versions') &&
 include 'table.g'
 include 'meq/meqtypes.g'
 
+# -----------------------------------------------------------------------
+# class meptable
+#    This represents a table of MEPs
+#
+# -----------------------------------------------------------------------
+
+#------ meptable constructor
+# Opens table specified by name.
+# If create=T, creates a new table
 const meq.meptable := function (name,create=F)
 {
     self:=[=];
@@ -92,6 +101,8 @@ const meq.meptable := function (name,create=F)
         }
     }
 
+#------ done()
+# closes table
     const public.done := function()
     {
         wider self, public;
@@ -102,6 +113,11 @@ const meq.meptable := function (name,create=F)
         return T;
     }
 
+#------ putdef1()
+# inserts a default entry for parameter parmname, with the polc order
+# explicitly specified as nfreq,ntime.
+# The c00 coeff is set to 'value', and the rest to 0.
+# A scale and a default perturbation may also be specified.
     const public.putdef1 := function (parmname,
                                 value, nfreq, ntime, perturbation=1e-6, 
                                 freq0=0., time0=4.56e9, 
@@ -114,6 +130,11 @@ const meq.meptable := function (name,create=F)
                        freqscale, timescale, trace);
     }
 
+#------ putdef()
+# inserts a default entry for parameter parmname, with the polc order
+# determined by the shape of the 'values' argument.
+# 'values' is a complete set of coeffs.
+# A scale and a default perturbation may also be specified.
     const public.putdef := function (parmname,
                                values=1, perturbation=1e-6, 
                                freq0=0., time0=4.56e9, 
@@ -156,12 +177,21 @@ const meq.meptable := function (name,create=F)
         return T;
     }
 
+#------ put()
+# Writes out a polc for parameter parmname. The components of the polc
+# are specified via the arguments.
+# If rownr is set, overwrites the polc at the specified row. If rownr<0,
+# adds a row to the table (and returns its number via rownr).
+# If uniq=T, ensures that the polc is unique for this parm and domain:
+#   - checks if a polc for the specified domain already exists;
+#   - if it does, checks that row number matches;
+#   - on match, allows an overwrite. No match (incl. rownr<0) -- fails.
     const public.put := function (parmname,
                             freqrange=[1,1e20], timerange=[1,1e20], 
                             values=1, perturbation=1e-6, weight=1,
                             freq0=0., time0=4.56e9, 
                             freqscale=1e6, timescale=1,
-                            ref rownr=-1,trace=T,uniq=T)
+                            ref rownr=-1,uniq=T,trace=T)
     {
         #----------------------------------------------------------------
         funcname := paste('** meptable.put(',parmname,'):');
@@ -221,6 +251,13 @@ const meq.meptable := function (name,create=F)
         return T;
     }
     
+#------ putpolc()
+# Writes out a polc for parameter parmname. The polc is specified as
+# a meq.polc object.
+# If set, the polc's dbid_index field is interpreted just like the rownr 
+# argument to put(). If a new row is assigned, it is written into
+# polc.dbid_index (this is why polc is passed by ref).
+# uniq is interpreted same as for put().
     const public.putpolc := function (parmname,ref polc,uniq=T)
     {
       wider self,public;
@@ -239,6 +276,9 @@ const meq.meptable := function (name,create=F)
                   rownr=polc.dbid_index,uniq=uniq);
     }
     
+#------ getpolcs()
+# Retrieves all the polcs for the specified parameter.
+# Returns a record (used as a vector) of meq.polc objects.
     const public.getpolcs := function (parmname)
     {
       wider self,public;
@@ -259,19 +299,21 @@ const meq.meptable := function (name,create=F)
       rownums := t1.rownumbers(self.tab);
       for( i in 1:t1.nrows() )
       {
-        polcs[i] := meq.polc(t1.getcell('VALUES',i),
-                            domain=meq.domain(df0c[i],df1c[i],dt0c[i],dt1c[i]),
-                            freq0=fq0c[i],time0=tm0c[i],
-                            freqsc=fqsc[i],timesc=tmsc[i],pert=pertc[i],
-                            weight=weightc[i],dbid=rownums[i]);
+        polcs[spaste('#',i)] := 
+            meq.polc(t1.getcell('VALUES',i),
+                     domain=meq.domain(df0c[i],df1c[i],dt0c[i],dt1c[i]),
+                     freq0=fq0c[i],time0=tm0c[i],
+                     freqsc=fqsc[i],timesc=tmsc[i],pert=pertc[i],
+                     weight=weightc[i],dbid=rownums[i]);
       }
+      polcs::dmi_datafield_content_type := 'MeqPolc';
       return polcs;
     }
 
-    # meptable.summary([parmname])
-    #   Provides a summary of MEP table contents.
-    #   If called with no arguments, provides an overall summary.
-    #   If called with parmnames as arguments, summarizes parms.
+#------ summary()
+# Provides a summary of MEP table contents.
+# If called with no arguments, provides an overall summary.
+# If called with parmnames as arguments, summarizes parms.
     const public.summary := function (...)
     {
       wider self,public;
@@ -299,49 +341,16 @@ const meq.meptable := function (name,create=F)
       }
       return T;
     }
-    
-    const self.perturb := function (tab, where, perturbation)
-    {
-        t1 := ref tab;
-        if (where != '') {
-            t1 := tab.query (where);
-        }
-        if (is_fail(t1)) fail;
-        if (t1.nrows() > 0) {
-            for (row in [1:t1.nrows()]) {
-                vals := t1.getcell ('VALUES', row);
-                valp := vals + perturbation;
-                t1.putcell ('VALUES', row, valp);
-            }
-        }
-        if (where != '') {
-            t1.close();
-        }
-        return T;
-    }
 
-    const public.perturb := function (where='', perturbation=1e-6,
-                                trace=F)
-    {
-        #----------------------------------------------------------------
-        funcname := paste('** meptable.perturb(',where,'):');
-        input := [where=where,
-                  perturbation=perturbation, pertrelative=pertrelative];
-        if (trace) print funcname,' input=',input;
-        #----------------------------------------------------------------
-
-        if (is_record(self.dtab)) {
-            self.perturb(self.dtab, where, perturbation, pertrelative);
-        }
-        self.perturb(self.tab, where, perturbation, pertrelative);
-        return T;
-    }
-
+#------ table()
+# Returns a ref to the internal main table object
     const public.table := function()
     {
         return ref self.tab;
     }
 
+#------ deftable()
+# Returns a ref to the internal defaultvalues subtable object
     const public.deftable := function()
     {
         return ref self.dtab;
