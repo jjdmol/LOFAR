@@ -178,7 +178,7 @@ void doIt (const string& in, const string& out)
   cout << "      " << nfreq << " frequency channels" << endl;
   cout << "      " << a1.nelements() << " baselines" << endl;
   cout << "      " << tim2.nelements() << " times" << endl;
-  cout << " into file " << out << " (.dat and .des)" << endl;
+  cout << " into file " << out << " (.dat, .uvw and .des)" << endl;
 }
 
 int main(int argc, char** argv)
