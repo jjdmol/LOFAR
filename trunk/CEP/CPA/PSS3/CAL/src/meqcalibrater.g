@@ -226,12 +226,16 @@ const _define_meqcalibrater := function(ref agent, id) {
 #
 # meqcalibrater constructor
 #
-const meqcalibrater := function(msname, meqmodel = 'LOFAR', skymodel = 'GSM', ddid = 0,
-				host='',forcenewserver=F) {
+const meqcalibrater := function(msname, meqmodel = 'LOFAR', skymodel = 'GSM',
+                                ddid = 0, ant=[], ant1=[], ant2=[], 
+				host='', forcenewserver=F) {
+    if (len(ant1) == 0) ant1:=ant;
+    if (len(ant2) == 0) ant2:=ant;
     agent := defaultservers.activate('meqcalibrater', host, forcenewserver)
     id := defaultservers.create(agent, 'meqcalibrater', 'meqcalibrater',
                                 [msname=msname, meqmodel=meqmodel,
-				 skymodel=skymodel, ddid=ddid]);
+				 skymodel=skymodel, ddid=ddid,
+				 ant1=ant1, ant2=ant2]);
     return ref _define_meqcalibrater(agent, id);
 }
 

@@ -24,7 +24,7 @@
 #define CAL_MEQCALIBRATER_H
 
 #include <aips/Arrays/Matrix.h>
-#include <aips/Fitting/LSQ.h>
+#include <aips/Fitting/FitLSQ.h>
 #include <aips/MeasurementSets/MSMainColumns.h>
 #include <aips/MeasurementSets/MeasurementSet.h>
 #include <aips/Quanta/MVBaseline.h>
@@ -60,12 +60,14 @@ public:
   /*!
    * Create MeqCalibrater object for a specific
    * MeaurementSet, MEQ model (with associated MEP database) and skymodel
-   * for the specified spectral window.
+   * for the specified data descriptor (i.e. spectral window) and antennas.
    */ 
   MeqCalibrater(const String& msName,
 		const String& meqModel,
 		const String& skyModel,
-		uInt spw);
+		uInt ddid,
+		const Vector<Int>& ant1,
+		const Vector<Int>& ant2);
 
   //! Destructor
   ~MeqCalibrater();
@@ -104,7 +106,7 @@ public:
    * \returns Returns fit value to indicate fitness of the solution and
    * updates the parameters for which to solve.
    */
-  Double solve (const String& colName);
+  GlishRecord solve (const String& colName);
 
   //! Save solved parameters to the MEP database.
   void saveParms();
@@ -208,6 +210,7 @@ private:
   /*@{*/
   MeasurementSet        itsMS;          //# MS as given
   ROMSMainColumns       itsMSCol;
+  Table                 itsSelMS;       //# Selected rows from MS
   ParmTable             itsMEP;
   Table                 itsGSMTable;
   GSM::SkyModel         itsGSM;
@@ -236,7 +239,7 @@ private:
   double itsStepFreq;
   int    itsNrChan;
 
-  LSQ          itsSolver;
+  FitLSQ       itsSolver;
   int          itsNrScid;               //# Nr of solvable parameter coeff.
   vector<bool> itsIsParmSolvable;       //# is corresponding parmlist solvable?
   MeqMatrix    itsSolution;             //# Solution as complex numbers

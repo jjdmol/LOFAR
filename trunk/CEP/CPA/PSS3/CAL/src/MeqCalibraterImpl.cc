@@ -65,6 +65,7 @@
 #include <aips/Tables/ArrayColumn.h>
 #include <aips/Tables/ColumnDesc.h>
 #include <aips/Tables/ExprNode.h>
+#include <aips/Tables/ExprNodeSet.h>
 #include <aips/Tables/SetupNewTab.h>
 #include <aips/Tables/TableParse.h>
 #include <aips/Utilities/Regex.h>
@@ -335,7 +336,9 @@ void MeqCalibrater::calcUVWPolc (const Table& ms)
 MeqCalibrater::MeqCalibrater(const String& msName,
 			     const String& meqModel,
 			     const String& skyModel,
-			     const uInt    ddid)
+			           uInt    ddid,
+			     const Vector<Int>& ant1,
+			     const Vector<Int>& ant2)
   :
   itsMS       (msName, Table::Update),
   itsMSCol    (itsMS),
@@ -353,14 +356,21 @@ MeqCalibrater::MeqCalibrater(const String& msName,
   // Get phase reference (for field 0).
   getPhaseRef();
 
-  // We only handle field 0 and the given data desc id (for the time being).
+  // We only handle field 0, the given data desc id, and antennas.
   // Sort the MS in order of baseline.
-  Table selMS = itsMS(itsMS.col("FIELD_ID")==0 &&
-		      itsMS.col("DATA_DESC_ID")==int(ddid));
+  TableExprNode expr = (itsMS.col("FIELD_ID")==0 &&
+			itsMS.col("DATA_DESC_ID")==int(ddid));
+  if (ant1.nelements() > 0) {
+    expr = expr && itsMS.col("ANTENNA1").in (TableExprNodeSet(ant1));
+  }
+  if (ant2.nelements() > 0) {
+    expr = expr && itsMS.col("ANTENNA2").in (TableExprNodeSet(ant2));
+  }
+  itsSelMS = itsMS(expr);
   Block<String> keys(2);
   keys[0] = "ANTENNA1";
   keys[1] = "ANTENNA2";
-  Table sortMS = selMS.sort (keys);
+  Table sortMS = itsSelMS.sort (keys);
   // Sort uniquely to get all baselines.
   Table blMS = sortMS.sort (keys, Sort::Ascending,
 			    Sort::NoDuplicates + Sort::InsSort);
@@ -589,7 +599,6 @@ void MeqCalibrater::setSolvableParms (Vector<String>& parmPatterns,
 				      Vector<String>& excludePatterns,
 				      Bool isSolvable)
 {
-  GlishRecord rec;
   vector<MeqParm*> parmVector;
 
   const vector<MeqParm*>& parmList = MeqParm::getParmList();
@@ -654,7 +663,7 @@ void MeqCalibrater::setSolvableParms (Vector<String>& parmPatterns,
 // Solve for the solvable parameters on the current time domain.
 //
 //----------------------------------------------------------------------
-Double MeqCalibrater::solve (const String& colName)
+GlishRecord MeqCalibrater::solve (const String& colName)
 {
   cdebug(1) << "solve using column " << colName << endl;
 
@@ -883,17 +892,24 @@ Double MeqCalibrater::solve (const String& colName)
   // Solve the equation.
   uInt rank;
   double fit;
-  vector<double> stddev(2*nrpoint);
-  double mu[2];
+  double stddev;
+  double mu;
   cdebug(1) << "Solution before: " << itsSolution << endl;
-  double sol[200];
+  int nrs = itsSolution.nelements();
+  Vector<double> sol(nrs);
   complex<double>* solData = itsSolution.dcomplexStorage();
-  for (int i=0; i<itsSolution.nelements(); i++) {
+  // It looks as if LSQ has a bug so that solveLoop and getCovariance
+  // interact badly (maybe both doing an invert).
+  // So make a copy to separate them.
+  Matrix<double> covar;
+  FitLSQ tmpSolver = itsSolver;
+  tmpSolver.getCovariance (covar);
+  for (int i=0; i<nrs; i++) {
     sol[i] = solData[i].real();
   }
-  Assert (itsSolver.solveLoop (fit, rank, sol, &(stddev[0]), mu));
+  Assert (itsSolver.solveLoop (fit, rank, sol, stddev, mu));
   if (Debug(1)) timer.show("solve");
-  for (int i=0; i<itsSolution.nelements(); i++) {
+  for (int i=0; i<nrs; i++) {
     solData[i] = complex<double>(sol[i], 0);
   }
   cdebug(1) << "Solution after:  " << itsSolution << endl;
@@ -911,7 +927,17 @@ Double MeqCalibrater::solve (const String& colName)
     i++;
   }
 
-  return fit;
+  GlishRecord rec;
+  rec.add ("sol", GlishArray(sol));
+  rec.add ("rank", Int(rank));
+  rec.add ("fit", fit);
+  rec.add ("diag", GlishArray(covar.diagonal()));
+  rec.add ("covar", GlishArray(covar));
+  rec.add ("mu", mu);
+  rec.add ("stddev", stddev);
+  rec.add ("chi", itsSolver.getChi());
+
+  return rec;
 }
 
 //----------------------------------------------------------------------
@@ -984,6 +1010,7 @@ void MeqCalibrater::predict (const String& modelDataColName)
   int nrchan = 1+itsLastChan-itsFirstChan;
 
   ArrayColumn<Complex> mdcol(itsMS, modelDataColName);
+
   // Loop through all rows in the current solve domain.
   for (unsigned int i=0; i<itsCurRows.nelements(); i++) {
     int rownr = itsCurRows(i);
@@ -1060,7 +1087,7 @@ void MeqCalibrater::saveResidualData(const String& colAName,
   }
 
   // Make sure the MS is writable.
-  itsMS.reopenRW();
+  itsSelMS.reopenRW();
   // Create the column if it does not exist yet.
   // Make it an indirect variable shaped column.
   if (! itsMS.tableDesc().isColumn (residualColName)) {
@@ -1070,13 +1097,13 @@ void MeqCalibrater::saveResidualData(const String& colAName,
   }
 
   // Loop through all rows in the MS and store the result.
-  ROArrayColumn<Complex> colA(itsMS, colAName);
-  ROArrayColumn<Complex> colB(itsMS, colBName);
-  ArrayColumn<Complex> colR(itsMS, residualColName);
-  for (uInt i=0; i<itsMS.nrow(); i++) {
+  ROArrayColumn<Complex> colA(itsSelMS, colAName);
+  ROArrayColumn<Complex> colB(itsSelMS, colBName);
+  ArrayColumn<Complex> colR(itsSelMS, residualColName);
+  for (uInt i=0; i<itsSelMS.nrow(); i++) {
     colR.put (i, colA(i) - colB(i));
   }
-  itsMS.flush();
+  itsSelMS.flush();
 
   cdebug(1) << "saveResidualData('" << colAName << "', '" << colBName << "', ";
   cdebug(1) << "'" << residualColName << "')" << endl;
@@ -1312,11 +1339,11 @@ Bool MeqCalibrater::select(const String& where, int firstChan, int lastChan)
 	    << ',' << itsLastChan << ']' << endl;
   Assert (itsFirstChan <= itsLastChan);
   if (! where.empty()) {
-    Table selms = tableCommand ("select from $1 where " + where, itsMS);
+    Table selms = tableCommand ("select from $1 where " + where, itsSelMS);
     Assert (selms.nrow() > 0);
     itsIter = TableIterator (selms, "TIME");
   } else {
-    itsIter = TableIterator (itsMS, "TIME");
+    itsIter = TableIterator (itsSelMS, "TIME");
   }  
   resetIterator();
   return True;
@@ -1493,8 +1520,8 @@ MethodResult MeqCalibrater::runMethod(uInt which,
     {
       Parameter<String> colName(inputRecord, "datacolname",
 				ParameterSet::In);
-      Parameter<Double> returnval(inputRecord, "returnval",
-				  ParameterSet::Out);
+      Parameter<GlishRecord> returnval(inputRecord, "returnval",
+				       ParameterSet::Out);
 
       if (runMethod) returnval() = solve (colName());
     }
@@ -1610,11 +1637,14 @@ MethodResult MeqCalibraterFactory::make(ApplicationObject*& newObject,
       Parameter<String> meqModel(inputRecord, "meqmodel", ParameterSet::In);
       Parameter<String> skyModel(inputRecord, "skymodel", ParameterSet::In);
       Parameter<Int>        ddid(inputRecord, "ddid",     ParameterSet::In);
+      Parameter<Vector<Int> > ant1(inputRecord, "ant1",   ParameterSet::In);
+      Parameter<Vector<Int> > ant2(inputRecord, "ant2",   ParameterSet::In);
 
       if (runConstructor)
 	{
 	  newObject = new MeqCalibrater(msName(), meqModel(),
-					skyModel(), ddid());
+					skyModel(), ddid(),
+					ant1(), ant2());
 	}
     }
   else
