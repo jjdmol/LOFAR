@@ -21,6 +21,9 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.2  2002/05/07 11:15:12  schaaf
+//  minor
+//
 //  Revision 1.1.1.1  2002/05/06 11:49:20  schaaf
 //  initial version
 //
@@ -104,25 +107,41 @@ void WH_Transpose::process()
 
   {
     int cnt=0;
-    AssertStr(getOutHolder(0)->getXSize() == getInputs(),
+    int Xsize,Ysize;
+    int Ysize_bytes;
+    DH_2DMatrix *InDHptr, *OutDHptr;
+    DbgAssertStr(getOutHolder(0)->getXSize() == getInputs(),
 		 "nr of stations not correct");
-    AssertStr(getOutHolder(0)->getYSize() == getInHolder(0)->getYSize(),
+    DbgAssertStr(getOutHolder(0)->getYSize() == getInHolder(0)->getYSize(),
 		 "nr of freqs not correct");
-    AssertStr(getOutputs() == getInHolder(0)->getXSize(),
+    DbgAssertStr(getOutputs() == getInHolder(0)->getXSize(),
 		 "nr of times not correct");
+
     for (int time=0; time<getOutputs(); time++) {
-      for (int station=0; station < getOutHolder(time)->getXSize(); station++) {
-	for (int freq=0; freq < getOutHolder(time)->getYSize(); freq++) {
-	    *getOutHolder(time)   ->getBuffer(station,freq) = 
-	      *getInHolder (station)->getBuffer(time,   freq);
+      OutDHptr = getOutHolder(time); 
+      Xsize = OutDHptr->getXSize();
+      Ysize = OutDHptr->getYSize();
+      Ysize_bytes = Ysize*sizeof(int);
+      for (int station=0; station < Xsize; station++) {
+#ifndef noncontiguous
+	InDHptr = getInHolder (station);
+	// DH_2DMatrix::getBuffer(x,y) contiguous for fixed x.
+	memcpy(OutDHptr->getBuffer(station,0),
+	       InDHptr->getBuffer(time,0),
+	       Ysize_bytes   );
+#else
+	for (int freq=0; freq < Ysize; freq++) {
+	    *( OutDHptr->getBuffer(station,freq)) = 
+	      *(InDHptr->getBuffer(time,   freq));
 	  // set time
 	  // set freq
 	  // set station
 	}
+#endif
       }
     }
   }
-  //  dump();
+  //dump();
 }
 
 void WH_Transpose::dump() const
