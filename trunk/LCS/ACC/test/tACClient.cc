@@ -35,14 +35,13 @@ int main (int argc, char *argv[]) {
 	APConn.useAsyncMode (mySupplyInfo, handleAnswerMessage, handleAckMessage);
 	LOG_DEBUG ("AsyncMode activated");
 	sleep (5);
-
 	LOG_DEBUG (formatString("Command boot went %s!!!", 
 				APConn.boot(0x12345678, "configID") ? "OK" : "WRONG"));
 
 	LOG_DEBUG (formatString("Command define went %s!!!", 
 				APConn.define(0x22334455, "defineFile") ? "OK" : "WRONG"));
 
-	LOG_DEBUG ("Sending ping request\n");
+	LOG_DEBUG ("Sending ping request");
 	APConn.ping();
 
 	LOG_DEBUG (formatString("Command init went %s!!!", 
@@ -71,7 +70,6 @@ int main (int argc, char *argv[]) {
 				APConn.askInfo("Mag ik van jouw ....").c_str()));
 
 	sleep (5);
-
 
 }
 
