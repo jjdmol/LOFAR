@@ -58,7 +58,7 @@ void MeqStoredParmPolc::readPolcs (const MeqDomain& domain)
     }
     ///    itsTable->putCoeff (getName(), getSourceNr(), getStation(), polc);
     polcs.push_back (polc);
-    cout << "BBSTest: simparm " << getName() << " = " << polcs[0].getSimCoeff();
+    cout << "BBSTest: simparm " << getName() << " = " << polcs[0].getSimCoeff() << endl;
   } else {
     // Check if the polc domains cover the entire domain and if they
     // do not overlap.

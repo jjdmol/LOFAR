@@ -87,7 +87,6 @@ bool SI_Simple::execute(vector<string>& parmNames,
     itsCal->nextInterval();
     TRACER1("Next interval");
 
-    itsCal->showParmValues();
     itsFirstCall = false;
   }
 
