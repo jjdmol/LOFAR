@@ -2,7 +2,10 @@
 #include "CEPFrame/SimulatorParseClass.h"
 #include "Common/lofar_iostream.h"
 #include "Common/Debug.h"
+#include "Common/LofarLogger.h"
 
+
+using namespace LOFAR;
 
 #ifdef HAVE_CORBA
 int atexit(void (*function)(void))
@@ -18,6 +21,9 @@ int main (int argc, const char** argv)
 #endif
   // Set trace level.
   Debug::initLevels (argc, argv);
+
+  // Initialize the LOFAR logger
+  INIT_LOGGER("OnLineProto.log_prop");
 
   try {
     OnLineProto simulator;

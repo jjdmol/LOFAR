@@ -45,12 +45,14 @@ namespace LOFAR
 
 WH_Dump::WH_Dump (const string& name,
 		  unsigned int  nin,
+		  const ParameterSet& ps,
 		  int           rank)
   : WorkHolder    (nin, 1, name,"WH_Dump"),
     itsIndex   (1),
     itsCounter (0),
     itsBuffer  (0),
     handle     (0),
+    itsPS      (ps),
     itsRank    (rank)
 {
   char str[8];
@@ -58,7 +60,7 @@ WH_Dump::WH_Dump (const string& name,
   for (unsigned int i=0; i<nin; i++) {
     sprintf (str, "%d", i);
     getDataManager().addInDataHolder(i, 
-				     new DH_Vis (string("in_") + str),
+				     new DH_Vis (string("in_") + str, ps),
 				     true);
   }
 
@@ -85,19 +87,21 @@ WH_Dump::~WH_Dump()
 
 WorkHolder* WH_Dump::construct (const string& name, 
 				int nin, 
+				const ParameterSet& ps,
 				int rank)
 {
-  return new WH_Dump (name, nin, rank);
+  return new WH_Dump (name, nin, ps, rank);
 }
 
 WH_Dump* WH_Dump::make (const string& name)
 {
-  return new WH_Dump (name, getDataManager().getInputs(), itsRank);
+  return new WH_Dump (name, getDataManager().getInputs(), itsPS, itsRank);
 }
 
 void WH_Dump::process()
 {
-  blitz::Array<complex<float>, 2> corr(NSTATIONS, NSTATIONS);
+  int nstations = itsPS.getInt("general.nstations");
+  blitz::Array<complex<float>, 2> corr(nstations, nstations);
   blitz::Array<float, 1> plotBuffer (PLOTSIZE) ;
   corr = complex<float> (0,0);
 
@@ -110,7 +114,7 @@ void WH_Dump::process()
 
     memcpy (corr.data(), 
 	    InDHptr->getBuffer(), 
-	    NSTATIONS*NSTATIONS*sizeof(DH_Vis::BufferType));
+	    nstations*nstations*sizeof(DH_Vis::BufferType));
 
     if (itsIndex % 50 == 0) {
       cout << itsIndex << endl;

@@ -28,6 +28,7 @@
 #include "CEPFrame/WorkHolder.h"
 #include "OnLineProto/DH_CorrCube.h"
 #include "OnLineProto/DH_Vis.h"
+#include <ACC/ParameterSet.h>
 
 #include <blitz/blitz.h>
 #include <blitz/array.h>
@@ -47,13 +48,15 @@ public:
   /// are created and how many elements there are in the buffer.
   /// The first WorkHolder should have nin=0.
   explicit WH_Correlate (const string& name,
-			 unsigned int channels);
+			 unsigned int channels,
+			 const ParameterSet& ps);
 
   virtual ~WH_Correlate();
 
   /// Static function to create an object.
   static WorkHolder* construct (const string& name, 
-				unsigned int channels);
+				unsigned int channels,
+				const ParameterSet& ps);
 
   /// Make a fresh copy of the WH object.
   virtual WH_Correlate* make (const string& name);
@@ -87,8 +90,9 @@ private:
   ///     be frequency channels or time samples.
   ///     M is defined to be 1000
 
-  static const int itsNelements = NSTATIONS;  // number of stations/inputs
-  static const int itsNitems    = TSIZE;      // number of frequency channels * number of time samples
+    const int itsNelements;  // number of stations/inputs
+    const int itsNitems;     // number of frequency channels * number of time samples
+    const ParameterSet itsPS;
 
 };
 

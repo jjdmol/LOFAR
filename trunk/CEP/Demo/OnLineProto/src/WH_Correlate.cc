@@ -38,22 +38,26 @@ namespace LOFAR
 {
 
 WH_Correlate::WH_Correlate (const string& name,
-			    unsigned int channels)
-  : WorkHolder    (channels, channels, name,"WH_Correlate")
+			    unsigned int channels,
+			    const ParameterSet& ps)
+  : WorkHolder    (channels, channels, name,"WH_Correlate"),
+    itsNelements  (ps.getInt("general.nstations")),
+    itsNitems     (ps.getInt("corr.tsize")),
+    itsPS         (ps)
 {
   char str[8];
   // create the input dataholders
   for (unsigned int i=0; i<channels; i++) {
     sprintf (str, "%d", i);
     getDataManager().addInDataHolder(i, 
-				     new DH_CorrCube (string("out_") + str), 
+				     new DH_CorrCube (string("out_") + str, ps), 
 				     true);
   }
   // create the output dataholders
   for (unsigned int i=0; i<channels; i++) {
     sprintf (str, "%d", i);
     getDataManager().addOutDataHolder(i, 
-				      new DH_Vis (string("out_") + str), 
+				      new DH_Vis (string("out_") + str, ps), 
 				      true);
   }
 }
@@ -63,15 +67,17 @@ WH_Correlate::~WH_Correlate()
 }
 
 WorkHolder* WH_Correlate::construct (const string& name, 
-				     unsigned int channels)
+				     unsigned int channels,
+				     const ParameterSet& ps)
 {
-  return new WH_Correlate (name, channels);
+  return new WH_Correlate (name, channels, ps);
 }
 
 WH_Correlate* WH_Correlate::make (const string& name)
 {
   return new WH_Correlate (name, 
-			   getDataManager().getInputs());
+			   getDataManager().getInputs(),
+			   itsPS);
 }
 
 void WH_Correlate::process()

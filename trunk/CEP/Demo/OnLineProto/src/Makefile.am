@@ -11,12 +11,9 @@ WH_Transpose.h					\
 WH_Correlate.h					\
 WH_Dump.h					\
 Correlator_test.h				\
-MAC.h						\
-Station.h					\
 GnuPlotInterface.h				\
 WH_FringeControl.h				\
 DH_Phase.h
-
 
 OnLineProto_SOURCES  	= $(DOCHDRS)		\
 DH_Beamlet.cc					\
@@ -29,8 +26,6 @@ WH_PreProcess.cc				\
 WH_Transpose.cc					\
 WH_Correlate.cc					\
 WH_Dump.cc					\
-MAC.cc						\
-Station.cc					\
 GnuPlotInterface.cc				\
 WH_FringeControl.cc				\
 DH_Phase.cc

@@ -24,16 +24,16 @@
 #define ONLINEPROTO_WH_SIMSTATION_H
 
 #define NINPUT_BEAMLETS 128
-#define DATA_ITERATION TSIZE
 
 #include <lofar_config.h>
 
 #include "CEPFrame/WorkHolder.h"
 #include "OnLineProto/DH_Beamlet.h"
-#include "OnLineProto/MAC.h"
 #include <Common/Lorrays.h>
 #include <Common/lofar_complex.h>
-#include <fstream>
+#include <ACC/ParameterSet.h>
+#include <Common/lofar_fstream.h>
+#include <OnLineProto/definitions.h>
 
 namespace LOFAR
 {
@@ -47,7 +47,7 @@ public:
   explicit WH_SimStation (const string& name,
 			  const int nout,
 			  const string fileName,
-			  const MAC mac,
+			  const ParameterSet& ps,
 			  const int ID);
 
   virtual ~WH_SimStation();
@@ -56,17 +56,17 @@ public:
     static WorkHolder* construct (const string& name, 
 				  const int nout,
 				  const string fileName,
-				  const MAC mac,
+				  const ParameterSet& ps,
 				  const int ID);
 
-    /// Make a fresh copy of the WH object.
-      virtual WH_SimStation* make (const string& name);
+  /// Make a fresh copy of the WH object.
+  virtual WH_SimStation* make (const string& name);
       
-      /// Do a process step.
-	virtual void process();
+  /// Do a process step.
+  virtual void process();
       
-	/// Show the work holder on stdout.
-	  virtual void dump();
+  /// Show the work holder on stdout.
+  virtual void dump();
 	  
  private:
    /// Forbid copy constructor.
@@ -79,9 +79,9 @@ public:
      
    string itsFileName;
    ifstream itsInputFile;
-   complex<float>* itsData;
-   MAC itsMac;
+   ParameterSet itsPS;
    int itsID;
+   complex<float>* itsData;
    int itsCounter;
 };
 

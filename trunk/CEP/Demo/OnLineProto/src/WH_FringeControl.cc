@@ -39,9 +39,9 @@ namespace LOFAR
 
 WH_FringeControl::WH_FringeControl (const string& name,
 				    const int nout,
-				    MAC mac)
+				    const ParameterSet& ps)
   : WorkHolder    (1, nout, name,"WH_FringeControl"),
-    itsMac        (mac)
+    itsPS        (ps)
 {
   char str[8];
 
@@ -64,14 +64,14 @@ WH_FringeControl::~WH_FringeControl()
 
 WorkHolder* WH_FringeControl::construct (const string& name,
 					 const int nout,
-					 MAC mac)
+					 const ParameterSet& ps)
 {
-  return new WH_FringeControl (name, nout, mac);
+  return new WH_FringeControl (name, nout, ps);
 }
 
 WH_FringeControl* WH_FringeControl::make (const string& name)
 {
-  return new WH_FringeControl (name, getDataManager().getOutputs(), itsMac);
+  return new WH_FringeControl (name, getDataManager().getOutputs(), itsPS);
 }
 
 void WH_FringeControl::process()

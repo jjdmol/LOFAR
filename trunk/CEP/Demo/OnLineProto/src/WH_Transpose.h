@@ -24,6 +24,7 @@
 #define ONLINEPROTO_WH_TRANSPOSE_H
 
 #include <lofar_config.h>
+#include <ACC/ParameterSet.h>
 
 #include "CEPFrame/WorkHolder.h"
 
@@ -44,7 +45,7 @@ public:
   explicit WH_Transpose (const string& name,
 			 unsigned int nin,
 			 unsigned int nout,
-			 const int FBW);
+			 const ParameterSet& ps);
 
   virtual ~WH_Transpose();
 
@@ -52,7 +53,7 @@ public:
   static WorkHolder* construct (const string& name, 
 				unsigned int nin,
 				unsigned int nout,
-				const int FBW);
+				const ParameterSet& ps);
 
   /// Make a fresh copy of the WH object.
   virtual WH_Transpose* make (const string& name);
@@ -73,6 +74,7 @@ private:
   int itsFBW; // frequency bandwidth of the DH_Beamlet 
 
   int itsIntegrationTime;
+  const ParameterSet itsPS;
 };
 
 }
