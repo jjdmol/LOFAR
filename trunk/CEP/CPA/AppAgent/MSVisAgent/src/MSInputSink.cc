@@ -37,6 +37,7 @@
 #include <aips/MeasurementSets/MSSpWindowColumns.h>
 #include <aips/Measures/MDirection.h>
 #include <aips/Measures/MeasConvert.h>
+#include <aips/Measures/Stokes.h>
 #include <aips/Quanta/MVPosition.h>
 #include <aips/Tables/ArrColDesc.h>
 #include <aips/Tables/ArrayColumn.h>
@@ -100,7 +101,11 @@ void MSInputSink::fillHeader (DataRecord &hdr,const DataRecord &select)
     MSPolarization mssub2(ms_.polarization());
     ROMSPolarizationColumns mssub2c(mssub2);
     num_corrs_ = mssub2c.numCorr()(polzn);
-    hdr[FCorr] = mssub2c.corrType()(spw);
+    Vector<int> corrtypes = mssub2c.corrType()(polzn);
+    vector<string> corrnames(corrtypes.nelements());
+    for( uint i=0; i<corrtypes.nelements(); i++ )
+      corrnames[i] = Stokes::name(Stokes::type(corrtypes(i)));
+    hdr[FCorr] = corrnames;
   }
   // get antenna positions from ANTENNA subtable
   {
