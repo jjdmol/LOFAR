@@ -58,6 +58,11 @@ public:
   /// Make an instance of the derived TransportHolder.
   virtual TransportHolder* make() const = 0;
 
+
+  /// Initialise the Transport; this mauy for instance open a file,
+  /// port or dbms connection
+  virtual bool init();
+
   /// Recv the data sent by the connected TransportHolder and wait
   /// until data has been received into buf.
   virtual bool recvBlocking (void* buf, int nbytes, int source, int tag);

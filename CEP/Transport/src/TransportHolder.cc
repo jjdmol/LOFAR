@@ -36,6 +36,9 @@ TransportHolder::TransportHolder()
 TransportHolder::~TransportHolder()
 {}
 
+bool TransportHolder::init()
+{}
+
 bool TransportHolder::recvBlocking (void*, int, int, int)
 {
   Throw("No blocking receive mehtod implemented in this TransportHolder");
