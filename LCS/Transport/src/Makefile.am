@@ -4,12 +4,6 @@ else
 SUBDIRS                 = .
 endif
 
-if HAVE_SHMEM
-SHMEM_HDRS = TH_ShMem.h
-else 
-SHMEM_HDRS =
-endif
-
 
 INSTHDRS = \
 BaseSim.h \
@@ -19,11 +13,11 @@ DataBlobExtra.h \
 TH_File.h \
 TH_Mem.h \
 TH_MPI.h \
+TH_ShMem.h \
 TH_Socket.h \
+TH_Ethernet.h \
 Transporter.h \
-TransportHolder.h \
-$(SHMEM_HDRS)
-
+TransportHolder.h 
 
 NOINSTHDRS =
 
@@ -40,12 +34,6 @@ lib_LTLIBRARIES 	= libtransport.la
 
 libtransport_la_DEPENDENCIES	= $(LOFAR_DEPEND)
 
-if HAVE_SHMEM
-SHMEM_SOURCES = TH_ShMem.cc
-else
-SHMEM_SOURCES =
-endif
-
 libtransport_la_SOURCES = \
 CyclicBuffer.cc \
 DataHolder.cc \
@@ -53,14 +41,17 @@ DataBlobExtra.cc \
 TH_File.cc \
 TH_Mem.cc \
 TH_MPI.cc \
+TH_ShMem.cc \
 TH_Socket.cc \
+TH_Ethernet.cc \
 Transporter.cc \
-TransportHolder.cc \
-$(SHMEM_SOURCES)
+TransportHolder.cc 
 
 
 if HAVE_CORBA
 libtransport_la_LIBADD = Corba/libth_corba.la
+else
+libtransport_la_LIBADD = 
 endif
 
 include $(lofar_sharedir)/Makefile.common
