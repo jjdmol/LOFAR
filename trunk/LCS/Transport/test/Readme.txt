@@ -35,7 +35,11 @@ This file describes the tests in this directory (./LOFAR/LCS/Transport/test/):
 *** ExampleMPI ***
  Tests transport of fixed and variable size data via MPI. Also tests bidirectional transport
  with MPI.
-  
+
+
+*** ExampleVarBuf ***  
+ Illustrates transport of a user-defined, variable size datafield in the blob.
+
 
 *** ExampleSocket ***
  Tests transport of fixed and variable size data via sockets. Also tests bidirectional
