@@ -22,7 +22,7 @@ UVPSpectrumVector::UVPSpectrumVector(unsigned int numberOfChannels)
     itsMaxValue(0)
 {
 #if(DEBUG_MODE)
-  TRACER1(__PRETTY_FUNCTION__);
+  TRACERPF2("");
   TRACER2("itsNumberOfChannels: " << itsNumberOfChannels);
   TRACER2("");
 #endif
@@ -38,7 +38,7 @@ UVPSpectrumVector::UVPSpectrumVector(unsigned int numberOfChannels)
 void UVPSpectrumVector::add(const UVPSpectrum &spectrum)
 {
 #if(DEBUG_MODE)
-  TRACER2(__PRETTY_FUNCTION__);
+  TRACERPF2("");
   TRACER2("itsNumberOfChannels: " << itsNumberOfChannels);
   TRACER2("spectrum.getNumberOfChannels(): " << spectrum.getNumberOfChannels());
   assert(spectrum.getNumberOfChannels() == itsNumberOfChannels);
@@ -67,7 +67,7 @@ void UVPSpectrumVector::add(const UVPSpectrum &spectrum)
     }
   }
 #if(DEBUG_MODE)
-  TRACER2("End: " << __PRETTY_FUNCTION__);
+  TRACERPF2("End.");
 #endif
 }
 

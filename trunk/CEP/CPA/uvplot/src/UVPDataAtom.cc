@@ -38,7 +38,7 @@ UVPDataAtom::UVPDataAtom(const UVPDataAtom & other)
   :itsData(other.itsData.size())
 {
   itsHeader = other.itsHeader;
-  setData(other.itsData.begin());
+  setData(&(other.itsData.front()));
 }
 
 
@@ -102,7 +102,7 @@ void UVPDataAtom::setData(const std::vector<ComplexType>& data)
 
 void UVPDataAtom::setData(const ComplexType* data)
 {
-  ComplexType*       i   = itsData.begin();
+  ComplexType*       i   = &(itsData.front());
 
   memcpy(i, data, itsData.size()*sizeof(ComplexType));
 }
