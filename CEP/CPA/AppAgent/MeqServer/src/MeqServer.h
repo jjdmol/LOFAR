@@ -3,19 +3,21 @@
 
 #include <MEQ/Forest.h>
 #include <AppUtils/VisPipe.h>
+#include <MeqServer/VisDataMux.h>
+#include <AppUtils/VisRepeater.h>
 
 #pragma aidgroup MeqServer    
 #pragma aid Node Name NodeIndex MeqServer
 #pragma aid Create Delete Get Set State Request Resolve Child Children
-#pragma aid App Command Args Result Error Message Code
+#pragma aid App Command Args Result Data Processing Error Message Code
     
 namespace MEQ
 {
-  
+
 //##ModelId=3F5F195E013B
 //##Documentation
 //## Returns True if a valid node exists for the given index
-class MeqServer : public VisPipe
+class MeqServer : public VisRepeater
 {
   public:
     //##ModelId=3F5F195E0140
@@ -32,8 +34,9 @@ class MeqServer : public VisPipe
     void getNodeState (DataRecord::Ref &out,DataRecord::Ref::Xfer &in);
     //##ModelId=3F61920F02A4
     void setNodeState (DataRecord::Ref &out,DataRecord::Ref::Xfer &in);
-    
+    //##ModelId=3F98D91A03B9
     void resolveChildren (DataRecord::Ref &out,DataRecord::Ref::Xfer &in);
+    //##ModelId=3F98D91B0064
     void getNodeResult (DataRecord::Ref &out,DataRecord::Ref::Xfer &in);
       
     //##ModelId=3F5F195E0156
@@ -48,7 +51,6 @@ class MeqServer : public VisPipe
       
     //##ModelId=3F5F218F02BD
     Forest forest;
-    
   
     //##ModelId=3F61920F0158
     typedef void (MeqServer::*PtrCommandMethod)(DataRecord::Ref &out,DataRecord::Ref::Xfer &in);
@@ -56,6 +58,9 @@ class MeqServer : public VisPipe
     typedef std::map<HIID,PtrCommandMethod> CommandMap;
     //##ModelId=3F61920F0193
     CommandMap command_map;
+    //##ModelId=3F9CE0D3027D
+    VisDataMux data_mux;
+
 
 };
 

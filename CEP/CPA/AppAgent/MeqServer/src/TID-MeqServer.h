@@ -8,6 +8,40 @@
       // should be called somewhere in order to link in the registry
       int aidRegistry_MeqServer ();
 
+#ifndef _defined_id_TpMEQSink
+#define _defined_id_TpMEQSink 1
+const TypeId TpMEQSink(-1462);                    // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/MeqServer/src/MeqServer.aidlist:17
+const int TpMEQSink_int = -1462;
+namespace MEQ { class Sink; };
+            template<>
+            class DMIBaseTypeTraits<MEQ::Sink> : public TypeTraits<MEQ::Sink>
+            {
+              public:
+              enum { isContainable = true };
+              enum { typeId = TpMEQSink_int };
+              enum { TypeCategory = TypeCategories::DYNAMIC };
+              enum { ParamByRef = true, ReturnByRef = true };
+              typedef const MEQ::Sink & ContainerReturnType;
+              typedef const MEQ::Sink & ContainerParamType;
+            };
+#endif
+#ifndef _defined_id_TpMEQSpigot
+#define _defined_id_TpMEQSpigot 1
+const TypeId TpMEQSpigot(-1492);                  // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/MeqServer/src/MeqServer.aidlist:18
+const int TpMEQSpigot_int = -1492;
+namespace MEQ { class Spigot; };
+            template<>
+            class DMIBaseTypeTraits<MEQ::Spigot> : public TypeTraits<MEQ::Spigot>
+            {
+              public:
+              enum { isContainable = true };
+              enum { typeId = TpMEQSpigot_int };
+              enum { TypeCategory = TypeCategories::DYNAMIC };
+              enum { ParamByRef = true, ReturnByRef = true };
+              typedef const MEQ::Spigot & ContainerReturnType;
+              typedef const MEQ::Spigot & ContainerParamType;
+            };
+#endif
 
 
 #endif
