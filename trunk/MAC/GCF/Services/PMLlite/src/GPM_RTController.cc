@@ -241,7 +241,7 @@ GCFEvent::TResult GPMRTController::connected(GCFEvent& e, GCFPortInterface& /*p*
       }
       else
       {
-        LOFAR_LOG_TRACE(PML_STDOUT_LOGGER, ( 
+        LOFAR_LOG_DEBUG(PML_STDOUT_LOGGER, ( 
             "Property set with scope %d was deleted in the meanwhile", 
             requestIn.scope.c_str()));
 
@@ -269,7 +269,7 @@ GCFEvent::TResult GPMRTController::connected(GCFEvent& e, GCFPortInterface& /*p*
       }
       else
       {
-        LOFAR_LOG_TRACE(PML_STDOUT_LOGGER, ( 
+        LOFAR_LOG_DEBUG(PML_STDOUT_LOGGER, ( 
             "Property set with scope %d was deleted in the meanwhile", 
             requestIn.scope.c_str()));
 
@@ -297,7 +297,7 @@ GCFEvent::TResult GPMRTController::connected(GCFEvent& e, GCFPortInterface& /*p*
       }
       else
       {
-        LOFAR_LOG_TRACE(PML_STDOUT_LOGGER, ( 
+        LOFAR_LOG_DEBUG(PML_STDOUT_LOGGER, ( 
             "Property set with scope %d was deleted in the meanwhile", 
             scope.c_str()));
       }

@@ -211,13 +211,6 @@ bool GCFMyPropertySet::linkProperties()
   bool successful(true);
   switch (_state)
   {
-    case S_ENABLING:
-    case S_LINKING:
-    case S_LINKED:
-    case S_DELAYED_DISABLING:
-      wrongState("linkProperties");
-      pController->propertiesLinked(getScope(), PA_WRONG_STATE);
-      break;
     case S_DISABLED:
     case S_DISABLING:
       pController->propertiesLinked(getScope(), PA_PS_GONE);
@@ -227,6 +220,10 @@ bool GCFMyPropertySet::linkProperties()
       _missing = 0;
       _state = S_LINKING;
       successful = tryLinking();
+      break;
+    default:
+      wrongState("linkProperties");
+      pController->propertiesLinked(getScope(), PA_WRONG_STATE);
       break;
   }
   return successful;
@@ -239,12 +236,6 @@ bool GCFMyPropertySet::tryLinking()
   bool successful(true);
   switch (_state)
   {
-    case S_ENABLING:
-    case S_LINKED:
-    case S_ENABLED:
-      wrongState("tryLinking");
-      pController->propertiesLinked(getScope(), PA_WRONG_STATE);
-      break;
     case S_DELAYED_DISABLING:
       pController->propertiesLinked(getScope(), PA_PS_GONE);
       _state = S_ENABLED;
@@ -305,6 +296,10 @@ bool GCFMyPropertySet::tryLinking()
       }
       break;
     }
+    default:
+      wrongState("tryLinking");
+      pController->propertiesLinked(getScope(), PA_WRONG_STATE);
+      break;
   }
   return successful;
 }
@@ -318,13 +313,6 @@ void GCFMyPropertySet::linked (GCFMyProperty& prop)
   {
     switch (_state)
     {
-      case S_ENABLING:
-      case S_LINKED:
-      case S_ENABLED:
-        wrongState("linked");
-        prop.unlink();
-        pController->propertiesLinked(getScope(), PA_WRONG_STATE);
-        break;
       case S_DELAYED_DISABLING:
         pController->propertiesLinked(getScope(), PA_PS_GONE);
         _state = S_LINKED;
@@ -348,6 +336,11 @@ void GCFMyPropertySet::linked (GCFMyProperty& prop)
         }
         break;
       }
+      default:
+        wrongState("linked");
+        prop.unlink();
+        pController->propertiesLinked(getScope(), PA_WRONG_STATE);
+        break;
     }
   }
   else if (_state == S_DISABLING)

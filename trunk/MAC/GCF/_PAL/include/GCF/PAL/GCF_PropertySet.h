@@ -42,13 +42,13 @@ class GCFPropertySet
   public:
     virtual ~GCFPropertySet ();
 
-    inline const string& getScope () const 
+    const string& getScope () const 
       { return _scope; }
-    inline const char* getType () const 
+    const char* getType () const 
       { return _propSetInfo.typeName; }
-    inline const bool isTemporary () const 
+    const bool isTemporary () const 
       { return _propSetInfo.isTemporary; }
-    inline GCFAnswer* getAnswerObj() const 
+    GCFAnswer* getAnswerObj() const 
       { return _pAnswerObj; }
 
     /**

@@ -350,7 +350,7 @@ bool GSSController::forwardMsgToPMLlite(GCFEvent& e, string& scope, char* logMsg
   }
   else
   {
-    LOFAR_LOG_TRACE(SS_STDOUT_LOGGER, ( 
+    LOFAR_LOG_DEBUG(SS_STDOUT_LOGGER, ( 
         "Property set with scope %s was deleted in the meanwhile", 
         scope.c_str()));
   }

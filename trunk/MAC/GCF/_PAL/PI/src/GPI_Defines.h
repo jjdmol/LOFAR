@@ -1,4 +1,4 @@
-//#  GPA_Defines.h: preprocessor definitions of various constants
+//#  GPI_Defines.h: preprocessor definitions of various constants
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,36 +20,29 @@
 //#
 //#  $Id$
 
-#ifndef GPA_DEFINES_H
-#define GPA_DEFINES_H
+#ifndef GPI_DEFINES_H
+#define GPI_DEFINES_H
 
-//#define LOFARLOGGER_PACKAGE "MAC.GCF.PAL.PA.Logger"
+//#define LOFARLOGGER_PACKAGE "MAC.GCF.PAL.PI.Logger"
 
 #include <GCF/GCF_Defines.h>
 
-class GCFPValue;
-
-enum TPAResult {
-  PA_NO_ERROR, 
-  PA_UNKNOWN_ERROR,
-  PA_WRONG_STATE,
-  PA_PS_GONE,
-  PA_MISSING_PROPS,
-  PA_PROP_SET_NOT_EXISTS,
-  PA_PROP_SET_ALLREADY_EXISTS,
-  PA_DPTYPE_UNKNOWN,
-  PA_INTERNAL_ERROR,
-  PA_PI_INTERNAL_ERROR,
-  PA_APC_NOT_EXISTS,
-  PA_LINK_TIME_OUT,
-  PA_SERVER_GONE,
-};
-
-typedef struct
+enum TPIResult 
 {
-  string name;
-  GCFPValue* pValue;
-  bool  defaultSet;
-} TAPCProperty;
+  PI_NO_ERROR, 
+  PI_UNKNOWN_ERROR,
+  PI_WRONG_STATE,
+  PI_PS_GONE,
+  PI_MISSING_PROPS,
+  PI_PROP_SET_NOT_EXISTS,
+  PI_PROP_SET_ALLREADY_EXISTS,
+  PI_DPTYPE_UNKNOWN,
+  PI_INTERNAL_ERROR,
+  PI_PA_INTERNAL_ERROR,
+  PI_PA_NOTCONNECTED,
+  PI_PROP_NOT_VALID,
+  PI_EMPTY_SCOPE,
+  PI_MACTYPE_UNKNOWN,  
+};
 
 #endif

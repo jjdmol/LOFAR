@@ -1,4 +1,4 @@
-//#  GPA_Defines.h: preprocessor definitions of various constants
+//#  GPI_Main.cc: 
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,36 +20,18 @@
 //#
 //#  $Id$
 
-#ifndef GPA_DEFINES_H
-#define GPA_DEFINES_H
+#include  <GPI_Controller.h>
 
-//#define LOFARLOGGER_PACKAGE "MAC.GCF.PAL.PA.Logger"
-
-#include <GCF/GCF_Defines.h>
-
-class GCFPValue;
-
-enum TPAResult {
-  PA_NO_ERROR, 
-  PA_UNKNOWN_ERROR,
-  PA_WRONG_STATE,
-  PA_PS_GONE,
-  PA_MISSING_PROPS,
-  PA_PROP_SET_NOT_EXISTS,
-  PA_PROP_SET_ALLREADY_EXISTS,
-  PA_DPTYPE_UNKNOWN,
-  PA_INTERNAL_ERROR,
-  PA_PI_INTERNAL_ERROR,
-  PA_APC_NOT_EXISTS,
-  PA_LINK_TIME_OUT,
-  PA_SERVER_GONE,
-};
-
-typedef struct
+int main(int argc, char *argv[])
 {
-  string name;
-  GCFPValue* pValue;
-  bool  defaultSet;
-} TAPCProperty;
+	GCFTask::init(argc, argv);
 
-#endif
+	GPIController propertyInterace;
+
+  propertyInterace.start();
+  
+  GCFTask::run();
+
+  // Just make the compilers happy...
+	return 0;
+}

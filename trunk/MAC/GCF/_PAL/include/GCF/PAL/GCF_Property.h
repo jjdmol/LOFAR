@@ -47,7 +47,7 @@ class GCFPValue;
 class GCFProperty
 {
   public:
-    inline const string getName () const 
+    const string getName () const 
       { return _propInfo.propName;}
       
     /// @return the given property name including the scope of the related property set
@@ -80,7 +80,7 @@ class GCFProperty
      */ 
     virtual bool exists ();
       
-    inline virtual void setAnswer (GCFAnswer* pAnswerObj) 
+    virtual void setAnswer (GCFAnswer* pAnswerObj) 
       {_pAnswerObj = pAnswerObj;}
       
   protected:
@@ -103,21 +103,21 @@ class GCFProperty
 
   private:
     friend class GPMPropertyService;
-    inline void propSubscribed (const string& propName)
+    void propSubscribed (const string& propName)
       { assert(propName == getFullName()); subscribed(); }
       
     /** 
      * does nothing (but still in the GCF API)
      * because unsubscribe isn't asynchronous in the SCADA API
      */
-    inline void propUnsubscribed (const string& propName)
+    void propUnsubscribed (const string& propName)
       { assert(propName == getFullName()); }
       
-    inline void propValueGet (const string& propName, 
+    void propValueGet (const string& propName, 
                               const GCFPValue& value)
       { assert(propName == getFullName()); valueGet(value); }
       
-    inline void propValueChanged (const string& propName, 
+    void propValueChanged (const string& propName, 
                                   const GCFPValue& value)
       { assert(propName == getFullName()); valueChanged(value); }
   
@@ -138,8 +138,8 @@ class GCFProperty
     GCFPropertySet*     _pPropertySet;
     GCFAnswer*          _pAnswerObj;
     GPMPropertyService* _pPropService;
+    const TProperty&    _propInfo;
 
   private: // admin. data members
-    const TProperty&    _propInfo;
 };
 #endif

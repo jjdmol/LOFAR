@@ -1,4 +1,4 @@
-//#  GPA_Defines.h: preprocessor definitions of various constants
+//#  GPM_RTDefines.h: preprocessor definitions of various constants
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,36 +20,31 @@
 //#
 //#  $Id$
 
-#ifndef GPA_DEFINES_H
-#define GPA_DEFINES_H
+#ifndef GPM_RTDEFINES_H
+#define GPM_RTDEFINES_H
 
-//#define LOFARLOGGER_PACKAGE "MAC.GCF.PAL.PA.Logger"
+#define LOFARLOGGER_PACKAGE "MAC.GCF.PALlight.PMLlight.Logger"
 
-#include <GCF/GCF_Defines.h>
+#include <GCFCommon/GCF_Defines.h>
 
-class GCFPValue;
-
-enum TPAResult {
-  PA_NO_ERROR, 
-  PA_UNKNOWN_ERROR,
-  PA_WRONG_STATE,
-  PA_PS_GONE,
-  PA_MISSING_PROPS,
-  PA_PROP_SET_NOT_EXISTS,
-  PA_PROP_SET_ALLREADY_EXISTS,
-  PA_DPTYPE_UNKNOWN,
-  PA_INTERNAL_ERROR,
-  PA_PI_INTERNAL_ERROR,
-  PA_APC_NOT_EXISTS,
-  PA_LINK_TIME_OUT,
-  PA_SERVER_GONE,
+enum TPMResult {
+  PM_NO_ERROR, 
+  PM_UNKNOWN_ERROR,
+  PM_PA_NOTCONNECTED,
+  PM_IS_BUSY,
+  PM_SCOPE_ALREADY_EXISTS,
+  PM_SCOPE_NOT_EXISTS, 
+  PM_PROP_NOT_EXISTS,
+  PM_SCADA_ERROR,
+  PM_PROP_NOT_VALID,
+  PM_PROP_WRONG_TYPE,
+  PM_PROP_LINK_NOT_IN_SYNC,
+  PM_PROP_SET_BUSY,
+  PM_PROP_LIST_FAILURE,
+  PM_PROP_ALREADY_LINKED,
+  PM_PROP_NOT_LINKED,
+  PM_PROP_NOT_IN_SET,
+  PM_SCOPE_NOT_FOUND
 };
-
-typedef struct
-{
-  string name;
-  GCFPValue* pValue;
-  bool  defaultSet;
-} TAPCProperty;
 
 #endif
