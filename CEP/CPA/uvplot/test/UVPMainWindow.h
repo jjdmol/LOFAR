@@ -36,12 +36,18 @@
 #include <UVPGraphSettingsWidget.h>
 #include <uvplot/UVPDataSet.h>
 
-#include <VisAgent/VisInputAgent.h>
+//#include <VisAgent/VisInputAgent.h>
+class OctoMultiplexer;
+class VisInputAgent;
+#include <DMI/HIID.h>
+
 
 #if(DEBUG_MODE)
 #include <Common/Debug.h>
 #endif
 
+#pragma aidgroup uvplot
+#pragma aid VisualizerWP
 
 
 //! The main window class
@@ -88,7 +94,8 @@ class UVPMainWindow:public QMainWindow
   void slot_vdmInput();
 
   //! Initialize VDM communications. Called from slot_vdmInput().
-  void slot_vdmInit();
+  void slot_vdmInit(const HIID& header = HIID(""),
+		    const HIID& data   = HIID(""));
 
   //! Stop VDM
   void slot_quitPlotting();
@@ -99,8 +106,14 @@ class UVPMainWindow:public QMainWindow
   //! Lets the user select an MS filename. Sets itsInputType to "VDM".
   void slot_vdmOpenMS();
 
+  void slot_vdmOpenPipe();
+
   //! Called when "load" button is pressed
   void slot_loadData();
+
+  //! Let user set number of antennae.
+  void slot_changeNumberOfAntennae();
+
 
   //! Actually reads data from MS msName.
   void slot_readMeasurementSet(const std::string& msName);
@@ -111,6 +124,7 @@ class UVPMainWindow:public QMainWindow
   QPopupMenu*     itsApplicationMenu;
   QPopupMenu*     itsDatasourceMenu;
   QPopupMenu*     itsProcessControlMenu;
+  QPopupMenu*     itsSettingsMenu;
   QPopupMenu*     itsHelpMenu;
   
   int             itsMenuPlotImageID;
@@ -137,7 +151,8 @@ class UVPMainWindow:public QMainWindow
   std::string     itsInputFilename;
   std::string     itsMSColumnName;
 
-  VisInputAgent*  itsVisInputAgent;
+  VisInputAgent*   itsVisInputAgent;
+  OctoMultiplexer* itsOctoMultiplexer;
 
   virtual void resizeEvent  (QResizeEvent* event);
   virtual void keyPressEvent(QKeyEvent*    event);

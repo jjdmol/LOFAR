@@ -28,6 +28,8 @@
 #include <qpushbutton.h>
 #include <qcombobox.h>
 #include <qlayout.h>
+#include <qcheckbox.h>
+
 
 #include <sstream>
 
@@ -44,9 +46,10 @@ UVPGraphSettingsWidget::UVPGraphSettingsWidget(unsigned int numOfAntennae,
   itsVLayout        = new QVBoxLayout(this);
 
   itsFieldLabel     = new QLabel("Field(s)", this);
-  itsFieldLayout    = new QHBoxLayout(itsVLayout);
   
-  setNumberOfFields(1);
+  itsVLayout->addWidget(itsFieldLabel);
+  itsFieldLayout    = new QHBoxLayout(itsVLayout);
+  setNumberOfFields(5);
   
   itsAntenna1Label  = new QLabel("Antenna 1: ", this);
   itsAntenna1Slider = new QSlider(1, numOfAntennae, 1, 1,
@@ -69,7 +72,6 @@ UVPGraphSettingsWidget::UVPGraphSettingsWidget(unsigned int numOfAntennae,
   itsSettings.setAntenna1(itsAntenna1Slider->value()-1);
   itsSettings.setAntenna2(itsAntenna2Slider->value()-1);
   
-  itsVLayout->addWidget(itsFieldLabel);
   itsVLayout->addWidget(itsAntenna1Label);
   itsVLayout->addWidget(itsAntenna1Slider);
   itsVLayout->addWidget(itsColumnLabel);
@@ -161,16 +163,21 @@ void UVPGraphSettingsWidget::setNumberOfFields(unsigned int numberOfFields)
   }
   itsFieldSelections.clear();
 
+  itsSettings.setNumberOfFields(numberOfFields);
+
   for(unsigned int i = 0; i < numberOfFields; i++) {
     std::ostringstream num;
     num << i + 1;
     itsFieldSelections.push_back(new QCheckBox(num.str(), this));
     itsFieldLayout->addWidget(itsFieldSelections[i]);
-    QObject::connect(itsFieldSelections[i], SIGNAL(toggled()),
+    itsFieldSelections[i]->toggle();
+    itsSettings.setPlotField(i, true);
+    QObject::connect(itsFieldSelections[i], SIGNAL(toggled(bool)),
                      this, SLOT(slot_fieldChanged())); 
   }
-    
-  itsSettings.setNumberOfFields(numberOfFields);
+  
+  
+  //  itsVLayout->insertLayout(1, itsFieldLayout);
 }
 
 
@@ -240,7 +247,7 @@ void UVPGraphSettingsWidget::slot_columnChanged(int /*column*/)
 void UVPGraphSettingsWidget::slot_fieldChanged()
 {
   for(unsigned int i = 0; i < itsFieldSelections.size(); i++) {
-    itsSettings.setPoltField(i,itsFieldSelections[i]->isOn());
+    itsSettings.setPlotField(i,itsFieldSelections[i]->isOn());
   }
 
   emit signalFieldsChanged();

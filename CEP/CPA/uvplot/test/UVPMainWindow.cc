@@ -47,6 +47,12 @@
 
 // For VDM stuff
 #include <MSVisAgent/MSVisInputAgent.h>
+#include <OctoAgent/OctoVisInputAgent.h>
+#include <OctoAgent/OctoMultiplexer.h>
+#include <AID-uvplot.h>
+
+
+#include <UVPOpenVDMDialog.h>
 
 
 #if(DEBUG_MODE)
@@ -57,7 +63,8 @@ InitDebugContext(UVPMainWindow, "DEBUG_CONTEXT");
 
 UVPMainWindow::UVPMainWindow()
   : QMainWindow(),
-    itsVisInputAgent(0)
+    itsVisInputAgent(0),
+    itsOctoMultiplexer(0)
 {
   // Construct a menu
   buildMenuBar();
@@ -100,6 +107,9 @@ UVPMainWindow::UVPMainWindow()
   connect(itsGraphSettingsWidget, SIGNAL(signalCorrelationChanged(UVPDataAtomHeader::Correlation)),
           this, SLOT(slot_redraw()));
 
+  connect(itsGraphSettingsWidget, SIGNAL(signalFieldsChanged()),
+          this, SLOT(slot_redraw()));
+
   connect(itsGraphSettingsWidget, SIGNAL(signalLoadButtonClicked()),
           this, SLOT(slot_loadData()));
 
@@ -132,6 +142,9 @@ UVPMainWindow::~UVPMainWindow()
   if(itsVisInputAgent != 0) {
     delete itsVisInputAgent;
   }
+  if(itsOctoMultiplexer != 0) {
+    delete itsOctoMultiplexer;
+  }
 }
 
 
@@ -147,18 +160,21 @@ void UVPMainWindow::buildMenuBar()
 
   itsDatasourceMenu = new QPopupMenu;
   itsDatasourceMenu->insertItem("&Open MS", this, SLOT(slot_openMS()));
-  itsDatasourceMenu->insertItem("&VDM pipeline", this, SLOT(slot_vdmOpenMS()));
+  itsDatasourceMenu->insertItem("&VDM pipeline", this, SLOT(slot_vdmOpenPipe()));
 
 
-  itsProcessControlMenu = new QPopupMenu;
+  //  itsProcessControlMenu = new QPopupMenu;
   /*  itsMenuPlotImageID = itsProcessControlMenu->insertItem("&Start", this,
                                                          SLOT(slot_vdmInput()));
   itsMenuPlotStopID  = itsProcessControlMenu->insertItem("&Stop", this,
                                                          SLOT(slot_quitPlotting()));
   */
-  itsProcessControlMenu->setItemEnabled(itsMenuPlotImageID, true);
-  itsProcessControlMenu->setItemEnabled(itsMenuPlotStopID, false);
+  //  itsProcessControlMenu->setItemEnabled(itsMenuPlotImageID, true);
+  //  itsProcessControlMenu->setItemEnabled(itsMenuPlotStopID, false);
 
+  itsSettingsMenu = new QPopupMenu;
+  itsSettingsMenu->insertItem("Number of antennae", this, SLOT(slot_changeNumberOfAntennae()));
+  
 
   itsHelpMenu = new QPopupMenu;
   itsHelpMenu->insertItem("&About uvplot", this, SLOT(slot_about_uvplot()));
@@ -166,9 +182,10 @@ void UVPMainWindow::buildMenuBar()
   itsMenuBar = new QMenuBar(this);
   itsMenuBar->insertItem("&Application", itsApplicationMenu);
   itsMenuBar->insertItem("&Data source", itsDatasourceMenu);
+  itsMenuBar->insertItem("&Settings", itsSettingsMenu);
   //  itsMenuBar->insertItem("&Process control", itsProcessControlMenu);
   itsMenuBar->insertSeparator();
-  itsMenuBar->insertItem("&About", itsHelpMenu);
+  itsMenuBar->insertItem("A&bout", itsHelpMenu);
 }
 
 
@@ -331,10 +348,6 @@ void UVPMainWindow::drawDataSet()
   UVPDataAtomHeader::Correlation Correlation = itsGraphSettingsWidget->getSettings().getCorrelation();
   unsigned int                   SpectralWindowID = 0;
 
-#if(DEBUG_MODE)
-  TRACER1("Correlation= " << Correlation);
-#endif
-
 
   for(UVPDataSet::iterator p = Start;
       p != EndOfRecords && p != EndOfData; p++) {
@@ -342,8 +355,9 @@ void UVPMainWindow::drawDataSet()
     const   UVPDataAtom *dataAtom = &(p->second);
     
     //********** Data are only added if correlation type is right ********
-    if(dataAtom->getHeader().itsCorrelationType == Correlation &&
-       dataAtom->getHeader().itsSpectralWindowID == SpectralWindowID) {
+    if(dataAtom->getHeader().itsCorrelationType  == Correlation &&
+       dataAtom->getHeader().itsSpectralWindowID == SpectralWindowID &&
+       itsGraphSettingsWidget->getSettings().mustPlotField(dataAtom->getHeader().itsFieldID)) {
 
       unsigned int NumChan = dataAtom->getNumberOfChannels();
       double*      Values  = new double[NumChan];
@@ -447,6 +461,27 @@ void UVPMainWindow::slot_quitPlotting()
 
 
 
+
+
+//===========>>>  UVPMainWindow::slot_changeNumberOfAntennae  <<<===========
+
+void UVPMainWindow::slot_changeNumberOfAntennae()
+{
+  bool ok(false);
+  int stations = QInputDialog::getInteger("uvplot: settings", "Specify number of stations", 30, 2,1000,1, &ok, this);
+  
+  if(stations > 1 && ok) {
+    itsGraphSettingsWidget->setNumberOfAntennae(stations);
+  }
+}
+
+
+
+
+
+
+
+
 //===============>>>  UVPMainWindow::slot_loadData  <<<===============
 
 void UVPMainWindow::slot_loadData()
@@ -491,7 +526,12 @@ void UVPMainWindow::slot_openMS()
 
     MeasurementSet ms(filename.latin1());
     MSAntenna      AntennaTable(ms.antenna());
+    MSField        FieldTable(ms.field());
     itsGraphSettingsWidget->setNumberOfAntennae(AntennaTable.nrow());
+    //itsGraphSettingsWidget->setNumberOfFields(FieldTable.nrow());
+#if(DEBUG_MODE)
+    std::cout << FieldTable.nrow() << std::endl;
+#endif
   }
 }
 
@@ -515,7 +555,8 @@ void UVPMainWindow::slot_vdmOpenMS()
     MeasurementSet ms(filename.latin1());
     MSAntenna      AntennaTable(ms.antenna());
     itsGraphSettingsWidget->setNumberOfAntennae(AntennaTable.nrow());
-    slot_vdmInit(HIID(""));
+
+    slot_vdmInit();
 
   }
 }
@@ -528,24 +569,34 @@ void UVPMainWindow::slot_vdmOpenMS()
 
 void UVPMainWindow::slot_vdmOpenPipe()
 {
-  bool ok;
-  QString text = QInputDialog::getText("Uvplot: VDM initialisation", 
-                                       "Enter HIID to subscribe to:",
-                                       QLineEdit::Normal,
-                                       QString::null, &ok, this );
-  if ( ok && !text.isEmpty() ) {
-    // user entered something and pressed OK
-    slot_vdmInit(HIID(text.str()));
-  } else {
-    // user entered nothing or pressed Cancel
+  UVPOpenVDMDialog dlg("Uvplot", this);
+  bool ok = dlg.exec();
+  
+  try {
+    if(ok) {
+      HIID header(dlg.getHeaderText());
+      HIID data(dlg.getDataText());
+    
+      slot_vdmInit(header, data);
+    }
+  }
+  catch(...){
+    QMessageBox::critical(0, "uvplot: VDM",
+			  "Invalid HIID, connection failed.",
+			  QMessageBox::Ok|QMessageBox::Default,
+			  QMessageBox::NoButton);
   }
 }
 
 
 
+
+
+
 //===============>>>  UVPMainWindow::slot_vdmInit  <<<===============
 
-void UVPMainWindow::slot_vdmInit(const HIID& hiid)
+void UVPMainWindow::slot_vdmInit(const HIID& header,
+				 const HIID& data)
 try
 {
   using namespace MSVisAgentVocabulary;
@@ -587,10 +638,11 @@ try
   itsScrollView->addChild(itsCanvas);
   resizeEvent(0);
 
-
+  
   // create agent
   if(itsVisInputAgent == 0) {
-    itsVisInputAgent = new  MSVisInputAgent;
+    itsOctoMultiplexer = new OctoMultiplexer(AidVisualizerWP);
+    itsVisInputAgent   = new OctoVisInputAgent(*itsOctoMultiplexer, HIID(""));//new  MSVisInputAgent;
   }
   
   bool res = itsVisInputAgent->init(dataref);
@@ -684,6 +736,12 @@ try
   
       itsVisInputAgent->close();
       drawDataSet();
+      
+      delete itsVisInputAgent;
+      delete itsOctoMultiplexer;
+      itsVisInputAgent   = 0;
+      itsOctoMultiplexer = 0;
+
     } else {
       QMessageBox::information(0, "Uvplot", 
 			       "No VisInputAgent. First initialize agent.",

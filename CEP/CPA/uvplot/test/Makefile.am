@@ -16,7 +16,9 @@ uvplot_SOURCES := main.cc \
                   UVPDisplayArea.cc  UVPDisplayArea.moc.cc \
                   UVPGraphSettingsWidget.cc UVPGraphSettingsWidget.moc.cc \
                   UVPTimeFrequencyPlot.cc UVPTimeFrequencyPlot.moc.cc \
-                  UVPUVCoverageArea.cc UVPUVCoverageArea.moc.cc
+                  UVPUVCoverageArea.cc UVPUVCoverageArea.moc.cc \
+                  UVPOpenVDMDialog.cc\
+                  AID-uvplot-Registry.cc
 
 
 uvplot_LDADD        := $(top_builddir)/src/libuvplot.la
