@@ -34,7 +34,7 @@
 #include <MNS/MeqMatrixTmp.h>
 #include <Common/Debug.h>
 #include <casa/Arrays/Matrix.h>
-#include <scimath/Fitting/LSQ.h>
+#include <scimath/Fitting/LSQaips.h>
 #include <casa/OS/Timer.h>
 #include <casa/Exceptions/Error.h>
 #include <Common/lofar_iostream.h>
@@ -70,13 +70,13 @@ void doIt1 (const string& dbtype, const string& dbname,
   cout << original << endl;
 
   // Use AIPS++ LSQ solver. There are 3 unknowns.
-  LSQ lnl(3);
+  LSQaips lnl(3);
   // Initial parameters.
   Double sol[3] = {2, 1, 1};
   double me[3*3], mu[1];
   // Define vectors for derivatives and value difference.
   Double un[3];
-  Double kn[1];
+  Double kn;
   Int iter=0;
   Double fit = 1.0;
   uInt nr;
@@ -97,10 +97,10 @@ void doIt1 (const string& dbtype, const string& dbname,
       for (int i=0; i<3; i++) {
 	un[i] = derivptr[i][j];
       }
-      kn[0] = orval[j] - values[j];
-      lnl.makeNorm(un, 1.0, kn);
+      kn = orval[j] - values[j];
+      lnl.makeNorm(&un[0], 1.0, kn);
     };
-    if (!lnl.solveLoop(fit, nr, sol, mu, me)) {
+    if (!lnl.solveLoop(fit, nr, sol)) {
       cout << "Error in loop: " << nr << endl;
       break;
     };
@@ -116,11 +116,11 @@ void doIt1 (const string& dbtype, const string& dbname,
   };
   cout << "Sol:       " << sol[0] << ", " << sol[1] << ", " << sol[2] << 
     endl;
-  if (mu[0] == me[0] && mu[0] < 1e-15) {
-    mu[0] = 0;
-    me[0] = 0;
-  };
-  cout << "me:        " << mu[0] << ", " << me[0] << endl;
+  ///  if (mu[0] == me[0] && mu[0] < 1e-15) {
+    ///    mu[0] = 0;
+    ///    me[0] = 0;
+    ///  };
+    ///  cout << "me:        " << mu[0] << ", " << me[0] << endl;
   cerr << "User time: " << tim1.user() << endl;
 }
 

@@ -35,7 +35,7 @@ MeqStoredParmPolc.h				\
 MeqUVWPolc.h					\
 MeqWsrtInt.h					\
 MeqWsrtPoint.h					\
-ParmTable.h ParmTableAIPS.h ParmTableDB.h	\
+ParmTable.h ParmTableAIPS.h 	\
 MeqParmHolder.h TPOParm.h					
 
 NOINSTHDRS = 
@@ -85,16 +85,16 @@ MeqStoredParmPolc.cc				\
 MeqUVWPolc.cc					\
 MeqWsrtInt.cc					\
 MeqWsrtPoint.cc					\
-ParmTable.cc ParmTableAIPS.cc ParmTableDB.cc	\
+ParmTable.cc ParmTableAIPS.cc 	\
 TPOParm.cc					
 
 EXTRA_DIST = 
 
-bin_PROGRAMS 		= parmdb
+#bin_PROGRAMS 		= parmdb
 
-parmdb_SOURCES		= parmdb.cc
-parmdb_LDADD		= ./libmns.la
-parmdb_DEPENDENCIES	= ./libmns.la $(LOFAR_DEPEND)
+#parmdb_SOURCES		= parmdb.cc
+#parmdb_LDADD		= ./libmns.la
+#parmdb_DEPENDENCIES	= ./libmns.la $(LOFAR_DEPEND)
 
 include $(lofar_sharedir)/Makefile.common
 
