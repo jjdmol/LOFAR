@@ -26,11 +26,8 @@ client=PA:server
 [PI]
 client=PA:server
 
-[SS]
-client=PI:server
-
 [PMLlite]
-client=SS:server
+client=PI:server
 
 [PA]
 # has no SAP's

@@ -1,7 +1,0 @@
-<?xml version="1.0"?>
-
-<T1>
-  <P1> <MACType> MACInteger </MACType> <MACDefault> 100   </MACDefault> </P1>
-  <P2> <MACType> MACChar    </MACType> <MACDefault> 200   </MACDefault> </P2>
-  <P3> <MACType> MACDouble  </MACType> <MACDefault> 100.5 </MACDefault> </P3>
-</T1>
