@@ -333,7 +333,7 @@ bool GlishClientWP::messageToGlishRec (const Message &msg, GlishRecord &glrec)
     glrec.addAttribute("datasize",GlishArray((int)sz));
     if( sz )
       glrec.addAttribute("data",GlishArray(Array<uChar>(IPosition(1,sz),
-                                static_cast<uChar*>(msg.data()),COPY)));
+		static_cast<uChar*>(const_cast<void*>(msg.data())),COPY)));
   }
   
   return True;
@@ -529,7 +529,7 @@ BlockableObject * GlishClientWP::blockRecToObject (const GlishRecord &rec )
   String typestr;
   GlishArray tmp = rec.getAttribute("blocktype"); tmp.get(typestr);
   TypeId tid(typestr);
-  FailWhen( !tid,"illegal blocktype "+typestr );
+  FailWhen( !tid,"illegal blocktype "+static_cast<string>(typestr) );
   // extract blockset form record
   BlockSet set;
   for( uint i=0; i<rec.nelements(); i++ )
@@ -563,7 +563,7 @@ void GlishClientWP::objectToBlockRec (const BlockableObject &obj,GlishRecord &re
     char num[32];
     sprintf(num,"%d",i++);
     rec.add("num",Array<uChar>(IPosition(1,set.front()->size()),
-                static_cast<uChar*>(set.front()->data()),COPY));
+                static_cast<uChar*>(const_cast<void*>(set.front()->data())),COPY));
     set.pop();
   }
 }
