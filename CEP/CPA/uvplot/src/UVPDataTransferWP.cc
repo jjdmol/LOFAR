@@ -18,12 +18,12 @@ UVPDataTransferWP::UVPDataTransferWP()
   : WorkProcess(0) // Must be a proper Aid-something sometime
 {
 #if(DEBUG_MODE)
-  TRACER1(__FUNCTION__);
+  TRACER1(__PRETTY_FUNCTION__);
 #endif
 
 
 #if(DEBUG_MODE)
-  TRACER1("End of " << __FUNCTION__);
+  TRACER1("End of " << __PRETTY_FUNCTION__);
 #endif
 }
 
@@ -37,14 +37,14 @@ UVPDataTransferWP::UVPDataTransferWP()
 void UVPDataTransferWP::init()
 {
 #if(DEBUG_MODE)
-  TRACER1(__FUNCTION__);
+  TRACER1(__PRETTY_FUNCTION__);
 #endif
 
   WorkProcess::init();
 
 
 #if(DEBUG_MODE)
-  TRACER1("End of " << __FUNCTION__);
+  TRACER1("End of " << __PRETTY_FUNCTION__);
 #endif
 }
 
@@ -57,16 +57,16 @@ void UVPDataTransferWP::init()
 bool UVPDataTransferWP::start()
 {
 #if(DEBUG_MODE)
-  TRACER1(__FUNCTION__);
+  TRACER1(__PRETTY_FUNCTION__);
 #endif
   bool parentReturn = WorkProcess::start();
 
 
-  return parentReturn && true;
-
 #if(DEBUG_MODE)
-  TRACER1("End of " << __FUNCTION__);
+  TRACER1("End of " << __PRETTY_FUNCTION__);
 #endif
+
+  return parentReturn && true;
 }
 
 
@@ -82,11 +82,11 @@ bool UVPDataTransferWP::start()
 int  UVPDataTransferWP::receive(MessageRef &messageRef)
 {
 #if(DEBUG_MODE)
-  TRACER1(__FUNCTION__);
+  TRACER1(__PRETTY_FUNCTION__);
 #endif
 
 
 #if(DEBUG_MODE)
-  TRACER1("End of " << __FUNCTION__);
+  TRACER1("End of " << __PRETTY_FUNCTION__);
 #endif
 }

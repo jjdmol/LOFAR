@@ -80,10 +80,7 @@ void UVPSpectrum::operator =(const UVPSpectrum &other)
 void UVPSpectrum::copy(const UVPSpectrum &other)
 {
 #if(DEBUG_MODE)
-  TRACER1("void UVPSpectrum::copy(const UVPSpectrum &other)");
-  TRACER2("other.itsNumberOfChannels: " << other.itsNumberOfChannels);
-  TRACER2("other.itsRowIndex: " << other.itsRowIndex);
-  TRACER2("other.itsValues: " << other.itsValues);
+  TRACER2(__FUNCTION__);
 #endif
   
   if(itsValues != 0) {
@@ -96,6 +93,10 @@ void UVPSpectrum::copy(const UVPSpectrum &other)
   itsValues           = new double[itsNumberOfChannels];
   
   copyFast(other.itsValues);
+
+#if(DEBUG_MODE)
+  TRACER2("End: " << __FUNCTION__);
+#endif
 }
 
 
@@ -114,7 +115,7 @@ void UVPSpectrum::copy(const UVPSpectrum &other)
 void UVPSpectrum::copyFast(const double *values)
 {
 #if(DEBUG_MODE)
-  TRACER1("UVPSpectrum::copyFast");
+  TRACER2(__FUNCTION__);
 #endif
   
   register unsigned int N(itsNumberOfChannels);
@@ -149,6 +150,10 @@ void UVPSpectrum::copyFast(const double *values)
     itsMinValue = tempMin;
     itsMaxValue = tempMax;
   }
+
+#if(DEBUG_MODE)
+  TRACER2("End: " << __FUNCTION__);
+#endif
 }
 
 

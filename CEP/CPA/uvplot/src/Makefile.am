@@ -15,13 +15,8 @@ uvplot_SOURCES := main.cc \
 # Your package's subdirectory
 UVPLOT_DIR := $(top_srcdir)/src
 
-#QT_DIR     := /home/brentjens/usr/src/qt-2.3.2
-#MOC        := $(QT_DIR)/bin/moc
 
-#%.moc.cc: %.h
-#	$(MOC) $< -o $@
-
-CXXFLAGS += -pg #-I$(QT_DIR)/include -L$(QT_DIR)/lib -lqt
+CXXFLAGS += -DDEBUG_MODE -pg
 
 
 include $(lofar_sharedir)/Makefile.common

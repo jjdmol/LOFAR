@@ -169,7 +169,6 @@ void UVPDisplayArea::mousePressEvent(QMouseEvent *event)
     double center = (255.0*event->pos().x())/width();
     
     initColormap(slope, center);
-    drawView();
   }
 }
 
@@ -185,7 +184,6 @@ void UVPDisplayArea::mouseMoveEvent(QMouseEvent *event)
     double center = (255.0*event->pos().x())/width();
     
     initColormap(slope, center);
-    drawView();
   }else{
   }
   emit signal_mouseWorldPosChanged(itsXAxis.axisToWorld(event->pos().x()),
