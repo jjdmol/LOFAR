@@ -21,11 +21,12 @@
 
 #include <GSM/PointSource.h>
 
-#include <MNS/MeqParmSingle.h>
+#include <MNS/MesParmSingle.h>
 
 #include <aips/aips.h>
 #include <aips/Tables/ScalarColumn.h>
-
+#include <aips/Tables/ArrayColumn.h>
+#include <aips/Arrays/Matrix.h>
 
 using namespace GSM;
 
@@ -37,7 +38,7 @@ PointSource::PointSource(unsigned int       catNumber,
   : AbstractSource(POINT, catNumber, name)
 {
   for(unsigned int i = 0; i < NUMBER_OF_POLARIZATIONS;i++) {
-    itsFlux[i] =  new MeqParmSingle(0);
+    itsFlux[i] =  new MesParmSingle(0);
   }
 }
 
@@ -111,7 +112,7 @@ void PointSource::store(Table&       table,
 
 //====================>>>  PointSource::getParameters  <<<====================
 
-unsigned int PointSource::getParameters(std::vector<MeqParm *> &parameters)
+unsigned int PointSource::getParameters(std::vector<MesParm *> &parameters)
 {
 
   unsigned int i = AbstractSource::getParameters(parameters);
@@ -130,7 +131,7 @@ unsigned int PointSource::getParameters(std::vector<MeqParm *> &parameters)
 
 //====================>>>  PointSource::setParameters  <<<====================
 
-unsigned int PointSource::setParameters(const std::vector<MeqParm*> &parameters)
+unsigned int PointSource::setParameters(const std::vector<MesParm*> &parameters)
 {
   unsigned int i = AbstractSource::setParameters(parameters);
   
@@ -158,7 +159,7 @@ unsigned int PointSource::getNumberOfParameters() const
 
 //===============>>>  PointSource::getFluxExpressions  <<<===============
 
-void PointSource::getFluxExpressions(std::vector<MeqExpr*> &flux)
+void PointSource::getFluxExpressions(std::vector<MesExpr*> &flux)
 {
   for(unsigned int i = 0; i < NUMBER_OF_POLARIZATIONS; i++) {
     flux[i] = itsFlux[i];

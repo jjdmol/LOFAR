@@ -45,7 +45,7 @@ public:
   virtual void store(Table&       table,
                      unsigned int row);
 
-  virtual unsigned int getParameters(std::vector<MeqParm*> &parameters);
+  virtual unsigned int getParameters(std::vector<MesParm*> &parameters);
 
   //! Makes deep copy of parameters;
   /*! 
@@ -54,16 +54,16 @@ public:
            Flux (NUMBER_OF_POLARIZATIONS times)
 
   */
-  virtual unsigned int setParameters(const std::vector<MeqParm*> &parameters);
+  virtual unsigned int setParameters(const std::vector<MesParm*> &parameters);
 
   virtual unsigned int getNumberOfParameters() const;
 
-  virtual void         getFluxExpressions(std::vector<MeqExpr*> &flux);
+  virtual void         getFluxExpressions(std::vector<MesExpr*> &flux);
 
 protected:
 private:
 
-  MeqParm*  itsFlux[NUMBER_OF_POLARIZATIONS];
+  MesParm*  itsFlux[NUMBER_OF_POLARIZATIONS];
 };
 
 
