@@ -19,7 +19,8 @@
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
 //#  $Id$
-#include <Common/LofarLogger.h>			// contains the API of the LofarLogger
+
+#include <Common/LofarLogger.h>	       // contains the API of the LofarLogger
 #include <Common/hexdump.h>
 
 using namespace std;
@@ -31,9 +32,9 @@ int main (int, char *argv[]) {
 	// Read in the log-environment configuration
 	// We should always start with this.
 #ifdef HAVE_LOG4CPLUS
-	INIT_LOGGER("testHexdump");
+	INIT_LOGGER("tHexdump.log_prop");
 #else
-	INIT_LOGGER("testHexdump.debug");
+	INIT_LOGGER("tHexdump.debug");
 #endif
 
 	// Show operator were are on the air
@@ -47,10 +48,10 @@ int main (int, char *argv[]) {
 	LOG_INFO ("testing hexdump(FILE*, ...)");
 	char	fileTest [80];
 	strcpy (fileTest, "this should appear in the file");
-	FILE*	fd = fopen("./hexdumptest", "w");
+	FILE*	fd = fopen("./tHexdump_tmp.txt", "w");
 	hexdump(fd, fileTest, strlen(fileTest));
 	fclose(fd);
-	system("cat ./hexdumptest");
+	system("cat ./tHexdump_tmp.txt");
 
 	LOG_INFO ("testing hexdump(char*, ...)");
 	char	charPtrTest [80];
