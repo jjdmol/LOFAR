@@ -62,6 +62,7 @@ lofar_QT
 lofar_PACKAGE(Common)
 lofar_PACKAGE(CEP/CPA/OCTOPUSSY)
 lofar_PACKAGE(DMI)
+lofar_AIPSPP(1)
 
 
 dnl

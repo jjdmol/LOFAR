@@ -8,7 +8,8 @@ uvplot_SOURCES := main.cc \
                   UVPSpectrum.cc       \
                   UVPSpectrumVector.cc \
                   UVPTimeFrequencyPlot.cc UVPTimeFrequencyPlot.moc.cc \
-                  UVPUVCoverageArea.cc UVPUVCoverageArea.moc.cc
+                  UVPUVCoverageArea.cc UVPUVCoverageArea.moc.cc \
+                  UVPDataTransferWP.cc
 
 
 # Your package's subdirectory
