@@ -316,18 +316,22 @@ MeqMatrixTmp sum(const MeqMatrix& arg)
 LOFAR::BlobOStream& operator<< (LOFAR::BlobOStream& bs, const MeqMatrix& vec)
 {
   bs.putStart ("MeqMatrix", 1);
-  bs << vec.isDouble() << (vec.nelements()==1);
-  if (vec.isDouble()) {
-    if (vec.nelements() == 1) {
-      bs << vec.getDouble();
-    } else {
-      bs << vec.getDoubleMatrix();
-    }
+  if (vec.rep() == 0) {
+    bs << true;
   } else {
-    if (vec.nelements() == 1) {
-      bs << vec.getDComplex();
+    bs << vec.isDouble() << (vec.nelements()==1);
+    if (vec.isDouble()) {
+      if (vec.nelements() == 1) {
+	bs << vec.getDouble();
+      } else {
+	bs << vec.getDoubleMatrix();
+      }
     } else {
-      bs << vec.getDComplexMatrix();
+      if (vec.nelements() == 1) {
+	bs << vec.getDComplex();
+      } else {
+	bs << vec.getDComplexMatrix();
+      }
     }
   }
   bs.putEnd();
@@ -337,27 +341,32 @@ LOFAR::BlobOStream& operator<< (LOFAR::BlobOStream& bs, const MeqMatrix& vec)
 LOFAR::BlobIStream& operator>> (LOFAR::BlobIStream& bs, MeqMatrix& vec)
 {
   bs.getStart ("MeqMatrix");
-  bool isDouble, isScalar;
-  bs >> isDouble >> isScalar;
-  if (isDouble) {
-    if (isScalar) {
-      double val;
-      bs >> val;
-      vec = MeqMatrix(val);
-    } else {
-      Matrix<double> mat;
-      bs >> mat;
-      vec = MeqMatrix(mat);
-    }
+  bool isNull, isDouble, isScalar;
+  bs >> isNull;
+  if (isNull) {
+    vec = MeqMatrix();
   } else {
-    if (isScalar) {
-      complex<double> val;
-      bs >> val;
-      vec = MeqMatrix(val);
+    bs >> isDouble >> isScalar;
+    if (isDouble) {
+      if (isScalar) {
+	double val;
+	bs >> val;
+	vec = MeqMatrix(val);
+      } else {
+	Matrix<double> mat;
+	bs >> mat;
+	vec = MeqMatrix(mat);
+      }
     } else {
-      Matrix<complex<double> > mat;
-      bs >> mat;
-      vec = MeqMatrix(mat);
+      if (isScalar) {
+	complex<double> val;
+	bs >> val;
+	vec = MeqMatrix(val);
+      } else {
+	Matrix<complex<double> > mat;
+	bs >> mat;
+	vec = MeqMatrix(mat);
+      }
     }
   }
   bs.getEnd();
