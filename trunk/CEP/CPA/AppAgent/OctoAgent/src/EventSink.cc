@@ -46,14 +46,14 @@ bool EventSink::init (const DataRecord &data)
   multiplexer->init();
 // setup input event map
   if( data[FEventMapIn].exists() )
-    setReceiveMap(data[FEventMapIn]);
+    setReceiveMap(data[FEventMapIn].as<DataRecord>());
   else
   {
     cdebug(1)<<"no input event map\n";
   }
 // setup output event map
   if( data[FEventMapOut].exists() )
-    setPostMap(data[FEventMapOut]);
+    setPostMap(data[FEventMapOut].as<DataRecord>());
   else
   {
     cdebug(1)<<"no output event map\n";

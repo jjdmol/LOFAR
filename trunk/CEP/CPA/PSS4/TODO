@@ -1,0 +1,505 @@
+MEQ in general:
+
+  * Think thorugh privatization issues of objects with shortcuts
+    Calling validateContent() is not necessarily efficient -- makes things
+    not-quite-a-noop
+
+  * Add centralized reporting of FAILs via the forest
+  
+  * Add breakpoints on fail  
+
+  * FFT nodes
+
+  * BUG in build system: liboctopython vs octopython
+
+  * BUG: in Gateway reader thread, if a data structure fails unpacking, drop
+    the message instead of terminating the thread (this also includes
+    privatizing)
+
+  * BUG: see how domain deps are generated in the test scripts
+    Setup mechanism to generate default dependencies during a resolve
+
+  * BUG:(?) WSRT MSs may have channels laid out by decreasing freq.
+    This screws up Domain/Cells -- somebody has to either reverse the freq axis,
+    or Domain/Cells need to be reimplemented to support reversed domains.
+
+  * BUG: assigning requestIDs in VisDataMux: should be consistent with symdeps
+    Add knowledge of symdeps to MeqServer itself
+
+  * BUG: Sink does not handle a fail-result gracefully. Or does it?
+    Actually, we need to regularize this whole fail business.
+  
+      + CRITICAL BUG: If spigot is created implicitly (via nested init-records), 
+        it does not get added to the data mux!!! Same goes for loading a forest.
+        Time to rethink this whole I/O business -- tie it to forest.
+        12/08/04: done
+
+      + BUG: Initial Resolve.Children too inefficient in the case of a large set of
+        interlinked solve trees (the singular solver causes everything to be 
+        repeated over and over again). If cache would apply itself properly to 
+        command results, that would solve the whole problem. Think this through.
+        And what about symdep propagation? Same thing, really.
+        12/08/04: done
+        
+      + Better ways to check for a running meqserver?
+        Check esp. when the pipe exists and a debugger is running --
+        I think -nostart, if given, should override everything
+        12/08/04: all done
+  
+      + BUG: RES_UPDATED gets propagated, should it?
+        11/07/04: no, fixed, cleared from cached code
+      + BUG: Condeq cannot handle spids but no pert sets?
+        10/07/05: this is really a malformed result -- added exception
+      + BUG: assigning children record using a=,b= does not insure order.
+        Should it?
+        11/07/05: fixed. See new DataList class, and dmi.list (aka meq.list)
+        function, which ensures order. Old way is now deprecated.
+
+  * new name for Polc? Maybe Fitfunc? Repfunc?
+    Funklet!!
+    
+  * revise auto_resample to support resolution drivers, compute Result cells,
+    revise getResult() to take a Cells argument
+
+  * make linearly interpolating upsampler
+  
+  * change Result constructor to take a Cells argument; change it to do
+    copy-or-attach (perhaps move this function to CountedRef?)
+    
+  * Figure out the right value of epsilon for Cells comparisons
+  
+  * Align glish request_id with new C++ structure
+  
+  * Add tests for all this crap
+  
+  * Update the default node defrec.g
+
+  * meqtypes.g: make all cells fields const, since they should not be changed
+
+    * Think through some more RequestId issues:
+      1) user-defined dependencies ("config" would fall into this category)
+      3) dependency on resolution (same domain, different sampling), and
+         how this affects caching issues in a multi-res tree
+      4) document this!
+      OK, here's an idea: the nodes generating new requests are assigned
+      dependency masks for the parts of the rqid that they update. 
+      These masks are propagated recursively thorugh the tree. For example,
+      a Parm knows it depends on VALUE; the mask corresponding to VALUE is
+      set by the solver and sent up the tree. This way, parms connected to
+      multiple solvers can get their masks right.
+    
+  * Update documentation! (never goes away, does it?)
+    Specifically, a Node construction checklist
+  
+  * Specify child labels in node constructor; check them in init().
+    Process named children properly.
+    Re-opening: we want optional children, too (see, e.g., FlagSubtract)
+    01/01/04: done, need to test w/glish (glish not working on my laptop)
+    16/01/04: tested with default tests; now need to make some nodes
+              with child labels
+              
+        - Add integrate/sample flag to Result -- not to VellSet
+          13/04/04 done
+
+        - Add flag to Cells for equisized cells
+          13/04/04 done: included in segment comparison
+   
+             
+        + figure out caching of cells in ModRes: comparing rqid is wrong wrong wrong
+          18/04/04: actually our own dependMask() is right -- the cached cells
+          depend on request only
+
+        + All nodes that generate requests (Sink, Solver, ModRes) must send up
+          the symdeps that they generate.
+          Is there perhaps an easier way to do it?
+          19/04/04: yes there is, done: see Node::setGenSymDeps()
+
+        + Add Init.Dep.Masks command to MeqServer; change ResolveChildren to a command
+          19/04/04: somewhat done, see next item
+
+        + rework this whole pollChildren() business as it is a mess (in ModRes and
+          Solver)
+          19/04/04: done, it's OK. Have the redefined pollChildren() defer to the
+          standard method if the request has no cells.
+
+        + Make sure Solver passes on cell-less requests transparently
+          19/04/04: done in pollChildren()
+
+              
+        + Add capability to recalc the dependency mask on the fly -- must 
+          remember the dependency masks then.
+          Note that parm should return different masks depending on whether a predict
+          or solve is done.
+          Propagate dependency handling throughout the system:
+          add request modification to nodes that generate new requests
+          18/04/04: done, fucking eh!
+
+        + Make ResampleMachine
+          13/04/04: done
+
+        + Modify Resampler
+          13/04/04: done
+
+              
+        + Add automatic resampling to Function node; handle integrated flag
+          14/04/04: done, at node level
+          13/05/04: tested
+
+        + Add ModRes node
+          14/04/04: done
+          13/05/04: tested
+              
+        + go through setStateImpl, and clean up usage of getStateField
+          31/03/04: done
+
+        + add checkInitState() to recent nodes, setup defaults in state record
+          Move children checks to constructior
+          31/03/04: done
+
+              
+        + Resolution coupler node
+          27/03/04 done: called Resampler
+              
+        + look through VellSet and Result classes, check for privatize-on-write
+          where needed.
+          23/03/04: cleaned up
+              
+        + add shape attribute to VellSet, ensure that Vells, etc. have the same 
+          shape (or are scalar)
+          19/03/04: done
+        
+        + How to tell all the nodes to shut up? (stop publishing)
+          15/03/04: done, added command to MeqServer
+  
+        + update add_command to add to command_all list
+          16/03/04: done
+          
+        + meqsink_test() exits when no such MS; it shouldn't
+          15/03/04: added try/catch to agent init in MeqServer::run()
+  
+        + Use the same mechanism to check the request rider as we do for state
+          updates. E.g., polc values from the solver should be passed in this 
+          manner -- and not via state.
+          27/02/04: all done & tested
+          
+        + reconsider order or events in execute(): should cache be checked
+          only after node_state and rider have been processed? Note that for
+          repeated requests, this step is skipped, regardless. 
+          11/02/04: no, leave as is. 
+  
+    
+        + publish intermediate results
+          29/01/04: done
+  
+        + Clear.Forest command 
+          04/01/04: done, need to test w/glish (glish not working on my laptop)
+          19/01/04: done
+  
+        + Persistent nodes: Save.Forest, Load.Forest, Clear.Cache commands
+          01/01/04: done, need to test w/glish (glish not working on my laptop)
+          16/01/04: MeqParm refuses to reload itself after a solve. Needs work.
+          19/01/04: done
+      
+        + Document the two types of node_state lookups
+        + Document pollChildren()
+          12/12/03
+  
+        + re-work execute(). Make it possible to send up "empty" (command or
+          state-only) requests.  
+        + cache failed Results too (along with result_code and such)
+        + do processRider()
+        + map node_state to setState(), via configuration classes and such.
+          Implement and document the two types of lookups.
+          12/12/03
+
+        + Store nodeindex in node, provide accessor.
+        + rearrange init() and setState() to make use of DataRecord::merge().
+          12/12/03
+
+        + Rename Result to VellSet and ResultSet to Result
+        + Rename getResult() to execute(), and getResultImpl to getResult.
+          08/12/03
+
+        + think through writability & privatization issues. Perhaps finally
+          implement simple copy-on-write as the default policy in DMI?
+          27/11/03: good to go for now. Still thinking about COW.
+          
+Nodes:
+  
+  * make WSum node
+
+  * make ReqSeq node
+  
+  * add resampled child result caching to Node 
+    Work out caching issues with resampled children
+  
+  * review init()/reinit(): could they perhaps be merged? Can we serialize
+    a node before a resolveChildren() call?
+      
+  * Start using the depmask in Node::getCacheResult()
+  
+  * Possibly use empty Cells to indicate constant values? Propagate these
+    properly.
+    
+  * Add Integrator/Differencer node
+  
+  * Look for const_cast in Solver and figure out why it's there!
+
+      + Handle integrated flag in Compose  
+        13/04/04: done
+
+      + Add handling of integrate to leaf nodes 
+        Spigot: set          impl 
+        Time/Freq: not set   impl
+        Const: from config   impl
+        Parm: from config?   impl
+        13/04/04: done
+
+      + Add debug flag to Node that enables extra sanity checking
+        18/04/04: added, not really used yet
+      
+      + review ModRes arguments (specifically, factor) for consistency 
+        with auto-resample
+        14/05/04: done
+      
+      - add a create_or_link flag to initrecord: if the node already exists,
+        throw away the init record and link to it.
+        14/06/04: done, link_or_create
+
+      - add Node.Exists command to MeqServer
+        14/06/04: done, Get.NodeIndex
+
+      - allow initrec.children=F for no children
+        14/06/04: done
+
+Solver:
+
+  ? BUG: JEN has a problem after Clear.Polcs: execute returns a fail saying
+    "no cells in Meq::Request"
+    
+      [ Apply a gain factor to incremental value updates (perhaps both on the 
+        solver side, and on the parm side?) ]
+    
+        + Implement request ID hierarchy
+          28/01/04: done
+  
+        + Generate a valid RequestId even if the input request is NULL.
+          This ties in to hierarchical requests, so maybe something simple for now
+          (i.e., append iteration index or something?)
+          20/01/04: done for now; revisit with hierarchical requests
+          
+
+Flagging:
+  
+      + add generic flag_mask functionality (a-la MergeFlags) to Function
+        23/03/04: done
+
+      + implement ZeroFlagger: flag where value <OP> 0 (OP is ==,!=,<,>,<=,>=)
+        23/03/04: done
+
+      + implement MergeFlags: merge flags of all children
+        23/03/04: done
+
+
+Sink/Spigot:
+
+  * improve Spigot flag reading options: e.g., apply mask to input, and
+    if true, place result into 1 bit of the output
+  
+  * handle writing flags in Sink; check if they're written correctly by
+    MSOutput
+  
+        + handle flags in Spigot 
+          19/03/04: done
+  
+        + In deliver, just stick the result in the cache and let the caching code
+          take care of everything else. 
+          10/01/04: done, needs testing
+          20/01/04: seems to work
+    
+        + Allow string specification for correlations
+          09/01/04: no need, now that Spigots output all correlations at once.
+
+Parm:
+
+  * develop different strategies for handling multiple polcs
+  
+        + for grow_domain: use the envelope domain, rather than checking for 
+          strict supersets.
+          01/03/04: done
+
+        + rework parm so that predict-only requests may be satisfied without dropping
+          the solvable polc (i.e. keep the solvable polc and the per-domain cached
+          polcs separate)
+          01/03/04: done
+  
+        + move the update-via-FValue mechanism to the request rider; it doesn't
+          really belong in state proper. (The rider needs to be reworked, see 
+          entry above).
+          25/02/04: done
+
+        + If a polc with the right domain is already specified in the init-record,
+          do not read the tables
+          11/02/04: done: added inf_domain and grow_domain attributes to a polc
+    
+        + take over from GvD; log any issues that result
+          06/02/04: done
+    
+        + Figure out how to specify default values (with, e.g., an infinite domain)
+          28/01/04: emerged from discussions with JEN
+
+Request: 
+
+  * Buglet: when Jan supplied an illegal request (wrong fields, unmatched IDs), the 
+    error message was not exactly descriptive
+    
+        + BUG: Figure out why state_test() (meqtest.g) causes Requests to be
+          fail to unpack upon the first invocation. Possibly related to problem
+          below. See details in report 1 below. 14/01/04: found; Cells was
+          missing a clone() and thus wouldn't clone itself properly. Request
+          would only occasionally be cloned (depending on whether the other
+          thread already released the message or not), thus the error only
+          showed up when true cloning occurred. Removing bug report from this
+          file.
+
+Vells and VellSets and Results:
+
+  * think of extending the Vells math functions: median, etc.
+
+    - double-differencing?
+      02/02/04 done for VellSets, needs real testing
+    
+        + Vells(DataArray*) constructor: if rank<2 but nelements==1, reform the 
+          array (otherwise, won't instantiate from scalars!)
+          09/02/04: perhaps unnecessary, seeing as we have a meqpolc() glish function?
+          16/03/04: stick a fork in it: meqpolc() ensures this
+    
+        + Problem with in-place operators (+= etc.) and type promotion
+          15/01/04 fixed
+    
+Function:
+  
+        + Allow cases where a Result has 1 plane and another has N planes: treat
+          the single-plane result as a scalar
+          12/12/03 done
+          
+DMI & Debug:
+
+  * add lazy unblocking to DataRecord
+
+  * ? add protect feature to container fields (for use in classes such as 
+    Meq::Result etc.) Note that Hook::replace() does not play well with this.
+    (merged with: expose lock()/unlock() of DataRecord fields. Do not lock 
+    fields by default. Use locking to "protect" fields, e.g., in the MEQ 
+    Request & Result classes.)
+
+  * ? implement CountedRef::makeWritable since this seems to be a very common
+    operation
+    
+  * ? think about recursive makeReadonly: do this on a data structure to make
+    sure recepient can't change anything without COW. What to do if we hit
+    a readonly branch?
+    
+  * implement Hook = Hook and Hook <<= Hook, should be easy to do now
+  
+        + remove flags argument from DataField constructor
+          31/03/04: done
+
+        + implement bool Hook::get(T&), for getting stuff by value (or pointer?),
+          and simultaneously returning false if not defined.
+          31/03/04: done
+    
+        + In Debug: add capability to redirect the debug message stream
+          30/01/04 done
+
+        + Keep thinking about COWs. Perhaps make hooks implicit-COW? This would 
+          mean declaring an operator [] on CountedRefs? 
+          30/01/04 done
+          
+        + provide conversions between scalars and single-element arrays
+          09/02/04 done & tested
+
+        + DataField: getting a non-existing element as an ObjRef makes the
+          element MODIFIED. This can cause confusion later on. Perhaps it
+          should only be returned as MODIFIED if write-access is requested?
+          apparently fixed 25/01/04
+    
+
+OCTOPUSSY:
+
+  * PERF: why does privatizing message arguments in MeqServer
+    sometimes lead to cloning? I don't see why anybody else would be holding
+    onto the message.
+    Update 14/01/04: in fact in a multi-threaded scenario the dispatcher
+    is holding onto the message throughout send(). Even if there's only one
+    recepient, there's a chance that the recepient thread wakes up, grabs
+    the message and starts wastefully cloning it (via a privatize call) 
+    because Dispatcher::send() is not yet complete. This ties into the COW
+    issue as well; both need to be considered together. As an alternative, 
+    perhaps there's a way for send() to block all updated recepients from 
+    waking up until the entire send() cycle is complete.
+
+  * BUG: test_octopussy crashes with the NPTL libraries (rh9 system with 2.6 
+    kernel, using /lib/tls/ instead of /lib/i686/: try e.g. lofar17, or
+    zeppelin at home)
+ 
+  * BUG: valgrind reports thread deadlock on the Dispatcher::startup_cond
+    and Dispatcher::repoll_cond condition vars. How is this even possible?
+    Perhaps related to problem below?
+    
+  * BUG: Figure out why the hell it freezes on a single-CPU machine sometimes. A
+    race condition somewhere? NB: a sure way to do it (on zeppelin) seems to
+    enable wait_reply=T in the Resolve.Children calls in meqtest.g.
+
+  * BUG: Check how a zero-length string or hiid array from Glish shows up in
+    AppAgent -- because it looked like a 1-element DataField when 
+    processing child specs.
+    
+  * BUG: Ditto for zero-length arrays ('[]'), i.e., uninitialized domain, etc.
+
+  * Check for USE_THREADS when playing with mutexes (or improve the definition
+    of mutexes when compiling without threads: declare constructors for
+    Mutex::Lock and all that crap)
+
+General:
+
+  * Fix MeqServer/test/solver_test to run in a "clean" environment
+    (i.e. no install, no .glishrc, etc -- mostly related to include paths)
+    10/02/04: symlinks to ../pkginc/*.g do part of the job. What do we do
+    about *.g files installed in subdirectories though?
+
+        + what to do about too many events? One idea: add a silent flag to
+          each command: no reply if command is successful.
+          14/06/04: too many events either way make the system slow down.
+          still investigating.
+          22/06/04: revised GlishClientWP into a multithreaded thing, seems to
+          have helped
+
+        + Bug: MSOutputSink: output to new column doesn't work, column stays
+          'dummy'. Ask Ger for help, since I'm obviously misusing tables
+          somehow. 20/01/04: not a bug -- it actually works perfectly. It's the
+          bloody table browser that's broken!
+
+        + How to use different (gcc-version-specific) libstdc++ versions?
+          This can be addressed via LD_LIBRARY_PATH; ideally, we'd like to list
+          all gcc/../lib dirs in /etc/ld.so.conf and not worry about it. Can we
+          make the binary select the correct library via DT_RUNPATH somehow (see
+          the ld.so(1) man page)?
+        + solution: pass the following flags to the linker: 
+            --enable-new-dtags -rpath /usr/local/gcc-x.y.z/lib/blahblahblah
+          This adds an RPATH section to the binary which makes it select the
+          correct library.
+
+          merged: * tDataArray segfaults (gcc 3.3.2)
+                    14/01/04: ldd was using wrong libstdc++ version.
+    
+        + test_dmi fails (gcc 3.2.1, 3.3.2)
+          14/01/04: fixed, see problem with DataField
+
+        + GlishUtil: interpret record field name "#nnn" as AtomicID(atoi("nnn"))
+        + DataField: check how type mismatches are reported; clean up
+          12/12/03
+        + DataRecord: add a merge method
+          8/12/03: done
+          
+          
