@@ -21,7 +21,6 @@ CXXFLAGS += \
 check_PROGRAMS			= Example 		\
 				  Simulator_Example	\
 				  Tester		\
-				  tSAXSimulParser	\
 				  tParamBlock		\
 				  shmem_alloc1		\
 				  shmem_alloc2		\
@@ -31,7 +30,6 @@ check_PROGRAMS			= Example 		\
 Example_SOURCES 		= Example.cc
 Simulator_Example_SOURCES	= Simulator_Example.cc Simulator_Example.h
 Tester_SOURCES			= Tester.cc
-tSAXSimulParser_SOURCES		= tSAXSimulParser.cc
 tParamBlock_SOURCES		= tParamBlock.cc
 tmat_SOURCES			= tmat.cc
 shmem_alloc1_SOURCES		= shmem_alloc1.cc
@@ -51,8 +49,6 @@ CyclicBufferTest_DEPENDENCIES	= ../src/libbasesim.la $(LOFAR_DEPEND) -lpthread
 #Simulator_Example_DEPENDENCIES	= ../src/libbasesim.la $(LOFAR_DEPEND)
 #Tester_LDADD			= ../src/libbasesim.la
 #Tester_DEPENDENCIES		= ../src/libbasesim.la $(LOFAR_DEPEND)
-#tSAXSimulParser_LDADD		= ../src/libbasesim.la
-#tSAXSimulParser_DEPENDENCIES	= ../src/libbasesim.la $(LOFAR_DEPEND)
 #tParamBlock_LDADD		= ../src/libbasesim.la
 #tParamBlock_DEPENDENCIES	= ../src/libbasesim.la $(LOFAR_DEPEND)
 
@@ -64,7 +60,6 @@ TESTS	=					\
 	Example_test.sh				\
 	Simulator_Example_test.sh		\
 	Tester_test.sh				\
-	tSAXSimulParser_test.sh			\
 	tParamBlock_test.sh			\
 	tmat_test.sh				\
 	shmem_alloc1.sh				\
@@ -79,9 +74,6 @@ EXTRA_DIST = 					\
 	Simulator_Example_test.sh		\
 	Tester.out				\
 	Tester_test.sh				\
-	tSAXSimulParser.in			\
-	tSAXSimulParser_test.sh			\
-	tSAXSimulParser.out			\
 	tParamBlock_test.sh			\
 	tParamBlock.out				\
 	tmat_test.sh				\

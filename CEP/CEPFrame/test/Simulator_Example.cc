@@ -19,21 +19,22 @@
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //
 //  $Id$
-
+//
+/////////////////////////////////////////////////////////////////////////
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
 
 #include "Simulator_Example.h"
-#include "BaseSim/SimulatorParseClass.h"
-#include "BaseSim/ParamBlock.h"
-#include "BaseSim/Transport.h"
-#include "BaseSim/Step.h"
-#include "BaseSim/BaseSim.h"
-#include "BaseSim/Simul.h"
-#include "BaseSim/WH_Example.h"
-#include "BaseSim/Profiler.h"
+#include "CEPFrame/SimulatorParseClass.h"
+#include "CEPFrame/ParamBlock.h"
+#include "CEPFrame/Transport.h"
+#include "CEPFrame/Step.h"
+#include "CEPFrame/BaseSim.h"
+#include "CEPFrame/Simul.h"
+#include "CEPFrame/WH_Example.h"
+#include "CEPFrame/Profiler.h"
 #include "Common/Debug.h"
 #include <Common/lofar_iostream.h>
 
@@ -47,7 +48,7 @@ void Simulator_Example::define (const ParamBlock& params)
   int rank = TRANSPORTER::getCurrentRank ();
   unsigned int size = TRANSPORTER::getNumberOfNodes();
   int appl = Step::getCurAppl ();
-  cout << "BaseSim Processor " << rank << " of " << size
+  cout << "CEPFrame Processor " << rank << " of " << size
        << " operational  (appl=" << appl << ')' << endl;
 
   // define the top-level simul object
