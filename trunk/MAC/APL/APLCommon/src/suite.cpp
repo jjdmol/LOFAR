@@ -31,9 +31,6 @@
 
 #include "suite.h"
 #include <Common/lofar_iostream.h>
-#include <stdexcept>
-#include <cassert>
-using namespace std;
 
 void Suite::addTest(Test* t)
 {

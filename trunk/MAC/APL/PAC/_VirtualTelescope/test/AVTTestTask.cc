@@ -20,32 +20,38 @@
 //#
 //#  $Id$
 
+#include <GCF/GCF_PValue.h>
 #include "AVTTest.h"
 #include "AVTTestTask.h"
+#include "../src/LogicalDevice_Protocol.ph"
 
 #include <stdio.h>
 
-const string sTaskName    = "AVTTest";
-const string sSBFName     = "AVTTestSBF1";
+string sTaskName    = "AVTTest";
+string sSBFName     = "AVTTestSBF1";
 const string sSBFAPCName  = "AVTTestSBFAPC";
 const string sSBFAPCScope = "AVTTestSBFAPCScope";
-const string sVTName      = "AVTTestVT1";
+string sVTName      = "AVTTestVT1";
 const string sVTAPCName   = "AVTTestVTAPC";
 const string sVTAPCScope  = "AVTTestVTAPCScope";
-const string sBSName      = "BeamServer";
+string sBSName      = "BeamServer";
 
+const TProperty  propertySBFStatus =
+{"status",GCFPValue::LPT_STRING,GCF_READABLE_PROP|GCF_WRITABLE_PROP,"unknown"};
 const TPropertySet primaryPropertySetSBF =
-{
-};
+{1,"LCU1_VT1",&propertySBFStatus};
  
+const TProperty propertyVTStatus = 
+{"status",GCFPValue::LPT_STRING,GCF_READABLE_PROP|GCF_WRITABLE_PROP,"unknown"};
 const TPropertySet primaryPropertySetVT = 
-{
-};
+{1,"LCU1",&propertyVTStatus};
 
-AVTTestTask::AVTTestTask(AVTTestTask& tester) :
+AVTTestTask::AVTTestTask(AVTTest& tester) :
   GCFTask((State)&AVTTestTask::initial, sTaskName),
   m_beamformer(sSBFName,primaryPropertySetSBF,sSBFAPCName,sSBFAPCScope,sBSName),
   m_virtualTelescope(sVTName,primaryPropertySetVT,sVTAPCName,sVTAPCScope,m_beamformer),
+  m_BFPort(),
+  m_VTPort(),
   m_tester(tester)
 {
 }
@@ -61,8 +67,8 @@ GCFEvent::TResult AVTTestTask::initial(GCFEvent& e, GCFPortInterface& /*p*/)
   switch (e.signal)
   {
     case F_INIT_SIG:
-      m_beamformer.getPort().init(m_beamformer, "AVTTestClient", GCFPortInterface::SAP, LOGICALDEVICE_PROTOCOL);
-      m_virtualTelescope.getPort().init(m_virtualTelescope, "AVTTestClient", GCFPortInterface::SAP, LOGICALDEVICE_PROTOCOL);
+      m_BFPort.init(m_beamformer, "AVTTestClient", GCFPortInterface::SAP, LOGICALDEVICE_PROTOCOL);
+      m_VTPort.init(m_virtualTelescope, "AVTTestClient", GCFPortInterface::SAP, LOGICALDEVICE_PROTOCOL);
       TRAN(AVTTestTask::test1);
       break;
 
@@ -77,7 +83,7 @@ GCFEvent::TResult AVTTestTask::initial(GCFEvent& e, GCFPortInterface& /*p*/)
 /* 
  * Test case: set antenna orhtogonalization weights
  */
-GCFEvent::TResult AVTTestTask::test1(GCFEvent& e, GCFPortInterface& p)
+GCFEvent::TResult AVTTestTask::test1(GCFEvent& e, GCFPortInterface& /*p*/)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
@@ -100,7 +106,7 @@ GCFEvent::TResult AVTTestTask::test1(GCFEvent& e, GCFPortInterface& p)
 /* 
  * Test case: initialize EPA waveform generator
  */
-GCFEvent::TResult AVTTestTask::test2(GCFEvent& e, GCFPortInterface& p)
+GCFEvent::TResult AVTTestTask::test2(GCFEvent& e, GCFPortInterface& /*p*/)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
@@ -122,7 +128,7 @@ GCFEvent::TResult AVTTestTask::test2(GCFEvent& e, GCFPortInterface& p)
 /* 
  * Test case: create beamformer
  */
-GCFEvent::TResult AVTTestTask::test3(GCFEvent& e, GCFPortInterface& p)
+GCFEvent::TResult AVTTestTask::test3(GCFEvent& e, GCFPortInterface& /*p*/)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
@@ -144,7 +150,7 @@ GCFEvent::TResult AVTTestTask::test3(GCFEvent& e, GCFPortInterface& p)
 /* 
  * Test case: select beamlets
  */
-GCFEvent::TResult AVTTestTask::test4(GCFEvent& e, GCFPortInterface& p)
+GCFEvent::TResult AVTTestTask::test4(GCFEvent& e, GCFPortInterface& /*p*/)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
@@ -166,7 +172,7 @@ GCFEvent::TResult AVTTestTask::test4(GCFEvent& e, GCFPortInterface& p)
 /* 
  * Test case: select subbands
  */
-GCFEvent::TResult AVTTestTask::test5(GCFEvent& e, GCFPortInterface& p)
+GCFEvent::TResult AVTTestTask::test5(GCFEvent& e, GCFPortInterface& /*p*/)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
@@ -188,7 +194,7 @@ GCFEvent::TResult AVTTestTask::test5(GCFEvent& e, GCFPortInterface& p)
 /* 
  * Test case: set beam direction
  */
-GCFEvent::TResult AVTTestTask::test6(GCFEvent& e, GCFPortInterface& p)
+GCFEvent::TResult AVTTestTask::test6(GCFEvent& e, GCFPortInterface& /*p*/)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
@@ -210,7 +216,7 @@ GCFEvent::TResult AVTTestTask::test6(GCFEvent& e, GCFPortInterface& p)
 /* 
  * Test case: monitor statistics
  */
-GCFEvent::TResult AVTTestTask::test7(GCFEvent& e, GCFPortInterface& p)
+GCFEvent::TResult AVTTestTask::test7(GCFEvent& e, GCFPortInterface& /*p*/)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
@@ -232,7 +238,7 @@ GCFEvent::TResult AVTTestTask::test7(GCFEvent& e, GCFPortInterface& p)
 /* 
  * Test case: cleanup
  */
-GCFEvent::TResult AVTTestTask::test8(GCFEvent& e, GCFPortInterface& p)
+GCFEvent::TResult AVTTestTask::test8(GCFEvent& e, GCFPortInterface& /*p*/)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
@@ -254,7 +260,7 @@ GCFEvent::TResult AVTTestTask::test8(GCFEvent& e, GCFPortInterface& p)
 /* 
  * Test case: tbd
  */
-GCFEvent::TResult AVTTestTask::test9(GCFEvent& e, GCFPortInterface& p)
+GCFEvent::TResult AVTTestTask::test9(GCFEvent& e, GCFPortInterface& /*p*/)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
 

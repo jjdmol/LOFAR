@@ -43,7 +43,7 @@ AVTLogicalDevice::~AVTLogicalDevice()
 {
 }
 
-const string& AVTLogicalDevice::getServerPortName()
+string& AVTLogicalDevice::getServerPortName()
 {
   return m_serverPortName;
 }
@@ -209,7 +209,7 @@ GCFEvent::TResult AVTLogicalDevice::claimed_state(GCFEvent& event, GCFPortInterf
   return status;
 }
 
-GCFEvent::TResult AVTLogicalDevice::prepairing_state(GCFEvent& event, GCFPortInterface& port)
+GCFEvent::TResult AVTLogicalDevice::preparing_state(GCFEvent& event, GCFPortInterface& port)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
@@ -229,14 +229,14 @@ GCFEvent::TResult AVTLogicalDevice::prepairing_state(GCFEvent& event, GCFPortInt
     default:
       // call the implementation of the derived class
       bool stateFinished=false;
-      status = concrete_prepairing_state(event,port,stateFinished);
+      status = concrete_preparing_state(event,port,stateFinished);
       if(stateFinished)
       {
         port.send(LOGICALDEVICE_PREPARED);
         TRAN(AVTLogicalDevice::suspended_state);
       }
       break;
-
+  }
   return status;
 }
 

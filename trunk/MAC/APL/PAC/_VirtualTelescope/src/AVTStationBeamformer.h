@@ -38,11 +38,11 @@ class AVTStationBeamformer : public AVTLogicalDevice
 {
   public:
 
-    explicit AVTStationBeamformer(const string& name, 
+    explicit AVTStationBeamformer(string& name, 
                                   const TPropertySet& primaryPropertySet,
                                   const string& APCName,
                                   const string& APCScope,
-                                  const string& beamServerPortName); 
+                                  string& beamServerPortName); 
     virtual ~AVTStationBeamformer();
 
   protected:
@@ -62,14 +62,17 @@ class AVTStationBeamformer : public AVTLogicalDevice
      */
     virtual GCFEvent::TResult concrete_claiming_state(GCFEvent& e, GCFPortInterface& p, bool& stateFinished);
     /**
-     * returns true if the prepairing state has finished
+     * returns true if the preparing state has finished
      */
-    virtual GCFEvent::TResult concrete_prepairing_state(GCFEvent& e, GCFPortInterface& p, bool& stateFinished);
+    virtual GCFEvent::TResult concrete_preparing_state(GCFEvent& e, GCFPortInterface& p, bool& stateFinished);
     /**
      * returns true if the releasing state has finished
      */
     virtual GCFEvent::TResult concrete_releasing_state(GCFEvent& e, GCFPortInterface& p, bool& stateFinished);
     
+    virtual void handlePropertySetAnswer(GCFEvent& answer);
+    virtual void handleAPCAnswer(GCFEvent& answer);
+
     virtual void concreteClaim(GCFPortInterface& port);
     virtual void concretePrepare(GCFPortInterface& port);
     virtual void concreteResume(GCFPortInterface& port);

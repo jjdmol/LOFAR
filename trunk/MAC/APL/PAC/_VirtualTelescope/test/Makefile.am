@@ -1,4 +1,4 @@
-check_PROGRAMS 		= avttest
+noinst_PROGRAMS 		= avttest
 
 TESTS			= #avttest
 
@@ -7,8 +7,10 @@ avttest_SOURCES 		= \
 	AVTTestTask.cc \
 	AVTTestMain.cc
 	
-avttest_LDADD		= ../src/libvirtualtelescope.la
-avttest_DEPENDENCIES	= ../src/libvirtualtelescope.la $(LOFAR_DEPEND)
+avttest_LDADD		= ../src/libvirtualtelescope.la \
+	$(top_builddir)/APLCommon/src/libaplcommon.la
+avttest_DEPENDENCIES	= ../src/libvirtualtelescope.la $(LOFAR_DEPEND) \
+	$(top_builddir)/APLCommon/src/libaplcommon.la
 
 BUILT_SOURCES = \
 	avttest.ns \
