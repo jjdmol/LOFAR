@@ -81,7 +81,7 @@ GCFEvent::TResult RSPTest::initial(GCFEvent& e, GCFPortInterface& port)
 
     case F_CONNECTED:
     {
-      TRAN(RSPTest::test001);
+      TRAN(RSPTest::test010);
     }
     break;
 
@@ -120,7 +120,7 @@ GCFEvent::TResult RSPTest::test001(GCFEvent& e, GCFPortInterface& port)
       /* start of the test sequence */
       RSPSetweightsEvent sw;
       sw.timestamp.setNow(10);
-      cout << "sw.time=" << sw.timestamp << endl;
+      LOG_INFO_STR("sw.time=" << sw.timestamp);
       sw.rcumask.reset();
       sw.weights().resize(1, 1, N_BEAMLETS);
 
@@ -137,7 +137,7 @@ GCFEvent::TResult RSPTest::test001(GCFEvent& e, GCFPortInterface& port)
       RSPSetweightsackEvent ack(e);
 
       TESTC_ABORT(ack.status == SUCCESS, RSPTest::final);
-      cout << "ack.time=" << ack.timestamp << endl;
+      LOG_INFO_STR("ack.time=" << ack.timestamp);
 
       TRAN(RSPTest::test002);
     }
@@ -178,7 +178,7 @@ GCFEvent::TResult RSPTest::test002(GCFEvent& e, GCFPortInterface& port)
 	  /* start of the test sequence */
 	  RSPGetweightsEvent sw;
 	  sw.timestamp.setNow(5);
-	  cout << "sw.time= " << sw.timestamp << endl;	  
+	  LOG_INFO_STR("sw.time= " << sw.timestamp);
 	  sw.rcumask.reset();
 	  sw.rcumask.set(0);
 	  sw.cache = false;
@@ -191,8 +191,8 @@ GCFEvent::TResult RSPTest::test002(GCFEvent& e, GCFPortInterface& port)
       {
 	  RSPGetweightsackEvent ack(e);
 
-	  cout << "ack.weights = " << ack.weights() << endl;
-	  cout << "ack.time= " << ack.timestamp << endl;
+	  LOG_INFO_STR("ack.weights = " << ack.weights());
+	  LOG_INFO_STR("ack.time= " << ack.timestamp);
 
 	  TESTC_ABORT(ack.status == SUCCESS, RSPTest::final);
 
@@ -235,7 +235,7 @@ GCFEvent::TResult RSPTest::test003(GCFEvent& e, GCFPortInterface& port)
       /* start of the test sequence */
       RSPSetweightsEvent sw;
       sw.timestamp = Timestamp(0,0);
-      cout << "sw.time=" << sw.timestamp << endl;
+      LOG_INFO_STR("sw.time=" << sw.timestamp);
       sw.rcumask.reset();
       sw.weights().resize(1, 1, N_BEAMLETS);
 
@@ -252,7 +252,7 @@ GCFEvent::TResult RSPTest::test003(GCFEvent& e, GCFPortInterface& port)
       RSPSetweightsackEvent ack(e);
 
       TESTC_ABORT(ack.status == SUCCESS, RSPTest::final);
-      cout << "ack.time=" << ack.timestamp << endl;
+      LOG_INFO_STR("ack.time=" << ack.timestamp);
 
       TRAN(RSPTest::test004);
     }
@@ -295,7 +295,7 @@ GCFEvent::TResult RSPTest::test004(GCFEvent& e, GCFPortInterface& port)
 
       // 20 seconds from now
       sw.timestamp.setNow(20);
-      cout << "sw.time=" << sw.timestamp << endl;
+      LOG_INFO_STR("sw.time=" << sw.timestamp);
       sw.rcumask.reset();
 
       // send weights for 10 timesteps
@@ -314,7 +314,7 @@ GCFEvent::TResult RSPTest::test004(GCFEvent& e, GCFPortInterface& port)
       RSPSetweightsackEvent ack(e);
 
       TESTC_ABORT(ack.status == SUCCESS, RSPTest::final);
-      cout << "ack.time=" << ack.timestamp << endl;
+      LOG_INFO_STR("ack.time=" << ack.timestamp);
 
       TRAN(RSPTest::test005);
     }
@@ -381,7 +381,7 @@ GCFEvent::TResult RSPTest::test005(GCFEvent& e, GCFPortInterface& port)
       RSPSetsubbandsackEvent ack(e);
 
       TESTC_ABORT(ack.status == SUCCESS, RSPTest::final);
-      cout << "ack.time=" << ack.timestamp << endl;
+      LOG_INFO_STR("ack.time=" << ack.timestamp);
 
       TRAN(RSPTest::test006);
     }
@@ -436,7 +436,7 @@ GCFEvent::TResult RSPTest::test006(GCFEvent& e, GCFPortInterface& port)
       RSPGetstatusackEvent ack(e);
 
       TESTC_ABORT(ack.status == SUCCESS, RSPTest::final);
-      cout << "ack.time=" << ack.timestamp << endl;
+      LOG_INFO_STR("ack.time=" << ack.timestamp);
 
       LOG_INFO_STR("board=" << ack.sysstatus.board());
       LOG_INFO_STR("rcu="   << ack.sysstatus.rcu());
@@ -493,7 +493,7 @@ GCFEvent::TResult RSPTest::test007(GCFEvent& e, GCFPortInterface& port)
       RSPGetsubbandsackEvent ack(e);
 
       TESTC_ABORT(ack.status == SUCCESS, RSPTest::final);
-      cout << "ack.time=" << ack.timestamp << endl;
+      LOG_INFO_STR("ack.time=" << ack.timestamp);
 
       LOG_INFO_STR("subbands=" << ack.subbands());
       LOG_INFO_STR("nsubbands=" << ack.subbands.nrsubbands());
@@ -548,7 +548,7 @@ GCFEvent::TResult RSPTest::test008(GCFEvent& e, GCFPortInterface& port)
       RSPGetversionackEvent ack(e);
 
       TESTC_ABORT(ack.status == SUCCESS, RSPTest::final);
-      cout << "ack.time=" << ack.timestamp << endl;
+      LOG_INFO_STR("ack.time=" << ack.timestamp);
 
       for (int i = 0; i < ack.versions.rsp().extent(firstDim); i++)
       {
@@ -569,8 +569,179 @@ GCFEvent::TResult RSPTest::test008(GCFEvent& e, GCFPortInterface& port)
 	printf("\n");
       }
       
-      TRAN(RSPTest::final);
+      TRAN(RSPTest::test009);
+    }
+    break;
 
+    case F_DISCONNECTED:
+    {
+      port.close();
+
+      FAIL_ABORT("unexpected disconnect", RSPTest::final);
+    }
+    break;
+
+    case F_EXIT:
+    {
+      STOP_TEST();
+    }
+    break;
+
+    default:
+      status = GCFEvent::NOT_HANDLED;
+      break;
+  }
+
+  return status;
+}
+
+GCFEvent::TResult RSPTest::test009(GCFEvent& e, GCFPortInterface& port)
+{
+  GCFEvent::TResult status = GCFEvent::HANDLED;
+  
+  switch (e.signal)
+  {
+    case F_ENTRY:
+    {
+      START_TEST("test009", "test SET/GET WG");
+
+      // send wg settings for RCU 0
+
+      RSPSetwgEvent wgset;
+      wgset.timestamp.setNow();
+      wgset.rcumask.reset();
+      wgset.rcumask.set(0);
+      wgset.settings().resize(1);
+      wgset.settings()(0).freq            = 0xaabb;
+      wgset.settings()(0).ampl            = 0xccdd;
+      wgset.settings()(0).nof_usersamples = 0x1122;
+      wgset.settings()(0).mode            = 0;
+      
+      TESTC_ABORT(m_server.send(wgset), RSPTest::final);
+    }
+    break;
+
+    case RSP_SETWGACK:
+    {
+      RSPSetwgackEvent ack(e);
+
+      TESTC_ABORT(ack.status == SUCCESS, RSPTest::final);
+      LOG_INFO_STR("ack.time=" << ack.timestamp);
+
+      // read back settings
+      RSPGetwgEvent wgget;
+
+      wgget.timestamp.setNow(1);
+      wgget.rcumask.reset();
+      wgget.rcumask.set(0);
+      wgget.cache = false;
+
+      TESTC_ABORT(m_server.send(wgget), RSPTest::final);
+    }
+    break;
+    
+    case RSP_GETWGACK:
+    {
+      RSPGetwgackEvent ack(e);
+
+      TESTC_ABORT(ack.status == SUCCESS, RSPTest::final);
+      LOG_INFO_STR("ack.time=" << ack.timestamp);
+      
+      LOG_INFO_STR("freq            =" << ack.settings()(0).freq << endl << 
+		   "ampl            =" << ack.settings()(0).ampl << endl <<
+		   "nof_usersamples =" << ack.settings()(0).nof_usersamples << endl <<
+		   "mode            =" << ack.settings()(0).mode << endl);
+
+      TRAN(RSPTest::test010);
+    }
+    break;
+
+    case F_DISCONNECTED:
+    {
+      port.close();
+
+      FAIL_ABORT("unexpected disconnect", RSPTest::final);
+    }
+    break;
+
+    case F_EXIT:
+    {
+      STOP_TEST();
+    }
+    break;
+
+    default:
+      status = GCFEvent::NOT_HANDLED;
+      break;
+  }
+
+  return status;
+}
+
+GCFEvent::TResult RSPTest::test010(GCFEvent& e, GCFPortInterface& port)
+{
+  static int updcount = 0;
+  
+  GCFEvent::TResult status = GCFEvent::HANDLED;
+  
+  switch (e.signal)
+  {
+    case F_ENTRY:
+    {
+      START_TEST("test010", "test UPDSTATUS");
+
+      // subscribe to status updates
+      RSPSubstatusEvent substatus;
+
+      substatus.timestamp.setNow();
+      substatus.rcumask.reset();
+      substatus.rcumask.set(0);
+      substatus.period = 1;
+      
+      TESTC_ABORT(m_server.send(substatus) > 0, RSPTest::final);
+    }
+    break;
+
+    case RSP_SUBSTATUSACK:
+    {
+      RSPSubstatusackEvent ack(e);
+
+      TESTC_ABORT(ack.status == SUCCESS, RSPTest::final);
+      LOG_INFO_STR("ack.time=" << ack.timestamp);
+    }
+    break;
+
+    case RSP_UPDSTATUS:
+    {
+      RSPUpdstatusEvent upd(e);
+
+      TESTC_ABORT(upd.status == SUCCESS, RSPTest::final);
+      LOG_INFO_STR("upd.time=" << upd.timestamp);
+      LOG_INFO_STR("upd.handle=" << upd.handle);
+      
+      LOG_INFO_STR("upd.sysstatus.board=" << upd.sysstatus.board());
+      LOG_INFO_STR("upd.sysstatus.rcu(0)=" << upd.sysstatus.rcu()(0));
+
+      if (updcount++ > 20)
+      {
+	RSPUnsubstatusEvent unsub;
+	unsub.handle = 0;
+
+	TESTC_ABORT(m_server.send(unsub) > 0, RSPTest::final);
+      }
+    }
+    break;
+    
+    case RSP_UNSUBSTATUSACK:
+    {
+      RSPUnsubstatusackEvent ack(e);
+
+      TESTC_ABORT(ack.status == SUCCESS, RSPTest::final);
+      LOG_INFO_STR("ack.time=" << ack.timestamp);
+
+      LOG_INFO_STR("ack.handle=" << ack.handle);
+
+      TRAN(RSPTest::final);
       port.close();
     }
     break;

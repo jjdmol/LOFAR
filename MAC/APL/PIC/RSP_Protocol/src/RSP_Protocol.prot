@@ -341,16 +341,17 @@ event = {
   signal = SUBSTATUS;
   dir = IN;
   param = {
+    name = "timestamp";
+    type = "Timestamp";
+    userdefined;
+  };
+  param = {
     name = "rcumask";
     type = "std::bitset<MAX_N_RCUS>";
   };
   param = {
     name = "period";
     type = "int16";
-  };
-  param = {
-    name = "handle";
-    type = "uint32";
   };
 };
 

@@ -1,6 +1,6 @@
 //#  -*- mode: c++ -*-
 //#
-//#  GetStatusCmd.h: Get system status command.
+//#  UpdStatusCmd.h: Get system status command.
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -22,8 +22,8 @@
 //#
 //#  $Id$
 
-#ifndef GETSTATUSCMD_H_
-#define GETSTATUSCMD_H_
+#ifndef UPDSTATUSCMD_H_
+#define UPDSTATUSCMD_H_
 
 #include "Command.h"
 #include "RSP_Protocol.ph"
@@ -33,16 +33,16 @@
 
 namespace RSP
 {
-  class GetStatusCmd : public Command
+  class UpdStatusCmd : public Command
   {
     public:
       /**
-       * Constructors for a GetStatusCmd object.
+       * Constructors for a UpdStatusCmd object.
        */
-      GetStatusCmd(GCFEvent& event, GCFPortInterface& port, Operation oper);
+      UpdStatusCmd(GCFEvent& event, GCFPortInterface& port, Operation oper);
 	  
-      /* Destructor for GetStatusCmd. */
-      virtual ~GetStatusCmd();
+      /* Destructor for UpdStatusCmd. */
+      virtual ~UpdStatusCmd();
 
       /**
        * Acknowledge the command by sending the appropriate
@@ -81,9 +81,9 @@ namespace RSP
       void ack_fail();
       
     private:
-      GetStatusCmd();
-      RSPGetstatusEvent* m_event;
+      UpdStatusCmd();
+      RSPSubstatusEvent* m_event;
   };
 };
      
-#endif /* GETSTATUSCMD_H_ */
+#endif /* UPDSTATUSCMD_H_ */

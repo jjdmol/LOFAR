@@ -47,7 +47,7 @@ GetSubbandsCmd::GetSubbandsCmd(GCFEvent& event, GCFPortInterface& port, Operatio
 
 GetSubbandsCmd::~GetSubbandsCmd()
 {
-  delete m_event;
+  if (isOwner()) delete m_event;
 }
 
 void GetSubbandsCmd::ack(CacheBuffer& cache)
