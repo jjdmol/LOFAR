@@ -110,7 +110,6 @@ build_system:
 	      && echo ":::::: DONE BOOTSTRAPPING $$pkg" \
 	      && echo ); \
 	      for var in $(VARIANTS); do \
-	        echo ":::::: VARIANT $$var"; \
 		case $$var in gnu3*) inst_var=gcc3;; \
 	                      gnu*)  inst_var=gcc2;; \
 	                      icc*)  inst_var=icc;; \
