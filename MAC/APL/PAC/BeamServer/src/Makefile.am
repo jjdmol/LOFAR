@@ -1,5 +1,6 @@
 
-AM_CXXFLAGS = -I$(top_srcdir)/src -DUSE_GNUPLOT
+# -DUSE_GNUPLOT
+AM_CXXFLAGS = -I$(top_srcdir)/src -DEPA_Y_POL_IMAG_FIX -DWEIGHTS_IN_NETWORK_ORDER
 
 AUTOGEN = autogen
 SUFFIXES = .ph

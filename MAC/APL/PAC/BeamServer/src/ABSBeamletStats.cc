@@ -48,6 +48,8 @@ static int snapshot_time = 0;
 #define N_TIME 60
 Array<double, 1> time_axis(N_TIME);
 Array<double, 1> power_t(N_TIME);
+
+#define PLOT_BIN_NR 10
 #endif
 
 using namespace LOFAR;
@@ -65,10 +67,12 @@ BeamletStats::BeamletStats(int n_beamlets, int n_integrations) :
     m_seqnr(0),
     m_selected_beamlet(0),
     m_beamlet_power(n_beamlets, N_POLARIZATIONS),
+    m_power_sum(n_beamlets / 2, N_POLARIZATIONS, 2),
     m_pset(BeamServerPSet, "BeamServer", this)
 {
   m_pset.load();
   m_beamlet_power = 0.0;
+  m_power_sum = 0;
 
   if (m_nbeamlets > N_BEAMLETS) m_nbeamlets = N_BEAMLETS;
 
@@ -92,7 +96,7 @@ BeamletStats::BeamletStats(int n_beamlets, int n_integrations) :
   {
       //gnuplot_setstyle(gp_handle_t, "impulses");
       gnuplot_set_xlabel(gp_handle_t, "time");
-      gnuplot_set_ylabel(gp_handle_t, "power_x(6)");
+      gnuplot_set_ylabel(gp_handle_t, "power_x(10)");
   }
 
   firstIndex i;
@@ -124,8 +128,6 @@ BeamletStats::~BeamletStats()
 
 void BeamletStats::update(Array<unsigned int,3>& power_sum, unsigned int seqnr)
 {
-  int beamlet_offset = 0;
-
   //
   // Even packets contain the power sums for the first
   // half of the beamlets and odd packets for the second half.
@@ -138,22 +140,42 @@ void BeamletStats::update(Array<unsigned int,3>& power_sum, unsigned int seqnr)
 	  m_seqnr = seqnr;
 	  return; // skip loose packet
       }
-      beamlet_offset = m_nbeamlets / 2;
-  }
 
-  for (int i = 0; i < m_nbeamlets / 2; i++)
+      /**
+       * Got a complete result, add it to the total power
+       */
+
+      // first m_nbeamlets/2 beamlets
+      for (int i = 0; i < m_nbeamlets / 2; i++)
+      {
+	// x-polarization
+	m_beamlet_power(i, 0) += m_power_sum(i, 0, 0) + m_power_sum(i, 0, 1);
+	
+	// y-polarization
+	m_beamlet_power(i, 1) += m_power_sum(i, 1, 0) + m_power_sum(i, 1, 1);
+      }
+
+      // next m_nbeamlets/2 beamlets
+      for (int i = 0; i < m_nbeamlets / 2; i++)
+      {
+	// x-polarization
+	m_beamlet_power(i + m_nbeamlets / 2, 0) += power_sum(i, 0, 0) + power_sum(i, 0, 1);
+	
+	// y-polarization
+	m_beamlet_power(i + m_nbeamlets / 2, 1) += power_sum(i, 1, 0) + power_sum(i, 1, 1);
+      }
+
+      m_count++;
+  }
+  else
   {
-      // x-polarization
-      m_beamlet_power(i + beamlet_offset, 0) += power_sum(i, 0, 0) + power_sum(i, 0, 1);
-      
-      // y-polarization
-      m_beamlet_power(i + beamlet_offset, 1) += power_sum(i, 1, 0) + power_sum(i, 1, 1);
+    // even packet, first packet of statistics update, save it in m_power_sum
+    m_power_sum = power_sum;
   }
 
   m_seqnr = seqnr;
-  m_count++;
 
-  if ( (m_count % (2 * m_nintegrations)) == 0)
+  if ( m_count && ((m_count % m_nintegrations) == 0) )
   {
       // divide by number of samples = m_count * EPA_SCALING_FACTOR
       m_beamlet_power /= m_nintegrations * EPA_SCALING_FACTOR;
@@ -200,7 +222,7 @@ void BeamletStats::update(Array<unsigned int,3>& power_sum, unsigned int seqnr)
 			  "Power per beamlet y-polarization");
       }
 
-      power_t(snapshot_time) = m_beamlet_power(6, 0);
+      power_t(snapshot_time) = m_beamlet_power(PLOT_BIN_NR, 0);
       snapshot_time = (snapshot_time + 1) % N_TIME;
 
       if (gp_handle_t)
