@@ -23,30 +23,34 @@
 #ifndef TRANSPORT_TRANSPORTHOLDER_H
 #define TRANSPORT_TRANSPORTHOLDER_H
 
+// \file TransportHolder.h
+// Abstract base class for all TransportHolders
+
 #include <lofar_config.h>
 
 #include <Common/lofar_string.h>
 
 namespace LOFAR
 {
+// \addtogroup Transport
+// @{
+
+//# Forward declarations
 class BlobStringType;
-
-/**
-   This class defines the base class for transport mechanism classes
-   to transport data between connected BaseDataHolders.
-   Actually, the data transport is done between 2 TransportHolder objects
-   belonging to the communicating DataHolder objects.
-
-   Derived classes (e.g. TH_MPI) implement the concrete transport
-   classes.
-
-   If data have to be transported between different machines, they
-   need to have the same data representation. It is not possible
-   yet to transport data between e.g. a SUN and PC. This will be
-   improved in the future.
-*/
-
 class Transporter;
+
+// This class defines the base class for transport mechanism classes
+// to transport data between connected BaseDataHolders.
+// Actually, the data transport is done between 2 TransportHolder objects
+// belonging to the communicating DataHolder objects.
+//
+// Derived classes (e.g. TH_MPI) implement the concrete transport
+// classes.
+//
+// If data have to be transported between different machines, they
+// need to have the same data representation. It is not possible
+// yet to transport data between e.g. a SUN and PC. This will be
+// improved in the future.
 
 class TransportHolder
 {
@@ -78,7 +82,7 @@ public:
   // TransportHolder.
   virtual bool recvVarNonBlocking (int tag);
 
-  /// Wait until data has been received into buf.
+  // Wait until data has been received into buf.
   virtual bool waitForReceived(void* buf, int nbytes, int tag);
 
   // Send the fixed sized data to the connected TransportHolder
@@ -97,13 +101,13 @@ public:
   // The default implementation uses sendNonBlocking.
   virtual bool sendVarNonBlocking (void* buf, int nbytes, int tag);
 
-  /// Wait until the data has been sent.
+  // Wait until the data has been sent.
   virtual bool waitForSent(void* buf, int nbytes, int tag);
 
-  /// Wait until the receiving TransportHolder has received the data.
+  // Wait until the receiving TransportHolder has received the data.
   virtual bool waitForRecvAck(void* buf, int nbytes, int tag);
 
-  /// Get the type of transport as a string.
+  // Get the type of transport as a string.
   virtual string getType() const = 0;
 
   // Get the type of BlobString needed for the DataHolder.
@@ -113,13 +117,13 @@ public:
   // The default implementation is true, but TH_ShMem is false.
   virtual bool canDataGrow() const;
 
-  /// Check if a connection is possible between two processes.
+  // Check if a connection is possible between two processes.
   virtual bool connectionPossible (int srcRank, int dstRank) const;
 
   // Check if this TransportHolder can handle bidirectional transport.
   virtual bool isBidirectional () const;
 
-  /// Accessor method for its Transporter.
+  // \name Accessor method for its Transporter.
   // <group>
   Transporter* getTransporter()
     { return itsTransporter; }
@@ -131,6 +135,7 @@ private:
   Transporter* itsTransporter;
 };
 
+// @} // Doxygen endgroup Transport
 
 }
 
