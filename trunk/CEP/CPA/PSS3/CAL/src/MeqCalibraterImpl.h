@@ -50,6 +50,7 @@
 #include <MNS/MeqLofarStatSources.h>
 #include <MNS/MeqStatUVW.h>
 #include <MNS/ParmTable.h>
+#include <Common/lofar_complex.h>
 
 using namespace casa;
 
@@ -300,7 +301,7 @@ private:
   vector<bool> itsIsParmSolvable;       //# is corresponding parmlist solvable?
   MeqMatrix    itsSolution;             //# Solution as complex numbers
   vector<double> itsFitME;
-  vector<complex<double> > itsDeriv;   //# derivatives of predict
+  vector<LOFAR::dcomplex> itsDeriv;     //# derivatives of predict
   
   /*@}*/
 };
