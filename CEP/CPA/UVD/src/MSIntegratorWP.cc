@@ -301,9 +301,11 @@ void MSIntegratorWP::initSegment (ROVisibilityIterator &vi)
       // add fields specific to the patch/correlation
       rec[FCorr] = corrtype[icorr];
       rec[FReceptorIndex] = receptor_ref;
-      rec[FData] <<= new DataArray(TpArray_dcomplex,IPosition(2,num_integrated_channels,num_ifrs));
-      rec[FNumIntPixels] <<= new DataArray(TpArray_int,IPosition(2,num_integrated_channels,num_ifrs));
+      rec[FData] <<= new DataArray(TpArray_dcomplex,IPosition(2,num_integrated_channels,num_ifrs),DMI::ZERO);
+      rec[FNumIntPixels] <<= new DataArray(TpArray_int,IPosition(2,num_integrated_channels,num_ifrs),DMI::ZERO);
       pdata[iacc] = &rec[FData];
+      if( Debug(2) && !iacc )
+        cdebug(2)<<"init vis: "<<pdata[iacc][0]<<" "<<pdata[iacc][1]<<" "<<pdata[iacc][2]<<endl;
       pnumpixels[iacc] = &rec[FNumIntPixels];
     }
   }
@@ -343,6 +345,8 @@ void MSIntegratorWP::finishIntegration (bool reset)
       for( int j=0; j < num_points; j++ )
         if( pn[j] )
           pd[j] /= pn[j];
+      if( Debug(2) && !iacc )
+        cdebug(2)<<"avg. visibilities: "<<pd[0]<<" "<<pd[1]<<" "<<pd[2]<<endl;
       // NB: think about a privatize-and-reset implementation here
       // publish message
       MessageRef mref;
@@ -454,15 +458,15 @@ void MSIntegratorWP::integrate (ROVisibilityIterator &vi,VisBuffer &vb)
   } // end of loop over time slots
   // send off final chunk, if any
   finishIntegration(False);
-//   // send off footers
-//   patch_footer.resize(num_patches);
-//   for( int i=0; i<num_patches; i++ )
-//   {
-//     Message *msg = new Message(chunk_hiid|AidPatch|i|AidFooter|AidCorr|AidTimeslot);
-//     patch_footer[i] <<= msg;
-//     (*msg) <<= patch_header[i]().payload().copy().privatize(DMI::WRITE);
-//     publish(patch_footer[i].copy());
-//   }
+  // send off footers
+  patch_footer.resize(num_patches);
+  for( int i=0; i<num_patches; i++ )
+  {
+    Message *msg = new Message(chunk_hiid|AidPatch|i|AidFooter|AidCorr|AidTimeslot);
+    patch_footer[i] <<= msg;
+    (*msg) <<= patch_header[i]().payload().copy().privatize(DMI::WRITE);
+    publish(patch_footer[i].copy());
+  }
 }
 
 
