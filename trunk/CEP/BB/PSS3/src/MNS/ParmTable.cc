@@ -40,9 +40,9 @@ ParmTable::ParmTable (const string& dbType, const string& tableName,
   } else if (dbType == "postgres") {
     itsRep = new ParmTablePGSQL (hostName, userName, tableName);
   } else if (dbType == "mysql") {
-    itsRep = new ParmTableMySQL ("lofar6", userName, tableName);
+    itsRep = new ParmTableMySQL (hostName, userName, tableName);
   } else if (dbType == "monet") {
-    itsRep = new ParmTableMonet ("lofar6", "monetdb", tableName); // should be hostName of course
+    itsRep = new ParmTableMonet (hostName, "monetdb", tableName);
   } else {
     Assert (dbType=="aips");
   }
