@@ -43,6 +43,7 @@ global string   ELNAME_NROFSUBVIEWS             = "nrOfSubViews";
 global string   ELNAME_SUBVIEWS                 = "subViews";
 global string   ELNAME_CONFIGS                  = "configs";
 global string   ELNAME_TRIGGERUPDATE            = "triggerUpdate";
+global string   ELNAME_NEWDATAPOINT             = "newDatapoint";
 global string   DPTYPENAME_NAVIGATOR_INSTANCE   = "GCFNavigatorInstance";
 global int      g_navigatorID = 0;
 
