@@ -49,9 +49,9 @@ public:
 
   DataHolder* clone() const;
 
-  /// Set the Counter attribute in the DataPacket.
+  /// Set the Counter attribute.
   void setCounter (int counter);
-  /// Get the Counter attribute in the DataPacket.
+  /// Get the Counter attribute.
   int getCounter() const;
 
   /// Allocate the buffers.
@@ -63,9 +63,9 @@ public:
   /// Reset the buffer size.
   void setBufferSize (unsigned int nelements);
 
-  /// Get write access to the Buffer in the DataPacket.
+  /// Get write access to the Buffer.
   BufferType* getBuffer();
-  /// Get read access to the Buffer in the DataPacket.
+  /// Get read access to the Buffer.
   const BufferType* getBuffer() const;
 
  private:

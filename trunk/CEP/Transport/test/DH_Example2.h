@@ -62,9 +62,9 @@ public:
   // Create a TPO object and set the table name in it.          //PL
   virtual void initPO (const string& tableName);                //PL
 
-  /// Set the Counter attribute in the DataPacket.
+  /// Set the Counter attribute.
   void setCounter (int counter);
-  /// Get the Counter attribute in the DataPacket.
+  /// Get the Counter attribute.
   int getCounter() const;
 
   /// Allocate the buffers.
@@ -73,9 +73,9 @@ public:
   /// Deallocate the buffers.
   virtual void postprocess();
 
-  /// Get write access to the Buffer in the DataPacket.
+  /// Get write access to the Buffer.
   BufferType* getBuffer();
-  /// Get read access to the Buffer in the DataPacket.
+  /// Get read access to the Buffer.
   const BufferType* getBuffer() const;
 
 private:
