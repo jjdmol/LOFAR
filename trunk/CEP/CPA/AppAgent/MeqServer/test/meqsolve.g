@@ -84,7 +84,7 @@ const sta_dft_tree := function (st,src='')
                          ra = 'ra0',dec = 'dec0',
                          x_0='x0',y_0='y0',z_0='z0' ]) );
                          
-  uvw := meq.node('MeqReqSeq',fq_name('uvw.seq',st),[result_index=1],children=uvwlist);
+  uvw := meq.node('MeqReqSeq',fq_name('uvw.seq',st),[result_index=1,link_or_create=T],children=uvwlist);
     
   # builds an init-rec for a node called 'dft.N' with two children: 
   # lmn and uvw.N
@@ -97,7 +97,7 @@ const ifr_source_predict_tree := function (st1,st2,src='')
 {
   return meq.node('MeqMultiply',fq_name('predict',src,st1,st2),children=meq.list(
       fq_name('stokes_i',src),
-      meq.node('MeqPointSourceDFT',fq_name('dft',st1,st2),children=[
+      meq.node('MeqPointSourceDFT',fq_name('dft',src,st1,st2),children=[
                st_dft_1 = sta_dft_tree(st1,src),
                st_dft_2 = sta_dft_tree(st2,src),
                n = fq_name('n',src) ] ) ));
@@ -107,10 +107,10 @@ const ifr_source_predict_tree := function (st1,st2,src='')
 const ifr_predict_tree := function (st1,st2,src=[''])
 {
   if( len(src) == 1 )
-    return ifr_predict_tree(st1,st2,src);
+    return ifr_source_predict_tree(st1,st2,src);
   list := dmi.list();
   for( s in src ) 
-    dmi.add_list(list,ifr_predict_tree(st1,st2,s));
+    dmi.add_list(list,ifr_source_predict_tree(st1,st2,s));
   return meq.node('MeqAdd',fq_name('predict',st1,st2),children=list);
 }
 
@@ -450,8 +450,8 @@ msname := 'test.ms';
 mepuvw := T;
 filluvw := F;
 
-src_dra  := [0,128] + 10 * pi/(180*60*60); # perturb positions by # seconds
-src_ddec := [0,128] + 10 * pi/(180*60*60);
+src_dra  := ([0,128] + 5) * pi/(180*60*60); # perturb positions by # seconds
+src_ddec := ([0,128] + 5) * pi/(180*60*60);
 src_sti  := [1,1]   + 0.1;
 src_names := "a b";
 
