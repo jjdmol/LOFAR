@@ -23,8 +23,6 @@
 #ifndef TRANSPORT_BASESIM_H
 #define TRANSPORT_BASESIM_H
 
-#include <lofar_config.h>
-
 #define MPI_OPT
 
 /// Node of the MPI controller.

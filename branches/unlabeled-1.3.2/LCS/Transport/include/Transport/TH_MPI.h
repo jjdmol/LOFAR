@@ -23,8 +23,6 @@
 #ifndef TRANSPORT_TH_MPI_H
 #define TRANSPORT_TH_MPI_H
 
-#include <lofar_config.h>
-
 #ifdef HAVE_MPI
 
 #include <Transport/TransportHolder.h>

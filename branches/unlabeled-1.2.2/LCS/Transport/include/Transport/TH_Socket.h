@@ -24,7 +24,6 @@
 #ifndef TRANSPORT_TH_SOCKET_H
 #define TRANSPORT_TH_SOCKET_H
 
-#include <lofar_config.h>
 #include <Common/lofar_string.h>
 #include <Transport/TransportHolder.h>
 #include <Common/Net/Socket.h>

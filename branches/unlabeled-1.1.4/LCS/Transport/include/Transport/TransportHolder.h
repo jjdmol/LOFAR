@@ -23,8 +23,6 @@
 #ifndef TRANSPORT_TRANSPORTHOLDER_H
 #define TRANSPORT_TRANSPORTHOLDER_H
 
-#include <lofar_config.h>
-
 #include <Common/lofar_string.h>
 
 namespace LOFAR

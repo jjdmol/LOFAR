@@ -23,7 +23,7 @@
 #ifndef TRANSPORT_CONNECTION_H
 #define TRANSPORT_CONNECTION_H
  
-#include <lofar_config.h>
+
 
 //# Includes
 #include <Transport/BaseSim.h>

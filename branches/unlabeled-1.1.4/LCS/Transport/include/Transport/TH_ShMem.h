@@ -23,8 +23,6 @@
 #ifndef LIBTRANSPORT_TH_SHMEM_H
 #define LIBTRANSPORT_TH_SHMEM_H
 
-#include <lofar_config.h>
-
 //# Needed for shmem
 #define USE_PUBLIC_MALLOC_WRAPPERS
 #define USE_DL_PREFIX

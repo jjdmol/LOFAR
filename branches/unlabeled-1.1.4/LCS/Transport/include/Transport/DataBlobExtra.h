@@ -23,8 +23,6 @@
 #ifndef TRANSPORT_DATABLOBEXTRA_H
 #define TRANSPORT_DATABLOBEXTRA_H
 
-#include <lofar_config.h>
-
 //# Includes
 #include <Common/BlobIBufChar.h>
 #include <Common/BlobOBufChar.h>

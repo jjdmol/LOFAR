@@ -23,7 +23,6 @@
 #ifndef TRANSPORT_TH_ETHERNET_H
 #define TRANSPORT_TH_ETHERNET_H
 
-#include <lofar_config.h>
 #include <Transport/TransportHolder.h>
 
 #include <net/if.h>

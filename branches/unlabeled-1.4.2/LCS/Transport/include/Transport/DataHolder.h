@@ -23,8 +23,6 @@
 #ifndef TRANSPORT_DATAHOLDER_H
 #define TRANSPORT_DATAHOLDER_H
 
-#include <lofar_config.h>
-
 //# Includes
 #include <Common/BlobFieldSet.h>
 #include <Common/BlobHeader.h>

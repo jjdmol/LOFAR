@@ -23,8 +23,6 @@
 #ifndef TRANSPORT_TH_FILE_H
 #define TRANSPORT_TH_FILE_H
 
-#include <lofar_config.h>
-
 #include <Transport/TransportHolder.h>
 #include <stdio.h>
 
