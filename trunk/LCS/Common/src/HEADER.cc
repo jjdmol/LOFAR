@@ -20,6 +20,11 @@
 //#
 //#  $Id$
 
+//# Always #include <lofar_config.h> first!
+#include <lofar_config.h>
+
+//# Includes
+
 namespace LOFAR
 {
 
