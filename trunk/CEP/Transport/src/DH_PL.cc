@@ -31,8 +31,8 @@
 namespace LOFAR {
 
 
-DH_PL::DH_PL (const string& name, const string& type)
-  : DataHolder (name, type),
+DH_PL::DH_PL (const string& name, const string& type, int version)
+  : DataHolder (name, type, version),
     itsPODHPL  (0)
 {}
 

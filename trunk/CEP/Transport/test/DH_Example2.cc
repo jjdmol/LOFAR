@@ -30,7 +30,7 @@ namespace LOFAR
 
   DH_Example2::DH_Example2 (const string& name, unsigned int nbuffer,
 			    bool useExtra)
-: DH_PL      (name, "DH_Example2"),
+: DH_PL      (name, "DH_Example2", 1),
   itsCounter (0),
   itsBuffer  (0),
   itsBufSize (nbuffer),

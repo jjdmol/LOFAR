@@ -48,12 +48,8 @@ class DataBlobExtra;
   to a class like WorkHolder. Apart from that it also offers some common
   functionality to the classes derived from it.
 
-  DataHolder has an internal class called DataPacket. This class holds
-  the data of a DataHolder class. A Class derived from DataHolder
-  should also have an internal class to hold its data. That class should
-  be derived from DataHolder::DataPacket.
-  The basic DataPacket class offers some functions to set, get, and
-  compare the timestamp of a data packet.
+  DataHolder has an internal class called DataPacket. The basic DataPacket class 
+  offers some functions to set, get, and compare the timestamp of a data packet.
 
   The constructors of a class derived from DataHolder should always
   call the function setDataPacket in order to make their DataPacket object
@@ -105,7 +101,8 @@ public:
 public:
   // Construct a DataHolder with a default name.
   DataHolder (const string& name="aDataHolder",
-	      const string& type="DH");
+	      const string& type="DH",
+	      int version=0);
 
   virtual ~DataHolder();
 
@@ -320,6 +317,7 @@ private:
   bool         itsIsAddMax;
   string       itsName;
   string       itsType;
+  int          itsVersion;
   int          itsReadConvert;   //# data conversion needed after a read?
                                  //# 0=no, 1=yes, else=not known yet
   DataBlobExtra* itsExtraPtr;
