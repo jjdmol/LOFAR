@@ -535,39 +535,70 @@ void MeqCalibrater::clearSolvableParms()
 
 //----------------------------------------------------------------------
 //
-// ~setSolvableParm
+// ~setSolvableParms
 //
 // Set the solvable flag (true or false) on all parameters whose
 // name matches the parmPatterns pattern.
 //
 //----------------------------------------------------------------------
 void MeqCalibrater::setSolvableParms (Vector<String>& parmPatterns,
+				      Vector<String>& excludePatterns,
 				      Bool isSolvable)
 {
+  GlishRecord rec;
+  vector<MeqParm*> parmVector;
+
   const vector<MeqParm*>& parmList = MeqParm::getParmList();
 
   cout << "setSolvableParms" << endl;
+  cout << "isSolvable = " << isSolvable << endl;
 
+  // Convert patterns to regexes.
+  vector<Regex> parmRegex;
+  for (unsigned int i=0; i<parmPatterns.nelements(); i++) {
+    parmRegex.push_back (Regex::fromPattern(parmPatterns[i]));
+  }
+
+  vector<Regex> excludeRegex;
+  for (unsigned int i=0; i<excludePatterns.nelements(); i++) {
+    excludeRegex.push_back (Regex::fromPattern(excludePatterns[i]));
+  }
+
+  //
+  // Find all parms matching the parmPatterns
+  // Exclude them if matching an excludePattern
+  //
   for (vector<MeqParm*>::const_iterator iter = parmList.begin();
        iter != parmList.end();
        iter++)
   {
-    for (int i=0; i < (int)parmPatterns.nelements(); i++)
-    {
-      Regex pattern(Regex::fromPattern(parmPatterns[i]));
+    String parmName ((*iter)->getName());
 
-      if (*iter)
+    for (vector<Regex>::const_iterator incIter = parmRegex.begin();
+	 incIter != parmRegex.end();
+	 incIter++)
+    {
       {
-	if (String((*iter)->getName()).matches(pattern))
+	if (parmName.matches(*incIter))
 	{
-	  //cout << "setSolvable: " << (*iter)->getName() << endl;
-	  (*iter)->setSolvable(isSolvable);
+	  bool parmExc = false;
+	  for (vector<Regex>::const_iterator excIter = excludeRegex.begin();
+	       excIter != excludeRegex.end();
+	       excIter++)
+	  {
+	    if (parmName.matches(*excIter))
+	    parmExc = true;
+	    break;
+	  }
+	  if (!parmExc) {
+	    cout << "setSolvable: " << (*iter)->getName() << endl;
+	    (*iter)->setSolvable(isSolvable);
+	  }
+	  break;
 	}
       }
     }
   }
-
-  cout << "isSolvable = " << isSolvable << endl;
 }
 
 //----------------------------------------------------------------------
@@ -1208,10 +1239,12 @@ MethodResult MeqCalibrater::runMethod(uInt which,
     {
       Parameter<Vector<String> > parmPatterns(inputRecord, "parmpatterns",
 					     ParameterSet::In);
+      Parameter<Vector<String> > excludePatterns(inputRecord, "excludepatterns",
+						 ParameterSet::In);
       Parameter<Bool> isSolvable(inputRecord, "issolvable",
 				 ParameterSet::In);
 
-      if (runMethod) setSolvableParms(parmPatterns(), isSolvable());
+      if (runMethod) setSolvableParms(parmPatterns(), excludePatterns(), isSolvable());
     }
     break;
 
