@@ -4,6 +4,7 @@ DOCHDRS 	=				\
 DH_2DMatrix					\
 Transpose.h					\
 WH_FillTFMatrix.h				\
+WH_Delay.h					\
 WH_Transpose.h					\
 WH_Correlate.h
 
@@ -12,6 +13,7 @@ DH_2DMatrix.cc					\
 Transpose.cc					\
 Simulate.cc					\
 WH_FillTFMatrix.cc				\
+WH_Delay.cc					\
 WH_Transpose.cc					\
 WH_Correlate.cc				
 
