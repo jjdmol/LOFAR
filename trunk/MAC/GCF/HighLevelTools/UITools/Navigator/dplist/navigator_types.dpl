@@ -22,118 +22,246 @@ GCFNavViewConfiguration.GCFNavViewConfiguration	1#1
 	nrOfSubViews	5#8
 	subViews	29#6
 	configs	29#7
-GCFLogLevel.GCFLogLevel	21#2
 GCFNavigatorInstance.GCFNavigatorInstance	1#1
 	useCount	21#2
-	selectedElement	27#3
+	selectedElement	25#6
 	selectedViewCaption	25#4
-
-# Datapoint/DpId
-DpName	TypeName	ID
-__nav_subview_list	GCFNavSubView	48072
-__nav_view_list	GCFNavView	48073
-__nav_view_plot	GCFNavView	48074
-__nav_default_config_list	GCFNavSubViewConfigList	48075
-__nav_default_viewconfig	GCFNavViewConfiguration	48077
-__nav_TLcuPicRack_viewconfig	GCFNavViewConfiguration	48078
-__nav_view_test1	GCFNavView	48084
-__nav_view_test2	GCFNavView	48085
-__nav_subview_dummy1	GCFNavSubView	48086
-__nav_subview_dummy2	GCFNavSubView	48087
-__nav_TLcuPicRack_config_dummy1	GCFNavSubViewConfigList	48088
-__nav_TLcuPicRack_config_dummy2	GCFNavSubViewConfigList	48089
-__nav_TLcuPicRack_config_dummy3	GCFNavSubViewConfigList	48090
-__nav_TLcuPicRack_config_dummy4	GCFNavSubViewConfigList	48091
-__nav_subview_NewSubRackList	GCFNavSubView	48112
-__nav_subview_NewSubRackList1	GCFNavSubView	48115
-__nav_subview_TTTTT	GCFNavSubView	48122
-__nav_subview_TTTTTT	GCFNavSubView	48124
-__nav_subview_RRRRR	GCFNavSubView	48126
-__nav_subview_SSSSS	GCFNavSubView	48128
-__nav_subview_Dumdum	GCFNavSubView	48130
-__nav_subview_DummyYummy	GCFNavSubView	48251
-__loglevel	GCFLogLevel	48254
-__navigator	GCFNavigator	48265
-__nav_subview_List_blubbah	GCFNavSubView	48300
-__nav__config_List_blubbah	GCFNavSubViewConfigList	48301
-__nav__viewconfig	GCFNavViewConfiguration	48302
-__nav_subview_List_blubbbah	GCFNavSubView	48303
-__nav_TLcuPicSNMP_config_List_blubbbah	GCFNavSubViewConfigList	48304
-__nav_TLcuPicSNMP_viewconfig	GCFNavViewConfiguration	48305
-__nav_subview_List_System1	GCFNavSubView	48523
-__nav__config_List_System1	GCFNavSubViewConfigList	48524
-
-# DpValue
-ElementName	TypeName	_original.._value	_original.._status	_original.._stime
-__nav_subview_list.caption	GCFNavSubView	"List"	0x101	29.10.2004 13:25:47.257
-__nav_subview_list.filename	GCFNavSubView	"subview-list.pnl"	0x101	29.10.2004 13:25:58.557
-__nav_view_list.caption	GCFNavView	"List"	0x101	29.10.2004 13:26:46.698
-__nav_view_list.configPanel	GCFNavView	"config-list.pnl"	0x101	03.11.2004 07:35:06.230
-__nav_view_plot.caption	GCFNavView	"Plot"	0x101	29.10.2004 13:26:57.681
-__nav_default_config_list.dummy	GCFNavSubViewConfigList	145	0x101	03.11.2004 13:32:53.879
-__nav_default_config_list.dummy2	GCFNavSubViewConfigList	"Niks"	0x101	03.11.2004 13:32:53.879
-__nav_default_viewconfig.selectedView	GCFNavViewConfiguration	1	0x101	26.11.2004 07:52:37.415
-__nav_default_viewconfig.selectedSubView	GCFNavViewConfiguration	1	0x101	02.12.2004 12:22:22.859
-__nav_default_viewconfig.views	GCFNavViewConfiguration	__nav_view_list, __nav_view_plot	0x101	29.11.2004 14:37:33.204
-__nav_default_viewconfig.subViews	GCFNavViewConfiguration	__nav_subview_list, __nav_subview_dummy1	0x101	29.11.2004 14:38:12.376
-__nav_default_viewconfig.configs	GCFNavViewConfiguration	__nav_default_config_list, __nav_TLcuPicRack_config_dummy1	0x101	29.11.2004 14:39:03.745
-__nav_default_viewconfig.nrOfSubViews	GCFNavViewConfiguration	1, 1	0x101	29.11.2004 14:37:45.244
-__nav_TLcuPicRack_viewconfig.selectedView	GCFNavViewConfiguration	1	0x101	26.11.2004 11:16:19.082
-__nav_TLcuPicRack_viewconfig.selectedSubView	GCFNavViewConfiguration	1	0x101	01.12.2004 14:31:31.908
-__nav_TLcuPicRack_viewconfig.views	GCFNavViewConfiguration	__nav_view_list, __nav_view_test1, __nav_view_test2	0x101	02.11.2004 13:02:02.449
-__nav_TLcuPicRack_viewconfig.subViews	GCFNavViewConfiguration	__nav_subview_list, __nav_subview_dummy1, __nav_subview_dummy2	0x101	04.11.2004 12:45:35.176
-__nav_TLcuPicRack_viewconfig.configs	GCFNavViewConfiguration	__nav_TLcuPicRack_config_dummy1, __nav_TLcuPicRack_config_dummy2, __nav_TLcuPicRack_config_dummy3	0x101	04.11.2004 12:45:35.176
-__nav_TLcuPicRack_viewconfig.nrOfSubViews	GCFNavViewConfiguration	1, 2, 0	0x101	04.11.2004 12:45:35.176
-__nav_view_test1.caption	GCFNavView	"Test1"	0x101	02.11.2004 12:46:55.990
-__nav_view_test1.configPanel	GCFNavView	"config-list.pnl"	0x101	03.11.2004 07:35:18.771
-__nav_view_test2.caption	GCFNavView	"Test2"	0x101	02.11.2004 12:47:11.781
-__nav_view_test2.configPanel	GCFNavView	"config-list.pnl"	0x101	03.11.2004 07:35:31.090
-__nav_subview_dummy1.caption	GCFNavSubView	"Dummy1"	0x101	02.11.2004 12:48:48.300
-__nav_subview_dummy1.filename	GCFNavSubView	"subview-list.pnl"	0x101	04.11.2004 09:33:04.770
-__nav_subview_dummy2.caption	GCFNavSubView	"Dummy2"	0x101	02.11.2004 12:47:46.790
-__nav_subview_dummy2.filename	GCFNavSubView	"subview-list.pnl"	0x101	04.11.2004 09:33:10.921
-__nav_TLcuPicRack_config_dummy1.dummy	GCFNavSubViewConfigList	111	0x101	03.11.2004 10:29:35.980
-__nav_TLcuPicRack_config_dummy2.dummy	GCFNavSubViewConfigList	2222	0x101	03.11.2004 13:08:57.909
-__nav_TLcuPicRack_config_dummy2.dummy2	GCFNavSubViewConfigList	"Hai hoi hiei"	0x101	03.11.2004 13:08:57.910
-__nav_TLcuPicRack_config_dummy3.dummy	GCFNavSubViewConfigList	3333	0x101	03.11.2004 13:09:08.619
-__nav_TLcuPicRack_config_dummy3.dummy2	GCFNavSubViewConfigList	"heu"	0x101	03.11.2004 13:09:08.619
-__nav_TLcuPicRack_config_dummy4.dummy	GCFNavSubViewConfigList	444	0x101	03.11.2004 13:05:27.239
-__nav_TLcuPicRack_config_dummy4.dummy2	GCFNavSubViewConfigList	"Hallo dit is dummy 2"	0x101	03.11.2004 13:05:27.240
-__nav_subview_NewSubRackList.caption	GCFNavSubView	"NewSubRackList"	0x101	04.11.2004 09:20:17.220
-__nav_subview_NewSubRackList.filename	GCFNavSubView	"subview-list.pnl"	0x101	04.11.2004 09:32:18.570
-__nav_subview_NewSubRackList1.caption	GCFNavSubView	"NewSubRackList1"	0x101	04.11.2004 09:24:58.109
-__nav_subview_NewSubRackList1.filename	GCFNavSubView	"config-list.pnl"	0x101	04.11.2004 09:32:38.342
-__nav_subview_TTTTT.caption	GCFNavSubView	"TTTTT"	0x101	04.11.2004 12:29:24.909
-__nav_subview_TTTTT.filename	GCFNavSubView	"subview-list.pnl"	0x101	04.11.2004 12:29:24.909
-__nav_subview_TTTTTT.caption	GCFNavSubView	"TTTTTT"	0x101	04.11.2004 12:42:52.599
-__nav_subview_TTTTTT.filename	GCFNavSubView	"subview-list.pnl"	0x101	04.11.2004 12:42:52.599
-__nav_subview_RRRRR.caption	GCFNavSubView	"RRRRR"	0x101	04.11.2004 12:44:12.859
-__nav_subview_RRRRR.filename	GCFNavSubView	"subview-list.pnl"	0x101	04.11.2004 12:44:12.859
-__nav_subview_SSSSS.caption	GCFNavSubView	"SSSSS"	0x101	04.11.2004 12:44:47.339
-__nav_subview_SSSSS.filename	GCFNavSubView	"subview-list.pnl"	0x101	04.11.2004 12:44:47.339
-__nav_subview_Dumdum.caption	GCFNavSubView	"Dumdum"	0x101	04.11.2004 12:45:51.919
-__nav_subview_Dumdum.filename	GCFNavSubView	"subview-list.pnl"	0x101	04.11.2004 12:45:51.919
-__nav_subview_DummyYummy.caption	GCFNavSubView	"DummyYummy"	0x101	19.11.2004 14:10:54.445
-__nav_subview_DummyYummy.filename	GCFNavSubView	"subview-list.pnl"	0x101	19.11.2004 14:10:54.445
-__loglevel.	GCFLogLevel	10000	0x101	30.11.2004 08:10:12.794
-__navigator.viewsPath	GCFNavigator	"navigator/views/"	0x101	24.11.2004 12:19:21.361
-__navigator.resourceRoots	GCFNavigator	"System1:PIC", "System1:PAC"	0x101	29.11.2004 13:19:10.426
-__navigator.ignoreEnabledRoots	GCFNavigator	"PIC_SNMP"	0x101	26.11.2004 12:09:40.851
-__nav_subview_List_blubbah.caption	GCFNavSubView	"blubbah"	0x101	25.11.2004 14:56:54.191
-__nav_subview_List_blubbah.filename	GCFNavSubView	"Station.pnl"	0x101	25.11.2004 14:56:54.191
-__nav__viewconfig.selectedView	GCFNavViewConfiguration	1	0x101	25.11.2004 14:56:54.392
-__nav__viewconfig.selectedSubView	GCFNavViewConfiguration	1	0x101	29.11.2004 14:33:37.844
-__nav__viewconfig.views	GCFNavViewConfiguration	__nav_view_list	0x101	25.11.2004 14:56:54.392
-__nav__viewconfig.subViews	GCFNavViewConfiguration	__nav_subview_list, __nav_subview_List_blubbah, __nav_subview_List_System1	0x101	26.11.2004 11:17:01.331
-__nav__viewconfig.configs	GCFNavViewConfiguration	__nav_default_config_list, __nav__config_List_blubbah, __nav__config_List_System1	0x101	26.11.2004 11:17:01.331
-__nav__viewconfig.nrOfSubViews	GCFNavViewConfiguration	3	0x101	26.11.2004 11:17:01.331
-__nav_subview_List_blubbbah.caption	GCFNavSubView	"blubbbah"	0x101	25.11.2004 14:59:13.700
-__nav_subview_List_blubbbah.filename	GCFNavSubView	"Station.pnl"	0x101	25.11.2004 14:59:13.700
-__nav_TLcuPicSNMP_viewconfig.selectedView	GCFNavViewConfiguration	1	0x101	26.11.2004 10:57:23.173
-__nav_TLcuPicSNMP_viewconfig.selectedSubView	GCFNavViewConfiguration	1	0x101	29.11.2004 14:50:40.954
-__nav_TLcuPicSNMP_viewconfig.views	GCFNavViewConfiguration	__nav_view_list	0x101	25.11.2004 14:59:13.802
-__nav_TLcuPicSNMP_viewconfig.subViews	GCFNavViewConfiguration	__nav_subview_list, __nav_subview_List_blubbbah	0x101	25.11.2004 14:59:13.805
-__nav_TLcuPicSNMP_viewconfig.configs	GCFNavViewConfiguration	__nav_default_config_list, __nav_TLcuPicSNMP_config_List_blubbbah	0x101	25.11.2004 14:59:13.805
-__nav_TLcuPicSNMP_viewconfig.nrOfSubViews	GCFNavViewConfiguration	2	0x101	25.11.2004 14:59:13.805
-__nav_subview_List_System1.caption	GCFNavSubView	"System1"	0x101	26.11.2004 11:17:01.291
-__nav_subview_List_System1.filename	GCFNavSubView	"LOFAR_main.pnl"	0x101	26.11.2004 11:17:01.291
+	triggerUpdate	21#5
+GCFNavSubViewConfigTrend.GCFNavSubViewConfigTrend	1#1
+	1	1#8
+		Trace1	1#55
+			dpName	25#56
+			AutoScale	23#57
+			ScaleMin	21#58
+			ScaleMax	21#59
+			LegendName	25#60
+		Trace2	1#61
+			dpName	25#62
+			AutoScale	23#63
+			ScaleMin	21#64
+			ScaleMax	21#65
+			LegendName	25#66
+		Trace3	1#67
+			dpName	25#68
+			AutoScale	23#69
+			ScaleMin	21#70
+			ScaleMax	21#71
+			LegendName	25#72
+		Trace4	1#73
+			dpName	25#74
+			AutoScale	23#75
+			ScaleMin	21#76
+			ScaleMax	21#77
+			LegendName	25#78
+		Trace5	1#79
+			dpName	25#80
+			AutoScale	23#81
+			ScaleMin	21#82
+			ScaleMax	21#83
+			LegendName	25#84
+		Trace6	1#85
+			dpName	25#86
+			AutoScale	23#87
+			ScaleMin	21#88
+			ScaleMax	21#89
+			LegendName	25#90
+		Trace7	1#91
+			dpName	25#92
+			AutoScale	23#93
+			ScaleMin	21#94
+			ScaleMax	21#95
+			LegendName	25#96
+		Trace8	1#97
+			dpName	25#98
+			AutoScale	23#99
+			ScaleMin	21#100
+			ScaleMax	21#101
+			LegendName	25#102
+		Title	25#103
+		Days	21#104
+		Hours	21#105
+		Minutes	21#106
+		Seconds	21#107
+	2	1#108
+		Trace1	1#109
+			dpName	25#110
+			AutoScale	23#111
+			ScaleMin	21#112
+			ScaleMax	21#113
+			LegendName	25#114
+		Trace2	1#115
+			dpName	25#116
+			AutoScale	23#117
+			ScaleMin	21#118
+			ScaleMax	21#119
+			LegendName	25#120
+		Trace3	1#121
+			dpName	25#122
+			AutoScale	23#123
+			ScaleMin	21#124
+			ScaleMax	21#125
+			LegendName	25#126
+		Trace4	1#127
+			dpName	25#128
+			AutoScale	23#129
+			ScaleMin	21#130
+			ScaleMax	21#131
+			LegendName	25#132
+		Trace5	1#133
+			dpName	25#134
+			AutoScale	23#135
+			ScaleMin	21#136
+			ScaleMax	21#137
+			LegendName	25#138
+		Trace6	1#139
+			dpName	25#140
+			AutoScale	23#141
+			ScaleMin	21#142
+			ScaleMax	21#143
+			LegendName	25#144
+		Trace7	1#145
+			dpName	25#146
+			AutoScale	23#147
+			ScaleMin	21#148
+			ScaleMax	21#149
+			LegendName	25#150
+		Trace8	1#151
+			dpName	25#152
+			AutoScale	23#153
+			ScaleMin	21#154
+			ScaleMax	21#155
+			LegendName	25#156
+		Title	25#157
+		Days	21#158
+		Hours	21#159
+		Minutes	21#160
+		Seconds	21#161
+	Standard	23#165
+	Trend2Active	23#166
+	DedicatedPanelName	25#167
+	Dedicated	23#168
+	dummy	25#169
+	dummy2	25#170
+GCFNavSubViewConfigAlert.GCFNavSubViewConfigAlert	1#1
+	1	1#2
+		Title	25#3
+		Active	23#4
+		nrOfRows	21#5
+		nrOfColumns	21#6
+		Column1Titles	9#7
+		Column1dpNames	9#8
+		Column2Titles	9#9
+		Column2dpNames	9#10
+		Column3Titles	9#11
+		Column3dpNames	9#12
+		Column4Titles	9#13
+		Column4dpNames	9#14
+		Column5Titles	9#15
+		Column5dpNames	9#16
+		Column6Titles	9#17
+		Column6dpNames	9#18
+		Column7Titles	9#19
+		Column7dpNames	9#20
+		Column8Titles	9#21
+		Column8dpNames	9#22
+		Column9Titles	9#23
+		Column9dpNames	9#24
+		Column10Titles	9#25
+		Column10dpNames	9#26
+	2	1#27
+		Title	25#28
+		Active	23#29
+		nrOfRows	21#30
+		nrOfColumns	21#31
+		Column1Titles	9#32
+		Column1dpNames	9#33
+		Column2Titles	9#34
+		Column2dpNames	9#35
+		Column3Titles	9#36
+		Column3dpNames	9#37
+		Column4Titles	9#38
+		Column4dpNames	9#39
+		Column5Titles	9#40
+		Column5dpNames	9#41
+		Column6Titles	9#42
+		Column6dpNames	9#43
+		Column7Titles	9#44
+		Column7dpNames	9#45
+		Column8Titles	9#46
+		Column8dpNames	9#47
+		Column9Titles	9#48
+		Column9dpNames	9#49
+		Column10Titles	9#50
+		Column10dpNames	9#51
+	3	1#52
+		Title	25#53
+		Active	23#54
+		nrOfRows	21#55
+		nrOfColumns	21#56
+		Column1Titles	9#57
+		Column1dpNames	9#58
+		Column2Titles	9#59
+		Column2dpNames	9#60
+		Column3Titles	9#61
+		Column3dpNames	9#62
+		Column4Titles	9#63
+		Column4dpNames	9#64
+		Column5Titles	9#65
+		Column5dpNames	9#66
+		Column6Titles	9#67
+		Column6dpNames	9#68
+		Column7Titles	9#69
+		Column7dpNames	9#70
+		Column8Titles	9#71
+		Column8dpNames	9#72
+		Column9Titles	9#73
+		Column9dpNames	9#74
+		Column10Titles	9#75
+		Column10dpNames	9#76
+	ListActive	23#77
+GCFNavSubViewConfigPlot.GCFNavSubViewConfigPlot	1#1
+	1	1#2
+		dpName	25#3
+		Script	25#4
+		maxTimeslotSize	21#5
+		ColorPartition	1#6
+			Red	21#7
+			Yellow	21#8
+			Green	21#9
+			Blue	21#10
+	2	1#11
+		dpName	25#12
+		Script	25#13
+		maxTimeslotSize	21#14
+		ColorPartition	1#15
+			Red	21#16
+			Yellow	21#17
+			Green	21#18
+			Blue	21#19
+	3	1#20
+		dpName	25#21
+		Script	25#22
+		maxTimeslotSize	21#23
+		ColorPartition	1#24
+			Red	21#25
+			Yellow	21#26
+			Green	21#27
+			Blue	21#28
+	4	1#29
+		dpName	25#30
+		Script	25#31
+		maxTimeslotSize	21#32
+		ColorPartition	1#33
+			Red	21#34
+			Yellow	21#35
+			Green	21#36
+			Blue	21#37
+	nrOfPlots	21#38
+	ScriptDescription	9#39
+	ScriptContent	9#40
+	ScreenSize	25#41
+	SelectedPlot	25#42
+	FontSize	25#43
+GCFNavSubViewConfigPanel.GCFNavSubViewConfigPanel	1#1
+	Dummy1	25#2
+	Dummy2	25#3

@@ -183,10 +183,6 @@ void navConfigSetSelectedElement(string datapointPath)
   string dpSelectedElement = datapointPath;
   if(dpExists(dpSelectedElementContainer))
   {
-    if(!dpExists(dpSelectedElement))
-    {
-      dpSelectedElement="";
-    }
     dpSet(dpSelectedElementContainer,dpSelectedElement);
   }
 }
