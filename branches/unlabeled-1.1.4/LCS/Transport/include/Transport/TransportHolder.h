@@ -57,29 +57,29 @@ public:
 
   // Initialize the Transport; this may for instance open a file,
   // port or dbms connection
-  virtual bool init();
+  virtual bool init() = 0;
 
   // Recv the fixed sized data sent by the connected TransportHolder
   // and wait until data has been received into buf.
-  virtual bool recvBlocking (void* buf, int nbytes, int tag, int nBytesRead=0, DataHolder* dh=0);
+  virtual bool recvBlocking (void* buf, int nbytes, int tag, int nBytesRead=0, DataHolder* dh=0) = 0;
 
   // Send the fixed sized data to the connected TransportHolder
   // and wait until the data has been sent.
-  virtual bool sendBlocking (void* buf, int nbytes, int tag, DataHolder* dh=0);
+  virtual bool sendBlocking (void* buf, int nbytes, int tag, DataHolder* dh=0) = 0;
 
   // Start receiving the fixed sized data sent by the connected
   // TransportHolder. Returns true if data has been received completely.
-  virtual bool recvNonBlocking (void* buf, int nbytes, int tag, int nBytesRead=0, DataHolder* dh=0);
+  virtual bool recvNonBlocking (void* buf, int nbytes, int tag, int nBytesRead=0, DataHolder* dh=0) = 0;
 
   /// Wait until data has been received into buf.
-  virtual void waitForReceived(void* buf, int nbytes, int tag);
+  virtual void waitForReceived(void* buf, int nbytes, int tag) = 0;
 
   // Start sending the fixed sized data to the connected TransportHolder.
   // Returns true if data has been sent completely.
-  virtual bool sendNonBlocking (void* buf, int nbytes, int tag, DataHolder* dh=0);
+  virtual bool sendNonBlocking (void* buf, int nbytes, int tag, DataHolder* dh=0) = 0;
 
   /// Wait until the data has been sent.
-  virtual void waitForSent(void* buf, int nbytes, int tag);
+  virtual void waitForSent(void* buf, int nbytes, int tag) = 0;
 
   // Read the total message length of the next message.
   // Default return value is -1, to indicate this is not possible.

@@ -213,8 +213,8 @@ protected:
   // Initialize the data field set.
   void initDataFields();
 
-  // The basePostprocess method cleans up the DataHolder.
-  void basePostprocess();          // TBD: Is this needed?
+  //  // The basePostprocess method cleans up the DataHolder.
+  //  void basePostprocess();          // TBD: Is this needed?
 
 private:
   // Get the type of BlobString needed from the transport holder.

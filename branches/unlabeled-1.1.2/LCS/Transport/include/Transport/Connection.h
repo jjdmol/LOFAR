@@ -113,6 +113,8 @@ private:
   void*       itsLastReadPtr;    // Pointer to data of last non-blocking read.
   int         itsLastReadSize;   // Size of data of last non-blocking read.
 
+  State       itsWriteState;     // State of the non-blocking write
+
 };
 
 inline const string& Connection::getName() const

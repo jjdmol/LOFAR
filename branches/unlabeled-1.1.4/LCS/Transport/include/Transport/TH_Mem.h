@@ -56,6 +56,8 @@ public:
   TH_Mem();
   virtual ~TH_Mem();
 
+  virtual bool init();  
+
   /**
      Receive fixed sized data. This call does the actual data transport
      by memcpy'ing the data from the sender.
@@ -101,6 +103,14 @@ public:
   /// Get the type of transport.
   virtual string getType() const;
 
+  // NB: The following method doesn't do what you expect! It does not
+  // guarantee the buffer contents has been safely sent.
+  // Your application should make sure write/read are called alternately.
+  virtual void waitForSent(void* buf, int nbytes, int tag);
+
+  // This method does nothing, because the memcpy is always done by recvNonBlocking
+  virtual void waitForReceived(void* buf, int nbytes, int tag);
+
   // Static functions which are the same as those in TH_ShMem and TH_MPI.
   // They don't do anything. In this way templating on TH type can be done.
   // <group>
@@ -140,6 +150,8 @@ public:
   bool        itsFirstCall;
 };
 
+inline bool TH_Mem::init()
+{ return true; }
 }
 
 #endif
