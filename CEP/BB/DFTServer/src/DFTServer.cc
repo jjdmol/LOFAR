@@ -37,6 +37,7 @@
 
 
 using namespace LOFAR;
+using namespace LOFAR::ACC;
 
 DFTServer::~DFTServer()
 {}
