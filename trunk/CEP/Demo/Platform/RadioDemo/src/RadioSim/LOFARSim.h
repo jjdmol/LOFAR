@@ -22,6 +22,9 @@ public:
 
 private:
   LSFiller* itsFiller;
+  int itsRunInApp[10];
+  int itsSkipApp1;
+  int itsSkipApp2;
 };
 
 
