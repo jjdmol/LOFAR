@@ -131,6 +131,7 @@ void TestDataRecord ()
   Assert( rec["A.B.C.D"].exists() );
   Assert( rec["A.B.C.D"].size() == 32 );
   Assert( rec["A.B.C.D"].type() == Tpint );
+  Assert( rec["A.B.C.D"][20].type() == Tpint );
   Assert( rec["A.B.C.D"].isContainer() );
   Assert( rec["A.B.C.D"].actualType() == TpObjRef );
   Assert( rec["A.B.C.D"].containerType() == TpDataField );
@@ -143,7 +144,12 @@ void TestDataRecord ()
   cerr<<rec.sdebug(3)<<endl;
   cerr<<"======================= old field debug info:\n";
   cerr<<f2->sdebug(3)<<endl;
-  
+  cerr<<"======================= removing from field:\n";
+  Assert( rec["A.B.C.D"][31].remove() );
+  Assert( rec["A.B.C.D"].size() == 31 );
+  cerr<<"======================= re-inserting into field:\n";
+  rec["A.B.C.D/31"] = 5;
+  Assert( rec["A.B.C.D"].size() == 32 );
   cerr<<"======================= making compound record\n";
   rec.add(AidB,new DataField(TpDataRecord,-1));
   rec.add(AidC,f2,DMI::COPYREF);
@@ -177,6 +183,25 @@ void TestDataRecord ()
   Assert( rec["B/C"]["A"]["10"].as_float() == 10 );
   Assert( rec2["B/C"]["A"]["10"].as_float() == 5 );
   
+  cerr<<"======================= getting reference from record\n";
+  cerr<<rec["B/C/A"].ref().debug(3)<<endl;
+
+  cerr<<"======================= removing field B/C/A from record\n";
+  cerr<<"Original record: "<<rec.sdebug(10)<<endl;
+  ObjRef fref;  
+  Assert( rec["B/C/A"].remove(&fref) );
+  cerr<<"Record is now: "<<rec.sdebug(10)<<endl;
+  cerr<<"Removed field is: "<<fref.sdebug(10)<<endl;
+
+  cerr<<"======================= reattaching instead of B/C\n";
+  ObjRef fref2;
+  rec["B"]["C"].detach(&fref2) = fref;
+  cerr<<"Record is now: "<<rec.sdebug(10)<<endl;
+  cerr<<"Removed field is: "<<fref2.sdebug(10)<<endl;
+  cerr<<"======================= inserting as B/E\n";
+  rec["B/E"] <<= fref2;
+  cerr<<"Record is now: "<<rec.sdebug(10)<<endl;
+  cerr<<"Source field is: "<<fref2.sdebug(10)<<endl;
   cerr<<"======================= exiting\n";
 }
 
