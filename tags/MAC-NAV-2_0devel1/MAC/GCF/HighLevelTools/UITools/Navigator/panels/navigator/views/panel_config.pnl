@@ -1,0 +1,325 @@
+V 10
+1
+LANG:1 8 (NoName)
+PANEL,258 108 950 740 N "_3DFace" 5
+"$configDatapoint"
+"$datapoint"
+"$selectedElementDpType"
+"$selectedView"
+"$viewName"
+EEE E E 1 -1 -1 0  20 20
+"" 0 1
+E"#uses \"gcfnav_view.ctl\"" 0
+ 2
+"CBRef""1"
+"EClose"E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+2 0
+"Text3"
+""
+1 10 50 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+1 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 12 52 198 68
+0 2 0 "s" 0 0 0 64 0 0  12 52
+ 1
+1
+LANG:1 105 -microsoft windows-Arial-bold-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,700,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 29 Selected panel file for type:
+2 1
+"txt_dpTypeName"
+""
+1 200 50 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+2 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+"main()
+{
+	if (dpExists($datapoint))
+	{
+	  setValue(\"\", \"text\", dpTypeName($datapoint));
+	}
+	else
+	{
+    setValue(\"\", \"text\", \"datapoint type not found\");
+  }
+}" 0
+ E 0 1 1 0 1 E U  0 E 202 52 332 68
+0 2 0 "s" 0 0 0 64 0 0  202 52
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 0 
+2 2
+"txt_Dedicated_panel"
+""
+1 82 132 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+3 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 84 134 186 148
+0 2 0 "s" 0 0 0 64 0 0  84 134
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 15 dedicated panel
+6 3
+"Border5"
+""
+1 10 144 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+4 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 10 130 691 154
+1 14 1 "" 57
+0
+1 18 2 "" 0
+0
+1 19 2 "" 4
+0
+1 19 2 "" 1
+0
+1 20 2 "" 2
+0
+1 21 2 "" 3
+0
+6 22
+"Border20"
+""
+1 10 127 E E E 1 E 1 E N "_WindowText" E N {51,102,255} E E
+ E E
+11 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 10 117 690 127
+6 23
+"Border21"
+""
+1 10 117 E E E 1 E 1 E N "_WindowText" E N {51,102,255} E E
+ E E
+12 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 10 97 60 117
+2 24
+"Text31"
+""
+1 17 97 E E E 1 E 1 E N {255,255,255} E N "_Transparent" E E
+ E E
+13 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 19 99 52 115
+0 2 0 "s" 0 0 0 192 0 0  19 99
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 5 Panel
+4 25
+"Line2"
+""
+1 10 117 E E E 1 E 1 E N {51,102,255} E N "_Transparent" E E
+ E E
+14 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  60 117 10 117
+14 8
+"txt_fileName"
+""
+1 200 130 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+9 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+198 128 692 155
+3 "s" 0 0 0 0 0 0 
+E
+"// Valid
+main()
+{
+  if (dpExists($configDatapoint))
+  {
+    setValue(\"\", \"enabled\", TRUE);
+    string currentSubview = substr($configDatapoint ,strlen(\"System1:__nav_\"+$selectedElementDpType+\"_config_\"+$viewName+\"_\"), strlen($configDatapoint));
+    dpConnect(\"EP_textFieldInCB\", \"System1:__nav_subview_Panel_\" + currentSubview + \".filename:_online.._value\");
+   	// Is it a datapoint element? then disable control
+	  // This includes that this control is only suitable for DP-Types
+	  if (dpGetElementName($datapoint)!=\"\")
+    {
+      setValue (\"\", \"enabled\", FALSE);
+    }
+	}
+	else
+  {
+    setValue(\"\", \"enabled\", FALSE);
+    setValue(\"\", \"text\", \"Configuration data not available\");  
+  }
+
+}
+
+
+EP_textFieldInCB(string dp, string fileName)
+{
+  setValue(\"\", \"text\", fileName);
+}
+" 0
+
+E
+13 9
+"Button1"
+""
+1 13 132 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+10 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+11 130 73 154
+T 
+1
+LANG:1 4 Load
+"main()
+{
+  string fileName;
+	dyn_string SplitfileName;
+  string subViewName, pad;
+
+
+  pad = getPath(PANELS_REL_PATH)+\"navigator/views/\";
+  fileSelector(fileName, pad , TRUE, \"*.pnl\");
+
+ 	if (fileName!=\"\")
+ 	{
+    SplitfileName = strsplit(fileName, \"/\");
+    getSubviewName(subViewName);
+    dpSet(\"System1:__nav_subview_Panel_\" + subViewName + \".filename\", SplitfileName[dynlen(SplitfileName)]);
+  }
+}" 0
+ E E "main()
+{
+  if (dpExists($configDatapoint))
+  {
+    setValue(\"\", \"enabled\", TRUE);
+	}
+	else
+  {
+    setValue(\"\", \"enabled\", FALSE);
+  }
+
+ 	// Is it a datapoint element? then disable control
+	// This includes that this control is only suitable for DP-Types
+	if (dpGetElementName($datapoint)!=\"\")
+  {
+    setValue (\"\", \"enabled\", FALSE);
+  }
+
+}" 0
+
+1 15 1 "" 54
+0
+1 16 1 "" 55
+0
+1 17 1 "" 58
+0
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+3 1 ""
+"navigator\\navigator_config_tab.pnl" 120 250 T 11 1 0 1  -101 -206  
+4
+"$configDatapoint""$configDatapoint"
+"$selectedElementDpType""$selectedElementDpType"
+"$selectedView""$selectedView"
+"$viewName""$viewName"
+3 2 "Group3"
+"objects\\Nav\\info_config disabled_because_dpe.pnl" 90 590 T 11 1 0 1  10 70  
+1
+"$datapoint""$datapoint"
+0

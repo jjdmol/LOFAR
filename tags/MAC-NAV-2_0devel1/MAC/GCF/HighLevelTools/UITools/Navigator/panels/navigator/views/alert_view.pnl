@@ -1,0 +1,1173 @@
+V 10
+1
+LANG:1 5 panel
+PANEL,252 108 1006 750 N "_3DFace" 2
+"$configDatapoint"
+"$datapoint"
+"main()
+{
+ DebugTN(\"Initialize view\");
+  // Is it a datapoint element? then disable control
+	// This includes that this control is only suitable for DP-Types
+	if (dpGetElementName($datapoint)==\"\")
+  {
+  dpConnect(\"ArrangeTable\", $configDatapoint + \".1.nrOfRows:_online.._value\",
+                            $configDatapoint + \".1.nrOfColumns:_online.._value\",
+                            $configDatapoint + \".1.Title:_online.._value\",
+                            $configDatapoint + \".1.Active:_online.._value\");
+
+  dpConnect(\"ArrangeTable\", $configDatapoint + \".2.nrOfRows:_online.._value\",
+                            $configDatapoint + \".2.nrOfColumns:_online.._value\",
+                            $configDatapoint + \".2.Title:_online.._value\",
+                            $configDatapoint + \".2.Active:_online.._value\");
+
+  dpConnect(\"ArrangeTable\", $configDatapoint + \".3.nrOfRows:_online.._value\",
+                            $configDatapoint + \".3.nrOfColumns:_online.._value\",
+                            $configDatapoint + \".3.Title:_online.._value\",
+                            $configDatapoint + \".3.Active:_online.._value\");
+
+
+  dpConnect(\"ArrangeAlertList\", $configDatapoint + \".nrOfRowsList:_online.._value\",
+                                $configDatapoint + \".ListActive:_online.._value\");
+
+  dpConnect(\"PostitionObjects\",  $configDatapoint + \".1.Active:_online.._value\",
+                                 $configDatapoint + \".2.Active:_online.._value\",
+                                 $configDatapoint + \".3.Active:_online.._value\",
+                                 $configDatapoint + \".ListActive:_online.._value\",
+                                 $configDatapoint + \".1.nrOfRows:_online.._value\",
+                                 $configDatapoint + \".2.nrOfRows:_online.._value\",
+                                 $configDatapoint + \".3.nrOfRows:_online.._value\");
+  }
+}
+
+//////////////////////////////////////////////////////////////////////////////////
+//
+// FunctionName: ArrangeAlertList
+// Function    : Resize the Alert list
+// 
+///////////////////////////////////////////////////////////////////////////////////
+ArrangeAlertList(string dp1, float nrOfRowsList,
+                 string dp2, bool ListActive)
+{
+  int x, y;
+
+  setValue(\"AlertList\", \"scale\", 1, (nrOfRowsList+1)/28 );
+  getValue(\"AlertList\", \"size\", x, y );
+}
+
+
+//////////////////////////////////////////////////////////////////////////////////
+//
+// FunctionName: ArrangeTableContent
+// Function    : display
+// 
+///////////////////////////////////////////////////////////////////////////////////
+ArrangeTableContent(string dp1, dyn_string Column1Titles,
+                    string dp2, dyn_string Column1dpNames)
+{
+  string ColumnTitle;
+  string CellContent, titel;
+  int nrOfRows, i, TableNumber;
+  anytype Row;
+  string connectDatapoint;
+  getTableNumber(dp1, TableNumber);
+  getColumnTitle(dp2, ColumnTitle);
+  dpGet($configDatapoint + \".\"+TableNumber+\".nrOfRows:_online.._value\", nrOfRows);
+  for (i=0; i< nrOfRows ;i++) 
+  { 
+    // Fill the cell with the title if present
+    if (dynlen(Column1Titles)>i) //Check or the dyn_string had this index
+    {
+      if (Column1Titles[ConvIndex(i)] != \"\")  
+      {
+        setValue (\"Table\" + TableNumber, \"cellValueRC\", i, ColumnTitle+\"Titles\" , Column1Titles[ConvIndex(i)]);
+      }
+      else
+      {
+        setValue (\"Table\" +TableNumber, \"cellValueRC\", i, ColumnTitle+\"Titles\" , \"\");
+      }
+    }              
+
+    //Fill the datapoint table with is needed for detecting new datapoints
+    getValue (\"Table\"+TableNumber+\"_dpNames\", \"cellValueRC\", i, ColumnTitle+\"Titles\" , CellContent);
+    if (dynlen(Column1dpNames)>i)
+    {
+      
+      if (1==dynlen(strsplit(Column1dpNames[ConvIndex(i)], \".\")))
+      {
+        connectDatapoint = $datapoint + \".\" + Column1dpNames[ConvIndex(i)];// + \":_online.._value\";
+      }
+      else
+      {
+        connectDatapoint = $datapoint + \"_\" + Column1dpNames[ConvIndex(i)];// + \":_online.._value\";
+      }
+      //DebugN(\"## ConnectDP: \" + connectDatapoint + \":_alert_hdl.._act_state_color\");
+      if (Column1dpNames[ConvIndex(i)] == CellContent)
+      {
+        if ((\"\" != Column1dpNames[ConvIndex(i)]) && (\"0\" != Column1dpNames[ConvIndex(i)]))
+        {
+          dpConnect(\"UpdateCell\", connectDatapoint + \":_alert_hdl.._act_state_color\", dp2);
+	        setValue (\"Table\"+TableNumber+\"_dpNames\", \"cellValueRC\", i, ColumnTitle+\"Titles\", Column1dpNames[ConvIndex(i)]);
+  	    }
+	      else
+	      {
+          setValue (\"Table\"+TableNumber, \"cellBackColRC\", i, ColumnTitle+\"Titles\", \"_3DFace\"); 
+        }
+      }
+      else if (Column1dpNames[ConvIndex(i)] != CellContent)
+      {
+        if (dpExists(CellContent))
+        {
+          dpDisconnect(\"UpdateCell\", CellContent + \":_alert_hdl.._act_state_color\", dp2);
+        }
+        if ((\"\" == Column1dpNames[ConvIndex(i)]) || (\"0\" == Column1dpNames[ConvIndex(i)]))
+        {
+          setValue (\"Table\"+TableNumber, \"cellBackColRC\", i, ColumnTitle+\"Titles\", \"_3DFace\");
+        }
+        else if (\"\" != $datapoint + \"_\" + Column1dpNames[ConvIndex(i)])
+        {
+          if (dpExists(connectDatapoint)) //Exists the configured datapoint? 
+          {
+            dpConnect(\"UpdateCell\", connectDatapoint + \":_alert_hdl.._act_state_color\", dp2);            
+            setValue (\"Table\"+TableNumber+\"_dpNames\", \"cellValueRC\", i, ColumnTitle+\"Titles\", Column1dpNames[ConvIndex(i)]);
+          }
+          else //No, display color DpDoesNotExist
+          {
+            setValue (\"Table\"+TableNumber, \"cellBackColRC\", i, ColumnTitle+\"Titles\", \"DpDoesNotExist\");
+          }
+        }
+	    }
+	    else
+  	  {
+        setValue (\"Table\"+TableNumber+\"_dpNames\", \"cellValueRC\", i, ColumnTitle+\"Titles\", \"\");	  
+      }
+    }
+    else
+    {
+      setValue (\"Table\"+TableNumber+\"_dpNames\", \"cellValueRC\", i, ColumnTitle+\"Titles\", \"\");
+      setValue (\"Table\"+TableNumber, \"cellBackColRC\", i, ColumnTitle+\"Titles\", \"_3DFace\");
+    }
+  }
+}
+
+//////////////////////////////////////////////////////////////////////////////////
+//
+// FunctionName: UpdateCell
+// Function    : Update a specific Cell in a specific table, with the actual
+//               alert color
+///////////////////////////////////////////////////////////////////////////////////
+void UpdateCell(string dpName, string value,
+                string dp1   , dyn_string ColumndpNames)
+{
+  int i, TableNumber;
+  anytype Row, AlertColor;
+  string ColumnTitle, connectDatapoint;
+  getTableNumber(dp1, TableNumber);
+  getColumnTitle(dp1, ColumnTitle);
+  for(i=0; i<dynlen(ColumndpNames) ; i++)
+  {
+    if (1==dynlen(strsplit(ColumndpNames[ConvIndex(i)], \".\"))) //check or the last part only a dpe is
+      connectDatapoint = $datapoint + \".\" + ColumndpNames[ConvIndex(i)];
+    else
+      connectDatapoint = $datapoint + \"_\" + ColumndpNames[ConvIndex(i)];
+    //DebugN(\"## dpName: \" + dpName);
+    //System1:PIC_CEP_StorageNode10.status:_alert_hdl.._act_state_color
+    //This check is overruled by AdB 20050218 
+    if (dpName == connectDatapoint + \":_alert_hdl.._act_state_color\") 
+    {
+      
+      Row=i;
+      //dpGet(connectDatapoint + \":_alert_hdl.._act_state_color\", AlertColor);
+      setValue (\"Table\"+TableNumber, \"cellBackColRC\", Row, ColumnTitle+\"Titles\", value);
+    }
+  }
+}
+
+
+//////////////////////////////////////////////////////////////////////////////////
+//
+// FunctionName: ArrangeTable
+// Function    : display
+// 
+///////////////////////////////////////////////////////////////////////////////////
+ArrangeTable(string dp1, float nrOfRows,
+             string dp2, int nrOfColumns,
+             string dp3, string Title,
+             string dp4, bool Active)
+{
+  int x,y, i, j, k, TableNumber;
+  int MaximumColumns = 15;
+  int MaximumRows = 15;
+ 
+  getTableNumber(dp1, TableNumber);
+  setValue(\"Table\"+TableNumber+\"_title\", \"text\", Title);
+  setValue(\"Table\"+TableNumber, \"deleteAllLines\");
+  setValue(\"Table\"+TableNumber+\"_dpNames\", \"deleteAllLines\");
+  for (i=0;i<nrOfRows ; i++)  
+  {
+    setValue(\"Table\"+TableNumber, \"appendLine\", \"Column0Titles\", \"\", \"Column1Titles\",\"\",\"Column2Titles\", \"\", \"Column3Titles\", \"\", \"Column4Titles\", \"\",
+                                                \"Column5Titles\", \"\", \"Column6Titles\", \"\", \"Column7Titles\", \"\", \"Column8Titles\", \"\", \"Column9Titles\", \"\", \"Column10Titles\", \"\",
+                                                \"Column11Titles\", \"\", \"Column12Titles\", \"\", \"Column13Titles\", \"\", \"Column14Titles\", \"\");
+    setValue(\"Table\"+TableNumber+\"_dpNames\", \"appendLine\", \"Column0Titles\", \"\", \"Column1Titles\",\"\",\"Column2Titles\", \"\", \"Column3Titles\", \"\", \"Column4Titles\", \"\",
+                                                           \"Column5Titles\", \"\", \"Column6Titles\", \"\", \"Column7Titles\", \"\", \"Column8Titles\", \"\", \"Column9Titles\", \"\", \"Column10Titles\", \"\",
+                                                           \"Column11Titles\", \"\", \"Column12Titles\", \"\", \"Column13Titles\", \"\", \"Column14Titles\", \"\");
+  }
+
+  setValue(\"Table\"+TableNumber, \"scale\", 1, nrOfRows/MaximumRows);
+  setValue(\"Table\"+TableNumber, \"lineVisible\", 0);  // Both functions needed, otherwise it doesn't work
+  setValue(\"Table\"+TableNumber, \"lineVisible\", 0);
+
+  if (Active==TRUE)  // If table is active, set column width and amount
+  {
+    setColumnConfig(TableNumber, nrOfColumns, MaximumColumns, \"\");
+  }
+}
+
+//////////////////////////////////////////////////////////////////////////////////
+//
+// FunctionName: PostitionObjects
+//
+// Function    : Gives the active object the correct position on the screen.
+///////////////////////////////////////////////////////////////////////////////////
+PostitionObjects(string dp1, int Area1Active,
+                 string dp2, int Area2Active,
+                 string dp3, int Area3Active,
+                 string dp4, bool ListActive,
+                 string dp5, int Area1nrOfRows,
+                 string dp6, int Area2nrOfRows,
+                 string dp7, int Area3nrOfRows)
+{
+  int x, y;
+  int label=20, space=10;
+  int panelHeigth = 746;
+
+  //calculate and set the positions of the objects
+  setValue(\"Table1\"      , \"position\", 10, space+label);
+  setValue(\"Table1_title\", \"position\", 10, space);
+  setValue(\"Table2_title\", \"position\", 10, space +         (space+label+Area1nrOfRows*26)*Area1Active);
+  setValue(\"Table2\"      , \"position\", 10, space + label + (space+label+Area1nrOfRows*26)*Area1Active);
+  setValue(\"Table3_title\", \"position\", 10, space +         (space+label+Area1nrOfRows*26)*Area1Active + (space+label+Area2nrOfRows*26)*Area2Active);
+  setValue(\"Table3\"      , \"position\", 10, space + label + (space+label+Area1nrOfRows*26)*Area1Active + (space+label+Area2nrOfRows*26)*Area2Active);
+  setValue(\"AlertList\"   , \"position\", 10, space + label + (space+label+Area1nrOfRows*26)*Area1Active + (space+label+Area2nrOfRows*26)*Area2Active + (space+label+Area3nrOfRows*26)*Area3Active);
+
+  //Set all Objects visible/invisible
+  setValue(\"Table1_title\", \"visible\", Area1Active);
+  setValue(\"Table1\"      , \"visible\", Area1Active);
+  setValue(\"Table2_title\", \"visible\", Area2Active);
+  setValue(\"Table2\"      , \"visible\", Area2Active);
+  setValue(\"Table3_title\", \"visible\", Area3Active);
+  setValue(\"Table3\"      , \"visible\", Area3Active);
+  //setValue(\"AlertList\"   , \"visible\", ListActive);
+  
+  //Show a warning on the panel when panelheight is exceeded.
+/*  if (panelHeigth < (120 + space + label + (space+label+Area1nrOfRows*26)*Area1Active + (space+label+Area2nrOfRows*26)*Area2Active + (space+label+Area3nrOfRows*26)*Area3Active))
+  {
+    setValue(\"txt_warning\"  , \"visible\", TRUE);
+    setValue(\"txt_warning1\" , \"visible\", TRUE);
+    setValue(\"icon_warning\" , \"visible\", TRUE);
+  }
+  else
+  {
+    setValue(\"txt_warning\"  , \"visible\", FALSE);
+    setValue(\"txt_warning1\" , \"visible\", FALSE);
+    setValue(\"icon_warning\" , \"visible\", FALSE);
+  }*/
+}" 0
+EE E E 1 -1 -1 0  0 0
+"" 0 1
+E"#uses \"gcfnav_view.ctl\"" 0
+ 2
+"CBRef""1"
+"EClose"E
+""
+NC
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+2 50
+"Table1_title"
+""
+1 0 1 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+44 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 2 3 538 19
+0 2 0 "s" 0 0 0 64 0 0  2 3
+ 1
+1
+LANG:1 105 -microsoft windows-Arial-bold-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,700,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 1 .
+2 51
+"Table2_title"
+""
+1 11 267 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+45 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 13 269 549 285
+0 2 0 "s" 0 0 0 64 0 0  13 269
+ 1
+1
+LANG:1 105 -microsoft windows-Arial-bold-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,700,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 1 .
+2 103
+"Table3_title"
+""
+1 10 400 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+95 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 12 402 658 418
+0 2 0 "s" 0 0 0 64 0 0  12 402
+ 1
+1
+LANG:1 105 -microsoft windows-Arial-bold-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,700,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 0 
+25 94
+"Table2_dpNames"
+""
+1 -227 -449 E E E 1 E 0 E N "_WindowText" E N {255,255,255} E E
+ E E
+87 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 106 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,0,0,0,0,Arial
+0 ""
+-2 -2 802 72
+E E 0 0 1 15 1 "Column0Titles" 0 -1 -1 "s" 1
+LANG:1 1 0
+E1
+LANG:1 0 
+ 200 "Column1Titles" 0 1 -1 "s" 1
+LANG:1 1 1
+E1
+LANG:1 0 
+ 200 "Column2Titles" 0 1 -1 "s" 1
+LANG:1 1 2
+E1
+LANG:1 0 
+ 200 "Column3Titles" 0 1 -1 "s" 1
+LANG:1 1 3
+E1
+LANG:1 0 
+ 200 "Column4Titles" 0 1 -1 "s" 1
+LANG:1 1 4
+E1
+LANG:1 0 
+ 200 "Column5Titles" 0 1 -1 "s" 1
+LANG:1 1 5
+E1
+LANG:1 0 
+ 200 "Column6Titles" 0 1 -1 "s" 1
+LANG:1 1 6
+E1
+LANG:1 0 
+ 200 "Column7Titles" 0 1 -1 "s" 1
+LANG:1 1 7
+E1
+LANG:1 0 
+ 200 "Column8Titles" 0 1 -1 "s" 1
+LANG:1 1 8
+E1
+LANG:1 0 
+ 200 "Column9Titles" 0 1 -1 "s" 1
+LANG:1 1 9
+E1
+LANG:1 0 
+ 200 "Column10Titles" 0 1 -1 "s" 1
+LANG:1 2 10
+E1
+LANG:1 0 
+ 200 "Column11Titles" 0 1 -1 "s" 1
+LANG:1 2 11
+E1
+LANG:1 0 
+ 200 "Column12Titles" 0 1 -1 "s" 1
+LANG:1 2 13
+E1
+LANG:1 0 
+ 200 "Column13Titles" 0 1 -1 "s" 1
+LANG:1 2 13
+E1
+LANG:1 0 
+ 200 "Column14Titles" 0 1 -1 "s" 1
+LANG:1 2 14
+E1
+LANG:1 0 
+ 200 26 26 "" 1 1
+LANG:1 2 #1
+8 30 1
+LANG:1 106 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,0,0,0,0,Arial
+0 ""
+0 0 0 3 0
+1 0
+25 92
+"Table1_dpNames"
+""
+1 -207 -389 E E E 1 E 0 E N "_WindowText" E N {255,255,255} E E
+ E E
+85 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 106 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,0,0,0,0,Arial
+0 ""
+-2 8 802 82
+E E 0 0 1 15 1 "Column0Titles" 0 -1 -1 "s" 1
+LANG:1 1 0
+E1
+LANG:1 0 
+ 200 "Column1Titles" 0 1 -1 "s" 1
+LANG:1 1 1
+E1
+LANG:1 0 
+ 200 "Column2Titles" 0 1 -1 "s" 1
+LANG:1 1 2
+E1
+LANG:1 0 
+ 200 "Column3Titles" 0 1 -1 "s" 1
+LANG:1 1 3
+E1
+LANG:1 0 
+ 200 "Column4Titles" 0 1 -1 "s" 1
+LANG:1 1 4
+E1
+LANG:1 0 
+ 200 "Column5Titles" 0 1 -1 "s" 1
+LANG:1 1 5
+E1
+LANG:1 0 
+ 200 "Column6Titles" 0 1 -1 "s" 1
+LANG:1 1 6
+E1
+LANG:1 0 
+ 200 "Column7Titles" 0 1 -1 "s" 1
+LANG:1 1 7
+E1
+LANG:1 0 
+ 200 "Column8Titles" 0 1 -1 "s" 1
+LANG:1 1 8
+E1
+LANG:1 0 
+ 200 "Column9Titles" 0 1 -1 "s" 1
+LANG:1 1 9
+E1
+LANG:1 0 
+ 200 "Column10Titles" 0 1 -1 "s" 1
+LANG:1 2 10
+E1
+LANG:1 0 
+ 200 "Column11Titles" 0 1 -1 "s" 1
+LANG:1 2 11
+E1
+LANG:1 0 
+ 200 "Column12Titles" 0 1 -1 "s" 1
+LANG:1 2 13
+E1
+LANG:1 0 
+ 200 "Column13Titles" 0 1 -1 "s" 1
+LANG:1 2 13
+E1
+LANG:1 0 
+ 200 "Column14Titles" 0 1 -1 "s" 1
+LANG:1 2 14
+E1
+LANG:1 0 
+ 200 26 26 "" 1 1
+LANG:1 2 #1
+8 30 1
+LANG:1 106 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,0,0,0,0,Arial
+0 ""
+0 0 0 3 0
+1 0
+25 2
+"AlertList"
+"AlertRow"
+1 0 0 E E E 1 E 1 E N "STD_text" E N "_3DFace" E "// SimpleCtrlScriptStart {valid}
+// SimpleCtrlScript {alertConfirm}
+// dp {dpid}
+// time {time}
+// count {count}
+// confirmable {ackable}
+// SimpleCtrlScriptEnd
+main()
+{
+   bool confirmable, valid, stopped;
+   int i, count, start, end;
+   string dpStr, k_dpStr;
+   time t;
+
+   getValue( \"\", \"stop\", stopped );
+   if ( !stopped )
+     setValue(\"\", \"stop\", true );
+   getValue( \"\", \"lineRangeVisible\", start, end );
+   setValue( \"\", \"sortPart\", start, end, \"time\", \"count\" );
+   for( i = start; i <= end; i++ )
+   {
+     setValue( \"\", \"currentCellCAC\", i, 0 );
+     getValue( \"\", \"valid\", valid );
+     if ( valid )
+     {
+        setValue( \"\", \"currentColumnCAC\", \"dpid\" );
+        getValue( \"\", \"cellValueCAC\", dpStr );
+        k_dpStr = dpSubStr(dpStr, DPSUB_DP_EL_CONF_DET);
+        if (dpSubStr(dpStr, DPSUB_CONF_DET) == dpSubStr(dpStr, DPSUB_CONF))
+          k_dpStr = k_dpStr + \".\";
+        k_dpStr+= \".quitt_zust\";
+        setValue( \"\", \"currentColumnCAC\", \"time\" );
+        getValue( \"\", \"cellValueCAC\", t );
+        setValue( \"\", \"currentColumnCAC\", \"count\" );
+        getValue( \"\", \"cellValueCAC\", count );
+        setValue( \"\", \"currentColumnCAC\", \"ackable\" );
+        getValue( \"\", \"cellValueCAC\", confirmable );
+        if ( confirmable )
+          alertSet( t, count, k_dpStr, DPATTR_ACKTYPE_MULTIPLE );
+     }
+   }
+   if( !stopped )
+     setValue( \"\", \"stop\", false );
+   setValue( \"\", \"sortUndo\", 0 );
+}
+" 0
+
+ E E
+2 0 0 0 0 0
+EE E
+0
+2
+LANG:1 0 
+LANG:0 0 
+0
+2
+LANG:1 106 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,0,0,0,0,Arial
+LANG:0 106 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,0,0,0,0,Arial
+0 ""
+-2 -2 932 730
+"dyn_bool g_colVis;           // holds the flag wheter an optional column is visible or not
+string   g_connectId;        // holds id of current query
+dyn_int  g_counterConnectId; // holds numbers of Id's
+time     g_timeLastUpdate;   // holds time of the last update
+string   g_dpCommentFilter;  // store filter
+bool     g_showInternals;
+unsigned g_maxClosedLines;   // max num of lines to be queried by closed protocoll
+unsigned g_state;            // alert-state filter
+
+int      g_busyThread;    // id of thread, which shows busyness
+
+int      g_maxLines;      // num of max lines in open protocoll
+
+// TI 14075 (discarding pending values)
+int        g_discardThread;
+time       g_discardStart;
+bool       g_discarded;
+const time MINCB_TIME = 2;
+const time MAXCB_TIME = 5;
+
+//-------------------------------------------------------------------------
+
+main()
+{
+  as_init();
+}
+" 0
+ E 1 0 1 22 3 "_abbr" 0 0 0 "s" 1
+LANG:1 5 Abbr.
+"main(int row, string col)
+{
+  as_cellAction(row, col);
+}" 0
+1
+LANG:1 0 
+ 34 "_prior" 0 1 0 "s" 1
+LANG:1 4 Prio
+"main(int row, string col)
+{
+  as_cellAction(row, col);
+}" 0
+1
+LANG:1 0 
+ 36 "timeStr" 0 1 0 "s" 1
+LANG:1 4 Time
+"main(int row, string col)
+{
+  as_cellAction(row, col);
+}" 0
+1
+LANG:1 0 
+ 144 "dpElement" 0 0 0 "s" 1
+LANG:1 10 DP element
+"main(int row, string col)
+{
+  as_cellAction(row, col);
+}" 0
+1
+LANG:1 0 
+ 200 "dpComment" 0 1 0 "s" 1
+LANG:1 9 Datapoint
+"main(int row, string col)
+{
+  as_cellAction(row, col);
+}" 0
+1
+LANG:1 0 
+ 345 "_text" 0 1 0 "s" 1
+LANG:1 10 Alert text
+"main(int row, string col)
+{
+  as_cellAction(row, col);
+}" 0
+1
+LANG:1 0 
+ 215 "direction" 0 0 0 "s" 1
+LANG:1 9 Direction
+"main(int row, string col)
+{
+  as_cellAction(row, col);
+}" 0
+1
+LANG:1 0 
+ 50 "_value" 0 0 0 "s" 1
+LANG:1 5 Value
+"main(int row, string col)
+{
+  as_cellAction(row, col);
+}" 0
+1
+LANG:1 0 
+ 120 "ack" 0 1 0 "s" 1
+LANG:1 3 Ack
+"main(int row, string col)
+{
+  as_cellAction(row, col);
+}" 0
+1
+LANG:1 0 
+ 34 "commentStr" 0 0 0 "s" 1
+LANG:1 7 Comment
+"main(int row, string col)
+{
+  as_cellAction(row, col);
+}" 0
+1
+LANG:1 0 
+ 56 "_ack_time" 0 -1 0 "s" 1
+LANG:1 8 Ack.time
+"main(int row, string col)
+{
+  as_cellAction(row, col);
+}" 0
+1
+LANG:1 0 
+ 144 "_partner" 0 0 0 "s" 1
+LANG:1 12 Partner time
+"main(int row, string col)
+{
+  as_cellAction(row, col);
+}" 0
+1
+LANG:1 0 
+ 56 "_comment" 0 1 0 "s" 1
+LANG:1 14 Comment number
+"main(int row)
+{
+  as_commentAction(row, \"vision/SC/AS_detail\");
+}" 0
+1
+LANG:1 0 
+ 24 "_panel" 0 0 0 "s" 1
+LANG:1 1 >
+"main(int row, string col)
+{
+  as_cellAction(row, col);
+}" 0
+1
+LANG:1 0 
+ 24 "detail" 0 1 0 "s" 1
+LANG:1 3 ...
+"main(int row)
+{
+  as_detailAction(row, \"vision/SC/AS_detail\");
+}" 0
+1
+LANG:1 0 
+ 20 "ackable" 0 0 0 "s" 1
+LANG:1 7 ackable
+E1
+LANG:1 0 
+ 24 "oldest_ack" 0 0 0 "s" 1
+LANG:1 6 oldest
+E1
+LANG:1 0 
+ 56 "_ack_user" 0 0 0 "s" 1
+LANG:1 4 User
+"main(int row, string col)
+{
+  as_cellAction(row, col);
+}" 0
+1
+LANG:1 0 
+ 56 "partner" 0 0 0 "s" 1
+LANG:1 7 Partner
+E1
+LANG:1 0 
+ 56 "dpid" 0 0 0 "s" 1
+LANG:1 4 dpid
+E1
+LANG:1 0 
+ 200 "count" 0 0 0 "s" 1
+LANG:1 3 #21
+E1
+LANG:1 0 
+ 56 "time" 0 0 0 "s" 1
+LANG:1 4 time
+E1
+LANG:1 0 
+ 168 26 26 "" 1 1
+LANG:1 2 #1
+"" 1 1
+LANG:1 2 #2
+"" 1 1
+LANG:1 2 #3
+8 16 2
+LANG:1 106 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,0,0,0,0,Arial
+LANG:0 106 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,0,0,0,0,Arial
+0 ""
+0 1 0 3 0
+1 0
+25 1
+"Table1"
+""
+1 0 0 E E E 1 E 0 E N "_WindowText" E N {255,255,255} E E
+ E "main()
+{
+  int Row, Column;
+  dyn_string ColumndpNames;
+
+  getValue(\"\", \"currentCell\", Row, Column);
+  dpGet($configDatapoint + \".1.Column\" + Column + \"dpNames\", ColumndpNames); 
+  string newDatapoint = $datapoint + \"_\" + ColumndpNames[ConvIndex(Row)];
+  DebugTN(\"newDatapoint: \" + newDatapoint);
+  if (dpExists(newDatapoint))
+  {
+    DebugTN(\"Jumping to: \"+ $datapoint + \"_\" + ColumndpNames[ConvIndex(Row)]);
+    DebugTN(\"altered: \" + dpSubStr(newDatapoint, DPSUB_SYS_DP));
+    navConfigTriggerNavigatorRefreshWithDP(dpSubStr(newDatapoint, DPSUB_SYS_DP));
+  }
+}" 0
+
+1 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 106 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,0,0,0,0,Arial
+0 ""
+-2 -2 932 393
+E E 0 0 1 15 1 "Column0Titles" 0 -1 0 "s" 1
+LANG:1 1 0
+E1
+LANG:1 0 
+ 200 "Column1Titles" 0 1 0 "s" 1
+LANG:1 1 1
+E1
+LANG:1 0 
+ 200 "Column2Titles" 0 1 0 "s" 1
+LANG:1 1 2
+E1
+LANG:1 0 
+ 200 "Column3Titles" 0 1 0 "s" 1
+LANG:1 1 3
+E1
+LANG:1 0 
+ 200 "Column4Titles" 0 1 0 "s" 1
+LANG:1 1 4
+E1
+LANG:1 0 
+ 200 "Column5Titles" 0 1 0 "s" 1
+LANG:1 1 5
+E1
+LANG:1 0 
+ 200 "Column6Titles" 0 1 0 "s" 1
+LANG:1 1 6
+E1
+LANG:1 0 
+ 200 "Column7Titles" 0 1 0 "s" 1
+LANG:1 1 7
+E1
+LANG:1 0 
+ 200 "Column8Titles" 0 1 0 "s" 1
+LANG:1 1 8
+E1
+LANG:1 0 
+ 200 "Column9Titles" 0 1 0 "s" 1
+LANG:1 1 9
+E1
+LANG:1 0 
+ 200 "Column10Titles" 0 1 0 "s" 1
+LANG:1 2 10
+E1
+LANG:1 0 
+ 200 "Column11Titles" 0 1 0 "s" 1
+LANG:1 2 11
+E1
+LANG:1 0 
+ 200 "Column12Titles" 0 1 0 "s" 1
+LANG:1 2 13
+E1
+LANG:1 0 
+ 200 "Column13Titles" 0 1 0 "s" 1
+LANG:1 2 13
+E1
+LANG:1 0 
+ 200 "Column14Titles" 0 1 0 "s" 1
+LANG:1 2 14
+E1
+LANG:1 0 
+ 200 26 26 "" 1 1
+LANG:1 2 #1
+8 30 1
+LANG:1 106 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,0,0,0,0,Arial
+0 ""
+0 0 0 3 0
+1 0
+25 93
+"Table2"
+""
+1 0 0 E E E 1 E 0 E N "_WindowText" E N {255,255,255} E E
+ E "main()
+{
+  int Row, Column;
+  dyn_string ColumndpNames;
+
+  getValue(\"\", \"currentCell\", Row, Column);
+  dpGet($configDatapoint + \".2.Column\" + Column + \"dpNames\", ColumndpNames); 
+  string newDatapoint = $datapoint + \"_\" + ColumndpNames[ConvIndex(Row)];
+  DebugN(\"newDatapoint: \" + newDatapoint);
+  if (dpExists(newDatapoint))
+  {
+    DebugN(\"Jumping to: \"+ $datapoint + \"_\" + ColumndpNames[ConvIndex(Row)]);
+    DebugN(\"altered: \" + dpSubStr(newDatapoint, DPSUB_SYS_DP));
+    navConfigTriggerNavigatorRefreshWithDP(dpSubStr(newDatapoint, DPSUB_SYS_DP));
+  }
+
+}" 0
+
+86 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 106 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,0,0,0,0,Arial
+0 ""
+-2 -2 932 393
+E E 0 0 1 15 1 "Column0Titles" 0 -1 0 "s" 1
+LANG:1 1 0
+E1
+LANG:1 0 
+ 200 "Column1Titles" 0 1 0 "s" 1
+LANG:1 1 1
+E1
+LANG:1 0 
+ 200 "Column2Titles" 0 1 0 "s" 1
+LANG:1 1 2
+E1
+LANG:1 0 
+ 200 "Column3Titles" 0 1 0 "s" 1
+LANG:1 1 3
+E1
+LANG:1 0 
+ 200 "Column4Titles" 0 1 0 "s" 1
+LANG:1 1 4
+E1
+LANG:1 0 
+ 200 "Column5Titles" 0 1 0 "s" 1
+LANG:1 1 5
+E1
+LANG:1 0 
+ 200 "Column6Titles" 0 1 0 "s" 1
+LANG:1 1 6
+E1
+LANG:1 0 
+ 200 "Column7Titles" 0 1 0 "s" 1
+LANG:1 1 7
+E1
+LANG:1 0 
+ 200 "Column8Titles" 0 1 0 "s" 1
+LANG:1 1 8
+E1
+LANG:1 0 
+ 200 "Column9Titles" 0 1 0 "s" 1
+LANG:1 1 9
+E1
+LANG:1 0 
+ 200 "Column10Titles" 0 1 0 "s" 1
+LANG:1 2 10
+E1
+LANG:1 0 
+ 200 "Column11Titles" 0 1 0 "s" 1
+LANG:1 2 11
+E1
+LANG:1 0 
+ 200 "Column12Titles" 0 1 0 "s" 1
+LANG:1 2 13
+E1
+LANG:1 0 
+ 200 "Column13Titles" 0 1 0 "s" 1
+LANG:1 2 13
+E1
+LANG:1 0 
+ 200 "Column14Titles" 0 1 0 "s" 1
+LANG:1 2 14
+E1
+LANG:1 0 
+ 200 26 26 "" 1 1
+LANG:1 2 #1
+8 30 1
+LANG:1 106 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,0,0,0,0,Arial
+0 ""
+0 0 0 3 0
+1 0
+25 101
+"Table3"
+""
+1 0 0 E E E 1 E 0 E N "_WindowText" E N {255,255,255} E E
+ E "main()
+{
+  int Row, Column;
+  dyn_string ColumndpNames;
+
+  getValue(\"\", \"currentCell\", Row, Column);
+  dpGet($configDatapoint + \".3.Column\" + Column + \"dpNames\", ColumndpNames); 
+  string newDatapoint = $datapoint + \"_\" + ColumndpNames[ConvIndex(Row)];
+  DebugN(\"newDatapoint: \" + newDatapoint);
+  if (dpExists(newDatapoint))
+  {
+    DebugN(\"Jumping to: \"+ $datapoint + \"_\" + ColumndpNames[ConvIndex(Row)]);
+    DebugN(\"altered: \" + dpSubStr(newDatapoint, DPSUB_SYS_DP));
+    navConfigTriggerNavigatorRefreshWithDP(dpSubStr(newDatapoint, DPSUB_SYS_DP));
+  }
+
+}" 0
+
+93 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 106 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,0,0,0,0,Arial
+0 ""
+-2 -2 932 393
+E E 0 0 1 15 1 "Column0Titles" 0 -1 0 "s" 1
+LANG:1 1 0
+E1
+LANG:1 0 
+ 200 "Column1Titles" 0 1 0 "s" 1
+LANG:1 1 1
+E1
+LANG:1 0 
+ 200 "Column2Titles" 0 1 0 "s" 1
+LANG:1 1 2
+E1
+LANG:1 0 
+ 200 "Column3Titles" 0 1 0 "s" 1
+LANG:1 1 3
+E1
+LANG:1 0 
+ 200 "Column4Titles" 0 1 0 "s" 1
+LANG:1 1 4
+E1
+LANG:1 0 
+ 200 "Column5Titles" 0 1 0 "s" 1
+LANG:1 1 5
+E1
+LANG:1 0 
+ 200 "Column6Titles" 0 1 0 "s" 1
+LANG:1 1 6
+E1
+LANG:1 0 
+ 200 "Column7Titles" 0 1 0 "s" 1
+LANG:1 1 7
+E1
+LANG:1 0 
+ 200 "Column8Titles" 0 1 0 "s" 1
+LANG:1 1 8
+E1
+LANG:1 0 
+ 200 "Column9Titles" 0 1 0 "s" 1
+LANG:1 1 9
+E1
+LANG:1 0 
+ 200 "Column10Titles" 0 1 0 "s" 1
+LANG:1 2 10
+E1
+LANG:1 0 
+ 200 "Column11Titles" 0 1 0 "s" 1
+LANG:1 2 11
+E1
+LANG:1 0 
+ 200 "Column12Titles" 0 1 0 "s" 1
+LANG:1 2 13
+E1
+LANG:1 0 
+ 200 "Column13Titles" 0 1 0 "s" 1
+LANG:1 2 13
+E1
+LANG:1 0 
+ 200 "Column14Titles" 0 1 0 "s" 1
+LANG:1 2 14
+E1
+LANG:1 0 
+ 200 26 26 "" 1 1
+LANG:1 2 #1
+8 30 1
+LANG:1 106 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,0,0,0,0,Arial
+0 ""
+0 0 0 3 0
+1 0
+25 102
+"Table3_dpNames"
+""
+1 -247 -749 E E E 1 E 0 E N "_WindowText" E N {255,255,255} E E
+ E E
+94 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 106 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,0,0,0,0,Arial
+0 ""
+-2 -2 802 72
+E E 0 0 1 15 1 "Column0Titles" 0 -1 -1 "s" 1
+LANG:1 1 0
+E1
+LANG:1 0 
+ 200 "Column1Titles" 0 1 -1 "s" 1
+LANG:1 1 1
+E1
+LANG:1 0 
+ 200 "Column2Titles" 0 1 -1 "s" 1
+LANG:1 1 2
+E1
+LANG:1 0 
+ 200 "Column3Titles" 0 1 -1 "s" 1
+LANG:1 1 3
+E1
+LANG:1 0 
+ 200 "Column4Titles" 0 1 -1 "s" 1
+LANG:1 1 4
+E1
+LANG:1 0 
+ 200 "Column5Titles" 0 1 -1 "s" 1
+LANG:1 1 5
+E1
+LANG:1 0 
+ 200 "Column6Titles" 0 1 -1 "s" 1
+LANG:1 1 6
+E1
+LANG:1 0 
+ 200 "Column7Titles" 0 1 -1 "s" 1
+LANG:1 1 7
+E1
+LANG:1 0 
+ 200 "Column8Titles" 0 1 -1 "s" 1
+LANG:1 1 8
+E1
+LANG:1 0 
+ 200 "Column9Titles" 0 1 -1 "s" 1
+LANG:1 1 9
+E1
+LANG:1 0 
+ 200 "Column10Titles" 0 1 -1 "s" 1
+LANG:1 2 10
+E1
+LANG:1 0 
+ 200 "Column11Titles" 0 1 -1 "s" 1
+LANG:1 2 11
+E1
+LANG:1 0 
+ 200 "Column12Titles" 0 1 -1 "s" 1
+LANG:1 2 13
+E1
+LANG:1 0 
+ 200 "Column13Titles" 0 1 -1 "s" 1
+LANG:1 2 13
+E1
+LANG:1 0 
+ 200 "Column14Titles" 0 1 -1 "s" 1
+LANG:1 2 14
+E1
+LANG:1 0 
+ 200 26 26 "" 1 1
+LANG:1 2 #1
+8 30 1
+LANG:1 106 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,0,0,0,0,Arial
+0 ""
+0 0 0 3 0
+1 0
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+0
