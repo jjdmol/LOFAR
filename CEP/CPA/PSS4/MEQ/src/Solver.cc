@@ -45,12 +45,12 @@ Solver::Solver()
   itsDefClearMatrix  (true),
   itsDefInvertMatrix (true),
   itsDefSavePolcs    (true),
-  itsParmGroup       (AidParm),
-  itsSolveDependMask (RQIDM_VALUE)
+  itsParmGroup       (AidParm)
 {
   resetCur();
   // Set this flag, so setCurState will be called in first getResult.
   itsResetCur = true;
+  setGenSymDeps(FParmValue,RQIDM_VALUE,itsParmGroup);
 }
 
 //##ModelId=400E53550261
@@ -77,17 +77,26 @@ void Solver::checkChildren()
 
 // do nothing here -- we'll do it manually in getResult()
 //##ModelId=400E5355026B
-int Solver::pollChildren (std::vector<Result::Ref> &,
-                          Result::Ref &,const Request &)
+int Solver::pollChildren (std::vector<Result::Ref> &chres,
+                          Result::Ref &resref,const Request &request)
 {
-  return 0; 
+  // a request that has cells in it is a solve request -- do not pass it to the
+  // children, as we'll be doing our own polling in getResult() below
+  if( request.hasCells() )
+    return 0;
+  // A cell-less request contains commands and states only, and thus it should
+  // passed on to the children as is. (This request will never make it to our
+  // getResult())
+  else
+    return Node::pollChildren(chres,resref,request);
 }
 
 // Process rider for the given request
 // (this will be called prior to getResult() on the same request)
-void Solver::processCommands (const DataRecord &rec,const Request &request)
+void Solver::processCommands (const DataRecord &rec,Request::Ref &reqref)
 {
-  Node::processCommands(rec,request); // required
+  const Request &request = *reqref;
+  Node::processCommands(rec,reqref); // required
   // Get new current values (use default if not given).
   itsCurNumIter   = rec[FNumIter].as<int>(itsDefNumIter);
   if (itsCurNumIter < 1) itsCurNumIter = 1;
@@ -119,8 +128,8 @@ void Solver::processCommands (const DataRecord &rec,const Request &request)
       DataRecord& solRec = solRef <<= new DataRecord;
       std::vector<Result::Ref> child_results;
       Result::Ref resref;
-      solve (solution, request, solRec, resref, child_results,
-             false, true);
+      solve(solution,reqref,solRec,resref,child_results,
+            false,true);
     }
     // Take care that current gets reset to default if no
     // processCommands is called for the next getResult.
@@ -134,6 +143,16 @@ int Solver::getResult (Result::Ref &resref,
                        const std::vector<Result::Ref> &,
                        const Request &request, bool newreq)
 {
+  // a cell-less request contains commands and states only, and thus it should
+  // passed on to the children as is (since we override pollChildren() to do
+  // nothing)
+  // pass it on to the children as is (using Node's standard poll method) -- 
+  // since we override pollChildren() and do nothing else  
+  if( !request.hasCells() )
+  {
+    std::vector<Result::Ref> dum(numChildren());
+    return Node::pollChildren(dum,resref,request);
+  }
   // Reset current values if needed.
   // That is possible if a getResult is done without a processCommands
   // (thus without a rider in the request).
@@ -153,19 +172,25 @@ int Solver::getResult (Result::Ref &resref,
   Vector<double> solution;
   Vector<double> allSolutions;
   std::vector<Result::Ref> child_results(numChildren());
-  // get the request ID -- we're going to be incrementing the 
-  // itsSolveDependMask part of it
+  // get the request ID -- we're going to be incrementing the part of it 
+  // corresponding to our generated symdep
   HIID rqid = request.id();
-  // Copy the request and attach the solvable parm specification if needed.
+  // Create a new request and attach the solvable parm specification if needed.
+  // We'll keep the request object via reference; note that
+  // solve()/fillSolution() may subsequently create new request objects
+  // and attach them to this ref; so we can't just say Request &req = reqref()
+  // and use req from then on, as the request object is likely to change.
+  // Instead, all operations will go via the ref.
   Request::Ref reqref;
-  Request & newReq = reqref <<= new Request(request.cells(),calcDeriv,rqid);
-  newReq[FRider] <<= new DataRecord;
+  reqref <<= new Request(request.cells(),calcDeriv,rqid);
   if( state()[FSolvable].exists() ) {
-    newReq[FRider][itsParmGroup] <<= wstate()[FSolvable].as_wp<DataRecord>();
-    newReq.validateRider();
+    DataRecord& rider = Rider::getRider(reqref);
+    rider[itsParmGroup].replace() <<= wstate()[FSolvable].as_wp<DataRecord>();
   } else {
-    newReq[FRider][itsParmGroup] <<= new DataRecord;
+    // no solvables specified -- clear the group record
+    Rider::getGroupRec(reqref,itsParmGroup,Rider::NEW_GROUPREC);
   }
+  reqref().validateRider();
   // Take care that the matrix is cleared if needed.
   if (itsCurClearMatrix) {
       itsSpids.clear();
@@ -175,7 +200,7 @@ int Solver::getResult (Result::Ref &resref,
   for (step=0; step<itsCurNumIter; step++) 
   {
     // collect child results, using Node's standard method
-    int retcode = Node::pollChildren (child_results, resref, newReq);
+    int retcode = Node::pollChildren (child_results, resref, *reqref);
     // a fail or a wait is returned immediately
     if( retcode&(RES_FAIL|RES_WAIT) )
       return retcode;
@@ -296,11 +321,11 @@ int Solver::getResult (Result::Ref &resref,
     solution.reference (vec);
     // Solve the equation.
     DataRecord& solRec = metricsRec[step] <<= new DataRecord;
-    solve (solution, newReq, solRec, resref, child_results,
+    solve (solution, reqref, solRec, resref, child_results,
            false, step==itsCurNumIter-1);
     // increment the solce-dependent parts of the request ID
-    incrSubId(rqid,itsSolveDependMask);
-    newReq.setId(rqid);
+    incrSubId(rqid,getGenSymDepMask());
+    reqref().setId(rqid);
     // Unlock all parm tables used.
     ParmTable::unlockTables();
   }
@@ -313,7 +338,7 @@ int Solver::getResult (Result::Ref &resref,
   return 0;
 }
 
-void Solver::solve (Vector<double>& solution, const Request& request,
+void Solver::solve (Vector<double>& solution,Request::Ref &reqref,
                     DataRecord& solRec, Result::Ref& resref,
                     std::vector<Result::Ref>& child_results,
                     bool savePolcs, bool lastIter)
@@ -325,15 +350,16 @@ void Solver::solve (Vector<double>& solution, const Request& request,
              << " equations for "
              << nspid << " solvable parameters in solver " << name());
   solution = 0;
-  Request::Ref reqref;
-  Request* req = const_cast<Request*>(&request);
   if (lastIter) {
-    // Do the last solve via an empty request.
+    RequestId rqid = incrSubId(reqref->id(),getGenSymDepMask());
+    // generate a command-only (no cells) request for the last update
     Request & lastReq = reqref <<= new Request;
-    req = &lastReq;
-    lastReq.setId(incrSubId(request.id(),itsSolveDependMask));
+    lastReq.setId(rqid);
     lastReq[FRider] <<= new DataRecord;
-  }
+  } // else make a private writable copy of request, since we're going to modify it
+  else if( !reqref.isWritable() )
+    reqref.privatize(DMI::WRITE);
+  Request &req = reqref();
   // It looks as if in LSQ solveLoop and getCovariance
   // interact badly (maybe both doing an invert).
   // So make a copy to separate them.
@@ -367,15 +393,15 @@ void Solver::solve (Vector<double>& solution, const Request& request,
   // Put the solution in the rider:
   //    [FRider][<parm_group>][CommandByNodeIndex][<parmid>]
   // will contain a DataRecord for each parm 
-  DataRecord& dr1 = (*req)[FRider][itsParmGroup].replace() <<= new DataRecord;
-  fillSolution (dr1[FCommandByNodeIndex] <<= new DataRecord, 
-                itsSpids, solution, savePolcs);
+  DataRecord& dr1 = Rider::getCmdRec_ByNodeIndex(reqref,itsParmGroup,
+                                                 Rider::NEW_GROUPREC);
+  fillSolution (dr1,itsSpids, solution, savePolcs);
+  // make sure the request rider is validated
+  req.validateRider();
   // Lock all parm tables used.
   ParmTable::lockTables();
-  // Update the parms.
-  req->validateRider();
   if (lastIter) {
-    Node::pollChildren (child_results, resref, *req);
+    Node::pollChildren (child_results, resref, req);
   }
   // Unlock all parm tables used.
   ParmTable::unlockTables();
@@ -414,8 +440,6 @@ void Solver::setStateImpl (DataRecord& newst,bool initializing)
   Node::setStateImpl(newst,initializing);
   newst[FParmGroup].get(itsParmGroup,initializing);
   DataRecord *pdef = newst[FDefault].as_wpo<DataRecord>();
-  
-  newst[FSolveDependMask].get(itsSolveDependMask,initializing);
   
   // if no default record at init time, create a new one
   if( !pdef && initializing )

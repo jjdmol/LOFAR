@@ -37,12 +37,6 @@
 //  Resamples the Vells in its child's Result to the Cells of the parent's
 //  Request. Current version ignores cell centers, sizes, domains, etc.,
 //  and goes for a simple integrate/expand by an integer factor.
-//field: integrate F
-//  If True, then Vells are treated as integral values over a cell (i.e.,
-//  when downsampling, values are integrated; when upsampling, values are 
-//  divided). If False, then Vells are treated as samples at cell center 
-//  (i.e., when downsampling, values are averaged; when upsampling, values 
-//  are duplicated).
 //field: flag_mask -1
 //  Flag mask applied to child's result. -1 for all flags, 0 to ignore 
 //  flags. Flagged values are ignored during integration.
@@ -50,7 +44,7 @@
 //  Flag bit(s) used to indicate flagged integrated results. If 0, then 
 //  flag_mask&input_flags is used.
 //field: flag_density 0.5
-//  Critical ration of flagged/total pixels for integration. If this ratio
+//  Critical ratio of flagged/total pixels for integration. If this ratio
 //  is exceeded, the integrated pixel is flagged.
 //defrec end
 
@@ -80,48 +74,12 @@ protected:
                          const Request &req,bool newreq);
   
 private:
-  // resamples vells according to current setup (see below)
-  Vells::Ref resampleVells (const Vells &in);
-    
-  // templated helper function for above, which does the actual work
-  template<class T>
-  void doResample (Vells::Ref &voutref,const blitz::Array<T,2> &in);
-
-  // if true, signal is assumed to be integrated over the cell
-  // if false, signal is assumed to be a sampling at the cell center
-  bool integrate;
-  
   int flag_mask;
   
   int flag_bit;
   
   float flag_density;
 
-  // All members below are used by resampleVells() to do the actual
-  // resampling. These are meant to be set up by getResult(), before calling
-  // resampleVells() repeatedly on all input Vells.
-  
-  // shape of output Vells
-  LoShape outshape;    
-  // # of cells to integrate in X/Y (1 if expanding)
-  int     nsum[2];
-  // # of cells to expand by in X/Y (1 if integrating)
-  int     nexpand[2];  
-  // renormalization factor applied to output cell after summing up 
-  // the input cells. 
-  double  renorm_factor;
-  // Renormalization matrix, incorporating renorm_factor, plus
-  // corrections for partially flagged integrations
-  LoMat_double renorm_matrix;
-  
-  // pointer to output flags, 0 if no flagging
-  VellSet::FlagArrayType *outflags;
-  
-  // pointer to input flags, 0 if no flagging
-  const VellSet::FlagArrayType *inflags;
-  
-  
-  
 };
 
 

@@ -84,6 +84,14 @@ int Composer::getResult (Result::Ref &resref,
   // otherwise, compose normal result
   else
   {
+    // check that integrated property matches
+    bool integrated = childres[0]->isIntegrated();
+    for( int i=1; i<numChildren(); i++ )
+    {
+      FailWhen( childres[i]->isIntegrated() != integrated,
+          "'integrated' property of child results is not uniform");
+    }
+    // compose the result
     Result &result = resref <<= new Result(nres,request);
     result.setCells(request.cells()); 
     int ires=0;

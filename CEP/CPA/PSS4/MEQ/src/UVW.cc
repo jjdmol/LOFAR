@@ -34,14 +34,19 @@
 
 namespace Meq {
 
-const int num_children = 5;
 const HIID child_labels[] = { AidRA,AidDec,AidStX,AidStY,AidStZ };
+const int num_children = sizeof(child_labels)/sizeof(child_labels[0]);
+
+const HIID FDomain = AidDomain;
 
 //##ModelId=400E535502D1
 UVW::UVW()
 {
-  setDependMask(RQIDM_CELLS);
+  const HIID symdeps[] = { FDomain,FResolution };
+  setActiveSymDeps(symdeps,2);
+  // ***BUG***
   // Use the Dwingeloo position for the frame.
+  // must pass in real position somehow, later
   Assert (MeasTable::Observatory(itsEarthPos, "DWL"));
   ///  itsRefU = itsU;
 }
