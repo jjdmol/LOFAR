@@ -66,26 +66,29 @@ int Sink::getResult (Result::Ref &ref,
 
 template<class T,class U>
 void Sink::fillTileColumn (T *coldata,const LoShape &colshape,
+                           const LoRange &rowrange,
                            const blitz::Array<U,2> &arr,int icorr)
 {
   const LoShape arrshape = arr.shape();
-  FailWhen(arrshape[1]!=colshape.back(),"shape of child result does not match output column");
+  blitz::Array<T,2> colarr;
   // option 1 is writing to a 2D column with same shape
-  if( colshape.size() == 2 && colshape[0] == arrshape[0] )
+  if( colshape.size() == 2 )
   {
-    blitz::Array<T,2> colarr(coldata,colshape,blitz::neverDeleteData);
-    colarr = blitz::cast<T>(arr);
+    blitz::Array<T,2> colarr0(coldata,colshape,blitz::neverDeleteData);
+    colarr.reference(colarr0(LoRange::all(),rowrange));
   }
   // option 2 is writing to a cube column using the current correlation
-  else if( colshape.size() == 3 && colshape[1] == arrshape[0] )
+  else if( colshape.size() == 3 )
   {
-    blitz::Array<T,3> colarr(coldata,colshape,blitz::neverDeleteData);
-    colarr(icorr,LoRange::all(),LoRange::all()) = blitz::cast<T>(arr);
+    blitz::Array<T,3> colarr0(coldata,colshape,blitz::neverDeleteData);
+    colarr.reference(colarr0(icorr,LoRange::all(),rowrange));
   }
   else
   {
-    Throw("shape of child result does not match output column")
+    Throw("output tile column must have 2 or 3 dimensions")
   }
+  FailWhen(colarr.shape()!=arr.shape(),"shape of child result does not match output column");
+  colarr = blitz::cast<T>(arr);
 }
 
 int Sink::deliverHeader (const VisTile::Format &outformat)
@@ -171,12 +174,14 @@ int Sink::procPendingTile (VisTile::Ref &tileref)
       if( vells.isReal() ) // real values
       {
         FailWhen(coltype!=Tpdouble,"type mismatch: double Vells, "+coltype.toString()+" column");
-        fillTileColumn(static_cast<double*>(coldata),colshape,vells.getRealArray(),icorr);
+        fillTileColumn(static_cast<double*>(coldata),colshape,pending.range,
+                      vells.getRealArray(),icorr);
       }
       else  // complex values
       {
         FailWhen(coltype!=Tpfcomplex,"type mismatch: complex Vells, "+coltype.toString()+" column");
-        fillTileColumn(static_cast<fcomplex*>(coldata),colshape,vells.getComplexArray(),icorr);
+        fillTileColumn(static_cast<fcomplex*>(coldata),colshape,pending.range,
+                      vells.getComplexArray(),icorr);
       }
       resflag |= RES_UPDATED;
     }
@@ -185,7 +190,7 @@ int Sink::procPendingTile (VisTile::Ref &tileref)
 }
 
 //##ModelId=3F98DAE6021E
-int Sink::deliverTile (const Request &req,VisTile::Ref &tileref)
+int Sink::deliverTile (const Request &req,VisTile::Ref &tileref,const LoRange &range)
 {
   // grab a copy of the ref (since procPendingTile may overwrite tileref)
   VisTile::Ref ref(tileref,DMI::COPYREF);
@@ -196,7 +201,8 @@ int Sink::deliverTile (const Request &req,VisTile::Ref &tileref)
   {
     // make this tile & request pending
     pending.request.attach(req);
-    pending.tile = ref;
+    pending.tile  = ref;
+    pending.range = range;
   }
   return resflag;
 }

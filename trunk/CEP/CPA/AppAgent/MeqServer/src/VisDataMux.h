@@ -35,24 +35,23 @@ class VisDataMux
     //##ModelId=3F98DAE6024A
     //##Documentation
     //## delivers visdata header to data mux
-    //## control agent may be used to post error events
     int deliverHeader (const DataRecord &header);
       
     //##ModelId=3F98DAE60251
     //##Documentation
     //## delivers tile to data mux
-    //## control agent may be used to post error events
+    //## rowrange specifies range of valid rows in tile
     int deliverTile (VisTile::Ref::Copy &tileref);
 
     //##Documentation
     //## delivers visdata footer to data mux
-    //## control agent may be used to post error events
     int deliverFooter (const DataRecord &footer);
     
     // helper func:
-    // returns Meq::Cells object corresponding to a VisTile
+    // returns Meq::Cells object corresponding to a VisTile, plus range
+    // of valid rows
     //##ModelId=3F9FF6970269
-    void fillCells (Cells &cells,const VisTile &tile);
+    void fillCells (Cells &cells,LoRange &range,const VisTile &tile);
 
     AppControlAgent &       control()   { return *control_; }
     VisAgent::InputAgent &  input()     { return *input_;   }

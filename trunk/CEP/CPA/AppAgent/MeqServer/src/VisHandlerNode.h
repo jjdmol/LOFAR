@@ -52,15 +52,16 @@ class VisHandlerNode : public Node
     //##ModelId=3F98DAE60344
     //##Documentation
     //## Delivers a VisTile to the node.
-    //## req is the request generated from this VisTile
+    //## req is the request generated using this VisTile
     //## tileref is a ref to the tile (will be detached)
+    //## range is the range of valid rows to use
     //## Returns result state (see Node::RES_xxx constants), which can be
     //## Node::RES_FAIL for failure, or a combination of the following
     //## bit flags:
     //##    RES_WAIT    result not yet available, must wait
     //##    RES_UPDATED result available and tile was updated, output tile is
     //##                attached to tileref
-    virtual int deliverTile   (const Request &,VisTile::Ref &) { return 0; }
+    virtual int deliverTile   (const Request &,VisTile::Ref &,const LoRange &) { return 0; }
                          
     //##Documentation
     //## Alerts node that a visdata stream is finished.

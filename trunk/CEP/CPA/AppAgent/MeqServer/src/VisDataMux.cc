@@ -137,27 +137,33 @@ int Meq::VisDataMux::formDataId (int sta1,int sta2)
   return VisVocabulary::ifrNumber(sta1,sta2);
 }
 
-void Meq::VisDataMux::fillCells (Cells &cells,const VisTile &tile)
-{
-  // form domain & cells based on stuff in the tile
+void Meq::VisDataMux::fillCells (Cells &cells,LoRange &range,const VisTile &tile)
+{    
+  // figure out range of valid rows
   LoVec_bool valid( tile.rowflag() != int(VisTile::MissingData) );
-  cdebug1(5)<<"valid rows: "<<valid<<endl;
-  int nr = count(valid);
-  const LoVec_double &time0 = tile.time();
-  const LoVec_double &interval0 = tile.interval();
-  LoVec_double time(nr),interval(nr);
-  int j=0;
-  for( int i=0 ; i<tile.nrow(); i++ )
-    if( valid(i) )
-    {
-      time(j) = time0(i);
-      interval(j) = interval0(i);
-      j++;
-    }
-  cdebug1(5)<<"time:     "<<time<<endl;
-  cdebug1(5)<<"interval: "<<interval<<endl;
+  cdebug1(6)<<"valid rows: "<<valid<<endl;
+  // find first valid row, error if none
+  int i0,i1;
+  for( i0=0; !valid(i0); i0++ )
+    if( i0 >= tile.nrow() )
+    { Throw("tile does not contain any valid rows"); }
+  cdebug1(5)<<"valid row range: "<<i0<<":"<<i1<<endl;
+  // find last valid row (error condition above enures that at least one exists)
+  for( i1=tile.nrow()-1; !valid(i1); i1-- );
+  // form a LoRange describing valid rows, extract time/interval for them
+  range = makeLoRange(i0,i1);
+  LoVec_double time1     = tile.time()(range).copy();
+  LoVec_double interval1 = tile.interval()(range).copy();
+  // now, for any rows missing _within_ the valid range, fill in interpolated
+  // times (just to keep Cells & co. happy)
+  int j=1;
+  for( int i=i0+1; i<i1; i++,j++ ) // no need to look at start/end rows -- always valid
+    if( !valid(i) )
+      time1(j) = time1(j-1) + ( interval1(j) = interval1(j-1) );
+  cdebug1(5)<<"time:     "<<time1<<endl;
+  cdebug1(5)<<"interval: "<<interval1<<endl;
   cells.setCells(FREQ,channel_freqs,channel_widths);
-  cells.setCells(TIME,time,interval);
+  cells.setCells(TIME,time1,interval1);
   cells.recomputeDomain();
   cdebug1(5)<<"cells: "<<cells;
   if( force_regular_grid )
@@ -244,7 +250,8 @@ int Meq::VisDataMux::deliverTile (VisTile::Ref::Copy &tileref)
     cdebug(3)<<"have handlers for did "<<did<<", got tile "<<tileref->sdebug(DebugLevel-1)<<endl;
     // For now, generate the request right here.
     Cells::Ref cellref(DMI::ANONWR);
-    fillCells(cellref(),*tileref);
+    LoRange range;
+    fillCells(cellref(),range,*tileref);
     Request::Ref reqref;
     Request &req = reqref <<= new Request(cellref.deref_p(),0);
     forest_.assignRequestId(req);
@@ -254,7 +261,7 @@ int Meq::VisDataMux::deliverTile (VisTile::Ref::Copy &tileref)
     for( ; iter != hlist.end(); iter++ )
     {
       VisTile::Ref ref(tileref,DMI::COPYREF);
-      int code = (*iter)->deliverTile(req,ref);
+      int code = (*iter)->deliverTile(req,ref,range);
       result_flag |= code;
       // if an output tile is returned, dump it out
       if( code&Node::RES_UPDATED )

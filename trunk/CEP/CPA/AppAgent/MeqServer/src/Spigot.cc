@@ -41,11 +41,11 @@ void Spigot::setStateImpl (DataRecord &rec,bool initializing)
 }
 
 //##ModelId=3F98DAE6023B
-int Spigot::deliverTile (const Request &req,VisTile::Ref::Copy &tileref)
+int Spigot::deliverTile (const Request &req,VisTile::Ref::Copy &tileref,const LoRange &rowrange)
 {
   const VisTile &tile = *tileref;
   const HIID &rqid = req.id();
-  cdebug(3)<<"deliver: tile "<<tile.tileId()<<", rqid "<<rqid<<endl;
+  cdebug(3)<<"deliver: tile "<<tile.tileId()<<", rqid "<<rqid<<",row rowrange "<<rowrange<<endl;
   // already waiting for such a request? Do nothing for now
   if( currentRequestId() == rqid )
   {
@@ -60,7 +60,10 @@ int Spigot::deliverTile (const Request &req,VisTile::Ref::Copy &tileref)
     const VisTile::Format &tileformat = tile.format();
     TypeId coltype = tileformat.type(icolumn);
     LoShape colshape = tileformat.shape(icolumn);
+    // # output rows -- tile.nrow() if rowrange is all, or rowrange length otherwise
+    int nrows = rowrange.last(tile.nrow()-1) - rowrange.first(0)+1; 
     colshape.push_back(tile.nrow());
+    cdebug(3)<<"deliver: using "<<nrows<<" of "<<tile.nrow()<<" tile rows\n";
     // casting away const because blitz constructors below only take non-const
     // pointers
     void *coldata = const_cast<void*>(tile.column(icolumn));
@@ -73,13 +76,14 @@ int Spigot::deliverTile (const Request &req,VisTile::Ref::Copy &tileref)
       {
         LoCube_double cube(static_cast<double*>(coldata),colshape,blitz::neverDeleteData);
         for( int i=0; i<nplanes; i++ )
-          result.setNewVellSet(i).setReal(colshape[1],colshape[2]) = 
-              cube(i,LoRange::all(),LoRange::all());
+          result.setNewVellSet(i).setReal(colshape[1],nrows) = 
+              cube(i,LoRange::all(),rowrange);
       }
       else if( colshape.size() == 2 )
       {
         LoMat_double mat(static_cast<double*>(coldata),colshape,blitz::neverDeleteData);
-        result.setNewVellSet(0).setReal(colshape[0],colshape[1]) = mat;
+        result.setNewVellSet(0).setReal(colshape[0],nrows) = 
+              mat(LoRange::all(),rowrange);
       }
       else
         Throw("bad input column shape");
@@ -90,14 +94,14 @@ int Spigot::deliverTile (const Request &req,VisTile::Ref::Copy &tileref)
       {
         LoCube_fcomplex cube(static_cast<fcomplex*>(coldata),colshape,blitz::neverDeleteData);
         for( int i=0; i<nplanes; i++ )
-          result.setNewVellSet(i).setComplex(colshape[1],colshape[2]) = 
-              blitz::cast<dcomplex>(cube(i,LoRange::all(),LoRange::all()));
+          result.setNewVellSet(i).setComplex(colshape[1],nrows) = 
+              blitz::cast<dcomplex>(cube(i,LoRange::all(),rowrange));
       }
       else if( colshape.size() == 2 )
       {
         LoMat_fcomplex mat(static_cast<fcomplex*>(coldata),colshape,blitz::neverDeleteData);
-        result.setNewVellSet(0).setComplex(colshape[0],colshape[1]) = 
-            blitz::cast<dcomplex>(mat);
+        result.setNewVellSet(0).setComplex(colshape[0],nrows) = 
+            blitz::cast<dcomplex>(mat(LoRange::all(),rowrange));
       }
       else
         Throw("bad input column shape");
@@ -115,18 +119,20 @@ int Spigot::deliverTile (const Request &req,VisTile::Ref::Copy &tileref)
         // get flag columns
         const LoCube_int & flags   = tile.flags();
 //        cout<<"Tile flags: "<<flags<<endl;
-        const LoVec_int  & rowflag = tile.rowflag();
+        const LoVec_int  rowflag = tile.rowflag()(rowrange);
         for( int i=0; i<nplanes; i++ )
         {
           VellSet::FlagArrayType & fl = result.vellSetWr(i).
                   initOptCol<VellSet::FLAGS>();
           // apply flags with mask
           if( flag_mask )
+          {
             fl = cast<VellSet::FlagType>(
-                  flags(i,LoRange::all(),LoRange::all()) & flag_mask );
+                  flags(i,LoRange::all(),rowrange) & flag_mask );
+          }
           // apply row flags with mask
           if( row_flag_mask )
-            for( int j=0; j<colshape[2]; j++ )
+            for( int j=0; j<nrows; j++ )
               fl(LoRange::all(),j) |= rowflag(j) & row_flag_mask;
         }
       }
