@@ -24,13 +24,11 @@
 #define COMMON_LOFAR_LOGCOUT_H
 
 #include <Common/lofar_iostream.h>
+#include <Common/lofar_sstream.h>
 #include <Common/lofar_iomanip.h>
 #include <Common/lofar_string.h>
 #include <Common/lofar_map.h>
 #include <Common/Exception.h>
-#include <sstream>
-#include <stdexcept>
-#include <stdio.h>
 #ifdef ENABLE_LATENCY_STATS
 #include <sys/time.h>
 #endif
