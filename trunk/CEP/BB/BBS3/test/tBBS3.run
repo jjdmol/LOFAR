@@ -1,0 +1,26 @@
+#!/bin/sh
+
+# Initialize AIPS++
+aips_ext=gnu34
+. /lofarbuild/aips++/stable/aipsinit.sh
+export LD_LIBRARY_PATH=/home/loose/linux/usr/local/gcc-3.4.3/lib:$LD_LIBRARY_PATH
+
+# Initialize AIPS++
+. /data/aips++/weekly/aipsinit.sh
+
+cdir=`pwd`
+echo "Doing tBBS3 tests in $cdir"
+
+# Do test
+echo ""
+echo "Doing test"
+echo "  Generating parm tables ..."
+time ( glish initgsm3.g; glish setgsm3.g; glish initparms.g ) >& test.log
+rm -f /tmp/test.demo3_gsm-1.MEP
+rm -f /tmp/test.demo3-1.MEP
+ln -s $cdir/demo3-1_gsm.MEP /tmp/test.demo3_gsm-1.MEP
+ln -s $cdir/demo.MEP /tmp/test.demo3-1.MEP
+echo "  Preparing BlackBoard ..."
+time prepareBBD >> test.log
+echo "  Starting solve ..."
+time tBBS3 tBBS3.in 3 >& test.out

@@ -1,0 +1,22 @@
+#!/bin/sh
+
+rm -rf tBBS3_tmp
+mkdir tBBS3_tmp
+cd tBBS3_tmp
+ln -s ../../../../test/tBBS3.sh .
+ln -s ../../../../test/*.g .
+ln -s ../../../../test/tBBS3.test*[0-9] .
+ln -s ../../../../src/prepareBBD2 prepareBBD
+ln -s ../../../../src/clearBB .
+ln -s ../tBBS3 .
+
+rm -f demo{3,3p,10}-1.MS.{dat,des,uvw}
+ln -s /data/PSS3/diepen/BBS2/demo3/demo.dat demo3-1.MS.dat
+ln -s /data/PSS3/diepen/BBS2/demo3/demo.des demo3-1.MS.des
+ln -s /data/PSS3/diepen/BBS2/demo3/demo.uvw demo3-1.MS.uvw
+ln -s /data/PSS3/diepen/BBS2/demo3p/demo.dat demo3p-1.MS.dat
+ln -s /data/PSS3/diepen/BBS2/demo3p/demo.des demo3p-1.MS.des
+ln -s /data/PSS3/diepen/BBS2/demo3p/demo.uvw demo3p-1.MS.uvw
+ln -s /data/PSS3/diepen/BBS2/demo10/demo.dat demo10-1.MS.dat
+ln -s /data/PSS3/diepen/BBS2/demo10/demo.des demo10-1.MS.des
+ln -s /data/PSS3/diepen/BBS2/demo10/demo.uvw demo10-1.MS.uvw

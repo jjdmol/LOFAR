@@ -1,0 +1,84 @@
+#!/bin/sh
+
+# clearBB: clear BB (workorders and solutions) for BlackBoardDemo
+#
+#  Copyright (C) 2004
+#  ASTRON (Netherlands Foundation for Research in Astronomy)
+#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+#
+#  This program is free software; you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either version 2 of the License, or
+#  (at your option) any later version.
+#
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program; if not, write to the Free Software
+#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#
+#  $Id$
+
+# the following options can be given:
+# -host    Host (default = dop50, this is the host PL uses)
+# -user    User
+
+BBHOST="dop50"
+BBUSER=`whoami`
+
+while [ 1 = 1 ]
+do
+  if [ "$1" = "-host" ]; then
+    shift
+    BBHOST="$1"
+    shift
+  elif [ "$1" = "-user" ]; then
+    shift
+    BBUSER="$1"
+    shift
+  else
+    break;
+  fi
+done
+
+SQLCLIENT="psql -h $BBHOST -U postgres $BBUSER"
+
+#create the bb tables
+echo " " > sql_create
+echo " DROP TABLE bbsolutions;" >> sql_create
+echo " DROP TABLE bbworkorders;" >> sql_create
+echo " CREATE TABLE bbworkorders (
+       ObjId BIGINT NOT NULL UNIQUE PRIMARY KEY, 
+       Owner BIGINT NOT NULL, 
+       VersionNr INTEGER NOT NULL, 
+       ID INTEGER, 
+       TAG INTEGER, 
+       SEQNR BIGINT, 
+       DATA TEXT, 
+       WOID INTEGER, 
+       STATUS INTEGER, 
+       KSTYPE TEXT, 
+       STRATEGYNO INTEGER, 
+       NOSTARTSOLS INTEGER, 
+       ARGSSIZE INTEGER, 
+       NUMBEROFPARAM INTEGER);" >> sql_create
+echo "create table bbsolutions (
+      ObjId BIGINT NOT NULL UNIQUE PRIMARY KEY, 
+      Owner BIGINT NOT NULL, 
+      VersionNr INTEGER NOT NULL, 
+      ID INTEGER, 
+      TAG INTEGER, 
+      SEQNR BIGINT, 
+      DATA TEXT, 
+      BBID INTEGER, 
+      WOID INTEGER, 
+      ITERATION INTEGER, 
+      FIT DOUBLE PRECISION, 
+      MU DOUBLE PRECISION, 
+      STDDEV DOUBLE PRECISION, 
+      CHI DOUBLE PRECISION, 
+      NUMBEROFPARAM INTEGER);" >> sql_create
+$SQLCLIENT < sql_create
