@@ -618,7 +618,6 @@ void BeamServerTask::send_weights(int period)
 
 	  if (pol == 0) {
 	    // weights for x-real part
-	    weights(all, Range(1,toEnd,2)) = complex<int16_t>(0,0);
 	  } else if (pol == 1) {
 	    // weights for x-imaginary part
 	    weights *= complex<int16_t>(0,1);
