@@ -91,7 +91,7 @@ void BlackBoardDemo::define(const KeyValueMap& params)
   // Optional: Get any extra params from input
   int controlRead = params.getInt("cRead", 0);  // If 1: Controller reads from 
                                                 // database
-  int itsNumberKS = 6;       // The total number of Knowledge Sources
+  int itsNumberKS = 3;       // The total number of Knowledge Sources
   char databaseName[10] = "schaaf";   // !!!! Change to own database !!!!
 
   DH_Postgresql::UseDatabase("10.87.2.50", databaseName, "postgres"); 
@@ -105,7 +105,7 @@ void BlackBoardDemo::define(const KeyValueMap& params)
   bool calcUVW = false;
  
   // Create the controller WorkHolder and Step
-  WH_Evaluate controlWH("control");
+  WH_Evaluate controlWH("control", itsNumberKS);
   Step controlStep(controlWH, "controlStep");
   controlStep.runOnNode(0,0);
   simul.addStep(controlStep);
@@ -181,6 +181,7 @@ void BlackBoardDemo::run(int nSteps) {
   for (int i=0; i<nSteps; i++) {
     if (i==2) Profiler::activate();
     TRACER2("Call simul.process() ");
+    cout << "Run " << i << "/" << nSteps << endl;
     getSimul().process();
     if (i==5) Profiler::deActivate();
   }
