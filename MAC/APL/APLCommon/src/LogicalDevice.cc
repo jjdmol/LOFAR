@@ -25,7 +25,9 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 #include <GCF/GCF_PVString.h>
+#include <GCF/GCF_PVInteger.h>
 #include "APLCommon/APL_Defines.h"
+#include "APLCommon/APLUtilities.h"
 #include "APLCommon/LogicalDevice.h"
 
 #define DECLARE_SIGNAL_NAMES
@@ -38,20 +40,28 @@ namespace LOFAR
 namespace APLCommon
 {
 
-const string LogicalDevice::LD_STATE_STRING_INITIAL    = string("Initial");
-const string LogicalDevice::LD_STATE_STRING_IDLE       = string("Idle");
-const string LogicalDevice::LD_STATE_STRING_CLAIMING   = string("Claiming");
-const string LogicalDevice::LD_STATE_STRING_CLAIMED    = string("Claimed");
-const string LogicalDevice::LD_STATE_STRING_PREPARING  = string("Preparing");
-const string LogicalDevice::LD_STATE_STRING_SUSPENDED  = string("Suspended");
-const string LogicalDevice::LD_STATE_STRING_ACTIVE     = string("Active");
-const string LogicalDevice::LD_STATE_STRING_RELEASING  = string("Releasing");
-const string LogicalDevice::LD_STATE_STRING_RELEASED   = string("Released");
+const string LogicalDevice::LD_STATE_STRING_INITIAL     = string("Initial");
+const string LogicalDevice::LD_STATE_STRING_IDLE        = string("Idle");
+const string LogicalDevice::LD_STATE_STRING_CLAIMING    = string("Claiming");
+const string LogicalDevice::LD_STATE_STRING_CLAIMED     = string("Claimed");
+const string LogicalDevice::LD_STATE_STRING_PREPARING   = string("Preparing");
+const string LogicalDevice::LD_STATE_STRING_SUSPENDED   = string("Suspended");
+const string LogicalDevice::LD_STATE_STRING_ACTIVE      = string("Active");
+const string LogicalDevice::LD_STATE_STRING_RELEASING   = string("Releasing");
+const string LogicalDevice::LD_STATE_STRING_RELEASED    = string("Released");
 
-const string LogicalDevice::LD_PROPNAME_COMMAND        = string("command");
-const string LogicalDevice::LD_PROPNAME_STATUS         = string("status");
+const string LogicalDevice::LD_PROPNAME_COMMAND         = string("command");
+const string LogicalDevice::LD_PROPNAME_STATUS          = string("status");
 
-LogicalDevice::LogicalDevice(const string& taskName, const string& parameterFile) throw (ParameterFileNotFoundException, ParameterNotFoundException) :
+const string LogicalDevice::LD_COMMAND_SCHEDULE         = string("SCHEDULE");
+const string LogicalDevice::LD_COMMAND_CANCELSCHEDULE   = string("CANCELSCHEDULE");
+const string LogicalDevice::LD_COMMAND_CLAIM            = string("CLAIM");
+const string LogicalDevice::LD_COMMAND_PREPARE          = string("PREPARE");
+const string LogicalDevice::LD_COMMAND_RESUME           = string("RESUME");
+const string LogicalDevice::LD_COMMAND_SUSPEND          = string("SUSPEND");
+const string LogicalDevice::LD_COMMAND_RELEASE          = string("RELEASE");
+
+LogicalDevice::LogicalDevice(const string& taskName, const string& parameterFile) throw (APLCommon::ParameterFileNotFoundException, APLCommon::ParameterNotFoundException) :
   ::GCFTask((State)&LogicalDevice::initial_state,taskName),
   PropertySetAnswerHandlerInterface(),
   m_propertySetAnswer(*this),
@@ -79,7 +89,7 @@ LogicalDevice::LogicalDevice(const string& taskName, const string& parameterFile
   }
   catch(Exception& e)
   {
-    THROW(ParameterFileNotFoundException,e.message());
+    THROW(APLCommon::ParameterFileNotFoundException,e.message());
   }
   
   try
@@ -89,7 +99,7 @@ LogicalDevice::LogicalDevice(const string& taskName, const string& parameterFile
   }
   catch(Exception& e)
   {
-    THROW(ParameterNotFoundException,e.message());
+    THROW(APLCommon::ParameterNotFoundException,e.message());
   }
   
   m_properties = boost::shared_ptr<GCFMyPropertySet>(new GCFMyPropertySet(psName.c_str(),psType.c_str(),PS_CAT_TEMPORARY,&m_propertySetAnswer));
@@ -121,6 +131,150 @@ bool LogicalDevice::isPrepared(vector<string>& /*parameters*/)
 LogicalDevice::TLogicalDeviceState LogicalDevice::getLogicalDeviceState() const
 {
   return m_logicalDeviceState;
+}
+
+void LogicalDevice::handlePropertySetAnswer(::GCFEvent& answer)
+{
+  switch(answer.signal)
+  {
+    case F_MYPS_ENABLED:
+    {
+      GCFPropSetAnswerEvent* pPropAnswer=static_cast<GCFPropSetAnswerEvent*>(&answer);
+      if(pPropAnswer->result == GCF_NO_ERROR)
+      {
+        // property set loaded, now load apc?
+      }
+      else
+      {
+        LOG_ERROR(formatString("%s : PropertySet %s NOT ENABLED",getName().c_str(),pPropAnswer->pScope));
+      }
+      break;
+    }
+    
+    case F_PS_CONFIGURED:
+    {
+      GCFConfAnswerEvent* pConfAnswer=static_cast<GCFConfAnswerEvent*>(&answer);
+      if(pConfAnswer->result == GCF_NO_ERROR)
+      {
+        LOG_DEBUG(formatString("%s : apc %s Loaded",getName().c_str(),pConfAnswer->pApcName));
+        //apcLoaded();
+      }
+      else
+      {
+        LOG_ERROR(formatString("%s : apc %s NOT LOADED",getName().c_str(),pConfAnswer->pApcName));
+      }
+      break;
+    }
+    
+    case F_VCHANGEMSG:
+    {
+      // check which property changed
+      GCFPropValueEvent* pPropAnswer=static_cast<GCFPropValueEvent*>(&answer);
+      if ((pPropAnswer->pValue->getType() == LPT_STRING) &&
+          (strstr(pPropAnswer->pPropName, LD_PROPNAME_COMMAND.c_str()) != 0))
+      {
+        // command received
+        string commandString(((GCFPVString*)pPropAnswer->pValue)->getValue());
+        vector<string> parameters;
+        string command;
+        APLUtilities::decodeCommand(commandString,command,parameters);
+        
+        // SCHEDULE <fileName>
+        if(command==string(LD_COMMAND_SCHEDULE))
+        {
+          if(parameters.size()==1)
+          {
+          }
+          else
+          {
+            TLDResult result = LD_RESULT_INCORRECT_NUMBER_OF_PARAMETERS;
+            m_properties->setValue(LD_PROPNAME_STATUS,GCFPVInteger(result));
+          }
+        }
+        // CANCELSCHEDULE <fileName>
+        else if(command==string(LD_COMMAND_CANCELSCHEDULE))
+        {
+          if(parameters.size()==1)
+          {
+          }
+          else
+          {
+            TLDResult result = LD_RESULT_INCORRECT_NUMBER_OF_PARAMETERS;
+            m_properties->setValue(LD_PROPNAME_STATUS,GCFPVInteger(result));
+          }
+        }
+        // CLAIM
+        else if(command==string(LD_COMMAND_CLAIM))
+        {
+          if(parameters.size()==0)
+          {
+          }
+          else
+          {
+            TLDResult result = LD_RESULT_INCORRECT_NUMBER_OF_PARAMETERS;
+            m_properties->setValue(LD_PROPNAME_STATUS,GCFPVInteger(result));
+          }
+        }
+        // PREPARE
+        else if(command==string(LD_COMMAND_PREPARE))
+        {
+          if(parameters.size()==0)
+          {
+          }
+          else
+          {
+            TLDResult result = LD_RESULT_INCORRECT_NUMBER_OF_PARAMETERS;
+            m_properties->setValue(LD_PROPNAME_STATUS,GCFPVInteger(result));
+          }
+        }
+        // RESUME
+        else if(command==string(LD_COMMAND_RESUME))
+        {
+          if(parameters.size()==0)
+          {
+          }
+          else
+          {
+            TLDResult result = LD_RESULT_INCORRECT_NUMBER_OF_PARAMETERS;
+            m_properties->setValue(LD_PROPNAME_STATUS,GCFPVInteger(result));
+          }
+        }
+        // SUSPEND
+        else if(command==string(LD_COMMAND_SUSPEND))
+        {
+          if(parameters.size()==0)
+          {
+          }
+          else
+          {
+            TLDResult result = LD_RESULT_INCORRECT_NUMBER_OF_PARAMETERS;
+            m_properties->setValue(LD_PROPNAME_STATUS,GCFPVInteger(result));
+          }
+        }
+        // RELEASE
+        else if(command==string(LD_COMMAND_RELEASE))
+        {
+          if(parameters.size()==0)
+          {
+          }
+          else
+          {
+            TLDResult result = LD_RESULT_INCORRECT_NUMBER_OF_PARAMETERS;
+            m_properties->setValue(LD_PROPNAME_STATUS,GCFPVInteger(result));
+          }
+        }
+        else
+        {
+          TLDResult result = LD_RESULT_UNKNOWN_COMMAND;
+          m_properties->setValue(LD_PROPNAME_STATUS,GCFPVInteger(result));
+        }
+      }
+      break;
+    }  
+
+    default:
+      break;
+  }  
 }
 
 bool LogicalDevice::_isParentPort(::GCFPortInterface& port)

@@ -83,14 +83,29 @@ namespace APLCommon
       // property defines
       static const string LD_PROPNAME_COMMAND;
       static const string LD_PROPNAME_STATUS;
+      
+      // command defines
+      static const string LD_COMMAND_SCHEDULE;
+      static const string LD_COMMAND_CANCELSCHEDULE;
+      static const string LD_COMMAND_CLAIM;
+      static const string LD_COMMAND_PREPARE;
+      static const string LD_COMMAND_RESUME;
+      static const string LD_COMMAND_SUSPEND;
+      static const string LD_COMMAND_RELEASE;
 
-      explicit LogicalDevice(const string& taskName, const string& parameterFile) throw (ParameterFileNotFoundException, ParameterNotFoundException);
+      explicit LogicalDevice(const string& taskName, const string& parameterFile) throw (APLCommon::ParameterFileNotFoundException, 
+                                                                                         APLCommon::ParameterNotFoundException);
       virtual ~LogicalDevice();
 
       string& getServerPortName();
       void addChildPort(boost::shared_ptr<GCFPVSSPort> childPort);
       virtual bool isPrepared(vector<string>& parameters);
       TLogicalDeviceState getLogicalDeviceState() const;
+      
+      /**
+      * PropertySetAnswerHandlerInterface method
+      */
+      virtual void handlePropertySetAnswer(::GCFEvent& answer);
 
       /**
       * The initial state handler. This handler is passed to the GCFTask constructor

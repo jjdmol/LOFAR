@@ -32,7 +32,7 @@ namespace LOFAR
   using namespace ACC;
   using namespace APLCommon;
   
-namespace VIC
+namespace AVI
 {
 
 VirtualInstrument::VirtualInstrument(const string& taskName, const string& parameterFile) :

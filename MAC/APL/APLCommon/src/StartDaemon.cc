@@ -24,7 +24,11 @@
 #undef VERSION
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
+#include <GCF/GCF_PVInteger.h>
 #include "APLCommon/APL_Defines.h"
+#include "APLCommon/APLUtilities.h"
+#include "APLCommon/LogicalDevice.h"
+#include "APLCommon/LogicalDeviceFactory.h"
 
 #define DECLARE_SIGNAL_NAMES
 #include "APLCommon/StartDaemon.h"
@@ -34,9 +38,10 @@ namespace LOFAR
 namespace APLCommon
 {
 
-static const string StartDaemon::PSTYPE_STARTDAEMON("TAplStartDaemon");
-static const string StartDaemon::SD_PROPNAME_COMMAND("command");
-static const string StartDaemon::SD_PROPNAME_STATUS("status");
+const string StartDaemon::PSTYPE_STARTDAEMON("TAplStartDaemon");
+const string StartDaemon::SD_PROPNAME_COMMAND("command");
+const string StartDaemon::SD_PROPNAME_STATUS("status");
+const string StartDaemon::SD_COMMAND_SCHEDULE("SCHEDULE");
 
 StartDaemon::StartDaemon(const string& name) :
   ::GCFTask((State)&StartDaemon::initial_state,"StartDaemon"),
@@ -44,7 +49,7 @@ StartDaemon::StartDaemon(const string& name) :
   m_propertySetAnswer(*this),
   m_properties(name.c_str(),PSTYPE_STARTDAEMON.c_str(),PS_CAT_TEMPORARY,&m_propertySetAnswer),
   m_serverPortName(name + string("server")),
-  m_serverPort(*this, m_serverPortName, ::GCFPortInterface::SPP, LOGICALDEVICE_PROTOCOL),
+  m_serverPort(*this, m_serverPortName, ::GCFPortInterface::SPP, STARTDAEMON_PROTOCOL),
   m_childPorts(),
   m_factories(),
   m_logicalDevices()
@@ -67,28 +72,27 @@ void StartDaemon::registerFactory(TLogicalDeviceTypes ldType,boost::shared_ptr<L
   m_factories[ldType] = factory;
 }
 
-TSDResult StartDaemon::createLogicalDevice(const TLogicalDeviceTypes ldType, const string& fileName)
+TSDResult StartDaemon::createLogicalDevice(const TLogicalDeviceTypes ldType, const string& taskName, const string& fileName)
 {
-  TSDResult result = SD_NO_ERROR;
+  TSDResult result = SD_RESULT_NO_ERROR;
   TFactoryMap::iterator it = m_factories.find(ldType);
   if(m_factories.end() != it)
   {
     try
     {
-      boost::shared_ptr<LogicalDevice> ld = (*it)->createLogicalDevice(fileName);
+      boost::shared_ptr<LogicalDevice> ld = it->second->createLogicalDevice(taskName,fileName);
       m_logicalDevices.push_back(ld);
     }
-    catch(ParameterFileNotFoundException& e)
+    catch(APLCommon::ParameterFileNotFoundException& e)
     {
       LOG_FATAL(e.message());
-      result = SD_FILENOTFOUND;
+      result = SD_RESULT_FILENOTFOUND;
     }
   }
   else
   {
-    std::ostream os;
-    LOG_FATAL_STR(os<<"Requested Logical Device ("<<ldType<<") cannot be created by this StartDaemon");
-    result = SD_UNSUPPORTED_LD;
+    LOG_FATAL_STR("Requested Logical Device ("<<ldType<<") cannot be created by this StartDaemon");
+    result = SD_RESULT_UNSUPPORTED_LD;
   }
   return result;
 }
@@ -125,7 +129,7 @@ void StartDaemon::_disconnectedHandler(::GCFPortInterface& port)
       found = (&port == (*it).get()); // comparing two pointers. yuck?
       if(found)
       {
-        m_clientPorts.erase(it);
+        m_childPorts.erase(it);
       }
       else
       { 
@@ -188,7 +192,7 @@ void StartDaemon::_disconnectedHandler(::GCFPortInterface& port)
     {
       boost::shared_ptr<GCFPVSSPort> client(new GCFPVSSPort);
       client->init(*this, m_serverPortName, GCFPortInterface::SPP, STARTDAEMON_PROTOCOL);
-      m_serverPort.accept(client.get());
+      m_serverPort.accept(*(client.get()));
       m_childPorts.push_back(client);
     }
     break;
@@ -202,7 +206,7 @@ void StartDaemon::_disconnectedHandler(::GCFPortInterface& port)
       STARTDAEMONScheduleEvent scheduleEvent(event);
       STARTDAEMONScheduledEvent scheduledEvent;
       
-      scheduledEvent.result = createLogicalDevice(scheduleEvent.logicalDeviceType,scheduleEvent.fileName);
+      scheduledEvent.result = createLogicalDevice(scheduleEvent.logicalDeviceType,scheduleEvent.taskName, scheduleEvent.fileName);
       
       port.send(scheduledEvent);
       break;
@@ -214,6 +218,84 @@ void StartDaemon::_disconnectedHandler(::GCFPortInterface& port)
   }
 
   return status;
+}
+
+void StartDaemon::handlePropertySetAnswer(::GCFEvent& answer)
+{
+  switch(answer.signal)
+  {
+    case F_MYPS_ENABLED:
+    {
+      GCFPropSetAnswerEvent* pPropAnswer=static_cast<GCFPropSetAnswerEvent*>(&answer);
+      if(pPropAnswer->result == GCF_NO_ERROR)
+      {
+        // property set loaded, now load apc?
+      }
+      else
+      {
+        LOG_ERROR(formatString("%s : PropertySet %s NOT ENABLED",getName().c_str(),pPropAnswer->pScope));
+      }
+      break;
+    }
+    
+    case F_PS_CONFIGURED:
+    {
+      GCFConfAnswerEvent* pConfAnswer=static_cast<GCFConfAnswerEvent*>(&answer);
+      if(pConfAnswer->result == GCF_NO_ERROR)
+      {
+        LOG_DEBUG(formatString("%s : apc %s Loaded",getName().c_str(),pConfAnswer->pApcName));
+        //apcLoaded();
+      }
+      else
+      {
+        LOG_ERROR(formatString("%s : apc %s NOT LOADED",getName().c_str(),pConfAnswer->pApcName));
+      }
+      break;
+    }
+    
+    case F_VCHANGEMSG:
+    {
+      // check which property changed
+      GCFPropValueEvent* pPropAnswer=static_cast<GCFPropValueEvent*>(&answer);
+      if ((pPropAnswer->pValue->getType() == LPT_STRING) &&
+          (strstr(pPropAnswer->pPropName, SD_PROPNAME_COMMAND.c_str()) != 0))
+      {
+        // command received
+        string commandString(((GCFPVString*)pPropAnswer->pValue)->getValue());
+        vector<string> parameters;
+        string command;
+        APLUtilities::decodeCommand(commandString,command,parameters);
+        
+        // SCHEDULE <type>,<taskname>,<filename>
+        if(command==string(SD_COMMAND_SCHEDULE))
+        {
+          if(parameters.size()==3)
+          {
+            TLogicalDeviceTypes logicalDeviceType = static_cast<TLogicalDeviceTypes>(atoi(parameters[0].c_str()));
+            string taskName = parameters[1];
+            string fileName = parameters[2];            
+            
+            TSDResult result = createLogicalDevice(logicalDeviceType,taskName,fileName);
+            m_properties.setValue(SD_PROPNAME_STATUS,GCFPVInteger(result));
+          }
+          else
+          {
+            TSDResult result = SD_RESULT_INCORRECT_NUMBER_OF_PARAMETERS;
+            m_properties.setValue(SD_PROPNAME_STATUS,GCFPVInteger(result));
+          }
+        }
+        else
+        {
+          TSDResult result = SD_RESULT_UNKNOWN_COMMAND;
+          m_properties.setValue(SD_PROPNAME_STATUS,GCFPVInteger(result));
+        }
+      }
+      break;
+    }  
+
+    default:
+      break;
+  }  
 }
 
 

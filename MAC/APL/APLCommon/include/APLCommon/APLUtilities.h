@@ -1,6 +1,6 @@
-//#  VirtualInstrumentStartDaemonMain.cc: Main entry for the VirtualInstrument start daemon
+//#  APLUtilities.h: Utility functions
 //#
-//#  Copyright (C) 2002-2005
+//#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
 //#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -20,27 +20,45 @@
 //#
 //#  $Id$
 
-#include <boost/shared_ptr.hpp>
+#ifndef APLUtilities_H
+#define APLUtilities_H
 
-#include <APLCommon/StartDaemon.h>
-#include "VirtualInstrumentFactory.h"
+//# Includes
+//# Common Includes
+#include <Common/lofar_vector.h>
+#include <Common/lofar_string.h>
 
-using namespace LOFAR;
-using namespace APLCommon;
-using namespace AVI;  // A)pplication layer V)irtual I)nstrument
+//# GCF Includes
 
-int main(int argc, char* argv[])
+//# local includes
+
+// forward declaration
+
+namespace LOFAR
 {
-  GCFTask::init(argc, argv);
   
-  boost::shared_ptr<VirtualInstrumentFactory> viFactory(new VirtualInstrumentFactory);
-  
-  StartDaemon sd(string("VIC_VIStartDaemon"));
-  sd.registerFactory(LDTYPE_VIRTUALINSTRUMENT,viFactory);
-  sd.start(); // make initial transition
+namespace APLCommon
+{
 
-  GCFTask::run();
+class APLUtilities
+{
+  public:
+
+    APLUtilities(); 
+    virtual ~APLUtilities();
+
+    static void decodeCommand(const string& commandString, string& command, vector<string>& parameters);
+    static void decodeParameters(const string& parametersString, vector<string>& parameters); 
     
-  return 0;
-}
+  protected:
+    // protected copy constructor
+    APLUtilities(const APLUtilities&);
+    // protected assignment operator
+    APLUtilities& operator=(const APLUtilities&);
 
+  private:
+};
+
+};//APL
+};//LOFAR
+#endif

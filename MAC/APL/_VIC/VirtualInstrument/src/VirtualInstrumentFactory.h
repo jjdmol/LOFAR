@@ -44,9 +44,9 @@ namespace AVI // A)pplication layer V)irtual I)nstrument
       VirtualInstrumentFactory() {}; 
       virtual ~VirtualInstrumentFactory() {};
       
-      virtual boost::shared_ptr<APLCommon::LogicalDevice> createLogicalDevice(const string& parameterFile) throw(ParameterFileNotFoundException)
+      virtual boost::shared_ptr<APLCommon::LogicalDevice> createLogicalDevice(const string& taskName, const string& parameterFile) throw(APLCommon::ParameterFileNotFoundException)
       {
-        return boost::shared_ptr<APLCommon::LogicalDevice>(new VirtualInstrument(parameterFile));
+        return boost::shared_ptr<APLCommon::LogicalDevice>(new VirtualInstrument(taskName, parameterFile));
       };
 
     protected:
