@@ -20,35 +20,6 @@
 //
 //  $Id$
 //
-//  $Log$
-//  Revision 1.1.1.1  2002/11/13 15:58:06  schaaf
-//  %[BugId: 117]%
-//
-//  Initial working version
-//
-//  Revision 1.6  2002/11/08 13:48:22  schaaf
-//
-//  %[BugId: 11]%
-//
-//  includes
-//
-//  Revision 1.5  2002/07/18 09:35:31  schaaf
-//  %[BugId: 11]%
-//  Modified time handling
-//
-//  Revision 1.4  2002/06/10 09:12:46  schaaf
-//  %[BugId: 11]%
-//  Removed ^M characters
-//
-//  Revision 1.3  2002/05/15 07:23:27  schaaf
-//  Added profiler state
-//
-//  Revision 1.2  2002/05/14 11:39:41  gvd
-//  Changed for new build environment
-//
-//  Revision 1.1.1.1  2002/05/06 11:49:20  schaaf
-//  initial version
-//
 //
 //////////////////////////////////////////////////////////////////////
 
@@ -117,5 +88,20 @@ private:
   static int          theirProcessProfilerState; 
   
 };
+
+inline DH_2DMatrix* WH_Transpose::getInHolder (int channel)
+{
+  DbgAssertStr (channel >= 0,          "input channel too low");
+  DbgAssertStr (channel < getInputs(), "input channel too high");
+  return itsInHolders[channel];
+}
+
+inline DH_2DMatrix* WH_Transpose::getOutHolder (int channel)
+{
+  DbgAssertStr (channel >= 0,           "output channel too low");
+  DbgAssertStr (channel < getOutputs(), "output channel too high");
+  return itsOutHolders[channel];
+}
+
 
 #endif
