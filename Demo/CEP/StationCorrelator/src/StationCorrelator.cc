@@ -74,25 +74,28 @@ void StationCorrelator::undefine() {
 
 void StationCorrelator::define(const KeyValueMap& /*kvm*/) {
 
+  LOG_TRACE_FLOW_STR("Read KVM parameters");
   char H_name[128];
   int fast_rate = itsKVM.getInt("samples",256000)/itsKVM.getInt("NoPacketsInFrame",8);
 
+  LOG_TRACE_FLOW_STR("Create the top-level composite");
   WH_Empty empty;
   Composite comp(empty);
   setComposite(comp);
   comp.runOnNode(0);
 
+  LOG_TRACE_FLOW_STR("Create the workholders");
   /// Create the WorkHolders 
   Step** itsRSPsteps = new Step*[itsNrsp];
   for (unsigned int i = 0; i < itsNrsp; i++) {
     snprintf(H_name, 128, "RSPNode_%d_of_%d", i, itsNrsp);
-    
+    LOG_TRACE_LOOP_STR("Create RSP workholder/Step " << H_name);
     WH_RSP* whRSP; 
 
     if (i == 0) {
-      whRSP = new WH_RSP(H_name, itsKVM, true);
+      whRSP = new WH_RSP(H_name, itsKVM, true);  // syncmaster
     } else {
-      whRSP = new WH_RSP(H_name, itsKVM, false);
+      whRSP = new WH_RSP(H_name, itsKVM, false);  // notsyncmaster
     }
     itsRSPsteps[i] = new Step(*whRSP, H_name, false);
 
@@ -115,6 +118,7 @@ void StationCorrelator::define(const KeyValueMap& /*kvm*/) {
     // we create a transpose workholder for every correlator workholder
     // to rearrange the data coming from the RSP boards.
     sprintf(H_name, "TransposeNode_%d_of_%d", i, itsNcorrelator);
+    LOG_TRACE_LOOP_STR("Create Transpose workholder/Step " << H_name);
 
     WH_Transpose whTranspose(H_name, itsKVM);
     itsTsteps[i] = new Step(whTranspose, H_name, false);
@@ -128,33 +132,39 @@ void StationCorrelator::define(const KeyValueMap& /*kvm*/) {
     // connect the Transpose step just created to the correct RSP outputs
     for (unsigned int rsp = 0; rsp < itsNrsp; rsp++) {
       //      itsRSPsteps[rsp]->connect(itsTsteps[i], i+1, rsp, 1, TH_Mem(), true);
-      itsTsteps[i]->connect(itsRSPsteps[rsp], rsp, i, 1, TH_Mem(), true);
+      itsTsteps[i]->connect(itsRSPsteps[rsp], rsp, i, 1, TH_Mem(), 
+			    true);       // true=blocking
     }
 
 
     // now create the Correlator workholder
     sprintf(H_name, "CorrelatorNode_%d_of_%d", i, itsNcorrelator);
-    
+    LOG_TRACE_LOOP_STR("Create Correlator  workholder/Step " << H_name);
+
     WH_Correlator whCorrelator(H_name, itsKVM);
     itsCsteps[i] = new Step(whCorrelator, H_name, false);
     comp.addStep(itsCsteps[i]);
     
-    itsCsteps[i]->connectInput(itsTsteps[i], TH_Mem(), true);
+    itsCsteps[i]->connectInput(itsTsteps[i], TH_Mem(), 
+			       true);   // true=blocking
   }
   
   
   unsigned int c_index = 0;
   for (unsigned int i = 0; i < itsNdump; i++) {
     sprintf(H_name, "DumpNode_%d_of_%d", i, itsNdump);
+    LOG_TRACE_LOOP_STR("Create Dump workholder/Step " << H_name);
 
     WH_Dump whDump(H_name, itsKVM);
-    Step step(whDump);
-    comp.addStep(step);
+    Step dumpstep(whDump);
+    comp.addStep(dumpstep);
     
     for (unsigned int in = 0; in < (itsNcorrelator/itsNdump); in++) {
-      step.connect(itsCsteps[c_index++], in, 0, 1, TH_Mem(), true);
+      dumpstep.connect(itsCsteps[c_index++], in, 0, 1, TH_Mem(), 
+		       true);  // true=blocking
     }
   }
+  LOG_TRACE_FLOW_STR("Finished define()");
 }
 
 void StationCorrelator::prerun() {
@@ -162,13 +172,16 @@ void StationCorrelator::prerun() {
 }
     
 void StationCorrelator::run(int steps) {
+  LOG_TRACE_FLOW_STR("Start StationCorrelator::run() "  );
   for (int i = 0; i < steps; i++) {
+    LOG_TRACE_LOOP_STR("processing run " << i );
     getComposite().process();
   }
+  LOG_TRACE_FLOW_STR("Finished StationCorrelator::run() "  );
 }
 
 void StationCorrelator::dump() const {
-
+  LOG_TRACE_FLOW_STR("StationCorrelator::dump() not implemented"  );
 }
 
 void StationCorrelator::quit() {
