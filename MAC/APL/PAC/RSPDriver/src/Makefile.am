@@ -14,9 +14,9 @@ SUFFIXES = .ph
 
 BUILT_SOURCES = \
 	RSP_Protocol.ph \
-	EPA_Protocol.ph
+	EPA_Protocol.ph \
+	log4cplus.properties
 
-# 	log4cplus.properties \
 # 	abs.ns \
 # 	abs.top
 

@@ -5,8 +5,8 @@ server.type=TCP
 [RSP]
 cmd=../src/RSPDriver
 host=localhost
-client.type=TCP
-client.port=30230
+acceptor.type=TCP
+acceptor.port=30230
 board0.type=TCP
 board1.type=TCP
 board2.type=TCP

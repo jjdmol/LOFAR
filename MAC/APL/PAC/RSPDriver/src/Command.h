@@ -64,10 +64,13 @@ namespace RSP
       int16 getPeriod();
       /*@}*/
 
+      /*@{*/
       /**
-       * Set the type of operation READ/WRITE.
+       * Set/get the type of operation READ/WRITE.
        */
       void setOperation(Operation oper);
+      Operation getOperation() const;
+      /*@}*/
 
       /*@{*/
       /**
@@ -118,9 +121,9 @@ namespace RSP
    * Comparison function to order a priority_queue of Command* pointers
    * as it is used in the Scheduler class.
    */
-  struct Command_compare { 
+  struct Command_greater { 
       bool operator() (Command*& x, Command*& y) const 
-      { return x->getTimestamp() < y->getTimestamp(); }
+      { return x->getTimestamp() > y->getTimestamp(); }
   };
 };
      

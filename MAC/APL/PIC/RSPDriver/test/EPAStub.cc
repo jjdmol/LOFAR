@@ -26,8 +26,8 @@
 
 #include "EPA_Protocol.ph"
 
-#include "RSPTestSuite.h"
 #include "EPAStub.h"
+#include "RSPTestSuite.h"
 
 #include "BeamletWeights.h"
 

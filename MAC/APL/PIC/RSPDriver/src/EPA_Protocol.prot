@@ -21,10 +21,12 @@ prelude = << PRELUDE_END
  */
 namespace EPA_Protocol
 {
-  /**
-   * Number of Antenna processors and Beamlet processors.
-   */
   /*@{*/
+  /**
+   * Constants used in the EPA protocol.
+   * These constants are all derived from the leading
+   * constants in MEPHeader.h.
+   */
   static const int N_AP          = 4;
   static const int N_BLP         = N_AP*2;
   static const int N_COEF        = MEPHeader::BFCOEFS_SIZE / sizeof(uint16);      /* should be 512 */

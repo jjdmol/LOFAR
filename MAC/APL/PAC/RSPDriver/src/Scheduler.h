@@ -96,7 +96,7 @@ namespace RSP
       void              completeCommands();
       /*@}*/
 
-      typedef std::priority_queue<Command*, std::vector<Command*>, RSP::Command_compare> pqueue;
+      typedef std::priority_queue<Command*, std::vector<Command*>, RSP::Command_greater> pqueue;
       pqueue m_later_queue;
       pqueue m_now_queue;
       pqueue m_periodic_queue;

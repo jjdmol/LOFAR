@@ -1,5 +1,5 @@
 [RSPTest]
-server=RSP:client
+server=RSP:acceptor
 
 [RSP]
 board0=EPAStub0:client

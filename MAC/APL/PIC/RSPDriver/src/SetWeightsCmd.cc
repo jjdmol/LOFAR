@@ -77,6 +77,7 @@ void SetWeightsCmd::apply(CacheBuffer& cache)
 
 void SetWeightsCmd::complete(CacheBuffer& /*cache*/)
 {
+  LOG_INFO_STR("SetWeightsCmd completed at time=" << getTimestamp());
 }
 
 const Timestamp& SetWeightsCmd::getTimestamp() const

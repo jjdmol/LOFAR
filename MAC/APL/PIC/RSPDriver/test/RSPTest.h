@@ -25,8 +25,7 @@
 #ifndef RSPTEST_H_
 #define RSPTEST_H_
 
-#include "RSP_Protocol.ph"
-
+#include <Suite/test.h>
 #include <GCF/GCF_Control.h>
 #include <GCF/GCF_ETHRawPort.h>
 
@@ -60,6 +59,7 @@ namespace RSP_Test
        */
       GCFEvent::TResult test001(GCFEvent& e, GCFPortInterface &p);
       GCFEvent::TResult test002(GCFEvent& e, GCFPortInterface &p);
+      GCFEvent::TResult test003(GCFEvent& e, GCFPortInterface &p);
 
       /**
        * Run the tests.
