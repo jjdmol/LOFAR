@@ -71,6 +71,12 @@ namespace LCS
         return *aTPO;
       }
 
+      friend bool operator==(const TPersistentObject<T>& lhs, 
+                             const TPersistentObject<T>& rhs)
+      {
+        return lhs.itsOid == rhs.itsOid;
+      }
+      
     private:
       // @name Methods that must be implemented using template specialization
       // The implementation of the following methods will depend on the
