@@ -69,12 +69,11 @@ class Transporter
   /// Get the TransportHolder for this object.
   TransportHolder* getTransportHolder();
 
-  
   /// interface to the Connection class
-  /// after setting the connection, the init() methods on both the
-  /// TransportHolder and DataHolder are called.
-  bool connectTo(Transporter* that, TransportHolder& prototype);
-  bool connectFrom(Transporter* that, TransportHolder& prototype);
+  bool connectTo(Transporter& that, const TransportHolder& prototype);
+  bool connectFrom(Transporter& that, const TransportHolder& prototype);
+
+  // Initialize the BasaeDataHolder and the TransportHolder.
   bool init();
 
   /// Set/get the ID.
@@ -105,10 +104,10 @@ class Transporter
   BaseDataHolder* getSourceAddr();
   BaseDataHolder* getTargetAddr();
 
-  /// Get pointer to the DataPacket from the BaseDataHolder.
+  /// Get pointer to the data from the BaseDataHolder.
   void* getDataPtr();
-  /// Get the size of the DataPacket in the BaseDataHolder.
-  int getDataPacketSize() const;
+  /// Get the size of the data in the BaseDataHolder.
+  int getDataSize() const;
 
   /// Set the rate for this Transport (thus for its BaseDataHolder).
   void setRate (int aRate);

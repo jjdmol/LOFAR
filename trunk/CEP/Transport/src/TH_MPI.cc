@@ -114,7 +114,7 @@ bool TH_MPI::sendBlocking(void* buf, int nbytes, int destination, int tag)
     return (result == MPI_SUCCESS);
 }
 
-bool TH_MPI::sendBlocking(void* buf, int nbytes, int destination, int tag)
+bool TH_MPI::sendNonBlocking(void* buf, int nbytes, int destination, int tag)
 {
   cerr << "**Warning** TH_MPI::sendNonBlocking() is not implemented. " 
        << "The sendBlocking() method is used instead." << endl;    

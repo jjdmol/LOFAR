@@ -44,12 +44,12 @@ namespace LOFAR
     
     virtual ~Connection();
 
-    bool connectTo(Transporter* sourceTP,
-		   Transporter* targetTP,
+    bool connectTo(Transporter& sourceTP,
+		   Transporter& targetTP,
 		   const TransportHolder& prototype);
     
-    bool connectFrom(Transporter* sourceTP, 
-		     Transporter* targetTP,
+    bool connectFrom(Transporter& sourceTP, 
+		     Transporter& targetTP,
 		     const TransportHolder& prototype);
 
   private:
