@@ -154,11 +154,13 @@ bool navConfigCheckEnabled(string datapointName)
     dyn_string ignoreEnabledDPs;
     dyn_errClass err;
     dpGet(DPNAME_NAVIGATOR + "." + ELNAME_IGNOREENABLEDROOTS,ignoreEnabledDPs);
+    err = getLastError();
     if(dynlen(err) == 0)
     {
       for(int i=1;i<=dynlen(ignoreEnabledDPs) && !enabled;i++)
       {
         int pos = strpos(datapointName,ignoreEnabledDPs[i]);
+        LOG_TRACE("checkEnabled",pos,datapointName,ignoreEnabledDPs[i]);
         if(pos >= 0)
         {
           enabled=true;
@@ -270,6 +272,7 @@ string navConfigGetViewConfigPanel(string dpView)
 dyn_string navConfigGetResources(string parentDatapoint, int depth)
 {
   dyn_string resources;
+  dyn_string allResources;
   dyn_string resourceRoots;
   dyn_errClass err;
   int maxDepth;
@@ -295,20 +298,34 @@ dyn_string navConfigGetResources(string parentDatapoint, int depth)
   for(int i=1;i<=dynlen(resourceRoots);i++)
   {
     // query the database for all resources under the given root
-    dynAppend(resources,dpNames(resourceRoots[i]+"*"));
+    dynAppend(allResources,dpNames(resourceRoots[i]+"*"));
   }
   
+  // now remove all DP's with double '_' (e.g. __enabled)
+  // strip everything below the requested level
+  // remove duplicates  
   int i=1;
-  while(i<=dynlen(resources))
+  while(i<=dynlen(allResources))
   {
-    dyn_string dpPathElements = strsplit(resources[i],"_");
-    if(dynlen(dpPathElements)>maxDepth)
+    if(strpos(allResources[i],"__") < 0)
     {
-      LOG_TRACE("Removing: ",resources[i]);
-      dynRemove(resources,i);
+      dyn_string dpPathElements = strsplit(allResources[i],"_");
+      string addResource;
+      int d=1;
+      while(d<=maxDepth && d<=dynlen(dpPathElements))
+      {
+        if(d>1)
+          addResource += "_";
+        addResource += dpPathElements[d];
+        d++;
+      }
+      if(!dynContains(resources,addResource))
+      {
+        LOG_DEBUG("Adding: ",addResource);
+        dynAppend(resources,addResource);
+      }
     }
-    else
-      i++;
+    i++;
   }
   return resources;
 }
