@@ -37,15 +37,13 @@ Add::Add (Function* ch1, Function* ch2)
 Add::~Add()
 {}
 
-Vells Add::evaluate (const Request&,
-		     const vector<Vells*>& values)
+void Add::evaluate (Vells& result, const Request&,
+		    const vector<Vells*>& values)
 {
-  Assert (values.size() > 0);
-  Vells vells = values[0]->clone();
-  for (unsigned int i=1; i<values.size(); i++) {
-    vells += *(values[i]);
+  result.init();
+  for (unsigned int i=0; i<values.size(); i++) {
+    result += *(values[i]);
   }
-  return vells;
 }
 
 
