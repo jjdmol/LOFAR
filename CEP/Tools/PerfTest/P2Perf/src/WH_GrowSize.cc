@@ -22,6 +22,9 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.18  2002/05/13 12:51:26  schaaf
+//  move Asserts to DbgAssert
+//
 //  Revision 1.17  2002/05/08 14:28:37  wierenga
 //  DataHolder allocation moved from constructor to preprocess to be able to
 //  use TransportHolder::allocate.
@@ -163,6 +166,17 @@ void WH_GrowSize::process()
   if (itsReportPerformance){
     if (!itsFirstcall) {
       watch.stop();
+
+      char* pcInData = (char*)getInHolder(0)->getDataPtr();
+      char* pcOutData = (char*)getOutHolder(0)->getDataPtr();
+      for (int i=0; i < 2; i++)
+      {
+	for (int j=0; j < getInHolder(0)->getDataPacketSize(); j++)
+	{
+	  pcOutData[j] = pcInData[j] * 2;
+	}
+      }
+
       if (itsIteration == 0) {
 	// first measurement; print packet sizes etc.
 	cout << endl;
