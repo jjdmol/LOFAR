@@ -67,6 +67,10 @@ public:
   MeqStatUVW& uvw()
     { return *itsUVW; }
 
+  // Get the nr of sources.
+  unsigned int nsources() const
+    { return itsSources->size(); }
+
 private:
   MeqStatUVW*  itsUVW;
   vector<MeqPointSource>* itsSources;

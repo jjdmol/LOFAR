@@ -25,8 +25,11 @@
 #include <aips/Arrays/Matrix.h>
 #include <aips/Mathematics/Math.h>
 
-MeqStoredParmPolc::MeqStoredParmPolc (const string& name, ParmTable* table)
+MeqStoredParmPolc::MeqStoredParmPolc (const string& name, int srcnr,
+				      int statnr, ParmTable* table)
 : MeqParmPolc (name),
+  itsSrcnr    (srcnr),
+  itsStatnr   (statnr),
   itsTable    (table)
 {}
 
@@ -36,11 +39,13 @@ MeqStoredParmPolc::~MeqStoredParmPolc()
 int MeqStoredParmPolc::initDomain (const MeqDomain& domain, int spidIndex)
 {
   // Find the polc(s) for the given domain.
-  vector<MeqPolc> polcs = itsTable->getPolcs (getName(), domain);
+  vector<MeqPolc> polcs = itsTable->getPolcs (getName(), getSourceNr(),
+					      getStation(), domain);
   // If none found, try to get a default value.
   // If no default found, use a 2nd order polynomial with values 1.
   if (polcs.size() == 0) {
-    MeqPolc polc = itsTable->getInitCoeff (getName());
+    MeqPolc polc = itsTable->getInitCoeff (getName(),  getSourceNr(),
+					   getStation());
     if (polc.getCoeff().isNull()) {
       Matrix<double> defCoeff(3,3);
       defCoeff = 1;
@@ -74,7 +79,7 @@ void MeqStoredParmPolc::save()
 {
   const vector<MeqPolc>& polcs = getPolcs();
   for (unsigned int i=0; i<polcs.size(); i++) {
-    itsTable->putCoeff (getName(), polcs[i]);
+    itsTable->putCoeff (getName(), getSourceNr(), getStation(), polcs[i]);
   }
   MeqParmPolc::save();
 }

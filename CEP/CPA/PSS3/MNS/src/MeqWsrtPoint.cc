@@ -76,15 +76,19 @@ void MeqWsrtPoint::calcResult (const MeqRequest& request)
   ncellf *= request.ny();
   // The domain is divided into the required number of cells.
   MeqRequest dftReq (domain, ncellt, ncellf, request.nspid());
-  itsXX = MeqResult(request.nspid());
-  itsXY = MeqResult(request.nspid());
-  itsYX = MeqResult(request.nspid());
-  itsYY = MeqResult(request.nspid());
+  MeqResult& resXX = result11();
+  MeqResult& resXY = result12();
+  MeqResult& resYX = result21();
+  MeqResult& resYY = result22();
+  resXX = MeqResult(request.nspid());
+  resXY = MeqResult(request.nspid());
+  resYX = MeqResult(request.nspid());
+  resYY = MeqResult(request.nspid());
   Matrix<complex<double> > value(ncellt, ncellf, complex<double>(0,0));
-  itsXX.setValue (MeqMatrix (value));
-  itsYX.setValue (MeqMatrix (value));
-  itsXY.setValue (MeqMatrix (value));
-  itsYY.setValue (MeqMatrix (value));
+  resXX.setValue (MeqMatrix (value));
+  resYX.setValue (MeqMatrix (value));
+  resXY.setValue (MeqMatrix (value));
+  resYY.setValue (MeqMatrix (value));
   int srcnr = 0;
   
   for (vector<MeqPointSource>::iterator iter = itsSources.begin();
@@ -112,7 +116,7 @@ void MeqWsrtPoint::calcResult (const MeqRequest& request)
     MeqMatrix xy = (uk.getValue() + vki) * dft.getValue();
     MeqMatrix yy = (ik.getValue() - qk.getValue()) * dft.getValue();
     if (MeqPointDFT::doshow) {
-      cout << "MeqWsrtPoint XX: " << xx << endl << itsXX.getValue() << endl;
+      cout << "MeqWsrtPoint XX: " << xx << endl << resXX.getValue() << endl;
     }
 
     // Evaluate (if needed) for the perturbed parameter values.
@@ -153,54 +157,54 @@ void MeqWsrtPoint::calcResult (const MeqRequest& request)
 	  MeqMatrix xxp = (ikp + qkp) * dkp;
 	  MeqMatrix yyp = (ikp - qkp) * dkp;
 	  // If not calculated before, initialize to unperturbed sum.
-	  if (! itsXX.isDefined(spinx)) {
-	    itsXX.setPerturbedValue (spinx, itsXX.getValue().clone());
-	    itsXX.setPerturbation (spinx, perturbation);
+	  if (! resXX.isDefined(spinx)) {
+	    resXX.setPerturbedValue (spinx, resXX.getValue().clone());
+	    resXX.setPerturbation (spinx, perturbation);
 	  }
-	  if (! itsYY.isDefined(spinx)) {
-	    itsYY.setPerturbedValue (spinx, itsYY.getValue().clone());
-	    itsYY.setPerturbation (spinx, perturbation);
+	  if (! resYY.isDefined(spinx)) {
+	    resYY.setPerturbedValue (spinx, resYY.getValue().clone());
+	    resYY.setPerturbation (spinx, perturbation);
 	  }
-	  itsXX.getPerturbedValueRW(spinx) += xxp;
-	  itsYY.getPerturbedValueRW(spinx) += yyp;
+	  resXX.getPerturbedValueRW(spinx) += xxp;
+	  resYY.getPerturbedValueRW(spinx) += yyp;
 	}
 	if (evaluv) {
 	  const MeqMatrix& ukp = uk.getPerturbedValue(spinx);
 	  MeqMatrix xyp = (ukp - vkip) * dkp;
 	  MeqMatrix yxp = (ukp + vkip) * dkp;
-	  if (! itsXY.isDefined(spinx)) {
-	    itsXY.setPerturbedValue (spinx, itsXY.getValue().clone());
-	    itsXY.setPerturbation (spinx, perturbation);
+	  if (! resXY.isDefined(spinx)) {
+	    resXY.setPerturbedValue (spinx, resXY.getValue().clone());
+	    resXY.setPerturbation (spinx, perturbation);
 	  }
-	  if (! itsYX.isDefined(spinx)) {
-	    itsYX.setPerturbedValue (spinx, itsYX.getValue().clone());
-	    itsYX.setPerturbation (spinx, perturbation);
+	  if (! resYX.isDefined(spinx)) {
+	    resYX.setPerturbedValue (spinx, resYX.getValue().clone());
+	    resYX.setPerturbation (spinx, perturbation);
 	  }
-	  itsXY.getPerturbedValueRW(spinx) += xyp;
-	  itsYX.getPerturbedValueRW(spinx) += yxp;
+	  resXY.getPerturbedValueRW(spinx) += xyp;
+	  resYX.getPerturbedValueRW(spinx) += yxp;
 	}
       } else {
 	// No perturbed values in result for this parameter.
 	// Add unperturbed value if previous results were perturbed.
-	if (itsXX.isDefined(spinx)) {
-	  itsXX.getPerturbedValueRW(spinx) += xx;
+	if (resXX.isDefined(spinx)) {
+	  resXX.getPerturbedValueRW(spinx) += xx;
 	}
-	if (itsXY.isDefined(spinx)) {
-	  itsXY.getPerturbedValueRW(spinx) += xx;
+	if (resXY.isDefined(spinx)) {
+	  resXY.getPerturbedValueRW(spinx) += xx;
 	}
-	if (itsYX.isDefined(spinx)) {
-	  itsYX.getPerturbedValueRW(spinx) += xx;
+	if (resYX.isDefined(spinx)) {
+	  resYX.getPerturbedValueRW(spinx) += xx;
 	}
-	if (itsYY.isDefined(spinx)) {
-	  itsYY.getPerturbedValueRW(spinx) += xx;
+	if (resYY.isDefined(spinx)) {
+	  resYY.getPerturbedValueRW(spinx) += xx;
 	}
       }
     }
 
     // Now add the source contribution to the unperturbed value.
-    itsXX.getValueRW() += xx;
-    itsXY.getValueRW() += xy;
-    itsYX.getValueRW() += yx;
-    itsYY.getValueRW() += yy;
+    resXX.getValueRW() += xx;
+    resXY.getValueRW() += xy;
+    resYX.getValueRW() += yx;
+    resYY.getValueRW() += yy;
   }
 }

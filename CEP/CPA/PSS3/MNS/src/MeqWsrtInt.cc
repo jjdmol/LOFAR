@@ -34,9 +34,9 @@
 #include <MNS/MeqPointDFT.h>
 
 
-MeqWsrtInt::MeqWsrtInt (MeqWsrtPoint* expr, MeqJonesExpr* station1,
+MeqWsrtInt::MeqWsrtInt (MeqJonesExpr* vis, MeqJonesExpr* station1,
 			MeqJonesExpr* station2)
-: itsExpr  (expr),
+: itsExpr  (vis),
   itsStat1 (station1),
   itsStat2 (station2)
 {}
@@ -69,10 +69,10 @@ void MeqWsrtInt::calcResult (const MeqRequest& request)
   itsExpr->calcResult (request);
   itsStat1->calcResult (request);
   itsStat2->calcResult (request);
-  const MeqResult& xx = itsExpr->getResultXX();
-  const MeqResult& xy = itsExpr->getResultXY();
-  const MeqResult& yx = itsExpr->getResultYX();
-  const MeqResult& yy = itsExpr->getResultYY();
+  const MeqResult& xx = itsExpr->getResult11();
+  const MeqResult& xy = itsExpr->getResult12();
+  const MeqResult& yx = itsExpr->getResult21();
+  const MeqResult& yy = itsExpr->getResult22();
   if (MeqPointDFT::doshow) {
     cout << "MeqWsrtInt " << request.nx() <<  ' ' << request.ny() << endl;
     cout << "MeqWsrtInt xx: " << xx.getValue() << endl;
