@@ -42,10 +42,16 @@ namespace LOFAR
         ostringstream oss;
         oss << "DSN=" << aDsn << ";UID=" << aUid << ";PWD=" << aPwd << ";";
         DBConnection::GetDefaultConnection().Connect(oss.str());
+
+        // Enable auto-commit. This line should be removed, once we have
+        // transactions properly in place, because then we only want to do a
+        // commit when the whole transaction succeeds and not for every
+        // database access. For the time being this is the safest, but also
+        // the slowest way to do it.
         DBConnection::GetDefaultConnection().SetAutoCommit(true);
       }
       catch (DBException& e) {
-        THROW(PLException,"Failed to connect to database.\n" << e.what());
+        THROW(BrokerException,"Failed to connect to database.\n" << e.what());
       }
     }
     
