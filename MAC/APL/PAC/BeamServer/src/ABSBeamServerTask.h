@@ -25,6 +25,7 @@
 
 #include "ABSSpectralWindow.h"
 #include "ABS_Protocol.ph"
+#include "ABSBeamlet.h"
 
 #include <GCF/GCF_Control.h>
 #include <GCF/GCF_ETHRawPort.h>
@@ -107,11 +108,6 @@ namespace ABS
 	void compute_timeout_action(long current_seconds);
 
 	/**
-	 * Calculate beam former weights.
-	 */
-	void calculate_weights();
-
-	/**
 	 * Send weights to the board.
 	 */
 	void send_weights();
@@ -154,6 +150,16 @@ namespace ABS
 	    unsigned char sample_period;
 	    bool          enabled;
 	} m_wgsetting;
+
+	/**
+	 * Receptor positions
+	 */
+	blitz::Array<W_TYPE, 2> m_pos;
+
+	/**
+	 * Weight array
+	 */
+	blitz::Array<std::complex<W_TYPE>, 3> m_weights;
 
     private:
 	// ports

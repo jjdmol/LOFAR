@@ -22,6 +22,7 @@
 
 #include "ABSBeam.h"
 
+#include <math.h>
 #include <iostream>
 #include <sys/time.h>
 #include <queue>
@@ -47,11 +48,8 @@ Beam*          Beam::m_beams            = 0;
 unsigned short Beam::m_update_interval  = 0;
 unsigned short Beam::m_compute_interval = 0;
 
-//static const int timestep = Beam::TIMESTEP;
-//static const int _n_timesteps_var = Beam::N_TIMESTEPS;
-
 Beam::Beam() :
-  m_allocated(false), m_pointing(), m_index(-1), m_track_time(date(1970,1,1))
+  m_allocated(false), m_pointing(), m_index(-1) 
 {}
 
 Beam::~Beam()
@@ -103,7 +101,7 @@ int Beam::init(int            ninstances,
       // inplace constructor
       m_beams[i].m_index = i; // assign index
       m_beams[i].m_azels.resize(compute_interval,2);
-      m_beams[i].m_lms.resize(compute_interval,2);
+      m_beams[i].m_lmns.resize(compute_interval,3);
   }
 
   m_update_interval = update_interval;
@@ -176,8 +174,6 @@ int Beam::deallocate()
 
 int Beam::addPointing(const Pointing& pointing)
 {
-  struct ptime;
-
   if (!m_allocated) return -1;
 
   m_pointing_queue.push(pointing);
@@ -202,20 +198,17 @@ int Beam::convertPointings(time_period period)
     return -1;
   }
 
-  // update track starttime
-  m_track_time = period.begin();
-
   // reset azel, lm arrays
   m_azels = 0.0;
-  m_lms = 0.0;
+  m_lmns = 0.0;
 
-  LOG_INFO_STR("Period=" << to_simple_string(period));
+  LOG_DEBUG_STR("Period=" << to_simple_string(period));
 
-  do
+  while (!m_pointing_queue.empty())
   {
       Pointing pointing = m_pointing_queue.top();
 
-      LOG_INFO_STR("Pointing time=" << to_simple_string(pointing.time()));
+      LOG_DEBUG_STR("Pointing time=" << to_simple_string(pointing.time()));
 
       if (pointing.direction().type() != Direction::LOFAR_LMN)
       {
@@ -225,6 +218,8 @@ int Beam::convertPointings(time_period period)
 
       if (pointing.time() < period.end())
       {
+	  m_pointing_queue.pop(); // remove from queue
+
 	  //
 	  // convert direction
 	  // INSERT COORDINATE CONVERSION CALL
@@ -233,23 +228,25 @@ int Beam::convertPointings(time_period period)
 
 	  //
 	  // insert converted LM coordinate at correct 
-	  // position in the m_lms array
+	  // position in the m_lmns array
 	  //
 	  time_duration t = pointing.time() - period.begin();
+	  register int tsec = (pointing.time()-period.begin()).seconds();
 
-	  if ( (t.seconds() < 0) || (t.seconds() >= m_compute_interval) )
+	  if ( (tsec < 0) || (tsec >= m_compute_interval) )
 	  {
 	    LOG_ERROR_STR("invalid pointing time" << to_simple_string(pointing.time()));
 	    continue;
 	  }
+
 	  
-	  m_lms(t.seconds(),0) = pointing.direction().angle1();
-	  m_lms(t.seconds(),1) = pointing.direction().angle2();
-	  pset[t.seconds()] = true;
+	  m_lmns(tsec,0) = pointing.direction().angle1();
+	  m_lmns(tsec,1) = pointing.direction().angle2();
+	  m_lmns(tsec,2) = sqrt(1.0 - ((m_lmns(tsec,0)*m_lmns(tsec,0))
+				       + (m_lmns(tsec,1)*m_lmns(tsec,1))));
+	  pset[tsec] = true;
 
 	  m_pointing = pointing; // remember current pointing
-
-	  m_pointing_queue.pop(); // move on to next pointing
       }
       else if (pointing.time() < period.begin())
       {
@@ -265,10 +262,10 @@ int Beam::convertPointings(time_period period)
 	// done with this period
 	break;
       }
-  } while (!m_pointing_queue.empty());
+  }
   
   //
-  // m_lms array will have unset values because
+  // m_lmns array will have unset values because
   // there are not necessarily pointings at each second
   // these wholes are fixed up in this loop
   //
@@ -277,27 +274,38 @@ int Beam::convertPointings(time_period period)
   {
     if (!pset[t])
     {
-      m_lms(t,0) = current_pointing.direction().angle1();
-      m_lms(t,1) = current_pointing.direction().angle2();
+      m_lmns(t,0) = current_pointing.direction().angle1();
+      m_lmns(t,1) = current_pointing.direction().angle2();
+      m_lmns(t,2) = sqrt(1.0 - ((m_lmns(t,0) * m_lmns(t,0))
+			      + (m_lmns(t,1) * m_lmns(t,1))));
     }
     else
     {
-      double a1 = m_lms(t,0);
-      double a2 = m_lms(t,1);
+      double a1 = m_lmns(t,0);
+      double a2 = m_lmns(t,1);
       current_pointing.setDirection(Direction(a1,a2));
     }
 
-    LOG_INFO(formatString("direction@%s=(%f,%f)",
+    if ((fabs(m_lmns(t,0)) > 1.0)
+	|| (fabs(m_lmns(t,1)) > 1.0))
+    {
+	LOG_ERROR("l or m coordinate out of range -1.0 < l < 1.0, setting to (l,m) to (0.0, 0.0)");
+	m_lmns(t,0) = 0.0;
+	m_lmns(t,1) = 0.0;
+	m_lmns(t,2) = 0.0;
+    }
+
+    LOG_DEBUG(formatString("direction@%s=(%f,%f,%f)",
 			  to_simple_string(*thetime).c_str(),
-			  m_lms(t,0), m_lms(t,1)));
+			  m_lmns(t,0), m_lmns(t,1), m_lmns(t,2)));
   }
 
   return 0;
 }
 
-const Array<double,2>& Beam::getCoordinates() const
+const Array<W_TYPE,2>& Beam::getLMNCoordinates() const
 {
-  return m_lms;
+  return m_lmns;
 }
 
 void Beam::getSubbandSelection(map<int,int>& selection) const

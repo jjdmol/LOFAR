@@ -58,7 +58,7 @@ namespace ABS
 	   * from 0 so that getFrequency(0) returns the center
 	   * frequency of the first subband.
 	   */
-	  double getFrequency(int subband);
+	  double getFrequency(int subband) const;
 
       private:
 	  /** the center frequency in Hz of the first subband */
@@ -75,7 +75,7 @@ namespace ABS
   inline double SpectralWindow::width() const     { return m_width; }
   inline int    SpectralWindow::nsubbands() const { return m_nsubbands; }
 
-  inline double SpectralWindow::getFrequency(int subband)
+  inline double SpectralWindow::getFrequency(int subband) const
       {
 	  return m_start + (subband * m_width);
       }

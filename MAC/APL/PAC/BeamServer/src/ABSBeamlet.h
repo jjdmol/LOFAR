@@ -25,6 +25,11 @@
 
 #include <ABSSpectralWindow.h>
 
+#include <blitz/array.h>
+
+// define the datatype for the weight calculation
+#define W_TYPE double
+
 namespace ABS
 {
   // forward declaration of Beam
@@ -96,9 +101,11 @@ namespace ABS
 	  const Beam* getBeam() const;
 
 	  /**
-	   * Calculate weights for all beamlets (static method).
+	   * Calculate weights for all beamlets 
+	   * for the specified number of time steps.
 	   */
-	  static void calculate_weights();
+	  static void calculate_weights(const blitz::Array<W_TYPE, 2>&               pos,
+					      blitz::Array<std::complex<W_TYPE>, 3>& weights);
 
       protected:
 	  Beamlet(); // no direct construction
@@ -125,8 +132,8 @@ namespace ABS
       private:
 	  //@{
 	  /** singleton implementation members */
-	  static int   m_ninstances;
-	  static Beamlet* m_beamlets; // array of ninstances beamlets
+	  static int      m_ninstances;          // number of beamlets
+	  static Beamlet* m_beamlets;            // array of ninstances beamlets
 	  //@}
 
       private:
@@ -137,11 +144,10 @@ namespace ABS
 	  Beamlet& operator= (const Beamlet&); // not implemented
       };
 
-  inline bool Beamlet::allocated() const { return m_beam != 0; }
+  inline bool Beamlet::allocated() const            { return m_beam != 0; }
   inline const SpectralWindow* Beamlet::spw() const { return m_spw; }
-  inline int  Beamlet::subband()   const { return m_subband; }
-  inline int  Beamlet::index()     const { return m_index; }
-
+  inline int  Beamlet::subband()   const            { return m_subband; }
+  inline int  Beamlet::index()     const            { return m_index; }
 };
      
 #endif /* ABSBEAMLET_H_ */
