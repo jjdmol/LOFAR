@@ -104,9 +104,9 @@ namespace LOFAR
 	  //cout<<"xi, yi, c, matrix[xi,yi]: "<<xi<<", "<<yi<<", "<<c<<", "<<dh_matrix->value(xi,yi)<<endl;
 	}
       }
-      getDataManager().readyWithOutHolder(outi);
     }
     itsLastTime++;
+    //getDataManager().readyWithOutHolder(outi);
   }
 
   void WH_Random::dump()

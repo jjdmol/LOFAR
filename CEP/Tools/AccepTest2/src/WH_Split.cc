@@ -85,9 +85,9 @@ namespace LOFAR
                        / itsNOutputs;
 
     // outi iterates over the outputs
-    // ixi  iterates over the x axis of the inputs  ixi = outi * xsize + oxi
+    // ixi  iterates over the x axis of the input  ixi = outi * xsize + oxi
     // yi   iterates over the y axis of the inputs and y axis of the output;
-    // oxi  iterates over the x axis of the output;
+    // oxi  iterates over the x axis of the outputs;
     int ixi=0;
 
     for (int outi=0; outi<itsNOutputs; outi++) {

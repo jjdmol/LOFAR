@@ -32,6 +32,7 @@
 #include <Common/LofarLogger.h>
 #include <AH_testWHs.h>
 #include <Transport/TH_Mem.h>
+#include <Transport/TH_MPI.h>
 
 namespace LOFAR
 {
@@ -47,18 +48,28 @@ namespace LOFAR
     // These variables can be chosen just the way you like them, EXCEPT:
     //     MatrixY*NoRndNodes must be a multiple of NoSplitsPerSplitter
     //     and of course NoSplitters <= NoHeatLines
-    int NoRndNodes = 10;
-    int NoHeatLines = 10;
-    int NoSplitters = 5;
-    int NoSplitsPerSplitter = 10;
-    int MatrixX = 100;
-    int MatrixY = 100;
+    int NoRndNodes = 2;
+    int NoHeatLines = 1;
+    int NoSplitters = 1;
+    int NoSplitsPerSplitter = 3;
+    int MatrixX = 8000;
+    int MatrixY = 300;
+
+    int totalNumberOfNodes = ( NoSplitsPerSplitter + 2 ) * NoSplitters + 3 * NoHeatLines + NoRndNodes;
+    int MPINodes = TH_MPI::getNumberOfNodes();
+    if (totalNumberOfNodes>MPINodes) {
+      cerr<<"This program was started on "<<TH_MPI::getNumberOfNodes()
+	  <<" nodes, but we need "<<totalNumberOfNodes<<" nodes. Aborting"<<endl;
+      exit(1);
+    } else if (totalNumberOfNodes<MPINodes) {
+      cerr<<"This program was started on "<<TH_MPI::getNumberOfNodes()
+	  <<" nodes, but we need only "<<totalNumberOfNodes<<" nodes."<<endl;
+    };
     
-    TH_Mem myTransProto;
-    itsFileOutput = new fstream("/dev/null", fstream::out);
     // you can choose the output for the WH_Dump here
     // of course this can also be done per workholder
     //ostream& myOutput = cout;
+    itsFileOutput = new fstream("/dev/null", fstream::out);
     ostream& myOutput = *itsFileOutput;
 
     vector<WH_Random*> RandomNodes;
@@ -69,6 +80,7 @@ namespace LOFAR
     vector<WH_Heat*> Heat2Nodes;
     vector<WH_Join*> JoinNodes;
 
+    int lowestFreeNode = 0;
     // create workholders
     char WH_DH_Name[128];
     for (int i=0; i<NoRndNodes; i++) {
@@ -79,6 +91,7 @@ namespace LOFAR
 					  MatrixX,
 					  MatrixY));
       itsWHs.push_back((WorkHolder*) RandomNodes[i]);
+      itsWHs[itsWHs.size()-1]->runOnNode(lowestFreeNode++);      
     };
     for (int i=0; i<NoHeatLines; i++) {
       // transpose nodes
@@ -88,6 +101,7 @@ namespace LOFAR
 						MatrixX,
 						MatrixY));
       itsWHs.push_back((WorkHolder*) TransposeNodes[i]);
+      itsWHs[itsWHs.size()-1]->runOnNode(lowestFreeNode++);      
 
       // heat nodes
       sprintf(WH_DH_Name, "Heat_%d_of_%d", i, NoHeatLines);
@@ -95,6 +109,7 @@ namespace LOFAR
 				       MatrixY*NoRndNodes,
 				       MatrixX));
       itsWHs.push_back((WorkHolder*) Heat1Nodes[i]);
+      itsWHs[itsWHs.size()-1]->runOnNode(lowestFreeNode++);      
     };
 
     for (int Si=0; Si<NoSplitters; Si++) {
@@ -105,6 +120,7 @@ namespace LOFAR
 					MatrixY*NoRndNodes/NoSplitsPerSplitter,
 					MatrixX));
       itsWHs.push_back((WorkHolder*) SplitNodes[Si]);
+      itsWHs[itsWHs.size()-1]->runOnNode(lowestFreeNode++);      
 
       for (int Di=0; Di<NoSplitsPerSplitter; Di++) {
 	// heat2 nodes
@@ -114,6 +130,7 @@ namespace LOFAR
 					 MatrixX,
 					 false));
 	itsWHs.push_back((WorkHolder*) Heat2Nodes[Si*NoSplitsPerSplitter+Di]);
+	itsWHs[itsWHs.size()-1]->runOnNode(lowestFreeNode++);      
       }
       // join nodes
       sprintf(WH_DH_Name, "Join_%d_of_%d", Si, NoSplitters);
@@ -122,6 +139,7 @@ namespace LOFAR
 				      MatrixY*NoRndNodes/NoSplitsPerSplitter,
 				      MatrixX));
       itsWHs.push_back((WorkHolder*) JoinNodes[Si]);
+      itsWHs[itsWHs.size()-1]->runOnNode(lowestFreeNode++);      
     }
     // create dump nodes last so they process will be called on them last
     for (int i=0; i<NoHeatLines; i++) {
@@ -132,6 +150,7 @@ namespace LOFAR
 				      MatrixX,
 				      myOutput));
       itsWHs.push_back((WorkHolder*) DumpNodes[i]);
+      itsWHs[itsWHs.size()-1]->runOnNode(lowestFreeNode++);      
     }
 
 
@@ -140,33 +159,26 @@ namespace LOFAR
     for (int Hi = 0; Hi < NoHeatLines; Hi++) {
       // random nodes to transpose
       for (int Ri = 0; Ri < NoRndNodes; Ri++) {
-	RandomNodes[Ri]->getDataManager().getOutHolder(Hi)->connectTo
-	  ( *(TransposeNodes[Hi]->getDataManager().getInHolder(Ri)), myTransProto, false);
+	connectWHs_MPI(RandomNodes[Ri], Hi, TransposeNodes[Hi], Ri);
       }
       // transpose nodes to heat1
-      TransposeNodes[Hi]->getDataManager().getOutHolder(0)->connectTo
-	( *(Heat1Nodes[Hi]->getDataManager().getInHolder(0)), myTransProto, false);
+      connectWHs_MPI(TransposeNodes[Hi], 0, Heat1Nodes[Hi], 0);
     }
     for (int Si = 0; Si < NoSplitters; Si++) {
       // heat nodes to split
-      Heat1Nodes[Si]->getDataManager().getOutHolder(0)->connectTo
-	( *(SplitNodes[Si]->getDataManager().getInHolder(0)), myTransProto, false);
+      connectWHs_MPI(Heat1Nodes[Si], 0, SplitNodes[Si], 0);
       for (int Hi = 0; Hi < NoSplitsPerSplitter; Hi++) {
 	// split nodes to heat2
-	SplitNodes[Si]->getDataManager().getOutHolder(Hi)->connectTo
-	  ( *(Heat2Nodes[Si*NoSplitsPerSplitter+Hi]->getDataManager().getInHolder(0)), myTransProto, false);
+	connectWHs_MPI(SplitNodes[Si], Hi, Heat2Nodes[Si*NoSplitsPerSplitter+Hi], 0);
 	// heat2 nodes to join
-	Heat2Nodes[Si*NoSplitsPerSplitter+Hi]->getDataManager().getOutHolder(0)->connectTo
-	  ( *(JoinNodes[Si]->getDataManager().getInHolder(Hi)), myTransProto, false);
+	connectWHs_MPI(Heat2Nodes[Si*NoSplitsPerSplitter+Hi], 0, JoinNodes[Si], Hi);
       }
       // dump nodes to the join
-      JoinNodes[Si]->getDataManager().getOutHolder(0)->connectTo
-	( *(DumpNodes[Si]->getDataManager().getInHolder(0)), myTransProto, false);
+      connectWHs_MPI(JoinNodes[Si], 0, DumpNodes[Si], 0);
     }
     // connect the remaining Dump nodes directly to Heat1
     for (int Di = NoSplitters; Di < NoHeatLines; Di++) {
-      Heat1Nodes[Di]->getDataManager().getOutHolder(0)->connectTo
-	( *(DumpNodes[Di]->getDataManager().getInHolder(0)), myTransProto, false);
+      connectWHs_MPI(Heat1Nodes[Di], 0, DumpNodes[Di], 0);
     }
   };
 
@@ -200,6 +212,14 @@ namespace LOFAR
     }
   }
   
+  void AH_testWHs::connectWHs_MPI(WorkHolder* srcWH, int srcDH, WorkHolder* dstWH, int dstDH, bool isBlocking) {
+    srcWH->getDataManager().getOutHolder(srcDH)->connectTo
+      ( *(dstWH->getDataManager().getInHolder(dstDH)), 
+	TH_MPI(srcWH->getNode(), dstWH->getNode()),
+	true);
+  }
+
   void AH_testWHs::quit() {
+    TH_MPI::finalize();
   }
 }
