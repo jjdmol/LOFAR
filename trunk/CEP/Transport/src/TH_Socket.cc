@@ -32,20 +32,10 @@
 namespace LOFAR
 {
 
-  TH_Socket TH_Socket::proto;
-  
-  TH_Socket::TH_Socket () : 
-    itsSendingHostName ("localhost"), 
-    itsReceivingHostName ("localhost"), 
-    itsPortNo (4567),
-    isConnected (false)
-  {
-    cerr << "Warning: Using TH_Socket with uninitialized host " 
-	 << "names and port number" << endl; 
-  }
+//   TH_Socket TH_Socket::proto;
   
   TH_Socket::TH_Socket 
-    (std::string sendhost, std::string recvhost, int portno) :
+    (const std::string &sendhost, const std::string &recvhost, const int portno) :
       itsSendingHostName (sendhost), 
       itsReceivingHostName (recvhost), 
       itsPortNo (portno),
@@ -57,7 +47,7 @@ namespace LOFAR
   
   TH_Socket* TH_Socket::make() const
   {
-      return new TH_Socket();
+      return new TH_Socket(itsSendingHostName, itsReceivingHostName, itsPortNo);
   }
   
   string TH_Socket::getType() const
@@ -70,7 +60,7 @@ namespace LOFAR
     return srcRank == dstRank;
   }
   
-  bool TH_Socket::recvBlocking (void * buf, int nbytes, int, int tag)
+  bool TH_Socket::recvBlocking (void * buf, int nbytes, int, int /*tag*/)
   { 
     cout << "Creating socket..." << endl;
     Socket socket;
@@ -105,7 +95,7 @@ namespace LOFAR
   }
   
   
-  bool TH_Socket::waitForReceived (void * buf, int nbytes, int, int tag)
+  bool TH_Socket::waitForReceived (void * /*buf*/, int /*nbytes*/, int, int /*tag*/)
   { 
     cerr << "Warning (TH_Socket::waitForReceived ()): Non-blocking receive "
          << "not yet implemented. Recption ready, ingoring call." << endl;
@@ -114,7 +104,7 @@ namespace LOFAR
   }
   
   
-  bool TH_Socket::sendBlocking (void* buf, int nbytes, int, int tag)
+  bool TH_Socket::sendBlocking (void* buf, int nbytes, int, int /*tag*/)
   {
     cout << "Creating a socket..." << endl;
     Socket socket;
@@ -144,7 +134,7 @@ namespace LOFAR
   }
   
   
-  bool TH_Socket::waitForSend (void* buf, int nbytes, int, int tag)
+  bool TH_Socket::waitForSend (void* /*buf*/, int /*nbytes*/, int, int /*tag*/)
   {
     cerr << "Warning (TH_Socket::waitForSend ()): Non-blocking send "
          << "not yet implemented. Sending is ready anyway. ignoring call." 
@@ -154,7 +144,7 @@ namespace LOFAR
   }
   
   
-  bool TH_Socket::waitForReceiveAck (void* buf, int nbytes, int, int tag)
+  bool TH_Socket::waitForReceiveAck (void* /*buf*/, int /*nbytes*/, int, int /*tag*/)
   {
     cerr << "Warning (TH_Socket::waitForSend ()): Non-blocking send "
          << "not yet implemented. Sending is ready anyway. ignoring call." 

@@ -20,8 +20,8 @@
 //#
 //# $Id$
 
-#ifndef CEPFRAME_TH_MEM_BL_H
-#define CEPFRAME_TH_MEM_BL_H
+#ifndef CEPFRAME_TH_SOCKET_H
+#define CEPFRAME_TH_SOCKET_H
 
 #include <lofar_config.h>
 #include <Transport/TransportHolder.h>
@@ -41,8 +41,8 @@ namespace LOFAR
   class TH_Socket: public TransportHolder
   {
   public:
-    TH_Socket ();
-    TH_Socket (std::string sendhost, std::string recvhost, int portno);
+    TH_Socket (const std::string &sendhost, const std::string &recvhost, 
+	       const int portno);
   
     virtual ~TH_Socket();
   
