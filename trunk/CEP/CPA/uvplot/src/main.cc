@@ -11,7 +11,7 @@ int main(int argc, char *argv[])
 {
   QApplication app(argc, argv);
   Debug::initLevels(argc, (const char **)argv);       // Initialize debugging
-  OctopussyConfig::initGlobal(argc,argv);
+  OctopussyConfig::initGlobal(argc,(const char **)argv);
 
 
   UVPMainWindow *mainwin = new UVPMainWindow;
