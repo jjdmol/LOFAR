@@ -61,7 +61,7 @@ void AH_Correlator::define(const KeyValueMap& /*params*/) {
 		   itsNpolarisations);
   
   // Synchronise all correlators here and connect sequentially in blocks of 10
-  TH_MPI::synchronnizeAllProcesses();
+  TH_MPI::synchroniseAllProcesses();
   usleep(100 * (TH_MPI::getCurrentRank()%10));
 
   // now connect to the dummy workholders. 
