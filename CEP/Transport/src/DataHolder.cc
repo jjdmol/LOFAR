@@ -33,7 +33,7 @@
 namespace LOFAR
 {
 
-DataHolder::DataHolder(const string& name, const string& type)
+DataHolder::DataHolder(const string& name, const string& type, int version)
   : itsDataFields     (type),
     itsData           (0),
     itsDataBlob       (0),
@@ -42,6 +42,7 @@ DataHolder::DataHolder(const string& name, const string& type)
     itsIsAddMax       (false),
     itsName           (name),
     itsType           (type),
+    itsVersion        (version),
     itsReadConvert    (-1),
     itsExtraPtr       (0)
 {
@@ -57,6 +58,7 @@ DataHolder::DataHolder(const DataHolder& that)
     itsIsAddMax       (that.itsIsAddMax),
     itsName           (that.itsName),
     itsType           (that.itsType),
+    itsVersion        (that.itsVersion),
     itsReadConvert    (that.itsReadConvert),
     itsExtraPtr       (0)
 {
@@ -198,6 +200,13 @@ bool DataHolder::connectTo (DataHolder& thatDH,
 			    const TransportHolder& prototype,
 			    bool blockingComm)
 {
+  AssertStr(itsType == thatDH.itsType, 
+	    "Connected DataHolders must be of the same type. Connection between "
+	    << itsType << " and " << thatDH.itsType << " is not possible.");
+  AssertStr(itsVersion == thatDH.itsVersion, 
+	    "DataHolders cannot be connected, their versions " 
+	    << itsVersion << " and " << thatDH.itsVersion 
+	    << " are not the same.");
   return itsTransporter.connect (thatDH.getTransporter(), 
 				 prototype, blockingComm);
 }

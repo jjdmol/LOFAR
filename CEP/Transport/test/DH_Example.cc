@@ -28,7 +28,7 @@ namespace LOFAR
 
 DH_Example::DH_Example (const string& name, unsigned int nbuffer,
 			bool useExtra)
-: DH_PL      (name, "DH_Example"),
+: DH_PL      (name, "DH_Example", 1),
   itsCounter (0),
   itsBuffer  (0),
   itsBufSize (nbuffer)
