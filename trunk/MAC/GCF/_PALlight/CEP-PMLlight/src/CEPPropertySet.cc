@@ -426,7 +426,7 @@ void CEPPropertySet::readTypeFile(TPropInfoList& propInfos)
 
   char buffer[200];
   // Try to open the type information file
-  sprintf(buffer, "typeInfo_%s.dpl", _type.c_str());
+  sprintf(buffer, "typeStruct_%s.dpl", _type.c_str());
   pvssAsciiFile.open(buffer, ifstream::in);
   
   if (!pvssAsciiFile)
@@ -475,8 +475,9 @@ void buildTypeStructTree(const string path,
   static bool readyWithType = false;
   unsigned int elType, elTypeSeq;  
   
-  char* elName(0);
-  int nrOfScanned = sscanf(curAsciiLine, "%as%d#%d", &elName, &elType, &elTypeSeq);
+  static char elName[256];
+  
+  int nrOfScanned = sscanf(curAsciiLine, "%s%d#%d", elName, &elType, &elTypeSeq);
   // first element entry found or empty ascii line found (end of type information section)
   if (elTypeSeq == 1 || nrOfScanned < 3)
   {
@@ -501,10 +502,7 @@ void buildTypeStructTree(const string path,
       propName += elName;  
     }
   }
-  
-  if (elName)
-    delete [] elName;
-    
+      
   switch (elType)
   {
     case 1:   // structure

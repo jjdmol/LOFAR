@@ -26,6 +26,8 @@ libgcfpallight_la_LIBADD= libpmllight.la
 
 libgcfpallight_la_DEPENDENCIES= libpmllight.la $(LOFAR_DEPEND)
 
+AM_CPPFLAGS = -DLOFARLOGGER_SUBPACKAGE=\"RTC\"
+
 configfilesdir=$(bindir)
 configfiles_DATA= \
 	gcf-pmllight.conf \

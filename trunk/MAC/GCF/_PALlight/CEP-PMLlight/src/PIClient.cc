@@ -40,12 +40,11 @@ PIClient* PIClient::_pInstance = 0;
 void logResult(TPIResult result, CEPPropertySet& propSet);
 
 PIClient::PIClient() : 
-  _pTHSocket(0),
   _usecount(0),
   _valueBuf(0),
-  _upperboundValueBuf(0)
+  _upperboundValueBuf(0),
+  _extraDataBuf(1024, 0)
 {
-  ParameterSet::instance()->adoptFile("PropertyInterface.conf");
   _thread = Thread::create(piClientThread, this);
 }
 
@@ -53,7 +52,6 @@ PIClient::~PIClient ()
 {
   _thread.cancel();
   if (_valueBuf) delete [] _valueBuf;
-  if (_pTHSocket) delete _pTHSocket;
 }
 
 PIClient* PIClient::instance(bool temporary)
@@ -75,7 +73,7 @@ void PIClient::release()
   if (_pInstance->mayDeleted())
   {
     delete _pInstance;
-    assert(!_pInstance);
+    _pInstance = 0;
   }
 }
 
@@ -92,57 +90,125 @@ void* PIClient::piClientThread(void* arg)
 void PIClient::run()
 {
   // will be called in piClient thread context
-  _pTHSocket = new TH_Socket("", 
-                            ParameterSet::instance()->getString(PARAM_PI_HOST), 
-                            ParameterSet::instance()->getInt(PARAM_PI_PORT)
-                           );
-  _dhProto.setID(1);
-  
-  // this dummy dataholder represents the remote server (Property Interface)
-  DH_PIProtocol dhDummy("dummy");
-  dhDummy.setID(2);
-  
-  // initilizes a virtual connection with the Property Interface
-  _dhProto.connectTo(dhDummy, *_pTHSocket, false);
-  
-  // real synchronous connect with the Property Interface
-  _dhProto.init();
-  
-  // the main loop of the thread
-  while (true)
-  {
-    processOutstandingActions();
-    
-    _connMutex.lock();
-    if (_dhProto.read())
+  bool retry;
+
+  do
+  {    
+    retry = false;
+    try
     {
-      switch (_dhProto.getEventID())
-      {
-        case DH_PIProtocol::SCOPE_REGISTERED:
-          scopeRegistered();
-          break; 
-        case DH_PIProtocol::SCOPE_UNREGISTERED:
-          scopeUnregistered();
-          break;
-        case DH_PIProtocol::LINK_PROPSET:
-          linkPropSet();
-          break;
-        case DH_PIProtocol::UNLINK_PROPSET:
-          unlinkPropSet();
-          break;
-        default:
-          assert(0);
-          break;
-      }
+      ParameterSet::instance()->adoptFile("PropertyInterface.conf");
+      TH_Socket TCPto(ParameterSet::instance()->getString(PARAM_PI_HOST), 
+                      "",
+                      ParameterSet::instance()->getInt(PARAM_PI_PORT),
+                      false,
+                      false);
+    
+      TH_Socket TCPfrom("", 
+                        ParameterSet::instance()->getString(PARAM_PI_HOST), 
+                        ParameterSet::instance()->getInt(PARAM_PI_PORT),
+                        true,
+                        false);
+      _dhPIClient.setID(1);
+      // this dummy dataholder represents the remote server (Property Interface)
+      DH_PIProtocol dhServer("dummy");
+      dhServer.setID(2);
+      
+      LOG_DEBUG("Setup connection");
+    
+      // initilizes a virtual connection with the Property Interface
+      _dhPIClient.connectBidirectional(dhServer, TCPto, TCPfrom, false);
     }
-    _connMutex.unlock();
+    catch (std::exception& e)
+    {
+      LOG_ERROR(formatString (
+          "Exception: %s! RETRY after 10s!!!", 
+          e.what()));
+      retry = true;
+      sleep(10);
+    }
+  } while (retry);
+
+    
+  do
+  {
+    retry = false;
+    try
+    {
+      LOG_DEBUG("Try to connect");
+      // real synchronous connect with the Property Interface
+      if (_dhPIClient.init())
+      {    
+        LOG_DEBUG("Connected to PropertyInterface of MAC");
+      }
+      else
+      {
+        retry = true;
+        continue;
+      }
+  
+      // the main loop of the thread
+      while (true)
+      {
+        processOutstandingActions();
+        
+        if (_dhPIClient.read())
+        {
+          switch (_dhPIClient.getEventID())
+          {
+            case DH_PIProtocol::SCOPE_REGISTERED:
+              scopeRegistered();
+              break; 
+            case DH_PIProtocol::SCOPE_UNREGISTERED:
+              scopeUnregistered();
+              break;
+            case DH_PIProtocol::LINK_PROPSET:
+              linkPropSet();
+              break;
+            case DH_PIProtocol::UNLINK_PROPSET:
+              unlinkPropSet();
+              break;
+            default:
+              assert(0);
+              break;
+          }
+        }
+        usleep(10000);
+      }
+    } 
+    catch (std::exception& e)
+    {
+      LOG_ERROR(formatString (
+          "Exception: %s! RETRY after 10s", 
+          e.what()));
+      retry = true;
+ 
+      _propSetMutex.lock();  
+      for (TMyPropertySets::iterator iter = _myPropertySets.begin();
+           iter != _myPropertySets.end(); ++iter)
+      {
+        iter->second->scopeUnregistered(false);
+      }
+      TMyPropertySets tempMyPropertySets(_myPropertySets);
+      _myPropertySets.clear();
+
+      for (TMyPropertySets::iterator iter = tempMyPropertySets.begin();
+           iter != tempMyPropertySets.end(); ++iter)
+      {
+        iter->second->enable();
+      }
+
+      _propSetMutex.unlock();
+      sleep(10);
+    }
   }
+  while (retry);
 }
 
 void PIClient::deletePropSet(const CEPPropertySet& propSet)
 {
   // will be called from user thread context
-  _actionMutex.lock();
+  _bufferMutex.lock();
   // cleanup all sequences and buffered actions, which are related to the deleted
   // property set
   list<uint16> seqToDelete;
@@ -168,7 +234,7 @@ void PIClient::deletePropSet(const CEPPropertySet& propSet)
       if (iter != _bufferedActions.end()) break;
     }    
   }
-  _actionMutex.unlock();
+  _bufferMutex.unlock();
 }
 
 bool PIClient::registerScope(CEPPropertySet& propSet)
@@ -188,7 +254,15 @@ bool PIClient::registerScope(CEPPropertySet& propSet)
   {
     _myPropertySets[propSet.getScope()] = &propSet;
     _propSetMutex.unlock();
-  
+      
+    BlobOStream extraData(_extraDataBuf);
+    extraData.clear();
+    _extraDataBuf.clear();
+    extraData.putStart(0);
+    extraData << propSet.getScope();
+    extraData << propSet.getType();
+    extraData << (char) propSet.getCategory();  
+    
     bufferAction(DH_PIProtocol::REGISTER_SCOPE, &propSet);
   }
 
@@ -197,6 +271,12 @@ bool PIClient::registerScope(CEPPropertySet& propSet)
 
 void PIClient::unregisterScope(CEPPropertySet& propSet)
 {
+  BlobOStream extraData(_extraDataBuf);
+  extraData.clear();
+  _extraDataBuf.clear();
+  extraData.putStart(0);
+  extraData << propSet.getScope();
+  
   // will be called from user thread context
   bufferAction(DH_PIProtocol::UNREGISTER_SCOPE, &propSet);
 
@@ -209,27 +289,42 @@ void PIClient::unregisterScope(CEPPropertySet& propSet)
 
 void PIClient::propertiesLinked(const string& scope, TPIResult result)
 {
+  BlobOStream extraData(_extraDataBuf);
+  extraData.clear();
+  _extraDataBuf.clear();
+  extraData.putStart(0);
+  extraData << scope;
+  extraData << (uint16) result;
+  
   // will be called in piClient thread context
-  bufferAction(DH_PIProtocol::PROPSET_LINKED, 0, scope, result);
+  bufferAction(DH_PIProtocol::PROPSET_LINKED, 0);
 }
 
 void PIClient::propertiesUnlinked(const string& scope, TPIResult result)
 {
   // will be called in piClient thread context
-  bufferAction(DH_PIProtocol::PROPSET_LINKED, 0, scope, result);
+  BlobOStream extraData(_extraDataBuf);
+  extraData.clear();
+  _extraDataBuf.clear();
+  extraData.putStart(0);
+  extraData << scope;
+  extraData << (uint16) result;
+  bufferAction(DH_PIProtocol::PROPSET_UNLINKED, 0);  
 }
 
 void PIClient::valueSet(const string& propName, const GCFPValue& value)
 {
   // will be called from user thread context
-  _connMutex.lock();
+  BlobOStream extraData(_extraDataBuf);
+  extraData.clear();
+  _extraDataBuf.clear();
+  extraData.putStart(0);
 
-  // constructs the message
-  _dhProto.setEventID(DH_PIProtocol::VALUE_SET);
-  BlobOStream& blob = _dhProto.createExtraBlob();
-  blob << propName;
+  extraData << propName;
+
   uint16 valSize(value.getSize());
-  blob << valSize;
+  extraData << valSize;
+
   if (_upperboundValueBuf < valSize)
   {
     // enlarge the value buffer
@@ -238,64 +333,59 @@ void PIClient::valueSet(const string& propName, const GCFPValue& value)
     _valueBuf = new char[valSize];
   }
   value.pack(_valueBuf);
-  blob.put(_valueBuf, valSize);
-  _dhProto.write(); // sends the message
-  
-  _connMutex.unlock();
+  extraData.put(_valueBuf, valSize);
+
+  bufferAction(DH_PIProtocol::VALUE_SET, 0);  
 }
 
 void PIClient::scopeRegistered()
 {
   // will be called in piClient thread context
-  CEPPropertySet* pPropertySet = _startedSequences[_dhProto.getSeqNr()];
-  _startedSequences.erase(_dhProto.getSeqNr());
-  
-  if (pPropertySet)
+  CEPPropertySet* pPropertySet = _startedSequences[_dhPIClient.getSeqNr()];
+  _startedSequences.erase(_dhPIClient.getSeqNr());
+    
+  assert(pPropertySet);
+
+  // unpacks the extra blob
+  BlobIStream& blob = _dhPIClient.getExtraBlob();
+  uint16 result;
+  blob >> result;
+  _propSetMutex.lock();
+  logResult((TPIResult) result, *pPropertySet);
+  if (result != PI_NO_ERROR)
   {
-    // unpacks the extra blob
-    BlobIStream& blob = _dhProto.getExtraBlob();
-    uint16 result;
-    blob >> result;
-    _propSetMutex.lock();
-    logResult((TPIResult) result, *pPropertySet);
-    if (result != PI_NO_ERROR)
-    {
 
-      _myPropertySets.erase(pPropertySet->getScope());
-      
-    }        
-    pPropertySet->scopeRegistered((result == PI_NO_ERROR));
-    _propSetMutex.unlock();
-  }
-
+    _myPropertySets.erase(pPropertySet->getScope());
+    
+  }        
+  pPropertySet->scopeRegistered((result == PI_NO_ERROR));
+  _propSetMutex.unlock();
 }
 
 void PIClient::scopeUnregistered()
 {
   // will be called in piClient thread context
-  CEPPropertySet* pPropertySet = _startedSequences[_dhProto.getSeqNr()];
+  CEPPropertySet* pPropertySet = _startedSequences[_dhPIClient.getSeqNr()];
   
-  _startedSequences.erase(_dhProto.getSeqNr());
+  _startedSequences.erase(_dhPIClient.getSeqNr());
   
-  if (pPropertySet)
-  {
-    BlobIStream& blob = _dhProto.getExtraBlob();
-    uint16 result;
-    blob >> result;
+  assert(pPropertySet);
+  BlobIStream& blob = _dhPIClient.getExtraBlob();
+  uint16 result;
+  blob >> result;
 
-    _propSetMutex.lock();
+  _propSetMutex.lock();
 
-    logResult((TPIResult) result, *pPropertySet);
-    pPropertySet->scopeUnregistered((result == PI_NO_ERROR));
+  logResult((TPIResult) result, *pPropertySet);
+  pPropertySet->scopeUnregistered((result == PI_NO_ERROR));
 
-    _propSetMutex.unlock();
-  }
+  _propSetMutex.unlock();
 }
 
 void PIClient::linkPropSet()
 {
   // will be called in piClient thread context
-  BlobIStream& blob = _dhProto.getExtraBlob();
+  BlobIStream& blob = _dhPIClient.getExtraBlob();
   string scope;
   blob >> scope;
 
@@ -325,7 +415,7 @@ void PIClient::linkPropSet()
 void PIClient::unlinkPropSet()
 {
   // will be called in piClient thread context
-  BlobIStream& blob = _dhProto.getExtraBlob();
+  BlobIStream& blob = _dhPIClient.getExtraBlob();
   string scope;
   blob >> scope;
 
@@ -353,22 +443,25 @@ void PIClient::unlinkPropSet()
 }
 
 void PIClient::bufferAction(DH_PIProtocol::TEventID event, 
-                            CEPPropertySet* pPropSet, 
-                            const string& scope,
-                            TPIResult result)
+                            CEPPropertySet* pPropSet)
 {
   // will be called in different thread context
   TAction action;
   action.eventID = event;
   action.pPropSet = pPropSet;
-  action.result = result;
-  action.scope = scope;
+  //action.sent = false;
+  
+  uint32 neededSize = _extraDataBuf.size() - sizeof(BlobHeader);
+  // _extraDataBuf is set in the calling method
+  action.extraData = new char[neededSize];
+  memcpy(action.extraData, _extraDataBuf.getBuffer() + sizeof(BlobHeader), neededSize);
+  action.extraDataSize = neededSize;
 
-  _actionMutex.lock();
+  _bufferMutex.lock();
 
   _bufferedActions.push_back(action); 
   
-  _actionMutex.unlock();
+  _bufferMutex.unlock();
 }
 
 uint16 PIClient::startSequence(CEPPropertySet& propSet)
@@ -391,14 +484,14 @@ uint16 PIClient::startSequence(CEPPropertySet& propSet)
 void PIClient::processOutstandingActions()
 {
   // will be called in piClient thread context
-  _actionMutex.lock();
+  _bufferMutex.lock();
+  bool sent(true);
   CEPPropertySet* pPropSet;
   for (TBufferedActions::iterator iter = _bufferedActions.begin();
-       iter != _bufferedActions.end(); ++iter)
+       iter != _bufferedActions.end() && sent; ++iter)
   {
-    _connMutex.lock();
-    _dhProto.setEventID(iter->eventID);
-    BlobOStream& blob = _dhProto.createExtraBlob();
+    _dhPIClient.setEventID(iter->eventID);
+    BlobOStream& blob = _dhPIClient.createExtraBlob();
     switch (iter->eventID)
     {
       case DH_PIProtocol::REGISTER_SCOPE:
@@ -406,29 +499,32 @@ void PIClient::processOutstandingActions()
         pPropSet = iter->pPropSet;
         assert(pPropSet);
 
-        _dhProto.setSeqNr(startSequence(*pPropSet));
+        _dhPIClient.setSeqNr(startSequence(*pPropSet));
 
-        blob << pPropSet->getScope();
-        if (iter->eventID == DH_PIProtocol::REGISTER_SCOPE)
-        {
-          blob << pPropSet->getType();
-          blob << (char) pPropSet->getCategory();
-        }
-        break;
-      case DH_PIProtocol::PROPSET_LINKED:
-      case DH_PIProtocol::PROPSET_UNLINKED:
-        blob << iter->scope;
-        blob << (uint16) iter->result;
-        break;
       default:
-        assert(0);
         break;
     }
-    _dhProto.write();
-    _connMutex.unlock();
+    blob.put(iter->extraData, iter->extraDataSize);
+    
+    sent = false;
+    try
+    {
+      sent = _dhPIClient.write();
+    }
+    catch (std::exception& e)
+    {
+      LOG_ERROR(formatString (
+          "Exception: %s", 
+          e.what()));
+    }
+    if (sent)
+    {
+      delete [] iter->extraData;
+      _bufferedActions.erase(iter);
+      iter--;
+    }
   }  
-  _bufferedActions.clear();
-  _actionMutex.unlock();  
+  _bufferMutex.unlock();  
 }
 
 void logResult(TPIResult result, CEPPropertySet& propSet)
