@@ -15,7 +15,6 @@ DOCHDRS	=	$(pkginclude_HEADERS) \
 	GPM_Controller.h \
 	GPM_PropertyService.h \
 	GPM_PropertyProxy.h \
-	GPM_Converter.h \
 	GPM_Defines.h
    
 lib_LTLIBRARIES 	= libgcfpal.la
@@ -38,7 +37,6 @@ libpml_la_SOURCES= $(DOCHDRS) \
 	GCF_MyPropertySet.cc \
 	GCF_Answer.cc \
 	GPM_Controller.cc \
-	GPM_Converter.cc \
 	GPM_PropertyService.cc \
 	GCF_PropertyProxy.cc
 

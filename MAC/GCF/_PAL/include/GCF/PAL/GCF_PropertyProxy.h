@@ -70,7 +70,8 @@ class GCFPropertyProxy
     // 
     // @returns GCF_NO_ERROR, GCF_PML_ERROR (see in logging whats wrong)
     virtual TGCFResult setPropValue (const string& propName, 
-                                 const GCFPValue& value);
+                                     const GCFPValue& value, 
+                                     bool wantAnswer = false);
 
   protected:
     friend class GPMPropertyProxy;
@@ -92,6 +93,9 @@ class GCFPropertyProxy
     virtual void propValueChanged (const string& propName, 
                                    const GCFPValue& value) = 0;
   
+    // Response on 'setPropValue' request, only if wantAnswer was set to true
+    virtual void propValueSet (const string& propName) = 0;
+
   private:
     // Don't allow copying this object.
     // <group>

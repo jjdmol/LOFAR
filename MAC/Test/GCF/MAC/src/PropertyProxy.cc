@@ -42,3 +42,8 @@ void PropertyProxy::propValueChanged(const string& propName, const GCFPValue& va
 {
   _task.propValueChanged(propName, value);
 }
+
+void PropertyProxy::propValueSet(const string& propName)
+{
+  _task.propValueSet(propName);
+}

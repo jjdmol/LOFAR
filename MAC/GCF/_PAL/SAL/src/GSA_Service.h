@@ -56,22 +56,24 @@ class GSAService
     virtual TSAResult dpCreate (const string& dpName, 
                                 const string& typeName);
     virtual TSAResult dpDelete (const string& dpName);
-    virtual TSAResult dpeSubscribe (const string& propName);
-    virtual TSAResult dpeUnsubscribe (const string& propName);
-    virtual TSAResult dpeGet (const string& propName);
-    virtual TSAResult dpeSet (const string& propName, 
-                           const GCFPValue& value);
+    virtual TSAResult dpeSubscribe (const string& dpeName);
+    virtual TSAResult dpeUnsubscribe (const string& dpeName);
+    virtual TSAResult dpeGet (const string& dpeName);
+    virtual TSAResult dpeSet (const string& dpeName, 
+                              const GCFPValue& value, 
+                              bool wantAnswer = false);
     
-    virtual void dpCreated (const string& dpName) = 0;
-    virtual void dpDeleted (const string& dpName) = 0;
-    virtual void dpeSubscribed (const string& propName) = 0;    
-    virtual void dpeSubscriptionLost (const string& propName) = 0;
-    virtual void dpeUnsubscribed (const string& propName) = 0;
-    virtual void dpeValueGet (const string& propName, 
-                               const GCFPValue& value) = 0;
-    virtual void dpeValueChanged (const string& propName, 
-                                   const GCFPValue& value) = 0;
-        
+    virtual void dpCreated (const string& /*dpName*/) = 0;
+    virtual void dpDeleted (const string& /*dpName*/) = 0;
+    virtual void dpeSubscribed (const string& /*dpeName*/) = 0;    
+    virtual void dpeSubscriptionLost (const string& /*dpeName*/) = 0;
+    virtual void dpeUnsubscribed (const string& /*dpeName*/) = 0;
+    virtual void dpeValueGet (const string& /*dpeName*/, 
+                              const GCFPValue& /*value*/) = 0;
+    virtual void dpeValueChanged (const string& /*dpeName*/, 
+                                  const GCFPValue& /*value*/) = 0;        
+    virtual void dpeValueSet (const string& /*dpeName*/) = 0;
+
   private: // methods
     // interface for GSAWaitForAnswer
     void handleHotLink (const DpMsgAnswer& answer, 
@@ -94,11 +96,11 @@ class GSAService
     // helper methods
     TSAResult getDpId (const string& dpName, 
                        DpIdentifier& dpId) const;
-    void convPropToDpConfig (const string& propName, 
+    void convPropToDpConfig (const string& dpeName, 
                              string& pvssDpName, 
                              bool willReadValue);
     void convDpConfigToProp (const string& pvssDPEConfigName, 
-                             string& propName);    
+                             string& dpeName);    
     
   private: // data members    
     GSAWaitForAnswer* _pWFA;

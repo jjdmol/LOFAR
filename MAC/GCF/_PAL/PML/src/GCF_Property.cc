@@ -77,20 +77,20 @@ TGCFResult GCFProperty::requestValue ()
   return _pPropService->requestPropValue(getFullName()); 
 }
 
-TGCFResult GCFProperty::setValue(const GCFPValue& value)
+TGCFResult GCFProperty::setValue(const GCFPValue& value, bool wantAnswer)
 { 
   assert(_pPropService);
-  return _pPropService->setPropValue(getFullName(), value); 
+  return _pPropService->setPropValue(getFullName(), value, wantAnswer); 
 }
 
-TGCFResult GCFProperty::setValue(const string& value)
+TGCFResult GCFProperty::setValue(const string& value, bool wantAnswer)
 { 
   assert(_pPropService);
   GCFPValue* pValue = GCFPValue::createMACTypeObject(_propInfo.type);
   if (pValue) 
   { 
     pValue->setValue(value);
-    return _pPropService->setPropValue(getFullName(), *pValue); 
+    return _pPropService->setPropValue(getFullName(), *pValue, wantAnswer); 
   }
   else 
   {
@@ -146,6 +146,14 @@ void GCFProperty::valueGet (const GCFPValue& value)
 {
   GCFPropValueEvent e(F_VGETRESP);
   e.pValue = &value;
+  string fullName(getFullName());
+  e.pPropName = fullName.c_str();
+  dispatchAnswer(e);
+}
+
+void GCFProperty::valueSet ()
+{
+  GCFPropAnswerEvent e(F_VSETRESP);
   string fullName(getFullName());
   e.pPropName = fullName.c_str();
   dispatchAnswer(e);

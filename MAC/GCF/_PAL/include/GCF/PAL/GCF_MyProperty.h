@@ -65,8 +65,8 @@ class GCFMyProperty : public GCFProperty
     // updated too.
     // @return can be GCF_PROP_WRONG_TYPE, GCF_PROP_NOT_VALID
     // <group>
-    TGCFResult setValue (const string value);
-    TGCFResult setValue (const GCFPValue& value);        
+    TGCFResult setValue (const string value, bool wantAnswer = false);
+    TGCFResult setValue (const GCFPValue& value, bool wantAnswer = false);
     // </group>
     
     bool isMonitoringOn () const {return _isLinked && !_isBusy;}

@@ -125,6 +125,7 @@ enum
   F_UNSUBSCRIBED_ID,      
   F_VCHANGEMSG_ID,               
   F_VGETRESP_ID,        
+  F_VSETRESP_ID,        
   F_EXTPS_LOADED_ID,
   F_EXTPS_UNLOADED_ID,
   F_PS_CONFIGURED_ID,
@@ -137,6 +138,7 @@ enum
 #define F_UNSUBSCRIBED    F_SIGNAL(F_PML_PROTOCOL, F_UNSUBSCRIBED_ID,  F_IN)
 #define F_VCHANGEMSG      F_SIGNAL(F_PML_PROTOCOL, F_VCHANGEMSG_ID,    F_IN)
 #define F_VGETRESP        F_SIGNAL(F_PML_PROTOCOL, F_VGETRESP_ID,      F_IN)
+#define F_VSETRESP        F_SIGNAL(F_PML_PROTOCOL, F_VSETRESP_ID,      F_IN)
 #define F_EXTPS_LOADED    F_SIGNAL(F_PML_PROTOCOL, F_EXTPS_LOADED_ID,  F_IN)
 #define F_EXTPS_UNLOADED  F_SIGNAL(F_PML_PROTOCOL, F_EXTPS_UNLOADED_ID,F_IN)
 #define F_PS_CONFIGURED   F_SIGNAL(F_PML_PROTOCOL, F_PS_CONFIGURED_ID, F_IN)
@@ -165,7 +167,7 @@ struct GCFPropValueEvent : public GCFEvent
 
 struct GCFPropAnswerEvent : public GCFEvent
 {
-  // @param sig can only be F_SUBSCRIBED
+  // @param sig can only be F_SUBSCRIBED, F_VSETRESP
   GCFPropAnswerEvent(unsigned short sig) : GCFEvent(sig)
   {
       length = sizeof(GCFPropAnswerEvent);

@@ -1,7 +1,8 @@
 INSTALL=/usr/bin/install -C
 pkginclude_HEADERS = \
 	../../include/GCF/PAL/GCF_PVSSPort.h \
-	../../include/GCF/PAL/GCF_PVSSInfo.h
+	../../include/GCF/PAL/GCF_PVSSInfo.h \
+	../../include/GCF/PAL/GCF_SysConnGuard.h
 
 DOCHDRS	=	$(pkginclude_HEADERS) \
 	GSA_SCADAHandler.h \
@@ -10,7 +11,8 @@ DOCHDRS	=	$(pkginclude_HEADERS) \
 	GSA_Service.h \
 	GSA_WaitForAnswer.h \
 	GSA_Defines.h \
-	GSA_PortService.h
+	GSA_PortService.h \
+	GSA_SysConnGuard.h
     
 noinst_LTLIBRARIES 	= libsal.la
 
@@ -22,7 +24,9 @@ libsal_la_SOURCES= $(DOCHDRS) \
 	GSA_WaitForAnswer.cc \
 	GSA_PortService.cc \
 	GCF_PVSSPort.cc \
-	GCF_PVSSInfo.cc
+	GCF_PVSSInfo.cc \
+	GCF_SysConnGuard.cc \
+	GSA_SysConnGuard.cc
 
 libsal_la_CPPFLAGS= -I$(top_srcdir)/include
 

@@ -85,10 +85,11 @@ class GPIPropertySet : public GCFPropertyProxy
     
   private:
     void propSubscribed(const string& propName);
-    void propSubscriptionLost(const string& /*propName*/) {;}
-    void propUnsubscribed(const string& /*propName*/) {;}
-    void propValueGet(const string& /*propName*/, const GCFPValue& /*value*/) {;}
+    void propSubscriptionLost(const string& /*propName*/) {}
+    void propUnsubscribed(const string& /*propName*/) {}
+    void propValueGet(const string& /*propName*/, const GCFPValue& /*value*/) {}
     void propValueChanged(const string& propName, const GCFPValue& value);
+    void propValueSet(const string& /*propName*/) {}
   
   private: //helper methods
     TPAResult unsubscribeAllProps();

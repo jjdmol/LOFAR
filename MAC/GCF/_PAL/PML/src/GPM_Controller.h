@@ -29,7 +29,6 @@
 #include <GCF/TM/GCF_Handler.h>
 #include <GCF/PAL/GCF_PVSSPort.h>
 #include "GPM_Defines.h"
-#include "GPM_Converter.h"
 #include <Common/lofar_map.h>
 #include <Common/lofar_list.h>
 #include <GCF/Protocols/PA_Protocol.ph>
@@ -49,6 +48,13 @@ class GCFPropertySet;
 class GCFMyPropertySet;
 class GCFExtPropertySet;
 class GPMHandler;
+namespace LOFAR {
+  namespace GCF {
+class GCFSysConnGuard;
+  }
+}
+
+using LOFAR::GCF::GCFSysConnGuard;
 
 class GPMController : public GCFTask
 {
@@ -107,8 +113,8 @@ class GPMController : public GCFTask
     typedef map<unsigned short /*seqnr*/, TAction>  TActionSeqList;
     TActionSeqList _actionSeqList;    
     
-    GCFPVSSPort _distPropertyAgent;
-    GPMConverter  _converter;
+    GCFPVSSPort       _distPropertyAgent;
+    GCFSysConnGuard*  _pSysConnGuard;
 
   private: // admin members  
 

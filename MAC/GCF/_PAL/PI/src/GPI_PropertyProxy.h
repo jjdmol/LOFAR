@@ -45,6 +45,7 @@ class GPIPropertyProxy : public GCFPropertyProxy
     void propUnsubscribed(const string& /*propName*/) {}
     void propValueGet(const string& /*propName*/, const GCFPValue& /*value*/) {}
     void propValueChanged(const string& /*propName*/, const GCFPValue& /*value*/) {}
+    void propValueSet(const string& /*propName*/) {}
 
     // Don't allow copying of this object.
     // <group>

@@ -1,4 +1,4 @@
-//#  GSA_PortService.h: manages the properties with its use count
+//#  GSA_SysConnGuard.h: manages the properties with its use count
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,45 +20,35 @@
 //#
 //#  $Id$
 
-#ifndef GSA_PORTSERVICE_H
-#define GSA_PORTSERVICE_H
+#ifndef GSA_SYSCONNGUARD_H
+#define GSA_SYSCONNGUARD_H
 
 #include <GSA_Service.h>
 #include <GCF/GCF_PVString.h>
 
-#include <Common/lofar_list.h>
-#include <Common/lofar_map.h>
-
 /**
-   This class manages the properties with its use count, which are created 
-   (resp. deleted) by means of the base class GSAService.
+ * 
 */
+namespace LOFAR {
+  namespace GCF {
 
-class GCFPVSSPort;
-class GCFPVSSUIMConverter;
+class GCFSysConnGuard;
 
-class GSAPortService : public GSAService
+class GSASysConnGuard : public GSAService
 {
   public:
-  	GSAPortService(GCFPVSSPort& port);
-  	virtual ~GSAPortService();
+  	GSASysConnGuard(GCFSysConnGuard& sysConnGuard) :
+    _sysConnGuard(sysConnGuard),
+    _isSubscribed(false)
+    {};
+  	virtual ~GSASysConnGuard();
 
-    virtual void start ();
-    virtual void stop ();
-    /**
-     * send/recv functions
-     */
-    virtual ssize_t send (void* buf, size_t count, const string& destDpName);
-    virtual ssize_t recv (void* buf, size_t count);
-    bool registerPort(GCFPVSSPort& p);
-    void unregisterPort(const string& portID);
-    void setConverter(GCFPVSSUIMConverter& converter) 
-      { _pConverter = &converter;}
-    GCFPVSSPort& getPort() const { return _port;}
-    const string& getCurPortId() const { return _curPeerID.getValue();}
-    
+    void start ();
+    void stop ();
+    bool isSubscribed() const;
+        
   protected:
-    void dpCreated(const string& propName);
+    void dpCreated(const string& /*propName*/) {};
     void dpDeleted(const string& /*propName*/) {};
     void dpeValueGet(const string& /*propName*/, const GCFPValue& /*value*/) {}; 
     void dpeValueChanged(const string& propName, const GCFPValue& value);
@@ -68,21 +58,18 @@ class GSAPortService : public GSAService
     void dpeUnsubscribed(const string& /*propName*/) {};
 
   private: // helper methods
-    GCFPVSSPort* findClient(const string& c);
-    void disconnectedEvent(const string& curPeerID);
     
   private: // data members
-    GCFPVSSPort& _port;
+    GCFSysConnGuard& _sysConnGuard;
     
   private: // admin. data members
     bool _isSubscribed;
-    unsigned char* _msgBuffer;
-    unsigned int _bytesLeft;
-    typedef map<string /*peer ID*/, GCFPVSSPort*> TClients;
-    TClients _clients;
-    
-    GCFPVString _curPeerID;
-    GCFPVString _curPeerAddr;
-    GCFPVSSUIMConverter* _pConverter;
 };
+
+inline bool GSASysConnGuard::isSubscribed() const
+{
+  return _isSubscribed;
+}
+  } // namespace GCF
+} // namespace LOFAR
 #endif

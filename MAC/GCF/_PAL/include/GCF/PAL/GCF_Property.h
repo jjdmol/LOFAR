@@ -59,12 +59,12 @@ class GCFProperty
     // Synchronous (!) action
     // Performs a set operation on the SCADA DB
     // @return can be GCF_NO_ERROR or GCF_PML_ERROR
-    virtual TGCFResult setValue(const GCFPValue& value);
+    virtual TGCFResult setValue(const GCFPValue& value, bool wantAnswer = false);
       
     // Synchronous (!) action
     // Performs a set operation on the SCADA DB
     // @return can be GCF_NO_ERROR or GCF_PML_ERROR
-    virtual TGCFResult setValue(const string& value);
+    virtual TGCFResult setValue(const string& value, bool wantAnswer = false);
 
     // Synchronous (!) action
     // Checks whether the property exists in the SCADA DB or not
@@ -90,6 +90,8 @@ class GCFProperty
     
     virtual void valueGet (const GCFPValue& value); 
   
+    virtual void valueSet (); 
+
   protected: // helper attr.
     bool _isBusy;    
 
@@ -114,6 +116,9 @@ class GCFProperty
                                   const GCFPValue& value)
       { assert(propName == getFullName()); valueChanged(value); }
   
+    void propValueSet (const string& propName)
+      { assert(propName == getFullName()); valueSet(); }
+
   private:
     friend class GCFPropertySet;
     // Normally a property object can only constructed by a property set object.

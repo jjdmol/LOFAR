@@ -8,8 +8,20 @@ main()
 	handleType(types, "GCFPaPsEnabled", DPEL_STRING);
 	handleType(types, "GCFPaPsIndication", DPEL_STRING);
 	handleType(types, "GCFDistPort", DPEL_BLOB);
-	handleType(types, "GCFWDGoneSys", DPEL_UINT);
-	dpCreate("__gcf_WDGoneSys", "GCFWDGoneSys");
+	string type = "GCFWatchDog";
+	if (dynContains(types, type))
+	{
+		deleteDPs(type);
+	}
+	xxdepes[1] = makeDynString (type, "");
+	xxdepes[2] = makeDynString ("", "sys");
+	xxdepes[3] = makeDynString ("", "man");
+	xxdepei[1] = makeDynInt (DPEL_STRUCT);
+	xxdepei[2] = makeDynInt (0, DPEL_STRING);
+	xxdepei[3] = makeDynInt (0, DPEL_STRING);
+	dpTypeCreate(xxdepes,xxdepei);
+	DebugN("Add type " + type);
+	dpCreate("__gcf_wd", type);
 	dpCreate("__pa_PSIndication", "GCFPaPsIndication");
 }
 
@@ -24,7 +36,7 @@ deleteDPs(string type)
     for (i = 1; i <= len; i++)
     {
       dpName = names[i];
-      if (dpName != getSystemName() + "__gcf_DPA_server")
+      if (dpName != getSystemName() + "__gcfportAPI_DPAserver")
       {
       	dpDelete(dpName);
       	DebugN(dpName + " deleted");

@@ -39,6 +39,12 @@ GSAPortService::GSAPortService(GCFPVSSPort& port) :
 
 GSAPortService::~GSAPortService()
 {
+  if (_isSubscribed)
+  {
+    dpeUnsubscribe(_port.getPortAddr());
+    dpeUnsubscribe("__gcf_wd.sys");
+    dpeUnsubscribe("__gcf_wd.man");
+  }
 }
 
 void GSAPortService::start ()
@@ -65,6 +71,9 @@ void GSAPortService::start ()
 void GSAPortService::stop ()
 {
   dpeUnsubscribe(_port.getPortAddr());
+  dpeUnsubscribe("__gcf_wd.sys");
+  dpeUnsubscribe("__gcf_wd.man");
+  _isSubscribed = false;
 }
 
 ssize_t GSAPortService::send (void* buf, size_t count, const string& destDpName)
@@ -74,7 +83,7 @@ ssize_t GSAPortService::send (void* buf, size_t count, const string& destDpName)
   GCFPVBlob convBv;
   
   GCFPVBlob* pBlobMsg = &bv;
-  if (destDpName.find("_UIM") < string::npos)
+  if (destDpName.find("__gcfportUIM") < string::npos)
   {
     assert(_pConverter);
     if (_pConverter->gcfEventToUIMMsg(bv, convBv))
@@ -111,17 +120,36 @@ void GSAPortService::dpCreated(const string& dpName)
   }
 }
 
-void GSAPortService::dpDeleted(const string& /*dpName*/)
-{
-  GCFEvent e(F_DISCONNECTED);
-  _port.dispatch(e);
-}
-
 void GSAPortService::dpeSubscribed(const string& dpName)
 {
-  assert(dpName.find(_port.getPortAddr()) < dpName.length());
-  _isSubscribed = true;
-  _port.serviceStarted(true);
+  static unsigned char nrOfSubscriptions = 1;
+  TSAResult result(SA_NO_ERROR);
+  switch (nrOfSubscriptions)
+  {
+    case 1:
+      assert(dpName.find(_port.getPortAddr()) < dpName.length());
+      result = dpeSubscribe("__gcf_wd.sys");
+      break;
+    case 2:
+      assert(dpName.find("__gcf_wd.sys") < dpName.length());
+      result = dpeSubscribe("__gcf_wd.man");
+      break;
+    case 3:
+      assert(dpName.find("__gcf_wd.man") < dpName.length());
+      _isSubscribed = true;
+      nrOfSubscriptions = 0;
+      _port.serviceStarted(true);
+      break;
+  }
+  if (result != SA_NO_ERROR && !_isSubscribed)
+  {
+    nrOfSubscriptions = 0;
+    _port.serviceStarted(false);
+  }
+  else
+  {
+    nrOfSubscriptions++;
+  }
 }
 
 void GSAPortService::dpeSubscriptionLost(const string& /*dpName*/)
@@ -132,105 +160,90 @@ void GSAPortService::dpeSubscriptionLost(const string& /*dpName*/)
 
 void GSAPortService::dpeValueChanged(const string& dpName, const GCFPValue& value)
 {
-  GCFPVBlob* pValue = (GCFPVBlob*) &value;  
-  _msgBuffer = pValue->getValue();
-  _bytesLeft = pValue->getLen();
-  unsigned int bytesRead = 1;  
-  switch (_msgBuffer[0])
+  if (dpName.find("__gcf_wd") < dpName.length())
   {
-    case 'd': // disconnect event from CTRL-script
+    GCFPVString* pValue = (GCFPVString*) &value;
+    if (pValue->getValue()[0] == 'd')
     {
-      string curPeerID;
-      curPeerID.assign((char*) _msgBuffer + bytesRead, _bytesLeft - 1);
-      bytesRead += _curPeerID.setValue(curPeerID);
-      GCFEvent e(F_DISCONNECTED);
-      switch (_port.getType())
+      string sysID;
+      sysID.assign(pValue->getValue(), 1, string::npos);
+      disconnectedEvent(sysID);
+    }
+  }
+  else
+  {
+    GCFPVBlob* pValue = (GCFPVBlob*) &value;  
+    _msgBuffer = pValue->getValue();
+    _bytesLeft = pValue->getLen();
+    unsigned int bytesRead = 1;  
+    switch (_msgBuffer[0])
+    {
+      case 'd': // disconnect event from CTRL-script
       {
-        case GCFPortInterface::MSPP:
+        string curPeerID;
+        curPeerID.assign((char*) _msgBuffer + bytesRead, _bytesLeft - 1);
+        disconnectedEvent(curPeerID);
+        break;
+      } 
+      case 'm': // message
+      {
+        bytesRead += _curPeerID.unpack((char*) _msgBuffer + bytesRead);
+        switch (_port.getType())
         {
-          GCFPVSSPort* pClientPort(0);
-          list<GCFPVSSPort*> portsToInform;
-          for (TClients::iterator iter = _clients.begin();
-               iter != _clients.end(); ++iter)
-          {        
-            if (iter->first.find(_curPeerID.getValue()) == 0)
+          case GCFPortInterface::MSPP:
+          {
+            GCFPVSSPort* pPort = findClient(_curPeerID.getValue());
+            bytesRead += _curPeerAddr.unpack((char *)_msgBuffer + bytesRead);
+            
+            if (!pPort)
             {
-              portsToInform.push_back(&(*iter->second));
+              GCFEvent e(F_ACCEPT_REQ);
+              _port.dispatch(e);        
             }
-          } 
-          for (list<GCFPVSSPort*>::iterator iter = portsToInform.begin();
-               iter != portsToInform.end(); ++iter)
-          {
-            pClientPort = *iter;
-            pClientPort->dispatch(e);                    
-          }
-          break;
-        }
-        case GCFPortInterface::SPP:
-        case GCFPortInterface::SAP:
-          _port.dispatch(e);
-          break;
-      }
-      break;
-    } 
-    case 'm': // message
-    {
-      bytesRead += _curPeerID.unpack((char*) _msgBuffer + bytesRead);
-      switch (_port.getType())
-      {
-        case GCFPortInterface::MSPP:
-        {
-          GCFPVSSPort* pPort = findClient(_curPeerID.getValue());
-          bytesRead += _curPeerAddr.unpack((char *)_msgBuffer + bytesRead);
-          
-          if (!pPort)
-          {
-            GCFEvent e(F_ACCEPT_REQ);
-            _port.dispatch(e);        
-          }
-          pPort = findClient(_curPeerID.getValue());
-          if (pPort)
-          {
-            if (pPort->getState() == GCFPortInterface::S_CONNECTING)
+            pPort = findClient(_curPeerID.getValue());
+            if (pPort)
             {
-              GCFEvent e(F_CONNECTED);
+              if (pPort->getState() == GCFPortInterface::S_CONNECTING)
+              {
+                GCFEvent e(F_CONNECTED);
+                pPort->dispatch(e);
+              }
+              GCFEvent e(F_DATAIN);
+              pPort->setDestAddr(_curPeerAddr.getValue());
+              _bytesLeft -= bytesRead;
+              _msgBuffer += bytesRead;
               pPort->dispatch(e);
             }
-            GCFEvent e(F_DATAIN);
-            pPort->setDestAddr(_curPeerAddr.getValue());
+            break;
+          }
+          case GCFPortInterface::SPP:
+          case GCFPortInterface::SAP:
+          {
+            bytesRead += _curPeerAddr.unpack((char *)_msgBuffer + bytesRead);
             _bytesLeft -= bytesRead;
             _msgBuffer += bytesRead;
-            pPort->dispatch(e);
+            _port.setDestAddr(_curPeerAddr.getValue());
+            GCFEvent e(F_DATAIN);
+            _port.dispatch(e);
+            break;
           }
-          break;
         }
-        case GCFPortInterface::SPP:
-        case GCFPortInterface::SAP:
-        {
-          bytesRead += _curPeerAddr.unpack((char *)_msgBuffer + bytesRead);
-          _bytesLeft -= bytesRead;
-          _msgBuffer += bytesRead;
-          _port.setDestAddr(_curPeerAddr.getValue());
-          GCFEvent e(F_DATAIN);
-          _port.dispatch(e);
-          break;
-        }
+        break;
       }
-      break;
-    }
-    case 'u': // uim message
-    {
-      GCFPVBlob gcfEvent;
-      assert(_pConverter);
-      if (_pConverter->uimMsgToGCFEvent(_msgBuffer + 1, _bytesLeft - 1, gcfEvent))
+      case 'u': // uim message
       {
-        dpeValueChanged(dpName, gcfEvent);
+        GCFPVBlob gcfEvent;
+        assert(_pConverter);
+        if (_pConverter->uimMsgToGCFEvent(_msgBuffer + 1, _bytesLeft - 1, gcfEvent))
+        {
+          dpeValueChanged(dpName, gcfEvent);
+        }
+        break;
       }
-      break;
+      default:
+        assert(_msgBuffer[0]);
+        break;
     }
-    default:
-      assert(_msgBuffer[0]);
-      break;
   }
 }
 
@@ -261,4 +274,42 @@ bool GSAPortService::registerPort(GCFPVSSPort& p)
 void GSAPortService::unregisterPort(const string& portID)
 {
   _clients.erase(portID);
+}
+
+void GSAPortService::disconnectedEvent(const string& curPeerID)
+{
+  _curPeerID.setValue(curPeerID);
+  GCFEvent e(F_DISCONNECTED);
+  switch (_port.getType())
+  {
+    case GCFPortInterface::MSPP:
+    {
+      GCFPVSSPort* pClientPort(0);
+      list<GCFPVSSPort*> portsToInform;
+      for (TClients::iterator iter = _clients.begin();
+           iter != _clients.end(); ++iter)
+      {        
+        if (iter->first.find(_curPeerID.getValue()) == 0)
+        {
+          portsToInform.push_back(&(*iter->second));
+        }
+      } 
+      for (list<GCFPVSSPort*>::iterator iter = portsToInform.begin();
+           iter != portsToInform.end(); ++iter)
+      {
+        pClientPort = *iter;
+        pClientPort->dispatch(e);                    
+      }
+      break;
+    }
+    case GCFPortInterface::SPP:
+      _port.dispatch(e);
+      break;
+    case GCFPortInterface::SAP:
+      // no real disconnect is occured here, because it is maybe still possible 
+      // to communicate with other managers/systems
+      // A disconnect only can be send after a subscription lost indication 
+      // for this type ports.
+      break;
+  }
 }

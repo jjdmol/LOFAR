@@ -32,6 +32,7 @@ const char* F_PML_PROTOCOL_signalnames[] =
   "F_UNSUBCRIBED (IN)",
   "F_VCHANGEMSG (IN)",
   "F_VGETRESP (IN)",
+  "F_VSETRESP (IN)",
   "F_EXTPS_LOADED (IN)",
   "F_EXTPS_UNLOADED (IN)",
   "F_PS_CONFIGURED (IN)",

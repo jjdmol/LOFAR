@@ -55,7 +55,7 @@
 
 GSAService::GSAService() : _pWFA(0)
 {
-  _pWFA = new GSAWaitForAnswer(*this);
+  _pWFA  = new GSAWaitForAnswer(*this);
   _pSCADAHandler = GSASCADAHandler::instance();
   assert(_pSCADAHandler);
   if (_pSCADAHandler->isOperational() == SA_SCADA_NOT_AVAILABLE)
@@ -99,7 +99,7 @@ void GSAService::handleHotLink(const DpMsgAnswer& answer, const GSAWaitForAnswer
         if (answer.isAnswerOn() == DP_MSG_DP_REQ)
         {
           LOG_INFO(formatString (
-              "DP %s was deleted successfully", 
+              "DP %s was deleted successful", 
               wait.getDpName().c_str()));   
           dpDeleted(wait.getDpName());
           handled = true;
@@ -120,13 +120,13 @@ void GSAService::handleHotLink(const DpMsgAnswer& answer, const GSAWaitForAnswer
         {
           case DP_MSG_CONNECT:
             LOG_INFO(formatString (
-                "DPE %s was subscribed successfully", 
+                "DPE %s was subscribed successful", 
                 dpName.c_str()));   
             dpeSubscribed(dpName);
             break;
           case DP_MSG_REQ_NEW_DP:
             LOG_INFO(formatString (
-                "DP %s was created successfully", 
+                "DP %s was created successful", 
                 dpName.c_str()));   
             dpCreated(dpName);
             break;
@@ -163,12 +163,20 @@ void GSAService::handleHotLink(const DpMsgAnswer& answer, const GSAWaitForAnswer
     }
     if (!handled)
     {
-      ErrClass* pError = pGrItem->getError();
-      if (pError)
+      if (pGrItem->wasOk() == PVSS_TRUE)
+      {
+        if (answer.isAnswerOn() == DP_MSG_COMPLEX_VC)
+        {
+          // this must be the answer on a dpSet(Wait) 
+          dpeValueSet(wait.getDpName());
+          handled = true;
+        }
+      }
+      else
       {
         LOG_DEBUG(formatString (
             "Error (%s) in answer on: %d",
-            (const char*) pError->getErrorText(),
+            (const char*) pGrItem->getError()->getErrorText(),
             answer.isAnswerOn()));
       }
     }
@@ -308,6 +316,13 @@ TSAResult GSAService::dpCreate(const string& dpName,
         "Creation of DP '%s' was requested successful", 
         dpName.c_str()));
   }
+
+  if (result != SA_NO_ERROR)
+  {
+    // default the PVSS API is configured to delete this object
+    // but if there is an error occured PVSS API will not do this
+    delete pWFA;
+  }
   return result;
 }
 
@@ -363,6 +378,13 @@ TSAResult GSAService::dpDelete(const string& dpName)
     LOG_DEBUG(formatString (
         "Deletion of DP '%s' was requested successful", 
         dpName.c_str()));
+  }
+
+  if (result != SA_NO_ERROR)
+  {
+    // default the PVSS API is configured to delete this object
+    // but if there is an error occured PVSS API will not do this
+    delete pWFA;
   }
 
   return result;
@@ -499,51 +521,53 @@ TSAResult GSAService::dpeUnsubscribe(const string& propName)
   return result;
 }
 
-TSAResult GSAService::dpeGet(const string& propName)
+TSAResult GSAService::dpeGet(const string& dpeName)
 {
   TSAResult result(SA_NO_ERROR);
   DpIdentifier dpId;
   string pvssDpName;
+  GSAWaitForAnswer *pWFA = new GSAWaitForAnswer(*this);
+  pWFA->setDpName(dpeName);
 
-  convPropToDpConfig(propName, pvssDpName, true);
+  convPropToDpConfig(dpeName, pvssDpName, true);
 
   LOG_INFO(formatString (
       "Request value of property '%s'", 
-      propName.c_str()));
+      dpeName.c_str()));
   
   assert(_pSCADAHandler);
   if ((result = _pSCADAHandler->isOperational()) != SA_NO_ERROR)
   {
     LOG_FATAL(formatString (
         "Unable to request of property: '%s'", 
-        propName.c_str()));
+        dpeName.c_str()));
   }
-  else if (!GCFPVSSInfo::propExists(propName))
+  else if (!GCFPVSSInfo::propExists(dpeName))
   {
     LOG_WARN(formatString (
         "Property: '%s' does not exists", 
-        propName.c_str()));    
+        dpeName.c_str()));    
     result = SA_PROP_DOES_NOT_EXIST;      
   }
   else if ((result = getDpId(pvssDpName, dpId)) != SA_NO_ERROR)
   {
     LOG_ERROR(formatString (
         "Unable to request value of property: '%s'", 
-        propName.c_str()));
+        dpeName.c_str()));
   }
-  else if (Manager::dpGet(dpId, _pWFA, PVSS_FALSE) == PVSS_FALSE)
+  else if (Manager::dpGet(dpId, pWFA) == PVSS_FALSE)
   {
     ErrHdl::error(ErrClass::PRIO_SEVERE,      // It is a severe error
                   ErrClass::ERR_PARAM,        // wrong name: blame others
                   ErrClass::UNEXPECTEDSTATE,  // fits all
                   "GSAService",               // our file name
                   "dpeGet",                      // our function name
-                  CharString("Value of datapoint ") + propName.c_str() + 
+                  CharString("Value of datapoint ") + dpeName.c_str() + 
                   CharString(" could not be requested"));
 
     LOG_ERROR(formatString (
         "PVSS: Unable to request value of property: '%s'", 
-        propName.c_str()));
+        dpeName.c_str()));
 
     result = SA_GETPROP_FAILED;
   }
@@ -551,72 +575,116 @@ TSAResult GSAService::dpeGet(const string& propName)
   {
     LOG_DEBUG(formatString (
         "Value of property '%s' was requested successful", 
-        propName.c_str()));
+        dpeName.c_str()));
   }
   
+  if (result != SA_NO_ERROR)
+  {
+    // default the PVSS API is configured to delete this object
+    // but if there is an error occured PVSS API will not do this
+    delete pWFA;
+  }
   return result;
 }
 
-TSAResult GSAService::dpeSet(const string& propName, const GCFPValue& value)
+TSAResult GSAService::dpeSet(const string& dpeName, 
+                             const GCFPValue& value, 
+                             bool wantAnswer)
 {
   TSAResult result(SA_NO_ERROR);
   DpIdentifier dpId;
   Variable* pVar(0);
   string pvssDpName;
 
-  convPropToDpConfig(propName, pvssDpName, false);
+  convPropToDpConfig(dpeName, pvssDpName, false);
 
   LOG_INFO(formatString (
       "Set value of property '%s'", 
-      propName.c_str()));
+      dpeName.c_str()));
   
   assert(_pSCADAHandler);
   if ((result = _pSCADAHandler->isOperational()) != SA_NO_ERROR)
   {
     LOG_FATAL(formatString (
         "Unable to set value of property: '%s'", 
-        propName.c_str()));
+        dpeName.c_str()));
   }
-  else if (!GCFPVSSInfo::propExists(propName))
+  else if (!GCFPVSSInfo::propExists(dpeName))
   {
     LOG_WARN(formatString (
         "Property: '%s' does not exists", 
-        propName.c_str()));    
+        dpeName.c_str()));    
     result = SA_PROP_DOES_NOT_EXIST;      
   }
   else if ((result = getDpId(pvssDpName, dpId)) != SA_NO_ERROR)
   {
     LOG_ERROR(formatString (
         "Unable to set value of property: '%s'", 
-        propName.c_str()));
+        dpeName.c_str()));
   }
   else if ((result = convertMACToPVSS(value, &pVar, dpId)) != SA_NO_ERROR)
   {
     LOG_ERROR(formatString (
         "Unable to set value of property: '%s'", 
-        propName.c_str()));
+        dpeName.c_str()));
   }
-  else if (Manager::dpSet(dpId, *pVar) == PVSS_FALSE)
+  else 
   {
-    ErrHdl::error(ErrClass::PRIO_SEVERE,      // It is a severe error
-                  ErrClass::ERR_PARAM,        // wrong name: blame others
-                  ErrClass::UNEXPECTEDSTATE,  // fits all
-                  "GSAService",               // our file name
-                  "dpeSet",                      // our function name
-                  CharString("Value of datapoint ") + propName.c_str() + 
-                  CharString(" could not be set"));
-
-    LOG_ERROR(formatString (
-        "PVSS: Unable to set value of property: '%s'", 
-        propName.c_str()));
-
-    result = SA_SETPROP_FAILED;
-  }
-  else
-  {
-    LOG_DEBUG(formatString (
-        "Property value '%s' is set successful", 
-        propName.c_str()));
+    if (wantAnswer)
+    {
+      GSAWaitForAnswer *pWFA = new GSAWaitForAnswer(*this); // will be deleted by PVSS API
+      pWFA->setDpName(dpeName);
+      if (Manager::dpSet(dpId, *pVar, pWFA) == PVSS_FALSE)
+      {
+        ErrHdl::error(ErrClass::PRIO_SEVERE,      // It is a severe error
+                      ErrClass::ERR_PARAM,        // wrong name: blame others
+                      ErrClass::UNEXPECTEDSTATE,  // fits all
+                      "GSAService",               // our file name
+                      "dpeSet(Wait)",                      // our function name
+                      CharString("Value of datapoint ") + dpeName.c_str() + 
+                      CharString(" could not be set"));
+    
+        LOG_ERROR(formatString (
+            "PVSS: Unable to set value of property: '%s' (with 'answer')",
+            dpeName.c_str()));
+    
+        result = SA_SETPROP_FAILED;
+        // default the PVSS API is configured to delete this object
+        // but if there is an error occured PVSS API will not do this
+        delete pWFA;
+      }
+      else
+      {
+        LOG_DEBUG(formatString (
+            "Setting the value of property '%s' is requested successful", 
+            dpeName.c_str()));
+      }
+    }
+    else 
+    {
+      if (Manager::dpSet(dpId, *pVar) == PVSS_FALSE)
+      {
+        ErrHdl::error(ErrClass::PRIO_SEVERE,      // It is a severe error
+                      ErrClass::ERR_PARAM,        // wrong name: blame others
+                      ErrClass::UNEXPECTEDSTATE,  // fits all
+                      "GSAService",               // our file name
+                      "dpeSet",                      // our function name
+                      CharString("Value of datapoint ") + dpeName.c_str() + 
+                      CharString(" could not be set"));
+    
+        LOG_ERROR(formatString (
+            "PVSS: Unable to set value of property: '%s'", 
+            dpeName.c_str()));
+    
+        result = SA_SETPROP_FAILED;
+      }
+      else
+      {
+        LOG_DEBUG(formatString (
+            "Property value '%s' is set successful", 
+            dpeName.c_str()));
+      }
+    }
   }
   if (pVar)
   {

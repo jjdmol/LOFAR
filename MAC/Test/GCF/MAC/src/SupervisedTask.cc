@@ -46,6 +46,14 @@ void Task::propValueChanged(const string& propName, const GCFPValue& value)
   _application.dispatch(e, _port);
 }
 
+void Task::propValueSet(const string& propName)
+{
+  GCFPropAnswerEvent  e(F_VSETRESP);
+  e.pPropName = propName.c_str();
+  _application.dispatch(e, _port);
+}
+
+
 void Task::valueGet(const string& propName, const GCFPValue& value)
 {
   GCFPropValueEvent e(F_VGETRESP);
