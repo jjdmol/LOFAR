@@ -90,12 +90,13 @@ int Solver::getResult (Result::Ref &resref,
   // The result has 1 plane.
   Result& result = resref <<= new Result(request, 1);
   VellSet& vellset = result.setNewVellSet(0);
+  DataRecord& metricsRec = result[FMetrics] <<= new DataRecord;
   // Allocate variables needed for the solution.
   uint nspid;
   vector<int> spids;
   Vector<double> solution;
   Vector<double> allSolutions;
-  uInt rank;
+  uint rank;
   double fit;
   double stddev;
   double mu;
@@ -226,6 +227,16 @@ int Solver::getResult (Result::Ref &resref,
     bool solFlag = itsSolver.solveLoop (fit, rank, solution,
                                         stddev, mu, itsUseSVD);
     cdebug(4) << "Solution after:  " << solution << endl;
+    // Put the statistics in a record the result.
+    DataRecord& solrec = metricsRec[step] <<= new DataRecord;
+    solrec[FRank] = int(rank);
+    solrec[FFit] = fit;
+    //  solrec[FErrors] = errors;
+    //  solrec[FCoVar ] = covar; 
+    solrec[FFlag] = solFlag; 
+    solrec[FMu] = mu;
+    solrec[FStdDev] = stddev;
+    //  solrec[FChi   ] = itsSolver.getChi());
     // Put the solution in the FNodeState,FByNodeIndex data record.
     // That will contain a DataRecord for each parm with the parmid
     // as the index.
@@ -238,6 +249,8 @@ int Solver::getResult (Result::Ref &resref,
     rqid.back() = AtomicID(step+1);
     newReq.setId(rqid);
   }
+  // Put the spids in the result.
+  vellset.setSpids(spids);
   // Distribute the last solution.
   // Do that in an empty request.
   Request lastReq;
