@@ -269,11 +269,10 @@ void BlobOStream::put (const string* values, uint nrval)
   }
 }
 
-void BlobOStream::put (const std::vector<bool>& values)
+void BlobOStream::putBoolVec (const std::vector<bool>& values)
 {
-  // Convert to bools and put as such.
   uint32 sz = values.size();
-  operator<< (sz);
+  // Convert to bools and put as such.
   bool buf[256];
   uint inx=0;
   while (sz > 0) {
