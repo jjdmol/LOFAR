@@ -128,6 +128,14 @@ void TestDataRecord ()
   cerr<<"ID: "<<id.toString()<<endl;
   rec.add(id,f2,DMI::COPYREF|DMI::WRITE);
   rec["A.B.C.D"][20] = 5;
+  Assert( rec["A.B.C.D"].exists() );
+  Assert( rec["A.B.C.D"].size() == 32 );
+  Assert( rec["A.B.C.D"].type() == Tpint );
+  Assert( rec["A.B.C.D"].isContainer() );
+  Assert( rec["A.B.C.D"].actualType() == TpObjRef );
+  Assert( rec["A.B.C.D"].containerType() == TpDataField );
+  Assert( rec["A.B.C.D"].isWritable() );
+  Assert( rec["A.B.C.D/20"].isWritable() );
   cerr<<(int)(rec["A.B.C.D"][20])<<" "<<(int*)&(rec["A.B.C.D"][20])
       <<"  "<<rec["A.B.C.D"].as_int_p();
   Assert( rec["A.B.C.D/20"].as_int() == 5 );
