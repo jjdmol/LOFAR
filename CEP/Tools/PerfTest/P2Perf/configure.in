@@ -53,8 +53,9 @@ lofar_CORBA
 lofar_MATLAB
 lofar_AIPSPP
 lofar_MPI
-lofar_PURETOOLS
-lofar_BASESIM(P2Perf)
+lofar_QATOOLS
+lofar_DOCXX
+lofar_BASESIM
 
 dnl
 dnl Output Makefiles
