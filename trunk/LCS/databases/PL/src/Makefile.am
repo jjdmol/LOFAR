@@ -48,6 +48,7 @@ libpl_la_SOURCES = \
 	Query.cc \
 	PersistenceBroker.cc \
 	PersistentObject.cc \
+	TPersistentObject.cc \
 	Query/BinaryExprNode.cc \
 	Query/ColumnExprNode.cc \
 	Query/ConstExprNode.cc \

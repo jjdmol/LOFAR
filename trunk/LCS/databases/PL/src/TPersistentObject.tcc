@@ -96,6 +96,37 @@ namespace LOFAR
 
 
     template<typename T>
+    int 
+    TPersistentObject<T>::retrieveInPlace(const QueryObject& query,
+					  int maxObjects)
+    {
+      int nr=0;
+      typedef dtl::DBView< DBRepHolder<T> >  DBViewType;
+      try {
+        DBViewType view(tableName(), BCA<T>(), query.getSql());
+        TRACER1(__PRETTY_FUNCTION__ << "\n  " << query.getSql());
+	// Only use the first record found.
+	typename DBViewType::select_iterator iter = view.begin();
+	if (iter != view.end()) {
+	  fromDBRep(*iter);          // Retrieve this record
+	  // Get the data from the nested PO-s.
+	  if (ownedPOs().empty()) {
+	    retrieve();
+	  }
+	  // Get total nr of records found.
+	  for (; iter!=view.end() && nr<maxObjects; ++iter) {
+	    nr++;
+	  }
+        }
+      }
+      catch(dtl::DBException& e) {
+        THROW (RetrieveError, "Retrieve failed.\n" << e.what());
+      }
+      return nr;
+    }
+
+
+    template<typename T>
     void TPersistentObject<T>::doErase() const
     {
       typedef dtl::DBView< DBRepHolder<ObjectId> > DBViewType;
@@ -147,10 +178,11 @@ namespace LOFAR
     void TPersistentObject<T>::doRetrieve(const ObjectId& oid, bool isOwnerOid)
     {
       std::ostringstream whereClause;
-      if (isOwnerOid)
+      if (isOwnerOid) {
         whereClause << "WHERE Owner=" << oid.get();
-      else
+      }	else {
         whereClause << "WHERE ObjId=" << oid.get();
+      }
 
       typedef dtl::DBView< DBRepHolder<T>, DBRepHolder<ObjectId> > DBViewType;
 
