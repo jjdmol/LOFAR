@@ -100,9 +100,6 @@ private:
   ulong itsReadSeqNo;
   ulong itsWriteSeqNo;
 
-  /// Boolean indicating whether a Postgresql connection is in place or not.
-  bool isConnected;
-
   /// Counter for the number of DH_Postgresql instances. Used to coordinate
   /// the connection to the database.
   static ulong theirInstanceCount;
