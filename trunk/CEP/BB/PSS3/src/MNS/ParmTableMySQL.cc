@@ -35,7 +35,7 @@ ParmTableMySQL::ParmTableMySQL (const string& hostName, const string& userName, 
 {
   mysql_init(&itsDB);
   //MYSQL *mysql_real_connect(MYSQL *mysql, const char *host, const char *user, const char *passwd, const char *db, unsigned int port, const char *unix_socket, unsigned long client_flag) 
-  if (mysql_real_connect(           &itsDB, "lofar6",          "mysql",               NULL, userName.c_str(),               0,                    NULL,                         0)==NULL)
+  if (mysql_real_connect(           &itsDB,  hostname.c_str(),          "mysql",               NULL, userName.c_str(),               0,                    NULL,                         0)==NULL)
   {
     ASSERTSTR(false, "no connection to database");
   }
