@@ -1,0 +1,100 @@
+<pre><code><span class="codeComment">// Using dynamic parameters to join two tables
+
+
+// For purposes of illustration we introduce a table called DB_SAMPLE </span>
+
+SQL&gt; desc db_sample;
+Name				Type
+------------------------------- -------- 
+SAMPLE_LONG			LONG INTEGER
+SAMPLE_INT			INTEGER
+SAMPLE_STR			STRING
+EXTRA_FLOAT			FLOAT
+
+class JoinExample
+{
+private:
+	                                <span class="codeComment">//tablename.columnname:</span>
+	int exampleInt;                 <span class="codeComment">//DB_EXAMPLE.INT_VALUE</span>
+	string exampleStr;              <span class="codeComment">//DB_EXAMPLE.STRING_VALUE</span>
+	double exampleDouble;           <span class="codeComment">//DB_EXAMPLE.DOUBLE_VALUE</span>
+	unsigned long sampleLong;       <span class="codeComment">//DB_SAMPLE.SAMPLE_LONG</span>
+	double extraDouble;             <span class="codeComment">//DB_SAMPLE.EXTRA_FLOAT</span>
+
+friend class BCAJoinExample;
+friend class BPAJoinParamObj;
+};
+
+<span class="codeComment">// Here we define a custom parameter object for use with our JoinExample</span> 
+class JoinParamObj
+{
+public:
+	int intValue;
+	string strValue;
+	int sampleInt;
+	string sampleStr;
+};
+
+<span class="codeComment">// BCA for JoinExample ... needed to store bindings between
+// query fields and members in JoinExample objects</span>
+class BCAJoinExample
+{
+public:
+	void operator()(BoundIOs &amp;cols, JoinExample &amp;row)
+	{
+		cols[&quot;INT_VALUE&quot;] == row.exampleInt;
+		cols[&quot;STRING_VALUE&quot;] == row.exampleStr;
+		cols[&quot;DOUBLE_VALUE&quot;] == row.exampleDouble;
+		cols[&quot;SAMPLE_LONG&quot;] == row.sampleLong;
+		cols[&quot;EXTRA_FLOAT&quot;] ==row.extraDouble;
+	}
+};
+
+<span class="codeComment">// BPA for JoinParamObj ... set SQL Query parameters from object</span>
+class BPAJoinParamObj
+{
+public:
+	void operator()(BoundIOs &amp;boundIOs, JoinParamObj &amp;paramObj)
+	{
+		params[0] == paramObj.intValue;
+		params[1] == paramObj.strValue;
+		params[2] == paramObj.sampleInt;
+		params[3] == paramObj.sampleStr;
+	}
+};
+
+
+<span class="codeComment">// Read JoinExample objects from the database using a query that
+// joins the DB_EXAMPLE and DB_SAMPLE tables</span>
+vector&lt;JoinExample&gt; ReadJoinedData()
+{
+	vector&lt;JoinExample&gt; results;
+
+	<span class="codeComment">// construct view
+	// note here that we use a custom parameter class for JoinExample
+	// rather than DefaultParamObj&lt;JoinExample&gt;</span>
+
+	DBView&lt;JoinExample, JoinParamObj&gt;
+	view(&quot;DB_EXAMPLE, DB_SAMPLE&quot;,	BCAJoinExample(),
+	&quot;WHERE (INT_VALUE = (?) AND STRING_VALUE = (?)) AND &quot;
+	&quot;(SAMPLE_INT = (?) OR SAMPLE_STR = (?)) &quot;
+	&quot;ORDER BY SAMPLE_LONG&quot;, BPAJoinParamObj());
+
+	<span class="codeComment">// loop through query results and add them to our vector</span>
+	DBView&lt;JoinExample, JoinParamObj&gt;::select_iterator read_it = view.begin();
+
+	<span class="codeComment">// assign paramteter values as represented by the (?) placeholders
+	// in the where clause for our view</span>
+	read_it.Params().intValue = 3;
+	read_it.Params().strValue = &quot;Join Example&quot;;
+	read_it.Params().sampleInt = 1;
+	read_it.Params().sampleStr = &quot;Joined Tables&quot;;
+
+	for ( ; read_it != view.end(); read_it++)
+	{ 
+		results.push_back(*read_it);
+	}
+
+	return results;
+}
+</code></pre>

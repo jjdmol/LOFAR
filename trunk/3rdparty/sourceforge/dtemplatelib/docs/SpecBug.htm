@@ -1,0 +1,28 @@
+For template class specializations within the dtl
+                namespace, there is a compiler bug (<a
+                href="http://support.microsoft.com/support/kb/articles/Q263/6/33.ASP">http://support.microsoft.com/support/kb/articles/Q263/6/33.ASP</a>)
+                that forces us to explicitly qualify with dtl::
+                or reopen the namespace dtl and declare the
+                specialization in there&nbsp;as you'll notice
+                with DefaultBCA and DefaultBPA in both the
+                example and test code.&nbsp; The compiler bug
+                applies to explicit instantiations, but also
+                applies in our case with explicit specializations.&nbsp;
+                This problem doesn't seem to occur for the
+                specialization of template functions from within
+                our namespace. The following is an example of how to declare these specializations:
+
+<pre><code>
+	// Examples of proper specialization of DefaultBCA and DefaultBPA
+	// in Visual Studio 6.0
+
+	// for some reason specialization needs to use namespace prefix dtl::
+	// on identifier
+	template&lt;&gt; class dtl::DefaultBCA&lt;Example&gt;
+	{ // ... members ... };
+
+	template&lt;&gt; class dtl::DefaultBPA&lt;Example&gt;
+	{ // ... members ... };
+
+
+</code></pre>

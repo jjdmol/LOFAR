@@ -1,0 +1,72 @@
+<pre><code><span class="codeComment">// Range Transaction over a DBConnection: Insertion into a DBView </span>
+
+const TIMESTAMP_STRUCT chrysalis = {2002, 4, 3, 0, 0, 0, 0};
+const TIMESTAMP_STRUCT mikero = {2001, 11, 2, 0, 0, 0, 0};
+const TIMESTAMP_STRUCT victory = {2001, 3, 10, 0, 0, 0, 0};
+
+<span class="codeComment">// this example shows range insert transactions in action</span>
+void RangeInsertExample()
+{
+	DBConnection conn;
+        conn.Connect("UID=example;PWD=example;DSN=example;");
+
+	typedef DBView&lt;Example&gt; DBV;
+
+	DBV view("DB_EXAMPLE", DefaultBCA&lt;Example&gt;(), 
+	   "", DefaultBPA&lt;DefaultParamObj&lt;Example&gt; &gt;(), DefaultSelValidate&lt;Example&gt;(),
+	   DefaultInsValidate&lt;Example&gt;(), conn);
+
+	cout &lt;&lt; "Examples in view before attempted range insert:" &lt;&lt; endl;
+
+	copy(view.begin(), view.end(), ostream_iterator&lt;Example&gt;(cout, "\n"));
+
+	vector&lt;Example&gt; read_from_DB_before;
+
+	copy(view.begin(), view.end(), back_inserter(read_from_DB_before));
+
+	<span class="codeComment">// examples that we want to insert into the DB ...
+	// we want an all or nothing on these guys!</span>
+	vector&lt;Example&gt; all_or_nothing_examples;
+
+	<span class="codeComment">// third element will fail to be inserted, should force rollback</span>
+	all_or_nothing_examples.push_back(Example(79, "FUBAR", 2.2, 99, mikero));
+	all_or_nothing_examples.push_back(Example(81, "All Messed Up", 21.09, 75, chrysalis));
+	all_or_nothing_examples.push_back(Example(85, "Bad Boy", -21.22, 11, victory));
+	all_or_nothing_examples.push_back(Example(99, "Good One", 77.99, 41, victory));
+	
+	<span class="codeComment">// must write all the elements to succeed in the transaction</span>
+	// else we rollback
+	try { 
+      
+	  DBV::insert_iterator write_it = view;
+
+	  write_it.set_io_handler(AlwaysThrowsHandler<Example>());
+
+	  for (vector&lt;Example&gt;::iterator ins_it = all_or_nothing_examples.begin(); 
+	      ins_it != all_or_nothing_examples.end(); ins_it++, write_it++)
+		  {	  
+			 *write_it = *ins_it;
+		  }
+
+          conn.CommitAll(); <span class="codeComment">// we assume commit and rollback must always succeed to avoid two-phase commit type logic</span>
+	}
+        catch(RootException &ex) 
+	{ 
+	  cout &lt;&lt; ex &lt;&lt; endl;
+          conn.RollbackAll(); 
+	}
+
+	cout &lt;&lt; "Examples in view after attempted range insert:" &lt;&lt; endl;
+
+	copy(view.begin(), view.end(), ostream_iterator&lt;Example&gt;(cout, "\n"));
+
+	vector&lt;Example&gt; read_from_DB_after;
+
+	copy(view.begin(), view.end(), back_inserter(read_from_DB_after));
+
+	cout &lt;&lt; "Changes resulting from attempted range insert:" &lt;&lt; endl;
+   
+        TableDiff(cout, read_from_DB_before, read_from_DB_after);
+} 
+
+</code></pre>

@@ -1,0 +1,164 @@
+<?xml version='1.0' encoding='utf-8' ?>
+<!-- C++Builder XML Project -->
+<PROJECT>
+  <MACROS>
+    <VERSION value="BCB.06.00"/>
+    <PROJECT value="example.exe"/>
+    <OBJFILES value="CStringExample.obj WriteData.obj example.obj example_core.obj 
+      IndexedViewExample.obj main.obj range.obj ReadData.obj 
+      ReadDataNoMatches.obj ReadJoinedData.obj ShareConn.obj 
+      SimpleDynamicRead.obj SpecialQryExample.obj StoredProc.obj 
+      DynamicIndexedViewExample.obj"/>
+    <RESFILES value="example.res"/>
+    <IDLFILES value=""/>
+    <IDLGENFILES value=""/>
+    <DEFFILE value=""/>
+    <RESDEPEN value="$(RESFILES)"/>
+    <LIBFILES value="..\lib\dtl.lib &quot;C:\Program Files\Borland\CBuilder6\Lib\Psdk\odbc32.lib&quot;"/>
+    <LIBRARIES value=""/>
+    <SPARELIBS value=""/>
+    <PACKAGES value="vcl.bpi rtl.bpi dbrtl.bpi adortl.bpi vcldb.bpi vclx.bpi bdertl.bpi 
+      vcldbx.bpi ibxpress.bpi dsnap.bpi cds.bpi bdecds.bpi qrpt.bpi teeui.bpi 
+      teedb.bpi tee.bpi dss.bpi teeqr.bpi visualclx.bpi visualdbclx.bpi 
+      dsnapcrba.bpi dsnapcon.bpi bcbsmp.bpi vclie.bpi xmlrtl.bpi inet.bpi 
+      inetdbbde.bpi inetdbxpress.bpi inetdb.bpi nmfast.bpi webdsnap.bpi 
+      bcbie.bpi websnap.bpi soaprtl.bpi dclocx.bpi dbexpress.bpi dbxcds.bpi 
+      indy.bpi bcb2kaxserver.bpi"/>
+    <PATHCPP value=".;"/>
+    <PATHPAS value=".;"/>
+    <PATHRC value=".;"/>
+    <PATHASM value=".;"/>
+    <DEBUGLIBPATH value="$(BCB)\lib\debug"/>
+    <RELEASELIBPATH value="$(BCB)\lib\release"/>
+    <LINKER value="ilink32"/>
+    <USERDEFINES value="_DEBUG;WIN32"/>
+    <SYSDEFINES value="NO_STRICT;_NO_VCL;USEPACKAGES"/>
+    <MAINSOURCE value="example.bpf"/>
+    <INCLUDEPATH value="C:\dtl325_bug\dtl_future\dtl\example;$(BCB)\include;$(BCB)\include\vcl;..\lib;$(BCB)\Include\stlport"/>
+    <LIBPATH value="C:\dtl325_bug\dtl_future\dtl\example;$(BCB)\lib\obj;$(BCB)\lib"/>
+    <WARNINGS value="-w-par"/>
+    <OTHERFILES value=""/>
+  </MACROS>
+  <OPTIONS>
+    <IDLCFLAGS value="-IC:\dtl325_bug\dtl_future\dtl\example -I$(BCB)\include 
+      -I$(BCB)\include\vcl -I..\lib -I$(BCB)\Include\stlport -src_suffix cpp 
+      -D_DEBUG -DWIN32 -boa"/>
+    <CFLAG1 value="-Od -P -Vx -Ve -X- -r- -a8 -b- -k -y -v -vi- -tWC -tWM- -c"/>
+    <PFLAGS value="-$YD -$W -$O- -$A8 -v -JPHNE -M"/>
+    <RFLAGS value=""/>
+    <AFLAGS value="/mx /w2 /zd"/>
+    <LFLAGS value="-D&quot;&quot; -ap -Tpe -x -Gn -v"/>
+    <OTHERFILES value=""/>
+  </OPTIONS>
+  <LINKER>
+    <ALLOBJ value="c0x32.obj $(PACKAGES) $(OBJFILES)"/>
+    <ALLRES value="$(RESFILES)"/>
+    <ALLLIB value="$(LIBFILES) $(LIBRARIES) import32.lib cw32.lib"/>
+    <OTHERFILES value=""/>
+  </LINKER>
+  <FILELIST>
+      <FILE FILENAME="example.res" FORMNAME="" UNITNAME="example.res" CONTAINERID="ResTool" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="example.bpf" FORMNAME="" UNITNAME="example" CONTAINERID="BPF" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="CStringExample.cpp" FORMNAME="" UNITNAME="CStringExample.cpp" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="WriteData.cpp" FORMNAME="" UNITNAME="WriteData.cpp" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="example.cpp" FORMNAME="" UNITNAME="example.cpp" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="example_core.cpp" FORMNAME="" UNITNAME="example_core.cpp" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="IndexedViewExample.cpp" FORMNAME="" UNITNAME="IndexedViewExample.cpp" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="main.cpp" FORMNAME="" UNITNAME="main.cpp" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="range.cpp" FORMNAME="" UNITNAME="range.cpp" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="ReadData.cpp" FORMNAME="" UNITNAME="ReadData.cpp" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="ReadDataNoMatches.cpp" FORMNAME="" UNITNAME="ReadDataNoMatches.cpp" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="ReadJoinedData.cpp" FORMNAME="" UNITNAME="ReadJoinedData.cpp" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="ShareConn.cpp" FORMNAME="" UNITNAME="ShareConn.cpp" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="SimpleDynamicRead.cpp" FORMNAME="" UNITNAME="SimpleDynamicRead.cpp" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="SpecialQryExample.cpp" FORMNAME="" UNITNAME="SpecialQryExample.cpp" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="StoredProc.cpp" FORMNAME="" UNITNAME="StoredProc.cpp" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="DynamicIndexedViewExample.cpp" FORMNAME="" UNITNAME="DynamicIndexedViewExample.cpp" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="..\lib\dtl.lib" FORMNAME="" UNITNAME="dtl.lib" CONTAINERID="LibTool" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="C:\Program Files\Borland\CBuilder6\Lib\Psdk\odbc32.lib" FORMNAME="" UNITNAME="odbc32.lib" CONTAINERID="LibTool" DESIGNCLASS="" LOCALCOMMAND=""/>
+  </FILELIST>
+  <BUILDTOOLS>
+  </BUILDTOOLS>
+
+  <IDEOPTIONS>
+[Version Info]
+IncludeVerInfo=0
+AutoIncBuild=0
+MajorVer=1
+MinorVer=0
+Release=0
+Build=0
+Debug=0
+PreRelease=0
+Special=0
+Private=0
+DLL=0
+Locale=1033
+CodePage=1252
+
+[Version Info Keys]
+CompanyName=
+FileDescription=
+FileVersion=1.0.0.0
+InternalName=
+LegalCopyright=
+LegalTrademarks=
+OriginalFilename=
+ProductName=
+ProductVersion=1.0.0.0
+Comments=
+
+[HistoryLists\hlIncludePath]
+Count=5
+Item0=C:\dtl325_bug\dtl_future\dtl\example;$(BCB)\include;$(BCB)\include\vcl;..\lib;$(BCB)\Include\stlport
+Item1=C:\dtl325_bug\dtl_future\dtl\example;$(BCB)\include;$(BCB)\include\vcl;..\lib;C:\Program Files\Borland\CBuilder6\Include\stlport
+Item2=C:\dtl325_bug\dtl_future\dtl\example;$(BCB)\include;$(BCB)\include\vcl;..\lib;C:\Program Files\Borland\CBuilder6\Include\oldstl
+Item3=C:\dtl325_bug\dtl_future\dtl\example;$(BCB)\include;$(BCB)\include\vcl;..\lib
+Item4=C:\dtl325_bug\dtl_future\dtl\example;$(BCB)\include;$(BCB)\include\vcl
+
+[HistoryLists\hlLibraryPath]
+Count=1
+Item0=C:\dtl325_bug\dtl_future\dtl\example;$(BCB)\lib\obj;$(BCB)\lib
+
+[HistoryLists\hlDebugSourcePath]
+Count=1
+Item0=$(BCB)\source\vcl
+
+[HistoryLists\hlConditionals]
+Count=4
+Item0=_DEBUG;WIN32
+Item1=_DEBUG;WIN32;_USE_OLD_RW_STL
+Item2=_DEBUG;WIN32;_USE_OLD_RW_STL;_RWSTD_COMPILE_INSTANTIATE
+Item3=_DEBUG
+
+[Debugging]
+DebugSourceDirs=$(BCB)\source\vcl
+
+[Parameters]
+RunParams=DSN=example;UID=example;PWD=example
+Launcher=
+UseLauncher=0
+DebugCWD=
+HostApplication=
+RemoteHost=
+RemotePath=
+RemoteLauncher=
+RemoteCWD=
+RemoteDebug=0
+
+[Compiler]
+ShowInfoMsgs=0
+LinkDebugVcl=0
+LinkCGLIB=0
+
+[CORBA]
+AddServerUnit=1
+AddClientUnit=1
+PrecompiledHeaders=1
+
+[Language]
+ActiveLang=
+ProjectLang=
+RootDir=
+  </IDEOPTIONS>
+</PROJECT>

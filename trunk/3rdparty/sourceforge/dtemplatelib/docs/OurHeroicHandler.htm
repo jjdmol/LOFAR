@@ -1,0 +1,38 @@
+<pre><code><span class="codeComment">// Let's Use our X-Ray Vision to Look at the Innards of our Hero</span>
+
+
+template&lt;class DataObj, class ParamObj = DefaultParamObj&lt;DataObj&gt; &gt; class OurHeroicHandler
+{
+private:
+	<span class="codeComment">// ... some state data, but assume handler is default constructible</span>
+public:
+
+	dtl_ios_base::MeansOfRecovery
+		operator()(RootException &amp;ex, dtl_ios_base &amp;base,
+		   DataObj &amp;data, ParamObj &amp;params)
+	{
+		<span class="codeComment">// example of what you might do in a handler</span>
+		if (bad())
+		{
+			LogErrorToFile(ex);
+			return dtl_ios_base::THROW_EXCEPTION;
+		}
+		else if (fail())
+		{
+			<span class="codeComment">// tries to make the DataObj valid and then reapplies previous operation
+			// to base on the good object ... may still fail</span>
+			bool failed = WorkMagicOnDataObjAndTryAgain(...);
+
+			if (failed)
+			{
+				LogErrorToFile(ex);
+				return dtl_ios_base::THROW_EXCEPTION;
+			}
+			else
+				return dtl_ios_base::SUPPRESS_ERROR; <span class="codeComment">// success ... our superhero
+								     // has saved the day!</span>
+		}
+	}
+};
+</code></pre>
+

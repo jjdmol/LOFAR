@@ -1,0 +1,38 @@
+
+<pre><code><span class="codeComment">// Using a DynamicDBView to read rows from the database.
+
+// Read the contents of a table and print the resulting rows</span>
+void SimpleDynamicRead() {
+
+	<span class="codeComment">// Our query will be &quot;SELECT * FROM DB_EXAMPLE&quot;</span>
+	DynamicDBView&lt;&gt; view(&quot;DB_EXAMPLE&quot;, &quot;*&quot;);
+
+	<span class="codeComment">// NOTE: We need to construct r from the view itself since we
+	// don't know what fields the table will contain.
+	// We therefore make a call to the DataObj() function to have the
+	// table return us a template row with the correct number of fields
+	// and field types.
+	// We use this construction since we can't be guaranteed that the table
+	// is non-empty &amp; we want to still display column names in this case.</span>
+	variant_row s(view.GetDataObj());
+
+	<span class="codeComment">// Print out the column names</span>
+	vector&lt;string&gt; colNames = s.GetNames();
+	for (vector&lt;string&gt;::iterator name_it = colNames.begin(); name_it != colNames.end(); name_it++)
+	{
+		cout &lt;&lt; (*name_it) &lt;&lt; &quot; &quot;;
+	}
+	cout &lt;&lt; endl;
+
+	<span class="codeComment">// Print out all rows and columns from our query</span>
+	DynamicDBView&lt;&gt;::select_iterator print_it = view.begin();
+	for (print_it = view.begin(); print_it != view.end(); print_it++)
+	{
+		variant_row r = *print_it;
+		for (size_t i = 0; i &lt; r.size(); i++)
+		{
+			cout &lt;&lt; r[i] &lt;&lt; &quot; &quot;;
+		}
+		cout &lt;&lt; endl;
+	}
+}</code></pre>

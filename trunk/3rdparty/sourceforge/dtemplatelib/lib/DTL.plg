@@ -1,0 +1,83 @@
+<html>
+<body>
+<pre>
+<h1>Build Log</h1>
+<h3>
+--------------------Configuration: DTL - Win32 Debug--------------------
+</h3>
+<h3>Command Lines</h3>
+Creating temporary file "C:\DOCUME~1\corwinj\LOCALS~1\Temp\RSP1EEE.tmp" with contents
+[
+/nologo /MLd /W3 /Gm /GR /GX /ZI /Od /I "." /D "WIN32" /D "_DEBUG" /D "_MBCS" /D "_LIB" /D "DTL_UC" /FR"Debug/" /Fp"Debug/DTL.pch" /YX /Fo"Debug/" /Fd"Debug/" /FD /GZ /c 
+"G:\dtl345\lib\bind_basics.cpp"
+"G:\dtl345\lib\BoundIO.cpp"
+"G:\dtl345\lib\clib_fwd.cpp"
+"G:\dtl345\lib\CountedPtr.cpp"
+"G:\dtl345\lib\date_util.cpp"
+"G:\dtl345\lib\DB_Base.cpp"
+"G:\dtl345\lib\DBConnection.cpp"
+"G:\dtl345\lib\DBException.cpp"
+"G:\dtl345\lib\DBStmt.cpp"
+"G:\dtl345\lib\DBView.cpp"
+"G:\dtl345\lib\dtl_base_types.cpp"
+"G:\dtl345\lib\LocalBCA.cpp"
+"G:\dtl345\lib\RootException.cpp"
+"G:\dtl345\lib\string_util.cpp"
+"G:\dtl345\lib\validate.cpp"
+"G:\dtl345\lib\variant_cc.cpp"
+"G:\dtl345\lib\variant_row.cpp"
+"G:\dtl345\lib\VariantException.cpp"
+]
+Creating command line "cl.exe @C:\DOCUME~1\corwinj\LOCALS~1\Temp\RSP1EEE.tmp" 
+Creating temporary file "C:\DOCUME~1\corwinj\LOCALS~1\Temp\RSP1EEF.tmp" with contents
+[
+/nologo /out:"Debug\DTL.lib" 
+.\Debug\bind_basics.obj
+.\Debug\BoundIO.obj
+.\Debug\clib_fwd.obj
+.\Debug\CountedPtr.obj
+.\Debug\date_util.obj
+.\Debug\DB_Base.obj
+.\Debug\DBConnection.obj
+.\Debug\DBException.obj
+.\Debug\DBStmt.obj
+.\Debug\DBView.obj
+.\Debug\dtl_base_types.obj
+.\Debug\LocalBCA.obj
+.\Debug\RootException.obj
+.\Debug\string_util.obj
+.\Debug\validate.obj
+.\Debug\variant_cc.obj
+.\Debug\variant_row.obj
+.\Debug\VariantException.obj
+]
+Creating command line "link.exe -lib @C:\DOCUME~1\corwinj\LOCALS~1\Temp\RSP1EEF.tmp"
+<h3>Output Window</h3>
+Compiling...
+bind_basics.cpp
+BoundIO.cpp
+clib_fwd.cpp
+CountedPtr.cpp
+date_util.cpp
+DB_Base.cpp
+DBConnection.cpp
+DBException.cpp
+DBStmt.cpp
+DBView.cpp
+dtl_base_types.cpp
+LocalBCA.cpp
+RootException.cpp
+string_util.cpp
+validate.cpp
+variant_cc.cpp
+variant_row.cpp
+VariantException.cpp
+Creating library...
+
+
+
+<h3>Results</h3>
+DTL.lib - 0 error(s), 0 warning(s)
+</pre>
+</body>
+</html>

@@ -1,0 +1,50 @@
+<h3>Example: InsVal for variant_row - check the variant row null flags 
+and use this to decide whether or not to write NULL values to the database.</h3>
+
+<pre><code><span class="codeComment">// this example shows how to use the null status flag information from variant_row's data fields
+// to properly set the corresponding flags in the BoundIOs for a record to insert
+
+// here we want to make sure that any NULL data in the variant_row
+// gets reflected in the resulting parameters that are sent to the database
+// *** Note: This example is the actual implementation of the DefaultInsValidate
+// for variant_row in the DTL library ***
+</span>
+
+template&lt;&gt; class dtl::DefaultInsValidate&lt;variant_row&gt;
+{
+public:
+
+	bool operator()(BoundIOs &amp;boundIOs, variant_row &amp;rowbuf) {
+
+		boundIOs.ClearNull(); <span class="codeComment">// clear null on all BoundIO's</span>
+
+		for (BoundIOs::iterator b_it = boundIOs.begin();
+				b_it != boundIOs.end(); b_it++)
+		{
+			BoundIO &amp;boundIO = (*b_it).second;
+
+			if (boundIO.IsParam()) <span class="codeComment">// rowbufs could have parameters in the case of sql_iterator</span>
+				try{
+					if(rowbuf[boundIO.GetName()].IsNull())
+						boundIO.SetNull();
+					else
+						boundIO.ClearNull();
+				}
+				catch(...) 
+				{
+					<span class="codeComment">// This parameter # is not part of the rowbuf, lives in ParamBuf instead</span>
+					boundIO.ClearNull();
+				}
+			else
+				if(rowbuf[boundIO.GetName()].IsNull())
+					boundIO.SetNull();
+				else
+					boundIO.ClearNull();
+
+		}
+		return true;
+	}
+
+	~DefaultInsValidate() {};
+};
+</code></pre>
