@@ -49,12 +49,9 @@ class BlobOStream
 {
 public:
   // Construct it with the underlying buffer object.
-  // If header8==true, all blob headers will be made a multiple of 8 bytes.
-  // This is useful for alignment if the blob buffer is directly used
-  // via the setSpace function.
   // It keeps the pointer, so be sure that the BlobOBuffer is not deleted
   // before this object.
-  explicit BlobOStream (BlobOBuffer*, bool header8 = false);
+  explicit BlobOStream (BlobOBuffer*);
 
   // Destructor.
   ~BlobOStream();
@@ -71,9 +68,19 @@ public:
   // After all values (including nested objects) of the object have
   // been put, a call to putEnd has to be done.
   // It returns the nesting level.
+  //
+  // If align>1, the header is extended as needed with filler bytes to
+  // make sure the data thereafter is aligned properly. E.g. align=4 extends
+  // the header such that the blob length gets a multiple of 4. It is useful
+  // in combination with function setSpace. Alignment can only be done for
+  // seekable buffers.
+  // Note that the filler bytes in the header are transparant for the reader,
+  // while when using function align, the reader has to ensure it uses
+  // align in the same way.
   // <group>
-  uint putStart (const std::string& objectType, int objectVersion);
-  uint putStart (const char* objectType, int objectVersion);
+  uint putStart (const std::string& objectType, int objectVersion,
+		 uint align=0);
+  uint putStart (const char* objectType, int objectVersion, uint align=0);
   // </group>
 
   // End putting an object. It returns the object length (including
@@ -134,11 +141,6 @@ public:
   // can be used to turn the position into a pointer.
   int64 setSpace (uint nbytes);
 
-  // Reserve the given number of bytes.
-  // This is useful when forming a static blob in a dynamic way.
-  // It returns the position of the reserved space in the stream.
-  int64 reserve (uint nbytes);
-
   // Add filler bytes as needed to make the total length a multiple of n.
   // In this way the next data are aligned properly.
   // It returns the number of filler bytes used.
@@ -151,13 +153,19 @@ public:
 
 private:
   // Function to do the actual putStart.
-  uint doPutStart (const char* objectType, uint nrc, int objectVersion);
+  uint doPutStart (const char* objectType, uint nrc, int objectVersion,
+		   uint align);
 
   // Write the buffer, increment itsCurLength, and check if everything written.
   void putBuf (const void* buf, uint sz);
 
+  // Throw an exception if a put cannot be done.
+  // <group>
+  void checkPut() const;
+  void throwPut() const;
+  // </group>
 
-  bool   itsHeader8;
+
   bool   itsSeekable;
   uint32 itsCurLength;
   uint   itsLevel;
@@ -171,12 +179,13 @@ private:
 
 
 inline uint BlobOStream::putStart (const std::string& objectType,
-				   int objectVersion)
-  { return doPutStart (objectType.data(), objectType.size(), objectVersion); }
+				   int objectVersion, uint align)
+  { return doPutStart (objectType.data(), objectType.size(), objectVersion,
+		       align); }
 
 inline uint BlobOStream::putStart (const char* objectType,
-				   int objectVersion)
-  { return doPutStart (objectType, strlen(objectType), objectVersion); }
+				   int objectVersion, uint align)
+  { return doPutStart (objectType, strlen(objectType), objectVersion, align); }
 
 inline int64 BlobOStream::tellPos() const
   { return itsStream->tellPos(); }
@@ -187,6 +196,12 @@ inline void BlobOStream::put (const std::vector<T>& vec)
   operator<< (uint32(vec.size()));
   put (&vec[0], vec.size());
 }
+
+inline void BlobOStream::checkPut() const
+{
+  if (itsLevel == 0) throwPut();
+}
+
 
 } // end namespace
 
