@@ -23,7 +23,7 @@
 
 // $Id$
 
-
+#include <string>
 #include <qdialog.h>
 #include <string>
 

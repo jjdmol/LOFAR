@@ -745,64 +745,100 @@ try
       itsNumberOfChannels = 0;
     
       DataRecord::Ref header;
-      cout<<"getHeader(): "<<itsInputAgent->getHeader(header)<<endl;
-      cout << header.deref() <<endl;
-    
-      VisTile::Ref tile;
+      VisTile::Ref    tile;
+      DataRecord::Ref footer;
+
 
       UVPDataAtomHeader uvp_header;
       int draw_list = 0;
 
-      for(int state = itsInputAgent->getNextTile(tile);
-          state > 0 && itsBusyPlotting;
-          state = itsInputAgent->getNextTile(tile)) {
-
-        int ncorr = tile.deref().ncorr();
-        int nfreq = tile.deref().nfreq();
-        int ntime = tile.deref().ntime();
-        int ant1  = tile.deref().antenna1();
-        int ant2  = tile.deref().antenna2();
+      int intype = 0;
+      while( intype > 0 && itsBusyPlotting) {
+        HIID   id;
+        ObjRef ref;
         
-        if(nfreq > itsNumberOfChannels) {
-          itsNumberOfChannels = nfreq;
-        }
+        intype = itsInputAgent->hasNext();
 
-        if(ncorr > 0 && nfreq > 0 && ntime > 0) {
-          uvp_header.itsTime             = 0;
-          uvp_header.itsAntenna1         = ant1;
-          uvp_header.itsAntenna2         = ant2;
-          uvp_header.itsExposureTime     = 0;
-          uvp_header.itsFieldID          = 1;
-          uvp_header.itsSpectralWindowID = 0;
+        if(intype <= 0) {
+          std::cout << "intype: " << intype << std::endl;
+        } else {
           
-          UVPDataAtom atom(nfreq, uvp_header);
+          switch(intype){
+          case HEADER:
+            {
+              std::cout << "Ignoring HEADER " << id.toString() << std::endl;
+              itsInputAgent->getHeader(header);
+            }
+            break;
+
+          case DATA:
+            {
+              itsInputAgent->getNextTile(tile);
+              int ncorr = tile.deref().ncorr();
+              int nfreq = tile.deref().nfreq();
+              int ntime = tile.deref().ntime();
+              int ant1  = tile.deref().antenna1();
+              int ant2  = tile.deref().antenna2();
+        
+              if(nfreq > itsNumberOfChannels) {
+                itsNumberOfChannels = nfreq;
+              }
+
+              if(ncorr > 0 && nfreq > 0 && ntime > 0) {
+                uvp_header.itsTime             = 0;
+                uvp_header.itsAntenna1         = ant1;
+                uvp_header.itsAntenna2         = ant2;
+                uvp_header.itsExposureTime     = 0;
+                uvp_header.itsFieldID          = 1;
+                uvp_header.itsSpectralWindowID = 0;
           
-          for(VisTile::const_iterator iter=tile.deref().begin();
-              iter != tile.deref().end();
-              iter.next()) {
-            uvp_header.itsTime           = iter.time();
+                UVPDataAtom atom(nfreq, uvp_header);
+          
+                for(VisTile::const_iterator iter=tile.deref().begin();
+                    iter != tile.deref().end();
+                    iter.next()) {
+                  uvp_header.itsTime           = iter.time();
             
-            for(int corr = 0; corr < ncorr && uvp_header.itsTime != 0;corr++) {
-              uvp_header.itsCorrelationType = UVPDataAtomHeader::Correlation(corr+1);
+                  for(int corr = 0; corr < ncorr && uvp_header.itsTime != 0;corr++) {
+                    uvp_header.itsCorrelationType = UVPDataAtomHeader::Correlation(corr+1);
               
-              LoVec_fcomplex data(iter.f_data(corr));
-              LoVec_int      flags(iter.f_flags(corr));
+                    LoVec_fcomplex data(iter.f_data(corr));
+                    LoVec_int      flags(iter.f_flags(corr));
               
               
-              atom.setHeader(uvp_header);
-              atom.setData(data);
-              atom.setFlags(flags);
+                    atom.setHeader(uvp_header);
+                    atom.setData(data);
+                    atom.setFlags(flags);
               
-              itsDataSet[uvp_header] = atom;
-            } 
-          }
-          if(draw_list % 30 == 0) {
-            drawDataSet();
-          }
-          draw_list++;
-          qApp->processEvents();
-        }
-      }
+                    itsDataSet[uvp_header] = atom;
+                  } 
+                }
+                if(draw_list % 30 == 0) {
+                  drawDataSet();
+                }
+                draw_list++;
+                qApp->processEvents();
+              }
+            }
+            break;
+            
+          case FOOTER:
+            {
+              std::cout << "Ignoring FOOTER " << id.toString() << std::endl;
+              itsInputAgent->getFooter(footer);
+            }
+            break;
+            
+          default:
+            {
+              std::cout << "ERROR: " << intype << std::endl;
+            }
+            break;
+          }//switch intype
+          
+        } //if intype...
+        
+      }//while state > 0...
       
       itsInputAgent->close();
       drawDataSet();
@@ -811,8 +847,8 @@ try
       itsInputAgent   = 0;
     } else {
       QMessageBox::information(0, "Uvplot", 
-			       "No VisInputAgent. First initialize agent.",
-			       QMessageBox::Ok|QMessageBox::Default);
+                               "No VisInputAgent. First initialize agent.",
+                               QMessageBox::Ok|QMessageBox::Default);
     }
     itsBusyPlotting = false;
   }//itsBusyPlotting
