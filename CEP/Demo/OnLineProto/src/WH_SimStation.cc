@@ -104,8 +104,7 @@ namespace LOFAR
       itsCounter--;
     }
 
-    float t = (float)(itsData[0].real())+
-      (0.05*(DATA_ITERATION-itsCounter)/DATA_ITERATION);
+    float t = (float)(itsData[0].real())+ (0.05*(DATA_ITERATION-itsCounter)/DATA_ITERATION);
     
     for (int i = 0; i < itsMac.getNumberOfBeamlets(); ++i) {
       ((DH_Beamlet*)getDataManager().getOutHolder(i))->setElapsedTime(t);

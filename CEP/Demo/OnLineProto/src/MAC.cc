@@ -41,7 +41,9 @@ namespace LOFAR
 	itsFrequencies.resize (itsNumberOfBeamlets);
 	itsFrequencies = blitz::tensor::i *itsBeamletSize*itsChannelBandwidth+itsLOfrequency;
 
-	for (int i = 0; i < itsNumberOfStations; i++) {
+	itsStations[0] = (Station*)new Station (0, 0.0, 0.0, 0.0);
+	itsStations[1] = (Station*)new Station (1, 350000.0, 0.0, 0.0);
+	for (int i = 2; i < itsNumberOfStations; i++) {
 	  itsStations[i] = (Station*)new Station (i, 0.0, 0.0, 0.0);
 	}
      }
@@ -61,9 +63,11 @@ namespace LOFAR
 	itsNumberOfStations = m.itsNumberOfStations;
 	itsNumberOfBeamlets = m.itsNumberOfBeamlets;
 	itsFrequencies.resize(itsNumberOfBeamlets);
-	itsFrequencies = m.itsFrequencies.copy();
+	itsFrequencies = blitz::tensor::i *itsBeamletSize*itsChannelBandwidth+itsLOfrequency;
 
-	for (int i = 0; i < itsNumberOfStations; i++) {
+	itsStations[0] = (Station*)new Station (0, 0.0, 0.0, 0.0);
+	itsStations[1] = (Station*)new Station (1, 350000.0, 0.0, 0.0);
+	for (int i = 2; i < itsNumberOfStations; i++) {
 	  itsStations[i] = m.itsStations[i];
 	}
      }
