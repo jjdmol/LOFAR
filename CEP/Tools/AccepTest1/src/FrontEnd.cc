@@ -25,7 +25,8 @@
 // TransportHolders
 #include <Common/lofar_iostream.h>
 #include <Common/LofarLogger.h>
-#include <Transport/TH_Socket.h>
+//#include <Transport/TH_Socket.h>
+#include "TH_Socket.h"
 #include <tinyCEP/SimulatorParseClass.h>
 
 #include <FrontEnd.h>

@@ -23,6 +23,8 @@
 
 #include <Correlator.h>
 
+extern "C" void traceback (void);
+
 using namespace LOFAR;
 
 Correlator::Correlator(int elements, int samples, int channels, 
@@ -66,11 +68,11 @@ void Correlator::define(const KeyValueMap& /*params*/) {
   // now connect to the dummy workholders. 
   myWHRandom.getDataManager().getOutHolder(0)->connectTo 
     ( *itsWH->getDataManager().getInHolder(0), 
-      TH_Socket(itsIP, itsIP, itsBaseport+TH_MPI::getCurrentRank(), false, false) );
+      TH_Socket(itsIP, itsIP, itsBaseport+TH_MPI::getCurrentRank(), false, true) );
   
-  itsWH->getDataManager().getOutHolder(0)->connectTo
-    ( *myWHDump.getDataManager().getInHolder(0), 
-      TH_Socket(itsIP, itsIP, itsBaseport+TH_MPI::getNumberOfNodes()+TH_MPI::getCurrentRank(), true, false) );
+//   itsWH->getDataManager().getOutHolder(0)->connectTo
+//     ( *myWHDump.getDataManager().getInHolder(0), 
+//       TH_Socket(itsIP, itsIP, itsBaseport+TH_MPI::getNumberOfNodes()+TH_MPI::getCurrentRank(), true, true));
 }
 
 void Correlator::undefine() {
