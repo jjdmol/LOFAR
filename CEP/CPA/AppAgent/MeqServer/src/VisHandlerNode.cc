@@ -20,7 +20,7 @@ void VisHandlerNode::setDataId (int id)
 }
 
 //##ModelId=3F9FF6970269
-Cells VisHandlerNode::makeCells (const VisTile &tile)
+Cells * VisHandlerNode::makeCells (const VisTile &tile)
 {
   // form domain & cells based on stuff in the tile
   LoVec_bool valid( tile.rowflag() != int(VisTile::MissingData) );
@@ -34,8 +34,8 @@ Cells VisHandlerNode::makeCells (const VisTile &tile)
   cdebug1(5)<<"start_time: "<<start_time<<endl;
   cdebug1(5)<<"  end_time: "<<end_time<<endl;
   // note: frequency domain is 0:1 for now
-  return Cells(Domain(0,1,min(start_time),max(end_time)),
-               tile.nfreq(),start_time,end_time);
+  return new Cells(Domain(0,1,min(start_time),max(end_time)),
+                   tile.nfreq(),start_time,end_time);
 }
 
 

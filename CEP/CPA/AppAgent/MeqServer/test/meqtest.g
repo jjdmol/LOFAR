@@ -1,10 +1,10 @@
 # use_suspend  := T;
 # use_nostart  := T;
-# use_valgrind := T;
+use_valgrind := T;
 use_valgrind_opts := [ "",
 #  "--gdb-attach=yes",          # use either this...
-  "--logfile=meqserver",       # ...or this, not both
-#  "--gdb-path=/usr/bin/ddd", 
+  "--logfile=vg.meqserver",       # ...or this, not both
+#  "--gdb-path=/home/oms/bin/valddd", 
   ""];
   
 include 'meq/meqserver.g'
@@ -69,8 +69,8 @@ const meqsink_test := function ()
   mqs := meqserver(verbose=4,options="-d0 -meq:M:M:MeqServer");
   # set verbose debugging messages
   mqs.setdebug("MeqNode MeqForest MeqSink MeqSpigot",1);
-  mqs.setdebug("MeqNode MeqForest MeqSink MeqSpigot MeqNode",5);
-  mqs.setdebug("MeqServer MeqVisHandler",5);
+  mqs.setdebug("MeqNode MeqForest MeqSink MeqSpigot MeqNode",2);
+  mqs.setdebug("MeqServer MeqVisHandler",2);
   mqs.setdebug("meqserver",1);
   # initialize meqserver
   mqs.init([output_col="PREDICT"],wait=T);
