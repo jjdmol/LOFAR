@@ -249,7 +249,17 @@ void DataManager::initializeInputs()
       {
 	itsInDHsinfo[ch].currentDH = itsSynMan->getInPoolManagerPtr(ch)->
 	                         getWriteLockedDH(&itsInDHsinfo[ch].id);
-	itsInDHsinfo[ch].currentDH->read();
+	
+	// Only perform the read if no rate is set;
+	// this assumes that we are currently handling ProcessStep == 1
+	// todo: can't we get the process step from elsewere?
+	if ( getInputRate(ch) == 1 ) {
+	  LOG_TRACE_COND_STR("DM Allowed input handling;  channel = " << ch << " step=1   rate= " << getInputRate(ch));
+	  itsInDHsinfo[ch].currentDH->read();
+	} else {
+	  LOG_TRACE_COND_STR("DM Skip input handling;  channel = " << ch << " step=1   rate= " << getInputRate(ch));
+	}
+	
 	itsSynMan->getInPoolManagerPtr(ch)->writeUnlock(itsInDHsinfo[ch].id);
 	itsInDHsinfo[ch].id = -1;
 	itsInDHsinfo[ch].currentDH = 0;
