@@ -70,7 +70,7 @@ public:
 	void	ready();
 
 	// Ask is the next state is waiting.
-	bool	isNextStateWaiting();
+	bool	isStateFinished();
 
 	// Command for handling the state expire timer
 	void setStateLifeTime	 (time_t		anInterval);
@@ -83,7 +83,7 @@ public:
 private:
 	uint16		itsSequence;
 	uint16		itsStepNr;
-	bool		itsWantNewState;
+	bool		itsStateFinished;
 	
 	// GMT time the current state expires
 	time_t	itsStateExpireTime;		
@@ -107,13 +107,14 @@ private:
 
 inline void StateEngine::ready()
 {
-	LOG_TRACE_STAT ("StateEngine:ready");
-	itsWantNewState = true;
+//	LOG_TRACE_STAT ("StateEngine:ready");
+	LOG_DEBUG ("StateEngine:ready");
+	itsStateFinished = true;
 }
 
-inline bool StateEngine::isNextStateWaiting()
+inline bool StateEngine::isStateFinished()
 {
-	return (itsWantNewState);
+	return (itsStateFinished);
 }
 
 inline void StateEngine::setStateLifeTime(time_t		anInterval)

@@ -277,7 +277,6 @@ void ApplController::createParSubsets()
 		// V. Remove meta data from set
 		procPS.remove(procName+".start");
 		procPS.remove(procName+".stop");
-		procPS.remove(procName+".node");
 		procPS.remove(procName+".startstoptype");
 
 		// [C] Add AC parameters of any interest to process
@@ -329,9 +328,7 @@ void ApplController::startCmdState()
 			sendExecutionResult(0, "Startup failures");
 			itsStateEngine->reset();			// no further processing
 	 	}
-		else {
-			itsStateEngine->ready();			// report this state is ready.
-		}
+		// the incomming acks decide the result of the start action
 		break;
 	case StateKillAppl:
 		itsProcRuler.stopAll();
@@ -351,6 +348,7 @@ void ApplController::startCmdState()
 	case StateReinitCmd:
 	case StateQuitCmd:
 		if (itsCurState == StatePauseCmd) {
+			// overrule default wait time
 			itsStateEngine->setStateLifeTime(itsCurACMsg->getWaitTime());
 		}
 
@@ -406,19 +404,32 @@ void ApplController::acceptOrRefuseACMsg(DH_ApplControl*	anACMsg)
 //
 void ApplController::doEventLoop()
 {
+	const uint16		loopDiff = 5;
+	uint16				loopCounter = loopDiff;
+
 	while (itsIsRunning) {
 		checkForACCommands();
-		checkForAPMessages();	
-		checkForConnectingAPs();
-		checkForDisconnectingAPs();	
-		checkAckCompletion();
+		// AP's are less important when no command is running.
+		if ((itsCurState != StateNone) || (loopCounter == 0)) {
+			checkForAPMessages();	
+			checkForConnectingAPs();
+			checkForDisconnectingAPs();	
+			checkAckCompletion();
+		}
 		checkStateTimer();
 		checkCmdStack();
 		checkStateEngine();
 
-		cout << *itsAPAPool; 
+		if (loopCounter == 0) {
+			loopCounter = loopDiff;
+		}
+		else {
+			--loopCounter;
+		}
 
-		sleep (5);
+		cout << *itsAPAPool; 		// temp debug info
+
+		sleep (1);
 	}
 }
 
@@ -528,6 +539,12 @@ void ApplController::checkAckCompletion()
 {
 	LOG_DEBUG("All ack's received?");
 
+	if (itsCurState == StateStartupAppl) {
+		if (itsAPAPool->onlineCount() == itsProcRuler.size()) {
+			itsStateEngine->ready();
+		}
+	}
+
 	if (itsAPAPool->allAcksReceived()) {
 		itsStateEngine->ready();		// report we are ready with this state.
 	}
@@ -574,7 +591,7 @@ void ApplController::checkCmdStack()
 void ApplController::checkStateEngine()
 {
 	LOG_DEBUG("Time for next commmand phase?");
-	if (!itsStateEngine->isNextStateWaiting()) {	
+	if (!itsStateEngine->isStateFinished()) {	
 		return;
 	}
 
