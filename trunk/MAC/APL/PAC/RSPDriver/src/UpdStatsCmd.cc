@@ -40,6 +40,10 @@ UpdStatsCmd::UpdStatsCmd(GCFEvent& event, GCFPortInterface& port, Operation oper
 {
   m_event = new RSPSubstatsEvent(event);
 
+  m_n_devices = ((m_event->type <= Statistics::SUBBAND_POWER)
+		 ? GET_CONFIG("RS.N_BLPS", i) : 1)
+    * GET_CONFIG("RS.N_RSPBOARDS", i) * MEPHeader::N_POL;
+
   setOperation(oper);
   setPeriod(m_event->period);
   setPort(port);
@@ -79,41 +83,28 @@ void UpdStatsCmd::complete(CacheBuffer& cache)
 		       cache.getBeamletStats()().extent(thirdDim));
   }
   
-  int result_rcu = 0;
-  for (int cache_rcu = 0;
-       cache_rcu < GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL;
-       cache_rcu++)
+  int result_device = 0;
+  for (unsigned int cache_device = 0; cache_device < m_n_devices; cache_device++)
   {
-    if (m_event->rcumask[cache_rcu])
+    if (m_event->rcumask[cache_device])
     {
-      if (cache_rcu < GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL)
+      if (m_event->type <= Statistics::SUBBAND_POWER)
       {
-	if (m_event->type <= Statistics::SUBBAND_POWER)
-	{
-	  ack.stats()(0, result_rcu, Range::all())
-	    = cache.getSubbandStats()()(m_event->type,
-					cache_rcu, Range::all());
-	}
-	else
-	{
-	  ack.stats()(0, result_rcu, Range::all())
-	    = cache.getBeamletStats()()(m_event->type - Statistics::BEAMLET_MEAN,
-					cache_rcu, Range::all());
-	}
+	ack.stats()(0, result_device, Range::all())
+	  = cache.getSubbandStats()()(m_event->type,
+				      cache_device, Range::all());
       }
       else
       {
-	LOG_WARN(formatString("invalid RCU index %d, there are only %d RCU's",
-			      cache_rcu, GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL));
+	ack.stats()(0, result_device, Range::all())
+	  = cache.getBeamletStats()()(m_event->type - Statistics::BEAMLET_MEAN,
+				      cache_device, Range::all());
       }
-      
-      result_rcu++;
+
+      result_device++;
     }
   }
 
-  //cout << "ack.stats, m_type=" << (int)m_event->type << endl;
-  //cout << ack.stats()(0,0,Range::all()) << endl;
-    
   getPort()->send(ack);
 }
 
@@ -129,6 +120,6 @@ void UpdStatsCmd::setTimestamp(const Timestamp& timestamp)
 
 bool UpdStatsCmd::validate() const
 {
-  return ((m_event->rcumask.count() <= (unsigned int)GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL)
+  return ((m_event->rcumask.count() <= m_n_devices)
 	  && (m_event->type < Statistics::N_STAT_TYPES));
 }

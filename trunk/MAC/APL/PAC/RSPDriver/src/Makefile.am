@@ -26,7 +26,8 @@ BUILT_SOURCES = \
 	EPA_Protocol.ph \
 	RemoteStation.conf \
 	RSPDriverPorts.conf \
-	RSPDriver.conf
+	RSPDriver.conf \
+	ViewStats.conf
 
 clean-local:
 	rm -f \
@@ -42,7 +43,8 @@ EXTRA_DIST = \
 sysconf_DATA = \
 	RemoteStation.conf \
 	RSPDriverPorts.conf \
-	RSPDriver.conf
+	RSPDriver.conf \
+	ViewStats.conf
 
 %.properties: $(MAC_CONFIG)/%.properties
 	cp $< $@

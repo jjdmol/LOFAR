@@ -68,7 +68,7 @@ namespace RSP_Protocol
       /* Destructor for Statistics. */
       virtual ~Statistics() {}
 
-      /* get reference to the weights array */
+      /* get reference to the statistics array */
       blitz::Array<std::complex<double>, 3>& operator()();
 
     public:
@@ -84,7 +84,10 @@ namespace RSP_Protocol
     private:
       /**
        * Statistics
-       * Dimensions are: (2, N_RCU, N_SUBBANDS); 2 for MEAN and POWER
+       * Dimensions are: (2, N_DEVICES, N_SUBBANDS); 2 for MEAN and POWER
+       *
+       * N_DEVICES == N_RSPBOARDS * N_POL for beamlet statistics
+       * N_DEVICES == N_RSPBOARDS * N_BLPS * N_POL for subband statistics
        * 
        */
       blitz::Array<std::complex<double>, 3> m_statistics;

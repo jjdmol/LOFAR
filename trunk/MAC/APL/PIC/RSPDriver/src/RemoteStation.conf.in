@@ -18,7 +18,7 @@ RS.N_BLPS=4
 # Dimensions: (N_RSPBOARDS * N_BLPS) x 2 polarizations x 3 (x,y,z)
 #
 
-RS.ANTENNA_POSITIONS=3 x 2 x 3 [ -47.9675         0         0    47.9675         0         0   191.8718         0         0  -191.8718         0         0  -100.0000 -100.0000         0   100.0000  100.0000         0 ]
+RS.ANTENNA_POSITIONS=4 x 2 x 3 [ -47.9675 0 0  47.9675 0 0 191.8718 0 0 -191.8718 0 0 -100.0000 -100.0000 0 100.0000 100.0000  0 0 0 0 0 0 0 ]
 
 #
 # This format is not yet supported by the ParameterSet classes.

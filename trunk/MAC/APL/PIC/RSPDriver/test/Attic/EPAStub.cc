@@ -199,7 +199,8 @@ GCFEvent::TResult EPAStub::initial(GCFEvent& e, GCFPortInterface& port)
 
     case F_DISCONNECTED:
     {
-      port.setTimer((long)1);
+      port.setTimer((long)3);
+      LOG_WARN(formatString("port '%s' disconnected, retry in 3 seconds...", port.getName().c_str()));
       port.close();
     }
     break;
@@ -207,6 +208,7 @@ GCFEvent::TResult EPAStub::initial(GCFEvent& e, GCFPortInterface& port)
     case F_TIMER:
     {
       // try again
+      LOG_DEBUG(formatString("port '%s' retry of open...", port.getName().c_str()));
       m_client.open();
     }
     break;
@@ -444,6 +446,10 @@ void EPAStub::run()
 
 int main(int argc, char** argv)
 {
+  GCFTask::init(argc, argv);
+
+  LOG_INFO(formatString("Program %s has started", argv[0]));
+
 #ifdef HAVE_SYS_CAPABILITY_H
   //
   // Need to run as (setuid) root (geteuid()==0), but will limit
@@ -455,13 +461,11 @@ int main(int argc, char** argv)
   {
     if (!enable_cap_net_raw())
     {
-      fprintf(stderr, "%s: error: failed to enable CAP_NET_RAW capability.\n",argv[0]);
+      LOG_ERROR(formatString("%s: error: failed to enable CAP_NET_RAW capability.\n",argv[0]));
       exit(EXIT_FAILURE);
     }
   }
 #endif
-
-  GCFTask::init(argc, argv);
 
   try
   {
@@ -484,7 +488,6 @@ int main(int argc, char** argv)
   }
 #endif
 
-  LOG_INFO(formatString("Program %s has started", argv[0]));
 
   Suite s("EPA Firmware Stub", &cerr);
   s.addTest(new EPAStub("EPAStub"));

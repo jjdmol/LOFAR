@@ -379,7 +379,7 @@ GCFEvent::TResult RSPDriver::initial(GCFEvent& event, GCFPortInterface& port)
     case F_DISCONNECTED:
     {
       port.setTimer((long)3); // try again in 3 seconds
-      LOG_DEBUG(formatString("port '%s' disconnected, retry in 3 seconds...", port.getName().c_str()));
+      LOG_WARN(formatString("port '%s' disconnected, retry in 3 seconds...", port.getName().c_str()));
       port.close();
     }
     break;
@@ -1069,6 +1069,10 @@ void RSPDriver::rsp_getversions(GCFEvent& event, GCFPortInterface& port)
 
 int main(int argc, char** argv)
 {
+  GCFTask::init(argc, argv);
+  
+  LOG_INFO(formatString("Program %s has started", argv[0]));
+
 #ifdef HAVE_SYS_CAPABILITY_H
   //
   // Need to run as (setuid) root (geteuid()==0), but will limit
@@ -1080,16 +1084,12 @@ int main(int argc, char** argv)
   {
     if (!enable_cap_net_raw())
     {
-      fprintf(stderr, "%s: error: failed to enable CAP_NET_RAW capability.\n",argv[0]);
+      LOG_ERROR(formatString("%s: error: failed to enable CAP_NET_RAW capability.\n",argv[0]));
       exit(EXIT_FAILURE);
     }
   }
 #endif
   
-  GCFTask::init(argc, argv);
-  
-  LOG_INFO(formatString("Program %s has started", argv[0]));
-
   try
   {
     GCF::ParameterSet::instance()->adoptFile("RSPDriverPorts.conf");
@@ -1098,7 +1098,7 @@ int main(int argc, char** argv)
   }
   catch (Exception e)
   {
-    cerr << "Failed to load configuration files: " << e.text() << endl;
+    LOG_ERROR_STR("Failed to load configuration files: " << e.text());
     exit(EXIT_FAILURE);
   }
 
@@ -1112,7 +1112,7 @@ int main(int argc, char** argv)
   }
   catch (Exception e)
   {
-    cerr << "Exception: " << e.text();
+    LOG_ERROR_STR("Exception: " << e.text());
     exit(EXIT_FAILURE);
   }
 
