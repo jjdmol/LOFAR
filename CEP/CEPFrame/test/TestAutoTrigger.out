@@ -9,10 +9,10 @@ Call run
 Start Process
 
 
-Cnt=1,  Input buffer=0   Cnt=1,  Input buffer=1   
+Cnt=1,  Input buffer=0   Cnt=1,  Input buffer=0   
 
 
-Cnt=2,  Input buffer=0   Cnt=2,  Input buffer=1   
+Cnt=2,  Input buffer=0   Cnt=2,  Input buffer=0   
 Cnt=3,  Input buffer=0   Cnt=3,  Input buffer=3   
 
 
