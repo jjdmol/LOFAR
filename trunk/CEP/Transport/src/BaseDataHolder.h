@@ -124,33 +124,33 @@ public:
   // Functions to deal with handling the timestamp 
   int compareTimeStamp (const BaseDataHolder& that) const;
 
-  // Get Data Packet size (in bytes);
-  // See also getCurDataPacketSize() and getMaxDataPacketSize 
-  // for operation with variable datapackets
-  int getDataPacketSize();
+  // Get data size (in bytes);
+  // See also getCurDataSize() and getMaxDataSize()
+  // for operation with variable datas
+  int getDataSize();
 
 #ifdef abc_0
   /** 
-      Get the size of the CURRENT data packet (in bytes)
-      For non-flexible datapackets, this is the same as 
-      getDataPacketSize()
+      Get the size of the CURRENT data block (in bytes)
+      For non-flexible data blocks, this is the same as 
+      getDataSize()
   */
-  virtual int getCurDataPacketSize();
+  virtual int getCurDataSize();
 
   /** 
-      Get the MAXIMUM data packet size supported(in bytes)
-      For non-flexible datapackets, this is the same as 
-      getDataPacketSize()
+      Get the MAXIMUM data block size supported (in bytes)
+      For non-flexible data blocks, this is the same as 
+      getDataSize()
   */
-  virtual int getMaxDataPacketSize();
+  virtual int getMaxDataSize();
 
 #endif
 
-  // Get the data packet
-  const DataPacket& getDataPacket() const;
-
   // Get a pointer to the data (in the blob).
   void* getDataPtr();
+
+  // Get the data packet
+  const DataPacket& getDataPacket() const;
 
   /// Set the node number the BaseDataHolder runs on.
   void runOnNode(int aNode);
@@ -249,27 +249,27 @@ private:
 };
 
 
-inline int BaseDataHolder::getDataPacketSize()
+inline int BaseDataHolder::getDataSize()
   { return itsData->size(); }
 
 #ifdef abc_0
-inline int BaseDataHolder::getCurDataPacketSize(){
-  // overload in flexible datapackets
-  return getDataPacketSize(); 
+inline int BaseDataHolder::getCurDataSize(){
+  // overload in flexible datas
+  return getDataSize(); 
 }
 
-inline int BaseDataHolder::getMaxDataPacketSize(){
-  // overload in flexible datapackets
-  return getDataPacketSize(); 
+inline int BaseDataHolder::getMaxDataSize(){
+  // overload in flexible datas
+  return getDataSize(); 
 }
 #endif
+
+inline void* BaseDataHolder::getDataPtr()
+  { return itsData->data(); }
 
 
 inline const BaseDataHolder::DataPacket& BaseDataHolder::getDataPacket() const
   { return *itsDataPacketPtr; }
-
-inline void* BaseDataHolder::getDataPtr()
-  { return itsData->data(); }
 
 inline Transporter& BaseDataHolder::getTransporter()
   { return itsTransporter; }
