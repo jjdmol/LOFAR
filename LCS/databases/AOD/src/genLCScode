@@ -213,9 +213,9 @@ TPOaddRoutineRedefinitions()
 
 		if [ ${ROLLBACKCODE} = true ]; then
 			echo "void TPersistentObject<${Class}>::${FunctionName}(const long			theState,"
-			echo "								const ObjectId&	theOwner);"
+			echo "								MetaData&	mdOwner) const;"
 		else
-			echo "void TPersistentObject<${Class}>::${FunctionName}(const ObjectId&	theOwner);"
+			echo "void TPersistentObject<${Class}>::${FunctionName}(MetaData&	mdOwner) const;"
 		fi
 	done
 
@@ -250,11 +250,11 @@ TPOaddClassRedefinition()
 	echo "{}"
 
 	echo "	~TPersistentObject() {};"
-	echo "protected:"
-	echo "	virtual void doInsert  (const ObjectId& poid);"
-	echo "	virtual void doUpdate  (const ObjectId& poid);"
-	echo "	virtual void doErase   (const ObjectId& poid);"
-	echo "	virtual void doRetrieve(const ObjectId& poid);"
+	echo "public:"
+	echo "	virtual void doInsert  (MetaData& md) const;"
+	echo "	virtual void doUpdate  (MetaData& md) const;"
+	echo "	virtual void doErase   (MetaData& md) const;"
+	echo "	virtual void doRetrieve(MetaData& md) const;"
 	echo "private:"
 
 	# This is where it all about:
@@ -368,9 +368,9 @@ TPOaddToDatabaseRep()
 	echo "{"
 	echo "	// copy info of the ${Class} to the ${Class}_DBRep class"
 	echo "	// First copy the PO part"
-	echo "	dest.Oid		= itsOid.get();"
-	echo "	dest.Owner		= itsOwnerOid.get();"
-	echo "	dest.TimeStamp	= itsTimeStamp;"
+	echo "	dest.Oid		= metaData().itsOid.get();"
+	echo "	dest.Owner		= metaData().itsOwnerOid.get();"
+	echo "	dest.TimeStamp	= metaData().itsTimeStamp;"
 	echo ""
 	echo "	// Finally copy the info from ${Class}"
 
@@ -405,9 +405,9 @@ TPOaddFromDatabaseRep()
 	echo "{"
 	echo "	// copy info of the ${Class} to the ${Class}_DBRep class"
 	echo "	// First copy the PO part"
-	echo "	itsOid.set   (org.Oid);"
-	echo "	itsOwnerOid.set(org.Owner);"
-	echo "	itsTimeStamp	= SQLTimeStamp(org.TimeStamp);"
+	echo "	metaData().itsOid.set   (org.Oid);"
+	echo "	metaData().itsOwnerOid.set(org.Owner);"
+	echo "	metaData().itsTimeStamp	= SQLTimeStamp(org.TimeStamp);"
 	echo ""
 	echo "	// Finally copy the info from ${Class}"
 
@@ -435,9 +435,9 @@ TPOcodeCopyToLocal()
 	echo "	${Class}_DBRep		rec;"
 	echo "	toDatabaseRep (rec);"
 
-	echo "	rec.Owner		= theOwner.get();	// theOwner is const"
+	echo "	rec.Owner		= mdOwner.itsOid.get();"
 	if [ "${Action}" == "insert" ]; then
-		echo "	rec.Oid			= itsOid.get();		// get current or new ID"
+		echo "	rec.Oid			= metaData().itsOid.get();"
 		echo "	// Note: TimeStamp must contain a legal value for ODBC"
 		echo "	const TIMESTAMP_STRUCT someDate = { 2001, 1, 1, 1, 1, 1, 0 };"
 		echo "	rec.TimeStamp = someDate;"
@@ -481,7 +481,7 @@ TPOcodeHandleAllSubclasses()
 	grep ^$Class ${TMPFILE} | grep -v "::" | while read line
 	do
 		Member=`echo $line | cut -d':' -f4`
-		echo "		its${Member}TPO.do${Action}(itsOid);"
+		echo "		its${Member}TPO.do${Action}(metaData());"
 	done
 
 	# Close the try and build the catch
@@ -518,10 +518,10 @@ TPOcodeGetDBTimestamp()
 	echo "						selIter = selView.begin();"
 	echo ""
 	echo "	// setup the selection parameters"
-	echo "	selIter.Params().Oid = itsOid.get();"
+	echo "	selIter.Params().Oid = metaData().itsOid.get();"
 	echo ""
 	echo "	Generic_DTL_PO_info	db_keys = *selIter;"
-	echo "	itsTimeStamp = SQLTimeStamp(db_keys.TimeStamp);"
+	echo "	metaData().itsTimeStamp = SQLTimeStamp(db_keys.TimeStamp);"
 	echo ""
 }
 
@@ -573,7 +573,7 @@ TPOaddInsertRoutine()
 	if [ ${ROLLBACKCODE} == true ]; then
 		echo "const long			theState,\n							"
 	fi
-	echo "const ObjectId&	theOwner) {"
+	echo "MetaData&	mdOwner) const {"
 	echo "	DBView<${Class}_DBRep>	insView(\"${Table}\", ${Class}_DTL_BCA());"
 	echo "	DBView<${Class}_DBRep>::insert_iterator	insIter = insView;"
 	echo ""
@@ -624,7 +624,7 @@ TPOaddUpdateRoutine()
 	if [ ${ROLLBACKCODE} == true ]; then
 		echo "const long			theState,\n							"
 	fi
-	echo "const ObjectId&	theOwner) {"
+	echo "MetaData&	mdOwner) const {"
 	echo "	DBView<${Class}_DBRep, Generic_DTL_OID>"
 	echo "			updView(\"${Table}\", ${Class}_DTL_BCA(),"
 	echo "			\"WHERE ObjId=(?)\", Generic_OID_BPA());"
@@ -679,7 +679,7 @@ TPOaddDeleteRoutine()
 	if [ ${ROLLBACKCODE} == true ]; then
 		echo "const long			theState,\n							"
 	fi
-	echo "const ObjectId&	theOwner) {"
+	echo "MetaData&	mdOwner) const {"
 	echo "	DBView<Generic_DTL_OID>"
 	echo "			delView(\"${Table}\", Generic_OID_BCA());"
 	echo "	DBView<Generic_DTL_OID>::delete_iterator"
@@ -693,7 +693,7 @@ TPOaddDeleteRoutine()
 
 	echo "	// setup the selection parameters"
 	echo "	Generic_DTL_OID		rec;"
-	echo "	rec.Oid = itsOid.get();"
+	echo "	rec.Oid = metaData().itsOid.get();"
 	echo ""
 	echo "	// delete this record"
 	echo "	*delIter = rec;"
@@ -730,7 +730,7 @@ TPOaddSearchRoutine()
 	if [ ${ROLLBACKCODE} == true ]; then
 		echo "const long			theState,\n							"
 	fi
-	echo "const ObjectId&	theOwner) {"
+	echo "MetaData&	mdOwner) const {"
 	echo "	DBView<${Class}_DBRep>	selView(\"${Table}\", ${Class}_DTL_BCA());"
 	echo "	DBView<${Class}_DBRep>::select_iterator	selIter = selView;"
 	echo ""
@@ -807,6 +807,7 @@ initSrcfile()
 			echo "#include \"DTL.h\""
 		else
 			echo "#include \"PL/TPersistentObject.h\""
+			echo "#include \"PL/SQLTimeStamp.h\""
 			echo "#include \"${Class}.h\""
 		fi
 
@@ -883,10 +884,10 @@ convertMapfile()
 		*)								# no keyword, assume fieldname
 			typeset -l SubClass=`echo $dbname | cut -d" " -f1`
 			# what kind of field is this?
-			if [ "${SubClass}" == "class" ]; then
+			if [ "${SubClass}" == "class" -o "${SubClass}" == "baseclass" ]; then
 				# it's a (sub)class, get its name.
 				SubClassName=`echo $fldtype | cut -d" " -f1`
-			echo "$CurClass:$CurTable:$label:$name:$dbname:$SubClassName:BIGINT"
+				echo "$CurClass:$CurTable:$label:$name:$dbname:$SubClassName:BIGINT"
 			else
 				echo "$CurClass:$CurTable:$label:$name:$dbname::$fldtype"
 			fi
@@ -972,6 +973,7 @@ ALLCLASSESTMPFILE=tcc.genDTL.$$
 
 # convert the human readable format of the mapfile into something
 # more convenient for shell-programming
+echo "Analysing mapfile"
 initTmpfile					> ${TMPFILE}
 convertMapfile ${MAPFILE}	>>${TMPFILE}
 
@@ -998,7 +1000,8 @@ do
 	# New class? generate the necc. structures in the new sourcefile.
 	# generate exacly one BCA for each class
 	if [ "${PrevClass}" != "${class}" ]; then
-		RedefineTPOclass=`hasSubClasses ${class}`
+		#RedefineTPOclass=`hasSubClasses ${class}`
+		RedefineTPOclass=true
 		case ${LAYER} in
 		R) 	SOURCEFILE=${FILEPREFIX}${class}.cc
 			HEADERFILE=${FILEPREFIX}${class}.h
@@ -1019,8 +1022,8 @@ do
 			TPOaddDTLstruct					${class} 	>>${HEADERFILE}
 			if [ ${RedefineTPOclass} == true ]; then
 				TPOaddClassRedefinition		${class} 	>>${HEADERFILE}
-			#else
-			#	TPOaddRoutineRedefinitions	${class} 	>>${HEADERFILE}
+			else
+				TPOaddRoutineRedefinitions	${class} 	>>${HEADERFILE}
 			fi
 			TPOcloseNamespace							>>${HEADERFILE}
 			closeHeaderfile					${class}	>>${HEADERFILE}
@@ -1062,4 +1065,4 @@ if [ "${LAYER}" == "P" ]; then
 	done
 fi
 
-rm -f ${TMPFILE} ${ALLCCFILESTMPFILE}
+rm -f ${TMPFILE} ${ALLCLASSESTMPFILE}
