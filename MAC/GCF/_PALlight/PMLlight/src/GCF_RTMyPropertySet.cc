@@ -29,6 +29,8 @@
 #include <sstream>
 using std::istringstream;
 using std::ostringstream;
+using std::ifstream;
+
 #include <Common/lofar_fstream.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -631,7 +633,7 @@ void buildTypeStructTree(const string path,
       propName += elName;  
     }
   }
-  if (elName == 0)
+  if (elName)
     delete [] elName;
   if (elType == 1 || elType == 41) // structure or type ref
   {

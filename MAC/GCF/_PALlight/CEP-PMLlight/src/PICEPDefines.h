@@ -1,4 +1,4 @@
-//#  GPM_RTDefines.h: preprocessor definitions of various constants
+//#  PICEPDefines.h: preprocessor definitions of various constants
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,32 +20,14 @@
 //#
 //#  $Id$
 
-#ifndef GPM_RTDEFINES_H
-#define GPM_RTDEFINES_H
+#ifndef PICEPDEFINES_H
+#define PICEPDEFINES_H
 
 //#define LOFARLOGGER_PACKAGE "MAC.GCF.PALlight.PMLlight.Logger"
 
 #include <GCF/GCF_Defines.h>
 
-enum TPMResult 
-{
-  PM_NO_ERROR, 
-  PM_UNKNOWN_ERROR,
-  PM_PA_NOTCONNECTED,
-  PM_IS_BUSY,
-  PM_SCOPE_ALREADY_EXISTS,
-  PM_SCOPE_NOT_EXISTS, 
-  PM_PROP_NOT_EXISTS,
-  PM_SCADA_ERROR,
-  PM_PROP_NOT_VALID,
-  PM_PROP_WRONG_TYPE,
-  PM_PROP_LINK_NOT_IN_SYNC,
-  PM_PROP_SET_BUSY,
-  PM_PROP_LIST_FAILURE,
-  PM_PROP_ALREADY_LINKED,
-  PM_PROP_NOT_LINKED,
-  PM_PROP_NOT_IN_SET,
-  PM_SCOPE_NOT_FOUND
-};
+#define PARAM_PI_HOST "mac.gcf.pi.cephost"
+#define PARAM_PI_PORT "mac.gcf.pi.cepport"
 
 #endif

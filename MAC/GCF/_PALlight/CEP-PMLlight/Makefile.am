@@ -1,3 +1,3 @@
-SUBDIRS=PMLlight CEP-PMLlight
+SUBDIRS=src
 
 include $(lofar_sharedir)/Makefile.common
