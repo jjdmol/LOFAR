@@ -90,10 +90,10 @@ public:
   virtual void dump() const;
 
   // Read the packet data.
-  bool read();
+  virtual bool read();
 
   // Write the packet data.
-  void write();
+  virtual void write();
 
   // Is the Transporter of this DataHolder valid?
   bool isValid() const;
