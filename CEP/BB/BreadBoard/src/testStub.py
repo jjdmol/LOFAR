@@ -66,7 +66,9 @@ def main():
     #next line is c and python
     myStub.dump();
   #}
-  
+  del myparams;
+  del myStub;
+  print "end of main";  
 #} end of main
 
 main();

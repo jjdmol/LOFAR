@@ -5,7 +5,7 @@ $Id$
 
 """
 
-__all__ = ["selfcal"];
+__all__ = ["selfcal", "paramset"];
 
 
 Version_info = (0,0,1);
