@@ -27,8 +27,6 @@
 #include <GCF/TM/GCF_Task.h>
 #include "GTM_SBTCPPort.h"
 #include <GCF/TM/GCF_Handler.h>
-#include "GSB_Defines.h"
-#include <GTM_Defines.h>
 #include <Common/lofar_map.h>
 #include <Common/lofar_list.h>
 

@@ -20,13 +20,15 @@
 //#
 //#  $Id$
 
+#define LOFARLOGGER_SUBPACKAGE "Timer"
+
 #include <Timer/GTM_Timer.h>
 #include <GCF/TM/GCF_RawPort.h>
 #include <GCF/TM/GCF_Protocols.h>
 #include <GTM_Defines.h>
 
 GTMTimer::GTMTimer(GCFRawPort& port, 
-		   unsigned long id,
+            		   unsigned long id,
                    unsigned long timeVal, 
                    unsigned long intervalTime, 
                    void* arg) :
@@ -64,7 +66,7 @@ void GTMTimer::decreaseTime()
       
       if (_intervalTime < timeoverflow)
       {
-        LOG_ERROR(LOFAR::formatString(
+        LOG_ERROR(formatString(
             "Timerinterval %fsec of timer %d is to small for performance reasons.",
             ((double) _intervalTime) / 1000000.0,
             _id));
