@@ -23,20 +23,20 @@
 //
 //////////////////////////////////////////////////////////////////////
 
-#include "CEPFrame/CompositeRep.h"
-#include "CEPFrame/Step.h"
-#include "CEPFrame/Composite.h"
-#include "tinyCEP/Profiler.h"
-#include "CEPFrame/WH_Empty.h"
-#include "CEPFrame/VirtualMachine.h"
-#include <Common/Debug.h>
+#include <CEPFrame/CompositeRep.h>
+#include <CEPFrame/Step.h>
+#include <CEPFrame/Composite.h>
+#include <tinyCEP/Profiler.h>
+#include <CEPFrame/WH_Empty.h>
+#include <CEPFrame/VirtualMachine.h>
+#include <Common/LofarLogger.h>
 #include <Common/lofar_iostream.h>
 #include <Common/lofar_algorithm.h>    // for min,max
 #include <unistd.h>
 
 #ifdef HAVE_CORBA
-#include "Transport/Corba/BS_Corba.h"
-#include "Transport/Corba/CorbaController.h"
+#include <Transport/Corba/BS_Corba.h>
+#include <Transport/Corba/CorbaController.h>
 #endif 
 
 namespace LOFAR
@@ -62,9 +62,9 @@ CompositeRep::CompositeRep (WorkHolder& worker,
   itsIsHighestLevel(true),
   itsController    (0)
 {
-  TRACER2("CompositeRep C'tor");
+  LOG_TRACE_FLOW("CompositeRep C'tor");
   if (controllable) {
-    TRACER2("Create controllable Composite " << name);
+    LOG_TRACE_RTTI_STR("Create controllable Composite " << name);
 #ifdef HAVE_CORBA
     // Create a CorbaController object and connect it to the VirtualMachine.
     itsController = new CorbaController (BS_Corba::getPOA(),
@@ -72,7 +72,7 @@ CompositeRep::CompositeRep (WorkHolder& worker,
 					 name, 
 					 &itsVM);
 #else
-    TRACER3("CORBA is not configured, so CorbaMonitor cannot be used in Composite ");
+    LOG_INFO("CORBA is not configured, so CorbaMonitor cannot be used in Composite ");
 #endif 
   }
 
@@ -106,9 +106,9 @@ CompositeRep::~CompositeRep()
 
 void CompositeRep::addStep (const Step& step)
 {
-  TRACER2("Composite::addStep " << step.getName());
+  LOG_TRACE_FLOW_STR("Composite::addStep " << step.getName());
   // Error if the step is already used in a simul.
-  AssertStr (step.getRep()->getParent() == 0,
+  ASSERTSTR (step.getRep()->getParent() == 0,
 	     "Step " << step.getName() << " already used in another simul");
   // Make a copy of the Step object.
   // Note that the underlying StepRep is shared (reference counted).
@@ -117,7 +117,7 @@ void CompositeRep::addStep (const Step& step)
   // Set the sequence number (which might change the name).
   stepPtr->setSeqNr (itsSteps.size());
   // Error if the step name is already used.
-  AssertStr (itsNameMap.find(stepPtr->getName()) == itsNameMap.end(),
+  ASSERTSTR (itsNameMap.find(stepPtr->getName()) == itsNameMap.end(),
 	     "Step name '%s' already used in this simul" <<
 	     step.getName());
   // Put the copy of the step in list.
@@ -155,7 +155,7 @@ bool CompositeRep::connect (const string& sourceName, const string& targetName,
   if (! splitName (false, targetName, targetStep, targetDH)) {
     return false;
   }
-  AssertStr (sourceStep != targetStep,
+  ASSERTSTR (sourceStep != targetStep,
 	     "Attempt to connect Step/Composite " <<
 	     sourceStep->getName() << " to itself");
   if (sourceStep == this) {
@@ -211,7 +211,7 @@ bool CompositeRep::splitName (bool isSource, const string& name,
     if (i > 0) {
       stepName = name.substr (0, i);
     }
-    AssertStr (itsNameMap.find(stepName) != itsNameMap.end(),
+    ASSERTSTR (itsNameMap.find(stepName) != itsNameMap.end(),
 	       "Step name " << stepName << " is unknown");
     step = itsNameMap[stepName];
   }
@@ -236,7 +236,7 @@ bool CompositeRep::splitName (bool isSource, const string& name,
       type = "Input";
       dhIndex = step->getWorker()->getInChannel(dhName);
     }
-    AssertStr (dhIndex >= 0,
+    ASSERTSTR (dhIndex >= 0,
 	       type << " DataHolder " << dhName <<
 	       " unknown in step/simul " << step->getName());
   }
@@ -266,7 +266,7 @@ bool CompositeRep::connect_thisOut_Out (Step* aStep,
 		 this->getOutData(thischannel),
 		 blockingComm);
 
-    TRACER2("connect_OutOut; Connect " << getName() << "(ID = "
+    LOG_TRACE_RTTI_STR("connect_OutOut; Connect " << getName() << "(ID = "
 	   << getID() << " ) channel " << thischannel << "to : ("
 	   << aStep->getRep()->getID() << ") OutTransport ID = " 
 	   << aStep->getOutData(thatchannel).getID() << " ");  
@@ -296,7 +296,8 @@ bool CompositeRep::connect_thisIn_In (Step* aStep,
 		 aStep->getInData(thatchannel),
 		 blockingComm);
 
-    TRACER2( "connect_thisIn_In; Connect " << getName() << "(ID = " << getID() 
+    LOG_TRACE_RTTI_STR( "connect_thisIn_In; Connect " << getName() 
+			<< "(ID = " << getID() 
 	   << " ) channel " << thischannel << " : InTransport InID = " 
 	   << aStep->getInData(thatchannel).getID() << " ");  
   }
@@ -312,13 +313,13 @@ bool CompositeRep::connectInputToArray (Step* aStep[],   // pointer to  array of
 				 bool blockingComm)
 {
 
-  TRACER2("connectInputToArray " 
-	 << getName() << " "
-	 << aStep[0]->getName());
+  LOG_TRACE_FLOW_STR("connectInputToArray " 
+		     << getName() << " "
+		     << aStep[0]->getName());
   if (aStep==NULL) return false;
   int channelOffset=0;
   for (int item=offset; item<nrItems; item ++) {
-    AssertStr(getWorker()->getDataManager().getInputs()  
+    ASSERTSTR(getWorker()->getDataManager().getInputs()  
 	    >=  channelOffset + aStep[item]->getWorker()->getDataManager().getInputs() - skip,
 		 "Step::connectInputToArray not enough inputs");
     connect_thisIn_In (aStep[item],
@@ -342,13 +343,13 @@ bool CompositeRep::connectOutputToArray (Step* aStep[],  // array of ptrs to Ste
 				  bool blockingComm)
 { // nr of Steps in aStep[] array
   
-  TRACER2( "connectOutputToArray " 
-	 << getName() << " "
-	 << aStep[0]->getName());
+  LOG_TRACE_FLOW_STR( "connectOutputToArray " 
+		      << getName() << " "
+		      << aStep[0]->getName());
   if (aStep==NULL) return false;
   int channelOffset=0;
   for (int item=0; item<nrItems; item++) {
-    AssertStr (getWorker()->getDataManager().getOutputs() >=
+    ASSERTSTR (getWorker()->getDataManager().getOutputs() >=
 	       channelOffset + aStep[item]->getWorker()->getDataManager().getOutputs(),
 	       "Step::connectOutputToArray not enough outputs");
     connect_thisOut_Out (aStep[item],
@@ -375,7 +376,7 @@ void CompositeRep::replaceConnectionsWith(const TransportHolder& newTH, bool blo
 
 void CompositeRep::preprocess()
 {
-  TRACER4("Composite " << getName() << " preprocess");
+  LOG_TRACE_FLOW_STR("Composite " << getName() << " preprocess");
   StepRep::preprocess();
   list<Step*>::iterator iList;
   for (iList = itsSteps.begin(); iList != itsSteps.end(); ++iList) {
@@ -407,13 +408,13 @@ void CompositeRep::process()
   bool onRightNode = true; // true if Node of this process == current rank
 
   if (getNode() < 0) {
-    TRACER4("Composite::Process Node<0 " << getName());	  
+    LOG_TRACE_RTTI_STR("Composite::Process Node<0 " << getName());	  
     onRightNode = false;     
   }
 	
   if (! (getWorker()->shouldProcess())) {
     onRightNode = false;     
-    TRACER4("Not on right node/appl; will skip Read & Write, and proceed substeps.");
+    LOG_TRACE_RTTI("Not on right node/appl; will skip Read & Write, and proceed substeps.");
   }
 
   if (onRightNode) {
@@ -436,9 +437,9 @@ void CompositeRep::process()
   list<Step*>::iterator iList;
   for (iList = itsSteps.begin(); iList != itsSteps.end(); ++iList) {
     if ((*iList)->isComposite()) {
-      TRACER4("Processing Composite " << (*iList)->getName());  
+      LOG_TRACE_RTTI_STR("Processing Composite " << (*iList)->getName());  
     } else {            // not a Composite but a step
-      TRACER4("Processing step ID = " << (*iList)->getID());
+      LOG_TRACE_RTTI_STR("Processing step ID = " << (*iList)->getID());
     }
     (*iList)->process();
   }
@@ -459,7 +460,7 @@ void CompositeRep::process()
 
 void CompositeRep::postprocess()
 {
-  TRACER4("Composite " << getName() << " postprocess");
+  LOG_TRACE_FLOW_STR("Composite " << getName() << " postprocess");
   StepRep::postprocess();
   list<Step*>::iterator iList;
   for (iList = itsSteps.begin(); iList != itsSteps.end(); ++iList) {
@@ -469,7 +470,7 @@ void CompositeRep::postprocess()
 
 void CompositeRep::dump() const
 {
-  TRACER4("Composite " << getName() << " dump");
+  LOG_TRACE_FLOW_STR("Composite " << getName() << " dump");
   StepRep::dump();
   list<Step*>::const_iterator iList;
   for (iList = itsSteps.begin(); iList != itsSteps.end(); ++iList) {

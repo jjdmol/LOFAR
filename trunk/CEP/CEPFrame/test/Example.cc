@@ -28,13 +28,13 @@
 #include <Transport/TH_Mem.h>
 #include <CEPFrame/WH_Example.h>
 #include <tinyCEP/Profiler.h>
-#include <Common/Debug.h>
+#include <Common/LofarLogger.h>
 
 using namespace LOFAR;
 
 void doIt (Composite& comp, const std::string& name, int nsteps)
 {
-  TRACER2("Ready with definition of configuration");
+  LOG_TRACE_FLOW("Ready with definition of configuration");
   Profiler::init();
   Step::clearEventCount();
 
@@ -72,7 +72,7 @@ void doIt (Composite& comp, const std::string& name, int nsteps)
 int main (int argc, const char *argv[])
 {
   // Set trace level.
-  ::Debug::initLevels (argc, argv);
+  INIT_LOGGER("Example.log_prop");
 
   // A simple example. Four steps connected to each other.
   // Each WorkHolder has a single DataHolder.

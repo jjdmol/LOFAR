@@ -24,19 +24,19 @@
 // 
 ///////////////////////////////////////////////////////////////////////
 
-#include "CEPFrame/BaseSim.h"
-#include "CEPFrame/Transport.h"
-#include "CEPFrame/Step.h"
-#include "CEPFrame/Simul.h"
-#include "CEPFrame/DH_Tester.h"
-#include "CEPFrame/WH_TestOnDemandData.h"
-#include "tinyCEP/Profiler.h"
-#include "Common/Debug.h"
+#include <CEPFrame/BaseSim.h>
+#include <CEPFrame/Transport.h>
+#include <CEPFrame/Step.h>
+#include <CEPFrame/Simul.h>
+#include <CEPFrame/DH_Tester.h>
+#include <CEPFrame/WH_TestOnDemandData.h>
+#include <tinyCEP/Profiler.h>
+#include <Common/LofarLogger.h>
 
 int main (int argc, char *argv[])
 {
   // Set trace level.
-  Debug::initLevels (argc, (const char* [])argv);
+  INIT_LOGGER("TestOnDemand.log_prop");
   // initialise MPI environment
   TRANSPORTER::init(argc,argv);
   int rank = TRANSPORTER::getCurrentRank ();
@@ -84,7 +84,7 @@ int main (int argc, char *argv[])
   // Finished configuration 
 //////////////////////////////////////////////////////////////
 
-  TRACER2("Ready with definition of configuration");
+  LOG_TRACE_FLOW("Ready with definition of configuration");
   Profiler::init();
 
   testerSim.preprocess();

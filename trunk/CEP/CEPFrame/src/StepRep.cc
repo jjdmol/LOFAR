@@ -23,13 +23,13 @@
 //
 //////////////////////////////////////////////////////////////////////
 
-#include "CEPFrame/StepRep.h"
-#include "CEPFrame/CompositeRep.h"
-#include "CEPFrame/Step.h"
-#include "CEPFrame/DataManager.h"
+#include <CEPFrame/StepRep.h>
+#include <CEPFrame/CompositeRep.h>
+#include <CEPFrame/Step.h>
+#include <CEPFrame/DataManager.h>
 #include TRANSPORTERINCLUDE
-#include "Transport/TH_Mem.h"
-#include <Common/Debug.h>
+#include <Transport/TH_Mem.h>
+#include <Common/LofarLogger.h>
 #include <Common/lofar_iostream.h>
 #include <Common/lofar_algorithm.h>    // for min,max
 #ifdef HAVE_CORBA
@@ -69,7 +69,7 @@ StepRep::StepRep (WorkHolder& worker,
   itsWorker->setDataManager(itsDataManager);
 
   if (monitor) {
-    TRACER2("Create controllable Composite " << name);
+    LOG_TRACE_FLOW_STR("Create controllable Composite " << name);
 #ifdef HAVE_CORBA
     // Create a CorbaMonitor object    
     itsMonitor = new CorbaMonitor(BS_Corba::getPOA(),
@@ -77,11 +77,11 @@ StepRep::StepRep (WorkHolder& worker,
 				  name,
 				  getWorker());
 #else
-    TRACER1("CORBA is not configured, so CorbaMonitor cannot be used in Composite ");
+    LOG_INFO("CORBA is not configured, so CorbaMonitor cannot be used in Composite ");
 #endif 
   }
 
-  TRACER2("Create Step " << name << " ID = " << getID());
+  LOG_TRACE_RTTI_STR("Create Step " << name << " ID = " << getID());
 
 }
 
@@ -158,10 +158,11 @@ bool StepRep::connectRep (StepRep* aStep,
 			   *itsWorker->getDataManager().getGeneralInHolder(thisInx), 
 			   blockingComm);
  
-    TRACER2( "StepRep::connect " << getName().c_str() << " (ID = "
-	   << getID() << ") DataHolder " << thisInx << " to "
-	   << aStep->getName().c_str() 
-	   << " (ID = " << aStep->getID() << ") DataHolder " << thatInx);
+    LOG_TRACE_RTTI_STR( "StepRep::connect " << getName().c_str() << " (ID = "
+			<< getID() << ") DataHolder " << thisInx << " to "
+			<< aStep->getName().c_str() 
+			<< " (ID = " << aStep->getID() << ") DataHolder " 
+			<< thatInx);
   }
   return result;
 }
@@ -184,7 +185,7 @@ bool StepRep::connectInputArray (Step* aStep[],
   }
   int dhIndex=0;
   for (int item=0; item<nrSteps; item++) {
-    AssertStr (getWorker()->getDataManager().getInputs() >= 
+    ASSERTSTR (getWorker()->getDataManager().getInputs() >= 
 	       dhIndex+aStep[item]->getWorker()->getDataManager().getOutputs(),
 	       "connect " << getName() << " - " << aStep[item]->getName() <<
 	       "; not enough inputs");
@@ -215,7 +216,7 @@ bool StepRep::connectOutputArray (Step* aStep[],
   int dhIndex=0;
   for (int item=0; item<nrSteps; item++) {
 
-    AssertStr (getWorker()->getDataManager().getOutputs() >= 
+    ASSERTSTR (getWorker()->getDataManager().getOutputs() >= 
 	       dhIndex+aStep[item]->getWorker()->getDataManager().getInputs(),
 	       "connect " << getName() << " - " << aStep[item]->getName() <<
 	       "; not enough inputs");
@@ -235,7 +236,7 @@ bool StepRep::connectOutputArray (Step* aStep[],
 void StepRep::replaceConnectionsWith(const TransportHolder& newTH,
 				     bool blockingComm)
 {
-  cdebug(3) << "replaceConnectionsWith  " << newTH.getType() << endl;
+  LOG_TRACE_RTTI_STR("replaceConnectionsWith  " << newTH.getType());
   for (int ch=0; ch<itsDataManager->getInputs(); ch++)
   {
     DataHolder* dh = itsDataManager->getGeneralInHolder(ch);
@@ -243,8 +244,8 @@ void StepRep::replaceConnectionsWith(const TransportHolder& newTH,
     DataHolder* thatDH = transp.getSourceDataHolder();
     if (thatDH)
     {
-      cdebug(3) << "replace " << transp.getTransportHolder()->getType()
-		<< " with " << newTH.getType() << endl;
+      LOG_TRACE_RTTI_STR("replace " << transp.getTransportHolder()->getType()
+		<< " with " << newTH.getType());
       dh->connectTo(*thatDH, newTH, blockingComm);
     }
   }

@@ -25,7 +25,7 @@
 
 #include <lofar_config.h>
 
-#include <Common/Debug.h>
+#include <Common/LofarLogger.h>
 #include <pthread.h>
 
 namespace LOFAR
@@ -125,7 +125,7 @@ class ThreadRWLock
 	    pthread_mutex_lock(&mutex); //** LOCK
 
 	    // something wrong if there are no read locks
-	    AssertStr(readers_reading > 0, "Unbalanced ReadUnlock");
+	    ASSERTSTR(readers_reading > 0, "Unbalanced ReadUnlock");
 
 	    // one reader less
 	    readers_reading--;
@@ -150,7 +150,7 @@ class ThreadRWLock
 		pthread_cond_wait(&lock_free, &mutex);
 	    }
 
-	    AssertStr(0 == writer_writing, "Multiple writers should not be possible");
+	    ASSERTSTR(0 == writer_writing, "Multiple writers should not be possible");
 
 	    // one more writer (there should only every be one!)
 	    writer_writing = 1;;
@@ -163,7 +163,7 @@ class ThreadRWLock
 	{
 	    pthread_mutex_lock(&mutex); //** LOCK
 
-	    AssertStr(1 == writer_writing, "Unbalanced WriteUnlock");
+	    ASSERTSTR(1 == writer_writing, "Unbalanced WriteUnlock");
 
 	    // no writers left
 	    writer_writing = 0;

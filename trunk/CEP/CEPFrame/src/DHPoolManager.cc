@@ -24,8 +24,8 @@
 //
 //////////////////////////////////////////////////////////////////////
 
-#include "CEPFrame/DHPoolManager.h"
-#include <Common/Debug.h>
+#include <CEPFrame/DHPoolManager.h>
+#include <Common/LofarLogger.h>
 
 namespace LOFAR
 {
@@ -38,7 +38,7 @@ DHPoolManager::DHPoolManager ()
   : itsDataHolder(0),
     itsShared(false)
 {
-  TRACER2("DHPoolManager constructor");
+  LOG_TRACE_FLOW("DHPoolManager constructor");
 }
 
 DHPoolManager::~DHPoolManager()
@@ -46,7 +46,7 @@ DHPoolManager::~DHPoolManager()
 
 void DHPoolManager::preprocess()
 {
-  AssertStr(itsDataHolder!=0, "DataHolder has not been set");
+  ASSERTSTR(itsDataHolder!=0, "DataHolder has not been set");
   itsDataHolder->init();
 }
 

@@ -32,14 +32,14 @@
 #include <CEPFrame/DH_Tester.h>
 #include <CEPFrame/WH_Tester.h>
 #include <tinyCEP/Profiler.h>
-#include <Common/Debug.h>
+#include <Common/LofarLogger.h>
 
 using namespace LOFAR;
 
 int main (int argc, const char *argv[])
 {
   // Set trace level.
-  Debug::initLevels (argc, argv);
+  INIT_LOGGER("Tester.log_prop");
   // initialise MPI environment
   TRANSPORTER::init(argc,argv);
   int rank = TRANSPORTER::getCurrentRank ();
@@ -81,7 +81,7 @@ int main (int argc, const char *argv[])
   // Finished configuration 
 //////////////////////////////////////////////////////////////
 
-  TRACER2("Ready with definition of configuration");
+  LOG_TRACE_FLOW("Ready with definition of configuration");
   Profiler::init();
 
   testerSim.preprocess();

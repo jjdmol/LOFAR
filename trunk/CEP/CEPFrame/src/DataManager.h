@@ -27,7 +27,6 @@
 
 #include <tinyCEP/TinyDataManager.h>
 #include <Transport/DataHolder.h>
-#include <Common/Debug.h>
 
 namespace LOFAR
 {

@@ -24,9 +24,9 @@
 //
 //////////////////////////////////////////////////////////////////////
 
-#include "CEPFrame/DataManager.h"
-#include "CEPFrame/SynchronisityManager.h"
-#include "CEPFrame/DHPoolManager.h"
+#include <CEPFrame/DataManager.h>
+#include <CEPFrame/SynchronisityManager.h>
+#include <CEPFrame/DHPoolManager.h>
 
 namespace LOFAR
 {
@@ -38,7 +38,7 @@ namespace LOFAR
 DataManager::DataManager (int inputs, int outputs)
   : TinyDataManager(inputs, outputs)
 {
-  TRACER2("DataManager constructor");
+  LOG_TRACE_FLOW("DataManager constructor");
   itsSynMan = new SynchronisityManager(inputs, outputs);
   itsInDHsinfo = new DH_info[inputs];
   itsOutDHsinfo = new DH_info[outputs];
@@ -76,7 +76,7 @@ DataManager::DataManager (const DataManager& that)
 DataManager::DataManager (const TinyDataManager& that)
   : TinyDataManager(that)                       // Copy all data from TinyDM
 {
-  TRACER2("Copy TinyDataManager to DataManager");
+  LOG_TRACE_FLOW("Copy TinyDataManager to DataManager");
   itsSynMan = new SynchronisityManager(itsNinputs, itsNoutputs);
   itsInDHsinfo = new DH_info[itsNinputs];
   itsOutDHsinfo = new DH_info[itsNoutputs];
@@ -99,7 +99,7 @@ DataManager::DataManager (const TinyDataManager& that)
 
 DataManager::~DataManager()
 {
-  TRACER4("DataManager destructor");
+  LOG_TRACE_FLOW("DataManager destructor");
   delete itsSynMan;
   delete [] itsInDHsinfo;
   delete [] itsOutDHsinfo;
@@ -107,8 +107,8 @@ DataManager::~DataManager()
 
 DataHolder* DataManager::getInHolder(int channel)
 {
-  DbgAssertStr (channel >= 0,          "input channel too low");
-  DbgAssertStr (channel < getInputs(), "input channel too high");
+  DBGASSERTSTR (channel >= 0,          "input channel too low");
+  DBGASSERTSTR (channel < getInputs(), "input channel too high");
   DHPoolManager* dhpPtr = itsSynMan->getInPoolManagerPtr(channel);
 
   if (itsInDHsinfo[channel].currentDH == 0)
@@ -128,8 +128,8 @@ DataHolder* DataManager::getInHolder(int channel)
 
 DataHolder* DataManager::getOutHolder(int channel)
 {
-  DbgAssertStr(channel >= 0, "output channel too low");
-  DbgAssertStr(channel < getOutputs(), "output channel too high");
+  DBGASSERTSTR(channel >= 0, "output channel too low");
+  DBGASSERTSTR(channel < getOutputs(), "output channel too high");
   DHPoolManager* dhpPtr = itsSynMan->getOutPoolManagerPtr(channel);
 
   if (itsOutDHsinfo[channel].currentDH == 0)
@@ -150,8 +150,8 @@ DataHolder* DataManager::getOutHolder(int channel)
 
 void DataManager::readyWithInHolder(int channel)
 {
-  DbgAssertStr (channel >= 0,          "input channel too low");
-  DbgAssertStr (channel < getInputs(), "input channel too high");
+  DBGASSERTSTR (channel >= 0,          "input channel too low");
+  DBGASSERTSTR (channel < getInputs(), "input channel too high");
 
   if (itsInDHsinfo[channel].id >= 0)
   {
@@ -181,25 +181,25 @@ void DataManager::readyWithInHolder(int channel)
   }
   else
   {
-    TRACER2("DataManager::readyWithInHolder() Inholder not previously requested with getInHolder() function");
+    LOG_TRACE_RTTI("DataManager::readyWithInHolder() Inholder not previously requested with getInHolder() function");
   }
 }
 
 void DataManager::readyWithOutHolder(int channel)
 {
-  DbgAssertStr(channel >= 0, "output channel too low");
-  DbgAssertStr(channel < getOutputs(), "output channel too high");
+  DBGASSERTSTR(channel >= 0, "output channel too low");
+  DBGASSERTSTR(channel < getOutputs(), "output channel too high");
 
   if (itsOutDHsinfo[channel].id >= 0)
   {
     if (itsSynMan->isOutSynchronous(channel) == true)
     {
-      TRACER4("DataManager::readyWithOutHolder synchronous write");
+      LOG_TRACE_RTTI("DataManager::readyWithOutHolder synchronous write");
       itsOutDHsinfo[channel].currentDH->write();
     }
     else
     {
-      TRACER4("DataManager::readyWithOutHolder asynchronous write");
+      LOG_TRACE_RTTI("DataManager::readyWithOutHolder asynchronous write");
       itsSynMan->writeAsynchronous(channel);
     }
 
@@ -210,27 +210,27 @@ void DataManager::readyWithOutHolder(int channel)
   }
   else
   {
-    TRACER2("DataManager::readyWithOutHolder Outholder not previously requested with getOutHolder() function");
+    LOG_TRACE_RTTI("DataManager::readyWithOutHolder Outholder not previously requested with getOutHolder() function");
   }
 }
 
 DataHolder* DataManager::getGeneralInHolder(int channel) const
 {  
-  DbgAssertStr(channel >= 0, "input channel too low");
-  DbgAssertStr(channel < getInputs(), "input channel too high");
+  DBGASSERTSTR(channel >= 0, "input channel too low");
+  DBGASSERTSTR(channel < getInputs(), "input channel too high");
   return itsSynMan->getInPoolManagerPtr(channel)->getGeneralDataHolder();
 }
 
 DataHolder* DataManager::getGeneralOutHolder(int channel) const
 {
-  DbgAssertStr(channel >= 0, "output channel too low");
-  DbgAssertStr(channel < getOutputs(), "output channel too high");
+  DBGASSERTSTR(channel >= 0, "output channel too low");
+  DBGASSERTSTR(channel < getOutputs(), "output channel too high");
   return itsSynMan->getOutPoolManagerPtr(channel)->getGeneralDataHolder();
 }
 
 void DataManager::preprocess()
 {
-  TRACER4("DataManager::preprocess()");
+  LOG_TRACE_FLOW("DataManager::preprocess()");
   itsSynMan->preprocess();
 }
 
@@ -276,7 +276,7 @@ void DataManager::initializeInputs()
 void DataManager::setInBufferingProperties(int channel, bool synchronous,
 					   bool shareDHs) const
 {
-  AssertStr(itsInDHs[channel]->getTransporter().getTransportHolder()==0, 
+  ASSERTSTR(itsInDHs[channel]->getTransporter().getTransportHolder()==0, 
 	    "Input " << channel << 
 	    " is already connected. Buffering properties must be set before connecting."); 
   DataHolder* dhPtr = getGeneralInHolder(channel);
@@ -285,7 +285,7 @@ void DataManager::setInBufferingProperties(int channel, bool synchronous,
 
   if (shareDHs == true)
   {
-    DbgAssertStr(channel < getOutputs(), 
+    DBGASSERTSTR(channel < getOutputs(), 
  		 "corresponding output channel does not exist");
     itsSynMan->sharePoolManager(channel);   
   }
@@ -295,7 +295,7 @@ void DataManager::setInBufferingProperties(int channel, bool synchronous,
 void DataManager::setOutBufferingProperties(int channel, bool synchronous,
 					    bool shareDHs) const
 {
-  AssertStr(itsOutDHs[channel]->getTransporter().getTransportHolder()==0, 
+  ASSERTSTR(itsOutDHs[channel]->getTransporter().getTransportHolder()==0, 
 	    "Output " << channel << 
 	    " is already connected. Buffering properties must be set before connecting."); 
   DataHolder* dhPtr = getGeneralOutHolder(channel);
@@ -304,9 +304,9 @@ void DataManager::setOutBufferingProperties(int channel, bool synchronous,
 
   if (shareDHs == true)
   {
-    DbgAssertStr(channel < getInputs(), 
+    DBGASSERTSTR(channel < getInputs(), 
  		 "corresponding input channel does not exist");
-    DbgAssertStr(((itsSynMan->isInSynchronous(channel)) == synchronous), 
+    DBGASSERTSTR(((itsSynMan->isInSynchronous(channel)) == synchronous), 
 		 "Synchronisity of output is not equal to synchronisity of input. Changing output synchronisity to match input.");
 
     itsSynMan->sharePoolManager(channel);
@@ -315,15 +315,15 @@ void DataManager::setOutBufferingProperties(int channel, bool synchronous,
 
 bool DataManager::isInSynchronous(int channel)
 {
-  DbgAssertStr(channel >= 0, "input channel too low");
-  DbgAssertStr(channel < getInputs(), "input channel too high");
+  DBGASSERTSTR(channel >= 0, "input channel too low");
+  DBGASSERTSTR(channel < getInputs(), "input channel too high");
   return itsSynMan->isInSynchronous(channel);
 }
 
 bool DataManager::isOutSynchronous(int channel)
 {
-  DbgAssertStr(channel >= 0, "output channel too low");
-  DbgAssertStr(channel < getOutputs(), "output channel too high");
+  DBGASSERTSTR(channel >= 0, "output channel too low");
+  DBGASSERTSTR(channel < getOutputs(), "output channel too high");
   return itsSynMan->isOutSynchronous(channel);
 }
 
