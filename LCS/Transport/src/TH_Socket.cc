@@ -40,10 +40,12 @@ TH_Socket::TH_Socket (const std::string&	sourceName,
 	itsServerHostname	(""), 
 	itsPort				(portno),
 	itsIsConnected		(false),
-	itsIsBlocking		(blocking),
+	itsSyncComm			(blocking),
 	itsDestHasListener	(listenerAtDestination), 
 	itsServerSocket		(0),
-	itsDataSocket		(0)
+	itsDataSocket		(0),
+	itsReadOffset		(0),
+	itsLastCmd			(CmdNone)
 {
 	if (listenerAtDestination) {
 		itsServerHostname = destinationName;
@@ -84,11 +86,11 @@ TH_Socket* TH_Socket::make() const
 
 	if (itsDestHasListener) {
 		return (new TH_Socket("", itsServerHostname, itsPort, 
-									itsDestHasListener, itsIsBlocking));
+									itsDestHasListener, itsSyncComm));
 	}
 	else {
 		return (new TH_Socket(itsServerHostname, "", itsPort, 
-									itsDestHasListener, itsIsBlocking));
+									itsDestHasListener, itsSyncComm));
 	}
 }
   
@@ -112,13 +114,16 @@ bool TH_Socket::connectionPossible (int32 srcRank, int32 dstRank) const
 //
 // recvBlocking (buf, nrBytes)
 //
-bool TH_Socket::recvBlocking (void*	buf, int32	nrBytes, int32	tag)
+bool TH_Socket::recvBlocking (void*	buf, int32	nrBytes, int32	/*tag*/)
 { 
-	if (!init()) {
+	LOG_TRACE_OBJ("TH_Socket::recvBlocking");
+
+	if (!init()) {								// be sure we are connected
 		return (false);
 	}
-
 	// Now we should have a connection
+
+	itsReadOffset = 0;
 	if (itsDataSocket->readBlocking (buf, nrBytes) != nrBytes) {
 		THROW(AssertError, "TH_Socket: data not succesfully received");
 	}
@@ -131,11 +136,15 @@ bool TH_Socket::recvBlocking (void*	buf, int32	nrBytes, int32	tag)
 //
 bool TH_Socket::recvVarBlocking (int32 tag)
 {
-	if (!init()) {
+#if 1
+	LOG_TRACE_OBJ("TH_Socket::recvVarBlocking");
+
+	if (!init()) {								// be sure we are connected
 		return (false);
 	}
 
 	// Read the blob header.
+	itsReadOffset = 0;
 	DataHolder* target = getTransporter()->getDataHolder();
 	void*	buf   = target->getDataPtr();
 	int32	hdrsz = target->getHeaderSize();
@@ -152,21 +161,59 @@ bool TH_Socket::recvVarBlocking (int32 tag)
 	bool result = recvBlocking (static_cast<char*>(buf)+hdrsz, size-hdrsz, tag);
 
     return (result);
+#else
+	return(true);
+#endif
 }
 
 //
 // recvNonBlocking
 //
-bool TH_Socket::recvNonBlocking(void*	buf, int32	nrBytes, int32 tag)
+bool TH_Socket::recvNonBlocking(void*	buf, int32	nrBytes, int32 /*tag*/)
 {
-	if (!init()) {
+	LOG_TRACE_OBJ(formatString("TH_Socket::recvNonBlocking(%d), offset=%d", 
+													nrBytes, itsReadOffset));
+	
+	if (nrBytes <= itsReadOffset) {				// already in buffer?
+		return (true);
+	}
+
+	itsLastCmd  = CmdRecvNonBlock;				// remember where to wait for.
+
+	if (!init()) {								// be sure we are connected
 		return (false);
 	}
 
-	// Now we should have a connection
-	if (itsDataSocket->read (buf, nrBytes) != nrBytes) {
-		THROW(AssertError, "TH_Socket: data not succesfully received");
+	// read remaining bytes
+	int32	bytesRead = itsDataSocket->read ((char*)buf+itsReadOffset, 
+												nrBytes-itsReadOffset);
+	LOG_TRACE_VAR_STR("Read " << bytesRead << " bytes from socket");
+
+	// Errors are reported with negative numbers
+	if (bytesRead < 0) {						// serious error?
+		if (bytesRead == Socket::INCOMPLETE) {	// interrrupt occured
+			return (false);						// rest of data may come
+		}
+		// It's a total mess, anything could have happend. Close line.
+		// At next read or write it will be reopened.
+		LOG_DEBUG("TH_Socket:shutdown datasocket after read-error");
+		itsDataSocket->shutdown();
+		delete itsDataSocket;
+		itsIsConnected = false;
+		itsLastCmd     = CmdNone;
+		itsReadOffset  = 0;						// it's a total mess
+		return (false);
 	}
+
+	// Some data was read
+	if (bytesRead+itsReadOffset < nrBytes) {	// everthing read?
+		itsReadOffset += bytesRead;				// No, update readoffset.
+		return(false);
+	}
+
+	itsReadOffset = 0;							// message complete, reset
+	itsLastCmd    = CmdNone;					// async asmin.
+
 	return (true);
 }
 
@@ -175,7 +222,12 @@ bool TH_Socket::recvNonBlocking(void*	buf, int32	nrBytes, int32 tag)
 //
 bool TH_Socket::recvVarNonBlocking(int32	tag)
 {
-	if (!init()) {
+#if 1
+	LOG_TRACE_OBJ("TH_Socket::recvVarNonBlocking");
+
+	itsLastCmd  = CmdRecvVarNonBlock;			// remember where to wait for.
+
+	if (!init()) {								// be sure we are connected
 		return (false);
 	}
 
@@ -185,6 +237,7 @@ bool TH_Socket::recvVarNonBlocking(int32	tag)
 	int32	hdrsz = target->getHeaderSize();
 
 	if (!recvNonBlocking(buf, hdrsz, tag)) {
+		itsLastCmd  = CmdRecvVarNonBlock;		// remember where to wait for.
 		return (false);
 	}
 
@@ -193,28 +246,49 @@ bool TH_Socket::recvVarNonBlocking(int32	tag)
 	target->resizeBuffer (size);
 	buf = target->getDataPtr();
 	// Read the remainder.
-	bool result = recvNonBlocking (static_cast<char*>(buf)+hdrsz, size-hdrsz, tag);
+	bool result = recvNonBlocking (static_cast<char*>(buf)+hdrsz, 
+														size-hdrsz, tag);
+	if (!result) {
+		itsLastCmd  = CmdRecvVarNonBlock;		// remember where to wait for.
+	}
 
     return (result);
+#else
+	return(true);
+#endif
 }
 
 //
 // waitForReceived(buf, maxBytes, tag)
 //
+// NOTE: THIS CALL IS BLOCKING, WHY RETURN A BOOL???
+//
 bool TH_Socket::waitForReceived(void*	buf, int32 	maxBytes, int32  tag)
 {
-	// TODO
-	return (true);
+	switch (itsLastCmd) {
+	case CmdNone:
+		return (true);
+	case CmdRecvNonBlock:
+		return(recvBlocking(buf, maxBytes, tag));
+	case CmdRecvVarNonBlock:
+		while (!recvVarNonBlocking(tag)) {
+			;
+		}
+		return (true);
+	}
+	ASSERTSTR(false, "TH_Socket:LastCmd is unknown: " << itsLastCmd);
 }
 
 //
 // sendBlocking (buf, nrBytes, tag)
 //
-bool TH_Socket::sendBlocking (void*	buf, int32	nrBytes, int32 tag)
+bool TH_Socket::sendBlocking (void*	buf, int32	nrBytes, int32 /*tag*/)
 {
 	if (!init()) {
 		return (false);
 	}
+
+	LOG_TRACE_OBJ("TH_Socket::sendBlocking");
 
 	// Now we should have a connection
 	int32 sent_len = itsDataSocket->writeBlocking (buf, nrBytes);
@@ -225,14 +299,17 @@ bool TH_Socket::sendBlocking (void*	buf, int32	nrBytes, int32 tag)
 //
 // sendNonBlocking(buf, nrBytes, tag)
 //
-bool TH_Socket::sendNonBlocking(void*	buf, int32	nrBytes, int32	 tag)
+bool TH_Socket::sendNonBlocking(void*	buf, int32	nrBytes, int32	 /*tag*/)
 {
 	if (!init()) {
 		return (false);
 	}
 
-	// Now we should have a connection
-	int32 sent_len = itsDataSocket->write (buf, nrBytes);
+	LOG_TRACE_OBJ("TH_Socket::sendNonBlocking");
+
+	//int32 sent_len = itsDataSocket->write (buf, nrBytes);
+	// TODO: For now implemented as blocking!
+	int32 sent_len = itsDataSocket->writeBlocking (buf, nrBytes);
 
 	return (sent_len == nrBytes);
 }
@@ -242,7 +319,7 @@ bool TH_Socket::sendNonBlocking(void*	buf, int32	nrBytes, int32	 tag)
 //
 bool TH_Socket::waitForSent(void*, int, int)
 {
-	// TODO
+	// TODO when sendNonBlocking is modified
 	return (true);
 }
 
@@ -251,10 +328,14 @@ bool TH_Socket::waitForSent(void*, int, int)
 // init()
 //
 // Code to open the connection
-bool TH_Socket::init () {
+bool TH_Socket::init () 
+{
 	if (itsIsConnected) {
 		return (true);
 	}
+
+	itsReadOffset = 0;
+	itsLastCmd    = CmdNone;
 
 	// On a destination DH the field sourceDH is filled (with a pointer to
 	// the source DH), on a sourceDH this field is 0. This way we can figure
@@ -292,7 +373,11 @@ bool TH_Socket::connectToServer (const int32	waitMs)
 	std::stringstream 	service;
 	service << itsPort;
 	itsDataSocket  = new Socket("TH_Socket", itsServerHostname, service.str());
-	itsDataSocket->setBlocking(itsIsBlocking);
+	ASSERTSTR (itsDataSocket->ok(), "TH_Socket::connectToServer (" <<
+											itsServerHostname << "," <<
+											itsPort << ") failed: " <<
+											itsDataSocket->errstr());
+	itsDataSocket->setBlocking(itsSyncComm);
 
 	// try to connect to the server
 	int32		status;
@@ -311,8 +396,10 @@ bool TH_Socket::connectToServer (const int32	waitMs)
 			
 		// when errno == ECONNREFUSED the server might not be on the air yet
 		int32 	sysErrno = itsDataSocket->errnoSys();
-		ASSERTSTR (((status == Socket::CONNECT) && (sysErrno == ECONNREFUSED)),
-					"TH_Socket: could not connect to server, status =" << status);
+		ASSERTSTR (((status == Socket::CONNECT) || (sysErrno == ECONNREFUSED)),
+					"TH_Socket: could not connect to server(" << 
+					itsServerHostname << "," << itsPort << "), status =" 
+					<< status);
 
 		// The server is probably not on the air. Do a couple of retries.
 		if (waitMs < 0) {
@@ -345,16 +432,20 @@ bool TH_Socket::connectToClient (const int32	waitMs)
 	}
 
 	// create a server socket (and start listener)
-	std::stringstream 	service;
-	service << itsPort;
-	itsServerSocket = new Socket("TH_Socket", service.str());
+	if (!itsServerSocket) {
+		std::stringstream 	service;
+		service << itsPort;
+		itsServerSocket = new Socket("TH_Socket", service.str());
+		ASSERTSTR (itsServerSocket->ok(), "TH_Socket::starting listener (" <<
+							itsPort << ") failed: " << itsServerSocket->errstr());
+	}
 
 	// wait for incoming connections
 	itsDataSocket = itsServerSocket->accept(waitMs);
 	if (itsDataSocket) {
 		LOG_TRACE_FLOW("Connection with client succesful");
 		itsIsConnected = true;
-		itsDataSocket->setBlocking(itsIsBlocking);
+		itsDataSocket->setBlocking(itsSyncComm);
 		return (true);
 	}
 
@@ -365,6 +456,17 @@ bool TH_Socket::connectToClient (const int32	waitMs)
 	LOG_TRACE_FLOW("ConnectToClient timed out");
 
 	return (false);
+}
+
+void TH_Socket::setDataSocket (Socket*	aDataSocket)
+{
+	if (aDataSocket) {
+		itsDataSocket  = aDataSocket;
+		itsIsConnected = aDataSocket->isConnected();
+		itsSyncComm    = aDataSocket->isBlocking();
+		itsReadOffset  = 0;
+		itsLastCmd     = CmdNone;
+	}
 }
 
 } // namespace LOFAR

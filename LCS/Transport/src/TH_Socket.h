@@ -93,20 +93,38 @@ namespace LOFAR
 
     virtual bool isBlocking() const
       { return (itsDataSocket && itsDataSocket->isBlocking()); }
-    
-  private:
+   
+	void		setDataSocket (Socket*	aDataSocket);
+	Socket*		getDataSocket() const; 
     bool		connectToServer(int32	waitMs = -1);
     bool		connectToClient(int32	waitMs = -1);
+  private:
+	typedef enum {
+		CmdNone = 0,
+		CmdRecvNonBlock,
+		CmdRecvVarNonBlock,
+	} CmdTypes;
 
     string		itsServerHostname;
     int32		itsPort;
     bool		itsIsConnected;
-    bool		itsIsBlocking;
+    bool		itsSyncComm;
     bool		itsDestHasListener;
     Socket*		itsServerSocket;
     Socket*		itsDataSocket;
+	int32		itsReadOffset;
+
+	// Administration for non-blocking receiving. In the recv-call
+	// these fields are filled so that waitForRecv knows what to do.
+	int16		itsLastCmd;
   };
   
+
+inline Socket* TH_Socket::getDataSocket() const
+{
+	return (itsDataSocket);
 }
+
+} // namespace LOFAR
 
 #endif

@@ -34,11 +34,11 @@
 #include <errno.h>
 #include <fcntl.h>
 
-#ifndef HAVE_BGL
-#include <netdb.h>
-#else
+#ifdef HAVE_BGL
 // netdb is not available on BGL; all code using netdb will be 
 // conditionally included using the HAVE_BGL definition;
+#else
+#include <netdb.h>
 #endif
 
 namespace LOFAR
@@ -88,6 +88,9 @@ Socket::Socket (const string&	socketname,
 	itsIsInitialized(false),
 	itsIsBlocking	(false)
 {
+	LOG_TRACE_OBJ(formatString("Socket<server>(%s,%s)",
+									socketname.c_str(), service.c_str()));
+
 	sigpipeCounter = &defaultSigpipeCounter;
 	initServer (service, protocol, backlog);
 }
@@ -113,6 +116,9 @@ Socket::Socket (const string&	socketname,
 	itsIsInitialized(false),
 	itsIsBlocking	(false)
 {
+	LOG_TRACE_OBJ(formatString("Socket<client>(%s,%s,%s)",
+					socketname.c_str(), hostname.c_str(), service.c_str()));
+
 	sigpipeCounter = &defaultSigpipeCounter;
 	initClient (hostname, service, protocol);
 }
@@ -122,7 +128,7 @@ Socket::Socket (const string&	socketname,
 //
 Socket::~Socket()
 {
-	LOG_TRACE_OBJ ("~Socket");
+	LOG_TRACE_OBJ (formatString("~Socket(%d)", itsSocketID));
 
 	if (itsSocketID >=0) {
 		shutdown ();
@@ -148,8 +154,8 @@ int32 Socket::initServer (const string& service, int32 protocol, int32 backlog)
 		return (SK_OK);
 	}
 
-	LOG_TRACE_FLOW(formatString("Socket::initServer(%s,%d,%d)", service.c_str(),
-														protocol, backlog));
+	LOG_TRACE_FLOW(formatString("Socket::initServer(%s,%s,%d,%d)", 
+				itsSocketname.c_str(), service.c_str(), protocol, backlog));
 
 	itsErrno 	= SK_OK;
 	itsSysErrno = 0;
@@ -178,24 +184,27 @@ int32 Socket::initServer (const string& service, int32 protocol, int32 backlog)
 		
 	// bind the socket (always blocking)
 	if ((::bind (itsSocketID, addrPtr,addrLen )) < 0) {
-		LOG_DEBUG(formatString("Socket:Bind error for port %s, err = %d", 
-													itsPort.c_str(), errno));
+		LOG_DEBUG(formatString("Socket(%d):Bind error for port %s, err = %d", 
+										itsSocketID, itsPort.c_str(), errno));
 		close(itsSocketID);
 		itsSocketID = -1;
 		return (setErrno(BIND));
 	}
+	setBlocking(itsIsBlocking);		// be sure the right blockingmode is used
 	itsIsInitialized = true;
 
 	// start listening for connections on UNIX and TCP sockets
 	if (itsType == UNIX || itsType == TCP) {
 		if ((::listen (itsSocketID, backlog)) < 0) {	// always blocking
-			LOG_DEBUG(formatString("Socket:Listen error for port %s, err = %d(%s)", 
-									itsPort.c_str(), errno, strerror(errno)));
+			LOG_DEBUG(formatString(
+					"Socket(%d):Listen error for port %s, err = %d(%s)", 
+					itsSocketID, itsPort.c_str(), errno, strerror(errno)));
 			close(itsSocketID);
 			itsSocketID = -1;
 			return (setErrno(LISTEN));
 		}
-		LOG_DEBUG(formatString("Socket:Listener started at port %s", itsPort.c_str()));
+		LOG_DEBUG(formatString("Socket(%d):Listener started at port %s", 
+											itsSocketID, itsPort.c_str()));
 	}
 	else {	// UDP socket
 		memset(addrPtr, 0, addrLen);
@@ -218,8 +227,8 @@ int32 Socket::initClient (const string&	hostname,
 		return (SK_OK);
 	}
 
-	LOG_TRACE_FLOW(formatString("Socket::initClient(%s,%s,%d)", hostname.c_str(),
-							service.c_str(), protocol));
+	LOG_TRACE_FLOW(formatString("Socket::initClient(%s,%s,%s,%d)", 
+		itsSocketname.c_str(), hostname.c_str(), service.c_str(), protocol));
 
 	itsErrno 	= SK_OK;
 	itsSysErrno = 0;
@@ -242,6 +251,7 @@ int32 Socket::initClient (const string&	hostname,
 		addrPtr = (struct sockaddr*) &itsTCPAddr;
 	}
 		
+	setBlocking(itsIsBlocking);		// be sure the blockingmode is used
 	itsIsInitialized = true;
 
 	return (SK_OK);
@@ -255,6 +265,8 @@ int32 Socket::initClient (const string&	hostname,
 //
 int32 Socket::initUnixSocket(bool		asServer)
 {
+	LOG_TRACE_CALC(formatString("Socket::initUnixSocket(%s,%d)",
+											itsSocketname.c_str(), asServer));
 	string 		path;
 	if (asServer) {
 		path = itsPort;
@@ -281,7 +293,8 @@ int32 Socket::initUnixSocket(bool		asServer)
     if (itsSocketID < 0) {
       return (setErrno(SOCKET));
 	}
-    LOG_TRACE_FLOW(formatString("creating unix socket %s", path.c_str()));
+    LOG_TRACE_CALC(formatString("Socket(%d):creating unix socket %s", 
+												itsSocketID, path.c_str()));
 
     if (setDefaults() < 0) {
 		close (itsSocketID);
@@ -300,6 +313,9 @@ int32 Socket::initUnixSocket(bool		asServer)
 //
 int32 Socket::initTCPSocket(bool	asServer)
 {
+	LOG_TRACE_CALC(formatString("Socket::initTCPSocket(%s,%d)",
+											itsSocketname.c_str(), asServer));
+
 	// Preinit part of TCP address structure
 	memset (&itsTCPAddr, 0, sizeof(itsTCPAddr));
 	itsTCPAddr.sin_family = AF_INET;
@@ -310,25 +326,28 @@ int32 Socket::initTCPSocket(bool	asServer)
 		uint32				IPbytes;
 		// try if hostname is hard ip address
 		if ((IPbytes = inet_addr(itsHost.c_str())) == INADDR_NONE) {
-#ifndef HAVE_BGL
+#ifdef HAVE_BGL
+		  {
+		    LOG_ERROR(formatString("Socket:Hostname (%s) can not be resolved",
+														itsHost.c_str()));
+		    return (itsErrno = BADHOST);
+		  }
+#else
 		  struct hostent*		hostEnt;		// server host entry
 		  // No, try to resolve the name
 		  if (!(hostEnt = gethostbyname(itsHost.c_str()))) {
-		    LOG_DEBUG("Socket:Hostname can not be resolved");
+		    LOG_ERROR(formatString("Socket:Hostname (%s) can not be resolved",
+														itsHost.c_str()));
 		    return (itsErrno = BADHOST);
 		  }
 		  // Check type
 		  if (hostEnt->h_addrtype != AF_INET) {
-		    LOG_DEBUG("Socket:Hostname is of wrong protocoltype");
+		    LOG_ERROR(formatString(
+						"Socket:Hostname(%s) is not of type AF_INET",
+						itsHost.c_str()));
 		    return (itsErrno = BADADDRTYPE);
 		  }
 		  memcpy (&IPbytes, hostEnt->h_addr, sizeof (IPbytes));
-#else
-		  {
-		    // BGL Only
-		    LOG_ERROR("Socket:Hostname can not be resolved");
-		    return (itsErrno = BADHOST);
-		  }
 #endif
 		}
 		memcpy ((char*) &itsTCPAddr.sin_addr.s_addr, (char*) &IPbytes, 
@@ -336,15 +355,24 @@ int32 Socket::initTCPSocket(bool	asServer)
 	}
 			
 	// try to resolve the service
+#ifdef HAVE_BGL
+	int32		protocolType = 6;		// assume tcp
+	if (!(itsTCPAddr.sin_port = htons((uint16)atoi(itsPort.c_str())))) {
+		LOG_ERROR(formatString("Socket:Portnr/service(%s) can not be resolved",
+													itsHost.c_str()));
+		return (itsErrno = PORT);
+	}
+#else
 	const char*			protocol = (itsType == UDP ? "udp" : "tcp");
-#ifndef HAVE_BGL
 	struct servent*		servEnt;		// service info entry
 	if ((servEnt = getservbyname(itsPort.c_str(), protocol))) {
 		itsTCPAddr.sin_port = servEnt->s_port;
 	}
 	else {
 		if (!(itsTCPAddr.sin_port = htons((uint16)atoi(itsPort.c_str())))) {
-			LOG_DEBUG("Socket:Portnr/service can not be resolved");
+			LOG_ERROR(formatString(
+						"Socket:Portnr/service(%s) can not be resolved",
+						itsHost.c_str()));
 			return (itsErrno = PORT);
 		}
 	}
@@ -354,23 +382,21 @@ int32 Socket::initTCPSocket(bool	asServer)
 	if (!(protoEnt = getprotobyname(protocol))) {
 	  return (itsErrno = PROTOCOL);
 	}
+	int32		protocolType = protoEnt->p_proto;
+#endif
+
 	// Finally time to open the real socket
 	int32	socketType = (itsType == TCP) ? SOCK_STREAM : SOCK_DGRAM;
-	if ((itsSocketID = ::socket(PF_INET, socketType, protoEnt->p_proto)) < 0) {
-		LOG_DEBUG(formatString("Socket:Can not get a socket, err = %d", errno));
+	if ((itsSocketID = ::socket(PF_INET, socketType, protocolType)) < 0) {
+		LOG_ERROR(formatString("Socket:Can not get a socket(%d,%d), err=%d(%s)", 
+							socketType, protocolType, errno, strerror(errno)));
 		return (setErrno(SOCKET));
 	}
 
 	LOG_DEBUG(formatString("Socket:Created %s socket, port %d, protocol %d",
 			       asServer ? "server" : "client",
-			       ntohs((ushort)itsTCPAddr.sin_port), (int)protoEnt->p_proto));
+			       ntohs((ushort)itsTCPAddr.sin_port), protocolType));
 
-#else
-	{// BGL Only 
-	  //! todo need some kind of check...
-	  //! and open the socket without using the protoEnt struct...
-	}
-#endif
     // set default options
     if (setDefaults() < 0) {
 		close(itsSocketID);
@@ -396,6 +422,8 @@ int32 Socket::initTCPSocket(bool	asServer)
 //
 int32 Socket::connect (int32 waitMs)
 {
+	LOG_TRACE_COND(formatString("Socket::connect(%d,%d)",
+													itsSocketID, waitMs));
 	if (itsIsServer) {							// only clients can connect
 		return (itsErrno = INVOP);
 	}
@@ -432,8 +460,14 @@ int32 Socket::connect (int32 waitMs)
 	// connecton request is still in progress, wait waitMs for a result
 	struct pollfd	pollInfo;
 	pollInfo.fd     = itsSocketID;
+#if defined(__APPLE__)
+	pollInfo.events = POLLOUT;
+#else
 	pollInfo.events = POLLWRNORM;
-	LOG_TRACE_FLOW(formatString("going into a poll for %d ms", waitMs));
+#endif
+	LOG_TRACE_CALC(formatString("Socket(%d):going into a poll for %d ms", 
+													itsSocketID, waitMs));
+	setBlocking (true);								// we want to wait!
 	int32 pollRes = poll (&pollInfo, 1, waitMs);	// poll max waitMs time
 	setBlocking (blockingMode);						// restore blocking mode
 
@@ -454,16 +488,15 @@ int32 Socket::connect (int32 waitMs)
 #else
 	int32		connRes;				// check for sys errors
 	socklen_t	resLen = sizeof(connRes);
-	if ((getsockopt(itsSocketID, SOL_SOCKET, SO_ERROR, 
-									(void*)(&connRes), &resLen))) {
+	if ((getsockopt(itsSocketID, SOL_SOCKET, SO_ERROR, &connRes, &resLen))) {
 		return (setErrno(CONNECT));		// getsockopt failed, assume conn failed
 	}
 	errno = connRes;					// put it were it belongs
 #endif
 
 	if (connRes != 0) {					// not yet connected
-		LOG_DEBUG(formatString("delayed connect failed also, err=%d(%s)",
-													errno, strerror(errno)));
+		LOG_DEBUG(formatString("Socket(%d):delayed connect failed also, err=%d(%s)",
+											itsSocketID, errno, strerror(errno)));
 		if ((errno == EINPROGRESS) || (errno == EALREADY)) {
 			return (setErrno(INPROGRESS));
 		}
@@ -471,7 +504,8 @@ int32 Socket::connect (int32 waitMs)
 		return (setErrno(CONNECT));
 	}
 
-	LOG_DEBUG("Socket:delayed connect() succesful");
+	LOG_DEBUG(formatString("Socket(%d):delayed connect() succesful", 
+															itsSocketID));
 	itsIsConnected = true;
 	setBlocking (blockingMode);
 	return (itsErrno = SK_OK);
@@ -487,6 +521,8 @@ int32 Socket::connect (int32 waitMs)
 //
 Socket* Socket::accept(int32	waitMs)
 {
+	LOG_TRACE_COND(formatString("Socket(%d):accept(%d)",
+													itsSocketID, waitMs));
 	// Only possible on server sockets
 	if (!itsIsServer) {
 		itsErrno = INVOP; 
@@ -521,7 +557,7 @@ Socket* Socket::accept(int32	waitMs)
 	errno 	 = 0;
 	int32 	newSocketID = ::accept(itsSocketID, addrPtr, &addrLen);
 	if (newSocketID > 0) {
-	    LOG_DEBUG("Socket:accept() successful");
+	    LOG_DEBUG(formatString("Socket(%d):accept() successful",itsSocketID));
 		setBlocking(blockingMode);
 		Socket*		newSocket = (itsType == UNIX) ?
 								new Socket(newSocketID, itsUnixAddr) :
@@ -530,13 +566,15 @@ Socket* Socket::accept(int32	waitMs)
 		return (newSocket);
 	}
 
-	LOG_DEBUG(formatString("accept() failed: errno=%d (%s)", errno,
-														strerror(errno)));
+	LOG_DEBUG(formatString("Socket(%d):accept() failed: errno=%d(%s)", 
+										itsSocketID, errno, strerror(errno)));
 
 	if ((errno != EWOULDBLOCK) && (errno != EALREADY)) {
 		// real error
 		setBlocking(blockingMode);
 		setErrno(ACCEPT);
+		LOG_TRACE_COND(formatString("Socket(%d):accept():REAL ERROR!",
+															itsSocketID));
 		return(0);
 	}
 
@@ -544,8 +582,10 @@ Socket* Socket::accept(int32	waitMs)
 	struct pollfd	pollInfo;
 	pollInfo.fd     = itsSocketID;
 	pollInfo.events = POLLIN;
-	LOG_TRACE_FLOW(formatString("going into a poll for %d ms", waitMs));
-	int32 pollRes = poll (&pollInfo, 1, waitMs);	// poll max waitMs time
+	LOG_TRACE_CALC(formatString("Socket(%d):going into a poll for %d ms", 
+													itsSocketID, waitMs));
+	setBlocking(true);							// we want to wait!
+	int32 pollRes = poll (&pollInfo, 1, waitMs);// poll max waitMs time
 	setBlocking (blockingMode);					// restore blocking mode
 
 	switch (pollRes) {
@@ -573,7 +613,7 @@ Socket* Socket::accept(int32	waitMs)
 #if defined (__sun)
 	if (atoi(connRes) != 0) {			// not yet connected
 #else
-	if (connRes != 0) {			// not yet connected
+	if (connRes != 0) {					// not yet connected
 #endif
 		setErrno(INPROGRESS);
 		return (0);
@@ -581,7 +621,8 @@ Socket* Socket::accept(int32	waitMs)
 
 	newSocketID = ::accept(itsSocketID, addrPtr, &addrLen);
 	ASSERT (newSocketID > 0);
-    LOG_DEBUG("Socket:accept() successful after delay");
+    LOG_DEBUG(formatString("Socket(%d):accept() successful after delay",
+															itsSocketID));
 	itsErrno = 0;
 	setBlocking(blockingMode);
 	Socket*		newSocket = (itsType == UNIX) ?
@@ -609,7 +650,8 @@ int32 Socket::shutdown (bool receive, bool send)
 		itsErrno     = SK_OK;
 		int32 how    = receive ? (send ? SHUT_RDWR : SHUT_RD) : SHUT_WR;
 		int32 result = ::shutdown (itsSocketID, how);
-		LOG_TRACE_FLOW(formatString("Socket:shutdown(%d)=%d", how, result));
+		LOG_TRACE_FLOW(formatString("Socket(%d):shutdown(%d)=%d", 
+												itsSocketID, how, result));
 		if (result < 0) {
 			setErrno(SHUTDOWN);
 		}
@@ -630,19 +672,18 @@ int32 Socket::shutdown (bool receive, bool send)
 //
 int32 Socket::setBlocking (bool block)
 {
-	if (itsIsBlocking == block) {			// no mode change? ready!
+	if (itsIsInitialized && (itsIsBlocking == block)) { // no mode change? ready!
 		return (SK_OK);
 	}
 
-	itsIsBlocking = block;					// register user wish
-
-	if (itsSocketID >= 0) {					// already a socket?
+	if (itsSocketID >= 0) {					// we must have a socket ofcourse
 		if (fcntl (itsSocketID, F_SETFL, block ? 0 : O_NONBLOCK) < 0) {
 			return (setErrno(SOCKOPT));
 		}
+		itsIsBlocking = block;					// register user wish
+		LOG_TRACE_COND(formatString("Socket(%d):setBlocking(%s)", 
+									itsSocketID, block ? "true" : "false"));
 	}
-
-	LOG_TRACE_FLOW(formatString("setBlocking(%s)", block ? "true" : "false"));
 
 	return (SK_OK);
 }
@@ -656,6 +697,8 @@ int32 Socket::setBlocking (bool block)
 //				>= 0 == maxBytes		everthing went OK.
 int32 Socket::read (void	*buf, int32	maxBytes)
 {
+	LOG_TRACE_STAT(formatString("Socket(%d):read(%d)", itsSocketID, maxBytes));
+
 	if (itsSocketID < 0)  {
 		return (itsErrno = NOINIT); 
 	}
@@ -691,11 +734,11 @@ int32 Socket::read (void	*buf, int32	maxBytes)
 			int32 oldCounter = *sigpipeCounter;
 
 			// try to read something
-			LOG_TRACE_FLOW(formatString("read for %d bytes", bytesLeft));
 			bytesRead = ::recv (itsSocketID, (char*)buf, bytesLeft, 0);
 			sigpipe = (oldCounter != *sigpipeCounter); 	// check for SIGPIPE
-			LOG_TRACE_FLOW(formatString("read(%d)=%d%s, errno=%d (%s)", 
-						bytesLeft, bytesRead, sigpipe ? " SIGPIPE" : "", 
+			LOG_TRACE_CALC(formatString("Socket(%d):read(%d)=%d%s, errno=%d(%s)", 
+						itsSocketID, bytesLeft, bytesRead, 
+						sigpipe ? " SIGPIPE" : "", 
 						errno, strerror(errno)));
 
 			// allow interrupting threads
@@ -750,6 +793,8 @@ int32 Socket::read (void	*buf, int32	maxBytes)
 //				>= 0 == nrBytes		everthing went OK.
 int32 Socket::write (const void*	buf, int32	nrBytes)
 {
+	LOG_TRACE_STAT(formatString("Socket(%d):write(%d)", itsSocketID, nrBytes));
+
 	if (itsSocketID < 0)  {
 		return (itsErrno = NOINIT); 
 	}
@@ -786,8 +831,9 @@ int32 Socket::write (const void*	buf, int32	nrBytes)
 			int32 oldCounter = *sigpipeCounter;
 			bytesWritten = ::write (itsSocketID, buf, bytesLeft);
 			sigpipe = (oldCounter != *sigpipeCounter); // check for SIGPIPE
-			LOG_TRACE_VAR(formatString("Socket:write(%d)=%d%s, errno=%d (%s)", bytesLeft,
-							bytesWritten, sigpipe ? " SIGPIPE" : "",
+			LOG_TRACE_CALC(formatString("Socket(%d):write(%d)=%d%s, errno=%d(%s)",
+							itsSocketID, bytesLeft, bytesWritten, 
+							sigpipe ? " SIGPIPE" : "",
 							errno, strerror(errno)));
 
 			// allow interrupting threads
@@ -842,9 +888,10 @@ int32 Socket::readBlocking (void *buf, int32 maxBytes)
 	bool	blockingMode = itsIsBlocking;
 	setBlocking(true);
 
-	LOG_TRACE_FLOW("readBlocking()");
-	int32 result = read(buf, maxBytes);
+	LOG_TRACE_STAT(formatString("Socket(%d):readBlocking(%d)",
+												itsSocketID, maxBytes));
 
+	int32 result = read(buf, maxBytes);
 	setBlocking (blockingMode);
 
 	return (result);
@@ -860,9 +907,10 @@ int32 Socket::writeBlocking (const void *buf, int32	nrBytes)
 	bool	blockingMode = itsIsBlocking;
 	setBlocking(true);
 
-	LOG_TRACE_FLOW("writeBlocking()");
-	int32 result = write(buf, nrBytes);
+	LOG_TRACE_STAT(formatString("Socket(%d):writeBlocking(%d)",
+													itsSocketID, nrBytes));
 
+	int32 result = write(buf, nrBytes);
 	setBlocking (blockingMode);
   
 	return (result);
@@ -924,8 +972,9 @@ Socket::Socket (int32	aSocketID, struct sockaddr_in &inetAddr) :
 	itsIsInitialized(false),
 	itsIsBlocking	(false)
 {
+	LOG_TRACE_FLOW(formatString("Socket(%d):creating connected TCP socket",
+																aSocketID));
 	sigpipeCounter = &defaultSigpipeCounter;
-	LOG_TRACE_FLOW("creating connected socket");
 
 	itsTCPAddr = inetAddr;
 	if (setDefaults() < 0) {
@@ -935,7 +984,6 @@ Socket::Socket (int32	aSocketID, struct sockaddr_in &inetAddr) :
 
 	// successfully created connected socket
 	itsIsConnected = true;
-
 }
 
 //
@@ -955,6 +1003,8 @@ Socket::Socket (int32	aSocketID, struct sockaddr_un &unixAddr) :
 	itsIsInitialized(false),
 	itsIsBlocking	(false)
 {
+	LOG_TRACE_FLOW(formatString("Socket(%d):creating connected UNIX socket",
+																aSocketID));
 	sigpipeCounter = &defaultSigpipeCounter;
 	itsUnixAddr = unixAddr;
 
@@ -972,6 +1022,8 @@ Socket::Socket (int32	aSocketID, struct sockaddr_un &unixAddr) :
 //
 int32 Socket::setDefaults ()
 {
+	LOG_TRACE_CALC(formatString("Socket(%d):setDefaults", itsSocketID));
+
 	if (itsSocketID < 0)  {
 		return (itsErrno = NOINIT);
 	}
