@@ -10,6 +10,7 @@
 [+ DEFINE protocol_name +][+ (string-upcase (base-name)) +][+ ENDDEF +]
 [+ DEFINE param +][+ (get "type") +] [+ (get "name") +][+ IF (exist? "dim")+][[+ (get "dim") +]][+ ENDIF +][+ enddef +]
 [+ DEFINE param_arg +][+ (get "type") +] [+ (get "name") +]_arg[+ IF (exist? "dim")+][[+ (get "dim") +]][+ ENDIF +][+ enddef +]
+[+ DEFINE param_init +][+ IF (exist? "init") +],[+ (get "name") +]([+ (get "init") +])[+ ENDIF +][+ enddef +]
 [+ (out-pop) +]
 //
 //  [+ (base-name) +].h: [+ description +]
@@ -59,7 +60,7 @@ namespace [+ (base-name) +]
 	[+ IF (exist? "dim") +]memcpy([+ (get "name") +], [+ (get "name") +]_arg, [+ (get "dim") +]);[+ ENDIF +][+ ENDFOR +]
     }
 
-    [+ struct_name +]() : GCFEvent([+ signal_name +])
+    [+ struct_name +]() : GCFEvent([+ signal_name +])[+ FOR param "" +][+ param_init +][+ ENDFOR +]
     {
       length = sizeof([+ struct_name +]);
     }
