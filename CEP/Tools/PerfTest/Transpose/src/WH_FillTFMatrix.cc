@@ -22,6 +22,11 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.8  2002/08/19 20:36:59  schaaf
+//  %[BugId: 11]%
+//  Layout
+//  little performance enhancement
+//
 //  Revision 1.7  2002/06/07 11:37:41  schaaf
 //  %[BugId: 11]%
 //  Removed unnessesary Assert in C'tor
@@ -133,7 +138,7 @@ void WH_FillTFMatrix::process()
   Profiler::enterState (theirProcessProfilerState);
 
   ///////////////////////// START OF PREPROCESS BLOCK ////////////////
-  int cnt=0;
+//  int cnt=0;
   int *Rowstartptr;
   DH_2DMatrix *DHptr;
   int Xsize,Ysize; 

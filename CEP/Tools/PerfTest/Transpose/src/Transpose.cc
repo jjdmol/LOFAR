@@ -22,6 +22,10 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.11  2002/09/04 11:20:51  schaaf
+//  %[BugId: 91]%
+//  Added extra #ifdef HAVE_MPI
+//
 //  Revision 1.10  2002/08/19 20:33:44  schaaf
 //  %[BugId: 11]%
 //  Use input parameters
@@ -225,9 +229,14 @@ void Transpose::define(const ParamBlock& params)
     Dsteps[iStep] = new Step(Dworkholders[iStep], 
 			     "TransposeDestStep", 
 			     iStep);
-
+#define NOWITHCORR
+#ifdef WITHCORR
     int node = 2*iStep+itsSourceSteps;
-    Dsteps[iStep]->runOnNode(node,0); 
+#else 
+   int node = iStep+itsSourceSteps;
+#endif
+
+   Dsteps[iStep]->runOnNode(node,0); 
 
 
 
@@ -244,7 +253,10 @@ void Transpose::define(const ParamBlock& params)
 			     iStep);
     Csteps[iStep]->runOnNode(node+1,0); 
     // connect the correlator to the corresponding transpose step
+#ifdef WITHCORR
     Csteps[iStep]->connectInput(Dsteps[iStep]);
+#else
+#endif
   }
   
 
@@ -262,7 +274,10 @@ void Transpose::define(const ParamBlock& params)
   // and the correlators
   for (int iStep = 0; iStep < itsDestSteps; iStep++) {
     TRACER4("Add Dest step " << iStep);
+#ifdef WITHCORR
     simul.addStep(Csteps[iStep]);
+#else
+#endif
   }
 
   // Create the cross connections
