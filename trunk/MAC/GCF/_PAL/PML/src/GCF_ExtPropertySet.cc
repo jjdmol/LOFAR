@@ -26,6 +26,13 @@
 #include "GPM_Controller.h"
 #include <GCF/Utils.h>
 
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+using namespace Common;
+  namespace PAL
+  {
 GCFExtPropertySet::GCFExtPropertySet(const char* name, 
                                      const char* type,                                      
                                      GCFAnswer* pAnswerObj) :
@@ -272,3 +279,6 @@ bool GCFExtPropertySet::isPropSubscribed (const string propName) const
     return false;
   }
 }
+  } // namespace PAL
+ } // namespace GCF
+} // namespace LOFAR

@@ -25,7 +25,6 @@
 
 #include <Common/LofarLogger.h>
 
-//using namespace LOFAR;
 #include <Common/lofar_list.h>
 #include <Common/lofar_map.h>
 #include <Common/lofar_vector.h>
@@ -34,9 +33,15 @@ using std::string;
 using std::list;
 using std::map;
 using std::vector;
-using LOFAR::formatString;
 
 #include <assert.h>
+
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+  namespace Common 
+  {
 
 // This header file will be included by each GCF API class header and provides
 // therefore a number of defines, structs or macro's. They can/must be used when
@@ -152,4 +157,7 @@ typedef enum TPSCategory
   // will be loaded automatically right after handled enable request in the PA
   PS_CAT_PERM_AUTOLOAD,  
 };
+  } // namespace Common
+ } // namespace GCF
+} // namespace LOFAR
 #endif

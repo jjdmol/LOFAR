@@ -23,6 +23,13 @@
 
 #include <GCF/GCF_PVBool.h>
 
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+  namespace Common 
+  {
+
 unsigned int GCFPVBool::unpackConcrete(const char* valBuf)
 {
   _value = (valBuf[0] == 1 ? true : false);
@@ -91,3 +98,6 @@ TGCFResult GCFPVBool::copy(const GCFPValue& newVal)
   
   return result;
 }
+  } // namespace Common
+ } // namespace GCF
+} // namespace LOFAR

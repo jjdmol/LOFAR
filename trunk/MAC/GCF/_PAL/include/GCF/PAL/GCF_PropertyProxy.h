@@ -36,8 +36,17 @@
 // value change in the SCADA DB will be received. In most of the cases this is 
 // not wanted. Always use this class with cautions.
 
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+  namespace Common
+  {
+class Common::GCFPValue;
+  }
+  namespace PAL
+  {
 class GPMPropertyProxy;
-class GCFPValue;
 
 class GCFPropertyProxy
 {
@@ -51,7 +60,7 @@ class GCFPropertyProxy
     // property, but this results in multiple 'propValueChanged' indications too
     // 
     // @returns GCF_NO_ERROR, GCF_PML_ERROR (see in logging whats wrong)
-    virtual TGCFResult subscribeProp (const string& propName);
+    virtual Common::TGCFResult subscribeProp (const string& propName);
 
     // Synchronous (!) request
     // Note that subscription could be made multiple times on the same 
@@ -59,18 +68,18 @@ class GCFPropertyProxy
     // more 'propValueChanged' indications
     // 
     // @returns GCF_NO_ERROR, GCF_PML_ERROR (see in logging whats wrong)
-    virtual TGCFResult unsubscribeProp (const string& propName);
+    virtual Common::TGCFResult unsubscribeProp (const string& propName);
 
     // Asynchronous request (results in response 'propValueGet')
     // 
     // @returns GCF_NO_ERROR, GCF_PML_ERROR (see in logging whats wrong)
-    virtual TGCFResult requestPropValue (const string& propName);
+    virtual Common::TGCFResult requestPropValue (const string& propName);
 
     // Synchronous (!) request
     // 
     // @returns GCF_NO_ERROR, GCF_PML_ERROR (see in logging whats wrong)
-    virtual TGCFResult setPropValue (const string& propName, 
-                                     const GCFPValue& value, 
+    virtual Common::TGCFResult setPropValue (const string& propName, 
+                                     const Common::GCFPValue& value, 
                                      bool wantAnswer = false);
 
   protected:
@@ -87,11 +96,11 @@ class GCFPropertyProxy
 
     // Response on 'requestPropValue' request
     virtual void propValueGet (const string& propName, 
-                               const GCFPValue& value) = 0;
+                               const Common::GCFPValue& value) = 0;
 
     // Indication after propSubscribed is received successfully
     virtual void propValueChanged (const string& propName, 
-                                   const GCFPValue& value) = 0;
+                                   const Common::GCFPValue& value) = 0;
   
     // Response on 'setPropValue' request, only if wantAnswer was set to true
     virtual void propValueSet (const string& propName) = 0;
@@ -105,4 +114,7 @@ class GCFPropertyProxy
   
     GPMPropertyProxy* _pPMProxy;
 };
+  } // namespace PAL
+ } // namespace GCF
+} // namespace LOFAR
 #endif

@@ -32,7 +32,12 @@
 #include <GCF/GCF_PVBlob.h>
 #include "GCO_Defines.h"
 
-using namespace LOFAR;
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+  namespace Common 
+  {
 
 GCFPValue* GCFPValue::createMACTypeObject(TMACValueType type)
 {
@@ -121,3 +126,6 @@ unsigned int GCFPValue::pack(char* valBuf) const
   // be assigned to a value.
   return 2 + packConcrete(valBuf + 2);
 }
+  } // namespace Common
+ } // namespace GCF
+} // namespace LOFAR

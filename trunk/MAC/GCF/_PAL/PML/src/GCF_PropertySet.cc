@@ -30,6 +30,13 @@
 #include <GPM_Defines.h>
 #include <GPM_Controller.h>
 
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+using namespace Common;  
+  namespace PAL
+  {
 const TPropertyInfo dummyPropInfo("DUMMY", LPT_BOOL);
 
 GCFPropertySet::GCFPropertySet (const char* name,
@@ -263,3 +270,6 @@ const string GCFPropertySet::getFullScope () const
     return GCFPVSSInfo::getLocalSystemName() + ":" + _scope; 
   }
 }
+  } // namespace PAL
+ } // namespace GCF
+} // namespace LOFAR

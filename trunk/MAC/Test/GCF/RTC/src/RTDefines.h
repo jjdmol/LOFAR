@@ -1,6 +1,13 @@
 #include <GCF/GCF_Defines.h>
 #include <GCF/GCF_PValue.h>
 
+namespace LOFAR
+{
+ namespace GCF
+ {
+using namespace Common;
+  namespace Test
+  {
 // property sets
 
 // propertySetF1: start
@@ -273,4 +280,7 @@ PROPERTYCONFIGLIST_BEGIN(propertiesSG1)
   PROPERTYCONFIGLIST_ITEM("sn255", GCF_READABLE_PROP, "0")
 PROPERTYCONFIGLIST_END
 // echoPingPSET: end
+  } // namespace Test
+ } // namespace GCF
+} // namespace LOFAR
 

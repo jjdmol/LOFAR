@@ -37,11 +37,20 @@
 // GCFMyPropertySet, GCFMyProperty, GCFExtPropertySet, GCFExtProperty
 // 
 // All responses or indications (events) will be given in the handleAnswer 
-// method based on the GCFEvent structure. This provides the flexibility to 
+// method based on the TM::GCFEvent structure. This provides the flexibility to 
 // handle events in a state machine of a task, to skip or to handle in a 
 // different way.
 
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+  namespace Common
+  {
 class GCFPValue;
+  }
+  namespace PAL
+  {
 
 class GCFAnswer
 {
@@ -75,7 +84,7 @@ class GCFAnswer
     //   };
     //   // If aState is the current state this method will be called indirect
     //   // by the dispatch method call.  
-    //   GCFEvent::TResult Application::aState(GCFEvent& e, GCFPortInterface& p)
+    //   TM::GCFEvent::TResult Application::aState(GCFEvent& e, GCFPortInterface& p)
     //   {
     //     ...
     //     switch (e.signal)
@@ -103,7 +112,7 @@ class GCFAnswer
     //               all parameters of these events are pointers to data, which 
     //               is created in and managed by PML
     //
-    virtual void handleAnswer (GCFEvent& answer) = 0;
+    virtual void handleAnswer (TM::GCFEvent& answer) = 0;
     
   private:
     // Don't allow copying this object.
@@ -113,8 +122,9 @@ class GCFAnswer
     // </group>
 };
 
-enum {
-  F_PML_PROTOCOL = F_GCF_PROTOCOL,
+enum 
+{
+  F_PML_PROTOCOL = TM::F_GCF_PROTOCOL,
 };
 
 
@@ -148,15 +158,15 @@ enum
 
 // NOTE: These structs cannot be used to send messages by real port 
 // implementations like TCP. 
-struct GCFPropValueEvent : public GCFEvent
+struct GCFPropValueEvent : public TM::GCFEvent
 {
   // @param sig can only be F_VCHANGEMSG, F_VGETRESP
-  GCFPropValueEvent(unsigned short sig) : GCFEvent(sig)
+  GCFPropValueEvent(unsigned short sig) : TM::GCFEvent(sig)
   {
       length = sizeof(GCFPropValueEvent);
   }
   // Pointer to the changed value object
-  const GCFPValue* pValue; 
+  const Common::GCFPValue* pValue; 
   // Pointer to the string of the property name
   const char* pPropName;   
   // Indicates whether the internal/owned/my 
@@ -165,20 +175,20 @@ struct GCFPropValueEvent : public GCFEvent
   bool internal;           
 };
 
-struct GCFPropAnswerEvent : public GCFEvent
+struct GCFPropAnswerEvent : public TM::GCFEvent
 {
   // @param sig can only be F_SUBSCRIBED, F_VSETRESP
-  GCFPropAnswerEvent(unsigned short sig) : GCFEvent(sig)
+  GCFPropAnswerEvent(unsigned short sig) : TM::GCFEvent(sig)
   {
       length = sizeof(GCFPropAnswerEvent);
   }
   const char* pPropName;
 };
 
-struct GCFPropSetAnswerEvent : public GCFEvent
+struct GCFPropSetAnswerEvent : public TM::GCFEvent
 {
   // @param sig can only be F_MYPS_ENABLED, F_MYPS_DISABLED, F_EXTPS_LOADED, F_EXTPS_UNLOADED
-  GCFPropSetAnswerEvent(unsigned short sig) : GCFEvent(sig)
+  GCFPropSetAnswerEvent(unsigned short sig) : TM::GCFEvent(sig)
   {
       length = sizeof(GCFPropSetAnswerEvent);
   }
@@ -187,7 +197,7 @@ struct GCFPropSetAnswerEvent : public GCFEvent
   // Result of the requested action: 
   // GCF_MYPS_ENABLE_ERROR, GCF_MYPS_DISABLE_ERROR, 
   // GCF_EXTPS_LOAD_ERROR, GCF_EXTPS_UNLOAD_ERROR, GCF_PS_CONFIGURE_ERROR
-  TGCFResult result;
+  Common::TGCFResult result;
 };
 
 struct GCFConfAnswerEvent : public GCFPropSetAnswerEvent
@@ -203,5 +213,8 @@ struct GCFConfAnswerEvent : public GCFPropSetAnswerEvent
 
 // defined in GCF_Answer.cc
 extern const char* F_PML_PROTOCOL_signalnames[];
+  } // namespace PAL
+ } // namespace GCF
+} // namespace LOFAR
 
 #endif

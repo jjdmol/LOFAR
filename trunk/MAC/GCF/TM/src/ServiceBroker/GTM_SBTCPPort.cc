@@ -26,6 +26,14 @@
 #include <PortImpl/GTM_TCPServerSocket.h>
 #include <GCF/ParameterSet.h>
 
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+  using namespace TM;
+  namespace SB 
+  {
+
 GTMSBTCPPort::GTMSBTCPPort(GCFTask& task, 
                        string name, 
                        TPortType type, 
@@ -130,3 +138,6 @@ bool GTMSBTCPPort::open()
   }
   return true;
 }
+  } // namespace SB
+ } // namespace GCF
+} // namespace LOFAR

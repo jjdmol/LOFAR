@@ -32,6 +32,13 @@
 #include <netdb.h>
 #include <stdio.h>
 
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+  namespace TM 
+  {
+
 GTMTCPSocket::GTMTCPSocket(GCFTCPPort& port) :
   GTMFile(port)
 {
@@ -154,3 +161,6 @@ bool GTMTCPSocket::connect(unsigned int portNumber, const string& host)
   }
   return result;
 } 
+  } // namespace TM
+ } // namespace GCF
+} // namespace LOFAR

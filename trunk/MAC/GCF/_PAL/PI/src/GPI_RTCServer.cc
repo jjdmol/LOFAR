@@ -22,9 +22,18 @@
 
 #include <GPI_RTCServer.h>
 
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+  namespace PAL
+  {
 GPIRTCServer::GPIRTCServer(GPIController& controller) : 
   GPIPMLlightServer(controller, PI_RTCPLS_TASK_NAME, false)
 {
 }
+  } // namespace PAL
+ } // namespace GCF
+} // namespace LOFAR
 
 

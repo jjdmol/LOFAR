@@ -26,7 +26,17 @@
 #include <GPA_Defines.h>
 #include <GSA_Service.h>
 #include <GCF/Protocols/PA_Protocol.ph>
-#include <Common/lofar_list.h>
+
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+  namespace TM
+  {
+class GCFPortInterface;
+  }
+  namespace PAL 
+  {
 
 /**
    This class manages the properties with its use count, which are created 
@@ -34,40 +44,39 @@
 */
 
 class GPAController;
-class GCFPortInterface;
 
 class GPAPropertySet : public GSAService
 {
   public:
-  	GPAPropertySet(GPAController& controller, GCFPortInterface& serverPort);
+  	GPAPropertySet(GPAController& controller, TM::GCFPortInterface& serverPort);
   	virtual ~GPAPropertySet();
 
     typedef struct
     {
-      GCFPortInterface* pPSClientPort;
+      TM::GCFPortInterface* pPSClientPort;
       unsigned short count;
     } TPSClient;
 
     bool enable(PARegisterScopeEvent& request);
     void disable(PAUnregisterScopeEvent& request);
-    void load(PALoadPropSetEvent& request, GCFPortInterface& p);
-    void unload(PAUnloadPropSetEvent& request, const GCFPortInterface& p);
+    void load(PALoadPropSetEvent& request, TM::GCFPortInterface& p);
+    void unload(PAUnloadPropSetEvent& request, const TM::GCFPortInterface& p);
     void configure(PAConfPropSetEvent& request);
     
     void linked(PAPropSetLinkedEvent& response);
     void unlinked(PAPropSetUnlinkedEvent& response);
     
-    void clientGone(GCFPortInterface& p);
+    void clientGone(TM::GCFPortInterface& p);
     
-    bool isOwner(const GCFPortInterface& p) const { return (&p == &_serverPort); }
+    bool isOwner(const TM::GCFPortInterface& p) const { return (&p == &_serverPort); }
     bool mayDelete() const { return (_state == S_DISABLED); }
-    bool knowsClient(const GCFPortInterface& p) { return (findClient(p) != 0); }
+    bool knowsClient(const TM::GCFPortInterface& p) { return (findClient(p) != 0); }
     			
   protected:
     void dpCreated(const string& dpName);
     void dpDeleted(const string& dpName);
-    void dpeValueGet(const string& /*dpeName*/, const GCFPValue& /*value*/) {}; 
-    void dpeValueChanged(const string& /*dpeName*/, const GCFPValue& /*value*/) {};
+    void dpeValueGet(const string& /*dpeName*/, const Common::GCFPValue& /*value*/) {}; 
+    void dpeValueChanged(const string& /*dpeName*/, const Common::GCFPValue& /*value*/) {};
     void dpeValueSet(const string& /*dpeName*/) {};
     void dpeSubscribed(const string& /*dpeName*/) {};
     void dpeSubscriptionLost (const string& dpeName);
@@ -77,17 +86,17 @@ class GPAPropertySet : public GSAService
     void link();
     void unlink();
     void wrongState(const char* request);
-    TPSClient* findClient(const GCFPortInterface& p);
+    TPSClient* findClient(const TM::GCFPortInterface& p);
 
   private: // data members
     GPAController&	  _controller;
     unsigned short    _usecount;
     string            _name;
     string            _type;
-    GCFPortInterface& _serverPort;
+    TM::GCFPortInterface& _serverPort;
     typedef list<TPSClient> TPSClients;
     TPSClients        _psClients;
-    TPSCategory       _category;
+    Common::TPSCategory       _category;
     
   private: // admin. data members
     typedef enum TSTATE {S_ENABLED, S_ENABLING, S_DISABLED, S_DISABLING, S_LINKING, S_LINKED, S_UNLINKING};
@@ -96,4 +105,7 @@ class GPAPropertySet : public GSAService
     TPAResult _savedResult;
     unsigned short _savedSeqnr;
 };
+  } // namespace PAL
+ } // namespace GCF
+} // namespace LOFAR
 #endif

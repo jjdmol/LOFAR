@@ -32,6 +32,13 @@
 #include <GCF/TM/GCF_ETHRawPort.h>
 #include <GCF/TM/GCF_DevicePort.h>
 
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+  namespace TM 
+  {
+
 GCFPort::GCFPort(GCFTask& task, 
                  string& name, 
                  TPortType type, 
@@ -306,3 +313,6 @@ int GCFPort::cancelAllTimers()
   if (!_pSlave) return -1;
   return _pSlave->cancelAllTimers();
 }
+  } // namespace TM
+ } // namespace GCF
+} // namespace LOFAR

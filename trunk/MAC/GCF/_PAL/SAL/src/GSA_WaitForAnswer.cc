@@ -25,6 +25,13 @@
 #include "GSA_WaitForAnswer.h"
 #include "GSA_Service.h"
 
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+  namespace PAL
+  {
+
 GSAWaitForAnswer::GSAWaitForAnswer(GSAService& service) :
   HotLinkWaitForAnswer(),
   _service(service)
@@ -41,3 +48,6 @@ void GSAWaitForAnswer::hotLinkCallBack(DpHLGroup& group)
 {
   _service.handleHotLink(group, *this);
 }
+  } // namespace PAL
+ } // namespace GCF
+} // namespace LOFAR

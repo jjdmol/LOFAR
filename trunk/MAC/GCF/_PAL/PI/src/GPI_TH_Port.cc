@@ -25,9 +25,12 @@
 #include <Transport/DataHolder.h>
 #include <GCF/TM/GCF_PortInterface.h>
 
-namespace LOFAR
+namespace LOFAR 
 {
-
+ namespace GCF 
+ {
+  namespace PAL
+  {
 GPITH_Port::~GPITH_Port()
 {
 	LOG_TRACE_OBJ("~GPITH_Port");
@@ -122,6 +125,6 @@ void* GPITH_Port::GPIBlobEvent::pack(unsigned int& packsize)
   packsize = blobSize;
   return _buffer;
 }
-
-
+  } // namespace PAL
+ } // namespace GCF
 } // namespace LOFAR

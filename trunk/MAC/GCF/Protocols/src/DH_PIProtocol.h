@@ -29,8 +29,10 @@
 
 //
 
-namespace LOFAR {
-  namespace GCF {
+namespace LOFAR 
+{
+  namespace GCF 
+  {
 
 class DH_PIProtocol: public DataHolder
 {

@@ -18,8 +18,7 @@ ping_CPPFLAGS= $(cppflags)
 AUTOGEN = autogen
 SUFFIXES = .ph
 %.ph: %.prot
-	$(AUTOGEN) -L $(top_srcdir)/../../MACCommon/autogen $< && \
-	chmod a+w $@
+	$(AUTOGEN) --writable -L $(top_srcdir)/../../MACCommon/autogen $<
 
 BUILT_SOURCES = \
 	Echo_Protocol.ph \

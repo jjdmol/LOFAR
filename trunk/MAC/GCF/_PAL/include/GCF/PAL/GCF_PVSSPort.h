@@ -25,31 +25,45 @@
 
 #include <GCF/TM/GCF_RawPort.h>
 #include <GCF/GCF_PVString.h>
-#include <Common/lofar_string.h>
 #include <set>
 
 using std::set;
 using std::string;
 
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+  namespace Common
+  {
+// forward declaration
+class GCFPVBlob;
+  }
+  namespace TM
+  {
 // forward declaration
 class GCFTask;
 class GCFEvent;
+  }
+  namespace PAL
+  {
+
+// forward declaration
 class GSAPortService;
-class GCFPVBlob;
 class GCFPVSSUIMConverter;
 
 // This is the class, which implements the special port with the PVSS message 
 // transport protocol. 
 // NOTE: This class is intended to use outside of GCF but is not yet ready for use.
-class GCFPVSSPort : public GCFRawPort
+class GCFPVSSPort : public TM::GCFRawPort
 {
  public:
 
     // Construction methods
     // @param protocol NOT USED
-    explicit GCFPVSSPort (GCFTask& task,
+    explicit GCFPVSSPort (TM::GCFTask& task,
           	    string name,
-          	    TPortType type,
+          	    TM::GCFPortInterface::TPortType type,
                 int protocol, 
                 bool transportRawData = false);
 
@@ -69,7 +83,7 @@ class GCFPVSSPort : public GCFRawPort
   
     // send/recv functions
     // <group>
-    virtual ssize_t send (GCFEvent& event);
+    virtual ssize_t send (TM::GCFEvent& event);
     virtual ssize_t recv (void* buf,
                           size_t count);
     // </group>
@@ -98,12 +112,12 @@ class GCFPVSSPort : public GCFRawPort
     static void releasePortNr(const string& portId);
     
   private: // data members
-    GSAPortService*   _pPortService;
-    string            _destDpName;
-    GCFPVString       _portId;
-    string            _remotePortId;
-    GCFPVString       _portAddr;
-    GCFPVSSUIMConverter* _pConverter;
+    GSAPortService*       _pPortService;
+    string                _destDpName;
+    Common::GCFPVString   _portId;
+    string                _remotePortId;
+    Common::GCFPVString   _portAddr;
+    GCFPVSSUIMConverter*  _pConverter;
     
     bool _acceptedPort;
     
@@ -115,8 +129,11 @@ class GCFPVSSPort : public GCFRawPort
 class GCFPVSSUIMConverter
 {
   public:
-    virtual bool uimMsgToGCFEvent(unsigned char* buf, unsigned int length, GCFPVBlob& gcfEvent) = 0;
-    virtual bool gcfEventToUIMMsg(GCFPVBlob& gcfEvent, GCFPVBlob& uimMsg) = 0;
+    virtual bool uimMsgToGCFEvent(unsigned char* buf, unsigned int length, Common::GCFPVBlob& gcfEvent) = 0;
+    virtual bool gcfEventToUIMMsg(Common::GCFPVBlob& gcfEvent, Common::GCFPVBlob& uimMsg) = 0;
 };
+  } // namespace PAL
+ } // namespace GCF
+} // namespace LOFAR
 
 #endif

@@ -4,23 +4,35 @@
 #include <GCF/PALlight/GCF_RTAnswer.h>
 #include <GCF/TM/GCF_Fsm.h>
 
+namespace LOFAR
+{
+ namespace GCF
+ {
+  namespace TM
+  {
 class GCFEvent;
 class GCFTask;
+  }
+  namespace Test
+  {
 
-class Answer : public GCFRTAnswer
+class Answer : public RTCPMLlight::GCFRTAnswer
 {
   public:
-    Answer(GCFTask& t) : 
+    Answer(TM::GCFTask& t) : 
       _t(t),
       _dummyPort(&t, "RTAnswerPort", 0)
       {;}
       
     ~Answer() {;}
 
-    void handleAnswer(GCFEvent& answer);
+    void handleAnswer(TM::GCFEvent& answer);
     
   private:    
-    GCFTask& _t;
-    GCFDummyPort _dummyPort;
+    TM::GCFTask& _t;
+    TM::GCFDummyPort _dummyPort;
 };
+  } // namespace Test
+ } // namespace GCF
+} // namespace LOFAR
 #endif

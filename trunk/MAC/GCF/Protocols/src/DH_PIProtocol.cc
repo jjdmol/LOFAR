@@ -23,8 +23,10 @@
 
 #include <DH_PIProtocol.h>
 
-namespace LOFAR {
-  namespace GCF {
+namespace LOFAR 
+{
+  namespace GCF 
+  {
 
 DH_PIProtocol::DH_PIProtocol (const string& name)
 : DataHolder (name, "DH_PIProtocol", 1),

@@ -23,8 +23,17 @@
 #ifndef GCO_DEFINES_H
 #define GCO_DEFINES_H
 
-//#define LOFARLOGGER_PACKAGE "MAC.GCF.GCFCommon.Logger"
-
 #include <GCF/GCF_Defines.h>
+
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+  namespace Common 
+  {
+
+  } // namespace Common
+ } // namespace GCF
+} // namespace LOFAR
 
 #endif

@@ -32,9 +32,12 @@
 
 class GCFPValue;
 
-namespace LOFAR {
- namespace GCF {
-  namespace CEPPMLlight {
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+  namespace CEPPMLlight 
+  {
 
 class PIClient;
 
@@ -53,7 +56,7 @@ class PIClient;
 class CEPPropertySet
 {
   public:
-    typedef list<TPropertyInfo> TPropInfoList;
+    typedef list<Common::TPropertyInfo> TPropInfoList;
     
     // Constructor
     // Creates an property set with owned properties.
@@ -63,7 +66,7 @@ class CEPPropertySet
     // preprocess time of an application.
     explicit CEPPropertySet (const char* name,
                              const char* type, 
-                             TPSCategory category);
+                             Common::TPSCategory category);
 
     virtual ~CEPPropertySet ();
 
@@ -77,7 +80,7 @@ class CEPPropertySet
     bool isTemporary () const;
      
     // @return the category data member value
-    TPSCategory getCategory () const;
+    Common::TPSCategory getCategory () const;
 
     // @param propName with or without the scope
     // @return true if property with 'propName' exists in this set
@@ -128,18 +131,18 @@ class CEPPropertySet
     // @return false if 'propName' was not found in property set or value type 
     //         is not equal to the value type in the property object
     bool setValue (const string& propName, 
-                   const GCFPValue& value);
+                   const Common::GCFPValue& value);
                    
     // @param propName with or without the scope
     // @return pointer of cloned value object of the addressed property or 0 
     //         if not found
-    GCFPValue* getValue (const string& propName);             
+    Common::GCFPValue* getValue (const string& propName);             
                
   private: // methods called by CEPProperty
     friend class CEPProperty;
     // will be invoked by CEPProperty if the value of the property has changed
     // and the property set is in monitoring state
-    void valueSet(const string& propName, const GCFPValue& value);
+    void valueSet(const string& propName, const Common::GCFPValue& value);
     
   private: // methods called by PIClient
     friend class PIClient;
@@ -175,7 +178,7 @@ class CEPPropertySet
     // the type
     string  _type;   
     // temporary, permanent or permanent autoloading on enable?
-    TPSCategory _category;
+    Common::TPSCategory _category;
     
     typedef map<string /*propName*/, CEPProperty*> TPropertyList;
     TPropertyList       _properties;
@@ -199,9 +202,9 @@ inline const string& CEPPropertySet::getType () const
   { return _type; }
   
 inline bool CEPPropertySet::isTemporary () const 
-  { return (_category == PS_CAT_TEMPORARY); }
+  { return (_category == Common::PS_CAT_TEMPORARY); }
      
-inline TPSCategory CEPPropertySet::getCategory () const 
+inline Common::TPSCategory CEPPropertySet::getCategory () const 
   { return _category; }
   
 inline bool CEPPropertySet::isEnabled () 

@@ -27,6 +27,14 @@
 #include "GSB_Defines.h"
 #include <unistd.h>
 
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+  using namespace TM;
+  namespace SB 
+  {
+
 static string sSBTaskName("GCF-SB");
 GTMSBHandler* GTMSBHandler::_pInstance = 0;
 
@@ -317,3 +325,6 @@ void logResult(TSBResult result, const string& servicename)
       break;
   }
 }
+  } // namespace SB
+ } // namespace GCF
+} // namespace LOFAR

@@ -26,12 +26,17 @@
 #include <HotLinkWaitForAnswer.hxx>   
 #include <Common/lofar_string.h>
 
-using std::string;
-
-class GSAService;
 class DpMsgAnswer;
 class DpHLGroup;
 
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+  namespace PAL
+  {
+
+class GSAService;
 /**
  * This special WaitForAnswer class implements the abstract handleAnswer 
  * methods, which translates the incoming messages to methods in the GSAService 
@@ -56,7 +61,7 @@ class GSAWaitForAnswer : public HotLinkWaitForAnswer
     virtual ~GSAWaitForAnswer () {};
     
     void hotLinkCallBack (DpMsgAnswer& answer);
-    const string& getDpName () const {return _dpName;}
+    const std::string& getDpName () const {return _dpName;}
     void setDpName (const string& dpName) {_dpName = dpName;}
 
   protected:
@@ -65,7 +70,10 @@ class GSAWaitForAnswer : public HotLinkWaitForAnswer
 
   private:
     GSAService& _service;
-    string      _dpName;
+    std::string      _dpName;
 };                                 
+  } // namespace PAL
+ } // namespace GCF
+} // namespace LOFAR
 
 #endif

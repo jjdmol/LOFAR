@@ -23,6 +23,13 @@
 #include <GCF/TM/GCF_Fsm.h>
 #include <GTM_Defines.h>
 
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+  namespace TM 
+  {
+
 // static data member initialisation
 GCFDummyPort GCFFsm::_gcfPort(0, "GCFFSM", F_FSM_PROTOCOL);
 
@@ -56,3 +63,6 @@ void GCFFsm::tran(State target, const char* from, const char* to)
   e.signal = F_ENTRY;
   (void)(this->*_state)(e, _gcfPort); // entry signal
 }
+  } // namespace TM
+ } // namespace GCF
+} // namespace LOFAR

@@ -23,10 +23,18 @@
 #ifndef GPI_PROPERTYPROXY_H
 #define GPI_PROPERTYPROXY_H
 
-
 #include <GCF/PAL/GCF_PropertyProxy.h>
 
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+  namespace Common
+  {
 class GCFPValue;
+  }
+  namespace PAL
+  {
 
 // This specialized property proxy class provides for all in the controller 
 // registered PMLlight servers (objects of classes, which derives from the 
@@ -43,8 +51,8 @@ class GPIPropertyProxy : public GCFPropertyProxy
     void propSubscribed(const string& /*propName*/) {}
     void propSubscriptionLost(const string& /*propName*/) {}
     void propUnsubscribed(const string& /*propName*/) {}
-    void propValueGet(const string& /*propName*/, const GCFPValue& /*value*/) {}
-    void propValueChanged(const string& /*propName*/, const GCFPValue& /*value*/) {}
+    void propValueGet(const string& /*propName*/, const Common::GCFPValue& /*value*/) {}
+    void propValueChanged(const string& /*propName*/, const Common::GCFPValue& /*value*/) {}
     void propValueSet(const string& /*propName*/) {}
 
     // Don't allow copying of this object.
@@ -53,4 +61,7 @@ class GPIPropertyProxy : public GCFPropertyProxy
     GPIPropertyProxy& operator= (const GPIPropertyProxy&);
     // </group>
 };    
+  } // namespace PAL
+ } // namespace GCF
+} // namespace LOFAR
 #endif

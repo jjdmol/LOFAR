@@ -26,11 +26,14 @@
 #include <GCF/PAL/GCF_PVSSInfo.h>
 #include <GPI_TH_Port.h>
 
-using LOFAR::BlobIStream;
-using LOFAR::BlobOStream;
-using LOFAR::TYPES::uint16;
-using LOFAR::GPITH_Port;
-
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+using namespace TM;
+using namespace Common;
+  namespace PAL
+  {
 GPICEPServer::GPICEPServer(GPIController& controller) : 
   GPIPMLlightServer(controller, PI_CEPPLS_TASK_NAME, true),
   _dhServer("Server"),
@@ -223,3 +226,6 @@ void GPICEPServer::sendMsgToClient(GCFEvent& msg)
         x.what()));    
   }
 }
+  } // namespace PAL
+ } // namespace GCF
+} // namespace LOFAR

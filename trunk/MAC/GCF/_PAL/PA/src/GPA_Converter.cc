@@ -8,6 +8,15 @@
 
 #include <stdio.h>
 
+namespace LOFAR 
+{
+ namespace GCF
+ {
+using namespace TM;
+using namespace Common;
+  namespace PAL 
+  {
+
 bool GPAConverter::uimMsgToGCFEvent(unsigned char* pMsgBuf, unsigned int length, GCFPVBlob& gcfEvent)
 {
   string msg((char*) pMsgBuf, length);
@@ -199,3 +208,6 @@ void GPAConverter::encodeEvent(GCFEvent& e, list<string>& uimMsgItems)
     }    
   }
 }
+  } // namespace PAL
+ } // namespace GCF
+} // namespace LOFAR

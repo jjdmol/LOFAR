@@ -24,6 +24,13 @@
 
 using namespace std;
 
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+  namespace TM 
+  {
+
 GCFEvent::~GCFEvent() 
 { 
   if (_buffer) delete [] _buffer; 
@@ -89,3 +96,6 @@ unsigned int GCFEvent::packString(char* buffer, const string& value)
   memcpy(buffer + sizeof(unsigned int), (void *) value.c_str(), value.size());
   return neededBufLength;
 }  
+  } // namespace TM
+ } // namespace GCF
+} // namespace LOFAR

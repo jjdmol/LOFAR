@@ -26,6 +26,13 @@
 #include <GCF/TM/GCF_RawPort.h>
 #include <Common/lofar_string.h>
 
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+  namespace TM 
+  {
+
 // forward declaration
 class GCFTask;
 class GCFEvent;
@@ -97,5 +104,8 @@ class GCFDevicePort : public GCFRawPort
     GTMDevice*          _pDevice;
     string              _deviceName;
 };
+  } // namespace TM
+ } // namespace GCF
+} // namespace LOFAR
 
 #endif

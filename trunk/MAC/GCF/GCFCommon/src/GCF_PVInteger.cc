@@ -24,6 +24,13 @@
 #include <GCF/GCF_PVInteger.h>
 #include <Common/DataConvert.h>
 
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+  namespace Common 
+  {
+
 unsigned int GCFPVInteger::unpackConcrete(const char* valBuf)
 {
   memcpy((void*) &_value, valBuf, sizeof(int32));
@@ -72,3 +79,6 @@ TGCFResult GCFPVInteger::copy(const GCFPValue& newVal)
   
   return result;
 }
+  } // namespace Common
+ } // namespace GCF
+} // namespace LOFAR

@@ -35,6 +35,13 @@
 #include <GCF/CmdLine.h>
 #include <ctype.h>
 
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+  namespace Common 
+  {
+
 /*------------------------------------------------------
   int CCmdLine::SplitLine(int argc, char **argv)
 
@@ -262,3 +269,6 @@ int CCmdLine::GetArgumentCount(const char *pSwitch)
 
    return iArgumentCount;
 }
+  } // namespace Common
+ } // namespace GCF
+} // namespace LOFAR

@@ -26,6 +26,13 @@
 #include <GCF/GCF_Defines.h>
 #include <GCF/PAL/GCF_Property.h>
 
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+  namespace PAL
+  {
+
 class GCFExtPropertySet;
 
 // This class represents an external property, which are normally owned by an 
@@ -47,18 +54,18 @@ class GCFExtProperty : public GCFProperty
     // of a GCFExtPropertySet object.
     // @param propName it only can mapped to a property in the SCADA DB if the
     //                 scope is included 
-    GCFExtProperty (const TPropertyInfo& propInfo);
+    GCFExtProperty (const Common::TPropertyInfo& propInfo);
     virtual ~GCFExtProperty () {}
 
     inline bool isSubscribed () const {return _isSubscribed;}
 
     // Asynchronous action
     // @return GCF_NO_ERROR, GCF_BUSY, GCF_ALREADY_SUBSCRIBED, GCF_PML_ERROR
-    TGCFResult subscribe();
+    Common::TGCFResult subscribe();
 
     // Synchronous (!) action
     // @return GCF_NO_ERROR, GCF_BUSY, GCF_NOT_SUBSCRIBED, GCF_PML_ERROR
-    TGCFResult unsubscribe();
+    Common::TGCFResult unsubscribe();
 
     // Checks whether the property exists in the SCADA DB or not
     // Note that in case the property does not exists the property will
@@ -71,7 +78,7 @@ class GCFExtProperty : public GCFProperty
 
     // Creates an instance of the property class, which only can exists in 
     // combination with a GCFExtPropertySet object.
-    GCFExtProperty (const TPropertyInfo& propInfo, 
+    GCFExtProperty (const Common::TPropertyInfo& propInfo, 
                     GCFExtPropertySet& pPropertySet);
     
   private: // overrides base class methods
@@ -88,4 +95,7 @@ class GCFExtProperty : public GCFProperty
   private: // data members
     bool _isSubscribed;           
 };
+  } // namespace PAL
+ } // namespace GCF
+} // namespace LOFAR
 #endif

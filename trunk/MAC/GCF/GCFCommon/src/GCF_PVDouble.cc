@@ -24,6 +24,13 @@
 #include <GCF/GCF_PVDouble.h>
 #include <Common/DataConvert.h>
 
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+  namespace Common 
+  {
+
 unsigned int GCFPVDouble::unpackConcrete(const char* valBuf)
 {
   memcpy((void *) &_value, valBuf, sizeof(double));
@@ -74,3 +81,6 @@ TGCFResult GCFPVDouble::copy(const GCFPValue& newVal)
   
   return result;
 }
+  } // namespace Common
+ } // namespace GCF
+} // namespace LOFAR

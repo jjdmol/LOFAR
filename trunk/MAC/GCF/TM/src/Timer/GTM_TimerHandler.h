@@ -24,7 +24,13 @@
 #define GTM_TIMERHANDLER_H
 
 #include <GCF/TM/GCF_Handler.h>
-#include <Common/lofar_map.h>
+
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+  namespace TM 
+  {
 
 class GTMTimer;
 class GCFRawPort;
@@ -67,4 +73,7 @@ class GTMTimerHandler : GCFHandler
     typedef map<unsigned long, GTMTimer*> TTimers;
     TTimers _timers;
 };
+  } // namespace TM
+ } // namespace GCF
+} // namespace LOFAR
 #endif

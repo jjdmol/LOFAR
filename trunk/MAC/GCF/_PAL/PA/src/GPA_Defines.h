@@ -23,10 +23,16 @@
 #ifndef GPA_DEFINES_H
 #define GPA_DEFINES_H
 
-//#define LOFARLOGGER_PACKAGE "MAC.GCF.PAL.PA.Logger"
-
 #include <GCF/GCF_Defines.h>
 
+namespace LOFAR {
+ namespace GCF {
+  namespace PAL {
+
 const string PA_TASK_NAME("GCF-PA");
+
+  } // namespace PAL
+ } // namespace GCF
+} // namespace LOFAR
 
 #endif

@@ -27,13 +27,12 @@
 #include <sys/types.h>
 #include <string>
 
-#ifdef SWIG
-%module GCFEvent
-%{
-#include "GCF_Event.h"
-%}
-#endif
-
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+  namespace TM 
+  {
 
 /**
  * This class is the base event data container to exchange messages between two 
@@ -115,21 +114,15 @@ class GCFEvent
   	*   F_INOUT = 0b11 (F_IN_SIGNAL | F_OUT_SIGNAL)
   	*
   	* +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
-  	* | O | I | P | P | P | P | P | S | S | S | S | S | S | S | S | S |
+  	* | O | I | P | P | P | P | P | P | S | S | S | S | S | S | S | S |
   	* +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
   	*  15  14  13  12  11  10   9   8   7   6   5   4   3   2   1   0
   	* <- I/O-><--- protocol ---------><--------- signal -------------->
   	* @endcode
   	*/
-#ifdef SWIG
-%immutable;
-#endif
   	unsigned short  signal; // lsb contains signal id (0-255)
   	                      // msb contains protocol id (0-255)
   	size_t          length; // payload length of the event (thus excl. signal and length) should be <= SSIZE_MAX)
-#ifdef SWIG
-%mutable;
-#endif
 
   protected:
     /// indicates wether the event is unpacked or not
@@ -169,5 +162,8 @@ class GCFTransportable
 #define F_EVT_PROTOCOL(e) (((e).signal & F_EVT_PROTOCOL_MASK) >> 8)
 #define F_EVT_SIGNAL(e)    ((e).signal & F_EVT_SIGNAL_MASK)
 
+  } // namespace TM
+ } // namespace GCF
+} // namespace LOFAR
 
 #endif

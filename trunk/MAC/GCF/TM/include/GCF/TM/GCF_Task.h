@@ -24,9 +24,13 @@
 #define GCF_TASK_H
 
 #include <GCF/TM/GCF_Fsm.h>
-#include <Common/lofar_string.h>
-#include <Common/lofar_vector.h>
-#include <Common/lofar_map.h>
+
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+  namespace TM 
+  {
 
 // forward declaration
 class GCFPort;
@@ -142,5 +146,9 @@ class GCFTask : public GCFFsm
 
     /// indicates wether the application should be stop or not
     static bool _doExit;
-};
+};  
+  } // namespace TM
+ } // namespace GCF
+} // namespace LOFAR
+
 #endif

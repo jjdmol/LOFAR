@@ -24,6 +24,12 @@
 #include "GTM_File.h"
 #include <GCF/TM/GCF_Task.h>
 
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+  namespace TM 
+  {
 GTMFileHandler* GTMFileHandler::_pInstance = 0;
 
 GTMFileHandler* GTMFileHandler::instance()
@@ -106,3 +112,6 @@ void GTMFileHandler::stop()
 {
   _running = false;
 }
+  } // namespace TM
+ } // namespace GCF
+} // namespace LOFAR

@@ -25,6 +25,12 @@
 /**
  * F_PVSS_PROTOCOL signal names
  */
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+  namespace PAL
+  {
 const char* F_PML_PROTOCOL_signalnames[] =
 {
   "F_PML_PROTOCOL: invalid signal",
@@ -40,3 +46,6 @@ const char* F_PML_PROTOCOL_signalnames[] =
   "F_MYPS_DISABLED (IN)",
   "F_SERVER_GONE (IN)",
 };
+  } // namespace PAL
+ } // namespace GCF
+} // namespace LOFAR

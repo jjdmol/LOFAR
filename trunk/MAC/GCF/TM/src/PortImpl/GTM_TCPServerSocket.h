@@ -25,6 +25,13 @@
 
 #include "GTM_TCPSocket.h"
 
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+  namespace TM 
+  {
+
 // forward declaration
 
 /**
@@ -68,4 +75,7 @@ class GTMTCPServerSocket : public GTMTCPSocket
     GTMTCPSocket* _pDataSocket;
 };
 
+  } // namespace TM
+ } // namespace GCF
+} // namespace LOFAR
 #endif

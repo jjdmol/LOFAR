@@ -27,6 +27,13 @@
 #include <GCF/PAL/GCF_PVSSInfo.h>
 
 
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+using namespace Common;
+  namespace PAL
+  {
 TPIResult convertPAToPIResult(TPAResult result);
 TPAResult convertPIToPAResult(TPIResult result);
 
@@ -535,3 +542,6 @@ TPIResult convertPAToPIResult(TPAResult result)
     default:                          return PI_UNKNOWN_ERROR;
   }
 }
+  } // namespace PAL
+ } // namespace GCF
+} // namespace LOFAR

@@ -8,7 +8,7 @@
 [+ DEFINE signal_id +][+ signal_name +]_ID[+ ENDDEF +]
 [+ DEFINE cap_signal +][+ (string-substitute (string-capitalize! (get "signal")) '( "_" )' ( "" )) +][+ ENDDEF +]
 [+ DEFINE event_class_name +][+ prefix_cap +][+ cap_signal +]Event[+ ENDDEF +]
-[+ DEFINE event_class_decl +][+ event_class_name +] : public GCFEvent[+ ENDDEF +]
+[+ DEFINE event_class_decl +][+ event_class_name +] : public GCF::TM::GCFEvent[+ ENDDEF +]
 [+ DEFINE protocol_name +][+ (string-upcase (base-name)) +][+ ENDDEF +]
 [+ DEFINE event_class_member_type +][+ IF (*== (get "type") "]") +][+ (substring (get "type") 0 (string-index (get "type") #\[)) +][+ ELSE +][+ (get "type") +][+ ENDIF +][+ ENDDEF +]
 [+ DEFINE event_class_member +][+ event_class_member_type +][+ IF (*== (get "type") "[]") +]*[+ ENDIF +] [+ (get "name") +][+ IF (and (*== (get "type") "]") (not (*== (get "type") "[]"))) +][+ (substring (get "type") (string-index (get "type") #\[) (string-length (get "type"))) +][+ ENDIF +][+ ENDDEF +]
@@ -28,9 +28,9 @@
 [+ IF (== (suffix) "cc") +]
 #include "[+ (base-name) +].ph"
 
-using namespace [+ (base-name) +];
+using namespace LOFAR::GCF::TM;
 
-const char* [+ protocol_name +]_signalnames[] = 
+const char* LOFAR::[+ (base-name) +]::[+ protocol_name +]_signalnames[] = 
 {
   "[+ protocol_name +]: invalid signal",[+ FOR event "," +]
   "[+ signal_name +] ([+ (get "dir") +])"[+ ENDFOR +]
@@ -39,63 +39,47 @@ const char* [+ protocol_name +]_signalnames[] =
 #ifndef [+ protocol_name +]_H
 #define [+ protocol_name +]_H
 
-#ifdef SWIG
-%module [+ (base-name) +]
-%include GCF/TM/GCF_Event.h
-%include carrays.i
-%include std_string.i
-%include typemaps.i
-%include array_typemaps.i
-[+ FOR include "" +]
-%include [+ (get "include") +][+ ENDFOR +]
-[+ FOR unbounded_array_types "" +][+ FOR type "" +]
-%array_class([+ (get "type") +], [+ (string-substitute (get "type") '( " " )' ( "_" )) +]_array)
-[+ ENDFOR +][+ ENDFOR +]
-%{
-#include "[+ (base-name) +].ph"[+ FOR include "" +]
-#include [+ (get "include") +][+ ENDFOR +]
-#include <GCF/TM/GCF_Protocols.h>
-%}
-#else
 [+ FOR include "" +]
 #include [+ (get "include") +][+ ENDFOR +]
 #include <GCF/TM/GCF_Protocols.h>
 #include <string>
-#endif
+
+namespace LOFAR
+{
+	namespace [+ (base-name) +]
+	{
 
 [+ (get "prelude") +]
 
 //
 // Define protocol ID
 //
-enum {
+enum 
+{
   [+ protocol_name +] = [+ protocol_id +]
 };
 
 //
 // Define protocol message types
 //
-enum { [+ FOR event "," +]
+enum 
+{ [+ FOR event "," +]
   [+ signal_id +][+ IF (= 0 (for-index)) +] = 1[+ ENDIF +][+ ENDFOR event +]
 };
 
 [+ FOR event "" +] 
 #define [+ prefix_ucase +]_[+ (get "signal") +] F_SIGNAL([+ protocol_name +], [+ prefix_ucase +]_[+ (get "signal") +]_ID, F_[+ (get "dir")+])[+ ENDFOR event +]
 
-// extern declaration of protocol event names
-#ifndef SWIG
 extern const char* [+ protocol_name +]_signalnames[];
-#endif
 
-namespace [+ (base-name) +]
-{[+ ENDIF +]
+[+ ENDIF +]
 [+ FOR event "" +][+ IF (= (suffix) "ph") +][+ FOR param "" +]
 [+ IF (*== (get "type") "&") +][+ (error "reference types not supported") +][+ ENDIF +]
-[+ IF (and (==* (get "type") "string") (> (string-length (get "type")) 6)) +][+ (error "only scalar 'string' are supported") +][+ ENDIF +][+ ENDFOR +]
+[+ IF (and (==* (get "type") "string") (> (string-length (get "type")) 6)) +][+ (error "only scalar 'string' is supported") +][+ ENDIF +][+ ENDFOR +]
   class [+ event_class_decl +]
   {
     public:
-      [+ event_class_name +](GCFEvent& e);
+      [+ event_class_name +](GCF::TM::GCFEvent& e);
       [+ event_class_name +]();
       virtual ~[+ event_class_name +]();
 
@@ -110,8 +94,8 @@ namespace [+ (base-name) +]
       
 	    void unpack();
   };   [+ ELSE +]
-[+ event_class_name +]::[+ event_class_name +](GCFEvent& e)
-  : GCFEvent(e)[+ FOR param "" +][+ IF (or (*== (get "type") "[]") (*== (get "type") "*")) +],
+[+ event_class_name +]::[+ event_class_name +](GCF::TM::GCFEvent& e)
+  : GCF::TM::GCFEvent(e)[+ FOR param "" +][+ IF (or (*== (get "type") "[]") (*== (get "type") "*")) +],
     [+ (get "name") +](0)[+ ENDIF +][+ IF (*== (get "type") "[]") +],
     [+ (get "name") +]Dim(0)[+ ENDIF +][+ ENDFOR +]
 {
@@ -119,7 +103,7 @@ namespace [+ (base-name) +]
 }
       
 [+ event_class_name +]::[+ event_class_name +]()
-  : GCFEvent([+ signal_name +])[+ FOR param "" +][+ IF (or (*== (get "type") "[]") (*== (get "type") "*")) +],
+  : GCF::TM::GCFEvent([+ signal_name +])[+ FOR param "" +][+ IF (or (*== (get "type") "[]") (*== (get "type") "*")) +],
     [+ (get "name") +](0)[+ ENDIF +][+ IF (*== (get "type") "[]") +],
     [+ (get "name") +]Dim(0)[+ ENDIF +][+ ENDFOR +]
 {        
@@ -146,7 +130,7 @@ void* [+ event_class_name +]::pack(unsigned int& packsize)
   resizeBuf(requiredSize);
   unsigned int offset = 0;
   [+ IF (not (exist? "noheader")) +]
-  GCFEvent::pack(offset);[+ ENDIF +]
+  GCF::TM::GCFEvent::pack(offset);[+ ENDIF +]
   [+ FOR param "" +]
   [+ IF (exist? "userdefined") +]
   offset += [+ (get "name") +][+ IF (*== (get "type") "*") +]->[+ ELSE +].[+ ENDIF +]pack(_buffer + offset);
@@ -172,7 +156,7 @@ void [+ event_class_name +]::unpack()
 {
   if (length > 0)
   {
-  	unsigned int offset = sizeof(GCFEvent);
+  	unsigned int offset = sizeof(GCF::TM::GCFEvent);
     char* data = (char*) _base;
     [+ FOR param "" +]
     [+ IF (exist? "userdefined") +]
@@ -182,7 +166,7 @@ void [+ event_class_name +]::unpack()
     offset += [+ (get "name") +][+ IF (*== (get "type") "*") +]->[+ ELSE +].[+ ENDIF +]unpack(data + offset);
     [+ ELIF (not (*== (get "type") "]")) +]
       [+ IF (== (get "type") "string") +]
-    offset += GCFEvent::unpackString([+ (get "name") +], data + offset);
+    offset += GCF::TM::GCFEvent::unpackString([+ (get "name") +], data + offset);
       [+ ELSE +]
     memcpy(&[+ (get "name") +], data + offset, sizeof([+ (get "type") +]));
     offset += sizeof([+ (get "type") +]);
@@ -196,10 +180,11 @@ void [+ event_class_name +]::unpack()
   }
 }[+ ENDIF +][+ ENDFOR +]
 [+ IF (= (suffix) "ph") +]
-} // namespace [+ (base-name) +]
+	} // namespace [+ (base-name) +]
+} // namespace LOFAR
 
 
-using namespace [+ (base-name) +];
+using namespace LOFAR::[+ (base-name) +];
 
 #endif
 [+ ENDIF +]

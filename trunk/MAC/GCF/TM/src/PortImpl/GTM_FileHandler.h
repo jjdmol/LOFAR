@@ -27,6 +27,12 @@
 #include <Common/lofar_map.h>
 #include <sys/time.h>
 
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+  namespace TM 
+  {
 // forward declaration
 class GTMFile;
 
@@ -72,4 +78,7 @@ class GTMFileHandler : public GCFHandler
     bool _running;    
 };
 
+  } // namespace TM
+ } // namespace GCF
+} // namespace LOFAR
 #endif

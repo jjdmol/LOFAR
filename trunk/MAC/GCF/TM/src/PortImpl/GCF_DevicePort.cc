@@ -29,6 +29,13 @@
 #include <GCF/ParameterSet.h>
 #include <errno.h>
 
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+  namespace TM 
+  {
+
 GCFDevicePort::GCFDevicePort(GCFTask& task, 
                        string name,                        
                        int protocol,
@@ -197,3 +204,6 @@ void GCFDevicePort::setDeviceName(const string& deviceName)
   _deviceName = deviceName;
   _devNameIsSet = true;
 }
+  } // namespace TM
+ } // namespace GCF
+} // namespace LOFAR

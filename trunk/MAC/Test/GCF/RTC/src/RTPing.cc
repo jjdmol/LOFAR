@@ -27,12 +27,17 @@
 #include <GCF/GCF_PVInteger.h>
 #include <GCF/GCF_PVDouble.h>
 #include <GCF/CmdLine.h>
-#include <stdio.h>
 #include "Echo_Protocol.ph"
 
-using std::cout;
-using std::endl;
-
+namespace LOFAR
+{
+ namespace GCF
+ {
+using namespace Common;
+using namespace TM;
+using namespace RTCPMLlight;
+  namespace Test
+  {
 /**
  * Function to calculate the elapsed time between two tiemval's.
  */
@@ -251,14 +256,20 @@ GCFEvent::TResult Ping::awaiting_echo(GCFEvent& e, GCFPortInterface& /*p*/)
   return status;
 }
 
+  } // namespace Test
+ } // namespace GCF
+} // namespace LOFAR
+
+using namespace LOFAR::GCF;
+
 int main(int argc, char** argv)
 {
-  GCFTask::init(argc, argv);
+  TM::GCFTask::init(argc, argv);
   
   string brdnr("1");
   if (argv != 0)
   {
-    CCmdLine cmdLine;
+    Common::CCmdLine cmdLine;
 
     // parse argc,argv 
     if (cmdLine.SplitLine(argc, argv) > 0)
@@ -268,22 +279,22 @@ int main(int argc, char** argv)
   }
 
   string type;
-  TPSCategory category;
+  Common::TPSCategory category;
   if (brdnr == "1")
   {
     type = "TTypeF";
-    category = PS_CAT_PERMANENT;
+    category = Common::PS_CAT_PERMANENT;
   }
   else
   {
     type = "TTypeG";
-    category = PS_CAT_TEMPORARY;
+    category = Common::PS_CAT_TEMPORARY;
   }
-  Ping pingTask(string("RTPING") + brdnr, string("B_A_BRD") + brdnr, type, category);
+  Test::Ping pingTask(string("RTPING") + brdnr, string("B_A_BRD") + brdnr, type, category);
 
   pingTask.start(); // make initial transition
 
-  GCFTask::run();
+  TM::GCFTask::run();
   
   return 0;  
 }

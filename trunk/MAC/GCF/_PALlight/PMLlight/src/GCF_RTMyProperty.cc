@@ -24,6 +24,14 @@
 #include <GCF/PALlight/GCF_RTMyPropertySet.h>
 #include <GCF/PALlight/GCF_RTAnswer.h>
 
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+using namespace Common;
+using namespace TM;
+  namespace RTCPMLlight 
+  {
 GCFRTMyProperty::GCFRTMyProperty(const TPropertyInfo& propertyFields,
                              GCFRTMyPropertySet& propertySet) :
   _name(propertyFields.propName), 
@@ -35,7 +43,7 @@ GCFRTMyProperty::GCFRTMyProperty(const TPropertyInfo& propertyFields,
   _isBusy(false),
   _pAnswerObj(0)  
 {
-  _pCurValue = GCFPValue::createMACTypeObject((TMACValueType) propertyFields.type);
+  _pCurValue = Common::GCFPValue::createMACTypeObject((TMACValueType) propertyFields.type);
   assert(_pCurValue);
   _pOldValue = _pCurValue->clone();
 }
@@ -64,7 +72,7 @@ GCFRTMyProperty::~GCFRTMyProperty()
   _pCurValue = 0;
 }
 
-TGCFResult GCFRTMyProperty::setValue(const string value)
+TGCFResult GCFRTMyProperty::setValue(const string& value)
 {
   TGCFResult result(GCF_NO_ERROR);
   if (!_pOldValue || !_pCurValue) 
@@ -200,3 +208,6 @@ void GCFRTMyProperty::dispatchAnswer(GCFEvent& answer)
     _pAnswerObj->handleAnswer(answer);
   }  
 }
+  } // namespace RTCPMLlight
+ } // namespace GCF
+} // namespace LOFAR

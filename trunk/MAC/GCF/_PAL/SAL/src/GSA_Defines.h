@@ -25,6 +25,13 @@
 
 #include <GCF/GCF_Defines.h>
 
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+  namespace PAL
+  {
+
 enum TSAResult 
 {
   SA_NO_ERROR, 
@@ -50,4 +57,7 @@ enum TSAResult
 
 #define PARAM_PVSS_CMDLINE "mac.%s.pvss.cmdline"
 #define PARAM_DEFAULT_PVSS_CMDLINE "mac.controller.pvss.cmdline"
+  } // namespace PAL
+ } // namespace GCF
+} // namespace LOFAR
 #endif

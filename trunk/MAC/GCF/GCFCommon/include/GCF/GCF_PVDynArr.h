@@ -26,6 +26,12 @@
 #include <GCF/GCF_PValue.h>
 #include <Common/lofar_vector.h>
 
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+  namespace Common 
+  {
 typedef vector<GCFPValue*> GCFPValueArray;
 
 /**
@@ -81,4 +87,7 @@ class GCFPVDynArr : public GCFPValue
     /**  The values*/
     GCFPValueArray _values;
 };
+  } // namespace Common
+ } // namespace GCF
+} // namespace LOFAR
 #endif

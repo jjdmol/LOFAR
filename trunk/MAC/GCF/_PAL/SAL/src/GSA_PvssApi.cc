@@ -36,6 +36,12 @@
 
 #include <unistd.h>
 
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+  namespace PAL
+  {
 // -------------------------------------------------------------------------
 // Our manager class
 
@@ -96,3 +102,6 @@ void GSAPvssApi::stop()
 {
 
 }
+  } // namespace PAL
+ } // namespace GCF
+} // namespace LOFAR

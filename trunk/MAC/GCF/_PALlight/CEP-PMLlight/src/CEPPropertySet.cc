@@ -29,9 +29,13 @@ using std::ifstream;
 
 #define ASCII_LINE_SIZE 1024
 
-namespace LOFAR {
- namespace GCF {
-  namespace CEPPMLlight {
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+using namespace Common;
+  namespace CEPPMLlight 
+  {
 
 CEPPropertySet::CEPPropertySet(const char* name,
                                const char* type,

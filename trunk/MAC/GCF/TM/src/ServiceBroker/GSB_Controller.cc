@@ -25,6 +25,14 @@
 #include <GCF/ParameterSet.h>
 #include <GSB_Defines.h>
 
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+  using namespace TM;
+  namespace SB 
+  {
+
 static string sSBTaskName("GCF-SB");
 
 GSBController::GSBController() : 
@@ -367,3 +375,6 @@ GSBController::TPortStates* GSBController::findHost(const string& host)
   TPortHosts::iterator iter = _availableHosts.find(host);
   return (iter != _availableHosts.end() ? &iter->second : 0);
 }
+  } // namespace SB
+ } // namespace GCF
+} // namespace LOFAR

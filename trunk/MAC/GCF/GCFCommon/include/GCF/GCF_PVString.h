@@ -25,6 +25,12 @@
 
 #include <GCF/GCF_PValue.h>
 
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+  namespace Common 
+  {
 /**
  * By means of this property type a zero terminated string (max. length ~30.000 
  * characters) value can be used.
@@ -63,4 +69,7 @@ class GCFPVString : public GCFPValue
     /** The value*/
     string _value;
 };
+  } // namespace Common
+ } // namespace GCF
+} // namespace LOFAR
 #endif

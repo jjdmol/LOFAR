@@ -28,6 +28,12 @@
 // PVSS includes
 #include  <ErrHdl.hxx>
 
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+  namespace PAL
+  {
 // Wrapper to read config file
 void  GSAResources::init(int &argc, char *argv[])
 {
@@ -73,3 +79,6 @@ PVSSboolean  GSAResources::readSection()
   // So the loop will stop at the end of the file
   return cfgState != CFG_EOF;
 }
+  } // namespace PAL
+ } // namespace GCF
+} // namespace LOFAR

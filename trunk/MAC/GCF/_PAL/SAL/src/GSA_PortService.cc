@@ -31,6 +31,15 @@
 #include <stdio.h>
 #include <unistd.h>
 
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+using namespace Common;
+using namespace TM;
+  namespace PAL
+  {
+
 GSAPortService::GSAPortService(GCFPVSSPort& port) :
   _port(port),
   _isSubscribed(false)
@@ -313,3 +322,6 @@ void GSAPortService::disconnectedEvent(const string& curPeerID)
       break;
   }
 }
+  } // namespace PAL
+ } // namespace GCF
+} // namespace LOFAR

@@ -26,8 +26,10 @@
 using std::istringstream;
 using std::ifstream;
 
-namespace LOFAR {
- namespace GCF {
+namespace LOFAR 
+{
+ namespace GCF 
+ {
 
 ParameterSet* ParameterSet::_pInstance = 0;
 

@@ -25,6 +25,12 @@
 
 #include <GCF/GCF_PValue.h>
 
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+  namespace Common 
+  {
 /**
  * By means of this property type a double value (-3.4*10^38 to 3.4*10^38) can 
  * be used.
@@ -71,4 +77,7 @@ class GCFPVDouble : public GCFPValue
     ///  The value 
     double _value;
 };
+  } // namespace Common
+ } // namespace GCF
+} // namespace LOFAR
 #endif

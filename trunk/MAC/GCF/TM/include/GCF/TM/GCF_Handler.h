@@ -26,6 +26,13 @@
 //# Includes
 
 
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+  namespace TM 
+  {
+
 //# forward declaration
 class GCFTask;
 
@@ -105,7 +112,14 @@ class GCFHandler
     unsigned int _usecount;
 };
 
+  } // namespace TM
+ } // namespace GCF
+} // namespace LOFAR
+
+
 #include <GCF/TM/GCF_Task.h>
+
+using namespace LOFAR::GCF::TM;
 
 inline GCFHandler::GCFHandler() : _usecount(0) 
 {

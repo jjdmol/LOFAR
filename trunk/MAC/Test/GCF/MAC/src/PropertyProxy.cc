@@ -23,6 +23,13 @@
 #include "PropertyProxy.h"
 #include "SupervisedTask.h"
 
+namespace LOFAR
+{
+ namespace GCF
+ {
+using namespace Common;
+  namespace Test
+  {
 void PropertyProxy::propSubscribed(const string& propName)
 {
   _task.propSubscribed(propName);
@@ -47,3 +54,6 @@ void PropertyProxy::propValueSet(const string& propName)
 {
   _task.propValueSet(propName);
 }
+  } // namespace Test
+ } // namespace GCF
+} // namespace LOFAR

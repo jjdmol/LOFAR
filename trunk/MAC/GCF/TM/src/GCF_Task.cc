@@ -36,6 +36,13 @@ using std::ifstream;
 #include <stdio.h>
 #include <stdlib.h>
 
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+  namespace TM 
+  {
+
 // static member initialisation
 bool GCFTask::_doExit = false;
 GCFTask::THandlers GCFTask::_handlers;
@@ -176,3 +183,6 @@ void GCFTask::signalHandler(int sig)
   if ( (sig == SIGINT) || (sig == SIGTERM) )
     _doExit = true;
 }                                            
+  } // namespace TM
+ } // namespace GCF
+} // namespace LOFAR

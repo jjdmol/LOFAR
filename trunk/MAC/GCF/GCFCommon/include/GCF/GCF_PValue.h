@@ -26,6 +26,13 @@
 #include <GCF/GCF_Defines.h>
 #include <Common/DataFormat.h>
 
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+  namespace Common 
+  {
+
 class GCFPVDynArr;
 
 /**
@@ -180,5 +187,7 @@ class GCFPValue
     /// Holds the dataformat (ENDIANES) of this value
     LOFAR::DataFormat   _dataFormat;
 };
-
+  } // namespace Common
+ } // namespace GCF
+} // namespace LOFAR
 #endif

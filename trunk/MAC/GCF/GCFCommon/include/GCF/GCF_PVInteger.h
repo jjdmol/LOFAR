@@ -28,6 +28,12 @@
 
 using LOFAR::TYPES::int32;
 
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+  namespace Common 
+  {
 /**
  * By means of this property type a integer (-2,147,483,648 to 2,147,483,647) 
  * value can be used.
@@ -73,4 +79,7 @@ class GCFPVInteger : public GCFPValue
     /** The value */
     int32 _value;
 };
+  } // namespace Common
+ } // namespace GCF
+} // namespace LOFAR
 #endif

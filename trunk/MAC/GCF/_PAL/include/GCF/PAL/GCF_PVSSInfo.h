@@ -25,13 +25,16 @@
 
 #include <GCF/GCF_Defines.h>
 
-#include <Common/lofar_string.h>
-#include <Common/lofar_list.h>
-
 // forward declaration
 
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+  namespace PAL
+  {
+
 class GSAService;
-class GCFPropertySet;
 
 // By means of this class information from the PVSS system can be retreived
 class GCFPVSSInfo
@@ -46,6 +49,9 @@ class GCFPVSSInfo
     static unsigned int getLastEventSysId();
     static unsigned int getSysId(const string& name);
     static unsigned int getManNum();
+    static Common::TGCFResult getTypeStruct(const string& typeName, 
+                                            list<Common::TPropertyInfo>& propInfo, 
+                                            unsigned int sysNr);    
     
   private:
     friend class GSAService;
@@ -64,10 +70,8 @@ class GCFPVSSInfo
     GCFPVSSInfo (const GCFPVSSInfo&);
     GCFPVSSInfo& operator= (const GCFPVSSInfo&);
     // </group>
-
-  private:
-    friend class GCFPropertySet;
-    static TGCFResult getTypeStruct(const string& typeName, list<TPropertyInfo>& propInfo, unsigned int sysNr);    
 };
-
+  } // namespace PAL
+ } // namespace GCF
+} // namespace LOFAR
 #endif

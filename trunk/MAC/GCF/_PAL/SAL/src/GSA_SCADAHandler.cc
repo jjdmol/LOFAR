@@ -28,6 +28,12 @@
 #include <GCF/TM/GCF_Task.h>
 #include <GCF/ParameterSet.h>
 
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+  namespace PAL
+  {
 GSASCADAHandler* GSASCADAHandler::_pInstance = 0;
 
 GSASCADAHandler* GSASCADAHandler::instance()
@@ -136,3 +142,6 @@ TSAResult GSASCADAHandler::isOperational()
     result = SA_NO_ERROR;
   return result;
 }
+  } // namespace PAL
+ } // namespace GCF
+} // namespace LOFAR

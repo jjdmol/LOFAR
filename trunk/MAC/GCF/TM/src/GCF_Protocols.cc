@@ -22,30 +22,40 @@
 
 #include <GCF/TM/GCF_Protocols.h>
 
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+  namespace TM 
+  {
+
 /**
  * F_FSM_PROTOCOL signal names
  */
 const char* F_FSM_PROTOCOL_names[] =
-  {
-    "F_FSM_PROTOCOL: invalid signal",
-    "F_ENTRY (IN)",
-    "F_EXIT (IN)",
-    "F_INIT (IN)",
-  };
+{
+  "F_FSM_PROTOCOL: invalid signal",
+  "F_ENTRY (IN)",
+  "F_EXIT (IN)",
+  "F_INIT (IN)",
+};
 
 /**
  * F_PORT_PROTOCOL signal names
  */
 const char* F_PORT_PROTOCOL_names[] =
-  {
-    "F_PORT_PROTOCOL: invalid signal",
-    "F_CONNECT (OUT)",
-    "F_CONNECTED (IN)",
-    "F_DISCONNECTED (IN)",
-    "F_CLOSED (IN)",
-    "F_TIMER (IN)",
-    "F_DATAIN (IN)",
-    "F_DATAOUT (IN)",
-    "F_RAW_DATA (IN_OUT)",
-    "F_ACCEPT_REQ (IN)",
-  };
+{
+  "F_PORT_PROTOCOL: invalid signal",
+  "F_CONNECT (OUT)",
+  "F_CONNECTED (IN)",
+  "F_DISCONNECTED (IN)",
+  "F_CLOSED (IN)",
+  "F_TIMER (IN)",
+  "F_DATAIN (IN)",
+  "F_DATAOUT (IN)",
+  "F_RAW_DATA (IN_OUT)",
+  "F_ACCEPT_REQ (IN)",
+};
+  } // namespace TM
+ } // namespace GCF
+} // namespace LOFAR

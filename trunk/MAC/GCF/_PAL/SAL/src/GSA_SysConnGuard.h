@@ -29,8 +29,12 @@
 /**
  * 
 */
-namespace LOFAR {
-  namespace GCF {
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+  namespace PAL
+  {
 
 class GCFSysConnGuard;
 
@@ -50,8 +54,8 @@ class GSASysConnGuard : public GSAService
   protected:
     void dpCreated(const string& /*propName*/) {};
     void dpDeleted(const string& /*propName*/) {};
-    void dpeValueGet(const string& /*propName*/, const GCFPValue& /*value*/) {}; 
-    void dpeValueChanged(const string& propName, const GCFPValue& value);
+    void dpeValueGet(const string& /*propName*/, const Common::GCFPValue& /*value*/) {}; 
+    void dpeValueChanged(const string& propName, const Common::GCFPValue& value);
     void dpeValueSet(const string& /*propName*/) {};
     void dpeSubscribed(const string& propName);
     void dpeSubscriptionLost (const string& propName);
@@ -70,6 +74,7 @@ inline bool GSASysConnGuard::isSubscribed() const
 {
   return _isSubscribed;
 }
-  } // namespace GCF
+  } // namespace PAL
+ } // namespace GCF
 } // namespace LOFAR
 #endif

@@ -25,6 +25,14 @@
 #include <GPI_PropertySet.h>
 #include <GCF/Utils.h>
 
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+using namespace TM;  
+using namespace Common;  
+  namespace PAL
+  {
 GPIPMLlightServer::GPIPMLlightServer(GPIController& controller, const string& name, bool transportRawData) : 
   GCFTask((State)&GPIPMLlightServer::initial, name),
   _controller(controller),
@@ -407,3 +415,6 @@ void GPIPMLlightServer::sendMsgToClient(GCFEvent& msg)
     _clientPort.send(msg);
   }
 }
+  } // namespace PAL
+ } // namespace GCF
+} // namespace LOFAR

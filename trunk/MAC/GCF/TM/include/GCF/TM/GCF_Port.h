@@ -25,6 +25,13 @@
 
 #include <GCF/TM/GCF_PortInterface.h>
 
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+  namespace TM 
+  {
+
 // forward declaration
 class GCFTask;
 class GCFRawPort;
@@ -117,4 +124,8 @@ class GCFPort : public GCFPortInterface
 
     friend class GCFRawPort; // to access the setState method of the base class
 };
+  } // namespace TM
+ } // namespace GCF
+} // namespace LOFAR
+
 #endif

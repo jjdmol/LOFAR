@@ -31,6 +31,14 @@
 
 #include <stdio.h>
 
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+using namespace Common;
+using namespace TM;  
+  namespace PAL
+  {
 static string sPMLTaskName("GCF-PML");
 GPMHandler* GPMHandler::_pInstance = 0;
 
@@ -681,3 +689,6 @@ bool GPMController::checkDestination(const string& destAddr) const
     return true;
   }
 }
+  } // namespace PAL
+ } // namespace GCF
+} // namespace LOFAR

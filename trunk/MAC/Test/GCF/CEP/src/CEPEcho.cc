@@ -23,7 +23,12 @@
 #include <DH_EchoPing.h>
 #include <Transport/TH_Socket.h>
 
-using namespace LOFAR;
+namespace LOFAR
+{
+ namespace GCF
+ {
+  namespace Test
+  {
 
 void echo ()
 {
@@ -44,6 +49,11 @@ void echo ()
     DH_Echo.write();
   }
 }
+  } // namespace Test
+ } // namespace GCF
+} // namespace LOFAR
+
+using namespace LOFAR::GCF;
 
 int main (int , const char** )
 {
@@ -51,9 +61,11 @@ int main (int , const char** )
 
   try 
   {
-    echo();
-  } catch (std::exception& x) {
-    cerr << "Unexpected exception in 'echo': " << x.what() << endl;
+    Test::echo();
+  } 
+  catch (std::exception& x) 
+  {
+    fprintf(stderr, "Unexpected exception in 'echo': %s\n", x.what());
     return 1;
   }
   return 0;

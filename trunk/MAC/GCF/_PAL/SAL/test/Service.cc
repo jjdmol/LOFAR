@@ -1,6 +1,14 @@
 #include "Service.h"
 #include <GCF/PAL/GCF_PVSSInfo.h>
 
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+using namespace Common;
+  namespace PAL
+  {
+   
 TSAResult Service::dpCreate(const string& propName, 
                             const string& macType)
 {
@@ -79,3 +87,6 @@ void Service::dpeValueSet(const string& propName)
   LOG_DEBUG(formatString (
       "Value of property '%s' is set", propName.c_str()));
 }
+  } // namespace PAL
+ } // namespace GCF
+} // namespace LOFAR

@@ -29,6 +29,13 @@
 #include <Common/lofar_string.h>
 #include <Common/lofar_map.h>
 
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+  namespace TM 
+  {
+
 // forward declaration
 class GCFPort;
 class GTMTimer;
@@ -135,5 +142,8 @@ class GCFRawPort : public GCFPortInterface
   private: // admin. data member
     GTMTimerHandler*            _pTimerHandler;
 };
+  } // namespace TM
+ } // namespace GCF
+} // namespace LOFAR
 
 #endif

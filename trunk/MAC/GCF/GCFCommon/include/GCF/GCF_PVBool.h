@@ -25,6 +25,13 @@
 
 #include <GCF/GCF_PValue.h>
 
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+  namespace Common 
+  {
+
 /**
    By means of this property type a boolean (TRUE/FALSE or YES/NO) value can be 
    used.
@@ -71,4 +78,7 @@ class GCFPVBool : public GCFPValue
     /** The value */
     volatile bool _value;
 };
+  } // namespace Common
+ } // namespace GCF
+} // namespace LOFAR
 #endif

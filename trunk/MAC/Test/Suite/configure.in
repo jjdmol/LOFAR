@@ -55,7 +55,7 @@ lofar_DEBUG_OPTIMIZE
 lofar_QATOOLS
 lofar_DOCXX
 lofar_MPI(0)
-lofar_INTERNAL(LCS/Common, Common, LCS-Common-2_0, 1,Common/LofarTypes.h,,)
+lofar_INTERNAL(LCS/Common, Common, LCS-Common-2_1, 1,Common/LofarTypes.h,,)
 
 dnl
 dnl Output Makefiles

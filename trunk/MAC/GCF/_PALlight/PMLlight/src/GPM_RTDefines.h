@@ -26,6 +26,12 @@
 //#define LOFARLOGGER_PACKAGE "MAC.GCF.PALlight.PMLlight.Logger"
 
 #include <GCF/GCF_Defines.h>
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+  namespace RTCPMLlight 
+  {
 
 enum TPMResult 
 {
@@ -47,5 +53,8 @@ enum TPMResult
   PM_PROP_NOT_IN_SET,
   PM_SCOPE_NOT_FOUND
 };
+  } // namespace RTCPMLlight
+ } // namespace GCF
+} // namespace LOFAR
 
 #endif

@@ -26,6 +26,14 @@
 #include <GCF/PAL/GCF_PVSSInfo.h>
 #include <GPM_PropertyService.h>
 
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+using namespace Common;
+using namespace TM;  
+  namespace PAL
+  {
 GCFProperty::GCFProperty (const TPropertyInfo& propInfo, GCFPropertySet* pPropertySet) : 
   _isBusy(false),
   _pPropertySet(pPropertySet),
@@ -158,3 +166,6 @@ void GCFProperty::valueSet ()
   e.pPropName = fullName.c_str();
   dispatchAnswer(e);
 }
+  } // namespace PAL
+ } // namespace GCF
+} // namespace LOFAR

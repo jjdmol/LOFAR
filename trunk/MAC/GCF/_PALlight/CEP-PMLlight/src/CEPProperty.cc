@@ -23,9 +23,13 @@
 #include <GCF/PALlight/CEPProperty.h>
 #include <GCF/PALlight/CEPPropertySet.h>
 
-namespace LOFAR {
- namespace GCF {
-  namespace CEPPMLlight {
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+using namespace Common;
+  namespace CEPPMLlight 
+  {
 
 CEPProperty::CEPProperty(const TPropertyInfo& propertyFields,
                          CEPPropertySet& propertySet) :

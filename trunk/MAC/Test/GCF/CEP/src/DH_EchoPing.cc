@@ -25,6 +25,10 @@
 
 namespace LOFAR
 {
+ namespace GCF
+ {
+  namespace Test
+  {
 
 DH_EchoPing::DH_EchoPing (const string& name)
 : DataHolder (name, "DH_EchoPing", 1),
@@ -71,5 +75,6 @@ void DH_EchoPing::postprocess()
   itsSeqNr = 0;
   itsPingTime = 0;
 }
-
-} // end namespace
+  } // namespace Test
+ } // namespace GCF
+} // namespace LOFAR

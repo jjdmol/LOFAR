@@ -2,6 +2,16 @@
 #include <GCF/PAL/GCF_Answer.h>
 #include "TST_Protocol.ph"
 
+namespace LOFAR
+{
+ namespace GCF
+ {
+using namespace Common;
+using namespace TM;
+using namespace PAL;
+  namespace Test
+  {
+    
 Task::Task(GCFTask& a, string taskName) : 
   GCFTask((State)&Task::initial, taskName),
   _application(a),
@@ -62,3 +72,6 @@ void Task::valueGet(const string& propName, const GCFPValue& value)
   e.internal = false;
   _application.dispatch(e, _port);
 }
+  } // namespace Test
+ } // namespace GCF
+} // namespace LOFAR

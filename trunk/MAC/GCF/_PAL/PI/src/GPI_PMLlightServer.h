@@ -26,29 +26,40 @@
 #include <GPI_Defines.h>
 #include <GCF/TM/GCF_Task.h>
 #include <GCF/TM/GCF_TCPPort.h>
-#include <Common/lofar_list.h>
 
 #include <GCF/Protocols/PI_Protocol.ph>
 #include <GCF/Protocols/PA_Protocol.ph>
 
-class GCFEvent;
-class GPIController;
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+  namespace Common
+  {
 class GCFPValue;
+  }
+  namespace TM
+  {
+class GCFEvent;
+  }
+  namespace PAL
+  {
+class GPIController;
 class GPIPropertySet;
 
 // This class represents and manages the connection with a PIA and the PA. It 
 // acts as a PML with no owned properties w.r.t. the PA and as PA w.r.t. the 
 // PIA. It manages a list of all registered property sets of one connected PIA.
 
-class GPIPMLlightServer : public GCFTask
+class GPIPMLlightServer : public TM::GCFTask
 {
 	public:
 		GPIPMLlightServer (GPIController& controller, const string& name, bool transportRawData);
 		virtual ~GPIPMLlightServer ();
     
-    GCFTCPPort& getClientPort();
-    virtual void sendMsgToClient(GCFEvent& msg);
-    void sendMsgToPA(GCFEvent& msg);
+    TM::GCFTCPPort& getClientPort();
+    virtual void sendMsgToClient(TM::GCFEvent& msg);
+    void sendMsgToPA(TM::GCFEvent& msg);
       
   protected: // event handle methods
     void registerPropSet(const PIRegisterScopeEvent& requestIn);
@@ -66,9 +77,9 @@ class GPIPMLlightServer : public GCFTask
     GPIPropertySet* findPropertySet(unsigned int seqnr) const;
         
 	protected: // state methods
-		        GCFEvent::TResult initial     (GCFEvent& e, GCFPortInterface& p);
-    virtual GCFEvent::TResult operational (GCFEvent& e, GCFPortInterface& p);
-            GCFEvent::TResult closing     (GCFEvent& e, GCFPortInterface& p);
+		        TM::GCFEvent::TResult initial     (TM::GCFEvent& e, TM::GCFPortInterface& p);
+    virtual TM::GCFEvent::TResult operational (TM::GCFEvent& e, TM::GCFPortInterface& p);
+            TM::GCFEvent::TResult closing     (TM::GCFEvent& e, TM::GCFPortInterface& p);
     
   private: // (copy)constructors
     GPIPMLlightServer();
@@ -80,8 +91,8 @@ class GPIPMLlightServer : public GCFTask
 
 	private: // data members
     // the PMLlight server port
-		GCFTCPPort        _clientPort;
-    GCFTCPPort        _propertyAgent;
+		TM::GCFTCPPort        _clientPort;
+    TM::GCFTCPPort        _propertyAgent;
     // PI centre
     GPIController&    _controller;
     typedef map<string /*scope*/, GPIPropertySet*> TPropertySets;
@@ -93,7 +104,10 @@ class GPIPMLlightServer : public GCFTask
     int _timerID;
 };
 
-inline GCFTCPPort& GPIPMLlightServer::getClientPort()    
+inline TM::GCFTCPPort& GPIPMLlightServer::getClientPort()    
   { return _clientPort; }
+  } // namespace PAL
+ } // namespace GCF
+} // namespace LOFAR
   
 #endif

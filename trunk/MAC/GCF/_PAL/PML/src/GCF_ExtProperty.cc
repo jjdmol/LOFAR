@@ -25,6 +25,14 @@
 #include <GCF/Utils.h>
 #include <GPM_Defines.h>
 
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+using namespace Common;
+  namespace PAL
+  {
+   
 GCFExtProperty::GCFExtProperty (const TPropertyInfo& propInfo) :
    GCFProperty(propInfo, 0),
    _isSubscribed(false)
@@ -106,4 +114,7 @@ bool GCFExtProperty::exists ()
     
   return existsInDB;
 }
+  } // namespace PAL
+ } // namespace GCF
+} // namespace LOFAR
 

@@ -22,15 +22,17 @@
 
 #include  <GPI_Controller.h>
 
+using namespace LOFAR::GCF;
+
 int main(int argc, char *argv[])
 {
-	GCFTask::init(argc, argv);
+	TM::GCFTask::init(argc, argv);
 
-	GPIController propertyInterace;
+	PAL::GPIController propertyInterace;
 
   propertyInterace.start();
   
-  GCFTask::run();
+  TM::GCFTask::run();
 
   // Just make the compilers happy...
 	return 0;

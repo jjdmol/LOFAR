@@ -26,8 +26,17 @@
 #include <GCF/TM/GCF_Task.h>
 #include <GTM_SBTCPPort.h>
 
-#include <Common/lofar_list.h>
-#include <Common/lofar_map.h>
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+  namespace TM
+  {
+class GCFEvent;
+class GCFPortInterface; 
+  }   
+  namespace SB 
+  {
 
 /**
    This is the main class of the Property Agent. It uses a number of helper 
@@ -36,29 +45,26 @@
    more than one connect request from different clients (PML).
 */
 
-class GCFEvent;
-class GCFPortInterface; 
-
-class GSBController : public GCFTask
+class GSBController : public TM::GCFTask
 {
 	public:
 		GSBController();
 		virtual ~GSBController();
   
 	private: // state methods
-		GCFEvent::TResult initial(GCFEvent& e, GCFPortInterface& p);
-		GCFEvent::TResult operational(GCFEvent& e, GCFPortInterface& p);
+		TM::GCFEvent::TResult initial(TM::GCFEvent& e, TM::GCFPortInterface& p);
+		TM::GCFEvent::TResult operational(TM::GCFEvent& e, TM::GCFPortInterface& p);
 
   private: // helper methods
     typedef struct
     {
       string host;
       unsigned int portNumber;
-      GCFPortInterface* pPortToOwner;
+      TM::GCFPortInterface* pPortToOwner;
     } TServiceInfo;
 
     void acceptConnectRequest();
-    void clientGone(GCFPortInterface& p);
+    void clientGone(TM::GCFPortInterface& p);
     void readRanges();
     unsigned int claimPortNumber(const string& host);
     void cleanupGarbage();
@@ -72,8 +78,8 @@ class GSBController : public GCFTask
     typedef map<string /*hostname*/, TPortStates> TPortHosts;
     TPortHosts _availableHosts;
 
-    list<GCFPortInterface*> _brokerClients;		
-    list<GCFPortInterface*> _brokerClientsGarbage;
+    list<TM::GCFPortInterface*> _brokerClients;		
+    list<TM::GCFPortInterface*> _brokerClientsGarbage;
 		GTMSBTCPPort					  _brokerProvider;
 
     TServiceInfo* findService(const string& servicename);
@@ -84,4 +90,7 @@ class GSBController : public GCFTask
     bool                _isRegistered;
     unsigned int        _counter;  
 };
+  } // namespace SB
+ } // namespace GCF
+} // namespace LOFAR
 #endif

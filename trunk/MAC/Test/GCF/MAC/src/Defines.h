@@ -48,6 +48,13 @@
     break; \
   }
 
+namespace LOFAR
+{
+ namespace GCF
+ {
+using namespace Common;
+  namespace Test
+  {
 // property sets
 
 // PropertySetA1: start
@@ -228,3 +235,6 @@ PROPERTYCONFIGLIST_BEGIN(propertiesSE1)
 PROPERTYCONFIGLIST_END
 
 // PropertySetE1: end
+  } // namespace Test
+ } // namespace GCF
+} // namespace LOFAR

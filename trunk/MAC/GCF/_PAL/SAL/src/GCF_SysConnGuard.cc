@@ -29,9 +29,13 @@
 #include <stdio.h>
 #include <unistd.h>
 
-namespace LOFAR {
-  namespace GCF {
-
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+using namespace TM;
+  namespace PAL
+  {
 /**
  * F_SCG_PROTOCOL signal names
  */
@@ -130,6 +134,7 @@ void GCFSysConnGuard::serviceEvent(const string& sysName, bool gone)
     (*iter)->dispatch(e, _dummyPort); 
   }
 }
-  } // namespace GCF
+  } // namespace PAL
+ } // namespace GCF
 } // namespace LOFAR
 

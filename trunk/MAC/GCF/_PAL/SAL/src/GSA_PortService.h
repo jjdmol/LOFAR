@@ -26,9 +26,12 @@
 #include <GSA_Service.h>
 #include <GCF/GCF_PVString.h>
 
-#include <Common/lofar_list.h>
-#include <Common/lofar_map.h>
-
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+  namespace PAL
+  {
 /**
    This class manages the properties with its use count, which are created 
    (resp. deleted) by means of the base class GSAService.
@@ -60,8 +63,8 @@ class GSAPortService : public GSAService
   protected:
     void dpCreated(const string& propName);
     void dpDeleted(const string& /*propName*/) {};
-    void dpeValueGet(const string& /*propName*/, const GCFPValue& /*value*/) {}; 
-    void dpeValueChanged(const string& propName, const GCFPValue& value);
+    void dpeValueGet(const string& /*propName*/, const Common::GCFPValue& /*value*/) {}; 
+    void dpeValueChanged(const string& propName, const Common::GCFPValue& value);
     void dpeValueSet(const string& /*propName*/) {};
     void dpeSubscribed(const string& propName);
     void dpeSubscriptionLost (const string& propName);
@@ -81,8 +84,11 @@ class GSAPortService : public GSAService
     typedef map<string /*peer ID*/, GCFPVSSPort*> TClients;
     TClients _clients;
     
-    GCFPVString _curPeerID;
-    GCFPVString _curPeerAddr;
-    GCFPVSSUIMConverter* _pConverter;
+    Common::GCFPVString   _curPeerID;
+    Common::GCFPVString   _curPeerAddr;
+    GCFPVSSUIMConverter*  _pConverter;
 };
+  } // namespace PAL
+ } // namespace GCF
+} // namespace LOFAR
 #endif

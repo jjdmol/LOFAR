@@ -9,8 +9,7 @@ AUTOGEN = autogen
 SUFFIXES = .ph
 
 %.ph: %.prot
-	$(AUTOGEN) -L $(top_srcdir)/../../MACCommon/autogen $< && \
-	chmod a+w $@
+	$(AUTOGEN) --writable -L $(top_srcdir)/../../MACCommon/autogen $<
 
 DOCHDRS	= $(pkginclude_HEADERS)
     

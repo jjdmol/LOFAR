@@ -30,9 +30,13 @@
 using LOFAR::BlobIStream;
 using LOFAR::BlobOStream;
 
-namespace LOFAR {
- namespace GCF {
-  namespace CEPPMLlight {
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+using namespace Common;
+  namespace CEPPMLlight 
+  {
     
 
 PIClient* PIClient::_pInstance = 0;

@@ -27,6 +27,12 @@
 
 using LOFAR::TYPES::uint16;
 
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+  namespace Common 
+  {
 
 GCFPVDynArr::GCFPVDynArr(TMACValueType itemType, const GCFPValueArray& val) :
   GCFPValue((TMACValueType) (LPT_DYNARR | itemType))
@@ -160,3 +166,6 @@ void GCFPVDynArr::cleanup()
   }
   _values.clear();
 }
+  } // namespace Common
+ } // namespace GCF
+} // namespace LOFAR

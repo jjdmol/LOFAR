@@ -26,6 +26,13 @@
 #include "GTM_File.h"
 #include <Common/lofar_string.h>
 
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+  namespace TM 
+  {
+
 // forward declaration
 class GCFTCPPort;
 
@@ -63,4 +70,7 @@ class GTMTCPSocket : public GTMFile
   protected: // data member
 };
 
+  } // namespace TM
+ } // namespace GCF
+} // namespace LOFAR
 #endif

@@ -26,6 +26,12 @@
 
 #include  <Resources.hxx>
 
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+  namespace PAL
+  {
 class GSAResources : public Resources
 {
   public:
@@ -36,4 +42,7 @@ class GSAResources : public Resources
     static PVSSboolean readSection ();        
 };
 
+  } // namespace PAL
+ } // namespace GCF
+} // namespace LOFAR
 #endif

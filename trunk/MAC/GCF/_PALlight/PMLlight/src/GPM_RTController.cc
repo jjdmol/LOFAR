@@ -26,6 +26,14 @@
 #include <GCF/Utils.h>
 #include <GCF/ParameterSet.h>
 
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+using namespace Common;
+using namespace TM;
+  namespace RTCPMLlight 
+  {
 static string sPMLTaskName("GCF-PMLlight");
 GPMRTHandler* GPMRTHandler::_pInstance = 0;
 
@@ -393,3 +401,6 @@ void logResult(TPIResult result, GCFRTMyPropertySet& propSet)
       break;
   }
 }
+  } // namespace RTCPMLlight
+ } // namespace GCF
+} // namespace LOFAR

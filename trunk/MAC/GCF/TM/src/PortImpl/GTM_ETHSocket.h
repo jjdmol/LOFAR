@@ -30,6 +30,12 @@
 #include <linux/if_packet.h>
 #include <linux/if_ether.h>
 
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+  namespace TM 
+  {
 
 // forward declaration
 class GCFETHRawPort;
@@ -75,5 +81,8 @@ class GTMETHSocket : public GTMFile
     char* _sendPacketData; // pointer to start of packet payload data
     struct sockaddr_ll _sockaddr;
 };
+  } // namespace TM
+ } // namespace GCF
+} // namespace LOFAR
 
 #endif

@@ -24,27 +24,35 @@
 #define GPA_REQUESTMANAGER_H
 
 #include <GPA_Defines.h>
-#include <Common/lofar_list.h>
+
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+  namespace TM
+  {
+class GCFPortInterface;
+class GCFEvent;
+  }
+  namespace PAL 
+  {
 
 /**
    This class manages a FIFO queue of requests, which 
    can be received from a PML and not handled immediately.
 */
-class GCFPortInterface;
-class GCFEvent;
-
 class GPARequestManager 
 {
 	public:
 		GPARequestManager();
 		virtual ~GPARequestManager();
 		
-		void registerRequest(GCFPortInterface& requestPort, const GCFEvent& e);
-		GCFEvent* getOldestRequest();
-		GCFPortInterface* getOldestRequestPort();
+		void registerRequest(TM::GCFPortInterface& requestPort, const TM::GCFEvent& e);
+		TM::GCFEvent* getOldestRequest();
+		TM::GCFPortInterface* getOldestRequestPort();
     
 		void deleteOldestRequest();
-    void deleteRequestsOfPort(const GCFPortInterface& requestPort);
+    void deleteRequestsOfPort(const TM::GCFPortInterface& requestPort);
     void deleteAllRequests();
 	
 	private: // helper methods
@@ -52,11 +60,14 @@ class GPARequestManager
 	private: // data members
 		typedef struct 
 		{
-			GCFPortInterface* pRPort;
+			TM::GCFPortInterface* pRPort;
 			char* pEvent;
 		} TRequest;
 		
 		list<TRequest> 	_requests;
 };
 
+  } // namespace PAL
+ } // namespace GCF
+} // namespace LOFAR
 #endif

@@ -5,7 +5,7 @@ autogen definitions protocol;
 
 description = "Protocol definition for the RTC-PMLlight/Property Interface(MAC/GCF)";
 prefix = "PI"; // for the signal names
-id = "(F_GCF_PROTOCOL + 1)";
+id = "(LOFAR::GCF::TM::F_GCF_PROTOCOL + 1)";
 // specify extra include files
 // e.g.
 //include = '<sys/time.h>';
@@ -32,11 +32,11 @@ enum TPIResult
   PI_MACTYPE_UNKNOWN,  
 };
 
-class PValue : public GCFTransportable
+class PValue : public GCF::TM::GCFTransportable
 {
   public:
     PValue() : _pValue(0), _unpacked(false) {};
-    PValue(const GCFPValue& value) : _pValue(&value), _unpacked(false) {};
+    PValue(const LOFAR::GCF::Common::GCFPValue& value) : _pValue(&value), _unpacked(false) {};
 
     virtual ~PValue() 
     {
@@ -52,7 +52,7 @@ class PValue : public GCFTransportable
     {
       assert(!_pValue);
       _unpacked = true;
-      _pValue = GCFPValue::unpackValue(buffer);
+      _pValue = LOFAR::GCF::Common::GCFPValue::unpackValue(buffer);
       return _pValue->getSize();
     }
     unsigned int getSize()
@@ -61,7 +61,7 @@ class PValue : public GCFTransportable
       return _pValue->getSize();
     }
 
-    const GCFPValue* _pValue;
+    const LOFAR::GCF::Common::GCFPValue* _pValue;
 
   private:
     bool _unpacked;
@@ -91,7 +91,7 @@ event = {
 	};
 	param = {
 		name = "category";
-		type = "TPSCategory";
+		type = "LOFAR::GCF::Common::TPSCategory";
 	};
 };
 
