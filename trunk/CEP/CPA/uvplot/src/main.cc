@@ -1,7 +1,7 @@
 #include <qapplication.h>
 
 
-#include "mainwin.h"
+#include <UVPMainWindow.h>
 
 
 int main(int argc, char *argv[])
