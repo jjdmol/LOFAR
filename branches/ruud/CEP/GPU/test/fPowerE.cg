@@ -1,0 +1,22 @@
+struct C2E2f_Output {
+	float4 color : COLOR;
+};
+
+C2E2f_Output fragmentMain(float2 xpos: TEXCOORD0,
+						  float2 ypos: TEXCOORD1,
+						  uniform samplerRECT xStream : TEXUNIT0,
+						  uniform samplerRECT yStream : TEXUNIT1)
+{
+	C2E2f_Output result;
+	float4		a;
+	float4		sval;
+	float4		cval;
+	a = texRECT(xStream, xpos);
+
+//	result.color = texRECT(xStream, xpos) * exp(texRECT(yStream, ypos));
+//	result.color = sin(a) + cos(a);
+	sincos(a, sval, cval);
+	result.color = sval + cval;
+
+	return result;
+}
