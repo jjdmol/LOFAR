@@ -1,24 +1,24 @@
-// KeyValue.h: Class to hold a general value
-//
-//  Copyright (C) 2001
-//  ASTRON (Netherlands Foundation for Research in Astronomy)
-//  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
-//
-//  This program is free software; you can redistribute it and/or modify
-//  it under the terms of the GNU General Public License as published by
-//  the Free Software Foundation; either version 2 of the License, or
-//  (at your option) any later version.
-//
-//  This program is distributed in the hope that it will be useful,
-//  but WITHOUT ANY WARRANTY; without even the implied warranty of
-//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//  GNU General Public License for more details.
-//
-//  You should have received a copy of the GNU General Public License
-//  along with this program; if not, write to the Free Software
-//  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-//
-//  $Id$
+//# KeyValue.h: Class to hold a general value
+//#
+//#  Copyright (C) 2001
+//#  ASTRON (Netherlands Foundation for Research in Astronomy)
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+//#
+//#  This program is free software; you can redistribute it and/or modify
+//#  it under the terms of the GNU General Public License as published by
+//#  the Free Software Foundation; either version 2 of the License, or
+//#  (at your option) any later version.
+//#
+//#  This program is distributed in the hope that it will be useful,
+//#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//#  GNU General Public License for more details.
+//#
+//#  You should have received a copy of the GNU General Public License
+//#  along with this program; if not, write to the Free Software
+//#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+//#
+//#  $Id$
 
 #ifndef COMMON_KEYVALUE_H
 #define COMMON_KEYVALUE_H
@@ -38,12 +38,17 @@ class KeyValueMap;
 class BlobOStream;
 class BlobIStream;
 
+// <summary> Class to hold a general value </summary>
+
 /**
-   The KeyHolder class is the interface to a set of parameters
-   defined in its sub-class DataType.
-   In the LOFARSim framework, an instance of this class is added to
-   Data objects. Therefore, each WorkHolder in the framework can
-   access the parameters.
+   The KeyValue and KeyValueMap act as a map of heterogeneous values.
+   A KeyValue object can contain a value from a set of data types.
+   The data types supported are all standard types (including string and
+   complex) and a std::vector of these types.
+   Furthermore the data type can be a KeyValueMap making it possible to have
+   nested structs.
+   Finally it can be a std::vector of KeyValue making it possible to have 
+   a vector of heterogeneous values.
 */
 
 class KeyValue
@@ -56,9 +61,8 @@ public:
 		 DTVecBool, DTVecInt, DTVecFloat, DTVecDouble,
 		 DTVecFComplex, DTVecDComplex, DTVecString};
 
-  /** @name Constructors
-      @memo Construct value with given type
-      @doc Construct value with given type. Default is empty vector<KeyValue>.
+  /** \name Constructors
+      Construct value with given type. Default is empty vector<KeyValue>.
   */
   //@{
   KeyValue();
@@ -104,9 +108,8 @@ public:
   /// Return the size of a vector (1 is returned for a scalar).
   unsigned int size() const;
 
-  /** @name Get functions
-      @memo Get the value with the given type
-      @doc Get the value with the given type.
+  /** \name Get functions
+      Get the value with the given type.
   */
   //@{
   bool getBool() const;
@@ -127,9 +130,8 @@ public:
   const KeyValueMap& getValueMap() const;
   //@}
 
-  /** @name Get functions for templated purposes
-      @memo Get the value with the given type
-      @doc Get the value with the given type.
+  /** \name Get functions for templated purposes
+      Get the value with the given type.
   */
   //@{
   void get (bool& value) const
