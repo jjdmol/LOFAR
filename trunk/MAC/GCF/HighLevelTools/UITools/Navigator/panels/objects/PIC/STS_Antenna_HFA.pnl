@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,394 286 95 64 N "_3DFace" 4
+PANEL,415 221 95 64 N "_3DFace" 4
 "$APNr"
 "$RCUNr"
 "$RackNr"
@@ -22,43 +22,7 @@ LANG:1 6 Layer1
 1 12 42 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
  "main()
 {
-
-		// Local data
-  	dyn_string txt;
-  	int iAnswer;
-  	bool bOK;				//Variable with value FALSE
-  	
-		txt = makeDynString(
-   	\"PUSH_BUTTON, Turn on maintenance, 11, 1\",
-   	\"PUSH_BUTTON, Turn off maintenance, 10, 1\",
-   	\"SEPARATOR\",
-   	\"PUSH_BUTTON, Set status to -> OK, 2, 1\",
-   	\"PUSH_BUTTON, Set status to -> Error, 3, 1\" );
- 
-  	popupMenu(txt, iAnswer);
-
-	//########################################################
-	//
-	//	Compute the chosen option
-	//
-	//########################################################
-  	switch (iAnswer)
-  	{
-		case 2:
-			  dpSetWait(\"System1:PIC_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board1_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\"_HFA.status:_original.._value\", 0);
-				break;
-		case 3:
-			  dpSetWait(\"System1:PIC_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board1_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\"_HFA.status:_original.._value\", 1);
-				break;
-   	case 10:
-			  dpSetWait(\"System1:PIC_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board1_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\"_HFA_Maintenance.status:_original.._value\", 0);
-      	break;
-   	case 11:
-			  dpSetWait(\"System1:PIC_Rack\"+ $RackNr +\"_SubRack\"+ $SubrackNr +\"_Board1_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\"_HFA_Maintenance.status:_original.._value\", 1);
-     	break;
-    default:
-    	break;
-  	}       
+  AntennaContextMenu(\"HFA\");
 }" 0
  E
 22 0 0 0 0 0
@@ -112,7 +76,11 @@ EP_setBackColorCB(string dpSource1, unsigned HFA_main,
 "Line20"
 ""
 1 16 22 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
+ "main()
+{
+  AntennaContextMenu(\"HFA\");
+}" 0
+ E
 23 0 0 0 0 0
 EE E
 0
@@ -125,7 +93,11 @@ E E 0 1 1 0 1 E  16 22 20 16
 "Line21"
 ""
 1 24 22 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
+ "main()
+{
+  AntennaContextMenu(\"HFA\");
+}" 0
+ E
 24 0 0 0 0 0
 EE E
 0
@@ -138,7 +110,11 @@ E E 0 1 1 0 1 E  24 22 20 16
 "Line22"
 ""
 1 30 22 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
+ "main()
+{
+  AntennaContextMenu(\"HFA\");
+}" 0
+ E
 25 0 0 0 0 0
 EE E
 0
@@ -151,7 +127,11 @@ E E 0 1 1 0 1 E  30 22 34 16
 "Line23"
 ""
 1 38 22 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
+ "main()
+{
+  AntennaContextMenu(\"HFA\");
+}" 0
+ E
 26 0 0 0 0 0
 EE E
 0
@@ -164,7 +144,11 @@ E E 0 1 1 0 1 E  38 22 34 16
 "Line24"
 ""
 1 30 38 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
+ "main()
+{
+  AntennaContextMenu(\"HFA\");
+}" 0
+ E
 27 0 0 0 0 0
 EE E
 0
@@ -177,7 +161,11 @@ E E 0 1 1 0 1 E  30 38 34 32
 "Line25"
 ""
 1 38 38 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
+ "main()
+{
+  AntennaContextMenu(\"HFA\");
+}" 0
+ E
 28 0 0 0 0 0
 EE E
 0
@@ -190,7 +178,11 @@ E E 0 1 1 0 1 E  38 38 34 32
 "Line26"
 ""
 1 16 38 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
+ "main()
+{
+  AntennaContextMenu(\"HFA\");
+}" 0
+ E
 29 0 0 0 0 0
 EE E
 0
@@ -203,7 +195,11 @@ E E 0 1 1 0 1 E  16 38 20 32
 "Line27"
 ""
 1 24 38 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
+ "main()
+{
+  AntennaContextMenu(\"HFA\");
+}" 0
+ E
 30 0 0 0 0 0
 EE E
 0

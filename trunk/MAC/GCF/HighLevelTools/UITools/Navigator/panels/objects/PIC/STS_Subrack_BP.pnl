@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,288 115 328 89 N "_3DFace" 1
+PANEL,285 456 328 89 N "_3DFace" 1
 "$datapoint"
 "main()
 {
@@ -94,75 +94,9 @@ main(int iType)
 
  "main()
 {
-  string txt_maintenance, txt_status;
-  int iAnswer, maintenance, status;
-  bool bOK;				//Variable with value FALSE
-  	
-  dpGet($datapoint + \"_Board1_BP.status:_original.._value\", status);
-	dpGet($datapoint + \"_Board1_Maintenance.status:_original.._value\", maintenance);
-  if (status==1)
-    txt_status = \"PUSH_BUTTON, Set status to -> OK, 2, 1\";
-  else
-    txt_status = \"PUSH_BUTTON, Set status to -> Error, 3, 1\";
-
- 	if (maintenance==1)
-    txt_maintenance = \"PUSH_BUTTON, Turn off maintenance, 10, 1\";
-	else
-	  txt_maintenance = \"PUSH_BUTTON, Turn on maintenance, 11, 1\";
-	  
-  popupMenu(makeDynString(txt_maintenance, \"SEPARATOR\", txt_status), iAnswer);
-
-
-//////////////////////////////////////////////////////////
-//
-//	Compute the chosen option
-//
-//////////////////////////////////////////////////////////
-  	switch (iAnswer)
-  	{
-  	case 2:
-			  dpSetWait($datapoint + \"_Board1_BP.status:_original.._value\", 0);
-  			break;
-   	case 3:
-			  dpSetWait($datapoint + \"_Board1_BP.status:_original.._value\", 1);
-  			break;
-   	case 10:   	
-			  dpSetWait($datapoint + \"_Board1_Maintenance.status:_original.._value\", 0);
-/* 		  	dpActivateAlert($datapoint + \"_Board1_BP.status\", bOK);
- 		  	dpActivateAlert($datapoint + \"_Board1_AP1.status\", bOK);
- 		  	dpActivateAlert($datapoint + \"_Board1_AP2.status\", bOK);
- 		  	dpActivateAlert($datapoint + \"_Board1_AP3.status\", bOK);
- 		  	dpActivateAlert($datapoint + \"_Board1_AP4.status\", bOK);
-		  	dpActivateAlert($datapoint + \"_Board1_AP1_RCU1.status\", bOK);
-		  	dpActivateAlert($datapoint + \"_Board1_AP1_RCU2.status\", bOK);
-		  	dpActivateAlert($datapoint + \"_Board1_AP2_RCU1.status\", bOK);
-		  	dpActivateAlert($datapoint + \"_Board1_AP2_RCU2.status\", bOK);
-		  	dpActivateAlert($datapoint + \"_Board1_AP3_RCU1.status\", bOK);
-		  	dpActivateAlert($datapoint + \"_Board1_AP3_RCU2.status\", bOK);
-		  	dpActivateAlert($datapoint + \"_Board1_AP4_RCU1.status\", bOK);
-		  	dpActivateAlert($datapoint + \"_Board1_AP4_RCU2.status\", bOK); */
-      	break;
-   	case 11:
-			  dpSetWait($datapoint + \"_Board1_Maintenance.status:_original.._value\", 1);
-/* 		  	dpDeactivateAlert($datapoint + \"_Board1_BP.status\", bOK);
- 		  	dpDeactivateAlert($datapoint + \"_Board1_AP1.status\", bOK);
- 		  	dpDeactivateAlert($datapoint + \"_Board1_AP2.status\", bOK);
- 		  	dpDeactivateAlert($datapoint + \"_Board1_AP3.status\", bOK);
- 		  	dpDeactivateAlert($datapoint + \"_Board1_AP4.status\", bOK);
-		  	dpDeactivateAlert($datapoint + \"_Board1_AP1_RCU1.status\", bOK);
-		  	dpDeactivateAlert($datapoint + \"_Board1_AP1_RCU2.status\", bOK);
-		  	dpDeactivateAlert($datapoint + \"_Board1_AP2_RCU1.status\", bOK);
-		  	dpDeactivateAlert($datapoint + \"_Board1_AP2_RCU2.status\", bOK);
-		  	dpDeactivateAlert($datapoint + \"_Board1_AP3_RCU1.status\", bOK);
-		  	dpDeactivateAlert($datapoint + \"_Board1_AP3_RCU2.status\", bOK);
-		  	dpDeactivateAlert($datapoint + \"_Board1_AP4_RCU1.status\", bOK);
-		  	dpDeactivateAlert($datapoint + \"_Board1_AP4_RCU2.status\", bOK); */
-     	break;
-    default:
-    	break;
-  	}       
+  BPContextMenu();
 }
-//Function re" 0
+" 0
  E
 1 0 0 0 0 0
 EE E
@@ -196,7 +130,11 @@ LANG:1 2 BP
 "icon_maintenance"
 ""
 1 140 59 E E E 1 E 0 E N "_Transparent" E N "_Transparent" E E
- E E
+ "main()
+{
+  BPContextMenu();
+}" 0
+ E
 5 0 0 0 0 0
 EE E
 0
