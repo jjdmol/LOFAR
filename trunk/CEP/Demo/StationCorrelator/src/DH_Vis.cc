@@ -31,8 +31,12 @@ DH_Vis::DH_Vis (const string& name, const int stations, const int channels, cons
 DH_Vis::DH_Vis(const DH_Vis& that)
   : DataHolder(that),
     itsBuffer(0),
-    itsBufSize(that.itsBufSize)
+    nstations     (that.nstations),
+    nchannels     (that.nchannels),
+    npolarisations(that.npolarisations)
 {
+  // Determine the number of bytes needed for DataPacket and buffer.
+  itsBufSize = nstations * nstations * nchannels * npolarisations*npolarisations; 
 }
 
 DH_Vis::~DH_Vis()

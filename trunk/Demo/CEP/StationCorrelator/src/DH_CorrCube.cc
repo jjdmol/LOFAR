@@ -29,7 +29,7 @@ DH_CorrCube::DH_CorrCube (const string& name,
   npolarisations (polarisations)
 {
   // Determine the number of bytes needed for DataPacket and buffer.
-  cout << nstations << " " << nchannels << " " << nsamples << " " << npolarisations << endl;
+  //cout << nstations << " " << nchannels << " " << nsamples << " " << npolarisations << endl;
   itsBufSize = nstations * nchannels * nsamples * npolarisations ;
   //  cout << itsBufSize << endl;
 }
@@ -37,8 +37,13 @@ DH_CorrCube::DH_CorrCube (const string& name,
 DH_CorrCube::DH_CorrCube(const DH_CorrCube& that)
   : DataHolder     (that),
     itsBuffer      (0),
-    itsBufSize     (that.itsBufSize)
+    nstations      (that.nstations),
+    nchannels      (that.nchannels),
+    nsamples       (that.nsamples),
+    npolarisations (that.npolarisations)
 {
+  // Determine the number of bytes needed for DataPacket and buffer.
+  itsBufSize = nstations * nchannels * nsamples * npolarisations ;
 }
 
 DH_CorrCube::~DH_CorrCube()
