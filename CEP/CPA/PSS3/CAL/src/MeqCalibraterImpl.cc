@@ -39,6 +39,7 @@
 #include <aips/Arrays/ArrayLogical.h>
 #include <aips/Arrays/Matrix.h>
 #include <aips/Arrays/Slice.h>
+#include <aips/Arrays/Slicer.h>
 #include <aips/Arrays/Vector.h>
 #include <aips/Exceptions/Error.h>
 #include <aips/Functionals/Polynomial.h>
@@ -114,8 +115,9 @@ void MeqCalibrater::getFreq (int ddid)
   AssertMsg (allEQ (chanWidth, chanWidth(0)),
 	     "Channels must have equal spacings");
   itsNrChan    = chanWidth.nelements();
-  itsStartFreq = chanFreq(0) - chanWidth(0)/2;
-  itsEndFreq   = itsStartFreq + itsNrChan*chanWidth(0);
+  itsStepFreq  = chanWidth(0);
+  itsStartFreq = chanFreq(0) - itsStepFreq/2;
+  itsEndFreq   = itsStartFreq + itsNrChan*itsStepFreq;
 }
 
 //----------------------------------------------------------------------
@@ -374,10 +376,7 @@ MeqCalibrater::MeqCalibrater(const String& msName,
   // Calculate the UVW polynomial coefficients for each baseline.
   calcUVWPolc (sortMS);
 
-  // Setup the iterator to step through the MS in TIME order.
-  itsIter = TableIterator(selMS, "TIME");
-
-  // Set up the expression tree for a single baseline.
+  // Set up the expression tree for all baselines.
   makeWSRTExpr();
 
   cout << "MeqMat " << MeqMatrixRep::nctor << ' ' << MeqMatrixRep::ndtor
@@ -388,7 +387,12 @@ MeqCalibrater::MeqCalibrater(const String& msName,
   // Calculate frequency domain.
   getFreq (ddid);
   cout << "Freq: " << itsStartFreq << ' ' << itsEndFreq << " (" <<
-    itsEndFreq - itsStartFreq << " Hz) " << itsNrChan << endl;
+    itsEndFreq - itsStartFreq << " Hz) " << itsNrChan << " channels of "
+       << itsStepFreq << " Hz" << endl;
+
+  // By default select all rows and all channels.
+  // This also sets up the iterator.
+  select ("", 0, -1);
 }
 
 //----------------------------------------------------------------------
@@ -536,7 +540,8 @@ bool MeqCalibrater::nextInterval()
     itsIter++;
   }
   itsSolveDomain = MeqDomain(timeStart, timeStart + nrtim*timeStep,
-			     itsStartFreq, itsEndFreq);
+			     itsStartFreq + itsFirstChan*itsStepFreq,
+			     itsStartFreq + (itsLastChan+1)*itsStepFreq);
   initParms (itsSolveDomain);
   return true;
 }
@@ -651,6 +656,12 @@ Double MeqCalibrater::solve (const String& colName)
   int nrpoint = 0;
   Timer timer;
 
+  double startFreq = itsStartFreq + itsFirstChan*itsStepFreq;
+  double endFreq   = itsStartFreq + (itsLastChan+1)*itsStepFreq;
+  int nrchan = 1+itsLastChan-itsFirstChan;
+  Slicer dataSlicer (IPosition(2,0,itsFirstChan),
+		     IPosition(2,Slicer::MimicSource,nrchan));
+
   ROArrayColumn<Complex> dataCol (itsMS, colName);
   // Complex values are separated in real and imaginary.
   // Loop through all rows in the current solve domain.
@@ -668,18 +679,17 @@ Double MeqCalibrater::solve (const String& colName)
       ///    }
     double time = itsMSCol.time()(rownr);
     double step = itsMSCol.interval()(rownr);
-    MeqDomain domain(time-step/2, time+step/2, itsStartFreq, itsEndFreq);
-    MeqRequest request(domain, 1, itsNrChan, itsNrScid);
+    MeqDomain domain(time-step/2, time+step/2, startFreq, endFreq);
+    MeqRequest request(domain, 1, nrchan, itsNrScid);
     MeqJonesExpr& expr = *(itsExpr[blindex]);
     expr.calcResult (request);
     // Form the equations for this row.
     // Make a default derivative vector with values 0.
-    MeqMatrix defaultDeriv (Matrix<DComplex> (1, itsNrChan, DComplex()));
+    MeqMatrix defaultDeriv (Matrix<DComplex> (1, nrchan, DComplex()));
     const complex<double>* defaultDerivPtr = defaultDeriv.dcomplexStorage();
-    // Get the data of this row.
-    Matrix<Complex> data = dataCol(rownr);
+    // Get the data of this row for the given channels.
+    Matrix<Complex> data = dataCol.getSlice (rownr, dataSlicer);
     int npol = data.shape()(0);
-    Assert (itsNrChan == data.shape()(1));
     // Calculate the derivatives and get pointers to them.
     // Use the default if no perturbed value defined.
     vector<const complex<double>*> derivs(npol*itsNrScid);
@@ -740,7 +750,7 @@ Double MeqCalibrater::solve (const String& colName)
       // Fill in all equations.
       if (npol == 1) {
 	const MeqMatrix& xx = expr.getResult11().getValue();
-	for (int i=0; i<itsNrChan; i++) {
+	for (int i=0; i<nrchan; i++) {
 	  for (int j=0; j<itsNrScid; j++) {
 	    derivReal[j] = derivs[j][i].real();
 	    derivImag[j] = derivs[j][i].imag();
@@ -756,7 +766,7 @@ Double MeqCalibrater::solve (const String& colName)
       } else if (npol == 2) {
 	{
 	  const MeqMatrix& xx = expr.getResult11().getValue();
-	  for (int i=0; i<itsNrChan; i++) {
+	  for (int i=0; i<nrchan; i++) {
 	    for (int j=0; j<itsNrScid; j++) {
 	      derivReal[j] = derivs[j][i].real();
 	      derivImag[j] = derivs[j][i].imag();
@@ -772,7 +782,7 @@ Double MeqCalibrater::solve (const String& colName)
 	}
 	{
 	  const MeqMatrix& yy = expr.getResult22().getValue();
-	  for (int i=0; i<itsNrChan; i++) {
+	  for (int i=0; i<nrchan; i++) {
 	    for (int j=0; j<itsNrScid; j++) {
 	      derivReal[j] = derivs[j+itsNrScid][i].real();
 	      derivImag[j] = derivs[j+itsNrScid][i].imag();
@@ -789,7 +799,7 @@ Double MeqCalibrater::solve (const String& colName)
       } else if (npol == 4) {
 	{
 	  const MeqMatrix& xx = expr.getResult11().getValue();
-	  for (int i=0; i<itsNrChan; i++) {
+	  for (int i=0; i<nrchan; i++) {
 	    for (int j=0; j<itsNrScid; j++) {
 	      derivReal[j] = derivs[j][i].real();
 	      derivImag[j] = derivs[j][i].imag();
@@ -808,7 +818,7 @@ Double MeqCalibrater::solve (const String& colName)
 	}
 	{
 	  const MeqMatrix& xy = expr.getResult12().getValue();
-	  for (int i=0; i<itsNrChan; i++) {
+	  for (int i=0; i<nrchan; i++) {
 	    for (int j=0; j<itsNrScid; j++) {
 	      derivReal[j] = derivs[j+itsNrScid][i].real();
 	      derivImag[j] = derivs[j+itsNrScid][i].imag();
@@ -824,7 +834,7 @@ Double MeqCalibrater::solve (const String& colName)
 	}
 	{
 	  const MeqMatrix& yx = expr.getResult21().getValue();
-	  for (int i=0; i<itsNrChan; i++) {
+	  for (int i=0; i<nrchan; i++) {
 	    for (int j=0; j<itsNrScid; j++) {
 	      derivReal[j] = derivs[j+2*itsNrScid][i].real();
 	      derivImag[j] = derivs[j+2*itsNrScid][i].imag();
@@ -840,7 +850,7 @@ Double MeqCalibrater::solve (const String& colName)
 	}
 	{
 	  const MeqMatrix& yy = expr.getResult22().getValue();
-	  for (int i=0; i<itsNrChan; i++) {
+	  for (int i=0; i<nrchan; i++) {
 	    for (int j=0; j<itsNrScid; j++) {
 	      derivReal[j] = derivs[j+3*itsNrScid][i].real();
 	      derivImag[j] = derivs[j+3*itsNrScid][i].imag();
@@ -927,14 +937,15 @@ void MeqCalibrater::saveParms()
   // Therefore the table is recreated.
   // First get the table description and name.
   TableDesc td = itsGSMTable.tableDesc();
-  String name  = itsGSMTable.tableName() + "_saved";
-  // Close the table by assigining an empty object to it.
+  String name  = itsGSMTable.tableName();
+  // Close the table by assigning an empty object to it.
   itsGSMTable = Table();
-  // Rrecreate the table and save the parameters.
-  SetupNewTable newtab(name, td, Table::New);
+  // Recreate the table and save the parameters.
+  SetupNewTable newtab(name+"_new", td, Table::New);
   Table tab(newtab);
   itsGSM.store(tab);
-  // Make the new table the current one.
+  // Make the new table the current one and rename it to the original name.
+  tab.rename (name, Table::New);
   itsGSMTable = tab;
 }
 
@@ -960,6 +971,10 @@ void MeqCalibrater::predict (const String& modelDataColName)
     cout << "Added column " << modelDataColName << " to the MS" << endl;
   }
 
+  double startFreq = itsStartFreq + itsFirstChan*itsStepFreq;
+  double endFreq   = itsStartFreq + (itsLastChan+1)*itsStepFreq;
+  int nrchan = 1+itsLastChan-itsFirstChan;
+
   ArrayColumn<Complex> mdcol(itsMS, modelDataColName);
   // Loop through all rows in the current solve domain.
   for (unsigned int i=0; i<itsCurRows.nelements(); i++) {
@@ -975,15 +990,15 @@ void MeqCalibrater::predict (const String& modelDataColName)
       ///    }
     double time = itsMSCol.time()(rownr);
     double step = itsMSCol.interval()(rownr);
-    MeqDomain domain(time-step/2, time+step/2, itsStartFreq, itsEndFreq);
-    MeqRequest request(domain, 1, itsNrChan, itsNrScid);
+    MeqDomain domain(time-step/2, time+step/2, startFreq, endFreq);
+    MeqRequest request(domain, 1, nrchan, itsNrScid);
     itsExpr[blindex]->calcResult (request);
     // Write the requested data into the MS.
     // Use the same polarizations as for the original data.
     IPosition shp = itsMSCol.data().shape(rownr);
     Assert (shp(1) == itsNrChan);
     Matrix<Complex> data(shp);
-    Slice sliceFreq(0, itsNrChan);
+    Slice sliceFreq(itsFirstChan, nrchan);
     // Store the DComplex results into the Complex data array.
     Array<Complex> tmp0 (data(Slice(0,1), sliceFreq));
     convertArray (tmp0,
@@ -1182,14 +1197,31 @@ GlishRecord MeqCalibrater::getSolveDomain()
 //
 // Create a subset of the MS using the given selection string
 // (which must be the WHERE part of a TaQL command).
+// Also the channels to be used can be specified.
 //
 //----------------------------------------------------------------------
-Bool MeqCalibrater::select(const String& where)
+Bool MeqCalibrater::select(const String& where, int firstChan, int lastChan)
 {
-  cout << "select " << where << endl;
-  Table selms = tableCommand ("select from $1 where " + where, itsMS);
-  Assert (selms.nrow() > 0);
-  itsIter = TableIterator (selms, "TIME");
+  if (firstChan < 0  ||  firstChan >= itsNrChan) {
+    itsFirstChan = 0;
+  } else {
+    itsFirstChan = firstChan;
+  }
+  if (lastChan < 0  ||  lastChan >= itsNrChan) {
+    itsLastChan = itsNrChan-1;
+  } else {
+    itsLastChan = lastChan;
+  }
+  cout << "select " << where << "  channels=[" << itsFirstChan
+       << ',' << itsLastChan << ']' << endl;
+  Assert (itsFirstChan <= itsLastChan);
+  if (! where.empty()) {
+    Table selms = tableCommand ("select from $1 where " + where, itsMS);
+    Assert (selms.nrow() > 0);
+    itsIter = TableIterator (selms, "TIME");
+  } else {
+    itsIter = TableIterator (itsMS, "TIME");
+  }  
   resetIterator();
   return True;
 }
@@ -1418,8 +1450,12 @@ MethodResult MeqCalibrater::runMethod(uInt which,
     {
       Parameter<String> where(inputRecord, "where",
 			      ParameterSet::In);
+      Parameter<Int> firstChan(inputRecord, "firstchan",
+			       ParameterSet::In);
+      Parameter<Int> lastChan(inputRecord, "lastchan",
+			      ParameterSet::In);
 
-      if (runMethod) select(where());
+      if (runMethod) select(where(), firstChan(), lastChan());
     }
     break;
 
