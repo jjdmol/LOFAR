@@ -116,12 +116,12 @@ namespace LOFAR
       }
 
 
-      LikeExprNode::LikeExprNode(const std::string& oper,
-                                 const Expr& lhs, const Expr& rhs) :
+      LikeExprNode::LikeExprNode(const std::string& oper, const Expr& value, 
+                                 const std::string& pattern) :
         itsOperation(oper),
-        itsLeft(lhs), itsRight(rhs)
+        itsOperand(value), itsPattern(pattern)
       {
-        if (lhs.isNull() || rhs.isNull())
+        if (value.isNull())
           THROW(QueryError, "Null expression argument is not allowed");
       }
 
@@ -131,19 +131,13 @@ namespace LOFAR
 
       void LikeExprNode::print(std::ostream& os) const
       {
-        // We must print the pattern expression in itsRight into an
-        // ostringstream, because we need its contents as a string.
-        ostringstream oss;
-        itsRight.print(oss);
-        string rhs(oss.str());
-
         // This string will contain the output pattern in SQL format.
         string pattern;
 
-        // Scan the pattern expression in itsRight (represented as a string by
-        // rhs) for occurrences of wildcard characters and make the proper
-        // substitutions.
-        for(string::const_iterator it = rhs.begin(); it != rhs.end(); ++it) {
+        // Scan the pattern expression in \c itsPattern for occurrences of
+        // wildcard characters and make the proper substitutions.
+        for(string::const_iterator it = itsPattern.begin(); 
+            it != itsPattern.end(); ++it) {
           switch (*it) {
           case '*':
             pattern += "%";
@@ -158,7 +152,7 @@ namespace LOFAR
             pattern += "\\\\_";
             break;
           case '\\':
-            if (++it != rhs.end())
+            if (++it != itsPattern.end())
               if (*it == '\\') pattern += "\\\\\\\\";
               else pattern += *it;
             break;
@@ -168,14 +162,17 @@ namespace LOFAR
           }
         }
 
-        itsLeft.print(os);
-        os << itsOperation << pattern << " ESCAPE '\\\\'";
+        itsOperand.print(os);
+        // We need to convert \a pattern to an Expr object here, because the
+        // Expr object will take care of converting the C/C++-style string to
+        // a SQL-style string.
+        os << itsOperation << Expr(pattern) << " ESCAPE '\\\\'";
       }
 
 
       Expr LikeExprNode::getConstraint() const
       {
-        return itsLeft.getConstraint() && itsRight.getConstraint();
+        return itsOperand.getConstraint();
       }
 
 

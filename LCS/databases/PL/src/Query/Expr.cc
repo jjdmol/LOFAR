@@ -135,14 +135,14 @@ namespace LOFAR
         return new InExprNode(" NOT IN ", *this, set);
       }
 
-      Expr Expr::like (const Expr& exp) const
+      Expr Expr::like (const std::string& str) const
       {
-        return new LikeExprNode(" LIKE ", *this, exp);
+        return new LikeExprNode(" LIKE ", *this, str);
       }
 
-      Expr Expr::notLike (const Expr& exp) const
+      Expr Expr::notLike (const std::string& str) const
       {
-        return new LikeExprNode(" NOT LIKE ", *this, exp);
+        return new LikeExprNode(" NOT LIKE ", *this, str);
       }
 
       
