@@ -20,17 +20,21 @@
 //#
 //#  $ $
 
-#ifndef BBS3_MMAP_H
-#define BBS3_MMAP_H
+#ifndef LOFAR_BBS3_MMAP_H
+#define LOFAR_BBS3_MMAP_H
 
-#include <Common/lofar_string.h>
+// \file MMap.h
+// implements an mmap operation
 
 //# Includes
-
+#include <Common/lofar_string.h>
 #include <Common/LofarTypes.h>
 
 namespace LOFAR
 {
+
+// \ addtogroup BBS3
+// @{
 
 /** 
     This class implements a mmap operation
@@ -87,6 +91,9 @@ inline void* MMap::getStart()
 
 inline const string& MMap::getFileName()
    { return itsFileName; }
+
+// @}
+
 } // namespace LOFAR
 
 #endif

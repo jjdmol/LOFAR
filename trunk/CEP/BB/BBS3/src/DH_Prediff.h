@@ -1,4 +1,4 @@
-//  DH_Prediff.h:  DataHolder
+//  DH_Prediff.h:  DataHolder for 'prediffed' data
 //
 //  Copyright (C) 2000, 2001
 //  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -23,14 +23,20 @@
 //
 //////////////////////////////////////////////////////////////////////
 
-#ifndef BBS3_DH_PREDIFF_H
-#define BBS3_DH_PREDIFF_H
+#ifndef LOFAR_BBS3_DH_PREDIFF_H
+#define LOFAR_BBS3_DH_PREDIFF_H
+
+// \file DH_Prediff.h
+// DataHolder for 'prediffed' data.
 
 #include <Transport/DataHolder.h>
 #include <Common/lofar_vector.h>
 
 namespace LOFAR
 {
+
+// \addtogroup BBS3
+// @{
 
 /**
    This class is a DataHolder which contains the difference between measured
@@ -130,6 +136,7 @@ inline double DH_Prediff::getStartTime()
 inline double DH_Prediff::getEndTime()
 { return *itsEndTime; }
 
+// @}
 
 } // namespace LOFAR
 

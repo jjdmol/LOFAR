@@ -1391,6 +1391,13 @@ void Prediffer::updateSolvableParms()
       MeqParmPolc* ppc = dynamic_cast<MeqParmPolc*>(*iter);
       ASSERT (ppc);
       ppc->updateFromTable();
+      
+//       streamsize prec = cout.precision();
+//       cout.precision(10);
+//       cout << "****Read: " << (*iter)->getCoeffValues().getDouble()
+// 	   << " for parameter " << (*iter)->getName() << endl;
+//       cout.precision (prec);
+
     }
   }
   resetEqLoop();

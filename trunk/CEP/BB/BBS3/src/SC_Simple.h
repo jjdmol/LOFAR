@@ -20,9 +20,11 @@
 //#
 //#  $Id$
 
-#ifndef BBS3_SC_SIMPLE_H
-#define BBS3_SC_SIMPLE_H
+#ifndef LOFAR_BBS3_SC_SIMPLE_H
+#define LOFAR_BBS3_SC_SIMPLE_H
 
+// \file SC_Simple
+// A simple calibration strategy
 
 //# Includes
 #include <BBS3/StrategyController.h>
@@ -31,6 +33,9 @@
 
 namespace LOFAR
 {
+
+// \addtogroup BBS3
+// @{
 
 //# Forward Declarations
 
@@ -70,6 +75,8 @@ public:
 
 inline string SC_Simple::getType() const
 { return "Simple"; }
+
+// @}
 
 } // namespace LOFAR
 

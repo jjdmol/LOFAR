@@ -20,8 +20,11 @@
 //#
 //#  $Id$
 
-#ifndef BBS3_STRATEGYCONTROLLER_H
-#define BBS3_STRATEGYCONTROLLER_H
+#ifndef LOFAR_BBS3_STRATEGYCONTROLLER_H
+#define LOFAR_BBS3_STRATEGYCONTROLLER_H
+
+// \file StrategyController.h
+// A base class for all calibration strategies
 
 //# Includes
 #include <Common/lofar_vector.h>
@@ -31,6 +34,9 @@
 
 namespace LOFAR
 {
+
+// \addtogroup BBS3
+// @{
 
 //# Forward Declarations
 class DH_Solution;
@@ -111,6 +117,8 @@ inline ParmWriter& StrategyController::getParmWriter()
 
 inline int StrategyController::getNumberOfPrediffers() const
 { return itsNrPrediffers; }
+
+// @}
 
 } // namespace LOFAR
 

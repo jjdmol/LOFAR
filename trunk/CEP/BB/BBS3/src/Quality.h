@@ -1,4 +1,4 @@
-//#  Quality.h: 
+//#  Quality.h: contains metrics defining the quality of a solution
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,14 +20,20 @@
 //#
 //#  $Id$
 
-#ifndef BBS3_QUALITY_H
-#define BBS3_QUALITY_H
+#ifndef LOFAR_BBS3_QUALITY_H
+#define LOFAR_BBS3_QUALITY_H
+
+// \file Quality.h
+// Contains metrics defining the quality of a solution
 
 //# Includes
 #include <Common/lofar_iostream.h>
 
 namespace LOFAR
 {
+
+// \addtogroup BBS3
+// @{
 
 // This struct contains metrics defining the quality of a solution.
 class Quality {
@@ -53,6 +59,8 @@ inline ostream& operator<< (ostream& os, const Quality& qual)
   qual.show(os); 
   return os; 
 }
+
+// @}
 
 } // namespace LOFAR
 

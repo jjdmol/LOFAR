@@ -21,9 +21,11 @@
 //#
 //#  $Id$
 
-#ifndef BBS3_WH_PREDIFF_H
-#define BBS3_WH_PREDIFF_H
+#ifndef LOFAR_BBS3_WH_PREDIFF_H
+#define LOFAR_BBS3_WH_PREDIFF_H
 
+// \file WH_Prediff.h
+// Predicts visibilities and determines difference to measured data.
 
 //# Includes
 #include <tinyCEP/WorkHolder.h>
@@ -31,6 +33,10 @@
 
 namespace LOFAR
 {
+
+// \addtogroup BBS3
+// @{
+
 //# Forward Declarations
 class Prediffer;
  class ParmData;
@@ -86,6 +92,8 @@ class WH_Prediff : public LOFAR::WorkHolder
 
   bool        itsFirstCall;  // Temporary!!! Needs to be done correctly for multiple strategies
 };
+
+// @}
 
 } // namespace LOFAR
 

@@ -1,4 +1,4 @@
-//  DH_WOPrediff.h: Example DataHolder
+//  DH_WOPrediff.h: DataHolder containing Prediffer workorders
 //
 //  Copyright (C) 2000, 2001
 //  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -23,8 +23,11 @@
 //
 //////////////////////////////////////////////////////////////////////
 
-#ifndef BBS3_DH_WOPREDIFF_H
-#define BBS3_DH_WOPREDIFF_H
+#ifndef LOFAR_BBS3_DH_WOPREDIFF_H
+#define LOFAR_BBS3_DH_WOPREDIFF_H
+
+// \file DH_WOPrediff.h
+// DataHolder containing Prediffer workorders
 
 #include <Common/lofar_vector.h>
 
@@ -34,6 +37,9 @@
 
 namespace LOFAR
 {
+
+// \addtogroup BBS3
+// @{
 
 /**
    This class is a DataHolder which contains the work orders.
@@ -311,6 +317,7 @@ namespace PL {
                                                       
 } // end namespace PL   
 
+// @}
 } // namespace LOFAR
 
 #endif 
