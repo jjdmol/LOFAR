@@ -1,5 +1,5 @@
 #!/bin/sh
 
-./Simulator_Example -dGlobal=0
+./Simulator_Example -dGlobal=0 < Simulator_Example.in
 STATUS=$?
 exit $STATUS
