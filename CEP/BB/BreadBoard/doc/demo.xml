@@ -5,7 +5,7 @@
 
 <!-- $Id$ -->
 <!-- look at bottom for revision Log. -->
-<article lang="nl">
+<article lang="en">
  <artheader>
   <title>a use-case to demonstrate the use of the Blackboard
   architecture in the selfcal imaging application in LOFAR</title>
@@ -93,8 +93,10 @@
   <para>
 
    termination strategies can be "perform a fixed number of steps", or
-   "terminate when &delta; smaller then &number;". For now the results
-   are classified as good enough by the user terminating the program.
+   "terminate when &delta; smaller then &number;". This second
+   approach can be dangerous, if the calibration process is not
+   strictly convergent. For now the results are classified as good
+   enough by the user terminating the program.
 
   </para>
 
@@ -127,12 +129,18 @@
   <section>
 
    <title>The strategy</title>
-   <subtitle>A high level script</subsection>
+   <subtitle>A high level script</subtitle>
 
    <para>
 
     The implementation of the strategy is a python script using the
-    components defined in the selfcal framework.
+    components defined in the selfcal framework. In the final
+    (c++-)implementation of selfcal. The high level control object is
+    a process with an embedded python interpreter. It reads the script
+    when started and in an advanced enterprise-pro-gold version it
+    might supply a GUI to interrupt and/or change the strategy on the
+    fly. The database used supplies the possibility to watch progress
+    on-line and intervene if needed.
 
    </para>
 
