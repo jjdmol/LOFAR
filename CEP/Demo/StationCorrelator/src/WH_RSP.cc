@@ -57,16 +57,9 @@ WH_RSP::WH_RSP(const string& name,
   itsNbeamlets     = kvm.getInt("NoRSPBeamlets", 92) / itsNCorrOutputs; // number of EPA-packet beamlets per OutDataholder
   itsNpackets      = kvm.getInt("NoPacketsInFrame", 8);             // number of EPA-packets in RSP-ethernetframe
   itsSzEPAheader   = kvm.getInt("SzEPAheader", 14);                 // headersize in bytes
-  itsSzEPApacket   = (itsPolarisations * sizeof(complex<int16>) * kvm.getInt("NoRSPBeamlets", 92)) + itsSzEPAheader;           // packetsize in bytes
+  itsSzEPApacket   = (itsPolarisations * sizeof(complex<int16>) * kvm.getInt("NoRSPBeamlets", 92)) + itsSzEPAheader; // packetsize in bytes
 
-  // create buffer for incoming dataholders 
-  // implement a cyclic buffer later !!!
-  int DHSize = kvm.getInt("NoPacketsInFrame", 8)       // number of EPA-packets in RSP-ethernetframe
-               * (kvm.getInt("SzEPAheader", 14)        // headersize in bytes
-                  + (kvm.getInt("polarisations",2)     // number of polarisations
-		     * kvm.getInt("NoRSPBeamlets", 92) // number of beamlets per packet
-		     * sizeof(complex<int16>)));
-
+  // create buffer for incoming dataholders   
   getDataManager().addInDataHolder(0, new DH_RSP("DH_RSP_in", itsKVM)); // buffer of char
   
   // create outgoing dataholders
@@ -74,6 +67,9 @@ WH_RSP::WH_RSP(const string& name,
   for (int i=0; i < itsNCorrOutputs; i++) {
     snprintf(str, 32, "DH_out_%d", i);
     getDataManager().addOutDataHolder(i, new DH_StationData(str, bufsize)); // buffer of complex<int16>
+    
+    //Use asynchronous mode (by using CyclicBuffer) per outgoing dataholder
+    //getDataManager().setOutBufferingProperties(i, false); //not a member of tinyDataManager!!
   }
 
   if (itsIsSyncMaster) {
