@@ -78,6 +78,7 @@
 #include <stdio.h>
 
 using namespace casa;
+using namespace LOFAR;
 
 
 //----------------------------------------------------------------------
@@ -864,14 +865,14 @@ GlishRecord MeqCalibrater::solve(bool useSVD)
     expr.calcResult (request);
     // Form the equations for this row.
     // Make a default derivative vector with values 0.
-    MeqMatrix defaultDeriv (DComplex(0,0), 1, nrchan);
-    const complex<double>* defaultDerivPtr = defaultDeriv.dcomplexStorage();
+    MeqMatrix defaultDeriv (makedcomplex(0,0), 1, nrchan);
+    const dcomplex* defaultDerivPtr = defaultDeriv.dcomplexStorage();
     // Get the data of this row for the given channels.
     Matrix<Complex> data = dataCol.getSlice (rownr, dataSlicer);
     int npol = data.shape()(0);
     // Calculate the derivatives and get pointers to them.
     // Use the default if no perturbed value defined.
-    vector<const complex<double>*> derivs(npol*itsNrScid);
+    vector<const dcomplex*> derivs(npol*itsNrScid);
     bool foundDeriv = false;
     if (showd) {
       cout << "xx val " << expr.getResult11().getValue() << endl;;
@@ -981,14 +982,15 @@ GlishRecord MeqCalibrater::solve(bool useSVD)
 	  const MeqMatrix& xx = expr.getResult11().getValue();
 	  for (int i=0; i<nrchan; i++) {
 	    for (int j=0; j<itsNrScid; j++) {
-	      derivReal[j] = derivs[j][i].real();
-	      derivImag[j] = derivs[j][i].imag();
+	      derivReal[j] = real(derivs[j][i]);
+	      derivImag[j] = imag(derivs[j][i]);
 	    }
-	    DComplex diff (dataPtr[i].real(), dataPtr[i].imag());
+	    dcomplex diff = makedcomplex(real(dataPtr[i]),
+					 imag(dataPtr[i]));
 	    diff -= xx.getDComplex(0,i);
-	    double val = diff.real();
+	    double val = real(diff);
 	    itsSolver.makeNorm (derivReal, 1., val);
-	    val = diff.imag();
+	    val = imag(diff);
 	    itsSolver.makeNorm (derivImag, 1., val);
 	    nrpoint++;
 	  }
@@ -998,14 +1000,15 @@ GlishRecord MeqCalibrater::solve(bool useSVD)
 	  const MeqMatrix& xx = expr.getResult11().getValue();
 	  for (int i=0; i<nrchan; i++) {
 	    for (int j=0; j<itsNrScid; j++) {
-	      derivReal[j] = derivs[j][i].real();
-	      derivImag[j] = derivs[j][i].imag();
+	      derivReal[j] = real(derivs[j][i]);
+	      derivImag[j] = imag(derivs[j][i]);
 	    }
-	    DComplex diff (dataPtr[i*2].real(), dataPtr[i*2].imag());
+	    dcomplex diff = makedcomplex(real(dataPtr[i*2]),
+					 imag(dataPtr[i*2]));
 	    diff -= xx.getDComplex(0,i);
-	    double val = diff.real();
+	    double val = real(diff);
 	    itsSolver.makeNorm (derivReal, 1., val);
-	    val = diff.imag();
+	    val = imag(diff);
 	    itsSolver.makeNorm (derivImag, 1., val);
 	    nrpoint++;
 	  }
@@ -1014,14 +1017,15 @@ GlishRecord MeqCalibrater::solve(bool useSVD)
 	  const MeqMatrix& yy = expr.getResult22().getValue();
 	  for (int i=0; i<nrchan; i++) {
 	    for (int j=0; j<itsNrScid; j++) {
-	      derivReal[j] = derivs[j+itsNrScid][i].real();
-	      derivImag[j] = derivs[j+itsNrScid][i].imag();
+	      derivReal[j] = real(derivs[j+itsNrScid][i]);
+	      derivImag[j] = imag(derivs[j+itsNrScid][i]);
 	    }
-	    DComplex diff (dataPtr[i*2+1].real(), dataPtr[i*2+1].imag());
+	    dcomplex diff = makedcomplex(real(dataPtr[i*2+1]),
+					 imag(dataPtr[i*2+1]));
 	    diff -= yy.getDComplex(0,i);
-	    double val = diff.real();
+	    double val = real(diff);
 	    itsSolver.makeNorm (derivReal, 1., val);
-	    val = diff.imag();
+	    val = imag(diff);
 	    itsSolver.makeNorm (derivImag, 1., val);
 	    nrpoint++;
 	  }
@@ -1031,8 +1035,8 @@ GlishRecord MeqCalibrater::solve(bool useSVD)
 	  const MeqMatrix& xx = expr.getResult11().getValue();
 	  for (int i=0; i<nrchan; i++) {
 	    for (int j=0; j<itsNrScid; j++) {
-	      derivReal[j] = derivs[j][i].real();
-	      derivImag[j] = derivs[j][i].imag();
+	      derivReal[j] = real(derivs[j][i]);
+	      derivImag[j] = imag(derivs[j][i]);
 	      ///cout << derivReal[j] << ' ' << derivImag[j] << ", ";
 	      if (showd) {
  		cout << "derxx: " << j << ' '
@@ -1040,16 +1044,17 @@ GlishRecord MeqCalibrater::solve(bool useSVD)
  	      }
 	    }
 	    ///cout << endl;
-	    DComplex diff (dataPtr[i*4].real(), dataPtr[i*4].imag());
+	    dcomplex diff = makedcomplex(real(dataPtr[i*4]),
+					 imag(dataPtr[i*4]));
 	    ///cout << "Value " << diff << ' ' << xx.getDComplex(0,i) << endl;
 	    diff -= xx.getDComplex(0,i);
  	    if (showd) {
  	      cout << "diffxx: " << i << ' '
- 		   << diff.real() << ' ' << diff.imag() << endl;
+ 		   << real(diff) << ' ' << imag(diff) << endl;
  	    }
-	    double val = diff.real();
+	    double val = real(diff);
 	    itsSolver.makeNorm (derivReal, 1., val);
-	    val = diff.imag();
+	    val = imag(diff);
 	    itsSolver.makeNorm (derivImag, 1., val);
 	    nrpoint++;
 	  }
@@ -1058,22 +1063,23 @@ GlishRecord MeqCalibrater::solve(bool useSVD)
 	  const MeqMatrix& xy = expr.getResult12().getValue();
 	  for (int i=0; i<nrchan; i++) {
 	    for (int j=0; j<itsNrScid; j++) {
-	      derivReal[j] = derivs[j+itsNrScid][i].real();
-	      derivImag[j] = derivs[j+itsNrScid][i].imag();
+	      derivReal[j] = real(derivs[j+itsNrScid][i]);
+	      derivImag[j] = imag(derivs[j+itsNrScid][i]);
  	      if (showd) {
  		cout << "derxy: " << i << ' '
  		     << derivReal[j] << ' ' << derivImag[j] << endl;
  	      }
 	    }
-	    DComplex diff (dataPtr[i*4+1].real(), dataPtr[i*4+1].imag());
+	    dcomplex diff = makedcomplex(real(dataPtr[i*4+1]),
+					 imag(dataPtr[i*4+1]));
 	    diff -= xy.getDComplex(0,i);
  	    if (showd) {
  	      cout << "diffxy: " << i << ' '
- 		   << diff.real() << ' ' << diff.imag() << endl;
+ 		   << real(diff) << ' ' << imag(diff) << endl;
  	    }
-	    double val = diff.real();
+	    double val = real(diff);
 	    itsSolver.makeNorm (derivReal, 1., val);
-	    val = diff.imag();
+	    val = imag(diff);
 	    itsSolver.makeNorm (derivImag, 1., val);
 	    nrpoint++;
 	  }
@@ -1082,22 +1088,23 @@ GlishRecord MeqCalibrater::solve(bool useSVD)
 	  const MeqMatrix& yx = expr.getResult21().getValue();
 	  for (int i=0; i<nrchan; i++) {
 	    for (int j=0; j<itsNrScid; j++) {
-	      derivReal[j] = derivs[j+2*itsNrScid][i].real();
-	      derivImag[j] = derivs[j+2*itsNrScid][i].imag();
+	      derivReal[j] = real(derivs[j+2*itsNrScid][i]);
+	      derivImag[j] = imag(derivs[j+2*itsNrScid][i]);
       	      if (showd) {
  		cout << "deryx: " << i << ' '
  		     << derivReal[j] << ' ' << derivImag[j] << endl;
  	      }
 	    }
-	    DComplex diff (dataPtr[i*4+2].real(), dataPtr[i*4+2].imag());
+	    dcomplex diff = makedcomplex(real(dataPtr[i*4+2]),
+					 imag(dataPtr[i*4+2]));
 	    diff -= yx.getDComplex(0,i);
  	    if (showd) {
  	      cout << "diffyx: " << i << ' '
- 		   << diff.real() << ' ' << diff.imag() << endl;
+ 		   << real(diff) << ' ' << imag(diff) << endl;
  	    }
-	    double val = diff.real();
+	    double val = real(diff);
 	    itsSolver.makeNorm (derivReal, 1., val);
-	    val = diff.imag();
+	    val = imag(diff);
 	    itsSolver.makeNorm (derivImag, 1., val);
 	    nrpoint++;
 	  }
@@ -1106,22 +1113,23 @@ GlishRecord MeqCalibrater::solve(bool useSVD)
 	  const MeqMatrix& yy = expr.getResult22().getValue();
 	  for (int i=0; i<nrchan; i++) {
 	    for (int j=0; j<itsNrScid; j++) {
-	      derivReal[j] = derivs[j+3*itsNrScid][i].real();
-	      derivImag[j] = derivs[j+3*itsNrScid][i].imag();
+	      derivReal[j] = real(derivs[j+3*itsNrScid][i]);
+	      derivImag[j] = imag(derivs[j+3*itsNrScid][i]);
 	      if (showd) {
 		cout << "deryy: " << i << ' '
  		     << derivReal[j] << ' ' << derivImag[j] << endl;
  	      }
 	    }
-	    DComplex diff (dataPtr[i*4+3].real(), dataPtr[i*4+3].imag());
+	    dcomplex diff = makedcomplex(real(dataPtr[i*4+3]),
+					 imag(dataPtr[i*4+3]));
 	    diff -= yy.getDComplex(0,i);
  	    if (showd) {
  	      cout << "diffyy: " << i << ' '
- 		   << diff.real() << ' ' << diff.imag() << endl;
+ 		   << real(diff) << ' ' << imag(diff) << endl;
  	    }
-	    double val = diff.real();
+	    double val = real(diff);
 	    itsSolver.makeNorm (derivReal, 1., val);
-	    val = diff.imag();
+	    val = imag(diff);
 	    itsSolver.makeNorm (derivImag, 1., val);
 	    nrpoint++;
 	  }
@@ -1275,23 +1283,25 @@ void MeqCalibrater::predict (const String& modelDataColName)
     Matrix<Complex> data(shp);
     Slice sliceFreq(itsFirstChan, nrchan);
     // Store the DComplex results into the Complex data array.
-    Array<Complex> tmp0 (data(Slice(0,1), sliceFreq));
-    convertArray (tmp0,
-      itsExpr[blindex]->getResult11().getValue().getDComplexMatrix());
+    {
+      Array<Complex> tmp0 (data(Slice(0,1), sliceFreq));
+      Array<dcomplex> res0 (itsExpr[blindex]->getResult11().getValue().getDComplexMatrix());
+      convertArray (tmp0, (const Array<DComplex>&)res0);
+    }
     if (4 == shp(0)) {
       Array<Complex> tmp1 (data(Slice(1,1), sliceFreq));
-      convertArray (tmp1,
-	itsExpr[blindex]->getResult12().getValue().getDComplexMatrix());
+      Array<dcomplex> res1 (itsExpr[blindex]->getResult12().getValue().getDComplexMatrix());
+      convertArray (tmp1, (const Array<DComplex>&)res1);
       Array<Complex> tmp2 (data(Slice(2,1), sliceFreq));
-      convertArray (tmp2,
-	itsExpr[blindex]->getResult21().getValue().getDComplexMatrix());
+      Array<dcomplex> res2 (itsExpr[blindex]->getResult21().getValue().getDComplexMatrix());
+      convertArray (tmp2, (const Array<DComplex>&)res2);
       Array<Complex> tmp3 (data(Slice(3,1), sliceFreq));
-      convertArray (tmp3,
-	itsExpr[blindex]->getResult22().getValue().getDComplexMatrix());
+      Array<dcomplex> res3 (itsExpr[blindex]->getResult22().getValue().getDComplexMatrix());
+      convertArray (tmp3, (const Array<DComplex>&)res3);
     } else if (2 == shp(0)) {
       Array<Complex> tmp1 (data(Slice(1,1), sliceFreq));
-      convertArray (tmp1,
-	itsExpr[blindex]->getResult22().getValue().getDComplexMatrix());
+      Array<dcomplex> res1 (itsExpr[blindex]->getResult22().getValue().getDComplexMatrix());
+      convertArray (tmp1, (const Array<DComplex>&)res1);
     } else if (1 != shp(0)) {
       throw AipsError("Number of polarizations should be 1, 2, or 4");
     }
@@ -1373,26 +1383,28 @@ void MeqCalibrater::saveResidualData()
     Slice sliceFreq(0, nrchan);
     // Convert the DComplex results to a Complex data array.
     Matrix<Complex> tmp(IPosition(2,1,nrchan));
-    convertArray (tmp,
-      itsExpr[blindex]->getResult11().getValue().getDComplexMatrix());
-    Matrix<Complex> tmp0 (data(Slice(0,1), sliceFreq));
-    tmp0 -= tmp;
+    {
+      Array<dcomplex> res0 (itsExpr[blindex]->getResult11().getValue().getDComplexMatrix());
+      convertArray (tmp, (const Array<DComplex>&)res0);
+      Matrix<Complex> tmp0 (data(Slice(0,1), sliceFreq));
+      tmp0 -= tmp;
+    }
     if (4 == npol) {
-      convertArray (tmp,
-	itsExpr[blindex]->getResult12().getValue().getDComplexMatrix());
+      Array<dcomplex> res1 (itsExpr[blindex]->getResult12().getValue().getDComplexMatrix());
+      convertArray (tmp, (const Array<DComplex>&)res1);
       Matrix<Complex> tmp1 (data(Slice(1,1), sliceFreq));
       tmp1 -= tmp;
-      convertArray (tmp,
-	itsExpr[blindex]->getResult21().getValue().getDComplexMatrix());
+      Array<dcomplex> res2 (itsExpr[blindex]->getResult21().getValue().getDComplexMatrix());
+      convertArray (tmp, (const Array<DComplex>&)res2);
       Matrix<Complex> tmp2 (data(Slice(2,1), sliceFreq));
       tmp2 -= tmp;
-      convertArray (tmp,
-	itsExpr[blindex]->getResult22().getValue().getDComplexMatrix());
+      Array<dcomplex> res3 (itsExpr[blindex]->getResult22().getValue().getDComplexMatrix());
+      convertArray (tmp, (const Array<DComplex>&)res3);
       Matrix<Complex> tmp3 (data(Slice(3,1), sliceFreq));
       tmp3 -= tmp;
     } else if (2 == npol) {
-      convertArray (tmp,
-	itsExpr[blindex]->getResult22().getValue().getDComplexMatrix());
+      Array<dcomplex> res1 (itsExpr[blindex]->getResult22().getValue().getDComplexMatrix());
+      convertArray (tmp, (const Array<DComplex>&)res1);
       Matrix<Complex> tmp1 (data(Slice(1,1), sliceFreq));
       tmp1 -= tmp;
     } else if (1 != npol) {
@@ -1866,26 +1878,28 @@ GlishRecord MeqCalibrater::getResidualData()
     // Subtract predicted from data.
     // Use the same polarizations as for the original data.
     Matrix<Complex> tmp(IPosition(2,1,nrchan));
-    convertArray (tmp,
-      itsExpr[blindex]->getResult11().getValue().getDComplexMatrix());
-    Matrix<Complex> tmp0 (data(Slice(0,1), Slice(0,nrchan)));
-    tmp0 -= tmp;
+    {
+      Array<dcomplex> res0 (itsExpr[blindex]->getResult11().getValue().getDComplexMatrix());
+      convertArray (tmp, (const Array<DComplex>&)res0);
+      Matrix<Complex> tmp0 (data(Slice(0,1), Slice(0,nrchan)));
+      tmp0 -= tmp;
+    }
     if (4 == npol) {
-      convertArray (tmp,
-	itsExpr[blindex]->getResult12().getValue().getDComplexMatrix());
+      Array<dcomplex> res1 (itsExpr[blindex]->getResult12().getValue().getDComplexMatrix());
+      convertArray (tmp, (const Array<DComplex>&)res1);
       Matrix<Complex> tmp1 (data(Slice(1,1), Slice(0,nrchan)));
       tmp1 -= tmp;
-      convertArray (tmp,
-	itsExpr[blindex]->getResult21().getValue().getDComplexMatrix());
+      Array<dcomplex> res2 (itsExpr[blindex]->getResult21().getValue().getDComplexMatrix());
+      convertArray (tmp, (const Array<DComplex>&)res2);
       Matrix<Complex> tmp2 (data(Slice(2,1), Slice(0,nrchan)));
       tmp2 -= tmp;
-      convertArray (tmp,
-	itsExpr[blindex]->getResult22().getValue().getDComplexMatrix());
+      Array<dcomplex> res3 (itsExpr[blindex]->getResult22().getValue().getDComplexMatrix());
+      convertArray (tmp, (const Array<DComplex>&)res3);
       Matrix<Complex> tmp3 (data(Slice(3,1), Slice(0,nrchan)));
       tmp3 -= tmp;
     } else if (2 == npol) {
-      convertArray (tmp,
-	itsExpr[blindex]->getResult22().getValue().getDComplexMatrix());
+      Array<dcomplex> res1 (itsExpr[blindex]->getResult22().getValue().getDComplexMatrix());
+      convertArray (tmp, (const Array<DComplex>&)res1);
       Matrix<Complex> tmp1 (data(Slice(1,1), Slice(0,nrchan)));
       tmp1 -= tmp;
     } else if (1 != npol) {
