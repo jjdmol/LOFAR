@@ -45,8 +45,8 @@ class WH_Ring:public WorkHolder
 
   void markInputEmpty();
   void markOutputEmpty();
-  void markSlotEmpty();
-  void copySlot2Output();
+  void markSlotEmpty(int slotnr);
+  void copySlot2Output(int slotnr);
   void copyQ2Output();
   void copySlot2OutQ(int slotnr);
   void copyInput2Slot(int slotnr);  
@@ -117,16 +117,16 @@ inline void     WH_Ring<T>::markOutputEmpty() {
 }
 
 template <class T>
-inline void     WH_Ring<T>::markSlotEmpty() { 
-  itsInDataHolders[1]->getPacket()->destination = NOTADDRESSED;
-  itsOutDataHolders[1]->getPacket()->destination = NOTADDRESSED;
+inline void     WH_Ring<T>::markSlotEmpty(int slotnr) { 
+  itsInDataHolders[slotnr]->getPacket()->destination = NOTADDRESSED;
+  itsOutDataHolders[slotnr]->getPacket()->destination = NOTADDRESSED;
 }
 
 template <class T>
-inline void WH_Ring<T>::copySlot2Output(){
+inline void WH_Ring<T>::copySlot2Output(int slotnr){
   memcpy((void*)itsOutDataHolders[0]->getPacket(),
-	 (void*)itsInDataHolders[1]->getPacket(),
-	 itsInDataHolders[1]->getDataPacketSize());
+	 (void*)itsInDataHolders[slotnr]->getPacket(),
+	 itsInDataHolders[slotnr]->getDataPacketSize());
 }
 
 template <class T>
@@ -135,7 +135,7 @@ inline void WH_Ring<T>::copyQ2Output(){
   itsOutQ.pop();
   memcpy((void*)itsOutDataHolders[0]->getPacket(),
 	 (void*)aDH->getPacket(),
-	 itsInDataHolders[1]->getDataPacketSize());
+	 itsInDataHolders[0]->getDataPacketSize());
   delete aDH; // created in copySlot2OutQ()
 }
 
@@ -153,7 +153,7 @@ template <class T>
 inline void WH_Ring<T>::copyInput2Slot(int slotnr) {
   memcpy((void*)itsOutDataHolders[slotnr]->getPacket(),
 	 (void*)itsInDataHolders[0]->getPacket(), 
-	 itsInDataHolders[1]->getDataPacketSize());
+	 itsInDataHolders[slotnr]->getDataPacketSize());
 }
 
 template <class T>
@@ -169,11 +169,11 @@ inline void WH_Ring<T>::copySlot2Slot(int srcslotnr, int destslotnr) {
 
 template <class T>
 inline WH_Ring<T>::WH_Ring ():
-WorkHolder (2,2),
+WorkHolder (3,3),
 itsLastBufferSent(true)
 {
-  itsInDataHolders.reserve(2);
-  itsOutDataHolders.reserve(2);
+  itsInDataHolders.reserve(3);
+  itsOutDataHolders.reserve(3);
   
   itsInDataHolders.push_back(new DH_Ring<T>()); // input
   
@@ -193,8 +193,20 @@ itsLastBufferSent(true)
 		   "InstanceCnt == NOTADDRESSED flag %i",NOTADDRESSED);
   
   for (int destination = 0; destination<10; destination++) {
-    itsRoutingTable[destination] = 1;
+    if (myInstanceCnt <= 4) { // first ring
+      if (destination <= 4) itsRoutingTable[destination] = 1; // this ring
+      if (destination  > 4) itsRoutingTable[destination] = 2; // other ring
+    }
+    if (myInstanceCnt >  4) { // second ring
+      if (destination >  4) itsRoutingTable[destination] = 1; //this ring
+      if (destination <= 4) itsRoutingTable[destination] = 2; // other ring
+    }
+
   }
+  markInputEmpty();
+  markOutputEmpty();
+  markSlotEmpty(1);
+  markSlotEmpty(2);
 }
 
 
@@ -206,12 +218,16 @@ inline WH_Ring<T>::~WH_Ring ()
 template <class T>
 inline void WH_Ring<T>::process ()
 {
-  TRACER(monitor,"RingNode " << getInstanceCnt() << " Ring INDATA:  destination " 
-	 << itsInDataHolders[1]->getPacket()->destination << "  "
-	 << itsInDataHolders[1]->getBuffer()[0] << endl
-	 << "RingNode " << getInstanceCnt() << " ToRing INDATA:  destination " 
-	 << itsInDataHolders[0]->getPacket()->destination << "  "
-	 << itsInDataHolders[0]->getBuffer()[0]);
+  cout << "RingNode " << getInstanceCnt()  << endl
+       << "\t Ring INDATA1:  destination " 
+       << itsInDataHolders[1]->getPacket()->destination << "  "
+       << itsInDataHolders[1]->getBuffer()[0] << endl
+       << "\t Ring INDATA2:  destination " 
+       << itsInDataHolders[2]->getPacket()->destination << "  "
+       << itsInDataHolders[2]->getBuffer()[0] << endl
+       << "\t ToRing INDATA1:  destination " 
+       << itsInDataHolders[0]->getPacket()->destination << "  "
+       << itsInDataHolders[0]->getBuffer()[0] << endl;
 
   if (getInHolder(0)->doHandle()) {    
     Firewall::Assert(itsLastBufferSent,
@@ -223,15 +239,18 @@ inline void WH_Ring<T>::process ()
 
   markOutputEmpty();
   receiveFromRing();
-  putInputToRing();
   reRoute();
+  putInputToRing();
   
-  TRACER(monitor,"RingNode " << getInstanceCnt() << " OUTDATA:  destination " 
-	 << itsOutDataHolders[1]->getPacket()->destination << "  "
-	 << itsOutDataHolders[1]->getBuffer()[0] << endl
-	 << "RingNode " << getInstanceCnt() << " From Ring DATA:  destination " 
-	 << itsOutDataHolders[0]->getPacket()->destination << "  "
-	 << itsOutDataHolders[0]->getBuffer()[0]);
+  cout << "\t OUTDATA1:  destination " 
+       << itsOutDataHolders[1]->getPacket()->destination << "  "
+       << itsOutDataHolders[1]->getBuffer()[0] << endl
+       << "\t OUTDATA2:  destination " 
+       << itsOutDataHolders[2]->getPacket()->destination << "  "
+       << itsOutDataHolders[2]->getBuffer()[0] << endl
+       << "\t From Ring DATA: destination " 
+       << itsOutDataHolders[0]->getPacket()->destination << "  "
+       << itsOutDataHolders[0]->getBuffer()[0] << endl;
 }
 
 template <class T>
@@ -241,13 +260,13 @@ inline bool WH_Ring<T>::receiveFromRing() {
   //  (therefore, this may be data received in a earlier call
   for (int slotnr=1; slotnr<getInputs(); slotnr++) {
     if (getInstanceCnt() == itsInDataHolders[slotnr]->getPacket()->destination) {
-      TRACER(monitor, "Packet arrived at WorkHolder" << getInstanceCnt()
-	     << " Destination = " << itsInDataHolders[slotnr]->getPacket()->destination 
-	     << " Data = " << itsInDataHolders[slotnr]->getBuffer()[0]);
+      cout << "Packet arrived at WorkHolder" << getInstanceCnt()
+	   << " Destination = " << itsInDataHolders[slotnr]->getPacket()->destination 
+	   << " Data = " << itsInDataHolders[slotnr]->getBuffer()[0] << endl;
       //copy the data to the queue
       copySlot2OutQ(slotnr);
       // mark the DH as received
-      markSlotEmpty();
+      markSlotEmpty(slotnr);
     }
   } 
   if (itsOutQ.size() > 0) {
@@ -261,12 +280,13 @@ template <class T>
 inline bool WH_Ring<T>::putInputToRing() {
   if ((slotIsEmpty()) &&  !inputIsEmpty()) {
     // OK we have input data to put on the ring
-    copyInput2Slot(itsRoutingTable[itsInDataHolders[0]->getPacket()->destination]);
+    int slot = itsRoutingTable[itsInDataHolders[0]->getPacket()->destination];
+    copyInput2Slot(slot);
     itsLastBufferSent = true;
     markInputEmpty();
-    TRACER(monitor,"Added to ring data for node " 
-	   << itsOutDataHolders[1]->getPacket()->destination  << " " 
-	   << itsOutDataHolders[1]->getBuffer()[0] );
+    cout << "Added to ring data for node " 
+	 << itsOutDataHolders[slot]->getPacket()->destination  << " " 
+	 << itsOutDataHolders[slot]->getBuffer()[0] << endl;
     return true;
   } 
   return false;
@@ -274,12 +294,24 @@ inline bool WH_Ring<T>::putInputToRing() {
 
 template <class T>
 inline void WH_Ring<T>::reRoute() {
+  /** This routine only works for closed loops since rerouting is not
+      done if a non-empty slot is found; the package will then be rerouted
+      further on in the ring or eventualy after one or more loops by
+      this same ring element.
+  */
   for (int slotnr=1; slotnr<getInputs(); slotnr++) {
     if (!slotIsEmpty(slotnr)) {
       int destslot = itsRoutingTable[itsInDataHolders[slotnr]->getPacket()->destination];
-      if ( destslot != slotnr) 
-	cout << "reRoute destination slot : " << slotnr << " --> " << destslot << endl;
-      copySlot2Slot(slotnr,destslot);
+      if ( destslot != slotnr) {
+	if (slotIsEmpty(destslot)) { // only rerout if slot is empty; this only work for closed loops!!!!!
+	  cout << "reRoute destination slot element " 
+	       << getInstanceCnt() 
+	       << " destination " << itsInDataHolders[slotnr]->getPacket()->destination 
+	       << " : " << slotnr << " --> " << destslot << endl;
+	  copySlot2Slot(slotnr,destslot);
+	  markSlotEmpty(slotnr);
+	}
+      }
     }
   }
 }

@@ -58,20 +58,57 @@ inline void RingBuilder<DH_T>::buildSimul(Simul* aSimul) {
   Step *RingStep[itsChannels];
   Step *RingOutStep[itsChannels];
 
-  for (int stepnr=0; stepnr<itsChannels; stepnr++) {
+  int firstringstart=0;
+  int firstringend = itsChannels/2-1;
+  int ringsize = firstringend-firstringstart+1;
+  for (int stepnr=firstringstart; stepnr<=firstringend; stepnr++) {
     RingStep[stepnr] = new Step(new WH_Ring<DH_Test>());
     RingStep[stepnr]->runOnNode(0);
     RingStep[stepnr]->setInRate(itsChannels+1,0); // set inrate for channel 0
-    if (stepnr >  0) RingStep[stepnr]->connect(RingStep[stepnr-1],1,1,1); 
+    if (stepnr >  firstringstart) {
+      RingStep[stepnr]->connect(RingStep[stepnr-1],1,1,1); //fwd loop 
+      cout << stepnr << "<--" << stepnr-1 << endl;
+    }
+    aSimul->addStep (RingStep[stepnr]);
+  }
+
+  cout << "Created first ring" << endl;
+
+  // connect last element to first one to close the ring.
+  RingStep[firstringstart]->connect(RingStep[firstringend],1,1,1); // close forwards loop
+  cout << firstringstart << "<--" << firstringend << endl;
+
+  int secondringstart=itsChannels/2;
+  int secondringend = itsChannels-1;
+  for (int stepnr=secondringstart; stepnr<=secondringend; stepnr++) {
+    RingStep[stepnr] = new Step(new WH_Ring<DH_Test>());
+    RingStep[stepnr]->runOnNode(0);
+    RingStep[stepnr]->setInRate(itsChannels+1,0); // set inrate for channel 0
+    if (stepnr >  secondringstart) {
+      RingStep[stepnr]->connect(RingStep[stepnr-1],1,1,1); //fwd loop 
+      cout << stepnr << "<--" << stepnr-1 << endl;
+    }
     aSimul->addStep (RingStep[stepnr]);
   }
   // connect last element to first one to close the ring.
-  RingStep[0]->connect(RingStep[itsChannels-1],1,1,1);
+  RingStep[secondringstart]->connect(RingStep[secondringend],1,1,1); // close forwards loop
+  cout << secondringstart << "<--" << secondringend << endl;
+
+  cout << "Created second ring" << endl;
+
+  cout << "Connecting the rings to each other " << endl;
+  for (int stepnr=0; stepnr <= firstringend; stepnr++) {
+    cout << "connect  " << stepnr+ringsize << "  --  " << stepnr << endl;
+    RingStep[stepnr+ringsize]->connect(RingStep[stepnr],2,2,1); 
+    cout << "reverse " << endl;
+    RingStep[stepnr]->connect(RingStep[stepnr+ringsize],2,2,1); 
+  }
+
   cout << "Created ring elements" << endl;
 
   aSimul->connectInputToArray(RingStep,
 				itsChannels,
-				1); // skip every second DataHolder from the ring elements 
+				2); // only connect the first DataHolder from the ring elements 
 
   cout << "connected ring elements to input" << endl;
 
