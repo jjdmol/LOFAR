@@ -107,6 +107,18 @@ const _define_meqcalibrater := function(ref agent, id) {
         return defaultservers.run(self.agent, self.predictRec);
     }
     
+    self.selectRec := [_method="select", _sequence=self.id._sequence]
+    public.select := function (where) {
+    
+        wider self;
+        
+        # argument assignment
+        self.selectRec.where := where
+
+        # return
+        return defaultservers.run(self.agent, self.selectRec);
+    }
+    
     self.solveRec := [_method="solve", _sequence=self.id._sequence]
     public.solve := function (datacolname = "DATA") {
     
