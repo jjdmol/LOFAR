@@ -84,7 +84,7 @@ void doIt (const BlobStringType& type)
 int main()
 {
   try {
-    INIT_LOGGER("tBlobString.log_prop");
+    INIT_LOGGER("tBlobString");
     // Try it for a char* buffer.
     doIt (BlobStringType(false,LOFAR::HeapAllocator()));
     // Try it for a string buffer.

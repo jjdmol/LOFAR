@@ -77,7 +77,7 @@ void doIn (BlobIBuffer& bb, bool read2=false)
 int main()
 {
   try {
-    INIT_LOGGER("tBlobArray.log_prop");
+    INIT_LOGGER("tBlobArray");
     {
       {
 	// Create the blob in a file.

@@ -31,7 +31,7 @@ using namespace LOFAR;
 
 int main()
 {
-  INIT_LOGGER("tBlobArrayHeader.log_prop");
+  INIT_LOGGER("tBlobArrayHeader");
   // Create a header for a C-order array.
   BlobArrayHeader<fcomplex,4> bl(false);
   cout << sizeof(bl) << endl;

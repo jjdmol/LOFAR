@@ -208,7 +208,7 @@ void readFile (BlobFieldSet& fset, BlobFieldSet& fset2,
 int main()
 {
   try {
-    INIT_LOGGER("tBlobField.log_prop");
+    INIT_LOGGER("tBlobField");
     {
       // Create a version 1 field set.
       BlobFieldSet fset("test1");
