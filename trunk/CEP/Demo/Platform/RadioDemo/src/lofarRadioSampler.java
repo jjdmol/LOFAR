@@ -253,7 +253,7 @@ public class lofarRadioSampler extends JPanel
 	    try {
               prog=workDir+"/clean.csh";
 	      thisSystem.exec(prog);
-	      prog=workDir+"/record.csh";
+	      //prog=workDir+"/record.csh";
 	      thisSystem.exec(prog);
 	    } catch (IOException ex) {
               Message msg = new Message("Error in command: " + prog + " : " + ex);
@@ -327,7 +327,7 @@ public class lofarRadioSampler extends JPanel
 	    try {
 		prog=workDir+"/clean.csh";
 		thisSystem.exec(prog);
-		prog=workDir+"/record.csh";
+		//prog=workDir+"/record.csh";
 		thisSystem.exec(prog);
 	    } catch (IOException ex) {
               Message msg = new Message("Error in command: " + prog + " : " + ex);
