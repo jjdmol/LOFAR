@@ -43,8 +43,11 @@ public:
   /// It is possible to specify how many input and output data holders
   /// are created and how many elements there are in the buffer.
   /// The first WorkHolder should have nin=0.
+  /// multiFile=false means that a single ASCII contains all rcu-s (Alliot).
+  /// True means multiple binary files each containing a single rcu (Boonstra).
   WH_RCUAll (const string& name, unsigned int nout,
-	     unsigned int nrcu, const string& fileName);
+	     unsigned int nrcu, const string& fileName,
+	     bool multiFile);
 
   virtual ~WH_RCUAll();
 
@@ -55,8 +58,14 @@ public:
   /// Make a fresh copy of the WH object.
   virtual WH_RCUAll* make (const string& name) const;
 
+  /// Preprocess by opening the files.
+  virtual void preprocess();
+
   /// Do a process step.
   virtual void process();
+
+  /// Postprocess by closing the files.
+  virtual void postprocess();
 
   /// Show the work holder on stdout.
   virtual void dump() const;
@@ -79,7 +88,8 @@ private:
   DH_SampleR** itsOutHolders;
   unsigned int itsNrcu;
   string       itsFileName;
-  ifstream     itsFile;
+  bool         itsMultiFile;
+  ifstream*    itsFile;
 };
 
 

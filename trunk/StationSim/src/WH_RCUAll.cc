@@ -31,15 +31,16 @@
 WH_RCUAll::WH_RCUAll (const string& name,
 		      unsigned int nout,
 		      unsigned int nrcu,
-		      const string& fileName)
+		      const string& fileName,
+		      bool multiFile)
 			
 : WorkHolder   (0, nout, name, "WH_RCUAll"),
   itsOutHolders(0),
   itsNrcu      (nrcu),
   itsFileName  (fileName),
-  itsFile      (fileName.c_str())
+  itsMultiFile (multiFile),
+  itsFile      (0)
 {
-  AssertStr (itsFile, "Failed to open file " << fileName);
   if (nout > 0) {
     itsOutHolders = new DH_SampleR* [nout];
   }
@@ -57,6 +58,7 @@ WH_RCUAll::~WH_RCUAll()
     delete itsOutHolders[i];
   }
   delete [] itsOutHolders;
+  delete [] itsFile;
 }
 
 WorkHolder* WH_RCUAll::construct (const string& name, int ninput, int noutput,
@@ -65,12 +67,37 @@ WorkHolder* WH_RCUAll::construct (const string& name, int ninput, int noutput,
   Assert (ninput==0);
   return new WH_RCUAll (name, noutput,
 			params.getInt ("nrcu", 10),
-			params.getString ("rcufilename", ""));
+			params.getString ("rcufilename", ""),
+			params.getBool ("rcumultifile", true));
 }
 
 WH_RCUAll* WH_RCUAll::make (const string& name) const
 {
-  return new WH_RCUAll (name, getOutputs(), itsNrcu, itsFileName);
+  return new WH_RCUAll (name, getOutputs(), itsNrcu,
+			itsFileName, itsMultiFile);
+}
+
+void WH_RCUAll::preprocess()
+{
+  postprocess();
+  if (itsMultiFile) {
+    itsFile = new ifstream [itsNrcu];
+    unsigned int pos = itsFileName.find ('*');
+    AssertStr (pos != string::npos, "Multi file name " << itsFileName
+	       << " does not contain an *");
+    char str[8];
+    for (unsigned int i=0; i<itsNrcu; i++) {
+      sprintf (str, "%d", i);
+      string name (itsFileName);
+      name.replace (pos, 1, str);
+      itsFile[i].open (name.c_str());
+      AssertStr (itsFile[i], "File " << name << " could not be opened");
+    }
+  } else {
+    itsFile = new ifstream [1];
+    itsFile[0].open (itsFileName.c_str());
+    AssertStr (itsFile[0], "File " << itsFileName << " could not be opened");
+  }
 }
 
 void WH_RCUAll::process()
@@ -78,15 +105,22 @@ void WH_RCUAll::process()
   if (getOutputs() > 0) {
     DH_SampleR::BufferType* bufout = itsOutHolders[0]->getBuffer();
     for (unsigned int i=0; i<itsNrcu; i++) {
-      itsFile >> bufout[i];
-      if (itsFile.eof()) {
-	itsFile.close();
-	itsFile.open (itsFileName.c_str());
-	itsFile >> bufout[i];
-	AssertStr (!itsFile.eof(), "File " << itsFileName << " is empty");
+      if (itsMultiFile) {
+	short val;
+	itsFile[i].read ((char*)(&val), 2);
+	AssertStr (itsFile[i], "File " << itsFileName << " at end");
+	bufout[i] = double(val) / 2048;              // 11 significant bits
+      } else {
+	itsFile[0] >> bufout[i];
+	if (itsFile[0].eof()) {
+	  itsFile[0].close();
+	  itsFile[0].open (itsFileName.c_str());
+	  itsFile[0] >> bufout[i];
+	  AssertStr (!itsFile[0].eof(), "File " << itsFileName << " is empty");
+	}
+	AssertStr (!itsFile[0].fail(), "File " << itsFileName
+		   << " has wrong format");
       }
-      AssertStr (!itsFile.fail(), "File " << itsFileName
-		 << " has wrong format");
     }
     // Copy data to other output buffers
     for (int i=0; i<getOutputs(); i++) {
@@ -94,6 +128,12 @@ void WH_RCUAll::process()
 	      itsNrcu * sizeof(DH_SampleR::BufferType));
     }
   }
+}
+
+void WH_RCUAll::postprocess()
+{
+  delete [] itsFile;
+  itsFile = 0;
 }
 
 void WH_RCUAll::dump() const

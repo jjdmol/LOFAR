@@ -88,6 +88,9 @@ void StationSim::define (const ParamBlock& params)
   string dipoleName = params.getString ("dipolefilename", "");
   string targetName = params.getString ("targettrackfilename", "");
   string rfiName = params.getString ("rfitrackfilename", "");
+  // Multiple files are used if rcu file name does not contain an *.
+  bool rcumultifile = rcuName.find('*') != string::npos;
+  cout << "multifile=" << rcumultifile << endl;
 
   // Create the overall simul object.
   WH_Empty wh;
@@ -97,6 +100,10 @@ void StationSim::define (const ParamBlock& params)
   // Create all the steps.
   // Set the rate of the steps.
   // Add the steps to the Simul.
+
+  // The RCU data is read from a file.
+  // It can be done from one (ASCII) file by WH_RCU or WH_RCUAll
+  // or from multiple binary files by WH_RCUAll.
   if (splitrcu) {
     Step rcu (WH_RCU ("", nrcu, rcuName),
 	      "rcu", false);
@@ -105,7 +112,7 @@ void StationSim::define (const ParamBlock& params)
 		"rcuall", false);
     simul.addStep (merge);
   } else {
-    Step rcu (WH_RCUAll ("", 1, nrcu, rcuName),
+    Step rcu (WH_RCUAll ("", 1, nrcu, rcuName, rcumultifile),
 	      "rcuall", false);
     simul.addStep (rcu);
   }
@@ -158,7 +165,7 @@ void StationSim::define (const ParamBlock& params)
   }
 
   // Connect the steps.
-  if (splitrcu) {
+  if (splitrcu  &&  !rcumultifile) {
     simul.connect ("rcu", "rcuall");
   }
   if (nsub1 > 0) {

@@ -95,10 +95,6 @@ void WH_Selector::process()
 	outDone[out] = true;
 	memcpy (bufout+out*itsNrcu, bufin,
 		itsNrcu * sizeof(DH_SampleC::BufferType));
-	for (int j=0; j<itsNrcu; j++) {
-	  cout << bufin[j] << ' ';
-	}
-	cout << endl;
       }
       bufin += itsNrcu;
     }
