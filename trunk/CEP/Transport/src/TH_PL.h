@@ -77,9 +77,9 @@ public:
 			   const string& userName="postgres");
 
   // Special functions to deal with database records in a special way.  
-  int queryDB (const string& queryString, void* buf, int nbytes, int tag);  
-  void insertDB (void* buf, int nbytes, int tag);  
-  void updateDB (void* buf, int nbytes, int tag);  
+  int queryDB (const string& queryString, int tag);  
+  void insertDB (int tag);  
+  void updateDB (int tag);  
   // <group>  
   
 protected:

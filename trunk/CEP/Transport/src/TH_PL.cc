@@ -129,28 +129,24 @@ bool TH_PL::connectionPossible (int srcRank, int dstRank) const
   return srcRank == dstRank;
 }
 
-void TH_PL::insertDB (void* buf, int nbytes, int tag)  
+void TH_PL::insertDB (int tag)  
 {  
   PL::PersistentObject& aPO = itsDHPL->preparePO (tag, itsWriteSeqNo++);  
   theirPersistenceBroker.save(aPO, PL::PersistenceBroker::INSERT);  
 }  
 
-void TH_PL::updateDB (void* buf, int nbytes, int tag)  
+void TH_PL::updateDB (int tag)  
 {  
   PL::PersistentObject& aPO = itsDHPL->preparePO (tag, itsWriteSeqNo++);  
   theirPersistenceBroker.save(aPO, PL::PersistenceBroker::UPDATE);  
 }  
      
-int TH_PL::queryDB (const string& queryString,  
-		    void* buf, int nbytes, int tag)  
+int TH_PL::queryDB (const string& queryString, int tag)  
 {  
   // Get a reference to the DHPL's TPO object.  
   PL::PersistentObject& aPO = itsDHPL->getPO();  
   int result = aPO.retrieveInPlace(PL::QueryObject(queryString));  
   Assert (result >= 0);  
-  DbgAssertStr(int(itsDHPL->getDataBlock().size()) == nbytes,  
-	       "TH_PL::queryDB - non matching size; found "  
-	       << itsDHPL->getDataBlock().size() << ", expected " << nbytes);  
   itsReadSeqNo++;  
   return result;  
 }  
