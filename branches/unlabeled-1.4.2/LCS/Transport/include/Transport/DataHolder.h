@@ -75,10 +75,10 @@ public:
   // Make a copy
   virtual DataHolder* clone() const = 0;
 
-  // Pack the data (if present: pack the extra blob)
+  // Pack the data (use before writing)
   void pack();
 
-  // Unpack the data (check and convert it as needed)
+  // Unpack the data (use after reading). Checks and converts it as needed.
   void unpack();
 
   // Dump the DataHolder contents to cout.
@@ -141,7 +141,7 @@ public:
   int getVersion();
 
 protected:
-  // Copy constructor
+  // Copy DataHolder
   DataHolder(const DataHolder&);
 
   // Add a field to the data block definition.
@@ -228,15 +228,15 @@ private:
   BlobFieldSet    itsDataFields;
   BlobString*     itsData;
   BlobOBufString* itsDataBlob;
-  Connection*  itsConnection;
-  int          itsMaxDataSize;   //# <0 is not filled in
-  bool         itsIsAddMax;
-  string       itsName;
-  string       itsType;
-  int          itsVersion;
-  int          itsReadConvert;   //# data conversion needed after a read?
-                                 //# 0=no, 1=yes, else=not known yet
-  DataBlobExtra* itsExtraPtr;
+  Connection*     itsConnection;
+  int             itsMaxDataSize;   //# <0 is not filled in
+  bool            itsIsAddMax;
+  string          itsName;
+  string          itsType;
+  int             itsVersion;
+  int             itsReadConvert;   //# data conversion needed after a read?
+                                    //# 0=no, 1=yes, else=not known yet
+  DataBlobExtra*  itsExtraPtr;
 };
 
 
