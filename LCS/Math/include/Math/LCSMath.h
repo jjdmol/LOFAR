@@ -25,11 +25,26 @@
 
 //# Includes
 #include <Common/Lorrays-Blitz.h>
+#include <Common/lofar_complex.h>
 
 namespace LOFAR
 {
   namespace LCSMath
   {
+    // Set to the value zero.
+    // <group>
+    void setZero (int& x)
+      { x = 0; }
+    void setZero (float& x)
+      { x = 0; }
+    void setZero (double& x)
+      { x = 0; }
+    void setZero (fcomplex& x)
+      { x = makefcomplex(0,0); }
+    void setZero (dcomplex& x)
+      { x = makedcomplex(0,0); }
+    // </group>
+
     // Get conjugate of a complex matrix.
     LoMat_dcomplex conj (const LoMat_dcomplex& aMatrix);
 
