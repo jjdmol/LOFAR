@@ -192,6 +192,16 @@ class Message : public CountedRefTarget, //## Inherits: <unnamed>%3C7B903501C5
       ObjRef& payload ();
       BlockRef& block ();
       
+      // explicit versions of [] for string IDs
+      NestableContainer::ConstHook operator [] (const string &id1) const
+      { return (*this)[HIID(id1)]; }
+      NestableContainer::ConstHook operator [] (const char *id1) const
+      { return (*this)[HIID(id1)]; }
+      NestableContainer::Hook operator [] (const string &id1) 
+      { return (*this)[HIID(id1)]; }
+      NestableContainer::Hook operator [] (const char *id1) 
+      { return (*this)[HIID(id1)]; }
+      
       static const int MIN_PRIORITY = 0x80000000;
       
       typedef CountedRef<Message> Ref;
