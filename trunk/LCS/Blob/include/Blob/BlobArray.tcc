@@ -28,6 +28,11 @@
 #include <Common/TypeNames.h>
 #include <Common/Debug.h>
 
+#if defined(HAVE_AIPSPP) 
+# include <aips/Arrays/Array.h>
+#endif
+
+
 namespace LOFAR
 {
 

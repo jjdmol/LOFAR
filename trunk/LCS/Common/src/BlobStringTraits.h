@@ -28,9 +28,7 @@
 // It is taken from the DTL implementation.
 // It should not be done if DTL is used.
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
+#include <lofar_config.h>
 
 #if defined(HAVE_DTL)
 # include <dtl/dtl_config.h>

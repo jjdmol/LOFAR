@@ -20,12 +20,10 @@
 //#
 //# $Id$
 
-#if !defined(LCS_PERFPROFILE_H)
-#define LCS_PERFPROFILE_H
+#ifndef COMMON_PERFPROFILE_H
+#define COMMON_PERFPROFILE_H
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
+#include <lofar_config.h>
 
 #if defined(HAVE_MPICH) && defined(HAVE_MPI_PROFILER)
 #define MPICH_SKIP_MPICXX

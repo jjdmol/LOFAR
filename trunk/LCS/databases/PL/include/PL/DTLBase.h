@@ -23,9 +23,7 @@
 #ifndef LOFAR_PL_DTLBASE_H
 #define LOFAR_PL_DTLBASE_H
 
-#if defined(HAVE_CONFIG_H)
-#include <config.h>
-#endif
+#include <lofar_config.h>
 
 #if !defined(HAVE_DTL)
 #error "DTL library is required"
