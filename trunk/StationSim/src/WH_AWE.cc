@@ -128,7 +128,7 @@ void WH_AWE::process()
   // Now assign the calculated weight vector to the output
   
 
-  memcpy(itsOutHolder->getBuffer(), d.data(), itsNrcu * sizeof(LoVec_dcomplex));
+  memcpy(itsOutHolder->getBuffer(), d.data(), itsNrcu * sizeof(DH_SampleC::BufferType));
   
   
 //   cout << itsBuffer << endl;
@@ -142,7 +142,12 @@ void WH_AWE::process()
 
 void WH_AWE::dump() const
 {
+  using namespace blitz;
 
+//   LoVec_dcomplex weight(itsOutHolder->getBuffer(), itsNrcu, duplicateData);    
+
+//   cout << "Weight vector Buffer: " << endl;
+//   cout << weight<< endl;
 }
 
 
