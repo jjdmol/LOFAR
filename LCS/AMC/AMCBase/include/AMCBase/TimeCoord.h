@@ -37,7 +37,7 @@ namespace LOFAR
       // Create from the current local date/time.
       TimeCoord();
 
-      // Create from the given date and time.
+      // Create from the given UTC date and time.
       // Note that days, hours, minutes, and seconds can contain fractions.
       TimeCoord (int yy, int mm, double dd,
                  double h=0, double m=0, double s=0);
@@ -45,26 +45,36 @@ namespace LOFAR
       // Create from an MJD (with possible fractions of day for high accuracy).
       explicit TimeCoord (double mjd, double fraction=0);
 
-      // Get the time in utc (in UNIX format in seconds).
+      // @{
+      // Get/set the UTC time in seconds since January 1, 1970 (Unix format).
       double utc() const;
+      void utc(double s);
+      // @}
 
-      // Get the local time (in UNIX format in seconds).
+      // @{
+      // Get/set the local time in seconds since January 1, 1970 (Unix format).
       double local() const;
+      void local(double s);
+      // @}
 
-      // Get the time in MJD (as utc).
-      double mjd() const
-      { return itsDay + itsFrac; }
+      // @{
+      // Get/set the UTC time in MJD.
+      double mjd() const;
+      void mjd(double mjd);
+      // @}
 
+      // @{
       // Get day and fraction.
-      double getDay() const
-      { return itsDay; }
-      double getFraction() const
-      { return itsFrac; }
+      double getDay() const;
+      double getFraction() const;
+      // @}
 
-      // Get year, month, day (possibly in local time).
+      // Get year, month, day. If \a local is false, return UTC time; else
+      // return local time.
       void ymd (int& yyyy, int& mm, int& dd, bool local=false) const;
 
-      // Get hours, minutes seconds (possibly in local time).
+      // Get hours, minutes seconds. If \a local is false, return UTC time;
+      // else return local time.
       void hms (int& h, int& m, double& s, bool local=false) const;
 
       // Return the difference between local time and UTC in seconds.
@@ -79,6 +89,35 @@ namespace LOFAR
 
     // Output in ASCII (in UTC).
     ostream& operator<< (ostream&, const TimeCoord&);
+
+
+    //######################## INLINE FUNCTIONS ########################//
+
+    inline double TimeCoord::utc() const
+    {
+      return (mjd() - 40587) * 24 * 3600;
+    }
+
+    inline double TimeCoord::local() const
+    {
+      return utc() + getUTCDiff();
+    }
+
+    inline double TimeCoord::mjd() const
+    {
+      return itsDay + itsFrac; 
+    }
+
+    inline double TimeCoord::getDay() const
+    {
+      return itsDay;
+    }
+
+    inline double TimeCoord::getFraction() const
+    {
+      return itsFrac;
+    }
+
 
   } // namespace AMC
 
