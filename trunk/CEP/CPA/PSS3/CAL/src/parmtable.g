@@ -1,4 +1,4 @@
-### TFStoredParmPolc.cc: Stored parameter with polynomial coefficients
+### parmtable.g: Glish script to add parameters to the MEP table
 ###
 ### Copyright (C) 2002
 ### ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -39,7 +39,9 @@ parmtable := function (name, create=F)
 	d7 := tablecreatearraycoldesc  ('RVALUES', as_double(0));
 	d8 := tablecreatearraycoldesc  ('CVALUES', as_dcomplex(0));
 	d9 := tablecreatearraycoldesc  ('MASK', T);
-	td := tablecreatedesc (d1, d3, d4, d5, d6, d7, d8, d9);
+	d10:= tablecreatescalarcoldesc ('PERTURBATION', as_double(0));
+	d11:= tablecreatescalarcoldesc ('PERT_REL', T);
+	td := tablecreatedesc (d1, d3, d4, d5, d6, d7, d8, d9, d10, d11);
 	self.tab := table (name, td);
 	if (is_fail(self.tab)) {
 	    fail;
@@ -51,7 +53,7 @@ parmtable := function (name, create=F)
 	
 	# Create the table with initial values.
 	itabname := spaste(name,'/INITIALVALUES');
-	td := tablecreatedesc (d1, d7, d8, d9);
+	td := tablecreatedesc (d1, d7, d8, d9, d10, d11);
 	self.itab := table (itabname, td);
 	if (is_fail(self.itab)) {
 	    fail;
@@ -84,7 +86,8 @@ parmtable := function (name, create=F)
 	return T;
     }
 
-    public.putinit := function (parmname, values, mask=unset)
+    public.putinit := function (parmname, values, mask=unset,
+                                perturbation=1e-6, pertrelative=T)
     {
 	t1 := self.itab.query (spaste('NAME=="',parmname,'"'));
 	nr := t1.nrows();
@@ -92,11 +95,20 @@ parmtable := function (name, create=F)
 	if (nr != 0) {
 	    fail paste('Parameter',parmname,'already has an initial value');
 	}
+	# Turn a scalar into a matrix.
+	if (length(shape(values)) == 1  &&  length(values) == 1) {
+	    values := array (values, 1, 1);
+	}
 	if (length(shape(values)) != 2  ||  !is_numeric(values)) {
 	    fail paste('values should be a 2-dim numerical array');
 	}
-	if (!is_unset(mask)  &&  (!is_boolean(mask) || length(shape(mask)) != 2)) {
+	if (!is_unset(mask)) {
+  	  if (length(shape(mask)) == 1  &&  length(mask) == 1) {
+	    mask := array (mask, 1, 1);
+	  }
+          if (!is_boolean(mask) || length(shape(mask)) != 2) {
 	    fail paste('mask should be unset or a 2-dim boolean array');
+          }
 	}
 	self.itab.addrows(1);
 	rownr := self.itab.nrows();
@@ -109,9 +121,12 @@ parmtable := function (name, create=F)
 	} else {
 	    self.itab.putcell ('RVALUES', rownr, as_double(values));
 	}
+	self.itab.putcell ('PERTURBATION', rownr, perturbation);
+	self.itab.putcell ('PERT_REL', rownr, pertrelative);
     }
 
-    public.put := function (parmname, timerange, freqrange, values, mask=unset)
+    public.put := function (parmname, timerange, freqrange, values, mask=unset,
+                            perturbation=1e-6, pertrelative=T)
     {
 	if (length(timerange) != 2) {
 	    fail 'timerange should be a vector of 2 elements (start,end)';
@@ -150,6 +165,8 @@ parmtable := function (name, create=F)
 	} else {
 	    self.tab.putcell ('RVALUES', rownr, as_double(values));
 	}
+	self.tab.putcell ('PERTURBATION', rownr, perturbation);
+	self.tab.putcell ('PERT_REL', rownr, pertrelative);
     }
 
     return ref public;
