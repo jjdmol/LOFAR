@@ -71,7 +71,7 @@ MeqPolc ParmTableDB::getInitCoeff (const string& parmName,
   while (true) {
     TPOMParmDef tpoparm;
     tpoparm.tableName (itsTableName+"Def");
-    MParmDefSet set = tpoparm.retrieve (attrib(tpoparm,"name") == parmName);
+    MParmDefSet set = tpoparm.retrieve (attrib(tpoparm,"name") == name);
     if (! set.empty()) {
       Assert (set.size() == 1);
       MParmDefSet::const_iterator iter = set.begin();
