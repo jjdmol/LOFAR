@@ -6,6 +6,7 @@
 // $Id$
 
 #include <vector>
+#include <iostream>
 
 #include <values.h>
 
@@ -33,7 +34,7 @@ class UVPDataAtomHeader
                    LR=7,
                    LL=8};
   
-  enum DataType{Raw,
+  enum DataType{Raw = 0,
                 Corrected,
                 Model};
 
@@ -75,15 +76,35 @@ class UVPDataAtomHeader
                     unsigned int fieldID         = 0,
                     const std::vector<double>& uvw = std::vector<double>(3,0),
                     DataType     dataType        = Raw);
-
-  //! Less-than operator. Keys are itsAntenna1-itsAntenna2-itsCorrelationType-itsTime.
+  
+  //! Less-than operator. Keys are
+  //itsAntenna1-itsAntenna2-itsCorrelationType-itsTime.
   bool operator < (const UVPDataAtomHeader &other) const;
-
-  //! Makes sure that itsAntenan1 <= itsAntenna2
+  
+  //! Makes sure that its Antenna1 <= itsAntenna2
   /*! This method should always be called when itsAntenna1 or
     itsAntenna2 is changed
-   */
+    */
   void sortAntennae();
+
+
+  //! Stores internal state in binary format.
+  /*!
+    - Bytes  0- 3:     unsigned int     Antenna 1
+    - Bytes  4- 7:     unsigned int     Antenna 2
+    - Bytes  8-15:     double           Time (mid integration)
+    - Bytes 16-19:     float            Exposure time
+    - Bytes 20-23:     unsigned int     Field ID
+    - Bytes 24-31:     double           U (ITRF, meters)
+    - Bytes 32-39:     double           V (ITRF, meters)
+    - Bytes 40-48:     double           W (ITRF, meters)
+    - Byte  49   :     unsigned char    Correlation type
+    - Byte  50   :     unsigned char    Data type
+   */
+  void store(std::ostream &out) const;
+
+  //! Loads internal state in binary format.
+  void load(std::istream &in);
 
 };
 

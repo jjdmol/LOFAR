@@ -92,7 +92,8 @@ double UVPDataAtomVector::max() const
 
 //===============>>>  UVPDataAtomVector::add  <<<===============
 
-void UVPDataAtomVector::add(const UVPDataAtom *atom)
+void UVPDataAtomVector::add(const UVPDataAtom *atom,
+                            bool               honourFlags)
 {
   push_back(atom);
 
@@ -104,23 +105,30 @@ void UVPDataAtomVector::add(const UVPDataAtom *atom)
   const UVPDataAtom::ComplexType* value = atom->getData(0);
   unsigned int                    N     = atom->getNumberOfChannels();
   const UVPDataAtom::ComplexType* end   = value + N;
+  UVPDataAtom::FlagIterator       flag  = atom->getFlagBegin();
 
   if(N > 0) {
-    MinRe = (*value).real();
-    MaxRe = MinRe;
-    MinIm = (*value).imag();
-    MaxIm = MinIm;
+    if( !(*flag && honourFlags)) {
+      MinRe = (*value).real();
+      MaxRe = MinRe;
+      MinIm = (*value).imag();
+      MaxIm = MinIm;
+    }
     value++;
+    flag++;
 
     while(value < end) {
       double real = (*value).real();
       double imag = (*value).imag();
       value++;
 
-      MinRe = ( real < MinRe ? real : MinRe);
-      MaxRe = ( real > MaxRe ? real : MaxRe);
-      MinIm = ( imag < MinIm ? imag : MinIm);
-      MaxIm = ( imag > MaxIm ? imag : MaxIm);
+      if( !(*flag && honourFlags)) {
+        MinRe = ( real < MinRe ? real : MinRe);
+        MaxRe = ( real > MaxRe ? real : MaxRe);
+        MinIm = ( imag < MinIm ? imag : MinIm);
+        MaxIm = ( imag > MaxIm ? imag : MaxIm);
+      }
+      flag++;
     }
     
     if(size() == 1) {

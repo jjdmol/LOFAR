@@ -21,8 +21,10 @@ class UVPDataAtom
 {
  public:
 
-  typedef std::complex<float> ComplexType;
+  typedef std::complex<float>               ComplexType;
   
+  typedef std::vector<bool>::const_iterator FlagIterator;
+
   //! Default constructor.
   /*!  The header is initialized with its default constructor, The data
        array initially has zero length.
@@ -90,6 +92,9 @@ class UVPDataAtom
   */
   void            setFlags(const std::vector<bool>& flags);
 
+  //! Sets one flag to "flag"
+  void            setFlag(unsigned int channel,
+                          bool         flag);
 
   //! \returns the number of channels.
   unsigned int    getNumberOfChannels() const;
@@ -107,9 +112,28 @@ class UVPDataAtom
    */
   const bool         getFlag(unsigned int channel) const;
 
+  //! \returns const_iterator to first flag.
+  FlagIterator       getFlagBegin() const;
+
+  //! \returns const_iterator one past last flag.
+  FlagIterator       getFlagEnd() const;
 
   //! \returns const ref to itsHeader.
   const UVPDataAtomHeader& getHeader() const;
+
+
+  //! Stores internal state in binary format.
+  /*! Format:
+    - itsHeader
+    - unsigned int (4 bytes) number of channels
+    - N*8 bytes  std::complex<float>  data
+    - N*1 bytes  unsigned char        flags (1(T) or 0(F))
+   */
+  void               store(std::ostream& out) const;
+
+  //! Loads internal state in binary format.
+  void               load(std::istream& in);
+
 
  protected:
  private:

@@ -31,7 +31,9 @@ public:
   double min() const;
   double max() const;
 
-  void   add(const UVPDataAtom *atom);
+  //!If honourFlags == true, ignore flagged data in min/max computation
+  void   add(const UVPDataAtom *atom,
+             bool               honourFlags=false);
   
 protected:
 private:
