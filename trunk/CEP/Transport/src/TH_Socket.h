@@ -41,14 +41,15 @@ namespace LOFAR
   class TH_Socket: public TransportHolder
   {
   public:
-    TH_Socket (const std::string &sendhost, const std::string &recvhost, 
-	       const int portno);
-  
+    TH_Socket (const std::string &sendhost, 
+	       const std::string &recvhost, 
+	       const int portno,
+	       const bool ServerAtSender=true); // determine who is the server
+    
     virtual ~TH_Socket();
-  
+    
     virtual TH_Socket* make() const;
-
-  
+     
     virtual bool recvBlocking    (void* buf, int nbytes, int tag);
     virtual bool recvNonBlocking (void* buf, int nbytes, int tag);
     virtual bool waitForReceived (void* buf, int nbytes, int tag);
@@ -57,27 +58,30 @@ namespace LOFAR
     virtual bool sendNonBlocking   (void* buf, int nbytes, int tag);
     virtual bool waitForSend       (void* buf, int nbytes, int tag);
     virtual bool waitForReceiveAck (void* buf, int nbytes, int tag);
-  
+    
     virtual string getType() const;
-  
+    
     virtual bool connectionPossible(int srcRank, int dstRank) const;
     virtual bool isBlocking() const { return true; }
-  
+    
     static TH_Socket proto;
     
     virtual bool init ();
-  
-   private:
+    
+  private:
     std::string itsSendingHostName;
     std::string itsReceivingHostName;
     int itsPortNo;
   
     bool isConnected;
   
-    Socket itsSocket, itsDataSocket;
+    Socket itsDataSocket;
+    Socket itsServerSocket;
   
     bool ConnectToServer (void);
     bool ConnectToClient (void);
+
+    bool itsServerAtSender;
   };
   
 }
