@@ -49,17 +49,6 @@ namespace LOFAR
       void operator()(dtl::BoundIOs& boundIOs, DataObj& rowbuf);
     };
 
-    // The BPA template class is a helper class. It provides a generic
-    // interface for operator() by defining a typedef for DBRep<T>.
-    template<typename T> 
-    class BPA
-    {
-    public:
-      typedef DBRep<T> ParamObj ;
-      void operator()(dtl::BoundIOs& boundIOs, ParamObj& paramObj);
-    };
-
-
     //@name Template specializations
     //@{
 
@@ -71,17 +60,6 @@ namespace LOFAR
       void operator()(dtl::BoundIOs& cols, DataObj& rowbuf)
       {
         cols["ObjId"] == rowbuf.itsOid;
-      }
-    };
-
-    template<>
-    class BPA<ObjectId>
-    {
-    public:
-      typedef DBRepOid ParamObj;
-      void operator()(dtl::BoundIOs& pos, ParamObj& param)
-      {
-        pos[0] == param.itsOid;
       }
     };
 
