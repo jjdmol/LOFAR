@@ -52,13 +52,13 @@ CacheBuffer::CacheBuffer()
   m_timestamp.set(tv);
 
   m_beamletweights().resize(BeamletWeights::SINGLE_TIMESTEP,
-			    GET_CONFIG("N_RSPBOARDS", i) * GET_CONFIG("N_BLPS", i),
+			    GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i),
 			    N_BEAMLETS,
 			    EPA_Protocol::N_POL);
-  m_subbandselection().resize(GET_CONFIG("N_RSPBOARDS", i) * GET_CONFIG("N_BLPS", i),
+  m_subbandselection().resize(GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i),
 			      N_BEAMLETS * EPA_Protocol::N_POL);
 
-  if (!GET_CONFIG("IDENTITY_WEIGHTS", i))
+  if (!GET_CONFIG("RSPDriver.IDENTITY_WEIGHTS", i))
   {
     m_beamletweights()(Range::all(), Range::all(), Range::all()) =
       complex<int16>(0, 0);
@@ -78,10 +78,10 @@ CacheBuffer::CacheBuffer()
     m_subbandselection()(Range::all(), Range::all()) = i;
   }
 
-  m_rcusettings().resize(GET_CONFIG("N_BLPS", i) * GET_CONFIG("N_RSPBOARDS", i) * EPA_Protocol::N_POL);
+  m_rcusettings().resize(GET_CONFIG("RS.N_BLPS", i) * GET_CONFIG("RS.N_RSPBOARDS", i) * EPA_Protocol::N_POL);
   m_rcusettings() = RCUSettings::RCURegisterType();
 
-  m_wgsettings().resize(GET_CONFIG("N_BLPS", i) * GET_CONFIG("N_RSPBOARDS", i));
+  m_wgsettings().resize(GET_CONFIG("RS.N_BLPS", i) * GET_CONFIG("RS.N_RSPBOARDS", i));
   
   WGSettings::WGRegisterType init;
   init.freq = 0;
@@ -92,17 +92,17 @@ CacheBuffer::CacheBuffer()
   m_wgsettings() = init;
 
   m_subbandstats().resize(Statistics::N_STAT_TYPES / 2,
-			  GET_CONFIG("N_RSPBOARDS", i) * GET_CONFIG("N_BLPS", i) * EPA_Protocol::N_POL,
+			  GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * EPA_Protocol::N_POL,
 			  N_SUBBANDS);
   m_subbandstats() = 0;
 
   m_beamletstats().resize(Statistics::N_STAT_TYPES / 2,
-			  GET_CONFIG("N_RSPBOARDS", i) * GET_CONFIG("N_BLPS", i) * EPA_Protocol::N_POL,
+			  GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * EPA_Protocol::N_POL,
 			  N_BEAMLETS);
   m_beamletstats() = 0;
 
-  m_systemstatus.board().resize(GET_CONFIG("N_RSPBOARDS", i));
-  m_systemstatus.rcu().resize(GET_CONFIG("N_RSPBOARDS", i) * GET_CONFIG("N_BLPS", i) * EPA_Protocol::N_POL);
+  m_systemstatus.board().resize(GET_CONFIG("RS.N_RSPBOARDS", i));
+  m_systemstatus.rcu().resize(GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * EPA_Protocol::N_POL);
 
   BoardStatus boardinit;
   RCUStatus   rcuinit;
@@ -113,11 +113,11 @@ CacheBuffer::CacheBuffer()
   m_systemstatus.board() = boardinit;
   m_systemstatus.rcu()   = rcuinit;
 
-  m_versions.rsp().resize(GET_CONFIG("N_RSPBOARDS", i));
+  m_versions.rsp().resize(GET_CONFIG("RS.N_RSPBOARDS", i));
   m_versions.rsp() = 0;
-  m_versions.bp().resize(GET_CONFIG("N_RSPBOARDS", i));
+  m_versions.bp().resize(GET_CONFIG("RS.N_RSPBOARDS", i));
   m_versions.bp() = 0;
-  m_versions.ap().resize(GET_CONFIG("N_RSPBOARDS", i) * EPA_Protocol::N_AP);
+  m_versions.ap().resize(GET_CONFIG("RS.N_RSPBOARDS", i) * EPA_Protocol::N_AP);
   m_versions.ap() = 0;
 }
 

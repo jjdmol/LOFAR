@@ -22,6 +22,7 @@
 //#  $Id$
 
 #include <APLConfig.h>
+#include <GCF/ParameterSet.h>
 
 #include "RSP_Protocol.ph"
 #include "EPA_Protocol.ph"
@@ -82,7 +83,7 @@ RSPDriver::RSPDriver(string name)
   registerProtocol(RSP_PROTOCOL, RSP_PROTOCOL_signalnames);
   registerProtocol(EPA_PROTOCOL, EPA_PROTOCOL_signalnames);
 
-  m_clock.init(*this, "spid", GCFPortInterface::SPP, 0 /*don't care*/, true /*raw*/);
+  m_clock.init(*this, "spid", GCFPortInterface::SAP, 0 /*don't care*/, true /*raw*/);
 
   m_acceptor.init(*this, "acceptor", GCFPortInterface::MSPP, RSP_PROTOCOL);
 
@@ -1003,11 +1004,32 @@ int main(int argc, char** argv)
 
   APLConfig::getInstance().load("RSPDRIVER", RSP_SYSCONF "/rspdriver.conf");
 
-  RSPDriver rsp("RSP");
+  try
+  {
+    GCF::ParameterSet::instance()->adoptFile("RSPDriverPorts.conf");
+    GCF::ParameterSet::instance()->adoptFile("RemoteStation.conf");
+    GCF::ParameterSet::instance()->adoptFile("RSPDriver.conf");
+  }
+  catch (Exception e)
+  {
+    cerr << "Failed to load configuration files: " << e.text() << endl;
+    exit(EXIT_FAILURE);
+  }
+
+  RSPDriver rsp("RSPDriver");
 
   rsp.start(); // make initial transition
 
-  GCFTask::run();
+
+  try
+  {
+    GCFTask::run();
+  }
+  catch (Exception e)
+  {
+    cerr << "Exception: " << e.text();
+    exit(EXIT_FAILURE);
+  }
 
   LOG_INFO("Normal termination of program");
 

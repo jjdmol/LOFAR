@@ -29,12 +29,28 @@
 #include "Config.h"
 #include <string>
 
+#if 1
+
+#include <GCF/ParameterSet.h>
+
+// Replace APLConfig calls with ParameterSet calls
+
+#define convert_i getInt
+#define convert_f getFloat
+#define GET_CONFIG(var, type) (GCF::ParameterSet::instance()->convert_##type(var))
+
+#define GET_CONFIG_STRING(var) (GCF::ParameterSet::instance()->getString(var).c_str())
+
+#else
+
 #define GET_CONFIG(var, type) \
 (APLConfig::getInstance()()(APLConfig::getInstance().getBlockname(), var)? \
  (ato##type(APLConfig::getInstance()()(APLConfig::getInstance().getBlockname(), var))) : ato##type(""))
 
 #define GET_CONFIG_STRING(var) \
 (APLConfig::getInstance()()(APLConfig::getInstance().getBlockname(), var)?APLConfig::getInstance()()(APLConfig::getInstance().getBlockname(), var):"unset")
+
+#endif
 
 /**
  * Singleton class holding the constants that

@@ -16,7 +16,10 @@ BUILT_SOURCES = \
 	RSP_Protocol.ph \
 	EPA_Protocol.ph \
 	log4cplus.properties \
-	rspdriver.conf
+	rspdriver.conf \
+	RemoteStation.conf \
+	RSPDriverPorts.conf \
+	RSPDriver.conf
 
 clean-local:
 	rm -f \
@@ -29,7 +32,11 @@ EXTRA_DIST = \
 	RSP_Protocol.ph \
 	EPA_Protocol.ph
 
-sysconf_DATA = rspdriver.conf
+sysconf_DATA = \
+	rspdriver.conf \
+	RemoteStation.conf \
+	RSPDriverPorts.conf \
+	RSPDriver.conf
 
 # 	log4cplus.properties \
 # 	abs.ns \
