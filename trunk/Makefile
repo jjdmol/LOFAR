@@ -41,7 +41,10 @@ PACKAGE = \
          CEP/Tools/PerfTest/P2Perf \
          CEP/CPA/OCTOPUSSY \
          CEP/CPA/UVD \
-         CEP/CPA/uvplot
+         CEP/CPA/uvplot \
+         CEP/CPA/MNS \
+         CEP/CPA/GSM \
+         CEP/CPA/CAL
 PACKAGES = $(PACKAGE)
 #
 
