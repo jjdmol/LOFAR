@@ -29,6 +29,7 @@
 //# GCF Includes
 #include <GCF/GCF_Task.h>
 #include <GCF/GCF_Property.h>
+#include <RSP_Protocol.ph>
 #include <boost/shared_ptr.hpp>
 #include <map>
 
@@ -60,10 +61,11 @@ namespace ARA
       void addPropertySet(string scope);
       void addAllProperties(string scope, TProperty* ptp, int numProperties);
       void subscribeAllProperties();
-      void updateETHstatus(string& propName,unsigned int& ethStatus,GCFPVUnsigned& pvUnsigned);
-      void updateFPGAstatus(string& propName,unsigned int& fpgaStatus,GCFPVBool& pvBool, GCFPVDouble& pvDouble);
-      void updateRCUstatus(string& propName,unsigned int& rcuStatus,GCFPVBool& pvBool);
-      void updateSystemStatus(unsigned int& statusItem,unsigned int newStatus);
+      void updateETHstatus(string& propName,const GCFPValue* pvalue);
+      void updateAPstatus(string& propName,const GCFPValue* pvalue);
+      void updateBPstatus(string& propName,const GCFPValue* pvalue);
+      void updateRCUstatus(string& propName,const GCFPValue* pvalue);
+      void updateSystemStatus();
       bool isEnabled();
       GCFEvent::TResult initial(GCFEvent& e, GCFPortInterface& p);
       GCFEvent::TResult enabled(GCFEvent& e, GCFPortInterface& p);
@@ -76,20 +78,7 @@ namespace ARA
       GCFPort         m_RSPserver;
       TPropertyMap    m_propMap;
       
-      unsigned int    m_bpStatus;
-      unsigned int    m_ap1Status;
-      unsigned int    m_ap2Status;
-      unsigned int    m_ap3Status;
-      unsigned int    m_ap4Status;
-      unsigned int    m_ethStatus;
-      unsigned int    m_rcu1Status;
-      unsigned int    m_rcu2Status;
-      unsigned int    m_rcu3Status;
-      unsigned int    m_rcu4Status;
-      unsigned int    m_rcu5Status;
-      unsigned int    m_rcu6Status;
-      unsigned int    m_rcu7Status;
-      unsigned int    m_rcu8Status;
+      RSP_Protocol::SystemStatus m_systemStatus;
   };  
 };
 

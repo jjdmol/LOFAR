@@ -26,6 +26,17 @@
 #include "GCF/GCF_Defines.h"
 #include "GCF/GCF_PValue.h"
 
+const int N_RACKS               = 6;
+const int N_SUBRACKS_PER_RACK   = 4;
+const int N_BOARDS_PER_SUBRACK  = 1;
+const int N_APS_PER_BOARD       = 4;
+const int N_RCUS_PER_AP         = 2;
+const int N_RCUS                = N_RCUS_PER_AP*
+                                  N_APS_PER_BOARD*
+                                  N_BOARDS_PER_SUBRACK*
+                                  N_SUBRACKS_PER_RACK*
+                                  N_RACKS;
+
 const char APC_Station[]        = "ApcStationType";
 const char APC_Rack[]           = "ApcRackType";
 const char APC_SubRack[]        = "ApcSubRackType";
@@ -38,52 +49,32 @@ const char APC_Maintenance[]    = "ApcMaintenanceType";
 const char APC_Alert[]          = "ApcAlertType";
 
 const char SCOPE_PIC[] =                                              "PIC";
-const char SCOPE_PIC_Rack1[] =                                        "PIC_Rack1";
-const char SCOPE_PIC_Rack1_SubRack1[] =                               "PIC_Rack1_SubRack1";
-const char SCOPE_PIC_Rack1_SubRack1_Board1[] =                        "PIC_Rack1_SubRack1_Board1";
-const char SCOPE_PIC_Rack1_SubRack1_Board1_ETH[] =                    "PIC_Rack1_SubRack1_Board1_ETH";
-const char SCOPE_PIC_Rack1_SubRack1_Board1_BP[] =                     "PIC_Rack1_SubRack1_Board1_BP";
-const char SCOPE_PIC_Rack1_SubRack1_Board1_AP1[] =                    "PIC_Rack1_SubRack1_Board1_AP1";
-const char SCOPE_PIC_Rack1_SubRack1_Board1_AP2[] =                    "PIC_Rack1_SubRack1_Board1_AP2";
-const char SCOPE_PIC_Rack1_SubRack1_Board1_AP3[] =                    "PIC_Rack1_SubRack1_Board1_AP3";
-const char SCOPE_PIC_Rack1_SubRack1_Board1_AP4[] =                    "PIC_Rack1_SubRack1_Board1_AP4";
-const char SCOPE_PIC_Rack1_SubRack1_Board1_AP1_RCU1[] =               "PIC_Rack1_SubRack1_Board1_AP1_RCU1";
-const char SCOPE_PIC_Rack1_SubRack1_Board1_AP1_RCU2[] =               "PIC_Rack1_SubRack1_Board1_AP1_RCU2";
-const char SCOPE_PIC_Rack1_SubRack1_Board1_AP2_RCU1[] =               "PIC_Rack1_SubRack1_Board1_AP2_RCU1";
-const char SCOPE_PIC_Rack1_SubRack1_Board1_AP2_RCU2[] =               "PIC_Rack1_SubRack1_Board1_AP2_RCU2";
-const char SCOPE_PIC_Rack1_SubRack1_Board1_AP3_RCU1[] =               "PIC_Rack1_SubRack1_Board1_AP3_RCU1";
-const char SCOPE_PIC_Rack1_SubRack1_Board1_AP3_RCU2[] =               "PIC_Rack1_SubRack1_Board1_AP3_RCU2";
-const char SCOPE_PIC_Rack1_SubRack1_Board1_AP4_RCU1[] =               "PIC_Rack1_SubRack1_Board1_AP4_RCU1";
-const char SCOPE_PIC_Rack1_SubRack1_Board1_AP4_RCU2[] =               "PIC_Rack1_SubRack1_Board1_AP4_RCU2";
-const char SCOPE_PIC_Rack1_SubRack1_Board1_AP1_RCU1_ADCStatistics[] = "PIC_Rack1_SubRack1_Board1_AP1_RCU1_ADCStatistics";
-const char SCOPE_PIC_Rack1_SubRack1_Board1_AP1_RCU2_ADCStatistics[] = "PIC_Rack1_SubRack1_Board1_AP1_RCU2_ADCStatistics";
-const char SCOPE_PIC_Rack1_SubRack1_Board1_AP2_RCU1_ADCStatistics[] = "PIC_Rack1_SubRack1_Board1_AP2_RCU1_ADCStatistics";
-const char SCOPE_PIC_Rack1_SubRack1_Board1_AP2_RCU2_ADCStatistics[] = "PIC_Rack1_SubRack1_Board1_AP2_RCU2_ADCStatistics";
-const char SCOPE_PIC_Rack1_SubRack1_Board1_AP3_RCU1_ADCStatistics[] = "PIC_Rack1_SubRack1_Board1_AP3_RCU1_ADCStatistics";
-const char SCOPE_PIC_Rack1_SubRack1_Board1_AP3_RCU2_ADCStatistics[] = "PIC_Rack1_SubRack1_Board1_AP3_RCU2_ADCStatistics";
-const char SCOPE_PIC_Rack1_SubRack1_Board1_AP4_RCU1_ADCStatistics[] = "PIC_Rack1_SubRack1_Board1_AP4_RCU1_ADCStatistics";
-const char SCOPE_PIC_Rack1_SubRack1_Board1_AP4_RCU2_ADCStatistics[] = "PIC_Rack1_SubRack1_Board1_AP4_RCU2_ADCStatistics";
+const char SCOPE_PIC_RackN[] =                                        "PIC_Rack%d";
+const char SCOPE_PIC_RackN_SubRackN[] =                               "PIC_Rack%d_SubRack%d";
+const char SCOPE_PIC_RackN_SubRackN_BoardN[] =                        "PIC_Rack%d_SubRack%d_Board%d";
+const char SCOPE_PIC_RackN_SubRackN_BoardN_ETH[] =                    "PIC_Rack%d_SubRack%d_Board%d_ETH";
+const char SCOPE_PIC_RackN_SubRackN_BoardN_BP[] =                     "PIC_Rack%d_SubRack%d_Board%d_BP";
+const char SCOPE_PIC_RackN_SubRackN_BoardN_APN[] =                    "PIC_Rack%d_SubRack%d_Board%d_AP%d";
+const char SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN[] =               "PIC_Rack%d_SubRack%d_Board%d_AP%d_RCU%d";
+const char SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN_ADCStatistics[] = "PIC_Rack%d_SubRack%d_Board%d_AP%d_RCU%d_ADCStatistics";
 const char SCOPE_PIC_Maintenance[] =                                  "PIC_Maintenance";
-const char SCOPE_PIC_Rack1_Maintenance[] =                            "PIC_Rack1_Maintenance";
-const char SCOPE_PIC_Rack1_SubRack1_Maintenance[] =                   "PIC_Rack1_SubRack1_Maintenance";
-const char SCOPE_PIC_Rack1_SubRack1_Board1_Maintenance[] =            "PIC_Rack1_SubRack1_Board1_Maintenance";
-const char SCOPE_PIC_Rack1_SubRack1_Board1_AP1_RCU1_Maintenance[] =   "PIC_Rack1_SubRack1_Board1_AP1_RCU1_Maintenance";
-const char SCOPE_PIC_Rack1_SubRack1_Board1_AP1_RCU2_Maintenance[] =   "PIC_Rack1_SubRack1_Board1_AP1_RCU2_Maintenance";
-const char SCOPE_PIC_Rack1_SubRack1_Board1_AP2_RCU1_Maintenance[] =   "PIC_Rack1_SubRack1_Board1_AP2_RCU1_Maintenance";
-const char SCOPE_PIC_Rack1_SubRack1_Board1_AP2_RCU2_Maintenance[] =   "PIC_Rack1_SubRack1_Board1_AP2_RCU2_Maintenance";
-const char SCOPE_PIC_Rack1_SubRack1_Board1_AP3_RCU1_Maintenance[] =   "PIC_Rack1_SubRack1_Board1_AP3_RCU1_Maintenance";
-const char SCOPE_PIC_Rack1_SubRack1_Board1_AP3_RCU2_Maintenance[] =   "PIC_Rack1_SubRack1_Board1_AP3_RCU2_Maintenance";
-const char SCOPE_PIC_Rack1_SubRack1_Board1_AP4_RCU1_Maintenance[] =   "PIC_Rack1_SubRack1_Board1_AP4_RCU1_Maintenance";
-const char SCOPE_PIC_Rack1_SubRack1_Board1_AP4_RCU2_Maintenance[] =   "PIC_Rack1_SubRack1_Board1_AP4_RCU2_Maintenance";
-const char SCOPE_PIC_Rack1_Alert[] =                                  "PIC_Rack1_Alert";
-const char SCOPE_PIC_Rack1_SubRack1_Alert[] =                         "PIC_Rack1_SubRack1_Alert";
-const char SCOPE_PIC_Rack1_SubRack1_Board1_Alert[] =                  "PIC_Rack1_SubRack1_Board1_Alert";
+const char SCOPE_PIC_RackN_Maintenance[] =                            "PIC_Rack%d_Maintenance";
+const char SCOPE_PIC_RackN_SubRackN_Maintenance[] =                   "PIC_Rack%d_SubRack%d_Maintenance";
+const char SCOPE_PIC_RackN_SubRackN_BoardN_Maintenance[] =            "PIC_Rack%d_SubRack%d_Board%d_Maintenance";
+const char SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN_Maintenance[] =   "PIC_Rack%d_SubRack%d_Board%d_AP%d_RCU%d_Maintenance";
+const char SCOPE_PIC_RackN_Alert[] =                                  "PIC_Rack%d_Alert";
+const char SCOPE_PIC_RackN_SubRackN_Alert[] =                         "PIC_Rack%d_SubRack%d_Alert";
+const char SCOPE_PIC_RackN_SubRackN_BoardN_Alert[] =                  "PIC_Rack%d_SubRack%d_Board%d_Alert";
 
 // the following constants cannot be defined as const char because they are used
 // as char* elsewhere
 #define PROPNAME_STATUS          "status"
 #define PROPNAME_PACKETSRECEIVED "packetsReceived"
 #define PROPNAME_PACKETSERROR    "packetsError"
+#define PROPNAME_LASTERROR       "lastError"
+#define PROPNAME_FFI0            "ffi0"
+#define PROPNAME_FFI1            "ffi1"
+#define PROPNAME_FFI2            "ffi2"
 #define PROPNAME_ALIVE           "alive"
 #define PROPNAME_TEMPERATURE     "temperature"
 #define PROPNAME_VERSION         "version"
@@ -111,9 +102,14 @@ const TProperty PROPS_Rack[] =
   {PROPNAME_STATUS, GCFPValue::LPT_UNSIGNED, GCF_READABLE_PROP | GCF_WRITABLE_PROP, "0"},
 };
 
-const TPropertySet PROPSET_Rack1 = 
+const TPropertySet PROPSET_Racks[] = 
 {
-  1, "Rack1", PROPS_Rack
+  {1, "Rack1", PROPS_Rack},
+  {1, "Rack2", PROPS_Rack},
+  {1, "Rack3", PROPS_Rack},
+  {1, "Rack4", PROPS_Rack},
+  {1, "Rack5", PROPS_Rack},
+  {1, "Rack6", PROPS_Rack},
 };
 
 const TProperty PROPS_SubRack[] =
@@ -121,9 +117,12 @@ const TProperty PROPS_SubRack[] =
   {PROPNAME_STATUS, GCFPValue::LPT_UNSIGNED, GCF_READABLE_PROP | GCF_WRITABLE_PROP, "0"},
 };
 
-const TPropertySet PROPSET_SubRack1 = 
+const TPropertySet PROPSET_SubRacks[] = 
 {
-  1, "SubRack1", PROPS_SubRack
+  {1, "SubRack1", PROPS_SubRack},
+  {1, "SubRack2", PROPS_SubRack},
+  {1, "SubRack3", PROPS_SubRack},
+  {1, "SubRack4", PROPS_SubRack},
 };
 
 const TProperty PROPS_Board[] =
@@ -131,9 +130,9 @@ const TProperty PROPS_Board[] =
   {PROPNAME_STATUS, GCFPValue::LPT_UNSIGNED, GCF_READABLE_PROP | GCF_WRITABLE_PROP, "0"},
 };
 
-const TPropertySet PROPSET_Board1 = 
+const TPropertySet PROPSET_Boards[] = 
 {
-  1, "Board1", PROPS_Board
+  {1, "Board1", PROPS_Board},
 };
 
 const TProperty PROPS_Ethernet[] =
@@ -141,11 +140,15 @@ const TProperty PROPS_Ethernet[] =
   {PROPNAME_STATUS, GCFPValue::LPT_UNSIGNED, GCF_READABLE_PROP | GCF_WRITABLE_PROP, "0"},
   {PROPNAME_PACKETSRECEIVED, GCFPValue::LPT_UNSIGNED, GCF_READABLE_PROP | GCF_WRITABLE_PROP, "0"},
   {PROPNAME_PACKETSERROR, GCFPValue::LPT_UNSIGNED, GCF_READABLE_PROP | GCF_WRITABLE_PROP, "0"},
+  {PROPNAME_LASTERROR, GCFPValue::LPT_UNSIGNED, GCF_READABLE_PROP | GCF_WRITABLE_PROP, "0"},
+  {PROPNAME_FFI0, GCFPValue::LPT_UNSIGNED, GCF_READABLE_PROP | GCF_WRITABLE_PROP, "0"},
+  {PROPNAME_FFI1, GCFPValue::LPT_UNSIGNED, GCF_READABLE_PROP | GCF_WRITABLE_PROP, "0"},
+  {PROPNAME_FFI2, GCFPValue::LPT_UNSIGNED, GCF_READABLE_PROP | GCF_WRITABLE_PROP, "0"},
 };
 
 const TPropertySet PROPSET_ETH = 
 {
-  3, "ETH", PROPS_Ethernet
+  7, "ETH", PROPS_Ethernet
 };
 
 const TProperty PROPS_FPGA[] =
@@ -161,24 +164,12 @@ const TPropertySet PROPSET_BP =
   4, "BP", PROPS_FPGA
 };
 
-const TPropertySet PROPSET_AP1 = 
+const TPropertySet PROPSET_APs[] = 
 {
-  4, "AP1", PROPS_FPGA
-};
-
-const TPropertySet PROPSET_AP2 = 
-{
-  4, "AP2", PROPS_FPGA
-};
-
-const TPropertySet PROPSET_AP3 = 
-{
-  4, "AP3", PROPS_FPGA
-};
-
-const TPropertySet PROPSET_AP4 = 
-{
-  4, "AP4", PROPS_FPGA
+  {4, "AP1", PROPS_FPGA},
+  {4, "AP2", PROPS_FPGA},
+  {4, "AP3", PROPS_FPGA},
+  {4, "AP4", PROPS_FPGA},
 };
 
 const TProperty PROPS_RCU[] =
@@ -189,14 +180,10 @@ const TProperty PROPS_RCU[] =
   {PROPNAME_STATSREADY, GCFPValue::LPT_BOOL, GCF_READABLE_PROP | GCF_WRITABLE_PROP, "false"},
 };
 
-const TPropertySet PROPSET_RCU1 = 
+const TPropertySet PROPSET_RCUs[] = 
 {
-  4, "RCU1", PROPS_RCU
-};
-
-const TPropertySet PROPSET_RCU2 = 
-{
-  4, "RCU2", PROPS_RCU
+  {4, "RCU1", PROPS_RCU},
+  {4, "RCU2", PROPS_RCU},
 };
 
 const TProperty PROPS_ADCStatistics[] =

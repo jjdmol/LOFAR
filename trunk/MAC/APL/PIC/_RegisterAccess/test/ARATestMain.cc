@@ -20,6 +20,8 @@
 //#
 //#  $Id$
 
+#undef PACKAGE
+#undef VERSION
 #include <CmdLine.h>
 #include <GCF/GCF_Task.h>
 #include "../../../APLCommon/src/suite.h"
@@ -55,10 +57,10 @@ int main(int argc, char* argv[])
     }
     
     // create test driver task. 
-    ARATestDriverTask testDriverTask;
-    testDriverTask.start(); // make initial transition
     if(noTest)
     {
+      ARATestDriverTask testDriverTask;
+      testDriverTask.start(); // make initial transition
       GCFTask::run(); //is also called by the ARATest class
     }
     else

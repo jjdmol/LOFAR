@@ -67,92 +67,116 @@ RegisterAccessTask::RegisterAccessTask(string name)
 {
   registerProtocol(RSP_PROTOCOL, RSP_PROTOCOL_signalnames);
   m_answer.setTask(this);
+
+  char scopeString[300];
+  int rack;
+  int subrack;
+  int board;
+  int ap;
+  int rcu;
   
   // fill MyPropertySets map
   addMyPropertySet(PROPSET_PIC, SCOPE_PIC);
-  addMyPropertySet(PROPSET_Rack1, SCOPE_PIC_Rack1);
-  addMyPropertySet(PROPSET_SubRack1, SCOPE_PIC_Rack1_SubRack1);
-  addMyPropertySet(PROPSET_Board1, SCOPE_PIC_Rack1_SubRack1_Board1);
-  addMyPropertySet(PROPSET_ETH, SCOPE_PIC_Rack1_SubRack1_Board1_ETH);
-  addMyPropertySet(PROPSET_BP, SCOPE_PIC_Rack1_SubRack1_Board1_BP);
-  addMyPropertySet(PROPSET_AP1, SCOPE_PIC_Rack1_SubRack1_Board1_AP1);
-  addMyPropertySet(PROPSET_AP2, SCOPE_PIC_Rack1_SubRack1_Board1_AP2);
-  addMyPropertySet(PROPSET_AP3, SCOPE_PIC_Rack1_SubRack1_Board1_AP3);
-  addMyPropertySet(PROPSET_AP4, SCOPE_PIC_Rack1_SubRack1_Board1_AP4);
-  addMyPropertySet(PROPSET_RCU1, SCOPE_PIC_Rack1_SubRack1_Board1_AP1_RCU1);
-  addMyPropertySet(PROPSET_RCU2, SCOPE_PIC_Rack1_SubRack1_Board1_AP1_RCU2);
-  addMyPropertySet(PROPSET_RCU1, SCOPE_PIC_Rack1_SubRack1_Board1_AP2_RCU1);
-  addMyPropertySet(PROPSET_RCU2, SCOPE_PIC_Rack1_SubRack1_Board1_AP2_RCU2);
-  addMyPropertySet(PROPSET_RCU1, SCOPE_PIC_Rack1_SubRack1_Board1_AP3_RCU1);
-  addMyPropertySet(PROPSET_RCU2, SCOPE_PIC_Rack1_SubRack1_Board1_AP3_RCU2);
-  addMyPropertySet(PROPSET_RCU1, SCOPE_PIC_Rack1_SubRack1_Board1_AP4_RCU1);
-  addMyPropertySet(PROPSET_RCU2, SCOPE_PIC_Rack1_SubRack1_Board1_AP4_RCU2);
-  addMyPropertySet(PROPSET_ADCStatistics, SCOPE_PIC_Rack1_SubRack1_Board1_AP1_RCU1_ADCStatistics);
-  addMyPropertySet(PROPSET_ADCStatistics, SCOPE_PIC_Rack1_SubRack1_Board1_AP1_RCU2_ADCStatistics);
-  addMyPropertySet(PROPSET_ADCStatistics, SCOPE_PIC_Rack1_SubRack1_Board1_AP2_RCU1_ADCStatistics);
-  addMyPropertySet(PROPSET_ADCStatistics, SCOPE_PIC_Rack1_SubRack1_Board1_AP2_RCU2_ADCStatistics);
-  addMyPropertySet(PROPSET_ADCStatistics, SCOPE_PIC_Rack1_SubRack1_Board1_AP3_RCU1_ADCStatistics);
-  addMyPropertySet(PROPSET_ADCStatistics, SCOPE_PIC_Rack1_SubRack1_Board1_AP3_RCU2_ADCStatistics);
-  addMyPropertySet(PROPSET_ADCStatistics, SCOPE_PIC_Rack1_SubRack1_Board1_AP4_RCU1_ADCStatistics);
-  addMyPropertySet(PROPSET_ADCStatistics, SCOPE_PIC_Rack1_SubRack1_Board1_AP4_RCU2_ADCStatistics);
   addMyPropertySet(PROPSET_Maintenance, SCOPE_PIC_Maintenance);
-  addMyPropertySet(PROPSET_Maintenance, SCOPE_PIC_Rack1_Maintenance);
-  addMyPropertySet(PROPSET_Maintenance, SCOPE_PIC_Rack1_SubRack1_Maintenance);
-  addMyPropertySet(PROPSET_Maintenance, SCOPE_PIC_Rack1_SubRack1_Board1_Maintenance);
-  addMyPropertySet(PROPSET_Maintenance, SCOPE_PIC_Rack1_SubRack1_Board1_AP1_RCU1_Maintenance);
-  addMyPropertySet(PROPSET_Maintenance, SCOPE_PIC_Rack1_SubRack1_Board1_AP1_RCU2_Maintenance);
-  addMyPropertySet(PROPSET_Maintenance, SCOPE_PIC_Rack1_SubRack1_Board1_AP2_RCU1_Maintenance);
-  addMyPropertySet(PROPSET_Maintenance, SCOPE_PIC_Rack1_SubRack1_Board1_AP2_RCU2_Maintenance);
-  addMyPropertySet(PROPSET_Maintenance, SCOPE_PIC_Rack1_SubRack1_Board1_AP3_RCU1_Maintenance);
-  addMyPropertySet(PROPSET_Maintenance, SCOPE_PIC_Rack1_SubRack1_Board1_AP3_RCU2_Maintenance);
-  addMyPropertySet(PROPSET_Maintenance, SCOPE_PIC_Rack1_SubRack1_Board1_AP4_RCU1_Maintenance);
-  addMyPropertySet(PROPSET_Maintenance, SCOPE_PIC_Rack1_SubRack1_Board1_AP4_RCU2_Maintenance);
-  addMyPropertySet(PROPSET_Alert, SCOPE_PIC_Rack1_Alert);
-  addMyPropertySet(PROPSET_Alert, SCOPE_PIC_Rack1_SubRack1_Alert);
-  addMyPropertySet(PROPSET_Alert, SCOPE_PIC_Rack1_SubRack1_Board1_Alert);
+  for(rack=1;rack<=N_RACKS;rack++)
+  {
+    sprintf(scopeString,SCOPE_PIC_RackN,rack);
+    addMyPropertySet(PROPSET_Racks[rack-1], scopeString);
+    sprintf(scopeString,SCOPE_PIC_RackN_Maintenance,rack);
+    addMyPropertySet(PROPSET_Maintenance, scopeString);
+    sprintf(scopeString,SCOPE_PIC_RackN_Alert,rack);
+    addMyPropertySet(PROPSET_Alert, scopeString);
+
+    for(subrack=1;subrack<=N_SUBRACKS_PER_RACK;subrack++)
+    {
+      sprintf(scopeString,SCOPE_PIC_RackN_SubRackN,rack,subrack);
+      addMyPropertySet(PROPSET_SubRacks[subrack-1], scopeString);
+      sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_Maintenance,rack,subrack);
+      addMyPropertySet(PROPSET_Maintenance, scopeString);
+      sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_Alert,rack,subrack);
+      addMyPropertySet(PROPSET_Alert, scopeString);
+      
+      for(board=1;board<=N_BOARDS_PER_SUBRACK;board++)
+      {
+        sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN,rack,subrack,board);
+        addMyPropertySet(PROPSET_Boards[board-1], scopeString);
+        sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_Maintenance,rack,subrack,board);
+        addMyPropertySet(PROPSET_Maintenance, scopeString);
+        sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_Alert,rack,subrack,board);
+        addMyPropertySet(PROPSET_Alert, scopeString);
+        sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_ETH,rack,subrack,board);
+        addMyPropertySet(PROPSET_ETH, scopeString);
+        sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_BP,rack,subrack,board);
+        addMyPropertySet(PROPSET_BP, scopeString);
+    
+        for(ap=1;ap<=N_APS_PER_BOARD;ap++)
+        {
+          sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN,rack,subrack,board,ap);
+          addMyPropertySet(PROPSET_APs[ap-1], scopeString);
+          for(rcu=1;rcu<=N_RCUS_PER_AP;rcu++)
+          {
+            sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN,rack,subrack,board,ap,rcu);
+            addMyPropertySet(PROPSET_RCUs[rcu-1], scopeString);
+            sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN_ADCStatistics,rack,subrack,board,ap,rcu);
+            addMyPropertySet(PROPSET_ADCStatistics, scopeString);
+            sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN_Maintenance,rack,subrack,board,ap,rcu);
+            addMyPropertySet(PROPSET_Maintenance, scopeString);
+          }
+        }
+      }
+    }  
+  }
   
   // fill APCs map
   addAPC(APC_Station, SCOPE_PIC);
-  addAPC(APC_Rack, SCOPE_PIC_Rack1);
-  addAPC(APC_SubRack, SCOPE_PIC_Rack1_SubRack1);
-  addAPC(APC_Board, SCOPE_PIC_Rack1_SubRack1_Board1);
-  addAPC(APC_Ethernet, SCOPE_PIC_Rack1_SubRack1_Board1_ETH);
-  addAPC(APC_FPGA, SCOPE_PIC_Rack1_SubRack1_Board1_BP);
-  addAPC(APC_FPGA, SCOPE_PIC_Rack1_SubRack1_Board1_AP1);
-  addAPC(APC_FPGA, SCOPE_PIC_Rack1_SubRack1_Board1_AP2);
-  addAPC(APC_FPGA, SCOPE_PIC_Rack1_SubRack1_Board1_AP3);
-  addAPC(APC_FPGA, SCOPE_PIC_Rack1_SubRack1_Board1_AP4);
-  addAPC(APC_RCU, SCOPE_PIC_Rack1_SubRack1_Board1_AP1_RCU1);
-  addAPC(APC_RCU, SCOPE_PIC_Rack1_SubRack1_Board1_AP1_RCU2);
-  addAPC(APC_RCU, SCOPE_PIC_Rack1_SubRack1_Board1_AP2_RCU1);
-  addAPC(APC_RCU, SCOPE_PIC_Rack1_SubRack1_Board1_AP2_RCU2);
-  addAPC(APC_RCU, SCOPE_PIC_Rack1_SubRack1_Board1_AP3_RCU1);
-  addAPC(APC_RCU, SCOPE_PIC_Rack1_SubRack1_Board1_AP3_RCU2);
-  addAPC(APC_RCU, SCOPE_PIC_Rack1_SubRack1_Board1_AP4_RCU1);
-  addAPC(APC_RCU, SCOPE_PIC_Rack1_SubRack1_Board1_AP4_RCU2);
-  addAPC(APC_ADCStatistics, SCOPE_PIC_Rack1_SubRack1_Board1_AP1_RCU1_ADCStatistics);
-  addAPC(APC_ADCStatistics, SCOPE_PIC_Rack1_SubRack1_Board1_AP1_RCU2_ADCStatistics);
-  addAPC(APC_ADCStatistics, SCOPE_PIC_Rack1_SubRack1_Board1_AP2_RCU1_ADCStatistics);
-  addAPC(APC_ADCStatistics, SCOPE_PIC_Rack1_SubRack1_Board1_AP2_RCU2_ADCStatistics);
-  addAPC(APC_ADCStatistics, SCOPE_PIC_Rack1_SubRack1_Board1_AP3_RCU1_ADCStatistics);
-  addAPC(APC_ADCStatistics, SCOPE_PIC_Rack1_SubRack1_Board1_AP3_RCU2_ADCStatistics);
-  addAPC(APC_ADCStatistics, SCOPE_PIC_Rack1_SubRack1_Board1_AP4_RCU1_ADCStatistics);
-  addAPC(APC_ADCStatistics, SCOPE_PIC_Rack1_SubRack1_Board1_AP4_RCU2_ADCStatistics);
   addAPC(APC_Maintenance, SCOPE_PIC_Maintenance);
-  addAPC(APC_Maintenance, SCOPE_PIC_Rack1_Maintenance);
-  addAPC(APC_Maintenance, SCOPE_PIC_Rack1_SubRack1_Maintenance);
-  addAPC(APC_Maintenance, SCOPE_PIC_Rack1_SubRack1_Board1_Maintenance);
-  addAPC(APC_Maintenance, SCOPE_PIC_Rack1_SubRack1_Board1_AP1_RCU1_Maintenance);
-  addAPC(APC_Maintenance, SCOPE_PIC_Rack1_SubRack1_Board1_AP1_RCU2_Maintenance);
-  addAPC(APC_Maintenance, SCOPE_PIC_Rack1_SubRack1_Board1_AP2_RCU1_Maintenance);
-  addAPC(APC_Maintenance, SCOPE_PIC_Rack1_SubRack1_Board1_AP2_RCU2_Maintenance);
-  addAPC(APC_Maintenance, SCOPE_PIC_Rack1_SubRack1_Board1_AP3_RCU1_Maintenance);
-  addAPC(APC_Maintenance, SCOPE_PIC_Rack1_SubRack1_Board1_AP3_RCU2_Maintenance);
-  addAPC(APC_Maintenance, SCOPE_PIC_Rack1_SubRack1_Board1_AP4_RCU1_Maintenance);
-  addAPC(APC_Maintenance, SCOPE_PIC_Rack1_SubRack1_Board1_AP4_RCU2_Maintenance);
-  addAPC(APC_Alert, SCOPE_PIC_Rack1_Alert);
-  addAPC(APC_Alert, SCOPE_PIC_Rack1_SubRack1_Alert);
-  addAPC(APC_Alert, SCOPE_PIC_Rack1_SubRack1_Board1_Alert);
+  for(rack=1;rack<=N_RACKS;rack++)
+  {
+    sprintf(scopeString,SCOPE_PIC_RackN,rack);
+    addAPC(APC_Rack, scopeString);
+    sprintf(scopeString,SCOPE_PIC_RackN_Maintenance,rack);
+    addAPC(APC_Maintenance, scopeString);
+    sprintf(scopeString,SCOPE_PIC_RackN_Alert,rack);
+    addAPC(APC_Alert, scopeString);
+
+    for(subrack=1;subrack<=N_SUBRACKS_PER_RACK;subrack++)
+    {
+      sprintf(scopeString,SCOPE_PIC_RackN_SubRackN,rack,subrack);
+      addAPC(APC_SubRack, scopeString);
+      sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_Maintenance,rack,subrack);
+      addAPC(APC_Maintenance, scopeString);
+      sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_Alert,rack,subrack);
+      addAPC(APC_Alert, scopeString);
+
+      for(board=1;board<=N_BOARDS_PER_SUBRACK;board++)
+      {
+        sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN,rack,subrack,board);
+        addAPC(APC_Board, scopeString);
+        sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_Maintenance,rack,subrack,board);
+        addAPC(APC_Maintenance, scopeString);
+        sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_Alert,rack,subrack,board);
+        addAPC(APC_Alert, scopeString);
+        sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_ETH,rack,subrack,board);
+        addAPC(APC_Ethernet, scopeString);
+        sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_BP,rack,subrack,board);
+        addAPC(APC_FPGA, scopeString);
+        for(ap=1;ap<=N_APS_PER_BOARD;ap++)
+        {
+          sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN,rack,subrack,board,ap);
+          addAPC(APC_FPGA, scopeString);
+          for(rcu=1;rcu<=N_RCUS_PER_AP;rcu++)
+          {
+            sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN,rack,subrack,board,ap,rcu);
+            addAPC(APC_RCU, scopeString);
+            sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN_ADCStatistics,rack,subrack,board,ap,rcu);
+            addAPC(APC_ADCStatistics, scopeString);
+            sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN_Maintenance,rack,subrack,board,ap,rcu);
+            addAPC(APC_Maintenance, scopeString);
+          }
+        }
+      }
+    }
+  }
 }
 
 RegisterAccessTask::~RegisterAccessTask()
@@ -176,7 +200,7 @@ bool RegisterAccessTask::isConnected()
   return m_RSPclient.isConnected();
 }
 
-GCFEvent::TResult RegisterAccessTask::initial(GCFEvent& e, GCFPortInterface& port)
+GCFEvent::TResult RegisterAccessTask::initial(GCFEvent& e, GCFPortInterface& /*port*/)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
   
@@ -225,7 +249,7 @@ GCFEvent::TResult RegisterAccessTask::initial(GCFEvent& e, GCFPortInterface& por
   return status;
 }
 
-GCFEvent::TResult RegisterAccessTask::myPropSetsLoaded(GCFEvent& e, GCFPortInterface& port)
+GCFEvent::TResult RegisterAccessTask::myPropSetsLoaded(GCFEvent& e, GCFPortInterface& /*port*/)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
   
@@ -402,66 +426,99 @@ GCFEvent::TResult RegisterAccessTask::handleUpdStatus(GCFEvent& e, GCFPortInterf
   GCFEvent::TResult status = GCFEvent::HANDLED;
   {
     RSPUpdstatusEvent updStatusEvent(e);
-    struct timeval timestamp;
-    updStatusEvent.timestamp.get(&timestamp);
 
-    unsigned int eth_status = updStatusEvent.sysstatus.eth_status()(0);
-    unsigned int bp_status = updStatusEvent.sysstatus.bp_status()(0);
-    unsigned int ap1_status = updStatusEvent.sysstatus.ap_status()(0);
-    unsigned int ap2_status = updStatusEvent.sysstatus.ap_status()(1);
-    unsigned int ap3_status = updStatusEvent.sysstatus.ap_status()(2);
-    unsigned int ap4_status = updStatusEvent.sysstatus.ap_status()(3);
-    unsigned int rcu1_status = updStatusEvent.sysstatus.rcu_status()(0);
-    unsigned int rcu2_status = updStatusEvent.sysstatus.rcu_status()(1);
-    unsigned int rcu3_status = updStatusEvent.sysstatus.rcu_status()(2);
-    unsigned int rcu4_status = updStatusEvent.sysstatus.rcu_status()(3);
-    unsigned int rcu5_status = updStatusEvent.sysstatus.rcu_status()(4);
-    unsigned int rcu6_status = updStatusEvent.sysstatus.rcu_status()(5);
-    unsigned int rcu7_status = updStatusEvent.sysstatus.rcu_status()(6);
-    unsigned int rcu8_status = updStatusEvent.sysstatus.rcu_status()(7);
-  
-    LOG_INFO(formatString("UpdStatus:\n\ttime: \t%s\n\tstatus:\t%d\n\thandle:\t%d\n\teth:\t%d\n\tbp:\t%d\n\tap1:\t%d\n\tap2:\t%d\n\tap3:\t%d\n\tap4:\t%d\n\trcu1:\t%d\n\trcu2:\t%d\n\trcu3:\t%d\n\trcu4:\t%d\n\trcu5:\t%d\n\trcu6:\t%d\n\trcu7:\t%d\n\trcu8:\t%d\n", 
-        ctime(&timestamp.tv_sec),
+    time_t curTime=(time_t)updStatusEvent.timestamp.sec();
+    LOG_INFO(formatString("UpdStatus:\n\ttime: \t%s\n\tstatus:\t%d\n\thandle:\t%d", 
+        ctime(&curTime),
         updStatusEvent.status,
-        updStatusEvent.handle,
-        eth_status,
-        bp_status,
-        ap1_status,
-        ap2_status,
-        ap3_status,
-        ap4_status,
-        rcu1_status,
-        rcu2_status,
-        rcu3_status,
-        rcu4_status,
-        rcu5_status,
-        rcu6_status,
-        rcu7_status,
-        rcu8_status
-        ));
-  
-    updateETHproperties(SCOPE_PIC_Rack1_SubRack1_Board1_ETH,eth_status);  
-    updateFPGAproperties(SCOPE_PIC_Rack1_SubRack1_Board1_BP,bp_status);
-    updateFPGAproperties(SCOPE_PIC_Rack1_SubRack1_Board1_AP1,ap1_status);
-    updateFPGAproperties(SCOPE_PIC_Rack1_SubRack1_Board1_AP2,ap2_status);
-    updateFPGAproperties(SCOPE_PIC_Rack1_SubRack1_Board1_AP3,ap3_status);
-    updateFPGAproperties(SCOPE_PIC_Rack1_SubRack1_Board1_AP4,ap4_status);
-    updateRCUproperties(SCOPE_PIC_Rack1_SubRack1_Board1_AP1_RCU1,rcu1_status);
-    updateRCUproperties(SCOPE_PIC_Rack1_SubRack1_Board1_AP1_RCU2,rcu2_status);
-    updateRCUproperties(SCOPE_PIC_Rack1_SubRack1_Board1_AP2_RCU1,rcu3_status);
-    updateRCUproperties(SCOPE_PIC_Rack1_SubRack1_Board1_AP2_RCU2,rcu4_status);
-    updateRCUproperties(SCOPE_PIC_Rack1_SubRack1_Board1_AP3_RCU1,rcu5_status);
-    updateRCUproperties(SCOPE_PIC_Rack1_SubRack1_Board1_AP3_RCU2,rcu6_status);
-    updateRCUproperties(SCOPE_PIC_Rack1_SubRack1_Board1_AP4_RCU1,rcu7_status);
-    updateRCUproperties(SCOPE_PIC_Rack1_SubRack1_Board1_AP4_RCU2,rcu8_status);
+        updStatusEvent.handle));
+
+    blitz::Array<EPA_Protocol::BoardStatus,  1>& boardStatus = updStatusEvent.sysstatus.board();
+    blitz::Array<EPA_Protocol::RCUStatus,  1>& rcuStatus = updStatusEvent.sysstatus.rcu();
     
+    int rackNr=1;
+    int subRackNr=1;
+    int relativeBoardNr=1;
+    char scopeString[300];
+
+    int boardNr;
+    for(boardNr=boardStatus.lbound(blitz::firstDim); boardNr <= boardStatus.ubound(blitz::firstDim); ++boardNr)
+    {
+      rackNr          = boardNr / (N_SUBRACKS_PER_RACK*N_BOARDS_PER_SUBRACK) + 1;
+      subRackNr       = boardNr % (N_SUBRACKS_PER_RACK*N_BOARDS_PER_SUBRACK) + 1;
+      relativeBoardNr = boardNr % N_BOARDS_PER_SUBRACK + 1;
+      LOG_INFO(formatString("UpdStatus:\n\tRack:\t%d\n\tSubRack:\t%d\n\tBoard:\t%d\n",rackNr,subRackNr,relativeBoardNr));
+      
+      uint8   rspVoltage_15 = boardStatus(boardNr).rsp.voltage_15;
+      uint8   rspVoltage_22 = boardStatus(boardNr).rsp.voltage_22;
+      uint16  rspFfi        = boardStatus(boardNr).rsp.ffi;
+      LOG_INFO(formatString("UpdStatus:\n\tRSP voltage_15:\t%d\n\tRSP voltage_22:\t%d\n\tRSP ffi\t%d",rspVoltage_15,rspVoltage_22,rspFfi));
+      
+      uint8   bpStatus  = boardStatus(boardNr).bp.status;
+      uint8   bpTemp    = boardStatus(boardNr).bp.temp;
+      LOG_INFO(formatString("UpdStatus:\n\tBP status:\t%d\n\tBP temp:\t%d",bpStatus,bpTemp));
+      
+      sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_BP,rackNr,subRackNr,relativeBoardNr);
+      updateFPGAproperties(scopeString,bpStatus,bpTemp);
+
+      for(int apNr=0; apNr < EPA_Protocol::N_AP; ++apNr)
+      {
+        uint8   apStatus  = boardStatus(boardNr).ap[apNr].status;
+        uint8   apTemp    = boardStatus(boardNr).ap[apNr].temp;
+        LOG_INFO(formatString("UpdStatus:\n\tAP[%d] status:\t%d\n\tAP[%d] temp:\t%d",apNr,apStatus,apNr,apTemp));
+
+        sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN,rackNr,subRackNr,relativeBoardNr,apNr+1);
+        updateFPGAproperties(scopeString,apStatus,apTemp);
+      }      
+  
+      uint32    ethFrames     = boardStatus(boardNr).eth.nof_frames;
+      uint32    ethErrors     = boardStatus(boardNr).eth.nof_errors;
+      uint8     ethLastError  = boardStatus(boardNr).eth.last_error;
+      uint8     ethFfi0       = boardStatus(boardNr).eth.ffi0;
+      uint8     ethFfi1       = boardStatus(boardNr).eth.ffi1;
+      uint8     ethFfi2       = boardStatus(boardNr).eth.ffi2;
+      LOG_INFO(formatString("UpdStatus:\n\tETH frames:\t%d\n\tETH errors:\t%d\n\tETH last_error:\t%d\n\tETH ffi0:\t%d\n\tETH ffi1:\t%d\n\tETH ffi2:\t%d",ethFrames,ethErrors,ethLastError,ethFfi0,ethFfi1,ethFfi2));
+
+      sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_ETH,rackNr,subRackNr,relativeBoardNr);
+      updateETHproperties(scopeString,ethFrames,ethErrors,ethLastError,ethFfi0,ethFfi1,ethFfi2);  
+  
+      uint16    readSeqnr = boardStatus(boardNr).read.seqnr;
+      uint8     readError = boardStatus(boardNr).read.error;
+      uint8     readFfi   = boardStatus(boardNr).read.ffi;
+      LOG_INFO(formatString("UpdStatus:\n\tREAD seqnr:\t%d\n\tREAD error:\t%d\n\tREAD ffr:\t%d",readSeqnr,readError,readFfi));
+      
+      uint16    writeSeqnr = boardStatus(boardNr).write.seqnr;
+      uint8     writeError = boardStatus(boardNr).write.error;
+      uint8     writeFfi   = boardStatus(boardNr).write.ffi;
+      LOG_INFO(formatString("UpdStatus:\n\tWRITE seqnr:\t%d\n\tWRITE error:\t%d\n\tWRITE ffr:\t%d",writeSeqnr,writeError,writeFfi));
+
+    }
+
+    for(int rcuNr=rcuStatus.lbound(blitz::firstDim); rcuNr <= rcuStatus.ubound(blitz::firstDim); ++rcuNr)
+    {
+      uint8   rcuStatusBits = rcuStatus(rcuNr).status;
+      LOG_INFO(formatString("UpdStatus:\n\tRCU[%d] status:\t0x%x",rcuNr,rcuStatusBits));
+      
+      int rackRelativeNr    = rcuNr / (N_RCUS_PER_AP*N_APS_PER_BOARD*N_BOARDS_PER_SUBRACK*N_SUBRACKS_PER_RACK) + 1;
+      int subRackRelativeNr = rcuNr / (N_RCUS_PER_AP*N_APS_PER_BOARD*N_BOARDS_PER_SUBRACK) + 1;
+      int boardRelativeNr   = rcuNr / (N_RCUS_PER_AP*N_APS_PER_BOARD) + 1;
+      int apRelativeNr      = ( ( rcuNr % (N_RCUS_PER_AP*N_APS_PER_BOARD) ) / N_RCUS_PER_AP) + 1;
+      int rcuRelativeNr     = ( rcuNr % N_RCUS_PER_AP) + 1;
+      sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN,rackRelativeNr,subRackRelativeNr,boardRelativeNr,apRelativeNr,rcuRelativeNr);
+      updateRCUproperties(scopeString,rcuStatusBits);
+    }
   }
-  LOG_INFO("Komtiehier???");
   
   return status;
 }
 
-void RegisterAccessTask::updateETHproperties(string scope,unsigned int status)
+void RegisterAccessTask::updateETHproperties(string scope,
+                                             uint32 frames,
+                                             uint32 errors,
+                                             uint8  lastError,
+                                             uint8  ffi0,
+                                             uint8  ffi1,
+                                             uint8  ffi2)
 {
   // layout eth status: 
   // 31......24  23.....16  15........8  7........0       
@@ -469,17 +526,27 @@ void RegisterAccessTask::updateETHproperties(string scope,unsigned int status)
   TMyPropertySetMap::iterator it=m_myPropertySetMap.find(scope);
   if(it != m_myPropertySetMap.end())
   {
-    unsigned int tempStatus = (status >> 16) & 0xFFFF;
-    GCFPVUnsigned pvTemp(tempStatus);
+    GCFPVUnsigned pvTemp(frames);
     it->second->setValue(string(PROPNAME_PACKETSRECEIVED),pvTemp);
     
-    tempStatus = status & 0xFFFF;
-    pvTemp.setValue(tempStatus);
+    pvTemp.setValue(errors);
     it->second->setValue(string(PROPNAME_PACKETSERROR),pvTemp);
+
+    pvTemp.setValue(lastError);
+    it->second->setValue(string(PROPNAME_LASTERROR),pvTemp);
+
+    pvTemp.setValue(ffi0);
+    it->second->setValue(string(PROPNAME_FFI0),pvTemp);
+
+    pvTemp.setValue(ffi1);
+    it->second->setValue(string(PROPNAME_FFI1),pvTemp);
+
+    pvTemp.setValue(ffi2);
+    it->second->setValue(string(PROPNAME_FFI2),pvTemp);
   }
 }
 
-void RegisterAccessTask::updateFPGAproperties(string scope,unsigned int status)
+void RegisterAccessTask::updateFPGAproperties(string scope,uint8 status, uint8 temp)
 {
   // layout fpga status: 
   // 15..9 8       7........0       
@@ -487,17 +554,15 @@ void RegisterAccessTask::updateFPGAproperties(string scope,unsigned int status)
   TMyPropertySetMap::iterator it=m_myPropertySetMap.find(scope);
   if(it != m_myPropertySetMap.end())
   {
-    unsigned int tempStatus = (status >> 8) & 0x01;
-    GCFPVBool pvBool(tempStatus);
+    GCFPVBool pvBool(status & 0x01);
     it->second->setValue(string(PROPNAME_ALIVE),pvBool);
     
-    tempStatus = status & 0xFF;
-    GCFPVDouble pvDouble(static_cast<double>(tempStatus)/100.0);
+    GCFPVDouble pvDouble(static_cast<double>(temp)/100.0);
     it->second->setValue(string(PROPNAME_TEMPERATURE),pvDouble);
   }
 }
 
-void RegisterAccessTask::updateRCUproperties(string scope,unsigned int status)
+void RegisterAccessTask::updateRCUproperties(string scope,uint8 status)
 {
   // layout rcu status: 
   // 7 6       5       4       3 2 1 0

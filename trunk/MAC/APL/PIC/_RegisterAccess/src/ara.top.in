@@ -1,6 +1,6 @@
 [ARA]
 ARAtestRSPserver=ARATest:ARAtestRSPserver
-ARAtestRSPserver=ARATestDriver:ARAtestRSPserver
+#ARAtestRSPserver=ARATestDriver:ARAtestRSPserver
 
 [ARATest]
 #intentionally left empty: no SAP's

@@ -18,12 +18,11 @@ aratest_SOURCES 		= \
 	ARATest.cc \
 	ARATestTask.cc \
 	ARATestDriverTask.cc \
-	ARATestMain.cc \
-	RSP_Protocol.cc
+	ARATestMain.cc
 	
 aratest_LDADD		= \
 	$(top_builddir)/APLCommon/src/libaplcommon.la \
-	-lrsp \
+	$(top_srcdir)/PAC/RSPDriver/build/gnu_debug/src/librsp.la \
 	-lgcf -lpml -lgcfcommon -lpa -lsal -ltm
 	
 aratest_DEPENDENCIES	= \

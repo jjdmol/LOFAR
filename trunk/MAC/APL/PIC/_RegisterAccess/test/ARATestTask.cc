@@ -62,6 +62,7 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 
+#include <bitset>
 #include <boost/date_time/posix_time/posix_time.hpp>
 
 using namespace LOFAR;
@@ -486,8 +487,6 @@ GCFEvent::TResult ARATestTask::test6(GCFEvent& event, GCFPortInterface& /*p*/)
     case F_ENTRY:
     {
       LOG_INFO("3.2.2.5: schedule maintenance of 1 antenna");
-LOG_INFO("skip test 6 until maintenance scheduling in PAC is implemented");
-TRAN(ARATestTask::test7);
   
       m_test_passCounter=0;
       // MAINTENANCE <scheduleid>,<resource>,<starttime>,<stoptime>
@@ -576,8 +575,6 @@ GCFEvent::TResult ARATestTask::test7(GCFEvent& event, GCFPortInterface& /*p*/)
     case F_ENTRY:
     {
       LOG_INFO("3.2.2.6: schedule maintenance of entire station");
-LOG_INFO("skip test 7 until maintenance scheduling in PAC is implemented");
-TRAN(ARATestTask::test8);
 
       m_test_passCounter=0;
       // MAINTENANCE <scheduleid>,<resource>,<starttime>,<stoptime>
@@ -675,6 +672,23 @@ GCFEvent::TResult ARATestTask::test8(GCFEvent& event, GCFPortInterface& /*p*/)
       updStatusEvent.timestamp.set(timeValNow);
       updStatusEvent.status=1;
       updStatusEvent.handle=1;
+      
+      EPA_Protocol::BoardStatus boardStatus;
+      memset(&boardStatus,0,sizeof(boardStatus));
+      boardStatus.ap[0].temp = 28;
+      boardStatus.ap[1].temp = 29;
+      boardStatus.ap[2].temp = 30;
+      boardStatus.ap[3].temp = 31;
+
+      EPA_Protocol::RCUStatus rcuStatus;
+      std::bitset<8> rcuBitStatus;
+      rcuBitStatus[7] = 1; // overflow
+      rcuStatus.status = rcuBitStatus.to_ulong();
+      updStatusEvent.sysstatus.board().resize(1);
+      updStatusEvent.sysstatus.board()(0) = boardStatus;
+      updStatusEvent.sysstatus.rcu().resize(1);
+      updStatusEvent.sysstatus.rcu()(0) = rcuStatus;
+
       m_RSPserver.send(updStatusEvent);
 
       // now wait for the alert status to change    
@@ -746,6 +760,23 @@ GCFEvent::TResult ARATestTask::test9(GCFEvent& event, GCFPortInterface& /*p*/)
       updStatusEvent.timestamp.set(timeValNow);
       updStatusEvent.status=0;
       updStatusEvent.handle=1;
+
+      EPA_Protocol::BoardStatus boardStatus;
+      memset(&boardStatus,0,sizeof(boardStatus));
+      boardStatus.ap[0].temp = 28;
+      boardStatus.ap[1].temp = 29;
+      boardStatus.ap[2].temp = 30;
+      boardStatus.ap[3].temp = 31;
+
+      EPA_Protocol::RCUStatus rcuStatus;
+      std::bitset<8> rcuBitStatus;
+      rcuBitStatus[7] = 0; // no overflow
+      rcuStatus.status = rcuBitStatus.to_ulong();
+      updStatusEvent.sysstatus.board().resize(1);
+      updStatusEvent.sysstatus.board()(0) = boardStatus;
+      updStatusEvent.sysstatus.rcu().resize(1);
+      updStatusEvent.sysstatus.rcu()(0) = rcuStatus;
+
       m_RSPserver.send(updStatusEvent);
 
       // now wait for the alert status to change    
