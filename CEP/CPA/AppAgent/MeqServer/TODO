@@ -8,10 +8,6 @@ MEQ in general:
       16/01/04: tested with default tests; now need to make some nodes
                 with child labels
                 
-  * reconsider order or events in execute(): should cache be checked
-    only after node_state and rider have been processed? Note that for
-    repeated requests, this step is skipped, regardless. 
-  
   * check performance: why does privatizing message arguments in MeqServer
     sometimes lead to cloning? I don't see why anybody else would be holding
     onto the message.
@@ -30,6 +26,12 @@ MEQ in general:
     about *.g files installed in subdirectories though?
    
   * How to tell all the nodes to shut up?
+  
+        + reconsider order or events in execute(): should cache be checked
+          only after node_state and rider have been processed? Note that for
+          repeated requests, this step is skipped, regardless. 
+          11/02/04: no, leave as is. 
+  
     
         + publish intermediate results
           29/01/04: done
@@ -89,8 +91,9 @@ Spigot:
 
 Parm:
 
-  * If a polc with the right domain is already specified in the init-record,
-    do not read the tables
+        + If a polc with the right domain is already specified in the init-record,
+          do not read the tables
+          11/02/04: done: added inf_domain and grow_domain attributes to a polc
     
         + take over from GvD; log any issues that result
           06/02/04: done
