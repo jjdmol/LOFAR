@@ -43,8 +43,11 @@ class myACClientFunctions : public ACClientFunctions
 		  cout << "Answer=" << answer << endl;
 	    }
 
-	void	handleAckMsg()
-		{ cout << "myACClientFunctions::handleAckMessage was called\n"; }
+	void	handleAckMsg(ACCmd	cmd, uint16 result, const string& info)
+		{ cout << "myACClientFunctions::handleAckMessage was called" << endl; 
+		  cout << "command = " << cmd << ", result = " << result
+				<< ", info = " << info << endl;
+		}
 
 };
 
