@@ -40,21 +40,9 @@ int main (int argc, char** argv)
 	cout << "It was a pleasure working with you!" << endl << endl;
 
 #else
-//  	cout << "Welcome to P2Perf" <<endl;
-//  	cout << "Running in batch mode " << endl;
-//  	cout << endl;
-//  	cout << "Call Define" << endl;
 	simulator.baseDefine();
-//  	cout << endl;
-//  	cout << "Call Run" << endl;
-
-	simulator.baseRun(5000);
-
-//  	cout << endl;
-//  	cout << "Call Dump " << endl;
+	simulator.baseRun(3651);
 	simulator.baseDump();
-//  	cout << endl;
-//  	cout << "Good Bye!" << endl;
 	simulator.baseQuit();
 #endif
   } catch (...) {

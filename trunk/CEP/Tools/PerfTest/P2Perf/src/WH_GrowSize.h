@@ -1,4 +1,5 @@
-//  WH_GrowSize.h: This is an example of a WorkHolder class.
+//  WH_GrowSize.h: WorkHolder class using DH_Growsize() objects and 
+//                 measuring performance
 //
 //  Copyright (C) 2000, 2001
 //  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -21,6 +22,9 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.5  2002/04/12 15:51:44  schaaf
+//  Explicit definition of source and destination side
+//
 //  Revision 1.4  2001/12/17 16:30:00  schaaf
 //  new logic in process() measurements counting
 //
@@ -47,32 +51,33 @@
 #include "DH_GrowSize.h"
 #include "StopWatch.h"
 
-
 /**
-   This is an example of a WorkHolder class.
-   It has one input and one output DH_IntArray object as DataHolders.
-
-   It shows which functions have to be implemented
-*/
+   The WH_Growsize class implements a workholder with DH_Growsize
+   objects as inputs and outputs. The process() method does nothing to
+   the data (not even copy...) but can contains a performance measurement
+   indication for the data transport bandwidth of the output DataHolders. 
+ */
 
 class WH_GrowSize: public WorkHolder
 {
 public:
-  /// Construct the work holder and give it a name.
-  /// It is possible to specify how many input and output data holders
-  /// are created and how many elements there are in the buffer.
-  /// The argument first tells if this is the first WorkHolder in
-  /// the simulation chain.
+
   WH_GrowSize (const string& name="WH_GrowSize",
 	       bool first = false,
-	       unsigned int nin=1, 
-	       unsigned int nout=1,
-	       unsigned int nbuffer=10,
-	       bool destside=false);
+	       unsigned int nin=1,      // nr of input channels
+	       unsigned int nout=1,     // nr of output channels
+	       unsigned int nbuffer=10, // default length of the
+	                                // buffer in DH_Growsize::DataPacket 
+	       bool destside=false);    // determine whether this is
+                                        // the send or recieve side in
+                                        // a connection to other
+                                        // WH_Growsize objects
   
   virtual ~WH_GrowSize();
 
   virtual WorkHolder* make(const string& name) const;
+
+  virtual void preprocess();
 
   /// Do a process step.
   virtual void process();
@@ -85,6 +90,9 @@ public:
 
   /// Get a pointer to the i-th output DataHolder.
   virtual DH_GrowSize* getOutHolder (int channel);
+
+  /// determine whether performance reporting is wanted
+  void setReportPerformance(bool);
 
 private:
   /// Forbid copy constructor.
@@ -102,19 +110,25 @@ private:
   /// Length of DH_GrowSize buffers.
   int itsBufLength;
 
-  /// indicate destination side WH in order to manage the increasesize call correctly
+  /** indicate destination side WH in order to manage the increasesize 
+      call correctly
+  */
   bool itsIsDestSide;
 
   /// Is this the first WorkHolder in the simulation chain?
   bool itsFirst;
 
   /// Used to do timing on communication
-  StopWatch watch;
+  StopWatch   watch;
   int         itsIteration;
   static int  itsMeasurements;
   static bool itsFirstcall;
   int         itsTime;
+  bool        itsReportPerformance;
 };
 
-
+inline void WH_GrowSize::setReportPerformance(bool doreport){
+  TRACER4("Set output for " << getName() << " to " << doreport);
+  itsReportPerformance = doreport;
+}
 #endif

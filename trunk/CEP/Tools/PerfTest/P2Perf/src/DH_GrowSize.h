@@ -1,4 +1,5 @@
-//  DH_GrowSize.h: Example DataHolder
+//  DH_GrowSize.h: DataHolder with one dimensional byte array that 
+//                  can grow its size (e.g. for performance measurements)
 //
 //  Copyright (C) 2000, 2001
 //  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -21,6 +22,9 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.6  2002/04/09 10:59:54  schaaf
+//  minor
+//
 //  Revision 1.5  2002/03/27 09:51:13  schaaf
 //  Use get{Cur/Max}DataPacketSize
 //
@@ -89,8 +93,8 @@ protected:
   {
   public:
     DataPacket() : itsCounter(0) {};
-
     int itsCounter;
+    BufferType* itsBuffer;
   };
 
 private:
@@ -99,11 +103,12 @@ private:
   /// Forbid assignment.
   DH_GrowSize& operator= (const DH_GrowSize&);
 
+  // pointer to a dataPacket object
   DataPacket* itsDataPacket;
-  BufferType* itsBuffer;
 
-  int reportedDataPacketSize;
-  float floatDataPacketSize;
+  // keep track of the reported sizes of the getCurDataPacketSize()
+  // method. This value is increased in the increaseSize() method
+  float reportedDataPacketSize;
 };
 
 inline void DH_GrowSize::setCounter (int counter)
@@ -113,48 +118,37 @@ inline int DH_GrowSize::getCounter() const
   { return itsDataPacket->itsCounter; }
 
 inline DH_GrowSize::BufferType* DH_GrowSize::getBuffer()
-  { return itsBuffer; }
+  { return itsDataPacket->itsBuffer; }
 
 inline const DH_GrowSize::BufferType* DH_GrowSize::getBuffer() const
-  { return itsBuffer; }
+  { return itsDataPacket->itsBuffer; }
 
-inline bool DH_GrowSize::increaseSize(float factor)
-{ 
-  bool success = false;
-  
-  if (reportedDataPacketSize * factor < this->DataHolder::getDataPacketSize())
-  {
-    floatDataPacketSize *= factor;
-    reportedDataPacketSize = (int)floatDataPacketSize;
-    success = true;
+inline bool DH_GrowSize::increaseSize(float factor) { 
+  if (reportedDataPacketSize * factor < this->DataHolder::getDataPacketSize()){
+    reportedDataPacketSize *= factor;
+    return true;
   }
-
-  return success;
+  return false;
 }
 
 inline int DH_GrowSize::getDataPacketSize(void) {
-  TRACER3("getDataPacketSize returns getCurDataPacketSize for flexible DataPackages");
   return getCurDataPacketSize(); 
 }
 
 inline int DH_GrowSize::getCurDataPacketSize(void)
-{ return reportedDataPacketSize; }
+{ return (int)reportedDataPacketSize; }
 
 inline int DH_GrowSize::getMaxDataPacketSize(void)
 { return DataHolder::getDataPacketSize(); }
 
-inline bool DH_GrowSize::setInitialDataPacketSize(int initialSize)
-{
-  bool success = false;
-
-  if (initialSize < this->DataHolder::getDataPacketSize())
-  {
-    floatDataPacketSize = initialSize;
+inline bool DH_GrowSize::setInitialDataPacketSize(int initialSize){
+  if (initialSize < this->DataHolder::getDataPacketSize()) {
     reportedDataPacketSize = initialSize;
-    success = true;
+    return true;
   }
-
-  return success;
+  return false;
 }
 
 #endif 
+
+

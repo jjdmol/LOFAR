@@ -1,6 +1,7 @@
-//  P2Perf.h: Concrete Simulator class for a sequence of steps
+//  P2Perf.h: Concrete Simulator class for performance measurements on
+//            a sequence of cross-connected steps
 //
-//  Copyright (C) 2000, 2001
+//  Copyright (C) 2000, 2002
 //  ASTRON (Netherlands Foundation for Research in Astronomy)
 //  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //
@@ -21,6 +22,9 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.9  2002/04/12 15:52:18  schaaf
+//  Updated for multiple source steps and cross connects
+//
 //  Revision 1.8  2002/03/27 09:48:00  schaaf
 //  Use get{Cur/Max}DataPacketSize
 //
@@ -48,8 +52,8 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef RINGSIM_H
-#define RINGSIM_H
+#ifndef P2PERF_H
+#define P2PERF_H
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
@@ -59,10 +63,16 @@
 #include "WH_GrowSize.h"
 #include "ParamBlock.h"
 
+// define the maximum data block size used in this simulation
 #define MAX_GROW_SIZE (256*1024) // 256 kWords =^ 1 MB
 
 /**
-   This class is an example of a concrete Simulator.
+   The P2Perf class implements a Simulator consisting of a set of data
+   source steps cross-connected to a set of destination nodes. By
+   using DH_Growsize and WH_Growsize, this simulator can be used for
+   performance measurements on the (cross) connections between the
+   steps.
+   
 */
 
 class P2Perf: public Simulator
@@ -71,6 +81,7 @@ public:
   P2Perf();
   virtual ~P2Perf();
 
+  // overloaded methods from the Simulator base class
   virtual void define(const ParamBlock& params = ParamBlock());
   virtual void run(int);
   virtual void dump() const;
@@ -79,10 +90,17 @@ public:
   void undefine();
 
  private:
+  /// Define pointers to the arrays with steps and workholders.
   WH_GrowSize **Sworkholders;
   WH_GrowSize **Dworkholders;
   Step        **Ssteps;
   Step        **Dsteps;
+
+  /// Number of source steps
+    int itsSourceSteps;
+
+  /// Number of destination steps
+    int itsDestSteps;
 };
 
 

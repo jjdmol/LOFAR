@@ -1,4 +1,5 @@
-//  DH_GrowSize.cc:
+//  DH_GrowSize.cc: DataHolder with one dimensional byte array that 
+//                  can grow its size (e.g. for performance measurements)
 //
 //  Copyright (C) 2000, 2001
 //  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -21,6 +22,9 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.4  2002/03/19 16:34:57  schaaf
+//  reverted to version 1.2
+//
 //  Revision 1.3  2002/03/08 11:38:42  wierenga
 //  Upgraded from firewalls.h use to Debug.h use. This version was used for performance tests.
 //
@@ -38,35 +42,44 @@
 #include "DH_GrowSize.h"
 #include "Debug.h"
 
+/** 
+    In the DH_Growsize constructor memory is allocated for the maximum 
+    allowed buffer size. the CurDataPacketSize is set to a default
+    determined by the nbuffer argument.
+ */
 DH_GrowSize::DH_GrowSize (const string& name, unsigned int nbuffer)
 : DataHolder (name, "DH_GrowSize")
 {
+  // Create the DataPacket AND its buffer in contiguous memory
+
   // Determine the number of bytes needed for DataPacket and buffer.
+  // the size is that of the DataPacket object, plus the size of the Buffer
   unsigned int size = sizeof(DataPacket) + (nbuffer * sizeof(BufferType));
+  // allocate the memmory
   char* ptr = new char[size];
-
   
-  //cout << "sizeof(BufferType) = " << sizeof(BufferType) << endl;
-  //cout << "sizeof(DataPacket) = " << sizeof(DataPacket) << endl;
-
   // Fill in the data packet pointer and initialize the memory.
   itsDataPacket = (DataPacket*)(ptr);
   *itsDataPacket = DataPacket();
 
   // Fill in the buffer pointer and initialize the buffer.
-  itsBuffer = (BufferType*)(ptr + sizeof(DataPacket));
-
+  // the buffer starts after the DataPacket object
+  itsDataPacket->itsBuffer = (BufferType*)(ptr + sizeof(DataPacket)); 
+  // fill with zeroes
   for (unsigned int i=0; i<nbuffer; i++) {
-    itsBuffer[i] = 0;
+    itsDataPacket->itsBuffer[i] = 0;
   }
+  
   // Initialize base class.
   setDataPacket (itsDataPacket, size);
 
-  reportedDataPacketSize = sizeof(DataPacket); /* initial packet size */
-  floatDataPacketSize = (float)reportedDataPacketSize;
+  // set initial reported datapacket size to zero buffer length
+  reportedDataPacketSize = (float) sizeof(DataPacket); 
 }
 
 DH_GrowSize::~DH_GrowSize()
 {
+  // delete the allocated memmory for the DataPacket object, 
+  // including the buffer
   delete [] (char*)(itsDataPacket);
 }
