@@ -1,6 +1,7 @@
 lib_LTLIBRARIES 	= libtinycep.la
 
 DOCHDRS = \
+Profiler.h					\
 SimulatorParseClass.h \
 TinyDataManager.h \
 TinyApplicationHolder.h \
@@ -31,6 +32,7 @@ Sel_RoundRobin.h
 #			libcepframe.la
 
 libtinycep_la_SOURCES = $(DOCHDRS) \
+Profiler.cc			\
 SimulatorParse.yy               \
 SimulatorParse.h                \
 SimulatorTokenize.ll            \

@@ -29,7 +29,7 @@
 #include "CEPFrame/DataManager.h"
 #include TRANSPORTERINCLUDE
 #include "Transport/TH_Mem.h"
-#include "CEPFrame/Profiler.h"
+#include "tinyCEP/Profiler.h"
 #include <Common/Debug.h>
 #include <Common/lofar_iostream.h>
 #include <Common/lofar_algorithm.h>    // for min,max
@@ -123,6 +123,7 @@ void StepRep::preprocess()
 void StepRep::process()
 {
   // Call the baseProcess() method in the WorkHolder
+
   Profiler::enterState (theirProcessProfilerState);
   itsWorker->baseProcess();
   Profiler::leaveState (theirProcessProfilerState);
