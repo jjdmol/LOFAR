@@ -113,8 +113,6 @@ void WH_Solve::process()
   wo->setStatus(DH_WOSolve::Assigned);
   woPtr->updateDB();
 
-  vector<string> resultParmNames;
-  vector<double> resultParmValues;
   Quality resultQuality;
 
   int contrID = wo->getStrategyControllerID();
@@ -130,15 +128,14 @@ void WH_Solve::process()
     readInputs(solver);
   }
   // Do the solve
-  solver->solve(wo->getUseSVD(), resultParmNames,
-		resultParmValues, resultQuality);
+  solver->solve(wo->getUseSVD(), resultQuality);
 
   // Write result
   // Get solution dataholder DH_Solution* sol;
   DH_Solution* sol = dynamic_cast<DH_Solution*>(getDataManager().getOutHolder(1));
   sol->clearData();
   DH_PL* solPtr = dynamic_cast<DH_PL*>(sol);
-  sol->setSolution(resultParmNames, resultParmValues);
+  sol->setSolution(resultParmNames, solver->getSolvableValues());
   sol->setQuality(resultQuality);
   sol->setWorkOrderID(wo->getWorkOrderID());
   wo->setStatus(DH_WOSolve::Executed);
