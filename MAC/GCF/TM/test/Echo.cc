@@ -84,9 +84,12 @@ GCFEvent::TResult Echo::connected(GCFEvent& e, GCFPortInterface& p)
   {
     case F_DISCONNECTED:
       cout << "Lost connection to client" << endl;
+      p.close();
+      break;
+    case F_CLOSED:
       TRAN(Echo::initial);
       break;
-
+      
     case ECHO_PING:
     {
       EchoPingEvent ping(e);

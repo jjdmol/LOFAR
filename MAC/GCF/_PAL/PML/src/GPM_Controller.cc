@@ -25,10 +25,13 @@
 #include <GCF/PAL/GCF_MyPropertySet.h>
 #include <GCF/Utils.h>
 #include <PA_Protocol.ph>
+#include <GCF/ParameterSet.h>
+
+using namespace GCF;
 
 #include <stdio.h>
 
-static string sPMLTaskName("PML");
+static string sPMLTaskName("GCF-PML");
 GPMHandler* GPMHandler::_pInstance = 0;
 
 extern void logResult(TPAResult result, GCFPropertySet& propSet);
@@ -41,6 +44,8 @@ GPMController::GPMController() :
 
   // initialize the port
   _propertyAgent.init(*this, "client", GCFPortInterface::SAP, PA_PROTOCOL);
+  ParameterSet::instance()->adoptFile("gcf-pml.conf");
+  ParameterSet::instance()->adoptFile("PropertyAgent.conf");
 }
 
 GPMController::~GPMController()

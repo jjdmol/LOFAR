@@ -26,6 +26,7 @@
 #include <unistd.h>
 #include <GCF/TM/GCF_Event.h>
 #include <Socket/GTM_Socket.h>
+#include <Common/lofar_string.h>
 
 // forward declaration
 class GCFTCPPort;
@@ -47,8 +48,8 @@ class GTMTCPSocket : public GTMSocket
     /**
      * open/close functions
      */
-    virtual int open (GCFPeerAddr& addr);
-    virtual int connect (GCFPeerAddr& addr);
+    virtual int open (unsigned int portNumber);
+    virtual int connect (unsigned int portNumber, const string& host);
   
     /**
      * send/recv functions

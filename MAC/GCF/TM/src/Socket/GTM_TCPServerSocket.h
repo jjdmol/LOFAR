@@ -47,7 +47,7 @@ class GTMTCPServerSocket : public GTMTCPSocket
     /**
      * open/close functions
      */
-    virtual int open (GCFPeerAddr& addr);
+    virtual int open (unsigned int portNumber);
     virtual int close ();
     int accept (GTMSocket& newSocket);
     

@@ -44,20 +44,17 @@ PropertyInterface_DEPENDENCIES	= libpi.la \
 
 BUILT_SOURCES = \
 	PI_Protocol.ph \
-	PA_Protocol.ph \
-	mac.ns \
-	mac.top
+	PA_Protocol.ph
 
 EXTRA_DIST = \
 	PI_Protocol.ph \
-	PA_Protocol.ph \
-	mac.ns \
-	mac.top
-		
-%.ns: $(MAC_CONFIG)/%.ns
-	cp $< $@
+	PA_Protocol.ph
 
-%.top: $(MAC_CONFIG)/%.top
+configfilesdir=$(bindir)
+configfiles_DATA= \
+	PropertyInterface.conf
+		
+%.conf: gcf-pi.conf.in
 	cp $< $@
 
 include $(lofar_sharedir)/Makefile.common

@@ -26,6 +26,7 @@
 #include <unistd.h>
 #include <GCF/TM/GCF_Event.h>
 #include <Socket/GTM_Socket.h>
+#include <Common/lofar_string.h>
 
 // forward declaration
 class GCFDevicePort;
@@ -46,7 +47,7 @@ class GTMDevice : public GTMSocket
     /**
      * open/close functions
      */
-    virtual int open (GCFPeerAddr& addr);
+    virtual int open (const string& deviceName);
   
     /**
      * send/recv functions

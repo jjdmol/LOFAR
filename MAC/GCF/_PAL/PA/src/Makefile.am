@@ -21,7 +21,6 @@ libpa_la_SOURCES= $(DOCHDRS) \
 libpa_la_CPPFLAGS= -I$(top_srcdir)/include/GCF/PAL \
 	-I$(top_srcdir)/SAL/src
 
-
 bin_PROGRAMS   		= PropertyAgent
   
 PropertyAgent_SOURCES		    	= GPA_Main.cc
@@ -35,28 +34,23 @@ PropertyAgent_CPPFLAGS= -I$(top_srcdir)/include/GCF/PAL \
 	-I$(top_srcdir)/SAL/src
 
 BUILT_SOURCES = \
-	PA_Protocol.ph \
-	mac.ns \
-	mac.top
+	PA_Protocol.ph
 
 EXTRA_DIST = \
-	PA_Protocol.ph \
-	mac.ns \
-	mac.top
+	PA_Protocol.ph
 
 #in case of make install these files will be copied to the bindir beside the test apps
 configfilesdir=$(bindir)
 configfiles_DATA= \
-	loadAPC
+	loadAPC \
+	PropertyAgent.conf
 
-	
+MAC_CONFIG = $(top_srcdir)/../../Config
+
 %.properties: $(MAC_CONFIG)/%.properties
 	cp $< $@
 	
-%.ns: $(MAC_CONFIG)/%.ns
-	cp $< $@
-
-%.top: $(MAC_CONFIG)/%.top
+%.conf: gcf-pa.conf.in
 	cp $< $@
 
 include $(lofar_sharedir)/Makefile.common

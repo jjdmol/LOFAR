@@ -48,9 +48,6 @@ GCFEvent::TResult Application::initial(GCFEvent& e, GCFPortInterface& /*p*/)
   switch (e.signal)
   {
     case F_INIT:
-      _supTask1.getPort().init(_supTask1, "client", GCFPortInterface::SAP, TST_PROTOCOL);
-      _supTask2.getPort().init(_supTask2, "client", GCFPortInterface::SAP, TST_PROTOCOL);
-
       NEXT_TEST(1_1, "Port connection, one client, one server");
       break;
 
@@ -70,11 +67,11 @@ GCFEvent::TResult Application::test1_1(GCFEvent& e, GCFPortInterface& p)
   {
     case F_ENTRY:
       _supTask1.getPort().init(_supTask1, "client", GCFPortInterface::SAP, TST_PROTOCOL);
-      TESTC(1 == _supTask1.getPort().open());
+      TESTC(_supTask1.getPort().open());
       break;
 
     case F_TIMER:
-      TESTC(1 == _supTask1.getPort().open());
+      TESTC(_supTask1.getPort().open());
       break;
 
     case F_CONNECTED:
@@ -115,9 +112,9 @@ GCFEvent::TResult Application::test1_2(GCFEvent& e, GCFPortInterface& p)
 
     case F_TIMER:
       if (&p == &_supTask1.getPort())
-        TESTC(1 == _supTask1.getPort().open());
+        TESTC(_supTask1.getPort().open());
       if (&p == &_supTask2.getPort())
-        TESTC(1 == _supTask2.getPort().open());
+        TESTC(_supTask2.getPort().open());
       break;
 
     case F_CONNECTED:
@@ -131,7 +128,7 @@ GCFEvent::TResult Application::test1_2(GCFEvent& e, GCFPortInterface& p)
           TESTC(_supTask1.getPort().send(r) == SIZEOF_EVENT(r));
         }
         else
-          TESTC(1 == _supTask2.getPort().open());
+          TESTC(_supTask2.getPort().open());
       }        
       break;
     }
@@ -139,9 +136,7 @@ GCFEvent::TResult Application::test1_2(GCFEvent& e, GCFPortInterface& p)
     case F_DISCONNECTED:
       if (closing)
       {
-        _supTask2.getPort().init(_supTask2, "client", GCFPortInterface::SAP, TST_PROTOCOL);
-        TESTC(1 == _supTask1.getPort().open());
-        closing = false;
+        _supTask1.getPort().close();
       }
       else
       {
@@ -151,7 +146,14 @@ GCFEvent::TResult Application::test1_2(GCFEvent& e, GCFPortInterface& p)
           _supTask2.getPort().setTimer(1.0); // try again after 1 second
       }
       break;
-
+    
+    case F_CLOSED:
+      _supTask1.getPort().init(_supTask1, "mclient", GCFPortInterface::SAP, TST_PROTOCOL);
+      _supTask2.getPort().init(_supTask2, "mclient", GCFPortInterface::SAP, TST_PROTOCOL);   
+      TESTC(_supTask1.getPort().open());
+      closing = false;
+      break;
+    
     case TST_TESTRESP:
       if (&p == &_supTask1.getPort())
       {
@@ -1124,8 +1126,8 @@ GCFEvent::TResult Application::test7_1(GCFEvent& e, GCFPortInterface& /*p*/)
   switch (e.signal)
   {
     case F_ENTRY:
-      TESTC_ABORT_ON_FAIL(system("./RTPing -sfp test -brdnr 1 2&> RTPing1.out &") != -1);
-      TESTC_ABORT_ON_FAIL(system("./RTPing -sfp test -brdnr 2 2&> RTPing2.out &") != -1);
+      TESTC_ABORT_ON_FAIL(system("./RTPing -brdnr 1 2&> RTPing1.out &") != -1);
+      TESTC_ABORT_ON_FAIL(system("./RTPing -brdnr 2 2&> RTPing2.out &") != -1);
       _supTask1.getPort().setTimer(2.0);      
       break;
 
@@ -1197,8 +1199,8 @@ GCFEvent::TResult Application::test7_2(GCFEvent& e, GCFPortInterface& /*p*/)
   switch (e.signal)
   {
     case F_ENTRY:
-      TESTC_ABORT_ON_FAIL(system("./RTEcho -sfp test -brdnr 1 2&> RTEcho1.out &") != -1);
-      TESTC_ABORT_ON_FAIL(system("./RTEcho -sfp test -brdnr 2 2&> RTEcho2.out &") != -1);      
+      TESTC_ABORT_ON_FAIL(system("./RTEcho -brdnr 1 2&> RTEcho1.out &") != -1);
+      TESTC_ABORT_ON_FAIL(system("./RTEcho -brdnr 2 2&> RTEcho2.out &") != -1);      
       _supTask1.getPort().setTimer(40.0);
       _counter = 0;
       break;

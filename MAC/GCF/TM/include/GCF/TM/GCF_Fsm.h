@@ -48,8 +48,8 @@ class GCFDummyPort : public GCFPortInterface
       GCFPortInterface(pTask, name, SPP, protocol, false) 
     {};
 
-    inline int close () {return 0;}
-    inline int open () {return 0;}
+    inline bool close () {return false;}
+    inline bool open () {return false;}
 
     inline ssize_t send (GCFEvent& /*event*/)
     {

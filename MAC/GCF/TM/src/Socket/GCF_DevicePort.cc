@@ -25,27 +25,40 @@
 #include <GTM_Defines.h>
 #include <GCF/TM/GCF_Task.h>
 #include <GCF/TM/GCF_Protocols.h>
-#include <PortInterface/GTM_NameService.h>
-#include <PortInterface/GTM_TopologyService.h>
 #include <Socket/GTM_Device.h>
+#include <GCF/ParameterSet.h>
 #include <errno.h>
+
+using namespace LOFAR;
+using namespace GCF;
 
 GCFDevicePort::GCFDevicePort(GCFTask& task, 
                        string name, 
                        TPortType type, 
-                       int protocol, 
+                       int protocol,
+                       const string& deviceName, 
                        bool transportRawData) 
   : GCFRawPort(task, name, type, protocol, transportRawData),
-    _addrIsSet(false),
-    _pDevice(0)
+    _devNameIsSet(false),
+    _pDevice(0),
+    _deviceName(deviceName)
 {
-    _pDevice = new GTMDevice(*this);
+  _pDevice = new GTMDevice(*this);
+}
+
+GCFDevicePort::GCFDevicePort(const string& deviceName)
+    : GCFRawPort(),
+    _devNameIsSet(false),
+    _pDevice(0),
+    _deviceName(deviceName)
+{
 }
 
 GCFDevicePort::GCFDevicePort()
     : GCFRawPort(),
-    _addrIsSet(false),
-    _pDevice(0)
+    _devNameIsSet(false),
+    _pDevice(0),
+    _deviceName("")
 {
 }
 
@@ -56,60 +69,66 @@ GCFDevicePort::~GCFDevicePort()
 }
 
 
-int GCFDevicePort::open()
+bool GCFDevicePort::open()
 {
-  GCFPeerAddr fwaddr;
-  int result(1);
-
   if (isConnected())
   {
     LOG_ERROR(LOFAR::formatString ( 
         "ERROR: Port %s already open.",
-	      _name.c_str()));
-    result = 0;
+	      getRealName().c_str()));
+    return false;
   }
-  else if (!_pDevice && isSlave())
+  else if (!_pDevice)
   {
-    LOG_ERROR(LOFAR::formatString ( 
-        "ERROR: Port %s not initialised.",
-        _name.c_str()));
-    result = 0;
-  }
-  else if (!_addrIsSet && !isSlave())
-  {
-    _pDevice = new GTMDevice(*this);
-    
-    if (findAddr(fwaddr))
+    if (isSlave())
     {
-      setAddr(fwaddr);
+      LOG_ERROR(LOFAR::formatString ( 
+          "ERROR: Port %s not initialised.",
+          getRealName().c_str()));
+      return false;
     }
     else
     {
-      LOG_ERROR(LOFAR::formatString (
-          "Could not get address info for port '%s' of task '%s'",
-		      _name.c_str(), _pTask->getName().c_str()));
-      result = 0;
+      _pDevice = new GTMDevice(*this);
     }
   }
-  if (result == 0) return result;
-  
-  if (_pDevice->open(_addr) < 0)
+
+  try
   {
-    _isConnected = false;
+    setDeviceName(ParameterSet::instance()->getString(formatString(
+      "mac.ns.%s.%s.deviceName",
+      _pTask->getName().c_str(),
+      getRealName().c_str())));    
+  }
+  catch (...)
+  {
+    if (!_devNameIsSet)
+    {
+      LOG_ERROR(LOFAR::formatString (
+          "Could not get address info for port '%s' of task '%s'",
+         getRealName().c_str(), _pTask->getName().c_str()));
+      return false;
+    }
+  }
+
+  if (_pDevice->open(_deviceName) < 0)
+  {
+    setState(S_DISCONNECTING);
     if (SAP == getType())
     {
       schedule_disconnected();
     }
     else
     {
-      result = 0;
+      return false;
     }
   }
   else
   { 
+    setState(S_CONNECTING);
     schedule_connected();
   }
-  return result;
+  return true;
 }
 
 ssize_t GCFDevicePort::send(GCFEvent& e)
@@ -125,20 +144,19 @@ ssize_t GCFDevicePort::send(GCFEvent& e)
   unsigned int packsize;
   void* buf = e.pack(packsize);
 
-  if (!isSlave())
-  {
-    LOG_DEBUG(LOFAR::formatString (
-      "Sending event '%s' for task %s on port '%s'",
+  LOG_DEBUG(formatString (
+      "Sending event '%s' for task '%s' on port '%s'",
       getTask()->evtstr(e),
       getTask()->getName().c_str(), 
-      getName().c_str()));
-  }
+      getRealName().c_str()));
+
   if ((written = _pDevice->send(buf, packsize)) != packsize)
   {
     LOG_DEBUG(LOFAR::formatString (
         "truncated send: %s",
         strerror(errno)));
-        
+      
+    setState(S_DISCONNECTING);    
     schedule_disconnected();
     
     written = 0;
@@ -153,18 +171,19 @@ ssize_t GCFDevicePort::recv(void* buf, size_t count)
   return _pDevice->recv(buf, count);
 }
 
-int GCFDevicePort::close()
+bool GCFDevicePort::close()
 {
   _pDevice->close();
+  setState(S_CLOSING);
   schedule_close();
 
   // return success when port is still connected
   // scheduled close will only occur later
-  return (isConnected() ? 0 : -1);
+  return isConnected();
 }
 
-void GCFDevicePort::setAddr(const GCFPeerAddr& addr)
+void GCFDevicePort::setDeviceName(const string& deviceName)
 {
-  _addr = addr;
-  _addrIsSet = true;
+  _deviceName = deviceName;
+  _devNameIsSet = true;
 }

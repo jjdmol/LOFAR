@@ -271,7 +271,7 @@ int main(int argc, char** argv)
   {
     pPropSet = &propertySetG1;
   }
-  Ping pingTask(string("PING") + brdnr, string("B_A_BRD") + brdnr, *pPropSet);
+  Ping pingTask(string("RTPING") + brdnr, string("B_A_BRD") + brdnr, *pPropSet);
 
   pingTask.start(); // make initial transition
 

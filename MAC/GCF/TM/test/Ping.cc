@@ -96,7 +96,7 @@ GCFEvent::TResult Ping::initial(GCFEvent& e, GCFPortInterface& /*port*/)
   return status;
 }
 
-GCFEvent::TResult Ping::connected(GCFEvent& e, GCFPortInterface& /*p*/)
+GCFEvent::TResult Ping::connected(GCFEvent& e, GCFPortInterface& p)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
@@ -130,6 +130,10 @@ GCFEvent::TResult Ping::connected(GCFEvent& e, GCFPortInterface& /*p*/)
       (void)client.cancelTimer(ping_timer);
 
       seqnr = 0;
+      p.close();      
+      break;
+
+    case F_CLOSED:
       TRAN(Ping::initial);
       break;
 
@@ -141,7 +145,7 @@ GCFEvent::TResult Ping::connected(GCFEvent& e, GCFPortInterface& /*p*/)
   return status;
 }
 
-GCFEvent::TResult Ping::awaiting_echo(GCFEvent& e, GCFPortInterface& /*p*/)
+GCFEvent::TResult Ping::awaiting_echo(GCFEvent& e, GCFPortInterface& p)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
@@ -172,9 +176,12 @@ GCFEvent::TResult Ping::awaiting_echo(GCFEvent& e, GCFPortInterface& /*p*/)
     }
     case F_DISCONNECTED:
       (void)client.cancelTimer(ping_timer);
+      p.close();      
+      break;
+
+    case F_CLOSED:
       TRAN(Ping::initial);
       break;
-      
     default:
       status = GCFEvent::NOT_HANDLED;
       break;

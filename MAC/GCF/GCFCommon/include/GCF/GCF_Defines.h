@@ -25,6 +25,8 @@
 
 #include <Common/LofarLogger.h>
 
+using namespace LOFAR;
+
 #include <assert.h>
 
 #define GCF_PROP_NAME_SEP     '.'

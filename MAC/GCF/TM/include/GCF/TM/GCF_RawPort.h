@@ -24,7 +24,6 @@
 #define GCF_RAWPORT_H
 
 #include <GCF/TM/GCF_PortInterface.h>
-#include <GCF/TM/GCF_PeerAddr.h>
 #include <GCF/TM/GCF_Event.h>
 #include <GCF/TM/GCF_Task.h>
 #include <Common/lofar_string.h>
@@ -34,6 +33,12 @@
 class GCFPort;
 class GTMTimer;
 class GTMTimerHandler;
+
+typedef struct
+{
+  string taskname;
+  string portname;
+} TPeerAddr;
 
 /**
  * This is the abstract base class for all concrete port implementations (like 
@@ -100,10 +105,12 @@ class GCFRawPort : public GCFPortInterface
     void schedule_close();
     void schedule_connected();
 
+  
     inline bool                 isSlave () const {return _pMaster != 0;}
     virtual void                setMaster (GCFPort* pMaster);
     virtual GCFEvent::TResult   dispatch (GCFEvent& event);
-    bool                        findAddr (GCFPeerAddr& addr);
+    bool                        findAddr (TPeerAddr& addr);
+    const string&               getRealName() const;  
 
   private:
 

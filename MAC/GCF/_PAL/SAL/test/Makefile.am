@@ -22,23 +22,27 @@ SUFFIXES = .ph
 
 BUILT_SOURCES = \
 	Echo_Protocol.ph \
-	tutorial.ns \
-	tutorial.top \
+	echoapp.conf \
+	ping.conf \
+	ServiceBroker.conf \
 	log4cplus.properties	
 
 EXTRA_DIST = \
 	Echo_Protocol.ph \
-	tutorial.ns \
-	tutorial.top \
+	echoapp.conf \
+	ping.conf \
+	ServiceBroker.conf \
 	log4cplus.properties
+
+MAC_CONFIG = $(top_srcdir)/../../Config
 
 %.properties: $(MAC_CONFIG)/%.properties
 	cp $< $@
 
-%.ns: %.ns.in
-	cp $< $@
+%.conf: sal-test.conf.in
+	ln -sf $< $@
 
-%.top: %.top.in
+ServiceBroker.conf:	$(bindir)/ServiceBroker.conf
 	cp $< $@
 
 include $(lofar_sharedir)/Makefile.common

@@ -25,14 +25,15 @@
 #include <GCF/TM/GCF_PortInterface.h>
 #include <GCF/TM/GCF_Task.h>
 #include <GCF/TM/GCF_Protocols.h>
-#include <PortInterface/GTM_NameService.h>
-#include <PortInterface/GTM_TopologyService.h>
 #include <GTM_Defines.h>
 #include <Timer/GTM_TimerHandler.h>
+#include <GCF/ParameterSet.h>
 
-static GCFEvent disconnected_event(F_DISCONNECTED);
-static GCFEvent connected_event   (F_CONNECTED);
-static GCFEvent closed_event      (F_CLOSED);
+static GCFEvent disconnectedEvent(F_DISCONNECTED);
+static GCFEvent connectedEvent   (F_CONNECTED);
+static GCFEvent closedEvent      (F_CLOSED);
+
+using namespace GCF;
 
 GCFRawPort::GCFRawPort(GCFTask& task, 
                        string& name, 
@@ -86,35 +87,35 @@ GCFEvent::TResult GCFRawPort::dispatch(GCFEvent& event)
       (F_EVT_PROTOCOL(event) != F_FSM_PROTOCOL) &&
       (F_EVT_PROTOCOL(event) != F_PORT_PROTOCOL))
   {
-    LOG_INFO(LOFAR::formatString (
-        "%s receives '%s' on port '%s'",
-        _pTask->getName().c_str(), 
+    LOG_INFO(formatString (
+        "%s was received on port '%s' in task '%s'",
         _pTask->evtstr(event), 
-        (isSlave() ? _pMaster->getName().c_str() : _name.c_str()))); 
+        getRealName().c_str(), 
+        _pTask->getName().c_str())); 
   }
 
   switch (event.signal)
   {
     case F_CONNECTED:
-      LOG_INFO(LOFAR::formatString (
-          "port '%s' of task %s is connected!",
-          _name.c_str(), _pTask->getName().c_str()));    
-      _isConnected = true;
+      LOG_INFO(formatString (
+          "Port '%s' in task '%s' is connected!",
+          getRealName().c_str(), _pTask->getName().c_str()));    
+      _state = S_CONNECTED;
       break;
     case F_DISCONNECTED: 
     case F_CLOSED:
-      LOG_INFO(LOFAR::formatString (
-          "port '%s' of task %s is %s!",
-          _name.c_str(), _pTask->getName().c_str(),
+      LOG_INFO(formatString (
+          "Port '%s' in task '%s' is %s!",
+          getRealName().c_str(), _pTask->getName().c_str(),
           (event.signal == F_CLOSED ? "closed" : "disconnected")));    
-      _isConnected = false;
+      _state = S_DISCONNECTED;
       break;
     case F_TIMER:
     {
       GCFTimerEvent* pTE = static_cast<GCFTimerEvent*>(&event);
-      if (&disconnected_event == pTE->arg || 
-          &connected_event == pTE->arg ||
-          &closed_event == pTE->arg)
+      if (&disconnectedEvent == pTE->arg || 
+          &connectedEvent == pTE->arg ||
+          &closedEvent == pTE->arg)
       {    
         return dispatch(*((GCFEvent*) pTE->arg));
       }
@@ -132,20 +133,20 @@ GCFEvent::TResult GCFRawPort::dispatch(GCFEvent& event)
     default:        
       if (SPP == getType() && (F_EVT_INOUT(event) == F_OUT)) 
       {    
-        LOG_ERROR(LOFAR::formatString (
+        LOG_ERROR(formatString (
             "Developer error in %s (port %s): received an OUT event (%s) in a SPP",
             _pTask->getName().c_str(), 
-            _name.c_str(), 
+            getRealName().c_str(), 
             _pTask->evtstr(event)
             ));    
         return status;
       }
       else if (SAP == getType() && (F_EVT_INOUT(event) == F_IN)) 
       {
-        LOG_ERROR(LOFAR::formatString (
+        LOG_ERROR(formatString (
             "Developer error in %s (port %s): received an IN event (%s) in a SAP",
             _pTask->getName().c_str(), 
-            _name.c_str(), 
+            getRealName().c_str(), 
             _pTask->evtstr(event)
             ));    
         return status;
@@ -155,7 +156,7 @@ GCFEvent::TResult GCFRawPort::dispatch(GCFEvent& event)
 
   if (isSlave())
   {
-    _pMaster->setIsConnected(_isConnected);
+    _pMaster->setState(_state);
     status = _pTask->dispatch(event, *_pMaster);      
   }
   else
@@ -210,82 +211,58 @@ int GCFRawPort::resetTimerInterval(long timerid,
 /**
  * ::findAddr
  */
-bool GCFRawPort::findAddr(GCFPeerAddr& addr)
+bool GCFRawPort::findAddr(TPeerAddr& addr)
 {
-  GCFPeerAddr theaddr;
+  // find remote address
+  string remoteAddrParam = formatString(
+      PARAM_SERVER_SERVICE_NAME, 
+      _pTask->getName().c_str(),
+      getRealName().c_str());
+  
+  addr.taskname = "";
+  addr.portname = "";
   
   if (SAP == _type)
   {  
-    // find local and remote address
-    if (GTMTopologyService::instance()->getPeerAddr(_pTask->getName(),
-				      _name, theaddr) < 0)
+    string remoteAddr;
+    try
     {
-      LOG_DEBUG(LOFAR::formatString (
+      remoteAddr += ParameterSet::instance()->getString(remoteAddrParam);
+    }
+    catch (...)
+    {
+      LOG_DEBUG(formatString (
           "No remote address found for port '%s' of task '%s'",
-          _name.c_str(), _pTask->getName().c_str()));
-      
-      return false;
-    }
-
-    LOG_DEBUG(LOFAR::formatString (
-        "Connecting local SAP [%s:%s] "
-        "to remote SPP [%s:%s]@(%s:%d).",
-        _pTask->getName().c_str(),
-        _name.c_str(),
-        theaddr.getTaskname().c_str(),
-        theaddr.getPortname().c_str(),
-        theaddr.getHost().c_str(),
-        theaddr.getPortnumber()));
-  }
-  else if (SPP == _type || MSPP == _type)
-  {
-    // find my own address in the nameservice
-    if (GTMNameService::instance()->query(_pTask->getName(),
-    		    theaddr) < 0)
-    {
-     
-      LOG_ERROR(LOFAR::formatString (
-          "Could not find own address for "
-          "task '%s'.", 
-          _pTask->getName().c_str()));
-      return false;
-    }
-    if (GTMNameService::instance()->queryPort(_pTask->getName(),
-    			_name,
-    			theaddr))
-    {
-      LOG_ERROR(LOFAR::formatString (
-          "Could not find port info for port '%s' of "
-          "task '%s'.", _name.c_str(), 
-          _pTask->getName().c_str()));
-     
+          getRealName().c_str(), _pTask->getName().c_str()));
       return false;
     }
     
-    LOG_INFO(LOFAR::formatString ("Listening on port %d for clients.",
-                theaddr.getPortnumber()));
+    const char* pRemoteTaskName = remoteAddr.c_str();
+    char* colon = strchr(pRemoteTaskName, ':');
+    if (colon) *colon = '\0';
+    
+    addr.taskname = pRemoteTaskName;
+    addr.portname = colon + 1;
   }
   else 
     return false;
-
-  addr = theaddr;
 
   return true;
 }
 
 void GCFRawPort::schedule_disconnected()
 {
-  setTimer(0, 0, 0, 0, (void*)&disconnected_event);
+  setTimer(0, 0, 0, 0, (void*)&disconnectedEvent);
 }
 
 void GCFRawPort::schedule_close()
 {
-  setTimer(0, 0, 0, 0, (void*)&closed_event);
+  setTimer(0, 0, 0, 0, (void*)&closedEvent);
 }
 
 void GCFRawPort::schedule_connected()
 {
-  setTimer(0, 0, 0, 0, (void*)&connected_event);
+  setTimer(0, 0, 0, 0, (void*)&connectedEvent);
 }
 
 GCFEvent::TResult GCFRawPort::recvEvent()
@@ -293,25 +270,33 @@ GCFEvent::TResult GCFRawPort::recvEvent()
   GCFEvent::TResult status = GCFEvent::NOT_HANDLED;
   
   GCFEvent e;
-  if (recv(&e.signal, sizeof(e.signal)) == -1) return status;
-  if (recv(&e.length, sizeof(e.length)) == -1) return status;
-  
-  if (e.length > 0)
+  // expects and reads signal
+  if (recv(&e.signal, sizeof(e.signal)) != sizeof(e.signal)) 
+  {
+    // don't continue with receiving
+  }
+  // expects and reads length
+  else if (recv(&e.length, sizeof(e.length)) != sizeof(e.length))
+  {
+    // don't continue with receiving
+  }  
+  // reads payload if specified
+  else if (e.length > 0)
   {
     GCFEvent* full_event = 0;
     char* event_buf = new char[sizeof(e) + e.length];
     full_event = (GCFEvent*)event_buf;
     memcpy(event_buf, &e, sizeof(e));
-    
-    event_buf += sizeof(e);
 
-    if (recv(event_buf, e.length) > 0)
+    // read the payload right behind the just memcopied basic event structure
+    if (recv(event_buf + sizeof(e), e.length) > 0)
     {          
+    // dispatchs an event with just received params
       status = dispatch(*full_event);
     }    
-    event_buf -= sizeof(e);
     delete [] event_buf;
   }
+  // dispatchs an event without params
   else
   {
     status = dispatch(e);
@@ -320,13 +305,18 @@ GCFEvent::TResult GCFRawPort::recvEvent()
   if (status != GCFEvent::HANDLED)
   {
     assert(getTask());
-    LOG_INFO(LOFAR::formatString (
-      "Event %s for task %s on port %s not handled or an error occured",
+    LOG_INFO(formatString (
+      "%s for port '%s' in task '%s' not handled or an error occured",
       getTask()->evtstr(e),
       getTask()->getName().c_str(), 
-      getName().c_str()
+      getRealName().c_str()
       ));
   }
 
   return status;
+}
+
+const string& GCFRawPort::getRealName() const
+{
+  return (isSlave() ? _pMaster->getName() : _name);
 }

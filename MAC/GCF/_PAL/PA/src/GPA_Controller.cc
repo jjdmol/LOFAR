@@ -24,11 +24,14 @@
 #include <GPA_PropertySet.h>
 #include <stdio.h>
 #include <PA_Protocol.ph>
+#include <GCF/ParameterSet.h>
+
+using namespace GCF;
 
 #define QUEUE_REQUEST(p, e)  \
   if (!mayContinue(e, p)) break;
 
-static string sPATaskName("PA");
+static string sPATaskName("GCF-PA");
 
 GPAController::GPAController() : 
   GCFTask((State)&GPAController::initial, sPATaskName),
@@ -41,7 +44,7 @@ GPAController::GPAController() :
   registerProtocol(PA_PROTOCOL, PA_PROTOCOL_signalnames);
 
   // initialize the port
-  _pmlPortProvider.init(*this, "server", GCFPortInterface::MSPP, PA_PROTOCOL);
+  _pmlPortProvider.init(*this, "provider", GCFPortInterface::MSPP, PA_PROTOCOL);
 
   // To force a connection with the PVSS system at start-up of the PA 
   // a dummy property set will be created temporary. 

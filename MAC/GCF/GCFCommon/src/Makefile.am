@@ -10,7 +10,8 @@ pkginclude_HEADERS = \
 	../include/GCF/GCF_PVDynArr.h \
 	../include/GCF/CmdLine.h \
 	../include/GCF/Utils.h \
-	../include/GCF/GCF_Defines.h
+	../include/GCF/GCF_Defines.h \
+	../include/GCF/ParameterSet.h
 
 DOCHDRS	=	$(pkginclude_HEADERS)
       
@@ -26,7 +27,8 @@ libgcfcommon_la_SOURCES= $(DOCHDRS) \
 	GCF_PVString.cc \
 	GCF_PVInteger.cc \
 	GCF_PVUnsigned.cc \
-	GCF_PVDynArr.cc
+	GCF_PVDynArr.cc \
+	ParameterSet.cc
 	
 libgcfcommon_la_CPPFLAGS=-I$(top_srcdir)/include
 
