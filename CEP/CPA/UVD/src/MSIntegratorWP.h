@@ -66,7 +66,7 @@ class MSIntegratorWP : public WorkProcess  //## Inherits: <unnamed>%3CD1338701E2
 
     //## Constructors (specified)
       //## Operation: MSIntegratorWP%3CD781CA01B8
-      MSIntegratorWP (string msname, int nchan = 8, int ntime = 10, int npatch = 2);
+      MSIntegratorWP (string msname = "", const HIID &act_msg = HIID(), int nchan = 8, int ntime = 10, int npatch = 2);
 
     //## Destructor (generated)
       ~MSIntegratorWP();
@@ -105,13 +105,14 @@ class MSIntegratorWP : public WorkProcess  //## Inherits: <unnamed>%3CD1338701E2
   private: //## implementation
     // Additional Implementation Declarations
       //## begin MSIntegratorWP%3CD133700076.implementation preserve=yes
-      void initMS (const Message &msg,MeasurementSet &ms);
+      bool initMS (const Message &msg,MeasurementSet &ms);
       void initSegment (ROVisibilityIterator &vi);
       void finishIntegration (bool reset=True);
       void integrate (ROVisibilityIterator &vi,VisBuffer &vb);
 
       string auto_ms;
       int auto_nchan,auto_ntime,auto_npatch;
+      HIID auto_activate;
             
       string msname;
       

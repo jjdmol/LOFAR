@@ -17,7 +17,24 @@ int main (int argc,const char *argv[])
   {
     Dispatcher dsp;
     dsp.attach(new LoggerWP(10,Message::LOCAL),DMI::ANON);
-    dsp.attach(new UVSorterWP(0,5),DMI::ANON);
+
+    // start a sorter for every patch:corr argument
+    int nsort = 0;
+    const vector<string> &args = OctopussyConfig::global().args();
+    for( uint i=0; i < args.size(); i++ )
+      if( args[i].length() == 3 && 
+          isdigit(args[i][0]) && args[i][1] == ':' && isdigit(args[i][2]) ) 
+      {
+        int patch = args[i][0]-'0';
+        int corr = args[i][2]-'0';
+        dprintf(0)("creating UVSorter for patch %d corr %d\n",patch,corr);
+        dsp.attach(new UVSorterWP(patch,corr),DMI::ANON);
+        nsort++;
+      }
+    // if none specified, use default test case
+    if( !nsort )
+      dsp.attach(new UVSorterWP(0,5),DMI::ANON);
+    
     initGateways(dsp);
     dsp.start();
     dsp.pollLoop();
