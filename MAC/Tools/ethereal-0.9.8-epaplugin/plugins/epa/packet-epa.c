@@ -59,13 +59,6 @@ static const value_string type_vals[] =
   { 0,     NULL                   },
 };
 
-static const value_string page_vals[] =
-{
-  { 0x00, "Write page for LCU (INACTIVE)" },
-  { 0x01, "Read page for FPGA (ACTIVE)"   },
-  { 0,     NULL                           },
-};
-
 static const value_string dst_vals[] =
 {
   { 0x00, "Beamlet processor" },
@@ -85,6 +78,13 @@ static const value_string pid_vals[] =
   { 0x07, "Subband statistics (STSUB)"         },
   { 0x08, "RCU Control (RCU)"                  },
   { 0,     NULL                                },
+};
+
+static const value_string page_vals[] =
+{
+  { 0x00, "Write page for LCU (INACTIVE)" },
+  { 0x01, "Read page for FPGA (ACTIVE)"   },
+  { 0,     NULL                           },
 };
 
 static const value_string status_vals[] =
@@ -151,6 +151,19 @@ static const value_string rcu_vals[] =
   { 0,     NULL   },
 };
 
+static const value_string eth_error_vals[] =
+{
+  { 0, "The ethernet frame was received correctly"           },
+  { 1, "Preamble had other value than 0xAA"                  },
+  { 2, "Frame delimiter had other value than 0xAB"           },
+  { 3, "Not enough preamble nibbles"                         },
+  { 4, "Frame ended during frame header."                    },
+  { 5, "Caculated CRC does not match received CRC"           },
+  { 6, "An odd number of nibbles was received from ethernet" },
+  { 7, "Ethertype value had other value than 0x10FA"         },
+  { 0,     NULL   },
+};
+
 /**
  * Pluginize BEGIN
  *
@@ -179,8 +192,8 @@ G_MODULE_EXPORT void plugin_reg_handoff(void);
 /* Initialize the protocol and registered fields */
 static int proto_epa          = -1;
 static int hf_epa_type        = -1;
-static int hf_epa_ffi         = -1;
 static int hf_epa_seqnr       = -1;
+static int hf_epa_addr        = -1;
 static int hf_epa_addr_dstid  = -1;
 static int hf_epa_addr_pid    = -1;
 static int hf_epa_addr_regid  = -1;
@@ -189,8 +202,46 @@ static int hf_epa_offset      = -1;
 static int hf_epa_size        = -1;
 static int hf_epa_data        = -1;
 
+/**
+ * RSP Status register fields.
+ */
+/*static int df_rspstatus             = -1;*/
+static int df_rspstatus_voltage_15  = -1;
+static int df_rspstatus_voltage_33  = -1;
+/*static int df_fpgastatus            = -1;*/
+static int df_fpgastatus_bp_status  = -1;
+static int df_fpgastatus_bp_temp    = -1;
+static int df_fpgastatus_ap1_status = -1;
+static int df_fpgastatus_ap1_temp   = -1;
+static int df_fpgastatus_ap2_status = -1;
+static int df_fpgastatus_ap2_temp   = -1;
+static int df_fpgastatus_ap3_status = -1;
+static int df_fpgastatus_ap3_temp   = -1;
+static int df_fpgastatus_ap4_status = -1;
+static int df_fpgastatus_ap4_temp   = -1;
+/*static int df_ethstatus             = -1;*/
+static int df_ethstatus_nof_frames  = -1;
+static int df_ethstatus_nof_errors  = -1;
+static int df_ethstatus_last_error  = -1;
+/*static int df_mepstatus             = -1;*/
+static int df_mepstatus_read_seqnr  = -1;
+static int df_mepstatus_read_error  = -1;
+static int df_mepstatus_write_seqnr = -1;
+static int df_mepstatus_write_error = -1;
+/*static int df_rcustatus             = -1;*/
+static int df_rcustatus_ap1_rcu_x   = -1;
+static int df_rcustatus_ap1_rcu_y   = -1;
+static int df_rcustatus_ap2_rcu_x   = -1;
+static int df_rcustatus_ap2_rcu_y   = -1;
+static int df_rcustatus_ap3_rcu_x   = -1;
+static int df_rcustatus_ap3_rcu_y   = -1;
+static int df_rcustatus_ap4_rcu_x   = -1;
+static int df_rcustatus_ap4_rcu_y   = -1;
+
 /* Initialize the subtree pointers */
-static gint ett_epa = -1;
+static gint ett_epa       = -1;
+static gint ett_epa_addr  = -1;
+static gint ett_rspstatus = -1;
 
 /* Code to actually dissect the packets */
 static void
@@ -200,10 +251,15 @@ dissect_epa(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree)
   /* Set up structures needed to add the protocol subtree and manage it */
   proto_item *ti;
   proto_tree *epa_tree;
+  char*  typestr = 0;
+  char*  regstr  = 0;
+  guint8 type = tvb_get_guint8(tvb, 0);
+  guint8 reg  = tvb_get_guint8(tvb, 6);
+  guint8 pid  = tvb_get_guint8(tvb, 5);
 
   /* Make entries in Protocol column and Info column on summary display */
   if (check_col(pinfo->cinfo, COL_PROTOCOL)) 
-    col_set_str(pinfo->cinfo, COL_PROTOCOL, "epa");
+    col_set_str(pinfo->cinfo, COL_PROTOCOL, "EPA");
     
   /* This field shows up as the "Info" column in the display; you should make
      it, if possible, summarize what's in the packet, so that a user looking
@@ -235,10 +291,60 @@ dissect_epa(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree)
   if (check_col(pinfo->cinfo, COL_INFO)) 
     col_clear(pinfo->cinfo, COL_INFO);
 
+  /* decode the typestr */
+  typestr = type_vals[type].strptr;
+  switch (pid)
+  {
+    case 0x00:
+      regstr = status_vals[reg].strptr;
+      break;
+
+    case 0x01:
+      regstr = tst_vals[reg].strptr;
+      break;
+
+    case 0x02:
+      regstr = cfg_vals[reg].strptr;
+      break;
+
+    case 0x03:
+      regstr = wg_vals[reg].strptr;
+      break;
+
+    case 0x04:
+      regstr = ss_vals[reg].strptr;
+      break;
+
+    case 0x05:
+      regstr = bf_vals[reg].strptr;
+      break;
+
+    case 0x06:
+      regstr = st_vals[reg].strptr;
+      break;
+
+    case 0x07:
+      regstr = stsub_vals[reg].strptr;
+      break;
+
+    case 0x08:
+      regstr = rcu_vals[reg].strptr;
+      break;
+  }
+
+  if (!typestr) typestr = "Unknown type?";
+  if (!regstr)  regstr  = "Unknown register?";
+      
+  /* fill the INFO column */
+  if (check_col(pinfo->cinfo, COL_INFO))
+    col_add_fstr(pinfo->cinfo, COL_INFO, "%s; %s", typestr, regstr);
+  
   /* In the interest of speed, if "tree" is NULL, don't do any work not
      necessary to generate protocol tree items. */
   if (tree)
   {
+    proto_item* newitem = 0;
+    proto_tree* newtree = 0;
 
     /* NOTE: The offset and length values in the call to
        "proto_tree_add_item()" define what data bytes to highlight in the hex
@@ -257,71 +363,72 @@ dissect_epa(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree)
     
     /* Continue adding tree items to process the packet here */
     proto_tree_add_item(epa_tree, hf_epa_type,        tvb,  0,  1, FALSE);
-    proto_tree_add_item(epa_tree, hf_epa_ffi,         tvb,  1,  1, FALSE);
     proto_tree_add_item(epa_tree, hf_epa_seqnr,       tvb,  2,  2, TRUE);
-    proto_tree_add_item(epa_tree, hf_epa_addr_dstid,  tvb,  4,  1, FALSE);
-    proto_tree_add_item(epa_tree, hf_epa_addr_pid,    tvb,  5,  1, FALSE);
-    proto_tree_add_item(epa_tree, hf_epa_addr_regid,  tvb,  6,  1, FALSE);
-    proto_tree_add_item(epa_tree, hf_epa_addr_pageid, tvb,  7,  1, FALSE);
+
+    newitem = proto_tree_add_item(epa_tree, hf_epa_addr, tvb,  4,  4, FALSE);
+    newtree = proto_item_add_subtree(newitem, ett_epa_addr);
+
+    proto_tree_add_item(newtree, hf_epa_addr_dstid,  tvb,  4,  1, FALSE);
+    proto_tree_add_item(newtree, hf_epa_addr_pid,    tvb,  5,  1, FALSE);
+
+    if (regstr)
+      proto_tree_add_string(newtree, hf_epa_addr_regid, tvb, 6, 1, regstr);
+    else
+      proto_tree_add_item(newtree, hf_epa_addr_regid,  tvb,  6,  1, FALSE);
+
+    proto_tree_add_item(newtree, hf_epa_addr_pageid, tvb,  7,  1, FALSE);
+
     proto_tree_add_item(epa_tree, hf_epa_offset,      tvb,  8,  2, TRUE);
     proto_tree_add_item(epa_tree, hf_epa_size,        tvb, 10,  2, TRUE);
-    proto_tree_add_item(epa_tree, hf_epa_data,        tvb, 12, -1, FALSE);
 
-  }
-
-  /* fill the INFO column */
-  if (check_col(pinfo->cinfo, COL_INFO))
-  {
-    char*  typestr = type_vals[tvb_get_guint8(tvb, 0)].strptr;
-    char*  regstr  = 0;
-    guint8 reg     = tvb_get_guint8(tvb, 6);
-    guint8 pid     = tvb_get_guint8(tvb, 5);
-    
-    switch (pid)
+    if (0x03 == type && 0x00 == pid && 0x00 == reg)
     {
-      case 0x00:
-	regstr = status_vals[reg].strptr;
-	break;
+      newitem = proto_tree_add_text(epa_tree, tvb, 12, 44, "RSP Status register");
+      newtree = proto_item_add_subtree(newitem, ett_rspstatus);
 
-      case 0x01:
-	regstr = tst_vals[reg].strptr;
-	break;
+      proto_tree_add_text(newtree, tvb, 12, 44,  "RSP Status");
+      proto_tree_add_item(newtree, df_rspstatus_voltage_15  ,tvb, 12, 1,  FALSE);
+      proto_tree_add_item(newtree, df_rspstatus_voltage_33  ,tvb, 13, 1,  FALSE);
 
-      case 0x02:
-	regstr = cfg_vals[reg].strptr;
-	break;
+      proto_tree_add_text(newtree, tvb,  16, 12, "FPGA Status");
+      proto_tree_add_item(newtree, df_fpgastatus_bp_status  ,tvb, 16, 1,  FALSE);
+      proto_tree_add_item(newtree, df_fpgastatus_bp_temp    ,tvb, 17, 1,  FALSE);
+      proto_tree_add_item(newtree, df_fpgastatus_ap1_status ,tvb, 18, 1,  FALSE);
+      proto_tree_add_item(newtree, df_fpgastatus_ap1_temp   ,tvb, 19, 1,  FALSE);
+      proto_tree_add_item(newtree, df_fpgastatus_ap2_status ,tvb, 20, 1,  FALSE);
+      proto_tree_add_item(newtree, df_fpgastatus_ap2_temp   ,tvb, 21, 1,  FALSE);   
+      proto_tree_add_item(newtree, df_fpgastatus_ap3_status ,tvb, 22, 1,  FALSE);
+      proto_tree_add_item(newtree, df_fpgastatus_ap3_temp   ,tvb, 23, 1,  FALSE);
+      proto_tree_add_item(newtree, df_fpgastatus_ap4_status ,tvb, 24, 1,  FALSE);
+      proto_tree_add_item(newtree, df_fpgastatus_ap4_temp   ,tvb, 25, 1,  FALSE);   
 
-      case 0x03:
-	regstr = wg_vals[reg].strptr;
-	break;
+      proto_tree_add_text(newtree, tvb, 28, 12, "ETH Status");
+      proto_tree_add_item(newtree, df_ethstatus_nof_frames  ,tvb, 28, 4,  FALSE); /* will become TRUE once firmware is fixed */
+      proto_tree_add_item(newtree, df_ethstatus_nof_errors  ,tvb, 32, 4,  FALSE); /* will become TRUE once firmware is fixed */
+      proto_tree_add_item(newtree, df_ethstatus_last_error  ,tvb, 36, 1,  FALSE);
 
-      case 0x04:
-	regstr = ss_vals[reg].strptr;
-	break;
+      proto_tree_add_text(newtree, tvb, 40, 8, "MEP Status");
+      proto_tree_add_item(newtree, df_mepstatus_read_seqnr  ,tvb, 40, 2,  TRUE);
+      proto_tree_add_item(newtree, df_mepstatus_read_error  ,tvb, 42, 1,  FALSE);
+      proto_tree_add_item(newtree, df_mepstatus_write_seqnr ,tvb, 44, 2,  TRUE);
+      proto_tree_add_item(newtree, df_mepstatus_write_error ,tvb, 46, 1,  FALSE);
 
-      case 0x05:
-	regstr = bf_vals[reg].strptr;
-	break;
-
-      case 0x06:
-	regstr = st_vals[reg].strptr;
-	break;
-
-      case 0x07:
-	regstr = stsub_vals[reg].strptr;
-	break;
-
-      case 0x08:
-	regstr = rcu_vals[reg].strptr;
-	break;
+      proto_tree_add_text(newtree, tvb, 48, 8, "RCU Status");
+      proto_tree_add_item(newtree, df_rcustatus_ap1_rcu_x   ,tvb, 48, 1,  FALSE);
+      proto_tree_add_item(newtree, df_rcustatus_ap1_rcu_y   ,tvb, 49, 1,  FALSE);
+      proto_tree_add_item(newtree, df_rcustatus_ap2_rcu_x   ,tvb, 50, 1,  FALSE);
+      proto_tree_add_item(newtree, df_rcustatus_ap2_rcu_y   ,tvb, 51, 1,  FALSE);
+      proto_tree_add_item(newtree, df_rcustatus_ap3_rcu_x   ,tvb, 52, 1,  FALSE);
+      proto_tree_add_item(newtree, df_rcustatus_ap3_rcu_y   ,tvb, 53, 1,  FALSE);
+      proto_tree_add_item(newtree, df_rcustatus_ap4_rcu_x   ,tvb, 54, 1,  FALSE);
+      proto_tree_add_item(newtree, df_rcustatus_ap4_rcu_y   ,tvb, 55, 1,  FALSE);
     }
-
-    if (!typestr) typestr = "Unknown type?";
-    if (!regstr)  regstr  = "Unknown register?";
-      
-    col_add_fstr(pinfo->cinfo, COL_INFO, "%s; %s", typestr, regstr);
+    else
+    {
+      proto_tree_add_item(epa_tree, hf_epa_data,        tvb, 12, -1, FALSE);
+    }
   }
-  
+
   /* If this protocol has a sub-dissector call it here, see section 1.8 */
 }
 
@@ -343,35 +450,15 @@ proto_register_epa(void)
 	FT_UINT8, BASE_HEX, VALS(type_vals), 0x0,          
 	"Message type", HFILL }
     },
-    { &hf_epa_ffi,
-      { "ffi",           "epa.ffi",
-	FT_UINT8, BASE_HEX, NULL, 0x0,          
-	"For Future Information", HFILL }
-    },
     { &hf_epa_seqnr,
       { "seqnr",           "epa.seqnr",
 	FT_UINT16, BASE_DEC, NULL, 0x0,          
 	"Sequence number", HFILL }
     },
-    { &hf_epa_addr_dstid,
-      { "addr_dstid",           "epa.addr_dstid",
-	FT_UINT8, BASE_HEX, VALS(dst_vals), 0x0,          
-	"Destination ID", HFILL }
-    },
-    { &hf_epa_addr_pid,
-      { "addr_pid",           "epa.addr_pid",
-	FT_UINT8, BASE_HEX, VALS(pid_vals), 0x0,          
-	"Process ID", HFILL }
-    },
-    { &hf_epa_addr_regid,
-      { "addr_regid",           "epa.addr_regid",
-	FT_UINT8, BASE_HEX, NULL, 0x0,          
-	"Register ID", HFILL }
-    },
-    { &hf_epa_addr_pageid,
-      { "addr_pageid",           "epa.addr_pageid",
-	FT_UINT8, BASE_HEX, VALS(page_vals), 0x0,          
-	"Page ID", HFILL }
+    { &hf_epa_addr,
+      { "addr",           "epa.addr",
+	FT_BYTES, BASE_HEX, NULL, 0x0,          
+	"Message addressing", HFILL }
     },
     { &hf_epa_offset,
       { "offset",           "epa.offset",
@@ -390,9 +477,217 @@ proto_register_epa(void)
     },
   };
 
+  static hf_register_info addr_fields[] = {
+    { &hf_epa_addr_dstid,
+      { "dstid",           "epa.addr.dstid",
+	FT_UINT8, BASE_HEX, VALS(dst_vals), 0x0,          
+	"Destination ID", HFILL }
+    },
+    { &hf_epa_addr_pid,
+      { "pid",           "epa.addr.pid",
+	FT_UINT8, BASE_HEX, VALS(pid_vals), 0x0,          
+	"Process ID", HFILL }
+    },
+    { &hf_epa_addr_regid,
+      { "regid",           "epa.addr.regid",
+	FT_STRING, BASE_HEX, NULL, 0x0,          
+	"Register ID", HFILL }
+    },
+    { &hf_epa_addr_pageid,
+      { "pageid",           "epa.addr.pageid",
+	FT_UINT8, BASE_HEX, VALS(page_vals), 0x0,          
+	"Page ID", HFILL }
+    },
+  };
+
+  static hf_register_info rspstatus_fields[] = {
+    { &df_rspstatus_voltage_15,
+      { "voltage_15",           "epa.data.rspstatus.voltage_15",
+	FT_UINT8, BASE_HEX, NULL, 0x0,          
+	"Measured voltage on 1.5V circuit", HFILL }
+    },
+    { &df_rspstatus_voltage_33,
+      { "voltage_33",           "epa.data.rspstatus.voltage_33",
+	FT_UINT8, BASE_HEX, NULL, 0x0,          
+	"Measured voltage on 3.3 circuit", HFILL }
+    },
+    { &df_fpgastatus_bp_status,
+      { "bp_status",           "epa.data.fpgastatus.bp_status",
+	FT_UINT8, BASE_HEX, NULL, 0x0,          
+	"Current Board Processor status", HFILL }
+    },
+    { &df_fpgastatus_bp_temp,
+      { "bp_temp",           "epa.data.fpgastatus.bp_temp",
+	FT_UINT8, BASE_HEX, NULL, 0x0,          
+	"Current Board Processor temperature", HFILL }
+    },
+    { &df_fpgastatus_ap1_status,
+      { "ap1_status",           "epa.data.fpgastatus.ap1_status",
+	FT_UINT8, BASE_HEX, NULL, 0x0,          
+	"Current Antenna Processor 1 status", HFILL }
+    },
+    { &df_fpgastatus_ap1_temp,
+      { "ap1_temp",           "epa.data.fpgastatus.ap1_temp",
+	FT_UINT8, BASE_HEX, NULL, 0x0,          
+	"Current Antenna Processor 1 temperature", HFILL }
+    },
+    { &df_fpgastatus_ap2_status,
+      { "ap2_status",           "epa.data.fpgastatus.ap2_status",
+	FT_UINT8, BASE_HEX, NULL, 0x0,          
+	"Current Antenna Processor 2 status", HFILL }
+    },
+    { &df_fpgastatus_ap2_temp,
+      { "ap2_temp",           "epa.data.fpgastatus.ap2_temp",
+	FT_UINT8, BASE_HEX, NULL, 0x0,          
+	"Current Antenna Processor 2 temperature", HFILL }
+    },
+    { &df_fpgastatus_ap3_status,
+      { "ap3_status",           "epa.data.fpgastatus.ap3_status",
+	FT_UINT8, BASE_HEX, NULL, 0x0,          
+	"Current Antenna Processor 3 status", HFILL }
+    },
+    { &df_fpgastatus_ap3_temp,
+      { "ap3_temp",           "epa.data.fpgastatus.ap3_temp",
+	FT_UINT8, BASE_HEX, NULL, 0x0,          
+	"Current Antenna Processor 3 temperature", HFILL }
+    },
+    { &df_fpgastatus_ap4_status,
+      { "ap4_status",           "epa.data.fpgastatus.ap4_status",
+	FT_UINT8, BASE_HEX, NULL, 0x0,          
+	"Current Antenna Processor 4 status", HFILL }
+    },
+    { &df_fpgastatus_ap4_temp,
+      { "ap4_temp",           "epa.data.fpgastatus.ap4_temp",
+	FT_UINT8, BASE_HEX, NULL, 0x0,          
+	"Current Antenna Processor 4 temperature", HFILL }
+    },
+    {
+      &df_ethstatus_nof_frames,
+      {
+	"nof_frames", "epa.data.ethstatus.nof_frames",
+	FT_UINT32, BASE_DEC, NULL, 0x0,
+	"Number of eth frames received", HFILL 
+      }
+    },
+    {
+      &df_ethstatus_nof_errors,
+      {
+	"nof_errors", "epa.data.ethstatus.nof_errors",
+	FT_UINT32, BASE_DEC, NULL, 0x0,
+	"Number of incorrect ethernet frames", HFILL 
+      }
+    },
+    {
+      &df_ethstatus_last_error,
+      {
+	"last_error", "epa.data.ethstatus.last_error",
+	FT_UINT8, BASE_DEC, VALS(eth_error_vals), 0x0,
+	"Error status of last received ethernet frame", HFILL 
+      }
+    },
+    {
+      &df_mepstatus_read_seqnr,
+      {
+	"read_seqnr", "epa.data.mepstatus.read_seqnr",
+	FT_UINT16, BASE_DEC, NULL, 0x0,
+	"Sequence number of last received read message", HFILL 
+      }
+    },
+    {
+      &df_mepstatus_read_error,
+      {
+	"read_error", "epa.data.mepstatus.read_error",
+	FT_UINT8, BASE_DEC, VALS(eth_error_vals), 0x0,
+	"Error status of last received read message", HFILL 
+      }
+    },
+    {
+      &df_mepstatus_write_seqnr,
+      {
+	"write_seqnr", "epa.data.mepstatus.write_seqnr",
+	FT_UINT16, BASE_DEC, NULL, 0x0,
+	"Sequence number of last received write message", HFILL 
+      }
+    },
+    {
+      &df_mepstatus_write_error,
+      {
+	"write_error", "epa.data.mepstatus.write_error",
+	FT_UINT8, BASE_DEC, VALS(eth_error_vals), 0x0,
+	"Error status of last received write message frame", HFILL 
+      }
+    },
+    {
+      &df_rcustatus_ap1_rcu_x,
+      {
+	"ap1_rcu_x", "epa.data.rcustatus.ap1_rcu_x",
+	FT_UINT8, BASE_HEX, NULL, 0x0,
+	"AP1 X RCU status, incl overflow indicator", HFILL 
+      }
+    },
+    {
+      &df_rcustatus_ap1_rcu_y,
+      {
+	"ap1_rcu_y", "epa.data.rcustatus.ap1_rcu_y",
+	FT_UINT8, BASE_HEX, NULL, 0x0,
+	"AP1 Y RCU status, incl overflow indicator", HFILL 
+      }
+    },
+    {
+      &df_rcustatus_ap2_rcu_x,
+      {
+	"ap2_rcu_x", "epa.data.rcustatus.ap2_rcu_x",
+	FT_UINT8, BASE_HEX, NULL, 0x0,
+	"AP2 X RCU status, incl overflow indicator", HFILL 
+      }
+    },
+    {
+      &df_rcustatus_ap2_rcu_y,
+      {
+	"ap2_rcu_y", "epa.data.rcustatus.ap2_rcu_y",
+	FT_UINT8, BASE_HEX, NULL, 0x0,
+	"AP2 Y RCU status, incl overflow indicator", HFILL 
+      }
+    },
+    {
+      &df_rcustatus_ap3_rcu_x,
+      {
+	"ap3_rcu_x", "epa.data.rcustatus.ap3_rcu_x",
+	FT_UINT8, BASE_HEX, NULL, 0x0,
+	"AP3 X RCU status, incl overflow indicator", HFILL 
+      }
+    },
+    {
+      &df_rcustatus_ap3_rcu_y,
+      {
+	"ap3_rcu_y", "epa.data.rcustatus.ap3_rcu_y",
+	FT_UINT8, BASE_HEX, NULL, 0x0,
+	"AP3 Y RCU status, incl overflow indicator", HFILL 
+      }
+    },
+    {
+      &df_rcustatus_ap4_rcu_x,
+      {
+	"ap4_rcu_x", "epa.data.rcustatus.ap4_rcu_x",
+	FT_UINT8, BASE_HEX, NULL, 0x0,
+	"AP4 X RCU status, incl overflow indicator", HFILL 
+      }
+    },
+    {
+      &df_rcustatus_ap4_rcu_y,
+      {
+	"ap4_rcu_y", "epa.data.rcustatus.ap4_rcu_y",
+	FT_UINT8, BASE_HEX, NULL, 0x0,
+	"AP4 Y RCU status, incl overflow indicator", HFILL 
+      }
+    },
+  };
+
   /* Setup protocol subtree array */
-  static gint *ett[] = {
+  static gint* ett[] = {
     &ett_epa,
+    &ett_epa_addr,
+    &ett_rspstatus,
   };
 
   /* Register the protocol name and description */
@@ -401,6 +696,8 @@ proto_register_epa(void)
 
   /* Required function calls to register the header fields and subtrees used */
   proto_register_field_array(proto_epa, hf, array_length(hf));
+  proto_register_field_array(proto_epa, addr_fields, array_length(addr_fields));
+  proto_register_field_array(proto_epa, rspstatus_fields, array_length(rspstatus_fields));
   proto_register_subtree_array(ett, array_length(ett));
 }
 
@@ -421,6 +718,7 @@ proto_reg_handoff_epa(void)
 void plugin_init(plugin_address_table_t* pat)
 {
   /* initialise the table of pointers needed in Win32 DLLs */
+  pat = pat; /* shut-up compiler warning on non Win32 hosts */
   plugin_address_table_init(pat);
 
   /* register the new protocol, protocol fields, and subtrees */
