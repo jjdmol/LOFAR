@@ -84,7 +84,7 @@ public:
 
   /** The preprocess method is called before process.
       It can be used to initialize the WorkHolder.
-      The default implementation calls basePreprocess for all DataHolders.
+      The default implementation initialises all DataHolders.
   */
   void basePreprocess();
   virtual void preprocess();

@@ -161,12 +161,12 @@ namespace LOFAR
 
   void TinyDataManager::preprocess() {
     for (int i = 0; i < itsNinputs; i++) {
-      itsInDHs[i]->basePreprocess();
+      itsInDHs[i]->init();
     }
     
 
     for (int i = 0; i < itsNoutputs; i++) {
-      itsOutDHs[i]->basePreprocess();
+      itsOutDHs[i]->init();
     }
   }
 
