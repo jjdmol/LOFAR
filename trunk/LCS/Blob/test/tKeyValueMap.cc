@@ -22,6 +22,7 @@
 
 
 #include <Common/KeyValueMap.h>
+#include <Common/KeyParser.h>
 #include <Common/BlobOBufChar.h>
 #include <Common/BlobIBufChar.h>
 #include <Common/BlobOStream.h>
@@ -174,10 +175,20 @@ void doIt()
   }
 }
 
+void doItParse()
+{
+  cout << KeyParser::parse ("key1=1") << endl;
+  cout << KeyParser::parse ("key2='abc'") << endl;
+  cout << KeyParser::parse ("key1=1, key2='abc'") << endl;
+  cout << KeyParser::parse ("key1=[1,1.3], key2='abc'") << endl;
+  cout << KeyParser::parse ("key1=[a=1,b=2], key2='abc'") << endl;
+}
+
 int main()
 {
   try {
     doIt();
+    doItParse();
   } catch (...) {
     cout << "Unexpected exception" << endl;
     exit(1);
