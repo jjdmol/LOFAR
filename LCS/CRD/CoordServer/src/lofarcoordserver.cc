@@ -30,6 +30,7 @@
 #include <measures/Measures/MEpoch.h>
 #include <measures/Measures/MPosition.h>
 #include <measures/Measures/MeasConvert.h>
+#include <casa/Exceptions/Error.h>
 
 #include <sys/types.h>
 #include <unistd.h>
@@ -119,31 +120,38 @@ void j2000ToAzel (Socket& socket, bool swap)
   const double* skyData = in;
   const double* posData = skyData + 2*nrsky;
   const double* timeData = posData + 3*nrpos;
-  MeasFrame frame;
-  MDirection dir;
-  Quantity height(0, "m");
-  Quantity angle1(0, "rad");
-  Quantity angle2(0, "rad");
-  for (int k=0; k<nrtime; k++) {
-    frame.set (MEpoch(MVEpoch(timeData[2*k], timeData[2*k+1])));
-    for (int j=0; j<nrpos; j++) {
-      angle1.setValue (posData[3*j]);
-      angle2.setValue (posData[3*j+1]);
-      height.setValue (posData[3*j+2]);
-      MVPosition pos(height, angle1, angle2);
-      frame.set (MPosition(pos));
-      MDirection::Convert conv (dir,
-				MDirection::Ref (MDirection::AZEL, frame));
-      for (int i=0; i<nrsky; i++) {
-	angle1.setValue (skyData[2*i]);
-	angle2.setValue (skyData[2*i+1]);
-	MDirection sky(MVDirection(angle1, angle2), MDirection::J2000);
-	MDirection res = conv(sky);
-	Quantum<Vector<Double> > angles = res.getAngle();
-	*outData++ = angles.getBaseValue()(0);
-	*outData++ = angles.getBaseValue()(1);
+
+  try {
+    MeasFrame frame;
+    MDirection dir;
+    Quantity height(0, "m");
+    Quantity angle1(0, "rad");
+    Quantity angle2(0, "rad");
+    for (int k=0; k<nrtime; k++) {
+      frame.set (MEpoch(MVEpoch(timeData[2*k], timeData[2*k+1])));
+      for (int j=0; j<nrpos; j++) {
+        angle1.setValue (posData[3*j]);
+        angle2.setValue (posData[3*j+1]);
+        height.setValue (posData[3*j+2]);
+        MVPosition pos(height, angle1, angle2);
+        frame.set (MPosition(pos));
+        MDirection::Convert conv (dir,
+                                  MDirection::Ref (MDirection::AZEL, frame));
+        for (int i=0; i<nrsky; i++) {
+          angle1.setValue (skyData[2*i]);
+          angle2.setValue (skyData[2*i+1]);
+          MDirection sky(MVDirection(angle1, angle2), MDirection::J2000);
+          MDirection res = conv(sky);
+          Quantum<Vector<Double> > angles = res.getAngle();
+          *outData++ = angles.getBaseValue()(0);
+          *outData++ = angles.getBaseValue()(1);
+        }
       }
     }
+  }
+  catch (AipsError& e) {
+    LOG_ERROR(formatString("AipsError: %s", e.what()));
+    return;
   }
   socket.writeBlocking (out, (1+2*nrval) * sizeof(double));
 }
@@ -181,53 +189,60 @@ void azelToJ2000 (Socket& socket, bool swap)
   const double* skyData = in;
   const double* posData = skyData + 2*nrsky;
   const double* timeData = posData + 3*nrpos;
-  MeasFrame frame;
-  MDirection dir;
-  Quantity height(0, "m");
-  Quantity angle1(0, "rad");
-  Quantity angle2(0, "rad");
-  frame.set (MEpoch(MVEpoch(timeData[0], timeData[1])));
-  angle1.setValue (posData[0]);
-  angle2.setValue (posData[1]);
-  height.setValue (posData[2]);
-  MVPosition pos(height, angle1, angle2);
-  frame.set (MPosition(pos));
-  if (nrtime == 1) {
+
+  try {
+    MeasFrame frame;
+    MDirection dir;
+    Quantity height(0, "m");
+    Quantity angle1(0, "rad");
+    Quantity angle2(0, "rad");
     frame.set (MEpoch(MVEpoch(timeData[0], timeData[1])));
     angle1.setValue (posData[0]);
     angle2.setValue (posData[1]);
     height.setValue (posData[2]);
     MVPosition pos(height, angle1, angle2);
     frame.set (MPosition(pos));
-    MDirection::Ref ref(MDirection::AZEL, frame);
-    MDirection::Convert conv (dir, MDirection::J2000);
-    for (int i=0; i<nrsky; i++) {
-      angle1.setValue (skyData[2*i]);
-      angle2.setValue (skyData[2*i+1]);
-      MDirection sky(MVDirection(angle1, angle2), ref);
-      MDirection res = conv(sky);
-      Quantum<Vector<Double> > angles = res.getAngle();
-      *outData++ = angles.getBaseValue()(0);
-      *outData++ = angles.getBaseValue()(1);
-    }
-  } else {
-    for (int i=0; i<nrsky; i++) {
-      frame.set (MEpoch(MVEpoch(timeData[2*i], timeData[2*i+1])));
-      angle1.setValue (posData[2*i]);
-      angle2.setValue (posData[2*i+1]);
-      height.setValue (posData[2*i+2]);
+    if (nrtime == 1) {
+      frame.set (MEpoch(MVEpoch(timeData[0], timeData[1])));
+      angle1.setValue (posData[0]);
+      angle2.setValue (posData[1]);
+      height.setValue (posData[2]);
       MVPosition pos(height, angle1, angle2);
       frame.set (MPosition(pos));
       MDirection::Ref ref(MDirection::AZEL, frame);
       MDirection::Convert conv (dir, MDirection::J2000);
-      angle1.setValue (skyData[2*i]);
-      angle2.setValue (skyData[2*i+1]);
-      MDirection sky(MVDirection(angle1, angle2), ref);
-      MDirection res = conv(sky);
-      Quantum<Vector<Double> > angles = res.getAngle();
-      *outData++ = angles.getBaseValue()(0);
-      *outData++ = angles.getBaseValue()(1);
+      for (int i=0; i<nrsky; i++) {
+        angle1.setValue (skyData[2*i]);
+        angle2.setValue (skyData[2*i+1]);
+        MDirection sky(MVDirection(angle1, angle2), ref);
+        MDirection res = conv(sky);
+        Quantum<Vector<Double> > angles = res.getAngle();
+        *outData++ = angles.getBaseValue()(0);
+        *outData++ = angles.getBaseValue()(1);
+      }
+    } else {
+      for (int i=0; i<nrsky; i++) {
+        frame.set (MEpoch(MVEpoch(timeData[2*i], timeData[2*i+1])));
+        angle1.setValue (posData[2*i]);
+        angle2.setValue (posData[2*i+1]);
+        height.setValue (posData[2*i+2]);
+        MVPosition pos(height, angle1, angle2);
+        frame.set (MPosition(pos));
+        MDirection::Ref ref(MDirection::AZEL, frame);
+        MDirection::Convert conv (dir, MDirection::J2000);
+        angle1.setValue (skyData[2*i]);
+        angle2.setValue (skyData[2*i+1]);
+        MDirection sky(MVDirection(angle1, angle2), ref);
+        MDirection res = conv(sky);
+        Quantum<Vector<Double> > angles = res.getAngle();
+        *outData++ = angles.getBaseValue()(0);
+        *outData++ = angles.getBaseValue()(1);
+      }
     }
+  }
+  catch (AipsError& e) {
+    LOG_ERROR(formatString("AipsError: %s", e.what()));
+    return;
   }
   socket.writeBlocking (out, (1+2*nrval) * sizeof(double));
 }
