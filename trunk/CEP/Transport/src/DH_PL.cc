@@ -22,44 +22,18 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include <DH_PL.h>				// for class definition
+#include <libTransport/DH_PL.h>				// for class definition
 #include <Common/lofar_iostream.h>		// for cout, cerr
 #include <Common/Debug.h>			// for AssertStr
 #include <sstream>				// for ostrstream
 
-//obsolete #include "DH_PL_MessageRecord.h"		// class MessageRecord
-//obsolete #include "PO_DH_PL_MessageRecord.h"		// TPO of MessageRecord
-
-using namespace std;
-
 namespace LOFAR {
-
-// Number of DH_PL objects currently instantiated. Used internally for
-// managing the database connection.
-
-ulong DH_PL::theirInstanceCount = 0L;
-
-
 
 
 DH_PL::DH_PL (const string& name, const string& type)
   : DataHolder (name, type) 
 {
-  // Fill its members with correct values.
-  ((DH_PL::DataPacket*)itsDataPacketPtr)->AppId = 1234;
-  ((DH_PL::DataPacket*)itsDataPacketPtr)->Tag = 0;
-  ((DH_PL::DataPacket*)itsDataPacketPtr)->SeqNo = itsWriteSeqNo;
-  ((DH_PL::DataPacket*)itsDataPacketPtr)->Status = "Sent";
-  ((DH_PL::DataPacket*)itsDataPacketPtr)->Size = 0;
-  ((DH_PL::DataPacket*)itsDataPacketPtr)->TimeStamp = "00:00";
-  ((DH_PL::DataPacket*)itsDataPacketPtr)->Type = getType ();
-  ((DH_PL::DataPacket*)itsDataPacketPtr)->Type = getName ();
-  ostringstream ostr;
-  ((DH_PL::DataPacket*)itsDataPacketPtr)->Blob = ostr.str ();
-
-  
-
-
+  itsDHPLPO = new DH_PL_PO(); 
 } 
 
 
@@ -67,7 +41,14 @@ DH_PL::~DH_PL () {
 }
 
 
-
+PL::PersistentObject& DH_PL::getTPO() const{
+  return itsDHPLPO->getTPO();
 }
 
+PL::PersistentObject& DH_PL::prepareTPO(int aSeqNo) {
+  itsSeqNo = aSeqNo;
+  return itsDHPLPO->getTPO();
+}
+
+}
 

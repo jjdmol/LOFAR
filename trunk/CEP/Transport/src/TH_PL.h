@@ -69,13 +69,10 @@ private:
   /// Strings containing the name specs describing the ODBC connection.
     static string theirDSN;
     static string theirUserName;
+    string        itsTableName;
     
-    // The results from a query is returned as a collection of
-    // DH_PL_MessageRecord. So we need an object for that purpose:
-   Collection<PL::TPersistentObject<DH_PL::DataPacket> > Results;  
-
-   long itsWriteSeqNo;
-   long itsReadSeqNo;
+    long itsWriteSeqNo;
+    long itsReadSeqNo;
 };
  
 }

@@ -23,9 +23,8 @@
 //////////////////////////////////////////////////////////////////////////
 
 
-#include <TH_PL.h>
-#include <BaseTransport.h>
-#include <Transportable.h>
+#include <libTransport/TH_PL.h>
+#include <libTransport/Transporter.h>
 #include <Common/lofar_iostream.h>
 #include <PL/Query.h>
 
@@ -41,15 +40,21 @@ int TH_PL::theirInstanceCount=0;
    
 // The PersistenceBroker is a management object from PL. One static
 // PersistenceBroker is used to optimally use resources.
-PersistenceBroker TH_PL::theirPersistenceBroker;
+PL::PersistenceBroker TH_PL::theirPersistenceBroker;
 
 
 TH_PL TH_PL::proto;
 
 TH_PL::TH_PL() :
+   itsTableName("defaultTable"),
    itsWriteSeqNo(0),
    itsReadSeqNo(0)
+   
 {
+
+  // ToDo: test dynamic cast
+  // ToDo: getPO->setTableName();
+
   // If this is the first instance of TH_PL in the (current) process,
   // connect to the database.
   if (TH_PL::theirInstanceCount == 0L) {
@@ -98,63 +103,51 @@ string TH_PL::getType() const
 bool TH_PL::connectionPossible(int srcRank, int dstRank) const
   { return srcRank == dstRank; }
 
-bool TH_PL::sendBlocking(void* buf, int nbytes, int, int tag)
+bool TH_PL::sendBlocking(void* buf, int nbytes, int destination, int tag)
+
 {
-  if (getTransporter() -> getBaseDataHolder() != 0) {
-        
-    DH_PL* DHPLptr = (DH_PL*)getTransporter () -> getBaseDataHolder ();
-    // ToDo: DbgAssertStr(DHPLptr->getType = "", "Wrong DH type;")
-
-    //ToDo:  DHPLptr->setSeqNo(itsWriteSeqNo ++);
-    theirPersistenceBroker.save(DHPLptr -> getPO());
-
-  } else {
-    cerr << "TH_PL::send():Transportable not found." << endl;
-    return false;
-  }
-
+  DbgAssertStr(getTransporter() -> getBaseDataHolder() != 0, 
+	       "TH_PL::send():Transportable not found.");
+  DH_PL* DHPLptr = (DH_PL*)getTransporter () -> getBaseDataHolder ();
+  // ToDo:   DHPLptr->setTag(tag);
+  // ToDo:   DHPLptr->setDestination(destination);
+  // ToDo: DbgAssertStr(DHPLptr->getType = "", "Wrong DH type;")
+  
+  PL::PersistentObject& aPO = DHPLptr -> preparePO(itsWriteSeqNo++);
+  theirPersistenceBroker.save(aPO);
   return true;
 }
 
-bool TH_PL::recvBlocking(void* buf, int nbytes, int, int tag)
+bool TH_PL::recvBlocking(void* buf, int nbytes, int source , int tag)
+
 { 
   DbgAssertStr( (getTransporter() -> getBaseDataHolder () != 0),
 		"TH_PL::recv():Transportable not found.");
-  
-  // get a refernece to the DHPL object
-  DH_PL* DHPLptr = (DH_PL*)getTransporter() -> getBaseDataHolder();
-  
  
+  // get a refernece to the DHPL object
+  DH_PL* DHPLptr = (DH_PL*)getTransporter() -> getBaseDataHolder();  
+  PL::PersistentObject& aPO = DHPLptr -> getPO();
+
   // PL is based on query objects to identify records in database
   // tables. A query object is now prepared to retrieve the record with
   // the correct tag and sequence number.
   char q [200]; 
-  sprintf (q, "WHERE tag='%d' AND SeqNo='%ld'",
+  sprintf (q, "WHERE tag='%d' AND SeqNo='%ld' AND source='%ld'",
 	   tag, 
-	   itsReadSeqNo);
+	   itsReadSeqNo++,
+	   source);
    PL::QueryObject qGetRecord(q);
     
   // Perform the actual query and obtain the data collection.
-   Results = theirPersistenceBroker.retrieve<DH_PL::DataPacket> (qGetRecord);
-  
-  // ToDo: DbgAssertStr(itsReadSeqnNo == ... ,"");
-  itsReadSeqNo ++;
 
-  // Take the size of the first TH_PL_MessageRecord in the collection.
-  int resSize = Results.begin () -> data().Size;
+   int result;
+   // ToDo: result = aPO.retrieve(qGetRecord);
+   DbgAssert (result == 1);
+
+  // ToDo: DbgAssertStr(itsReadSeqnNo == ... ,"");
+
+   // ToDo: DbgAssertStr((resSize == size),"TH_PL Warning: Not matching size, continuing anyway.");
   
-  // Check its size.
-  DbgAssertStr((resSize == size),
-	       "TH_PL Warning: Not matching size, continuing anyway.");
-  
-  // Unpack the blob
-  unsigned int k;
-  char token[40];
-  istringstream istr (Results.begin () -> data().Blob);
-  for (k = 0; k < (unsigned int) size; k ++) {
-    istr >> token;
-    buf [k] = (char) strtoul (token, NULL, 16);
-  }
   return true;
 }
 
