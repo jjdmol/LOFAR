@@ -12,6 +12,8 @@
 
 cdir=`pwd`
 echo "Doing tBBS2 tests in $cdir"
+echo "gathering info about run environment"
+./generalinfo.sh
 
 # Do test1
 echo ""
