@@ -33,18 +33,18 @@ namespace LOFAR
   using std::tan;
   using std::exp;
   using std::sqrt;
-  //    using std::conj;
+//   using std::conj;
 }
 
 #ifdef MAKE_LOFAR_SYMBOLS_GLOBAL
 #include <Common/lofar_global_symbol_warning.h>
-using std::complex;
-using std::sin;
-using std::cos;
-using std::tan;
-using std::exp;
-using std::sqrt;
-//using std::conj;
+using LOFAR::complex;
+using LOFAR::sin;
+using LOFAR::cos;
+using LOFAR::tan;
+using LOFAR::exp;
+using LOFAR::sqrt;
+// using LOFAR::conj;
 #endif
 
 #endif
