@@ -55,7 +55,17 @@ int main (int argc, const char** argv)
   	theApp.baseRun(10); 
   	theApp.baseDump();
   	theApp.baseQuit();
-  } catch (...) {
-    cout << "Unexpected exception" << endl;
   }
+  catch (LOFAR::Exception& e)
+  {
+    cout << "Lofar exception: " << e.what() << endl;
+  }
+  catch (std::exception& e)
+  {
+    cout << "Standard exception: " << e.what() << endl;
+  }
+  catch (...) {
+    cout << "Unexpected exception in Simulate" << endl;
+  }
+
 }
