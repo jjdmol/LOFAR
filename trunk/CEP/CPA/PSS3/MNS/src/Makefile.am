@@ -35,7 +35,8 @@ MeqStoredParmPolc.h				\
 MeqUVWPolc.h					\
 MeqWsrtInt.h					\
 MeqWsrtPoint.h					\
-ParmTable.h					
+ParmTable.h ParmtableAIPS.h ParmTableDB.h	\
+MeqParmHolder.h TPOParm.h					
 
 lib_LTLIBRARIES 	= libmns.la
 
@@ -72,11 +73,18 @@ MeqStoredParmPolc.cc				\
 MeqUVWPolc.cc					\
 MeqWsrtInt.cc					\
 MeqWsrtPoint.cc					\
-ParmTable.cc					
+ParmTable.cc ParmTableAIPS.cc ParmTableDB.cc	\
+TPOParm.cc					
 
 #EXTRA_DIST		=			\
 #Beam.m						\
 #spectralfft.m					\
 #Simulate.out
+
+bin_PROGRAMS 		= parmdb
+
+parmdb_SOURCES		= parmdb.cc
+parmdb_LDADD		= ./libmns.la
+parmdb_DEPENDENCIES	= ./libmns.la $(LOFAR_DEPEND)
 
 include $(lofar_sharedir)/Makefile.common

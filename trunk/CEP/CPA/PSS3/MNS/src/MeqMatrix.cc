@@ -27,6 +27,9 @@
 #include <MNS/MeqMatrixComplexSca.h>
 #include <MNS/MeqMatrixRealArr.h>
 #include <MNS/MeqMatrixComplexArr.h>
+#include <Common/BlobArray.h>
+#include <Common/BlobOStream.h>
+#include <Common/BlobIStream.h>
 #include <Common/Debug.h>
 #include <aips/Arrays/Matrix.h>
 
@@ -305,4 +308,56 @@ MeqMatrixTmp mean(const MeqMatrix& arg)
 MeqMatrixTmp sum(const MeqMatrix& arg)
 {
     return arg.itsRep->sum();
+}
+
+
+BlobOStream& operator<< (BlobOStream& bs, const MeqMatrix& vec)
+{
+  bs.putStart ("MeqMatrix", 1);
+  bs << vec.isDouble() << (vec.nelements()==1);
+  if (vec.isDouble()) {
+    if (vec.nelements() == 1) {
+      bs << vec.getDouble();
+    } else {
+      bs << vec.getDoubleMatrix();
+    }
+  } else {
+    if (vec.nelements() == 1) {
+      bs << vec.getDComplex();
+    } else {
+      bs << vec.getDComplexMatrix();
+    }
+  }
+  return bs;
+  bs.putEnd();
+}
+
+BlobIStream& operator>> (BlobIStream& bs, MeqMatrix& vec)
+{
+  bs.getStart ("MeqMatrix");
+  bool isDouble, isScalar;
+  bs >> isDouble >> isScalar;
+  if (isDouble) {
+    if (isScalar) {
+      double val;
+      bs >> val;
+      vec = MeqMatrix(val);
+    } else {
+      Matrix<double> mat;
+      bs >> mat;
+      vec = MeqMatrix(mat);
+    }
+  } else {
+    if (isScalar) {
+      complex<double> val;
+      bs >> val;
+      vec = MeqMatrix(val);
+    } else {
+      Matrix<complex<double> > mat;
+      bs >> mat;
+      vec = MeqMatrix(mat);
+    }
+  }
+  bs.getEnd();
+  return bs;
 }
