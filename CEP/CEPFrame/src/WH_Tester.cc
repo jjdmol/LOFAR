@@ -40,7 +40,7 @@ WH_Tester::~WH_Tester()
 {}
 
 WorkHolder* WH_Tester::construct (const string& name, int, int,
-				  const ParamBlock&)
+				  const KeyValueMap&)
 {
   return new WH_Tester (name);
 }

@@ -27,7 +27,7 @@
 #include "CEPFrame/SynchronisityManager.h"
 #include "CEPFrame/DHPoolManager.h"
 #include "CEPFrame/CycBufferManager.h"
-#include "Common/Debug.h"
+#include <Common/Debug.h>
 #include <unistd.h>
 
 namespace LOFAR

@@ -25,7 +25,7 @@
 //////////////////////////////////////////////////////////////////////
 
 #include "CEPFrame/SAXSimulParser.h"
-#include "Common/Debug.h"
+#include <Common/Debug.h>
 
 namespace LOFAR
 {

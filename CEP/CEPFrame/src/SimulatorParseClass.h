@@ -1,34 +1,29 @@
-//  SimulatorParse.h: Class for parsing simulation commands
-//
-//  Copyright (C) 2001
-//  ASTRON (Netherlands Foundation for Research in Astronomy)
-//  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
-//
-//  This program is free software; you can redistribute it and/or modify
-//  it under the terms of the GNU General Public License as published by
-//  the Free Software Foundation; either version 2 of the License, or
-//  (at your option) any later version.
-//
-//  This program is distributed in the hope that it will be useful,
-//  but WITHOUT ANY WARRANTY; without even the implied warranty of
-//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//  GNU General Public License for more details.
-//
-//  You should have received a copy of the GNU General Public License
-//  along with this program; if not, write to the Free Software
-//  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-//
-//  $Id$
-//
-//
-/////////////////////////////////////////////////////////////////////////////
+//# SimulatorParse.h: Class for parsing simulation commands
+//#
+//# Copyright (C) 2001
+//# ASTRON (Netherlands Foundation for Research in Astronomy)
+//# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+//#
+//# This program is free software; you can redistribute it and/or modify
+//# it under the terms of the GNU General Public License as published by
+//# the Free Software Foundation; either version 2 of the License, or
+//# (at your option) any later version.
+//#
+//# This program is distributed in the hope that it will be useful,
+//# but WITHOUT ANY WARRANTY; without even the implied warranty of
+//# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//# GNU General Public License for more details.
+//#
+//# You should have received a copy of the GNU General Public License
+//# along with this program; if not, write to the Free Software
+//# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+//#
+//# $Id$
 
 #ifndef CEPFRAME_SIMULATORPARSE_H
 #define CEPFRAME_SIMULATORPARSE_H
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
+#include <lofar_config.h>
 
 //# Includes
 #include <Common/lofar_complex.h>
@@ -44,8 +39,8 @@ extern "C" {
 
 //# Forward Declarations
 class Simulator;
-class ParamValue;
-class ParamBlock;
+class KeyValue;
+class KeyValueMap;
 
 /**
    SimulatorParse is the class for parsing simulation commands.
@@ -66,20 +61,20 @@ public:
   static void parse (Simulator&);
 
   /// Execute the command given in the value.
-  static void execute (const ParamValue&);
+  static void execute (const KeyValue&);
 
   /** Execute the command given in the value.
       The 2nd argument gives a parameter. Currently it is only
       used for the step and run command in which case it gives the number
       of steps to execute.
   */
-  static void execute (const ParamValue&, const ParamValue& param);
+  static void execute (const KeyValue&, const KeyValue& param);
 
   /** Execute the command given in the value.
       The 2nd argument gives a set of parameters, which can be used
       by the define.
   */
-  static void execute (const ParamValue&, const ParamBlock& parameters);
+  static void execute (const KeyValue&, const KeyValueMap& parameters);
 
   /// Give the current line (for read or update).
   static int& line()

@@ -26,12 +26,12 @@
 
 
 #include "CEPFrame/ParamHolder.h"
-#include <Common/lofar_iostream.h>
 #include "CEPFrame/StepRep.h"
 #include "CEPFrame/ParamTransport.h"
 #include "CEPFrame/ParamTransportManager.h"
 #include TRANSPORTERINCLUDE
-#include "Common/Debug.h"
+#include <Common/lofar_iostream.h>
+#include <Common/Debug.h>
 
 namespace LOFAR
 {

@@ -23,18 +23,17 @@
 //
 //////////////////////////////////////////////////////////////////////
 
-#include <Common/lofar_iostream.h>
-#include <Common/lofar_algorithm.h>    // for min,max
-
-#include <unistd.h>
 #include "CEPFrame/SimulRep.h"
 #include "CEPFrame/Step.h"
 #include "CEPFrame/Simul.h"
 #include "CEPFrame/TH_Mem.h"
 #include "CEPFrame/Profiler.h"
 #include "CEPFrame/WH_Empty.h"
-#include "Common/Debug.h"
 #include "CEPFrame/VirtualMachine.h"
+#include <Common/Debug.h>
+#include <Common/lofar_iostream.h>
+#include <Common/lofar_algorithm.h>    // for min,max
+#include <unistd.h>
 
 #ifdef HAVE_CORBA
 #include "CEPFrame/Corba/BS_Corba.h"

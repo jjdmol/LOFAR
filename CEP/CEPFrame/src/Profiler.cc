@@ -21,14 +21,12 @@
 //  $Id$
 //
 //
-/////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
+#include <lofar_config.h>
 
 #include "CEPFrame/Profiler.h"
-#include "Common/Debug.h"
+#include <Common/Debug.h>
 #include <Common/lofar_iostream.h>
 
 #ifdef HAVE_MPI_PROFILER

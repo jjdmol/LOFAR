@@ -26,7 +26,7 @@
 
 #include "CEPFrame/ParamManager.h"
 #include "CEPFrame/ParamTransportManager.h"
-#include "Common/Debug.h"
+#include <Common/Debug.h>
 #include <pthread.h>
 
 #include "CEPFrame/TH_MPI.h"

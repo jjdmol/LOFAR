@@ -22,9 +22,7 @@
 //
 ///////////////////////////////////////////////////////////////////
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
+#include <lofar_config.h>
 
 #ifdef HAVE_MPI
 
@@ -33,11 +31,11 @@
 #endif
 
 #include "CEPFrame/TH_MPI.h"
-#include "mpi.h"
+#include <mpi.h>
 #include "CEPFrame/StepRep.h"
-#include "Common/Debug.h"
-#include "Common/lofar_deque.h"
-#include "Common/lofar_list.h"
+#include <Common/Debug.h>
+#include <Common/lofar_deque.h>
+#include <Common/lofar_list.h>
 
 #include <pthread.h>
 

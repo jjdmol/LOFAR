@@ -23,7 +23,7 @@
 
 #include "CEPFrame/TH_Mem.h"
 #include "CEPFrame/StepRep.h"
-#include "Common/Debug.h"
+#include <Common/Debug.h>
 
 namespace LOFAR
 {

@@ -24,8 +24,8 @@
 /////////////////////////////////////////////////////////////////////////////
 
 #include "CEPFrame/SimulatorParseClass.h"
-#include "CEPFrame/ParamBlock.h"
 #include "CEPFrame/Simulator.h"
+#include <Common/KeyValueMap.h>
 #include <Common/lofar_vector.h>
 #include <Common/lofar_iostream.h>
 #include <sstream>
@@ -60,14 +60,14 @@ void SimulatorParse::parse (Simulator& simulator)
   theirSimulator->baseQuit();
 }
 
-void SimulatorParse::execute (const ParamValue& value)
+void SimulatorParse::execute (const KeyValue& value)
 {
-  if (value.dataType() != ParamValue::DTString) {
+  if (value.dataType() != KeyValue::DTString) {
     throw SimulatorParseError("command is not a string");
   }
   const string& comm = value.getString();
   if (comm == "define") {
-    theirSimulator->baseDefine (ParamBlock());
+    theirSimulator->baseDefine (KeyValueMap());
   } else if (comm == "check") {
     theirSimulator->baseCheck();
   } else if (comm == "prerun") {
@@ -83,15 +83,15 @@ void SimulatorParse::execute (const ParamValue& value)
   }
 }
 
-void SimulatorParse::execute (const ParamValue& value,
-			      const ParamValue& param)
+void SimulatorParse::execute (const KeyValue& value,
+			      const KeyValue& param)
 {
-  if (value.dataType() != ParamValue::DTString) {
+  if (value.dataType() != KeyValue::DTString) {
     throw SimulatorParseError("command is not a string");
   }
   const string& comm = value.getString();
   if (comm == "define") {
-    theirSimulator->baseDefine (ParamBlock());
+    theirSimulator->baseDefine (KeyValueMap());
   } else if (comm == "run"  ||  comm == "step") {
     theirSimulator->baseRun (param.getInt());
   } else if (comm == "step") {
@@ -103,10 +103,10 @@ void SimulatorParse::execute (const ParamValue& value,
   }
 }
 
-void SimulatorParse::execute (const ParamValue& value,
-			      const ParamBlock& params)
+void SimulatorParse::execute (const KeyValue& value,
+			      const KeyValueMap& params)
 {
-  if (value.dataType() != ParamValue::DTString) {
+  if (value.dataType() != KeyValue::DTString) {
     throw SimulatorParseError("command is not a string");
   }
   const string& comm = value.getString();

@@ -21,6 +21,9 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.1.1.1  2003/02/21 11:14:36  schaaf
+//  copy from BaseSim tag "CEPFRAME"
+//
 //  Revision 1.2  2001/10/26 10:06:28  wierenga
 //  Wide spread changes to convert from Makedefs to autoconf/automake/libtool build environment
 //
@@ -30,9 +33,7 @@
 //
 //////////////////////////////////////////////////////////////////////
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
+#include <lofar_config.h>
 
 #ifdef HAVE_MATLAB
 #include "../src/mexversion.c"

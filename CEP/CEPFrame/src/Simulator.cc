@@ -52,14 +52,14 @@ void Simulator::getarg (int* argc, const char** argv[])
   *argv = itsArgv;
 }
 
-void Simulator::baseDefine (const ParamBlock& params)
+void Simulator::baseDefine (const KeyValueMap& params)
 {
   // Initialize MPI environment.
   TRANSPORTER::init (itsArgc, itsArgv);
   // Set current application number if defined in parameters.
-  ParamBlock::const_iterator iter = params.find ("appl");
+  KeyValueMap::const_iterator iter = params.find ("appl");
   if (iter != params.end()) {
-    if (iter->second.dataType() == ParamValue::DTInt) {
+    if (iter->second.dataType() == KeyValue::DTInt) {
       Step::setCurAppl (iter->second.getInt());
     }
   }

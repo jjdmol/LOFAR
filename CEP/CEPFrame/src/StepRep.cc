@@ -23,8 +23,6 @@
 //
 //////////////////////////////////////////////////////////////////////
 
-#include <Common/lofar_iostream.h>
-#include <Common/lofar_algorithm.h>    // for min,max
 #include "CEPFrame/StepRep.h"
 #include "CEPFrame/SimulRep.h"
 #include "CEPFrame/Step.h"
@@ -33,7 +31,9 @@
 #include "CEPFrame/ParamTransport.h"
 #include "CEPFrame/ParamTransportManager.h"
 #include "CEPFrame/Profiler.h"
-#include "Common/Debug.h"
+#include <Common/Debug.h>
+#include <Common/lofar_iostream.h>
+#include <Common/lofar_algorithm.h>    // for min,max
 #ifdef HAVE_CORBA
 #include "CEPFrame/Corba/BS_Corba.h"
 #include "CEPFrame/Corba/CorbaMonitor.h"

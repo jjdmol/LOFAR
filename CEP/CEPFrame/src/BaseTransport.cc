@@ -23,14 +23,13 @@
 //
 //////////////////////////////////////////////////////////////////////
 
-#include <Common/lofar_iostream.h>
-#include <stdlib.h>
-#include <memory.h>
-
 #include "CEPFrame/BaseTransport.h"
 #include "CEPFrame/TransportHolder.h"
 #include "CEPFrame/Step.h"
-#include "Common/Debug.h"
+#include <Common/Debug.h>
+#include <Common/lofar_iostream.h>
+#include <stdlib.h>
+#include <memory.h>
 
 namespace LOFAR
 {

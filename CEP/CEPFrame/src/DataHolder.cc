@@ -29,7 +29,7 @@
 #include "CEPFrame/Transport.h"
 #include "CEPFrame/DataHolder.h"
 #include "CEPFrame/StepRep.h"
-#include "Common/Debug.h"
+#include <Common/Debug.h>
 
 namespace LOFAR
 {
