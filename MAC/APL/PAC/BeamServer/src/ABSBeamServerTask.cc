@@ -71,12 +71,13 @@ using namespace RSP_Protocol;
 
 #define SYSTEM_CLOCK_FREQ 120e6 // 120 MHz
 
-BeamServerTask::BeamServerTask(string name)
+BeamServerTask::BeamServerTask(string name, int n_blps)
     : GCFTask((State)&BeamServerTask::initial, name),
-      m_pos(GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i), MEPHeader::N_POL, N_DIM),
-      m_weights(COMPUTE_INTERVAL, GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i), MEPHeader::N_BEAMLETS, MEPHeader::N_POL),
-      m_weights16(COMPUTE_INTERVAL, GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i), MEPHeader::N_BEAMLETS, MEPHeader::N_POL),
-      m_beams_modified(false)
+      m_pos(n_blps, MEPHeader::N_POL, N_DIM),
+      m_weights(COMPUTE_INTERVAL, n_blps, MEPHeader::N_BEAMLETS, MEPHeader::N_POL),
+      m_weights16(COMPUTE_INTERVAL, n_blps, MEPHeader::N_BEAMLETS, MEPHeader::N_POL),
+      m_beams_modified(false),
+      m_n_blps(n_blps)
 {
   registerProtocol(ABS_PROTOCOL, ABS_PROTOCOL_signalnames);
   registerProtocol(RSP_PROTOCOL, RSP_PROTOCOL_signalnames);
@@ -536,21 +537,28 @@ void BeamServerTask::wgsettings_action(ABSWgsettingsEvent& wgs,
 
 void BeamServerTask::wgenable_action()
 {
-  RSPSetwgEvent wg;
-  
-  wg.timestamp.setNow();
-  wg.blpmask.reset();
-  for (int i = 0; i < GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i); i++) wg.blpmask.set(i);
-  wg.settings().resize(1);
-  // scale and convert to uint16
-  wg.settings()(0).freq = (uint16)(((m_wgsetting.frequency * (1 << 16)) / SYSTEM_CLOCK_FREQ) + 0.5);
-  wg.settings()(0).ampl = m_wgsetting.amplitude;
-  wg.settings()(0).phase = 0;
-  wg.settings()(0).nof_samples = 512;
-  wg.settings()(0).mode = WGSettings::MODE_REPEAT;
-  wg.settings()(0)._pad = 0; /* stop valgrind complaining */
+  if (!GET_CONFIG("BeamServer.DISABLE_WG", i))
+  {
+    RSPSetwgEvent wg;
 
-  m_rspdriver.send(wg);
+    wg.timestamp.setNow();
+    wg.blpmask.reset();
+#if 0
+    for (int i = 0; i < m_n_blps; i++) wg.blpmask.set(i);
+#else
+    wg.blpmask.set(0);
+#endif
+    wg.settings().resize(1);
+    // scale and convert to uint16
+    wg.settings()(0).freq = (uint16)(((m_wgsetting.frequency * (1 << 16)) / SYSTEM_CLOCK_FREQ) + 0.5);
+    wg.settings()(0).ampl = m_wgsetting.amplitude;
+    wg.settings()(0).phase = 0;
+    wg.settings()(0).nof_samples = 512;
+    wg.settings()(0).mode = WGSettings::MODE_REPEAT;
+    wg.settings()(0)._pad = 0; /* stop valgrind complaining */
+
+    m_rspdriver.send(wg);
+  }
 }
 
 void BeamServerTask::wgdisable_action()
@@ -559,7 +567,7 @@ void BeamServerTask::wgdisable_action()
   
   wg.timestamp.setNow();
   wg.blpmask.reset();
-  for (int i = 0; i < GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i); i++) wg.blpmask.set(i);
+  for (int i = 0; i < m_n_blps; i++) wg.blpmask.set(i);
   wg.settings().resize(1);
   wg.settings()(0).freq = 0;
   wg.settings()(0).ampl = 0;
@@ -628,21 +636,7 @@ void BeamServerTask::compute_weights(long current_seconds)
   // need complex conjugate of the weights
   // as 16bit signed integer to send to the board
   //
-#if 1
   m_weights16 = convert2complex_int16_t(conj(m_weights));
-#else
-  for (int i = 0; i < COMPUTE_INTERVAL; i++)
-    for (int j = 0; j < GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i); j++)
-      for (int k = 0; k < MEPHeader::N_BEAMLETS; k++)
-	for (int l = 0; l < MEPHeader::N_POL; l++)
-	  {
-	      //
-	      // -1 * imaginary part to take complex conjugate of the weight
-	      //
-	      m_weights16(i,j,k,l) = complex<int16_t>(     (int16_t)round(m_weights(i,j,k,l).real()*SCALE),
-						      -1 * (int16_t)round(m_weights(i,j,k,l).imag()*SCALE));
-	  }
-#endif
 
   //LOG_DEBUG(formatString("m_weights16 contiguous storage? %s", (m_weights16.isStorageContiguous()?"yes":"no")));
   LOG_DEBUG(formatString("sizeof(m_weights16) = %d", m_weights16.size()*sizeof(int16_t)));
@@ -657,9 +651,9 @@ void BeamServerTask::send_weights()
 
   // select all BLPS, no subarraying
   sw.blpmask.reset();
-  for (int i = 0; i < GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i); i++) sw.blpmask.set(i);
+  for (int i = 0; i < m_n_blps; i++) sw.blpmask.set(i);
 
-  sw.weights().resize(COMPUTE_INTERVAL, GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i), MEPHeader::N_BEAMLETS, MEPHeader::N_POL);
+  sw.weights().resize(COMPUTE_INTERVAL, m_n_blps, MEPHeader::N_BEAMLETS, MEPHeader::N_POL);
   sw.weights() = m_weights16;
 
   m_rspdriver.send(sw);
@@ -691,7 +685,7 @@ void BeamServerTask::send_sbselection()
 
   // select all BLPS, no subarraying
   ss.blpmask.reset();
-  for (int i = 0; i < GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i); i++) ss.blpmask.set(i);
+  for (int i = 0; i < m_n_blps; i++) ss.blpmask.set(i);
 
   //
   // Always allocate the array as if all beamlets were
@@ -744,7 +738,7 @@ void BeamServerTask::send_rcusettings()
 
   // select all BLPS, no subarraying
   rcu.rcumask.reset();
-  for (int i = 0; i < GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL; i++)
+  for (int i = 0; i < m_n_blps * MEPHeader::N_POL; i++)
   {
     rcu.rcumask.set(i);
   }
@@ -784,8 +778,18 @@ int main(int argc, char** argv)
     cerr << "Failed to load configuration files: " << e.text() << endl;
     exit(EXIT_FAILURE);
   }
+
+  int n_blps = GET_CONFIG("BeamServer.N_BLPS", i);
+  if (n_blps <= 0 || n_blps > GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i))
+  {
+    LOG_FATAL(formatString("Error: BeamServer.N_BLPS(%d) less or equal zero or greater than RS.N_RSPBOARDS(%d) * RS.N_BLPS(%d)",
+			   n_blps,
+			   GET_CONFIG("RS.N_RSPBOARDS", i),
+			   GET_CONFIG("RS.N_BLPS", i)));
+    exit(EXIT_FAILURE);
+  }
   
-  BeamServerTask abs("BeamServer");
+  BeamServerTask abs("BeamServer", n_blps);
 
   abs.start(); // make initial transition
 
