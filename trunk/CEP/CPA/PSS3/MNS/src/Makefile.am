@@ -65,7 +65,8 @@ MeqStatUVW.cc					\
 MeqStoredParmPolc.cc				\
 MeqWsrtInt.cc					\
 MeqWsrtPoint.cc					\
-ParmTable.cc					
+ParmTable.cc					\
+PerfProfile.cc
 
 #EXTRA_DIST		=			\
 #Beam.m						\
