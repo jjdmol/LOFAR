@@ -27,6 +27,7 @@
 
 #include <Common/KeyValueMap.h>
 #include <tinyCEP/WorkHolder.h>
+#include <DH_RSPSync.h>
 
 namespace LOFAR
 {
@@ -35,14 +36,20 @@ namespace LOFAR
   public:
 
     explicit WH_RSP(const string& name, 
-                    const KeyValueMap kvm);
+                    const KeyValueMap kvm,
+		    const bool isSyncMaster = false);
     virtual ~WH_RSP();
     
     static WorkHolder* construct(const string& name, 
-                                 const KeyValueMap kvm);
+                                 const KeyValueMap kvm,
+				 const bool isSyncMaster = false);
     virtual WH_RSP* make(const string& name);
 
     virtual void process();
+
+    /// set delay of this WorkHolder
+    void setDelay(const DH_RSPSync::syncStamp_t newDelay);
+
   private:
     /// forbid copy constructor
     WH_RSP (const WH_RSP&);
@@ -52,12 +59,21 @@ namespace LOFAR
     int itsNpackets;
     int itsPolarisations;
     int itsNbeamlets;
-    int itsNoutputs;
+    int itsNCorrOutputs;
+    int itsNRSPOutputs;
     int itsSzEPAheader;
     int itsSzEPApacket;
 
     KeyValueMap itsKVM;
+
+    // for synchronisation
+    bool itsIsSyncMaster; // Am I the one that sends the sync packets?
+    DH_RSPSync::syncStamp_t itsNextStamp;
+    DH_RSPSync::syncStamp_t itsDelay;    
   };
+
+  inline void WH_RSP::setDelay(const DH_RSPSync::syncStamp_t newDelay)
+    { itsDelay = newDelay; }
 
 } // namespace LOFAR
 

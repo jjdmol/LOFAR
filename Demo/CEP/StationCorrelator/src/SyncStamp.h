@@ -33,6 +33,10 @@ namespace LOFAR
 
     /// set the Stamp
     void setStamp(const int seqId, const int blockId);
+    /// get seqId
+    const int getSeqId () const;
+    /// get blockId
+    const int getBlockId () const;
 
     /// the blockId restarts at zero at some point. Check if we are there yet
     void checkOverflow();
@@ -52,8 +56,14 @@ namespace LOFAR
 
   inline void SyncStamp::setStamp(const int seqId, const int blockId)
     { itsSeqId = seqId; itsBlockId = blockId; checkOverflow(); };
+  inline const int SyncStamp::getSeqId () const
+    { return itsSeqId; }
+  inline const int SyncStamp::getBlockId () const
+    { return itsBlockId; }
+
   inline void SyncStamp::increment(const int value)
     { itsBlockId += value; checkOverflow(); };
+
   inline void SyncStamp::checkOverflow()
     { if (itsBlockId > MAX_BLOCK_ID) {itsSeqId++; itsBlockId = 0;};}
 
@@ -63,11 +73,13 @@ namespace LOFAR
       checkOverflow();
       itsSeqId += other.itsSeqId;
     }
+
   inline void SyncStamp::operator ++ (int dummy)
     { 
       itsBlockId ++;
       checkOverflow();
     }
+
   inline bool SyncStamp::operator > (SyncStamp& other)
     { 
       if (itsSeqId > other.itsSeqId) return true;
@@ -75,6 +87,7 @@ namespace LOFAR
       if (itsBlockId > other.itsBlockId) return true;
       return false;
     }
+
   inline bool SyncStamp::operator < (SyncStamp& other)
     { 
       if (itsSeqId < other.itsSeqId) return true;
@@ -82,6 +95,7 @@ namespace LOFAR
       if (itsBlockId < other.itsBlockId) return true;
       return false;
     }
+
   inline bool SyncStamp::operator == (SyncStamp& other)
     { 
       return ((itsSeqId == other.itsSeqId) && (itsBlockId == other.itsBlockId));

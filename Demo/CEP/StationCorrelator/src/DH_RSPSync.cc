@@ -38,13 +38,15 @@ DataHolder* DH_RSPSync::clone() const
 
 void DH_RSPSync::preprocess()
 {
-  addField("syncStamp", BlobField<syncStamp_t>(1));
+  // this could be done nicer, but it works for now because SyncStamp doesn't contain
+  // any pointers
+  addField("syncStamp", BlobField<char>(1, sizeof(SyncStamp)));
   createDataBlock();
 }
 
 void DH_RSPSync::fillDataPointers() {
-  itsSyncStamp = getData<syncStamp_t> ("syncStamp");
-  *itsSyncStamp = 0;
+  itsSyncStamp = (SyncStamp*)getData<char> ("syncStamp");
+  itsSyncStamp->setStamp(0, 0);
 }
 
 }
