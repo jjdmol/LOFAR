@@ -63,12 +63,12 @@ public:
   void setID(int id);
   int getWorkOrderID();
   void setWorkOrderID(int id);
-  float getRAValue(int sourceNo);
-  void setRAValue(int sourceNo, float val);
-  float getDECValue(int sourceNo);
-  void setDECValue(int sourceNo, float val);
-  float getStokesIValue(int sourceNo);
-  void setStokesIValue(int sourceNo, float val);
+  double getRAValue(int sourceNo);
+  void setRAValue(int sourceNo, double val);
+  double getDECValue(int sourceNo);
+  void setDECValue(int sourceNo, double val);
+  double getStokesIValue(int sourceNo);
+  void setStokesIValue(int sourceNo, double val);
   int getIterationNo();
   void setIterationNo(int no);
   Quality* getQuality();
@@ -86,9 +86,9 @@ protected:
     int itsWOID;                       // ID of the corresponding WorkOrder
 /*     vector<string> itsParamNames;      // Names of parameters */
 /*     vector<double> itsParamValues;     // Values of parameters */
-    float itsRAValues[10];              // Array containing RA.CPx values
-    float itsDECValues[10];             // Array containing DEC.CPx values
-    float itsStokesIValues[10];         // Array containing StokesI.CPx values
+    double itsRAValues[10];              // Array containing RA.CPx values
+    double itsDECValues[10];             // Array containing DEC.CPx values
+    double itsStokesIValues[10];         // Array containing StokesI.CPx values
     int itsIteration;                   // Its iteration
     Quality itsQuality;                 // Its solution quality
 
@@ -119,22 +119,22 @@ inline int DH_Solution::getWorkOrderID()
 inline void DH_Solution::setWorkOrderID(int id)
 { itsDataPacket.itsWOID = id; }
 
-inline float DH_Solution::getRAValue(int sourceNo)
+inline double DH_Solution::getRAValue(int sourceNo)
 { return itsDataPacket.itsRAValues[sourceNo-1]; }
 
-inline void DH_Solution::setRAValue(int sourceNo, float val)
+inline void DH_Solution::setRAValue(int sourceNo, double val)
 { itsDataPacket.itsRAValues[sourceNo-1] = val; }
 
-inline float DH_Solution::getDECValue(int sourceNo)
+inline double DH_Solution::getDECValue(int sourceNo)
 { return itsDataPacket.itsDECValues[sourceNo-1]; }
 
-inline void DH_Solution::setDECValue(int sourceNo, float val)
+inline void DH_Solution::setDECValue(int sourceNo, double val)
 { itsDataPacket.itsDECValues[sourceNo-1] = val; }
 
-inline float DH_Solution::getStokesIValue(int sourceNo)
+inline double DH_Solution::getStokesIValue(int sourceNo)
 { return itsDataPacket.itsStokesIValues[sourceNo-1]; }
 
-inline void DH_Solution::setStokesIValue(int sourceNo, float val)
+inline void DH_Solution::setStokesIValue(int sourceNo, double val)
 { itsDataPacket.itsStokesIValues[sourceNo-1] = val; }
 
 inline int DH_Solution::getIterationNo()

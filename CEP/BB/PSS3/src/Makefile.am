@@ -11,8 +11,10 @@ Quality.h					\
 Strategy.h					\
 StrategyImpl.h					\
 SI_Peeling.h					\
+SI_Simple.h					\
+SI_WaterCal.h					\
 MeqCalibraterImpl.h				\
-Calibrator.h					
+CalibratorOld.h					
 
 BlackBoardDemo_SOURCES  	= $(DOCHDRS)		\
 Simulate.cc						\
@@ -26,8 +28,10 @@ Quality.cc						\
 Strategy.cc						\
 StrategyImpl.cc						\
 SI_Peeling.cc						\
+SI_Simple.cc						\
+SI_WaterCal.cc		   			        \
 MeqCalibraterImpl.cc					\
-Calibrator.cc						
+CalibratorOld.cc						
 
 BlackBoardDemo_DEPENDENCIES = $(LOFAR_DEPEND)
 

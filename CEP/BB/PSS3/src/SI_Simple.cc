@@ -1,4 +1,4 @@
-//#  SI_Peeling.cc:  The peeling calibration strategy
+//#  SI_Simple.cc:  The peeling calibration strategy
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,34 +20,32 @@
 //#
 //#  $Id$
 
-#include <PSS3/SI_Peeling.h>
+#include <PSS3/SI_Simple.h>
 #include <Common/Debug.h>
 #include <PSS3/CalibratorOld.h>
 
-SI_Peeling::SI_Peeling(CalibratorOld* cal, int argSize, char* args)
+SI_Simple::SI_Simple(CalibratorOld* cal, int argSize, char* args)
   : StrategyImpl(),
     itsCal(cal),
     itsCurIter(-1),
     itsFirstCall(true)
 {
-  AssertStr(argSize == sizeof(Peeling_data), "Incorrect argument list");
-  SI_Peeling::Peeling_data* pData = (SI_Peeling::Peeling_data*)args;
-  itsNIter = pData->nIter;
-  itsNSources = pData->nSources;
-  itsStartSource = pData->startSource;
-  itsCurSource = itsStartSource;
-  itsTimeInterval = pData->timeInterval;
-  TRACER1("Creating Peeling strategy implementation with " 
+  AssertStr(argSize == sizeof(Simple_data), "Incorrect argument list");
+  SI_Simple::Simple_data* sData = (SI_Simple::Simple_data*)args;
+  itsNIter = sData->nIter;
+  itsNSources = sData->nSources;
+  itsTimeInterval = sData->timeInterval;
+  TRACER1("Creating Simple strategy implementation with " 
 	  << "number of iterations = " << itsNIter << ", "
 	  << "number of sources = " << itsNSources << ", "
 	  << " time interval = " << itsTimeInterval);
 
 }
 
-SI_Peeling::~SI_Peeling()
+SI_Simple::~SI_Simple()
 {}
 
-bool SI_Peeling::execute(vector<string>& parmNames, 
+bool SI_Simple::execute(vector<string>& parmNames, 
 			 vector<string>& resultParmNames,
 			 vector<double>& resultParmValues,
 			 Quality& resultQuality,
@@ -60,14 +58,23 @@ bool SI_Peeling::execute(vector<string>& parmNames,
   {
     itsCal->Initialize();
     itsCal->ShowSettings();
-    for (unsigned int i=0; i < parmNames.size(); i++)      // Add all parms
-    { 
-      itsCal->addSolvableParm(parmNames[i], itsCurSource);
+
+    for (int srcNo = 1; srcNo <= itsNSources; srcNo++)
+    {
+      for (unsigned int i=0; i < parmNames.size(); i++)      // Add all parms
+      { 
+	itsCal->addSolvableParm(parmNames[i], srcNo);
+	TRACER1("Adding Parameter " << parmNames[i] << " for source " << srcNo);
+      }
     }
     itsCal->commitSolvableParms();
 
     itsCal->clearPeelSources();
-    itsCal->addPeelSource(itsCurSource);
+    for (int srcNo = 1; srcNo <= itsNSources; srcNo++)
+    {
+      itsCal->addPeelSource(srcNo);
+      TRACER1("Adding peel (predict) source no: " << srcNo);
+    }
     itsCal->commitPeelSourcesAndMasks();
 
     itsCal->resetTimeIntervalIterator();
@@ -80,45 +87,25 @@ bool SI_Peeling::execute(vector<string>& parmNames,
   TRACER1("Next iteration: " << itsCurIter+1);
   if (++itsCurIter >= itsNIter)          // Next iteration
   {                                      // Finished with all iterations
+    //  itsCal->SubtractOptimizedSources();
+    itsCal->CommitOptimizedParameters(); // Write to parmTable
+
     TRACER1("Next interval");
     if (itsCal->advanceTimeIntervalIterator() == false) // Next time interval
     {                                    // Finished with all time intervals
-      TRACER1("Next source: " << itsCurSource+1);
-     if (++itsCurSource >= itsStartSource+itsNSources)  // Next source
-      {
-	itsCurIter = -1;
-	itsCurSource = itsStartSource;
-	itsFirstCall = true;
-	return false;                    // Finished with all sources
-      }
-      else
-      {
-	itsCal->clearSolvableParms();
-	for (unsigned int i=0; i < parmNames.size(); i++) // Add all parms
-	{ 
-	  itsCal->addSolvableParm(parmNames[i], itsCurSource);
-	}
-	itsCal->commitSolvableParms();
-	//itsCal->clearPeelSources(); ///Temporary!!!!
-	itsCal->addPeelSource(itsCurSource);
-	itsCal->commitPeelSourcesAndMasks();
-
-	itsCal->resetTimeIntervalIterator();
-	itsCal->advanceTimeIntervalIterator();
-	TRACER1("Next interval");
-      }
+      itsCurIter = -1;
+      itsFirstCall = true;
+      return false;       
     }
     itsCurIter = 0;                      // Reset iterator
   }
 
   // The actual solve
-  TRACER1("Solve for source = " << itsCurSource << " of " << itsNSources 
+  TRACER1("Solve for " << itsNSources <<" sources, " 
        << " iteration = " << itsCurIter << " of " << itsNIter);
  
   itsCal->Run(resultParmNames, resultParmValues, resultQuality);
 
-  //  itsCal->SubtractOptimizedSources();
-  itsCal->CommitOptimizedParameters(); // Write to parmTable
   resultIterNo = itsCurIter;
   return true;
 }

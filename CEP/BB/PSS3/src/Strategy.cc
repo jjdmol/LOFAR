@@ -23,22 +23,28 @@
 #include <PSS3/Strategy.h>
 #include <Common/Debug.h>
 #include <PSS3/SI_Peeling.h>
+#include <PSS3/SI_Simple.h>
+#include <PSS3/SI_WaterCal.h>
 
-Strategy::Strategy(int strategyNo, Calibrator* cal, 
+Strategy::Strategy(int strategyNo, CalibratorOld* cal, 
 		   int varArgSize, char* varArgs)
 {
   AssertStr(cal!=0, "Calibrator pointer is 0");
   switch (strategyNo) 
   {
-  case 1:                                        // Peeling
+  case 1:                                        // Simple
+    TRACER3("Creating simple strategyImpl");
+    itsImpl = new SI_Simple(cal, varArgSize, varArgs);
+    break;    
+  case 2:                                        // Peeling
     TRACER3("Creating peeling strategyImpl");
     itsImpl = new SI_Peeling(cal, varArgSize, varArgs);
     break;
-  case 2:                                        // Ripple Tree
-    TRACER3("Creating ripple tree strategyImpl");
-    // Code must be added
+  case 3:                                        // WaterCal
+    TRACER3("Creating WaterCal strategyImpl");
+    itsImpl = new SI_WaterCal(cal, varArgSize, varArgs);
     break;
-  case 3:                                        // Classic
+  case 4:                                        // Classic
     TRACER3("Creating classic strategyImpl");
     // Code must be added
     break;
@@ -71,6 +77,22 @@ bool Strategy::execute(vector<string>& parmNames,
   else
   {
     TRACER2("No strategy implementation; cannot execute.");
+    return false;
+  }
+}
+
+bool Strategy::useParms(const vector<string>& pNames,
+			const vector<double>& pValues,
+			const vector<int>& srcNumbers)
+{
+  if (itsImpl->getType() == "WaterCal")
+  {
+    itsImpl->useParms(pNames, pValues, srcNumbers);
+    return true;
+  }
+  else
+  {
+    TRACER1("Strategy does not support the useParms() method");
     return false;
   }
 }

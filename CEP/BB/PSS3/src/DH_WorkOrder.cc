@@ -27,6 +27,7 @@
 #include "PSS3/DH_WorkOrder.h"
 #include <Common/Debug.h>
 #include <sstream>
+#include <unistd.h> 
 
 using namespace LOFAR;
 
@@ -133,21 +134,23 @@ bool DH_WorkOrder::RetrieveFromDatabase(int, int, char*, int)
     // Construct workorder query in table BBWorkOrders
     std::ostringstream q1;
 
-    q1 << "SELECT * FROM BBWorkOrders WHERE "
+    q1 << "SELECT * FROM BBWorkOrders WHERE "      // Look for own name and general workOrders
        << "status = 0 AND "
-       << "kstype = 'PSS3' " << " ORDER BY woid ;";
+       << "kstype = 'KS' OR " 
+       << "kstype = '" << getName() << "' ORDER BY kstype DESC, woid ASC;";      
 
     TRACER1("DH_WorkOrder::RetrieveFromDatabase <<< WorkOrder QUERY: " << q1.str ());
 
+    resWO = PQexec (DH_Postgresql::theirConnection, (q1.str ()).c_str ());
     // Block until a packet appears in the table
-    do
+    while (PQntuples (resWO) == 0)
     {
-      cerr << '.';
+      cout << ".";
+      //     usleep(1000);
       resWO = PQexec (DH_Postgresql::theirConnection, (q1.str ()).c_str ());
-	  
       AssertStr (PQresultStatus (resWO) == PGRES_TUPLES_OK,
-		 "DH_Postgressql::Retrieve (); Select query failed.")
-    } while (PQntuples (resWO) == 0);
+		 "DH_Postgressql::Retrieve (); Select query failed.");
+    }
 
     int identifier = atoi(PQgetvalue(resWO, 0, 0));    
 

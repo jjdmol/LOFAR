@@ -1,4 +1,4 @@
-//#  SI_Peeling.h: The peeling calibration strategy
+//#  SI_WaterCal.h: A 'WaterCal' calibration strategy
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,8 +20,8 @@
 //#
 //#  $Id$
 
-#ifndef PSS3_SI_PEELING_H
-#define PSS3_SI_PEELING_H
+#ifndef PSS3_SI_WATERCAL_H
+#define PSS3_SI_WATERCAL_H
 
 #include <lofar_config.h>
 
@@ -31,25 +31,23 @@
 
 //# Forward Declarations
 
-// This is a class which implements the peeling strategy.
-// This strategy solves for a number of sources. It starts with solving all 
-// parameters of one source (all iterations and intervals) and then moves 
-// on to the next source.
+// This is a class which implements the WaterCal strategy.
+// This strategy solves all parameters for a source and can take into 
+// account a parameters found for another source
 
-class SI_Peeling : public StrategyImpl
+class SI_WaterCal : public StrategyImpl
 {
 public:
 
- typedef struct {       // Struct containing data specific for peeling strategy
-   int    nIter;
-   int    nSources;
-   int    startSource;
+ typedef struct {       // Struct containing data specific
+   int    nIter;        // for WaterCal strategy
+   int    sourceNo;
    double timeInterval;
- }Peeling_data;
+ }WaterCal_data;
 
-  SI_Peeling(CalibratorOld* cal, int argSize, char* args);
+  SI_WaterCal(CalibratorOld* cal, int argSize, char* args);
 
-  virtual ~SI_Peeling();
+  virtual ~SI_WaterCal();
 
   /// Execute the strategy
   virtual bool execute(vector<string>& parmNames,      // Parameters for which
@@ -58,26 +56,30 @@ public:
 		       vector<double>& resultParmValues, // Solved parameter values
 		       Quality& resultQuality,        // Fitness of solution
 		       int& resultIterNo);           // Source number of solution
-    
+
+  void useParms (const vector<string>& parmNames,
+		 const vector<double>& parmValues,
+		 const vector<int>& srcNumbers);     // Use these parameters
+                                                     // in the predict
   /// Get strategy type
   virtual string getType() const;
 
  private:
-  SI_Peeling(const SI_Peeling&);
-  SI_Peeling& operator=(const SI_Peeling&);
+  SI_WaterCal(const SI_WaterCal&);
+  SI_WaterCal& operator=(const SI_WaterCal&);
 
   CalibratorOld*    itsCal;             // The calibrator
   int            itsNIter;           // Number of iterations
-  int            itsNSources;        // Number of sources for which to solve
   double         itsTimeInterval;    // Time interval for which to solve
   int            itsCurIter;         // The current iteration
-  int            itsStartSource;     // Start source number
-  int            itsCurSource;       // The current source
-  bool           itsFirstCall;
+  int            itsSourceNo;        // The current source
+  bool           itsInitialized;     // Has initialization taken place?
+  vector<int>    itsExtraPeelSrcs;   // Source numbers of start solutions
+                                     // Have to predict for these sources
+  bool           itsFirstCall;       // Has execute been called?
 };
 
-inline string SI_Peeling::getType() const
-{ return "Peeling"; }
-
+inline string SI_WaterCal::getType() const
+{ return "WaterCal"; }
 
 #endif

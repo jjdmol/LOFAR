@@ -46,14 +46,17 @@ int main (int argc, const char** argv)
 #endif
   try {
     BlackBoardDemo simulator;
+
+//     // Set trace level.
+    Debug::initLevels (argc, argv);
+
     simulator.setarg (argc, argv);
 
     simulator.baseDefine();
     simulator.baseRun(1);
     simulator.baseQuit();
 
-//     // Set trace level.
-//     Debug::initLevels (argc, argv);
+
 //     try {
 //       LOFAR::SimulatorParse::parse (simulator);
 //     }

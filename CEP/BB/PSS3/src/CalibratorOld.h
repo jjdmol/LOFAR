@@ -138,6 +138,8 @@ public:
   // model), commits the parameters to the internal storage of MeqCalImpl.
   void CommitOptimizedParameters (void);
 
+  // Save all parameters to internal storage of MeqCalImpl.
+  void commitAllSolvableParameters (void);
 
   void getParmValues (vector<string>& names,
 		      vector<double>& values);
