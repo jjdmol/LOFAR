@@ -37,7 +37,10 @@ four1.h						\
 realft.h					\
 Simul2XML.h					\
 Lock.h						\
-CyclicBuffer.h
+CyclicBuffer.h					\
+DH_Database.h					\
+PO_DH_Database.h				\
+TH_Database.h
 
 lib_LTLIBRARIES 	= libcepframe.la
 
@@ -75,7 +78,10 @@ WorkHolder.cc					\
 four1.cc					\
 matlabmex.cc					\
 realft.cc					\
-Simul2XML.cc
+Simul2XML.cc					\
+DH_Database.cc					\
+PO_DH_Database.cc				\
+TH_Database.cc
 
 EXTRA_DIST = assay
 
