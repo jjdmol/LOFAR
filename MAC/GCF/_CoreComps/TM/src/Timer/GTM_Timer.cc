@@ -24,11 +24,14 @@
 #include <GCF/GCF_RawPort.h>
 #include <GCF/GCF_TMProtocols.h>
 
+// for gettimeofday
+#include <sys/time.h>
+
 GTMTimer::GTMTimer(GCFRawPort& port, 
 		   unsigned long id,
                    unsigned long timeVal, 
                    unsigned long intervalTime, 
-                   const void* arg) :
+                   void* arg) :
   _port(port), _id(id), _time(timeVal),
   _timeLeft(timeVal), 
   _intervalTime(intervalTime), 
@@ -44,9 +47,12 @@ void GTMTimer::decreaseTime(unsigned long microSec)
   }
   else
   {
+    struct timeval now;
+    (void)gettimeofday(&now, NULL);
+
     GCFTimerEvent te;
-    te.sec = _time / 1000000;
-    te.usec = _time - (te.sec * 1000000);
+    te.sec = now.tv_sec;
+    te.usec = now.tv_usec;
     te.id = _id;
     te.arg = _arg;
     

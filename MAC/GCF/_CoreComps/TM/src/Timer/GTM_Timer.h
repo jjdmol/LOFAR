@@ -40,10 +40,10 @@ class GTMTimer
 	      unsigned long id,
               unsigned long timeVal, 
               unsigned long intervalTime = 0, 
-              const void* arg = 0);
+              void* arg = 0);
     virtual ~GTMTimer () {};
     inline unsigned long getTime () const {return _time;}
-    inline const void* getTimerArg () const {return _arg;}
+    inline void* getTimerArg () const {return _arg;}
     inline bool hasInterval () const { return _intervalTime > 0;}
     inline GCFRawPort& getPort () const {return _port;}
     inline bool isElapsed () const {return _elapsed;}
@@ -63,7 +63,7 @@ class GTMTimer
     unsigned long   _time;
     unsigned long   _timeLeft;
     unsigned long   _intervalTime;
-    const void*     _arg;
+    void*     _arg; // this pointer should NEVER be modified by the GTMTimer class!!
     bool  _elapsed;
     bool  _canceled;
 };

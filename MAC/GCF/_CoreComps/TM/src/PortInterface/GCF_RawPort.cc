@@ -151,8 +151,8 @@ GCFEvent::TResult GCFRawPort::dispatch(GCFEvent& event)
 }
 
 long GCFRawPort::setTimer(long delay_sec, long delay_usec,
-			long interval_sec, long interval_usec,
-			const void* arg)
+			  long interval_sec, long interval_usec,
+			  void* arg)
 {
   return GTMTimerHandler::instance()->setTimer(*this, 
           (unsigned long) (delay_sec * 1000000 + delay_usec), 
@@ -161,8 +161,8 @@ long GCFRawPort::setTimer(long delay_sec, long delay_usec,
 }
 
 long GCFRawPort::setTimer(double delay_seconds, 
-			double interval_seconds,
-			const void* arg)
+			  double interval_seconds,
+			  void* arg)
 {
   return GTMTimerHandler::instance()->setTimer(*this, 
          (unsigned long) (delay_seconds * 1000000.0), 
@@ -170,7 +170,7 @@ long GCFRawPort::setTimer(double delay_seconds,
          arg);
 }
 
-int GCFRawPort::cancelTimer(long timerid, const void **arg)
+int GCFRawPort::cancelTimer(long timerid, void **arg)
 {
   return GTMTimerHandler::instance()->cancelTimer(timerid, arg);
 }

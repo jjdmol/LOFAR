@@ -95,9 +95,9 @@ void GTMTimerHandler::saveDateTime()
 
 
 unsigned long GTMTimerHandler::setTimer(GCFRawPort& port, 
-                       unsigned long delay_seconds, 
-                       unsigned long interval_seconds,
-                       const void*  arg)
+					unsigned long delay_seconds, 
+					unsigned long interval_seconds,
+					void*  arg)
 {
   unsigned long timerid(0);
   unsigned long foundTimerID(1);
@@ -124,7 +124,7 @@ unsigned long GTMTimerHandler::setTimer(GCFRawPort& port,
   return timerid;
 }
 
-int GTMTimerHandler::cancelTimer(unsigned long timerid, const void** arg)
+int GTMTimerHandler::cancelTimer(unsigned long timerid, void** arg)
 {
   int result(0);
   GTMTimer* pCurTimer(0);
