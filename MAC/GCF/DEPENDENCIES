@@ -1,5 +1,5 @@
 Compiler version:
-Default compiler of RedHat 8 installation (gccc3.x)
+Default compiler of RedHat 9 installation (gccc3.x)
 
 EXTERNAL PACKAGES:
 PVSS II 3.0.1
@@ -14,5 +14,6 @@ PVSS II 3.0.1
 	- add all permanent	DP instances by means of the PARA module of PVSSII
 	- now the started project is ready for GCF
 			
-LCS/Common
+LCS/Common (CVS TAG: Common_v1-0)
+autoconf_share (CVS TAG: autoconf_v1-0)
 log4cplus (see LCS/Common)
