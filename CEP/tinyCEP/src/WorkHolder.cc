@@ -48,7 +48,7 @@ WorkHolder::WorkHolder (int inputs, int outputs,
   itsFirstProcessCall (true)
 {
   TRACER2("WorkHolder constructor");
-  itsDataManager = new DataManager(inputs, outputs);
+  itsDataManager = new BaseDataManager(inputs, outputs);
 }
 
 WorkHolder::WorkHolder (const WorkHolder& that)
