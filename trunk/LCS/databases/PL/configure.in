@@ -58,11 +58,11 @@ lofar_DOCXX
 lofar_PACKAGE(LCS/Common)
 # Need explicit /usr, because /usr/local/lib/libodbc.so is broken on dop48
 lofar_EXTERNAL(odbc,1,sql.h,,"/usr")
-lofar_EXTERNAL(boost,1,boost/shared_ptr.hpp,"",$HOME/linux/usr/local)
+lofar_EXTERNAL(boost,1,boost/shared_ptr.hpp,"")
 lofar_EXTERNAL(dtl,1,dtl/DTL.h)
 #lofar_EXTERNAL(cppunit,0,cppunit/Test.h,,$HOME/linux/usr/local/+pkg/+comp)
 #lofar_EXTERNAL(cxxtest,0,cxxtest/SelfTest.h,"",$HOME/linux/usr/local)
-lofar_EXTERNAL(loki,1,loki/LokiTypeInfo.h,,$HOME/linux/usr/local)
+lofar_EXTERNAL(loki,1,loki/LokiTypeInfo.h,"")
 
 dnl
 dnl Output Makefiles
