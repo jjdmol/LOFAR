@@ -7,27 +7,20 @@
 
 #include "parser/selfparse.h"
 
-int partnum = 0;
-
-char * branch = ("start");
-unsigned int subBranch = (0);
-    // int yylex(YYSTYPE*);
-
-int topLevel  = 1; /* true that is */
- unsigned int level = 0;
-int topScript = 1; /* first token indicates script */
-
-int report(char * s);
-
-char * calculateBrancheNumber();
+    /* <todo> Not all three of these are needed. Did I choose ok? </todo> */
+    //int topLevel  = 1; /* true that is, if we have a toplevel to deal with */
+   unsigned int level = 0; /* look at the "control" produktion rules for explanation */
+    //int topScript = 1; /* first token indicates script */
 
 %}
 
 %debug
 %defines
     //%destructor
-    //%locations
+%locations
+%pure-parser
 %verbose
+
 
 %union {
       long int number;
@@ -42,6 +35,8 @@ char * calculateBrancheNumber();
 }
 
 %token <branchId> BRANCH
+%token <branchId> REF
+%token <branchId> REFBRANCH
 %token <number> NUMBER
 %token <real> REAL
 %token LBRACE
@@ -69,8 +64,6 @@ char * calculateBrancheNumber();
 %token <dimension> FIELD
 %token <dimension> BASELINE
 
-%pure-parser
-
 %start script
 
 %type <block> script part_block parts part control_block control
@@ -94,8 +87,6 @@ char * calculateBrancheNumber();
 
 %type <dimension> dimension
 
-%defines
-
 %left NEG     /* negation--unary minus */
 
 %left MINUSSIGN
@@ -112,14 +103,16 @@ script :
           saveScript("callibrate_observation", $2);
        }
        | topbranch {
+       /*
+         It doesn't matter whether this is a branch or a ref,
+         the numbering should continue.
+       */
           branch = $1;
-          topScript = 0;
        }
        definition_part {
           printf("\nbranch-parsed:\n%s\ndefinition-part:\n%s\nend of parsed branch\n",$1,$3);
           saveScript($1, $3);
        }
-       | { selfparseerror(" no script found "); }
        ;
 
 part : defining_part {$$ = $1; }
@@ -172,6 +165,16 @@ definition_part : commandname control_block {
 ;
 
 referencing_part : PART_TOKEN BRANCH {
+   printf("referencing part parsed: %s", $2);
+   $$ = (char*)(malloc(strlen($2) + 8));
+   sprintf($$,"part %s\n", $2);
+}
+                 | PART_TOKEN REF {
+   printf("referencing part parsed: %s", $2);
+   $$ = (char*)(malloc(strlen($2) + 8));
+   sprintf($$,"part %s\n", $2);
+}
+                 | PART_TOKEN REFBRANCH {
    printf("referencing part parsed: %s", $2);
    $$ = (char*)(malloc(strlen($2) + 8));
    sprintf($$,"part %s\n", $2);
@@ -241,11 +244,11 @@ control_block : LBRACE control RBRACE {
               | LBRACE RBRACE { $$ = (char *)(malloc(4)); sprintf($$,"{}\n"); }
               ;
 
-control : COMPETITION { level ++; } part_block  {
+control : COMPETITION { level ++; /* step in deeper */} part_block  {
    $$ = (char *)(malloc(strlen($3) + 3 + 11));/*strlen("competition")*/
    sprintf($$,"competition %s\n",$3);
    free($3);
-   level--;
+   level--; /* step back */
 }
         | COLLABORATION { level ++; } part_block {
    $$ = (char*)(malloc(strlen($3) + 3 + 13));/*strlen("collaboration")*/
@@ -272,66 +275,7 @@ dimension : DIMENSION { $$ = $1; }
           ;
 
 topbranch: BRANCH { $$ = $1;}
-      ;
+         | REF { $$ = $1;}
+         | REFBRANCH { $$ = $1;}
+         ;
 %%
-
-int report(char * s)
-{
-       // if (debug_or_verbose)
-   return fprintf(stdout,s);
-}
-
-char * calculateBrancheNumber()
-{
-   static char * branchNumber = 0;
-   char subBstr[6];
-   int rc = snprintf(subBstr, 5, "%u", subBranch++);
-   if( rc > 5 )
-   {
-      report ("branch number truncated");
-   }
-   if(branchNumber)
-   {
-      free(branchNumber);
-   }
-       //   branchNumber = new char [ strlen(branch) + strlen(subBstr) + 2];
-   branchNumber = (char *)(malloc( strlen(branch) + strlen(subBstr) + 2));
-
-   sprintf(branchNumber,"%s.%s",branch,subBstr);
-
-   return branchNumber;
-}
-
-
-void saveSubScript(char * bn, char * command, char * options , char * block)
-{
-   FILE * of;
-   char * ext = ".selfcal";
-   char * ofname = (char*)(malloc(strlen(bn) + strlen(ext) + 1));
-   strcpy(ofname,bn);
-   strcat(ofname,ext);
-   of = fopen(ofname,"w");
-   if(options)
-   {
-      fprintf(of,"%s %s %s %s", bn, command, options, block);
-   }
-   else
-   {
-      fprintf(of,"%s %s %s", bn, command, block);
-   }
-   fclose(of);
-   free(ofname);
-}
-
-void saveScript( char * command, char * block)
-{
-   FILE * of;
-   char * ext = ".out";
-   char * ofname = (char*)(malloc(strlen(filename) + strlen(ext) + 1));
-   strcpy(ofname,filename);
-   strcat(ofname,ext);
-   of = fopen(ofname,"w");
-   fprintf(of,"%s %s", command, block);
-   fclose(of);
-   free(ofname);
-}
