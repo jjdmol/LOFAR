@@ -65,6 +65,7 @@ public:
 
   // Display all the settings for the MeqCalImpl object on cout.
   void ShowSettings (void);
+  void showCurrentParms (void);
 
   // Clear the CalibratorOld list of solvable parameters.
   // Note: This method does not affect the MeqCalImpl object. 
