@@ -17,12 +17,12 @@
 UVPDisplayArea::UVPDisplayArea(QWidget*     parent,
                                unsigned int numColors)
   : QWidget(parent),
-    itsColormap(numColors),
-    itsXAxis(1, 0, "X", "arbitrary"),
-    itsYAxis(1, 0, "Y", "arbitrary"),
     itsComplexColormap(numColors*numColors),
     itsRealIndex(numColors),
-    itsImagIndex(numColors)
+    itsImagIndex(numColors),
+    itsColormap(numColors),
+    itsXAxis(1, 0, "X", "arbitrary"),
+    itsYAxis(1, 0, "Y", "arbitrary")
 {
   // Uncomment: Don't blank window before repainting
   setBackgroundMode(NoBackground);
@@ -87,7 +87,7 @@ void UVPDisplayArea::initColormap(double slope,
 
   // The complex color table;
   for(unsigned int i = 0; i < numColors; i++) {
-    double green  = (max_color-min_color)/2 + slope*(double(i)-center);
+    double green  = fabs(min_color + slope*(double(i)-numColors/2));
     if(green < min_color) {
       green = min_color;
     }
@@ -97,7 +97,7 @@ void UVPDisplayArea::initColormap(double slope,
     int Green = int(green + 0.5);
 
     for(unsigned int r = 0; r < numColors; r++) {
-      double red  = (max_color-min_color)/2 + slope*(double(r)-center);
+      double red  = fabs(min_color + slope*(double(r)-numColors/2));
       if(red < min_color) {
         red = min_color;
       }

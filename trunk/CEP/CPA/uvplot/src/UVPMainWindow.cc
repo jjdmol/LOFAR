@@ -187,14 +187,6 @@ void UVPMainWindow::drawDataSet()
   itsCanvas->setChannels(itsNumberOfChannels); // Number of channels. Clears buffer.
   unsigned int spectraAdded = 0;
 
-#if(DEBUG_MODE)
-  TRACER2(__PRETTY_FUNCTION__);
-  TRACER2("Number of atoms: " << itsDataSet.size());
-  TRACER2(ant1 << "-" << ant2);
-  TRACER2(itsDataSet.upper_bound(FromHeader)->first.itsAntenna1 << "-" <<itsDataSet.upper_bound(FromHeader)->first.itsAntenna2 << ": " << itsDataSet.upper_bound(FromHeader)->first.itsTime);
-  TRACER2(itsDataSet.upper_bound(ToHeader)->first.itsAntenna1 << "-" <<itsDataSet.upper_bound(ToHeader)->first.itsAntenna2 << ": " << itsDataSet.upper_bound(ToHeader)->first.itsTime);
-#endif
-
   UVPDataSet::iterator EndOfRecords = itsDataSet.upper_bound(ToHeader);
   UVPDataSet::iterator EndOfData = itsDataSet.end();
 
@@ -217,6 +209,7 @@ void UVPMainWindow::drawDataSet()
       UVPSpectrum Spectrum(NumChan, spectraAdded, Values);
       
       itsCanvas->slot_addSpectrum(Spectrum);
+      itsCanvas->slot_addDataAtom(dataAtom);
       spectraAdded++;
       delete[] Values;
     }
