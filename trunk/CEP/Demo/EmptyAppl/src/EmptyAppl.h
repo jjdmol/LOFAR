@@ -1,4 +1,4 @@
-//  EmptyAppl.h: An empty simulator  
+//  EmptyAppl.h: An empty ApplicationHolder  
 //
 //  Copyright (C) 2000, 2002
 //  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -29,20 +29,20 @@
 
 #include <lofar_config.h>
 
-#include <CEPFrame/Simulator.h>
+#include <CEPFrame/ApplicationHolder.h>
 #include <Common/KeyValueMap.h>
 
 /**
-   This is an empty Simulator class   
+   This is an empty ApplicationHolder class   
 */
 
-class EmptyAppl: public LOFAR::Simulator
+class EmptyAppl: public LOFAR::ApplicationHolder
 {
 public:
   EmptyAppl();
   virtual ~EmptyAppl();
 
-  // overloaded methods from the Simulator base class
+  // overloaded methods from the ApplicationHolder base class
   virtual void define(const LOFAR::KeyValueMap& params = LOFAR::KeyValueMap());
   virtual void run(int);
   virtual void dump() const;

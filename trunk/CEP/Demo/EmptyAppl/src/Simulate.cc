@@ -26,10 +26,10 @@
 #include <config.h>
 #endif
 
-#include "CEPFrame/SimulatorParseClass.h"
+#include <tinyCEP/SimulatorParseClass.h>
 #include <Common/lofar_iostream.h>
 #include <Common/Debug.h>
-#include "EmptyAppl/EmptyAppl.h"
+#include <EmptyAppl/EmptyAppl.h>
 #ifdef HAVE_MPI
 #include <mpi.h>
 #endif
