@@ -28,6 +28,37 @@
 # myspp.port=20033
 #
 
+[PML]
+host=localhost
+client.type=TCP   # SAP
+
+[PA]
+host=localhost
+server.port=20040 # MSPP
+server.type=TCP
+
+[PI]
+host=localhost
+server.port=20199 # MSPP
+server.type=TCP
+
+[SS]
+host=localhost
+client.type=TCP
+
+[ST3]
+host=localhost
+server.port=20099
+server.type=TCP
+
+[ST1]
+host=localhost
+client.type=TCP
+
+[ST2]
+host=localhost
+client.type=TCP
+
 [BeamServer]
 host=localhost
 client.type=TCP   # SAP
