@@ -52,7 +52,6 @@ PACKAGE = \
          CEP/CPA/AppAgent/VisAgent \
          CEP/CPA/AppAgent/MSVisAgent \
          CEP/CPA/AppAgent/OctoAgent \
-         CEP/CPA/uvplot \
          CEP/CPA/CAL
 PACKAGES = $(PACKAGE)
 #
