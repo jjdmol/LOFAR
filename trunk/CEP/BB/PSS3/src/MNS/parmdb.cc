@@ -146,9 +146,9 @@ MeqMatrix getArray (const KeyValueMap& kvmap, const std::string& arrName,
   if (value == kvmap.end()) {
     return MeqMatrix (double(defaultValue), 1, 1);
   }
-  vector<double> vec;
+  LOFAR::vector<double> vec;
   if (value->second.dataType() == KeyValue::DTValueVector) {
-    const vector<KeyValue>& vvec = value->second.getVector();
+    const LOFAR::vector<KeyValue>& vvec = value->second.getVector();
     for (uint i=0; i<vvec.size(); i++) {
       vec.push_back (vvec[i].getDouble());
     }
@@ -168,9 +168,9 @@ MeqDomain getDomain (const KeyValueMap& kvmap, const std::string& arrName)
     MeqDomain MDdef (0, 1, 0, 1);
     return MDdef;
   }
-  vector<double> vec;
+  LOFAR::vector<double> vec;
   if (value->second.dataType() == KeyValue::DTValueVector) {
-    const vector<KeyValue>& vvec = value->second.getVector();
+    const LOFAR::vector<KeyValue>& vvec = value->second.getVector();
     for (uint i=0; i<vvec.size(); i++) {
       vec.push_back (vvec[i].getDouble());
     }
@@ -273,7 +273,7 @@ void ShowDef(string name){
 }
 
 void Show(string name, MeqDomain &domain){
-  vector<MeqPolc> VMP = PTR->getPolcs(name, -1, -1, domain);
+  LOFAR::vector<MeqPolc> VMP = PTR->getPolcs(name, -1, -1, domain);
   for (uint i=0; i<VMP.size(); i++){
     cout<<name<<" : "<<endl;
     cout<<" coeff        : "<<VMP[i].getCoeff()<<endl;
@@ -287,7 +287,7 @@ void Show(string name, MeqDomain &domain){
 }
 
 void ShowAllSources() {
-  vector<string> names = PTR->getSources();
+  LOFAR::vector<string> names = PTR->getSources();
   cout << "names: "<<names<<endl;
   MeqDomain MD;
   for (uint i=0; i<names.size(); i++) {
@@ -295,7 +295,7 @@ void ShowAllSources() {
   }
 }
 void ShowAllDefSources() {
-  vector<string> names = PTR->getSources();
+  LOFAR::vector<string> names = PTR->getSources();
   cout << "names: "<<names<<endl;
   for (uint i=0; i<names.size(); i++) {
     ShowDef(names[i]);
