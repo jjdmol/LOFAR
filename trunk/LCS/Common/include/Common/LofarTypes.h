@@ -33,14 +33,14 @@
 
 //# Define some unsigned only if not already done in /usr/include/sys/types.h
 #if (HAVE_QT)
-#include <qglobal.h>
+# include <qglobal.h>
 #else
 using LOFAR::TYPES::uchar;
-#if !defined(_SYS_TYPES_H) || !defined(__USE_MISC)
+# if !defined(_SYS_TYPES_H) || !defined(__USE_MISC)
 using LOFAR::TYPES::ushort;
 using LOFAR::TYPES::uint;
 using LOFAR::TYPES::ulong;
-#endif
+# endif
 #endif // QT
 using LOFAR::TYPES::longlong;
 using LOFAR::TYPES::ulonglong;
