@@ -142,6 +142,7 @@ void AH_BackEnd::init() {
             << "sec" << endl;
     cn++;
   }
+  cout << "--> All correlators have connected" << endl;
 }
 
 void AH_BackEnd::run(int nsteps) {
