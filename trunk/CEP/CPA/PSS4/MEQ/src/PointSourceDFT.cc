@@ -31,44 +31,29 @@ const HIID child_labels[] = { AidSt|AidDFT|1,AidSt|AidDFT|2,AidN };
 const int num_children = sizeof(child_labels)/sizeof(child_labels[0]);
 
 PointSourceDFT::PointSourceDFT()
-: Function(num_children,child_labels)
+: CompoundFunction(num_children,child_labels)
 {}
 
 PointSourceDFT::~PointSourceDFT()
 {}
 
-int PointSourceDFT::getResult (Result::Ref &resref, 
-                               const std::vector<Result::Ref> &childres,
-                               const Request &request, bool newreq)
+void PointSourceDFT::evalResult (std::vector<Vells> &res,
+                            const std::vector<const Vells*> &values,
+                            const Cells &cells)
 {
-  const int expect_nvs[] = {2,2,1};
-  // Check that child results are all OK (no fails, expected # of vellsets per child)
-  string fails;
-  for( int i=0; i<num_children; i++ )
-  {
-    int nvs = childres[i]->numVellSets();
-    if( nvs != expect_nvs[i] )
-      Debug::appendf(fails,"child %s: expecting %d VellsSets, got %d;",
-          child_labels[i].toString().c_str(),expect_nvs[i],nvs);
-    if( childres[i]->hasFails() )
-      Debug::appendf(fails,"child %s: has fails",child_labels[i].toString().c_str());
-  }
-  if( !fails.empty() )
-    NodeThrow1(fails);
-  // Get F0 and DF of S1 and S2.
-  const Vells& vs1f0 = childres[0]->vellSet(0).getValue();
-  const Vells& vs1df = childres[0]->vellSet(1).getValue();
-  const Vells& vs2f0 = childres[1]->vellSet(0).getValue();
-  const Vells& vs2df = childres[1]->vellSet(1).getValue();
-  const Vells& vn    = childres[2]->vellSet(0).getValue();
-  // For the time being we only support 1 frequency range.
-  const Cells& cells = request.cells();
-  Assert (cells.numSegments(FREQ) == 1);
-  // Allocate a 1-plane result.
-  Result &result = resref <<= new Result(1,request);
-  // create a vellset for each plane.
-  VellSet &vellset = result.setNewVellSet(0,0,0);
-
+  // Assume that frequency is the first axis.
+  Assert(FREQ==0);
+  // for now, only work with 1 frequency segment (2 values from each station's DFT)
+  int nval = values.size();
+  Assert(nval == 5);
+  #define vs1f0 (*values[0])
+  #define vs1df (*values[1])
+  #define vs2f0 (*values[2])
+  #define vs2df (*values[3])
+  #define vn    (*values[4])
+  // output is a single value
+  #define vres  (res[0])
+  
   // It is tried to compute the DFT as efficient as possible.
   // Therefore the baseline contribution is split into its antenna parts.
   // dft = exp(2i.pi(ul+vm+wn)) / n                 (with u,v,w in wavelengths)
@@ -108,14 +93,11 @@ int PointSourceDFT::getResult (Result::Ref &resref,
   const complex<double>* deltar = vs2df.complexStorage();
   const double* tmpnk = vn.realStorage();
 
-  // Assume that frequency is the first axis.
-  Assert(FREQ==0);
-
   // Set the type and shape of the result value.
   int ntime = cells.ncells(TIME);
   int nfreq = cells.ncells(FREQ);
-  LoMat_dcomplex& vells = vellset.setComplex (nfreq, ntime);
-  dcomplex* resdata = vells.data();
+  vres = Vells(dcomplex(0),nfreq,ntime,false);
+  dcomplex* resdata = vres.complexStorage();
 
   // vn can be a scalar or an array (in time axis), so set its step to 0
   // if it is a scalar.
@@ -133,6 +115,30 @@ int PointSourceDFT::getResult (Result::Ref &resref,
       }
     }
   }
+}
+
+int PointSourceDFT::getResult (Result::Ref &resref, 
+                               const std::vector<Result::Ref> &childres,
+                               const Request &request, bool newreq)
+{
+  const int expect_nvs[]        = {2,2,1};
+  const int expect_integrated[] = {-1,-1,0};
+  
+  // Check that child results are all OK (no fails, expected # of vellsets per child)
+  Assert(int(childres.size()) == num_children);
+  vector<const VellSet *> child_vs(5);
+  if( checkChildResults(resref,child_vs,childres,expect_nvs,
+        expect_integrated) == RES_FAIL )
+    return RES_FAIL;
+  
+  // allocate proper output result (integrated=false??)
+  const Cells &cells = childres[0]->cells();
+  Result &result = resref <<= new Result(1,false);
+  result.setCells(cells);
+  
+  // fill it
+  computeValues(result,child_vs);
+  
   return 0;
 }
 

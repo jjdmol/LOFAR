@@ -100,17 +100,16 @@ int Condeq::getResult (Result::Ref &resref,
     // collect vector of pointers to children, and vector
     // of pointers to main value
     vector<const Vells*> values(nrch);
-    int npertsets = 0;
+    int npertsets;
     for( int i=0; i<nrch; i++ )
     {
       child_res[i] = &(child_result[i]->vellSet(iplane));
       const Vells &val = child_res[i]->getValue();
       FailWhen(val.isArray() && val.shape() != res_shape,"mismatch in child result shapes");
       values[i] = &(child_res[i]->getValue());
-      npertsets = std::max(npertsets,child_res[i]->numPertSets());
     }
     // Find all spids from the children.
-    vector<int> spids = Function::findSpids(child_res);
+    vector<int> spids = Function::findSpids(npertsets,child_res);
     // allocate new result object with given number of spids, add to set
     // note that result always has 1 perturbation set (i.e., double-perts
     // are collapsed into a single pert)

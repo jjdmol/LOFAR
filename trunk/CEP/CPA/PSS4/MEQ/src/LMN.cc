@@ -1,4 +1,4 @@
-//# LMN.cc: Calculate station LMN from station position and phase center
+//# LMN.cc: Calculate source LMN from source position and phase center
 //#
 //# Copyright (C) 2003
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -35,9 +35,11 @@ const int num_children = sizeof(child_labels)/sizeof(child_labels[0]);
 
 const HIID FDomain = AidDomain;
 
+using Debug::ssprintf;
+
 //##ModelId=400E535502D1
 LMN::LMN()
-: Function(num_children,child_labels)
+: CompoundFunction(num_children,child_labels)
 {
 }
 
@@ -45,40 +47,46 @@ LMN::LMN()
 LMN::~LMN()
 {}
 
+void LMN::evalResult (std::vector<Vells> &res,const std::vector<const Vells*> &values,const Cells &)
+{
+  // phase center pos
+  #define vra0   (*(values[0]))
+  #define vdec0  (*(values[1]))
+  // source pos
+  #define vra    (*(values[2]))
+  #define vdec   (*(values[3]))
+  // outputs
+  #define L res[0]
+  #define M res[1]
+  #define N res[2]
+  
+  L = cos(vdec) * sin(vra-vra0);
+  L.makeNonTemp(); // just in case
+  M = sin(vdec) * cos(vdec0) - cos(vdec) * sin(vdec0) * cos(vra-vra0);
+  M.makeNonTemp();
+  N = sqrt(1 - sqr(L) - sqr(M));
+  N.makeNonTemp();
+}
+
 //##ModelId=400E535502D6
 int LMN::getResult (Result::Ref &resref, 
                     const std::vector<Result::Ref> &childres,
                     const Request &request,bool newreq)
 {
-  // Check that child results are all OK (no fails, 1 vellset per child)
-  string fails;
-  for( int i=0; i<num_children; i++ )
-  {
-    int nvs = childres[i]->numVellSets();
-    if( nvs != 1 )
-      Debug::appendf(fails,"child %s: expecting single VellsSet, got %d;",
-          child_labels[i].toString().c_str(),nvs);
-    if( childres[i]->hasFails() )
-      Debug::appendf(fails,"child %s: has fails",child_labels[i].toString().c_str());
-  }
-  if( !fails.empty() )
-    NodeThrow1(fails);
-  // Get RA and DEC of phase center and source.
-  const Vells& vra   = childres[0]->vellSet(0).getValue();
-  const Vells& vdec  = childres[1]->vellSet(0).getValue();
-  const Vells& vras  = childres[2]->vellSet(0).getValue();
-  const Vells& vdecs = childres[3]->vellSet(0).getValue();
-  // Allocate a 3-plane result for L, M, and N.
-  Result &result = resref <<= new Result(3,request);
-  // create a vellset for each plane
-  VellSet &lvellset = result.setNewVellSet(0,0,0);
-  VellSet &mvellset = result.setNewVellSet(1,0,0);
-  VellSet &nvellset = result.setNewVellSet(2,0,0);
-  lvellset.setValue (cos(vdecs) * sin(vras-vra));
-  mvellset.setValue (sin(vdecs) * cos(vdec) -
-		     cos(vdecs) * sin(vdec) * cos(vras-vra));
-  nvellset.setValue (sqrt(1 - sqr(lvellset.getValue()) -
-			  sqr(mvellset.getValue())));
+  const int expect_nvs[]        = {1,1,1,1};
+  const int expect_integrated[] = {0,0,0,0};
+  Assert(int(childres.size()) == num_children);
+  vector<const VellSet *> child_vs(4);
+  // Check that child results are all OK (no fails, expected # of vellsets per child)
+  if( checkChildResults(resref,child_vs,childres,expect_nvs,
+        expect_integrated) == RES_FAIL )
+    return RES_FAIL;
+  
+  // allocate proper output result (integrated=false)
+  Result &result = resref <<= new Result(3,false);
+  result.setCells(childres[0]->cells());
+  // fill it
+  computeValues(result,child_vs);
   return 0;
 }
 

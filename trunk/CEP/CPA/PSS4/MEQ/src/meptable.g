@@ -188,7 +188,7 @@ const meq.meptable := function (name,create=F)
 #   - if it does, checks that row number matches;
 #   - on match, allows an overwrite. No match (incl. rownr<0) -- fails.
     const public.put := function (parmname,
-                            freqrange=[1,1e20], timerange=[1,1e20], 
+                            freqrange=[0,1e20], timerange=[0,1e20], 
                             values=1, perturbation=1e-6, weight=1,
                             freq0=0., time0=4.56e9, 
                             freqscale=1e6, timescale=1,

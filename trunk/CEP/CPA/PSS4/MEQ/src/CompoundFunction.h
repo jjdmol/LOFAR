@@ -1,4 +1,4 @@
-//# LMN.h: Calculate station LMN from station position and phase center
+//# CompoundFunction.h: Base class for an compound expression node (i.e. with multiple-planed result)
 //#
 //# Copyright (C) 2003
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,35 +20,38 @@
 //#
 //# $Id$
 
-#ifndef MEQ_LMN_H
-#define MEQ_LMN_H
+#ifndef MEQ_COMPOUNDFUNCTION_H
+#define MEQ_COMPOUNDFUNCTION_H
     
-#include <MEQ/CompoundFunction.h>
+#include <MEQ/Function.h>
 
-#pragma aidgroup Meq
-#pragma types #Meq::LMN
+namespace Meq {
 
-namespace Meq {    
-
-class LMN : public CompoundFunction
+//##ModelId=3F86886E01A8
+class CompoundFunction : public Function
 {
 public:
-  LMN();
+    //##ModelId=3F86886E03C5
+  CompoundFunction (int nchildren=-1,const HIID *labels = 0,int nmandatory=0);
 
-  virtual ~LMN();
-
-  virtual TypeId objectType() const
-    { return TpMeqLMN; }
-
-  // Get the result for the given request.
-  virtual int getResult (Result::Ref &resref, 
-                         const std::vector<Result::Ref> &childres,
-                         const Request &req,bool newreq);
+    //##ModelId=3F86886E03D1
+  virtual ~CompoundFunction();
 
 protected:
+    
   virtual void evalResult (std::vector<Vells> &res,
           const std::vector<const Vells*> &values,
-          const Cells &);
+          const Cells &cells) 
+    = 0;
+
+  int checkChildResults (Result::Ref &resref, 
+                         std::vector<const VellSet *> &child_vs,
+                         const std::vector<Result::Ref> &childres,
+                         const int expect_nvs[],
+                         const int expect_integrated[]);
+
+  void computeValues ( Result &result,const std::vector<const VellSet *> &chvs );
+    
 };
 
 } // namespace Meq
