@@ -44,7 +44,7 @@
 //
 #define INIT_LOGGER(filename) \
 	getDebugContext().setLevel(20); \
-	const char*	myargv[2] =  { argv[0], filename }; \
+	const char*	myargv[2] =  { "", filename }; \
 	Debug::initLevels (2, myargv, true)
 
 //# Note: 'watch' functionality not available
