@@ -86,11 +86,11 @@ BeamServerTask::BeamServerTask(string name)
 
   // initialize antenna positions
   Range all = Range::all();
-  m_pos(0, all, all) = 0.0;
-  m_pos(0, all, 0)   = -50.0;
+  m_pos(0, 0, all) = 0.0;
+  m_pos(0, 0, 0)   = -50.0;
 
-  m_pos(1, all, all) = 0.0;
-  m_pos(1, all, 0)   = 50.0;
+  m_pos(0, 1, all) = 0.0;
+  m_pos(0, 1, 0)   = 50.0;
 
   // initialize weight matrix
   m_weights   = complex<W_TYPE>(0,0);
@@ -102,7 +102,7 @@ BeamServerTask::~BeamServerTask()
 
 bool BeamServerTask::isEnabled()
 {
-  return client.isConnected() && board.isConnected();
+  return client.isConnected() && board.isConnected() && m_stats.isReady();
 }
 
 GCFEvent::TResult BeamServerTask::initial(GCFEvent& e, GCFPortInterface& port)
