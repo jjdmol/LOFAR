@@ -84,11 +84,13 @@ void AH_Correlator::init() {
   int     buf = 0;
 //   cout << "Correlator " << myrank << " wait for token " << endl;
   if (myrank > 0) MPI_Recv(&buf, 1, MPI_INT, myrank-1, 645327, MPI_COMM_WORLD, &status);
+  cout << "Correlator " << myrank << " has received token. Time =  " << MPI_Wtime() << endl;
 //   cout << "Correlator " << myrank << " start baseprocess " << endl;
 #endif
   itsWH->basePreprocess();
 #ifdef HAVE_MPI
 //   cout << "Correlator " << myrank << " send token " << endl;
+  cout << "Correlator " << myrank << " is going to send token. Time =  " << MPI_Wtime() << endl;
   if (myrank < maxrank-1) MPI_Send(&buf, 1, MPI_INT, myrank+1, 645327, MPI_COMM_WORLD);
 //   cout << "Correlator " << myrank << " ended baseprocess " << endl;
   TH_MPI::synchroniseAllProcesses();
