@@ -38,11 +38,11 @@ public:
   //# Constructors
   // From one or two ints (note for gnu use)
   IComplex8();
-  IComplex8 (int8 re);
-  IComplex8 (int8 re, int8 im);
+  IComplex8 (char re);
+  IComplex8 (char re, char im);
 
-  int8 re() const;
-  int8 im() const;
+  char re() const;
+  char im() const;
 
   bool operator== (const IComplex8& that) const;
   bool operator== (const IComplex16& that) const;
@@ -58,8 +58,8 @@ public:
   void mulconj    (const IComplex8&);
 
 private:
-  int8 itsre;
-  int8 itsim;
+  char itsre;
+  char itsim;
 };
 
 
@@ -284,18 +284,18 @@ inline IComplex8::IComplex8()
 : itsre(0),
   itsim(0)
 {}
-inline IComplex8::IComplex8 (int8 re)
+inline IComplex8::IComplex8 (char re)
 : itsre(re),
   itsim(0)
 {}
-inline IComplex8::IComplex8 (int8 re, int8 im)
+inline IComplex8::IComplex8 (char re, char im)
 : itsre(re),
   itsim(im)
 {}
 
-inline int8 IComplex8::re() const
+inline char IComplex8::re() const
   { return itsre; }
-inline int8 IComplex8::im() const
+inline char IComplex8::im() const
   { return itsim; }
 
 inline bool IComplex8::operator== (const IComplex8& that) const
@@ -418,7 +418,7 @@ inline void IComplex32::operator-= (const IComplex32& that)
   { itsre -= that.re(); itsim -= that.im(); }
 
 inline void IComplex8::operator*= (const IComplex8& that)
-  { int8 re = itsre * that.re() - itsim * that.im();
+  { char re = itsre * that.re() - itsim * that.im();
       itsim = itsre * that.im() + itsim * that.re(); itsre = re; }
 inline void IComplex16::operator*= (const IComplex8& that)
   { int16 re = itsre * that.re() - itsim * that.im();
@@ -462,7 +462,7 @@ inline void IComplex32::operator/= (const IComplex32& that)
        itsim = (itsim * that.re() - itsre * that.im()) / n; itsre = re; }
 
 inline void IComplex8::mulconj (const IComplex8& that)
-  { int8 re = itsre * that.re() + itsim * that.im();
+  { char re = itsre * that.re() + itsim * that.im();
       itsim = itsim * that.re() - itsre * that.im(); itsre = re; }
 inline void IComplex16::mulconj (const IComplex8& that)
   { int16 re = itsre * that.re() + itsim * that.im();
