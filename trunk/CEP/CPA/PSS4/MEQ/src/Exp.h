@@ -23,7 +23,7 @@
 #ifndef MEQ_EXP_H
 #define MEQ_EXP_H
     
-#include <MEQ/Function.h>
+#include <MEQ/Function1.h>
 
 #pragma aidgroup MEQ
 #pragma types #MEQ::Exp
@@ -31,7 +31,7 @@
 namespace MEQ {    
 
 
-class Exp : public Function
+class Exp : public Function1
 {
 public:
   Exp();

@@ -23,7 +23,7 @@
 #ifndef MEQ_SUBTRACT_H
 #define MEQ_SUBTRACT_H
     
-#include <MEQ/Function.h>
+#include <MEQ/Function2.h>
 
 #pragma aidgroup MEQ
 #pragma types #MEQ::Subtract
@@ -31,7 +31,7 @@
 namespace MEQ {    
 
 
-class Subtract : public Function
+class Subtract : public Function2
 {
 public:
   Subtract();

@@ -35,7 +35,6 @@ Subtract::~Subtract()
 Vells Subtract::evaluate (const Request&,
 			  const vector<Vells*>& values)
 {
-  Assert (values.size() == 2);
   return *(values[0]) - *(values[1]);
 }
 

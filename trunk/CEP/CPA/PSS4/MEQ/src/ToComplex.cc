@@ -34,7 +34,6 @@ ToComplex::~ToComplex()
 Vells ToComplex::evaluate (const Request&,
 			   const vector<Vells*>& values)
 {
-  Assert (values.size() == 2);
   return tocomplex(*(values[0]), *(values[1]));
 }
 

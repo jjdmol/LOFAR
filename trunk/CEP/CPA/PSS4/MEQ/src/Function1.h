@@ -1,4 +1,4 @@
-//# Conj.h: Take conjugate of a node
+//# Function1.h: Abstract class for a function with 1 child
 //#
 //# Copyright (C) 2003
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,27 +20,24 @@
 //#
 //# $Id$
 
-#ifndef MEQ_CONJ_H
-#define MEQ_CONJ_H
+#ifndef MEQ_FUNCTION1_H
+#define MEQ_FUNCTION1_H
     
-#include <MEQ/Function1.h>
+#include <MEQ/Function.h>
 
-#pragma aidgroup MEQ
-#pragma types #MEQ::Conj
 
 namespace MEQ {    
 
 
-class Conj : public Function1
+class Function1 : public Function
 {
 public:
-  Conj();
+  Function1();
 
-  virtual ~Conj();
+  virtual ~Function1();
 
-  // Evaluate the value for the given request.
-  virtual Vells evaluate (const Request&,
-			  const vector<Vells*>& values);
+  // Check if 1 child has been given.
+  virtual void checkChildren();
 };
 
 

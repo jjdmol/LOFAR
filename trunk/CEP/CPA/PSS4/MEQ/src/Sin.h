@@ -23,7 +23,7 @@
 #ifndef MEQ_SIN_H
 #define MEQ_SIN_H
     
-#include <MEQ/Function.h>
+#include <MEQ/Function1.h>
 
 #pragma aidgroup MEQ
 #pragma types #MEQ::Sin
@@ -31,7 +31,7 @@
 namespace MEQ {    
 
 
-class Sin : public Function
+class Sin : public Function1
 {
 public:
   Sin();

@@ -23,7 +23,7 @@
 #ifndef MEQ_DIVIDE_H
 #define MEQ_DIVIDE_H
     
-#include <MEQ/Function.h>
+#include <MEQ/Function2.h>
 
 #pragma aidgroup MEQ
 #pragma types #MEQ::Divide
@@ -31,7 +31,7 @@
 namespace MEQ {    
 
 
-class Divide : public Function
+class Divide : public Function2
 {
 public:
   Divide();

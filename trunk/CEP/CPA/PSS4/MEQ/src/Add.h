@@ -36,8 +36,6 @@ class Add : public Function
 public:
   Add();
 
-  Add (Function* ch1, Function* ch2);
-
   virtual ~Add();
 
   // Evaluate the value for the given request.

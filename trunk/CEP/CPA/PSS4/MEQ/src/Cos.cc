@@ -28,11 +28,6 @@ namespace MEQ {
 Cos::Cos()
 {}
 
-Cos::Cos (Function* ch)
-{
-  children().push_back (ch);
-}
-
 Cos::~Cos()
 {}
 

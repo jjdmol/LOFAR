@@ -23,7 +23,7 @@
 #ifndef MEQ_TOCOMPLEX_H
 #define MEQ_TOCOMPLEX_H
     
-#include <MEQ/Function.h>
+#include <MEQ/Function2.h>
 
 #pragma aidgroup MEQ
 #pragma types #MEQ::ToComplex
@@ -31,7 +31,7 @@
 namespace MEQ {    
 
 
-class ToComplex : public Function
+class ToComplex : public Function2
 {
 public:
   ToComplex();
