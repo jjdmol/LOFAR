@@ -6,7 +6,7 @@
 int main (int argc, char** argv)
 {
   try {
-    RingSim simulator;
+    SeqSim simulator;
     simulator.setarg (argc, argv);
 #ifdef NOMPI_
         cout << endl;
@@ -18,7 +18,7 @@ int main (int argc, char** argv)
 	try {
 	  SimulatorParse::parse (simulator);
 	} catch (SimulatorParseError x) {
-	  cout << x.getMesg() << endl;
+	  //cout << x.getMesg() << endl;
 	}
 	cout << endl;
 	cout << "It was a pleasure working with you!" << endl << endl;

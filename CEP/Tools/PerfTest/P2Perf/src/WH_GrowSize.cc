@@ -21,14 +21,20 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.1  2001/08/16 15:14:23  wierenga
+//  Implement GrowSize DH and WH for performance measurements. Timing code still needs to be added.
+//
 //
 //////////////////////////////////////////////////////////////////////
 
-#include "WH_GrowSize.h"
+#include <stdio.h>             // for sprintf
+#include <math.h>
+
 #include "Step.h"
 #include "firewalls.h"
-#include <stdio.h>             // for sprintf
 
+#include "WH_GrowSize.h"
+#include "StopWatch.h"
 
 WH_GrowSize::WH_GrowSize (const string& name, bool first,
 			unsigned int nin, unsigned int nout,
@@ -59,6 +65,8 @@ WH_GrowSize::WH_GrowSize (const string& name, bool first,
     sprintf (str, "%d", i);
     itsOutHolders[i] = new DH_GrowSize (std::string("out_") + str, nbuffer);
   }
+
+  iteration = 0;
 }
 
 
@@ -77,50 +85,27 @@ WH_GrowSize::~WH_GrowSize()
 void WH_GrowSize::process()
 {
   static bool firstCall = true;
-  cout << getName() << endl;
 
-#if 0
-  // for all inputs take each input element and put the square
-  // of the input element in the output element
-  for (int i=0; i<getInputs(); i++)
+  if (!strncmp("GrowSize[1]", getName().c_str(), 11))
   {
-    DH_GrowSize::BufferType* inbuf  = itsInHolders[i]->getBuffer();
-    DH_GrowSize::BufferType* outbuf = itsOutHolders[i]->getBuffer();
-
-    cout << "Processing Data! "
-	 << inbuf[0] << ',' << inbuf[itsBufLength-1] << "   --->  ";
-
-    for (int j=0; j<itsBufLength; j++)
+    if (iteration > 0)
     {
-      if (itsFirst) {
-	inbuf[j] = j + 1;
-      }
-      outbuf[j] = inbuf[j] + 1; //* 2; //inbuf[j];
-
-      cout << endl << "outbuf[" << j << "] = " << outbuf[j] << endl;
+      watch.stop();
+      printf("%d %g\n",
+	     itsInHolders[0]->getDataPacketSize(),
+	     (itsInHolders[0]->getDataPacketSize() / (1024.0 * 1024.0)) / watch.elapsed());
     }
-
-    cout << outbuf[0] << ',' << outbuf[itsBufLength-1] << endl;
+    watch.start();
   }
-#else
+
   if (false == firstCall)
   {
-    // for all inputs take each input element and put the square
-    // of the input element in the output element
-    for (int i=0; i<getInputs(); i++)
+    if ((iteration % 5) == 0)
     {
-      DH_GrowSize::BufferType* inbuf  = itsInHolders[i]->getBuffer();
-      DH_GrowSize::BufferType* outbuf = itsOutHolders[i]->getBuffer();
-      
-      if (itsInHolders[i]->increaseSize(2))
+      for (int i=0; i<getInputs(); i++)
       {
-	cout << "Increasing size for itsInHolders " << i << " to "
-	     << itsInHolders[i]->getDataPacketSize() << endl;
-      }
-      if (itsOutHolders[i]->increaseSize(2))
-      {
-	cout << "Increasing size for itsOutHolders " << i << " to "
-	     << itsOutHolders[i]->getDataPacketSize() << endl;
+	(void)itsInHolders[i]->increaseSize(exp(log(20*1024*1024)/1000));
+	(void)itsOutHolders[i]->increaseSize(exp(log(20*1024*1024)/1000));
       }
     }
   }
@@ -128,7 +113,8 @@ void WH_GrowSize::process()
   {
     firstCall = false;
   }
-#endif
+
+  iteration++;
 }
 
 void WH_GrowSize::dump() const
