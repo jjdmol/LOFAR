@@ -98,39 +98,39 @@ Solver::~Solver()
 //----------------------------------------------------------------------
 bool Solver::nextInterval(double start, double length, bool callReadPolcs)
 {
-  cout << "BBSTest: EndOfInterval" << endl;
+//   cout << "BBSTest: EndOfInterval" << endl;
 
-  // Normally the times are in sequential order, so we can continue searching.
-  // Otherwise start the search at the start.
-  if (start < itsTimes[itsTimeIndex]) {
-    itsTimeIndex = 0;
-  }
-  // Find the time matching the start time.
-  while (itsTimeIndex < itsTimes.size()
-	 && start < itsTimes[itsTimeIndex] - itsIntervals[itsTimeIndex]/2) {
-    ++itsTimeIndex;
-  }
-  // Exit when no more chunks.
-  if (itsTimeIndex >= itsTimes.size()) {
-    return false;
-  }
+//   // Normally the times are in sequential order, so we can continue searching.
+//   // Otherwise start the search at the start.
+//   if (start < itsTimes[itsTimeIndex]) {
+//     itsTimeIndex = 0;
+//   }
+//   // Find the time matching the start time.
+//   while (itsTimeIndex < itsTimes.size()
+// 	 && start < itsTimes[itsTimeIndex] - itsIntervals[itsTimeIndex]/2) {
+//     ++itsTimeIndex;
+//   }
+//   // Exit when no more chunks.
+//   if (itsTimeIndex >= itsTimes.size()) {
+//     return false;
+//   }
   
-  cout << "BBSTest: BeginOfInterval" << endl;
+//   cout << "BBSTest: BeginOfInterval" << endl;
 
-  // Find the end of the interval.
-  double startTime = itsTimes[itsTimeIndex] - itsIntervals[itsTimeIndex]/2;
-  double endTime = start + length;
-  itsNrTimes = 0;
-  while (itsTimeIndex < itsTimes.size()
-	 && endTime <= itsTimes[itsTimeIndex] + itsIntervals[itsTimeIndex]/2) {
-    ++itsTimeIndex;
-    ++itsNrTimes;
-  }
-  endTime = itsTimes[itsTimeIndex-1] + itsIntervals[itsTimeIndex-1]/2;
+//   // Find the end of the interval.
+//   double startTime = itsTimes[itsTimeIndex] - itsIntervals[itsTimeIndex]/2;
+//   double endTime = start + length;
+//   itsNrTimes = 0;
+//   while (itsTimeIndex < itsTimes.size()
+// 	 && endTime <= itsTimes[itsTimeIndex] + itsIntervals[itsTimeIndex]/2) {
+//     ++itsTimeIndex;
+//     ++itsNrTimes;
+//   }
+//   endTime = itsTimes[itsTimeIndex-1] + itsIntervals[itsTimeIndex-1]/2;
   
-  itsSolveDomain = MeqDomain(startTime, endTime,
-			     itsStartFreq, itsEndFreq);
-  return true;
+//   itsSolveDomain = MeqDomain(startTime, endTime,
+// 			     itsStartFreq, itsEndFreq);
+//   return true;
 }
 
 

@@ -71,7 +71,10 @@ public:
 
   /// Data access methods.
   int getWorkOrderID() const;
-  void setWorkOrderID(int id);
+  void setNewWorkOrderID();
+
+  int getStrategyControllerID() const;
+  void setStrategyControllerID(int id);
 
   unsigned int getStatus() const ;
   void setStatus(unsigned int status);
@@ -88,11 +91,18 @@ public:
   bool getUseSVD() const;
   void setUseSVD(bool useSVD);
 
-  void setVarData(const KeyValueMap& msArgs, 
-		  float timeInterval,
+  float getStartTime() const;
+  void setStartTime(float time);
+
+  float getTimeInterval() const;
+  void setTimeInterval(float time);
+
+  bool getCleanUp() const;
+  void setCleanUp(bool clean);
+
+  void setVarData(const KeyValueMap& msArgs,
 		  vector<string>& pNames);
   bool getVarData(KeyValueMap& msArgs,
-		  float& timeInterval,
 		  vector<string>& pNames);
 
   void dump();
@@ -106,12 +116,18 @@ private:
   // Fill the pointers (itsCounter and itsBuffer) to the data in the blob.
   virtual void fillDataPointers();
 
+  void setWorkOrderID(int id);
+
   int*          itsWOID;                    // Unique workorder id
+  int*          itsSCID;                    // ID of sending StrategyController (SC)
   unsigned int* itsStatus;                  // Workorder status
   char*         itsKSType;                  // Knowledge Source type
   unsigned int* itsInitialize;              // Do initialization?
   unsigned int* itsNextInterval;            // Do nextInterval?
   unsigned int* itsUseSVD;                  // UseSVD in solver?
+  float*        itsStartTime;               // Start time of this interval (s)
+  float*        itsTimeInterval;            // Time interval size (s)
+  unsigned int* itsCleanUp;                 // Clean up Solver when finished?
  
   PO_DH_WOSOLVE*    itsPODHWO; 
 
@@ -120,8 +136,17 @@ private:
 inline int DH_WOSolve::getWorkOrderID() const
 { return *itsWOID; }
 
+inline void DH_WOSolve::setNewWorkOrderID()
+{ *itsWOID = *itsWOID + 1; }
+
 inline void DH_WOSolve::setWorkOrderID(int id)
 { *itsWOID = id; }
+
+inline int DH_WOSolve::getStrategyControllerID() const
+{ return *itsSCID; }
+
+inline void DH_WOSolve::setStrategyControllerID(int id)
+{ *itsSCID = id; }
 
 inline unsigned int DH_WOSolve::getStatus() const
 { return *itsStatus; }
@@ -150,6 +175,24 @@ inline bool DH_WOSolve::getUseSVD() const
 inline void DH_WOSolve::setUseSVD(bool useSVD)
 { *itsUseSVD = useSVD; }
 
+inline float DH_WOSolve::getStartTime() const
+{ return *itsStartTime; }
+
+inline void DH_WOSolve::setStartTime(float time)
+{ *itsStartTime = time; }
+
+inline float DH_WOSolve::getTimeInterval() const
+{ return *itsTimeInterval; }
+
+inline void DH_WOSolve::setTimeInterval(float time)
+{ *itsTimeInterval = time; }
+
+inline bool DH_WOSolve::getCleanUp() const
+{ return *itsCleanUp; }
+
+inline void DH_WOSolve::setCleanUp(bool clean)
+{ *itsCleanUp = clean; }
+
 
 // Define the class needed to tell PL that there should be
 // extra fields stored in the database table.
@@ -161,12 +204,16 @@ namespace PL {
       void bindCols (dtl::BoundIOs& cols);                      
       void toDBRep (const DH_WOSolve&);                        
     private:                                                    
-      int itsWOID;                    // Temporarily stored in separate fields
-      unsigned int itsStatus;         // in order to facilitate debugging
-      string itsKSType;
+      int          itsWOID;         // Temporarily stored in separate fields
+      int          itsSCID;         // in order to facilitate debugging
+      unsigned int itsStatus;
+      string       itsKSType;
       unsigned int itsInitialize;
       unsigned int itsNextInterval;
       unsigned int itsUseSVD;
+      float        itsStartTime;
+      float        itsTimeInterval;
+      unsigned int itsCleanUp;
     };   
                                                       
 } // end namespace PL   

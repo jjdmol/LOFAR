@@ -73,6 +73,8 @@ public:
   virtual void dump();
 
 private:
+  typedef list<StrategyController*> ControllerList;
+
   /// Forbid copy constructor.
   WH_Control (const WH_Control&);
 
@@ -82,21 +84,13 @@ private:
   // Private help functions to create strategy controller(s)
   void createStrategyControllers();
 
-  int itsNrKS;        // number of KS available
-  int itsCurrentRun;
-  int itsEventCnt;
-
-  vector<int>  itsStartSols;      // IDs of start solutions
-  unsigned int itsOldestSolIdx;   // Index of the 'oldest' solution
-                                  // in start solution vector.
-
-  static int theirNextWorkOrderID;
-
-  KeyValueMap itsArgs;
-
-  list<StrategyController*> itsControllers;
-  
-  bool itsFirstCall;
+  KeyValueMap              itsArgs;          // Input parameters
+  ControllerList           itsControllers;   // All StrategyControllers   
+  ControllerList::iterator itsCtrlIter;      // Iterator indicating the currently
+                                             // active strategy controller.
+                                             // At the moment each process() call 
+                                             // executes one StrategyController
+  bool                     itsFirstCall;
 
 };
 

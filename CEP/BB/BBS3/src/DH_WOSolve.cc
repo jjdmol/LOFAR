@@ -41,11 +41,15 @@ const unsigned int MaxKSTypeLength = 8;
 DH_WOSolve::DH_WOSolve (const string& name)
   : DH_PL(name, "DH_WOSolve", 1),
     itsWOID            (0),
+    itsSCID            (0),
     itsStatus          (0),
     itsKSType          (0),
     itsInitialize      (0),
     itsNextInterval    (0),
     itsUseSVD          (0),
+    itsStartTime       (0),
+    itsTimeInterval    (0),
+    itsCleanUp         (0),
     itsPODHWO          (0)
 {
   LOG_TRACE_FLOW("DH_WOSolve constructor");
@@ -55,11 +59,15 @@ DH_WOSolve::DH_WOSolve (const string& name)
 DH_WOSolve::DH_WOSolve(const DH_WOSolve& that)
   : DH_PL(that),
     itsWOID            (0),
+    itsSCID            (0),
     itsStatus          (0),
     itsKSType          (0),
     itsInitialize      (0),
     itsNextInterval    (0),
     itsUseSVD          (0),
+    itsStartTime       (0),
+    itsTimeInterval    (0),
+    itsCleanUp         (0),
     itsPODHWO          (0)
 {
   LOG_TRACE_FLOW("DH_WOSolve copy constructor");
@@ -92,11 +100,15 @@ void DH_WOSolve::preprocess()
 {
   // Add the fields to the data definition.
   addField ("WOID", BlobField<int>(1));
+  addField ("SCID", BlobField<int>(1));
   addField ("Status", BlobField<unsigned int>(1));
   addField ("KSType", BlobField<char>(1, MaxKSTypeLength));
   addField ("Initialize", BlobField<unsigned int>(1));
   addField ("NextInterval", BlobField<unsigned int>(1));
   addField ("UseSVD", BlobField<unsigned int>(1));
+  addField ("StartTime", BlobField<float>(1));
+  addField ("TimeInterval", BlobField<float>(1));
+  addField ("CleanUp", BlobField<unsigned int>(1));
 
   // Create the data blob (which calls fillPointers).
   createDataBlock();
@@ -106,32 +118,44 @@ void DH_WOSolve::preprocess()
     itsKSType[k] = 0;
   }
 
-  *itsWOID = -1;
+  *itsWOID = 0;
+  *itsSCID = -1;
   *itsStatus = DH_WOSolve::New;
   *itsInitialize = 0;
   *itsNextInterval = 0;
   *itsUseSVD = 0;
+  *itsStartTime = 0;
+  *itsTimeInterval = 0;
+  *itsCleanUp = 0;
 }
 
 void DH_WOSolve::fillDataPointers()
 {
   // Fill in the pointers.
   itsWOID = getData<int> ("WOID");
+  itsSCID = getData<int> ("SCID");
   itsStatus = getData<unsigned int> ("Status");
   itsKSType = getData<char> ("KSType");
   itsInitialize = getData<unsigned int> ("Initialize");
   itsNextInterval = getData<unsigned int> ("NextInterval");
   itsUseSVD = getData<unsigned int> ("UseSVD");
+  itsStartTime = getData<float> ("StartTime");
+  itsTimeInterval = getData<float> ("TimeInterval");
+  itsCleanUp = getData<unsigned int> ("CleanUp");
 }
 
 void DH_WOSolve::postprocess()
 {
   itsWOID = 0;
+  itsSCID = 0;
   itsStatus = 0;
   itsKSType = 0;
   itsInitialize = 0;
   itsNextInterval = 0;
   itsUseSVD = 0;
+  itsStartTime = 0;
+  itsTimeInterval = 0;
+  itsCleanUp = 0;
 }
 
 void DH_WOSolve::setKSType(const string& ksType)
@@ -143,14 +167,11 @@ void DH_WOSolve::setKSType(const string& ksType)
 }
 
 void DH_WOSolve::setVarData(const KeyValueMap& msArgs,
-			    float timeInterval,
 			    vector<string>& pNames)
 {
   BlobOStream& bos = createExtraBlob();
   // Put strategy arguments into extra blob
   bos << msArgs;
-
-  bos << timeInterval;
 
   // Put parameter names into extra blob
   bos.putStart("names", 1);
@@ -166,7 +187,6 @@ void DH_WOSolve::setVarData(const KeyValueMap& msArgs,
 }
 
 bool DH_WOSolve::getVarData(KeyValueMap& msArgs,
-			    float& timeInterval,
 			    vector<string>& pNames)
 {
   bool found;
@@ -179,8 +199,6 @@ bool DH_WOSolve::getVarData(KeyValueMap& msArgs,
   {
     // Get ms arguments
     bis >> msArgs;
-
-    bis >> timeInterval;
 
     // Get parameter names.
     bis.getStart("names");
@@ -203,16 +221,19 @@ void DH_WOSolve::dump()
 {
   cout << "DH_WOSolve: " << endl;
   cout << "ID = " << getWorkOrderID() << endl;
+  cout << "Controller ID = " << getStrategyControllerID() << endl;
   cout << "Status = " << getStatus() << endl;
   cout << "KS Type = " << getKSType() << endl;
   cout << "Initialize? = " << getInitialize() << endl;
   cout << "NextInterval? = " << getNextInterval() << endl;
   cout << "UseSVD? = " << getUseSVD() << endl;
+  cout << "Start time = " << getStartTime() << endl;
+  cout << "Time interval = " << getTimeInterval() << endl;
+  cout << "Clean up = " << getCleanUp() << endl;
 
   KeyValueMap sArguments;
-  float timeInterval;
   vector<string> pNames;
-  if (getVarData(sArguments, timeInterval, pNames))
+  if (getVarData(sArguments, pNames))
   { 
     cout << "MS name = " << sArguments.getString ("MSName", "notfound") 
 	 << endl;
@@ -229,7 +250,6 @@ void DH_WOSolve::dump()
     cout << "Sky table name = " << sArguments.getString ("skyTableName", "notfound")
 	 << endl;
 
-    cout << "Time interval = " << timeInterval << endl;
     cout << "Number of parameters = "  << pNames.size() << endl;
     
     cout << "Parameter names : " << endl;
@@ -244,11 +264,15 @@ void DH_WOSolve::clearData()
 {
   clearExtraBlob();
   setWorkOrderID(-1);
+  setStrategyControllerID(-1);
   setStatus(DH_WOSolve::New);
   setKSType("");
   setInitialize(true);
   setNextInterval(true);
   setUseSVD(false);
+  setStartTime(0);
+  setTimeInterval(0);
+  setCleanUp(false);
 }
 
 namespace PL {
@@ -257,22 +281,30 @@ void DBRep<DH_WOSolve>::bindCols (dtl::BoundIOs& cols)
 {
   DBRep<DH_PL>::bindCols (cols);
   cols["WOID"] == itsWOID;
+  cols["SCID"] == itsSCID;
   cols["STATUS"] == itsStatus;
   cols["KSTYPE"] == itsKSType;
   cols["INITIALIZE"] == itsInitialize;
   cols["NEXTINTERVAL"] == itsNextInterval;
   cols["USESVD"] == itsUseSVD;
+  cols["STARTTIME"] == itsStartTime;
+  cols["TIMEINTERVAL"] == itsTimeInterval;
+  cols["CLEANUP"] == itsCleanUp;
 }
 
 void DBRep<DH_WOSolve>::toDBRep (const DH_WOSolve& obj)
 {
   DBRep<DH_PL>::toDBRep (obj);
   itsWOID = obj.getWorkOrderID();
+  itsSCID = obj.getStrategyControllerID();
   itsStatus = obj.getStatus();
   itsKSType = obj.getKSType();
   itsInitialize = obj.getInitialize();
   itsNextInterval = obj.getNextInterval();
   itsUseSVD = obj.getUseSVD();
+  itsStartTime = obj.getStartTime();
+  itsTimeInterval = obj.getTimeInterval();
+  itsCleanUp = obj.getCleanUp();
 }
 
 //# Force the instantiation of the templates.

@@ -59,14 +59,17 @@ echo " CREATE TABLE bbs3woprediffer (
        TAG INTEGER, 
        SEQNR BIGINT, 
        DATA TEXT, 
-       WOID INTEGER, 
+       WOID INTEGER,
+       SCID INTEGER, 
        STATUS INTEGER, 
        KSTYPE TEXT, 
        INITIALIZE INTEGER, 
        NEXTINTERVAL INTEGER, 
        FIRSTCHAN INTEGER,
-       LASTCHAN INTEGER, 
-       TIMEINTERVAL INTEGER);" >> sql_create
+       LASTCHAN INTEGER,
+       STARTTIME INTEGER,
+       TIMEINTERVAL INTEGER,
+       CLEANUP INTEGER);" >> sql_create
 echo " CREATE TABLE bbs3wosolver (
        ObjId BIGINT NOT NULL UNIQUE PRIMARY KEY, 
        Owner BIGINT NOT NULL, 
@@ -75,12 +78,16 @@ echo " CREATE TABLE bbs3wosolver (
        TAG INTEGER, 
        SEQNR BIGINT, 
        DATA TEXT, 
-       WOID INTEGER, 
+       WOID INTEGER,
+       SCID INTEGER, 
        STATUS INTEGER, 
        KSTYPE TEXT, 
        INITIALIZE INTEGER, 
        NEXTINTERVAL INTEGER, 
-       USESVD INTEGER);" >> sql_create
+       USESVD INTEGER,
+       STARTTIME INTEGER,
+       TIMEINTERVAL INTEGER,
+       CLEANUP INTEGER);" >> sql_create
 echo "create table bbs3solutions (
       ObjId BIGINT NOT NULL UNIQUE PRIMARY KEY, 
       Owner BIGINT NOT NULL, 
