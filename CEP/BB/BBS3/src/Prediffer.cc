@@ -712,7 +712,7 @@ vector<uint32> Prediffer::setDomain (double fstart, double flength,
   int64 nr2 = nrb*itsNrTimes;
   int64 nrValues = nr1*nr2;
   nr2 = nrb*startIndex;
-  int64 startOffset = nr1*nr2
+  int64 startOffset = nr1*nr2;
   itsDataMap->mapFile(nr1*nr2*sizeof(fcomplex), nrValues*sizeof(fcomplex)); 
   // Map the correct flags subset (this time interval)
   itsFlagsMap->mapFile(startOffset, nrValues); 
