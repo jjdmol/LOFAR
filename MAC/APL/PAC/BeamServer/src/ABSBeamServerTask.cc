@@ -420,10 +420,18 @@ void BeamServerTask::beampointto_action(ABSBeampointtoEvent* pt,
 
   if (beam)
   {
+      time_t pointto_time = pt->time;
+
+      //
+      // If the time is not set, then activate the command
+      // 2 * COMPUTE_INTERVAL seconds from now, because that's how
+      // long it takes the command to flow through the pipeline.
+      //
+      if (0 == pt->time) pointto_time = time(0) + 2 * COMPUTE_INTERVAL;
       if (beam->addPointing(Pointing(Direction(pt->angle1,
 					       pt->angle2,
 					       (Direction::Types)pt->type),
-				     from_time_t(pt->time))) < 0)
+				     from_time_t(pointto_time))) < 0)
       {
 	  LOG_ERROR("beam not allocated");
       }
