@@ -163,7 +163,7 @@ int Solver::getResult (Result::Ref &resref,
   // Use 1 derivative by default, or 2 if specified in request
   int calcDeriv = std::max(request.calcDeriv(),1);
   // The result has 1 plane.
-  Result& result = resref <<= new Result(request, 1);
+  Result& result = resref <<= new Result(1);
   VellSet& vellset = result.setNewVellSet(0);
   DataRecord& metricsRec = result[FMetrics] <<= new DataRecord;
   // Allocate variables needed for the solution.
@@ -437,8 +437,17 @@ void Solver::fillSolution (DataRecord& rec, const vector<int>& spids,
 //##ModelId=400E53550267
 void Solver::setStateImpl (DataRecord& newst,bool initializing)
 {
+  // special case: if parm_group is set but gen_symdep_group isn't,
+  // set it into the record
+  if( newst[FParmGroup].get(itsParmGroup,initializing) )
+  {
+    HIID gen;
+    if( !newst[FGenSymDepGroup].get(gen) )
+      newst[FGenSymDepGroup] = itsParmGroup;
+  }
+  
   Node::setStateImpl(newst,initializing);
-  newst[FParmGroup].get(itsParmGroup,initializing);
+  
   DataRecord *pdef = newst[FDefault].as_wpo<DataRecord>();
   
   // if no default record at init time, create a new one
