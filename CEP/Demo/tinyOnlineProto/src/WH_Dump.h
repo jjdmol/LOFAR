@@ -27,12 +27,10 @@
 
 #include <tinyCEP/WorkHolder.h>
 
-#include <blitz/blitz.h>
-#include <blitz/array.h>
 //#include <Common/Lorrays.h>
 
 // GnuPlot Interface
-#include <tinyOnlineProto/GnuPlotInterface.h>
+// #include <tinyOnlineProto/GnuPlotInterface.h>
 
 namespace LOFAR
 {
@@ -81,10 +79,8 @@ private:
   int itsIndex;
   int itsCounter;
   
-  blitz::Array<std::complex<float>, 1> itsBuffer;
+  //  blitz::Array<std::complex<float>, 1> itsBuffer;
 
-  gnuplot_ctrl* handle;
-  
   int itsRank;
   
 };

@@ -1,4 +1,4 @@
-//# WH_Correlate.h: 
+//# WH_Random.h: 
 //#
 //# Copyright (C) 2000, 2001
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,15 +20,12 @@
 //#
 //# $Id$
 
-#ifndef ONLINEPROTO_WH_CORRELATE_H
-#define ONLINEPROTO_WH_CORRELATE_H
+#ifndef ONLINEPROTO_WH_RANDOM_H
+#define ONLINEPROTO_WH_RANDOM_H
 
 #include <lofar_config.h>
-#include <Common/lofar_complex.h>
 
 #include <tinyCEP/WorkHolder.h>
-#include <tinyOnlineProto/DH_CorrCube.h>
-#include <tinyOnlineProto/DH_Vis.h>
 
 namespace LOFAR
 {
@@ -37,24 +34,28 @@ namespace LOFAR
    TBW
 */
 
-class WH_Correlate: public WorkHolder
+class WH_Random: public WorkHolder
 {
 public:
   /// Construct the work holder and give it a name.
   /// It is possible to specify how many input and output data holders
   /// are created and how many elements there are in the buffer.
   /// The first WorkHolder should have nin=0.
-  explicit WH_Correlate (const string& name,
-			 unsigned int channels);
+  explicit WH_Random (const string& name,
+			 unsigned int nin,
+			 unsigned int nout,
+			 const int FBW);
 
-  virtual ~WH_Correlate();
+  virtual ~WH_Random();
 
   /// Static function to create an object.
   static WorkHolder* construct (const string& name, 
-				unsigned int channels);
+				unsigned int nin,
+				unsigned int nout,
+				const int FBW);
 
   /// Make a fresh copy of the WH object.
-  virtual WH_Correlate* make (const string& name);
+  virtual WH_Random* make (const string& name);
 
   /// Do a process step.
   virtual void process();
@@ -63,31 +64,15 @@ public:
   virtual void dump();
 
 private:
-  static const int itsNelements = NSTATIONS;  // number of stations/inputs
-  static const int itsNitems    = TSIZE;      // number of frequency channels * number of time samples
   /// Forbid copy constructor.
-  WH_Correlate (const WH_Correlate&);
+  WH_Random (const WH_Random&);
 
   /// Forbid assignment.
-  WH_Correlate& operator= (const WH_Correlate&);
-
-  // main correlator routine
-  void correlator_core(complex<float> signal[NSTATIONS][TSIZE], 
-		       complex<float> corr[NSTATIONS][NSTATIONS]);
-
-  // correlator core (unrolled)
-  void correlator_core_unrolled(complex<float> s[NSTATIONS][TSIZE],
-  				complex<float> c[NSTATIONS][NSTATIONS]);
-    
+  WH_Random& operator= (const WH_Random&);
+  
   int itsFBW; // frequency bandwidth of the DH_Beamlet 
 
-  /// The input is assumed to be a matrix of N*M
-  /// N = the number of inputs (either antennas or stations)
-  /// M = the number of discreet samples to integrate over. This may 
-  ///     be frequency channels or time samples.
-  ///     M is defined to be 1000
-
-
+  int itsIntegrationTime;
 };
 
 }
