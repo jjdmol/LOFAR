@@ -28,6 +28,7 @@
 
 //# GCF Includes
 #include <GCF/GCF_Task.h>
+#include <GCF/GCF_Port.h>
 #include <GCF/GCF_Property.h>
 #include <boost/shared_ptr.hpp>
 #include <vector>
@@ -105,13 +106,14 @@ namespace AVT
       std::vector<TTranTarget>::iterator  m_testSequenceIt;
       AVTTest<AVTTestMAC2Task>&           m_tester;
       AVTTestAnswer                       m_answer;
+      GCFPort                             m_timerPort;
       
       GCFProperty     m_propertyLDScommand;
       GCFProperty     m_propertyLDSstatus;
       GCFProperty     m_propBoard1MaintenanceStatus;
       GCFProperty     m_propAP1RCU1MaintenanceStatus;
       GCFProperty     m_propAP1RCU2MaintenanceStatus;
-      GCFProperty     m_propSRG1Frequency;
+      GCFProperty     m_propSRG1Filter;
       GCFProperty     m_propAP1RCU1Status;
       GCFProperty     m_propAP2RCU1Status;
       GCFProperty     m_propAP2RCU2Status;

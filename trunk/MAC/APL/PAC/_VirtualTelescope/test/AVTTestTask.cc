@@ -665,13 +665,13 @@ GCFEvent::TResult AVTTestTask::finished(GCFEvent& event, GCFPortInterface& /*p*/
 
 GCFEvent::TResult AVTTestTask::handleBeamServerEvents(GCFEvent& event, GCFPortInterface& p)
 {
-  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTTestTask(%s)::handleBeamServerEvents (%d)",getName().c_str(),event.signal));
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (event.signal)
   {
     case ABS_BEAMALLOC:
     {
+      LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTTestTask(%s)::handleBeamServerEvents (ABS_BEAMALLOC)",getName().c_str(),event.signal));
       ABSBeamallocAckEvent ack;
       ack.handle=0;
       ack.status=SUCCESS;
@@ -682,6 +682,7 @@ GCFEvent::TResult AVTTestTask::handleBeamServerEvents(GCFEvent& event, GCFPortIn
      
     case ABS_BEAMFREE:
     {
+      LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTTestTask(%s)::handleBeamServerEvents (ABS_BEAMFREE)",getName().c_str(),event.signal));
       ABSBeamfreeAckEvent ack;
       ack.handle=0;
       ack.status=SUCCESS;
@@ -692,6 +693,7 @@ GCFEvent::TResult AVTTestTask::handleBeamServerEvents(GCFEvent& event, GCFPortIn
      
     case ABS_BEAMPOINTTO:
     {
+      LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTTestTask(%s)::handleBeamServerEvents (ABS_BEAMPOINTTO)",getName().c_str(),event.signal));
       m_BEAMPOINTTO_received=true;
       
       ABSBeampointtoEvent* pPointToEvent=static_cast<ABSBeampointtoEvent*>(&event);
@@ -705,6 +707,7 @@ GCFEvent::TResult AVTTestTask::handleBeamServerEvents(GCFEvent& event, GCFPortIn
      
     case ABS_WGSETTINGS:
     {
+      LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTTestTask(%s)::handleBeamServerEvents (ABS_WGSETTINGS)",getName().c_str(),event.signal));
       ABSWgsettingsAckEvent ack;
       ack.status=SUCCESS;
       p.send(ack);
@@ -713,10 +716,12 @@ GCFEvent::TResult AVTTestTask::handleBeamServerEvents(GCFEvent& event, GCFPortIn
     }
     
     case ABS_WGENABLE:
+      LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTTestTask(%s)::handleBeamServerEvents (ABS_WGENABLE)",getName().c_str(),event.signal));
       m_WGENABLE_received=true;
       break;
       
     case ABS_WGDISABLE:
+      LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTTestTask(%s)::handleBeamServerEvents (ABS_WGDISABLE)",getName().c_str(),event.signal));
       m_WGDISABLE_received=true;
       break;
 

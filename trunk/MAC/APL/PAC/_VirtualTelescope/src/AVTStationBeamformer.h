@@ -50,6 +50,7 @@ namespace AVT
 
       GCFPort& getBeamServerPort(); // increment 1 only!!!
       virtual bool isPrepared(vector<string>& parameters);
+      bool checkQualityRequirements();
 
     protected:
       // protected default constructor

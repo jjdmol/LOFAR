@@ -66,13 +66,13 @@ AVTStationBeamformer::AVTStationBeamformer(string& taskName,
   m_beamID(-1)
 {
   registerProtocol(ABS_PROTOCOL, ABS_PROTOCOL_signalnames);
-  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTStationBeamformer(%s)::AVTStationBeamformer",getName().c_str()));
+  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTStationBeamformer(%s)::%s",getName().c_str(),__func__));
 }
 
 
 AVTStationBeamformer::~AVTStationBeamformer()
 {
-  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTStationBeamformer(%s)::~AVTStationBeamformer",getName().c_str()));
+  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTStationBeamformer(%s)::%s",getName().c_str(),__func__));
 }
 
 int AVTStationBeamformer::convertDirection(const string type) const
@@ -132,6 +132,20 @@ bool AVTStationBeamformer::isPrepared(vector<string>& parameters)
     isPrepared = (directionAngle2 == m_directionAngle2);
   }
   return isPrepared;
+}
+
+bool AVTStationBeamformer::checkQualityRequirements()
+{
+  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTStationBeamformer(%s)::%s",getName().c_str(),__func__));
+  bool requirementsMet=false;
+  
+  // quality requirements for this BeamServer:
+  // - none
+  // (by the time the quality check is done, the BeamFormer is completely up and running
+  
+  requirementsMet=true;
+  
+  return requirementsMet;
 }
 
 bool AVTStationBeamformer::_isBeamServerPort(GCFPortInterface& port)
@@ -310,9 +324,10 @@ GCFEvent::TResult AVTStationBeamformer::concrete_releasing_state(GCFEvent& event
     {
       // check the beam ID and status of the ACK message
       ABSBeamfreeAckEvent ackEvent(event);
-      if(ackEvent.handle==m_beamID)
+      if(ackEvent.handle==m_beamID || m_beamID==-1)
       {
         stateFinished=true;
+        m_beamID=-1;
       }
       break;
     }
@@ -548,7 +563,7 @@ void AVTStationBeamformer::concreteResume(GCFPortInterface& /*port*/)
   // resume my own resources
   
   // send resume message to BeamFormer
-  GCFEvent wgEnableEvent(ABS_WGENABLE);
+  ABSWgenableEvent wgEnableEvent;
   m_beamServer.send(wgEnableEvent);
   
 }
@@ -559,7 +574,7 @@ void AVTStationBeamformer::concreteSuspend(GCFPortInterface& /*port*/)
   // suspend my own resources
   
   // send suspend message to BeamFormer
-  GCFEvent wgDisableEvent(ABS_WGDISABLE);
+  ABSWgdisableEvent wgDisableEvent;
   m_beamServer.send(wgDisableEvent);
 }
 

@@ -58,8 +58,15 @@ host=localhost
 BeamServer.type=TCP
 BeamServer.port=21040 				# MSPP
 
+[AVTTestMAC2]
+host=localhost
+timerPort.type=TCP      #MSPP
+timerPort.port=21001
+
 [LogicalDeviceScheduler]
 host=localhost
+timerPort.type=TCP      #MSPP
+timerPort.port=21000
 VT1_server.type=TCP 		# SAP
 VT2_server.type=TCP 		# SAP
 VT3_server.type=TCP 		# SAP
@@ -118,6 +125,46 @@ SRG2_server.type=TCP		# SAP
 SRG3_server.type=TCP		# SAP
 SRG4_server.type=TCP		# SAP
 
+[VT5]
+host=localhost
+VT5_server.type=TCP
+VT5_server.port=21045		# MSPP
+BF5_server.type=TCP			# SAP
+SRG1_server.type=TCP		# SAP
+SRG2_server.type=TCP		# SAP
+SRG3_server.type=TCP		# SAP
+SRG4_server.type=TCP		# SAP
+
+[VT6]
+host=localhost
+VT6_server.type=TCP
+VT6_server.port=21046		# MSPP
+BF6_server.type=TCP			# SAP
+SRG1_server.type=TCP		# SAP
+SRG2_server.type=TCP		# SAP
+SRG3_server.type=TCP		# SAP
+SRG4_server.type=TCP		# SAP
+
+[VT7]
+host=localhost
+VT7_server.type=TCP
+VT7_server.port=21047		# MSPP
+BF7_server.type=TCP			# SAP
+SRG1_server.type=TCP		# SAP
+SRG2_server.type=TCP		# SAP
+SRG3_server.type=TCP		# SAP
+SRG4_server.type=TCP		# SAP
+
+[VT8]
+host=localhost
+VT8_server.type=TCP
+VT8_server.port=21048		# MSPP
+BF8_server.type=TCP			# SAP
+SRG1_server.type=TCP		# SAP
+SRG2_server.type=TCP		# SAP
+SRG3_server.type=TCP		# SAP
+SRG4_server.type=TCP		# SAP
+
 [BF1]
 host=localhost
 BF1_server.type=TCP
@@ -140,6 +187,30 @@ BeamServer.type=TCP			# SAP
 host=localhost
 BF4_server.type=TCP
 BF4_server.port=21054		# MSPP
+BeamServer.type=TCP			# SAP
+
+[BF5]
+host=localhost
+BF5_server.type=TCP
+BF5_server.port=21055		# MSPP
+BeamServer.type=TCP			# SAP
+
+[BF6]
+host=localhost
+BF6_server.type=TCP
+BF6_server.port=21056		# MSPP
+BeamServer.type=TCP			# SAP
+
+[BF7]
+host=localhost
+BF7_server.type=TCP
+BF7_server.port=21057		# MSPP
+BeamServer.type=TCP			# SAP
+
+[BF8]
+host=localhost
+BF8_server.type=TCP
+BF8_server.port=21058		# MSPP
 BeamServer.type=TCP			# SAP
 
 [SRG1]

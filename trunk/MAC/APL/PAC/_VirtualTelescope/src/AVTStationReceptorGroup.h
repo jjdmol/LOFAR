@@ -54,6 +54,7 @@ namespace AVT
                                        std::vector<boost::shared_ptr<AVTStationReceptor> >& rcus); 
       virtual ~AVTStationReceptorGroup();
 
+      bool checkQualityRequirements(int maxFailedResources);
       void setStartTime(const time_t startTime);
       void setStopTime(const time_t stopTime);
       void setFrequency(const double frequency);

@@ -53,6 +53,7 @@ namespace AVT
                                   AVTStationReceptorGroup& srg); 
       virtual ~AVTVirtualTelescope();
 
+      bool checkQualityRequirements();
       void setStartTime(const time_t startTime);
       void setStopTime(const time_t stopTime);
       void setFrequency(const double frequency);
@@ -100,7 +101,6 @@ namespace AVT
       bool _isStationReceptorGroupClient(GCFPortInterface& port);
       
       bool allInState(GCFPortInterface& port, TLogicalDeviceState state);
-
 
       // The BeamFormer task    
       AVTStationBeamformer&     m_stationBeamformer;
