@@ -39,6 +39,7 @@
 #endif
 #include <BaseSim/Simul2XML.h>
 #include <StationSim/StationSim.h>
+#include <StationSim/SelSubbands.h>
 
 // Beamformer includes
 #include <StationSim/WH_BeamFormer.h>
@@ -54,7 +55,8 @@
 #include <StationSim/WH_ReadSignal.h>
 #include <StationSim/WH_BandSep.h>
 #include <StationSim/WH_DataReader.h>
-
+#include <StationSim/WH_SubBandSel.h>
+#include <StationSim/WH_DetNulls.h>
 
 StationSim::StationSim()
 {}
@@ -89,13 +91,16 @@ void StationSim::define (const ParamBlock& params)
   const string coeffFileNameChan  = params.getString ("coefffilenamechan", "");
   const string datagenFileName    = params.getString ("datagenfilename", "");
   const string bfDipoleFile       = params.getString ("bffilename","");
+  const string detNullsFile       = params.getString ("detnullsfilename","");
   const int fifolength            = params.getInt    ("bf_fifolength", 512);
   const int buflength             = params.getInt    ("bf_bufferlength", 100);
   const int modulationWindowSize  = params.getInt    ("modwindowsize", 32);
   const int aweRate               = params.getInt    ("awerate", 1);
   const int nbeam                 = params.getInt    ("nbeam", 1);
   const int maxNtarget            = params.getInt    ("maxntarget", 1);
+  const int detNrfi               = params.getInt    ("detnrfi",0);
   const int maxNrfi               = params.getInt    ("maxnrfi", 1);
+  const int ndetnulls             = params.getInt    ("ndetnulls",0);
   const int STArate               = params.getInt    ("starate", 100);
   const int WDrate                = params.getInt    ("wdrate", 100);
   const int PROJrate              = params.getInt    ("projrate", 100);
@@ -105,9 +110,15 @@ void StationSim::define (const ParamBlock& params)
   const bool tapPRJ               = params.getInt    ("tapprj", 0);
   const bool tapBF                = params.getInt    ("tapbf", 0);
   const int BF_Algorithm          = params.getInt    ("bfalg", 0);
+  const int PASTd_Init            = params.getInt    ("pd_init",0);
+  const int PASTd_Update          = params.getInt    ("pd_update",100);
+  const int PASTd_Interval        = params.getInt    ("pd_interval",5);
+  const double PASTd_Beta         = params.getDouble ("pd_beta", 0.95);
   const bool enableDG             = params.getInt    ("enabledg", 1);
   const bool enableFB1            = params.getInt    ("enablefb1", 1);
   const bool enableBF             = params.getInt    ("enablebf", 1);
+
+  const int QMs                   = params.getInt    ("qms",0);
 
   const int delayBeamForm         = 1;
 
@@ -127,154 +138,164 @@ void StationSim::define (const ParamBlock& params)
    *  The creation of the data generator workholders                                 *
    ***********************************************************************************/  
   if (enableDG) {
-	// Create the workholders
-	for (int i = 0; i < DG_Config->itsNumberOfSources; ++i) {
-	  // Create for every signal a read_signal step/workholder
-	  // The signals are named as follows: signal_ + source number + _ + signal number (e.g. signal_1_3 )
-	  for (int j = 0; j < DG_Config->itsSources[i]->itsNumberOfSignals; ++j) {
-		// create suffix for name
-		sprintf (suffix, "%d_%d", i, j);
-		
-		// create the read signal steps
-		Step signal (WH_ReadSignal ("",
-									1,
-									DG_Config->itsSources[i]->itsSignals[j]->itsInputFileName),
-					 string ("signal_") + suffix, 
-					 false);
-		
-		simul.addStep (signal);
-		
-		// Create the modulation steps
-		Step modulate (WH_Modulate (1,
-									1,
-									DG_Config->itsSources[i]->itsSignals[j]->itsModulationType,
-									DG_Config->itsSources[i]->itsSignals[j]->itsCarrierFreq,
-									DG_Config->itsSamplingFreq,
-									DG_Config->itsSources[i]->itsSignals[j]->itsOpt,
-									DG_Config->itsSources[i]->itsSignals[j]->itsAmplitude, 
-									suffix,
-									modulationWindowSize),
-					   string ("modulate_") + suffix, 
-					   false);
-		
-		simul.addStep (modulate);
-	  }
-	  
-	  // Create the source creator steps
-	  sprintf (suffix, "%d", i);
-	  Step create_source (WH_CreateSource ("",
-										   DG_Config->itsSources[i]->itsNumberOfSignals, 
-										   1),
-						  string ("create_source_") + suffix, 
-						  false);
-	  
-	  simul.addStep (create_source);
-	  
-	  // Create the phase shifters
-	  Step phase_shift (WH_PhaseShift (1,
-									   1,
-									   nrcu,
-									   DG_Config,
-									   DG_Config->itsNumberOfFFT,
-									   i,
-									   modulationWindowSize,
-									   suffix),
-						string ("phase_shift_") + suffix, 
-						false);
-	  
-	  simul.addStep (phase_shift);
-	}
+    // Create the workholders
+    for (int i = 0; i < DG_Config->itsNumberOfSources; ++i) {
+      // Create for every signal a read_signal step/workholder
+      // The signals are named as follows: signal_ + source number + _ + signal number (e.g. signal_1_3 )
+      for (int j = 0; j < DG_Config->itsSources[i]->itsNumberOfSignals; ++j) {
+	// create suffix for name
+	sprintf (suffix, "%d_%d", i, j);
 	
-	// Create the step that adds the signals 
-	Step add_signals (WH_AddSignals ("",
-									 DG_Config->itsNumberOfSources,
-									 nrcu, 
-									 nrcu,
-									 (bool) tapDG), 
-					  "add_signals", 
-					  false); 
+	// create the read signal steps
+	Step signal (WH_ReadSignal ("",
+				    1,
+				    DG_Config->itsSources[i]->itsSignals[j]->itsInputFileName),
+		     string ("signal_") + suffix, 
+		     false);
 	
-	simul.addStep (add_signals);
+	simul.addStep (signal);
+	
+	// Create the modulation steps
+	Step modulate (WH_Modulate (1,
+				    1,
+				    DG_Config->itsSources[i]->itsSignals[j]->itsModulationType,
+				    DG_Config->itsSources[i]->itsSignals[j]->itsCarrierFreq,
+				    DG_Config->itsSamplingFreq,
+				    DG_Config->itsSources[i]->itsSignals[j]->itsOpt,
+				    DG_Config->itsSources[i]->itsSignals[j]->itsAmplitude, 
+				    suffix,
+				    modulationWindowSize),
+		       string ("modulate_") + suffix, 
+		       false);
+	
+	simul.addStep (modulate);
+      }
+      
+      // Create the source creator steps
+      sprintf (suffix, "%d", i);
+      Step create_source (WH_CreateSource ("",
+					   DG_Config->itsSources[i]->itsNumberOfSignals, 
+					   1),
+			  string ("create_source_") + suffix, 
+			  false);
+      
+      simul.addStep (create_source);
+	  
+      // Create the phase shifters
+      Step phase_shift (WH_PhaseShift (1,
+				       1,
+				       nrcu,
+				       DG_Config,
+				       DG_Config->itsNumberOfFFT,
+				       i,
+				       modulationWindowSize,
+				       suffix),
+			string ("phase_shift_") + suffix, 
+			false);
+	  
+      simul.addStep (phase_shift);
+    }
+    
+    // Create the step that adds the signals 
+    Step add_signals (WH_AddSignals ("",
+				     DG_Config->itsNumberOfSources,
+				     nrcu, 
+				     nrcu,
+				     (bool) tapDG), 
+		      "add_signals", 
+		      false); 
+    
+    simul.addStep (add_signals);
   }
 
   /***********************************************************************************
    *  The creation of the polyphase filterbank workholders                           *
    ***********************************************************************************/  
   if (enableFB1) {
-	// Create the subband filterbank
-	int nout = 2;
-	for (int i = 0; i < nrcu; ++i) {
-	  sprintf (suffix, "%d", i);
-	  
-	  Step subband_filter (WH_BandSep(suffix,	nsubband, coeffFileNameSub, nout, (bool) tapFB1),
-						   string ("subband_filter_") + suffix,
-						   false);
-	  
-	  subband_filter.setOutRate(nsubband);
-	  simul.addStep (subband_filter);	
-	}
+    // Create the subband filterbank
+    int nout = 2;
+    for (int i = 0; i < nrcu; ++i) {
+      sprintf (suffix, "%d", i);
+      
+      Step subband_filter (WH_BandSep(suffix,	nsubband, coeffFileNameSub, nout, (bool) tapFB1),
+			   string ("subband_filter_") + suffix,
+			   false);
+      
+      subband_filter.setOutRate(nsubband);
+      simul.addStep (subband_filter);	
+    }
   }
 
+  
   /***********************************************************************************
    *  The creation of the beamforming workholders                                    *
    ***********************************************************************************/  
   if (enableBF) {
-	// Create the beam forming components
-	for (int i = 0; i < nsubband; ++i) {
-	  sprintf (suffix, "%d", i);
+    // Create the beam forming components
+    // Create as many beamformers as there are _selected_ subbands
+    for (int i = 0; i < nselsubband; ++i) {
+      sprintf (suffix, "%d", i);
+      
+      // The beamformer object    
+      Step beam (WH_BeamFormer(suffix, nrcu + 1, 1, nrcu, nbeam, maxNtarget, maxNrfi, 
+			       (bool) tapBF, bfDipoleFile, QMs), 
+		 string("beam_former_") + suffix, false);
+      
+      beam.getInData (nrcu).setReadDelay (delayBeamForm);
+      beam.setRate(nsubband);
+      beam.setInRate (PROJrate * nsubband, nrcu);	
+      simul.addStep (beam);
+      
 	  
-	  // The beamformer object    
-	  Step beam (WH_BeamFormer(suffix, nrcu + 1, 1, nrcu, nbeam, maxNtarget, maxNrfi, 
-							   (bool) tapBF), 
-				 string("beam_former_") + suffix, false);
+      // The Space Time Analysis object
+      Step sta (WH_STA(suffix, nrcu, 2, nrcu, maxNrfi, buflength, BF_Algorithm, PASTd_Init, PASTd_Update,
+		       PASTd_Interval, PASTd_Beta, detNrfi), 
+		string ("sta_") + suffix, false);
+      
+      sta.setRate(nsubband);
+      sta.setOutRate(nsubband * STArate);
+      simul.addStep (sta);
+      
 	  
-	  beam.getInData (nrcu).setReadDelay (delayBeamForm);
-	  beam.setRate(nsubband);
-	  beam.setInRate (PROJrate * nsubband, nrcu);	
-	  simul.addStep (beam);
-	  
-	  
-	  // The Space Time Analysis object
-	  Step sta (WH_STA(suffix, nrcu, 2, nrcu, maxNrfi, buflength, BF_Algorithm), 
-				string ("sta_") + suffix, false);
-	  
-	  sta.setRate(nsubband);
-	  sta.setOutRate(nsubband * STArate);
-	  simul.addStep (sta);
-	  
-	  
-	  // the Weight Determination Object
-	  Step weight_det (WH_WeightDetermination(suffix, 0, 1, nrcu, bfDipoleFile, beamtrajectfile),
-					   string("weight_det_") + suffix, false);   
-	  
-	  weight_det.setRate(nsubband * WDrate);
-	  simul.addStep(weight_det);
-	  
-	  // 	// Deterministic nulls should have the same rate as STA !!!!!!!
-	  //     // add a deterministic null
-	  // 	Step det_null (WH_WeightDetermination(suffix, 0, 1, nrcu, bfDipoleFile, 2.583, 0.8238),
-	  // 				   string("det_null_") + suffix, false);
-	  
-	  //     det_null.getOutData (0).setWriteDelay (delaySubFilt);
-	  //     det_null.setRate(nsubband + STArate);
-	  //     simul.addStep(det_null);
-	  
-	  
-	  // the projection object
-	  int ninProj = 3;
-	  Step projection (WH_Projection(suffix, ninProj, 1, nrcu, maxNrfi, tapPRJ), 
-					   string("projection_") + suffix, false);
-	  
-	  for (int i = 0; i < ninProj - 2; ++i) {
-		projection.setInRate (nsubband * WDrate, i);
-	  }
-	  for (int i = ninProj - 2; i < ninProj; ++i) {
-		projection.setInRate(nsubband * STArate, i);
-	  }
-	  projection.setOutRate (PROJrate * nsubband);
-	  
-	  simul.addStep(projection); 
-	}
+      // the Weight Determination Object
+      Step weight_det (WH_WeightDetermination(suffix, 0, 1, nrcu, bfDipoleFile, beamtrajectfile),
+		       string("weight_det_") + suffix, false);   
+      
+      weight_det.setRate(nsubband * WDrate);
+      simul.addStep(weight_det);
+      
+      // the Deterministic nulls object
+      // run at the same rate as the STA 
+      Step det_nulls (WH_DetNulls(suffix, 0, 1, nrcu, ndetnulls, bfDipoleFile, detNullsFile), 
+		      string("det_nulls_") + suffix, false);
+      det_nulls.setRate(nsubband * STArate);
+      simul.addStep(det_nulls);
+      
+
+      // Deterministic nulls should have the same rate as STA !!!!!!!
+      // add a deterministic null
+     //   Step det_null (WH_WeightDetermination(suffix, 0, 1, nrcu, bfDipoleFile, 2.583, 0.8238),
+//  		     string("det_null_") + suffix, false);
+//        //     det_null.getOutData (0).setWriteDelay (delaySubFilt);
+//        det_null.setRate(nsubband + STArate);
+//        simul.addStep(det_null);
+      
+      
+      // the projection object
+      int ninProj = 4;
+      Step projection (WH_Projection(suffix, ninProj, 1, nrcu, maxNrfi, ndetnulls, tapPRJ, bfDipoleFile), 
+		       string("projection_") + suffix, false);
+      
+      for (int i = 0; i < ninProj - 2; ++i) {
+	projection.setInRate (nsubband * WDrate, i);
+      }
+      for (int i = ninProj - 2; i < ninProj; ++i) {
+	projection.setInRate(nsubband * STArate, i);
+      }
+      projection.setOutRate (PROJrate * nsubband);
+      
+      simul.addStep(projection); 
+    }
   }
  
 
@@ -282,90 +303,106 @@ void StationSim::define (const ParamBlock& params)
    *  The connection of the datagenerator workholders                                *
    ***********************************************************************************/  
   if (enableDG) {
-	// Connect the steps.
-	for (int i = 0; i < DG_Config->itsNumberOfSources; ++i) {
-	  sprintf (suffix2, "%d", i);
-	  
-	  // Connect the signals to the modulators
-	  for (int j = 0; j < DG_Config->itsSources[i]->itsNumberOfSignals; ++j) {
-		sprintf (suffix, "%d_%d", i, j);
-		sprintf (suffix3, "%d", j);
-		simul.connect (string ("signal_") + suffix + string (".out_0"),
-					   string ("modulate_") + suffix + string (".in_0"));
-	  }
-	  
-	  // Connect the modulators to a create_source
-	  for (int j = 0; j < DG_Config->itsSources[i]->itsNumberOfSignals; ++j) {
-		sprintf (suffix, "%d_%d", i, j);
-		sprintf (suffix3, "%d", j);
-		simul.connect (string ("modulate_") + suffix + string (".out_0"),
-					   string ("create_source_") + suffix2 +
-					   string (".in_") + suffix3);
-	  }
-	  
-	  // Connect the create_sources to the phase_shifters
-	  simul.connect (string ("create_source_") + suffix2 + string (".out_0"),
-					 string ("phase_shift_") + suffix2 + string (".in_0"));
-	}
-	
-	// Connect the phaseshifters to the add signals
-	for (int i = 0; i < DG_Config->itsNumberOfSources; ++i) {
-	  sprintf (suffix, "%d", i);
-	  simul.connect (string ("phase_shift_") + suffix + string (".out_0"),
-					 string ("add_signals.in_") + suffix);
-	}
-  
-	if (enableFB1) {
-	  // Connect the add_signals (rcu signals generated by the DG) to the 
-	  // subband filterbank  
-	  for (int i = 0; i < nrcu; ++i) { 
-		sprintf (suffix, "%d", i);
-		simul.connect (string ("add_signals") + string (".out_") +
-					   suffix, string ("subband_filter_") + suffix + string (".in"));
-	  }
-	}
+    // Connect the steps.
+    for (int i = 0; i < DG_Config->itsNumberOfSources; ++i) {
+      sprintf (suffix2, "%d", i);
+      
+      // Connect the signals to the modulators
+      for (int j = 0; j < DG_Config->itsSources[i]->itsNumberOfSignals; ++j) {
+	sprintf (suffix, "%d_%d", i, j);
+	sprintf (suffix3, "%d", j);
+	simul.connect (string ("signal_") + suffix + string (".out_0"),
+		       string ("modulate_") + suffix + string (".in_0"));
+      }
+      
+      // Connect the modulators to a create_source
+      for (int j = 0; j < DG_Config->itsSources[i]->itsNumberOfSignals; ++j) {
+	sprintf (suffix, "%d_%d", i, j);
+	sprintf (suffix3, "%d", j);
+	simul.connect (string ("modulate_") + suffix + string (".out_0"),
+		       string ("create_source_") + suffix2 +
+		       string (".in_") + suffix3);
+      }
+      
+      // Connect the create_sources to the phase_shifters
+      simul.connect (string ("create_source_") + suffix2 + string (".out_0"),
+		     string ("phase_shift_") + suffix2 + string (".in_0"));
+    }
+    
+    // Connect the phaseshifters to the add signals
+    for (int i = 0; i < DG_Config->itsNumberOfSources; ++i) {
+      sprintf (suffix, "%d", i);
+      simul.connect (string ("phase_shift_") + suffix + string (".out_0"),
+		     string ("add_signals.in_") + suffix);
+    }
+    
+    if (enableFB1) {
+      // Connect the add_signals (rcu signals generated by the DG) to the 
+      // subband filterbank  
+      for (int i = 0; i < nrcu; ++i) { 
+	sprintf (suffix, "%d", i);
+	simul.connect (string ("add_signals") + string (".out_") +
+		       suffix, string ("subband_filter_") + suffix + string (".in"));
+      }
+    }
   }
 
 
   /***********************************************************************************
    *  The connection of the beamforming workholders                                    *
    ***********************************************************************************/  
-  if (enableBF) {	  
-	// Connect the Beamformer objects
-	for (int s = 0; s < nsubband; ++s) {
-	  sprintf(suffix2, "%d", s);
-	  for (int r = 0; r < nrcu && enableFB1; ++r) {
-		sprintf(suffix, "%d", r);
-		
-		// connect the subband filterbank to the Beamformer
-		simul.connect (string ("subband_filter_") + suffix + string (".out0_") + suffix2,
-					   string ("beam_former_") + suffix2 + string(".in_") + suffix);
-		
-		// connect the subband filterbank to STA
-		simul.connect (string ("subband_filter_") + suffix + string (".out1_") + suffix2,
-					   string ("sta_") + suffix2 + string (".in_") + suffix);
-	  }
-	  
-	  // connect Projection to Beamformer
-	  simul.connect (string ("projection_") + suffix2 + string (".out_0"),
-					 string ("beam_former_") + suffix2 + string (".weights"));
-	  
-	  // connect the STA to Projection
-	  simul.connect (string ("sta_") + suffix2 + string (".out_0"),
-					 string ("projection_") + suffix2 + string (".in_rfi"));
-	  simul.connect (string ("sta_") + suffix2 + string (".out_mdl"), 
-					 string ("projection_") + suffix2 + string (".in_mdl"));
-	  
-	  // connect the Weight determinator to Projection
-	  simul.connect (string ("weight_det_") + suffix2 + string (".out_0"),
-					 string ("projection_") + suffix2 + string (".in_0"));
-	  
-	  // 	// connect the deterministic null to the projection
-	  // 	simul.connect (string ("det_null_") + suffix2 + string (".out_0"),
-	  // 				   string ("projection_") + suffix2 + string(".in_1"));	  
-	}
-  }
+  
+  // DEBUG 
+  LoVec_bool selsubbands(nsubband);
+  selsubbands = SelSubbands(selFileName, nselsubband);
+  int t = 0;
 
+  if (enableBF) {	  
+    // Connect the Beamformer objects
+    for (int s = 0; s < nsubband; ++s) {
+      if (selsubbands(s)) {
+	cout << "Creating connections for subband : " << s << endl;
+	sprintf(suffix2, "%d", s);
+	sprintf(suffix3, "%d", t);
+	for (int r = 0; r < nrcu && enableFB1; ++r) {
+	  sprintf(suffix, "%d", r);
+	  
+	  // connect the subband filterbank to the Beamformer
+	  simul.connect (string ("subband_filter_") + suffix + string (".out0_") + suffix2,
+			 string ("beam_former_") + suffix3 + string(".in_") + suffix);
+	  
+	  // connect the subband filterbank to STA
+	  simul.connect (string ("subband_filter_") + suffix + string (".out1_") + suffix2,
+			 string ("sta_") + suffix3 + string (".in_") + suffix);
+	}
+	
+	// connect Projection to Beamformer
+	simul.connect (string ("projection_") + suffix3 + string (".out_0"),
+		       string ("beam_former_") + suffix3 + string (".weights"));
+	
+	// connect the STA to Projection
+	simul.connect (string ("sta_") + suffix3 + string (".out_0"),
+		       string ("projection_") + suffix3 + string (".in_rfi"));
+	simul.connect (string ("sta_") + suffix3 + string (".out_mdl"), 
+		       string ("projection_") + suffix3 + string (".in_mdl"));
+	
+	// connect the Weight determinator to Projection
+	simul.connect (string ("weight_det_") + suffix3 + string (".out_0"),
+		       string ("projection_") + suffix3 + string (".in_0"));
+	
+
+	// connect the deterministic nulls to Projection
+	simul.connect (string ("det_nulls_") + suffix3 + string (".out_0") ,
+		       string ("projection_") + suffix3 + string (".in_1"));
+
+	// 	// connect the deterministic null to the projection
+	// 	simul.connect (string ("det_null_") + suffix3 + string (".out_0"),
+	// 				   string ("projection_") + suffix3 + string(".in_1"));	  
+	t++;
+      }
+    }
+  }
+  
   // end of dataprocessor definition
   simul.checkConnections();
 

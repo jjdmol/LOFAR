@@ -2,6 +2,7 @@ DOCHDRS		 	= 			\
 ArrayConfig.h					\
 DH_SampleC.h					\
 DH_SampleR.h					\
+DH_SubBandSel.h					\
 DataGenConfig.h					\
 FFTW.h						\
 FilterBank.h					\
@@ -24,8 +25,12 @@ WH_DataReader.h					\
 WH_STA.h					\
 WH_WeightDetermination.h			\
 WH_Projection.h					\
+WH_SubBandSel.h					\
+WH_DetNulls.h					\
 GnuPlotInterface.h				\
-PASTd.h
+PASTd.h						\
+SelSubbands.h					\
+QMinterface.h
 
 lib_LTLIBRARIES 	= libstationsim.la
 
@@ -33,6 +38,7 @@ libstationsim_la_SOURCES 	= $(DOCHDRS)	\
 ArrayConfig.cc					\
 DH_SampleC.cc					\
 DH_SampleR.cc					\
+DH_SubBandSel.cc				\
 DataGenConfig.cc				\
 FFTW.cc						\
 FilterBank.cc					\
@@ -55,8 +61,12 @@ WH_DataReader.cc				\
 WH_STA.cc					\
 WH_WeightDetermination.cc			\
 WH_Projection.cc				\
+WH_SubBandSel.cc				\
+WH_DetNulls.cc					\
 GnuPlotInterface.cc				\
-PASTd.cc
+PASTd.cc					\
+SelSubbands.cc					\
+QMinterface.cc
 
 bin_PROGRAMS		= Simulate
 Simulate_SOURCES 	= Simulate.cc Simulate.in
@@ -70,3 +80,5 @@ Simulate_DEPENDENCIES	= libstationsim.la $(LOFAR_DEPEND)
 #Simulate.out
 
 include $(lofar_sharedir)/Makefile.common
+
+

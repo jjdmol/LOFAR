@@ -1,4 +1,4 @@
-//#  WH_STA.h:
+//#  WH_DetNulls.h:
 //#
 //#  Copyright (C) 2002
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -18,49 +18,48 @@
 //#  along with this program; if not, write to the Free Software
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
-//#  Chris Broekema, january 2003.
+//#  Chris Broekema, november 2002.
+//#
+//#  $Id$
 //#
 
-#ifndef STATIONSIM_WH_STA_H
-#define STATIONSIM_WH_STA_H
+#ifndef STATIONSIM_WH_DetNulls_H
+#define STATIONSIM_WH_DetNulls_H
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
 
+#include <fstream>
 #include <BaseSim/WorkHolder.h>
 #include <StationSim/DH_SampleC.h>
-#include <StationSim/DH_SampleR.h>
+#include <StationSim/ArrayConfig.h>
+#include <StationSim/DataGenConfig.h>
 #include <Common/Lorrays.h>
 
-class WH_STA: public WorkHolder
+class WH_DetNulls: public WorkHolder
 {
 public:
   /// Construct the work holder and give it a name.
   /// It is possible to specify how many input and output data holders
   /// are created and how many elements there are in the buffer.
   /// The first WorkHolder should have nin=0.
-  WH_STA (const string& name,
-	  int nin, 
-	  int nout,
-	  int nant,
-	  int maxnrfi,
-	  int buflength,
-	  int alg, 
-	  int pdinit,
-	  int pdupdate,
-	  int pdinterval,
-	  double pdbeta,
-	  int detNrfi
-		  );
-  virtual ~WH_STA();
+  WH_DetNulls (const string& name,
+	       unsigned int nin, 
+	       unsigned int nout,
+	       unsigned int nant, 
+	       unsigned int detnulls,
+	       string s,
+	       string itsDetNullsFile);
+
+  virtual ~WH_DetNulls();
 
   /// Static function to create an object.
   static WorkHolder* construct (const string& name, int ninput, int noutput,
-				const ParamBlock&);
+								const ParamBlock&);
 
   /// Make a fresh copy of the WH object.
-  virtual WH_STA* make (const string& name) const;
+  virtual WH_DetNulls* make (const string& name) const;
 
   virtual void preprocess();
 
@@ -70,54 +69,31 @@ public:
   /// Show the work holder on stdout.
   virtual void dump() const;
 
-  /// Get a pointer to the i-th input DataHolder.
-  /// The first one is the sampled data.
-  /// The second one is the selected subbands.
-  virtual DH_SampleC* getInHolder (int channel);
+  // This Workholder has no inputs. This member is not functional.
+  virtual DataHolder* getInHolder (int channel);
 
   /// Get a pointer to the i-th output DataHolder.
-  virtual DataHolder* getOutHolder (int channel);
+  virtual DH_SampleC* getOutHolder (int channel);
 
 private:
   /// Forbid copy constructor.
-  WH_STA (const WH_STA&);
+  WH_DetNulls (const WH_DetNulls&);
 
   /// Forbid assignment.
-  WH_STA& operator= (const WH_STA&);
+  WH_DetNulls& operator= (const WH_DetNulls&);
 
-  LoMat_dcomplex CreateContigeousBuffer (const LoMat_dcomplex& aBuffer, int pos);
-  LoMat_dcomplex TransposeMatrix (const LoMat_dcomplex& aMat);
-  LoVec_double ReverseVector (const LoVec_double& aVec);
-  LoMat_dcomplex ReverseMatrix (const LoMat_dcomplex& aMat, int dim);
+  LoVec_dcomplex steerv (double u, double v, LoVec_double px, LoVec_double py) ;
 
-  /// In- and OutHolders
-  DH_SampleC** itsInHolders;
+  // OutHolders
   DH_SampleC** itsOutHolders; 
-  DH_SampleR   itsNumberOfRFIs;
 
-  /// Length of buffers.
-  int itsNrcu;
-  int itsDetRFI;
-  int itsMaxRFI;
-  int itsBufLength;
-	
-  LoMat_dcomplex itsBuffer;
-  int itsPos;
-  LoMat_dcomplex itsEvectors;
-  LoVec_double   itsEvalues;
-  LoMat_dcomplex itsAcm;
-  int            itsAlg;
-  int            itsPASTdInterval;
-  double         itsPASTdBeta;
-  int            itsPASTdInit;
-  int            itsUpdateRate;
-  double         itsRFI;
-
-  // DEBUG
-  ifstream itsFileInput; 
-  ofstream itsResults;
-  LoMat_dcomplex itsTestVector; 
-  int itsCount;
-
+  unsigned int itsNrcu;
+  int itsNDetNulls;
+  ArrayConfig itsArray;
+  ifstream itsDetNullsFile;
+  string itsDetNullsFileName;
+  
+  LoMat_double itsCoordinates;
+  LoMat_dcomplex itsDetNulls;
 };
 #endif

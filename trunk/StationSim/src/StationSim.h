@@ -42,5 +42,4 @@ public:
   void quit();
 };
 
-
 #endif
