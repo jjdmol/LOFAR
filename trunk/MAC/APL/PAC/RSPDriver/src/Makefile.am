@@ -15,14 +15,20 @@ SUFFIXES = .ph
 BUILT_SOURCES = \
 	RSP_Protocol.ph \
 	EPA_Protocol.ph \
-	log4cplus.properties
+	log4cplus.properties \
+	rsp.cfg
 
-# 	abs.ns \
-# 	abs.top
+clean-local:
+	rm -f \
+	RSP_Protocol.ph \
+	RSP_Protocol.cc \
+	EPA_Protocol.ph \
+	EPA_Protocol.cc
 
 EXTRA_DIST = \
 	RSP_Protocol.ph \
-	EPA_Protocol.ph
+	EPA_Protocol.ph \
+	rsp.cfg
 
 # 	log4cplus.properties \
 # 	abs.ns \
@@ -33,6 +39,9 @@ include_HEADERS = \
 	EPA_Protocol.ph
 
 %.properties: $(MAC_CONFIG)/%.properties
+	cp $< $@
+
+%.cfg: %.cfg.in
 	cp $< $@
 
 %.ns: %.ns.in

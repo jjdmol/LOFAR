@@ -57,6 +57,8 @@ RSPDriverTask::RSPDriverTask(string name)
   registerProtocol(RSP_PROTOCOL, RSP_PROTOCOL_signalnames);
   registerProtocol(EPA_PROTOCOL, EPA_PROTOCOL_signalnames);
 
+  m_clock.init(*this, "spid", GCFPortInterface::SPP, 0 /*don't care*/, true /*raw*/);
+
   m_acceptor.init(*this, "acceptor", GCFPortInterface::MSPP, RSP_PROTOCOL);
 
   m_board = new GCFTCPPort[GET_CONFIG("N_RSPBOARDS", i)];
@@ -89,6 +91,8 @@ bool RSPDriverTask::isEnabled()
       break;
     }
   }
+
+  enabled = enabled && m_clock.isConnected();
   
   return enabled;
 }
@@ -185,6 +189,7 @@ GCFEvent::TResult RSPDriverTask::initial(GCFEvent& event, GCFPortInterface& port
 
     case F_ENTRY:
     {
+      if (!m_clock.isConnected()) m_clock.open();
       openBoards();
     }
     break;
@@ -216,15 +221,27 @@ GCFEvent::TResult RSPDriverTask::initial(GCFEvent& event, GCFPortInterface& port
 
     case F_DATAIN:
     {
-      MEPHeader hdr;
-      port.recv(&hdr.m_fields, sizeof(hdr.m_fields));
-
-      LOG_DEBUG(formatString("F_DATAIN: type=0x%02x, addr=(0x%02x 0x%02x 0x%02x 0x%02x)",
-			     hdr.m_fields.type,
-			     hdr.m_fields.addr.dstid,
-			     hdr.m_fields.addr.pid,
-			     hdr.m_fields.addr.regid,
-			     hdr.m_fields.addr.pageid));
+      if (&port == &m_clock)
+      {
+	/**
+	 * We don't need the clock here yet, simply read the value
+	 * and ignore
+	 */
+	uint8 count = 0;
+	(void)port.recv(&count, sizeof(uint8));
+      }
+      else
+      {
+	MEPHeader hdr;
+	port.recv(&hdr.m_fields, sizeof(hdr.m_fields));
+	
+	LOG_DEBUG(formatString("F_DATAIN: type=0x%02x, addr=(0x%02x 0x%02x 0x%02x 0x%02x)",
+			       hdr.m_fields.type,
+			       hdr.m_fields.addr.dstid,
+			       hdr.m_fields.addr.pid,
+			       hdr.m_fields.addr.regid,
+			       hdr.m_fields.addr.pageid));
+      }
     }
     break;
 
@@ -267,9 +284,12 @@ GCFEvent::TResult RSPDriverTask::enabled(GCFEvent& event, GCFPortInterface& port
       // start waiting for clients
       if (!m_acceptor.isConnected()) m_acceptor.open();
 
-      /* Start the update timer after 1 second */
-      m_board[0].setTimer(1.0,
-			  GET_CONFIG("SYNC_INTERVAL", f)); // update SYNC_INTERVAL seconds
+      if (1 == GET_CONFIG("SW_CLOCK", i))
+      {
+	/* Start the update timer after 1 second */
+	m_board[0].setTimer(1.0,
+			    GET_CONFIG("SYNC_INTERVAL", f)); // update SYNC_INTERVAL seconds
+      }
     }
     break;
 
@@ -290,7 +310,14 @@ GCFEvent::TResult RSPDriverTask::enabled(GCFEvent& event, GCFPortInterface& port
 
     case F_DATAIN:
     {
-      status = RawEvent::dispatch(*this, port);
+      if (&port == &m_clock)
+      {
+	status = clock_tick(port);
+      }
+      else
+      {
+	status = RawEvent::dispatch(*this, port);
+      }
     }
     break;
     
@@ -352,13 +379,18 @@ GCFEvent::TResult RSPDriverTask::enabled(GCFEvent& event, GCFPortInterface& port
 
     case F_TIMER:
     {
-      GCFTimerEvent* timer = static_cast<GCFTimerEvent*>(&event);
-      LOG_DEBUG(formatString("timer=(%d,%d)", timer->sec, timer->usec));
-
-      if (&port == &m_board[0] || &port == &m_board[1])
+      if (&port == &m_board[0])
       {
-	/* run the scheduler */
-	status = m_scheduler.run(event,port);
+	if (1 == GET_CONFIG("SW_CLOCK", i))
+	{
+	  /**
+	   * Trigger a clock signal by sending
+	   * an 's' character on the clock port.
+	   */
+	  EPATriggerClockEvent trigger;
+	  trigger.value = 's';
+	  m_clock.send(trigger);
+	}
       }
     }
     break;
@@ -398,6 +430,47 @@ GCFEvent::TResult RSPDriverTask::enabled(GCFEvent& event, GCFPortInterface& port
 	status = m_scheduler.dispatch(event, port);
       }
       break;
+  }
+
+  return status;
+}
+
+GCFEvent::TResult RSPDriverTask::clock_tick(GCFPortInterface& port)
+{
+  GCFEvent::TResult status = GCFEvent::NOT_HANDLED;
+
+  uint8 count = 0;
+	
+  if (port.recv(&count, sizeof(uint8)) != 1)
+  {
+    LOG_FATAL("We got a signal, but there is no clock pulse!");
+    exit(EXIT_FAILURE);
+  }
+  else
+  {
+    count -= '0'; // convert to integer
+    if (count > 1)
+    {
+      LOG_WARN("Got more than one clock pulse: missed real-time deadline");
+    }
+	  
+    struct timeval now;
+    (void)gettimeofday(&now, 0);
+
+    // print time, ugly
+    char timestr[32];
+    strftime(timestr, 32, "%T", localtime(&now.tv_sec));
+    LOG_INFO(formatString("time=%s.%d", timestr, now.tv_usec));
+
+    /* construct a timer event */
+    GCFTimerEvent timer;
+    timer.sec  = now.tv_sec;
+    timer.usec = now.tv_usec;
+    timer.id   = 0;
+    timer.arg  = 0;
+	  
+    /* run the scheduler with the timer event */
+    status = m_scheduler.run(timer, port);
   }
 
   return status;

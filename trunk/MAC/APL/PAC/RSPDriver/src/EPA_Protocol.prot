@@ -73,7 +73,7 @@ namespace EPA_Protocol
   {
       RSPStatus  rsp;
       FPGAStatus bp;
-      FPGAStatus ap[N_AP];
+      FPGAStatus ap[EPA_Protocol::N_AP];
       ETHStatus  eth;
       MEPStatus  read;
       MEPStatus  write;
@@ -151,11 +151,11 @@ event = {
    */
   param = {
     name = "board";
-    type = "BoardStatus";
+    type = "EPA_Protocol::BoardStatus";
   };
   param = {
     name = "rcu";
-    type = "RCUStatus[N_BLP]";
+    type = "RCUStatus[EPA_Protocol::N_BLP]";
   };
 };
 
@@ -282,7 +282,7 @@ event = {
   };
   param = {
     name = "sample";
-    type = "int16[N_USERSAMPLES]";
+    type = "int16[EPA_Protocol::N_USERSAMPLES]";
   };
 };
 
@@ -360,7 +360,7 @@ event = {
   };
   param = {
     name = "coef";
-    type = "int16[N_COEF]";
+    type = "int16[EPA_Protocol::N_COEF]";
   };
 };
 
@@ -386,7 +386,7 @@ event = {
   };
   param = {
     name = "stat";
-    type = "int16[N_STATS]";
+    type = "int16[EPA_Protocol::N_STATS]";
   };
 };
 
@@ -427,5 +427,15 @@ event = {
   param = {
     name = "dummy";
     type = "int";
+  };
+};
+
+event = {
+  noheader;
+  signal = TRIGGER_CLOCK;
+  dir = OUT;
+  param = {
+    name = "value";
+    type = "uint8";
   };
 };

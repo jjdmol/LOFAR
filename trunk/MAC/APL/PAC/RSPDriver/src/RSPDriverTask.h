@@ -30,6 +30,7 @@
 
 #include <GCF/GCF_Control.h>
 #include <GCF/GCF_ETHRawPort.h>
+#include <GCF/GCF_DevicePort.h>
 
 #include "Scheduler.h"
 
@@ -84,9 +85,9 @@ namespace RSP
       GCFEvent::TResult enabled(GCFEvent& event, GCFPortInterface &port);
 
       /**
-       * Dispatch a raw EPA event.
+       * Handle a F_DATAIN on the clock port.
        */
-      GCFEvent::TResult dispatch_rawevent(GCFPortInterface& port);
+      GCFEvent::TResult clock_tick(GCFPortInterface& port);
 
       /*@{*/
       /**
@@ -117,8 +118,9 @@ namespace RSP
 
     private:
       // ports
-      GCFTCPPort  m_acceptor; // listen for clients on this port
-      GCFTCPPort* m_board;
+      GCFDevicePort m_clock;    // clock pulse will arrive on this port
+      GCFTCPPort    m_acceptor; // listen for clients on this port
+      GCFTCPPort*   m_board;    // array of ports, one for each RSP board
       std::list<GCFPortInterface*> m_client_list;  // list of clients
       std::list<GCFPortInterface*> m_garbage_list; // list of clients to cleanup
 
