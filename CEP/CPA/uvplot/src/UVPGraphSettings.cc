@@ -5,15 +5,15 @@
 
 //====================>>>  UVPGraphSettings::UVPGraphSettings  <<<====================
 
-UVPGraphSettings::UVPGraphSettings(unsigned int antenna1,
-                                   unsigned int antenna2,
-                                   unsigned int polarizationIndex,
-                                   ValueType    valueType,
-                                   PlotType     plotType,
-                                   const std::vector<bool> fieldsToPlot)
+UVPGraphSettings::UVPGraphSettings(unsigned int                   antenna1,
+                                   unsigned int                   antenna2,
+                                   UVPDataAtomHeader::Correlation corr,
+                                   ValueType                      valueType,
+                                   PlotType                       plotType,
+                                   const std::vector<bool>&       fieldsToPlot)
   : itsAntenna1(antenna1),
     itsAntenna2(antenna2),
-    itsPolarizationIndex(polarizationIndex),
+    itsCorrelation(corr),
     itsValueType(valueType),
     itsPlotType(plotType),
     itsPlotFields(fieldsToPlot)
@@ -45,11 +45,11 @@ unsigned int UVPGraphSettings::getAntenna2() const
 
 
 
-//===============>>>  UVPGraphSettings::getPolarizationIndex  <<<===============
+//===============>>>  UVPGraphSettings::getCorrelation  <<<===============
 
-unsigned int UVPGraphSettings::getPolarizationIndex() const
+UVPDataAtomHeader::Correlation  UVPGraphSettings::getCorrelation() const
 {
-  return itsPolarizationIndex;
+  return itsCorrelation;
 }
 
 
@@ -106,11 +106,11 @@ void UVPGraphSettings::setAntenna2(unsigned int antenna2)
 
 
 
-//====================>>>  UVPGraphSettings::setPolarizationIndex  <<<====================
+//=================>>>  UVPGraphSettings::setCorrelation  <<<=================
 
-void UVPGraphSettings::setPolarizationIndex(unsigned int polarizationIndex)
+void UVPGraphSettings::setCorrelation(UVPDataAtomHeader::Correlation corr)
 {
-  itsPolarizationIndex = polarizationIndex;
+  itsCorrelation = corr;
 }
 
 

@@ -6,6 +6,8 @@
 // $Id$
 
 #include <vector>
+#include <UVPDataAtomHeader.h>
+
 
 //! 
 class UVPGraphSettings
@@ -16,24 +18,24 @@ public:
   enum PlotType {e2D, e3D};
 
 
-  UVPGraphSettings(unsigned int antenna1                = 0,
-                   unsigned int antenna2                = 0,
-                   unsigned int polarizationIndex       = 0,
-                   ValueType    valueType               = eAbs,
-                   PlotType     plotType                = e2D,
-                   const std::vector<bool> fieldsToPlot = std::vector<bool>(0));
+  UVPGraphSettings(unsigned int antenna1                 = 0,
+                   unsigned int antenna2                 = 0,
+                   UVPDataAtomHeader::Correlation  corr  = UVPDataAtomHeader::None,
+                   ValueType    valueType                = eAbs,
+                   PlotType     plotType                 = e2D,
+                   const std::vector<bool>& fieldsToPlot = std::vector<bool>(0));
 
-  unsigned int getAntenna1() const;
-  unsigned int getAntenna2() const;
-  unsigned int getPolarizationIndex() const;
-  ValueType    getValueType() const;
-  PlotType     getPlotType() const;
-  bool         mustPlotField(unsigned int fieldIndex) const;
+  unsigned int                    getAntenna1() const;
+  unsigned int                    getAntenna2() const;
+  UVPDataAtomHeader::Correlation  getCorrelation() const;
+  ValueType                       getValueType() const;
+  PlotType                        getPlotType() const;
+  bool                            mustPlotField(unsigned int fieldIndex) const;
 
 
   void         setAntenna1(unsigned int antenna1);
   void         setAntenna2(unsigned int antenna2);
-  void         setPolarizationIndex(unsigned int polarizationIndex);
+  void         setCorrelation(UVPDataAtomHeader::Correlation corr);
   void         setValueType(ValueType valueType);
   void         setPlotType(PlotType plotType);
   void         setPlotField(unsigned int fieldIndex,
@@ -50,12 +52,12 @@ public:
 protected:
 private:
   
-  unsigned int      itsAntenna1;
-  unsigned int      itsAntenna2;
-  unsigned int      itsPolarizationIndex;
-  ValueType         itsValueType;
-  PlotType          itsPlotType;
-  std::vector<bool> itsPlotFields;
+  unsigned int                   itsAntenna1;
+  unsigned int                   itsAntenna2;
+  UVPDataAtomHeader::Correlation itsCorrelation;
+  ValueType                      itsValueType;
+  PlotType                       itsPlotType;
+  std::vector<bool>              itsPlotFields;
 };
 
 #endif //UVPGRAPHSETTINGS_H

@@ -24,7 +24,11 @@ UVPGraphSettingsWidget::UVPGraphSettingsWidget(unsigned int numOfAntennae,
                                   QSlider::Horizontal, this, "Antenna 2");
   itsAntenna1Label  = new QLabel("Antenna 1: ", this);
   itsAntenna2Label  = new QLabel("Antenna 2: ", this);
-  
+
+
+  itsCorrelationCombo = new QComboBox(false, this);
+  itsCorrelationLabel = new QLabel("Correlation:", this);
+
   itsSettings.setAntenna1(itsAntenna1Slider->value()-1);
   itsSettings.setAntenna2(itsAntenna2Slider->value()-1);
   
@@ -35,9 +39,21 @@ UVPGraphSettingsWidget::UVPGraphSettingsWidget(unsigned int numOfAntennae,
   BaselineVLayout->addWidget(itsAntenna1Slider);
   BaselineVLayout->addWidget(itsAntenna2Label);
   BaselineVLayout->addWidget(itsAntenna2Slider);
+  BaselineVLayout->addWidget(itsCorrelationLabel);
+  BaselineVLayout->addWidget(itsCorrelationCombo);
   BaselineVLayout->addWidget(itsStartButton);
   BaselineVLayout->addStretch();
   BaselineVLayout->activate();
+
+  itsCorrelationCombo->insertItem("Not selected", 0);
+  itsCorrelationCombo->insertItem("XX", 1);
+  itsCorrelationCombo->insertItem("XY", 2);
+  itsCorrelationCombo->insertItem("YX", 3);
+  itsCorrelationCombo->insertItem("YY", 4);
+  itsCorrelationCombo->insertItem("RR", 5);
+  itsCorrelationCombo->insertItem("RL", 6);
+  itsCorrelationCombo->insertItem("LR", 7);
+  itsCorrelationCombo->insertItem("LL", 8);
 
   QObject::connect(itsAntenna1Slider, SIGNAL(valueChanged(int)),
                    this, SLOT(slot_antenna1Changed(int)) );
@@ -47,6 +63,9 @@ UVPGraphSettingsWidget::UVPGraphSettingsWidget(unsigned int numOfAntennae,
 
   QObject::connect(itsStartButton, SIGNAL(clicked()),
                    this, SIGNAL(signalStartButtonClicked()));
+
+  QObject::connect(itsCorrelationCombo, SIGNAL(activated(int)),
+                   this, SLOT(slot_correlationChanged(int)) );
 
   slot_antenna1Changed(itsAntenna1Slider->value());
   slot_antenna2Changed(itsAntenna2Slider->value());
@@ -109,6 +128,18 @@ void UVPGraphSettingsWidget::slot_antenna2Changed(int antenna2)
 
   itsSettings.setAntenna2(antenna2-1);
   emit signalAntenna2Changed(antenna2-1);
+}
+
+
+
+
+
+//============>>>  UVPGraphSettingsWidget::slot_correlationChanged  <<<============
+
+void UVPGraphSettingsWidget::slot_correlationChanged(int corr)
+{
+  itsSettings.setCorrelation(UVPDataAtomHeader::Correlation(corr));
+  emit signalCorrelationChanged(UVPDataAtomHeader::Correlation(corr));
 }
 
 

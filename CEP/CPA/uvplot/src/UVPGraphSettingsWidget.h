@@ -11,7 +11,7 @@
 #include <qlabel.h>
 #include <qslider.h>
 #include <qpushbutton.h>
-
+#include <qcombobox.h>
 
 class UVPGraphSettingsWidget: public QWidget
 {
@@ -37,6 +37,7 @@ public slots:
    */
   void slot_antenna1Changed(int antenna1);
   void slot_antenna2Changed(int antenna2);
+  void slot_correlationChanged(int corr);
 
 
 signals:
@@ -46,6 +47,9 @@ signals:
 
   //! antenna2 is zero based
   void signalAntenna2Changed(unsigned int antenna2);
+
+  void signalCorrelationChanged(UVPDataAtomHeader::Correlation corr);
+  
   void signalStartButtonClicked();
   
 protected:
@@ -57,7 +61,10 @@ private:
 
   QSlider*         itsAntenna2Slider;
   QLabel*          itsAntenna2Label;
-  
+
+  QComboBox*       itsCorrelationCombo;
+  QLabel*          itsCorrelationLabel;
+
   QPushButton*     itsStartButton;
 
   UVPGraphSettings itsSettings;
