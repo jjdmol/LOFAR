@@ -98,6 +98,9 @@ private:
   int64  itsWriteSeqNo;
   int64  itsReadSeqNo;
   DH_PL* itsDHPL;
+
+  bool itsInitCalled; // Flag to indicate if the init method has been called
+                      // This is used in the counting of initialized instances.
 };
  
 } // end namespace
