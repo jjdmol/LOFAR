@@ -40,28 +40,36 @@ namespace LOFAR {
 // The blob is written into a BlobOBuffer object that can be a memory
 // buffer or an ostream object. The BlobIStream class can be used to
 // retrieve objects from a blob.
+//
+// See LOFAR document
+// <a href="http://www.lofar.org/forum/document.php?action=match&docname=LOFAR-ASTRON-MAN-006">
+// LOFAR-ASTRON-MAN-006</a> for more information.
 
 class BlobOStream
 {
 public:
   // Construct it with the underlying buffer object.
-  // If header8==true, the blob headers will be made a multiple of 8 bytes.
+  // If header8==true, all blob headers will be made a multiple of 8 bytes.
+  // This is useful for alignment if the blob buffer is directly used
+  // via the setSpace function.
+  // It keeps the pointer, so be sure that the BlobOBuffer is not deleted
+  // before this object.
   explicit BlobOStream (BlobOBuffer*, bool header8 = false);
 
-  // Destructor closes the stream if not closed yet.
+  // Destructor.
   ~BlobOStream();
 
   // Get the total size.
   uint64 size() const;
 
-  // Start putting a blob.
-  // Data in the outermost object cannot be put before a putstart is done.
-  // Data in nested objects can be put without an intermediate putstart.
-  // However, for complex objects it is recommended to do a putstart
+  // Start putting a blob. It writes the header containing data that are
+  // checked when reading the blob back in BlobIStream::getStart.
+  // Data in nested objects can be put without an intermediate putStart.
+  // However, for complex objects it is recommended to do a putStart
   // to have a better checking.
   // <br>
-  // After all values (inclusing nested objects) of the object have
-  // been put, a call to putend has to be done.
+  // After all values (including nested objects) of the object have
+  // been put, a call to putEnd has to be done.
   // It returns the nesting level.
   // <group>
   uint putStart (const std::string& objectType, int objectVersion);
@@ -73,7 +81,6 @@ public:
   uint putEnd();
 
   // Put a single value.
-  // A bool will be stored as a char.
   // A string will be stored as a length followed by the characters.
   // <group>
   BlobOStream& operator<< (const bool& value);
@@ -94,6 +101,7 @@ public:
   // </group>
 
   // Put an array of values with the given number of values.
+  // Bool values are stored as bits.
   // <group>
   void put (const bool* values, uint nrval);
   void put (const char* values, uint nrval);
@@ -119,10 +127,11 @@ public:
   // </group>
 
   // Reserve the given amount of space (the opposite of BlobIStream::getSpace).
-  // This is useful when reading a static blob in a dynamic way.
+  // This is useful when creating a static blob in a dynamic way.
   // It returns the position of the skipped space in the stream.
   // It is meant for use with the BlobOBufString buffer. The function
-  // getPointer in that class can be used to turn the position into a pointer.
+  // getPointer in that class (in fact, in its base class BlobOBufChar)
+  // can be used to turn the position into a pointer.
   int64 setSpace (uint nbytes);
 
   // Reserve the given number of bytes.
@@ -130,13 +139,14 @@ public:
   // It returns the position of the reserved space in the stream.
   int64 reserve (uint nbytes);
 
-  // Add filler bytes as needed to make total length a multiple of n.
-  // In this way the next data are aligned.
+  // Add filler bytes as needed to make the total length a multiple of n.
+  // In this way the next data are aligned properly.
   // It returns the number of filler bytes used.
   // It is only useful for seekable buffers.
   uint align (uint n);
 
   // Get the current stream position.
+  // It returns -1 if the stream is not seekable.
   int64 tellPos() const;
 
 private:

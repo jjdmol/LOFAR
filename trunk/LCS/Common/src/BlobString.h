@@ -30,6 +30,26 @@
 
 namespace LOFAR {
 
+// A BlobString object can hold a blob (binary large object).
+// Blobs are created by the BlobOStream class and read back by BlobIStream.
+// An BlobOBufString object has to be used to make a BlobString object
+// available for BlobOStream.
+// The main purpose of BlobString is the hide the way of allocating memory
+// for the blob. A BlobStringType object defines the way of allocation.
+//
+// The main goal is the transparent use of blobs in the TransportHolder
+// objects in CEPFrame.
+// <ol>
+//  <li> It can be a char* buffer in shared memory for TH_ShMem.
+//  <li> It can be a char* buffer on the heap for, say, TH_Mem or TH_MPI.
+//  <li> It can be a string<uchar> for TH_PL.
+// </ol>
+// Normally the buffer will expand as needed. However, it is possible to
+// tell that the buffer has a fixed size. In such a case an exception is
+// thrown if the buffer is too small.
+// Please note that a BlobOBufNull object can be used to find the exact
+// length of a blob before allocating the BlobString.
+
 class BlobString
 {
 public:

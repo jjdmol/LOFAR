@@ -24,13 +24,17 @@
 #define COMMON_DATAFORMAT_H
 
 
-// This file defines the data format on a machine.
+namespace LOFAR
+{
+// This file defines an enum for the possible machine data formats.
 // Currently only little and big endian is possible with floating point
 // numbers as IEEE and characters in the ASCII representation.
 // It is used in the Blob classes and the DataConvert functions.
+//
+// Furthermore it contains a function giving the data format in use on
+// the machine in use.
+// <group>
 
-namespace LOFAR
-{
   enum DataFormat {LittleEndian=0, BigEndian=1};
 
   // Get the endian type on this machine.
@@ -40,6 +44,8 @@ namespace LOFAR
 #else
    {return LittleEndian; }
 #endif
+
+// </group>
 }
 
 

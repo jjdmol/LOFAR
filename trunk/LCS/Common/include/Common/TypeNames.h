@@ -27,12 +27,14 @@
 #include <Common/LofarTypes.h>
 #include <string>
 
+namespace LOFAR
+{
 // These global functions return the name of the basic types.
 // They are meant to get the full id of a templated class when such an
 // object is stored in a blob.
+// \defgroup TypeNames global type name functions
+// <group>
 
-namespace LOFAR
-{
   // Give the name of the basic types.
   // <group>
   const std::string& typeName (const void*);
@@ -52,6 +54,8 @@ namespace LOFAR
   template<typename T> const std::string& typeName (const std::complex<T>*);
   template<typename T> const std::string& typeName (T**);
   // </group>
+
+// </group>
 }
 
 // Include templated implementations.

@@ -24,8 +24,14 @@
 #define COMMON_LOFARTYPES_H
 
 #include <Common/LofarTypedefs.h>
+#include <lofar_config.h>
 
-// Define some unsigned only if not already done is /usr/include/sys/types.h
+// Make the type names defined in LofarTypedefs.h available in the
+// global name space.
+// Some types (e.g. uint) are sometimes defined in other header files.
+// If so, they are used from there and are not put in the global namespace.
+
+//# Define some unsigned only if not already done in /usr/include/sys/types.h
 #if (HAVE_QT)
 #include <qglobal.h>
 #else

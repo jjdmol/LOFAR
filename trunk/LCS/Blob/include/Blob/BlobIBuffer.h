@@ -33,17 +33,21 @@ namespace LOFAR {
 // <ul>
 // <li> BlobIBufStream uses an istream as the source. It is mainly
 //      meant to read blobs from a file, socket, etc.
+// <li> BlobIBufChar uses a plain C-array as the source. Its mainly used
+//      as a helper class, but can also be used in itself.
 // <li> BlobIBufVector<T> uses a vector<T> (where T is char or uchar)
-//      as the source. It is mainly meant for reading blobs
-//      stored using the classes in the LCS Persistent Object Layer.
-// <li> BlobIBufChar uses a plain C-array as the source. It serves as
-//      a helper class for BlobIBufVector, but can also be used in itself.
+//      as the source.
+//      It uses BlobIBufChar to do the actual work.
+// <li> BlobIBufString uses a BlobString as the source.
+//      It uses BlobIBufChar to do the actual work.
+//      It is mainly meant for reading blobs stored using the LCS
+//      Persistency Layer.
 // </ul>
 
 class BlobIBuffer
 {
 public:
-  // Construct it with the underlying istream object.
+  // Constructor.
   BlobIBuffer()
     {};
 

@@ -42,25 +42,29 @@ namespace LOFAR {
 // The blob is read from a BlobIBuffer object that can be a memory
 // buffer or an istream object. The BlobOStream class can be used to
 // store objects into a blob.
+//
+// See LOFAR document
+// <a href="http://www.lofar.org/forum/document.php?action=match&docname=LOFAR-ASTRON-MAN-006">
+// LOFAR-ASTRON-MAN-006</a> for more information.
 
 class BlobIStream
 {
 public:
   // Construct it with the underlying buffer object.
+  // It keeps the pointer, so be sure that the BlobIBuffer is not deleted
+  // before this object.
   explicit BlobIStream (BlobIBuffer*);
 
-  // Destructor closes the stream if not closed yet.
+  // Destructor.
   ~BlobIStream();
 
-  // Start getting a blob.
-  // Data in the outermost object cannot be get before a getstart is done.
-  // Data in nested objects can be get without an intermediate getstart.
-  // However, for complex objects it is recommended to do a getstart
-  // to have a better checking.
+  // Start getting a blob which reads the header abd checks if its type
+  // matches the given object type.
+  // It is the counterpart of BlobOStream::putStart.
   // <br>
   // After all values (inclusing nested objects) of the object have
-  // been get, a call to getend has to be done.
-  // It returns the nesting level.
+  // been obtained (using operato, a call to getEnd has to be done.
+  // It returns the blob version.
   // <group>
   int getStart (const std::string& objectType);
   int getStart (const char* objectType);
@@ -79,8 +83,7 @@ public:
   const std::string& BlobIStream::getNextType();
 
   // Get a single value.
-  // A bool will be stored as a char.
-  // A string will be stored as a length followed by the characters.
+  // A string is stored as a length followed by the characters.
   // <group>
   BlobIStream& operator>> (bool& value);
   BlobIStream& operator>> (char& value);
@@ -99,7 +102,7 @@ public:
   // </group>
 
   // Get an array of values with the given number of values.
-  // Bools will be compressed to single bits.
+  // Bools are retrieved as bits.
   // <group>
   void get (bool* values, uint nrval);
   void get (char* values, uint nrval);
@@ -128,16 +131,18 @@ public:
   // This is useful when reading a static blob in a dynamic way.
   // It returns the position of the skipped space in the stream.
   // It is meant for use with the BlobIBufString buffer. The function
-  // getPointer in that class can be used to turn the position into a pointer.
+  // getPointer in that class (in fact in its base class BlobIBufChar)
+  // can be used to turn the position into a pointer.
   int64 getSpace (uint nbytes);
 
-  // Read filler bytes as needed to make total length a multiple of n.
+  // Skip as many filler bytes as needed to make total length a multiple of n.
   // In this way the next data are aligned.
   // It returns the number of filler bytes used.
   // It is only useful for seekable buffers.
   uint align (uint n);
 
   // Get the current stream position.
+  // It returns -1 if the stream is not seekable.
   int64 tellPos() const;
 
 private:

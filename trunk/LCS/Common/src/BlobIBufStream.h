@@ -29,7 +29,8 @@
 namespace LOFAR {
 
 // This class is the BlobIBuffer that makes use of an istream object.
-// The istream can be any type (ofstream, istringstream, ...)
+// The istream can be any type (ifstream, istringstream, ...).
+// It can, for instance, be used to read from a file or a socket.
 
 class BlobIBufStream : public BlobIBuffer
 {

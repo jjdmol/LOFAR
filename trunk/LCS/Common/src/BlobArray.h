@@ -33,6 +33,10 @@
 # include <aips/Arrays/Array.h>
 #endif
 
+
+namespace LOFAR
+{
+
 // Define functions to write N-dimensional arrays into a blob and to
 // read them back from a blob.
 // The arrays can be:
@@ -49,10 +53,8 @@
 // The write functions follow the same standard as the static array header
 // defined in BlobArrayHeader.h, so it is possible to read a static array
 // back in a dynamic way.
-
-
-namespace LOFAR
-{
+// \defgroup BlobArray global BlobArray functions
+// <group>
 
 // The general function to write a data array.
 // Usually it is used by the other functions, but it can be used on
@@ -79,7 +81,7 @@ BlobOStream& putBlobVector (BlobOStream& bs, const T* data, uint32 size);
 // <group>
 template<typename T>
 uint setSpaceBlobArray1 (BlobOStream& bs, uint32 size0,
-			 bool fortranOrder, bool align=true);
+			 bool align=true);
 template<typename T>
 uint setSpaceBlobArray2 (BlobOStream& bs, uint32 size0, uint32 size1,
 			 bool fortranOrder, bool align=true);
@@ -168,26 +170,29 @@ uint getSpaceBlobArray (BlobIStream& bs,
 
 
 
-
+// Reserve space for a 1-dim array of the given size.
 template<typename T>
 inline uint setSpaceBlobArray1 (BlobOStream& bs, uint32 size0,
-				bool fortranOrder, bool align)
+				bool align)
 {
-  return setSpaceBlobArray<T> (bs, &size0, 1, fortranOrder, align);
+  return setSpaceBlobArray<T> (bs, &size0, 1, true, align);
 }
 
+// Put a vector object as an array.
 template<typename T>
 inline BlobOStream& operator<< (BlobOStream& bs, const std::vector<T>& vec)
 {
   return putBlobVector (bs, &(vec[0]), vec.size());
 }
 
+// Put a C-style vector of values as an array.
 template<typename T>
 inline BlobOStream& putBlobVector (BlobOStream& bs, const T* vec, uint32 size)
 {
   return putBlobArray (bs, vec, 1, &size, true);
 }
 
+// </group>
 
 // Get the ordering and dimensionality/
 // This is a helper function for the functions reading an array.

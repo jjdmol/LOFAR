@@ -29,8 +29,10 @@ namespace LOFAR {
 
 // This class is the BlobOBuffer that makes use of a character buffer,
 // i.e. a buffer of signed or unsigned chars.
-// The buffer can be static or dynamic. A static buffer has a fixed
-// length and cannot grow. A dynamic buffer can grow as needed.
+// The buffer can be static or dynamic. A static buffer (expandSize=0)
+// has a fixed length and cannot grow. A dynamic buffer can grow as needed.
+// The class is mainly meant as the base class for BlobOBufString, but can
+// also be used in itself.
 
 class BlobOBufChar : public BlobOBuffer
 {
@@ -83,6 +85,7 @@ public:
   uint expandSize() const;
 
   // Get a typed pointer to an area in the string.
+  // It is meant to be used in combination with BlobOStream::setSpace.
   template<typename U> U* getPointer (uint position)
     {
       DbgAssert(position < itsSize);

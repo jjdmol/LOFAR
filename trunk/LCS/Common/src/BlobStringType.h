@@ -27,11 +27,15 @@
 
 namespace LOFAR {
 
+// A BlobStringType object defines how a blob is represented in a BlobString.
+// See that class for more details.
+
 class BlobStringType
 {
 public:
-  // Allocate the blob as a string<uchar> or using char*.
-  // In case of char*, give an allocator (for normal or shared memory).
+  // Allocate as a string<uchar> or by using raw memory with a char*.
+  // In case of char*, an allocator can be given (for heap or shared memory).
+  // By default a heap allocator is used.
   explicit BlobStringType (bool useString,
 			   const LOFAR::Allocator& = LOFAR::HeapAllocator());
 
