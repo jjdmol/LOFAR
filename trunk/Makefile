@@ -61,7 +61,7 @@ VARIANT = $(shell for NM in $(VARLINES); do cmp=`echo $$NM | sed -e "s%/.*%%"`; 
 VARIANTS = $(VARIANT)
 VARIANTNAMES = $(addsuffix .variant, $(VARIANTS))
 DOCPACKAGES = $(addprefix ./,$(PACKAGES))
-
+PREFIX = /data/LOFAR/installed
 #
 # Keep the make directory (which is LOFAR).
 #
@@ -81,34 +81,24 @@ CRONCVSUSER = $(CRONUSER)
 CRONROOT = $$HOME
 
 #
+# Install needed ?
+#
+WITH_INSTALL=0
+
+#
 # all: Target to compile the specified variants of all packages
 #
 all: build
-
-#
-# daily build without installation
-#
-daily:
-	make build_daily WITH_INSTALL=0
-
-#
-# daily build with installation
-#
-daily_install:
-	make build_daily WITH_INSTALL=1
 
 #
 # Target reached via daily or daily_install
 # For all packages do:
 #       - Bootstrap. Bootstrapping is only needed once,
 #       - Configure. Configuration is needed for each variant.
-#	- Compile for each variant
-#       - Run make check for each variant
-#       - if WITH_INSTALL == 1 install for each variant
-#
-build_weekly: 
+#       -            But norecursive
+build_system: 
 	@date;\
-	echo && echo ":::::: DAILY BUILD START" && echo; \
+	echo && echo ":::::: SYSTEM BUILD START" && echo; \
 	for pkg in $(PACKAGES); do \
 	  if test -d $$pkg ; then \
 	    ( echo \
@@ -126,11 +116,11 @@ build_weekly:
 	                      icc*)  inst_var=icc;; \
 	        esac; \
 	        (echo \
-		&& echo ":::::: CONFIGURING VARIANT $$variant FOR PACKAGE $$pkg" \
+		&& echo ":::::: CONFIGURING VARIANT $$var FOR PACKAGE $$pkg" \
 		&& echo \
 		&& date \
-		&& ((cd $$pkg/build/$$var \
-		&& $(LOFARDIR)/autoconf_share/lofarconf --prefix=/data/LOFAR/installed/$$inst_var ) \
+		&& ((mkdir -p $$pkg/build/$$var; cd $$pkg/build/$$var \
+		&& $(LOFARDIR)/autoconf_share/lofarconf -norecursive --prefix=$(PREFIX)/$$inst_var ) \
 	   	  || echo ":::::: ERROR" ) \
 		&& echo \
 		&& echo ":::::: FINISHED CONFIGURING VARIANT $$var FOR PACKAGE $$pkg" \
@@ -140,135 +130,20 @@ build_weekly:
 		&& echo \
 		&& date \
 		&& (( cd $$pkg/build/$$var \
-		&& make -k $(MAKE_OPTIONS) `cat makeoptions` ) \
+		&& $(MAKE) -k $(MAKE_OPTIONS) `cat makeoptions` build_system WITH_INSTALL=$(WITH_INSTALL) PREFIX=$(PREFIX) ) \
 			|| echo ":::::: ERROR" ) \
 		&& echo \
 		&& echo ":::::: FINISHED BUILDING VARIANT $$var FOR PACKAGE $$pkg" \
 		&& echo ;); \
-		( echo \
-		&& echo ":::::: CHECKING VARIANT $$var FOR PACKAGE $$pkg" \
-		&& echo \
-		&& date \
-		&& cd $$pkg/build/$$var \
-		&& (make -k $(MAKE_OPTIONS) `cat makeoptions` check \
-			|| echo ":::::: ERROR" ) \
-		&& echo \
-		&& echo ":::::: FINISHED CHECKING VARIANT $$var FOR PACKAGE $$pkg" \
-		&& echo ;); \
-		if test 1 -eq $$WITH_INSTALL; then \
-		  ( echo \
-		  && echo ":::::: INSTALLING VARIANT $$var FOR PACKAGE $$pkg" \
-		  && echo \
-		  && date \
-		  && (( cd $$pkg/build/$$var \
-		  && make install ) \
-			  || echo ":::::: ERROR" ) \
-		  && echo \
-		  && echo ":::::: FINISHED INSTALLING VARIANT $$var FOR PACKAGE $$pkg" \
-		  && echo ; ) \
-		fi \
 	      done; \
 	  else \
 	    echo ":::::: ERROR $$pkg does not exist"; \
 	  fi \
 	done; \
-	echo && echo ":::::: DAILY BUILD COMPLETE" && echo; \
+	echo && echo ":::::: SYSTEM BUILD COMPLETE" && echo; \
 	date;
 
 
-#
-# weekly build without installation
-#
-weekly:
-	make build_weekly WITH_INSTALL=0
-
-#
-# weekly build with installation
-#
-weekly_install:
-	make build_weekly WITH_INSTALL=1
-
-#
-# Target reached via weekly or weekly_install
-# For all packages do:
-#       - Bootstrap. Bootstrapping is only needed once,
-#	- Remove previous variant build directory
-#	- Recreate variant build directory
-#	- Configure package for variant
-#	- Compile variant
-#       - Run make check for each variant
-#       - if WITH_INSTALL == 1 install for each variant
-#
-build_weekly: 
-	@date;\
-	echo && echo ":::::: WEEKLY BUILD START" && echo; \
-	for pkg in $(PACKAGES); do \
-	  if test -d $$pkg ; then \
-	    ( echo \
-	      && echo ":::::: BOOTSTRAPPING $$pkg" \
-	      && echo \
-	      && ( ( cd $$pkg && ( ./bootstrap; )) \
-		  || echo ":::::: ERROR" ) \
-	      && echo \
-	      && echo ":::::: DONE BOOTSTRAPPING $$pkg" \
-	      && echo ); \
-	      for var in $(VARIANTS); do \
-	        echo ":::::: VARIANT $$var"; \
-		case $$var in gnu3*) inst_var=gcc3;; \
-	                      gnu*)  inst_var=gcc2;; \
-	                      icc*)  inst_var=icc;; \
-	        esac; \
-	        (echo \
-		&& echo ":::::: CONFIGURING VARIANT $$variant FOR PACKAGE $$pkg" \
-		&& echo \
-		&& date \
-		&& (( $(RM) -rf $$pkg/build/$$var \
-		&& mkdir -p $$pkg/build/$$var \
-		&& cd $$pkg/build/$$var \
-		&& $(LOFARDIR)/autoconf_share/lofarconf --prefix=/data/LOFAR/installed/$$inst_var ) \
-	   	  || echo ":::::: ERROR" ) \
-		&& echo \
-		&& echo ":::::: FINISHED CONFIGURING VARIANT $$var FOR PACKAGE $$pkg" \
-		&& echo ; ); \
-		(echo \
-		&& echo ":::::: BUILDING VARIANT $$var FOR PACKAGE $$pkg" \
-		&& echo \
-		&& date \
-		&& (( cd $$pkg/build/$$var \
-		&& make -k $(MAKE_OPTIONS) `cat makeoptions` ) \
-			|| echo ":::::: ERROR" ) \
-		&& echo \
-		&& echo ":::::: FINISHED BUILDING VARIANT $$var FOR PACKAGE $$pkg" \
-		&& echo ;); \
-		( echo \
-		&& echo ":::::: CHECKING VARIANT $$var FOR PACKAGE $$pkg" \
-		&& echo \
-		&& date \
-		&& cd $$pkg/build/$$var \
-		&& (make -k $(MAKE_OPTIONS) `cat makeoptions` check \
-			|| echo ":::::: ERROR" ) \
-		&& echo \
-		&& echo ":::::: FINISHED CHECKING VARIANT $$var FOR PACKAGE $$pkg" \
-		&& echo ;); \
-		if test 1 -eq $$WITH_INSTALL; then \
-		  ( echo \
-		  && echo ":::::: INSTALLING VARIANT $$var FOR PACKAGE $$pkg" \
-		  && echo \
-		  && date \
-		  && (( cd $$pkg/build/$$var \
-		  && make install ) \
-			  || echo ":::::: ERROR" ) \
-		  && echo \
-		  && echo ":::::: FINISHED INSTALLING VARIANT $$var FOR PACKAGE $$pkg" \
-		  && echo ; ) \
-		fi \
-	      done; \
-	  else \
-	    echo ":::::: ERROR $$pkg does not exist"; \
-	  fi \
-	done; \
-	echo && echo ":::::: WEEKLY BUILD COMPLETE" && echo; \
-	date;
 
 #
 # build: Target to compile in a bootstrapped and configured tree
@@ -294,14 +169,6 @@ start_install:
 start_rebuild:
 	@echo && echo ":::::: REBUILD START" && echo
 
-start_daily:
-	@echo && echo ":::::: DAILY BUILD START" && echo
-
-start_weekly_build:
-	@echo && echo ":::::: WEEKLY BUILD START" && echo
-
-start_weekly_install:
-	@echo && echo ":::::: WEEKLY INSTALL START" && echo
 
 stop_build:
 	@echo && echo ":::::: BUILD COMPLETE" && echo
@@ -312,14 +179,6 @@ stop_install:
 stop_rebuild:
 	@echo && echo ":::::: REBUILD COMPLETE" && echo
 
-stop_daily:
-	@echo && echo ":::::: DAILY BUILD COMPLETE" && echo
-
-stop_weekly_build:
-	@echo && echo ":::::: WEEKLY BUILD COMPLETE" && echo
-
-stop_weekly_install:
-	@echo && echo ":::::: WEEKLY INSTALL COMPLETE" && echo
 
 #
 # check target: check all variants that have been specified in the
@@ -394,7 +253,7 @@ configure: $(VARIANTNAMES:.variant=.variant_configure)
 		&& echo \
 		&& date \
 		&& (( cd $$pkg/build/$$variant \
-		&& make -k $(MAKE_OPTIONS) `cat makeoptions` ) \
+		&& $(MAKE) -k $(MAKE_OPTIONS) `cat makeoptions` ) \
 			|| echo ":::::: ERROR" ) \
 		&& echo \
 		&& echo ":::::: FINISHED BUILDING VARIANT $$variant FOR PACKAGE $$pkg" \
@@ -419,7 +278,7 @@ configure: $(VARIANTNAMES:.variant=.variant_configure)
 		&& echo \
 		&& date \
 		&& (( cd $$pkg/build/$$variant \
-		&& make -k $(MAKE_OPTIONS) `cat makeoptions` ) \
+		&& $(MAKE) -k $(MAKE_OPTIONS) `cat makeoptions` ) \
 			|| echo ":::::: ERROR" ) \
 		&& echo \
 		&& echo ":::::: FINISHED BUILDING VARIANT $$variant FOR PACKAGE $$pkg" \
@@ -443,7 +302,7 @@ configure: $(VARIANTNAMES:.variant=.variant_configure)
 		&& echo \
 		&& date \
 		&& (( cd $$pkg/build/$$variant \
-		&& make install ) \
+		&& $(MAKE) install ) \
 			|| echo ":::::: ERROR" ) \
 		&& echo \
 		&& echo ":::::: FINISHED INSTALLING VARIANT $$variant FOR PACKAGE $$pkg" \
@@ -469,8 +328,8 @@ configure: $(VARIANTNAMES:.variant=.variant_configure)
 		&& echo \
 		&& date \
 		&& ((cd $$pkg/build/$$variant \
-		&& make -k clean $(MAKE_OPTIONS) `cat makeoptions` \
-		&& make -k $(MAKE_OPTIONS) `cat makeoptions` ) \
+		&& $(MAKE) -k clean $(MAKE_OPTIONS) `cat makeoptions` \
+		&& $(MAKE) -k $(MAKE_OPTIONS) `cat makeoptions` ) \
 			|| echo ":::::: ERROR" ) \
 		&& echo \
 		&& echo ":::::: FINISHED REBUILDING VARIANT $$variant FOR PACKAGE $$pkg" \
@@ -495,7 +354,7 @@ configure: $(VARIANTNAMES:.variant=.variant_configure)
 		&& echo \
 		&& date \
 		&& cd $$pkg/build/$$variant \
-		&& (make -k $(MAKE_OPTIONS) `cat makeoptions` check \
+		&& ($(MAKE) -k $(MAKE_OPTIONS) `cat makeoptions` check \
 			|| echo ":::::: ERROR" )) \
 		&& echo \
 		&& echo ":::::: FINISHED CHECKING VARIANT $$variant FOR PACKAGE $$pkg" \
