@@ -25,22 +25,28 @@
 
 namespace LOFAR {
 
-BlobString::BlobString (bool useString, size_t capacity)
+BlobString::BlobString (bool useString, size_t capacity,
+			bool canIncreaseCapacity)
 : itsAllocator (BlobStringType(useString, LOFAR::HeapAllocator())),
   itsCapacity  (0),
   itsSize      (0),
+  itsCanIncr   (true),
   itsChars     (0)
 {
   reserve (capacity);
+  itsCanIncr = canIncreaseCapacity;
 }
 
-BlobString::BlobString (const BlobStringType& allocator, size_t capacity)
+BlobString::BlobString (const BlobStringType& allocator, size_t capacity,
+			bool canIncreaseCapacity)
 : itsAllocator (allocator),
   itsCapacity  (0),
   itsSize      (0),
+  itsCanIncr   (true),
   itsChars     (0)
 {
   reserve (capacity);
+  itsCanIncr = canIncreaseCapacity;
 }
 
 BlobString::~BlobString()
@@ -53,6 +59,7 @@ BlobString::~BlobString()
 void BlobString::reserve (size_t newSize)
 {
   if (newSize > itsCapacity) {
+    AssertStr (itsCanIncr, "This BlobString cannot increase its capacity");
     if (itsAllocator.useString()) {
       itsString.reserve (newSize);
       itsChars = const_cast<uchar*>(itsString.data());

@@ -34,12 +34,16 @@ class BlobString
 {
 public:
   // Create a buffer as a char* or string<uchar> (string is default).
-  explicit BlobString (bool useString=true, size_t capacity=0);
+  // By default the initial capacity can be extended.
+  explicit BlobString (bool useString=true, size_t capacity=0,
+		       bool canIncreaseCapacity=true);
 
-  // Create a data buffer with the given size.
+  // Create a data buffer with the given capacity.
   // The buffer is a char* or a string<uchar> depending on the allocator
   // object.
-  explicit BlobString (const BlobStringType&, size_t size=0);
+  // By default the initial capacity can be extended.
+  explicit BlobString (const BlobStringType&, size_t size=0,
+		       bool canIncreaseCapacity=true);
 
   ~BlobString();
 
@@ -47,14 +51,17 @@ public:
   size_t size() const
     { return itsSize; }
 
-  // Resize the data buffer.
+  // Resize the data buffer. Nothing is done if the new size is not more.
+  // If needed, the capacity is increased as well.
   void resize (size_t newSize);
 
   // Get the capacity.
   size_t capacity() const
     { return itsCapacity; }
 
-  // Set the capacity.
+  // Set the capacity. Nothing is done if the new capacity is not more.
+  // An exception is thrown if the capacity has to be increased, but was
+  // denied in the constructor.
   void reserve (size_t newSize);
 
   // Get a pointer to the data.
@@ -83,6 +90,7 @@ private:
   BlobStringType           itsAllocator;
   size_t                   itsCapacity;
   size_t                   itsSize;
+  bool                     itsCanIncr;
   void*                    itsChars;
   std::basic_string<uchar> itsString;
 };

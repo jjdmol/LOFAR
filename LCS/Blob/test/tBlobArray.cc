@@ -25,6 +25,7 @@
 #include <Common/BlobIBufStream.h>
 #include <Common/BlobOBufString.h>
 #include <Common/BlobIBufString.h>
+#include <Common/BlobOBufNull.h>
 #include <Common/Debug.h>
 #include <iostream>
 #include <fstream>
@@ -113,6 +114,20 @@ int main()
 	Assert (ptr[0] == fcomplex(2,3));
 	Assert (ptr[1] == fcomplex(-1,1e10));
       }
+    }
+    {
+      BlobOBufNull bobn;
+      uint cposn = doOut (&bobn);
+      std::cout << "stringpos=" << cposn << ' ' << bobn.size() << std::endl;
+      BlobString str(BlobStringType(false), bobn.size(), false);
+      BlobOBufString bob(str);
+      uint cpos = doOut (&bob);
+      std::cout << "stringpos=" << cpos << std::endl;
+      fcomplex* ptr = bob.getPointer<fcomplex> (cpos);
+      ptr[0] = fcomplex(2,3);
+      ptr[1] = fcomplex(-1,1e10);
+      BlobIBufString bib(str);
+      doIn (&bib, true);
     }
   } catch (std::exception& x) {
     std::cout << "Unexpected exception: " << x.what() << std::endl;
