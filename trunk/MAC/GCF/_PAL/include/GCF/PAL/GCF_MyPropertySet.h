@@ -111,7 +111,7 @@ class GCFMyPropertySet : public GCFPropertySet
       { return _isTemporary; }
      
     void setAllAccessModes(TAccessMode mode, bool on);
-    void initProperties(const TPropertyConfig config[], unsigned int nrOfConfigs);
+    void initProperties(const TPropertyConfig config[]);
              
   private: // interface methods
     friend class GCFMyProperty;

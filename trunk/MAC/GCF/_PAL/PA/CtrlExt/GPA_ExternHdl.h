@@ -11,6 +11,7 @@
 #   define  PVSS_EXPORT
 # endif
 
+class GCFEvent;
 
 class GPAExternHdl : public BaseExternHdl
 {
@@ -36,6 +37,13 @@ class GPAExternHdl : public BaseExternHdl
   private:
     bool gpaConvertMsgToGCFEvent(const DynVar& msg, BlobVar& gcfEvent);
     bool gpaConvertGCFEventToMsg(const BlobVar& gcfEvent, DynVar& msg);
+    
+    ssize_t recv (void* buf, size_t count);
+    void encodeEvent(GCFEvent& e, DynVar& msg);
+  
+  private:  
+    const unsigned char* _msgBuffer;
+    unsigned int _bytesLeft;
 };
 
 
