@@ -36,6 +36,8 @@
 #include "test.h"   // includes <string>, <iosfwd>
 #include <Common/lofar_vector.h>
 
+using std::vector;
+
 class Suite
 {
 public:

@@ -33,6 +33,8 @@
 #include <Common/lofar_iostream.h>
 #include <Common/LofarLogger.h>
 
+using std::endl;
+
 #ifdef _MSC_VER
 //Allow return-less mains:
 #pragma warning(disable: 4541)

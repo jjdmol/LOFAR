@@ -26,6 +26,9 @@
 #include "Echo_Protocol.ph"
 #include <GCF/CmdLine.h>
 
+using std::cout;
+using std::endl;
+
 Echo::Echo(string name) : GCFTask((State)&Echo::initial, name)
 {
   // register the protocol for debugging purposes

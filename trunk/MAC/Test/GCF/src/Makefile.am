@@ -47,12 +47,12 @@ RTPing_DEPENDENCIES					= libgcfrttest.la $(LOFAR_DEPEND)
 BUILT_SOURCES = \
 	TST_Protocol.ph \
 	Echo_Protocol.ph \
-	log4cplus.properties
+	mac.log_prop
 
 EXTRA_DIST = \
 	TST_Protocol.ph \
 	Echo_Protocol.ph \
-	log4cplus.properties
+	mac.log_prop
 	
 #in case of make install these files will be copied to the bindir beside the test apps
 configfilesdir=$(bindir)
@@ -61,11 +61,11 @@ configfiles_DATA= \
 	RTPing.conf \
 	Application1.conf \
 	Application2.conf \
-	log4cplus.properties \
+	mac.log_prop \
 	customPrepPVSSDB.ctl
 	
 MAC_CONFIG = $(top_srcdir)/../../Config
-%.properties: $(MAC_CONFIG)/%.properties
+%.log_prop: $(MAC_CONFIG)/%.log_prop
 	cp $< $@
 	
 %.conf: gcf-test.conf.in

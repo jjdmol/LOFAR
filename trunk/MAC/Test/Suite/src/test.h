@@ -37,6 +37,10 @@
 #include <Common/lofar_map.h>
 #include <Common/lofar_list.h>
 
+using std::string;
+using std::ostream;
+using std::map;
+using std::list;
 // The following have underscores because they are macros
 // (and it's impolite to usurp other users' functions!).
 // For consistency, _succeed() also has an underscore.
@@ -47,7 +51,7 @@
 class Test
 {
   public:
-    Test(const string& name,ostream* osptr = 0);
+    Test(const string& name, ostream* osptr = 0);
     virtual ~Test(){}
     virtual void run() = 0;
 
