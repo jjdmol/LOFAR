@@ -265,7 +265,7 @@ void TH_MPI::init(int argc, const char *argv[])
     MPI_Initialized(&initialized);
     if (!initialized)
     {
-      MPI_Init (&argc,&argv);
+      MPI_Init (&argc,(char***)&argv);
     }
 }
 
