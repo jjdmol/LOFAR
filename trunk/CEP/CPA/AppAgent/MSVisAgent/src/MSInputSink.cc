@@ -106,22 +106,22 @@ void MSInputSink::fillHeader (DataRecord &hdr,const DataRecord &select)
     FailWhen(channels_[1] < channels_[0] || channels_[1]>=num_channels_,
           "illegal channel selection");
     IPosition ip0(1,channels_[0]),ip1(1,channels_[1]);
-    ch_freq = ch_freq(ip0,ip1);
-    ch_width = ch_width(ip0,ip1);
+    Array<Double> ch_freq1 = ch_freq(ip0,ip1);
+    Array<Double> ch_width1 = ch_width(ip0,ip1);
     // if frequencies are in decreasing order, freq axis needs to be flipped
-    if( ch_freq(IPosition(1,0)) > ch_freq(IPosition(1,channels_[1]-channels_[0])) )
+    if( ch_freq1(IPosition(1,0)) > ch_freq1(IPosition(1,channels_[1]-channels_[0])) )
     {
       dprintf(2)("reversing frequency channel\n");
       hdr[FFlipFreq] = flip_freq_ = True;
-      hdr[FChannelFreq] = refAipsToBlitz<double,1>(ch_freq).reverse(blitz::firstDim);
-      hdr[FChannelWidth] = refAipsToBlitz<double,1>(ch_width).reverse(blitz::firstDim);
+      hdr[FChannelFreq] = refAipsToBlitz<double,1>(ch_freq1).reverse(blitz::firstDim);
+      hdr[FChannelWidth] = refAipsToBlitz<double,1>(ch_width1).reverse(blitz::firstDim);
     }
     else
     {
       dprintf(2)("frequency channel is in normal order\n");
       hdr[FFlipFreq] = flip_freq_ = False;
-      hdr[FChannelFreq]  = ch_freq;
-      hdr[FChannelWidth] = ch_width;
+      hdr[FChannelFreq]  = ch_freq1;
+      hdr[FChannelWidth] = ch_width1;
     }
     // now get the correlations & their types
     int polzn = mssub1c.polarizationId()(ddid);
