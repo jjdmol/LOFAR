@@ -179,21 +179,29 @@ void Beamlet::calculate_weights(const Array<W_TYPE, 2>&          pos,
   	  for (int si = 0; si < nelements; si++)
 	  {
 	      //
-	      // calculate (xm - yl -zn) for both polarizations
+	      // calculate (xm - yl - zn) for both polarizations
 	      // of all elements
 	      //
 
 	      // x-polarization
-	      weights(all, si, bi, 0) =
-		  (pos(si*2, 0) * (*lmn)(all, 1))
-		  - (pos(si*2, 1) * (*lmn)(all, 0))
-		  - (pos(si*2, 2) * (*lmn)(all, 2));
+	      for (int t = 0; t < compute_interval; t++)
+	      {
+	      weights(t, si, bi, 0) =
+		  (pos(si*2, 0) * (*lmn)(t, 1))
+		  - (pos(si*2, 1) * (*lmn)(t, 0))
+		  - (pos(si*2, 2) * (*lmn)(t, 2));
 
 	      // y-polarization
-	      weights(all, si, bi, 1) =
-		  (pos(si*2+1, 0) * (*lmn)(all, 1))
-		  - (pos(si*2+1, 1) * (*lmn)(all, 0))
-		  - (pos(si*2+1, 2) * (*lmn)(all, 2));
+	      weights(t, si, bi, 1) =
+		  (pos(si*2+1, 0) * (*lmn)(t, 1))
+		  - (pos(si*2+1, 1) * (*lmn)(t, 0))
+		  - (pos(si*2+1, 2) * (*lmn)(t, 2));
+	      }
+
+	      if (bi == 0 && si == 0)
+	      {
+		  LOG_DEBUG_STR("weights=" << weights(all, si, bi, 0));
+	      }
 	  }
 
 	  weights(all, all, bi, all) *=
@@ -201,6 +209,10 @@ void Beamlet::calculate_weights(const Array<W_TYPE, 2>&          pos,
 
 	  //LOG_TRACE(formatString("calculating weights for frequency %f",
 	  //freq));
+      }
+      else
+      {
+	  weights(all, all, bi, all) = complex<W_TYPE>(100.0, 100.0);
       }
   }
 
