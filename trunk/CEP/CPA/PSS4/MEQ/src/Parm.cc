@@ -308,16 +308,17 @@ int Parm::getResult (Result::Ref &resref,
   retcode |= RES_DEP_DOMAIN | (newreq?RES_UPDATED:0);
   // Get the domain, etc.
   const Cells &cells = request.cells();
-  int ndFreq = cells.nfreq();
-  int ndTime = cells.ntime();
   double* datar = 0;
-  double stepFreq = cells.stepFreq();
-  double halfStepFreq = stepFreq * .5;
-  double firstMidFreq = domain.startFreq() + halfStepFreq;
-  double lastMidFreq  = firstMidFreq + (ndFreq-1) * stepFreq;
-  double firstMidTime = cells.time(0);
-  double lastMidTime  = cells.time(ndTime-1);
-  vs.setReal(ndFreq, ndTime);
+  const LoVec_double & midFreq = cells.center(FREQ),
+                       midTime = cells.center(TIME);
+  int ndFreq = midFreq.extent(0);
+  int ndTime = midTime.extent(0);
+                       
+  double firstMidFreq = midFreq(0);
+  double lastMidFreq  = midFreq(ndFreq-1);
+  double firstMidTime = midTime(0);
+  double lastMidTime  = midTime(ndTime-1);
+  vs.setReal(ndFreq,ndTime);
   // Iterate over all polynomials.
   // Evaluate one if its domain overlaps the request domain.
   cdebug(3)<<"midfreqs: "<<firstMidFreq<<":"<<lastMidFreq<<endl;
@@ -327,58 +328,41 @@ int Parm::getResult (Result::Ref &resref,
   {
     const Polc& polc = *((*ppolcs)[i]);
     cdebug(3)<<"polc "<<i<<" domain is "<<polc.domain()<<endl;
-    double pfreq0 = polc.domain().startFreq(), 
-           pfreq1 = polc.domain().endFreq(),
-           ptime0 = polc.domain().startTime(), 
-           ptime1 = polc.domain().endTime();
+    double pfreq0 = polc.domain().start(FREQ), 
+           pfreq1 = polc.domain().end(FREQ),
+           ptime0 = polc.domain().start(TIME), 
+           ptime1 = polc.domain().end(TIME);
     if( firstMidFreq < pfreq1 && lastMidFreq > pfreq0 &&
         firstMidTime < ptime1 && lastMidTime > ptime0 )
     {
-      // Determine which part of the request domain is covered by the
-      // polynomial.
-      int stFreq = 0;
-      if (firstMidFreq < pfreq0) {
-        stFreq = 1 + int((pfreq0 - firstMidFreq) / stepFreq);
-      }
-      int nrFreq = ndFreq - stFreq;
-      if (lastMidFreq > pfreq1) {
-        int remFreq = 1 + int((lastMidFreq - pfreq1) / stepFreq);
-        nrFreq -= remFreq;
-      }
-      int stTime = 0;
-      while (cells.time(stTime) < ptime0) {
-        stTime++;
-      }
-      int lastTime = ndTime-1;
-      while (cells.time(lastTime) > ptime1) {
-        lastTime--;
-      }
-      int nrTime = lastTime - stTime + 1;
-      cdebug(3)<<"polc "<<i<<" overlap: "<<stFreq<<" "<<nrFreq
-                <<" "<<stTime<<" "<<nrTime<<endl;
+      // Determine which subset of the request Cells is covered by the poly
+      int ifreq0 = 0, ifreq1 = ndFreq-1;
+      while( midFreq(ifreq0) < pfreq0 ) 
+        ifreq0++;
+      while( midFreq(ifreq1) > pfreq1 )
+        ifreq1--;
+      int itime0 = 0, itime1 = ndTime-1;
+      while( midTime(itime0) < ptime0 ) 
+        itime0++;
+      while( midTime(itime1) > ptime1 )
+        itime1--;
+      int nrFreq = ifreq1 - ifreq0 + 1;
+      int nrTime = itime1 - itime0 + 1;
+      cdebug(3)<<"polc "<<i<<" overlap: "<<ifreq0<<":"<<ifreq1
+                <<","<<itime0<<":"<<itime1<<endl;
       // If the overlap is full, only this polynomial needs to be evaluated.
-      if( stFreq == 0 && nrFreq == ndFreq &&
-          stTime == 0 && nrTime == ndTime ) {
-        polc.evaluate (vs, request);
+      if( ifreq0 == 0 && ifreq1 == ndFreq-1 &&
+          itime0 == 0 && itime1 == ndTime-1 )
+      {
+        polc.evaluate(vs,request);
         return retcode;
       }
-      // Form the domain and request for the overlapping part
-      // and evaluate the polynomial.
-      double startFreq = domain.startFreq() + stFreq*stepFreq;
-      double startTime = cells.time(stTime) - cells.stepTime(stTime) / 2;
-      double endTime   = cells.time(lastTime) + cells.stepTime(lastTime) / 2;
-      Domain partDom(startFreq, startFreq + nrFreq*stepFreq,
-                     startTime, endTime);
-      LoVec_double partStartTime(nrTime);
-      LoVec_double partEndTime(nrTime);
-      for (int j=0; j<nrTime; j++) {
-        partStartTime(j) = cells.time(stTime+j) - cells.stepTime(stTime+j)/2;
-        partEndTime(j)   = cells.time(stTime+j) + cells.stepTime(stTime+j)/2;
-      }
-      Cells partCells (partDom, nrFreq, partStartTime, partEndTime);
-      Request partReq(partCells, request.calcDeriv());
+      // Evaluate polc over overlapping part of grid
       VellSet partRes;
-      polc.evaluate (partRes, partReq);
+      polc.evaluate(partRes,
+                    midFreq(blitz::Range(ifreq0,ifreq1)),
+                    midTime(blitz::Range(itime0,itime1)),
+                    request.calcDeriv());
       // Create the result matrix if it is the first Time.
       // Now it is initialized with zeroes (to see possible errors).
       // In the future the outcommnented statement can be used
@@ -392,7 +376,7 @@ int Parm::getResult (Result::Ref &resref,
       // Note that in principle a polynomial could be a single coefficient
       // in which case it returns a single value.
       const double* from = partRes.getValue().realStorage();
-      double* to = datar + stFreq + stTime*ndFreq;
+      double* to = datar + ifreq0 + itime0*ndFreq;
       if (partRes.getValue().nelements() == 1) {
         for (int iTime=0; iTime<nrTime; iTime++) {
           for (int iFreq=0; iFreq<nrFreq; iFreq++) {

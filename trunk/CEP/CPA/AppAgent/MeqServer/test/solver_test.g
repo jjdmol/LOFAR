@@ -46,20 +46,11 @@ const mqsinit := function (verbose=3,debug=[=],gui=F)
   }
 }
 
-const solver_test := function (stage=0,gui=T,debug=[=],verbose=1)
+const solver_test := function (stage=0,gui=F,debug=[=],verbose=1)
 {
   global mqs;
   mqsinit(debug=debug,verbose=verbose,gui=gui)
   mqs.meq('Clear.Forest');
-  # set verbose debugging messages
-  mqs.setdebug("MeqNode MeqForest MeqSink MeqSpigot",debug_level);
-  mqs.setdebug("MeqNode MeqForest MeqSink MeqSpigot",debug_level);
-  mqs.setdebug("MeqServ MeqVisHandler",debug_level);
-  mqs.setdebug("MeqNode",debug_level);
-  mqs.setdebug("Glish",debug_level);
-  #  mqs.setdebug("meqserver",debug_level);
-  # initialize meqserver
-  mqs.init([output_col="PREDICT"],wait=T);
 
   # define true parameter values. Solutions will start from zero
   x0 := 2.; y0 := 1.;
@@ -105,7 +96,7 @@ const solver_test := function (stage=0,gui=T,debug=[=],verbose=1)
     # create solver
     global rec;
     rec := meq.node('MeqSolver','solver',children="eq1 eq2");
-    rec.num_steps := 5;
+    rec.num_steps := 10;
     rec.parm_group := hiid('Parm');
     rec.solvable := meq.solvable_list("x y");
     print mqs.meq('Create.Node',rec);
@@ -113,11 +104,9 @@ const solver_test := function (stage=0,gui=T,debug=[=],verbose=1)
     # resolve children
     print mqs.meq('Resolve.Children',[name='solver']);
 
-    print mqs.meq('Node.Publish.Results',[name='eq1']);
-    print mqs.meq('Node.Publish.Results',[name='lhs1']);
-    print mqs.meq('Node.Publish.Results',[name='c1']);
-    print mqs.meq('Node.Publish.Results',[name='a1x']);
-    print mqs.meq('Node.Publish.Results',[name='x']);
+#    for( n in "eq1 lhs1 c1 a1x x" )
+    for( n in "x eq1 eq2" )
+      print mqs.meq('Node.Publish.Results',[name=n]);
 
     # execute request on x and y parms to load polcs and get original values
     global cells,request,res;

@@ -51,24 +51,6 @@ const meq.get_domain := function (x)
     fail 'meq.get_domain(): argument is not a meq.domain or a meq.polc';
 }
 
-#------ meq.get_freq_grid(cells)
-# Given a cells, returns its frequency grid (i.e. a vector of num_freq 
-# actual frequency values)
-const meq.get_freq_grid := function (cells)
-{
-  return cells.domain[1] + 
-          (cells.domain[2]-cells.domain[1])*
-            ((1:cells.num_freq)-0.5)/cells.num_freq;
-}
-
-#------ meq.get_time_grid(cells)
-# Given a cells, returns its time grid (i.e., simply the .times field.)
-# This is trivial but provided for consistency.
-const meq.get_time_grid := function (cells)
-{
-  return cells.times;
-}
-
 #------ meq.get_full_grid(x,y,cells)
 # Given a cells, fills in two vectors with the coordinates of every grid
 # point defined by that cells, as follows (assuming N frequencies and M
@@ -77,8 +59,8 @@ const meq.get_time_grid := function (cells)
 #     [y1 ... y1,y2 ... y2,y3 ... y3, ... ,yM,...,yM ]
 const meq.get_full_grid := function (ref x,ref y,cells)
 {
-  xp := meq.get_freq_grid(cells);
-  yp := meq.get_time_grid(cells);
+  xp := cells.grid[1];
+  yp := cells.grid[2];
   # create composite arrays where every combination is present
   val x := rep(xp,len(yp));           # [x1,...,xn,x1,...,xn,x1,...,xn,x1 ...
   val y := array(0.,len(xp)*len(yp)); # [y1 ... y1,y2 ... y2,y3 ... y3,y4 ...
@@ -86,7 +68,6 @@ const meq.get_full_grid := function (ref x,ref y,cells)
     y[(i-1)*len(xp)+(1:len(xp))] := yp[i];
   return len(x);
 }
-
 
 #------ meq.eval_polc()
 # Evaluates a polc over either (a) a set of points, or (b) a cells object.
@@ -126,7 +107,7 @@ const meq.eval_polc := function (polc,x=F,y=F,cells=F)
   }
   # if input was a cells, reform the result into a matrix
   if( is_dmi_type(cells,'MeqCells') )
-    res := array(res,cells.num_freq,len(cells.times));
+    res := array(res,len(cells.grid[1]),len(cells.grid[2]));
   return res;
 }
 
@@ -138,10 +119,8 @@ const meq.envelope_2domains := function (d1,d2)
 {
   if( !is_dmi_type(d1,'MeqDomain') )
     return d2;
-  d1[1] := min(d1[1],d2[1]);
-  d1[2] := max(d1[2],d2[2]);
-  d1[3] := min(d1[3],d2[3]);
-  d1[4] := max(d1[4],d2[4]);
+  for( a in d1.axes() )
+    d1[a] := range(d1[a],d2[a]);
   return d1;
 }
 

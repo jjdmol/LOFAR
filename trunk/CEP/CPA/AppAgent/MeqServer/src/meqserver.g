@@ -68,6 +68,24 @@ const _meqserver_binary :=
                       nostart=use_nostart,suspend=use_suspend);
   
 
+
+# Prints its arguments formatted between left and right margin
+# sep is the separator to use between arguments, default is space
+const margin_print := function (...,left=2,right=78,sep=' ')
+{
+  width := right-left;
+  prefix := spaste(rep(' ',left));
+  strs := split(paste(...,sep=sep),'');
+  length := len(strs);
+  i:=0;
+  while( i<length )
+  {
+    i1 := min(i+width,length);
+    print spaste(prefix,spaste(strs[(i+1):i1]));
+    i := i1;
+  }
+}
+
 const meq.server := function (appid='MeqServer',
     server=_meqserver_binary,options="-nogw -d0 -meq:M:M:MeqServer",
     verbose=1,gui=F,ref parent_frame=F,ref widgetset=dws,
@@ -79,6 +97,10 @@ const meq.server := function (appid='MeqServer',
                          parent_frame=parent_frame,widgetset=widgetset,
                          self=self,public=public) ))
     fail;
+  # init meqserver-specific data members
+  self.track_results := F;
+  self.results_log := [=];
+  
   # define meqserver-specific methods
   const public.meq := function (cmd_name,args=[=],wait_reply=F)
   {
@@ -148,6 +170,43 @@ const meq.server := function (appid='MeqServer',
     rec.request := req;
     return public.meq('Node.Execute',rec,wait_reply=T);
   }
+  
+  # enables or disables printing of node_result events
+  const public.track_results := function (enable=T)
+  {
+    wider self,public;
+    if( enable )
+    {
+      self.dprint(2,'auto-printing all node_result events');
+      # if already executed a whenever, activate it
+      if( has_field(self,'weid_print_results') )
+        activate self.weid_print_results;
+      else
+      {
+        whenever self.relay->node_result do
+        {
+          print '============= result for node: ',$value.name;
+          margin_print($value);
+        }
+        # store id of this wheever
+        self.weid_print_results := last_whenever_executed();
+      }
+    }
+    else  # disable
+    {
+      self.dprint(2,'disabling auto-printing of node_result events');
+      deactivate self.weid_print_results;
+    }
+    return T;
+  }
+  
+  if( verbose>0 )
+  {
+    self.dprint(1,'verbose>0: auto-enabling node_result output');
+    public.track_results(T);
+    self.dprint(1,'you can disable this by calling .track_results(F)');
+  }
+  
   
   return ref public;
 }

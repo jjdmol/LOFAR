@@ -182,7 +182,10 @@ int Meq::VisDataMux::deliverTile (VisTile::Ref::Copy &tileref)
   {
     cdebug(3)<<"have handlers for did "<<did<<", got tile "<<tileref->sdebug(DebugLevel-1)<<endl;
     // For now, generate the request right here.
-    Request req(VisHandlerNode::makeCells(*tileref,minfreq,maxfreq),False);
+    Cells::Ref cellref(DMI::ANONWR);
+    VisHandlerNode::fillCells(cellref(),*tileref,minfreq,maxfreq);
+    Request::Ref reqref;
+    Request &req = reqref <<= new Request(cellref.deref_p(),0);
     forest_.assignRequestId(req);
     cdebug(3)<<"have handler, generated request id="<<req.id()<<endl;
     // deliver to all known handlers

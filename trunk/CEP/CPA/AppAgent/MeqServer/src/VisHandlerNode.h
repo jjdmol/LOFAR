@@ -51,9 +51,9 @@ class VisHandlerNode : public Node
     virtual int deliver (const Request &req,VisTile::Ref::Copy &tileref,
                          VisTile::Format::Ref &outformat) =0;
     
-    // returns Meq::Cells object corresponding to this VisTile
+    // returns Meq::Cells object corresponding to a VisTile
     //##ModelId=3F9FF6970269
-    static Cells * makeCells (const VisTile &tile,double minfreq,double maxfreq);
+    static void fillCells (Cells &cells,const VisTile &tile,double minfreq,double maxfreq);
     
     //##ModelId=3F98DAE602DA
     LocalDebugContext;

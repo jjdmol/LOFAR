@@ -12,7 +12,7 @@
 #pragma aid Create Delete Get Set State Request Resolve Child Children List
 #pragma aid App Command Args Result Data Processing Error Message Code
 #pragma aid Execute Clear Cache Save Load Forest Recursive 
-#pragma aid Publish Results Enable Event Id
+#pragma aid Publish Results Enable Disable Event Id
 #pragma aid addstate
     
 namespace Meq
@@ -67,6 +67,7 @@ class MeqServer : public VisRepeater, public EventRecepient
     void clearForest (DataRecord::Ref &out,DataRecord::Ref::Xfer &in);
     
     void publishResults (DataRecord::Ref &out,DataRecord::Ref::Xfer &in);
+    void disablePublishResults (DataRecord::Ref &out,DataRecord::Ref::Xfer &in);
     
     virtual int receiveEvent (const EventIdentifier &evid,const ObjRef::Xfer &evdata);
     

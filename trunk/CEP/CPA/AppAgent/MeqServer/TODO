@@ -1,5 +1,7 @@
 MEQ in general:
 
+  * meqsink_test() exits when no such MS; it shouldn't
+  
   * Update documentation!
                 
   * check performance: why does privatizing message arguments in MeqServer
