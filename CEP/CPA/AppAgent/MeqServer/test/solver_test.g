@@ -50,7 +50,7 @@ const solver_test := function (gui=T,debug_level=2,verbose=1)
   # create solver
   global rec;
   rec := meqnode('MeqSolver','solver',children="eq1 eq2");
-  rec.num_steps := 3;
+  rec.num_steps := 5;
   rec.solvable_parm := [ by_list=meqinitstatelist() ];
   meqaddstatelist(rec.solvable_parm.by_list,"x y",[solvable=T]); 
   meqaddstatelist(rec.solvable_parm.by_list,"*",[solvable=F]); 

@@ -134,6 +134,11 @@ const meqserver := function (appid='MeqServer',
   return ref public;
 }
 
+const meqrequestid := function(domain_id,config_id=0,iter_id=0)
+{ 
+  return hiid(domain_id,config_id,iter_id);
+}
+
 const meqnode := function (class,name,children=F,default=[=],config_groups="")
 {
   defrec := [ class=class,name=name ];
@@ -188,11 +193,13 @@ const meqaddstatelist := function (ref rec,node,state)
 
 const meqrequest := function (cells,request_id=F,calc_deriv=F)
 {
-  global _meqrequest_id;
+  global _meqdomain_id;
+  # if no request ID supplied, generate one by incrementing the
+  # global domain ID. 
   if( is_boolean(request_id) )
-    request_id := _meqrequest_id +:= 1;
-  else
-    _meqrequest_id := request_id;
+    request_id := meqrequestid(_meqdomain_id+:=1);
+  else  # else, setup global domain ID from the one given in the request ID
+    _meqdomain_id := as_integer(request_id ~ s/\..*$//);
   rec := [ cells=cells,request_id=hiid(request_id),calc_deriv=calc_deriv ];
   rec::dmi_actual_type := 'MeqRequest';
   
