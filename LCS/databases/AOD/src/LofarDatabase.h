@@ -67,7 +67,8 @@ public:
 	//  DATA-ACCESS FUNCTIONS
 
 	/// Add ...depends of how to handle fields...
-	virtual	void	add		(const void	*record);
+	virtual	int		add		(const char	*fields,
+							 const char	*values);
 
 	/// Searches the database for records that meet the given condition.
 	/// All found records are deleted from the database.
@@ -164,6 +165,7 @@ private:
 	virtual LofarDatabase*	clone() const;
 
 	friend class MySQLDatabase;
+	friend class PgSQLDatabase;
 };
 
 ////////////////////////// inline functions ///////////////////////////////
