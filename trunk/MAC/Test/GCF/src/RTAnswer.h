@@ -1,8 +1,8 @@
 #ifndef ANSWER_H
 #define ANSWER_H
 
-#include <GCF/GCF_RTAnswer.h>
-#include <GCF/GCF_Fsm.h>
+#include <GCF/PALlight/GCF_RTAnswer.h>
+#include <GCF/TM/GCF_Fsm.h>
 
 class GCFEvent;
 class GCFTask;

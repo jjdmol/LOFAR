@@ -24,6 +24,7 @@
 #include "RTEcho.h"
 #include <stdio.h>
 #include "Echo_Protocol.ph"
+#include <GCF/CmdLine.h>
 
 Echo::Echo(string name) : GCFTask((State)&Echo::initial, name)
 {
@@ -109,10 +110,22 @@ GCFEvent::TResult Echo::connected(GCFEvent& e, GCFPortInterface& /*p*/)
 int main(int argc, char** argv)
 {
   GCFTask::init(argc, argv);
-  
-  Echo echo_task("ECHO");
 
-  echo_task.start();
+  string brdnr("1");
+  if (argv != 0)
+  {
+    CCmdLine cmdLine;
+
+    // parse argc,argv 
+    if (cmdLine.SplitLine(argc, argv) > 0)
+    {
+      brdnr = cmdLine.GetSafeArgument("-brdnr", 0, "1");
+    }            
+  }
+
+  Echo echoTask(string("ECHO") + brdnr);
+  
+  echoTask.start();
 
   GCFTask::run();
   

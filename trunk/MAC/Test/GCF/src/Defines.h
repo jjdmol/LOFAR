@@ -1,18 +1,5 @@
 #include <GCF/GCF_Defines.h>
 
-//#define WAIT_FOR_INPUT
-
-#ifdef WAIT_FOR_INPUT
-#define CHECK_DB \
-          { \
-            string input; \
-            cout << "Check SCADA DB content: "; \
-            cin >> input; \
-          }
-#else
-#define CHECK_DB {}
-#endif
-
 #define NEXT_TEST(_test_, _descr_) \
   { \
     setCurSubTest(#_test_, _descr_); \
@@ -27,6 +14,7 @@
 
 #define ABORT_TESTS \
   { \
+    cout << "TESTS ABORTED due to an ERROR or terminated" << endl; \
     FINISH; \
   }
 
@@ -59,15 +47,15 @@
 
 const TProperty propertiesSA1[] =
 {
-  {"F_P4", LPT_INTEGER, GCF_READWRITE_PROP, "10"},
-  {"F_P5", LPT_CHAR, GCF_READWRITE_PROP, "20"},
-  {"G_P6", LPT_DOUBLE, GCF_READWRITE_PROP, "12.1"},
-  {"G_P7", LPT_STRING, GCF_READWRITE_PROP, "geit"},
+  {"F.P4", LPT_INTEGER, GCF_READWRITE_PROP, "10"},
+  {"F.P5", LPT_CHAR, GCF_READWRITE_PROP, "20"},
+  {"G.P6", LPT_DOUBLE, GCF_READWRITE_PROP, "12.1"},
+  {"G.P7", LPT_STRING, GCF_READWRITE_PROP, "geit"},
 };
 
 const TPropertySet propertySetA1 = 
 {
-  "TTypeA", true, 4, propertiesSA1
+  "TTypeA", true, (sizeof(propertiesSA1)/sizeof(TProperty)), propertiesSA1
 };
 
 // PropertySetA1: end
@@ -83,7 +71,7 @@ const TProperty propertiesSB1[] =
 
 const TPropertySet propertySetB1 = 
 {
-  "TTypeB", true, 3, propertiesSB1
+  "TTypeB", true, (sizeof(propertiesSB1)/sizeof(TProperty)), propertiesSB1
 };
 
 // PropertySetB1: end
@@ -99,7 +87,7 @@ const TProperty propertiesSB2[] =
 
 const TPropertySet propertySetB2 = 
 {
-  "TTypeB", true, 3, propertiesSB2
+  "TTypeB", true, (sizeof(propertiesSB2)/sizeof(TProperty)), propertiesSB2
 };
 
 // PropertySetB2: end
@@ -115,7 +103,7 @@ const TProperty propertiesSB3[] =
 
 const TPropertySet propertySetB3 = 
 {
-  "TTypeB", true, 3, propertiesSB3
+  "TTypeB", true, (sizeof(propertiesSB3)/sizeof(TProperty)), propertiesSB3
 };
 
 // PropertySetB3: end
@@ -132,7 +120,7 @@ const TProperty propertiesSB4[] =
 
 const TPropertySet propertySetB4 = 
 {
-  "TTypeB", false, 3, propertiesSB4
+  "TTypeB", false, (sizeof(propertiesSB4)/sizeof(TProperty)), propertiesSB4
 };
 
 // PropertySetB4: end
@@ -147,7 +135,7 @@ const TProperty propertiesSC1[] =
 
 const TPropertySet propertySetC1 = 
 {
-  "TTypeC", true, 2, propertiesSC1
+  "TTypeC", true, (sizeof(propertiesSC1)/sizeof(TProperty)), propertiesSC1
 };
 
 // PropertySetC1: end
@@ -260,7 +248,7 @@ const TProperty propertiesSD1[] =
 
 const TPropertySet propertySetD1 = 
 {
-  "TTypeD", true, 100, propertiesSD1
+  "TTypeD", true, (sizeof(propertiesSD1)/sizeof(TProperty)), propertiesSD1
 };
 
 // PropertySetD1: end
@@ -279,7 +267,7 @@ const TProperty propertiesSE1[] =
 
 const TPropertySet propertySetE1 = 
 {
-  "TTypeE", false, 6, propertiesSE1
+  "TTypeE", false, (sizeof(propertiesSE1)/sizeof(TProperty)), propertiesSE1
 };
 
 // PropertySetE1: end

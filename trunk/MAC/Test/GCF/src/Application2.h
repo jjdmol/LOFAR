@@ -14,6 +14,8 @@ class Application : public GCFTask , public Test
 {
   public:
     Application();
+    virtual ~Application();
+    
     void run();
     
   private: 

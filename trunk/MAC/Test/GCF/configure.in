@@ -5,7 +5,7 @@ AC_INIT(src/Application1.h)
 dnl AC_CONFIG_AUX_DIR(config)
 dnl AM_CONFIG_HEADER(config/config.h)
 AM_CONFIG_HEADER(config.h)
-AM_INIT_AUTOMAKE(GCFTM, 0.1)
+AM_INIT_AUTOMAKE(TESTGCF, 4.0)
 
 dnl Initialize for LOFAR (may set compilers)
 lofar_INIT
@@ -60,6 +60,7 @@ lofar_EXTERNAL(common,1,Common/LofarTypes.h,,)
 lofar_EXTERNAL(GCFTM,1,GCF/TM/GCF_Control.h,,)
 lofar_EXTERNAL(GCFCommon,1,GCF/GCF_Defines.h,,)
 lofar_EXTERNAL(GCFPAL,1,GCF/PAL/GCF_Property.h,,)
+lofar_EXTERNAL(GCFPALlight,1,GCF/PALlight/GCF_RTMyProperty.h,,)
 lofar_PACKAGE(MAC/Test/Suite)
 
                        

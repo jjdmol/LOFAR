@@ -43,12 +43,6 @@ client.type=TCP
 server.port=20041 # MSPP
 server.type=TCP
 
-[SS]
-host=localhost
-client.type=TCP
-server.port=20042 # MSPP
-server.type=TCP
-
 [PMLlite]
 host=localhost
 client.type=TCP # SAP
@@ -66,12 +60,20 @@ client.type=TCP
 host=localhost
 client.type=TCP
 
-[ECHO]
+[ECHO1]
 host=localhost
 server.port=20098 # SPP
 server.type=TCP
 
-[PING]
+[PING1]
 host=localhost
 client.type=TCP   # SAP
 
+[ECHO2]
+host=localhost
+server.port=20097 # SPP
+server.type=TCP
+
+[PING2]
+host=localhost
+client.type=TCP   # SAP
