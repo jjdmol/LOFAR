@@ -11,10 +11,13 @@ ln -s ../../../../src/clearBB .
 ln -s ../../../../src/clearParamTables .
 ln -s ../../../../src/createParamTables .
 ln -s ../../../../test/initparms .
+ln -s ../../../../test/run.test* .
 ln -s ../tBBS2 . 
 ln -s ../../src/parmdb . 
 ln -s ../../../../test/generalinfo.sh .
 ln -s ../../../../test/cp2web.sh .
+# remove emacs backup files
+rm -f ./run.test*~
 
 rm -f demo{3,3p,10}-1.MS.{dat,des,uvw}
 ln -s /data/PSS3/diepen/BBS2/demo3/demo.dat demo3-1.MS.dat

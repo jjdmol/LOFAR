@@ -1,0 +1,33 @@
+#!/bin/sh
+# this script must be called with nriter and usernm
+
+if [ "$#" != "2" ]; then
+ echo "not the correct number of parameters"
+ echo "Usage : $0 nIter userName"
+ exit 1
+fi
+
+niter=$1
+usernm=$2
+
+. ./initparms
+
+# Do testEJ115Int
+echo ""
+echo "Doing testEJ115Int"
+
+echo "  Generating parm tables ..."
+# use functions in initparms to initialize parmtables
+beginParmdbInputFile "dbtype='aips', user='$usernm', tablename='demo3-1'"
+makeMeq
+perturbEJ11real
+applyfile
+
+beginParmdbInputFile "dbtype='aips', user='$usernm', tablename='demo3_gsm-1'"
+makeGsm
+applyfile
+
+echo "  Preparing BlackBoard ..."
+time ./clearBB -user $usernm
+echo "  Starting solve ..."
+time ./tBBS2 tBBS2.testEJ115Int $niter $usernm >& testEJ115Int.out

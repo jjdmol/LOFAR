@@ -1,0 +1,31 @@
+#!/bin/sh
+# this script must be called with nriter and usernm
+
+if [ "$#" != "2" ]; then
+ echo "not the correct number of parameters"
+ exit 1
+fi
+
+niter=$1
+usernm=$2
+
+. ./initparms
+
+# Do test10Sources
+echo ""
+echo "Doing test10Sources"
+
+echo "  Generating parm tables ..."
+# use functions in initparms to initialize parmtables
+beginParmdbInputFile "dbtype='aips', user='$usernm', tablename='demo10-1'"
+makeMeq
+applyfile
+
+beginParmdbInputFile "dbtype='aips', user='$usernm', tablename='demo10_gsm-1'"
+makePertGsm10
+applyfile
+
+echo "  Preparing BlackBoard ..."
+time ./clearBB -user $usernm
+echo "  Starting solve ..."
+time ./tBBS2 tBBS2.test10Sources $niter $usernm >& test10Sources.out
