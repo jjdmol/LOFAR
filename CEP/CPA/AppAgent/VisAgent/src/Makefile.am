@@ -2,7 +2,8 @@ dmi_dir = $(lofar_sharedir)/../DMI
 
 lib_LTLIBRARIES = libvisagent.la
 
-libvisagent_la_SOURCES = AID-VisAgent-Registry.cc VisFileInputAgent.cc
+libvisagent_la_SOURCES = AID-VisAgent-Registry.cc \
+  VisFileInputAgent.cc VisFileOutputAgent.cc VisFileAgentBase.cc
   
 
 # script used to generate AID maps

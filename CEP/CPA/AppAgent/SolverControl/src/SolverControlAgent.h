@@ -145,12 +145,12 @@ class SolverControlAgent : public AppControlAgent
     //##Documentation
     //## As long as the stop_flag_ is raised, returns StopEvent(). Otherwise
     //## returns no events.
-    virtual bool getEvent (HIID &event, DataRecord::Ref &dataref, bool wait = False);
+    virtual int getEvent (HIID &event, DataRecord::Ref &dataref, const HIID &mask, bool wait = False);
   
     //##ModelId=3DFF2D5F0008
     //##Documentation
     //## True for StopEvent() events as long as the stop_flag_ is raised.
-    virtual bool hasEvent (const HIID &mask = HIID(), bool outOfSeq = False);
+    virtual int hasEvent (const HIID &mask = HIID(), bool outOfSeq = False);
   
     //##ModelId=3E00C57E0304
     //##Documentation
@@ -238,9 +238,15 @@ class SolverControlAgent : public AppControlAgent
     //## class's startSolution()
     void initSolution (const DataRecord::Ref &params);
     
+    //##ModelId=3E258E45023A
     SolutionState state (SolutionState newstate);
 
   private:
+    //##ModelId=3E25905102E6
+    //##Documentation
+    //## Helper function for getEvent() and hasEvent()
+    int matchEvent (const HIID &event,DataRecord::Ref &dataref,const HIID &mask,int fail = OUTOFSEQ);
+      
     //##ModelId=3E005C7A016B
     //##Documentation
     //## Record containing current soution status
@@ -309,6 +315,7 @@ inline SolutionState SolverControlAgent::state() const
   return state_;
 }
 
+//##ModelId=3E258E45023A
 inline SolutionState SolverControlAgent::state (SolutionState newstate)
 {
   return state_ = newstate;

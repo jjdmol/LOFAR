@@ -24,72 +24,42 @@
 #define _VISAGENT_VISFILEINPUTAGENT_H 1
 
 #include <VisAgent/VisInputAgent.h>
+#include <VisAgent/VisFileAgentBase.h>
 
 //##ModelId=3DF9FECD0159
 //##Documentation
 //## VisFileInputAgent implements some common features & services for agents
 //## that get their input from a static data file (e.g., AIPS++ MSs, BOIO
 //## files).
-class VisFileInputAgent : public VisInputAgent
+class VisFileInputAgent : public VisInputAgent, public VisFileAgentBase
 {
   protected:
-    //##ModelId=3DF9FECD015F
-      typedef enum {
-        CLOSED  = 0,
-        HEADER  = 1,
-        DATA    = 2,
-        ENDFILE = 3,
-        ERROR   = 4
-      } FileState;
       
   private:
-    //##ModelId=3DF9FECE0047
-      FileState         filestate_;
     //##ModelId=3DF9FECE0055
-      DataRecord::Ref   header_,eventdata_;
-      
-      // will generate at most one event at a time
-    //##ModelId=3E00AA520286
-      HIID              event_;
+      DataRecord::Ref  header_;
+    //##ModelId=3E281884006E
+      bool suspended_;
       
   protected:
       
     //##ModelId=3DF9FECE00FC
       VisFileInputAgent ()
-          : filestate_(CLOSED)
+          : suspended_(False)
           {}
-      
-      // reports the file state
-    //##ModelId=3DF9FECE012A
-      FileState fileState    () const
-          { return filestate_; }
-      
-    //##ModelId=3DFDFC07004C
-      string fileStateString () const;
-      
-      // called form subclass to set the file state.
-    //##ModelId=3DF9FECE0154
-      void setFileState (FileState state);
-      
-      // sets the ERROR state, and caches an error message
-      // This will also generate an error event
-    //##ModelId=3DF9FECE01CA
-      void setErrorState (const string &msg);
-      
-      // generates an event
-    //##ModelId=3DF9FECE024A
-      void generateEvent (const HIID &evname);
-    //##ModelId=3DF9FECE02BA
-      void generateEvent (const HIID &evname,DataRecord::Ref &data);
-      
+  
       // returns header by reference
     //##ModelId=3DF9FECE0384
       DataRecord &  header     ()
-          { return header_.dewr(); }
+      { return header_.dewr(); }
 
       // initializes an empty header
     //##ModelId=3DF9FECE03AB
       DataRecord &  initHeader ();
+      
+    //##ModelId=3E2819650278
+      bool suspended () const
+      { return suspended_; }
           
   public:
       
@@ -97,16 +67,37 @@ class VisFileInputAgent : public VisInputAgent
       virtual int getHeader (DataRecord::Ref &hdr,bool wait = True);
   
     //##ModelId=3DF9FECF009D
-      virtual int hasHeader () const;
+      virtual int hasHeader ();
       
     //##ModelId=3DF9FECF00BF
-      virtual int hasTile   () const;
+      virtual int hasTile   ();
       
-    //##ModelId=3DF9FECF00DB
-      virtual bool getEvent (HIID &,DataRecord::Ref &data,bool wait = False);
+      //##ModelId=3E281894014E
+    //##Documentation
+    //## Tells the agent to suspend the input stream. Agents are not obliged to
+    //## implement this. An application can use suspend() to "advise" the input
+    //## agent that it is not keeping up with the input data rate; the agent
+    //## can use this to determine it queuing or load balancing strategy.
+      virtual void suspend()
+      { suspended_ = True; }
+
+      //##ModelId=3E28189901DD
+      //##Documentation
+      //## Resumes a stream after a suspend(). 
+      virtual void resume()
+      { suspended_ = False; }
       
-    //##ModelId=3DF9FECF01DA
-      virtual bool hasEvent (const HIID &mask = HIID(),bool outOfSeq = False);
+      
+      //##ModelId=3E2C299201D6
+      //##Documentation
+      //## Reports current state of agent. Default version always reports success
+      virtual int state() const;
+
+      //##ModelId=3E2C2999029A
+      //##Documentation
+      //## Reports current state as a string
+      virtual string stateString() const;
+
 };
 
 

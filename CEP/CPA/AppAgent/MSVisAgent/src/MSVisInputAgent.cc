@@ -21,11 +21,9 @@
 //  $Id$
 
 #define AIPSPP_HOOKS
-#include <MSVisAgent/MSVisInputAgent.h>
+#include "MSVisInputAgent.h"
 #include <Common/BlitzToAips.h>
 #include <DMI/AIPSPP-Hooks.h>
-
-using namespace MSVisAgentVocabulary;
 
 #include <aips/MeasurementSets/MSAntenna.h>
 #include <aips/MeasurementSets/MSAntennaColumns.h>
@@ -47,6 +45,8 @@ using namespace MSVisAgentVocabulary;
 #include <aips/Tables/ExprNodeSet.h>
 #include <aips/Tables/SetupNewTab.h>
 #include <aips/Tables/TableParse.h>
+
+using namespace MSVisAgentVocabulary;
 
 static int dum = aidRegistry_MSVisAgent();
 
@@ -135,8 +135,8 @@ void MSVisInputAgent::openMS (DataRecord &header,const DataRecord &select)
   header[FVDSID] = static_cast<HIID&>(vdsid_);
   
   // Get range of channels (default values: all channles)
-  channels_[0] = select[FChannelStartIndex].as_int(0);
-  channels_[1] = select[FChannelEndIndex].as_int(header[FChannelFreq].size()-1);
+  channels_[0] = header[FChannelStartIndex] = select[FChannelStartIndex].as_int(0);
+  channels_[1] = header[FChannelEndIndex]   = select[FChannelEndIndex].as_int(header[FChannelFreq].size()-1);
   
   // get and apply selection string
   String where = select[FSelectionString].as_string("");
@@ -162,6 +162,9 @@ bool MSVisInputAgent::init (const DataRecord::Ref &data)
 {
   try
   {
+    // make sure resume flag is cleared
+    resume();
+    
     const DataRecord &params = (*data)[FParams()];
 
     DataRecord &header = initHeader();
@@ -211,7 +214,7 @@ void MSVisInputAgent::close ()
   ms_ = MeasurementSet();
   tiles_.clear();
   tileformat_.detach();
-  setFileState(CLOSED);
+  setFileState(FILECLOSED);
 }
 
 //##ModelId=3DF9FECD021B
@@ -337,7 +340,8 @@ string MSVisInputAgent::sdebug ( int detail,const string &prefix,const char *nam
   }
   if( detail >= 1 || detail == -1 )
   {
-    appendf(out,"MS %d (%d rows)",msname_.c_str(),selms_.nrow());
+    appendf(out,"MS %s (%d rows) %s",msname_.c_str(),selms_.nrow(),
+        stateString().c_str());
   }
   if( detail >= 2 || detail <= -2 )
   {

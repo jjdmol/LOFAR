@@ -21,6 +21,7 @@
 //  $Id$
 
 #include "../src/MSVisInputAgent.h"
+#include "../src/MSVisOutputAgent.h"
 #include <DMI/DataArray.h>
 
 #include <AppAgent/AppControlAgent.h>
@@ -54,45 +55,76 @@ void checkEvents (AppAgent &agent)
     
 int main (int argc,const char *argv[])
 {
+//  MeasurementSet ms1("test.ms",Table::Old);
+  MeasurementSet ms2("test.ms",Table::Update);
+    
   using namespace MSVisAgentVocabulary;
   
   try 
   {
-    Debug::initLevels(argc,argv);
     Debug::setLevel("MSVisAgent",2);
+    Debug::initLevels(argc,argv);
 
-    // initialize parameter record
-    DataRecord::Ref dataref;
-    dataref <<= new DataRecord;
+      // initialize parameter record
+    DataRecord::Ref dataref(DMI::ANONWR);
 
     DataRecord &args = *new DataRecord;
-    dataref.dewr()[MSVisInputAgent::FParams()] <<= args;
+    dataref()[MSVisInputAgent::FParams()] <<= args;
+    
+      args[FMSName] = "test.ms";
+      args[FDataColumnName] = "DATA";
+      args[FTileSize] = 10;
 
-    args[FMSName] = "test.ms";
-    args[FDataColumnName] = "DATA";
-    args[FTileSize] = 10;
+      // setup selection
+      DataRecord &select = *new DataRecord;
+      args[FSelection] <<= select;
 
-    // setup selection
-    DataRecord &select = *new DataRecord;
-    args[FSelection] <<= select;
+        select[FDDID] = 0;
+        select[FFieldIndex] = 1;
+        select[FChannelStartIndex] = 10;
+        select[FChannelEndIndex]   = 20;
+        select[FSelectionString] = "ANTENNA1=1 && ANTENNA2=2";
+        
+    DataRecord &outargs = *new DataRecord;
+    dataref()[MSVisOutputAgent::FParams()] <<= outargs;
+    
+      outargs[FWriteFlags]  = True;
+      outargs[FFlagMask]    = 0xFF;
+      
+      outargs[FDataColumn]      = "";
+      outargs[FPredictColumn]   = "MODEL_DATA";
+      outargs[FResidualsColumn] = "RESIDUAL_DATA";
 
-    select[FDDID] = 0;
-    select[FFieldIndex] = 1;
-    select[FChannelStartIndex] = 10;
-    select[FChannelEndIndex]   = 20;
-    select[FSelectionString] = "ANTENNA1=1 && ANTENNA2=2";
-
-    cout<<"=================== creating agent ============================\n";
+    cout<<"=================== creating input agent ======================\n";
     // create agent
     MSVisInputAgent agent;
     checkEvents(agent);
+  
+    cout<<"=================== creating output agent ======================\n";
+    // create agent
+    MSVisOutputAgent outagent;
+    checkEvents(outagent);
 
-    cout<<"=================== initializing agent ========================\n";
+    cout<<"=================== initializing input agent ==================\n";
     bool res = agent.init(dataref);
     cout<<"init(): "<<res<<endl;
     checkEvents(agent);
     cout<<"hasHeader(): "<<agent.hasHeader()<<endl;
     cout<<"hasTile(): "<<agent.hasTile()<<endl;
+
+    if( !res )
+    {
+      cout<<"init has failed, exiting...\n";
+      return 1;
+    }
+    
+//    MeasurementSet ms("test.ms",Table::Update);
+    
+    cout<<"=================== initializing output agent ================\n";
+    // initialize parameter record
+    res = outagent.init(dataref);
+    cout<<"init(): "<<res<<endl;
+    checkEvents(outagent);
 
     if( !res )
     {
@@ -106,23 +138,43 @@ int main (int argc,const char *argv[])
     cout<<header->sdebug(10)<<endl;
     checkEvents(agent);
 
-    cout<<"=================== getting tiles =============================\n";
+    cout<<"=================== putting header ============================\n";
+    cout<<"putHeader(): "<<outagent.putHeader(header)<<endl;
+    checkEvents(outagent);
+       
+    cout<<"=================== copying tiles =============================\n";
     int state = 1;
     while( state > 0 )
     {
       VisTile::Ref tile;
       cout<<"getNextTile(): "<<(state=agent.getNextTile(tile))<<endl;
-      if( state > 0 )
-        cout<<tile->sdebug(10)<<endl;
       checkEvents(agent);
+      if( state > 0 )
+      {
+        cout<<tile->sdebug(10)<<endl;
+        // add columns to tile
+        LoShape shape = tile->data().shape();
+        VisTile::Format::Ref newformat;
+        newformat <<= new VisTile::Format(tile->format());
+        newformat().add(VisTile::PREDICT,Tpfcomplex,tile->data().shape())
+                   .add(VisTile::RESIDUALS,Tpfcomplex,tile->data().shape());
+        // fill the columns
+        tile().wpredict()   = -tile->data();
+        tile().wresiduals() = conj(tile->data());
+
+        cout<<"putNextTile(): "<<outagent.putNextTile(tile)<<endl;
+        checkEvents(outagent);
+      }
     }
 
     cout<<"=================== end of run ================================\n";
     cout<<"hasHeader(): "<<agent.hasHeader()<<endl;
     cout<<"hasTile(): "<<agent.hasTile()<<endl;
     checkEvents(agent);
+    checkEvents(outagent);
 
     agent.close();
+    outagent.close();
   } 
   catch ( std::exception &exc ) 
   {

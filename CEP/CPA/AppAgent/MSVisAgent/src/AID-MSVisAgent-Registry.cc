@@ -23,7 +23,17 @@ static AtomicID::Register aid_reg_Size(-1127,"Size");
 static AtomicID::Register aid_reg_Format(-1126,"Format");
 static AtomicID::Register aid_reg_Vis(-1116,"Vis");
 static AtomicID::Register aid_reg_Input(-1075,"Input");
+static AtomicID::Register aid_reg_Output(-1130,"Output");
 static AtomicID::Register aid_reg_Params(-1135,"Params");
 static AtomicID::Register aid_reg_Start(-1134,"Start");
 static AtomicID::Register aid_reg_End(-1131,"End");
+static AtomicID::Register aid_reg_Write(-1253,"Write");
+static AtomicID::Register aid_reg_Flags(-1255,"Flags");
+static AtomicID::Register aid_reg_Flag(-1207,"Flag");
+static AtomicID::Register aid_reg_Mask(-1254,"Mask");
+static AtomicID::Register aid_reg_Data(-1107,"Data");
+static AtomicID::Register aid_reg_Predict(-1256,"Predict");
+static AtomicID::Register aid_reg_Residuals(-1257,"Residuals");
+static AtomicID::Register aid_reg_Name(-1163,"Name");
+static AtomicID::Register aid_reg_Message(-1067,"Message");
 

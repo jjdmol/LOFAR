@@ -25,44 +25,11 @@
     
 #include <VisAgent/VisFileInputAgent.h>
 #include <VisCube/VisVocabulary.h>
-#include <MSVisAgent/AID-MSVisAgent.h>
 #include <MSVisAgent/MSVisAgentDebugContext.h>
+#include <MSVisAgent/MSVisAgentVocabulary.h>
 
 #include <aips/MeasurementSets/MeasurementSet.h>
 #include <aips/Tables/TableIter.h>
-
-#pragma aidgroup MSVisAgent
-#pragma aid MS MSVisInputAgent MSVisOutputAgent
-
-#pragma aid DDID VDSID Selection Tile String Column Size Format 
-#pragma aid Vis Input Params Start End
-
-
-// this defines constants for field names used in the parameter record
-namespace MSVisAgentVocabulary
-{
-  using namespace VisVocabulary;
-  
-  const
-  HIID FDDID              = AidDDID|AidIndex,
-       FSelection         = AidSelection,
-       FPhaseRef          = AidPhase|AidRef,
-       FAntennaPos        = AidAntenna|AidPos,
-       FMSName            = AidMS|AidName,
-       FVDSID             = AidVDSID,
-       FChannelStartIndex = AidChannel|AidStart|AidIndex,
-       FChannelEndIndex   = AidChannel|AidEnd|AidIndex,
-       FSelectionString   = AidSelection|AidString,
-       FDataColumnName    = AidData|AidColumn|AidName,
-       FTileSize          = AidTile|AidSize,
-       FTileFormat        = AidTile|AidFormat,
-       FMSVisInputAgentParams
-                          = AidMS|AidVis|AidInput|AidParams,
-                          
-       __last_declaration;
-       
-};
-    
 
 //##ModelId=3DF9FECD013C
 //##Documentation
@@ -82,7 +49,7 @@ namespace MSVisAgentVocabulary
 //##       +--[FChannelEndIndex]   (int)     ending channel (default: last chan.)
 //##       +--[FSelectionString] (string)    additional TaQL selection applied 
 //##                                           to MS
-class MSVisInputAgent : public VisFileInputAgent
+class MSVisInputAgent : public VisFileInputAgent, public MSVisAgentDebugContext
 {
   public:
     //##ModelId=3DF9FECD0219

@@ -71,46 +71,52 @@ SolutionState SolverControlAgent::endIteration (double conv)
   return state();
 }
 
+// helper function for getEvent() below
+//##ModelId=3E25905102E6
+int SolverControlAgent::matchEvent (const HIID &event,DataRecord::Ref &dataref,const HIID &mask,int fail)
+{
+  if( mask.empty() || mask.matches(event) )
+  {
+    dataref.detach();
+    return SUCCESS;
+  }
+  else
+    return fail;
+}
+
 //##ModelId=3DFF2D4C0068
-bool SolverControlAgent::getEvent (HIID &event, DataRecord::Ref &dataref, bool wait)
+int SolverControlAgent::getEvent (HIID &event, DataRecord::Ref &dataref, const HIID &mask,bool wait)
 {
   Thread::Mutex::Lock lock(mutex());
   // if the stop flag is raised, always return a stop event
   if( state() == HALT )
-  {
-    event = StopEvent();
-    dataref.detach();
-    return True;
-  }
+    return matchEvent( event = StopEvent(),dataref,mask );
   else if( state() == NEXT_SOLUTION )
-  {
-    event = NextSolutionEvent;
-    dataref.detach();
-    return True;
-  }
+    return matchEvent( event = NextSolutionEvent,dataref,mask );
   else if( state() == NEXT_DOMAIN )
-  {
-    event = NextDomainEvent;
-    dataref.detach();
-    return True;
-  }
+    return matchEvent( event = NextDomainEvent,dataref,mask );
   FailWhen(wait,"Waiting for event here would suspend indefinitely");
-  return False;
+  return WAIT;
 }
 
 //##ModelId=3DFF2D5F0008
-bool SolverControlAgent::hasEvent (const HIID &mask, bool outOfSeq)
+int SolverControlAgent::hasEvent (const HIID &mask, bool outOfSeq)
 {
+  DataRecord::Ref dum;
   Thread::Mutex::Lock lock(mutex());
-  // if the stop flag is raised, always return a stop event
-  if( state() == HALT && ( !mask.length() || mask.matches(StopEvent()) ) )
-    return True;
-  else if( state() == NEXT_SOLUTION && ( !mask.length() || mask.matches(NextSolutionEvent) ) )
-    return True;
-  else if( state() == NEXT_DOMAIN && ( !mask.length() || mask.matches(NextDomainEvent) ) )
-    return True;
+  // If outOfSeq is not specified, then the failstate returned for when the
+  // current state does not match the event mask is "OUTOFSEQ".
+  // If it is specified, then the failstate is "WAIT".
+  int failstate = outOfSeq ? WAIT : OUTOFSEQ;
+  // return event depending on state
+  if( state() == HALT )
+    return matchEvent(StopEvent(),dum,mask,failstate);
+  else if( state() == NEXT_SOLUTION )
+    return matchEvent(NextSolutionEvent,dum,mask,failstate);
+  else if( state() == NEXT_DOMAIN )
+    return matchEvent(NextDomainEvent,dum,mask,failstate);
   else
-    return False;
+    return WAIT;
 }
 
 //##ModelId=3E00C57E0304
