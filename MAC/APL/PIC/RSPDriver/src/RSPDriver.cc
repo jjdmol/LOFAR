@@ -47,7 +47,8 @@
 #include "RCUWrite.h"
 #include "RCURead.h"
 #include "StatusRead.h"
-#include "StatsRead.h"
+#include "SstRead.h"
+#include "BstRead.h"
 #include "WGWrite.h"
 #include "WGRead.h"
 #include "VersionsRead.h"
@@ -155,7 +156,8 @@ bool RSPDriver::isEnabled()
  * - SS:     write subband selection settings  // SSWrite
  * - RCU:    write RCU control settings        // RCUWrite
  * - STATUS (RSP Status): read RSP status info // StatusRead
- * - ST:     read statistics                   // StatsRead
+ * - SST:    read subband statistics           // SstRead
+ * - BST:    read beamlet statistics           // BstRead
  * - WG:     write waveform generator settings // WGWrite
  * - STATUS (Version): read version info       // VersionsSync
  *
@@ -273,21 +275,25 @@ void RSPDriver::addAllSyncActions()
       }
     }
 
-    if (1 == GET_CONFIG("RSPDriver.READ_ST", i))
+    if (1 == GET_CONFIG("RSPDriver.READ_SST", i))
     {
-      StatsRead* statsread = 0;
-      statsread = new StatsRead(m_board[boardid], boardid,
-				Statistics::SUBBAND_MEAN, EPA_Protocol::SST_N_FRAGMENTS);
-      m_scheduler.addSyncAction(statsread);
-      statsread = new StatsRead(m_board[boardid], boardid,
-				Statistics::SUBBAND_POWER, EPA_Protocol::SST_N_FRAGMENTS);
-      m_scheduler.addSyncAction(statsread);
-      statsread = new StatsRead(m_board[boardid], boardid,
-				Statistics::BEAMLET_MEAN, EPA_Protocol::BST_N_FRAGMENTS);
-      m_scheduler.addSyncAction(statsread);
-      statsread = new StatsRead(m_board[boardid], boardid,
-				Statistics::BEAMLET_POWER, EPA_Protocol::BST_N_FRAGMENTS);
-      m_scheduler.addSyncAction(statsread);
+      SstRead* sstread = 0;
+
+      sstread = new SstRead(m_board[boardid], boardid, Statistics::SUBBAND_MEAN);
+      m_scheduler.addSyncAction(sstread);
+      sstread = new SstRead(m_board[boardid], boardid, Statistics::SUBBAND_POWER);
+      m_scheduler.addSyncAction(sstread);
+
+    }
+
+    if (1 == GET_CONFIG("RSPDriver.READ_BST", i))
+    {
+      BstRead* bstread = 0;
+
+      bstread = new BstRead(m_board[boardid], boardid, Statistics::BEAMLET_MEAN);
+      m_scheduler.addSyncAction(bstread);
+      bstread = new BstRead(m_board[boardid], boardid, Statistics::BEAMLET_POWER);
+      m_scheduler.addSyncAction(bstread);
     }
 
     for (int action = 0; action < 2; action++)

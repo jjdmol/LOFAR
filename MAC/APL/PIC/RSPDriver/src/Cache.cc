@@ -98,7 +98,7 @@ CacheBuffer::CacheBuffer()
   m_subbandstats() = 0;
 
   m_beamletstats().resize(Statistics::N_STAT_TYPES / 2,
-			  GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL,
+			  GET_CONFIG("RS.N_RSPBOARDS", i) * MEPHeader::N_POL,
 			  MEPHeader::N_BEAMLETS);
   m_beamletstats() = 0;
 

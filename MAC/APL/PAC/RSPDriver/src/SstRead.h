@@ -1,6 +1,6 @@
 //#  -*- mode: c++ -*-
 //#
-//#  StatsRead.h: Synchronize statistics with RSP hardware.
+//#  SstRead.h: Synchronize statistics with RSP hardware.
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -22,46 +22,43 @@
 //#
 //#  $Id$
 
-#ifndef STATSREAD_H_
-#define STATSREAD_H_
+#ifndef SSTREAD_H_
+#define SSTREAD_H_
 
 #include "SyncAction.h"
 #include <Common/LofarTypes.h>
 
 namespace RSP
 {
-  class StatsRead : public SyncAction
+  class SstRead : public SyncAction
   {
-  public:
-    /**
-     * Constructors for a StatsRead object.
-     */
-    StatsRead(GCFPortInterface& board_port, int board_id, uint8 type,
-	      uint8 nblps, uint8 nfragments);
+    public:
+      /**
+       * Constructors for a SstRead object.
+       */
+      SstRead(GCFPortInterface& board_port, int board_id, uint8 type);
 	  
-    /* Destructor for StatsRead. */
-    virtual ~StatsRead();
+      /* Destructor for SstRead. */
+      virtual ~SstRead();
 
-    /**
-     * Send the write message.
-     */
-    virtual void sendrequest();
+      /**
+       * Send the write message.
+       */
+      virtual void sendrequest();
 
-    /**
-     * Send the read request.
-     */
-    virtual void sendrequest_status();
+      /**
+       * Send the read request.
+       */
+      virtual void sendrequest_status();
 
-    /**
-     * Handle the read result.
-     */
-    virtual GCFEvent::TResult handleack(GCFEvent& event, GCFPortInterface& port);
+      /**
+       * Handle the read result.
+       */
+      virtual GCFEvent::TResult handleack(GCFEvent& event, GCFPortInterface& port);
 
-  private:
-    uint8 m_type;       // statistics type
-    uint8 m_nfragments; // register is too large for ethernet packet, use this many fragments
-    uint8 m_nblsp;      // 1 for beamlet statistics BST, n for subband statistics SST
+    private:
+      uint8 m_type;       // statistics type
   };
 };
      
-#endif /* STATSREAD_H_ */
+#endif /* SSTREAD_H_ */

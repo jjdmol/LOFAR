@@ -154,8 +154,10 @@ RSPDriver_SOURCES = \
 	RCURead.cc \
 	StatusRead.h \
 	StatusRead.cc \
-	StatsRead.h \
-	StatsRead.cc \
+	SstRead.h \
+	SstRead.cc \
+	BstRead.h \
+	BstRead.cc \
 	VersionsRead.h \
 	VersionsRead.cc \
 	WGWrite.h \
