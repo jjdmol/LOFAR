@@ -12,6 +12,8 @@
 // TransportHolders
 #include <Common/lofar_iostream.h>
 #include <Common/LofarLogger.h>
+#include <Common/KeyParser.h>
+#include <Common/KeyValueMap.h>
 #include <Transport/TH_Socket.h>
 #include <tinyCEP/SimulatorParseClass.h>
 
@@ -61,9 +63,19 @@ void AH_FrontEnd::define(const KeyValueMap& /*params*/) {
 			       itsNtargets
 			       );
 
-  for (int cn = 0; cn < itsNtargets; cn++) {
+  KeyValueMap kvm;
+  try {
+    kvm = KeyParser::parseFile("TestRange");
+  } catch (std::exception& x) {
+    cout << x.what() << endl;
+  }
+  const int targetgroups = kvm.getInt("targetgroups", 1);
+
+  char name[32];
+  for (int cn = 0; cn < itsNtargets/targetgroups; cn++) {
+    sprintf(name,"FE_node%i",cn);
     itsWHs.push_back((WorkHolder*) 
-		     new WH_Random("noname",
+		     new WH_Random(name,
 				   itsNelements,
 				   itsNsamples,
 				   itsNchannels, 
@@ -87,6 +99,7 @@ void AH_FrontEnd::undefine() {
 void AH_FrontEnd::init() {
   vector<WorkHolder*>::iterator it = itsWHs.begin();
   for (; it != itsWHs.end(); it++) {
+    cout << "init FE WH " << (*it)->getName() << endl;
     // somehow the isBlocking flag is forgotten
     (*it)->getDataManager().getOutHolder(0)->getTransporter().setIsBlocking(false);
     (*it)->basePreprocess();
