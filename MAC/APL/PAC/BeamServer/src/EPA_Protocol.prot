@@ -17,6 +17,20 @@ enum {
 	EPA_PROTOCOL = F_APL_PROTOCOL + 11
 };
 
+/**
+ * Define Ethernet packet sizes for the
+ * various packets that are sent to the EPA board.
+ */
+namespace EPA_Protocol
+{
+	static const int SBSELECT_PACKET_HDR_SIZE = 5;
+	static const int WGENABLE_PACKET_SIZE     = 12;
+	static const int WGDISABLE_PACKET_SIZE    = 12;
+	static const int BFCONFIGURE_PACKET_SIZE  = 1030;
+	static const int BFENABLE_PACKET_SIZE     = 12;
+	static const int STATS_PACKET_SIZE        = 1030;
+};
+
 PRELUDE_END;
 
 //
@@ -198,7 +212,7 @@ event = {
       //
       // Board data
       //
-      signal = DATA;
+      signal = STATS;
       dir = IN;
       param = {
 	    name = "fill";
