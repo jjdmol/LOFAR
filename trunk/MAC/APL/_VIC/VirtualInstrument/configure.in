@@ -10,10 +10,6 @@ AM_INIT_AUTOMAKE(VirtualInstrument, 1.0)
 dnl Initialize for LOFAR (may set compilers)
 lofar_INIT
 
-AC_DEFINE_UNQUOTED([ARA_SYSCONF],["${prefix}/etc"],[Path to ARA install prefix directory.])
-RSP_SYSCONF="${prefix}/etc"
-AC_SUBST([ARA_SYSCONF])
-
 dnl Checks for programs.
 AC_PROG_AWK
 AC_PROG_YACC
@@ -63,6 +59,7 @@ lofar_COMPILETOOLS
 lofar_PVSS(1)
 lofar_EXTERNAL(common,1,Common/LofarTypes.h,,)
 lofar_EXTERNAL(log4cplus,1,log4cplus/logger.h,,)
+lofar_EXTERNAL(suite,1,Suite/test.h,,)
 lofar_EXTERNAL(boost,1,boost/shared_ptr.hpp,"")
 lofar_EXTERNAL(GCFTM,1,GCF/TM/GCF_Control.h,,)
 lofar_EXTERNAL(GCFCommon,1,GCF/GCF_Defines.h,,)
@@ -74,5 +71,6 @@ dnl Output Makefiles
 dnl
 AC_OUTPUT(
 src/Makefile
+test/Makefile
 Makefile
 )

@@ -28,7 +28,8 @@
 
 //# GCF Includes
 #include <GCF/PAL/GCF_MyPropertySet.h>
-#include <GCF/PAL/GCF_PVSSPort.h>
+#include <GCF/TM/GCF_Port.h>
+#include <GCF/TM/GCF_TCPPort.h>
 #include <GCF/TM/GCF_Task.h>
 #include <GCF/TM/GCF_Event.h>
 
@@ -70,6 +71,8 @@ namespace APLCommon
         LOGICALDEVICE_STATE_RELEASED
       } TLogicalDeviceState;
 
+      static const string LD_SHARED_FILE_LOCATION;
+      
       static const string LD_STATE_STRING_INITIAL;
       static const string LD_STATE_STRING_IDLE;
       static const string LD_STATE_STRING_CLAIMING;
@@ -83,6 +86,7 @@ namespace APLCommon
       // property defines
       static const string LD_PROPNAME_COMMAND;
       static const string LD_PROPNAME_STATUS;
+      static const string LD_PROPNAME_CHILDREFS;
       
       // command defines
       static const string LD_COMMAND_SCHEDULE;
@@ -98,7 +102,6 @@ namespace APLCommon
       virtual ~LogicalDevice();
 
       string& getServerPortName();
-      void addChildPort(boost::shared_ptr<GCFPVSSPort> childPort);
       virtual bool isPrepared(vector<string>& parameters);
       TLogicalDeviceState getLogicalDeviceState() const;
       
@@ -155,18 +158,27 @@ namespace APLCommon
       // protected assignment operator
       LogicalDevice& operator=(const LogicalDevice&);
 
+      typedef GCFTCPPort  TThePortTypeInUse;
+//    typedef GCFPVSSPort TThePortTypeInUse;
+      
+      typedef boost::shared_ptr<TThePortTypeInUse>  TPortPtr;
+
       /**
       * returns true if the specified port is the logicalDevice SPP
       */
       bool _isParentPort(::GCFPortInterface& port);
       bool _isServerPort(::GCFPortInterface& port);
       bool _isChildPort(::GCFPortInterface& port);
+      bool _isChildStartDaemonPort(::GCFPortInterface& port, string& startDaemonKey);
       void _sendToAllChilds(::GCFEvent& event);
       void _disconnectedHandler(::GCFPortInterface& port);
-      void _doStateTransition(const TLogicalDeviceState& newState);
-      void _handleTimers(::GCFEvent& event, ::GCFPortInterface& port);
       bool _isAPCLoaded() const;
       void _apcLoaded();
+      void _doStateTransition(const TLogicalDeviceState& newState);
+      void _handleTimers(::GCFEvent& event, ::GCFPortInterface& port);
+      vector<string> _getChildKeys();
+      void _addChildPort(TPortPtr childPort);
+      void _sendClientSchedule(const string& startDaemonKey);
 
       /**
       * Initial state additional behaviour must be implemented in the derived classes. 
@@ -221,15 +233,16 @@ namespace APLCommon
     protected:    
       PropertySetAnswer                     m_propertySetAnswer;
       boost::shared_ptr<GCFMyPropertySet>   m_propertySet;
-      boost::shared_ptr<GCFMyPropertySet>   m_referencesPropSet;
 
     private:
-      typedef vector<boost::shared_ptr<GCFPVSSPort> > TPVSSPortVector;
+      typedef vector<TPortPtr>                TPortVector;
+      typedef map<string,TPortPtr>            TPortMap;
       
       string                                m_serverPortName;
-      ::GCFPVSSPort                         m_parentPort; // connection with parent, if any
-      ::GCFPVSSPort                         m_serverPort; // listening port
-      TPVSSPortVector                       m_childPorts;    // connected childs
+      TThePortTypeInUse                     m_parentPort; // connection with parent, if any
+      TThePortTypeInUse                     m_serverPort; // listening port
+      TPortVector                           m_childPorts;    // connected childs
+      TPortMap                              m_childStartDaemonPorts; // child startDaemons
       bool                                  m_apcLoaded;
       TLogicalDeviceState                   m_logicalDeviceState;
       

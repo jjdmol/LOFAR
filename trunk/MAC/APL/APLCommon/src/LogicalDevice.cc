@@ -23,15 +23,18 @@
 #undef PACKAGE
 #undef VERSION
 #include <lofar_config.h>
+#include <boost/shared_array.hpp>
 #include <Common/LofarLogger.h>
 #include <GCF/GCF_PVString.h>
 #include <GCF/GCF_PVInteger.h>
+#include <GCF/GCF_PVDynArr.h>
 #include "APLCommon/APL_Defines.h"
 #include "APLCommon/APLUtilities.h"
 #include "APLCommon/LogicalDevice.h"
 
 #define DECLARE_SIGNAL_NAMES
 #include "APLCommon/LogicalDevice_Protocol.ph"
+#include "APLCommon/StartDaemon_Protocol.ph"
 
 using namespace LOFAR::ACC;
 
@@ -39,6 +42,8 @@ namespace LOFAR
 {
 namespace APLCommon
 {
+
+const string LogicalDevice::LD_SHARED_FILE_LOCATION     = string("/home/lofar/MACTransport/share/");
 
 const string LogicalDevice::LD_STATE_STRING_INITIAL     = string("Initial");
 const string LogicalDevice::LD_STATE_STRING_IDLE        = string("Idle");
@@ -52,6 +57,7 @@ const string LogicalDevice::LD_STATE_STRING_RELEASED    = string("Released");
 
 const string LogicalDevice::LD_PROPNAME_COMMAND         = string("command");
 const string LogicalDevice::LD_PROPNAME_STATUS          = string("status");
+const string LogicalDevice::LD_PROPNAME_CHILDREFS       = string("childrefs");
 
 const string LogicalDevice::LD_COMMAND_SCHEDULE         = string("SCHEDULE");
 const string LogicalDevice::LD_COMMAND_CANCELSCHEDULE   = string("CANCELSCHEDULE");
@@ -66,11 +72,11 @@ LogicalDevice::LogicalDevice(const string& taskName, const string& parameterFile
   PropertySetAnswerHandlerInterface(),
   m_propertySetAnswer(*this),
   m_propertySet(),
-  m_referencesPropSet(),
   m_serverPortName(taskName+string("_server")),
   m_parentPort(),
   m_serverPort(*this, m_serverPortName, ::GCFPortInterface::SPP, LOGICALDEVICE_PROTOCOL),
   m_childPorts(),
+  m_childStartDaemonPorts(),
   m_apcLoaded(false),
   m_logicalDeviceState(LOGICALDEVICE_STATE_IDLE),
   m_prepareTimerId(0),
@@ -86,7 +92,7 @@ LogicalDevice::LogicalDevice(const string& taskName, const string& parameterFile
   
   try
   {
-    m_parameterSet.adoptFile(parameterFile);
+    m_parameterSet.adoptFile(LD_SHARED_FILE_LOCATION + parameterFile);
   }
   catch(Exception& e)
   {
@@ -95,8 +101,8 @@ LogicalDevice::LogicalDevice(const string& taskName, const string& parameterFile
   
   try
   {
-    psName = m_parameterSet.getString("psName");
-    psType = m_parameterSet.getString("psType");
+    psName = m_parameterSet.getString("propertysetName");
+    psType = m_parameterSet.getString("propertysetType");
   }
   catch(Exception& e)
   {
@@ -109,14 +115,6 @@ LogicalDevice::LogicalDevice(const string& taskName, const string& parameterFile
       PS_CAT_TEMPORARY,
       &m_propertySetAnswer));
   m_propertySet->enable();
-  
-  string refPSName = psName + "__ref";
-  m_referencesPropSet = boost::shared_ptr<GCFMyPropertySet>(new GCFMyPropertySet(
-      refPSName.c_str(),
-      "TLDReference",
-      PS_CAT_TEMPORARY,
-      &m_propertySetAnswer));
-  m_referencesPropSet->enable();
 }
 
 
@@ -124,7 +122,6 @@ LogicalDevice::~LogicalDevice()
 {
   LOG_DEBUG(formatString("LogicalDevice(%s)::~LogicalDevice",getName().c_str()));
   m_propertySet->disable();
-  m_referencesPropSet->disable();
 }
 
 string& LogicalDevice::getServerPortName()
@@ -132,7 +129,7 @@ string& LogicalDevice::getServerPortName()
   return m_serverPortName;
 }
 
-void LogicalDevice::addChildPort(boost::shared_ptr<GCFPVSSPort> childPort)
+void LogicalDevice::_addChildPort(TPortPtr childPort)
 {
   m_childPorts.push_back(childPort);
 }
@@ -304,7 +301,7 @@ bool LogicalDevice::_isServerPort(::GCFPortInterface& port)
 bool LogicalDevice::_isChildPort(::GCFPortInterface& port)
 {
   bool found=false;
-  TPVSSPortVector::iterator it=m_childPorts.begin();
+  TPortVector::iterator it=m_childPorts.begin();
   while(!found && it != m_childPorts.end())
   {
     found = (&port == (*it).get()); // comparing two pointers. yuck?
@@ -312,11 +309,27 @@ bool LogicalDevice::_isChildPort(::GCFPortInterface& port)
   }
   return found;
 }
-   
+
+bool LogicalDevice::_isChildStartDaemonPort(::GCFPortInterface& port, string& startDaemonKey)
+{
+  bool found=false;
+  TPortMap::iterator it=m_childStartDaemonPorts.begin();
+  while(!found && it != m_childStartDaemonPorts.end())
+  {
+    found = (&port == it->second.get()); // comparing two pointers. yuck?
+    if(found)
+    {
+      startDaemonKey = it->first;
+    }
+    ++it;
+  }
+  return found;
+}
+
 void LogicalDevice::_sendToAllChilds(::GCFEvent& event)
 {
   // send to all childs
-  TPVSSPortVector::iterator it=m_childPorts.begin();
+  TPortVector::iterator it=m_childPorts.begin();
   while(it != m_childPorts.end())
   {
     (*it)->send(event);
@@ -420,6 +433,62 @@ void LogicalDevice::_handleTimers(::GCFEvent& event, ::GCFPortInterface& port)
   }
 }
 
+vector<string> LogicalDevice::_getChildKeys()
+{
+  string childs;
+  vector<string> childKeys;
+  try
+  {
+    childs = m_parameterSet.getString("childs");
+  }
+  catch(Exception& e)
+  {
+  }
+  char* pch;
+  boost::shared_array<char> childsCopy(new char[childs.length()+1]);
+  strcpy(childsCopy.get(),childs.c_str());
+  pch = strtok (childsCopy.get(),",");
+  while (pch != NULL)
+  {
+    childKeys.push_back(string(pch));
+    pch = strtok (NULL, ",");
+  }
+  return childKeys;
+}
+
+void LogicalDevice::_sendClientSchedule(const string& startDaemonKey)
+{
+  // get the port
+  TPortMap::iterator it = m_childStartDaemonPorts.find(startDaemonKey);
+  if(it == m_childStartDaemonPorts.end())
+  {
+    LOG_WARN(formatString("StartDaemon %s not available",startDaemonKey.c_str()));
+  }
+  else
+  {
+    try
+    {
+      // extract the parameterset for the child
+      TPortPtr startDaemonPort = it->second;
+      ParameterSet psSubset = m_parameterSet.makeSubset(startDaemonKey + string("."));
+      string parameterFileName = startDaemonKey+string(".ps"); 
+      psSubset.writeFile(string("/home/lofar/MACTransport/mnt/mars/")+parameterFileName);// TODO: share name config
+
+      // send the schedule to the startdaemon of the child
+      TLogicalDeviceTypes ldType = static_cast<TLogicalDeviceTypes>(psSubset.getInt("logicalDeviceType"));
+      STARTDAEMONScheduleEvent scheduleEvent;
+      scheduleEvent.logicalDeviceType = ldType;
+      scheduleEvent.taskName = startDaemonKey;
+      scheduleEvent.fileName = parameterFileName;
+      startDaemonPort->send(scheduleEvent);
+    }
+    catch(Exception& e)
+    {
+      LOG_FATAL(formatString("Fatal error while scheduling child: %s",e.message().c_str()));
+    }
+  }
+}
+
 ::GCFEvent::TResult LogicalDevice::initial_state(::GCFEvent& event, ::GCFPortInterface& port)
 {
   LOG_DEBUG(formatString("LogicalDevice(%s)::initial_state (%s)",getName().c_str(),evtstr(event)));
@@ -437,17 +506,60 @@ void LogicalDevice::_handleTimers(::GCFEvent& event, ::GCFPortInterface& port)
       ::GCFPVString status(LD_STATE_STRING_INITIAL);
       m_propertySet->setValue(LD_PROPNAME_STATUS,status);
       
+      // create the childs
+      vector<string> childKeys = _getChildKeys();
+      vector<string>::iterator chIt;
+      for(chIt=childKeys.begin(); chIt!=childKeys.end();++chIt)
+      {
+        // connect to child startdaemon.
+        try
+        {
+          string startDaemonPortName = m_parameterSet.getString((*chIt) + string(".startDaemonPort"));
+          string startDaemonTaskName = m_parameterSet.getString((*chIt) + string(".startDaemonTask"));
+          string childPsName         = m_parameterSet.getString((*chIt) + string(".propertysetName"));
+          
+          
+          TPortPtr startDaemonPort(new TThePortTypeInUse(*this,startDaemonTaskName,::GCFPortInterface::SAP,0));
+          TPeerAddr peerAddr;
+          peerAddr.taskname = startDaemonTaskName;
+          peerAddr.portname = startDaemonPortName;
+          startDaemonPort->setAddr(peerAddr);
+          startDaemonPort->open();
+          m_childStartDaemonPorts[(*chIt)] = startDaemonPort;
+          
+          // add reference in propertyset
+          GCFPVDynArr* childRefs = static_cast<GCFPVDynArr*>(m_propertySet->getValue(LD_PROPNAME_CHILDREFS));
+          if(childRefs != 0)
+          {
+            GCFPValueArray refsVector(childRefs->getValue()); // create a copy 
+            GCFPVString newRef((*chIt) + string("=") + childPsName);
+            refsVector.push_back(&newRef);
+            GCFPVDynArr newChildRefs(LPT_STRING,refsVector);
+            m_propertySet->setValue(LD_PROPNAME_CHILDREFS,newChildRefs);
+          }
+        }
+        catch(Exception& e)
+        {
+          LOG_FATAL(formatString("Unable to create child %s",(*chIt).c_str()));
+        }
+      }
+      
       // connect to parent.
-      string parentPort = m_parameterSet.getString(m_parameterSet.getName() + string(".parentPort"));
-      m_parentPort.setDestAddr(parentPort);
+      string parentPortName = m_parameterSet.getString("parentPort");
+      string parentTaskName = m_parameterSet.getString("parentTask");
+      m_parentPort.init(*this,parentTaskName,::GCFPortInterface::SAP, STARTDAEMON_PROTOCOL);
+      TPeerAddr peerAddr;
+      peerAddr.taskname = parentTaskName;
+      peerAddr.portname = parentPortName;
+      m_parentPort.setAddr(peerAddr);
       m_parentPort.open();
       
       // set timers
       // specified times are in UTC, seconds since 1-1-1970
       time_t timeNow = time(0);
-      time_t prepareTime = m_parameterSet.getInt(m_parameterSet.getName() + string(".prepareTime"));
-      time_t startTime   = m_parameterSet.getInt(m_parameterSet.getName() + string(".startTime"));
-      time_t stopTime    = m_parameterSet.getInt(m_parameterSet.getName() + string(".stopTime"));
+      time_t prepareTime = m_parameterSet.getInt("prepareTime");
+      time_t startTime   = m_parameterSet.getInt("startTime");
+      time_t stopTime    = m_parameterSet.getInt("stopTime");
       m_prepareTimerId = m_serverPort.setTimer(prepareTime - timeNow);
       m_startTimerId = m_serverPort.setTimer(startTime - timeNow);
       m_stopTimerId = m_serverPort.setTimer(stopTime - timeNow);
@@ -455,13 +567,20 @@ void LogicalDevice::_handleTimers(::GCFEvent& event, ::GCFPortInterface& port)
     }
   
     case F_CONNECTED:
+    {
+      string startDaemonKey;
       if(_isParentPort(port))
       {
         LOGICALDEVICEConnectEvent connectEvent;
         port.send(connectEvent);
       }
+      else if(_isChildStartDaemonPort(port,startDaemonKey))
+      {
+        _sendClientSchedule(startDaemonKey);
+      }
       break;
-
+    }
+    
     case LOGICALDEVICE_CONNECTED:
     {
       LOGICALDEVICEConnectedEvent connectedEvent;
@@ -521,12 +640,10 @@ void LogicalDevice::_handleTimers(::GCFEvent& event, ::GCFPortInterface& port)
   
     case F_ACCEPT_REQ:
     {
-      boost::shared_ptr<GCFPVSSPort> client(new GCFPVSSPort);
+      TPortPtr client(new TThePortTypeInUse);
       client->init(*this, m_serverPortName, GCFPortInterface::SPP, LOGICALDEVICE_PROTOCOL);
       m_serverPort.accept(*(client.get()));
-      addChildPort(client);
-      
-      // add reference
+      _addChildPort(client);
       break;
     }
 

@@ -1,6 +1,6 @@
-//#  LogicalDeviceFactory.h: Base class for logical device factories.
+//#  AVITestDriverTask.h: Automatic test of the RegisterAccess application
 //#
-//#  Copyright (C) 2002-2005
+//#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
 //#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -20,44 +20,59 @@
 //#
 //#  $Id$
 
-#ifndef LogicalDeviceFactory_H
-#define LogicalDeviceFactory_H
+#ifndef AVITestDriverTask_H
+#define AVITestDriverTask_H
 
 //# Includes
-#include <boost/shared_ptr.hpp>
-
-//# local includes
-#include "APLCommon/APLCommonExceptions.h"
-
 //# Common Includes
 
+//# GCF Includes
+#include <GCF/TM/GCF_Task.h>
+#include <GCF/PAL/GCF_ExtPropertySet.h>
+#include <RSP_Protocol.ph>
+#include <boost/shared_ptr.hpp>
+#include <map>
+
+#include "AVITestAnswer.h"
+
 // forward declaration
+class GCFEvent;
+class GCFPVUnsigned;
+class GCFPVBool;
+class GCFPVDouble;
+
 
 namespace LOFAR
 {
-  
-namespace APLCommon
-{
-  class LogicalDevice;
 
-  class LogicalDeviceFactory
+namespace AVI
+{
+  class AVITestDriverTask : public GCFTask
   {
     public:
-
-      LogicalDeviceFactory() {}; 
-      virtual ~LogicalDeviceFactory() {};
-      
-      virtual boost::shared_ptr<LogicalDevice> createLogicalDevice(const string& taskName, const string& parameterFile)=0;
-
+      AVITestDriverTask();
+      virtual ~AVITestDriverTask();
+  
     protected:
       // protected copy constructor
-      LogicalDeviceFactory(const LogicalDeviceFactory&);
+      AVITestDriverTask(const AVITestDriverTask&);
       // protected assignment operator
-      LogicalDeviceFactory& operator=(const LogicalDeviceFactory&);
+      AVITestDriverTask& operator=(const AVITestDriverTask&);
+      
+    private: 
+      bool isEnabled();
+      GCFEvent::TResult initial(GCFEvent& e, GCFPortInterface& p);
+      GCFEvent::TResult enabled(GCFEvent& e, GCFPortInterface& p);
+      
+      static string m_taskName;
+      
+      AVITestAnswer     m_answer;
+      GCFExtPropertySet m_extPropSetVISD;
+      GCFExtPropertySet m_extPropSetVI1;
+  };  
+};
 
-    private:
-    
-  };
-};//APLCommon
-};//LOFAR
+
+} // namespace LOFAR
+
 #endif

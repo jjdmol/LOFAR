@@ -1,6 +1,6 @@
-//#  LogicalDeviceFactory.h: Base class for logical device factories.
+//#  AVITestAnswer.h
 //#
-//#  Copyright (C) 2002-2005
+//#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
 //#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -20,44 +20,37 @@
 //#
 //#  $Id$
 
-#ifndef LogicalDeviceFactory_H
-#define LogicalDeviceFactory_H
+#ifndef AVITestAnswer_H
+#define AVITestAnswer_H
 
-//# Includes
-#include <boost/shared_ptr.hpp>
+#include <GCF/PAL/GCF_Answer.h>
+#include <GCF/TM/GCF_Port.h>
 
-//# local includes
-#include "APLCommon/APLCommonExceptions.h"
-
-//# Common Includes
-
-// forward declaration
+class GCFEvent;
+class GCFTask;
 
 namespace LOFAR
 {
-  
-namespace APLCommon
-{
-  class LogicalDevice;
 
-  class LogicalDeviceFactory
+namespace AVI
+{
+  class AVITestAnswer : public GCFAnswer
   {
     public:
-
-      LogicalDeviceFactory() {}; 
-      virtual ~LogicalDeviceFactory() {};
+      AVITestAnswer();
+      ~AVITestAnswer();
+  
+      void setTask(GCFTask* t);
+      void handleAnswer(GCFEvent& answer);
       
-      virtual boost::shared_ptr<LogicalDevice> createLogicalDevice(const string& taskName, const string& parameterFile)=0;
-
-    protected:
-      // protected copy constructor
-      LogicalDeviceFactory(const LogicalDeviceFactory&);
-      // protected assignment operator
-      LogicalDeviceFactory& operator=(const LogicalDeviceFactory&);
-
-    private:
-    
+    private:    
+      GCFPort  m_dummyPort;
+      GCFTask* m_task;
   };
-};//APLCommon
-};//LOFAR
+  
+};
+
+
+} // namespace LOFAR
+
 #endif

@@ -42,14 +42,15 @@ const string StartDaemon::PSTYPE_STARTDAEMON("TAplStartDaemon");
 const string StartDaemon::SD_PROPNAME_COMMAND("command");
 const string StartDaemon::SD_PROPNAME_STATUS("status");
 const string StartDaemon::SD_COMMAND_SCHEDULE("SCHEDULE");
+const string StartDaemon::SD_COMMAND_STOP("STOP");
 
 StartDaemon::StartDaemon(const string& name) :
   ::GCFTask((State)&StartDaemon::initial_state,"StartDaemon"),
   PropertySetAnswerHandlerInterface(),
   m_propertySetAnswer(*this),
   m_properties(name.c_str(),PSTYPE_STARTDAEMON.c_str(),PS_CAT_TEMPORARY,&m_propertySetAnswer),
-  m_serverPortName(name + string("server")),
-  m_serverPort(*this, m_serverPortName, ::GCFPortInterface::SPP, STARTDAEMON_PROTOCOL),
+  m_serverPortName(name + string("_server")),
+  m_serverPort(*this, m_serverPortName, ::GCFPortInterface::MSPP, STARTDAEMON_PROTOCOL),
   m_childPorts(),
   m_factories(),
   m_logicalDevices()
@@ -82,11 +83,22 @@ TSDResult StartDaemon::createLogicalDevice(const TLogicalDeviceTypes ldType, con
     {
       boost::shared_ptr<LogicalDevice> ld = it->second->createLogicalDevice(taskName,fileName);
       m_logicalDevices.push_back(ld);
+      ld->start(); // make initial transition
     }
     catch(APLCommon::ParameterFileNotFoundException& e)
     {
       LOG_FATAL(e.message());
       result = SD_RESULT_FILENOTFOUND;
+    }
+    catch(APLCommon::ParameterNotFoundException& e)
+    {
+      LOG_FATAL(e.message());
+      result = SD_RESULT_PARAMETERNOTFOUND;
+    }
+    catch(Exception& e)
+    {
+      LOG_FATAL(e.message());
+      result = SD_RESULT_UNSPECIFIED_ERROR;
     }
   }
   else
@@ -208,6 +220,7 @@ void StartDaemon::_disconnectedHandler(::GCFPortInterface& port)
       
       scheduledEvent.result = createLogicalDevice(scheduleEvent.logicalDeviceType,scheduleEvent.taskName, scheduleEvent.fileName);
       
+      m_properties.setValue(SD_PROPNAME_STATUS,GCFPVInteger(scheduledEvent.result));
       port.send(scheduledEvent);
       break;
     }
@@ -283,6 +296,11 @@ void StartDaemon::handlePropertySetAnswer(::GCFEvent& answer)
             TSDResult result = SD_RESULT_INCORRECT_NUMBER_OF_PARAMETERS;
             m_properties.setValue(SD_PROPNAME_STATUS,GCFPVInteger(result));
           }
+        }
+        // STOP
+        else if(command==string(SD_COMMAND_STOP))
+        {
+          stop();
         }
         else
         {
