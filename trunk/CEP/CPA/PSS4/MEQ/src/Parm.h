@@ -105,6 +105,9 @@ public:
                          const std::vector<Result::Ref> &childres,
                          const Request &req,bool newreq);
 
+  // process parm-specific rider commands
+  virtual void processCommands (const DataRecord &rec,const Request &req);
+
   // Initialize the parameter for the given domain.
     //##ModelId=3F86886F0226
   virtual int initDomain (const Domain&);
@@ -153,9 +156,6 @@ protected:
     //##ModelId=400E5353033A
   virtual void setStateImpl (DataRecord &rec,bool initializing);
   
-  // process parm-specific rider commands
-  virtual void processRider (const DataRecord &);
-
 private:
     
     //##ModelId=3F86886F0215

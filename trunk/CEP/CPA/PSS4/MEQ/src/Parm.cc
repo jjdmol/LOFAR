@@ -415,24 +415,6 @@ void Parm::setStateImpl (DataRecord& rec, bool initializing)
     // reset domain ID
     domain_id_ = HIID();
   }
-  else
-  {
-    // Is the parm value specified? use it to update polcs
-    // (ignore when initializing)
-    if( rec[FValue].exists() ) 
-    {
-      // Update the polc coefficients with the new values.
-      LoVec_double values = rec[FValue].as<LoVec_double>();
-      ////    vector<double>& values = rec[FValue].as<vector<double> >();
-      uint inx = 0;
-      for (uint i=0; i<polcs_.size(); i++) {
-        inx += polcs_[i]().update(&values(inx), values.size()-inx);
-      }
-      Assert(inx == uint(values.size()));
-      if( auto_save_ )
-        save();
-    }
-  }
   // Get default polc (to be used if no table exists)
   if( rec[FDefault].exists() )
     default_polc_ <<= rec[FDefault].as_p<Polc>();
@@ -447,9 +429,30 @@ void Parm::setStateImpl (DataRecord& rec, bool initializing)
   }
 }
 
-void Parm::processRider (const DataRecord &rider)
+void Parm::processCommands (const DataRecord &rec,const Request &req)
 {
-  if( rider[FSavePolc].as<bool>(true) )
+  // process parent class's commands
+  Function::processCommands(rec,req);
+  bool saved  = False;
+  // Is the parm value specified? use it to update polcs
+  DataRecord::Hook hset(rec,FSetValue);
+  if( hset.exists() )
+  {
+    cdebug(4)<<"got "<<FSetValue<<" command"<<endl;
+    // Update the polc coefficients with the new values.
+    LoVec_double values = hset.as<LoVec_double>();
+    uint inx = 0;
+    for (uint i=0; i<polcs_.size(); i++) 
+      inx += polcs_[i]().update(&values(inx), values.size()-inx);
+    Assert(inx == uint(values.size()));
+    if( auto_save_ )
+    {
+      save();
+      saved = True;
+    }
+  }
+  // if not already saved, then check for a Save.Polc command
+  if( !saved && rec[FSavePolc].as<bool>(true) )
     save();
 }
 
