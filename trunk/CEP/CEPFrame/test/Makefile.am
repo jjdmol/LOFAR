@@ -21,7 +21,6 @@ CXXFLAGS += \
 check_PROGRAMS			= Example 		\
 				  Simulator_Example	\
 				  Tester		\
-				  tParamBlock		\
 				  shmem_alloc1		\
 				  shmem_alloc2		\
 				  TestAutoTrigger       \
@@ -31,7 +30,6 @@ check_PROGRAMS			= Example 		\
 Example_SOURCES 		= Example.cc
 Simulator_Example_SOURCES	= Simulator_Example.cc Simulator_Example.h
 Tester_SOURCES			= Tester.cc
-tParamBlock_SOURCES		= tParamBlock.cc
 tmat_SOURCES			= tmat.cc
 shmem_alloc1_SOURCES		= shmem_alloc1.cc
 shmem_alloc2_SOURCES		= shmem_alloc2.cc
@@ -51,8 +49,6 @@ CyclicBufferTest_DEPENDENCIES	= ../src/libcepframe.la $(LOFAR_DEPEND) -lpthread
 #Simulator_Example_DEPENDENCIES	= ../src/libcepframe.la $(LOFAR_DEPEND)
 #Tester_LDADD			= ../src/libcepframe.la
 #Tester_DEPENDENCIES		= ../src/libcepframe.la $(LOFAR_DEPEND)
-#tParamBlock_LDADD		= ../src/libcepframe.la
-#tParamBlock_DEPENDENCIES	= ../src/libcepframe.la $(LOFAR_DEPEND)
 
 TESTS_ENVIRONMENT		= top_srcdir=$(top_srcdir) \
 				  lofar_sharedir=$(lofar_sharedir) \
@@ -62,7 +58,6 @@ TESTS	=					\
 	Example_test.sh				\
 	Simulator_Example_test.sh		\
 	Tester_test.sh				\
-	tParamBlock_test.sh			\
 	tmat_test.sh				\
 	shmem_alloc1.sh				\
 	shmem_alloc2.sh				\
@@ -77,8 +72,6 @@ EXTRA_DIST = 					\
 	Simulator_Example_test.sh		\
 	Tester.out				\
 	Tester_test.sh				\
-	tParamBlock_test.sh			\
-	tParamBlock.out				\
 	tmat_test.sh				\
 	shmem_alloc1.sh				\
 	shmem_alloc2.sh				\

@@ -26,9 +26,7 @@
 #ifndef CEPFRAME_SIMULATOR_EXAMPLE_H
 #define CEPFRAME_SIMULATOR_EXAMPLE_H
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
+#include <lofar_config.h>
 
 #include "CEPFrame/Simulator.h"
 
@@ -41,7 +39,7 @@ class Simulator_Example: public LOFAR::Simulator
 public:
   virtual ~Simulator_Example();
 
-  virtual void define (const LOFAR::ParamBlock&);
+  virtual void define (const LOFAR::KeyValueMap&);
   virtual void run (int nsteps);
   virtual void dump() const;
   virtual void quit();

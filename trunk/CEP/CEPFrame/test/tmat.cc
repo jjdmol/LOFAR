@@ -74,8 +74,8 @@
             * Plot the result.
             */
            engEvalString(ep, "plot(T,D);");
-           engEvalString(ep, "title('Position vs. Time for a falling
-                                     object');");
+           engEvalString(ep, "title('Position vs. Time for a falling "
+			 "object');");
            engEvalString(ep, "xlabel('Time (seconds)');");
            engEvalString(ep, "ylabel('Position (meters)');");
 
@@ -111,10 +111,10 @@
                /*
                 * Get a string input from the user.
                 */
-               printf("Enter a MATLAB command to evaluate.  This 
-                       command should\n");
-               printf("create a variable X.  This program will then
-                       determine\n");
+               printf("Enter a MATLAB command to evaluate.  This "
+                       "command should\n");
+               printf("create a variable X.  This program will then "
+                       "determine\n");
                printf("what kind of variable you created.\n");
                printf("For example: X = 1:5\n");
                printf(">> ");

@@ -22,20 +22,18 @@
 //
 /////////////////////////////////////////////////////////////////////////
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
+#include <lofar_config.h>
 
 #include "Simulator_Example.h"
 #include "CEPFrame/SimulatorParseClass.h"
-#include "CEPFrame/ParamBlock.h"
 #include "CEPFrame/Transport.h"
 #include "CEPFrame/Step.h"
 #include "CEPFrame/BaseSim.h"
 #include "CEPFrame/Simul.h"
 #include "CEPFrame/WH_Example.h"
 #include "CEPFrame/Profiler.h"
-#include "Common/Debug.h"
+#include <Common/KeyValueMap.h>
+#include <Common/Debug.h>
 #include <Common/lofar_iostream.h>
 
 using namespace LOFAR;
@@ -43,7 +41,7 @@ using namespace LOFAR;
 Simulator_Example::~Simulator_Example()
 {}
 
-void Simulator_Example::define (const ParamBlock& params)
+void Simulator_Example::define (const KeyValueMap& params)
 {
   params.show (cout);
   int rank = TRANSPORTER::getCurrentRank ();
