@@ -40,6 +40,9 @@
 #include "CEPFrame/DataHolder.h"
 #include "CEPFrame/DHPoolManager.h"
 
+namespace LOFAR
+{
+
 class CycBufferManager : public DHPoolManager
 {
 public:
@@ -70,5 +73,5 @@ private:
 
 };
 
-
+}
 #endif

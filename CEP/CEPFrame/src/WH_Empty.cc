@@ -26,6 +26,8 @@
 #include "CEPFrame/WH_Empty.h"
 #include "Common/Debug.h"
 
+namespace LOFAR
+{
 
 WH_Empty::WH_Empty (const string& name)
 : WorkHolder (1, 1, name,"WH_Empty")
@@ -72,4 +74,6 @@ int WH_Empty::getMonitorValue(const char* name){
   }
   TRACER2("WH_Empty::getMonitorValue resturns " << result);
   return result;
+}
+
 }

@@ -27,6 +27,9 @@
 #include "CEPFrame/PHEX_Antenna.h"
 #include <Common/lofar_iostream.h>
 
+namespace LOFAR
+{
+
 PHEX_Antenna::PHEX_Antenna()
 {}
 
@@ -39,4 +42,6 @@ void PHEX_Antenna::setPosition(float aXpos, float aYpos)
 void PHEX_Antenna::dump() const
 {
   cout << "ParamHolder" << endl;
+}
+
 }

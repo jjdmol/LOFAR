@@ -27,6 +27,9 @@
 #include <BaseTransport.h>
 #include <Transportable.h>
 
+namespace LOFAR
+{
+
 TH_Database TH_Database::proto;
 
 TH_Database::TH_Database() {}
@@ -73,5 +76,5 @@ void TH_Database::init (int, const char * []) {}
 void TH_Database::finalize () {}
 void TH_Database::synchroniseAllProcesses () {}
 
-
+}
 

@@ -32,6 +32,9 @@
 #include "CEPFrame/TransportHolder.h"
 #include <stdio.h>
 
+namespace LOFAR
+{
+
 /**
    This class defines the transport mechanism To/From a single dataholder.
    A connection between two dataholders has to be made; Only one of them is 
@@ -109,5 +112,6 @@ public:
   int       itsSepLen;
 };
 
+}
 
 #endif

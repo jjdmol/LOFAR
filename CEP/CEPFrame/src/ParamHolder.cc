@@ -33,6 +33,9 @@
 #include TRANSPORTERINCLUDE
 #include "Common/Debug.h"
 
+namespace LOFAR
+{
+
 int ParamHolder::theirSerial = 0;
 
 
@@ -104,4 +107,6 @@ bool ParamHolder::operator< (const ParamHolder& aPH) const
 void ParamHolder::dump() const
 {
   cout << "ParamHolder" << endl;
+}
+
 }

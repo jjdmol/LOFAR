@@ -26,6 +26,9 @@
 #include <PO_DH_Database.h>
 #include <Common/lofar_iostream.h>
 
+namespace LOFAR
+{
+
 bool DH_Database::StoreInDatabase (int, int tag, char * buf, int size) {
   /*
   PO_DH_Database po_dh_db;
@@ -77,7 +80,7 @@ bool DH_Database::RetrieveFromDatabase (int, int tag, char * buf, int size) {
   return true;
 }
 
-
+}
 
 
 

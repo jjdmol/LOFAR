@@ -34,6 +34,9 @@
 
 #include "CEPFrame/DataHolder.h"
 
+namespace LOFAR
+{
+
 /**
    This class is an example DataHolder which is only used in the
    Example programs.
@@ -102,5 +105,6 @@ inline DH_Example::BufferType* DH_Example::getBuffer()
 inline const DH_Example::BufferType* DH_Example::getBuffer() const
   { return itsBuffer; }
 
+}
 
 #endif 

@@ -41,6 +41,9 @@
 #include "CEPFrame/Corba/CorbaController.h"
 #endif 
 
+namespace LOFAR
+{
+
 // Set static variables
 int SimulRep::theirProcessProfilerState=0; 
 int SimulRep::theirInReadProfilerState=0; 
@@ -570,4 +573,6 @@ bool SimulRep::setDHFile (const string& dhName, const string& fileName)
     return false;
   }
   return step->getOutData(inxDH).setOutFile (fileName);
+}
+
 }

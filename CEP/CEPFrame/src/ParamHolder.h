@@ -35,6 +35,9 @@
 #include "CEPFrame/Lock.h"
 #include "CEPFrame/Transportable.h"
 
+namespace LOFAR
+{
+
 //Forward declarations
 class StepRep;
 class ParamTransportManager;
@@ -257,5 +260,6 @@ inline void ParamHolder::ParamPacket::setTimeStamp (unsigned long aTimeStamp)
 inline unsigned long ParamHolder::ParamPacket::getTimeStamp() const
   { return itsTimeStamp; }
 
+}
 
 #endif 

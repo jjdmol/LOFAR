@@ -39,6 +39,9 @@
 
 #include <pthread.h>
 
+namespace LOFAR
+{
+
 /**
    This class defines the transport mechanism for MPI to be
    able to run the simulation in a parallel way on multiple nodes.
@@ -125,6 +128,7 @@ private:
 
 };
 
+}
 
 #endif
 #endif

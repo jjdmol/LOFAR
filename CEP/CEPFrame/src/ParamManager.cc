@@ -31,6 +31,9 @@
 
 #include "CEPFrame/TH_MPI.h"
 
+namespace LOFAR
+{
+
 //////////////////////////////////////////////////////////////////////
 // Construction/Destruction
 //////////////////////////////////////////////////////////////////////
@@ -321,4 +324,7 @@ void ParamManager::disconnectParam(const string& name)
     "No such parameter");
   ParamHolder* phPtr = itsParamBuffers[name]->param;
   phPtr->getPTManager()->disconnectParam();
+}
+
+
 }

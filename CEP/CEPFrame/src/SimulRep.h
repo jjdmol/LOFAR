@@ -39,6 +39,9 @@
 #include "CEPFrame/Transport.h"
 #include "CEPFrame/VirtualMachine.h"
 
+namespace LOFAR
+{
+
 class CorbaController;
 class Simul;
 
@@ -240,5 +243,7 @@ inline const list<Step*>& SimulRep::getSteps() const
  { return itsSteps; }
 inline VirtualMachine& SimulRep::getVM()
  { return itsVM; }
+
+}
 
 #endif

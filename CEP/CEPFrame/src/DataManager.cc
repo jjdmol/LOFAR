@@ -30,6 +30,9 @@
 #include "Common/Debug.h"
 #include "CEPFrame/Selector.h"
 
+namespace LOFAR
+{
+
 //////////////////////////////////////////////////////////////////////
 // Construction/Destruction
 //////////////////////////////////////////////////////////////////////
@@ -354,4 +357,7 @@ bool DataManager::hasOutputSelector()
   {
     return true;
   }
+}
+
+
 }

@@ -33,6 +33,8 @@
 #include "CEPFrame/WorkHolder.h"
 #include "CEPFrame/DH_Tester.h"
 
+namespace LOFAR
+{
 
 /**
    This is the work holder for the Tester test program.
@@ -68,5 +70,6 @@ private:
 
 };
 
+}
 
 #endif

@@ -34,6 +34,9 @@
 #include "CEPFrame/DHPoolManager.h"
 #include <pthread.h>
 
+namespace LOFAR
+{
+
 /**
   The main purpose of the SynchronisityManager class is to control asynchronous
   read/write actions. It contains a DHPoolManager for each input and output 
@@ -132,5 +135,6 @@ inline bool SynchronisityManager::isInSynchronous(int channel)
   return itsInSynchronisities[channel];
 }
 
+}
 
 #endif

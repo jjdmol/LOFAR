@@ -28,6 +28,9 @@
 
 #include <Common/lofar_string.h>
 
+namespace LOFAR
+{
+
 bool ConnectDatabase (char * hostname);
 bool DisconnectDatabase (void);
 
@@ -113,6 +116,8 @@ public:
   bool Retrieve (unsigned long rdweqno);
 
 };
+
+}
 
 #endif
 

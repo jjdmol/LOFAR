@@ -26,6 +26,8 @@
 
 #include "CEPFrame/Sel_RoundRobin.h"
 
+namespace LOFAR
+{
 
 Sel_RoundRobin::Sel_RoundRobin(unsigned int noOptions)
   :  Selector(noOptions)
@@ -42,4 +44,6 @@ unsigned int Sel_RoundRobin::getNext()
     itsCurrentSelection = 0;
   }
   return itsCurrentSelection;
+}
+
 }

@@ -25,6 +25,8 @@
 
 #include "CEPFrame/WH_Tester.h"
 
+namespace LOFAR
+{
 
 WH_Tester::WH_Tester (const string& name)
 : WorkHolder       (1, 1, name,"WH_Tester")
@@ -74,3 +76,4 @@ void WH_Tester::dump()
   cout << endl;
 }
 
+}

@@ -23,6 +23,9 @@
 #include "CEPFrame/Simul2XML.h"
 #include <Common/lofar_string.h>
 
+namespace LOFAR
+{
+
 const int INDENT = 1;
 
 //////////////////////////////////////////////////////////////////////
@@ -132,4 +135,7 @@ void Simul2XML::outputDataHolder (DataHolder *dh, ofstream &file,
     file << " type=\"output\"/>" << endl;
   }
   delete [] es;
+}
+
+
 }

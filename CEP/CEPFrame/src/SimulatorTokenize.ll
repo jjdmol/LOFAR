@@ -22,6 +22,9 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.1.1.1  2003/02/21 11:14:36  schaaf
+//  copy from BaseSim tag "CEPFRAME"
+//
 //  Revision 1.2  2002/06/10 09:48:31  diepen
 //
 //  %[BugId: 38]%
@@ -53,6 +56,7 @@
 
 #undef YY_DECL
 #define YY_DECL int yylex (YYSTYPE* lvalp)
+
 %}
 
 DEFINE   [Dd][Ee][Ff][Ii][Nn][Ee]
@@ -94,50 +98,50 @@ ESCNAME   ([A-Za-z0-9._~$]|(\\.))+
 
 %%
 {DEFINE}  {
-            SimulatorParse::position() += yyleng;
-            lvalp->val = new ParamValue ("define");
+            LOFAR::SimulatorParse::position() += yyleng;
+            lvalp->val = new LOFAR::ParamValue ("define");
 	    return DEFCOMMAND;
           }
 
 {CHECK}   {
-            SimulatorParse::position() += yyleng;
-            lvalp->val = new ParamValue ("check");
+            LOFAR::SimulatorParse::position() += yyleng;
+            lvalp->val = new LOFAR::ParamValue ("check");
 	    return OTHERCOMMAND;
           }
 
 {PRERUN}  {
-            SimulatorParse::position() += yyleng;
-            lvalp->val = new ParamValue ("prerun");
+            LOFAR::SimulatorParse::position() += yyleng;
+            lvalp->val = new LOFAR::ParamValue ("prerun");
 	    return OTHERCOMMAND;
           }
 
 {RUN}     {
-            SimulatorParse::position() += yyleng;
-            lvalp->val = new ParamValue ("run");
+            LOFAR::SimulatorParse::position() += yyleng;
+            lvalp->val = new LOFAR::ParamValue ("run");
 	    return OTHERCOMMAND;
           }
 
 {STEP}    {
-            SimulatorParse::position() += yyleng;
-            lvalp->val = new ParamValue ("step");
+            LOFAR::SimulatorParse::position() += yyleng;
+            lvalp->val = new LOFAR::ParamValue ("step");
 	    return OTHERCOMMAND;
           }
 
 {DUMP}    {
-            SimulatorParse::position() += yyleng;
-            lvalp->val = new ParamValue ("dump");
+            LOFAR::SimulatorParse::position() += yyleng;
+            lvalp->val = new LOFAR::ParamValue ("dump");
 	    return OTHERCOMMAND;
           }
 
 {DHFILE} {
-            SimulatorParse::position() += yyleng;
-            lvalp->val = new ParamValue ("dhfile");
+            LOFAR::SimulatorParse::position() += yyleng;
+            lvalp->val = new LOFAR::ParamValue ("dhfile");
 	    return OTHERCOMMAND;
           }
 
 {POSTRUN} {
-            SimulatorParse::position() += yyleng;
-            lvalp->val = new ParamValue ("postrun");
+            LOFAR::SimulatorParse::position() += yyleng;
+            lvalp->val = new LOFAR::ParamValue ("postrun");
 	    return OTHERCOMMAND;
           }
 
@@ -154,49 +158,49 @@ ESCNAME   ([A-Za-z0-9._~$]|(\\.))+
 
  /* Literals */
 {DCOMPLEX} {
-            SimulatorParse::position() += yyleng;
+            LOFAR::SimulatorParse::position() += yyleng;
             double value;
 	    sscanf (SimulatorTokenizetext, "%lf%*c", &value);
-            lvalp->val = new ParamValue (complex<double> (0, value));
+            lvalp->val = new LOFAR::ParamValue (complex<double> (0, value));
 	    return LITERAL;
 	  }
 {COMPLEX} {
-            SimulatorParse::position() += yyleng;
+            LOFAR::SimulatorParse::position() += yyleng;
             float value;
 	    sscanf (SimulatorTokenizetext, "%f%*c", &value);
-            lvalp->val = new ParamValue (complex<float> (0, value));
+            lvalp->val = new LOFAR::ParamValue (complex<float> (0, value));
 	    return LITERAL;
 	  }
 {DOUBLE}  {
-            SimulatorParse::position() += yyleng;
-            lvalp->val = new ParamValue (atof(SimulatorTokenizetext));
+            LOFAR::SimulatorParse::position() += yyleng;
+            lvalp->val = new LOFAR::ParamValue (atof(SimulatorTokenizetext));
 	    return LITERAL;
 	  }
 {FLOAT}   {
-            SimulatorParse::position() += yyleng;
-            lvalp->val = new ParamValue (float(atof(SimulatorTokenizetext)));
+            LOFAR::SimulatorParse::position() += yyleng;
+            lvalp->val = new LOFAR::ParamValue (float(atof(SimulatorTokenizetext)));
 	    return LITERAL;
 	  }
 {INT}     {
-            SimulatorParse::position() += yyleng;
+            LOFAR::SimulatorParse::position() += yyleng;
             int ival = atoi(SimulatorTokenizetext);
             double dval = atof(SimulatorTokenizetext);
             /* Handle integers exceeding integer precision as doubles */
             if (ival < dval-0.1  ||  ival > dval+0.1) {
-                lvalp->val = new ParamValue (dval);
+                lvalp->val = new LOFAR::ParamValue (dval);
             } else {
-                lvalp->val = new ParamValue (ival);
+                lvalp->val = new LOFAR::ParamValue (ival);
             }
             return LITERAL;
 	  }
 {TRUE}    {
-            SimulatorParse::position() += yyleng;
-            lvalp->val = new ParamValue (true);
+            LOFAR::SimulatorParse::position() += yyleng;
+            lvalp->val = new LOFAR::ParamValue (true);
 	    return LITERAL;
 	  }
 {FALSE}   {
-            SimulatorParse::position() += yyleng;
-            lvalp->val = new ParamValue (false);
+            LOFAR::SimulatorParse::position() += yyleng;
+            lvalp->val = new LOFAR::ParamValue (false);
 	    return LITERAL;
 	  }
 
@@ -205,20 +209,20 @@ ESCNAME   ([A-Za-z0-9._~$]|(\\.))+
  Names can have escape characters to be removed.
  */
 {NAME}    {
-            SimulatorParse::position() += yyleng;
-            lvalp->val = new ParamValue (SimulatorTokenizetext);
+            LOFAR::SimulatorParse::position() += yyleng;
+            lvalp->val = new LOFAR::ParamValue (SimulatorTokenizetext);
 	    return NAME;
 	  }
 {ESCNAME} {
-            SimulatorParse::position() += yyleng;
-            lvalp->val = new ParamValue
-                         (SimulatorParse::removeEscapes (SimulatorTokenizetext));
+            LOFAR::SimulatorParse::position() += yyleng;
+            lvalp->val = new LOFAR::ParamValue
+                         (LOFAR::SimulatorParse::removeEscapes (SimulatorTokenizetext));
 	    return NAME;
 	  }
 {STRING}  {
-            SimulatorParse::position() += yyleng;
-            lvalp->val = new ParamValue
-                         (SimulatorParse::removeQuotes (SimulatorTokenizetext));
+            LOFAR::SimulatorParse::position() += yyleng;
+            lvalp->val = new LOFAR::ParamValue
+                         (LOFAR::SimulatorParse::removeQuotes (SimulatorTokenizetext));
 	    return LITERAL;
 	  }
 
@@ -231,10 +235,10 @@ ESCNAME   ([A-Za-z0-9._~$]|(\\.))+
 "]"       { return RBRACKET; }
 
  /* Whitespace is skipped */
-{WHITE}   { SimulatorParse::position() += yyleng; }
+{WHITE}   { LOFAR::SimulatorParse::position() += yyleng; }
 
  /* Newline updates counters */
-{NEWLINE} { SimulatorParse::line()++; SimulatorParse::position() = 0; }
+{NEWLINE} { LOFAR::SimulatorParse::line()++; LOFAR::SimulatorParse::position() = 0; }
 
  /* An unterminated string is an error */
 {USTRING} { throw "SimulatorTokenize: Unterminated string"; }

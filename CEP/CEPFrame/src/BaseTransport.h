@@ -42,6 +42,9 @@
 
 */
 
+namespace LOFAR
+{
+
 class Transportable;
 
 class BaseTransport
@@ -171,4 +174,5 @@ inline void BaseTransport::setTargetTransportable (Transportable * t)
 inline Transportable * BaseTransport::getTargetTransportable () 
   { return itsTargetTransportable; }
 
+}
 #endif 

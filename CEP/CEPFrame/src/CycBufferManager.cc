@@ -27,6 +27,8 @@
 #include "CEPFrame/CycBufferManager.h"
 #include "Common/Debug.h"
 
+namespace LOFAR
+{
 //////////////////////////////////////////////////////////////////////
 // Construction/Destruction
 //////////////////////////////////////////////////////////////////////
@@ -85,4 +87,6 @@ void CycBufferManager::preprocess()
 int CycBufferManager::getSize()
 {
   return itsBuf.GetSize();
+}
+
 }

@@ -30,6 +30,8 @@
 #include "Common/Debug.h"
 #include <unistd.h>
 
+namespace LOFAR
+{
 
 //////////////////////////////////////////////////////////////////////
 // Construction/Destruction
@@ -280,4 +282,6 @@ void SynchronisityManager::writeAsynchronous(int channel)
   }
 
   pthread_mutex_unlock(&itsWritersData[channel].mutex);
+}
+
 }

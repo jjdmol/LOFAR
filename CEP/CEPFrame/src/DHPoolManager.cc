@@ -27,6 +27,9 @@
 #include "CEPFrame/DHPoolManager.h"
 #include "Common/Debug.h"
 
+namespace LOFAR
+{
+
 //////////////////////////////////////////////////////////////////////
 // Construction/Destruction
 //////////////////////////////////////////////////////////////////////
@@ -72,3 +75,4 @@ DataHolder* DHPoolManager::getRWLockedDH(int* id)
   return itsDataHolder;
 }
 
+}

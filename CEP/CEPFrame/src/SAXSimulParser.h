@@ -41,6 +41,9 @@ class SAX2XMLReader;
 class SAXHandler;
 #endif
 
+namespace LOFAR
+{
+
 /** This is a wrapper around the SAX2XMLReader class, to make parsing
     an XML file for building a LOFAR simulation easy.
 */
@@ -63,5 +66,6 @@ private:
   SAXHandler*      handler;
 };
 
+}
 
 #endif

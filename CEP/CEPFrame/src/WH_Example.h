@@ -33,6 +33,8 @@
 #include "CEPFrame/WorkHolder.h"
 #include "CEPFrame/DH_Example.h"
 
+namespace LOFAR
+{
 
 /**
    This is an example of a WorkHolder class.
@@ -79,5 +81,6 @@ private:
   int itsBufLength;
 };
 
+}
 
 #endif

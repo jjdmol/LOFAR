@@ -34,6 +34,9 @@
 #include "Common/Debug.h"
 #include "CEPFrame/Selector.h"
 
+namespace LOFAR
+{
+
 /**
    This class implements a selection mechanism which follows the selection
    of another selector. Useful when an output must follow an input. Both
@@ -54,5 +57,6 @@ private:
   
 };
 
+}
 
 #endif

@@ -25,6 +25,9 @@
 #include <cmath>
 #include "CEPFrame/four1.h"
 
+namespace LOFAR
+{
+
 #define FOUR1_SWAP(a,b) tempr=(a);(a)=(b);(b)=tempr
 
 void four1(float data[], unsigned long nn, int isign)
@@ -73,3 +76,5 @@ void four1(float data[], unsigned long nn, int isign)
 	}
 }
 #undef FOUR1_SWAP
+
+}

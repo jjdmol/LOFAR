@@ -26,6 +26,9 @@
 #include "CEPFrame/SimulatorParseClass.h"
 #include TRANSPORTERINCLUDE
 
+namespace LOFAR
+{
+
 Simulator::Simulator()
 : itsSimul(),
   itsArgc (0),
@@ -142,3 +145,5 @@ void Simulator::postrun()
 
 void Simulator::quit()
 {}
+
+}

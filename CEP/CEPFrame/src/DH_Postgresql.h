@@ -33,6 +33,8 @@
 
 using namespace std;
 
+namespace LOFAR
+{
 
 class DH_Postgresql : public DH_Database {
 
@@ -65,7 +67,7 @@ private:
 
 };
 
-
+}
 
 #endif
 

@@ -29,6 +29,8 @@
 #include "CEPFrame/ParamBlock.h"
 #include <stdexcept>
 
+namespace LOFAR
+{
 
 ParamValue::ParamValue()
 : itsDataType (DTValueVector),
@@ -752,4 +754,6 @@ ostream& operator<< (ostream& os, const ParamValue& param)
     break;
   }
   return os;
+}
+
 }

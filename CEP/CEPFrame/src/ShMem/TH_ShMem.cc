@@ -44,6 +44,9 @@
 #include <errno.h>
 #include <sched.h>
 
+namespace LOFAR
+{
+
 // use semaphore in shared memory to synchronize the sender and receiver
 #define SEM_SYNC
 
@@ -511,6 +514,8 @@ void* TH_ShMem::ShMemBuf::getDataAddress()
     // return the address of the itsBuf field since
     // that is where the buffer should start
     return &itsBuf;
+}
+
 }
 
 #endif

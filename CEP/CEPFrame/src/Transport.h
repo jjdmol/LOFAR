@@ -34,6 +34,9 @@
 #include "CEPFrame/BaseTransport.h"
 #include "CEPFrame/DataHolder.h"
 
+namespace LOFAR
+{
+
 //# Forward Declarations
 class StepRep;
 
@@ -142,5 +145,7 @@ inline void Transport::setRate (int aRate)
 
 inline int Transport::getRate() const
   { return itsRate; }
+
+}
 
 #endif 

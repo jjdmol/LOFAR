@@ -27,6 +27,9 @@
 #include "CEPFrame/SAXSimulParser.h"
 #include "Common/Debug.h"
 
+namespace LOFAR
+{
+
 SAXSimulParser::SAXSimulParser (const string& fileName)
 : file   (0),
   parser (0),
@@ -120,3 +123,4 @@ Simul SAXSimulParser::parseSimul()
 #endif
 }
 
+}

@@ -26,6 +26,9 @@
 
 #include "CEPFrame/Selector.h"
 
+namespace LOFAR
+{
+
 Selector::Selector(unsigned int noOptions)
   :  itsNOptions(noOptions),
      itsCurrentSelection(-1)
@@ -34,4 +37,4 @@ Selector::Selector(unsigned int noOptions)
 Selector::~Selector()
 {}
 
-
+}

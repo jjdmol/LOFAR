@@ -31,6 +31,9 @@
 #include "Common/Debug.h"
 #include "CEPFrame/StepRep.h"
 
+namespace LOFAR
+{
+
 ParamTransport::ParamTransport (ParamHolder* paramHolderPtr, bool isSender)
   : BaseTransport      (),
     itsInParamHolder   (0),
@@ -149,3 +152,4 @@ void ParamTransport::setTargetAddr (ParamHolder* addr)
   setTargetTransportable(addr);    // Set Transportable in base class BaseTransport
 }
 
+}

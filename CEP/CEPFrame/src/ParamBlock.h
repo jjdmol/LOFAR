@@ -34,6 +34,9 @@
 #include <Common/lofar_map.h>
 #include <Common/lofar_iosfwd.h>
 
+namespace LOFAR
+{
+
 /**
    The ParamBlock class holds a collection of parameter name/value pairs.
    It uses the STL map class to hold the parameters.
@@ -77,5 +80,6 @@ public:
   friend ostream& operator<< (ostream&, const ParamBlock&);
 };
 
+}
 
 #endif 

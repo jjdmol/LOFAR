@@ -25,6 +25,8 @@
 #include TRANSPORTERINCLUDE
 #include "CEPFrame/PH_Int.h"
 
+namespace LOFAR
+{
 
 ParamTransportManager::ParamTransportManager()
   : itsSourceTransport(0),
@@ -359,3 +361,4 @@ void ParamTransportManager::sendFinalMsg(ParamTransport* ptPtr)
   }
 }
 
+}

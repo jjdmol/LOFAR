@@ -33,6 +33,9 @@
 
 #include <CEPFrame/TransportHolder.h>
 
+namespace LOFAR
+{
+
 class TH_Database: public TransportHolder
 {
 public:
@@ -67,6 +70,8 @@ private:
 
 inline bool TH_Database::isBlocking() const
 { return false;}
+
+}
 
 #endif
 

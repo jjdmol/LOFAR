@@ -38,6 +38,9 @@
 
 #include "CEPFrame/CyclicBuffer.h"
 
+namespace LOFAR
+{
+
 /** A cyclic buffer template, like a fifo. When the buffer is full, the
     oldest values are overwritten. (Cyclic Over Writing Buffer)*/
 template <class TYPE>
@@ -293,6 +296,8 @@ template<class TYPE>
 int CyclicOWBuffer<TYPE>::GetCount(void)
 {
   return itsCount;
+}
+
 }
 
 #endif

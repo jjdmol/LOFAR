@@ -41,6 +41,9 @@
 
 #include <pthread.h>
 
+namespace LOFAR
+{
+
 // static ints to count nr of reads/writes
 #ifndef THREAD_SAFE
 pthread_mutex_t TH_MPI::theirMPILock = PTHREAD_MUTEX_INITIALIZER;
@@ -280,6 +283,8 @@ void TH_MPI::synchroniseAllProcesses()
     TRACER2("Synchronise all");
     MPI_Barrier(MPI_COMM_WORLD);
     TRACER2("Synchronised...");
+}
+
 }
 
 #endif

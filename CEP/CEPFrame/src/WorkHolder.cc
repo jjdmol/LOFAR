@@ -28,6 +28,9 @@
 #include "Common/Debug.h"
 
 
+namespace LOFAR
+{
+
 map<string,WorkHolder::WHConstruct*>* WorkHolder::itsConstructMap = 0;
 
 
@@ -250,4 +253,6 @@ WorkHolder::WHConstruct* WorkHolder::getConstruct (const string& name)
 int WorkHolder::getMonitorValue (const char*)
 {
   return 0;
+}
+
 }

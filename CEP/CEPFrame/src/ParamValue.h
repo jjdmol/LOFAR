@@ -21,6 +21,9 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.1.1.1  2003/02/21 11:14:36  schaaf
+//  copy from BaseSim tag "CEPFRAME"
+//
 //  Revision 1.6  2002/05/03 11:21:31  gvd
 //  Changed for new build environment (mostly added package name to include)
 //
@@ -55,6 +58,9 @@
 #include <Common/lofar_string.h>
 #include <Common/lofar_vector.h>
 #include <Common/lofar_iosfwd.h>
+
+namespace LOFAR
+{
 
 //# Forward Declarations
 class ParamBlock;
@@ -201,5 +207,6 @@ private:
   void*    itsValuePtr;
 };
 
+}
 
 #endif 

@@ -26,6 +26,9 @@
 #include "CEPFrame/Simul.h"
 #include "CEPFrame/SimulBuilder.h"
 
+namespace LOFAR
+{
+
 Simul::Simul()
 : Step(),
   itsSimul(0)
@@ -111,4 +114,6 @@ bool Simul::connectInputArray (Simul* aSimul[],
   bool result = itsRep->connectInputArray (stepPtrs, nrItems, prototype);
   delete [] stepPtrs;
   return result;
+}
+
 }

@@ -31,6 +31,9 @@
 
 #include <Common/lofar_string.h>
 
+namespace LOFAR
+{
+
 class VirtualMachine
 {
  public:
@@ -71,5 +74,6 @@ inline VirtualMachine::State VirtualMachine::getState() const
 inline VirtualMachine::Status VirtualMachine::getStatus() const
   { return itsStatus; }
 
+}
 
 #endif

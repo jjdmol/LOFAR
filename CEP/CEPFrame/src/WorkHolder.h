@@ -38,6 +38,9 @@
 #include <Common/lofar_string.h>
 #include <Common/lofar_map.h>
 
+namespace LOFAR
+{
+
 class ParamBlock;
 
 /**
@@ -204,5 +207,6 @@ inline WorkHolder::ProcMode WorkHolder::getProcMode() const
 inline void WorkHolder::setProcMode (ProcMode aProcMode)
   { itsProcMode = aProcMode; }
 
+}
 
 #endif

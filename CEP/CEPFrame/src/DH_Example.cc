@@ -26,6 +26,8 @@
 
 #include "DH_Example.h"
 
+namespace LOFAR
+{
 
 DH_Example::DH_Example (const string& name, unsigned int nbuffer)
 : DataHolder    (name, "DH_Example"),
@@ -77,4 +79,6 @@ void DH_Example::postprocess()
   itsDataPacket = 0;
   itsBuffer     = 0;
   setDefaultDataPacket();
+}
+
 }

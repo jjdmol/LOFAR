@@ -36,6 +36,9 @@
 #include <stdlib.h>
 #include <Common/lofar_string.h>
 
+namespace LOFAR
+{
+
 class Step;
 class SimulRep;
 class CorbaMonitor;
@@ -355,5 +358,6 @@ inline void StepRep::setParent (SimulRep& parent)
 inline int StepRep::getSeqNr() const
   { return itsSeqNr; }
 
+}
 
 #endif

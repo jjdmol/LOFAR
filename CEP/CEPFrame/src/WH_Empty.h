@@ -33,6 +33,8 @@
 #include "CEPFrame/WorkHolder.h"
 #include "CEPFrame/DH_Empty.h"
 
+namespace LOFAR
+{
 
 /**
    This is an empty WorkHolder class.
@@ -72,5 +74,6 @@ private:
 
 };
 
+}
 
 #endif
