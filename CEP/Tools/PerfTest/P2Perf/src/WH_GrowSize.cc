@@ -1,4 +1,5 @@
-//  WH_GrowSize.cc:
+//  WH_GrowSize.cc: WorkHolder class using DH_Growsize() objects and 
+//                  measuring performance
 //
 //  Copyright (C) 2000, 2001
 //  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -21,6 +22,9 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.13  2002/04/12 15:51:44  schaaf
+//  Explicit definition of source and destination side
+//
 //  Revision 1.12  2002/03/27 09:47:47  schaaf
 //  Use get{Cur/Max}DataPacketSize
 //
@@ -86,7 +90,8 @@ WH_GrowSize::WH_GrowSize (const string& name,
   itsIsDestSide (destside),
   itsFirst      (first),
   itsIteration(itsMeasurements),
-  itsTime(0)
+  itsTime(0),
+  itsReportPerformance(false)
 {
   AssertStr (nin > 0,     "0 input DH_IntArray is not possible");
   AssertStr (nout > 0,    "0 output DH_IntArray is not possible");
@@ -104,13 +109,8 @@ WH_GrowSize::WH_GrowSize (const string& name,
     itsOutHolders[i] = new DH_GrowSize (std::string("out_") + str, nbuffer);
   }
 
-  for (int i=0; i<getInputs() ; i++) {
-      if (getInputs()  > 0) (void)itsInHolders[i]->increaseSize(1.0);
-    }
-  for (int i=0; i<getOutputs() ; i++) {
-    if (getOutputs() > 0) (void)itsOutHolders[i]->increaseSize(1.0);
-    }
-
+  // decrease the iteration counter at the destination side for
+  // proper synchronisation of the increaseSize() method calls
   if (itsIsDestSide) {
     itsIteration --;
   }
@@ -131,32 +131,42 @@ WH_GrowSize::~WH_GrowSize()
 
 WorkHolder* WH_GrowSize::make(const string& name) const
 {
-  return new WH_GrowSize(name, itsFirst, getInputs(), getOutputs(), itsBufLength, itsIsDestSide);
+  return new WH_GrowSize(name, 
+			 itsFirst, 
+			 getInputs(), 
+			 getOutputs(), 
+			 itsBufLength, 
+			 itsIsDestSide);
 }
 
-void WH_GrowSize::process()
-{
+void WH_GrowSize::preprocess() {
+  return;
+}
 
+
+void WH_GrowSize::process()
+{  
   itsOutHolders[0]->setTimeStamp(itsTime++);
-  if (!strncmp("GrowSizeSource[1]", getName().c_str(), 11)){
-    if (!itsFirstcall)
-      {
-	watch.stop();
-	if (itsIteration == 0)
-	    {
-	      // first measurement; print packet sizes etc.
-	      cout << endl;
-	      cout << itsInHolders[0]->getDataPacketSize() << " "
-		   << log10(itsInHolders[0]->getDataPacketSize()) << " ";
-	    }
-	cout << (itsOutHolders[0]->getDataPacketSize()*getOutputs()/(1024.*1024.*watch.elapsed())) 
-	     << "  "
-	     << watch.elapsed()
-	     << "  ";
+  if (itsReportPerformance){
+    if (!itsFirstcall) {
+      watch.stop();
+      if (itsIteration == 0) {
+	// first measurement; print packet sizes etc.
+	cout << endl;
+	cout << itsInHolders[0]->getDataPacketSize() << " "
+	     << log10(itsInHolders[0]->getDataPacketSize()) << " ";
       }
+      // report the bandwidth per output channel (in MB/s)
+      cout << (itsOutHolders[0]->getDataPacketSize() * getOutputs()
+	       /(1024.*1024.*watch.elapsed())) 
+	   << "  "
+	   << watch.elapsed()
+	   << "  ";
+    } else {
+      if (itsIteration == 1) itsFirstcall = false;
+    }
     watch.start();
   }
-  itsFirstcall = false;
   {
     // perform every measurement Measurements times
     if (itsIteration-- == 0 )
@@ -176,29 +186,17 @@ void WH_GrowSize::process()
 
 void WH_GrowSize::dump() const
 {
-#if 0
-  cout << "WH_GrowSize " << getName() << " Buffers:" << endl;
-  for (int i=0; i<getOutputs(); i++)
-  {
-    cout << "Buf = [ ";
-    for (int j=0; j<itsBufLength; j++)
-    {
-      cout << itsOutHolders[i]->getBuffer()[j];
-      
-      if (j < itsBufLength - 1) cout << ",";
-    }
-    cout << " ]" << endl;
-  }
-#endif
 }
 
 DH_GrowSize* WH_GrowSize::getInHolder (int channel)
 {
+  AssertStr (channel >= 0,          "input channel too low");
   AssertStr (channel < getInputs(), "input channel too high");
   return itsInHolders[channel];
 }
 DH_GrowSize* WH_GrowSize::getOutHolder (int channel)
 {
+  AssertStr (channel >= 0,           "output channel too low");
   AssertStr (channel < getOutputs(), "output channel too high");
   return itsOutHolders[channel];
 }
