@@ -58,7 +58,7 @@ int main (int argc, const char** argv)
     simulator.setarg (argc, argv);
 
     simulator.baseDefine();
-    simulator.baseRun(1);
+    simulator.baseRun(3);
     simulator.baseQuit();
 
 
