@@ -33,7 +33,7 @@
 class FPDoubleValue : public FPValue
 {
 public: 
-	FPDoubleValue(const double& val = 0.0) : FPValue(DOUBLE_VAL), value_(val) {;}
+	FPDoubleValue(const double& val = 0.0) : FPValue(LPT_DOUBLE), value_(val) {;}
 	virtual ~FPDoubleValue() {;}
 
   /** Write property of double value_. */
@@ -57,9 +57,9 @@ private: // Private attributes
 class FPComplexDoubleValue : public FPValue
 {
 public:
-	FPComplexDoubleValue(const double val[]) : FPValue(COMPLEX_DOUBLE_VAL)
+	FPComplexDoubleValue(const double val[]) : FPValue(COMPLEX_LPT_DOUBLE)
     {value_[0] = val[0]; value_[1] = val[1];}
-	FPComplexDoubleValue(const double real = 0.0, const double imag = 0.0) : FPValue(COMPLEX_DOUBLE_VAL)
+	FPComplexDoubleValue(const double real = 0.0, const double imag = 0.0) : FPValue(COMPLEX_LPT_DOUBLE)
     {value_[0] = real; value_[1] = imag;}
 	virtual ~FPComplexDoubleValue() {;}
 

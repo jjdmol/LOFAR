@@ -1086,7 +1086,7 @@ GCFEvent::TResult Application::test302(GCFEvent& e, GCFPortInterface& p)
       switch (_counter)
       {
         case 1:  
-          if ((pResponse->pValue->getType() == GCFPValue::INTEGER_VAL) &&
+          if ((pResponse->pValue->getType() == GCFPValue::LPT_INTEGER) &&
               (strcmp(pResponse->pPropName, "A_C_P1") == 0) &&
               (((GCFPVInteger*)pResponse->pValue)->getValue() == 22) &&
               (&p == &_supTask2.getPort()))
@@ -1112,7 +1112,7 @@ GCFEvent::TResult Application::test302(GCFEvent& e, GCFPortInterface& p)
           }
           break;
         case 2:  
-          if ((pResponse->pValue->getType() == GCFPValue::CHAR_VAL) &&
+          if ((pResponse->pValue->getType() == GCFPValue::LPT_CHAR) &&
               (strcmp(pResponse->pPropName, "A_C_P2") == 0) &&
               (((GCFPVChar*)pResponse->pValue)->getValue() == 22) &&
               (&p == &_supTask2.getPort()))
@@ -1138,7 +1138,7 @@ GCFEvent::TResult Application::test302(GCFEvent& e, GCFPortInterface& p)
           }
           break;
         case 3:  
-          if ((pResponse->pValue->getType() == GCFPValue::DOUBLE_VAL) &&
+          if ((pResponse->pValue->getType() == GCFPValue::LPT_DOUBLE) &&
               (strcmp(pResponse->pPropName, "A_C_P3") == 0) &&
               (((GCFPVChar*)pResponse->pValue)->getValue() == 22.0) &&
               (&p == &_supTask2.getPort()))
@@ -1226,7 +1226,7 @@ GCFEvent::TResult Application::test303(GCFEvent& e, GCFPortInterface& p)
     {
       GCFPropValueEvent* pResponse = static_cast<GCFPropValueEvent*>(&e);
       assert(pResponse);
-      if ((pResponse->pValue->getType() == GCFPValue::INTEGER_VAL) &&
+      if ((pResponse->pValue->getType() == GCFPValue::LPT_INTEGER) &&
           (strcmp(pResponse->pPropName, "A_C_P1") == 0) &&
           (((GCFPVInteger*)pResponse->pValue)->getValue() == 22) &&
           (&p == &_supTask1.getPort()))
@@ -1321,7 +1321,7 @@ GCFEvent::TResult Application::test304(GCFEvent& e, GCFPortInterface& p)
     {
       GCFPropValueEvent* pResponse = static_cast<GCFPropValueEvent*>(&e);
       assert(pResponse);
-      if ((pResponse->pValue->getType() == GCFPValue::DOUBLE_VAL) &&
+      if ((pResponse->pValue->getType() == GCFPValue::LPT_DOUBLE) &&
           (strncmp(pResponse->pPropName, "A_H_J_P", 7) == 0) &&
           (&p == &_supTask1.getPort()))
       {
@@ -1431,7 +1431,7 @@ GCFEvent::TResult Application::test305(GCFEvent& e, GCFPortInterface& p)
     {
       GCFPropValueEvent* pResponse = static_cast<GCFPropValueEvent*>(&e);
       assert(pResponse);
-      if ((pResponse->pValue->getType() == GCFPValue::DOUBLE_VAL) &&
+      if ((pResponse->pValue->getType() == GCFPValue::LPT_DOUBLE) &&
           (strcmp(pResponse->pPropName, "A_H_J_P00") == 0) &&
           (((GCFPVDouble*)pResponse->pValue)->getValue() == 3.12))
       {
@@ -1516,7 +1516,7 @@ GCFEvent::TResult Application::test306(GCFEvent& e, GCFPortInterface& /*p*/)
       GCFPropValueEvent* pResponse = static_cast<GCFPropValueEvent*>(&e);
       assert(pResponse);
       if (pResponse->internal) break;
-      if ((pResponse->pValue->getType() == GCFPValue::INTEGER_VAL) &&
+      if ((pResponse->pValue->getType() == GCFPValue::LPT_INTEGER) &&
           (strcmp(pResponse->pPropName, "A_C_P1") == 0) &&
           (((GCFPVInteger*)pResponse->pValue)->getValue() == _counter))
       {   
@@ -1685,6 +1685,7 @@ GCFEvent::TResult Application::test403(GCFEvent& e, GCFPortInterface& /*p*/)
   switch (e.signal)
   {
     case F_ENTRY_SIG:
+      GCFTask::stop();
       break;
 
     default:

@@ -351,41 +351,41 @@ TPAResult GPAAPCFileReader::createMACValueObject(
   
   if (macType == "MACBool")
   {
-    *pReturnValue = GCFPValue::createMACTypeObject(GCFPValue::BOOL_VAL);
+    *pReturnValue = GCFPValue::createMACTypeObject(GCFPValue::LPT_BOOL);
   }
   else if (macType == "MACChar")
   {
-    *pReturnValue = GCFPValue::createMACTypeObject(GCFPValue::CHAR_VAL);
+    *pReturnValue = GCFPValue::createMACTypeObject(GCFPValue::LPT_CHAR);
   }
   else if (macType == "MACUnsigned")
   {
-    *pReturnValue = GCFPValue::createMACTypeObject(GCFPValue::UNSIGNED_VAL);
+    *pReturnValue = GCFPValue::createMACTypeObject(GCFPValue::LPT_UNSIGNED);
   }
   else if (macType == "MACInteger")
   {
-    *pReturnValue = GCFPValue::createMACTypeObject(GCFPValue::INTEGER_VAL);
+    *pReturnValue = GCFPValue::createMACTypeObject(GCFPValue::LPT_INTEGER);
   }
   else if (macType == "MACDouble")
   {
-    *pReturnValue = GCFPValue::createMACTypeObject(GCFPValue::DOUBLE_VAL);
+    *pReturnValue = GCFPValue::createMACTypeObject(GCFPValue::LPT_DOUBLE);
   }
   else if (macType == "MACString")
   {
-    *pReturnValue = GCFPValue::createMACTypeObject(GCFPValue::STRING_VAL);
+    *pReturnValue = GCFPValue::createMACTypeObject(GCFPValue::LPT_STRING);
   }
-/*  else if (macType == "BIT32_VAL")
+/*  else if (macType == "LPT_BIT32")
   {
     *pMacValue = new GCFPVBit32(((Bit32Var *)&variable)->getValue());
   }
-  else if (macType == "REF_VAL")
+  else if (macType == "LPT_REF")
   {
     *pMacValue = new GCFPVRef(((TextVar *)&variable)->getValue());
   }
-  else if (macType == "BLOB_VAL")
+  else if (macType == "LPT_BLOB")
   {
     *pMacValue = new GCFPVBlob(((BlobVar *)&variable)->getValue());
   }
-  else if (macType == "DATETIME_VAL")
+  else if (macType == "LPT_DATETIME")
   {
     *pMacValue = new GCFPVDateTime(((TimeVar *)&variable)->getValue());
   }*/

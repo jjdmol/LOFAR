@@ -132,14 +132,21 @@ void GCFTask::start()
 
 void GCFTask::stop()
 {
-  vector<GCFHandler*> tempHandlers(_handlers);
-  
-  for (THandlerIter iter = tempHandlers.begin() ;
-        iter != tempHandlers.end() ; 
-        ++iter)
+  if (_doExit)
   {
+    vector<GCFHandler*> tempHandlers(_handlers);
+  
+    for (THandlerIter iter = tempHandlers.begin() ;
+          iter != tempHandlers.end() ; 
+          ++iter)
+    {
       (*iter)->stop();
-  }  
+    } 
+  }
+  else
+  {
+    _doExit = true;
+  }     
 }
 
 void GCFTask::registerHandler(GCFHandler& handler)

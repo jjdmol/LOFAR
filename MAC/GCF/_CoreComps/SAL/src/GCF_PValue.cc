@@ -37,39 +37,39 @@ GCFPValue* GCFPValue::createMACTypeObject(TMACValueType type)
   
   switch (type)
   {
-    case BOOL_VAL:
+    case LPT_BOOL:
       pResult = new GCFPVBool();
       break;
-    case CHAR_VAL:
+    case LPT_CHAR:
       pResult = new GCFPVChar();
       break;
-    case UNSIGNED_VAL:
+    case LPT_UNSIGNED:
       pResult = new GCFPVUnsigned();
       break;
-    case INTEGER_VAL:
+    case LPT_INTEGER:
       pResult = new GCFPVInteger();
       break;
-    case DOUBLE_VAL:
+    case LPT_DOUBLE:
       pResult = new GCFPVDouble();
       break;
-    case STRING_VAL:
+    case LPT_STRING:
       pResult = new GCFPVString();
       break;
-/*    case BIT32_VAL:
+/*    case LPT_BIT32:
       pResult = new GCFPVBit32();
       break;
-    case REF_VAL:
+    case LPT_REF:
       pResult = new GCFPVRef();
       break;
-    case BLOB_VAL:
+    case LPT_BLOB:
       pResult = new GCFPVBlob();
       break;
-    case DATETIME_VAL:
+    case LPT_DATETIME:
       pResult = new GCFPVDateTime();
       break;*/
     default:
-      if (type > DYNARR_VAL &&
-          type <= DYNSTRING_VAL)
+      if (type > LPT_DYNARR &&
+          type <= LPT_DYNSTRING)
       {
         pResult = new GCFPVDynArr(type);
       }

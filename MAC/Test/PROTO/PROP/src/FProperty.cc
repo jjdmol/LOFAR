@@ -46,17 +46,17 @@ FProperty::FProperty(const char* name, FPValue::ValueType type) :
   
   switch (type)
   {
-  case FPValue::BOOL_VAL:
+  case FPValue::LPT_BOOL:
     pOldValue_ = new FPBoolValue();
     pOriginalValue_ = new FPBoolValue();
     pOnlineValue_ = new FPBoolValue();
     break;
-  case FPValue::UCHAR_VAL:
+  case FPValue::ULPT_CHAR:
     pOldValue_ = new FPUCharValue();
     pOriginalValue_ = new FPUCharValue();
     pOnlineValue_ = new FPUCharValue();
     break;
-  case FPValue::CHAR_VAL:
+  case FPValue::LPT_CHAR:
     pOldValue_ = new FPCharValue();
     pOriginalValue_ = new FPCharValue();
     pOnlineValue_ = new FPCharValue();
@@ -101,12 +101,12 @@ FProperty::FProperty(const char* name, FPValue::ValueType type) :
     pOriginalValue_ = new FPComplexFloatValue();
     pOnlineValue_ = new FPComplexFloatValue();
     break;
-  case FPValue::DOUBLE_VAL:
+  case FPValue::LPT_DOUBLE:
     pOldValue_ = new FPDoubleValue();
     pOriginalValue_ = new FPDoubleValue();
     pOnlineValue_ = new FPDoubleValue();
     break;
-  case FPValue::COMPLEX_DOUBLE_VAL:
+  case FPValue::COMPLEX_LPT_DOUBLE:
     pOldValue_ = new FPComplexDoubleValue();
     pOriginalValue_ = new FPComplexDoubleValue();
     pOnlineValue_ = new FPComplexDoubleValue();
