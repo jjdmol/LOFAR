@@ -67,7 +67,7 @@ public:
   // increaseSize: increase the size returned by getDataPacketSize
   bool increaseSize(float factor);
 
-  virtual void dump();
+  virtual void dump() const;
 
   // override getDataPacketSize accessor methods
   int getDataPacketSize();

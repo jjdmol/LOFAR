@@ -100,6 +100,6 @@ void DH_GrowSize::postprocess()
   deallocate((void*)itsDataPacket);
 }
 
-void DH_GrowSize::dump()
+void DH_GrowSize::dump()const
 {
 }
