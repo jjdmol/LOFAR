@@ -26,12 +26,16 @@
 #include "suite.h"
 #define DECLARE_SIGNAL_NAMES
 #include "ABS_Protocol.ph"
+#include "ABSDirection.h"
 
 #include "ABSAVTStub.h"
 
 #include <iostream>
 #include <sys/time.h>
 #include <string.h>
+
+#include <boost/date_time/posix_time/posix_time.hpp>
+using namespace boost::posix_time;
 
 #undef PACKAGE
 #undef VERSION
@@ -219,8 +223,8 @@ GCFEvent::TResult AVTStub::test002(GCFEvent& e, GCFPortInterface& /*port*/)
 	// send pointto command
 	ABSBeampointtoEvent pointto;
 	pointto.handle = ack->handle;
-	gettimeofday(&pointto.time,0);
-	pointto.type=3;
+	pointto.time = from_time_t(time(0)) + seconds(15);
+	pointto.type=(int)Direction::LOFAR_LMN;
 	pointto.angle1=0.0;
 	pointto.angle2=-1.0;
 
@@ -228,7 +232,7 @@ GCFEvent::TResult AVTStub::test002(GCFEvent& e, GCFPortInterface& /*port*/)
 
 	// beam pointed, now free it
 	ABSBeamfreeEvent beamfree;
-	beamfree.handle = 0;
+	beamfree.handle = ack->handle;
 
 	_test(sizeof(beamfree) == beam_server.send(beamfree));
       }
@@ -324,8 +328,8 @@ GCFEvent::TResult AVTStub::test003(GCFEvent& e, GCFPortInterface& /*port*/)
 	// send pointto command
 	ABSBeampointtoEvent pointto;
 	pointto.handle = ack->handle;
-	gettimeofday(&pointto.time,0);
-	pointto.type=3;
+	pointto.time = from_time_t(time(0)) + seconds(15);
+	pointto.type=(int)Direction::LOFAR_LMN;
 	pointto.angle1=0.0;
 	pointto.angle2=-1.0;
 

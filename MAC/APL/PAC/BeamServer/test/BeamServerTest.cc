@@ -28,6 +28,8 @@
 #include "suite.h"
 
 #include <iostream>
+#include <boost/date_time/posix_time/posix_time.hpp>
+using namespace boost::posix_time;
 
 #undef PACKAGE
 #undef VERSION
@@ -180,51 +182,44 @@ public:
 	{
 	  set<int> subbands;
 	  subbands.clear();
-	  struct timeval t = {0,0};
+
+	  ptime thetime = from_time_t(time(0)) + seconds(20);
 
 	  // allocate beam, addPointing, should succeed
 	  _test(0 != (m_beam[0] = Beam::allocate(m_spw, subbands)));
 	  _test(m_beam[0]->addPointing(Pointing(Direction(
-			    0.0, 0.0, Direction::J2000), t)) == 0);
+			    0.0, 0.0, Direction::J2000), thetime)) == 0);
 
 	  // deallocate beam, addPointing, should fail
 	  _test(m_beam[0]->deallocate() == 0);
 	  _test(m_beam[0]->addPointing(Pointing(Direction(
-			    0.0, 0.0, Direction::J2000), t)) < 0);
+			    0.0, 0.0, Direction::J2000), thetime + seconds(5))) < 0);
 	}
 
     void convert_pointings()
 	{
 	  allocate();
 
-	  struct timeval lasttime;
-	  struct timeval fromtime;
-	  gettimeofday(&lasttime, 0);
+	  ptime now = from_time_t(time(0));
 
 	  // add a few pointings
-	  struct timeval t = lasttime;
-	  t.tv_sec += 5;
 	  _test(m_beam[0]->addPointing(Pointing(Direction(
-			    0.0, 0.0, Direction::LOFAR_LMN), t)) == 0);
-	  t.tv_sec += 10;
+			    0.0, 1.0, Direction::LOFAR_LMN), now + seconds(1))) == 0);
 	  _test(m_beam[0]->addPointing(Pointing(Direction(
-			    0.0, 0.0, Direction::LOFAR_LMN), t)) == 0);
-	  t.tv_sec += 15;
+			    0.0, 2.0, Direction::LOFAR_LMN), now + seconds(3))) == 0);
 	  _test(m_beam[0]->addPointing(Pointing(Direction(
-			    0.0, 0.0, Direction::LOFAR_LMN), t)) == 0);
-	  t.tv_sec += 16;
+			    3.0, 0.0, Direction::LOFAR_LMN), now + seconds(5))) == 0);
 	  _test(m_beam[0]->addPointing(Pointing(Direction(
-			    0.0, 0.0, Direction::LOFAR_LMN), t)) == 0);
+			    4.0, 0.0, Direction::LOFAR_LMN), now + seconds(8))) == 0);
+	  _test(m_beam[0]->addPointing(Pointing(Direction(
+			    5.0, 0.0, Direction::LOFAR_LMN), now + seconds(COMPUTE_INTERVAL))) == 0);
 
 	  // iterate over all beams
-	  for (int i = 0; i < N_BEAMS; i++)
-	  {
-	      fromtime = lasttime;
-	      lasttime.tv_sec += COMPUTE_INTERVAL;
-	      int ret = 0;
-	      _test(0 == (ret = m_beam[i]->convertPointings(fromtime)));
-	      if (ret < 0) { deallocate(); return; }
-	  }
+	  time_period period(now, seconds(COMPUTE_INTERVAL));
+
+	  _test(0 == m_beam[0]->convertPointings(period));
+	  period = time_period(now + seconds(COMPUTE_INTERVAL), seconds(COMPUTE_INTERVAL));
+	  _test(0 == m_beam[0]->convertPointings(period));
 
 	  Beamlet::calculate_weights();
 
