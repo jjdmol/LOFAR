@@ -69,6 +69,7 @@
 #include <GSM/SkyModel.h>
 #include <Common/Debug.h>
 #include <stdexcept>
+#include <iomanip>
 #include <stdio.h>
 
 // Get the phase reference of the first field.
@@ -159,9 +160,9 @@ MeqJonesExpr* makeExpr (const MDirection& phaseRef, MeqUVWPolc* uvw,
   MeqExpr* stat1_12 = new MeqParmSingle ("Station.RT_0.12",
 					 double(0));
   MeqExpr* stat1_21 = new MeqParmSingle ("Station.RT_0.21",
-					 double(1));
-  MeqExpr* stat1_22 = new MeqParmSingle ("Station.RT_0.22",
 					 double(0));
+  MeqExpr* stat1_22 = new MeqParmSingle ("Station.RT_0.22",
+					 double(1));
   MeqJonesNode* stat1 = new MeqJonesNode (stat1_11, stat1_12,
 					  stat1_21, stat1_22);
   MeqExpr* stat2_11 = new MeqParmSingle ("Station.RT_1.11",
@@ -169,9 +170,9 @@ MeqJonesExpr* makeExpr (const MDirection& phaseRef, MeqUVWPolc* uvw,
   MeqExpr* stat2_12 = new MeqParmSingle ("Station.RT_1.12",
 					 double(0));
   MeqExpr* stat2_21 = new MeqParmSingle ("Station.RT_1.21",
-					 double(1));
-  MeqExpr* stat2_22 = new MeqParmSingle ("Station.RT_1.22",
 					 double(0));
+  MeqExpr* stat2_22 = new MeqParmSingle ("Station.RT_1.22",
+					 double(1));
   MeqJonesNode* stat2 = new MeqJonesNode (stat2_11, stat2_12,
 					  stat2_21, stat2_22);
   // Get the point sources from the GSM.
@@ -238,12 +239,19 @@ int main(int argc, char* argv[])
     MeqUVWPolc uvwpolc;
     MeqJonesExpr* expr = makeExpr (phaseRef, &uvwpolc, ptable, gsm);
     vector<double> diffu, diffv, diffw;
+    int cnt = 0;
+    cout << "MeqMat " << MeqMatrixRep::nctor << ' ' << MeqMatrixRep::ndtor
+	 << ' ' << MeqMatrixRep::nctor + MeqMatrixRep::ndtor << endl;
+    cout << "MeqRes " << MeqResultRep::nctor << ' ' << MeqResultRep::ndtor
+	 << ' ' << MeqResultRep::nctor + MeqResultRep::ndtor << endl;
     while (!iter.pastEnd()) {
       Table tab = iter.table();
       ArrayColumn<Complex> mdcol(tab, "MODEL_DATA");
+      ROArrayColumn<Complex> dcol(tab, "DATA");
       ROArrayColumn<double> uvwcol(tab, "UVW");
       ROScalarColumn<double> timcol(tab, "TIME");
       ROScalarColumn<double> intcol(tab, "INTERVAL");
+      int npol = dcol(0).shape()(0);
       Vector<double> dt = timcol.getColumn();
       Matrix<double> uvws = uvwcol.getColumn();
       uvwpolc.calcCoeff (dt, uvws);
@@ -254,6 +262,7 @@ int main(int argc, char* argv[])
       Assert (near(endTime-startTime, nrTime*step));
       MeqDomain domain (startTime, endTime, startFreq, endFreq);
       MeqRequest request(domain, nrTime, nrChan);
+      cout << setw(5) << cnt << ":  ";
       Timer timer;
       expr->calcResult (request);
       timer.show();
@@ -263,7 +272,7 @@ int main(int argc, char* argv[])
       ///      cout << expr->getResult22().getValue() << endl;
       // Write the predicted data into the MODEL_DATA column.
       // They have to be converted from double to float complex.
-      Matrix<complex<float> > data(4,nrChan);
+      Matrix<complex<float> > data(npol,nrChan);
       Matrix<DComplex> xx=expr->getResult11().getValue().getDComplexMatrix();
       Matrix<DComplex> xy=expr->getResult12().getValue().getDComplexMatrix();
       Matrix<DComplex> yx=expr->getResult21().getValue().getDComplexMatrix();
@@ -272,16 +281,26 @@ int main(int argc, char* argv[])
 	for (int i=0; i<nrChan; i++) {
 	  const DComplex& xxji = xx(j,i);
 	  data(0,i) = complex<float> (xxji.real(), xxji.imag());
-	  const DComplex& xyji = xy(j,i);
-	  data(1,i) = complex<float> (xyji.real(), xyji.imag());
-	  const DComplex& yxji = yx(j,i);
-	  data(2,i) = complex<float> (yxji.real(), yxji.imag());
+	  ///	  if (abs(data(0,i)) < 0.4) {
+	    ///	    cout << cnt << ' ' << j << ' ' << i << ' ' << abs(data(0,i)) << endl;
+	    ///	  }
+	  if (npol > 2) {
+	    const DComplex& xyji = xy(j,i);
+	    data(1,i) = complex<float> (xyji.real(), xyji.imag());
+	    const DComplex& yxji = yx(j,i);
+	    data(2,i) = complex<float> (yxji.real(), yxji.imag());
+	  }
 	  const DComplex& yyji = yy(j,i);
-	  data(3,i) = complex<float> (yyji.real(), yyji.imag());
+	  data(npol-1,i) = complex<float> (yyji.real(), yyji.imag());
 	}
 	mdcol.put (j, data);
       }
       iter++;
+      cnt++;
+      //      cout << "MeqMat " << MeqMatrixRep::nctor << ' ' << MeqMatrixRep::ndtor
+      //	   << ' ' << MeqMatrixRep::nctor + MeqMatrixRep::ndtor << endl;
+      //      cout << "MeqRes " << MeqResultRep::nctor << ' ' << MeqResultRep::ndtor
+      //	   << ' ' << MeqResultRep::nctor + MeqResultRep::ndtor << endl;
     }
   } catch (AipsError& x) {
     cout << "Unexpected AIPS++ exception: " << x.getMesg() << endl;
@@ -290,6 +309,10 @@ int main(int argc, char* argv[])
     cout << "Unexpected AIPS++ exception: " << x.what() << endl;
     return 1;
   }
+  cout << "MeqMat " << MeqMatrixRep::nctor << ' ' << MeqMatrixRep::ndtor
+       << ' ' << MeqMatrixRep::nctor + MeqMatrixRep::ndtor << endl;
+  cout << "MeqRes " << MeqResultRep::nctor << ' ' << MeqResultRep::ndtor
+       << ' ' << MeqResultRep::nctor + MeqResultRep::ndtor << endl;
   cout << "OK" << endl;
   return 0;
 }
