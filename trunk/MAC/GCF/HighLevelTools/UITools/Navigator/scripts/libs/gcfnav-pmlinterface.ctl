@@ -29,6 +29,7 @@
 #uses "gcf-util.ctl"
 
 global unsigned g_PAclientId = 0;  // client ID used during all communication with the PML
+
 global string    NAVPML_DPNAME_ENABLED   = "__enabled";
 global string    NAVPML_ENABLED_PERM     =  "permanent";
 global string    NAVPML_ENABLED_TEMP     =  "temporary";
@@ -58,27 +59,6 @@ void navPMLterminate()
 }  
 
 ///////////////////////////////////////////////////////////////////////////
-//Function navPMLunloadPropertySet
-//
-// unloads the propertyset of the datapoint.
-///////////////////////////////////////////////////////////////////////////
-bool navPMLunloadPropertySet(string datapoint)
-{
-  LOG_TRACE("navPMLunloadPropertySet",datapoint);
-  if(dpExists(datapoint))
-  {
-    if(!navPMLisAutoLoaded(datapoint))
-    {
-  	  gcfUnloadPS(g_PAclientId,datapoint);
-    }
-	}
-	else
-	{
-	  LOG_TRACE("navPMLunloadPropertySet -- Datapoint does not exist",datapoint);
-	}
-}
-
-///////////////////////////////////////////////////////////////////////////
 //Function navPMLloadPropertySet
 //
 // loads the propertyset of the datapoint
@@ -97,6 +77,27 @@ void navPMLloadPropertySet(string datapoint)
 	{
 	  LOG_TRACE("navPMLloadPropertySet -- Datapoint does not exist",datapoint);
 	}
+}
+
+///////////////////////////////////////////////////////////////////////////
+//Function navPMLunloadPropertySet
+//
+// unloads the propertyset of the datapoint.
+///////////////////////////////////////////////////////////////////////////
+bool navPMLunloadPropertySet(string datapoint)
+{
+  LOG_TRACE("navPMLunloadPropertySet",datapoint);
+  if(dpExists(datapoint))
+  {
+    if(!navPMLisAutoLoaded(datapoint))
+    {
+      gcfUnloadPS(g_PAclientId,datapoint);
+    }
+  }
+  else
+  {
+    LOG_TRACE("navPMLunloadPropertySet -- Datapoint does not exist",datapoint);
+  }
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -120,7 +121,7 @@ void navPMLconfigurePropertySet(string psScope, string psApcName)
 ///////////////////////////////////////////////////////////////////////////
 void pmlCallback(dyn_string response)
 {
-  LOG_TRACE("pmlCallback:",response);
+  LOG_DEBUG("pmlCallback:",LOG_DYN(response));
   if(response[1] == "loaded")
   {
     if(response[3] == "OK")
