@@ -10,9 +10,31 @@ N_RSPBOARDS=3
 #
 N_BLPS=1
 
-SYNC_INTERVAL=1.0
-SW_CLOCK=0
-SOFTPPSF=0
+#
+# Antenna positions
+#
+# Dimensions: (N_RSPBOARDS * N_BLPS) x N_POL x N_DIM (3 for x,y,z)
+#
+ANTENNA_POSITIONS=\
+3 x 2 x 3 \
+[        0         0         0 \
+   95.9359         0         0 \
+         0         0         0 \
+   95.9359         0         0 \
+         0         0         0 \
+   95.9359         0         0 ]
+
+# ANTENNA_POSITIONS=\
+# 3 x 2 x 3 \
+# [        0         0         0 \
+#    95.9359         0         0 \
+#          0         0         0 \
+#    95.9359         0         0 \
+#          0         0         0 \
+#    95.9359         0         0 ]
+
+
+
 
 
 
