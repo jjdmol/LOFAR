@@ -10,7 +10,7 @@
 using namespace std;
 using namespace LOFAR::PL;
 
-int main()
+int main(int argc, const char* argv[])
 {
 
   A a1(42, 3.14, "Hello", complex<double>(2.818, -2.818), 
@@ -34,6 +34,9 @@ int main()
     TPersistentObject<C> tpoc1(c1);
     TPersistentObject<C> tpoc2;
     
+    // Initialize tracer routines.
+    Debug::initLevels(argc, argv);
+
     // Connect to the database
     broker.connect("test","postgres");
 
