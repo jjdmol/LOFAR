@@ -36,11 +36,8 @@ namespace LOFAR
       itsBuffer  (0)
   {
     itsSocket.setBlocking();
-    int sts = 0;
-    while (sts == 0) {
-      sts = itsSocket.connect();
-    }
-    ASSERTSTR (sts == 1,
+    int sts = itsSocket.connect();
+    ASSERTSTR (sts == 0,
                "CoordClient could not connect to server on host " << host
                << ", port " << port);
     // Make sure the buffer is long enough for a single conversion
