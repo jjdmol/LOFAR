@@ -54,7 +54,7 @@ MeqMatrix::MeqMatrix (double value, int nx, int ny, bool init)
 
 MeqMatrix::MeqMatrix (complex<double> value, int nx, int ny, bool init)
 {
-    MeqMatrixComplexArr* v = new MeqMatrixComplexArr (nx, ny);
+    MeqMatrixComplexArr* v = MeqMatrixComplexArr::poolNew (nx, ny);
     if (init) {
       v->set (value);
     }
@@ -70,7 +70,7 @@ MeqMatrix::MeqMatrix (const double* values, int nx, int ny)
 
 MeqMatrix::MeqMatrix (const complex<double>* values, int nx, int ny)
 {
-    MeqMatrixComplexArr* v = new MeqMatrixComplexArr (nx, ny);
+    MeqMatrixComplexArr* v = MeqMatrixComplexArr::poolNew(nx, ny);
     v->set (values);
     itsRep = v->link();
 }
@@ -90,8 +90,8 @@ MeqMatrix::MeqMatrix (const Matrix<complex<double> >& array)
 {
     bool deleteIt;
     const complex<double>* values = array.getStorage (deleteIt);
-    MeqMatrixComplexArr* v = new MeqMatrixComplexArr (array.shape()(0),
-						      array.shape()(1));
+    MeqMatrixComplexArr* v = MeqMatrixComplexArr::poolNew (array.shape()(0),
+							   array.shape()(1));
     v->set (values);
     itsRep = v->link();
     array.freeStorage (values, deleteIt);
@@ -142,7 +142,7 @@ void MeqMatrix::setDCMat (int nx, int ny)
     if (nx == 1  &&  ny == 1) {
         itsRep = new MeqMatrixComplexSca (complex<double>());
     } else {
-        itsRep = new MeqMatrixComplexArr (nx, ny);
+        itsRep = MeqMatrixComplexArr::poolNew (nx, ny);
     }
     itsRep->link();
 }

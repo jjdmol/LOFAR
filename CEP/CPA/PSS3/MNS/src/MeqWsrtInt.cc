@@ -46,7 +46,7 @@ MeqWsrtInt::~MeqWsrtInt()
 
 void MeqWsrtInt::calcResult (const MeqRequest& request)
 {
-  PERFPROFILE(__PRETTY_FUNCTION__);
+  PERFPROFILE_L(__PRETTY_FUNCTION__, PP_LEVEL_1);
 
   // We can handle only 1 time at a time (for PSS-1 at least).
   // It makes life much easier.

@@ -33,6 +33,11 @@ MeqMatrixRep::~MeqMatrixRep()
   ndtor--;
 }
 
+void MeqMatrixRep::poolDelete()
+{
+  throw (AipsError ("MeqMatrixRep::poolDelete()"));
+}
+
 bool MeqMatrixRep::isDouble() const
 {
   return false;
