@@ -10,24 +10,24 @@ class Parser
 {
  public:
   //##ModelId=3F4DE363005D
-  void setText(std::string text);
+  void setText(const std::string & text);
 
   //##ModelId=3F4DE3900109
-  std::string getText();
+  const std::string &getText() const;
 
   //##ModelId=3F4DE3CF031C
-  std::vector<Directive> *getNested();
+  const std::vector<Directive> &getNested() const;
 
- protected:
-    //##ModelId=3F53420E0177
+  Parser():txt(""),nested(){};
+  virtual ~Parser(){};
+
+ private:
+  //##ModelId=3F53420E0177
   std::string txt;
-  private:
-    //##ModelId=3F53423103C8
-    std::vector<Directive> nested;
+  //##ModelId=3F53423103C8
+  std::vector<Directive> nested;
 
 
 };
-
-
 
 #endif /* PARSER_H_HEADER_INCLUDED_C0B1CBD5 */
