@@ -649,8 +649,8 @@ const stress_test := function (n=10000,verbose=0)
       rec.children.b.children :=
       rec.children.c.children :=
       rec.children.d.children := spaste('const',i);
-    mqs.meq('Create.Node',rec,wait_reply=F); # wait_reply=((i%10)==0),silent=T); 
-    mqs.meq('Resolve.Children',[name=rec.name],wait_reply=F);
+    mqs.meq('Create.Node',rec,wait_reply=F,silent=T); # wait_reply=((i%10)==0),silent=T); 
+    mqs.meq('Resolve.Children',[name=rec.name],wait_reply=F,silent=T);
   }
   print 'getting node list';
   list := mqs.getnodelist();
