@@ -32,6 +32,7 @@ AH_Correlator::AH_Correlator(int elements, int samples, int channels, int polari
 }  
 
 AH_Correlator::~AH_Correlator() {
+  this->undefine();
 }
 
 void AH_Correlator::define(const KeyValueMap& /*params*/) {
