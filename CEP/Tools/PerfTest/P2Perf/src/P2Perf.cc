@@ -21,6 +21,9 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.15  2002/03/08 11:38:42  wierenga
+//  Upgraded from firewalls.h use to Debug.h use. This version was used for performance tests.
+//
 //  Revision 1.14  2001/12/17 16:28:41  schaaf
 //  removed first step flag
 //
@@ -213,7 +216,7 @@ void doIt (Simul& simul, const std::string& name, int nsteps)
   cout << endl << "Start Processing simul " << name << endl;    
   for (int i=0; i<nsteps; i++) {
     if (i==2) Profiler::activate();
-    cout << "Call simul.process() " << i << endl;
+    TRACER2("Call simul.process() ");
     simul.process();
     if (i==5) Profiler::deActivate();
   }
