@@ -1,4 +1,4 @@
-//#  APAdminPool.h: one line description
+//#  APAdminPool.h: Administation of the AP's for the Appl. controller
 //#
 //#  Copyright (C) 2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -18,19 +18,26 @@
 //#  along with this program; if not, write to the Free Software
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
+//#  Note: This source is best read with tabstop 4.
+//#
 //#  $Id$
 
-#ifndef ACC_APADMINPOOL_H
-#define ACC_APADMINPOOL_H
+#ifndef LOFAR_ACC_APADMINPOOL_H
+#define LOFAR_ACC_APADMINPOOL_H
+
+// \file APAdminPool.h
+// Collection of APAdmin classes used by the Application Controller for
+// managing the Application Processes.
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
-
 //# Includes
 #include <Common/lofar_vector.h>
 #include <ACC/APAdmin.h>
 
 namespace LOFAR {
   namespace ACC {
+// \addtogroup ACC
+// @{
 
 // The APAdminPool object manages a pool of APAdmin objects. An APAdmin object
 // is a pair of a DataHolder and a Socket. The surplus value of the APAdminPool
@@ -268,6 +275,7 @@ inline bool APAdminPool::allAcksReceived()
 }
 
 
+// @} addgroup
   } // namespace ACC
 } // namespace LOFAR
 #endif

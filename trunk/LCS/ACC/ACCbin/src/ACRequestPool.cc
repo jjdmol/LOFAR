@@ -26,31 +26,57 @@
 #include <lofar_config.h>
 
 //# Includes
-#include<Common/LofarLogger.h>
-#include<Common/lofar_fstream.h>
-#include<ACC/ACRequestPool.h>
+#include <arpa/inet.h>
+#include <Common/LofarLogger.h>
+#include <Common/lofar_fstream.h>
+#include <ACC/ACRequestPool.h>
 
 namespace LOFAR {
   namespace ACC {
 
-ACRequestPool::ACRequestPool()
+ACRequestPool::ACRequestPool(uint16	firstPortNr, uint16	nrOfPorts) :
+	itsFirstPort(firstPortNr),
+	itsLastPort (firstPortNr+nrOfPorts-1),
+	itsNextPort (firstPortNr)
 {}
 
 ACRequestPool::~ACRequestPool()
 {}
 
+//
+// add(anACR)
+//
+// Add (a copy of) the given ACRequest to the pool
+//
 void	ACRequestPool::add    (const ACRequest&		anACR)
 {
+	LOG_TRACE_OBJ_STR("ACRPool: add " << anACR.itsRequester);
 
+	itsPool.push_back(new ACRequest(anACR));		// save ptr to copy
 }
 
-void	ACRequestPool::remove (const ACRequest&		anACR)
+//
+// remove(anACRName)
+//
+// Remove the ACRequest with the given name from the pool
+//
+void	ACRequestPool::remove (const string&		anACRName)
 {
+	LOG_TRACE_OBJ_STR("ACRPool: remove " << anACRName);
 
+	ACRequest*	ACRPtr = search(anACRName);
+	if (ACRPtr) {
+		itsPool.remove(ACRPtr);			// remove ptr from pool
+		delete ACRPtr;					// remove object itself
+	}
 }
 
-
-ACRequest*	ACRequestPool::find (const string&		anACRName)
+//
+// search(anACRName)
+//
+// Searches for an ACRequest with the given name. Returns 0 if not found.
+//
+ACRequest*	ACRequestPool::search (const string&		anACRName)
 {
 	iterator	iter = itsPool.begin();
 
@@ -65,38 +91,178 @@ ACRequest*	ACRequestPool::find (const string&		anACRName)
 	return (0);		// No match found
 }
 
-bool	ACRequestPool::save (const string&		filename)
+//
+// save(filename)
+//
+// Save the pool to survive power failures.
+//
+bool	ACRequestPool::save (const string&		aFilename)
 {
-#if 0
-	ofstream	oFile(filename, ios::trunc);
+	static bool		showedWarning = false;
 
-	oFile << itsPool.size();
+	ofstream	oFile(aFilename.c_str(), ofstream::out | ofstream::trunc
+													   | ofstream::binary);
+
+	// If the file can not be opened warn the operator once.
+	if (!oFile) {
+		if (!showedWarning) {
+			LOG_WARN("ACDaemon is not powerfailure save!");
+			showedWarning = true;
+		}
+		return (false);
+	}
+
+	LOG_TRACE_RTTI_STR("Saving " << itsPool.size() << " ACrequests to file "
+					   << aFilename);
+
+	uint16	writeVersion = ACREQUEST_VERSION;
+	uint16  count = itsPool.size();
+	oFile.write((char*)(&writeVersion), sizeof(writeVersion));
+	oFile.write((char*)&count, sizeof(count));
 
 	iterator	iter = itsPool.begin();
 	while (iter != itsPool.end()) {
-		oFile << (*iter)->itsRequester;
-		oFile << (*iter)->itsNrProcs;
-		oFile << (*iter)->itsActivityLevel;
-		oFile << (*iter)->itsArchitecture;
-		oFile << (*iter)->itsLifeTime;
-		oFile << (*iter)->itsAddr;
-		oFile << (*iter)->itsPort;
+		oFile.write((char*)(*iter), sizeof(ACRequest));
 		iter++;
 	}
 
 	oFile.close();
-#endif
-	return (false);
+	return (true);
 }
 
-bool	ACRequestPool::load (const string&		filename)
+//
+// load (filename)
+//
+// readin file with old admin info
+//
+bool	ACRequestPool::load (const string&		aFilename)
 {
-		
-	return (false);
+	ifstream	iFile(aFilename.c_str(), ifstream::in | ifstream::binary);
+	if (!iFile) {					// No file is OK
+		return (false);				// tell we did not load anything
+	}
+
+	uint16		count;
+	uint16		readVersion;
+
+	iFile.read((char*)&readVersion, sizeof(readVersion));// for future V. control
+	iFile.read((char*)&count, sizeof(count));			 // nr elements in file
+
+	LOG_TRACE_RTTI_STR("Loading " << count << " ACrequests from file "
+					   << aFilename);
+
+	while (count) {
+		ACRequest		ACR;
+
+		iFile.read((char*)&ACR, sizeof (ACRequest));
+		ACR.itsPingtime = time(0);				// reset pingtime
+		ACR.itsState = ACRloaded;
+
+		add (ACR);
+		count--;
+	}
+
+	iFile.close();
+	return (true);
 }
 
+bool ACRequestPool::assignNewPort(ACRequest*	anACR) 
+{
+	// TODO: Assign a machine in a clever way.
+#if defined (__APPLE__)
+	anACR->itsAddr = htonl(0xA9FE3264);
+#else
+	anACR->itsAddr = htonl(0xC0A80175);
+#endif
 
+	uint16	startingPort = itsNextPort;
+	uint16	freePort;
+	bool	found		 = false;
+	do {
+		// scan pool to see if number is (still) in use.
+		iterator	iter = itsPool.begin();
+		bool		inUse = false;
+		while (!inUse && iter != itsPool.end()) {
+			if ((*iter)->itsPort == itsNextPort) {
+				inUse = true;
+			}
+			++iter;
+		}
+		if ((found = !inUse)) {
+			freePort = itsNextPort;
+		}
+		itsNextPort++;				// increment nextPort for next round.
+		if (itsNextPort > itsLastPort) {
+			itsNextPort = itsFirstPort;
+		}
+	} while (!found && itsNextPort != startingPort);
 
+	if (!found) {
+		LOG_ERROR ("Pool of TCP portnumber of ACDaemon is full. "
+				   "Can not start a new Application Controller");
+		return (false);
+	}
+
+	// fill in portnumber
+	anACR->itsPort = htons(freePort);
+
+	// log assignment
+	in_addr		IPaddr;
+	IPaddr.s_addr = anACR->itsAddr;
+	LOG_DEBUG_STR (inet_ntoa(IPaddr) << ", " << anACR->itsPort <<
+				   " assigned to " << anACR->itsRequester);
+
+	return (true);
+
+}
+
+//
+// cleanupACPool()
+//
+// Remove AC's that did not repsond for more than 5 minutes.
+// Returns true if one or more elements were removed from the pool.
+//
+bool ACRequestPool::cleanup(int32	warnTime, int32	cleanTime)
+{
+	LOG_TRACE_STAT("Checking sign of life of AC's");
+
+	time_t		curTime  = time(0);
+	bool    	modified = false;
+
+	iterator	iter     = itsPool.begin();
+	while (iter != itsPool.end()) {
+		// No sign of life for a long time anymore?? Remove from pool.
+		if ((curTime - (*iter)->itsPingtime) > cleanTime) {
+			// Don't complain about loaded (old) stuff
+			if ((*iter)->itsState != ACRloaded) {
+				LOG_INFO_STR ("No more pings from " << (*iter)->itsRequester <<
+						  ". Removing it from pool");
+			}
+			
+			// iter is destroyed in remove, prepare new iter.
+			iterator	tmp_iter = iter;
+			++tmp_iter;
+
+			// remove the AC from the pool
+			remove((*iter)->itsRequester);
+			modified = true;
+			iter = tmp_iter;
+		} 
+		else {	// When pings stay out a while inform operator
+			if ((curTime - (*iter)->itsPingtime) > warnTime) {
+				// Don't complain about loaded (old) stuff
+				if ((*iter)->itsState != ACRloaded) {
+					LOG_INFO_STR ("No sign of life from " <<
+								  (*iter)->itsRequester);
+					(*iter)->itsState = ACRlosing;
+				}
+			}
+			++iter;
+		}
+	}
+
+	return (modified);
+}
 
   } // namespace ACC
 } // namespace LOFAR

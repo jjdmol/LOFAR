@@ -1,4 +1,4 @@
-//#  KVpair.h: one line description
+//#  KVpair.h: Implements a KV pair as a pair<string, string>.
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -18,20 +18,26 @@
 //#  along with this program; if not, write to the Free Software
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
+//#  Note: This source is best read with tabstop 4.
+//#
 //#  $Id$
 
-#ifndef ACC_KVPAIR_H
-#define ACC_KVPAIR_H
+#ifndef LOFAR_ACC_KVPAIR_H
+#define LOFAR_ACC_KVPAIR_H
+
+// \file KVpair.h
+// Implements a KV pair as a pair<string, string>.
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
-
 //# Includes
 #include <Common/lofar_map.h>
 
 namespace LOFAR {
   namespace ACC {
+// \addtogroup ACC
+// @{
 
-// Description of class.
+// Implements a KV pair as a pair<string, string>.
 class KVpair : public pair<string, string>
 {
 public:
@@ -49,6 +55,7 @@ public:
 	KVpair& operator=(const KVpair& that);
 };
 
+// @} addgroup
   } // namespace ACC
 } // namespace LOFAR
 

@@ -18,29 +18,29 @@
 //#  along with this program; if not, write to the Free Software
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
-//#  Abstract:
-//#	 This class implements the client API for using an Application 
-//#  Controller in synchrone mode. 
+//#  Note: This source is best read with tabstop 4.
 //#
 //#  $Id$
 
-#ifndef ACC_ACSYNCCLIENT_H
-#define ACC_ACSYNCCLIENT_H
+#ifndef LOFAR_ACC_ACSYNCCLIENT_H
+#define LOFAR_ACC_ACSYNCCLIENT_H
 
-#include <lofar_config.h>
+// \file ACSyncClient.h 
+// Synchrone version of a Application Control client
 
+//# Never #include <config.h> or #include <lofar_config.h> in a header file!
 //# Includes
 #include <ACC/ApplControlClient.h>
 #include <ACC/ACSyncClient.h>
 
 namespace LOFAR {
   namespace ACC {
-
-
+// \addtogroup ACC
+// @{
 
 //# Description of class.
 // The ACSyncClient class implements the interface of the Application Controller
-// for synchroon communication.
+// for synchrone communication.
 //
 class ACSyncClient : public ApplControlClient 
 {
@@ -77,7 +77,7 @@ private:
 
 };
 
-
+// @} addgroup
 } // namespace ACC
 } // namespace LOFAR
 

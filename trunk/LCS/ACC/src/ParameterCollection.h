@@ -24,13 +24,17 @@
 //#  be read from a file or be merged with the values in another file.
 //#  The class also support the creation of subsets.
 //#
+//#  Note: This source is best read with tabstop 4.
+//#
 //#  $Id$
 
-#ifndef ACC_PARAMETERCOLLECTION_H
-#define ACC_PARAMETERCOLLECTION_H
+#ifndef LOFAR_ACC_PARAMETERCOLLECTION_H
+#define LOFAR_ACC_PARAMETERCOLLECTION_H
 
-#include <lofar_config.h>
+// \file ParameterCollection.h
+// Implements a map of Key-Value pairs.
 
+//# Never #include <config.h> or #include <lofar_config.h> in a header file!
 //# Includes
 #include <Common/LofarTypes.h>
 #include <Common/lofar_string.h>
@@ -41,6 +45,8 @@
 
 namespace LOFAR {
   namespace ACC {
+// \addtogroup ACC
+// @{
 
 const char PC_QUAL_STABLE[]   = { "stable"        };
 const char PC_QUAL_TEST[]     = { "test"          };
@@ -254,6 +260,7 @@ string	valuePart  (const string& parameterLine);
 // last pair is used.
 int32 	indexValue (const string&	label, char	indexMarker[2]);
 
+// @} addgroup
 } // namespace ACC
 } // namespace LOFAR
 

@@ -84,6 +84,7 @@ ApplControlClient::ApplControlClient(const string&	aUniqUserName,
 					 			TH_Socket(host, "", port, false, syncClient),
 					 			TH_Socket("", host, port, true,  syncClient),
 								true);	// blocking
+	sleep (2);					// give AC a little time to start up.
 	DH_CtrlClient->init();
 
 	itsCommChan = new ApplControlComm(syncClient);

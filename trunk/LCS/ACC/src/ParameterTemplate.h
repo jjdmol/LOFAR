@@ -18,24 +18,24 @@
 //#  along with this program; if not, write to the Free Software
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
-//#  Abstract:
-//#
-//#	 Defines a class the should contain all parameters that the 'outside' world
-//#  can set in the module the template belongs to.
+//#  Note: This source is best read with tabstop 4.
 //#
 //#  $Id$
 
-#ifndef ACC_PARAMETERTEMPLATE_H
-#define ACC_PARAMETERTEMPLATE_H
+#ifndef LOFAR_ACC_PARAMETERTEMPLATE_H
+#define LOFAR_ACC_PARAMETERTEMPLATE_H
 
-#include <lofar_config.h>
+// \file ParameterTemplate.h
+// Collection of parametersdefinitions.
 
+//# Never #include <config.h> or #include <lofar_config.h> in a header file!
 //# Includes
 #include <ACC/ParameterCollection.h>
 
 namespace LOFAR {
   namespace ACC {
-
+// \addtogroup ACC
+// @{
 
 //# Description of the class.
 // The ParameterTemplate class is a ParameterCollection that contains the
@@ -78,6 +78,7 @@ public:
 	friend std::ostream& operator<<(std::ostream& os, const ParameterCollection &thePS);
 };
 
+// @} addgroup
 } // namespace ACC
 } // namespace LOFAR
 

@@ -24,6 +24,8 @@
 #include <lofar_config.h>
 
 //# Includes
+#include<libgen.h>				// basename
+#include<sys/stat.h>			// umask
 #include<Common/LofarLogger.h>
 #include<ACC/ACDaemon.h>
 
@@ -50,7 +52,7 @@ int main (int argc, char* argv[]) {
 	LOG_INFO_STR("Starting up: " << argv[0] << "(" << argv[1] << ")");
 
 	try {
-#if REAL_DAEMON
+//#if REAL_DAEMON
 		pid_t pid = fork();
 		switch (pid) {
 		case -1:	// error
@@ -58,11 +60,16 @@ int main (int argc, char* argv[]) {
 			return (-1);
 		case 0:		// child (the real daemon)
 			// do nothing;
+			break;
 		default:	// parent
 			LOG_INFO_STR("Daemon succesfully started, pid = " << pid);
 			return (0);
 		}
-#endif		
+//#endif		
+		// TODO: active the next two calls.
+//		setsid();		// disconnect from terminalsession
+//		chdir("/");		// might be on a mounted file system
+		umask(0);		// no limits
 
 		ACDaemon	theDaemon(argv[1]);
 

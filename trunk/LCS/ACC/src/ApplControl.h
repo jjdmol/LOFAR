@@ -18,18 +18,24 @@
 //#  along with this program; if not, write to the Free Software
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
+//#  Note: This source is best read with tabstop 4.
+//#
 //#  $Id$
 
-#ifndef ACC_APPLCONTROL_H
-#define ACC_APPLCONTROL_H
+#ifndef LOFAR_ACC_APPLCONTROL_H
+#define LOFAR_ACC_APPLCONTROL_H
 
-#include <lofar_config.h>
+// \file ApplControl.h
+// Defines the I/F of the Application Controller.
 
+//# Never #include <config.h> or #include <lofar_config.h> in a header file!
 //# Includes
 #include <ACC/DH_ApplControl.h>
 
 namespace LOFAR {
   namespace ACC {
+// \addtogroup ACC
+// @{
 
 //# Description of class.
 // The ApplControl class defines the interface the Application Controller
@@ -199,6 +205,7 @@ protected:
 };
 
 
+// @} addgroup
   } // namespace ACC
 } // namespace LOFAR
 

@@ -18,20 +18,27 @@
 //#  along with this program; if not, write to the Free Software
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
+//#  Note: This source is best read with tabstop 4.
+//#
 //#  $Id$
 
-#ifndef ACC_ACCMDIMPL_H
-#define ACC_ACCMDIMPL_H
+#ifndef LOFAR_ACC_ACCMDIMPL_H
+#define LOFAR_ACC_ACCMDIMPL_H
+
+// \file ACCmdImpl.h
+// The implementation of the AC commands from the Application Controller
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
-
 //# Includes
 #include <ACC/ApplControl.h>
 
 namespace LOFAR {
   namespace ACC {
+// \addtogroup ACC
+// @{
 
-// Description of class.
+// This class implements the execution of the AC commands by the Application
+// Controller.
 class ACCmdImpl : public ApplControl
 {
 public:
@@ -75,6 +82,7 @@ private:
 };
 
 
+// @} addtogroup
   } // namespace ACC
 } // namespace LOFAR
 

@@ -18,13 +18,17 @@
 //#  along with this program; if not, write to the Free Software
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
+//#  Note: This source is best read with tabstop 4.
+//#
 //#  $Id$
 
-#ifndef ACC_STATEENGINE_H
-#define ACC_STATEENGINE_H
+#ifndef LOFAR_ACC_STATEENGINE_H
+#define LOFAR_ACC_STATEENGINE_H
+
+// \file StateEngine.h
+// (internal) sequence definitions of the command states.
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
-
 //# Includes
 #include <Common/Exception.h>
 #include <ACC/DH_ApplControl.h>
@@ -32,6 +36,8 @@
 
 namespace LOFAR {
   namespace ACC {
+// \addtogroup ACC
+// @{
 
 // define application controller states.
 enum ACState {  StateNone = 0, StateInitController,
@@ -136,8 +142,7 @@ inline bool StateEngine::IsStateExpired()
 	return (itsStateExpireTime && (itsStateExpireTime < time(0)));
 }
 
-
-
+// @} addgroup
   } // namespace ACC
 } // namespace LOFAR
 

@@ -18,12 +18,17 @@
 //#  along with this program; if not, write to the Free Software
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
+//#  Note: This source is best read with tabstop 4.
+//#
 //#  $Id$
 
-#ifndef ACC_CONFIGURATIONMGR_H
-#define ACC_CONFIGURATIONMGR_H
+#ifndef LOFAR_ACC_CONFIGURATIONMGR_H
+#define LOFAR_ACC_CONFIGURATIONMGR_H
 
-#include <lofar_config.h>
+// \file ConfigurationMgr.h
+// The ACC configuration manager handles all database actions for parameters.
+
+//# Never #include <config.h> or #include <lofar_config.h> in a header file!
 #include <Common/lofar_string.h>
 #include <PL/PersistenceBroker.h>
 #include <ACC/TemplateUnion.h>
@@ -38,6 +43,8 @@ using LOFAR::ACC::ParameterSet;
 
 namespace LOFAR {
   namespace ACC {
+// \addtogroup ACC
+// @{
 
 //# Description of class.
 // The ConfigurationMgr is a class that performs a lot of tasks on more than
@@ -94,6 +101,7 @@ private:
 	LOFAR::PL::PersistenceBroker		itsBroker;
 };
 
+// @} addgroup
   } // namespace ACC
 } // namespace LOFAR
 

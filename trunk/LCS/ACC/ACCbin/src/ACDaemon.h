@@ -18,13 +18,17 @@
 //#  along with this program; if not, write to the Free Software
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
+//#  Note: This source is best read with tabstop 4.
+//#
 //#  $Id$
 
-#ifndef ACC_ACDAEMON_H
-#define ACC_ACDAEMON_H
+#ifndef LOFAR_ACC_ACDAEMON_H
+#define LOFAR_ACC_ACDAEMON_H
+
+// \file ACDaemon.h
+// Daemon for launching Application Controllers
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
-
 //# Includes
 #include <Common/Exception.h>
 #include <Common/Net/Socket.h>
@@ -33,6 +37,8 @@
 
 namespace LOFAR {
   namespace ACC {
+// \addtogroup ACC
+// @{
 
 
 // The ACDaemon class implements a small daemon that wait for a request message
@@ -57,6 +63,8 @@ private:
 	void constructACFile(const ACRequest*	anACR,
 						 const string&	    aFilename);
 
+	void handlePingMessage();
+	void handleACRequest();
 
 	// Copying is not allowed
 	ACDaemon(const ACDaemon&	that);
@@ -76,8 +84,10 @@ private:
 
 	// The list with current active Application Controllers
 	ACRequestPool*	itsACPool;
+
 };
 
+// @} addgroup
   } // namespace ACC
 } // namespace LOFAR
 

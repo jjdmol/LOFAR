@@ -18,31 +18,36 @@
 //#  along with this program; if not, write to the Free Software
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
+//#  Note: This source is best read with tabstop 4.
+//#
 //#  $Id$
 
-#ifndef ACC_ITEMLIST_H
-#define ACC_ITEMLIST_H
+#ifndef LOFAR_ACC_ITEMLIST_H
+#define LOFAR_ACC_ITEMLIST_H
+
+// \file ItemList.h
+// Class that can substract and array of items from a parameter collection.
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
-
 //# Includes
 #include <Common/lofar_vector.h>
 #include <ACC/ParameterSet.h>
 
 namespace LOFAR {
   namespace ACC {
+// \addtogroup ACC
+// @{
 
-//# Forward Declarations
-//class forward;
 
-
-// Description of class.
+// Class that can substract and array of items from a parameter collection.
 class ItemList : public vector <string>
 {
 public:
 	typedef vector<string>::iterator		iterator;
 	typedef vector<string>::const_iterator	const_iterator;
 
+	// Constructs a vector of Values from the vector of keys with the name
+	// 'prefix' from the given ParameterSet. ( prefix[n] = )
 	ItemList(const ParameterSet&	aPS,
 			 const string&			prefix);
 
@@ -52,6 +57,7 @@ private:
 	
 };
 
+// @} addgroup
   } // namespace ACC
 } // namespace LOFAR
 

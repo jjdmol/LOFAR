@@ -18,23 +18,25 @@
 //#  along with this program; if not, write to the Free Software
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
-//#  Abstract:
-//#	 This class implements the client API for managing an Application 
-//#  Controller. 
+//#  Note: This source is best read with tabstop 4.
 //#
 //#  $Id$
 
-#ifndef ACC_PROCCONTROLSERVER_H
-#define ACC_PROCCONTROLSERVER_H
+#ifndef LOFAR_ACC_PROCCONTROLSERVER_H
+#define LOFAR_ACC_PROCCONTROLSERVER_H
 
-#include <lofar_config.h>
+// \file ProcControlServer.h
+// Server stub of the I/F to the Application Controller.
 
+//# Never #include <config.h> or #include <lofar_config.h> in a header file!
 //# Includes
 #include <ACC/ProcessControl.h>
 #include <ACC/ProcControlComm.h>
 
 namespace LOFAR {
   namespace ACC {
+// \addtogroup ACC
+// @{
 
 
 //# Description of class.
@@ -87,6 +89,7 @@ inline	DH_ProcControl*	ProcControlServer::getDataHolder() const {
 	return (itsCommChan->getDataHolder());
 }
 
+// @} addgroup
 } // namespace ACC
 } // namespace LOFAR
 

@@ -18,13 +18,17 @@
 //#  along with this program; if not, write to the Free Software
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
+//#  Note: This source is best read with tabstop 4.
+//#
 //#  $Id$
 
-#ifndef ACC_DH_APPLCONTROL_H
-#define ACC_DH_APPLCONTROL_H
+#ifndef LOFAR_ACC_DH_APPLCONTROL_H
+#define LOFAR_ACC_DH_APPLCONTROL_H
 
-#include <lofar_config.h>
+// \file DH_ApplControl.h
+// DataHolder for Application Control commands.
 
+//# Never #include <config.h> or #include <lofar_config.h> in a header file!
 //# Includes
 #include <sys/time.h>
 #include <sys/socket.h>
@@ -35,6 +39,8 @@
 
 namespace LOFAR {
   namespace ACC {
+// \addtogroup ACC
+// @{
 
 
 // The ACCmd enumeration is a list of command(numbers) that are used to
@@ -260,6 +266,7 @@ inline void DH_ApplControl::pack()
 }
 
 
+// @} addgroup
 } // namespace ACC
 } // namespace LOFAR
 

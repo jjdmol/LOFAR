@@ -1,4 +1,5 @@
-AC.portnr  			= 3820		# for AC user
-AC.backlog 			= 20		# large queue for fast startup
-AC.process.APportnr = 3900		# for Appl processes
-#
+AC.backlog=5
+AC.pinginterval=1 m
+AC.pingportnr=3801
+AC.processportnr=3900
+AC.userportnr=3820
