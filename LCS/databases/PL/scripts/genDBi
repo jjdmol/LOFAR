@@ -171,7 +171,7 @@ fi
 if [ -n "${BUILDDIR}" ]; then
 	theBuildDir=${BUILDDIR}/${LeafDir}
 else
-	`ls -1d */src >${BUILDDIRWRKFILE}`
+	`ls -1d */${LeafDir} >${BUILDDIRWRKFILE}`
 	[ $? -eq 0 ] || Fail "Cannot find the directory <variant>/$LeafDir in `pwd`"
 	theBuildDir=`head -1 ${BUILDDIRWRKFILE}`
 fi
@@ -180,13 +180,19 @@ cd ${theBuildDir} 2>/dev/null
 [ $? -eq 0 ] || Fail "Cannot go to the directory `pwd`/${theBuildDir}"
 
 echo "Building ${PRECOMPFILE} in `pwd`..."
+echo "---"
 make ${PRECOMPFILE}
+echo "---"
 [ -f ${PRECOMPFILE} ] || Fail "Build of ${PRECOMPFILE} file failed!"
 
 mv ${PRECOMPFILE} ${SOURCEDIR}/${DESTDIR}/
 cd ${SOURCEDIR}
-[ -n "${TARGET}" ] && mv ${DESTDIR}/${PRECOMPFILE} ${DESTDIR}/${TARGET}.i
-echo "Created file ${DESTDIR}/${TARGET}.i"
+if [ -n "${TARGET}" ]; then
+	mv ${DESTDIR}/${PRECOMPFILE} ${DESTDIR}/${TARGET}.i
+	echo "Created file ${DESTDIR}/${TARGET}.i"
+else
+	echo "Created file ${DESTDIR}/${PRECOMPFILE}"
+fi
 
 # Finally cleanup our mess
 cleanupWorkFiles
