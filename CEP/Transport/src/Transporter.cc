@@ -138,28 +138,70 @@ bool Transporter::read (bool fixedSized)
 						    getCurDataSize(),
 						    getReadTag());
       } else {
+	// nrread keeps track of the #bytes already read.
 	int nrread = 0;
+	// First try to get the length directly.
+	// For example, TH_Mem and TH_MPI can give that.
 	int leng = getTransportHolder()->recvLengthBlocking (getReadTag());
 	if (leng < 0) {
+	  // If the length is not directly available, read the header
+	  // and extract the length from it.
 	  nrread = getDataHolder()->getHeaderSize();
 	  getDataHolder()->resizeBuffer (nrread);
 	  result = getTransportHolder()->recvHeaderBlocking (getDataPtr(),
 							     nrread,
 							     getReadTag());
-	  leng = getDataHolder()->getDataLength (getDataPtr());
+	  if (result) {
+	    leng = getDataHolder()->getDataLength (getDataPtr());
+	  }
 	}
-	getDataHolder()->resizeBuffer (leng);
-	getTransportHolder()->recvBlocking
+	// Read the remaining data (if there).
+	if (leng > 0) {
+	  getDataHolder()->resizeBuffer (leng);
+	  getTransportHolder()->recvBlocking
 	                       (static_cast<char*>(getDataPtr())+nrread,
 				leng-nrread,
 				getReadTag());
+	} else {
+	  result = false;
+	}
       }
     }
     else
     {
-      result = getTransportHolder()->recvNonBlocking(getDataPtr(),
-						     getCurDataSize(),
-						     getReadTag());
+      if (fixedSized) {
+	result = getTransportHolder()->recvNonBlocking(getDataPtr(),
+						       getCurDataSize(),
+						       getReadTag());
+      } else {
+	// nrread keeps track of the #bytes already read.
+	int nrread = 0;
+	// First try to get the length directly.
+	// For example, TH_MPI can give that.
+	int leng = getTransportHolder()->recvLengthNonBlocking (getReadTag());
+	if (leng < 0) {
+	  // If the length is not directly available, read the header
+	  // and extract the length from it.
+	  nrread = getDataHolder()->getHeaderSize();
+	  getDataHolder()->resizeBuffer (nrread);
+	  nrread = getTransportHolder()->recvHeaderNonBlocking (getDataPtr(),
+								nrread,
+								getReadTag());
+	  if (nrread >= 0) {
+	    leng = getDataHolder()->getDataLength (getDataPtr());
+	  }
+	}
+	// Read the remaining data (if there).
+	if (leng > 0) {
+	  getDataHolder()->resizeBuffer (leng);
+	  getTransportHolder()->recvNonBlocking
+	                       (static_cast<char*>(getDataPtr())+nrread,
+				leng-nrread,
+				getReadTag());
+	} else {
+	  result = false;
+	}
+      }
     }      
     setStatus(Transporter::Clean);
   }
