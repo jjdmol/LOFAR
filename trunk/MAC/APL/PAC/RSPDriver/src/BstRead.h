@@ -37,7 +37,7 @@ namespace RSP
       /**
        * Constructors for a BstRead object.
        */
-      BstRead(GCFPortInterface& board_port, int board_id, uint8 type);
+      BstRead(GCFPortInterface& board_port, int board_id);
 	  
       /* Destructor for BstRead. */
       virtual ~BstRead();
@@ -58,7 +58,6 @@ namespace RSP
       virtual GCFEvent::TResult handleack(GCFEvent& event, GCFPortInterface& port);
 
     private:
-      uint8 m_type;       // statistics type
       EPA_Protocol::MEPHeader m_hdr;
   };
 };

@@ -38,8 +38,8 @@ using namespace EPA_Protocol;
 using namespace RSP_Protocol;
 using namespace blitz;
 
-SstRead::SstRead(GCFPortInterface& board_port, int board_id, uint8 type)
-  : SyncAction(board_port, board_id, GET_CONFIG("RS.N_BLPS", i) * SST_N_FRAGMENTS), m_type(type)
+SstRead::SstRead(GCFPortInterface& board_port, int board_id)
+  : SyncAction(board_port, board_id, GET_CONFIG("RS.N_BLPS", i) * SST_N_FRAGMENTS)
 {
   memset(&m_hdr, 0, sizeof(MEPHeader));
 }
@@ -55,17 +55,8 @@ void SstRead::sendrequest()
 
   uint16 byteoffset = (getCurrentBLP() % SST_N_FRAGMENTS) * MEPHeader::FRAGMENT_SIZE;
 
-  switch (m_type)
-  {
-    case Statistics::SUBBAND_POWER:
-      sstread.hdr.set(MEPHeader::SST_POWER_HDR, getCurrentBLP() / SST_N_FRAGMENTS,
-		      MEPHeader::READ, N_STATS * sizeof(uint32), byteoffset);
-      break;
-
-    default:
-      LOG_ERROR("invalid statistics type");
-      break;
-  }
+  sstread.hdr.set(MEPHeader::SST_POWER_HDR, getCurrentBLP() / SST_N_FRAGMENTS,
+		  MEPHeader::READ, N_STATS * sizeof(uint32), byteoffset);
 
   m_hdr = sstread.hdr;
   getBoardPort().send(sstread);
@@ -119,35 +110,24 @@ GCFEvent::TResult SstRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/
 
   LOG_DEBUG_STR("fragment_range=" << fragment_range);
   
-  if (m_type != ack.hdr.m_fields.addr.regid)
+  if (MEPHeader::SST_POWER != ack.hdr.m_fields.addr.regid)
   {
     LOG_ERROR("invalid sst ack");
     return GCFEvent::HANDLED;
   }
 
-  switch (m_type)
-  {
-    case Statistics::SUBBAND_POWER:
-    {
-      Array<uint32, 2> stats((uint32*)&ack.stat,
-			     shape(N_STATS / MEPHeader::N_POL,
-				   MEPHeader::N_POL),
-			     neverDeleteData);
+  Array<uint32, 2> stats((uint32*)&ack.stat,
+			 shape(N_STATS / MEPHeader::N_POL,
+			       MEPHeader::N_POL),
+			 neverDeleteData);
 
-      Array<double, 3>& cache(Cache::getInstance().getBack().getSubbandStats()());
+  Array<double, 3>& cache(Cache::getInstance().getBack().getSubbandStats()());
 
-      // x-pol subband statistics: copy and convert to double
-      cache(m_type, global_blp * 2,     fragment_range) = convert_uint32_to_double(stats(Range::all(), 0));
+  // x-pol subband statistics: copy and convert to double
+  cache(0, global_blp * 2,     fragment_range) = convert_uint32_to_double(stats(Range::all(), 0));
 
-      // y-pol subband statistics: copy and convert to double
-      cache(m_type, global_blp * 2 + 1, fragment_range) = convert_uint32_to_double(stats(Range::all(), 1));
-    }
-    break;
-      
-    default:
-      LOG_ERROR("invalid statistics type");
-      break;
-  }
+  // y-pol subband statistics: copy and convert to double
+  cache(0, global_blp * 2 + 1, fragment_range) = convert_uint32_to_double(stats(Range::all(), 1));
   
   return GCFEvent::HANDLED;
 }

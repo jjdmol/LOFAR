@@ -281,7 +281,7 @@ void RSPDriver::addAllSyncActions()
     {
       SstRead* sstread = 0;
 
-      sstread = new SstRead(m_board[boardid], boardid, Statistics::SUBBAND_POWER);
+      sstread = new SstRead(m_board[boardid], boardid);
       m_scheduler.addSyncAction(sstread);
 
     }
@@ -290,7 +290,7 @@ void RSPDriver::addAllSyncActions()
     {
       BstRead* bstread = 0;
 
-      bstread = new BstRead(m_board[boardid], boardid, Statistics::BEAMLET_POWER);
+      bstread = new BstRead(m_board[boardid], boardid);
       m_scheduler.addSyncAction(bstread);
     }
 
