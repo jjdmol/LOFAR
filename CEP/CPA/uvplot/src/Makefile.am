@@ -32,7 +32,7 @@ LDADD				:= ../src/libuvplot.la
 UVPLOT_DIR := $(top_srcdir)/src
 
 
-CXXFLAGS += -DDEBUG_MODE=1
+CXXFLAGS += -DDEBUG_MODE=1 -pg
 
 
 

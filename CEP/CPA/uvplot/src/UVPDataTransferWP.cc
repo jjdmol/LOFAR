@@ -23,12 +23,12 @@ UVPDataTransferWP::UVPDataTransferWP(int         patchID,
     itsHeader()
 {
 #if(DEBUG_MODE)
-  TRACER1(__PRETTY_FUNCTION__);
+  TRACERF1("");
 #endif
 
 
 #if(DEBUG_MODE)
-  TRACER1("End of " << __PRETTY_FUNCTION__);
+  TRACERF1("End.");
 #endif
 }
 
@@ -42,7 +42,7 @@ UVPDataTransferWP::UVPDataTransferWP(int         patchID,
 void UVPDataTransferWP::init()
 {
 #if(DEBUG_MODE)
-  TRACER1(__PRETTY_FUNCTION__);
+  TRACERF1("");
 #endif
 
   WorkProcess::init();
@@ -65,7 +65,7 @@ void UVPDataTransferWP::init()
   itsHeaderIsReceived = false;
   
 #if(DEBUG_MODE)
-  TRACER1("End of " << __PRETTY_FUNCTION__);
+  TRACERF1("End.");
 #endif
 }
 
@@ -78,12 +78,12 @@ void UVPDataTransferWP::init()
 bool UVPDataTransferWP::start()
 {
 #if(DEBUG_MODE)
-  TRACER1(__PRETTY_FUNCTION__);
+  TRACERF1("");
 #endif
   bool parentReturn = WorkProcess::start();
 
 #if(DEBUG_MODE)
-  TRACER1("End of " << __PRETTY_FUNCTION__);
+  TRACERF1("End.");
 #endif
 
   return parentReturn || false;
@@ -104,7 +104,7 @@ int  UVPDataTransferWP::receive(MessageRef &messageRef)
   using namespace UVD;
 
 #if(DEBUG_MODE)
-  TRACER1(__PRETTY_FUNCTION__);
+  TRACERF1("");
   TRACER1("ID     : " << messageRef->id().toString());
   TRACER1("From   : " << messageRef->from().toString());
 #endif
@@ -206,7 +206,7 @@ int  UVPDataTransferWP::receive(MessageRef &messageRef)
     
     
 #if(DEBUG_MODE)
-  TRACER1("End of " << __PRETTY_FUNCTION__);
+  TRACERF1("End.");
 #endif
 
   return Message::ACCEPT;

@@ -38,7 +38,7 @@ UVPSpectrumVector::UVPSpectrumVector(unsigned int numberOfChannels)
 void UVPSpectrumVector::add(const UVPSpectrum &spectrum)
 {
 #if(DEBUG_MODE)
-  TRACERPF2("");
+  TRACERF2("");
   TRACER2("itsNumberOfChannels: " << itsNumberOfChannels);
   TRACER2("spectrum.getNumberOfChannels(): " << spectrum.getNumberOfChannels());
   assert(spectrum.getNumberOfChannels() == itsNumberOfChannels);
@@ -67,7 +67,7 @@ void UVPSpectrumVector::add(const UVPSpectrum &spectrum)
     }
   }
 #if(DEBUG_MODE)
-  TRACERPF2("End.");
+  TRACERF2("End.");
 #endif
 }
 
