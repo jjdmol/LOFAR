@@ -174,9 +174,11 @@ int parse_config() {
 
 
 
-int main (int argv, const char** argc) {
+int main (int argc, const char** argv) {
 
-  LOFAR::TH_MPI::init(argv, argc);
+  INIT_LOGGER("RTLogger.prop");
+
+  LOFAR::TH_MPI::init(argc, argv);
   
   if (!parse_config()) {
     cout << "Error reading config file" << endl;
@@ -190,14 +192,9 @@ int main (int argv, const char** argc) {
     cout << "FRONTEND:   " << frontend_ip << endl;
     cout << "BASEPORT:   " << baseport << endl;
   }
-  
-  INIT_LOGGER("RTLogger.prop");
-
-  // set trace levels
-//   Debug::initLevels(argv, argc);
 
   RTCorrelator correlator;
-  correlator.setarg(argv, argc);
+  correlator.setarg(argc, argv);
 
 #if 0
   /* Interactive run of the correlator */
