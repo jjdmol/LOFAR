@@ -61,6 +61,9 @@ public:
   /// Execute the strategy
   virtual bool execute() = 0;
    
+  /// Postprocessing, can be used to do some clean-up, saving etc.
+  virtual void postprocess() = 0;
+
   /// Get strategy implementation type
   virtual string getType() const = 0;
 

@@ -50,6 +50,9 @@ public:
 
   /// Execute the strategy
   virtual bool execute();
+
+  /// Postprocess
+  virtual void postprocess();
     
   /// Get strategy type
   virtual string getType() const;
