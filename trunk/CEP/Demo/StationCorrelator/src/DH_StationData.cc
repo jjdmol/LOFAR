@@ -42,7 +42,7 @@ DH_StationData::~DH_StationData()
 DH_StationData::DH_StationData(const DH_StationData& that)
   : DataHolder(that),
     itsBuffer(0),
-    itsBufsize(that.itsBufsize)
+    itsBufSize(that.itsBufSize)
 { }
 
 DataHolder* DH_StationData:: clone() const {
