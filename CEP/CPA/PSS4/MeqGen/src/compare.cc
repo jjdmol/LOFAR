@@ -8,7 +8,7 @@
 //# $Id$: 
 
 #include "compare.h"
-#include <MEQ/VellsTmp.h>
+#include <MEQ/Vells.h>
 #include <Common/Debug.h>
 
 #define   copy              *(values[0])

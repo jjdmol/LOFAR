@@ -21,7 +21,6 @@
 //# $Id$
 
 #include <MEQ/Subtract.h>
-#include <MEQ/VellsTmp.h>
 
 namespace Meq {    
 

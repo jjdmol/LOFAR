@@ -10,17 +10,17 @@
     {
       static int res = 
 
-        AtomicID::registerId(-1384,"Vis")+
-        AtomicID::registerId(-1072,"Input")+
-        AtomicID::registerId(-1242,"Output")+
-        AtomicID::registerId(-1278,"Agent")+
-        AtomicID::registerId(-1050,"Parameters")+
-        AtomicID::registerId(-1118,"Data")+
-        AtomicID::registerId(-1200,"Header")+
-        AtomicID::registerId(-1188,"Footer")+
-        AtomicID::registerId(-1266,"Tile")+
-        AtomicID::registerId(-1387,"Suspend")+
-        AtomicID::registerId(-1219,"Resume")+
+        AtomicID::registerId(-1278,"vis")+
+        AtomicID::registerId(-1092,"input")+
+        AtomicID::registerId(-1282,"output")+
+        AtomicID::registerId(-1279,"agent")+
+        AtomicID::registerId(-1090,"parameters")+
+        AtomicID::registerId(-1116,"data")+
+        AtomicID::registerId(-1175,"header")+
+        AtomicID::registerId(-1151,"footer")+
+        AtomicID::registerId(-1280,"tile")+
+        AtomicID::registerId(-1281,"suspend")+
+        AtomicID::registerId(-1270,"resume")+
     0;
     return res;
   }

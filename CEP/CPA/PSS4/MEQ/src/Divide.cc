@@ -21,7 +21,10 @@
 //# $Id$
 
 #include <MEQ/Divide.h>
-#include <MEQ/VellsTmp.h>
+
+#include <MEQ/Vells.h>
+
+using namespace Meq::VellsMath;
 
 namespace Meq {    
 

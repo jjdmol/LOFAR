@@ -55,8 +55,8 @@ void Parm::init (DataRecord::Ref::Xfer& initrec, Forest* frst)
   Node::init (initrec, frst);
   // Get default value.
   if (state()[AidDefault].exists()) {
-    LoMat_double& val = wstate()[AidDefault].as_wr<LoMat_double>();
-    itsDefault = Vells(&val);
+    DataArray *parr = wstate()[AidDefault].as_wp<DataArray>();
+    itsDefault = Vells(parr);
   }
   // Get possible ParmTable name and open it.
   string tableName;
@@ -268,16 +268,14 @@ void Parm::save()
   }
 }
 
-void Parm::setState (const DataRecord& rec)
+void Parm::setState (const DataRecord&)
 {
 }
 
-string Parm::sdebug (int detail, const string& prefix,
-		     const char* nm) const
+string Parm::sdebug (int detail, const string &prefix,const char* nm) const
 {
-  string out;
-  Debug::appendf(out,"%s(%s)", nm?nm:"Meq::Parm", itsName.c_str());
-  if (itsTable) {
+  string out = Node::sdebug(detail,prefix,nm);
+  if( detail>=2 || detail == -2) {
     Debug::appendf(out,"  parmtable=%s", itsTable->name().c_str());
   }
   return out;

@@ -21,7 +21,10 @@
 //# $Id$
 
 #include <MEQ/Sqrt.h>
-#include <MEQ/VellsTmp.h>
+
+#include <MEQ/Vells.h>
+
+using namespace Meq::VellsMath;
 
 namespace Meq {    
 

@@ -73,7 +73,7 @@ int UVW::getResultImpl (ResultSet::Ref& resref, const Request& request, bool)
   // Allocate a 3-plane result
   ResultSet &res_set = resref <<= new ResultSet(3);
   // Get RA and DEC of phase center.
-  MVDirection phaseRef (vra.getRealScalar(), vdec.getRealScalar());
+  MVDirection phaseRef(vra.as<double>(), vdec.as<double>());
   // Set correct size of values.
   int nfreq = cells.nfreq();
   int ntime = cells.ntime();
@@ -81,9 +81,7 @@ int UVW::getResultImpl (ResultSet::Ref& resref, const Request& request, bool)
   LoMat_double& matV = res_set.setNewResult(1).setReal(nfreq,ntime);
   LoMat_double& matW = res_set.setNewResult(2).setReal(nfreq,ntime);
   // Calculate the UVW coordinates using the AIPS++ code.
-  MVPosition mvpos(vstx.getRealScalar(),
-		   vsty.getRealScalar(),
-		   vstz.getRealScalar());
+  MVPosition mvpos(vstx.as<double>(),vsty.as<double>(),vstz.as<double>());
   MVBaseline mvbl(mvpos);
   MBaseline mbl(mvbl, MBaseline::ITRF);
   Quantum<double> qepoch(0, "s");

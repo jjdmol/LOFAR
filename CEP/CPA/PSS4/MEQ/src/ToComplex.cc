@@ -21,7 +21,12 @@
 //# $Id$
 
 #include <MEQ/ToComplex.h>
-#include <MEQ/VellsTmp.h>
+
+#include <MEQ/Vells.h>
+
+#include <MEQ/Vells.h>
+
+using namespace Meq::VellsMath;
 
 namespace Meq {    
 
