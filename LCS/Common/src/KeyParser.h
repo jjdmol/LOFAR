@@ -29,11 +29,11 @@
 #include <Common/lofar_string.h>
 #include <stdexcept>
 
-namespace LOFAR {
-
 extern "C" {
   int KeyTokenizewrap();        // yywrap
 }
+
+namespace LOFAR {
 
 //# Forward Declarations
 class KeyValue;
