@@ -59,7 +59,13 @@ int main (int argc, const char** argv)
 //       istringstream istr(argv[2]);
 //       istr >> nriter;
 //     }
-    string usernm = "meijeren";
+    const char *usernm = getenv("USER");
+
+    if (usernm == 0) {
+      cerr << "$USER not in environment\n";
+      exit(1);
+    }
+
 //     if (argc > 3) {
 //       usernm = argv[3];
 //     }
