@@ -39,8 +39,9 @@ int main(int argc, const char* argv[])
        B(false, -14, -1.7320508, "Bubbles"));
   A a2(84, 6.28, "Goodbye", complex<double>(5.636, -5.636),
        B(true, 327, 1.4142135, "Bjorn again"));
-  blob b1((dtl::BYTE*)"ABCDEFG");
-  blob b2((dtl::BYTE*)"abcdefg");
+  blob b1, b2;
+  b1.assign((dtl::BYTE*)"ABCDEFG");
+  b2.assign((dtl::BYTE*)"abcdefg");
   C c;
   C c1(a1, b1, "CU soon");
   C c2(a2, b2, "C4Y2");

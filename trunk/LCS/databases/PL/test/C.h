@@ -3,7 +3,7 @@
 
 #include "A.h"
 #include <PL/PLfwd.h>
-#include <dtl/dtl_config.h>
+#include <dtl/BoundIO.h>
 #include <string>
 #include <complex>
 #include <iostream>
