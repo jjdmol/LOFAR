@@ -24,23 +24,28 @@ int main (int argc, char** argv)
 	try {
 	  SimulatorParse::parse (simulator);
 	} catch (SimulatorParseError x) {
+
 	  //cout << x.getMesg() << endl;
+	  //cout << x.what() << endl;
+
 	}
 	cout << endl;
 	cout << "It was a pleasure working with you!" << endl << endl;
 
 #else
-	cout << "Welcome to LOFARSim" <<endl;
+	cout << "Welcome to SeqSim" <<endl;
 	cout << "Running in batch mode " << endl;
 	cout << endl;
 	cout << "Call Define" << endl;
 	simulator.baseDefine();
 	cout << endl;
 	cout << "Call Run" << endl;
-	simulator.run(5000);
+
+	simulator.baseRun();
+
 	cout << endl;
 	cout << "Call Dump " << endl;
-	simulator.dump();
+	simulator.baseDump();
 	cout << endl;
 	cout << "Good Bye!" << endl;
 	simulator.baseQuit();
