@@ -1,6 +1,6 @@
-//# UVW.h: Calculate station UVW from station position and phase center
+//# PointSourceDFT.h: The point source DFT component for a station
 //#
-//# Copyright (C) 2003
+//# Copyright (C) 2004
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
 //# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -20,46 +20,39 @@
 //#
 //# $Id$
 
-#ifndef MEQ_UVW_H
-#define MEQ_UVW_H
-    
+#ifndef MEQ_POINTSOURCEDFT_H
+#define MEQ_POINTSOURCEDFT_H
+
+//# Includes
 #include <MEQ/Function.h>
-#include <aips/Measures/MPosition.h>
 
 #pragma aidgroup Meq
-#pragma types #Meq::UVW
-#pragma aid RA Dec StX StY StZ
+#pragma types #Meq::PointSourceDFT
+#pragma aid S1F0 S2F0 S1DF S2DF
 
 namespace Meq {    
 
-
-//##ModelId=400E530400BD
-class UVW : public Function
+class PointSourceDFT: public Function
 {
 public:
-    //##ModelId=400E535502D1
-  UVW();
+  // The default constructor.
+  PointSourceDFT()
+    {};
 
-    //##ModelId=400E535502D2
-  virtual ~UVW();
+  virtual ~PointSourceDFT();
 
-    //##ModelId=400E535502D4
   virtual TypeId objectType() const
-    { return TpMeqUVW; }
+    { return TpMeqPointSourceDFT; }
 
   // Get the result for the given request.
-    //##ModelId=400E535502D6
   virtual int getResult (Result::Ref &resref, 
                          const std::vector<Result::Ref> &childres,
                          const Request &req,bool newreq);
 
   // Check and convert the children.
-    //##ModelId=400E535502DC
   void checkChildren();
 
 private:
-    //##ModelId=400E535502D0
-  MPosition itsEarthPos;
 };
 
 } // namespace Meq
