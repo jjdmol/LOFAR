@@ -23,9 +23,9 @@ void DummySolver::run ()
   {
     control().startDomain();
     // second loop over solve jobs. Each call to startSoltion
-    // returns a different set of params; once all sets have
-    // been run through, the return code is NEXT_DOMAIN.
-    while( control().startSolution(params) == CONTINUE )
+    // returns a different set of params and the code RUNNING; once all sets 
+    // have been run through, the return code is NEXT_DOMAIN.
+    while( control().startSolution(params) == RUNNING )
     {
       cdebug(1)<< "startSolution: "<<params->sdebug(3)<<endl;
       cdebug(3)<< sdebug(3) <<endl;
@@ -38,15 +38,14 @@ void DummySolver::run ()
         converge /= 10;
         niter++;
       }
-      while( !control().endIteration(converge) );
-      // endIteration() will return CONTINUE (=0) as long as you still need
+      while( control().endIteration(converge) == RUNNING );
+      // endIteration() will return RUNNING as long as you still need
       // to iterate. Once the solution has converged (or the max iter count is
       // exceeded), it returns NEXT_SOLUTION (if more jobs are scheduled)
       // or NEXT_DOMAIN (no more jobs, proceed to next domain). We do not
       // differentiate between the two here, since the while( startSolution()...)
       // condition does the same thing for us.
-      // On a user interrupt it will return HALT -- but you don't have to deal 
-      // with that, since the test setup does not generate user interrupts.
+      // On a user interrupt it will return STOPPED or HALTED.
       cdebug(1)<< "stopped after "<<niter<<" iterations, converge="<<converge<<endl;
       cdebug(3)<< sdebug(3) <<endl;
     }
