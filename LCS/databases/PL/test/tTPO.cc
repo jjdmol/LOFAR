@@ -63,7 +63,7 @@ namespace LOFAR {
 
     template<> void TPersistentObject<Y>::init() 
     {
-      Pointer p(new TPersistentObject<X>(*itsObjectPtr));
+      Pointer p(new TPersistentObject<X>(data()));
       p->metaData().ownerOid() = metaData().oid();
       ownedPOs().push_back(p);
       tableName("Y");
@@ -90,7 +90,7 @@ int main(int argc, const char* argv[])
     cout << "Try to connect to database ...";
     b->connect("test","postgres","");
   }
-  catch (Exception& e) {
+  catch (PL::Exception& e) {
     cerr << endl << e << endl;
   }
   cout << "  ok" << endl;
@@ -100,7 +100,7 @@ int main(int argc, const char* argv[])
     cout << "attrib<Y>(\"hello.world\") = " 
          << attrib<Y>("hello.world") << endl;
   }
-  catch (Exception& e) {
+  catch (PL::Exception& e) {
     cerr << endl << e << endl;
   }
   return 0;
@@ -109,7 +109,7 @@ int main(int argc, const char* argv[])
     cout << "Trying save() ...";
     b->save(tpoy);
   }
-  catch (Exception& e) {
+  catch (PL::Exception& e) {
     cerr << endl << e << endl;
   }
   cout << "  ok" << endl;
@@ -120,7 +120,7 @@ int main(int argc, const char* argv[])
     cout << "Forcing insert() ...";
     b->save(tpoy, PersistenceBroker::INSERT);
   }
-  catch (Exception& e) {
+  catch (PL::Exception& e) {
     cerr << endl << e << endl;
   }
   cout << "  ok" << endl;
@@ -129,7 +129,7 @@ int main(int argc, const char* argv[])
     cout << "Forcing update() ...";
     b->save(tpoy, PersistenceBroker::UPDATE);
   }
-  catch (Exception& e) {
+  catch (PL::Exception& e) {
     cerr << endl << e << endl;
   }
   cout << "  ok" << endl;
@@ -138,7 +138,7 @@ int main(int argc, const char* argv[])
     cout << "Trying erase() ...";
     b->erase(tpoy);
   }
-  catch (Exception& e) {
+  catch (PL::Exception& e) {
     cerr << endl << e << endl;
   }
   cout << "  ok" << endl;
@@ -147,7 +147,7 @@ int main(int argc, const char* argv[])
     cout << "Trying retrieve(ObjectId&) ...";
     b->retrieve<Y>(oid);
   }
-  catch (Exception& e) {
+  catch (PL::Exception& e) {
     cerr << endl << e << endl;
   }
   cout << "  ok" << endl;
@@ -156,7 +156,7 @@ int main(int argc, const char* argv[])
     cout << "Trying retrieve<Y>(q) ...";
     b->retrieve<Y>(q);
   }
-  catch (Exception& e) {
+  catch (PL::Exception& e) {
     cerr << endl << e << endl;
   }
   cout << "  ok" << endl;

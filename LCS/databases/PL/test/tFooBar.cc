@@ -18,7 +18,7 @@ public:
     return os;
   }
 private:
-  friend class TPersistentObject<Bar>;
+  friend class LOFAR::PL::TPersistentObject<Bar>;
   string text;
 };
 
@@ -32,7 +32,7 @@ public:
     return os;
   }
 private:
-  friend class TPersistentObject<Foo>;
+  friend class LOFAR::PL::TPersistentObject<Foo>;
   int val;
   Bar bar;
 };
@@ -95,7 +95,7 @@ namespace LOFAR {
     template<>
     void TPersistentObject<Foo>::init()
     {
-      Pointer p(new TPersistentObject<Bar>(itsObjectPtr->bar));
+      Pointer p(new TPersistentObject<Bar>(data().bar));
       p->metaData().ownerOid() = metaData().oid();
       ownedPOs().push_back(p);
       tableName("FOO");
@@ -122,7 +122,7 @@ int main(int argc, const char* argv[])
     cout << "attrib<Foo>(\"bar.text\") = " 
          << attrib<Foo>("bar.text") << endl;
   }
-  catch (Exception& e) {
+  catch (LOFAR::Exception& e) {
     cerr << endl << e << endl;
   }
 
