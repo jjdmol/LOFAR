@@ -7,15 +7,15 @@
 %\usepackage{graphicx}
 \usepackage{float}
 %\usepackage{times}
+\usepackage{fancybox}
 %\usepackage{algorithmic}
 \usepackage[dvips]{hyperref}
-\usepackage{theorem}
 \DeclareGraphicsExtensions{.eps}
 
-\floatstyle{ruled}
+\floatstyle{boxed}
 \newfloat{assumption}{ht}{ass}[subsection]
 \newfloat{prerequisite}{ht}{pre}[subsection]
-\newfloat{requirement}{ht}{req}[subsection]
+\newfloat{requirement}{H}{req}[subsection]
 
 % ------------------------  End of your preamble.
 \begin{document}
@@ -50,8 +50,10 @@
       is implemented to fit the needs and requirements for the LOFAR
       self-calibration-application. An demo application has been made,
       and test-runs have been performed in order to get a feeling of
-      what is really needed. Those are described in
-      \hyperlink{bib:LOFAR-ASTRON-MEM-096}{[HOO03]}.
+      what is really needed. The results of those tests are described
+      in \hyperlink{bib:LOFAR-ASTRON-MEM-096}{[HOO03]} and are used in
+      for the description of the framework that is presented in this
+      document.
 
     \subsection{context}
     \label{subsec:context}\hypertarget{subsec:context}{}
@@ -67,15 +69,23 @@
 
     \subsection{human perspectives}
 
+      This section describes how different human beings can have
+      different perspectives on the system.
+
       \subsubsection{management}
 
         The Blackboard framework handles the distribution of an
         application over a part of the cluster. From the management
         perspective only a priority has to be given to the
         application. On this high level this only means: ``how many
-        nodes may it use?'' The application has been given strategy
-        scripts to handle on that node that define the internal
-        priorities and the distribution within the appointed
+        nodes may it use?'' and ``For what period of time may it use
+        them?''\footnote{It is yet to be considered what is to be done
+        when tho maximum execution time is exceeded. One thing might
+        be to settle for the present time intermediate
+        results. Another might be to add an extra request to the
+        job-queue.\label{execution-duration}}. The application has been
+        given strategy scripts to handle on that node that define the
+        internal priorities and the distribution within the appointed
         sub-cluster.
 
         \begin{requirement}
@@ -88,12 +98,56 @@
 
         Given the appointed sub-cluster, the application must be able
         to run. Therefore different components and utilities must be
-        deployed to the different nodes in the system. There are
+        deployed to the different nodes in the system
+        (\hyperlink{pre:software-availability}{prerequisite \ref{pre:software-availability}}). There are
         mechanisms available in the LOFAR cluster to do this. These
         mechanisms need some scripting or configuring. A lot of this
         can be automated, but a system administrator has to be aware
         of those mechanisms and the way the BlackBoard framework uses
         them.
+
+        \begin{requirement}
+          It must be possible to configure exactly what nodes to use
+          for an instance of a BlackBoard application.
+          \caption{specification of nodes\label{req:specification-of-nodes}}
+        \end{requirement}
+
+        \begin{figure}
+          \includegraphics[]{../figures/CEP_Cluster_Selfcal_mapped.eps}
+          \hypertarget{fig:selfcalMapped}{}
+          \caption{a sample mapping of a selfcal application on the
+          LOFAR cluster.\label{fig:selfcalMapped}}
+        \end{figure}
+
+        \begin{prerequisite}
+          It must be possible to specify what software ``might'' be
+          needed at what nodes.
+          \caption{software availability\label{pre:software-availability}}
+        \end{prerequisite}
+
+      \subsubsection{instrumentalist}
+
+        The instrumentalist will be acting on behalf of the
+        astronomer-user to advice on technical usability of data
+        collected. Given the strategy that a user has specified, the
+        instrumentalist will decide how data will be partitioned for a
+        certain self-calibration job.
+
+        \begin{requirement}
+          It must be possible to specify how data is to be partitioned.
+          \caption{data partitioning\label{req:data-partitioning}}
+        \end{requirement}
+
+        It is not very interesting to specify what part of the data is
+        calibrated for in what part of the system. It might sometimes
+        be opportune to force a certain distribution if it is foreseen
+        that certain data/parameter sets are mutually dependent.
+
+        \begin{requirement}
+          It should be possible to specify how data is going to
+          distributed over the cluster given a certain partitioning
+          \caption{data distribution\label{req:data-distribution}}
+        \end{requirement}
 
       \subsubsection{astronomer-user}
 
@@ -104,9 +158,41 @@
         is the responsibility over parameter to solve divided? Is a
         ``peeling'' strategy applied? And so more.
 
+        \begin{requirement}
+          It must be possible to specify what strategy, or strategies
+          to use for a self-calibration job.
+          \caption{strategy specification\label{req:strategy-specification}}
+        \end{requirement}
+
+        An a-user would not want to know about the number of nodes
+        assigned to his job. He would certainly not want to have to
+        specify how his data is going to be partitioned over these
+        nodes. 
+
+        \begin{requirement}
+          It must not be needed to specify how data is going to
+          distributed over the cluster given a certain partitioning
+          \caption{data distribution 2\label{req:data-distribution-2}}
+        \end{requirement}
+
+        However, the a-user might want to limit the permissible
+        partition possibilities to a fixed number. Or maybe even limit
+        it to fixed boundaries.
+
+        \begin{requirement}
+          It must be possible to specify data can not be partitioned.
+          \caption{data partitioning 2\label{req:data-partitioning-2}}
+        \end{requirement}
+
         During the calculation the a-user might ask for temporary
         results, in order to see if things are going his way. Some
         strategy directives can then be changed on the fly.
+
+        \begin{requirement}
+          It must be possible to reconfigure strategy directives on
+          the fly.
+          \caption{reconfiguring\label{req:reconfiguring}}
+        \end{requirement}
 
     \subsection{system internals}
 
@@ -121,9 +207,46 @@
 
         \paragraph{lifetimes of objects}
 
-        \paragraph{protocol semantics}
+    \subsection{protocol semantics}
 
-      \subsection{deployment}
+      There are several inter component protocols that need to be
+      observed for the system to function. These are discussed in this
+      section.
+
+      First there is the way the blackboard is addressed by other
+      components. In figure
+      \hyperlink{fig:overview}{\ref{fig:overview}}, these are
+      represented by the straight dependency connections. Then there
+      are embedded in the messages posted on the blackboard protocols
+      that must maintain and guarantee the validity of the
+      system-state at all times. In figure
+      \hyperlink{fig:overview}{\ref{fig:overview}}, these are
+      represented by the dotted dependency lines. The actual
+      communication is embedded in whatever is put on the
+      blackboard. A valid system state in this context would mean that
+      there are no solution threads laying around unfinished and
+      unevaluated.
+
+      External knowledge sources, that are being embedded in a
+      BlackBoard-instance are going to have to adhere to some rules on
+      the communications.
+
+      \begin{figure}
+        \includegraphics[]{../figures/overview.eps}
+        \hypertarget{fig:overview}{}
+        \caption{the overall structure of a BlackBoard-application\label{fig:overview}}
+      \end{figure}
+
+      Then the final group of protocols are those with external
+      components like data-persistency mechanisms.
+
+      \begin{requirement}
+        It must be possible to specify which right knowledge sources
+        have on certain parts of the blackboard-data.
+        \caption{data access rights\label{req:data-access-rights}}
+      \end{requirement}
+
+    \subsection{deployment}
 
     \subsection{code organisation}
 
