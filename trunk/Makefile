@@ -96,12 +96,20 @@ weekly: start_weekly bootstrap configure $(VARIANTNAMES) check stop_weekly
 build: start_build $(VARIANTNAMES:.variant=.variant_build) stop_build
 
 #
+# install: Target to install a buildtree
+#
+install: start_install $(VARIANTNAMES:.variant=.variant_install) stop_install
+
+#
 # rebuild: Target to compile from scratch in a bootstrapped and configured tree
 #
 rebuild: start_rebuild $(VARIANTNAMES:.variant=.variant_rebuild) stop_rebuild
 
 start_build:
 	@echo && echo ":::::: BUILD START" && echo
+
+start_install:
+	@echo && echo ":::::: INSTALL START" && echo
 
 start_rebuild:
 	@echo && echo ":::::: REBUILD START" && echo
@@ -114,6 +122,9 @@ start_weekly:
 
 stop_build:
 	@echo && echo ":::::: BUILD COMPLETE" && echo
+
+stop_install:
+	@echo && echo ":::::: INSTALL COMPLETE" && echo
 
 stop_rebuild:
 	@echo && echo ":::::: REBUILD COMPLETE" && echo
@@ -234,6 +245,30 @@ configure: $(VARIANTNAMES:.variant=.variant_configure)
 			|| echo ":::::: ERROR" ) \
 		&& echo \
 		&& echo ":::::: FINISHED BUILDING VARIANT $$variant FOR PACKAGE $$pkg" \
+		&& echo ; ) \
+	    else \
+	        echo ":::::: ERROR $$pkg does not exist"; \
+	    fi\
+	done; \
+	date
+
+#
+# Rule to install build
+#
+%.variant_install:
+	@date; \
+	variant=`basename $@ .variant_install`; \
+	for pkg in $(PACKAGES); do \
+	    if test -d $$pkg; then \
+		( echo \
+		&& echo ":::::: INSTALLING VARIANT $$variant FOR PACKAGE $$pkg" \
+		&& echo \
+		&& date \
+		&& (( cd $$pkg/build/$$variant \
+		&& make install ) \
+			|| echo ":::::: ERROR" ) \
+		&& echo \
+		&& echo ":::::: FINISHED INSTALLING VARIANT $$variant FOR PACKAGE $$pkg" \
 		&& echo ; ) \
 	    else \
 	        echo ":::::: ERROR $$pkg does not exist"; \
