@@ -36,6 +36,7 @@
 #include "OnLineProto/DH_Beamlet.h"
 #include "OnLineProto/DH_CorrCube.h"
 
+#define min(a,b) (a<b?a:b)
 namespace LOFAR
 {
 
@@ -86,6 +87,11 @@ WH_Transpose* WH_Transpose::make (const string& name)
 void WH_Transpose::process()
 {
   TRACER4("WH_Transpose::Process()");
+  // Transpose receives one beamlet per station
+  //DbgAssertStr(getDataManager().getInputs() == NSTATIONS,"Nr inputs");
+  DbgAssertStr(getDataManager().getOutputs() == NVis,"Nr outputs");
+  
+  DbgAssertStr(NVis == BFBW,"Assume one freq channel per corrcube");
 
   // copy all data in the input beamlets into 
   // the CorrCube plane corresponding to the timestamp in the beamlets.
@@ -96,17 +102,17 @@ void WH_Transpose::process()
   int OutChannel;
   int OutStation;
   int OutFreqBin;
-  int OutTime;
+  int OutTime = (int)((DH_Beamlet*)getDataManager().getInHolder(0))->getElapsedTime();
 
   // loop over all input beamlets and channels therein
   for (int InChannel=0; InChannel< getDataManager().getInputs(); InChannel++) {
     for (int InFreqBin=0; InFreqBin<BFBW; InFreqBin++) {
       // ToDo: calculate the correct output channel and freq channels therein
       // 
-      OutChannel = 0;
-      OutFreqBin = 0;
-      OutStation=0;
-      OutTime=0;
+      OutChannel = InFreqBin;
+      OutFreqBin = 0; // single frequency assumed
+      OutStation=InChannel; // channel nr == station nr
+     
       // now copy the data
       *((DH_CorrCube*)getDataManager().getOutHolder(OutChannel))
 	->getBufferElement(OutStation, OutTime, OutFreqBin) 
@@ -121,6 +127,28 @@ void WH_Transpose::process()
 
 void WH_Transpose::dump()
 {
+  cout << "--------------------------------------------------------" << endl;
+  cout << "Dump WH_Transpose " << getName() << endl;
+  cout << " input " << endl;
+  for (int s=0; s<10; s++) {
+    cout << "in station=" << s << ":  ";
+    for (int f=0; f<10; f++) {
+      cout << 	*((DH_Beamlet*)getDataManager().getInHolder(0))
+	->getBufferElement(f*BFBW+s) << "  ";
+    }
+    cout << endl;
+  }
+
+  cout << " output " << endl;
+  for (int s=0; s<10; s++) {
+    cout << "out station=" << s << ":  ";
+    for (int t=0; t<10; t++) {
+      cout << 	*((DH_Beamlet*)getDataManager().getOutHolder(0))
+	->getBufferElement(t*NSTATIONS+s) << "  ";
+    }
+    cout << endl;
+  }
+  cout << "--------------------------------------------------------" << endl;
 }
 
 }// namespace LOFAR
