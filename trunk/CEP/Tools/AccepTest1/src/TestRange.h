@@ -10,7 +10,7 @@ const int max_elements  = 60;
 const int stp_elements  = 5;
 
 const int min_samples   = 1000;   // integration time of the correlator
-const int max_samples   = 1000;
+const int max_samples   = 1100;
 const int stp_samples   = 50;
 
 const int port          = 1100;  // startport; [port,port+2*targets] will be used

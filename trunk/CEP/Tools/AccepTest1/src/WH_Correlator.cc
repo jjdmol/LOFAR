@@ -54,11 +54,7 @@ WH_Correlator::WH_Correlator(const string& name,
 
   DH_Vis::BufferType* nul_value = new DH_Vis::BufferType(0,0);
 
-  (void*)itsResetBuffer = malloc(itsNchannels*
-				 itsNelements*
-				 itsNelements*
-				 itsNpolarisations*
-				 sizeof(DH_Vis::BufferType));
+  itsResetBuffer = new DH_Vis::BufferType [itsNchannels*itsNelements*itsNelements*itsNpolarisations] ;
   
   for (int h = 0; h < itsNchannels; h++) {
     for (int i = 0; i < itsNelements; i++){ 
