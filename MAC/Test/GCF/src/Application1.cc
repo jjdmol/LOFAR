@@ -13,6 +13,9 @@
 #include "TST_Protocol.ph"
 #include <Suite/suite.h>
 
+using std::cerr;
+using std::endl;
+
 static string sTaskName = "TA1";
 
 const TPropertyInfo propertyAHJP00Def(REMOTESYS1"A_H.J.P00", LPT_DOUBLE);
@@ -1293,7 +1296,7 @@ int main(int argc, char* argv[])
 {
   GCFTask::init(argc, argv);
     
-  Suite s("GCF Test", &cout);
+  Suite s("GCF Test", &cerr);
   s.addTest(new Application);
   s.run();
   s.report();

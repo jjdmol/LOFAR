@@ -30,6 +30,9 @@
 #include <stdio.h>
 #include "Echo_Protocol.ph"
 
+using std::cout;
+using std::endl;
+
 /**
  * Function to calculate the elapsed time between two tiemval's.
  */

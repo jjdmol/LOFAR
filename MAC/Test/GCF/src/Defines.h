@@ -24,7 +24,7 @@
 
 #define ABORT_TESTS \
   { \
-    cout << "TESTS ABORTED due to an ERROR or terminated" << endl; \
+    cerr << "TESTS ABORTED due to an ERROR or terminated" << endl; \
     FINISH; \
   }
 
