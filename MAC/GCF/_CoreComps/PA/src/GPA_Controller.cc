@@ -305,12 +305,10 @@ void GPAController::apcLoaded(TPAResult result)
   {
     result = _usecountManager.setDefaults(*propsFromAPC);
   } 
-#ifdef PML
   GCFEvent* pEvent = _requestManager.getOldestRequest();
   PALoadapcEvent* pLoadapcE = static_cast<PALoadapcEvent*> (pEvent);
   PAApcloadedEvent e(pLoadapcE->seqnr, result);
   sendAPCActionResponse(e);
-#endif
 }  
 
 void GPAController::unloadAPC(char* actionData)
@@ -428,14 +426,4 @@ void GPAController::unpackAPCActionData(char* pActionData)
   unsigned int scopeNameLength(0);
   sscanf(pScopeData, "%03x", &scopeNameLength);
   _curScope.assign(pScopeData + 3, scopeNameLength);
-}
-
-void GPAController::loadAPCTest()
-{
-  const list<TAPCProperty>* propsFromAPC;
-  _apc.load("/home/mueller/workspace/LOFAR/MAC/GCF/CoreComps/PA/src/apc1.xml", "receptor1");
-  propsFromAPC = &_apc.getProperties();
-  TPAResult result = _usecountManager.incrementUsecount(*propsFromAPC);
-  if (!_usecountManager.waitForAsyncResponses())
-    result = _usecountManager.setDefaults(*propsFromAPC);
 }

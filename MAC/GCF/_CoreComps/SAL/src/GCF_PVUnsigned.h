@@ -1,4 +1,4 @@
-//#  GPA_Main.cc: 
+//#  GCF_PVUnsigned.h: 
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,18 +20,27 @@
 //#
 //#  $Id$
 
-#include <GPA_Controller.h>
-#include <TM/GCF_Control.h>
+#ifndef GCF_PVUNSIGNED_H
+#define GCF_PVUNSIGNED_H
 
-int main(int argC, char *argV[])
+#include "GCF_PValue.h"
+
+class GCFPVUnsigned : public GCFPValue
 {
-  GCFTask::init(argC, argV);
-  
-  GPAController propertyAgent; 
-  
-  propertyAgent.start(); // make initial transition
-  
-  GCFTask::run();
-
-  return 0;
-}
+  public:
+  	GCFPVUnsigned(unsigned int val = 0) : GCFPValue(UNSIGNED_VAL), _value(val) {;}
+  	virtual ~GCFPVUnsigned() {;}
+    /** Write property of unsigned value. */
+    virtual inline void setValue( const unsigned int newVal) {_value = newVal;}
+    /** Read property of unsigned value. */
+    virtual inline unsigned int getValue() const {return _value;}
+    /** No descriptions */
+    virtual GCFPValue* clone() const;
+    /** No descriptions */
+    virtual TSAResult copy(const GCFPValue& value);
+ 
+  private: // Private attributes
+    /**  */
+    unsigned int _value;
+};
+#endif

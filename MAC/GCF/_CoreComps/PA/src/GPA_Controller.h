@@ -41,8 +41,6 @@ class GPAController : public GCFTask
 		GPAController();
 		virtual ~GPAController();
   
-    void loadAPCTest();
-
 	private: // GPAUsecountManager call back methods
     friend class GPAUsecountManager;
 		void propertiesCreated(list<string>& propList);

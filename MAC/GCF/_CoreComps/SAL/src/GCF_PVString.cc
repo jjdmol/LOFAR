@@ -1,4 +1,4 @@
-//#  GPA_Main.cc: 
+//#  GCF_PVString.cc: 
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,18 +20,25 @@
 //#
 //#  $Id$
 
-#include <GPA_Controller.h>
-#include <TM/GCF_Control.h>
 
-int main(int argC, char *argV[])
+#include "GCF_PVString.h"
+
+/** No descriptions */
+GCFPValue* GCFPVString::clone() const
 {
-  GCFTask::init(argC, argV);
-  
-  GPAController propertyAgent; 
-  
-  propertyAgent.start(); // make initial transition
-  
-  GCFTask::run();
+  GCFPValue* pNewValue = new GCFPVString(_value);
+  return pNewValue;
+}
 
-  return 0;
+/** No descriptions */
+TSAResult GCFPVString::copy(const GCFPValue& newVal)
+{
+  TSAResult result(SA_NO_ERROR);
+
+  if (newVal.getType() == getType())
+    _value = ((GCFPVString *)&newVal)->getValue();
+  else
+    result = SA_DIFFERENT_TYPES;
+  
+  return result;
 }

@@ -26,7 +26,12 @@
 #include "GSA_SCADAHandler.h"
 
 #include "GCF_PVBool.h"
+#include "GCF_PVChar.h"
+#include "GCF_PVInteger.h"
+#include "GCF_PVUnsigned.h"
 #include "GCF_PVDouble.h"
+#include "GCF_PVString.h"
+#include "GCF_PVDynArr.h"
 
 #include <DpMsgAnswer.hxx>            
 #include <DpMsgHotLink.hxx>           
@@ -36,6 +41,11 @@
 #include <ErrClass.hxx>
 #include <Manager.hxx>
 #include <FloatVar.hxx>
+#include <CharVar.hxx>
+#include <TextVar.hxx>
+#include <IntegerVar.hxx>
+#include <UIntegerVar.hxx>
+#include <DynVar.hxx>
 
 GSAService::GSAService() : _pWFA(0)
 {
@@ -604,22 +614,27 @@ TSAResult GSAService::convertPVSSToMAC(const Variable& variable,
     else
       result = SA_VARIABLE_WRONG_TYPE;
   }
-/*  else if (typeName == "BIT32_VAL")
-  {
-    *pMacValue = new GCFPVBit32(((Bit32Var *)&variable)->getValue());
-  }
   else if (typeName == "CHAR_VAL")
   {
-    *pMacValue = new GCFPVChar(((CharVar *)&variable)->getValue());
+    if (variable.isA() == CHAR_VAR)
+      *pMacValue = new GCFPVChar(((CharVar *)&variable)->getValue());
+    else
+      result = SA_VARIABLE_WRONG_TYPE;
   }
   else if (typeName == "UNSIGNED_VAL")
   {
-    *pMacValue = new GCFPVUnsigned(((UIntegerVar *)&variable)->getValue());
+    if (variable.isA() == UINTEGER_VAR)
+      *pMacValue = new GCFPVUnsigned(((UIntegerVar *)&variable)->getValue());
+    else
+      result = SA_VARIABLE_WRONG_TYPE;
   }
   else if (typeName == "INTEGER_VAL")
   {
-    *pMacValue = new GCFVPInteger(((IntegerVar *)&variable)->getValue());
-  }*/
+    if (variable.isA() == INTEGER_VAR)
+      *pMacValue = new GCFPVInteger(((IntegerVar *)&variable)->getValue());
+    else
+      result = SA_VARIABLE_WRONG_TYPE;
+  }
   else if (typeName == "FLOAT_VAL")
   {
     if (variable.isA() == FLOAT_VAR)
@@ -627,9 +642,76 @@ TSAResult GSAService::convertPVSSToMAC(const Variable& variable,
     else
       result = SA_VARIABLE_WRONG_TYPE;     
   }
-/*  else if (typeName == "STRING_VAL")
+  else if (typeName == "STRING_VAL")
   {
-    *pMacValue = new GCFPVString(((TextVar *)&variable)->getValue());
+    if (variable.isA() == TEXT_VAR)
+      *pMacValue = new GCFPVString(((TextVar *)&variable)->getValue());
+    else
+      result = SA_VARIABLE_WRONG_TYPE;     
+  }
+  else if (typeName.ncmp("DYN", 3))
+  {
+    const DynVar* pDynVar = static_cast<const DynVar*>(&variable);
+    if (pDynVar)
+    {
+      GCFPValueArray arrayTo;
+      GCFPValue* pItemValue(0);
+      GCFPValue::TMACValueType type(GCFPValue::DYNARR_VAL);
+      // the type for the new FPValue must be determined 
+      // separate, because the array could be empty
+      switch (DynVar::getItemType(pDynVar->isA()))
+      {
+        case BIT_VAR:
+          type = (GCFPValue::TMACValueType) (type | GCFPValue::BOOL_VAL);
+          break;
+        case CHAR_VAR:
+          type = (GCFPValue::TMACValueType) (type | GCFPValue::CHAR_VAL);
+          break;
+        case INTEGER_VAR:
+          type = (GCFPValue::TMACValueType) (type | GCFPValue::INTEGER_VAL);
+          break;
+        case UINTEGER_VAR:
+          type = (GCFPValue::TMACValueType) (type | GCFPValue::UNSIGNED_VAL);
+          break;
+        case FLOAT_VAR:
+          type = (GCFPValue::TMACValueType) (type | GCFPValue::DOUBLE_VAL);
+          break;
+        case TEXT_VAR:
+          type = (GCFPValue::TMACValueType) (type | GCFPValue::STRING_VAL);
+          break;
+      }
+      for (Variable* pVar = pDynVar->getFirst();
+           pVar; pVar = pDynVar->getNext())
+      {
+        switch (pVar->isA())
+        {
+          case BIT_VAR:
+            pItemValue = new GCFPVBool(((BitVar*)pVar)->getValue());
+            break;
+          case CHAR_VAR:
+            pItemValue = new GCFPVChar(((CharVar*)pVar)->getValue());
+            break;
+          case INTEGER_VAR:
+            pItemValue = new GCFPVInteger(((IntegerVar*)pVar)->getValue());
+            break;
+          case UINTEGER_VAR:
+            pItemValue = new GCFPVUnsigned(((UIntegerVar*)pVar)->getValue());
+            break;
+          case FLOAT_VAR:
+            pItemValue = new GCFPVDouble(((FloatVar*)pVar)->getValue());
+            break;
+          case TEXT_VAR:
+            pItemValue = new GCFPVString(((TextVar*)pVar)->getValue());
+            break;
+        }
+        arrayTo.push_back(pItemValue);
+      }
+      *pMacValue = new GCFPVDynArr(type, arrayTo);
+    }
+  }
+/*  else if (typeName == "BIT32_VAL")
+  {
+    *pMacValue = new GCFPVBit32(((Bit32Var *)&variable)->getValue());
   }
   else if (typeName == "REF_VAL")
   {
@@ -657,40 +739,98 @@ TSAResult GSAService::convertMACToPVSS(const GCFPValue& macValue,
   switch (macValue.getType())
   {
     case GCFPValue::BOOL_VAL:
-      *pVar = new BitVar(((GCFPVBool *)&macValue)->getValue());
-      break;
-/*    case GCFPValue::BIT32_VAL:
-      *pVar = new Bit32Var(((GCFPVBit32 *)&macValue)->getValue());
+      *pVar = new BitVar(((GCFPVBool*)&macValue)->getValue());
       break;
     case GCFPValue::CHAR_VAL:
-      *pVar = new CharVar(((GCFPVChar *)&macValue)->getValue());
+      *pVar = new CharVar(((GCFPVChar*)&macValue)->getValue());
       break;
     case GCFPValue::UNSIGNED_VAL:
-      *pVar = new UIntegerVar(((GCFPVUnsigned *)&macValue)->getValue());
+      *pVar = new UIntegerVar(((GCFPVUnsigned*)&macValue)->getValue());
       break;
     case GCFPValue::INTEGER_VAL:
-      *pVar = new IntegerVar(((GCFVPInteger *)&macValue)->getValue());
-      break;*/      
+      *pVar = new IntegerVar(((GCFPVInteger*)&macValue)->getValue());
+      break;
     case GCFPValue::DOUBLE_VAL:
-      *pVar = new FloatVar(((GCFPVDouble *)&macValue)->getValue());
+      *pVar = new FloatVar(((GCFPVDouble*)&macValue)->getValue());
       break;
-/*    case GCFPValue::STRING_VAL:
-      *pVar = new TextVar(((GCFPVString *)&macValue)->getValue());
+    case GCFPValue::STRING_VAL:
+      *pVar = new TextVar(((GCFPVString*)&macValue)->getValue().c_str());
       break;
-    case GCFPValue::REF_VAL:
-      *pVar = new TextVar(((GCFPVRef *)&macValue)->getValue());
+/*    case GCFPValue::REF_VAL:
+      *pVar = new TextVar(((GCFPVRef*)&macValue)->getValue());
       break;
     case GCFPValue::BLOB_VAL:
-      *pVar = new BlobVar(((GCFPVBlob *)&macValue)->getValue());
+      *pVar = new BlobVar(((GCFPVBlob*)&macValue)->getValue());
       break;
     case GCFPValue::DATETIME_VAL:
-      *pVar = new TimeVar(((GCFPVDateTime *)&macValue)->getValue());
+      *pVar = new TimeVar(((GCFPVDateTime*)&macValue)->getValue());
+      break;
+    case GCFPValue::BIT32_VAL:
+      *pVar = new Bit32Var(((GCFPVBit32 *)&macValue)->getValue());
       break;*/
     default:
-      LOFAR_LOG_ERROR(SAL_STDOUT_LOGGER, (
-          "Type of MAC value is unknown: '%d'", 
-          macValue.getType()));
-      result = SA_MACTYPE_UNKNOWN;
+      if (macValue.getType() > GCFPValue::DYNARR_VAL && 
+          macValue.getType() <= (GCFPValue::DYNARR_VAL & GCFPValue::STRING_VAL))
+      {        
+        Variable* pItemValue;
+        VariableType type(NOTYPE_VAR);
+        // the type for the new FPValue must be determined 
+        // separat, because the array could be empty
+        switch (macValue.getType() & ~GCFPValue::DYNARR_VAL)
+        {
+          case GCFPValue::BOOL_VAL:
+            type = BIT_VAR;
+            break;
+          case GCFPValue::CHAR_VAL:
+            type = CHAR_VAR;
+            break;
+          case GCFPValue::INTEGER_VAL:
+            type = INTEGER_VAR;
+            break;
+          case GCFPValue::UNSIGNED_VAL:
+            type = UINTEGER_VAR;
+            break;
+          case GCFPValue::DOUBLE_VAL:
+            type = FLOAT_VAR;
+            break;
+          case GCFPValue::STRING_VAL:
+            type = TEXT_VAR;
+            break;
+        }
+        *pVar = new DynVar(type);
+        GCFPValue* pValue;
+        const GCFPValueArray& arrayFrom = ((GCFPVDynArr*)&macValue)->getValue();
+        for (GCFPValueArray::const_iterator iter = arrayFrom.begin();
+             iter != arrayFrom.end(); ++iter)
+        {
+          pValue = (*iter);
+          switch (pValue->getType())
+          {
+            case GCFPValue::BOOL_VAL:
+              pItemValue  = new BitVar(((GCFPVBool*)pValue)->getValue());
+              break;
+            case GCFPValue::CHAR_VAL:
+              pItemValue  = new CharVar(((GCFPVChar*)pValue)->getValue());
+              break;
+            case GCFPValue::INTEGER_VAL:
+              pItemValue  = new IntegerVar(((GCFPVInteger*)pValue)->getValue());
+              break;
+            case GCFPValue::UNSIGNED_VAL:
+              pItemValue  = new UIntegerVar(((GCFPVUnsigned*)pValue)->getValue());
+              break;
+            case GCFPValue::DOUBLE_VAL:
+              pItemValue  = new FloatVar(((GCFPVDouble*)pValue)->getValue());
+              break;
+            case GCFPValue::STRING_VAL:
+              pItemValue  = new TextVar(((GCFPVString*)pValue)->getValue().c_str());
+              break;
+          }
+          if (pItemValue)
+            ((DynVar *)(*pVar))->append(*pItemValue);
+        }
+      }
+      else
+        result = SA_MACTYPE_UNKNOWN;
       break;
   }  
   
