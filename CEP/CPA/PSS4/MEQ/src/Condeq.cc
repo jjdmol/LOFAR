@@ -66,44 +66,48 @@ int Condeq::getResult (Result::Ref &resref,
     // collect vector of pointers to children, and vector
     // of pointers to main value
     vector<Vells*> values(nrch);
+    int npertsets = 0;
     for( int i=0; i<nrch; i++ )
     {
       child_res[i] = &(child_result[i]().vellSet(iplane));
       values[i] = &(child_res[i]->getValueRW());
+      npertsets = std::max(npertsets,child_res[i]->numPertSets());
     }
     // Find all spids from the children.
     vector<int> spids = Function::findSpids(child_res);
     // allocate new result object with given number of spids, add to set
-    VellSet &vellset = result.setNewVellSet(iplane,spids.size());
+    // note that result always has 1 perturbation set (i.e., double-perts
+    // are collapsed into a single pert)
+    VellSet &vellset = result.setNewVellSet(iplane,spids.size(),1);
     // The main value is measured-predicted.
-    vellset.setValue (*values[0] - *values[1]);
+    vellset.setValue(*values[0] - *values[1]);
     // Evaluate all perturbed values.
     vector<Vells*> perts(nrch);
     vector<int> indices(nrch, 0);
     Vells deriv;
-    for (unsigned int j=0; j<spids.size(); j++) 
+    for( uint j=0; j<spids.size(); j++ )
     {
-      int inx0 = child_res[0]->isDefined (spids[j], indices[0]);
-      int inx1 = child_res[1]->isDefined (spids[j], indices[1]);
+      int inx0 = child_res[0]->isDefined(spids[j],indices[0]);
+      int inx1 = child_res[1]->isDefined(spids[j],indices[1]);
       double pert = 0;
-      if (inx1 >= 0) {
-        deriv = (child_res[1]->getPerturbedValueRW(inx1) - *values[1]) /
-                ( pert = child_res[1]->getPerturbation(inx1) );
-        if (inx0 >= 0) {
-          deriv -= (child_res[0]->getPerturbedValueRW(inx0) - *values[0]) /
-                   child_res[0]->getPerturbation(inx0);
+      if (inx1 >= 0) 
+      {
+        pert = calcDerivative(deriv,*child_res[1],inx1);
+        if (inx0 >= 0) 
+        {
+          Vells d1;
+          calcDerivative(d1,*child_res[0],inx0);
+          deriv -= d1;
         }
-      } else if (inx0 >= 0) {
-        deriv = (*values[0] - child_res[0]->getPerturbedValueRW(inx0)) /
-                 ( pert = child_res[0]->getPerturbation(inx0) );
-      } else {
-        deriv = Vells(0.);
       }
-      vellset.setPerturbedValue (j, deriv);
+      else if (inx0 >= 0) 
+        pert = calcDerivative(deriv,*child_res[0],inx0,true);
+      else 
+        deriv = Vells(0.);
+      vellset.setPerturbedValue(j,deriv);
       vellset.setPerturbation(j,pert);
     }
     vellset.setSpids (spids);
-    
   }
   // no dependencies introduced
   return 0;

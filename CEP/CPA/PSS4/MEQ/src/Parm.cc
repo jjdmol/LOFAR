@@ -157,9 +157,7 @@ int Parm::getResult (Result::Ref &resref,
   }
   // Create result object and attach to the ref that was passed in
   Result &result = resref <<= new Result(1,request); // result has one vellset
-  // *** NB: Should pass in the proper # of spids here, because
-  // VellSet does not allow for changing it later!
-  VellSet & vs = result.setNewVellSet(0);
+  VellSet & vs = result.setNewVellSet(0,0,request.calcDeriv());
   // return depencies: depends on parm value, if solvable
   // NB: should set UPDATED here if we've received a new parm value
   int retcode = itsIsSolvable ? RES_DEP_ITER : 0;
@@ -187,11 +185,13 @@ int Parm::getResult (Result::Ref &resref,
   vs.setReal (ndFreq, ndTime);
   // Iterate over all polynomials.
   // Evaluate one if its domain overlaps the request domain.
-  for (unsigned int i=0; i<itsPolcs.size(); i++) {
+  for (unsigned int i=0; i<itsPolcs.size(); i++) 
+  {
     Polc& polc = itsPolcs[i];
     const Domain& polDom = polc.domain();
     if (firstMidFreq < polDom.endFreq() && lastMidFreq > polDom.startFreq()
-    &&  firstMidTime < polDom.endTime() && lastMidTime > polDom.startTime()) {
+        &&  firstMidTime < polDom.endTime() && lastMidTime > polDom.startTime()) 
+    {
       // Determine which part of the request domain is covered by the
       // polynomial.
       int stFreq = 0;
