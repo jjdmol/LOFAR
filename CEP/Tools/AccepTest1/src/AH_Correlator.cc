@@ -85,9 +85,9 @@ void AH_Correlator::undefine() {
 void AH_Correlator::init() {
 
   itsWH->basePreprocess();
-
+#ifdef HAVE_MPI
   TH_MPI::synchroniseAllProcesses();
-
+#endif
 }
 
 void AH_Correlator::run(int nsteps) {
