@@ -28,17 +28,12 @@
 #include <stdlib.h>
 #include <Common/lofar_string.h>
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
-
 #include <Common/Debug.h>
-#include <CEPFrame/Transport.h>
 #include <CEPFrame/Step.h>
-#include <CEPFrame/Simul.h>
+#include <CEPFrame/Composite.h>
 #include <CEPFrame/WH_Empty.h>
 #include <CEPFrame/Profiler.h>
-#include <CEPFrame/ShMem/TH_ShMem.h>
+#include <Transport/TH_ShMem.h>
 #include <EmptyAppl/EmptyAppl.h>
 #include <Common/KeyValueMap.h>
 
@@ -82,16 +77,16 @@ void EmptyAppl::define(const KeyValueMap&)
   undefine();
 
   // Create the top-level Simul
-  Simul simul(new WH_Empty(), 
-	      "EmptyAppl",
-	      true, 
-	      true,  // controllable	      
-	      true); // monitor
-  setSimul(simul);
+  Composite comp(new WH_Empty(), 
+	        "EmptyAppl",
+	        true, 
+	        true,  // controllable	      
+	        true); // monitor
+  setComposite(comp);
 
-  // Set node and application number of Simul
-  simul.runOnNode(0,0);
-  simul.setCurAppl(0);
+  // Set node and application number of Composite
+  comp.runOnNode(0,0);
+  comp.setCurAppl(0);
 
   // Optional: Get any extra params from input
   // Example:    noOfSourceSteps = params.getInt("sources",1);  
@@ -113,8 +108,8 @@ void EmptyAppl::define(const KeyValueMap&)
 
 
   // Add all Step(s) to Simul
-  // Example:    simul.addStep(sourceStep);
-  //             simul.addStep(targetStep);
+  // Example:    comp.addStep(sourceStep);
+  //             comp.addStep(targetStep);
 
 
   // Create the cross connections between Steps
@@ -140,7 +135,7 @@ void EmptyAppl::run(int nSteps) {
   for (int i=0; i<nSteps; i++) {
     if (i==2) Profiler::activate();
     TRACER2("Call simul.process() ");
-    getSimul().process();
+    getComposite().process();
     if (i==5) Profiler::deActivate();
   }
 
@@ -154,7 +149,7 @@ void EmptyAppl::run(int nSteps) {
 }
 
 void EmptyAppl::dump() const {
-  getSimul().dump();
+  getComposite().dump();
 }
 
 void EmptyAppl::quit() {  
