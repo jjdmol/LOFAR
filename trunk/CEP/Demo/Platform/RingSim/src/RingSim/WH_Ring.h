@@ -236,6 +236,3 @@ short WH_Ring<T>::itsInstanceCnt = 0;
 
 #endif 
 
-
-
-
