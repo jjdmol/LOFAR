@@ -1,0 +1,27 @@
+Check in of 12/12/03:
+
+  * Changed MeqServer command names:
+  
+    command_map["Create.Node"] = &MeqServer::createNode;
+    command_map["Delete.Node"] = &MeqServer::deleteNode;
+    command_map["Resolve.Children"] = &MeqServer::resolveChildren;
+    command_map["Get.Node.List"] = &MeqServer::getNodeList;
+    command_map["Node.Get.State"] = &MeqServer::getNodeState;
+    command_map["Node.Set.State"] = &MeqServer::setNodeState;
+    command_map["Node.Execute"] = &MeqServer::getNodeResult;
+    
+  * For result, vellssets lists:
+    Use '#1', "#2', etc. for field names. Shouldn't matter as long
+    as record is accessed as [1], [2], etc.
+  
+  * Changed state record names:
+      cache_result
+      cache_result_code
+    
+  * Added node_state to request, see meqrequest() in meqserver.g
+  
+  * Meq::Parm:
+    initrec.table_name!
+    initrec.parm_name   (optional, node name used by default)
+  
+(Changes relative to 08/12/03)
