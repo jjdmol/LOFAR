@@ -35,6 +35,9 @@ public:
   virtual void putNewDefCoeff (const string& parmName,
 			    int srcnr, int statnr,
 			    const MeqPolc& polc) = 0;
+  virtual void putNewCoeff (const string& parmName,
+			    int srcnr, int statnr,
+			    const MeqPolc& polc) = 0;
 };
 
 }
