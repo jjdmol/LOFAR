@@ -20,8 +20,8 @@
 //#
 //#  $Id$
 
+#include <APLConfig.h>
 #include "RSP_Protocol.ph"
-#include "RSPConfig.h"
 #include "UpdStatsCmd.h"
 
 #include <blitz/array.h>
@@ -68,24 +68,41 @@ void UpdStatsCmd::complete(CacheBuffer& cache)
   ack.status = SUCCESS;
   ack.handle = (uint32)this; // opaque pointer used to refer to the subscription
 
-  ack.stats().resize(Statistics::N_STAT_TYPES,
-		     m_event->rcumask.count(),
-		     cache.getStatistics()().extent(thirdDim));
+  if (m_event->type <= Statistics::SUBBAND_POWER)
+  {
+    ack.stats().resize(1, m_event->rcumask.count(),
+		       cache.getSubbandStats()().extent(thirdDim));
+  }
+  else
+  {
+    ack.stats().resize(1, m_event->rcumask.count(),
+		       cache.getBeamletStats()().extent(thirdDim));
+  }
   
   int result_rcu = 0;
-  for (int cache_rcu = 0; cache_rcu < GET_CONFIG("N_RCU", i); cache_rcu++)
+  for (int cache_rcu = 0; cache_rcu < GET_CONFIG("N_BLPS", i) * N_POL; cache_rcu++)
   {
     if (m_event->rcumask[result_rcu])
     {
-      if (result_rcu < GET_CONFIG("N_RCU", i))
+      if (result_rcu < GET_CONFIG("N_BLPS", i) * N_POL)
       {
-	ack.stats()(Range::all(), result_rcu, Range::all())
-	  = cache.getStatistics()()(Range::all(), cache_rcu, Range::all());
+	if (m_event->type <= Statistics::SUBBAND_POWER)
+	{
+	  ack.stats()(0, result_rcu, Range::all())
+	    = cache.getSubbandStats()()(m_event->type,
+					cache_rcu, Range::all());
+	}
+	else
+	{
+	  ack.stats()(0, result_rcu, Range::all())
+	    = cache.getBeamletStats()()(m_event->type - Statistics::BEAMLET_MEAN,
+					cache_rcu, Range::all());
+	}
       }
       else
       {
 	LOG_WARN(formatString("invalid RCU index %d, there are only %d RCU's",
-			      result_rcu, GET_CONFIG("N_RCU", i)));
+			      result_rcu, GET_CONFIG("N_BLPS", i) * N_POL));
       }
       
       result_rcu++;
@@ -107,5 +124,6 @@ void UpdStatsCmd::setTimestamp(const Timestamp& timestamp)
 
 bool UpdStatsCmd::validate() const
 {
-  return (m_event->rcumask.count() <= (unsigned int)GET_CONFIG("N_RCU", i));
+  return ((m_event->rcumask.count() <= (unsigned int)GET_CONFIG("N_BLPS", i) * N_POL)
+	  && (m_event->type < Statistics::N_STAT_TYPES));
 }

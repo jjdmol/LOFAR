@@ -32,57 +32,66 @@
 namespace RSP_Protocol
 {
   typedef enum StatsReduction
-    {
-      SUM = 1,
-      REPLACE,
-      MEAN,
-      MAX,
-      MIN,
-      PRODUCT,
-      MIN_INDEX,
-      MAX_INDEX,
-    };
+  {
+    SUM = 1,
+    REPLACE,
+    MEAN,
+    MAX,
+    MIN,
+    PRODUCT,
+    MIN_INDEX,
+    MAX_INDEX,
+  };
 
   class Statistics
   {
-  public:
+    public:
 
-    static const int N_STAT_TYPES = 2; // MEAN and POWER
+      //
+      // Indexes in the statistics array.
+      // Don't change the order of these constants,
+      // the code relies on it.
+      //
+      static const uint8 SUBBAND_MEAN  = 0x00;
+      static const uint8 SUBBAND_POWER = 0x01;
+      static const uint8 BEAMLET_MEAN  = 0x02;
+      static const uint8 BEAMLET_POWER = 0x03;
+      static const int   N_STAT_TYPES = BEAMLET_POWER + 1;
 
-    /**
-     * Constructors for a Statistics object.
-     * Currently the tv_usec part is always set to 0 irrespective
-     * of the value passed in.
-     */
-    Statistics() { }
+      /**
+       * Constructors for a Statistics object.
+       * Currently the tv_usec part is always set to 0 irrespective
+       * of the value passed in.
+       */
+      Statistics() { }
 	  
-    /* Destructor for Statistics. */
-    virtual ~Statistics() {}
+      /* Destructor for Statistics. */
+      virtual ~Statistics() {}
 
-    /* get reference to the weights array */
-    blitz::Array<uint16, 3>& operator()();
+      /* get reference to the weights array */
+      blitz::Array<std::complex<double>, 3>& operator()();
 
-  public:
-    /*@{*/
-    /**
-     * marshalling methods
-     */
-    unsigned int getSize();
-    unsigned int pack  (void* buffer);
-    unsigned int unpack(void *buffer);
-    /*@}*/
+    public:
+      /*@{*/
+      /**
+       * marshalling methods
+       */
+      unsigned int getSize();
+      unsigned int pack  (void* buffer);
+      unsigned int unpack(void *buffer);
+      /*@}*/
 
-  private:
-    /**
-     * Statistics
-     * First dimension is the number of bits in
-     * the rcumask.
-     * 
-     */
-    blitz::Array<uint16, 3> m_statistics;
+    private:
+      /**
+       * Statistics
+       * First dimension is the number of bits in
+       * the rcumask.
+       * 
+       */
+      blitz::Array<std::complex<double>, 3> m_statistics;
   };
   
-  inline blitz::Array<uint16, 3>& Statistics::operator()() { return m_statistics; }
+  inline blitz::Array<std::complex<double>, 3>& Statistics::operator()() { return m_statistics; }
 
 };
      

@@ -72,7 +72,7 @@ namespace RSP_Protocol
        *
        * Dimensions of the arrays are:
        *  - m_board_status  [N_RSPBOARDS]
-       *  - m_rcu_status    [N_RCU]
+       *  - m_rcu_status    [N_BLPS * 2]
        */
       blitz::Array<EPA_Protocol::BoardStatus, 1> m_board_status;
       blitz::Array<EPA_Protocol::RCUStatus,   1> m_rcu_status;

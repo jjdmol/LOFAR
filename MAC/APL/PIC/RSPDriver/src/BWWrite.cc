@@ -81,25 +81,47 @@ void BWWrite::sendrequest()
   MEP_BF(bfcoefs.hdr, MEPHeader::WRITE, getCurrentBLP(), m_regid);
 
   // copy weights from the cache to the message
-  Array<int16, 1> weights((int16*)&bfcoefs.coef,
-			  shape(RSP_Protocol::MAX_N_BEAMLETS *
-				RSP_Protocol::N_POL * RSP_Protocol::N_POL),
-			  neverDeleteData);
-  
-  //
-  // TODO
-  // Make sure we're actually sending the correct weights.
-  //
-  weights = 0;
-  if (0 == (m_regid % 2))
-  {
-    weights(Range(0, RSP_Protocol::MAX_N_BEAMLETS - 1)) = real(Cache::getInstance().getBack().getBeamletWeights()()(0, global_blp, Range::all()));
-  }
-  else
-  {
-    weights(Range(0, RSP_Protocol::MAX_N_BEAMLETS - 1)) = imag(Cache::getInstance().getBack().getBeamletWeights()()(0, global_blp, Range::all()));
-  }
+  Array<complex<int16>, 2> weights((complex<int16>*)&bfcoefs.coef,
+				   shape(N_BEAMLETS, N_POL),
+				   neverDeleteData);
 
+  weights = Cache::getInstance().getBack().getBeamletWeights()()(0, global_blp, Range::all(), Range::all());
+
+  switch (m_regid)
+  {
+    case MEPHeader::BFXRE:
+    {
+      // weights for x-real part
+      // no added conversions needed
+    }
+    break;
+
+    case MEPHeader::BFXIM:
+    {
+      // weights for x-imaginary part
+      weights *= complex<int16>(0,1);
+    }
+    break;
+    
+    case MEPHeader::BFYRE:
+    {
+      // weights for y-real part
+      // no added conversions needed
+    }
+    break;
+    
+    case MEPHeader::BFYIM:
+    {
+      // weights for y-imaginary part
+      weights *= complex<int16>(0,1);
+    }
+    break;
+
+    default:
+      LOG_ERROR("Invalid m_refid.");
+      break;
+  }
+  
   getBoardPort().send(bfcoefs);
 }
 

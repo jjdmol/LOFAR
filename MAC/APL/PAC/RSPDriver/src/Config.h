@@ -30,9 +30,6 @@
 
 #define DEF_CONFIG "config.cfg"
 
-namespace RSP
-{
-
 enum ValType
 {
   TYPE_EMPTY,
@@ -110,6 +107,4 @@ public:
   const char* block(int index);
 };
  
-};
-
 #endif

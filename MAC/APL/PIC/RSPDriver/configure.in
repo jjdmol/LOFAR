@@ -1,14 +1,21 @@
 dnl
 dnl Process this file with autoconf to produce a configure script.
 dnl
-AC_INIT(src/RSPDriverTask.h)
-dnl AC_CONFIG_AUX_DIR(config)
-dnl AM_CONFIG_HEADER(config/config.h)
+AC_INIT(src/RSPDriver.h)
 AM_CONFIG_HEADER(config.h)
 AM_INIT_AUTOMAKE(RSPDriver, 1.0)
 
 dnl Initialize for LOFAR (may set compilers)
 lofar_INIT
+
+dnl Define the prefix to allow the use of this path in programs
+AC_DEFINE_UNQUOTED([RSP_PREFIX],["${prefix}"],[Path to RSP install prefix directory.])
+RSP_PREFIX="${prefix}"
+AC_SUBST([RSP_PREFIX])
+
+AC_DEFINE_UNQUOTED([RSP_SYSCONF],["${prefix}/etc"],[Path to RSP install prefix directory.])
+RSP_SYSCONF="${prefix}/etc"
+AC_SUBST([RSP_SYSCONF])
 
 dnl Checks for programs.
 AC_PROG_AWK

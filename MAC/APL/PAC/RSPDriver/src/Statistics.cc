@@ -35,14 +35,14 @@ using namespace blitz;
 
 unsigned int Statistics::getSize()
 {
-  return MSH_ARRAY_SIZE(m_statistics, uint16);
+  return MSH_ARRAY_SIZE(m_statistics, complex<double>);
 }
 
 unsigned int Statistics::pack  (void* buffer)
 {
   unsigned int offset = 0;
 
-  MSH_PACK_ARRAY(buffer, offset, m_statistics, uint16);
+  MSH_PACK_ARRAY(buffer, offset, m_statistics, complex<double>);
 
   return offset;
 }
@@ -51,7 +51,7 @@ unsigned int Statistics::unpack(void *buffer)
 {
   unsigned int offset = 0;
 
-  MSH_UNPACK_ARRAY(buffer, offset, m_statistics, uint16, 3);
+  MSH_UNPACK_ARRAY(buffer, offset, m_statistics, complex<double>, 3);
 
   return offset;
 }

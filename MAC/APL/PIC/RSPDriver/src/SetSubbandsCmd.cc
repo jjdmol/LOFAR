@@ -20,8 +20,8 @@
 //#
 //#  $Id$
 
+#include <APLConfig.h>
 #include "RSP_Protocol.ph"
-#include "RSPConfig.h"
 #include "SetSubbandsCmd.h"
 
 #include <blitz/array.h>
@@ -62,22 +62,25 @@ void SetSubbandsCmd::ack(CacheBuffer& /*cache*/)
 
 void SetSubbandsCmd::apply(CacheBuffer& cache)
 {
-  uint16 nr_subbands = m_event->subbands.nrsubbands()(0);
-  for (int cache_rcu = 0; cache_rcu < GET_CONFIG("N_RCU", i); cache_rcu++)
+  for (int cache_blp = 0; cache_blp < GET_CONFIG("N_BLPS", i); cache_blp++)
   {
-    if (m_event->rcumask[cache_rcu])
+    if (m_event->blpmask[cache_blp])
     {
-      if (cache_rcu < GET_CONFIG("N_RCU", i))
+      if (cache_blp < GET_CONFIG("N_BLPS", i))
       {
-	cache.getSubbandSelection()()(cache_rcu, Range(0, nr_subbands - 1))
-	  = m_event->subbands()(0, Range(0, nr_subbands - 1));
-
-	cache.getSubbandSelection().nrsubbands()(cache_rcu) = nr_subbands;
+//	cache.getSubbandSelection()()(cache_blp, Range(0, N_BEAMLETS * 2 - 1))
+//	  = m_event->subbands()(0, Range(0, N_BEAMLETS * 2 - 1));
+	cache.getSubbandSelection()()(cache_blp, Range(0, m_event->subbands().extent(secondDim) - 1))
+	  = m_event->subbands()(0, Range::all());
+	
+	// set remaining subbands to 0
+	cache.getSubbandSelection()()(cache_blp, Range(0, N_BEAMLETS * 2 - m_event->subbands().extent(secondDim) - 1))
+	  = 0;
       }
       else
       {
-	LOG_WARN(formatString("invalid RCU index %d, there are only %d RCU's",
-			      cache_rcu, GET_CONFIG("N_RCU", i)));
+	LOG_WARN(formatString("invalid BLP index %d, there are only %d BLP's",
+			      cache_blp, GET_CONFIG("N_BLPS", i)));
       }
     }
   }
@@ -100,9 +103,7 @@ void SetSubbandsCmd::setTimestamp(const Timestamp& timestamp)
 
 bool SetSubbandsCmd::validate() const
 {
-  return ((m_event->rcumask.count() <= (unsigned int)GET_CONFIG("N_RCU", i))
+  return ((m_event->blpmask.count() <= (unsigned int)GET_CONFIG("N_BLPS", i) * 2)
 	  && (2 == m_event->subbands().dimensions())
-	  && (1 == m_event->subbands.nrsubbands().dimensions())
-	  && (1 == m_event->subbands().extent(firstDim))
-	  && (1 == m_event->subbands.nrsubbands().extent(firstDim)));
+	  && (1 == m_event->subbands().extent(firstDim)));
 }

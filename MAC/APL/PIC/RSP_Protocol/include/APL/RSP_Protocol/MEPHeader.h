@@ -149,6 +149,7 @@ namespace EPA_Protocol
       static const uint16 BFCOEFS_SIZE       = 1024;
 
       static const uint16 STSTATS_SIZE       = 1024;
+      static const uint16 STSUBSTATS_SIZE    = 1024;
 
       static const uint16 RCUSETTINGS_SIZE   = 2;
       /*@}*/
@@ -237,6 +238,8 @@ namespace EPA_Protocol
   (hdr).set(oper,         dstid, CTX(BF),     (regid),            CTX(BFCOEFS_SIZE))
 #define MEP_ST(hdr, oper, dstid, regid) \
   (hdr).set(oper,         dstid, CTX(ST),     (regid),            CTX(STSTATS_SIZE))
+#define MEP_STSUB(hdr, oper, dstid, regid) \
+  (hdr).set(oper,         dstid, CTX(STSUB),  (regid),            CTX(STSUBSTATS_SIZE))
 #define MEP_RCUSETTINGS(hdr, oper, dstid) \
   (hdr).set(oper,         dstid, CTX(RCU),    CTX(RCUSETTINGS),   CTX(RCUSETTINGS_SIZE))
 

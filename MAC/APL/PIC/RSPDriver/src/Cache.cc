@@ -20,8 +20,8 @@
 //#
 //#  $Id$
 
+#include <APLConfig.h>
 #include "Cache.h"
-#include "RSPConfig.h"
 
 #undef PACKAGE
 #undef VERSION
@@ -51,28 +51,31 @@ CacheBuffer::CacheBuffer()
   m_timestamp.set(tv);
 
   m_beamletweights().resize(BeamletWeights::SINGLE_TIMESTEP,
-			    GET_CONFIG("N_RCU", i),
-			    MAX_N_BEAMLETS);
+			    GET_CONFIG("N_BLPS", i),
+			    N_BEAMLETS,
+			    EPA_Protocol::N_POL);
   m_beamletweights()(Range::all(), Range::all(), Range::all()) = complex<int16>(0,0);
 
-  m_subbandselection().resize(GET_CONFIG("N_RCU", i), MAX_N_BEAMLETS);
+  m_subbandselection().resize(GET_CONFIG("N_BLPS", i), N_BEAMLETS * EPA_Protocol::N_POL);
   m_subbandselection() = 0;
-  m_subbandselection.nrsubbands().resize(GET_CONFIG("N_RCU", i));
-  m_subbandselection.nrsubbands() = MAX_N_BEAMLETS; // all subbands
     
-  m_rcusettings().resize(GET_CONFIG("N_RCU", i));
+  m_rcusettings().resize(GET_CONFIG("N_BLPS", i) * EPA_Protocol::N_POL);
   m_rcusettings() = RCUSettings::RCURegisterType();
 
-  m_wgsettings().resize(GET_CONFIG("N_RCU", i));
+  m_wgsettings().resize(GET_CONFIG("N_BLPS", i));
   m_wgsettings() = WGSettings::WGRegisterType();
 
-  m_statistics().resize(Statistics::N_STAT_TYPES,
-			GET_CONFIG("N_RCU", i),
-			MAX_N_BEAMLETS);
-  m_statistics() = 0;
+  m_subbandstats().resize(Statistics::N_STAT_TYPES / 2,
+			  GET_CONFIG("N_BLPS", i) * EPA_Protocol::N_POL,
+			  N_SUBBANDS);
+  m_subbandstats() = 0;
+  m_beamletstats().resize(Statistics::N_STAT_TYPES / 2,
+			  GET_CONFIG("N_BLPS", i) * EPA_Protocol::N_POL,
+			  N_BEAMLETS);
+  m_beamletstats() = 0;
 
   m_systemstatus.board().resize(GET_CONFIG("N_RSPBOARDS", i));
-  m_systemstatus.rcu().resize(GET_CONFIG("N_RCU", i));
+  m_systemstatus.rcu().resize(GET_CONFIG("N_BLPS", i) * EPA_Protocol::N_POL);
 
   BoardStatus boardinit;
   RCUStatus   rcuinit;
@@ -95,10 +98,10 @@ CacheBuffer::~CacheBuffer()
 {
   m_beamletweights().free();
   m_subbandselection().free();
-  m_subbandselection.nrsubbands().free();
   m_rcusettings().free();
   m_wgsettings().free();
-  m_statistics().free();
+  m_subbandstats().free();
+  m_beamletstats().free();
   m_systemstatus.board().free();
   m_systemstatus.rcu().free();
   m_versions.rsp().free();
@@ -136,9 +139,14 @@ SystemStatus&     CacheBuffer::getSystemStatus()
   return m_systemstatus;
 }
 
-Statistics&       CacheBuffer::getStatistics()
+Statistics&       CacheBuffer::getSubbandStats()
 {
-  return m_statistics;
+  return m_subbandstats;
+}
+
+Statistics&       CacheBuffer::getBeamletStats()
+{
+  return m_beamletstats;
 }
 
 Versions&         CacheBuffer::getVersions()

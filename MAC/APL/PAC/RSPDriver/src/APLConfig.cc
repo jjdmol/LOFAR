@@ -1,4 +1,4 @@
-//#  RSPConfig.h: configuration constants read from config file
+//#  APLConfig.h: configuration constants read from config file
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,7 +20,7 @@
 //#
 //#  $Id$
 
-#include "RSPConfig.h"
+#include "APLConfig.h"
 #include <stdlib.h>
 
 #undef PACKAGE
@@ -29,29 +29,33 @@
 #include <Common/LofarLogger.h>
 using namespace LOFAR;
 
-using namespace RSP;
+APLConfig* APLConfig::m_instance = 0;
 
-RSPConfig* RSPConfig::m_instance = 0;
-
-RSPConfig::RSPConfig()
+APLConfig::APLConfig()
 {
 }
 
-RSPConfig::~RSPConfig()
+APLConfig::~APLConfig()
 {
 }
 
-RSPConfig& RSPConfig::getInstance()
+APLConfig& APLConfig::getInstance()
 {
   if (!m_instance)
   {
-    m_instance = new RSPConfig;
+    m_instance = new APLConfig;
   }
 
   return *m_instance;
 }
 
-void RSPConfig::load(const char* filename)
+void APLConfig::load(const char* blockname, const char* filename)
 {
+  m_blockname = std::string(blockname);
   m_config.init(filename, '=', 1);
+}
+
+const char* APLConfig::getBlockname()
+{
+  return m_blockname.c_str();
 }

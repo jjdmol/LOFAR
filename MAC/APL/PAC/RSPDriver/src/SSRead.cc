@@ -86,14 +86,11 @@ GCFEvent::TResult SSRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
 
   if (0 == (getCurrentBLP() % 2))
   {
-    uint8 global_blp = (getBoardId() * N_BLP) + (getCurrentBLP() / 2);
-  
     // unpack nrsubbands message
     EPANrsubbandsEvent nrsubbands(event);
 
     // copy into the cache
-    Cache::getInstance().getBack().getSubbandSelection().nrsubbands()(global_blp)
-      = nrsubbands.nof_subbands;
+    LOG_DEBUG(formatString("nr_subbands=%d", nrsubbands.nof_subbands));
   }
   else
   {
@@ -109,11 +106,11 @@ GCFEvent::TResult SSRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
   
     // create array point to data in the response event
     Array<uint16, 1> subbands((uint16*)&ss.ch,
-			      shape(RSP_Protocol::MAX_N_BEAMLETS),
+			      shape(N_BEAMLETS * N_POL),
 			      neverDeleteData);
   
     // copy into the cache
-    Cache::getInstance().getBack().getSubbandSelection()()(global_blp, Range(0, MAX_N_BEAMLETS - 1))
+    Cache::getInstance().getBack().getSubbandSelection()()(global_blp, Range::all())
       = subbands;
   }
 

@@ -20,9 +20,9 @@
 //#
 //#  $Id$
 
+#include <APLConfig.h>
 #include "Scheduler.h"
 #include "SyncAction.h"
-#include "RSPConfig.h"
 
 #undef PACKAGE
 #undef VERSION
@@ -96,7 +96,7 @@ GCFEvent::TResult Scheduler::run(GCFEvent& event, GCFPortInterface& /*port*/)
   }
   else
   {
-    LOG_ERROR("received invalid event != F_TIMER");
+    LOG_ERROR("\nreceived invalid event != F_TIMER\n");
   }
 
   return GCFEvent::HANDLED;
@@ -349,7 +349,11 @@ void Scheduler::processCommands()
   {
     Ptr<Command> command = m_now_queue.top();
 
-    /* let the command apply its changes to the cache */
+    /* *
+     * Let the commands apply their changes to 
+     * the front and back caches.
+     */
+    command->apply(Cache::getInstance().getFront());
     command->apply(Cache::getInstance().getBack());
 
     /* move from the now queue to the done queue */
@@ -390,7 +394,12 @@ void Scheduler::initiateSync(GCFEvent& event)
 
 void Scheduler::completeSync()
 {
+  // swap the buffers
+  // new data from the boards which was in the back buffers
+  // will end up in the front buffers.
   Cache::getInstance().swapBuffers();
+
+  // complete any outstanding commands
   completeCommands();
 }
 

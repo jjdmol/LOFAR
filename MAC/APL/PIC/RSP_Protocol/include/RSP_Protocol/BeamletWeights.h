@@ -49,7 +49,7 @@ namespace RSP_Protocol
       /* Destructor for BeamletWeights. */
       virtual ~BeamletWeights() {}
 
-      static const int NDIM = 3;
+      static const int NDIM = 4;
 
       /* get reference to the weights array */
       blitz::Array<std::complex<int16>, NDIM>& operator()();
@@ -68,8 +68,9 @@ namespace RSP_Protocol
       /**
        * The beamlet weights.
        * Dimension 1: nr_timesteps (>1)
-       * Dimension 2: count(rcumask)
-       * Dimension 3: MAX_N_BEAMLETS
+       * Dimension 2: count(blpmask)
+       * Dimension 3: N_BEAMLETS
+       * Dimension 4: 2 (polarizations)
        */
       blitz::Array<std::complex<int16>, NDIM> m_weights;
   };

@@ -21,11 +21,12 @@
 //#
 //#  $Id$
 
+#include <APLConfig.h>
+
 #include "RSP_Protocol.ph"
 #include "EPA_Protocol.ph"
 
 #include "RSPDriver.h"
-#include "RSPConfig.h"
 #include "Command.h"
 #include "SetWeightsCmd.h"
 #include "GetWeightsCmd.h"
@@ -63,6 +64,10 @@
 #undef VERSION
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
+
+#ifndef RSP_SYSCONF
+#define RSP_SYSCONF "."
+#endif
 
 #define ETHERTYPE_EPA 0x10FA
 
@@ -183,7 +188,14 @@ void RSPDriver::addAllSyncActions()
     
     if (1 == GET_CONFIG("READ_ST", i))
     {
-      StatsRead* statsread = new StatsRead(m_board[boardid], boardid);
+      StatsRead* statsread = 0;
+      statsread = new StatsRead(m_board[boardid], boardid, Statistics::SUBBAND_MEAN);
+      m_scheduler.addSyncAction(statsread);
+      statsread = new StatsRead(m_board[boardid], boardid, Statistics::SUBBAND_POWER);
+      m_scheduler.addSyncAction(statsread);
+      statsread = new StatsRead(m_board[boardid], boardid, Statistics::BEAMLET_MEAN);
+      m_scheduler.addSyncAction(statsread);
+      statsread = new StatsRead(m_board[boardid], boardid, Statistics::BEAMLET_POWER);
       m_scheduler.addSyncAction(statsread);
     }
 
@@ -591,8 +603,10 @@ void RSPDriver::rsp_setweights(GCFEvent& event, GCFPortInterface& port)
 
   /* range check on parameters */
   if ((sw_event->weights().dimensions() != BeamletWeights::NDIM)
-      || (sw_event->weights().extent(thirdDim) != MAX_N_BEAMLETS)
-      || (sw_event->weights().extent(secondDim) > GET_CONFIG("N_RCU", i)))
+      || (sw_event->weights().extent(firstDim) < 1)
+      || (sw_event->weights().extent(secondDim) > GET_CONFIG("N_BLPS", i))
+      || (sw_event->weights().extent(thirdDim) != N_BEAMLETS)
+      || (sw_event->weights().extent(fourthDim) != EPA_Protocol::N_POL))
   {
     delete sw_event;
     
@@ -955,7 +969,7 @@ int main(int argc, char** argv)
 
   GCFTask::init(argc, argv);
 
-  RSPConfig::getInstance().load("./rsp.cfg");
+  APLConfig::getInstance().load("RSPDRIVER", RSP_SYSCONF "/rspdriver.conf");
 
   RSPDriver rsp("RSP");
 

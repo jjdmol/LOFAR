@@ -37,16 +37,13 @@ using namespace blitz;
 
 unsigned int SubbandSelection::getSize()
 {
-  return 
-    MSH_ARRAY_SIZE(m_nrsubbands, uint16)
-    + MSH_ARRAY_SIZE(m_subbands, uint16);
+  return MSH_ARRAY_SIZE(m_subbands, uint16);
 }
 
 unsigned int SubbandSelection::pack(void* buffer)
 {
   unsigned int offset = 0;
 
-  MSH_PACK_ARRAY(buffer, offset, m_nrsubbands, uint16);
   MSH_PACK_ARRAY(buffer, offset, m_subbands,   uint16);
   
   return offset;
@@ -56,7 +53,6 @@ unsigned int SubbandSelection::unpack(void *buffer)
 {
   unsigned int offset = 0;
 
-  MSH_UNPACK_ARRAY(buffer, offset, m_nrsubbands, uint16, 1);
   MSH_UNPACK_ARRAY(buffer, offset, m_subbands,   uint16, 2);
 
   return offset;
@@ -66,11 +62,5 @@ Array<uint16,2>& SubbandSelection::operator()()
 {
   return m_subbands;
 }
-
-Array<uint16,1>& SubbandSelection::nrsubbands()
-{
-  return m_nrsubbands;
-}
-
 
 

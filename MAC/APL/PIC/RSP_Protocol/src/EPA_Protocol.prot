@@ -31,10 +31,13 @@ namespace EPA_Protocol
    */
   static const int N_AP          = 4;    // number of AP's per board
   static const int N_BLP         = N_AP; // number of BLP's per board, equal to N_AP
-  static const int N_COEF        = MEPHeader::BFCOEFS_SIZE / sizeof(uint16);      /* should be 512 */
-  static const int N_USERSAMPLES = MEPHeader::WGUSER_SIZE / sizeof(uint16);       /* should be 512 */
-  static const int N_STATS       = MEPHeader::STSTATS_SIZE / sizeof(uint16);      /* should be 512 */
-  static const int N_SUBBANDS    = MEPHeader::SUBBANDSELECT_SIZE / sizeof(uint16);/* should be 512 */
+  static const int N_COEF        = MEPHeader::BFCOEFS_SIZE / sizeof(uint16);           
+  static const int N_USERSAMPLES = MEPHeader::WGUSER_SIZE / sizeof(uint16);            
+  static const int N_STSTATS     = MEPHeader::STSTATS_SIZE / sizeof(uint16);           
+  static const int N_STSUBSTATS  = MEPHeader::STSUBSTATS_SIZE / sizeof(uint16);           
+  static const int N_BEAMLETS    = MEPHeader::SUBBANDSELECT_SIZE / sizeof(uint16) / 2;
+  static const int N_SUBBANDS    = N_BEAMLETS; // subband index should be <= this
+  static const int N_POL         = 2; /* don't change this, it should always be 2 */
   /*@}*/
 
   typedef struct RSPStatus
@@ -367,7 +370,7 @@ event = {
   };
   param = {
     name = "ch";
-    type = "uint16[EPA_Protocol::N_SUBBANDS]";
+    type = "uint16[N_BEAMLETS * N_POL]";
   };
 };
 
@@ -419,7 +422,33 @@ event = {
   };
   param = {
     name = "stat";
-    type = "int16[EPA_Protocol::N_STATS]";
+    type = "int16[EPA_Protocol::N_STSTATS]";
+  };
+};
+
+event = {
+  noheader;
+  signal = STSUBSTATS_READ;
+  dir = IN;
+  param = {
+    name = "hdr";
+    type = "EPA_Protocol::MEPHeader";
+    userdefined;
+  };
+};
+
+event = {
+  noheader;
+  signal = STSUBSTATS;
+  dir = INOUT;
+  param = {
+    name = "hdr";
+    type = "EPA_Protocol::MEPHeader";
+    userdefined;
+  };
+  param = {
+    name = "stat";
+    type = "int16[EPA_Protocol::N_STSUBSTATS]";
   };
 };
 

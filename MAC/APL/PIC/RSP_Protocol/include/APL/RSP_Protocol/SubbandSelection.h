@@ -40,10 +40,9 @@ namespace RSP_Protocol
    *  - nrsubbands[1]
    *
    * When used in the Cache the dimensions should be:
-   *  - subbands[N_RCU][MAX_N_BEAMLETS]
-   *  - nrsubbands[N_RCU]
+   *  - subbands[N_BLPS][N_BEAMLETS * 2]
    *
-   * The values in the subbands array should be 0 <= value < MAX_N_SUBBANDS
+   * The values in the subbands array should be 0 <= value < N_SUBBANDS * EPA_Protocol::N_POL
    */
   class SubbandSelection
   {
@@ -64,13 +63,6 @@ namespace RSP_Protocol
        */
       blitz::Array<uint16, 2>& operator()();
 
-      /**
-       * Return the nrsubbands array.
-       * The nrsubbands array indicates for each rcu how many
-       * subbands have been selected.
-       */
-      blitz::Array<uint16, 1>& nrsubbands();
-
     public:
       /*@{*/
       /**
@@ -83,14 +75,9 @@ namespace RSP_Protocol
 
     private:
       /**
-       * Number of selected subbands for each RCU.
-       */
-      blitz::Array<uint16, 1> m_nrsubbands;
-
-      /**
        * Subband selection array.
-       * dim 1 = n_rcus (== 1 on SETSUBBANDS, == count(rcumask) on GETSUBBANDS_ACK)
-       * dim 2 = n_beamlets.
+       * dim 1 = n_blps (== 1 on SETSUBBANDS, == count(blpmask) on GETSUBBANDS_ACK)
+       * dim 2 = n_beamlets * 2.
        */
       blitz::Array<uint16, 2> m_subbands;
   };

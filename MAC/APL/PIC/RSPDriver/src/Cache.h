@@ -33,39 +33,41 @@ namespace RSP
 
   class CacheBuffer
   {
-  public:
-    /**
-     * Constructors for a Cache object.
-     */
-    CacheBuffer();
+    public:
+      /**
+       * Constructors for a Cache object.
+       */
+      CacheBuffer();
 	  
-    /* Destructor for Cache. */
-    virtual ~CacheBuffer();
+      /* Destructor for Cache. */
+      virtual ~CacheBuffer();
 
-    /*@{*/
-    /**
-     * Data access methods.
-     */
-    RSP_Protocol::Timestamp         getTimestamp() const;
-    RSP_Protocol::BeamletWeights&   getBeamletWeights();
-    RSP_Protocol::SubbandSelection& getSubbandSelection();
-    RSP_Protocol::RCUSettings&      getRCUSettings();
-    RSP_Protocol::WGSettings&       getWGSettings();
-    RSP_Protocol::SystemStatus&     getSystemStatus();
-    RSP_Protocol::Statistics&       getStatistics();
-    RSP_Protocol::Versions&         getVersions();
-    /*@}*/
+      /*@{*/
+      /**
+       * Data access methods.
+       */
+      RSP_Protocol::Timestamp         getTimestamp() const;
+      RSP_Protocol::BeamletWeights&   getBeamletWeights();
+      RSP_Protocol::SubbandSelection& getSubbandSelection();
+      RSP_Protocol::RCUSettings&      getRCUSettings();
+      RSP_Protocol::WGSettings&       getWGSettings();
+      RSP_Protocol::SystemStatus&     getSystemStatus();
+      RSP_Protocol::Statistics&       getSubbandStats();
+      RSP_Protocol::Statistics&       getBeamletStats();
+      RSP_Protocol::Versions&         getVersions();
+      /*@}*/
 
-  private:
-    RSP_Protocol::Timestamp        m_timestamp;
+    private:
+      RSP_Protocol::Timestamp        m_timestamp;
 
-    RSP_Protocol::BeamletWeights   m_beamletweights;
-    RSP_Protocol::SubbandSelection m_subbandselection;
-    RSP_Protocol::RCUSettings      m_rcusettings;
-    RSP_Protocol::WGSettings       m_wgsettings;
-    RSP_Protocol::Statistics       m_statistics;
-    RSP_Protocol::SystemStatus     m_systemstatus;
-    RSP_Protocol::Versions         m_versions;
+      RSP_Protocol::BeamletWeights   m_beamletweights;
+      RSP_Protocol::SubbandSelection m_subbandselection;
+      RSP_Protocol::RCUSettings      m_rcusettings;
+      RSP_Protocol::WGSettings       m_wgsettings;
+      RSP_Protocol::Statistics       m_subbandstats;
+      RSP_Protocol::Statistics       m_beamletstats;
+      RSP_Protocol::SystemStatus     m_systemstatus;
+      RSP_Protocol::Versions         m_versions;
   };
 
   /**
@@ -73,45 +75,45 @@ namespace RSP
    */
   class Cache
   {
-  public:
-    /*@{*/
-    /**
-     * Constructor/destructor
-     */
-    static Cache& getInstance();
-    virtual ~Cache();
-    /*@}*/
+    public:
+      /*@{*/
+      /**
+       * Constructor/destructor
+       */
+      static Cache& getInstance();
+      virtual ~Cache();
+      /*@}*/
 
-    /**
-     * Swap front and back buffers
-     */
-    void swapBuffers();
+      /**
+       * Swap the front and back buffers.
+       */
+      void swapBuffers();
 
-    /**
-     * Get front/back buffers.
-     */
-    CacheBuffer& getFront();
-    CacheBuffer& getBack();
+      /**
+       * Get front/back buffers.
+       */
+      CacheBuffer& getFront();
+      CacheBuffer& getBack();
 
-  private:
+    private:
 
-    /**
-     * Direct construction not allowed.
-     */
-    Cache();
+      /**
+       * Direct construction not allowed.
+       */
+      Cache();
 
-    /*@{*/
-    /**
-     * Front and back buffers.
-     */
-    CacheBuffer* m_front;
-    CacheBuffer* m_back;
-    /*@}*/
+      /*@{*/
+      /**
+       * Front and back buffers.
+       */
+      CacheBuffer* m_front;
+      CacheBuffer* m_back;
+      /*@}*/
 
-    /**
-     * Singleton class.
-     */
-    static Cache* m_instance;
+      /**
+       * Singleton class.
+       */
+      static Cache* m_instance;
   };
 };
      
