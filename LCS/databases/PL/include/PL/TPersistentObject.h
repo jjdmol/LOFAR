@@ -26,6 +26,7 @@
 //# Includes
 #include <PL/PersistentObject.h>
 #include <loki/static_check.h>
+#include <climits>
 
 namespace LOFAR 
 {
@@ -91,8 +92,8 @@ namespace LOFAR
       // PersistentObject. We will have at least one existing
       // TPersistentObject<T> anyway, because we can only add instances of
       // TPersistentObject<T> to our Collection.
-      static Collection< TPersistentObject<T> > 
-      retrieve(const Query& query, int maxObjects);
+      Collection< TPersistentObject<T> > 
+      retrieve(const Query& query, int maxObjects=INT_MAX);
 
     private:
       
