@@ -13,6 +13,7 @@ SC_Simple.cc					\
 MMap.h						\
 Prediffer.h					\
 Solver.h					\
+ParmData.h					\
 MNS/MeqDomain.h \
 MNS/MeqExpr.h \
 MNS/MeqHist.h \
@@ -83,6 +84,7 @@ SC_Simple.cc						\
 MMap.cc							\
 Prediffer.cc						\
 Solver.cc						\
+ParmData.cc						\
 MNS/MeqDomain.cc \
 MNS/MeqExpr.cc \
 MNS/MeqHist.cc \

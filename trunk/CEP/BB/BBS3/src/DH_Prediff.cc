@@ -44,8 +44,7 @@ DH_Prediff::DH_Prediff (const string& name)
     itsNspids     (0),
     itsNTimes     (0),
     itsNFreq      (0),
-    itsDataPtr    (0),
-    itsParmDataPtr(0)
+    itsDataPtr    (0)
 {
   LOG_TRACE_FLOW("DH_Prediff constructor");
 }
@@ -56,8 +55,7 @@ DH_Prediff::DH_Prediff(const DH_Prediff& that)
     itsNspids     (0),
     itsNTimes     (0),
     itsNFreq      (0),
-    itsDataPtr    (0),
-    itsParmDataPtr(0)
+    itsDataPtr    (0)
 {
   LOG_TRACE_FLOW("DH_Prediff copy constructor");
   setExtraBlob("Extra", 1);
@@ -82,8 +80,6 @@ void DH_Prediff::preprocess()
   addField ("NFreq", BlobField<int>(1));
   addField ("Nspids", BlobField<int>(1));
   addField ("DataBuf", BlobField<dcomplex>(1, 0));
-  addField ("ParmData", BlobField<char>(1, 0));
-
 }
 
 void DH_Prediff::fillDataPointers()
@@ -94,7 +90,6 @@ void DH_Prediff::fillDataPointers()
   itsNTimes = getData<int> ("NTimes");
   itsNFreq = getData<int> ("NFreq");
   itsDataPtr = getData<dcomplex> ("DataBuf");
-  itsParmDataPtr = getData<ParmData> ("ParmData");
 }
 
 
@@ -106,33 +101,44 @@ void DH_Prediff::postprocess()
   itsNTimes = 0;
   itsNFreq = 0;
   itsDataPtr = 0;
-  itsParmDataPtr = 0;
 }
 
-void DH_Prediff::getParmData(vector<ParmData>& pdata)
+bool DH_Prediff::getParmData(vector<ParmData>& pdata)
 { 
-  vector<uint32> shape = getDataField("ParmData").getShape();
-  ASSERTSTR(shape.size() == 1, "ParmData datafield has an invalid shape.");
-  uint size = shape[0];
-  pdata.clear();
-  for (uint i=0; i<size; i++)
+  bool found;
+  int version;
+  BlobIStream& bis = getExtraBlob(found, version);
+  if (!found) {
+    return false;
+  }
+  else
   {
-    pdata.push_back(*dynamic_cast<ParmData*>((itsParmDataPtr+(i*sizeof(ParmData)))));
+    // Get vector size.
+    int nr;
+    bis >> nr;
+    pdata.resize(nr);
+    for (int i=0; i < nr; i++)
+    {
+      bis >> pdata[i];
+    }
+    bis.getEnd();
+    return true;
   }
 }
 
 void DH_Prediff::setParmData(const vector<ParmData>& pdata)
 {
-  uint size = pdata.size()*sizeof(ParmData);
-  vector<uint> sizeVec(1);
-  sizeVec[1] = size;
-  getDataField("ParmData").setShape(sizeVec);
-  createDataBlock();    // Or call fillDataPointers(); ???
-  for (unsigned int i=0; i<pdata.size(); i++)
+  BlobOStream& bos = createExtraBlob();
+
+  // Put vector length into extra blob
+  vector<ParmData>::const_iterator iter;
+  int nParms = pdata.size();
+  bos << nParms;
+  for (iter = pdata.begin(); iter != pdata.end(); iter++)
   {
-    itsParmDataPtr[i] = pdata[i];
+    bos << *iter;
   }
-  // Are more actions needed?
+  bos.putEnd();
 }
 
 void DH_Prediff::setData(dcomplex* dataPtr, int size)

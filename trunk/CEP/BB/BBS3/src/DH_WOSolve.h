@@ -89,10 +89,10 @@ public:
   void setUseSVD(bool useSVD);
 
   void setVarData(const KeyValueMap& msArgs, 
-		  int timeInterval,
+		  float timeInterval,
 		  vector<string>& pNames);
   bool getVarData(KeyValueMap& msArgs,
-		  int& timeInterval,
+		  float& timeInterval,
 		  vector<string>& pNames);
 
   void dump();

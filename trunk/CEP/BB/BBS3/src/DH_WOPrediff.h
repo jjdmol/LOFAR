@@ -91,8 +91,8 @@ public:
   int getLastChannel() const;
   void setLastChannel(int nr);
 
-  int getTimeInterval() const;
-  void setTimeInterval(int time);
+  float getTimeInterval() const;
+  void setTimeInterval(float time);
 
   int getDDID() const;
   void setDDID(int ddid);
@@ -133,7 +133,7 @@ private:
   unsigned int* itsNextInterval;            // Do nextInterval?
   int*          itsFirstChan;               // First frequency channel
   int*          itsLastChan;                // Last frequency channel
-  int*          itsTimeInterval;            // Time interval size (s)
+  float*        itsTimeInterval;            // Time interval size (s)
   int*          itsDDID;
   char*         itsModelType;
   unsigned int* itsCalcUVW;
@@ -182,10 +182,10 @@ inline int DH_WOPrediff::getLastChannel() const
 inline void DH_WOPrediff::setLastChannel(int nr)
 { *itsLastChan = nr; }
 
-inline int DH_WOPrediff::getTimeInterval() const
+inline float DH_WOPrediff::getTimeInterval() const
 { return *itsTimeInterval; }
 
-inline void DH_WOPrediff::setTimeInterval(int time)
+inline void DH_WOPrediff::setTimeInterval(float time)
 { *itsTimeInterval = time; }
 
 inline int DH_WOPrediff::getDDID() const
@@ -223,7 +223,7 @@ namespace PL {
       int itsNextInterval;
       int itsFirstChan;
       int itsLastChan;
-      int itsTimeInterval;
+      float itsTimeInterval;
     };   
                                                       
 } // end namespace PL   

@@ -143,7 +143,7 @@ void DH_WOSolve::setKSType(const string& ksType)
 }
 
 void DH_WOSolve::setVarData(const KeyValueMap& msArgs,
-			    int timeInterval,
+			    float timeInterval,
 			    vector<string>& pNames)
 {
   BlobOStream& bos = createExtraBlob();
@@ -166,7 +166,7 @@ void DH_WOSolve::setVarData(const KeyValueMap& msArgs,
 }
 
 bool DH_WOSolve::getVarData(KeyValueMap& msArgs,
-			    int& timeInterval,
+			    float& timeInterval,
 			    vector<string>& pNames)
 {
   bool found;
@@ -207,9 +207,10 @@ void DH_WOSolve::dump()
   cout << "KS Type = " << getKSType() << endl;
   cout << "Initialize? = " << getInitialize() << endl;
   cout << "NextInterval? = " << getNextInterval() << endl;
+  cout << "UseSVD? = " << getUseSVD() << endl;
 
   KeyValueMap sArguments;
-  int timeInterval;
+  float timeInterval;
   vector<string> pNames;
   if (getVarData(sArguments, timeInterval, pNames))
   { 
