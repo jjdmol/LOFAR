@@ -27,11 +27,12 @@
 #include <Common/lofar_iostream.h>		// for cout
 #include <Common/Stopwatch.h>			// for Stopwatch class
 
-#include <libpq-fe.h>				// for direct postgres xs
+#include <pgsql/libpq-fe.h>			// for direct postgres xs
 
 #include <sstream>				// for ostrstream
 #include <sys/time.h>				// for ctime (), time ()
 #include <unistd.h>				// for gethostname ()
+#include <stdlib.h>				// for strtoul
 
 using namespace std;
 
@@ -108,6 +109,12 @@ bool ConnectDatabase (char * hostname) {
   LogEntry ("  (Re-created message table.)");
   LogEntry ("  (Dropped log table.)");
   LogEntry ("  (Re-created log table.)");
+
+#if defined (__GNUC__) && (__GNUC__) < 3
+  LogEntry ("WARNING: The client library (libpq) does not support writing");
+  LogEntry ("  and reading binary strings. This function will be disabled");
+  LogEntry ("  for this session.");
+#endif
 
   return true;
 }
@@ -187,24 +194,28 @@ bool PO_DH_Database::Store (unsigned long wrseqno) {
   int i;
   ostringstream ostr;
 
-  cout << "{S}";
+  cout << "{S}" << endl;
 
-  char hexrep [4];
+  char hexrep [40];
   for (i = 0; i < getByteStringLength (); i ++) {  
-    sprintf (hexrep, "%02X ", (int) (getByteString ()) [i]);
+    sprintf (hexrep, "%02X ", (unsigned char) (getByteString ()) [i]);
     ostr << hexrep;
   }
 
   // Create a postgres byte string
   ostringstream ByteString;
-  size_t len;
 
-  ByteString << "'" 
-	     << PQescapeBytea ((unsigned char *)
-		  getByteString (), getByteStringLength (), &len)
-	     << "'::bytea";
-  // TODO check len with MAX_BYTEA_SIZE
-  // TODO Maybe must free bugfer returned from fuction.
+#if defined (__GNUC__) && (__GNUC__) > 2
+    size_t len;
+    ByteString << "'" 
+  	       << PQescapeBytea ((unsigned char *)
+  		    getByteString (), getByteStringLength (), &len)
+  	       << "'::bytea";
+    // TODO check len with MAX_BYTEA_SIZE
+    // TODO Maybe must free buffer returned from fuction.
+#else
+    ByteString << "'byteaNotSupported'::bytea";
+#endif
 
   // Create inseertion command
   ostringstream q;
@@ -291,12 +302,23 @@ bool PO_DH_Database::Retrieve (unsigned long rdseqno) {
   setType             (PQgetvalue (res, 0, 6));
   setName             (PQgetvalue (res, 0, 7));
 
+#if defined (__GNUC__) && (__GNUC__) > 2
   unsigned char * ByteString;
   size_t size;
   ByteString = PQunescapeBytea 
     ((unsigned char*)PQgetvalue (res, 0, 9), & size);
   
   memcpy (getByteString (), ByteString, size);
+  // TODO: Must free ByteString here?
+#else
+  unsigned int k;
+  char token[40];
+  istringstream istr (PQgetvalue (res, 0, 8));
+  for (k = 0; k < (unsigned int) getByteStringLength (); k ++) {
+    istr >> token;
+    (getByteString ()) [k] = (char) strtoul (token, NULL, 16);
+  }
+#endif
 
   PQclear (res);
 
