@@ -1203,8 +1203,7 @@ void MeqCalibrater::solve(bool useSVD, vector<string>& resultParmNames,
 			  Quality& resultQuality)
 {
   cdebug(1) << "solve using column " << itsSolveColName << endl;
-  cout << "solve using column " << itsSolveColName << endl;
-
+  
   if (itsSolveRows.nelements() == 0) {
     throw AipsError("nextInterval needs to be done before solve");
   }
@@ -1514,7 +1513,7 @@ void MeqCalibrater::solve(bool useSVD, vector<string>& resultParmNames,
   double stddev;
   double mu;
   cdebug(1) << "Solution before: " << itsSolution << endl;
-  // cout << "Solution before: " << itsSolution << endl;
+  cout << "Solution before: " << itsSolution << endl;
   // It looks as if LSQ has a bug so that solveLoop and getCovariance
   // interact badly (maybe both doing an invert).
   // So make a copy to separate them.
@@ -1535,7 +1534,7 @@ void MeqCalibrater::solve(bool useSVD, vector<string>& resultParmNames,
   }
   if (Debug(1)) timer.show("solve");
   cdebug(1) << "Solution after:  " << itsSolution << endl;
-  // cout << "Solution after:  " << itsSolution << endl;
+  cout << "Solution after:  " << itsSolution << endl;
   
   resultParmValues.clear();
   for (int nr=0; nr < itsSolution.nx(); nr++)

@@ -62,6 +62,7 @@ private:
   /// Forbid assignment.
   WH_Evaluate& operator= (const WH_Evaluate&);
 
+  int itsCurrentRun;
 };
 
 

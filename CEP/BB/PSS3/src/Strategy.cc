@@ -25,6 +25,7 @@
 #include <PSS3/SI_Peeling.h>
 #include <PSS3/SI_Simple.h>
 #include <PSS3/SI_WaterCal.h>
+#include <PSS3/SI_Randomized.h>
 
 Strategy::Strategy(int strategyNo, CalibratorOld* cal, 
 		   int varArgSize, char* varArgs)
@@ -44,9 +45,9 @@ Strategy::Strategy(int strategyNo, CalibratorOld* cal,
     TRACER3("Creating WaterCal strategyImpl");
     itsImpl = new SI_WaterCal(cal, varArgSize, varArgs);
     break;
-  case 4:                                        // Classic
-    TRACER3("Creating classic strategyImpl");
-    // Code must be added
+  case 4:                                        // Randomized
+    TRACER3("Creating Randomized strategyImpl");
+    itsImpl = new SI_Randomized(cal, varArgSize, varArgs);
     break;
   default:
     itsImpl = 0;
