@@ -70,7 +70,7 @@ event = {
       signal = BEAMALLOC_ACK;
       dir = OUT;
       param = {
-	    name = "beam_index";
+	    name = "handle";
 	    type = "int";
       };
       param = {
@@ -83,7 +83,7 @@ event = {
       signal = BEAMFREE;
       dir = IN;
       param = {
-	    name = "beam_index";
+	    name = "handle";
 	    type = "int";
       };
 };
@@ -92,7 +92,7 @@ event = {
       signal = BEAMFREE_ACK;
       dir = OUT;
       param = {
-	    name = "beam_index";
+	    name = "handle";
 	    type = "int";
       };
       param = {
@@ -105,7 +105,7 @@ event = {
       signal = BEAMPOINTTO;
       dir = IN;
       param = {
-	    name = "beam_index";
+	    name = "handle";
 	    type = "int";
       };
       param = {
@@ -129,10 +129,17 @@ event = {
 
 event = {
       //
-      // enable or change settings of the waveform generator
-      // disables the ADC input
+      // Change settings of the waveform generator.
+      // Settings will be used immediately if 
+      // the WG has already been enabled.
       //
-      signal = WGENABLE;
+      // Default settings of the WG are
+      // (if no WGSETTINGS event has been sent).
+      // frequency = 1e6 (1MHz)
+      // amplitude = 128
+      // sample_period = 2
+      //
+      signal = WGSETTINGS;
       dir = IN;
       param = {
 	    // Frequency of the sine wave. Current design
@@ -151,6 +158,24 @@ event = {
 	    name = "sample_period";
 	    type = "unsigned char";
       };
+};
+
+event = {
+      signal = WGSETTINGS_ACK;
+      dir = OUT;
+      param = {
+	    name = "status"; // either ERR_RANGE or SUCCESS
+	    type = "int";
+      };
+};
+
+event = {
+      //
+      // Enable the waveform generator, by default it 
+      // is disabled.
+      //
+      signal = WGENABLE;
+      dir = IN;
 };
 
 event = {

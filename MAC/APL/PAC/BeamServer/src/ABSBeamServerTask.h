@@ -89,7 +89,8 @@ namespace ABS
 	 * Enable or change setting of the waveform generator.
 	 * Enabling the waveform generator disables the ADC input.
 	 */
-	void wgenable_action(ABSWgenableEvent* we);
+	void wgsettings_action(ABSWgsettingsEvent* we,
+			       GCFPortInterface& port);
 	void wgenable_action();
 	void sbselect();
 
@@ -142,6 +143,16 @@ namespace ABS
 	 * Current subband selection
 	 */
 	std::map<int, int> m_sbsel;
+
+	/**
+	 * Current WG settings.
+	 */
+	struct {
+	    double        frequency;
+	    unsigned char amplitude;
+	    unsigned char sample_period;
+	    bool          enabled;
+	} m_wgsetting;
 
     private:
 	// ports

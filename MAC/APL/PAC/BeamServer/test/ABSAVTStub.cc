@@ -100,8 +100,10 @@ GCFEvent::TResult AVTStub::initial(GCFEvent& e, GCFPortInterface& port)
       break;
 
       default:
+      {
 	  status = GCFEvent::NOT_HANDLED;
-	  break;
+      }
+      break;
   }
 
   return status;
@@ -136,11 +138,11 @@ GCFEvent::TResult AVTStub::test001(GCFEvent& e, GCFPortInterface& /*port*/)
       {
 	ABSBeamalloc_AckEvent* ack = static_cast<ABSBeamalloc_AckEvent*>(&e);
 	_test(SUCCESS == ack->status);
-	_test(0 <= ack->beam_index);
+	_test(0 <= ack->handle);
 
 	// beam allocated, now free it
 	ABSBeamfreeEvent beamfree;
-	beamfree.beam_index = ack->beam_index;
+	beamfree.handle = ack->handle;
 
 	_test(sizeof(beamfree) == beam_server.send(beamfree));
       }
@@ -150,7 +152,7 @@ GCFEvent::TResult AVTStub::test001(GCFEvent& e, GCFPortInterface& /*port*/)
       {
 	ABSBeamfree_AckEvent* ack = static_cast<ABSBeamfree_AckEvent*>(&e);
 	_test(SUCCESS == ack->status);
-	_test(0 <= ack->beam_index);
+	_test(0 <= ack->handle);
 
 	// test completed, next test
 	TRAN(AVTStub::test002);
@@ -174,8 +176,10 @@ GCFEvent::TResult AVTStub::test001(GCFEvent& e, GCFPortInterface& /*port*/)
       break;
 
       default:
+      {
 	  status = GCFEvent::NOT_HANDLED;
-	  break;
+      }
+      break;
   }
 
   return status;
@@ -210,11 +214,11 @@ GCFEvent::TResult AVTStub::test002(GCFEvent& e, GCFPortInterface& /*port*/)
       {
 	ABSBeamalloc_AckEvent* ack = static_cast<ABSBeamalloc_AckEvent*>(&e);
 	_test(SUCCESS == ack->status);
-	_test(0 == ack->beam_index);
+	_test(0 == ack->handle);
 
 	// send pointto command
 	ABSBeampointtoEvent pointto;
-	pointto.beam_index = 0;
+	pointto.handle = ack->handle;
 	gettimeofday(&pointto.time,0);
 	pointto.type=3;
 	pointto.angle1=0.0;
@@ -224,7 +228,7 @@ GCFEvent::TResult AVTStub::test002(GCFEvent& e, GCFPortInterface& /*port*/)
 
 	// beam pointed, now free it
 	ABSBeamfreeEvent beamfree;
-	beamfree.beam_index = 0;
+	beamfree.handle = 0;
 
 	_test(sizeof(beamfree) == beam_server.send(beamfree));
       }
@@ -234,7 +238,7 @@ GCFEvent::TResult AVTStub::test002(GCFEvent& e, GCFPortInterface& /*port*/)
       {
 	ABSBeamfree_AckEvent* ack = static_cast<ABSBeamfree_AckEvent*>(&e);
 	_test(SUCCESS == ack->status);
-	_test(0 == ack->beam_index);
+	_test(0 == ack->handle);
 
 	// test completed, next test
 	TRAN(AVTStub::test003);
@@ -258,8 +262,10 @@ GCFEvent::TResult AVTStub::test002(GCFEvent& e, GCFPortInterface& /*port*/)
       break;
 
       default:
+      {
 	  status = GCFEvent::NOT_HANDLED;
-	  break;
+      }
+      break;
   }
 
   return status;
@@ -281,12 +287,23 @@ GCFEvent::TResult AVTStub::test003(GCFEvent& e, GCFPortInterface& /*port*/)
 	timerid = beam_server.setTimer((long)2);
 
 	// send wgenable
-	ABSWgenableEvent wgenable;
-	wgenable.frequency=1e6;
-	wgenable.amplitude=128;
-	wgenable.sample_period=2;
+	ABSWgsettingsEvent wgs;
+	wgs.frequency=1e6;
+	wgs.amplitude=128;
+	wgs.sample_period=2;
 
-	_test(sizeof(wgenable) == beam_server.send(wgenable));
+	_test(sizeof(wgs) == beam_server.send(wgs));
+      }
+      break;
+
+      case ABS_WGSETTINGS_ACK:
+      {
+	// check acknowledgement
+	ABSWgsettings_AckEvent* wgsa = static_cast<ABSWgsettings_AckEvent*>(&e);
+	_test(SUCCESS == wgsa->status);
+
+	// send WGENABLE
+	_test(sizeof(GCFEvent) == beam_server.send(GCFEvent(ABS_WGENABLE)));
 
 	// start test by sending beam alloc
 	ABSBeamallocEvent alloc;
@@ -302,11 +319,11 @@ GCFEvent::TResult AVTStub::test003(GCFEvent& e, GCFPortInterface& /*port*/)
       {
 	ABSBeamalloc_AckEvent* ack = static_cast<ABSBeamalloc_AckEvent*>(&e);
 	_test(SUCCESS == ack->status);
-	_test(0 == ack->beam_index);
+	_test(0 == ack->handle);
 
 	// send pointto command
 	ABSBeampointtoEvent pointto;
-	pointto.beam_index = 0;
+	pointto.handle = ack->handle;
 	gettimeofday(&pointto.time,0);
 	pointto.type=3;
 	pointto.angle1=0.0;
@@ -316,7 +333,7 @@ GCFEvent::TResult AVTStub::test003(GCFEvent& e, GCFPortInterface& /*port*/)
 
 	// beam pointed, now free it
 	ABSBeamfreeEvent beamfree;
-	beamfree.beam_index = 0;
+	beamfree.handle = ack->handle;
 
 	_test(sizeof(beamfree) == beam_server.send(beamfree));
       }
@@ -326,7 +343,7 @@ GCFEvent::TResult AVTStub::test003(GCFEvent& e, GCFPortInterface& /*port*/)
       {
 	ABSBeamfree_AckEvent* ack = static_cast<ABSBeamfree_AckEvent*>(&e);
 	_test(SUCCESS == ack->status);
-	_test(0 == ack->beam_index);
+	_test(0 == ack->handle);
 
 	// send wgdisable
 	_test(sizeof(GCFEvent) == beam_server.send(GCFEvent(ABS_WGDISABLE)));
@@ -353,8 +370,10 @@ GCFEvent::TResult AVTStub::test003(GCFEvent& e, GCFPortInterface& /*port*/)
       break;
 
       default:
+      {
 	  status = GCFEvent::NOT_HANDLED;
-	  break;
+      }
+      break;
   }
 
   return status;
@@ -455,8 +474,10 @@ GCFEvent::TResult AVTStub::test004(GCFEvent& e, GCFPortInterface& /*port*/)
       break;
 
       default:
+      {
 	  status = GCFEvent::NOT_HANDLED;
-	  break;
+      }
+      break;
   }
 
   return status;
@@ -466,7 +487,7 @@ GCFEvent::TResult AVTStub::test005(GCFEvent& e, GCFPortInterface& /*port*/)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
   static int timerid = 0;
-  static int beam_index = -1;
+  static int beam_handle = -1;
   
   switch (e.signal)
   {
@@ -474,7 +495,7 @@ GCFEvent::TResult AVTStub::test005(GCFEvent& e, GCFPortInterface& /*port*/)
       {
 	LOG_INFO("running test005");
 
-	// invalid n_subbands in beam alloc
+	// send beam allocation
 	ABSBeamallocEvent alloc;
 	alloc.spectral_window = 0;
 	alloc.n_subbands = N_BEAMLETS;
@@ -491,9 +512,10 @@ GCFEvent::TResult AVTStub::test005(GCFEvent& e, GCFPortInterface& /*port*/)
       case ABS_BEAMALLOC_ACK:
       {
 	ABSBeamalloc_AckEvent* ack = static_cast<ABSBeamalloc_AckEvent*>(&e);
-	_test(SUCCESS != ack->status);
+	_test(SUCCESS == ack->status);
 
-	beam_index = ack->beam_index;
+	beam_handle = ack->handle;
+	LOG_DEBUG(formatString("got beam_handle=%d", beam_handle));
 
 	// let the beamformer compute for 10 seconds
 	timerid = beam_server.setTimer((long)10);
@@ -504,8 +526,9 @@ GCFEvent::TResult AVTStub::test005(GCFEvent& e, GCFPortInterface& /*port*/)
       {
 	  // done => send BEAMFREE
 	  ABSBeamfreeEvent beamfree;
-	  beamfree.beam_index = beam_index;
+	  beamfree.handle = beam_handle;
 
+	  _test(sizeof(beamfree) == beam_server.send(beamfree));
       }
       break;
 
@@ -513,7 +536,7 @@ GCFEvent::TResult AVTStub::test005(GCFEvent& e, GCFPortInterface& /*port*/)
       {
 	ABSBeamfree_AckEvent* ack = static_cast<ABSBeamfree_AckEvent*>(&e);
 	_test(SUCCESS == ack->status);
-	_test(beam_index == ack->beam_index);
+	_test(beam_handle == ack->handle);
 
 	// test completed, next test
 	TRAN(AVTStub::done);
@@ -528,8 +551,10 @@ GCFEvent::TResult AVTStub::test005(GCFEvent& e, GCFPortInterface& /*port*/)
       break;
 
       default:
+      {
 	  status = GCFEvent::NOT_HANDLED;
-	  break;
+      }
+      break;
   }
 
   return status;
