@@ -482,7 +482,8 @@ void StepRep::simplifyConnections()
     DataHolder* src = dsttp.getSourceAddr();
     if (src) {
       Transport& srctp = src->getTransport();
-      if (src->getNode() == dst->getNode()) {
+      if ((src->getNode() == dst->getNode()) 
+	  && (srctp.getTransportHolder()->isBlocking() == false)) {
 	srctp.makeTransportHolder (TH_Mem());
 	dsttp.makeTransportHolder (TH_Mem());
       }
