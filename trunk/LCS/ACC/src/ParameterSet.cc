@@ -248,9 +248,27 @@ double ParameterSet::getDouble(const string& theKey) const
 		THROW (Exception, formatString("Key %s unknown", theKey.c_str()));
 	}
 	if (sscanf (iter->second.c_str(), "%lg", &theDouble) != 1) {
-		THROW (Exception, formatString("%s is not an double value", iter->second.c_str()));
+		THROW (Exception, formatString("%s is not a double value", iter->second.c_str()));
 	}
 	return (theDouble);
+}
+
+//#
+//# getFloat(key)
+//#
+float ParameterSet::getFloat(const string& theKey) const
+
+{
+  float theFloat;
+  const_iterator iter = find (theKey);
+
+  if (iter == end()) {
+    THROW (Exception, formatString("Key %s unknown", theKey.c_str()));
+  }
+  if (sscanf (iter->second.c_str(), "%e", &theFloat) != 1) {
+    THROW (Exception, formatString("%s is not a float value", iter->second.c_str()));
+  }
+  return (theFloat);
 }
 
 //#
