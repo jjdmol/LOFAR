@@ -22,6 +22,9 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.6  2002/04/18 07:55:03  schaaf
+//  Documentation and code update
+//
 //  Revision 1.5  2002/04/12 15:51:44  schaaf
 //  Explicit definition of source and destination side
 //
@@ -94,6 +97,9 @@ public:
   /// determine whether performance reporting is wanted
   void setReportPerformance(bool);
 
+  /// Monitoring output
+  virtual int getMonitorValue(const char* name);
+
 private:
   /// Forbid copy constructor.
   WH_GrowSize (const WH_GrowSize&);
@@ -125,6 +131,11 @@ private:
   static bool itsFirstcall;
   int         itsTime;
   bool        itsReportPerformance;
+
+  /// Monitoring Values
+  int itsLastSize;
+  int itsLastPerf;
+  int itsReportPerf;
 };
 
 inline void WH_GrowSize::setReportPerformance(bool doreport){

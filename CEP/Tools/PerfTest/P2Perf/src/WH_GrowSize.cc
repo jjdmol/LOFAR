@@ -22,6 +22,9 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.14  2002/04/18 07:55:03  schaaf
+//  Documentation and code update
+//
 //  Revision 1.13  2002/04/12 15:51:44  schaaf
 //  Explicit definition of source and destination side
 //
@@ -153,12 +156,14 @@ void WH_GrowSize::process()
       if (itsIteration == 0) {
 	// first measurement; print packet sizes etc.
 	cout << endl;
-	cout << itsInHolders[0]->getDataPacketSize() << " "
-	     << log10(itsInHolders[0]->getDataPacketSize()) << " ";
+	itsLastSize = itsInHolders[0]->getDataPacketSize(); 
+	cout <<  itsLastSize << " "
+	     << log10(itsLastSize) << " ";
       }
       // report the bandwidth per output channel (in MB/s)
-      cout << (itsOutHolders[0]->getDataPacketSize() * getOutputs()
-	       /(1024.*1024.*watch.elapsed())) 
+      itsLastPerf = (int)(itsOutHolders[0]->getDataPacketSize() * getOutputs()
+		     /(1024.*1024.*watch.elapsed()));
+      cout << itsLastPerf 
 	   << "  "
 	   << watch.elapsed()
 	   << "  ";
@@ -199,4 +204,23 @@ DH_GrowSize* WH_GrowSize::getOutHolder (int channel)
   AssertStr (channel >= 0,           "output channel too low");
   AssertStr (channel < getOutputs(), "output channel too high");
   return itsOutHolders[channel];
+}
+
+/**
+   This getMonitorValue method pruduces output as follows:
+   "size"  : current packet size
+   "perf"  : current bandwidth
+ */
+int WH_GrowSize::getMonitorValue(const char* name){
+  TRACER2("Called WH_GrowSize::getMonitorValue" << name);
+  int result = 0;
+  if (strcmp(name,"size") == 0) {
+    result = itsLastSize;
+    itsReportPerf = itsLastPerf;
+  } else if (strcmp(name,"perf") == 0) {
+    result = itsReportPerf > 0 ? itsReportPerf : itsLastPerf;
+    itsReportPerf = -1;
+  }
+  TRACER2("WH_Empty::getMonitorValue resturns " << result);
+  return result;
 }
