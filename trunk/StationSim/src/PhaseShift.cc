@@ -57,10 +57,10 @@ namespace PhaseShift
 
 	dprintf1 (2) ("inverse fft length %d bins %d\n", nfft, nbins);
 
-	// Do a ifftshift, put the DC component in the middle of the band
-	temp = result (Range (nfft / 2, nfft - 1));
-	result (Range (nfft / 2, nfft - 1)) = result (Range (0, nfft / 2 - 1));
-	result (Range (0, nfft / 2 - 1)) = temp;
+	//AG: Do a ifftshift, put the DC component in the middle of the band
+// 	temp = result (Range (nfft / 2, nfft - 1));
+// 	result (Range (nfft / 2, nfft - 1)) = result (Range (0, nfft / 2 - 1));
+// 	result (Range (0, nfft / 2 - 1)) = temp;
 
     // do inverse fft
 	FFTW::inverse_fft (result, nfft, nbins, invplan);
@@ -97,10 +97,10 @@ namespace PhaseShift
     // do forward fft of source
     LoVec_dcomplex cdata = FFTW::forward_fft (source (Range (0, siglen - 1)), nfft, nbins, fwdplan);
 
-	// Do a fftshift, put the DC component in the middle of the band
-	temp = cdata (Range (nfft / 2, nfft - 1));
-	cdata (Range (nfft / 2, nfft - 1)) = cdata (Range (0, nfft / 2 - 1));
-	cdata (Range (0, nfft / 2 - 1)) = temp;
+	//AG: Do a fftshift, put the DC component in the middle of the band
+// 	temp = cdata (Range (nfft / 2, nfft - 1));
+// 	cdata (Range (nfft / 2, nfft - 1)) = cdata (Range (0, nfft / 2 - 1));
+// 	cdata (Range (0, nfft / 2 - 1)) = temp;
 
     dprintf1 (1) ("foward fft done\n");
 
@@ -135,8 +135,9 @@ namespace PhaseShift
     LoVec_double fs (nfft);
 
 	// JD/AG: look at the phased array book
-    fs = ((tensor::i - (nfft / 2.0 + 1.0) + 1) * (bandwidth / nfft) + center_freq) / center_freq;
-	//    fs = ((tensor::i - nfft / 2.0 + 1) * (bandwidth / nfft) + center_freq) / center_freq;  Oleg's original code
+// 	fs = ((tensor::i - (nfft / 2.0 + 1.0) + 1) * (bandwidth / nfft) + center_freq) / center_freq;
+
+	fs = ((tensor::i - nfft / 2.0 + 1) * (bandwidth / nfft) + center_freq) / center_freq; // Oleg's original code
     return fs;
   }
 
@@ -147,6 +148,8 @@ namespace PhaseShift
 
     res = -2 * M_PI * (px * sin (theta) * cos (phi) + py * sin (theta) * sin (phi));
 
-    return res / nfft;
+	// JD/AG: put in the divide by nfft
+//     return res / nfft;
+    return res;
   }
 };				// namespace PhaseShift
