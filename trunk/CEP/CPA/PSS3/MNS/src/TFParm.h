@@ -45,6 +45,8 @@ public:
   // Add the parameter name to the static vector of parms.
   explicit TFParm (unsigned int type);
 
+  virtual ~TFParm();
+
   // Get the parameter type or id.
   unsigned int getType() const
     { return itsType; }
@@ -62,6 +64,9 @@ public:
   // spidIndex is index the first spid of this parm.
   // It returns the number of spids in this parm.
   virtual int setSolvable (int spidIndex) = 0;
+
+  // Make the parameter non-solvable.
+  virtual void clearSolvable() = 0;
 
   // Get the range of the parameter for the given domain.
   virtual TFRange getRange (const TFRequest&) = 0;
