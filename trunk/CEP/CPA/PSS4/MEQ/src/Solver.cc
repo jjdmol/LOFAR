@@ -167,6 +167,9 @@ int Solver::getResult (Result::Ref &resref,
     } else {
       AssertStr (itsSpids == spids,
 		 "Different spids while solver is not restarted");
+      if (step > 0) {
+	itsSolver.set (nspid, 1u, 0u);
+      }
     }
     // Now feed the solver with equations from the results.
     // Define the vector with derivatives (for real and imaginary part).
