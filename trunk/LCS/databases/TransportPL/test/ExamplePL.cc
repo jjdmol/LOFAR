@@ -24,6 +24,8 @@
 #include <TransportPL/TH_PL.h>
 #include <Transport/TH_Mem.h>
 #include <Common/BlobOStream.h>
+#include <Common/BlobArray.h>
+#include <vector>
 #include <iostream>
 
 using namespace LOFAR;
@@ -40,9 +42,10 @@ void sendData2 (DH_Example& sender)
 {
   sender.getBuffer()[0] = fcomplex(17,-3.5);
   sender.setCounter(2);
-  // fill extra blob
+  // fill extra blob (> 1 KByte because of possible DTL bug)
   BlobOStream& bos = sender.createExtraBlob();
   bos << "a string";
+  bos << std::vector<int>(256,1);
   sender.write();
 }
 
