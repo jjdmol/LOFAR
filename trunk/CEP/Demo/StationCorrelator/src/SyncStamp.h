@@ -40,13 +40,15 @@ namespace LOFAR
 
     /// the blockId restarts at zero at some point. Check if we are there yet
     void checkOverflow();
-    /// increase the value of the stamp
-    void increment(const int value);
 
+    /// increase the value of the stamp
     void operator+= (SyncStamp& other);
+    void operator+= (int increment);
     void operator++ (int);
-    bool operator> (SyncStamp& other);
-    bool operator< (SyncStamp& other);
+
+    SyncStamp operator+ (int other);
+    bool operator>  (SyncStamp& other);
+    bool operator<  (SyncStamp& other);
     bool operator== (SyncStamp& other);
 
   private:
@@ -61,11 +63,8 @@ namespace LOFAR
   inline const int SyncStamp::getBlockId () const
     { return itsBlockId; }
 
-  inline void SyncStamp::increment(const int value)
-    { itsBlockId += value; checkOverflow(); };
-
   inline void SyncStamp::checkOverflow()
-    { if (itsBlockId > MAX_BLOCK_ID) {itsSeqId++; itsBlockId = 0;};}
+    { if (itsBlockId > MAX_BLOCK_ID) {itsSeqId++; itsBlockId = itsBlockId % MAX_BLOCK_ID;};}
 
   inline void SyncStamp::operator += (SyncStamp& other)
     { 
@@ -73,11 +72,22 @@ namespace LOFAR
       checkOverflow();
       itsSeqId += other.itsSeqId;
     }
+  inline void SyncStamp::operator += (int increment)
+    { 
+      itsBlockId += increment;
+      checkOverflow();
+    }
 
   inline void SyncStamp::operator ++ (int dummy)
     { 
       itsBlockId ++;
       checkOverflow();
+    }
+
+  inline SyncStamp SyncStamp::operator+ (int increment)
+    { 
+      // check overflow is done in the constructor
+      return SyncStamp(itsSeqId, itsBlockId + increment);
     }
 
   inline bool SyncStamp::operator > (SyncStamp& other)

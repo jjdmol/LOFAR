@@ -115,9 +115,9 @@ void WH_RSP::process()
       // so take get current time stamp and wait 1 sec to 
       DH_RSP* inDHp = (DH_RSP*)getDataManager().getInHolder(0);
       itsNextStamp.setStamp(inDHp->getSeqID(), 0);
-      itsNextStamp.increment(itsNpackets * 10000); // at 1 Gb/s I think this is .5 sec
+      itsNextStamp += itsNpackets * 10000; // at 1 Gb/s I think this is .5 sec
     } else {
-      itsNextStamp.increment(itsNpackets);
+      itsNextStamp += itsNpackets;
     }
     for (int i = itsNCorrOutputs; i < itsNCorrOutputs + itsNRSPOutputs; i++) {
       ((DH_RSPSync*)getDataManager().getOutHolder(i))->setSyncStamp(itsNextStamp);
@@ -133,37 +133,15 @@ void WH_RSP::process()
     inDHp = (DH_RSP*)getDataManager().getInHolder(0);
     thisStamp->setStamp(inDHp->getSeqID(), inDHp->getBlockID());
     
-    if (*thisStamp == itsNextStamp) {
+    if (*thisStamp < itsNextStamp) {
 
-      LOG_TRACE_COND_STR("Package has correct timestamp");
-      // this is the right packet, so send it
-      inSync = true;
-
-      // determine blocksizes of char-based InHolder and complex<uint16-based> OutHolder
-      int char_blocksize   = itsNbeamlets * itsPolarisations * sizeof(complex<uint16>); 
-      int complex_uint16_blocksize = itsNbeamlets * itsPolarisations;
-      
-      // copy stationID and blockID of first EPA-packet in OutDataholder
-      outDHp = (DH_StationData*)getDataManager().getOutHolder(0);
-      outDHp->setStationID( inDHp->getStationID() );
-      outDHp->setBlockID( inDHp->getBlockID() );
-      outDHp->setFlag( 0 );
-     
-      // copy the beamlets from all EPA-packets in OutDataholder
-      for (int i=0;i<itsNpackets;i++) {
-	for (int j=0;j<itsNCorrOutputs;j++) {
-          outDHp = (DH_StationData*)getDataManager().getOutHolder(j);
-          memcpy( &outDHp->getBuffer()[i * complex_uint16_blocksize], 
-		  &inDHp->getBuffer()[(i * itsSzEPApacket)+ itsSzEPAheader + (j * char_blocksize)],
-		  char_blocksize );
-	}
-      }      
-
-      // Tell dataManager we are ready with InHolder, this will trigger a new read.
-      // (this InHolder is not auto triggered)
+      // this packets time stamp is too old, it should have been sent already
+      // so do nothing and read again
+      LOG_TRACE_COND_STR("Package too old; skip");
       getDataManager().readyWithInHolder(0);  
 
-    } else if (*thisStamp > itsNextStamp) {
+    } else if (itsNextStamp + (itsNpackets - 1) < *thisStamp) {
+
       LOG_TRACE_COND_STR("Package has been missed, insert dummy package");
       // we missed some packets, 
       // send a dummy and do NOT read again 
@@ -194,13 +172,36 @@ void WH_RSP::process()
       }      
       // step out of the while loop and do not call readyWithInHolder
       inSync = true;
+      
+    } else { /* (*thisStamp == itsNextStamp) { */
 
-    } else {
-
-      // this packets time stamp is too old, it should have been sent already
-      // so do nothing and read again
-      LOG_TRACE_COND_STR("Package too old; skip");
-      getDataManager().readyWithInHolder(0);  
-    }
+      LOG_TRACE_COND_STR("Package has correct timestamp");
+      // this is the right packet, so send it
+      inSync = true;
+      
+      // determine blocksizes of char-based InHolder and complex<uint16-based> OutHolder
+      int char_blocksize   = itsNbeamlets * itsPolarisations * sizeof(complex<uint16>); 
+      int complex_uint16_blocksize = itsNbeamlets * itsPolarisations;
+      
+      // copy stationID and blockID of first EPA-packet in OutDataholder
+      outDHp = (DH_StationData*)getDataManager().getOutHolder(0);
+      outDHp->setStationID( inDHp->getStationID() );
+      outDHp->setBlockID( inDHp->getBlockID() );
+      outDHp->setFlag( 0 );
+      
+      // copy the beamlets from all EPA-packets in OutDataholder
+      for (int i=0;i<itsNpackets;i++) {
+	for (int j=0;j<itsNCorrOutputs;j++) {
+          outDHp = (DH_StationData*)getDataManager().getOutHolder(j);
+          memcpy( &outDHp->getBuffer()[i * complex_uint16_blocksize], 
+		  &inDHp->getBuffer()[(i * itsSzEPApacket)+ itsSzEPAheader + (j * char_blocksize)],
+		  char_blocksize );
+	}
+      }      
+      
+      // Tell dataManager we are ready with InHolder, this will trigger a new read.
+      // (this InHolder is not auto triggered)
+      getDataManager().readyWithInHolder(0);        
+    } 
   }
 }

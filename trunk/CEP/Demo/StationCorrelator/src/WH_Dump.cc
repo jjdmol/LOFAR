@@ -59,7 +59,6 @@ WorkHolder* WH_Dump::construct (const string& name,
 }
 
 WH_Dump* WH_Dump::make(const string& name) {
-
   return new WH_Dump(name, itsKvm); 
 }
 
