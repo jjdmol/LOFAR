@@ -24,7 +24,6 @@
 #ifdef HAVE_BGL
 // cheat by including the entire hummer_builtin.h file
 #include <hummer_builtin.h>
-#include <complex.h>
 #endif 
 
 
@@ -86,10 +85,9 @@ WH_Correlator* WH_Correlator::make (const string& name) {
 void WH_Correlator::process() {
   double starttime, stoptime, cmults;
   // variables to store prefetched antenna data
-  complex<float> *s1_val_0, *s1_val_1;
-  complex<float> *s2_val_0, *s2_val_1;
+  _Complex float *s1_val_0, *s1_val_1;
+  _Complex float *s2_val_0, *s2_val_1;
 
-  // 
 #ifdef DO_TIMING
   double agg_bandwidth = 0.0;
   if (t_start.tv_sec != 0 && t_start.tv_usec != 0) {
@@ -154,7 +152,7 @@ void WH_Correlator::process() {
   // 
 #ifdef HAVE_BGL
   // complex<double> pointer to the output buffer
-  __complex__ double * out_ptr = reinterpret_cast<__complex__ double*> ( outDH->getBuffer() );
+  _Complex double * out_ptr = reinterpret_cast<_Complex double*> ( outDH->getBuffer() );
 #endif
 
   for (int fchannel = 0; fchannel < itsNchannels; fchannel++) {
@@ -168,54 +166,46 @@ void WH_Correlator::process() {
       for (int   station1 = 0; station1 < itsNelements; station1++) {
 	int s1_addr = sample_addr+itsNpolarisations*station1;
 	// prefetch station1, both polarisation 0 and 1
-	s1_val_0 = reinterpret_cast<complex<float>*>( in_buffer + s1_addr );
-	s1_val_1 = reinterpret_cast<complex<float>*>( in_buffer + s1_addr + 1 );
+	s1_val_0 = reinterpret_cast<_Complex float*>( in_buffer + s1_addr );
+	s1_val_1 = reinterpret_cast<_Complex float*>( in_buffer + s1_addr + 1 );
 
 	for (int station2 = 0; station2 <= station1; station2++) {
 	  int s2_addr = sample_addr+itsNpolarisations*station2;
 
  	    // prefetch station2, both polarisation 0 and 1
-  	    s2_val_0 = reinterpret_cast<complex<float>*>( in_buffer + s2_addr );
-	    s2_val_1 = reinterpret_cast<complex<float>*>( in_buffer + s2_addr +1 ) ;
+  	    s2_val_0 = reinterpret_cast<_Complex float*>( in_buffer + s2_addr );
+	    s2_val_1 = reinterpret_cast<_Complex float*>( in_buffer + s2_addr + 1 ) ;
+
 #ifdef HAVE_BGL
 	    // load prefetched values into FPU
-	    __lfps((float*) s1_val_0);
-	    __lfps((float*) s2_val_0);
-// 	     __lfps((float*) __real__ s2_val_0);
+	    // (now done inside the intrinsic)
+//  	    __lfps((float*) s1_val_0);
+//   	    __lfps(&__real__ *s2_val_0);
 
-// 	    // do the actual complex fused multiply-add (polarisation 0)
-// 	    // note that s1_val and s2_val are pointer of the type complex<float>
-// 	    // this may be incompatible with the __real__ and __imag__ macro
-// 	    // - we may want to use the .real() and .imag() methods of the complex class instead
-// 	    // - if this is too slow, we should consider rewriting the correlator using the C complex.h header
+	    // do the actual complex fused multiply-add (polarisation 0)
+	    // note that s1_val and s2_val are pointer of the type complex<float>
+	    // this may be incompatible with the __real__ and __imag__ macro
+	    // - we may want to use the .real() and .imag() methods of the complex class instead
+	    // - if this is too slow, we should consider rewriting the correlator using the C complex.h header
 
-	    // note that this may very well result in bogus answers. This is lots 'o hacks to get the intrinsics to compile
-	    *out_ptr += __fxcpmadd( *out_ptr, *(__complex__ float*)s1_val_0, *(float*)s2_val_0) ;
-	    __lfps((float*) s2_val_0);
-	    *out_ptr += __fxcxnpma( *out_ptr, *(__complex__ float*)s1_val_0, *(float*)s2_val_0);
+	    // here we do the loading into the FPU inside the intrinsics (as sugested by Mark Mendell)
+ 	    *out_ptr = __fxcpmadd( *out_ptr, __lfps((float*) s1_val_0), __lfps(&__real__ *s2_val_0));
+	    *out_ptr = __fxcxnpma( *out_ptr, __lfps((float*) s1_val_0), __lfps(&__imag__ *s2_val_0));
+	    out_ptr++;
 
 	    // note that the output buffer is assumed to be contiguous
 	    // also note that I'm trying to force a add-store by using the += in the intrinsic.
 	    // I don't know if this will work, since the first argument of the intrinsic may very well 
-	    // just overwrite the resulting value.
+	    // just overwrite the resulting value. According to Mike Mendell this is a double add, so I removed the +=.
 
-	    out_ptr++;
 	    // now do the same thing for polarisation 1
 	    __lfps((float*) s1_val_1);
-	    __lfps((float*) s2_val_1);
+ 	    __lfps(&__real__ *s2_val_1);
 
 	    // note that this may very well result in bogus answers. This is lots 'o hacks to get the intrinsics to compile
-	    *out_ptr += __fxcpmadd( *out_ptr, *(__complex__ float*)s1_val_1, *(float*)s2_val_1) ;
-	    __lfps((float*) s2_val_1);
-	    *out_ptr += __fxcxnpma( *out_ptr, *(__complex__ float*)s1_val_1, *(float*)s2_val_1);
-	    
+ 	    *out_ptr = __fxcpmadd( *out_ptr, __lfps((float*) s1_val_1), __lfps(&__real__ *s2_val_1)) ;
+ 	    *out_ptr = __fxcxnpma( *out_ptr, __lfps((float*) s1_val_1), __lfps(&__imag__ *s2_val_1)) ;
 	    out_ptr++;
-
-// 	    __lfps((float*) s1_val_1);
-// 	    __lfps((float*) __real__ s2_val_1);
-// 	    out_ptr += __fxcpmadd(out_ptr, s1_val_1, __real__ s2_val_1) ;
-// 	    __lfps((float*) __imag__ s2_val_1);
-// 	    out_ptr += __fxcxnpma(out_ptr, s1_val_1, __imag__ s2_val_1);
 #else 
 	    // this is purely functional code, very expensive and slow as hell
 	    outDH->addBufferElementVal(station1, station2, fchannel, 0,
