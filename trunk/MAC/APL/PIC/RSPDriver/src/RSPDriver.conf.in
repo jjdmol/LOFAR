@@ -74,16 +74,19 @@ RSPDriver.IDENTITY_WEIGHTS=1
 # Select LOOPBACK_MODE mode
 #
 # If LOOPBACK_MODE == 0, the WRITE is done first.
-# In this mode you can check with Ethereal that what was
+# In this mode the RSPDriver checks that what was
 # written is correctly read back from the board. This can
 # be used to check that the RSP board or the EPAStub
-# functions correctly.
+# functions correctly. Read results are not stored in
+# the RSPDriver cache.
 #
 # If LOOPBACK_MODE == 1, the READ is done first.
 # In this mode you can check with Ethereal that what was
 # read from the RSP board or EPAStub is written back in
 # the same way. This is used to check whether the RSPDriver
 # stores the information at the correct location in its cache.
+# Of course in this mode reads results are stored in the
+# RSPDriver cache.
 #
 RSPDriver.LOOPBACK_MODE=0
 

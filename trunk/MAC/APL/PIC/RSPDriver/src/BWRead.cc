@@ -128,10 +128,35 @@ GCFEvent::TResult BWRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
 				   shape(N_COEF / MEPHeader::N_PHASEPOL, MEPHeader::N_POL),
 				   neverDeleteData);
 
-  Cache::getInstance().getBack().getBeamletWeights()()(0, global_blp,
-						       Range(offset / MEPHeader::N_PHASEPOL,
-							     (offset / MEPHeader::N_PHASEPOL) + (N_COEF / MEPHeader::N_PHASEPOL) - 1),
-						       Range::all()) = weights;
+  //
+  // In mode 0, check that the received message matches with what's in the cache.
+  // In other modes, store the data in the cache.
+  //
+  if (0 == GET_CONFIG("RSPDriver.LOOPBACK_MODE", i))
+  {
+    //
+    // substract cache contents from weights
+    // if there is a difference, log a warning
+    //
+    weights -= Cache::getInstance().getBack().getBeamletWeights()()(0, global_blp,
+								    Range(offset / MEPHeader::N_PHASEPOL,
+									  (offset / MEPHeader::N_PHASEPOL) + (N_COEF / MEPHeader::N_PHASEPOL) - 1),
+	
+								    Range::all());
+    complex<int16> errorsum(sum(weights));
+    if (complex<int16>(0) != errorsum)
+    {
+      LOG_WARN(formatString("LOOPBACK CHECK FAILED: BWRead mismatch [blp=%d, errorsum=(%d,i%d)]",
+			    global_blp, real(errorsum), imag(errorsum)));
+    }
+  }
+  else
+  {
+    Cache::getInstance().getBack().getBeamletWeights()()(0, global_blp,
+							 Range(offset / MEPHeader::N_PHASEPOL,
+							       (offset / MEPHeader::N_PHASEPOL) + (N_COEF / MEPHeader::N_PHASEPOL) - 1),
+							 Range::all()) = weights;
+  }
   
   return GCFEvent::HANDLED;
 }
