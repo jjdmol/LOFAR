@@ -28,14 +28,15 @@
 
 
 WH_BandSep::WH_BandSep (const string& name, unsigned int nsubband,
-			const string& coeffFileName, int nout)
+						const string& coeffFileName, int nout, bool tapstream)
 : WorkHolder   (1, nsubband * nout, name, "WH_BandSep"),
   itsInHolder  ("in", 1, 1),
   itsOutHolders(0),
   itsNsubband  (nsubband),
   itsCoeffName (coeffFileName),
   itsPos       (0),
-  itsNout      (nout)
+  itsNout      (nout),
+  itsTapStream (tapstream)
 {
   // Allocate blocks to hold pointers to input and output DH-s.
   if (nsubband > 0) {
@@ -52,13 +53,13 @@ WH_BandSep::WH_BandSep (const string& name, unsigned int nsubband,
       sprintf (str2, "%d", j);
       itsOutHolders[i + j * nsubband] = new DH_SampleC (string ("out") + 
 							str2 + string("_") + str, 1, 1);
+
+	  if (itsTapStream) {
+		itsOutHolders [i + j * nsubband]->setOutFile (string ("FB1_") + str2 + 
+													  string ("_") + str + string (".dat"));
+	  }
     }
   }
-
-  // DEBUG
-//   handle = gnuplot_init();
-//   itsFileOutReal.open ((string ("/home/alex/gerdes/subband_real_") + name + string (".txt")).c_str ());
-//   itsFileOutComplex.open ((string ("/home/alex/gerdes/subband_complex_") + name + string (".txt")).c_str ());
 }
 
 WH_BandSep::~WH_BandSep()
@@ -78,12 +79,12 @@ WH_BandSep::~WH_BandSep()
 WorkHolder* WH_BandSep::construct(const string& name, int ninput, int noutput, const ParamBlock& params)
 {
   return new WH_BandSep(name, params.getInt("nsubband", 10), 
-			params.getString("coeffname", "filter.coeff"), ninput);
+						params.getString("coeffname", "filter.coeff"), ninput, false);
 }
 
 WH_BandSep* WH_BandSep::make(const string& name) const
 {
-  return new WH_BandSep (name, itsNsubband, itsCoeffName, itsNout);
+  return new WH_BandSep (name, itsNsubband, itsCoeffName, itsNout, itsTapStream);
 }
 
 void WH_BandSep::preprocess()
@@ -94,9 +95,6 @@ void WH_BandSep::preprocess()
   
   // Check if the given coefficient file matches the given number of subbands
   AssertStr (itsNsubband == itsFilterbank->getItsNumberOfBands(), "The coefficientfile isn't correct!");
-
-  // DEBUG
-  //  itsFileOut << itsNsubband << " x 100" << endl << "[ ";
 }
 
 void WH_BandSep::process()
@@ -118,14 +116,6 @@ void WH_BandSep::process()
  		  getOutHolder (i + j * itsNsubband)->getBuffer ()[0] = subbandSignals (i, 0);
 		}
 	  }
-	  	  
-	  // DEBUG
-// 	  for (int i = 0; i < itsNsubband; i++) {
-// 		itsFileOutReal << real (itsOutHolders[i]->getBuffer ()[0]) << " ";
-// 		itsFileOutComplex << imag (itsOutHolders[i]->getBuffer ()[0]) << " ";
-// 	  }
-// 	  itsFileOutReal << endl;	
-// 	  itsFileOutComplex << endl;	
 	}
   }
 }

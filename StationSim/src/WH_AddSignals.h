@@ -41,7 +41,8 @@ public:
   WH_AddSignals (const string& name, 
 				 unsigned int nin, 
 				 unsigned int nout,
-				 unsigned int nrcu);
+				 unsigned int nrcu,
+				 bool tapstream);
 
   virtual ~WH_AddSignals ();
 
@@ -79,11 +80,7 @@ private:
   DH_SampleC** itsOutHolders;
 
   int itsNrcu;
-
-  // DEBUG
-  int itsCount;
-  ofstream itsFileOutReal;
-  ofstream itsFileOutComplex;
+  bool itsTapStream;
 };
 
 

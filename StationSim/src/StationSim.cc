@@ -100,6 +100,9 @@ void StationSim::define (const ParamBlock& params)
   const int WDrate                = params.getInt    ("wdrate", 100);
   const int PROJrate              = params.getInt    ("projrate", 100);
   const string beamtrajectfile    = params.getString ("beamtrajectfile", "");
+  const bool tapDG                = params.getInt    ("tapdg", 0);
+  const bool tapFB1               = params.getInt    ("tapfb1", 0);
+  const bool tapBF                = params.getInt    ("tapbf", 0);
 
   const int delayBeamForm         = 1;
 
@@ -178,7 +181,8 @@ void StationSim::define (const ParamBlock& params)
   Step add_signals (WH_AddSignals ("",
 								   DG_Config->itsNumberOfSources,
 								   nrcu, 
-								   nrcu), 
+								   nrcu,
+								   (bool) tapDG), 
 					"add_signals", 
 					false); 
 
@@ -190,7 +194,7 @@ void StationSim::define (const ParamBlock& params)
   for (int i = 0; i < nrcu; ++i) {
 	sprintf (suffix, "%d", i);
 	  
-	Step subband_filter (WH_BandSep(suffix,	nsubband, coeffFileNameSub, nout),
+	Step subband_filter (WH_BandSep(suffix,	nsubband, coeffFileNameSub, nout, (bool) tapFB1),
 			     string ("subband_filter_") + suffix,
 			     false);
 
@@ -204,7 +208,7 @@ void StationSim::define (const ParamBlock& params)
 
 	// The beamformer object    
 	Step beam (WH_BeamFormer(suffix, nrcu + 1, 1, nrcu, nbeam, maxNtarget, maxNrfi, 
-							 STArate), 
+							 (bool) tapBF), 
 			   string("beam_former_") + suffix, false);
 
 	beam.getInData (nrcu).setReadDelay (delayBeamForm);

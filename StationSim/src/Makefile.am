@@ -23,7 +23,8 @@ WH_BeamFormer.h					\
 WH_DataReader.h					\
 WH_STA.h					\
 WH_WeightDetermination.h			\
-WH_Projection.h					
+WH_Projection.h					\
+GnuPlotInterface.h
 
 lib_LTLIBRARIES 	= libstationsim.la
 
@@ -52,7 +53,8 @@ WH_BeamFormer.cc				\
 WH_DataReader.cc				\
 WH_STA.cc					\
 WH_WeightDetermination.cc			\
-WH_Projection.cc
+WH_Projection.cc				\
+GnuPlotInterface.cc
 
 bin_PROGRAMS		= Simulate
 Simulate_SOURCES 	= Simulate.cc Simulate.in

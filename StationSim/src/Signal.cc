@@ -30,28 +30,6 @@ Signal::Signal (string config_file, string mod, double cf, double amp, double op
   itsInputFileName  (config_file)
 {
   ifstream configfile (config_file.c_str (), ifstream::in);
-  string s;
-  int InfoRead = 0;
-
   AssertStr (configfile.is_open (), "Couldn't open signal file!");
-
   configfile.close ();
-
-//   while (InfoRead < 2 && !configfile.eof ()) {
-//     s = "";
-//     configfile >> s;
-//     if (s == "length") {
-//       configfile >> s;
-//       if (s == ":") {
-// 		configfile >> itsLength;
-// 		InfoRead++;
-//       }
-//     } else if (s == "fs_signal") {
-//       configfile >> s;
-//       if (s == ":") {
-// 		configfile >> itsSamplingFreq;
-// 		InfoRead++;
-//       }
-//     }
-//   }
 }

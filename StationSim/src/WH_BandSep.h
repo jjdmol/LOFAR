@@ -52,7 +52,7 @@ public:
   /// are created and how many elements there are in the buffer.
   /// The first WorkHolder should have nin=0.
   WH_BandSep (const string& name, unsigned int nsubband,
-	      const string& coeffFileName, int nout);
+			  const string& coeffFileName, int nout, bool tapstream);
 
   virtual ~WH_BandSep();
 
@@ -97,11 +97,7 @@ private:
   int itsFilterLength;
   FilterBank <dcomplex> * itsFilterbank;
   LoVec_dcomplex itsBuffer;
-
-  // DEBUG
-  gnuplot_ctrl* handle;
-  ofstream itsFileOutReal;
-  ofstream itsFileOutComplex;
+  bool itsTapStream;
 };
 
 

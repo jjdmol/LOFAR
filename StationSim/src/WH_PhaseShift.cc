@@ -111,7 +111,7 @@ void WH_PhaseShift::process ()
 		itsOutputBuffer = 
 		  PhaseShift::phaseShift (itsNfft,
 								  itsInputBuffer,
-								  itsConfig->itsSources[itsSource]->itsTraject->getTheta (itsCount),
+								  itsConfig->itsSources[itsSource]->itsTraject->getTheta (itsCount++),
 								  itsConfig->itsSources[itsSource]->itsTraject->getPhi (itsCount),
 								  *(itsConfig->itsArray),
 								  itsFreqShift,
@@ -130,7 +130,7 @@ void WH_PhaseShift::process ()
 				itsNrcu * sizeof (dcomplex));
       }
     }
-    itsCount++;
+	//    itsCount++;
   }
 }
 
