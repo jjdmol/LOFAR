@@ -27,7 +27,7 @@
 #include <Common/BlobIBufChar.h>
 #include <Common/BlobOBufNull.h>
 #include <Common/BlobHeader.h>
-#include <Common/Exception.h>
+#include <Common/BlobException.h>
 
 namespace LOFAR {
 
@@ -75,7 +75,8 @@ namespace LOFAR {
   {
     NameMap::iterator iter = itsNameMap.find (name);
     if (iter != itsNameMap.end()) {
-      throw Exception("BlobFieldBase::add - field" + name + " already exists");
+      THROW (BlobException,
+	     "BlobFieldBase::add - field" + name + " already exists");
     }
     if (field.getVersion() > itsVersion) {
       itsVersion = field.getVersion();
@@ -125,7 +126,7 @@ namespace LOFAR {
     BlobIStream bs(buf);
     uint version = bs.getStart (itsName);
     if (version > itsVersion) {
-      throw (LOFAR::Exception("BlobFieldSet: blob has an unknown version"));
+      THROW (BlobException, "BlobFieldSet: blob has an unknown version");
     }
     for (uint i=0; i<itsFields.size(); i++) {
       itsFields[i]->getSpace (bs, version);
@@ -137,7 +138,7 @@ namespace LOFAR {
   {
     NameMap::iterator iter = itsNameMap.find (name);
     if (iter == itsNameMap.end()) {
-      throw Exception("BlobFieldBase: " + name + " is an unknown field");
+      THROW (BlobException, "BlobFieldBase: " + name + " is an unknown field");
     }
     return *(itsFields[iter->second]); 
   }
@@ -146,7 +147,7 @@ namespace LOFAR {
   {
     NameMap::const_iterator iter = itsNameMap.find (name);
     if (iter == itsNameMap.end()) {
-      throw Exception("BlobFieldBase: " + name + " is an unknown field");
+      THROW (BlobException, "BlobFieldBase: " + name + " is an unknown field");
     }
     return *(itsFields[iter->second]); 
   }
@@ -154,28 +155,37 @@ namespace LOFAR {
   bool BlobFieldSet::checkHeader (BlobIBufChar& buf, const char* objectType,
 				  int version, uint size)
   {
-    BlobHeaderBase* hdr = (BlobHeaderBase*)(buf.getBuffer());
+    BlobHeader* hdr = (BlobHeader*)(buf.getBuffer());
     if (! hdr->checkMagicValue()) {
-      throw Exception("BlobFieldSet::checkHeader - magic value mismatch");
+      THROW (BlobException,
+	     "BlobFieldSet::checkHeader - magic value mismatch");
     }
     int vrs = hdr->getVersion();
     if (objectType != 0) {
-      if (! hdr->checkType (objectType)) {
-	throw Exception("BlobFieldSet::checkHeader - object type mismatch");
+      if (strncmp (objectType, (char*)(buf.getBuffer()) + sizeof(BlobHeader),
+		   hdr->getNameLength()) != 0) {
+      //      if (std::string(objectType) !=
+      //	  std::string((char*)(buf.getBuffer()) + sizeof(BlobHeader),
+      //		      hdr->getNameLength())) {
+	THROW (BlobException,
+	       "BlobFieldSet::checkHeader - object type mismatch");
       }
       if (version >= 0) {
 	if (version < vrs) {
-	  throw Exception("BlobFieldSet::checkHeader - blob version too high");
+	  THROW (BlobException,
+		 "BlobFieldSet::checkHeader - blob version too high");
 	}
       } else {
 	if (-version != vrs) {
-	  throw Exception("BlobFieldSet::checkHeader - blob version mismatch");
+	  THROW (BlobException,
+		 "BlobFieldSet::checkHeader - blob version mismatch");
 	}
       }
     }
     if (size > 0) {
       if (size != hdr->getLength()) {
-	throw Exception("BlobFieldSet::checkHeader - blob size mismatch");
+	THROW (BlobException,
+	       "BlobFieldSet::checkHeader - blob size mismatch");
       }
     }
     return hdr->mustConvert();
@@ -183,7 +193,7 @@ namespace LOFAR {
 
   void BlobFieldSet::convertData (BlobIBufChar& buf) const
   {
-    BlobHeaderBase* hdr = (BlobHeaderBase*)(buf.getBuffer());
+    BlobHeader* hdr = (BlobHeader*)(buf.getBuffer());
     if (hdr->mustConvert()) {
       LOFAR::DataFormat fmt = hdr->getDataFormat();
       for (uint i=0; i<itsFields.size(); i++) {

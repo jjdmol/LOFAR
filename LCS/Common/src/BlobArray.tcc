@@ -43,7 +43,7 @@ BlobOStream& putBlobArray (BlobOStream& bs, const T* data,
 {
   uint32 n = putBlobArrayHeader (bs, true,
 				 LOFAR::typeName((const T**)0),
-				 shape, ndim, fortranOrder);
+				 shape, ndim, fortranOrder, 1);
   putBlobArrayData (bs, data, n);
   bs.putEnd();
   return bs;
@@ -100,8 +100,7 @@ uint setSpaceBlobArray (BlobOStream& bs, bool useBlobHeader,
 {
   uint32 n = putBlobArrayHeader (bs, useBlobHeader,
 				 LOFAR::typeName((const T**)0),
-				 shape, ndim, fortranOrder,
-				 std::min(sizeof(T),8u));         // align
+				 shape, ndim, fortranOrder, sizeof(T));
   uint pos = bs.setSpace (n*sizeof(T));
   if (useBlobHeader) {
     bs.putEnd();
@@ -131,10 +130,11 @@ BlobIStream& operator>> (BlobIStream& bs, blitz::array<T,NDIM>& arr)
   bs.getStart (LOFAR::typeName((const T**)0));
   bool fortranOrder;
   uint16 ndim;
-  getBlobArrayStart (bs, fortranOrder, ndim);
+  uint nalign = getBlobArrayStart (bs, fortranOrder, ndim);
   ASSERT (ndim == NDIM);
   TinyVector<NDIM>(uint32,NDIM) shape;
-  getBlobArrayShape (bs, shape.data(), NDIM, fortranOrder!=arr.isMinorRank());
+  getBlobArrayShape (bs, shape.data(), NDIM, fortranOrder!=arr.isMinorRank(),
+		     nalign);
   arr.resize (shape);
   if (arr.isStorageContiguous()) {
     getBlobArrayData (bs, arr.dataFirst(), arr.numElements());
@@ -170,9 +170,9 @@ BlobIStream& operator>> (BlobIStream& bs, Array<T>& arr)
   bs.getStart (LOFAR::typeName((const T**)0));
   bool fortranOrder;
   uint16 ndim;
-  getBlobArrayStart (bs, fortranOrder, ndim);
+  uint nalign = getBlobArrayStart (bs, fortranOrder, ndim);
   vector<uint32> shp(ndim);
-  getBlobArrayShape (bs, &shp[0], ndim, !fortranOrder);
+  getBlobArrayShape (bs, &shp[0], ndim, !fortranOrder, nalign);
   IPosition shape(ndim);
   for (uint i=0; i<arr.ndim(); i++) {
     shape[i] = shp[i];
@@ -194,9 +194,9 @@ BlobIStream& getBlobVector (BlobIStream& bs, T*& arr, uint32& size)
   bs.getStart (LOFAR::typeName((const T**)0));
   bool fortranOrder;
   uint16 ndim;
-  getBlobArrayStart (bs, fortranOrder, ndim);
+  uint nalign = getBlobArrayStart (bs, fortranOrder, ndim);
   ASSERT (ndim == 1);
-  getBlobArrayShape (bs, &size, 1, false);
+  getBlobArrayShape (bs, &size, 1, false, nalign);
   arr = new T[size];
   getBlobArrayData (bs, arr, size);
   bs.getEnd();
@@ -210,13 +210,10 @@ BlobIStream& getBlobArray (BlobIStream& bs, T*& arr,
   bs.getStart (LOFAR::typeName((const T**)0));
   bool fortranOrder1;
   uint16 ndim;
-  getBlobArrayStart (bs, fortranOrder1, ndim);
+  uint nalign = getBlobArrayStart (bs, fortranOrder1, ndim);
   shape.resize (ndim);
-  getBlobArrayShape (bs, &shape[0], ndim, fortranOrder!=fortranOrder1);
-  uint n=1;
-  for (uint i=0; i<ndim; i++) {
-    n *= shape[i];
-  }
+  uint n = getBlobArrayShape (bs, &shape[0], ndim,
+			      fortranOrder!=fortranOrder1, nalign);
   arr = new T[n];
   getBlobArrayData (bs, arr, n);
   bs.getEnd();
@@ -233,13 +230,10 @@ uint getSpaceBlobArray (BlobIStream& bs, bool useBlobHeader,
   }
   bool fortranOrder1;
   uint16 ndim;
-  getBlobArrayStart (bs, fortranOrder1, ndim);
+  uint nalign = getBlobArrayStart (bs, fortranOrder1, ndim);
   shape.resize (ndim);
-  getBlobArrayShape (bs, &shape[0], ndim, fortranOrder!=fortranOrder1);
-  uint n=1;
-  for (uint i=0; i<ndim; i++) {
-    n *= shape[i];
-  }
+  uint n = getBlobArrayShape (bs, &shape[0], ndim,
+			      fortranOrder!=fortranOrder1, nalign);
   uint pos = bs.getSpace (n*sizeof(T));
   if (useBlobHeader) {
     bs.getEnd();
@@ -253,10 +247,10 @@ BlobIStream& operator>> (BlobIStream& bs, std::vector<T>& arr)
   bs.getStart (LOFAR::typeName((const T**)0));
   bool fortranOrder;
   uint16 ndim;
-  getBlobArrayStart (bs, fortranOrder, ndim);
+  uint nalign = getBlobArrayStart (bs, fortranOrder, ndim);
   ASSERT (ndim == 1);
   uint32 size;
-  getBlobArrayShape (bs, &size, 1, false);
+  getBlobArrayShape (bs, &size, 1, false, nalign);
   arr.resize (size);
   getBlobArrayData (bs, &(arr[0]), size);
   bs.getEnd();

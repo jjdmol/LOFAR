@@ -169,7 +169,6 @@ BlobIStream& getBlobArray (BlobIStream& bs, T*& arr,
 // It is meant for use with the BlobIBufString buffer. The function
 // getPointer in that class can be used to turn the position into a pointer.
 // The data are assumed to be aligned on sizeof(T) bytes with a maximum of 8.
-// The alignment should match the one used in setSpaceBlobArray.
 template<typename T>
 uint getSpaceBlobArray (BlobIStream& bs, bool useBlobHeader,
 			std::vector<uint32>& shape,
@@ -204,18 +203,23 @@ inline BlobOStream& putBlobVector (BlobOStream& bs, const T* vec, uint32 size)
 
 // Put a blob array header. It returns the number of elements.
 // This is a helper function for the functions writing an array.
+// After writing the shape it aligns the stream on the given alignment
+// with a maximum of 8.
+// It returns the number of elements in the array.
 uint32 putBlobArrayHeader (BlobOStream& bs, bool useBlobHeader,
 			   const std::string& headerName,
 			   const uint32* shape, uint16 ndim,
-			   bool fortranOrder, uint align=0);
+			   bool fortranOrder, uint nalign);
 
 // Get the ordering and dimensionality.
 // This is a helper function for the functions reading an array.
-inline void getBlobArrayStart (BlobIStream& bs, bool& fortranOrder,
+// It returns the number of alignment bytes used.
+inline uint getBlobArrayStart (BlobIStream& bs, bool& fortranOrder,
 			       uint16& ndim)
 {
-  char dummy;
-  bs >> fortranOrder >> dummy >> ndim;
+  uchar nalign;
+  bs >> fortranOrder >> nalign >> ndim;
+  return nalign;
 }
 
 
@@ -225,8 +229,9 @@ void convertArrayHeader (LOFAR::DataFormat, char* header,
 
 // Get the shape of an array from the blob.
 // This is a helper function for the functions reading an array.
-void getBlobArrayShape (BlobIStream& bs, uint32* shape, uint ndim,
-			bool swapAxes);
+// It returns the number of elements in the array.
+uint getBlobArrayShape (BlobIStream& bs, uint32* shape, uint ndim,
+			bool swapAxes, uint nalign);
 
 // Helper function to put an array of data.
 // It is specialized for the standard types (including complex and string).

@@ -26,6 +26,7 @@
 #include <Common/BlobIStream.h>
 #include <Common/BlobIBufChar.h>
 #include <Common/BlobOBufChar.h>
+#include <Common/BlobException.h>
 #include <Common/DataConvert.h>
 #include <Common/LofarLogger.h>
 
@@ -122,17 +123,18 @@ namespace LOFAR {
   void BlobFieldBase::setShape (const std::vector<uint32>& shape)
   {
     if (itsIsScalar) {
-      throw Exception("BlobField: cannot set shape of a scalar field");
+      THROW (BlobException,
+	     "BlobField: cannot set shape of a scalar field");
     }
     if (itsShapeDef.size() > 0) {
       if (itsShapeDef.size() != shape.size()) {
-	throw Exception("BlobField: cannot change dimensionality of "
-			"this array field");
+	THROW (BlobException, "BlobField: cannot change dimensionality of "
+	                      "this array field");
       }
       for (uint i=0; i<shape.size(); i++) {
 	if (itsShapeDef[i] != 0  &&  shape[i] != itsShapeDef[i]) {
-	  throw Exception("BlobField: cannot change fixed axis size of "
-			  "this array field");
+	  THROW (BlobException, "BlobField: cannot change fixed axis size of "
+			        "this array field");
 	}
       }
     }
@@ -218,9 +220,10 @@ namespace LOFAR {
       bs.align (std::min(sizeof(T),8u));
       setOffset (bs.setSpace (sizeof(T)), 0);
     } else {
-      int64 off = bs.tellPos();     // array offset
+      int64 off = bs.tellPos();                        // array offset
       setOffset (setSpaceBlobArray<T> (bs, useBlobHeader(),
-				       getShape(), isFortranOrder()), off);
+				       getShape(), isFortranOrder()),
+		 off);
     }
   }
 
@@ -235,7 +238,8 @@ namespace LOFAR {
       int64 off = bs.tellPos();     // array offset
       std::vector<uint32> shp;
       setOffset (getSpaceBlobArray<T> (bs, useBlobHeader(),
-				       shp, fortranOrder()), off);
+				       shp, fortranOrder()),
+		 off);
       setShape (shp);
     }
   }

@@ -33,30 +33,33 @@ uint32 putBlobArrayHeader (BlobOStream& bs, bool useBlobHeader,
 			   bool fortranOrder, uint align)
 {
   if (useBlobHeader) {
-    bs.putStart (headerName, 1, align);                // version 1
+    bs.putStart (headerName, 1);                // version 1
   }
-  bs << fortranOrder << char(0) << ndim;
+  uchar nalign = 0;
+  if (align > 1) {
+    int64 pos = bs.tellPos();
+    if (pos > 0) {
+      nalign = (pos + 4 + ndim*sizeof(uint32)) % std::min(8u, align);
+    }
+  }    
+  bs << fortranOrder << nalign << ndim;
   bs.put (shape, ndim);
-  if (ndim%2 == 0) {
-    bs << uint32(0);      // make #axes odd (to match BlobArrayHeader)
-  }
   uint32 n = 1;
   for (int i=0; i<ndim; i++) {
     n *= shape[i];
+  }
+  if (nalign > 0) {
+    bs.put ("        ", nalign);
   }
   return n;
 }
 
 // Get the shape of an array from the blob.
 // This is a helper function for the functions reading an array.
-void getBlobArrayShape (BlobIStream& bs, uint32* shape, uint ndim,
-			bool swapAxes)
+uint getBlobArrayShape (BlobIStream& bs, uint32* shape, uint ndim,
+			bool swapAxes, uint nalign)
 {
   bs.get (shape, ndim);
-  if (ndim%2 == 0) {
-    uint32 dummy;
-    bs >> dummy;    // a dummy is added to make #dim odd (for BlobArrayHeader)
-  }
   if (swapAxes) {
     std::vector<uint32> shp(ndim);
     for (uint i=0; i<ndim; i++) {
@@ -66,6 +69,16 @@ void getBlobArrayShape (BlobIStream& bs, uint32* shape, uint ndim,
       shape[i] = shp[ndim-i-1];
     }
   }
+  uint n=1;
+  for (uint i=0; i<ndim; i++) {
+    n *= shape[i];
+  }
+  if (nalign > 0) {
+    ASSERT (nalign <= 8);
+    char buf[8];
+    bs.get (buf, nalign);
+  }
+  return n;
 }
 
 void convertArrayHeader (LOFAR::DataFormat fmt, char* header,
@@ -73,11 +86,11 @@ void convertArrayHeader (LOFAR::DataFormat fmt, char* header,
 {
   char* buf = header;
   if (useBlobHeader) {
-    BlobHeaderBase* hdr = (BlobHeaderBase*)header;
+    BlobHeader* hdr = (BlobHeader*)header;
     hdr->setLocalDataFormat();
     buf += hdr->getHeaderLength();
   }
-  // Skip the 2 characters that do not need to be converted.
+  // Skip the first 2 characters that do not need to be converted.
   buf += + 2;
   int ndim = dataConvert (fmt, *((uint16*)buf));
   dataConvert16 (fmt, buf);
@@ -93,7 +106,7 @@ BlobOStream& operator<< (BlobOStream& bs, const std::vector<bool>& vec)
   uint32 size = vec.size();
   putBlobArrayHeader (bs, true,
 		      LOFAR::typeName((const bool**)0),
-		      &size, 1, true);
+		      &size, 1, true, 1);
   bs.putBoolVec (vec);
   bs.putEnd();
   return bs;
@@ -104,10 +117,10 @@ BlobIStream& operator>> (BlobIStream& bs, std::vector<bool>& vec)
   bs.getStart (LOFAR::typeName((const bool**)0));
   bool fortranOrder;
   uint16 ndim;
-  getBlobArrayStart (bs, fortranOrder, ndim);
+  uint nalign = getBlobArrayStart (bs, fortranOrder, ndim);
   ASSERT(ndim == 1);
   uint32 size;
-  getBlobArrayShape (bs, &size, 1, false);
+  getBlobArrayShape (bs, &size, 1, false, nalign);
   bs.getBoolVec (vec, size);
   return bs;
 }

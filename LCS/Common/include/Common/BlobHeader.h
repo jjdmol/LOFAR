@@ -36,7 +36,7 @@ namespace LOFAR {
 // in it will be preceeded by a header. The header contains the
 // following information:
 // <ul>
-// <li> A magic value is used to indicatew the start of an object.
+// <li> A magic value is used to indicate the start of an object.
 // <li> The length defines the total size of the object in the blob
 //   (including the header). It may not always be possible to store
 //   the length. In that case the length is 0.
@@ -78,19 +78,14 @@ namespace LOFAR {
 // So it is always aligned on a double boundary and its length is always
 // a multiple of 8.
 
-template<uint NAMELENGTH>
 class BlobHeader
 {
+friend class BlobOStream;
+friend class BlobIStream;
+
 public:
   // Construct for the given name and version.
-  BlobHeader (const char* objectType, int version, uint level=0);
-
-  // Check if the magic value is correct.
-  bool checkMagicValue() const;
-
-  bool checkType (const char* objectType) const
-    { return itsNameLength==strlen(objectType)
-          && strncmp(itsName, objectType, itsNameLength) == 0; }
+  BlobHeader (int version=0, uint level=0);
 
   // Get the data format.
   LOFAR::DataFormat getDataFormat() const
@@ -118,40 +113,13 @@ public:
   bool mustConvert() const
     { return itsDataFormat != LOFAR::dataFormat(); }
 
-  // Get the plain size of the header (i.e. without the name).
-  int32 plainSize() const
-    { return 2*sizeof(int32) + sizeof(int16) + 4; }
-
   // Get the offset of the length.
   uint lengthOffset() const
     { return sizeof(uint32); }
 
-  // Get the reserved name length.
-  uint getHeaderLength() const
-    { return plainSize() + itsReservedLength; }
-
-protected:
-  uint32 itsMagicValue;
-  uint32 itsLength;
-  int16  itsVersion;
-  char   itsDataFormat;
-  uchar  itsLevel;
-  uchar  itsReservedLength;
-  uchar  itsNameLength;
-  char   itsName[(1+(NAMELENGTH+6-1)/8)*8-6];
-};
-
-
-class BlobHeaderBase : public BlobHeader<0>
-{
-friend class BlobOStream;
-friend class BlobIStream;
-
-public:
-  // Construct for the given version.
-  explicit BlobHeaderBase (int version=0, uint level=0)
-    : BlobHeader<0> ("", version, level)
-    {}
+  // Get the name length.
+  uint getNameLength() const
+    { return itsNameLength; }
 
   // Get the begin-of-blob magic value.
   static uint32 bobMagicValue()
@@ -160,16 +128,25 @@ public:
   // Get the end-of-blob magic value.
   static uint32 eobMagicValue()
     { return 0xbfbfbfbf; }
+
+  bool BlobHeader::checkMagicValue() const
+    { return itsMagicValue == bobMagicValue(); }
+
+  // Get the length of the total header (thus including objecttype).
+  uint getHeaderLength() const
+    { return sizeof(BlobHeader) + itsNameLength; }
+
+private:
+  uint32 itsMagicValue;
+  uint32 itsLength;
+  char   itsVersion;
+  char   itsDataFormat;
+  uchar  itsLevel;
+  uchar  itsNameLength;
 };
-
-
-template<uint NAMELENGTH>
-bool BlobHeader<NAMELENGTH>::checkMagicValue() const
-  { return itsMagicValue == BlobHeaderBase::bobMagicValue(); }
 
 
 } // end namespace
 
-#include <Common/BlobHeader.tcc>
 
 #endif
