@@ -15,11 +15,12 @@ SUFFIXES = .ph
 BUILT_SOURCES = \
 	RSP_Protocol.ph \
 	EPA_Protocol.ph \
-	log4cplus.properties \
-	rspdriver.conf \
 	RemoteStation.conf \
 	RSPDriverPorts.conf \
 	RSPDriver.conf
+
+#	rspdriver.conf 
+#	log4cplus.properties
 
 clean-local:
 	rm -f \
@@ -33,13 +34,13 @@ EXTRA_DIST = \
 	EPA_Protocol.ph
 
 sysconf_DATA = \
-	rspdriver.conf \
 	RemoteStation.conf \
 	RSPDriverPorts.conf \
 	RSPDriver.conf
 
-# 	log4cplus.properties \
-# 	abs.ns \
+#	rspdriver.conf 
+# 	log4cplus.properties 
+# 	abs.ns 
 # 	abs.top
 
 %.properties: $(MAC_CONFIG)/%.properties
