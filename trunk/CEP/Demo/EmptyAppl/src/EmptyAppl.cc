@@ -33,21 +33,21 @@
 #endif
 
 #include <Common/Debug.h>
-#include "CEPFrame/Transport.h"
-#include "CEPFrame/Step.h"
-#include "CEPFrame/Simul.h"
-#include "CEPFrame/WH_Empty.h"
-#include "CEPFrame/Profiler.h"
-#include "CEPFrame/ParamBlock.h"
-#include "CEPFrame/ShMem/TH_ShMem.h"
-#include "EmptyAppl/EmptyAppl.h"
+#include <CEPFrame/Transport.h>
+#include <CEPFrame/Step.h>
+#include <CEPFrame/Simul.h>
+#include <CEPFrame/WH_Empty.h>
+#include <CEPFrame/Profiler.h>
+#include <CEPFrame/ShMem/TH_ShMem.h>
+#include <EmptyAppl/EmptyAppl.h>
+#include <Common/KeyValueMap.h>
 
 
 #include TRANSPORTERINCLUDE
 
 #ifdef HAVE_CORBA
-#include "CEPFrame/Corba/BS_Corba.h"
-#include "CEPFrame/Corba/TH_Corba.h"
+#include <CEPFrame/Corba/BS_Corba.h>
+#include <CEPFrame/Corba/TH_Corba.h>
 #endif
 
 using namespace LOFAR;
@@ -65,7 +65,7 @@ EmptyAppl::~EmptyAppl()
    Define function for the EmptyAppl simulation. It defines the steps that 
    process part of the data.
  */
-void EmptyAppl::define(const ParamBlock& params)
+void EmptyAppl::define(const KeyValueMap&)
 {
 
 #ifdef HAVE_CORBA
