@@ -13,11 +13,29 @@
 
 //====================>>>  UVPDataAtom::UVPDataAtom  <<<====================
 
-UVPDataAtom::UVPDataAtom(int    numberOfChannels,
-                         double time)
-  : itsData(numberOfChannels),
-    itsTime(time)    
+UVPDataAtom::UVPDataAtom()
+  : itsData(0),
+    itsTime(0),
+    itsUVW(3)
 {
+}
+
+
+
+
+
+//====================>>>  UVPDataAtom::UVPDataAtom  <<<====================
+
+UVPDataAtom::UVPDataAtom(unsigned int  numberOfChannels,
+                         double          time,
+                         const std::vector<double> &uvw)
+  : itsData(numberOfChannels),
+    itsTime(time),
+    itsUVW(uvw)
+{
+#if(DEBUG_MODE)
+  assert(uvw.size() == 3);
+#endif
 }
 
 
@@ -58,6 +76,23 @@ void UVPDataAtom::setData(const std::vector<double_complex>& data)
 
   itsData = data;
 }
+
+
+
+
+
+
+//====================>>>  UVPDataAtom::setUVW  <<<====================
+
+void UVPDataAtom::setUVW(const std::vector<double> &uvw)
+{
+#if(DEBUG_MODE)
+  assert(uvw.size() == itsUVW.size());
+#endif
+
+  itsUVW = uvw;
+}
+
 
 
 

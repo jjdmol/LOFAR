@@ -149,7 +149,7 @@ int  UVPDataTransferWP::receive(MessageRef &messageRef)
         
         double       time = record[FTime];
         
-        UVPDataAtom atom(itsHeader.itsNumberOfChannels, time);
+        UVPDataAtom atom(itsHeader.itsNumberOfChannels, time, std::vector<double>(3,0));
         
         for(unsigned int i = 0; i < (unsigned int)itsHeader.itsNumberOfChannels; i++) {
 #if(DEBUG_MODE)

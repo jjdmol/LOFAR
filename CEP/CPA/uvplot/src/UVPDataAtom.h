@@ -1,6 +1,6 @@
 // Copyright notice
 
-// $ID
+// $Id$
 
 #if !defined(UVPDATAATOM_H)
 #define UVPDATAATOM_H
@@ -9,20 +9,39 @@
 #include <vector>
 #include <complex>
 
+
+
 //! Manages a vector of visibilities recorded for one correlation, on
 //! one baseline at a given time.
-/*!
-  
+/*!  The uvw coordinates are in meters. The visibility data in
+  Jansky. This is the basic data unit of a synthesis observation as we
+  currently consider it.
  */
 class UVPDataAtom
 {
  public:
   
-  UVPDataAtom(int    numberOfChannels = 0,
-              double time            = 0);
+  //! Default constructor.
+  /*!  UVW coordinates are initialized to 0, The data array initially
+    has zero length, time is 0.
+   */
+  UVPDataAtom();
+
+  //! Constructor.
+  /*!
+    \param numberOfChannels must be >= 0.
+    \param time is the time in seconds. The user is responsible for
+    defining the exact zeropoint.
+    \param uvw is a vector of length 3 specifying the u (0), v (1) and
+    w (2) coordinates of the visibility spectrum in meters. 
+   */
+  UVPDataAtom(unsigned int             numberOfChannels,
+              double                     time,
+              const std::vector<double> &uvw);
 
   //! Sets a new number of channels.
-  /*! setChannels destroys the previous contents of itsData.
+  /*! setChannels destroys the previous contents of itsData and
+    allocates new storage for numberOfChannels channels.
    */
   void            setChannels(unsigned int numberOfChannels);
   
@@ -43,6 +62,14 @@ class UVPDataAtom
    */
   void            setData(const std::vector<double_complex>& data);
 
+  //! Sets new UVW coordinates.
+  /*!
+    \param uvw must be an array of length 3. u is at index 0, v at 1
+    and w at index 2.
+   */
+  void            setUVW(const std::vector<double> &uvw);
+
+
   //! \returns the number of channels.
   unsigned int getNumberOfChannels() const;
 
@@ -57,6 +84,7 @@ class UVPDataAtom
   
   std::vector<double_complex> itsData;
   double                   itsTime;
+  std::vector<double>      itsUVW;
 };
 
 #endif // UVPDATAATOM_H
