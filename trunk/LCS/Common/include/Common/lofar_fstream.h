@@ -23,7 +23,7 @@
 #ifndef COMMON_FSTREAM_H
 #define COMMON_FSTREAM_H
 
-#include <fstream.h>
+#include <fstream>
 using std::ifstream;
 using std::ofstream;
 
