@@ -46,10 +46,10 @@ void MeqLofarStatSources::calcResult (const MeqRequest& request)
 {
   PERFPROFILE_L(__PRETTY_FUNCTION__, PP_LEVEL_1);
 
-  ASSERT (request.nx() == 1);
+  ASSERT (request.ny() == 1);
   MeqRequest req(request);
   // Size the K vector such that all channels can be held.
-  int nfreq = request.ny();
+  int nfreq = request.nx();
   complex<double>* kdat = itsK.setDComplex (1, nfreq);
   // Multiply the station J matrices by the source contribution K.
   int nrsrc = itsSrc->nsources();

@@ -37,7 +37,7 @@ class MeqResult;
 
 // This class contains a 2-dim function with real coefficients.
 // It is valid for the given domain only.
-// The coefficients are numbered 0..N with the time as the most rapidly
+// The coefficients are numbered 0..N with the frequency as the most rapidly
 // varying axis.
 
 class MeqFunklet

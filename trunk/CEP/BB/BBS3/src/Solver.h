@@ -24,8 +24,6 @@
 #define BB_BBS3_SOLVER_H
 
 #include <scimath/Fitting/LSQaips.h>
-#include <BBS3/MNS/MeqDomain.h>
-#include <BBS3/MNS/ParmTable.h>
 #include <BBS3/ParmData.h>
 #include <BBS3/Quality.h>
 #include <Common/LofarTypes.h>
@@ -35,8 +33,6 @@
 
 namespace LOFAR
 {
-
-class ParmData;
 
 // Solver calculates new parameter values from the equations given by the
 // Prediffer class.

@@ -51,10 +51,10 @@ vector<int> MeqPointDFT::ncells (int sourceNr,
   double tmpphi = C::_2pi * (itsLeft->getExponent(sourceNr, request) -
 			     itsRight->getExponent(sourceNr, request));
   double cellWidth = C::c / (2*tmpphi);
-  double step = request.stepY();
-  double freq0 = domain.startY();
+  double step = request.stepX();
+  double freq0 = domain.startX();
   double freq1 = freq0 + step;
-  for (int i=0; i<request.ny(); i++) {
+  for (int i=0; i<request.nx(); i++) {
     int nc = 2*(1 + int((freq1 - freq0) / cellWidth));
     //int nc = (1 + int((freq1 - freq0) / cellWidth));
     if (nc > ncell) {
@@ -72,7 +72,7 @@ MeqResult MeqPointDFT::getResult (const MeqRequest& request)
 {
   // A delta in the station source predict is only available if multiple
   // frequency channels are used.
-  bool multFreq = request.ny() > 1;
+  bool multFreq = request.nx() > 1;
   MeqResult result(request.nspid());
   const MeqResult& left = itsLeft->getResult (request);
   const MeqResult& right = itsRight->getResult (request);
@@ -136,43 +136,23 @@ MeqResult MeqPointDFT::getResult (const MeqRequest& request)
   MeqMatrix res(complex<double>(0,0), request.nx(), request.ny(), false);
   complex<double>* resdata = res.dcomplexStorage();
   complex<double> dval, val0;
-  // Note that some optimization can be achieved here, because usually
-  // request.nx()==1. 'Roll out' the loop by making a special case for nx==1
-  // so it can use tmpnk[0], deltal[0], etc. and does not need nx in
-  // the resdata addressing.
-  // A similar optimization in the perturbed value calculation.
   const double* tmpnk = nk.getValue().doubleStorage();
-  //if request.nx() == 1) {
-  //  val0 = tmpr[0] * conj(tmpl[0]) / tmpnk[0]);
-  //  resdata[0] = val0;
-  //  if (multFreq) {
-  //    dval = deltar[0] / deltal[0];
-  //    for (int j=1; j<request.ny(); j++) {
-  //	  val0 *= dval;
-  //	  resdata[j] = val0;
-  //    }
-  //  }
-  //} else {
   // nk can be a scalar or an array (in time axis), so set its step to 0
   // if it is a scalar.
-  int stepnk = (nk.getValue().nx() > 1  ?  1 : 0);
+  int stepnk = (nk.getValue().ny() > 1  ?  1 : 0);
   int nki = 0;
-  for (int i=0; i<request.nx(); i++) {
+  for (int i=0; i<request.ny(); i++) {
     val0 = tmpr[i] * conj(tmpl[i]) / tmpnk[nki];
     nki += stepnk;
-    resdata[i] = val0;
+    *resdata++ = val0;
     if (multFreq) {
       dval = deltar[i] * conj(deltal[i]);
-      for (int j=1; j<request.ny(); j++) {
+      for (int j=1; j<request.nx(); j++) {
 	val0 *= dval;
-	resdata[i + j*request.nx()] = val0;
+	*resdata++ = val0;
       }
     }
   }
-      ///      if (i==0) {
-	///	cout << "abs dft " << abs(*(resdata-1)) << endl;
-	///      }
-  ///  cout << "Res: " << res << endl;
   result.setValue (res);
 
   // Evaluate (if needed) for the perturbed parameter values.
@@ -196,15 +176,15 @@ MeqResult MeqPointDFT::getResult (const MeqRequest& request)
       complex<double>* presdata = pres.dcomplexStorage();
       tmpnk = nk.getPerturbedValue(spinx).doubleStorage();
       nki = 0;
-      for (int i=0; i<request.nx(); i++) {
+      for (int i=0; i<request.ny(); i++) {
 	val0 = tmpr[i] * conj(tmpl[i]) / tmpnk[nki];
 	nki += stepnk;
-	presdata[i] = val0;
+	*presdata++ = val0;
 	if (multFreq) {
 	  dval = deltar[i] * conj(deltal[i]);
-	  for (int j=1; j<request.ny(); j++) {
+	  for (int j=1; j<request.nx(); j++) {
 	    val0 *= dval;
-	    presdata[i + j*request.nx()] = val0;
+	    *presdata++ = val0;
 	  }
 	}
       }

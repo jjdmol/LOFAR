@@ -56,7 +56,7 @@ void MeqLofarPoint::calcResult (const MeqRequest& request)
 
   // We can only calculate for a single time bin.
   const MeqDomain& domain = request.domain();
-  ASSERT (request.nx() == 1);
+  ASSERT (request.ny() == 1);
   // Find the maximum nr of cells needed.
   // Use 1 cell only until more cells are needed.
   int ncellt = 1;
@@ -75,10 +75,10 @@ void MeqLofarPoint::calcResult (const MeqRequest& request)
   itsNcell[1] = ncellf;
   itsCelltHist->update (ncellt);
   itsCellfHist->update (ncellf);
-  ncellf *= request.ny();
+  ncellf *= request.nx();
 
   // The domain is divided into the required number of cells.
-  MeqRequest dftReq (domain, ncellt, ncellf, request.nspid());
+  MeqRequest dftReq (domain, ncellf, ncellt, request.nspid());
   Int ncell = ncellt*ncellf;
   MeqResult& resXX = result11();
   MeqResult& resXY = result12();

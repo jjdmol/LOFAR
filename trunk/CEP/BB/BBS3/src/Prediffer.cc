@@ -687,9 +687,11 @@ vector<uint32> Prediffer::setDomain (double fstart, double flength,
 
   NSTimer parmTimer;
   parmTimer.start();
-  itsDomain = MeqDomain(startTime, endTime,
-			itsStartFreq + itsFirstChan*itsStepFreq,
-			itsStartFreq + (itsLastChan+1)*itsStepFreq);
+  itsDomain = MeqDomain(itsStartFreq + itsFirstChan*itsStepFreq,
+			itsStartFreq + (itsLastChan+1)*itsStepFreq,
+			startTime,
+			endTime);
+
   initParms (itsDomain);
   parmTimer.stop();
   cout << "BBSTest: initparms    " << parmTimer << endl;
@@ -834,8 +836,8 @@ bool Prediffer::getEquations (double* result, const vector<uint32>& shape,
     double time = itsTimes[itsTimeIndex-itsNrTimes+tStep];
     double interv = itsIntervals[itsTimeIndex-itsNrTimes+tStep];
     
-    MeqDomain domain(time-interv/2, time+interv/2, startFreq, endFreq);
-    MeqRequest request(domain, 1, nrchan, itsNrScid);
+    MeqDomain domain(startFreq, endFreq, time-interv/2, time+interv/2);
+    MeqRequest request(domain, nrchan, 1, itsNrScid);
 
     // Loop through all baselines and get an equation if selected.
     while (itsBlNext<itsNrBl) {
@@ -894,7 +896,7 @@ void Prediffer::getEquation (double* result, const fcomplex* data,
   itsPredTimer.stop();
 
   itsEqTimer.start();
-  int nrchan = request.ny();
+  int nrchan = request.nx();
   bool showd = false;
   /// showd = (ant1==4 && ant2==8);
   // Put the results in a single array for easier handling.
@@ -964,10 +966,10 @@ vector<MeqResult> Prediffer::getResults (bool calcDeriv)
   {
     double time = itsTimes[itsTimeIndex-itsNrTimes+tStep];
     double interv = itsIntervals[itsTimeIndex-itsNrTimes+tStep];
-    MeqDomain domain(time-interv/2, time+interv/2, startFreq, endFreq);
-    MeqRequest request(domain, 1, nrchan, 0);
+    MeqDomain domain(startFreq, endFreq, time-interv/2, time+interv/2);
+    MeqRequest request(domain, nrchan, 1, 0);
     if (calcDeriv) {
-      request = MeqRequest(domain, 1, nrchan, itsNrScid);
+      request = MeqRequest(domain, nrchan, 1, itsNrScid);
     }
     for (unsigned int bl=0; bl<itsNrBl; bl++)
     {
@@ -1045,8 +1047,8 @@ void Prediffer::subtractPeelSources (bool write)
     double time = itsTimes[itsTimeIndex-itsNrTimes+tStep];
     double interv = itsIntervals[itsTimeIndex-itsNrTimes+tStep];
 
-    MeqDomain domain(time-interv/2, time+interv/2, startFreq, endFreq);
-    MeqRequest request(domain, 1, nrchan, itsNrScid);
+    MeqDomain domain(startFreq, endFreq, time-interv/2, time+interv/2);
+    MeqRequest request(domain, nrchan, 1, itsNrScid);
     
     for (unsigned int bl=0; bl<itsNrBl; bl++)
     {

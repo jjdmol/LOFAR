@@ -38,10 +38,10 @@ namespace LOFAR {
 class MeqDomain
 {
 public:
-  // Create a time,frequency default domain of -1:1,-1:1..
+  // Create an  x,y default domain of -1:1,-1:1..
   MeqDomain();
 
-  // Create a time,frequency domain.
+  // Create an x,y domain.
   MeqDomain (double startX, double endX, double startY, double endY);
 
   // Get offset and scale value.

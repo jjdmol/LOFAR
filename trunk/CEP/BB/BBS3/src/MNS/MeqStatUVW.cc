@@ -62,14 +62,14 @@ void MeqStatUVW::calculate (const MeqRequest& request)
 {
   PERFPROFILE(__PRETTY_FUNCTION__);
   // Make sure the MeqResult/Matrix objects have the correct size.
-  double* uptr = itsU.setDouble (request.nx(), 1);
-  double* vptr = itsV.setDouble (request.nx(), 1);
-  double* wptr = itsW.setDouble (request.nx(), 1);
-  double step = request.stepX();
-  double time = request.domain().startX() + step/2;
+  double* uptr = itsU.setDouble (1, request.ny());
+  double* vptr = itsV.setDouble (1, request.ny());
+  double* wptr = itsW.setDouble (1, request.ny());
+  double step = request.stepY();
+  double time = request.domain().startY() + step/2;
   // Use the UVW coordinates if already calculated for this time.
   MeqTime meqtime(time);
-  if (request.nx() == 1) {
+  if (request.ny() == 1) {
     map<MeqTime,MeqUVW>::iterator pos = itsUVW.find (meqtime);
     if (pos != itsUVW.end()) {
       uptr[0] = pos->second.itsU;
@@ -99,7 +99,7 @@ void MeqStatUVW::calculate (const MeqRequest& request)
   itsFrame.set (mepoch);
   mbl.getRefPtr()->set(itsFrame);      // attach frame
   MBaseline::Convert mcvt(mbl, MBaseline::J2000);
-  for (Int i=0; i<request.nx(); i++) {
+  for (Int i=0; i<request.ny(); i++) {
     itsFrame.set (mepoch);
     LOG_TRACE_FLOW_STR ("frame " << mbl.getRefPtr()->getFrame());
     const MVBaseline& bas2000 = mcvt().getValue();
@@ -120,14 +120,14 @@ void MeqStatUVW::calculate (const MeqRequest& request)
   }
 
 //   double hav = itsPhaseRef->getStartHA() +
-//                (request.domain().startX() + request.stepX()/2 -
+//                (request.domain().startY() + request.stepY()/2 -
 //                 itsPhaseRef->getStartTime()) * itsPhaseRef->getScaleHA();
-//   double haStep = request.stepX() * itsPhaseRef->getScaleHA();
+//   double haStep = request.stepY() * itsPhaseRef->getScaleHA();
 //   // Make a double matrix for the hourangle values.
-//   MeqMatrix ha(0., request.nx(), 1, false);
+//   MeqMatrix ha(0., 1, request.ny(), false);
 //   double* haval = ha.doubleStorage();
 //   haval[0] = hav;
-//   for (int i=1; i<request.nx(); i++) {
+//   for (int i=1; i<request.ny(); i++) {
 //     hav += haStep;
 //     haval[i] = hav;
 //   }
