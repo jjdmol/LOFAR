@@ -42,9 +42,15 @@ PACKAGE = \
 	 LCS/CRD/CoordServer \
          CEP/Tools/PerfTest/P2Perf \
          CEP/CPA/OCTOPUSSY \
-         CEP/CPA/uvplot \
+         CEP/CPA/OCTOGlish \
+         CEP/CPA/VisCube \
          CEP/CPA/MNS \
          CEP/CPA/GSM \
+         CEP/CPA/AppAgent/AppAgent \
+         CEP/CPA/AppAgent/SolverControl \
+         CEP/CPA/AppAgent/Solver \
+         CEP/CPA/AppAgent/VisAgent \
+         CEP/CPA/AppAgent/MSVisAgent \
          CEP/CPA/CAL
 PACKAGES = $(PACKAGE)
 #
