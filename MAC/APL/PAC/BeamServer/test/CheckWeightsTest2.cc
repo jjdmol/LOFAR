@@ -148,17 +148,10 @@ public:
 
 	  //weights16 = convert2complex_int16_t(conj(weights));
 
-#if 0	  
-	  firstIndex i;
-	  secondIndex j;
-	  thirdIndex k;
-	  fourthIndex l;
-#else
 	  for (int i = 0; i < COMPUTE_INTERVAL; i++)
 	    for (int j = 0; j < N_ELEMENTS; j++)
 	      for (int k = 0; k < N_SUBBANDS; k++)
 		for (int l = 0; l < N_POLARIZATIONS; l++)
-#endif
 		  {
 		    weights16(i,j,k,l) = conj(weights16(i,j,k,l));
 		    weights16(i,j,k,l) = complex<int16_t>((int16_t)round(weights(i,j,k,l).real()*SCALE),
