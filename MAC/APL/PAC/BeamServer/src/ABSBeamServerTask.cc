@@ -60,7 +60,7 @@ using namespace boost::gregorian;
 
 #define SCALE (1<<(16-2))
 
-#define BEAMLETSTATS_INTEGRATION_COUNT 5000
+#define BEAMLETSTATS_INTEGRATION_COUNT 1000
 
 static Array<std::complex<int16_t>, 4> zero_weights;
 
@@ -88,9 +88,11 @@ BeamServerTask::BeamServerTask(string name)
 
   // initialize antenna positions
   Range all = Range::all();
-  m_pos(all, all, 0) = 1.0;
-  m_pos(all, all, 1) = 1.0;
-  m_pos(all, all, 2) = 0.0;
+  m_pos(0, all, all) = 0.0;
+  m_pos(0, all, 0)   = -50.0;
+
+  m_pos(1, all, all) = 0.0;
+  m_pos(1, all, 0)   = 50.0;
 
   // initialize weight matrix
   m_weights   = complex<W_TYPE>(0,0);
