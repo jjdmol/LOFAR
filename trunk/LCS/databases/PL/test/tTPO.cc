@@ -29,35 +29,16 @@ namespace LOFAR {
 
   namespace PL {
 
-    template<> struct DBRep<X> 
+    template<> class DBRep<X> : public DBRepMeta
     {
-      ObjectId::oid_t  itsOid;
-      ObjectId::oid_t  itsOwnerOid;
-
-
-      ObjectId::oid_t getOid() const
-      { return itsOid; }
+    public:
+      void bindCols(dtl::BoundIOs& cols) {}
+      void toDBRep(const X& src) {}
+      void fromDBRep(X& dest) const {}
     };
 
-    template<>
-    void BCA<X>::operator()(BoundIOs& cols, DataObj& rowbuf) 
+    template<> void TPersistentObject<X>::initAttribMap()
     {
-	  cols["ObjID"]  == rowbuf.itsOid;
-	  cols["Owner"]  == rowbuf.itsOwnerOid;
-    }
-    
-    template<>
-    void TPersistentObject<X>::fromDBRep(const DBRep<X>& org)
-    {
-      metaData().oid()->set(org.itsOid);
-      metaData().ownerOid()->set(org.itsOwnerOid);
-    }
-
-    template<>
-    void TPersistentObject<X>::toDBRep(DBRep<X>& dest) const
-    {
-      dest.itsOid   = metaData().oid()->get();
-      dest.itsOwnerOid = metaData().ownerOid()->get();
     }
 
     template<> void TPersistentObject<X>::init() 
@@ -65,45 +46,17 @@ namespace LOFAR {
       metaData().tableName() = "X"; 
     }
     
-    template<> void TPersistentObject<X>::initAttribMap()
+    template<> class DBRep<Y> : public DBRepMeta
     {
-      theirAttribMap["world"] = "World";
-    }
-
-    template<> struct DBRep<Y> 
-    {
-      ObjectId::oid_t  itsOid;
-      ObjectId::oid_t  itsOwnerOid;
-
-
-      ObjectId::oid_t getOid() const
-      { return itsOid; }
+    public:
+      void bindCols(dtl::BoundIOs& cols) {}
+      void toDBRep(const Y& src) {}
+      void fromDBRep(Y& dest) const {}
     };
-
-    template<>
-    void BCA<Y>::operator()(BoundIOs& cols, DataObj& rowbuf) 
-    {
-	  cols["ObjID"]  == rowbuf.itsOid;
-	  cols["Owner"]  == rowbuf.itsOwnerOid;
-    }
-    
-    template<>
-    void TPersistentObject<Y>::fromDBRep(const DBRep<Y>& org)
-    {
-      metaData().oid()->set(org.itsOid);
-      metaData().ownerOid()->set(org.itsOwnerOid);
-    }
-
-    template<>
-    void TPersistentObject<Y>::toDBRep(DBRep<Y>& dest) const
-    {
-      dest.itsOid   = metaData().oid()->get();
-      dest.itsOwnerOid = metaData().ownerOid()->get();
-    }
 
     template<> void TPersistentObject<Y>::initAttribMap()
     {
-      theirAttribMap["hello"] = "@Hello";
+      theirAttribMap["hello"] = "@Hello@";
     }
 
     template<> void TPersistentObject<Y>::init() 
@@ -114,8 +67,6 @@ namespace LOFAR {
       tableName("Y");
       initAttribMap();
     }
-
-//     template<> TPersistentObject<Y>::attribmap_t theirAttribMap;
 
   }
 
@@ -142,7 +93,7 @@ int main()
 
   TPersistentObject<Y> tpoy(y);
   try {
-    cout << "tpoy.attrib(\"hello.world\") = " 
+    cout << "attrib<Y>(\"hello.world\") = " 
          << attrib<Y>("hello.world") << endl;
   }
   catch (Exception& e) {

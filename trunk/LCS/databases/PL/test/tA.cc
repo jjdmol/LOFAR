@@ -71,7 +71,6 @@ int main()
     // Should call retrieve(ObjectId&), returning a TPO that contains a1
     oid.set(tpoa1.metaData().oid()->get());
     tpoa2 = broker.retrieve<A>(oid);
-//     tpoa2.retrieve(oid);
     cout << "Retrieved tpoa1 -- tpoa1.data() = " << tpoa2.data() << endl;
 
     cout << "Press <Enter> to continue" << endl;
@@ -80,7 +79,6 @@ int main()
     // Should call retrieve(ObjectId&), returning a TPO that contains a2
     oid.set(tpoa.metaData().oid()->get());
     tpoa2 = broker.retrieve<A>(oid);
-//     tpoa2.retrieve(oid);
     cout << "Retrieved tpoa -- tpoa.data() = " << tpoa2.data() << endl;
     
     cout << "Press <Enter> to continue" << endl;
@@ -89,9 +87,7 @@ int main()
     cout << "Retrieve collection of tpoa using query" << endl;
     Collection< TPersistentObject<A> > ctpoa;
     Collection< TPersistentObject<A> >::const_iterator iter;
-//     ctpoa = broker.retrieve<A>(QueryObject("WHERE ITSINT=42;"));
     QueryObject q(attrib<A>("itsInt") == 42);
-//     QueryObject q(attrib<B>("itsString") == "Bubbles");
     ctpoa = broker.retrieve<A>(q);
     cout << "Found " << ctpoa.size() << " matches ..." << endl;
     for(iter = ctpoa.begin(); iter != ctpoa.end(); ++iter) {

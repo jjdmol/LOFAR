@@ -13,30 +13,10 @@ namespace LOFAR {
 
     template<> struct DBRep<X> : public DBRepMeta
     {
-//       ObjectId::oid_t  itsOid;
-//       ObjectId::oid_t  itsOwnerOid;
+      void bindCols(dtl::BoundIOs& cols) {}
+      void toDBRep(const X& src) {}
+      void fromDBRep(X& dest) const {}
     };
-
-    template<>
-    void BCA<X>::operator()(BoundIOs& cols, DataObj& rowbuf) 
-    {
-// 	  cols["ObjID"]  == rowbuf.itsOid;
-// 	  cols["Owner"]  == rowbuf.itsOwnerOid;
-    }
-    
-    template<>
-    void TPersistentObject<X>::fromDBRep(const DBRep<X>& org)
-    {
-//       metaData().oid()->set(org.itsOid);
-//       metaData().ownerOid()->set(org.itsOwnerOid);
-    }
-
-    template<>
-    void TPersistentObject<X>::toDBRep(DBRep<X>& dest) const
-    {
-//       dest.itsOid   = metaData().oid()->get();
-//       dest.itsOwnerOid = metaData().ownerOid()->get();
-    }
 
     template<> void TPersistentObject<X>::init() 
     { 

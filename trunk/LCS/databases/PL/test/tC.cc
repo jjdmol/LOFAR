@@ -52,7 +52,6 @@ int main()
     // Should call insert(), saving data in c
     cout << "Saving tpoc1 -- tpoc1.data() = " << tpoc1.data() << endl;
     broker.save(tpoc1); 
-//     cout << tpoc1.metaData() << endl;
 
     cout << "Press <Enter> to continue" << endl;
     cin.get();
@@ -60,7 +59,6 @@ int main()
     // Should call insert(), saving data in a
     cout << "Saving tpoc -- tpoc.data() = " << tpoc.data() << endl;
     broker.save(tpoc); 
-//     cout << tpoc.metaData() << endl;
 
     cout << "Press <Enter> to continue" << endl;
     cin.get();
@@ -69,7 +67,6 @@ int main()
     tpoc.data() = c2;
     cout << "Saving tpoc1 -- tpoc.data() = " << tpoc.data() << endl;
     broker.save(tpoc);
-//     cout << tpoc.metaData() << endl;
     
     cout << "Press <Enter> to continue" << endl;
     cin.get();
@@ -77,9 +74,7 @@ int main()
     // Should call retrieve(ObjectId&), returning a TPO that contains a1
     oid.set(tpoc1.metaData().oid()->get());
     tpoc2 = broker.retrieve<C>(oid);
-//     tpoc2.retrieve(oid);
     cout << "Retrieved tpoc1 -- tpoc1.data() = " << tpoc2.data() << endl;
-//          << tpoc2.metaData() << endl;
 
     cout << "Press <Enter> to continue" << endl;
     cin.get();
@@ -87,46 +82,20 @@ int main()
     // Should call retrieve(ObjectId&), returning a TPO that contains a2
     oid.set(tpoc.metaData().oid()->get());
     tpoc2 = broker.retrieve<C>(oid);
-//     tpoc2.retrieve(oid);
     cout << "Retrieved tpoc -- tpoc.data() = " << tpoc2.data() << endl;
-//          << tpoc2.metaData() << endl;
     
     cout << "Press <Enter> to continue" << endl;
     cin.get();
 
-    Query::Expr expr;
-
-    // This makes for an interesting case, because it doesn't work :-p.
-    // The problem lies with the fact that class C inherits from class A,
-    // which in turn has a field itsB. There is, however, no way to tell the
-    // TPO<C> that it should also inquire its "parent" TPO<A> to look for a
-    // field itsB. Hence, the lookup in the attribute map fails.
-    try {
-      expr = attrib<C>("itsB.itsShort") == 327;
-    } catch (QueryError& e){
-      cerr << e << endl;
-    }
-
-    // The workaround, to use attrib<A>(), does not produce the right query
-    // result, because the constraint (C.OBJID=A.OWNER) will not be generated!
-    expr = attrib<A>("itsB.itsShort") == 327;
-
-    // Ah, this can be done. The attrib() method is not completely useles :-p.
-    // We have to make sure, though, that the template parameter in the call
-    // to attrib() is the same as that in the call to
-    // broker.retrieve(). Hence, we're currently limited to composing the
-    // query for fields of class C only.
-    expr = attrib<C>("itsString") == "C4Y2";
-    cout << "Retrieve collection of tpoc using query: " << expr << endl;
-
+    QueryObject q(attrib<C>("itsString") == "C4Y2");
+    cout << "Retrieve collection of tpoc using query: " << q.getSql() << endl;
     Collection< TPersistentObject<C> > ctpoc;
     Collection< TPersistentObject<C> >::const_iterator iter;
-    ctpoc = broker.retrieve<C>(QueryObject(expr));
+    ctpoc = broker.retrieve<C>(q);
     cout << "Found " << ctpoc.size() << " matches ..." << endl;
     for(iter = ctpoc.begin(); iter != ctpoc.end(); ++iter) {
       cout << "Press <Enter> to continue" << endl;
       cin.get();
-      cout << iter->metaData() << endl;
       cout << iter->data() << endl;
     }
 

@@ -25,8 +25,8 @@ int main()
        << endl;
 
   cout << endl << "Making oid1 and oid2 equal to global null object-id ...";
-  oid1.set(ObjectId::nullId()->get());
-  oid2.set(ObjectId::nullId()->get());
+  oid1.set(0);
+  oid2.set(0);
   cout << endl << "oid1.get() = 0x" << oid1.get();
   cout << endl << "oid2.get() = 0x" << oid2.get();
   cout << endl << "(oid1 == oid2) = " << (oid1 == oid2 ? "true" : "false") 
