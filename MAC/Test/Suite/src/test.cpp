@@ -31,6 +31,7 @@
 
 #include "test.h"
 #include <Common/lofar_iostream.h>
+#include <Common/LofarLogger.h>
 
 #ifdef _MSC_VER
 //Allow return-less mains:
@@ -38,27 +39,48 @@
 #endif
 
 bool Test::do_test(bool cond, const std::string& lbl,
+                   const char* descr, 
                    const char* fname, long lineno)
 {  
   if (!cond)
-    do_fail(lbl, fname, lineno);
+    do_fail(lbl, descr, fname, lineno);
   else
-    succeed();
+    succeed(lbl, descr, fname, lineno);
 
   return cond;
 }
 
 void Test::do_fail(const std::string& lbl,
+                   const char* descr,
                    const char* fname, long lineno)
 {
   ++m_nFail;
   m_subTests[m_curSubTest].failed++;
+  string failure;
+  failure += "Test: ";
+  if (descr) failure += descr;    
+  if (lbl.length() > 0) failure += "(" + lbl + ")";
+  failure += LOFAR::formatString(" => FAILED!!! [%s:%d]", (strrchr(fname, '/') + 1), lineno);
   if (m_osptr)
   {
-    *m_osptr << m_name
-             << " failure: (" << lbl << ") , "
-                              << fname
-             << " (line " << lineno << ")\n";
+    *m_osptr << failure << endl;
+  }
+  m_failures.push_back(failure);
+}
+
+void Test::succeed(const std::string& lbl,
+                   const char* descr,
+                   const char* fname, long lineno)
+{
+  m_subTests[m_curSubTest].passed++;
+  ++m_nPass;
+  if (m_osptr)
+  {
+    *m_osptr << "Test: ";
+    if (descr) *m_osptr << descr;    
+    *m_osptr << "(" << lbl << ") => succeed [" 
+             << (strrchr(fname, '/') + 1)
+             << ":" << lineno << "]\n";
   }
 }
 
@@ -66,11 +88,17 @@ long Test::report() const
 {
   if (m_osptr)
   {
-    *m_osptr << "Test \"" 
+    *m_osptr << "Test summary\"" 
              << m_name << "\":\n"
              << "\tPassed: " << m_nPass
              << "\tFailed: " << m_nFail
-             << endl;
+             << endl << "Failures:" << endl;
+    
+    for (TFailures::const_iterator iter = m_failures.begin();
+         iter != m_failures.end(); ++iter)
+    {
+      *m_osptr << "\t" << *iter << endl;
+    }
   }
   return m_nFail;
 }
@@ -79,16 +107,31 @@ void Test::reportSubTest()
 {
   if (m_osptr && m_curSubTest != "")
   {
-    *m_osptr << "SubtTest \"" 
-             << m_curSubTest << "\" in " << m_name << ": "
+    *m_osptr << "Finish (sub)test " 
+               << m_name << "." << m_curSubTest
              << "\tPassed: " << m_subTests[m_curSubTest].passed
              << "\tFailed: " << m_subTests[m_curSubTest].failed
              << endl;
   }
 }
 
-void Test::setCurSubTest(const char* testname)
+void Test::setCurSubTest(const char* testname, const char* description)
 {
+  if (m_curSubTest != testname && m_osptr)
+  {
+    if (m_curSubTest.length() > 0)
+    {
+      *m_osptr << "Finish (sub)test " 
+               << m_name << "." << m_curSubTest
+               << "\tPassed: " << m_subTests[m_curSubTest].passed
+               << "\tFailed: " << m_subTests[m_curSubTest].failed
+               << endl;
+    }
+    *m_osptr << "Start (sub)test " 
+               << m_name << "." << testname;
+    if (description) *m_osptr << ": " << description;
+    *m_osptr << endl;
+  }
   m_curSubTest = testname;
   TSubTests::iterator iter = m_subTests.find(m_curSubTest);
   if (iter != m_subTests.end())
@@ -100,11 +143,6 @@ void Test::setCurSubTest(const char* testname)
   }
 }
 
-void Test::succeed()
-{
-  m_subTests[m_curSubTest].passed++;
-  ++m_nPass;
-}
 
 void Test::reset()
 {

@@ -26,7 +26,8 @@ Application::Application() :
   _propertySetB2("A_D",   propertySetB2, &_supTask2.getAnswerObj()),
   _propertySetB3("A_E",   propertySetB3, &_supTask2.getAnswerObj()),
   _ePropertySetAC("A_C",  propertySetB1, &_supTask2.getAnswerObj()),   
-  _ePropertySetAL("A_L",  propertySetB1, &_supTask2.getAnswerObj())   
+  _ePropertySetAD("A_D",  propertySetB2, &_supTask2.getAnswerObj()),   
+  _ePropertySetAL("A_L",  propertySetE1, &_supTask2.getAnswerObj())   
 {
     // register the protocol for debugging purposes
   registerProtocol(TST_PROTOCOL, TST_PROTOCOL_signalnames);  
@@ -42,7 +43,7 @@ GCFEvent::TResult Application::initial(GCFEvent& e, GCFPortInterface& /*p*/)
       _supTask1.getPort().init(_supTask1, "client", GCFPortInterface::SAP, TST_PROTOCOL);
       _supTask2.getPort().init(_supTask2, "client", GCFPortInterface::SAP, TST_PROTOCOL);
 
-      NEXT_TEST(1_1)
+      NEXT_TEST(1_1, "Port connection, one client, one server");
       break;
 
     default:
@@ -82,7 +83,7 @@ GCFEvent::TResult Application::test1_1(GCFEvent& e, GCFPortInterface& p)
 
     case TST_TESTRESP:
     {
-      NEXT_TEST(1_2)
+      NEXT_TEST(1_2, "Port connection, multiple client, one server");
       break;
     }
     default:
@@ -159,7 +160,7 @@ GCFEvent::TResult Application::test1_2(GCFEvent& e, GCFPortInterface& p)
       break;
 
     case TST_TESTREADY:
-      NEXT_TEST(2_1);
+      NEXT_TEST(2_1, "Enable property set");
       break;
     
     default:
@@ -177,14 +178,8 @@ GCFEvent::TResult Application::test2_1(GCFEvent& e, GCFPortInterface& p)
   switch (e.signal)
   {
     case F_ENTRY:
-      if (TESTC(_propertySetA1.enable() == GCF_NO_ERROR))
-      {
-        _supTask1.getPort().setTimer(10.0);
-      }
-      else
-      {
-        FAIL_AND_DONE("PML could not enable propset A1");
-      }      
+      TESTC_ABORT_ON_FAIL(_propertySetA1.enable() == GCF_NO_ERROR);
+      _supTask1.getPort().setTimer(10.0);
       break;
 
     case F_MYPS_ENABLED:
@@ -200,11 +195,11 @@ GCFEvent::TResult Application::test2_1(GCFEvent& e, GCFPortInterface& p)
       TESTC(&p == &_supTask1.getPort());
       TESTC(_propertySetA1.isEnabled());
       TESTC(_supTask1.getProxy().exists("A_B_temp"));
-      NEXT_TEST(2_2);
+      NEXT_TEST(2_2, "Disable property set");
       break;
     }  
     case F_TIMER:
-      FAIL_AND_DONE("Gets not response on enable request in time.");
+      FAIL_AND_ABORT("Gets not response on enable request in time.");
       break;
 
     default:
@@ -222,14 +217,8 @@ GCFEvent::TResult Application::test2_2(GCFEvent& e, GCFPortInterface& p)
   switch (e.signal)
   {
     case F_ENTRY:
-      if (TESTC(_propertySetA1.disable() == GCF_NO_ERROR))
-      {
-        _supTask1.getPort().setTimer(10.0);
-      }
-      else
-      {
-        FAIL_AND_DONE("PML could not disable propset A1");
-      }      
+      TESTC_ABORT_ON_FAIL(_propertySetA1.disable() == GCF_NO_ERROR);
+      _supTask1.getPort().setTimer(10.0);
       break;
 
     case F_MYPS_DISABLED:
@@ -245,11 +234,11 @@ GCFEvent::TResult Application::test2_2(GCFEvent& e, GCFPortInterface& p)
       TESTC(&p == &_supTask1.getPort());
       TESTC(!_propertySetA1.isEnabled());
       TESTC(!_supTask1.getProxy().exists("A_B_temp"));
-      NEXT_TEST(2_3);
+      NEXT_TEST(2_3, "Recognize that a property set is alrady in use");
       break;
     }  
     case F_TIMER:
-      FAIL_AND_DONE("Gets not response on disable request in time.");
+      FAIL_AND_ABORT("Gets not response on disable request in time.");
       break;
 
     default:
@@ -267,17 +256,8 @@ GCFEvent::TResult Application::test2_3(GCFEvent& e, GCFPortInterface& p)
   switch (e.signal)
   {
     case F_ENTRY:
-      if (TESTC(_propertySetB1.enable() == GCF_NO_ERROR))
-      {
-        if (!TESTC(_propertySetB1.enable() != GCF_NO_ERROR))
-        {
-          FAIL_AND_DONE("This should not be possible");
-        }
-      }
-      else
-      {
-        FAIL_AND_DONE("PML could not enable propset B1");
-      }      
+      TESTC_ABORT_ON_FAIL(_propertySetB1.enable() == GCF_NO_ERROR);
+      TESTC_DESCR_ABORT_ON_FAIL((_propertySetB1.enable() != GCF_NO_ERROR), "Should not be possible");
       break;
 
     case F_MYPS_ENABLED:
@@ -297,11 +277,11 @@ GCFEvent::TResult Application::test2_3(GCFEvent& e, GCFPortInterface& p)
         r.testnr = 203;
         if (_supTask1.getPort().isConnected())
           _supTask1.getPort().send(r);        
-        NEXT_TEST(2_5);
+        NEXT_TEST(2_5, "Enable/Disable mulitple temp. prop. sets");
       }
       else
       {
-        FAIL_AND_DONE("This should not be possible");
+        ABORT_TESTS;
       }
       break;
     }  
@@ -322,22 +302,10 @@ GCFEvent::TResult Application::test2_5(GCFEvent& e, GCFPortInterface& p)
   {
     case F_ENTRY:
       _counter = 3;
-      if (!TESTC(_propertySetA1.enable() == GCF_NO_ERROR))
-      {
-        FAIL_AND_DONE("PML could not enable propset A1");
-      }      
-      else if (!TESTC(_propertySetB2.enable() == GCF_NO_ERROR))
-      {
-        FAIL_AND_DONE("PML could not enable propset B2");
-      }      
-      else if (!TESTC(_propertySetB3.enable() == GCF_NO_ERROR))
-      {
-        FAIL_AND_DONE("PML could not enable propset B3");
-      }      
-      else
-      {
-        _supTask1.getPort().setTimer(10.0);
-      }
+      TESTC_ABORT_ON_FAIL(_propertySetA1.enable() == GCF_NO_ERROR);
+      TESTC_ABORT_ON_FAIL(_propertySetB2.enable() == GCF_NO_ERROR);
+      TESTC_ABORT_ON_FAIL(_propertySetB3.enable() == GCF_NO_ERROR);
+      _supTask1.getPort().setTimer(10.0);
       break;
 
     case F_MYPS_ENABLED:
@@ -374,26 +342,11 @@ GCFEvent::TResult Application::test2_5(GCFEvent& e, GCFPortInterface& p)
       {
         _counter = 4;
         _supTask1.getPort().cancelAllTimers();        
-        if (!TESTC(_propertySetA1.disable() == GCF_NO_ERROR))
-        {
-          FAIL_AND_DONE("PML could not disable propset A1");
-        }      
-        else if (!TESTC(_propertySetB1.disable() == GCF_NO_ERROR))
-        {
-          FAIL_AND_DONE("PML could not disable propset B1");
-        }      
-        else if (!TESTC(_propertySetB2.disable() == GCF_NO_ERROR))
-        {
-          FAIL_AND_DONE("PML could not disable propset B2");
-        }      
-        else if (!TESTC(_propertySetB3.disable() == GCF_NO_ERROR))
-        {
-          FAIL_AND_DONE("PML could not disable propset B3");
-        }        
-        else
-        {
-          _supTask1.getPort().setTimer(10.0);
-        }
+        TESTC_ABORT_ON_FAIL(_propertySetA1.disable() == GCF_NO_ERROR);
+        TESTC_ABORT_ON_FAIL(_propertySetB1.disable() == GCF_NO_ERROR);
+        TESTC_ABORT_ON_FAIL(_propertySetB2.disable() == GCF_NO_ERROR);
+        TESTC_ABORT_ON_FAIL(_propertySetB3.disable() == GCF_NO_ERROR);
+        _supTask1.getPort().setTimer(10.0);
       }
       break;
     }  
@@ -409,28 +362,28 @@ GCFEvent::TResult Application::test2_5(GCFEvent& e, GCFPortInterface& p)
           TESTC(strcmp(pResponse->pScope, _propertySetA1.getScope().c_str()) == 0);
           TESTC(&p == &_supTask1.getPort());
           TESTC(!_propertySetA1.isEnabled());
-          TESTC(!_supTask1.getProxy().exists("A_B_temp"));
+          TESTC_DESCR(!_supTask1.getProxy().exists("A_B_temp"), "may fail");
         }
         else if (strcmp(pResponse->pScope, "A_C") == 0)
         {
           TESTC(strcmp(pResponse->pScope, _propertySetB1.getScope().c_str()) == 0);
           TESTC(&p == &_supTask1.getPort());
           TESTC(!_propertySetB1.isEnabled());
-          TESTC(!_supTask1.getProxy().exists("A_C_temp"));
+          TESTC_DESCR(!_supTask1.getProxy().exists("A_C_temp"), "may fail");
         }
         else if (strcmp(pResponse->pScope, "A_D") == 0)
         {
           TESTC(strcmp(pResponse->pScope, _propertySetB2.getScope().c_str()) == 0);
           TESTC(&p == &_supTask2.getPort());
           TESTC(!_propertySetB2.isEnabled());
-          TESTC(!_supTask2.getProxy().exists("A_D_temp"));
+          TESTC_DESCR(!_supTask2.getProxy().exists("A_D_temp"), "may fail");
         }
         else if (strcmp(pResponse->pScope, "A_E") == 0)
         {
           TESTC(strcmp(pResponse->pScope, _propertySetB3.getScope().c_str()) == 0);
           TESTC(&p == &_supTask2.getPort());
           TESTC(!_propertySetB3.isEnabled());
-          TESTC(!_supTask2.getProxy().exists("A_E_temp"));
+          TESTC_DESCR(!_supTask2.getProxy().exists("A_E_temp"), "may fail");
         }
       }      
       if (_counter == 0)
@@ -439,12 +392,12 @@ GCFEvent::TResult Application::test2_5(GCFEvent& e, GCFPortInterface& p)
         TSTTestreadyEvent r;
         r.testnr = 205;
         _supTask1.getPort().send(r);
-        NEXT_TEST(3_4);
+        NEXT_TEST(3_4, "Enable permanent prop. set, which does not exists");
       }      
       break;
     }
     case F_TIMER:
-      FAIL_AND_DONE("Gets not response on disable request in time.");
+      FAIL_AND_ABORT("Gets not response on disable request in time.");
       break;
     default:
       status = GCFEvent::NOT_HANDLED;
@@ -469,10 +422,7 @@ GCFEvent::TResult Application::test3_4(GCFEvent& e, GCFPortInterface& p)
     case F_ENTRY:
       if (_curRemoteTestNr != 303) break;           
       TESTC(!_supTask1.getProxy().exists("A_X"));
-      if (!TESTC(_propertySetXX.enable() == GCF_NO_ERROR))
-      {
-        FAIL_AND_DONE("PML could not enable propset XX");
-      }      
+      TESTC_ABORT_ON_FAIL(_propertySetXX.enable() == GCF_NO_ERROR);
       break;
 
     case F_MYPS_ENABLED:
@@ -486,7 +436,7 @@ GCFEvent::TResult Application::test3_4(GCFEvent& e, GCFPortInterface& p)
       TESTC(&p == &_supTask1.getPort());
       TESTC(!_propertySetXX.isEnabled());
       TESTC(!_supTask1.getProxy().exists("A_X"));
-      NEXT_TEST(4_1);
+      NEXT_TEST(4_1, "Load property set (prepare for TestApp2)");
       break;
     }  
 
@@ -505,10 +455,7 @@ GCFEvent::TResult Application::test4_1(GCFEvent& e, GCFPortInterface& p)
   switch (e.signal)
   {
     case F_ENTRY:
-      if (!TESTC(_propertySetB1.enable() == GCF_NO_ERROR))
-      {
-        FAIL_AND_DONE("PML could not enable propset B1");
-      }      
+      TESTC_ABORT_ON_FAIL(_propertySetB1.enable() == GCF_NO_ERROR);
       break;
 
     case F_MYPS_ENABLED:
@@ -525,7 +472,7 @@ GCFEvent::TResult Application::test4_1(GCFEvent& e, GCFPortInterface& p)
       TSTTestreadyEvent r;
       r.testnr = 401;
       _supTask1.getPort().send(r);
-      NEXT_TEST(4_3);
+      NEXT_TEST(4_3, "Check property set usecount");
       break;
     }  
 
@@ -554,16 +501,10 @@ GCFEvent::TResult Application::test4_3(GCFEvent& e, GCFPortInterface& /*p*/)
       switch (_curRemoteTestNr)
       {
         case 402:
-          if (!TESTC(_ePropertySetAC.load() == GCF_NO_ERROR))
-          {
-            FAIL_AND_DONE("PML could not load propset A_C");
-          }      
+          TESTC_ABORT_ON_FAIL(_ePropertySetAC.load() == GCF_NO_ERROR);
           break;
         case 403:
-          if (!TESTC(_ePropertySetAC.unload() == GCF_NO_ERROR))
-          {
-            FAIL_AND_DONE("PML could not unload propset A_C");
-          }
+          TESTC_ABORT_ON_FAIL(_ePropertySetAC.unload() == GCF_NO_ERROR);
           break;
       }
       break;
@@ -574,10 +515,7 @@ GCFEvent::TResult Application::test4_3(GCFEvent& e, GCFPortInterface& /*p*/)
         delayedUnLoad = true;
         break;
       }
-      if (!TESTC(_ePropertySetAC.load() == GCF_NO_ERROR))
-      {
-        FAIL_AND_DONE("PML could not load propset A_C");
-      }      
+      TESTC_ABORT_ON_FAIL(_ePropertySetAC.load() == GCF_NO_ERROR);
       break;
 
     case F_EXTPS_LOADED:
@@ -589,25 +527,16 @@ GCFEvent::TResult Application::test4_3(GCFEvent& e, GCFPortInterface& /*p*/)
         TESTC(pResponse->result == GCF_NO_ERROR);
       }
             
-      if (TESTC(_ePropertySetAC.isLoaded()))
+      TESTC_ABORT_ON_FAIL(_ePropertySetAC.isLoaded());
+      TSTTestreadyEvent r;
+      r.testnr = 402;
+      _supTask1.getPort().send(r);        
+      if (_curRemoteTestNr != 403) 
       {
-        TSTTestreadyEvent r;
-        r.testnr = 402;
-        _supTask1.getPort().send(r);        
-        if (_curRemoteTestNr != 403) 
-        {
-          delayedUnLoad = true;
-          break;
-        }
-        if (!TESTC(_ePropertySetAC.unload() == GCF_NO_ERROR))
-        {
-          FAIL_AND_DONE("PML could not unload propset A_C");
-        }                
-      }      
-      else
-      {
-        FAIL_AND_DONE("PA could not load propset A_C");
+        delayedUnLoad = true;
+        break;
       }
+      TESTC_ABORT_ON_FAIL(_ePropertySetAC.unload() == GCF_NO_ERROR);
       break;
     }
 
@@ -620,17 +549,13 @@ GCFEvent::TResult Application::test4_3(GCFEvent& e, GCFPortInterface& /*p*/)
         TESTC(pResponse->result == GCF_NO_ERROR);
       }
             
-      if (TESTC(!_ePropertySetAC.isLoaded()))
-      {
-        TSTTestreadyEvent r;
-        r.testnr = 403;
-        _supTask1.getPort().send(r);        
-        NEXT_TEST(5_1);
-      }      
-      else
-      {
-        FAIL_AND_DONE("PA could not unload propset A_C");
-      }
+      TESTC_ABORT_ON_FAIL(!_ePropertySetAC.isLoaded());
+
+      TSTTestreadyEvent r;
+      r.testnr = 403;
+      _supTask1.getPort().send(r);        
+
+      NEXT_TEST(5_1, "Configure prop. set");
       break;
     }
 
@@ -657,10 +582,7 @@ GCFEvent::TResult Application::test5_1(GCFEvent& e, GCFPortInterface& /*p*/)
     }
     case F_ENTRY:
       if (_curRemoteTestNr != 404) break;           
-      if (!TESTC(_propertySetE1.enable() == GCF_NO_ERROR))
-      {
-        FAIL_AND_DONE("PML could not enable propset E1");
-      }      
+      TESTC_ABORT_ON_FAIL(_propertySetE1.enable() == GCF_NO_ERROR);
       break;
 
     case F_MYPS_ENABLED:
@@ -672,17 +594,8 @@ GCFEvent::TResult Application::test5_1(GCFEvent& e, GCFPortInterface& /*p*/)
         TESTC(pResponse->result == GCF_NO_ERROR);
       }
                   
-      if (TESTC(_propertySetE1.isEnabled()))
-      {
-        if (!TESTC(_ePropertySetAL.load() == GCF_NO_ERROR))
-        {
-          FAIL_AND_DONE("PML could not load propset A_L");
-        }
-      }
-      else
-      {
-        FAIL_AND_DONE("PA could not enable propset E1");
-      }
+      TESTC_ABORT_ON_FAIL(_propertySetE1.isEnabled());
+      TESTC_ABORT_ON_FAIL(_ePropertySetAL.load() == GCF_NO_ERROR);
       break;
     }    
     case F_EXTPS_LOADED:
@@ -693,39 +606,23 @@ GCFEvent::TResult Application::test5_1(GCFEvent& e, GCFPortInterface& /*p*/)
         TESTC(strcmp(pResponse->pScope, _propertySetE1.getScope().c_str()) == 0);
         TESTC(pResponse->result == GCF_NO_ERROR);
       }      
-      if (TESTC(_ePropertySetAL.isLoaded()))
-      {
-        _propertySetE1.configure("e1");
-      }
-      else
-      {
-        FAIL_AND_DONE("PA could not load propset A_L");
-      }
+      TESTC_ABORT_ON_FAIL(_ePropertySetAL.isLoaded());
+      _propertySetE1.configure("e1");
       break;
     }    
     case F_PS_CONFIGURED:
     {
       GCFConfAnswerEvent* pResponse = (GCFConfAnswerEvent*)(&e);
-      if (TESTC(pResponse))
-      {
-        TESTC(strcmp(pResponse->pScope, _propertySetE1.getScope().c_str()) == 0);
-        TESTC(strcmp(pResponse->pApcName, "e1") == 0);
-        if (!TESTC(pResponse->result == GCF_NO_ERROR))
-        {
-          FAIL_AND_DONE("PA could not configure the propset A_L");
-        }
-        else
-        {
-          TSTTestreadyEvent r;
-          r.testnr = 501;
-          _supTask1.getPort().send(r);        
-          NEXT_TEST(6_1);
-        }
-      }
-      else
-      {
-        FAIL_AND_DONE("PA could not configure the propset A_L");
-      }
+      TESTC_ABORT_ON_FAIL(pResponse);
+      TESTC(strcmp(pResponse->pScope, _propertySetE1.getScope().c_str()) == 0);
+      TESTC(strcmp(pResponse->pApcName, "e1") == 0);
+      TESTC_ABORT_ON_FAIL(pResponse->result == GCF_NO_ERROR);
+
+      TSTTestreadyEvent r;
+      r.testnr = 501;
+      _supTask1.getPort().send(r);        
+
+      NEXT_TEST(6_1, "Read/Write properties in RAM");
       break;
     }    
     default:
@@ -736,7 +633,7 @@ GCFEvent::TResult Application::test5_1(GCFEvent& e, GCFPortInterface& /*p*/)
   return status;
 }
 
-GCFEvent::TResult Application::test6_1(GCFEvent& e, GCFPortInterface& p)
+GCFEvent::TResult Application::test6_1(GCFEvent& e, GCFPortInterface& /*p*/)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
@@ -799,7 +696,7 @@ GCFEvent::TResult Application::test6_1(GCFEvent& e, GCFPortInterface& p)
       TESTC(((GCFPVDouble*)pValue)->getValue() == 35.4);
       delete pValue;
       
-      FINISHED;
+      NEXT_TEST(6_2, "Read/write properties in Database");
       break;
     }  
 
@@ -811,128 +708,98 @@ GCFEvent::TResult Application::test6_1(GCFEvent& e, GCFPortInterface& p)
   return status;
 }
 
-/*
-GCFEvent::TResult Application::test302(GCFEvent& e, GCFPortInterface& p)
+GCFEvent::TResult Application::test6_2(GCFEvent& e, GCFPortInterface& /*p*/)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
-  static bool ready = false;
-  static unsigned int nrOfValueChanges = 0;
-  
+  static unsigned int receivedChanges = 0;
   switch (e.signal)
   {
     case F_ENTRY:
-      _apcT1.setAnswer(&_supTask1.getAnswerObj());
-      if (_apcT1.load(false) != GCF_NO_ERROR)
-      {
-        failed(302);
-        TRAN(Application::test303);
-      }
-      break;
-
-    case F_APCLOADED:
     {
-      GCFAPCAnswerEvent* pResponse = static_cast<GCFAPCAnswerEvent*>(&e);
-      assert(pResponse);
-      if ((strcmp(pResponse->pScope, "A_C") == 0) &&
-          (strcmp(pResponse->pApcName, "ApcT1") == 0) &&
-          (pResponse->result == GCF_NO_ERROR) &&
-          (&p == &_supTask1.getPort()))
-      {
-        CHECK_DB;
-        GCFPVInteger iv(22);
-        if (_supTask2.getProxy().setPropValue("A_C_P1", iv) != GCF_NO_ERROR)
-        {
-          failed(302);
-          TRAN(Application::test303);
-        }
-        else if (_supTask2.getProxy().requestPropValue("A_C_P1") != GCF_NO_ERROR)
-        {
-          failed(302);
-          TRAN(Application::test303);
-        }      
-        else
-          _counter = 1;
-      }
+      TESTC_ABORT_ON_FAIL(_propertySetB2.enable() == GCF_NO_ERROR);
       break;
-    }      
+    }
+    case F_MYPS_ENABLED:
+    {
+      TESTC_ABORT_ON_FAIL(_ePropertySetAD.load() == GCF_NO_ERROR);
+      break;
+    }
+    case F_EXTPS_LOADED:
+    {
+      TESTC_ABORT_ON_FAIL(_ePropertySetAD.isLoaded());
+      if (_supTask2.getProxy().requestPropValue("A_D.P1") == GCF_NO_ERROR)
+      {
+        TESTC(_supTask2.getProxy().requestPropValue("A_D.P2") == GCF_NO_ERROR);
+        TESTC_ABORT_ON_FAIL(_supTask2.getProxy().requestPropValue("A_D.P3") == GCF_NO_ERROR);
+      }
+      else
+      {
+        _supTask1.getPort().setTimer(0.0);
+      }
+      _counter = 0;
+      break;
+    }
     case F_VGETRESP:
     {
-      GCFPropValueEvent* pResponse = static_cast<GCFPropValueEvent*>(&e);
-      assert(pResponse);
+      GCFPropValueEvent* pResponse = (GCFPropValueEvent*)(&e);
+
       switch (_counter)
       {
-        case 1:  
-          if ((pResponse->pValue->getType() == GCFPValue::LPT_INTEGER) &&
-              (strcmp(pResponse->pPropName, "A_C_P1") == 0) &&
-              (((GCFPVInteger*)pResponse->pValue)->getValue() == 22) &&
-              (&p == &_supTask2.getPort()))
+        case 0:  
+        case 1:
+        case 2:
+          if (strcmp(pResponse->pPropName, "A_D.P1") == 0)
           {
-            GCFPVChar cv(22);
-            if (_supTask2.getProxy().setPropValue("A_C_P2", cv) != GCF_NO_ERROR)
-            {
-              failed(302);
-              TRAN(Application::test303);
-            }
-            else if (_supTask2.getProxy().requestPropValue("A_C_P2") != GCF_NO_ERROR)
-            {
-              failed(302);
-              TRAN(Application::test303);
-            }      
-            else
-              _counter++;
+            TESTC(pResponse->pValue->getType() == LPT_INTEGER);
+            TESTC(((GCFPVInteger*)pResponse->pValue)->getValue() == 13);            
+            GCFPVInteger iv(22);
+            TESTC_ABORT_ON_FAIL(_supTask2.getProxy().setPropValue("A_D.P1", iv) == GCF_NO_ERROR);
+            TESTC_ABORT_ON_FAIL(_supTask2.getProxy().requestPropValue("A_D.P1") == GCF_NO_ERROR);
+            _counter++;
           }
-          else
+          else if (strcmp(pResponse->pPropName, "A_D.P2") == 0)          
           {
-            failed(302);
-            TRAN(Application::test303);
+            TESTC(pResponse->pValue->getType() == LPT_CHAR);
+            TESTC(((GCFPVChar*)pResponse->pValue)->getValue() == 27);            
+            GCFPVChar cv(28);
+            TESTC_ABORT_ON_FAIL(_ePropertySetAD.setValue("A_D.P2", cv) == GCF_NO_ERROR);
+            TESTC_ABORT_ON_FAIL(_ePropertySetAD.requestValue("P2") == GCF_NO_ERROR);
+            _counter++;
           }
-          break;
-        case 2:  
-          if ((pResponse->pValue->getType() == GCFPValue::LPT_CHAR) &&
-              (strcmp(pResponse->pPropName, "A_C_P2") == 0) &&
-              (((GCFPVChar*)pResponse->pValue)->getValue() == 22) &&
-              (&p == &_supTask2.getPort()))
+          else if (strcmp(pResponse->pPropName, "A_D.P3") == 0)          
           {
+            TESTC(pResponse->pValue->getType() == LPT_DOUBLE);
+            TESTC(((GCFPVDouble*)pResponse->pValue)->getValue() == 35.4);            
             GCFPVDouble dv(22.0);
-            if (_supTask2.getProxy().setPropValue("A_C_P3", dv) != GCF_NO_ERROR)
-            {
-              failed(302);
-              TRAN(Application::test303);
-            }
-            else if (_supTask2.getProxy().requestPropValue("A_C_P3") != GCF_NO_ERROR)
-            {
-              failed(302);
-              TRAN(Application::test303);
-            }      
-            else
-              _counter++;
-          }
-          else
-          {
-            failed(302);
-            TRAN(Application::test303);
+            TESTC_ABORT_ON_FAIL(_ePropertySetAD["P3"].setValue(dv) == GCF_NO_ERROR);
+            TESTC_ABORT_ON_FAIL(_ePropertySetAD["P3"].requestValue() == GCF_NO_ERROR);
+            _counter++;
           }
           break;
         case 3:  
-          if ((pResponse->pValue->getType() == GCFPValue::LPT_DOUBLE) &&
-              (strcmp(pResponse->pPropName, "A_C_P3") == 0) &&
-              (((GCFPVChar*)pResponse->pValue)->getValue() == 22.0) &&
-              (&p == &_supTask2.getPort()))
+        case 4:  
+        case 5:  
+          if (strcmp(pResponse->pPropName, "A_D.P1") == 0)
           {
-            if (!ready)
-            {
-              ready = true;
-            }
-            else if (nrOfValueChanges == 3)
-            {
-              passed(302);
-              TRAN(Application::test303);
-            }
+            TESTC(pResponse->pValue->getType() == LPT_INTEGER);
+            TESTC(((GCFPVInteger*)pResponse->pValue)->getValue() == 22);            
+            _counter++;
           }
-          else
+          else if (strcmp(pResponse->pPropName, "A_D.P2") == 0)          
           {
-            failed(302);
-            TRAN(Application::test303);
+            TESTC(pResponse->pValue->getType() == LPT_CHAR);
+            TESTC(((GCFPVChar*)pResponse->pValue)->getValue() == 28);            
+            _counter++;
+          }
+          else if (strcmp(pResponse->pPropName, "A_D.P3") == 0)          
+          {
+            TESTC(pResponse->pValue->getType() == LPT_DOUBLE);
+            TESTC(((GCFPVDouble*)pResponse->pValue)->getValue() == 22.0);            
+            _counter++;
+          }
+          if (_counter == 6 && receivedChanges == 3)
+          {
+            NEXT_TEST(6_3, "Subscribe to property in DB, receive changes");
           }
           break;
       }
@@ -940,32 +807,47 @@ GCFEvent::TResult Application::test302(GCFEvent& e, GCFPortInterface& p)
     }
     case F_VCHANGEMSG:
     {
-      GCFPropValueEvent* pResponse = static_cast<GCFPropValueEvent*>(&e);
-      assert(pResponse);
-      if ((strncmp(pResponse->pPropName, "A_C_P", 5) == 0) &&
-          (&p == &_supTask1.getPort()))
+      GCFPropValueEvent* pResponse = (GCFPropValueEvent*)(&e);
+      TESTC(pResponse->internal);
+      if (strcmp(pResponse->pPropName, "A_D.P1") == 0)
       {
-        nrOfValueChanges++;
-        if (!ready)
-        {
-          ready = true;
-        }
-        else if (nrOfValueChanges == 3)
-        {
-          passed(302);
-          TRAN(Application::test303);
-        }
+        TESTC(pResponse->pValue->getType() == LPT_INTEGER);
+        TESTC(((GCFPVInteger*)pResponse->pValue)->getValue() == 22);            
+        receivedChanges++;
+      }
+      else if (strcmp(pResponse->pPropName, "A_D.P2") == 0)          
+      {
+        TESTC(pResponse->pValue->getType() == LPT_CHAR);
+        TESTC(((GCFPVChar*)pResponse->pValue)->getValue() == 28);            
+        receivedChanges++;
+      }
+      else if (strcmp(pResponse->pPropName, "A_D.P3") == 0)          
+      {
+        TESTC(pResponse->pValue->getType() == LPT_DOUBLE);
+        TESTC(((GCFPVDouble*)pResponse->pValue)->getValue() == 22.0);            
+        receivedChanges++;
+      }
+      if (_counter == 6 && receivedChanges == 3)
+      {
+        NEXT_TEST(6_3, "Subscribe to property in DB, receive changes");
       }
       break;
-    } 
-    case F_EXIT:
-    {
-      TSTTestreadyEvent r;
-      r.testnr = 302;
-      _supTask1.getPort().send(r);
+    }  
+
+    case F_TIMER:
+      if (_supTask2.getProxy().requestPropValue("A_D.P1") == GCF_NO_ERROR)
+      {
+        TESTC(_supTask2.getProxy().requestPropValue("A_D.P2") == GCF_NO_ERROR);
+        TESTC_ABORT_ON_FAIL(_supTask2.getProxy().requestPropValue("A_D.P3") == GCF_NO_ERROR);
+        _counter = 0;
+      }
+      else
+      {
+        _counter++;
+        if (_counter < 20) _supTask1.getPort().setTimer(0.0);
+        else FAIL_AND_ABORT("DP A_D not available in time");
+      }
       break;
-    }
-    
     default:
       status = GCFEvent::NOT_HANDLED;
       break;
@@ -974,6 +856,50 @@ GCFEvent::TResult Application::test302(GCFEvent& e, GCFPortInterface& p)
   return status;
 }
 
+GCFEvent::TResult Application::test6_3(GCFEvent& e, GCFPortInterface& /*p*/)
+{
+  GCFEvent::TResult status = GCFEvent::HANDLED;
+
+  switch (e.signal)
+  {
+    case F_ENTRY:
+    {
+      TESTC_ABORT_ON_FAIL(_propertySetB3.enable() == GCF_NO_ERROR);
+      break;
+    }
+    case F_MYPS_ENABLED:
+    {
+      TSTTestreadyEvent r;
+      r.testnr = 602;
+      _supTask1.getPort().send(r);        
+      break;
+    }
+    case TST_TESTREADY:
+    {
+      TSTTestreadyEvent indicationIn(e);
+      _curRemoteTestNr = indicationIn.testnr;
+      GCFPVInteger iv(22);
+      TESTC_ABORT_ON_FAIL(_propertySetB3["P1"].setValue(iv) == GCF_NO_ERROR);
+      break;
+    }
+    case F_VCHANGEMSG:
+    {
+      GCFPropValueEvent* pResponse = (GCFPropValueEvent*)(&e);
+      TESTC(pResponse->internal);
+      TESTC(strcmp(pResponse->pPropName, "A_E.P1") == 0);
+      TESTC(pResponse->pValue->getType() == LPT_INTEGER);
+      TESTC(((GCFPVInteger*)pResponse->pValue)->getValue() == 22);            
+      FINISH;
+      break;
+    }  
+    default:
+      status = GCFEvent::NOT_HANDLED;
+      break;
+  }
+
+  return status;
+}
+/*
 GCFEvent::TResult Application::test303(GCFEvent& e, GCFPortInterface& p)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
@@ -1449,11 +1375,13 @@ GCFEvent::TResult Application::finished(GCFEvent& e, GCFPortInterface& /*p*/)
     }
     case F_ENTRY:
     {
-      if (_curRemoteTestNr != 999) break;           
+      //if (_curRemoteTestNr != 999) break;           
       TSTTestreadyEvent r;
       r.testnr = 999;
       if (_supTask1.getPort().isConnected())
-      //  _supTask1.getPort().send(r);
+      {
+        _supTask1.getPort().send(r);
+      }
       GCFTask::stop();
       break;
     }
