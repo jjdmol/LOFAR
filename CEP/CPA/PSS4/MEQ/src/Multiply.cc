@@ -34,18 +34,12 @@ Multiply::~Multiply()
 Vells Multiply::evaluate (const Request&, const LoShape&,
 			  const vector<Vells*>& values)
 {
-  if (values.empty()) {
-    return Vells(0.);
-  } else {
-    Vells result(values[0]->clone());
-    result.makeTemp (true);
-    for (uint i=1; i<values.size(); i++) {
-      // Note that result is a temporary Vells, so the multiplication is
-      // effectively *= if the types and sizes match.
-      result = result * *(values[i]);
-    }
-    return result;
-  }
+  if( values.empty() )
+    return Vells(1.);  // or should this be 0?
+  Vells result(*values[0],DMI::PRIVATIZE);
+  for( uint i=1; i<values.size(); i++ )
+    result *= *(values[i]);
+  return result;
 }
 
 
