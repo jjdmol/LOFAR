@@ -75,8 +75,6 @@ void MeqServer::createNode (DataRecord::Ref &out,DataRecord::Ref::Xfer &initrec)
   cdebug(2)<<endl;
   int nodeindex;
   const Node::Ref &ref = forest.create(nodeindex,initrec);
-  // add to spigot mux if necessary
-  data_mux.addNode(ref());
   // form a response message
   const string & name = ref->name();
   string classname = ref->className();
@@ -102,8 +100,6 @@ void MeqServer::deleteNode (DataRecord::Ref &out,DataRecord::Ref::Xfer &in)
   const Node::Ref &noderef = forest.getRef(nodeindex);
   string name = noderef->name();
   cdebug(2)<<"deleting node "<<name<<"("<<nodeindex<<")\n";
-  // remove from the spigot mux if necessary
-  data_mux.removeNode(noderef());
   // remove from forest
   forest.remove(nodeindex);
   out[AidMessage] = ssprintf("node %d (%s): deleted",nodeindex,name.c_str());
@@ -309,6 +305,11 @@ int MeqServer::receiveEvent (const EventIdentifier &evid,const ObjRef::Xfer &evd
 //##ModelId=3F608106021C
 void MeqServer::run ()
 {
+  // connect forest events to data_mux slots (so that the mux can register
+  // i/o nodes)
+  forest.addSubscriber(AidCreate,EventSlot(VisDataMux::EventCreate,&data_mux));
+  forest.addSubscriber(AidDelete,EventSlot(VisDataMux::EventDelete,&data_mux));
+  
   verifySetup(True);
   DataRecord::Ref initrec;
   HIID output_event;
@@ -525,6 +526,8 @@ void MeqServer::run ()
   }
   cdebug(1)<<"exiting with control state "<<control().stateString()<<endl;
   control().close();
+  forest.removeSubscriber(AidCreate,&data_mux);
+  forest.removeSubscriber(AidDelete,&data_mux);
 }
 
 //##ModelId=3F5F195E0156

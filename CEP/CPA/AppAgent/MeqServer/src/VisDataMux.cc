@@ -31,6 +31,9 @@
 using namespace AppControlAgentVocabulary;
 using namespace VisVocabulary;
 using namespace VisAgent;
+
+const HIID Meq::VisDataMux::EventCreate = AidCreate;
+const HIID Meq::VisDataMux::EventDelete = AidDelete; 
     
 //##ModelId=3F9FF71B006A
 Meq::VisDataMux::VisDataMux (Meq::Forest &frst)
@@ -68,6 +71,21 @@ void Meq::VisDataMux::init (const DataRecord &rec,
     }
   }
   force_regular_grid = rec[FMandateRegularGrid].as<bool>(false);
+}
+
+int Meq::VisDataMux::receiveEvent (const EventIdentifier &evid,const ObjRef::Xfer &,void *ptr)
+{
+  if( evid.id() == EventCreate )
+    addNode( *static_cast<Node*>(ptr) );
+  else if( evid.id() == EventDelete )
+  {
+    if( ptr )
+      removeNode( *static_cast<Node*>(ptr) );
+    else // null ptr means all nodes
+      handlers_.clear();
+  }
+  // ignore all other events
+  return 0;
 }
 
 //##ModelId=3F716E98002E

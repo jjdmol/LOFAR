@@ -99,15 +99,7 @@ const make_predict_tree := function (st1,st2)
 # builds a read-predict-subtract tree for stations st1, st2
 const make_subtract_tree := function (st1,st2)
 {
-  global ms_phasedir,ms_antpos;
-
   sinkname := fq_name('sink',st1,st2);
-  spigname := fq_name('spigot',st1,st2);
-  # create a spigot node
-  mqs.createnode(meq.node('MeqSpigot',spigname,[ 
-            station_1_index=st1,
-            station_2_index=st2,
-            input_column='DATA']));
   
   # create a sink & subtree attached to it
   # note how meq.node() can be passed a record in the third argument, to specify
@@ -119,8 +111,13 @@ const make_subtract_tree := function (st1,st2)
                            station_2_index = st2,
                            corr_index      = [1] ],
                          children=meq.list(
-     meq.node('MeqSubtract',fq_name('sub',st1,st2),children=meq.list(
-        meq.node('MeqSelector',fq_name('xx',st1,st2),[index=1],children=spigname),
+      meq.node('MeqSubtract',fq_name('sub',st1,st2),children=meq.list(
+        meq.node('MeqSelector',fq_name('xx',st1,st2),[index=1],children=meq.list(
+          meq.node('MeqSpigot',fq_name('spigot',st1,st2),[ 
+            station_1_index=st1,
+            station_2_index=st2,
+            input_column='DATA'])
+        )),
         ifr_predict_tree(st1,st2)
       ))
     ))
@@ -136,17 +133,17 @@ const make_solve_tree := function (st1,st2)
   predtree := ifr_predict_tree(st1,st2);
   predname := predtree.name;
   mqs.createnode(predtree);
-  spigname := fq_name('spigot',st1,st2);
-  mqs.createnode(meq.node('MeqSpigot',spigname,[ 
-            station_1_index=st1,
-            station_2_index=st2,
-            input_column='DATA']));
   
   # create condeq tree (solver will plug into this)
   mqs.createnode(
     meq.node('MeqCondeq',fq_name('ce',st1,st2),children=meq.list(
       predname,
-      meq.node('MeqSelector',fq_name('xx',st1,st2),[index=1],children=spigname)
+      meq.node('MeqSelector',fq_name('xx',st1,st2),[index=1],children=meq.list(
+        meq.node('MeqSpigot',fq_name('spigot',st1,st2),[ 
+              station_1_index=st1,
+              station_2_index=st2,
+              input_column='DATA'])
+      ))
     ))
   );
   # create subtract sub-tree
@@ -327,7 +324,7 @@ const do_test := function (predict=F,subtract=F,solve=F,run=T,
     mqs.meq('Save.Forest',[file_name=save]);
   
   # get a list of nodes
-  nodelist := mqs.getnodelist();
+  nodelist := mqs.getnodelist(children=T);
   print 'Nodes: ',nodelist.name;
   
   # enable publishing of solver results
@@ -349,8 +346,8 @@ const do_test := function (predict=F,subtract=F,solve=F,run=T,
 
 #do_test(predict=T,run=T,st1set=1,st2set=2,publish=2);
 # do_test(solve=T,run=T,st1set=1,st2set=1,publish=2);
-do_test(solve=T,run=T,st1set=1:10,st2set=1:10,publish=1,save='solve.forest');
-# do_test(solve=T,run=T,publish=1,load='solve.forest');
+do_test(solve=T,run=T,st1set=1:5,st2set=1:5,publish=3);
+#do_test(solve=T,run=T,publish=2,load='solve-100.forest');
 
 print 'errors reported:',mqs.num_errors();
 
