@@ -47,7 +47,7 @@ int main()
  
     // connect DH1 to DH2
     TH_PL TH1("ExamplePL");
-    TR1.connectTo(&TR2, TH1);
+    TR1.connectTo(TR2, TH1);
     
     // initialize the TransportHolders and DataHolders
     TR1.init();

@@ -48,7 +48,7 @@ int main()
   TR2.setIsBlocking(false);
 
   // connect DH1 to DH2
-  TR1.connectTo(&TR2, TH_Mem::proto);
+  TR1.connectTo(TR2, TH_Mem::proto);
     
   // initialize the TransportHolders and DataHolders
   TR1.init();
