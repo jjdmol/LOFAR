@@ -2,6 +2,13 @@
 #include <Common/LofarLogger.h>
 #include <Common/hexdump.h>
 
+#include <netdb.h>		// gethostbyname
+
+#include <sys/types.h>	// 4x = inet_ntop
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+
 #include <ACC/DH_AC_Connect.h>
 #include <Transport/TH_Socket.h>
 
@@ -30,12 +37,16 @@ try {
 	DH_AC_Server.read();
 	LOG_INFO ("Connection request received!");
 	
+#if defined (__APPLE__)
+	DH_AC_Server.setServerIP (0xA9FE3264);
+#else
 	DH_AC_Server.setServerIP (0xC0A80175);
-	DH_AC_Server.setServerPort (5051);
+#endif
+	DH_AC_Server.setServerPort (3801);
 	DH_AC_Server.write();
 
-	LOG_DEBUG("Starting tACServer at port 5051");
-	int32	res = execl("./tACServer", "tACServer", "5051", NULL);
+	LOG_DEBUG("Starting tACServer at port 3801");
+	int32	res = execl("./tACServer", "tACServer", "3801", NULL);
 	cout << "execl = " << res << ", errno = " << errno << strerror(errno) << endl;
 	return(0);
 }

@@ -1,3 +1,4 @@
+#include <time.h>
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 #include <Common/hexdump.h>
@@ -18,13 +19,16 @@ int main (int argc, char *argv[]) {
 	// switch to async mode
 	sleep (5);
 	LOG_DEBUG (formatString("Command boot went %s!!!", 
-				ACClient->boot(0x12345678, "configID") ? "OK" : "WRONG"));
+				ACClient->boot(time(0L), "configID") ? "OK" : "WRONG"));
 
 	LOG_DEBUG (formatString("Command define went %s!!!", 
 				ACClient->define(0x22334455) ? "OK" : "WRONG"));
 
 	LOG_DEBUG (formatString("Command init went %s!!!", 
-				ACClient->init(0x55447766) ? "OK" : "WRONG"));
+				ACClient->init(time(0)+30) ? "OK" : "WRONG"));
+
+	LOG_DEBUG (formatString("Command pause went %s!!!", 
+				ACClient->pause(time(0)+40, 0, "pause??") ? "OK" : "WRONG"));
 
 	LOG_DEBUG (formatString("Command run went %s!!!", 
 				ACClient->run(0x32547698) ? "OK" : "WRONG"));
