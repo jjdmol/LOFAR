@@ -35,6 +35,34 @@ def pgArray2list(s):
     lst.append(nextfield);
   return lst;
 
+def pgArray2booleanList(s):
+  """ This should be more generic inside the pgArray2list function """
+  lst = [];
+  s = string.strip(s);
+  if(debug):
+    print "start string: " + s;
+##  s = s[1:len(s)];
+  commapos = string.find(s,",");
+  while ( commapos > -1 ):
+    field = s[:commapos];
+    if(debug):
+      print "field: " , field;
+    if(string.find(field,"t")>-1):
+      lst.append(True);
+    elif(string.find(field,"f")>-1):
+      lst.append(False);
+    s = s[commapos+1:]
+    commapos = string.find(s,",");
+    if(debug):
+      print "string: " , s;
+      print "list:   " , lst;
+  """see if the rest is a field"""
+  if(string.find(s,"t")>-1):
+    lst.append(True);
+  elif(string.find(s,"f")>-1):
+    lst.append(False);
+  return lst;
+
 def getField(s):
   if(debug):
     print "getting field from: " + s;
@@ -54,7 +82,13 @@ def getField(s):
     try:
       s = int(s)
     except:
-      """do nothing"""
+      try:
+        s = float(s)
+      except:
+        try:
+          s = bool(s)
+        except:
+          """do nothing"""
     rc =  (s, next);
   if(debug):
     print rc;

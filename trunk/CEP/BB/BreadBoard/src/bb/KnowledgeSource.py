@@ -10,6 +10,8 @@ $Id$
 import BlackBoard;
 import threading;
 
+debug = False;
+
 class KnowledgeSource(threading.Thread):
   """ place holder for utility functions """
 
@@ -22,10 +24,14 @@ class KnowledgeSource(threading.Thread):
     self.bb = obj;
 
   def run(self):
+    debug = True;
     while not self.stopevent.isSet():
+      if(debug):
+        print "action by " , self.id;
       self.action();
-      self.stopevent.wait(0);
+      self.stopevent.wait(1);
 
   def join(self,timeout = None):
     self.stopevent.set();
+    print self.id, " stopping"
     threading.Thread.join(self,timeout);

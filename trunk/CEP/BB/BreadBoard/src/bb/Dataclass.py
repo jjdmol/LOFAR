@@ -11,6 +11,7 @@ import pg;
 
 db = pg.DB(dbname="bb");
 
+debug = False;
 class Dataclass:
   """ something to do """
 
@@ -24,6 +25,9 @@ class Dataclass:
       self.refresh_data();
 
   def refresh_data(self):
+    debug = True;
+    if debug:
+      print self.tablename, " - ", self.id;
     self.record = db.get(self.tablename, self.id, "oid");
 
 
