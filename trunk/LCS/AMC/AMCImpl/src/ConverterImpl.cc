@@ -120,9 +120,9 @@ namespace LOFAR
           for (uint j = 0; j < earthCoord.size(); j++) {
 
             // Set the position on earth in the frame.
-            MVPosition pos(Quantity(earthCoord[j].height(), "m"),
-                           Quantity(earthCoord[j].longitude(), "rad"),
-                           Quantity(earthCoord[j].latitude(), "rad"));
+            MVPosition pos((Quantity(earthCoord[j].height(), "m")),
+                           (Quantity(earthCoord[j].longitude(), "rad")),
+                           (Quantity(earthCoord[j].latitude(), "rad")));
             frame.set (MPosition(pos));
 
             // Set-up the conversion engine, using reference direction AZEL.
@@ -136,8 +136,8 @@ namespace LOFAR
             for (uint k = 0; k < skyCoord.size(); k++) {
 
               // Define the astronomical direction as a J2000 direction.
-              MDirection sky(MVDirection(skyCoord[k].angle0(), 
-                                         skyCoord[k].angle1()), 
+              MDirection sky((MVDirection(skyCoord[k].angle0(), 
+                                          skyCoord[k].angle1())), 
                              MDirection::J2000);
 
               // Convert this direction, using the conversion engine.
@@ -228,9 +228,9 @@ namespace LOFAR
                                     timeCoord[0].getFraction())));
 
           // Set the position on earth in the frame.
-          MVPosition pos(Quantity(earthCoord[0].height(), "m"),
-                         Quantity(earthCoord[0].longitude(), "rad"),
-                         Quantity(earthCoord[0].latitude(), "rad"));
+          MVPosition pos((Quantity(earthCoord[0].height(), "m")),
+                         (Quantity(earthCoord[0].longitude(), "rad")),
+                         (Quantity(earthCoord[0].latitude(), "rad")));
           frame.set (MPosition(pos));
 
           // Set-up the reference frame, using reference direction AZEL.
@@ -244,8 +244,8 @@ namespace LOFAR
           for (uint i = 0; i < skyCoord.size(); i++) {
             
             // Define the astronomical direction w.r.t. the reference frame.
-            MDirection sky(MVDirection(skyCoord[i].angle0(), 
-                                       skyCoord[i].angle1()), 
+            MDirection sky((MVDirection(skyCoord[i].angle0(), 
+                                        skyCoord[i].angle1())), 
                            ref);
             
             // Convert this direction, using the conversion engine.
@@ -272,9 +272,9 @@ namespace LOFAR
                                       timeCoord[i].getFraction())));
             
             // Set the position on earth in the frame.
-            MVPosition pos(Quantity(earthCoord[i].height(), "m"),
-                           Quantity(earthCoord[i].longitude(), "rad"),
-                           Quantity(earthCoord[i].latitude(), "rad"));
+            MVPosition pos((Quantity(earthCoord[i].height(), "m")),
+                           (Quantity(earthCoord[i].longitude(), "rad")),
+                           (Quantity(earthCoord[i].latitude(), "rad")));
             frame.set (MPosition(pos));
 
             // Set-up the reference frame, using reference direction AZEL.
@@ -285,8 +285,8 @@ namespace LOFAR
 //          conv (MDirection(), MDirection::Ref (MDirection::J2000, frame));
            
             // Define the astronomical direction w.r.t. the reference frame.
-            MDirection sky(MVDirection(skyCoord[i].angle0(), 
-                                       skyCoord[i].angle1()), 
+            MDirection sky((MVDirection(skyCoord[i].angle0(), 
+                                        skyCoord[i].angle1())),
                            ref);
             
             // Convert this direction, using the conversion engine.
