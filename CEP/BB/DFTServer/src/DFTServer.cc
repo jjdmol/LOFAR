@@ -25,7 +25,7 @@
 
 #include <lofar_config.h>
 
-#include <DFTServer.h>
+#include <DFTServer/DFTServer.h>
 
 #include <ACC/ParameterSet.h>
 #include <Common/KeyValueMap.h>
