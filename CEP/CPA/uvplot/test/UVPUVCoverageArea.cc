@@ -19,7 +19,7 @@
 //
 
 
-#include <uvplot/UVPUVCoverageArea.h>
+#include <UVPUVCoverageArea.h>
 
 #include <qpainter.h>
 #include <qimage.h>

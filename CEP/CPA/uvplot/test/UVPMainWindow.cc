@@ -23,7 +23,7 @@
 #include <OCTOPUSSY/Dispatcher.h> 
 #include <OCTOPUSSY/Gateways.h>
 
-#include <uvplot/UVPMainWindow.h>
+#include <UVPMainWindow.h>
 //***#include <uvplot/UVPDataTransferWP.h>    // Communications class
 //***#include <uvplot/UVPPVDInput.h>
 
@@ -146,8 +146,8 @@ void UVPMainWindow::buildMenuBar()
 
 
   itsProcessControlMenu = new QPopupMenu;
-  itsMenuPlotImageID = itsProcessControlMenu->insertItem("&Image", this,
-                                                         SLOT(slot_plotTimeFrequencyImage()));
+  itsMenuPlotImageID = itsProcessControlMenu->insertItem("&Start", this,
+                                                         SLOT(slot_vdmInput()));
   itsMenuPlotStopID  = itsProcessControlMenu->insertItem("&Stop", this,
                                                          SLOT(slot_quitPlotting()));
 
