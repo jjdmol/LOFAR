@@ -26,21 +26,32 @@ SOURCES = \
 
 OBJS       = $(SOURCES:.cpp=.o)
 
-CCC     = g++
+FLEX	= ${HOME}/bin/flex
+BISON	= ${HOME}/bin/bison
+CXX     = g++
+CC      = gcc
 #OPT     = -O3
-OPT     = -pg -g
+COPT     = -pg -g
 
+BISONFLAGS = --defines --debug --locations --graph --token-table --report=all
+FLEXFLAGS  = --debug --verbose # --bison-bridge --bison-locations --trace --yylineno --nodefault
 CFLAGS     = -Wall -D_REENTRANT -I./ -I$(DTLINCLUDE) $(MPI_INCLUDES) $(MPI_CXX_INCLUDES) $(OPT) $(CC_MACH_FLAGS) 
 
 %.o : %.cpp Makefile
-	$(CCC) -c $(CFLAGS) $< -o $@
+	$(CXX) -c $(CFLAGS) $< -o $@
+
+%.o : %.cc Makefile
+	$(CXX) -c $(CFLAGS) $< -o $@
+
+%.o : %.c Makefile
+	$(CC) -c $(CFLAGS) $< -o $@
 
 $(TARGET):   $(OBJS)
-	$(CCC)  $(MPI_CXX_LDLIBS) $(OBJS) -o $(TARGET) \
+	$(CXX)  $(MPI_CXX_LDLIBS) $(OBJS) -o $(TARGET) \
 	      $(MPI_LDLIBS) $(MPI_CXX_LDLIBS) $(MACH_LDFLAGS) -L$(DTLLIBDIR) $(DTLLIB) -lodbc
 
 bbdb:	blackboard/createdb.o
-	$(CCC) $< -o $@ \
+	$(CXX) $< -o $@ \
 	      -L$(MPI_HOME)/lib $(MPI_LDLIBS) $(MACH_LDFLAGS) -L$(DTLLIBDIR) $(DTLLIB) -lodbc
 
 clean:
@@ -49,3 +60,20 @@ clean:
 new:
 	make clean
 	make
+
+lex.%.c:	%.l Makefile
+	$(FLEX) -P$* $(FLEXFLAGS) $<
+
+lex.%.cc:	%.l Makefile
+	$(FLEX) -+ -P$* $(FLEXFLAGS) $<
+
+%.tab.c:	%.y Makefile
+	$(BISON) -p$* $(BISONFLAGS) $*.y
+
+read_script:	selfparse.tab.o lex.selfparse.o
+	$(CXX) $+ -o $@ -lfl -ly
+
+lex.lexer.o:	lex.selfparse.cc
+
+%.d:	confdata/%.selfcal read_script
+	./read_script $<
