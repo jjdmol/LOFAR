@@ -48,9 +48,9 @@
 #include <casa/Arrays/Vector.h>
 #include <casa/Exceptions/Error.h>
 #include <scimath/Functionals/Polynomial.h>
-#include <tasking/Glish/GlishArray.h>
-#include <tasking/Glish/GlishRecord.h>
-#include <tasking/Glish/GlishValue.h>
+//#include <tasking/Glish/GlishArray.h>
+//#include <tasking/Glish/GlishRecord.h>
+//#include <tasking/Glish/GlishValue.h>
 #include <scimath/Mathematics/AutoDiff.h>
 #include <casa/BasicSL/Constants.h>
 #include <measures/Measures/MDirection.h>
@@ -736,6 +736,7 @@ bool MeqCalibrater::nextInterval(bool callReadPolcs)
   showParmValues();
   cout << "BBSTest: initparms    " << parmTimer << endl;
 
+  showParmValues();
 //   itsSolveColName = itsDataColName;
   return true;
 }
@@ -847,6 +848,7 @@ void MeqCalibrater::setSolvableParms (vector<string>& parms,
 // Solve for the solvable parameters on the current time domain.
 //
 //----------------------------------------------------------------------
+/*
 GlishRecord MeqCalibrater::solve(bool useSVD)
 {
   cdebug(1) << "solve using file " << itsDataMap->getFileName() << endl;
@@ -908,6 +910,7 @@ GlishRecord MeqCalibrater::solve(bool useSVD)
 	MeqMatrix defaultDeriv (DComplex(0,0), 1, nrchan);
 	const complex<double>* defaultDerivPtr = defaultDeriv.dcomplexStorage();
 
+/// showd = (ant1==4 && ant2==8);
 	// >>>>>>>>>>>>>> Diff 
 	// Calculate the derivatives and get pointers to them.
 	// Use the default if no perturbed value defined.                    //>>>> uses predicted data
@@ -1241,6 +1244,7 @@ GlishRecord MeqCalibrater::solve(bool useSVD)
   cout << "BBSTest: total-iter " << totTimer << endl;
   return rec;
 }
+*/
 
 //----------------------------------------------------------------------
 //
@@ -1288,6 +1292,7 @@ void MeqCalibrater::solve(bool useSVD, vector<string>& resultParmNames,
       uInt ant2 = itsAnt2Data(bl);
       if (itsBLSelection(ant1,ant2) == true)
       {
+	///	showd = (ant1==4 && ant2==8);
         unsigned int blOffset = bl*itsNrChan*itsNPol;
         unsigned int freqOffset = itsFirstChan*itsNPol;
         // Set the data pointer
@@ -1860,6 +1865,7 @@ void MeqCalibrater::saveResidualData()
 // for the purpose of passing the information back to a glish script.
 //
 //----------------------------------------------------------------------
+/*
 void MeqCalibrater::addParm(const MeqParm& parm, bool denormalize,
 			    GlishRecord& rec)
 {
@@ -1880,6 +1886,7 @@ void MeqCalibrater::addParm(const MeqParm& parm, bool denormalize,
   
   rec.add(parm.getName(), parmRec);
 }
+*/
 
 //----------------------------------------------------------------------
 //
@@ -1890,6 +1897,7 @@ void MeqCalibrater::addParm(const MeqParm& parm, bool denormalize,
 // evaluation of the parameter on the current time domain.
 //
 //----------------------------------------------------------------------
+/*
 GlishRecord MeqCalibrater::getParms(Vector<String>& parmPatterns,
 				    Vector<String>& excludePatterns,
 				    int isSolvable, bool denormalize)
@@ -1956,6 +1964,7 @@ GlishRecord MeqCalibrater::getParms(Vector<String>& parmPatterns,
   }
   return rec;
 }
+*/
 
 //----------------------------------------------------------------------
 //
@@ -1966,6 +1975,7 @@ GlishRecord MeqCalibrater::getParms(Vector<String>& parmPatterns,
 // E.g. getParmNames("*") returns all parameter names.
 //
 //----------------------------------------------------------------------
+/*
 GlishArray MeqCalibrater::getParmNames(Vector<String>& parmPatterns,
 				       Vector<String>& excludePatterns)
 {
@@ -2035,6 +2045,7 @@ GlishArray MeqCalibrater::getParmNames(Vector<String>& parmPatterns,
 
   return arr;
 }
+*/
 
 //----------------------------------------------------------------------
 //
@@ -2044,6 +2055,7 @@ GlishArray MeqCalibrater::getParmNames(Vector<String>& parmPatterns,
 // of passing it back to the calling glish script.
 //
 //----------------------------------------------------------------------
+/*
 GlishRecord MeqCalibrater::getSolveDomain()
 {
   GlishRecord rec;
@@ -2053,7 +2065,7 @@ GlishRecord MeqCalibrater::getSolveDomain()
   rec.add("endy",   itsSolveDomain.endY());
   return rec;
 }
-
+*/
 
 //----------------------------------------------------------------------
 //
@@ -2281,6 +2293,7 @@ Bool MeqCalibrater::peel(const vector<int>& peelSources,
 // evaluation of the parameter on the current time domain.
 //
 //----------------------------------------------------------------------
+/*
 GlishRecord MeqCalibrater::getStatistics (bool detailed, bool clear)
 {
   GlishRecord rec;
@@ -2321,7 +2334,7 @@ GlishRecord MeqCalibrater::getStatistics (bool detailed, bool clear)
   }
   return rec;
 }
-
+*/
 
 void MeqCalibrater::getParmValues (vector<string>& names,
 				   vector<double>& values)
