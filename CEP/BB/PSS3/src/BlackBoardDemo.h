@@ -76,7 +76,10 @@
 
  2. For each Knowledge Source there must exist a separate measurement set and 
     meqmodel/skymodel tables. See /LOFAR/CEP/CPA/PSS3/MNS/src/parmdb.cc on how
-    to create these.
+    to create these. The names of these tables must be '<name>1' and 
+    '<name>1def' for Knowledge Source 1, '<name>2' and '<name>2def' for 
+    Knowledge Source 2 etc. Scripts to fill these tables can be found in the
+    BB/PSS3/src directory
 
  3. In BlackBoardDemo.cc change 'databaseName' to your own database name.
 */
