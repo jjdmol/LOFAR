@@ -105,7 +105,7 @@ namespace LOFAR
 	  = itsData[i * itsMac.getBeamletSize() + j + 1];
       }
     }
-    dump();
+    //dump();
   }
   
   void WH_SimStation::dump()
