@@ -143,7 +143,7 @@ public:
 
      
    */
-  virtual void load(Table&       table,
+  virtual void load(const Table& table,
                     unsigned int row);
 
   //! Loads state from an Aips++ table.

@@ -220,8 +220,8 @@ void AbstractSource::store(Table&      table,
 
 //===============>>>  AbstractSource::load  <<<===============
 
-void AbstractSource::load(Table&      table,
-                           unsigned int row)
+void AbstractSource::load(const Table& table,
+                          unsigned int row)
 {
   ROScalarColumn<int>    Number  (table, "NUMBER");
   ROScalarColumn<String> Name    (table, "NAME");

@@ -67,7 +67,7 @@ PointSource::~PointSource()
 
 //====================>>>  PointSource:load:  <<<====================
 
-void PointSource::load(Table&       table,
+void PointSource::load(const Table& table,
                        unsigned int row)
 {
   AbstractSource::load(table, row);
