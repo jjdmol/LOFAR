@@ -82,7 +82,7 @@ void test1 (bool isReceiver)
   DH_Example DH_Receiver("dh2", 1);
   DH_Sender.setID(1);
   DH_Receiver.setID(2);
-  TH_Socket proto("localhost", "localhost", 8923);
+  TH_Socket proto("localhost", "localhost", 8924);
   DH_Sender.connectTo (DH_Receiver, proto, true);
   if (isReceiver)
     DH_Receiver.init();
@@ -114,7 +114,7 @@ void test2 (bool isReceiver)
   DH_Example DH_Receiver("dh2", 1, true);
   DH_Sender.setID(1);
   DH_Receiver.setID(2);
-  TH_Socket proto("localhost", "localhost", 8923);
+  TH_Socket proto("localhost", "localhost", 8924);
   DH_Sender.connectTo (DH_Receiver, proto, true);
   if (isReceiver)
     DH_Receiver.init();
@@ -158,8 +158,8 @@ void testBidirectional (bool isReceiver)
   DH_Example DH_Receiver("dh2", 1);
   DH_Sender.setID(1);
   DH_Receiver.setID(2);
-  TH_Socket proto("localhost", "", 8923, false);
-  TH_Socket proto2("", "localhost", 8923, true);
+  TH_Socket proto("localhost", "", 8924, false);
+  TH_Socket proto2("", "localhost", 8924, true);
   DH_Sender.connectBidirectional (DH_Receiver, proto, proto2, true);
   // DH_Sender.connectTo (DH_Receiver, proto, true);
   if (isReceiver)
