@@ -72,6 +72,7 @@ namespace LOFAR
     
     // overload methods form the ApplicationHolder base class
     virtual void define (const KeyValueMap& params = KeyValueMap());
+    void undefine();
     virtual void init();
     virtual void run(int nsteps);
     virtual void dump();
