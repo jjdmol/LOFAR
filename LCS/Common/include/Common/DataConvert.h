@@ -63,6 +63,7 @@ namespace LOFAR
   void dataConvert (DataFormat, float* inout, uint nrval);
   void dataConvert (DataFormat, double* inout, uint nrval);
   void dataConvert (DataFormat, std::complex<uint16>* inout, uint nrval);
+  void dataConvert (DataFormat, std::complex<int16>* inout, uint nrval);
   void dataConvert (DataFormat, fcomplex* inout, uint nrval);
   void dataConvert (DataFormat, dcomplex* inout, uint nrval);
   // </group>
@@ -188,6 +189,8 @@ namespace LOFAR
   inline void dataConvert (DataFormat fmt, double* inout, uint nrval)
     { dataConvert64 (fmt, inout, nrval); }
   inline void dataConvert (DataFormat fmt, std::complex<uint16>* inout, uint nrval)
+    { dataConvert16 (fmt, inout, 2*nrval); }
+  inline void dataConvert (DataFormat fmt, std::complex<int16>* inout, uint nrval)
     { dataConvert16 (fmt, inout, 2*nrval); }
   inline void dataConvert (DataFormat fmt, fcomplex* inout, uint nrval)
     { dataConvert32 (fmt, inout, 2*nrval); }

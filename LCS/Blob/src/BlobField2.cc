@@ -174,6 +174,7 @@ namespace LOFAR {
   template class BlobField<float>;
   template class BlobField<double>;
   template class BlobField<std::complex<uint16> >;
+  template class BlobField<std::complex<int16> >;
   template class BlobField<fcomplex>;
   template class BlobField<dcomplex>;
 }
