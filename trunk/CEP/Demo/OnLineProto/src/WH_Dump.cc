@@ -56,11 +56,13 @@ WH_Dump::WH_Dump (const string& name,
     getDataManager().addOutDataHolder(0, 
 				      new DH_Empty (string("out_") + str), 
 				      true);
-  
+    // open output file. filename is hardcoded.
+    itsOutputFile.open("output.out");
 }
 
 WH_Dump::~WH_Dump()
 {
+  itsOutputFile.close();
 }
 
 WorkHolder* WH_Dump::construct (const string& name, 
@@ -77,6 +79,11 @@ WH_Dump* WH_Dump::make (const string& name)
 void WH_Dump::process()
 {
   TRACER4("WH_Dump::Process()");
+
+  DH_Vis *InDHptr = (DH_Vis*)getDataManager().getInHolder(0);
+
+  // dump output to file
+  itsOutputFile << InDHptr->getBuffer();
 }
 
 void WH_Dump::dump()
