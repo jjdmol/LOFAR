@@ -27,6 +27,8 @@
 #include <Common/BlobString.h>
 #include <string>
 
+namespace LOFAR {
+
 // The buffer can be static or dynamic. A static buffer has a fixed
 // length and cannot grow. A dynamic buffer can grow as needed.
 //
@@ -46,5 +48,6 @@ public:
     {}
 };
 
+} // end namespace
 
 #endif

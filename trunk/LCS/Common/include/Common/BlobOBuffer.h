@@ -25,6 +25,8 @@
 
 #include <Common/LofarTypes.h>
 
+namespace LOFAR {
+
 // BlobOBuffer is the abstract base class for the sink of a
 // BlobOStream object. In this way the destination of a BlobOStream
 // can be chosen as needed. Currently three sink types are possible:
@@ -59,5 +61,6 @@ public:
   virtual int64 setPos (int64 pos) = 0;
 };
 
+} // end namespace
 
 #endif

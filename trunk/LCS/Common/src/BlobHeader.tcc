@@ -27,12 +27,13 @@
 #include <Common/DataFormat.h>
 #include <Common/Debug.h>
 
+
 // Use the same magic value as used in the AIPS++ class AipsIO.
-// Use a magic value that is insensitive to data format.
+// It is insensitive to data format (big or little endian).
 
 template<uint NAMELENGTH>
-BlobHeader<NAMELENGTH>::BlobHeader (const char* objectType, int version,
-				    uint level)
+LOFAR::BlobHeader<NAMELENGTH>::BlobHeader (const char* objectType, int version,
+					   uint level)
 : itsMagicValue     (0xbebebebe),
   itsLength         (0),
   itsVersion        (version),

@@ -26,6 +26,7 @@
 #include <Common/BlobIStream.h>
 #include <stdexcept>
 
+namespace LOFAR {
 
 KeyValue::KeyValue()
 : itsDataType (DTValueVector),
@@ -902,3 +903,5 @@ BlobIStream& operator>> (BlobIStream& bs, KeyValue& param)
   }
   return bs;
 }
+
+} // end namespace

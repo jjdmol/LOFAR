@@ -29,6 +29,8 @@
 #include <Common/lofar_string.h>
 #include <stdexcept>
 
+namespace LOFAR {
+
 extern "C" {
   int KeyTokenizewrap();        // yywrap
 }
@@ -97,5 +99,6 @@ public:
 */
 void KeyParseerror (char*);
 
+} // end namespace
 
 #endif

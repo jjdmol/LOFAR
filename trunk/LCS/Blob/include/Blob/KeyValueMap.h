@@ -27,6 +27,8 @@
 #include <Common/lofar_map.h>
 #include <Common/lofar_iosfwd.h>
 
+namespace LOFAR {
+
 // <summary> Class to hold a collection of key name/value pairs </summary>
 
 /**
@@ -77,5 +79,6 @@ public:
   friend BlobIStream& operator>> (BlobIStream&, KeyValueMap&);
 };
 
+} //end namespace
 
 #endif 

@@ -29,24 +29,24 @@
 #if (HAVE_QT)
 #include <qglobal.h>
 #else
-using LOFAR::uchar;
+using LOFAR::TYPES::uchar;
 #if !defined(_SYS_TYPES_H) || !defined(__USE_MISC)
-using LOFAR::ushort;
-using LOFAR::uint;
-using LOFAR::ulong;
+using LOFAR::TYPES::ushort;
+using LOFAR::TYPES::uint;
+using LOFAR::TYPES::ulong;
 #endif
 #endif // QT
-using LOFAR::longlong;
-using LOFAR::ulonglong;
-using LOFAR::ldouble;
-using LOFAR::fcomplex;
-using LOFAR::dcomplex;
+using LOFAR::TYPES::longlong;
+using LOFAR::TYPES::ulonglong;
+using LOFAR::TYPES::ldouble;
+using LOFAR::TYPES::fcomplex;
+using LOFAR::TYPES::dcomplex;
 
-using LOFAR::int16;
-using LOFAR::int32;
-using LOFAR::int64;
-using LOFAR::uint16;
-using LOFAR::uint32;
-using LOFAR::uint64;
+using LOFAR::TYPES::int16;
+using LOFAR::TYPES::int32;
+using LOFAR::TYPES::int64;
+using LOFAR::TYPES::uint16;
+using LOFAR::TYPES::uint32;
+using LOFAR::TYPES::uint64;
 
 #endif

@@ -27,6 +27,8 @@
 #include <Common/Debug.h>
 #include <vector>
 
+namespace LOFAR {
+
 // This class is the BlobOBuffer that makes use of a vector object.
 // The vector can be static or dynamic. A static vector has a fixed
 // length and cannot grow. A dynamic vector can grow as needed.
@@ -70,5 +72,6 @@ private:
   std::vector<T>* itsVector;
 };
 
+} // end namespace
 
 #endif

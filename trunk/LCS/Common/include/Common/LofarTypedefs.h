@@ -27,25 +27,27 @@
 #include <unistd.h>
 
 namespace LOFAR {
+  namespace TYPES {
 
-  // Convenience shortcuts.
-  typedef unsigned char        uchar;
-  typedef unsigned short       ushort;
-  typedef unsigned int         uint;
-  typedef unsigned long        ulong;
-  typedef long long            longlong;
-  typedef unsigned long long   ulonglong;
-  typedef long double          ldouble;
-  typedef std::complex<float>  fcomplex;
-  typedef std::complex<double> dcomplex;
-
-  // Fixed data sizes.
-  typedef short               int16;
-  typedef int                 int32;
-  typedef long long           int64;
-  typedef unsigned short     uint16;
-  typedef unsigned int       uint32;
-  typedef unsigned long long uint64;
+    // Convenience shortcuts.
+    typedef unsigned char        uchar;
+    typedef unsigned short       ushort;
+    typedef unsigned int         uint;
+    typedef unsigned long        ulong;
+    typedef long long            longlong;
+    typedef unsigned long long   ulonglong;
+    typedef long double          ldouble;
+    typedef std::complex<float>  fcomplex;
+    typedef std::complex<double> dcomplex;
+ 
+    // Fixed data sizes.
+    typedef short               int16;
+    typedef int                 int32;
+    typedef long long           int64;
+    typedef unsigned short     uint16;
+    typedef unsigned int       uint32;
+    typedef unsigned long long uint64;
+  }
 }
 
 

@@ -24,6 +24,8 @@
 #include <Common/DataFormat.h>
 #include <Common/Debug.h>
 
+using namespace LOFAR;
+
 class XX
 {
 public:

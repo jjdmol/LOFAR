@@ -36,6 +36,8 @@
 #include <fstream>
 #include <vector>
 
+using namespace LOFAR;
+
 int doOut (BlobOBuffer* bb, bool header8=false)
 {
   uint len = 0;

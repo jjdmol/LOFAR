@@ -24,6 +24,7 @@
 #include <Common/BlobHeader.h>
 #include <Common/DataConvert.h>
 
+namespace LOFAR {
 
 BlobIStream::BlobIStream (BlobIBuffer* bb)
 : itsMustConvert   (false),
@@ -371,3 +372,5 @@ uint BlobIStream::align (uint n)
   }
   return nfill;
 }
+
+} // end namespace

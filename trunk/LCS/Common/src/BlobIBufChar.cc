@@ -24,6 +24,7 @@
 #include <Common/Debug.h>
 #include <string.h>
 
+namespace LOFAR {
 
 BlobIBufChar::BlobIBufChar (const void* buffer, uint size)
 : itsBuffer ((const uchar*)buffer),
@@ -62,3 +63,5 @@ int64 BlobIBufChar::setPos (int64 pos)
   }
   return itsPos;
 }
+
+} // end namespace

@@ -22,6 +22,7 @@
 
 #include <Common/BlobStringType.h>
 
+namespace LOFAR {
 
 BlobStringType::BlobStringType (bool useString, const LOFAR::Allocator& alloc)
 : itsUseString (useString),
@@ -48,4 +49,4 @@ BlobStringType& BlobStringType::operator= (const BlobStringType& that)
   return *this;
 }
 
-
+} // end namespace

@@ -27,6 +27,8 @@
 #include <Common/TypeNames.h>
 #include <Common/Debug.h>
 
+namespace LOFAR {
+
 // An array is a special blob, so it has a special header.
 // This class defines a standard header meant for static blobs.
 // The dynamic headers obey this standard, so a static array blob
@@ -131,5 +133,6 @@ private:
   uint32 itsSize[NDIM/2*2+1];   // make sure odd #values to get multiple of 8
 };
 
+} // end namespace
 
 #endif

@@ -27,6 +27,7 @@
 #include <KeyValueMap.h>
 #include <KeyParser.h>
 #include <KeyParse.h>     // output of bison
+using namespace LOFAR;
 
 #undef YY_INPUT
 #define YY_INPUT(buf,result,max_size) result=KeyParser::input(buf,max_size)

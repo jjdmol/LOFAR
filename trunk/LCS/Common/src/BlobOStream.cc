@@ -24,6 +24,7 @@
 #include <Common/BlobHeader.h>
 #include <Common/DataConvert.h>
 
+namespace LOFAR {
 
 BlobOStream::BlobOStream (BlobOBuffer* bb, bool header8)
 : itsHeader8   (header8),
@@ -293,3 +294,5 @@ uint BlobOStream::align (uint n)
   }
   return nfill;
 }
+
+} // end namespace

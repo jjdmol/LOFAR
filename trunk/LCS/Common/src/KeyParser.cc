@@ -33,6 +33,7 @@ extern FILE* KeyTokenizein;
 extern void KeyParseparse();
 extern void KeyTokenizerestart(FILE*);
 
+namespace LOFAR {
 
 // Initialize statics.
 int KeyParser::theirPosition = 0;
@@ -136,3 +137,5 @@ int KeyTokenizewrap()
 {
     return 1;
 }
+
+} // end namespace

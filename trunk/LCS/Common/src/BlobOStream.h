@@ -29,6 +29,8 @@
 #include <vector>
 #include <string>
 
+namespace LOFAR {
+
 // This class makes it possible to create a blob.
 // It creates a header (in the putStart function) using the
 // BlobHeader definition.
@@ -176,5 +178,6 @@ inline void BlobOStream::put (const std::vector<T>& vec)
   put (&vec[0], vec.size());
 }
 
+} // end namespace
 
 #endif

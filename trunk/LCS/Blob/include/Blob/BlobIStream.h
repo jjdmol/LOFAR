@@ -30,6 +30,7 @@
 #include <vector>
 #include <string>
 
+namespace LOFAR {
 
 // This class makes it possible to interpret a blob and create the objects
 // stored in it.
@@ -178,5 +179,6 @@ inline void BlobIStream::get (std::vector<T>& vec)
   get (&vec[0], sz);
 }
 
+} // end namespace
 
 #endif

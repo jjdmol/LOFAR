@@ -25,6 +25,7 @@
 
 #include <Common/BlobIBuffer.h>
 
+namespace LOFAR {
 
 // This class is the BlobIBuffer that makes use of a character buffer,
 // i.e. a buffer of signed or unsigned chars.
@@ -60,5 +61,6 @@ private:
   uint         itsPos;
 };
 
+} // end namespace
 
 #endif

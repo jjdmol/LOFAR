@@ -22,6 +22,7 @@
 
 #include <Common/BlobOBufNull.h>
 
+namespace LOFAR {
 
 BlobOBufNull::BlobOBufNull()
 : itsSize (0),
@@ -53,3 +54,5 @@ int64 BlobOBufNull::setPos (int64 pos)
   }
   return itsPos;
 }
+
+} // end namespace

@@ -26,6 +26,8 @@
 #include <Common/BlobIBuffer.h>
 #include <iosfwd>
 
+namespace LOFAR {
+
 // This class is the BlobIBuffer that makes use of an istream object.
 // The istream can be any type (ofstream, istringstream, ...)
 
@@ -53,5 +55,6 @@ private:
   std::streambuf* itsStream;
 };
 
+} // end namespace
 
 #endif

@@ -25,14 +25,15 @@
 %{
 #include <Common/KeyParser.h>
 #include <Common/KeyValueMap.h>
+using namespace LOFAR;
 %}
 
 %pure_parser                /* make parser re-entrant */
 
 %union {
-KeyValue* val;
-KeyValueMap* block;
-vector<KeyValue>* vec;
+LOFAR::KeyValue* val;
+LOFAR::KeyValueMap* block;
+vector<LOFAR::KeyValue>* vec;
 }
 
 %{
