@@ -8,6 +8,8 @@ vs[5] = ""
 Trimmed C++ strings:
 >a String with leading and trailing whitespace<
 >a String without leading and trailing whitespace<
+>String with(out) itemnr and arrayindex<
 Trimmed C strings:
 >a String with leading and trailing whitespace< , len=45
 >a String without leading and trailing whitespace< , len=48
+>String with(out) itemnr and arrayindex< , len=38
