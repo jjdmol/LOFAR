@@ -38,9 +38,9 @@ namespace LOFAR
   // \addtogroup Transport
   // @{
 
-  class TH_Socket: public TransportHolder
-  {
-  public:
+class TH_Socket: public TransportHolder
+{
+public:
     // Create the socket transport holder.
 	// The sourceName and destinationName correspond with the machines on which
 	// the endpoints (dataholders) are situated. 
@@ -107,11 +107,15 @@ namespace LOFAR
     virtual bool isBlocking() const
       { return (itsDataSocket && itsDataSocket->isBlocking()); }
    
-	void		setDataSocket (Socket*	aDataSocket);
-	Socket*		getDataSocket() const; 
-    bool		connectToServer(int32	waitMs = -1);
-    bool		connectToClient(int32	waitMs = -1);
-//  private:
+	// Specialties for TH_Socket.
+	bool			setDataSocket   (Socket*	aDataSocket);
+	inline Socket*	getDataSocket   () const; 
+	bool			setListenSocket (Socket*	aListenSocket);
+	inline Socket*	getListenSocket () const; 
+    bool			connectToServer (int32	waitMs = -1);
+    bool			connectToClient (int32	waitMs = -1);
+
+private:
 	typedef enum {
 		CmdNone = 0,
 		CmdRecvNonBlock,
@@ -130,12 +134,22 @@ namespace LOFAR
 	// Administration for non-blocking receiving. In the recv-call
 	// these fields are filled so that waitForRecv knows what to do.
 	int16		itsLastCmd;
-  };
+};
   
-
+//
+// getDataSocket
+//
 inline Socket* TH_Socket::getDataSocket() const
 {
 	return (itsDataSocket);
+}
+
+//
+// getListenSocket
+//
+inline Socket* TH_Socket::getListenSocket() const
+{
+	return (itsServerSocket);
 }
 
   // @} // Doxygen endgroup Transport

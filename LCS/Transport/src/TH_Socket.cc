@@ -458,15 +458,37 @@ bool TH_Socket::connectToClient (const int32	waitMs)
 	return (false);
 }
 
-void TH_Socket::setDataSocket (Socket*	aDataSocket)
+//
+// SetDataSocket(socket*)
+//
+bool TH_Socket::setDataSocket (Socket*	aDataSocket)
 {
-	if (aDataSocket) {
-		itsDataSocket  = aDataSocket;
-		itsIsConnected = aDataSocket->isConnected();
-		itsSyncComm    = aDataSocket->isBlocking();
-		itsReadOffset  = 0;
-		itsLastCmd     = CmdNone;
+	// Must be a legal pointer.
+	if (!aDataSocket) {
+		return (false);
 	}
+
+	itsDataSocket  = aDataSocket;
+	itsIsConnected = aDataSocket->isConnected();
+	itsSyncComm    = aDataSocket->isBlocking();
+	itsReadOffset  = 0;
+	itsLastCmd     = CmdNone;
+
+	return (true);
+}
+
+//
+// SetListenSocket(socket*)
+//
+bool TH_Socket::setListenSocket (Socket*	aListenSocket)
+{
+	// Must be a legal pointer and working listener
+	if (!aListenSocket || !aListenSocket->isServer() || !aListenSocket->ok()) {
+		return (false);
+	}
+
+	itsServerSocket = aListenSocket;
+	return (true);
 }
 
 } // namespace LOFAR
