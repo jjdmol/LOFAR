@@ -43,19 +43,43 @@ void RTCorrelator::define(const KeyValueMap& /*params*/) {
 
     itsWH = (WorkHolder*) new WH_Correlator("Master",
 					    TH_MPI::getNumberOfNodes()+1, 
-					    TH_MPI::getNumberOfNodes()+1);
+					    TH_MPI::getNumberOfNodes()+1,
+					    nelements, nsamples, nchannels, nruns);
     
-    
+    WH_Correlator aSlave("noname", 1, 1, nelements, nsamples, nchannels, nruns);
 
+    /* The correlator cannot accept connections because of the limitations   */
+    /* of the BG/L socket implementation. Therefore all connections are      */
+    /* opened from this application and accepted by the frontend application */
+    TH_Socket fe_input(frontend_ip, frontend_ip, baseport, true);
+    TH_Socket fe_output(frontend_ip, frontend_ip, baseport+1, false);
+
+
+    for (int i = 1; i<TH_MPI::getNumberOfNodes(); i++) {
+      /* [CHECKME] needs to be defined at global scope? */
+      TH_MPI proto_input (0,i);
+      TH_MPI proto_output(i,0);
+	
+      itsWH->getDataManager().getOutHolder(i)->connectTo
+	( *aSlave.getDataManager().getInHolder(0),
+	  proto_output );
+
+      aSlave.getDataManager().getOutHolder(0)->connectTo
+	( *itsWH->getDataManager().getInHolder(0),
+	  proto_input );
+    }
+    
   } else {
     /* Create a slave correlator and connect it to it's master */
     itsWH = (WorkHolder*) new WH_Correlator("aSlave",
 					    1, 
-					    1);
+					    1,
+					    nelements, nsamples, nchannels, nruns);
     /* Dummy workHolder to connect to */ 
     WH_Correlator myMaster("noname", 
 			   TH_MPI::getNumberOfNodes()+1, 
-			   TH_MPI::getNumberOfNodes()+1);
+			   TH_MPI::getNumberOfNodes()+1,
+			   nelements, nsamples, nchannels, nruns);
 
     /* [CHECKME] Needs to be defined at global scope?? */
     TH_MPI proto_input(0, TH_MPI::getCurrentRank());
@@ -115,9 +139,14 @@ int parse_config() {
     nelements = atoi(el);
   }
   
-  const char* it = params("RTCorrelator", "iterations");
-  if (it) {
-    niterations = atoi(it);
+  const char* rn = params("RTCorrelator", "runs");
+  if (rn) {
+    nruns = atoi(rn);
+  }
+
+  const char* sa = params("RTCorrelator", "samples");
+  if (sa) {
+    nsamples = atoi(sa);
   }
   
   const char* ip = params("RTCorrelator", "frontendip");
@@ -137,19 +166,55 @@ int parse_config() {
 
 
 int main (int argv, const char** argc) {
-  
-//   if (!RTCorrelator::parse_config()) {
-//     cout << "Error reading config file" << endl;
-//   }
 
   LOFAR::TH_MPI::init(argv, argc);
   
+  if (!parse_config()) {
+    cout << "Error reading config file" << endl;
+  }
 
-  cout << "CHANNELS:   " << nchannels << endl;
-  cout << "ELEMENTS:   " << nelements << endl;
-  cout << "ITERATIONS: " << niterations << endl;
-  cout << "FRONTEND:   " << frontend_ip << endl;
-  cout << "BASEPORT:   " << baseport << endl;
+  if (TH_MPI::getCurrentRank() == 0) {
+    cout << "CHANNELS:   " << nchannels << endl;
+    cout << "ELEMENTS:   " << nelements << endl;
+    cout << "SAMPLES:    " << nsamples << endl;
+    cout << "RUNS:       " << nruns << endl;
+    cout << "FRONTEND:   " << frontend_ip << endl;
+    cout << "BASEPORT:   " << baseport << endl;
+  }
+  
+  INIT_LOGGER("RTLogger.prop");
+
+  // set trace levels
+//   Debug::initLevels(argv, argc);
+
+  RTCorrelator correlator;
+  correlator.setarg(argv, argc);
+
+#if 0
+  /* Interactive run of the correlator */
+  try {
+    LOFAR::SimulatorParse::parse(correlator);
+  } catch (LOFAR::SimulatorParseError x) {
+    cout << x.what() << endl;
+  }
+#else
+  /* Automatic run of the correlator based on parameters from config file */ 
+  try {
+    
+    correlator.baseDefine();
+    correlator.basePrerun();
+
+    correlator.baseRun(nruns);
+    
+    correlator.basePostrun();
+    correlator.baseDump();
+    correlator.baseQuit();
+  } catch (...) {
+    cout << "Unexpected exception" << endl;
+  }
+#endif
+
+
 
   LOFAR::TH_MPI::finalize();
 

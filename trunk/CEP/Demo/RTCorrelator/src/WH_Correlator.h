@@ -27,6 +27,7 @@
 #include <lofar_config.h>
 
 #include <Common/lofar_complex.h>
+#include <Transport/TH_MPI.h>
 #include <tinyCEP/WorkHolder.h>
 
 #include <DH_CorrCube.h>
@@ -40,13 +41,21 @@ class WH_Correlator: public WorkHolder {
  public:
   explicit WH_Correlator (const string& name, 
 			  unsigned int nin, 
-			  unsigned int nout);
+			  unsigned int nout,
+			  unsigned int nelements,
+			  unsigned int nsamples,
+			  unsigned int nchannels, 
+			  unsigned int nruns);
 
   virtual ~WH_Correlator();
 
   static WorkHolder* construct(const string& name, 
 			       unsigned int nin, 
-			       unsigned int nout);
+			       unsigned int nout,
+			       unsigned int nelements, 
+			       unsigned int nsamples, 
+			       unsigned int nchannels, 
+			       unsigned int nruns);
 
   virtual WH_Correlator* make (const string& name);
 
@@ -56,9 +65,10 @@ class WH_Correlator: public WorkHolder {
   virtual void dump();
   
  private:
-  static const int itsNelements;
-  static const int itsNchannels;
-  static const int itsNsamples;
+  const int itsNelements;
+  const int itsNsamples;
+  const int itsNchannels;
+  const int itsNruns;
 
   int task_id;
   
