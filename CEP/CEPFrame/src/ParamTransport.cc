@@ -137,3 +137,15 @@ void ParamTransport::dump() const
   cout << " WriteTag = " << getWriteTag() << endl;
 }
 
+void ParamTransport::setSourceAddr (ParamHolder* addr)
+{ 
+  itsSourceAddr = addr;
+  setSourceTransportable(addr);    // Set Transportable in base class BaseTransport
+}
+
+void ParamTransport::setTargetAddr (ParamHolder* addr)
+{ 
+  itsTargetAddr = addr; 
+  setTargetTransportable(addr);    // Set Transportable in base class BaseTransport
+}
+

@@ -123,3 +123,15 @@ void Transport::dump() const
   cout << " WriteTag = " << getWriteTag() << endl;
 }
 
+void Transport::setSourceAddr (DataHolder* addr)
+{ 
+  itsSourceAddr = addr;
+  setSourceTransportable(addr); // SetTransportable in base class BaseTransport
+}
+
+void Transport::setTargetAddr (DataHolder* addr)
+{ 
+  itsTargetAddr = addr;
+  setTargetTransportable(addr);//Set Transportable in base class BaseTransport
+  
+}
