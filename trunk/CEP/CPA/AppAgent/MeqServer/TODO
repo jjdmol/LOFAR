@@ -5,6 +5,8 @@ MEQ in general:
       01/01/04: done, need to test w/glish (glish not working on my laptop)
       16/01/04: tested with default tests; now need to make some nodes
                 with child labels
+                
+1** publish intermediate results
   
   * reconsider order or events in execute(): should cache be checked
     only after node_state and rider have been processed? Note that for
@@ -56,7 +58,9 @@ MEQ in general:
           
 Solver:
 
-  * Implement request ID hierarchy
+        + Implement request ID hierarchy
+          28/01/04: done
+        
   
         + Generate a valid RequestId even if the input request is NULL.
           This ties in to hierarchical requests, so maybe something simple for now
@@ -75,7 +79,10 @@ Spigot:
 
 Parm:
 
-  * Figure out how to specify default values (with, e.g., an infinite domain)
+  * take over from GvD; log any issues that result
+    
+        + Figure out how to specify default values (with, e.g., an infinite domain)
+          28/01/04: emerged from discussions with JEN
 
 Request: 
 
@@ -91,10 +98,12 @@ Request:
           showed up when true cloning occurred. Removing bug report from this
           file.
 
-Vells:
+Vells and VellSets and Results:
 
   * Vells(DataArray*) constructor: if rank<2 but nelements==1, reform the 
     array (otherwise, won't instantiate from scalars!)
+    
+2** double-differencing?
     
         + Problem with in-place operators (+= etc.) and type promotion
           15/01/04 fixed
@@ -111,10 +120,22 @@ DMI & Debug:
 
   * Keep thinking about COWs. Perhaps make hooks implicit-COW? This would 
     mean declaring an operator [] on CountedRefs? 
+
+DMI COW:
+
+  * ? implement CountedRef::makeWritable since this seems to be a very common
+    operation
     
-  * DataField: getting a non-existing element as an ObjRef makes the
-    element MODIFIED. This can cause confusion later on. Perhaps it
-    should only be returned as MODIFIED if write-access is requested?
+  * expose lock()/unlock() of DataRecord fields. Do not lock fields by default.
+    Use locking to "protect" fields, e.g., in the MEQ Request & Result classes.
+    
+  * implement Hook = Hook and Hook <<= Hook, should be easy to do now
+    
+      + DataField: getting a non-existing element as an ObjRef makes the
+        element MODIFIED. This can cause confusion later on. Perhaps it
+        should only be returned as MODIFIED if write-access is requested?
+        apparently fixed 25/01/04
+    
 
 OCTOPUSSY:
 
