@@ -26,7 +26,6 @@
 #ifndef __CEP_BB_CALIBRATOR_H__
 #define __CEP_BB_CALIBRATOR_H__
 
-#include <Common/lofar_vector.h>
 #include <Common/lofar_string.h>
 #include <Common/Debug.h>
 
@@ -44,8 +43,6 @@ class MeqCalibrater;
 class Calibrator 
 {
 public:
-  LocalDebugContext
-
   // Initialize all Calibrator members to their default values. 
   // Note: This method does not affect the MeqCalImpl object. 
   Calibrator (const string & ObservationData, const string & CelestialBodies, 
