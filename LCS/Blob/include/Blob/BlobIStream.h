@@ -140,6 +140,10 @@ public:
   int64 tellPos() const;
 
 private:
+  // Read the buffer, increment itsCurLength, and check if everything read.
+  void getBuf (void* buf, uint sz);
+
+
   bool   itsSeekable;
   bool   itsMustConvert;
   bool   itsHasCachedType;

@@ -22,6 +22,7 @@
 
 #include <Common/BlobOStream.h>
 #include <Common/BlobHeader.h>
+#include <Common/DataConvert.h>
 
 
 BlobOStream::BlobOStream (BlobOBuffer* bb, bool header8)
@@ -62,10 +63,10 @@ uint BlobOStream::doPutStart (const char* type, uint nrc, int version)
   itsObjLen.push (itsCurLength);         // length of outer blob
   itsObjPtr.push (tellPos()+hdr.lengthOffset()); // remember where to put len
   itsCurLength = 0;                      // initialize object length
-  put ((const char*)(&hdr), hdr.plainSize());
-  put (type, nrc);
+  putBuf (&hdr, hdr.plainSize());
+  putBuf (type, nrc);
   if (nalign > 0) {
-    put ("        ", nalign);
+    putBuf ("        ", nalign);
   }
   itsLevel++;
   return itsLevel;
@@ -85,7 +86,7 @@ uint BlobOStream::putEnd()
   if (itsSeekable) {
     int64 curpos = tellPos();
     itsStream->setPos (pos);
-    itsStream->put ((const char*)(&len), sizeof(len));
+    itsStream->put (&len, sizeof(len));
     itsStream->setPos (curpos);
   }
   itsLevel--;
@@ -95,169 +96,154 @@ uint BlobOStream::putEnd()
   return len;
 }
 
+void BlobOStream::putBuf (const void* buf, uint sz)
+{
+  uint sz1 = itsStream->put (static_cast<const char*>(buf), sz);
+  AssertMsg (sz1 == sz,
+	     "BlobOStream::putBuf - " << sz << " bytes asked, but only "
+	     << sz1 << " could be written (pos=" << tellPos() << ")");
+  itsCurLength += sz1;
+}
+
 BlobOStream& BlobOStream::operator<< (const bool& var)
 {
   char v = (var ? 1 : 0);
-  itsStream->put (&v, 1);
-  itsCurLength++;
+  putBuf (&v, 1);
   return *this;
 }
 BlobOStream& BlobOStream::operator<< (const char& var)
 {
-  itsStream->put (&var, 1);
-  itsCurLength++;
+  putBuf (&var, 1);
   return *this;
 }
 BlobOStream& BlobOStream::operator<< (const uchar& var)
 {
-  itsStream->put ((const char*)(&var), 1);
-  itsCurLength++;
+  putBuf (&var, 1);
   return *this;
 }
 BlobOStream& BlobOStream::operator<< (const int16& var)
 {
-  itsStream->put ((const char*)(&var), sizeof(var));
-  itsCurLength += sizeof(var);
+  putBuf (&var, sizeof(var));
   return *this;
 }
 BlobOStream& BlobOStream::operator<< (const uint16& var)
 {
-  itsStream->put ((const char*)(&var), sizeof(var));
-  itsCurLength += sizeof(var);
+  putBuf (&var, sizeof(var));
   return *this;
 }
 BlobOStream& BlobOStream::operator<< (const int32& var)
 {
-  itsStream->put ((const char*)(&var), sizeof(var));
-  itsCurLength += sizeof(var);
+  putBuf (&var, sizeof(var));
   return *this;
 }
 BlobOStream& BlobOStream::operator<< (const uint32& var)
 {
-  itsStream->put ((const char*)(&var), sizeof(var));
-  itsCurLength += sizeof(var);
+  putBuf (&var, sizeof(var));
   return *this;
 }
 BlobOStream& BlobOStream::operator<< (const int64& var)
 {
-  itsStream->put ((const char*)(&var), sizeof(var));
-  itsCurLength += sizeof(var);
+  putBuf (&var, sizeof(var));
   return *this;
 }
 BlobOStream& BlobOStream::operator<< (const uint64& var)
 {
-  itsStream->put ((const char*)(&var), sizeof(var));
-  itsCurLength += sizeof(var);
+  putBuf (&var, sizeof(var));
   return *this;
 }
 BlobOStream& BlobOStream::operator<< (const float& var)
 {
-  itsStream->put ((const char*)(&var), sizeof(var));
-  itsCurLength += sizeof(var);
+  putBuf (&var, sizeof(var));
   return *this;
 }
 BlobOStream& BlobOStream::operator<< (const double& var)
 {
-  itsStream->put ((const char*)(&var), sizeof(var));
-  itsCurLength += sizeof(var);
+  putBuf (&var, sizeof(var));
   return *this;
 }
 BlobOStream& BlobOStream::operator<< (const fcomplex& var)
 {
-  itsStream->put ((const char*)(&var), sizeof(var));
-  itsCurLength += sizeof(var);
+  putBuf (&var, sizeof(var));
   return *this;
 }
 BlobOStream& BlobOStream::operator<< (const dcomplex& var)
 {
-  itsStream->put ((const char*)(&var), sizeof(var));
-  itsCurLength += sizeof(var);
+  putBuf (&var, sizeof(var));
   return *this;
 }
 BlobOStream& BlobOStream::operator<< (const std::string& var)
 {
   operator<< (int32(var.size()));
-  itsStream->put (var.data(), var.size());
-  itsCurLength += var.size();
+  putBuf (var.data(), var.size());
   return *this;
 }
 BlobOStream& BlobOStream::operator<< (const char* var)
 {
   int32 sz = strlen(var);
   operator<< (sz);
-  itsStream->put (var, sz);
-  itsCurLength += sz;
+  putBuf (var, sz);
   return *this;
 }
 
 void BlobOStream::put (const bool* values, uint nrval)
 {
-  // Convert to chars and put.
-  std::vector<char> val(nrval);
-  for (uint i=0; i<nrval; i++) {
-    val[i] = (values[i]  ?  1 : 0);
+  uchar buf[256];
+  while (nrval > 0) {
+    uint nr = std::min(nrval, 8*256u);
+    // Convert to bits and put.
+    uint nrb = LOFAR::boolToBit (buf, values, nr);
+    putBuf (buf, nrb);
+    nrval -= nr;
+    values += nr;
   }
-  put (&val[0], nrval);
 }
 void BlobOStream::put (const char* values, uint nrval)
 {
-  itsStream->put (values, nrval);
-  itsCurLength += nrval;
+  putBuf (values, nrval);
 }
 void BlobOStream::put (const uchar* values, uint nrval)
 {
-  itsStream->put ((const char*)values, nrval);
-  itsCurLength += nrval;
+  putBuf (values, nrval);
 }
 void BlobOStream::put (const int16* values, uint nrval)
 {
-  itsStream->put ((const char*)values, nrval*sizeof(int16));
-  itsCurLength += nrval*sizeof(int16);
+  putBuf (values, nrval*sizeof(int16));
 }
 void BlobOStream::put (const uint16* values, uint nrval)
 {
-  itsStream->put ((const char*)values, nrval*sizeof(uint16));
-  itsCurLength += nrval*sizeof(uint16);
+  putBuf (values, nrval*sizeof(uint16));
 }
 void BlobOStream::put (const int32* values, uint nrval)
 {
-  itsStream->put ((const char*)values, nrval*sizeof(int32));
-  itsCurLength += nrval*sizeof(int32);
+  putBuf (values, nrval*sizeof(int32));
 }
 void BlobOStream::put (const uint32* values, uint nrval)
 {
-  itsStream->put ((const char*)values, nrval*sizeof(uint32));
-  itsCurLength += nrval*sizeof(uint32);
+  putBuf (values, nrval*sizeof(uint32));
 }
 void BlobOStream::put (const int64* values, uint nrval)
 {
-  itsStream->put ((const char*)values, nrval*sizeof(int64));
-  itsCurLength += nrval*sizeof(int64);
+  putBuf (values, nrval*sizeof(int64));
 }
 void BlobOStream::put (const uint64* values, uint nrval)
 {
-  itsStream->put ((const char*)values, nrval*sizeof(uint64));
-  itsCurLength += nrval*sizeof(uint64);
+  putBuf (values, nrval*sizeof(uint64));
 }
 void BlobOStream::put (const float* values, uint nrval)
 {
-  itsStream->put ((const char*)values, nrval*sizeof(float));
-  itsCurLength += nrval*sizeof(float);
+  putBuf (values, nrval*sizeof(float));
 }
 void BlobOStream::put (const double* values, uint nrval)
 {
-  itsStream->put ((const char*)values, nrval*sizeof(double));
-  itsCurLength += nrval*sizeof(double);
+  putBuf (values, nrval*sizeof(double));
 }
 void BlobOStream::put (const fcomplex* values, uint nrval)
 {
-  itsStream->put ((const char*)values, nrval*sizeof(fcomplex));
-  itsCurLength += nrval*sizeof(fcomplex);
+  putBuf (values, nrval*sizeof(fcomplex));
 }
 void BlobOStream::put (const dcomplex* values, uint nrval)
 {
-  itsStream->put ((const char*)values, nrval*sizeof(dcomplex));
-  itsCurLength += nrval*sizeof(dcomplex);
+  putBuf (values, nrval*sizeof(dcomplex));
 }
 void BlobOStream::put (const string* values, uint nrval)
 {
@@ -268,12 +254,19 @@ void BlobOStream::put (const string* values, uint nrval)
 
 void BlobOStream::put (const std::vector<bool>& values)
 {
-  // Convert to chars and put as such.
-  std::vector<char> val(values.size());
-  for (uint i=0; i<values.size(); i++) {
-    val[i] = (values[i]  ?  1 : 0);
+  // Convert to bools and put as such.
+  uint32 sz = values.size();
+  operator<< (sz);
+  bool buf[256];
+  uint inx=0;
+  while (sz > 0) {
+    uint nr = std::min(sz, 256u);
+    for (uint i=0; i<nr; i++) {
+      buf[i] = values[inx++];
+    }
+    put (buf, nr);
+    sz -= nr;
   }
-  put (val);
 }
 
 int64 BlobOStream::setSpace (uint nbytes)

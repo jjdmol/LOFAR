@@ -81,3 +81,53 @@ void LOFAR::byteSwap64 (void* out, const void* in, uint nrval)
     vin += 8;
   }
 }
+
+uint LOFAR::boolToBit (void* to, const void* from, uint nvalues)
+{
+    const bool* data = (const bool*)from;
+    unsigned char* bits = (unsigned char*)to;
+    //# Fill as many bytes as needed.
+    uint nbytes = (nvalues + 7) / 8;
+    uint i,j;
+    uint index = 0;
+    for (i=0; i<nbytes; i++) {
+	unsigned char& ch = bits[i];
+	ch = 0;
+	unsigned char mask = 128;
+	//# Take care of correct number of bits in last byte.
+	uint nbits = (nvalues-index < 8  ?  nvalues-index : 8);
+	for (j=0; j<nbits; j++) {
+	    if (data[index++]) {
+		ch |= mask;
+	    }
+	    mask >>= 1;
+	}
+    }
+    return nbytes;
+}
+
+uint LOFAR::bitToBool (void* to, const void* from, uint nvalues)
+{
+    bool* data = (bool*)to;
+    const unsigned char* bits = (const unsigned char*)from;
+    //# Fill as many bytes as needed.
+    uint nbytes = (nvalues + 7) / 8;
+    uint i,j;
+    uint index = 0;
+    for (i=0; i<nbytes; i++) {
+	const uchar ch = bits[i];
+	uchar mask = 128;
+	//# Take care of correct number of bits in last byte.
+	uint nbits = (nvalues-index < 8  ?  nvalues-index : 8);
+	for (j=0; j<nbits; j++) {
+	    if (ch & mask) {
+		data[index] = true;
+	    }else{
+		data[index] = false;
+	    }
+	    mask >>= 1;
+	    index++;
+	}
+    }
+    return nbytes;
+}

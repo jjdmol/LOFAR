@@ -138,7 +138,12 @@ public:
   int64 tellPos() const;
 
 private:
+  // Function to do the actual putStart.
   uint doPutStart (const char* objectType, uint nrc, int objectVersion);
+
+  // Write the buffer, increment itsCurLength, and check if everything written.
+  void putBuf (const void* buf, uint sz);
+
 
   bool   itsHeader8;
   bool   itsSeekable;
