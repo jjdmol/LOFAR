@@ -120,14 +120,14 @@ void StationCorrelator::define(const KeyValueMap& /*kvm*/) {
       StepRSPemulator.runOnNode(-1);
     } else {
       // Use the WH_RSPBoard to emulate a real RSP Board
-      itsRSPsteps[i]->connect(&StepRSPemulator, 0, i, 1, TH_Mem(), false); 
+      connect(&StepRSPemulator, itsRSPsteps[i], i, 0);
     }
 
     comp.addStep(itsRSPsteps[i]); 
 
     if (i != 0) {
       // we're a syncSlave. Connect the second input to an appropriate output.
-      itsRSPsteps[i]->connect(itsRSPsteps[0], 1, itsNcorrelator + i - 1, 1, TH_Mem(), false);
+      connect(itsRSPsteps[0], itsRSPsteps[i], itsNcorrelator + i - 1, 1);
     }
   }
 
@@ -149,9 +149,7 @@ void StationCorrelator::define(const KeyValueMap& /*kvm*/) {
 
     // connect the Transpose step just created to the correct RSP outputs
     for (unsigned int rsp = 0; rsp < itsNrsp; rsp++) {
-      //      itsRSPsteps[rsp]->connect(itsTsteps[i], i+1, rsp, 1, TH_Mem(), false);
-      itsTsteps[i]->connect(itsRSPsteps[rsp], rsp, i, 1, TH_Mem(), 
-			    false);       // true=blocking
+      connect(itsRSPsteps[rsp], itsTsteps[i], i, rsp);
     }
 
 
@@ -166,8 +164,7 @@ void StationCorrelator::define(const KeyValueMap& /*kvm*/) {
     itsCsteps[i]->setOutRate(slow_rate);
     comp.addStep(itsCsteps[i]);
     
-    itsCsteps[i]->connectInput(itsTsteps[i], TH_Mem(), 
-			       false);   // true=blocking
+    connect(itsTsteps[i], itsCsteps[i], 0, 0);
   }
   
   
@@ -186,8 +183,7 @@ void StationCorrelator::define(const KeyValueMap& /*kvm*/) {
     comp.addStep(dumpstep);
     
     for (unsigned int in = 0; in < (itsNcorrelator/itsNdump); in++) {
-      dumpstep.connect(itsCsteps[c_index++], in, 0, 1, TH_Mem(), 
-		       false);  // true=blocking
+      connect(itsCsteps[c_index++], &dumpstep, 0, in);
     }
   }
   LOG_TRACE_FLOW_STR("Finished define()");
@@ -214,6 +210,20 @@ void StationCorrelator::dump() const {
 
 void StationCorrelator::quit() {
 
+}
+
+void StationCorrelator::connect(Step* srcStep, Step* dstStep, int srcDH, int dstDH) {
+#ifdef HAVE_MPI
+  int srcNode = srcStep->getNode();
+  int dstNode = dstStep->getNode();
+  if (srcNode == dstNode) {
+    dstStep->connect(srcStep, srcDH, dstDH, 1, TH_Mem(), false);  // true=blocking
+  } else {
+    dstStep->connect(srcStep, srcDH, dstDH, 1, TH_MPI(srcNode, dstNode), true);  // true=blocking
+  }
+#else
+  dstStep->connect(srcStep, srcDH, dstDH, 1, TH_Mem(), false);  // true=blocking
+#endif
 }
 
 int main (int argc, const char** argv) {
