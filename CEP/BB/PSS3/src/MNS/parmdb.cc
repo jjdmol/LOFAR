@@ -335,10 +335,8 @@ void doIt()
 	tableName = kvmap.getString ("tablename", "MeqParm");
 	if (dbType=="aips") {
 	  PTR = new ParmTableAIPS (dbUser, tableName);
-#if 0
 	} else if (dbType=="bdb") {
 	  PTR = new ParmTableBDB (dbUser, tableName);
-#endif
 	} else {
 	  cerr<<"Unknown database type: '"<<dbType<<"'"<<endl;
 	  exit(1);
@@ -360,10 +358,8 @@ void doIt()
 	tableName = kvmap.getString ("tablename", "MeqParm");
 	if (dbType=="aips") {
 	  ParmTableAIPS::createTable(dbUser, tableName);
-#if 0
 	} else if (dbType=="bdb") {
 	  ParmTableBDB::createTable(dbUser, tableName);
-#endif
 	} else {
 	  cerr<<"Unknown database type: '"<<dbType<<"'"<<endl;
 	  exit(1);
