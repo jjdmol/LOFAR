@@ -95,35 +95,20 @@ Prediffer::Prediffer(const string& msName,
   itsCalcUVW      (calcUVW),
   itsNPol         (0),
   itsNrBl         (0),
-  itsSelAnt       (ant),
   itsTimeIndex    (0),
   itsNrTimes      (0),
   itsDataMap      (0),
   itsLockMappedMem(lockMappedMem)
 {
-  LOG_INFO_STR( "MeqCalibrater constructor ("
+  LOG_INFO_STR( "Prediffer constructor ("
 		<< "'" << msName   << "', "
 		<< "'" << meqModel << "', "
 		<< "'" << skyModel << "', "
 		<< itsCalcUVW << ")" );
 
   readDescriptiveData (msName);
-
-  vector<unsigned int> ant1;
-  vector<unsigned int> ant2;
-  ASSERTSTR (ant.size() > 0, "No antennas selected");
-  for (unsigned int i=0; i<ant.size(); i++)
-  {
-    for (unsigned int j=i+1; j<ant.size(); j++)
-    {
-      ant1.push_back(ant[i]);
-      ant2.push_back(ant[j]);
-    }
-  }
-
-  fillStations (ant1, ant2);     // Selected antennas
-  fillBaselines (ant1, ant2);
-
+  fillStations (ant);     // Selected antennas
+  fillBaselines (ant);
   itsDataMap = new MMap(msName + ".dat", MMap::Read);
 
   // Set up the expression tree for all baselines.
@@ -145,9 +130,6 @@ Prediffer::Prediffer(const string& msName,
     itsEndFreq - itsStartFreq << " Hz) " << itsNrChan << " channels of "
 	    << itsStepFreq << " Hz" );
 
-  // Do the initial antenna selection.
-  select (ant, ant); 
-                                                             
   if (!itsCalcUVW) {
     // Fill the UVW coordinates from the MS instead of calculating them.
     fillUVW();
@@ -172,7 +154,7 @@ Prediffer::Prediffer(const string& msName,
 //----------------------------------------------------------------------
 Prediffer::~Prediffer()
 {
-  LOG_TRACE_FLOW( "MeqCalibrater destructor" );
+  LOG_TRACE_FLOW( "Prediffer destructor" );
 
   MeqParm::clearParmList();     // Clear static parameter data
 
@@ -243,27 +225,14 @@ void Prediffer::readDescriptiveData(const string& fileName)
   bis >> itsStartFreq;
   bis >> itsEndFreq;
   bis >> itsStepFreq;
-  bis >> itsAnt1Data;
-  bis >> itsAnt2Data;
+  bis >> itsAnt1;
+  bis >> itsAnt2;
   bis >> itsTimes;
   bis >> itsIntervals;
   bis >> itsAntPos;
-
-//   cout << "Descriptive Data:" << endl;
-//   cout << ra << ", " << dec << ", " << itsNPol << ", " << itsNrChan << ", " << itsStartFreq << ", " 
-//        << itsEndFreq << ", " << itsStepFreq << ", " << endl;
-//   cout << endl;
-//   cout << itsAnt1Data << endl;
-//   cout << endl;
-//   cout << itsAnt2Data << endl;
-//   cout << endl;
-//   cout << itsTimes << endl;
-//   cout << itsIntervals << endl;
   bis.getEnd();
-
-  ASSERT (itsAnt1Data.nelements() == itsAnt2Data.nelements());
-  itsNrBl = itsAnt1Data.nelements();
-
+  ASSERT (itsAnt1.size() == itsAnt2.size());
+  itsNrBl = itsAnt1.size();
   getPhaseRef(ra, dec, itsTimes[0]);
 }
 
@@ -290,32 +259,28 @@ void Prediffer::getPhaseRef(double ra, double dec, double startTime)
 // Fill the station positions and names.
 //
 //----------------------------------------------------------------------
-void Prediffer::fillStations (const vector<unsigned int>& ant1,
-			      const vector<unsigned int>& ant2)
+void Prediffer::fillStations (const vector<int>& antnrs)
 {
-  int nrant = itsAntPos.ncolumn();
+  uint nrant = itsAntPos.ncolumn();
   itsStations = vector<MeqStation*>(nrant, (MeqStation*)0);
   // Get all stations actually used.
   char str[8];
-  for (uint i=0; i<ant1.size(); i++) {
-    for (int j=0; j<2; j++) {
-      int ant = ant1[i];
-      if (j==1) ant = ant2[i];
-      ASSERT (ant < nrant);
-      if (itsStations[ant] == 0) {
-	// Store each position as a constant parameter.
-	// Use the antenna name as the parameter name.
-	Vector<Double> antpos = itsAntPos.column(ant);
-	sprintf (str, "%d", ant+1);
-	String name = string("SR") + str;
-	MeqParmSingle* px = new MeqParmSingle ("AntPosX." + name,
-					       antpos(0));
-	MeqParmSingle* py = new MeqParmSingle ("AntPosY." + name,
-					       antpos(1));
-	MeqParmSingle* pz = new MeqParmSingle ("AntPosZ." + name,
-					       antpos(2));
-	itsStations[ant] = new MeqStation(px, py, pz, name);
-      }
+  for (uint i=0; i<antnrs.size(); i++) {
+    uint ant = antnrs[i];
+    ASSERT (ant < nrant);
+    if (itsStations[ant] == 0) {
+      // Store each position as a constant parameter.
+      // Use the antenna name as the parameter name.
+      Vector<Double> antpos = itsAntPos.column(ant);
+      sprintf (str, "%d", ant+1);
+      String name = string("SR") + str;
+      MeqParmSingle* px = new MeqParmSingle ("AntPosX." + name,
+					     antpos(0));
+      MeqParmSingle* py = new MeqParmSingle ("AntPosY." + name,
+					     antpos(1));
+      MeqParmSingle* pz = new MeqParmSingle ("AntPosZ." + name,
+					     antpos(2));
+      itsStations[ant] = new MeqStation(px, py, pz, name);
     }
   }
 }
@@ -328,38 +293,66 @@ void Prediffer::fillStations (const vector<unsigned int>& ant1,
 // Create an index giving the baseline index of an ordered antenna pair.
 //
 //----------------------------------------------------------------------
-void Prediffer::fillBaselines (const vector<unsigned int>& ant1,
-			       const vector<unsigned int>& ant2)
+void Prediffer::fillBaselines (const vector<int>& antnrs)
 {
   MeqDomain  domain;
   MeqRequest req(domain, 1, 1);
 
-  itsBaselines.reserve (ant1.size());
-  itsBLIndex.resize (itsStations.size(), itsStations.size());
-  itsBLIndex = -1;
-
-  for (unsigned int i=0; i<ant1.size(); i++)
-  {
-    uInt a1 = ant1[i];
-    uInt a2 = ant2[i];
-    // Create an MVBaseline object for each antenna pair.
-    ASSERT (a1 < itsStations.size()  &&  a2 < itsStations.size());
-    itsBLIndex(a1,a2) = itsBaselines.size();
-    MVPosition pos1
-      (itsStations[a1]->getPosX()->getResult(req).getValue().getDouble(),
-       itsStations[a1]->getPosY()->getResult(req).getValue().getDouble(),
-       itsStations[a1]->getPosZ()->getResult(req).getValue().getDouble());
-    MVPosition pos2
-      (itsStations[a2]->getPosX()->getResult(req).getValue().getDouble(),
-       itsStations[a2]->getPosY()->getResult(req).getValue().getDouble(),
-       itsStations[a2]->getPosZ()->getResult(req).getValue().getDouble());
-
-    itsBaselines.push_back (MVBaseline (pos1, pos2));
+  // Convert antnrs to bools.
+  uint maxAnt = itsStations.size();
+  Vector<bool> useAnt(maxAnt);
+  useAnt = false;
+  for (uint i=0; i<antnrs.size(); i++) {
+    uint ant = antnrs[i];
+    ASSERT (ant < maxAnt);
+    useAnt[ant] = true;
   }
+  itsBaselines.reserve (itsAnt1.size());
+  itsBLIndex.resize (maxAnt, maxAnt);
+  itsBLIndex = -1;
+  itsBLSelection.resize (maxAnt, maxAnt);
+  itsBLSelection = false;
+  
+  for (uint i=0; i<itsAnt1.size(); i++) {
+    uint a1 = itsAnt1[i];
+    uint a2 = itsAnt2[i];
+    ASSERT (a1 < maxAnt  &&  a2 < maxAnt);
+    if (useAnt[a1] && useAnt[a2]) {
+      // Assign a baseline number and set to selected.
+      itsBLIndex(a1,a2) = itsBaselines.size();
+      itsBLSelection(a1,a2) = true;
+      // Create an MVBaseline object for each antenna pair.
+      MVPosition pos1
+	(itsStations[a1]->getPosX()->getResult(req).getValue().getDouble(),
+	 itsStations[a1]->getPosY()->getResult(req).getValue().getDouble(),
+	 itsStations[a1]->getPosZ()->getResult(req).getValue().getDouble());
+      MVPosition pos2
+	(itsStations[a2]->getPosX()->getResult(req).getValue().getDouble(),
+	 itsStations[a2]->getPosY()->getResult(req).getValue().getDouble(),
+	 itsStations[a2]->getPosZ()->getResult(req).getValue().getDouble());
+      itsBaselines.push_back (MVBaseline (pos1, pos2));
+    }
+  }
+  countBaselines();
+}
 
-  //>>>>>>> Set all baselines to "not selected".
-  itsBLSelection.resize (itsStations.size(), itsStations.size()); 
-  itsBLSelection = false;  
+//----------------------------------------------------------------------
+//
+// ~countBaselines
+//
+// Count the selected nr of baselines.
+//
+//----------------------------------------------------------------------
+void Prediffer::countBaselines()
+{
+  itsNrSelBl = 0;
+  for (uint j=0; j<itsBLSelection.nrow(); ++j) {
+    for (uint i=0; i<itsBLSelection.nrow(); ++j) {
+      if (itsBLSelection(j,i)  &&  itsBLIndex(j,i) >= 0) {
+	itsNrSelBl++;
+      }
+    }
+  }
 }
 
 //----------------------------------------------------------------------
@@ -689,7 +682,7 @@ vector<uint32> Prediffer::setDomain (double fstart, double flength,
   vector<uint32> shape(3);
   shape[0] = itsNrTimes*itsNrChan*itsNPol;
   shape[1] = itsNrScid;
-  shape[2] = itsNrBl;
+  shape[2] = itsNrSelBl;
 //   itsSolveColName = itsDataColName;
   return shape;
 }
@@ -1150,8 +1143,8 @@ void Prediffer::subtractPeelSources (bool write)
     
     for (unsigned int bl=0; bl<itsNrBl; bl++)
     {
-      uInt ant1 = itsAnt1Data(bl);
-      uInt ant2 = itsAnt2Data(bl);
+      uInt ant1 = itsAnt1[bl];
+      uInt ant2 = itsAnt2[bl];
       if (itsBLSelection(ant1,ant2) == true)
       {
         unsigned int blOffset = bl*itsNrChan*itsNPol;
@@ -1236,7 +1229,8 @@ void Prediffer::subtractPeelSources (bool write)
 //
 //----------------------------------------------------------------------
 void Prediffer::select (const vector<int>& ant1, 
-			const vector<int>& ant2)
+			const vector<int>& ant2,
+			bool useAutoCorrelations)
 {
 //   if (firstChan < 0  ||  firstChan >= itsNrChan) {
 //     itsFirstChan = 0;
@@ -1251,24 +1245,26 @@ void Prediffer::select (const vector<int>& ant1,
 //   ASSERT (itsFirstChan <= itsLastChan);
 
   ASSERT (ant1.size() == ant2.size());
-  itsBLSelection = false;
-//   if (ant1.size() == 0)  // If no baselines specified, select all baselines
-//   {
-//     itsBLSelection = true;
-//   }
-//   else
-//   {
-    for (unsigned int i=0; i<ant1.size(); i++)
-    {
-      ASSERT(ant1[i] < int(itsBLSelection.nrow()));
-      for (unsigned int j=0; j<ant2.size(); j++)
-      {
-	ASSERT(ant2[i] < int(itsBLSelection.nrow()));
-	itsBLSelection(ant1[i], ant2[j]) = true;     // Select baseline subset
+  if (ant1.size() == 0) {
+    // No baselines specified, select all baselines
+    itsBLSelection = true;
+  } else {
+    itsBLSelection = false;
+    for (unsigned int j=0; j<ant2.size(); j++) {
+      ASSERT(ant2[j] < int(itsBLSelection.nrow()));
+      for (unsigned int i=0; i<ant1.size(); i++) {
+	ASSERT(ant1[i] < int(itsBLSelection.nrow()));
+	itsBLSelection(ant1[i], ant2[j]) = true;     // select this baseline
       }
-      //    }
+    }
   }
-  
+  // Unset auto-correlations if needed.
+  if (!useAutoCorrelations) {
+    for (unsigned int i=0; i<itsBLSelection.nrow(); i++) {
+      itsBLSelection(i,i) = false;
+    }
+  } 
+  countBaselines();
 }
 
 //----------------------------------------------------------------------
@@ -1291,17 +1287,17 @@ void Prediffer::fillUVW()
   int nStatFnd = 0;
   for (unsigned int bl=0; bl < itsNrBl; bl++)
   {
-    int a1 = itsAnt1Data[bl];
-    int a2 = itsAnt2Data[bl];
+    int a1 = itsAnt1[bl];
+    int a2 = itsAnt2[bl];
     if (itsBLSelection(a1,a2) == true)
     {
-      if (!statFnd[itsAnt1Data[bl]]) {
+      if (!statFnd[itsAnt1[bl]]) {
 	nStatFnd++;
-	statFnd[itsAnt1Data[bl]] = true;
+	statFnd[itsAnt1[bl]] = true;
       }
-      if (!statFnd[itsAnt2Data[bl]]) {
+      if (!statFnd[itsAnt2[bl]]) {
 	nStatFnd++;
-	statFnd[itsAnt2Data[bl]] = true;
+	statFnd[itsAnt2[bl]] = true;
       }
     }
   }
@@ -1328,11 +1324,11 @@ void Prediffer::fillUVW()
     
     // Set UVW of first station to 0 (UVW coordinates are relative!).
     statDone.assign (statDone.size(), false);
-    statuvw[3*itsAnt1Data[0]]   = 0;
-    statuvw[3*itsAnt1Data[0]+1] = 0;
-    statuvw[3*itsAnt1Data[0]+2] = 0;
-    statDone[itsAnt1Data[0]] = true;
-    itsStatUVW[itsAnt1Data[0]]->set (time, 0, 0, 0);
+    statuvw[3*itsAnt1[0]]   = 0;
+    statuvw[3*itsAnt1[0]+1] = 0;
+    statuvw[3*itsAnt1[0]+2] = 0;
+    statDone[itsAnt1[0]] = true;
+    itsStatUVW[itsAnt1[0]]->set (time, 0, 0, 0);
 
 //     cout << "itsStatUVW[" << itsAnt1Data[0] << "] time: " << time << " 0, 0, 0" << endl;
 
@@ -1345,8 +1341,8 @@ void Prediffer::fillUVW()
       // Loop over baselines
       for (unsigned int bl=0; bl < itsNrBl; bl++)
       {
-	int a1 = itsAnt1Data[bl];
-	int a2 = itsAnt2Data[bl];
+	int a1 = itsAnt1[bl];
+	int a2 = itsAnt2[bl];
 	if (itsBLSelection(a1,a2) == true)
 	{
 	  if (!statDone[a2]) {
@@ -1535,12 +1531,6 @@ void Prediffer::showSettings() const
   cout << "  stchan:    " << itsFirstChan << endl;
   cout << "  endchan:   " << itsLastChan << endl;
   cout << "  calcuvw  : " << itsCalcUVW << endl;
-  cout << "  antennas : " ;
-  for (unsigned int i=0; i<itsSelAnt.size() ; i++)
-  {
-    cout << itsSelAnt[i] << ", ";
-  }
-  cout << endl;
   cout << endl;
 }
 
