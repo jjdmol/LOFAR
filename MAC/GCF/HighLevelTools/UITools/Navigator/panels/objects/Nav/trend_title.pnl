@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,571 228 438 25 N "_3DFace" 2
+PANEL,258 168 438 25 N "_3DFace" 2
 "$TrendNr"
 "$configDatapoint"
 EEE E E 1 -1 -1 0  0 0
@@ -33,9 +33,18 @@ LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-
 E
 "main()
 {
-  string InsertedText;
-  dpGet($configDatapoint + \".\" + $TrendNr + \".Title:_online.._value\", InsertedText);
-	setValue(\"\", \"text\", InsertedText);
+	if (dpExists($configDatapoint + \".\" + $TrendNr + \".Title\"))
+	{
+    string InsertedText;
+ 		setValue(\"\", \"enabled\", TRUE);
+    dpGet($configDatapoint + \".\" + $TrendNr + \".Title:_online.._value\", InsertedText);
+  	setValue(\"\", \"text\", InsertedText);
+  }
+	else
+	{
+		setValue(\"\", \"enabled\", FALSE);
+	  setValue(\"\", \"text\", \"Configuration data not available.\");
+	}
 }" 0
 
 "main()

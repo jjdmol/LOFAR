@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 19 Trace configuration
-PANEL,317 155 502 319 N "_3DFace" 4
+PANEL,428 204 502 319 N "_3DFace" 4
 "$TraceNr"
 "$TrendNr"
 "$configDatapoint"
@@ -13,7 +13,6 @@ PANEL,317 155 502 319 N "_3DFace" 4
   dpConnect(\"EnableScaleInput\", $configDatapoint + \".\" + $TrendNr + \".Trace\" + $TraceNr + \".AutoScale\",
                                 $configDatapoint + \".\" + $TrendNr + \".Trace\" + $TraceNr + \".dpName\");
 }
-
 
 //////////////////////////////////////////////////////////////////////////////////
 //
@@ -43,7 +42,12 @@ void ProgressBar(float Maximum, float value)
   }
 }
 
-
+//////////////////////////////////////////////////////////////////////////////////
+//
+// FunctionName: FillSelectionList
+// Function    : Fills the selection list with retrieved datapoint from the 
+//               PVSS database
+ ///////////////////////////////////////////////////////////////////////////////////
 void FillSelectionList()
 {
   dyn_dyn_anytype tab;
@@ -357,15 +361,17 @@ E
 {
   string SelectedItem;
 	string LegendName;
+	string UnloadDpName;
 	
+  dpGet($configDatapoint + \".\" + $TrendNr + \".Trace\"+$TraceNr+\".dpName\", UnloadDpName); 
+//  DebugN(\"UnloadDpName: \" + UnloadDpName);
+  navPMLunloadPropertySet($datapoint + \"_\" + UnloadDpName);
+//  DebugN(\"$datapoint: \"+$datapoint);
+//  DebugN(\"strltrim(SelectedItem, dpSubStr($datapoint, DPSUB_DP_EL)): \" + strltrim(SelectedItem, dpSubStr($datapoint, DPSUB_DP_EL)));
+
   getValue(\"SelectionList1\", \"selectedText\", SelectedItem);
-//  DebugN(\"SelectedItem: \" + \"System1:\"+SelectedItem);
-//  DebugN(\"$datapoint  : \" + $datapoint);
-//  setValue(\"Selection\", \"text\", strltrim(SelectedItem, dpSubStr($datapoint, DPSUB_DP_EL)));
-//  dpSubStr(DPName, DPSUB_DP_EL)
-  
-//  DebugN(\"Trim: \" + strltrim(\"PIC_Rack1_SubRack1_Alert.status\", \"PIC_Rack1\"));
 	dpSet($configDatapoint + \".\" + $TrendNr + \".Trace\"+$TraceNr+\".dpName\", strltrim(SelectedItem, dpSubStr($datapoint, DPSUB_DP_EL)));
+	navPMLloadPropertySet($datapoint + \"_\" + SelectedItem); //Load selected datapoint
 	getValue(\"txt_legend\", \"text\", LegendName);
 	if (LegendName==\"\")
 		{
