@@ -74,3 +74,10 @@ const vector<MeqParm*>& MeqParm::getParmList()
   }
   return *theirParms;
 }
+
+void MeqParm::clearParmList()
+{
+  delete theirParms;
+  theirParms = 0;
+  theirNparm = 0;
+}

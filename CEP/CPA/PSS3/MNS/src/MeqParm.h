@@ -90,6 +90,9 @@ public:
   // Get the list of all MeqParm objects.
   static const vector<MeqParm*>& getParmList();
 
+  // Clear the list of all MeqParm objects.
+  static void clearParmList();
+
 private:
   // A parm cannot be copied, otherwise problems arise with theirParms.
   MeqParm (const MeqParm&);
