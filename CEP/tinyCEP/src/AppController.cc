@@ -24,7 +24,7 @@
 
 #include <tinyCEP/AppController.h>
 #include <libTransport/BaseSim.h>
-#include <tinyCEP/SimulatorParseClass.h>
+#include <tinyCEP/AppControllerParseClass.h>
 #include TRANSPORTERINCLUDE
 
 namespace LOFAR
