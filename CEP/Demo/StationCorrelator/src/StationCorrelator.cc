@@ -118,7 +118,7 @@ void StationCorrelator::define(const KeyValueMap& /*kvm*/) {
       StepRSPemulator.runOnNode(-1);
     } else {
       // Use the WH_RSPBoard to emulate a real RSP Board
-      itsRSPsteps[i]->connect(&StepRSPemulator, 0, i, 1, TH_Mem(), true); 
+      itsRSPsteps[i]->connect(&StepRSPemulator, 0, i, 1, TH_Mem(), false); 
     }
 
     // set the rates of this Step.
@@ -130,7 +130,7 @@ void StationCorrelator::define(const KeyValueMap& /*kvm*/) {
 
     if (i != 0) {
       // we're a syncSlave. Connect the second input to an appropriate output.
-      itsRSPsteps[i]->connect(itsRSPsteps[0], 1, itsNcorrelator + i - 1, 1, TH_Mem(), true);
+      itsRSPsteps[i]->connect(itsRSPsteps[0], 1, itsNcorrelator + i - 1, 1, TH_Mem(), false);
     }
   }
 
@@ -153,9 +153,9 @@ void StationCorrelator::define(const KeyValueMap& /*kvm*/) {
 
     // connect the Transpose step just created to the correct RSP outputs
     for (unsigned int rsp = 0; rsp < itsNrsp; rsp++) {
-      //      itsRSPsteps[rsp]->connect(itsTsteps[i], i+1, rsp, 1, TH_Mem(), true);
+      //      itsRSPsteps[rsp]->connect(itsTsteps[i], i+1, rsp, 1, TH_Mem(), false);
       itsTsteps[i]->connect(itsRSPsteps[rsp], rsp, i, 1, TH_Mem(), 
-			    true);       // true=blocking
+			    false);       // true=blocking
     }
 
 
@@ -168,7 +168,7 @@ void StationCorrelator::define(const KeyValueMap& /*kvm*/) {
     comp.addStep(itsCsteps[i]);
     
     itsCsteps[i]->connectInput(itsTsteps[i], TH_Mem(), 
-			       true);   // true=blocking
+			       false);   // true=blocking
   }
   
   
@@ -183,7 +183,7 @@ void StationCorrelator::define(const KeyValueMap& /*kvm*/) {
     
     for (unsigned int in = 0; in < (itsNcorrelator/itsNdump); in++) {
       dumpstep.connect(itsCsteps[c_index++], in, 0, 1, TH_Mem(), 
-		       true);  // true=blocking
+		       false);  // true=blocking
     }
   }
   LOG_TRACE_FLOW_STR("Finished define()");
