@@ -18,6 +18,10 @@ include = '"Timestamp.h"';
 include = '"BeamletWeights.h"';
 include = '"SubbandSelection.h"';
 include = '"RCUSettings.h"';
+include = '"WGSetting.h"';
+include = '"SystemStatus.h"';
+include = '"Statistics.h"';
+include = '"Versions.h"';
 
 prelude = << PRELUDE_END
 
@@ -59,7 +63,7 @@ event = {
 };
 
 event = {
-    signal = SETWEIGHTS_ACK;
+    signal = SETWEIGHTSACK;
     dir = OUT;
     param = {
 	name = "timestamp";
@@ -91,7 +95,7 @@ event = {
 };
 
 event = {
-    signal = GETWEIGHTS_ACK;
+    signal = GETWEIGHTSACK;
     dir = OUT;
     param = {
 	name = "timestamp";
@@ -132,7 +136,7 @@ event = {
 };
 
 event = {
-    signal = SETSUBBANDS_ACK;
+    signal = SETSUBBANDSACK;
     dir = OUT;
     param = {
 	name = "timestamp";
@@ -164,7 +168,7 @@ event = {
 };
 
 event = {
-    signal = GETSUBBANDS_ACK;
+    signal = GETSUBBANDSACK;
     dir = OUT;
     param = {
 	name = "timestamp";
@@ -205,7 +209,7 @@ event = {
 };
 
 event = {
-    signal = SETRCU_ACK;
+    signal = SETRCUACK;
     dir = OUT;
     param = {
 	name = "timestamp";
@@ -237,7 +241,7 @@ event = {
 };
 
 event = {
-    signal = GETRCU_ACK;
+    signal = GETRCUACK;
     dir = OUT;
     param = {
 	name = "timestamp";
@@ -270,15 +274,15 @@ event = {
 	name = "rcumask";
 	type = "std::bitset<N_RCUBITS>";
     };
-//    param = {
-//	name = "setting";
-//	type = "WGSetting";
-//	userdefined;
-//    };
+    param = {
+	name = "setting";
+	type = "WGSetting";
+	userdefined;
+    };
 };
 
 event = {
-    signal = SETWG_ACK;
+    signal = SETWGACK;
     dir = OUT;
     param = {
 	name = "timestamp";
@@ -310,7 +314,7 @@ event = {
 };
 
 event = {
-    signal = GETWG_ACK;
+    signal = GETWGACK;
     dir = OUT;
     param = {
 	name = "timestamp";
@@ -321,9 +325,254 @@ event = {
 	name = "status";
 	type = "int16";
     };
-//    param = {
-//	name = "setting";
-//	type = "WGSetting";
-//	userdefined;
-//    };
+    param = {
+	name = "setting";
+	type = "WGSetting";
+	userdefined;
+    };
+};
+
+event = {
+    signal = SUBSTATUS;
+    dir = IN;
+    param = {
+	name = "rcumask";
+	type = "std::bitset<N_RCUBITS>";
+    };
+    param = {
+	name = "period";
+	type = "int16";
+    };
+    param = {
+	name = "handle";
+	type = "uint32";
+    };
+};
+
+event = {
+    signal = SUBSTATUSACK;
+    dir = OUT; 
+    param = {
+	name = "timestamp";
+	type = "Timestamp";
+	userdefined;
+    };
+    param = {
+	name = "status";
+	type = "int16";
+    };
+    param = {
+	name = "handle";
+	type = "uint32";
+    };
+};
+
+event = {
+    signal = UNSUBSTATUS;
+    dir = IN;
+    param = {
+	name = "handle";
+	type = "uint32";
+    };
+};
+
+event = {
+    signal = UNSUBSTATUSACK;
+    dir = OUT;
+    param = {
+	name = "timestamp";
+	type = "Timestamp";
+	userdefined;
+    };
+    param = {
+	name = "status";
+	type = "int16";
+    };
+    param = {
+	name = "handle";
+	type = "uint32";
+    };
+};
+
+event = {
+    signal = UPDSTATUS;
+    dir = OUT;
+    param = {
+	name = "timestamp";
+	type = "Timestamp";
+	userdefined;
+    };
+    param = {
+	name = "status";
+	type = "int16";
+    };
+    param = {
+	name = "handle";
+	type = "uint32";
+    };
+    param = {
+	name = "sysstatus";
+	type = "SystemStatus";
+    };
+};
+
+event = {
+    signal = GETSTATUS;
+    dir = IN;
+    param = {
+	name = "timestamp";
+	type = "Timestamp";
+	userdefined;
+    };
+    param = {
+	name = "rcumask";
+	type = "std::bitset<N_RCUBITS>";
+    };
+};
+
+event = {
+    signal = GETSTATUSACK;
+    dir = OUT;
+    param = {
+	name = "timestamp";
+	type = "Timestamp";
+	userdefined;
+    };
+    param = {
+	name = "status";
+	type = "int16";
+    };
+    param = {
+	name = "sysstatus";
+	type = "SystemStatus";
+    };
 };    
+
+event = {
+    signal = SUBSTATS;
+    dir = IN;
+    param = {
+	name = "rcumask";
+	type = "std::bitset<N_RCUBITS>";
+    };
+    param = {
+	name = "period";
+	type = "int16";
+    };
+    param = {
+	name = "type";
+	type = "uint8";
+    };
+    param = {
+	name = "reduction";
+	type = "StatsReduction";
+    };
+};
+
+event = {
+    signal = SUBSTATSACK;
+    dir = OUT; 
+    param = {
+	name = "timestamp";
+	type = "Timestamp";
+	userdefined;
+    };
+    param = {
+	name = "status";
+	type = "int16";
+    };
+    param = {
+	name = "handle";
+	type = "uint32";
+    };
+};
+
+event = {
+    signal = UNSUBSTATS;
+    dir = IN;
+    param = {
+	name = "handle";
+	type = "uint32";
+    };
+};
+
+event = {
+    signal = UNSUBSTATSACK;
+    dir = OUT;
+    param = {
+	name = "timestamp";
+	type = "Timestamp";
+	userdefined;
+    };
+    param = {
+	name = "status";
+	type = "int16";
+    };
+    param = {
+	name = "handle";
+	type = "uint32";
+    };
+};
+
+event = {
+    signal = UPDSTATS;
+    dir = OUT;
+    param = {
+	name = "timestamp";
+	type = "Timestamp";
+	userdefined;
+    };
+    param = {
+	name = "status";
+	type = "int16";
+    };
+    param = {
+	name = "handle";
+	type = "uint32";
+    };
+    param = {
+	name = "stats";
+	type = "Statistics";
+    };
+};
+
+event = {
+    signal = GETSTATS;
+    dir = IN;
+    param = {
+	name = "timestamp";
+	type = "Timestamp";
+	userdefined;
+    };
+    param = {
+	name = "rcumask";
+	type = "std::bitset<N_RCUBITS>";
+    };
+    param = {
+	name = "type";
+	type = "uint8";
+    };
+    param = {
+	name = "reduction";
+	type = "StatsReduction";
+    };
+};
+
+event = {
+    signal = GETSTATSACK;
+    dir = OUT;
+    param = {
+	name = "timestamp";
+	type = "Timestamp";
+	userdefined;
+    };
+    param = {
+	name = "status";
+	type = "int16";
+    };
+    param = {
+	name = "stats";
+	type = "Statistics";
+    };
+};    
+    
