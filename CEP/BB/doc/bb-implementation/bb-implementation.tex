@@ -1,0 +1,751 @@
+
+% -----------------------  Define your Preamble Here 
+\documentclass[]{lofar}
+\usepackage{layout}
+%
+\include{definitions}
+%\usepackage{amsmath,amsthm, amsfonts, amssymb, amsxtra,amsopn}
+%\usepackage{graphicx}
+%\usepackage{float}
+%\usepackage{times}
+%\usepackage{algorithmic}
+%\usepackage[dvips]{hyperref}
+%\DeclareGraphicsExtensions{.eps}
+%\DeclareGraphicsExtensions{.png}
+% ------------------------  End of you preamble.
+  \title{the implementation details of selfcal}
+\author{Daan Hoogland \and Kjeld van der Schaaf}
+\begin{document}
+
+\maketitle
+
+% --------------------------------------------
+% Abstract 
+% --------------------------------------------
+\begin{abstract}
+
+
+
+    For the LOFAR project a self-calibration program shall be
+    written. The idea is that this program will have the architectural
+    structure of a "BlackBoard". The design and implementation details
+    of this application, are described here.
+
+   
+\end{abstract}
+
+
+
+% ------------------------   
+% Section 
+\section{introduction}
+\label{id2719843}\hypertarget{id2719843}{}%
+
+\subsection{Purpose of this document}
+\label{id2719820}\hypertarget{id2719820}{}%
+
+
+
+    This document describes how the Blackboard architectural pattern
+    is implemented to fit the need and requirement for the LOFAR
+    self-calibration-application.
+
+   
+
+
+% ------------------------   
+% Section 
+\section{data-storage}
+\label{id2719754}\hypertarget{id2719754}{}%
+
+
+
+   The major classes of storage requirements are
+
+   \begin{itemize}
+
+	\item 
+
+
+      parameters
+
+     
+
+
+	\item 
+
+
+      datasets
+
+     
+
+
+	\item 
+
+
+      the strategy
+
+     
+
+
+	\item 
+
+
+      the blackboard logistics
+
+     
+
+\end{itemize}
+
+
+\subsection{Parameter administration}
+\label{id2720046}\hypertarget{id2720046}{}%
+
+
+
+    Parameters are solved locally, on subclusters of the LOFAR central
+    processor and then distributed or discarded along the rest of the
+    cluster.
+
+   
+{{\includegraphics[]{local-_global-commit.png}}}
+
+
+
+    In the distributed selfcal program, the available cluster will be
+    partitioned as well as the data the be calibrated on. several
+    sub-clusters will have responsibility over part of the data and hence
+    part of the parameters  to be calibrated.
+
+   
+
+
+
+    A calibrating cluster is a set of programs running on a (set of)
+    node(s), that is doing part of the calibration.
+    A calibrating cluster might use more parameters then it has
+    responsibility over. Therefor it must have all parameters to its
+    disposal.
+
+   
+
+
+
+    A calibrating cluster is converging parameters from assumed values
+    to corrected values. This converging might go in the wrong direction
+    so a set of transactions might be leading to invalid results and
+    must not be distributed. It might also lead to good results and be
+    approved by a controlling program for distribution. The idea is that
+    this program will then close a more global transaction, leading to
+    the replication of the data.
+
+   
+
+
+
+    The essence of the requirement is that transactions have to be
+    nested. The fact that they seem to be centered around separate
+    engines does not seem to be important. We need only one level of
+    nesting.
+
+   
+
+\subsubsection{nested cooperative transactions}
+\label{id2719612}\hypertarget{id2719612}{}%
+
+
+
+     One solution for this requirement is that transactions can be
+     nested. The fact that they seem to be centered around separate
+     engines does not seem to be important. We need only one level of
+     nesting. However several processes with their own connections to
+     the database must be able to participate in a single global level
+     transaction.
+
+    
+{{\includegraphics[]{database.png}}}
+
+
+
+     For this nesting to make sense, a database client must be able to
+     start a transaction and get an transaction id to distribute among
+     co-workers.
+
+    
+
+
+
+     These co-workers can then work on the global transaction, by
+     "connecting to" or "joining" a transaction
+     by id. Once joined, they can change data within the scope of global
+     transaction. This can be as singular operations or as
+     transactions. Any changes committed is valid an visible to any
+     client joining in the transaction. Once the owner decides so he can
+     close the global transaction. This closing can be a commit as well
+     as a rollback, both with the expected result.
+
+     
+\begin{admonition}{figures/note}{Note}% NOTICE: see the db2latex FAQ w.r.t db2latex variable $latex.admonition.path
+
+
+
+       Should participants be notified of the closing of the transaction?
+
+      
+
+
+
+       No, they will notice when trying to manipulate data.
+
+      
+
+
+   ` \end{admonition}
+
+{{\includegraphics[]{nestedTransaction.png}}}
+
+
+\subsubsection{selective replication}
+\label{id2719816}\hypertarget{id2719816}{}%
+
+
+
+     Another solution would be to use selective replication. This could
+     mean that records will only be replicated after a specific
+     trigger. It could also mean that only part of the datamodel will be
+     replicated to other engines.
+
+    
+
+\subsection{Datasets}
+\label{id2720237}\hypertarget{id2720237}{}%
+
+
+
+    Datasets are high-volume and intensively queried. Updates are
+    mostly copies. Using a database engine would be to much of a
+    CPU-cycle and memory hog.
+
+   
+
+\subsection{The strategy}
+\label{id2721184}\hypertarget{id2721184}{}%
+ [subtitle] 
+A high level script [/subtitle] 
+
+
+
+    The implementation of the strategy is a python script using the
+    components defined in the selfcal framework. In the final
+    (c++-)implementation of selfcal, the high level control object is
+    a process with an embedded python interpreter. It reads the script
+    when started and executes it, creating the processes needed on the
+    nodes available to the program.
+
+   
+
+
+
+    In an advanced enterprise-pro-gold version the control object
+    might supply a GUI to interrupt and/or change the strategy on the
+    fly. The database used supplies the possibility to watch progress
+    on-line and intervene if needed.
+
+   
+
+
+
+    The in core storage of the script byte be python byte code, but it
+    might be a database as well. It must be taken into account that
+    user representation of both database and in-core code, will be
+    hard to implement.
+
+   
+{{\includegraphics[]{strategy_interpreter.png}}}
+
+\subsection{The blackboard logistics}
+\label{id2721238}\hypertarget{id2721238}{}%
+
+
+
+    For the blackboard to function several protocols need to be
+    described. To guarantee loose coupling between components it is
+    not desirable to have the dialogs in these protocols be needing
+    real-time message interchange. Therefor a database-based approach
+    is chosen, which is described in
+    XrefId[??].
+
+   
+
+
+% ------------------------   
+% Section 
+\section{distributed hierarchical blackboard}
+\label{id2721216}\hypertarget{id2721216}{}%
+
+\subsection{distribution over nodes and sub-clusters}
+\label{id2721220}\hypertarget{id2721220}{}%
+
+
+
+    For performance reasons we want to divide the measurement data over
+    the cluster in a way that distributes the disk-usage and minimizes
+    the network-usage.
+
+   
+
+
+
+    Logically there is only one Blackboard. It is a distributed
+    application however, each instance dividing it's workload to it's
+    own liking. Each blackboard 
+\begin{admonition}{figures/note}{Note}% NOTICE: see the db2latex FAQ w.r.t db2latex variable $latex.admonition.path
+no capital here\end{admonition}
+
+ knows what
+    nodes it has to start KnowledgeSources on.
+
+   
+
+
+
+    For this to work it has to be possible to distribute responsibility
+    in this fashion as well. For instance; If a blackboard has
+    responsibility for a certain time-frame, it must be able to change
+    any time dependent parameters at will as long as they fall
+    completely in this time frame. 
+\begin{admonition}{figures/note}{Note}% NOTICE: see the db2latex FAQ w.r.t db2latex variable $latex.admonition.path
+Continuity in a function for a
+    parameter over time will pose a problem at the edges of the time
+    frame.\end{admonition}
+
+
+
+\subsection{Workload distribution}
+\label{id2721283}\hypertarget{id2721283}{}%
+
+
+
+    The workload for a self-calibration process, might be distributed
+    in several ways. It is a design choice to decide that only
+    partitioning to data, as opposed to partitioning to parameters, is
+    opportune. This is based on the order of magnitude that the volume
+    of data is bigger then the amount of parameters. The data has a
+    limited number of dimensions. 
+\begin{admonition}{figures/note}{Note}% NOTICE: see the db2latex FAQ w.r.t db2latex variable $latex.admonition.path
+The number of dimensions is four as far as
+    we can tell right now\end{admonition}
+
+ These are.
+
+    \begin{itemize}
+
+	\item 
+
+       time
+      
+
+
+	\item 
+
+       frequency
+      
+
+
+	\item 
+
+       baseline
+      
+
+
+	\item 
+
+       observatory-direction
+      
+
+\end{itemize}
+
+
+    The Blackboard will be configured to delegate tasks to children,
+    divided along one of these dimensions.
+\begin{admonition}{figures/note}{Note}% NOTICE: see the db2latex FAQ w.r.t db2latex variable $latex.admonition.path
+It doesn't seem
+    necessary to divide along a dimension more then once.\end{admonition}
+
+
+
+\subsection{controllers}
+\label{id2721330}\hypertarget{id2721330}{}%
+
+
+
+    A Blackboard has a controller that can be asked to start a process
+    for a blackboard. Such a process can be a child-blackboard
+    including its controller, or one of the knowledge sources
+    associated with the blackboard.
+
+   
+{{\includegraphics[]{start.usecase.png}}}
+
+
+% ------------------------   
+% Section 
+\section{logistical database}
+\label{logistical datamodel}\hypertarget{logistical datamodel}{}%
+
+\subsection{Workload distribution}
+\label{id2721376}\hypertarget{id2721376}{}%
+
+
+
+    The data, resulting from an observation will be several TB in
+    volume \hyperlink{LOFAR-ASTRON-MEM-035}{[LOFAR-ASTRON-MEM-035]}. To
+    conveniently handle this it will have to be partitioned. To handle
+    part of the data a specialized sub-cluster will be defined. (see \hyperlink{subcluster}{Figure 1}).
+
+   
+{{\includegraphics[]{bb.subcluster.png}}}
+
+
+
+    As a result of this partitioning the Blackboard will be responsible
+    for a subset of the data. This it will know:
+
+   
+
+
+
+    \{self\}1, \{parent-id\}1, \{range\}1
+
+    \begin{itemize}
+
+	\item 
+
+
+       "self" is the id of this blackboard.
+
+      
+
+
+	\item 
+
+
+       "parent\_id" is the obvious.
+
+      
+
+
+	\item 
+
+
+       "range" is the set of values that defines the dataset used for
+       solving parameters.
+
+      
+
+\end{itemize}
+
+
+
+
+    the range can vary over several dimensions
+
+   
+
+
+
+    \{time\}1, \{frequency\}1, \{interferometers\}1, \{direction\}1
+    \begin{itemize}
+
+	\item 
+
+
+       "time" is a time range this blackboard is concerned
+       with. 
+\begin{admonition}{figures/note}{Note}% NOTICE: see the db2latex FAQ w.r.t db2latex variable $latex.admonition.path
+We'll assume no time-gaps for now.\end{admonition}
+
+
+
+
+	\item 
+
+
+       "frequency" is the frequency range or band this blackboard is
+       concerned with.  
+\begin{admonition}{figures/note}{Note}% NOTICE: see the db2latex FAQ w.r.t db2latex variable $latex.admonition.path
+We'll assume a single continuous band for
+       now.\end{admonition}
+
+
+
+
+	\item 
+
+
+       "interferometers" is the set of baselines that this BlackBoard is
+       responsible for.
+
+      
+
+
+	\item 
+
+
+       "directions" is a range of points in the sky that function as
+       field-centers.
+
+      
+
+\end{itemize}
+
+
+
+
+    If for some reason it is considered that on one of the dimensions
+    the range to evaluate is to large to do in one step, the Blackboard
+    can ask it's BlackBoardController to spawn children. The Blackboard
+    will have to know what children it has:
+
+   
+
+
+
+    \{child-id\}1, \{self\}1, \{range\}1
+
+   
+
+
+
+    For all of "time" through "objects" goes that they are a subset of
+    the parents fields with the same name.
+
+   
+
+\subsection{Workload level}
+\label{id2721606}\hypertarget{id2721606}{}%
+
+
+
+    The idea is that several analysis threads can exist
+    simultaneously. In each of these threads several processes are
+    active. In our blackboard model we have the following
+    Knowledge-Sources
+
+    \begin{itemize}
+
+	\item 
+
+
+       A SelfCalEngine. Which contains processes at several
+       nodes. There are a solve process and an array of predict
+       processes.
+
+      
+
+
+	\item 
+
+
+       A SelfCalController starts engines and forks new child-threads
+       if opportune.
+
+      
+
+
+	\item 
+
+
+       A SelfCalWatcher that monitors threads and decides on what is or
+       is not a dead end.
+
+      
+
+\end{itemize}
+
+
+
+    All three have their controlling BB tables.
+
+    
+\subsubsection{SelfcalEngine}
+\label{id2721640}\hypertarget{id2721640}{}%
+
+
+
+      A SelfcalEngine solves for a set of parameters based on part of the data.
+
+     
+
+
+
+      A SelfcalEngine writes a record with globally the following
+      structure.
+
+     
+
+
+
+      \{meta-data\}1, \{next-action-type\}1, \{quality\}1, \{p-name, p-value, p-delta\}1-*
+
+     
+
+
+
+      meta-data will contain:
+
+     
+
+
+
+      \{workload-id\}1, \{engine-id\}1, \{controller-id\}1, \{parent-id\}1, \{range\}1
+
+      \begin{itemize}
+
+	\item 
+
+
+         the id for the SelfcalEngine that produced the result.
+
+        
+
+
+	\item 
+
+
+         the id for the SelfcalController that created the workload.
+
+        
+
+
+	\item 
+
+
+         The parent id of this workload. This could be a thread-id or
+         the id of another workload.
+
+        
+
+
+	\item 
+
+
+         The time that the data was captured.
+
+        
+
+
+	\item 
+
+
+         The frequency-range examined.
+
+        
+
+\end{itemize}
+
+
+\subsubsection{SelfcalController}
+\label{id2721696}\hypertarget{id2721696}{}%
+
+
+
+      A SelfcalController writes records of workloads like the
+      SelfcalEngine, except the it does give a quality and it doesn't
+      write the SelfcalEngine id. An engine writes its id in a record
+      as it accepts it and starts the associated calculation. When it
+      is finished it writes the deltas for all parameters and the
+      quality.
+
+     
+
+
+
+      A SelfcalController decides what the next step in a anaysis path
+      should be. The range might be smaller then that of the parent
+      dataset.
+
+     
+
+
+
+      \{controller-id\}1, \{strategy-description\}1, \{range\}1, \{child-id\}0-*
+
+     
+
+\subsubsection{SelfcalWatcher}
+\label{id2721718}\hypertarget{id2721718}{}%
+
+
+
+      A SelfcalWatcher has to have access to the records of the
+      engines. It has a domain to watch containing several analysis
+      threads.
+
+     
+
+
+
+      \{watcher-id\}1 \{controller-id\}2-*
+
+     
+
+
+\newcommand{\dbappendix}[1]{\section{#1}}%
+% ------------------------------------------------------------- 
+% Appendixes start here
+% -------------------------------------------------------------
+\appendix
+
+% -------------------------------------------------------------
+% appendix:  revision log 
+% ------------------------------------------------------------- 	
+\dbappendix{revision log}
+\label{id2721729}\hypertarget{id2721729}{}%
+
+
+
+   Hand copy log entries from the cvs log, or make up your own.
+
+  
+
+\begin{itemize}
+
+	\item 
+
+      Revision 1.1 2003/06/18 12:06:25 daan
+     
+
+
+      initial version containing:
+      \begin{itemize}
+
+	\item 
+
+         storage requirements.
+        
+
+\end{itemize}
+
+
+\end{itemize}
+
+% ------------------------------------------- 
+%	
+%  Bibliography
+%	
+% -------------------------------------------	
+\bibliography{}
+\begin{thebibliography}{WIDELABEL}
+
+% -------------- biblioentry 
+\bibitem[LOFAR-ASTRON-MEM-035]{LOFAR-ASTRON-MEM-035}
+\emph{CEP Requirements Analysis, Architectural Design and Description} , Kjeld van der Schaaf, Copyright \copyright{} 2002 ASTRON. \label{LOFAR-ASTRON-MEM-035}
+
+
+\end{thebibliography}
+
+% --------------------------------------------
+% End of document
+% --------------------------------------------
+\end{document}
