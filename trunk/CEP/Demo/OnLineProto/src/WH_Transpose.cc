@@ -136,11 +136,13 @@ void WH_Transpose::dump()
   cout << "--------------------------------------------------------" << endl;
   cout << "Dump WH_Transpose " << getName() << endl;
   cout << " input " << endl;
-  for (int s=0; s<10; s++) {
-    cout << "in station=" << s << ":  ";
-    for (int f=0; f<10; f++) {
-      cout << 	*((DH_Beamlet*)getDataManager().getInHolder(s))
-	->getBufferElement(f) << "  ";
+  int nrStations = getDataManager().getInputs();
+  int nrFreq = itsPS.getInt("station.nchannels");
+  for (int station=0; station < nrStations ; station++) {
+    cout << "in station=" << station << ":  ";
+    for (int freq=0; freq < nrFreq; freq++) {
+      cout << 	*((DH_Beamlet*)getDataManager().getInHolder(station))
+	->getBufferElement(freq) << "  ";
     }
     cout << endl;
   }
@@ -148,11 +150,11 @@ void WH_Transpose::dump()
   cout << " output " << endl;
 
   
-  for (int s=0; s<10; s++) {
-    cout << "out station=" << s << ":  ";
-    for (int t=0; t<10; t++) {
+  for (int station=0; station < nrStations; station++) {
+    cout << "out station=" << station << ":  ";
+    for (int freq=0; freq < nrFreq; freq++) {
       cout << *((DH_CorrCube*)getDataManager().getOutHolder(0))
-	->getBufferElement(s, 0, t) ;
+	->getBufferElement(station, 0, freq) ;
 
     }
     cout << endl;
