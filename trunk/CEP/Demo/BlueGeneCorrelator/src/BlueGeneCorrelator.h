@@ -47,6 +47,7 @@ namespace LOFAR
     virtual void init();
     virtual void run(int nsteps);
     virtual void dump() const;
+    virtual void postrun();
     virtual void quit();
     
   private:
