@@ -11,7 +11,8 @@ DOCHDRS = $(pkginclude_HEADERS) \
   Socket/GTM_TCPSocket.h \
   Socket/GTM_TCPServerSocket.h \
   Socket/GTM_SocketHandler.h \
-  Socket/GTM_ETHSocket.h
+  Socket/GTM_ETHSocket.h \
+  Socket/GTM_Device.h
     
 noinst_LTLIBRARIES 	= libtm.la
 
@@ -34,7 +35,9 @@ libtm_la_SOURCES=  \
   Socket/GTM_TCPServerSocket.cc \
   Socket/GTM_SocketHandler.cc \
   Socket/GTM_ETHSocket.cc \
-  Socket/GCF_ETHRawPort.cc
+  Socket/GCF_ETHRawPort.cc \
+  Socket/GCF_DevicePort.cc \
+  Socket/GTM_Device.cc
 
 libtm_la_CPPFLAGS=-I$(top_srcdir)/GCFCommon/src
 

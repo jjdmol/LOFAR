@@ -27,7 +27,8 @@ pkginclude_HEADERS =	\
 	GCF_Port.h \
 	GCF_RawPort.h \
 	GCF_PeerAddr.h \
-	GCF_TCPPort.h
+	GCF_TCPPort.h \
+	GCF_DevicePort.h
 
 DOCHDRS	=	$(pkginclude_HEADERS)
 
