@@ -48,7 +48,8 @@ namespace LOFAR
       for (int nr = 0; iter != view.end() && nr < maxObjects; ++iter, ++nr) {
 	TPersistentObject<T> tpo;
 	tpo.tableName (tableName());
-	tpo.fromDatabaseRep(*iter);
+        tpo.fromDBRepMeta((DBRepMeta&)(*iter));
+	tpo.fromDBRep(*iter);
         // If the object T is spread among several tables we must call
         // retrieve() in order to get the data from all the tables. If we
         // don't, we will miss the data for the "owned" POs. This really isn't
@@ -93,7 +94,8 @@ namespace LOFAR
 
       // copy info of the T to the DBRep<T> class
       DBRep<T>    rec;
-      toDatabaseRep (rec);
+      toDBRepMeta ((DBRepMeta&)rec);
+      toDBRep (rec);
 
       // save this record
       *iter = rec;
@@ -115,11 +117,12 @@ namespace LOFAR
 
       // copy info of the T to the DBRep<T> class
       DBRep<T>    rec;
-      toDatabaseRep (rec);
+      toDBRepMeta ((DBRepMeta&)rec);
+      toDBRep (rec);
 
       // setup the selection parameters
-      iter.Params().itsOid = rec.getOid(); // GvD
-      //      iter.Params().itsOid = rec.itsOid; 
+//       iter.Params().itsOid = rec.getOid(); // GvD
+      iter.Params().itsOid = rec.itsOid; 
 
       // save this record
       *iter = rec;
@@ -148,7 +151,8 @@ namespace LOFAR
       // We should find a match! Otherwise there's some kind of logic error.
       AssertStr(iter != view.end(), "oid=" << oid.get()
                 << ", isOwnerOid=" << (isOwnerOid ? "true" : "false") );  
-      fromDatabaseRep(*iter);
+      fromDBRepMeta((DBRepMeta&)(*iter));
+      fromDBRep(*iter);
 
     }
 

@@ -30,6 +30,7 @@
 #include <vector>
 #include <string>
 #include <map>
+#include <iostream>
 
 namespace LOFAR
 {
@@ -109,6 +110,15 @@ namespace LOFAR
         // Return a shared pointer to the "global" null object-id.
         static const boost::shared_ptr<ObjectId>& nullOid() { 
           return theirNullOid; 
+        }
+
+        friend std::ostream& operator<<(std::ostream& os, const MetaData& md)
+        {
+          os << "itsOid       = " << md.itsOid->get() << std::endl
+             << "itsOwnerOid  = " << md.itsOwnerOid->get() << std::endl
+             << "itsVersionNr = " << *md.itsVersionNr << std::endl
+             << "itsTableName = " << *md.itsTableName << std::endl;
+          return os;
         }
 
       private:
@@ -230,6 +240,12 @@ namespace LOFAR
         metaData().tableName() = aName; 
       }
 
+      // Return a comma delimited list of all the table names that are
+      // associated with this persistent object. In other words, tableNames()
+      // will return the table name of this persistent objects and the table
+      // names of its owned persistent objects.
+      std::string tableNames() const;
+
       // Return a reference to the container of "owned" PersistentObjects.
       POContainer& ownedPOs() { return itsOwnedPOs; }
 
@@ -253,6 +269,12 @@ namespace LOFAR
       // relations between the PersistentObjects in this container are
       // properly set in their associated MetaData objects.
       virtual void init() = 0;
+
+      friend struct DBRepMeta;
+
+      void toDBRepMeta(DBRepMeta& dest) const;
+
+      void fromDBRepMeta(const DBRepMeta& org);
 
     private:
 
