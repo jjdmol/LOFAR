@@ -28,26 +28,22 @@ namespace LOFAR
 //     : itsArgc(0),
 //       itsArgv(0),
 //       itsProto(dhptr),
-//       itsDataManager(0),
+//       itsDataManager(0) {
 //       itsNinputs(ninput),
 //       itsNoutputs(noutput){
     
 //     itsDataManager = new MiniDataManager(ninput, noutput);
 
-//     for (int i=0; i < itsNinputs; i++) {
+//     for (int i=0; i < ninput; i++) {
 //       itsDataManager->addInDataHolder(i, dhptr);
 //     }
-//     for (int i=0; i < itsNoutputs; i++){
+//     for (int i=0; i < noutput; i++){
 //       itsDataManager->addOutDataHolder(i, dhptr);
 //     }
 //   }
 
   ApplicationHolder::ApplicationHolder()
-    : itsArgc(0),
-      itsArgv(0),
-      itsProto(0),
-      itsDataManager(0) {
-  }
+    { }
 
   ApplicationHolder::~ApplicationHolder() {
     // dit segfault op dit moment nog.. FIXME!
@@ -58,8 +54,7 @@ namespace LOFAR
   ApplicationHolder::ApplicationHolder(const ApplicationHolder& that)
     : itsArgc        (that.itsArgc),
       itsArgv        (that.itsArgv),
-      itsProto       (that.itsProto),
-      itsDataManager (that.itsDataManager) {
+      itsProto       (that.itsProto) { 
   }
       
     
@@ -75,6 +70,7 @@ namespace LOFAR
   }
 
   void ApplicationHolder::basePrerun() {
+    //    itsDataManager->preprocess();
     init();
   }
 
@@ -125,6 +121,7 @@ namespace LOFAR
   }
   
   void ApplicationHolder::run(int nsteps) {
+    
   }
   
   void ApplicationHolder::run_once() {
@@ -133,7 +130,7 @@ namespace LOFAR
   void ApplicationHolder::quit() {
   }
 
-  void ApplicationHolder::dump() const{
+  void ApplicationHolder::dump() const {
   }
 
   void ApplicationHolder::setarg (int argc, const char** argv) {

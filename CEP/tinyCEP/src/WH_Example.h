@@ -52,6 +52,8 @@ namespace LOFAR
     virtual void preprocess();
     virtual void process();
 
+    virtual void dump();
+
   private:
     WH_Example (const WH_Example&);
     WH_Example& operator= (const WH_Example&);

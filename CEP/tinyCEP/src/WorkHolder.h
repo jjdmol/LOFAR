@@ -138,6 +138,9 @@ public:
   /// Get monitoring data
   virtual int getMonitorValue(const char* name);
 
+protected:
+  MiniDataManager* itsDataManager;
+
 private:
   /** Make a map of all DataHolders names. A separate map is made
       for the input and output DataHolders.
@@ -155,7 +158,6 @@ private:
   string itsType;
   mutable map<string,int> itsInMap;
   mutable map<string,int> itsOutMap;
-  MiniDataManager* itsDataManager;
 /*   ParamManager itsParamManager; */
   bool itsFirstProcessCall;
 
