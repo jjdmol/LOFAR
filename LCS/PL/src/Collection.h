@@ -25,6 +25,7 @@
 
 //# Includes
 #include <list>
+#include <PL/Exception.h>
 
 namespace LCS
 {
@@ -50,12 +51,22 @@ namespace LCS
       iterator end() { return itsContainer.end(); }
       const_iterator end() const { return itsContainer.end(); }
 
-      // Add the element \c t to the collection
-      void add(const T& t) { itsContainer.push_back(t); }
+      // Add the element \c t to the collection. Check for duplicates, because
+      // we don't want them.
+      // \throw CollectionException
+      void add(const T& t) {
+        if (find(itsContainer.begin(), itsContainer.end(),t) != 
+            itsContainer.end()) {
+          THROW(CollectionException,"Duplicate element");
+        }
+        itsContainer.push_back(t);
+      }
 
-      // Remove \e all elements from the collection that are equal to the
-      // element \c t.
-      void remove(const T& t) { itsContainer.remove(t); }
+      // Remove \e the element from the collection that matches with \c t.
+      void remove(const T& t) { return itsContainer.remove(t); }
+      
+      // Remove all elements from our container
+      void clear() { itsContainer.clear(); }
 
     private:
 
