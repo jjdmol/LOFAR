@@ -92,6 +92,16 @@ namespace LCSMath
   // or Matrix
   LoVec_double absVec (const LoVec_dcomplex& aVec);
   LoMat_double absMat (const LoMat_dcomplex& aMat);
+
+  // Statistics routines
+  template <class T> T sum (const blitz::Array <T, 1>& aVector, int length);
+  template <class T> T sum_square (const blitz::Array <T, 1>& aVector, int length);
+  template <class T> T mean (const blitz::Array <T, 1>& aVector, int length);
+  template <class T> T variance (const blitz::Array <T, 1>& aVector, int length);
+  template <class T> T stdev (const blitz::Array <T, 1>& aVector, int length);
+  template <class T> T median (blitz::Array <T, 1>& aVector, int length);
+  template <class T> T max (blitz::Array <T, 1>& aVector, int length);
+  template <class T> T min (blitz::Array <T, 1>& aVector, int length);
 };
 
 
