@@ -46,6 +46,7 @@ BaseDataHolder::BaseDataHolder(const string& name, const string& type)
     itsTransporter    (0),
     itsName           (name),
     itsType           (type),
+    itsReadConvert    (-1),
     itsReadDelay      (0),
     itsWriteDelay     (0),
     itsReadDelayCount (0),
@@ -61,6 +62,7 @@ BaseDataHolder::BaseDataHolder(const BaseDataHolder& that)
     itsTransporter    (0),
     itsName           (that.itsName),
     itsType           (that.itsType),
+    itsReadConvert    (that.itsReadConvert),
     itsReadDelay      (that.itsReadDelay),
     itsWriteDelay     (that.itsWriteDelay),
     itsReadDelayCount (that.itsReadDelayCount),
@@ -136,6 +138,28 @@ bool BaseDataHolder::read()
   bool result = false;
   if (itsReadDelayCount <= 0) {
     result = itsTransporter->read();
+    // Check the data header in debug mode.
+#ifdef ENABLE_DBGASSERT
+    BlobIBufChar bibc(itsData->data(), itsData->size());
+    itsDataFields.checkHeader (bibc, itsType.c_str(),
+			       itsDataFields.version(), 0);
+#endif
+    // Convert the data (swap bytes) if needed.
+    if (itsReadConvert) {
+      BlobIBufChar bib(itsData->data(), itsData->size());
+      if (itsReadConvert != 1) {
+	// Not known yet if conversion is needed. So determine it.
+	// At the same time the header is checked.
+	// For the time being, only version 1 sets are supported.
+	itsReadConvert = 0;
+	if (itsDataFields.checkHeader(bib, itsType.c_str(), 1, 0)) {
+	  itsReadConvert = 1;
+	}
+      }
+      if (itsReadConvert) {
+	itsDataFields.convertData (bib);
+      }
+    }
   } else {
     itsReadDelayCount--;
   }
