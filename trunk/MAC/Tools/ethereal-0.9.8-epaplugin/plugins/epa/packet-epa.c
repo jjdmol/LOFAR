@@ -49,6 +49,16 @@
 /**
  * EPA protocol constants and value to string mappings.
  */
+static const value_string type_info_vals[] =
+{
+  { 0x00, "Invalid message type"  },
+  { 0x01, "READ   " },
+  { 0x02, "WRITE  " },
+  { 0x03, "READRES" },
+  { 0x04, "READERR" },
+  { 0,     NULL                   },
+};
+
 static const value_string type_vals[] =
 {
   { 0x00, "Invalid message type"  },
@@ -64,6 +74,20 @@ static const value_string dst_vals[] =
   { 0x00, "Beamlet processor" },
   { 0x80, "RSP Main FPGA"     },
   { 0,     NULL               },  
+};
+
+static const value_string pid_info_vals[] =
+{
+  { 0x00, "STATUS" },
+  { 0x01, "TST   " },
+  { 0x02, "CFG   " },
+  { 0x03, "WG    " },
+  { 0x04, "SS    " },
+  { 0x05, "BF    " },
+  { 0x06, "ST    " },
+  { 0x07, "STSUB " },
+  { 0x08, "RCU   " },
+  { 0,     NULL                                },
 };
 
 static const value_string pid_vals[] =
@@ -251,12 +275,27 @@ dissect_epa(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree)
   /* Set up structures needed to add the protocol subtree and manage it */
   proto_item *ti;
   proto_tree *epa_tree;
-  char*  typestr = 0;
-  char*  regstr  = 0;
+  char*  typestr = NULL;
+  char*  pidstr  = NULL;
+  char*  regstr  = NULL;
   guint8 type = tvb_get_guint8(tvb, 0);
   guint8 reg  = tvb_get_guint8(tvb, 6);
   guint8 pid  = tvb_get_guint8(tvb, 5);
 
+#if 0
+  /* don't know enough about how this conversation stuff works, implement it later */
+  conversation_t* conversation = NULL;
+
+  conversation = find_conversation(&pinfo->net_src, &pinfo->net_dst, pinfo->ptype,
+				   0, 0, NO_PORT2);
+  if (conversation == NULL)
+  {
+    /* No conversation, create one */
+    conversation = conversation_new(&pinfo->net_src, &pinfo->net_dst, pinfo->ptype,
+				    0, 0, NO_PORT_B);
+  }
+#endif
+  
   /* Make entries in Protocol column and Info column on summary display */
   if (check_col(pinfo->cinfo, COL_PROTOCOL)) 
     col_set_str(pinfo->cinfo, COL_PROTOCOL, "EPA");
@@ -292,7 +331,8 @@ dissect_epa(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree)
     col_clear(pinfo->cinfo, COL_INFO);
 
   /* decode the typestr */
-  typestr = type_vals[type].strptr;
+  typestr = type_info_vals[type].strptr;
+  pidstr  = pid_info_vals[pid].strptr;
   switch (pid)
   {
     case 0x00:
@@ -333,11 +373,12 @@ dissect_epa(tvbuff_t *tvb, packet_info *pinfo, proto_tree *tree)
   }
 
   if (!typestr) typestr = "Unknown type?";
+  if (!pidstr)  pidstr  = "Uknown process?";
   if (!regstr)  regstr  = "Unknown register?";
       
   /* fill the INFO column */
   if (check_col(pinfo->cinfo, COL_INFO))
-    col_add_fstr(pinfo->cinfo, COL_INFO, "%s; %s", typestr, regstr);
+    col_add_fstr(pinfo->cinfo, COL_INFO, "%s %s %s", typestr, pidstr, regstr);
   
   /* In the interest of speed, if "tree" is NULL, don't do any work not
      necessary to generate protocol tree items. */
