@@ -25,7 +25,7 @@
 #include <MEQ/VellsRealArr.h>
 #include <MEQ/VellsComplexArr.h>
 
-namespace MEQ {
+namespace Meq {
 
 VellsTmp::VellsTmp (double value, int nx, int ny, bool init)
 {
@@ -120,4 +120,4 @@ VellsTmp sum (const VellsTmp& arg)
   return arg.itsRep->sum();
 }
 
-} // namespace MEQ
+} // namespace Meq

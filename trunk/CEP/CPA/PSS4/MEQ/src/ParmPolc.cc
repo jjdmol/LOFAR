@@ -26,7 +26,7 @@
 #include <aips/Arrays/Matrix.h>
 
 
-namespace MEQ {
+namespace Meq {
 
 ParmPolc::ParmPolc (const string& name)
 : Parm (name)
@@ -190,4 +190,4 @@ void ParmPolc::update (const Vells& value)
 void ParmPolc::save()
 {}
 
-} //namespace MEQ
+} //namespace Meq

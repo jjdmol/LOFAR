@@ -23,7 +23,7 @@
 #include <MEQ/Function1.h>
 #include <MEQ/VellsTmp.h>
 
-namespace MEQ {    
+namespace Meq {    
 
 Function1::Function1()
 {}
@@ -36,4 +36,4 @@ void Function1::checkChildren()
   convertChildren(1);
 }
 
-} // namespace MEQ
+} // namespace Meq

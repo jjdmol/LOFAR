@@ -6,16 +6,16 @@
       #include "DMI/AtomicID.h"
 
       // should be called somewhere in order to link in the registry
-      int aidRegistry_MEQ ();
+      int aidRegistry_Meq ();
 
 #ifndef _defined_id_AidCalcDeriv
 #define _defined_id_AidCalcDeriv 1
-const AtomicID AidCalcDeriv(-1480);               // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/PSS4/MEQ/src/MEQ.aidlist:1
+const AtomicID AidCalcDeriv(-1480);               // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/PSS4/MEQ/src/Meq.aidlist:1
 const int AidCalcDeriv_int = -1480;
 #endif
 #ifndef _defined_id_AidCells
 #define _defined_id_AidCells 1
-const AtomicID AidCells(-1478);                   // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/PSS4/MEQ/src/MEQ.aidlist:2
+const AtomicID AidCells(-1478);                   // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/PSS4/MEQ/src/Meq.aidlist:2
 const int AidCells_int = -1478;
 #endif
 #ifndef _defined_id_AidChild
@@ -30,7 +30,7 @@ const int AidChildren_int = -1431;
 #endif
 #ifndef _defined_id_AidClass
 #define _defined_id_AidClass 1
-const AtomicID AidClass(-1481);                   // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/PSS4/MEQ/src/MEQ.aidlist:5
+const AtomicID AidClass(-1481);                   // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/PSS4/MEQ/src/Meq.aidlist:5
 const int AidClass_int = -1481;
 #endif
 #ifndef _defined_id_AidDefault
@@ -48,80 +48,80 @@ const int AidDomain_int = -1144;
 const AtomicID AidId(-1457);                      // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/MeqServer/src/MeqServer.aidlist:14
 const int AidId_int = -1457;
 #endif
-#ifndef _defined_id_AidMEQAdd
-#define _defined_id_AidMEQAdd 1
-const AtomicID AidMEQAdd(-1472);                  // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/PSS4/MEQ/src/MEQ.aidlist:8
-const int AidMEQAdd_int = -1472;
+#ifndef _defined_id_AidMeqAdd
+#define _defined_id_AidMeqAdd 1
+const AtomicID AidMeqAdd(-1472);                  // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/PSS4/MEQ/src/Meq.aidlist:8
+const int AidMeqAdd_int = -1472;
 #endif
-#ifndef _defined_id_AidMEQConj
-#define _defined_id_AidMEQConj 1
-const AtomicID AidMEQConj(-1487);                 // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/PSS4/MEQ/src/MEQ.aidlist:9
-const int AidMEQConj_int = -1487;
+#ifndef _defined_id_AidMeqConj
+#define _defined_id_AidMeqConj 1
+const AtomicID AidMeqConj(-1487);                 // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/PSS4/MEQ/src/Meq.aidlist:9
+const int AidMeqConj_int = -1487;
 #endif
-#ifndef _defined_id_AidMEQCos
-#define _defined_id_AidMEQCos 1
-const AtomicID AidMEQCos(-1476);                  // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/PSS4/MEQ/src/MEQ.aidlist:10
-const int AidMEQCos_int = -1476;
+#ifndef _defined_id_AidMeqCos
+#define _defined_id_AidMeqCos 1
+const AtomicID AidMeqCos(-1476);                  // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/PSS4/MEQ/src/Meq.aidlist:10
+const int AidMeqCos_int = -1476;
 #endif
-#ifndef _defined_id_AidMEQDivide
-#define _defined_id_AidMEQDivide 1
-const AtomicID AidMEQDivide(-1474);               // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/PSS4/MEQ/src/MEQ.aidlist:11
-const int AidMEQDivide_int = -1474;
+#ifndef _defined_id_AidMeqDivide
+#define _defined_id_AidMeqDivide 1
+const AtomicID AidMeqDivide(-1474);               // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/PSS4/MEQ/src/Meq.aidlist:11
+const int AidMeqDivide_int = -1474;
 #endif
-#ifndef _defined_id_AidMEQExp
-#define _defined_id_AidMEQExp 1
-const AtomicID AidMEQExp(-1475);                  // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/PSS4/MEQ/src/MEQ.aidlist:12
-const int AidMEQExp_int = -1475;
+#ifndef _defined_id_AidMeqExp
+#define _defined_id_AidMeqExp 1
+const AtomicID AidMeqExp(-1475);                  // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/PSS4/MEQ/src/Meq.aidlist:12
+const int AidMeqExp_int = -1475;
 #endif
-#ifndef _defined_id_AidMEQFunction
-#define _defined_id_AidMEQFunction 1
-const AtomicID AidMEQFunction(-1491);             // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/PSS4/MEQ/src/MEQ.aidlist:13
-const int AidMEQFunction_int = -1491;
+#ifndef _defined_id_AidMeqFunction
+#define _defined_id_AidMeqFunction 1
+const AtomicID AidMeqFunction(-1491);             // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/PSS4/MEQ/src/Meq.aidlist:13
+const int AidMeqFunction_int = -1491;
 #endif
-#ifndef _defined_id_AidMEQMultiply
-#define _defined_id_AidMEQMultiply 1
-const AtomicID AidMEQMultiply(-1466);             // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/PSS4/MEQ/src/MEQ.aidlist:14
-const int AidMEQMultiply_int = -1466;
+#ifndef _defined_id_AidMeqMultiply
+#define _defined_id_AidMeqMultiply 1
+const AtomicID AidMeqMultiply(-1466);             // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/PSS4/MEQ/src/Meq.aidlist:14
+const int AidMeqMultiply_int = -1466;
 #endif
-#ifndef _defined_id_AidMEQNode
-#define _defined_id_AidMEQNode 1
-const AtomicID AidMEQNode(-1470);                 // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/PSS4/MEQ/src/MEQ.aidlist:15
-const int AidMEQNode_int = -1470;
+#ifndef _defined_id_AidMeqNode
+#define _defined_id_AidMeqNode 1
+const AtomicID AidMeqNode(-1470);                 // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/PSS4/MEQ/src/Meq.aidlist:15
+const int AidMeqNode_int = -1470;
 #endif
-#ifndef _defined_id_AidMEQParmPolcStored
-#define _defined_id_AidMEQParmPolcStored 1
-const AtomicID AidMEQParmPolcStored(-1471);       // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/PSS4/MEQ/src/MEQ.aidlist:16
-const int AidMEQParmPolcStored_int = -1471;
+#ifndef _defined_id_AidMeqParmPolcStored
+#define _defined_id_AidMeqParmPolcStored 1
+const AtomicID AidMeqParmPolcStored(-1471);       // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/PSS4/MEQ/src/Meq.aidlist:16
+const int AidMeqParmPolcStored_int = -1471;
 #endif
-#ifndef _defined_id_AidMEQPow
-#define _defined_id_AidMEQPow 1
-const AtomicID AidMEQPow(-1465);                  // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/PSS4/MEQ/src/MEQ.aidlist:17
-const int AidMEQPow_int = -1465;
+#ifndef _defined_id_AidMeqPow
+#define _defined_id_AidMeqPow 1
+const AtomicID AidMeqPow(-1465);                  // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/PSS4/MEQ/src/Meq.aidlist:17
+const int AidMeqPow_int = -1465;
 #endif
-#ifndef _defined_id_AidMEQSin
-#define _defined_id_AidMEQSin 1
-const AtomicID AidMEQSin(-1469);                  // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/PSS4/MEQ/src/MEQ.aidlist:18
-const int AidMEQSin_int = -1469;
+#ifndef _defined_id_AidMeqSin
+#define _defined_id_AidMeqSin 1
+const AtomicID AidMeqSin(-1469);                  // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/PSS4/MEQ/src/Meq.aidlist:18
+const int AidMeqSin_int = -1469;
 #endif
-#ifndef _defined_id_AidMEQSqr
-#define _defined_id_AidMEQSqr 1
-const AtomicID AidMEQSqr(-1489);                  // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/PSS4/MEQ/src/MEQ.aidlist:19
-const int AidMEQSqr_int = -1489;
+#ifndef _defined_id_AidMeqSqr
+#define _defined_id_AidMeqSqr 1
+const AtomicID AidMeqSqr(-1489);                  // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/PSS4/MEQ/src/Meq.aidlist:19
+const int AidMeqSqr_int = -1489;
 #endif
-#ifndef _defined_id_AidMEQSqrt
-#define _defined_id_AidMEQSqrt 1
-const AtomicID AidMEQSqrt(-1477);                 // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/PSS4/MEQ/src/MEQ.aidlist:20
-const int AidMEQSqrt_int = -1477;
+#ifndef _defined_id_AidMeqSqrt
+#define _defined_id_AidMeqSqrt 1
+const AtomicID AidMeqSqrt(-1477);                 // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/PSS4/MEQ/src/Meq.aidlist:20
+const int AidMeqSqrt_int = -1477;
 #endif
-#ifndef _defined_id_AidMEQSubtract
-#define _defined_id_AidMEQSubtract 1
-const AtomicID AidMEQSubtract(-1467);             // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/PSS4/MEQ/src/MEQ.aidlist:21
-const int AidMEQSubtract_int = -1467;
+#ifndef _defined_id_AidMeqSubtract
+#define _defined_id_AidMeqSubtract 1
+const AtomicID AidMeqSubtract(-1467);             // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/PSS4/MEQ/src/Meq.aidlist:21
+const int AidMeqSubtract_int = -1467;
 #endif
-#ifndef _defined_id_AidMEQToComplex
-#define _defined_id_AidMEQToComplex 1
-const AtomicID AidMEQToComplex(-1468);            // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/PSS4/MEQ/src/MEQ.aidlist:22
-const int AidMEQToComplex_int = -1468;
+#ifndef _defined_id_AidMeqToComplex
+#define _defined_id_AidMeqToComplex 1
+const AtomicID AidMeqToComplex(-1468);            // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/PSS4/MEQ/src/Meq.aidlist:22
+const int AidMeqToComplex_int = -1468;
 #endif
 #ifndef _defined_id_AidName
 #define _defined_id_AidName 1
@@ -130,7 +130,7 @@ const int AidName_int = -1163;
 #endif
 #ifndef _defined_id_AidNfreq
 #define _defined_id_AidNfreq 1
-const AtomicID AidNfreq(-1484);                   // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/PSS4/MEQ/src/MEQ.aidlist:24
+const AtomicID AidNfreq(-1484);                   // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/PSS4/MEQ/src/Meq.aidlist:24
 const int AidNfreq_int = -1484;
 #endif
 #ifndef _defined_id_AidNode
@@ -140,17 +140,17 @@ const int AidNode_int = -1427;
 #endif
 #ifndef _defined_id_AidParmValues
 #define _defined_id_AidParmValues 1
-const AtomicID AidParmValues(-1479);              // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/PSS4/MEQ/src/MEQ.aidlist:26
+const AtomicID AidParmValues(-1479);              // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/PSS4/MEQ/src/Meq.aidlist:26
 const int AidParmValues_int = -1479;
 #endif
 #ifndef _defined_id_AidPerturbations
 #define _defined_id_AidPerturbations 1
-const AtomicID AidPerturbations(-1473);           // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/PSS4/MEQ/src/MEQ.aidlist:27
+const AtomicID AidPerturbations(-1473);           // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/PSS4/MEQ/src/Meq.aidlist:27
 const int AidPerturbations_int = -1473;
 #endif
 #ifndef _defined_id_AidReqId
 #define _defined_id_AidReqId 1
-const AtomicID AidReqId(-1486);                   // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/PSS4/MEQ/src/MEQ.aidlist:28
+const AtomicID AidReqId(-1486);                   // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/PSS4/MEQ/src/Meq.aidlist:28
 const int AidReqId_int = -1486;
 #endif
 #ifndef _defined_id_AidRequest
@@ -165,12 +165,12 @@ const int AidResult_int = -1421;
 #endif
 #ifndef _defined_id_AidRider
 #define _defined_id_AidRider 1
-const AtomicID AidRider(-1482);                   // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/PSS4/MEQ/src/MEQ.aidlist:30
+const AtomicID AidRider(-1482);                   // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/PSS4/MEQ/src/Meq.aidlist:30
 const int AidRider_int = -1482;
 #endif
 #ifndef _defined_id_AidSpids
 #define _defined_id_AidSpids 1
-const AtomicID AidSpids(-1490);                   // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/PSS4/MEQ/src/MEQ.aidlist:31
+const AtomicID AidSpids(-1490);                   // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/PSS4/MEQ/src/Meq.aidlist:31
 const int AidSpids_int = -1490;
 #endif
 #ifndef _defined_id_AidState
@@ -180,17 +180,17 @@ const int AidState_int = -1052;
 #endif
 #ifndef _defined_id_AidTablename
 #define _defined_id_AidTablename 1
-const AtomicID AidTablename(-1488);               // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/PSS4/MEQ/src/MEQ.aidlist:33
+const AtomicID AidTablename(-1488);               // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/PSS4/MEQ/src/Meq.aidlist:33
 const int AidTablename_int = -1488;
 #endif
 #ifndef _defined_id_AidTimeSteps
 #define _defined_id_AidTimeSteps 1
-const AtomicID AidTimeSteps(-1485);               // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/PSS4/MEQ/src/MEQ.aidlist:34
+const AtomicID AidTimeSteps(-1485);               // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/PSS4/MEQ/src/Meq.aidlist:34
 const int AidTimeSteps_int = -1485;
 #endif
 #ifndef _defined_id_AidTimes
 #define _defined_id_AidTimes 1
-const AtomicID AidTimes(-1483);                   // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/PSS4/MEQ/src/MEQ.aidlist:35
+const AtomicID AidTimes(-1483);                   // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/PSS4/MEQ/src/Meq.aidlist:35
 const int AidTimes_int = -1483;
 #endif
 #ifndef _defined_id_AidValues

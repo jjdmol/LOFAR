@@ -5,35 +5,35 @@
 
 
 
-#define DoForAllBinaryTypes_MEQ(Do,arg,separator) \
+#define DoForAllBinaryTypes_Meq(Do,arg,separator) \
         
 
-#define DoForAllDynamicTypes_MEQ(Do,arg,separator) \
-        Do(MEQAdd,arg) separator \
-        Do(MEQConj,arg) separator \
-        Do(MEQCos,arg) separator \
-        Do(MEQDivide,arg) separator \
-        Do(MEQExp,arg) separator \
-        Do(MEQFunction,arg) separator \
-        Do(MEQMultiply,arg) separator \
-        Do(MEQNode,arg) separator \
-        Do(MEQParmPolcStored,arg) separator \
-        Do(MEQPow,arg) separator \
-        Do(MEQSin,arg) separator \
-        Do(MEQSqr,arg) separator \
-        Do(MEQSqrt,arg) separator \
-        Do(MEQSubtract,arg) separator \
-        Do(MEQToComplex,arg)
+#define DoForAllDynamicTypes_Meq(Do,arg,separator) \
+        Do(MeqAdd,arg) separator \
+        Do(MeqConj,arg) separator \
+        Do(MeqCos,arg) separator \
+        Do(MeqDivide,arg) separator \
+        Do(MeqExp,arg) separator \
+        Do(MeqFunction,arg) separator \
+        Do(MeqMultiply,arg) separator \
+        Do(MeqNode,arg) separator \
+        Do(MeqParmPolcStored,arg) separator \
+        Do(MeqPow,arg) separator \
+        Do(MeqSin,arg) separator \
+        Do(MeqSqr,arg) separator \
+        Do(MeqSqrt,arg) separator \
+        Do(MeqSubtract,arg) separator \
+        Do(MeqToComplex,arg)
 
-#define DoForAllNumericTypes_MEQ(Do,arg,separator) \
+#define DoForAllNumericTypes_Meq(Do,arg,separator) \
         
 
-#define DoForAllIntermediateTypes_MEQ(Do,arg,separator) \
+#define DoForAllIntermediateTypes_Meq(Do,arg,separator) \
         
 
-#define DoForAllOtherTypes_MEQ(Do,arg,separator) \
+#define DoForAllOtherTypes_Meq(Do,arg,separator) \
         
 
-#define DoForAllSpecialTypes_MEQ(Do,arg,separator) \
+#define DoForAllSpecialTypes_Meq(Do,arg,separator) \
         
 #endif

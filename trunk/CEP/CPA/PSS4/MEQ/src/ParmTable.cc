@@ -24,6 +24,10 @@
 #include <MEQ/Domain.h>
 #include <MEQ/ParmPolcStored.h>
 #include <Common/Debug.h>
+#include <aips/Tables/TableDesc.h>
+#include <aips/Tables/ScaColDesc.h>
+#include <aips/Tables/ArrColDesc.h>
+#include <aips/Tables/SetupNewTab.h>
 #include <aips/Tables/ExprNode.h>
 #include <aips/Tables/ExprNodeSet.h>
 #include <aips/Tables/ScalarColumn.h>
@@ -37,7 +41,7 @@
 #include <aips/Utilities/GenSort.h>
 #include <aips/Mathematics/Math.h>
 
-namespace MEQ {
+namespace Meq {
 
 std::map<string, ParmTable*> ParmTable::theirTables;
 
@@ -270,5 +274,26 @@ void ParmTable::closeTables()
   theirTables.clear();
 }
 
+void ParmTable::createTable (const String& tableName)
+{
+  TableDesc tdesc;
+  tdesc.addColumn (ScalarColumnDesc<String>("NAME"));
+  tdesc.addColumn (ScalarColumnDesc<Double>("STARTTIME"));
+  tdesc.addColumn (ScalarColumnDesc<Double>("ENDTIME"));
+  tdesc.addColumn (ScalarColumnDesc<Double>("STARTFREQ"));
+  tdesc.addColumn (ScalarColumnDesc<Double>("ENDFREQ"));
+  tdesc.addColumn (ScalarColumnDesc<Double>("TIME0"));
+  tdesc.addColumn (ScalarColumnDesc<Double>("FREQ0"));
+  tdesc.addColumn (ScalarColumnDesc<Bool>("NORMALIZED"));
+  tdesc.addColumn (ArrayColumnDesc<Double>("VALUES", 2));
+  tdesc.addColumn (ArrayColumnDesc<Double>("SIM_VALUES", 2));
+  tdesc.addColumn (ArrayColumnDesc<Double>("SIM_PERT", 2));
+  tdesc.addColumn (ArrayColumnDesc<Bool>("SOLVABLE", 2));
+  tdesc.addColumn (ScalarColumnDesc<Double>("DIFF"));
+  tdesc.addColumn (ScalarColumnDesc<Bool>("DIFF_REL"));
+  SetupNewTable newtab(tableName, tdesc, Table::New);
+  Table tab(newtab);
+}
 
-} // namespace MEQ
+
+} // namespace Meq

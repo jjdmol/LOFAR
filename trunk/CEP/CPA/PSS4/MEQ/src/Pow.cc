@@ -23,7 +23,7 @@
 #include <MEQ/Pow.h>
 #include <MEQ/VellsTmp.h>
 
-namespace MEQ {    
+namespace Meq {    
 
 
 Pow::Pow()
@@ -33,11 +33,10 @@ Pow::~Pow()
 {}
 
 Vells Pow::evaluate (const Request&,
-			const vector<Vells*>& values)
+		     const vector<Vells*>& values)
 {
-  Assert (values.size() == 2);
   return pow (*(values[0]), *(values[1]));
 }
 
 
-} // namespace MEQ
+} // namespace Meq

@@ -25,10 +25,10 @@
     
 #include <MEQ/Function.h>
 
-#pragma aidgroup MEQ
-#pragma types #MEQ::Multiply
+#pragma aidgroup Meq
+#pragma types #Meq::Multiply
 
-namespace MEQ {    
+namespace Meq {    
 
 
 class Multiply : public Function
@@ -44,6 +44,6 @@ public:
 };
 
 
-} // namespace MEQ
+} // namespace Meq
 
 #endif

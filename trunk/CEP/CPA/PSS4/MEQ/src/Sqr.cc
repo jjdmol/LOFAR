@@ -23,7 +23,7 @@
 #include <MEQ/Sqr.h>
 #include <MEQ/VellsTmp.h>
 
-namespace MEQ {    
+namespace Meq {    
 
 Sqr::Sqr()
 {}
@@ -37,4 +37,4 @@ Vells Sqr::evaluate (const Request&,
   return sqr(*(values[0]));
 }
 
-} // namespace MEQ
+} // namespace Meq

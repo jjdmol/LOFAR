@@ -22,7 +22,7 @@
 
 #include <MEQ/Add.h>
 
-namespace MEQ {    
+namespace Meq {    
 
 
 Add::Add()
@@ -41,4 +41,4 @@ void Add::evaluateVells (Vells& result, const Request&,
 }
 
 
-} // namespace MEQ
+} // namespace Meq

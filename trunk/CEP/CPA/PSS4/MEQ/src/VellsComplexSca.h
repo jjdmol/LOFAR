@@ -29,7 +29,7 @@
 #include <Common/lofar_complex.h>
 
 
-namespace MEQ {
+namespace Meq {
 
 class VellsComplexSca : public VellsRep
 {
@@ -107,7 +107,7 @@ private:
   complex<double>* itsValuePtr;
 };
 
-} // namespace MEQ
+} // namespace Meq
 
 
 #endif

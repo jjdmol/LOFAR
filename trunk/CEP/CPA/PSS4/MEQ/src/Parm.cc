@@ -23,7 +23,7 @@
 #include <MEQ/Parm.h>
 #include <Common/Debug.h>
 
-namespace MEQ {
+namespace Meq {
 
 unsigned int Parm::theirNparm = 0;
 vector<Parm*>* Parm::theirParms = 0;
@@ -83,4 +83,4 @@ void Parm::clearParmList()
   theirNparm = 0;
 }
 
-} // namespace MEQ
+} // namespace Meq

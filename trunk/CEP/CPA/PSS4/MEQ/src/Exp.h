@@ -25,10 +25,10 @@
     
 #include <MEQ/Function1.h>
 
-#pragma aidgroup MEQ
-#pragma types #MEQ::Exp
+#pragma aidgroup Meq
+#pragma types #Meq::Exp
 
-namespace MEQ {    
+namespace Meq {    
 
 
 class Exp : public Function1
@@ -44,6 +44,6 @@ public:
 };
 
 
-} // namespace MEQ
+} // namespace Meq
 
 #endif

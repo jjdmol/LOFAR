@@ -25,10 +25,10 @@
     
 #include <MEQ/Function2.h>
 
-#pragma aidgroup MEQ
-#pragma types #MEQ::ToComplex
+#pragma aidgroup Meq
+#pragma types #Meq::ToComplex
 
-namespace MEQ {    
+namespace Meq {    
 
 
 class ToComplex : public Function2
@@ -44,6 +44,6 @@ public:
 };
 
 
-} // namespace MEQ
+} // namespace Meq
 
 #endif

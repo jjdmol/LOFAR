@@ -23,7 +23,7 @@
 #include <MEQ/Conj.h>
 #include <MEQ/VellsTmp.h>
 
-namespace MEQ {    
+namespace Meq {    
 
 Conj::Conj()
 {}
@@ -37,4 +37,4 @@ Vells Conj::evaluate (const Request&,
   return conj(*(values[0]));
 }
 
-} // namespace MEQ
+} // namespace Meq

@@ -28,7 +28,7 @@
 #include <Common/Debug.h>
 #include <aips/Mathematics/Constants.h>
 
-namespace MEQ {
+namespace Meq {
 
 VellsRealArr::VellsRealArr (int nx, int ny)
 : VellsRep   (nx, ny),
@@ -115,7 +115,7 @@ double* VellsRealArr::realStorage()
 }
 
 
-#define MEQVELLSREALARR_OP(NAME, OP, OP2) \
+#define MeqVELLSREALARR_OP(NAME, OP, OP2) \
 VellsRep* VellsRealArr::NAME (VellsRealSca& left, bool rightTmp) \
 { \
   VellsRealArr* v = this; \
@@ -166,10 +166,10 @@ VellsRep* VellsRealArr::NAME (VellsComplexArr& left, bool) \
   return &left; \
 }
 
-MEQVELLSREALARR_OP(addRep,+=,+);
-MEQVELLSREALARR_OP(subRep,-=,-);
-MEQVELLSREALARR_OP(mulRep,*=,*);
-MEQVELLSREALARR_OP(divRep,/=,/);
+MeqVELLSREALARR_OP(addRep,+=,+);
+MeqVELLSREALARR_OP(subRep,-=,-);
+MeqVELLSREALARR_OP(mulRep,*=,*);
+MeqVELLSREALARR_OP(divRep,/=,/);
 
 VellsRep* VellsRealArr::posdiffRep (VellsRealSca& left)
 {
@@ -395,4 +395,4 @@ VellsRep* VellsRealArr::sum()
   return new VellsRealSca (sum);
 }
 
-} // namespace MEQ
+} // namespace Meq

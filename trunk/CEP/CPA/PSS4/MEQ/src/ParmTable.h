@@ -33,7 +33,7 @@
 #include <map>
 
 
-namespace MEQ {
+namespace Meq {
 
 //# Forward Declarations
 class Domain;
@@ -75,6 +75,9 @@ public:
   const string& name() const
     { return itsTable.tableName(); }
 
+  // Create a new table.
+  static void createTable (const String& tableName);
+
 private:
   // Find the table subset containing the parameter values for the
   // requested domain.
@@ -91,6 +94,6 @@ private:
 };
 
 
-} // namespace MEQ
+} // namespace Meq
 
 #endif

@@ -22,7 +22,7 @@
 
 #include <MEQ/Multiply.h>
 
-namespace MEQ {    
+namespace Meq {    
 
 
 Multiply::Multiply()
@@ -41,4 +41,4 @@ void Multiply::evaluateVells (Vells& result, const Request&,
 }
 
 
-} // namespace MEQ
+} // namespace Meq

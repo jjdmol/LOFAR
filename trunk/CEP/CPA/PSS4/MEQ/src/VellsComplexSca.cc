@@ -27,7 +27,7 @@
 #include <MEQ/VellsComplexArr.h>
 #include <Common/Debug.h>
 
-namespace MEQ {
+namespace Meq {
 
 VellsComplexSca::~VellsComplexSca()
 {}
@@ -69,7 +69,7 @@ complex<double>* VellsComplexSca::complexStorage()
 }
 
 
-#define MEQVELLSCOMPLEXSCA_OP(NAME, OP, OP2) \
+#define MeqVELLSCOMPLEXSCA_OP(NAME, OP, OP2) \
 VellsRep* VellsComplexSca::NAME (VellsRealSca& left, bool rightTmp) \
 { \
   VellsComplexSca* v = this; \
@@ -100,10 +100,10 @@ VellsRep* VellsComplexSca::NAME (VellsComplexArr& left, bool) \
   return &left; \
 }
 
-MEQVELLSCOMPLEXSCA_OP(addRep,+=,+);
-MEQVELLSCOMPLEXSCA_OP(subRep,-=,-);
-MEQVELLSCOMPLEXSCA_OP(mulRep,*=,*);
-MEQVELLSCOMPLEXSCA_OP(divRep,/=,/);
+MeqVELLSCOMPLEXSCA_OP(addRep,+=,+);
+MeqVELLSCOMPLEXSCA_OP(subRep,-=,-);
+MeqVELLSCOMPLEXSCA_OP(mulRep,*=,*);
+MeqVELLSCOMPLEXSCA_OP(divRep,/=,/);
 
 VellsRep* VellsComplexSca::powRep (VellsRealSca& left, bool rightTmp)
 {
@@ -195,4 +195,4 @@ VellsRep* VellsComplexSca::sum()
   return this;
 }
 
-} // namespace MEQ
+} // namespace Meq

@@ -23,7 +23,7 @@
 #include <MEQ/Exp.h>
 #include <MEQ/VellsTmp.h>
 
-namespace MEQ {    
+namespace Meq {    
 
 Exp::Exp()
 {}
@@ -37,4 +37,4 @@ Vells Exp::evaluate (const Request&,
   return exp(*(values[0]));
 }
 
-} // namespace MEQ
+} // namespace Meq
