@@ -23,6 +23,8 @@ BlockableObject * __construct_MEQMultiply (int n) { return n>0 ? new MEQ::Multip
 BlockableObject * __construct_MEQNode (int n) { return n>0 ? new MEQ::Node [n] : new MEQ::Node; }
 #include "ParmPolcStored.h"
 BlockableObject * __construct_MEQParmPolcStored (int n) { return n>0 ? new MEQ::ParmPolcStored [n] : new MEQ::ParmPolcStored; }
+#include "Pow.h"
+BlockableObject * __construct_MEQPow (int n) { return n>0 ? new MEQ::Pow [n] : new MEQ::Pow; }
 #include "Sin.h"
 BlockableObject * __construct_MEQSin (int n) { return n>0 ? new MEQ::Sin [n] : new MEQ::Sin; }
 #include "Sqr.h"
@@ -78,6 +80,9 @@ BlockableObject * __construct_MEQToComplex (int n) { return n>0 ? new MEQ::ToCom
         AtomicID::registerId(-1426,"MEQParmPolcStored")+
         TypeInfoReg::addToRegistry(-1426,TypeInfo(TypeInfo::DYNAMIC,0))+
         DynamicTypeManager::addToRegistry(-1426,__construct_MEQParmPolcStored)+
+        AtomicID::registerId(-1449,"MEQPow")+
+        TypeInfoReg::addToRegistry(-1449,TypeInfo(TypeInfo::DYNAMIC,0))+
+        DynamicTypeManager::addToRegistry(-1449,__construct_MEQPow)+
         AtomicID::registerId(-1433,"Cells")+
         AtomicID::registerId(-1441,"ReqId")+
         AtomicID::registerId(-1435,"CalcDeriv")+
