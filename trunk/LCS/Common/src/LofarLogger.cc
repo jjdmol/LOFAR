@@ -72,9 +72,12 @@ void lofarLoggerInitNode(void) {
 
 	// construct loggerId and register it.
 	snprintf(loggerId, MAXLEN-1, "%s@%s", basename(applName), hostName);
+#ifdef HAVE_LOG4CPLUS
 	log4cplus::getNDC().push(loggerId);
+#endif // HAVE_LOG4CPLUS
 }
 
+#ifdef HAVE_LOG4CPLUS
 using namespace log4cplus;
 
 //# ------------------------ implement the five trace levels ------------------------
@@ -124,6 +127,7 @@ LogLevel string2TraceLevel (const tstring& lname) {
 	return NOT_SET_LOG_LEVEL;			// not found
 }
 
+
 // initTracemodule
 //
 // Function that is used when the TRACE levels are NOT compiled out. It registers
@@ -151,5 +155,6 @@ void initTraceModule (void) {
 
 }
 LOFAR::LoggerReference	theirTraceLoggerRef("TRC");		// create the tracelogger
+#endif // HAVE_LOG4CPLUS
 
 }	// namespace LOFAR
