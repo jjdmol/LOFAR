@@ -107,7 +107,7 @@ UVPMainWindow::UVPMainWindow()
   resizeEvent(0);
   itsCanvas->drawView();
 
-    // End update itsCube
+  setFocusPolicy(QWidget::StrongFocus);
 }
 
 
@@ -135,6 +135,37 @@ void UVPMainWindow::resizeEvent(QResizeEvent */*event*/)
   itsCanvas->setGeometry(0, 0, itsNumberOfChannels, itsNumberOfTimeslots);
 }
 
+
+
+
+
+
+//==================>>>  UVPMainWindow::keyPressEvent  <<<==================
+
+void UVPMainWindow::keyPressEvent(QKeyEvent* event)
+{
+  switch(event->key()) {
+  case Key_Up:
+    {
+      itsScrollView->scrollBy(0,-40);
+      event->accept();
+    }
+  break;
+
+  case Key_Down:
+    {
+      itsScrollView->scrollBy(0,40);
+      event->accept();
+    }
+  break;
+
+  default:
+    {
+      event->ignore();
+    }
+    break;
+  }
+}
 
 
 

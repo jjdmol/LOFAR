@@ -88,7 +88,8 @@ class UVPMainWindow:public QMainWindow
 
   UVPDataSet      itsDataSet;
 
-  virtual void resizeEvent(QResizeEvent *event);
+  virtual void resizeEvent  (QResizeEvent* event);
+  virtual void keyPressEvent(QKeyEvent*    event);
 
   protected slots:
     
