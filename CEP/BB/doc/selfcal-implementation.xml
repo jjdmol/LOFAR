@@ -6,18 +6,21 @@
 <!-- $Id$ -->
 <!-- look at bottom for revision Log. -->
 <article lang="en">
- <artheader>
-  <title>the implementation details of the Blackboard
-  architecture in the selfcal imaging application in LOFAR</title>
-  <author>
-   <firstname>Daan</firstname>
-   <surname>Hoogland</surname>
-  </author>
-  <author>
-   <firstname>Kjeld</firstname>
-   <surname>Schaaf</surname>
-   <othername role='conjectives'>van der</othername>
-  </author>
+ <articleinfo>
+  <title>the implementation details of selfcal</title>
+  <subtitle>the implementation details of the Blackboard
+  architecture in the selfcal imaging application in LOFAR</subtitle>
+  <authorgroup>
+   <author>
+    <firstname>Daan</firstname>
+    <surname>Hoogland</surname>
+   </author>
+   <author>
+    <firstname>Kjeld</firstname>
+    <surname>Schaaf</surname>
+    <othername role='conjectives'>van der</othername>
+   </author>
+  </authorgroup>
   <releaseinfo>
    <para>
     $Id$
@@ -35,7 +38,7 @@
 
    </para>
   </abstract>
- </artheader>
+ </articleinfo>
 
  <section>
 
@@ -86,7 +89,7 @@
     </listitem>
 
     <listitem>
-     <title>user-scripts</title>
+
      <para>
 
       the strategy
@@ -339,6 +342,9 @@
 </article>
 <!--
 $Log$
+Revision 1.2  2003/06/19 15:24:56  daan
+conclusions
+
 Revision 1.1  2003/06/18 17:26:47  daan
 start makeing conclusions, man\!
 
