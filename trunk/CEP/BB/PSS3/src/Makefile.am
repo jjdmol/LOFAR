@@ -1,44 +1,39 @@
-bin_PROGRAMS	= BlackBoardDemo
+bin_PROGRAMS    = BlackBoardDemo
 
-DOCHDRS 	=				\
-DH_Solution.h					\
-DH_WorkOrder.h					\
-WH_Evaluate.h					\
-WH_PSS3.h					\
-WH_Connection.h   				\
-BlackBoardDemo.h				\
-Quality.h					\
-Strategy.h					\
-StrategyImpl.h					\
-SI_Peeling.h					\
-SI_Simple.h					\
-SI_WaterCal.h					\
-MeqCalibraterImpl.h				\
-CalibratorOld.h					
+DOCHDRS         =                                \
+DH_Solution.h                                   \
+DH_WorkOrder.h                                  \
+WH_Evaluate.h                                   \
+WH_PSS3.h                                       \
+WH_Connection.h                                 \
+BlackBoardDemo.h                                \
+Quality.h                                       \
+Strategy.h                                      \
+StrategyImpl.h                                  \
+SI_Peeling.h                                    \
+SI_Simple.h                                     \
+SI_WaterCal.h                                   \
+MeqCalibraterImpl.h                             \
+CalibratorOld.h                                 
 
-BlackBoardDemo_SOURCES  	= $(DOCHDRS)		\
-Simulate.cc						\
-DH_Solution.cc						\
-DH_WorkOrder.cc						\
-WH_Evaluate.cc						\
-WH_PSS3.cc						\
-WH_Connection.cc					\
-BlackBoardDemo.cc					\
-Quality.cc						\
-Strategy.cc						\
-StrategyImpl.cc						\
-SI_Peeling.cc						\
-SI_Simple.cc						\
-SI_WaterCal.cc		   			        \
-MeqCalibraterImpl.cc					\
-CalibratorOld.cc					\
-Calibrator.cc					\
-TryOut.cc						\
-origCal.cc \
-SI_WaterCal.cc \
-SI_Randomized.cc \
-SI_Simple.cc
+BlackBoardDemo_SOURCES          = $(DOCHDRS)                \
+Simulate.cc                                             \
+DH_Solution.cc                                          \
+DH_WorkOrder.cc                                         \
+WH_Evaluate.cc                                          \
+WH_PSS3.cc                                              \
+WH_Connection.cc                                        \
+BlackBoardDemo.cc                                       \
+Quality.cc                                              \
+Strategy.cc                                             \
+StrategyImpl.cc                                         \
+SI_Peeling.cc                                           \
+SI_Simple.cc                                            \
+SI_WaterCal.cc                                             \
+MeqCalibraterImpl.cc                                    \
+CalibratorOld.cc                                                
 
 BlackBoardDemo_DEPENDENCIES = $(LOFAR_DEPEND)
 
 include $(lofar_sharedir)/Makefile.common
+
