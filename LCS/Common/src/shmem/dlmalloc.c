@@ -1,4 +1,7 @@
 /*
+  This is an adaptation of Doug Lea's malloc to be used for shared memory.
+
+
   This is a version (aka dlmalloc) of malloc/free/realloc written by
   Doug Lea and released to the public domain.  Use, modify, and
   redistribute this code without permission or acknowledgement in any
@@ -2368,7 +2371,7 @@ struct malloc_state {
   INTERNAL_SIZE_T  max_total_mem;
 };
 
-typedef struct malloc_state *mstate;
+typedef struct malloc_state *mstate_shm;
 
 /* 
    There is exactly one instance of this struct in this malloc.
@@ -2401,9 +2404,9 @@ static struct malloc_state av_;  /* never directly referenced */
 */
 
 #if __STD_C
-static void malloc_init_state(mstate av)
+static void malloc_init_state(mstate_shm av)
 #else
-static void malloc_init_state(av) mstate av;
+static void malloc_init_state(av) mstate_shm av;
 #endif
 {
   int     i;
@@ -2435,9 +2438,9 @@ static void malloc_init_state(av) mstate av;
 */
 
 #if __STD_C
-static Void_t*  sYSMALLOc(INTERNAL_SIZE_T, mstate);
-static int      sYSTRIm(size_t, mstate);
-static void     malloc_consolidate(mstate);
+static Void_t*  sYSMALLOc(INTERNAL_SIZE_T, mstate_shm);
+static int      sYSTRIm(size_t, mstate_shm);
+static void     malloc_consolidate(mstate_shm);
 static Void_t** iALLOc(size_t, size_t*, int, Void_t**);
 #else
 static Void_t*  sYSMALLOc();
@@ -2483,7 +2486,7 @@ static void do_check_chunk(mchunkptr p)
 static void do_check_chunk(p) mchunkptr p;
 #endif
 {
-  mstate av = get_malloc_state();
+  mstate_shm av = get_malloc_state();
   unsigned long sz = chunksize(p);
   /* min and max possible addresses assuming contiguous allocation */
   char* max_address = (char*)(av->top) + chunksize(av->top);
@@ -2533,7 +2536,7 @@ static void do_check_free_chunk(mchunkptr p)
 static void do_check_free_chunk(p) mchunkptr p;
 #endif
 {
-  mstate av = get_malloc_state();
+  mstate_shm av = get_malloc_state();
 
   INTERNAL_SIZE_T sz = p->size & ~PREV_INUSE;
   mchunkptr next = chunk_at_offset(p, sz);
@@ -2573,7 +2576,7 @@ static void do_check_inuse_chunk(mchunkptr p)
 static void do_check_inuse_chunk(p) mchunkptr p;
 #endif
 {
-  mstate av = get_malloc_state();
+  mstate_shm av = get_malloc_state();
   mchunkptr next;
   do_check_chunk(p);
 
@@ -2668,7 +2671,7 @@ static void do_check_malloced_chunk(p, s) mchunkptr p; INTERNAL_SIZE_T s;
 
 static void do_check_malloc_state()
 {
-  mstate av = get_malloc_state();
+  mstate_shm av = get_malloc_state();
   int i;
   mchunkptr p;
   mchunkptr q;
@@ -2790,9 +2793,9 @@ static void do_check_malloc_state()
 */
 
 #if __STD_C
-static Void_t* sYSMALLOc(INTERNAL_SIZE_T nb, mstate av)
+static Void_t* sYSMALLOc(INTERNAL_SIZE_T nb, mstate_shm av)
 #else
-static Void_t* sYSMALLOc(nb, av) INTERNAL_SIZE_T nb; mstate av;
+static Void_t* sYSMALLOc(nb, av) INTERNAL_SIZE_T nb; mstate_shm av;
 #endif
 {
   mchunkptr       old_top;        /* incoming value of av->top */
@@ -3175,9 +3178,9 @@ static Void_t* sYSMALLOc(nb, av) INTERNAL_SIZE_T nb; mstate av;
 */
 
 #if __STD_C
-static int sYSTRIm(size_t pad, mstate av)
+static int sYSTRIm(size_t pad, mstate_shm av)
 #else
-static int sYSTRIm(pad, av) size_t pad; mstate av;
+static int sYSTRIm(pad, av) size_t pad; mstate_shm av;
 #endif
 {
   long  top_size;        /* Amount of top-most memory */
@@ -3241,7 +3244,7 @@ Void_t* mALLOc(size_t bytes)
   Void_t* mALLOc(bytes) size_t bytes;
 #endif
 {
-  mstate av = get_malloc_state();
+  mstate_shm av = get_malloc_state();
 
   INTERNAL_SIZE_T nb;               /* normalized request size */
   unsigned int    idx;              /* associated bin index */
@@ -3640,7 +3643,7 @@ void fREe(Void_t* mem)
 void fREe(mem) Void_t* mem;
 #endif
 {
-  mstate av = get_malloc_state();
+  mstate_shm av = get_malloc_state();
 
   mchunkptr       p;           /* chunk corresponding to mem */
   INTERNAL_SIZE_T size;        /* its size */
@@ -3802,9 +3805,9 @@ void fREe(mem) Void_t* mem;
 */
 
 #if __STD_C
-static void malloc_consolidate(mstate av)
+static void malloc_consolidate(mstate_shm av)
 #else
-static void malloc_consolidate(av) mstate av;
+static void malloc_consolidate(av) mstate_shm av;
 #endif
 {
   mfastbinptr*    fb;                 /* current fastbin being consolidated */
@@ -3910,7 +3913,7 @@ Void_t* rEALLOc(Void_t* oldmem, size_t bytes)
 Void_t* rEALLOc(oldmem, bytes) Void_t* oldmem; size_t bytes;
 #endif
 {
-  mstate av = get_malloc_state();
+  mstate_shm av = get_malloc_state();
 
   INTERNAL_SIZE_T  nb;              /* padded request size */
 
@@ -4364,7 +4367,7 @@ static Void_t** iALLOc(size_t n_elements,
 static Void_t** iALLOc(n_elements, sizes, opts, chunks) size_t n_elements; size_t* sizes; int opts; Void_t* chunks[];
 #endif
 {
-  mstate av = get_malloc_state();
+  mstate_shm av = get_malloc_state();
   INTERNAL_SIZE_T element_size;   /* chunksize of each element, if all same */
   INTERNAL_SIZE_T contents_size;  /* total size of elements */
   INTERNAL_SIZE_T array_size;     /* request size of pointer array */
@@ -4486,7 +4489,7 @@ Void_t* vALLOc(bytes) size_t bytes;
 #endif
 {
   /* Ensure initialization/consolidation */
-  mstate av = get_malloc_state();
+  mstate_shm av = get_malloc_state();
   if (have_fastchunks(av)) malloc_consolidate(av);
   return mEMALIGn(av->pagesize, bytes);
 }
@@ -4502,7 +4505,7 @@ Void_t* pVALLOc(size_t bytes)
 Void_t* pVALLOc(bytes) size_t bytes;
 #endif
 {
-  mstate av = get_malloc_state();
+  mstate_shm av = get_malloc_state();
   size_t pagesz;
 
   /* Ensure initialization/consolidation */
@@ -4522,7 +4525,7 @@ int mTRIm(size_t pad)
 int mTRIm(pad) size_t pad;
 #endif
 {
-  mstate av = get_malloc_state();
+  mstate_shm av = get_malloc_state();
   /* Ensure initialization/consolidation */
   malloc_consolidate(av);
 
@@ -4561,7 +4564,7 @@ size_t mUSABLe(mem) Void_t* mem;
 
 struct mallinfo mALLINFo()
 {
-  mstate av = get_malloc_state();
+  mstate_shm av = get_malloc_state();
   struct mallinfo mi;
   int i;
   mbinptr b;
@@ -4669,7 +4672,7 @@ int mALLOPt(int param_number, int value)
 int mALLOPt(param_number, value) int param_number; int value;
 #endif
 {
-  mstate av = get_malloc_state();
+  mstate_shm av = get_malloc_state();
   /* Ensure initialization/consolidation */
   malloc_consolidate(av);
 
