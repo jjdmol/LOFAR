@@ -82,7 +82,7 @@ class UVPDataAtom
     \param data  is the visibility that is to be set.
    */
   void            setData(unsigned int          channel,
-                          const ComplexType& data);
+                          const ComplexType&    data);
   
   //! Assigns a complete vector of visibilities to itsData
   /*! setData overwrites itsData with the contents of data.
@@ -117,7 +117,7 @@ class UVPDataAtom
   //! \returns the number of channels.
   unsigned int    getNumberOfChannels() const;
 
-  //! \returns a pointer to a specific visibilty.
+  //! \returns a pointer to a specific visibility.
   /*!
       \param channel is a zero based channel index. 
    */

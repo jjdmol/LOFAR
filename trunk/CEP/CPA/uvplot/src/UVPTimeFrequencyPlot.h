@@ -73,7 +73,7 @@ class UVPTimeFrequencyPlot: public UVPDisplayArea
   void slot_addSpectrum(const UVPSpectrum& spectrum);
   
   
-  //! Add a UVPDataATom to itsComplexSpectrum.
+  //! Add a UVPDataAtom to itsComplexSpectrum.
   /*! \param atom points to an object that MUST exist during the
       entire lifetime of itsComplexSpectrumVector. That is, at least
       until the next setChannels() call.The transferfunction of
