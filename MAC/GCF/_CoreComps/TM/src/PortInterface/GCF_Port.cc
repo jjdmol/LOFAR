@@ -196,6 +196,15 @@ int GCFPort::close()
  */
 ssize_t GCFPort::send(const GCFEvent& e, void* buf, size_t count)
 {
+  if (F_RAW_SIG != e.signal)
+  {
+    LOFAR_LOG_TRACE(TM_STDOUT_LOGGER, (
+      "Sending event '%s' for task %s on port %s",
+      getTask()->evtstr(e),
+      getTask()->getName().c_str(), 
+      getName().c_str()));
+  }
+
   if (SPP == _type)
   {
     if (F_EVT_INOUT(e) & F_IN)
@@ -243,6 +252,15 @@ ssize_t GCFPort::send(const GCFEvent& e, void* buf, size_t count)
  */
 ssize_t GCFPort::sendv(const GCFEvent& e, const iovec buffers[], int n)
 {
+  if (F_RAW_SIG != e.signal)
+  {
+    LOFAR_LOG_TRACE(TM_STDOUT_LOGGER, (
+      "Sending event '%s' for task %s on port %s",
+      getTask()->evtstr(e),
+      getTask()->getName().c_str(), 
+      getName().c_str()));
+  }
+
   if (SPP == getType())
   {
     if (F_EVT_INOUT(e) & F_IN)

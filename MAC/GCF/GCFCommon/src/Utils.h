@@ -24,6 +24,8 @@ class Utils
                                          char* buffer, 
                                          unsigned int maxBufferSize);
     static void unpackPropertyList(char* pListData, list<string>& propertyList);
+    
+    static bool isValidPropName(const char* propName);    
 };
 
 #endif // UTILS_H

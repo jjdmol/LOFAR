@@ -87,10 +87,17 @@ GCFEvent::TResult GCFRawPort::dispatch(GCFEvent& event)
   switch (event.signal)
   {
     case F_CONNECTED_SIG:
+      LOFAR_LOG_INFO(TM_STDOUT_LOGGER, (
+          "port '%s' of task %s is connected!",
+          _name.c_str(), _pTask->getName().c_str()));    
       _isConnected = true;
       break;
     case F_DISCONNECTED_SIG: 
     case F_CLOSED_SIG:
+      LOFAR_LOG_INFO(TM_STDOUT_LOGGER, (
+          "port '%s' of task %s is %s!",
+          _name.c_str(), _pTask->getName().c_str(),
+          (event.signal == F_CLOSED_SIG ? "closed" : "disconnected")));    
       _isConnected = false;
       break;
     case F_TIMER_SIG:

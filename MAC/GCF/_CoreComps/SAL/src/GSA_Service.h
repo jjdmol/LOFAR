@@ -50,7 +50,6 @@ class GSAService
   public:
     GSAService ();
     virtual ~GSAService ();
-    static bool validatePropName(const char* propName);
 
   protected:
     virtual TSAResult createProp (const string& propName, 

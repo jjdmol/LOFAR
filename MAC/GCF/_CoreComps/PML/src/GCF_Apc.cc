@@ -23,7 +23,7 @@
 #include <GCF/GCF_Apc.h>
 #include <GPM_Controller.h>
 #include <GCF/GCF_Answer.h>
-#include <GSA_Service.h>
+#include <Utils.h>
 
 GCFApc::~GCFApc ()
 {
@@ -49,7 +49,7 @@ TGCFResult GCFApc::load (bool loadDefaults)
   }
   else if (_name.length() == 0 || 
            _scope.length() == 0 || 
-           !GSAService::validatePropName(_scope.c_str()))
+           !Utils::isValidPropName(_scope.c_str()))
   {
     LOFAR_LOG_INFO(PML_STDOUT_LOGGER, ( 
         "APC name or scope not set or scope \"%s\"meets not the naming convention.",
@@ -90,7 +90,7 @@ TGCFResult GCFApc::unload ()
   }
   else if (_name.length() == 0 || 
            _scope.length() == 0 || 
-           !GSAService::validatePropName(_scope.c_str()))
+           !Utils::isValidPropName(_scope.c_str()))
   {
     LOFAR_LOG_INFO(PML_STDOUT_LOGGER, ( 
         "APC name or scope not set or scope (%s) meets not the naming convention.",
@@ -131,7 +131,7 @@ TGCFResult GCFApc::reload ()
   }
   else if (_name.length() == 0 || 
            _scope.length() == 0 || 
-           !GSAService::validatePropName(_scope.c_str()))
+           !Utils::isValidPropName(_scope.c_str()))
   {
     LOFAR_LOG_INFO(PML_STDOUT_LOGGER, ( 
         "APC name or scope not set or scope (%s) meets not the naming convention.",

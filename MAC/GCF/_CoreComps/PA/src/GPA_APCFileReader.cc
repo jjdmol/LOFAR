@@ -22,7 +22,7 @@
 
 #include <GPA_APCFileReader.h>
 #include <CmdLine.h>
-#include <GSA_Service.h>
+#include <Utils.h>
 
 #include <GCF/GCF_Task.h>
 #include <GCF/GCF_PValue.h>
@@ -290,7 +290,7 @@ TPAResult GPAAPCFileReader::makePropList(DOMNode* pN, string path)
         {
           property.pValue = pV;
           property.defaultSet = macDefaultSet;
-          if (GSAService::validatePropName(property.name.c_str()))
+          if (Utils::isValidPropName(property.name.c_str()))
           {
             LOFAR_LOG_TRACE(PA_STDOUT_LOGGER, ( 
                 "Property %s found in APC",

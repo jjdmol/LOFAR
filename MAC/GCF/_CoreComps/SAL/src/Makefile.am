@@ -1,6 +1,6 @@
-include_HEADERS = 
+pkginclude_HEADERS = 
 
-DOCHDRS	=	$(include_HEADERS) \
+DOCHDRS	=	$(pkginclude_HEADERS) \
 	GSA_SCADAHandler.h \
 	GSA_PvssApi.h \
 	GSA_Resources.h \

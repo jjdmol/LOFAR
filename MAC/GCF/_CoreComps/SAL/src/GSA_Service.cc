@@ -982,30 +982,3 @@ void GSAService::convDpConfigToProp(const string& pvssDPEConfigName, string& pro
   }
   propName.assign(pvssDPEConfigName, startPosToCopy, nrOfCharsToCopy); 
 }
-
-bool GSAService::validatePropName(const char* propName)
-{
-  bool result(true);
-  assert(propName);
-  char doubleSep[] = {GCF_PROP_NAME_SEP, GCF_PROP_NAME_SEP, 0};
-  if (propName[0] == GCF_PROP_NAME_SEP || propName[strlen(propName) - 1] == GCF_PROP_NAME_SEP )
-  {
-    result = false;
-  }
-  else if (strstr(propName, doubleSep) != 0)
-  {
-    result = false;
-  }
-  else
-  {
-    for(unsigned short i = 0; i < strlen(propName); i++)
-    {
-      if (!isalnum(propName[i]) && propName[i] != GCF_PROP_NAME_SEP)
-      {
-        result = false;
-        break;
-      }
-    }
-  }
-  return result;
-}

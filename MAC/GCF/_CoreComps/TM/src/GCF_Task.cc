@@ -109,7 +109,7 @@ void GCFTask::run()
 {
   signal(SIGINT,  GCFTask::signalHandler);
   signal(SIGTERM, GCFTask::signalHandler);
-  
+  signal(SIGPIPE, SIG_IGN);
 
   while (!_doExit)
   {

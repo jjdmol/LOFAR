@@ -23,7 +23,7 @@
 #include <GCF/GCF_PropertySetBase.h>
 #include <GCF/GCF_PropertySet.h>
 #include <GCF/GCF_PropertyBase.h>
-#include <GSA_Service.h>
+#include <Utils.h>
 #include <GPM_Defines.h>
 
 GCFPropertySetBase::GCFPropertySetBase (string scope, 
@@ -32,7 +32,7 @@ GCFPropertySetBase::GCFPropertySetBase (string scope,
   _scope(scope),
   _dummyProperty("", this)
 {
-  if (!GSAService::validatePropName(scope.c_str()))
+  if (!Utils::isValidPropName(scope.c_str()))
   {
     LOFAR_LOG_WARN(PML_STDOUT_LOGGER, ( 
         "Scope %s meets not the name convention! Set to \"\"",
