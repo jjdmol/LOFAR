@@ -34,7 +34,7 @@ using namespace casa;
 namespace LOFAR {
 
 MeqMatrixRealArr::MeqMatrixRealArr (int nx, int ny)
-: MeqMatrixRep (nx, ny, sizeof(double))
+: MeqMatrixRep (nx, ny)
 {
   itsValue = new double[nelements()];
 }
@@ -132,7 +132,7 @@ MeqMatrixRep* MeqMatrixRealArr::NAME (MeqMatrixRealSca& left, \
 MeqMatrixRep* MeqMatrixRealArr::NAME (MeqMatrixComplexSca& left, \
 				      bool) \
 { \
-  MeqMatrixComplexArr* v = MeqMatrixComplexArr::poolNew (nx(), ny()); \
+  MeqMatrixComplexArr* v = MeqMatrixComplexArr::allocate (nx(), ny()); \
   dcomplex* value = v->itsValue; \
   double* value2 = itsValue; \
   dcomplex lvalue = left.itsValue; \
@@ -214,7 +214,7 @@ MeqMatrixRep* MeqMatrixRealArr::posdiffRep (MeqMatrixRealArr& left)
 
 MeqMatrixRep* MeqMatrixRealArr::tocomplexRep (MeqMatrixRealSca& left)
 {
-  MeqMatrixComplexArr* v = MeqMatrixComplexArr::poolNew (nx(), ny());
+  MeqMatrixComplexArr* v = MeqMatrixComplexArr::allocate (nx(), ny());
   dcomplex* value = v->itsValue;
   double* rvalue = itsValue;
   double  lvalue = left.itsValue;
@@ -227,7 +227,7 @@ MeqMatrixRep* MeqMatrixRealArr::tocomplexRep (MeqMatrixRealSca& left)
 MeqMatrixRep* MeqMatrixRealArr::tocomplexRep (MeqMatrixRealArr& left)
 {
   ASSERT (nelements() == left.nelements());
-  MeqMatrixComplexArr* v = MeqMatrixComplexArr::poolNew (nx(), ny());
+  MeqMatrixComplexArr* v = MeqMatrixComplexArr::allocate (nx(), ny());
   dcomplex* value = v->itsValue;
   double* rvalue = itsValue;
   double* lvalue = left.itsValue;

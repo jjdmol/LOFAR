@@ -60,10 +60,9 @@ public:
 
   virtual void show (ostream& os) const;
 
+  static MeqMatrixComplexArr* allocate(int nx, int ny);
+  virtual void deallocate();
   static void poolActivate(int nelements);
-  static MeqMatrixComplexArr* poolNew(int nx, int ny);
-  virtual void poolDelete();
-  static void poolClear();
   static void poolDeactivate();
 
   virtual MeqMatrixRep* add      (MeqMatrixRep& right, bool rightTmp);

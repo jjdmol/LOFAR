@@ -109,9 +109,6 @@ public:
   int nelements() const
     { return itsRep->nelements(); }
 
-  int elemLength() const
-    { return itsRep->elemLength(); }
-
   void show (ostream& os) const
     { itsRep->show (os); }
 

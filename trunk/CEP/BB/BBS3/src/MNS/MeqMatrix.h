@@ -123,9 +123,6 @@ public:
   int nelements() const
     { return itsRep->nelements(); }
 
-  int elemLength() const
-    { return itsRep->elemLength(); }
-
   bool isNull() const
     { return (itsRep == 0); }
 

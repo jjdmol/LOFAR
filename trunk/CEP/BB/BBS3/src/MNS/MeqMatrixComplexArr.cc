@@ -31,39 +31,39 @@
 
 namespace LOFAR {
 
+// Allocation will be done from the pool containing matrices of theirNElements
+// or less elements.
 std::deque<MeqMatrixComplexArr*> MeqMatrixComplexArr::theirPool;
-
-// allocation will be done from the pool for matrices of theirNElements
-// or smaller matrices
 int MeqMatrixComplexArr::theirNElements = 0;
 
-// to ensure 8-byte alignment of the data round the size
-// of the header up to the nearest multiple of 8 bytes
+// To ensure 8-byte alignment of the data, round the size
+// of the header up to the nearest multiple of 8 bytes.
+// Add 8 extra bytes to make alignement on 16 bytes possible (for SSE).
 size_t MeqMatrixComplexArr::theirHeaderSize =
     ((sizeof(MeqMatrixComplexArr) >> 3) << 3)
-  + ((sizeof(MeqMatrixComplexArr) & 0x7)? 8 : 0);
+  + ((sizeof(MeqMatrixComplexArr) & 0x7)? 8 : 0)
+  + 8;
 
 MeqMatrixComplexArr::MeqMatrixComplexArr (int nx, int ny)
-: MeqMatrixRep (nx, ny, sizeof(dcomplex))
+: MeqMatrixRep (nx, ny)
 {
   // data is found after the header
-  itsValue = (dcomplex*)(((char*)this) + theirHeaderSize);
+  // malloc ensures it is aligned on 8 byte, but we want it on 16 byte.
+  double* ptr1 = (double*)(((char*)this) + theirHeaderSize);
+  if ((ptrdiff_t)(ptr1) & 0x000F) ptr1++;
+  itsValue = (dcomplex*)(ptr1);
 }
 
 MeqMatrixComplexArr::~MeqMatrixComplexArr()
 {
-  //delete [] itsValue;
+  //delete [] itsValue;   // free is done by deallocate
 }
 
 MeqMatrixRep* MeqMatrixComplexArr::clone() const
 {
   PERFPROFILE_L(__PRETTY_FUNCTION__, PP_LEVEL_1);
-
-  MeqMatrixComplexArr* v;
-  
-  v = MeqMatrixComplexArr::poolNew (nx(), ny());
+  MeqMatrixComplexArr* v = MeqMatrixComplexArr::allocate (nx(), ny());
   memcpy (v->itsValue, itsValue, sizeof(dcomplex) * nelements());
-
   return v;
 }
 
@@ -87,83 +87,78 @@ void MeqMatrixComplexArr::show (ostream& os) const
   os << ']';
 }
 
-void MeqMatrixComplexArr::poolActivate(int nelements)
-{
-  theirNElements = nelements;
-}
-
-MeqMatrixComplexArr* MeqMatrixComplexArr::poolNew(int nx, int ny)
+MeqMatrixComplexArr* MeqMatrixComplexArr::allocate (int nx, int ny)
 {
   MeqMatrixComplexArr* newArr = 0;
-
-  if (nx * ny <= theirNElements)
-  {
-    if (theirPool.empty())
-    {
-      // allocate memory for the header and the maximum amount of data (theirNElements)
-      // only nx * ny elements will be used, but the array can be reused for an array
-      // of size theirNElements
+  if (nx * ny <= theirNElements) {
+    if (theirPool.empty()) {
+      // Allocate memory for the header and the maximum amount of data
+      // (theirNElements). Only nx * ny elements will be used, but the
+      // array can be reused for an array of size up to theirNElements.
       newArr = (MeqMatrixComplexArr*)malloc(theirHeaderSize +
 					    (theirNElements * sizeof(dcomplex)));
-
       // placement new to call constructor
       newArr = new (newArr) MeqMatrixComplexArr(nx, ny);
       newArr->setInPool(true);
       newArr->setIsMalloced(true);
-    }
-    else
-    {
+    } else {
+      // Get an array from the pool.
       newArr = theirPool.back();
       newArr = new (newArr) MeqMatrixComplexArr(nx, ny);
+      ///      newArr->setNXY (nx, ny);
       newArr->setInPool(true);
       newArr->setIsMalloced(true);
-
       theirPool.pop_back();
+      MeqMatrixRep::nreused++;
     }
-  }
-  else
-  {
-    // allocate enough memory
+  } else {
+    // Array is larger than arrays in pool.
+    // So allocate it separately.
+    // Still use malloc to get enough memory for alignment.
     newArr = (MeqMatrixComplexArr*)malloc(theirHeaderSize +
 					  (nx * ny * sizeof(dcomplex)));
     // placement new
     newArr = new (newArr) MeqMatrixComplexArr(nx, ny);
-
     // set inPool to false so this matrix will be delete'd.
     newArr->setInPool(false);
     newArr->setIsMalloced(true);
   }
-
   return newArr;
 }
 
-void MeqMatrixComplexArr::poolDelete()
+void MeqMatrixComplexArr::deallocate()
 {
-  ASSERT(inPool() || isMalloced());
-  if (inPool())
-  {
+  ASSERT(isMalloced());
+  if (inPool()) {
     theirPool.push_front(this);
-  }
-  else // isMalloced
-  {
+  } else {
+    MeqMatrixRep::ndeleted++;
     free(this);
+  }
+}
+
+void MeqMatrixComplexArr::poolActivate(int nelements)
+{
+  if (nelements != theirNElements) {
+    poolDeactivate();
+    theirNElements = nelements;
   }
 }
 
 void MeqMatrixComplexArr::poolDeactivate()
 {
-  // free all objects remaining in the pool and clear the pool
+  // Free all objects remaining in the pool and clear the pool.
   deque<MeqMatrixComplexArr*>::iterator pos;
-  for (pos = theirPool.begin(); pos < theirPool.end(); ++pos)
-  {
+  for (pos = theirPool.begin(); pos < theirPool.end(); ++pos) {
     free(*pos);
+    MeqMatrixRep::ndeleted++;
   }
   theirPool.clear();
-
-  // setting theirNElements to zero will result in no pool usage;
-  // poolNew will simply 'new' memory, poolDelete will 'delete' it.
+  // Setting theirNElements to zero will result in no pool usage;
+  // allocate will simply 'new' memory, deallocate will 'delete' it.
   theirNElements = 0;
 }
+
 
 MeqMatrixRep* MeqMatrixComplexArr::add (MeqMatrixRep& right, bool rightTmp)
 {

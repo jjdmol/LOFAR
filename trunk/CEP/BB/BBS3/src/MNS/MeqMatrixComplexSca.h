@@ -44,7 +44,7 @@ friend class MeqMatrixComplexArr;
 
 public:
   MeqMatrixComplexSca (dcomplex value)
-    : MeqMatrixRep(1, 1, sizeof(dcomplex)), itsValue (value) {}
+    : MeqMatrixRep(1,1), itsValue (value) {}
 
   virtual ~MeqMatrixComplexSca();
 

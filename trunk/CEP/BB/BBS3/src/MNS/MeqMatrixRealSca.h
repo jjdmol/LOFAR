@@ -43,7 +43,7 @@ friend class MeqMatrixComplexArr;
 
 public:
   MeqMatrixRealSca (double value)
-    : MeqMatrixRep(1, 1, sizeof(double)), itsValue (value) {}
+    : MeqMatrixRep(1,1), itsValue (value) {}
 
   virtual ~MeqMatrixRealSca();
 
