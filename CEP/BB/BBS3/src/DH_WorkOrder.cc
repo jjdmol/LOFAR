@@ -30,7 +30,7 @@
 #include <Common/KeyValueMap.h>
 #include <Common/BlobOStream.h>
 #include <Common/BlobIStream.h>
-#include <Common/Debug.h>
+#include <Common/LofarLogger.h>
 #include <sstream>
 #include <unistd.h> 
 
@@ -54,6 +54,7 @@ DH_WorkOrder::DH_WorkOrder (const string& name)
     itsNumberOfParam   (0),
     itsPODHWO          (0)
 {
+  LOG_TRACE_FLOW("DH_WorkOrder constructor");
   setExtraBlob("Extra", 1);
 }
 
@@ -67,12 +68,13 @@ DH_WorkOrder::DH_WorkOrder(const DH_WorkOrder& that)
     itsNumberOfParam   (0),
     itsPODHWO          (0)
 {
- setExtraBlob("Extra", 1);
+  LOG_TRACE_FLOW("DH_WorkOrder copy constructor");
+  setExtraBlob("Extra", 1);
 }
 
 DH_WorkOrder::~DH_WorkOrder()
 {
-  TRACER4("DH_WorkOrder destructor");
+  LOG_TRACE_FLOW("DH_WorkOrder destructor");
   delete itsPODHWO;
 }
 
@@ -146,7 +148,7 @@ void DH_WorkOrder::postprocess()
 
 void DH_WorkOrder::setKSType(const string& ksType)
 {
-  AssertStr(ksType.size() < MaxKSTypeLength, "KS type name is too long");
+  ASSERTSTR(ksType.size() < MaxKSTypeLength, "KS type name is too long");
   char* ptr;
   ptr = itsKSType;
   strcpy(ptr, ksType.c_str());

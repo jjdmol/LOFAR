@@ -23,7 +23,7 @@
 #include <lofar_config.h>
 
 #include <BBS3/Strategy.h>
-#include <Common/Debug.h>
+#include <Common/LofarLogger.h>
 #include <BBS3/SI_Peeling.h>
 #include <BBS3/SI_Simple.h>
 #include <BBS3/SI_WaterCal.h>
@@ -35,28 +35,28 @@ namespace LOFAR
 Strategy::Strategy(int strategyNo, MeqCalibrater* cal, 
 		   const KeyValueMap& args)
 {
-  AssertStr(cal!=0, "Calibrator pointer is 0");
+  ASSERTSTR(cal!=0, "Calibrator pointer is 0");
   switch (strategyNo) 
   {
   case 1:                                        // Simple
-    TRACER3("Creating simple strategyImpl");
+    LOG_TRACE_RTTI("Creating simple strategyImpl");
     itsImpl = new SI_Simple(cal, args);
     break;    
   case 2:                                        // Peeling
-    TRACER3("Creating peeling strategyImpl");
+    LOG_TRACE_RTTI("Creating peeling strategyImpl");
     itsImpl = new SI_Peeling(cal, args);
     break;
   case 3:                                        // WaterCal
-    TRACER3("Creating WaterCal strategyImpl");
+    LOG_TRACE_RTTI("Creating WaterCal strategyImpl");
     itsImpl = new SI_WaterCal(cal, args);
     break;
   case 4:                                        // Randomized
-    TRACER3("Creating Randomized strategyImpl");
+    LOG_TRACE_RTTI("Creating Randomized strategyImpl");
     itsImpl = new SI_Randomized(cal, args);
     break;
   default:
     itsImpl = 0;
-    Throw("Unknown strategy number in Strategy construction");
+    THROW(LOFAR::Exception, "Unknown strategy number in Strategy construction");
   }
 
 }
@@ -82,7 +82,7 @@ bool Strategy::execute(vector<string>& parmNames,
   }
   else
   {
-    TRACER2("No strategy implementation; cannot execute.");
+    LOG_WARN("No strategy implementation; cannot execute.");
     return false;
   }
 }

@@ -36,7 +36,9 @@ MMap::MMap(const string& fileName, protection prot)
     itsNrBytes   (0),
     itsPageStart (0),
     itsPtr       (0),
-    itsProtection(prot)
+    itsProtection(prot),
+    itsLockAddr  (0),
+    itsLockBytes (0)
 {
   // Open file
   int pr;
@@ -125,6 +127,30 @@ void MMap::unmapFile()
     itsPageStart = 0;
     itsPtr = 0;
     itsNrBytes = 0;
+    unlockMappedMemory();
+  }
+}
+
+void MMap::lockMappedMemory(void* addr, size_t nrBytes)
+{
+  ASSERTSTR(itsPtr > 0, "No area has been mapped. ");
+  char* req = reinterpret_cast<char*>(addr);
+  char* mpd = reinterpret_cast<char*>(itsPageStart);
+  ASSERTSTR((req >= mpd) && (req+nrBytes <= mpd+itsNrBytes), 
+	    "Indicated range to lock does not correspond to the currently mapped area");
+  int res;
+  res = mlock(addr, nrBytes);
+  ASSERTSTR(res != 0, "mlock failed: " << strerror(errno) ); 
+}
+
+void MMap::unlockMappedMemory()
+{
+  if (itsLockAddr != 0)
+  {
+    int res = munlock(itsLockAddr, itsLockBytes);
+    ASSERTSTR (res == 0, "munlock failed: " << strerror(errno));
+    itsLockAddr = 0;
+    itsLockBytes = 0;
   }
 }
 

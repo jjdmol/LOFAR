@@ -26,7 +26,7 @@
 
 #include <tinyCEP/SimulatorParseClass.h>
 #include <Common/lofar_iostream.h>
-#include <Common/Debug.h>
+#include <Common/LofarLogger.h>
 #include <BBS3/BlackBoardDemo.h>
 
 #ifdef HAVE_MPI
@@ -53,9 +53,6 @@ int main (int argc, const char** argv)
     INIT_LOGGER("BlackboardDemo.log_prop");
 
     BlackBoardDemo simulator;
-
-    // Set trace level.
-    Debug::initLevels (argc, argv);
 
     simulator.setarg (argc, argv);
 

@@ -29,7 +29,6 @@
 
 #include <BBS3/WH_PSS3.h>
 #include <CEPFrame/Step.h>
-#include <Common/Debug.h>
 #include <Common/Timer.h>
 #include <Common/KeyValueMap.h>
 #include <BBS3/DH_WorkOrder.h>
@@ -56,7 +55,7 @@ WH_PSS3::WH_PSS3 (const string& name, string nr, int id ,
     itsIden           (id),
     itsArgs           (args)
 {
-  TRACER4("WH_PSS3 construction");
+  LOG_TRACE_FLOW("WH_PSS3 construction");
   getDataManager().addInDataHolder(0, new DH_WorkOrder(name+"_in"));
   getDataManager().addInDataHolder(1, new DH_Solution("in_1"));
   getDataManager().addOutDataHolder(0, new DH_WorkOrder(name+"_out"));
@@ -70,7 +69,7 @@ WH_PSS3::WH_PSS3 (const string& name, string nr, int id ,
 
 WH_PSS3::~WH_PSS3()
 {
-  TRACER4("WH_PSS3 destructor");
+  LOG_TRACE_FLOW("WH_PSS3 destructor");
   if (itsCal != 0)    
   {                  
     delete itsCal;   
@@ -85,19 +84,19 @@ WH_PSS3* WH_PSS3::make (const string& name)
 
 void WH_PSS3::preprocess()
 {
-  TRACER4("WH_PSS3 preprocess()");
+  LOG_TRACE_RTTI("WH_PSS3 preprocess()");
 }
 
 void WH_PSS3::process()
 {
   NSTimer totTimer;
   totTimer.start();
-  TRACER4("WH_PSS3 process()");
+  LOG_TRACE_RTTI("WH_PSS3 process()");
   // Query the database for a work order
   DH_WorkOrder* wo =  dynamic_cast<DH_WorkOrder*>(getDataManager().getInHolder(0));
-  AssertStr(wo !=  0, "Dataholder is not a work order");
+  ASSERTSTR(wo !=  0, "Dataholder is not a work order");
   DH_PL* woPtr = dynamic_cast<DH_PL*>(wo);
-  AssertStr(woPtr != 0, "Input work order cannot be cast to a DH_PL");
+  ASSERTSTR(woPtr != 0, "Input work order cannot be cast to a DH_PL");
  
   // Wait for workorder
   bool firstTime = true;
@@ -141,15 +140,15 @@ void WH_PSS3::process()
 			     antennas, itsModelType, calcUVW);
   
   // Create a strategy object
-  TRACER1("Strategy number: " << wo->getStrategyNo());
+  LOG_TRACE_OBJ_STR("Strategy number: " << wo->getStrategyNo());
   Strategy strat(wo->getStrategyNo(), itsCal, stratArgs);
   
   // Get solution dataholder DH_Solution* sol;
   DH_Solution* sol = dynamic_cast<DH_Solution*>(getDataManager().getInHolder(1));
-  AssertStr(sol != 0, "Dataholder can not be cast to a DH_Solution");
+  ASSERTSTR(sol != 0, "Dataholder can not be cast to a DH_Solution");
   sol->clearData();
   DH_PL* solPtr = dynamic_cast<DH_PL*>(sol);
-  AssertStr(solPtr != 0, "Input solution cannot be cast to a DH_PL");      
+  ASSERTSTR(solPtr != 0, "Input solution cannot be cast to a DH_PL");      
   
   int noStartSols = wo->getNoStartSolutions();
   if (noStartSols > 0)
@@ -175,7 +174,7 @@ void WH_PSS3::process()
 	       << getName() << ". Waiting..." << endl;
 	}
       }  
-      AssertStr(solPtr->queryDB(q.str())==1,
+      ASSERTSTR(solPtr->queryDB(q.str())==1,
 		"Multiple solutions with ID " << solNumbers[i] << " found in database.");
       vector<string> startNames;
       vector<double> startValues; 
@@ -198,7 +197,7 @@ void WH_PSS3::process()
   // Show parameter names
   for (unsigned int i = 0; i < pNames.size(); i++)
   {  
-    TRACER1("Parameter name " << i << " :" << pNames[i]);
+    LOG_TRACE_OBJ_STR("Parameter name " << i << " :" << pNames[i]);
   }
   
   // Execute the strategy until finished with all iterations, intervals 
@@ -207,7 +206,7 @@ void WH_PSS3::process()
   exTimer.start();
   while (strat.execute(pNames, resPNames, resPValues, resQuality, iterNo))
   {
-    TRACER1("Executed strategy");
+    LOG_TRACE_RTTI("Executed strategy");
     if (outputAllIter)   // Write every found solution in DH_Solution
     {    
       sol->setSolution(resPNames, resPValues);
@@ -255,7 +254,7 @@ void WH_PSS3::addToStartVectors(const vector<string>& names,
 				vector<string>& allNames,
 				vector<double>& allValues) const
 {
-  Assert(names.size() == values.size());
+  ASSERT(names.size() == values.size());
   unsigned int noParms = allNames.size();
   for (unsigned int i=0; i<names.size(); i++)
   {

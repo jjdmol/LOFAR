@@ -23,7 +23,7 @@
 #include <lofar_config.h>
 
 #include <BBS3/SI_Randomized.h>
-#include <Common/Debug.h>
+#include <Common/LofarLogger.h>
 #include <Common/KeyValueMap.h>
 #include <BBS3/MeqCalibraterImpl.h>
 #include <unistd.h>
@@ -45,10 +45,10 @@ SI_Randomized::SI_Randomized(MeqCalibrater* cal, const KeyValueMap& args)
   itsEndChan = args.getInt("endChan", 0);
   itsAnt = (const_cast<KeyValueMap&>(args))["antennas"].getVecInt();
 
-  TRACER1("Creating Randomized strategy implementation with " 
-	  << "number of iterations = " << itsNIter << ", "
-	  << "source number = " << itsSourceNo << ", "
-	  << " time interval = " << itsTimeInterval);
+  LOG_INFO_STR("Creating Randomized strategy implementation with " 
+		     << "number of iterations = " << itsNIter << ", "
+		     << "source number = " << itsSourceNo << ", "
+		     << " time interval = " << itsTimeInterval);
 
 }
 
@@ -61,7 +61,7 @@ bool SI_Randomized::execute(vector<string>& parmNames,
 			 Quality& resultQuality,
 			 int& resultIterNo)
 {
-  AssertStr(itsCal != 0, 
+  ASSERTSTR(itsCal != 0, 
 	    "Calibrator pointer not set for this random strategy");
 
   if (itsFirstCall)
@@ -87,22 +87,22 @@ bool SI_Randomized::execute(vector<string>& parmNames,
       if (*iter != itsSourceNo)
       { 
 	sources.push_back(*iter);
-	TRACER1("SI_Randomized::execute : Adding an extra peel source " << *iter);
+	LOG_TRACE_RTTI_STR("SI_Randomized::execute : Adding an extra peel source " << *iter);
       }
     }
     itsCal->peel(sources, emptyS);    
   
     itsCal->resetIterator();
     itsCal->nextInterval();
-    TRACER1("Next interval");
+    LOG_TRACE_RTTI("Next interval");
    
     itsFirstCall = false;
   }
 
-  TRACER1("Next iteration: " << itsCurIter+1);
+  LOG_TRACE_RTTI_STR("Next iteration: " << itsCurIter+1);
   if (++itsCurIter >= itsNIter)          // Next iteration
   {                                      // Finished with all iterations
-    TRACER1("Next interval");
+    LOG_TRACE_RTTI("Next interval");
     if (itsCal->nextInterval() == false) // Next time interval
     {                                    // Finished with all time intervals
       itsCurIter = -1;
@@ -114,8 +114,8 @@ bool SI_Randomized::execute(vector<string>& parmNames,
   }
 
   // The actual solve
-  TRACER1("Solve for source = " << itsSourceNo  
-	  << " iteration = " << itsCurIter << " of " << itsNIter);
+  LOG_TRACE_RTTI_STR("Solve for source = " << itsSourceNo  
+		     << " iteration = " << itsCurIter << " of " << itsNIter);
 
   itsCal->solve(false, resultParmNames, resultParmValues, resultQuality);
   //  itsCal->SubtractOptimizedSources();
@@ -128,7 +128,7 @@ bool SI_Randomized::useParms (const vector<string>& parmNames,
 			    const vector<double>& parmValues, 
 			    const vector<int>& srcNumbers)
 {
-  AssertStr(itsCal != 0, 
+  ASSERTSTR(itsCal != 0, 
 	    "Calibrator pointer not set for this random strategy");
 
   itsCal->select(itsAnt, itsAnt, itsStartChan, itsEndChan);
@@ -152,7 +152,7 @@ bool SI_Randomized::useParms (const vector<string>& parmNames,
   for (unsigned int i=0; i < srcNumbers.size(); i++)      
   { 
     itsExtraPeelSrcs.push_back(srcNumbers[i]);
-    TRACER1("SI_Randomized::useParms : Using a start solution for source " 
+    LOG_TRACE_RTTI_STR("SI_Randomized::useParms : Using a start solution for source " 
 	    << srcNumbers[i]);
   }
   return true;

@@ -23,7 +23,7 @@
 #include <lofar_config.h>
 
 #include <BBS3/StrategyImpl.h>
-#include <Common/Debug.h>
+#include <Common/LofarLogger.h>
 
 namespace LOFAR
 {
@@ -38,7 +38,7 @@ bool StrategyImpl::useParms(const vector<string>&,
 			    const vector<double>&,
 			    const vector<int>&)
 {
-  TRACER1("This strategy does not support the useParms() method");
+  LOG_WARN("This strategy does not support the useParms() method");
   return false;
 }
 

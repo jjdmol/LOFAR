@@ -29,7 +29,7 @@
 #include <PL/TPersistentObject.h>
 #include <Common/BlobOStream.h>
 #include <Common/BlobIStream.h>
-#include <Common/Debug.h>
+#include <Common/LofarLogger.h>
 #include <sstream>
 
 namespace LOFAR
@@ -202,7 +202,7 @@ bool DH_Solution::getSolution(vector<string>& names, vector<double>& values)
 
 void DH_Solution::setSolution(vector<string>& names, vector<double>& values)
 {
-  AssertStr(names.size() == values.size(), 
+  ASSERTSTR(names.size() == values.size(), 
 	    "The number of parameter names and values are not equal.");
   BlobOStream& bos = createExtraBlob();
   // Put parameter names into extra blob
@@ -244,7 +244,7 @@ void DH_Solution::dump()
 //   getParamNames(pNames);
 //   vector<double> pValues;
 //   getParamValues(pValues);
-//   DbgAssertStr(pNames.size() == pValues.size(), 
+//   DBGASSERTSTR(pNames.size() == pValues.size(), 
 // 	            "The number of parameters and their values do not match ");
 //   cout <<  "PARAMETERS" << endl;
 
@@ -261,7 +261,7 @@ void DH_Solution::dump()
   vector<string> pNames;
   vector<double> pValues;
   getSolution(pNames, pValues);
-  DbgAssertStr(pNames.size() == pValues.size(), 
+  DBGASSERTSTR(pNames.size() == pValues.size(), 
 	            "The number of parameters and their values do not match ");
 
   char strVal [20];

@@ -54,6 +54,13 @@ class MMap
   // Unmap the last area
   void unmapFile();
 
+  // Guarantee this memory range is resident in RAM (disable paging). The memory range
+  // must be part of a mapped area.
+  void lockMappedMemory(void* addr, size_t nrBytes);
+
+  // Reenable paging 
+  void unlockMappedMemory();
+
   // Get pointer to start of mapped region
   void* getStart();
 
@@ -72,6 +79,9 @@ class MMap
   void*  itsPageStart;      // Pointer to the start of the mapped page(s)
   void*  itsPtr;            // Pointer to the start of requested map area
   protection itsProtection; // Read/write protection of mapped area
+
+  void*  itsLockAddr;       // Start address for memory lock
+  size_t itsLockBytes;      // Number of memory locked bytes
 };
 
 inline void* MMap::getStart()

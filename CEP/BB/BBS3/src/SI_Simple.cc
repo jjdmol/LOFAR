@@ -23,7 +23,7 @@
 #include <lofar_config.h>
 
 #include <BBS3/SI_Simple.h>
-#include <Common/Debug.h>
+#include <Common/LofarLogger.h>
 #include <Common/KeyValueMap.h>
 #include <BBS3/MeqCalibraterImpl.h>
 
@@ -46,16 +46,16 @@ SI_Simple::SI_Simple(MeqCalibrater* cal, const KeyValueMap& args)
   itsUseSVD = args.getBool("useSVD", false);
   itsSaveAllIter = args.getBool("saveAllIter", false);
 
-  TRACER1("Creating Simple strategy implementation with " 
-	  << "number of iterations = " << itsNIter << ", "
-	  << "number of sources = " << itsNSources << ", "
-	  << "time interval = " << itsTimeInterval << ", "
-	  << "start channel = " << itsStartChan << ", "
-	  << "end channel = " << itsEndChan << ", "
-	  << "number of antennas = " << itsAnt.size() << ", "
-	  << "use SVD = " << itsUseSVD << ", "
-	  << "save parms at all iterations = " << itsSaveAllIter);
-
+  LOG_INFO_STR("Creating Simple strategy implementation with " 
+	       << "number of iterations = " << itsNIter << ", "
+	       << "number of sources = " << itsNSources << ", "
+	       << "time interval = " << itsTimeInterval << ", "
+	       << "start channel = " << itsStartChan << ", "
+	       << "end channel = " << itsEndChan << ", "
+	       << "number of antennas = " << itsAnt.size() << ", "
+	       << "use SVD = " << itsUseSVD << ", "
+	       << "save parms at all iterations = " << itsSaveAllIter);
+  
 }
 
 SI_Simple::~SI_Simple()
@@ -67,7 +67,7 @@ bool SI_Simple::execute(vector<string>& parmNames,
 			 Quality& resultQuality,
 			 int& resultIterNo)
 {
-  AssertStr(itsCal != 0, 
+  ASSERTSTR(itsCal != 0, 
 	    "Calibrator pointer not set for this peeling strategy");
 
   if (itsFirstCall)
@@ -85,18 +85,18 @@ bool SI_Simple::execute(vector<string>& parmNames,
     itsCal->showSettings();
     itsCal->resetIterator();
     itsCal->nextInterval();
-    TRACER1("Next interval");
+    LOG_TRACE_RTTI("Next interval");
 
     itsCal->showParmValues();
     itsFirstCall = false;
   }
 
-  TRACER1("Next iteration: " << itsCurIter+1);
+  LOG_TRACE_RTTI_STR("Next iteration: " << itsCurIter+1);
   if (++itsCurIter >= itsNIter)          // Next iteration
   {                                      // Finished with all iterations
     itsCal->saveParms(); // Write to parmTable
 
-    TRACER1("Next interval");
+    LOG_TRACE_RTTI("Next interval");
     if (itsCal->nextInterval() == false) // Next time interval
     {                                    // Finished with all time intervals
       itsCurIter = -1;
@@ -112,8 +112,8 @@ bool SI_Simple::execute(vector<string>& parmNames,
   }
 
   // The actual solve
-  TRACER1("Solve for " << itsNSources <<" sources, " 
-       << " iteration = " << itsCurIter << " of " << itsNIter);
+  LOG_TRACE_RTTI_STR("Solve for " << itsNSources <<" sources, " 
+		     << " iteration = " << itsCurIter << " of " << itsNIter);
  
   itsCal->solve(itsUseSVD, resultParmNames, resultParmValues, resultQuality);
 
