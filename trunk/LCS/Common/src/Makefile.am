@@ -78,4 +78,12 @@ libcommon_la_LIBADD	= shmem/libshmem.la
 bin_PROGRAMS		= LimitExec
 LimitExec_SOURCES	= LimitExec.c
 
+#
+# only compile LofarLogger if log4cplus is configured
+#
+if HAVE_LOG4CPLUS
+INSTHDRS += LofarLogger.h
+libcommon_la_SOURCES += LofarLogger.cc
+endif
+
 include $(lofar_sharedir)/Makefile.common
