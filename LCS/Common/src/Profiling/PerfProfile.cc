@@ -22,60 +22,65 @@
 
 #include <Common/Profiling/PerfProfile.h>
 
+namespace LOFAR 
+{
+
 #if defined(HAVE_MPICH) && defined(HAVE_MPI_PROFILER)
 #include <mpi.h>
 
-const char* const PerfProfile::m_colors[] = {
-  "blue",
-  "red",
-  "green",
-  "purple",
-  "yellow",
-  "orange",
-  "brown",
-  "grey",
-  "pink",
-};
+  const char* const PerfProfile::m_colors[] = {
+    "blue",
+    "red",
+    "green",
+    "purple",
+    "yellow",
+    "orange",
+    "brown",
+    "grey",
+    "pink",
+  };
 
-int           PerfProfile::m_nr_colors  = sizeof(PerfProfile::m_colors) / sizeof(char*);
-int           PerfProfile::iInitialized = 0;
-int           PerfProfile::iStop        = 0;
-unsigned char PerfProfile::debugMask    = 0;
+  int           PerfProfile::m_nr_colors  = sizeof(PerfProfile::m_colors) / sizeof(char*);
+  int           PerfProfile::iInitialized = 0;
+  int           PerfProfile::iStop        = 0;
+  unsigned char PerfProfile::debugMask    = 0;
 
 #endif
 
-void PerfProfile::init(int* argc, char*** argv, unsigned char theDebugMask)
-{
-#if defined(HAVE_MPICH) && defined(HAVE_MPI_PROFILER)
-  // check if MPI already initialized
-  (void)MPI_Initialized(&iInitialized);
-
-  if (!iInitialized)
+  void PerfProfile::init(int* argc, char*** argv, unsigned char theDebugMask)
   {
-    MPI_Init(argc, argv);
-  }
+#if defined(HAVE_MPICH) && defined(HAVE_MPI_PROFILER)
+    // check if MPI already initialized
+    (void)MPI_Initialized(&iInitialized);
 
-  int iStart = MPE_Log_get_event_number();
-  iStop  = MPE_Log_get_event_number();
-  MPE_Describe_state(iStart, iStop, "Total runtime", "red");
-  MPE_Start_log();
-  MPE_Log_event(iStart, 0, "start");
+    if (!iInitialized)
+    {
+      MPI_Init(argc, argv);
+    }
 
-  debugMask = theDebugMask;
+    int iStart = MPE_Log_get_event_number();
+    iStop  = MPE_Log_get_event_number();
+    MPE_Describe_state(iStart, iStop, "Total runtime", "red");
+    MPE_Start_log();
+    MPE_Log_event(iStart, 0, "start");
+
+    debugMask = theDebugMask;
 
 #else
-  // keep the compiler happy :-)
-  argc=argc; argv=argv;
+    // keep the compiler happy :-)
+    argc=argc; argv=argv;
 #endif
-}
-
-void PerfProfile::finalize()
-{
-#if defined(HAVE_MPICH) && defined(HAVE_MPI_PROFILER)
-  MPE_Log_event(iStop, 0, "stop");
-  if (!iInitialized)
-  {
-    MPI_Finalize();
   }
+
+  void PerfProfile::finalize()
+  {
+#if defined(HAVE_MPICH) && defined(HAVE_MPI_PROFILER)
+    MPE_Log_event(iStop, 0, "stop");
+    if (!iInitialized)
+    {
+      MPI_Finalize();
+    }
 #endif
-}
+  }
+
+} // namespace LOFAR
