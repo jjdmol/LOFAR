@@ -12,15 +12,6 @@ using namespace std;
 using namespace LOFAR::PL;
 using namespace LOFAR;
 
-string getUserName()
-{
-  passwd* aPwd;
-  if ((aPwd = getpwuid(getuid())) == 0)
-    return "";
-  else
-    return aPwd->pw_name;
-}
-
 int main()
 {
   try {
@@ -39,7 +30,7 @@ int main()
     TPersistentObject<A> tpoa2;
 
     // Connect to the database
-    broker.connect(getUserName(),"postgres");
+    broker.connect("test","postgres");
 
     DBConnection::GetDefaultConnection().SetAutoCommit(true);
 
