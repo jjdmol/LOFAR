@@ -30,7 +30,7 @@
 DBTYPE="mysql"
 HOST="lofar6"
 BBHOST="dop50"
-USER=test
+USER=$USER
 
 while [ 1 = 1 ]
 do
