@@ -1,12 +1,9 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,224 138 941 694 N "_3DFace" 8
+PANEL,281 138 941 694 N "_3DFace" 5
 "$configDatapoint"
-"$controlAttributes"
-"$controlNames"
 "$datapoint"
-"$elementNames"
 "$selectedElementDpType"
 "$selectedView"
 "$viewName"
@@ -23,7 +20,7 @@ LANG:1 6 Layer1
 2 0
 "Text3"
 ""
-1 10 170 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 10 50 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 1 0 0 0 0 0
 EE E
@@ -32,8 +29,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 12 172 198 188
-0 2 0 "s" 0 0 0 64 0 0  12 172
+E E 0 1 1 0 1 E U  0 E 12 52 198 68
+0 2 0 "s" 0 0 0 64 0 0  12 52
  1
 1
 LANG:1 105 -microsoft windows-Arial-bold-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,700,0,0,0,0,3,2,1,34,Arial
@@ -43,7 +40,7 @@ LANG:1 29 Selected panel file for type:
 2 1
 "txt_dpTypeName"
 ""
-1 200 170 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 200 50 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 2 0 0 0 0 0
 EE E
@@ -54,10 +51,17 @@ LANG:1 0
 "dashclr"N "_Transparent"
 "main()
 {
-setValue(\"\", \"text\", dpTypeName($datapoint));
+	if (dpExists($datapoint))
+	{
+	  setValue(\"\", \"text\", dpTypeName($datapoint));
+	}
+	else
+	{
+    setValue(\"\", \"text\", \"datapoint type not found\");
+  }
 }" 0
- E 0 1 1 0 1 E U  0 E 202 172 332 188
-0 2 0 "s" 0 0 0 64 0 0  202 172
+ E 0 1 1 0 1 E U  0 E 202 52 332 68
+0 2 0 "s" 0 0 0 64 0 0  202 52
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
@@ -67,7 +71,7 @@ LANG:1 0
 2 2
 "txt_Dedicated_panel"
 ""
-1 82 252 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 82 132 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 3 0 0 0 0 0
 EE E
@@ -76,8 +80,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 84 254 186 268
-0 2 0 "s" 0 0 0 64 0 0  84 254
+E E 0 1 1 0 1 E U  0 E 84 134 186 148
+0 2 0 "s" 0 0 0 64 0 0  84 134
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
@@ -87,7 +91,7 @@ LANG:1 15 dedicated panel
 6 3
 "Border5"
 ""
-1 10 264 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 10 144 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 4 0 0 0 0 0
 EE E
@@ -96,11 +100,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 10 250 691 274
+E E 0 1 1 0 1 E U  0 E 10 130 691 154
 2 4
 "Text4"
 ""
-1 10 231 E E E 1 E 1 E N {255,255,255} E N {51,102,255} E E
+1 10 111 E E E 1 E 1 E N {255,255,255} E N {51,102,255} E E
  E E
 5 0 0 0 0 0
 EE E
@@ -109,8 +113,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 12 233 71 248
-0 2 0 "s" 0 0 0 65 0 0  12 233
+E E 0 1 1 0 1 E U  1 E 12 113 71 128
+0 2 0 "s" 0 0 0 65 0 0  12 113
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
@@ -120,7 +124,7 @@ LANG:1 5 Panel
 4 5
 "Line13"
 ""
-1 10 249 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 10 129 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 6 0 0 0 0 0
 EE E
@@ -129,11 +133,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E  10 250 10 231
+E E 0 1 1 0 1 E  10 130 10 111
 4 6
 "Line14"
 ""
-1 72 247 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 72 127 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 7 0 0 0 0 0
 EE E
@@ -142,11 +146,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E  72 250 72 230
+E E 0 1 1 0 1 E  72 130 72 110
 4 7
 "Line15"
 ""
-1 10 231 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 10 111 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 8 0 0 0 0 0
 EE E
@@ -155,13 +159,13 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E  72 231 10 231
-1 13 0 "" 57
+E E 0 1 1 0 1 E  72 111 10 111
+1 14 1 "" 57
 0
 14 8
 "txt_fileName"
 ""
-1 200 250 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 200 130 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 9 0 0 0 0 0
 EE E
@@ -172,22 +176,26 @@ LANG:1 0
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
-198 248 692 275
+198 128 692 155
 3 "s" 0 0 0 0 0 0 
 E
 "// Valid
 main()
 {
-  string subViewName;
-//	if (dpExists(\"System1:__nav_subview_Panel_\" + subViewName + \".filename\"))
-//	{
+  if (dpExists($configDatapoint))
+  {
+    setValue(\"\", \"enabled\", TRUE);
+    string subViewName;
     getSubviewName(subViewName);
     dpConnect(\"EP_textFieldInCB\", \"System1:__nav_subview_Panel_\" + subViewName + \".filename:_online.._value\");
-/*  }
-  else
+
+	}
+	else
   {
     setValue(\"\", \"enabled\", FALSE);
-  }*/
+    setValue(\"\", \"text\", \"Configuration data not available\");  
+  }
+
 }
 
 
@@ -201,7 +209,7 @@ E
 13 9
 "Button1"
 ""
-1 13 252 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+1 13 132 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
  E E
 10 0 0 0 0 0
 EE E
@@ -212,7 +220,7 @@ LANG:1 0
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-11,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
-11 250 73 274
+11 130 73 154
 T 
 1
 LANG:1 4 Load
@@ -224,7 +232,6 @@ LANG:1 4 Load
 
 
   pad = getPath(PANELS_REL_PATH)+\"navigator/views/\";
-//  DebugN(\"pad: \"+ pad);
   fileSelector(fileName, pad , TRUE, \"*.pnl\");
 
  	if (fileName!=\"\")
@@ -234,36 +241,23 @@ LANG:1 4 Load
     dpSet(\"System1:__nav_subview_Panel_\" + subViewName + \".filename\", SplitfileName[dynlen(SplitfileName)]);
   }
 }" 0
- E E E
-1 10 0 "" 54
-0
-1 11 0 "" 55
-0
-1 12 0 "" 56
-0
-14 14
-"TextField1"
-""
-1 200 110 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
- E E
-11 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-0
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-198 108 642 135
-3 "s" 0 0 0 0 0 0 
-E
-"main()
+ E E "main()
 {
- setValue(\"\", \"text\", $configDatapoint);
+  if (dpExists($configDatapoint))
+  {
+    setValue(\"\", \"enabled\", TRUE);
+	}
+	else
+  {
+    setValue(\"\", \"enabled\", FALSE);
+  }
+
 }" 0
 
-E
+1 15 1 "" 54
+0
+1 16 1 "" 55
+0
 0
 LAYER, 1 
 1
@@ -293,13 +287,10 @@ LAYER, 7
 1
 LANG:1 6 Layer8
 0
-3 0 ""
-"objects\\Nav\\navigator_config_tab.pnl" 150 152 T 11 1 0 1  -131 -108  
-7
+3 1 ""
+"navigator\\navigator_config_tab.pnl" 120 250 T 11 1 0 1  -101 -206  
+4
 "$configDatapoint""$configDatapoint"
-"$controlAttributes""$controlAttributes"
-"$controlNames""$controlNames"
-"$elementNames""$elementNames"
 "$selectedElementDpType""$selectedElementDpType"
 "$selectedView""$selectedView"
 "$viewName""$viewName"

@@ -64,7 +64,7 @@ void getColumnTitle(string dpName, string &ColumnTitle)
 }
 
 
-=======
+
 //////////////////////////////////////////////////////////////////////////////////
 //
 // FunctionName: setColumnConfig
@@ -128,7 +128,7 @@ void getColumnTitle(string dpName, string &ColumnTitle)
 }
 
 
->>>>>>> 1.3
+
 /////////////////////////////////////////////////////////////////////
 // Funtion: dpGetElementName for trend
 //
@@ -503,7 +503,7 @@ void getSubviewName(string &subViewName)
   }
 //	subViewName = "System1:__nav_subview_Trend_" + text;
     subViewName = text;
-  	DebugN("subViewName inside: "+ subViewName);
+//  	DebugN("subViewName inside: "+ subViewName);
 //	DebugN("s$configDatapoint: "+ $configDatapoint);
 }
 
