@@ -1,5 +1,5 @@
-include 'octopussy.g'
 pragma include once
+include 'octopussy.g'
 
 default_octopussy := F;
 
@@ -20,33 +20,6 @@ const start_octopussy := function(server,options="",suspend=F)
     default_octopussy.start();
   }
   return ref default_octopussy;
-}
-
-# defines a set of standard debug methods inside an object
-const define_debug_methods := function (ref self,ref public,initverbose=1)
-{
-  self.verbose := initverbose;
-  # prints debug message if level is <= current verbosity level
-  const public.dprint := function (level,...)
-  {
-    wider self;
-    if( level <= self.verbose )
-     print spaste('[== ',self.appid,' ==] ',...);
-  }
-  # private version for convenience
-  const self.dprint := function (level,...)
-  {
-    wider public;
-    public.dprint(level,...);
-  }
-  # sets the verbosity level for the dprint methods
-  const public.setverbose := function (level)
-  {
-    wider self;
-    self.verbose := level;
-    return level;
-  }
-  return T;
 }
 
 const define_app_proxy := function (ref self,ref public,
@@ -92,6 +65,11 @@ const define_app_proxy := function (ref self,ref public,
     if( is_boolean(verb) )
       self.verbose_events := verb;
     return self.verbose_events;
+  }
+  const public.setdebug := function(context,level)
+  {
+    wider self;
+    return self.octo.setdebug(context,level);
   }
   # Creates an event name by prefixing it with "appname_"
   const public.eventname := function (...)

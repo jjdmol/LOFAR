@@ -1,5 +1,5 @@
-include 'app_proxy.g'
 pragma include once
+include 'app_proxy.g'
 
 solver := function (appid='Solver',
     server='./applauncher',options="-d0 -meq:M:M:Solver",

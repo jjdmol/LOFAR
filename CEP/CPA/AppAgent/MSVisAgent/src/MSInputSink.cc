@@ -116,7 +116,7 @@ void MSInputSink::fillHeader (DataRecord &hdr,const DataRecord &select)
 void MSInputSink::openMS (DataRecord &header,const DataRecord &select)
 {
   // open MS
-  ms_ = MeasurementSet(msname_,Table::Old);
+  ms_ = MeasurementSet(msname_,TableLock(TableLock::AutoNoReadLocking),Table::Old);
   dprintf(1)("opened MS %s, %d rows\n",msname_.c_str(),ms_.nrow());
   
   dprintf(3)("selection record is %s\n",select.sdebug(4).c_str());
@@ -134,7 +134,7 @@ void MSInputSink::openMS (DataRecord &header,const DataRecord &select)
   num_ifrs_ = ifrNumber(num_antennas_-1,num_antennas_-1) + 1;
   
   // We only handle the given field & data desc id
-  TableExprNode expr = ( ms_.col("FIELD_ID")==fieldid && ms_.col("DATA_DESC_ID") == ddid );
+  TableExprNode expr = ( ms_.col("FIELD_ID") == fieldid && ms_.col("DATA_DESC_ID") == ddid );
   selms_ = ms_(expr);
   
   vdsid_ = VDSID(obsid_++,0,0);
