@@ -3,7 +3,7 @@
 
 #define FSIZE 1
 #define NSTATIONS 100
-#define TSIZE 1
+#define TSIZE 1000
 #define NBEAMLETS 1
 #define BFBW 128
 #define NVis (BFBW/FSIZE)

@@ -87,8 +87,8 @@ private:
   ///     be frequency channels or time samples.
   ///     M is defined to be 1000
 
-  static const int itsNelements = 100;  // number of stations/inputs
-  static const int itsNitems    = 1000; // number of frequency channels * number of time samples
+  static const int itsNelements = NSTATIONS;  // number of stations/inputs
+  static const int itsNitems    = TSIZE;      // number of frequency channels * number of time samples
 
 };
 

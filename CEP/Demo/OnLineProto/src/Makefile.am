@@ -12,7 +12,8 @@ WH_Correlate.h					\
 WH_Dump.h					\
 Correlator_test.h				\
 MAC.h						\
-Station.h					
+Station.h					\
+GnuPlotInterface.h
 
 
 OnLineProto_SOURCES  	= $(DOCHDRS)		\
@@ -27,7 +28,8 @@ WH_Transpose.cc					\
 WH_Correlate.cc					\
 WH_Dump.cc					\
 MAC.cc						\
-Station.cc					
+Station.cc					\
+GnuPlotInterface.cc
 
 OnLineProto_DEPENDENCIES = $(LOFAR_DEPEND)
 

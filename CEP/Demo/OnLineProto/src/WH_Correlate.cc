@@ -91,7 +91,7 @@ void WH_Correlate::process()
   blitz::Array<complex<float>, 2> corr (itsNelements, itsNelements);
 
   // Enter data either by assignment or by memcpy. The first should be faster. 
-  //  signal = *InDHptr->getBuffer();
+  //signal = *InDHptr->getBuffer();
   memcpy(signal.data(), InDHptr->getBuffer(), itsNelements*itsNitems*sizeof(DH_CorrCube::BufferType));
 
   corr = complex<float> (0,0);
