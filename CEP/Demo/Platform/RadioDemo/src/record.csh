@@ -5,7 +5,7 @@
 # script to start cleaning the wavedir
 #
 # place where the samples and programs can be found.
-setenv LOFARWORKDIR $HOME/ICT_KENNIS_DEMO/RadioCapture
+setenv LOFARWORKDIR $HOME/RadioDemo
 setenv WAVEDIR $LOFARWORKDIR/WAVE
 setenv MACHINE1 lofar2 
 
