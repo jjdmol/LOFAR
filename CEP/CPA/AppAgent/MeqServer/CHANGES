@@ -1,8 +1,22 @@
+  * added flag_mask state field to all Function nodes. Use, e.g.:
+      initrec.flag_mask := mask
+    where mask is a single common mask applied to all flags (-1 to pass
+    all flags, 0 to pass no flags), or a vector of numChildren masks, 
+    one per child.
+    
+  * C++: prohibited Vells from automatic copy-on-write, as that can
+    confuse their containers. 
+    
   * C++: changed Result and VellSet interfaces for consistency:
     Result::vellSet(), vellSetWr(); VellSet::getValue(), getValueWr()
 
   * C++: changed signature of Function::evaluate() to take a vector of
     const Vells *. Must change JEN's code generator.
+    
+  * added MergeFlagger node. Init with:
+      initrec.flag_mask := []
+    where mask is a single mask, or a vector of numChildren masks, one 
+    per child.
     
   * added ZeroFlagger node. Init with:
     initrec.oper     := hiid(op)    # op=EQ/NE/GT/LT/GE/LE, EQ by default
