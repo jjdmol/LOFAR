@@ -106,7 +106,7 @@ protected:
 private:
   // Fill the solution (per parmid) in the DataRecord.
     //##ModelId=400E53550276
-  void fillSolution (DataRecord& rec, const vector<int> spids,
+  void fillSolution (DataRecord& rec, const vector<int>& spids,
 		     const Vector<double>& solution,bool save_polc);
 
     //##ModelId=400E53550257
@@ -121,6 +121,7 @@ private:
   double          itsEpsilon;
     //##ModelId=400E5355025F
   bool            itsUseSVD;
+  vector<int>     itsSpids;
   
   // solvable parm group for this solver ("Parm" by default)
   HIID            itsParmGroup;
