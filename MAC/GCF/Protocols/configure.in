@@ -57,6 +57,7 @@ lofar_DOCXX
 lofar_INTERNAL(LCS/Common, Common, LCS-Common-2_0, 1,Common/LofarTypes.h,,)
 lofar_INTERNAL(LCS/Transport, transport, LCS-Transport-1_0, 1, Transport/DataHolder.h,,)
 lofar_INTERNAL(MAC/GCF/GCFCommon, GCFCommon, MAC-GCF-4_2alpha3, 1,GCF/GCF_Defines.h,,)
+lofar_INTERNAL(MAC/GCF/TM, TM, MAC-GCF-4_2alpha3, 1, GCF/TM/GCF_Event.h,,)
 
 dnl
 dnl Output Makefiles
