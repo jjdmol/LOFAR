@@ -58,10 +58,7 @@ public:
 	// Destructor
 	virtual ~DH_AC_Connect();
 
-	// Copying is allowed.
-	DH_AC_Connect(const DH_AC_Connect& that);
 	DH_AC_Connect*		clone() const;
-
 	// Redefines the preprocess function.
 	virtual void 	preprocess();
 
@@ -76,8 +73,9 @@ public:
 	in_port_t	getServerPort () const;
 
 private:
-	// forbit default construction and assignment operator
+	// forbit default construction and copying
 	DH_AC_Connect();
+	DH_AC_Connect(const DH_AC_Connect& that);
 	DH_AC_Connect& 	operator=(const DH_AC_Connect& that);
 
 	// Implement the initialisation of the pointers

@@ -32,7 +32,6 @@
 //# Includes
 #include <ACC/ApplControl.h>
 #include <ACC/ApplControlComm.h>
-#include <ACC/ACCommand.h>
 
 namespace LOFAR {
   namespace ACC {
@@ -71,7 +70,6 @@ public:
 	// Function to read a message an call the corresponding function.
 	bool	pollForMessage() const;
 	bool 	handleMessage(DH_ApplControl*	theMsg);
-	bool 	handleMessage(ACCommand*		theCmd);
 	void	sendResult(uint16	aResult, const string&	someOptions = "");
 
 	inline DH_ApplControl*	getDataHolder() const;

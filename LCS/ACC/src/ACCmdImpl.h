@@ -27,7 +27,6 @@
 
 //# Includes
 #include <ACC/ApplControl.h>
-#include <ACC/ParameterSet.h>
 
 namespace LOFAR {
   namespace ACC {
@@ -37,7 +36,7 @@ class ACCmdImpl : public ApplControl
 {
 public:
 	// Default constructable
-	ACCmdImpl(ParameterSet*		aPS);
+	ACCmdImpl();
 
 	// Destructor
 	virtual ~ACCmdImpl();
@@ -70,7 +69,6 @@ public:
 
 private:
 	// Copying is not allowed
-	ACCmdImpl();
 	ACCmdImpl(const ACCmdImpl& that);
 	ACCmdImpl& 	operator=(const ACCmdImpl& that);
 

@@ -66,8 +66,8 @@ public:
 	virtual ~DH_ApplControl();
 
 	// Copying is allowed.
-	DH_ApplControl*		clone() const;
-	DH_ApplControl*		makeDataCopy(DH_ApplControl	&that);
+	DH_ApplControl*		clone()        const;
+	DH_ApplControl*		makeDataCopy() const;
 
 	// Redefines the preprocess function.
 	virtual void 	preprocess();
@@ -89,9 +89,9 @@ public:
 	ACCmd	getCommand		() const;
 	time_t	getScheduleTime	() const;
 	time_t	getWaitTime		() const;
-	string	getOptions		() ;
-	string	getProcList		() ;
-	string	getNodeList		() ;
+	string	getOptions		() const;
+	string	getProcList		() const;
+	string	getNodeList		() const;
 	uint16	getResult		() const;
 
 private:
@@ -168,17 +168,17 @@ inline ACCmd	DH_ApplControl::getCommand		() const
 	return static_cast<ACCmd>(*itsCommand);
 }
 
-inline string	DH_ApplControl::getOptions		()
+inline string	DH_ApplControl::getOptions		() const
 {
 	return (itsOptions);
 }
 
-inline string	DH_ApplControl::getProcList		()
+inline string	DH_ApplControl::getProcList		() const
 {
 	return (itsProcList);
 }
 
-inline string	DH_ApplControl::getNodeList		()
+inline string	DH_ApplControl::getNodeList		() const
 {
 	return (itsNodeList);
 }

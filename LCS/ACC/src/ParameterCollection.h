@@ -72,8 +72,9 @@ public:
 	ParameterCollection& 	operator=(const ParameterCollection& that);
 
 	// Adds the Key-Values pair in the given file to the current ParCollection.
-	void	adoptFile  (const string& theFilename);
-	void	adoptBuffer(const string& theBuffer);
+	void	adoptFile      (const string&               theFilename);
+	void	adoptBuffer    (const string&               theBuffer);
+	void	adoptCollection(const ParameterCollection&	theCollection);
 
 	// Writes the Key-Values pair from the current ParCollection to the file.
 	void	writeFile   (const string& theFilename) const;

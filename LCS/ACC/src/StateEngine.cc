@@ -30,7 +30,7 @@
 namespace LOFAR {
   namespace ACC {
 
-const uint16	CMD_SEQ_LENGTH	=	3;
+const uint16	CMD_SEQ_LENGTH	=	4;
 
 typedef struct CmdSeq {
 	ACCmd		userCmd;
@@ -38,19 +38,32 @@ typedef struct CmdSeq {
 } CmdSeq_t;
 
 static CmdSeq_t theirCmdSeqTable[] = { 
-	{ ACCmdNone,	{ StateNone,		   StateNone,		   StateNone } },
-	{ ACCmdBoot,	{ StatePowerUpNodes,   StateCreatePSubset, StateNone } },
-	{ ACCmdDefine,	{ StateStartupAppl,	   StateDefineCmd,	   StateNone } },
-	{ ACCmdInit,	{ StateInitCmd,		   StateNone,		   StateNone } },
-	{ ACCmdRun,		{ StateRunCmd,		   StateNone,		   StateNone } },
-	{ ACCmdPause,	{ StatePauseCmd,	   StateNone,		   StateNone } },
-	{ ACCmdSnapshot,{ StateSnapshotCmd,	   StateNone,		   StateNone } },
-	{ ACCmdRecover,	{ StateRecoverCmd,	   StateNone,		   StateNone } },
-	{ ACCmdReinit,	{ StateReinitCmd,	   StateNone,		   StateNone } },//TODO
-	{ ACCmdReplace,	{ StateNone,		   StateNone,		   StateNone } },//TODO
-	{ ACCmdInfo,	{ StateInfoCmd,		   StateNone,		   StateNone } },
-	{ ACCmdQuit,	{ StateQuitCmd,		   StateKillAppl,	   StateNone } },
-	{ ACCmdShutdown,{ StatePowerDownNodes, StateNone,		   StateNone } }
+{ ACCmdNone,	
+	{ StateNone,		   StateNone,		  StateNone,          StateNone } },
+{ ACCmdBoot,	
+	{ StateInitController, StatePowerUpNodes, StateCreatePSubset, StateNone } },
+{ ACCmdDefine,	
+	{ StateStartupAppl,	   StateDefineCmd,	  StateNone,          StateNone } },
+{ ACCmdInit,	
+	{ StateInitCmd,		   StateNone,		  StateNone,          StateNone } },
+{ ACCmdRun,		
+	{ StateRunCmd,		   StateNone,		  StateNone,          StateNone } },
+{ ACCmdPause,	
+	{ StatePauseCmd,	   StateNone,		  StateNone,          StateNone } },
+{ ACCmdSnapshot,{ 
+	StateSnapshotCmd,	   StateNone,		  StateNone,          StateNone } },
+{ ACCmdRecover,	
+	{ StateRecoverCmd,	   StateNone,		  StateNone,          StateNone } },
+{ ACCmdReinit,	// TODO
+	{ StateReinitCmd,	   StateNone,		  StateNone,          StateNone } },
+{ ACCmdReplace,	// TODO
+	{ StateNone,		   StateNone,		  StateNone,          StateNone } },
+{ ACCmdInfo,	
+	{ StateInfoCmd,		   StateNone,		  StateNone,          StateNone } },
+{ ACCmdQuit,	
+	{ StateQuitCmd,		   StateKillAppl,	  StateNone,          StateNone } },
+{ ACCmdShutdown,
+	{ StatePowerDownNodes, StateNone,		  StateNone,          StateNone } }
 };
 
 // Array with the max lifetime times of the states
@@ -58,11 +71,19 @@ time_t	StateLifeTime [NR_OF_STATES];
 
 #define	CMD_SEQ_TABLE_SIZE	((sizeof(theirCmdSeqTable)/sizeof(CmdSeq_t)) - 1)
 
-StateEngine::StateEngine(const ParameterSet*	aPS) :
+StateEngine::StateEngine() :
 	itsSequence       (0),
 	itsStepNr         (0),
 	itsWantNewState   (false),
 	itsStateExpireTime(0)		
+{
+	StateLifeTime[StateInitController] = 900;	// should be long enough
+}
+
+StateEngine::~StateEngine()
+{}
+
+void StateEngine::init(const ParameterSet*	aPS)
 {
 	// (constant) timer values for the states
 	StateLifeTime[StatePowerUpNodes]  = aPS->getTime("AC.timeout.powerup");
@@ -81,9 +102,6 @@ StateEngine::StateEngine(const ParameterSet*	aPS) :
 	StateLifeTime[StateKillAppl]	  = aPS->getTime("AC.timeout.kill");
 }
 
-StateEngine::~StateEngine()
-{}
-
 void StateEngine::reset()
 {
 	LOG_TRACE_STAT ("StateEngine:reset");
@@ -96,15 +114,21 @@ void StateEngine::reset()
 
 ACState StateEngine::startSequence(ACCmd	aStartPoint) throw (Exception)
 {
+	// loop through SeqTable to find the given ACCmd.
 	for (int i = CMD_SEQ_TABLE_SIZE; i > 0; i--) {
 		if (theirCmdSeqTable[i].userCmd == aStartPoint) {
+			// startpoint of sequence found, start with first state
 			itsSequence     = i;
 			itsStepNr       = 0;
 			itsWantNewState = false;
 			ACState	stateNr = theirCmdSeqTable[itsSequence].cmdSeq[itsStepNr];
 
-			LOG_TRACE_STAT (formatString("StateEngine:startSeq[%d][%d]=%d",
-							itsSequence, itsStepNr, stateNr));
+			LOG_DEBUG (formatString("Start stateSequence[%d][%d]=%s, time=%d",
+							itsSequence, itsStepNr, 
+							stateStr(stateNr).c_str(),
+							StateLifeTime[stateNr]));
+
+			// start timer for this state
 			setStateLifeTime(StateLifeTime[stateNr]);
 			return (stateNr);
 		}
@@ -133,13 +157,43 @@ ACState StateEngine::nextState()
 
 	ACState	stateNr = theirCmdSeqTable[itsSequence].cmdSeq[itsStepNr];
 
-	LOG_TRACE_STAT (formatString("StateEngine:nextState[%d][%d]=%d",
-							itsSequence, itsStepNr, stateNr));
+	LOG_DEBUG (formatString("Next state[%d][%d]=%s, time=%d",
+							itsSequence, itsStepNr, 
+							stateStr(stateNr).c_str(),
+							StateLifeTime[stateNr]));
+
+//	setStateLifeTime(StateLifeTime[stateNr]);	TODO: do this here?
 
 	return (stateNr);
 }
 
+string StateEngine::stateStr(uint16	stateNr) const
+{
+	static char* const stateNames[] = {
+		"Idle",
+		"InitController",
+		"PowerUpNodes",
+		"PowerDownNodes",
+		"CreatePSubset",
+		"StartupAppl",
+		"DefineCmd",
+		"InitCmd",
+		"RunCmd",
+		"PauseCmd",
+		"RecoverCmd",
+		"SnapshotCmd",
+		"ReinitCmd",
+		"InfoCmd",
+		"QuitCmd",
+		"KillAppl"
+	};
 
+	if (stateNr >= NR_OF_STATES) {
+		return ("");
+	}
+
+	return (stateNames[stateNr]);
+}
 
   } // namespace ACC
 } // namespace LOFAR

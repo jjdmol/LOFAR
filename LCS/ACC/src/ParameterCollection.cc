@@ -133,6 +133,21 @@ void ParameterCollection::adoptBuffer(const string&	theBuffer)
 }
 
 //#
+//# adoptCollection
+//#
+// Adds the parameters from the ParColl. to the current ParameterCollection.
+//
+void ParameterCollection::adoptCollection(const ParameterCollection& theCollection)
+{
+	const_iterator		newItem = theCollection.begin();
+
+	while (newItem != theCollection.end()) {
+		replace(newItem->first, newItem->second);
+		++newItem;
+	}
+}
+
+//#
 //# readFile
 //# (private)
 //#

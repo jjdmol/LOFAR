@@ -33,7 +33,7 @@
 namespace LOFAR {
   namespace ACC {
 
-ACCmdImpl::ACCmdImpl(ParameterSet*	aPS) :
+ACCmdImpl::ACCmdImpl() :
 	ApplControl()
 {
 }

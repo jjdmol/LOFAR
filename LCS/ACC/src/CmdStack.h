@@ -27,7 +27,7 @@
 
 //# Includes
 #include <time.h>
-#include <ACC/ACCommand.h>
+#include <ACC/DH_ApplControl.h>
 #include <Common/lofar_map.h>
 
 namespace LOFAR {
@@ -37,22 +37,22 @@ namespace LOFAR {
 class CmdStack
 {
 public:
-	typedef map<time_t,	ACCommand>					ACCmdStack;
-	typedef map<time_t, ACCommand>::iterator		iterator;
-	typedef map<time_t, ACCommand>::const_iterator	const_iterator;
+	typedef map<time_t,	DH_ApplControl*>					DHACStack;
+	typedef map<time_t, DH_ApplControl*>::iterator			iterator;
+	typedef map<time_t, DH_ApplControl*>::const_iterator	const_iterator;
 
 	CmdStack ();
 	~CmdStack();
 
-	void		add(time_t	scheduleTime, ACCommand*	aCmd);
-	ACCommand	pop();
-	bool		timeExpired();
+	void			add(time_t	scheduleTime, DH_ApplControl*	aDHAC);
+	DH_ApplControl*	pop();
+	bool			timeExpired();
 
 private:
 	CmdStack(const CmdStack&	that);
 	CmdStack& operator= (const CmdStack&	that);
 
-	ACCmdStack		itsStack;
+	DHACStack		itsStack;
 };
 
   } // namespace ACC

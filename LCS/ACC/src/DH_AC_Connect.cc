@@ -60,8 +60,6 @@ DH_AC_Connect::DH_AC_Connect(const DH_AC_Connect& that) :
 	itsServerIP(that.itsServerIP),
 	itsServerPort(that.itsServerPort)
 {
-//	strcpy(itsHostname, that.itsHostname);
-//TODO
 }
 
 DH_AC_Connect*		DH_AC_Connect::clone() const
@@ -83,11 +81,6 @@ void 	DH_AC_Connect::preprocess()
 
 
 //# ---------- private ----------
-// forbit assignment operator
-DH_AC_Connect& 	DH_AC_Connect::operator=(const DH_AC_Connect& that) { 
-	// TODO implement
-	return (*this);
-}
 
 // Implement the initialisation of the pointers
 void	DH_AC_Connect::fillDataPointers() {
