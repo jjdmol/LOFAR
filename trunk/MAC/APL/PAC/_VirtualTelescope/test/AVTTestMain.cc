@@ -41,7 +41,7 @@ int main(int argc, char* argv[])
       AVTTestTask::m_sBeamServerOnly=cmdLine.HasSwitch("-b");
     }
     
-    Suite s("MAC.APL.PAC VirtualTelescope Test",&cout);
+    Suite s("MAC.APL.PAC VirtualTelescope Test",&std::cout);
   
     boost::shared_ptr<AVTTest> avtTest(new AVTTest);
     s.addTest(avtTest.get());

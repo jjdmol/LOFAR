@@ -5,18 +5,20 @@ TESTS			= #avttest
 AUTOGEN = autogen
 SUFFIXES = .ph
 %.ph: %.prot
-	$(AUTOGEN) -L $(top_srcdir)/../MACCommon/autogen $< && \
-	chmod a+w $@
+	$(AUTOGEN) --writable -L $(top_srcdir)/../MACCommon/autogen -L $(top_builddir)/PAC/BeamServer/src $<
 
 avttest_CPPFLAGS= \
 	-I$(top_srcdir)/../GCF/GCFCommon/src \
-	-I$(top_srcdir)/PAC/BeamServer/src
+	-I$(top_srcdir)/PAC/BeamServer/src \
+	-fmessage-length=0
 
 avttest_SOURCES 		= \
 	AVTTestAnswer.cc \
 	AVTTest.cc \
 	AVTTestTask.cc \
-	AVTTestMain.cc
+	AVTTestMain.cc \
+	../src/LogicalDevice_Protocol.cc \
+	ABS_Protocol.cc
 	
 avttest_LDADD		= \
 	$(top_builddir)/APLCommon/src/libaplcommon.la
@@ -24,11 +26,15 @@ avttest_DEPENDENCIES	= \
 	$(top_builddir)/APLCommon/src/libaplcommon.la
 
 BUILT_SOURCES = \
+    $(top_builddir)/PAC/BeamServer/src/ABS_Protocol.ph \
+    $(top_builddir)/PAC/VirtualTelescope/src/LogicalDevice_Protocol.ph \
 	avttest.ns \
 	avttest.top \
 	log4cplus.properties	
 
 EXTRA_DIST = \
+    $(top_builddir)/PAC/BeamServer/src/ABS_Protocol.ph \
+    $(top_builddir)/PAC/VirtualTelescope/src/LogicalDevice_Protocol.ph \
 	avttest.ns \
 	avttest.top \
 	log4cplus.properties

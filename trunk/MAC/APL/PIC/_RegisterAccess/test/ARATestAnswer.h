@@ -1,4 +1,4 @@
-//#  AVTUtilities.h: Utility functions
+//#  ARATestAnswer.h
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,38 +20,26 @@
 //#
 //#  $Id$
 
-#ifndef AVTUtilities_H
-#define AVTUtilities_H
+#ifndef ARATESTANSWER_H
+#define ARATESTANSWER_H
 
-//# Includes
-//# Common Includes
-#include <Common/lofar_vector.h>
-#include <Common/lofar_string.h>
+#include <GCF/GCF_Answer.h>
+#include <GCF/GCF_Port.h>
 
-//# GCF Includes
+class GCFEvent;
+class GCFTask;
 
-//# local includes
-
-// forward declaration
-
-class AVTUtilities
+class ARATestAnswer : public GCFAnswer
 {
   public:
+    ARATestAnswer();
+    ~ARATestAnswer();
 
-    AVTUtilities(); 
-    virtual ~AVTUtilities();
-
-    static void decodeCommand(const string& commandString, string& command, vector<string>& parameters);
-    static void decodeParameters(const string& parametersString, vector<string>& parameters); 
-    static void decodeSubbandsParameter(const string& subbandsString, vector<int>& subbands);
-    static void encodeParameters(const vector<string>& parameters,string& parameters);
+    void setTask(GCFTask* t);
+    void handleAnswer(GCFEvent& answer);
     
-  protected:
-    // protected copy constructor
-    AVTUtilities(const AVTUtilities&);
-    // protected assignment operator
-    AVTUtilities& operator=(const AVTUtilities&);
-
-  private:
+  private:    
+    GCFPort  m_dummyPort;
+    GCFTask* m_task;
 };
 #endif

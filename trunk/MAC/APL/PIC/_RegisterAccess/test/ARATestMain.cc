@@ -1,4 +1,4 @@
-//#  AVTUtilities.h: Utility functions
+//#  ARATestMain.cc: Main entry for the Register Access test
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,38 +20,34 @@
 //#
 //#  $Id$
 
-#ifndef AVTUtilities_H
-#define AVTUtilities_H
+#include <CmdLine.h>
+#include <GCF/GCF_Task.h>
+#include "../../../APLCommon/src/suite.h"
+#include "ARATest.h"
+#include <boost/shared_ptr.hpp>
 
-//# Includes
-//# Common Includes
-#include <Common/lofar_vector.h>
-#include <Common/lofar_string.h>
-
-//# GCF Includes
-
-//# local includes
-
-// forward declaration
-
-class AVTUtilities
+int main(int argc, char* argv[])
 {
-  public:
+  int retval=-1;
+  
+  {
+    GCFTask::init(argc, argv);
 
-    AVTUtilities(); 
-    virtual ~AVTUtilities();
+    CCmdLine cmdLine;
 
-    static void decodeCommand(const string& commandString, string& command, vector<string>& parameters);
-    static void decodeParameters(const string& parametersString, vector<string>& parameters); 
-    static void decodeSubbandsParameter(const string& subbandsString, vector<int>& subbands);
-    static void encodeParameters(const vector<string>& parameters,string& parameters);
+    // parse argc,argv 
+    if (cmdLine.SplitLine(argc, argv) > 0)
+    {
+      // no extra switches
+    }
     
-  protected:
-    // protected copy constructor
-    AVTUtilities(const AVTUtilities&);
-    // protected assignment operator
-    AVTUtilities& operator=(const AVTUtilities&);
+    Suite s("MAC.APL.PIC RegisterAccess Test",&std::cout);
+  
+    boost::shared_ptr<ARATest> araTest(new ARATest);
+    s.addTest(araTest.get());
+    s.run();
+    retval=s.report();
+  }
+  return retval;
+}
 
-  private:
-};
-#endif

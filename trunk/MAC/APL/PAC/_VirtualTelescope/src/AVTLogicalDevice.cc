@@ -105,23 +105,23 @@ GCFEvent::TResult AVTLogicalDevice::initial_state(GCFEvent& event, GCFPortInterf
   
   switch (event.signal)
   {
-    case F_INIT_SIG:
+    case F_INIT:
       break;
 
-    case F_ENTRY_SIG:
+    case F_ENTRY:
     {
       GCFPVString status("Initial");
       m_properties.setValue("status",status);
       break;
     }
   
-    case F_CONNECTED_SIG:
+    case F_CONNECTED:
       break;
 
-    case F_DISCONNECTED_SIG:
+    case F_DISCONNECTED:
       break;
 
-    case F_TIMER_SIG:
+    case F_TIMER:
       break;
 
     default:
@@ -143,10 +143,10 @@ GCFEvent::TResult AVTLogicalDevice::idle_state(GCFEvent& event, GCFPortInterface
 
   switch (event.signal)
   {
-    case F_INIT_SIG:
+    case F_INIT:
       break;
       
-    case F_ENTRY_SIG:
+    case F_ENTRY:
     {
       // open the server port to allow clients to connect
       m_logicalDeviceServerPort.open();
@@ -161,7 +161,7 @@ GCFEvent::TResult AVTLogicalDevice::idle_state(GCFEvent& event, GCFPortInterface
       break;
     }
   
-    case F_DISCONNECTED_SIG:
+    case F_DISCONNECTED:
       _disconnectedHandler(port);
       break;
     
@@ -186,17 +186,17 @@ GCFEvent::TResult AVTLogicalDevice::claiming_state(GCFEvent& event, GCFPortInter
 
   switch (event.signal)
   {
-    case F_INIT_SIG:
+    case F_INIT:
       break;
       
-    case F_ENTRY_SIG:
+    case F_ENTRY:
     {
       GCFPVString status("Claiming");
       m_properties.setValue("status",status);
       break;
     }
   
-    case F_DISCONNECTED_SIG:
+    case F_DISCONNECTED:
       _disconnectedHandler(port);
       break;
       
@@ -229,10 +229,10 @@ GCFEvent::TResult AVTLogicalDevice::claimed_state(GCFEvent& event, GCFPortInterf
 
   switch (event.signal)
   {
-    case F_INIT_SIG:
+    case F_INIT:
       break;
       
-    case F_ENTRY_SIG:
+    case F_ENTRY:
     {
       GCFPVString status("Claimed");
       m_properties.setValue("status",status);
@@ -246,7 +246,7 @@ GCFEvent::TResult AVTLogicalDevice::claimed_state(GCFEvent& event, GCFPortInterf
       break;
     }
     
-    case F_DISCONNECTED_SIG:
+    case F_DISCONNECTED:
       _disconnectedHandler(port);
       break;
    
@@ -285,20 +285,20 @@ GCFEvent::TResult AVTLogicalDevice::preparing_state(GCFEvent& event, GCFPortInte
 
   switch (event.signal)
   {
-    case F_INIT_SIG:
+    case F_INIT:
       break;
       
-    case F_ENTRY_SIG:
+    case F_ENTRY:
     {
       GCFPVString status("Preparing");
       m_properties.setValue("status",status);
       break;
     }
     
-    case F_EXIT_SIG:
+    case F_EXIT:
       break;
       
-    case F_DISCONNECTED_SIG:
+    case F_DISCONNECTED:
       _disconnectedHandler(port);
       break;
       
@@ -343,10 +343,10 @@ GCFEvent::TResult AVTLogicalDevice::suspended_state(GCFEvent& event, GCFPortInte
 
   switch (event.signal)
   {
-    case F_INIT_SIG:
+    case F_INIT:
       break;
       
-    case F_ENTRY_SIG:
+    case F_ENTRY:
     {
       GCFPVString status("Suspended");
       m_properties.setValue("status",status);
@@ -357,7 +357,7 @@ GCFEvent::TResult AVTLogicalDevice::suspended_state(GCFEvent& event, GCFPortInte
       break;
     }
   
-    case F_DISCONNECTED_SIG:
+    case F_DISCONNECTED:
       _disconnectedHandler(port);
       break;
     
@@ -400,9 +400,9 @@ GCFEvent::TResult AVTLogicalDevice::active_state(GCFEvent& event, GCFPortInterfa
 
   switch (event.signal)
   {
-    case F_INIT_SIG:
+    case F_INIT:
       
-    case F_ENTRY_SIG:
+    case F_ENTRY:
     {
       GCFPVString status("Active");
       m_properties.setValue("status",status);
@@ -416,7 +416,7 @@ GCFEvent::TResult AVTLogicalDevice::active_state(GCFEvent& event, GCFPortInterfa
       break;
     }
   
-    case F_DISCONNECTED_SIG:
+    case F_DISCONNECTED:
       _disconnectedHandler(port);
       break;
     
@@ -446,17 +446,17 @@ GCFEvent::TResult AVTLogicalDevice::releasing_state(GCFEvent& event, GCFPortInte
 
   switch (event.signal)
   {
-    case F_INIT_SIG:
+    case F_INIT:
       break;
       
-    case F_ENTRY_SIG:
+    case F_ENTRY:
     {
       GCFPVString status("Releasing");
       m_properties.setValue("status",status);
       break;
     }
   
-    case F_DISCONNECTED_SIG:
+    case F_DISCONNECTED:
       _disconnectedHandler(port);
       break;
 

@@ -110,15 +110,15 @@ GCFEvent::TResult AVTStationBeamformer::concrete_initial_state(GCFEvent& event, 
 
   switch (event.signal)
   {
-    case F_INIT_SIG:
+    case F_INIT:
       break;
 
-    case F_ENTRY_SIG:
+    case F_ENTRY:
       // open all ports
       m_beamServer.open();
       break;
 
-    case F_CONNECTED_SIG:
+    case F_CONNECTED:
     {
       // go to operational only if there is a connection with the beam server.
       if(_isBeamServerPort(port))
@@ -136,14 +136,14 @@ GCFEvent::TResult AVTStationBeamformer::concrete_initial_state(GCFEvent& event, 
       break;
     }
 
-    case F_DISCONNECTED_SIG:
+    case F_DISCONNECTED:
       if(_isBeamServerPort(port))
       {
         m_beamServer.setTimer(2.0); // try again
       }
       break;
 
-    case F_TIMER_SIG:
+    case F_TIMER:
       if(_isBeamServerPort(port))
       {
         if(m_beamServerConnected)
@@ -211,7 +211,7 @@ GCFEvent::TResult AVTStationBeamformer::concrete_preparing_state(GCFEvent& event
       if(_isBeamServerPort(port))
       {
         // check the beam ID and status of the ACK message
-        ABSBeamalloc_AckEvent& ackEvent=static_cast<ABSBeamalloc_AckEvent&>(event);
+        ABSBeamallocAckEvent ackEvent(event);
         if(ackEvent.status==0)
         {
           m_beamID=ackEvent.handle;
@@ -227,7 +227,12 @@ GCFEvent::TResult AVTStationBeamformer::concrete_preparing_state(GCFEvent& event
 
           // point the new beam
           time_t time_arg(0);
-          ABSBeampointtoEvent beamPointToEvent(m_beamID,time_arg,m_directionType,m_directionAngle1,m_directionAngle2);
+          ABSBeampointtoEvent beamPointToEvent;
+          beamPointToEvent.handle = m_beamID;
+          beamPointToEvent.time   = time_arg;
+          beamPointToEvent.type   = m_directionType;
+          beamPointToEvent.angle1 = m_directionAngle1;
+          beamPointToEvent.angle2 = m_directionAngle2;
           m_beamServer.send(beamPointToEvent);
         }
         else
@@ -257,7 +262,7 @@ GCFEvent::TResult AVTStationBeamformer::concrete_releasing_state(GCFEvent& event
     case ABS_BEAMFREE_ACK:
     {
       // check the beam ID and status of the ACK message
-      ABSBeamfree_AckEvent& ackEvent=static_cast<ABSBeamfree_AckEvent&>(event);
+      ABSBeamfreeAckEvent ackEvent(event);
       if(ackEvent.handle==m_beamID)
       {
         stateFinished=true;
@@ -278,14 +283,14 @@ void AVTStationBeamformer::handlePropertySetAnswer(GCFEvent& answer)
 {
   switch(answer.signal)
   {
-    case F_MYPLOADED_SIG:
+    case F_MYPLOADED:
     {
       // property set loaded, now load apc
       m_APC.load(false);
       break;
     }
     
-    case F_VCHANGEMSG_SIG:
+    case F_VCHANGEMSG:
     {
       // check which property changed
       GCFPropValueEvent* pPropAnswer = static_cast<GCFPropValueEvent*>(&answer);
@@ -305,12 +310,13 @@ void AVTStationBeamformer::handlePropertySetAnswer(GCFEvent& answer)
           if(parameters.size()==7)
           {
             // send prepare message:
-            char prepareParameters[700];
-            AVTUtilities::encodeParameters(parameters,prepareParameters,700);
+            string prepareParameters;
+            AVTUtilities::encodeParameters(parameters,prepareParameters);
             
             // send prepare to myself using a dummyport
             GCFDummyPort dummyPort(this,string("BF_command_dummy"),LOGICALDEVICE_PROTOCOL);
-            LOGICALDEVICEPrepareEvent prepareEvent(prepareParameters);
+            LOGICALDEVICEPrepareEvent prepareEvent;
+            prepareEvent.parameters = prepareParameters;
             dispatch(prepareEvent,dummyPort); // dummyport
           }
         }
@@ -342,7 +348,12 @@ void AVTStationBeamformer::handlePropertySetAnswer(GCFEvent& answer)
           m_directionType=newType;
           // send new direction
           time_t time_arg(0);
-          ABSBeampointtoEvent beamPointToEvent(m_beamID,time_arg,m_directionType,m_directionAngle1,m_directionAngle2);
+          ABSBeampointtoEvent beamPointToEvent;
+          beamPointToEvent.handle = m_beamID;
+          beamPointToEvent.time   = time_arg;
+          beamPointToEvent.type   = m_directionType;
+          beamPointToEvent.angle1 = m_directionAngle1;
+          beamPointToEvent.angle2 = m_directionAngle2;
           m_beamServer.send(beamPointToEvent);
         }
       }      
@@ -356,7 +367,12 @@ void AVTStationBeamformer::handlePropertySetAnswer(GCFEvent& answer)
           m_directionAngle1 = angle1;
           // send new direction
           time_t time_arg(0);
-          ABSBeampointtoEvent beamPointToEvent(m_beamID,time_arg,m_directionType,m_directionAngle1,m_directionAngle2);
+          ABSBeampointtoEvent beamPointToEvent;
+          beamPointToEvent.handle = m_beamID;
+          beamPointToEvent.time   = time_arg;
+          beamPointToEvent.type   = m_directionType;
+          beamPointToEvent.angle1 = m_directionAngle1;
+          beamPointToEvent.angle2 = m_directionAngle2;
           m_beamServer.send(beamPointToEvent);
         }
       }      
@@ -370,7 +386,12 @@ void AVTStationBeamformer::handlePropertySetAnswer(GCFEvent& answer)
           m_directionAngle2 = angle2;
           // send new direction
           time_t time_arg(0);
-          ABSBeampointtoEvent beamPointToEvent(m_beamID,time_arg,m_directionType,m_directionAngle1,m_directionAngle2);
+          ABSBeampointtoEvent beamPointToEvent;
+          beamPointToEvent.handle = m_beamID;
+          beamPointToEvent.time   = time_arg;
+          beamPointToEvent.type   = m_directionType;
+          beamPointToEvent.angle1 = m_directionAngle1;
+          beamPointToEvent.angle2 = m_directionAngle2;
           m_beamServer.send(beamPointToEvent);
         }
       }      
@@ -386,7 +407,7 @@ void AVTStationBeamformer::handleAPCAnswer(GCFEvent& answer)
 {
   switch(answer.signal)
   {
-    case F_APCLOADED_SIG:
+    case F_APCLOADED:
     {
       // used during startup to check if all necessary APC's have been loaded.
       // not used when loading the statistics APC's
@@ -467,7 +488,10 @@ void AVTStationBeamformer::concretePrepare(GCFPortInterface& /*port*/,string& pa
   
   
   LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTStationBeamformer(%s)::allocate %d subbands: %s",getName().c_str(),n_subbands,tempLogStr));
-  ABSBeamallocEvent beamAllocEvent(spectral_window,n_subbands,subbandsArray);
+  ABSBeamallocEvent beamAllocEvent;
+  beamAllocEvent.spectral_window = spectral_window;
+  beamAllocEvent.n_subbands      = n_subbands;
+//  beamAllocEvent.subbands        = subbandsArray;
   m_beamServer.send(beamAllocEvent);
 }
 
@@ -498,7 +522,8 @@ void AVTStationBeamformer::concreteRelease(GCFPortInterface& /*port*/)
   // release my own resources
   
   // send release message to BeamFormer
-  ABSBeamfreeEvent beamFreeEvent(m_beamID);
+  ABSBeamfreeEvent beamFreeEvent;
+  beamFreeEvent.handle=m_beamID;
   m_beamServer.send(beamFreeEvent);
   
   // wait for the beamfree_ack event in the releasing state

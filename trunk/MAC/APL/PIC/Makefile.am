@@ -1,5 +1,3 @@
-SUBDIRS= \
-  APLCommon \
-  PIC
-  
+SUBDIRS=RegisterAccess
+
 include $(lofar_sharedir)/Makefile.common
