@@ -58,7 +58,7 @@ int ParmPolc::initDomain (const Domain&, int spidIndex)
 }
 
 
-int ParmPolc::getResult (Result::Ref& result, const Request& request)
+int ParmPolc::getResultImpl (Result::Ref& result, const Request& request, bool)
 {
   int spidIndex=0;
   initDomain (request.cells().domain(), spidIndex);
