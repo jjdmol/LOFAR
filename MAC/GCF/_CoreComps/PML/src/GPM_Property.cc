@@ -24,7 +24,7 @@
 #include <SAL/GCF_PVBool.h>
 
 GPMProperty::GPMProperty(GCFPValue::TMACValueType type, string name) :
-  _name(name), _isLinked(false)
+  _isLinked(false), _name(name)
 {
   _pCurValue = createValue(type);
   _pOldValue = createValue(type);
@@ -32,9 +32,9 @@ GPMProperty::GPMProperty(GCFPValue::TMACValueType type, string name) :
 
 GPMProperty::GPMProperty(TProperty& propertyFields)
 {
-  _name = propertyFields.name;
-  _pCurValue = createValue(propertyFields.type);
-  _pOldValue = createValue(propertyFields.type);
+  _name = propertyFields.propName;
+  _pCurValue = createValue((GCFPValue::TMACValueType) propertyFields.type);
+  _pOldValue = createValue((GCFPValue::TMACValueType) propertyFields.type);
   _accessMode = propertyFields.accessMode;
 }
 
@@ -50,14 +50,14 @@ GPMProperty::~GPMProperty()
   _pCurValue = 0;
 }
 
-TPMResult GPMProperty::setValue(GCFPValue& value)
+TPMResult GPMProperty::setValue(const GCFPValue& value)
 {
   TPMResult result(PM_NO_ERROR);
   if (!_pOldValue || !_pCurValue) 
     result = PM_PROP_NOT_VALID;
-  else if (_pOldValue->copy(*_pNewValue) != SA_NO_ERROR)
+  else if (_pOldValue->copy(*_pCurValue) != SA_NO_ERROR)
     result = PM_PROP_WRONG_TYPE;
-  else if (_pNewValue->copy(value) != SA_NO_ERROR)
+  else if (_pCurValue->copy(value) != SA_NO_ERROR)
     result = PM_PROP_WRONG_TYPE;
   
   return result;
@@ -123,7 +123,7 @@ GCFPValue* GPMProperty::createValue(GCFPValue::TMACValueType type) const
 {
   GCFPValue* pResult(0);
   
-  switch (macValue.getType())
+  switch (type)
   {
     case GCFPValue::BOOL_VAL:
       pResult = new GCFPVBool();
@@ -158,7 +158,7 @@ GCFPValue* GPMProperty::createValue(GCFPValue::TMACValueType type) const
     default:
       LOFAR_LOG_ERROR(PML_STDOUT_LOGGER, (
           "Type of MAC value is unknown or not supported yet: '%d'", 
-          macValue.getType()));
+          type));
       break;
   }  
   

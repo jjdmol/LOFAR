@@ -21,3 +21,24 @@
 //#  $Id$
 
 #include "GPM_Service.h"
+#include "GPM_Controller.h"
+
+TSAResult GPMService::get(const string& propName)
+{
+  return GSAService::get(propName);
+}
+
+TSAResult GPMService::set(const string& propName, const GCFPValue& value)
+{
+  return GSAService::set(propName, value);
+}
+
+bool GPMService::exists(const string& propName)
+{
+  return GSAService::exists(propName);
+}
+
+void GPMService::propValueGet(string& propName, GCFPValue& value)
+{
+  _controller.valueGet(propName, value);
+}

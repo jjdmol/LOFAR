@@ -21,6 +21,8 @@
 //#  $Id$
 
 #include "GPM_PropertySet.h"
+#include "GPM_Property.h"
+#include "GPM_Controller.h"
 
 GPMPropertySet::GPMPropertySet(GPMController& controller, TPropertySet& propSet) : 
   _controller(controller)
@@ -29,8 +31,8 @@ GPMPropertySet::GPMPropertySet(GPMController& controller, TPropertySet& propSet)
   _scope = propSet.scope;
   for (unsigned int i = 0; i < propSet.nrOfProperties; i++)
   {
-    // TODO: should be checked, whether the no double properties are created here
-    pProperty = new GPMProperty(propSet.props[i]);
+    // TODO: should be checked, whether there are no double properties are created here
+    pProperty = new GPMProperty(propSet.properties[i]);
     _properties[pProperty->getName()] = pProperty;    
   }
 }  
@@ -39,7 +41,7 @@ GPMPropertySet::~GPMPropertySet()
 {
   GPMProperty* pProperty;
   for (TPropertyIter iter = _properties.begin(); 
-        iter != _timers.end(); ++iter) 
+        iter != _properties.end(); ++iter) 
   {
     pProperty = iter->second;
     if (pProperty)
@@ -51,12 +53,12 @@ void GPMPropertySet::propSubscribed(string& propName)
 {
   // TODO: Make this more secure (see linkProperties)
   cutScope(propName);
-  _properties[propName]->setLinked(true);
-  _tempLinkList.erase(propName);
+  _properties[propName]->setLink(true);
+  _tempLinkList.remove(propName);
   _counter--;
   if (_counter == 0)
   {
-    _controller.propertiesLinked(_tempLinkList);
+    _controller.propertiesLinked(_tempSeqnr, _tempLinkList);
   }
 }
 
@@ -64,31 +66,33 @@ void GPMPropertySet::propUnsubscribed(string& propName)
 {
   // TODO: Make this more secure (see unlinkProperties)
   cutScope(propName);
-  _properties[propName]->setLinked(false);
-  _tempLinkList.erase(propName);
+  _properties[propName]->setLink(false);
+  _tempLinkList.remove(propName);
   _counter--;
   if (_counter == 0)
   {
-    _controller.propertiesUnlinked(_tempLinkList);
+    _controller.propertiesUnlinked(_tempSeqnr, _tempLinkList);
   }
 }
 
 void GPMPropertySet::propValueChanged(string& propName, GCFPValue& value)
 {
+  string fullPropName = propName;
   cutScope(propName);
   GPMProperty* pProperty = _properties[propName];
   if (pProperty->isLinked())
   {
     pProperty->setValue(value);
+    _controller.valueChanged(fullPropName, value);
   }
-  _controller.valueChanged(_scope + "_" + propName, value);
 }
 
-TPMResult GPMPropertySet::linkProperties(list<string>& properties)
+TPMResult GPMPropertySet::linkProperties(unsigned int seqnr, list<string>& properties)
 {
   TPMResult result(PM_NO_ERROR);
   GPMProperty* pProperty;
   _tempLinkList = properties;
+  _tempSeqnr = seqnr;
   if (_counter > 0)
   {
     result = PM_PROP_SET_BUSY;
@@ -96,9 +100,9 @@ TPMResult GPMPropertySet::linkProperties(list<string>& properties)
   else 
   {
     for (list<string>::iterator iter = properties.begin(); 
-         iter != iter.end(); ++iter)
+         iter != properties.end(); ++iter)
     {
-      pProperty = _properties[iter];
+      pProperty = _properties[*iter];
       if (!pProperty)
       {
         if (result == PM_NO_ERROR) result = PM_PROP_LIST_FAILURE;
@@ -109,7 +113,9 @@ TPMResult GPMPropertySet::linkProperties(list<string>& properties)
       }      
       else
       {
-        subscribe(_scope + "_" + iter);
+        result = (GSAService::subscribe(_scope + "_" + *iter) == SA_NO_ERROR ?
+                  PM_NO_ERROR :
+                  PM_SCADA_ERROR);
         _counter++;        
       }
     }
@@ -118,11 +124,12 @@ TPMResult GPMPropertySet::linkProperties(list<string>& properties)
   return result;
 }
 
-TPMResult GPMPropertySet::unlinkProperties(list<string>& properties)
+TPMResult GPMPropertySet::unlinkProperties(unsigned int seqnr, list<string>& properties)
 {
   TPMResult result(PM_NO_ERROR);
   GPMProperty* pProperty;
   _tempLinkList = properties;
+  _tempSeqnr = seqnr;
   
   if (_counter > 0)
   {
@@ -131,9 +138,9 @@ TPMResult GPMPropertySet::unlinkProperties(list<string>& properties)
   else 
   {
     for (list<string>::iterator iter = properties.begin(); 
-         iter != iter.end(); ++iter)
+         iter != properties.end(); ++iter)
     {
-      pProperty = _properties[iter];
+      pProperty = _properties[*iter];
       if (!pProperty)
       {
         if (result == PM_NO_ERROR) result = PM_PROP_LIST_FAILURE;
@@ -144,7 +151,9 @@ TPMResult GPMPropertySet::unlinkProperties(list<string>& properties)
       }      
       else
       {
-        unsubscribe(_scope + "_" + iter);
+        result = (GSAService::unsubscribe(_scope + "_" + *iter) == SA_NO_ERROR ?
+                  PM_NO_ERROR :
+                  PM_SCADA_ERROR);
         _counter++;        
       }
     }
@@ -153,15 +162,15 @@ TPMResult GPMPropertySet::unlinkProperties(list<string>& properties)
   return result;
 }
 
-TPMResult GPMPropertySet::get(const string& propName, GCFPValue** pValue)
+TPMResult GPMPropertySet::getValue(const string& propName, GCFPValue** pValue)
 {
   TPMResult result(PM_NO_ERROR);
   GPMProperty* pProperty;
-  
-  if ((result = cutScope(propName)) != PM_NO_ERROR)
+  string shortPropName = propName;
+  if ((result = cutScope(shortPropName)) != PM_NO_ERROR)
   {
   }
-  else if ((pProperty = _properties[propName]) == 0)
+  else if ((pProperty = _properties[shortPropName]) == 0)
   {
     result = PM_PROP_NOT_IN_SET;
   }
@@ -173,36 +182,39 @@ TPMResult GPMPropertySet::get(const string& propName, GCFPValue** pValue)
   return result;
 }
 
-TPMResult GPMPropertySet::set(const string& propName, const GCFPValue& value)
+TPMResult GPMPropertySet::setValue(const string& propName, const GCFPValue& value)
 {
   TPMResult result(PM_NO_ERROR);
   GPMProperty* pProperty;
+  string shortPropName = propName;
   
-  if ((result = cutScope(propName)) != PM_NO_ERROR)
+  if ((result = cutScope(shortPropName)) != PM_NO_ERROR)
   {
   }
-  else if ((pProperty = _properties[propName]) == 0)
+  else if ((pProperty = _properties[shortPropName]) == 0)
   {
     result = PM_PROP_NOT_IN_SET;
   }
   else if ((result = pProperty->setValue(value)) == PM_NO_ERROR)
   {
     if (pProperty->isLinked())
-      set(_scope + "_" + propName, value);
+      result = (GSAService::set(propName, value) == SA_NO_ERROR ?
+                PM_NO_ERROR : PM_SCADA_ERROR);
   }  
 
   return result;
 }
 
-TPMResult GPMPropertySet::getOldValue(const string& propName, GCFPValue** value)
+TPMResult GPMPropertySet::getOldValue(const string& propName, GCFPValue** pValue)
 {
   TPMResult result(PM_NO_ERROR);
   GPMProperty* pProperty;
+  string shortPropName = propName;
   
-  if ((result = cutScope(propName)) != PM_NO_ERROR)
+  if ((result = cutScope(shortPropName)) != PM_NO_ERROR)
   {
   }
-  else if ((pProperty = _properties[propName]) == 0)
+  else if ((pProperty = _properties[shortPropName]) == 0)
   {
     result = PM_PROP_NOT_IN_SET;
   }

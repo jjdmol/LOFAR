@@ -24,56 +24,29 @@
 #define GPM_SERVICE_H
 
 #include <SAL/GSA_Service.h>
-#include "GPMController.h"
+
+class GPMController;
 
 class GPMService : public GSAService
 {
   public:
-    GPMService(GPMController& controller) : _controller(controller) {};
+    GPMService(GPMController& controller) : _controller(controller) {;}
     virtual ~GPMService();
 
-    inline TSAResult subscribe(const string& propName)
-    {
-      return GSAService::subscribe(propName);
-    }
-    inline TSAResult unsubscribe(const string& propName)
-    {
-      return GSAService::unsubscribe(propName);
-    }
-    inline TSAResult get(const string& propName)
-    {
-      return GSAService::get(propName);
-    }
-    inline TSAResult set(const string& propName, const GCFPValue& value)
-    {
-      return GSAService::set(propName, value);
-    }
-    inline bool exists(const string& propName)
-    {
-      return GSAService::exists(propName);
-    }
+    TSAResult get(const string& propName);
+    TSAResult set(const string& propName, const GCFPValue& value);
+    bool exists(const string& propName);
 
   protected:
-    void propCreated(string& propName) {};
-    void propDeleted(string& propName) {};
-    inline void propSubscribed(string& propName)
-    {
-      _controller.propSubscribed(propName);
-    }
-    inline void propUnsubscribed(string& propName)
-    {
-      _controller.propUnsubscribed(propName);
-    }
-    inline void propValueGet(string& propName, GCFPValue& value)
-    {
-      _controller.valueGet(propName, value);
-    }
-    inline void propValueChanged(string& propName, GCFPValue& value)
-    {
-      _controller.valueChanged(propName, value);
-    }
+    inline void propCreated(string& propName) {};
+    inline void propDeleted(string& propName) {};
+    inline void propSubscribed(string& propName) {};
+    inline void propUnsubscribed(string& propName) {};
+    void propValueGet(string& propName, GCFPValue& value);
+    inline void propValueChanged(string& propName, GCFPValue& value) {};
   
   private:
     GPMController& _controller;
 };
+
 #endif

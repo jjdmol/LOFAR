@@ -24,10 +24,11 @@
 #define GPM_CONTROLLER_H
 
 #include <TM/GCF_Task.h>
-#include <TM/GCF_Port.h>
-#include "GPM_Service.h"
+#include <TM/PortInterface/GCF_Port.h>
 #include "GPM_Defines.h"
+#include "GPM_Service.h"
 #include <Common/lofar_map.h>
+#include <Common/lofar_list.h>
 
 class GCFSupervisedTask;
 class GPMPropertySet;
@@ -43,22 +44,31 @@ class GPMController : public GCFTask
 
   private: // member functions
     friend class GCFSupervisedTask;
-    TPMResult loadAPC(string& apcName, string& scope);
-    TPMResult unloadAPC(string& apcName, string& scope);
-    TPMResult reloadAPC(string& apcName, string& scope);
+    friend class GPMService;
+    friend class GPMPropertySet;
+    
+    TPMResult loadAPC(const string& apcName, const string& scope);
+    TPMResult unloadAPC(const string& apcName, const string& scope);
+    TPMResult reloadAPC(const string& apcName, const string& scope);
     TPMResult loadMyProperties(TPropertySet& newSet);
-    TPMResult unloadMyProperties(TPropertySet& newSet);
-    TPMResult set(string& propName, GCFPValue& value);
-    TPMResult get(string& propName);
-    TPMResult getMyOldValue(string& propName, GCFPValue** value);
+    TPMResult unloadMyProperties(const string& scope);
+    TPMResult set(const string& propName, const GCFPValue& value);
+    TPMResult get(const string& propName);
+    TPMResult getMyOldValue(const string& propName, GCFPValue** value);
     void valueChanged(string& propName, GCFPValue& value);
     void valueGet(string& propName, GCFPValue& value);
-    void propertiesLinked(list<string>& notLinkedProps);
-    void propertiesUnlinked(list<string>& notUnlinkedProps);
+    void propertiesLinked(unsigned int seqnr, list<string>& notLinkedProps);
+    void propertiesUnlinked(unsigned int seqnr, list<string>& notUnlinkedProps);
   
   private: // state methods
     int initial  (GCFEvent& e, GCFPortInterface& p);
+    int connected(GCFEvent& e, GCFPortInterface& p);
         
+  private: // helper methods
+    GPMPropertySet* findPropertySet(const string& propName);
+    void registerScope(const string& scope);
+    void unpackPropertyList(char* pListData, list<string>& propertyList);
+    
   private: // data members
     GCFSupervisedTask& _supervisedTask;
     
@@ -66,6 +76,9 @@ class GPMController : public GCFTask
     typedef map<string, GPMPropertySet*>::iterator TPropertySetIter;
     GCFPort _propertyAgent;
     GPMService _scadaService;
+    bool _isBusy;
+    bool _preparing;
+    unsigned int _counter;
     
     typedef struct
     {
