@@ -26,6 +26,7 @@
 #include <MNS/MeqMatrixComplexSca.h>
 #include <MNS/MeqMatrixComplexArr.h>
 #include <Common/Debug.h>
+#include <aips/Mathematics/Constants.h>
 
 
 MeqMatrixRealArr::MeqMatrixRealArr (int nx, int ny)
@@ -81,9 +82,13 @@ MeqMatrixRep* MeqMatrixRealArr::divide (MeqMatrixRep& right, bool rightTmp)
 {
   return right.divRep (*this, rightTmp);
 }
+MeqMatrixRep* MeqMatrixRealArr::posdiff (MeqMatrixRep& right)
+{
+  return right.posdiffRep (*this);
+}
 MeqMatrixRep* MeqMatrixRealArr::tocomplex (MeqMatrixRep& right)
 {
-  return right.complexRep (*this);
+  return right.tocomplexRep (*this);
 }
 
 bool MeqMatrixRealArr::isDouble() const
@@ -164,7 +169,47 @@ MNSMATRIXREALARR_OP(subRep,-=,-);
 MNSMATRIXREALARR_OP(mulRep,*=,*);
 MNSMATRIXREALARR_OP(divRep,/=,/);
 
-MeqMatrixRep* MeqMatrixRealArr::complexRep (MeqMatrixRealSca& left)
+MeqMatrixRep* MeqMatrixRealArr::posdiffRep (MeqMatrixRealSca& left)
+{
+  MeqMatrixRealArr* v = new MeqMatrixRealArr (nx(), ny());
+  double* value = v->itsValue;
+  double* rvalue = itsValue;
+  double  lvalue = left.itsValue;
+  int n = left.nelements();
+  for (int i=0; i<n; i++) {
+    double diff = lvalue - rvalue[i];
+    if (diff < -1 * C::pi) {
+      diff += C::_2pi;
+    }
+    if (diff > C::pi) {
+      diff -= C::_2pi;
+    }
+    value[i] = diff;
+  }
+  return v;
+}
+MeqMatrixRep* MeqMatrixRealArr::posdiffRep (MeqMatrixRealArr& left)
+{
+  Assert (nelements() == left.nelements());
+  MeqMatrixRealArr* v = new MeqMatrixRealArr (nx(), ny());
+  double* value = v->itsValue;
+  double* rvalue = itsValue;
+  double* lvalue = left.itsValue;
+  int n = left.nelements();
+  for (int i=0; i<n; i++) {
+    double diff = lvalue[i] - rvalue[i];
+    if (diff < -1 * C::pi) {
+      diff += C::_2pi;
+    }
+    if (diff > C::pi) {
+      diff -= C::_2pi;
+    }
+    value[i] = diff;
+  }
+  return v;
+}
+
+MeqMatrixRep* MeqMatrixRealArr::tocomplexRep (MeqMatrixRealSca& left)
 {
   MeqMatrixComplexArr* v = new MeqMatrixComplexArr (nx(), ny());
   complex<double>* value = v->itsValue;
@@ -176,7 +221,7 @@ MeqMatrixRep* MeqMatrixRealArr::complexRep (MeqMatrixRealSca& left)
   }
   return v;
 }
-MeqMatrixRep* MeqMatrixRealArr::complexRep (MeqMatrixRealArr& left)
+MeqMatrixRep* MeqMatrixRealArr::tocomplexRep (MeqMatrixRealArr& left)
 {
   Assert (nelements() == left.nelements());
   MeqMatrixComplexArr* v = new MeqMatrixComplexArr (nx(), ny());

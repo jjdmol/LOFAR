@@ -43,6 +43,24 @@ MeqMatrix::MeqMatrix (complex<double> value)
     itsRep = v->link();
 }
 
+MeqMatrix::MeqMatrix (double value, int nx, int ny, bool init)
+{
+    MeqMatrixRealArr* v = new MeqMatrixRealArr (nx, ny);
+    if (init) {
+      v->set (value);
+    }
+    itsRep = v->link();
+}
+
+MeqMatrix::MeqMatrix (complex<double> value, int nx, int ny, bool init)
+{
+    MeqMatrixComplexArr* v = new MeqMatrixComplexArr (nx, ny);
+    if (init) {
+      v->set (value);
+    }
+    itsRep = v->link();
+}
+
 MeqMatrix::MeqMatrix (const double* values, int nx, int ny)
 {
     MeqMatrixRealArr* v = new MeqMatrixRealArr (nx, ny);
@@ -209,6 +227,14 @@ MeqMatrixTmp MeqMatrix::operator-() const
     return MeqMatrixTmp(*this).operator-();
 }
 
+MeqMatrixTmp posdiff (const MeqMatrix& left, const MeqMatrix& right)
+{
+    return left.itsRep->posdiff(*right.itsRep);
+}
+MeqMatrixTmp posdiff (const MeqMatrix& left, const MeqMatrixTmp& right)
+{
+    return left.itsRep->posdiff(*right.rep());
+}
 MeqMatrixTmp tocomplex (const MeqMatrix& left, const MeqMatrix& right)
 {
     return left.itsRep->tocomplex(*right.itsRep);

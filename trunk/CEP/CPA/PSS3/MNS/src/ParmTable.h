@@ -36,7 +36,7 @@ class MeqMatrix;
 class ParmTable
 {
 public:
-  ParmTable (const string& tableName);
+  explicit ParmTable (const string& tableName);
 
   // Get the parameter values for the given parameter and domain.
   // The matchDomain argument is set telling if the found parameter

@@ -22,7 +22,27 @@
 
 
 #include <MNS/MeqMatrixTmp.h>
+#include <MNS/MeqMatrixRealArr.h>
+#include <MNS/MeqMatrixComplexArr.h>
 
+
+MeqMatrixTmp::MeqMatrixTmp (double value, int nx, int ny, bool init)
+{
+    MeqMatrixRealArr* v = new MeqMatrixRealArr (nx, ny);
+    if (init) {
+      v->set (value);
+    }
+    itsRep = v->link();
+}
+
+MeqMatrixTmp::MeqMatrixTmp (complex<double> value, int nx, int ny, bool init)
+{
+    MeqMatrixComplexArr* v = new MeqMatrixComplexArr (nx, ny);
+    if (init) {
+      v->set (value);
+    }
+    itsRep = v->link();
+}
 
 MeqMatrixTmp& MeqMatrixTmp::operator= (const MeqMatrixTmp& that)
 {
@@ -42,6 +62,22 @@ MeqMatrixTmp MeqMatrixTmp::operator-() const
   return itsRep;
 }
 
+MeqMatrixTmp posdiff (const MeqMatrixTmp& left, const MeqMatrix& right)
+{
+    return left.itsRep->posdiff(*right.rep());
+}
+MeqMatrixTmp posdiff (const MeqMatrixTmp& left, const MeqMatrixTmp& right)
+{
+    return left.itsRep->posdiff(*right.rep());
+}
+MeqMatrixTmp tocomplex (const MeqMatrixTmp& left, const MeqMatrix& right)
+{
+    return left.itsRep->tocomplex(*right.rep());
+}
+MeqMatrixTmp tocomplex (const MeqMatrixTmp& left, const MeqMatrixTmp& right)
+{
+    return left.itsRep->tocomplex(*right.rep());
+}
 MeqMatrixTmp sin (const MeqMatrixTmp& arg)
 {
   return arg.itsRep->sin();

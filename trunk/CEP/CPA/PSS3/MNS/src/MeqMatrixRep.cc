@@ -49,15 +49,27 @@ const complex<double>* MeqMatrixRep::dcomplexStorage() const
   throw (AipsError ("MeqMatrixRep::dcomplexStorage()"));
 }
 
+MeqMatrixRep* MeqMatrixRep::posdiff (MeqMatrixRep&)
+{
+  throw (AipsError ("MeqMatrixRep::posdiff requires real arguments"));
+}
+MeqMatrixRep* MeqMatrixRep::posdiffRep (MeqMatrixRealSca&)
+{
+  throw (AipsError ("MeqMatrixRep::posdiff requires real arguments"));
+}
+MeqMatrixRep* MeqMatrixRep::posdiffRep (MeqMatrixRealArr&)
+{
+  throw (AipsError ("MeqMatrixRep::posdiff requires real arguments"));
+}
 MeqMatrixRep* MeqMatrixRep::tocomplex (MeqMatrixRep&)
 {
   throw (AipsError ("MeqMatrixRep::tocomplex requires real arguments"));
 }
-MeqMatrixRep* MeqMatrixRep::complexRep (MeqMatrixRealSca&)
+MeqMatrixRep* MeqMatrixRep::tocomplexRep (MeqMatrixRealSca&)
 {
   throw (AipsError ("MeqMatrixRep::tocomplex requires real arguments"));
 }
-MeqMatrixRep* MeqMatrixRep::complexRep (MeqMatrixRealArr&)
+MeqMatrixRep* MeqMatrixRep::tocomplexRep (MeqMatrixRealArr&)
 {
   throw (AipsError ("MeqMatrixRep::tocomplex requires real arguments"));
 }

@@ -64,7 +64,7 @@ void MeqWsrtPoint::calcResult (const MeqRequest& request)
   itsNcell[1] = ncellf;
   
   // The domain is divided into the required number of cells.
-  MeqRequest dftReq (domain, request.nspid(), ncellt, ncellf);
+  MeqRequest dftReq (domain, ncellt, ncellf, request.nspid());
   itsXX = MeqResult(request.nspid());
   itsXY = MeqResult(request.nspid());
   itsYX = MeqResult(request.nspid());
@@ -84,7 +84,14 @@ void MeqWsrtPoint::calcResult (const MeqRequest& request)
     MeqResult uk = iter->getU()->getResult (dftReq);
     MeqResult vk = iter->getV()->getResult (dftReq);
     MeqResult dft = itsDFT->getResult (dftReq);
-    MeqMatrixTmp ivk = tocomplex(0, vk.getValue());
+    ///    cout << "MeqWsrtPoint ik: " << ik.getValue() << endl;
+      ///    cout << "MeqWsrtPoint qk: " << qk.getValue() << endl;
+      ///    cout << "MeqWsrtPoint uk: " << uk.getValue() << endl;
+      ///    cout << "MeqWsrtPoint vk: " << vk.getValue() << endl;
+      ///    cout << "MeqWsrtPoint dft: " << dft.getValue() << endl;
+    MeqMatrixTmp ivk = tocomplex(0., vk.getValue());
+    // Calculate XX, etc. Note that the values should be divided by 2.
+    // That is done later in MeqWsrtInt, because that is less expensive.
     MeqMatrix xx = (ik.getValue() + qk.getValue()) * dft.getValue();
     MeqMatrix yx = (uk.getValue() - MeqMatrix(ivk)) * dft.getValue();
     MeqMatrix xy = (uk.getValue() + ivk) * dft.getValue();
@@ -93,6 +100,7 @@ void MeqWsrtPoint::calcResult (const MeqRequest& request)
     itsXY.getValueRW() += xy;
     itsYX.getValueRW() += yx;
     itsYY.getValueRW() += yy;
+    ///    cout << "MeqWsrtPoint XX: " << xx << endl << itsXX.getValue() << endl;
 
     // Evaluate (if needed) for the perturbed parameter values.
     MeqMatrix perturbation;
@@ -116,7 +124,7 @@ void MeqWsrtPoint::calcResult (const MeqRequest& request)
       if (vk.isDefined(spinx)) {
 	evaluv = true;
 	perturbation = vk.getPerturbation(spinx);
-	ivkp = tocomplex(0, vk.getPerturbedValue(spinx));
+	ivkp = tocomplex(0., vk.getPerturbedValue(spinx));
       }
       if (dft.isDefined(spinx)) {
 	evaliq = true;

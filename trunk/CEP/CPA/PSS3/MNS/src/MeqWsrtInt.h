@@ -24,49 +24,30 @@
 #define MNS_MEQWSRTINT_H
 
 //# Includes
-#include <MNS/MeqExpr.h>
-#include <Common/lofar_vector.h>
+#include <MNS/MeqJonesExpr.h>
 
 //# Forward declarations
-class MeqPointSource;
-class MeqUVWPolc;
-class MeqDomain;
-class MDirection;
+class MeqWsrtPoint;
 
 
 // This class is the (abstract) base class for an expression.
 
-class MeqWsrtInt
+class MeqWsrtInt: public MeqJonesExpr
 {
 public:
   // Construct from source list, pahse reference position and uvw.
-  MeqWsrtInt (const MeqWsrtPoint*, const MeqExpr* station1,
-	      const MeqExpr* station2);
+  MeqWsrtInt (MeqWsrtPoint*, MeqJonesExpr* station1,
+	      MeqJonesExpr* station2);
 
   ~MeqWsrtInt();
 
   // Get the result of the expression for the given domain.
   void calcResult (const MeqRequest&);
 
-  // Get the results of the expression.
-  const MeqResult& getResultXX() const
-    { return itsXX; }
-  const MeqResult& getResultXY() const
-    { return itsXY; }
-  const MeqResult& getResultYX() const
-    { return itsYX; }
-  const MeqResult& getResultYY() const
-    { return itsYY; }
-
-
 private:
   MeqWsrtPoint*  itsExpr;
   MeqJonesExpr*  itsStat1;
   MeqJonesExpr*  itsStat2;
-  MeqResult      itsXX;
-  MeqResult      itsXY;
-  MeqResult      itsYX;
-  MeqResult      itsYY;
 };
 
 

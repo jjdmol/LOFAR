@@ -38,7 +38,7 @@ void MeqUVWPolc::calcCoeff (const Vector<double>& times,
   int nr = times.nelements();
   Assert (uvws.shape()(0) == 3  &&  uvws.shape()(1) == nr);
   double step = times(1) - times(0);
-  MeqDomain domain (times(0)-step/2, times(nr-1)+step/2, -1, 1);
+  MeqDomain domain (times(0)-step/2, times(nr-1)+step/2, 0, 1e15);
   Vector<double> normTimes(nr);
   for (int i=0; i<nr; i++) {
     normTimes(i) = domain.normalizeX (times(i));

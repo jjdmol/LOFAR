@@ -42,6 +42,14 @@ public:
     : itsRep (new MeqMatrixComplexSca(value)) { itsRep->link(); }
   // <group>
 
+  // Create a MeqMatrixTmp of given size.
+  // If the init flag is true, the matrix is initialized to the given value.
+  // Otherwise the value only indicates the type of matrix to be created.
+  // <group>
+  MeqMatrixTmp (double, int nx, int ny, bool init=true);
+  MeqMatrixTmp (complex<double>, int nx, int ny, bool init=true);
+  // <group>
+
   // Create a MeqMatrixTmp from a real one (copy semantics).
   MeqMatrixTmp (const MeqMatrix& that)
     : itsRep (that.rep()->clone()->link()) {}
@@ -63,11 +71,26 @@ public:
   const double* doubleStorage() const
     { return itsRep->doubleStorage(); }
 
+  double* doubleStorage()
+    { return (double*)(itsRep->doubleStorage()); }
+
+  const complex<double>* dcomplexStorage() const
+    { return (complex<double>*)(itsRep->dcomplexStorage()); }
+
+  complex<double>* dcomplexStorage()
+    { return (complex<double>*)(itsRep->dcomplexStorage()); }
+
   double getDouble (int x, int y) const
     { return itsRep->getDouble (x, y); }
 
+  double getDouble() const
+    { return itsRep->getDouble (0, 0); }
+
   complex<double> getDComplex (int x, int y) const
     { return itsRep->getDComplex (x, y); }
+
+  complex<double> getDComplex() const
+    { return itsRep->getDComplex (0, 0); }
 
   int nx() const
     { return itsRep->nx(); }
@@ -114,6 +137,10 @@ public:
 
   MeqMatrixTmp operator-() const;
 
+  friend MeqMatrixTmp posdiff (const MeqMatrixTmp&, const MeqMatrix&);
+  friend MeqMatrixTmp posdiff (const MeqMatrixTmp&, const MeqMatrixTmp&);
+  friend MeqMatrixTmp tocomplex (const MeqMatrixTmp&, const MeqMatrix&);
+  friend MeqMatrixTmp tocomplex (const MeqMatrixTmp&, const MeqMatrixTmp&);
   friend MeqMatrixTmp sin (const MeqMatrixTmp&);
   friend MeqMatrixTmp cos (const MeqMatrixTmp&);
   friend MeqMatrixTmp exp (const MeqMatrixTmp&);
@@ -124,11 +151,6 @@ public:
   friend MeqMatrixTmp max (const MeqMatrixTmp&);
   friend MeqMatrixTmp mean(const MeqMatrixTmp&);
   friend MeqMatrixTmp sum (const MeqMatrixTmp&);
-
-  friend MeqMatrixTmp min (const MeqMatrix&);
-  friend MeqMatrixTmp max (const MeqMatrix&);
-  friend MeqMatrixTmp mean(const MeqMatrix&);
-  friend MeqMatrixTmp sum (const MeqMatrix&);
 
 
   MeqMatrixRep* rep() const
