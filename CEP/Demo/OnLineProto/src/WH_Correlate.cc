@@ -93,14 +93,25 @@ void WH_Correlate::process()
 //   for (int i = 0; i < itsNelements; i++) {
 //     for (int j = 0; j < itsNitems; j++) {
       
-//       signal(i,j) = complex<float> (i,i);
+//        signal(i,j) = complex<float> (i,i);
       
 //     }
 //   }
 
-  // Enter data either by assignment or by memcpy. The first should be faster. 
-  //signal = *InDHptr->getBuffer();
-  memcpy(signal.data(), InDHptr->getBuffer(), itsNelements*itsNitems*sizeof(DH_CorrCube::BufferType));
+  // Enter data either by assignment(1) or by memcpy(2) 
+  // or by DH_CorrCube accessor(3); in order of expected performance
+
+  
+  //1 signal = *InDHptr->getBuffer();
+  //2 memcpy(signal.data(), InDHptr->getBuffer(), itsNelements*itsNitems*sizeof(DH_CorrCube::BufferType));
+   for (int element = 0; element < itsNelements; element++) {
+     for (int item = 0; item < itsNitems; item++) {
+       //3      signal(element,item) = *(InDHptr->getBufferElement(element,item,0));
+	cout << signal(element,item) << " ";
+     }
+   }
+   cout << endl;
+
 
   corr = complex<float> (0,0);
 
