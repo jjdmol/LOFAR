@@ -150,11 +150,13 @@ bootstrap_rule:
 		( echo \
 		&& echo ":::::: BOOTSTRAPPING $$pkg" \
 		&& echo \
-		&& ( ( cd $$pkg && ( ./bootstrap; ./bootstrap )) \
+		&& ( ( cd $$pkg && ( ./bootstrap; )) \
 			|| echo ":::::: ERROR" ) \
 		&& echo \
 		&& echo ":::::: DONE BOOTSTRAPPING $$pkg" \
 		&& echo ) ; \
+	    else \
+	        echo ":::::: ERROR $$pkg does not exist"; \
 	    fi \
 	done
 
@@ -184,6 +186,8 @@ configure: $(VARIANTNAMES:.variant=.variant_configure)
 		&& echo \
 		&& echo ":::::: FINISHED CONFIGURING VARIANT $$variant FOR PACKAGE $$pkg" \
 		&& echo ; ) \
+	    else \
+	        echo ":::::: ERROR $$pkg does not exist"; \
 	    fi\
 	done; \
 	date
@@ -210,6 +214,8 @@ configure: $(VARIANTNAMES:.variant=.variant_configure)
 		&& echo \
 		&& echo ":::::: FINISHED BUILDING VARIANT $$variant FOR PACKAGE $$pkg" \
 		&& echo ; ) \
+	    else \
+	        echo ":::::: ERROR $$pkg does not exist"; \
 	    fi\
 	done; \
 	date
@@ -233,6 +239,8 @@ configure: $(VARIANTNAMES:.variant=.variant_configure)
 		&& echo \
 		&& echo ":::::: FINISHED BUILDING VARIANT $$variant FOR PACKAGE $$pkg" \
 		&& echo ; ) \
+	    else \
+	        echo ":::::: ERROR $$pkg does not exist"; \
 	    fi\
 	done; \
 	date
@@ -258,6 +266,8 @@ configure: $(VARIANTNAMES:.variant=.variant_configure)
 		&& echo \
 		&& echo ":::::: FINISHED REBUILDING VARIANT $$variant FOR PACKAGE $$pkg" \
 		&& echo ; ) \
+	    else \
+	        echo ":::::: ERROR $$pkg does not exist"; \
 	    fi\
 	done; \
 	date
@@ -281,6 +291,8 @@ configure: $(VARIANTNAMES:.variant=.variant_configure)
 		&& echo \
 		&& echo ":::::: FINISHED CHECKING VARIANT $$variant FOR PACKAGE $$pkg" \
 		&& echo ; \
+	    else \
+	        echo ":::::: ERROR $$pkg does not exist"; \
 	    fi\
 	done; \
 	date
