@@ -32,33 +32,35 @@ namespace RSP
 {
   class StatsRead : public SyncAction
   {
-    public:
-      /**
-       * Constructors for a StatsRead object.
-       */
-      StatsRead(GCFPortInterface& board_port, int board_id, uint8 type, uint8 nfragments);
+  public:
+    /**
+     * Constructors for a StatsRead object.
+     */
+    StatsRead(GCFPortInterface& board_port, int board_id, uint8 type,
+	      uint8 nblps, uint8 nfragments);
 	  
-      /* Destructor for StatsRead. */
-      virtual ~StatsRead();
+    /* Destructor for StatsRead. */
+    virtual ~StatsRead();
 
-      /**
-       * Send the write message.
-       */
-      virtual void sendrequest();
+    /**
+     * Send the write message.
+     */
+    virtual void sendrequest();
 
-      /**
-       * Send the read request.
-       */
-      virtual void sendrequest_status();
+    /**
+     * Send the read request.
+     */
+    virtual void sendrequest_status();
 
-      /**
-       * Handle the read result.
-       */
-      virtual GCFEvent::TResult handleack(GCFEvent& event, GCFPortInterface& port);
+    /**
+     * Handle the read result.
+     */
+    virtual GCFEvent::TResult handleack(GCFEvent& event, GCFPortInterface& port);
 
-    private:
-      uint8 m_type;       // statistics type
-      uint8 m_nfragments; // register is too large for ethernet packet, use this many fragments
+  private:
+    uint8 m_type;       // statistics type
+    uint8 m_nfragments; // register is too large for ethernet packet, use this many fragments
+    uint8 m_nblsp;      // 1 for beamlet statistics BST, n for subband statistics SST
   };
 };
      
