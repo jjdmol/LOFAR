@@ -27,8 +27,14 @@
 
 namespace Meq {
 
-const HIID FCells           = AidCells,
-           FResults         = AidResults;
+const HIID  FCells          = AidCells,
+            FResults        = AidResults,
+            FFail           = AidFail,
+            FNodeName       = AidNode|AidName,
+            FClassName      = AidClass|AidName,
+            FOrigin         = AidOrigin,
+            FOriginLine     = AidOrigin|AidLine,
+            FMessage        = AidMessage; 
 
 int ResultSet::nctor = 0;
 int ResultSet::ndtor = 0;
@@ -37,14 +43,25 @@ static NestableContainer::Register reg(TpMeqResultSet,True);
 
 
 ResultSet::ResultSet (int nresults)
-: itsResults(new DataField(TpMeqResult,nresults)),itsCells(0)
+: itsCells(0)
 {
   nctor++;
-  DataRecord::add(FResults,itsResults,DMI::ANONWR);
+  if( nresults >= 0 )
+  {
+    itsIsFail = false;
+    itsResults <<= new DataField(TpMeqResult,nresults);
+    DataRecord::add(FResults,itsResults.dewr_p(),DMI::ANONWR);
+  }
+  else // nresults<0 indicates a fail, so insert one
+  {
+    itsIsFail = true;
+    DataRecord::add(FFail,new DataField(TpDataRecord,0));
+  }
 }
 
 ResultSet::ResultSet (const DataRecord &other,int flags,int depth)
-: DataRecord(other,flags,depth)
+: DataRecord(other,flags,depth),
+  itsIsFail(false)
 {
   nctor++;
   validateContent();
@@ -61,13 +78,24 @@ void ResultSet::validateContent ()
   // indeed writable. Setup shortcuts to their contents
   try
   {
-    if( (*this)[FCells].exists() ) // verify cells field
+    if( hasField(FCells) ) // verify cells field
       itsCells = (*this)[FCells].as_p<Cells>();
     else
       itsCells = 0;
-    // get pointer to results field
-    itsResults = (*this)[FResults].as_wp<DataField>();
-    FailWhen(itsResults->type()!=TpMeqResult,"illegal results field");
+    itsResults.detach();
+    // is it a fail?
+    if( DataRecord::hasField(FFail) )
+      itsIsFail = true;
+    else
+    {
+      itsIsFail = false;
+      // get pointer to results field
+      if( DataRecord::hasField(FResults) )
+      {
+        itsResults <<= (*this)[FResults].privatize(DMI::WRITE).as_wp<DataField>();
+        FailWhen(itsResults->type()!=TpMeqResult,"illegal results field");
+      }
+    }
   }
   catch( std::exception &err )
   {
@@ -79,6 +107,51 @@ void ResultSet::validateContent ()
   }  
 }
 
+void ResultSet::addFail (const DataRecord *rec,int flags)
+{
+  itsIsFail = true;
+  // clear out results
+  itsResults.detach();
+  if( DataRecord::hasField(FResults) )
+    DataRecord::removeField(FResults);
+  // insert field of fail records, if necessary
+  DataField *fails;
+  if( !hasField(FFail) )
+  {
+    DataRecord::add(FFail,fails = new DataField(TpDataRecord,1),DMI::ANONWR);
+    fails->put(0,rec,flags); // insert new
+  }
+  else
+  {
+    fails = &(*this)[FFail];
+    fails->put(fails->size(),rec,flags);
+  }
+}
+
+void ResultSet::addFail (const string &nodename,const string &classname,
+                      const string &origin,int origin_line,const string &msg)
+{
+  DataRecord::Ref ref;
+  DataRecord & rec = ref <<= new DataRecord;
+  // populate the fail record
+  rec[FNodeName] = nodename;
+  rec[FClassName] = classname;
+  rec[FOrigin] = origin;
+  rec[FOriginLine] = origin_line;
+  rec[FMessage] = msg;
+  addFail(&rec);
+}
+
+int ResultSet::numFails () const
+{
+  return (*this)[FFail].size();
+}
+  
+const DataRecord & ResultSet::getFail (int i) const
+{
+  return (*this)[FFail][i].as<DataRecord>();
+}
+
 void ResultSet::setCells (const Cells *cells,int flags)
 {
   itsCells = flags&DMI::CLONE ? new Cells(*cells) : cells;
@@ -87,17 +160,21 @@ void ResultSet::setCells (const Cells *cells,int flags)
 
 void ResultSet::setResult (int i,Result *result)
 {
-  itsResults->put(i,result,DMI::ANONWR);
+  DbgFailWhen(isFail(),"ResultSet marked as a fail, can't set result");
+  itsResults().put(i,result,DMI::ANONWR);
 }
   
 void ResultSet::setResult (int i,Result::Ref::Xfer &result)
 {
-  itsResults->put(i,result.dewr_p(),DMI::ANONWR);
+  DbgFailWhen(isFail(),"ResultSet marked as a fail, can't set result");
+  itsResults().put(i,result.dewr_p(),DMI::ANONWR);
   result.detach();
 }
 
 void ResultSet::show (std::ostream& os) const
 {
+  if( isFail() )
+    os << "FAIL";
   for( int i=0; i<numResults(); i++ )
   {
     os << "Result "<<i<<endl;

@@ -30,7 +30,7 @@
 #include <MEQ/Result.h>
 
 #pragma aidgroup Meq
-#pragma aid Cells Results
+#pragma aid Cells Results Fail Node Class Name Origin Line Message
 #pragma type #Meq::ResultSet
 
 // This class represents a result of a domain for which an expression
@@ -45,7 +45,8 @@ class ResultSet : public DataRecord
 public:
   typedef CountedRef<ResultSet> Ref;
 
-  // Create a time,frequency result with the given number of results
+  // Create a ResultSet with the given number of results.
+  // If <0, then the set is marked as a fail
   explicit ResultSet (int nresults=1);
   
   // Construct from DataRecord. 
@@ -56,10 +57,41 @@ public:
   virtual TypeId objectType () const
   { return TpMeqResultSet; }
   
+//  // implement standard clone method via copy constructor
+//  virtual CountedRefTarget* clone (int flags, int depth) const
+//  { return new ResultSet(*this,flags,depth); }
+  
   // validate record contents and setup shortcuts to them. This is called 
   // automatically whenever a ResultSet is made from a DataRecord
+  // (or when the underlying DataRecord is privatized, etc.)
   virtual void validateContent ();
   
+  // This marks the ResultSet as a FAIL, and adds a fail-record.
+  // Results, if any, are cleared, a Fail sub-record is created if necessary.
+  // The Fail subrecord can contain multiple fail records.
+  void addFail (const DataRecord *rec,int flags=DMI::ANON|DMI::READONLY);
+  void addFail (const string &nodename,const string &classname,
+                const string &origin,int origin_line,const string &msg);
+#if defined(HAVE_PRETTY_FUNCTION)
+# define ResultSet_FailLocation __PRETTY_FUNCTION__ "() " __FILE__ 
+#elif defined(HAVE_FUNCTION)
+# define ResultSet_FailLocation __FUNCTION__ "() " __FILE__ 
+#else
+# define ResultSet_FailLocation __FILE__ 
+#endif
+
+// define a macro for automatically generating the correct fail location 
+#define MakeFailResult(res,msg) \
+    (res).addFail(name(),objectType().toString(),ResultSet_FailLocation,__LINE__,msg);
+    
+  // checks if this ResultSet is a fail
+  bool isFail () const
+  { return itsIsFail; }
+  
+  int numFails () const;
+  
+  const DataRecord & getFail (int i=0) const;
+
   // Set or get the cells.
   // Attaches cells object (default as anon). Can also specify DMI::CLONE
   // to copy
@@ -77,17 +109,19 @@ public:
 
   int numResults () const
   { 
-    return itsResults->size(); 
+    return itsResults.valid() ? itsResults->size() : 0;
   }
   
   const Result & resultConst (int i) const
   { 
-    return (*itsResults)[i].as<Result>(); 
+    DbgFailWhen( isFail(),"ResultSet marked as a fail, can't access result" );
+    return itsResults.deref()[i].as<Result>(); 
   }
   
   Result & result (int i)
   { 
-    return (*itsResults)[i].as_wr<Result>(); 
+    DbgFailWhen( isFail(),"ResultSet marked as a fail, can't access result" );
+    return itsResults.dewr()[i].as_wr<Result>(); 
   }
   
   void setResult (int i,Result *result);
@@ -96,8 +130,11 @@ public:
   
   // creates new result at plane i with the given # of spids
   Result & setNewResult (int i,int nspids=0)
-  { Result *res = new Result(nspids); setResult(i,res); return *res; }
-    
+  { 
+    DbgFailWhen( isFail(),"ResultSet marked as a fail, can't set result");
+    Result *res = new Result(nspids); setResult(i,res); 
+    return *res; 
+  }
 
   void show (std::ostream&) const;
 
@@ -105,8 +142,9 @@ public:
   static int ndtor;
   
 private:
-  DataField * itsResults;
+  DataField::Ref itsResults;
   const Cells *itsCells;
+  bool itsIsFail;
 };
 
 

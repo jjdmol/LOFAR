@@ -62,7 +62,10 @@ int Spigot::deliver (const Request &req,VisTile::Ref::Copy &tileref,
   if( currentRequestId() == rqid )
   {
     cdebug(2)<<"deliver: already at rqid but notify not implemented, doing nothing"<<endl;
-    Throw("Spigot: parent notify mechanism not yet implemented");
+    Throw("Spigot: deliver() called after getResult() for the same request ID. "
+          "This is not something we can handle w/o a parent notify mechanism, "
+          "which is not yet implemented. Either something is wrong with your tree, "
+          "or you're not genrating unique request IDs.");
   }
   else
   {
@@ -132,7 +135,12 @@ int Spigot::getResultImpl (ResultSet::Ref &resref,const Request &req,bool newreq
   {
     // return fail if unable to satisfy this request
     if( req.id() != next_rqid )
+    {
+      resref <<= new ResultSet(-1);
+      MakeFailResult(resref(),"spigot: got request id "+
+                              req.id().toString()+", expecting "+next_rqid.toString());
       return RES_FAIL;
+    }
     // return result and clear cache
     resref = next_res;
     next_rqid.clear();

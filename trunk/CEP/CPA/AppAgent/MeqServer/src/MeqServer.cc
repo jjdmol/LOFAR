@@ -146,15 +146,24 @@ void MeqServer::getNodeResult (DataRecord::Ref &out,DataRecord::Ref::Xfer &in)
   int flags = node.getResult(res,req);
   cdebug(2)<<"  getResult returns flags "<<flags<<" with result"<<endl;
   cdebug(3)<<"    result is "<<res.sdebug(DebugLevel-1,"    ")<<endl;
-  if( DebugLevel>3 )
+  if( DebugLevel>3 && res.valid() )
   {
-    for( int i=0; i<res->numResults(); i++ )
-      cdebug(4)<<"  plane "<<i<<": "<<res->resultConst(i).getValue()<<endl;
+    if( res->isFail() ) {
+      cdebug(4)<<"  result is marked as FAIL"<<endl;
+    } else {
+      for( int i=0; i<res->numResults(); i++ ) {
+        cdebug(4)<<"  plane "<<i<<": "<<res->resultConst(i).getValue()<<endl;
+      }
+    }
   }
   out <<= new DataRecord;
   out()[AidResult|AidCode] = flags;
   if( res.valid() )
+  {
+    cdebug(1)<<"objectType: "<<res->objectType().toString()<<endl;
     out()[AidResult] <<= res;
+    cdebug(1)<<"in-record objectType: "<<out()[AidResult].ref()->objectType()<<endl;
+  }
 }
 
 //##ModelId=3F608106021C
