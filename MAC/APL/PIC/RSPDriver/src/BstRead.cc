@@ -38,8 +38,8 @@ using namespace EPA_Protocol;
 using namespace RSP_Protocol;
 using namespace blitz;
 
-BstRead::BstRead(GCFPortInterface& board_port, int board_id, uint8 type)
-  : SyncAction(board_port, board_id, BST_N_FRAGMENTS), m_type(type)
+BstRead::BstRead(GCFPortInterface& board_port, int board_id)
+  : SyncAction(board_port, board_id, BST_N_FRAGMENTS)
 {
   memset(&m_hdr, 0, sizeof(MEPHeader));
 }
@@ -55,17 +55,8 @@ void BstRead::sendrequest()
 
   uint16 byteoffset = (getCurrentBLP() % BST_N_FRAGMENTS) * MEPHeader::FRAGMENT_SIZE;
 
-  switch (m_type)
-  {
-    case Statistics::BEAMLET_POWER:
-      bstread.hdr.set(MEPHeader::BST_POWER_HDR, MEPHeader::DST_RSP,
-		      MEPHeader::READ, N_STATS * sizeof(uint32), byteoffset);
-      break;
-
-    default:
-      LOG_ERROR("invalid statistics type");
-      break;
-  }
+  bstread.hdr.set(MEPHeader::BST_POWER_HDR, MEPHeader::DST_RSP,
+		  MEPHeader::READ, N_STATS * sizeof(uint32), byteoffset);
 
   m_hdr = bstread.hdr;
   getBoardPort().send(bstread);
@@ -117,38 +108,26 @@ GCFEvent::TResult BstRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/
 
   LOG_DEBUG_STR("fragment_range=" << fragment_range);
   
-  if (m_type != ack.hdr.m_fields.addr.regid)
+  if (MEPHeader::BST_POWER != ack.hdr.m_fields.addr.regid)
   {
     LOG_ERROR("invalid bst ack");
     return GCFEvent::HANDLED;
   }
 
-  switch (m_type)
-  {
-    case Statistics::BEAMLET_POWER:
-    {
-      
-      Array<uint32, 2> stats((uint32*)&ack.stat,
-			     shape(N_STATS / MEPHeader::N_POL,
-				   MEPHeader::N_POL),
-			     neverDeleteData);
+  Array<uint32, 2> stats((uint32*)&ack.stat,
+			 shape(N_STATS / MEPHeader::N_POL,
+			       MEPHeader::N_POL),
+			 neverDeleteData);
 
-      Array<double, 3>& cache(Cache::getInstance().getBack().getBeamletStats()());
+  Array<double, 3>& cache(Cache::getInstance().getBack().getBeamletStats()());
 
-      // x-pol beamlet statistics: copy and convert to double
-      cache(m_type, getBoardId() * 2,     fragment_range) =
-	convert_uint32_to_double(stats(Range::all(), 0));
+  // x-pol beamlet statistics: copy and convert to double
+  cache(0, getBoardId() * 2,     fragment_range) =
+    convert_uint32_to_double(stats(Range::all(), 0));
 
-      // y-pol beamlet statistics: copy and convert to double
-      cache(m_type, getBoardId() * 2 + 1, fragment_range) =
-	convert_uint32_to_double(stats(Range::all(), 1));
-    }
-    break;
-    
-    default:
-      LOG_ERROR("invalid statistics type");
-      break;
-  }
+  // y-pol beamlet statistics: copy and convert to double
+  cache(0, getBoardId() * 2 + 1, fragment_range) =
+    convert_uint32_to_double(stats(Range::all(), 1));
   
   return GCFEvent::HANDLED;
 }

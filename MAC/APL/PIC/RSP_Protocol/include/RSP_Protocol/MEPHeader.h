@@ -121,11 +121,9 @@ namespace EPA_Protocol
       static const uint8 BF_YROUT      = 0x02;
       static const uint8 BF_YIOUT      = 0x03;
 
-      static const uint8 BST_MEAN      = 0x00; // used as index in statistics array
-      static const uint8 BST_POWER     = 0x01; // used as index in statistics array
+      static const uint8 BST_POWER     = 0x00; // used as index in statistics array
 
-      static const uint8 SST_MEAN      = 0x00; // used as index in statistics array
-      static const uint8 SST_POWER     = 0x01; // used as index in statistics array
+      static const uint8 SST_POWER     = 0x00; // used as index in statistics array
 
       static const uint8 RCU_SETTINGS  = 0x00;
 
