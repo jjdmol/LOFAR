@@ -67,6 +67,7 @@ namespace LOFAR
 
       try {
         DBViewType view(tableName(), BCA<T>(), query.getSql());
+        TRACER1(__PRETTY_FUNCTION__ << "\n  " << query.getSql());
         typename DBViewType::select_iterator iter = view.begin();
 
         for (int nr = 0; iter != view.end() && nr < maxObjects; ++iter, ++nr) {
