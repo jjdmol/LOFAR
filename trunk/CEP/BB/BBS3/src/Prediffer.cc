@@ -808,7 +808,8 @@ void Prediffer::setSolvableParms (const vector<string>& parms,
 // Get the condition equations for the selected baselines and domain.
 //
 //----------------------------------------------------------------------
-bool Prediffer::getEquations (double* result, const vector<uint32>& shape)
+bool Prediffer::getEquations (double* result, const vector<uint32>& shape,
+			      int& nresult)
 {
   ASSERT (itsNrTimesDone < itsNrTimes);
   LOG_TRACE_FLOW("Prediffer::getEquations");
@@ -873,6 +874,7 @@ bool Prediffer::getEquations (double* result, const vector<uint32>& shape)
     //cout << "After calc";
     //cin >> ch;
   }
+  nresult = nrDone*itsNPol;
   if (itsNrTimesDone == itsNrTimes) {
     cout << "BBSTest: predict " << itsPredTimer << endl;
     cout << "BBSTest: formeqs " << itsEqTimer << endl;
