@@ -1,10 +1,11 @@
-include_HEADERS =
-
-DOCHDRS	=	$(include_HEADERS) \
+pkgincludedir = $(includedir)/Suite
+pkginclude_HEADERS = \
 	suite.h \
 	test.h
+
+DOCHDRS	=	$(include_HEADERS)
       
-noinst_LTLIBRARIES 	= libsuite.la
+lib_LTLIBRARIES 	= libsuite.la
 
 libsuite_la_SOURCES= $(DOCHDRS) \
 	suite.cpp \
