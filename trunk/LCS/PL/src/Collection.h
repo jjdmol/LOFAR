@@ -38,19 +38,29 @@ namespace LCS
     {
     public:
 
-      // This is the kind of container we're gonna store our elements in.
-      typedef std::list<T> CollectionType;
+      // This is the type of container we're gonna store our elements in.
+      typedef std::list<T> container_t;
 
-      typedef typename CollectionType::iterator iterator;
+      typedef typename container_t::iterator iterator;
+      typedef typename container_t::const_iterator const_iterator;
+
+      iterator begin() { return itsContainer.begin(); }
+      const_iterator begin() const { return itsContainer.begin(); }
+
+      iterator end() { return itsContainer.end(); }
+      const_iterator end() const { return itsContainer.end(); }
 
       // Add the element \c t to the collection
-      void add(const T& t);
+      void add(const T& t) { itsContainer.push_back(t); }
 
       // Remove \e all elements from the collection that are equal to the
       // element \c t.
-      void remove(const T& t);
+      void remove(const T& t) { itsContainer.remove(t); }
 
     private:
+
+      // The container that will actually hold our elements.
+      container_t itsContainer;
 
     };
 
