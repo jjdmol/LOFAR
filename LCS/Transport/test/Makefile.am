@@ -14,13 +14,15 @@ CXXFLAGS += \
 	-DMORECORE_CANNOT_TRIM=1 \
 	-DSHMEM_ALLOC
 
-check_PROGRAMS			= Example TestBidirectional ExampleMem ExampleBlMem  ExampleShMem ExampleMPI ExampleSocket ExampleSocketPerf tTH_Socket
+check_PROGRAMS			= Example TestBidirectional ExampleMem ExampleBlMem ExampleNonBlocking ExampleShMem ExampleMPI ExampleSocket ExampleSocketPerf tTH_Socket
 
 Example_SOURCES 		= Example.cc DH_Example.cc
 
 ExampleMem_SOURCES 		= ExampleMem.cc DH_Example.cc
 
 ExampleBlMem_SOURCES		= ExampleBlMem.cc DH_Example.cc
+
+ExampleNonBlocking_SOURCES      = ExampleNonBlocking.cc DH_Example.cc
 
 ExampleShMem_SOURCES 		= ExampleShMem.cc DH_Example.cc
 
@@ -49,6 +51,7 @@ TESTS	=					\
 	TestBidirectional_test.sh		\
 	ExampleMem_test.sh			\
 	ExampleBlMem_test.sh			\
+	ExampleNonBlocking_test.sh			\
 	ExampleShMem_test.sh			\
 	ExampleMPI_test.sh			\
 	ExampleSocket_test.sh		\

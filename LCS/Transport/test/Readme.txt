@@ -23,6 +23,11 @@ This file describes the tests in this directory (./LOFAR/LCS/Transport/test/):
  by having separate threads for reading and writing.
 
 
+*** ExampleNonBlocking ***
+ This example illustrates the principle (and danger!) of non-blocking
+ communication. Your data can be modified before it has completely been sent.
+
+
 *** ExampleShMem ***
  Tests transport of fixed and variable size data via shared memory (in an MPI environment).
 
