@@ -27,6 +27,7 @@
 #include <Common/TypeNames.h>
 #include <Common/DataFormat.h>
 #include <vector>
+#include <typeinfo>
 
 namespace LOFAR {
 
@@ -102,14 +103,26 @@ public:
   // Get a pointer to the data in the output blob.
   // This function should be called after BlobFieldSet::createBlob.
   template<typename T> T* getData (BlobOBufChar& buf)
-    { return static_cast<T*> (getOData (LOFAR::typeName((T*)0), buf)); }
+  {
+#ifdef ENABLE_DBGASSERT
+    return static_cast<T*> (getOData (typeid(T), buf));
+#else
+    return static_cast<T*> (getOData (buf));
+#endif
+  }
 
   // Get a pointer to the data in the input blob.
   // This function should be called after BlobFieldSet::openBlob.
   // A null pointer is returned if the field does not exist which can happen
   // if the version of the field is higher than the version of the blob.
   template<typename T> const T* getData (BlobIBufChar& buf) const
-    { return static_cast<const T*> (getIData (LOFAR::typeName((T*)0), buf)); }
+  {
+#ifdef ENABLE_DBGASSERT
+    return static_cast<const T*> (getIData (typeid(T), buf));
+#else
+    return static_cast<const T*> (getIData (buf));
+#endif
+  }
 
   // Helper functions for BlobFieldSet.
   // <group>
@@ -143,9 +156,11 @@ private:
   void fillNelem();
   virtual void setOSpace (BlobOStream&) = 0;
   virtual void getISpace (BlobIStream&) = 0;
-  virtual void* getOData (const std::string& typeName,
+  virtual void* getOData (BlobOBufChar&) const = 0;
+  virtual const void* getIData (BlobIBufChar&) const = 0;
+  virtual void* getOData (const std::type_info&,
 			  BlobOBufChar&) const = 0;
-  virtual const void* getIData (const std::string& typeName,
+  virtual const void* getIData (const std::type_info&,
 				BlobIBufChar&) const = 0;
   // </group>
 
@@ -245,8 +260,15 @@ public:
 
   // Get the pointer to the data in the buffer.
   // <group>
-  virtual void* getOData (const std::string&, BlobOBufChar&) const;
-  virtual const void* getIData (const std::string&, BlobIBufChar&) const;
+  virtual void* getOData (BlobOBufChar&) const;
+  virtual const void* getIData (BlobIBufChar&) const;
+  // </group>
+
+  // Get the pointer to the data in the buffer.
+  // It checks if the data type is correct.
+  // <group>
+  virtual void* getOData (const std::type_info&, BlobOBufChar&) const;
+  virtual const void* getIData (const std::type_info&, BlobIBufChar&) const;
   // </group>
 
   // Convert this field in the buffer from the given to the local format.
