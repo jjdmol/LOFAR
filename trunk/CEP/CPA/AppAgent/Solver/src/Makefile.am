@@ -16,6 +16,9 @@ applauncher_SOURCES		    = applauncher.cc
 applauncher_LDADD		      = libsolver.la -lglish -lsos -lnpd
 applauncher_DEPENDENCIES	= libsolver.la $(LOFAR_DEPEND)
 
+glishdir = $(libexecdir)/glish/pss3
+dist_glish_SCRIPTS = glishsolver.g
+
 # script used to generate AID maps
 MAPBUILDER = $(dmi_dir)/src/build_aid_maps.pl 
 
