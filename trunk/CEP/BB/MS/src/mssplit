@@ -1,0 +1,36 @@
+#!/bin/sh
+
+# This script splits an MS into smaller parts.
+# It also reorganizes the storage managers od DATA, FLAGS and UVW such that
+# they can be read directly by the BBS software.
+# The user can specify which data column should be used.
+#
+# Run as:
+#    mssplit msin msout [column]
+
+if test "$1" = ""  -o  "$1" = "-h"  -o  "$1" = "--help"; then
+    echo ""
+    echo "Run as:"
+    echo "  mssplit msin msout [datacolumn]"
+    echo "      datacolumn defaults to DATA"
+    echo ""
+    exit 0
+fi
+
+col=$3
+if [ "$col" = "" ]; then
+  col="DATA"
+fi
+
+# Create a temporary glish script to be executed.
+cat << EOFXXXXX > /tmp/$USER_mssplit_tmp.g
+ include 'mssplit.g'
+ mssplit ("$1", 'ANTENNA1<10000', "$2", "$col");
+ exit
+EOFXXXXX
+
+# Execute the script.
+glish /tmp/$USER_mssplit_tmp.g
+
+# Set the protections such that the world can read the MS created.
+chmod -R +r $2
