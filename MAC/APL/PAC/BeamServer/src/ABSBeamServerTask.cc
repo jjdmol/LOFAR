@@ -650,7 +650,7 @@ void BeamServerTask::send_weights(int period)
   coeff -= 1;
 
   Array<complex<int16_t>, 2> weights((complex<int16_t>*)coeff,
-				     shape(N_SUBBANDS, N_POLARIZATIONS),
+				     shape(N_BEAMLETS, N_POLARIZATIONS),
 				     neverDeleteData);
 
   for (int ant = 0; ant < N_ELEMENTS; ant++)
@@ -660,6 +660,20 @@ void BeamServerTask::send_weights(int period)
       for (int pol = 0; pol < N_POLARIZATIONS * 2; pol++)
       {
 	  weights = m_weights16(period, ant, all, all);
+
+	  if (pol == 0) {
+	    // weights for x-real part
+	  } else if (pol == 1) {
+	    // weights for x-imaginary part
+	    weights *= complex<int16_t>(0,1);
+	    //imag(weights) *= -1;
+	  } else if (pol == 2) {
+	    // weights for y-real part
+	  } else if (pol == 3) {
+	    // weights for y-imaginary part
+	    weights *= complex<int16_t>(0,1);
+	    //imag(weights) *= -1;
+	  }
 
 #ifdef EPA_Y_POL_IMAG_FIX
 	  //
@@ -671,20 +685,6 @@ void BeamServerTask::send_weights(int period)
 	  //
 	  imag(weights(all, 1)) *= -1;
 #endif
-
-	  if (pol == 0) {
-	    // weights for x-real part
-	  } else if (pol == 1) {
-	    // weights for x-imaginary part
-	    //weights *= complex<int16_t>(0,1);
-	    imag(weights) *= -1;
-	  } else if (pol == 2) {
-	    // weights for y-real part
-	  } else if (pol == 3) {
-	    // weights for y-imaginary part
-	    //weights *= complex<int16_t>(0,1);
-	    imag(weights) *= -1;
-	  }
 
 	  for (int i = 0; i < N_SUBBANDS; i++)
 	    for (int j = 0; j < N_POLARIZATIONS; j++)
