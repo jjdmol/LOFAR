@@ -281,7 +281,7 @@ uint DataHolder::addField (const std::string& fieldName,
 BlobStringType DataHolder::blobStringType()
 {
   if (getTransporter().getTransportHolder()) {
-    LofarLogTraceStr(2, "blobStringType "
+    LOG_TRACE_FLOW_STR("blobStringType "
 	      << getTransporter().getTransportHolder()->getType()) ;
     return getTransporter().getTransportHolder()->blobStringType();
   }
