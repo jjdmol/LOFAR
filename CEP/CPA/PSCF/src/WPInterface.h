@@ -26,6 +26,7 @@
 #include <list>
 #include <set>
 #include <queue>
+#include "OctopussyConfig.h"
 //## end module%3C8F268F00DE.includes
 
 // Subscriptions
@@ -297,6 +298,9 @@ class WPInterface : public PSCFDebugContext, //## Inherits: <unnamed>%3C7FA31F00
       
       bool full_lock,receive_lock;
       
+      
+      const OctopussyConfig & config;
+      
       //## end WPInterface%3C7B6A3702E5.protected
   private:
     //## Constructors (generated)
@@ -364,6 +368,7 @@ class WPInterface : public PSCFDebugContext, //## Inherits: <unnamed>%3C7FA31F00
       typedef MessageQueue::const_iterator CMQI;
       typedef MessageQueue::reverse_iterator MQRI;
       typedef MessageQueue::const_reverse_iterator CMQRI;
+      
       //## end WPInterface%3C7B6A3702E5.implementation
 };
 

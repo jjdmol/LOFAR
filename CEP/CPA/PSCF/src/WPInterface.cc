@@ -18,6 +18,7 @@
 //## end module%3C8F26A30123.additionalIncludes
 
 //## begin module%3C8F26A30123.includes preserve=yes
+#include "OctopussyConfig.h"
 //## end module%3C8F26A30123.includes
 
 // Dispatcher
@@ -41,8 +42,10 @@ WPInterface::WPInterface (AtomicID wpc)
   //## begin WPInterface::WPInterface%3C7CBB10027A.hasinit preserve=no
   //## end WPInterface::WPInterface%3C7CBB10027A.hasinit
   //## begin WPInterface::WPInterface%3C7CBB10027A.initialization preserve=yes
-    : DebugContext(wpc.toString(),PSCFDebugContext::DebugContext),
-    address_(wpc),autoCatch_(False),dsp_(0),queue_(0),wpid_(wpc)
+  : DebugContext(wpc.toString(),PSCFDebugContext::DebugContext),
+    config(OctopussyConfig::global()),
+    address_(wpc),autoCatch_(False),dsp_(0),
+    queue_(0),wpid_(wpc)
   //## end WPInterface::WPInterface%3C7CBB10027A.initialization
 {
   //## begin WPInterface::WPInterface%3C7CBB10027A.body preserve=yes

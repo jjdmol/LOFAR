@@ -64,24 +64,19 @@ LoggerWP::~LoggerWP()
 void LoggerWP::init ()
 {
   //## begin LoggerWP::init%3CA045020054.body preserve=yes
-  string filebase = dsp()->getCommandLine()[0]+".log";
+  // default logname is app path
+  string filebase = config.appPath()+".log";
   filename_ = filebase;
-  dsp()->getOption("logfile",filename_);
+  // .. but can be overridden by config
+  config.get("logfile",filename_);
+
+  // get log levels from config
+  config.get("loglev",level_);
+  config.get("logcon",consoleLevel_);
+  config.getOption("lc",consoleLevel_);
+  level_ = max(level_,consoleLevel_);
   
-  int lev;
-  if( dsp()->getOption("-lc",lev) )
-  {
-    level_ = consoleLevel_ = lev;
-  }
-  else
-  {
-    if( dsp()->getOption("loglev",lev) )
-      level_ = lev;
-    if( dsp()->getOption("logcon",lev) )
-      consoleLevel_ = lev;
-  }
-  if( dsp()->getOption("logscope",lev) )
-    scope_ = lev;
+  config.getOption("logscope",scope_);
   
   dprintf(0)("log level: %d, console log level: %d, scope: %d\n",
       level_,consoleLevel_,scope_);

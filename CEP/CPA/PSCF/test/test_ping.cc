@@ -9,21 +9,18 @@ static int dum = aidRegistry_Testing();
     
 int main (int argc,const char *argv[])
 {
-//  Debug::DebugContext.setLevel(10);
-//  CountedRefBase::DebugContext.setLevel(10);
-  PSCFDebugContext::DebugContext.setLevel(10);
   Debug::initLevels(argc,argv);
+  OctopussyConfig::initGlobal(argc,argv);
   
   try 
   {
-    Dispatcher *dsp = new Dispatcher(getpid(),1,argc,argv);
-    dsp->attach(new LoggerWP,DMI::ANON);
-    dsp->attach(new EchoWP(-1),DMI::ANON);
-    dsp->attach(new EchoWP(0),DMI::ANON);
-    dsp->start();
-    dsp->pollLoop();
-    dsp->stop();
-    delete dsp;
+    Dispatcher dsp;
+    dsp.attach(new LoggerWP,DMI::ANON);
+    dsp.attach(new EchoWP(-1),DMI::ANON);
+    dsp.attach(new EchoWP(0),DMI::ANON);
+    dsp.start();
+    dsp.pollLoop();
+    dsp.stop();
   }
   catch( Debug::Error err ) 
   {

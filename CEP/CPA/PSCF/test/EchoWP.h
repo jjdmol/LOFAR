@@ -84,7 +84,7 @@ class EchoWP : public WorkProcess  //## Inherits: <unnamed>%3C8F26580162
     // Additional Protected Declarations
       //## begin EchoWP%3C7E498E00D1.protected preserve=yes
       int pcount,blocksize,pipeline,fill;
-      bool invert;
+      int invert;
   
       long   bytecount,msgcount;
       double ts,timecount;
