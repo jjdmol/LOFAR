@@ -1,10 +1,13 @@
 MEQ in general:
 
-  * think through writability & privatization issues. Perhaps finally
-    implement copy-on-write in DMI?
-    
   * automatically add the cells to the ResultSet? Some nodes (Freq,Time)
     are still missing it!
+    
+  * Delete.All.Nodes command
+    
+    + think through writability & privatization issues. Perhaps finally
+      implement simple copy-on-write as the default policy in DMI?
+      27/11/03: good to go for now. Still thinking about COW.
     
     + ResultSet shows up in Glish with ::dmi_actual_type=datarecord. WTF?
       24/11/03: it got cloned along the way, clone's not implemented, and

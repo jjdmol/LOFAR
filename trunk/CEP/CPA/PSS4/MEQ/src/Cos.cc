@@ -40,12 +40,4 @@ Vells Cos::evaluate (const Request&,const LoShape &,
   return cos(*(values[0]));
 }
 
-///void Cos::evaluateVells (Vells& result, const Request&,
-///			 const vector<Vells*>& values)
-///  if (result.isReal()) {
-///    result.getRealArray() = cos(values[0]->getRealArray());
-///  } else {
-///    result.getComplexArray() = cos(values[0]->getComplexArray());
-///  }
-
 } // namespace Meq
