@@ -77,7 +77,7 @@ class GCFTask : public GCFFsm
     static void stop();
  
     // Get the name of the task.
-    inline string& getName() {return _name;}
+    inline const string& getName() const {return _name;}
     /// Set the name of the task.
     inline void setName(string& name) {_name = name;}
     static int _argc;
@@ -92,11 +92,13 @@ class GCFTask : public GCFFsm
     * a signal. Signal numbers should start at 1.
     */
     void registerProtocol(unsigned short protocol_id,
-                                        const char* signal_names[]);
-    friend class GCFPort;
-    const char* evtstr(const GCFEvent& e);
+                          const char* signal_names[]);
 
   private:
+    friend class GCFPort;
+    friend class GTMSocket;
+    friend class GCFRawPort;
+    const char* evtstr(const GCFEvent& e) const;
 		/// Is private to avoid initialising a task without giving an inital state and the task name
     GCFTask();
     string _name;

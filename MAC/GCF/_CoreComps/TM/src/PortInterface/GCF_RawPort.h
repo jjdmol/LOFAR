@@ -25,6 +25,7 @@
 
 #include "GCF_PortInterface.h"
 #include "GCF_PeerAddr.h"
+#include <TM/GCF_Event.h>
 #include <Common/lofar_string.h>
 #include <Common/lofar_map.h>
 
@@ -82,10 +83,10 @@ class GCFRawPort : public GCFPortInterface
     void schedule_close();
     void schedule_connected();
 
-    inline bool isSlave() const {return _pMaster != 0;}
-    virtual void    setMaster(GCFPort* pMaster);
-    virtual int     dispatch(GCFEvent& event);
-    bool findAddr(GCFPeerAddr& addr);
+    inline bool                 isSlave() const {return _pMaster != 0;}
+    virtual void                setMaster(GCFPort* pMaster);
+    virtual GCFEvent::TResult   dispatch(GCFEvent& event);
+    bool                        findAddr(GCFPeerAddr& addr);
     friend class GCFPort; // to access the setMaster method
     friend class GTMTimer;
 

@@ -61,7 +61,7 @@ class GSAService
         
   private: // methods
     // interface for GSAWaitForAnswer
-    void handleHotLink(const DpMsgAnswer& answer);
+    void handleHotLink(const DpMsgAnswer& answer, const GSAWaitForAnswer& wait);
     void handleHotLink(const DpHLGroup& group);
     friend class GSAWaitForAnswer;
   

@@ -24,6 +24,16 @@
 #include "GCF_PVString.h"
 
 /** No descriptions */
+TSAResult GCFPVString::setValue(const string value)
+{
+  TSAResult result(SA_NO_ERROR);
+
+  _value = value;
+  
+  return result;
+}
+
+/** No descriptions */
 GCFPValue* GCFPVString::clone() const
 {
   GCFPValue* pNewValue = new GCFPVString(_value);

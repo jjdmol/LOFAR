@@ -32,6 +32,8 @@ class GCFPVInteger : public GCFPValue
   	virtual ~GCFPVInteger() {;}
     /** Write property of integer value_. */
     virtual inline void setValue( const int newVal) {_value = newVal;}
+     /** No descriptions */
+    virtual TSAResult setValue(const string value);
     /** Read property of integer value_. */
     virtual inline int getValue() const {return _value;}
     /** No descriptions */

@@ -133,7 +133,7 @@ void GCFTask::start()
 void GCFTask::stop()
 {
   vector<GCFHandler*> tempHandlers(_handlers);
-
+  
   for (THandlerIter iter = tempHandlers.begin() ;
         iter != tempHandlers.end() ; 
         ++iter)
@@ -150,10 +150,11 @@ void GCFTask::registerHandler(GCFHandler& handler)
 void GCFTask::registerProtocol(unsigned short protocolID,
               const char* signal_names[])
 {
+  assert((protocolID << 8) <= F_EVT_PROTOCOL_MASK);
   _protocols[protocolID] = signal_names;
 }
 
-const char* GCFTask::evtstr(const GCFEvent& e)
+const char* GCFTask::evtstr(const GCFEvent& e)  const
 {
   static const char* unknown = "unknown signal";
   const char* signame;

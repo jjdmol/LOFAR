@@ -41,9 +41,9 @@ GPIController::~GPIController()
 {
 }
 
-int GPIController::initial(GCFEvent& e, GCFPortInterface& p)
+GCFEvent::TResult GPIController::initial(GCFEvent& e, GCFPortInterface& p)
 {
-  int status = GCFEvent::HANDLED;
+  GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (e.signal)
   {
@@ -56,7 +56,7 @@ int GPIController::initial(GCFEvent& e, GCFPortInterface& p)
       break;
 
     case F_CONNECTED_SIG:
-      TRAN(&GPIController::connected);
+      TRAN(GPIController::connected);
       break;
 
     case F_DISCONNECTED_SIG:
@@ -72,9 +72,9 @@ int GPIController::initial(GCFEvent& e, GCFPortInterface& p)
   return status;
 }
 
-int GPIController::connected(GCFEvent& e, GCFPortInterface& p)
+GCFEvent::TResult GPIController::connected(GCFEvent& e, GCFPortInterface& p)
 {
-  int status = GCFEvent::HANDLED;
+  GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (e.signal)
   {

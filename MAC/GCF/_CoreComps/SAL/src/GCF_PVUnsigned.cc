@@ -24,6 +24,28 @@
 #include "GCF_PVUnsigned.h"
 
 /** No descriptions */
+TSAResult GCFPVUnsigned::setValue(const string valueData)
+{
+  TSAResult result(SA_VALUESTRING_NOT_VALID);
+  
+  if (valueData.length() > 0)
+  {
+    char* validPos(0);
+    long int value = strtol(valueData.c_str(), &validPos, 10);
+    if (*validPos == '\0')
+    {
+      if (value >= 0)
+      {
+        _value = value;
+        result = SA_NO_ERROR;
+      }
+    }
+  }
+  
+  return result;
+}
+
+/** No descriptions */
 GCFPValue* GCFPVUnsigned::clone() const
 {
   GCFPValue* pNewValue = new GCFPVUnsigned(_value);

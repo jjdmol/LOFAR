@@ -35,18 +35,18 @@ class GPAUsecountManager : public GSAService
   public:
   	GPAUsecountManager(GPAController& controller);
   	virtual ~GPAUsecountManager();
-  	TPAResult incrementUsecount(const list<TAPCProperty>& propList);
-  	TPAResult decrementUsecount(const list<TAPCProperty>& propList);
-  	TPAResult deletePropertiesByScope(const string& scope, list<string>& subScopes);
+  	void incrementUsecount(const list<TAPCProperty>& propList);
+  	void decrementUsecount(const list<TAPCProperty>& propList);
     TPAResult setDefaults(const list<TAPCProperty>& propsFromAPC);
+    void deletePropertiesByScope(const string& scope, list<string>& subScopes);
     void deleteAllProperties();
     bool waitForAsyncResponses();
 			
   protected:
     void propCreated(const string& propName);
     void propDeleted(const string& propName);
+    inline void propValueGet(const string& /*propName*/, const GCFPValue& /*value*/) {}; 
     inline void propValueChanged(const string& /*propName*/, const GCFPValue& /*value*/) {};
-    inline void propValueGet(const string& /*propName*/, const GCFPValue& /*value*/) {};
     inline void propSubscribed(const string& /*propName*/) {};
     inline void propUnsubscribed(const string& /*propName*/) {};
 
@@ -59,7 +59,7 @@ class GPAUsecountManager : public GSAService
     typedef map<string, unsigned int>::iterator TPropListIter;	
     
   private: // admin. data members
-    typedef enum State {DECREMENT, DELETE_BY_SCOPE, DELETE_ALL};
+    typedef enum State {NO_ACTION, DECREMENT, DELETE_BY_SCOPE, DELETE_ALL};
     State _state;
     list<string> _tempPropList;
     unsigned int _counter;

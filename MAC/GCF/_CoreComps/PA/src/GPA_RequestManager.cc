@@ -37,7 +37,7 @@ void GPARequestManager::registerRequest(GCFPortInterface& requestPort, const GCF
   TRequest request;
   request.pRPort = &requestPort;
   char* buffer = new char[e.length];
-  strncpy(buffer, (const char*) &e, e.length);
+  memcpy(buffer, (const char*) &e, e.length);
   request.pEvent = (GCFEvent*) buffer;
 
   _requests.push_back(request);
@@ -91,6 +91,7 @@ void GPARequestManager::deleteRequestsOfPort(const GCFPortInterface& requestPort
         if (pRequest->pEvent)
           delete pRequest->pEvent;
         iter = _requests.erase(iter);
+        --iter;
       }
     }
   }

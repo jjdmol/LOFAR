@@ -50,7 +50,7 @@ class GPMController : public GCFTask
     TPMResult loadAPC(const string& apcName, const string& scope);
     TPMResult unloadAPC(const string& apcName, const string& scope);
     TPMResult reloadAPC(const string& apcName, const string& scope);
-    TPMResult loadMyProperties(TPropertySet& newSet);
+    TPMResult loadMyProperties(const TPropertySet& newSet);
     TPMResult unloadMyProperties(const string& scope);
     TPMResult set(const string& propName, const GCFPValue& value);
     TPMResult get(const string& propName);
@@ -61,8 +61,8 @@ class GPMController : public GCFTask
     void propertiesUnlinked(const string& scope, list<string>& notUnlinkedProps);
   
   private: // state methods
-    int initial  (GCFEvent& e, GCFPortInterface& p);
-    int connected(GCFEvent& e, GCFPortInterface& p);
+    GCFEvent::TResult initial  (GCFEvent& e, GCFPortInterface& p);
+    GCFEvent::TResult connected(GCFEvent& e, GCFPortInterface& p);
         
   private: // helper methods
     GPMPropertySet* findPropertySet(const string& propName);

@@ -176,13 +176,13 @@ GTMConfig::operator()(string& name, int col)
 }
 
 const char*
-GTMConfig::operator()(string&  block, string& name, int col)
+GTMConfig::operator()(const string&  block, string& name, int col)
 {
   return value(block, name, col);
 }
 
 const char*
-GTMConfig::value(string& block, string& name, int col)
+GTMConfig::value(const string& block, string& name, int col)
 {
   if (name == "" || col < 1)
       return NULL;
@@ -285,7 +285,7 @@ GTMConfig::_ivalue(const char* block, const char* name, int index, int col)
 }
 
 int
-GTMConfig::search_block(string& block)
+GTMConfig::search_block(const string& block)
 {
   int block_id = 0;
   

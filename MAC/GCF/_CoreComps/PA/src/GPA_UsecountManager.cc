@@ -24,11 +24,12 @@
 #include "GPA_Controller.h"
 #include <strings.h>
 #include <stdio.h>
+#include <unistd.h>
 
 GPAUsecountManager::GPAUsecountManager(GPAController& controller) :
   GSAService(),
   _controller(controller),
-  _state(DECREMENT),
+  _state(NO_ACTION),
   _counter(0)
 {
 }
@@ -37,59 +38,57 @@ GPAUsecountManager::~GPAUsecountManager()
 {
 }
 
-TPAResult GPAUsecountManager::incrementUsecount(const list<TAPCProperty>& propList)
+void GPAUsecountManager::incrementUsecount(const list<TAPCProperty>& propList)
 {
-  TPAResult result(PA_NO_ERROR);
+  TSAResult result;
   TPropListIter iter;
-  _counter = 0;
+
+  assert(_counter == 0);
+  assert(_state == NO_ACTION);
+  
   for (list<TAPCProperty>::const_iterator pAPCProperty = propList.begin(); 
        pAPCProperty != propList.end(); ++pAPCProperty)
   {
     iter = _propList.find(pAPCProperty->name);
-    if (iter->first == pAPCProperty->name)
+    if (iter != _propList.end())
     {
       iter->second++;
     }
     else
     {      
-      if (GSAService::createProp(pAPCProperty->name, 
-                      pAPCProperty->pValue->getType()) 
-                      == SA_NO_ERROR)
-      {
-        _counter++;
-      }
-      else
-        result = PA_SCADA_ERROR;
+      result = GSAService::createProp(pAPCProperty->name, 
+                                      pAPCProperty->pValue->getType());                      
+      assert(result == SA_NO_ERROR);
+      _counter++;
     }
   }
-  return result;
 }
 
-TPAResult GPAUsecountManager::decrementUsecount(const list<TAPCProperty>& propList)
+void GPAUsecountManager::decrementUsecount(const list<TAPCProperty>& propList)
 {
-  TPAResult result(PA_NO_ERROR);
+  TSAResult result;
   TPropListIter iter;
-  _counter = 0;
+
+  assert(_counter == 0);
+  assert(_state == NO_ACTION);
+  
   for (list<TAPCProperty>::const_iterator pAPCProperty = propList.begin(); 
        pAPCProperty != propList.end(); ++pAPCProperty)
   {
     iter = _propList.find(pAPCProperty->name);
-    if (iter->first == pAPCProperty->name)
+
+    assert(iter != _propList.end());
+
+    iter->second--;
+    if (iter->second == 0)
     {
-      iter->second--;
-      if (iter->second == 0)
-      {
-        if (GSAService::deleteProp(pAPCProperty->name) == SA_NO_ERROR)
-        {
-          _state = DECREMENT;
-          _counter++;
-        }
-        else 
-          result = PA_SCADA_ERROR;
-      }
+      _propList.erase(pAPCProperty->name);
+      result = GSAService::deleteProp(pAPCProperty->name);
+      assert(result == SA_NO_ERROR);
+      _state = DECREMENT;
+      _counter++;
     }
   }  
-  return result;
 }
 
 TPAResult GPAUsecountManager::setDefaults(const list<TAPCProperty>& propList)
@@ -117,15 +116,17 @@ TPAResult GPAUsecountManager::setDefaults(const list<TAPCProperty>& propList)
   return result;
 }
 
-TPAResult GPAUsecountManager::deletePropertiesByScope(const string& scope, 
-                                                      list<string>& subScopes)
+void GPAUsecountManager::deletePropertiesByScope(const string& scope, 
+                                                 list<string>& subScopes)
 {
-  TPAResult result(PA_NO_ERROR);
   const string* pPropName;
   size_t propNameLength;
   bool belongsToASubScope(false);
-  _counter = 0;
-  
+  if (_state == NO_ACTION)
+  {
+    assert(_counter == 0);
+  }
+    
   for (TPropListIter iter = _propList.begin();
        iter != _propList.end(); ++iter)
   {
@@ -150,10 +151,10 @@ TPAResult GPAUsecountManager::deletePropertiesByScope(const string& scope,
           _state = DELETE_BY_SCOPE;
           _counter++;
         }
+        _propList.erase(*pPropName);
       }      
     }
   }
-  return result;
 }
 
 void GPAUsecountManager::deleteAllProperties()
@@ -168,12 +169,13 @@ void GPAUsecountManager::deleteAllProperties()
       _counter++;
     }
   }
+  _propList.clear();
 }
 
 void GPAUsecountManager::propCreated(const string& propName)
 {
   _counter--;
-  _propList[propName] = 0; // adds a new usecounter for the just created property
+  _propList[propName] = 1; // adds a new usecounter for the just created property
   _tempPropList.push_back(propName);
   if (_counter == 0)
   {
@@ -185,11 +187,12 @@ void GPAUsecountManager::propCreated(const string& propName)
 void GPAUsecountManager::propDeleted(const string& propName)
 {
   _counter--;
-  _propList.erase(propName);
   _tempPropList.push_back(propName);
   if (_counter == 0)
   {
-    switch (_state)
+    State curState(_state);
+    _state = NO_ACTION;
+    switch (curState)
     {
       case DECREMENT:  
         _controller.propertiesDeleted(_tempPropList);
@@ -202,7 +205,7 @@ void GPAUsecountManager::propDeleted(const string& propName)
         break;
     }
     _tempPropList.clear();
-  }
+  }  
 }
 
 bool GPAUsecountManager::waitForAsyncResponses()

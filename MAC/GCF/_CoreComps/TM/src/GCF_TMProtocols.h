@@ -81,7 +81,7 @@ extern const char* F_FSM_PROTOCOL_names[]; // defined in GCF_Protocols.cc
  */
 enum {
     F_CONNECT_ID = 1,   // sent to the accept port to connect
-                      // to a specific SPP port
+                        // to a specific SPP port
     F_CONNECTED_ID,     // sent to the port to indicate completion
     F_DISCONNECTED_ID,  // sent to the port that is disconnected
     F_CLOSED_ID,        // to delay closing a port
@@ -89,7 +89,8 @@ enum {
     F_DATAIN_ID,        // data available for reading
     F_DATAOUT_ID,       // space available to write
     F_RAW_ID,           // no event!, only the data is sent (used with direct ports)
-    F_ACCEPT_REQ_ID,           // this event will be used by the port provider to indicate the user that there is one more connect request of a client (SAP)
+    F_ACCEPT_REQ_ID,    // indicatation of the port provider to the user about a client connect request (SAP)
+    F_DISPATCHED_ID     // SCADA API has dispachted (read/write on own ports) right now
 };
 
 #define F_CONNECT_SIG       F_SIGNAL(F_PORT_PROTOCOL, F_CONNECT_ID,       F_IN)
@@ -101,6 +102,7 @@ enum {
 #define F_DATAOUT_SIG       F_SIGNAL(F_PORT_PROTOCOL, F_DATAOUT_ID,       F_IN)
 #define F_RAW_SIG           F_SIGNAL(F_PORT_PROTOCOL, F_RAW_ID,           F_INOUT)
 #define F_ACCEPT_REQ_SIG    F_SIGNAL(F_PORT_PROTOCOL, F_ACCEPT_REQ_ID,    F_IN)
+#define F_DISPATCHED_SIG    F_SIGNAL(F_PORT_PROTOCOL, F_DISPATCHED_ID,    F_IN)
 
 extern const char* F_PORT_PROTOCOL_names[]; // defined in GCF_TMProtocols.cc
 

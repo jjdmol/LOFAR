@@ -67,9 +67,9 @@ GPISupervisoryServer::~GPISupervisoryServer()
 {
 }
 
-int GPISupervisoryServer::initial(GCFEvent& e, GCFPortInterface& p)
+GCFEvent::TResult GPISupervisoryServer::initial(GCFEvent& e, GCFPortInterface& p)
 {
-  int status = GCFEvent::HANDLED;
+  GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (e.signal)
   {
@@ -85,7 +85,7 @@ int GPISupervisoryServer::initial(GCFEvent& e, GCFPortInterface& p)
 
     case F_CONNECTED_SIG:
       if (_ssPort.isConnected() && _propertyAgent.isConnected())
-        TRAN(&GPISupervisoryServer::connected);
+        TRAN(GPISupervisoryServer::connected);
       break;
 
     case F_DISCONNECTED_SIG:
@@ -100,9 +100,9 @@ int GPISupervisoryServer::initial(GCFEvent& e, GCFPortInterface& p)
   return status;
 }
 
-int GPISupervisoryServer::connected(GCFEvent& e, GCFPortInterface& p)
+GCFEvent::TResult GPISupervisoryServer::connected(GCFEvent& e, GCFPortInterface& p)
 {
-  int status = GCFEvent::HANDLED;
+  GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (e.signal)
   {
@@ -112,7 +112,7 @@ int GPISupervisoryServer::connected(GCFEvent& e, GCFPortInterface& p)
     case F_DISCONNECTED_SIG:      
       if (&p == &_ssPort)
       {
-        TRAN(&GPISupervisoryServer::closing);
+        TRAN(GPISupervisoryServer::closing);
       }
       break;
      
@@ -132,7 +132,7 @@ int GPISupervisoryServer::connected(GCFEvent& e, GCFPortInterface& p)
       {
         if (pResponse->result == 1) // no error
         {
-          TRAN(&GPISupervisoryServer::operational);
+          TRAN(GPISupervisoryServer::operational);
           break;
         }
       }
@@ -148,16 +148,16 @@ int GPISupervisoryServer::connected(GCFEvent& e, GCFPortInterface& p)
   return status;
 }
 
-int GPISupervisoryServer::operational(GCFEvent& e, GCFPortInterface& p)
+GCFEvent::TResult GPISupervisoryServer::operational(GCFEvent& e, GCFPortInterface& p)
 {
-  int status = GCFEvent::HANDLED;
+  GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (e.signal)
   {      
     case F_DISCONNECTED_SIG:      
       if (&p == &_ssPort)
       {
-        TRAN(&GPISupervisoryServer::closing);
+        TRAN(GPISupervisoryServer::closing);
       }
       break;
 
@@ -228,9 +228,9 @@ int GPISupervisoryServer::operational(GCFEvent& e, GCFPortInterface& p)
   return status;
 }
 
-int GPISupervisoryServer::closing(GCFEvent& e, GCFPortInterface& p)
+GCFEvent::TResult GPISupervisoryServer::closing(GCFEvent& e, GCFPortInterface& p)
 {
-  int status = GCFEvent::HANDLED;
+  GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (e.signal)
   {

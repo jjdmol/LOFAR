@@ -136,6 +136,8 @@ ssize_t GCFTCPPort::send(const GCFEvent& e, void* buf, size_t count)
 {
   size_t written = 0;
 
+  assert(_pSocket);
+
   if (MSPP == getType())  
     return 0; // no messages can be send by this type of port
 
@@ -165,6 +167,7 @@ ssize_t GCFTCPPort::sendv(const GCFEvent& e, const iovec buffers[], int n)
 {
   size_t written = 0;
   size_t count = 0;
+  assert(_pSocket);
   if (MSPP == getType())  
     return 0; // no messages can be send by this type of port
   
@@ -191,6 +194,7 @@ ssize_t GCFTCPPort::sendv(const GCFEvent& e, const iovec buffers[], int n)
 
 ssize_t GCFTCPPort::recv(void* buf, size_t count)
 {
+  assert(_pSocket);
   return _pSocket->recv(buf, count);
 }
 
@@ -201,11 +205,9 @@ ssize_t GCFTCPPort::recvv(iovec buffers[], int n)
 
 int GCFTCPPort::close()
 {
-  if (isConnected()) 
-  {
-    _pSocket->close();
-    schedule_close();
-  }
+  _pSocket->close();
+  schedule_close();
+
   // return success when port is still connected
   // scheduled close will only occur later
   return (isConnected() ? 0 : -1);

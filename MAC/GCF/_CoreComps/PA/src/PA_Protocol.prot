@@ -12,8 +12,9 @@ include = '<sys/time.h>';
 
 prelude = << PRELUDE_END
 enum {
-	PA_PROTOCOL = F_APL_PROTOCOL
+	PA_PROTOCOL = (F_GCF_PROTOCOL + 1)
 };
+#include <PA/GPA_Defines.h>
 PRELUDE_END;
 
 //

@@ -72,7 +72,9 @@ void LofarLogger::trace(const string& logger,const string& logEvent,const char* 
     {
         log4cplus::tostringstream _log4cplus_buf;
         _log4cplus_buf << logEvent;
-        log4cplusLogger.forcedLog(log4cplus::TRACE_LOG_LEVEL,_log4cplus_buf.str(),file,line);
+        const char* shortFile = strrchr(file, '/');
+        if (shortFile == 0) shortFile = file; else shortFile++;
+        log4cplusLogger.forcedLog(log4cplus::TRACE_LOG_LEVEL,_log4cplus_buf.str(),shortFile,line);
     }
 }
 
@@ -87,7 +89,9 @@ void LofarLogger::debug(const string& logger,const string& logEvent,const char* 
     {
         log4cplus::tostringstream _log4cplus_buf;
         _log4cplus_buf << logEvent;
-        log4cplusLogger.forcedLog(log4cplus::DEBUG_LOG_LEVEL, _log4cplus_buf.str(), file,line);
+        const char* shortFile = strrchr(file, '/');
+        if (shortFile == 0) shortFile = file; else shortFile++;
+        log4cplusLogger.forcedLog(log4cplus::DEBUG_LOG_LEVEL, _log4cplus_buf.str(), shortFile,line);
     }
 }
 
@@ -102,7 +106,9 @@ void LofarLogger::info(const string& logger,const string& logEvent,const char* f
     {
         log4cplus::tostringstream _log4cplus_buf;
         _log4cplus_buf << logEvent;
-        log4cplusLogger.forcedLog(log4cplus::INFO_LOG_LEVEL, _log4cplus_buf.str(), file,line);
+        const char* shortFile = strrchr(file, '/');
+        if (shortFile == 0) shortFile = file; else shortFile++;
+        log4cplusLogger.forcedLog(log4cplus::INFO_LOG_LEVEL, _log4cplus_buf.str(), shortFile,line);
     }
 }
 
@@ -117,7 +123,9 @@ void LofarLogger::warn(const string& logger,const string& logEvent,const char* f
     {
         log4cplus::tostringstream _log4cplus_buf;
         _log4cplus_buf << logEvent;
-        log4cplusLogger.forcedLog(log4cplus::WARN_LOG_LEVEL, _log4cplus_buf.str(), file,line);
+        const char* shortFile = strrchr(file, '/');
+        if (shortFile == 0) shortFile = file; else shortFile++;
+        log4cplusLogger.forcedLog(log4cplus::WARN_LOG_LEVEL, _log4cplus_buf.str(), shortFile,line);
     }
 }
 
@@ -132,7 +140,9 @@ void LofarLogger::error(const string& logger,const string& logEvent,const char* 
     {
         log4cplus::tostringstream _log4cplus_buf;
         _log4cplus_buf << logEvent;
-        log4cplusLogger.forcedLog(log4cplus::ERROR_LOG_LEVEL, _log4cplus_buf.str(), file,line);
+        const char* shortFile = strrchr(file, '/');
+        if (shortFile == 0) shortFile = file; else shortFile++;
+        log4cplusLogger.forcedLog(log4cplus::ERROR_LOG_LEVEL, _log4cplus_buf.str(), shortFile,line);
     }
 }
 
@@ -147,7 +157,9 @@ void LofarLogger::fatal(const string& logger,const string& logEvent,const char* 
     {
         log4cplus::tostringstream _log4cplus_buf;
         _log4cplus_buf << logEvent;
-        log4cplusLogger.forcedLog(log4cplus::FATAL_LOG_LEVEL, _log4cplus_buf.str(), file,line);
+        const char* shortFile = strrchr(file, '/');
+        if (shortFile == 0) shortFile = file; else shortFile++;
+        log4cplusLogger.forcedLog(log4cplus::FATAL_LOG_LEVEL, _log4cplus_buf.str(), shortFile,line);
     }
 }
 

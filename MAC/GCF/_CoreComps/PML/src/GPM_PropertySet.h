@@ -35,7 +35,7 @@ class GPMController;
 class GPMPropertySet : public GSAService
 {
   public:
-    GPMPropertySet(GPMController& controller, TPropertySet& propSet);
+    GPMPropertySet(GPMController& controller, const TPropertySet& propSet);
     ~GPMPropertySet();
     
   protected:
@@ -48,12 +48,13 @@ class GPMPropertySet : public GSAService
   
   private: // methods for GPMController
     friend class GPMController;  
-    TPMResult linkProperties(unsigned int seqnr, list<string>& properties);
+    void linkProperties(unsigned int seqnr, list<string>& properties);
     TPMResult unlinkProperties(unsigned int seqnr, list<string>& properties);
     TPMResult getValue(const string& propName, GCFPValue** pValue);
     TPMResult setValue(const string& propName, const GCFPValue& value);
     TPMResult getOldValue(const string& propName, GCFPValue** value);
-    inline const string& getScope() const {return _scope;}   
+    inline const string& getScope() const {return _scope;}
+    void retryLinking();    
   
   private: // helper methods
     TPMResult cutScope(string& propName);

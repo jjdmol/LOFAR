@@ -24,6 +24,25 @@
 #include "GCF_PVDouble.h"
 
 /** No descriptions */
+TSAResult GCFPVDouble::setValue(const string valueData)
+{
+  TSAResult result(SA_VALUESTRING_NOT_VALID);
+
+  if (valueData.length() > 0)
+  {
+    char* validPos(0);
+    double value = strtod(valueData.c_str(), &validPos);
+    if (*validPos == '\0')
+    {
+      _value = value;
+      result = SA_NO_ERROR;
+    }
+  }
+  
+  return result;
+}
+
+/** No descriptions */
 GCFPValue* GCFPVDouble::clone() const
 {
   GCFPValue* pNewValue = new GCFPVDouble(_value);

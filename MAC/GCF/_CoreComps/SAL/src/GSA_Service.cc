@@ -66,7 +66,7 @@ GSAService::~GSAService()
 
 // Receive Signals.
 // We are interested in SIGINT and SIGTERM. 
-void GSAService::handleHotLink(const DpMsgAnswer& answer)
+void GSAService::handleHotLink(const DpMsgAnswer& answer, const GSAWaitForAnswer& wait)
 {
   CharString pvssDPEConfigName;
   string DPEConfigName;
@@ -102,6 +102,9 @@ void GSAService::handleHotLink(const DpMsgAnswer& answer)
             propUnsubscribed(propName);
             break;
           case DP_MSG_REQ_NEW_DP:
+            LOFAR_LOG_INFO(SAL_STDOUT_LOGGER, (
+                "Propery %s was created successfully", 
+                propName.c_str()));   
             propCreated(propName);
             break;
           case DP_MSG_CMD_NEWDEL_DP:
@@ -156,9 +159,14 @@ void GSAService::handleHotLink(const DpMsgAnswer& answer)
   }
   if (!handled)
   {
-    LOFAR_LOG_TRACE(SAL_STDOUT_LOGGER, (
-        "Answer on: %d is not handled",
-        answer.isAnswerOn()));   
+    if (answer.isAnswerOn() == DP_MSG_CMD_NEWDEL_DP)
+    {
+      propDeleted(wait.getPropName());
+    }
+    else
+      LOFAR_LOG_TRACE(SAL_STDOUT_LOGGER, (
+          "Answer on: %d is not handled",
+          answer.isAnswerOn()));   
   }  
 }
 
@@ -171,9 +179,6 @@ void GSAService::handleHotLink(const DpHLGroup& group)
   string DPEConfigName;
   string propName;
   GCFPValue* pPropertyValue(0);
-
-  LOFAR_LOG_DEBUG(SAL_STDOUT_LOGGER, (
-    "Receiving hotlink"));   
 
   // A group consists of pairs of DpIdentifier and values called items.
   // There is exactly one item for all configs we are connected.
@@ -300,6 +305,7 @@ TSAResult GSAService::deleteProp(const string& propName)
   TSAResult result(SA_NO_ERROR);  
   DpIdentifier dpId;
   GSAWaitForAnswer *pWFA = new GSAWaitForAnswer(*this);
+  pWFA->setPropName(propName);
 
   LOFAR_LOG_TRACE(SAL_STDOUT_LOGGER, (
       "Delete property '%s'", 
@@ -644,7 +650,7 @@ TSAResult GSAService::convertPVSSToMAC(const Variable& variable,
     else
       result = SA_VARIABLE_WRONG_TYPE;
   }
-  else if (typeName == "FLOAT_VAL")
+  else if (typeName == "DOUBLE_VAL")
   {
     if (variable.isA() == FLOAT_VAR)
       *pMacValue = new GCFPVDouble(((FloatVar *)&variable)->getValue());
@@ -658,7 +664,7 @@ TSAResult GSAService::convertPVSSToMAC(const Variable& variable,
     else
       result = SA_VARIABLE_WRONG_TYPE;     
   }
-  else if (typeName.ncmp("DYN", 3))
+  else if (typeName.ncmp("DYN", 3) == 0)
   {
     const DynVar* pDynVar = static_cast<const DynVar*>(&variable);
     if (pDynVar)

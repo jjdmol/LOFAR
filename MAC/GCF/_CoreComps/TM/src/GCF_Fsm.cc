@@ -23,3 +23,28 @@
 #include <GCF_Fsm.h>
 
 GCFDummyPort GCFFsm::_gcfPort(0, "GCF", F_FSM_PROTOCOL);
+
+void GCFFsm::initFsm()
+{
+  GCFEvent e;
+  e.signal = F_ENTRY_SIG;
+  (void)(this->*_state)(e, _gcfPort); // entry signal
+  e.signal = F_INIT_SIG;
+  if (GCFEvent::HANDLED != (this->*_state)(e, _gcfPort)) // initial transition
+  {
+    cerr << "Fsm::init: initial transition F_SIGNAL(F_FSM_PROTOCOL, F_INIT_SIG) not handled." << endl;
+    exit(1); // EXIT
+  }
+}
+
+void GCFFsm::tran(State target)
+{
+  GCFEvent e;
+  e.signal = F_EXIT_SIG;
+  (void)(this->*_state)(e, _gcfPort); // exit signal
+
+  _state = target; // state transition
+  
+  e.signal = F_ENTRY_SIG;
+  (void)(this->*_state)(e, _gcfPort); // entry signal
+}

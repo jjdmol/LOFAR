@@ -44,47 +44,47 @@ GCFPeerAddr::~GCFPeerAddr()
 {
 }
 
-string& GCFPeerAddr::getTaskname()
+const string& GCFPeerAddr::getTaskname() const 
 {
   return _taskname;
 }
 
-string& GCFPeerAddr::getHost()
+const string& GCFPeerAddr::getHost() const 
 {
   return _host;
 }
 
-string& GCFPeerAddr::getPortname()
+const string& GCFPeerAddr::getPortname() const 
 {
   return _portname;
 }
 
-string& GCFPeerAddr::getPorttype()
+const string& GCFPeerAddr::getPorttype() const 
 {
   return _porttype;
 }
 
-int GCFPeerAddr::getPortnumber()
+int GCFPeerAddr::getPortnumber() const 
 {
   return _portnumber;
 }
 
-void GCFPeerAddr::setTaskname(string& taskname)
+void GCFPeerAddr::setTaskname(const string& taskname)
 {
   _taskname = taskname;
 }
 
-void GCFPeerAddr::setHost(string& host)
+void GCFPeerAddr::setHost(const string& host)
 {
   _host = host;
 }
 
-void GCFPeerAddr::setPortname(string& portname)
+void GCFPeerAddr::setPortname(const string& portname)
 {
   _portname = portname;
 }
 
-void GCFPeerAddr::setPorttype(string& porttype)
+void GCFPeerAddr::setPorttype(const string& porttype)
 {
   _porttype = porttype;
 }

@@ -23,7 +23,8 @@
 #include "GTM_Socket.h"
 #include "GTM_SocketHandler.h"
 #include "GCF_TCPPort.h"
-#include <GCF_Event.h>
+#include <GCF_Task.h>
+#include <GTM_Defines.h>
 #include <GCF_TMProtocols.h>
 #include <PortInterface/GCF_PeerAddr.h>
 #include <netinet/in.h>
@@ -85,7 +86,7 @@ int GTMSocket::setFD(int fd)
   return (fd);    
 }
 
-int GTMSocket::open(GCFPeerAddr& addr)
+int GTMSocket::open(GCFPeerAddr& /*addr*/)
 {
   if (_socketFD > -1)
     return 0;
@@ -121,7 +122,7 @@ int GTMSocket::connect(GCFPeerAddr& serveraddr)
 void GTMSocket::workProc()
 {
   GCFEvent e(F_DISCONNECTED_SIG);
-  int status = GCFEvent::NOT_HANDLED;
+  GCFEvent::TResult status;
   
   ssize_t bytesRead = read(_socketFD, &e, sizeof(e));
   if (bytesRead == 0)
@@ -131,12 +132,21 @@ void GTMSocket::workProc()
   else if (bytesRead == sizeof(e))
   {
     status = eventReceived(e);
+    if (status != GCFEvent::HANDLED)
+    {
+      LOFAR_LOG_INFO(TM_STDOUT_LOGGER, (
+        "Event %s for task %s on port %s not handled or an error occured",
+        _port.getTask()->evtstr(e),
+        _port.getTask()->getName().c_str(), 
+        _port.getName().c_str()
+        ));
+    }
   }
 }
 
-int GTMSocket::eventReceived(const GCFEvent& e)
+GCFEvent::TResult GTMSocket::eventReceived(const GCFEvent& e)
 {
-  int status = GCFEvent::NOT_HANDLED;
+  GCFEvent::TResult status = GCFEvent::NOT_HANDLED;
   char*   event_buf  = 0;
   GCFEvent* full_event = 0;
 
@@ -147,13 +157,26 @@ int GTMSocket::eventReceived(const GCFEvent& e)
   if (e.length - sizeof(e) > 0)
   {
     // recv the rest of the message (payload)
-    ssize_t count = recv(event_buf + sizeof(e),
-                          e.length - sizeof(e));
+    ssize_t payloadLength = e.length - sizeof(e);
     
-    if ((ssize_t)(e.length - sizeof(e)) != count)
+    ssize_t count = recv(event_buf + sizeof(e),
+                          payloadLength);
+    
+    if (payloadLength != count)
     {
-      fprintf(stderr, "truncated recv (count=%d)", count);
-      exit(1);
+      LOFAR_LOG_FATAL(TM_STDOUT_LOGGER, (
+          "truncated recv on event %s (missing %d bytes)",
+          _port.getTask()->evtstr(e),
+          payloadLength - count
+          ));
+    }
+    if (payloadLength != count) // retry to read the rest
+    {
+      //TODO: Make this retry more secure
+      usleep(10);
+      count += recv(event_buf + sizeof(e) + count ,
+                           payloadLength - count);
+      assert(payloadLength == count);
     }
   }
 

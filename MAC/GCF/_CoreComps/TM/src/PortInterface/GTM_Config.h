@@ -73,7 +73,7 @@ class GTMConfig
   
   void S_trunc(string& str);
 
-  int search_block(string& block);
+  int search_block(const string& block);
   const char* search_value(int col);
   
 public:
@@ -88,9 +88,9 @@ public:
   ~GTMConfig(void);
   
   const char* value(string& name, int col = 1);
-  const char* value(string& block, string& name, int col = 1);
+  const char* value(const string& block, string& name, int col = 1);
   const char* operator()(string& name, int col = 1);
-  const char* operator()(string& block, string& name, int col = 1);
+  const char* operator()(const string& block, string& name, int col = 1);
 
   const char* _ivalue(const char* block, const char* name, int index, int col);
   const char* ivalue(int index, int col = 1);

@@ -68,7 +68,7 @@ GTMTopologyService* GTMTopologyService::instance()
   return _pInstance;
 }
 
-int GTMTopologyService::getPeerAddr(string& localtaskname,
+int GTMTopologyService::getPeerAddr(const string& localtaskname,
 				  string& localportname,
 				  GCFPeerAddr& peeraddr)
 {

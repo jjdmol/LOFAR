@@ -45,9 +45,9 @@ class GPIController : public GCFTask
 	private: // helper methods
     
 	private: // state methods
-		int initial(GCFEvent& e, GCFPortInterface& p);
-		int connected(GCFEvent& e, GCFPortInterface& p);
-    int closing(GCFEvent& e, GCFPortInterface& p);
+		GCFEvent::TResult initial(GCFEvent& e, GCFPortInterface& p);
+		GCFEvent::TResult connected(GCFEvent& e, GCFPortInterface& p);
+    GCFEvent::TResult closing(GCFEvent& e, GCFPortInterface& p);
 
 	private: // data members
     typedef list<GPISupervisoryServer*> TSupervisoryServers;

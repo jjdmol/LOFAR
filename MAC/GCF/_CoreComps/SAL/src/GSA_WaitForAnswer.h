@@ -24,6 +24,7 @@
 #define  GSA_WAITFORANSWER_H
 
 #include <HotLinkWaitForAnswer.hxx>   
+#include <Common/lofar_string.h>
 
 class GSAService;
 class DpMsgAnswer;
@@ -39,6 +40,8 @@ class GSAWaitForAnswer : public HotLinkWaitForAnswer
     virtual ~GSAWaitForAnswer() {};
     
     void hotLinkCallBack(DpMsgAnswer& answer);
+    inline const string& getPropName() const {return _propName;}
+    inline void setPropName(const string& propName) {_propName = propName;}
 
   protected:
     // Answer on conenct
@@ -46,6 +49,7 @@ class GSAWaitForAnswer : public HotLinkWaitForAnswer
 
   private:
     GSAService& _service;
+    string  _propName;
 };                                 
 
 #endif

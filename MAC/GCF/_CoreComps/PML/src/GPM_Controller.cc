@@ -23,6 +23,7 @@
 #include "GPM_Controller.h"
 #include "GCF_SupTask.h"
 #include "GPM_PropertySet.h"
+#include <SAL/GSA_SCADAHandler.h>
 #include <stdio.h>
 #define DECLARE_SIGNAL_NAMES
 #include <PA/PA_Protocol.ph>
@@ -41,6 +42,8 @@ GPMController::GPMController(GCFSupervisedTask& supervisedTask) :
 
   // initialize the port
   _propertyAgent.init(*this, "client", GCFPortInterface::SAP, PA_PROTOCOL);
+
+  GSASCADAHandler::instance()->registerTask(*this);
 }
 
 GPMController::~GPMController()
@@ -53,6 +56,7 @@ GPMController::~GPMController()
     assert(pPropertySet);
     delete pPropertySet;
   }
+  GSASCADAHandler::instance()->deregisterTask(*this);
 }
 
 TPMResult GPMController::loadAPC(const string& apcName, const string& scope)
@@ -137,7 +141,7 @@ TPMResult GPMController::reloadAPC(const string& apcName, const string& scope)
   return result;
 }
 
-TPMResult GPMController::loadMyProperties(TPropertySet& newSet)
+TPMResult GPMController::loadMyProperties(const TPropertySet& newSet)
 {
   TPMResult result(PM_NO_ERROR);
   string scope = newSet.scope;
@@ -268,7 +272,7 @@ void GPMController::propertiesLinked(const string& scope, list<string>& notLinke
 {
   if (_propertyAgent.isConnected())
   {
-    PAPropertieslinkedEvent e(0, PM_NO_ERROR);
+    PAPropertieslinkedEvent e(0, PA_NO_ERROR);
     string allPropNames;
     for (list<string>::iterator iter = notLinkedProps.begin(); 
          iter != notLinkedProps.end(); ++iter)
@@ -290,7 +294,7 @@ void GPMController::propertiesUnlinked(const string& scope, list<string>& notUnl
 {
   if (_propertyAgent.isConnected())
   {
-    PAPropertiesunlinkedEvent e(0, PM_NO_ERROR);
+    PAPropertiesunlinkedEvent e(0, PA_NO_ERROR);
     string allPropNames;
     for (list<string>::iterator iter = notUnlinkedProps.begin(); 
          iter != notUnlinkedProps.end(); ++iter)
@@ -321,7 +325,10 @@ GPMPropertySet* GPMController::findPropertySet(const string& propName)
     {
       scope.erase(lastUSpos);   
       iter = _propertySets.find(scope);
-      pResult = iter->second;
+      if (iter != _propertySets.end())
+      {
+        pResult = iter->second;
+      }
     }
     else
     {
@@ -332,9 +339,9 @@ GPMPropertySet* GPMController::findPropertySet(const string& propName)
   return pResult;
 }
 
-int GPMController::initial(GCFEvent& e, GCFPortInterface& /*p*/)
+GCFEvent::TResult GPMController::initial(GCFEvent& e, GCFPortInterface& /*p*/)
 {
-  int status = GCFEvent::HANDLED;
+  GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (e.signal)
   {
@@ -347,7 +354,7 @@ int GPMController::initial(GCFEvent& e, GCFPortInterface& /*p*/)
       break;
 
     case F_CONNECTED_SIG:
-      TRAN(&GPMController::connected);
+      TRAN(GPMController::connected);
       break;
 
     case F_DISCONNECTED_SIG:
@@ -362,15 +369,16 @@ int GPMController::initial(GCFEvent& e, GCFPortInterface& /*p*/)
   return status;
 }
 
-int GPMController::connected(GCFEvent& e, GCFPortInterface& /*p*/)
+GCFEvent::TResult GPMController::connected(GCFEvent& e, GCFPortInterface& /*p*/)
 {
-  int status = GCFEvent::HANDLED;
+  GCFEvent::TResult status = GCFEvent::HANDLED;
+  TGCFResult result;
 
   switch (e.signal)
   {
     case F_DISCONNECTED_SIG:
       cout << "Lost connection to Property Agent" << endl;
-      TRAN(&GPMController::initial);
+      TRAN(GPMController::initial);
       break;
 
     case F_ENTRY_SIG:
@@ -388,41 +396,40 @@ int GPMController::connected(GCFEvent& e, GCFPortInterface& /*p*/)
     }  
     case PA_SCOPEREGISTERED:
     {
-      PAScoperegisteredEvent* response = static_cast<PAScoperegisteredEvent*>(&e);
-      if (response->result == 0) // no error
+      PAScoperegisteredEvent* pResponse = static_cast<PAScoperegisteredEvent*>(&e);
+      assert(pResponse);
+      char* pResponseData = ((char*)pResponse) + sizeof(PAScoperegisteredEvent);
+      unsigned int scopeNameLength(0);
+      sscanf(pResponseData, "%03x", &scopeNameLength);
+      string scope(pResponseData + 3, scopeNameLength);
+      result = (pResponse->result == PA_NO_ERROR ? GCF_NO_ERROR : GCF_MYPROPSLOAD_ERROR);
+      if (_preparing)
       {
-        char* pResponseData = ((char*)response) + sizeof(PAScoperegisteredEvent);
-        unsigned int scopeNameLength(0);
-        sscanf(pResponseData, "%03x", &scopeNameLength);
-        string scope(pResponseData + 3, scopeNameLength);
-        _supervisedTask.myPropertiesLoaded(scope);
-        if (_preparing)
-        {
-          _counter--;
-          if (_counter == 0)
-          {       
-            _isBusy = false;
-            _preparing = false;
-          }
-        }
-        else
+        _counter--;
+        if (_counter == 0)
+        {       
           _isBusy = false;
+          _preparing = false;
+        }
       }
+      else
+        _isBusy = false;
+        
+      _supervisedTask.myPropertiesLoaded(scope, result);
       break;
     }
 
     case PA_SCOPEUNREGISTERED:
     {
-      PAScopeunregisteredEvent* response = static_cast<PAScopeunregisteredEvent*>(&e);
-      if (response->result == 0) // no error
-      {
-        char* pResponseData = ((char*)response) + sizeof(PAScopeunregisteredEvent);
-        unsigned int scopeNameLength(0);
-        sscanf(pResponseData, "%03x", &scopeNameLength);
-        string scope(pResponseData + 3, scopeNameLength);
-        _supervisedTask.myPropertiesUnloaded(scope);
-        _isBusy = false;
-      }
+      PAScopeunregisteredEvent* pResponse = static_cast<PAScopeunregisteredEvent*>(&e);
+      assert(pResponse);
+      char* pResponseData = ((char*)pResponse) + sizeof(PAScopeunregisteredEvent);
+      unsigned int scopeNameLength(0);
+      sscanf(pResponseData, "%03x", &scopeNameLength);
+      string scope(pResponseData + 3, scopeNameLength);
+      result = (pResponse->result == PA_NO_ERROR ? GCF_NO_ERROR : GCF_MYPROPSUNLOAD_ERROR);      
+      _isBusy = false;
+      _supervisedTask.myPropertiesUnloaded(scope, result);
       break;
     }
 
@@ -460,53 +467,53 @@ int GPMController::connected(GCFEvent& e, GCFPortInterface& /*p*/)
     }
     case PA_APCLOADED:
     {
-      PAApcloadedEvent* response = static_cast<PAApcloadedEvent*>(&e);
-      if (response->result == 0) // no error
-      {
-        char* pApcData = ((char*)response) + sizeof(PAApcloadedEvent);
-        unsigned int apcNameLength(0);
-        sscanf(pApcData, "%03x", &apcNameLength);
-        string apcName(pApcData + 3, apcNameLength);
-        char* pScopeData = pApcData + 3 + apcNameLength;
-        unsigned int scopeNameLength(0);
-        sscanf(pScopeData, "%03x", &scopeNameLength);
-        string scope(pScopeData + 3, scopeNameLength);
-        _supervisedTask.apcLoaded(apcName, scope);
-      }
+      PAApcloadedEvent* pResponse = static_cast<PAApcloadedEvent*>(&e);
+      assert(pResponse);
+      _isBusy = false;
+      char* pApcData = ((char*)pResponse) + sizeof(PAApcloadedEvent);
+      unsigned int apcNameLength(0);
+      sscanf(pApcData, "%03x", &apcNameLength);
+      string apcName(pApcData + 3, apcNameLength);
+      char* pScopeData = pApcData + 3 + apcNameLength;
+      unsigned int scopeNameLength(0);
+      sscanf(pScopeData, "%03x", &scopeNameLength);
+      string scope(pScopeData + 3, scopeNameLength);
+      result = (pResponse->result == PA_NO_ERROR ? GCF_NO_ERROR : GCF_APCLOAD_ERROR);        
+      _supervisedTask.apcLoaded(apcName, scope, result);
       break;
     }
     case PA_APCUNLOADED:
     {
-      PAApcunloadedEvent* response = static_cast<PAApcunloadedEvent*>(&e);
-      if (response->result == 0) // no error
-      {
-        char* pApcData = ((char*)response) + sizeof(PAApcunloadedEvent);
-        unsigned int apcNameLength(0);
-        sscanf(pApcData, "%03x", &apcNameLength);
-        string apcName(pApcData + 3, apcNameLength);
-        char* pScopeData = pApcData + 3 + apcNameLength;
-        unsigned int scopeNameLength(0);
-        sscanf(pScopeData, "%03x", &scopeNameLength);
-        string scope(pScopeData + 3, scopeNameLength);
-        _supervisedTask.apcUnloaded(apcName, scope);
-      }
+      PAApcunloadedEvent* pResponse = static_cast<PAApcunloadedEvent*>(&e);
+      assert(pResponse);
+      _isBusy = false;
+      char* pApcData = ((char*)pResponse) + sizeof(PAApcunloadedEvent);
+      unsigned int apcNameLength(0);
+      sscanf(pApcData, "%03x", &apcNameLength);
+      string apcName(pApcData + 3, apcNameLength);
+      char* pScopeData = pApcData + 3 + apcNameLength;
+      unsigned int scopeNameLength(0);
+      sscanf(pScopeData, "%03x", &scopeNameLength);
+      string scope(pScopeData + 3, scopeNameLength);
+      result = (pResponse->result == PA_NO_ERROR ? GCF_NO_ERROR : GCF_APCUNLOAD_ERROR);      
+      _supervisedTask.apcUnloaded(apcName, scope, result);
       break;
     }
     case PA_APCRELOADED:
     {
-      PAApcreloadedEvent* response = static_cast<PAApcreloadedEvent*>(&e);
-      if (response->result == 0) // no error
-      {
-        char* pApcData = ((char*)response) + sizeof(PAApcreloadedEvent);
-        unsigned int apcNameLength(0);
-        sscanf(pApcData, "%03x", &apcNameLength);
-        string apcName(pApcData + 3, apcNameLength);
-        char* pScopeData = pApcData + 3 + apcNameLength;
-        unsigned int scopeNameLength(0);
-        sscanf(pScopeData, "%03x", &scopeNameLength);
-        string scope(pScopeData + 3, scopeNameLength);
-        _supervisedTask.apcReloaded(apcName, scope);
-      }
+      PAApcreloadedEvent* pResponse = static_cast<PAApcreloadedEvent*>(&e);
+      assert(pResponse);
+      _isBusy = false;
+      char* pApcData = ((char*)pResponse) + sizeof(PAApcreloadedEvent);
+      unsigned int apcNameLength(0);
+      sscanf(pApcData, "%03x", &apcNameLength);
+      string apcName(pApcData + 3, apcNameLength);
+      char* pScopeData = pApcData + 3 + apcNameLength;
+      unsigned int scopeNameLength(0);
+      sscanf(pScopeData, "%03x", &scopeNameLength);
+      string scope(pScopeData + 3, scopeNameLength);
+      result = (pResponse->result == PA_NO_ERROR ? GCF_NO_ERROR : GCF_APCRELOAD_ERROR);
+      _supervisedTask.apcReloaded(apcName, scope, result);
       break;
     }
     case F_TIMER_SIG:
@@ -522,7 +529,13 @@ int GPMController::connected(GCFEvent& e, GCFPortInterface& /*p*/)
       }      
       break;
     }
-    
+    case F_DISPATCHED_SIG:
+      for (TPropertySetIter iter = _propertySets.begin();
+           iter != _propertySets.end(); ++iter)
+      {
+        iter->second->retryLinking();
+      }
+      break;      
     default:
       status = GCFEvent::NOT_HANDLED;
       break;
@@ -558,7 +571,7 @@ void GPMController::unpackPropertyList(char* pListData, list<string>& propertyLi
       propName = pPropName;      
       pPropName = strtok(NULL, "|");
       dataLength -= (propName.size() + 1);
-      propertyList.push_front(propName);
+      propertyList.push_back(propName);
     }
   }
 }
