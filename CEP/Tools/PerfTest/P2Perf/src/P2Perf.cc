@@ -255,7 +255,7 @@ void P2Perf::define(const KeyValueMap& params)
                               TH_Socket( params.getString("sockets_sending_host", "localhost"),
                                          params.getString("sockets_receiving_host", "localhost"),
                                          params.getInt("sockets_portnumber",20001)), 
-                              true);
+                              false);
       } else
       {
         Dsteps[step]->connect(Ssteps[ch],

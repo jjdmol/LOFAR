@@ -54,7 +54,7 @@ void BlueGeneFrontEnd::define(const KeyValueMap& /*params*/) {
 			      NCHANNELS);
     itsWHs[0]->getDataManager().getOutHolder(0)->connectTo
       ( *myWHCorrelate.getDataManager().getInHolder(0),
-	TH_Socket(LOCALHOST_IP, LOCALHOST_IP, itsPort, true) );
+	TH_Socket(LOCALHOST_IP, LOCALHOST_IP, itsPort, false) );
 
   } else {
 	  
@@ -63,7 +63,7 @@ void BlueGeneFrontEnd::define(const KeyValueMap& /*params*/) {
 			    0);
     myWHCorrelate.getDataManager().getOutHolder(0)->connectTo
       ( *itsWHs[0]->getDataManager().getInHolder(0),
-	TH_Socket(LOCALHOST_IP, LOCALHOST_IP, itsPort+1, false) );
+	TH_Socket(LOCALHOST_IP, LOCALHOST_IP, itsPort+1, true) );
     
   } 
 

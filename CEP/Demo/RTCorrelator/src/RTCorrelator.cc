@@ -55,8 +55,8 @@ void RTCorrelator::define(const KeyValueMap& /*params*/) {
     /* The correlator cannot accept connections because of the limitations   */
     /* of the BG/L socket implementation. Therefore all connections are      */
     /* opened from this application and accepted by the frontend application */
-    TH_Socket fe_input(frontend_ip, frontend_ip, baseport, true);
-    TH_Socket fe_output(frontend_ip, frontend_ip, baseport+1, false);
+    TH_Socket fe_input(frontend_ip, frontend_ip, baseport, false);
+    TH_Socket fe_output(frontend_ip, frontend_ip, baseport+1, true);
 
     aRandom.getDataManager().getOutHolder(0)->connectTo 
       ( *itsWH->getDataManager().getInHolder(0), 

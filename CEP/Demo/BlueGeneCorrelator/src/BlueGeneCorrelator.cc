@@ -81,8 +81,8 @@ void BlueGeneCorrelator::define(const KeyValueMap& /*params*/) {
 
   if (itsRank == 0) {
 
-    proto_input = new TH_Socket(FRONTEND_IP, FRONTEND_IP, BASEPORT, true);
-    proto_output = new TH_Socket(FRONTEND_IP, FRONTEND_IP, BASEPORT+1, false);
+    proto_input = new TH_Socket(FRONTEND_IP, FRONTEND_IP, BASEPORT, false);
+    proto_output = new TH_Socket(FRONTEND_IP, FRONTEND_IP, BASEPORT+1, true);
 
     myWHRandom.getDataManager().getOutHolder(0)->connectTo
       ( *itsWHs[0]->getDataManager().getInHolder(0), 

@@ -1,5 +1,5 @@
 //# TH_Socket.h: Socket based TransportHolder
-//#              Based on the Socket wrapper class 
+//#              Based on the Socket wrapper class from Common
 //#
 //# Copyright (C) 2000, 2001
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -25,6 +25,7 @@
 #define TRANSPORT_TH_SOCKET_H
 
 #include <lofar_config.h>
+#include <Common/lofar_string.h>
 #include <Transport/TransportHolder.h>
 #include <Common/Net/Socket.h>
 
@@ -34,54 +35,76 @@ namespace LOFAR
   {
   public:
     // Create the socket transport holder.
-    // Argument serverAtSender determines which peer opens the connection
-    // and is completely independent of the direction of the transfer
-    // (i.e. the sender can either open or accept a connection).
-    // The server is said to be the peer that accepts the connection.
-    TH_Socket (const std::string& sendhost, 
-	       const std::string& recvhost, 
-	       int portno,
-	       bool serverAtSender=true);
+	// The sourceName and destinationName correspond with the machines on which
+	// the endpoints (dataholders) are situated. 
+	// The flag listenerAtDestination determines which peer starts the listener.
+	// When sAD is true the dataholder TO which the connection is made starts
+	// the listener, this is the most common situation.
+	// When sAD is false the dataholder FROM which the connection originates
+	// will start the listener.
+	//
+	// E.g.: DH1.connectTo(DH2, TH_Socket([host_DH1], host_DH2, port, true))
+	//
+	//    DH1 ---------> DH2
+	//    Clnt           Srvr
+	//
+	// E.g.: DH1.connectTo(DH2, TH_Socket(host_DH1, [host_DH2], port, false))
+	//
+	//    DH1 ---------> DH2
+	//    Srvr           Clnt
+	//
+	// Note: one of the hostnames is always obsolete, but this makes the API
+	//       more confirm to other TH API's.
+	//
+    TH_Socket (const string&	sourceName,
+			   const string&	destinationName, 
+			   int32			portno,
+			   const bool		listenerAtDestination = true,
+			   const bool		blocking = true);
     
     virtual ~TH_Socket();
     
+	// Make an instance of the transportholder
     virtual TH_Socket* make() const;
+
+	// Sets up the connection(s) between server and client
+	virtual bool	init();
      
     /// Get the type of transport.
     virtual string getType() const;
 
     /// Read the data.
-    virtual bool recvBlocking (void* buf, int nbytes, int tag);
-    virtual bool recvVarBlocking (int tag);
-    virtual bool recvNonBlocking (void* buf, int nbytes, int tag);
-    virtual bool recvVarNonBlocking (int tag);
+    virtual bool recvBlocking 		(void* buf, int32 nbytes, int32 tag);
+    virtual bool recvVarBlocking 	(int32 tag);
+    virtual bool recvNonBlocking 	(void* buf, int32 nbytes, int32 tag);
+    virtual bool recvVarNonBlocking (int32 tag);
     /// Wait for the data to be received
-    virtual bool waitForReceived (void* buf, int nbytes, int tag);
+    virtual bool waitForReceived 	(void* buf, int32 nbytes, int32 tag);
 
     /// Write the data.
-    virtual bool sendBlocking (void* buf, int nbytes, int tag);
-    virtual bool sendNonBlocking (void* buf, int nbytes, int tag);
+    virtual bool sendBlocking 		(void* buf, int32 nbytes, int32 tag);
+    virtual bool sendNonBlocking	(void* buf, int32 nbytes, int32 tag);
     /// Wait for the data to be sent
-    virtual bool waitForSent (void* buf, int nbytes, int tag);
+    virtual bool waitForSent 		(void* buf, int32 nbytes, int32 tag);
 
-    virtual bool connectionPossible (int srcRank, int dstRank) const;
+    virtual bool connectionPossible (int32 srcRank, int32 dstRank) const;
+	virtual bool isBidirectional() const
+		{ return(true); }
 
     virtual bool isBlocking() const
-      { return true; }
-    
-    virtual bool init();
+      { return (itsDataSocket && itsDataSocket->isBlocking()); }
     
   private:
-    bool connectToServer();
-    bool connectToClient();
+    bool		connectToServer(int32	waitMs = -1);
+    bool		connectToClient(int32	waitMs = -1);
 
-    std::string itsSendingHostName;
-    std::string itsReceivingHostName;
-    int         itsPortNo;
-    bool        itsIsConnected;
-    bool        itsServerAtSender;
-    Socket*     itsServerSocket;
-    Socket*     itsDataSocket;
+    string		itsServerHostname;
+    int32		itsPort;
+    bool		itsIsConnected;
+    bool		itsIsBlocking;
+    bool		itsDestHasListener;
+    Socket*		itsServerSocket;
+    Socket*		itsDataSocket;
   };
   
 }

@@ -44,12 +44,12 @@ namespace LOFAR {
     TH_Socket thReq(myPS.getString("DFTConnection.ClientHost"), // sendhost
 		    myPS.getString("DFTConnection.ServerHost"),   // recvhost
 		    myPS.getInt("DFTConnection.RequestPort"),   // port
-		    false
+		    true
 		    );
     TH_Socket thRes(myPS.getString("DFTConnection.ServerHost"), // sendhost
 			myPS.getString("DFTConnection.ClientHost"), // recvhost
 		    myPS.getInt("DFTConnection.ResultPort"),    // port
-		    true
+		    false
 		    );    
     itsRequest.setID(998);
     itsResult.setID(999);

@@ -71,7 +71,7 @@ void RTFrontEnd::define(const KeyValueMap& /*params*/) {
 			      itsNchannels);
     itsWHs[0]->getDataManager().getOutHolder(0)->connectTo
       ( *myWHCorrelator.getDataManager().getInHolder(0),
-	TH_Socket(LOCALHOST_IP, LOCALHOST_IP, itsPort, true) );
+	TH_Socket(LOCALHOST_IP, LOCALHOST_IP, itsPort, false) );
 
   } else {
 	  
@@ -82,7 +82,7 @@ void RTFrontEnd::define(const KeyValueMap& /*params*/) {
 			    itsNchannels);
     myWHCorrelator.getDataManager().getOutHolder(0)->connectTo
       ( *itsWHs[0]->getDataManager().getInHolder(0),
-	TH_Socket(LOCALHOST_IP, LOCALHOST_IP, itsPort+1, false) );
+	TH_Socket(LOCALHOST_IP, LOCALHOST_IP, itsPort+1, true) );
     
   } 
 
