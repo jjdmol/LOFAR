@@ -52,7 +52,7 @@ class Transporter
   ~Transporter();
 
   /// Send the data to the connected Transport object.
-  void write (bool fixedSized);
+  bool write (bool fixedSized);
 
   /// Read the data from the connected Transport object.
   bool read (bool fixedSized);

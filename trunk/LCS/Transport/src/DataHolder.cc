@@ -94,16 +94,11 @@ void DataHolder::setExtraBlob (const string& name, int version)
   itsExtraPtr = new DataBlobExtra (name, version, this);
 }
 
-void DataHolder::init() {
+bool DataHolder::init() {
   LOG_TRACE_RTTI("DataHolder init");
-  basePreprocess();
-}
-
-void DataHolder::basePreprocess()
-{
-  LOG_TRACE_RTTI("DataHolder basePreprocess()");
-  itsTransporter.init();
+  bool res = itsTransporter.init();
   preprocess();
+  return res;
 }
 
 void DataHolder::preprocess()
@@ -192,7 +187,7 @@ void DataHolder::handleDataRead()
   }
 }
 
-void DataHolder::write()
+bool DataHolder::write()
 {
   LOG_TRACE_FLOW("DataHolder write()");
   // If there might be extra data, we have to write it.
@@ -202,7 +197,7 @@ void DataHolder::write()
   bool fixedSized = itsDataFields.hasFixedShape()  &&
                     itsDataFields.version() == 1  &&
                     itsExtraPtr == 0;
-  itsTransporter.write (fixedSized);
+  return itsTransporter.write (fixedSized);
 }
 
 bool DataHolder::connectTo (DataHolder& thatDH,
