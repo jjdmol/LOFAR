@@ -43,7 +43,7 @@ predict := function(fname='michiel.demo', ant=4*[0:20], trace=T)
     return T;
 }
 
-solve := function(fname='michiel.demo', ant=4*[0:20], niter=1)
+solve := function(fname='michiel.demo', ant=4*[0:20], niter=1, sleep=F, sleeptime=2, wait=F)
 {
     annotator := imgannotator(spaste(fname, '.img'), 'raster');
     
@@ -59,6 +59,12 @@ solve := function(fname='michiel.demo', ant=4*[0:20], niter=1)
     # Create calibrater object
     #
     mc := meqcalibrater(spaste(fname,'.MS'), fname, fname, ant=ant);
+
+    if (wait)
+    {
+	print "Press RETURN to continue.";
+	shell("read");
+    }
 
     if (is_fail(mc)) {
         print "meqcalibratertest(): could not instantiate meqcalibrater";
@@ -79,6 +85,9 @@ solve := function(fname='michiel.demo', ant=4*[0:20], niter=1)
     #mc.setsolvableparms("Leakage.{11,22}.*");
 
     solverec := [=];
+
+    sleep_cmd := spaste('sleep ', sleeptime);
+    if (sleep) shell(sleep_cmd);
 
     mc.resetiterator()
     while (mc.nextinterval())
@@ -126,7 +135,8 @@ solve := function(fname='michiel.demo', ant=4*[0:20], niter=1)
                     annotator.add_marker(j, real(ra), real(dec), j==nrpos);
                 }
             }
-
+	    sleep_cmd := spaste('sleep ', sleeptime);
+	    if (sleep) shell(sleep_cmd);
         }
         print mc.getstatistics()
         }
@@ -332,7 +342,7 @@ init := function(fname='michiel.demo')
 	predict(fname=fname);
 }
 
-demo := function(solver=0,niter=10,fname='michiel.demo')
+demo := function(solver=0,niter=10,fname='michiel.demo',sleep=F,sleeptime=2,wait=F)
 {
 	global annotator;
 
@@ -340,7 +350,8 @@ demo := function(solver=0,niter=10,fname='michiel.demo')
 	setgsm(fname);
 	if (0 == solver)
 	{
-		annotator:=solve(fname=fname, niter=niter);
+		annotator:=solve(fname=fname, niter=niter,
+				 sleep=sleep, sleeptime=sleeptime, wait=wait);
 	}
 	else
 	{
