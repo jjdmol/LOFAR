@@ -45,10 +45,6 @@ int main(int argc, const char* argv[])
   TR1.setItsID(1);
   TR2.setItsID(2);
 
-  TR1.setSourceAddr(&DH1);
-  TR2.setSourceAddr(&DH2);
-  //  TR2.setSourceAddr(15);
-  
   // connect DH1 to DH2
   TR1.connectTo(&TR2, TH_ShMem::proto);
     

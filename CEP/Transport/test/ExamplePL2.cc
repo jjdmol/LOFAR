@@ -44,11 +44,7 @@ int main()
     // This will be done by the framework later on
     TR1.setItsID(1);
     TR2.setItsID(2);
-
-    TR1.setSourceAddr(&DH1);
-    TR2.setSourceAddr(&DH2);
-    //  TR2.setSourceAddr(15);
-  
+ 
     // connect DH1 to DH2
     TH_PL TH1("ExamplePL2");
     TR1.connectTo(&TR2, TH1);
