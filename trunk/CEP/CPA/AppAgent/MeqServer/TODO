@@ -92,7 +92,9 @@ Function:
 
 General:
 
-  * Keep thinking about COWs. Perhaps make hooks implicitl-COW? This would 
+  * In Debug: add capability to redirect the debug message stream
+
+  * Keep thinking about COWs. Perhaps make hooks implicit-COW? This would 
     mean declaring an operator [] on CountedRefs? 
   
   * Bug: MSOutputSink: output to new column doesn't work, column stays 'dummy'.
@@ -111,6 +113,21 @@ General:
   * Bug: Figure out why the hell it freezes on a single-CPU machine sometimes. A
     race condition somewhere? NB: a sure way to do it (on zeppelin) seems to
     enable wait_reply=T in the Resolve.Children calls in meqtest.g.
+    
+  * How to use different (gcc-version-specific) libstdc++ versions?
+    This can be addressed via LD_LIBRARY_PATH; ideally, we'd like to list
+    all gcc/../lib dirs in /etc/ld.so.conf and not worry about it. Can we
+    make the binary select the correct library via DT_RUNPATH somehow (see
+    the ld.so(1) man page)?
+      merged: * tDataArray segfaults (gcc 3.3.2)
+                14/01/04: ldd was using wrong libstdc++ version.
+                
+  * DataField: getting a non-existing element as an ObjRef makes the
+    element MODIFIED. This can cause confusion later on. Perhaps it
+    should only be returned as MODIFIED if write-access is requested?
+    
+        + test_dmi fails (gcc 3.2.1, 3.3.2)
+          14/01/04: fixed, see problem with DataField
 
         + GlishUtil: interpret record field name "#nnn" as AtomicID(atoi("nnn"))
         + DataField: check how type mismatches are reported; clean up
