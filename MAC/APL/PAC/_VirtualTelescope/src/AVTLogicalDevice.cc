@@ -350,6 +350,10 @@ GCFEvent::TResult AVTLogicalDevice::suspended_state(GCFEvent& event, GCFPortInte
     {
       GCFPVString status("Suspended");
       m_properties.setValue("status",status);
+      if(m_clientInterTaskPort!=0)
+      {
+        m_clientInterTaskPort->sendBack(LOGICALDEVICE_SUSPENDED);
+      }
       break;
     }
   

@@ -103,6 +103,7 @@ class AVTLogicalDeviceScheduler : public GCFTask,
     {
       boost::shared_ptr<AVTLogicalDevice> logicalDevice;
       boost::shared_ptr<APLInterTaskPort> clientPort;
+      bool                                toBeReleased;
       int                                 startTime;
       int                                 stopTime;
       vector<string>                      parameters;

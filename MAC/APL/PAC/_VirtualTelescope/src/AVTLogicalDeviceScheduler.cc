@@ -163,6 +163,43 @@ GCFEvent::TResult AVTLogicalDeviceScheduler::initial_state(GCFEvent& event, GCFP
       m_properties.setValue(PROPERTY_LDS_STATUS,status);
       break;
     }
+
+    case LOGICALDEVICE_SUSPENDED:
+    {
+      GCFPVString status("Suspended");
+      m_properties.setValue(PROPERTY_LDS_STATUS,status);
+      
+      string clientName;
+      if(findClientPort(port,clientName))
+      {
+        if(m_logicalDeviceMap[clientName].toBeReleased)
+        {
+          // send reslease message:
+          GCFEvent releaseEvent(LOGICALDEVICE_RELEASE);
+          m_logicalDeviceMap[clientName].clientPort->send(releaseEvent);
+        }
+      }
+      break;
+    }
+
+    case LOGICALDEVICE_RELEASED:
+    {
+      GCFPVString status("Released");
+      m_properties.setValue(PROPERTY_LDS_STATUS,status);
+
+      string clientName;
+      if(findClientPort(port,clientName))
+      {
+        SchedulableLogicalDeviceMapT::iterator ldIt=m_logicalDeviceMap.find(clientName);
+        if(ldIt!=m_logicalDeviceMap.end())
+        {
+          // remove the object from the map. The Port instance and children Logical Device instances
+          // are destroyed too because they are smart pointers.
+          m_logicalDeviceMap.erase(ldIt);
+        }
+      }
+      break;
+    }
         
     case F_DISCONNECTED_SIG:
     {
@@ -295,6 +332,8 @@ void AVTLogicalDeviceScheduler::handlePropertySetAnswer(GCFEvent& answer)
               string vtApcName(VTAPCNAME);
               boost::shared_ptr<AVTVirtualTelescope> vt(new AVTVirtualTelescope(parameters[0],primaryPropertySetVT,vtApcName,parameters[0],*sbf.get()));
               vtInfo.logicalDevice=vt;
+              vtInfo.toBeReleased=false;
+              
   //            vtInfo.clientPort.reset(new GCFPort(*this, vt->getServerPortName(), GCFPortInterface::SAP, LOGICALDEVICE_PROTOCOL));
               vtInfo.clientPort.reset(new APLInterTaskPort(*vt.get(),*this, vt->getServerPortName(), GCFPortInterface::SAP, LOGICALDEVICE_PROTOCOL));
               vt->setClientInterTaskPort(vtInfo.clientPort.get());
@@ -329,9 +368,10 @@ void AVTLogicalDeviceScheduler::handlePropertySetAnswer(GCFEvent& answer)
             SchedulableLogicalDeviceMapT::iterator it=m_logicalDeviceMap.find(parameters[0]);
             if(it!=m_logicalDeviceMap.end())
             {
-              // remove the object from the map. The Port instance and children Logical Device instances
-              // are destroyed too because they are smart pointers.
-              m_logicalDeviceMap.erase(it);
+              it->second.toBeReleased=true;
+              GCFEvent suspendEvent(LOGICALDEVICE_SUSPEND);
+              // send suspend to Virtual Telescope. VT will send suspend to SBF and SRG
+              it->second.clientPort->send(suspendEvent);
             }
           } 
         }
