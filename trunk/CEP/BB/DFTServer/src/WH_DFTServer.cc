@@ -23,7 +23,7 @@
 //
 //////////////////////////////////////////////////////////////////////
 
-#include "CEPFrame/WH_DFTServer.h"
+#include "DFTServer/WH_DFTServer.h"
 
 namespace LOFAR
 {
@@ -31,8 +31,8 @@ namespace LOFAR
 WH_DFTServer::WH_DFTServer (const string& name)
 : WorkHolder       (1, 1, name,"WH_DFTServer")
 {
-  getDataManager().addInDataHolder(0, new DH_DFTIn("DFTServer_in"));
-  getDataManager().addOutDataHolder(0, new DH_DFTOut("DFTServer_out"));
+  getDataManager().addInDataHolder(0, new DH_DFTRequest());
+  getDataManager().addOutDataHolder(0, new DH_DFTResult());
 }
 
 
