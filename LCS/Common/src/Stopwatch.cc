@@ -60,7 +60,7 @@ namespace LOFAR
     {
       sprintf(str,format,ut); out1 += str;
       if( nops )
-      { sprintf(str,"%12Ld",(long long)(nops/(ut+st)+0.5)); out2 += str; }
+      { sprintf(str,"%12lld",(long long)(nops/(ut+st)+0.5)); out2 += str; }
     }
     if( opts&SYSTEM )
     {
@@ -70,10 +70,10 @@ namespace LOFAR
     {
       sprintf(str,format,rt); out1 += str;
       if( nops )
-      { sprintf(str,"%12Ld",(long long)(nops/rt+0.5)); out2 += str; }
+      { sprintf(str,"%12lld",(long long)(nops/rt+0.5)); out2 += str; }
     }
     if( nops )
-    { sprintf(str,"%12Ld",nops); out2 += str; }
+    { sprintf(str,"%12lld",nops); out2 += str; }
     return out1+out2;
   }
 

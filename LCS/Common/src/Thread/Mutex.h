@@ -211,16 +211,16 @@ namespace LOFAR
       pmutex = const_cast<pthread_mutex_t *>(&mtx);
       if( options == TRY )
       {
-        dprintf(3)("init: try-locking mutex @%08X\n",(int)pmutex);
+        dprintf(3)("init: try-locking mutex @%p\n",pmutex);
         if( pthread_mutex_trylock(pmutex) < 0 )
           pmutex = 0;
       }
       else
       {
-        dprintf(3)("init: locking mutex @%08X\n",(int)pmutex);
+        dprintf(3)("init: locking mutex @%p\n",pmutex);
         pthread_mutex_lock(pmutex);
       }
-      dprintf(3)("init: locked mutex @%08X\n",(int)pmutex);
+      dprintf(3)("init: locked mutex @%pn",pmutex);
     }
 
     //##ModelId=D5165FA7FEED
@@ -244,7 +244,7 @@ namespace LOFAR
     //##ModelId=E2FBE0C8FEED
     inline int Mutex::Lock::release ()
     {
-      dprintf(3)("release: unlocking mutex @%08X\n",(int)pmutex);
+      dprintf(3)("release: unlocking mutex @%p\n",pmutex);
       int ret = pmutex ? pthread_mutex_unlock(pmutex) : 0;
       pmutex = 0;
       return ret; 
@@ -253,7 +253,7 @@ namespace LOFAR
     //##ModelId=D8B60901FEED
     inline void Mutex::Lock::release_without_unlock ()
     {
-      dprintf(3)("release: relasing w/o unlock mutex @%08X\n",(int)pmutex);
+      dprintf(3)("release: relasing w/o unlock mutex @%p\n",pmutex);
       pmutex = 0;
     }
 
@@ -264,7 +264,7 @@ namespace LOFAR
       init(mutex.mutex,options);
       if( old )
       {
-        dprintf(3)("relock: unlocking old mutex @%08X\n",(int)old);
+        dprintf(3)("relock: unlocking old mutex @%p\n",old);
         pthread_mutex_unlock(old);
       }
       return 0;
@@ -303,7 +303,7 @@ namespace LOFAR
     {
       pthread_mutexattr_t attr = { kind  };
       pthread_mutex_init(&mutex,&attr); 
-      dprintf(3)("initialized mutex %08x kind %d\n",(int)&mutex,kind);
+      dprintf(3)("initialized mutex %p kind %d\n",&mutex,kind);
     }
 
     //##ModelId=3D10BC47035F
@@ -317,9 +317,9 @@ namespace LOFAR
     //##ModelId=D4F415F7FEED
     inline int Mutex::lock () const
     {
-      dprintf(3)("%d: locking mutex %08x\n",(int)self().id(),(int)&mutex);
+      dprintf(3)("%d: locking mutex %p\n",(int)self().id(),&mutex);
       int ret = pthread_mutex_lock(&mutex); 
-      dprintf(3)("%d: locked mutex %08x: %d\n",(int)self().id(),(int)&mutex,ret);
+      dprintf(3)("%d: locked mutex %p: %d\n",(int)self().id(),&mutex,ret);
       return ret;
     }
 
@@ -327,7 +327,7 @@ namespace LOFAR
     inline int Mutex::unlock () const
     {
       int ret = pthread_mutex_unlock(&mutex); 
-      dprintf(3)("%d: unlocked mutex %08x: %d\n",(int)self().id(),(int)&mutex,ret);
+      dprintf(3)("%d: unlocked mutex %p: %d\n",(int)self().id(),&mutex,ret);
       return ret;
     }
 
