@@ -22,6 +22,10 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.5  2002/07/18 09:41:06  schaaf
+//  %[BugId: 11]%
+//  Added intermediate (delay) step
+//
 //  Revision 1.4  2002/06/07 11:43:33  schaaf
 //  %[BugId: 11]%
 //  Added flag for profiler
@@ -91,6 +95,10 @@ class Transpose: public Simulator
    
    /// Number of destination steps
    int itsDestSteps;
+
+   /// Frequency Band size
+   int itsFreqs;
+   int itsTimeDim;
    
    /// To Profile  or not....
    bool itsDoLogProfile;
