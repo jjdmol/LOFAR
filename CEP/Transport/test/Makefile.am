@@ -47,6 +47,7 @@ TESTS_ENVIRONMENT		= top_srcdir=$(top_srcdir) \
 
 TESTS	=					\
 	Example_test.sh				\
+	TestBidirectional_test.sh		\
 	ExampleMemBL_test.sh			\
 	ExamplePL_test.sh			\
 	ExamplePL2_test.sh			\
