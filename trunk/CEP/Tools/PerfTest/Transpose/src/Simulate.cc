@@ -17,11 +17,11 @@ int main (int argc, char** argv)
   MPI_Init(&argc,&argv);
 #endif
   // Set trace level.
-  Debug::initLevels (argc, (const char* [])argv);
+  Debug::initLevels (argc, argv);
 
   try {
     Transpose simulator;
-    simulator.setarg (argc, (const char* [])argv);
+    simulator.setarg (argc, argv);
 #ifndef HAVE_MPICH
 //          cout << endl;
 //  	cout << "  * Type 'define;' to define the simulation" << endl;
