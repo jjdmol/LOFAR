@@ -36,6 +36,7 @@ class BlobIStream;
 class ParmData
 {
 public:
+  ParmData ();
   // Constructor.
   ParmData (const std::string& name, int nrSpid, int firstSpid,
 	    const MeqMatrix& values);

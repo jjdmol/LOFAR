@@ -98,6 +98,11 @@ void WH_Solve::process()
     }
   }
 
+  cout << "!!!!!! Solver read workorder: " << endl;
+  wo->dump();
+  cout << "!!!!!! " << endl;
+
+
   // Update workorder status
   wo->setStatus(DH_WOSolve::Assigned);
   woPtr->updateDB();
@@ -110,7 +115,7 @@ void WH_Solve::process()
   if (wo->getInitialize())           // Initialize, next interval and solve
   {
     KeyValueMap msArgs;
-    int timeInterval;
+    float timeInterval;
     vector<string> pNames;    // Parameter names
     wo->getVarData(msArgs, timeInterval, pNames);
     createSolver(msArgs);

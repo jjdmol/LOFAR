@@ -87,6 +87,10 @@ void WH_Prediff::process()
     }
   }
 
+  cout << "!!!!!! Prediffer read workorder: " << endl;
+  wo->dump();
+  cout << "!!!!!!" << endl;
+
   // Update workorder status
   wo->setStatus(DH_WOPrediff::Assigned);
   woPtr->updateDB();

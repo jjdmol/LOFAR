@@ -112,7 +112,7 @@ void DH_WOPrediff::preprocess()
   addField ("NextInterval", BlobField<unsigned int>(1));
   addField ("FirstChan", BlobField<int>(1));
   addField ("LastChan", BlobField<int>(1));
-  addField ("TimeInterval", BlobField<int>(1));
+  addField ("TimeInterval", BlobField<float>(1));
   addField ("DDID", BlobField<int>(1));
   addField ("ModelType", BlobField<char>(1, MaxModelTypeLength));
   addField ("CalcUVW", BlobField<unsigned int>(1));
@@ -153,7 +153,7 @@ void DH_WOPrediff::fillDataPointers()
   itsNextInterval = getData<unsigned int> ("NextInterval");
   itsFirstChan = getData<int> ("FirstChan");
   itsLastChan = getData<int> ("LastChan");
-  itsTimeInterval = getData<int> ("TimeInterval");
+  itsTimeInterval = getData<float> ("TimeInterval");
   itsDDID = getData<int> ("DDID");
   itsModelType = getData<char> ("ModelType");
   itsCalcUVW = getData<unsigned int> ("CalcUVW");

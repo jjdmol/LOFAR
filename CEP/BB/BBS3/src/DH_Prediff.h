@@ -66,7 +66,7 @@ public:
   dcomplex* getDataPtr();
   void setData(dcomplex* dataPtr, int size);  // Size in number of dcomplex's
 
-  void getParmData(vector<ParmData>& pdata); 
+  bool getParmData(vector<ParmData>& pdata); 
   void setParmData(const vector<ParmData>& pdata);
 
   int getNResults() const;
@@ -98,7 +98,6 @@ private:
   int* itsNFreq;            // The number of frequencies
 
   dcomplex* itsDataPtr;
-  ParmData* itsParmDataPtr;
 
 };
 

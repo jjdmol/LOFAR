@@ -57,6 +57,8 @@ public:
   bool        itsFirstCall;
   int         itsWOID;
   KeyValueMap itsArgs;
+  int         itsNrIterations;
+  int         itsCurIter;
 };
 
 inline string SC_Simple::getType() const

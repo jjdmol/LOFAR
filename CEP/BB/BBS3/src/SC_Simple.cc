@@ -38,8 +38,10 @@ SC_Simple::SC_Simple(int id, DH_Solution* inDH, DH_WOPrediff* woPD,
   : StrategyController(id, inDH, woPD, woSolve),
     itsFirstCall      (true),
     itsWOID           (0),
-    itsArgs           (args)
+    itsArgs           (args),
+    itsCurIter        (-1)
 {
+  itsNrIterations = itsArgs.getInt("nrIterations", 0);
 }
 
 SC_Simple::~SC_Simple()
@@ -48,6 +50,7 @@ SC_Simple::~SC_Simple()
 bool SC_Simple::execute()
 {
   itsWOID++;
+  itsCurIter++;
   if (itsFirstCall)
   {
     itsFirstCall = false;
@@ -77,6 +80,7 @@ bool SC_Simple::execute()
     itsWOSolve->setKSType("Solver");
     itsWOSolve->setUseSVD (itsArgs.getBool ("useSVD", false)); 
     itsWOSolve->setVarData (msParams, timeInterval, pNames);
+
   }
   else
   {
@@ -86,10 +90,21 @@ bool SC_Simple::execute()
   }
 
   // If solution for this interval is good enough, go to next. TBA
-  itsWOPD->setNextInterval(true);
-  itsWOSolve->setNextInterval(true);
+  // For now: if number of iterations reached: go to next interval.
+  bool nextInter = false;
+  if (fmod(itsCurIter, itsNrIterations) == 0)
+  {
+    nextInter = true;
+  }
+
+  itsWOSolve->setNextInterval(nextInter);
+  itsWOPD->setNextInterval(nextInter);
+
+  cout << "!!!!!!! Sent workorders: " << endl;
   itsWOPD->dump();
   itsWOSolve->dump();
+
+  cout << "!!!!!!! " << endl;
 
   // Insert WorkOrders into database
   itsWOPD->insertDB();

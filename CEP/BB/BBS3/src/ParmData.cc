@@ -26,6 +26,12 @@
 
 namespace LOFAR {
 
+  ParmData::ParmData()
+    : itsNrSpid   (0),
+      itsFirstSpid(0),
+      itsName     ("empty")
+  {}
+
   ParmData::ParmData (const std::string& name, int nrSpid, int firstSpid,
 		      const MeqMatrix& values)
     : itsNrSpid    (nrSpid),
