@@ -28,6 +28,7 @@
 #include <Common/lofar_iostream.h>
 #include <Common/Debug.h>
 #include "PSS3/BlackBoardDemo.h"
+#include "TryOut.h"
 #ifdef HAVE_MPI
 #include <mpi.h>
 #endif
@@ -45,6 +46,10 @@ int main (int argc, const char** argv)
   MPI_Init(&argc, (char ***)&argv);
 #endif
   try {
+    // To try out different (serial) experiments without the CEP
+    // framework, use following two statements:
+    // TryOut (); return 0;
+
     BlackBoardDemo simulator;
 
 //     // Set trace level.
