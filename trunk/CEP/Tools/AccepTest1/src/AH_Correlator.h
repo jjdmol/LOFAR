@@ -66,6 +66,7 @@ namespace LOFAR
     char* itsIP;
     int   itsBaseport;
     int   itsNtargets;
+    int   itsRank;             // MPI-like process number
   };
 
 } // namespace LOFAR
