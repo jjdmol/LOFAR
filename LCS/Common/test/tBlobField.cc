@@ -199,9 +199,14 @@ int main()
       fset.add (BlobField<int> (1));              // scalar
       fset.add (BlobField<fcomplex> (1, 4, 5));   // 2-dim array
       fset.add (BlobField<XX> (1, 2));            // 1-dim array
+      fset[0].setUseBlobHeader(true);
+      fset[1].setUseBlobHeader(true);
+      fset[2].setUseBlobHeader(true);
       // Make another set with an extra field (with version 2).
       BlobFieldSet fset2(fset);
       fset2.add (BlobField<double> (2));
+      fset2[3].setUseBlobHeader(true);
+      Assert (fset2.hasFixedShape());
       {
 	// Create the blob and read it back.
 	BlobString bstr;
