@@ -42,7 +42,7 @@ public:
 
   ~PointSource();
 
-  virtual void load(Table&       table,
+  virtual void load(const Table& table,
                     unsigned int row);
 
   virtual void store(Table&       table,
