@@ -329,6 +329,7 @@ MeqDomain AbstractSource::load(const Table& table,
   std::vector<MeqPolc> RaPolcs(1);
   std::vector<MeqPolc> DecPolcs(1);
 
+  itsRa->setPolcs(RaPolcs);
   Matrix<double> coef(1,1);
   RaParms.get (row, coef, true);
   RaPolcs[0].setDomain(Domain);
@@ -339,7 +340,6 @@ MeqDomain AbstractSource::load(const Table& table,
   DecPolcs[0].setCoeff(coef);
   DecPolcs[0].setDomain(Domain);
   itsDec->setPolcs(DecPolcs);
-
   
   int temp;
   Number.get(row, temp);
@@ -351,6 +351,10 @@ MeqDomain AbstractSource::load(const Table& table,
 
   Type.get  (row, temp);
   itsSourceType = SourceType(temp);
+
+  std::string ParmName(createParmName());
+  itsRa->setName(ParmName+"RA");
+  itsDec->setName(ParmName+"DEC");
   
   return Domain;
 }
