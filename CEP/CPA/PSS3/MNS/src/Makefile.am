@@ -1,4 +1,4 @@
-SUBDIRS	= . Glish
+SUBDIRS	= .
 
 DOCHDRS		 	= 			\
 MeqMatrix.h					\
