@@ -632,7 +632,7 @@ void BeamServerTask::compute_timeout_action(long current_seconds)
 #endif
 
   //LOG_DEBUG(formatString("m_weights16 contiguous storage? %s", (m_weights16.isStorageContiguous()?"yes":"no")));
-  //LOG_DEBUG(formatString("sizeof(m_weights16) = %d", m_weights16.size()*sizeof(int16_t)));
+  LOG_DEBUG(formatString("sizeof(m_weights16) = %d", m_weights16.size()*sizeof(int16_t)));
 }
 
 void BeamServerTask::send_weights(int period)

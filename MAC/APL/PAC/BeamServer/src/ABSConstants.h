@@ -33,7 +33,7 @@ namespace ABS
    * than this value. This is always less
    * than or equal to N_SUBBANDS
    */
-  static const int N_BEAMLETS = 128;
+  static const int N_BEAMLETS = 256;
   
   /**
    * Maximum number of input subbands of the
@@ -41,13 +41,13 @@ namespace ABS
    * n_subbands <= N_SUBBANDS. This is always
    * greater than or equal to N_BEAMLETS.
    */
-  static const int N_SUBBANDS = 128;
+  static const int N_SUBBANDS = 256;
   
   /**
    * The number of antenna elements, an
    * element can have one or two polarizations.
    */
-  static int const N_ELEMENTS      = 1;
+  static int const N_ELEMENTS      = 100;
 
   /**
    * Number of polarizations for each element.
