@@ -24,7 +24,7 @@
 #include <MNS/MeqPointDFT.h>
 #include <MNS/MeqRequest.h>
 #include <MNS/MeqResult.h>
-#include <MNS/MeqParm.h>
+#include <MNS/MeqHist.h>
 #include <MNS/MeqMatrix.h>
 #include <MNS/MeqMatrixTmp.h>
 #include <Common/Debug.h>
@@ -32,9 +32,12 @@
 
 
 MeqWsrtPoint::MeqWsrtPoint (const vector<MeqPointSource>& sources,
-			    MeqPointDFT* dft)
-: itsSources (sources),
-  itsDFT     (dft)
+			    MeqPointDFT* dft,
+			    MeqHist* celltHistogram, MeqHist* cellfHistogram)
+: itsSources   (sources),
+  itsDFT       (dft),
+  itsCelltHist (celltHistogram),
+  itsCellfHist (cellfHistogram)
 {}
 
 MeqWsrtPoint::~MeqWsrtPoint()
@@ -68,6 +71,8 @@ void MeqWsrtPoint::calcResult (const MeqRequest& request)
     ///    cout << "ncellf=" << ncellf << endl;
     ///  }
   
+  itsCelltHist->update (ncellt);
+  itsCellfHist->update (ncellt);
   // The domain is divided into the required number of cells.
   MeqRequest dftReq (domain, ncellt, ncellf, request.nspid());
   itsXX = MeqResult(request.nspid());
