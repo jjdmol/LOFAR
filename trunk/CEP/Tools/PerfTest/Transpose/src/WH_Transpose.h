@@ -21,6 +21,9 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.2  2002/05/14 11:39:41  gvd
+//  Changed for new build environment
+//
 //  Revision 1.1.1.1  2002/05/06 11:49:20  schaaf
 //  initial version
 //
@@ -86,6 +89,10 @@ private:
   int itsTime;
   int itsTimeDim;
   int itsFreqDim;
+
+  /// Profiling States
+  static int          theirProcessProfilerState; 
+  
 };
 
 #endif
