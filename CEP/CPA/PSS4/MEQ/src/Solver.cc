@@ -120,9 +120,20 @@ int Solver::getResult (Result::Ref &resref,
   } else {
     newReq[FRider][itsParmGroup] <<= new DataRecord;
   }
+  // Determine number of steps; default is as given to the solver.
+  int numStep = request.numSteps();
+  if (numStep < 0) {
+    numStep = itsNumStep;
+  }
+  // if numstep=0, accumulate equations, but do no solve.
+  bool doSolve = true;
+  if (numStep <= 0) {
+    numStep = 1;
+    doSolve = false;
+  }
   // Iterate as many times as needed.
   int step;
-  for (step=0; step<itsNumStep; step++) 
+  for (step=0; step<numStep; step++) 
   {
     // collect child results, using Node's standard method
     int retcode = Node::pollChildren (child_results, resref, newReq);
@@ -225,12 +236,17 @@ int Solver::getResult (Result::Ref &resref,
         }
       }
     }
+    // Size the solutions vector.
+    allSolutions.resize ((step+1)*nspid, True);
+    if (!doSolve) {
+      allSolutions = 0.;
+      break;
+    }
     // Solve the equation.
     AssertStr (nreq >= nspid, "Only " << nreq << " equations for " << nspid
                << " solvable parameters in solver " << name());
     // Keep all solutions in a vector.
     // The last part is the current solution.
-    allSolutions.resize ((step+1)*nspid, True);
     Vector<double> vec(allSolutions(Slice(step*nspid, nspid)));
     solution.reference (vec);
     solution = 0;
@@ -276,20 +292,22 @@ int Solver::getResult (Result::Ref &resref,
   // Put the spids in the result.
   vellset.setSpids(spids);
   // Distribute the last solution.
-  // Do that in an empty request.
-  Request & lastReq = reqref <<= new Request;
-  lastReq.setId(rqid);
-  lastReq[FRider] <<= new DataRecord;
-  DataRecord &dr1 = lastReq[FRider][itsParmGroup] <<= new DataRecord;
-  fillSolution(dr1[FCommandByNodeIndex] <<= new DataRecord, 
-               spids,solution,true);
-  // Lock all parm tables used.
-  ParmTable::lockTables();
-  // Update the parms.
-  lastReq.validateRider();
-  Node::pollChildren (child_results, resref, lastReq);
-  // Unlock all parm tables used.
-  ParmTable::unlockTables();
+  if (doSolve) {
+    // Do that in an empty request.
+    Request & lastReq = reqref <<= new Request;
+    lastReq.setId(rqid);
+    lastReq[FRider] <<= new DataRecord;
+    DataRecord &dr1 = lastReq[FRider][itsParmGroup] <<= new DataRecord;
+    fillSolution(dr1[FCommandByNodeIndex] <<= new DataRecord, 
+		 spids,solution,true);
+    // Lock all parm tables used.
+    ParmTable::lockTables();
+    // Update the parms.
+    lastReq.validateRider();
+    Node::pollChildren (child_results, resref, lastReq);
+    // Unlock all parm tables used.
+    ParmTable::unlockTables();
+  }
   // result depends on domain, and has -- most likely -- been updated
   double* sol = vellset.setReal(nspid, step).data();
   memcpy (sol, allSolutions.data(), nspid*step*sizeof(double));
