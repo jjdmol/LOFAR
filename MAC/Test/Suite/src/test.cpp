@@ -88,7 +88,7 @@ long Test::report() const
 {
   if (m_osptr)
   {
-    *m_osptr << "Test summary\"" 
+    *m_osptr << "Test summary \"" 
              << m_name << "\":\n"
              << "\tPassed: " << m_nPass
              << "\tFailed: " << m_nFail
