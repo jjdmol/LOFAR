@@ -1,7 +1,10 @@
 #include <GCF/Utils.h>
 #include <stdio.h>
-#include <assert.h>
 #include <GCF/GCF_Defines.h>
+
+namespace LOFAR {
+ namespace GCF {
+  namespace Common {
 
 Utils::Utils()
 {}
@@ -96,6 +99,7 @@ bool Utils::isValidScope(const char* scopeName)
   char* sysNameSep = strchr(scopeName, ':');
   if (sysNameSep > 0)
   {
+    length -= (sysNameSep + 1 - scopeName);
     scopeName = sysNameSep + 1;
   }
   if (scopeName[0] == GCF_SCOPE_NAME_SEP || scopeName[length - 1] == GCF_SCOPE_NAME_SEP )
@@ -118,3 +122,6 @@ bool Utils::isValidScope(const char* scopeName)
   }
   return valid;
 }
+  } // namespace Common
+ } // namespace GCF
+} // namespace LOFAR
