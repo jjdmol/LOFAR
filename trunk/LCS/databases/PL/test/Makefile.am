@@ -1,7 +1,7 @@
 check_PROGRAMS		= tA \
-			  tC
+			  tC \
+			  tTPO
 #			  tCollection	\
-#			  tTPO		\
 #			  tObjectId
 #			  tSQLTimeStamp
 
@@ -13,9 +13,9 @@ tC_SOURCES              = tC.cc
 tC_LDADD		= ../src/libpl.la
 tC_DEPENDENCIES		= ../src/libpl.la $(LOFAR_DEPEND)
 
-#tTPO_SOURCES		= tTPO.cc
-#tTPO_LDADD		= ../src/libpl.la
-#tTPO_DEPENDENCIES	= ../src/libpl.la $(LOFAR_DEPEND)
+tTPO_SOURCES		= tTPO.cc
+tTPO_LDADD		= ../src/libpl.la
+tTPO_DEPENDENCIES	= ../src/libpl.la $(LOFAR_DEPEND)
 
 #tCollection_SOURCES	= tCollection.cc
 #tCollection_LDADD	= ../src/libpl.la

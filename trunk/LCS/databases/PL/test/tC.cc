@@ -1,12 +1,22 @@
-#include "LCS_base.h"
 #include "C.h"
 #include "PO_C.h"
 #include <PL/TPersistentObject.h>
 #include <PL/PersistenceBroker.h>
+#include <PL/Query.h>
 #include <iostream>
+#include <pwd.h>
 
 using namespace std;
 using namespace LOFAR::PL;
+
+string getUserName()
+{
+  passwd* aPwd;
+  if ((aPwd = getpwuid(getuid())) == 0)
+    return "";
+  else
+    return aPwd->pw_name;
+}
 
 int main()
 {
@@ -31,7 +41,7 @@ int main()
     TPersistentObject<C> tpoc2;
     
     // Connect to the database
-    broker.connect("dtl_example","postgres");
+    broker.connect(getUserName(),"postgres");
 
     DBConnection::GetDefaultConnection().SetAutoCommit(true);
 
@@ -83,10 +93,11 @@ int main()
     cout << "Press <Enter> to continue" << endl;
     cin.get();
 
-    cout << "Retrieve collection of tpoc using query" << endl;
+    string qry("WHERE ItsString='C4Y2';");
+    cout << "Retrieve collection of tpoc using query: " << qry << endl;
     Collection< TPersistentObject<C> > ctpoc;
     Collection< TPersistentObject<C> >::const_iterator iter;
-    ctpoc = broker.retrieve<C>(Query("WHERE ItsString='C4Y2';"));
+    ctpoc = broker.retrieve<C>(Query(qry));
     cout << "Found " << ctpoc.size() << " matches ..." << endl;
     for(iter = ctpoc.begin(); iter != ctpoc.end(); ++iter) {
       cout << "Press <Enter> to continue" << endl;

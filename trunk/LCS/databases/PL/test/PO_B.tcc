@@ -6,12 +6,7 @@
 //# IT MIGHT BE OVERWRITTEN BY THE NEXT MAKE OF YOUR PROJECT
 //#
 #include "PO_B.h"
-#include "LCS_base.h"
-#include <PL/Collection.h>
-#include <PL/DTLHelperClasses.h>
-#include <PL/Query.h>
 #include <PL/TPersistentObject.h>
-#include <string>
 
 using namespace dtl;
 
@@ -75,144 +70,9 @@ namespace LOFAR {
     template<>
     void TPersistentObject<B>::init()
     {
+      // Set the correct database table name
+      tableName("B");
     }
-
-    //
-    // Routine for insert this B object in the database.
-    //
-    template<>
-    void TPersistentObject<B>::doInsert() const 
-    {
-      typedef DBView< DBRep<B> > DBViewType;
-
-      DBViewType  insView("B", BCA<B>());
-      DBViewType::insert_iterator  insIter = insView;
-
-      // copy info of the B to the DBRep<B> class
-      DBRep<B>    rec;
-      toDatabaseRep (rec);
-
-      // save this record
-      *insIter = rec;
-
-      // Once we've reached here, the insert was successful.
-      // Increment the version number.
-      metaData().versionNr()++;
-
-      // No subclasses
-
-    }
-
-
-    //
-    // Routine for updating this B object in the database.
-    //
-    template<>
-    void TPersistentObject<B>::doUpdate() const 
-    {
-      typedef DBView<DBRep<B>, DBRep<ObjectId> > DBViewType;
-      DBViewType updView("B", BCA<B>(), "WHERE ObjId=(?)", BPA<ObjectId>());
-      DBViewType::update_iterator updIter = updView;
-
-      // copy info of the B to the DBRep<B> class
-      DBRep<B>    rec;
-      toDatabaseRep (rec);
-
-      // setup the selection parameters
-      updIter.Params().itsOid = rec.itsOid;
-
-      // save this record
-      *updIter = rec;
-
-      // No subclasses
-
-      // Once we've reached here, the update was successful.
-      // Increment the version number.
-      metaData().versionNr()++;
-    }
-
-    //
-    // Routine for deleting this B object in the database.
-    //
-    template<>
-    void TPersistentObject<B>::doErase() const 
-    {
-      typedef DBView<DBRep<ObjectId> > DBViewType;
-      DBViewType delView("B", BCA<ObjectId>());
-      DBViewType::delete_iterator delIter = delView;
-
-      // setup the selection parameters
-      DBRep<ObjectId>     rec;
-      rec.itsOid = metaData().oid()->get();
-
-      // delete this record
-      *delIter = rec;
-
-      // No subclasses
-
-      // Once we've reached here, the update was successful.
-      // Reset the meta data structure.
-      metaData().reset();
-    }
-
-    //
-    // Routine to retrieve this B object from the database.
-    //
-    template<>
-    Collection<TPersistentObject<B> > 
-    TPersistentObject<B>::retrieve(const Query&  query, int maxObjects) 
-    {
-      std::cout << "retrieve(const Query&, int)" << std::endl;
-      typedef DBView< DBRep<B> >  DBViewType;
-
-      // GML: This isnt' quite right yet. Have to figure out how to construct
-      // a DBView using a valid user-defined SQL statement
-      DBViewType selView("B", BCA<B>(), query.getSql());
-
-      DBViewType::select_iterator  selIter = selView.begin();
-      Collection<TPersistentObject<B> >   selResult;
-
-      for (int nrRecs = 0; selIter != selView.end() && nrRecs < maxObjects; ++selIter, ++nrRecs) {
-	TPersistentObject<B>    TPOB;
-	TPOB.fromDatabaseRep(*selIter);
-        TPOB.retrieve();
-	// No subclasses
-	selResult.add(TPOB);
-      }
-      // @@@ TO BE DEFINED @@@
-
-      return (selResult);
-    }
-
-    template<>
-    void TPersistentObject<B>::doRetrieve(const ObjectId& aOid, 
-                                          bool isOwnerOid)
-    {
-      std::string whereClause;
-      if (isOwnerOid) {
-        whereClause = "WHERE Owner=(?)";
-      }
-      else {
-        whereClause = "WHERE ObjId=(?)";
-      }
-
-      typedef DBView< DBRep<B>, DBRep<ObjectId> > DBViewType;
-      DBViewType selView("B", BCA<B>(), whereClause, BPA<ObjectId>());
-      DBViewType::select_iterator selIter = selView.begin();
-
-      selIter.Params().itsOid = aOid.get();
-
-      // Should we throw an exception if there are no matching records?
-      // Let's do it for the time being; that's easier for debugging.
-      if (selIter != selView.end()) { 
-	fromDatabaseRep(*selIter);
-      }
-      else {
-	THROW(PLException,"No matching records found!");
-      }
-    }
-
-    template class TPersistentObject<B>;
 
   } // close namespace PL
 

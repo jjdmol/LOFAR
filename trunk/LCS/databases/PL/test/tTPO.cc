@@ -2,84 +2,179 @@
 #include <PL/PersistenceBroker.h>
 #include <PL/Query.h>
 #include <iostream>
+#include <pwd.h>
 
-#define TRACER std::cout << __PRETTY_FUNCTION__ << " (" \
-                         << __FILE__ << ":" << __LINE__ << ")\n" 
+using namespace std;
+using namespace dtl;
+
+string getUserName()
+{
+  passwd* aPwd;
+  if ((aPwd = getpwuid(getuid())) == 0)
+    return "";
+  else
+    return aPwd->pw_name;
+}
 
 class X
 {
 };
 
-class Y
+class Y : public X
 {
 };
 
-using namespace LOFAR::PL;
-using namespace std;
+namespace LOFAR { 
 
-template<> void TPersistentObject<X>::doErase() const { TRACER; }
-template<> void TPersistentObject<X>::doInsert() const { TRACER; }
-template<> void TPersistentObject<X>::doUpdate() const { TRACER; }
-template<> void TPersistentObject<X>::init() { TRACER; }
-template<> Collection< TPersistentObject<Y> > 
-TPersistentObject<Y>::doRetrieve(const Query&, int) 
-{ TRACER; return Collection< TPersistentObject<Y> >(); }
+  namespace PL {
+
+    template<> struct DBRep<X> 
+    {
+      ObjectId::oid_t  itsOid;
+      ObjectId::oid_t  itsOwnerOid;
+    };
+
+    template<>
+    void BCA<X>::operator()(BoundIOs& cols, DataObj& rowbuf) 
+    {
+	  cols["ObjID"]  == rowbuf.itsOid;
+	  cols["Owner"]  == rowbuf.itsOwnerOid;
+    }
+    
+    template<>
+    void TPersistentObject<X>::fromDatabaseRep(const DBRep<X>& org)
+    {
+      metaData().oid()->set(org.itsOid);
+      metaData().ownerOid()->set(org.itsOwnerOid);
+    }
+
+    template<>
+    void TPersistentObject<X>::toDatabaseRep(DBRep<X>& dest) const
+    {
+      dest.itsOid   = metaData().oid()->get();
+      dest.itsOwnerOid = metaData().ownerOid()->get();
+    }
+
+    template<> void TPersistentObject<X>::init() 
+    { 
+      metaData().tableName() = "X"; 
+    }
+    
+    template<> struct DBRep<Y> 
+    {
+      ObjectId::oid_t  itsOid;
+      ObjectId::oid_t  itsOwnerOid;
+    };
+
+    template<>
+    void BCA<Y>::operator()(BoundIOs& cols, DataObj& rowbuf) 
+    {
+	  cols["ObjID"]  == rowbuf.itsOid;
+	  cols["Owner"]  == rowbuf.itsOwnerOid;
+    }
+    
+    template<>
+    void TPersistentObject<Y>::fromDatabaseRep(const DBRep<Y>& org)
+    {
+      metaData().oid()->set(org.itsOid);
+      metaData().ownerOid()->set(org.itsOwnerOid);
+    }
+
+    template<>
+    void TPersistentObject<Y>::toDatabaseRep(DBRep<Y>& dest) const
+    {
+      dest.itsOid   = metaData().oid()->get();
+      dest.itsOwnerOid = metaData().ownerOid()->get();
+    }
+
+    template<> void TPersistentObject<Y>::init() 
+    {
+      Pointer p(new TPersistentObject<X>(*itsObjectPtr));
+      p->metaData().ownerOid() = metaData().oid();
+      ownedPOs().push_back(p);
+      tableName("Y");
+    }
+
+  }
+
+}
+
+using namespace LOFAR::PL;
+using namespace LOFAR;
 
 int main()
 {
-  X x;
+  Y y;
+  ObjectId oid;
   Query q;
   PersistenceBroker* b = new PersistenceBroker();
 
   try {
     cout << "Try to connect to database ...";
-    b->connect("dtl_example","postgres","");
+    b->connect(getUserName(),"postgres","");
   }
-  catch (PLException& e) {
+  catch (Exception& e) {
     cerr << endl << e << endl;
   }
   cout << "  ok" << endl;
 
-  TPersistentObject<X> tpox(x);
-  try {
-    cout << "Trying save() ..." << endl;
-    b->save(tpox);
-  }
-  catch (PLException& e) {
-    cerr << e << endl;
-  }
+  TPersistentObject<Y> tpoy(y);
 
   try {
-    cout << "Forcing insert() ..." << endl;
-    b->save(tpox, PersistenceBroker::INSERT);
+    cout << "Trying save() ...";
+    b->save(tpoy);
   }
-  catch (PLException& e) {
-    cerr << e << endl;
+  catch (Exception& e) {
+    cerr << endl << e << endl;
   }
+  cout << "  ok" << endl;
+
+  oid.set(tpoy.metaData().oid()->get());
 
   try {
-    cout << "Forcing update() ..." << endl;
-    b->save(tpox, PersistenceBroker::UPDATE);
+    cout << "Forcing insert() ...";
+    b->save(tpoy, PersistenceBroker::INSERT);
   }
-  catch (PLException& e) {
-    cerr << e << endl;
+  catch (Exception& e) {
+    cerr << endl << e << endl;
   }
+  cout << "  ok" << endl;
 
   try {
-    cout << "Trying erase() ..." << endl;
-    b->erase(tpox);
+    cout << "Forcing update() ...";
+    b->save(tpoy, PersistenceBroker::UPDATE);
   }
-  catch (PLException& e) {
-    cerr << e << endl;
+  catch (Exception& e) {
+    cerr << endl << e << endl;
   }
+  cout << "  ok" << endl;
 
   try {
-    cout << "Trying retrieve() ..." << endl;
+    cout << "Trying erase() ...";
+    b->erase(tpoy);
+  }
+  catch (Exception& e) {
+    cerr << endl << e << endl;
+  }
+  cout << "  ok" << endl;
+
+  try {
+    cout << "Trying retrieve(ObjectId&) ...";
+    b->retrieve<Y>(oid);
+  }
+  catch (Exception& e) {
+    cerr << endl << e << endl;
+  }
+  cout << "  ok" << endl;
+
+  try {
+    cout << "Trying retrieve<Y>(q) ...";
     b->retrieve<Y>(q);
   }
-  catch (PLException& e) {
-    cerr << e << endl;
+  catch (Exception& e) {
+    cerr << endl << e << endl;
   }
+  cout << "  ok" << endl;
 
   return 0;
 }
