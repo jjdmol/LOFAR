@@ -40,27 +40,39 @@ namespace LCS
       // NullId represents a (default) null object-id value.
       static const oid_t NullId;
 
-      // Default constructor.
-      ObjectId() { generate(); }
+      // Default constructor. If \c doGenerate is true, \c itsOid will be
+      // lazily initialized when get() is called, else \c itsOid will be 
+      // set equal to \c NullId and marked as set.
+      ObjectId(bool doGenerate = true);
 
-      // Set the stored object-id equal to aOid.
-      void set(const oid_t& aOid) { itsOid = aOid; }
+      // Set the stored object-id equal to \c aOid.
+      // \post \c itsOidIsSet is true.
+      void set(const oid_t& aOid);
 
       // Return the stored object-id.
-      const oid_t& get() const { return itsOid; }
+      // \post \c itsOid will have been set if it wasn't already.
+      // \post \c itsOidIsSet is true.
+      const oid_t& get() const;
 
     private:
       // Flag indicating whether the random generator has been initialized.
-      static bool theirInitFlag;
+      static bool theirRandomGeneratorIsInitialized;
 
       // Here we keep the unique object-id.
       oid_t itsOid;
 
+      // Flag that indicates whether itsOid has been set.
+      // \note itsOidIsSet must be mutable because we use lazy 
+      // initialization in the get() method.
+      mutable bool itsOidIsSet;
+
       // Generate a (hopefully) unique object-id.
-      void generate();
+      // \note This method must be \c const, because it is called by get().
+      // However, it \e does change \c itsOid.
+      void generate() const;
     };
 
-
+    // Compare two ObjectIds.
     inline bool operator==(const ObjectId& lhs, const ObjectId& rhs)
     {
       return lhs.get() == rhs.get();
