@@ -55,9 +55,9 @@ AM_LFLAGS               = -PAppControllerTokenize
 LEX_OUTPUT_ROOT         = lex.AppControllerTokenize
 
 if HAVE_CORBA
-libtransport_la_LIBADD = Corba/libth_corba.la -lpthread
+libtransport_la_LIBADD = Corba/libth_corba.la
 else
-libtransport_la_LIBADD = -lpthread
+libtransport_la_LIBADD = 
 endif
 
 include $(lofar_sharedir)/Makefile.common
