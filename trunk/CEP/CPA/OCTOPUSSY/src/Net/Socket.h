@@ -4,16 +4,9 @@
 #include "DMI/Common.h"
 #include "DMI/DMI.h"
 
-//#include <sys/file.h>
-//#include <sys/types.h>
 #include <resolv.h>
 #include <errno.h>
 #include <sys/un.h>
-//#include <netinet/in.h>
-//#include <netdb.h>
-//#include <fcntl.h>
-//#include <unistd.h>
-//#include <string.h>
 
 
 //##ModelId=3C90CE58024E

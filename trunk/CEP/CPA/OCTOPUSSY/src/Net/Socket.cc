@@ -1,23 +1,3 @@
-//## begin module%1.4%.codegen_version preserve=yes
-//   Read the documentation to learn more about C++ code generator
-//   versioning.
-//## end module%1.4%.codegen_version
-
-//## begin module%3C90D43B0096.cm preserve=no
-//	  %X% %Q% %Z% %W%
-//## end module%3C90D43B0096.cm
-
-//## begin module%3C90D43B0096.cp preserve=no
-//## end module%3C90D43B0096.cp
-
-//## Module: Socket%3C90D43B0096; Package body
-//## Subsystem: OCTOPUSSY::Net%3C90D442031F
-//## Source file: F:\lofar8\oms\LOFAR\src-links\OCTOPUSSY\Net\Socket.cc
-
-//## begin module%3C90D43B0096.additionalIncludes preserve=no
-//## end module%3C90D43B0096.additionalIncludes
-
-//## begin module%3C90D43B0096.includes preserve=yes
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/time.h>
@@ -31,14 +11,10 @@
 #include <stdio.h>
 #include <fcntl.h>
 #include "OCTOPUSSY/OctopussyDebugContext.h"
-//## end module%3C90D43B0096.includes
 
 // Socket
 #include "OCTOPUSSY/Net/Socket.h"
-//## begin module%3C90D43B0096.declarations preserve=no
-//## end module%3C90D43B0096.declarations
 
-//## begin module%3C90D43B0096.additionalDeclarations preserve=yes
 InitDebugSubContext(Socket,OctopussyDebugContext,"Socket");
 
 //##ModelId=3DB936CF02C9
@@ -53,60 +29,36 @@ int Socket::setBlocking (bool block)
 }
 
 //##ModelId=3C91BA4300F6
-//## end module%3C90D43B0096.additionalDeclarations
 
 
 // Class Socket 
 
 Socket::Socket (const string &sname)
-  //## begin Socket::Socket%3C91BA4300F6.hasinit preserve=no
-  //## end Socket::Socket%3C91BA4300F6.hasinit
-  //## begin Socket::Socket%3C91BA4300F6.initialization preserve=yes
-    : name(sname),errcode_(Socket::NOINIT),sid(-1),bound(False)
-  //## end Socket::Socket%3C91BA4300F6.initialization
+    : name(sname),errcode_(Socket::NOINIT),sid(-1),do_intr(False),bound(False)
 {
-  //## begin Socket::Socket%3C91BA4300F6.body preserve=yes
   sigpipe_counter = &default_sigpipe_counter;
-  //## end Socket::Socket%3C91BA4300F6.body
 }
 
 //##ModelId=9FD2BC39FEED
 Socket::Socket (const string &sname, const string &serv, int proto, int backlog)
-  //## begin Socket::Socket%9FD2BC39FEED.hasinit preserve=no
-  //## end Socket::Socket%9FD2BC39FEED.hasinit
-  //## begin Socket::Socket%9FD2BC39FEED.initialization preserve=yes
-    : name(sname),port_(serv),bound(False)
-  //## end Socket::Socket%9FD2BC39FEED.initialization
+    : name(sname),port_(serv),do_intr(False),bound(False)
 {
-  //## begin Socket::Socket%9FD2BC39FEED.body preserve=yes
   sigpipe_counter = &default_sigpipe_counter;
   initServer(serv,proto,backlog);
-  //## end Socket::Socket%9FD2BC39FEED.body
 }
 
 //##ModelId=C15CE2A5FEED
 Socket::Socket (const string &sname, const string &host, const string &serv, int proto, int wait_ms)
-  //## begin Socket::Socket%C15CE2A5FEED.hasinit preserve=no
-  //## end Socket::Socket%C15CE2A5FEED.hasinit
-  //## begin Socket::Socket%C15CE2A5FEED.initialization preserve=yes
-    : name(sname),host_(host),port_(serv),bound(False)
-  //## end Socket::Socket%C15CE2A5FEED.initialization
+    : name(sname),host_(host),port_(serv),do_intr(False),bound(False)
 {
-  //## begin Socket::Socket%C15CE2A5FEED.body preserve=yes
   sigpipe_counter = &default_sigpipe_counter;
   initClient(host,serv,proto,wait_ms);
-  //## end Socket::Socket%C15CE2A5FEED.body
 }
 
 //##ModelId=4760B82BFEED
 Socket::Socket (int id, struct sockaddr_in &sa)
-  //## begin Socket::Socket%4760B82BFEED.hasinit preserve=no
-  //## end Socket::Socket%4760B82BFEED.hasinit
-  //## begin Socket::Socket%4760B82BFEED.initialization preserve=yes
-    : name("client"),sid(id),type(TCP),host_(">tcp"),port_("0"),bound(False)
-  //## end Socket::Socket%4760B82BFEED.initialization
+    : name("client"),sid(id),type(TCP),host_(">tcp"),port_("0"),do_intr(False),bound(False)
 {
-  //## begin Socket::Socket%4760B82BFEED.body preserve=yes
   sigpipe_counter = &default_sigpipe_counter;
   dprintf(1)("creating connected socket\n");
   // constructs a generic socket (used by accept(), below)
@@ -120,18 +72,13 @@ Socket::Socket (int id, struct sockaddr_in &sa)
 // Set non-blocking mode
   if( fcntl(sid,F_SETFL,FNDELAY)<0 )
     set_errcode(SOCKOPT);
-  //## end Socket::Socket%4760B82BFEED.body
 }
 
 //##ModelId=3CC95D6E032A
 Socket::Socket (int id, struct sockaddr_un &sa)
-  //## begin Socket::Socket%3CC95D6E032A.hasinit preserve=no
-  //## end Socket::Socket%3CC95D6E032A.hasinit
-  //## begin Socket::Socket%3CC95D6E032A.initialization preserve=yes
-    : name("client"),sid(id),type(UNIX),host_(">unix"),port_("0"),bound(False)
-  //## end Socket::Socket%3CC95D6E032A.initialization
+    : name("client"),sid(id),type(UNIX),host_(">unix"),port_("0"),do_intr(False),bound(False)
 {
-  //## begin Socket::Socket%3CC95D6E032A.body preserve=yes
+  connected = false;
   sigpipe_counter = &default_sigpipe_counter;
   dprintf(1)("creating connected socket\n");
   unix_addr = sa;
@@ -144,14 +91,14 @@ Socket::Socket (int id, struct sockaddr_un &sa)
 // Set non-blocking mode
   if( fcntl(sid,F_SETFL,FNDELAY)<0 )
     set_errcode(SOCKOPT);
-  //## end Socket::Socket%3CC95D6E032A.body
+  // successfully created connected socket
+  connected = true;
 }
 
 
 //##ModelId=3DB936D00067
 Socket::~Socket()
 {
-  //## begin Socket::~Socket%3C90CE58024E_dest.body preserve=yes
   if( sid >=0 )
   {
     dprintf(1)("close(fd)\n");
@@ -163,16 +110,13 @@ Socket::~Socket()
     dprintf(1)("unlink(%s) = %d (%s)\n",unix_addr.sun_path,res<0?errno:res,res<0?strerror(errno):"OK");
   }
   dprintf(1)("destroying socket\n");
-  //## end Socket::~Socket%3C90CE58024E_dest.body
 }
 
 
 
 //##ModelId=3C91B9FC0130
-//## Other Operations (implementation)
 int Socket::initServer (const string &serv, int proto, int backlog)
 {
-  //## begin Socket::initServer%3C91B9FC0130.body preserve=yes
   // open a server socket
   errcode_ = errno_sys_ = 0;
   sid = -1;
@@ -298,13 +242,11 @@ int Socket::initServer (const string &serv, int proto, int backlog)
     return set_errcode(SOCKOPT);
   
   return 0;
-  //## end Socket::initServer%3C91B9FC0130.body
 }
 
 //##ModelId=3C91BA16008E
 int Socket::initClient (const string &host, const string &serv, int proto, int wait_ms)
 {
-  //## begin Socket::initClient%3C91BA16008E.body preserve=yes
   errcode_ = errno_sys_ = 0;
   sid = -1;
   server = False;
@@ -393,13 +335,11 @@ int Socket::initClient (const string &host, const string &serv, int proto, int w
   if( wait_ms >= 0 )
     return connect(wait_ms);
   return 0;
-  //## end Socket::initClient%3C91BA16008E.body
 }
 
 //##ModelId=F1A741D4FEED
 string Socket::errstr () const
 {
-  //## begin Socket::errstr%F1A741D4FEED.body preserve=yes
   static char const *s_errstr[] = {
      "OK",
      "Can't create socket (%d: %s)",
@@ -426,13 +366,11 @@ string Socket::errstr () const
   if( errcode_ < NOINIT || errcode_ > 0 )
     return "";
   return Debug::ssprintf(s_errstr[-errcode_],errno,strerror(errno));
-  //## end Socket::errstr%F1A741D4FEED.body
 }
 
 //##ModelId=6AE5AA36FEED
 int Socket::connect (int wait_ms)
 {
-  //## begin Socket::connect%6AE5AA36FEED.body preserve=yes
   if( isServer() )
     return errcode_=INVOP;
   for(;;)
@@ -463,13 +401,11 @@ int Socket::connect (int wait_ms)
   connected = True;
   errcode_ = 0;
   return 1;
-  //## end Socket::connect%6AE5AA36FEED.body
 }
 
 //##ModelId=1357FC75FEED
 Socket* Socket::accept ()
 {
-  //## begin Socket::accept%1357FC75FEED.body preserve=yes
   if( !isServer() )   
     { errcode_=INVOP; return 0; }
   if( sid<0 ) 
@@ -501,13 +437,11 @@ Socket* Socket::accept ()
         ? new Socket(id,unix_addr) 
         : new Socket(id,rmt_addr);
   }
-  //## end Socket::accept%1357FC75FEED.body
 }
 
 //##ModelId=5264A6A9FEED
 int Socket::read (void *buf, int maxn)
 {
-  //## begin Socket::read%5264A6A9FEED.body preserve=yes
   if( sid<0 ) 
     return errcode_=NOINIT; 
   FailWhen(!buf,"null buffer");
@@ -570,13 +504,11 @@ int Socket::read (void *buf, int maxn)
     return errcode_ = PEERCLOSED;
 
   return maxn-nleft;
-  //## end Socket::read%5264A6A9FEED.body
 }
 
 //##ModelId=139EF112FEED
 int Socket::write (const void *buf, int n)
 {
-  //## begin Socket::write%139EF112FEED.body preserve=yes
   if( sid<0 ) 
     return errcode_=NOINIT; 
   FailWhen(!buf,"null buffer");
@@ -633,13 +565,11 @@ int Socket::write (const void *buf, int n)
     return errcode_ = PEERCLOSED;
   
   return n - nleft;
-  //## end Socket::write%139EF112FEED.body
 }
 
 //##ModelId=890ACD77FEED
 int Socket::shutdown (bool receive, bool send)
 {
-  //## begin Socket::shutdown%890ACD77FEED.body preserve=yes
   FailWhen(!receive && !send,"neither receive nor send specified");
   if( sid<0 ) 
     return errcode_ = NOINIT; 
@@ -650,13 +580,11 @@ int Socket::shutdown (bool receive, bool send)
   if( res<0 )
     return set_errcode(SHUTDOWN);
   return 0;
-  //## end Socket::shutdown%890ACD77FEED.body
 }
 
 //##ModelId=3EE80597FEED
 int Socket::setDefaults ()
 {
-  //## begin Socket::setDefaults%3EE80597FEED.body preserve=yes
   if( sid<0 ) 
     return errcode_ = NOINIT;
   
@@ -684,12 +612,10 @@ int Socket::setDefaults ()
     return set_errcode(SOCKOPT);
   
   return 0;
-  //## end Socket::setDefaults%3EE80597FEED.body
 }
 
 // Additional Declarations
 //##ModelId=3DB936D50067
-  //## begin Socket%3C90CE58024E.declarations preserve=yes
 int Socket::readblock (void *buf, int maxn)
 {
   if( sid<0 ) 
@@ -749,7 +675,6 @@ int Socket::readblock (void *buf, int maxn)
 //##ModelId=3DB936D6007C
 int Socket::writeblock (const void *buf, int n)
 {
-  //## begin Socket::write%139EF112FEED.body preserve=yes
   if( sid<0 ) 
     return errcode_=NOINIT; 
   if( !n ) 
@@ -796,7 +721,6 @@ int Socket::writeblock (const void *buf, int n)
   }
   
   return n;
-  //## end Socket::write%139EF112FEED.body
 }
 
 
@@ -850,6 +774,3 @@ string Socket::sdebug ( int detail,const string &,const char *name ) const
   }
   return out;
 }
-  //## end Socket%3C90CE58024E.declarations
-//## begin module%3C90D43B0096.epilog preserve=yes
-//## end module%3C90D43B0096.epilog
