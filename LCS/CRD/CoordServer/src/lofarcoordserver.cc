@@ -37,6 +37,8 @@
 #include <sys/wait.h>
 #include <fcntl.h>
 
+using namespace LOFAR;
+
 
 // Initialize the deamon.
 // The deamon initialization is based on 'Advanced Programming in the
@@ -242,7 +244,8 @@ void handleConnection (Socket* socket)
     // Parent
     return;
   }
-  cout << "Established connection" << endl;
+  cout << "Established connection and forked" << endl;
+  socket->setBlocking();
 
   // This is the child process.
   // Determine version and endian format of client.
@@ -263,6 +266,7 @@ void handleConnection (Socket* socket)
     // Read 1 double (for command).
     if (socket->readBlocking (buf, sizeof(double)) == sizeof(double)) {
       int cmd = CoordClient::getInt (buf, swap);
+      cout << "read command " << cmd << endl;
       switch (cmd) {
       case CoordClient::J2000ToAzel:
 	j2000ToAzel (*socket, swap);
@@ -304,6 +308,7 @@ int main (int argc, const char* argv[])
     // If so, handle it in a child process.
     Socket* connSocket = mainSocket.accept();
     if (connSocket != 0) {
+      cout << "Found connection" << endl;
       handleConnection (connSocket);
       // At this point only the parent process continues.
       // It deletes the connection socket because the child handles it.
