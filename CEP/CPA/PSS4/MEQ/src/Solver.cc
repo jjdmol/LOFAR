@@ -90,6 +90,10 @@ int Solver::getResult (Result::Ref &resref,
   Result& result = resref <<= new Result(request, 1);
   VellSet& vellset = result.setNewVellSet(0);
   DataRecord& metricsRec = result[FMetrics] <<= new DataRecord;
+  // Check if we have to restart the solver.
+  if (request.clearSolver()) {
+    itsSpids.clear();
+  }
   // Allocate variables needed for the solution.
   uint nspid;
   vector<int> spids;
@@ -127,7 +131,7 @@ int Solver::getResult (Result::Ref &resref,
     vector<VellSet*> chvellsets;
     chvellsets.reserve(numChildren() * child_results[0]->numVellSets());
     // Find the set of all spids from all condeq results.
-    for (uint i=0; i<child_results.size(); i++) 
+    for (uint i=0; i<child_results.size(); i++)
       if( itsIsCondeq[i] )
       {
         for (int iplane=0; iplane<child_results[i]->numVellSets(); iplane++) 
@@ -139,10 +143,18 @@ int Solver::getResult (Result::Ref &resref,
         }
       }
     spids = Function::findSpids (chvellsets);
-    // Initialize solver.
-    nspid = spids.size();
-    AssertStr (nspid > 0, "No solvable parameters found in solver " << name());
-    itsSolver.set (nspid, 1u, 0u);
+    // It first time, initialize the solver.
+    // Otherwise check if spids are still the same.
+    if (itsSpids.empty()) {
+      nspid = spids.size();
+      AssertStr (nspid > 0,
+		 "No solvable parameters found in solver " << name());
+      itsSolver.set (nspid, 1u, 0u);
+      itsSpids = spids;
+    } else {
+      AssertStr (itsSpids == spids,
+		 "Different spids while solver is not restarted");
+    }
     // Now feed the solver with equations from the results.
     // Define the vector with derivatives (for real and imaginary part).
     vector<double> derivReal(nspid);
@@ -223,11 +235,16 @@ int Solver::getResult (Result::Ref &resref,
     // It looks as if LSQ has a bug so that solveLoop and getCovariance
     // interact badly (maybe both doing an invert).
     // So make a copy to separate them.
-    FitLSQ tmpSolver = itsSolver;
-    tmpSolver.getCovariance (covar);
-    tmpSolver.getErrors (errors);
-    bool solFlag = itsSolver.solveLoop (fit, rank, solution,
-                                        stddev, mu, itsUseSVD);
+    {
+      FitLSQ tmpSolver = itsSolver;
+      tmpSolver.getCovariance (covar);
+      tmpSolver.getErrors (errors);
+    }
+    // Make a copy of the solver for the actual solve.
+    // This is needed because the solver does in-place transformations.
+    FitLSQ solver = itsSolver;
+    bool solFlag = solver.solveLoop (fit, rank, solution,
+				     stddev, mu, itsUseSVD);
     cdebug(4) << "Solution after:  " << solution << endl;
     // Put the statistics in a record the result.
     DataRecord& solrec = metricsRec[step] <<= new DataRecord;
@@ -278,8 +295,8 @@ int Solver::getResult (Result::Ref &resref,
 }
 
 //##ModelId=400E53550276
-void Solver::fillSolution (DataRecord& rec, const vector<int> spids,
-                           const Vector<double>& solution,bool save_polc)
+void Solver::fillSolution (DataRecord& rec, const vector<int>& spids,
+                           const Vector<double>& solution, bool save_polc)
 {
   // Split the solution into vectors for each parm.
   // Reserve enough space in the vector.
