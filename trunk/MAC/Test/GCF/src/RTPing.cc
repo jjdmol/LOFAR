@@ -118,7 +118,7 @@ GCFEvent::TResult Ping::initial(GCFEvent& e, GCFPortInterface& /*p*/)
     }
 
     case F_EXIT:
-      _pingTimer = _client.setTimer(1.0, 0.5);
+      _pingTimer = _client.setTimer(1.0, 0.1);
       break;
       
     default:
@@ -160,7 +160,12 @@ GCFEvent::TResult Ping::connected(GCFEvent& e, GCFPortInterface& /*p*/)
     }
     case F_TIMER:
     {
-
+      
+      GCFTimerEvent* pTimer = (GCFTimerEvent*) &e;
+      
+      char timeString[9];
+      strftime(timeString, 9, "%T", localtime(&pTimer->sec));
+      printf("Timer event received on %s.%ld\n", timeString, pTimer->usec);     
       timeval pingTime;
 
       // create PingEvent
