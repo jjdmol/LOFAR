@@ -295,9 +295,9 @@ int Beam::convertPointings(time_period period)
 	m_lmns(t,2) = 0.0;
     }
 
-    LOG_DEBUG(formatString("direction@%s=(%f,%f,%f)",
-			  to_simple_string(*thetime).c_str(),
-			  m_lmns(t,0), m_lmns(t,1), m_lmns(t,2)));
+    LOG_TRACE_VAR(formatString("direction@%s=(%f,%f,%f)",
+			       to_simple_string(*thetime).c_str(),
+			       m_lmns(t,0), m_lmns(t,1), m_lmns(t,2)));
   }
 
   return 0;
