@@ -41,17 +41,17 @@ UVW::UVW()
 UVW::~UVW()
 {}
 
-int UVW::getResultImpl (Result::Ref& resref, const Request& request, bool)
+int UVW::getResultImpl (ResultSet::Ref& resref, const Request& request, bool)
 {
   const Cells& cells = request.cells();
   // Get RA and DEC of phase center.
-  Result::Ref ra, dec;
+  ResultSet::Ref ra, dec;
   int flag = children()[0]->getResult (ra, request);
   flag |= children()[1]->getResult (dec, request);
   ra.persist();
   dec.persist();
   // Get station positions.
-  Result::Ref stx, sty, stz;
+  ResultSet::Ref stx, sty, stz;
   flag |= children()[2]->getResult (stx, request);
   flag |= children()[3]->getResult (sty, request);
   flag |= children()[4]->getResult (stz, request);
@@ -62,24 +62,24 @@ int UVW::getResultImpl (Result::Ref& resref, const Request& request, bool)
     return flag;
   }
   // For the time being we only support scalars.
-  const Vells& vra  = ra->getValue();
-  const Vells& vdec = dec->getValue();
-  const Vells& vstx = stx->getValue();
-  const Vells& vsty = sty->getValue();
-  const Vells& vstz = stz->getValue();
+  const Vells& vra  = ra().result(0).getValue();
+  const Vells& vdec = dec().result(0).getValue();
+  const Vells& vstx = stx().result(0).getValue();
+  const Vells& vsty = sty().result(0).getValue();
+  const Vells& vstz = stz().result(0).getValue();
   Assert (vra.nelements()==1 && vdec.nelements()==1
 	  && vstx.nelements()==1 && vsty.nelements()==1
 	  && vstz.nelements()==1);
+  // Allocate a 3-plane result
+  ResultSet &res_set = resref <<= new ResultSet(3);
   // Get RA and DEC of phase center.
   MVDirection phaseRef (vra.getRealScalar(), vdec.getRealScalar());
   // Set correct size of values.
+  int nfreq = cells.nfreq();
   int ntime = cells.ntime();
-  LoMat_double& matU = itsU.setReal (1, ntime);
-  LoMat_double& matV = itsV.setReal (1, ntime);
-  LoMat_double& matW = itsW.setReal (1, ntime);
-  double* uptr = matU.data();
-  double* vptr = matV.data();
-  double* wptr = matW.data();
+  LoMat_double& matU = res_set.setNewResult(0).setReal(nfreq,ntime);
+  LoMat_double& matV = res_set.setNewResult(1).setReal(nfreq,ntime);
+  LoMat_double& matW = res_set.setNewResult(2).setReal(nfreq,ntime);
   // Calculate the UVW coordinates using the AIPS++ code.
   MVPosition mvpos(vstx.getRealScalar(),
 		   vsty.getRealScalar(),
@@ -100,9 +100,12 @@ int UVW::getResultImpl (Result::Ref& resref, const Request& request, bool)
     const MVBaseline& bas2000 = mcvt().getValue();
     MVuvw uvw2000 (bas2000, phaseRef);
     const Vector<double>& xyz = uvw2000.getValue();
-    *uptr++ = xyz(0);
-    *vptr++ = xyz(1);
-    *wptr++ = xyz(2);
+    for (int j=0; j<nfreq; j++) 
+    {
+      matU(j,i) = xyz(0);
+      matV(j,i) = xyz(1);
+      matW(j,i) = xyz(2);
+    }
   }
   return 0;
 }
@@ -111,110 +114,5 @@ void UVW::checkChildren()
 {
   Function::convertChildren (5);
 }
-
-
-
-UVWFunc::UVWFunc()
-: itsUVW(0)
-{}
-
-UVWFunc::~UVWFunc()
-{}
-
-void UVWFunc::makeResult (Result::Ref& resref, const Request& request,
-			  const Result& res)
-{
-  // Get cells.
-  const Cells& cells = request.cells();
-  int nfreq = cells.nfreq();
-  int ntime = cells.ntime();
-  // Create result object and attach to the ref that was passed in.
-  Result& result = resref <<= new Result();
-  // Evaluate the main value.
-  LoMat_double& arr = result.setReal (nfreq,ntime);
-  const LoMat_double& val = res.getValue().getRealArray();
-  for (int i=0; i<ntime; i++) {
-    double time = cells.time(i);
-    for (int j=0; j<nfreq; j++) {
-      arr(j,i) = val(1,i);
-    }
-  }
-  // Evaluate the perturbed values.
-  for (int k=0; k<res.nperturbed(); k++) {
-    LoMat_double& arr = result.setPerturbedReal (k,nfreq,ntime);
-    const LoMat_double& val = res.getPerturbedValue(k).getRealArray();
-    for (int i=0; i<ntime; i++) {
-      double time = cells.time(i);
-      for (int j=0; j<nfreq; j++) {
-	arr(j,i) = val(1,i);
-      }
-    }
-  }
-  result.setSpids (res.getSpids());
-}
-
-void UVWFunc::checkChildren()
-{
-  if (Function::convertChildren (1)) {
-    itsUVW = dynamic_cast<UVW*>(children()[0]);
-    AssertMsg (itsUVW, "Child of MeqU,MeqV,MeqW node must be a MeqUVW");
-  }
-}
-
-
-
-U::U()
-{}
-
-U::~U()
-{}
-
-int U::getResultImpl (Result::Ref& resref, const Request& request, bool)
-{
-  Result::Ref tmp;
-  int flag = itsUVW->getResult (tmp, request);
-  if (flag) {
-    makeResult (resref, request, itsUVW->getU().deref());
-  }
-  return flag;
-}
-
-
-
-V::V()
-{}
-
-V::~V()
-{}
-
-int V::getResultImpl (Result::Ref& resref, const Request& request, bool)
-{
-  Result::Ref tmp;
-  int flag = itsUVW->getResult (tmp, request);
-  if (flag) {
-    makeResult (resref, request, itsUVW->getU().deref());
-  }
-  return flag;
-}
-
-
-
-W::W()
-{}
-
-W::~W()
-{}
-
-int W::getResultImpl (Result::Ref& resref, const Request& request, bool)
-{
-  Result::Ref tmp;
-  int flag = itsUVW->getResult (tmp, request);
-  if (flag) {
-    makeResult (resref, request, itsUVW->getU().deref());
-  }
-  return flag;
-}
-
-
 
 } // namespace Meq

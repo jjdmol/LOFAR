@@ -15,55 +15,51 @@ void Sink::init (DataRecord::Ref::Xfer &initrec,Forest* frst)
 {
   // let the base class initialize itself
   VisHandlerNode::init(initrec,frst);
-  // init child correlation indices
-  // default is 0 to child 0, 1 to child 1, etc.
-  FailWhen(!numChildren(),"sink must have child nodes");
-  child_icorrs.resize(numChildren());
-  for( int i=0; i<numChildren(); i++ )
-    child_icorrs[i] = i;
-  // assign output columns -- default is -1
-  output_cols.resize(numChildren());
-  output_cols.assign(numChildren(),-1); // default disables output of VisTiles
+  FailWhen(numChildren()!=1,"sink must have exactly one child node");
+  // assign output column -- default is -1
+  output_col = -1;
+  // output correlations -- if clear, then plane i = corr i
+  output_icorrs.clear();
   // set stuff from record
   setStateImpl(state());
   // setup default if not already specified
   if( !wstate()[FCorr].exists() )
-    wstate()[FCorr] = child_icorrs;
+    wstate()[FCorr] = output_icorrs;
+  // setup default if not already specified
+}
+
+int Sink::mapOutputCorr (int iplane)
+{
+  if( output_icorrs.empty() )
+    return iplane;
+  if( iplane<0 || iplane >= int(output_icorrs.size()) )
+    return -1;
+  return output_icorrs[iplane]; 
 }
 
 //##ModelId=3F9918390169
 void Sink::setStateImpl (const DataRecord &rec)
 {
-  // check if output columns are specified
+  // check if output column is specified
   if( rec[FOutputColumn].exists() )
   {
-    vector<string> colnames = rec[FOutputColumn];
-    // must specify a single name for all, or exactly one name per child
-    FailWhen( colnames.size() != 1 && int(colnames.size()) != numChildren(),
-        "length of "+FOutputColumn.toString()+"field must match # of children");
-    for( uint i=0; i<colnames.size(); i++ )
+    string colname = struppercase(rec[FOutputColumn].as<string>());
+    if( colname.length() )
     {
-      if( colnames[i].length() )
-      {
-        const VisTile::NameToIndexMap &colmap = VisTile::getNameToIndexMap();
-        VisTile::NameToIndexMap::const_iterator iter = 
-            colmap.find(colnames[i] = struppercase(colnames[i]));
-        FailWhen(iter==colmap.end(),"unknown output column "+colnames[i]);
-        output_cols[i] = iter->second;
-      }
-      else
-        output_cols[i] = -1;
+      const VisTile::NameToIndexMap &colmap = VisTile::getNameToIndexMap();
+      VisTile::NameToIndexMap::const_iterator iter = colmap.find(colname);
+      FailWhen(iter==colmap.end(),"unknown output column "+colname);
+      output_col = iter->second;
     }
-    wstate()[FOutputColumn].replace() = colnames;
+    else
+      output_col = -1;
+    wstate()[FOutputColumn] = colname;
   }
-  // check if child correlations are (re)specified
+  // check if output correlation map is specified
   if( rec[FCorr].exists() )
   {
-    vector<int> icorr = rec[FCorr];
-    FailWhen( int(icorr.size())!=numChildren(),"length of "+FCorr.toString()+
-              "field must match # of children");
-    child_icorrs = icorr;
-    wstate()[FCorr].replace() = icorr;
+    output_icorrs = rec[FCorr].as_vector<int>();
+    wstate()[FCorr].replace() = output_icorrs;
   }
 }
 
@@ -75,19 +71,9 @@ void Sink::setState (const DataRecord &rec)
 }
 
 //##ModelId=3F9509770277
-int Sink::getResultImpl (Result::Ref &resref,const Request &req,bool newreq)
+int Sink::getResultImpl (ResultSet::Ref &resref,const Request &req,bool)
 {
-  int flag;
-  // get results for all children, dump updated results to output
-  for( int i=0; i<numChildren(); i++ )
-  {
-    flag = getChild(i).getResult(resref,req);
-//** commented out for now, sinks produce no result
-//    if( !(flag&RES_WAIT) && (newreq || flag&RES_UPDATED) )
-//      outputResult(i,resref,flag);
-  }
-  // ends up returning result of last child
-  return flag;
+  return getChild(0).getResult(resref,req);
 }
 
 template<class T,class U>
@@ -118,80 +104,84 @@ void Sink::fillTileColumn (T *coldata,const LoShape &colshape,
 int Sink::deliver (const Request &req,VisTile::Ref::Copy &tileref,
                    VisTile::Format::Ref &outformat)
 {
-  const VisTile &tile = *tileref;
-  const VisTile::Format * pformat = &(tile.format());
-  int ncorr = tileref->ncorr();
-  
-  cdebug(3)<<"deliver: processing tile "<<tile.tileId()<<" of "<<tile.ntime()<<" timeslots"<<endl;
-  
+  cdebug(3)<<"deliver: processing tile "<<tileref->tileId()<<" of "
+            <<tileref->ntime()<<" timeslots"<<endl;
   // get results from all child nodes 
-  vector<Result::Ref> resref(numChildren());
-  vector<int> flags(numChildren());
-  for( int ichild=0; ichild<numChildren(); ichild++ )
+  ResultSet::Ref resref;
+  cdebug(5)<<"calling getResult() on child "<<endl;
+  int resflag = getChild(0).getResult(resref,req);
+  FailWhen(resflag&RES_WAIT,"Meq::Sink can't cope with a WAIT result code yet");
+  if( resflag == RES_FAIL )
   {
-    cdebug(5)<<"calling getResult() on child "<<ichild<<endl;
-    flags[ichild] = getChild(ichild).getResult(resref[ichild],req);
+    cdebug(3)<<"child result is FAIL, returning"<<endl;
+    return RES_FAIL;
   }
-  int result_flag = 0;
-  // store resulting Vells into the tile
-  // loop over children and get a tf-plane from each
-  VisTile *ptile = 0;  // we will privatize the tile for writing as needed
-  for( int ichild=0; ichild<numChildren(); ichild++ )
+  int nres = resref->numResults();
+  cdebug(3)<<"child returns "<<nres<<" results, resflag "<<resflag<<endl;
+  if( output_col<0 )
   {
-    FailWhen(flags[ichild]&RES_WAIT,"Meq::Sink can't cope with a WAIT result code yet");
-    int icol = output_cols[ichild], icorr = child_icorrs[ichild];
-    if( flags[ichild] == RES_FAIL )
+    cdebug(3)<<"output disabled, skipping"<<endl;
+    return resflag;
+  }
+  // store resulting Vells into the tile
+  // loop over results and get a tf-plane from each
+  VisTile *ptile = 0;  // we will privatize the tile for writing as needed
+  const VisTile::Format *pformat = 0;
+  void *coldata; 
+  TypeId coltype;
+  LoShape colshape; 
+  int ncorr = tileref->ncorr();
+  for( int ires = 0; ires < nres; ires++ )
+  {
+    int icorr = mapOutputCorr(ires);
+    if( icorr<0 )
     {
-      cdebug(3)<<"child "<<ichild<<" result is FAIL, skipping"<<endl;
-    }
-    else if( icol<0 || icorr<0 )
-    {
-      cdebug(3)<<"child "<<ichild<<" output disabled, skipping"<<endl;
+      cdebug(3)<<"plane "<<ires<<" output disabled, skipping"<<endl;
     }
     else if( icorr >= ncorr )
     {
-      cdebug(3)<<"child "<<ichild<<" correlation not available, skipping"<<endl;
+      cdebug(3)<<"child "<<ires<<" correlation not available, skipping"<<endl;
     }
     else // OK, write it
     {
-      cdebug(3)<<"child "<<ichild<<" result is "<<flags[ichild]<<endl;
       // make tile writable if so required
+      // this is done the first time we actually try to write to it
       if( !ptile )
       {
         if( !tileref.isWritable() )
           tileref.privatize(DMI::WRITE|DMI::DEEP);
         ptile = tileref.dewr_p();
-      }
-      // add output column to tile as needed
-      if( !pformat->defined(icol) )
-      {
-        // if column is not present in default output format, add it
-        if( !outformat.valid() )
-          outformat.copy(tile.formatRef(),DMI::PRESERVE_RW);
-        if( !outformat->defined(icol) )
+        pformat = &(ptile->format());
+        // add output column to tile as needed
+        if( !pformat->defined(output_col) )
         {
-          if( icol == VisTile::PREDICT || icol == VisTile::RESIDUALS )
+          // if column is not present in default output format, add it
+          if( !outformat.valid() )
+            outformat.copy(tileref->formatRef(),DMI::PRESERVE_RW);
+          if( !outformat->defined(output_col) )
           {
-            outformat.privatize(DMI::WRITE|DMI::DEEP);
-            outformat().add(icol,outformat->type(VisTile::DATA),
-                                 outformat->shape(VisTile::DATA));
+            if( output_col == VisTile::PREDICT || output_col == VisTile::RESIDUALS )
+            {
+              outformat.privatize(DMI::WRITE|DMI::DEEP);
+              outformat().add(output_col,
+                  outformat->type(VisTile::DATA),outformat->shape(VisTile::DATA));
+            }
+            else
+            {
+              Throw("output column format is not known");
+            }
           }
-          else
-          {
-            Throw("output column format is not known");
-          }
+          cdebug(3)<<"adding output column to tile"<<endl;
+          ptile->changeFormat(outformat);
+          pformat = outformat.deref_p();
         }
-        cdebug(3)<<"adding output column to tile"<<endl;
-        ptile->changeFormat(outformat);
-        pformat = outformat.deref_p();
+        coldata  = ptile->wcolumn(output_col);
+        coltype  = pformat->type(output_col);
+        colshape = pformat->shape(output_col);
+        colshape.push_back(ptile->nrow()); // add third dimension to column shape
       }
-      // fill column
-      void *coldata = ptile->wcolumn(icol);
-      TypeId coltype = pformat->type(icol);
-      LoShape colshape = pformat->shape(icol);
-      colshape.push_back(tile.nrow()); // add third dimension to column shape
       // get the values out, and copy them to tile column
-      const Vells &vells = resref[ichild]->getValue();
+      const Vells &vells = resref->resultConst(ires).getValue();
       if( vells.isReal() ) // real values
       {
         FailWhen(coltype!=Tpdouble,"type mismatch: double Vells, "+coltype.toString()+" column");
@@ -202,12 +192,10 @@ int Sink::deliver (const Request &req,VisTile::Ref::Copy &tileref,
         FailWhen(coltype!=Tpfcomplex,"type mismatch: complex Vells, "+coltype.toString()+" column");
         fillTileColumn(static_cast<fcomplex*>(coldata),colshape,vells.getComplexArray(),icorr);
       }
-      result_flag |= RES_UPDATED;
+      resflag |= RES_UPDATED;
     }
-    // detach from result ref
-    resref[ichild].detach();
   }
-  return result_flag;
+  return resflag;
 }
 
 

@@ -33,17 +33,18 @@ class Spigot : public VisHandlerNode
 
   protected:
     //##ModelId=3F9FF6AA0300
-    virtual int getResultImpl (Result::Ref &resref, const Request &req,bool newreq);
+    virtual int getResultImpl (ResultSet::Ref &resref, const Request &req,bool newreq);
   
   private:
     //##ModelId=3F9FF6AA03D2
     void setStateImpl (const DataRecord &rec);
   
     //##ModelId=3F9FF6AA01A3
-    int icolumn,icorr;
+    int icolumn;
+//,icorr;
     
     //##ModelId=3F9FF6AA0221
-    Result::Ref next_res;
+    ResultSet::Ref next_res;
     //##ModelId=3F9FF6AA0238
     HIID next_rqid;
 };

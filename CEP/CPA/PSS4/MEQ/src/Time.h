@@ -23,7 +23,7 @@
 #ifndef MEQ_TIME_H
 #define MEQ_TIME_H
     
-#include <MEQ/Function.h>
+#include <MEQ/Node.h>
 
 #pragma aidgroup Meq
 #pragma types #Meq::Time
@@ -31,20 +31,22 @@
 namespace Meq {    
 
 
-class Time : public Function
+class Time : public Node
 {
 public:
   Time();
-
   virtual ~Time();
+  
+  void init (DataRecord::Ref::Xfer &initrec, Forest* frst);
+  
+  virtual TypeId objectType() const
+  { return TpMeqTime; }
 
+protected:
   // Evaluate the value for the given request.
-  int getResultImpl (Result::Ref &resref, const Request& request, bool newReq);
+  int getResultImpl (ResultSet::Ref &resref, const Request& request, bool newReq);
 
-  // Check if no children have been given.
-  virtual void checkChildren();
 };
-
 
 } // namespace Meq
 

@@ -64,7 +64,7 @@ if( !is_defined('_meqserver_binary') )
 const _meqserver_binary := 
     define_octoserver(_meqserver_binary,
                       valgrind=use_valgrind,valgrind_opts=use_valgrind_opts,
-                      nostart=use_nostart,suspend=F);
+                      nostart=use_nostart,suspend=use_suspend);
   
 
 const meqserver := function (appid='MeqServer',
@@ -101,6 +101,20 @@ const meqserver := function (appid='MeqServer',
       return T;
     }
   }
+  # define shortcuts for common methods
+  const public.getnodestate := function (node)
+  {
+    wider self,public;
+    rec := [=];
+    if( is_string(node) )
+      rec.name := node;
+    else if( is_integer(node) )
+      rec.nodeindex := node;
+    else
+      fail 'node must be specified by name or index';
+    return public.meq('Get.Node.State',rec,wait_reply=T);
+  }
+  
   
   return ref public;
 }
@@ -123,24 +137,29 @@ const meqparm := function (name,default=[=] )
 const meqdomain := function (startfreq,endfreq,starttime,endtime)
 {
   domain := as_double([startfreq,endfreq,starttime,endtime]);
-  domain::is_datafield := T;
+  domain::dmi_datafield_content_type := 'double';
+  domain::dmi_actual_type  := 'MeqDomain';
   return domain;
 }
 
-const meqcells := function(domain,nfreq,times,timesteps )
+const meqcells := function (domain,nfreq,times,timesteps )
 {
-  return [ domain=domain,nfreq=as_integer(nfreq),
+  rec := [ domain=domain,nfreq=as_integer(nfreq),
            times=as_double(times),
            timesteps=as_double(timesteps) ];
+  rec::dmi_actual_type := 'MeqCells';
+  return rec;
 }
 
-const meqrequest := function(cells,reqid=F,calcderiv=F)
+const meqrequest := function (cells,reqid=F,calc_deriv=F)
 {
   global _meqrequest_id;
   if( is_boolean(reqid) )
     reqid := _meqrequest_id +:= 1;
   else
     _meqrequest_id := reqid;
-  return [ cells=cells,reqid=as_integer(reqid),calcderiv=calcderiv ];
+  rec := [ cells=cells,request_id=hiid(reqid),calc_deriv=calc_deriv ];
+  rec::dmi_actual_type := 'MeqRequest';
+  return rec;
 }
 

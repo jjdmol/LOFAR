@@ -34,14 +34,21 @@ Time::Time()
 Time::~Time()
 {}
 
-int Time::getResultImpl (Result::Ref &resref, const Request& request, bool)
+void Time::init (DataRecord::Ref::Xfer &initrec, Forest* frst)
+{
+  Node::init(initrec,frst);
+  FailWhen(numChildren(),"Time node cannot have children");
+}
+
+int Time::getResultImpl (ResultSet::Ref &resref, const Request& request, bool)
 {
   // Get cells.
   const Cells& cells = request.cells();
   int nfreq = cells.nfreq();
   int ntime = cells.ntime();
   // Create result object and attach to the ref that was passed in.
-  Result& result = resref <<= new Result();
+  resref <<= new ResultSet(1);                // 1 plane
+  Result& result = resref().setNewResult(0);  // create new object for plane 0
   LoMat_double& arr = result.setReal (nfreq,ntime);
   // Evaluate the main value.
   for (int i=0; i<ntime; i++) {
@@ -53,11 +60,5 @@ int Time::getResultImpl (Result::Ref &resref, const Request& request, bool)
   // There are no perturbations.
   return 0;
 }
-
-void Time::checkChildren()
-{
-  convertChildren(0);
-}
-
 
 } // namespace Meq

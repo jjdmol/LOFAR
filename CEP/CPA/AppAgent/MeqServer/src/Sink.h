@@ -30,7 +30,7 @@ class Sink : public VisHandlerNode
     
   protected:
     //##ModelId=3F98DAE60217
-    virtual int getResultImpl (Result::Ref &resref, const Request &req,bool newreq);
+    virtual int getResultImpl (ResultSet::Ref &resref, const Request &req,bool newreq);
 
   private:
 //    //##ModelId=3F98DD7400A9
@@ -39,15 +39,18 @@ class Sink : public VisHandlerNode
     //##ModelId=3F9918390169
     void setStateImpl (const DataRecord &rec);
     
+    // maps plane to output correlation
+    int mapOutputCorr (int iplane);
     
     template<class T,class U>
     void fillTileColumn (T *coldata,const LoShape &colshape,
                          const blitz::Array<U,2> &arr,int icorr);
       
     //##ModelId=3F98DAE60211
-    vector<int> output_cols;
+    int output_col;
     //##ModelId=3F9918390123
-    vector<int> child_icorrs;
+    vector<int> output_icorrs;
+    
 };
 
 }
