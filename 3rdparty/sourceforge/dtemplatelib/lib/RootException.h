@@ -20,7 +20,8 @@ It is provided "as is" without express or implied warranty.
 #include "dtl_config.h"
 #include "DB_Base.h"
 #include "CountedPtr.h"
-#include "RootException.h"
+// #include "RootException.h" // <<ASTRON>> why?
+#include "clib_fwd.h" // <<ASTRON>> declares tstring_cast()
 
 #include "std_warn_off.h"
 #include <iosfwd>
@@ -30,6 +31,8 @@ It is provided "as is" without express or implied warranty.
 
 
 BEGIN_DTL_NAMESPACE
+
+class VariantException; // <<ASTRON>> it's used here.
 
 class RootException : public STD_::exception
 {

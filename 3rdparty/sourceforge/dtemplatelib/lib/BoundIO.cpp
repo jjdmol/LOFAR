@@ -9,11 +9,14 @@ Corwin Joy and Michael Gradman make no representations about the suitability
 of this software for any purpose.
 It is provided "as is" without express or implied warranty.
 */
+// Edited: 03/24/2004 - Alexander Motzkau, BoundIO remembers variant_row index
 #include "BoundIO.h"
 #include "clib_fwd.h"
 #include "DBException.h"
 #include "DBStmt.h"
 #include "string_util.h"
+
+#include "std_warn_off.h"
 
 #ifdef  WIN32
 #ifdef WIN32
@@ -28,17 +31,21 @@ It is provided "as is" without express or implied warranty.
 #include <sql.h>
 #include <sqlext.h>
 
-#include "std_warn_off.h"
 #include <sstream>
 #include <string>
 #include <set>
 #include <vector>
 #include <cassert>
+
 #include "std_warn_on.h"
+
+#ifdef POSTGRES_BLOB_PATCH
+#include <cmath>
+#endif
 
 // Reviewed: 11/12/2000 - CJ
 // Edited: 12/19/2000 - MG - added namespaces
-
+// Edited: 10/26/2003 - Paul Grenyer http://www.paulgrenyer.co.uk, added static_cast as required by MSVC 7.1
 BEGIN_DTL_NAMESPACE
 
 #ifdef POSTGRES_BLOB_PATCH
@@ -57,42 +64,38 @@ const unsigned char		LUB = 0xB1;			// least used byte
 const unsigned char		ESC = 0xAD;			// used as escape character
 const unsigned char		RNB = '\0';			// real null byte
 
-blob &DTLblob2Postgres(const blob &org) {
-	blob			*dest = new blob();				// on the heap
+void DTLblob2Postgres(blob&	dest, const blob& org) {
 	int				org_sz = org.size();
 
-	dest->reserve((long) floor(1.1 * org_sz));		// pre-size larger than original
+	dest.reserve((long) floor(1.1 * org_sz));		// pre-size larger than original
 
-	dest->append(&ESC, 1);							// ESC byte first
-	dest->append(&LUB, 1);							// LUB byte secondly
+	dest.append(&ESC, 1);							// ESC byte first
+	dest.append(&LUB, 1);							// LUB byte secondly
 	
 	const unsigned char		*p = org.data();		// append cvt data
 	for (int i = 0; i < org_sz; ++i) {	// scan whole original
 		switch (*(p+i)) {
 		case RNB:						// 0 --> LUB
-			dest->append(&LUB, 1);
+			dest.append(&LUB, 1);
 			break;
 		case LUB:						// LUB --> ESC LUB
-			dest->append(&ESC, 1);
-			dest->append(&LUB, 1);
+			dest.append(&ESC, 1);
+			dest.append(&LUB, 1);
 			break;
 		case ESC:						// ESC --> ESC ESC
-			dest->append(&ESC, 1);
-			dest->append(&ESC, 1);
+			dest.append(&ESC, 1);
+			dest.append(&ESC, 1);
 			break;
 		default:
-			dest->append(p+i, 1);
+			dest.append(p+i, 1);
 		}
 	}
-
-	return *dest;
 }
 
-blob &Postgresblob2DTL(const blob &org) {
-	blob			*dest = new blob();			// on the heap
+void Postgresblob2DTL(blob&	dest, const blob& org) {
 	int				org_sz = org.size();
 
-	dest->reserve(org_sz);						// pre-size to original size
+	dest.reserve(org_sz);						// pre-size to original size
 	
 	const unsigned char		*p = org.data();
 	const unsigned char		esc = *(p++);		// strip off esc-byte
@@ -105,17 +108,15 @@ blob &Postgresblob2DTL(const blob &org) {
 			// ESC ESC --> ESC and ESC LUB --> LUB
 			if ((*(p+i+1) == esc) || (*(p+i+1) == lub)) {
 				++i;						// skip over ESC
-				dest->append(p+i, 1);
+				dest.append(p+i, 1);
 			}
 		} else 
 		if (c == lub) {						// LUB --> 0
-			dest->append(&RNB, 1);
+			dest.append(&RNB, 1);
 		} else {
-			dest->append(&c, 1);
+			dest.append(&c, 1);
 		}
 	}
-
-	return *dest;
 }
 #endif
 // ************ Implementation code for BoundIO ****************
@@ -143,6 +144,7 @@ const size_t MAX_ACCESS_DEFAULT_STRING = 254;
 // Buffer size used for transferring string data via PutData and GetData
 // Make sure this buffer size is an even number or BoundIO::MoveRead will have
 // problems in SQL Server
+
 const size_t BoundIO::MINSTRBUFLEN = 1024; // if you frequently transfer large blobs or strings, you may want to enlarge this
 
 
@@ -217,7 +219,7 @@ SDWORD BoundIO::GetRawSize() const
     	if (IsPrimitive)
     		return size;    // use bound object directly for primitives
     	else
-    		return strbuf.size();	// use strbuf size for complex types
+    		return static_cast<SDWORD>(strbuf.size());	// use strbuf size for complex types
 }
 
 // get value for precision
@@ -255,11 +257,11 @@ SDWORD BoundIO::GetColumnSize(const DBConnection &conn) const
       return size; // Character types should array size
     case C_STRING: case C_WSTRING: case C_BLOB:
       if (conn.GetDBMSEnum() == DBConnection::DB_ACCESS)
-	return MAX(size_t(size), MAX_ACCESS_DEFAULT_STRING);
+	return static_cast<SDWORD>( DTL_MAX(size_t(size), MAX_ACCESS_DEFAULT_STRING) );
       else
 	// Character types should use max(string capacity, sql server
 	// minimum default)
-	return MAX(size_t(size), MAX_DEFAULT_STRING);
+	return static_cast<SDWORD>( DTL_MAX(size_t(size), MAX_DEFAULT_STRING) );
     case C_BOOL:
       return 1; // Character types should use buffer length
     };
@@ -276,21 +278,21 @@ SDWORD BoundIO::GetColumnSize(const DBConnection &conn) const
 }
 
 // form of CopyMember() for variant
-void BoundIO::CopyVariantRowMember(variant_row &vr, const variant_t &m)
+void BoundIO::CopyVariantRowMember(variant_row &vr, const dtl_variant_t &m)
 {
     vr[name] = m;
 }
 
 BoundIO::BoundIO() : addr(NULL), offset(0), sqlType(0), cType(0), paramType(SQL_PARAM_INPUT), name(_TEXT("")), typeId(0), IsPrimitive(false), size(0),
     	bufferLength(0), bytesFetched(), // mode(BIND_ADDRESSES),
-    	IsVariantRow(false), pBoundIOs(NULL), bindingType(UNKNOWN), colNo(0), strbuf()
+    	VariantRowIdx(-1), pBoundIOs(NULL), bindingType(UNKNOWN), colNo(0), strbuf()
 { }
 
 // BoundIO::BoundIO(const tstring &nm, BoundColMode bcMode, BoundType bt, BoundIOs &parentCollection) :
 BoundIO::BoundIO(const tstring &nm, BoundType bt, BoundIOs &parentCollection) :
     		addr(NULL), offset(0), // mode(bcMode),
     		sqlType(0), cType(0), paramType(SQL_PARAM_INPUT), name(nm), typeId(0), IsPrimitive(false),
-    		size(0), bufferLength(0), bytesFetched(), IsVariantRow(false), pBoundIOs(&parentCollection), bindingType(bt), colNo(0),
+    		size(0), bufferLength(0), bytesFetched(), VariantRowIdx(-1), pBoundIOs(&parentCollection), bindingType(bt), colNo(0),
     		strbuf()
     		
 { }
@@ -298,14 +300,14 @@ BoundIO::BoundIO(const tstring &nm, BoundType bt, BoundIOs &parentCollection) :
 BoundIO::BoundIO(const tstring &nm, BoundType bt) :
     		addr(NULL), offset(0), // mode(bcMode),
     		sqlType(0), cType(0), paramType(SQL_PARAM_INPUT), name(nm), typeId(0), IsPrimitive(false),
-    		size(0), bufferLength(0), bytesFetched(), IsVariantRow(false), pBoundIOs(NULL), bindingType(bt), colNo(0),
+    		size(0), bufferLength(0), bytesFetched(), VariantRowIdx(-1), pBoundIOs(NULL), bindingType(bt), colNo(0),
     		strbuf()
 { }
 
 BoundIO::BoundIO(BoundIOs &parentCollection, const tstring &nm, const TypeTranslation &tt, void *field, void *base_addr, size_t base_size) :
     		addr(NULL), offset(0), // mode(BIND_ADDRESSES),
     		sqlType(0), cType(0), paramType(SQL_PARAM_INPUT), name(nm), typeId(0), IsPrimitive(false),
-    		size(0), bufferLength(0), bytesFetched(), IsVariantRow(false), pBoundIOs(&parentCollection),
+    		size(0), bufferLength(0), bytesFetched(), VariantRowIdx(-1), pBoundIOs(&parentCollection),
     		bindingType(COLUMN), colNo(0),
     		strbuf()
     	{
@@ -315,7 +317,7 @@ BoundIO::BoundIO(BoundIOs &parentCollection, const tstring &nm, const TypeTransl
 
 BoundIO::BoundIO(const BoundIO &boundIO) : addr(boundIO.addr), offset(boundIO.offset), // mode(boundIO.mode),
     	sqlType(boundIO.sqlType), cType(boundIO.cType), paramType(boundIO.paramType), name(boundIO.name), typeId(boundIO.typeId), IsPrimitive(boundIO.IsPrimitive), size(boundIO.size),
-    	bufferLength(boundIO.bufferLength), bytesFetched(boundIO.bytesFetched), IsVariantRow(boundIO.IsVariantRow), pBoundIOs(boundIO.pBoundIOs),
+    	bufferLength(boundIO.bufferLength), bytesFetched(boundIO.bytesFetched), VariantRowIdx(boundIO.VariantRowIdx), pBoundIOs(boundIO.pBoundIOs),
     	bindingType(boundIO.bindingType), colNo(boundIO.colNo),
 	strbuf(boundIO.strbuf)
     	
@@ -336,7 +338,7 @@ void BoundIO::swap(BoundIO &other) {
     	// STD_::swap(mode, other.mode);
     	STD_::swap(offset, other.offset);
     	STD_::swap(pBoundIOs, other.pBoundIOs);
-    	STD_::swap(IsVariantRow, other.IsVariantRow);
+    	STD_::swap(VariantRowIdx, other.VariantRowIdx);
     	strbuf.swap(other.strbuf);
     	STD_::swap(typeId, other.typeId);
     	STD_::swap(IsPrimitive, other.IsPrimitive);
@@ -383,7 +385,10 @@ void BoundIO::SetNull() { *bytesFetched = SQL_NULL_DATA; }
 // indicator must be SQL_NTS for strings and 0 otherwise
 // except for strings, all SQL_C types have fixed lengths
 void BoundIO::ClearNull() {
-    *bytesFetched = SDWORD(0);
+	if (typeId != C_CHAR_STAR && typeId != C_WCHAR_STAR && typeId != C_TCSTRING)
+    	*bytesFetched = SDWORD(0);
+	else
+		*bytesFetched = SDWORD(SQL_NTS);
 }
 
 // set the field for this BoundIO to NULL if a column and primitive
@@ -501,28 +506,24 @@ void BoundIO::MoveRead(DBStmt &stmt)
 
 			bufferSize = GetRawSize() - 1;
 
-#if 0
-			if (stmt.GetConnection().GetDBMSEnum() == DBConnection::DB_SQL_SERVER)
-			{
-				// SQL Server version 7.0 has problems with the buffer size
-				// Truncates to one less than the buffer size.
-				bufferSize--;
-			}
-#endif
-
 			bool first_time = true;
+
+#ifdef DTL_NO_SQL_GETDATA
+			while(first_time) {
+#else
 
 			// For long strings, continue to grab chunks until no more left.
 			// Only call GetData a second time if results from the first call could
 			// not completely fit in the buffer.
 			while (stmt.GetData(GetColNo(),GetCType(), GetRawPtr(),
 				GetRawSize(), GetBytesFetchedPtr()) != DBStmt::NO_DATA_FETCHED)  {
+#endif
 
 				if (first_time)
 				{
 					first_time = false;
 					if (*bytesFetched <= 0) break;
-					bytesGet = MIN(bufferSize, *bytesFetched);
+					bytesGet = DTL_MIN(bufferSize, *bytesFetched);
 
 					tmp.reserve(*bytesFetched); // pre-size with total # of bytes
 					tmp.append(reinterpret_cast<char *>(strbuf.get()), bytesGet);
@@ -530,9 +531,12 @@ void BoundIO::MoveRead(DBStmt &stmt)
 				}
 				else
 				{
-					bytesGet = MIN(lastFetched - *bytesFetched, *bytesFetched);
+					// make sure that bytesGet <= bufferSize.  e.g. Access will lie about the
+					// total size of bytes it will return in the first setting for lastFetched
+					// and overflow the buffer for strings longer than 2046
+					bytesGet = DTL_MIN(DTL_MIN(lastFetched - *bytesFetched, *bytesFetched), bufferSize);
 
-					// bytesGet = MIN(bufferSize, MAX(*bytesFetched, SDWORD(0)));
+					// bytesGet = DTL_MIN(bufferSize, DTL_MAX(*bytesFetched, SDWORD(0)));
 					if (bytesGet <= 0) break;
 
 					tmp.append(reinterpret_cast<char *>(strbuf.get()), bytesGet);
@@ -545,7 +549,7 @@ void BoundIO::MoveRead(DBStmt &stmt)
 			// 2. NULL data - will set *GetBytesFetchedPtr() to SQL_NULL_DATA automatically
 			// 3. tmp = "\0"- will set *GetBytesFetchedPtr() to 0 automatically
 			if (tmp.size() > 0)
-				*GetBytesFetchedPtr() = tmp.size();
+				*GetBytesFetchedPtr() = static_cast<SDWORD>( tmp.size() );
 
 
 			perm_str_ptr->swap(tmp); // now we can commit the results to memory
@@ -569,28 +573,24 @@ void BoundIO::MoveRead(DBStmt &stmt)
 
 			bufferSize = GetRawSize();
 
-#if 0
-			if (stmt.GetConnection().GetDBMSEnum() == DBConnection::DB_SQL_SERVER)
-			{
-				// SQL Server version 7.0 has problems with the buffer size
-				// Truncates to one less than the buffer size.
-				bufferSize--;
-			}
-#endif
 
 			bool first_time = true;
 
+#ifdef DTL_NO_SQL_GETDATA
+			while(first_time) {
+#else
 			// For long strings, continue to grab chunks until no more left.
 			// Only call GetData a second time if results from the first call could
 			// not completely fit in the buffer.
 			while (stmt.GetData(GetColNo(),GetCType(), GetRawPtr(),
 				GetRawSize(), GetBytesFetchedPtr()) != DBStmt::NO_DATA_FETCHED)  {
+#endif
 
 				if (first_time)
 				{
 					first_time = false;
 					if (*bytesFetched <= 0) break;
-					bytesGet = MIN(bufferSize, *bytesFetched);
+					bytesGet = DTL_MIN(bufferSize, *bytesFetched);
 
 					tmp.reserve(*bytesFetched); // pre-size with total # of bytes
 					tmp.append(reinterpret_cast<BYTE *>(strbuf.get()), bytesGet);
@@ -598,9 +598,12 @@ void BoundIO::MoveRead(DBStmt &stmt)
 				}
 				else
 				{
-					bytesGet = MIN(lastFetched - *bytesFetched, *bytesFetched);
+					// make sure that bytesGet <= bufferSize.  e.g. Access will lie about the
+					// total size of bytes it will return in the first setting for lastFetched
+					// and overflow the buffer for strings longer than 2046
+					bytesGet = DTL_MIN(DTL_MIN(lastFetched - *bytesFetched, *bytesFetched), bufferSize);
 
-					// bytesGet = MIN(bufferSize, MAX(*bytesFetched, SDWORD(0)));
+					// bytesGet = DTL_MIN(bufferSize, DTL_MAX(*bytesFetched, SDWORD(0)));
 					if (bytesGet <= 0) break;
 
 					tmp.append(reinterpret_cast<BYTE *>(strbuf.get()), bytesGet);
@@ -613,12 +616,12 @@ void BoundIO::MoveRead(DBStmt &stmt)
 			// 2. NULL data - will set *GetBytesFetchedPtr() to SQL_NULL_DATA automatically
 			// 3. tmp = "\0"- will set *GetBytesFetchedPtr() to 0 automatically
 			if (tmp.size() > 0)
-				*GetBytesFetchedPtr() = tmp.size();
+				*GetBytesFetchedPtr() = static_cast<SDWORD>( tmp.size() );
 
 #ifdef POSTGRES_BLOB_PATCH
-			blob	converted_blob = Postgresblob2DTL(tmp);
+			blob	converted_blob;
+			Postgresblob2DTL(converted_blob, tmp);
 			perm_str_ptr->swap(converted_blob);
-	        converted_blob.clear();			// release allocated memory.
 #else
 			perm_str_ptr->swap(tmp); // now we can commit the results to memory
 #endif
@@ -642,28 +645,23 @@ void BoundIO::MoveRead(DBStmt &stmt)
 
 			bufferSize = GetRawSize() - 1;
 
-#if 0
-			if (stmt.GetConnection().GetDBMSEnum() == DBConnection::DB_SQL_SERVER)
-			{
-				// SQL Server version 7.0 has problems with the buffer size
-				// Truncates to one less than the buffer size.
-				bufferSize--;
-			}
-#endif
-
 			bool first_time = true;
 
+#ifdef DTL_NO_SQL_GETDATA
+			while(first_time) {
+#else
 			// For long strings, continue to grab chunks until no more left.
 			// Only call GetData a second time if results from the first call could
 			// not completely fit in the buffer.
 			while (stmt.GetData(GetColNo(),GetCType(), GetRawPtr(),
 				GetRawSize(), GetBytesFetchedPtr()) != DBStmt::NO_DATA_FETCHED)  {
+#endif
 
 				if (first_time)
 				{
 					first_time = false;
 					if (*bytesFetched <= 0) break;
-					bytesGet = MIN(bufferSize, *bytesFetched);
+					bytesGet = DTL_MIN(bufferSize, *bytesFetched);
 
 					tmp.reserve(*bytesFetched / sizeof(wchar_t)); // pre-size with total # of bytes
 					tmp.append(reinterpret_cast<wchar_t *>(strbuf.get()),
@@ -672,9 +670,12 @@ void BoundIO::MoveRead(DBStmt &stmt)
 				}
 				else
 				{
-					bytesGet = MIN(lastFetched - *bytesFetched, *bytesFetched);
+					// make sure that bytesGet <= bufferSize.  e.g. Access will lie about the
+					// total size of bytes it will return in the first setting for lastFetched
+					// and overflow the buffer for strings longer than 2046
+					bytesGet = DTL_MIN(DTL_MIN(lastFetched - *bytesFetched, *bytesFetched), bufferSize);
 
-					// bytesGet = MIN(bufferSize, MAX(*bytesFetched, SDWORD(0)));
+					// bytesGet = DTL_MIN(bufferSize, DTL_MAX(*bytesFetched, SDWORD(0)));
 					if (bytesGet <= 0) break;
 
 					tmp.append(reinterpret_cast<wchar_t *>(strbuf.get()),
@@ -688,7 +689,7 @@ void BoundIO::MoveRead(DBStmt &stmt)
 			// 2. NULL data - will set *GetBytesFetchedPtr() to SQL_NULL_DATA automatically
 			// 3. tmp = "\0"- will set *GetBytesFetchedPtr() to 0 automatically
 			if (tmp.size() > 0)
-				*GetBytesFetchedPtr() = tmp.size() * sizeof(wchar_t);
+				*GetBytesFetchedPtr() = static_cast<SDWORD>( tmp.size() * sizeof(wchar_t) );
 
 
 			perm_str_ptr->swap(tmp); // now we can commit the results to memory
@@ -714,10 +715,10 @@ void BoundIO::MoveRead(DBStmt &stmt)
 		}
 }
 
-template<typename T> static SQLINTEGER do_move_write_len (void* addr)
+template<typename T> static SQLINTEGER do_move_write_len (void* addr, T *dummy)
 {
   T* perm_str_ptr = reinterpret_cast<T*> (addr);
-  return perm_str_ptr->length ( );
+  return static_cast<SQLINTEGER>( perm_str_ptr->length ( ) );
 }
 
 void BoundIO::MoveWrite(SQLQueryType sqlQryType, DBStmt &stmt)
@@ -741,15 +742,15 @@ void BoundIO::MoveWrite(SQLQueryType sqlQryType, DBStmt &stmt)
 	// set string lengths for types that use SQLPutData
 	else if (typeId == C_STRING)
 		*(GetLenAtExecPtr()) = 
-			SQL_LEN_DATA_AT_EXEC(do_move_write_len<STD_::string> (addr));
+			SQL_LEN_DATA_AT_EXEC(do_move_write_len<STD_::string> (addr, (STD_::string *) NULL));
  
 	else if (typeId == C_BLOB)
 		*(GetLenAtExecPtr()) = 
-			SQL_LEN_DATA_AT_EXEC(do_move_write_len<blob> (addr));
+			SQL_LEN_DATA_AT_EXEC(do_move_write_len<blob> (addr, (blob *) NULL));
  
 #ifndef DTL_NO_UNICODE
 	else if (typeId == C_WSTRING)
-		*(GetLenAtExecPtr()) = SQL_LEN_DATA_AT_EXEC(do_move_write_len<STD_::wstring> (addr));
+		*(GetLenAtExecPtr()) = SQL_LEN_DATA_AT_EXEC(do_move_write_len<STD_::wstring> (addr, (STD_::wstring *)NULL));
 #endif
 }
 
@@ -800,7 +801,11 @@ void BoundIO::SetSQLType(SDWORD newSqlType) { sqlType = newSqlType; }
 
 void BoundIO::SetCType(SDWORD newCType) { cType = newCType; }
 
-BoundIO & BoundIO::SetColumnSize(size_t s) {size = s; return *this; }
+BoundIO & BoundIO::SetColumnSize(size_t s) 
+{
+	size = static_cast<SDWORD>( s ); 
+	return *this; 
+}
 
 
 // get type ID
@@ -905,13 +910,13 @@ void BoundIO::TypeTranslationFieldBind(TypeTranslationField &ttf) {
     	// if the address doesn't land within the bounds of the object,
     	// throw an exception
     	if (mem_offset >= ttf.base_size)
-    		throw DBException(_TEXT("BoundIO::InitFromField()"), _TEXT("Trying to bind index field outside of ")
+    		DTL_THROW DBException(_TEXT("BoundIO::InitFromField()"), _TEXT("Trying to bind index field outside of ")
     				_TEXT("base object bounds!"), NULL, NULL);
 
     	// everything should be OK otherwise
     	temp.offset = mem_offset;
     	swap(temp);
-    	SetAsVariantRow();
+    	SetAsVariantRow(ttf.field_nr);
 }
 
 BoundIO BoundIO::operator==(TypeTranslationField ttf) {
@@ -939,7 +944,7 @@ void BoundIO::InitFromField(const TypeTranslation &tt, void *field, void *base_a
 
     	if (pBoundIOs)
     	{
-    		tmp.colNo = BoundIOs_NumColumns((BoundIOs*) pBoundIOs) - 1; // set column order for SQL_iterator
+    		tmp.colNo = static_cast<int>( BoundIOs_NumColumns((BoundIOs*) pBoundIOs) - 1 ); // set column order for SQL_iterator
     	}
     	else
     	{
@@ -957,7 +962,7 @@ void BoundIO::InitFromField(const TypeTranslation &tt, void *field, void *base_a
 		  errmsg += _TEXT("Type ");
     	  errmsg += tstring_cast((tstring *)NULL, tt.typeNm);
     	  errmsg += _TEXT(" not found in ETI Map!");
-    	  throw ETIException(_TEXT("BoundIO::InitFromField()"), errmsg);
+    	  DTL_THROW ETIException(_TEXT("BoundIO::InitFromField()"), errmsg);
     	}
 
     	// now use our ETI table to get the SQL and C types necessary to populate
@@ -968,12 +973,12 @@ void BoundIO::InitFromField(const TypeTranslation &tt, void *field, void *base_a
     	tmp.IsPrimitive = tt.IsPrimitive();
 
     	// fill in the other members of boundIO
-    	tmp.size = tt.size;
+    	tmp.size = static_cast<SDWORD>( tt.size );
     	tmp.addr = field;
 
     	if (tmp.typeId == C_STRING  || tmp.typeId == C_WSTRING || tmp.typeId == C_BLOB) {
     	  if (tmp.strbuf.get() == NULL)
-    		  tmp.strbuf.reset(MAX(tt.size, MINSTRBUFLEN));
+    		  tmp.strbuf.reset(DTL_MAX(tt.size, MINSTRBUFLEN));
     	}
     	else
     	  if (tmp.typeId == C_JTIME_C)
@@ -993,7 +998,7 @@ void BoundIO::InitFromField(const TypeTranslation &tt, void *field, void *base_a
     	{
     		// check for possible basic error conditions, throw if either occurs
     		if (!tmp.pBoundIOs)
-    			throw DBException(_TEXT("BoundIO::InitFromField()"),
+    			DTL_THROW DBException(_TEXT("BoundIO::InitFromField()"),
     				 _TEXT("This BoundIO is not bound to its parent!"), NULL, NULL);
 
     		size_t mem_offset = (BYTE *) field - (BYTE *) base_addr;
@@ -1003,7 +1008,7 @@ void BoundIO::InitFromField(const TypeTranslation &tt, void *field, void *base_a
     		// if the address doesn't land within the bounds of the object,
     		// throw an exception
     		if (mem_offset >= base_size)
-    			throw DBException(_TEXT("BoundIO::InitFromField()"), _TEXT("Trying to bind index field outside of ")
+    			DTL_THROW DBException(_TEXT("BoundIO::InitFromField()"), _TEXT("Trying to bind index field outside of ")
     					_TEXT("base object bounds!"), NULL, NULL);
 
     		// everything should be OK otherwise
@@ -1014,14 +1019,19 @@ void BoundIO::InitFromField(const TypeTranslation &tt, void *field, void *base_a
     		       // in the face of exceptions
 }
 
-void BoundIO::SetAsVariantRow()
+void BoundIO::SetAsVariantRow(int nr)
 {
-    IsVariantRow = true;
+    VariantRowIdx = nr;
 }
 
 bool BoundIO::GetIsVariantRow() const
 {
-	return IsVariantRow;
+	return VariantRowIdx!=-1;
+}
+
+int BoundIO::GetVariantRowIdx() const
+{
+        return VariantRowIdx;
 }
 
 tostream &operator<<(tostream &o, const BoundIO &b)
@@ -1198,10 +1208,10 @@ void BoundIOs::FixColNos()
     size_t i;
     for (i = 0; i < bIO_its.size(); ++i)
     {
-    	bIO_its[i]->second.SetColNo(i);
+    	bIO_its[i]->second.SetColNo( static_cast<int>(i) );
     }
 
-    cColumns = i;
+    cColumns = static_cast<int>(i);
 }
 
 // return the names of the columns bound to
@@ -1281,6 +1291,14 @@ int BoundIOs::NumJtimes()
 		return its;
 }
 
+// erase a column by name
+void BoundIOs::EraseColumn(tstring &col)
+{
+	erase(col);
+	cColumns--; 
+	 
+}
+
 // erase all existing columns
 void BoundIOs::EraseColumns()
 {
@@ -1330,7 +1348,7 @@ void BoundIOs::PropagateToSQL(SQLQueryType sqlQryType, DBStmt &stmt)
     		}
     	}
     	if (bFail)
-    		throw DBException(_TEXT("BoundIOs::PropagateToSQL()"),
+    		DTL_THROW DBException(_TEXT("BoundIOs::PropagateToSQL()"),
     		   _TEXT("Error copying object data in BoundIO column"), NULL, NULL);
 }
 
@@ -1458,7 +1476,7 @@ void BoundIO::MoveWriteAfterExec(SQLQueryType sqlQryType, DBStmt &stmt)
     	  if (total_len == 0)
     	  {
     		std_strncpy(reinterpret_cast<char *>(strbuf.get()), "\0", 1);
-    		stmt.PutData(GetRawPtr(), 1);
+    		stmt.PutData(GetRawPtr(), SQL_NULL_DATA);
     		return;
     	  }
 
@@ -1481,12 +1499,10 @@ void BoundIO::MoveWriteAfterExec(SQLQueryType sqlQryType, DBStmt &stmt)
     		// figure what end position of string we're copying into strbuf
     		end_pos += len_to_copy;
 
-    		// copy string we're bound to into strbuf
+    		// Call SQLPutData on chunk from string
     		//
-    		perm_str_ptr->copy(reinterpret_cast<char *>(strbuf.get()),
-    			len_to_copy, start_pos);
-
-    		stmt.PutData(GetRawPtr(), len_to_copy);
+    		stmt.PutData(reinterpret_cast<const void *>(perm_str_ptr->data() + start_pos), 
+				static_cast<SDWORD>( len_to_copy ) );
 
     		// get new start pos. for next iteration of while loop
     		start_pos = end_pos;
@@ -1497,12 +1513,12 @@ void BoundIO::MoveWriteAfterExec(SQLQueryType sqlQryType, DBStmt &stmt)
     	{
     	  // type is blob, cast is OK
 #ifdef POSTGRES_BLOB_PATCH
-	      blob	converted_blob = DTLblob2Postgres(*((blob*) addr));
+	      blob	converted_blob;
+	      DTLblob2Postgres(converted_blob, *((blob*) addr));
 		  blob *perm_str_ptr = &converted_blob;
 #else
     	  blob *perm_str_ptr = (blob *) addr;
 #endif
-
     	  const size_t total_len = perm_str_ptr->length();
 
     	  // must handle empty strings, else ParamData() doesn't think
@@ -1510,7 +1526,7 @@ void BoundIO::MoveWriteAfterExec(SQLQueryType sqlQryType, DBStmt &stmt)
     	  if (total_len == 0)
     	  {
     		std_memcpy(strbuf.get(), "\0", size_t(1));
-    		stmt.PutData(GetRawPtr(), 1);
+    		stmt.PutData(GetRawPtr(), SQL_NULL_DATA);
     		return;
     	  }
 
@@ -1533,18 +1549,17 @@ void BoundIO::MoveWriteAfterExec(SQLQueryType sqlQryType, DBStmt &stmt)
     		// figure what end position of blob we're copying into strbuf
     		end_pos += len_to_copy;
 
-    		// copy string we're bound to into strbuf
+			// Call SQLPutData on chunk from string
     		//
-    		perm_str_ptr->copy(strbuf.get(), len_to_copy, start_pos);
-
-    		stmt.PutData(GetRawPtr(), len_to_copy);
+			stmt.PutData(reinterpret_cast<const void *>(perm_str_ptr->data() + start_pos), 
+				static_cast<SDWORD>( len_to_copy ) );
 
     		// get new start pos. for next iteration of while loop
     		start_pos = end_pos;
     	  }
 
 #ifdef POSTGRES_BLOB_PATCH
-	      converted_blob.clear();			// release allocated memory.
+//	      converted_blob.clear();			// release allocated memory.
 #endif
     	}
 
@@ -1562,7 +1577,7 @@ void BoundIO::MoveWriteAfterExec(SQLQueryType sqlQryType, DBStmt &stmt)
     	  if (total_len == 0)
     	  {
     		std_wcsncpy(reinterpret_cast<wchar_t *>(strbuf.get()), L"\0", 1);
-    		stmt.PutData(GetRawPtr(), sizeof(wchar_t));
+    		stmt.PutData(GetRawPtr(), SQL_NULL_DATA);
     		return;
     	  }
 
@@ -1584,15 +1599,12 @@ void BoundIO::MoveWriteAfterExec(SQLQueryType sqlQryType, DBStmt &stmt)
     		// figure what end position of wstring we're copying into strbuf
     		end_pos += len_to_copy;
 
-    		// copy string we're bound to into strbuf
+    		// Call SQLPutData on chunk from string
     		//
-    		perm_str_ptr->copy(reinterpret_cast<wchar_t *>(strbuf.get()),
-    			len_to_copy, start_pos);
-
-
             // parameter length must be changed from # of wide characters to bytes
     		// hence the multiplication of len_to_copy by sizeof(wchar_t)
-    		stmt.PutData(GetRawPtr(), len_to_copy * sizeof(wchar_t));
+    		stmt.PutData(reinterpret_cast<const void *>(perm_str_ptr->data() + start_pos), 
+				static_cast<SDWORD>(len_to_copy * sizeof(wchar_t)) );
 
     		// get new start pos. for next iteration of while loop
     		start_pos = end_pos;
@@ -1614,7 +1626,13 @@ void BoundIOs::PropagateFromResults(DBStmt &stmt)
     	// must order columns by ColNo in order for GetData() to bind in increasing
     	// column number order
     	STD_::vector<BoundIO *> applyMoveReadOrdered(cColumns);
+		STD_::vector<BoundIO *>::iterator b_it;
 
+		// init vector to NULL
+		for (b_it = applyMoveReadOrdered.begin();
+    	b_it != applyMoveReadOrdered.end(); ++b_it) {
+			*b_it = NULL;
+		}
 
     	for (BoundIOs::iterator order_it = begin(); order_it != end(); ++order_it)
     	{
@@ -1625,18 +1643,31 @@ void BoundIOs::PropagateFromResults(DBStmt &stmt)
     		}
     	}
 
-    	for (STD_::vector<BoundIO *>::iterator b_it = applyMoveReadOrdered.begin();
-    			b_it != applyMoveReadOrdered.end(); ++b_it) {
+		tstring err;
+    	for (b_it = applyMoveReadOrdered.begin();
+    	b_it != applyMoveReadOrdered.end(); ++b_it) {
+
+			if (*b_it == NULL)
+				continue;
+
     		try {
     			(*b_it)->MoveRead(stmt); // individual calls exception-safe
-    		} catch(...) {
+			} catch(DBException &ex) {
     			bFail = true;
+				err += ex.twhat();
     		}
     	}
 
     	if (bFail)
-    		throw DBException(_TEXT("BoundIOs::PropagateFromResults()"),
-    		   _TEXT("Error copying object data in BoundIO column"), NULL, NULL);
+		{
+			err = tstring(
+				_TEXT("Call to BoundIO::MoveRead() / SQLGetData() failed.  Make sure that all string ")
+				_TEXT("columns come last in your SQL statement or that your ODBC driver ")
+				_TEXT("supports SQLGetData extensions. If you need support for reading columns in DTL in ")
+				_TEXT("any order than you may want to define DTL_VARIANT_USE_FIXED_LEN_STRING\n\nBase error message:\n")
+				) + err;
+    		DTL_THROW DBException(_TEXT("BoundIOs::PropagateFromResults()"), err, NULL, NULL);
+		}
 }
 
 // Resets the address of the DataObj we are working with & updates all BoundIOs to
@@ -1722,6 +1753,12 @@ void BoundIOs::ClearNull()
     		(*it).second.ClearNull();
 }
 
+// returns true if field name passed in null or doesn't exist
+bool BoundIOs::IsNullOrNotExists(const tstring &name)
+{
+	return find(name) == end() || (*this)[name].IsNull();
+}
+
 // set the field for all primitive columns to NULL
 void BoundIOs::InitNullFields()
 {
@@ -1773,7 +1810,7 @@ TypeTranslation BoundIO::GetTypeTranslation() const
     ETI_Map::iterator it = SQL_types_to_C.find_by_typeid(typeId);
 
     if (it == SQL_types_to_C.end())
-    	throw ETIException(_TEXT("BoundIO::GetTypeTranslation()"),
+    	DTL_THROW ETIException(_TEXT("BoundIO::GetTypeTranslation()"),
     		_TEXT("Invalid typeId in BoundIO!"));
 
     return it->second;
@@ -1795,7 +1832,7 @@ BoundIOs BoundIOs::operator&&(const BoundIO &addMe)
 
     if (second.IsColumn())
     {
-    	second.colNo = BoundIOs_NumColumns(&newParentBoundIOs);
+    	second.colNo = static_cast<SDWORD>( BoundIOs_NumColumns(&newParentBoundIOs) - 1);
     }
 
     return newParentBoundIOs;
