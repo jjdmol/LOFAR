@@ -294,14 +294,14 @@ void Solver::fillSolution (DataRecord& rec, const vector<int> spids,
       lastParmid = spids[i] / 256;
       parmSol.resize(0);
       if( save_polc )
-        drp[FSavePolc] = true;
+        drp[FSavePolcs] = true;
     }
     parmSol.push_back (solution[i]);
   }
   DataRecord& drp = rec[lastParmid] <<= new DataRecord;
   drp[FUpdateValues] = parmSol;
   if( save_polc )
-    drp[FSavePolc] = true;
+    drp[FSavePolcs] = true;
 }
 
 //##ModelId=400E53550267

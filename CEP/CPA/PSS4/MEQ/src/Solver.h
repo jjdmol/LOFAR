@@ -44,20 +44,17 @@
 //  number of iterations to do in a solve
 //field: epsilon 0
 //  convergence criterium; not used at the moment
-//field: useSVD false
+//field: usesvd false
 //  Use singular value decomposition in solver?
-//field: solvable_parm
-//  Record describing the solvable parms with field
-//  field: by_list
-//    a data field consisting of data records, one for each solvable group.
-//    Each record contains:
-//    field: name 
-//      the name of the parm to set to (un)solvable. It can be a vector.
-//    field: state
-//      a data record consisting of a single field
-//      field: solvable
-//        boolean value defining if the named parms have to be set to
-//        solvable or unsolvable.
+//field: parm_group hiid('parm')
+//  HIID of the parameter group to use. 
+//field: solvable
+//  Command record which is sent up in the rider of the first request
+//  (as req.rider.<parm_group>). This is meant to set parms to solvable. 
+//  The simplest way to create this is by using meq.solvable_list("names"), 
+//  which returns such a record, given a  vector of solvable parm names. 
+//  It is also possible to create more elaborate command records from scratch,
+//  if more sophisticated manipulation of state is required.
 //defrec end
 
 

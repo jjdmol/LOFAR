@@ -1,16 +1,6 @@
 MEQ in general:
 
   * Update documentation!
-
-    - Specify child labels in node constructor; check them in init().
-      Process named children properly.
-      01/01/04: done, need to test w/glish (glish not working on my laptop)
-      16/01/04: tested with default tests; now need to make some nodes
-                with child labels
-                
-  * Use the same mechanism to check the request rider as we do for state
-    updates. E.g., polc values from the solver should be passed in this 
-    manner -- and not via state.
                 
   * check performance: why does privatizing message arguments in MeqServer
     sometimes lead to cloning? I don't see why anybody else would be holding
@@ -29,8 +19,19 @@ MEQ in general:
     10/02/04: symlinks to ../pkginc/*.g do part of the job. What do we do
     about *.g files installed in subdirectories though?
    
-  * How to tell all the nodes to shut up?
+  * How to tell all the nodes to shut up? (stop publishing)
   
+    - Specify child labels in node constructor; check them in init().
+      Process named children properly.
+      01/01/04: done, need to test w/glish (glish not working on my laptop)
+      16/01/04: tested with default tests; now need to make some nodes
+                with child labels
+  
+        + Use the same mechanism to check the request rider as we do for state
+          updates. E.g., polc values from the solver should be passed in this 
+          manner -- and not via state.
+          27/02/04: all done & tested
+          
         + reconsider order or events in execute(): should cache be checked
           only after node_state and rider have been processed? Note that for
           repeated requests, this step is skipped, regardless. 
@@ -95,11 +96,6 @@ Spigot:
 
 Parm:
 
-    + move the update-via-FValue mechanism to the request rider; it doesn't
-      really belong in state proper. (The rider needs to be reworked, see 
-      entry above).
-      25/02/04: done
-  
   * for grow_domain: use the envelope domain, rather than checking for 
     strict supersets.
     
@@ -108,6 +104,11 @@ Parm:
     polcs separate)
 
   * develop different strategies for handling multiple polcs
+  
+        + move the update-via-FValue mechanism to the request rider; it doesn't
+          really belong in state proper. (The rider needs to be reworked, see 
+          entry above).
+          25/02/04: done
 
         + If a polc with the right domain is already specified in the init-record,
           do not read the tables

@@ -28,6 +28,8 @@ if( has_field(lofar_software,'print_versions') &&
   print '$Id$';
 }
 
+include 'dmitypes.g'
+
 _meqdefrec_map := F;
 
 const meqdefrec := function (classname,name='',children='')
