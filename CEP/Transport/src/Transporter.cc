@@ -23,7 +23,8 @@
 //
 //////////////////////////////////////////////////////////////////////
 
-#include <Transporter.h>
+#include <libTransport/Transporter.h>
+#include <libTransport/BaseDataHolder.h>
 #include <Common/Debug.h>
 #include <Common/lofar_iostream.h>
 #include <stdlib.h>
@@ -89,6 +90,33 @@ void Transporter::makeTransportHolder (const TransportHolder& prototype)
   itsTransportHolder = prototype.make();
   itsTransportHolder -> setTransporter(this);
 }
+
+
+
+bool Transporter::init()
+{
+  itsTransportHolder->init();
+  itsBaseDataHolder->init();
+  return true;
+}
+
+
+bool Transporter::connectTo (Transporter* that, 
+			     TransportHolder& prototype)
+{
+  bool result = itsConnection->connectTo(this, that, prototype); 
+  result |= init();
+  return result;
+  
+}
+
+bool Transporter::connectFrom (Transporter* that, 
+			       TransportHolder& prototype) 
+{ 
+  bool result = itsConnection->connectFrom(that, this, prototype);
+  result  |= init();
+  return result;
+} 
 
 void Transporter::setReadTag (int tag)
 {
@@ -172,14 +200,5 @@ void Transporter::setTargetAddr (BaseDataHolder* addr)
   itsTargetAddr = addr;
 }
 
-bool Transporter::connectTo (Transporter* that)
-{
-  return itsConnection->connectTo(this, that); 
-}
-
-inline bool Transporter::connectFrom (Transporter* that) 
-{ 
-  return itsConnection->connectFrom(that, this);
-} 
 
 }
