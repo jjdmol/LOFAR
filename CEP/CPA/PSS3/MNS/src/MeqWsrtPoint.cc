@@ -20,6 +20,8 @@
 //#
 //# $Id$
 
+#include <PerfProfile.h>
+
 #include <MNS/MeqWsrtPoint.h>
 #include <MNS/MeqPointDFT.h>
 #include <MNS/MeqRequest.h>
@@ -45,6 +47,8 @@ MeqWsrtPoint::~MeqWsrtPoint()
 
 void MeqWsrtPoint::calcResult (const MeqRequest& request)
 {
+  PERFPROFILE(__PRETTY_FUNCTION__);
+
   // We can only calculate for a single time bin.
   const MeqDomain& domain = request.domain();
   Assert (request.nx() == 1);

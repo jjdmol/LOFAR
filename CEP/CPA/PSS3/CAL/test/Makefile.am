@@ -15,3 +15,4 @@ profile: tWSRT
 	MPE_LOG_FORMAT=SLOG $(lofar_sharedir)/profiletool tWSRT \
 		$(MPIBIN)/mpirun -np 1 ./tWSRT \
 		$(lofar_sharedir)/../data/pss1.demo/pss1.demo
+

@@ -20,6 +20,8 @@
 //#
 //# $Id$
 
+#include <PerfProfile.h>
+
 #include <MNS/MeqPolc.h>
 #include <MNS/MeqRequest.h>
 #include <MNS/MeqResult.h>
@@ -61,6 +63,8 @@ void MeqPolc::setCoeff (const MeqMatrix& values,
 
 MeqResult MeqPolc::getResult (const MeqRequest& request)
 {
+  PERFPROFILE(__PRETTY_FUNCTION__);
+
   // First check if the domain is valid.
   // Because the values are calculaed for the center of each cell,
   // it is only checked if the centers are in the polc domain.

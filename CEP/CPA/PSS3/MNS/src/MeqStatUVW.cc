@@ -20,6 +20,8 @@
 //#
 //# $Id$
 
+#include <PerfProfile.h>
+
 #include <MNS/MeqStatUVW.h>
 #include <MNS/MeqStation.h>
 #include <MNS/MeqPhaseRef.h>
@@ -46,6 +48,8 @@ MeqStatUVW::MeqStatUVW (MeqStation* station,
 
 void MeqStatUVW::calculate (const MeqRequest& request)
 {
+  PERFPROFILE(__PRETTY_FUNCTION__);
+
   itsU = MeqResult (request.nspid());
   itsV = MeqResult (request.nspid());
   itsW = MeqResult (request.nspid());

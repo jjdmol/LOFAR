@@ -31,7 +31,8 @@ MeqStation.h					\
 MeqStoredParmPolc.h				\
 MeqWsrtInt.h					\
 MeqWsrtPoint.h					\
-ParmTable.h					
+ParmTable.h					\
+PerfProfile.h
 
 lib_LTLIBRARIES 	= libmns.la
 

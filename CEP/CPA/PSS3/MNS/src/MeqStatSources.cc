@@ -20,6 +20,8 @@
 //#
 //# $Id$
 
+#include <PerfProfile.h>
+
 #include <MNS/MeqStatSources.h>
 #include <MNS/MeqPointSource.h>
 #include <MNS/MeqStatUVW.h>
@@ -40,6 +42,8 @@ MeqStatSources::MeqStatSources (MeqStatUVW* statUVW,
 
 void MeqStatSources::calculate (const MeqRequest& request)
 {
+  PERFPROFILE(__PRETTY_FUNCTION__);
+
   itsResults.resize (itsSources->size());
   const MeqResult& resU = itsUVW->getU(request);
   const MeqResult& resV = itsUVW->getV(request);
