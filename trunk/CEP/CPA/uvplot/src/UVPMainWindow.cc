@@ -1,17 +1,23 @@
+// Must be included first. Has a member "signals", which is also a
+// macro defined in QT :-)
+#include <OCTOPUSSY/Dispatcher.h> 
+
+
 #include <UVPMainWindow.h>
+#include <UVPDataTransferWP.h>    // Communications class
 
 
 #include <qapplication.h>       // qApp
 #include <qmessagebox.h>
 
-
 #include <sstream>              // std::ostringstream
+
 
 #if(DEBUG_MODE)
 InitDebugContext(UVPMainWindow, "DEBUG_CONTEXT");
 #endif
 
-//====================>>>  UVPMainWindow::UVPMainWindow  <<<====================
+//===================>>>  UVPMainWindow::UVPMainWindow  <<<===================
 
 UVPMainWindow::UVPMainWindow():QMainWindow()
 {
@@ -43,28 +49,6 @@ UVPMainWindow::UVPMainWindow():QMainWindow()
   
   itsStatusBar->show();
 
-#ifdef UVC_PLOT_FSBKB
-  // Small example view
-
-  itsCube = new UVPImageCube(500, 800);
-
-  // End small example view
-
-  itsCanvas = new UVPUVCoverageArea(this, itsCube);
-  itsCanvas->setGeometry(0, m_menu_bar->height(), width(), height()-m_menu_bar->height() -itsStatusBar->height());
-  itsCanvas->show();
-
-  // Update itsCube
-  slot_setProgressTotalSteps(500);
-
-  for(int x = 0; x < 500; x++) {
-    slot_setProgress(x+1);
-    for(int y = 0; y < 800; y++) {
-      itsCube->getPixel(x, y)->addPointUniform(sin(double(x)*double(y)/30.0), x*y);
-    }
-  }
-#endif
-
 #if(DEBUG_MODE)
   TRACER1("itsCanvas = new UVPTimeFrequencyPlot(this, Channels);");
 #endif
@@ -86,11 +70,6 @@ UVPMainWindow::UVPMainWindow():QMainWindow()
 
 UVPMainWindow::~UVPMainWindow()
 {
-#ifdef UVC_PLOT_FSBKB
-  itsCanvas->setData(0);
-  delete itsCube;
-#endif
-
 }
 
 
@@ -107,7 +86,7 @@ void UVPMainWindow::resizeEvent(QResizeEvent */*event*/)
 
 
 
-//==================>>>  UVPMainWindow::slot_about_uvplot  <<<==================
+//=================>>>  UVPMainWindow::slot_about_uvplot  <<<=================
 
 void UVPMainWindow::slot_about_uvplot()
 {
@@ -118,7 +97,7 @@ void UVPMainWindow::slot_about_uvplot()
 
 
 
-//====================>>>  UVPMainWindow::slot_mouse_world_pos  <<<====================
+//===============>>>  UVPMainWindow::slot_mouse_world_pos  <<<===============
 
 void UVPMainWindow::slot_mouse_world_pos(double x,
                                         double y)
@@ -140,7 +119,7 @@ void UVPMainWindow::slot_mouse_world_pos(double x,
 
 
 
-//====================>>>  UVPMainWindow::slot_setProgressTotalSteps <<<====================
+//=============>>>  UVPMainWindow::slot_setProgressTotalSteps <<<=============
 
 void UVPMainWindow::slot_setProgressTotalSteps(int steps)
 {
@@ -152,7 +131,7 @@ void UVPMainWindow::slot_setProgressTotalSteps(int steps)
 
 
 
-//====================>>>  UVPMainWindow::slot_setProgress <<<====================
+//==================>>>  UVPMainWindow::slot_setProgress <<<==================
 
 void UVPMainWindow::slot_setProgress(int steps)
 {
@@ -172,10 +151,18 @@ void UVPMainWindow::slot_plotTimeFrequencyImage()
   double     Values[Channels];
   UVPSpectrum   Spectrum(Channels);
 
+
+  Dispatcher    dispatcher;     // Octopussy Message Dispatcher
+
+  // Anonymous counted reference. No need to delete.
+  dispatcher.attach(new UVPDataTransferWP, DMI::ANON); 
+  dispatcher.start();
+
   itsCanvas->setChannels(Channels);
 
   slot_setProgressTotalSteps(600);
   for(unsigned int t = 0; t < 600; t++) {
+    dispatcher.poll();
     for(unsigned int i = 0; i < Channels; i++) {
       Values[i] = sin(double(i)*double(t)/30.0);
     }
@@ -184,6 +171,7 @@ void UVPMainWindow::slot_plotTimeFrequencyImage()
     slot_setProgress(t+1);
   }
 
+  dispatcher.stop();
   itsCanvas->drawView();
   slot_setProgress(0);
 }
