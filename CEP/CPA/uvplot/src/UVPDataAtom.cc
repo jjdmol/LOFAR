@@ -238,12 +238,12 @@ void UVPDataAtom::store(std::ostream& out) const
 {
   unsigned int N = itsData.size();
   itsHeader.store(out);
-  out.write((const void*)&N, sizeof(unsigned int));
-  out.write((const void*)&(itsData.front()), N*sizeof(ComplexType));
+  out.write((const char*)&N, sizeof(unsigned int));
+  out.write((const char*)&(itsData.front()), N*sizeof(ComplexType));
   FlagIterator end = itsFlags.end();
   for(FlagIterator i = itsFlags.begin(); i != end; i++) {
     unsigned char ch(*i);
-    out.write(&ch, 1);
+    out.write((const char*)&ch, 1);
   }
 }
 
@@ -260,16 +260,16 @@ void UVPDataAtom::load(std::istream& in)
   unsigned int N(0);
 
   itsHeader.load(in);
-  in.read((void*)&N, sizeof(unsigned int));
+  in.read((char*)&N, sizeof(unsigned int));
   
   itsData  = std::vector<ComplexType>(N);
   itsFlags = std::vector<bool>(N);
   
-  in.read((void*)&(itsData.front()), N*sizeof(ComplexType));
+  in.read((char*)&(itsData.front()), N*sizeof(ComplexType));
   std::vector<bool>::iterator end = itsFlags.end();
   for(std::vector<bool>::iterator i = itsFlags.begin(); i != end; i++) {
     unsigned char ch(0);
-    in.read(&ch, 1);
+    in.read((char*)&ch, 1);
     *i=bool(ch);
   }
 }

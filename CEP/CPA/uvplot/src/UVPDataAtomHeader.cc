@@ -94,15 +94,15 @@ bool UVPDataAtomHeader::operator < (const UVPDataAtomHeader &other) const
 
 void UVPDataAtomHeader::store(std::ostream& out) const
 {
-  out.write((const void*)&itsAntenna1    , sizeof(unsigned int));
-  out.write((const void*)&itsAntenna2    , sizeof(unsigned int));
-  out.write((const void*)&itsTime        , sizeof(double));
-  out.write((const void*)&itsExposureTime, sizeof(float));
-  out.write((const void*)&itsSpectralWindowID, sizeof(unsigned int));
-  out.write((const void*)&itsFieldID     , sizeof(unsigned int));
-  out.write((const void*)&itsUVW         , 3*sizeof(double));
-  out.write(& (unsigned char)itsCorrelationType, 1);
-  out.write(& (unsigned char)itsDataType       , 1);
+  out.write((const char*)&itsAntenna1    , sizeof(unsigned int));
+  out.write((const char*)&itsAntenna2    , sizeof(unsigned int));
+  out.write((const char*)&itsTime        , sizeof(double));
+  out.write((const char*)&itsExposureTime, sizeof(float));
+  out.write((const char*)&itsSpectralWindowID, sizeof(unsigned int));
+  out.write((const char*)&itsFieldID     , sizeof(unsigned int));
+  out.write((const char*)&itsUVW         , 3*sizeof(double));
+  out.write((const char*)&itsCorrelationType, 1);
+  out.write((const char*)&itsDataType       , 1);
 }
 
 
@@ -112,13 +112,13 @@ void UVPDataAtomHeader::store(std::ostream& out) const
 
 void UVPDataAtomHeader::load(std::istream& in)
 {
-  in.read((void*)&itsAntenna1    , sizeof(unsigned int));
-  in.read((void*)&itsAntenna2    , sizeof(unsigned int));
-  in.read((void*)&itsTime        , sizeof(double));
-  in.read((void*)&itsExposureTime, sizeof(float));
-  in.read((void*)&itsSpectralWindowID, sizeof(unsigned int));
-  in.read((void*)&itsFieldID     , sizeof(unsigned int));
-  in.read((void*)&itsUVW         , 3*sizeof(double));
-  in.read(& (unsigned char)itsCorrelationType, 1);
-  in.read(& (unsigned char)itsDataType       , 1);
+  in.read((char*)&itsAntenna1    , sizeof(unsigned int));
+  in.read((char*)&itsAntenna2    , sizeof(unsigned int));
+  in.read((char*)&itsTime        , sizeof(double));
+  in.read((char*)&itsExposureTime, sizeof(float));
+  in.read((char*)&itsSpectralWindowID, sizeof(unsigned int));
+  in.read((char*)&itsFieldID     , sizeof(unsigned int));
+  in.read((char*)&itsUVW         , 3*sizeof(double));
+  in.read((char*)&itsCorrelationType, 1);
+  in.read((char*)&itsDataType       , 1);
 }

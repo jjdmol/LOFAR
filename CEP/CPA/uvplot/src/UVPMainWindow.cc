@@ -24,7 +24,7 @@
 #include <OCTOPUSSY/Gateways.h>
 
 #include <uvplot/UVPMainWindow.h>
-#include <uvplot/UVPDataTransferWP.h>    // Communications class
+//***#include <uvplot/UVPDataTransferWP.h>    // Communications class
 #include <uvplot/UVPPVDInput.h>
 
 
@@ -136,27 +136,32 @@ UVPMainWindow::~UVPMainWindow()
 
 void UVPMainWindow::buildMenuBar()
 {
-  itsFileMenu = new QPopupMenu;
-  itsFileMenu->insertItem("&Open MS", this, SLOT(slot_openMS()));
-  itsFileMenu->insertItem("&Open PVD", this, SLOT(slot_openPVD()));
-  itsFileMenu->insertItem("&Quit", qApp, SLOT(quit()));
+  itsApplicationMenu = new QPopupMenu;
+  itsApplicationMenu->insertItem("&Quit", qApp, SLOT(quit()));
 
-  itsPlotMenu = new QPopupMenu;
-  itsMenuPlotImageID = itsPlotMenu->insertItem("&Image", this,
-                                               SLOT(slot_plotTimeFrequencyImage()));
-  itsMenuPlotStopID  = itsPlotMenu->insertItem("&Stop", this,
-                                               SLOT(slot_quitPlotting()));
+  itsDatasourceMenu = new QPopupMenu;
+  itsDatasourceMenu->insertItem("&Open MS", this, SLOT(slot_openMS()));
+  itsDatasourceMenu->insertItem("&VDM pipeline", this, SLOT(slot_vdmInput()));
+  itsDatasourceMenu->insertItem("Open &PVD", this, SLOT(slot_openPVD()));
 
-  itsPlotMenu->setItemEnabled(itsMenuPlotImageID, true);
-  itsPlotMenu->setItemEnabled(itsMenuPlotStopID, false);
+
+  itsProcessControlMenu = new QPopupMenu;
+  itsMenuPlotImageID = itsProcessControlMenu->insertItem("&Image", this,
+                                                         SLOT(slot_plotTimeFrequencyImage()));
+  itsMenuPlotStopID  = itsProcessControlMenu->insertItem("&Stop", this,
+                                                         SLOT(slot_quitPlotting()));
+
+  itsProcessControlMenu->setItemEnabled(itsMenuPlotImageID, true);
+  itsProcessControlMenu->setItemEnabled(itsMenuPlotStopID, false);
 
 
   itsHelpMenu = new QPopupMenu;
   itsHelpMenu->insertItem("&About uvplot", this, SLOT(slot_about_uvplot()));
 
   itsMenuBar = new QMenuBar(this);
-  itsMenuBar->insertItem("&File", itsFileMenu);
-  itsMenuBar->insertItem("&Plot", itsPlotMenu);
+  itsMenuBar->insertItem("&Application", itsApplicationMenu);
+  itsMenuBar->insertItem("&Data source", itsDatasourceMenu);
+  itsMenuBar->insertItem("&Process control", itsProcessControlMenu);
   itsMenuBar->insertSeparator();
   itsMenuBar->insertItem("&Help", itsHelpMenu);
 }
@@ -206,9 +211,9 @@ void UVPMainWindow::updateCaption()
     }
     break;
 
-  case DMI:
+  case VDM:
     {
-      out << "DMI: ";
+      out << "VDM: ";
     }
     break;
     
@@ -502,15 +507,15 @@ void UVPMainWindow::slot_openPVD()
 
 //==========>>>  UVPMainWindow::slot_plotTimeFrequencyImage  <<<==========
 
-void UVPMainWindow::slot_plotTimeFrequencyImage()
+/*void UVPMainWindow::slot_plotTimeFrequencyImage()
 {
   if(!itsBusyPlotting) {
-    itsInputFilename = "*** DMI ***";
-    itsInputType     = DMI;
+    itsInputFilename = "*** VDM ***";
+    itsInputType     = VDM;
     updateCaption();
     
-    itsPlotMenu->setItemEnabled(itsMenuPlotImageID, false);
-    itsPlotMenu->setItemEnabled(itsMenuPlotStopID, true);
+    itsProcessControlMenu->setItemEnabled(itsMenuPlotImageID, false);
+    itsProcessControlMenu->setItemEnabled(itsMenuPlotStopID, true);
     
     itsDataSet.clear();
         
@@ -556,8 +561,8 @@ void UVPMainWindow::slot_plotTimeFrequencyImage()
     dispatcher.stop();
     itsCanvas->drawView();
 
-    itsPlotMenu->setItemEnabled(itsMenuPlotImageID, true);
-    itsPlotMenu->setItemEnabled(itsMenuPlotStopID, false);
+    itsProcessControlMenu->setItemEnabled(itsMenuPlotImageID, true);
+    itsProcessControlMenu->setItemEnabled(itsMenuPlotStopID, false);
 
     itsInputFilename = "";
     itsInputType     = NoInput;
@@ -566,7 +571,7 @@ void UVPMainWindow::slot_plotTimeFrequencyImage()
   }
 
 }
-
+*/
 
 
 
