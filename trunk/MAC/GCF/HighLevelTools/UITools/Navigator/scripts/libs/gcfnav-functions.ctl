@@ -2,13 +2,14 @@
 
 global string  ACTIVEX_TREE_CTRL      = "FlyTreeXCtrl.FlyTreeX";
 global string  ACTIVEX_TREE_CTRL_NAME = "FlyTreeXCtrl1";
-global string  LIST_TREE_CTRL_NAME    = "TreeList1";
+global string  LIST_TREE_CTRL_NAME   = "list";
 global string  TAB_VIEWS_CTRL_NAME    = "TabViews";
 global bool    ACTIVEX_SUPPORTED      = false;
 global int     NR_OF_TABS             = 10;
 global mapping g_itemID2datapoint;
 global mapping g_datapoint2itemID;
 global bool    g_initializing         = true;
+global bool    g_treeCtrlInitializing = true;
 
 ///////////////////////////////////////////////////////////////////////////
 //Function ActiveXSupported
@@ -108,7 +109,15 @@ long getSelectedNode()
   }
   else
   {
+/* old tree    
     int selectedPos = treeCtrl.selectedPos;
+    if(selectedPos == -1)
+      selectedPos = 0;
+    return selectedPos;
+*/
+    dyn_string exceptionInfo;
+    unsigned selectedPos;
+    fwTreeView_getSelectedPosition(selectedPos,exceptionInfo);
     if(selectedPos == -1)
       selectedPos = 0;
     return selectedPos;
@@ -262,9 +271,15 @@ long treeAddNode(long parentId,int level,string text)
   }
   else
   {
+/* old tree
     string tempText = getLevelledString(text,level);
     treeCtrl.appendItem(tempText);  
     nodeId = treeCtrl.itemCount();
+*/
+  
+    fwTreeView_appendNode(text,"",0,level);
+    nodeId = fwTreeView_getNodeCount();
+
   }
   return nodeId;
 }
@@ -279,7 +294,6 @@ void treeAddDatapoints(dyn_string names)
   shape treeCtrl = getTreeCtrl();
   int namesIndex;
   dyn_string addedDatapoints;
-//  dyn_int    addedDatapointItemIds;
   
   // go through the list of datapoint names
   for(namesIndex=1;namesIndex<=dynlen(names);namesIndex++)
@@ -316,16 +330,14 @@ void treeAddDatapoints(dyn_string names)
         if(addingDPpart == systemName)
         {
           addedNode = treeAddNode(-1,0,addingDPpart);
-          DebugTN("Added root node: ",addedNode,addingDPpart);
-//          dynAppend(addedDatapointItemIds,addedNode); // add root item
+//          DebugTN("Added root node: ",addedNode,addingDPpart);
           g_itemID2datapoint[addedNode] = addingDPpart;
           g_datapoint2itemID[addingDPpart] = addedNode;
         }
         else
         {
-          addedNode = treeAddNode(parentId,pathIndex+1,dpPathElements[pathIndex]); 
-          DebugTN("Added node: ",addedNode,parentId,addingDPpart);
-//          dynAppend(addedDatapointItemIds,addedNode); 
+          addedNode = treeAddNode(parentId,pathIndex,dpPathElements[pathIndex]); 
+//          DebugTN("Added node: ",addedNode,parentId,pathIndex,dpPathElements[pathIndex]);
           g_itemID2datapoint[addedNode] = addingDPpart;
           g_datapoint2itemID[addingDPpart] = addedNode;
           if(dpPathElements[pathIndex] == "Alert")
@@ -352,8 +364,8 @@ void treeAddDatapoints(dyn_string names)
             int elementLevel = dynlen(elementNames[elementIndex])-1; // how deep is the element?
             string elementName = elementNames[elementIndex][elementLevel+1];
             
-            addedNode = treeAddNode(parentIds[elementLevel],pathIndex+1+elementLevel,elementName); 
-            DebugTN("Added node: ",addedNode,parentIds[elementLevel],elementLevel,elementName);
+            addedNode = treeAddNode(parentIds[elementLevel],pathIndex+elementLevel,elementName); 
+//            DebugTN("Added node: ",addedNode,parentIds[elementLevel],pathIndex+elementLevel,elementName);
             string fullDPname = addingDPpart+parentNodes[elementLevel]+"."+elementName;
             g_itemID2datapoint[addedNode] = fullDPname;
             g_datapoint2itemID[fullDPname] = addedNode;
@@ -416,89 +428,6 @@ string getLevelledString(string node, int level)
 string buildPathFromNode(long Node, string& systemName, string& datapointPath)
 {
   DebugTN("buildPathFromNode()",Node, systemName, datapointPath);
-/*
-  shape treeCtrl = getTreeCtrl(); 
-  if(ActiveXSupported())
-  {
-    // activeX tree control
-    idispatch aNode, parentNode;
-    string tempText;
-    if(Node != 0)
-    {
-      aNode = treeCtrl.ExtractNode(Node);
-      if(aNode!=0)
-      {
-        parentNode = aNode.Parent;
-        if(parentNode == 0) // this is the root!!
-        {
-          systemName = aNode.Text;
-          systemName = stripColorTags(systemName);
-          datapointPath = "";
-        }
-        else
-        {
-          systemName = "";
-          datapointPath = aNode.Text;
-          datapointPath = stripColorTags(datapointPath);
-        }
-        while(parentNode != 0)
-        {
-          if(parentNode.Parent == 0) // parent is the root!!
-          {
-            systemName = parentNode.Text;
-            systemName = stripColorTags(systemName);
-          }
-          else
-          {
-            tempText = stripColorTags(parentNode.Text);
-            datapointPath = tempText + "_" + datapointPath;
-          }
-          parentNode = parentNode.Parent;
-        }
-      }
-    }
-  }
-  else
-  {
-    if(Node != 0)
-    {
-      // simple list view
-      string tempString;
-      int level;
-      int previousLevel;
-      int i;
-      dyn_string items = treeCtrl.items;
-      string nodeText = items[Node];
-  
-      datapointPath = strltrim(nodeText);
-  
-      // count the number of spaces
-      level = getHierarchyLevel(nodeText);
-  
-      // work up the hierarchy until there are no leading spaces
-      previousLevel=level;
-      for(i=Node-1;i>0 && level>1;i--)
-      {
-        level = getHierarchyLevel(items[i]);
-        if(level < previousLevel)
-        {
-          datapointPath = strltrim(items[i]) + "_" + datapointPath;
-          previousLevel = level;
-        }
-      }
-      if(Node > 1)
-      {
-        systemName = strltrim(items[i]);
-      }
-      
-      if(level==0 && i==Node-1)
-      { // root selected
-        systemName = datapointPath;
-        datapointPath = "";
-      }
-    }
-  }
-*/
   
   string datapoint = g_itemID2datapoint[Node];
   systemName    = strrtrim(dpSubStr(datapoint,DPSUB_SYS),":");
@@ -514,52 +443,6 @@ string buildPathFromNode(long Node, string& systemName, string& datapointPath)
 long getNodeFromDatapoint(string dpe)
 {
   long nodeId;
-/*
-  // search dpe in tree
-  string treePath;
-  treePath=dpSubStr(dpe,DPSUB_SYS_DP);
-  strreplace(treePath,":","_"); // use one common separator
-  treePath = strrtrim(treePath,"_");  // prevent trailing _ (occurs if System1 is selected)
-  DebugTN("searching for ",treePath);
-  shape treeCtrl = getTreeCtrl();
-  if(ActiveXSupported())
-  {
-    nodeId = treeCtrl.Items.FindNodeOnPath(treePath,"_");
-  }
-  else
-  {
-    // can't use that FindNodeOnPath in the simple list control. Shame
-    // split treePath in pieces, separator is "_"
-    // search from top to bottom, prepending spaces for each level;
-    dyn_string nodes = strsplit(treePath,"_");
-    dyn_string items = treeCtrl.items;
-    int nodeIndex;
-    int itemIndex;
-    int parentIndex=1;
-    bool found=true;
-    for(nodeIndex=1;found && nodeIndex<=dynlen(nodes);nodeIndex++)
-    {
-      found=false;
-      for(itemIndex=parentIndex;!found && itemIndex<=dynlen(items);itemIndex++)
-      {
-        string tempNodeString = getLevelledString(nodes[nodeIndex],nodeIndex);
-        found = (tempNodeString == items[itemIndex]);
-      }
-      if(found)
-      {
-        parentIndex = itemIndex; // start next search from here
-      }
-    }
-    if(found)
-    {
-      nodeId = itemIndex-1;
-    }
-    else
-    {
-      nodeId = 0;
-    }
-  }
-*/
   
   string datapointName = dpSubStr(dpe,DPSUB_SYS_DP_EL);
   DebugTN("getNodeFromDatapoint: searching for: ",dpe,datapointName);
@@ -716,7 +599,9 @@ void Navigator_HandleEventInitialize()
   
   // manually control the initialization of the tree and tabviews
   TabViews_HandleEventInitialize();
-  TreeCtrl_HandleEventInitialize();
+  
+  // wait until tree control has initialized
+  while(g_treeCtrlInitializing) delay(0,200);
   
   // select the last selected datapoint
   string dpSelectedDatapoint="";
@@ -738,8 +623,14 @@ void Navigator_HandleEventInitialize()
     }
     else
     {
+/* old tree      
       treeCtrl.selectedPos(getNodeFromDatapoint(dpSelectedDatapoint)); 
       TreeCtrl_HandleEventOnSelChange(treeCtrl.selectedPos());
+*/
+
+// todo      treeCtrl.selectedPos(getNodeFromDatapoint(dpSelectedDatapoint)); 
+// todo      TreeCtrl_HandleEventOnSelChange(treeCtrl.selectedPos());
+      
     }
   }
 
@@ -824,8 +715,14 @@ void TreeCtrl_HandleEventInitialize()
   }
   else
   {
+/* old tree
     treeCtrl.visible = false;
     treeCtrl.deleteAllItems();
+*/
+
+    treeCtrl.visible = false;
+    fwTreeView_watchDog(); // prevent memory leak when closing controlling window
+    
   }
   
   dyn_string names;
@@ -839,6 +736,9 @@ void TreeCtrl_HandleEventInitialize()
   }
   else
   {
+/* old tree
+    treeCtrl.visible = true;
+*/
     treeCtrl.visible = true;
   }
   
@@ -940,5 +840,74 @@ void ButtonMaximize_HandleEventClick()
       }
     }
   }
+}
+
+///////////////////////////////////////////////////////////////////////////
+// TreeView_OnCollapse
+// 
+// called when an item is collapsed
+///////////////////////////////////////////////////////////////////////////
+TreeView_OnCollapse(unsigned pos)
+{
+  DebugTN("TreeView_OnCollapse",pos);
+
+  // the last line of code of each fwTreeView event handler MUST be the following:
+	id = -1; 
+}
+
+///////////////////////////////////////////////////////////////////////////
+// TreeView_OnExpand
+// 
+// called when an item is expanded
+///////////////////////////////////////////////////////////////////////////
+TreeView_OnExpand(unsigned pos)
+{
+  DebugTN("TreeView_OnExpand",pos);
+
+  // the last line of code of each fwTreeView event handler MUST be the following:
+	id = -1; 
+}
+
+///////////////////////////////////////////////////////////////////////////
+// TreeView_OnInit
+// 
+// called when the list is initialized
+///////////////////////////////////////////////////////////////////////////
+TreeView_OnInit()
+{
+  DebugTN("TreeView_OnInit");
+
+  TreeCtrl_HandleEventInitialize();  
+  g_treeCtrlInitializing = false;
+
+  // the last line of code of each fwTreeView event handler MUST be the following:
+	id = -1; 
+}
+
+///////////////////////////////////////////////////////////////////////////
+// TreeView_OnSelect
+// 
+// called when an item is selected
+///////////////////////////////////////////////////////////////////////////
+TreeView_OnSelect(unsigned pos)
+{
+  DebugTN("TreeView_OnSelect",pos);
+  TreeCtrl_HandleEventOnSelChange(pos);
+
+  // the last line of code of each fwTreeView event handler MUST be the following:
+	id = -1; 
+}
+
+///////////////////////////////////////////////////////////////////////////
+// TreeView_OnRightClick
+// 
+// called when the right mouse button is clicked on an item 
+///////////////////////////////////////////////////////////////////////////
+TreeView_OnRightClick(unsigned pos)
+{
+  DebugTN("TreeView_OnRightClick",pos);
+
+  // the last line of code of each fwTreeView event handler MUST be the following:
+	id = -1; 
 }
 

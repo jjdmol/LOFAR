@@ -1,0 +1,68 @@
+# ascii dump of database
+
+# DpType
+TypeName
+TNavigatorTabs.TNavigatorTabs	1#1
+	selectedTab	21#2
+	tab1	27#38
+	tab2	27#39
+	tab3	27#40
+TNavigatorTab.TNavigatorTab	1#1
+	caption	25#2
+	panel	25#3
+TNavigator.TNavigator	1#1
+	selectedDatapoint	27#2
+
+# Datapoint/DpId
+DpName	TypeName	ID
+__navigator_tab_listview	TNavigatorTab	48035
+__navigator_default_tabs	TNavigatorTabs	48044
+__navigator	TNavigator	48046
+__navigator_tab_gnuplot	TNavigatorTab	48051
+__navigator_TLcuPicAlert_tabs	TNavigatorTabs	48052
+__navigator_TLcuPicFPGA_tabs	TNavigatorTabs	48053
+__navigator_TLcuPicBoard_tabs	TNavigatorTabs	48054
+__navigator_TLcuPicMaintenance_tabs	TNavigatorTabs	48055
+__navigator_TLcuPic_tabs	TNavigatorTabs	48056
+__navigator_TLcuPicRack_tabs	TNavigatorTabs	48057
+__navigator_TLcuPicSubRack_tabs	TNavigatorTabs	48058
+
+# DpValue
+ElementName	TypeName	_original.._value	_original.._status	_original.._stime
+__navigator_tab_listview.caption	TNavigatorTab	"List view"	0x101	14.10.2004 10:07:05.788
+__navigator_tab_listview.panel	TNavigatorTab	"navigator_tabs/navigator_listview.pnl"	0x101	14.10.2004 10:07:11.536
+__navigator_default_tabs.selectedTab	TNavigatorTabs	1	0x101	18.10.2004 11:55:50.636
+__navigator_default_tabs.tab1	TNavigatorTabs	__navigator_tab_listview	0x101	14.10.2004 13:10:31.464
+__navigator_default_tabs.tab2	TNavigatorTabs		0x101	14.10.2004 13:22:24.569
+__navigator_default_tabs.tab3	TNavigatorTabs		0x101	14.10.2004 14:08:27.682
+__navigator.selectedDatapoint	TNavigator	PIC_Rack1_SubRack1_Board1_BP	0x101	18.10.2004 12:00:16.248
+__navigator_tab_gnuplot.caption	TNavigatorTab	"GNU plot"	0x101	15.10.2004 08:28:47.985
+__navigator_tab_gnuplot.panel	TNavigatorTab	"navigator_tabs/navigator_gnuplot.pnl"	0x101	15.10.2004 08:29:00.473
+__navigator_TLcuPicAlert_tabs.selectedTab	TNavigatorTabs	1	0x101	18.10.2004 11:57:16.439
+__navigator_TLcuPicAlert_tabs.tab1	TNavigatorTabs	__navigator_tab_listview	0x101	18.10.2004 11:57:16.439
+__navigator_TLcuPicAlert_tabs.tab2	TNavigatorTabs	__navigator_tab_listview	0x101	18.10.2004 11:57:16.439
+__navigator_TLcuPicAlert_tabs.tab3	TNavigatorTabs	__navigator_tab_gnuplot	0x101	18.10.2004 11:57:16.439
+__navigator_TLcuPicFPGA_tabs.selectedTab	TNavigatorTabs	1	0x101	18.10.2004 12:00:11.100
+__navigator_TLcuPicFPGA_tabs.tab1	TNavigatorTabs	__navigator_tab_listview	0x101	18.10.2004 11:58:27.011
+__navigator_TLcuPicFPGA_tabs.tab2	TNavigatorTabs	__navigator_tab_listview	0x101	18.10.2004 11:58:27.011
+__navigator_TLcuPicFPGA_tabs.tab3	TNavigatorTabs		0x101	18.10.2004 11:58:27.011
+__navigator_TLcuPicBoard_tabs.selectedTab	TNavigatorTabs	2	0x101	18.10.2004 11:58:42.894
+__navigator_TLcuPicBoard_tabs.tab1	TNavigatorTabs	__navigator_tab_listview	0x101	18.10.2004 11:58:42.894
+__navigator_TLcuPicBoard_tabs.tab2	TNavigatorTabs	__navigator_tab_listview	0x101	18.10.2004 11:58:42.894
+__navigator_TLcuPicBoard_tabs.tab3	TNavigatorTabs		0x101	18.10.2004 11:58:42.894
+__navigator_TLcuPicMaintenance_tabs.selectedTab	TNavigatorTabs	1	0x101	18.10.2004 11:59:56.960
+__navigator_TLcuPicMaintenance_tabs.tab1	TNavigatorTabs	__navigator_tab_listview	0x101	18.10.2004 11:58:57.665
+__navigator_TLcuPicMaintenance_tabs.tab2	TNavigatorTabs	__navigator_tab_listview	0x101	18.10.2004 11:58:57.665
+__navigator_TLcuPicMaintenance_tabs.tab3	TNavigatorTabs		0x101	18.10.2004 11:58:57.665
+__navigator_TLcuPic_tabs.selectedTab	TNavigatorTabs	1	0x101	18.10.2004 11:59:12.406
+__navigator_TLcuPic_tabs.tab1	TNavigatorTabs	__navigator_tab_listview	0x101	18.10.2004 11:59:12.406
+__navigator_TLcuPic_tabs.tab2	TNavigatorTabs	__navigator_tab_gnuplot	0x101	18.10.2004 11:59:12.406
+__navigator_TLcuPic_tabs.tab3	TNavigatorTabs		0x101	18.10.2004 11:59:12.406
+__navigator_TLcuPicRack_tabs.selectedTab	TNavigatorTabs	2	0x101	18.10.2004 11:59:59.143
+__navigator_TLcuPicRack_tabs.tab1	TNavigatorTabs	__navigator_tab_listview	0x101	18.10.2004 11:59:31.944
+__navigator_TLcuPicRack_tabs.tab2	TNavigatorTabs	__navigator_tab_listview	0x101	18.10.2004 11:59:31.944
+__navigator_TLcuPicRack_tabs.tab3	TNavigatorTabs		0x101	18.10.2004 11:59:31.944
+__navigator_TLcuPicSubRack_tabs.selectedTab	TNavigatorTabs	1	0x101	18.10.2004 11:59:43.681
+__navigator_TLcuPicSubRack_tabs.tab1	TNavigatorTabs	__navigator_tab_listview	0x101	18.10.2004 11:59:43.681
+__navigator_TLcuPicSubRack_tabs.tab2	TNavigatorTabs	__navigator_tab_listview	0x101	18.10.2004 11:59:43.681
+__navigator_TLcuPicSubRack_tabs.tab3	TNavigatorTabs		0x101	18.10.2004 11:59:43.681
