@@ -48,13 +48,6 @@ class DataBlobExtra;
   to a class like WorkHolder. Apart from that it also offers some common
   functionality to the classes derived from it.
 
-  DataHolder has an internal class called DataPacket. The basic DataPacket class 
-  offers some functions to set, get, and compare the timestamp of a data packet.
-
-  The constructors of a class derived from DataHolder should always
-  call the function setDataPacket in order to make their DataPacket object
-  known to this base class.
-
   Prove \code list<table> \endcode or \<table\>.
   \code
     main()
@@ -67,36 +60,6 @@ class DataBlobExtra;
 class DataHolder
 {
 friend class DataBlobExtra;
-
-public:
-  // Standard data containing a timestamp.
-  struct DataPacket
-  {
-  public:
-    DataPacket();
-
-    // Set the timestamp.
-    void setTimeStamp (unsigned long aTimeStamp);
-
-    // Get the timestamp.
-    unsigned long getTimeStamp() const;
-
-    // Copy the timestamp from another DataPacket to this one.
-    void copyTimeStamp (const DataPacket& that);
-
-    // Compare the timestamp of this and that DataPacket.
-    //    It returns -1, 0, or 1 (for <,==,>).
-    int compareTimeStamp (const DataPacket& that) const;
-
-    // Define the function to convert DataPacket from given format
-    // to local format.
-    friend void dataConvert (DataFormat fmt,
-			     DataHolder::DataPacket* buf, uint nrval);
-
-  private:
-    unsigned long itsTimeStamp;
-  };
-
 
 public:
   // Construct a DataHolder with a default name.
@@ -150,6 +113,11 @@ public:
   // Functions to deal with handling the timestamp 
   int compareTimeStamp (const DataHolder& that) const;
 
+  // Define the function to convert timestamp from given format
+  // to local format.
+  friend void dataConvert (DataFormat fmt,
+			   unsigned long* buf, uint nrval);
+
   // Set maximum data size.
   // If used, it should be called before preprocess.
   // Normally this is not needed, but for TH_ShMem transports it is useful,
@@ -168,13 +136,10 @@ public:
   int getMaxDataSize() const;
 
   // Get data size (in bytes);
-  virtual int getDataSize() const;
+  int getDataSize() const;
 
   // Get a pointer to the data (the beginning of the blob).
   void* getDataPtr() const;
-
-  // Get the data packet
-  const DataPacket& getDataPacket() const;
 
    // Set/get the ID
   void setID(int aID);
@@ -199,13 +164,44 @@ public:
   // to/from the DataHolder connected to this one.
   Transporter& getTransporter();
 
+   // Initialize the extra output blob holding arbitrary fields.
+  // The return reference can be used to store the fields in.
+  // It is meant for DataHolders writing data.
+  BlobOStream& createExtraBlob();
+  // Clear the extra blob output buffer.
+  // This is needed, because an extra blob is kept until overwritten.
+  void clearExtraBlob();
+  // Get read access to the extra blob last created or read.
+  // If a created blob is used, only the data written so far can be accessed.
+  // <br>found=false is set if there is no extra blob. The first version
+  // throws an exception if there is no extra blob.
+  // <group>
+  BlobIStream& getExtraBlob();
+  BlobIStream& getExtraBlob (bool& found, int& version);
+  // </group>
+
+  // Get access to the data blob.
+  // <group>
+  BlobString& getDataBlock();
+  const BlobString& getDataBlock() const;
+  // </group>
+
+  // Get the size of a blob header.
+  uint getHeaderSize() const;
+
+  // Extract the size from the blob header in the buffer.
+  static uint getDataLength (const void* buffer);
+
+  // Resize the buffer to the given size (if needed).
+  void resizeBuffer (uint newSize);
+
 protected:
   DataHolder(const DataHolder&);
 
   // Add a field to the data block definition.
   // Optionally a (unique) name can be given to the field.
   // It returns the index of the field.
-  // Note that the DataPacket (timestamp) is always the first
+  // Note that the timestamp is always the first
   // field of the block.
   // <group>
   uint addField (const BlobFieldBase&);
@@ -244,39 +240,6 @@ protected:
   // Tell that the extra data block will be used.
   void setExtraBlob (const string& name, int version);
 
-public:
-  // Initialize the extra output blob holding arbitrary fields.
-  // The return reference can be used to store the fields in.
-  // It is meant for DataHolders writing data.
-  BlobOStream& createExtraBlob();
-  // Clear the extra blob output buffer.
-  // This is needed, because an extra blob is kept until overwritten.
-  void clearExtraBlob();
-  // Get read access to the extra blob last created or read.
-  // If a created blob is used, only the data written so far can be accessed.
-  // <br>found=false is set if there is no extra blob. The first version
-  // throws an exception if there is no extra blob.
-  // <group>
-  BlobIStream& getExtraBlob();
-  BlobIStream& getExtraBlob (bool& found, int& version);
-  // </group>
-
-  // Get access to the data blob.
-  // <group>
-  BlobString& getDataBlock();
-  const BlobString& getDataBlock() const;
-  // </group>
-
-  // Get the size of a blob header.
-  uint getHeaderSize() const;
-
-  // Extract the size from the blob header in the buffer.
-  static uint getDataLength (const void* buffer);
-
-  // Resize the buffer to the given size (if needed).
-  void resizeBuffer (uint newSize);
-
-protected:
   // Handle the data read (check and convert it as needed).
   void handleDataRead();
 
@@ -298,7 +261,7 @@ private:
   // If resized, the data pointers are refilled.
   void putExtra (const void* data, uint size);
 
-  // Fill all data pointers (of DataPacket and in derived class).
+  // Fill all data pointers (of timestamp and in derived class).
   void fillAllDataPointers();
 
   // Let the derived class fill its pointers to the data in the blob.
@@ -307,11 +270,11 @@ private:
   // The default implementation does nothing.
   virtual void fillDataPointers();
 
+  unsigned long* itsTimeStampPtr;
 
   BlobFieldSet    itsDataFields;
   BlobString*     itsData;
   BlobOBufString* itsDataBlob;
-  DataPacket*  itsDataPacketPtr;
   Transporter  itsTransporter;
   int          itsMaxDataSize;   //# <0 is not filled in
   bool         itsIsAddMax;
@@ -333,40 +296,20 @@ inline int DataHolder::getDataSize() const
 inline void* DataHolder::getDataPtr() const
   { return itsData->data(); }
 
-inline const DataHolder::DataPacket& DataHolder::getDataPacket() const
-  { return *itsDataPacketPtr; }
-
 inline Transporter& DataHolder::getTransporter()
   { return itsTransporter; }
 
 inline void DataHolder::setTimeStamp (unsigned long aTimeStamp)
-  { itsDataPacketPtr->setTimeStamp (aTimeStamp); }
+  { *itsTimeStampPtr = aTimeStamp; }
 
 inline unsigned long DataHolder::getTimeStamp() const
-  { return itsDataPacketPtr->getTimeStamp(); }
+  { return *itsTimeStampPtr; }
 
 inline void DataHolder::copyTimeStamp (const DataHolder& that)
-  { itsDataPacketPtr->copyTimeStamp (that.getDataPacket()); }
+  { *itsTimeStampPtr = that.getTimeStamp(); }
 
 inline void DataHolder::copyTimeStamp (const DataHolder* that)
-  { itsDataPacketPtr->copyTimeStamp (that->getDataPacket()); }
-
-inline int DataHolder::compareTimeStamp (const DataHolder& that) const
-  { return itsDataPacketPtr->compareTimeStamp (that.getDataPacket()); }
-
-
-inline DataHolder::DataPacket::DataPacket()
-: itsTimeStamp (0)
-{}
-
-inline void DataHolder::DataPacket::setTimeStamp (unsigned long aTimeStamp)
-  { itsTimeStamp = aTimeStamp; }
-
-inline unsigned long DataHolder::DataPacket::getTimeStamp() const
-  { return itsTimeStamp; }
-
-inline void DataHolder::DataPacket::copyTimeStamp (const DataPacket& that)
-  { itsTimeStamp = that.itsTimeStamp; }
+  { *itsTimeStampPtr = that->getTimeStamp(); }
 
 inline const string& DataHolder::getName() const
   { return itsName; }
@@ -422,16 +365,16 @@ inline const BlobString& DataHolder::getDataBlock() const
 }
 
 inline void dataConvert (DataFormat fmt,
-			 DataHolder::DataPacket* buf, uint nrval)
+			 unsigned long* buf, uint nrval)
 {
   for (uint i=0; i<nrval ;i++) {
-    dataConvertDouble (fmt, &(buf[i].itsTimeStamp));
+    dataConvertDouble (fmt, &buf[i]);
   }
 }
 
 inline void DataHolder::fillAllDataPointers()
 {
-  itsDataPacketPtr = itsDataFields[0].getData<DataPacket> (*itsDataBlob);
+  itsTimeStampPtr = itsDataFields[0].getData<unsigned long> (*itsDataBlob);
   fillDataPointers();
 }
 

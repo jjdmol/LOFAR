@@ -40,29 +40,8 @@ class BlobIStream;
 class BlobString;
 
 /**
-  Class DataHolder is the abstract base class for all data holders
-  in the CEPFrame environment. Its main purpose is to offer a common interface
-  to a class like WorkHolder. Apart from that it also offers some common
-  functionality to the classes derived from it.
-
-  DataHolder has an internal class called DataPacket. This class holds
-  the data of a DataHolder class. A Class derived from DataHolder
-  should also have an internal class to hold its data. That class should
-  be derived from DataHolder::DataPacket.
-  The basic DataPacket class offers some functions to set, get, and
-  compare the timestamp of a data packet.
-
-  The constructors of a class derived from DataHolder should always
-  call the function setDataPacket in order to make their DataPacket object
-  known to this base class.
-
-  Prove \code list<table> \endcode or \<table\>.
-  \code
-    main()
-    {
-       list<table> l;
-    }
-  \endcode
+  Class DataBlobExtra holds extra (variable length) fields for the blob in 
+  the DataHolder.
 */
 
 class DataBlobExtra
