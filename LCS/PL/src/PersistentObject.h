@@ -48,6 +48,8 @@ namespace LCS
     {
     protected:
 
+      PersistentObject() : itsIsPersistent(false) {}
+
       virtual ~PersistentObject() {}
 
       // Insert the PersistentObject into the database.
@@ -79,6 +81,12 @@ namespace LCS
       // Remove this instance of PersistentObject from the database.
       virtual void erase(const PersistenceBroker* const) = 0;
 
+      // Get the isPersistent flag.
+      inline bool isPersistent() { return itsIsPersistent; }
+
+      // Set the isPersistent flag.
+      inline void isPersistent(bool b) { itsIsPersistent = b; }
+
     protected:
       // ObjectId is used to uniquely identify every instance of a
       // PersistentObject.
@@ -90,7 +98,7 @@ namespace LCS
 
       // Flag indicating whether this PersistentObject is already present in
       // the database or not.
-      bool isPersistent;
+      bool itsIsPersistent;
 
     };
 
