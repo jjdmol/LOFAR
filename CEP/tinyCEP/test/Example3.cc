@@ -60,18 +60,17 @@ int main (int argv, const char** argc) {
   EX1->baseDump();
   EX1->baseRun(10);
   EX1->baseDump();
-  EX1->baseQuit();
-
   if (!strcmp(argc[1], "-r")) {
 
     if ( ((DH_Example*)EX1->itsWHs[0]->getDataManager().getOutHolder(0))->getBuffer()[0] ==
-	  complex<float> (4,3) ) {
-
+	  complex<float> (4, 3) ) {
       return 0;
     } else { 
       return 1;
     }
   } 
+
+  EX1->baseQuit();
   return 0;
 
 }
