@@ -60,7 +60,7 @@ public:
 			 const MeqPolc& polc) = 0;
 
   // Get the names of all sources in the table.
-  virtual void getSources (vector<string>&, vector<int>&) = 0;
+  virtual vector<string> getSources() = 0;
 
   // Unlock the underlying table.
   virtual void unlock() = 0;
