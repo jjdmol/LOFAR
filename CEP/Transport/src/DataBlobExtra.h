@@ -78,9 +78,13 @@ public:
   // It is meant for DataHolders writing data.
   BlobOStream& createBlock();
 
+  // Clear the extra output blob.
+  void clearBlock();
+
   // Get access to the extra input blob holding arbitrary fields.
   // It fills the version of the extra data blob.
-  BlobIStream& openBlock (int& version, const BlobString& data);
+  // found is set to false if there is no extra blob.
+  BlobIStream& openBlock (bool& found, int& version, const BlobString& data);
 
   // Write the extra block into the main block.
   void write();
@@ -90,6 +94,11 @@ public:
 
   // Get the version of the extra data blob.
   int getVersion();
+
+  // Clear the output blob.
+  void clearOut()
+    { itsCreateDone = false; }
+
 
 private:
   // Forbid copy constructor.
@@ -101,11 +110,12 @@ private:
 
   BlobOStream* itsOut;
   BlobIStream* itsIn;
-  BlobOBufChar itsBufOut;   //# output buffer for extra blob data
-  BlobIBufChar itsBufIn;    //# input buffer for extra blob data
-  std::string  itsName;     //# blob type name for extra data
-  int          itsVersion;  //# blob version for extra data
-  char*        itsDataPtr;  //# Pointer to extra block in the main block
+  BlobOBufChar itsBufOut;     //# output buffer for extra blob data
+  BlobIBufChar itsBufIn;      //# input buffer for extra blob data
+  std::string  itsName;       //# blob type name for extra data
+  int          itsVersion;    //# blob version for extra data
+  char*        itsDataPtr;    //# pointer to extra block in the main block
+  bool         itsCreateDone; //# true = createBlock has been done
   DataHolder*  itsDH;
 };
 

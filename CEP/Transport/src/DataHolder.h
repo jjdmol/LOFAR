@@ -252,10 +252,14 @@ public:
   // The return reference can be used to store the fields in.
   // It is meant for DataHolders writing data.
   BlobOStream& createExtraBlob();
+  // Clear the extra blob output buffer.
+  // This is needed, because an extra blob is kept until overwritten.
+  void clearExtraBlob();
   // Get access to the extra input blob holding arbitrary fields.
   // It is meant for DataHolders reading data.
   // It fills the version of the extra data blob.
-  BlobIStream& openExtraBlob (int& version);
+  // found is set to false if there is no extra blob.
+  BlobIStream& openExtraBlob (bool& found, int& version);
 
   // Get access to the data blob.
   // <group>

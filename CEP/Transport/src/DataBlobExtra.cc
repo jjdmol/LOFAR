@@ -34,13 +34,14 @@ namespace LOFAR
 {
 
 DataBlobExtra::DataBlobExtra(const string& name, int version, DataHolder* DH)
-  : itsOut     (0),
-    itsIn      (0),
-    itsBufOut  (0),
-    itsBufIn   (0, 0),
-    itsName    (name),
-    itsVersion (version),
-    itsDH      (DH)
+ : itsOut        (0),
+   itsIn         (0),
+   itsBufOut     (0),
+   itsBufIn      (0, 0),
+   itsName       (name),
+   itsVersion    (version),
+   itsCreateDone (false),
+   itsDH         (DH)
 {}
 
 DataBlobExtra::~DataBlobExtra()
@@ -51,15 +52,19 @@ DataBlobExtra::~DataBlobExtra()
 
 void DataBlobExtra::write()
 {
-  // If the user has not started the extra block, it is done here.
-  if (itsBufOut.size() == 0) {
-    createBlock();
+  // Only do something if a createExtraBlock was done.
+  // This has the following effect:
+  // - an existing extra blob in the buffer is kept.
+  // - if the DataHolder writes data that was read before, the blob is kept.
+  if (itsCreateDone) {
+    if (itsBufOut.size() > 0) {
+      // First end the data.
+      itsOut->putEnd();
+    }
+    itsCreateDone = false;
+    // Append the extra block to the main block and clear it thereafter.
+    itsDH->putExtra (itsBufOut.getBuffer(), itsBufOut.size());
   }
-  // First end the data (as started by createExtraBlock).
-  itsOut->putEnd();
-  // Append the extra block to the main block and clear it thereafter.
-  itsDH->putExtra (itsBufOut.getBuffer(), itsBufOut.size());
-  itsBufOut.clear();
 }
 
 BlobOStream& DataBlobExtra::createBlock()
@@ -70,18 +75,31 @@ BlobOStream& DataBlobExtra::createBlock()
   itsOut->clear();
   itsBufOut.clear();
   itsOut->putStart (itsName, itsVersion);
+  itsCreateDone = true;
   return *itsOut;
 }
 
-BlobIStream& DataBlobExtra::openBlock (int& version, const BlobString& data)
+void DataBlobExtra::clearBlock()
 {
+  itsBufOut.clear();
+  itsCreateDone = true;
+}
+
+BlobIStream& DataBlobExtra::openBlock (bool& found, int& version,
+				       const BlobString& data)
+{
+  found = false;
+  clearOut();
   BlobIBufChar bibc(data.data(), data.size());
   itsBufIn = itsDH->dataFieldSet().getExtraBlob (bibc);
   if (itsIn == 0) {
     itsIn = new BlobIStream(itsBufIn);
   }
   itsIn->clear();
-  version = itsIn->getStart (itsName);
+  if (itsBufIn.size() > 0) {
+    version = itsIn->getStart (itsName);
+    found   = true;
+  }
   return *itsIn;
 }
 
