@@ -26,7 +26,12 @@
 // \file PLfwd.h
 // Forward declarations of classes in the PL package.
 
-#include <lofar_config.h>
+//# Never #include <config.h> or #include <lofar_config.h> in a header file!
+
+namespace dtl
+{
+  class BoundIOs;
+}
 
 namespace LOFAR
 {

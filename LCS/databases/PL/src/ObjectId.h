@@ -36,7 +36,7 @@ namespace LOFAR
     // \addtogroup PL
     // @{
 
-    // ObjectId is used to uniquely identify a persistent object. The unique
+    // %ObjectId is used to uniquely identify a persistent object. The unique
     // key is a 64-bit integer, which is randomly generated using a method
     // that was inspired by the code in gen_uuid.c (part of the e2fsprogs
     // utilities). Generating the random key is a relatively expensive

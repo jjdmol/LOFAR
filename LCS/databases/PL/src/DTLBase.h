@@ -26,7 +26,7 @@
 // \file DTLBase.h
 // Base classes and methods for use of DTL within PL.
 
-#include <lofar_config.h>
+//# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
 #if !defined(HAVE_DTL)
 #error "DTL library is required"
@@ -43,7 +43,7 @@ namespace LOFAR
     // \addtogroup PL
     // @{
 
-    // The BCA template class is a helper class. It provides a generic
+    // The %BCA template class is a helper class. It provides a generic
     // interface for operator() by defining a typedef for DBRepHolder<T>.
     template<typename T> 
     class BCA

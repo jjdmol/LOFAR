@@ -27,7 +27,7 @@
 // Represents the WHERE clause of a query.
 
 //# Includes
-#include <lofar_config.h>
+//# Never #include <config.h> or #include <lofar_config.h> in a header file!
 #include <PL/Query/ExprNode.h>
 #include <boost/shared_ptr.hpp>
 #include <iosfwd>

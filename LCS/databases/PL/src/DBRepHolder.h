@@ -26,7 +26,7 @@
 // \file DBRepHolder.h
 // Class combining metadata and user-defined class data.
 
-#include <lofar_config.h>
+//# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
 //# Includes
 #include <PL/DBRepMeta.h>
@@ -84,7 +84,7 @@ namespace LOFAR
     // \name Full class template specializations.
     // @{
 
-    // ObjectId is part of the metadata of a persistent object. Hence, we
+    // %ObjectId is part of the metadata of a persistent object. Hence, we
     // must define a specialization.
     template <>
     struct DBRepHolder<ObjectId>

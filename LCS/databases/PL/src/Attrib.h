@@ -26,7 +26,7 @@
 // \file Attrib.h
 // Global methods for converting attributes to table columns.
 
-#include <lofar_config.h>
+//# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
 //# Includes
 #include <PL/TPersistentObject.h>

@@ -26,7 +26,7 @@
 // \file DBRep.h
 // Adapter class transforming data to/from internal representation.
 
-#include <lofar_config.h>
+//# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
 //# Includes
 #include <PL/ObjectId.h>
