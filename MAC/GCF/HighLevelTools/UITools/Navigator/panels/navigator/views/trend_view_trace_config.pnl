@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 19 Trace configuration
-PANEL,258 138 502 296 N "_3DFace" 4
+PANEL,258 138 502 319 N "_3DFace" 4
 "$TraceNr"
 "$TrendNr"
 "$configDatapoint"
@@ -14,54 +14,82 @@ PANEL,258 138 502 296 N "_3DFace" 4
                                 $configDatapoint + \".\" + $TrendNr + \".Trace\" + $TraceNr + \".dpName\");
 }
 
+
+//////////////////////////////////////////////////////////////////////////////////
+//
+// FunctionName: ProgressBar
+// Function    : display
+// 
+///////////////////////////////////////////////////////////////////////////////////
+void ProgressBar(float Maximum, float value)
+{
+  float Minimum = 0;
+  int waarde;
+  float positie;
+	if (value>Minimum)
+	{
+    setValue(\"bar\", \"visible\", TRUE);
+    setValue(\"bar_border\", \"visible\", TRUE);
+  }
+	
+//	DebugN(\"value/Maximum: \"+ value/Maximum);
+  setValue(\"bar\", \"scale\", value/Maximum, 1.0);
+  
+  if (Maximum==value)
+  {
+    delay(0,200);
+    setValue(\"bar\", \"visible\", FALSE);
+    setValue(\"bar_border\", \"visible\", FALSE);
+  }
+}
+
+
 void FillSelectionList()
 {
   dyn_dyn_anytype tab;
   int i, ScaleMin, ScaleMax;
   int j=1;
   int SelectionPosition;
-  string value, hulp, EntryForSelectoinList, CurrentSelection;
+  string value, hulp, EntryForSelectionList, CurrentSelection;
   dyn_anytype all;
   dyn_string Items;
  	bool state;
+ 	int TotalDPE;
  	
-//	DebugN(\"datapoint: \" + $datapoint);
-	if ($datapoint==\"\")
+  if ($datapoint==\"\")
     dpQuery(\"SELECT '_online.._value' FROM 'PIC*' \", tab);
   else
     dpQuery(\"SELECT '_online.._value' FROM '\" + $datapoint +\"*' \", tab);
   SelectionList1.deleteAllItems();
   dpGet($configDatapoint + \".\" + $TrendNr + \".Trace\" + $TraceNr + \".dpName\", CurrentSelection);
-//	DebugN(\"CurrentSelection: \"+CurrentSelection);
-  for (i=2; i<=(dynlen(tab)) ; i++)
+  TotalDPE = dynlen(tab);
+  for (i=2; i<=TotalDPE ; i++)
   {
     if (\"\" != tab[i][1])   hulp=dpSubStr(tab[i][1]  , DPSUB_DP_EL_CONF_DET_ATT);
     {
 	    if ((6==dpElementType(hulp)) || (20==dpElementType(hulp)) ||  (22==dpElementType(hulp)) || (23==dpElementType(hulp)))
 	    {	    
-        EntryForSelectoinList = strltrim(hulp, dpSubStr($datapoint, DPSUB_DP_EL));
-        if (0==(strpos (EntryForSelectoinList, \"_\")))
+        EntryForSelectionList = strltrim(hulp, dpSubStr($datapoint, DPSUB_DP_EL));
+        if (0==(strpos (EntryForSelectionList, \"_\")))
         {
-          Items[j] = strltrim(EntryForSelectoinList, \"_\");
+          Items[j] = strltrim(EntryForSelectionList, \"_\");
         }
         else
         {
-          Items[j] = EntryForSelectoinList;
+          Items[j] = EntryForSelectionList;
         }
   			if (Items[j]==CurrentSelection) SelectionPosition = j;
         j++;
       }
-      setValue(\"txt_count\", \"text\", j);
+      ProgressBar(TotalDPE, j);
     }
   }
   SelectionList1.selectedPos(SelectionPosition);
 	setValue(\"SelectionList1\", \"items\", Items);
 	setValue(\"icon_HourGlass\", \"visible\", FALSE);
-  setValue(\"txt_ready\", \"text\", \"Done\");
-
-
-
+  ProgressBar(TotalDPE, TotalDPE);
 }
+
 
 
 EnableScaleInput(string dp1, bool state,
@@ -97,7 +125,7 @@ LANG:1 6 Layer1
 2 4
 "Text1"
 ""
-1 231 198 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 17 222 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 5 0 0 0 0 0
 EE E
@@ -106,8 +134,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 233 200 329 216
-0 2 0 "s" 0 0 0 64 0 0  233 200
+E E 0 1 1 0 1 E U  0 E 19 224 115 240
+0 2 0 "s" 0 0 0 64 0 0  19 224
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
@@ -117,7 +145,7 @@ LANG:1 14 Name in legend
 2 7
 "Text2"
 ""
-1 231 219 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 17 243 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 8 0 0 0 0 0
 EE E
@@ -126,8 +154,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 233 221 340 237
-0 2 0 "s" 0 0 0 64 0 0  233 221
+E E 0 1 1 0 1 E U  0 E 19 245 126 261
+0 2 0 "s" 0 0 0 64 0 0  19 245
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
@@ -137,7 +165,7 @@ LANG:1 17 Automatic scaling
 2 12
 "Text3"
 ""
-1 231 243 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 17 267 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 13 0 0 0 0 0
 EE E
@@ -146,8 +174,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 233 245 329 261
-0 2 0 "s" 0 0 0 64 0 0  233 245
+E E 0 1 1 0 1 E U  0 E 19 269 115 285
+0 2 0 "s" 0 0 0 64 0 0  19 269
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
@@ -157,7 +185,7 @@ LANG:1 13 Scale maximum
 2 13
 "Text4"
 ""
-1 231 264 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 17 288 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 14 0 0 0 0 0
 EE E
@@ -166,8 +194,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 233 266 329 282
-0 2 0 "s" 0 0 0 64 0 0  233 266
+E E 0 1 1 0 1 E U  0 E 19 290 115 306
+0 2 0 "s" 0 0 0 64 0 0  19 290
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
@@ -210,7 +238,7 @@ LANG:1 11 Selected DP
 6 29
 "Border2"
 ""
-1 224 211 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 10 235 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 23 0 0 0 0 0
 EE E
@@ -219,11 +247,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 224 196 354 220
+E E 0 1 1 0 1 E U  0 E 10 220 140 244
 6 30
 "Border3"
 ""
-1 224 256 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 10 280 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 24 0 0 0 0 0
 EE E
@@ -232,11 +260,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 224 241 354 265
+E E 0 1 1 0 1 E U  0 E 10 265 140 289
 6 31
 "Border4"
 ""
-1 224 278 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 10 302 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 25 0 0 0 0 0
 EE E
@@ -245,11 +273,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 224 263 354 287
+E E 0 1 1 0 1 E U  0 E 10 287 140 311
 6 32
 "Border5"
 ""
-1 224 233 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 10 257 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 26 0 0 0 0 0
 EE E
@@ -258,11 +286,11 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 224 218 382 243
+E E 0 1 1 0 1 E U  0 E 10 242 168 267
 6 34
 "icon_HourGlass"
 ""
-1 17 274 E E E 1 E 1 E N "_Transparent" E N "_Transparent" E E
+1 440 249 E E E 1 E 1 E N "_Transparent" E N "_Transparent" E E
  E E
 26 0 0 0 0 0
 EE E
@@ -271,7 +299,33 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  2 0 1 "pictures/Hourglass_icon.gif" 65535 E 17 245 53 279
+E E 0 1 1 0 1 E U  2 0 1 "pictures/Hourglass_icon.gif" 65535 E 440 220 476 254
+6 39
+"bar_border"
+""
+1 10 200 E E E 1 E 0 E N "_WindowText" E N {255,255,255} E E
+ E E
+30 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 10 194 491 212
+6 40
+"bar"
+""
+1 13 206 E E E 1 E 0 E N {51,102,255} E N {51,102,255} E E
+ E E
+31 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 13 197 486 207
 17 1
 "SelectionList1"
 ""
@@ -318,7 +372,7 @@ E
 20 8
 "btn_AutoScale"
 ""
-1 358 219 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+1 144 243 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
  E E
 9 0 0 0 0 0
 EE E
@@ -329,7 +383,7 @@ LANG:1 0
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
-356 217 376 241
+142 241 162 265
 1
 T 
 1
@@ -367,7 +421,7 @@ E
 14 5
 "txt_legend"
 ""
-1 341 196 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 127 220 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 6 0 0 0 0 0
 EE E
@@ -378,7 +432,7 @@ LANG:1 0
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
-339 194 493 221
+125 218 279 245
 3 "s" 0 0 0 0 0 0 
 E
 "// valid
@@ -402,7 +456,7 @@ main()
 14 25
 "txt_max"
 ""
-1 341 241 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 127 265 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 19 0 0 0 0 0
 EE E
@@ -413,7 +467,7 @@ LANG:1 0
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
-339 239 443 266
+125 263 229 290
 3 "s" 0 0 0 0 0 0 
 E
 E
@@ -438,7 +492,7 @@ E
 14 26
 "txt_min"
 ""
-1 341 263 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 127 287 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 20 0 0 0 0 0
 EE E
@@ -449,7 +503,7 @@ LANG:1 0
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
-339 261 443 288
+125 285 229 312
 3 "s" 0 0 0 0 0 0 
 E
 E
@@ -474,48 +528,10 @@ E
 }
 " 0
 
-14 33
-"txt_count"
-""
-1 80 220 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
- E E
-26 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-0
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-78 218 202 245
-3 "s" 0 0 0 0 0 0 
-E
-E
-E
-14 36
-"txt_ready"
-""
-1 80 250 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
- E E
-28 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-0
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-78 248 202 275
-3 "s" 0 0 0 0 0 0 
-E
-E
-E
 13 37
 "Button1"
 ""
-1 70 190 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+1 430 285 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
  E E
 29 0 0 0 0 0
 EE E
@@ -524,13 +540,17 @@ EE E
 LANG:1 0 
 0
 1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-110-100-100-*-*-iso8859-1|-12,0,0,0,400,0,0,0,0,3,2,1,34,Arial
 0 ""
-68 188 132 215
+428 283 492 310
 T 
 1
 LANG:1 2 OK
-E E E E
+"main()
+{
+  PanelOff();
+}" 0
+ E E E
 0
 LAYER, 1 
 1

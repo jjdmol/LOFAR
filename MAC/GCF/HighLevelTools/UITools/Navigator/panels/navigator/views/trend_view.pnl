@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 9 TREND_PNL
-PANEL,338 184 954 748 N "_3DFace" 2
+PANEL,308 123 954 748 N "_3DFace" 2
 "$configDatapoint"
 "$datapoint"
 "main()
@@ -138,8 +138,8 @@ ArrangeTrendPlots(string dp1, bool StandardTrend, string dp2, bool Trend2Active,
   else if ((!StandardTrend) && (DedicatedTrend))
   {
     string DedicatedPanelName;
-    DebugN(\"Load dedicated_trend.panel\");
-    dpGet(\"__nav_\"+dpTypeName($datapoint)+\"_Trend.DedicatedPanelName\", DedicatedPanelName);
+    dpGet($configDatapoint + \".DedicatedPanelName\", DedicatedPanelName);
+    DebugN(\"Load dedicated_trend.panel: \" + DedicatedPanelName);    
   }
 } 
 

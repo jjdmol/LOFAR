@@ -347,3 +347,31 @@ void APContextMenu()
     	break;
   	}       
 }
+
+
+/////////////////////////////////////////////////////////////////////
+//
+// Function: Retrieves the Name of the subview config in the RTDB
+// FunctionName: getSubviewName
+//
+/////////////////////////////////////////////////////////////////////
+void getSubviewName(string &subViewName)
+{
+  string text ="";
+  string bestandsnaam;
+  dyn_string split;
+  
+  int i;  
+  split=strsplit($configDatapoint, "_");
+  for (i=7; i<=dynlen(split) ; i++)
+  {
+    if (i>7)
+      text = text + "_" + split[i];
+    else
+      text = text + split[i];
+  }
+//	subViewName = "System1:__nav_subview_Trend_" + text;
+    subViewName = text;
+  	DebugN("subViewName inside: "+ subViewName);
+//	DebugN("s$configDatapoint: "+ $configDatapoint);
+}
