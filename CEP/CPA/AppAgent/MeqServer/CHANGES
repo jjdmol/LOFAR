@@ -1,3 +1,7 @@
+
+  * Renamed parmtable.g to meptable.g; the object is now called 'meptable()'
+
+
 Check in of 12/12/03:
 
   * Changed MeqServer command names:
