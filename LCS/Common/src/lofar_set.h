@@ -1,6 +1,6 @@
-//#  lofar_sstream.h: one line description
+//# lofar_set.h:
 //#
-//#  Copyright (C) 2002-2004
+//#  Copyright (C) 2002
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
 //#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -20,26 +20,25 @@
 //#
 //#  $Id$
 
-#ifndef LOFAR_COMMON_SSTREAM_H
-#define LOFAR_COMMON_SSTREAM_H
+#ifndef LOFAR_COMMON_SET_H
+#define LOFAR_COMMON_SET_H
 
-// \file lofar_sstream.h
+// \file lofar_set.h
 
-#include <Common/lofar_iosfwd.h>
-#include <sstream>
+#include <set>
 
 namespace LOFAR
 {
-  using std::istringstream;
-  using std::ostringstream;
-  using std::stringstream;
+  using std::set;
+  using std::multiset;
+  using std::pair;
 }
 
 #ifdef MAKE_LOFAR_SYMBOLS_GLOBAL
 #include <Common/lofar_global_symbol_warning.h>
-using LOFAR::istringstream;
-using LOFAR::ostringstream;
-using LOFAR::stringstream;
+using LOFAR::set;
+using LOFAR::multiset;
+using LOFAR::pair;
 #endif
 
 #endif

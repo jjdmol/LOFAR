@@ -25,18 +25,21 @@
 
 // \file lofar_fstream.h
 
+#include <Common/lofar_iosfwd.h>
 #include <fstream>
 
 namespace LOFAR
 {
   using std::ifstream;
   using std::ofstream;
+  using std::fstream;
 }
 
 #ifdef MAKE_LOFAR_SYMBOLS_GLOBAL
 #include <Common/lofar_global_symbol_warning.h>
 using LOFAR::ifstream;
 using LOFAR::ofstream;
+using LOFAR::fstream;
 #endif
 
 #endif
