@@ -44,7 +44,7 @@ const string GCFPropertyBase::getFullName () const
     }
     else
     {
-      string fullName = scope + "_" + _name;
+      string fullName = scope + GCF_PROP_NAME_SEP + _name;
       return fullName;
     }
   }

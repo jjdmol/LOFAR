@@ -124,7 +124,7 @@ bool GCFPropertySetBase::cutScope(string& propName) const
   
   if (propName.find(_scope) == 0)
   {
-    // plus 1 means erase the '_' after scope too
+    // plus 1 means erase the GCF_PROP_NAME_SEP after scope too
     propName.erase(0, _scope.size() + 1); 
     scopeFound = true;
   }

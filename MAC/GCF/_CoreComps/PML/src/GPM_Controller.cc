@@ -356,9 +356,9 @@ GCFEvent::TResult GPMController::connected(GCFEvent& e, GCFPortInterface& /*p*/)
       sscanf(pScopeData, "%03x", &scopeNameLength);
       string scope(pScopeData + 3, scopeNameLength);
       string unlinkListData(pScopeData + 3 + scopeNameLength, 
-        e.length - sizeof(PALinkpropertiesEvent) - 3 - scopeNameLength);
+        e.length - sizeof(PAUnlinkpropertiesEvent) - 3 - scopeNameLength);
       LOFAR_LOG_INFO(PML_STDOUT_LOGGER, ( 
-        "PA-REQ: Link properties %s on scope %s",
+        "PA-REQ: Unlink properties %s on scope %s",
         unlinkListData.c_str(), 
         scope.c_str()));
       list<string> propertyList;
