@@ -32,16 +32,12 @@ EPAStub_LDADD = \
 	-lsuite
 
 BUILT_SOURCES = \
-	test.ns \
-	test.top
+	RSPTest.conf
 
 %.properties: $(MAC_CONFIG)/%.properties
 	cp $< $@
 
-%.ns: %.ns.in
-	cp $< $@
-
-%.top: %.top.in
+%.conf: %.conf.in
 	cp $< $@
 
 include $(lofar_sharedir)/Makefile.common

@@ -78,6 +78,15 @@ namespace RSP_Test
     private:
       // ports
       GCFETHRawPort m_client;
+
+      // lookup for register pointers
+      typedef struct
+      {
+	  char*  addr;
+	  uint32 size;
+      } reginfo;
+      
+      reginfo m_reg[MEPHeader::MAX_PID + 1][MEPHeader::MAX_REGID + 1];
   };
 
 };

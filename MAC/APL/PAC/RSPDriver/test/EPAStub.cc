@@ -63,10 +63,62 @@ EPAStub::EPAStub(string name)
   m_client.setAddr(GET_CONFIG_STRING("RSPDriver.IF_NAME"),
 		   GET_CONFIG_STRING(addrstr));
   m_client.setEtherType(ETHERTYPE_EPA);
+
+  // set all pointers to 0
+  memset(&m_reg, 0, sizeof(m_reg));
+
+  m_reg[MEPHeader::RSR][MEPHeader::RSR_STATUS].addr    = new char[MEPHeader::RSR_STATUS_SIZE];
+  m_reg[MEPHeader::RSR][MEPHeader::RSR_STATUS].size    = MEPHeader::RSR_STATUS_SIZE;
+  m_reg[MEPHeader::RSR][MEPHeader::RSR_VERSION].addr   = new char[MEPHeader::RSR_VERSION_SIZE];
+  m_reg[MEPHeader::RSR][MEPHeader::RSR_VERSION].size   = MEPHeader::RSR_VERSION_SIZE;
+  m_reg[MEPHeader::TST][MEPHeader::TST_SELFTEST].addr  = new char[MEPHeader::TST_SELFTEST_SIZE];
+  m_reg[MEPHeader::TST][MEPHeader::TST_SELFTEST].size  = MEPHeader::TST_SELFTEST_SIZE;
+  m_reg[MEPHeader::WG] [MEPHeader::WG_XSETTINGS].addr  = new char[MEPHeader::WG_XSETTINGS_SIZE  * GET_CONFIG("N_BLPS", i)];
+  m_reg[MEPHeader::WG] [MEPHeader::WG_XSETTINGS].size  = MEPHeader::WG_XSETTINGS_SIZE;
+  m_reg[MEPHeader::WG] [MEPHeader::WG_YSETTINGS].addr  = new char[MEPHeader::WG_YSETTINGS_SIZE  * GET_CONFIG("N_BLPS", i)];
+  m_reg[MEPHeader::WG] [MEPHeader::WG_YSETTINGS].size  = MEPHeader::WG_YSETTINGS_SIZE;
+  m_reg[MEPHeader::WG] [MEPHeader::WG_XWAVE].addr      = new char[MEPHeader::WG_XWAVE_SIZE      * GET_CONFIG("N_BLPS", i)];
+  m_reg[MEPHeader::WG] [MEPHeader::WG_XWAVE].size      = MEPHeader::WG_XWAVE_SIZE;
+  m_reg[MEPHeader::WG] [MEPHeader::WG_YWAVE].addr      = new char[MEPHeader::WG_YWAVE_SIZE      * GET_CONFIG("N_BLPS", i)];
+  m_reg[MEPHeader::WG] [MEPHeader::WG_YWAVE].size      = MEPHeader::WG_YWAVE_SIZE;
+  m_reg[MEPHeader::BF] [MEPHeader::BF_XROUT].addr      = new char[MEPHeader::BF_XROUT_SIZE      * GET_CONFIG("N_BLPS", i)];
+  m_reg[MEPHeader::BF] [MEPHeader::BF_XROUT].size      = MEPHeader::BF_XROUT_SIZE;
+  m_reg[MEPHeader::BF] [MEPHeader::BF_XIOUT].addr      = new char[MEPHeader::BF_XIOUT_SIZE      * GET_CONFIG("N_BLPS", i)];
+  m_reg[MEPHeader::BF] [MEPHeader::BF_XIOUT].size      = MEPHeader::BF_XIOUT_SIZE;
+  m_reg[MEPHeader::BF] [MEPHeader::BF_YROUT].addr      = new char[MEPHeader::BF_YROUT_SIZE      * GET_CONFIG("N_BLPS", i)];
+  m_reg[MEPHeader::BF] [MEPHeader::BF_YROUT].size      = MEPHeader::BF_YROUT_SIZE;
+  m_reg[MEPHeader::BF] [MEPHeader::BF_YIOUT].addr      = new char[MEPHeader::BF_YIOUT_SIZE      * GET_CONFIG("N_BLPS", i)];
+  m_reg[MEPHeader::BF] [MEPHeader::BF_YIOUT].size      = MEPHeader::BF_YIOUT_SIZE;
+  m_reg[MEPHeader::BST][MEPHeader::BST_MEAN].addr      = new char[MEPHeader::BST_MEAN_SIZE];
+  m_reg[MEPHeader::BST][MEPHeader::BST_MEAN].size      = MEPHeader::BST_MEAN_SIZE;
+  m_reg[MEPHeader::BST][MEPHeader::BST_POWER].addr     = new char[MEPHeader::BST_POWER_SIZE];
+  m_reg[MEPHeader::BST][MEPHeader::BST_POWER].size     = MEPHeader::BST_POWER_SIZE;
+  m_reg[MEPHeader::SST][MEPHeader::SST_MEAN].addr      = new char[MEPHeader::SST_MEAN_SIZE      * GET_CONFIG("N_BLPS", i)];
+  m_reg[MEPHeader::SST][MEPHeader::SST_MEAN].size      = MEPHeader::SST_MEAN_SIZE;
+  m_reg[MEPHeader::SST][MEPHeader::SST_POWER].addr     = new char[MEPHeader::SST_POWER_SIZE     * GET_CONFIG("N_BLPS", i)];
+  m_reg[MEPHeader::SST][MEPHeader::SST_POWER].size     = MEPHeader::SST_POWER_SIZE;
+  m_reg[MEPHeader::RCU][MEPHeader::RCU_SETTINGS].addr  = new char[MEPHeader::RCU_SETTINGS_SIZE  * GET_CONFIG("N_BLPS", i)];
+  m_reg[MEPHeader::RCU][MEPHeader::RCU_SETTINGS].size  = MEPHeader::RCU_SETTINGS_SIZE;
+  m_reg[MEPHeader::CRR][MEPHeader::CRR_SOFTRESET].addr = new char[MEPHeader::CRR_SOFTRESET_SIZE];
+  m_reg[MEPHeader::CRR][MEPHeader::CRR_SOFTRESET].size = MEPHeader::CRR_SOFTRESET_SIZE;
+  m_reg[MEPHeader::CRR][MEPHeader::CRR_SOFTPPS].addr   = new char[MEPHeader::CRR_SOFTPPS_SIZE];
+  m_reg[MEPHeader::CRR][MEPHeader::CRR_SOFTPPS].size   = MEPHeader::CRR_SOFTPPS_SIZE;
+  m_reg[MEPHeader::CRB][MEPHeader::CRB_SOFTRESET].addr = new char[MEPHeader::CRB_SOFTRESET_SIZE * GET_CONFIG("N_BLPS", i)];
+  m_reg[MEPHeader::CRB][MEPHeader::CRB_SOFTRESET].size = MEPHeader::CRB_SOFTRESET_SIZE;
+  m_reg[MEPHeader::CRB][MEPHeader::CRB_SOFTPPS].addr   = new char[MEPHeader::CRB_SOFTPPS_SIZE   * GET_CONFIG("N_BLPS", i)];
+  m_reg[MEPHeader::CRB][MEPHeader::CRB_SOFTPPS].size   = MEPHeader::CRB_SOFTPPS_SIZE;
+  m_reg[MEPHeader::CDO][MEPHeader::CDO_SETTINGS].addr  = new char[MEPHeader::CDO_SETTINGS_SIZE];
+  m_reg[MEPHeader::CDO][MEPHeader::CDO_SETTINGS].size  = MEPHeader::CDO_SETTINGS_SIZE;
 }
 
 EPAStub::~EPAStub()
-{}
+{
+  for (int pid = 0; pid <= MEPHeader::MAX_PID; pid++)
+    for (int reg = 0; reg <= MEPHeader::MAX_REGID; reg++)
+    {
+      if (m_reg[pid][reg].addr) delete [] m_reg[pid][reg].addr;
+    }
+}
 
 GCFEvent::TResult EPAStub::initial(GCFEvent& e, GCFPortInterface& port)
 {
@@ -269,8 +321,8 @@ GCFEvent::TResult EPAStub::connected(GCFEvent& event, GCFPortInterface& port)
 
     //
     // All register write requests arrive as specific signals
-    // and are all handled in the same way, simply acknowledge
-    // with success status.
+    // and are all handled in the same way,
+    // copy to register memory and acknowledge with success status.
     //
     case EPA_RSR_STATUS:
     case EPA_RSR_VERSION:
@@ -293,6 +345,30 @@ GCFEvent::TResult EPAStub::connected(GCFEvent& event, GCFPortInterface& port)
       LOG_INFO(formatString("Received event (pid=0x%02x, regid=0x%02x)",
 			    write.hdr.m_fields.addr.pid,
 			    write.hdr.m_fields.addr.regid));
+
+      uint8 pid   = write.hdr.m_fields.addr.pid;
+      uint8 regid = write.hdr.m_fields.addr.regid;
+
+      ASSERT(pid <= MEPHeader::MAX_PID && regid <= MEPHeader::MAX_REGID);
+      ASSERT(m_reg[pid][regid].addr);
+	
+      if (MEPHeader::DST_RSP == write.hdr.m_fields.addr.dstid)
+      {
+	// copy to RSP register memory
+	ASSERT(write.hdr.m_fields.size <= m_reg[pid][regid].size);
+	
+	memcpy(m_reg[pid][regid].addr + write.hdr.m_fields.offset,
+	       &write.payload, write.hdr.m_fields.size);
+      }
+      else
+      {
+	// copy to BLP register memory
+	uint32 offset = write.hdr.m_fields.addr.dstid * m_reg[pid][regid].size;
+	ASSERT(offset + write.hdr.m_fields.size <= m_reg[pid][regid].size);
+	memcpy(m_reg[pid][regid].addr + offset,
+	       &write.payload, write.hdr.m_fields.size);
+      }
+
       EPAWriteackEvent writeack;
       
       writeack.hdr = write.hdr;
