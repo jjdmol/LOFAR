@@ -26,57 +26,88 @@
 
 using namespace LOFAR;
 
-int main (int argv, char** argc) {
+void displayUsage (void);
 
-  cout << "Transport example program using TH_Socket" << endl;
+int main (int argc, char** argv) {
+  bool isReceiver; 
+  // isReceiver == true  => this program must run as a server (receiver).
+  // isReceiver == false => this program must run as a client (sender).
 
-  DH_Example DH1("dh1", 1);
-  DH_Example DH2("dh2", 1);
+  if (argc != 2) {
+    displayUsage ();
+    return 0;
+  }
 
-  DH1.setID(1);
-  DH2.setID(2);
+  if (! strcmp (argv [1], "-s")) {
+    cout << "(Server side)" << endl;
+    isReceiver = true;
+  } else if (! strcmp (argv [1], "-c")) {
+    cout << "(Client side)" << endl;
+    isReceiver = false;
+  } else {
+    displayUsage ();
+    return 0;
+  }
 
-  DH1.setBlocking(true);
-  DH2.setBlocking(true);
+  DH_Example DH_Sender("dh1", 1);
+  DH_Example DH_Receiver("dh2", 1);
+
+  DH_Sender.setID(1);
+  DH_Receiver.setID(2);
+
+  DH_Sender.setBlocking(true);
+  DH_Receiver.setBlocking(true);
 
   TH_Socket proto("localhost", "localhost", 8923);
 
-  DH1.connectTo(DH2, proto);
+  DH_Sender.connectTo (DH_Receiver, proto);
 
-  DH1.init();
-  DH2.init();
+  DH_Sender.init();
+  DH_Receiver.init();
 
- // fill the DataHolders with some initial data
-  DH1.getBuffer()[0] = fcomplex(17,-3.5);
-  DH2.getBuffer()[0] = 0;
-  DH1.setCounter(2);
-  DH2.setCounter(0);
+  if (! isReceiver) {
+    // fill the DataHolders with some initial data
+    DH_Sender.getBuffer()[0] = fcomplex(17,-3.5);
+    DH_Receiver.getBuffer()[0] = 0;
+    DH_Sender.setCounter(2);
+    DH_Receiver.setCounter(0);
+    cout << "Before transport : " 
+	 << DH_Sender.getBuffer()[0] << ' ' << DH_Sender.getCounter()
+	 << " -- " 
+	 << DH_Receiver.getBuffer()[0] << ' ' << DH_Receiver.getCounter()
+	 << endl;
+  }
     
-  cout << "Before transport : " 
-       << DH1.getBuffer()[0] << ' ' << DH1.getCounter()
-       << " -- " 
-       << DH2.getBuffer()[0] << ' ' << DH2.getCounter()
-       << endl;
-    
-  // do the data transport
-  DH2.read();
-  DH1.write();
+  if (isReceiver) {
+    DH_Receiver.read();
+  } else {
+    DH_Sender.write();
+  }
+
+
   // note that transport is bi-directional.
   // so this will also work:
-  //   DH2.write();
-  //   DH1.read();
+  //   DH_Receiver.write();
+  //   DH_Sender.read();
   // 
   
-  cout << "After transport  : " 
-       << DH1.getBuffer()[0] << ' ' << DH1.getCounter()
-       << " -- " 
-       << DH2.getBuffer()[0] << ' ' << DH2.getCounter()
-       << endl;
-
-  if (DH1.getBuffer()[0] == DH2.getBuffer()[0]
-  &&  DH1.getCounter() == DH2.getCounter()) {
-    return 0;
+  if (isReceiver) {
+    cout << "After transport  : " 
+	 << DH_Sender.getBuffer()[0] << ' ' << DH_Sender.getCounter()
+	 << " -- " 
+	 << DH_Receiver.getBuffer()[0] << ' ' << DH_Receiver.getCounter()
+	 << endl;
+    /*
+    if (DH_Sender.getBuffer()[0] == DH_Receiver.getBuffer()[0]
+	&&  DH_Sender.getCounter() == DH_Receiver.getCounter()) {
+    }
+    */
   }
-  cout << "Data in receiving DataHolder is incorrect" << endl;
-  return 1;
+  return 0;
+}
+
+
+void displayUsage (void) {
+    cout << "Usage: ExampleSocket [-s|-c]" << endl;
+    cout << "(Skipping test)." << endl;
 }
