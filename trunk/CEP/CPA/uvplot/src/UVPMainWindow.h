@@ -77,6 +77,7 @@ class UVPMainWindow:public QMainWindow
   QProgressBar*   itsProgressBar; /* Resides in Status bar */
   QLabel*         itsXPosLabel;
   QLabel*         itsYPosLabel;
+  QLabel*         itsTimeLabel;
   QScrollView*    itsScrollView;
 
   unsigned int    itsNumberOfChannels;
@@ -98,6 +99,8 @@ class UVPMainWindow:public QMainWindow
                               double y);
   
     void slot_about_uvplot();
+
+  void slot_setTime(double time);
 };
 
 #endif // UVPMAINWINDOW_H

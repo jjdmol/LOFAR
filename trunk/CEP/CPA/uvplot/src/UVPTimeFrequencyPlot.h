@@ -45,14 +45,14 @@ class UVPTimeFrequencyPlot: public UVPDisplayArea
    */
   void         setChannels(unsigned int numberOfChannels);
 
-public slots:
+  public slots:
   
   //! Add a spectrum to itsSpectrum.
   /*! Adds spectrum to itsSpectrum. The transferfunction of
       itsValueAxis is NOT recalculated.  \param spectrum must have the
       same number of channels as defined by setChannels().
    */
- void slot_addSpectrum(const UVPSpectrum& spectrum);
+  void slot_addSpectrum(const UVPSpectrum& spectrum);
   
   
   //! Add a UVPDataATom to itsComplexSpectrum.
@@ -65,9 +65,15 @@ public slots:
  
   //! Redraws the image. Simply calls drawView().
   void slot_paletteChanged();
-  
+
+  signals:
+ 
+  void signal_timeChanged(double time);
   
  protected:
+
+  virtual void       mouseMoveEvent(QMouseEvent *event);
+
  private:
 
   UVPSpectrumVector  itsSpectrum;

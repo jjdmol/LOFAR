@@ -192,3 +192,19 @@ void UVPTimeFrequencyPlot::setChannels(unsigned int numberOfChannels)
   itsComplexSpectrum = UVPDataAtomVector();
   itsValueAxis       = UVPAxis();
 }
+
+
+
+
+//===================>>> UVPTimeFrequencyPlot::mouseMoveEvent  <<<===================
+
+void UVPTimeFrequencyPlot::mouseMoveEvent(QMouseEvent *event)
+{
+  UVPDisplayArea::mouseMoveEvent(event);
+
+  if(event->pos().y() >= 0 && (unsigned int)event->pos().y() < itsComplexSpectrum.size()) {
+    emit signal_timeChanged(itsComplexSpectrum[event->pos().y()]->getHeader().itsTime);
+  } else {
+    emit signal_timeChanged(0);
+  }
+}
