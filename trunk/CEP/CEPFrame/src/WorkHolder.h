@@ -54,9 +54,6 @@ public:
 				   int ninput, int noutput,
 				   const KeyValueMap& params);
 
-  enum ProcMode {Zeroes,Ones,Infile,Skip,Process};
-
-
   /** The constructor with the number of input and output
       DataHolders as arguments.
       The constructors of the subclasses of WorkHolder will actually
@@ -131,19 +128,6 @@ public:
   // Get its ParamManager
   ParamManager& getParamManager();
 
-  /**  The ProcMode determines the type of processing performed in the
-       process() method. This setting is especially usefull for
-       testing. One may for instance set the ProcMode to "ones"; which
-       forces the process() method to only fill the relevant output
-       data with unit values. Setting the ProcMode to "file" allows
-       for storing a well-defined output data set into the
-       WorkHolders's DataHolders. 
-   */
-  void setProcMode (ProcMode aProcMode);
-
-  /** This returns the current ProcMode setting
-   */
-  ProcMode getProcMode() const;
 
   // Register a static constructor functions.
   static void registerConstruct (const string& name, WHConstruct*);
@@ -169,7 +153,6 @@ private:
   int itsIndex;
   string itsName;
   string itsType;
-  ProcMode itsProcMode;  
   mutable map<string,int> itsInMap;
   mutable map<string,int> itsOutMap;
   DataManager* itsDataManager;
@@ -197,10 +180,6 @@ inline void WorkHolder::setName (const string& name)
 inline const string& WorkHolder::getName() const
   { return itsName; }
 
-inline WorkHolder::ProcMode WorkHolder::getProcMode() const
-  { return (itsProcMode); }
-inline void WorkHolder::setProcMode (ProcMode aProcMode)
-  { itsProcMode = aProcMode; }
 
 }
 
