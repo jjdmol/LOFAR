@@ -144,6 +144,14 @@ function varargout = RunButton_Callback(h, eventdata, handles, varargin)
     if (get(findobj('Tag', 'SubbandEnableCheck'),'Value'))
         fprintf('Subband splitter\n');
         SubbandSplitter;
+        load([dirpath '\subband_options.mat'])
+        if (RFIblanking & rfi_mit_power)
+            fprintf('\tPlotting RFI blanking results\n');
+            load([dirpath '\antenna_signals']);
+            RFImitResults(AntennaSignals,SelectedSubBands,DFTSystemResponse,NumberSubBands,SubbandFilterLength, ...
+                SelectedSubBandSignals, NumberOfAntennas, size(SelectedSubBandSignals),FlaggingCube,sb_quant_signal,...
+                sb_quant_inputfft,sb_quant_outputfft); 
+        end
     end
 
     % Calculating the eigen system on a large (nulled) grid may fill the memory to overflow
@@ -223,8 +231,17 @@ function varargout = RunButton_Callback(h, eventdata, handles, varargin)
     if (get(findobj('Tag', 'ChannelEnableCheck'),'Value'))
         fprintf('Channel splitter\n');
         ChannelSplitter(get(findobj('Tag','BFenableCheck'),'Value'));
-    end;
+        load([dirpath '\channel_options.mat'])
+        if (CH_RFIblanking & rfi_mit_power)
+            fprintf('\tPlotting RFI blanking results\n');
+            load([dirpath '\antenna_signals']);
+            RFImitResults(BFSignals,SelectedChannels,DFTSystemResponse,NumberChannels,ChannelFilterLength, ...
+                SelectedChannelSignals, NumberOfAntennas, size(SelectedChannelSignals),FlaggingCube,ch_quant_signal,ch_quant_inputfft,...
+                ch_quant_outputfft); 
+        end
+    end
     toc;
+end
     
 % --------------------------------------------------------------------
 function varargout = SubbandEnableCheck_Callback(h, eventdata, handles, varargin)

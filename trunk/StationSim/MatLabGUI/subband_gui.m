@@ -3,7 +3,7 @@ function varargout = subband_gui(varargin)
 %    FIG = SUBBAND_GUI launch subband_gui GUI.
 %    SUBBAND_GUI('callback_name', ...) invoke the named callback.
 
-% Last Modified by GUIDE v2.0 18-Jul-2002 11:15:58
+% Last Modified by GUIDE v2.0 06-Aug-2002 13:08:26
 
 if nargin == 0  % LAUNCH GUI
 
@@ -21,7 +21,7 @@ if nargin == 0  % LAUNCH GUI
 	end
     
     % set default value for selected sub band array
-    NumberSubBands = str2num(get(findobj(fig, 'Tag', 'SubBandEdit'), 'String'));
+    NumberSubBands = str2num(get(findobj(fig, 'Tag', 'NrSbEdit'), 'String'));
     SelectedSubBands = [1:NumberSubBands];
     
     g = findobj(fig, 'Tag','SelSubBandEdit');
@@ -41,7 +41,7 @@ if nargin == 0  % LAUNCH GUI
         load([dirpath '\signal_options.mat']);
         load([dirpath '\antenna_signals.mat']);
     
-        NumberSubBands = str2num(get(findobj(fig, 'Tag','SubBandEdit'),'String'));
+        NumberSubBands = str2num(get(findobj(fig, 'Tag','NrSbEdit'),'String'));
         SelectedSubBands = str2num(get(findobj(fig, 'Tag','SelSubBandEdit'),'String'));
         SubbandFilterLength = str2num(get(findobj(fig, 'Tag','SbFilterLengthEdit'),'String'));
         
@@ -123,8 +123,8 @@ function varargout = edit1_Callback(h, eventdata, handles, varargin)
 % --------------------------------------------------------------------
 function varargout = edit2_Callback(h, eventdata, handles, varargin)
 % array of selected sub bands
-    g = findobj('Tag','SubBandEdit');
-    set(g, 'String', size(str2num(get(h,'String')),2));
+%     g = findobj('Tag','SubBandEdit');
+%     set(g, 'String', num2str(size(str2num(get(h,'String')),2)));
     
 
 
@@ -184,12 +184,23 @@ function varargout = TFAfreqEdit_Callback(h, eventdata, handles, varargin)
 
 % --------------------------------------------------------------------
 function varargout = FillButton_Callback(h, eventdata, handles, varargin)
-    NumberSubBands = str2num(get(findobj('Tag','SubBandEdit'),'String'));
-    SelectedSubBands = [1:NumberSubBands];
+    NumberSubBands=str2num(get(findobj('Tag','NrSbEdit'),'String'));
+    SelectedSubBands = zeros(1,NumberSubBands);
     
-    g = findobj(fig, 'Tag','SelSubBandEdit');
+    if (get(findobj('Tag','RandomRadio'),'Value'))
+        SelectedSubBands=rand(NumberSubBands,1);
+        SelectedSubBands=round(SelectedSubBands*32000);
+    else
+        step=floor(32000/NumberSubBands);
+        for i=1:NumberSubBands
+            SelectedSubBands(1,i)=i*step;
+        end
+    end
+    
+    g = findobj('Tag','SelSubBandEdit');
     set(g, 'String', mat2str(SelectedSubBands));
-    
+    save('data\temp','SelectedSubBands');
+   
 
 % --------------------------------------------------------------------
 function varargout = EvenlyRadio_Callback(h, eventdata, handles, varargin)
@@ -206,3 +217,9 @@ function varargout = RandomRadio_Callback(h, eventdata, handles, varargin)
     else
         set(findobj('Tag','RandomRadio'),'Value',1);
     end
+
+
+
+% --------------------------------------------------------------------
+function varargout = NrSbEdit_Callback(h, eventdata, handles, varargin)
+ 

@@ -3,7 +3,7 @@ function varargout = channel_gui(varargin)
 %    FIG = CHANNEL_GUI launch channel_gui GUI.
 %    CHANNEL_GUI('callback_name', ...) invoke the named callback.
 
-% Last Modified by GUIDE v2.0 15-Jul-2002 13:41:36
+% Last Modified by GUIDE v2.0 06-Aug-2002 13:40:35
 
 if nargin == 0  % LAUNCH GUI
 
@@ -21,7 +21,7 @@ if nargin == 0  % LAUNCH GUI
 	end
     
     % set default value for selected sub band array
-    NumberChannels = str2num(get(findobj(fig, 'Tag', 'ChannelEdit'), 'String'));
+    NumberChannels = str2num(get(findobj(fig, 'Tag', 'NrChEdit'), 'String'));
     SelectedChannels = [1:NumberChannels];
     
     g = findobj(fig, 'Tag','SelChannelEdit');
@@ -41,7 +41,7 @@ if nargin == 0  % LAUNCH GUI
         load([dirpath '\signal_options.mat']);
         load([dirpath '\antenna_signals.mat']);
     
-        NumberChannels = str2num(get(findobj(fig,'Tag','ChannelEdit'),'String'));
+        NumberChannels = str2num(get(findobj(fig,'Tag','NrChEdit'),'String'));
         SelectedChannels = str2num(get(findobj(fig,'Tag','SelChannelEdit'),'String'));
         ChannelFilterLength = str2num(get(findobj(fig, 'Tag','SbFilterLengthEdit'),'String'));
         ch_quant_signal            = str2num(get(findobj(fig,'Tag', 'QuantSignalEdit'), 'String'));
@@ -122,8 +122,8 @@ function varargout = edit1_Callback(h, eventdata, handles, varargin)
 % --------------------------------------------------------------------
 function varargout = edit2_Callback(h, eventdata, handles, varargin)
 % array of selected sub bands
-    g = findobj('Tag','ChannelEdit');
-    set(g, 'String', size(str2num(get(h,'String')),2));
+    g = findobj('Tag','NrChEdit');
+    set(g, 'String', num2str(size(str2num(get(h,'String')),2)));
     
 
 
@@ -177,4 +177,48 @@ function varargout = TFAavgEdit_Callback(h, eventdata, handles, varargin)
 
 % --------------------------------------------------------------------
 function varargout = TFAfreqEdit_Callback(h, eventdata, handles, varargin)
+
+
+
+
+% --------------------------------------------------------------------
+function varargout = EvenlyRadio_Callback(h, eventdata, handles, varargin)
+    if (get(h, 'Value'))
+        set(findobj('Tag','RandomRadio'),'Value',0);
+    else
+        set(findobj('Tag','EvenlyRadio'),'Value',1);
+    end
+
+% --------------------------------------------------------------------
+function varargout = RandomRadio_Callback(h, eventdata, handles, varargin)
+    if (get(h, 'Value'))
+        set(findobj('Tag','EvenlyRadio'),'Value',0);
+    else
+        set(findobj('Tag','RandomRadio'),'Value',1);
+    end
+
+
+
+% --------------------------------------------------------------------
+function varargout = FillButton_Callback(h, eventdata, handles, varargin)
+
+    NumberChannels=str2num(get(findobj('Tag','NrChEdit'),'String'));
+    SelectedChannels = zeros(1,NumberChannels);
+    
+    if (get(findobj('Tag','RandomRadio'),'Value'))
+        SelectedChannels=rand(NumberChannels,1);
+        SelectedChannels=round(SelectedChannels*32000);
+    else
+        step=floor(32000/NumberChannels);
+        for i=1:NumberChannels
+            SelectedChannels(1,i)=i*step;
+        end
+    end
+    
+    g = findobj('Tag','SelChannelEdit');
+    set(g, 'String', mat2str(SelectedChannels));
+
+
+% --------------------------------------------------------------------
+function varargout = NrChEdit_Callback(h, eventdata, handles, varargin)
 

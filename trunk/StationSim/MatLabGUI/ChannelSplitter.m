@@ -11,6 +11,7 @@ function ChannelSplitter(beamformer_enable)
      load([dirpath '\subband_options.mat']);
      BFSignals(:,:)=SelectedSubBandSignals(:,:,round(NumberSubBands/2));
   end
+  FlaggingCube=1;
   DFTSystemResponse = DFTFilterBankInitialization(ChannelFilterLength, NumberChannels);
   SelectedChannelSignals = SubbandSeparator(BFSignals, SelectedChannels, DFTSystemResponse, ...
       NumberChannels, ChannelFilterLength, NumberOfAntennas, ch_quant_signal, ch_quant_inputfft, ch_quant_outputfft);
@@ -24,4 +25,5 @@ function ChannelSplitter(beamformer_enable)
     SelectedChannelSignals = CleanSelectedChannelSignals;
   end
   
-  save([dirpath '\antenna_signals.mat'], 'AntennaSignals','SelectedSubBandSignals','SelectedChannelSignals','BFSignals');
+  save([dirpath '\antenna_signals.mat'], 'AntennaSignals','SelectedSubBandSignals','SelectedChannelSignals','BFSignals',...
+      'DFTSystemResponse');

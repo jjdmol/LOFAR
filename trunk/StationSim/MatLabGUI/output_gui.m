@@ -3,7 +3,7 @@ function varargout = output_gui(varargin)
 %    FIG = OUTPUT_GUI launch output_gui GUI.
 %    OUTPUT_GUI('callback_name', ...) invoke the named callback.
 
-% Last Modified by GUIDE v2.0 30-Jul-2002 13:47:11
+% Last Modified by GUIDE v2.0 06-Aug-2002 11:30:08
 
 if nargin == 0  % LAUNCH GUI
 
@@ -48,9 +48,11 @@ if nargin == 0  % LAUNCH GUI
     bf_3dplot = get(findobj(fig,'Tag','BF3dCheck'),'Value');
     bf_side  = get(findobj(fig,'Tag','BFsideCheck'),'Value');
     
+    rfi_mit_power = get(findobj(fig,'Tag','RFImitPowerCheck'),'Value');
+    
     save([dirpath '\output_options.mat'],'beam_side','beam_top','beam_contour','beam_3d',...
         'signal_eigen_sv','signal_eigen_acm','signal_spectrum','bf_power','bf_3dplot','bf_side',...
-        'ad_beam_side','ad_beam_top','ad_beam_contour','ad_beam_3d');
+        'ad_beam_side','ad_beam_top','ad_beam_contour','ad_beam_3d','rfi_mit_power');
     
     % file saved, close the gui
     handles = guidata(fig);
@@ -91,6 +93,8 @@ function restore_options(fig)
     set(findobj(fig,'Tag','BFpowerCheck'),'Value',bf_power);
     set(findobj(fig,'Tag','BF3dCheck'),'Value',bf_3dplot);
     set(findobj(fig,'Tag','BFsideCheck'),'Value',bf_side);
+  
+    set(findobj(fig,'Tag','RFImitPowerCheck'),'Value',rfi_mit_power);    
     
 %| ABOUT CALLBACKS:
 %| GUIDE automatically appends subfunction prototypes to this file, and 
@@ -215,4 +219,10 @@ function varargout = BFsideCheck_Callback(h, eventdata, handles, varargin)
 
 % --------------------------------------------------------------------
 function varargout = BFavgCheck_Callback(h, eventdata, handles, varargin)
+
+
+
+
+% --------------------------------------------------------------------
+function varargout = RFImitPowerCheck_Callback(h, eventdata, handles, varargin)
 
