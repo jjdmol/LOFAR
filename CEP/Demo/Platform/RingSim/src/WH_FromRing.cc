@@ -3,6 +3,7 @@
 //////////////////////////////////////////////////////////////////////
 
 #include "WH_FromRing.h"
+#include "WH_Ring.h" // need definition of NOTADDRESSED ??
 #include "Step.h"
 
 short WH_FromRing::itsInstanceCnt = 0;
@@ -38,16 +39,17 @@ void WH_FromRing::process ()
 {
   if (getInHolder(0)->doHandle()) {
 
+    if (itsInDataHolders[0]->getPacket()->destination != NOTADDRESSED) {
     cout << "WH_FromRing " << getInstanceCnt() << " Received: " 
 	 << itsInDataHolders[0]->getBuffer()[0] << " From " 
 	 << itsInDataHolders[0]->getPacket()->destination << endl;
+    }
   }
-
 }
 
 void WH_FromRing::dump () const
 {
-cout << "WH_FomRing Buffer " << getInstanceCnt() 
+  cout << "WH_FomRing Buffer " //<< getInstanceCnt() 
      << " InBuffer[0] = " <<  itsInDataHolders[0]->getBuffer()[0] << endl;
 }
 
