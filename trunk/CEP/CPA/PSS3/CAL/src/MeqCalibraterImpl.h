@@ -235,7 +235,8 @@ private:
   void makeWSRTExpr ();
 
   //! Create the LOFAR expressions for each baseline.
-  void makeLOFARExpr ();
+  // The EJones can be expressed as real/imag or ampl/phase.
+  void makeLOFARExpr (Bool asAP);
 
   //! Append the current value of the parameters (as MeqMatrix) to rec
   void MeqCalibrater::addParm(const MeqParm& parm, bool denormalize,

@@ -292,7 +292,7 @@ void MeqCalibrater::makeWSRTExpr()
 // Make the expression tree per baseline for the WSRT.
 //
 //----------------------------------------------------------------------
-void MeqCalibrater::makeLOFARExpr()
+void MeqCalibrater::makeLOFARExpr(Bool asAP)
 {
   // Get the sources from the ParmTable.
   itsSources = itsGSMMEP.getPointSources (Vector<int>());
@@ -310,6 +310,12 @@ void MeqCalibrater::makeLOFARExpr()
 					      (MeqLofarStatSources*)0);
   itsStatExpr = vector<MeqJonesExpr*>        (itsStations.size(),
 					      (MeqJonesExpr*)0);
+  string ejname1 = "real.";
+  string ejname2 = "imag.";
+  if (asAP) {
+    ejname1 = "ampl.";
+    ejname2 = "phase.";
+  }
   for (unsigned int i=0; i<itsStations.size(); i++) {
     if (itsStations[i] != 0) {
       // Expression to calculate UVW per station
@@ -342,35 +348,43 @@ void MeqCalibrater::makeLOFARExpr()
       vector<MeqJonesExpr*> vec;
       for (int j=0; j<itsSources.size(); j++) {
 	string nm = itsStations[i]->getName() + '.' +  itsSources[j].getName();
-	MeqExpr* ej11r = new MeqStoredParmPolc ("EJ11.real." + nm,
+	MeqExpr* ej11r = new MeqStoredParmPolc ("EJ11." + ejname1 + nm,
 						j+1, i+1,
 						&itsMEP);
-	MeqExpr* ej11i = new MeqStoredParmPolc ("EJ11.imag." + nm,
+	MeqExpr* ej11i = new MeqStoredParmPolc ("EJ11." + ejname2 + nm,
 						j+1, i+1,
 						&itsMEP);
-	MeqExpr* ej12r = new MeqStoredParmPolc ("EJ12.real." + nm,
+	MeqExpr* ej12r = new MeqStoredParmPolc ("EJ12." + ejname1 + nm,
 						j+1, i+1,
 						&itsMEP);
-	MeqExpr* ej12i = new MeqStoredParmPolc ("EJ12.imag." + nm,
+	MeqExpr* ej12i = new MeqStoredParmPolc ("EJ12." + ejname2 + nm,
 						j+1, i+1,
 						&itsMEP);
-	MeqExpr* ej21r = new MeqStoredParmPolc ("EJ21.real." + nm,
+	MeqExpr* ej21r = new MeqStoredParmPolc ("EJ21." + ejname1 + nm,
 						j+1, i+1,
 						&itsMEP);
-	MeqExpr* ej21i = new MeqStoredParmPolc ("EJ21.imag." + nm,
+	MeqExpr* ej21i = new MeqStoredParmPolc ("EJ21." + ejname2 + nm,
 						j+1, i+1,
 						&itsMEP);
-	MeqExpr* ej22r = new MeqStoredParmPolc ("EJ22.real." + nm,
+	MeqExpr* ej22r = new MeqStoredParmPolc ("EJ22." + ejname1 + nm,
 						j+1, i+1,
 						&itsMEP);
-	MeqExpr* ej22i = new MeqStoredParmPolc ("EJ22.imag." + nm,
+	MeqExpr* ej22i = new MeqStoredParmPolc ("EJ22." + ejname2 + nm,
 						j+1, i+1,
 						&itsMEP);
-	MeqExpr* ej11 = new MeqExprToComplex (ej11r, ej11i);
-	MeqExpr* ej12 = new MeqExprToComplex (ej12r, ej12i);
-	MeqExpr* ej21 = new MeqExprToComplex (ej21r, ej21i);
-	MeqExpr* ej22 = new MeqExprToComplex (ej22r, ej22i);
-	vec.push_back (new MeqJonesNode (ej11, ej12, ej21, ej22));
+	if (asAP) {
+	  MeqExpr* ej11 = new MeqExprAPToComplex (ej11r, ej11i);
+	  MeqExpr* ej12 = new MeqExprAPToComplex (ej12r, ej12i);
+	  MeqExpr* ej21 = new MeqExprAPToComplex (ej21r, ej21i);
+	  MeqExpr* ej22 = new MeqExprAPToComplex (ej22r, ej22i);
+	  vec.push_back (new MeqJonesNode (ej11, ej12, ej21, ej22));
+	} else {
+	  MeqExpr* ej11 = new MeqExprToComplex (ej11r, ej11i);
+	  MeqExpr* ej12 = new MeqExprToComplex (ej12r, ej12i);
+	  MeqExpr* ej21 = new MeqExprToComplex (ej21r, ej21i);
+	  MeqExpr* ej22 = new MeqExprToComplex (ej22r, ej22i);
+	  vec.push_back (new MeqJonesNode (ej11, ej12, ej21, ej22));
+	}
       }
       itsLSSExpr[i] = new MeqLofarStatSources (vec, itsStatSrc[i]);
     }
@@ -481,8 +495,10 @@ MeqCalibrater::MeqCalibrater(const String& msName,
   // Set up the expression tree for all baselines.
   if (modelType == "WSRT") {
     makeWSRTExpr();
+  } else if (modelType == "LOFAR.RI") {
+    makeLOFARExpr(False);
   } else {
-    makeLOFARExpr();
+    makeLOFARExpr(True);
   }
 
   cdebug(1) << "MeqMat " << MeqMatrixRep::nctor << ' ' << MeqMatrixRep::ndtor
