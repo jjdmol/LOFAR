@@ -54,7 +54,8 @@
 #pragma aid Save Parms Residuals
 #pragma aid SolvParams Rank Fit Errors CoVar Flag Mu StdDev Chi
 
-#pragma aid Domain Peel Solve Iter Num Intermediate Final
+#pragma aid Domain Peel Solve Iter Num Intermediate Final 
+#pragma aid Current Start End Time Tile Count
 
 namespace SolverControl
 {
@@ -91,15 +92,19 @@ namespace SolverControl
   
   
   // status record fields
-  const HIID  StSolutionSolvParams= AidSolution|AidSolvParams;
-  const HIID  StSolutionRank      = AidSolution|AidRank;
-  const HIID  StSolutionFit       = AidSolution|AidFit;
-  const HIID  StSolutionErrors    = AidSolution|AidErrors;
-  const HIID  StSolutionCoVar     = AidSolution|AidCoVar;
-  const HIID  StSolutionFlag      = AidSolution|AidFlag;
-  const HIID  StSolutionMu        = AidSolution|AidMu;
-  const HIID  StSolutionStdDev    = AidSolution|AidStdDev;
-  const HIID  StSolutionChi       = AidSolution|AidChi;
+  const HIID  StTileCount          = AidTile|AidCount;
+  const HIID  StDomainStart        = AidDomain|AidStart|AidTime;
+  const HIID  StDomainEnd          = AidDomain|AidEnd|AidTime;
+  const HIID  StDomainCurrent      = AidDomain|AidCurrent|AidTime;
+  const HIID  StSolutionSolvParams = AidSolution|AidSolvParams;
+  const HIID  StSolutionRank       = AidSolution|AidRank;
+  const HIID  StSolutionFit        = AidSolution|AidFit;
+  const HIID  StSolutionErrors     = AidSolution|AidErrors;
+  const HIID  StSolutionCoVar      = AidSolution|AidCoVar;
+  const HIID  StSolutionFlag       = AidSolution|AidFlag;
+  const HIID  StSolutionMu         = AidSolution|AidMu;
+  const HIID  StSolutionStdDev     = AidSolution|AidStdDev;
+  const HIID  StSolutionChi        = AidSolution|AidChi;
 };
 
 

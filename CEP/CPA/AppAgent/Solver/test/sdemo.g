@@ -5,7 +5,7 @@ msname := 'demo.MS';
 mssel := 'ANTENNA1 in [0:2] && ANTENNA2 in [0:2]';
 rescol := 'CORRECTED_DATA';
 predcol := 'PREDICTED_DATA';
-solverec := [ max_iter=5,
+solverec := [ iter_step=1,max_iter=5,
 	            solvableparm="{RA,DEC,StokesI}.*", solvableflag=T,
 	            peelnrs=1, prednrs=[2], 
               when_max_iter=[save_residuals=T,save_params=F] ];
@@ -15,7 +15,7 @@ solverec := [ max_iter=5,
 mtest := function (dosolve=F,verbose=1,suspend=F)
 {
   print "Creating solver and output repeater";
-  start_octopussy('./applauncher',"-d0 -meq:M:O:Solver -rpt:O:M:Repeater",
+  start_octopussy('./applauncher',"-dSolver=4 -meq:M:O:Solver -rpt:O:M:Repeater",
                   suspend=suspend);
   global solv;
   global rpt;

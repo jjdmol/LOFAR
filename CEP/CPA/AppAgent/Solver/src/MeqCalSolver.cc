@@ -67,117 +67,6 @@ MeqCalSolver::~MeqCalSolver()
   clear();
 }    
 
-//##ModelId=3EC9F6EC0265
-void MeqCalSolver::addTileToDomain (VisTile::Ref &tileref)
-{
-  const VisTile &tile = *tileref;
-  // first tile of new domain
-  if( domain_start == 0 )
-  {
-    control().startDomain();
-    domain_start = tile.time(0);
-    domain_end = domain_start + domain_size;
-    cdebug(2)<<"starting new domain with Tstart="<<domain_start<<endl;
-    in_domain = True;
-    ntiles = 1;
-    itsVisTiles.resize (0);
-  }
-  // does tile belong to next domain?
-  else
-  {
-    if( tile.time(0) >= domain_end )
-    {
-      cdebug(2)<<"tile time past end of domain, closing domain"<<endl;
-      endDomain();
-      return;
-    }
-  }
-  // assume the domain size is a multiple of the tile size (in time),
-  // so at this point the tile fully belongs to our domain
-  // Xfer the tile to some to the internal container .
-  itsVisTiles.push_back (tileref);
-  ntiles++;
-  cdebug(3)<<"added tile to domain"<<endl;
-  if (ntiles%500 == 0) {
-    cdebug(2) << "#tiles = " << ntiles << endl;
-  }
-}
-
-//##ModelId=3EC9F6EC0267
-void MeqCalSolver::checkInputState (int instat)
-{
-  // if input stream is ERROR or CLOSED, say endOfData() to the 
-  // control agent, and end the current domain
-  // error on the input stream? terminate the transaction
-  if( instat == AppEvent::ERROR )
-  {
-    cdebug(2)<<"error on input: "<<input().stateString()<<endl;
-    control().endData(InputErrorEvent);
-    endDomain();
-  }
-  // closed the input stream? terminate the transaction
-  else if( instat == AppEvent::CLOSED )
-  {
-    cdebug(2)<<"input closed: "<<input().stateString()<<endl;
-    control().endData(InputClosedEvent);
-    endDomain();
-  }
-}
-
-//##ModelId=3EC9F6EC026A
-void MeqCalSolver::endDomain ()
-{
-  if( in_domain )
-  {
-    control().endDomain();
-    domain_start = 0;
-    in_domain = False;
-  }
-  itsCorrSel.resize(4);
-  itsCorrSel.assign (itsCorrSel.size(), true);
-  itsVisTilesSel.resize (itsVisTiles.size());
-  itsVisTilesSel.assign (itsVisTilesSel.size(), true);
-  cdebug(2) << "enddomain: " << itsVisTiles.size() << " tiles read" << endl;
-  // Remove all existing expressions and make them for the new data.
-  clearDomain();
-  // Find the sources in the sky ParmTable.
-  // Attach sourcenr and phaseref to them.
-  itsSources = itsGSMMEP->getPointSources (Vector<int>(), itsExprDel);
-  for (int i=0; i<itsSources.size(); i++) {
-    itsSources[i].setSourceNr (i);
-    itsSources[i].setPhaseRef (&itsPhaseRef);
-  }
-  makeExpr();
-  if (!itsCalcUVW) {
-    // Fill the UVW coordinates from the MS instead of calculating them.
-    fillUVW();
-  }
-  // initialize the ComplexArr pool with the most frequently used size
-  // itsNrChan is the numnber frequency channels
-  // 1 is the number of time steps. this code is limited to one timestep only
-  MeqMatrixComplexArr::poolActivate(itsNrChan * 1);
-}
-
-//##ModelId=3EC9F6EC026C
-void MeqCalSolver::endSolution (const DataRecord& endrec,
-                                DataRecord::Ref& header)
-{
-  cdebug(2)<< "end solution: "<<endrec.sdebug(3)<<endl;
-  if (endrec[SaveParms].exists()) {
-    Bool flag = endrec[SaveParms];
-    if (flag) {
-      saveParms();
-    }
-  }
-  if (endrec[SaveResiduals].exists()) {
-    Bool flag = endrec[SaveResiduals];
-    if (flag) {
-      saveResiduals (header);
-    }
-  }
-}
-
-
 //##ModelId=3EC9F6EC0233
 void MeqCalSolver::run ()
 {
@@ -209,7 +98,7 @@ void MeqCalSolver::run ()
       domain_size = (*initrec)[FDomainSize].as<double>(3600);
       cdebug(1)<< "starting run()\n";
       // run main loop
-      DataRecord::Ref header;
+      DataRecord::Ref header,new_header;
       VisTile::Ref tile;
       while( control().checkState() > 0 )  // while in a running state
       {
@@ -219,60 +108,69 @@ void MeqCalSolver::run ()
         // in cache until all solutions on the previous data set have been 
         // finished) and/or wait for a header to arrive
         input().resume();
-        while( !header.valid() && control().checkState() > 0 )
+        // no header? wait for a new one to come in
+        if( !header.valid() )
         {
-          HIID id;
-          ObjRef ref;
-          instat = input().getNext(id,ref,0,AppEvent::WAIT);
-          if( instat > 0 )
+          while( !new_header.valid() && control().checkState() > 0 )
           {
-            if( instat == HEADER )
+            HIID id;
+            ObjRef ref;
+            instat = input().getNext(id,ref,0,AppEvent::WAIT);
+            if( instat > 0 )
             {
-              // got header? break out
-              header = ref.ref_cast<DataRecord>();
-              // setup whatever's needed from the header
-              cdebug(1)<<"got header: "<<header->sdebug(2)<<endl;
-              break;
+              if( instat == HEADER )
+              {
+                // got header? break out
+                new_header = ref.ref_cast<DataRecord>();
+                // setup whatever's needed from the header
+                cdebug(1)<<"got new header: "<<new_header->sdebug(2)<<endl;
+                break;
+              }
+              else
+              {
+                cdebug(2)<<"ignoring "<<AtomicID(-instat)<<" while waiting for header\n";
+                ref.detach();
+              }
             }
+            // checks for end-of-data or error on the input stream and changes
+            // the control state accordingly
             else
-            {
-              cdebug(2)<<"ignoring "<<AtomicID(-instat)<<" while waiting for header\n";
-              ref.detach();
-            }
+              checkInputState(instat);
           }
-          // checks for end-of-data or error on the input stream and changes
-          // the control state accordingly
-          else
-            checkInputState(instat);
+          if( control().checkState() <= 0 )
+            continue;
         }
-        if( control().checkState() <= 0 )
-          continue;
-
-        // we have a valid header now, process it
-        processHeader(*initrec, *header);
-
-        // get tile format from header and add a residuals column 
-        tileformat_.attach((*header)[FTileFormat].as_p<VisTile::Format>(),DMI::READONLY);
-        if( !tileformat_->defined(VisTile::RESIDUALS) ) 
+        // process new data set header (else keep on using old one)
+        if( new_header.valid() )
         {
-          tileformat_.privatize(DMI::WRITE);
-          tileformat_().add(VisTile::RESIDUALS,
-                              tileformat_->type(VisTile::DATA),
-                              tileformat_->shape(VisTile::DATA));
-          // this will be applied to each tile as necessary later on
-        }
-        if( !tileformat_->defined(VisTile::PREDICT) ) 
-        {
-          tileformat_.privatize(DMI::WRITE);
-          tileformat_().add(VisTile::PREDICT,
-                              tileformat_->type(VisTile::DATA),
-                              tileformat_->shape(VisTile::DATA));
-          // this will be applied to each tile as necessary later on
-        }
+          // we have a valid header now, process it
+          header = new_header;
+          processHeader(*initrec, *header);
 
+          // get tile format from header and add a residuals column 
+          tileformat_.attach((*header)[FTileFormat].as_p<VisTile::Format>(),DMI::READONLY);
+          if( !tileformat_->defined(VisTile::RESIDUALS) ) 
+          {
+            tileformat_.privatize(DMI::WRITE);
+            tileformat_().add(VisTile::RESIDUALS,
+                                tileformat_->type(VisTile::DATA),
+                                tileformat_->shape(VisTile::DATA));
+            // this will be applied to each tile as necessary later on
+          }
+          if( !tileformat_->defined(VisTile::PREDICT) ) 
+          {
+            tileformat_.privatize(DMI::WRITE);
+            tileformat_().add(VisTile::PREDICT,
+                                tileformat_->type(VisTile::DATA),
+                                tileformat_->shape(VisTile::DATA));
+            // this will be applied to each tile as necessary later on
+          }
+        }
         // --------- read full domain from input ---------------------------
         in_domain = True;
         domain_start = 0;
+        itsVisTiles.resize(ntiles=0);
+        control().setStatus(StTileCount,0);
         while( in_domain && control().checkState() > 0 )
         {
           // a tile may be left over from the previous iteration
@@ -292,11 +190,14 @@ void MeqCalSolver::run ()
               }
               else if( instat == FOOTER )
               {
+                cdebug(1)<<"got footer"<<endl;
                 endDomain();
               }
               else if( instat == HEADER )
               {
-                header = ref.ref_cast<DataRecord>();
+                cdebug(1)<<"got new header: "<<new_header->sdebug(2)<<endl;
+                cdebug(1)<<"interrupting data stream and ending domain"<<endl;
+                new_header = ref.ref_cast<DataRecord>();
                 endDomain();
               }
               // got a tile? do nothing (addTileToDomain will be called below)
@@ -410,7 +311,7 @@ void MeqCalSolver::run ()
   {
     out = "exiting with unknown exception";
   }
-  
+  // post an error event, if one has occurred
   if( out.length() )
   {
     control().postEvent(SolverErrorEvent,out);
@@ -421,6 +322,126 @@ void MeqCalSolver::run ()
     cdebug(1)<<"exiting with control state "<<control().stateString()<<endl;
   }
   control().close();
+}
+
+//##ModelId=3EC9F6EC0265
+void MeqCalSolver::addTileToDomain (VisTile::Ref &tileref)
+{
+  const VisTile &tile = *tileref;
+  double tiletime = tile.time(0);
+  // first tile of new domain
+  if( !ntiles )
+  {
+    control().startDomain();
+    control().setStatus(StDomainStart,domain_start = tiletime);
+    control().setStatus(StDomainEnd,domain_end = domain_start + domain_size);
+    cdebug(2)<<"starting new domain with Tstart="<<domain_start<<endl;
+    in_domain = True;
+    itsVisTiles.resize(ntiles=0);
+  }
+  // does tile belong to next domain?
+  else
+  {
+    if( tiletime >= domain_end )
+    {
+      cdebug(2)<<"tile time past end of domain, closing domain"<<endl;
+      endDomain();
+      return;
+    }
+    else
+    {
+      control().setStatus(StDomainCurrent,tiletime);
+    }
+  }
+  // assume the domain size is a multiple of the tile size (in time),
+  // so at this point the tile fully belongs to our domain
+  // Xfer the tile to the internal container .
+  itsVisTiles.push_back (tileref);
+  ntiles++;
+  control().setStatus(StTileCount,ntiles);
+  cdebug(3)<<"added tile #"<<ntiles<<" to domain"<<endl;
+  if (ntiles%500 == 0) {
+    cdebug(2) << "#tiles = " << ntiles << endl;
+  }
+}
+
+//##ModelId=3EC9F6EC0267
+void MeqCalSolver::checkInputState (int instat)
+{
+  // if input stream is ERROR or CLOSED, say endOfData() to the 
+  // control agent, and end the current domain
+  if( instat == AppEvent::ERROR )
+  {
+    cdebug(2)<<"error on input: "<<input().stateString()<<endl;
+    control().endData(InputErrorEvent);
+    if( ntiles )
+      endDomain();
+    else
+      control().setState(STOPPED);
+  }
+  // closed the input stream? terminate the transaction
+  else if( instat == AppEvent::CLOSED )
+  {
+    cdebug(2)<<"input closed: "<<input().stateString()<<endl;
+    control().endData(InputClosedEvent);
+    if( ntiles )
+      endDomain();
+    else
+      control().setState(STOPPED);
+  }
+}
+
+//##ModelId=3EC9F6EC026A
+void MeqCalSolver::endDomain ()
+{
+  if( in_domain )
+  {
+    control().endDomain();
+    domain_start = 0;
+    in_domain = False;
+  }
+  itsCorrSel.resize(4);
+  itsCorrSel.assign (itsCorrSel.size(), true);
+  itsVisTilesSel.resize (itsVisTiles.size());
+  itsVisTilesSel.assign (itsVisTilesSel.size(), true);
+  cdebug(2) << "enddomain: " << itsVisTiles.size() << " tiles read" << endl;
+  // Remove all existing expressions and make them for the new data.
+  clearDomain();
+  // Find the sources in the sky ParmTable.
+  // Attach sourcenr and phaseref to them.
+  itsSources = itsGSMMEP->getPointSources (Vector<int>(), itsExprDel);
+  for (int i=0; i<itsSources.size(); i++) {
+    itsSources[i].setSourceNr (i);
+    itsSources[i].setPhaseRef (&itsPhaseRef);
+  }
+  makeExpr();
+  if (!itsCalcUVW) {
+    // Fill the UVW coordinates from the MS instead of calculating them.
+    fillUVW();
+  }
+  // initialize the ComplexArr pool with the most frequently used size
+  // itsNrChan is the numnber frequency channels
+  // 1 is the number of time steps. this code is limited to one timestep only
+  MeqMatrixComplexArr::poolActivate(itsNrChan * 1);
+}
+
+//##ModelId=3EC9F6EC026C
+void MeqCalSolver::endSolution (const DataRecord& endrec,
+                                DataRecord::Ref& header)
+{
+  cdebug(2)<< "end solution: "<<endrec.sdebug(3)<<endl;
+  if (endrec[SaveParms].exists()) {
+    Bool flag = endrec[SaveParms];
+    if (flag) {
+      saveParms();
+    }
+  }
+  if (endrec[SaveResiduals].exists()) {
+    Bool flag = endrec[SaveResiduals];
+    if (flag) {
+      saveResiduals (header);
+    }
+  }
 }
 
 

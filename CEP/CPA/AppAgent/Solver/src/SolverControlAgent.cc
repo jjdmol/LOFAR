@@ -220,21 +220,34 @@ int SolverControlAgent::setEndSolutionState ()
   if( checkState() == ENDSOLVE )
   {
     Thread::Mutex::Lock lock(mutex());
-    setState(nextDomain_?NEXT_DOMAIN:IDLE);
-    nextDomain_ = False;
+    // set state according to next-domain flag, and EOD flag
+    if( nextDomain_ )
+      setNextDomainState();
+    else
+      setState(IDLE);
+    // clear event flags if no more solutions
     if( solve_queue_.empty() )
     {
       dprintf(2)("no more solutions for now, clearing event flag\n");
       sink().clearEventFlag(); // no more events for now
-      if( endOfData() )
-      {
-        if( stop_on_end_ )
-        {
-          dprintf(1)("end of data, stopping\n");
-          setState(STOPPED);
-        }
-      }
     }
+  }
+  return state();
+}
+
+int SolverControlAgent::setNextDomainState ()
+{
+  dprintf(2)("proceeding to next domain, clearing solve queue\n");
+  nextDomain_ = False;
+  solve_queue_.clear();
+  if( endOfData() )
+  {
+    dprintf(1)("no next domain: end of data, stopping\n");
+    setState(STOPPED);
+  }
+  else
+  {
+    setState(NEXT_DOMAIN);
   }
   return state();
 }
@@ -285,14 +298,18 @@ int SolverControlAgent::processCommand (const HIID &id,
 {
   if( id == NextDomainCommand )
   {
-    // in idle state, go into NEXT_DOMAIN immediately
+    // in idle state, go into next domain immediately
     if( state() == IDLE )
-    {
-      setState(NEXT_DOMAIN);
-      nextDomain_ = False;
-    }
+      setNextDomainState();
     else if( state() != NEXT_DOMAIN ) // else raise flag for later
+    {
       nextDomain_ = True;
+      postEvent(NextDomainDeferEvent,"scheduled transition to next domain");
+    }
+    else
+    {
+      postEvent(CommandErrorEvent,"already waiting for next domain");
+    }
   }
   // end-of-solution command
   else if( id == EndSolutionCommand )
