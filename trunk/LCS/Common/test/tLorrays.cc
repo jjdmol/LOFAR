@@ -23,11 +23,11 @@
 #include <lofar_config.h>
 #include <Common/lofar_iostream.h>
 
+using namespace LOFAR;
+
 #ifdef HAVE_BLITZ
 
 #include <Common/Lorrays.h>
-
-using namespace LOFAR;
 
 int main ()
 {
