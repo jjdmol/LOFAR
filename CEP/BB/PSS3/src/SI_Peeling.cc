@@ -59,12 +59,17 @@ bool SI_Peeling::execute(vector<string>& parmNames,
   if (itsFirstCall)
   {
     itsCal->Initialize();
-    itsCal->clearSolvableParms();
+    itsCal->ShowSettings();
     for (unsigned int i=0; i < parmNames.size(); i++)      // Add all parms
     { 
       itsCal->addSolvableParm(parmNames[i], itsCurSource);
     }
     itsCal->commitSolvableParms();
+
+    itsCal->clearPeelSources();
+    itsCal->addPeelSource(itsCurSource);
+    itsCal->commitPeelSourcesAndMasks();
+
     itsCal->resetTimeIntervalIterator();
     itsCal->advanceTimeIntervalIterator();
     TRACER1("Next interval");
@@ -94,8 +99,11 @@ bool SI_Peeling::execute(vector<string>& parmNames,
 	  itsCal->addSolvableParm(parmNames[i], itsCurSource);
 	}
 	itsCal->commitSolvableParms();
-	itsCal->resetTimeIntervalIterator();
+	itsCal->clearPeelSources();
+	itsCal->addPeelSource(itsCurSource);
+	itsCal->commitPeelSourcesAndMasks();
 
+	itsCal->resetTimeIntervalIterator();
 	itsCal->advanceTimeIntervalIterator();
 	TRACER1("Next interval");
       }
@@ -106,13 +114,11 @@ bool SI_Peeling::execute(vector<string>& parmNames,
   // The actual solve
   TRACER1("Solve for source = " << itsCurSource << " of " << itsNSources 
        << " iteration = " << itsCurIter << " of " << itsNIter);
-  itsCal->clearPeelSources();
-  itsCal->addPeelSource(itsCurSource);
-  itsCal->clearPeelMasks();
-  itsCal->commitPeelSourcesAndMasks();
+ 
   itsCal->Run(resultParmNames, resultParmValues, resultQuality);
-  itsCal->SubtractOptimizedSources();
-  itsCal->CommitOptimizedParameters();
+
+  //  itsCal->SubtractOptimizedSources();
+  itsCal->CommitOptimizedParameters(); // Write to parmTable
   resultIterNo = itsCurIter;
   return true;
 }

@@ -66,6 +66,9 @@ WH_PSS3::WH_PSS3 (const string& name, const string & msName,
     itsMSName         (msName),
     itsMeqModel       (meqModel),
     itsSkyModel       (skyModel),
+    itsDbType         (dbType),
+    itsDbName         (dbName),
+    itsDbPwd          (dbPwd),
     itsDDID           (ddid),
     itsModelType      (modelType),
     itsCalcUVW        (calcUVW),
@@ -116,8 +119,7 @@ void WH_PSS3::preprocess()
 {
   TRACER4("WH_PSS3 preprocess()");
   itsCal = new Calibrator(itsMSName, itsMeqModel, itsSkyModel, itsDbType, 
-			  itsDbName, itsDbPwd, itsDDID, itsAnt1, itsAnt2, 
-			  itsModelType, itsCalcUVW, itsDataColName, itsResidualColName);
+			  itsDbName, itsDbPwd);
 }
 
 void WH_PSS3::process()
@@ -140,8 +142,10 @@ void WH_PSS3::process()
   if (inp->getSolutionNumber() != -1)
   {
     TRACER1("Use start solution number " << inp->getSolutionNumber());
+    DH_Solution* solObj = (DH_Solution*)getDataManager().getGeneralInHolder(1);
+    solObj->setSolutionID(inp->getSolutionNumber());
     startSol = (DH_Solution*)getDataManager().getInHolder(1);
-  // To do: Use a previous solution    
+    // To do: Use a previous solution    
     getDataManager().readyWithInHolder(1);
   }
 

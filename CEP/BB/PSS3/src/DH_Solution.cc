@@ -30,10 +30,10 @@
 
 using namespace LOFAR;
 
-DH_Solution::DH_Solution (const string& name, const string& type, int DBid)
+DH_Solution::DH_Solution (const string& name, const string& type)
   : DH_Postgresql    (name, "DH_Solution"),
     itsType          (type),
-    itsDBid          (DBid)  
+    itsDBid          (-1)  
 {
   setDataPacket (&itsDataPacket, sizeof(itsDataPacket));
 }

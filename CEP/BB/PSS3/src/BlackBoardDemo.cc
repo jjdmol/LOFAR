@@ -130,7 +130,7 @@ void BlackBoardDemo::define(const KeyValueMap& params)
     // Create the PSS3 Workholders and Steps
     ksID = i2string(ksNo);
 
-    WH_PSS3 ksWH("KS"+ksID, "demo"+ksID+".MS", meqModel+ksID, skyModel+ksID, "postgres", 
+    WH_PSS3 ksWH("KS"+ksID, "demo"+ksID, meqModel+ksID, skyModel+ksID, "postgres", 
 		 databaseName, "", ddID, modelType, calcUVW, dataColName, 
 		 residualColName, true, ksNo*10000);
     int index = ksNo - 1;

@@ -126,6 +126,9 @@ public:
   // PSS3 algorithm for exactly one iteration.
   void Run (void);
 
+  void Run (vector<string>& resultParmNames, vector<double>& resultParmValues, 
+            Quality& resultQuality);
+
   // After optimization, subtracts the calculated sources from the model
   // as optimized during the previous call to Run ().
   void SubtractOptimizedSources (void);
