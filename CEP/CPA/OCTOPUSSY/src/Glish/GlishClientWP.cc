@@ -38,6 +38,9 @@
 
 //## begin module%3CB562880397.additionalDeclarations preserve=yes
 static int dum = aidRegistry_Glish();
+//##ModelId=3CB562BB0226
+//##ModelId=3DB9369503DE
+//##ModelId=3DB9369600AA
 //## end module%3CB562880397.additionalDeclarations
 
 
@@ -57,6 +60,7 @@ GlishClientWP::GlishClientWP (GlishSysEventSource *src, bool autostp, AtomicID w
 }
 
 
+//##ModelId=3DB9369201C7
 GlishClientWP::~GlishClientWP()
 {
   //## begin GlishClientWP::~GlishClientWP%3CB5618B0373_dest.body preserve=yes
@@ -67,6 +71,7 @@ GlishClientWP::~GlishClientWP()
 
 
 
+//##ModelId=3CBA97E70232
 //## Other Operations (implementation)
 bool GlishClientWP::start ()
 {
@@ -93,6 +98,7 @@ bool GlishClientWP::start ()
   //## end GlishClientWP::start%3CBA97E70232.body
 }
 
+//##ModelId=3CBABEA10165
 void GlishClientWP::stop ()
 {
   //## begin GlishClientWP::stop%3CBABEA10165.body preserve=yes
@@ -101,6 +107,7 @@ void GlishClientWP::stop ()
   //## end GlishClientWP::stop%3CBABEA10165.body
 }
 
+//##ModelId=3CBACB920259
 int GlishClientWP::input (int , int )
 {
   //## begin GlishClientWP::input%3CBACB920259.body preserve=yes
@@ -214,6 +221,7 @@ int GlishClientWP::input (int , int )
   //## end GlishClientWP::input%3CBACB920259.body
 }
 
+//##ModelId=3CBACFC6013D
 int GlishClientWP::timeout (const HIID &)
 {
   //## begin GlishClientWP::timeout%3CBACFC6013D.body preserve=yes
@@ -222,6 +230,7 @@ int GlishClientWP::timeout (const HIID &)
   //## end GlishClientWP::timeout%3CBACFC6013D.body
 }
 
+//##ModelId=3CB5622B01ED
 int GlishClientWP::receive (MessageRef &mref)
 {
   //## begin GlishClientWP::receive%3CB5622B01ED.body preserve=yes
@@ -245,6 +254,7 @@ int GlishClientWP::receive (MessageRef &mref)
   //## end GlishClientWP::receive%3CB5622B01ED.body
 }
 
+//##ModelId=3CB57C8401D6
 MessageRef GlishClientWP::glishRecToMessage (const GlishRecord &glrec)
 {
   //## begin GlishClientWP::glishRecToMessage%3CB57C8401D6.body preserve=yes
@@ -303,6 +313,7 @@ MessageRef GlishClientWP::glishRecToMessage (const GlishRecord &glrec)
   //## end GlishClientWP::glishRecToMessage%3CB57C8401D6.body
 }
 
+//##ModelId=3CB57CA00280
 bool GlishClientWP::messageToGlishRec (const Message &msg, GlishRecord &glrec)
 {
   //## begin GlishClientWP::messageToGlishRec%3CB57CA00280.body preserve=yes
@@ -343,6 +354,7 @@ bool GlishClientWP::messageToGlishRec (const Message &msg, GlishRecord &glrec)
 }
 
 // Additional Declarations
+//##ModelId=3DB9369202CC
   //## begin GlishClientWP%3CB5618B0373.declarations preserve=yes
 void GlishClientWP::recToGlish (const DataRecord &rec, GlishRecord& glrec)
 {
@@ -552,6 +564,7 @@ static void newDataArray( const GlishArray &arr,DataField &fld)
 }
 
 
+//##ModelId=3DB936940034
 void GlishClientWP::glishToRec (const GlishRecord &glrec, DataRecord& rec)
 {
   for( uint i=0; i < glrec.nelements(); i++ )
@@ -706,6 +719,7 @@ void GlishClientWP::glishToRec (const GlishRecord &glrec, DataRecord& rec)
   }
 }
 
+//##ModelId=3DB93695024D
 BlockableObject * GlishClientWP::blockRecToObject (const GlishRecord &rec )
 {
   FailWhen( !rec.attributeExists("blocktype"),"missing 'blocktype' attribute" );
@@ -735,6 +749,7 @@ BlockableObject * GlishClientWP::blockRecToObject (const GlishRecord &rec )
   return DynamicTypeManager::construct(tid,set);
 }
 
+//##ModelId=3DB936930231
 void GlishClientWP::objectToBlockRec (const BlockableObject &obj,GlishRecord &rec )
 {
   BlockSet set;
@@ -751,6 +766,7 @@ void GlishClientWP::objectToBlockRec (const BlockableObject &obj,GlishRecord &re
   }
 }
 
+//##ModelId=3DB9369900E1
 void GlishClientWP::shutdown ()
 {
   dprintf(1)("shutting down\n");
