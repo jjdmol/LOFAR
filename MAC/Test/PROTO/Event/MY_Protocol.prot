@@ -11,12 +11,22 @@ id = "(F_GCF_PROTOCOL + 3)";
 // e.g.
 include = "<TransObject.h>";
 
+bounded_array_types = {
+	type = int;
+	type = float;
+	type = double;
+};
+
+unbounded_array_types = {
+	type = int;
+};
+
+//
 // An "event" has a "signal" and a "dir" (direction)
 // and zero or more "param"s.
 // "dir" can be one of "IN" or "OUT".
 // A "param" has a "name" and a "type".
 //
-
 event = {
 	signal = BEAM_ALLOC;
 	dir = IN;
@@ -44,6 +54,19 @@ event = {
 		name = "pObj1";
 		type = "TransObject*";
 		userdefined;
+	};
+
+	param = {
+		name = "onTheDouble";
+		type = "double[5]";
+	};
+	param = {
+		name = "onTheFloat";
+		type = "float[3]";
+	};
+	param = {
+		name = "bounded_string";
+		type = "char[20]";
 	};
 };
 
