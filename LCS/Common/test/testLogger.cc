@@ -85,11 +85,7 @@ int main (int, char *argv[]) {
 
 	// Read in the log-environment configuration
 	// We should always start with this.
-#ifdef HAVE_LOG4CPLUS
-	INIT_LOGGER_AND_WATCH("testLogger.log_prop", 10000);
-#else
-	INIT_LOGGER_AND_WATCH("testLogger.debug", 10000);
-#endif
+	INIT_LOGGER_AND_WATCH("testLogger", 10000);
 
 	// Show operator were are on the air
 	LOG_INFO (formatString("Program %s has started", argv[0]));

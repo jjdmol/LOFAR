@@ -31,11 +31,7 @@ int main (int, char *argv[]) {
 
 	// Read in the log-environment configuration
 	// We should always start with this.
-#ifdef HAVE_LOG4CPLUS
-	INIT_LOGGER("tHexdump.log_prop");
-#else
-	INIT_LOGGER("tHexdump.debug");
-#endif
+	INIT_LOGGER("tHexdump");
 
 	// Show operator were are on the air
 	LOG_INFO (formatString("Program %s has started", argv[0]));

@@ -202,7 +202,7 @@ void doItParse()
 int main()
 {
   try {
-    INIT_LOGGER("tKeyValueMap.log_prop");
+    INIT_LOGGER("tKeyValueMap");
     doIt();
     doItParse();
   } catch (...) {

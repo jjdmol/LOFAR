@@ -28,7 +28,7 @@ using namespace LOFAR;
 
 int main()
 {
-  INIT_LOGGER("tBlobHeader.log_prop");
+  INIT_LOGGER("tBlobHeader");
   // Define a blob header.
   BlobHeader<12> bl("abc",1);
   // Check if all data in it are correct.

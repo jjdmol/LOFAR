@@ -29,7 +29,7 @@ using namespace LOFAR;
 int main()
 {
   try {
-    INIT_LOGGER("tDataConvert.log_prop");
+    INIT_LOGGER("tDataConvert");
     {
       // Swap 2 byte integer and check if correct.
       // Double swapping should give the original.

@@ -364,7 +364,7 @@ void doIn (BlobIBuffer& bb, bool header8=false)
 int main()
 {
   try {
-    INIT_LOGGER("tBlobStream.log_prop");
+    INIT_LOGGER("tBlobStream");
     {
       int len;
       {

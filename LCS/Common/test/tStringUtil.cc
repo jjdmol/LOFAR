@@ -29,7 +29,7 @@ using namespace std;
 
 int main()
 {
-  INIT_LOGGER("tStringUtil.log_prop");
+  INIT_LOGGER("tStringUtil");
   string s(",aa,bb,,dd,");
   vector<string> vs = StringUtil::split(s,',');
   cout << "Splitting string \"" << s << "\" using \',\' as seperator ..." 
