@@ -20,60 +20,63 @@
 //#
 //# $Id$
 
-#if !defined(COORD_TIMECOORD_H)
+#ifndef COORD_TIMECOORD_H
 #define COORD_TIMECOORD_H
 
-//# Forward Declarations.
+//# Includes
 #include <Common/lofar_iosfwd.h>
 
-class TimeCoord
+namespace LOFAR
 {
-public:
-  // Create from the current local date/time.
-  TimeCoord();
+  class TimeCoord
+  {
+  public:
+    // Create from the current local date/time.
+    TimeCoord();
 
-  // Create from the given date and time.
-  // Note that days, hours, minutes, and seconds can contain fractions.
-  TimeCoord (int yy, int mm, double dd,
-	     double h=0, double m=0, double s=0);
+    // Create from the given date and time.
+    // Note that days, hours, minutes, and seconds can contain fractions.
+    TimeCoord (int yy, int mm, double dd,
+               double h=0, double m=0, double s=0);
 
-  // Create from an MJD (with possible fractions of day for high accuracy).
-  explicit TimeCoord (double mjd, double fraction=0);
+    // Create from an MJD (with possible fractions of day for high accuracy).
+    explicit TimeCoord (double mjd, double fraction=0);
 
-  // Get the time in utc (in UNIX format in seconds).
-  double utc() const;
+    // Get the time in utc (in UNIX format in seconds).
+    double utc() const;
 
-  // Get the local time (in UNIX format in seconds).
-  double local() const;
+    // Get the local time (in UNIX format in seconds).
+    double local() const;
 
-  // Get the time in MJD (as utc).
-  double mjd() const
+    // Get the time in MJD (as utc).
+    double mjd() const
     { return itsDay + itsFrac; }
 
-  // Get day and fraction.
-  double getDay() const
+    // Get day and fraction.
+    double getDay() const
     { return itsDay; }
-  double getFraction() const
+    double getFraction() const
     { return itsFrac; }
 
-  // Get year, month, day (possibly in local time).
-  void ymd (int& yyyy, int& mm, int& dd, bool local=false) const;
+    // Get year, month, day (possibly in local time).
+    void ymd (int& yyyy, int& mm, int& dd, bool local=false) const;
 
-  // Get hours, minutes seconds (possibly in local time).
-  void hms (int& h, int& m, double& s, bool local=false) const;
+    // Get hours, minutes seconds (possibly in local time).
+    void hms (int& h, int& m, double& s, bool local=false) const;
 
-  // Output in ASCII (in UTC).
-  friend ostream& operator<< (ostream&, const TimeCoord&);
+    // Output in ASCII (in UTC).
+    friend ostream& operator<< (ostream&, const TimeCoord&);
 
-  // Return the difference between local time and UTC in seconds.
-  // The difference is negative for time zones west of Greenwich.
-  // So add this value to utc to get local time.
-  static double getUTCDiff();
+    // Return the difference between local time and UTC in seconds.
+    // The difference is negative for time zones west of Greenwich.
+    // So add this value to utc to get local time.
+    static double getUTCDiff();
 
-private:
-  double itsDay;     //# whole day in MJD
-  double itsFrac;    //# Fraction of day
-};
+  private:
+    double itsDay;     //# whole day in MJD
+    double itsFrac;    //# Fraction of day
+  };
 
+} // namespace LOFAR
 
 #endif

@@ -23,9 +23,14 @@
 #include <Coord/EarthCoord.h>
 #include <Common/lofar_iostream.h>
 
-ostream& operator<< (ostream& os, const EarthCoord& pos)
+namespace LOFAR
 {
-  os << '[' << pos.longitude() << ", " << pos.latitude()
-     << ", " << pos.height() << ']';
-  return os;
-}
+
+  ostream& operator<< (ostream& os, const EarthCoord& pos)
+  {
+    os << '[' << pos.longitude() << ", " << pos.latitude()
+       << ", " << pos.height() << ']';
+    return os;
+  }
+
+} // namespace LOFAR

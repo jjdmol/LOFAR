@@ -22,42 +22,46 @@
 
 #include <Coord/Endian.h>
 
-
-Endian::Endian()
+namespace LOFAR
 {
-  union {
-    int val;
-    char buf[4];
-  } tmp;
-  tmp.val = 1;
-  itsLittle = tmp.buf[0] == 1;
-}
 
-
-void Endian::swap (int n, short* buf)
-{
-  for (int i=0; i<n; i++) {
-    buf[i] = swapShort (buf+i);
+  Endian::Endian()
+  {
+    union {
+      int val;
+      char buf[4];
+    } tmp;
+    tmp.val = 1;
+    itsLittle = tmp.buf[0] == 1;
   }
-}
 
-void Endian::swap (int n, int* buf)
-{
-  for (int i=0; i<n; i++) {
-    buf[i] = swapShort (buf+i);
-  }
-}
 
-void Endian::swap (int n, float* buf)
-{
-  for (int i=0; i<n; i++) {
-    buf[i] = swapShort (buf+i);
+  void Endian::swap (int n, short* buf)
+  {
+    for (int i=0; i<n; i++) {
+      buf[i] = swapShort (buf+i);
+    }
   }
-}
 
-void Endian::swap (int n, double* buf)
-{
-  for (int i=0; i<n; i++) {
-    buf[i] = swapShort (buf+i);
+  void Endian::swap (int n, int* buf)
+  {
+    for (int i=0; i<n; i++) {
+      buf[i] = swapShort (buf+i);
+    }
   }
-}
+
+  void Endian::swap (int n, float* buf)
+  {
+    for (int i=0; i<n; i++) {
+      buf[i] = swapShort (buf+i);
+    }
+  }
+
+  void Endian::swap (int n, double* buf)
+  {
+    for (int i=0; i<n; i++) {
+      buf[i] = swapShort (buf+i);
+    }
+  }
+
+} // namespace LOFAR

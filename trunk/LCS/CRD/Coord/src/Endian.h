@@ -20,91 +20,95 @@
 //#
 //# $Id$
 
-#if !defined(COORD_ENDIAN_H)
+#ifndef COORD_ENDIAN_H
 #define COORD_ENDIAN_H
 
-class Endian
+namespace LOFAR
 {
-public:
-  // Determine if the machine uses big or little endian format.
-  // (big endian is the SUN forat, little endian is the PC format).
-  Endian();
 
-  // Is the format little endian?
-  int isLittleEndian() const
+  class Endian
+  {
+  public:
+    // Determine if the machine uses big or little endian format.
+    // (big endian is the SUN forat, little endian is the PC format).
+    Endian();
+
+    // Is the format little endian?
+    int isLittleEndian() const
     { return itsLittle; }
 
-  // Convert the data (in place) to the local format (by swapping the bytes).
-  static void swap (int n, short* buf);
-  static void swap (int n, int* buf);
-  static void swap (int n, float* buf);
-  static void swap (int n, double* buf);
+    // Convert the data (in place) to the local format (by swapping the bytes).
+    static void swap (int n, short* buf);
+    static void swap (int n, int* buf);
+    static void swap (int n, float* buf);
+    static void swap (int n, double* buf);
 
-  // Convert a single value.
-  static short swapShort (const void* in);
-  static int swapInt (const void* in);
-  static float swapFloat (const void* in);
-  static double swapDouble (const void* in);
+    // Convert a single value.
+    static short swapShort (const void* in);
+    static int swapInt (const void* in);
+    static float swapFloat (const void* in);
+    static double swapDouble (const void* in);
 
-private:
-  int itsLittle;
-};
+  private:
+    int itsLittle;
+  };
 
 
-inline short Endian::swapShort (const void* in)
-{
-  union {
-    short val;
-    char buf[2];
-  } tmp;
-  const char* inc = static_cast<const char*>(in);
-  tmp.buf[1] = inc[0];
-  tmp.buf[0] = inc[1];
-  return tmp.val;
-}
-inline int Endian::swapInt (const void* in)
-{
-  union {
-    int val;
-    char buf[4];
-  } tmp;
-  const char* inc = static_cast<const char*>(in);
-  tmp.buf[3] = inc[0];
-  tmp.buf[2] = inc[1];
-  tmp.buf[1] = inc[2];
-  tmp.buf[0] = inc[3];
-  return tmp.val;
-}
-inline float Endian::swapFloat (const void* in)
-{
-  union {
-    float val;
-    char buf[4];
-  } tmp;
-  const char* inc = static_cast<const char*>(in);
-  tmp.buf[3] = inc[0];
-  tmp.buf[2] = inc[1];
-  tmp.buf[1] = inc[2];
-  tmp.buf[0] = inc[3];
-  return tmp.val;
-}
-inline double Endian::swapDouble (const void* in)
-{
-  union {
-    double val;
-    char buf[8];
-  } tmp;
-  const char* inc = static_cast<const char*>(in);
-  tmp.buf[7] = inc[0];
-  tmp.buf[6] = inc[1];
-  tmp.buf[5] = inc[2];
-  tmp.buf[4] = inc[3];
-  tmp.buf[3] = inc[4];
-  tmp.buf[2] = inc[5];
-  tmp.buf[1] = inc[6];
-  tmp.buf[0] = inc[7];
-  return tmp.val;
-}
+  inline short Endian::swapShort (const void* in)
+  {
+    union {
+      short val;
+      char buf[2];
+    } tmp;
+    const char* inc = static_cast<const char*>(in);
+    tmp.buf[1] = inc[0];
+    tmp.buf[0] = inc[1];
+    return tmp.val;
+  }
+  inline int Endian::swapInt (const void* in)
+  {
+    union {
+      int val;
+      char buf[4];
+    } tmp;
+    const char* inc = static_cast<const char*>(in);
+    tmp.buf[3] = inc[0];
+    tmp.buf[2] = inc[1];
+    tmp.buf[1] = inc[2];
+    tmp.buf[0] = inc[3];
+    return tmp.val;
+  }
+  inline float Endian::swapFloat (const void* in)
+  {
+    union {
+      float val;
+      char buf[4];
+    } tmp;
+    const char* inc = static_cast<const char*>(in);
+    tmp.buf[3] = inc[0];
+    tmp.buf[2] = inc[1];
+    tmp.buf[1] = inc[2];
+    tmp.buf[0] = inc[3];
+    return tmp.val;
+  }
+  inline double Endian::swapDouble (const void* in)
+  {
+    union {
+      double val;
+      char buf[8];
+    } tmp;
+    const char* inc = static_cast<const char*>(in);
+    tmp.buf[7] = inc[0];
+    tmp.buf[6] = inc[1];
+    tmp.buf[5] = inc[2];
+    tmp.buf[4] = inc[3];
+    tmp.buf[3] = inc[4];
+    tmp.buf[2] = inc[5];
+    tmp.buf[1] = inc[6];
+    tmp.buf[0] = inc[7];
+    return tmp.val;
+  }
 
+} // namespace LOFAR
 
 #endif
