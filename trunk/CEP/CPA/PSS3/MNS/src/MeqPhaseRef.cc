@@ -76,13 +76,16 @@ MeqPhaseRef::MeqPhaseRef (const MDirection& phaseRef, double startTime)
   }
   // Calculate HA increment per UT second.
   itsScaleHA = (ha - itsStartHA) / 3600;
+/*
   cout << "meqphasref: " << itsStartHA << ' ' << ha << ' ' << itsScaleHA
        << ' ' << itsStartTime-4.4977e9 << ' ' << gwPos << endl;
+*/
   // Set earth position.
   itsEarthPos = gwPos;
 
   MVEpoch ep1(startTime);
   MEpoch ep2(ep1, MEpoch::UTC);
   MEpoch ep3 = MEpoch::Convert (ep2, MEpoch::GAST)();
-  cout << "ep3 " << ep3 << endl;
+
+//  cout << "ep3 " << ep3 << endl;
 }
