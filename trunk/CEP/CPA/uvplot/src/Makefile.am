@@ -26,11 +26,11 @@ uvplot_SOURCES := main.cc \
                   UVPTimeFrequencyPlot.cc UVPTimeFrequencyPlot.moc.cc \
                   UVPUVCoverageArea.cc UVPUVCoverageArea.moc.cc
 
-LDADD				:= ../src/libuvplot.la
-
-
 # Your package's subdirectory
 UVPLOT_DIR := $(top_srcdir)/src
+
+
+LDADD				:= $(top_builddir)/src/libuvplot.la
 
 
 CXXFLAGS += -DDEBUG_MODE=1
