@@ -55,9 +55,26 @@
 #include <asm/io.h>       /* send/receive data of port or memory */
 #include <asm/uaccess.h>  /* copy between userspace and kernelspace V.V. */
 
+/* debugging defines */
+#ifdef CONFIG_NTP_PPS_SPID
+#undef DEBUG_NTP_PPS
+/*#define DEBUG_NTP_PPS*/
+#endif /* CONFIG_NTP_PPS_SPID */
+
+#ifdef	CONFIG_NTP_PPS_SPID
+#include <linux/time.h> 	/* struct timeval, do_gettimeofday(),
+				   hardpps() */
+#include <linux/timepps.h>	/* PPS API */
+#include <linux/slab.h>		/* kmalloc(), kfree() */
+#endif
+
 #ifdef MODULE
-MODULE_AUTHOR("Tilman Muller");
+#ifndef CONFIG_NTP_PPS_SPID
 MODULE_DESCRIPTION("Simple Parallel (Port) Interrupt Driver for MAC");
+#else
+MODULE_DESCRIPTION("Simple Parallel (Port) Interrupt Driver for MAC +PPS_API (RFC-2783)");
+#endif /* CONFIG_NTP_PPS_SPID */
+MODULE_AUTHOR("Tilman Muller");
 MODULE_LICENSE("GPL");
 
 MODULE_PARM (spid_base, "i");
@@ -121,6 +138,106 @@ struct file_operations spid_fops = {
     poll: spid_poll,
     ioctl: spid_ioctl,
 };
+
+#ifdef	CONFIG_NTP_PPS_SPID
+#define NANOSECOND	1000000000
+
+/* update PPS info from the event time stamp stored in etime and ecount. */
+static inline void pps_update_event(struct file * file)
+{
+        struct pps * pp = (struct pps*)file->private_data;
+	int mode;
+
+	if (NULL == pp) {
+#ifdef DEBUG_NTP_PPS
+		printk(KERN_ERR
+		       "pps_update_event(): no pps struct");
+#endif /* DEBUG_NTP_PPS */
+		return;
+	}
+	mode = pp->state.parm.mode;
+	if ((mode & (PPS_ECHOASSERT|PPS_ECHOCLEAR)) != 0) {
+		/* echo event, how? */
+#if 0
+		info->MCR |= UART_MCR_RTS;		/* signal no event */
+		if (((modem_status & UART_MSR_DCD) != 0) ==
+		    ((mode & PPS_ECHOASSERT) != 0))
+			info->MCR &= ~UART_MCR_RTS;	/* signal event */
+		serial_out(info, UART_MCR, info->MCR);
+#endif
+	}
+	
+	/* get timestamp */
+	/*if ((modem_status & UART_MSR_DCD) != 0)*/
+	{
+		struct timespec ts;
+		ts = pp->state.etime;
+		pp->state.info.current_mode = mode;
+		if ((mode & PPS_OFFSETASSERT) != 0) {
+			ts.tv_nsec += pp->state.parm.assert_offset.tv_nsec;
+			if (ts.tv_nsec >= NANOSECOND) {
+				ts.tv_nsec -= NANOSECOND;
+				++ts.tv_sec;
+			} else if (ts.tv_nsec < 0) {
+				ts.tv_nsec += NANOSECOND;
+				--ts.tv_sec;
+			}
+		}
+		if ((pps_kc_hardpps_mode & PPS_CAPTUREASSERT) != 0 &&
+		    pps_kc_hardpps_dev == (void *) file) {
+#ifdef DEBUG_NTP_PPS
+		    printk(KERN_INFO "spid: calling hardpps\n");
+#endif
+                    hardpps(&ts, pp->state.ecount);
+		}
+		if ((mode & PPS_CAPTUREASSERT) != 0) {
+			pp->state.info.assert_timestamp = ts;
+			++pp->state.info.assert_sequence;
+			if (waitqueue_active(&pp->state.ewait))
+				wake_up_interruptible(&pp->state.ewait);
+		}
+#ifdef DEBUG_NTP_PPS
+		printk(KERN_INFO
+		       "ASSERT event #%lu for %p at %lu.%09ld (%9ld)\n",
+		       pp->state.info.assert_sequence, pp, ts.tv_sec,
+		       ts.tv_nsec, pp->state.ecount);
+#endif /* DEBUG_NTP_PPS */
+	} 
+#if 0
+/*else*/ {
+		struct timespec ts;
+		ts = pp->state.etime;
+		pp->state.info.current_mode = mode;
+		if ((mode & PPS_OFFSETCLEAR) != 0) {
+			ts.tv_nsec += pp->state.parm.clear_offset.tv_nsec;
+			if (ts.tv_nsec >= NANOSECOND) {
+				ts.tv_nsec -= NANOSECOND;
+				++ts.tv_sec;
+			} else if (ts.tv_nsec < 0) {
+				ts.tv_nsec += NANOSECOND;
+				--ts.tv_sec;
+			}
+		}
+		if ((pps_kc_hardpps_mode & PPS_CAPTURECLEAR) != 0 &&
+		    pps_kc_hardpps_dev == (void *) file)
+			hardpps(&ts, pp->state.ecount);
+		if ((mode & PPS_CAPTURECLEAR) != 0) {
+			pp->state.info.clear_timestamp = ts;
+			++pp->state.info.clear_sequence;
+			if (waitqueue_active(&pp->state.ewait))
+				wake_up_interruptible(&pp->state.ewait);
+		}
+#ifdef DEBUG_NTP_PPS
+		printk(KERN_INFO
+		       "CLEAR event #%lu for %p at %lu.%09ld (%9ld)\n",
+		       pp->state.info.clear_sequence, pp, ts.tv_sec,
+		       ts.tv_nsec, pp->state.ecount);
+#endif /* DEBUG_NTP_PPS */
+	}
+#endif /* 0 */
+#undef NANOSECOND
+}
+#endif
 
 /* init and cleanup */
 
@@ -210,7 +327,6 @@ int spid_open (struct inode *inodeisr , struct file *filp)
         spid_irq = -1;
       }        
     } while (spid_irq < 0 && count++ < 5);
-
   }
   
   if (spid_irq_requested == 0)
@@ -225,9 +341,18 @@ int spid_open (struct inode *inodeisr , struct file *filp)
       printk(KERN_INFO "spid: Found and use irq %d\n", spid_irq);
       inb(spid_base + 1);
       outb(0x10, spid_base + 2); // enables reporting the interrupt
+#ifndef CONFIG_NTP_PPS_SPID
       request_irq(spid_irq, spid_isr, SA_INTERRUPT, "spid interrupt service routine", NULL);
+#else
+      request_irq(spid_irq, spid_isr, SA_INTERRUPT, "spid +PPS (RFC-2783)", filp);
+#endif
     }
   }
+
+#ifdef CONFIG_NTP_PPS_SPID
+  filp->private_data = NULL; /* holds pointer to the struct pps */
+#endif /* CONFIG_NTP_PPS_SPID */
+
   return 0;
 }
 
@@ -237,12 +362,34 @@ int spid_open (struct inode *inodeisr , struct file *filp)
 
 void spid_isr(int irq, void* dev_id, struct pt_regs* regs)
 {
-  printk(KERN_INFO "spid: Interrupt\n");
+  /*printk(KERN_INFO "spid: Interrupt\n");*/
   
   outb_p(0x00, spid_base);
   // in some cases it seams this is needed to force a down edge of the pin 10
   inb(spid_base + 1); 
   if (MOD_IN_USE) spid_interrupt++;
+
+#ifdef CONFIG_NTP_PPS_SPID
+  struct file * file = (struct file*) dev_id;
+  struct pps * pps = (file ? file->private_data : NULL);
+				
+  if (NULL != pps)
+  {
+    pps_update_event(file);
+    
+    /* store timestamp in case it is wanted later */
+    pps->state.ecount = do_clock_gettime(CLOCK_REALTIME,
+					    &pps->state.etime);
+    
+/*#ifdef DEBUG_NTP_PPS*/
+    printk(KERN_INFO
+	   "spid_isr: time %ld:%ld(%ld)\n",
+	   pps->state.etime.tv_sec,
+	   pps->state.etime.tv_nsec,
+	   pps->state.ecount);
+/*#endif*/
+  }
+#endif /* CONFIG_NTP_PPS_SPID */
 }
 
 // Closing a Device because device is treated like a normal file.
@@ -254,10 +401,42 @@ int spid_release (struct inode* inode, struct file* filp)
   MOD_DEC_USE_COUNT;
   if (!MOD_IN_USE)
   {    
+#ifdef CONFIG_NTP_PPS_SPID
+    struct pps* pps = (struct pps*)filp->private_data;
+    
+    if (NULL != pps)
+    {
+      struct pps *tmp = pps;
+      if (waitqueue_active(&tmp->state.ewait))
+	wake_up_interruptible(&tmp->state.ewait);
+      /*info->tty->termios->c_line = N_TTY;*/
+      filp->private_data = NULL; /*info->tty->disc_data = NULL;*/
+      /*tmp->magic = 0;*/
+      kfree(tmp);
+      if (pps_kc_hardpps_dev == (void *) filp) {
+	pps_kc_hardpps_mode = 0;
+	pps_kc_hardpps_dev = NULL;
+#ifdef DEBUG_NTP_PPS
+	printk(KERN_INFO
+	       "spid_release(): unbound kernel consumer dev %p\n",
+	       filp);
+#endif /* DEBUG_NTP_PPS */
+      }
+#ifdef DEBUG_NTP_PPS
+      printk(KERN_INFO "spid_release(): removed pps %p from file %p\n",
+	     tmp, filp);
+#endif /* DEBUG_NTP_PPS */
+    }
+#endif /* CONFIG_NTP_PPS_SPID */
+
     if (spid_irq > 0)
     {
       printk(KERN_INFO "spid: Release irq %d\n", spid_irq);
+#ifndef CONFIG_NTP_PPS_SPID
       free_irq(spid_irq, NULL);
+#else
+      free_irq(spid_irq, filp);
+#endif
     }
     outb_p(0x00, spid_base + 2); // disable reporting the interrupt
     spid_interrupt = 0;
@@ -349,10 +528,42 @@ unsigned int spid_poll(struct file* filp, poll_table* wait)
   return mask;
 }
 
+#ifdef	CONFIG_NTP_PPS_SPID
+/* Return allowed mode bits for given pps struct, file's mode, and user.
+ * Bits set in `*obligatory' must be set.  Returned bits may be set.
+ */
+static int pps_allowed_mode(const struct file * file, mode_t fmode,
+			    int *obligatory)
+{
+        const struct pps * pps = (struct pps*)file->private_data;
+	int 			cap = pps->state.cap;
+
+	cap &= ~PPS_CANWAIT;				/* always RO */
+	*obligatory = PPS_TSFMT_TSPEC;		/* only supported format */
+	if ((fmode & FMODE_WRITE) == 0) {	/* read-only mode */
+		cap = *obligatory = pps->state.parm.mode;
+	} else if (!capable(CAP_SYS_TIME)) {	/* may not manipulate time */
+		int	fixed_bits;
+		int	active_flags = pps->state.parm.mode;
+
+		if (pps_kc_hardpps_dev == file) {
+			fixed_bits = PPS_OFFSETASSERT|PPS_OFFSETCLEAR;
+			fixed_bits &= active_flags;
+			*obligatory |= fixed_bits;
+		}
+	}
+	return cap;
+}
+#endif
+
 // This method will be called on ioctl in userspace
 // NOTE: Only FIONREAD will be serviced to find out there is an interrupt or not
 int spid_ioctl(struct inode* inode, struct file* filp, unsigned int cmd, unsigned long arg)
 {    
+#ifdef	CONFIG_NTP_PPS_SPID
+  int error = 0;
+#endif
+
   switch (cmd)  
   {
     case FIONREAD:
@@ -369,6 +580,386 @@ int spid_ioctl(struct inode* inode, struct file* filp, unsigned int cmd, unsigne
       MOD_INC_USE_COUNT;
       return 0;
     }
+
+#ifdef	CONFIG_NTP_PPS_SPID
+#ifdef DEBUG_NTP_PPS
+#if 0
+#define RESTORE_FLAGS_AND_RETURN	\
+	do { \
+		printk(KERN_INFO "ioctl() returns %d\n", error);\
+		restore_flags(flags); return error;\
+	} while (0);
+#else
+#define RESTORE_FLAGS_AND_RETURN \
+        do { return error; } while (0)
+#endif
+#else
+#define RESTORE_FLAGS_AND_RETURN	\
+	do { /*restore_flags(flags);*/ return error; } while (0);
+#endif
+
+    case PPS_IOC_CREATE:
+    {
+      /* initialize the tty data struct */
+      struct pps *pps = filp->private_data;
+
+      /*save_flags(flags); cli();*/
+#ifdef DEBUG_NTP_PPS
+      printk(KERN_INFO
+	     "PPS_IOC_CREATE: file/data = %p/%p\n",
+	     filp, pps);
+#endif /* DEBUG_NTP_PPS */
+      if (pps != NULL) {
+#ifdef DEBUG_NTP_PPS
+	printk(KERN_INFO
+	       "PPS_IOC_CREATE: magic = 0x%x\n",
+	       pps->magic);
+#endif /* DEBUG_NTP_PPS */
+	/* share the handle if valid, otherwise fail */
+	if (pps->magic != PPSCLOCK_MAGIC)
+	  error = -EBADF;
+	RESTORE_FLAGS_AND_RETURN;
+      }
+      if ((filp->f_mode & FMODE_WRITE) == 0) {
+	error = -EBADF;
+	RESTORE_FLAGS_AND_RETURN;
+      }
+      if ((pps = (struct pps *) kmalloc(sizeof(struct pps),
+					GFP_KERNEL)) == NULL)
+      {
+	printk(KERN_ERR
+	       "PPS_IOC_CREATE: kmalloc failed\n");
+	error = -ENOMEM;
+	RESTORE_FLAGS_AND_RETURN;
+      }
+      /* clear all parameters */
+      memset(pps, 0, sizeof(struct pps));
+      pps->magic = PPSCLOCK_MAGIC;
+      pps->state.parm.api_version = PPS_API_VERS_1;
+      pps->state.parm.mode = PPS_TSFMT_TSPEC;
+      pps->state.cap = (PPS_CAPTUREASSERT|
+			PPS_CAPTURECLEAR|
+			PPS_OFFSETASSERT|
+			PPS_OFFSETCLEAR|
+			PPS_ECHOASSERT|
+			PPS_ECHOCLEAR|
+			PPS_CANWAIT|
+			PPS_TSFMT_TSPEC);
+      init_waitqueue_head(&pps->state.ewait);
+      filp->private_data = (void*)pps;
+      /*tty->termios->c_line = N_PPSCLOCK;*/
+#ifdef DEBUG_NTP_PPS
+      printk(KERN_INFO
+	     "PPS_IOC_CREATE: new pps at %p, magic 0x%0x\n",
+	     pps, pps->magic);
+#endif /* DEBUG_NTP_PPS */
+      error = 0;
+      RESTORE_FLAGS_AND_RETURN;
+    }
+
+    case PPS_IOC_DESTROY:
+    {
+      /* draft 03 says the settings are unaffected. */
+      struct pps *pps;
+
+      /*save_flags(flags); cli();*/
+      if ((filp->f_mode & FMODE_WRITE) == 0) {
+	error = -EBADF;
+	RESTORE_FLAGS_AND_RETURN;
+      }
+      pps = filp->private_data;
+#ifdef DEBUG_NTP_PPS
+      printk(KERN_INFO
+	     "PPS_IOC_DESTROY: file/data = %p/%p\n",
+	     filp, pps);
+#endif /* DEBUG_NTP_PPS */
+      if (pps == NULL || pps->magic != PPSCLOCK_MAGIC) {
+	error = -EOPNOTSUPP;
+	RESTORE_FLAGS_AND_RETURN;
+      }
+      if (waitqueue_active(&pps->state.ewait)) {
+#ifdef DEBUG_NTP_PPS
+	printk(KERN_INFO
+	       "PPS_IOC_DESTROY: wait queue busy\n");
+#endif /* DEBUG_NTP_PPS */
+	error = -EBUSY;
+	RESTORE_FLAGS_AND_RETURN;
+      }
+      error = 0;
+      RESTORE_FLAGS_AND_RETURN;
+    }
+
+    case PPS_IOC_FETCH:
+    {
+      struct pps *pps = (struct pps*)filp->private_data;
+      struct pps_fetch_args parms;
+      long timeout;
+
+      /*save_flags(flags); cli();*/
+#ifdef DEBUG_NTP_PPS
+      printk(KERN_INFO
+	     "PPS_IOC_FETCH: file/pps = %p/%p\n",
+	     filp, pps);
+#endif /* DEBUG_NTP_PPS */
+      if (pps == NULL || pps->magic != PPSCLOCK_MAGIC) {
+	error = -EOPNOTSUPP;
+	RESTORE_FLAGS_AND_RETURN;
+      }
+      if (copy_from_user(&parms,
+			 (struct pps_fetch_args *) arg,
+			 sizeof(struct pps_fetch_args))
+	  != 0) {
+	error = -EFAULT;
+	RESTORE_FLAGS_AND_RETURN;
+      }
+      if (parms.tsformat != PPS_TSFMT_TSPEC) {
+	error = -EINVAL;
+	RESTORE_FLAGS_AND_RETURN;
+      }
+      timeout = HZ * parms.timeout.tv_sec;
+      timeout += parms.timeout.tv_nsec / (1000000000 / HZ);
+      if (timeout != 0) {
+	/*restore_flags(flags);*/
+	if (parms.timeout.tv_sec == -1)
+	  interruptible_sleep_on(&pps->state.ewait);
+	else {
+	  timeout = interruptible_sleep_on_timeout(
+	    &pps->state.ewait,
+	    timeout);
+	  if (timeout <= 0) {
+	    error = -ETIMEDOUT;
+	    return error;
+	    /* flags already restored */
+	  }
+	}
+	/*save_flags(flags); cli();*/
+	pps = (struct pps*)filp->private_data;
+	if (pps == NULL || pps->magic != PPSCLOCK_MAGIC)
+	{
+#ifdef DEBUG_NTP_PPS
+	  printk(KERN_INFO "PPS_IOC_FETCH: "
+		 "file %p lacks pps\n",
+		 filp);
+#endif /* DEBUG_NTP_PPS */
+	  error = -EOPNOTSUPP;
+	  RESTORE_FLAGS_AND_RETURN;
+	}
+	if (signal_pending(current)) {
+	  error = -EINTR;
+	  RESTORE_FLAGS_AND_RETURN;
+	}
+      }
+      parms.pps_info_buf = pps->state.info;
+      if (copy_to_user((struct pps_fetch_args *) arg,
+		       &parms,
+		       sizeof(struct pps_fetch_args)) != 0)
+	error = -EFAULT;
+      RESTORE_FLAGS_AND_RETURN;
+    }
+
+    case PPS_IOC_SETPARMS:
+    {
+      struct pps *pps = (struct pps*)filp->private_data;
+      struct pps_params parms;
+      int may_bits, must_bits;
+
+      /*save_flags(flags); cli();*/
+      if ((filp->f_mode & FMODE_WRITE) == 0) {
+	error = -EBADF;
+	RESTORE_FLAGS_AND_RETURN;
+      }
+#ifdef DEBUG_NTP_PPS
+      printk(KERN_INFO
+	     "PPS_IOC_SETPARAMS: file/pps = %p/%p\n",
+	     filp, pps);
+#endif /* DEBUG_NTP_PPS */
+      if (pps == NULL || pps->magic != PPSCLOCK_MAGIC) {
+	error = -EOPNOTSUPP;
+	RESTORE_FLAGS_AND_RETURN;
+      }
+      if (copy_from_user(&parms,
+			 (struct pps_params *) arg,
+			 sizeof(struct pps_params)) != 0) {
+	error = -EFAULT;
+	RESTORE_FLAGS_AND_RETURN;
+      }
+#ifdef DEBUG_NTP_PPS
+      printk(KERN_INFO "PPS_IOC_SETPARAMS: "
+	     "vers/mode(cap) = %#x/%#x(%#x)\n",
+	     parms.api_version, parms.mode, pps->state.cap);
+#endif /* DEBUG_NTP_PPS */
+      if (parms.api_version != PPS_API_VERS_1) {
+	error = -EINVAL;
+	RESTORE_FLAGS_AND_RETURN;
+      }
+      if ((parms.mode & ~pps->state.cap) != 0 ) {
+	error = -EINVAL;
+	RESTORE_FLAGS_AND_RETURN;
+      }
+      if ((parms.mode &
+	   (PPS_TSFMT_TSPEC|PPS_TSFMT_NTPFP)) == 0 ) {
+	/* section 3.3 of RFC 2783 interpreted */
+	parms.mode |= PPS_TSFMT_TSPEC;
+      }
+      may_bits = pps_allowed_mode(filp, filp->f_mode,
+				  &must_bits);
+      if ((parms.mode & must_bits) != must_bits ||
+	  (parms.mode & ~may_bits) != 0) {
+	error = -EPERM;
+	RESTORE_FLAGS_AND_RETURN;
+      }
+      if (capable(CAP_SYS_TIME)) {
+	/* allow setting offsets */
+	pps->state.parm = parms;
+      } else {
+	pps_params_t	*ppspp = &pps->state.parm;
+
+	ppspp->api_version = parms.api_version;
+	ppspp->mode = parms.mode;
+	/* not offsets! */
+      }
+#if 0
+      if (parms.mode & (PPS_CAPTUREASSERT|PPS_CAPTURECLEAR)) {
+	/* enable interrupts */
+	info->IER |= UART_IER_MSI;
+	info->flags |= ASYNC_LOW_LATENCY;
+	if (info->flags & ASYNC_INITIALIZED) {
+	  serial_out(info, UART_IER, info->IER);
+#ifdef DEBUG_NTP_PPS
+	  printk(KERN_INFO
+		 "PPS_IOC_SETPARAMS: IER:%02x\n",
+		 info->IER);
+#endif /* DEBUG_NTP_PPS */
+	}
+      }
+#endif
+      RESTORE_FLAGS_AND_RETURN;
+    }
+
+    case PPS_IOC_GETPARMS:
+    {
+      const struct pps *pps = (struct pps*)filp->private_data;
+
+      /*save_flags(flags); cli();*/
+#ifdef DEBUG_NTP_PPS
+      printk(KERN_INFO
+	     "PPS_IOC_GETPARAMS: file/pps = %p/%p\n",
+	     filp, pps);
+#endif /* DEBUG_NTP_PPS */
+      if (pps == NULL || pps->magic != PPSCLOCK_MAGIC) {
+	error = -EOPNOTSUPP;
+	RESTORE_FLAGS_AND_RETURN;
+      }
+      if (copy_to_user((pps_params_t *) arg,
+		       &(pps->state.parm),
+		       sizeof(struct pps_params)) != 0) {
+	error = -EFAULT;
+	RESTORE_FLAGS_AND_RETURN;
+      }
+    }
+
+    case PPS_IOC_GETCAP:
+    {
+      const struct pps *pps = (struct pps*)filp->private_data;
+      int may_bits, must_bits;
+
+      /*save_flags(flags); cli();*/
+#ifdef DEBUG_NTP_PPS
+      printk(KERN_INFO
+	     "PPS_IOC_GETCAP: file/pps = %p/%p\n", filp, pps);
+#endif /* DEBUG_NTP_PPS */
+      if (pps == NULL || pps->magic != PPSCLOCK_MAGIC) {
+	error = -EOPNOTSUPP;
+	RESTORE_FLAGS_AND_RETURN;
+      }
+      may_bits = pps_allowed_mode(filp, filp->f_mode,
+				  &must_bits);
+      if (copy_to_user((int *) arg, &may_bits,
+		       sizeof(int)) != 0)
+	error = -EFAULT;
+      RESTORE_FLAGS_AND_RETURN;
+    }
+
+    case PPS_IOC_KC_BIND:
+    {
+      struct pps *pps = filp->private_data;
+      struct pps_bind_args parms;
+
+      /*save_flags(flags); cli();*/
+      if ((filp->f_mode & FMODE_WRITE) == 0) {
+	error = -EBADF;
+	RESTORE_FLAGS_AND_RETURN;
+      }
+#ifdef DEBUG_NTP_PPS
+      printk(KERN_INFO
+	     "PPS_IOC_KC_BIND: file/pps = %p/%p\n", filp, pps);
+      printk(KERN_INFO
+	     "PPS_IOC_KC_BIND: current dev/mode = %p/0x%x\n",
+	     pps_kc_hardpps_dev, pps_kc_hardpps_mode);
+			
+#endif /* DEBUG_NTP_PPS */
+      if (pps == NULL || pps->magic != PPSCLOCK_MAGIC)
+      {
+	error = -EOPNOTSUPP;
+	RESTORE_FLAGS_AND_RETURN;
+      }
+      if (copy_from_user(&parms,
+			 (struct pps_bind_args *) arg,
+			 sizeof(struct pps_bind_args)) != 0)
+      {
+	error = -EFAULT;
+	RESTORE_FLAGS_AND_RETURN;
+      }
+      /* generic parameter validation */
+      if (parms.tsformat != PPS_TSFMT_TSPEC ||
+	  (parms.edge & ~PPS_CAPTUREBOTH) != 0 ||
+#if 0
+	  parms.consumer < PPS_KC_HARDPPS ||
+	  parms.consumer > PPS_KC_HARDPPS_FLL ||
+#endif
+	  parms.consumer != PPS_KC_HARDPPS) {
+	error = -EINVAL;
+	RESTORE_FLAGS_AND_RETURN;
+      }
+      /* permission check */
+      if (!capable(CAP_SYS_TIME)) {
+	error = -EPERM;
+	RESTORE_FLAGS_AND_RETURN;
+      }
+      /* detailed parameter check */
+      if (parms.edge == 0) {
+	if (pps_kc_hardpps_dev == NULL ||
+	    pps_kc_hardpps_dev == (void *) filp) {
+	  pps_kc_hardpps_mode = parms.edge;
+	  pps_kc_hardpps_dev = NULL;
+#ifdef DEBUG_NTP_PPS
+	  printk(KERN_INFO "PPS_IOC_KC_BIND: "
+		 "unbound kernel consumer\n");
+#endif /* DEBUG_NTP_PPS */
+	} else {	/* another consumer bound */
+	  error = -EINVAL;
+	  RESTORE_FLAGS_AND_RETURN;
+	}
+      } else {
+	if (pps_kc_hardpps_dev == (void *) filp ||
+	    pps_kc_hardpps_dev == NULL) {
+	  pps_kc_hardpps_mode = parms.edge;
+	  pps_kc_hardpps_dev = filp;
+#ifdef DEBUG_NTP_PPS
+	  printk(KERN_INFO "PPS_IOC_KC_BIND: "
+		 "new kernel consumer: dev=%p, "
+		 "edge=0x%x\n",
+		 pps_kc_hardpps_dev,
+		 pps_kc_hardpps_mode);
+#endif /* DEBUG_NTP_PPS */
+	} else {
+	  error = -EINVAL;
+	  RESTORE_FLAGS_AND_RETURN;
+	}
+      }
+      RESTORE_FLAGS_AND_RETURN;
+    }
+#endif /* CONFIG_NTP_PPS_SPID */
   }
   return -1;
 }
