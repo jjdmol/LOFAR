@@ -762,7 +762,7 @@ try
         intype     = itsInputAgent->getNext(id, ref, 0, AppEvent::NOWAIT);
         std::cout << ColumnName<<std::endl;
         
-        if(intype < 0) {
+        if(intype <= 0) {
           std::cout << "intype: " << intype << std::endl;
         } else {
           
@@ -785,20 +785,22 @@ try
         
               std::cout << "Baseline "<< ant1 << "-" << ant2 << std::endl;
 
-              if(nfreq > itsNumberOfChannels) {
+              if(nfreq > int(itsNumberOfChannels)) {
                 itsNumberOfChannels = nfreq;
               }
 
               std::cout << "nfreq " << nfreq << std::endl;
               std::cout << "ncorr " << ncorr << std::endl;
               std::cout << "ntime " << ntime << std::endl;
+              std::cout << "ant1  " << ant1  << std::endl;
+              std::cout << "ant2  " << ant2  << std::endl;
               
               if(ncorr > 0 && nfreq > 0 && ntime > 0) {
                 uvp_header.itsTime             = 0;
                 uvp_header.itsAntenna1         = ant1;
                 uvp_header.itsAntenna2         = ant2;
                 uvp_header.itsExposureTime     = 0;
-                uvp_header.itsFieldID          = 1;
+                uvp_header.itsFieldID          = 0;
                 uvp_header.itsSpectralWindowID = 0;
           
                 UVPDataAtom atom(nfreq, uvp_header);

@@ -96,7 +96,7 @@ void UVPUVCoverageArea::drawView()
   for(unsigned int x = 0; x < nx; x++) {
     for(unsigned int y = 0; y < ny; y++) {
       int val = int(128.0 + 127.0* *(itsCurrentImage->getPixel(x, y)->getAverageValue()));
-      buffer_painter.setPen(*getColor(val));
+      buffer_painter.setPen(itsComplexColormap[val]);
       buffer_painter.drawPoint(x, y);
     }
   }

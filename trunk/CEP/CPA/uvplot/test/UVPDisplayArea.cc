@@ -36,7 +36,6 @@ UVPDisplayArea::UVPDisplayArea(QWidget*     parent,
     itsComplexColormap(numColors*numColors),
     itsRealIndex(numColors),
     itsImagIndex(numColors),
-    itsColormap(numColors),
     itsXAxis(1, 0, "X", "arbitrary"),
     itsYAxis(1, 0, "Y", "arbitrary")
 {
@@ -47,8 +46,7 @@ UVPDisplayArea::UVPDisplayArea(QWidget*     parent,
 
   itsBuffer.resize(10, 10);
 
-  for(unsigned int i = 0; i < itsColormap.size(); i++) {
-    itsColormap[i] = QColor(qRgb(i, i, i), i);
+  for(unsigned int i = 0; i < itsRealIndex.size(); i++) {
     itsRealIndex[i] = i;
     itsImagIndex[i] = numColors*i;
   }
@@ -83,23 +81,7 @@ void UVPDisplayArea::initColormap(double slope,
 {
   const int          min_color = 0;
   const int          max_color = 255;
-  const unsigned int numColors = itsColormap.size();
-
-  for(unsigned int i = 0; i < numColors; i++) {
-    double col  = (max_color-min_color)/2 + slope*(double(i)-center);
-    if(col < min_color) {
-      col = min_color;
-    }
-    if(col > max_color) {
-      col = max_color;
-    }
-    
-    int Col = int(col + 0.5);
-
-    itsColormap[i].setRgb(Col, Col, Col); 
-
-  }
-
+  const unsigned int numColors = itsRealIndex.size();
 
   // The complex color table;
   for(unsigned int i = 0; i < numColors; i++) {
@@ -144,7 +126,7 @@ void UVPDisplayArea::initColormap(double slope,
 
 unsigned int UVPDisplayArea::getNumberOfColors() const
 {
-  return itsColormap.size();
+  return itsRealIndex.size();
 }
 
 
@@ -267,7 +249,7 @@ void UVPDisplayArea::drawView()
   for(int y = 0; y < height(); y++) {
     int val = int(128.0 + 127.0*sin(double(y)/100.0));
     
-    buffer_painter.setPen(itsColormap[val]);
+    buffer_painter.setPen(itsComplexColormap[val]);
     buffer_painter.drawLine(0, y, width(), y);
   }
 

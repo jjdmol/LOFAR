@@ -35,7 +35,6 @@ InitDebugContext(UVPTimeFrequencyPlot, "DEBUG_CONTEXT");
 
 UVPTimeFrequencyPlot::UVPTimeFrequencyPlot(QWidget *parent)
   : UVPDisplayArea(parent),
-    itsSpectrum(0),
     itsComplexSpectrum(),
     itsValueAxis()
   
@@ -66,25 +65,6 @@ void UVPTimeFrequencyPlot::slot_paletteChanged()
 #if(DEBUG_MODE)
   TRACERF1("End.");
 #endif
-}
-
-
-
-
-
-//===========>>>  UVPTimeFrequencyPlot::slot_addSpectrum  <<<===========
-
-void UVPTimeFrequencyPlot::slot_addSpectrum(const UVPSpectrum &spectrum)
-{
-  itsSpectrum.add(spectrum);
-
-  /*  if(itsSpectrum.min() != itsSpectrum.max()) {
-    itsValueAxis.calcTransferFunction(itsSpectrum.min(),
-                                      itsSpectrum.max(),
-                                      0,
-                                      getNumberOfColors()-1);
-  }
-  */
 }
 
 
@@ -128,32 +108,7 @@ void UVPTimeFrequencyPlot::drawView()
   
   BufferPainter.begin(&itsBuffer);
   
-  /*
-  const unsigned int N(itsSpectrum.size());
-  const unsigned int Nch(itsSpectrum.getNumberOfChannels());
 
-#if(DEBUG_MODE)
-  //  TRACER2("i = " << i);
-  TRACER2("N = " << N);
-  TRACER2("Nch = " << Nch);
-#endif
-
-  if(itsSpectrum.min() != itsSpectrum.max()) {
-    for(unsigned int i = 0; i < N; i++) {
-      
-      const double*        spectrum(itsSpectrum[i].getValues());
-      unsigned int         j(0);
-      
-      while(j < Nch ) {
-        int col = int(itsValueAxis.worldToAxis(*spectrum++));
-        BufferPainter.setPen(*getColor(col));
-        BufferPainter.drawPoint(j, i);
-        j++;
-      }
-    }
-  }
-  
-  */
   const unsigned int Ncol(getNumberOfColors());
   const unsigned int N(itsComplexSpectrum.size());
   unsigned int Nch(0);
@@ -161,7 +116,7 @@ void UVPTimeFrequencyPlot::drawView()
 
 
   BufferPainter.eraseRect(0,0,width(), height());
-  int W = width();
+  unsigned int W = width();
 
   if(itsComplexSpectrum.min() != itsComplexSpectrum.max()) {
     for(unsigned int i = 0; i < N; i++) {
@@ -219,9 +174,6 @@ void UVPTimeFrequencyPlot::drawView()
 
 void UVPTimeFrequencyPlot::setChannels(unsigned int numberOfChannels)
 {
-  itsSpectrum.clear();
-  itsSpectrum        = UVPSpectrumVector(numberOfChannels);
-
   itsComplexSpectrum.clear();
   itsComplexSpectrum = UVPDataAtomVector();
   itsValueAxis       = UVPAxis();
