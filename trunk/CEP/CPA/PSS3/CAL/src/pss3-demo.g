@@ -12,7 +12,7 @@ include 'mkimg.g';
 #
 # Demo function showing the predict functionality and creating an image of it.
 #
-predict := function(fname='demo', ant=5*[0:19],
+predict := function(fname='demo', ant=4*[0:20],
                     modeltype='LOFAR', calcuvw=F, trace=T)
 {
 
@@ -91,7 +91,7 @@ solve := function(fname='demo', ant=4*[0:20],
     # Create calibrater object
     #
     mc := meqcalibrater(spaste(fname,'.MS'), fname, spaste(fname,'_gsm'),
-                        ant=ant,
+                        ant=ant,datacolname='DATA',
                         modeltype=modeltype, calcuvw=calcuvw);
 
     if (wait)
@@ -175,8 +175,8 @@ solve := function(fname='demo', ant=4*[0:20],
             sleep_cmd := spaste('sleep ', sleeptime);
             if (sleep) shell(sleep_cmd);
         }
-        print mc.getstatistics()
-            mc.saveresidualdata();
+        print mc.getstatistics();
+        mc.saveresidualdata();
         mc.saveparms();
     }
     
