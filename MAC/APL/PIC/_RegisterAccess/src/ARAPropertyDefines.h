@@ -94,16 +94,20 @@ const char SCOPE_PIC_RackN_SubRackN_BoardN_Alert[] =                  "PIC_Rack%
 #define PROPNAME_OVERFLOW        "overflow"
 #define PROPNAME_FROMTIME        "fromTime"
 #define PROPNAME_TOTIME          "toTime"
+#define PROPNAME_STATISTICSMEAN  "statisticsMean"
+#define PROPNAME_STATISTICSPOWER "statisticsPower"
 
 
 const TProperty PROPS_Station[] =
 {
   {PROPNAME_STATUS, GCFPValue::LPT_UNSIGNED, GCF_READABLE_PROP | GCF_WRITABLE_PROP, "0"},
+  {PROPNAME_STATISTICSMEAN, GCFPValue::LPT_DYNUNSIGNED, GCF_READABLE_PROP | GCF_WRITABLE_PROP, ""},
+  {PROPNAME_STATISTICSPOWER, GCFPValue::LPT_DYNUNSIGNED, GCF_READABLE_PROP | GCF_WRITABLE_PROP, ""},
 };
 
 const TPropertySet PROPSET_PIC = 
 {
-  1, "PIC", PROPS_Station
+  3, "PIC", PROPS_Station
 };
 
 const TProperty PROPS_Rack[] =
@@ -140,11 +144,12 @@ const TProperty PROPS_Board[] =
   {PROPNAME_VOLTAGE15, GCFPValue::LPT_UNSIGNED, GCF_READABLE_PROP | GCF_WRITABLE_PROP, "0"},
   {PROPNAME_VOLTAGE22, GCFPValue::LPT_UNSIGNED, GCF_READABLE_PROP | GCF_WRITABLE_PROP, "0"},
   {PROPNAME_FFI, GCFPValue::LPT_UNSIGNED, GCF_READABLE_PROP | GCF_WRITABLE_PROP, "0"},
+  {PROPNAME_VERSION, GCFPValue::LPT_STRING, GCF_READABLE_PROP | GCF_WRITABLE_PROP, ""},
 };
 
 const TPropertySet PROPSET_Boards[] = 
 {
-  {4, "Board1", PROPS_Board},
+  {5, "Board1", PROPS_Board},
 };
 
 const TProperty PROPS_Ethernet[] =

@@ -44,6 +44,8 @@
 #include <GCF/GCF_PVUnsigned.h>
 #include <GCF/GCF_PVBool.h>
 #include <GCF/GCF_PVDouble.h>
+#include <GCF/GCF_PVString.h>
+#include <GCF/GCF_PVDynArr.h>
 #include "ARAPropertyDefines.h"
 #include "ARAPhysicalModel.h"
 
@@ -65,7 +67,9 @@ RegisterAccessTask::RegisterAccessTask(string name)
       m_APCsLoaded(false),
       m_APCsLoadCounter(0),
       m_RSPclient(*this, m_RSPserverName, GCFPortInterface::SAP, RSP_PROTOCOL),
-      m_physicalModel()
+      m_physicalModel(),
+      m_subStatusHandle(0),
+      m_subStatsHandle(0)
 {
   registerProtocol(RSP_PROTOCOL, RSP_PROTOCOL_signalnames);
   m_answer.setTask(this);
@@ -399,8 +403,31 @@ GCFEvent::TResult RegisterAccessTask::connected(GCFEvent& e, GCFPortInterface& p
   switch (e.signal)
   {
 
+    case F_INIT:
+      break;
+      
     case F_ENTRY:
     {
+      // get versions
+      RSPGetversionEvent getversion;
+      getversion.timestamp.setNow();
+      getversion.cache = true;
+      m_RSPclient.send(getversion);
+      
+      // subscribe to status updates
+      RSPSubstatusEvent substatus;
+      substatus.timestamp.setNow();
+      substatus.rcumask = std::bitset<MAX_N_RCUS>(N_RCUS);
+      substatus.period = 4;
+      m_RSPclient.send(substatus);
+      
+      // subscribe to status updates
+      RSPSubstatsEvent substats;
+      substats.timestamp.setNow();
+      substats.rcumask = std::bitset<MAX_N_RCUS>(N_RCUS);
+      substats.period = 10;
+      m_RSPclient.send(substats);
+
       break;
     }
 
@@ -409,10 +436,90 @@ GCFEvent::TResult RegisterAccessTask::connected(GCFEvent& e, GCFPortInterface& p
       break;
     }
 
+    case RSP_GETVERSIONACK:
+    {
+      LOG_INFO("RSP_GETVERSIONACK received");
+      RSPGetversionackEvent ack(e);
+
+      if(ack.status != SUCCESS)
+      {
+        LOG_ERROR("RSP_GETVERSION failure");
+      }
+      else
+      {
+        char scopeString[300];
+        char version[20];
+        for (int board = 0; board < ack.versions.rsp().extent(blitz::firstDim); board++)
+        {
+          int rackNr          = board / (N_SUBRACKS_PER_RACK*N_BOARDS_PER_SUBRACK) + 1;
+          int subRackNr       = board % (N_SUBRACKS_PER_RACK*N_BOARDS_PER_SUBRACK) + 1;
+          int relativeBoardNr = board % N_BOARDS_PER_SUBRACK + 1;
+          sprintf(version,"%d.%d",ack.versions.rsp()(board) >> 4,ack.versions.rsp()(board) & 0xF);
+          LOG_INFO(formatString("board[%d].version = 0x%x",board,ack.versions.rsp()(board)));
+          sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN,rackNr,subRackNr,relativeBoardNr);
+          updateVersion(scopeString,string(version));
+          
+          sprintf(version,"%d.%d",ack.versions.bp()(board)  >> 4,ack.versions.bp()(board)  & 0xF);
+          LOG_INFO(formatString("bp[%d].version = 0x%x",board,ack.versions.bp()(board)));
+          sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_BP,rackNr,subRackNr,relativeBoardNr);
+          updateVersion(scopeString,string(version));
+  
+          for (int ap = 0; ap < EPA_Protocol::N_AP; ap++)
+          {
+            sprintf(version,"%d.%d",ack.versions.ap()(board * EPA_Protocol::N_AP + ap) >> 4,
+                                    ack.versions.ap()(board * EPA_Protocol::N_AP + ap) &  0xF);
+            LOG_INFO(formatString("ap[%d][%d].version = 0x%x",board,ap,ack.versions.ap()(board * EPA_Protocol::N_AP + ap)));
+            sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN,rackNr,subRackNr,relativeBoardNr,ap+1);
+            updateVersion(scopeString,string(version));
+          }
+        }
+      }
+      break;
+    }
+    
+    case RSP_SUBSTATUSACK:
+    {
+      LOG_INFO("RSP_SUBSTATUSACK received");
+      RSPSubstatusackEvent ack(e);
+
+      if(ack.status != SUCCESS)
+      {
+        LOG_ERROR("RSP_SUBSTATUS failure");
+      }
+      else
+      {
+        m_subStatusHandle = ack.handle;
+      }
+      break;
+    }
+    
+    case RSP_SUBSTATSACK:
+    {
+      LOG_INFO("RSP_SUBSTATSACK received");
+      RSPSubstatsackEvent ack(e);
+
+      if(ack.status != SUCCESS)
+      {
+        LOG_ERROR("RSP_SUBSTATS failure");
+      }
+      else
+      {
+        m_subStatsHandle = ack.handle;
+      }
+      break;
+    }
+    
     case RSP_UPDSTATUS:
     {
       LOG_INFO("RSP_UPDSTATUS received");
       status = handleUpdStatus(e,port);
+      break;
+    }
+    
+    case RSP_UPDSTATS:
+    {
+      LOG_INFO("RSP_UPDSTATS received");
+      status = handleUpdStats(e,port);
       break;
     }
     
@@ -441,6 +548,15 @@ GCFEvent::TResult RegisterAccessTask::connected(GCFEvent& e, GCFPortInterface& p
     
     case F_EXIT:
     {
+      // unsubscribe from status updates
+      RSPUnsubstatusEvent unsubStatus;
+      unsubStatus.handle = m_subStatusHandle; // remove subscription with this handle
+      m_RSPclient.send(unsubStatus);
+
+      // unsubscribe from status updates
+      RSPUnsubstatsEvent unsubStats;
+      unsubStats.handle = m_subStatsHandle; // remove subscription with this handle
+      m_RSPclient.send(unsubStats);
       break;
     }
 
@@ -542,6 +658,74 @@ GCFEvent::TResult RegisterAccessTask::handleUpdStatus(GCFEvent& e, GCFPortInterf
   return status;
 }
 
+GCFEvent::TResult RegisterAccessTask::handleUpdStats(GCFEvent& e, GCFPortInterface& /*port*/)
+{
+  GCFEvent::TResult status = GCFEvent::HANDLED;
+  {
+    RSPUpdstatsEvent updStatsEvent(e);
+
+    time_t curTime=(time_t)updStatsEvent.timestamp.sec();
+    LOG_INFO(formatString("UpdStats:\n\ttime: \t%s\n\tstatus:\t%d\n\thandle:\t%d", 
+        ctime(&curTime),
+        updStatsEvent.status,
+        updStatsEvent.handle));
+
+    blitz::Array<uint16, 3>& statistics = updStatsEvent.stats();
+//    int maxTypes    = statistics.ubound(blitz::firstDim) - statistics.lbound(blitz::firstDim);
+    int maxRCUs     = statistics.ubound(blitz::secondDim) - statistics.lbound(blitz::secondDim) + 1;
+    int maxBeamlets = statistics.ubound(blitz::thirdDim) - statistics.lbound(blitz::thirdDim) + 1;
+
+    int type,rcu,beamlet;
+    for(type=statistics.lbound(blitz::firstDim);type<=statistics.ubound(blitz::firstDim);type++)
+    {
+      GCFPValueArray valuePointerVector;
+      
+      // first elements indicate the length of the array
+      valuePointerVector.push_back(new GCFPVUnsigned(maxRCUs));
+      valuePointerVector.push_back(new GCFPVUnsigned(maxBeamlets));
+      
+      // then for each rcu, the statistics of the beamlets
+      for(rcu=statistics.lbound(blitz::secondDim);rcu<=statistics.ubound(blitz::secondDim);rcu++)
+      {
+        for(beamlet=statistics.lbound(blitz::thirdDim);beamlet<=statistics.ubound(blitz::thirdDim);beamlet++)
+        {
+          unsigned int stat = statistics(type,rcu,beamlet);
+          valuePointerVector.push_back(new GCFPVUnsigned(stat));
+        }
+      }
+
+      // convert the vector of unsigned values to a dynamic array
+      GCFPVDynArr dynamicArray(GCFPValue::LPT_UNSIGNED,valuePointerVector);
+      
+      // set the property
+      TMyPropertySetMap::iterator propSetIt=m_myPropertySetMap.find(string(SCOPE_PIC));
+      if(propSetIt != m_myPropertySetMap.end())
+      {
+        if(type == MEPHeader::MEAN)
+        {
+          propSetIt->second->setValue(string(PROPNAME_STATISTICSMEAN),dynamicArray);
+        }
+        else if(type == MEPHeader::POWER)
+        {
+          propSetIt->second->setValue(string(PROPNAME_STATISTICSPOWER),dynamicArray);
+        }
+      }
+      
+      // cleanup
+      GCFPValueArray::iterator it=valuePointerVector.begin();
+      while(it!=valuePointerVector.end())
+      {
+        delete *it;
+        valuePointerVector.erase(it);
+        it=valuePointerVector.begin();
+      }
+
+    }
+    
+  }
+  
+  return status;
+}
 void RegisterAccessTask::updateBoardProperties(string scope,
                                                uint8  voltage_15,
                                                uint8  voltage_22,
@@ -635,6 +819,16 @@ void RegisterAccessTask::updateRCUproperties(string scope,uint8 status)
     pvBool.setValue(tempStatus);
     it->second->setValue(string(PROPNAME_STATSREADY),pvBool);
   }
+}
+
+void RegisterAccessTask::updateVersion(string scope, string version)
+{
+  TMyPropertySetMap::iterator it=m_myPropertySetMap.find(scope);
+  if(it != m_myPropertySetMap.end())
+  {
+    GCFPVString pvString(version);
+    it->second->setValue(string(PROPNAME_VERSION),pvString);
+  }    
 }
 
 void RegisterAccessTask::handleMaintenance(string propName, const GCFPValue& value)

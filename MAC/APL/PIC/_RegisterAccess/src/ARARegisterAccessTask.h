@@ -86,6 +86,10 @@ namespace ARA
        * Handle the update status event
        */
       GCFEvent::TResult handleUpdStatus(GCFEvent& e, GCFPortInterface& port);
+      /**
+       * Handle the update stats event
+       */
+      GCFEvent::TResult handleUpdStats(GCFEvent& e, GCFPortInterface& port);
 
       /**
        * Handle a change of the Maintenance status field
@@ -131,6 +135,10 @@ namespace ARA
        * update rcu properties based on status bits
        */
       void updateRCUproperties(string scope,uint8 status);
+      /**
+       * update version string
+       */
+      void updateVersion(string scope, string version);
       
     private:
     
@@ -149,6 +157,10 @@ namespace ARA
       static string     m_RSPserverName;
       GCFPort           m_RSPclient;
       ARAPhysicalModel  m_physicalModel;
+      
+      // subscriptions
+      uint32            m_subStatusHandle;
+      uint32            m_subStatsHandle;
 
   };
 
