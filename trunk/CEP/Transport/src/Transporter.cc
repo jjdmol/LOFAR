@@ -45,7 +45,9 @@ Transporter::Transporter (BaseDataHolder* dataHolderPtr)
     itsRate            (1),
     itsConnection      (0),
     itsIsBlocking      (true)
-{}
+{
+  itsConnection = new Connection();
+}
 
 Transporter::Transporter(const Transporter& that)
   : itsBaseDataHolder  (that.itsBaseDataHolder),
@@ -58,8 +60,10 @@ Transporter::Transporter(const Transporter& that)
     itsSourceAddr      (that.itsSourceAddr),
     itsTargetAddr      (that.itsTargetAddr),
     itsRate            (that.itsRate),
+    itsConnection      (0),
     itsIsBlocking      (that.itsIsBlocking)
 {
+  itsConnection = new Connection();
   if (itsTransportHolder != 0) {
     itsTransportHolder = that.itsTransportHolder->make();
   }  
@@ -68,6 +72,7 @@ Transporter::Transporter(const Transporter& that)
 Transporter::~Transporter()
 {
   delete itsTransportHolder;
+  delete itsConnection;
 }
 
 Transporter* Transporter::clone() const

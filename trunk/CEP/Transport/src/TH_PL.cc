@@ -157,7 +157,7 @@ void TH_PL::finalize () {}
 void TH_PL::synchroniseAllProcesses () {}
 
 
-BlobStringType TransportHolder::blobStringType() const
+BlobStringType TH_PL::blobStringType() const
 {
   // Use a string buffer (for the blob in PL).
   return BlobStringType(true);

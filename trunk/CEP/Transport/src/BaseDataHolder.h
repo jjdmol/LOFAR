@@ -340,6 +340,10 @@ inline BlobString& BaseDataHolder::getDataBlock()
 {
   return *itsData;
 }
+inline const BlobString& BaseDataHolder::getDataBlock() const
+{
+  return *itsData;
+}
 
 inline void dataConvert (DataFormat fmt,
 			 BaseDataHolder::DataPacket* buf, uint nrval)
