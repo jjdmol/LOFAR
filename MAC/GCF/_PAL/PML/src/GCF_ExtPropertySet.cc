@@ -23,6 +23,8 @@
 #include <GCF/PAL/GCF_ExtPropertySet.h>
 #include <GCF/PAL/GCF_Property.h>
 #include <GCF/PAL/GCF_ExtProperty.h>
+#include "GPM_Controller.h"
+#include <GCF/Utils.h>
 
 GCFExtPropertySet::GCFExtPropertySet(const char* name, 
                                const TPropertySet& propSetInfo,
@@ -33,7 +35,7 @@ GCFExtPropertySet::GCFExtPropertySet(const char* name,
   loadPropSetIntoRam();
 }
 
-GCFProperty* GCFExtPropertySet::createPropObject(TProperty& propInfo) const
+GCFProperty* GCFExtPropertySet::createPropObject(TProperty& propInfo)
 {
   return new GCFExtProperty(propInfo, *this);
 }
@@ -44,14 +46,14 @@ TGCFResult GCFExtPropertySet::load()
   
   if (_isBusy)
   {
-    LOFAR_LOG_INFO(PML_STDOUT_LOGGER, ( 
+    LOG_INFO(LOFAR::formatString ( 
         "This property set with Instance name (%s) is busy with an action. Ignored!",
         getScope().c_str()));
     result = GCF_BUSY;
   }
   else if (_isLoaded)
   {
-    LOFAR_LOG_INFO(PML_STDOUT_LOGGER, ( 
+    LOG_INFO(LOFAR::formatString ( 
         "This instance of the property set with Instance name (%s) is already loaded. Ignored!",
         getScope().c_str()));
     result = GCF_ALREADY_LOADED;
@@ -59,7 +61,7 @@ TGCFResult GCFExtPropertySet::load()
   else if (getScope().length() == 0 || 
            !Utils::isValidPropName(getScope().c_str()))
   {
-    LOFAR_LOG_INFO(PML_STDOUT_LOGGER, ( 
+    LOG_INFO(LOFAR::formatString ( 
         "Instance name not set or meets not the naming convention (%s). Ignored!",
         getScope().c_str()));
     result = GCF_NO_PROPER_DATA;
@@ -87,14 +89,14 @@ TGCFResult GCFExtPropertySet::unload()
   
   if (_isBusy)
   {
-    LOFAR_LOG_INFO(PML_STDOUT_LOGGER, ( 
+    LOG_INFO(LOFAR::formatString ( 
         "This property set with Instance name (%s) is busy with an action. Ignored!",
         getScope().c_str()));
     result = GCF_BUSY;
   }
   else if (!_isLoaded)
   {
-    LOFAR_LOG_INFO(PML_STDOUT_LOGGER, ( 
+    LOG_INFO(LOFAR::formatString ( 
         "This instance of the property set with Instance name (%s) was not loaded here. Ignored!",
         getScope().c_str()));
     result = GCF_NOT_LOADED;
@@ -103,7 +105,7 @@ TGCFResult GCFExtPropertySet::unload()
            _scope.length() == 0 || 
            !Utils::isValidPropName(_scope.c_str()))
   {
-    LOFAR_LOG_INFO(PML_STDOUT_LOGGER, ( 
+    LOG_INFO(LOFAR::formatString ( 
         "APC name or scope not set or scope (%s) meets not the naming convention. Ignored!",
         _scope.c_str()));
     result = GCF_NO_PROPER_DATA;
@@ -113,7 +115,7 @@ TGCFResult GCFExtPropertySet::unload()
     GPMController* pController = GPMController::instance();
     assert(pController);
     _loadDefaults = false;
-    LOFAR_LOG_INFO(PML_STDOUT_LOGGER, ( 
+    LOG_INFO(LOFAR::formatString ( 
         "REQ: Unload ext. property set %s",
         getScope().c_str()));
     TPMResult pmResult = pController->unloadPropSet(*this);
@@ -134,7 +136,7 @@ TGCFResult GCFExtPropertySet::requestValue(const string propName) const
   }
   else 
   {
-    LOFAR_LOG_INFO(PML_STDOUT_LOGGER, ( 
+    LOG_INFO(LOFAR::formatString ( 
         "This property set has no property '%s'. Ignored!",
         propName.c_str()));
     return GCF_PROP_NOT_IN_SET;
@@ -150,7 +152,7 @@ TGCFResult GCFExtPropertySet::subscribe(const string propName) const
   }
   else 
   {
-    LOFAR_LOG_INFO(PML_STDOUT_LOGGER, ( 
+    LOG_INFO(LOFAR::formatString ( 
         "This property set has no property '%s'. Ignored!",
         propName.c_str()));
     return GCF_PROP_NOT_IN_SET;
@@ -166,7 +168,7 @@ TGCFResult GCFExtPropertySet::unsubscribe(const string propName) const
   }
   else 
   {
-    LOFAR_LOG_INFO(PML_STDOUT_LOGGER, ( 
+    LOG_INFO(LOFAR::formatString ( 
         "This property set has no property '%s'. Ignored!",
         propName.c_str()));
     return GCF_PROP_NOT_IN_SET;

@@ -24,7 +24,7 @@
 #define GCF_EXTPROPERTYSET_H
 
 #include <GCF/GCF_Defines.h>
-#include <GCF/GCF_PropertySet.h>
+#include <GCF/PAL/GCF_PropertySet.h>
 
 /**
  * This class represents a property set of properties specified in an APC. It 
@@ -105,10 +105,10 @@ class GCFExtPropertySet : public GCFPropertySet
     //@}
     
   private: // helper methods
-    GCFProperty* createPropObject(TProperty& propInfo) const;
+    GCFProperty* createPropObject(TProperty& propInfo);
       
   private: // data members
-    _isLoaded;
+    bool _isLoaded;
 };
 #endif
 

@@ -23,7 +23,7 @@
 #ifndef GCF_EXTPROPERTY_H
 #define GCF_EXTPROPERTY_H
 
-#include <GCF/GCFCommon/GCF_Defines.h>
+#include <GCF/GCF_Defines.h>
 #include <GCF/PAL/GCF_Property.h>
 
 class GCFExtPropertySet;

@@ -23,9 +23,9 @@
 #ifndef GPM_DEFINES_H
 #define GPM_DEFINES_H
 
-#define LOFARLOGGER_PACKAGE "MAC.GCF.PAL.PML.Logger"
+//#define LOFARLOGGER_PACKAGE "MAC.GCF.PAL.PML.Logger"
 
-#include <GCFCommon/GCF_Defines.h>
+#include <GCF/GCF_Defines.h>
 
 enum TPMResult {
   PM_NO_ERROR, 

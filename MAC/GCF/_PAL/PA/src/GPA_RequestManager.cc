@@ -21,7 +21,7 @@
 //#  $Id$
 
 #include "GPA_RequestManager.h"
-#include <GCF/GCF_Event.h>
+#include <GCF/TM/GCF_Event.h>
 
 GPARequestManager::GPARequestManager()
 {

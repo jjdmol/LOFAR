@@ -26,10 +26,11 @@
 #include <GPM_PropertyService.h>
 
 GCFProperty::GCFProperty (const TProperty& propInfo, GCFPropertySet* pPropertySet) : 
+  _isBusy(false),
   _pPropertySet(pPropertySet),
   _pAnswerObj(0),
-  _propInfo(propInfo),
-  _pPropService(0)
+  _pPropService(0),
+  _propInfo(propInfo)
 {
   _pPropService = new GPMPropertyService(*this);
 }

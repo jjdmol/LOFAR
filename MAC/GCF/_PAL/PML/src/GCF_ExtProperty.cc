@@ -27,12 +27,11 @@
 
 GCFExtProperty::GCFExtProperty (const TProperty& propInfo) :
    GCFProperty(propInfo, 0),
-   _isSubscribed(false),
-   _isBusy(false)
+   _isSubscribed(false)
 {
   if (!Utils::isValidPropName(propInfo.propName))
   {
-    LOFAR_LOG_WARN(PML_STDOUT_LOGGER, ( 
+    LOG_WARN(LOFAR::formatString ( 
         "Property %s meets not the name convention! Set to \"\"",
         propInfo.propName));
   }
@@ -41,12 +40,11 @@ GCFExtProperty::GCFExtProperty (const TProperty& propInfo) :
 GCFExtProperty::GCFExtProperty (const TProperty& propInfo, 
                           GCFExtPropertySet& propertySet) :
    GCFProperty(propInfo, &propertySet),
-   _isSubscribed(false),
-   _isBusy(false)
+   _isSubscribed(false)
 {
   if (!Utils::isValidPropName(propInfo.propName))
   {
-    LOFAR_LOG_WARN(PML_STDOUT_LOGGER, ( 
+    LOG_WARN(LOFAR::formatString ( 
         "Property %s meets not the name convention! Set to \"\"",
         propInfo.propName));
   }

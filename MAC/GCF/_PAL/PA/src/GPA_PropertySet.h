@@ -42,6 +42,12 @@ class GPAPropertySet : public GSAService
   	GPAPropertySet(GPAController& controller, GCFPortInterface& serverPort);
   	virtual ~GPAPropertySet();
 
+    typedef struct
+    {
+      GCFPortInterface* pPSClientPort;
+      unsigned short count;
+    } TPSClient;
+
     void enable(PARegisterScopeEvent& request);
     void disable(PAUnregisterScopeEvent& request);
     void load(PALoadPropSetEvent& request, GCFPortInterface& p);
@@ -66,12 +72,6 @@ class GPAPropertySet : public GSAService
     inline void dpeUnsubscribed(const string& /*propName*/) {};
 
   private: // helper methods
-    typedef struct
-    {
-      GCFPortInterface* pPSClientPort;
-      unsigned short count;
-      operator == 
-    } TPSClient;
 
     void linkPropSet();
     void unlinkPropSet();
@@ -95,5 +95,4 @@ class GPAPropertySet : public GSAService
     TPAResult _savedResult;
     unsigned short _savedSeqnr;
 };
-
 #endif

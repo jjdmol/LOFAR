@@ -24,8 +24,9 @@
 #define GCF_PROPERTYSET_H
 
 #include <GCF/GCF_Defines.h>
-#include <GCF/GCF_Property.h>
+#include <GCF/PAL/GCF_Property.h>
 
+#include <Common/lofar_map.h>
 class GCFAnswer;
 class GCFPValue;
 
@@ -82,12 +83,12 @@ class GCFPropertySet
                     GCFAnswer* pAnswerObj);
     
   protected: // helper methods
-    virtual GCFProperty* createPropObject(TProperty& propInfo) const = 0;
-    void loadPropSetIntoRAM();
+    virtual GCFProperty* createPropObject(TProperty& propInfo) = 0;
+    void loadPropSetIntoRam();
     void dispatchAnswer (unsigned short sig, TGCFResult result);
     
   protected: // helper attributes
-    typedef map<string /*propName*/, GCFPropertyBase*> TPropertyList;
+    typedef map<string /*propName*/, GCFProperty*> TPropertyList;
     TPropertyList _properties;
     bool _isBusy;
 

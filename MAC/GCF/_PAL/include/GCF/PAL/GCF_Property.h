@@ -23,13 +23,13 @@
 #ifndef GCF_PROPERTY_H
 #define GCF_PROPERTY_H
 
-#include <GCF/GCF_PropertyProxy.h>
 #include <GCF/GCF_Defines.h>
 
 class GPMPropertyService;
 class GCFPropertySet;
 class GCFAnswer;
 class GCFEvent;
+class GCFPValue;
 
 /** 
  * This is the base class for 2 types of properties. The owned (GCFMyProperty) 
@@ -47,8 +47,8 @@ class GCFEvent;
 class GCFProperty
 {
   public:
-    inline const string& getName () const 
-      { return propInfo.propName;}
+    inline const string getName () const 
+      { return _propInfo.propName;}
       
     /// @return the given property name including the scope of the related property set
     virtual const string getFullName () const;
@@ -80,7 +80,6 @@ class GCFProperty
     GCFProperty (const TProperty& propInfo, GCFPropertySet* pPropertySet);
     virtual ~GCFProperty ();
 
-  protected:
     virtual TGCFResult subscribe ();
     virtual TGCFResult unsubscribe ();
       
@@ -92,6 +91,9 @@ class GCFProperty
     
     virtual void valueGet (const GCFPValue& value); 
   
+  protected: // helper attr.
+    bool _isBusy;    
+
   private:
     friend class GPMPropertyService;
     inline void propSubscribed (const string& propName)
@@ -113,7 +115,7 @@ class GCFProperty
       { assert(propName == getFullName()); valueChanged(value); }
   
   private:
-    friend class GCFPropertySetBase;
+    friend class GCFPropertySet;
     inline void resetPropSetRef () 
       { _pPropertySet = 0; }
     
@@ -126,13 +128,12 @@ class GCFProperty
     //@}
 
   private: // data members
-    GCFPropertySetBase* _pPropertySet;
+    GCFPropertySet*     _pPropertySet;
     GCFAnswer*          _pAnswerObj;
     string              _name;
     GPMPropertyService* _pPropService;
 
   private: // admin. data members
-    bool _isBusy;    
     const TProperty&    _propInfo;
 };
 #endif

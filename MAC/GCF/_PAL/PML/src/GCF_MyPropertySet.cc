@@ -48,7 +48,7 @@ GCFMyPropertySet::~GCFMyPropertySet ()
   pController->unregisterScope(*this, true); 
 }
 
-GCFProperty* GCFMyPropertySet::createPropObject(TProperty& propInfo) const
+GCFProperty* GCFMyPropertySet::createPropObject(TProperty& propInfo)
 {
   return new GCFMyProperty(propInfo, *this);
 }

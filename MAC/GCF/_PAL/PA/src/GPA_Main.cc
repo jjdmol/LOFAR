@@ -21,7 +21,7 @@
 //#  $Id$
 
 #include <GPA_Controller.h>
-#include <GCF/GCF_Control.h>
+#include <GCF/TM/GCF_Control.h>
 
 int main(int argC, char *argV[])
 {
