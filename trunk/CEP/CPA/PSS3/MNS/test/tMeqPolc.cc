@@ -48,6 +48,9 @@ void doIt (MeqPolc& polc)
   MeqPolc newpolc;
   newpolc.setCoeff (newc);
   newpolc.setDomain (domain);
+  newpolc.setNormalize (True);
+  newpolc.setX0 (polc.getX0());
+  newpolc.setY0 (polc.getY0());
   MeqMatrix backc = newpolc.denormalize (newpolc.getCoeff());
   // Check if final coefficients match original.
   Assert (compare(polc.getCoeff(), backc));
@@ -60,26 +63,32 @@ void doIt (MeqPolc& polc)
 
 int main()
 {
-  MeqPolc polc;
+  for (int i=0; i<2; i++) {
+    MeqPolc polc;
+    polc.setX0 (i*0.5);
+    polc.setY0 (-i*2);
 
-  polc.setCoeff(MeqMatrix(2.));
-  doIt (polc);
+    polc.setCoeff(MeqMatrix(2.));
+    doIt (polc);
 
-  polc.setCoeff(MeqMatrix(2.,2,1,true));
-  doIt (polc);
+    polc.setCoeff(MeqMatrix(2.,2,1,true));
+    doIt (polc);
 
-  polc.setCoeff(MeqMatrix(2.,1,2,true));
-  doIt (polc);
+    polc.setCoeff(MeqMatrix(2.,1,2,true));
+    doIt (polc);
 
-  double c1[12] = {1.5, 2.1, -0.3, -2,
-		   1.45, -2.3, 0.34, 1.7,
-		   5, 1, 0, -1};
-  polc.setCoeff(MeqMatrix(c1, 3, 4));
-  doIt(polc);
-  polc.setCoeff(MeqMatrix(c1, 4, 3));
-  doIt(polc);
-  polc.setCoeff(MeqMatrix(c1, 6, 2));
-  doIt(polc);
-  polc.setCoeff(MeqMatrix(c1, 2, 6));
-  doIt(polc);
+    double c1[12] = {1.5, 2.1, -0.3, -2,
+		     1.45, -2.3, 0.34, 1.7,
+		     5, 1, 0, -1};
+    polc.setCoeff(MeqMatrix(c1, 3, 4));
+    doIt(polc);
+    polc.setCoeff(MeqMatrix(c1, 4, 3));
+    doIt(polc);
+    polc.setCoeff(MeqMatrix(c1, 6, 2));
+    doIt(polc);
+    polc.setCoeff(MeqMatrix(c1, 2, 6));
+    doIt(polc);
+  }
+  cout << "OK" << endl;
+  return 0;
 }

@@ -38,6 +38,8 @@ MeqPolc::MeqPolc()
 : itsMaxNrSpid  (0),
   itsPertValue  (1e-6),
   itsIsRelPert  (true),
+  itsX0         (0),
+  itsY0         (0),
   itsNormalized (false)
 {}
 
@@ -106,11 +108,19 @@ MeqResult MeqPolc::getResult (const MeqRequest& request)
     }
   } else {
     // The polynomial has multiple coefficients.
-    // Get the step and start values in the normalized domain.
-    double stepx = request.stepX() / itsDomain.scaleX();
-    double stepy = request.stepY() / itsDomain.scaleY();
-    double stx = itsDomain.normalizeX (domain.startX()) + stepx * .5;
-    double sty = itsDomain.normalizeY (domain.startY()) + stepy * .5;
+    // Get the step and start values in the (un)normalized domain.
+    double stepx, stepy, stx, sty;
+    if (itsNormalized) {
+      stepx = request.stepX() / itsDomain.scaleX();
+      stepy = request.stepY() / itsDomain.scaleY();
+      stx = itsDomain.normalizeX (domain.startX()) + stepx * .5;
+      sty = itsDomain.normalizeY (domain.startY()) + stepy * .5;
+    } else {
+      stepx = request.stepX();
+      stepy = request.stepY();
+      stx = domain.startX() - itsX0 + stepx * .5;
+      sty = domain.startY() - itsY0 + stepy * .5;
+    }
     // Get number of steps and coefficients in x and y.
     int ndx = request.nx();
     int ndy = request.ny();
@@ -289,15 +299,15 @@ MeqMatrix MeqPolc::normalize (const MeqMatrix& coeff, const MeqDomain& domain)
 {
   return normDouble (coeff,
 		     domain.scaleX(), domain.scaleY(),
-		     domain.offsetX(), domain.offsetY());
+		     domain.offsetX()-itsX0, domain.offsetY()-itsY0);
 }
   
 MeqMatrix MeqPolc::denormalize (const MeqMatrix& coeff) const
 {
   return normDouble (coeff,
 		     1/itsDomain.scaleX(), 1/itsDomain.scaleY(),
-		     -itsDomain.offsetX()/itsDomain.scaleX(),
-		     -itsDomain.offsetY()/itsDomain.scaleY());
+		     (itsX0-itsDomain.offsetX())/itsDomain.scaleX(),
+		     (itsY0-itsDomain.offsetY())/itsDomain.scaleY());
 }
   
 void MeqPolc::fillPascal()
