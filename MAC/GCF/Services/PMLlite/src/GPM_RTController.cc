@@ -242,8 +242,8 @@ GCFEvent::TResult GPMRTController::connected(GCFEvent& e, GCFPortInterface& /*p*
     {
       pData = ((char*)&e) + sizeof(GCFEvent);
       unsigned int scopeDataLength = Utils::unpackString(pData, scope);
-      string linkListData(pData + scopeDataLength, 
-        e.length - sizeof(GCFEvent) - scopeDataLength);
+      string linkListData(pData + scopeDataLength + Utils::SLEN_FIELD_SIZE, 
+        e.length - sizeof(GCFEvent) - scopeDataLength - Utils::SLEN_FIELD_SIZE);
       list<string> propertyList;
       LOFAR_LOG_INFO(PML_STDOUT_LOGGER, ( 
         "PI-REQ: Link properties %s on scope %s",
@@ -269,8 +269,8 @@ GCFEvent::TResult GPMRTController::connected(GCFEvent& e, GCFPortInterface& /*p*
     {
       pData = ((char*)&e) + sizeof(GCFEvent);
       unsigned int scopeDataLength = Utils::unpackString(pData, scope);
-      string unlinkListData(pData + scopeDataLength, 
-        e.length - sizeof(GCFEvent) - scopeDataLength);
+      string unlinkListData(pData + scopeDataLength + Utils::SLEN_FIELD_SIZE, 
+        e.length - sizeof(GCFEvent) - scopeDataLength - Utils::SLEN_FIELD_SIZE);
       LOFAR_LOG_INFO(PML_STDOUT_LOGGER, ( 
         "PI-REQ: Unlink properties %s on scope %s",
         unlinkListData.c_str(), 
