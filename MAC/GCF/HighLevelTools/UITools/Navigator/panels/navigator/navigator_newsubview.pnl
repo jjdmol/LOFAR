@@ -1,14 +1,15 @@
 V 10
 1
 LANG:1 18 Add Remove subview
-PANEL,40 57 460 133 N "_3DFace" 4
+PANEL,40 57 460 133 N "_3DFace" 5
 "$addView"
 "$configDatapoint"
 "$selectedElementDpType"
 "$selectedView"
+"$viewName"
 "main()
 {
-  DebugTN(\"New SubView: $addView,$selectedView,$configDatapoint,$selectedElementDpType:\",$addView,$selectedView,$configDatapoint,$selectedElementDpType);
+  DebugTN(\"New SubView: $addView,$viewName,$selectedView,$configDatapoint,$selectedElementDpType:\",$addView,$viewName,$selectedView,$configDatapoint,$selectedElementDpType);
 
   if($addView)
   {
@@ -150,9 +151,12 @@ LANG:1 2 OK
 {
   dyn_errClass err;
 
-  string subViewDpName = \"__nav_subview_\" + textFieldCaption.text;
+  string subViewName = $viewName + \"_\" + textFieldCaption.text;
+  strreplace(subViewName,\" \",\"-\");
+
+  string subViewDpName = \"__nav_subview_\" + subViewName;
   string configDpTypeName = dpTypeName($configDatapoint);
-  string configDpName = \"__nav_\" + $selectedElementDpType + \"_config_\" + textFieldCaption.text;
+  string configDpName = \"__nav_\" + $selectedElementDpType + \"_config_\" + subViewName;
   string viewConfigDpName = \"__nav_\" + $selectedElementDpType + \"_viewconfig\";
   
   if($addView)
