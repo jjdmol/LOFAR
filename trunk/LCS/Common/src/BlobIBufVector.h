@@ -20,31 +20,37 @@
 //#
 //# $Id$
 
-#ifndef COMMON_BLOBIBUFVECTOR_H
-#define COMMON_BLOBIBUFVECTOR_H
+#ifndef LOFAR_COMMON_BLOBIBUFVECTOR_H
+#define LOFAR_COMMON_BLOBIBUFVECTOR_H
+
+// \file BlobIBufVector
+// Input buffer for a blob using a vector.
 
 #include <Common/BlobIBufChar.h>
 #include <vector>
 
 namespace LOFAR {
 
-// This class can be used to read a blob from a vector of characters
-// (signed or unsigned).
+  // \addtogroup Common
+  // @{
 
-template<typename T>
-class BlobIBufVector : public BlobIBufChar
-{
-public:
-  // Construct from a vector.
-  explicit BlobIBufVector (const std::vector<T>& buffer)
-    : BlobIBufChar(&buffer[0], buffer.size()*sizeof(T))
-    {}
-
-  // Destructor.
-  virtual ~BlobIBufVector()
-    {}
-};
-
+  // This class can be used to read a blob from a vector of characters
+  // (signed or unsigned).
+  
+  template<typename T>
+    class BlobIBufVector : public BlobIBufChar
+    {
+    public:
+      // Construct from a vector.
+      explicit BlobIBufVector (const std::vector<T>& buffer)
+	: BlobIBufChar(&buffer[0], buffer.size()*sizeof(T))
+	{}
+      
+      // Destructor.
+      virtual ~BlobIBufVector()
+	{}
+    };
+  // @}
 } // end namespace
 
 #endif

@@ -20,44 +20,49 @@
 //#
 //# $Id$
 
-#ifndef COMMON_BLOBSTRINGTYPE_H
-#define COMMON_BLOBSTRINGTYPE_H
+#ifndef LOFAR_COMMON_BLOBSTRINGTYPE_H
+#define LOFAR_COMMON_BLOBSTRINGTYPE_H
+
+// \file BlobStringType
+//Define type for a blob string.
 
 #include <Common/Allocator.h>
 
 namespace LOFAR {
+  // \addtogroup Common
+  // @{
+  // A BlobStringType object defines how a blob is represented in a BlobString.
+  // See that class for more details.
+  
+  class BlobStringType
+    {
+    public:
+      // Allocate as a string<uchar> or by using raw memory with a char*.
+      // In case of char*, an allocator can be given (for heap or shared memory).
+      // By default a heap allocator is used.
+      explicit BlobStringType (bool useString,
+			       const LOFAR::Allocator& = LOFAR::HeapAllocator());
+      
+      BlobStringType (const BlobStringType& that);
+      
+      ~BlobStringType();
+      
+      BlobStringType& operator= (const BlobStringType& that);
 
-// A BlobStringType object defines how a blob is represented in a BlobString.
-// See that class for more details.
-
-class BlobStringType
-{
-public:
-  // Allocate as a string<uchar> or by using raw memory with a char*.
-  // In case of char*, an allocator can be given (for heap or shared memory).
-  // By default a heap allocator is used.
-  explicit BlobStringType (bool useString,
-			   const LOFAR::Allocator& = LOFAR::HeapAllocator());
-
-  BlobStringType (const BlobStringType& that);
-
-  ~BlobStringType();
-
-  BlobStringType& operator= (const BlobStringType& that);
-
-  // Use a string or not.
-  bool useString() const
-    { return itsUseString; }
-
+      // Use a string or not.
+      bool useString() const
+	{ return itsUseString; }
+      
   // Get the allocator
   LOFAR::Allocator& allocator()
     { return *itsAllocator; }
 
-private:
+    private:
   bool              itsUseString;
   LOFAR::Allocator* itsAllocator;
-};
-
+    };
+  
+  // @{
 } // end namespace
 
 #endif

@@ -20,8 +20,11 @@
 //#
 //# $Id$
 
-#ifndef COMMON_BLOBOBUFVECTOR_H
-#define COMMON_BLOBOBUFVECTOR_H
+#ifndef LOFAR_COMMON_BLOBOBUFVECTOR_H
+#define LOFAR_COMMON_BLOBOBUFVECTOR_H
+
+// \file BlobOBufVector 
+// Input buffer for a blob using a vector.
 
 #include <Common/BlobOBufChar.h>
 #include <Common/LofarLogger.h>
@@ -29,50 +32,53 @@
 
 namespace LOFAR {
 
-// This class is the BlobOBuffer that makes use of a vector object.
-// The vector can be static or dynamic. A static vector has a fixed
-// length and cannot grow. A dynamic vector can grow as needed.
-//
-// The class is templated. However, the template parameter can only be
-// a char or unsigned char. The constructor checks if sizeof(T)==1.
+  // \addtogroup Common
+  // @{
 
-template<typename T>
-class BlobOBufVector : public BlobOBufChar
-{
-public:
-  // Construct from a buffer with the given vector.
-  // If expandSize==0, the vector is static and cannot grow.
-  // The argument start can be used to append to an existing string.
-  // It keeps a pointer to the given vector object, so that should
-  // not be deleted before this object.
-  explicit BlobOBufVector (std::vector<T>& buffer,
-			   uint expandSize=1024, uint start=0)
-    : BlobOBufChar(&buffer[0], buffer.capacity(),
-		   expandSize, start, false),
-      itsVector (&buffer)
+  // This class is the BlobOBuffer that makes use of a vector object.
+  // The vector can be static or dynamic. A static vector has a fixed
+  // length and cannot grow. A dynamic vector can grow as needed.
+  //
+  // The class is templated. However, the template parameter can only be
+  // a char or unsigned char. The constructor checks if sizeof(T)==1.
+  
+  template<typename T>
+    class BlobOBufVector : public BlobOBufChar
     {
-      ASSERT(sizeof(T)==1);
-      ASSERT(start <= buffer.size());
-    }
-
-  // Destructor.
-  virtual ~BlobOBufVector()
-    {}
-
-private:
-  // Expand the capacity of the buffer to the given size.
-  virtual void doExpand (uint newReservedSize, uint newSize)
-  {
-    if (newReservedSize > itsVector->capacity()) {
-      itsVector->reserve (newReservedSize);
-      setBuffer (&((*itsVector)[0]));
-    }
-    itsVector->resize (newSize);
-  }
-
-  std::vector<T>* itsVector;
-};
-
+    public:
+      // Construct from a buffer with the given vector.
+      // If expandSize==0, the vector is static and cannot grow.
+      // The argument start can be used to append to an existing string.
+      // It keeps a pointer to the given vector object, so that should
+      // not be deleted before this object.
+      explicit BlobOBufVector (std::vector<T>& buffer,
+			       uint expandSize=1024, uint start=0)
+	: BlobOBufChar(&buffer[0], buffer.capacity(),
+		       expandSize, start, false),
+	itsVector (&buffer)
+	{
+	  ASSERT(sizeof(T)==1);
+	  ASSERT(start <= buffer.size());
+	}
+      
+      // Destructor.
+      virtual ~BlobOBufVector()
+	{}
+      
+    private:
+      // Expand the capacity of the buffer to the given size.
+      virtual void doExpand (uint newReservedSize, uint newSize)
+	{
+	  if (newReservedSize > itsVector->capacity()) {
+	    itsVector->reserve (newReservedSize);
+	    setBuffer (&((*itsVector)[0]));
+	  }
+	  itsVector->resize (newSize);
+	}
+      
+      std::vector<T>* itsVector;
+    };
+  // @}
 } // end namespace
 
 #endif

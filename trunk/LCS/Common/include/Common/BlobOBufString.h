@@ -20,8 +20,11 @@
 //#
 //# $Id$
 
-#ifndef COMMON_BLOBOBUFSTRING_H
-#define COMMON_BLOBOBUFSTRING_H
+#ifndef LOFAR_COMMON_BLOBOBUFSTRING_H
+#define LOFAR_COMMON_BLOBOBUFSTRING_H
+
+// \file BlobOBufString
+// Input buffer for a blob using a string.
 
 #include <Common/BlobOBufChar.h>
 #include <Common/BlobString.h>
@@ -29,32 +32,35 @@
 
 namespace LOFAR {
 
-// This class is the BlobOBuffer that makes use of a BlobString object.
-// The string can be static or dynamic. A static string has a fixed
-// length and cannot grow. A dynamic string can grow as needed.
+  // \addtogroup Common
+  // @{
 
-class BlobOBufString : public BlobOBufChar
-{
-public:
-  // Construct from a buffer with the given string.
-  // If expandSize==0, the string is static and cannot grow.
-  // The argument start can be used to append to an existing string.
-  // It keeps a pointer to the given BlobString object, so that should
-  // not be deleted before this object.
-  explicit BlobOBufString (BlobString& buffer,
-			   uint expandSize=1024, uint start=0);
-
-  // Destructor.
-  virtual ~BlobOBufString();
-
-private:
-  // Expand the capacity of the buffer to the given size.
-  virtual void doExpand (uint newReservedSize, uint newSize);
-
-
-  BlobString* itsString;
-};
-
+  // This class is the BlobOBuffer that makes use of a BlobString object.
+  // The string can be static or dynamic. A static string has a fixed
+  // length and cannot grow. A dynamic string can grow as needed.
+  
+  class BlobOBufString : public BlobOBufChar
+    {
+    public:
+      // Construct from a buffer with the given string.
+      // If expandSize==0, the string is static and cannot grow.
+      // The argument start can be used to append to an existing string.
+      // It keeps a pointer to the given BlobString object, so that should
+      // not be deleted before this object.
+      explicit BlobOBufString (BlobString& buffer,
+			       uint expandSize=1024, uint start=0);
+      
+      // Destructor.
+      virtual ~BlobOBufString();
+      
+    private:
+      // Expand the capacity of the buffer to the given size.
+      virtual void doExpand (uint newReservedSize, uint newSize);
+      
+      
+      BlobString* itsString;
+    };
+  // @}
 } // end namespace
 
 #endif

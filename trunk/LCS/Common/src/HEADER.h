@@ -20,10 +20,13 @@
 //#
 //#  $Id$
 
-#ifndef PACKAGE_FILENAME_H
-#define PACKAGE_FILENAME_H
+#ifndef LOFAR_PACKAGE__FILENAME_H
+#define LOFAR_PACKAGE_FILENAME_H
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
+
+// \file filename
+// one line description.
 
 //# Includes
 #include <otherpackage/file.h>
@@ -31,6 +34,8 @@
 namespace LOFAR
 {
 
+  // \addtogroup package
+  // @{
   //# Forward Declarations
   class forward;
 
@@ -40,6 +45,7 @@ namespace LOFAR
   {
   };
 
+  // @}
 } // namespace LOFAR
 
 #endif

@@ -20,8 +20,11 @@
 //#
 //# $Id$
 
-#ifndef COMMON_TIMER_H
-#define COMMON_TIMER_H
+#ifndef LOFAR_COMMON_TIMER_H
+#define LOFAR_COMMON_TIMER_H
+
+// \file Timer
+// Accurate timer
 
 #include <cstdlib>
 #include <cstring>
@@ -33,6 +36,8 @@
 
 
 namespace LOFAR {
+  // \addtogroup Common
+  // @{
 
   // Low-overhead and high-resolution interval timer for use on i386 and x86_64
   // platforms, using the processor's timestamp counter that is incremented each
@@ -139,6 +144,7 @@ namespace LOFAR {
 
     ++ count;
   }
+  // @}
 }  // end namespace LOFAR
 
 

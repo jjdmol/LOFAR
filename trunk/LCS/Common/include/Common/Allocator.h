@@ -20,64 +20,69 @@
 //#
 //# $Id$
 
-#ifndef COMMON_ALLOCATOR_H
-#define COMMON_ALLOCATOR_H
+#ifndef LOFAR_COMMON_ALLOCATOR_H
+#define LOFAR_COMMON_ALLOCATOR_H
+
+// \file Allocator
+// Abstract base class for LOFAR memory (de)allocator.
 
 #include <unistd.h>
 
 namespace LOFAR {
+  // \addtogroup Common
+  // @{
 
-// This class abstracts the way in which memory is allocated and
-// deallocated. In this way it is possible to use different memory models
-// in a transparant way.
-// A virtual function mechanism is used because it must be possible
-// to make the choice at run-time.
-//
-// The normal allocation is on the heap, which is done by the concrete
-// class HeapAllocator.
-
-class Allocator
-{
-public:
-  Allocator()
-    {}
-
-  virtual ~Allocator();
-
-  // Clone the allocator.
-  virtual Allocator* clone() const = 0;
-
-  // Allocate memory.
-  virtual void* allocate (size_t nbytes) = 0;
-
-  // Deallocate memory.
-  virtual void deallocate (void* data) = 0;
-};
-
-
-
-// This class is a concrete allocation of an Allocator.
-// It allocates and deallocates memory on the heap.
-
-class HeapAllocator: public Allocator
-{
-public:
-  HeapAllocator()
-    {}
-
-  virtual ~HeapAllocator();
-
-  // Clone the allocator.
-  virtual HeapAllocator* clone() const;
-
-  // Allocate memory.
-  virtual void* allocate (size_t nbytes);
-
-  // Deallocate memory.
-  virtual void deallocate (void* data);
-};
-
-
+  // This class abstracts the way in which memory is allocated and
+  // deallocated. In this way it is possible to use different memory models
+  // in a transparant way.
+  // A virtual function mechanism is used because it must be possible
+  // to make the choice at run-time.
+  //
+  // The normal allocation is on the heap, which is done by the concrete
+  // class HeapAllocator.
+  
+  class Allocator
+    {
+    public:
+      Allocator()
+	{}
+      
+      virtual ~Allocator();
+      
+      // Clone the allocator.
+      virtual Allocator* clone() const = 0;
+      
+      // Allocate memory.
+      virtual void* allocate (size_t nbytes) = 0;
+      
+      // Deallocate memory.
+      virtual void deallocate (void* data) = 0;
+    };
+  
+  
+  
+  // This class is a concrete allocation of an Allocator.
+  // It allocates and deallocates memory on the heap.
+  
+  class HeapAllocator: public Allocator
+    {
+    public:
+      HeapAllocator()
+	{}
+      
+      virtual ~HeapAllocator();
+      
+      // Clone the allocator.
+      virtual HeapAllocator* clone() const;
+      
+      // Allocate memory.
+      virtual void* allocate (size_t nbytes);
+      
+      // Deallocate memory.
+      virtual void deallocate (void* data);
+    };
+  
+  // @}
 } // end namespace LOFAR
 
 #endif

@@ -20,8 +20,11 @@
 //#
 //#  $Id$
 
-#if !defined(COMMON_LOFAR_LOG4CPLUS_H)
-#define COMMON_LOFAR_LOG4CPLUS_H
+#ifndef LOFAR_COMMON_LOG4CPLUS_H
+#define LOFAR_COMMON_LOG4CPLUS_H
+
+// \file LofarLog4Cplus
+// Interface to the log4cplus logging package
 
 #include <lofar_config.h>
 #include <Common/lofar_iostream.h>
@@ -33,7 +36,7 @@
 #include <log4cplus/configurator.h>
 
 
-//# -------------------- Initialisation of the logger module -------------------
+//# -------------------- Initialisation of the logger module ---------------
 //#
 // Before you can use any function of the logger module you should initialize
 // the module with an appropriate properties-file.
@@ -224,7 +227,10 @@
 	
 //# ----------- implementation details tracer part -------------
 namespace LOFAR {
+// \addtogroup Common
+// @{
 void	initTraceModule(void);
+// @}
 }
 // Internal macro to define (or not) the initialisation routine of the
 // trace module.
@@ -309,11 +315,17 @@ void	initTraceModule(void);
 	}
 
 namespace LOFAR {
+// \addtogroup Common
+// @{
 void	lofarLoggerInitNode(void);
+// @}
 }
 
 //------------------------- LoggerReference class ---------------------------------
 namespace LOFAR {
+
+// \addtogroup Common
+// @{
 
 // The LoggerReference class is used for implementing faster logging
 // for the trace levels. The class holds a Logger which is in fact a
@@ -371,6 +383,7 @@ extern LoggerReference	theirTraceLoggerRef;
 // Function to return the 'mother' of all trace-loggers.
 inline LoggerReference&	getLogger() { return theirTraceLoggerRef; }
 
+// @}
 } // namespace LOFAR
 
 #endif // file read before

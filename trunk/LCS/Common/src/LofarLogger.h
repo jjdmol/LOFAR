@@ -20,8 +20,11 @@
 //#
 //#  $Id$
 
-#ifndef COMMON_LOFARLOGGER_H
-#define COMMON_LOFARLOGGER_H
+#ifndef LOFAR_COMMON_LOFARLOGGER_H
+#define LOFAR_COMMON_LOFARLOGGER_H
+
+// \file LofarLogger
+// Macro interface to the lofar logging package
 
 #include <lofar_config.h>
 #include <Common/StringUtil.h>
@@ -37,8 +40,11 @@
 
 namespace LOFAR 
 {
+  // \addtogroup Common
+  // @{
   // Define the LOFAR::Exception class.
   EXCEPTION_CLASS(AssertError,Exception)  
+    //@}
 }
 
 //# --------------------- Common definitions ---------------

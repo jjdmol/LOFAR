@@ -20,42 +20,48 @@
 //#
 //# $Id$
 
-#ifndef COMMON_BLOBIBUFSTREAM_H
-#define COMMON_BLOBIBUFSTREAM_H
+#ifndef LOFAR_COMMON_BLOBIBUFSTREAM_H
+#define LOFAR_COMMON_BLOBIBUFSTREAM_H
+
+// \file BlobIBufStream
+// Input buffer for a blob using an istream.
 
 #include <Common/BlobIBuffer.h>
 #include <iosfwd>
 
 namespace LOFAR {
 
-// This class is the BlobIBuffer that makes use of an istream object.
-// The istream can be any type (ifstream, istringstream, ...).
-// It can, for instance, be used to read from a file or a socket.
-
-class BlobIBufStream : public BlobIBuffer
-{
-public:
-  // Construct it with the underlying istream object.
-  explicit BlobIBufStream (std::istream&);
-
-  // Destructor.
-  virtual ~BlobIBufStream();
-
-  // Get the requested nr of bytes.
-  virtual uint get (void* buffer, uint nbytes);
-
-  // Get the position in the stream.
-  // -1 is returned if the stream is not seekable.
-  virtual int64 tellPos() const;
-
-  // Set the position in the stream.
-  // It returns the new position which is -1 if the stream is not seekable.
-  virtual int64 setPos (int64 pos);
-
-private:
-  std::streambuf* itsStream;
-};
-
+  // \addtogroup Common
+  // @{
+  
+  // This class is the BlobIBuffer that makes use of an istream object.
+  // The istream can be any type (ifstream, istringstream, ...).
+  // It can, for instance, be used to read from a file or a socket.
+  
+  class BlobIBufStream : public BlobIBuffer
+    {
+    public:
+      // Construct it with the underlying istream object.
+      explicit BlobIBufStream (std::istream&);
+      
+      // Destructor.
+      virtual ~BlobIBufStream();
+      
+      // Get the requested nr of bytes.
+      virtual uint get (void* buffer, uint nbytes);
+      
+      // Get the position in the stream.
+      // -1 is returned if the stream is not seekable.
+      virtual int64 tellPos() const;
+      
+      // Set the position in the stream.
+      // It returns the new position which is -1 if the stream is not seekable.
+      virtual int64 setPos (int64 pos);
+      
+    private:
+      std::streambuf* itsStream;
+    };
+  // @}
 } // end namespace
 
 #endif

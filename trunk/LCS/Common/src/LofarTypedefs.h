@@ -20,8 +20,11 @@
 //#
 //#  $Id$
 
-#ifndef COMMON_LOFARTYPEDEFS_H
-#define COMMON_LOFARTYPEDEFS_H
+#ifndef LOFAR_COMMON_LOFARTYPEDEFS_H
+#define LOFAR_COMMON_LOFARTYPEDEFS_H
+
+// \file LofarTypedefs
+//
 
 #include <complex>
 #include <unistd.h>
@@ -34,6 +37,10 @@ namespace LOFAR {
   // namespace.
 
   namespace TYPES {
+
+    // \addtogroup Common
+    // @{
+
 
     // Convenience shortcuts.
     typedef unsigned char        uchar;
@@ -55,6 +62,9 @@ namespace LOFAR {
     typedef unsigned short     uint16;
     typedef unsigned int       uint32;
     typedef unsigned long long uint64;
+
+    // @}
+
   }
 }
 

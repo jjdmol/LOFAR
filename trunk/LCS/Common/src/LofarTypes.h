@@ -20,8 +20,11 @@
 //#
 //#  $Id$
 
-#ifndef COMMON_LOFARTYPES_H
-#define COMMON_LOFARTYPES_H
+#ifndef LOFAR_COMMON_LOFARTYPES_H
+#define LOFAR_COMMON_LOFARTYPES_H
+
+// \file LofarTypes
+//
 
 #include <Common/LofarTypedefs.h>
 #include <lofar_config.h>
@@ -38,6 +41,9 @@
 
 namespace LOFAR
 {
+  // \addtogroup LOFAR
+  // @{
+
   //# Make the type names defined in LofarTypedefs.h available in the
   //# namespace LOFAR. 
 
@@ -63,6 +69,7 @@ namespace LOFAR
   using TYPES::uint16;
   using TYPES::uint32;
   using TYPES::uint64;
+  // @}
 }
 
 #ifdef MAKE_LOFAR_SYMBOLS_GLOBAL

@@ -20,71 +20,77 @@
 //#
 //# $Id$
 
-#ifndef COMMON_BLOBIBUFCHAR_H
-#define COMMON_BLOBIBUFCHAR_H
+#ifndef LOFAR_COMMON_BLOBIBUFCHAR_H
+#define LOFAR_COMMON_BLOBIBUFCHAR_H
+
+// \file BlobIBufChar
+// Input buffer for a blob using a plain pointer.
 
 #include <Common/BlobIBuffer.h>
 #include <Common/LofarLogger.h>
 
 namespace LOFAR {
 
-// This class is the BlobIBuffer that makes use of a character buffer,
-// i.e. a buffer of signed or unsigned chars.
+  // \addtogroup Common
+  // @{
 
-class BlobIBufChar : public BlobIBuffer
-{
-public:
-  // Construct from a buffer with the given length.
-  BlobIBufChar (const void* buffer, uint size);
-
-  // Destructor.
-  virtual ~BlobIBufChar();
-
-  // Get the requested nr of bytes.
-  virtual uint get (void* buffer, uint nbytes);
-
-  // Get the position in the buffer.
-  virtual int64 tellPos() const;
-
-  // Set the position in the buffer and return the new position.
-  virtual int64 setPos (int64 pos);
-
-  // Get the buffer containing the data.
-  // <br>The size of the data in the buffer can be obtained using the
-  // size() function.
-  const uchar* getBuffer() const;
-
-  // Get the size of the data in the buffer.
-  uint size() const;
-
-  // Get a typed pointer to an area in the buffer.
-  // It is meant to be used in combination with BlobIStream::getSpace.
-  template<typename U> const U* getPointer (uint position) const;
-
-private:
-  const uchar* itsBuffer;
-  uint         itsSize;
-  uint         itsPos;
-};
-
-
-inline const uchar* BlobIBufChar::getBuffer() const
-{
-  return itsBuffer;
-}
-inline uint BlobIBufChar::size() const
-{
-  return itsSize;
-}
-
-template<typename U>
-inline const U* BlobIBufChar::getPointer (uint position) const
-{
-  DBGASSERT(position < itsSize);
-  return (const U*)(itsBuffer + position);
-}
-
-
+  // This class is the BlobIBuffer that makes use of a character buffer,
+  // i.e. a buffer of signed or unsigned chars.
+  
+  class BlobIBufChar : public BlobIBuffer
+    {
+    public:
+      // Construct from a buffer with the given length.
+      BlobIBufChar (const void* buffer, uint size);
+      
+      // Destructor.
+      virtual ~BlobIBufChar();
+      
+      // Get the requested nr of bytes.
+      virtual uint get (void* buffer, uint nbytes);
+      
+      // Get the position in the buffer.
+      virtual int64 tellPos() const;
+      
+      // Set the position in the buffer and return the new position.
+      virtual int64 setPos (int64 pos);
+      
+      // Get the buffer containing the data.
+      // <br>The size of the data in the buffer can be obtained using the
+      // size() function.
+      const uchar* getBuffer() const;
+      
+      // Get the size of the data in the buffer.
+      uint size() const;
+      
+      // Get a typed pointer to an area in the buffer.
+      // It is meant to be used in combination with BlobIStream::getSpace.
+      template<typename U> const U* getPointer (uint position) const;
+      
+    private:
+      const uchar* itsBuffer;
+      uint         itsSize;
+      uint         itsPos;
+    };
+  
+  
+  inline const uchar* BlobIBufChar::getBuffer() const
+    {
+      return itsBuffer;
+    }
+  inline uint BlobIBufChar::size() const
+    {
+      return itsSize;
+    }
+  
+  template<typename U>
+    inline const U* BlobIBufChar::getPointer (uint position) const
+    {
+      DBGASSERT(position < itsSize);
+      return (const U*)(itsBuffer + position);
+    }
+  
+  // @}
 } // end namespace
 
 #endif

@@ -20,31 +20,36 @@
 //#
 //# $Id$
 
-#ifndef COMMON_BLOBARRAYHEADER_H
-#define COMMON_BLOBARRAYHEADER_H
+#ifndef LOFAR_COMMON_BLOBARRAYHEADER_H
+#define LOFAR_COMMON_BLOBARRAYHEADER_H
+
+// \file BlobArrayHeader
+// Standard array header for a blob.
 
 #include <Common/BlobHeader.h>
 #include <Common/TypeNames.h>
 #include <Common/LofarLogger.h>
 
 namespace LOFAR {
-
-// An array is a special blob, so it has an array header following
-// the standard blob header as defined in BlobHeader.
-// <br>This class defines the standard array header.
-// The class is not really used, but tells what the array header used in
-// BlobArray is like.
-
-template<class NDIM>
-class BlobArrayHeader
-{
-private:
-  char   itsAxisOrder;
-  uchar  itsNAlign;       // number of filler bytes for proper alignment
-  uint16 itsNdim;
-  uint32 itsSize[NDIM];   // shape
-};
-
+  // \addtogroup Common
+  // @{
+  
+  // An array is a special blob, so it has an array header following
+  // the standard blob header as defined in BlobHeader.
+  // <br>This class defines the standard array header.
+  // The class is not really used, but tells what the array header used in
+  // BlobArray is like.
+  
+  template<class NDIM>
+    class BlobArrayHeader
+    {
+    private:
+      char   itsAxisOrder;
+      uchar  itsNAlign;       // number of filler bytes for proper alignment
+      uint16 itsNdim;
+      uint32 itsSize[NDIM];   // shape
+    };
+  // @}
 } // end namespace
 
 #endif

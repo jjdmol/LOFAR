@@ -23,6 +23,9 @@
 #ifndef LOFAR_COMMON_BLOBEXCEPTION_H
 #define LOFAR_COMMON_BLOBEXCEPTION_H
 
+// \fileBlobException
+// Blob Exception class. 
+
 //# Includes
 #include <Common/Exception.h>
 
@@ -30,9 +33,10 @@
 
 
 namespace LOFAR {
-
+  // \addtogroup Common
+  // @{
   EXCEPTION_CLASS (BlobException, Exception);
-
+  // @}
 }
 
 #endif
