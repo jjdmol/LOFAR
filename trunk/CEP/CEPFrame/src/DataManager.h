@@ -165,7 +165,7 @@ inline void DataManager::setAutoTriggerOut(int channel,
 					  bool newflag) const {
   DbgAssertStr(channel >= 0, "output channel too low");
   DbgAssertStr(channel < itsNoutputs, "output channel too high");
-  itsDoAutoTriggerIn[channel] = newflag;
+  itsDoAutoTriggerOut[channel] = newflag;
 }
 
 } // namespace
