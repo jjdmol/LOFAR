@@ -67,9 +67,14 @@ void getFreq (MS& ms, int ddid, int& nrchan,
     throw AipsError("Channels must have equal spacings");
   }
   nrchan    = chanWidth.nelements();
-  stepFreq  = chanWidth(0);
-  startFreq = chanFreq(0) - stepFreq/2;
-  endFreq   = startFreq + nrchan*stepFreq;
+  stepFreq  = abs(chanWidth(0));
+  if (chanFreq(0) > chanFreq(nrchan-1)) {
+    startFreq = chanFreq(0) + stepFreq/2;
+    endFreq   = startFreq - nrchan*stepFreq;
+  } else {
+    startFreq = chanFreq(0) - stepFreq/2;
+    endFreq   = startFreq + nrchan*stepFreq;
+  }
 }
 
 void getPhaseRef (MS& ms, double& ra, double& dec)
@@ -85,9 +90,7 @@ void getPhaseRef (MS& ms, double& ra, double& dec)
   dec = angles.getBaseValue()(1);
 }
 
-void doIt (const string& in,
-	   const string& dataFile, const string& flagFile,
-	   const string& uvwFile, const string& column)
+void doIt (const string& in, const string& column)
 {
   // Open the table and make sure it is in the correct order.
   MS ms(in);
@@ -151,7 +154,7 @@ void doIt (const string& in,
     getFreq (ms, 0, nchan, startFreq, endFreq, stepFreq);
     getPhaseRef (ms, ra, dec);
     ASSERT (nchan == nfreq);
-    string name(in+".des");
+    string name(in+"/vis.des");
     std::ofstream ostr(name.c_str());
     BlobOBufStream bbs(ostr);
     BlobOStream bos(bbs);
@@ -164,33 +167,27 @@ void doIt (const string& in,
     ROMSAntennaColumns mssubc(mssub);
     bos << mssubc.position().getColumn();
     bos.putEnd();
-    bos.putStart("ms.desf", 1);
-    bos << dataFile << flagFile << uvwFile;
-    bos.putEnd();
   }
   cout << "      " << npol << " polarizations" << endl;
   cout << "      " << nfreq << " frequency channels" << endl;
   cout << "      " << a1.nelements() << " baselines" << endl;
   cout << "      " << tim2.nelements() << " times" << endl;
-  cout << " in file " << in << ".des" << endl;
-  cout << " using data file " << in << dataFile << endl;
-  cout << "       flag file " << in << flagFile << endl;
-  cout << "        uvw file " << in << uvwFile << endl;
+  cout << " in file " << in << "/vis.des" << endl;
 }
 
 int main(int argc, char** argv)
 {
   try {
-    if (argc < 5) {
-      cout << "Run as:  MSDesc in datafilename flag UVW [datacolumn]" << endl;
+    if (argc < 2) {
+      cout << "Run as:  MSDesc ms [datacolumn]" << endl;
       cout << "   datacolumn defaults to DATA" << endl;
       return 0;
     }
     string column("DATA");
-    if (argc > 5) {
-      column = argv[5];
+    if (argc > 2) {
+      column = argv[2];
     }
-    doIt (argv[1], argv[2], argv[3], argv[4], column);
+    doIt (argv[1], column);
   } catch (exception& x) {
     cout << "Unexpected expection: " << x.what() << endl;
     return 1;
