@@ -2,6 +2,12 @@
 #include "SimulatorParse.h"
 #include <iostream>
 
+#ifdef CORBA_
+int atexit(void (*function)(void))
+{
+  return 1;
+}
+#endif
 
 int main (int argc, char** argv)
 {
@@ -31,7 +37,7 @@ int main (int argc, char** argv)
 	simulator.baseDefine();
 	cout << endl;
 	cout << "Call Run" << endl;
-	simulator.run();
+	simulator.run(5000);
 	cout << endl;
 	cout << "Call Dump " << endl;
 	simulator.dump();

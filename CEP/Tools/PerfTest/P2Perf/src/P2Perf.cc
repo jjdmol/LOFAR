@@ -21,6 +21,9 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.4  2001/09/19 08:00:13  wierenga
+//  Added code to do performance tests.
+//
 //  Revision 1.3  2001/08/16 15:14:22  wierenga
 //  Implement GrowSize DH and WH for performance measurements. Timing code still needs to be added.
 //
@@ -87,7 +90,10 @@ void SeqSim::define(const ParamBlock& params)
   int    argc = 0;
   char** argv = NULL;
   int    divisor = -1;
+
+#ifdef CORBA_
   TH_Corba corbaProto;
+#endif
 
   unsigned int rank = TRANSPORTER::getCurrentRank();
   unsigned int size = TRANSPORTER::getNumberOfNodes();
@@ -135,7 +141,12 @@ void SeqSim::define(const ParamBlock& params)
 
     if (iStep > 0)
     {
+#ifdef CORBA_
       steps[iStep]->connectInput(steps[iStep-1], corbaProto);
+#else
+      steps[iStep]->runOnNode(iStep);
+      steps[iStep]->connectInput(steps[iStep-1]);
+#endif
     }
   }
   

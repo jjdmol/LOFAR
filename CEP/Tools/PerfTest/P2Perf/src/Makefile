@@ -5,10 +5,11 @@
 
 EXES	= Simulate
 LIBNAME = lofarsim
-LIBS    = $(DIRPREFIX)../BaseSim/$(ALIBDIR)/libbasesim.a -L/opt/inprise/vbroker/lib -lcosev_r -lcosnm_r -lvport_r -lorb_r -lpthread
+LIBS    += $(DIRPREFIX)../BaseSim/$(ALIBDIR)/libbasesim.a
 
 ifdef CORBA
 LIBS += $(DIRPREFIX)../BaseSim/$(ALIBDIR)/libth_corba.a 
+LIBS    += -L/usr/local/inprise/vbroker/lib -lvport_r -lorb_r -lpthread
 endif
 
 AIPSPP  = 1
