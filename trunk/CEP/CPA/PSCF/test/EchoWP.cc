@@ -55,25 +55,25 @@ EchoWP::~EchoWP()
 
 
 //## Other Operations (implementation)
-void EchoWP::opname ()
-{
-  //## begin EchoWP::opname%3C9094FF03D4.body preserve=yes
-  //## end EchoWP::opname%3C9094FF03D4.body
-}
-
 void EchoWP::init ()
 {
   //## begin EchoWP::init%3C7F884A007D.body preserve=yes
   WorkProcess::init();
   if( !pcount )
-    subscribe(MsgPing);
+    subscribe("Ping");
+  else
+    subscribe("MsgHello.EchoWP");
   //## end EchoWP::init%3C7F884A007D.body
 }
 
 void EchoWP::start ()
 {
   //## begin EchoWP::start%3C7E4AC70261.body preserve=yes
-  sendPing();
+  WorkProcess::start();
+  if( pcount<0 )
+    addTimeout(5.0,0);
+  else if( pcount>0 )
+    sendPing();
   //## end EchoWP::start%3C7E4AC70261.body
 }
 
@@ -110,6 +110,14 @@ int EchoWP::receive (MessageRef& mref)
   }
   return Message::ACCEPT;
   //## end EchoWP::receive%3C7E49AC014C.body
+}
+
+int EchoWP::timeout (const HIID &)
+{
+  //## begin EchoWP::timeout%3C98CB600343.body preserve=yes
+  sendPing();
+  return Message::ACCEPT;
+  //## end EchoWP::timeout%3C98CB600343.body
 }
 
 // Additional Declarations

@@ -1,4 +1,5 @@
-#include "AID-Basic.h"
+#include "AID-DMI.h"
+#include "TID-DMI.h"
 #include "DataRecord.h"
     
 #define paddr(x) printf("=== " #x ": %08x\n",(int)&x)
