@@ -5,16 +5,16 @@
 \include{definitions}
 %\usepackage{amsmath,amsthm, amsfonts, amssymb, amsxtra,amsopn}
 %\usepackage{graphicx}
-%\usepackage{float}
+\usepackage{float}
 %\usepackage{times}
 %\usepackage{algorithmic}
 \usepackage[dvips]{hyperref}
 \usepackage{theorem}
 \DeclareGraphicsExtensions{.eps}
 
-\newtheorem{requirement}{Requirement}[subsection]
-\newtheorem{assumption}{Assumption}[section]
-\newtheorem{prerequisite}[enumi]{Prerequisite}
+\newfloat{assumption}{ht}{ass}[subsection]
+\newfloat{prerequisite}{ht}{pre}[subsection]
+\newfloat{requirement}{ht}{req}[subsection]
 
 % ------------------------  End of your preamble.
 \begin{document}
@@ -83,23 +83,24 @@
       \begin{prerequisite}
         A full fledged database management system (DBMS),
         object oriented or relational, must be available.
-        \label{pre:dbms}
+        \caption{DBMS\label{pre:dbms}}
       \end{prerequisite}
 
       \begin{prerequisite}
         The DBMS must be able to perform transaction based processing.
-        \label{pre:transactions}
+        \caption{transactions\label{pre:transactions}}
       \end{prerequisite}
 
       \begin{prerequisite}
         The DBMS should support table inheritance.
-        \label{pre:table-inheritance}
+        \caption{table inheritence\label{pre:table-inheritance}}
       \end{prerequisite}
 
       \begin{requirement}
+        \caption{Parameter distribution\label{req:parameter-distribution}}
         There must be a mechanism that can cleverly distribute
         parameters to any interested party upon request by the
-        originator.\label{req:parameter-distribution}
+        originator.
       \end{requirement}
 
       \begin{figure}
@@ -187,12 +188,12 @@
       \begin{assumption}
         There is a measurement-set package in AIPS++ that will be used
         for manipulating measurement data
-        \label{ass:aips++}
+        \caption{measurement-set package\label{ass:aips++}}
       \end{assumption}
 
       \begin{prerequisite}
-        A package for manipulation of measurement sets.
-        \label{pre:aips++}
+        There must be a package for manipulation of measurement sets available.
+        \caption{measurement-set manipulation\label{pre:aips++}}
       \end{prerequisite}
 
     \subsection{The strategy}{A high level script}
@@ -235,7 +236,7 @@
 
       \begin{requirement}
         Protocol dialogues should be asynchronous.
-        \label{req:asynchronous}
+        \caption{asynchronous dialogues\label{req:asynchronous}}
       \end{requirement}
 
   \section{distributed hierarchical blackboard}
@@ -287,13 +288,13 @@
 
       \begin{assumption}
         The number of dimensions in a measurement set is four.
-        \label{ass:dimensions}
+        \caption{dimensions\label{ass:dimensions}}
       \end{assumption}
 
       \begin{assumption}
         Data can be partitioned over the dimensions in the dataset,
         without disturbing the self-calibration process.
-        \label{ass:partitioning}
+        \caption{data partitioning\label{ass:partitioning}}
       \end{assumption}
 
       These are.
@@ -323,7 +324,7 @@
 
       \begin{assumption}
         It isn't necessary to divide along a dimension more then once.
-        \label{ass:devision}
+        \caption{data partitioning 2\label{ass:devision}}
       \end{assumption}
 
     \subsection{components}
@@ -359,7 +360,7 @@
           \begin{requirement}
             A watcher has to be able to make a tristate decision on
             which of two threads is leading to desirable results.
-            \label{req:no-decision}
+            \caption{tristate decisions\label{req:no-decision}}
           \end{requirement}
 
         \paragraph{more complex watchers}
@@ -371,7 +372,7 @@
           \begin{requirement}
             A watcher should be able to see a possibility to merge the
             results of two solution threads.
-            \label{req:merge}
+            \caption{thread merging\label{req:merge}}
           \end{requirement}
 
   \section{logistical database}
@@ -383,7 +384,7 @@
 
       The data, resulting from an observation will be several TB in
       volume
-      \hyperlink{LOFAR-ASTRON-MEM-035}{[SCH02]}. To
+      \hyperlink{bib:LOFAR-ASTRON-MEM-035}{[SCH02]}. To
       conveniently handle this it will have to be partitioned. To
       handle part of the data a specialised sub-cluster will be
       defined. (see \hyperlink{fig:bb.subcluster}{Figure 1}).
@@ -425,21 +426,21 @@
 	\item 
 
           "time" is a time range this blackboard is concerned with.
-          \begin{assumption}
-            There are no time-gaps in a measurement set.
-            \label{ass:time-gaps}
-          \end{assumption}
+          \begin{requirement}
+            It must be possible to handle time-gaps in a measurement set.
+            \caption{time gaps\label{req:time-gaps}}
+          \end{requirement}
 
 	\item 
 
           "frequency" is the frequency range or band this blackboard
           is concerned with.
 
-          \begin{assumption}
-            There is a single continuous band of frequencies in a
+          \begin{requirement}
+            It must be possible to handle multiple bands of frequencies in a
             measurement set.
-            \label{ass:one-band}
-          \end{assumption}
+            \caption{frequency bands\label{req:frequency-bands}}
+          \end{requirement}
 
 	\item 
 
@@ -575,17 +576,14 @@
       \includegraphics[]{../figures/control-hierarchy.eps}
     \end{figure}
 
-    \subsection{extra figures}
     \begin{figure}
       \includegraphics[]{../figures/fork.eps}
     \end{figure}
 
-    \subsection{extra figures}
     \begin{figure}
       \includegraphics[]{../figures/solve-step.eps}
     \end{figure}
 
-    \subsection{extra figures}
     \begin{figure}
       \includegraphics[]{../figures/strategy-distribution.eps}
     \end{figure}
@@ -597,52 +595,58 @@
   \dbappendix{assumptions}
   \label{app:assumptions}\hypertarget{app:assumptions}{}
 
-    \begin{itemize}
-      \item [\ref{ass:aips++}]There is a measurement-set package in
-        AIPS++ that will be used for manipulating measurement data.
-      \item [\ref{ass:dimensions}]The number of dimensions in a
-        measurement set is four.
-      \item [\ref{ass:partitioning}]Data can be partitioned over the
-        dimensions in the dataset, without disturbing the
-        self-calibration process.
-      \item [\ref{ass:devision}]It isn't necessary to divide along a
-        dimension more then once.
-      \item [\ref{ass:time-gaps}]There are no time-gaps in a
-        measurement set.
-      \item [\ref{ass:one-band}]There is a single continuous band of
-        frequencies in a measurement set.
-    \end{itemize}
+    \listof{assumption}{}
+
+%    \begin{itemize}
+%      \item [\ref{ass:aips++}]There is a measurement-set package in
+%        AIPS++ that will be used for manipulating measurement data.
+%      \item [\ref{ass:dimensions}]The number of dimensions in a
+%        measurement set is four.
+%      \item [\ref{ass:partitioning}]Data can be partitioned over the
+%        dimensions in the dataset, without disturbing the
+%        self-calibration process.
+%      \item [\ref{ass:devision}]It isn't necessary to divide along a
+%        dimension more then once.
+%      \item [\ref{ass:time-gaps}]There are no time-gaps in a
+%        measurement set.
+%      \item [\ref{ass:one-band}]There is a single continuous band of
+%        frequencies in a measurement set.
+%    \end{itemize}
 
   \dbappendix{prerequisites}
   \label{app:prerequisites}\hypertarget{app:prerequisites}{}
 
-    \begin{itemize}
-      \item [\ref{pre:dbms}]A full fledged database management system
-        (DBMS), object oriented or relational, must be available.
-      \item [\ref{pre:transactions}]The DBMS must be able to perform
-        transaction based processing.
-      \item [\ref{pre:table-inheritance}]The DBMS should support table
-        inheritance.
-      \item [\ref{pre:aips++}]A package for manipulation of
-        measurement sets.
-    \end{itemize}
+    \listof{prerequisite}{}
+
+%    \begin{itemize}
+%      \item [\ref{pre:dbms}]A full fledged database management system
+%        (DBMS), object oriented or relational, must be available.
+%      \item [\ref{pre:transactions}]The DBMS must be able to perform
+%        transaction based processing.
+%      \item [\ref{pre:table-inheritance}]The DBMS should support table
+%        inheritance.
+%      \item [\ref{pre:aips++}]A package for manipulation of
+%        measurement sets.
+%    \end{itemize}
 
   \dbappendix{requirements-list}
   \label{app:requirements-list}\hypertarget{app:requirements-list}{}%
 
-    \begin{itemize}
-      \item [\ref{req:parameter-distribution}]There must be a
-        mechanism that can cleverly distribute parameters to any
-        interested party upon request by the originator.
-      \item [\ref{req:asynchronous}]The protocol dialogs, for the
-        communications between BlackBoard components, should be
-        asynchronous.
-      \item [\ref{req:no-decision}]A simple watcher has to be able to
-        make a tristate decision on which of two threads is leading to
-        desirable results.
-      \item [\ref{req:merge}]A watcher should be able to see a
-        possibility to merge the results of two solution threads.
-    \end{itemize}
+   \listof{requirement}{}
+
+%    \begin{itemize}
+%      \item [\ref{req:parameter-distribution}]There must be a
+%        mechanism that can cleverly distribute parameters to any
+%        interested party upon request by the originator.
+%      \item [\ref{req:asynchronous}]The protocol dialogs, for the
+%        communications between BlackBoard components, should be
+%        asynchronous.
+%      \item [\ref{req:no-decision}]A simple watcher has to be able to
+%        make a tristate decision on which of two threads is leading to
+%        desirable results.
+%      \item [\ref{req:merge}]A watcher should be able to see a
+%        possibility to merge the results of two solution threads.
+%    \end{itemize}
 
   \dbappendix{revision log}
   \label{app:revision-log}\hypertarget{app:revision-log}{}%
@@ -672,13 +676,13 @@
     \bibitem[SCH02]{LOFAR-ASTRON-MEM-035}
       \emph{CEP Requirements Analysis, Architectural Design and
       Description} , Kjeld van der Schaaf, Copyright \copyright{} 2002
-      ASTRON. \label{LOFAR-ASTRON-MEM-035}
+      ASTRON. \label{bib:LOFAR-ASTRON-MEM-035}
 
     \bibitem[HOO03]{LOFAR-ASTRON-MEM-096}
       \emph{The use of the Blackboard architectural pattern, in the LOFAR Central Processor, for the selfcal control system},
       D.\ Hoogland,
       Copyright \copyright{} 2003 ASTRON.
-      \label{LOFAR-ASTRON-MEM-096}
+      \label{bib:LOFAR-ASTRON-MEM-096}
 
   \end{thebibliography}
 
