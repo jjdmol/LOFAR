@@ -4,7 +4,7 @@
 #define FSIZE 1
 #define NSTATIONS 100
 #define TSIZE 1
-#define NBEAMLETS 128
+#define NBEAMLETS 8
 #define BFBW 256
 #define NVis (BFBW/FSIZE)
 #define TFACTOR (BFBW/FSIZE)

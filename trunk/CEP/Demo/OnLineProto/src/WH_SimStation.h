@@ -23,6 +23,8 @@
 #ifndef ONLINEPROTO_WH_SIMSTATION_H
 #define ONLINEPROTO_WH_SIMSTATION_H
 
+#define NINPUT_BEAMLETS 128
+
 #include <lofar_config.h>
 
 #include "CEPFrame/WorkHolder.h"

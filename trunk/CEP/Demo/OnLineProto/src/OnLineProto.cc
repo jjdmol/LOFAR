@@ -127,14 +127,20 @@ void OnLineProto::define(const KeyValueMap& params)
   cout << "Number of Beamlets : " << NBeamlets << endl;
 
   for (int s=0; s < NStations; s++) {
-    sprintf (str, "%d", s+1);
     // ToDo: pass stationID, freq offset etc. to DH
-    myWHStations[s] = new WH_SimStation("noname",  // name,
-					myMac.getNumberOfBeamlets(),  // nout
-					string("/home/gerdes/temp/signal_")+str+string(".txt"),
-					myMac,
-					s);
-
+    if (s==0){
+      myWHStations[s] = new WH_SimStation("noname",  // name,
+					  myMac.getNumberOfBeamlets(),  // nout
+					  string("/home/gerdes/temp/signal_1.txt"),
+					  myMac,
+					  s);
+    } else {
+      myWHStations[s] = new WH_SimStation("noname",  // name,
+					  myMac.getNumberOfBeamlets(),  // nout
+					  string("/home/gerdes/temp/signal_2.txt"),
+					  myMac,
+					  s);
+    }
 
     myStationSteps[s] = new Step(myWHStations[s],"noname");
     myStationSteps[s]->runOnNode(0,0);
