@@ -26,11 +26,7 @@
 // \file TPersistentObject.h
 // Container class for making objects persistent.
 
-#include <lofar_config.h>
-
-#if !defined(HAVE_DTL)
-#error "DTL library is required"
-#endif
+//# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
 //# Includes
 #include <PL/PersistentObject.h>
@@ -57,8 +53,8 @@ namespace LOFAR
     {
     public:
 
-      // We need a default constructor, because we want to be able to create
-      // e.g. a Collection of TPersistentObject<T>. The default constructor
+      // We need a default constructor, because we want to be able to create,
+      // e.g., a Collection of TPersistentObject<T>. The default constructor
       // will create a default constructed object \c T on the free store,
       // which will be deleted when \c *this is destroyed.
       TPersistentObject() :

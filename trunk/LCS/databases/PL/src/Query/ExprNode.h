@@ -27,7 +27,7 @@
 // The node of a query expression.
 
 //# Includes
-#include <lofar_config.h>
+//# Never #include <config.h> or #include <lofar_config.h> in a header file!
 #include <iosfwd>
 
 namespace LOFAR
@@ -36,11 +36,11 @@ namespace LOFAR
   {
     namespace Query
     {
-      //# Forward Declarations
-      class Expr;
-
       // \addtogroup QueryExpr
       // @{
+
+      //# Forward Declarations
+      class Expr;
 
       // %ExprNode is an abstract base class that represents the node of an
       // expression query. We will need to derive specific expression node

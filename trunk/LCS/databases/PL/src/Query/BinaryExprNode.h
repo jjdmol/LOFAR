@@ -27,7 +27,7 @@
 // Binary expression node.
 
 //# Includes
-#include <lofar_config.h>
+//# Never #include <config.h> or #include <lofar_config.h> in a header file!
 #include <PL/Query/Expr.h>
 #include <PL/Query/ExprNode.h>
 #include <string>

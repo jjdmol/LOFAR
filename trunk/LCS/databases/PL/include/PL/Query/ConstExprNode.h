@@ -27,7 +27,7 @@
 // Constant expression nodes.
 
 //# Includes
-#include <lofar_config.h>
+//# Never #include <config.h> or #include <lofar_config.h> in a header file!
 #include <PL/Query/ExprNode.h>
 #include <string>
 

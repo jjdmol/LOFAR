@@ -20,7 +20,14 @@
 //#
 //#  $Id$
 
+#include <lofar_config.h>
+
+#if !defined(HAVE_DTL)
+#error "DTL library is required"
+#endif
+
 #include <PL/DBRepMeta.h>
+#include <dtl/BoundIO.h>
 
 namespace LOFAR
 {

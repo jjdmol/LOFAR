@@ -48,7 +48,7 @@ namespace LOFAR
     struct DBRepMeta;
 
     //
-    // PersistentObject is an abstract base class (i.e. interface) for
+    // %PersistentObject is an abstract base class (i.e.\ interface) for
     // persistent objects. Persistent objects are uniquely identified by their
     // ObjectId, which is stored in the so-called metadata. Apart from the
     // object-id, the metadata contain the object-id of the "owning"
@@ -56,7 +56,7 @@ namespace LOFAR
     // concurrent updates of the database, and the table name of the database
     // table that is associated with this persistent object.
     //
-    // PersistentObject could also act as a Virtual Proxy. This design offers
+    // %PersistentObject could also act as a Virtual Proxy. This design offers
     // the possibility to use lazy initialization for large (complex)
     // objects. However, this is not implemented yet.
     //

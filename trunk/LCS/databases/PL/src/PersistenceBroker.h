@@ -38,10 +38,10 @@ namespace LOFAR
     // \addtogroup PL
     // @{
 
-    // PersistenceBroker is responsible for handling (bulk) save and retrieve 
-    // operations on (a collection) of persistent objects. PersistenceBroker 
+    // %PersistenceBroker is responsible for handling (bulk) save and retrieve 
+    // operations on (a collection) of persistent objects. %PersistenceBroker 
     // "knows" in which database the data reside or must be saved. 
-    // PersistenceBroker provides transactions at the object level.
+    // %PersistenceBroker provides transactions at the object level.
     class PersistenceBroker
     {
     public:
