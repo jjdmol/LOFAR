@@ -31,7 +31,8 @@ include 'viewer.g'
 marker_template := [color=[value='green'], hashandles=F, drawhandles=F, type='marker', markerstyle=0, center=[x=[value=0, unit='pix'], y=[value=0, unit='pix']], coords='pix', linewidth=[value=1], size=[value=1]]
 text_template := [color=[value='green'], hashandles=F, drawhandles=F, type='text', fontsize=[value=18], text=[value='default'], center=[x=[value=0, unit='pix'], y=[value=0, unit='pix']], coords='pix']
 
-const imgannotator := function(fname, type='contour')
+const imgannotator := function(fname, type='contour',
+      colors="green red blue yellow purple orange")
 {
 	self   := [=];
 	public := [=];
@@ -41,8 +42,9 @@ const imgannotator := function(fname, type='contour')
 	#
 	# Construction starts here
 	# 
+	self.colors := colors;
 	self.shape_index := 1;
-	self.marker_index := 1;
+	self.marker_index := 0;
 
 	self.mdd := dv.loaddata(fname, type);
 	self.mdd.setoptions([axislabelswitch=T]);
@@ -54,7 +56,7 @@ const imgannotator := function(fname, type='contour')
 
 	# construction ends here
 
-	public.add_marker := function(ra, dec)
+	public.add_marker := function(index, ra, dec, updatemarker=T)
 	{
 		wider self;
 		a := self.annotator;
@@ -68,6 +70,7 @@ const imgannotator := function(fname, type='contour')
 		# Modify position and lock to World Coordinates again
 		#
 		opts:=a.getshapeoptions(self.shape_index)
+		opts.color.value:=self.colors[1+(index-1)%len(self.colors)];
 		opts.center.x.value:=ra;
 		opts.center.y.value:=dec;
 		opts.linewidth.value:=2;
@@ -77,13 +80,13 @@ const imgannotator := function(fname, type='contour')
 
 		self.shape_index +:= 1;
 
-		public.add_text(ra, dec, spaste(self.marker_index));
-		self.marker_index +:= 1;
+		public.add_text(index, ra, dec, spaste(self.marker_index));
+		if (updatemarker) self.marker_index +:= 1;
 
 		return T;
 	}
 
-	public.add_text := function(ra, dec, text='emtpy')
+	public.add_text := function(index, ra, dec, text='emtpy')
 	{
 		wider self;
 		a := self.annotator;
@@ -97,6 +100,7 @@ const imgannotator := function(fname, type='contour')
 		# Modify position and lock to World Coordinates again
 		#
 		opts:=a.getshapeoptions(self.shape_index)
+		opts.color.value:=self.colors[1+(index-1)%len(self.colors)];
 		opts.center.x.value:=ra;
 		opts.center.y.value:=dec;
 		opts.text.value:=text;
@@ -127,9 +131,12 @@ const imgannotator := function(fname, type='contour')
 
 imgannotator_demo := function()
 {
-	a := imgannotator('/aips++/wierenga/demo/michiel.demo.img', 'contour');
+	a := imgannotator('/aips++/wierenga/demo/michiel.demo.img',
+	     'contour', "red blue");
 
-	a.add_marker(2.734, 0.45379);
+	a.add_marker(1, 2.734, 0.45379, F);
+	a.add_marker(2, 2.73405, 0.45377);
+	a.add_marker(3, 2.73395, 0.45378);
 
 	return ref a;
 }
