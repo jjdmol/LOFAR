@@ -31,11 +31,14 @@
 
 #include <Transporter.h>
 
+namespace LOFAR
+{
+
 //# Forward declarations
 class DataHolder;
 class ParamHolder;
 
-class BaseDataHolder: public Transporter
+class BaseDataHolder
 {
 protected:
   struct DataPacket
@@ -168,7 +171,7 @@ public:
   /** Get a pointer to the Transport object used to send the data
       to/from the BaseDataHolder connected to this one.
   */
-  Transport& getTransport();
+  Transporter& getTransporter();
 
 protected:
   /** Set the pointer to the data packet and set the packet's size.
@@ -213,8 +216,8 @@ inline int BaseDataHolder::getMaxDataPacketSize(){
   return getDataPacketSize(); 
 }
 
-inline Transport& BaseDataHolder::getTransport()
-{ return *itsTransportPtr; }
+inline Transporter& BaseDataHolder::getTransporter()
+{ return *itsTransporter; }
 
 inline const BaseDataHolder::DataPacket& BaseDataHolder::getDataPacket() const
 { return *itsDataPacketPtr; }

@@ -26,9 +26,7 @@
 #include <Common/lofar_iostream.h>
 #include <stdexcept>
 
-#include "Transport.h"
 #include "DataHolder.h"
-#include <Common/Debug.h>
 
 namespace LOFAR
 {
