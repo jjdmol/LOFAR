@@ -55,7 +55,6 @@ class BeamServerTest : public Test
 {
 private:
     Beam*          m_beam[N_BEAMS];
-    SpectralWindow m_spw;
 
 public:
 
@@ -65,12 +64,14 @@ public:
      * SpectralWindow spw(10e6, 256*1e3, 80*(1000/250));
      */
     BeamServerTest() :
-	Test("BeamServerTest"),
-	m_spw(10e6, 256*1e3, 80*(1000/256))
+	Test("BeamServerTest")
 	{
 	  //cerr << "c";
 	  Beam::init(N_BEAMS, UPDATE_INTERVAL, COMPUTE_INTERVAL);
 	  Beamlet::init(N_BEAMLETS);
+
+	  SpectralWindow* window = new SpectralWindow(10e6, 256*1e3, 80*(1000/256), 0/*don't care*/);
+	  SpectralWindowConfig::getInstance().setSingle(window);
 	}
 
     void run()
@@ -98,7 +99,7 @@ public:
 	  }
 	  for (int i = 0; i < N_BEAMS; i++)
 	  {
-	      TESTC(0 != (m_beam[i] = Beam::allocate(m_spw, subbands)));
+	      TESTC(0 != (m_beam[i] = Beam::allocate(0, subbands)));
 	  }
 	}
 
@@ -142,7 +143,7 @@ public:
 
 	  subbands.clear();
 	  for (int i = 0; i < N_SUBBANDS_PER_BEAM; i++) subbands.insert(i);
-	  TESTC(0 == (beam = Beam::allocate(m_spw, subbands)));
+	  TESTC(0 == (beam = Beam::allocate(0, subbands)));
 
 	  deallocate();
 
@@ -160,7 +161,7 @@ public:
 	  {
 	      subbands.insert(i);
 	  }
-	  TESTC(0 == (m_beam[0] = Beam::allocate(m_spw, subbands)));
+	  TESTC(0 == (m_beam[0] = Beam::allocate(0, subbands)));
 
 	  STOP_TEST();
 	}
@@ -171,7 +172,7 @@ public:
 
 	  set<int> subbands;
 	  subbands.clear();
-	  TESTC(0 != (m_beam[0] = Beam::allocate(m_spw, subbands)));
+	  TESTC(0 != (m_beam[0] = Beam::allocate(0, subbands)));
 	  TESTC(m_beam[0]->deallocate() == 0);
 
 	  STOP_TEST();
@@ -187,7 +188,7 @@ public:
 	  ptime thetime = from_time_t(time(0)) + seconds(20);
 
 	  // allocate beam, addPointing, should succeed
-	  TESTC(0 != (m_beam[0] = Beam::allocate(m_spw, subbands)));
+	  TESTC(0 != (m_beam[0] = Beam::allocate(0, subbands)));
 	  TESTC(m_beam[0]->addPointing(Pointing(Direction(
 			    0.0, 0.0, Direction::J2000), thetime)) == 0);
 

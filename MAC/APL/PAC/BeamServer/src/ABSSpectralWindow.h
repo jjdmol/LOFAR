@@ -28,6 +28,8 @@
 #include <Common/LofarTypes.h>
 #include <sys/time.h>
 
+using namespace LOFAR;
+
 namespace ABS
 {
 
