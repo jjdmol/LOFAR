@@ -35,7 +35,7 @@
 using namespace blitz;
 
 WH_Projection::WH_Projection (const string& name, unsigned int nin, unsigned int nout,
-							  unsigned int nant, unsigned int maxnrfi)
+							  unsigned int nant, unsigned int maxnrfi, bool tapstream)
 : WorkHolder       (nin, nout, name, "WH_Projection"),
   itsInHolders     (0),
   itsOutHolders    (0),
@@ -46,7 +46,8 @@ WH_Projection::WH_Projection (const string& name, unsigned int nin, unsigned int
   itsDetectedRFIs  (nin - 3),
   itsWeight        (itsNrcu),
   itsV             (0,0),
-  itsA             (itsNrcu)
+  itsA             (itsNrcu),
+  itsTapStream     (tapstream)
 
 {
   char str[8];
@@ -65,6 +66,10 @@ WH_Projection::WH_Projection (const string& name, unsigned int nin, unsigned int
   for (unsigned int i = 0; i < nout; i++) {  // The resulting Weight vector
     sprintf (str, "%d",i);                      
     itsOutHolders[i] = new DH_SampleC (string("out_") + str, itsNrcu, 1);
+
+    if (itsTapStream) {
+      itsOutHolders[i]->setOutFile (string ("Proj_") + str + string(".dat"));
+    }
   }
 }
 
@@ -83,13 +88,14 @@ WH_Projection::~WH_Projection()
 
 WH_Projection* WH_Projection::make (const string& name) const
 {
-  return new WH_Projection (name, getInputs(), getOutputs(), itsNrcu, itsMaxRFI);
+  return new WH_Projection (name, getInputs(), getOutputs(), itsNrcu, itsMaxRFI, itsTapStream);
 }
 
 
 void WH_Projection::process()
 {
   if (getOutputs() > 0) {
+
 	if (itsRFISources.doHandle ()) {  
 	  // Get the number of detected RFI sources from the STA comp. (internally calc. by MDL)
 	  int NumberOfEigenVectors = (int)(itsNumberOfRFIs.getBuffer()[0]);
@@ -115,7 +121,7 @@ void WH_Projection::process()
 	}
 
 	if (itsInHolders[0]->doHandle ()) {
-	  // Get the steering vector form the weight determination comp. assume that only one will be put in.
+	  // Get the steering vector from the weight determination comp. assume that only one will be put in.
 	  LoVec_dcomplex steerv (itsInHolders[0]->getBuffer(), itsNrcu, duplicateData);
 	  itsA = steerv;
 	}
@@ -131,7 +137,6 @@ void WH_Projection::process()
 		itsWeight = itsA;
 	  }
 	}
-
 	// Copy output to the next step
 	for (int i = 0; i < getOutputs(); i++) {
 	  memcpy(itsOutHolders[i]->getBuffer(), itsWeight.data(), itsNrcu * sizeof(DH_SampleC::BufferType));
@@ -228,3 +233,4 @@ LoVec_dcomplex WH_Projection::vm_mult (const LoVec_dcomplex& A, const LoMat_dcom
   }
   return out;
 }
+

@@ -51,8 +51,10 @@ WH_BeamFormer::WH_BeamFormer (const string& name,
 	itsNbeam      (nbeam),
 	itsMaxNtarget (maxNtarget),
 	itsMaxNrfi    (maxNrfi),
+        itsTapStream  (tapstream),
 	sample        (nrcu),
-	itsTapStream  (tapstream)
+        itsBuffer     (0),
+        itsPos(0)
 {
   char str[8];
   // the number of inputs is equal to the number of reveiving elements
@@ -77,13 +79,19 @@ WH_BeamFormer::WH_BeamFormer (const string& name,
   }
 
   //DEBUG
-  itsTestVector.resize(itsNrcu, 25445);
-  if (name == "0") {
-	itsFileInput.open ("/home/alex/temp/test_vectorEssai.txt");
-	itsFileInput >> itsTestVector;
-  }
+//  itsTestVector.resize(itsNrcu, 25445);
+//    if (name == "0") {
+//      itsFileInput.open ("/home/chris/DG_input/test_vectorEssai.txt");
+//      itsFileInput >> itsTestVector;
+//    }
+
   handle = gnuplot_init ();
   iCount = 0;
+
+  // EXPERIMENT TOOLS
+  // Buffer size should depend on the particular experiment that is being run.
+  itsBuffer.resize(itsNrcu, 25445);
+  itsBuffer=0;
 }
 
 
@@ -125,11 +133,25 @@ WH_BeamFormer* WH_BeamFormer::make (const string& name) const
 void WH_BeamFormer::process()
 {
   if (getOutputs () > 0) {
+
+    // Fill the buffer to be able to calculate the spectrum
+    // Place the next incoming sample vector in the snapshot buffer 
+    // Keep a cylic buffer for the input snapshots
+    // We don't bother keeping it ordered.. Should not make any
+    // difference.
+    for (int i = 0; i < itsNrcu; i++) {
+      itsBuffer(i, itsPos) = itsInHolders[i]->getBuffer()[0];
+      // 	// DEBUG
+      // 	itsBuffer(i, itsPos) = itsTestVector(i, itsCount);
+    }
+    itsPos = (itsPos + 1) % itsBuffer.cols();
+
+
 	dcomplex temp;
 	for (int i = 0; i < itsNrcu; i++) {
-	  // 	  sample(i) = (dcomplex)itsInHolders[i]->getBuffer()[0]; 
+	  sample(i) = (dcomplex)itsInHolders[i]->getBuffer()[0]; 
 	  //DEBUG
-	  sample(i) = itsTestVector(i, iCount);
+	  //sample(i) = itsTestVector(i, iCount);
 	}
 	LoVec_dcomplex weight(itsWeight.getBuffer(), itsNrcu, duplicateData);   
 	
@@ -142,11 +164,12 @@ void WH_BeamFormer::process()
       // copy the sample to the outHolders
       itsOutHolders[j]->getBuffer ()[0] = output;
     }
-
-	string n = getName ();	
-	if (iCount++ % 25 == 0 && n == "0") {
-	  beamplot (handle, weight, itsTestVector, itsNrcu, 1);
-	}
+    
+    string n = getName ();	
+    if (iCount++ % 25 == 0 && n == "0" ) {
+      //      beamplot (handle, weight, itsBuffer, itsNrcu, 1);
+      //      spectrumplot(handle, itsBuffer, weight);
+    }
   }
 }
 
@@ -183,24 +206,25 @@ DataHolder* WH_BeamFormer::getOutHolder (int channel)
 }
 
 void WH_BeamFormer::beamplot (gnuplot_ctrl* handle, const LoVec_dcomplex& w, 
-							  const LoMat_dcomplex& skyScan, const int nrcu, const int seconds)
+			      const LoMat_dcomplex& skyScan,
+			      const int nrcu, const int seconds)
 {
   const int N = 180;                 // The resolution of the sky scan 
   int index = 0;	
   LoMat_dcomplex UVplane (N, N);
   LoMat_double UVpower (N, N);
   UVplane = 0;
-  
+
   for (int u = 0; u < N; u++) {
-	for (int v = 0; v < N; v++) {
-	  if (sqrt (pow ((2 * (double) u / N) - 1, 2) + pow ((2 * (double) v / N) - 1, 2)) <= 1) {
-		for (int k = 0; k < nrcu; k++) {		
-		  UVplane (u, v) += skyScan (k, index) * conj (w (k)); 
-		}
-		UVpower (u, v) = abs (UVplane (u, v));
-		index++;
-	  }
+    for (int v = 0; v < N; v++) {
+      if (sqrt (pow ((2 * (double) u / N) - 1, 2) + pow ((2 * (double) v / N) - 1, 2)) <= 1) {
+	for (int k = 0; k < nrcu; k++) {		
+	  UVplane (u, v) += skyScan (k, index) * conj (w (k)); 
 	}
+	UVpower (u, v) = abs (UVplane (u, v));
+	index++;
+      }
+    }
   }
   UVpower /= max (UVpower);
   
@@ -213,7 +237,36 @@ void WH_BeamFormer::beamplot (gnuplot_ctrl* handle, const LoVec_dcomplex& w,
 	  }
 	}
   }
-  
+   
   gnuplot_splot (handle, UVpower, "Beam pattern");
-  //  gnuplot_contour_plot (handle, UVpower, "Beam pattern");
+  //gnuplot_contour_plot (handle, UVpower, "Beam pattern");
 }
+
+void WH_BeamFormer::spectrumplot (gnuplot_ctrl* handle, const LoMat_dcomplex& buffer, 
+				  const LoVec_dcomplex& w)
+{
+  int nr = buffer.rows();
+  int nc = buffer.cols();
+  LoMat_dcomplex  o_spec (nr, nc); 
+  LoMat_dcomplex  b_spec (1, nc);
+  o_spec = 0;
+  b_spec = 0;
+
+  for (int i = 0; i < nr; i++) {
+    // power spectrum of input signal
+    o_spec (i, Range::all()) = (buffer(i, Range::all()) * 
+				   (2 * real(buffer(i, Range::all())) - buffer(i, Range::all()))) ;
+    // power spectrum of beamformed signal
+  }
+
+  for (int i = 0; i < nc; i++) {
+    b_spec(0, i) = sum( buffer(Range::all(), i) * w) ;
+  }
+  b_spec (0, Range::all()) = (buffer(0, Range::all()) * 
+  			      (2 * real(buffer(0, Range::all())) - buffer(0, Range::all()))) ;
+
+  gnuplot_splot(handle, sqrt(sqr(real( o_spec  )) + sqr(imag( o_spec ))) , "Title");
+}
+
+
+

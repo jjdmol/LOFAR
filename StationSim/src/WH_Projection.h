@@ -48,7 +48,8 @@ public:
 				 unsigned int nin, 
 				 unsigned int nout,
 				 unsigned int nant,
-				 unsigned int maxnrfi);
+				 unsigned int maxnrfi,
+		                 bool tapstream);
   
   virtual ~WH_Projection();
 
@@ -93,6 +94,7 @@ private:
   LoVec_dcomplex itsWeight;
   LoMat_dcomplex itsV;
   LoVec_dcomplex itsA;
+  bool itsTapStream;
 
   LoVec_dcomplex WH_Projection::getWeights (LoVec_dcomplex B, LoVec_dcomplex d) ;
   LoVec_dcomplex WH_Projection::getWeights (LoMat_dcomplex V, LoVec_dcomplex a) ;
