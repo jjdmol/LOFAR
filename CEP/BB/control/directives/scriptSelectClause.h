@@ -1,12 +1,14 @@
 #ifndef SCRIPTSELECTCLAUSE_H_HEADER_INCLUDED_C0B1F7D8
 #define SCRIPTSELECTCLAUSE_H_HEADER_INCLUDED_C0B1F7D8
 
+#include <string>
+
 //##ModelId=3F4DC5C401D4
 class scriptSelectClause
 {
  public:
     //##ModelId=3F4DD269003E
-  string id;
+  std::string id;
 
 };
 

@@ -4,6 +4,12 @@
 //##ModelId=3F4DC73102EE
 class SelectScriptID
 {
+   public:
+      void operator()(dtl::BoundIOs & position,
+		      scriptSelectClause &selectParam)
+      {
+         position[0] << selectParam.id;
+      }
 };
 
 

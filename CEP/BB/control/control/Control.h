@@ -9,7 +9,7 @@ class Control
 {
   public:
     //##ModelId=3F4CB6D80203
-    Control():blackboard((BlackBoard*)(0)),theDirective((Directive*)(0)){}
+    Control():blackboard((BlackBoard*)(0)),itsDirective((Directive*)(0)){}
     //##ModelId=3F3B90830399
     //##Documentation
     //## usually this method will be called by the parent controller or via
@@ -19,7 +19,7 @@ class Control
     //##ModelId=3F3B4FFD01E4
     BlackBoard *blackboard;
     //##ModelId=3F3B8FF502CE
-    Directive *theDirective;
+    Directive *itsDirective;
 };
 
 

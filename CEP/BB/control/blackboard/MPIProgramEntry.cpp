@@ -3,5 +3,5 @@
 
 void MPIProgramEntry::run()
 {
-  DEBUG(typeid(*this).name() << " is running");
+  DEBUG(std::string(typeid(*this).name()) + " is running");
 }

@@ -1,7 +1,7 @@
 #ifndef CONTROLLERFACTORY_H_HEADER_INCLUDED_C09100BC
 #define CONTROLLERFACTORY_H_HEADER_INCLUDED_C09100BC
 #include "Control.h"
-#include "DirectiveData.h"
+#include "directives/DirectiveData.h"
 #include "IntermediateLevelStrategy.h"
 #include "LowerStrategy.h"
 
@@ -10,14 +10,13 @@ class ControllerFactory
 {
   public:
     //##ModelId=3F6EC713008C
-    Control newController(DirectiveData data);
+    static Control& newController(Directive & dir);
 
     //##ModelId=3F6EC77A02EE
-    IntermediateLevelStrategy newStrategy();
+    static IntermediateLevelStrategy& newStrategy(Directive & dir);
 
     //##ModelId=3F6EC7B2032C
-    LowerStrategy newTactic(DirectiveData data);
-
+    static LowerStrategy& newTactic(Directive & dir);
 };
 
 

@@ -4,7 +4,7 @@
 #include "parser/selfparse.h"
 
 #define DEBUG(x) if(debug_flag_on) std::cout << x << std::endl;
-static bool debug_flag_on(true);
+static bool debug_flag_on(false);
 
 std::istream *selfparseStream;
 

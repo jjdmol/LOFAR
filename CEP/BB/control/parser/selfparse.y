@@ -14,12 +14,12 @@
 
 %}
 
-%debug
-%defines
+//%debug
+//%defines
     //%destructor
-%locations
+//%locations
 %pure-parser
-%verbose
+//%verbose
 
 
 %union {
@@ -99,7 +99,7 @@
 
 script :
          SCRIPT_TOKEN control_block {
-          printf("\nscript parsed:\n%s\nend of script\n",$2);
+  //          printf("\nscript parsed:\n%s\nend of script\n",$2);
           saveScript("callibrate_observation", $2);
        }
        | topbranch {
@@ -110,7 +110,7 @@ script :
           branch = $1;
        }
        definition_part {
-          printf("\nbranch-parsed:\n%s\ndefinition-part:\n%s\nend of parsed branch\n",$1,$3);
+	 //          printf("\nbranch-parsed:\n%s\ndefinition-part:\n%s\nend of parsed branch\n",$1,$3);
           saveScript($1, $3);
        }
        ;
@@ -122,7 +122,7 @@ part : defining_part {$$ = $1; }
 defining_part : PART_TOKEN definition_part {
    $$ = (char*)(malloc(strlen($2) + 8));
    sprintf($$,"part %s\n", $2);
-   fprintf(stderr,"defining-part-parsed:\n%s\nend of defining part",$2);
+   //   fprintf(stderr,"defining-part-parsed:\n%s\nend of defining part",$2);
    free ($2);
 }
               ;
@@ -131,7 +131,7 @@ definition_part : commandname control_block {
                    if(level == 1)
                    {
                       char * bn = strdup(calculateBrancheNumber());
-                      fprintf(stderr,"\ndefinition-commandname:\n%s\ncontrol block:\n%s\nend of definition part", $1, $2);
+		      //                      fprintf(stderr,"\ndefinition-commandname:\n%s\ncontrol block:\n%s\nend of definition part", $1, $2);
                       saveSubScript(bn, $1 , NULL , $2 );
                       $$ = bn;
                    }
@@ -147,7 +147,7 @@ definition_part : commandname control_block {
                    if(level == 1) /* replace and save the nested part */
                    {
                       char * bn = strdup(calculateBrancheNumber());
-                      fprintf(stderr,"\ndefinition-commandname:\n%s\nparameters:\n%s\ncontrol:\n%s\nend of definition part\n", $1, $2, $3);
+		      //                      fprintf(stderr,"\ndefinition-commandname:\n%s\nparameters:\n%s\ncontrol:\n%s\nend of definition part\n", $1, $2, $3);
                       saveSubScript(bn, $1 , $2 , $3 );
                       $$ = bn;
                    }
@@ -163,17 +163,17 @@ definition_part : commandname control_block {
 ;
 
 referencing_part : PART_TOKEN BRANCH {
-   printf("referencing part parsed: %s", $2);
+  //   printf("referencing part parsed: %s", $2);
    $$ = (char*)(malloc(strlen($2) + 8));
    sprintf($$,"part %s\n", $2);
 }
                  | PART_TOKEN REF {
-   printf("referencing part parsed: %s", $2);
+  //   printf("referencing part parsed: %s", $2);
    $$ = (char*)(malloc(strlen($2) + 8));
    sprintf($$,"part %s\n", $2);
 }
                  | PART_TOKEN REFBRANCH {
-   printf("referencing part parsed: %s", $2);
+		   //   printf("referencing part parsed: %s", $2);
    $$ = (char*)(malloc(strlen($2) + 8));
    sprintf($$,"part %s\n", $2);
 }
@@ -182,7 +182,7 @@ referencing_part : PART_TOKEN BRANCH {
 param_block : LBRACKET dimension tactic_params RBRACKET {
    $$ = (char*)(malloc(strlen($2)+strlen($3)+5));
    sprintf($$,"[%s %s]",$2,$3);
-   fprintf(stderr,"param-block:\n%s\nend of parameter block\n",$$);
+   //   fprintf(stderr,"param-block:\n%s\nend of parameter block\n",$$);
    free($3);
 }
              ;

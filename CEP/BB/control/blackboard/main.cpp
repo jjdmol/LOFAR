@@ -7,14 +7,17 @@
 #include <DTL.h>
 
 #include <iostream>
+#include <sstream>
 #include <string>
 #include <typeinfo>
+
+#include <getopt.h>
 
 //#include <mpi2c++/mpi++.h>
 #include <mpi.h>
 
 //#define DEBUG(x) if(debug) std::cout << " rank(" << ::rank << "): " << x << std::endl;
-
+unsigned long long TRACE::level = 1;
     //util vars
 int rank(-1);
 bool debug(true);
@@ -28,10 +31,13 @@ const char *BlackBoardName = "BlackBoard";
 const char *ControllerName = "Controller";
 const char *EngineName = "Engine";
 
-const char *connectString = "UID=bb;DSN=lofar16;";
+std::string dbuserid("bb");
+std::string dsn("lofar16");
+
+//const char *connectString;// = "UID=bb;DSN=lofar15;";
 
     //forward declarations util functions
-void connect(void);
+void connect(const char *);
 const std::string & getRole(const int rank);
 MPIProgramEntry *getObjectThatCanFulfill(const std::string &role);
 
@@ -115,9 +121,40 @@ int main( int ac, char ** av)
   MPI_Comm      comm = MPI_COMM_WORLD;
   MPI_Comm_rank(comm, &rank);
   //  int rank(MPI::COMM_WORLD.Get_rank());
-  DEBUG("My rank is: " << rank);
 
-   connect();
+   std::ostringstream os;
+   os << "My rank is: " << rank;
+   DEBUG(os.str());
+
+  int c;
+  static struct option long_options[] =
+  {
+    {"dbuser", 1, 0, 'u'},
+    {"dsn", 1, 0, 'd'},
+    {0, 0, 0, 0}
+  };
+
+  DEBUG("searching for options");
+
+  while((c = getopt_long (ac, av, "u:d:",
+		   long_options, NULL) ) != -1)
+  {
+    switch (c)
+    {
+    case 'u':
+      dbuserid = optarg;
+      std::cout << "dbuserid set to " << optarg << std::endl;
+      break;
+    case 'd':
+      dsn = optarg;
+      std::cout << "dsn set to " << optarg << std::endl;
+      break;
+    }
+  }
+
+  std::string connectString = "UID=" + dbuserid + ";DSN=" + dsn + ";";
+
+  connect(connectString.c_str());
        //<todo>How to handle none existent deploymentdata table?</todo>
 
        //<todo>MPI has been init'ed here</todo>
@@ -125,7 +162,7 @@ int main( int ac, char ** av)
    std::string role;
    role = getRole(rank);
 
-   DEBUG("My role is: " << role);
+   DEBUG(std::string("My role is: ") + role);
 
        /**
           <todo>add code to map the returned role to a implementation
@@ -171,20 +208,27 @@ const std::string & getRole(const int rank)
 
    DEBUG("accessing deployment-data..");
 
-   dtl::DBView<DeploymentData,RankClause> view(deploymentTableName,DeploymentBCA(),"WHERE rank = (?)",SelectOnRank());
+   dtl::DBView<DeploymentData,RankClause> view(deploymentTableName,
+					       DeploymentBCA(),
+					       "WHERE rank = (?)",
+					       SelectOnRank());
    DEBUG("creating iterator..");
 
    dtl::DBView<DeploymentData,RankClause>::select_iterator iter = view.begin();
    iter.Params().rank = rank;
 
-   DEBUG("looking for rank: " << rank);
+   std::ostringstream os;
+   os << "looking for rank: " << rank;
+   DEBUG(os.str());
 
-   DEBUG("Reading element #" << iter.GetLastCount());
+   os<<"Reading element #"<<iter.GetLastCount();
+   DEBUG(os.str());
+
    //   DeploymentData dat;
 
    if (iter != view.end())
    {
-      DEBUG("found: " << iter->role);
+      DEBUG(std::string("found: ") + std::string(iter->role));
 
           //<todo>What if more then one row can be returned? can "I" perform more then one role?</todo>
           //<todo>take good care of this former here memory leak</todo>
@@ -220,7 +264,7 @@ MPIProgramEntry *getObjectThatCanFulfill(const std::string &role)
    else
    {
       NoSuchBlackBoardComponentException *ex = new NoSuchBlackBoardComponentException(role);
-      DEBUG("throwing a " << typeid(NoSuchBlackBoardComponentException).name());
+      DEBUG(std::string("throwing a ") + typeid(NoSuchBlackBoardComponentException).name());
       throw *ex;
       
    }
@@ -230,13 +274,13 @@ MPIProgramEntry *getObjectThatCanFulfill(const std::string &role)
 
     // get connection
     // <todo>get connection string items from configuration</todo>
-void connect()
+void connect(const char * constr)
 {
    try {
       DEBUG("Connecting to database..");
       dtl::DBConnection &dbcon = dtl::DBConnection::GetDefaultConnection();
       DEBUG("Got default connection..");
-      dbcon.Connect(connectString);
+      dbcon.Connect(constr);
       DEBUG("connection started");
    }
    catch(dtl::DBException dbex)
