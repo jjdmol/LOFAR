@@ -26,7 +26,6 @@
 //# Includes
 #include <PL/PersistentObject.h>
 #include <loki/SmartPtr.h>
-#include <iostream>
 
 namespace LCS 
 {
@@ -71,6 +70,7 @@ namespace LCS
       explicit TPersistentObjectBase(T& t) : 
 	itsObjectPtr(&t)
       {
+        itsOwnerOid.set(ObjectId::NullId);
       }
 
       virtual ~TPersistentObjectBase() 
