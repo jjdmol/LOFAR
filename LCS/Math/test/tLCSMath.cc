@@ -27,79 +27,100 @@
 
 int main()
 {
-  {
-    const int n = 10000;
-    LoVec_double vec(n);
-    for (int i=0; i<n; i++) {
-      vec(i) = n-i-1;
+  try {
+    {
+      const int n = 10000;
+      LoVec_double vec(n);
+      for (int i=0; i<n; i++) {
+	vec(i) = n-i-1;
+      }
+      Stopwatch timer;
+      for (int j=0; j<100; j++) {
+	LCSMath::sort (vec);
+      }
+      cout << "100x LCSMath 10^4 " << timer.sdelta() << endl;
+      for (int i=0; i<n; i++) {
+	Assert (vec(i) == double(i));
+      }
     }
-    Stopwatch timer;
-    for (int j=0; j<100; j++) {
-      LCSMath::sort (vec);
+    {
+      const int n = 10000;
+      LoVec_double vec(n);
+      for (int i=0; i<n; i++) {
+	vec(i) = i;
+      }
+      Stopwatch timer;
+      for (int j=0; j<100; j++) {
+	LCSMath::sort (vec);
+      }
+      cout << "100x LCSMath order" << timer.sdelta() << endl;
+      for (int i=0; i<n; i++) {
+	Assert (vec(i) == double(i));
+      }
     }
-    cout << "100x LCSMath 10^4 " << timer.sdelta() << endl;
-    for (int i=0; i<n; i++) {
-      Assert (vec(i) == double(i));
+    {
+      const int n = 10000;
+      LoVec_double vec(n);
+      for (int i=0; i<n; i++) {
+	vec(i) = 0.;
+      }
+      Stopwatch timer;
+      for (int j=0; j<100; j++) {
+	LCSMath::sort (vec);
+      }
+      cout << "100x LCSMath equal" << timer.sdelta() << endl;
+      for (int i=0; i<n; i++) {
+	Assert (vec(i) == double(0));
+      }
     }
+    {
+      const int n = 100000;
+      LoVec_double vec(n);
+      for (int i=0; i<n; i++) {
+	vec(i) = n-i-1;
+      }
+      Stopwatch timer;
+      for (int j=0; j<100; j++) {
+	LCSMath::sort (vec);
+      }
+      cout << "100x LCSMath 10^5 " << timer.sdelta() << endl;
+      for (int i=0; i<n; i++) {
+	Assert (vec(i) == double(i));
+      }
+    }
+    {
+      const int n = 1000000;
+      LoVec_double vec(n);
+      for (int i=0; i<n; i++) {
+	vec(i) = n-i-1;
+      }
+      Stopwatch timer;
+      for (int j=0; j<10; j++) {
+	LCSMath::sort (vec);
+      }
+      cout << " 10x LCSMath 10^6 " << timer.sdelta() << endl;
+      for (int i=0; i<n; i++) {
+	Assert (vec(i) == double(i));
+      }
+    }
+    {
+      const int n = 1000000;
+      LoVec_double vec(n);
+      for (int i=0; i<n; i++) {
+	vec(i) = i;
+      }
+      Stopwatch timer;
+      for (int j=0; j<10; j++) {
+	LCSMath::sort (vec);
+      }
+      cout << " 10x LCSMath order" << timer.sdelta() << endl;
+      for (int i=0; i<n; i++) {
+	Assert (vec(i) == double(i));
+      }
+    }
+  } catch (...) {
+    cout << "Unexpected exception" << endl;
+    return 1;
   }
-  {
-    const int n = 10000;
-    LoVec_double vec(n);
-    for (int i=0; i<n; i++) {
-      vec(i) = i;
-    }
-    Stopwatch timer;
-    for (int j=0; j<100; j++) {
-      LCSMath::sort (vec);
-    }
-    cout << "100x LCSMath order" << timer.sdelta() << endl;
-    for (int i=0; i<n; i++) {
-      Assert (vec(i) == double(i));
-    }
-  }
-  {
-    const int n = 100000;
-    LoVec_double vec(n);
-    for (int i=0; i<n; i++) {
-      vec(i) = n-i-1;
-    }
-    Stopwatch timer;
-    for (int j=0; j<100; j++) {
-      LCSMath::sort (vec);
-    }
-    cout << "100x LCSMath 10^5 " << timer.sdelta() << endl;
-    for (int i=0; i<n; i++) {
-      Assert (vec(i) == double(i));
-    }
-  }
-  {
-    const int n = 1000000;
-    LoVec_double vec(n);
-    for (int i=0; i<n; i++) {
-      vec(i) = n-i-1;
-    }
-    Stopwatch timer;
-    for (int j=0; j<10; j++) {
-      LCSMath::sort (vec);
-    }
-    cout << " 10x LCSMath 10^6 " << timer.sdelta() << endl;
-    for (int i=0; i<n; i++) {
-      Assert (vec(i) == double(i));
-    }
-  }
-  {
-    const int n = 1000000;
-    LoVec_double vec(n);
-    for (int i=0; i<n; i++) {
-      vec(i) = i;
-    }
-    Stopwatch timer;
-    for (int j=0; j<10; j++) {
-      LCSMath::sort (vec);
-    }
-    cout << " 10x LCSMath order" << timer.sdelta() << endl;
-    for (int i=0; i<n; i++) {
-      Assert (vec(i) == double(i));
-    }
-  }
+  return 0;
 }

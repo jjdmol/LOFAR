@@ -61,7 +61,7 @@ namespace LCSMath
 {
   LoMat_dcomplex conj (const LoMat_dcomplex& aMatrix)
   {
-    return 2 * real(aMatrix) - aMatrix;
+    return LoMat_dcomplex (2. * real(aMatrix) - aMatrix);
   }
 
 
@@ -462,8 +462,8 @@ namespace LCSMath
 			  a(blitz::Range::all(), k).
 			      transpose(blitz::firstDim, blitz::secondDim)) ;
     }
-    ACM = ACM/nsh;
-    ACM = ACM-eye;
+    ACM = ACM / double(nsh);
+    ACM = ACM - eye;
     return ACM;
   }
 
