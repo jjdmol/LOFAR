@@ -2,7 +2,7 @@
 
 PVSS00ctrl -script libs/gcfpa-prep.ctl -proj $1
 if [ -r customPrepPVSSDB.ctl ]; then
-	cp *.ctl $LOFARHOME/3.0/$1/scripts
+	cp *.ctl $LOFARHOME/$1/scripts
 	PVSS00ctrl -script customPrepPVSSDB.ctl -proj $1
-	rm -f $LOFARHOME/3.0/$1/scripts/customPrepPVSSDB.ctl
+	rm -f $LOFARHOME/$1/scripts/customPrepPVSSDB.ctl
 fi
