@@ -23,5 +23,5 @@ Check in of 12/12/03:
   * Meq::Parm:
     initrec.table_name!
     initrec.parm_name   (optional, node name used by default)
-  
+    
 (Changes relative to 08/12/03)

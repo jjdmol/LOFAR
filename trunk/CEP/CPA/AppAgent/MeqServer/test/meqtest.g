@@ -186,7 +186,7 @@ const state_test_init := function ()
   mqs.setdebug("MeqNode MeqForest MeqSink MeqSpigot",5);
   mqs.setdebug("MeqNode MeqForest MeqSink MeqSpigot",5);
   mqs.setdebug("MeqServ MeqVisHandler",5);
-  mqs.setdebug("Glish",3);
+  mqs.setdebug("Glish",5);
   mqs.setdebug("meqserver",1);
   # initialize meqserver
   mqs.init([output_col="PREDICT"],wait=T);
