@@ -69,10 +69,9 @@ solver := function (suspend=F,verbose=1)
                 rec=payload);
   }
   
-  const public.init := function ( input=[=],output=[=] )
+  const public.init := function ( initrec=[=],input=[=],output=[=] )
   {
     wider public;
-    initrec := [=];
     initrec.input := input;
     initrec.output := output;
     initrec.control := [=];
@@ -185,12 +184,19 @@ whenever solv.agentref()->* do
 test := function ()
 {
   print "Starting solver";
-  inputrec := [ ms_name = 'test.ms',data_column_name = 'DATA', tile_size = 10 ];
+  inputrec := [ ms_name = 'demo.MS',data_column_name = 'MODEL_DATA',
+	        tile_size = 1];
   inputrec.selection :=  [ ddid_index = 1, field_index = 1, 
       channel_start_index = 1, channel_end_index = 10,
-      selection_string = 'ANTENNA1 == 1 && ANTENNA2 == 2' ];
+      selection_string = 'ANTENNA1 in [0:2] && ANTENNA2 in [0:2]' ];
   outputrec := [ write_flags = F ];
-  solv.init(input=inputrec,output=outputrec);
+  rec := [domain_size = 3600,               # 1-hr domains
+	  mep_name = 'demo.MEP',
+	  gsm_name = 'demo_gsm.MEP',
+	  calcuvw = F,
+	  modeltype = 'LOFAR'];
+  solv.init(initrec=rec,input=inputrec,output=outputrec);
+  solv.solve([iter_step=1, niter=2, max_iter=2,
+	      solvableparm="{RA,DEC,StokesI}.*", solvableflag=T,
+	      peelnrs=1, prednrs=[2], when_max_iter=[=]]);
 }
-
-

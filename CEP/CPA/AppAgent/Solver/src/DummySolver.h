@@ -123,7 +123,7 @@ private:
 		    int antMode,
 		    const vector<bool>& corrSel);
 
-  void solve (bool useSVD);
+  void solve (bool useSVD, const DataRecord::Ref& header);
 
   void saveParms();
 

@@ -304,7 +304,7 @@ void DummySolver::run ()
         double converge = niter;
         // iterate the solution until stopped
         do {
-	  solve(useSVD);
+	  solve (useSVD, header);
           converge -= 1;
         }
         while( control().endIteration(converge) == AppState::RUNNING );
@@ -490,7 +490,7 @@ void DummySolver::solveSelect (const vector<int>& ant1,
   }
 }
 
-void DummySolver::solve (bool useSVD)
+void DummySolver::solve (bool useSVD, const DataRecord::Ref& header)
 {
   cdebug(1) << "solve; useSVD=" << useSVD << endl;
   AssertMsg (itsNrScid > 0, "No parameters are set to solvable");
@@ -509,6 +509,7 @@ void DummySolver::solve (bool useSVD)
       iter->dewr().changeFormat (tform);
     }
   }
+  ///  output().putHeader (header.copy());
 
   int nrpoint = 0;
   Timer timer;
