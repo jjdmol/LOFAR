@@ -43,11 +43,12 @@ namespace LOFAR
         oss << "DSN=" << aDsn << ";UID=" << aUid << ";PWD=" << aPwd << ";";
         DBConnection::GetDefaultConnection().Connect(oss.str());
 
-        // Enable auto-commit. This line should be removed, once we have
-        // transactions properly in place, because then we only want to do a
-        // commit when the whole transaction succeeds and not for every
-        // database access. For the time being this is the safest, but also
-        // the slowest way to do it.
+        // Enable auto-commit. 
+        // \todo This line should be removed, once we have transactions
+        // properly in place, because then we only want to do a commit when
+        // the whole transaction succeeds and not for every database
+        // access. For the time being this is the safest, but also the slowest
+        // way to do it.
         DBConnection::GetDefaultConnection().SetAutoCommit(true);
       }
       catch (DBException& e) {
