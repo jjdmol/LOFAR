@@ -96,6 +96,8 @@ private:
   unsigned int itsMaxRFI;
   unsigned int itsBufLength;
 
+  LoVec_dcomplex itsWeight;
+
   LoVec_dcomplex WH_Projection::getWeights (LoVec_dcomplex B, LoVec_dcomplex d) ;
   LoVec_dcomplex WH_Projection::getWeights (LoMat_dcomplex B, LoVec_dcomplex d) ;
 };
