@@ -121,6 +121,9 @@ void WH_PSS3::process()
   pNames[1] = inp->getParam2Name();
   pNames[2] = inp->getParam3Name();
 
+  DH_Solution* outp;
+  outp = (DH_Solution*)getDataManager().getOutHolder(0);
+
   if (inp->getSolutionNumber() != -1)
   {
     TRACER1("Use start solution number " << inp->getSolutionNumber());
@@ -133,14 +136,13 @@ void WH_PSS3::process()
     startSol = (DH_Solution*)getDataManager().getInHolder(1);
     putSolutionIntoVectors(startSol, startNames, startValues, startSource);
     strat.useParms(startNames, startValues,startSource); 
+    putVectorsIntoSolution(outp, startNames, startValues);
     getDataManager().readyWithInHolder(1);
   }
 
   vector<string> resPNames(MaxNumberOfParms);
   vector<double> resPValues(MaxNumberOfParms);
   int iterNo = -1;
-
-  DH_Solution* outp;
 
   // Execute the strategy until finished with all iterations, intervals 
   // and sources.
