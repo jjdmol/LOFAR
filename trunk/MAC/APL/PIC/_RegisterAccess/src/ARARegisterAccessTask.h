@@ -140,6 +140,18 @@ namespace ARA
                                             uint8  ffi1,
                                             uint8  ffi2);
       /**
+       * update MEP status properties 
+       */
+      void updateMEPStatusProperties(string scope,uint32 seqnr,
+                                                  uint8  error,
+                                                  uint8  ffi);
+      /**
+       * update SYNC status properties 
+       */
+      void updateSYNCStatusProperties(string scope,uint32 clock_count,
+                                                   uint32 count,
+                                                   uint32 errors);
+      /**
        * update fpga properties based on status bits
        */
       void updateFPGAproperties(string scope,uint8 status, uint8 temp);
@@ -153,7 +165,9 @@ namespace ARA
       void updateVersion(string scope, string version);
       
     private:
-    
+      void getBoardRelativeNumbers(int boardNr,int& rackNr,int& subRackNr,int& relativeBoardNr);
+      void getRCURelativeNumbers(int rcuNr,int& rackRelativeNr,int& subRackRelativeNr,int& boardRelativeNr,int& apRelativeNr,int& rcuRelativeNr);    
+      
       // member variables
       ARAAnswer   m_answer;
       
