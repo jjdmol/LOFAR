@@ -153,7 +153,7 @@ Retrieving tpoa2 (empty) from database:
 (0 rows)
 
 System call >>>./tA.in_sqld 5718796394818251450<<< returned : 0
-Retrieve collection of tpoa using query: WHERE (A.ITSINT=42)
+Retrieve collection of tpoa using query: WHERE A.ITSINT=42
 Found 1 matches ...
 >>>
 
