@@ -385,6 +385,7 @@ namespace LOFAR {
 
 // The macro THROW first sends a logrequest to logger <module>.EXCEPTION
 // before executing the real throw.
+#undef THROW
 #define THROW(exc,stream) { \
 	std::ostringstream	oss;	\
 	oss << stream;				\
