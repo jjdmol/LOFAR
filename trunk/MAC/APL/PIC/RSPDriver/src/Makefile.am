@@ -101,6 +101,8 @@ RSPDriver_SOURCES = \
 	GetWeightsCmd.cc \
 	SetSubbandsCmd.h \
 	SetSubbandsCmd.cc \
+	GetSubbandsCmd.h \
+	GetSubbandsCmd.cc \
 	GetStatusCmd.h \
 	GetStatusCmd.cc \
 	\

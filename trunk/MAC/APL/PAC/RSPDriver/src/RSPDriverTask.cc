@@ -30,6 +30,7 @@
 #include "SetWeightsCmd.h"
 #include "GetWeightsCmd.h"
 #include "SetSubbandsCmd.h"
+#include "GetSubbandsCmd.h"
 #include "GetStatusCmd.h"
 #include "BWWrite.h"
 #include "BWRead.h"
@@ -45,12 +46,15 @@
 #include "WriteReg.h"
 #include "Cache.h"
 #include "RawEvent.h"
+#include "MEPHeader.h"
 #include <blitz/array.h>
 
 #undef PACKAGE
 #undef VERSION
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
+
+#define ETHERTYPE_EPA 0x10FA
 
 using namespace RSP;
 using namespace std;
@@ -79,6 +83,9 @@ RSPDriverTask::RSPDriverTask(string name)
 
     m_board[boardid].init(*this, name, GCFPortInterface::SAP, EPA_PROTOCOL,true /*raw*/);
     m_board[boardid].setAddr(GET_CONFIG_STRING("IF_NAME"), macaddrstr);
+
+    // set ethertype to 0x10FA so Ethereal can decode EPA messages
+    m_board[boardid].setEtherType(ETHERTYPE_EPA);
   }
 
   addAllSyncActions();
@@ -491,10 +498,16 @@ GCFEvent::TResult RSPDriverTask::enabled(GCFEvent& event, GCFPortInterface& port
 
 bool RSPDriverTask::isBoardPort(GCFPortInterface& port)
 {
+#if 1
+  if (   &port >= &m_board[0]
+      && &port <= &m_board[GET_CONFIG("N_RSPBOARDS", i)])
+    return true;
+#else
   for (int i = 0; i < GET_CONFIG("N_RSPBOARDS", i); i++)
   {
     if (&port == &m_board[i]) return true;
   }
+#endif
   
   return false;
 }
@@ -504,6 +517,18 @@ GCFEvent::TResult RSPDriverTask::clock_tick(GCFPortInterface& port)
   GCFEvent::TResult status = GCFEvent::NOT_HANDLED;
 
   uint8 count = 0;
+
+  if (1 == GET_CONFIG("SOFTPPS", i))
+  {
+    // Send SoftPPS signal to all boards
+    EPAWgsoftppsEvent softpps;
+    MEP_WGSOFTPPS(softpps.hdr);
+
+    for (int i = 0; i < GET_CONFIG("N_RSPBOARDS", i); i++)
+    {
+      m_board[i].send(softpps);
+    }
+  }
 	
   if (port.recv(&count, sizeof(uint8)) != 1)
   {
@@ -633,8 +658,33 @@ void RSPDriverTask::rsp_setsubbands(GCFEvent& event, GCFPortInterface& port)
   command->ack(Cache::getInstance().getFront());
 }
 
-void RSPDriverTask::rsp_getsubbands(GCFEvent& /*event*/, GCFPortInterface& /*port*/)
+void RSPDriverTask::rsp_getsubbands(GCFEvent& event, GCFPortInterface& port)
 {
+  GetSubbandsCmd* command = new GetSubbandsCmd(event, port, Command::READ);
+
+  if (!command->validate())
+  {
+    delete command;
+    
+    RSPGetsubbandsackEvent ack;
+    ack.timestamp = Timestamp(0,0);
+    ack.status = FAILURE;
+    port.send(ack);
+    return;
+  }
+  
+  // if null timestamp get value from the cache and acknowledge immediately
+  if ( (Timestamp(0,0) == command->getTimestamp())
+       && (true == command->readFromCache()))
+  {
+    command->setTimestamp(Cache::getInstance().getFront().getTimestamp());
+    command->ack(Cache::getInstance().getFront());
+    delete command;
+  }
+  else
+  {
+    (void)m_scheduler.enter(command);
+  }
 }
 
 void RSPDriverTask::rsp_setrcu(GCFEvent& /*event*/, GCFPortInterface& /*port*/)

@@ -68,7 +68,7 @@ void RCURead::sendrequest_status()
 
 GCFEvent::TResult RCURead::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
 {
-  uint8 global_blp = (getBoardId() * N_BLP) + getCurrentBLP();
+  uint8 global_blp = (getBoardId() * N_BLP) + getCurrentBLP() * 2;
 
   EPARcusettingsEvent rcusettings(event);
 

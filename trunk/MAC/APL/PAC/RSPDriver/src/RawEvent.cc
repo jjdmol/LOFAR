@@ -177,7 +177,26 @@ static unsigned short signal_lut[MEPHeader::MAX_PID + 1][MEPHeader::MAX_REGID + 
     },
   },
 
-  /* pid = 0x07 (RCU) */
+  /* pid = 0x07 (STSUB) */
+  {
+    /* reg = 0x00 (Mean) */
+    { 0,
+      EPA_STSTATS_READ, /* READ    */
+      EPA_STSTATS,      /* WRITE   */
+      EPA_STSTATS,      /* READRES */
+      EPA_READERR, /* READERR */
+    },
+
+    /* reg = 0x01 (Power) */
+    { 0,
+      EPA_STSTATS_READ, /* READ    */
+      EPA_STSTATS,      /* WRITE   */
+      EPA_STSTATS,      /* READRES */
+      EPA_READERR, /* READERR */
+    },
+  },
+
+  /* pid = 0x08 (RCU) */
   {
     /* reg = 0x00 (RCU Settings) */
     { 0,
@@ -262,7 +281,7 @@ GCFEvent::TResult RawEvent::dispatch(GCFTask& task, GCFPortInterface& port)
 
     if (size - offset > 0)
     {
-      LOG_WARN(formatString("discarding %d bytes", size - offset));
+      LOG_DEBUG(formatString("discarding %d bytes", size - offset));
     }
 
     //

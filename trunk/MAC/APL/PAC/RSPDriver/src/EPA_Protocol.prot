@@ -159,6 +159,18 @@ event = {
     name = "rcu";
     type = "RCUStatus[EPA_Protocol::N_BLP]";
   };
+  param = 
+  {
+    // wraps every ~17 seconds (at 250Mhz)
+    name = "sample_seqnr";
+    type = "uint32";
+  };
+  param = 
+  {
+    // wraps every ~180 years
+    name = "sync_seqnr";
+    type = "uint32";
+  };
 };
 
 event = {
@@ -285,6 +297,17 @@ event = {
   param = {
     name = "sample";
     type = "int16[EPA_Protocol::N_USERSAMPLES]";
+  };
+};
+
+event = {
+  noheader;
+  signal = WGSOFTPPS;
+  dir = IN;
+  param = {
+    name = "hdr";
+    type = "EPA_Protocol::MEPHeader";
+    userdefined;
   };
 };
 
@@ -442,10 +465,11 @@ event = {
   noheader;
   signal = READERR;
   dir = OUT;
-//   param = {
-//     name = "dummy";
-//     type = "int";
-//   };
+  param = {
+    name = "hdr";
+    type = "EPA_Protocol::MEPHeader";
+    userdefined;
+  };
 };
 
 event = {
