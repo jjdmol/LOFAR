@@ -47,7 +47,7 @@ SetRCUCmd::SetRCUCmd(GCFEvent& event, GCFPortInterface& port, Operation oper)
 
 SetRCUCmd::~SetRCUCmd()
 {
-  if (isOwner()) delete m_event;
+  delete m_event;
 }
 
 void SetRCUCmd::ack(CacheBuffer& /*cache*/)

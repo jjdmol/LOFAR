@@ -47,7 +47,7 @@ GetWGCmd::GetWGCmd(GCFEvent& event, GCFPortInterface& port, Operation oper)
 
 GetWGCmd::~GetWGCmd()
 {
-  if (isOwner()) delete m_event;
+  delete m_event;
 }
 
 void GetWGCmd::ack(CacheBuffer& cache)

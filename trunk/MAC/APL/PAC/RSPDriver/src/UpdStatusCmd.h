@@ -75,11 +75,6 @@ namespace RSP
        */
       virtual bool validate() const;
 
-      /**
-       * Send failure ack.
-       */
-      void ack_fail();
-      
     private:
       UpdStatusCmd();
       RSPSubstatusEvent* m_event;

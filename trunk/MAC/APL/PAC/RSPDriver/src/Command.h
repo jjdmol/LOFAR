@@ -117,28 +117,19 @@ namespace RSP
        */
       bool operator<(const Command& other);
 
-      /*@{*/
-      /**
-       * Set/get owner
-       */
-      void setOwner(bool owner);
-      bool isOwner() const;
-      /*@}*/
-
     private:
       int16              m_period;
       GCFEvent*          m_event;
       GCFPortInterface*  m_port;
       Operation          m_operation;
-      bool               m_owner;
   };
 
   /**
-   * Comparison function to order a priority_queue of Command* pointers
+   * Comparison function to order a priority_queue of Ptr<Command>* pointers
    * as it is used in the Scheduler class.
    */
   struct Command_greater { 
-      bool operator() (Command*& x, Command*& y) const 
+      bool operator() (Ptr<Command>& x, Ptr<Command>& y) const 
       { return x->getTimestamp() > y->getTimestamp(); }
   };
 };

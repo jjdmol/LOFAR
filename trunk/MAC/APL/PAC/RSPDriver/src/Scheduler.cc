@@ -45,30 +45,10 @@ Scheduler::Scheduler()
 Scheduler::~Scheduler()
 {
   /* clear the various queues */
-  while (!m_later_queue.empty())
-  {
-    Command* c = m_later_queue.top();
-    delete c;
-    m_later_queue.pop();
-  }
-  while (!m_now_queue.empty())
-  {
-    Command* c = m_now_queue.top();
-    if (c->isOwner()) delete c;
-    m_now_queue.pop();
-  }
-  while (!m_periodic_queue.empty())
-  {
-    Command* c = m_periodic_queue.top();
-    delete c;
-    m_periodic_queue.pop();
-  }
-  while (!m_done_queue.empty())
-  {
-    Command* c = m_done_queue.top();
-    if (c->isOwner()) delete c;
-    m_done_queue.pop();
-  }
+  while (!m_later_queue.empty())    m_later_queue.pop();
+  while (!m_now_queue.empty())      m_now_queue.pop();
+  while (!m_periodic_queue.empty()) m_periodic_queue.pop();
+  while (!m_done_queue.empty())     m_done_queue.pop();
 
   for (map< GCFPortInterface*, vector<SyncAction*> >::iterator port = m_syncactions.begin();
        port != m_syncactions.end();
@@ -186,13 +166,14 @@ bool Scheduler::syncHasCompleted()
   return result;
 }
 
-void Scheduler::pqueue_remove_commands(pqueue& pq,
-				       GCFPortInterface& port,
-				       bool checkOwner,
-				       uint32 handle)
+int Scheduler::pqueue_remove_commands(pqueue& pq,
+				      GCFPortInterface& port,
+				      uint32 handle)
 {
+  int count = 0;
+  
   // copy pq
-  pqueue tmp = pq;
+  pqueue tmp(pq);
 
   // clear pq, it will be filled again in the next loop
   while (!pq.empty()) pq.pop();
@@ -200,35 +181,46 @@ void Scheduler::pqueue_remove_commands(pqueue& pq,
   while (!tmp.empty())
   {
     // pop item from the queue
-    Command* c = tmp.top();
+    Ptr<Command> c = tmp.top();
     tmp.pop();
 
     // if port matches, delete c, else push back onto pq
-    if ((c->getPort() == &port) && (0 == handle || (uint32)c == handle))
+    if ((c->getPort() == &port) && (0 == handle || &(*c) == (Command*)handle))
     {
-      if (!checkOwner || c->isOwner()) delete c;
+      count++;
+      // don't push back on pq, c will be deleted when it goes out of scope
     }
     else pq.push(c);
   }
+  
+  return count;
 }
 
-void Scheduler::cancel(GCFPortInterface& port)
+int Scheduler::cancel(GCFPortInterface& port)
 {
+  int count = 0;
+  
   // cancel all commands related to this port
   // irrespective of the queue they are in
 
-  pqueue_remove_commands(m_later_queue,    port, false);
-  pqueue_remove_commands(m_now_queue,      port, true);
-  pqueue_remove_commands(m_periodic_queue, port, false);
-  pqueue_remove_commands(m_done_queue,     port, true);
+  count += pqueue_remove_commands(m_later_queue,    port);
+  count += pqueue_remove_commands(m_now_queue,      port);
+  count += pqueue_remove_commands(m_periodic_queue, port);
+  count += pqueue_remove_commands(m_done_queue,     port);
+
+  return count;
 }
 
-void Scheduler::remove_subscription(GCFPortInterface& port, uint32 handle)
+int Scheduler::remove_subscription(GCFPortInterface& port, uint32 handle)
 {
-  pqueue_remove_commands(m_later_queue,    port, false, handle);
-  pqueue_remove_commands(m_now_queue,      port, true,  handle);
-  pqueue_remove_commands(m_periodic_queue, port, false, handle);
-  pqueue_remove_commands(m_done_queue,     port, true,  handle);
+  int count = 0;
+
+  count += pqueue_remove_commands(m_later_queue,    port, handle);
+  count += pqueue_remove_commands(m_now_queue,      port, handle);
+  count += pqueue_remove_commands(m_periodic_queue, port, handle);
+  count += pqueue_remove_commands(m_done_queue,     port, handle);
+
+  return count;
 }
 
 void Scheduler::addSyncAction(SyncAction* action)
@@ -236,7 +228,7 @@ void Scheduler::addSyncAction(SyncAction* action)
   m_syncactions[&(action->getBoardPort())].push_back(action);
 }
 
-Timestamp Scheduler::enter(Command* command, QueueID queue)
+Timestamp Scheduler::enter(Ptr<Command> command, QueueID queue)
 {
   switch (queue)
   {
@@ -307,7 +299,7 @@ void Scheduler::scheduleCommands()
    */
   while (!m_later_queue.empty())
   {
-    Command* command = m_later_queue.top();
+    Ptr<Command> command = m_later_queue.top();
 
     if (command->getTimestamp() < m_current_time)
     {
@@ -315,7 +307,7 @@ void Scheduler::scheduleCommands()
       LOG_WARN("discarding late command");
 
       m_later_queue.pop();
-      delete command;
+      //delete command;
     }
     else if (command->getTimestamp() <= m_current_time + SYNC_INTERVAL_INT)
     {
@@ -332,12 +324,19 @@ void Scheduler::scheduleCommands()
   
   while (!pq.empty())
   {
-    Command* command = pq.top();
-    command->setOwner(false); // the priority queue remains the owner of this Command instance
+    Ptr<Command> command = pq.top();
 
     if (command->getTimestamp() <= m_current_time + SYNC_INTERVAL_INT)
     {
-      m_now_queue.push(command);
+      //
+      // only schedule the period command when the period == 0
+      // or when update period has arrived (0 == m_current_time.sec() % command->getPeriod())
+      //
+      if ((0 == command->getPeriod())
+	  || (0 == (m_current_time.sec() % command->getPeriod())))
+      {
+	m_now_queue.push(command);
+      }
     }
 
     pq.pop(); // next
@@ -348,7 +347,7 @@ void Scheduler::processCommands()
 {
   while (!m_now_queue.empty())
   {
-    Command* command = m_now_queue.top();
+    Ptr<Command> command = m_now_queue.top();
 
     /* let the command apply its changes to the cache */
     command->apply(Cache::getInstance().getBack());
@@ -399,14 +398,13 @@ void Scheduler::completeCommands()
 {
   while (!m_done_queue.empty())
   {
-    Command* command = m_done_queue.top();
+    Ptr<Command> command = m_done_queue.top();
     
     /* set the timestamp */
     command->setTimestamp(getCurrentTime());
     command->complete(Cache::getInstance().getFront());
 
     m_done_queue.pop();
-    if (command->isOwner()) delete command;
   }
 }
 

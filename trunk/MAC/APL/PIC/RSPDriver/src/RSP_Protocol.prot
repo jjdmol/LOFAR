@@ -96,7 +96,7 @@ event = {
   };
   param = {
     name = "cache";
-    type = "bool";
+    type = "uint8";
   };
 };
 
@@ -169,7 +169,7 @@ event = {
   };
   param = {
     name = "cache";
-    type = "bool";
+    type = "uint8";
   };
 };
 
@@ -242,7 +242,7 @@ event = {
   };
   param = {
     name = "cache";
-    type = "bool";
+    type = "uint8";
   };
 };
 
@@ -315,7 +315,7 @@ event = {
   };
   param = {
     name = "cache";
-    type = "bool";
+    type = "uint8";
   };
 };
 
@@ -436,6 +436,10 @@ event = {
     name = "rcumask";
     type = "std::bitset<MAX_N_RCUS>";
   };
+  param = {
+    name = "cache";
+    type = "uint8";
+  };
 };
 
 event = {
@@ -460,6 +464,11 @@ event = {
 event = {
   signal = SUBSTATS;
   dir = IN;
+  param = {
+    name = "timestamp";
+    type = "Timestamp";
+    userdefined;
+  };
   param = {
     name = "rcumask";
     type = "std::bitset<MAX_N_RCUS>";
@@ -559,6 +568,10 @@ event = {
     type = "std::bitset<MAX_N_RCUS>";
   };
   param = {
+    name = "cache";
+    type = "uint8";
+  };
+  param = {
     name = "type";
     type = "uint8";
   };
@@ -597,7 +610,7 @@ event = {
   };
   param = {
     name = "cache";
-    type = "bool";
+    type = "uint8";
   };
 };
 

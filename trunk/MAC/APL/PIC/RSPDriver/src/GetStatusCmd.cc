@@ -47,7 +47,7 @@ GetStatusCmd::GetStatusCmd(GCFEvent& event, GCFPortInterface& port, Operation op
 
 GetStatusCmd::~GetStatusCmd()
 {
-  if (isOwner()) delete m_event;
+  delete m_event;
 }
 
 void GetStatusCmd::ack(CacheBuffer& cache)
@@ -110,6 +110,11 @@ bool GetStatusCmd::validate() const
   return (m_event->rcumask.count() <= (unsigned int)GET_CONFIG("N_RCU", i));
 }
 
+bool GetStatusCmd::readFromCache() const
+{
+  return m_event->cache;
+}
+
 void GetStatusCmd::ack_fail()
 {
   RSPGetstatusackEvent ack;
@@ -117,6 +122,10 @@ void GetStatusCmd::ack_fail()
   ack.timestamp = Timestamp(0,0);
   ack.status = FAILURE;
 
+#if 1
+  ack.sysstatus.board().resize(0);
+  ack.sysstatus.rcu().resize(0);
+#else
   ack.sysstatus.board().resize(GET_CONFIG("N_RSPBOARDS", i));
   ack.sysstatus.rcu().resize(GET_CONFIG("N_RCU", i));
 
@@ -128,6 +137,7 @@ void GetStatusCmd::ack_fail()
   
   ack.sysstatus.board() = boardinit;
   ack.sysstatus.rcu()   = rcuinit;
+#endif
 
   getPort()->send(ack);
 }

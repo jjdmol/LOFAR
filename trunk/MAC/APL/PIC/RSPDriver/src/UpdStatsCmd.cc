@@ -1,4 +1,4 @@
-//#  GetWGCmd.cc: implementation of the GetWGCmd class
+//#  UpdStatsCmd.cc: implementation of the UpdStatsCmd class
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -22,7 +22,7 @@
 
 #include "RSP_Protocol.ph"
 #include "RSPConfig.h"
-#include "GetWGCmd.h"
+#include "UpdStatsCmd.h"
 
 #include <blitz/array.h>
 
@@ -36,28 +36,41 @@ using namespace LOFAR;
 using namespace RSP_Protocol;
 using namespace blitz;
 
-GetWGCmd::GetWGCmd(GCFEvent& event, GCFPortInterface& port, Operation oper)
+UpdStatsCmd::UpdStatsCmd(GCFEvent& event, GCFPortInterface& port, Operation oper)
 {
-  m_event = new RSPGetwgEvent(event);
+  m_event = new RSPSubstatsEvent(event);
 
   setOperation(oper);
-  setPeriod(0);
+  setPeriod(m_event->period);
   setPort(port);
 }
 
-GetWGCmd::~GetWGCmd()
+UpdStatsCmd::~UpdStatsCmd()
 {
   delete m_event;
 }
 
-void GetWGCmd::ack(CacheBuffer& cache)
+void UpdStatsCmd::ack(CacheBuffer& /*cache*/)
 {
-  RSPGetwgackEvent ack;
+  // intentionally left empty
+}
+
+void UpdStatsCmd::apply(CacheBuffer& /*cache*/)
+{
+  // no-op
+}
+
+void UpdStatsCmd::complete(CacheBuffer& cache)
+{
+  RSPUpdstatsEvent ack;
 
   ack.timestamp = getTimestamp();
   ack.status = SUCCESS;
+  ack.handle = (uint32)this; // opaque pointer used to refer to the subscription
 
-  ack.settings().resize(m_event->rcumask.count());
+  ack.stats().resize(Statistics::N_STAT_TYPES,
+		     m_event->rcumask.count(),
+		     cache.getStatistics()().extent(thirdDim));
   
   int result_rcu = 0;
   for (int cache_rcu = 0; cache_rcu < GET_CONFIG("N_RCU", i); cache_rcu++)
@@ -66,7 +79,8 @@ void GetWGCmd::ack(CacheBuffer& cache)
     {
       if (result_rcu < GET_CONFIG("N_RCU", i))
       {
-	ack.settings()(result_rcu) = cache.getWGSettings()()(cache_rcu);
+	ack.stats()(Range::all(), result_rcu, Range::all())
+	  = cache.getStatistics()()(Range::all(), cache_rcu, Range::all());
       }
       else
       {
@@ -81,32 +95,17 @@ void GetWGCmd::ack(CacheBuffer& cache)
   getPort()->send(ack);
 }
 
-void GetWGCmd::apply(CacheBuffer& /*cache*/)
-{
-  /* intentionally left empty */
-}
-
-void GetWGCmd::complete(CacheBuffer& cache)
-{
-  ack(cache);
-}
-
-const Timestamp& GetWGCmd::getTimestamp() const
+const Timestamp& UpdStatsCmd::getTimestamp() const
 {
   return m_event->timestamp;
 }
 
-void GetWGCmd::setTimestamp(const Timestamp& timestamp)
+void UpdStatsCmd::setTimestamp(const Timestamp& timestamp)
 {
   m_event->timestamp = timestamp;
 }
 
-bool GetWGCmd::validate() const
+bool UpdStatsCmd::validate() const
 {
-  return ((m_event->rcumask.count() <= (unsigned int)GET_CONFIG("N_RCU", i)));
-}
-
-bool GetWGCmd::readFromCache() const
-{
-  return m_event->cache;
+  return (m_event->rcumask.count() <= (unsigned int)GET_CONFIG("N_RCU", i));
 }

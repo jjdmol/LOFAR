@@ -47,7 +47,7 @@ SetSubbandsCmd::SetSubbandsCmd(GCFEvent& event, GCFPortInterface& port, Operatio
 
 SetSubbandsCmd::~SetSubbandsCmd()
 {
-  if (isOwner()) delete m_event;
+  delete m_event;
 }
 
 void SetSubbandsCmd::ack(CacheBuffer& /*cache*/)

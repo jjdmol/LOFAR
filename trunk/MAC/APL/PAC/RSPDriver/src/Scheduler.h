@@ -73,12 +73,12 @@ namespace RSP
       /**
        * Cancel all commands in any queue for this port.
        */
-      void cancel(GCFPortInterface& port);
+      int cancel(GCFPortInterface& port);
 
       /**
        * Remove commands matching the specified port and handle.
        */
-      void remove_subscription(GCFPortInterface& port, uint32 handle);
+      int remove_subscription(GCFPortInterface& port, uint32 handle);
       
       /**
        * Add a synchronization action to be carried out
@@ -91,7 +91,7 @@ namespace RSP
        * to receiving a command event from on of the RSPDriver
        * client processes.
        */
-      RSP_Protocol::Timestamp enter(Command* command, QueueID queue = LATER);
+      RSP_Protocol::Timestamp enter(Ptr<Command> command, QueueID queue = LATER);
 
       /*@{*/
       /**
@@ -105,16 +105,15 @@ namespace RSP
       /**
        * Private types.
        */
-      typedef std::priority_queue<Command*, std::vector<Command*>, RSP::Command_greater> pqueue;
-      /*typedef std::priority_queue<Command> pqueue;*/
+      typedef std::priority_queue<Ptr<Command>, std::vector<Ptr<Command> >, RSP::Command_greater> pqueue;
+      //typedef std::priority_queue<Ptr<Command> > pqueue;
 
       /**
        * Private helper methods.
        */
-      void pqueue_remove_commands(pqueue& p,
-				  GCFPortInterface& port,
-				  bool checkOwner,
-				  uint32 handle = 0);
+      int pqueue_remove_commands(pqueue& p,
+				 GCFPortInterface& port,
+				 uint32 handle = 0);
 
       /**
        * Constants from the config file converted to the correct type.

@@ -30,7 +30,7 @@
 using namespace RSP;
 using namespace LOFAR;
 
-Command::Command() : m_period(0), m_port(0), m_operation(READ), m_owner(true)
+Command::Command() : m_period(0), m_port(0), m_operation(READ)
 {
 }
 
@@ -83,15 +83,5 @@ void Command::setEvent(const GCFEvent& event, GCFPortInterface& port, Operation 
 bool Command::operator<(const Command& right)
 {
   return (this->getTimestamp() < right.getTimestamp());
-}
-
-void Command::setOwner(bool owner)
-{
-  m_owner = owner;
-}
-
-bool Command::isOwner() const
-{
-  return m_owner;
 }
 
