@@ -85,7 +85,11 @@ int MeqStoredParmPolc::initDomain (const MeqDomain& domain, int spidIndex)
 	       "Solvable parameter " << getName() <<
 	       " has a partially instead of fully matching entry for time "
 		 << domain.startX() << ':' << domain.endX() << " and freq "
-		 << domain.startY() << ':' << domain.endY());
+		 << domain.startY() << ':' << domain.endY() << endl
+		 << "(" << polDom.startX() << ":" << polDom.endX()
+		 << ", " << polDom.startY() << ":" << polDom.endY()) ;
+
+
   }
   return MeqParmPolc::initDomain (domain, spidIndex);
 }
