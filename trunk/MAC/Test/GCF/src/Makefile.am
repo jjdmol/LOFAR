@@ -4,36 +4,61 @@ SUFFIXES = .ph
 	$(AUTOGEN) -L $(top_srcdir)/../../GCF/GCFCommon/autogen $< && \
 	chmod a+w $@
 
-DOCHDRS	=	\
+libgcftest_la_DOCHDRS	=	\
 	SupervisedTask.h \
-  	PropertyProxy.h \
-  	Answer.h
+  PropertyProxy.h \
+  Answer.h \
+  Defines.h
 
-noinst_LTLIBRARIES 	= libgcftest.la
+libgcfrttest_la_DOCHDRS	=	\
+  RTAnswer.h \
+  RTDefines.h
 
-libgcftest_la_SOURCES= $(DOCHDRS) \
+noinst_LTLIBRARIES 	= libgcftest.la libgcfrttest.la
+
+libgcftest_la_SOURCES= $(libgcftest_la_DOCHDRS) \
 	SupervisedTask.cc \
  	PropertyProxy.cc \
  	Answer.cc
 
-noinst_PROGRAMS   		= Application1 Application2
+libgcfrttest_la_SOURCES= $(libgcfrttest_la_DOCHDRS) \
+ 	RTAnswer.cc
+
+bin_PROGRAMS   		= Application1 Application2 RTEcho RTPing
   
 Application1_SOURCES		    = Application1.cc
 Application1_LDADD		      = libgcftest.la 
-Application1_DEPENDENCIES	= libgcftest.la $(LOFAR_DEPEND)
+Application1_DEPENDENCIES		= libgcftest.la $(LOFAR_DEPEND)
 
 Application2_SOURCES		    = Application2.cc
 Application2_LDADD		      = libgcftest.la 
-Application2_DEPENDENCIES	= libgcftest.la $(LOFAR_DEPEND)
+Application2_DEPENDENCIES		= libgcftest.la $(LOFAR_DEPEND)
+
+RTEcho_SOURCES							= RTEcho.cc
+RTEcho_LDADD								= libgcfrttest.la
+RTEcho_DEPENDENCIES					= libgcfrttest.la $(LOFAR_DEPEND)
+
+RTPing_SOURCES							= RTPing.cc
+RTPing_LDADD								= libgcfrttest.la
+RTPing_DEPENDENCIES					= libgcfrttest.la $(LOFAR_DEPEND)
 
 BUILT_SOURCES = \
 	TST_Protocol.ph \
+	Echo_Protocol.ph \
 	test.ns \
 	test.top \
 	log4cplus.properties
 
 EXTRA_DIST = \
 	TST_Protocol.ph \
+	Echo_Protocol.ph \
+	test.ns \
+	test.top \
+	log4cplus.properties
+	
+#in case of make install these files will be copied to the bindir beside the test apps
+configfilesdir=$(bindir)
+configfiles_DATA= \
 	test.ns \
 	test.top \
 	log4cplus.properties

@@ -39,6 +39,7 @@ class Application : public GCFTask
     GCFEvent::TResult test306(GCFEvent& e, GCFPortInterface& p);
     GCFEvent::TResult test401(GCFEvent& e, GCFPortInterface& p);
     GCFEvent::TResult test402(GCFEvent& e, GCFPortInterface& p);
+    GCFEvent::TResult test501(GCFEvent& e, GCFPortInterface& p);
     GCFEvent::TResult finished(GCFEvent& e, GCFPortInterface& p);
     
     void passed(unsigned int passedTest)
