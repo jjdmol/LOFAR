@@ -83,6 +83,11 @@ namespace LOFAR
       // Return a const reference to the contained persistent object.
       const T& data() const { return *itsObjPtr; }
 
+      // We need the using statement, otherwise the retrieve method in the
+      // base class PersistentObject will be hidden by the retrieve method in
+      // this class.
+      using PersistentObject::retrieve;
+
       // \todo Maybe this should be done completely different. It will depend
       // on how we can best iterate over the query result. We might e.g.
       // instantiate our persistent objects using their unique object-ids
@@ -107,11 +112,6 @@ namespace LOFAR
 
     private:
       
-      // We need the using statement, otherwise the retrieve method in the
-      // base class PersistentObject will be hidden by the static retrieve
-      // method in this class.
-      using PersistentObject::retrieve;
-
       // This method will be called by every TPersistentObject constructor. It
       // ensures that the POContainer in the base class PersistentObject is
       // initialized properly and that the ownership relations between the
