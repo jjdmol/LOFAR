@@ -21,6 +21,9 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.5  2002/03/27 09:51:13  schaaf
+//  Use get{Cur/Max}DataPacketSize
+//
 //  Revision 1.3  2001/10/26 10:06:28  wierenga
 //  Wide spread changes to convert from Makedefs to autoconf/automake/libtool build environment
 //
@@ -44,6 +47,7 @@
 #endif
 
 #include "DataHolder.h"
+#include "Debug.h"
 #include <complex>
 
 /**
@@ -129,7 +133,7 @@ inline bool DH_GrowSize::increaseSize(float factor)
 }
 
 inline int DH_GrowSize::getDataPacketSize(void) {
-  TRACER1("getDataPacketSize returns getCurDataPacketSize for flexible DataPackages");
+  TRACER3("getDataPacketSize returns getCurDataPacketSize for flexible DataPackages");
   return getCurDataPacketSize(); 
 }
 
@@ -137,7 +141,7 @@ inline int DH_GrowSize::getCurDataPacketSize(void)
 { return reportedDataPacketSize; }
 
 inline int DH_GrowSize::getMaxDataPacketSize(void)
-{ return itsDataPacketSize; }
+{ return DataHolder::getDataPacketSize(); }
 
 inline bool DH_GrowSize::setInitialDataPacketSize(int initialSize)
 {
