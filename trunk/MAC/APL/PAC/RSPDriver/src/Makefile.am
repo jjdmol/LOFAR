@@ -1,9 +1,6 @@
 
 AM_CXXFLAGS = \
 	-I$(top_srcdir)/src \
-	-DEPA_Y_POL_IMAG_FIX \
-	-DWEIGHTS_IN_NETWORK_ORDER \
-	-DUSE_GNUPLOT \
 	-DN_PROTO2_BLP=1 \
 	-DTOGGLE_LEDS
 
@@ -76,6 +73,8 @@ librsp_la_SOURCES = \
 libepa_la_SOURCES = \
 	MEPHeader.h \
 	MEPHeader.cc \
+	MEPData.h \
+	MEPData.cc \
 	EPA_Protocol.cc \
 	RawDispatch.h \
 	RawDispatch.cc
@@ -107,8 +106,12 @@ RSPDriver_SOURCES = \
 	\
 	SyncAction.h \
 	SyncAction.cc \
-	BWSync.h \
-	BWSync.cc \
+	WriteReg.h \
+	WriteReg.cc \
+	BWWrite.h \
+	BWWrite.cc \
+	BWRead.h \
+	BWRead.cc \
 	SSSync.h \
 	SSSync.cc \
 	RCUSync.h \

@@ -1,6 +1,6 @@
 //#  -*- mode: c++ -*-
 //#
-//#  WGSync.h: Synchronize rcu settings with RSP hardware.
+//#  WriteReg.h: Write a register on a RSP board. Read status to verify correct writing.
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -22,29 +22,35 @@
 //#
 //#  $Id$
 
-#ifndef WGSYNC_H_
-#define WGSYNC_H_
+#ifndef WRITEREG_H_
+#define WRITEREG_H_
 
 #include "SyncAction.h"
+#include "MEPHeader.h"
+
+#include <Common/LofarTypes.h>
 
 namespace RSP
 {
-  class WGSync : public SyncAction
+  class WriteReg : public SyncAction
   {
     public:
       /**
-       * Constructors for a WGSync object.
+       * Constructors for a WriteReg object.
        */
-      WGSync(GCFPortInterface& board_port, int board_id);
+      WriteReg(GCFPortInterface& board_port, int board_id,
+	       uint8 dstid, uint8 pid, uint8 regid, uint16 size,
+	       uint16 offset = 0, uint8 pageid = EPA_Protocol::MEPHeader::PAGE_INACTIVE);
 	  
-      /* Destructor for WGSync. */
-      virtual ~WGSync();
+      /* Destructor for WriteReg. */
+      virtual ~WriteReg();
 
       /**
-       * Initial state handler.
+       * Set the source address of the data that is
+       * to be written to the RSP board.
        */
-      GCFEvent::TResult initial_state(GCFEvent& event, GCFPortInterface& port);
-
+      void setSrcAddress(void* address);
+      
       /**
        * Send the write message.
        */
@@ -61,7 +67,14 @@ namespace RSP
       virtual GCFEvent::TResult handleack(GCFEvent& event, GCFPortInterface& port);
 
     private:
+      uint8  m_dstid;
+      uint8  m_pid;
+      uint8  m_regid;
+      uint16 m_size;
+      uint16 m_offset;
+      uint8  m_pageid;
+      void*  m_source_address;
   };
 };
      
-#endif /* WGSYNC_H_ */
+#endif /* WRITEREG_H_ */

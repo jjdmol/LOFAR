@@ -40,7 +40,7 @@ using namespace blitz;
 unsigned int SystemStatus::getSize()
 {
   return
-      MSH_ARRAY_SIZE(m_board_status, EPA_Protocol::BoardStatus)
+    MSH_ARRAY_SIZE(m_board_status, EPA_Protocol::BoardStatus)
     + MSH_ARRAY_SIZE(m_rcu_status,   EPA_Protocol::RCUStatus);
 }
 

@@ -54,12 +54,12 @@ RCUSync::~RCUSync()
   /* TODO: delete event? */
 }
 
-void RCUSync::sendrequest(int local_blp)
+void RCUSync::sendrequest()
 {
-  uint8 global_blp = (getBoardId() * N_BLP) + local_blp * 2;
+  uint8 global_blp = (getBoardId() * N_BLP) + getCurrentBLP() * 2;
 
   EPARcusettingsEvent rcusettings;
-  MEP_RCUSETTINGS(rcusettings.hdr, MEPHeader::WRITE, local_blp);
+  MEP_RCUSETTINGS(rcusettings.hdr, MEPHeader::WRITE, getCurrentBLP());
 
   RCUSettings::RCURegisterType& x = Cache::getInstance().getBack().getRCUSettings()()(global_blp);
   RCUSettings::RCURegisterType& y = Cache::getInstance().getBack().getRCUSettings()()(global_blp + 1);

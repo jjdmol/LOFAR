@@ -46,7 +46,7 @@ StatusSync::~StatusSync()
   /* TODO: delete event? */
 }
 
-void StatusSync::sendrequest(int /*local_blp*/)
+void StatusSync::sendrequest()
 {
   // send read status request to check status of the write
   EPARspstatusReadEvent rspstatus;
@@ -71,6 +71,7 @@ GCFEvent::TResult StatusSync::handleack(GCFEvent& event, GCFPortInterface& /*por
 	 &ack.board,
 	 sizeof(BoardStatus));
 
+#if 0
   // copy rcu status
   for (int ap = 0; ap < N_BLP; ap++)
   {
@@ -78,6 +79,7 @@ GCFEvent::TResult StatusSync::handleack(GCFEvent& event, GCFPortInterface& /*por
 	   &ack.rcu[ap],
 	   sizeof(RCUStatus));
   }
+#endif
 
   return GCFEvent::HANDLED;
 }

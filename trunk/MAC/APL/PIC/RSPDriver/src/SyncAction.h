@@ -34,6 +34,7 @@ namespace RSP
     public:
       /**
        * Constructors for a SyncAction object.
+       * Default direction is read.
        */
       SyncAction(GCFPortInterface& board_port, int board_id, int n_blps);
 	  
@@ -53,7 +54,7 @@ namespace RSP
       /**
        * Hooks to perform specific actions.
        */
-      virtual void sendrequest(int local_blp) = 0;
+      virtual void sendrequest() = 0;
       virtual void sendrequest_status()   = 0;
       virtual GCFEvent::TResult handleack(GCFEvent& event, GCFPortInterface& port) = 0;
       /*@}*/
@@ -75,6 +76,11 @@ namespace RSP
       void setCompleted(bool final);
       bool hasCompleted() const;
       /*@}*/
+
+      /**
+       * Get index of current local BLP.
+       */
+      int getCurrentBLP() const;
 
     private:
       SyncAction();

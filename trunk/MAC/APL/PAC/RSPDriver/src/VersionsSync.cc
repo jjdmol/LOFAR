@@ -43,7 +43,7 @@ VersionsSync::~VersionsSync()
   /* TODO: delete event? */
 }
 
-void VersionsSync::sendrequest(int /*local_blp*/)
+void VersionsSync::sendrequest()
 {
   // send read status request to check status of the write
   EPAFwversionReadEvent versionread;

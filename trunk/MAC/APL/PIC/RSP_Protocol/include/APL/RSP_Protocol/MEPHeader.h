@@ -63,8 +63,8 @@ namespace EPA_Protocol
        * Address constants
        * Destination ID
        */
-      static const uint8 DST_BLP_BASE = 0x00; /* BLP's are addressed starting from 0x00 */
-      static const uint8 DST_RSP      = 0x00; /* Board entity, used to be 0xFF */
+      static const uint8 DST_BLPS = 0x00; /* BLP's are addressed starting from 0x00 */
+      static const uint8 DST_RSP  = 0x80; /* Destination id of the RSP board */
       /*@}*/
 
       /*@{*/
@@ -159,8 +159,9 @@ namespace EPA_Protocol
       /*@}*/
 
     public:
+      /*@{*/
       /**
-       * Method to set appropriate fields.
+       * Methods to set appropriate fields.
        */
       void set(uint8  type,
 	       uint8  dstid,
@@ -168,7 +169,17 @@ namespace EPA_Protocol
 	       uint8  regid,
 	       uint16 size);
 
-    public:
+      void set(uint8  type,
+	       uint16 seqnr,
+	       uint8  dstid,
+	       uint8  pid,
+	       uint8  regid,
+	       uint8  pageid,
+	       uint16 offset,
+	       uint16 size);
+      /*@}*/
+
+	public:
       /**
        * MEP header fields
        */
@@ -208,18 +219,18 @@ namespace EPA_Protocol
   (hdr).set(CTX(WRITE),   CTX(DST_RSP),              CTX(CFG),    CTX(REPROGRAM),     CTX(REPROGRAM_SIZE))
 
 #define MEP_WGSETTINGS(hdr, oper, dstid) \
-  (hdr).set(oper,         CTX(DST_BLP_BASE) + dstid, CTX(WG),     CTX(WGSETTINGS),    CTX(WGSETTINGS_SIZE))
+  (hdr).set(oper,         dstid, CTX(WG),     CTX(WGSETTINGS),    CTX(WGSETTINGS_SIZE))
 #define MEP_WGUSER(hdr, oper, dstid) \
-  (hdr).set(oper,         CTX(DST_BLP_BASE) + dstid, CTX(WG),     CTX(WGUSER),        CTX(WGUSER_SIZE))
+  (hdr).set(oper,         dstid, CTX(WG),     CTX(WGUSER),        CTX(WGUSER_SIZE))
 #define MEP_NRSUBBANDS(hdr, oper, dstid) \
-  (hdr).set(oper,         CTX(DST_BLP_BASE) + dstid, CTX(SS),     CTX(NRSUBBANDS),    CTX(NRSUBBANDS_SIZE))
+  (hdr).set(oper,         dstid, CTX(SS),     CTX(NRSUBBANDS),    CTX(NRSUBBANDS_SIZE))
 #define MEP_SUBBANDSELECT(hdr, oper, dstid) \
-  (hdr).set(oper,         CTX(DST_BLP_BASE) + dstid, CTX(SS),     CTX(SUBBANDSELECT), CTX(SUBBANDSELECT_SIZE))
+  (hdr).set(oper,         dstid, CTX(SS),     CTX(SUBBANDSELECT), CTX(SUBBANDSELECT_SIZE))
 #define MEP_BF(hdr, oper, dstid, regid) \
-  (hdr).set(oper,         CTX(DST_BLP_BASE) + dstid, CTX(BF),     (regid),            CTX(BFCOEFS_SIZE))
+  (hdr).set(oper,         dstid, CTX(BF),     (regid),            CTX(BFCOEFS_SIZE))
 #define MEP_ST(hdr, oper, dstid, regid) \
-  (hdr).set(oper,         CTX(DST_BLP_BASE) + dstid, CTX(ST),     (regid),            CTX(STSTATS_SIZE))
+  (hdr).set(oper,         dstid, CTX(ST),     (regid),            CTX(STSTATS_SIZE))
 #define MEP_RCUSETTINGS(hdr, oper, dstid) \
-  (hdr).set(oper,         CTX(DST_BLP_BASE) + dstid, CTX(RCU),    CTX(RCUSETTINGS),   CTX(RCUSETTINGS_SIZE))
+  (hdr).set(oper,         dstid, CTX(RCU),    CTX(RCUSETTINGS),   CTX(RCUSETTINGS_SIZE))
 
 #endif /* MEPHEADER_H_ */

@@ -63,3 +63,23 @@ void MEPHeader::set(uint8 type,
   m_fields.addr.regid = regid;
   m_fields.size = size;
 }
+
+void MEPHeader::set(uint8  type,
+		    uint16 seqnr,
+		    uint8  dstid,
+		    uint8  pid,
+		    uint8  regid,
+		    uint8  pageid,
+		    uint16 offset,
+		    uint16 size)
+{
+  m_fields.type        = type;
+  m_fields.ffi         = 0;
+  m_fields.seqnr       = seqnr;
+  m_fields.addr.dstid  = dstid;
+  m_fields.addr.pid    = pid;
+  m_fields.addr.regid  = regid;
+  m_fields.addr.pageid = pageid;
+  m_fields.offset      = offset;
+  m_fields.size        = size;
+}

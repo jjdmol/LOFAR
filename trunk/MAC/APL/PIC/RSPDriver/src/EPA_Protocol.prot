@@ -11,8 +11,10 @@ id = "(F_APL_PROTOCOL+11)";
 // e.g.
 include = '<sys/time.h>';
 include = '<linux/types.h>';
+include = '<net/ethernet.h>';
 include = '<Common/LofarTypes.h>';
 include = '"MEPHeader.h"';
+include = '"MEPData.h"';
 
 prelude = << PRELUDE_END
 
@@ -422,6 +424,22 @@ event = {
 
 event = {
   noheader;
+  signal = WRITE;
+  dir = IN;
+  param = {
+    name = "hdr";
+    type = "EPA_Protocol::MEPHeader";
+    userdefined;
+  };
+  param = {
+    name = "payload";
+    type = "EPA_Protocol::MEPData";
+    userdefined;
+  };
+};
+
+event = {
+  noheader;
   signal = READERR;
   dir = OUT;
   param = {
@@ -439,3 +457,7 @@ event = {
     type = "uint8";
   };
 };
+
+
+
+    

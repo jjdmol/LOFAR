@@ -1,6 +1,4 @@
-//#  -*- mode: c++ -*-
-//#
-//#  WGSync.h: Synchronize rcu settings with RSP hardware.
+//#  MEPData.h: implementation of the MEPData class
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -22,46 +20,41 @@
 //#
 //#  $Id$
 
-#ifndef WGSYNC_H_
-#define WGSYNC_H_
+#include "MEPData.h"
 
-#include "SyncAction.h"
+#include <string.h>
 
-namespace RSP
+#undef PACKAGE
+#undef VERSION
+#include <lofar_config.h>
+#include <Common/LofarLogger.h>
+
+using namespace LOFAR;
+using namespace EPA_Protocol;
+using namespace std;
+
+unsigned int MEPData::getSize()
 {
-  class WGSync : public SyncAction
-  {
-    public:
-      /**
-       * Constructors for a WGSync object.
-       */
-      WGSync(GCFPortInterface& board_port, int board_id);
-	  
-      /* Destructor for WGSync. */
-      virtual ~WGSync();
+  return m_count;
+}
 
-      /**
-       * Initial state handler.
-       */
-      GCFEvent::TResult initial_state(GCFEvent& event, GCFPortInterface& port);
+unsigned int MEPData::pack  (void* buffer)
+{
+  memcpy(buffer, m_dataptr, m_count);
+  return m_count;
+}
 
-      /**
-       * Send the write message.
-       */
-      virtual void sendrequest();
+unsigned int MEPData::unpack(void* /*buffer*/)
+{
+  /**
+   * Should never be called.
+   */
+  LOG_FATAL("MEPData::unpack should never be called.");
+  exit(EXIT_FAILURE);
+}
 
-      /**
-       * Send the read request.
-       */
-      virtual void sendrequest_status();
-
-      /**
-       * Handle the read result.
-       */
-      virtual GCFEvent::TResult handleack(GCFEvent& event, GCFPortInterface& port);
-
-    private:
-  };
-};
-     
-#endif /* WGSYNC_H_ */
+void MEPData::setBuffer(void* buf, size_t count)
+{
+  m_dataptr = buf;
+  m_count   = count;
+}

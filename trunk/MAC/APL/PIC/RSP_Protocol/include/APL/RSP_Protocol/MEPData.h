@@ -1,6 +1,6 @@
 //#  -*- mode: c++ -*-
 //#
-//#  WGSync.h: Synchronize rcu settings with RSP hardware.
+//#  MEPData.h: MEP Payload object.
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -22,46 +22,47 @@
 //#
 //#  $Id$
 
-#ifndef WGSYNC_H_
-#define WGSYNC_H_
+#ifndef MEPDATA_H_
+#define MEPDATA_H_
 
-#include "SyncAction.h"
+#include <unistd.h>
 
-namespace RSP
+namespace EPA_Protocol
 {
-  class WGSync : public SyncAction
-  {
-    public:
+  class MEPData
+    {
+      public:
       /**
-       * Constructors for a WGSync object.
+       * Constructors for a MEPData object.
        */
-      WGSync(GCFPortInterface& board_port, int board_id);
+      MEPData() { }
 	  
-      /* Destructor for WGSync. */
-      virtual ~WGSync();
+      /* Destructor for MEPData. */
+      virtual ~MEPData() {}
 
+      public:
       /**
-       * Initial state handler.
+       * Member access.
        */
-      GCFEvent::TResult initial_state(GCFEvent& event, GCFPortInterface& port);
+      void setBuffer(void* buf, size_t size);
 
+      public:
+      /*@{*/
       /**
-       * Send the write message.
+       * marshalling methods
        */
-      virtual void sendrequest();
+      unsigned int getSize();
+      unsigned int pack  (void* buffer);
+      unsigned int unpack(void *buffer);
+      /*@}*/
 
+      public:
       /**
-       * Send the read request.
+       * MEP Payload data
        */
-      virtual void sendrequest_status();
-
-      /**
-       * Handle the read result.
-       */
-      virtual GCFEvent::TResult handleack(GCFEvent& event, GCFPortInterface& port);
-
-    private:
-  };
+      void*  m_dataptr; // pointer to user data, not owned by this class
+      size_t m_count;
+    };
 };
-     
-#endif /* WGSYNC_H_ */
+
+#endif /* MEPDATA_H_ */

@@ -54,12 +54,12 @@ WGSync::~WGSync()
   /* TODO: delete event? */
 }
 
-void WGSync::sendrequest(int local_blp)
+void WGSync::sendrequest()
 {
-  uint8 global_blp = (getBoardId() * N_BLP) + local_blp * 2;
+  uint8 global_blp = (getBoardId() * N_BLP) + getCurrentBLP() * 2;
 
   EPAWgsettingsEvent wgsettings;
-  MEP_WGSETTINGS(wgsettings.hdr, MEPHeader::WRITE, local_blp);
+  MEP_WGSETTINGS(wgsettings.hdr, MEPHeader::WRITE, getCurrentBLP());
 
   WGSettings& w = Cache::getInstance().getBack().getWGSettings();
 
