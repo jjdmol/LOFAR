@@ -19,9 +19,9 @@
 
 
 
-WH_WAV::WH_WAV (int inputs,int outputs, int lags):
+WH_WAV::WH_WAV (int inputs,int outputs, int channel):
   WorkHolder (inputs, outputs),
-  itsLags(lags),
+  itsChannel(channel),
   itsOffset(0),
   itsFirstCall(true),
   itsDelay(0),
@@ -29,10 +29,6 @@ WH_WAV::WH_WAV (int inputs,int outputs, int lags):
   itsTimeStamp(0)
 {
   int ch;
-
-  Firewall::Assert(lags < ANTSAMPLES,
-		   __HERE__,
-		   "Lags must be < ANTSAMPLES");
 
   itsInDataHolders.reserve(inputs);
   itsOutDataHolders.reserve(outputs);
@@ -53,8 +49,7 @@ WH_WAV::~WH_WAV ()
 }
 
 void WH_WAV::readFile(char *filename){
-  cout << "Read file :" << filename << endl;
-  cout << "itsOffset = " << itsOffset << endl;
+
   FILE *infile;
   char ptr[10];
   int i, sample=0;
@@ -62,14 +57,16 @@ void WH_WAV::readFile(char *filename){
   char ready_name[256];
   struct stat ready_stat;
 
+  system("record_sample_sim antenna1");
+  system("touch ./WAVE/antenna1.wav.ready");
   cout << "Size of (in) = " << sizeof(in) << endl;
   sprintf(ready_name, "%s.ready", filename);
   
   // wait for ready file
-  do {
-    errno = 0;
-    (void)stat(ready_name, &ready_stat);
-  } while (errno == ENOENT);
+//    do {
+//      errno = 0;
+//      (void)stat(ready_name, &ready_stat);
+//    } while (errno == ENOENT);
 
   infile = fopen(filename,"r");
   if (infile == NULL) {
@@ -82,19 +79,11 @@ void WH_WAV::readFile(char *filename){
   }
 
   // skip one sample; i.e. go to the second inpu channel of the stereo WAV file
-  if (itsLags == 0) fread(&in,sizeof(in),1,infile);
-
-  if (itsLags != 0) {
-    for (i=0; i< 2*(itsLags/2); i++) {
-      fread(&in,sizeof(in),1,infile);
-    }
-  }
+  if (itsChannel == 0) fread(&in,sizeof(in),1,infile);
 
   while (   fread(&in,sizeof(in),1,infile)
 	 && sample++ < 2*ANTSAMPLES) {
-
     float currentvalue=0.;
-
       
 #ifdef SWAPWAVVALUES
       /* swap first 2 bytes with last 2 bytes in the word */
@@ -102,23 +91,18 @@ void WH_WAV::readFile(char *filename){
       right= in >> 8;
       currentvalue = left | right;
 #endif
-      
-#if 0
-      currentvalue = max (in-40000 , 0) ;
-#else
       currentvalue = in;
-#endif
       itsSampleBuffer[sample] = currentvalue;
     // skip the next sample since that is the other channel;
     fread(&in,sizeof(in),1,infile);
   }
 
-  for (int i=0; i<10; i++) {
-    cout << "Output [" << i << "]"
-	 << " = " << itsSampleBuffer[i] 
-	 << endl;
-  }
-  cout << "*************************************" << endl;
+//    for (int i=0; i<10; i++) {
+//      cout << "Output [" << i << "]"
+//  	 << " = " << itsSampleBuffer[i] 
+//  	 << endl;
+//    }
+//    cout << "*************************************" << endl;
 
   itsOffset = 0;
   fclose(infile);
@@ -127,9 +111,9 @@ void WH_WAV::readFile(char *filename){
 void WH_WAV::process () {
   if (WorkHolder::getProcMode() == Process) {
 
-    if (itsLags == 0) {
-      itsOffset++;      
-    }
+//      if (itsLags == 0) {
+//        itsOffset++;      
+//      }
 
     for (int i=0; i<ANTSAMPLES; i++) {
       itsOutDataHolders[0]->getBuffer()[i] = itsSampleBuffer[i+itsOffset];

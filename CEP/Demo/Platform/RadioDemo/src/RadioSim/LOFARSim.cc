@@ -50,7 +50,6 @@
 #define CORR_FILE       "./WAVE/Corr.ext"
 #define CORR_TMP_FILE   "./WAVE/Corr.tmp"
 #define WAVE_FILE_1 "./WAVE/antenna1.wav"
-#define WAVE_FILE_2 "./WAVE/antenna2.wav"
 #define CORRNODE (STATIONS+1)
 
 #ifdef CORBA_
@@ -63,6 +62,8 @@ int atexit(void (*function)(void))
 LOFARSim::LOFARSim()
 : itsFiller (0)
 {
+  // disable the RunInApp settings for all apps by default
+  // later on, applications can be activated by setting to 0;
   for (int i=0; i<10; i++) itsRunInApp[i]=999;
 }
 
@@ -70,7 +71,9 @@ LOFARSim::LOFARSim()
 void LOFARSim::define(const ParamBlock&)
 {
   const TH_Mem   TH_Mem_Proto;
+#ifdef MPI_
   const TH_MPI   TH_MPI_Proto;
+#endif
 
 #ifdef CORBA_
   const TH_Corba TH_Corba_Proto;
@@ -94,6 +97,7 @@ void LOFARSim::define(const ParamBlock&)
       cout << "Application = " << App << endl;
     }
   }
+  // App=2;
   int itsSkipApp1=0;
   int itsSkipApp2=0;
   if (App==2) {
@@ -150,7 +154,7 @@ void LOFARSim::define(const ParamBlock&)
       {
 
 	antenna[station][element] =
-	  new Step (new WH_WAV(1,1,station*LAGS), //WH_Antenna (1,1),
+	  new Step (new WH_WAV(1,1,station),
 		    "Antenna", 
 		    0);
 	antenna[station][element]->runOnNode(station+itsSkipApp1);
@@ -222,7 +226,7 @@ void LOFARSim::define(const ParamBlock&)
     // Set station communication parameters
 	    
     theStations[station]->connectOutputToArray(&transb,1);
-    simul.addStep (theStations[station]);      
+    simul->addStep (theStations[station]);      
   } // loop stations
 
   /***************************************************************************/
@@ -290,14 +294,18 @@ void LOFARSim::run (int nsteps)
   // create the time Controller; All the simuls will be synchronized with this object
   Simul Controller(new WH_Controller(),"Controller",CONTROLLER_NODE);
 
-  while (1) {
+    while (1) {
 
     if (itsRunInApp[1]==0 && rank == 0)
       ((WH_WAV*)antenna[0][0]->getWorker())->readFile(WAVE_FILE_1);
     if (itsRunInApp[1]==0 && rank == 1) 
       ((WH_WAV*)antenna[1][0]->getWorker())->readFile(WAVE_FILE_1);
 
-    nsteps = LAGS;
+    //    nsteps = LAGS;
+    if (itsRunInApp[2]==0 && rank == CORRNODE) {
+      ((WH_Corr*)correlator[0]->getWorker())->openFile(CORR_TMP_FILE);
+    }
+
 
 
   // Produce process output only on node 0
@@ -306,53 +314,30 @@ void LOFARSim::run (int nsteps)
   double starttime=MPI_Wtime();
 #endif
   Profiler::init();
-  if (rank == 0) cout << endl <<  "Start Process" << endl;    
-  if (itsRunInApp[2]==0 && rank == CORRNODE) {
-    cout << "Open Corr output file " << endl;
-    ((WH_Corr*)correlator[0]->getWorker())->openFile(CORR_TMP_FILE);
-  }
-
-  for (int i = 1; i <= nsteps; i++) {
-
-//      if ((i%1 == 0) && (rank == 0)) { // print a dot after every 1 process steps
-//        cout << "." << flush;
-//      }
-    if (i==4)   Profiler::activate();
-    if (rank == (unsigned int)CONTROLLER_NODE) {
+  //  if (rank == 0) cout << endl <<  "Start Process" << endl;    
+  //    for (int i = 1; i <= nsteps; i++) {
+  //    if (i==4)   Profiler::activate();
+  if (rank == (unsigned int)CONTROLLER_NODE) {
       Controller.getWorker()->process();
-      //sleep(3);
     } 
     if (rank != (unsigned int)CONTROLLER_NODE) TRANSPORTER::waitForBroadCast();
     TRANSPORTER::synchroniseAllProcesses();
     getSimul().process ();
-    if (i==4)   Profiler::deActivate();
-  }
+    //    if (i==4)   Profiler::deActivate();
+//    }
 #ifdef MPI_
   double endtime=MPI_Wtime();
   cout << "Total Time on node " << rank << " : " << endtime-starttime << endl;
 #endif
-  //sleep(5+2*rank); // wait for all processes (?) and dump one by one in the right order 
-  //cout << "DUMP from Node " << rank << endl;
-  cout << endl << "END OF SIMUL on node " << rank << endl;
+  //  cout << endl << "END OF SIMUL on node " << rank << endl;
  
   if (itsRunInApp[2]==0 && rank == CORRNODE) ((WH_Corr*)correlator[0]->getWorker())->closeFile();
   usleep(500);
   system("/bin/cp ./WAVE/Corr.tmp ./WAVE/Corr.ext");
   usleep(500);
-
-//    char arg[80];
-//    sprintf(arg,"%s %s\n",CORR_TMP_FILE,CORR_FILE);
-//    execl("/bin/cp",arg);
-  unlink(WAVE_FILE_1 ".ready");
- 
-
-#ifdef MPI_
-//   cout << "Node " << rank << " Totally Wrote " << TH_MPI::theirBytesWritten/1024 <<  " kB by MPI" << endl;
-//   cout << "Node " << rank << " Totally Read "  << TH_MPI::theirBytesRead/1024    <<  " kB by MPI" << endl;
-#endif // MPI_
-
+  unlink(WAVE_FILE_1 ".ready"); 
   }
-
+  
   return;
 }
 

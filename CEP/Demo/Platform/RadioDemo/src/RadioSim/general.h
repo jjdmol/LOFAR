@@ -12,7 +12,7 @@
 #include "firewalls.h"
 
 // LAGS
-const int LAGS=32;
+const int LAGS=1;
 
 // Number of stations
 const int STATIONS = 2;
@@ -23,7 +23,7 @@ const int DATAPROCESSORS = 1;
 
 // Number of antennas/ffts
 const int ELEMENTS = 1;     
-const int ANTSAMPLES = 256;//128; 
+const int ANTSAMPLES = 1024;//128; 
 const int BEAMS = 1;		//max=64 (power of 4)
 const int FREQS = ANTSAMPLES;		//64
 const int CORRFREQS = FREQS;
