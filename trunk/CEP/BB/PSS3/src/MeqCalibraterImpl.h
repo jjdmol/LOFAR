@@ -99,7 +99,7 @@ public:
    * Advance the iterator.
    * \returns false if at end of iteration.
    */
-  bool nextInterval();
+  bool nextInterval (bool callInitParms = true);
 
   //! Make all parameters non-solvable
   void clearSolvableParms();
