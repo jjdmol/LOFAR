@@ -41,8 +41,8 @@ public:
   virtual ~Cos();
 
   // Evaluate the value for the given request.
-  virtual void evaluate (Vells& result, const Request&,
-			 const vector<Vells*>& values);
+  virtual Vells evaluate (const Request&,
+			  const vector<Vells*>& values);
 };
 
 

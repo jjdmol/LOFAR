@@ -22,15 +22,33 @@
 
 #include <MEQ/ParmPolcStored.h>
 #include <Common/Debug.h>
-#include <aips/Arrays/Matrix.h>
+#include <Common/Lorrays.h>
 #include <aips/Mathematics/Math.h>
 
 namespace MEQ {
 
-ParmPolcStored::ParmPolcStored (const string& name, ParmTable* table)
-: ParmPolc (name),
-  itsTable (table)
+ParmPolcStored::ParmPolcStored()
+: ParmPolc (""),
+  itsTable (0)
 {}
+
+ParmPolcStored::ParmPolcStored (const string& name, ParmTable* table,
+				const Vells& defaultValue)
+: ParmPolc   (name),
+  itsTable   (table),
+  itsDefault (defaultValue)
+{}
+
+ParmPolcStored::ParmPolcStored (const string& name, const string& tableName,
+				const Vells& defaultValue)
+: ParmPolc   (name),
+  itsTable   (0),
+  itsDefault (defaultValue)
+{
+  if (! tableName.empty()) {
+    itsTable = ParmTable::openTable(tableName);
+  }
+}
 
 ParmPolcStored::~ParmPolcStored()
 {}
@@ -38,11 +56,21 @@ ParmPolcStored::~ParmPolcStored()
 int ParmPolcStored::initDomain (const Domain& domain, int spidIndex)
 {
   // Find the polc(s) for the given domain.
-  vector<Polc> polcs = itsTable->getPolcs (getName(), domain);
+  vector<Polc> polcs;
+  if (itsTable) {
+    polcs = itsTable->getPolcs (getName(), domain);
+  }
   // If none found, try to get a default value.
-  // If no default found, use a 2nd order polynomial with values 1.
   if (polcs.size() == 0) {
-    Polc polc = itsTable->getInitCoeff (getName());
+    Polc polc;
+    if (itsTable) {
+      polc = itsTable->getInitCoeff (getName());
+    } else {
+      polc.setCoeff (itsDefault);
+      polc.setSimCoeff (itsDefault);
+      polc.setPertSimCoeff (Vells(0.));
+      polc.setNormalize (true);
+    }
     AssertMsg (!polc.getCoeff().isNull(), "No value found for parameter "
 	       << getName());
     polc.setDomain (domain);
@@ -51,7 +79,6 @@ int ParmPolcStored::initDomain (const Domain& domain, int spidIndex)
       polc.setCoeffOnly (polc.normalize(polc.getCoeff(), domain));
       polc.setSimCoeff  (polc.normalize(polc.getSimCoeff(), domain));
     }
-    itsTable->putCoeff (getName(), polc);
     polcs.push_back (polc);
   } else if (isSolvable()) {
     AssertMsg (polcs.size() == 1, "Solvable parameter " << getName() <<
@@ -81,9 +108,46 @@ void ParmPolcStored::save()
 {
   const vector<Polc>& polcs = getPolcs();
   for (unsigned int i=0; i<polcs.size(); i++) {
-    itsTable->putCoeff (getName(), polcs[i]);
+    if (itsTable) {
+      itsTable->putCoeff (getName(), polcs[i]);
+    }
   }
   ParmPolc::save();
+}
+
+void ParmPolcStored::init (DataRecord::Ref::Xfer& initrec, Forest* frst)
+{
+  Node::init (initrec, frst);
+  // Get default value.
+  if (state()[AidDefault].exists()) {
+    LoMat_double& val = wstate()[AidDefault].as_wr<LoMat_double>();
+    itsDefault = Vells(&val);
+  }
+  // Get possible ParmTable name and open it.
+  string tableName;
+  if (state()[AidTablename].exists()) {
+    tableName = state()[AidTablename].as<string>();
+  }
+  if (! tableName.empty()) {
+    itsTable = ParmTable::openTable(tableName);
+  }
+  // Set the name of the parm.
+  setName (name());
+}
+
+void ParmPolcStored::setState (const DataRecord& rec)
+{
+}
+
+string ParmPolcStored::sdebug (int detail, const string& prefix,
+			       const char* nm) const
+{
+  string out;
+  Debug::appendf(out,"%s(%s)", nm?nm:"MEQ::Parm", getName().c_str());
+  if (itsTable) {
+    Debug::appendf(out,"  parmtable=%s", itsTable->name().c_str());
+  }
+  return out;
 }
 
 } // namespace MEQ

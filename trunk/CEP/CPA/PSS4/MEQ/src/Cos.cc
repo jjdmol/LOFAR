@@ -21,9 +21,9 @@
 //# $Id$
 
 #include <MEQ/Cos.h>
+#include <MEQ/VellsTmp.h>
 
 namespace MEQ {    
-
 
 Cos::Cos()
 {}
@@ -36,15 +36,18 @@ Cos::Cos (Function* ch)
 Cos::~Cos()
 {}
 
-void Cos::evaluate (Vells& result, const Request&,
-		    const vector<Vells*>& values)
+Vells Cos::evaluate (const Request&,
+		     const vector<Vells*>& values)
 {
-  if (result.isReal()) {
-    result.getRealArray() = cos(values[0]->getRealArray());
-  } else {
-    result.getComplexArray() = cos(values[0]->getComplexArray());
-  }
+  return cos(*(values[0]));
 }
 
+///void Cos::evaluateVells (Vells& result, const Request&,
+///			 const vector<Vells*>& values)
+///  if (result.isReal()) {
+///    result.getRealArray() = cos(values[0]->getRealArray());
+///  } else {
+///    result.getComplexArray() = cos(values[0]->getComplexArray());
+///  }
 
 } // namespace MEQ

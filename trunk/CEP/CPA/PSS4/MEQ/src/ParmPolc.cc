@@ -67,98 +67,103 @@ int ParmPolc::getResult (Result::Ref& result, const Request& request)
     itsPolcs[0].getResult (result, request);
     return 0;
   }
-  throw ("> 1 polc in domain");
-  /*
   // Get the domain, etc.
   const Cells& cells = request.cells();
   const Domain& domain = cells.domain();
-  Result result(0);
-  int ndx = request.nx();
-  int ndy = request.ny();
+  int ndFreq = cells.nfreq();
+  int ndTime = cells.ntime();
   double* datar = 0;
-  double stepx = request.stepX();
-  double stepy = request.stepY();
-  double halfStepx = stepx * .5;
-  double halfStepy = stepy * .5;
-  double firstMidx = domain.startX() + halfStepx;
-  double firstMidy = domain.startY() + halfStepy; 
-  double lastMidx = firstMidx + (ndx-1) * stepx;
-  double lastMidy = firstMidy + (ndy-1) * stepy;
+  double stepFreq = cells.stepFreq();
+  double halfStepFreq = stepFreq * .5;
+  double firstMidFreq = domain.startFreq() + halfStepFreq;
+  double lastMidFreq  = firstMidFreq + (ndFreq-1) * stepFreq;
+  double firstMidTime = cells.time(0);
+  double lastMidTime  = cells.time(ndTime-1);
+  Result& res = result.dewr();
+  res.setReal (ndFreq, ndTime);
   // Iterate over all polynomials.
   // Evaluate one if its domain overlaps the request domain.
   for (unsigned int i=0; i<itsPolcs.size(); i++) {
     Polc& polc = itsPolcs[i];
     const Domain& polDom = polc.domain();
-    if (firstMidx < polDom.endX()  &&  lastMidx > polDom.startX()
-    &&  firstMidy < polDom.endY()  &&  lastMidy > polDom.startY()) {
+    if (firstMidFreq < polDom.endFreq() && lastMidFreq > polDom.startFreq()
+    &&  firstMidTime < polDom.endTime() && lastMidTime > polDom.startTime()) {
       // Determine which part of the request domain is covered by the
       // polynomial.
-      int stx = 0;
-      if (firstMidx < polDom.startX()) {
-	stx = 1 + int((polDom.startX() - firstMidx) / stepx);
+      int stFreq = 0;
+      if (firstMidFreq < polDom.startFreq()) {
+	stFreq = 1 + int((polDom.startFreq() - firstMidFreq) / stepFreq);
       }
-      int nrx = ndx - stx;
-      if (lastMidx > polDom.endX()) {
-	int remx = 1 + int((lastMidx - polDom.endX()) / stepx);
-	nrx -= remx;
+      int nrFreq = ndFreq - stFreq;
+      if (lastMidFreq > polDom.endFreq()) {
+	int remFreq = 1 + int((lastMidFreq - polDom.endFreq()) / stepFreq);
+	nrFreq -= remFreq;
       }
-      int sty = 0;
-      if (firstMidy < polDom.startY()) {
-	sty = 1 + int((polDom.startY() - firstMidy) / stepy);
+      int stTime = 0;
+      while (cells.time(stTime) < polDom.startTime()) {
+	stTime++;
       }
-      int nry = ndy - sty;
-      if (lastMidy > polDom.endY()) {
-	int remy = 1 + int((lastMidy - polDom.endY()) / stepy);
-	nry -= remy;
+      int lastTime = ndTime-1;
+      while (cells.time(lastTime) > polDom.endTime()) {
+	lastTime--;
       }
+      int nrTime = lastTime - stTime + 1;
       // If the overlap is full, only this polynomial needs to be evaluated.
-      if (stx == 0  &&  nrx == ndx  &&  sty == 0  &&  nry == ndy) {
-	return polc.getResult (request);
+      if (stFreq == 0  &&  nrFreq == ndFreq
+      &&  stTime == 0  &&  nrTime == ndTime) {
+	polc.getResult (result, request);
+	return 0;
       }
       // Form the domain and request for the overlapping part
       // and evaluate the polynomial.
-      double startx = domain.startX() + stx*stepx;
-      double starty = domain.startY() + sty*stepy;
-      Domain partDom(startx, startx + nrx*stepx,
-			starty, starty + nry*stepy);
-      Request partReq(partDom, nrx, nry);
-      Result partRes = polc.getResult (partReq);
-      // Create the result matrix if it is the first time.
-      // Now it is initialized with zeroes (to see possiible errors).
+      double startFreq = domain.startFreq() + stFreq*stepFreq;
+      double startTime = cells.time(stTime) - cells.stepTime(stTime) / 2;
+      double endTime   = cells.time(lastTime) + cells.stepTime(lastTime) / 2;
+      Domain partDom(startFreq, startFreq + nrFreq*stepFreq,
+		     startTime, endTime);
+      LoVec_double partStartTime(nrTime);
+      LoVec_double partEndTime(nrTime);
+      for (int j=0; j<nrTime; j++) {
+	partStartTime(j) = cells.time(stTime+j) - cells.stepTime(stTime+j);
+	partEndTime(j)   = cells.time(stTime+j) + cells.stepTime(stTime+j);
+      }
+      Cells partCells (partDom, nrFreq, partStartTime, partEndTime);
+      Request partReq(partCells);
+      Result partRes;
+      Result::Ref partResRef (partRes, DMI::WRITE||DMI::EXTERNAL);
+      polc.getResult (partResRef, partReq);
+      // Create the result matrix if it is the first Time.
+      // Now it is initialized with zeroes (to see possible errors).
       // In the future the outcommnented statement can be used
-      // which saves the initialization time. It requires that the
+      // which saves the initialization Time. It requires that the
       // request domain is entirely covered by the polcs.
       if (datar == 0) {
-	Matrix<double> mat(ndx, ndy);
-	mat = 0;
-	////	  result.setValue (Matrix(double(), ndx. ndy));
-	result.setValue (mat);
-	datar = result.getValueRW().doubleStorage();
+	LoMat_double& mat = res.setReal (ndFreq, ndTime);
+	datar = mat.data();
       }
       // Move the values to the correct place in the output result.
       // Note that in principle a polynomial could be a single coefficient
       // in which case it returns a single value.
-      const double* from = partRes.getValue().doubleStorage();
-      double* to = datar + stx + sty*ndx;
+      const double* from = partRes.getValue().realStorage();
+      double* to = datar + stFreq + stTime*ndFreq;
       if (partRes.getValue().nelements() == 1) {
-	for (int iy=0; iy<nry; iy++) {
-	  for (int ix=0; ix<nrx; ix++) {
-	    to[ix] = *from;
+	for (int iTime=0; iTime<nrTime; iTime++) {
+	  for (int iFreq=0; iFreq<nrFreq; iFreq++) {
+	    to[iFreq] = *from;
 	  }
-	  to += ndx;
+	  to += ndFreq;
 	}
       } else {
-	for (int iy=0; iy<nry; iy++) {
-	  for (int ix=0; ix<nrx; ix++) {
-	    to[ix] = *from++;
+	for (int iTime=0; iTime<nrTime; iTime++) {
+	  for (int iFreq=0; iFreq<nrFreq; iFreq++) {
+	    to[iFreq] = *from++;
 	  }
-	  to += ndx;
+	  to += ndFreq;
 	}
       }
     }
   }
-  return result;
-  */
+  return 0;
 }
 
 void ParmPolc::getInitial (Vells& values) const
