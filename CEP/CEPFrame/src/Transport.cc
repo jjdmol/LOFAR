@@ -99,6 +99,7 @@ void Transport::makeTransportHolder (const TransportHolder& prototype)
   delete itsTransportHolder;
   itsTransportHolder = 0;
   itsTransportHolder = prototype.make();
+  itsTransportHolder -> setTransport (this);
 }
 
 void Transport::dump() const
