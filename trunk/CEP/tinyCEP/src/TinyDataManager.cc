@@ -84,6 +84,9 @@ namespace LOFAR
   TinyDataManager::TinyDataManager(const TinyDataManager& that)
     : itsNinputs (that.itsNinputs),
       itsNoutputs(that.itsNoutputs),
+      itsProcessRate(that.itsProcessRate),
+      itsInputRate(that.itsInputRate),
+      itsOutputRate(that.itsOutputRate),
       itsInputSelector(0),
       itsOutputSelector(0)
   {
