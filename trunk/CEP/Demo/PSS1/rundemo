@@ -1,4 +1,7 @@
 #!/bin/sh
+RUNDEMOPATH=`echo $0 | sed 's/\/rundemo$//'`
+cd $RUNDEMOPATH
+
 AIPSROOT=%AIPSROOT%
 if test "$AIPSROOT" = "%AIPSROOT%"; then
 	AIPSROOT=/aips++/weekly
