@@ -34,7 +34,7 @@
 #undef VERSION
 #define DECLARE_SIGNAL_NAMES
 #include "../src/LogicalDevice_Protocol.ph"
-#include "../src/ABS_Protocol.ph"
+#include <ABS_Protocol.ph>
 
 #include <stdio.h>
 
@@ -675,7 +675,7 @@ GCFEvent::TResult AVTTestTask::handleBeamServerEvents(GCFEvent& event, GCFPortIn
       LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTTestTask(%s)::handleBeamServerEvents (ABS_BEAMALLOC)",getName().c_str(),event.signal));
       ABSBeamallocAckEvent ack;
       ack.handle=0;
-      ack.status=SUCCESS;
+      ack.status=ABS_Protocol::SUCCESS;
       p.send(ack);
       m_BEAMALLOC_received=true;
       break;
@@ -686,7 +686,7 @@ GCFEvent::TResult AVTTestTask::handleBeamServerEvents(GCFEvent& event, GCFPortIn
       LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTTestTask(%s)::handleBeamServerEvents (ABS_BEAMFREE)",getName().c_str(),event.signal));
       ABSBeamfreeAckEvent ack;
       ack.handle=0;
-      ack.status=SUCCESS;
+      ack.status=ABS_Protocol::SUCCESS;
       p.send(ack);
       m_BEAMFREE_received=true;
       break;
@@ -710,7 +710,7 @@ GCFEvent::TResult AVTTestTask::handleBeamServerEvents(GCFEvent& event, GCFPortIn
     {
       LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTTestTask(%s)::handleBeamServerEvents (ABS_WGSETTINGS)",getName().c_str(),event.signal));
       ABSWgsettingsAckEvent ack;
-      ack.status=SUCCESS;
+      ack.status=ABS_Protocol::SUCCESS;
       p.send(ack);
       m_WGSETTINGS_received=true;
       break;

@@ -5,13 +5,14 @@ TESTS			= #aratest
 AUTOGEN = autogen
 SUFFIXES = .ph
 %.ph: %.prot
-	$(AUTOGEN) --writable -L $(top_srcdir)/../MACCommon/autogen -L $(top_builddir)/PAC/RSPDriver/src $<
+	$(AUTOGEN) --writable -L $(top_srcdir)/../MACCommon/autogen $<
 
 aratest_CPPFLAGS= \
-	-I$(top_srcdir)/PAC/RSPDriver/src \
 	-I$(top_srcdir)/../GCF/GCFCommon/src \
 	-I$(top_srcdir)/PIC/RegisterAccess/src \
-	-fmessage-length=0
+  -Wno-deprecated \
+	-fmessage-length=0 \
+	-fdiagnostics-show-location=once
 
 aratest_SOURCES 		= \
 	ARATestAnswer.cc \
@@ -22,18 +23,16 @@ aratest_SOURCES 		= \
 	
 aratest_LDADD		= \
 	$(top_builddir)/APLCommon/src/libaplcommon.la \
-	$(top_srcdir)/PAC/RSPDriver/build/gnu_debug/src/librsp.la \
-	-lgcf -lpml -lgcfcommon -lpa -lsal -ltm
+	-lrsp \
+	-lgcf 
 	
 aratest_DEPENDENCIES	= \
 	$(top_builddir)/APLCommon/src/libaplcommon.la
 
 BUILT_SOURCES = \
-  $(top_builddir)/PAC/RSPDriver/src/RSP_Protocol.ph \
 	log4cplus.properties	
 
 EXTRA_DIST = \
-  $(top_builddir)/PAC/RSPDriver/src/RSP_Protocol.ph \
 	log4cplus.properties
 	
 %.properties: ../src/%.properties.in

@@ -539,14 +539,14 @@ void AVTStationBeamformer::concretePrepare(GCFPortInterface& /*port*/,string& pa
   m_beamID=0; // TODO
   int spectral_window(0);
   int n_subbands(subbandsVector.size());
-  int subbandsArray[ABS::N_BEAMLETS];
+  int subbandsArray[AVT_N_BEAMLETS];
   char tempLogStr[1000];
   tempLogStr[0]=0;
   
-  memset(subbandsArray,0,sizeof(subbandsArray[0])*ABS::N_BEAMLETS);
+  memset(subbandsArray,0,sizeof(subbandsArray[0])*AVT_N_BEAMLETS);
   vectorIterator=subbandsVector.begin();
   int arrayIndex(0);
-  while(arrayIndex<ABS::N_BEAMLETS && vectorIterator!=subbandsVector.end())
+  while(arrayIndex<AVT_N_BEAMLETS && vectorIterator!=subbandsVector.end())
   {
     subbandsArray[arrayIndex++]=*vectorIterator;
     char tempStr[10];
@@ -559,7 +559,7 @@ void AVTStationBeamformer::concretePrepare(GCFPortInterface& /*port*/,string& pa
   LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTStationBeamformer(%s)::allocate %d subbands: %s",getName().c_str(),n_subbands,tempLogStr));
   ABSBeamallocEvent beamAllocEvent;
   beamAllocEvent.spectral_window = spectral_window;
-  memcpy(beamAllocEvent.subbands,subbandsArray,sizeof(int)*ABS::N_BEAMLETS);
+  memcpy(beamAllocEvent.subbands,subbandsArray,sizeof(int)*AVT_N_BEAMLETS);
   m_beamServer.send(beamAllocEvent);
 }
 

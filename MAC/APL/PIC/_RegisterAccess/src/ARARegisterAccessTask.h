@@ -79,6 +79,18 @@ namespace ARA
        * commands.
        */
       GCFEvent::TResult connected(GCFEvent& e, GCFPortInterface &p);
+      /**
+       * The subscribing states. In each state a SubStats message is sent
+       */
+      GCFEvent::TResult subscribingStatsSubbandPower(GCFEvent& e, GCFPortInterface &p);
+      GCFEvent::TResult subscribingStatsSubbandMean(GCFEvent& e, GCFPortInterface &p);
+      GCFEvent::TResult subscribingStatsBeamletPower(GCFEvent& e, GCFPortInterface &p);
+      GCFEvent::TResult subscribingStatsBeamletMean(GCFEvent& e, GCFPortInterface &p);
+      /**
+       * The operational state. In this state the task can receives
+       * status and statistics updates from the rsp driver
+       */
+      GCFEvent::TResult operational(GCFEvent& e, GCFPortInterface &p);
     
     private:
       // action methods
@@ -160,7 +172,10 @@ namespace ARA
       
       // subscriptions
       uint32            m_subStatusHandle;
-      uint32            m_subStatsHandle;
+      uint32            m_subStatsHandleSubbandPower;
+      uint32            m_subStatsHandleSubbandMean;
+      uint32            m_subStatsHandleBeamletPower;
+      uint32            m_subStatsHandleBeamletMean;
 
   };
 

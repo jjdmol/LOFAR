@@ -1,28 +1,30 @@
-noinst_PROGRAMS 		= ARARegisterAccess
+bin_PROGRAMS 		= RegisterAccess
 
 AUTOGEN = autogen
 SUFFIXES = .ph
 %.ph: %.prot
 	$(AUTOGEN) --writable -L $(top_srcdir)/../MACCommon/autogen  $<
+%.cc: %.prot
+	$(AUTOGEN) --writable -L $(top_srcdir)/../MACCommon/autogen $<
 
-ARARegisterAccess_CPPFLAGS= \
-	-I$(top_srcdir)/PAC/RSPDriver/src \
+RegisterAccess_CPPFLAGS= \
 	-I$(top_srcdir)/APLCommon/src \
+  -Wno-deprecated \
 	-fmessage-length=0 \
 	-fdiagnostics-show-location=once
 
-ARARegisterAccess_SOURCES 		= \
+RegisterAccess_SOURCES 		= \
 	ARAMain.cc \
 	ARAAnswer.cc \
 	ARAPhysicalModel.cc \
 	ARARegisterAccessTask.cc
 	
-ARARegisterAccess_LDADD		= \
+RegisterAccess_LDADD		= \
 	$(top_builddir)/APLCommon/src/libaplcommon.la \
-	$(top_srcdir)/PAC/RSPDriver/build/gnu_debug/src/librsp.la \
+	-lrsp \
 	-lgcfcommon
 	
-ARARegisterAccess_DEPENDENCIES	= \
+RegisterAccess_DEPENDENCIES	= \
 	$(top_builddir)/APLCommon/src/libaplcommon.la
 
 BUILT_SOURCES = \
@@ -34,6 +36,10 @@ EXTRA_DIST = \
     ara.ns \
     ara.top \
     log4cplus.properties
+
+sysconf_DATA = \
+	ara.ns \
+	ara.top
 	
 %.properties: %.properties.in
 	cp $< $@

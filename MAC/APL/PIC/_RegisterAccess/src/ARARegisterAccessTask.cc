@@ -468,7 +468,7 @@ GCFEvent::TResult RegisterAccessTask::connected(GCFEvent& e, GCFPortInterface& p
       RSPSubstatusEvent substatus;
       substatus.timestamp.setNow();
       substatus.rcumask = std::bitset<MAX_N_RCUS>((1<<N_RCUS)-1);
-      substatus.period = 4;
+      substatus.period = STATUS_UPDATE_INTERVAL;
       m_RSPclient.send(substatus);
       
       break;
@@ -531,7 +531,7 @@ GCFEvent::TResult RegisterAccessTask::subscribingStatsSubbandPower(GCFEvent& e, 
       RSPSubstatsEvent substats;
       substats.timestamp.setNow();
       substats.rcumask = std::bitset<MAX_N_RCUS>((1<<N_RCUS)-1);
-      substats.period = 10;
+      substats.period = STATISTICS_UPDATE_INTERVAL;
       substats.type = RSP_Protocol::Statistics::SUBBAND_POWER;
       substats.reduction = RSP_Protocol::REPLACE;
       m_RSPclient.send(substats);
@@ -595,7 +595,7 @@ GCFEvent::TResult RegisterAccessTask::subscribingStatsSubbandMean(GCFEvent& e, G
       RSPSubstatsEvent substats;
       substats.timestamp.setNow();
       substats.rcumask = std::bitset<MAX_N_RCUS>((1<<N_RCUS)-1);
-      substats.period = 10;
+      substats.period = STATISTICS_UPDATE_INTERVAL;
       substats.type = RSP_Protocol::Statistics::SUBBAND_MEAN;
       substats.reduction = RSP_Protocol::REPLACE;
       m_RSPclient.send(substats);
@@ -659,7 +659,7 @@ GCFEvent::TResult RegisterAccessTask::subscribingStatsBeamletPower(GCFEvent& e, 
       RSPSubstatsEvent substats;
       substats.timestamp.setNow();
       substats.rcumask = std::bitset<MAX_N_RCUS>((1<<N_RCUS)-1);
-      substats.period = 10;
+      substats.period = STATISTICS_UPDATE_INTERVAL;
       substats.type = RSP_Protocol::Statistics::BEAMLET_POWER;
       substats.reduction = RSP_Protocol::REPLACE;
       m_RSPclient.send(substats);
@@ -723,7 +723,7 @@ GCFEvent::TResult RegisterAccessTask::subscribingStatsBeamletMean(GCFEvent& e, G
       RSPSubstatsEvent substats;
       substats.timestamp.setNow();
       substats.rcumask = std::bitset<MAX_N_RCUS>((1<<N_RCUS)-1);
-      substats.period = 10;
+      substats.period = STATISTICS_UPDATE_INTERVAL;
       substats.type = RSP_Protocol::Statistics::BEAMLET_MEAN;
       substats.reduction = RSP_Protocol::REPLACE;
       m_RSPclient.send(substats);

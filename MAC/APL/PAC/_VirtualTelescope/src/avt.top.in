@@ -57,8 +57,8 @@ RCU6_server=RCU6:RCU6_server
 RCU7_server=RCU7:RCU7_server
 RCU8_server=RCU8:RCU8_server
 # use BeamServer=AVTTest:BeamServer if you want to use the AVTTest beamserver
-#BeamServer=ABS:client
-BeamServer=AVTTest:BeamServer
+BeamServer=ABS:client
+#BeamServer=AVTTest:BeamServer
 
 [VT1]
 BF1_server=BF1:BF1_server
@@ -118,43 +118,43 @@ SRG4_server=SRG4:SRG4_server
 
 [BF1]
 # use BeamServer=AVTTest:BeamServer if you want to use the AVTTest beamserver
-#BeamServer=ABS:client
-BeamServer=AVTTest:BeamServer
+BeamServer=ABS:client
+#BeamServer=AVTTest:BeamServer
 
 [BF2]
 # use BeamServer=AVTTest:BeamServer if you want to use the AVTTest beamserver
-#BeamServer=ABS:client
-BeamServer=AVTTest:BeamServer
+BeamServer=ABS:client
+#BeamServer=AVTTest:BeamServer
 
 [BF3]
 # use BeamServer=AVTTest:BeamServer if you want to use the AVTTest beamserver
-#BeamServer=ABS:client
-BeamServer=AVTTest:BeamServer
+BeamServer=ABS:client
+#BeamServer=AVTTest:BeamServer
 
 [BF4]
 # use BeamServer=AVTTest:BeamServer if you want to use the AVTTest beamserver
-#BeamServer=ABS:client
-BeamServer=AVTTest:BeamServer
+BeamServer=ABS:client
+#BeamServer=AVTTest:BeamServer
 
 [BF5]
 # use BeamServer=AVTTest:BeamServer if you want to use the AVTTest beamserver
-#BeamServer=ABS:client
-BeamServer=AVTTest:BeamServer
+BeamServer=ABS:client
+#BeamServer=AVTTest:BeamServer
 
 [BF6]
 # use BeamServer=AVTTest:BeamServer if you want to use the AVTTest beamserver
-#BeamServer=ABS:client
-BeamServer=AVTTest:BeamServer
+BeamServer=ABS:client
+#BeamServer=AVTTest:BeamServer
 
 [BF7]
 # use BeamServer=AVTTest:BeamServer if you want to use the AVTTest beamserver
-#BeamServer=ABS:client
-BeamServer=AVTTest:BeamServer
+BeamServer=ABS:client
+#BeamServer=AVTTest:BeamServer
 
 [BF8]
 # use BeamServer=AVTTest:BeamServer if you want to use the AVTTest beamserver
-#BeamServer=ABS:client
-BeamServer=AVTTest:BeamServer
+BeamServer=ABS:client
+#BeamServer=AVTTest:BeamServer
 
 [SRG1]
 RCU1_server=RCU1:RCU1_server
