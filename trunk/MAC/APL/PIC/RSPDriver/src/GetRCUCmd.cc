@@ -1,4 +1,4 @@
-//#  GetStatusCmd.cc: implementation of the GetStatusCmd class
+//#  GetRCUCmd.cc: implementation of the GetRCUCmd class
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -22,7 +22,7 @@
 
 #include "RSP_Protocol.ph"
 #include "RSPConfig.h"
-#include "GetStatusCmd.h"
+#include "GetRCUCmd.h"
 
 #include <blitz/array.h>
 
@@ -36,32 +36,29 @@ using namespace LOFAR;
 using namespace RSP_Protocol;
 using namespace blitz;
 
-GetStatusCmd::GetStatusCmd(GCFEvent& event, GCFPortInterface& port, Operation oper)
+GetRCUCmd::GetRCUCmd(GCFEvent& event, GCFPortInterface& port, Operation oper)
 {
-  m_event = new RSPGetstatusEvent(event);
+  m_event = new RSPGetrcuEvent(event);
 
   setOperation(oper);
   setPeriod(0);
   setPort(port);
 }
 
-GetStatusCmd::~GetStatusCmd()
+GetRCUCmd::~GetRCUCmd()
 {
   delete m_event;
 }
 
-void GetStatusCmd::ack(CacheBuffer& cache)
+void GetRCUCmd::ack(CacheBuffer& cache)
 {
-  RSPGetstatusackEvent ack;
+  RSPGetrcuackEvent ack;
 
   ack.timestamp = getTimestamp();
   ack.status = SUCCESS;
 
-  ack.sysstatus.board().resize(GET_CONFIG("N_RSPBOARDS", i));
-  ack.sysstatus.board() = cache.getSystemStatus().board();
-
-  ack.sysstatus.rcu().resize(m_event->rcumask.count());
-
+  ack.settings().resize(m_event->rcumask.count());
+  
   int result_rcu = 0;
   for (int cache_rcu = 0; cache_rcu < GET_CONFIG("N_RCU", i); cache_rcu++)
   {
@@ -69,8 +66,7 @@ void GetStatusCmd::ack(CacheBuffer& cache)
     {
       if (result_rcu < GET_CONFIG("N_RCU", i))
       {
-	ack.sysstatus.rcu()(result_rcu)
-	  = cache.getSystemStatus().rcu()(cache_rcu);
+	ack.settings()(result_rcu) = cache.getRCUSettings()()(cache_rcu);
       }
       else
       {
@@ -81,54 +77,36 @@ void GetStatusCmd::ack(CacheBuffer& cache)
       result_rcu++;
     }
   }
-
+  
   getPort()->send(ack);
 }
 
-void GetStatusCmd::apply(CacheBuffer& /*cache*/)
+void GetRCUCmd::apply(CacheBuffer& /*cache*/)
 {
-  // no-op
+  /* intentionally left empty */
 }
 
-void GetStatusCmd::complete(CacheBuffer& cache)
+void GetRCUCmd::complete(CacheBuffer& cache)
 {
   ack(cache);
 }
 
-const Timestamp& GetStatusCmd::getTimestamp() const
+const Timestamp& GetRCUCmd::getTimestamp() const
 {
   return m_event->timestamp;
 }
 
-void GetStatusCmd::setTimestamp(const Timestamp& timestamp)
+void GetRCUCmd::setTimestamp(const Timestamp& timestamp)
 {
   m_event->timestamp = timestamp;
 }
 
-bool GetStatusCmd::validate() const
+bool GetRCUCmd::validate() const
 {
-  return (m_event->rcumask.count() <= (unsigned int)GET_CONFIG("N_RCU", i));
+  return ((m_event->rcumask.count() <= (unsigned int)GET_CONFIG("N_RCU", i)));
 }
 
-void GetStatusCmd::ack_fail()
+bool GetRCUCmd::readFromCache() const
 {
-  RSPGetstatusackEvent ack;
-
-  ack.timestamp = Timestamp(0,0);
-  ack.status = FAILURE;
-
-  ack.sysstatus.board().resize(GET_CONFIG("N_RSPBOARDS", i));
-  ack.sysstatus.rcu().resize(GET_CONFIG("N_RCU", i));
-
-  BoardStatus boardinit;
-  RCUStatus rcuinit;
-
-  memset(&boardinit, 0, sizeof(BoardStatus));
-  memset(&rcuinit, 0, sizeof(RCUStatus));
-  
-  ack.sysstatus.board() = boardinit;
-  ack.sysstatus.rcu()   = rcuinit;
-
-  getPort()->send(ack);
+  return m_event->cache;
 }
-

@@ -133,7 +133,7 @@ namespace EPA_Protocol
       
       // RSSTATUS_SIZE was 44, now includes sample sequence number (32 bits) and pps sequence number (32bits)
       static const uint16 RSPSTATUS_SIZE     = 52;
-      static const uint16 FWVERSION_SIZE     = 2;
+      static const uint16 FWVERSION_SIZE     = 6; // used to be 2
 
       static const uint16 SELFTEST_SIZE      = 1;
 

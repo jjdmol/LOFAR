@@ -57,8 +57,8 @@ void GetSubbandsCmd::ack(CacheBuffer& cache)
   ack.timestamp = getTimestamp();
   ack.status = SUCCESS;
 
-  ack.subbands().resize(m_event->rcumask.count(),
-			cache.getSubbandSelection()().extent(firstDim));
+  ack.subbands().resize(m_event->rcumask.count(), MAX_N_BEAMLETS);
+  ack.subbands.nrsubbands().resize(m_event->rcumask.count());
   
   int result_rcu = 0;
   for (int cache_rcu = 0; cache_rcu < GET_CONFIG("N_RCU", i); cache_rcu++)
@@ -69,6 +69,8 @@ void GetSubbandsCmd::ack(CacheBuffer& cache)
       {
 	ack.subbands()(result_rcu, Range::all())
 	  = cache.getSubbandSelection()()(cache_rcu, Range::all());
+
+	ack.subbands.nrsubbands()(result_rcu) = cache.getSubbandSelection().nrsubbands()(cache_rcu);
       }
       else
       {

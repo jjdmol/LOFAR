@@ -1,4 +1,4 @@
-//#  GetSubbandsCmd.cc: implementation of the GetSubbandsCmd class
+//#  GetVersionsCmd.cc: implementation of the GetVersionsCmd class
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -22,7 +22,7 @@
 
 #include "RSP_Protocol.ph"
 #include "RSPConfig.h"
-#include "GetSubbandsCmd.h"
+#include "GetVersionsCmd.h"
 
 #include <blitz/array.h>
 
@@ -36,81 +36,65 @@ using namespace LOFAR;
 using namespace RSP_Protocol;
 using namespace blitz;
 
-GetSubbandsCmd::GetSubbandsCmd(GCFEvent& event, GCFPortInterface& port, Operation oper)
+GetVersionsCmd::GetVersionsCmd(GCFEvent& event, GCFPortInterface& port, Operation oper)
 {
-  m_event = new RSPGetsubbandsEvent(event);
+  m_event = new RSPGetversionEvent(event);
 
   setOperation(oper);
   setPeriod(0);
   setPort(port);
 }
 
-GetSubbandsCmd::~GetSubbandsCmd()
+GetVersionsCmd::~GetVersionsCmd()
 {
   delete m_event;
 }
 
-void GetSubbandsCmd::ack(CacheBuffer& cache)
+void GetVersionsCmd::ack(CacheBuffer& cache)
 {
-  RSPGetsubbandsackEvent ack;
+  RSPGetversionackEvent ack;
 
   ack.timestamp = getTimestamp();
   ack.status = SUCCESS;
 
-  ack.subbands().resize(m_event->rcumask.count(), MAX_N_BEAMLETS);
-  ack.subbands.nrsubbands().resize(m_event->rcumask.count());
+  ack.versions.rsp().resize(cache.getVersions().rsp().extent(firstDim));
+  ack.versions.rsp() = cache.getVersions().rsp();
   
-  int result_rcu = 0;
-  for (int cache_rcu = 0; cache_rcu < GET_CONFIG("N_RCU", i); cache_rcu++)
-  {
-    if (m_event->rcumask[result_rcu])
-    {
-      if (result_rcu < GET_CONFIG("N_RCU", i))
-      {
-	ack.subbands()(result_rcu, Range::all())
-	  = cache.getSubbandSelection()()(cache_rcu, Range::all());
+  ack.versions.bp().resize(cache.getVersions().bp().extent(firstDim));
+  ack.versions.bp() = cache.getVersions().bp();
 
-	ack.subbands.nrsubbands()(result_rcu) = cache.getSubbandSelection().nrsubbands()(cache_rcu);
-      }
-      else
-      {
-	LOG_WARN(formatString("invalid RCU index %d, there are only %d RCU's",
-			      result_rcu, GET_CONFIG("N_RCU", i)));
-      }
-      
-      result_rcu++;
-    }
-  }
+  ack.versions.ap().resize(cache.getVersions().ap().extent(firstDim));
+  ack.versions.ap() = cache.getVersions().ap();
   
   getPort()->send(ack);
 }
 
-void GetSubbandsCmd::apply(CacheBuffer& /*cache*/)
+void GetVersionsCmd::apply(CacheBuffer& /*cache*/)
 {
   /* intentionally left empty */
 }
 
-void GetSubbandsCmd::complete(CacheBuffer& cache)
+void GetVersionsCmd::complete(CacheBuffer& cache)
 {
   ack(cache);
 }
 
-const Timestamp& GetSubbandsCmd::getTimestamp() const
+const Timestamp& GetVersionsCmd::getTimestamp() const
 {
   return m_event->timestamp;
 }
 
-void GetSubbandsCmd::setTimestamp(const Timestamp& timestamp)
+void GetVersionsCmd::setTimestamp(const Timestamp& timestamp)
 {
   m_event->timestamp = timestamp;
 }
 
-bool GetSubbandsCmd::validate() const
+bool GetVersionsCmd::validate() const
 {
-  return ((m_event->rcumask.count() <= (unsigned int)GET_CONFIG("N_RCU", i)));
+  return true;
 }
 
-bool GetSubbandsCmd::readFromCache() const
+bool GetVersionsCmd::readFromCache() const
 {
   return m_event->cache;
 }

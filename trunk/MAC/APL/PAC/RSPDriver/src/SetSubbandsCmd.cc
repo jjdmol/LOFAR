@@ -67,15 +67,20 @@ void SetSubbandsCmd::apply(CacheBuffer& cache)
   {
     if (m_event->rcumask[cache_rcu])
     {
-      cache.getSubbandSelection()()(cache_rcu, Range(0, nr_subbands - 1))
-	= m_event->subbands()(0, Range(0, nr_subbands - 1));
+      if (cache_rcu < GET_CONFIG("N_RCU", i))
+      {
+	cache.getSubbandSelection()()(cache_rcu, Range(0, nr_subbands - 1))
+	  = m_event->subbands()(0, Range(0, nr_subbands - 1));
 
-      cache.getSubbandSelection().nrsubbands()(cache_rcu) = nr_subbands;
+	cache.getSubbandSelection().nrsubbands()(cache_rcu) = nr_subbands;
+      }
+      else
+      {
+	LOG_WARN(formatString("invalid RCU index %d, there are only %d RCU's",
+			      cache_rcu, GET_CONFIG("N_RCU", i)));
+      }
     }
   }
-
-  //LOG_INFO_STR("cache.ss=" << cache.getSubbandSelection()());
-  //LOG_INFO_STR("cache.nrsubbands=" << cache.getSubbandSelection().nrsubbands());
 }
 
 void SetSubbandsCmd::complete(CacheBuffer& /*cache*/)
