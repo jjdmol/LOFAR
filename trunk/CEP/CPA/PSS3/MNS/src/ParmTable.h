@@ -68,6 +68,10 @@ public:
   MeqSourceList getPointSources (const Vector<int>& sourceNrs,
 				 vector<MeqExpr*>& exprDel);
 
+  // Unlock the underlying AIPS++ table.
+  void unlock()
+    { itsTable.unlock(); }
+
 private:
   // Find the table subset containing the parameter values for the
   // requested domain.
