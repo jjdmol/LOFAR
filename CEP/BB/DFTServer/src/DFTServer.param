@@ -1,4 +1,4 @@
-DFTConnection.ClientHost="lofar17"
-DFTConnection.ServerHost="lofar17"
+DFTConnection.ClientHost="localhost"
+DFTConnection.ServerHost="localhost"
 DFTConnection.RequestPort=17543
 DFTConnection.ResultPort=17544
