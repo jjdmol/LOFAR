@@ -32,6 +32,8 @@
 #include <GCF/GCF_PVBlob.h>
 #include "GCO_Defines.h"
 
+using namespace LOFAR;
+
 GCFPValue* GCFPValue::createMACTypeObject(TMACValueType type)
 {
   GCFPValue* pResult(0);
