@@ -24,6 +24,8 @@
 #define GPM_PROPERTY_H
 
 #include <SAL/GCF_PValue.h>
+#include <GCFCommon/GCF_Defines.h>
+#include "GPM_Defines.h"
 
 class GPMPropertySet;
 
@@ -36,13 +38,14 @@ class GPMProperty
     
   private:
     friend class GPMPropertySet;
-    TPMResult setValue(GCFPValue& value);
+    TPMResult setValue(const GCFPValue& value);
     TPMResult getValue(GCFPValue& value, bool curValue = true) const;
     GCFPValue* getValue(bool curValue = true) const;
     TPMResult setLink(bool link);
     inline bool isLinked() const {return _isLinked;}
     void setAccessMode(TAccessMode mode, bool on);
     bool testAccessMode(TAccessMode mode) const;   
+    inline const string& getName() const {return _name;}
     
     GCFPValue* createValue(GCFPValue::TMACValueType type) const;
         

@@ -57,6 +57,7 @@ lofar_DOCXX
 lofar_MPI(0)
 lofar_PACKAGE(LCS/Common)
 lofar_PACKAGE(MAC/Tools/LofarLogger)
+lofar_PACKAGE(MAC/GCF/GCFCommon)
 lofar_PACKAGE(MAC/GCF/CoreComps/TM)
 lofar_PACKAGE(MAC/GCF/CoreComps/SAL)
 lofar_EXTERNAL(log4cplus,1,log4cplus/logger.h,log4cplus,)

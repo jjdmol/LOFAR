@@ -24,6 +24,8 @@
 #define GPM_PROPERTYSET_H
 
 #include <SAL/GSA_Service.h>
+#include <GCFCommon/GCF_Defines.h>
+#include "GPM_Defines.h"
 #include <Common/lofar_map.h>
 #include <Common/lofar_list.h>
 
@@ -39,17 +41,19 @@ class GPMPropertySet : public GSAService
   protected:
     void propCreated(string& propName) {};
     void propDeleted(string& propName) {};
+    void propValueGet(string& propName, GCFPValue& value) {};
     void propSubscribed(string& propName);
     void propUnsubscribed(string& propName);
     void propValueChanged(string& propName, GCFPValue& value);
   
   private: // methods for GPMController
     friend class GPMController;  
-    TPMResult linkProperties(list<string>& properties);
-    TPMResult unlinkProperties(list<string>& properties);
-    TPMResult get(const string& propName, GCFPValue** pValue);
-    TPMResult set(const string& propName, const GCFPValue& value);
+    TPMResult linkProperties(unsigned int seqnr, list<string>& properties);
+    TPMResult unlinkProperties(unsigned int seqnr, list<string>& properties);
+    TPMResult getValue(const string& propName, GCFPValue** pValue);
+    TPMResult setValue(const string& propName, const GCFPValue& value);
     TPMResult getOldValue(const string& propName, GCFPValue** value);
+    inline const string& getScope() const {return _scope;}   
   
   private: // helper methods
     TPMResult cutScope(string& propName);
@@ -57,9 +61,10 @@ class GPMPropertySet : public GSAService
   private:
     map<string, GPMProperty*> _properties;
     list<string> _tempLinkList;
+    unsigned int _tempSeqnr;
     typedef map<string, GPMProperty*>::iterator TPropertyIter;
     GPMController& _controller;
     string _scope;
-    unsigend int _counter;
+    unsigned int _counter;
 };
 #endif

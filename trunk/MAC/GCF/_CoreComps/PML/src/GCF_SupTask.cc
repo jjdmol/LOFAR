@@ -23,7 +23,7 @@
 #include "GCF_SupTask.h"
 #include "GPM_Controller.h"
 
-GCFSupervisedTask::GCFSupervisedTask(State inital, string& name) :
+GCFSupervisedTask::GCFSupervisedTask(State initial, string& name) :
   GCFTask(initial, name)
 {
   _pController = new GPMController(*this);
@@ -59,10 +59,9 @@ TGCFResult GCFSupervisedTask::reloadAPC(const string apcName,
           GCF_PML_ERROR);
 }
 
-TGCFResult GCFSupervisedTask::loadMyProperties(TPropertySet& newSet, 
-                                               const string scope)
+TGCFResult GCFSupervisedTask::loadMyProperties(TPropertySet& newSet)
 {
-  return (_pController->loadMyProperties(newSet, scope) == PM_NO_ERROR ? 
+  return (_pController->loadMyProperties(newSet) == PM_NO_ERROR ? 
           GCF_NO_ERROR : 
           GCF_PML_ERROR);
 }
@@ -74,7 +73,7 @@ TGCFResult GCFSupervisedTask::unloadMyProperties(const string scope)
           GCF_PML_ERROR);
 }
 
-TGCFResult GCFSupervisedTask::set(const string& propName, 
+TGCFResult GCFSupervisedTask::set(const string propName, 
                                   const GCFPValue& value)
 {
   return (_pController->set(propName, value) == PM_NO_ERROR ? 
@@ -82,16 +81,16 @@ TGCFResult GCFSupervisedTask::set(const string& propName,
           GCF_PML_ERROR);
 }
 
-TGCFResult GCFSupervisedTask::get(const string& propName)
+TGCFResult GCFSupervisedTask::get(const string propName)
 {
   return (_pController->get(propName) == PM_NO_ERROR ? 
           GCF_NO_ERROR : 
           GCF_PML_ERROR);
 }
 
-TGCFResult GCFSupervisedTask::getMyOldValue(const string& propName, GCFPValue& value)
+TGCFResult GCFSupervisedTask::getMyOldValue(const string propName, GCFPValue** pValue)
 {
-  return (_pController->getMyOldValue(propName, value) == PM_NO_ERROR ? 
+  return (_pController->getMyOldValue(propName, pValue) == PM_NO_ERROR ? 
           GCF_NO_ERROR : 
           GCF_PML_ERROR);
 }

@@ -34,24 +34,24 @@ GCFPropertyProxy::~GCFPropertyProxy()
   _pPMProxy = 0;
 }
 
-TPMResult GCFPropertyProxy::subscribe(const string& propName)
+TGCFResult GCFPropertyProxy::subscribe(const string& propName)
 {
-  return (_pPMProxy->subscribe(propName) == SA_NO_ERROR ? PM_NO_ERROR : PM_SCADA_ERROR);
+  return (_pPMProxy->subscribe(propName) == SA_NO_ERROR ? GCF_NO_ERROR : GCF_PML_ERROR);
 }
 
-TPMResult GCFPropertyProxy::unsubscribe(const string& propName)
+TGCFResult GCFPropertyProxy::unsubscribe(const string& propName)
 {
-  return (_pPMProxy->unsubscribe(propName) == SA_NO_ERROR ? PM_NO_ERROR : PM_SCADA_ERROR);
+  return (_pPMProxy->unsubscribe(propName) == SA_NO_ERROR ? GCF_NO_ERROR : GCF_PML_ERROR);
 }
 
-TPMResult GCFPropertyProxy::get(const string& propName)
+TGCFResult GCFPropertyProxy::get(const string& propName)
 {
-  return (_pPMProxy->get(propName) == SA_NO_ERROR ? PM_NO_ERROR : PM_SCADA_ERROR);
+  return (_pPMProxy->get(propName) == SA_NO_ERROR ? GCF_NO_ERROR : GCF_PML_ERROR);
 }
 
-TPMResult GCFPropertyProxy::set(const string& propName, const GCFPValue& value)
+TGCFResult GCFPropertyProxy::set(const string& propName, const GCFPValue& value)
 {
-  return (_pPMProxy->set(propName, value) == SA_NO_ERROR ? PM_NO_ERROR : PM_SCADA_ERROR);
+  return (_pPMProxy->set(propName, value) == SA_NO_ERROR ? GCF_NO_ERROR : GCF_PML_ERROR);
 }
 
 bool GCFPropertyProxy::exists(const string& propName)

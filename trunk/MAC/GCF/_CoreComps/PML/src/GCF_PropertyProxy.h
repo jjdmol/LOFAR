@@ -23,7 +23,10 @@
 #ifndef GCF_PROPERTYPROXY_H
 #define GCF_PROPERTYPROXY_H
 
+#include <GCFCommon/GCF_Defines.h>
+
 class GPMPropertyProxy;
+class GCFPValue;
 
 class GCFPropertyProxy
 {
@@ -31,26 +34,11 @@ class GCFPropertyProxy
     GCFPropertyProxy();
     virtual ~GCFPropertyProxy();
 
-    inline TPMResult subscribe(const string& propName)
-    {
-      return GSAService::subscribe(propName);
-    }
-    inline TPMResult unsubscribe(const string& propName);
-    {
-      return GSAService::unsubscribe(propName);
-    }
-    inline TPMResult get(const string& propName)
-    {
-      return GSAService::get(propName);
-    }
-    inline TPMResult set(const string& propName, const GCFPValue& value);
-    {
-      return GSAService::set(propName, value);
-    }
+    TGCFResult subscribe(const string& propName);
+    TGCFResult unsubscribe(const string& propName);
+    TGCFResult get(const string& propName);
+    TGCFResult set(const string& propName, const GCFPValue& value);
     bool exists(const string& propName);
-    {
-      return GSAService::exists(propName);
-    }
 
   protected:
     friend class GPMPropertyProxy;
