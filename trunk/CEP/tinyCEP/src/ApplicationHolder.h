@@ -39,7 +39,8 @@ namespace LOFAR
   class ApplicationHolder
   {
   public:
-    ApplicationHolder(int ninput, int noutput, DataHolder* dhptr);
+    //    ApplicationHolder(int ninput, int noutput, DataHolder* dhptr);
+    // default constructor does nothing.
     ApplicationHolder();
     virtual ~ApplicationHolder();
     
@@ -48,6 +49,30 @@ namespace LOFAR
     void setarg (int argc, const char* argv[]);
     void getarg (int* argc, const char** argv[]);
  
+    void baseDefine (const KeyValueMap& params = KeyValueMap());
+    void baseCheck();
+    
+    /// Do a prerun on the simulation.
+    void basePrerun();
+    
+    /// Run the simulation by calling the run function.
+    void baseRun (int nsteps = -1);
+
+    /// Dump the simulation data by calling the dump function.
+    void baseDump();
+    
+    /// Set the output file of a data holder.
+    void baseDHFile (const string& dh, const string& name);
+
+    /// Do a postrun on the simulation.
+    void basePostrun();
+    
+    /** Quit the simulation.
+	It calls the quit function and closes the transport.
+    */
+    void baseQuit();
+    
+
   protected:
     /**@name Virtual functions
      @memo Functions to be implemented in derived class.
@@ -60,6 +85,7 @@ namespace LOFAR
     virtual void init();
     virtual void run(int nsteps);
     virtual void run_once();
+    virtual void dump() const;
     virtual void quit();
 
     // Forbid copy constructor
@@ -76,8 +102,6 @@ namespace LOFAR
     // pointer to the application dataManager
     MiniDataManager* itsDataManager;
 
-    int itsNinputs;
-    int itsNoutputs;
   };
 
 } // namespace LOFAR

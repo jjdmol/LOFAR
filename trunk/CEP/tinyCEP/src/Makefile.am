@@ -1,6 +1,7 @@
 lib_LTLIBRARIES 	= libtinyframe.la
 
 DOCHDRS = \
+SimulatorParseClass.h \
 BaseDataManager.h \
 MiniDataManager.h \
 ApplicationHolder.h \
@@ -31,6 +32,10 @@ MyExample.h
 #			libcepframe.la
 
 libtinyframe_la_SOURCES = $(DOCHDRS) \
+SimulatorParse.yy                               \
+SimulatorParse.h                                \
+SimulatorTokenize.ll                            \
+SimulatorParseClass.cc                          \
 MiniDataManager.cc \
 BaseDataManager.cc \
 ApplicationHolder.cc \
@@ -41,9 +46,9 @@ MyExample.cc
 
 EXTRA_DIST = assay
 
-AM_YFLAGS               = -d -p AppControllerParse
-AM_LFLAGS               = -PAppControllerTokenize
-LEX_OUTPUT_ROOT         = lex.AppControllerTokenize
+AM_YFLAGS               = -d -p SimulatorParse
+AM_LFLAGS               = -PSimulatorTokenize
+LEX_OUTPUT_ROOT         = lex.SimulatorTokenize
 
 include $(lofar_sharedir)/Makefile.common
 
