@@ -28,22 +28,21 @@ using namespace LOFAR;
 
 int main (int, char *argv[]) {
 
-	INIT_LOGGER_AND_WATCH("testLogger", 10000);
-	LOG_INFO (formatString("Program %s has started", argv[0]));
-
-	LOG_TRACE_FLOW("Initialise RunOnNode; tell this process to be (0,0)");
-	SETNODE(0,0);
-
-	LOG_TRACE_FLOW("Check for conditional execution");
-	RUNINPROCESS(0,0)  LOG_TRACE_FLOW("Executing code for (0,0)");
-	RUNINPROCESS(3,7)  LOG_ERROR("Executing code for (3,7)");
+  cout << "Program started" << endl;
+  
+  cout << "Initialise RunOnNode; tell this process to be (0,0)" << endl;
+  SETNODE(0,0);
+  
+  cout << "Check for conditional execution" << endl;
+  RUNINPROCESS(0,0)  cout << "Executing code for (0,0)" << endl;
+  RUNINPROCESS(3,7)  cout << "ERROR: Executing code for (3,7)" << endl;
 
 // todo:test reset of node (not implemented yet)
-// 	LOG_TRACE_FLOW("Now re-init to (3,7)");
+// 	cout << "Now re-init to (3,7)" << endl;
 // 	SETNODE(3,7);
-// 	LOG_TRACE_FLOW("Check for conditional execution");
-// 	RUNINPROCESS(0,0)  LOG_TRACE_ERROR("Executing code for (0,0)");
-// 	RUNINPROCESS(3,7)  LOG_TRACE_FLOW("Executing code for (3,7)");
+// 	cout << "Check for conditional execution" << endl;
+// 	RUNINPROCESS(0,0)  cout << "ERROR: Executing code for (0,0)" << endl;
+// 	RUNINPROCESS(3,7)  cout << "Executing code for (3,7)" << endl;
 
 	
 }
