@@ -66,17 +66,17 @@ namespace LOFAR
 
     void PersistentObject::erase() const
     {
-      doErase();
-      POContainer::const_iterator it;
-      for(it = itsOwnedPOs.begin(); it != itsOwnedPOs.end(); ++it) {
+      POContainer::const_reverse_iterator it;
+      for(it = itsOwnedPOs.rbegin(); it != itsOwnedPOs.rend(); ++it) {
 	(*it)->erase();
       }
+      doErase();
     }
 
     void PersistentObject::insert() const
     {
-//       // Make a copy of the meta data first. We might need it to restore
-//       // the meta data when the insert actions fails.
+//       // Make a copy of the metadata first. We might need it to restore
+//       // the metadata when the insert actions fails.
 //       boost::shared_ptr<MetaData> md(metaData().clone());
 
       metaData().reset();
