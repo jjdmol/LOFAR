@@ -24,6 +24,7 @@
 #include <stdio.h>
 
 // General includes
+#include <Common/KeyValueMap.h>
 #include <Common/LofarLogger.h>
 
 #ifdef HAVE_MPI
@@ -47,27 +48,26 @@
 using namespace LOFAR;
 
 WH_Correlator::WH_Correlator(const string& name, 
-			     const int    elements,
-			     const int    samples,
-			     const int    channels, 
-			     const int    polarisations,
-			     const int    targets) 
+			     const KeyValueMap& kvm)
   : WorkHolder( 1, 1, name, "WH_Correlator"),
-    itsNelements(elements),
-    itsNsamples (samples),
-    itsNchannels(channels),
-    itsNpolarisations(polarisations),
-    itsNtargets (targets)
+    itsKVM    (kvm)
 {
+  itsNelements = itsKVM.getInt("stations", 92);
+  itsNsamples  = itsKVM.getInt("samples", 100);
+  itsNchannels = itsKVM.getInt("channels", 46);
+  itsNpolarisations = itsKVM.getInt("polarisations", 2);
+  itsNtargets = 0; // not used?
 
   getDataManager().addInDataHolder(0, new DH_CorrCube("in", 
-						      elements, 
-						      samples, 
-						      channels,
-						      polarisations));
+						      itsNelements, 
+						      itsNsamples, 
+						      itsNchannels,
+						      itsNpolarisations));
 
   getDataManager().addOutDataHolder(0, new DH_Vis("out", 
-						  elements, channels, polarisations));
+						  itsNelements, 
+						  itsNchannels, 
+						  itsNpolarisations));
 
   t_start.tv_sec = 0;
   t_start.tv_usec = 0;
@@ -82,26 +82,17 @@ WH_Correlator::~WH_Correlator() {
 }
 
 WorkHolder* WH_Correlator::construct (const string& name, 
-				      const int    nelements, 
-				      const int    nsamples,
-				      const int    nchannels,
-				      const int    npolarisations,
-				      const int    ntargets)
+				      const KeyValueMap& kvm)
 {
-  return new WH_Correlator(name, nelements, nsamples, nchannels, npolarisations, ntargets);
+  return new WH_Correlator(name, kvm);
 }
 
 WH_Correlator* WH_Correlator::make (const string& name) {
-  return new WH_Correlator(name,
-			   itsNelements,
-			   itsNsamples,
-			   itsNchannels, 
-			   itsNpolarisations,
-			   itsNtargets);
+  return new WH_Correlator(name, itsKVM);
 }
 
 void WH_Correlator::process() {
-  double starttime, stoptime, cmults;
+  double starttime, stoptime;
 
   DH_CorrCube *inDH  = (DH_CorrCube*)(getDataManager().getInHolder(0));
   DH_Vis      *outDH = (DH_Vis*)(getDataManager().getOutHolder(0));

@@ -22,14 +22,15 @@ using namespace LOFAR;
 
 
 WH_Dump::WH_Dump(const string& name,
-		 const int    elements, 
-		 const int    channels,
-		 const int    polarisations) 
+		 const KeyValueMap& kvm)
+
   : WorkHolder(1, 0, name, "WH_Dump"),
-    itsNelements (elements),
-    itsNchannels (channels),
-    itsNpolarisations (polarisations)
+    itsKVM    (kvm)
 {
+  itsNelements      = itsKVM.getInt("stations", 2);
+  itsNchannels      = itsKVM.getInt("channels", 46);
+  itsNpolarisations = itsKVM.getInt("polarisations", 2);
+
   getDataManager().addInDataHolder(0, new DH_Vis("in_", 
 						 itsNelements, 
 						 itsNchannels, 
@@ -51,15 +52,14 @@ WH_Dump::~WH_Dump() {
 }
 
 WorkHolder* WH_Dump::construct (const string& name, 
-				const int    elements, 
-				const int    channels,
-				const int    polarisations) {
-  return new WH_Dump(name, elements, channels, polarisations);
+				const KeyValueMap& kvm)
+{
+  return new WH_Dump(name, kvm);
 }
 
-WH_Dump* WH_Dump::make(const string& name) {
-
-  return new WH_Dump(name, itsNelements, itsNchannels, itsNpolarisations);
+WH_Dump* WH_Dump::make(const string& name) 
+{
+  return new WH_Dump(name, itsKVM);
 }
 
 void WH_Dump::process() {

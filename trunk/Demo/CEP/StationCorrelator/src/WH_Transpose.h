@@ -54,7 +54,13 @@ namespace LOFAR
 
     int itsNinputs;
     int itsNoutputs;
-    
+
+    int itsNstations;
+    int itsNchannels;
+    int itsNpolarisations;
+    int itsNsamples;
+    int itsNpacketsinframe;
+    int itsNbeamletsinpacket;
   };
 
   // @}
