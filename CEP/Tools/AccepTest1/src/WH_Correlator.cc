@@ -190,20 +190,20 @@ void WH_Correlator::process() {
 
 #if 1
 	  // XX
-	  *out_ptr = __fxcpmadd( *out_ptr, __lfps((float*)in_buffer+s1_addr), __real__ *(in_buffer+s2_addr) );
-	  *out_ptr = __fxcxnpma( *out_ptr, __lfps((float*)in_buffer+s1_addr), __imag__ *(in_buffer+s2_addr) );
+	  *out_ptr = __fxcpmadd( *out_ptr, *(in_buffer+s1_addr), __real__ *(in_buffer+s2_addr) );
+	  *out_ptr = __fxcxnpma( *out_ptr, *(in_buffer+s1_addr), __imag__ *(in_buffer+s2_addr) );
 	  out_ptr++;
 	  // XY
-	  *out_ptr = __fxcpmadd( *out_ptr, __lfps((float*)in_buffer+s1_addr), __real__ *(in_buffer+s2_addr+1) );
-	  *out_ptr = __fxcxnpma( *out_ptr, __lfps((float*)in_buffer+s1_addr), __imag__ *(in_buffer+s2_addr+1) );
+	  *out_ptr = __fxcpmadd( *out_ptr, *(in_buffer+s1_addr), __real__ *(in_buffer+s2_addr+1) );
+	  *out_ptr = __fxcxnpma( *out_ptr, *(in_buffer+s1_addr), __imag__ *(in_buffer+s2_addr+1) );
 	  out_ptr++;
 	  // YX
-	  *out_ptr = __fxcpmadd( *out_ptr, __lfps((float*)in_buffer+s1_addr+1), __real__ *(in_buffer+s2_addr) );
-	  *out_ptr = __fxcxnpma( *out_ptr, __lfps((float*)in_buffer+s1_addr+1), __imag__ *(in_buffer+s2_addr) );
+	  *out_ptr = __fxcpmadd( *out_ptr, *(in_buffer+s1_addr+1), __real__ *(in_buffer+s2_addr) );
+	  *out_ptr = __fxcxnpma( *out_ptr, *(in_buffer+s1_addr+1), __imag__ *(in_buffer+s2_addr) );
 	  out_ptr++;
 	  // YY
-	  *out_ptr = __fxcpmadd( *out_ptr, __lfps((float*)in_buffer+s1_addr+1), __real__ *(in_buffer+s2_addr+1) );
-	  *out_ptr = __fxcxnpma( *out_ptr, __lfps((float*)in_buffer+s1_addr+1), __imag__ *(in_buffer+s2_addr+1) );
+	  *out_ptr = __fxcpmadd( *out_ptr, *(in_buffer+s1_addr+1), __real__ *(in_buffer+s2_addr+1) );
+	  *out_ptr = __fxcxnpma( *out_ptr, *(in_buffer+s1_addr+1), __imag__ *(in_buffer+s2_addr+1) );
 #endif 
 
 	} // sample
