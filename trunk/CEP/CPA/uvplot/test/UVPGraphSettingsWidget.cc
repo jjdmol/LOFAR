@@ -37,6 +37,7 @@
 //==========>>>  UVPGraphSettingsWidget::UVPGraphSettingsWidget  <<<==========
 
 UVPGraphSettingsWidget::UVPGraphSettingsWidget(unsigned int numOfAntennae,
+                                               unsigned int numOfSpw,
                                                QWidget *    parent,
                                                const char * name,
                                                WFlags       f)
@@ -67,6 +68,10 @@ UVPGraphSettingsWidget::UVPGraphSettingsWidget(unsigned int numOfAntennae,
 
   itsCorrelationCombo = new QComboBox(false, this);
   itsCorrelationLabel = new QLabel("Correlation:", this);
+
+  itsSpectralWindowLabel = new QLabel("Spectral window:", this);
+  itsSpectralWindowSlider= new QSlider(1, numOfSpw, 1, 1,
+                                       QSlider::Horizontal, this, "Spectral Window");
   
 
   itsSettings.setAntenna1(itsAntenna1Slider->value()-1);
@@ -81,6 +86,8 @@ UVPGraphSettingsWidget::UVPGraphSettingsWidget(unsigned int numOfAntennae,
   itsVLayout->addWidget(itsAntenna2Slider);
   itsVLayout->addWidget(itsCorrelationLabel);
   itsVLayout->addWidget(itsCorrelationCombo);
+  itsVLayout->addWidget(itsSpectralWindowLabel);
+  itsVLayout->addWidget(itsSpectralWindowSlider);
   itsVLayout->addStretch();
   itsVLayout->activate();
 
@@ -121,8 +128,12 @@ UVPGraphSettingsWidget::UVPGraphSettingsWidget(unsigned int numOfAntennae,
                    this, SLOT(slot_correlationChanged(int)) );
 
 
+  QObject::connect(itsSpectralWindowSlider, SIGNAL(valueChanged(int)),
+                   this, SLOT(slot_spectralWindowChanged(int)) );
+
   slot_antenna1Changed(itsAntenna1Slider->value());
   slot_antenna2Changed(itsAntenna2Slider->value());
+  slot_spectralWindowChanged(itsSpectralWindowSlider->value());
 }
 
 
@@ -183,6 +194,19 @@ void UVPGraphSettingsWidget::setNumberOfFields(unsigned int numberOfFields)
   
   //  itsVLayout->insertLayout(1, itsFieldLayout);
 }
+
+
+
+
+//=========>>>  UVPGraphSettingsWidget::setNumberOfSpectralWindows  <<<========
+
+void UVPGraphSettingsWidget::setNumberOfSpectralWindows(unsigned int numberOfSpectralWindows)
+{
+  itsSpectralWindowSlider->setRange(1,numberOfSpectralWindows);
+}
+
+
+
 
 
 
@@ -255,6 +279,22 @@ void UVPGraphSettingsWidget::slot_fieldChanged()
   }
 
   emit signalFieldsChanged();
+}
+
+
+
+
+
+//=========>>>  UVPGraphSettingsWidget::slot_spectralWindowChanged  <<<========
+
+void UVPGraphSettingsWidget::slot_spectralWindowChanged(int spectralWindow)
+{
+  std::ostringstream out;
+  out << "SpectralWindow: " << spectralWindow;
+  itsSpectralWindowLabel->setText(out.str().c_str());
+
+  itsSettings.setSpectralWindow(spectralWindow-1);
+  emit signalSpectralWindowChanged(spectralWindow-1);
 }
 
 

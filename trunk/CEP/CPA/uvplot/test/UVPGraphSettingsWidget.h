@@ -51,6 +51,7 @@ class UVPGraphSettingsWidget: public QWidget
 public:
 
   UVPGraphSettingsWidget(unsigned int numOfAntennae = 30,
+                         unsigned int numOfSpw      = 1,
                          QWidget *    parent = 0,
                          const char * name = 0,
                          WFlags       f = 0);
@@ -61,6 +62,8 @@ public:
   void setNumberOfAntennae(unsigned int numberOfAntennae);
 
   void setNumberOfFields(unsigned int numberOfFields);
+  
+  void setNumberOfSpectralWindows(unsigned int numberOfSpectralWindows);
 
   const UVPGraphSettings &getSettings() const;
 
@@ -73,7 +76,7 @@ public slots:
   void slot_correlationChanged(int corr);
   void slot_columnChanged     (int column);
   void slot_fieldChanged      ();
-  //  void slot_spectralWindowChanged();
+  void slot_spectralWindowChanged(int spectralWindow);
 
 
 signals:
@@ -93,7 +96,8 @@ signals:
 
   void signalFieldsChanged();
 
-  
+  void signalSpectralWindowChanged(unsigned int spw);
+
 protected:
 private:
   unsigned int     itsNumberOfAntennae;
@@ -119,6 +123,9 @@ private:
 
   QComboBox*       itsCorrelationCombo;
   QLabel*          itsCorrelationLabel;
+
+  QLabel*          itsSpectralWindowLabel;
+  QSlider*         itsSpectralWindowSlider;
 
   UVPGraphSettings itsSettings;
 };
