@@ -9,8 +9,8 @@
 #                                  # prior to running the tool.
 # tool=/path/to/tool/binary	   # The path to the tool binary (may be empty).
 # toolargs="-tool -options %%"     # options that should be passed to the tool
-# toolstdout=/path/to/output/file  # tool stdout is redirected to this file
-# toolstderr=/path/to/output/file  # tool stderr is redirected to this file
+# toolstdout=/path/to/output/file  # (NOT IMPLEMENTED YET) tool stdout is redirected to this file
+# toolstderr=/path/to/output/file  # (NOT IMPLEMENTED YET) tool stderr is redirected to this file
 #
 # The following expansions are carried out on the 'init' and 'toolargs' options.
 #
@@ -34,10 +34,15 @@ toolargs=-x /tmp/ddd.%pid %0
 tool=/usr/bin/strace
 toolstdout=/tmp/strace.stdout
 toolstderr=/tmp/strace.stderr
+toolargs=-f -ff -ostrace.log %%
 
 [valgrind]
 tool=/usr/local/bin/valgrind
 toolargs=--cachesim=yes --show-reachable=yes --gdb-attach=yes %%
+
+[time]
+tool=/usr/bin/time
+toolargs=--output=time.log %%
 
 [none]
 # intentionally left empty

@@ -32,6 +32,11 @@
  *  $Id$
  *
  *  $Log$
+ *  Revision 1.1  2003/01/08 10:03:56  wierenga
+ *  %[BugId: 158]%
+ *
+ *  This is the initial implementation of the wrapexec tool.
+ *
  *
  */
 
@@ -339,7 +344,9 @@ int main(int argc, char* argv[])
   // still needed to free this memory
   free(argv[0]);
 
+#ifdef DEBUG
   cerr << "Execing: " << stoolargs << endl;
+#endif
 
   if (execvp(tal[0], &tal[0]) < 0)
   {
