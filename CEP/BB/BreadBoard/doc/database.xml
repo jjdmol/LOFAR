@@ -1,0 +1,83 @@
+<?xml version="1.0"?>
+<!DOCTYPE article PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
+ "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd" 
+ >
+
+<!-- $Id$ -->
+<!-- look at bottom for revision Log. -->
+<article lang="nl">
+ <artheader>
+  <title>an extreme database requirement for the use of the Blackboard
+  architecture in the selfcal imaging application in LOFAR</title>
+  <author>
+   <firstname>Daan</firstname>
+   <surname>Hoogland</surname>
+  </author>
+  <releaseinfo>
+   <para>
+    $Id$
+   </para>
+  </releaseinfo>
+
+  <!-- makes a summary from the content -->
+  <abstract>
+   <para>
+
+    For the LOFAR project a self-calibration program shall be
+    written. The idea is that this program will have the architectural
+    structure of a "BlackBoard". The Blackboard itself will be
+    distributed however. Therefor the database used must fulfill some
+    special requirements.
+
+   </para>
+  </abstract>
+ </artheader>
+
+ <mediaobject>
+  <imageobject>
+   <imagedata fileref="local-_global-commit.png" format="PNG" />
+   </imageobject>
+  <caption>a simple topology for a distributed blackboard database</caption>
+ </mediaobject>
+
+ <para>
+
+  In the distributed selfcal program, the available cluster will be
+  partitioned as well as the data the be calibrated on. several
+  sub-clusters will have responsibility over part of the data and hence
+  part of the parameters  to be calibrated.
+
+ </para>
+
+ <para>
+
+  A calibrating cluster is a set of programs running on a (set of)
+  node(s), that is doing part of the calibration.
+  A calibrating cluster might use more parameters then it has
+  responsibility over. Therefor it must have all parameters to its
+  disposal.
+
+ </para>
+
+ <para>
+
+  A calibrating cluster is converging parameters from assumed values
+  to corrected values. This converging might go in the wrong direction
+  so a set of transactions might be leading to invalid results and
+  must not be distributed. It might also lead to good results and be
+  approved by a controlling program for distribution. The idea is that
+  this program will then close a more global transaction, leading to
+  the replication of the data.
+
+ </para>
+
+ <para>
+
+  The essence of the requirement is that transactions have to be
+  nested. The fact that they seem to be centered around separate
+  engines does not seem to be important. We need only one level of
+  nesting.
+
+ </para>
+
+</article>
