@@ -65,7 +65,13 @@ MAKE_OPTIONS = -j2
 #
 # all target: build all specified variants and check these variants
 #
-all: bootstrap $(VARIANTS) check
+all: start bootstrap $(VARIANTS) check stop
+
+start:
+	@echo && echo "%%%%%% BUILD START" && echo
+
+stop:
+	@echo && echo "%%%%%% BUILD COMPLETE" && echo
 
 #
 # check target: check all variants that have been specified in the
@@ -78,7 +84,14 @@ check: $(VARIANTS:.variant=.variant_check)
 #
 bootstrap:
 	@for d in $(PACKAGES); do \
-		( cd $$d && ./bootstrap && ./bootstrap ); \
+		( echo \
+		&& echo "%%%%%% BOOTSTRAPPING $$d" \
+		&& echo \
+		&& ( ( cd $$d && ./bootstrap && ./bootstrap ) \
+			|| echo "%%%%%% ERROR" ) \
+		&& echo \
+		&& echo "%%%%%% DONE BOOTSTRAPPING $$d" \
+		&& echo ) ; \
 	done
 
 #
@@ -96,9 +109,9 @@ bootstrap:
 	variant_make_options=$($@.make); \
 	for d in $(PACKAGES); do \
 		( echo \
-		&& echo "[[[[[[ BUILDING VARIANT $$variant FOR PACKAGE $$d" \
-		&& echo "====== variant_conf_options = $$variant_conf_options" \
-		&& echo "====== variant_make_options = $$variant_make_options" \
+		&& echo "%%%%%% BUILDING VARIANT $$variant FOR PACKAGE $$d" \
+		&& echo "%%%%%% variant_conf_options = $$variant_conf_options" \
+		&& echo "%%%%%% variant_make_options = $$variant_make_options" \
 		&& echo \
 		&& date \
 		&& $(RM) -rf $$d/build/$$variant \
@@ -106,9 +119,9 @@ bootstrap:
 		&& cd $$d/build/$$variant \
 		&& ../../configure $$variant_conf_options \
 		&& (make -k $(MAKE_OPTIONS) $$variant_make_options \
-			|| echo "%%%%%%%%%%%%%%%% ERROR %%%%%%%%%%%%%%%" )) \
+			|| echo "%%%%%% ERROR" )) \
 		&& echo \
-		&& echo "]]]]]] FINISHED BUILDING VARIANT $$variant FOR PACKAGE $$d" \
+		&& echo "%%%%%% FINISHED BUILDING VARIANT $$variant FOR PACKAGE $$d" \
 		&& echo ; \
 	done; \
 	date
@@ -124,16 +137,16 @@ bootstrap:
 	variant_make_options=$($@.make); \
 	for d in $(PACKAGES); do \
 		( echo \
-		&& echo "[[[[[[ CHECKING VARIANT $$variant FOR PACKAGE $$d" \
-		&& echo "====== variant_conf_options = $$variant_conf_options" \
-		&& echo "====== variant_make_options = $$variant_make_options" \
+		&& echo "%%%%%% CHECKING VARIANT $$variant FOR PACKAGE $$d" \
+		&& echo "%%%%%% variant_conf_options = $$variant_conf_options" \
+		&& echo "%%%%%% variant_make_options = $$variant_make_options" \
 		&& echo \
 		&& date \
 		&& cd $$d/build/$$variant \
 		&& (make -k $(MAKE_OPTIONS) $$variant_make_options check \
-			|| echo "%%%%%%%%%%%%%%%% ERROR %%%%%%%%%%%%%%%" )) \
+			|| echo "%%%%%% ERROR" )) \
 		&& echo \
-		&& echo "]]]]]] FINISHED CHECKING VARIANT $$variant FOR PACKAGE $$d" \
+		&& echo "%%%%%% FINISHED CHECKING VARIANT $$variant FOR PACKAGE $$d" \
 		&& echo ; \
 	done; \
 	date
