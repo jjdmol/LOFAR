@@ -81,7 +81,7 @@ public:
   virtual void checkChildren();
   
   // called to process request rider commands, if any.
-  virtual void processCommands (const DataRecord &rec,Request::Ref &reqref);
+  virtual int processCommands (const DataRecord &rec,Request::Ref &reqref);
 
   LocalDebugContext;
 
