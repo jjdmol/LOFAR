@@ -35,6 +35,7 @@ TransportHolder.h				\
 WH_Empty.h					\
 WH_Example.h					\
 WH_Tester.h					\
+WH_TestAutoTrigger.h				\
 WorkHolder.h					\
 four1.h						\
 realft.h					\
@@ -90,6 +91,7 @@ TransportHolder.cc				\
 WH_Empty.cc					\
 WH_Example.cc					\
 WH_Tester.cc					\
+WH_TestAutoTrigger.cc				\
 WorkHolder.cc					\
 four1.cc					\
 matlabmex.cc					\
