@@ -199,7 +199,7 @@ void RunNewCal10Sources (int nIters) {
     cout << "********* RunNewCal10Sources ************" << endl;
     int i;
 
-    LOFAR::Calibrator cal ("data/10Sources/demo1", "skymodel1", "meijeren",
+    LOFAR::Calibrator cal ("data/10Sources/demo10", "skymodel1", "meijeren",
 			   "meqmodel1", "postgres");
 
     //    cal.setTimeSlot (2);

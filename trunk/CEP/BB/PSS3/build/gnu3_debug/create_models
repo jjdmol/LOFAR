@@ -91,42 +91,42 @@ for n in 1 2 3 4 5 6
 
     	echo "adddef RA.CP5 values=10:26:36.3" >> fill.parmdb
     	echo "adddef DEC.CP5 values=26.0.11.0" >> fill.parmdb
-    	echo "adddef StokesI.CP5 values=1.0" >> fill.parmdb
+    	echo "adddef StokesI.CP5 values=0.5" >> fill.parmdb
     	echo "adddef StokesQ.CP5 values=0 " >> fill.parmdb
     	echo "adddef StokesU.CP5 values=0 " >> fill.parmdb
     	echo "adddef StokesV.CP5 values=0" >> fill.parmdb
 
     	echo "adddef RA.CP6 values=10:26:36.1" >> fill.parmdb
     	echo "adddef DEC.CP6 values=25.59.59.0" >> fill.parmdb
-    	echo "adddef StokesI.CP6 values=1.0" >> fill.parmdb
+    	echo "adddef StokesI.CP6 values=0.5" >> fill.parmdb
     	echo "adddef StokesQ.CP6 values=0 " >> fill.parmdb
     	echo "adddef StokesU.CP6 values=0 " >> fill.parmdb
     	echo "adddef StokesV.CP6 values=0" >> fill.parmdb
 
     	echo "adddef RA.CP7 values=10:26:37.6" >> fill.parmdb
     	echo "adddef DEC.CP7 values=25.59.56.0" >> fill.parmdb
-    	echo "adddef StokesI.CP7 values=1.0" >> fill.parmdb
+    	echo "adddef StokesI.CP7 values=0.5" >> fill.parmdb
     	echo "adddef StokesQ.CP7 values=0 " >> fill.parmdb
     	echo "adddef StokesU.CP7 values=0 " >> fill.parmdb
     	echo "adddef StokesV.CP7 values=0" >> fill.parmdb
 
     	echo "adddef RA.CP8 values=10:26:34.5" >> fill.parmdb
     	echo "adddef DEC.CP8 values=25.59.51." >> fill.parmdb
-    	echo "adddef StokesI.CP8 values=1.0" >> fill.parmdb
+    	echo "adddef StokesI.CP8 values=0.5" >> fill.parmdb
     	echo "adddef StokesQ.CP8 values=0 " >> fill.parmdb
     	echo "adddef StokesU.CP8 values=0 " >> fill.parmdb
     	echo "adddef StokesV.CP8 values=0" >> fill.parmdb
 
-    	echo "adddef RA.CP9 values=10:26:36.6" >> fill.parmdb
+    	echo "adddef RA.CP9 values=10:26:37.2" >> fill.parmdb
     	echo "adddef DEC.CP9 values=26.0.15.5" >> fill.parmdb
-    	echo "adddef StokesI.CP9 values=1.0" >> fill.parmdb
+    	echo "adddef StokesI.CP9 values=0.5" >> fill.parmdb
     	echo "adddef StokesQ.CP9 values=0 " >> fill.parmdb
     	echo "adddef StokesU.CP9 values=0 " >> fill.parmdb
     	echo "adddef StokesV.CP9 values=0" >> fill.parmdb
 
-    	echo "adddef RA.CP10 values=10:26:35.6" >> fill.parmdb
+    	echo "adddef RA.CP10 values=10:26:35.7" >> fill.parmdb
     	echo "adddef DEC.CP10 values=26.0.0.0" >> fill.parmdb
-    	echo "adddef StokesI.CP10 values=1.0" >> fill.parmdb
+    	echo "adddef StokesI.CP10 values=0.5" >> fill.parmdb
     	echo "adddef StokesQ.CP10 values=0 " >> fill.parmdb
     	echo "adddef StokesU.CP10 values=0 " >> fill.parmdb
     	echo "adddef StokesV.CP10 values=0" >> fill.parmdb

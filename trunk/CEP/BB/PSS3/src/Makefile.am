@@ -16,8 +16,9 @@ SI_WaterCal.h                                   \
 SI_Randomized.h 				\
 MeqCalibraterImpl.h                             \
 CalibratorOld.h                                 \
-Calibrator.h                                    \
-TryOut.h                                        
+Calibrator.h					\
+TryOut.h
+
 
 BlackBoardDemo_SOURCES          = $(DOCHDRS)                \
 Simulate.cc                                             \
@@ -35,9 +36,10 @@ SI_Simple.cc                                            \
 SI_WaterCal.cc                                          \
 SI_Randomized.cc					\
 MeqCalibraterImpl.cc                                    \
-CalibratorOld.cc                                        \
-Calibrator.cc                                           \
-TryOut.cc                                               
+CalibratorOld.cc 	                                \
+Calibrator.cc						\
+TryOut.cc
+
 
 BlackBoardDemo_DEPENDENCIES = $(LOFAR_DEPEND)
 

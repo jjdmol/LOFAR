@@ -134,11 +134,18 @@ void WH_PSS3::process()
   // Update workorder status
   wo->setStatus(DH_WorkOrder::Assigned);
   woPtr->updateDB();
+
+  wo->dump();
+  
+  int argsSize = wo->getArgsSize();
+  char data[argsSize];
+  vector<string> pNames;    // Parameter names
+  vector<int> solNumbers;   // Solution IDs
+  wo->getVarData(data, pNames, solNumbers);
   
   // Create a strategy object
   TRACER1("Strategy number: " << wo->getStrategyNo());
-  Strategy strat(wo->getStrategyNo(), itsCal, wo->getArgsSize(), 
-		 wo->getStrategyArgs());
+  Strategy strat(wo->getStrategyNo(), itsCal, argsSize, data);
   
   // Get solution dataholder DH_Solution* sol;
   DH_Solution* sol = dynamic_cast<DH_Solution*>(getDataManager().getInHolder(1));
@@ -150,8 +157,6 @@ void WH_PSS3::process()
   int noStartSols = wo->getNoStartSolutions();
   if (noStartSols > 0)
   { 
-    vector<int> solNumbers;   // Contains all solution IDs
-    wo->getSolutionNumbers(solNumbers); 
     vector<string> allNames(0);      // Contains all start parameters
     vector<double> allValues(0);     // Contains all start values
 
@@ -177,8 +182,7 @@ void WH_PSS3::process()
 		"Multiple solutions with ID " << solNumbers[i] << " found in database.");
       vector<string> startNames;
       vector<double> startValues; 
-      sol->getParamNames(startNames);
-      sol->getParamValues(startValues);
+      sol->getSolution(startNames, startValues);
       addToStartVectors(startNames, startValues, allNames, allValues); 
     }
     vector<int> startSources;
@@ -194,8 +198,6 @@ void WH_PSS3::process()
   int count = 0;
   Quality resQuality;
   resQuality.init();
-  vector<string> pNames;
-  wo->getParamNames(pNames);
   // Show parameter names
   for (unsigned int i = 0; i < pNames.size(); i++)
   {  
@@ -209,8 +211,7 @@ void WH_PSS3::process()
     TRACER1("Executed strategy");
     if (itsOutputAllIter)   // Write every found solution in DH_Solution
     {    
-      sol->setParamNames(resPNames);
-      sol->setParamValues(resPValues);
+      sol->setSolution(resPNames, resPValues);
       sol->setIterationNo(iterNo);
       sol->setQuality(resQuality);
       sol->setID(itsNumber++);
@@ -220,8 +221,8 @@ void WH_PSS3::process()
       solPtr->insertDB();
       woPtr->updateDB();
       // Dump to screen
-	  cout << "WH_PSS3::process output ##### " << endl;
-	  sol->dump();
+      //	  cout << "WH_PSS3::process output ##### " << endl;
+      sol->dump();
     }
     count++;
     
@@ -229,8 +230,7 @@ void WH_PSS3::process()
 
   if (!itsOutputAllIter) // Write only the resulting output
   {  
-    sol->setParamNames(resPNames);
-    sol->setParamValues(resPValues);
+    sol->setSolution(resPNames, resPValues);
     sol->setIterationNo(iterNo);
     sol->setQuality(resQuality);
     sol->setID(itsNumber++);

@@ -115,7 +115,7 @@ bool SI_WaterCal::execute(vector<string>& parmNames,
 
   itsCal->Run(resultParmNames, resultParmValues, resultQuality);
   //  itsCal->SubtractOptimizedSources();
-  itsCal->showCurrentParms ();
+  // itsCal->showCurrentParms ();
 
   itsCal->CommitOptimizedParameters();
   resultIterNo = itsCurIter;

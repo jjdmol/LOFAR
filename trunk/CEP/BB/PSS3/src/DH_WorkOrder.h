@@ -91,19 +91,20 @@ public:
   int getNoStartSolutions() const;
   void setNoStartSolutions(int no);
 
-  void useSolutionNumbers(const vector<int>& );
-  void getSolutionNumbers(vector<int>& ) const;
-
-  char* getStrategyArgs();
   unsigned int getArgsSize() const;
   void setArgsSize(int size);
 
-  void getParamNames(vector<string>& names) const;
-  void setParamNames(vector<string>& names);
   int getParamNameLength();
   void setParamNameLength(int length);
   unsigned int getNumberOfParam() const;
   void setNumberOfParam(int number);
+
+  void setVarData(char* stratArgs, int size,
+		  vector<string>& pNames, 
+		  vector<int>& startSols);
+  bool getVarData(char* stratArgs,
+		  vector<string>& pNames,
+		  vector<int>& startSols);
 
   void dump();
 
@@ -119,11 +120,8 @@ private:
   char*         itsKSType;
   unsigned int* itsStrategyNo;
   int*          itsNoStartSols;
-  int*          itsStartSolutions;
   unsigned int* itsArgsSize; 
-  char*         itsStrategyArgs;
   unsigned int* itsNumberOfParam;
-  char*         itsParamNames;
 
   PO_DH_WO*    itsPODHWO; 
 
@@ -154,9 +152,6 @@ inline unsigned int DH_WorkOrder::getStrategyNo() const
 
 inline void DH_WorkOrder::setStrategyNo(unsigned int no)
 { *itsStrategyNo = no; }
-
-inline char* DH_WorkOrder::getStrategyArgs()
-{ return itsStrategyArgs; }
 
 inline unsigned int DH_WorkOrder::getArgsSize() const
 { return *itsArgsSize; }

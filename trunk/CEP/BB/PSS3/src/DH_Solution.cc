@@ -26,6 +26,8 @@
 
 #include <PSS3/DH_Solution.h>
 #include <PL/TPersistentObject.h>
+#include <Common/BlobOStream.h>
+#include <Common/BlobIStream.h>
 #include <Common/Debug.h>
 #include <sstream>
 
@@ -52,10 +54,10 @@ DH_Solution::DH_Solution (const string& name)
     itsStdDev       (0),
     itsChi          (0),
     itsNumberOfParam(0),
-    itsParamValues  (0),
-    itsParamNames   (0),
     itsPODHSOL      (0)
-{}
+{
+  setExtraBlob("Extra", 1);
+}
 
 DH_Solution::DH_Solution(const DH_Solution& that)
   : DH_PL   (that),
@@ -67,10 +69,10 @@ DH_Solution::DH_Solution(const DH_Solution& that)
     itsStdDev       (0),
     itsChi          (0),
     itsNumberOfParam(0),
-    itsParamValues  (0),
-    itsParamNames   (0),
     itsPODHSOL      (0)
-{}
+{
+  setExtraBlob("Extra", 1);
+}
 
 DH_Solution::~DH_Solution()
 {
@@ -104,16 +106,10 @@ void DH_Solution::preprocess()
   addField ("StdDev", BlobField<double>(1));
   addField ("Chi", BlobField<double>(1));
   addField ("NumberOfParam", BlobField<unsigned int>(1));
-  addField ("ParamValues", BlobField<double>(1, MaxNumberOfParam));
-  addField ("ParamNames", BlobField<char>(1, MaxParamNameLength, 
-                                          MaxNumberOfParam));
+
   // Create the data blob (which calls fillPointers).
   createDataBlock();
-  // Initialize the buffers.
-  for (unsigned int i=0; i<MaxNumberOfParam; i++) {
-     itsParamValues[i] = 0;
-     itsParamNames[i]= 0;
-  }
+
   *itsID = -1;
   *itsWOID = -1;
   *itsIteration = -1;
@@ -139,8 +135,6 @@ void DH_Solution::fillDataPointers()
   itsStdDev = getData<double> ("StdDev");
   itsChi = getData<double> ("Chi");
   itsNumberOfParam = getData<unsigned int> ("NumberOfParam");
-  itsParamValues = getData<double> ("ParamValues");
-  itsParamNames  = getData<char> ("ParamNames");
 }
 
 void DH_Solution::postprocess()
@@ -153,8 +147,6 @@ void DH_Solution::postprocess()
   itsStdDev = 0;
   itsChi = 0;
   itsNumberOfParam = 0;
-  itsParamValues = 0;
-  itsParamNames = 0;
 }
 
 Quality DH_Solution::getQuality() const
@@ -175,64 +167,58 @@ void DH_Solution::setQuality(const Quality& quality)
   *itsChi = quality.itsChi;
 }
 
-void DH_Solution::getParamValues(vector<double>& values) const
+bool DH_Solution::getSolution(vector<string>& names, vector<double>& values)
 {
-  values.clear();
-  values.resize(getNumberOfParam());
-  for (unsigned int i = 0; i < getNumberOfParam(); i++)
-  { 
-      values[i] = itsParamValues[i];
+  bool found;
+  int version;
+  BlobIStream& bis = openExtraBlob(found, version);
+  if (!found) {
+    return false;
   }
-}
-
-void DH_Solution::setParamValues(const vector<double>& values)
-{
-  AssertStr(values.size() <= MaxNumberOfParam, 
-            "The number of solution parameter values " << values.size() 
-            << " is larger than the maximum " << MaxNumberOfParam);
-  vector<double>::const_iterator iter;
-  int paramNo = 0;
-
-  for (iter = values.begin(); iter != values.end(); iter++)
+ else
   {
-    itsParamValues[paramNo] = *iter;
-    paramNo++;
-  }
-  setNumberOfParam(paramNo);
+    // Get parameter names
+    names.clear();
+    int size = getNumberOfParam();
+    names.resize(size);
+    for (int i=0; i<size; i++)
+    { 
+      bis >> names[i];
+    }
+    // Get parameter values.
+    bis.getStart("values");
+    values.clear();
+    values.resize(size);
+    for (int j=0; j < size; j++)
+    {
+      bis >> values[j];
+    }
+    bis.getEnd();
+    return true;
+  }  
+
 }
 
-void DH_Solution::getParamNames(vector<string>& names) const
+void DH_Solution::setSolution(vector<string>& names, vector<double>& values)
 {
-  names.clear();
-  names.resize(getNumberOfParam());
-  char* ptr = itsParamNames;
-  for (unsigned int i = 0; i < getNumberOfParam(); i++)
-  {
-    names[i] = ptr;
-    ptr += MaxParamNameLength;
-  }
-}
-
-void DH_Solution::setParamNames(const vector<string>& names)
-{
-  AssertStr(names.size() <= MaxNumberOfParam, 
-            "The number of solution parameter names " << names.size() 
-            << " is larger than the maximum " << MaxNumberOfParam);
-
+  AssertStr(names.size() == values.size(), 
+	    "The number of parameter names and values are not equal.");
+  BlobOStream& bos = createExtraBlob();
+  // Put parameter names into extra blob
   vector<string>::const_iterator iter;
-  int numberOfParam = 0;
-  char* ptr;
-  ptr = itsParamNames;
   for (iter = names.begin(); iter != names.end(); iter++)
   {
-    AssertStr(iter->length() < MaxParamNameLength, 
-              "Parameter name " << *iter << " is longer than maximum "
-	      << MaxParamNameLength <<".");
-    strcpy(ptr, iter->c_str());
-    ptr += MaxParamNameLength;    
-    numberOfParam++;
+    bos << *iter;
   }
-  setNumberOfParam(numberOfParam);
+  setNumberOfParam(names.size());
+  // Put parameter values into extra blob
+  bos.putStart("values", 1);
+  vector<double>::const_iterator valIter;
+  for (valIter = values.begin(); valIter != values.end(); valIter++)
+  {
+    bos << *valIter;
+  }
+  bos.putEnd();
 }
 
 void DH_Solution::clearData()
@@ -243,10 +229,7 @@ void DH_Solution::clearData()
   Quality q;
   setQuality(q);
   setNumberOfParam(0);
-  for (unsigned int i=0; i<MaxNumberOfParam; i++) {
-     itsParamValues[i] = 0;
-     itsParamNames[i]=0;
-  }
+  clearExtraBlob();
 }
 
 void DH_Solution::dump()
@@ -273,20 +256,27 @@ void DH_Solution::dump()
 //   } 
 //   cout << endl;
 
-  cout << getIterationNo() << " " << endl;
+
   vector<string> pNames;
-  getParamNames(pNames);
   vector<double> pValues;
-  getParamValues(pValues);
+  getSolution(pNames, pValues);
   DbgAssertStr(pNames.size() == pValues.size(), 
 	            "The number of parameters and their values do not match ");
 
   char strVal [20];
   for (unsigned int i = 0; i < pNames.size(); i++)
   {
-    cout <<  pNames[i] <<  " " ;
-  } 
-  cout << endl;
+    string::size_type pos;
+    pos = pNames[i].find(".CP");
+    if (pos!=string::npos)
+    {
+      string subStr;
+      subStr = pNames[i].substr(pos+3, 4);
+      cout << subStr << " ";
+      break;
+    } 
+  }
+  cout << getIterationNo() << " ";
   for (unsigned int i = 0; i < pNames.size(); i++)
   {
     sprintf(strVal, "%1.10f ", pValues[i]);
