@@ -94,6 +94,10 @@ class AVTTestTask : public GCFTask
     bool m_WGSETTINGS_received;
     bool m_WGENABLE_received;
     bool m_WGDISABLE_received;
+    long m_statisticsTimerID;
+    double m_beamAngle1;
+    double m_beamAngle2;
+    unsigned int m_seqnr;
 };
 
 #endif
