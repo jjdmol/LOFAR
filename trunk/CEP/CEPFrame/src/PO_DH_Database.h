@@ -28,6 +28,8 @@
 
 #include <Common/lofar_string.h>
 
+bool ConnectDatabase (void);
+
 // ==========================================
 // [>] DatabaseRecord
 
