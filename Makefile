@@ -86,11 +86,189 @@ CRONROOT = $$HOME
 all: build
 
 #
-# daily,weekly: Target to drive daily and weekly builds
+# daily build without installation
 #
-daily: start_daily bootstrap configure $(VARIANTNAMES) check stop_daily
+daily:
+	make build_daily WITH_INSTALL=0
 
-weekly: start_weekly bootstrap configure $(VARIANTNAMES) check stop_weekly
+#
+# daily build with installation
+#
+daily_install:
+	make build_daily WITH_INSTALL=1
+
+#
+# Target reached via daily or daily_install
+# For all packages do:
+#       - Bootstrap. Bootstrapping is only needed once,
+#       - Configure. Configuration is needed for each variant.
+#	- Compile for each variant
+#       - Run make check for each variant
+#       - if WITH_INSTALL == 1 install for each variant
+#
+build_weekly: 
+	@date;\
+	echo && echo ":::::: DAILY BUILD START" && echo; \
+	for pkg in $(PACKAGES); do \
+	  if test -d $$pkg ; then \
+	    ( echo \
+	      && echo ":::::: BOOTSTRAPPING $$pkg" \
+	      && echo \
+	      && ( ( cd $$pkg && ( ./bootstrap; )) \
+		  || echo ":::::: ERROR" ) \
+	      && echo \
+	      && echo ":::::: DONE BOOTSTRAPPING $$pkg" \
+	      && echo ); \
+	      for var in $(VARIANTS); do \
+	        echo ":::::: VARIANT $$var"; \
+		case $$var in gnu3*) inst_var=gcc3;; \
+	                      gnu*)  inst_var=gcc2;; \
+	                      icc*)  inst_var=icc;; \
+	        esac; \
+	        (echo \
+		&& echo ":::::: CONFIGURING VARIANT $$variant FOR PACKAGE $$pkg" \
+		&& echo \
+		&& date \
+		&& ((cd $$pkg/build/$$var \
+		&& $(LOFARDIR)/autoconf_share/lofarconf --prefix=/data/LOFAR/installed/$$inst_var ) \
+	   	  || echo ":::::: ERROR" ) \
+		&& echo \
+		&& echo ":::::: FINISHED CONFIGURING VARIANT $$var FOR PACKAGE $$pkg" \
+		&& echo ; ); \
+		(echo \
+		&& echo ":::::: BUILDING VARIANT $$var FOR PACKAGE $$pkg" \
+		&& echo \
+		&& date \
+		&& (( cd $$pkg/build/$$var \
+		&& make -k $(MAKE_OPTIONS) `cat makeoptions` ) \
+			|| echo ":::::: ERROR" ) \
+		&& echo \
+		&& echo ":::::: FINISHED BUILDING VARIANT $$var FOR PACKAGE $$pkg" \
+		&& echo ;); \
+		( echo \
+		&& echo ":::::: CHECKING VARIANT $$var FOR PACKAGE $$pkg" \
+		&& echo \
+		&& date \
+		&& cd $$pkg/build/$$var \
+		&& (make -k $(MAKE_OPTIONS) `cat makeoptions` check \
+			|| echo ":::::: ERROR" ) \
+		&& echo \
+		&& echo ":::::: FINISHED CHECKING VARIANT $$var FOR PACKAGE $$pkg" \
+		&& echo ;); \
+		if test 1 -eq $$WITH_INSTALL; then \
+		  ( echo \
+		  && echo ":::::: INSTALLING VARIANT $$var FOR PACKAGE $$pkg" \
+		  && echo \
+		  && date \
+		  && (( cd $$pkg/build/$$var \
+		  && make install ) \
+			  || echo ":::::: ERROR" ) \
+		  && echo \
+		  && echo ":::::: FINISHED INSTALLING VARIANT $$var FOR PACKAGE $$pkg" \
+		  && echo ; ) \
+		fi \
+	      done; \
+	  else \
+	    echo ":::::: ERROR $$pkg does not exist"; \
+	  fi \
+	done; \
+	echo && echo ":::::: DAILY BUILD COMPLETE" && echo; \
+	date;
+
+
+#
+# weekly build without installation
+#
+weekly:
+	make build_weekly WITH_INSTALL=0
+
+#
+# weekly build with installation
+#
+weekly_install:
+	make build_weekly WITH_INSTALL=1
+
+#
+# Target reached via weekly or weekly_install
+# For all packages do:
+#       - Bootstrap. Bootstrapping is only needed once,
+#	- Remove previous variant build directory
+#	- Recreate variant build directory
+#	- Configure package for variant
+#	- Compile variant
+#       - Run make check for each variant
+#       - if WITH_INSTALL == 1 install for each variant
+#
+build_weekly: 
+	@date;\
+	echo && echo ":::::: WEEKLY BUILD START" && echo; \
+	for pkg in $(PACKAGES); do \
+	  if test -d $$pkg ; then \
+	    ( echo \
+	      && echo ":::::: BOOTSTRAPPING $$pkg" \
+	      && echo \
+	      && ( ( cd $$pkg && ( ./bootstrap; )) \
+		  || echo ":::::: ERROR" ) \
+	      && echo \
+	      && echo ":::::: DONE BOOTSTRAPPING $$pkg" \
+	      && echo ); \
+	      for var in $(VARIANTS); do \
+	        echo ":::::: VARIANT $$var"; \
+		case $$var in gnu3*) inst_var=gcc3;; \
+	                      gnu*)  inst_var=gcc2;; \
+	                      icc*)  inst_var=icc;; \
+	        esac; \
+	        (echo \
+		&& echo ":::::: CONFIGURING VARIANT $$variant FOR PACKAGE $$pkg" \
+		&& echo \
+		&& date \
+		&& (( $(RM) -rf $$pkg/build/$$var \
+		&& mkdir -p $$pkg/build/$$var \
+		&& cd $$pkg/build/$$var \
+		&& $(LOFARDIR)/autoconf_share/lofarconf --prefix=/data/LOFAR/installed/$$inst_var ) \
+	   	  || echo ":::::: ERROR" ) \
+		&& echo \
+		&& echo ":::::: FINISHED CONFIGURING VARIANT $$var FOR PACKAGE $$pkg" \
+		&& echo ; ); \
+		(echo \
+		&& echo ":::::: BUILDING VARIANT $$var FOR PACKAGE $$pkg" \
+		&& echo \
+		&& date \
+		&& (( cd $$pkg/build/$$var \
+		&& make -k $(MAKE_OPTIONS) `cat makeoptions` ) \
+			|| echo ":::::: ERROR" ) \
+		&& echo \
+		&& echo ":::::: FINISHED BUILDING VARIANT $$var FOR PACKAGE $$pkg" \
+		&& echo ;); \
+		( echo \
+		&& echo ":::::: CHECKING VARIANT $$var FOR PACKAGE $$pkg" \
+		&& echo \
+		&& date \
+		&& cd $$pkg/build/$$var \
+		&& (make -k $(MAKE_OPTIONS) `cat makeoptions` check \
+			|| echo ":::::: ERROR" ) \
+		&& echo \
+		&& echo ":::::: FINISHED CHECKING VARIANT $$var FOR PACKAGE $$pkg" \
+		&& echo ;); \
+		if test 1 -eq $$WITH_INSTALL; then \
+		  ( echo \
+		  && echo ":::::: INSTALLING VARIANT $$var FOR PACKAGE $$pkg" \
+		  && echo \
+		  && date \
+		  && (( cd $$pkg/build/$$var \
+		  && make install ) \
+			  || echo ":::::: ERROR" ) \
+		  && echo \
+		  && echo ":::::: FINISHED INSTALLING VARIANT $$var FOR PACKAGE $$pkg" \
+		  && echo ; ) \
+		fi \
+	      done; \
+	  else \
+	    echo ":::::: ERROR $$pkg does not exist"; \
+	  fi \
+	done; \
+	echo && echo ":::::: WEEKLY BUILD COMPLETE" && echo; \
+	date;
 
 #
 # build: Target to compile in a bootstrapped and configured tree
@@ -119,8 +297,11 @@ start_rebuild:
 start_daily:
 	@echo && echo ":::::: DAILY BUILD START" && echo
 
-start_weekly:
+start_weekly_build:
 	@echo && echo ":::::: WEEKLY BUILD START" && echo
+
+start_weekly_install:
+	@echo && echo ":::::: WEEKLY INSTALL START" && echo
 
 stop_build:
 	@echo && echo ":::::: BUILD COMPLETE" && echo
@@ -134,8 +315,11 @@ stop_rebuild:
 stop_daily:
 	@echo && echo ":::::: DAILY BUILD COMPLETE" && echo
 
-stop_weekly:
+stop_weekly_build:
 	@echo && echo ":::::: WEEKLY BUILD COMPLETE" && echo
+
+stop_weekly_install:
+	@echo && echo ":::::: WEEKLY INSTALL COMPLETE" && echo
 
 #
 # check target: check all variants that have been specified in the
@@ -175,31 +359,23 @@ configure: $(VARIANTNAMES:.variant=.variant_configure)
 #	- Configure package for variant
 #
 %.variant_configure:
-	@date; \
 	variant=`basename $@ .variant_configure`; \
 	case $$variant in gnu3*) inst_var=gcc3;; \
 	                  gnu*)  inst_var=gcc2;; \
 	                  icc*)  inst_var=icc;; \
 	esac; \
-	for pkg in $(PACKAGES); do \
-	    if test -d $$pkg; then \
-		( echo \
-		&& echo ":::::: CONFIGURING VARIANT $$variant FOR PACKAGE $$pkg" \
-		&& echo \
-		&& date \
-		&& (( $(RM) -rf $$pkg/build/$$variant \
-		&& mkdir -p $$pkg/build/$$variant \
-		&& cd $$pkg/build/$$variant \
-		&& $(LOFARDIR)/autoconf_share/lofarconf --prefix=/data/LOFAR/installed/$$inst_var ) \
-			|| echo ":::::: ERROR" ) \
-		&& echo \
-		&& echo ":::::: FINISHED CONFIGURING VARIANT $$variant FOR PACKAGE $$pkg" \
-		&& echo ; ) \
-	    else \
-	        echo ":::::: ERROR $$pkg does not exist"; \
-	    fi\
-	done; \
-	date
+	(echo \
+	&& echo ":::::: CONFIGURING VARIANT $$variant FOR PACKAGE $$pkg" \
+	&& echo \
+	&& date \
+	&& (( $(RM) -rf $$pkg/build/$$variant \
+	&& mkdir -p $$pkg/build/$$variant \
+	&& cd $$pkg/build/$$variant \
+	&& $(LOFARDIR)/autoconf_share/lofarconf --prefix=/data/LOFAR/installed/$$inst_var ) \
+	   || echo ":::::: ERROR" ) \
+	&& echo \
+	&& echo ":::::: FINISHED CONFIGURING VARIANT $$variant FOR PACKAGE $$pkg" \
+	&& echo ; )
 
 #
 # Rule to build variant for daily or weekly build
