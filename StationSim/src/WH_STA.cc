@@ -76,9 +76,11 @@ WH_STA::WH_STA (const string& name,  int nin,  int nout,
     itsOutHolders[i] = new DH_SampleC (string("out_") + str, itsNrcu, itsMaxRFI);    
   }
   //DEBUG
-//    itsTestVector.resize(itsNrcu, 300);
-//    itsFileInput.open ("/home/chris/PASTD-validation/test_vectorSTA.txt");
+//    itsTestVector.resize(29952,92);
+//    itsFileInput.open ("/home/chris/ExperimentData/DatagenTest");
 //    itsFileInput >> itsTestVector;
+//    itsFileInput.close();
+
   itsBuffer = 0;
   itsRFI = 0;
   itsCount = 0;
@@ -136,7 +138,10 @@ void WH_STA::process()
   if (getOutHolder(0)->doHandle ()) {
       // Create contigeous buffer   
     itsBuffer = CreateContigeousBuffer(itsBuffer, itsPos);
-    itsPos = itsBuffer.lbound(secondDim);
+
+    // Buffer shape 
+    //itsPos = itsBuffer.lbound(secondDim);
+    itsPos = itsBuffer.ubound(secondDim);
     
     switch (itsAlg) {
         case -1 : // Skip the adaptive beamforming 
@@ -187,7 +192,6 @@ void WH_STA::process()
 	      itsCount = (itsCount + 1) % itsUpdateRate;
 	    } else if (itsCount > 0) {
 	    // PASTd step
-	      cout << itsBuffer(Range(0,10), Range(0,10)) << endl;
 	      pastd(itsBuffer, itsBufLength, itsPASTdInterval, itsPASTdBeta, itsEvalues, itsEvectors);
 	      itsCount = (itsCount + 1) % itsUpdateRate;
 	    }
@@ -243,7 +247,9 @@ void WH_STA::process()
       itsCount = (itsCount + 1) % itsUpdateRate;
     }
   }
-  itsPos = (itsPos + itsBuffer.cols() - 1) % itsBuffer.cols();
+  // Buffer shape 
+  //itsPos = (itsPos + itsBuffer.cols() - 1) % itsBuffer.cols();
+  itsPos = (itsPos + 1) % itsBuffer.cols();
   }
 }
 
@@ -268,17 +274,21 @@ DataHolder* WH_STA::getOutHolder (int channel)
 
 LoMat_dcomplex WH_STA::CreateContigeousBuffer (const LoMat_dcomplex& aBuffer, int pos)
 {
-    using namespace blitz;
-    AssertStr (pos <= aBuffer.ubound(secondDim), "Can't create contigeous buffer, pos too high!");
+  using namespace blitz;
+  AssertStr (pos <= aBuffer.ubound(secondDim), "Can't create contigeous buffer, pos too high!");
+  
+  Range all = Range::all();
+  int ub = aBuffer.ubound(secondDim) ;
+  LoMat_dcomplex output (aBuffer.shape());
+  
+  // Buffer shape 
+//    output (all, Range(fromStart, ub - pos) ) = aBuffer (all, Range(pos, toEnd) );
+//    output (all, Range(ub - pos + 1, toEnd ) )    = aBuffer (all, Range(fromStart, pos - 1) ) ;
 
-    Range all = Range::all();
-    int ub = aBuffer.ubound(secondDim) ;
-    LoMat_dcomplex output (aBuffer.shape());
+  output(all, Range(fromStart, ub - pos - 1)) = aBuffer(all, Range(pos+1, toEnd)) ;
+  output(all, Range(ub - pos, toEnd)) = aBuffer(all, Range(fromStart, pos));
 
-    output (all, Range(fromStart, ub - pos) ) = aBuffer (all, Range(pos, toEnd) );
-    output (all, Range(ub - pos + 1, toEnd ) )    = aBuffer (all, Range(fromStart, pos - 1) ) ;
-    
-   return output;
+  return output;
 }
 
 LoMat_dcomplex WH_STA::TransposeMatrix (const LoMat_dcomplex& aMat)

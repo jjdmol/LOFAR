@@ -86,10 +86,11 @@ WH_BeamFormer::WH_BeamFormer (const string& name,
   }
 
   //DEBUG
-//    itsTestVector.resize(itsNrcu, 300);
-//    itsFileInput.open ("/home/chris/PASTD-validation/test_vectorSTA.txt");
+//    itsTestVector.resize(29952,92);
+//    itsFileInput.open ("/home/chris/ExperimentData/DatagenTest/datagen.blitz");
 //    itsFileInput >> itsTestVector;
-
+//    itsFileInput.close();
+  
   //  handle = gnuplot_init ();
   iCount = 0;
   plotCount = 1;
@@ -115,6 +116,15 @@ WH_BeamFormer::WH_BeamFormer (const string& name,
   if (qm(0)) {
     // Beamplot handles
     handle_bp = gnuplot_init();
+  }
+
+  if (qm(3)) {
+//      cout << "ML Trans edge" << endl;
+//      handle_ml = gnuplot_init();
+//      x_size=180;
+//      // This matrix contains the sum of all difference matrices
+//      x_sum.resize(x_size, x_size);
+//      s_sum = 0;
   }
 }
 
@@ -182,6 +192,9 @@ void WH_BeamFormer::process()
 
     for (int i = 0; i < itsNrcu; i++) {
       sample(i) = (dcomplex)itsInHolders[i]->getBuffer()[0]; 
+      // DEBUG
+      //sample(i) = (dcomplex)itsTestVector(iCount,i);
+      
     }
 
     itsBuffer(Range::all(), itsPos) = sample;
@@ -210,26 +223,36 @@ void WH_BeamFormer::process()
     string n = getName ();
 
     if (iCount++ % 10 == 0 && n == "0" && iCount > 100) {
+      //  if (iCount++ == 300 && n == "0") {
       if (qm(0)) {
 	beamplot (handle_bp, weight, itsNrcu);
       }
       if (qm(1)) {
 	spectrumplot(handle_sp, itsLookBuffer, itsBeamBuffer, itsPos-1);
       }
+      if (qm(3)) {
+	ml_trans_edge(handle_ml, weight, lookdir, plotCount, itsNrcu, x_size, x_sum);
+      }
       plotCount++ ;
     }
 
-    // Validating the chain
-//      char str[8];
-//      if (iCount >= 100 && iCount % 10 == 0) {
-//        // after init (first 100 snapshots) save every 10th weightvector to file
-//        // compare these weigths with ones from the Matlab simulation
-//        sprintf(str, "%d", iCount);
-//        ofWeights.open((string("weights_") + str + string(".dat")).c_str ());
-//        ofWeights << weight ;
-//        ofWeights.close();
-//      }
+    // Validating the chain 
+    char str[8];
+    if (iCount >= 100) { // && iCount % 10 == 0) {
+//        if (iCount > 300) {
+//  	exit(1);
+//      } else {
+	// after init (first 100 snapshots) save every 10th weightvector to file
+	// compare these weigths with ones from the Matlab simulation
 	
+	// First save every weight vector after the first 100 snapshots to 
+	// determine the offset.
+//   	sprintf(str, "%d", iCount);
+//   	ofWeights.open((string("weights_") + str + string(".dat")).c_str ());
+//   	ofWeights << weight ;
+//   	ofWeights.close();
+//      } 
+    }
   }
 }
 
@@ -378,17 +401,49 @@ void WH_BeamFormer::spectrumplot (gnuplot_ctrl* handle, const LoVec_dcomplex& lo
 #endif
 }
 
-void WH_BeamFormer::ml_trans_edge (const LoVec_dcomplex& w, LoMat_double& ref, const int time, 
-		    const int nrcu, const int N)
+void WH_BeamFormer::ml_trans_edge (gnuplot_ctrl* handle, const LoVec_dcomplex& w, LoVec_dcomplex& ref, 
+				   const int time, const int nrcu, const int N, LoMat_double& x_sum)
 {
   // Calculate d(B(phi)) / d(t)
   // or the gain fluctuations of the beampattern in time
   LoMat_double current(N,N);
+  LoMat_double nonulled(N,N);
   LoMat_double diff(N,N);
+
+#ifndef TOSCREEN
+  gnuplot_close(handle);
+#endif
+
+  // calculate the current beam and the reference beamx
   current = beam_pattern (w, nrcu, N);
- 
-  diff = current - ref;
-  diff = diff / time;
+  nonulled = beam_pattern (ref, nrcu, N);
+
+  // calculate the difference compared to the reference beam
+  // (this is the beam without nulling)
+  diff = current - nonulled;
+  
+  // x_sum == x' * n (see below)
+  x_sum += diff;
+
+  // now get the standard deviation from the reference beam
+  // 
+  // s = sqrt ( 1/n * sum (1 to n) (x_i - x')^2 ) 
+  // with x' = 1/n * sum (1 to n) x_i
+
+  current = x_sum / time; // x'
+  
+  
+
+#ifndef TOSCREEN
+  handle = gnuplot_init ();
+  gnuplot_cmd(handle, "set terminal png");
+  char filename[25];
+  sprintf (filename, "set output \"beamvariance_%d.png\"", plotCount);
+  gnuplot_cmd(handle, filename);
+#endif
+
+  gnuplot_cmd(handle, "set view 0,0");
+  gnuplot_splot (handle, diff, "Main lobe variance over time");
 }
 
 LoMat_double WH_BeamFormer::beam_pattern (const LoVec_dcomplex& w, const int nrcu, const int N)
