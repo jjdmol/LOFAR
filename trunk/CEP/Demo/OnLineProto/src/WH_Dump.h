@@ -51,7 +51,7 @@ public:
   /// The first WorkHolder should have nin=0.
   explicit WH_Dump (const string& name,
 		    unsigned int nin,
-		    const ParameterSet& ps,
+		    const ACC::ParameterSet& ps,
 		    int rank = 0);
 
   virtual ~WH_Dump();
@@ -59,7 +59,7 @@ public:
   /// Static function to create an object.
   static WorkHolder* construct (const string& name, 
 				int nin,
-				const ParameterSet& ps,
+				const ACC::ParameterSet& ps,
 				int rank);
 
   /// Make a fresh copy of the WH object.
@@ -88,7 +88,7 @@ private:
 
   gnuplot_ctrl* handle;
   
-  const ParameterSet itsPS;
+  const ACC::ParameterSet itsPS;
   int itsRank;
   
 };

@@ -42,7 +42,7 @@ public:
   /// The first WorkHolder should have nin=0.
   explicit WH_Sync (const string& name, 
 			  const int nbeamlets, 
-			  const ParameterSet& ps,
+			  const ACC::ParameterSet& ps,
 			  const int StationID);
 
   virtual ~WH_Sync();
@@ -50,7 +50,7 @@ public:
   /// Static function to create an object.
   static WorkHolder* construct (const string& name, 
 				const int nbeamlets, 
-				const ParameterSet& ps,
+				const ACC::ParameterSet& ps,
 				const int StationID);
 
   /// Make a fresh copy of the WH object.
@@ -69,7 +69,7 @@ private:
   /// Forbid assignment.
   WH_Sync& operator= (const WH_Sync&);
 
-  ParameterSet itsPS;
+  ACC::ParameterSet itsPS;
   int itsStationID;
   int itsCounter;
 };

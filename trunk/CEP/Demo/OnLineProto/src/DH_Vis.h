@@ -44,7 +44,7 @@ class DH_Vis: public DataHolder
 public:
   typedef complex<float> BufferType;
 
-  explicit DH_Vis (const string& name, const ParameterSet& ps);
+  explicit DH_Vis (const string& name, const ACC::ParameterSet& ps);
 
   DH_Vis(const DH_Vis&);
 
@@ -82,7 +82,7 @@ private:
 
 
   unsigned int itsBufSize;
-  const ParameterSet itsPS;
+  const ACC::ParameterSet itsPS;
 };
 
 inline DH_Vis::BufferType* DH_Vis::getBuffer()

@@ -23,17 +23,19 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
+//#include <lofar_config.h>
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <Common/lofar_string.h>
 #include <Common/KeyValueMap.h>
-#include <Common/Debug.h>
+//#include <Common/Debug.h>
 #include <Common/lofar_iostream.h>
 #include <ACC/ParameterSet.h>
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
+//#ifdef HAVE_CONFIG_H
+//#include <config.h>
+//#endif
 
 //CEPFrame basics
 #include <CEPFrame/Step.h>
@@ -66,6 +68,7 @@
 #define nonblocking false
 
 using namespace LOFAR;
+using namespace LOFAR::ACC;
 
 OnLineProto::OnLineProto()
 {
@@ -109,7 +112,7 @@ void OnLineProto::define(const KeyValueMap& params)
   char str[8];
 
   // Read in the parameter sets
-  const ParameterSet myPS(params.getString("psfile", "params.ps"));
+  const ACC::ParameterSet myPS(params.getString("psfile", "params.ps"));
 
   ////////////////////////////////////////////////////////////////
   //

@@ -39,7 +39,7 @@ namespace LOFAR
   WH_SimStation::WH_SimStation (const string& name,
 				const int nout,
 				const string fileName,
-				const ParameterSet& ps,
+				const ACC::ParameterSet& ps,
 				const int ID)
     : WorkHolder   (1, nout, name,"WH_SimStation"),
       itsFileName  (fileName),
@@ -81,7 +81,7 @@ namespace LOFAR
   WorkHolder* WH_SimStation::construct (const string& name, 
 					const int nout,
 					const string fileName,
-					const ParameterSet& ps,
+					const ACC::ParameterSet& ps,
 					const int ID)
   {
     return new WH_SimStation (name, nout, fileName, ps, ID);

@@ -48,7 +48,7 @@ public:
   explicit WH_SimStation (const string& name,
 			  const int nout,
 			  const string fileName,
-			  const ParameterSet& ps,
+			  const ACC::ParameterSet& ps,
 			  const int ID);
 
   virtual ~WH_SimStation();
@@ -57,7 +57,7 @@ public:
     static WorkHolder* construct (const string& name, 
 				  const int nout,
 				  const string fileName,
-				  const ParameterSet& ps,
+				  const ACC::ParameterSet& ps,
 				  const int ID);
 
   /// Make a fresh copy of the WH object.
@@ -80,7 +80,7 @@ public:
      
    string itsFileName;
    ifstream itsInputFile;
-   ParameterSet itsPS;
+   ACC::ParameterSet itsPS;
    int itsID;
    complex<float>* itsData;
    int itsCounter;

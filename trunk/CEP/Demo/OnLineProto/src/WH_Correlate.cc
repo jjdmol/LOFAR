@@ -39,7 +39,7 @@ namespace LOFAR
 
 WH_Correlate::WH_Correlate (const string& name,
 			    unsigned int channels,
-			    const ParameterSet& ps)
+			    const ACC::ParameterSet& ps)
   : WorkHolder    (channels, channels, name,"WH_Correlate"),
     itsNelements  (ps.getInt("general.nstations")),
     itsNitems     (ps.getInt("corr.tsize")),
@@ -66,7 +66,7 @@ WH_Correlate::~WH_Correlate()
 
 WorkHolder* WH_Correlate::construct (const string& name, 
 				     unsigned int channels,
-				     const ParameterSet& ps)
+				     const ACC::ParameterSet& ps)
 {
   return new WH_Correlate (name, channels, ps);
 }
