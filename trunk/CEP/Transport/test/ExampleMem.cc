@@ -113,7 +113,11 @@ bool test2()
       return false;
     }
     int version;
-    BlobIStream& bis = DH2.openExtraBlob(version);
+    bool found;
+    BlobIStream& bis = DH2.openExtraBlob(found, version);
+    if (!found) {
+      return false;
+    }
     std::string str;
     bis >> str;
     bis.getEnd();
@@ -133,9 +137,59 @@ bool test2()
 	   &&  DH1.getCounter() == DH2.getCounter())) {
       return false;
     }
+    // Extra blob should be the same as the one before.
     int version;
-    BlobIStream& bis = DH2.openExtraBlob(version);
+    bool found;
+    BlobIStream& bis = DH2.openExtraBlob(found, version);
+    if (!found) {
+      return false;
+    }
+    std::string str;
+    bis >> str;
     bis.getEnd();
+    if (str != "a string") {
+      return false;
+    }
+  }
+  {
+    DH1.getBuffer()[0] = fcomplex(151,-4.5);
+    DH2.getBuffer()[0] = 0;
+    DH1.setCounter(2);
+    DH2.setCounter(0);
+    // make empty extra blob
+    DH1.clearExtraBlob();
+    // do the data transport (without data in the extra blob)
+    DH1.write();
+    DH2.read();
+    if (! (DH1.getBuffer()[0] == DH2.getBuffer()[0]
+	   &&  DH1.getCounter() == DH2.getCounter())) {
+      return false;
+    }
+    int version;
+    bool found;
+    DH2.openExtraBlob(found, version);
+    if (found) {
+      return false;
+    }
+  }
+  {
+    DH1.getBuffer()[0] = fcomplex(151,-41.5);
+    DH2.getBuffer()[0] = 0;
+    DH1.setCounter(2);
+    DH2.setCounter(0);
+    // do the data transport (without data in the extra blob)
+    DH1.write();
+    DH2.read();
+    if (! (DH1.getBuffer()[0] == DH2.getBuffer()[0]
+	   &&  DH1.getCounter() == DH2.getCounter())) {
+      return false;
+    }
+    int version;
+    bool found;
+    DH2.openExtraBlob(found, version);
+    if (found) {
+      return false;
+    }
   }
   {
     DH1.getBuffer()[0] = fcomplex(1.7,3.52);
@@ -154,7 +208,11 @@ bool test2()
       return false;
     }
     int version;
-    BlobIStream& bis = DH2.openExtraBlob(version);
+    bool found;
+    BlobIStream& bis = DH2.openExtraBlob(found, version);
+    if (!found) {
+      return false;
+    }
     int v1;
     float v2;
     bis >> v1 >> v2;

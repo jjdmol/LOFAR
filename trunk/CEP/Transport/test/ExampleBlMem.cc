@@ -44,7 +44,8 @@ void* startWriterThread(void* thread_arg)
 void* startReaderThread(void* thread_arg)
 {
   DH_Example* dh = (DH_Example*)thread_arg;
-  int* result = new int(1);
+  int* result = new int;
+  *result = 1;
 
   for (int count = 1; count <= 20; count++)
   {
@@ -81,6 +82,13 @@ void* startVarWriterThread(void* thread_arg)
       dh->write();
     }
     {
+      dh->getBuffer()[0] = fcomplex(151,-4.5*count);
+      dh->setCounter(20);
+      dh->clearExtraBlob();
+      // do the data transport (without data in the extra blob)
+      dh->write();
+    }
+    {
       dh->getBuffer()[0] = fcomplex(1.7,3.52);
       dh->setCounter(3);
       BlobOStream& bos = dh->createExtraBlob();
@@ -97,58 +105,102 @@ void* startVarWriterThread(void* thread_arg)
 void* startVarReaderThread(void* thread_arg)
 {
   DH_Example* dh = (DH_Example*)thread_arg;
-  int* result= new int(1);
+  int* result = new int;
+  *result = 1;
 
   for (int count=1; count <= 10; count++)
   {
     {
       dh->read();
+      cout << "read a " << count << endl;
       if (dh->getBuffer()[0] != fcomplex(17, -3.5*count) ||
 	  dh->getCounter() != 1)
       {
 	*result = 0;
       }
       int version;
-      BlobIStream& bis = dh->openExtraBlob(version);
-      std::string str;
-      bis >> str;
-      bis.getEnd();
-      if (str != "a string") {
-	return false;
+      bool found;
+      BlobIStream& bis = dh->openExtraBlob(found,version);
+      if (!found) {
+	cout << "!found 1" << endl;
+	*result = 0;
+      } else {
+	std::string str;
+	bis >> str;
+	bis.getEnd();
+	if (str != "a string") {
+	  *result = 0;
+	}
       }
     }
     {
       dh->read();
+      cout << "read a " << count << endl;
       if (dh->getBuffer()[0] != fcomplex(15, -4.5*count) ||
 	  dh->getCounter() != 2)
       {
 	*result = 0;
       }
       int version;
-      BlobIStream& bis = dh->openExtraBlob(version);
-      bis.getEnd();
+      bool found;
+      BlobIStream& bis = dh->openExtraBlob(found,version);
+      if (!found) {
+	cout << "!found 2" << endl;
+	*result = 0;
+      } else {
+	std::string str;
+	bis >> str;
+	bis.getEnd();
+	if (str != "a string") {
+	  *result = 0;
+	}
+      }
+    }
+    {
+      dh->read();
+      cout << "read a " << count << endl;
+      if (dh->getBuffer()[0] != fcomplex(151, -4.5*count) ||
+	  dh->getCounter() != 2)
+      {
+	*result = 0;
+      }
+      int version;
+      bool found;
+      dh->openExtraBlob(found,version);
+      if (found) {
+	cout << "found 3" << endl;
+	*result = 0;
+      }
     } 
     {
       dh->read();
+      cout << "read a " << count << endl;
       if (dh->getBuffer()[0] != fcomplex(1.7, 3.52) ||
 	  dh->getCounter() != 3)
       {
 	*result = 0;
       }
       int version;
-      BlobIStream& bis = dh->openExtraBlob(version);
-      int v1;
-      float v2;
-      bis >> v1 >> v2;
-      int vers = bis.getStart ("p3");
-      bis.getEnd();
-      bis.getEnd();
-      if (v1 != 1  ||  v2 != 3*count ||  vers != 3) {
+      bool found;
+      BlobIStream& bis = dh->openExtraBlob(found,version);
+      if (!found) {
+	cout << "!found 4" << endl;
 	*result = 0;
+      } else {
+	int v1;
+	float v2;
+	bis >> v1 >> v2;
+	int vers = bis.getStart ("p3");
+	bis.getEnd();
+	bis.getEnd();
+	if (v1 != 1  ||  v2 != 3*count ||  vers != 3) {
+	  *result = 0;
+	}
       } 
     } 
   }
 
+  cout << "var read done" << endl;
   pthread_exit(result);
 }
 
@@ -283,12 +335,16 @@ bool testVar1()
 	result = false;
       }
       int version;
-      BlobIStream& bis = DH2.openExtraBlob(version);
+      bool found;
+      BlobIStream& bis = DH2.openExtraBlob(found,version);
+      if (!found) {
+	result = false;
+      }
       std::string str;
       bis >> str;
       bis.getEnd();
       if (str != "a string") {
-	return false;
+	result = false;
       }
     }
     {
@@ -299,8 +355,31 @@ bool testVar1()
 	result = false;
       }
       int version;
-      BlobIStream& bis = DH2.openExtraBlob(version);
+      bool found;
+      BlobIStream& bis = DH2.openExtraBlob(found,version);
+      if (!found) {
+	result = false;
+      }
+      std::string str;
+      bis >> str;
       bis.getEnd();
+      if (str != "a string") {
+	result = false;
+      }
+    }
+    {
+      DH2.read();
+      if (DH2.getBuffer()[0] != fcomplex(151, -4.5*count) ||
+	  DH2.getCounter() != 20)
+      {
+	result = false;
+      }
+      int version;
+      bool found;
+      DH2.openExtraBlob(found,version);
+      if (found) {
+	result = false;
+      }
     } 
     {
       DH2.read();
@@ -310,7 +389,11 @@ bool testVar1()
 	result = false;
       }
       int version;
-      BlobIStream& bis = DH2.openExtraBlob(version);
+      bool found;
+      BlobIStream& bis = DH2.openExtraBlob(found,version);
+      if (!found) {
+	result = false;
+      }
       int v1;
       float v2;
       bis >> v1 >> v2;
@@ -369,12 +452,22 @@ bool testVar2()
       bos << "a string";
       // do the data transport
       DH1.write();
+      cout << "wrote a " << count << endl;
     }
     {
       DH1.getBuffer()[0] = fcomplex(15,-4.5*count);
       DH1.setCounter(2);
       // do the data transport (without data in the extra blob)
       DH1.write();
+      cout << "wrote b " << count << endl;
+    }
+    {
+      DH1.getBuffer()[0] = fcomplex(151,-4.5*count);
+      DH1.setCounter(2);
+      DH1.clearExtraBlob();
+      // do the data transport (without data in the extra blob)
+      DH1.write();
+      cout << "wrote c " << count << endl;
     }
     {
       DH1.getBuffer()[0] = fcomplex(1.7,3.52);
@@ -385,9 +478,11 @@ bool testVar2()
       bos.putEnd();
       // do the data transport
       DH1.write();
+      cout << "wrote d " << count << endl;
     }
   }
 
+  cout << "var write done" << endl;
   int* result;
   pthread_join(varReader, (void**)&result);
   

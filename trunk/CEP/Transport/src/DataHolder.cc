@@ -267,6 +267,10 @@ void DataHolder::createDataBlock()
   }
   itsDataFields.createBlob (*itsDataBlob);
   fillAllDataPointers();
+  // Clear extra output buffer if there.
+  if (itsExtraPtr) {
+    itsExtraPtr->clearOut();
+  }
 }
 
 void DataHolder::openDataBlock()
@@ -292,10 +296,16 @@ BlobOStream& DataHolder::createExtraBlob()
   return itsExtraPtr->createBlock();
 }
 
-BlobIStream& DataHolder::openExtraBlob (int& version)
+void DataHolder::clearExtraBlob()
 {
   Assert (itsExtraPtr != 0);
-  return itsExtraPtr->openBlock (version, *itsData);
+  return itsExtraPtr->clearBlock();
+}
+
+BlobIStream& DataHolder::openExtraBlob (bool& found, int& version)
+{
+  Assert (itsExtraPtr != 0);
+  return itsExtraPtr->openBlock (found, version, *itsData);
 }
 
 void DataHolder::writeExtra ()
