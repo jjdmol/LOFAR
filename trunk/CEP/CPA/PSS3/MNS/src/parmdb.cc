@@ -31,7 +31,10 @@
 //
 // Note that each name can be used instead of the name MeqParm used here.
 
+#include <lofar_config.h>
+#include <iostream>
 
+#ifdef HAVE_LOFAR_PL
 #include <MNS/TPOParm.h>
 #include <PL/PersistenceBroker.h>
 #include <PL/Query.h>
@@ -40,7 +43,6 @@
 #include <Common/KeyValueMap.h>
 #include <Common/KeyParser.h>
 #include <aips/Quanta/MVTime.h>
-#include <iostream>
 #include <string>
 #include <pwd.h>
 
@@ -533,3 +535,12 @@ int main()
   }
   return 0;
 }
+
+#else
+int main()
+{
+  std::cerr << "No database access compiled in; parmdb cannot be run"
+	    << std::endl;
+  return 0;
+}
+#endif

@@ -22,21 +22,34 @@
 
 #include <MNS/ParmTableDB.h>
 #include <MNS/MeqDomain.h>
-#include <MNS/TPOParm.h>
-#include <PL/Query.h>
-#include <PL/Attrib.h>
-#include <PL/Collection.h>
 #include <Common/Debug.h>
 #include <aips/Mathematics/Math.h>
 
+#ifdef HAVE_LOFAR_PL
+# include <MNS/TPOParm.h>
+# include <PL/Query.h>
+# include <PL/Attrib.h>
+# include <PL/Collection.h>
+
+typedef LOFAR::PL::TPersistentObject<MeqParmHolder> TPOMParm;
+typedef LOFAR::PL::Collection<TPOMParm> MParmSet;
+typedef LOFAR::PL::TPersistentObject<MeqParmDefHolder> TPOMParmDef;
+typedef LOFAR::PL::Collection<TPOMParmDef> MParmDefSet;
+
 using namespace LOFAR::PL;
+#endif
+
 
 
 ParmTableDB::ParmTableDB (const string& dbType, const string& tableName,
 			  const string& userName, const string& passwd)
 : itsTableName (tableName)
 {
+#ifdef HAVE_LOFAR_PL
   itsBroker.connect (userName, dbType, passwd);
+#else
+  AssertMsg (false, "Database access is not compiled in");
+#endif
 }
 
 ParmTableDB::~ParmTableDB()
@@ -47,6 +60,7 @@ vector<MeqPolc> ParmTableDB::getPolcs (const string& parmName,
 				       const MeqDomain& domain)
 {
   vector<MeqPolc> result;
+#ifdef HAVE_LOFAR_PL
   TPOMParm tpoparm;
   tpoparm.tableName (itsTableName);
   MParmSet set = tpoparm.retrieve (attrib(tpoparm,"name") == parmName);
@@ -54,6 +68,7 @@ vector<MeqPolc> ParmTableDB::getPolcs (const string& parmName,
   for (; iter!=set.end(); iter++) {
     result.push_back (iter->data().getPolc());
   }
+#endif
   return result;
 }
 
@@ -67,6 +82,7 @@ MeqPolc ParmTableDB::getInitCoeff (const string& parmName,
   // category.
   // So look up until found or until no more parts are left.
   MeqPolc result;
+#ifdef HAVE_LOFAR_PL
   string name = parmName;
   while (true) {
     TPOMParmDef tpoparm;
@@ -85,6 +101,7 @@ MeqPolc ParmTableDB::getInitCoeff (const string& parmName,
     // Remove last part and try again.
     name = name.substr (0, idx);
   }
+#endif
   return result;
 }
 				    
@@ -92,6 +109,7 @@ void ParmTableDB::putCoeff (const string& parmName,
 			    int srcnr, int statnr,
 			    const MeqPolc& polc)
 {
+#ifdef HAVE_LOFAR_PL
   const MeqDomain& domain = polc.domain();
   MParmSet set = find (parmName, srcnr, statnr, domain);
   if (! set.empty()) {
@@ -120,8 +138,10 @@ void ParmTableDB::putCoeff (const string& parmName,
     tpoparm.tableName (itsTableName);
     tpoparm.insert();
   }
+#endif
 }
 
+#ifdef HAVE_LOFAR_PL
 MParmSet ParmTableDB::find (const string& parmName,
 			    int srcnr, int statnr,
 			    const MeqDomain& domain)
@@ -147,9 +167,11 @@ MParmSet ParmTableDB::find (const string& parmName,
   }
   return set2;
 }
+#endif
 
 void ParmTableDB::getSources (vector<string>& nams, vector<int>& srcs)
 {
+#ifdef HAVE_LOFAR_PL
   // Get all parm rows containing RA in the name.
   // Use both tables.
   TPOMParm tpoparm;
@@ -173,6 +195,7 @@ void ParmTableDB::getSources (vector<string>& nams, vector<int>& srcs)
     nams.push_back (diter->data().getName());
     srcs.push_back (diter->data().getSourceNr());
   }
+#endif
 }
 
 void ParmTableDB::unlock()

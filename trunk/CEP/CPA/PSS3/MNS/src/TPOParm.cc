@@ -21,6 +21,8 @@
 //# $Id$
 
 #include <MNS/TPOParm.h>
+#ifdef HAVE_DTL
+
 #include <PL/DTLBase.h>
 #include <PL/Collection.h>
 #include <PL/Query.h>
@@ -247,3 +249,5 @@ template class DBRep<MeqParmHolder>;
 
   }  // end namespace PL
 }    // end namespace LOFAR
+
+#endif
