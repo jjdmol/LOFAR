@@ -1,4 +1,4 @@
-SUBDIRS=src
+SUBDIRS=src test
 
 DOC_SUBDIRS=src
 
