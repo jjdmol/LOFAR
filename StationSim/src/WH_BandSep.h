@@ -55,11 +55,11 @@ public:
   virtual ~WH_BandSep();
 
   /// Static function to create an object.
-  static WorkHolder* construct (const string& name, int ninput, int noutput,
-				const ParamBlock&);
+  static WorkHolder* construct(const string& name, int ninput, int noutput,
+			       const ParamBlock&);
 
   /// Make a fresh copy of the WH object.
-  virtual WH_BandSep* make (const string& name) const;
+  virtual WH_BandSep* make(const string& name) const;
 
   /// Preprocess (open coeff file and allocate internal buffer).
   virtual void preprocess();
@@ -71,14 +71,14 @@ public:
   virtual void dump() const;
 
   /// Get a pointer to the i-th input DataHolder.
-  virtual DH_SampleR* getInHolder (int channel);
+  virtual DH_SampleR* getInHolder(int channel);
 
   /// Get a pointer to the i-th output DataHolder.
-  virtual DH_SampleC* getOutHolder (int channel);
+  virtual DH_SampleC* getOutHolder(int channel);
 
 private:
   /// Forbid copy constructor.
-  WH_BandSep (const WH_BandSep&);
+  WH_BandSep(const WH_BandSep&);
 
   /// Forbid assignment.
   WH_BandSep& operator= (const WH_BandSep&);
@@ -101,6 +101,10 @@ private:
   FFTServer<DH_SampleR::BufferType,DH_SampleC::BufferType> itsFFTserver;
   int itsSubPos;
   int itsFiltPos;
+
+  // DEBUG
+  ofstream osDebugInput;
+  int iCount;
 };
 
 
