@@ -104,19 +104,19 @@ namespace MyProtocol
 
 	    virtual void unpack()
 		{
-		    int offset = base.length - sizeof(ABSBeamAllocEvent);
+		    int offset = sizeof(ABSBeamAllocEvent);
 
-		    if (offset > 0)
+		    if (offset < base.length)
 		    {
 			char* data = (char*)&base;
 
-			memcpy(&ext1_size, data+offset, sizeof(int));
-			offset += sizeof(int);
+			memcpy(&ext1_size, data+offset, sizeof(unsigned int));
+			offset += sizeof(unsigned int);
 			ext1 = (int*)(data + offset);
 			offset += ext1_size * sizeof(int);
 
-			memcpy(&ext2_size, data+offset, sizeof(int));
-			offset += sizeof(int);
+			memcpy(&ext2_size, data+offset, sizeof(unsigned int));
+			offset += sizeof(unsigned int);
 			ext2 = (char*)(data + offset);
 			offset += ext2_size * sizeof(char);
 		    }	
