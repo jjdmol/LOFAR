@@ -65,16 +65,15 @@ namespace LOFAR
 
       Collection< TPersistentObject<T> > ctpo;
 
-      DBViewType view(tableName(), BCA<T>(), query.getSql());
-      typename DBViewType::select_iterator iter = view.begin();
+      try {
+        DBViewType view(tableName(), BCA<T>(), query.getSql());
+        typename DBViewType::select_iterator iter = view.begin();
 
-      for (int nr = 0; iter != view.end() && nr < maxObjects; ++iter, ++nr) {
-        TPersistentObject<T> tpo;
-        tpo.tableName (tableName());
+        for (int nr = 0; iter != view.end() && nr < maxObjects; ++iter, ++nr) {
+          TPersistentObject<T> tpo;
+          tpo.tableName (tableName());
+          tpo.fromDBRep(*iter);          // Retrieve this record
 
-        // Retrieve this record
-        try {
-          tpo.fromDBRep(*iter);
           // If the object T is spread among several tables we must call
           // retrieve() in order to get the data from all the tables. If we
           // don't, we will miss the data for the "owned" POs. This really
@@ -84,14 +83,13 @@ namespace LOFAR
           if (!tpo.ownedPOs().empty()) {
             tpo.retrieve();
           }
-        }
-        catch(dtl::DBException& e) {
-          THROW (RetrieveError, "Retrieve failed.\n" << e.what());
+          ctpo.add(tpo);
         }
 
-        ctpo.add(tpo);
       }
-      
+      catch(dtl::DBException& e) {
+        THROW (RetrieveError, "Retrieve failed.\n" << e.what());
+      }
       return ctpo;
     }
 
@@ -100,21 +98,20 @@ namespace LOFAR
     void TPersistentObject<T>::doErase() const
     {
       typedef dtl::DBView< DBRepHolder<ObjectId> > DBViewType;
-      DBViewType view(tableName(), BCA<ObjectId>());
-      typename DBViewType::delete_iterator iter = view;
 
-      // setup the selection parameters
-      DBRepHolder<ObjectId> rec;
-      rec.rep().itsOid = metaData().oid()->get();
-
-      // Delete this record
       try {
-        *iter = rec;
+        DBViewType view(tableName(), BCA<ObjectId>());
+        typename DBViewType::delete_iterator iter = view;
+        
+        // setup the selection parameters
+        DBRepHolder<ObjectId> rec;
+        rec.rep().itsOid = metaData().oid()->get();
+        *iter = rec;        // Delete this record
       }
       catch (dtl::DBException& e) {
         THROW (EraseError, "Erase failed.\n" << e.what());
       }
-
+      
       // Once we've reached here, the update was successful.
       // Reset the meta data structure.
       metaData().reset();
@@ -126,16 +123,14 @@ namespace LOFAR
     {
       typedef dtl::DBView< DBRepHolder<T> > DBViewType;
 
-      DBViewType view(tableName(), BCA<T>());
-      typename DBViewType::insert_iterator  iter = view;
-
-      // copy info of the T to the DBRepHolder<T> class
-      DBRepHolder<T>    rec;
-      toDBRep (rec);
-
-      // Save this record
       try {
-        *iter = rec;
+        DBViewType view(tableName(), BCA<T>());
+        typename DBViewType::insert_iterator  iter = view;
+        
+        // copy info of the T to the DBRepHolder<T> class
+        DBRepHolder<T>    rec;
+        toDBRep (rec);
+        *iter = rec;        // Save this record
       }
       catch(dtl::DBException& e) {
         THROW (InsertError, "Insert failed.\n" << e.what());
@@ -157,20 +152,19 @@ namespace LOFAR
         whereClause << "WHERE ObjId=" << oid.get();
 
       typedef dtl::DBView< DBRepHolder<T>, DBRepHolder<ObjectId> > DBViewType;
-      DBViewType view(tableName(), BCA<T>(), whereClause.str());
-      typename DBViewType::select_iterator iter = view.begin();
 
-      // We should find a match! Otherwise, the database record was probably
-      // deleted by another thread or process.
-      if (iter == view.end()) {
-        THROW (RetrieveError, 
-               "Retrieve failed. Matching record could not be found;\n "
-               "it may have been deleted by another thread or process");
-      }
-
-      // Retrieve this record
       try {
-        fromDBRep(*iter);
+        DBViewType view(tableName(), BCA<T>(), whereClause.str());
+        typename DBViewType::select_iterator iter = view.begin();
+
+        // We should find a match! Otherwise, the database record was probably
+        // deleted by another thread or process.
+        if (iter == view.end()) {
+          THROW (RetrieveError, 
+                 "Retrieve failed. Matching record could not be found;\n "
+                 "it may have been deleted by another thread or process");
+        }
+        fromDBRep(*iter);      // Retrieve this record
       }
       catch(dtl::DBException& e) {
         THROW (RetrieveError, "Retrieve failed.\n" << e.what());
@@ -187,16 +181,14 @@ namespace LOFAR
 
       typedef dtl::DBView< DBRepHolder<T>, DBRepHolder<ObjectId> > DBViewType;
 
-      DBViewType view(tableName(), BCA<T>(), whereClause.str());
-      typename DBViewType::update_iterator iter = view;
-
-      // copy info of the T to the DBRepHolder<T> class
-      DBRepHolder<T>    rec;
-      toDBRep (rec);
-      
-      // Save this record
       try {
-        *iter = rec;
+        DBViewType view(tableName(), BCA<T>(), whereClause.str());
+        typename DBViewType::update_iterator iter = view;
+        
+        // copy info of the T to the DBRepHolder<T> class
+        DBRepHolder<T>    rec;
+        toDBRep (rec);
+        *iter = rec;      // Save this record
       }
       catch (dtl::DBException& e) {
         THROW (UpdateError, "Update failed.\n" << e.what());
