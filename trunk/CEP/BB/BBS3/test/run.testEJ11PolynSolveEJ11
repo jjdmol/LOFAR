@@ -30,4 +30,4 @@ applyfile
 echo "  Preparing BlackBoard ..."
 time ./clearBB -user $usernm
 echo "  Starting solve ..."
-time ./tBBS2 tBBS2.testEJ11PolynSolveEJ11 $niter $usernm >& testEJ11PolynSolveEJ11.out
+time ./tBBS3 tBBS3.testEJ11PolynSolveEJ11 $niter $usernm >& testEJ11PolynSolveEJ11.out
