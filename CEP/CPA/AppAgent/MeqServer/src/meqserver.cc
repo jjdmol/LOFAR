@@ -29,7 +29,7 @@ bool setupApp (ApplicationBase::Ref &app,const string &str)
   if( name == "-meq:" )
   {
     cout<<"=================== creating MeqServer =-==================\n";
-    app <<= new MEQ::MeqServer;
+    app <<= new Meq::MeqServer;
     wpclass = AidMeqServer;
   }
   else if( name == "-rpt:" )

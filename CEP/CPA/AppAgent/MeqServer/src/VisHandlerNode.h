@@ -7,7 +7,7 @@
 #pragma aid VisHandlerNode 
 #pragma aid Data Id
     
-namespace MEQ {
+namespace Meq {
   
 class Cells;
 
@@ -37,7 +37,7 @@ class VisHandlerNode : public Node
     virtual int deliver (const Request &req,VisTile::Ref::Copy &tileref,
                          VisTile::Format::Ref &outformat) =0;
     
-    // returns MEQ::Cells object corresponding to this VisTile
+    // returns Meq::Cells object corresponding to this VisTile
     //##ModelId=3F9FF6970269
     static Cells makeCells (const VisTile &tile);
     

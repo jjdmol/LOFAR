@@ -5,7 +5,7 @@
 #include <MEQ/Cells.h>
 #include <MEQ/Request.h>
     
-namespace MEQ    
+namespace Meq    
 {
   const HIID  FOutputColumns = AidOutput|AidCol,
               FStation1      = AidStation|1|AidIndex,
@@ -15,7 +15,7 @@ namespace MEQ
 }
 
 //##ModelId=3F9FF71B006A
-MEQ::VisDataMux::VisDataMux (MEQ::Forest &frst)
+Meq::VisDataMux::VisDataMux (Meq::Forest &frst)
     : forest_(frst)
 {
   // use reasonable default
@@ -23,7 +23,7 @@ MEQ::VisDataMux::VisDataMux (MEQ::Forest &frst)
 }
 
 //##ModelId=3FA1016000B0
-void MEQ::VisDataMux::init (const DataRecord &rec)
+void Meq::VisDataMux::init (const DataRecord &rec)
 {
   out_columns_.clear();
   out_colnames_.clear();
@@ -45,7 +45,7 @@ void MEQ::VisDataMux::init (const DataRecord &rec)
 }
 
 //##ModelId=3F716E98002E
-void MEQ::VisDataMux::addNode (Node &check_node)
+void Meq::VisDataMux::addNode (Node &check_node)
 {
   // return if the node is not a VisHandlerNode
   VisHandlerNode *node = dynamic_cast<VisHandlerNode*>(&check_node);
@@ -81,7 +81,7 @@ void MEQ::VisDataMux::addNode (Node &check_node)
 }
 
 //##ModelId=3F716EAA0106
-void MEQ::VisDataMux::removeNode (Node &check_node)
+void Meq::VisDataMux::removeNode (Node &check_node)
 {
   // return if the node is not a VisHandlerNode
   VisHandlerNode *node = dynamic_cast<VisHandlerNode*>(&check_node);
@@ -106,13 +106,13 @@ void MEQ::VisDataMux::removeNode (Node &check_node)
 }
 
 //##ModelId=3F992F280174
-int MEQ::VisDataMux::formDataId (int sta1,int sta2)
+int Meq::VisDataMux::formDataId (int sta1,int sta2)
 {
   return VisVocabulary::ifrNumber(sta1,sta2);
 }
 
 //##ModelId=3F98DAE6024A
-void MEQ::VisDataMux::deliverHeader (const DataRecord &header)
+void Meq::VisDataMux::deliverHeader (const DataRecord &header)
 {
   // check header for number of stations, use a reasonable default
   cdebug(3)<<"got header: "<<header.sdebug(DebugLevel)<<endl;
@@ -146,7 +146,7 @@ void MEQ::VisDataMux::deliverHeader (const DataRecord &header)
 }
 
 //##ModelId=3F950ACA0160
-int MEQ::VisDataMux::deliverTile (VisTile::Ref::Copy &tileref)
+int Meq::VisDataMux::deliverTile (VisTile::Ref::Copy &tileref)
 {
   int result_flag = 0;
   int did = formDataId(tileref->antenna1(),tileref->antenna2());

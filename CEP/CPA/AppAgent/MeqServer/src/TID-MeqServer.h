@@ -8,38 +8,38 @@
       // should be called somewhere in order to link in the registry
       int aidRegistry_MeqServer ();
 
-#ifndef _defined_id_TpMEQSink
-#define _defined_id_TpMEQSink 1
-const TypeId TpMEQSink(-1462);                    // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/MeqServer/src/MeqServer.aidlist:17
-const int TpMEQSink_int = -1462;
-namespace MEQ { class Sink; };
+#ifndef _defined_id_TpMeqSink
+#define _defined_id_TpMeqSink 1
+const TypeId TpMeqSink(-1459);                    // from /home/oms/LOFAR/CEP/CPA/AppAgent/MeqServer/src/Sink.h:9
+const int TpMeqSink_int = -1459;
+namespace Meq { class Sink; };
             template<>
-            class DMIBaseTypeTraits<MEQ::Sink> : public TypeTraits<MEQ::Sink>
+            class DMIBaseTypeTraits<Meq::Sink> : public TypeTraits<Meq::Sink>
             {
               public:
               enum { isContainable = true };
-              enum { typeId = TpMEQSink_int };
+              enum { typeId = TpMeqSink_int };
               enum { TypeCategory = TypeCategories::DYNAMIC };
               enum { ParamByRef = true, ReturnByRef = true };
-              typedef const MEQ::Sink & ContainerReturnType;
-              typedef const MEQ::Sink & ContainerParamType;
+              typedef const Meq::Sink & ContainerReturnType;
+              typedef const Meq::Sink & ContainerParamType;
             };
 #endif
-#ifndef _defined_id_TpMEQSpigot
-#define _defined_id_TpMEQSpigot 1
-const TypeId TpMEQSpigot(-1492);                  // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/MeqServer/src/MeqServer.aidlist:18
-const int TpMEQSpigot_int = -1492;
-namespace MEQ { class Spigot; };
+#ifndef _defined_id_TpMeqSpigot
+#define _defined_id_TpMeqSpigot 1
+const TypeId TpMeqSpigot(-1460);                  // from /home/oms/LOFAR/CEP/CPA/AppAgent/MeqServer/src/Spigot.h:9
+const int TpMeqSpigot_int = -1460;
+namespace Meq { class Spigot; };
             template<>
-            class DMIBaseTypeTraits<MEQ::Spigot> : public TypeTraits<MEQ::Spigot>
+            class DMIBaseTypeTraits<Meq::Spigot> : public TypeTraits<Meq::Spigot>
             {
               public:
               enum { isContainable = true };
-              enum { typeId = TpMEQSpigot_int };
+              enum { typeId = TpMeqSpigot_int };
               enum { TypeCategory = TypeCategories::DYNAMIC };
               enum { ParamByRef = true, ReturnByRef = true };
-              typedef const MEQ::Spigot & ContainerReturnType;
-              typedef const MEQ::Spigot & ContainerParamType;
+              typedef const Meq::Spigot & ContainerReturnType;
+              typedef const Meq::Spigot & ContainerParamType;
             };
 #endif
 

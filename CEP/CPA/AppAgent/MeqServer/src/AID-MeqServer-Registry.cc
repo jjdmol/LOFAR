@@ -6,9 +6,9 @@
     #include <DMI/Packer.h>
     
 #include "Sink.h"
-BlockableObject * __construct_MEQSink (int n) { return n>0 ? new MEQ::Sink [n] : new MEQ::Sink; }
+BlockableObject * __construct_MeqSink (int n) { return n>0 ? new Meq::Sink [n] : new Meq::Sink; }
 #include "Spigot.h"
-BlockableObject * __construct_MEQSpigot (int n) { return n>0 ? new MEQ::Spigot [n] : new MEQ::Spigot; }
+BlockableObject * __construct_MeqSpigot (int n) { return n>0 ? new Meq::Spigot [n] : new Meq::Spigot; }
   
     int aidRegistry_MeqServer ()
     {
@@ -16,23 +16,23 @@ BlockableObject * __construct_MEQSpigot (int n) { return n>0 ? new MEQ::Spigot [
 
         AtomicID::registerId(-1427,"Node")+
         AtomicID::registerId(-1163,"Name")+
-        AtomicID::registerId(-1425,"NodeIndex")+
-        AtomicID::registerId(-1426,"MeqServer")+
-        AtomicID::registerId(-1428,"Create")+
-        AtomicID::registerId(-1429,"Delete")+
-        AtomicID::registerId(-1430,"Get")+
+        AtomicID::registerId(-1456,"NodeIndex")+
+        AtomicID::registerId(-1457,"MeqServer")+
+        AtomicID::registerId(-1458,"Create")+
+        AtomicID::registerId(-1461,"Delete")+
+        AtomicID::registerId(-1466,"Get")+
         AtomicID::registerId(-1381,"Set")+
         AtomicID::registerId(-1052,"State")+
         AtomicID::registerId(-1351,"Request")+
-        AtomicID::registerId(-1424,"Resolve")+
+        AtomicID::registerId(-1454,"Resolve")+
         AtomicID::registerId(-1423,"Child")+
-        AtomicID::registerId(-1431,"Children")+
+        AtomicID::registerId(-1448,"Children")+
         AtomicID::registerId(-1137,"App")+
         AtomicID::registerId(-1338,"Command")+
-        AtomicID::registerId(-1422,"Args")+
+        AtomicID::registerId(-1453,"Args")+
         AtomicID::registerId(-1421,"Result")+
         AtomicID::registerId(-1107,"Data")+
-        AtomicID::registerId(-1494,"Processing")+
+        AtomicID::registerId(-1455,"Processing")+
         AtomicID::registerId(-1071,"Error")+
         AtomicID::registerId(-1067,"Message")+
         AtomicID::registerId(-1222,"Code")+
@@ -41,20 +41,20 @@ BlockableObject * __construct_MEQSpigot (int n) { return n>0 ? new MEQ::Spigot [
         AtomicID::registerId(-1463,"Col")+
         AtomicID::registerId(-1111,"Corr")+
         AtomicID::registerId(-1045,"Index")+
-        AtomicID::registerId(-1462,"MEQSink")+
-        TypeInfoReg::addToRegistry(-1462,TypeInfo(TypeInfo::DYNAMIC,0))+
-        DynamicTypeManager::addToRegistry(-1462,__construct_MEQSink)+
-        AtomicID::registerId(-1493,"Spigot")+
+        AtomicID::registerId(-1459,"MeqSink")+
+        TypeInfoReg::addToRegistry(-1459,TypeInfo(TypeInfo::DYNAMIC,0))+
+        DynamicTypeManager::addToRegistry(-1459,__construct_MeqSink)+
+        AtomicID::registerId(-1465,"Spigot")+
         AtomicID::registerId(-1075,"Input")+
         AtomicID::registerId(-1150,"Next")+
-        AtomicID::registerId(-1457,"Id")+
-        AtomicID::registerId(-1492,"MEQSpigot")+
-        TypeInfoReg::addToRegistry(-1492,TypeInfo(TypeInfo::DYNAMIC,0))+
-        DynamicTypeManager::addToRegistry(-1492,__construct_MEQSpigot)+
+        AtomicID::registerId(-1425,"Id")+
+        AtomicID::registerId(-1460,"MeqSpigot")+
+        TypeInfoReg::addToRegistry(-1460,TypeInfo(TypeInfo::DYNAMIC,0))+
+        DynamicTypeManager::addToRegistry(-1460,__construct_MeqSpigot)+
         AtomicID::registerId(-1167,"Station")+
         AtomicID::registerId(-1123,"Tile")+
         AtomicID::registerId(-1126,"Format")+
-        AtomicID::registerId(-1459,"VisHandlerNode")+
+        AtomicID::registerId(-1462,"VisHandlerNode")+
     0;
     return res;
   }

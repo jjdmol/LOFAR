@@ -6,9 +6,9 @@
 
 #pragma aid Sink 
 #pragma aid Output Col Corr Index
-#pragma types #MEQ::Sink
+#pragma types #Meq::Sink
     
-namespace MEQ {
+namespace Meq {
 
 //##ModelId=3F98DAE503B5
 class Sink : public VisHandlerNode
@@ -26,7 +26,7 @@ class Sink : public VisHandlerNode
     
     //##ModelId=3F98DAE60222
     virtual TypeId objectType() const
-    { return TpMEQSink; }
+    { return TpMeqSink; }
     
   protected:
     //##ModelId=3F98DAE60217

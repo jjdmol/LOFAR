@@ -4,7 +4,7 @@
 #include <MEQ/Request.h>
 #include <MEQ/Result.h>
 
-namespace MEQ {
+namespace Meq {
 
 InitDebugContext(Spigot,"MeqSpigot");
   

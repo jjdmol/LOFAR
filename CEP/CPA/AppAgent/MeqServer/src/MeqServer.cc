@@ -1,7 +1,7 @@
 #include "MeqServer.h"
 #include "AID-MeqServer.h"
 #include "DMI/AID-DMI.h"
-#include <MEQ/AID-MEQ.h>
+#include <MEQ/AID-Meq.h>
 #include <MEQ/Request.h>
 #include <MEQ/Result.h>
     
@@ -11,10 +11,10 @@ using namespace VisRepeaterVocabulary;
 using namespace VisVocabulary;
 using namespace VisAgent;
     
-namespace MEQ 
+namespace Meq 
 {
   
-static int dum = aidRegistry_MeqServer() + aidRegistry_MEQ();
+static int dum = aidRegistry_MeqServer() + aidRegistry_Meq();
 
 const HIID DataProcessingError = AidData|AidProcessing|AidError;
   

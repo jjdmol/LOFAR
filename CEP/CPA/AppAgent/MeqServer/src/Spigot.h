@@ -6,9 +6,9 @@
 
 #pragma aid Spigot 
 #pragma aid Input Col Next Request Id
-#pragma types #MEQ::Spigot
+#pragma types #Meq::Spigot
     
-namespace MEQ {
+namespace Meq {
 
 //##ModelId=3F98DAE503C9
 class Spigot : public VisHandlerNode
@@ -26,7 +26,7 @@ class Spigot : public VisHandlerNode
     
     //##ModelId=3F98DAE6023E
     virtual TypeId objectType() const
-    { return TpMEQSpigot; }
+    { return TpMeqSpigot; }
     
     //##ModelId=3F9FF6AA016C
     LocalDebugContext;

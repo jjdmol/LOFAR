@@ -11,7 +11,7 @@
 #pragma aid Create Delete Get Set State Request Resolve Child Children
 #pragma aid App Command Args Result Data Processing Error Message Code
     
-namespace MEQ
+namespace Meq
 {
 
 //##ModelId=3F5F195E013B
@@ -64,6 +64,6 @@ class MeqServer : public VisRepeater
 
 };
 
-}; // namespace MEQ
+}; // namespace Meq
 
 #endif /* MEQSERVER_SRC_MEQSERVER_H_HEADER_INCLUDED_D338579D */

@@ -2,11 +2,20 @@ pragma include once
 include 'appagent/app_proxy.g'
 
 # find path to server binary
-if( has_field(lofar_software,'meq') && has_field(lofar_software.meq,'server') )
-  const _meqserver_binary := lofar_software.meq.server;
-else
-  const _meqserver_binary := './meqserver';
-  print _meqserver_binary;
+if( has_field(lofar_software,'meq') && has_field(lofar_software.meq,'servers') )
+  for( f in lofar_software.meq.servers )
+    if( len(stat(f)) )
+    {
+      print 'Found path to meqserver binary:',f;
+      const _meqserver_binary := f;
+      break;
+    }
+# not found? try default
+if( !is_defined('_meqserver_binary') )
+{
+  const _meqserver_binary := 'meqserver';
+  print 'Will use default meqserver binary, hope this works';
+}
 
 const meqserver := function (appid='MeqServer',
     server=_meqserver_binary,options="-d0 -meq:M:M:MeqServer",
@@ -59,7 +68,7 @@ const meqnode := function (class,name,children=F,default=[=] )
 
 const meqparm := function (name,default=[=] )
 {
-  return meqnode('MEQParmPolcStored',name,default=default);
+  return meqnode('MeqParmPolcStored',name,default=default);
 }
 
 const meqdomain := function (startfreq,endfreq,starttime,endtime)
@@ -90,29 +99,29 @@ const meqserver_test := function ()
 {
   global mqs;
   # create meqserver object
-  mqs := meqserver(verbose=4,server='./meqserver'); # ,suspend=T);
+  mqs := meqserver(verbose=4,suspend=F);
   # set verbose debugging messages
   mqs.setdebug('MeqNode',5);
   # initialize meqserver
   mqs.init([=],[=],[=],wait=T);
   
   # create some test nodes
-  print mqs.meq('Create.Node',[class='MEQNode',name='x'],T);
-  print mqs.meq('Create.Node',[class='MEQNode',name='y'],T);
-  print mqs.meq('Create.Node',[class='MEQNode',name='z'],T);
+  print mqs.meq('Create.Node',[class='MeqNode',name='x'],T);
+  print mqs.meq('Create.Node',[class='MeqNode',name='y'],T);
+  print mqs.meq('Create.Node',[class='MeqNode',name='z'],T);
   
   # test various ways to specify children
   #   children specified as an array of names
   #   "w" is a forward reference, child w will be created later on
-  print mqs.meq('Create.Node',[class='MEQNode',name='test1',children="x y z w"],T);
+  print mqs.meq('Create.Node',[class='MeqNode',name='test1',children="x y z w"],T);
   #   children specified as an array of node indices
-  print mqs.meq('Create.Node',[class='MEQNode',name='test2',children=[2,3,4]],T);
+  print mqs.meq('Create.Node',[class='MeqNode',name='test2',children=[2,3,4]],T);
   #   children specified as a record. Field name is child name (argument name)
   children := [ a='x',          # child 'a' specified by name
                 b=2,            # child 'b' specified by node index
                 c='y',          # child 'c' will be created later on
-                d=[ class='MEQNode',name='aa' ] ]; # created on-the-fly
-  print mqs.meq('Create.Node',[class='MEQNode',name='w',children=children],T);
+                d=[ class='MeqNode',name='aa' ] ]; # created on-the-fly
+  print mqs.meq('Create.Node',[class='MeqNode',name='w',children=children],T);
         
   # this resolves remaining children of "test1" (specifically, "w")
   print mqs.meq('Resolve.Children',[name='test1'],T);
@@ -125,11 +134,11 @@ const meqserver_test := function ()
   # test creating a sub-tree
   defval1 := array(as_double(1),2,2);
   defval2 := array(as_double(2),1,1);
-  cosrec := [ class='MEQCos',name='cosp1',children=[ 
-      x=[ class='MEQParmPolcStored',name='p1',default=defval1 ] ] ];
-  addrec := [ class='MEQAdd',name='add1_2',children=[
+  cosrec := [ class='MeqCos',name='cosp1',children=[ 
+      x=[ class='MeqParmPolcStored',name='p1',default=defval1 ] ] ];
+  addrec := [ class='MeqAdd',name='add1_2',children=[
       x=cosrec,
-      y=[ class='MEQParmPolcStored',name='p2',default=defval2 ] ] ];
+      y=[ class='MeqParmPolcStored',name='p2',default=defval2 ] ] ];
       
   print mqs.meq('Create.Node',addrec,T);
   print mqs.meq('Resolve.Children',[name='add1_2'],T);
@@ -144,8 +153,7 @@ const meqsink_test := function ()
 {
   global mqs;
   # create meqserver object
-  mqs := meqserver(verbose=4,server='meqserver',
-                    options="-d0 -meq:M:O:MeqServer",suspend=F);
+  mqs := meqserver(verbose=4,options="-d0 -meq:M:M:MeqServer",suspend=F);
   # set verbose debugging messages
   mqs.setdebug("MeqNode MeqForest MeqSink MeqSpigot MeqNode MeqVisHandler MeqServ",5);
   mqs.setdebug("MeqServ MeqVisHandler",3);
@@ -156,13 +164,13 @@ const meqsink_test := function ()
   # create a small subtree
   defval1 := array(as_double(1),2,2);
   defval2 := array(as_double(2),1,1);
-  addrec := meqnode('MEQAdd','add1_2',
+  addrec := meqnode('MeqAdd','add1_2',
               children=[  x=meqparm('p1',default=defval1), 
                           y=meqparm('p2',default=defval2),
                           z='spigot1' ]);
   print mqs.meq('Create.Node',addrec);
   # create spigot (note! for now, a spigot MUST be created first)
-  spigrec := meqnode('MEQSpigot','spigot1');
+  spigrec := meqnode('MeqSpigot','spigot1');
   spigrec.input_col := 'DATA';
   spigrec.corr_index := 1;
   spigrec.station_1_index := 1;
@@ -170,7 +178,7 @@ const meqsink_test := function ()
   print mqs.meq('Create.Node',spigrec);
   
   # create sink
-  sinkrec := meqnode('MEQSink','sink1',children="add1_2");
+  sinkrec := meqnode('MeqSink','sink1',children="add1_2");
   sinkrec.output_col := 'PREDICT'; 
   sinkrec.corr_index := 1;
   sinkrec.station_1_index := 1;
@@ -181,6 +189,7 @@ const meqsink_test := function ()
   print mqs.meq('Resolve.Children',[name='sink1'],T);
   
   # activate input agent and watch the fireworks
+  global inputrec;
   inputrec := [ ms_name = 'test.ms',data_column_name = 'DATA',tile_size=10,
                 selection = [=]  ];
   mqs.init(input=inputrec); 
