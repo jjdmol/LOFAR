@@ -1,4 +1,5 @@
 #include "Service.h"
+#include <GCF/PAL/GCF_PVSSInfo.h>
 
 TSAResult Service::dpCreate(const string& propName, 
                             const string& macType)
@@ -33,7 +34,7 @@ TSAResult Service::dpeSet(const string& propName, const GCFPValue& value)
 
 bool Service::dpeExists(const string& propName)
 {
-  return GSAService::dpeExists(propName);
+  return GCFPVSSInfo::propExists(propName);
 }
 
     

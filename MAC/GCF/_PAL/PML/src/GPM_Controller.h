@@ -27,6 +27,7 @@
 #include <GCF/TM/GCF_Task.h>
 #include <GCF/TM/GCF_Port.h>
 #include <GCF/TM/GCF_Handler.h>
+#include <GCF/PAL/GCF_PVSSPort.h>
 #include "GPM_Defines.h"
 #include <GPA_Defines.h>
 #include <Common/lofar_map.h>
@@ -76,7 +77,14 @@ class GPMController : public GCFTask
     GCFEvent::TResult connected (GCFEvent& e, GCFPortInterface& p);
         
   private: // helper methods
-    unsigned short registerAction (GCFPropertySet& propSet);
+    typedef struct 
+    {
+      GCFPropertySet* pPropSet;
+      string apcName;
+      unsigned short signal;
+    } TAction;
+    unsigned short registerAction (TAction& action);
+    string determineDest(const string& scope) const;
 
   private: // data members        
     GCFPort                       _propertyAgent;
@@ -84,8 +92,10 @@ class GPMController : public GCFTask
     TMyPropertySets _myPropertySets;
     typedef list<GCFExtPropertySet*>  TExtPropertySets;
     TExtPropertySets _extPropertySets;
-    typedef map<unsigned short /*seqnr*/, GCFPropertySet*>  TActionSeqList;
+    typedef map<unsigned short /*seqnr*/, TAction>  TActionSeqList;
     TActionSeqList _actionSeqList;    
+    
+    GCFPVSSPort _distPropertyAgent;
 
   private: // admin members  
 

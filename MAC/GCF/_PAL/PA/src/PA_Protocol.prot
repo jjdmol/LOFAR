@@ -27,6 +27,10 @@ event = {
 		name = "scope";
 		type = "string";
 	};
+	param = {
+		name = "requestor";
+		type = "string";
+	};
 };
 
 event = {
@@ -38,6 +42,10 @@ event = {
 	};
 	param = {
 		name = "scope";
+		type = "string";
+	};
+	param = {
+		name = "requestor";
 		type = "string";
 	};
 };
@@ -55,6 +63,10 @@ event = {
 	};
 	param = {
 		name = "apcName";
+		type = "string";
+	};
+	param = {
+		name = "requestor";
 		type = "string";
 	};
 };

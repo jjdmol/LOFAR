@@ -25,14 +25,12 @@
 #include <GTM_Defines.h>
 #include <GCF/TM/GCF_Task.h>
 #include <GCF/TM/GCF_Protocols.h>
+#include <GCF/ParameterSet.h>
 #include <Socket/GTM_TCPServerSocket.h>
 #include <ServiceBroker/GTM_ServiceBroker.h>
 #include <errno.h>
 
-
-static GCFEvent disconnectedEvent(F_DISCONNECTED);
-static GCFEvent connectedEvent   (F_CONNECTED);
-static GCFEvent closedEvent      (F_CLOSED);
+using namespace GCF;
 
 GCFTCPPort::GCFTCPPort(GCFTask& task, 
                        string name, 
@@ -137,19 +135,46 @@ bool GCFTCPPort::open()
         return false;
       }
     }
+    string portNumParam = formatString(PARAM_TCP_PORTNR, 
+        _addr.taskname.c_str(),
+        _addr.portname.c_str());
+    if (ParameterSet::instance()->isDefined(portNumParam))
+    {
+      _portNumber = ParameterSet::instance()->getInt(portNumParam);
+      string hostParam = formatString(PARAM_TCP_HOST, 
+          _addr.taskname.c_str(),
+          _addr.portname.c_str());
+      if (ParameterSet::instance()->isDefined(hostParam))
+      {
+        _host = ParameterSet::instance()->getString(hostParam);
+      }
+      else
+      {
+        _host = "localhost";
+      }
+    }
     if (_host != "" && _portNumber > 0)
     {
       serviceInfo(SB_NO_ERROR, _portNumber, _host);
     }      
     else
     {
-      string remoteServiceName = formatString("%s:%s", _addr.taskname.c_str(), _addr.portname.c_str());
+      string remoteServiceName = formatString("%s:%s", 
+          _addr.taskname.c_str(), 
+          _addr.portname.c_str());
       assert(_broker);
       _broker->getServiceinfo(*this, remoteServiceName);
     }
   }
   else 
   {
+    string portNumParam = formatString(PARAM_TCP_PORTNR, 
+        getTask()->getName().c_str(),
+        getRealName().c_str());
+    if (ParameterSet::instance()->isDefined(portNumParam))
+    {
+      _portNumber = ParameterSet::instance()->getInt(portNumParam);
+    }
     if (_portNumber > 0)
     {
       serviceRegistered(SB_NO_ERROR, _portNumber);

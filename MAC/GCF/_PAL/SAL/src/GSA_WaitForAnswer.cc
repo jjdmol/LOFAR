@@ -37,5 +37,5 @@ void GSAWaitForAnswer::hotLinkCallBack(DpMsgAnswer& answer)
 
 void GSAWaitForAnswer::hotLinkCallBack(DpHLGroup& group)
 {
-  _service.handleHotLink(group);
+  _service.handleHotLink(group, *this);
 }

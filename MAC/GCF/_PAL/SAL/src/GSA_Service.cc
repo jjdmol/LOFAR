@@ -32,6 +32,8 @@
 #include <GCF/GCF_PVDouble.h>
 #include <GCF/GCF_PVString.h>
 #include <GCF/GCF_PVDynArr.h>
+#include <GCF/GCF_PVBlob.h>
+#include <GCF/PAL/GCF_PVSSInfo.h>
 
 #include <DpMsgAnswer.hxx>            
 #include <DpMsgHotLink.hxx>           
@@ -46,6 +48,7 @@
 #include <IntegerVar.hxx>
 #include <UIntegerVar.hxx>
 #include <DynVar.hxx>
+#include <BlobVar.hxx>
 
 GSAService::GSAService() : _pWFA(0)
 {
@@ -87,6 +90,7 @@ void GSAService::handleHotLink(const DpMsgAnswer& answer, const GSAWaitForAnswer
     for (AnswerItem *pAnItem = pGrItem->getFirstItem(); pAnItem;
          pAnItem = pGrItem->getNextItem())
     {
+      GCFPVSSInfo::_lastSysNr = pAnItem->getDpIdentifier().getSystem();
       if (pAnItem->getDpIdentifier().convertToString(pvssDPEConfigName) == PVSS_FALSE)
       {
         if (answer.isAnswerOn() == DP_MSG_DP_REQ)
@@ -152,6 +156,7 @@ void GSAService::handleHotLink(const DpMsgAnswer& answer, const GSAWaitForAnswer
             break;        
         }
       }
+      GCFPVSSInfo::_lastSysNr = 0;      
     }
     if (!handled)
     {
@@ -164,6 +169,7 @@ void GSAService::handleHotLink(const DpMsgAnswer& answer, const GSAWaitForAnswer
             answer.isAnswerOn()));
       }
     }
+    
   }
   if (!handled)
   {
@@ -175,7 +181,7 @@ void GSAService::handleHotLink(const DpMsgAnswer& answer, const GSAWaitForAnswer
 
 // Handle incoming hotlinks.
 // This function is called from our hotlink object
-void GSAService::handleHotLink(const DpHLGroup& group)
+void GSAService::handleHotLink(const DpHLGroup& group, const GSAWaitForAnswer& wait)
 {
   CharString pvssDPEConfigName;
   string DPEConfigName;
@@ -198,6 +204,7 @@ void GSAService::handleHotLink(const DpHLGroup& group)
     Variable *varPtr = item->getValuePtr();
     if (varPtr)      // could be NULL !!
     {
+      GCFPVSSInfo::_lastSysNr = item->getDpIdentifier().getSystem();
       if (item->getDpIdentifier().convertToString(pvssDPEConfigName) == PVSS_FALSE)
       {
         LOG_FATAL(LOFAR::formatString (
@@ -223,6 +230,7 @@ void GSAService::handleHotLink(const DpHLGroup& group)
       }
       if (pPropertyValue)
         delete pPropertyValue; // constructed by convertPVSSToMAC method
+      GCFPVSSInfo::_lastSysNr = 0;
     }
   }
 }
@@ -248,7 +256,7 @@ TSAResult GSAService::dpCreate(const string& dpName,
         "Unable to create DP: '%s'", 
         dpName.c_str()));    
   }
-  else if (dpeExists(dpName))
+  else if (GCFPVSSInfo::propExists(dpName))
   {
     LOG_WARN(LOFAR::formatString (
         "DP '%s' already exists", 
@@ -317,7 +325,7 @@ TSAResult GSAService::dpDelete(const string& dpName)
         "Unable to delete DP: '%s'", 
         dpName.c_str()));
   }
-  else if (!dpeExists(dpName))
+  else if (!GCFPVSSInfo::propExists(dpName))
   {
     LOG_WARN(LOFAR::formatString (
         "DP '%s' does not exists", 
@@ -362,7 +370,8 @@ TSAResult GSAService::dpeSubscribe(const string& propName)
   
   DpIdentifier dpId;
   string pvssDpName;
-
+  _pWFA->setDpName(propName);
+  
   convPropToDpConfig(propName, pvssDpName, true);
 
   LOG_INFO(LOFAR::formatString (
@@ -376,7 +385,7 @@ TSAResult GSAService::dpeSubscribe(const string& propName)
         "Unable to subscribe on property: '%s'", 
         propName.c_str()));
   }
-  else if (!dpeExists(propName))
+  else if (!GCFPVSSInfo::propExists(propName))
   {
     LOG_WARN(LOFAR::formatString (
         "Property: '%s' does not exists", 
@@ -440,7 +449,7 @@ TSAResult GSAService::dpeUnsubscribe(const string& propName)
         "Unable to unsubscribe from property: '%s'", 
         propName.c_str()));
   }
-  else if (!dpeExists(propName))
+  else if (!GCFPVSSInfo::propExists(propName))
   {
     LOG_WARN(LOFAR::formatString (
         "Property: '%s' does not exists", 
@@ -505,7 +514,7 @@ TSAResult GSAService::dpeGet(const string& propName)
         "Unable to request of property: '%s'", 
         propName.c_str()));
   }
-  else if (!dpeExists(propName))
+  else if (!GCFPVSSInfo::propExists(propName))
   {
     LOG_WARN(LOFAR::formatString (
         "Property: '%s' does not exists", 
@@ -564,7 +573,7 @@ TSAResult GSAService::dpeSet(const string& propName, const GCFPValue& value)
         "Unable to set value of property: '%s'", 
         propName.c_str()));
   }
-  else if (!dpeExists(propName))
+  else if (!GCFPVSSInfo::propExists(propName))
   {
     LOG_WARN(LOFAR::formatString (
         "Property: '%s' does not exists", 
@@ -612,22 +621,6 @@ TSAResult GSAService::dpeSet(const string& propName, const GCFPValue& value)
   return result;
 }
 
-bool GSAService::dpeExists(const string& dpeName)
-{
-  DpIdentifier dpId;
-  if (Manager::getId(dpeName.c_str(), dpId) == PVSS_FALSE)
-    return false;
-  else
-    return true;
-}
-
-bool GSAService::typeExists (const string& dpTypeName)
-{
-  CharString pvssTypeName(dpTypeName.c_str());
-  DpTypeId dpTypeId; 
-  return (Manager::getTypeId(pvssTypeName, dpTypeId) == PVSS_TRUE);
-}
-
 TSAResult GSAService::convertPVSSToMAC(const Variable& variable, 
                                   GCFPValue** pMacValue) const
 {
@@ -641,9 +634,14 @@ TSAResult GSAService::convertPVSSToMAC(const Variable& variable,
     case INTEGER_VAR: *pMacValue = new GCFPVInteger(((IntegerVar *)&variable)->getValue()); break;
     case FLOAT_VAR: *pMacValue = new GCFPVDouble(((FloatVar *)&variable)->getValue()); break;
     case TEXT_VAR: *pMacValue = new GCFPVString(((TextVar *)&variable)->getValue()); break;
+    case BLOB_VAR: 
+    {
+      const Blob* pBlob = &((BlobVar *)&variable)->getValue();
+      *pMacValue = new GCFPVBlob((unsigned char*) pBlob->getData(), pBlob->getLen()); // no memcpy !!!
+      break;
+    }
     //REF!!! case TEXT_VAR: *pMacValue = new GCFPVRef(((TextVar *)&variable)->getValue());
     //case BIT32_VAR: *pMacValue = new GCFPVBit32(((Bit32Var *)&variable)->getValue()); break;
-    //case BLOB_VAR: *pMacValue = new GCFPVBlob(((BlobVar *)&variable)->getValue()); break;
     //case TIME_VAR: *pMacValue = new GCFPVDateTime(((TimeVar *)&variable)->getValue()); break;
     case DYNBIT_VAR: 
     case DYNCHAR_VAR: 
@@ -656,11 +654,12 @@ TSAResult GSAService::convertPVSSToMAC(const Variable& variable,
       switch (variable.isA())
       {
         case DYNBIT_VAR: type = LPT_DYNBOOL; break;
-        case DYNCHAR_VAR: type = LPT_DYNBOOL; break;
-        case DYNUINTEGER_VAR: type = LPT_DYNBOOL; break;
-        case DYNINTEGER_VAR: type = LPT_DYNBOOL; break;
-        case DYNFLOAT_VAR: type = LPT_DYNBOOL; break;
-        case DYNTEXT_VAR: type = LPT_DYNBOOL; break;
+        case DYNCHAR_VAR: type = LPT_DYNCHAR; break;
+        case DYNUINTEGER_VAR: type = LPT_DYNUNSIGNED; break;
+        case DYNINTEGER_VAR: type = LPT_DYNINTEGER; break;
+        case DYNFLOAT_VAR: type = LPT_DYNDOUBLE; break;
+        case DYNTEXT_VAR: type = LPT_DYNSTRING; break;
+        case DYNBLOB_VAR: type = LPT_DYNBLOB; break;
         default: break;        
       }
         
@@ -692,6 +691,12 @@ TSAResult GSAService::convertPVSSToMAC(const Variable& variable,
             case TEXT_VAR:
               pItemValue = new GCFPVString(((TextVar*)pVar)->getValue());
               break;
+            case BLOB_VAR: 
+            {
+              const Blob* pBlob = &((BlobVar *)&variable)->getValue();
+              pItemValue = new GCFPVBlob((unsigned char*)pBlob->getData(), pBlob->getLen()); // no memcpy !!!
+              break;
+            }
             default:
               break;
           }
@@ -718,36 +723,42 @@ TSAResult GSAService::convertMACToPVSS(const GCFPValue& macValue,
   TSAResult result(SA_NO_ERROR);
   DpElementType elTypeId;
   *pVar = 0;
-  if (Manager::getTypeContainerPtr()->getElementType(dpId, elTypeId) != DpTypeContOK)
+  DpTypeContResult res = Manager::getTypeContainerPtr()->getElementType(dpId, elTypeId);
+  if (res != DpTypeContOK)
   {
-    LOG_FATAL("PVSS: Could not get dpeType" );   
-    return SA_DPTYPE_UNKNOWN;
+    LOG_FATAL(formatString (
+        "PVSS: Could not get dpeType (res: %d - see DpTypeContainer.hxx:DpTypeContResult)",
+        res));   
+    //return SA_DPTYPE_UNKNOWN;
   }
   switch (macValue.getType())
   {
     case LPT_BOOL:
-      if (elTypeId == DPELEMENT_BIT) *pVar = new BitVar(((GCFPVBool*)&macValue)->getValue());
+      /*if (elTypeId == DPELEMENT_BIT)*/*pVar = new BitVar(((GCFPVBool*)&macValue)->getValue());
       break;
     case LPT_CHAR:
-      if (elTypeId == DPELEMENT_CHAR) *pVar = new CharVar(((GCFPVChar*)&macValue)->getValue());
+      /*if (elTypeId == DPELEMENT_CHAR)*/ *pVar = new CharVar(((GCFPVChar*)&macValue)->getValue());
       break;
     case LPT_UNSIGNED:
-      if (elTypeId == DPELEMENT_UINT) *pVar = new UIntegerVar(((GCFPVUnsigned*)&macValue)->getValue());
+      /*if (elTypeId == DPELEMENT_UINT)*/ *pVar = new UIntegerVar(((GCFPVUnsigned*)&macValue)->getValue());
       break;
     case LPT_INTEGER:
-      if (elTypeId == DPELEMENT_INT) *pVar = new IntegerVar(((GCFPVInteger*)&macValue)->getValue());
+      /*if (elTypeId == DPELEMENT_INT)*/ *pVar = new IntegerVar(((GCFPVInteger*)&macValue)->getValue());
       break;
     case LPT_DOUBLE:
-      if (elTypeId == DPELEMENT_FLOAT) *pVar = new FloatVar(((GCFPVDouble*)&macValue)->getValue());
+      /*if (elTypeId == DPELEMENT_FLOAT)*/ *pVar = new FloatVar(((GCFPVDouble*)&macValue)->getValue());
       break;
     case LPT_STRING:
-      if (elTypeId == DPELEMENT_TEXT) *pVar = new TextVar(((GCFPVString*)&macValue)->getValue().c_str());
+      /*if (elTypeId == DPELEMENT_TEXT)*/ *pVar = new TextVar(((GCFPVString*)&macValue)->getValue().c_str());
+      break;
+    case LPT_BLOB:
+      //if (elTypeId == DPELEMENT_BLOB || elTypeId == DPELEMENT_RECORD) 
+      {
+        *pVar = new BlobVar(((GCFPVBlob*)&macValue)->getValue(), ((GCFPVBlob*)&macValue)->getLen(), PVSS_TRUE);
+      }
       break;
 /*    case LPT_REF:
       if (elTypeId == DPELEMENT_TEXT) *pVar = new TextVar(((GCFPVRef*)&macValue)->getValue());
-      break;
-    case LPT_BLOB:
-      if (elTypeId == DPELEMENT_BLOB) *pVar = new BlobVar(((GCFPVBlob*)&macValue)->getValue());
       break;
     case LPT_DATETIME:
       if (elTypeId == DPELEMENT_TIME) *pVar = new TimeVar(((GCFPVDateTime*)&macValue)->getValue());
@@ -759,7 +770,7 @@ TSAResult GSAService::convertMACToPVSS(const GCFPValue& macValue,
       if (macValue.getType() > LPT_DYNARR && 
           macValue.getType() <= LPT_DYNSTRING)
       {        
-        Variable* pItemValue;
+        Variable* pItemValue(0);
         VariableType type(NOTYPE_VAR);
         // the type for the new FPValue must be determined 
         // separat, because the array could be empty
@@ -782,6 +793,9 @@ TSAResult GSAService::convertMACToPVSS(const GCFPValue& macValue,
             break;
           case LPT_DYNSTRING:
             if (elTypeId == DPELEMENT_DYNTEXT) type = TEXT_VAR;
+            break;
+          case LPT_DYNBLOB:
+            if (elTypeId == DPELEMENT_DYNBLOB) type = BLOB_VAR;
             break;
           default:
             break;          
@@ -818,6 +832,9 @@ TSAResult GSAService::convertMACToPVSS(const GCFPValue& macValue,
             case LPT_STRING:
               pItemValue  = new TextVar(((GCFPVString*)pValue)->getValue().c_str());
               break;
+            case LPT_BLOB:
+              pItemValue = new BlobVar(((GCFPVBlob*)&macValue)->getValue(), ((GCFPVBlob*)&macValue)->getLen(), PVSS_TRUE);
+              break;
             default:
               break;              
           }
@@ -834,7 +851,7 @@ TSAResult GSAService::convertMACToPVSS(const GCFPValue& macValue,
     CharString valueTypeName;
     getPVSSType(macValue.getType(), valueTypeName);
     LOG_ERROR(LOFAR::formatString (
-        "Type mismatch! Property type: %s != Value type: %d (see in DpElemnent.hxx)",         
+        "Type mismatch! Property type: %s != Value type: %d (see in DpElemnentType.hxx)",         
         (const char*) valueTypeName,
         elTypeId));   
     
@@ -867,6 +884,9 @@ bool GSAService::getPVSSType(TMACValueType macType,
     case LPT_STRING:
       pvssTypeName = "LPT_STRING";
       break;
+    case LPT_BLOB:
+      pvssTypeName = "LPT_BLOB";
+      break;
     case LPT_DYNBOOL:
       pvssTypeName = "LPT_DYNBOOL";
       break;
@@ -884,6 +904,9 @@ bool GSAService::getPVSSType(TMACValueType macType,
       break;
     case LPT_DYNSTRING:
       pvssTypeName = "LPT_DYNSTRING";
+      break;
+    case LPT_DYNBLOB:
+      pvssTypeName = "LPT_DYNBLOB";
       break;
     default:
       return false;
@@ -941,36 +964,24 @@ void GSAService::convPropToDpConfig(const string& propName, string& pvssDpName, 
 
 void GSAService::convDpConfigToProp(const string& pvssDPEConfigName, string& propName)
 {
-  size_t doublePointPos = pvssDPEConfigName.find(':');
-  size_t dotPos = pvssDPEConfigName.find('.');
-  size_t nrOfCharsToCopy(pvssDPEConfigName.size());
-  size_t startPosToCopy(0);  
-  if (doublePointPos < pvssDPEConfigName.size() || 
-      dotPos < pvssDPEConfigName.size())
+  string::size_type doublePointPos = pvssDPEConfigName.find(':');
+  string::size_type dotPos = pvssDPEConfigName.find('.');
+  string::size_type nrOfCharsToCopy(pvssDPEConfigName.length());
+  if (doublePointPos < dotPos)
   {
-    size_t secondDoublePointPos(pvssDPEConfigName.size());
-
-    if (doublePointPos < pvssDPEConfigName.size())
-    {
-      secondDoublePointPos = pvssDPEConfigName.find(':', doublePointPos + 1);
-
-      if (doublePointPos < dotPos)
-      {
-        startPosToCopy = doublePointPos + 1; 
-      }
-    }
-    if (secondDoublePointPos < pvssDPEConfigName.size())
-    {
-      nrOfCharsToCopy = secondDoublePointPos - startPosToCopy;
-      if ((secondDoublePointPos - 1) == dotPos)
-        nrOfCharsToCopy--;
-    }
-    else 
-    {
-      nrOfCharsToCopy = pvssDPEConfigName.size() - startPosToCopy;
-      if ((pvssDPEConfigName.size() - 1) == dotPos)
-        nrOfCharsToCopy--;
-    }
+    doublePointPos = pvssDPEConfigName.find(':', doublePointPos + 1);
   }
-  propName.assign(pvssDPEConfigName, startPosToCopy, nrOfCharsToCopy); 
+  
+  if (doublePointPos < pvssDPEConfigName.length())
+  {
+    nrOfCharsToCopy = doublePointPos;
+  }
+  else 
+  {
+    doublePointPos = pvssDPEConfigName.length();
+  }
+  if ((doublePointPos - 1) == dotPos)
+    nrOfCharsToCopy--;
+  
+  propName.assign(pvssDPEConfigName, 0, nrOfCharsToCopy); 
 }

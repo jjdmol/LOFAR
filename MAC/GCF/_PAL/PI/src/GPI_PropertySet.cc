@@ -24,6 +24,7 @@
 #include <GPI_PMLlightServer.h>
 #include <GCF/GCF_PValue.h>
 #include <GCF/Utils.h>
+#include <GCF/PAL/GCF_PVSSInfo.h>
 #include <PI_Protocol.ph>
 
 TPAResult convertPIToPAResult(TPIResult result)
@@ -78,6 +79,10 @@ void GPIPropertySet::propValueChanged(const string& propName, const GCFPValue& v
   PIValueChangedEvent indicationOut;
   indicationOut.scopeLength = _scope.length();
   indicationOut.name = propName;
+  if (indicationOut.name.find(':') < propName.length())
+  {
+    indicationOut.name.erase(0, indicationOut.name.find(':') + 1); 
+  }
   indicationOut.value._pValue = &value;
   sendMsgToRTC(indicationOut);
 }
@@ -190,7 +195,7 @@ void GPIPropertySet::disable(PIUnregisterScopeEvent& requestIn)
         string fullName;
         assert(_scope.length() > 0);
         fullName = _scope + GCF_PROP_NAME_SEP + *iter;
-        if (exists(fullName))
+        if (GCFPVSSInfo::propExists(fullName))
         {
           unsubscribeProp(fullName);          
         }
@@ -263,7 +268,7 @@ void GPIPropertySet::linkPropSet(PALinkPropSetEvent& requestIn)
     case S_DISABLED:
     case S_DISABLING:
       LOG_DEBUG(LOFAR::formatString ( 
-          "Property set with scope %d is deleting in the meanwhile", 
+          "Property set with scope %s is deleting in the meanwhile", 
           _scope.c_str()));
       erResponse.result = PA_PS_GONE;   
       sendMsgToPA(erResponse);
@@ -324,7 +329,7 @@ bool GPIPropertySet::trySubscribing()
         string fullName;
         assert(_scope.length() > 0);
         fullName = _scope + GCF_PROP_NAME_SEP + *iter;
-        if (exists(fullName))
+        if (GCFPVSSInfo::propExists(fullName))
         {   
           if (subscribeProp(fullName) == GCF_NO_ERROR)
           {
@@ -405,7 +410,7 @@ void GPIPropertySet::unlinkPropSet(PAUnlinkPropSetEvent& requestIn)
         {
           fullName = *iter;
         }
-        if (exists(fullName))
+        if (GCFPVSSInfo::propExists(fullName))
         {
           if (unsubscribeProp(fullName) != GCF_NO_ERROR)
           {
@@ -431,7 +436,7 @@ void GPIPropertySet::unlinkPropSet(PAUnlinkPropSetEvent& requestIn)
     case S_DISABLED:
     case S_DISABLING:
       LOG_DEBUG(LOFAR::formatString ( 
-          "Property set with scope %d is deleting in the meanwhile", 
+          "Property set with scope %s is deleting in the meanwhile", 
           _scope.c_str()));
       propSetUnlinkedInPI(PA_PS_GONE);
       break;
@@ -485,37 +490,20 @@ void GPIPropertySet::sendMsgToRTC(GCFEvent& msg)
 
 void GPIPropertySet::wrongState(const char* request)
 {
-  char* stateString(0);
-  switch (_state)
+  const char* stateString[] =
   {
-    case S_DISABLED:
-      stateString = "DISABLED";
-      break;
-    case S_DISABLING:
-      stateString = "DISABLING";
-      break;
-    case S_ENABLED:
-      stateString = "ENABLED";
-      break;
-    case S_ENABLING:
-      stateString = "ENABLING";
-      break;
-    case S_LINKING:
-      stateString = "LINKING";
-      break;
-    case S_LINKED:
-      stateString = "LINKED";
-      break;
-    case S_UNLINKING:
-      stateString = "UNLINKING";
-      break;
-    case S_DELAYED_DISABLING:
-      stateString = "DELAYED_DISABLING";
-      break;    
-  }
+    "DISABLED",
+    "DISABLING",
+    "ENABLING",
+    "ENABLED",
+    "LINKING",
+    "LINKED",
+    "UNLINKING",
+    "DELAYED DISABLING"
+  };
   LOG_WARN(LOFAR::formatString ( 
         "Could not perform '%s' on property set '%s'. Wrong state: %s",
         request,
         getScope().c_str(),
-        stateString));  
+        stateString[_state]));  
 }

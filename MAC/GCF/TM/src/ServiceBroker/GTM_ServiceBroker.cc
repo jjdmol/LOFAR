@@ -208,8 +208,7 @@ GCFEvent::TResult GTMServiceBroker::operational(GCFEvent& e, GCFPortInterface& p
   switch (e.signal)
   {
     case F_DISCONNECTED:
-      LOG_FATAL(LOFAR::formatString ( 
-          "Connection lost to Service Broker deamon"));
+      LOG_FATAL("Connection lost to Service Broker deamon");
       p.close();
       break;
     case F_CLOSED:
@@ -299,21 +298,20 @@ void logResult(TSBResult result, const string& servicename)
     case SB_NO_ERROR:
       break;
     case SB_UNKNOWN_ERROR:
-      LOG_FATAL(LOFAR::formatString ( 
-          "Unknown error"));      
+      LOG_FATAL("Unknown error");
       break;
     case SB_SERVICE_ALREADY_EXIST:
-      LOG_ERROR(LOFAR::formatString ( 
+      LOG_ERROR(formatString ( 
           "Service %s already exist",
           servicename.c_str()));
       break;
     case   SB_NO_FREE_PORTNR:
-      LOG_ERROR(LOFAR::formatString ( 
-          "No free portnumber for this service: %s)",
+      LOG_ERROR(formatString ( 
+          "No free portnumber for this service: %s",
           servicename.c_str()));
       break;
     case SB_UNKNOWN_SERVICE:
-      LOG_FATAL(LOFAR::formatString ( 
+      LOG_FATAL(formatString ( 
           "Unkown remote service: %s",
           servicename.c_str()));
       break;

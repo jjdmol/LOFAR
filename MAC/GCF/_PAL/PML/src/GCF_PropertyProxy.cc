@@ -54,8 +54,3 @@ TGCFResult GCFPropertyProxy::setPropValue(const string& propName, const GCFPValu
 {
   return (_pPMProxy->setPM(propName, value) == SA_NO_ERROR ? GCF_NO_ERROR : GCF_PML_ERROR);
 }
-
-bool GCFPropertyProxy::exists(const string& propName)
-{
-  return _pPMProxy->existsPM(propName);
-}

@@ -29,6 +29,7 @@
 // Wrapper to read config file
 void  GSAResources::init(int &argc, char *argv[])
 {
+  Resources::setManNum(0);
   begin(argc, argv);
 
   while ( readSection() || generalSection() )

@@ -61,8 +61,6 @@ class GSAService
     virtual TSAResult dpeGet (const string& propName);
     virtual TSAResult dpeSet (const string& propName, 
                            const GCFPValue& value);
-    virtual bool dpeExists (const string& dpeName);
-    virtual bool typeExists (const string& dpTypeName);
     
     virtual void dpCreated (const string& dpName) = 0;
     virtual void dpDeleted (const string& dpName) = 0;
@@ -77,7 +75,8 @@ class GSAService
     // interface for GSAWaitForAnswer
     void handleHotLink (const DpMsgAnswer& answer, 
                         const GSAWaitForAnswer& wait);
-    void handleHotLink (const DpHLGroup& group);
+    void handleHotLink (const DpHLGroup& group, 
+                        const GSAWaitForAnswer& wait);
     friend class GSAWaitForAnswer;
   
   private:  

@@ -28,6 +28,8 @@
 #include <GCF/GCF_Defines.h>
 
 #define PARAM_PORT_PROT_TYPE "mac.ns.%s.%s.type"
+#define PARAM_TCP_HOST "mac.ns.%s.%s.host"
+#define PARAM_TCP_PORTNR "mac.ns.%s.%s.port"
 #define PARAM_SERVER_SERVICE_NAME "mac.top.%s.%s.remoteservice"
 #define PARAM_ETH_IFNAME "mac.ns.%s.%s.ifname"
 #define PARAM_ETH_MACADDR "mac.ns.%s.%s.macAddr"

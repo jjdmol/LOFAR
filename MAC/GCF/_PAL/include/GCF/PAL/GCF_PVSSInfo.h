@@ -1,4 +1,4 @@
-//#  GSA_PvssApi.h: describes the API with the PVSS system
+//#  GCF_PVSSInfo.h: PVSS connection to a remote process
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,23 +20,45 @@
 //#
 //#  $Id$
 
-#ifndef  GSA_PVSSAPI_H
-#define  GSA_PVSSAPI_H
+#ifndef GCF_PVSSINFO_H
+#define GCF_PVSSINFO_H
 
-// PVSS includes
-#include <Manager.hxx>        
+#include <Common/lofar_string.h>
 
-class GSASCADAHandler;
+class GSAService;
 
-class GSAPvssApi : public Manager
+// forward declaration
+
+/**
+ */
+class GCFPVSSInfo
 {
+  public:
+    static bool propExists (const string& dpeName);
+    static bool typeExists (const string& dpTypeName);
+    static const string& getLocalSystemName();
+    static const string& getProjectName();
+    static const string getSystemName(unsigned int sysnr);
+    static unsigned int getLastEventSysId();
+    static unsigned int getSysId(const string& name);
+    
   private:
-    friend class GSASCADAHandler;
-	  GSAPvssApi();
-    virtual ~GSAPvssApi() {long sec(0), usec(1); dispatch(sec, usec);};
+    friend class GSAService;
+    static string _sysName;
+    static string _projName;
+    static unsigned int _lastSysNr;
+  
+    /// Construction methods
+    GCFPVSSInfo ();
+  
+    virtual ~GCFPVSSInfo ();
 
-    void workProc();
-    void stop();
-    void init();
+    /**
+     * Don't allow copying this object.
+     */
+    GCFPVSSInfo (const GCFPVSSInfo&);
+    GCFPVSSInfo& operator= (const GCFPVSSInfo&);
+    
 };
+
 #endif

@@ -49,10 +49,6 @@ class GPMPropertyProxy : public GSAService
     {
       return GSAService::dpeSet(propName, value);
     }
-    inline bool existsPM(const string& propName)
-    {
-      return GSAService::dpeExists(propName);
-    }
 
   protected:
     inline void dpCreated(const string& /*propName*/) {};

@@ -27,6 +27,7 @@
 #include <GPA_RequestManager.h>
 #include <GCF/TM/GCF_Task.h>
 #include <GCF/TM/GCF_TCPPort.h>
+#include <GCF/PAL/GCF_PVSSPort.h>
 
 /**
    This is the main class of the Property Agent. It uses a number of helper 
@@ -58,22 +59,29 @@ class GPAController : public GCFTask
     void doNextRequest();    
     GPAPropertySet* findPropSet(const string& scope) const;
     void acceptConnectRequest();
-    void clientGone(GCFPortInterface& p);
-    void propSetClientGone(GCFPortInterface& p);
+    void clientPortGone(GCFPortInterface& p);
+    void propSetClientGone(const string& c);
+    void deletePort(GCFPortInterface& p);
+    void emptyGarbage();
+    GCFPVSSPort& getDistPmlPort() { return _distPmlPort;}
     
 	private: // data members
     typedef map<string /*scope*/, GPAPropertySet*> TPropertySets;
-    TPropertySets _propertySets;
+    TPropertySets         _propertySets;
+    list<GPAPropertySet*> _propertySetGarbage;
     
-		GPARequestManager 	_requestManager;
+		GPARequestManager       _requestManager;
+    //GPADistClientManager    _distClientManager;
 
     list<GCFPortInterface*> _pmlPorts;		
-		GCFTCPPort					_pmlPortProvider;
+    list<GCFPortInterface*> _pmlPortGarbage;
+		GCFTCPPort              _pmlPortProvider;
+    GCFPVSSPort             _distPmlPort;
     
   private: // admin. data members
     bool                _isBusy;
     bool                _isRegistered;
-    unsigned long                _deletePortTimId;
+    unsigned long       _garbageTimerId;
     unsigned int        _counter;  
     GPAPropertySet*     _pCurPropSet;
 };
