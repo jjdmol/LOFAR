@@ -33,22 +33,26 @@ namespace LOFAR
     : itsNinputs (ninputs),
       itsNoutputs(noutputs),
       itsProcessRate(1),
-      itsInputRate(1),
-      itsOutputRate(1),
+      itsInputRates(0),
+      itsOutputRates(0),
       itsInputSelector(0),
       itsOutputSelector(0)
   {
     itsInDHs = new DataHolder* [ninputs];
     itsOutDHs = new DataHolder* [noutputs];
+    itsInputRates = new int[ninputs];
+    itsOutputRates = new int[noutputs];
     itsDoAutoTriggerIn = new bool[ninputs];
     itsDoAutoTriggerOut = new bool[noutputs];
     for (int i = 0; i < ninputs; i++)
     {
       itsDoAutoTriggerIn[i]=true;
+      itsInputRates[i]=1;
     }
     for (int j = 0; j < noutputs; j++)
     {
       itsDoAutoTriggerOut[j]=true;
+      itsOutputRates[j]=1;
     }
 
   }
@@ -56,9 +60,11 @@ namespace LOFAR
   TinyDataManager::~TinyDataManager() {
     delete itsInputSelector;
     delete itsOutputSelector;
+    delete [] itsInputRates;
+    delete [] itsOutputRates;
     delete [] itsDoAutoTriggerIn;
     delete [] itsDoAutoTriggerOut;
-   
+
     // DataHolder clean-up:
     for (int i = 0; i < itsNinputs; i++)
     { 
@@ -85,8 +91,6 @@ namespace LOFAR
     : itsNinputs (that.itsNinputs),
       itsNoutputs(that.itsNoutputs),
       itsProcessRate(that.itsProcessRate),
-      itsInputRate(that.itsInputRate),
-      itsOutputRate(that.itsOutputRate),
       itsInputSelector(0),
       itsOutputSelector(0)
   {
@@ -101,17 +105,21 @@ namespace LOFAR
 
     itsInDHs = new DataHolder* [itsNinputs];          // Clones the DataHolders
     itsDoAutoTriggerIn = new bool[itsNinputs];
+    itsInputRates = new int[itsNinputs];
     for (int ch = 0; ch < itsNinputs; ch++)
     {
       itsInDHs[ch] = that.itsInDHs[ch]->clone();
       itsDoAutoTriggerIn[ch] = that.doAutoTriggerIn(ch);
+      itsInputRates[ch] = that.itsInputRates[ch];
     }
     itsOutDHs = new DataHolder* [itsNoutputs];
     itsDoAutoTriggerOut = new bool[itsNoutputs];
+    itsOutputRates = new int[itsNoutputs];
     for (int ch = 0; ch < itsNoutputs; ch++)
     {
       itsOutDHs[ch] = that.itsOutDHs[ch]->clone();
       itsDoAutoTriggerOut[ch]=that.doAutoTriggerOut(ch);
+      itsOutputRates[ch] = that.itsOutputRates[ch];
     }
   }
 
@@ -257,6 +265,71 @@ void TinyDataManager::setAutoTriggerOut(int channel,
   DbgAssertStr(channel >= 0, "output channel too low");
   DbgAssertStr(channel < getOutputs(), "output channel too high");
   itsDoAutoTriggerOut[channel] = newflag;
+}
+
+void TinyDataManager::setInputRate(int rate, int dhIndex)
+{ 
+  DbgAssertStr (rate>0, "Rate must be greater than 0");
+  DbgAssertStr(dhIndex >= -1, "DataHolder index is smaller than -1");
+  DbgAssertStr(dhIndex < getInputs(), "DataHolder index is greater than number of inputs");
+  if (dhIndex == -1)
+  {
+    for (int i=0; i<getInputs(); i++)
+    {
+      itsInputRates[i] = rate;
+    }
+  }
+  else
+  {
+    itsInputRates[dhIndex] = rate;
+  }
+}
+
+void TinyDataManager::setOutputRate(int rate, int dhIndex)
+{ 
+  DbgAssertStr (rate>0, "Rate must be greater than 0");
+  DbgAssertStr(dhIndex >= -1, "DataHolder index is smaller than -1");
+  DbgAssertStr(dhIndex < getOutputs(), "DataHolder index is greater than number of outputs");
+  if (dhIndex == -1)
+  {
+    for (int i=0; i<getOutputs(); i++)
+    {
+      itsOutputRates[i] = rate;
+    }
+  }
+  else
+  {
+    itsOutputRates[dhIndex] = rate;
+  } 
+}
+
+
+int TinyDataManager::getInputRate(int dhIndex)
+{ 
+  DbgAssertStr(dhIndex >= -1, "DataHolder index is smaller than -1");
+  DbgAssertStr(dhIndex < getInputs(), "DataHolder index is greater than number of inputs");
+  if (dhIndex == -1)
+  {
+    return itsInputRates[0]; 
+  }
+  else
+  {
+    return itsInputRates[dhIndex];
+  } 
+}
+
+int TinyDataManager::getOutputRate(int dhIndex)
+{ 
+  DbgAssertStr(dhIndex >= -1, "DataHolder index is smaller than -1");
+  DbgAssertStr(dhIndex < getOutputs(), "DataHolder index is greater than number of outputs");
+  if (dhIndex == -1)
+  {
+    return itsOutputRates[0]; 
+  }
+  else
+  {
+    return itsOutputRates[dhIndex];
+  } 
 }
 
   
