@@ -46,7 +46,7 @@ int main (int argc, const char** argv)
   // Set trace level.
 
 #ifdef HAVE_MPI
-  MPI_Init(&argc, &argv);
+  MPI_Init(&argc, (char ***)&argv);
 #else
 //          cout << endl;
 //  	cout << "  * Type 'define;' to define the simulation" << endl;
