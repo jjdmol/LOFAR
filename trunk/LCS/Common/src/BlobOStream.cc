@@ -171,11 +171,6 @@ BlobOStream& BlobOStream::operator<< (const dcomplex& var)
   putBuf (&var, sizeof(var));
   return *this;
 }
-BlobOStream& BlobOStream::operator<< (const scomplex& var)
-{
-  putBuf (&var, sizeof(var));
-  return *this;
-}
 BlobOStream& BlobOStream::operator<< (const std::string& var)
 {
   operator<< (int32(var.size()));
@@ -249,10 +244,6 @@ void BlobOStream::put (const fcomplex* values, uint nrval)
 void BlobOStream::put (const dcomplex* values, uint nrval)
 {
   putBuf (values, nrval*sizeof(dcomplex));
-}
-void BlobOStream::put (const scomplex* values, uint nrval)
-{
-  putBuf (values, nrval*sizeof(scomplex));
 }
 void BlobOStream::put (const string* values, uint nrval)
 {

@@ -45,7 +45,6 @@ namespace LOFAR {
     typedef long double          ldouble;
     typedef std::complex<float>  fcomplex;
     typedef std::complex<double> dcomplex;
-    typedef std::complex<short>  scomplex;
  
     // Fixed data sizes.
     typedef char                int8;

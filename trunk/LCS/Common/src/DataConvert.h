@@ -57,7 +57,6 @@ namespace LOFAR
   void dataConvert (DataFormat, double* inout, uint nrval);
   void dataConvert (DataFormat, fcomplex* inout, uint nrval);
   void dataConvert (DataFormat, dcomplex* inout, uint nrval);
-  void dataConvert (DataFormat, scomplex* inout, uint nrval);
   // <group>
 
   // Convert 16 bit integers.
@@ -174,8 +173,6 @@ namespace LOFAR
     { dataConvert32 (fmt, inout, 2*nrval); }
   inline void dataConvert (DataFormat fmt, dcomplex* inout, uint nrval)
     { dataConvert64 (fmt, inout, 2*nrval); }
-  inline void dataConvert (DataFormat fmt, scomplex* inout, uint nrval)
-    { dataConvert16 (fmt, inout, 2*nrval); }
 
   inline int16 dataConvert (DataFormat, int16 in)
     { return byteSwap (in); }
