@@ -21,56 +21,46 @@
 //#  $Id$
 
 #include <BaseDataHolder.h>
+#include <Common/Debug.h>
 
 namespace LOFAR
 {
 
-BaseDataHolder::BaseDataHolder(const &string name, const &string type)
-  : itsTransporter      ()
+BaseDataHolder::BaseDataHolder(const string& name, const string& type)
+  : itsTransporter      (),
     itsName             (name),
     itsType             (type),
     itsReadDelay        (0),
     itsWriteDelay       (0),
-    ItsReadDelayCount   (0),
-    itsWriteDelayCount  (0),
-    itaIfsPtr           (0),
-    itsOfsPtr           (0)
+    itsReadDelayCount   (0),
+    itsWriteDelayCount  (0)
 {
   setDefaultDataPacket();
 }
 
-DataHolder::DataHolder(const DataHolder& that)
+BaseDataHolder::BaseDataHolder(const BaseDataHolder& that)
   : itsDataPacketSize     (that.itsDataPacketSize),
     itsName               (that.itsName),
     itsType               (that.itsType),
     itsReadDelay          (that.itsReadDelay),
     itsWriteDelay         (that.itsWriteDelay),
     itsReadDelayCount     (that.itsReadDelayCount),
-    itsWriteDelayCount    (that.itsWriteDelayCount),
-    itsIfsPtr             (0),
-    itsOfsPtr             (0)
+    itsWriteDelayCount    (that.itsWriteDelayCount)
 {}
     
-BaseDataHolder::~BaseDataHolder() {
-  if (itsIfsPtr) {
-    itsIfsPtr->close();
-    delete itsIfsPtr;
-  }
-  if (itsOfsPtr) {
-    itsOfsPtr->close();
-    delete itsOfsPtr;
-  }
+BaseDataHolder::~BaseDataHolder() 
+{
 }
 
 void* BaseDataHolder::allocate(size_t size)
 {
   void* mem = 0;
-  if (!getTransport().getTransportHolder()) {
+  if (!getTransporter().getTransportHolder()) {
     mem = malloc(size);
   } else {
     cdebug(3) << "allocate "
-	      << getTransport().getTransportHolder()->getType() << endl;
-    mem = getTransport().getTransportHolder()->allocate(size);
+	      << getTransporter().getTransportHolder()->getType() << endl;
+    mem = getTransporter().getTransportHolder()->allocate(size);
   }
   return mem;
 }
@@ -78,11 +68,11 @@ void* BaseDataHolder::allocate(size_t size)
 void BaseDataHolder::deallocate(void*& ptr)
 {
   if (ptr) {
-    if (!getTransport().getTransportHolder()) {
+    if (!getTransporter().getTransportHolder()) {
       free(ptr);
     } else {
-      cdebug(3) << "deallocate " << getTransport().getTransportHolder()->getType() << endl;
-      getTransport().getTransportHolder()->deallocate(ptr);
+      cdebug(3) << "deallocate " << getTransporter().getTransportHolder()->getType() << endl;
+      getTransporter().getTransportHolder()->deallocate(ptr);
     }
   }
   ptr = 0;
@@ -102,11 +92,11 @@ void BaseDataHolder::basePostprocess()
 {
   // Read the possible outstanding buffers.
   for (int i=0; i<itsReadDelay; i++) {
-    itsTransportPtr->read();
+    itsTransporter->read();
   }
   // Write the possible outstanding buffers.
   for (int i=0; i<itsWriteDelay; i++) {
-    itsTransportPtr->write();
+    itsTransporter->write();
   }
   postprocess();
 }
@@ -124,10 +114,7 @@ bool BaseDataHolder::read()
 {
   bool result = false;
   if (itsReadDelayCount <= 0) {
-    result = itsTransportPtr->read();
-    if (itsIfsPtr) {
-      doFsRead (*itsIfsPtr);
-    }
+    result = itsTransporter->read();
   } else {
     itsReadDelayCount--;
   }
@@ -137,23 +124,11 @@ bool BaseDataHolder::read()
 void BaseDataHolder::write()
 { 
   if (itsWriteDelayCount <= 0) {
-    itsTransportPtr->write();
-    if (itsOfsPtr) {
-      doFsWrite (*itsOfsPtr);
-    }
+    itsTransporter->write();
   } else {
     itsWriteDelayCount--;
   }
 }
-
-void BaseDataHolder::setZeroes()
-{
-}
-
-void BaseDataHolder::setOnes()
-{
-}
-
 
 int BaseDataHolder::DataPacket::compareTimeStamp (const DataPacket& that) const
 {
@@ -165,80 +140,9 @@ int BaseDataHolder::DataPacket::compareTimeStamp (const DataPacket& that) const
   return 1;
 }
 
-
-void BaseDataHolder::setInFile (const string& inFile)
-{
-  TRACER2("BaseDataHolder::setInFile(" << inFile << ")");
-  if (itsIfsPtr) {
-    itsIfsPtr->close();
-    delete itsIfsPtr;
-    itsIfsPtr = 0;
-  }
-  if (inFile.size() > 0) {
-    itsIfsPtr = new ifstream(inFile.c_str());
-    if (!(*itsIfsPtr)) {
-      throw std::runtime_error("BaseDataHolder::setInFile() : File \"" + 
-			       inFile + "\" not found");
-    }
-  }
-}
-
-
-bool BaseDataHolder::setOutFile (const string& outFile)
-{
-  TRACER2("BaseDataHolder::setOutFile(" << outFile << ")");
-  if (itsOfsPtr) {
-    itsOfsPtr->close();
-    delete itsOfsPtr;
-    itsOfsPtr = 0;
-  }
-  if (outFile.size() > 0) {
-    itsOfsPtr = new ofstream(outFile.c_str());
-    return (*itsOfsPtr);
-  }
-  return false;
-}
-
-
-void BaseDataHolder::unsetInFile()
-{
-  TRACER2("BaseDataHolder::unsetInFile()");
-  if (itsIfsPtr) {
-    itsIfsPtr->close();
-    delete itsIfsPtr;
-    itsIfsPtr = 0;
-  }
-}
-
-
-void BaseDataHolder::unsetOutFile()
-{
-  TRACER2("BaseDataHolder::unsetOutFile()");
-  if (itsOfsPtr) {
-    itsOfsPtr->close();
-    delete itsOfsPtr;
-    itsOfsPtr = 0;
-  }
-}
-
-
-bool BaseDataHolder::doFsRead (ifstream&)
-{
-  TRACER2("BaseDataHolder::doFsRead()");
-  return true;
-}
-
-
-bool BaseDataHolder::doFsWrite (ofstream&) const
-{
-  TRACER2("BaseDataHolder::doFsWrite()");
-  return true;
-}
-
-
 bool BaseDataHolder::isValid() const
 {
-  return itsTransportPtr->isValid();
+  return itsTransporter->isValid();
 }
 
 int BaseDataHolder::getNode() const
@@ -258,18 +162,4 @@ void BaseDataHolder::setWriteDelay (int delay)
   itsWriteDelayCount = delay;
 }
 
-bool BaseDataHolder::operator== (const BaseDataHolder& aPH)  const
-{
-  return itsSerial == aPH.itsSerial;
-}
-
-bool BaseDataHolder::operator!= (const BaseDataHolder& aPH) const
-{
-  return itsSerial != aPH.itsSerial;
-}
-
-bool BaseDataHolder::operator< (const BaseDataHolder& aPH) const
-{
-  return itsSerial < aPH.itsSerial;
-}
 } // namespace LOFAR

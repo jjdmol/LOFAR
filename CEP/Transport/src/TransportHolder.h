@@ -45,7 +45,7 @@ namespace LOFAR
    improved in the future.
 */
 
-class BaseTransport;
+class Transporter;
 
 class TransportHolder
 {
@@ -72,16 +72,16 @@ public:
 
   virtual bool connectionPossible (int srcRank, int dstRank) const;
 
-  BaseTransport * getBaseTransport () { return itsBaseTransport; }
-  void setBaseTransport (BaseTransport * Trn) { 
-    itsBaseTransport = Trn; 
-  }
+  Transporter* getTransporter(){ return itsTransporter; }
+  void setTransporter(Transporter* tp)
+    { itsTransporter = tp; }
 
   virtual bool isBlocking() const = 0;
 
 private:
-  BaseTransport * itsBaseTransport;
+  Transporter* itsTransporter;
 };
+
 
 }
 
