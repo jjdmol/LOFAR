@@ -41,17 +41,26 @@ namespace LOFAR
     struct DBRepMeta;
 
     //
-    // PersistentObject is an abstract base class (i.e. interface) for 
+    // PersistentObject is an abstract base class (i.e. interface) for
     // persistent objects. Persistent objects are uniquely identified by their
-    // ObjectID. The date and time of their reification is stored. This
-    // information is needed when a modified persistent objects needs to be
-    // stored into the database.
+    // ObjectId, which is stored in the so-called metadata. Apart from the
+    // object-id, the metadata contain the object-id of the "owning"
+    // persistent object (if any), a version number that is used to detect
+    // concurrent updates of the database, and the table name of the database
+    // table that is associated with this persistent object.
     //
-    // PersistentObject also acts as a Virtual Proxy. This design offers the 
-    // possibility to use lazy initialization for large (complex) objects.
+    // PersistentObject could also act as a Virtual Proxy. This design offers
+    // the possibility to use lazy initialization for large (complex)
+    // objects. However, this is not implemented yet.
     //
     class PersistentObject
     {
+    private:
+
+      // Forward declaration of nested private class.
+      class MetaData;
+
+
     public:
 
       // We will often need shared pointers to this base class, hence
@@ -66,12 +75,121 @@ namespace LOFAR
       // to the PersistentObjects that we "own".
       typedef std::vector<Pointer> POContainer;
 
-      // The meta data for our persistent object will be stored in a separate
-      // class MetaData. We do not want to keep these meta data inside our
-      // PersistentObject, because we want to share these meta data. Hence,
-      // MetaData contains reference counted pointers to the actual meta
-      // data. Remember that multiple copies of a PersistentObject can refer
-      // to the same data, so they should also refer to the same meta data.
+
+      // Remove this instance of PersistentObject from the database.
+      void erase() const;
+
+      // Insert the PersistentObject into the database.
+      // \note insert() will \e always create a new stored object. This is
+      // contrary to the behaviour of save() which will only create a \e new
+      // stored object if it did not already exist in the database.
+      void insert() const;
+
+      // This method will typically be used to refresh an instance of 
+      // PersistentObject that already resides in memory. We will need it if
+      // another process or thread changed the data in the database.
+      void retrieve();
+      
+      // Set the data in this PersistentObject equal to the data in the
+      // database belonging to the object with the specified ObjectId.
+      void retrieve(const ObjectId& oid);
+
+      // Store the PersistentObject into the database. This method will
+      // typically be called by the PersistenceBroker, because at this level 
+      // we lack knowledge of where to store our data.
+      // save() will automatically figure out whether the PersistentObject is
+      // new and thus needs to be \e inserted into the database, or is already
+      // present in the database and thus needs to be \e updated.
+      void save() const;
+
+      // Update the PersistentObject into the database.
+      // \note update() will \e always modify an existing stored object. 
+      // Therefore, calling update() on a PersistentObject that is not
+      // already present in the database is an error.
+      // \throw LOFAR::PL::Exception
+      void update() const;
+
+      // Return a reference to the metadata.
+      // \note This method must be \c const because it is used by insert(),
+      // update(), etc. which are (logically) \c const.
+      MetaData& metaData() const { return itsMetaData; }
+
+      // Return whether this PersistentObject is in the database.
+      bool isPersistent() const { return metaData().versionNr() != 0; }
+
+      // Return whether this PersistentObject is owned by another one.
+      bool isOwned() const { 
+        return metaData().ownerOid() != MetaData::nullOid();
+      }
+
+      // Get the database table name that is associated with this
+      // PersistentObject.
+      // \note This method is only provided as a convenience as you can also
+      // get the table name directly using the metadata.
+      const std::string& tableName() const { return metaData().tableName(); }
+
+      // Set the database table name that is associated with this
+      // PersistentObject.
+      // \note This method is only provided as a convenience as you can also
+      // set the table name directly using the metadata.
+      void tableName(const std::string& aName) {
+        metaData().tableName() = aName; 
+      }
+
+      // Return a comma delimited list of all the table names that are
+      // associated with this persistent object. In other words, tableNames()
+      // will return the table name of this persistent objects and the table
+      // names of its owned persistent objects.
+      //
+      // \todo Do we need this method? I thought I would need it when doing a
+      // retrieve of a complex object that is stored across several tables,
+      // but it seems I can do without. Currently, I do not see other
+      // situations where you might want to use this method.
+      std::string tableNames() const;
+
+      // Return a reference to the container of "owned" PersistentObjects.
+      POContainer& ownedPOs() { return itsOwnedPOs; }
+
+      // Return a const reference to the container of "owned"
+      // PersistentObjects.
+      const POContainer& ownedPOs() const { return itsOwnedPOs; }
+
+      // Return the attribute map for this PersistentObject.
+      virtual const attribmap_t& attribMap() const = 0;
+
+
+    protected:
+
+      // Default constructor.
+      PersistentObject() {}
+
+      // We need a virtual destructor, cause this is our abstract base class.
+      virtual ~PersistentObject() {}
+
+      // This method \e must be called by every constructor. It must ensure
+      // that the POContainer is initialized properly and that the ownership
+      // relations between the PersistentObjects in this container are
+      // properly set in their associated MetaData objects.
+      virtual void init() = 0;
+
+      // Convert the MetaData in our persistent object to DBRepMeta format,
+      // which stores all data members contiguously in memory.
+      void toDBRepMeta(DBRepMeta& dest) const;
+
+      // Convert the data from DBRepMeta format to the MetaData format in our
+      // persistent object.
+      void fromDBRepMeta(const DBRepMeta& org);
+
+
+    private:
+
+      // The metadata for our persistent object will be stored in a separate
+      // class MetaData. We do not want to keep these metadata inside our
+      // PersistentObject, because we want to share these metadata. Hence,
+      // MetaData contains reference counted pointers to the actual
+      // metadata. Remember that multiple copies of a PersistentObject can
+      // refer to the same data, so they should also refer to the same
+      // metadata.
       class MetaData
       {
       public:
@@ -131,7 +249,7 @@ namespace LOFAR
         // All data members of MetaData are using shared pointers. We want to
         // be able to savely copy MetaData classes. However, we do not want
         // multiple copies of the member data of MetaData, because that would
-        // lead to potential inconsistencies in the meta data.
+        // lead to potential inconsistencies in the metadata.
 
         //@{
 
@@ -184,102 +302,6 @@ namespace LOFAR
       }; //# class MetaData
 
 
-      // Remove this instance of PersistentObject from the database.
-      void erase() const;
-
-      // Insert the PersistentObject into the database.
-      // \note insert() will \e always create a new stored object. This is
-      // contrary to the behaviour of save() which will only create a \e new
-      // stored object if it did not already exist in the database.
-      void insert() const;
-
-      // This method will typically be used to refresh an instance of 
-      // PersistentObject that already resides in memory. We will need it if
-      // another process or thread changed the data in the database.
-      void retrieve();
-      
-      // Set the data in this PersistentObject equal to the data in the
-      // database belonging to the object with the specified ObjectId.
-      void retrieve(const ObjectId& oid);
-
-      // Store the PersistentObject into the database. This method will
-      // typically be called by the PersistenceBroker, because at this level 
-      // we lack knowledge of where to store our data.
-      // save() will automatically figure out whether the PersistentObject is
-      // new and thus needs to be \e inserted into the database, or is already
-      // present in the database and thus needs to be \e updated.
-      void save() const;
-
-      // Update the PersistentObject into the database.
-      // \note update() will \e always modify an existing stored object. 
-      // Therefore, calling update() on a PersistentObject that is not
-      // already present in the database is an error.
-      // \throw LOFAR::PL::Exception
-      void update() const;
-
-      // Return a reference to the meta data.
-      // \note This method must be \c const because it is used by insert(),
-      // update(), etc. which are (logically) \c const.
-      MetaData& metaData() const { return itsMetaData; }
-
-      // Return whether this PersistentObject is in the database.
-      bool isPersistent() const { return metaData().versionNr() != 0; }
-
-      // Return whether this PersistentObject is owned by another one.
-      bool isOwned() const { 
-        return metaData().ownerOid() != MetaData::nullOid();
-      }
-
-      // Get the database table name that is associated with this
-      // PersistentObject.
-      // \note This method is only provided as a convenience as you can also
-      // get the table name directly using the meta data.
-      const std::string& tableName() const { return metaData().tableName(); }
-
-      // Set the database table name that is associated with this
-      // PersistentObject.
-      // \note This method is only provided as a convenience as you can also
-      // set the table name directly using the meta data.
-      void tableName(const std::string& aName) {
-        metaData().tableName() = aName; 
-      }
-
-      // Return a comma delimited list of all the table names that are
-      // associated with this persistent object. In other words, tableNames()
-      // will return the table name of this persistent objects and the table
-      // names of its owned persistent objects.
-      std::string tableNames() const;
-
-      // Return a reference to the container of "owned" PersistentObjects.
-      POContainer& ownedPOs() { return itsOwnedPOs; }
-
-      // Return a const reference to the container of "owned"
-      // PersistentObjects.
-      const POContainer& ownedPOs() const { return itsOwnedPOs; }
-
-      // Return the attribute map for this PersistentObject.
-      virtual const attribmap_t& attribMap() const = 0;
-
-    protected:
-
-      // Default constructor.
-      PersistentObject() {}
-
-      // We need a virtual destructor, cause this is our abstract base class.
-      virtual ~PersistentObject() {}
-
-      // This method \e must be called by every constructor. It must ensure
-      // that the POContainer is initialized properly and that the ownership
-      // relations between the PersistentObjects in this container are
-      // properly set in their associated MetaData objects.
-      virtual void init() = 0;
-
-      void toDBRepMeta(DBRepMeta& dest) const;
-
-      void fromDBRepMeta(const DBRepMeta& org);
-
-    private:
-
       // This method is responsible for actually erasing the \e primitive
       // data members of \c T.
       virtual void doErase() const = 0;
@@ -297,7 +319,7 @@ namespace LOFAR
       // data members of \c T.
       virtual void doUpdate() const = 0;
 
-      // Here we keep our meta data. MetaData can be copied savely, because
+      // Here we keep our metadata. MetaData can be copied savely, because
       // the data members within MetaData use shared pointers.
       // \note \c itsMetaData must be mutable because it is modified by
       // logically \c const methods like insert(), update(), etc.
@@ -315,7 +337,7 @@ namespace LOFAR
       // PersistentObject.
       std::string itsTableName;
 
-    };
+    }; //# class PersistentObject
 
 
     // Compare two instances of PersistentObject. PersistentObjects are
