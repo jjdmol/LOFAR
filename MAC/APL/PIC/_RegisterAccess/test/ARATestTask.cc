@@ -23,19 +23,19 @@
 #ifdef GCF4
 // datapoint structs are supported in gcf4
 #define PROPERTY_BOARD1_STATUS                  "PIC_Rack1_SubRack1_Board1.status"
-#define PROPERTY_BOARD1_ALERT_STATUS            "PIC_Rack1_SubRack1_Board1_Alert.status"
 #define PROPERTY_AP1_STATUS                     "PIC_Rack1_SubRack1_Board1_AP1.status"
 #define PROPERTY_AP1_RCU1                       "PIC_Rack1_SubRack1_Board1_AP1_RCU1"
 #define PROPERTY_AP1_RCU1_MAINTENANCE_STATUS    "PIC_Rack1_SubRack1_Board1_AP1_RCU1_Maintenance.status"
+#define PROPERTY_AP1_RCU1_ALERT_STATUS          "PIC_Rack1_SubRack1_Board1_AP1_RCU1_Alert.status"
 #define PROPERTY_STATION_PIC                    "PIC"
 #define PROPERTY_STATION_PIC_MAINTENANCE_STATUS "PIC_Maintenance.status"
 #define PROPERTY_STATION_PAC_LDS_COMMAND        "PAC_LogicalDeviceScheduler_command"
 #else
 #define PROPERTY_BOARD1_STATUS                  "PIC_Rack1_SubRack1_Board1_status"
-#define PROPERTY_BOARD1_ALERT_STATUS            "PIC_Rack1_SubRack1_Board1_Alert_status"
 #define PROPERTY_AP1_STATUS                     "PIC_Rack1_SubRack1_Board1_AP1_status"
 #define PROPERTY_AP1_RCU1                       "PIC_Rack1_SubRack1_Board1_AP1_RCU1"
 #define PROPERTY_AP1_RCU1_MAINTENANCE_STATUS    "PIC_Rack1_SubRack1_Board1_AP1_RCU1_Maintenance_status"
+#define PROPERTY_AP1_RCU1_ALERT_STATUS          "PIC_Rack1_SubRack1_Board1_AP1_RCU1_Alert_status"
 #define PROPERTY_STATION_PIC                    "PIC"
 #define PROPERTY_STATION_PIC_MAINTENANCE_STATUS "PIC_Maintenance_status"
 #define PROPERTY_STATION_PAC_LDS_COMMAND        "PAC_LogicalDeviceScheduler_command"
@@ -81,7 +81,7 @@ ARATestTask::ARATestTask(ARATest& tester) :
   m_propAP1RCUmaintenanceStatus(string(PROPERTY_AP1_RCU1_MAINTENANCE_STATUS)),
   m_propStationMaintenanceStatus(string(PROPERTY_STATION_PIC_MAINTENANCE_STATUS)),
   m_propLDScommand(string(PROPERTY_STATION_PAC_LDS_COMMAND)),
-  m_propBoard1AlertStatus(string(PROPERTY_BOARD1_ALERT_STATUS))
+  m_propAP1RCU1AlertStatus(string(PROPERTY_AP1_RCU1_ALERT_STATUS))
 {
   registerProtocol(RSP_PROTOCOL, RSP_PROTOCOL_signalnames);
   m_answer.setTask(this);
@@ -90,7 +90,7 @@ ARATestTask::ARATestTask(ARATest& tester) :
   m_propAP1RCUmaintenanceStatus.setAnswer(&m_answer);
   m_propStationMaintenanceStatus.setAnswer(&m_answer);
   m_propLDScommand.setAnswer(&m_answer);
-  m_propBoard1AlertStatus.setAnswer(&m_answer);
+  m_propAP1RCU1AlertStatus.setAnswer(&m_answer);
   
   m_RSPserver.init(*this, "ARAtestRSPserver", GCFPortInterface::SPP, RSP_PROTOCOL);
   
@@ -678,7 +678,7 @@ GCFEvent::TResult ARATestTask::test8(GCFEvent& event, GCFPortInterface& /*p*/)
     case F_ENTRY:
     {
       LOG_INFO("3.2.3.1: simulate board defect");
-      m_propBoard1AlertStatus.subscribe();
+      m_propAP1RCU1AlertStatus.subscribe();
       
       // send write register message to RA test port
       RSPUpdstatusEvent updStatusEvent;
@@ -728,7 +728,7 @@ GCFEvent::TResult ARATestTask::test8(GCFEvent& event, GCFPortInterface& /*p*/)
           TRAN(ARATestTask::test9);
         }
       }
-      else if(strstr(pPropAnswer->pPropName,PROPERTY_BOARD1_ALERT_STATUS)!=0)
+      else if(strstr(pPropAnswer->pPropName,PROPERTY_AP1_RCU1_ALERT_STATUS)!=0)
       {
         // check alert status
         GCFPVUnsigned status;
@@ -813,10 +813,109 @@ GCFEvent::TResult ARATestTask::test9(GCFEvent& event, GCFPortInterface& /*p*/)
         m_tester._avttest(testOk);
         if(!testOk)
         {
+          TRAN(ARATestTask::test10);
+        }
+      }
+      else if(strstr(pPropAnswer->pPropName,PROPERTY_AP1_RCU1_ALERT_STATUS)!=0)
+      {
+        // check alert status
+        GCFPVUnsigned status;
+        status.copy(*pPropAnswer->pValue);
+        LOG_INFO(formatString("Value of '%s': %d",pPropAnswer->pPropName,status.getValue()));
+        bool testOk = ( status.getValue()==0 );
+        m_tester._avttest(testOk);
+        TRAN(ARATestTask::test10);
+      }
+      break;
+    }
+    
+    case F_EXIT:
+    {
+      m_propAP1RCU1AlertStatus.unsubscribe();
+      break;
+    }
+     
+    default:
+      LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("ARATestTask(%s)::test9, default",getName().c_str()));
+      status = GCFEvent::NOT_HANDLED;
+      break;
+  }
+
+  return status;
+}
+
+
+/* 
+ * Test case 10: put all rcu's in overflow
+ */
+GCFEvent::TResult ARATestTask::test10(GCFEvent& event, GCFPortInterface& /*p*/)
+{
+  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("ARATestTask(%s)::test10 (%d)",getName().c_str(),event.signal));
+  GCFEvent::TResult status = GCFEvent::HANDLED;
+
+  switch (event.signal)
+  {
+    case F_INIT:
+      break;
+
+    case F_ENTRY:
+    {
+      LOG_INFO("3.2.3.1a: simulate all rcu's overflow");
+      
+      // send write register message to RA test port
+      RSPUpdstatusEvent updStatusEvent;
+      struct timeval timeValNow;
+      time(&timeValNow.tv_sec);
+      timeValNow.tv_usec=0;
+      updStatusEvent.timestamp.set(timeValNow);
+      updStatusEvent.status=0;
+      updStatusEvent.handle=1;
+
+      EPA_Protocol::BoardStatus boardStatus;
+      memset(&boardStatus,0,sizeof(boardStatus));
+      boardStatus.ap[0].temp = 28;
+      boardStatus.ap[1].temp = 29;
+      boardStatus.ap[2].temp = 30;
+      boardStatus.ap[3].temp = 31;
+
+      EPA_Protocol::RCUStatus rcuStatus;
+      std::bitset<8> rcuBitStatus;
+      rcuBitStatus[7] = 1; // overflow
+      rcuStatus.status = rcuBitStatus.to_ulong();
+      updStatusEvent.sysstatus.board().resize(1);
+      updStatusEvent.sysstatus.board()(0) = boardStatus;
+      updStatusEvent.sysstatus.rcu().resize(6);
+      updStatusEvent.sysstatus.rcu()(0) = rcuStatus;
+      updStatusEvent.sysstatus.rcu()(1) = rcuStatus;
+      updStatusEvent.sysstatus.rcu()(2) = rcuStatus;
+      updStatusEvent.sysstatus.rcu()(3) = rcuStatus;
+      updStatusEvent.sysstatus.rcu()(4) = rcuStatus;
+      updStatusEvent.sysstatus.rcu()(5) = rcuStatus;
+
+      m_RSPserver.send(updStatusEvent);
+
+      // now wait for the alert status to change    
+      break;
+    }
+    
+    case F_VCHANGEMSG:
+    {
+      // check which property changed
+      GCFPropValueEvent* pPropAnswer = static_cast<GCFPropValueEvent*>(&event);
+      assert(pPropAnswer);
+      if(strstr(pPropAnswer->pPropName,PROPERTY_BOARD1_STATUS)!=0)
+      {
+        GCFPVUnsigned status;
+        status.copy(*pPropAnswer->pValue);
+        LOG_INFO(formatString("Value of '%s': %d",pPropAnswer->pPropName,status.getValue()));
+        bool testOk = ( status.getValue()==0 );
+        m_tester._avttest(testOk);
+        if(!testOk)
+        {
           TRAN(ARATestTask::finished);
         }
       }
-      else if(strstr(pPropAnswer->pPropName,PROPERTY_BOARD1_ALERT_STATUS)!=0)
+      else if(strstr(pPropAnswer->pPropName,PROPERTY_AP1_RCU1_ALERT_STATUS)!=0)
       {
         // check alert status
         GCFPVUnsigned status;
@@ -831,19 +930,18 @@ GCFEvent::TResult ARATestTask::test9(GCFEvent& event, GCFPortInterface& /*p*/)
     
     case F_EXIT:
     {
-      m_propBoard1AlertStatus.unsubscribe();
+      m_propAP1RCU1AlertStatus.unsubscribe();
       break;
     }
      
     default:
-      LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("ARATestTask(%s)::test9, default",getName().c_str()));
+      LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("ARATestTask(%s)::test10, default",getName().c_str()));
       status = GCFEvent::NOT_HANDLED;
       break;
   }
 
   return status;
 }
-
 
 
 

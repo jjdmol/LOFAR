@@ -89,6 +89,15 @@ ARATestDriverTask::ARATestDriverTask() :
   
   m_systemStatus.board().resize(n_boards_per_subrack);
   m_systemStatus.rcu().resize(n_rcus);
+
+  for (int board = m_systemStatus.board().lbound(blitz::firstDim); board < m_systemStatus.board().ubound(blitz::firstDim); board++)
+  {
+    memset(&m_systemStatus.board()(board),0,sizeof(m_systemStatus.board()(board)));
+  }
+  for (int rcu = m_systemStatus.rcu().lbound(blitz::firstDim); rcu < m_systemStatus.rcu().ubound(blitz::firstDim); rcu++)
+  {
+    memset(&m_systemStatus.rcu()(rcu),0,sizeof(m_systemStatus.rcu()(rcu)));
+  }
   
   m_stats().resize(1,n_rcus,RSP_Protocol::MAX_N_BLPS);
   int i=0;
@@ -709,7 +718,7 @@ GCFEvent::TResult ARATestDriverTask::enabled(GCFEvent& event, GCFPortInterface& 
     case F_ENTRY:
     {
       // subscribe to all properties of all property sets.
-      subscribeAllProperties();
+      //subscribeAllProperties();
       break;
     }
 

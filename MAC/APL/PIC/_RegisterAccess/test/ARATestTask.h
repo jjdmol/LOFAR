@@ -80,7 +80,7 @@ namespace ARA
       GCFProperty m_propAP1RCUmaintenanceStatus;
       GCFProperty m_propStationMaintenanceStatus;
       GCFProperty m_propLDScommand;
-      GCFProperty m_propBoard1AlertStatus;
+      GCFProperty m_propAP1RCU1AlertStatus;
       
   };  
 };
