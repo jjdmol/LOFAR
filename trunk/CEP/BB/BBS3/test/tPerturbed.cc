@@ -97,7 +97,8 @@ void doTest (Prediffer& pre1, const vector<string>& solv)
       const dcomplex* resv2 = resm2->dcomplexStorage();
       for (int k=0; k<resm1->nelements(); ++k) {
 	//	cout <<
-	ASSERTSTR (casa::near(resv1[k],resv2[k]),
+	ASSERTSTR (casa::near(real(resv1[k]),real(resv2[k])) &&
+		   casa::near(imag(resv1[k]),imag(resv2[k])),
 		   "res1=" << resv1[k] << " res2=" << resv2[k] << " rnr=" << k
 		   << " valnr=" << j << " spid=" << i);
 	//     << endl;
