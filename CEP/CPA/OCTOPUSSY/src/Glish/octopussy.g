@@ -262,5 +262,5 @@ test_octopussy := function (server="./test_glish",options="")
   }
 }
 
-test_octopussy();
-exit 0;
+#test_octopussy();
+#exit 0;
