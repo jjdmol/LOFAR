@@ -16,6 +16,7 @@
 #include "WH_FromRing.h"
 #include "WH_Empty.h"
 #include "Profiler.h"
+#include "Simul2XML.h"
 
 int main (int argc, char *argv[])
 {
@@ -72,14 +73,14 @@ int main (int argc, char *argv[])
   // Finished configuration 
 //////////////////////////////////////////////////////////////
 
-  TRACER(debug,"Ready with definition of configuration");
+  TRACER1("Ready with definition of configuration");
   Profiler::init();
 
   cout << endl <<  "Start Process" << endl;    
   for (int i = 0; i < 221; i++) {
     if (i%1 == 0) { // print a dot after every 10 process steps
-      TRACER(monitor,"====================== " 
-	     << i << " ===============================" );
+      TRACER1("====================== " 
+	      << i << " ===============================" );
     }
     if (i==31)  {
       
@@ -95,6 +96,9 @@ int main (int argc, char *argv[])
      RingSim.dump ();  
 
   cout << endl << "END OF SIMUL on node " << rank << endl;
+
+  Simul2XML xml(&RingSim);
+  xml.write("ringsim.xml");
  
  
   //     close MPI environment
