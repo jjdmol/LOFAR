@@ -10,6 +10,7 @@ lam.variant.conf:	  --with-lam
 lam-opt.variant.conf:	  --with-lam --with-optimize
 corba.variant.conf:	  --with-vbroker
 mpich-corba.variant.conf: --with-mpich --with-vbroker
+lam-corba.variant.conf:   --with-lam --with-vbroker
 insure.variant.conf:	  --with-insure
 insure.variant.make:	  QA=insure
 scampi.variant.conf:	  --with-scampi
