@@ -40,7 +40,7 @@ ToComplex::~ToComplex()
 
 //##ModelId=400E535502C4
 Vells ToComplex::evaluate (const Request&,const LoShape &,
-			   const vector<Vells*>& values)
+			   const vector<const Vells*>& values)
 {
   return tocomplex(*(values[0]), *(values[1]));
 }

@@ -66,7 +66,7 @@ int Selector::getResult (Result::Ref &resref,
     }
     else
     {
-      result.setVellSet(i,&(childres.vellSet(isel)));
+      result.setVellSet(i,&(childres.vellSetWr(isel)));
     }
   }
   // no additional dependencies

@@ -38,7 +38,7 @@ Cos::~Cos()
 
 //##ModelId=400E530500C9
 Vells Cos::evaluate (const Request&,const LoShape &,
-		     const vector<Vells*>& values)
+		     const vector<const Vells*>& values)
 {
   return cos(*(values[0]));
 }

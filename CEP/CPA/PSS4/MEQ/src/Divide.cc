@@ -39,7 +39,7 @@ Divide::~Divide()
 
 //##ModelId=400E530500D8
 Vells Divide::evaluate (const Request&,const LoShape &,
-			const vector<Vells*>& values)
+			const vector<const Vells*>& values)
 {
   return *(values[0]) / *(values[1]);
 }

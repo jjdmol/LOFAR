@@ -38,7 +38,7 @@ Sin::~Sin()
 
 //##ModelId=400E53550246
 Vells Sin::evaluate (const Request&,const LoShape &,
-		     const vector<Vells*>& values)
+		     const vector<const Vells*>& values)
 {
   return sin(*(values[0]));
 }

@@ -68,11 +68,11 @@ int UVW::getResult (Result::Ref &resref,
   if( !fails.empty() )
     NodeThrow1(fails);
   // Get RA and DEC of phase center, and station positions
-  const Vells& vra  = childres[0]().vellSet(0).getValue();
-  const Vells& vdec = childres[1]().vellSet(0).getValue();
-  const Vells& vstx = childres[2]().vellSet(0).getValue();
-  const Vells& vsty = childres[3]().vellSet(0).getValue();
-  const Vells& vstz = childres[4]().vellSet(0).getValue();
+  const Vells& vra  = childres[0]().vellSetWr(0).getValue();
+  const Vells& vdec = childres[1]().vellSetWr(0).getValue();
+  const Vells& vstx = childres[2]().vellSetWr(0).getValue();
+  const Vells& vsty = childres[3]().vellSetWr(0).getValue();
+  const Vells& vstz = childres[4]().vellSetWr(0).getValue();
   // For the time being we only support scalars
   Assert (vra.nelements()==1 && vdec.nelements()==1
       	  && vstx.nelements()==1 && vsty.nelements()==1

@@ -197,7 +197,7 @@ int Solver::getResult (Result::Ref &resref,
     if( retcode&(RES_FAIL|RES_WAIT) )
       return retcode;
     // else process 
-    vector<VellSet*> chvellsets;
+    vector<const VellSet*> chvellsets;
     chvellsets.reserve(numChildren() * child_results[0]->numVellSets());
     // Find the set of all spids from all condeq results.
     for (uint i=0; i<child_results.size(); i++)
@@ -205,9 +205,9 @@ int Solver::getResult (Result::Ref &resref,
       {
         for (int iplane=0; iplane<child_results[i]->numVellSets(); iplane++) 
         {
-          if (! child_results[i]().vellSet(iplane).isFail()) 
+          if (! child_results[i]->vellSet(iplane).isFail()) 
           {
-            chvellsets.push_back (&(child_results[i]().vellSet(iplane)));
+            chvellsets.push_back (&(child_results[i]->vellSet(iplane)));
           }
         }
       }
@@ -236,7 +236,7 @@ int Solver::getResult (Result::Ref &resref,
     vector<double> derivImag(nspid);
     // Loop through all results and fill the deriv vectors.
     for (uint i=0; i<chvellsets.size(); i++) {
-      VellSet& chresult = *chvellsets[i];
+      const VellSet& chresult = *chvellsets[i];
       bool isReal = chresult.getValue().isReal();
       // Get nr of elements in the values.
       int nrval = chresult.getValue().nelements();

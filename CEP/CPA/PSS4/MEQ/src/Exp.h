@@ -48,7 +48,7 @@ public:
   // Evaluate the value for the given request.
     //##ModelId=400E5305013E
   virtual Vells evaluate (const Request&,const LoShape &,
-			  const vector<Vells*>& values);
+			  const vector<const Vells*>& values);
 };
 
 

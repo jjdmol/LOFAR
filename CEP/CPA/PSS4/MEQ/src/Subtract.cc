@@ -35,7 +35,7 @@ Subtract::~Subtract()
 
 //##ModelId=400E535502A1
 Vells Subtract::evaluate (const Request&,const LoShape &,
-			  const vector<Vells*>& values)
+			  const vector<const Vells*>& values)
 {
   return *(values[0]) - *(values[1]);
 }

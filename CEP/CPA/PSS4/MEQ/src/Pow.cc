@@ -39,7 +39,7 @@ Pow::~Pow()
 
 //##ModelId=400E53540389
 Vells Pow::evaluate (const Request&,const LoShape &,
-		     const vector<Vells*>& values)
+		     const vector<const Vells*>& values)
 {
   return pow (*(values[0]), *(values[1]));
 }

@@ -38,7 +38,7 @@ Exp::~Exp()
 
 //##ModelId=400E5305013E
 Vells Exp::evaluate (const Request&,const LoShape &,
-		     const vector<Vells*>& values)
+		     const vector<const Vells*>& values)
 {
   return exp(*(values[0]));
 }

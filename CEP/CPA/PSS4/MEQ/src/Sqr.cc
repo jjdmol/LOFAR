@@ -38,7 +38,7 @@ Sqr::~Sqr()
 
 //##ModelId=400E53550282
 Vells Sqr::evaluate (const Request&,const LoShape &,
-		     const vector<Vells*>& values)
+		     const vector<const Vells*>& values)
 {
   return sqr(*(values[0]));
 }

@@ -278,8 +278,8 @@ void checkUVW (const string& msName, const string& mepName, double threshold)
       Meq::Parm pu2(parmName, &ptab);
       pu1.execute (resset1, request);
       pu2.execute (resset2, request);
-      res1 = &(resset1->vellSetConst(0));
-      res2 = &(resset2->vellSetConst(0));
+      res1 = &(resset1->vellSet(0));
+      res2 = &(resset2->vellSet(0));
       LoMat_double diff(LoMatShape(1,nrtim));
       diff = res2->getValue().getRealArray() - res1->getValue().getRealArray();
       Vector<double> vec (IPosition(1,nrtim), diff.data(), SHARE);
@@ -297,8 +297,8 @@ void checkUVW (const string& msName, const string& mepName, double threshold)
       Meq::Parm pu2(parmName, &ptab);
       pu1.execute (resset1, request);
       pu2.execute (resset2, request);
-      res1 = &(resset1->vellSetConst(0));
-      res2 = &(resset2->vellSetConst(0));
+      res1 = &(resset1->vellSet(0));
+      res2 = &(resset2->vellSet(0));
       LoMat_double diff(LoMatShape(1,nrtim));
       diff = res2->getValue().getRealArray() - res1->getValue().getRealArray();
       Vector<double> vec (IPosition(1,nrtim), diff.data(), SHARE);
@@ -316,8 +316,8 @@ void checkUVW (const string& msName, const string& mepName, double threshold)
       Meq::Parm pu2(parmName, &ptab);
       pu1.execute (resset1, request);
       pu2.execute (resset2, request);
-      res1 = &(resset1->vellSetConst(0));
-      res2 = &(resset2->vellSetConst(0));
+      res1 = &(resset1->vellSet(0));
+      res2 = &(resset2->vellSet(0));
       LoMat_double diff(LoMatShape(1,nrtim));
       diff = res2->getValue().getRealArray() - res1->getValue().getRealArray();
       Vector<double> vec (IPosition(1,nrtim), diff.data(), SHARE);

@@ -71,7 +71,7 @@ int Composer::getResult (Result::Ref &resref,
       Result &chres = childres[i]();
       for( int j=0; j<chres.numVellSets(); j++ )
       {
-        VellSet &vs = chres.vellSet(j);
+        VellSet &vs = chres.vellSetWr(j);
         if( vs.isFail() )
           result.setVellSet(ires++,&vs);
       }
@@ -88,7 +88,7 @@ int Composer::getResult (Result::Ref &resref,
     {
       Result &chres = childres[i]();
       for( int j=0; j<chres.numVellSets(); j++ )
-        result.setVellSet(ires++,&(chres.vellSet(j)));
+        result.setVellSet(ires++,&(chres.vellSetWr(j)));
     }
   }
   // we do not introduce any dependencies

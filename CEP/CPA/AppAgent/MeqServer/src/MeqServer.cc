@@ -115,6 +115,7 @@ void MeqServer::nodeGetState (DataRecord::Ref &out,DataRecord::Ref::Xfer &in)
   cdebug(4)<<in->sdebug(3);
   cdebug(3)<<endl;
   out.attach(node.state(),DMI::READONLY|DMI::ANON);
+  cdebug(5)<<"Returned state is: "<<out->sdebug(20)<<endl;
 }
 
 void MeqServer::nodeSetState (DataRecord::Ref &out,DataRecord::Ref::Xfer &in)
@@ -172,7 +173,7 @@ void MeqServer::nodeExecute (DataRecord::Ref &out,DataRecord::Ref::Xfer &in)
   {
     for( int i=0; i<resref->numVellSets(); i++ ) 
     {
-      const VellSet &vs = resref->vellSetConst(i);
+      const VellSet &vs = resref->vellSet(i);
       if( vs.isFail() ) {
         cdebug(4)<<"  vellset "<<i<<": FAIL"<<endl;
       } else {
