@@ -9,15 +9,6 @@
 using namespace std;
 using namespace dtl;
 
-string getUserName()
-{
-  passwd* aPwd;
-  if ((aPwd = getpwuid(getuid())) == 0)
-    return "";
-  else
-    return aPwd->pw_name;
-}
-
 class X
 {
 };
@@ -97,7 +88,7 @@ int main(int argc, const char* argv[])
 
   try {
     cout << "Try to connect to database ...";
-    b->connect(getUserName(),"postgres","");
+    b->connect("test","postgres","");
   }
   catch (Exception& e) {
     cerr << endl << e << endl;
