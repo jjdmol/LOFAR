@@ -24,11 +24,14 @@
 #define AH_ACCEPTEST_H
 
 #include <lofar_config.h>
-
+#include <fstream>
+#include <tinyCEP/WorkHolder.h>
 #include <tinyCEP/TinyApplicationHolder.h>
 
 namespace LOFAR
 {
+  using std::fstream;
+
   class AH_AccepTest: public TinyApplicationHolder {
   public:
     AH_AccepTest();
@@ -45,6 +48,11 @@ namespace LOFAR
     AH_AccepTest (const AH_AccepTest&);
     // Forbid assignment
     AH_AccepTest& operator= (const AH_AccepTest&);
+    
+    vector<WorkHolder*> itsWHs;
+    void connectWHs(WorkHolder* srcWH, int srcDH, WorkHolder* dstWH, int dstDH);
+  private:
+    fstream* itsFileOutput;
   };
 }
 

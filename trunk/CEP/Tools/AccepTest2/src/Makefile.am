@@ -1,4 +1,4 @@
-bin_PROGRAMS	= testWHs
+bin_PROGRAMS	= testWHs accepTest2
 
 INSTHDRS	=				\
 DH_CMatrix.h					\
@@ -22,10 +22,18 @@ WH_Dump.cc
 
 testWHs_SOURCES		= $(DOCHDRS)		\
 $(NONPROGSRCS)					\
-Simulate.cc					\
+testWHs.cc					\
 AH_testWHs.h					\
 AH_testWHs.cc
 
+accepTest2_SOURCES		= $(DOCHDRS)	\
+$(NONPROGSRCS)					\
+Simulate.cc					\
+AH_AccepTest.h					\
+AH_AccepTest.cc
+
 testWHs_DEPENDENCIES = $(LOFAR_DEPEND)
+
+accepTest2_DEPENDENCIES = $(LOFAR_DEPEND)
 
 include $(lofar_sharedir)/Makefile.common
