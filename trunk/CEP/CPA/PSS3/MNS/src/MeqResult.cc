@@ -38,10 +38,7 @@ MeqResultRep::MeqResultRep (int nspid)
 
 MeqResultRep::~MeqResultRep()
 {
-  for (unsigned int i=0; i<itsPerturbedValues.size(); i++) {
-    delete itsPerturbedValues[i];
-    delete itsPerturbation[i];
-  }
+  clear();
   ndtor--;
 }
 
@@ -49,6 +46,17 @@ void MeqResultRep::setValue (const MeqMatrix& value)
 {
   itsValue = value;
 }
+
+void MeqResultRep::clear()
+{
+  for (unsigned int i=0; i<itsPerturbedValues.size(); i++) {
+    delete itsPerturbedValues[i];
+    itsPerturbedValues[i] = 0;
+    delete itsPerturbation[i];
+    itsPerturbation[i] = 0;
+  }
+}
+
   
 void MeqResultRep::setPerturbedValue (int i, const MeqMatrix& value)
 {

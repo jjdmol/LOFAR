@@ -20,7 +20,7 @@
 //#
 //# $Id$
 
-#include <PerfProfile.h>
+#include <MNS/PerfProfile.h>
 
 #include <MNS/MeqStatUVW.h>
 #include <MNS/MeqStation.h>
@@ -46,16 +46,36 @@ MeqStatUVW::MeqStatUVW (MeqStation* station,
   itsFrame.set (itsPhaseRef->earthPosition());
 }
 
+void MeqStatUVW::clear()
+{
+  itsLastReqId = InitMeqRequestId;
+  itsUVW.clear();
+  itsU.clear();
+  itsV.clear();
+  itsW.clear();
+}
+
 void MeqStatUVW::calculate (const MeqRequest& request)
 {
   PERFPROFILE(__PRETTY_FUNCTION__);
-
-  itsU = MeqResult (request.nspid());
-  itsV = MeqResult (request.nspid());
-  itsW = MeqResult (request.nspid());
-  MeqMatrix umat(0.0, request.nx(), 1);
-  MeqMatrix vmat(0.0, request.nx(), 1);
-  MeqMatrix wmat(0.0, request.nx(), 1);
+  // Make sure the MeqResult/Matrix objects have the correct size.
+  double* uptr = itsU.setDouble (request.nx(), 1);
+  double* vptr = itsV.setDouble (request.nx(), 1);
+  double* wptr = itsW.setDouble (request.nx(), 1);
+  double step = request.stepX();
+  double time = request.domain().startX() + step/2;
+  // Use the UVW coordinates if already calculated for this time.
+  MeqTime meqtime(time);
+  if (request.nx() == 1) {
+    map<MeqTime,MeqUVW>::iterator pos = itsUVW.find (meqtime);
+    if (pos != itsUVW.end()) {
+      uptr[0] = pos->second.itsU;
+      vptr[0] = pos->second.itsV;
+      wptr[0] = pos->second.itsW;
+      return;
+    }
+  }
+  // Calculate the UVW coordinates using the AIPS++ code.
   MeqResult posx = itsStation->getPosX()->getResult (request);
   MeqResult posy = itsStation->getPosY()->getResult (request);
   MeqResult posz = itsStation->getPosZ()->getResult (request);
@@ -68,19 +88,12 @@ void MeqStatUVW::calculate (const MeqRequest& request)
   MVBaseline mvbl(mvpos);
   MBaseline mbl(mvbl, MBaseline::ITRF);
   TRACER1 ("mbl " << mbl);
-  double step = request.stepX();
-  double time = request.domain().startX() + step/2;
   Quantum<double> qepoch(0, "s");
   qepoch.setValue (time);
   MEpoch mepoch(qepoch, MEpoch::UTC);
-  // Note that frame is referenced counted, so effectively itsFrame
-  // is always used.
   itsFrame.set (mepoch);
   mbl.getRefPtr()->set(itsFrame);      // attach frame
   MBaseline::Convert mcvt(mbl, MBaseline::J2000);
-  double* uptr = umat.doubleStorage();
-  double* vptr = vmat.doubleStorage();
-  double* wptr = wmat.doubleStorage();
   for (Int i=0; i<request.nx(); i++) {
     itsFrame.set (mepoch);
     TRACER1 ("frame " << mbl.getRefPtr()->getFrame());
@@ -93,13 +106,13 @@ void MeqStatUVW::calculate (const MeqRequest& request)
     *uptr++ = xyz(0);
     *vptr++ = xyz(1);
     *wptr++ = xyz(2);
+    // Save the UVW coordinates in the map.
+    itsUVW[MeqTime(time)] = MeqUVW(xyz(0), xyz(1), xyz(2));
+    // Go to next time step.
     time += step;
     qepoch.setValue (time);
     mepoch.set (qepoch);
   }
-  itsU.setValue (umat);
-  itsV.setValue (vmat);
-  itsW.setValue (wmat);
 
 //   double hav = itsPhaseRef->getStartHA() +
 //                (request.domain().startX() + request.stepX()/2 -

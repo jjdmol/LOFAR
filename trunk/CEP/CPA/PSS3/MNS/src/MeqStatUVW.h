@@ -26,6 +26,7 @@
 //# Includes
 #include <MNS/MeqResult.h>
 #include <MNS/MeqRequest.h>
+#include <Common/lofar_map.h>
 #include <aips/Measures/MeasFrame.h>
 
 //# Forward declarations
@@ -51,7 +52,29 @@ public:
   const MeqResult& getW (const MeqRequest& request)
     { if (request.getId() != itsLastReqId) calculate(request); return itsW; }
 
+  // Clear the map of UVW coordinates and reset the last request id.
+  void clear();
+
 private:
+  struct MeqTime
+  {
+    MeqTime (double time) :itsTime(time) {}
+    bool operator< (const MeqTime& other) const
+      { return itsTime < other.itsTime-0.000001; }
+    //operator== (const MeqTime& other)
+    //    { return itsTime > other.itsTime-0.001 && itsTime < other.itsTime+0.001; }
+    double itsTime;
+  };
+
+  struct MeqUVW
+  {
+    MeqUVW() {}
+    MeqUVW (double u, double v, double w) : itsU(u), itsV(v), itsW(w) {}
+    double itsU;
+    double itsV;
+    double itsW;
+  };
+
   MeqStation*  itsStation;
   const MeqPhaseRef* itsPhaseRef;
   MeqResult    itsU;
@@ -59,6 +82,7 @@ private:
   MeqResult    itsW;
   MeqRequestId itsLastReqId;
   MeasFrame    itsFrame;
+  map<MeqTime,MeqUVW> itsUVW;    // association of time and UVW coordinates
 };
 
 

@@ -84,6 +84,22 @@ public:
   MeqMatrix clone() const
     { return MeqMatrix (itsRep->clone()); }
 
+  // Change the type/or shape if different.
+  double* setDouble (int nrx, int nry)
+    { if (itsRep == 0  ||  !isDouble()  ||  nrx != nx()  ||  nry != ny()) {
+        setDMat (nrx, nry);
+      }
+      return doubleStorage();
+    }
+  complex<double>* setDComplex (int nrx, int nry)
+    { if (itsRep == 0  ||  isDouble()  ||  nrx != nx()  ||  nry != ny()) {
+        setDCMat (nrx, nry);
+      }
+      return dcomplexStorage();
+    }
+  void setDMat (int nx, int ny);
+  void setDCMat (int nx, int ny);
+
   int nx() const
     { return itsRep->nx(); }
 

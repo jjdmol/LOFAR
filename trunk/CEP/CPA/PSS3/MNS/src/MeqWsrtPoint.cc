@@ -1,6 +1,6 @@
 //# MeqWsrtPoint.cc: The total baseline prediction of point sources in the WSRT model
 //#
-//# Copyright (C) 2002
+//# Copyright (C) 2002,2003
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
 //# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -20,7 +20,7 @@
 //#
 //# $Id$
 
-#include <PerfProfile.h>
+#include <MNS/PerfProfile.h>
 
 #include <MNS/MeqWsrtPoint.h>
 #include <MNS/MeqPointDFT.h>

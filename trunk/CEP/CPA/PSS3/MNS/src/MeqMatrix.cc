@@ -124,6 +124,29 @@ MeqMatrix& MeqMatrix::operator= (const MeqMatrixTmp& that)
     return *this;
 }
 
+void MeqMatrix::setDMat (int nx, int ny)
+{
+    MeqMatrixRep::unlink (itsRep);
+    itsRep = 0;
+    if (nx == 1  &&  ny == 1) {
+        itsRep = new MeqMatrixRealSca (0.);
+    } else {
+        itsRep = new MeqMatrixRealArr (nx, ny);
+    }
+    itsRep->link();
+}
+void MeqMatrix::setDCMat (int nx, int ny)
+{
+    MeqMatrixRep::unlink (itsRep);
+    itsRep = 0;
+    if (nx == 1  &&  ny == 1) {
+        itsRep = new MeqMatrixComplexSca (complex<double>());
+    } else {
+        itsRep = new MeqMatrixComplexArr (nx, ny);
+    }
+    itsRep->link();
+}
+
 Matrix<double> MeqMatrix::getDoubleMatrix() const
 {
   return Matrix<double> (IPosition(2,nx(),ny()), doubleStorage());

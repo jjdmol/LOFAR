@@ -32,7 +32,7 @@ MeqStoredParmPolc.h				\
 MeqWsrtInt.h					\
 MeqWsrtPoint.h					\
 ParmTable.h					\
-PerfProfile.h
+PerfProfile.h					
 
 lib_LTLIBRARIES 	= libmns.la
 
