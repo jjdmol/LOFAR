@@ -40,7 +40,7 @@
 // <li> A plain N-dimensional C-array.
 // <li> A blitz array in Fortran order (minor axis first) or in C order.
 // <li> An AIPS++ array (which is in Fortran order).
-// <ul>
+// </ul>
 // Special functions exist to read or write a vector (1-dimensional array).
 // Because all array types are written in a standard way, it is possible
 // to write, for example, a blitz array and read it back as an AIPS++ array.

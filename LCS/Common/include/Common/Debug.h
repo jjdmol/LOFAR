@@ -21,6 +21,10 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.7  2003/12/01 12:48:24  loose
+//  %[ER: 61]%
+//  Moved Exception class from namespace LCS to namespace LOFAR.
+//
 //  Revision 1.6  2003/10/29 13:54:38  smirnov
 //  %[ER: 16]%
 //  Cleaned up debug context definition macros
@@ -415,7 +419,7 @@ namespace Debug
 // Use DeclareDebugInfo(virtual) to declare a virtual sdebug().
 // Else use DeclareDebugInfo().
 // The following method declarations are inserted:
-//    <qualifiers> string sdebug ( int detail = 1,const string &prefix = "",
+//    [qualifiers] string sdebug ( int detail = 1,const string &prefix = "",
 //              const char *name = 0 ) const;
 //    const char * debug ( int detail = 1,const string &prefix = "",
 //                         const char *name = 0 ) const
