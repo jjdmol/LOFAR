@@ -53,8 +53,9 @@ void ModRes::setStateImpl (DataRecord &rec,bool initializing)
   Node::setStateImpl(rec,initializing);
   bool new_ops = false;
   // check for resampling factor
-  if( new_ops |= rec[FFactor].get_vector(factor) )
+  if( rec[FFactor].get_vector(factor) )
   {
+    new_ops = true;
     // if a single element, resize and assign to entire vector
     if( factor.size() == 1 )
     {
@@ -67,8 +68,9 @@ void ModRes::setStateImpl (DataRecord &rec,bool initializing)
     }
   }
   // check for direct cell number
-  if( new_ops |= rec[FNumCells].get_vector(numcells) )
+  if( rec[FNumCells].get_vector(numcells) )
   {
+    new_ops = true;
     // if a single element, resize and assign to entire vector
     if( numcells.size() == 1 )
     {
@@ -97,16 +99,16 @@ void ModRes::setStateImpl (DataRecord &rec,bool initializing)
         cells_arg[i] = numcells[i];
         has_ops = true;
       }
-      else if( !factor.empty() && factor[i]>1 )
+      else if( !factor.empty() && factor[i]<1 )
       {
         cells_op[i]  = Cells::INTEGRATE; 
-        cells_arg[i] = factor[i];
+        cells_arg[i] = -factor[i];
         has_ops = true;
       }
-      else if( !factor.empty() && factor[i]<-1 )
+      else if( !factor.empty() && factor[i]>1 )
       {
         cells_op[i]  = Cells::UPSAMPLE; 
-        cells_arg[i] = -factor[i];
+        cells_arg[i] = factor[i];
         has_ops = true;
       }
       else
