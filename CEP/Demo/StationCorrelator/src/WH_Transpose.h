@@ -29,6 +29,7 @@
 // one line description.
 
 //# Includes
+#include <Common/KeyValueMap.h>
 #include <tinyCEP/WorkHolder.h>
 
 namespace LOFAR
@@ -37,9 +38,10 @@ namespace LOFAR
   {
   public:
 
-    explicit WH_Transpose(const string& name);
+    explicit WH_Transpose(const string& name, const KeyValueMap kvm);
     virtual ~WH_Transpose();
-    static WorkHolder* construct(const string& name);
+    static WorkHolder* construct(const string& name, 
+				 const KeyValueMap kvm);
     virtual WH_Transpose* make(const string& name);
 
     virtual void process();
@@ -49,7 +51,11 @@ namespace LOFAR
     /// forbid assignment
     WH_Transpose& operator= (const WH_Transpose&);
    
+    KeyValueMap itsKVM; 
 
+    int itsNinputs;
+    int itsNoutputs;
+    
   };
 
   // @}

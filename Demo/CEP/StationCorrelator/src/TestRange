@@ -1,0 +1,8 @@
+stations         = 2, 	   # the number of RSP boards
+samples          = 100,    # number of samples to integrate 
+channels         = 46,     # the number of individual channels
+polarisations    = 2,	
+NoWH_RSP         = 2,      
+NoWH_Correlator  = 7,      # This defines the number of WH_Transpose as well
+NoWH_Dump        = 1,
+NoDH_StationData = 7,
