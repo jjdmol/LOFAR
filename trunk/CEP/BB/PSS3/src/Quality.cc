@@ -1,4 +1,4 @@
-//#  StrategyImpl.h: A base class for all calibration strategies
+//#  Quality.cc: 
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,42 +20,35 @@
 //#
 //#  $Id$
 
-#ifndef PSS3_STRATEGYIMPL_H
-#define PSS3_STRATEGYIMPL_H
-
-#include <lofar_config.h>
-
-//# Includes
-#include <Common/lofar_vector.h>
-#include <Common/lofar_string.h>
 #include <PSS3/Quality.h>
 
-//# Forward Declarations
-class Calibrator;
 
-// This is a base class for all calibration strategies.
+Quality::Quality():
+  itsSolFlag(false),
+  itsRank(0),
+    itsFit(0.),
+  itsMu(0.),
+  itsStddev(0.),
+  itsChi(0.) {
+}
 
-class StrategyImpl
-{
-public:
-  StrategyImpl();
+Quality::~Quality() {
+}
 
-  virtual ~StrategyImpl();
+void Quality::init() {
+  itsSolFlag = false;
+  itsRank = 0;
+  itsFit = 0.;
+  itsMu = 0.;
+  itsStddev = 0.;
+  itsChi = 0.;
+}
 
-  /// Execute the strategy
-  virtual bool execute(vector<string>& parmNames,      // Parameters for which 
-		                                       // to solve 
- 		       vector<string>& resultParmNames,// Solved parameters
-		       vector<double>& resultParmValues, // Solved parameter values
-		       Quality& resultQuality,        // Fitness of solution
-		       int& resultIterNo) = 0;       // Source number of solution
-   
-  /// Get strategy implementation type
-  virtual string getType() const = 0;
-
- private:
-
-};
-
-
-#endif
+void Quality::show(ostream& os) const {
+  os << "itsSolFlag: " <<  itsSolFlag << endl;
+  os << "itsRank   : " <<  itsRank    << endl;
+  os << "itsFit    : " <<  itsFit     << endl;
+  os << "itsMu     : " <<  itsMu      << endl;
+  os << "itsStddev : " <<  itsStddev  << endl;
+  os << "itsChi    : " <<  itsChi     << endl;
+}

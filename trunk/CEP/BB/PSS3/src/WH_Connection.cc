@@ -43,22 +43,24 @@ WH_Connection::WH_Connection (const string& name, int nInDHs,
 	      << nInDHs);
     switch (dh1Type) {
     case WorkOrder:
-      getDataManager().addInDataHolder(0, new DH_WorkOrder("in", "Conn"), true);
+      getDataManager().addInDataHolder(0, new DH_WorkOrder("in"), true);
       break;
-    case Parms:
-      getDataManager().addInDataHolder(0, new DH_Parms("in"), true);
+    case Solution:
+      getDataManager().addInDataHolder(0, new DH_Solution("in", "Connection"), true);
       break;
     }
+    getDataManager().setAutoTriggerIn(0, false);
     if (nInDHs == 2)
     {
       switch (dh2Type) {
       case WorkOrder:
-        getDataManager().addInDataHolder(1, new DH_WorkOrder("in", "Conn"), true);
+        getDataManager().addInDataHolder(1, new DH_WorkOrder("in"), true);
         break;
-      case Parms:
-        getDataManager().addInDataHolder(1, new DH_Parms("in"), true);
+      case Solution:
+        getDataManager().addInDataHolder(1, new DH_Solution("in", "Connection"), true);
         break;
       }
+    getDataManager().setAutoTriggerIn(1, false); 
     }
   }
   else
@@ -67,22 +69,24 @@ WH_Connection::WH_Connection (const string& name, int nInDHs,
 	      << nOutDHs);
     switch (dh1Type) {
     case WorkOrder:
-      getDataManager().addOutDataHolder(0, new DH_WorkOrder("in", "Conn"), true);
+      getDataManager().addOutDataHolder(0, new DH_WorkOrder("in"), true);
       break;
-    case Parms:
-      getDataManager().addOutDataHolder(0, new DH_Parms("in"), true);
+    case Solution:
+      getDataManager().addOutDataHolder(0, new DH_Solution("in", "Connection"), true);
       break;
     }
+    getDataManager().setAutoTriggerOut(0, false);
     if (nOutDHs == 2)
     {
       switch (dh2Type) {
       case WorkOrder:
-        getDataManager().addOutDataHolder(1, new DH_WorkOrder("in", "Conn"), true);
+        getDataManager().addOutDataHolder(1, new DH_WorkOrder("in"), true);
         break;
-      case Parms:
-        getDataManager().addOutDataHolder(1, new DH_Parms("in"), true);
+      case Solution:
+        getDataManager().addOutDataHolder(1, new DH_Solution("in", "Connection"), true);
         break;
       }
+      getDataManager().setAutoTriggerOut(1, false);
     }
   }    
 
@@ -96,7 +100,7 @@ WH_Connection::~WH_Connection()
 WorkHolder* WH_Connection::construct (const string& name, int, int,
 				      const KeyValueMap&)
 {
-  return new WH_Connection (name, 0, 0, Parms, Parms);
+  return new WH_Connection (name, 0, 0, Solution, Solution);
 }
 
 WH_Connection* WH_Connection::make (const string& name)

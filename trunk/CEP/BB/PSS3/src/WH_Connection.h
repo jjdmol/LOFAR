@@ -30,7 +30,7 @@
 
 #include "CEPFrame/WorkHolder.h"
 #include "PSS3/DH_WorkOrder.h"
-#include "PSS3/DH_Parms.h"
+#include "PSS3/DH_Solution.h"
 
 
 /**
@@ -41,11 +41,11 @@ class WH_Connection: public LOFAR::WorkHolder
 {
 public:
   enum connType{input, output};
-  enum dhType{WorkOrder, Parms};
+  enum dhType{WorkOrder, Solution};
 
   /// Construct the work holder.
   explicit WH_Connection (const string& name, int NInDHs, 
-			  int NOutDHs, dhType dh1Type, dhType dh2Type=Parms);
+			  int NOutDHs, dhType dh1Type, dhType dh2Type=Solution);
 
   virtual ~WH_Connection();
 

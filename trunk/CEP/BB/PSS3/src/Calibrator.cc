@@ -29,32 +29,65 @@ const int DefaultAntennaCount = 21;
 
 InitDebugContext(Calibrator,"Calibrator");
 
-Calibrator::Calibrator () {
-  int i;
+// Calibrator::Calibrator () {
+//   int i;
 
-  // Initialize default values for the PSS3 Calibrater object.
-  // These values are committed to itsMeqCalImpl when the Calibrator
-  // ::Initialize () is called.
+//   // Initialize default values for the PSS3 Calibrater object.
+//   // These values are committed to itsMeqCalImpl when the Calibrator
+//   // ::Initialize () is called.
+//   for (i = 0; i < DefaultAntennaCount; i ++) {
+//     itsPrimaryAntennae.push_back (4 * i);
+//     itsSecondaryAntennae.push_back (4 * i);
+//   }
 
-  for (i = 0; i < DefaultAntennaCount; i ++) {
-    itsPrimaryAntennae.push_back (4 * i);
-    itsSecondaryAntennae.push_back (4 * i);
-  }
+//   itsNrOfIterations = 10;
 
-  itsNrOfIterations = 10;
+//   itsTblMeasurementSet = "demo.MS";		// AIPS table
+//   itsTblMeqModel = "meqmodel";			// PL table (demo.MEP)
+//   itsTblSkyModel = "skymodel";			// PL table (demo_gsm.MEP)
 
-  itsTblMeasurementSet = "demo.MS";		// AIPS table
-  itsTblMeqModel = "meqmodel";			// PL table (demo.MEP)
-  itsTblSkyModel = "skymodel";			// PL table (demo_gsm.MEP)
+//   itsDDID = 0;
+//   itsModelType = "LOFAR.RI";
 
-  itsDDID = 0;
-  itsModelType = "LOFAR.RI";
+//   itsCalcUVW = false;
 
-  itsCalcUVW = false;
+//   itsDataColumn = "CORRECTED_DATA";
+//   itsCorrectedDataColumn = "CORRECTED_DATA";
 
-  itsDataColumn = "CORRECTED_DATA";
-  itsCorrectedDataColumn = "CORRECTED_DATA";
+//   itsTimeInterval = 3600.0;
 
+//   itsPSS3CalibratorImpl = NULL;
+
+//   TRACERF2 ("Calibrator constructed.");
+// }
+
+Calibrator::Calibrator (const string& msName,
+			const string& meqModel,
+			const string& skyModel,
+			const string& dbType,
+			const string& dbName,
+			const string& dbPwd,
+			unsigned int ddid,
+			const vector<int>& ant1,
+			const vector<int>& ant2,
+			const string& modelType,
+			bool calcUVW,
+			const string& dataColName,
+			const string& residualColName)
+  :  itsTblMeasurementSet(msName),
+     itsTblMeqModel(meqModel),
+     itsTblSkyModel(skyModel),
+     itsDbType(dbType),
+     itsDbName(dbName),
+     itsDbPwd(dbPwd),
+     itsDDID(ddid),
+     itsPrimaryAntennae(ant1),
+     itsSecondaryAntennae(ant2),
+     itsModelType(modelType),
+     itsCalcUVW(calcUVW),
+     itsDataColumn(dataColName),
+     itsCorrectedDataColumn(residualColName)
+{
   itsTimeInterval = 3600.0;
 
   itsPSS3CalibratorImpl = NULL;
@@ -211,8 +244,11 @@ void Calibrator::commitPeelSourcesAndMasks (void) {
 }
 
 
-void Calibrator::Run (void) {
-  itsPSS3CalibratorImpl -> solve (false);
+void Calibrator::Run (vector<string>& resultParmNames,
+		      vector<double>& resultParmValues,
+		      Quality& resultQuality) {
+  itsPSS3CalibratorImpl -> solve (false, resultParmNames, resultParmValues, 
+				  resultQuality);
 }
 
 void Calibrator::SubtractOptimizedSources (void) {

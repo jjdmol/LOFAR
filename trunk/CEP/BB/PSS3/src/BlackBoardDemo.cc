@@ -30,6 +30,8 @@
 
 #include <Common/Debug.h>
 
+
+
 #include <CEPFrame/Transport.h>
 #include <CEPFrame/Step.h>
 #include <CEPFrame/Simul.h>
@@ -41,18 +43,27 @@
 #include "PSS3/WH_PSS3.h"
 #include "PSS3/WH_Connection.h"
 #include TRANSPORTERINCLUDE
-//#include <aips/Arrays/Vector.h>
-
 
 using namespace LOFAR;
 
+string i2string(int i) {
+  char str[32];
+  sprintf(str, "%i", i);
+  return string(str);
+}
+
 BlackBoardDemo::BlackBoardDemo()
+  : itsKSSteps(0),
+    itsKSInSteps(0),
+    itsKSOutSteps(0),
+    itsNumberKS(0)
 {
   cout << ">>>>>>>> BlackBoardDemo constructor <<<<<<<<<<" << endl;
 }
 
 BlackBoardDemo::~BlackBoardDemo()
 {
+  cout << ">>>>>>>> BlackBoardDemo destructor <<<<<<<<<<" << endl;
   undefine();
 }
 
@@ -80,102 +91,86 @@ void BlackBoardDemo::define(const KeyValueMap& params)
   // Optional: Get any extra params from input
   int controlRead = params.getInt("cRead", 0);  // If 1: Controller reads from 
                                                 // database
-  int ksRead = params.getInt("ksRead", 1);      // If 1: Knowledge Source reads
-                                                // from database
-  int ksWrite = params.getInt("ksWrite", 1);    // If 1: Knowledge Source writes
-                                                // to database
-//   String msName = "demo.MS";
-//   String meqModel = "demo";
-//   String skyModel = "demo_gsm";
-//   String modelType = "LOFAR.RI";
-//   String dataColName = "MODEL_DATA";
-//   String residualColName = "CORRECTED_DATA";
-//   uInt ddID = 0;
-//   Vector<int> ant1(21);
-//   Vector<int> ant2(21);
-//   for (int i=0; i<21; i++)
-//   {
-//     ant1[i]=ant2[i]=4*i;
-//   }
-//   bool calcUVW = false;
+  int itsNumberKS = 2;       // The total number of Knowledge Sources
+  char databaseName[10] = "meijeren";   // !!!! Change to own database !!!!
+
+  DH_Postgresql::UseDatabase("10.87.2.50", databaseName, "postgres"); 
+
+  string meqModel = "meqmodel";
+  string skyModel = "skymodel";
+  string modelType = "LOFAR.RI";
+  string dataColName = "CORRECTED_DATA";
+  string residualColName = "CORRECTED_DATA";
+  unsigned int ddID = 0;
+  bool calcUVW = false;
  
-  DH_Postgresql::UseDatabase("10.87.2.50", "meijeren", "postgres");
-
-  // Create the WorkHolder(s)
+  // Create the controller WorkHolder and Step
   WH_Evaluate controlWH("control");
-  WH_PSS3 ksWH("KS1", true, 1);
-  //  WH_PSS3 ksWH("KS1", msName, meqModel, skyModel, ddID, ant1, ant2, modelType,
-  //		calcUVW, dataColName, residualColName, false);
-  WH_PSS3 ks2WH("KS2", true, 2);
-//  WH_PSS3 ks2WH("KS2", msName, meqModel, skyModel, ddID, ant1, ant2, modelType,
-// 		calcUVW, dataColName, residualColName, false);
-
-  // Empty workholders necessary for data transport to/from database
-  WH_Connection controlInWH("empty", 0, 1, WH_Connection::WorkOrder);
-  WH_Connection controlOutWH("empty", 1, 0, WH_Connection::WorkOrder); 
-  WH_Connection ksInWH("empty", 0, 1, WH_Connection::WorkOrder);
-  WH_Connection ksOutWH("empty", 1, 0, WH_Connection::WorkOrder);
-  WH_Connection ks2InWH("empty", 0, 1, WH_Connection::WorkOrder);
-  WH_Connection ks2OutWH("empty", 1, 0, WH_Connection::WorkOrder);
-
-  // Create the Step(s)
   Step controlStep(controlWH, "controlStep");
-  Step knowledgeSourceStep(ksWH, "knowledgeSource");
-  Step knowledgeSource2Step(ks2WH, "knowledgeSource2");
-
-  // Empty steps necessary for data transport to database
+  controlStep.runOnNode(0,0);
+  simul.addStep(controlStep);
+  // Empty workholders and steps necessary for data transport to/from database
+  WH_Connection controlInWH("empty", 0, 1, WH_Connection::Solution);
+  WH_Connection controlOutWH("empty", 1, 0, WH_Connection::WorkOrder); 
   Step controlInStep(controlInWH, "CsourceStub");
   Step controlOutStep(controlOutWH, "CsinkStub");
-  Step ksInStep(ksInWH, "KSsourceStub");
-  Step ksOutStep(ksOutWH, "KSsinkStub");
-  Step ks2InStep(ks2InWH, "KSsourceStub2");
-  Step ks2OutStep(ks2OutWH, "KSsinkStub2");
-
-
-  // Determine the node and process for each step to run in
   controlInStep.runOnNode(0,0);
-  controlStep.runOnNode(0,0);
   controlOutStep.runOnNode(0,0);
-  ksInStep.runOnNode(1,0);
-  knowledgeSourceStep.runOnNode(1,0);
-  ksOutStep.runOnNode(1,0);
-  ks2InStep.runOnNode(2,0);
-  knowledgeSource2Step.runOnNode(2,0);
-  ks2OutStep.runOnNode(2,0);
-
-  
-  // Add all Step(s) to Simul
   simul.addStep(controlInStep);
-  simul.addStep(controlStep);
   simul.addStep(controlOutStep);
-  simul.addStep(ksInStep);
-  simul.addStep(knowledgeSourceStep);
-  simul.addStep(ksOutStep);
-  simul.addStep(ks2InStep);
-  simul.addStep(knowledgeSource2Step);
-  simul.addStep(ks2OutStep);
 
+  // Create the Knowledge Sources
+  itsKSSteps = new (Step*)[itsNumberKS];
+  itsKSInSteps = new (Step*)[itsNumberKS];
+  itsKSOutSteps = new (Step*)[itsNumberKS];
+  string ksID;
+
+  for (int ksNo=1; ksNo<=itsNumberKS; ksNo++)
+  { 
+    // Create the PSS3 Workholders and Steps
+    ksID = i2string(ksNo);
+
+    WH_PSS3 ksWH("KS"+ksID, "demo"+ksID+".MS", meqModel+ksID, skyModel+ksID, "postgres", 
+		 databaseName, "", ddID, modelType, calcUVW, dataColName, 
+		 residualColName, true, ksNo*10000);
+    int index = ksNo - 1;
+    itsKSSteps[index] = new Step(ksWH, "knowledgeSource"+ksID);
+    itsKSSteps[index]->runOnNode(ksNo,0);
+    simul.addStep(itsKSSteps[index]);
+
+    // Empty workholders and steps necessary for data transport to/from database
+    WH_Connection ksInWH("ksIn"+ksID, 0, 2, WH_Connection::WorkOrder, 
+			 WH_Connection::Solution);
+    itsKSInSteps[index] = new Step(ksInWH, "KSsource"+ksID);
+    itsKSInSteps[index]->runOnNode(ksNo,0);
+    simul.addStep(itsKSInSteps[index]);
+
+    WH_Connection ksOutWH("ksOut"+ksID, 1, 0, WH_Connection::Solution);
+    itsKSOutSteps[index] = new Step(ksOutWH, "KSsink"+ksID);
+    itsKSOutSteps[index]->runOnNode(ksNo,0);
+    simul.addStep(itsKSOutSteps[index]);
+
+  }
 
   // Create the cross connections between Steps
-  // Connections to the database. The steps are not really connected to 
-  // each other, but to the database
+  // Connections to the database.
   if (controlRead)     // Controller reads from database
   {
     controlStep.connect(&controlInStep, 0, 0, 1, TH_Database::proto);
   } 
   controlOutStep.connect(&controlStep, 0, 0, 1, TH_Database::proto); 
-  if (ksRead)
+
+  for (int index = 0; index < itsNumberKS; index++)
   {
-    knowledgeSourceStep.connect(&ksInStep, 0, 0, 1, TH_Database::proto);
-    knowledgeSource2Step.connect(&ks2InStep, 0, 0, 1, TH_Database::proto);
+    itsKSSteps[index]->connect(itsKSInSteps[index], 0, 0, 1, TH_Database::proto);
   }
-  if (ksWrite)
+
+  for (int index = 0; index < itsNumberKS; index++)
   {
-    ksOutStep.connect(&knowledgeSourceStep, 0, 0, 1, TH_Database::proto);
-    ks2OutStep.connect(&knowledgeSource2Step, 0, 0, 1, TH_Database::proto);
+    itsKSOutSteps[index]->connect(itsKSSteps[index], 0, 0, 1, TH_Database::proto);
   }
-}
-  
+
+}  
 
 void BlackBoardDemo::run(int nSteps) {
   TRACER1("Call run()");
@@ -207,5 +202,20 @@ void BlackBoardDemo::quit() {
 }
 
 void BlackBoardDemo::undefine() {
-  // Clean up
+  TRACER2("Enter BlackBoardDemo::undefine");
+  if (itsKSSteps) 
+    for (int iStep = 0; iStep < itsNumberKS; iStep++) 
+      delete itsKSSteps[iStep];
+  delete [] itsKSSteps;
+  if (itsKSInSteps) 
+    for (int iStep = 0; iStep < itsNumberKS; iStep++) 
+      delete itsKSInSteps[iStep];
+  delete [] itsKSInSteps;
+  if (itsKSOutSteps) 
+    for (int iStep = 0; iStep < itsNumberKS; iStep++) 
+      delete itsKSOutSteps[iStep];
+  delete [] itsKSOutSteps;
+
+  TRACER2("Leaving BlackBoardDemo::undefine");
+
 }
