@@ -63,6 +63,9 @@ bool TH_Mem::connectionPossible(int srcRank, int dstRank) const
             << srcRank << " and "
             << dstRank << "?" << endl;
 
+  // Assume that both DHs are in the same process if their 
+  // ranks are the same. 
+  //  This is at least true for MPI applications and single process apps
   return srcRank == dstRank;
 }
 
