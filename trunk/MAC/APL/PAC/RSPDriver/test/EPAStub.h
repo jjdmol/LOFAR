@@ -58,10 +58,13 @@ namespace RSP_Test
        */
       GCFEvent::TResult connected(GCFEvent& event, GCFPortInterface& port);
 
+      /*@{*/
       /**
-       * Handle the rsp status event.
+       * Request handlers.
        */
+      GCFEvent::TResult fwversion(GCFEvent& event, GCFPortInterface& port);
       GCFEvent::TResult rspstatus(GCFEvent& event, GCFPortInterface& port);
+      /*@}*/
 
       /**
       * Run the tests.

@@ -34,12 +34,13 @@ using namespace EPA_Protocol;
 
 #define N_RETRIES 2
 
-SyncAction::SyncAction(GCFPortInterface& board_port, int board_id) 
+SyncAction::SyncAction(GCFPortInterface& board_port, int board_id, int n_iterations) 
   : GCFFsm((State)&SyncAction::idle_state),
     m_board_port(board_port),
     m_board_id(board_id),
     m_completed(false),
-    m_current_blp(0),
+    m_n_iterations(n_iterations),
+    m_current_iteration(0),
     m_retries(0)
 {
 }
@@ -62,13 +63,14 @@ GCFEvent::TResult SyncAction::idle_state(GCFEvent& event, GCFPortInterface& /*po
     case F_ENTRY:
     {
       // reset extended state variables on initialization
-      m_current_blp   = 0;
-      m_retries       = 0;
+      m_current_iteration   = 0;
+      m_retries             = 0;
     }
     break;
     
     case F_TIMER:
     {
+      // Scheduler::run send a timer signal to start of the next update
       TRAN(SyncAction::sendrequest_state);
     }
     break;
@@ -90,7 +92,7 @@ GCFEvent::TResult SyncAction::sendrequest_state(GCFEvent& event, GCFPortInterfac
     case F_ENTRY:
     {
       // send next set of coefficients
-      sendrequest((getBoardId() * N_BLP) + m_current_blp);
+      sendrequest(m_current_iteration);
 
       TRAN(SyncAction::waitack_state);
     }
@@ -128,10 +130,13 @@ GCFEvent::TResult SyncAction::waitack_state(GCFEvent& event, GCFPortInterface& p
 
     case F_TIMER:
     {
-      LOG_FATAL("missed real-time deadline");
-      //exit(EXIT_FAILURE);
+      LOG_FATAL("missed real-time deadline, should have been caught in Scheduler::run");
+      exit(EXIT_FAILURE);
     }
     break;
+
+    case F_EXIT:
+      break;
       
     default:
     {
@@ -140,8 +145,8 @@ GCFEvent::TResult SyncAction::waitack_state(GCFEvent& event, GCFPortInterface& p
       // check status of previous write
       if (GCFEvent::HANDLED == status)
       {
-	// OK, move on to the next BLP
-	m_current_blp++;
+	// OK, move on to the next iteration
+	m_current_iteration++;
 	m_retries = 0;
       }
       else
@@ -154,7 +159,7 @@ GCFEvent::TResult SyncAction::waitack_state(GCFEvent& event, GCFPortInterface& p
 	}
       }
 
-      if (m_current_blp < N_BLP)
+      if (m_current_iteration < m_n_iterations)
       {
 	// send next bit of data
 	TRAN(SyncAction::sendrequest_state);

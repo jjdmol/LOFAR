@@ -77,6 +77,9 @@ CacheBuffer::CacheBuffer()
   
   m_systemstatus.board() = boardinit;
   m_systemstatus.rcu()   = rcuinit;
+
+  m_versions().resize(GET_CONFIG(N_RSPBOARDS));
+  m_versions() = 0;
 }
 
 CacheBuffer::~CacheBuffer()
@@ -90,6 +93,8 @@ CacheBuffer::~CacheBuffer()
 
   m_systemstatus.board().free();
   m_systemstatus.rcu().free();
+
+  m_versions().free();
 }
 
 RSP_Protocol::Timestamp CacheBuffer::getTimestamp() const

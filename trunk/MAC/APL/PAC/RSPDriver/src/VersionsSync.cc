@@ -22,6 +22,7 @@
 
 #include "VersionsSync.h"
 #include "EPA_Protocol.ph"
+#include "Cache.h"
 
 #undef PACKAGE
 #undef VERSION
@@ -33,7 +34,7 @@ using namespace LOFAR;
 using namespace EPA_Protocol;
 
 VersionsSync::VersionsSync(GCFPortInterface& board_port, int board_id)
-  : SyncAction(board_port, board_id)
+  : SyncAction(board_port, board_id, 1)
 {
 }
 
@@ -42,30 +43,28 @@ VersionsSync::~VersionsSync()
   /* TODO: delete event? */
 }
 
-void VersionsSync::sendrequest(uint8 /*blp*/)
+void VersionsSync::sendrequest(int /*iteration*/)
 {
+  // send read status request to check status of the write
+  EPAFwversionReadEvent versionread;
+  MEP_FWVERSION(versionread.hdr, MEPHeader::READ);
+
+  getBoardPort().send(versionread);
 }
 
 void VersionsSync::sendrequest_status()
 {
-  // send read status request to check status of the write
-  EPARspstatusEvent rspstatus;
-  MEP_RSPSTATUS(rspstatus.hdr, MEPHeader::READ);
-  
-  // clear from first field onwards
-  memset(&rspstatus.board, 0, MEPHeader::RSPSTATUS_SIZE);
-
-#if 0
-  // on the read request don't send the data
-  rspstatus.length -= RSPSTATUS_SIZE;
-#endif
-
-  getBoardPort().send(rspstatus);
+  // intentionally left empty
 }
 
-GCFEvent::TResult VersionsSync::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
+GCFEvent::TResult VersionsSync::handleack(GCFEvent& event, GCFPortInterface& port)
 {
-  EPARspstatusEvent ack(event);
+  EPAFwversionEvent ack(event);
+
+  LOG_INFO(formatString("Firmware version on board '%s'=%d",
+			port.getName().c_str(), ack.version));
+
+  Cache::getInstance().getBack().getVersions()()(getBoardId()) = ack.version;
 
   return GCFEvent::HANDLED;
 }

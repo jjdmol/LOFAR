@@ -44,7 +44,7 @@ namespace RSP
       /**
        * Write subband selection info.
        */
-      virtual void sendrequest(uint8 blp);
+      virtual void sendrequest(int iteration);
 
       /**
        * Read the board status.

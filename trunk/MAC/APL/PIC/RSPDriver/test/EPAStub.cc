@@ -21,7 +21,7 @@
 //#
 //#  $Id$
 
-#define EARLY_REPLY
+//#define EARLY_REPLY
 
 #include "EPA_Protocol.ph"
 
@@ -111,26 +111,23 @@ GCFEvent::TResult EPAStub::connected(GCFEvent& event, GCFPortInterface& port)
       }
       break;
 
-
-    case EPA_BFCOEFS:
+    case EPA_WGSETTINGS:
+    case EPA_WGUSER:
     case EPA_NRSUBBANDS:
     case EPA_SUBBANDSELECT:
+    case EPA_BFCOEFS:
+    case EPA_STSTATS:
+    case EPA_RCUSETTINGS:
     {
-      EPARspstatusEvent rspstatus;
-      
-      // set the correct header info
-      MEP_RSPSTATUS(rspstatus.hdr, MEPHeader::READRES);
-      memset(&rspstatus.board, 0, MEPHeader::RSPSTATUS_SIZE);
-      rspstatus.board.write.error = 0;
-
-#ifdef EARLY_REPLY
-      // early reply of status
-      port.send(rspstatus);
-#endif
+      // ignore write commands, a RspstatusreadEvent will follow
     }
     break;
 
-    case EPA_RSPSTATUS:
+    case EPA_FWVERSION_READ:
+      status = fwversion(event, port);
+      break;
+
+    case EPA_RSPSTATUS_READ:
       status = rspstatus(event, port);
       break;
       
@@ -177,17 +174,28 @@ GCFEvent::TResult EPAStub::final(GCFEvent& event, GCFPortInterface& /*port*/)
   return status;
 }
 
-GCFEvent::TResult EPAStub::rspstatus(GCFEvent& event, GCFPortInterface& /*port*/)
+GCFEvent::TResult EPAStub::fwversion(GCFEvent& /*event*/, GCFPortInterface& port)
 {
-  EPARspstatusEvent rspstatus(event);
+  EPAFwversionEvent version;
+
+  // set the correct header info
+  MEP_FWVERSION(version.hdr, MEPHeader::READRES);
+  version.version = 777;
+
+  port.send(version);
+
+  return GCFEvent::HANDLED;
+}
+
+GCFEvent::TResult EPAStub::rspstatus(GCFEvent& /*event*/, GCFPortInterface& port)
+{
+  EPARspstatusEvent rspstatus;
 
   // set the correct header info
   MEP_RSPSTATUS(rspstatus.hdr, MEPHeader::READRES);
+  memset(&rspstatus.board, 0, MEPHeader::RSPSTATUS_SIZE);
 
-#ifndef EARLY_REPLY
-  // simply echo the status event
   port.send(rspstatus);
-#endif
 
   return GCFEvent::HANDLED;
 }

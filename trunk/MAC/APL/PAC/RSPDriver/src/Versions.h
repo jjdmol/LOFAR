@@ -25,6 +25,8 @@
 #ifndef VERSIONS_H_
 #define VERSIONS_H_
 
+#include "Marshalling.h"
+
 #include <complex>
 #include <string>
 #include <blitz/array.h>
@@ -33,34 +35,39 @@
 namespace RSP_Protocol
 {
   class Versions
-      {
-      public:
-	  /**
-	   * Constructors for a Versions object.
-	   * Currently the tv_usec part is always set to 0 irrespective
-	   * of the value passed in.
-	   */
-	  Versions() { }
+  {
+    public:
+      /**
+       * Constructors for a Versions object.
+       * Currently the tv_usec part is always set to 0 irrespective
+       * of the value passed in.
+       */
+      Versions() { }
 	  
-	  /* Destructor for Versions. */
-	  virtual ~Versions() {}
+      /* Destructor for Versions. */
+      virtual ~Versions() {}
 
-      public:
-	  /*@{*/
-	  /**
-	   * marshalling methods
-	   */
-	  unsigned int getSize();
-	  unsigned int pack  (void* buffer);
-	  unsigned int unpack(void *buffer);
-	  /*@}*/
+      /* get reference to versions array */
+      blitz::Array<uint16, 1>& operator()();
 
-      private:
-	  /**
-	   * Versions
-	   */
-	  blitz::Array<std::string, 1> m_versions;
-      };
+    public:
+      /*@{*/
+      /**
+       * marshalling methods
+       */
+      unsigned int getSize();
+      unsigned int pack  (void* buffer);
+      unsigned int unpack(void *buffer);
+      /*@}*/
+
+    private:
+      /**
+       * Versions
+       */
+      blitz::Array<uint16, 1> m_versions;
+  };
+
+  inline blitz::Array<uint16, 1>& Versions::operator()() { return m_versions; }
 };
      
 #endif /* STATISTICS_H_ */

@@ -59,7 +59,12 @@ namespace RSP
       /**
        * Indicate whether synchronization of all data has completed.
        */
-      bool Scheduler::syncHasCompleted();
+      bool syncHasCompleted();
+
+      /**
+       * Cancel all commands in any queue for this port.
+       */
+      void cancel(GCFPortInterface& port);
 
       /**
        * Add a synchronization action to be carried out

@@ -32,53 +32,57 @@
 namespace RSP_Protocol
 {
   class RCUSettings
+  {
+    public:
+      /**
+       * Setting bitfield for an RCU.
+       */
+      union RCURegisterType
       {
-      public:
-	  /**
-	   * Constructors for a RCUSettings object.
-	   * Currently the tv_usec part is always set to 0 irrespective
-	   * of the value passed in.
-	   */
-	  RCUSettings() { }
-	  
-	  /* Destructor for RCUSettings. */
-	  virtual ~RCUSettings() {}
-
-      public:
-	  /*@{*/
-	  /**
-	   * marshalling methods
-	   */
-	  unsigned int getSize();
-	  unsigned int pack  (void* buffer);
-	  unsigned int unpack(void *buffer);
-	  /*@}*/
-
-      private:
-	  /**
-	   * Setting bitfield for an RCU.
-	   */
-	  union RCURegisterType
+	  typedef struct
 	  {
-	      typedef struct
-	      {
-		  uint8 filter_0:1;
-		  uint8 filter_1:1;
-		  uint8 filter_2:1;
-		  uint8 filter_3:1;
-		  uint8 lba_pwr:1;
-		  uint8 hba_pwr:1;
-		  uint8 rcu_pwr:1;
-		  uint8 ovrflw:1;
-	      } RCUBits;
+	      uint8 filter_0:1;
+	      uint8 filter_1:1;
+	      uint8 filter_2:1;
+	      uint8 filter_3:1;
+	      uint8 lba_pwr:1;
+	      uint8 hba_pwr:1;
+	      uint8 rcu_pwr:1;
+	      uint8 ovrflw:1;
+	  } RCUBits;
 	  
-	      RCUBits Bits; 
-	      uint8   Register;
-
-	  };
-
-	  blitz::Array<RCURegisterType, 1> settings;
+	  RCUBits bits; 
       };
+
+      /**
+       * Constructors for a RCUSettings object.
+       * Currently the tv_usec part is always set to 0 irrespective
+       * of the value passed in.
+       */
+      RCUSettings() { }
+	  
+      /* Destructor for RCUSettings. */
+      virtual ~RCUSettings() {}
+
+      /* get reference settings array */
+      blitz::Array<RCURegisterType, 1>& operator()();
+
+    public:
+      /*@{*/
+      /**
+       * marshalling methods
+       */
+      unsigned int getSize();
+      unsigned int pack  (void* buffer);
+      unsigned int unpack(void *buffer);
+      /*@}*/
+
+    private:
+      blitz::Array<RCURegisterType, 1> m_settings;
+  };
+  
+  inline blitz::Array<RCUSettings::RCURegisterType, 1>& RCUSettings::operator()() { return m_settings; }
+
 };
      
-#endif /* RCUSETTING_H_ */
+#endif /* RCUSETTINGS_H_ */

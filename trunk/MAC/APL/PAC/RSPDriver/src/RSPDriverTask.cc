@@ -33,6 +33,11 @@
 #include "GetStatusCmd.h"
 #include "BWSync.h"
 #include "SSSync.h"
+#include "RCUSync.h"
+#include "StatusSync.h"
+#include "StatsSync.h"
+#include "WGSync.h"
+#include "VersionsSync.h"
 #include <blitz/array.h>
 
 #undef PACKAGE
@@ -120,7 +125,6 @@ void RSPDriverTask::addAllSyncActions()
     SSSync* sssync = new SSSync(m_board[boardid], boardid);
     m_scheduler.addSyncAction(sssync);
 
-#if 0
     RCUSync* rcusync = new RCUSync(m_board[boardid], boardid);
     m_scheduler.addSyncAction(rcusync);
 
@@ -133,9 +137,8 @@ void RSPDriverTask::addAllSyncActions()
     WGSync* wgsync = new WGSync(m_board[boardid], boardid);
     m_scheduler.addSyncAction(wgsync);
 
-    VersionSync* versionsync = new VersionSync(m_board[boardid], boardid);
+    VersionsSync* versionsync = new VersionsSync(m_board[boardid], boardid);
     m_scheduler.addSyncAction(versionsync);
-#endif
   }
 }
 
@@ -233,8 +236,8 @@ GCFEvent::TResult RSPDriverTask::enabled(GCFEvent& event, GCFPortInterface& port
       // start waiting for clients
       if (!m_acceptor.isConnected()) m_acceptor.open();
 
-      /* Start the update timer */
-      m_board[0].setTimer(GET_CONFIG(SYNC_INTERVAL),
+      /* Start the update timer after 1 second */
+      m_board[0].setTimer(1.0,
 			  GET_CONFIG(SYNC_INTERVAL)); // update SYNC_INTERVAL seconds
     }
     break;
@@ -320,12 +323,6 @@ GCFEvent::TResult RSPDriverTask::enabled(GCFEvent& event, GCFPortInterface& port
 	/* run the scheduler */
 	status = m_scheduler.run(event,port);
       }
-#if 0
-      else
-      {
-	m_scheduler.dispatch(event, port);
-      }
-#endif
     }
     break;
 
@@ -341,6 +338,9 @@ GCFEvent::TResult RSPDriverTask::enabled(GCFEvent& event, GCFPortInterface& port
       }
       else
       {
+	/* cancel all commands for this port */
+	m_scheduler.cancel(port);
+
 	m_client_list.remove(&port);
 	m_garbage_list.push_back(&port);
       }
