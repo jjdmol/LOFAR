@@ -2,8 +2,8 @@
 
 // $ID$
 
-#if !defined(MAINWIN_H)
-#define MAINWIN_H
+#if !defined(UVPMAINWINDOW_H)
+#define UVPMAINWINDOW_H
 
 
 //#include <qwidget.h>
@@ -19,7 +19,7 @@
 
 
 
-class Tmain_window:public QMainWindow
+class UVPMainWindow:public QMainWindow
 {
   Q_OBJECT                      // to make the signal/slot mechanism work
 
@@ -28,8 +28,8 @@ class Tmain_window:public QMainWindow
   enum e_menu_command{mc_open, mc_quit, mc_help, mc_information};
 
   
-   Tmain_window();
-  ~Tmain_window();
+   UVPMainWindow();
+  ~UVPMainWindow();
 
  protected:                     /* Protected part */
   
@@ -49,12 +49,19 @@ class Tmain_window:public QMainWindow
 
   virtual void resizeEvent(QResizeEvent *event);
 
+  public slots:
+
+  void slot_setProgressTotalSteps(int steps);
+  void slot_setProgress(int steps);
+      
+
   protected slots:
-
+    
     // Display the world coordinates of the mouse pointer in the statusbar
-    void slot_mouse_world_pos(double x, double y);
-
+    void slot_mouse_world_pos(double x,
+                              double y);
+  
     void slot_about_uvplot();
 };
 
-#endif // MAINWIN_H
+#endif // UVPMAINWINDOW_H
