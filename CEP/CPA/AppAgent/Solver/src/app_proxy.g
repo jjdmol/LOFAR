@@ -1,6 +1,8 @@
 pragma include once
 include 'octopussy.g'
 include 'recutil.g'
+include 'widgetserver.g'
+include 'text_frame.g'
 
 default_octopussy := F;
 
@@ -24,11 +26,13 @@ const start_octopussy := function(server,options="",suspend=F)
 }
 
 const define_app_proxy := function (ref self,ref public,
-        appid,server,options,suspend,verbose,gui,parent_frame)
+        appid,server,options,suspend,verbose,gui,
+        parent_frame,ref widgetset=dws)
 {
   self.octo := start_octopussy(server,options,suspend);
   if( is_fail(self.octo) )
     fail;
+  self.ws := ref widgetset;
   self.appid := appid;
   self.lappid := paste(split(to_lower(appid),'.'),sep='_');
   self.agentref := ref self.octo.agentref();
@@ -229,32 +233,10 @@ const define_app_proxy := function (ref self,ref public,
     return $value.value;
   }
   
-  const self.make_text_frame := function (parent,disabled=T,
-                        size=[60,20],wrap='none',text='')
+  const public.notify := function (...)
   {
-    rec := [=];
-    rec.tf := dws.frame(parent,side='left',borderwidth=0);
-    rec.text := dws.text(rec.tf,disabled=disabled,text=text,
-          relief='sunken',width=size[1],height=size[2],wrap=wrap);
-    rec.vsb := dws.scrollbar(rec.tf);
-    rec.bf := dws.frame(parent,side='right',borderwidth=0,expand='x');
-    rec.pad := dws.frame(rec.bf,
-                expand='none',width=23,height=23,relief='groove');
-    rec.hsb := dws.scrollbar(rec.bf,orient='horizontal');
-    whenever rec.vsb->scroll, rec.hsb->scroll do
-        rec.text->view($value);
-    whenever rec.text->yscroll do
-        rec.vsb->view($value);
-    whenever rec.text->xscroll do
-        rec.hsb->view($value);
-    const rec.settext := function (text)
-    {
-      wider rec;
-      rec.text->delete('1.0','99999.99999');
-      rec.text->append(text);
-      rec.text->see('0.0')
-    }
-    return rec;
+    wider self;
+    self.relay->notify_message([text=spaste(...)]);
   }
   
   const self.update_command_dialog := function (command,payload)
@@ -271,27 +253,27 @@ const define_app_proxy := function (ref self,ref public,
   {
     wider self;
     rec := [=];
-    rec.topfr := dws.frame(parent=F,title=spaste(self.appid,': ',name),
+    rec.topfr := self.ws.frame(parent=F,title=spaste(self.appid,': ',name),
                             tlead=button,relief='groove');
     rec.topfr->unmap();
     
-    rec.label := dws.label(rec.topfr,paste(self.appid,': ',name));
+    rec.label := self.ws.label(rec.topfr,paste(self.appid,': ',name));
     if( has_field(self.last_cmd_arg,command) )
       text := paste(val2string(self.last_cmd_arg[command],skip_braces=T),sep='\n'); 
     else
       text := '';
-    rec.browser := self.make_text_frame(rec.topfr,disabled=F,
-            size=size,text=text);
+    rec.browser := text_frame(rec.topfr,disabled=F,
+                              size=size,text=text,ws=self.ws);
     rec.browser.text->see('0,0');
-    rec.cmdframe := dws.frame(parent=rec.topfr,side='left',expand='none');
-    rec.accept := dws.button(rec.cmdframe,to_upper(name));
-    rec.reset  := dws.button(rec.cmdframe,'Reset');
-    rec.cancel := dws.button(rec.cmdframe,'Cancel');
+    rec.cmdframe := self.ws.frame(parent=rec.topfr,side='left',expand='none');
+    rec.accept := self.ws.button(rec.cmdframe,to_upper(name));
+    rec.reset  := self.ws.button(rec.cmdframe,'Reset');
+    rec.cancel := self.ws.button(rec.cmdframe,'Cancel');
     
-    rec.error := dws.frame(parent=F,tlead=rec.accept,relief='groove');
+    rec.error := self.ws.frame(parent=F,tlead=rec.accept,relief='groove');
     rec.error->unmap();
-    rec.error_msg := dws.label(rec.error,'Failed to parse input record');
-    rec.error_dismiss := dws.button(rec.error,'Dismiss');
+    rec.error_msg := self.ws.label(rec.error,'Failed to parse input record');
+    rec.error_dismiss := self.ws.button(rec.error,'Dismiss');
     
     whenever rec.error_dismiss->press do rec.error->unmap();
     whenever rec.cancel->press do 
@@ -337,31 +319,31 @@ const define_app_proxy := function (ref self,ref public,
   {
     wider self;
     wider public;
-    if( !is_record(dws) ) fail 'dws not loaded -- include widgetserver.g first';
+    if( !is_record(self.ws) ) fail 'self.ws not loaded -- include widgetserver.g first';
     if( is_record(self.gui) ) fail 'gui frame already constructed';
     self.gui := [=];
     # create frame
-    self.gui.topframe := dws.frame(parent=parent,title=self.appid,relief='groove');
+    self.gui.topframe := self.ws.frame(parent=parent,title=self.appid,relief='groove');
     self.gui.topframe->unmap();
     # set 'killed' handler
     whenever self.gui.topframe->killed do 
       self.gui := F;
     # create state window
-    self.gui.stateframe := dws.frame(parent=self.gui.topframe,side='left',expand='none');
-    self.gui.state_lbl := dws.label(self.gui.stateframe,spaste(self.appid,': '));
-    self.gui.state := dws.entry(self.gui.stateframe,width=30,
+    self.gui.stateframe := self.ws.frame(parent=self.gui.topframe,side='left',expand='none');
+    self.gui.state_lbl := self.ws.label(self.gui.stateframe,spaste(self.appid,': '));
+    self.gui.state := self.ws.entry(self.gui.stateframe,width=30,
                                relief='sunken',disabled=T);
     # create command buttons
-    self.gui.cmd_frame := dws.frame(parent=self.gui.topframe,side='left',expand='none');
-    self.gui.pause := dws.button(self.gui.cmd_frame,'PAUSE',disabled=T);
-    self.gui.resume := dws.button(self.gui.cmd_frame,'RESUME',disabled=T);
-    self.gui.updstatus := dws.button(self.gui.cmd_frame,'Update status');
-    self.gui.resume_pad := dws.frame(self.gui.cmd_frame,expand='none',width=20,height=5);
-    self.gui.init := dws.button(self.gui.cmd_frame,'INIT');
+    self.gui.cmd_frame := self.ws.frame(parent=self.gui.topframe,side='left',expand='none');
+    self.gui.pause := self.ws.button(self.gui.cmd_frame,'PAUSE',disabled=T);
+    self.gui.resume := self.ws.button(self.gui.cmd_frame,'RESUME',disabled=T);
+    self.gui.updstatus := self.ws.button(self.gui.cmd_frame,'Update status');
+    self.gui.resume_pad := self.ws.frame(self.gui.cmd_frame,expand='none',width=20,height=5);
+    self.gui.init := self.ws.button(self.gui.cmd_frame,'INIT');
     self.make_command_dialog('Init','Init',self.gui.init);
-    self.gui.stop := dws.button(self.gui.cmd_frame,'STOP');
-    self.gui.stop_pad := dws.frame(self.gui.cmd_frame,expand='none',width=20,height=5);
-    self.gui.halt := dws.button(self.gui.cmd_frame,'HALT');
+    self.gui.stop := self.ws.button(self.gui.cmd_frame,'STOP');
+    self.gui.stop_pad := self.ws.frame(self.gui.cmd_frame,expand='none',width=20,height=5);
+    self.gui.halt := self.ws.button(self.gui.cmd_frame,'HALT');
     # register event handlers for command buttons
     whenever self.gui.pause->press do 
     { self.gui.pause->relief('sunken'); public.pause(from_gui=T); }
@@ -369,18 +351,19 @@ const define_app_proxy := function (ref self,ref public,
     whenever self.gui.stop->press do public.stop(from_gui=T);
     whenever self.gui.halt->press do public.halt(from_gui=T);
     # create event logger
-    self.gui.eventlog := self.make_text_frame(self.gui.topframe,disabled=T,size=[60,20]);
+    self.gui.eventlog := text_frame(self.gui.topframe,disabled=T,size=[60,20],
+                                    ws=self.ws);
     self.gui.eventlog.text->config('event',foreground="#808080");
     self.gui.eventlog.text->config('text',foreground="black");
     self.gui.eventlog.text->config('error',foreground="red");
     # create second command panel
-    self.gui.cmd2_frame := dws.frame(parent=self.gui.topframe,side='right',expand='none');
-    self.gui.updstatus := dws.button(self.gui.cmd2_frame,'Update status');
+    self.gui.cmd2_frame := self.ws.frame(parent=self.gui.topframe,side='right',expand='none');
+    self.gui.updstatus := self.ws.button(self.gui.cmd2_frame,'Update status');
     # create status record panel
-    self.gui.statusbrowser := dws.recordbrowser(self.gui.topframe,[status='none']);
-#    self.gui.statusrec_tf := dws.frame(self.gui.topframe,borderwidth=0);
-#    self.gui.statusrec_f1 := dws.frame(self.gui.statusrec_tf,borderwidth=0);
-#    self.gui.statusrec_f2 := dws.frame(self.gui.statusrec_tf,borderwidth=0);
+    self.gui.statusbrowser := self.ws.recordbrowser(self.gui.topframe,[status='none']);
+#    self.gui.statusrec_tf := self.ws.frame(self.gui.topframe,borderwidth=0);
+#    self.gui.statusrec_f1 := self.ws.frame(self.gui.statusrec_tf,borderwidth=0);
+#    self.gui.statusrec_f2 := self.ws.frame(self.gui.statusrec_tf,borderwidth=0);
     self.gui.statusrec := [=];
     whenever self.gui.updstatus->press do public.reqstatus();
     # create general event handler
@@ -497,12 +480,12 @@ const define_app_proxy := function (ref self,ref public,
 
 const app_proxy := function(appid,
         server=F,options=F,suspend=F,verbose=1,
-        gui=F,parent_frame=F)
+        gui=F,parent_frame=F,ref widgetset=dws)
 {
   self := [=];
   public := [=];
   ret := define_app_proxy(self,public,appid,server,options,suspend,verbose,
-                          gui,parent_frame);
+                          gui,parent_frame,widgetset=widgetset);
   if( is_fail(ret) )
     fail;
   return ref public;

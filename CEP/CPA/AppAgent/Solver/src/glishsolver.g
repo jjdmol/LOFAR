@@ -4,14 +4,14 @@ include 'app_proxy.g'
 solver := function (appid='Solver',
     server='./applauncher',options="-d0 -meq:M:M:Solver",
     suspend=F,verbose=1,
-    gui=F,parent_frame=F)
+    gui=F,parent_frame=F,ref widgetset=dws)
 {
   self := [=];
   public := [=];
   
   # init app proxy
   ret := define_app_proxy(self,public,appid,server,options,
-                          suspend,verbose,gui,parent_frame);
+                          suspend,verbose,gui,parent_frame,widgetset=widgetset);
   if( is_fail(ret) )
     fail;
   # define solver-specific methods
@@ -23,7 +23,7 @@ solver := function (appid='Solver',
   const public.endsolve := function (endrec=[=],set_default=F)
   {
     wider public;
-    public.command("Solver.End.Solution",solverec,set_default=set_default);
+    public.command("Solver.End.Solution",endrec,set_default=set_default);
   }
   const public.nextdomain := function (from_gui=F)
   {
@@ -41,10 +41,10 @@ solver := function (appid='Solver',
   # add solver-specific gui elements
   if( has_field(self,'gui') )
   {
-    self.gui.cmd2_pad := dws.frame(self.gui.cmd2_frame,width=30,height=5);
-    self.gui.nextdomain := dws.button(self.gui.cmd2_frame,'Next domain');
-    self.gui.endsolve := dws.button(self.gui.cmd2_frame,'End solve');
-    self.gui.solve := dws.button(self.gui.cmd2_frame,'Solve');
+    self.gui.cmd2_pad := self.ws.frame(self.gui.cmd2_frame,width=30,height=5);
+    self.gui.nextdomain := self.ws.button(self.gui.cmd2_frame,'Next domain');
+    self.gui.endsolve := self.ws.button(self.gui.cmd2_frame,'End solve');
+    self.gui.solve := self.ws.button(self.gui.cmd2_frame,'Solve');
     
     self.make_command_dialog('Add solution','Solver.Add.Solution',
                               self.gui.solve,size=[40,15]);
