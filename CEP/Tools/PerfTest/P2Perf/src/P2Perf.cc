@@ -30,13 +30,15 @@
 #include <Common/lofar_string.h>
 
 #include <P2Perf/P2Perf.h>
-#include <P2Perf/WH_GrowSize.h>
-#include <CEPFrame/Transport.h>
+#include <P2Perf/WH_Src.h>
+#include <P2Perf/WH_Dest.h>
+#include <Transport/Transporter.h>
 #include <CEPFrame/Step.h>
-#include <CEPFrame/Simul.h>
+#include <CEPFrame/ApplicationHolder.h>
 #include <CEPFrame/Profiler.h>
+#include <Transport/TH_ShMem.h>
+#include <Transport/TH_Socket.h>
 #include <CEPFrame/WH_Empty.h>
-#include <CEPFrame/ShMem/TH_ShMem.h>
 #include <Common/Debug.h>
 
 #include TRANSPORTERINCLUDE
@@ -66,11 +68,11 @@ P2Perf::~P2Perf()
 /**
    define function for the P2Perf simulation. It defines a list
    of steps that each process a part of the data.
- */
+*/
 void P2Perf::define(const KeyValueMap& params)
 {
 #ifdef HAVE_CORBA
-  // Start Orb Environment
+// Start Orb Environment
   AssertStr (BS_Corba::init(), "Could not initialise CORBA environment");
 #endif
 
@@ -78,11 +80,13 @@ void P2Perf::define(const KeyValueMap& params)
   // TH_ShMem only works in combination with MPI
   // initialize TH_ShMem
   int useShMem = params.getInt("shmem",1);
-  if (useShMem) TH_ShMem::init(0, NULL);
+  if (useShMem) 
+  TH_ShMem::init(0, NULL);
 #endif
   
   char name[20];  // name used during Step/WH creation
   
+  // these are only used for debugging purposes
   int rank = TRANSPORTER::getCurrentRank();
   unsigned int size = TRANSPORTER::getNumberOfNodes();
 
@@ -93,19 +97,37 @@ void P2Perf::define(const KeyValueMap& params)
 
   WH_Empty empty;
 
-  Simul simul(empty, 
-	      "P2Perf",
-	      true, 
-	      true,  // controllable	      
-	      true); // monitor
-  setSimul(simul);
-  simul.runOnNode(0);
-  simul.setCurAppl(0);
+  Composite comp(empty, // workholder
+		 "P2Perf", // name
+		 true,  // add name suffix
+		 true,  // controllable	      
+		 false); // monitor
+  setComposite(comp);
+  comp.runOnNode(0);
+  comp.setCurAppl(0);
 
-  itsSourceSteps = params.getInt("sources",1);  
-  itsDestSteps   = params.getInt("destinations",1);
-  itsFixedSize   = params.getInt("fixedsize",0);
+  itsSourceSteps = params.getInt("sources",1);      // number of source steps
+  itsDestSteps   = params.getInt("destinations",1); // number of destination steps
+  itsSize   = params.getInt("initial_size",1);    // to be fixed size or not to be fixed size
+  string stratString = params.getString("grow_strategy", "exp");
+  if (stratString == "fixed")
+    {
+      itsDHGS = new DHGrowStrategy(); // should be read from params
+    } else if (stratString == "exp")
+    {
+      itsDHGS = new ExpStrategy(params.getDouble("grow_factor", 1)); // should be read from params
+    } else if (stratString == "lin")
+    {
+      itsDHGS = new LineairStrategy(params.getInt("grow_increment", 1)); // should be read from params
+    //	    } else if (stratString == "measurement")
+    //{
+      //itsDHGS = new MeasurementStrategy();
+    } 
 
+  int measPerGrowStep = params.getInt("meas_per_step",10);
+  int packetsPerMeas = params.getInt("packets_per_meas",10);
+
+  int useSockets = params.getInt("use_sockets", 0);
   bool  WithMPI=false;
 
 #ifdef HAVE_MPI    
@@ -113,79 +135,83 @@ void P2Perf::define(const KeyValueMap& params)
 #endif
 
   // Create the Workholders and Steps
-  Sworkholders = new (WH_GrowSize*)[itsSourceSteps];
+  Sworkholders = new (LOFAR::WorkHolder*)[itsSourceSteps];
   Ssteps       = new (Step*)[itsSourceSteps];
-  Dworkholders = new (WH_GrowSize*)[itsDestSteps];
+  Dworkholders = new (LOFAR::WorkHolder*)[itsDestSteps];
   Dsteps       = new (Step*)[itsDestSteps];
   
   
   // now go and create the source and destination steps
   // the two loops do duplicate quite some code, so a private method  
   // should be made later...
-
+  
   // Create the Source Steps
   bool monitor;
   for (int iStep = 0; iStep < itsSourceSteps; iStep++) {
     
     // Create the Source Step
-    sprintf(name, "GrowSizeSource[%d]", iStep);
-    Sworkholders[iStep] = new WH_GrowSize(name, 
-				  false, 
-				  1, // should be 0 
-				  itsDestSteps,
-				  (itsFixedSize?itsFixedSize:MAX_GROW_SIZE),
-				  false, // flag for source side
-				  itsFixedSize!=0);
+    sprintf(name, "P2PerfSource[%d]", iStep);
+    Sworkholders[iStep] = new WH_Src(itsDHGS,
+				     name, 
+				     itsDestSteps,
+				     itsSize,
+				     measPerGrowStep,
+                                     packetsPerMeas);
     
-      monitor = (iStep==0) ? true:false;
-      Ssteps[iStep] = new Step(Sworkholders[iStep], 
-			       "GrowSizeSourceStep", 
-			       iStep,
-			       monitor);
+    monitor = false;//(iStep==0) ? true:false;
+    Ssteps[iStep] = new Step(Sworkholders[iStep], 
+			     "SourceStep", 
+			     iStep,
+			     monitor);
       
-      // Determine the node and process to run in
-      Ssteps[iStep]->runOnNode(iStep  ,0); // run in App 0
+    // Determine the node and process to run in
+    Ssteps[iStep]->runOnNode(iStep  ,0); // run in App 0
+    //    Ssteps[iStep]->runOnNode(0  ,0); // run in App 0
+
   }
   
   // Report performance of the first source Step
-  ((WH_GrowSize*)Ssteps[0]->getWorker())->setReportPerformance(true);
+  ((WH_Src*)Ssteps[0]->getWorker())->setReportPerformance(true);
   
   // Create the destination steps
   for (int iStep = 0; iStep < itsDestSteps; iStep++) {
     
     // Create the Destination Step
-    sprintf(name, "GrowSizeDest[%d]", iStep);
-    Dworkholders[iStep] = new WH_GrowSize(name, 
-				  false, 
-				  itsSourceSteps, 
-				  1, // should be 0 
-				  (itsFixedSize?itsFixedSize:MAX_GROW_SIZE),
-				  true,
-				  itsFixedSize!=0);
+    sprintf(name, "P2PerfDest[%d]", iStep);
+    Dworkholders[iStep] = new WH_Dest(itsDHGS,
+				      name, 
+				      itsSourceSteps, 
+				      itsSize,
+				      packetsPerMeas * measPerGrowStep);
     
-    Dsteps[iStep] = new Step(Dworkholders[iStep], "GrowSizeDestStep", iStep);
+    Dsteps[iStep] = new Step(Dworkholders[iStep], "DestStep", iStep);
     // Determine the node and process to run in
     if (WithMPI) {
-      TRACER2("Dest MPI runonnode (" << iStep << ")");
+      TRACER2("Dest MPI runonnode (" << iStep + itsSourceSteps << ")");
       Dsteps[iStep]->runOnNode(iStep+itsSourceSteps,0); // run in App 0
-    } else if (params.getInt("destside",0) != 0) {
-      simul.setCurAppl(1);
-      Dsteps[iStep]->runOnNode(iStep+1,1); // run in App 1
+      //Dsteps[iStep]->runOnNode(0,0); // run in App 0
+    } else if (useSockets != 0) {
+      Dsteps[iStep]->runOnNode(iStep+1,1); // run in App 1      
+      if (params.getInt("destside",0) != 0) 
+      {
+        comp.setCurAppl(1);
+      }
     } else {
       Dsteps[iStep]->runOnNode(iStep+1,0); // run in App 0
     }
+
   }
 
   // Now Add the steps to the simul;
   // first ALL the sources....
   for (int iStep = 0; iStep < itsSourceSteps; iStep++) {
     TRACER4("Add Source step " << iStep);
-    simul.addStep(Ssteps[iStep]);
+    comp.addStep(Ssteps[iStep]);
   }
   // ...then the destinations
   for (int iStep = 0; iStep < itsDestSteps; iStep++) {
     TRACER4("Add Dest step " << iStep);
-    simul.addStep(Dsteps[iStep]);
+    comp.addStep(Dsteps[iStep]);
   }
   
   // Create the cross connections
@@ -194,38 +220,69 @@ void P2Perf::define(const KeyValueMap& params)
       // Set up the connections
       // Correlator Style
 #ifdef HAVE_CORBA
-      Dsteps[step]->connect(Ssteps[ch],ch,step,1,TH_Corba::proto);
+      Dsteps[step]->connect(Ssteps[ch],
+                            ch,
+                            step,
+                            1,
+                            TH_Corba());
 #else
 #ifdef HAVE_MPI
       TRACER2("Connect using MPI");
-      Dsteps[step]->connect(Ssteps[ch],ch,step,1,TH_MPI::proto);
-#else
-      Dsteps[step]->connect(Ssteps[ch],ch,step,1,TH_Mem::proto);
-#endif
-#endif
+      if (useShMem)
+      {
+        Dsteps[step]->connect(Ssteps[ch],
+                              ch,
+                              step,
+                              1,
+                              TH_ShMem(Ssteps[ch]->getNode(),
+                              Dsteps[step]->getNode()));
+      } else
+      {
+        Dsteps[step]->connect(Ssteps[ch],
+                              ch,
+                              step,
+                              1,
+                              TH_MPI(Ssteps[ch]->getNode(),
+                                     Dsteps[step]->getNode()));
+      };
+#else 
+      if (useSockets != 0) 
+      {
+        Dsteps[step]->connect(Ssteps[ch],
+                              ch,
+                              step,
+                              1,
+                              TH_Socket( params.getString("sockets_sending_host", "localhost"),
+                                         params.getString("sockets_receiving_host", "localhost"),
+                                         params.getInt("sockets_portnumber",20001)), 
+                              true);
+      } else
+      {
+        Dsteps[step]->connect(Ssteps[ch],
+                              ch,
+                              step,
+                              1,
+                              TH_Mem(), 
+                              false);
+      }
+#endif //HAVE_MPI
+#endif //HAVE_CORBA
     }
   }
-  
-#ifdef HAVE_MPI
-  // TH_ShMem only works in combination with MPI
-  if (useShMem) simul.optimizeConnectionsWith(TH_ShMem::proto);
-#endif
 }
 
-void doIt (Simul& simul, const std::string& name, int nsteps) {
-#if 0
-  simul.resolveComm();
-#endif
+
+void P2Perf::run(int nSteps) {
   TRACER1("Ready with definition of configuration");
   Profiler::init();
   Step::clearEventCount();
 
-  TRACER4("Start Processing simul " << name);    
-  for (int i=0; i<nsteps; i++) {
-    if (i==2) Profiler::activate();
+  TRACER4("Start Processing simul P2Perf");    
+  for (int i=0; i<nSteps; i++) {
+    //    if (i==2) Profiler::activate();
     TRACER2("Call simul.process() ");
-    simul.process();
-    if (i==5) Profiler::deActivate();
+    getComposite().process();
+    //    if (i==5) Profiler::deActivate();
   }
 
   TRACER4("END OF SIMUL on node " << TRANSPORTER::getCurrentRank () );
@@ -236,14 +293,8 @@ void doIt (Simul& simul, const std::string& name, int nsteps) {
 #endif
 }
 
-void P2Perf::run(int nSteps) {
-  nSteps = nSteps;
-  doIt(getSimul(), "P2Perf Simulator", nSteps);
-
-}
-
 void P2Perf::dump() const {
-  getSimul().dump();
+  getComposite().dump();
 }
 
 void P2Perf::quit() {  
@@ -279,4 +330,6 @@ void P2Perf::undefine() {
 
   delete [] Dworkholders;
   delete [] Dsteps;
+  
+  delete itsDHGS;
 }

@@ -30,12 +30,9 @@
 
 #include <lofar_config.h>
 
-#include <P2Perf/WH_GrowSize.h>
-#include <CEPFrame/Simulator.h>
+#include <CEPFrame/ApplicationHolder.h>
 #include <Common/KeyValueMap.h>
-
-// define the maximum data block size used in this simulation
-#define MAX_GROW_SIZE (256*1024) // 256 kWords =^ 1 MB
+#include "P2Perf/DHGrowStrategy.h"
 
 /**
    The P2Perf class implements a Simulator consisting of a set of data
@@ -46,7 +43,7 @@
    
 */
 
-class P2Perf: public LOFAR::Simulator
+class P2Perf: public LOFAR::ApplicationHolder
 {
 public:
   P2Perf();
@@ -62,19 +59,22 @@ public:
 
  private:
   /// Define pointers to the arrays with steps and workholders.
-  WH_GrowSize **Sworkholders;
-  WH_GrowSize **Dworkholders;
+  LOFAR::WorkHolder **Sworkholders;
+  LOFAR::WorkHolder **Dworkholders;
   LOFAR::Step        **Ssteps;
   LOFAR::Step        **Dsteps;
 
   /// Number of source steps
-    int itsSourceSteps;
+  int itsSourceSteps;
 
   /// Number of destination steps
-    int itsDestSteps;
+  int itsDestSteps;
 
   /// 0 = variable size packets, > 0 fixed size packets
-    int itsFixedSize;
+  int itsSize;
+  
+  // the DataHolderGrower
+  DHGrowStrategy* itsDHGS;
       
 };
 
