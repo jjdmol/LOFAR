@@ -33,19 +33,21 @@
 // TransportHolders
 #include <Transport/TH_Socket.h>
 
+#ifdef __BLRTS__
 #include <mpi.h>
+#endif
 
 using namespace LOFAR;
 
 BlueGeneCorrelator::BlueGeneCorrelator () :
   itsWHcount (0),
   itsPort    (BASEPORT),
-  itsRank    (0) 
+  itsRank    (-1)
 {
 
-  int itsRank;
+#ifdef __BLRTS__
   MPI_Comm_rank(MPI_COMM_WORLD, &itsRank);
-  
+#endif
 }
 
 BlueGeneCorrelator::~BlueGeneCorrelator() {
@@ -55,7 +57,7 @@ void BlueGeneCorrelator::define(const KeyValueMap& /*params*/) {
 
   if (itsRank == 0) {
     itsWHs[0] = new WH_Correlate("noname",
-				1);
+				 1);
   } else {
     itsWHs[0] = new WH_Correlate("noname",
 				 0);
@@ -65,11 +67,11 @@ void BlueGeneCorrelator::define(const KeyValueMap& /*params*/) {
   WH_Random myWHRandom("noname",
 		       1,
 		       1,
-		       BFBW);
+		       NCHANNELS);
 
   WH_Dump myWHDump("noname",
 		   1,
-		   1);
+		   0);
 
   // the Correlator cannot accept connections because of the limitations 
   // of the current BG/L system software. Therefore all connections must be 
@@ -77,23 +79,17 @@ void BlueGeneCorrelator::define(const KeyValueMap& /*params*/) {
 
   if (itsRank == 0) {
 
-    TH_Socket proto_input (LOCALHOST_IP, LOCALHOST_IP, BASEPORT, true);
-    TH_Socket proto_output(LOCALHOST_IP, FRONTEND_IP, BASEPORT+1, false);
+    proto_input = new TH_Socket(LOCALHOST_IP, LOCALHOST_IP, BASEPORT, true);
+    proto_output = new TH_Socket(LOCALHOST_IP, LOCALHOST_IP, BASEPORT+1, false);
 
-//     myWHRandom.getDataManager().getOutHolder(0)->connectTo
-//       ( *itsWHs[0]->getDataManager().getInHolder(0), 
-// 	proto_input );
-
-    itsWHs[0]->getDataManager().getInHolder(0)->connectTo
-      ( *myWHRandom.getDataManager().getOutHolder(0), 
-	proto_input );
+    myWHRandom.getDataManager().getOutHolder(0)->connectTo
+      ( *itsWHs[0]->getDataManager().getInHolder(0), 
+	*proto_input );
 
     itsWHs[0]->getDataManager().getOutHolder(0)->connectTo
       ( *myWHDump.getDataManager().getInHolder(0),
-	proto_output );
-  }
-  
-			     
+	*proto_output );
+  }    
 }
 
 void BlueGeneCorrelator::init() {

@@ -63,7 +63,7 @@ public:
   BufferType* getBuffer();
   /// Get read access to the Buffer in the DataPacket.
   const BufferType* getBuffer() const;
-  BufferType* getBufferElement(int station1, int station2);
+  BufferType* getBufferElement(int station1, int station2, int channel);
   const int         getFBW() const;
 protected:
   // Definition of the DataPacket type.
@@ -100,9 +100,9 @@ inline DH_Vis::BufferType* DH_Vis::getBuffer()
 inline const DH_Vis::BufferType* DH_Vis::getBuffer() const
   { return itsBuffer; }
 
-inline DH_Vis::BufferType* DH_Vis::getBufferElement(int s1, int s2)
+inline DH_Vis::BufferType* DH_Vis::getBufferElement(int s1, int s2, int channel)
 { 
-  return itsBuffer+s1*NSTATIONS+s2;
+  return itsBuffer+s1*NSTATIONS*NCHANNELS+s2*NCHANNELS+channel;
 }
 
 inline const int DH_Vis::getFBW() const

@@ -20,8 +20,8 @@
 //#
 //#  $Id$
 
-#ifndef BLUEGENE_FRONTEND_H
-#define BLUEGENE_FRONTEND_H
+#ifndef BG_CORRELATOR__FRONTEND_H
+#define BG_CORRELATOR__FRONTEND_H
 
 #include <lofar_config.h>
 
@@ -49,9 +49,9 @@ namespace LOFAR
     virtual void quit();
 
   private:
-    WorkHolder* itsWHs;
+    WorkHolder* itsWHs[2];
     int         itsWHcount;
-    bool        itsInput;
+    bool        isFrontEnd;
     int         itsPort;
   };
 

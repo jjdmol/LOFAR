@@ -20,24 +20,14 @@
 //#
 //# $Id$
 
-#ifndef ONLINEPROTO_WH_DUMP_H
-#define ONLINEPROTO_WH_DUMP_H
+#ifndef BG_CORRELATOR_WH_DUMP_H
+#define BG_CORRELATOR_WH_DUMP_H
 
 #include <lofar_config.h>
-
 #include <tinyCEP/WorkHolder.h>
-
-//#include <Common/Lorrays.h>
-
-// GnuPlot Interface
-// #include <tinyOnlineProto/GnuPlotInterface.h>
 
 namespace LOFAR
 {
-
-/**
-   TBW
-*/
 
 class WH_Dump: public WorkHolder
 {
@@ -48,14 +38,14 @@ public:
   /// The first WorkHolder should have nin=0.
   explicit WH_Dump (const string& name,
 		    unsigned int nin,
-		    int rank = 0);
+		    unsigned int nout);
 
   virtual ~WH_Dump();
 
   /// Static function to create an object.
   static WorkHolder* construct (const string& name, 
-				int nin,
-				int rank);
+				unsigned int nin,
+				unsigned int nout);
 
   /// Make a fresh copy of the WH object.
   virtual WH_Dump* make (const string& name);
@@ -78,11 +68,6 @@ private:
   ofstream itsOutputFile;
   int itsIndex;
   int itsCounter;
-  
-  //  blitz::Array<std::complex<float>, 1> itsBuffer;
-
-  int itsRank;
-  
 };
 
 }

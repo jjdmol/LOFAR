@@ -63,8 +63,8 @@ public:
   BufferType* getBuffer();
   /// Get access to the Buffer in the DataPacket.
   const BufferType* getBuffer() const;
-  BufferType* getBufferElement(int station, int time, int freq);
-  void setBufferElement(int station, int time, int freq, BufferType* value); 
+  BufferType* getBufferElement(int station, int channel, int sample);
+  void setBufferElement(int station, int channel, int sample, BufferType* value); 
    
    const int         getFBW() const;
 protected:
@@ -101,20 +101,20 @@ inline DH_CorrCube::BufferType* DH_CorrCube::getBuffer()
 inline const DH_CorrCube::BufferType* DH_CorrCube::getBuffer() const
   { return itsBuffer; }
 
-inline DH_CorrCube::BufferType* DH_CorrCube::getBufferElement(int station, 
-							      int time, 
-							      int freq)
+inline DH_CorrCube::BufferType* DH_CorrCube::getBufferElement(int channel,
+							      int station, 
+							      int sample)
 { 
-  return itsBuffer+station*TSIZE*FSIZE+time*FSIZE+freq;
+  return itsBuffer + channel*NSTATIONS*NSAMPLES + station*NSAMPLES + sample;
 }
    
-inline void DH_CorrCube::setBufferElement(int station, 
-			     int time, 
-			     int freq, 
-  			     DH_CorrCube::BufferType* valueptr) 
+inline void DH_CorrCube::setBufferElement(int channel, 
+					  int station, 
+					  int sample, 
+					  DH_CorrCube::BufferType* valueptr) 
 {
-   DH_CorrCube::BufferType* ptr= itsBuffer+station*TSIZE*FSIZE+time*FSIZE+freq;
-   *ptr = *valueptr;
+  DH_CorrCube::BufferType* ptr= itsBuffer + channel*NSTATIONS*NSAMPLES + station*NSAMPLES + sample; 
+  *ptr = *valueptr;
 }
    
 

@@ -1,4 +1,4 @@
-//#  BlueGeneFrontEnd.cc: Runs on the FrontEnd of BG/L to provide & dump data
+//#  BlueGeneFrontEnd.cc: Definition of the FrontEnd application for the BG Correlator
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -21,87 +21,78 @@
 //#  $Id$
 
 #include <BlueGeneCorrelator/BlueGeneFrontEnd.h>
-
-// Application specific includes
-
-// WorkHolders
 #include <BlueGeneCorrelator/WH_Random.h>
-#include <BlueGeneCorrelator/WH_Dump.h>
 #include <BlueGeneCorrelator/WH_Correlate.h>
+#include <BlueGeneCorrelator/WH_Dump.h>
 
 // TransportHolders
-#include <Transport/TH_Mem.h>
 #include <Transport/TH_Socket.h>
+//#include <Transport/TH_Mem.h>
 
 using namespace LOFAR;
 
-BlueGeneFrontEnd::BlueGeneFrontEnd (bool input):
-  itsWHs     (0),
-  itsWHcount (0),
-  itsInput   (input),
+BlueGeneFrontEnd::BlueGeneFrontEnd (bool frontend):
+  isFrontEnd (frontend),
   itsPort    (BASEPORT)
 {
 }
 
-BlueGeneFrontEnd::~BlueGeneFrontEnd () {
+
+BlueGeneFrontEnd::~BlueGeneFrontEnd() {
 }
 
 void BlueGeneFrontEnd::define(const KeyValueMap& /*params*/) {
+
+  WH_Correlate myWHCorrelate("noname",
+			     1);
+
+  if (isFrontEnd) {
   
-  if (itsInput) {
-
-    // this is the input application. Create a WH_Random object.
-    
-    itsWHs = new WH_Random("noname",
-			   0,
-			   1, 
-			   NVis*BFBW);
-    
-    WH_Correlate myWHCorrelate("noname",
-			       1);
-    TH_Socket TH_proto(LOCALHOST_IP, LOCALHOST_IP, itsPort, true);
-    
-    itsWHs->getDataManager().getOutHolder(0)->connectTo
+    itsWHs[0] = new WH_Random("noname",
+			      1, 
+			      1, 
+			      NCHANNELS);
+    itsWHs[0]->getDataManager().getOutHolder(0)->connectTo
       ( *myWHCorrelate.getDataManager().getInHolder(0),
-	TH_proto );
-        
+	TH_Socket(LOCALHOST_IP, LOCALHOST_IP, itsPort, true) );
+
   } else {
-
-    // this is the output application. Create a WH_Dump object.
-
-    itsWHs = new WH_Dump("noname",
-			 1,
-			 1);
-
-    WH_Correlate myWHCorrelate("noname",
-			       1);
-    TH_Socket TH_proto(LOCALHOST_IP, FRONTEND_IP, itsPort+1, false);
-    
+	  
+    itsWHs[0] = new WH_Dump("noname",
+			    1, 
+			    0);
     myWHCorrelate.getDataManager().getOutHolder(0)->connectTo
-      ( *itsWHs->getDataManager().getInHolder(0),
-	TH_proto );
-		     
+      ( *itsWHs[0]->getDataManager().getInHolder(0),
+	TH_Socket(LOCALHOST_IP, LOCALHOST_IP, itsPort+1, false) );
+    
   } 
-}
 
+  
+  
+
+}
 
 void BlueGeneFrontEnd::init() {
-  itsWHs->basePreprocess();
-}
 
+  itsWHs[0]->basePreprocess();
+//   itsWHs[1]->basePreprocess();
+
+}
 
 void BlueGeneFrontEnd::run(int nsteps) {
   
   for (int s = 0; s < nsteps; s++) {
 
-    itsWHs->baseProcess();
+    itsWHs[0]->baseProcess();
+//     itsWHs[1]->baseProcess();
 
   }
 }
 
 void BlueGeneFrontEnd::dump() const {
   
-  itsWHs->dump();
+  itsWHs[0]->dump();  
+//   itsWHs[1]->dump();
 
 }
 

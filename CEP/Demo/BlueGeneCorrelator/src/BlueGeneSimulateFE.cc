@@ -14,7 +14,7 @@ using namespace LOFAR;
 
 int main (int argc, const char** argv)
 {
-  bool isInput = true;
+  bool isFrontEnd = true;
 
   Debug::initLevels (argc, argv);
   // The BlueGene 
@@ -22,16 +22,16 @@ int main (int argc, const char** argv)
     cout << argc << endl;
     if (argc >= 2 && !strcmp(argv[1], "-b")) {
       cout << "argument -b recognized"<< endl;
-      isInput = false;
+      isFrontEnd = false;
     }
 
-    BlueGeneFrontEnd simulator(isInput);
+    BlueGeneFrontEnd simulator(isFrontEnd);
 
     simulator.setarg (argc, argv);
     
     simulator.baseDefine();
     simulator.basePrerun();
-    simulator.baseRun(10); 
+    simulator.baseRun(RUNS); 
     simulator.baseDump();
     simulator.baseQuit();
 

@@ -3,10 +3,13 @@
 #include <Common/lofar_iostream.h>
 #include <Common/Debug.h>
 
-#include <BlueGeneDefinitions.h>
-#include <mpi.h>
+#include <BlueGeneCorrelator/definitions.h>
 
+#ifdef __BLRTS__
+#include <mpi.h>
+#endif
 #ifdef HAVE_CORBA
+
 int atexit(void (*function)(void))
 {
   return 1;
@@ -18,8 +21,10 @@ using namespace LOFAR;
 
 int main (int argc, const char** argv)
 {
+  
+#ifdef __BLRTS__
   MPI_Init(&argc,(char***)&argv);
-
+#endif
 
   // Set trace level.
   Debug::initLevels (argc, argv);
@@ -39,7 +44,7 @@ int main (int argc, const char** argv)
     
     simulator.baseDefine();
     simulator.basePrerun();
-    simulator.baseRun(10); 
+    simulator.baseRun(RUNS); 
     simulator.baseDump();
     simulator.baseQuit();
 
@@ -47,6 +52,9 @@ int main (int argc, const char** argv)
     cout << "Unexpected exception" << endl;
   }
 #endif
+
+#ifdef __BLRTS__
   MPI_Finalize();
+#endif
 
 }
