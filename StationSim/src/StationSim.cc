@@ -26,20 +26,14 @@
 // 
 
 #include <StationSim/StationSim.h>
-#include <StationSim/WH_RCU.h>
 #include <StationSim/WH_AWE.h>
 #include <StationSim/WH_BeamFormer.h>
-#include <StationSim/WH_Merge.h>
-#include <StationSim/WH_RCUAll.h>
 #include <StationSim/WH_BandSep.h>
 #include <StationSim/WH_Selector.h>
 #include <StationSim/WH_SubBandSel.h>
-#include <StationSim/WH_TargetTrack.h>
-#include <StationSim/WH_RFITrack.h>
 #include <StationSim/WH_Detection.h>
 #include <StationSim/WH_Calibration.h>
 #include <StationSim/WH_Cancel.h>
-#include <StationSim/WH_VerifyRFI.h>
 
 #include <BaseSim/Step.h>
 #include <BaseSim/WH_Empty.h>
@@ -112,115 +106,115 @@ void StationSim::define (const ParamBlock& params)
   // The RCU data is read from a file.
   // It can be done from one (ASCII) file by WH_RCU or WH_RCUAll
   // or from multiple binary files by WH_RCUAll.
-  if (splitrcu) {
-    Step rcu (WH_RCU ("", nrcu, rcuName),
-	      "rcu", false);
-    simul.addStep (rcu);
-    Step merge (WH_Merge ("", nrcu, 1),
-		"rcuall", false);
-    simul.addStep (merge);
-  } else {
-    Step rcu (WH_RCUAll ("", 1, nrcu, rcuName, rcumultifile),
-	      "rcuall", false);
-    simul.addStep (rcu);
-  }
+//   if (splitrcu) {
+//     Step rcu (WH_RCU ("", nrcu, rcuName),
+// 	      "rcu", false);
+//     simul.addStep (rcu);
+//     Step merge (WH_Merge ("", nrcu, 1),
+// 		"rcuall", false);
+//     simul.addStep (merge);
+//   } else {
+//     Step rcu (WH_RCUAll ("", 1, nrcu, rcuName, rcumultifile),
+// 	      "rcuall", false);
+//     simul.addStep (rcu);
+//   }
 
-  if (nsub1 > 0) {
-    Step bandsep (WH_BandSep ("", 1, nrcu, nsub1, coeffName1),
-		  "bandsep", false);
-    bandsep.setOutRate (nsub1, 0);
-    simul.addStep (bandsep);
-  }
+//   if (nsub1 > 0) {
+//     Step bandsep (WH_BandSep ("", 1, nrcu, nsub1, coeffName1),
+// 		  "bandsep", false);
+//     bandsep.setOutRate (nsub1, 0);
+//     simul.addStep (bandsep);
+//   }
 
-  Step subsel (WH_SubBandSel ("", nsub1, selName),
-	       "subseldef", false);
-  subsel.setRate (nsub1);
-  simul.addStep (subsel);
+//   Step subsel (WH_SubBandSel ("", nsub1, selName),
+// 	       "subseldef", false);
+//   subsel.setRate (nsub1);
+//   simul.addStep (subsel);
 
-  Step select (WH_Selector ("", 3, nrcu, nsub1, nsel), // Added two output for the rfimit
-	       "select", false);
-  select.setRate (nsub1);
-   simul.addStep (select);
+//   Step select (WH_Selector ("", 3, nrcu, nsub1, nsel), // Added two output for the rfimit
+// 	       "select", false);
+//   select.setRate (nsub1);
+//    simul.addStep (select);
 
   // Make instances of the Detection and Calibration workholder and connect them to 
   // each other
-  Step Calibration(WH_Calibration ("", 1, nrcu, nsub1), "calibration", false);
-  Calibration.setRate(nsub1); 
-  simul.addStep(Calibration);
+//   Step Calibration(WH_Calibration ("", 1, nrcu, nsub1), "calibration", false);
+//   Calibration.setRate(nsub1); 
+//   simul.addStep(Calibration);
 
-  Step Detection(WH_Detection ("", 1, nrcu, nsub1), "detection", false);
-  Detection.setRate(nsub1);
-  simul.addStep(Detection);
+//   Step Detection(WH_Detection ("", 1, nrcu, nsub1), "detection", false);
+//   Detection.setRate(nsub1);
+//   simul.addStep(Detection);
   
-  Step Cancel(WH_Cancel ("", 2, nrcu, nsub1), "cancel", false);
-  Cancel.setRate(nsub1);
-  simul.addStep(Cancel);
+//   Step Cancel(WH_Cancel ("", 2, nrcu, nsub1), "cancel", false);
+//   Cancel.setRate(nsub1);
+//   simul.addStep(Cancel);
 
-  Step VerifyRFI(WH_VerifyRFI("", 0, nrcu, nsub1), "verifyrfi", false);
-  VerifyRFI.setRate(nsub1);
-  simul.addStep(VerifyRFI);
+//   Step VerifyRFI(WH_VerifyRFI("", 0, nrcu, nsub1), "verifyrfi", false);
+//   VerifyRFI.setRate(nsub1);
+//   simul.addStep(VerifyRFI);
 
-  Step target (WH_TargetTrack ("", maxNtarget, targetName),
-	       "targettrack", false);
-  target.setRate (nsub1);
-  simul.addStep (target);
+//   Step target (WH_TargetTrack ("", maxNtarget, targetName),
+// 	       "targettrack", false);
+//   target.setRate (nsub1);
+//   simul.addStep (target);
 
-  Step rfi (WH_RFITrack ("", maxNtarget, rfiName),
-	    "rfitrack", false);
-  rfi.setRate (nsub1);
-  simul.addStep (rfi);
+//   Step rfi (WH_RFITrack ("", maxNtarget, rfiName),
+// 	    "rfitrack", false);
+//   rfi.setRate (nsub1);
+//   simul.addStep (rfi);
 
-  Step beam (WH_BeamFormer("", 2, nrcu, nsel, nbeam, maxNtarget, maxNrfi,
-			   dipoleName),
-	     "beamformer", false);
-  beam.setRate (nsub1);
-  beam.setInRate (nsub1*aweRate, 1);
-  simul.addStep (beam);
+//   Step beam (WH_BeamFormer("", 2, nrcu, nsel, nbeam, maxNtarget, maxNrfi,
+// 			   dipoleName),
+// 	     "beamformer", false);
+//   beam.setRate (nsub1);
+//   beam.setInRate (nsub1*aweRate, 1);
+//   simul.addStep (beam);
 
-  Step awe (WH_AWE("", 1, nsel, nbeam),
-	    "awe", false);
-  awe.setRate (nsub1);
-  awe.setOutRate (nsub1*aweRate);
-  simul.addStep (awe);
+//   Step awe (WH_AWE("", 1, nsel, nbeam),
+// 	    "awe", false);
+//   awe.setRate (nsub1);
+//   awe.setOutRate (nsub1*aweRate);
+//   simul.addStep (awe);
 
-  if (nsub2 > 0) {
-    Step chanfsep (WH_BandSep ("", 1, nsel*nbeam, nsub2, coeffName2),
-		  "chanfsep", false);
-    chanfsep.setOutRate (nsub1*nsub2, 1);
-    simul.addStep (chanfsep);
-  }
+//   if (nsub2 > 0) {
+//     Step chanfsep (WH_BandSep ("", 1, nsel*nbeam, nsub2, coeffName2),
+// 		  "chanfsep", false);
+//     chanfsep.setOutRate (nsub1*nsub2, 1);
+//     simul.addStep (chanfsep);
+//   }
 
-  // Connect the steps.
-  if (splitrcu  &&  !rcumultifile) {
-    simul.connect ("rcu", "rcuall");
-  }
-  if (nsub1 > 0) {
-    simul.connect ("rcuall.out_0", "bandsep.in");
-    simul.connect ("bandsep.out_0", "select.in");
-  } else {
-    simul.connect ("rcuall.out_0", "select.in");
-  }
-  simul.connect ("subseldef.out", "select.sel");
-  //  simul.connect ("select.out_0", "beamformer.in");
+//   // Connect the steps.
+//   if (splitrcu  &&  !rcumultifile) {
+//     simul.connect ("rcu", "rcuall");
+//   }
+//   if (nsub1 > 0) {
+//     simul.connect ("rcuall.out_0", "bandsep.in");
+//     simul.connect ("bandsep.out_0", "select.in");
+//   } else {
+//     simul.connect ("rcuall.out_0", "select.in");
+//   }
+//   simul.connect ("subseldef.out", "select.sel");
+//   //  simul.connect ("select.out_0", "beamformer.in");
 
-  simul.connect ("select.out_0", "cancel.in");
-  simul.connect ("cancel.out_1", "verifyrfi.in");
-  simul.connect ("cancel.out_0", "beamformer.in");
-  //  simul.connect ("verifyrfi.out_0", "beamformer.in");
-  simul.connect ("cancel.out_0", "beamformer.in");
+//   simul.connect ("select.out_0", "cancel.in");
+//   simul.connect ("cancel.out_1", "verifyrfi.in");
+//   simul.connect ("cancel.out_0", "beamformer.in");
+//   //  simul.connect ("verifyrfi.out_0", "beamformer.in");
+//   simul.connect ("cancel.out_0", "beamformer.in");
 
-  simul.connect ("targettrack.out", "beamformer.target");
-  simul.connect ("rfitrack.out", "beamformer.rfi");
-  simul.connect ("beamformer.out_1", "awe.in");
-  simul.connect ("awe.out_0", "beamformer.weight");
-  if (nsub2 > 0) {
-    simul.connect ("beamformer.out_0", "chansep.in");
-  }
+//   simul.connect ("targettrack.out", "beamformer.target");
+//   simul.connect ("rfitrack.out", "beamformer.rfi");
+//   simul.connect ("beamformer.out_1", "awe.in");
+//   simul.connect ("awe.out_0", "beamformer.weight");
+//   if (nsub2 > 0) {
+//     simul.connect ("beamformer.out_0", "chansep.in");
+//   }
 
-  simul.connect ("select.out_1", "detection.in");
-  simul.connect ("select.out_2", "calibration.in");
-  simul.connect ("detection.out_0", "cancel.flag");
-  simul.connect ("calibration.out_0", "detection.threshold"); 
+//   simul.connect ("select.out_1", "detection.in");
+//   simul.connect ("select.out_2", "calibration.in");
+//   simul.connect ("detection.out_0", "cancel.flag");
+//   simul.connect ("calibration.out_0", "detection.threshold"); 
 
   // end of dataprocessor definition
   simul.checkConnections();

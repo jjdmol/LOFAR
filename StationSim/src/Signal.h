@@ -20,8 +20,8 @@
 //
 //
 
-#ifndef DATAGEN_SIGNAL_H
-#define DATAGEN_SIGNAL_H
+#ifndef STATIONSIM_SIGNAL_H
+#define STATIONSIM_SIGNAL_H
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>

@@ -20,16 +20,16 @@
 //
 //
 
-#ifndef DATAGEN_DATAGEN_CONFIG_H
-#define DATAGEN_DATAGEN_CONFIG_H
+#ifndef STATIONSIM_DATAGEN_CONFIG_H
+#define STATIONSIM_DATAGEN_CONFIG_H
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
 
 #include <Common/Debug.h>
-#include <DataGen/ArrayConfig.h>
-#include <DataGen/Source.h>
+#include <StationSim/ArrayConfig.h>
+#include <StationSim/Source.h>
 #include <string>
 #include <fstream.h>
 

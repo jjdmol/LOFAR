@@ -20,8 +20,8 @@
 //
 //
 
-#ifndef DATAGEN_ARRAY_CONFIG_H
-#define DATAGEN_ARRAY_CONFIG_H
+#ifndef STATIONSIM_ARRAY_CONFIG_H
+#define STATIONSIM_ARRAY_CONFIG_H
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>

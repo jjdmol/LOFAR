@@ -20,7 +20,7 @@
 //
 
 
-#include <DataGen/Source.h>
+#include <StationSim/Source.h>
 
 Source::Source (string config_file)
 {

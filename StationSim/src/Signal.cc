@@ -19,7 +19,7 @@
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //
 
-#include <DataGen/Signal.h>
+#include <StationSim/Signal.h>
 
 
 Signal::Signal (string config_file, string mod, double cf, double amp, double opt)

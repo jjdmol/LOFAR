@@ -20,8 +20,8 @@
 //
 //
 
-#ifndef DATAGEN_WFFT_H
-#define DATAGEN_WFFT_H 1
+#ifndef STATIONSIM_WFFT_H
+#define STATIONSIM_WFFT_H 1
 
 #include <Common/Debug.h>
 #include <Common/Lorrays.h>

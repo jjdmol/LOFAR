@@ -19,16 +19,16 @@
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //
 
-#ifndef DATAGEN_WH_PHASESHIFT_H
-#define DATAGEN_WH_PHASESHIFT_H
+#ifndef STATIONSIM_WH_PHASESHIFT_H
+#define STATIONSIM_WH_PHASESHIFT_H
 
 #include <Common/Lorrays.h>
 #include <BaseSim/WorkHolder.h>
 #include <DataGen/DH_SampleR.h>
-#include <DataGen/DH_SampleC.h>
-#include <DataGen/DataGenConfig.h>
-#include <DataGen/PhaseShift.h>
-#include <DataGen/FFTW.h>
+#include <StationSim/DH_SampleC.h>
+#include <StationSim/DataGenConfig.h>
+#include <StationSim/PhaseShift.h>
+#include <StationSim/FFTW.h>
 
 
 class WH_PhaseShift : public WorkHolder 

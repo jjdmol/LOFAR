@@ -20,8 +20,8 @@
 //
 //
 
-#ifndef DATAGEN_MODULATE_H
-#define DATAGEN_MODULATE_H 1
+#ifndef STATIONSIM_MODULATE_H
+#define STATIONSIM_MODULATE_H 1
 
 #include <Common/Debug.h>
 #include <Common/Lorrays.h>

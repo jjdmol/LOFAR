@@ -20,8 +20,8 @@
 //
 //
 
-#ifndef DATAGEN_SOURCE_H
-#define DATAGEN_SOURCE_H
+#ifndef STATIONSIM_SOURCE_H
+#define STATIONSIM_SOURCE_H
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
@@ -29,8 +29,8 @@
 
 #include <Common/Lorrays.h>
 #include <Common/Debug.h>
-#include <DataGen/Trajectory.h>
-#include <DataGen/Signal.h>
+#include <StationSim/Trajectory.h>
+#include <StationSim/Signal.h>
 #include <string>
 #include <fstream.h>
 

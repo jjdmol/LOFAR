@@ -19,13 +19,13 @@
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //
 
-#ifndef DATAGEN_WH_MODULATE_H
-#define DATAGEN_WH_MODULATE_H
+#ifndef STATIONSIM_WH_MODULATE_H
+#define STATIONSIM_WH_MODULATE_H
 
 #include <BaseSim/WorkHolder.h>
-#include <DataGen/DH_SampleR.h>
-#include <DataGen/Modulate.h>
-#include <DataGen/DataGenConfig.h>
+#include <StationSim/DH_SampleR.h>
+#include <StationSim/Modulate.h>
+#include <StationSim/DataGenConfig.h>
 
 
 class WH_Modulate : public WorkHolder 

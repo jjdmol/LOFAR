@@ -22,7 +22,7 @@
 
 #include <Common/Debug.h>
 #include <BaseSim/ParamBlock.h>
-#include <DataGen/WH_CreateSource.h>
+#include <StationSim/WH_CreateSource.h>
 #include <stdio.h>		// for sprintf
 
 

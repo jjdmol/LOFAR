@@ -21,7 +21,7 @@
 //
 
 #include <Common/ArrayOperations.h>
-#include <DataGen/Modulate.h>
+#include <StationSim/Modulate.h>
 #include <fftw.h>
 #include <rfftw.h>
 
