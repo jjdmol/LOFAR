@@ -46,13 +46,13 @@ int main()
       Assert (v2 == 0xcdbe5602);
     }
     {
-      uint64 v1 = 0xbecd025613890574;
+      uint64 v1 = 0xbecd025613890574ULL;
       uint64 v2 = v1;
       Assert (byteSwap(byteSwap(v1)) == v2);
       byteSwap64 (&v2, &v1, 1);
-      Assert (v2 == 0x740589135602cdbe);
+      Assert (v2 == 0x740589135602cdbeULL);
       byteSwap32 (&v2, &v1, 2);
-      Assert (v2 == 0x5602cdbe74058913);
+      Assert (v2 == 0x5602cdbe74058913ULL);
     }
     {
       uint16 v1[3];
@@ -82,13 +82,13 @@ int main()
     }
     {
       uint64 v1[3];
-      v1[0]=0x0123321045677654; v1[1]=0x1234567887654321;
-      v1[2]=0x89abcdeffedcba98;
+      v1[0]=0x0123321045677654ULL; v1[1]=0x1234567887654321ULL;
+      v1[2]=0x89abcdeffedcba98ULL;
       uint64 v2[3];
       byteSwap64 (v2, v1, 3);
-      Assert (v2[0] == 0x5476674510322301);
-      Assert (v2[1] == 0x2143658778563412);
-      Assert (v2[2] == 0x98badcfeefcdab89);
+      Assert (v2[0] == 0x5476674510322301ULL);
+      Assert (v2[1] == 0x2143658778563412ULL);
+      Assert (v2[2] == 0x98badcfeefcdab89ULL);
       byteSwap64 (v2, 3);
       Assert (v2[0] == v1[0]);
       Assert (v2[1] == v1[1]);
