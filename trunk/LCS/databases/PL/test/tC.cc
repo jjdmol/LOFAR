@@ -35,11 +35,6 @@ int main()
     // Connect to the database
     broker.connect("test","postgres");
 
-    DBConnection::GetDefaultConnection().SetAutoCommit(true);
-
-    cout << "DBConnection::GetDefaultConnection().GetAutoCommit() = "
-	 <<  DBConnection::GetDefaultConnection().GetAutoCommit() << endl;
-
     // Should call insert(), saving data in c
     cout << "Saving tpoc1 -- tpoc1.data() = " << tpoc1.data() << endl;
     broker.save(tpoc1); 
@@ -91,11 +86,11 @@ int main()
     }
 
   }
-  catch (PLException& e) {
+  catch (LOFAR::Exception& e) {
     cerr << e << endl;
     return 1;
   }
-  catch (exception& e) {
+  catch (std::exception& e) {
     cerr << "Caught std::exception: " << e.what() << endl;
     return 1;
   }
