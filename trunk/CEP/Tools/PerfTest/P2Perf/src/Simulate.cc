@@ -32,30 +32,14 @@ int main (int argc, char** argv)
     P2Perf simulator;
     simulator.setarg (argc, argv);
 
-#ifndef HAVE_MPI
-        cout << endl;
-	cout << "  * Type 'define;' to define the simulation" << endl;
-	cout <<	"  * Type 'run;'    to run the simulation" << endl;
-	cout <<	"  * Type 'dump;'   to dump the simulators data" << endl;
-	cout <<	"  * Type 'quit'    to quit" << endl;
-	cout << endl;
-	try {
-	  SimulatorParse::parse (simulator);
-	} catch (SimulatorParseError x) {
 
-	  //cout << x.getMesg() << endl;
-	  //cout << x.what() << endl;
-
-	}
-	cout << endl;
-	cout << "It was a pleasure working with you!" << endl << endl;
-
-#else
-	simulator.baseDefine();
-	simulator.baseRun(3651);
-	simulator.baseDump();
-	simulator.baseQuit();
-#endif
+    shmem_debug();
+    simulator.baseDefine();
+    //simulator.baseRun(5000);
+    simulator.baseRun(3651);
+    simulator.baseDump();
+    simulator.baseQuit();
+    
   } catch (...) {
     cout << "Unexpected exception" << endl;
   }
