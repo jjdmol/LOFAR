@@ -154,6 +154,12 @@ void RSPDriver::addAllSyncActions()
    */
   for (int boardid = 0; boardid < GET_CONFIG("N_RSPBOARDS", i); boardid++)
   {
+    if (1 == GET_CONFIG("READ_STATUS", i))
+    {
+      StatusRead* statusread = new StatusRead(m_board[boardid], boardid);
+      m_scheduler.addSyncAction(statusread);
+    }
+    
     if (1 == GET_CONFIG("WRITE_BF", i))
     {
       BWWrite* bwsync = 0;
@@ -178,12 +184,6 @@ void RSPDriver::addAllSyncActions()
     {
       RCUWrite* rcuwrite = new RCUWrite(m_board[boardid], boardid);
       m_scheduler.addSyncAction(rcuwrite);
-    }
-    
-    if (1 == GET_CONFIG("READ_STATUS", i))
-    {
-      StatusRead* statusread = new StatusRead(m_board[boardid], boardid);
-      m_scheduler.addSyncAction(statusread);
     }
     
     if (1 == GET_CONFIG("READ_ST", i))
@@ -286,7 +286,7 @@ GCFEvent::TResult RSPDriver::initial(GCFEvent& event, GCFPortInterface& port)
 
     case F_CONNECTED:
     {
-      LOG_DEBUG(formatString("port '%s' connected", port.getName().c_str()));
+      LOG_INFO(formatString("CONNECTED: port '%s'", port.getName().c_str()));
       if (isEnabled())
       {
 	TRAN(RSPDriver::enabled);
@@ -297,14 +297,14 @@ GCFEvent::TResult RSPDriver::initial(GCFEvent& event, GCFPortInterface& port)
     case F_DISCONNECTED:
     {
       port.setTimer((long)3); // try again in 3 seconds
-      LOG_WARN(formatString("port '%s' disconnected, retry in 3 seconds...", port.getName().c_str()));
+      LOG_DEBUG(formatString("port '%s' disconnected, retry in 3 seconds...", port.getName().c_str()));
       port.close();
     }
     break;
 
     case F_TIMER:
     {
-      LOG_INFO(formatString("port '%s' retry of open...", port.getName().c_str()));
+      LOG_DEBUG(formatString("port '%s' retry of open...", port.getName().c_str()));
       port.open();
     }
     break;
@@ -368,7 +368,7 @@ GCFEvent::TResult RSPDriver::enabled(GCFEvent& event, GCFPortInterface& port)
       // start waiting for clients
       if (!m_acceptor.isConnected()) m_acceptor.open();
 
-      if (1 == GET_CONFIG("SW_CLOCK", i))
+      if (1 == GET_CONFIG("SW_SYNC", i))
       {
 	/* Start the update timer after 1 second */
 	m_board[0].setTimer(1.0,
@@ -383,12 +383,14 @@ GCFEvent::TResult RSPDriver::enabled(GCFEvent& event, GCFPortInterface& port)
       client->init(*this, "client", GCFPortInterface::SPP, RSP_PROTOCOL);
       m_acceptor.accept(*client);
       m_client_list.push_back(client);
+
+      LOG_INFO(formatString("NEW CLIENT CONNECTED: %d clients connected", m_client_list.size()));
     }
     break;
 
     case F_CONNECTED:
     {
-      LOG_DEBUG(formatString("port '%s' connected", port.getName().c_str()));
+      LOG_INFO(formatString("CONNECTED: port '%s'", port.getName().c_str()));
     }
     break;
 
@@ -469,7 +471,7 @@ GCFEvent::TResult RSPDriver::enabled(GCFEvent& event, GCFPortInterface& port)
     {
       if (&port == &m_board[0])
       {
-	if (1 == GET_CONFIG("SW_CLOCK", i))
+	if (1 == GET_CONFIG("SW_SYNC", i))
 	{
 	  /**
 	   * Trigger a clock signal by sending
@@ -485,7 +487,7 @@ GCFEvent::TResult RSPDriver::enabled(GCFEvent& event, GCFPortInterface& port)
 
     case F_DISCONNECTED:
     {
-      LOG_DEBUG(formatString("port %s disconnected", port.getName().c_str()));
+      LOG_INFO(formatString("DISCONNECTED: port '%s'", port.getName().c_str()));
       port.close();
 
       if (&port == &m_board[0] || &port == &m_board[1])
@@ -575,7 +577,7 @@ GCFEvent::TResult RSPDriver::clock_tick(GCFPortInterface& port)
     // print time, ugly
     char timestr[32];
     strftime(timestr, 32, "%T", localtime(&now.tv_sec));
-    LOG_INFO(formatString("time=%s.%d", timestr, now.tv_usec));
+    LOG_INFO(formatString("TICK: time=%s.%d", timestr, now.tv_usec));
 
     /* construct a timer event */
     GCFTimerEvent timer;
@@ -604,10 +606,12 @@ void RSPDriver::rsp_setweights(GCFEvent& event, GCFPortInterface& port)
   /* range check on parameters */
   if ((sw_event->weights().dimensions() != BeamletWeights::NDIM)
       || (sw_event->weights().extent(firstDim) < 1)
-      || (sw_event->weights().extent(secondDim) > GET_CONFIG("N_BLPS", i))
+      || (sw_event->weights().extent(secondDim) > GET_CONFIG("N_RSPBOARDS", i) * GET_CONFIG("N_BLPS", i))
       || (sw_event->weights().extent(thirdDim) != N_BEAMLETS)
       || (sw_event->weights().extent(fourthDim) != EPA_Protocol::N_POL))
   {
+    LOG_ERROR("SETWEIGHTS: invalid parameter");
+    
     delete sw_event;
     
     RSPSetweightsackEvent ack;
@@ -643,6 +647,8 @@ void RSPDriver::rsp_getweights(GCFEvent& event, GCFPortInterface& port)
 
   if (!command->validate())
   {
+    LOG_ERROR("GETWEIGHTS: invalid parameter");
+    
     RSPGetweightsackEvent ack;
     ack.timestamp = Timestamp(0,0);
     ack.status = FAILURE;
@@ -670,6 +676,8 @@ void RSPDriver::rsp_setsubbands(GCFEvent& event, GCFPortInterface& port)
 
   if (!command->validate())
   {
+    LOG_ERROR("SETSUBBANDS: invalid parameter");
+    
     RSPSetsubbandsackEvent ack;
     ack.timestamp = Timestamp(0,0);
     ack.status = FAILURE;
@@ -687,6 +695,8 @@ void RSPDriver::rsp_getsubbands(GCFEvent& event, GCFPortInterface& port)
 
   if (!command->validate())
   {
+    LOG_ERROR("GETSUBBANDS: invalid parameter");
+    
     RSPGetsubbandsackEvent ack;
     ack.timestamp = Timestamp(0,0);
     ack.status = FAILURE;
@@ -713,6 +723,8 @@ void RSPDriver::rsp_setrcu(GCFEvent& event, GCFPortInterface& port)
 
   if (!command->validate())
   {
+    LOG_ERROR("SETRCU: invalid parameter");
+    
     RSPSetrcuackEvent ack;
     ack.timestamp = Timestamp(0,0);
     ack.status = FAILURE;
@@ -730,6 +742,8 @@ void RSPDriver::rsp_getrcu(GCFEvent& event, GCFPortInterface& port)
 
   if (!command->validate())
   {
+    LOG_ERROR("GETRCU: invalid parameter");
+    
     RSPGetrcuackEvent ack;
     ack.timestamp = Timestamp(0,0);
     ack.status = FAILURE;
@@ -756,6 +770,8 @@ void RSPDriver::rsp_setwg(GCFEvent& event, GCFPortInterface& port)
 
   if (!command->validate())
   {
+    LOG_ERROR("SETWG: invalid parameter");
+    
     RSPSetwgackEvent ack;
     ack.timestamp = Timestamp(0,0);
     ack.status = FAILURE;
@@ -773,6 +789,8 @@ void RSPDriver::rsp_getwg(GCFEvent& event, GCFPortInterface& port)
 
   if (!command->validate())
   {
+    LOG_ERROR("GETWG: invalid parameter");
+    
     RSPGetwgackEvent ack;
     ack.timestamp = Timestamp(0,0);
     ack.status = FAILURE;
@@ -801,6 +819,8 @@ void RSPDriver::rsp_substatus(GCFEvent& event, GCFPortInterface& port)
 
   if (!command->validate())
   {
+    LOG_ERROR("SUBSTATUS: invalid parameter");
+    
     ack.timestamp = m_scheduler.getCurrentTime();
     ack.status = FAILURE;
     ack.handle = 0;
@@ -832,6 +852,10 @@ void RSPDriver::rsp_unsubstatus(GCFEvent& event, GCFPortInterface& port)
   if (m_scheduler.remove_subscription(port, unsub.handle) > 0)
   {
     ack.status = SUCCESS;
+  }
+  else
+  {
+    LOG_ERROR("UNSUBSTATUS: failed to remove subscription");
   }
 
   port.send(ack);
@@ -868,6 +892,8 @@ void RSPDriver::rsp_substats(GCFEvent& event, GCFPortInterface& port)
 
   if (!command->validate())
   {
+    LOG_ERROR("SUBSTATS: invalid parameter");
+    
     ack.timestamp = m_scheduler.getCurrentTime();
     ack.status = FAILURE;
     ack.handle = 0;
@@ -899,6 +925,10 @@ void RSPDriver::rsp_unsubstats(GCFEvent& event, GCFPortInterface& port)
   if (m_scheduler.remove_subscription(port, unsub.handle) > 0)
   {
     ack.status = SUCCESS;
+  }
+  else
+  {
+    LOG_ERROR("UNSUBSTATS: failed to remove subscription");
   }
 
   port.send(ack);
@@ -933,6 +963,8 @@ void RSPDriver::rsp_getversions(GCFEvent& event, GCFPortInterface& port)
 
   if (!command->validate())
   {
+    LOG_ERROR("GETVERSIONS: invalid parameter");
+    
     RSPGetversionackEvent ack;
     ack.timestamp = Timestamp(0,0);
     ack.status = FAILURE;

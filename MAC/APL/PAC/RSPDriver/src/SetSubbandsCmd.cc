@@ -62,11 +62,13 @@ void SetSubbandsCmd::ack(CacheBuffer& /*cache*/)
 
 void SetSubbandsCmd::apply(CacheBuffer& cache)
 {
-  for (int cache_blp = 0; cache_blp < GET_CONFIG("N_BLPS", i); cache_blp++)
+  for (int cache_blp = 0;
+       cache_blp < GET_CONFIG("N_RSPBOARDS", i) * GET_CONFIG("N_BLPS", i);
+       cache_blp++)
   {
     if (m_event->blpmask[cache_blp])
     {
-      if (cache_blp < GET_CONFIG("N_BLPS", i))
+      if (cache_blp < GET_CONFIG("N_RSPBOARDS", i) * GET_CONFIG("N_BLPS", i))
       {
 //	cache.getSubbandSelection()()(cache_blp, Range(0, N_BEAMLETS * 2 - 1))
 //	  = m_event->subbands()(0, Range(0, N_BEAMLETS * 2 - 1));
@@ -75,12 +77,12 @@ void SetSubbandsCmd::apply(CacheBuffer& cache)
 	cache.getSubbandSelection()()(cache_blp, Range(0, m_event->subbands().extent(secondDim) - 1))
 	  = m_event->subbands()(0, Range(0, m_event->subbands().extent(secondDim) - 1));
 
-	LOG_FATAL_STR("m_event->subbands() = " << m_event->subbands());
+	LOG_DEBUG_STR("m_event->subbands() = " << m_event->subbands());
       }
       else
       {
 	LOG_WARN(formatString("invalid BLP index %d, there are only %d BLP's",
-			      cache_blp, GET_CONFIG("N_BLPS", i)));
+			      cache_blp, GET_CONFIG("N_RSPBOARDS", i) * GET_CONFIG("N_BLPS", i)));
       }
     }
   }
@@ -103,7 +105,7 @@ void SetSubbandsCmd::setTimestamp(const Timestamp& timestamp)
 
 bool SetSubbandsCmd::validate() const
 {
-  return ((m_event->blpmask.count() <= (unsigned int)GET_CONFIG("N_BLPS", i) * 2)
+  return ((m_event->blpmask.count() <= (unsigned int)GET_CONFIG("N_RSPBOARDS", i) * GET_CONFIG("N_BLPS", i))
 	  && (2 == m_event->subbands().dimensions())
 	  && (1 == m_event->subbands().extent(firstDim)));
 }

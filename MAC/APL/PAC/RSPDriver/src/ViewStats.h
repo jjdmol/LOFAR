@@ -44,12 +44,11 @@ class ViewStats : public GCFTask, public Test
     // state methods
 
     /**
-     * The initial and final state.
+     * The initial state. In this state a connection with the RSP
+     * driver is attempted. When the connection is established,
+     * a transition is made to the enabled state.
      */
-    /*@{*/
     GCFEvent::TResult initial(GCFEvent& e, GCFPortInterface &p);
-    GCFEvent::TResult final(GCFEvent& e, GCFPortInterface &p);
-    /*@}*/
 
     /**
      * The test states. This state is reached when the

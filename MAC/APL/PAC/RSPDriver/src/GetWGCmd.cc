@@ -60,18 +60,20 @@ void GetWGCmd::ack(CacheBuffer& cache)
   ack.settings().resize(m_event->blpmask.count());
   
   int result_blp = 0;
-  for (int cache_blp = 0; cache_blp < GET_CONFIG("N_BLPS", i); cache_blp++)
+  for (int cache_blp = 0;
+       cache_blp < GET_CONFIG("N_RSPBOARDS", i) * GET_CONFIG("N_BLPS", i);
+       cache_blp++)
   {
     if (m_event->blpmask[cache_blp])
     {
-      if (cache_blp < GET_CONFIG("N_BLPS", i))
+      if (cache_blp < GET_CONFIG("N_RSPBOARDS", i) * GET_CONFIG("N_BLPS", i))
       {
 	ack.settings()(result_blp) = cache.getWGSettings()()(cache_blp);
       }
       else
       {
 	LOG_WARN(formatString("invalid BLP index %d, there are only %d BLP's",
-			      cache_blp, GET_CONFIG("N_BLPS", i)));
+			      cache_blp, GET_CONFIG("N_RSPBOARDS", i) * GET_CONFIG("N_BLPS", i)));
       }
       
       result_blp++;
@@ -103,7 +105,7 @@ void GetWGCmd::setTimestamp(const Timestamp& timestamp)
 
 bool GetWGCmd::validate() const
 {
-  return ((m_event->blpmask.count() <= (unsigned int)GET_CONFIG("N_BLPS", i)));
+  return ((m_event->blpmask.count() <= (unsigned int)GET_CONFIG("N_RSPBOARDS", i) * GET_CONFIG("N_BLPS", i)));
 }
 
 bool GetWGCmd::readFromCache() const

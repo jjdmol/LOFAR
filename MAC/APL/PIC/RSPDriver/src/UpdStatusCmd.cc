@@ -74,11 +74,13 @@ void UpdStatusCmd::complete(CacheBuffer& cache)
   ack.sysstatus.rcu().resize(m_event->rcumask.count());
 
   int result_rcu = 0;
-  for (int cache_rcu = 0; cache_rcu < GET_CONFIG("N_BLPS", i) * 2; cache_rcu++)
+  for (int cache_rcu = 0;
+       cache_rcu < GET_CONFIG("N_RSPBOARDS", i) * GET_CONFIG("N_BLPS", i) * N_POL;
+       cache_rcu++)
   {
     if (m_event->rcumask[cache_rcu])
     {
-      if (cache_rcu < GET_CONFIG("N_BLPS", i) * 2)
+      if (cache_rcu < GET_CONFIG("N_RSPBOARDS", i) * GET_CONFIG("N_BLPS", i) * N_POL)
       {
 	ack.sysstatus.rcu()(result_rcu)
 	  = cache.getSystemStatus().rcu()(cache_rcu);
@@ -86,7 +88,7 @@ void UpdStatusCmd::complete(CacheBuffer& cache)
       else
       {
 	LOG_WARN(formatString("invalid RCU index %d, there are only %d RCU's",
-			      cache_rcu, GET_CONFIG("N_BLPS", i) * 2));
+			      cache_rcu, GET_CONFIG("N_RSPBOARDS", i) * GET_CONFIG("N_BLPS", i) * N_POL));
       }
       
       result_rcu++;
@@ -108,5 +110,5 @@ void UpdStatusCmd::setTimestamp(const Timestamp& timestamp)
 
 bool UpdStatusCmd::validate() const
 {
-  return (m_event->rcumask.count() <= (unsigned int)GET_CONFIG("N_BLPS", i) * 2);
+  return (m_event->rcumask.count() <= (unsigned int)GET_CONFIG("N_RSPBOARDS", i) * GET_CONFIG("N_BLPS", i) * N_POL);
 }

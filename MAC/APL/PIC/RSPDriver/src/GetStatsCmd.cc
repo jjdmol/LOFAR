@@ -69,11 +69,12 @@ void GetStatsCmd::ack(CacheBuffer& cache)
   }
   
   int result_rcu = 0;
-  for (int cache_rcu = 0; cache_rcu < GET_CONFIG("N_BLPS", i) * N_POL; cache_rcu++)
+  for (int cache_rcu = 0;
+       cache_rcu < GET_CONFIG("N_RSPBOARDS", i) * GET_CONFIG("N_BLPS", i) * N_POL; cache_rcu++)
   {
     if (m_event->rcumask[cache_rcu])
     {
-      if (cache_rcu < GET_CONFIG("N_BLPS", i) * N_POL)
+      if (cache_rcu < GET_CONFIG("N_RSPBOARDS", i) * GET_CONFIG("N_BLPS", i) * N_POL)
       {
 	if (m_event->type <= Statistics::SUBBAND_POWER)
 	{
@@ -123,7 +124,7 @@ void GetStatsCmd::setTimestamp(const Timestamp& timestamp)
 bool GetStatsCmd::validate() const
 {
   return ((m_event->rcumask.count()
-	  <= (unsigned int)GET_CONFIG("N_BLPS", i) * N_POL)
+	  <= (unsigned int)GET_CONFIG("N_RSPBOARDS", i) * GET_CONFIG("N_BLPS", i) * N_POL)
 	  && (m_event->type < Statistics::N_STAT_TYPES));
 }
 

@@ -60,11 +60,13 @@ void GetSubbandsCmd::ack(CacheBuffer& cache)
   ack.subbands().resize(m_event->blpmask.count(), N_BEAMLETS * N_POL);
   
   int result_blp = 0;
-  for (int cache_blp = 0; cache_blp < GET_CONFIG("N_BLPS", i); cache_blp++)
+  for (int cache_blp = 0;
+       cache_blp < GET_CONFIG("N_RSPBOARDS", i) * GET_CONFIG("N_BLPS", i);
+       cache_blp++)
   {
     if (m_event->blpmask[cache_blp])
     {
-      if (cache_blp < GET_CONFIG("N_BLPS", i))
+      if (cache_blp < GET_CONFIG("N_RSPBOARDS", i) * GET_CONFIG("N_BLPS", i))
       {
 	ack.subbands()(result_blp, Range::all())
 	  = cache.getSubbandSelection()()(cache_blp, Range::all());
@@ -72,7 +74,7 @@ void GetSubbandsCmd::ack(CacheBuffer& cache)
       else
       {
 	LOG_WARN(formatString("invalid BLP index %d, there are only %d BLP's",
-			      cache_blp, GET_CONFIG("N_BLPS", i)));
+			      cache_blp, GET_CONFIG("N_RSPBOARDS", i) * GET_CONFIG("N_BLPS", i)));
       }
       
       result_blp++;
@@ -104,7 +106,7 @@ void GetSubbandsCmd::setTimestamp(const Timestamp& timestamp)
 
 bool GetSubbandsCmd::validate() const
 {
-  return ((m_event->blpmask.count() <= (unsigned int)GET_CONFIG("N_BLPS", i)));
+  return ((m_event->blpmask.count() <= (unsigned int)GET_CONFIG("N_RSPBOARDS", i) * GET_CONFIG("N_BLPS", i)));
 }
 
 bool GetSubbandsCmd::readFromCache() const

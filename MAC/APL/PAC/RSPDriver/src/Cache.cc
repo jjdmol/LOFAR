@@ -51,10 +51,11 @@ CacheBuffer::CacheBuffer()
   m_timestamp.set(tv);
 
   m_beamletweights().resize(BeamletWeights::SINGLE_TIMESTEP,
-			    GET_CONFIG("N_BLPS", i),
+			    GET_CONFIG("N_RSPBOARDS", i) * GET_CONFIG("N_BLPS", i),
 			    N_BEAMLETS,
 			    EPA_Protocol::N_POL);
-  m_subbandselection().resize(GET_CONFIG("N_BLPS", i), N_BEAMLETS * EPA_Protocol::N_POL);
+  m_subbandselection().resize(GET_CONFIG("N_RSPBOARDS", i) * GET_CONFIG("N_BLPS", i),
+			      N_BEAMLETS * EPA_Protocol::N_POL);
 
   if (!GET_CONFIG("IDENTITY_WEIGHTS", i))
   {
@@ -72,14 +73,14 @@ CacheBuffer::CacheBuffer()
     //
     // Set subbands selection in increasing value
     //
-    firstIndex i;
-    m_subbandselection()(0, Range::all()) = i;
+    secondIndex i;
+    m_subbandselection()(Range::all(), Range::all()) = i;
   }
 
-  m_rcusettings().resize(GET_CONFIG("N_BLPS", i) * EPA_Protocol::N_POL);
+  m_rcusettings().resize(GET_CONFIG("N_BLPS", i) * GET_CONFIG("N_RSPBOARDS", i) * EPA_Protocol::N_POL);
   m_rcusettings() = RCUSettings::RCURegisterType();
 
-  m_wgsettings().resize(GET_CONFIG("N_BLPS", i));
+  m_wgsettings().resize(GET_CONFIG("N_BLPS", i) * GET_CONFIG("N_RSPBOARDS", i));
   
   WGSettings::WGRegisterType init;
   init.freq = 0;
@@ -90,17 +91,17 @@ CacheBuffer::CacheBuffer()
   m_wgsettings() = init;
 
   m_subbandstats().resize(Statistics::N_STAT_TYPES / 2,
-			  GET_CONFIG("N_BLPS", i) * EPA_Protocol::N_POL,
+			  GET_CONFIG("N_RSPBOARDS", i) * GET_CONFIG("N_BLPS", i) * EPA_Protocol::N_POL,
 			  N_SUBBANDS);
   m_subbandstats() = 0;
 
   m_beamletstats().resize(Statistics::N_STAT_TYPES / 2,
-			  GET_CONFIG("N_BLPS", i) * EPA_Protocol::N_POL,
+			  GET_CONFIG("N_RSPBOARDS", i) * GET_CONFIG("N_BLPS", i) * EPA_Protocol::N_POL,
 			  N_BEAMLETS);
   m_beamletstats() = 0;
 
   m_systemstatus.board().resize(GET_CONFIG("N_RSPBOARDS", i));
-  m_systemstatus.rcu().resize(GET_CONFIG("N_BLPS", i) * EPA_Protocol::N_POL);
+  m_systemstatus.rcu().resize(GET_CONFIG("N_RSPBOARDS", i) * GET_CONFIG("N_BLPS", i) * EPA_Protocol::N_POL);
 
   BoardStatus boardinit;
   RCUStatus   rcuinit;

@@ -69,7 +69,7 @@ GCFEvent::TResult Scheduler::run(GCFEvent& event, GCFPortInterface& /*port*/)
   
   if (F_TIMER == event.signal)
   {
-    LOG_INFO("Scheduler::run");
+    LOG_TRACE_FLOW("Scheduler::run");
 
     if (!syncHasCompleted())
     {
