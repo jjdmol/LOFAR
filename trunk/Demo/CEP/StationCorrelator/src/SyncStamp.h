@@ -25,6 +25,8 @@
 
 #define MAX_BLOCK_ID 1000
 
+#include <Common/lofar_iostream.h>
+
 namespace LOFAR
 {
   class SyncStamp {
@@ -51,6 +53,8 @@ namespace LOFAR
     bool operator<  (SyncStamp& other);
     bool operator== (SyncStamp& other);
 
+    friend ostream& operator<<(ostream& os, const SyncStamp& ss);
+
   private:
     int itsSeqId;
     int itsBlockId;
@@ -62,9 +66,6 @@ namespace LOFAR
     { return itsSeqId; }
   inline const int SyncStamp::getBlockId () const
     { return itsBlockId; }
-
-  inline void SyncStamp::checkOverflow()
-    { if (itsBlockId > MAX_BLOCK_ID) {itsSeqId++; itsBlockId = itsBlockId % MAX_BLOCK_ID;};}
 
   inline void SyncStamp::operator += (SyncStamp& other)
     { 
@@ -110,6 +111,7 @@ namespace LOFAR
     { 
       return ((itsSeqId == other.itsSeqId) && (itsBlockId == other.itsBlockId));
     }
+
 }
 
 #endif
