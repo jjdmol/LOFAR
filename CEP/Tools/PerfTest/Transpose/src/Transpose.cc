@@ -22,6 +22,9 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.4  2002/05/16 15:08:00  schaaf
+//  overall update; removed command line arguments
+//
 //  Revision 1.3  2002/05/14 11:39:41  gvd
 //  Changed for new build environment
 //
@@ -48,6 +51,7 @@
 #include "BaseSim/Profiler.h"
 #include "Transpose/WH_FillTFMatrix.h"
 #include "Transpose/WH_Transpose.h"
+#include "Transpose/WH_Correlate.h"
 #include "BaseSim/WH_Empty.h"
 #include TRANSPORTERINCLUDE
 
@@ -121,6 +125,8 @@ void Transpose::define(const ParamBlock& params)
   Ssteps       = new (Step*)[itsSourceSteps];
   Dworkholders = new (WH_Transpose*)[itsDestSteps];
   Dsteps       = new (Step*)[itsDestSteps];
+  Cworkholders = new (WH_Correlate*)[itsDestSteps];
+  Csteps       = new (Step*)[itsDestSteps];
   
   // now go and create the source and destination steps
   // the two loops do duplicate quite some code, so a private method  
@@ -148,7 +154,7 @@ void Transpose::define(const ParamBlock& params)
     //Ssteps[iStep]->runOnNode(0); // MPI 1 process
        Ssteps[iStep]->runOnNode(iStep ,0); // run in App 0
   }
-  
+
   // Create the destination steps
   for (int iStep = 0; iStep < itsDestSteps; iStep++) {
     
@@ -158,14 +164,26 @@ void Transpose::define(const ParamBlock& params)
 					   itsSourceSteps, 
 					   timeDim,
 					   timeDim,
-					   freqDim);
-    
-    
-    Dsteps[iStep] = new Step(Dworkholders[iStep], "TransposeDestStep", iStep);
-    // Determine the node and process to run in
-    // ... sory, this should go in a private method later
-    //Ssteps[iStep]->runOnNode(0); // MPI 1 process
-      Dsteps[iStep]->runOnNode(iStep+itsSourceSteps,0); 
+					   freqDim); 
+    Dsteps[iStep] = new Step(Dworkholders[iStep], 
+			     "TransposeDestStep", 
+			     iStep);
+    Dsteps[iStep]->runOnNode(iStep+itsSourceSteps,0); 
+
+    // Create the correlator step
+    sprintf(name, "Correlate[%d]", iStep);
+    Cworkholders[iStep] = new WH_Correlate(name,
+					   timeDim,        // inputs
+					   1,              // outputs
+					   itsSourceSteps, // stations
+					   freqDim);       // frequency
+
+    Csteps[iStep] = new Step(Cworkholders[iStep],
+			     "Correlator",
+			     iStep);
+    Csteps[iStep]->runOnNode(iStep+itsSourceSteps,0); 
+    // connect the correlator to the corresponding transpose step
+    Csteps[iStep]->connectInput(Dsteps[iStep]);
   }
   
 
@@ -180,7 +198,11 @@ void Transpose::define(const ParamBlock& params)
     TRACER4("Add Dest step " << iStep);
     simul.addStep(Dsteps[iStep]);
   }
-  
+  // and the correlators
+  for (int iStep = 0; iStep < itsDestSteps; iStep++) {
+    TRACER4("Add Dest step " << iStep);
+    simul.addStep(Csteps[iStep]);
+  }
 
   // Create the cross connections
   for (int step = 0; step < itsDestSteps; step++) {

@@ -22,6 +22,9 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.2  2002/05/14 11:39:41  gvd
+//  Changed for new build environment
+//
 //  Revision 1.1.1.1  2002/05/06 11:49:20  schaaf
 //  initial version
 //
@@ -39,6 +42,7 @@
 #include "BaseSim/Simulator.h"
 class WH_FillTFMatrix;
 class WH_Transpose;
+class WH_Correlate;
 class ParamBlock ;
 
 /**
@@ -65,8 +69,10 @@ class Transpose: public Simulator
   /// Define pointers to the arrays with steps and workholders.
     WH_FillTFMatrix **Sworkholders;
     WH_Transpose    **Dworkholders;
+    WH_Correlate    **Cworkholders;
     Step            **Ssteps;
     Step            **Dsteps;
+    Step            **Csteps;
     
     /// Number of source steps
       int itsSourceSteps;
