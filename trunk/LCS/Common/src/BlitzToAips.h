@@ -83,9 +83,10 @@ namespace LOFAR
   void copyArray ( Array<T1> &out,const blitz::Array<T2,N> &in )
   {
     T1 *data = new T1[in.size()],*ptr = data;
-    for( typename blitz::Array<T2,N>::const_iterator iter = in.begin();
-         iter != in.end(); iter++,ptr++ )
-      *ptr = static_cast<T1>(*iter);
+    if( in.size() )
+      for( typename blitz::Array<T2,N>::const_iterator iter = in.begin();
+           iter != in.end(); iter++,ptr++ )
+        *ptr = static_cast<T1>(*iter);
     IPosition shape;
     convertShape(shape,in.shape());
     out.takeStorage(shape,data,TAKE_OVER);
@@ -98,7 +99,6 @@ namespace LOFAR
   template<class T1,class T2,int N>
   void refArray ( Array<T1> &out,blitz::Array<T2,N> &in )
   {
-    FailWhen( in.dimensions() != N,"array rank mismatch" );
     if( !in.isStorageContiguous() )
       copyArray(out,in);
     else
@@ -189,6 +189,8 @@ namespace LOFAR
     {
       FailWhen( to.shape()(i) != from.shape()[i],"array shape mismatch" );
     }
+    if( !to.size() )
+      return;
     // BUG!!
     // Use of getStorage() is not terribly efficient in case of not-contiguous
     // AIPS++ arrays. Check with Ger, how do we quickly iterate through one?
@@ -210,6 +212,8 @@ namespace LOFAR
     {
       FailWhen( to.shape()(i) != from.shape()[i],"array shape mismatch" );
     }
+    if( !to.size() )
+      return;
     // BUG!!
     // Use of getStorage() is not terribly efficient in case of not-contiguous
     // AIPS++ arrays. Check with Ger, how do we quickly iterate through one?
