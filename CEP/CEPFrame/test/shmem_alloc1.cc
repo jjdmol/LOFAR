@@ -93,9 +93,11 @@ int main(int argc, char** argv)
     {
       iarray[i][k] = k;
     }
+    int jj = (log  ?  1 : j);
     for (int ii = 0; ii < i; ii++)
     {
-	for (k = 0; k < j; k++)
+        if (log) jj *= 2;
+	for (k = 0; k < jj; k++)
 	{
 	    if (iarray[ii][k] != k)
 	    {
