@@ -32,11 +32,11 @@
 #
 PACKAGES = $(shell find . \( -name import -prune \) -o \( -name "configure.in" -print \) | sed -e s%/configure.in%% -e s%^\./%% )
 #
-# Find all variants to be built for this host.
+# Find all variants to be built for this host (without possible domain).
 # There can be multiple lines (one for each compiler).
 # Prepend each variant with the compiler type and append .variant.
 #
-HOST = $(shell uname -n)
+HOST = $(shell uname -n | sed -e "s%\..*%%")
 VARLINES = $(shell egrep "^make\..*\.variants:" ../builds.$(HOST) | sed -e "s%^make\.%%" -e "s%.variants:%/%" -e "s/ \+//g")
 VARIANTS = $(shell for NM in $(VARLINES); do cmp=`echo $$NM | sed -e "s%/.*%%"`; vars=`echo $$NM | sed -e "s%.*/%%" -e "s%,% %g"`; for VAR in $$vars; do echo $${cmp}_$$VAR.variant; done; done)
 #
