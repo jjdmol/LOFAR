@@ -2,6 +2,7 @@
 #define _LOFARSIM_H__
 
 #include "Simulator.h"
+#include "general.h"
 
 class LSFiller;
 
@@ -16,6 +17,8 @@ public:
   void dump() const;
   void quit();
 
+  Step  *antenna[STATIONS][ELEMENTS];
+  Step  *correlator[BEAMS*FCORR];
 
 private:
   LSFiller* itsFiller;

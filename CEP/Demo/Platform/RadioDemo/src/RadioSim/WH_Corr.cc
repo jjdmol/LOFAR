@@ -5,9 +5,7 @@
 #include <stdio.h>
 #include "WH_Corr.h"
 #include "callspectralfft.h"
-#ifdef PROFILER
 #include "Profiler.h"
-#endif
 #include <fstream.h>
 
 short WH_Corr::itsInstanceCnt = 0;
@@ -22,7 +20,9 @@ int WH_Corr::itsProcessProfilerState=0;
 
 WH_Corr::WH_Corr (int inputs,
 		  int outputs):
-  WorkHolder (inputs, outputs)
+  WorkHolder (inputs, outputs),
+  itsFile(NULL),
+  itsXOffset(0)
 {
   int ch;
   itsInDataHolders.reserve(inputs);
@@ -38,9 +38,7 @@ WH_Corr::WH_Corr (int inputs,
   myInstanceCnt = itsInstanceCnt++;
 
   if (itsProcessProfilerState == 0) {
-#ifdef PROFILER
     itsProcessProfilerState = Profiler::defineState("Correlator_Process","grey");
-#endif
   }
 }
 
@@ -55,10 +53,8 @@ void WH_Corr::process () {
     int input, freq;		// loop counters
     float realpart, imagpart;
     TRACER(debug,"WH_Corr  Process");
-
-#ifdef PROFILER
     Profiler::enterState (itsProcessProfilerState);
-#endif
+	
     
     // test the synchronisation of the time stamps.
     for (input = 0; input < getInputs (); input++) {
@@ -82,8 +78,8 @@ void WH_Corr::process () {
 		      itsInDataHolders[0]->getPacket()->timeStamp);
       }
       itsCurrentTimeStamp = itsInDataHolders[0]->getPacket()->timeStamp;
-      cout << "Correlator processing timestamp : " 
-	   << itsInDataHolders[0]->getPacket()->timeStamp << endl;
+//          cout << "Correlator processing timestamp : " 
+//    	   << itsInDataHolders[0]->getPacket()->timeStamp << endl;
     }
    
     TRACER(debug,"Start loops");
@@ -111,17 +107,16 @@ void WH_Corr::process () {
 	       &itsInDataHolders[station2]->getBuffer()[0],
 	       ANTSAMPLES-1,
 	       &corrcoef);
-	cout << "Corrcoeff " << station1 << " - " << station2  
-	     << " = " << corrcoef
-	     << endl;
+//    	cout << "Corrcoeff " << station1 << " - " << station2  
+//    	     << " = " << corrcoef
+//    	     << endl;
+		writeFile(corrcoef);
       }
     }
-  }
-  TRACER(debug,"End loops");
-  else { // zeroes,ones,infile,skip
+  } else { // zeroes,ones,infile,skip
     switch (WorkHolder::getProcMode()) {
     case Zeroes :
-    break;
+      break;
     case Ones :
       break;
     case Infile :
@@ -137,12 +132,34 @@ void WH_Corr::process () {
       break;
     }
   }
-#ifdef PROFILER
   Profiler::leaveState (itsProcessProfilerState);
-#endif
   TRACER(debug,"Quit Corr");
 }
 
+void WH_Corr::openFile(char* filename)
+{
+  //cout << "open file " << filename << " on Correlator " << getName() << endl;
+  itsFile = fopen(filename, "w");
+
+  Firewall::Assert(NULL != itsFile, __HERE__, "WH_Corr::openFile");
+
+  itsXOffset = (-LAGS) / 2;
+}
+
+void WH_Corr::closeFile(void)
+{
+  //cout << "close file  on Correlator " << getName() << endl;
+  fclose(itsFile);
+}
+
+void WH_Corr::writeFile(float y)
+{
+  Firewall::Assert(itsFile != NULL,
+		   __HERE__,
+		   "file pointer == NULL");
+  fprintf(itsFile, "%d, %f\n", ++itsXOffset, y);
+  //printf("%d, %f\n", ++itsXOffset, y);
+}
 
 void WH_Corr::dump () const
 {
@@ -181,7 +198,7 @@ void WH_Corr::dump () const
 
 void WH_Corr::pearsn(DataBufferType x[], 
 		     DataBufferType y[], 
-		     int n, 
+		     unsigned long n, 
 		     float *r)
 {
   //float betai(float a, float b, float x);
@@ -193,14 +210,9 @@ void WH_Corr::pearsn(DataBufferType x[],
 	for (j=1;j<=n;j++) {
 		ax += abs(x[j]);
 		ay += abs(y[j]);
-
-		//		cout << "x[j] = " << x[j] << endl;
-		//		cout << "y[j] = " << y[j] << endl;
 	}
 	ax /= n;
 	ay /= n;
-
-
 	for (j=1;j<=n;j++) {
 		xt=abs(x[j])-ax;
 		yt=abs(y[j])-ay;

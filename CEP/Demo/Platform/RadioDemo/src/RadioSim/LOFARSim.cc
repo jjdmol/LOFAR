@@ -7,14 +7,6 @@
 // parameters that are used during the construction of the Steps and Simuls.
 //
 
-#include <sys/utsname.h>
-#include "TH_Mem.h"
-#ifdef MPI_
-#include "TH_MPI.h"
-#endif
-#ifdef CORBA_
-#include "TH_Corba.h"
-#endif
 #include "Transport.h"
 #include "Step.h"
 #include "ParamBlock.h"
@@ -39,42 +31,32 @@
 #include "WH_Convolve.h"
 #include "WH_MakeMS.h"
 #include "WH_Controller.h"
-#ifdef PROFILER
 #include "Profiler.h"
-#endif
 #include TRANSPORTERINCLUDE
 #ifdef CORBA_
 #include "BS_Corba.h"
 #endif
 
+#include <unistd.h>
 #include <iostream.h>
 #include <stdlib.h>
 #include <string>
 #include <map>
 
+#define CORR_FILE       "./WAVE/Corr.ext"
+#define CORR_TMP_FILE   "./WAVE/Corr.tmp"
+#define WAVE_FILE_1 "./WAVE/antenna1.wav"
+#define WAVE_FILE_2 "./WAVE/antenna2.wav"
+#define CORRNODE (STATIONS+1)
 
 LOFARSim::LOFARSim()
 : itsFiller (0)
-{}
+{
+}
 
 
 void LOFARSim::define(const ParamBlock&)
 {
-#ifdef MPI_
-  TH_MPI thMPI;
-#else
-  TH_Mem thMPI;
-#endif
-#ifdef CORBA_
-  TH_Corba thCorba;
-#else
-  TH_MPI thCorba;
-#endif
-  TH_Mem thMem;
-
-  struct utsname uname_out;
-
-  (void)uname(&uname_out);
 
 #ifdef CORBA_
   // Start Orb Environment
@@ -86,7 +68,7 @@ void LOFARSim::define(const ParamBlock&)
   unsigned int rank = TRANSPORTER::getCurrentRank ();
   unsigned int size = TRANSPORTER::getNumberOfNodes();
   cout << "LOFARSim Processor " << rank << " of " 
-       << size << "  operational on node " << uname_out.nodename << flush << endl;
+       << size << "  operational." << flush << endl;
   //if (rank == 1) sleep(30);
 
   // counters for the construction loops
@@ -98,58 +80,35 @@ void LOFARSim::define(const ParamBlock&)
   setSimul (simul);
 
   // define the arrays of Simuls and Steps to filled later
-#if 0
   Simul *theStations[STATIONS];
-#endif
-  Step  *antenna[ELEMENTS];
   Step  *fft[ELEMENTS];
   Step  *transf;		// forwards transpose
   Step  *beamformer[FREQS];
-  Step  *transb[STATIONS];		// backwardss transpose
+  Step  *transb;		// backwardss transpose
 
-#if 0
   Simul *dataprocessor;
-#endif
   Step  *cpinput[STATIONS];
-  Step  *correlator[BEAMS*FCORR];
-  // Step  *integrator[BEAMS][CORRELATORS];
-  //   Step  *convolve[BEAMS][CORRELATORS];
-  Step  *makeMS;
-
-  Firewall::Assert(1 == FREQBANDS, __HERE__, "FREQBANDS != 1");
 
   // Now start defining stations. 
   for (station = 0; station < STATIONS; station++)    {  
-    int stationnode = station+1;
         
-#if 0
     // Station simuls will be created on every node, even if it has no substeps
     theStations[station] =
       new Simul (new WH_Station (ELEMENTS,1),
 		 "Lofar Station",
 		 0);
-    theStations[station]->runOnNode(stationnode);
-#endif
-
+    theStations[station]->runOnNode(station);
     ////////////////////////////////////////////////////////////////////////
     // First put the antenna's in the Sation Simul
     for (element = 0; element < ELEMENTS; element++)
       {
-	  antenna[element] =
-	    new Step (new WH_WAV(1,1,station*10), //WH_Antenna (1,1),
+	  antenna[station][element] =
+	    new Step (new WH_WAV(1,1,station*LAGS), //WH_Antenna (1,1),
 		      "Antenna", 
-		      0);
-	  antenna[element]->runOnNode(station);
-	  antenna[element]->connectInput(NULL, thMem);
-	  //            antenna[element]->getWorker()->setProcMode(ones);
-
-	  // Set antenna position
-	  // ((WH_Antenna*)antenna[element]->getWorker())
-// 	    ->setPosition((STAT_POS[station][0])+(ANT_POS[element][0]),
-// 			  (STAT_POS[station][1])+(ANT_POS[element][1]));
-	  //	  float *pos=new float[2];
-
-	  simul->addStep (antenna[element]);
+		      station);
+	  antenna[station][element]->runOnNode(station);
+	  antenna[station][element]->connectInput(NULL);
+	  theStations[station]->addStep (antenna[station][element]);
         }
       
     //////////////////////////////////////////////////////////////////////////
@@ -160,9 +119,8 @@ void LOFARSim::define(const ParamBlock&)
 				  "FFT",
 				  0);
 	  fft[element]->runOnNode(station);
-	  fft[element]->connectInput(antenna[element], thMem);
-	  //	    fft[element]->getWorker()->setProcMode(ones);
-	  simul->addStep(fft[element]); 
+	  fft[element]->connectInput(antenna[station][element]);
+	  theStations[station]->addStep(fft[element]); 
     }
     ///////////////////////////////////////////////////////////////////////////
     // Define the Forward transpose
@@ -174,9 +132,9 @@ void LOFARSim::define(const ParamBlock&)
 				 FREQS),
 		  "TransposeF",
 		  0);
-      transf->runOnNode(station+STATIONS);
-      transf->connectInputArray(fft,ELEMENTS, thMPI);
-      simul->addStep(transf);
+      transf->runOnNode(station);
+      transf->connectInputArray(fft,ELEMENTS);
+      theStations[station]->addStep(transf);
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -189,11 +147,11 @@ void LOFARSim::define(const ParamBlock&)
 		    WH_Beam (1,1),
 		    "BeamFormer", 
 		    0);
-	beamformer[freq]->runOnNode(station+STATIONS);
-	simul->addStep (beamformer[freq]);
+	beamformer[freq]->runOnNode(station);
+	theStations[station]->addStep (beamformer[freq]);
     } 
    // Connect the inputs of the beamformers to the transf step.
-    transf->connectOutputArray(beamformer, FREQS, thMem);
+    transf->connectOutputArray(beamformer,FREQS);
     
 	
     /////////////////////////////////////////////////////////////////////
@@ -201,124 +159,65 @@ void LOFARSim::define(const ParamBlock&)
     {
       TRACER(debug,"Define TransB on node " << rank);
 
-      transb[station] =
+      transb =
 	new Step (new WH_TransB (FREQS,1),
 		  "TransposeB",
 		  0);
-      transb[station]->runOnNode(station+STATIONS);
-      transb[station]->connectInputArray(beamformer,FREQS, thMem);
+      transb->runOnNode(station);
+      transb->connectInputArray(beamformer,FREQS);
       //transb->getWorker()->setProcMode(zeroes);
-      simul->addStep (transb[station]);
+      theStations[station]->addStep (transb);
     }
 	
     ///////////////////////
     // Station is filled now;
     // Set station communication parameters
-
-#if 0
+	    
     theStations[station]->connectOutputToArray(&transb,1);
     simul->addStep (theStations[station]);      
-#endif
   } // loop stations
 
   /***************************************************************************/
-  { 
-#if 0
-    // The stations will be connected to correlator Steps for each beam
-    dataprocessor =  new Simul(new WH_DataProc(STATIONS,BEAMS),  
-			       "Data Processor",
-			       0);
-    // dataprocessor-input:
-    //       [station1-beam1,..,station1-beamN,
-    //              ..-beam1,..,      ..-beamN, 
-    //        stationM-beam1,..,stationM-beamN] 
-    
-    dataprocessor->connectInputArray(theStations,STATIONS);
-#endif
-    
+  {     
     for (station=0; station<STATIONS; station++) {
       cpinput[station] = new Step(new WH_CPInput(1,BEAMS*FREQBANDS),
 				  "CPInput",
-				  2*STATIONS);
-      cpinput[station]->connectInput(transb[station], thCorba);
+				  STATIONS);
       simul->addStep(cpinput[station]); 
+      cpinput[station]->connectInput(theStations[station]);
     }
-
-#if 0
-    dataprocessor->connectInputToArray(cpinput,STATIONS);
-#endif
+    
+      //    dataprocessor->connectInputToArray(cpinput,STATIONS);
   
-  for (beam = 0; beam < BEAMS; beam++) {
-    for (freqband=0; freqband<FREQBANDS; freqband++) {
-      // create the correlator
-      correlator[beam*FREQBANDS+freqband] =
-	new Step (new WH_Corr (STATIONS,1),
-		  "Correlator",
-		  0);
-      simul->addStep (correlator[beam*FREQBANDS+freqband]);
-      correlator[beam*FREQBANDS+freqband]->runOnNode((2*STATIONS)+1); 
-
-      // Connect the correlators with the CPInput steps;
-      // these connects are the typical crosses needed in correlation
-      // The connects may be optimised for specific network
-      // topologies or protocols (such as rings)
-      for (station=0; station<STATIONS; station++) {
-	correlator[beam*FREQBANDS+freqband]->connect(cpinput[station],
-						     station,
-						     beam*FREQBANDS+freqband,
-						     1, thCorba);
+    char correlatorname[80];
+    for (beam = 0; beam < BEAMS; beam++) {
+      for (freqband=0; freqband<FREQBANDS; freqband++) {
+	// create the correlator
+	sprintf(correlatorname,"Correlator_%2i_%2i",beam*FREQBANDS+freqband,(2*STATIONS+1));
+	correlator[beam*FREQBANDS+freqband] =
+	  new Step (new WH_Corr (STATIONS,1),
+		    correlatorname,
+		    STATIONS+1);
+	simul->addStep (correlator[beam*FREQBANDS+freqband]);
+	correlator[0]->runOnNode(CORRNODE); 
+	
+	// Connect the correlators with the CPInput steps;
+	// these connects are the typical crosses needed in correlation
+	// The connects may be optimised for specific network
+	// topologies or protocols (such as rings)
+	for (station=0; station<STATIONS; station++) {
+	  correlator[beam*FREQBANDS+freqband]->connect(cpinput[station],
+						       station,
+						       beam*FREQBANDS+freqband,
+						       1);
+	}
       }
-    }
-  } 
-  
-  
-  
-  //     for (beam = 0; beam < BEAMS; beam++) {
-  //       for (corr=0; corr<CORRELATORS; corr++) {
-  //       // create the integrator
-  // 	integrator[beam][corr] =
-  // 	  new Step (new WH_Integrator(1,1),
-  // 		    "Integrator",
-  // 		    0);
-  
-  // 	integrator[beam][corr]->connectInput(correlator[beam][corr]);
-  // 	dataprocessor->addStep(integrator[beam][corr]);
-  //       }
-  //     }
-  
-  //     for (beam = 0; beam < BEAMS; beam++) {
-  //       for (corr=0; corr<CORRELATORS; corr++) {
-  // 	// create the integrator
-  // 	convolve[beam][corr] =
-  // 	  new Step(new WH_Convolve (1,1),
-  // 		   "Convolve",
-  // 		   0);
-  
-  // 	convolve[beam][corr]->connectInput(integrator[beam][corr]);
-  // 	dataprocessor->addStep(convolve[beam][corr]);	
-  //       }
-  //     }
-//   itsFiller = new LSFiller("LOFARSim.MS", 10., STATIONS, STAT_POS);
-//   for (int i=0; i<FCORR; i++) {
-//     itsFiller->addBand (POLS, CORRFREQS, INPUT_FREQ, 1e6);
-//   }
-//   for (int i=0; i<BEAMS; i++) {
-//     itsFiller->addField (INPUT_AZIMUTH*PI/180., INPUT_ELEVATION*PI/180.);
-//   }
-//   makeMS = new Step(new WH_MakeMS(BEAMS*FCORR, itsFiller),
-// 		    "Make MS",
-// 		    0);
-//   //makeMS->connectInputArray(convolve,BEAMS);
-//   makeMS->connectInputArray(correlator,BEAMS*FCORR);
-  
-//   dataprocessor->addStep(makeMS);
-  
-//   //dataprocessor->connectOutputToArray(&makeMS,1);
-  
-  
-  //  simul->addStep(dataprocessor);
+    } 
+    
+    
+    //    simul->addStep(dataprocessor);
   }
-  // end of dataprocessor definition
+
 
 //itsSiuml->setLocalComm();
   
@@ -334,19 +233,23 @@ void LOFARSim::define(const ParamBlock&)
 
 void LOFARSim::run (int nsteps)
 {
-  if (nsteps < 0) {
-    nsteps = 10;
-  }
+
+  unsigned int rank = TRANSPORTER::getCurrentRank ();
+  // create the time Controller; All the simuls will be synchronized with this object
+  Simul Controller(new WH_Controller(),"Controller",CONTROLLER_NODE);
+
+  while (1) {
+
+    if (rank == 0)  ((WH_WAV*)antenna[0][0]->getWorker())->readFile(WAVE_FILE_1);
+    if (rank == 1)  ((WH_WAV*)antenna[1][0]->getWorker())->readFile(WAVE_FILE_1);
+
+    nsteps = LAGS;
 
   if (getSimul() == NULL) {
     cout << "Empty simulator; skip" << endl;
     return;
   }
-  unsigned int rank = TRANSPORTER::getCurrentRank ();
   
-  // create the time Controller; All the simuls will be synchronized with this object
-  Simul Controller(new WH_Controller(),"Controller",CONTROLLER_NODE);
-
   
 
   // Produce process output only on node 0
@@ -354,29 +257,24 @@ void LOFARSim::run (int nsteps)
 #ifdef MPI_
   double starttime=MPI_Wtime();
 #endif
-#ifdef PROFILER
   Profiler::init();
-#endif
   if (rank == 0) cout << endl <<  "Start Process" << endl;    
+  if (rank == CORRNODE) ((WH_Corr*)correlator[0]->getWorker())->openFile(CORR_TMP_FILE);
+
   for (int i = 1; i <= nsteps; i++) {
-    if ((i%1 == 0) && (rank == 0)) { // print a dot after every 1 process steps
-      cout << "." << flush;
-    }
-#ifdef PROFILER
+
+//      if ((i%1 == 0) && (rank == 0)) { // print a dot after every 1 process steps
+//        cout << "." << flush;
+//      }
     if (i==4)   Profiler::activate();
-#endif
     if (rank == (unsigned int)CONTROLLER_NODE) {
       Controller.getWorker()->process();
       //sleep(3);
-    }
-
-    if (rank != (unsigned int)CONTROLLER_NODE) TRANSPORTER::waitForBroadCast();
+    } 
+    if (rank != CONTROLLER_NODE) TRANSPORTER::waitForBroadCast();
     TRANSPORTER::synchroniseAllProcesses();
-
     getSimul()->process ();
-#ifdef PROFILER
     if (i==4)   Profiler::deActivate();
-#endif
   }
 #ifdef MPI_
   double endtime=MPI_Wtime();
@@ -386,12 +284,24 @@ void LOFARSim::run (int nsteps)
   //cout << "DUMP from Node " << rank << endl;
   cout << endl << "END OF SIMUL on node " << rank << endl;
  
+  if (rank == CORRNODE) ((WH_Corr*)correlator[0]->getWorker())->closeFile();
+  usleep(500);
+  system("/bin/cp ./WAVE/Corr.tmp ./WAVE/Corr.ext");
+  usleep(500);
+
+//    char arg[80];
+//    sprintf(arg,"%s %s\n",CORR_TMP_FILE,CORR_FILE);
+//    execl("/bin/cp",arg);
+  unlink(WAVE_FILE_1 ".ready");
  
 
 #ifdef MPI_
 //   cout << "Node " << rank << " Totally Wrote " << TH_MPI::theirBytesWritten/1024 <<  " kB by MPI" << endl;
 //   cout << "Node " << rank << " Totally Read "  << TH_MPI::theirBytesRead/1024    <<  " kB by MPI" << endl;
 #endif // MPI_
+
+  }
+
   return;
 }
 
@@ -410,3 +320,6 @@ void LOFARSim::quit()
   delete itsFiller;
   itsFiller = 0;
 }
+
+
+

@@ -2,19 +2,13 @@
 #include "SimulatorParse.h"
 #include <iostream>
 
-#ifdef CORBA_
-int atexit(void (*function)(void))
-{
-  return 0;
-}
-#endif
 
 int main (int argc, char** argv)
 {
   try {
     LOFARSim simulator;
     simulator.setarg (argc, argv);
-#ifdef NOMPI_
+#if 0
         cout << endl;
 	cout << "  * Type 'define;' to define the simulation" << endl;
 	cout <<	"  * Type 'run;'    to run the simulation" << endl;
