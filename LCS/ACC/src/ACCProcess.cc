@@ -40,9 +40,9 @@ ACCProcess::ACCProcess()
 //#
 //# Construction by reading a parameter file.
 //#
-ACCProcess::ACCProcess(const string		theName,
-					   const string		theExec,
-					   const string		theParamFile,
+ACCProcess::ACCProcess(const string&		theName,
+					   const string&		theExec,
+					   const string&		theParamFile,
 					   const int16		thePortnr) :
 	itsName		(theName),
 	itsExec		(theExec),

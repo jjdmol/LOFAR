@@ -39,7 +39,7 @@ Event::Event()
 //#
 Event::Event(const int16	theType,
 			 const uint32	theTime,
-			 const string	theInfo) :
+			 const string&	theInfo) :
 	itsType(theType),
 	itsTime(theTime),
 	itsInfo(theInfo)
@@ -76,7 +76,7 @@ Event::~Event()
 //#
 //# Construct an event from a parameter string
 //#
-Event::Event(const string		paramString)
+Event::Event(const string&		paramString)
 {
 	ParameterSet	theParams;
 	theParams.adoptBuffer(paramString);

@@ -50,10 +50,10 @@ public:
 
 	ACCProcess();
 	~ACCProcess();
-	ACCProcess(const string		theName,
-				   const string		theExec,
-				   const string		theParamFile,
-				   const int16		thePortnr);
+	ACCProcess(const string&	theName,
+			   const string&	theExec,
+			   const string&	theParamFile,
+			   const int16		thePortnr);
 	
 	// Copying is allowed.
 	ACCProcess(const ACCProcess& that);

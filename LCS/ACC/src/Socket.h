@@ -53,7 +53,7 @@ public:
 	//#-------------- Connection routines ---------------------
 	// Tries to connect to the given host and service. The host parameter
 	// may contain a hostname (resolved by DNS) or a dotted IP adres.
-	bool	connect			(const string	hostname, const int16	portnr);
+	bool	connect			(const string&	hostname, const int16	portnr);
 
 	// Starts a listener-service on a TCP socket so a client can 
 	// connect on it.

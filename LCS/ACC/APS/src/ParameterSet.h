@@ -59,38 +59,38 @@ public:
 	~ParameterSet();
 
 	// The ParameterSet may be construction by reading a parameter file.
-	explicit ParameterSet(const string	theFilename);
+	explicit ParameterSet(const string&	theFilename);
 	
 	// Copying is allowed.
 	ParameterSet(const ParameterSet& that);
 	ParameterSet& 	operator=(const ParameterSet& that);
 
 	// Adds the Key-Values pair in the given file to the current ParameterSet.
-	void			adoptFile  (const string theFilename);
-	void			adoptBuffer(const string theBuffer);
+	void			adoptFile  (const string& theFilename);
+	void			adoptBuffer(const string& theBuffer);
 
 	// Writes the Key-Values pair from the current ParameterSet to the file.
-	void			writeFile   (const string theFilename) const;
-	void			writeBuffer (const string theBuffer) const;
+	void			writeFile   (const string& theFilename) const;
+	void			writeBuffer (const string& theBuffer) const;
 
 	// Creates a subset from the current ParameterSet containing all the 
 	// parameters that start with the given baseKey. The baseKey is cut off 
 	// from the Keynames in the created subset.
-	ParameterSet	makeSubset(const string baseKey) const;
+	ParameterSet	makeSubset(const string& baseKey) const;
 
 	// Checks if the given Key is defined in the ParameterSet.
-	bool	isDefined (const string searchKey) const
+	bool	isDefined (const string& searchKey) const
 				{ return (find(searchKey) != end()); };
 
-	int		getInt   (const string theKey) const;
-	double	getDouble(const string theKey) const;
-	string	getString(const string theKey) const;
+	int		getInt   (const string& theKey) const;
+	double	getDouble(const string& theKey) const;
+	string	getString(const string& theKey) const;
 
 	friend std::ostream& operator<<(std::ostream& os, const ParameterSet &thePS);
 
 private:
-	void	readFile   (const string theFile, const	bool merge);
-	void	readBuffer (const string theFile, const	bool merge);
+	void	readFile   (const string& theFile, const	bool merge);
+	void	readBuffer (const string& theFile, const	bool merge);
 	void	addStream  (istream&	inputStream, const	bool merge);
 };
 
