@@ -84,6 +84,7 @@ void WH_Correlate::process()
 
   // ToDo: set all output counters to zero
 
+  // Select the third frequency band, since this contains our signal
   InDHptr = (DH_CorrCube*)getDataManager().getInHolder(0);
   OutDHptr = (DH_Vis*)getDataManager().getOutHolder(0);
 
@@ -106,11 +107,11 @@ void WH_Correlate::process()
   //2 memcpy(signal.data(), InDHptr->getBuffer(), itsNelements*itsNitems*sizeof(DH_CorrCube::BufferType));
    for (int element = 0; element < itsNelements; element++) {
      for (int item = 0; item < itsNitems; item++) {
-       //3      signal(element,item) = *(InDHptr->getBufferElement(element,item,0));
-	cout << signal(element,item) << " ";
+       signal(element,item) = *(InDHptr->getBufferElement(element,item,0));
      }
    }
-   cout << endl;
+//    cout << signal(5,5) << " ";
+//    cout << endl;
 
 
   corr = complex<float> (0,0);

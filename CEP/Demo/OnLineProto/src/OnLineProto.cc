@@ -255,7 +255,7 @@ void OnLineProto::define(const KeyValueMap& params)
   ////////////////////////////////////////////////////////////////
   int correlator=0;
   for (int b=0; b<NBEAMLETS; b++) { //NBeamlets
-    for (int f=0; f<BFBW; f++) {
+    for (int f=0; f< BFBW /*NCorr*/; f++) {
       myCorrelatorSteps[correlator]->connect(myTransposeSteps[b],0,f,1);
       correlator++;
     }

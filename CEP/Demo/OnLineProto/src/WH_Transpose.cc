@@ -117,11 +117,11 @@ void WH_Transpose::process()
        // temporary test to find signal above noise level
        if (((DH_Beamlet*)getDataManager().getInHolder(station))->getBufferElement(freq)->real() > 0.01)
 	 {
-	    cout << "stations " << station
-	      << "  time " << itsIntegrationTime
-	      << "value " 
-	      << ((DH_Beamlet*)getDataManager().getInHolder(station))->getBufferElement(freq)
-		<< endl;
+// 	    cout << "stations " << station
+// 	      << "  time " << itsIntegrationTime
+// 	      << "value " 
+// 	      << ((DH_Beamlet*)getDataManager().getInHolder(station))->getBufferElement(freq)
+// 		<< endl;
 	 }
 
 	 } 

@@ -38,7 +38,7 @@
 
 // Print interval
 #define INTERVAL 1
-#define PLOTSIZE 20
+#define PLOTSIZE 1000
 
 namespace LOFAR
 {
@@ -67,12 +67,11 @@ WH_Dump::WH_Dump (const string& name,
     getDataManager().addOutDataHolder(0, 
 				      new DH_Empty (string("out_") + str), 
 				      true);
-    // open output file. filename is hardcoded.
 
-    itsBuffer.resize(NSTATIONS);
+    itsBuffer.resize(PLOTSIZE);
     itsBuffer = complex<float> (0,0);
 
-    if ( (0 == itsRank)  && (handle == 0) ) {
+    if ( (2 == itsRank)  && (handle == 0) ) {
       handle = gnuplot_init();
     }
 }
@@ -104,19 +103,19 @@ void WH_Dump::process()
 
   TRACER4("WH_Dump::Process()");
   
-
   itsCounter++;
   DH_Vis *InDHptr = (DH_Vis*)getDataManager().getInHolder(0);
 
-  if (( itsCounter % INTERVAL == 0 ) && ( 0 == itsRank )) {
+  if (( itsCounter % INTERVAL == 0 ) && ( 2 == itsRank )) {
 
     memcpy (corr.data(), 
 	    InDHptr->getBuffer(), 
 	    NSTATIONS*NSTATIONS*sizeof(DH_Vis::BufferType));
 
+    cout << itsIndex << endl;
     cout << corr(blitz::Range(0,4), blitz::Range(0,4)) << endl;
     
-    itsBuffer(itsIndex % PLOTSIZE) = corr (0,NSTATIONS-1);
+    itsBuffer(itsIndex % PLOTSIZE) = corr (1,0);
     
     if (itsIndex >= PLOTSIZE-1) {
 
