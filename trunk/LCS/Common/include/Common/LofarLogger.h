@@ -20,8 +20,8 @@
 //#
 //#  $Id$
 
-#if !defined(LOFAR_LOGGER_H)
-#define LOFAR_LOGGER_H
+#if !defined(COMMON_LOFAR_LOGGER_H)
+#define COMMON_LOFAR_LOGGER_H
 
 #include <lofar_config.h>
 #include <Common/lofar_iostream.h>
@@ -34,7 +34,12 @@
 #include <log4cplus/configurator.h>
 
 namespace LOFAR {
-extern const std::string formatString(const	char* format, ...);
+// The function formatString accepts printf-like arguments and returns a
+// formatted std::string. It can be used e.g. in the LOG_<level> macros:
+// LOG_INFO (formatString("Opening connection with host %%s", hostName);
+//# In real life this must be %s ofcourse but doxygen need a double %%.
+const std::string formatString(const	char* format, ...);
+void lofarLoggerInitNode(void);
 }
 
 //# -------------------- Initialisation of the logger module -------------------
@@ -47,19 +52,21 @@ extern const std::string formatString(const	char* format, ...);
 //								monitor any changes in the properties file.
 //								An intervaltime in millisecs must be provided.
 #define INIT_LOGGER(filename) \
-	log4cplus::PropertyConfigurator::doConfigure(filename); \
-	LofarInitTracingModule
+	lofarLoggerInitNode(); \
+	LofarInitTracingModule \
+	log4cplus::PropertyConfigurator::doConfigure(filename);
 
 #define INIT_LOGGER_AND_WATCH(filename,watchinterval) \
-	log4cplus::ConfigureAndWatchThread	tmpWatchThread(filename,watchinterval); \
-	LofarInitTracingModule
+	lofarLoggerInitNode(); \
+	LofarInitTracingModule \
+	log4cplus::ConfigureAndWatchThread	tmpWatchThread(filename,watchinterval);
 
 //# -------------------- Log Levels for the Operator messages ------------------
 //#
-//# LOG_FATAL(_STR) (logger, message | stream)
-//# LOG_ERROR(_STR)	(logger, message | stream)
-//# LOG_WARN(_STR)	(logger, message | stream)
-//# LOG_INFO(_STR)	(logger, message | stream)
+//# LOG_FATAL(_STR) (message | stream)
+//# LOG_ERROR(_STR)	(message | stream)
+//# LOG_WARN(_STR)	(message | stream)
+//# LOG_INFO(_STR)	(message | stream)
 //#
 // The LofarLogger utility can log messages on six different levels:
 // FATAL - ERROR - WARN - INFO - DEBUG - TRACE
@@ -71,56 +78,57 @@ extern const std::string formatString(const	char* format, ...);
 // The stream version allows you to use the operator<< but it is MUCH slower
 // than its string counterpart.
 // To simplifly the usage of strings you can call the global function 
-// formatString that accepts printf like arguments and returns a string.
+// 'formatString' that accepts printf like arguments and returns a string.
 //
 // The functions LOG_FATAL till LOG_INFO produce messages that are meant for the
 // operators. The message may NOT contain any 'inside' information, they should
 // tell:
 //  - WHAT situation has arisen
 //  - WHY this situation is a fault situation
-//  - HOW the situation should be solved.
+//  - HOW the situation should be solved (when appropriate).
 
 // LOG_FATAL(_STR) should be used when an unrecoverable exception occures.
-#define LOG_FATAL(logger,message) \
-	log4cplus::Logger::getInstance(logger).log(log4cplus::FATAL_LOG_LEVEL, message);
-#define LOG_FATAL_STR(logger,message) { 			\
+#define LOG_FATAL(message) \
+	log4cplus::Logger::getInstance(LOFARLOGGER_PACKAGE).log(log4cplus::FATAL_LOG_LEVEL, message);
+#define LOG_FATAL_STR(message) { 			\
 	std::ostringstream	oss;	\
 	oss << message;					\
-	log4cplus::Logger::getInstance(logger).log(log4cplus::FATAL_LOG_LEVEL, oss.str());	}
+	log4cplus::Logger::getInstance(LOFARLOGGER_PACKAGE).log(log4cplus::FATAL_LOG_LEVEL, oss.str());	}
 
 
 // LOG_ERROR(_STR) should be used in case of recoverable exceptions and illegal
 // start parms.
-#define LOG_ERROR(logger,message) \
-	log4cplus::Logger::getInstance(logger).log(log4cplus::ERROR_LOG_LEVEL, message);
-#define LOG_ERROR_STR(logger,message) { 			\
+#define LOG_ERROR(message) \
+	log4cplus::Logger::getInstance(LOFARLOGGER_PACKAGE).log(log4cplus::ERROR_LOG_LEVEL, message);
+#define LOG_ERROR_STR(message) { 			\
 	std::ostringstream	oss;	\
 	oss << message;					\
-	log4cplus::Logger::getInstance(logger).log(log4cplus::ERROR_LOG_LEVEL, oss.str());	}
+	log4cplus::Logger::getInstance(LOFARLOGGER_PACKAGE).log(log4cplus::ERROR_LOG_LEVEL, oss.str());	}
 
 
-// Use LOG_WARN(_STR) when ...
-#define LOG_WARN(logger,message) \
-	log4cplus::Logger::getInstance(logger).log(log4cplus::WARN_LOG_LEVEL, message);
-#define LOG_WARN_STR(logger,message) { 			\
+// Use LOG_WARN(_STR) when an unexpected situation occured that could be solved
+// be the software itself.
+#define LOG_WARN(message) \
+	log4cplus::Logger::getInstance(LOFARLOGGER_PACKAGE).log(log4cplus::WARN_LOG_LEVEL, message);
+#define LOG_WARN_STR(message) { 			\
 	std::ostringstream	oss;	\
 	oss << message;					\
-	log4cplus::Logger::getInstance(logger).log(log4cplus::WARN_LOG_LEVEL, oss.str()); }
+	log4cplus::Logger::getInstance(LOFARLOGGER_PACKAGE).log(log4cplus::WARN_LOG_LEVEL, oss.str()); }
 
 
 // LOG_INFO(_STR) should be used to notify operator startup and normal 
 // termination of programs. It can also be used for other 'global' actions.
-#define LOG_INFO(logger,message) \
-	log4cplus::Logger::getInstance(logger).log(log4cplus::INFO_LOG_LEVEL, message);
-#define LOG_INFO_STR(logger,message) { 			\
+#define LOG_INFO(message) \
+	log4cplus::Logger::getInstance(LOFARLOGGER_PACKAGE).log(log4cplus::INFO_LOG_LEVEL, message);
+#define LOG_INFO_STR(message) { 			\
 	std::ostringstream	oss;	\
 	oss << message;					\
-	log4cplus::Logger::getInstance(logger).log(log4cplus::INFO_LOG_LEVEL, oss.str()); }
+	log4cplus::Logger::getInstance(LOFARLOGGER_PACKAGE).log(log4cplus::INFO_LOG_LEVEL, oss.str()); }
 
 
 //# ------------------------- Debug Levels for the Integrator -------------------------
 //#
-//# LOG_DEBUG(_STR)	(logger, message | stream)
+//# LOG_DEBUG(_STR)	(message | stream)
 //#
 // Debug information is primairy meant for the integrator/user of your moudule. 
 // Note that the user of your module is often a developer. The messages contain
@@ -131,101 +139,105 @@ extern const std::string formatString(const	char* format, ...);
 // your module, so don't overload your program with it.
 
 #ifdef DISABLE_DEBUG_OUTPUT
-#define LOG_DEBUG(logger,message)
-#define LOG_DEBUG_STR(logger,stream)
+#define LOG_DEBUG(message)
+#define LOG_DEBUG_STR(stream)
 #else
 
 // Use this macro for plain and 'printf' like messages.
-#define LOG_DEBUG(logger,message) \
-	log4cplus::Logger::getInstance(logger).log(log4cplus::DEBUG_LOG_LEVEL, \
+#define LOG_DEBUG(message) \
+	log4cplus::Logger::getInstance(LOFARLOGGER_PACKAGE).log(log4cplus::DEBUG_LOG_LEVEL, \
 											   message, __FILE__, __LINE__);
 
 // Use these macro's for operator<< messages
 // Note: the 'printf' counterparts are MUCH faster and produce less code!
-#define LOG_DEBUG_STR(logger,message) { 			\
+#define LOG_DEBUG_STR(message) { 			\
 	std::ostringstream	oss;	\
 	oss << message;					\
-	log4cplus::Logger::getInstance(logger).log(log4cplus::DEBUG_LOG_LEVEL, \
+	log4cplus::Logger::getInstance(LOFARLOGGER_PACKAGE).log(log4cplus::DEBUG_LOG_LEVEL, \
 		oss.str(), __FILE__, __LINE__);	}
 
 #endif
 
 //# ----------------------- Trace Levels for the Programmer --------------------
 //#
-//# LOCAL_TRACER_CONTEXT
-//# INIT_TRACER_CONTEXT  (scope, contextname)
-//# LOG_TRACE_LOOP(_STR) (stream)
-//# LOG_TRACE_VAR(_STR)  (stream)
-//# LOG_TRACE_COND(_STR) (stream)
-//# LOG_TRACE_OBJ(_STR)  (stream)
-//# LOG_TRACE_FLOW(_STR) (stream)
+//# ALLOC_TRACER_CONTEXT
+//# INIT_TRACER_CONTEXT  	 (scope, contextname)
+//# ALLOC_TRACER_ALIAS		 (parent)
+//# LOG_TRACE_<type>(_STR) 	 (stream)
+//#
+//# Where <type> = LOOP, VAR, CALC, COND, STAT, OBJ, RTTI or FLOW
 //#
 // The trace level is split up into five additive sublevels to be able to
 // control the amount of output generated on this trace level. Again there are
 // strict guidelines how to use the levels in order to improve maintenance of
 // the source (by other developers).
 //
-// Tracing is implemented different that the other levels to get maximum speed
+// Tracing is implemented different from the other levels to get maximum speed
 // for the decision whether of not to log a message. The fact remains though
-// that the string-form of the calls stay much faster that there stream-from
+// that the string-form of the calls stay much faster than their stream-form
 // counterparts.
 //
 // Unlike the other loglevels the trace level will not be present anymore in the
 // final production code.
 #ifdef ENABLE_TRACER
 
-#define	LOCAL_TRACER_CONTEXT \
-	private:	static 			::LOFAR::LoggerReference	TraceLoggerRef;	\
-	public:		static inline	::LOFAR::LoggerReference	&getLogger() \
-				{ return TraceLoggerRef; }	
+// Allocates a global LoggerReference object in the scope of the class you
+// place this macro in. The (also defined) function getLogger returns the
+// created LoggerReference object.
+#define	ALLOC_TRACER_CONTEXT \
+	private:	static 			LOFAR::LoggerReference	theirTraceLoggerRef;	\
+	public:		static inline	LOFAR::LoggerReference	&getLogger() \
+				{ return theirTraceLoggerRef; }	
 
+// Attach a logger to the LoggerReference your defined in 'scope/class'.
 #define INIT_TRACER_CONTEXT(scope,contextname) \
-	::LOFAR::LoggerReference	scope::TraceLoggerRef(LOFAR::formatString("TRACE.%s",contextname))
+	::LOFAR::LoggerReference	scope::theirTraceLoggerRef(LOFAR::formatString("TRC.%s",contextname))
+
+// Only defines a function the return the LoggerReference in scope 'scope/class'
+#define ALLOC_TRACER_ALIAS(other) \
+	public:		static inline	LOFAR::LoggerReference	&getLogger() \
+				{ return other::theirTraceLoggerRef; }	
 
 // 
 #define LOG_TRACE_LOOP(message)		LofarLogTrace(1, message)
 #define LOG_TRACE_VAR(message)		LofarLogTrace(2, message)
-#define LOG_TRACE_COND(message)		LofarLogTrace(3, message)
-#define LOG_TRACE_OBJ(message)		LofarLogTrace(4, message)
-#define LOG_TRACE_FLOW(message)		LofarLogTrace(5, message)
+#define LOG_TRACE_CALC(message)		LofarLogTrace(3, message)
+#define LOG_TRACE_COND(message)		LofarLogTrace(4, message)
+#define LOG_TRACE_STAT(message)		LofarLogTrace(5, message)
+#define LOG_TRACE_OBJ(message)		LofarLogTrace(6, message)
+#define LOG_TRACE_RTTI(message)		LofarLogTrace(7, message)
+#define LOG_TRACE_FLOW(message)		LofarLogTrace(8, message)
 #define LOG_TRACE_LOOP_STR(stream)	LofarLogTraceStr(1, stream)
 #define LOG_TRACE_VAR_STR(stream)	LofarLogTraceStr(2, stream)
-#define LOG_TRACE_COND_STR(stream)	LofarLogTraceStr(3, stream)
-#define LOG_TRACE_OBJ_STR(stream)	LofarLogTraceStr(4, stream)
-#define LOG_TRACE_FLOW_STR(stream)	LofarLogTraceStr(5, stream)
+#define LOG_TRACE_CALC_STR(stream)	LofarLogTraceStr(3, stream)
+#define LOG_TRACE_COND_STR(stream)	LofarLogTraceStr(4, stream)
+#define LOG_TRACE_STAT_STR(stream)	LofarLogTraceStr(5, stream)
+#define LOG_TRACE_OBJ_STR(stream)	LofarLogTraceStr(6, stream)
+#define LOG_TRACE_RTTI_STR(stream)	LofarLogTraceStr(7, stream)
+#define LOG_TRACE_FLOW_STR(stream)	LofarLogTraceStr(8, stream)
 #define TRACE_LEVEL_LOOP			1
 #define TRACE_LEVEL_VAR				2
-#define TRACE_LEVEL_COND			3
-#define TRACE_LEVEL_OBJ				4
-#define TRACE_LEVEL_FLOW			5
-
-// If you like numbers more than names(?)
-#define LOG_TRACE1(message)			LofarLogTrace(1, message)
-#define LOG_TRACE2(message)			LofarLogTrace(2, message)
-#define LOG_TRACE3(message)			LofarLogTrace(3, message)
-#define LOG_TRACE4(message)			LofarLogTrace(4, message)
-#define LOG_TRACE5(message)			LofarLogTrace(5, message)
-#define LOG_TRACE_STR1(stream)		LofarLogTraceStr(1, stream)
-#define LOG_TRACE_STR2(stream)		LofarLogTraceStr(2, stream)
-#define LOG_TRACE_STR3(stream)		LofarLogTraceStr(3, stream)
-#define LOG_TRACE_STR4(stream)		LofarLogTraceStr(4, stream)
-#define LOG_TRACE_STR5(stream)		LofarLogTraceStr(5, stream)
-#define TRACE_LEVEL1				1
-#define TRACE_LEVEL2				2
-#define TRACE_LEVEL3				3
-#define TRACE_LEVEL4				4
-#define TRACE_LEVEL5				5
+#define TRACE_LEVEL_CALC			3
+#define TRACE_LEVEL_COND			4
+#define TRACE_LEVEL_STAT			5
+#define TRACE_LEVEL_OBJ				6
+#define TRACE_LEVEL_RTTI			7
+#define TRACE_LEVEL_FLOW			8
 
 //# ----------- implementation details -------------
 namespace LOFAR {
-extern void	initTraceModule(void);
+void	initTraceModule(void);
 }
+// Internal macro to define (or not) the initialisation routine of the
+// trace module.
 #define	LofarInitTracingModule	initTraceModule();
 
+// Internal macro used by the LOG_TRACE_<level> macros.
 #define LofarLogTrace(level,message) \
 	if (getLogger().logger().isEnabledFor(level)) \
 		getLogger().logger().forcedLog(level, message, __FILE__, __LINE__)
 
+// Internal macro used by the LOG_TRACE_<level>_STR macros.
 #define LofarLogTraceStr(level,stream) \
 	if (getLogger().logger().isEnabledFor(level)) { \
 		std::ostringstream	oss;	\
@@ -236,32 +248,31 @@ extern void	initTraceModule(void);
 //# Define dummies if tracing is disabled.
 #define LOG_TRACE_LOOP(message)
 #define LOG_TRACE_VAR(message)
+#define LOG_TRACE_CALC(message)
 #define LOG_TRACE_COND(message)
+#define LOG_TRACE_STAT(message)
 #define LOG_TRACE_OBJ(message)
+#define LOG_TRACE_RTTI(message)
 #define LOG_TRACE_FLOW(message)
 #define LOG_TRACE_LOOP_STR(stream)
 #define LOG_TRACE_VAR_STR(stream)
+#define LOG_TRACE_CALC_STR(stream)
 #define LOG_TRACE_COND_STR(stream)
+#define LOG_TRACE_STAT_STR(stream)
 #define LOG_TRACE_OBJ_STR(stream)
+#define LOG_TRACE_RTTI_STR(stream)
 #define LOG_TRACE_FLOW_STR(stream)
-#define LOG_TRACE1(message)
-#define LOG_TRACE2(message)
-#define LOG_TRACE3(message)
-#define LOG_TRACE4(message)
-#define LOG_TRACE5(message)
-#define LOG_TRACE_STR1(stream)
-#define LOG_TRACE_STR2(stream)
-#define LOG_TRACE_STR3(stream)
-#define LOG_TRACE_STR4(stream)
-#define LOG_TRACE_STR5(stream)
 #define TRACE_LEVEL_LOOP	0
 #define TRACE_LEVEL_VAR		0
+#define TRACE_LEVEL_CALC	0
 #define TRACE_LEVEL_COND	0
+#define TRACE_LEVEL_STAT	0
 #define TRACE_LEVEL_OBJ		0
+#define TRACE_LEVEL_RTTI	0
 #define TRACE_LEVEL_FLOW	0
 
 #define	LofarInitTracingModule
-#define	LOCAL_TRACER_CONTEXT 
+#define	ALLOC_TRACER_CONTEXT 
 #define INIT_TRACER_CONTEXT(scope,contextname) 
 
 #endif	// ENABLE_TRACER
@@ -269,8 +280,8 @@ extern void	initTraceModule(void);
 //#
 //# AUTO_FUNCTION_NAME
 //#
-// Define a the macro AUTO_FUNCTION_NAME that will be resolved by the
-// (pre)compiler to hold the name of the function the macro was used in.
+// The macro AUTO_FUNCTION_NAME will be resolved by the (pre)compiler to 
+// hold the name of the function the macro was used in.
 #if defined(HAVE_PRETTY_FUNCTION)
 #	define AUTO_FUNCTION_NAME		__PRETTY_FUNCTION__
 #elif defined(HAVE_FUNCTION)
@@ -282,15 +293,18 @@ extern void	initTraceModule(void);
 //#
 //# LOG_TRACE_LIFETIME(_STR) (level,message | stream)
 //#
+// The macros LOG_TRACE_LIFETIME(_STR) create a TraceLogger object that will
+// output your message during construct and destruction. Your message is
+// preceeded with "ENTER:" or "EXIT:".
 #define LOG_TRACE_LIFETIME(level,message) \
-	log4cplus::TraceLogger		_tmpLifetimeTraceObj(getLogger().logger(), \
+	LifetimeLogger		_tmpLifetimeTraceObj(level, getLogger().logger(), \
 			LOFAR::formatString("%s:%s", AUTO_FUNCTION_NAME, message), \
 			__FILE__, __LINE__); 
 
 #define LOG_TRACE_LIFETIME_STR(level,stream) \
 	ostringstream	oss; \
 	oss << AUTO_FUNCTION_NAME << ":" << stream; \
-	log4cplus::TraceLogger		_tmpLifetimeTraceObj(getLogger().logger(), \
+	LifetimeLogger		_tmpLifetimeTraceObj(level, getLogger().logger(), \
 								oss.str(), __FILE__, __LINE__); \
 	}
 
@@ -304,17 +318,55 @@ namespace LOFAR {
 // pointer to a shared Object.
 class	LoggerReference {
 public:
-	LoggerReference(const std::string&	LoggerName) : 
-			itsLogger(log4cplus::Logger::getInstance(LoggerName)) {	 }
+	// A logger with the given name is created and a pointer to this shared
+	// object is stored in the instance of this class.
+	LoggerReference(const std::string&	loggerName) : 
+			itsLogger(log4cplus::Logger::getInstance(loggerName)) {	 }
 	~LoggerReference() { }
+	// Returns the pointer to the logger.
 	log4cplus::Logger&	logger()	{ return itsLogger; }
 
 private:
+	LoggerReference();			// Force use of loggername
+
+	//# Data
 	log4cplus::Logger			itsLogger;
 };
 
-extern LoggerReference	TraceLoggerRef;
-inline LoggerReference&	getLogger() { return TraceLoggerRef; }
+// The LifetimeLogger class produces TRACE messages when an instance of this
+// class is created and when it is destroyed.
+class LifetimeLogger {
+public:
+	LifetimeLogger(const log4cplus::LogLevel ll, const log4cplus::Logger& logger,
+				   const log4cplus::tstring& msg, const char* file=NULL, int line=-1)
+		: itsLevel(ll), itsLogger(logger), itsMsg(msg), itsFile(file), itsLine(line) 
+	{
+		if (itsLogger.isEnabledFor(itsLevel)) {
+			itsLogger.forcedLog(itsLevel, LOG4CPLUS_TEXT("ENTER: ") + itsMsg, 
+																itsFile, itsLine);
+		}
+	}
+
+	~LifetimeLogger()
+	{
+		if (itsLogger.isEnabledFor(itsLevel)) {
+			itsLogger.forcedLog(itsLevel, LOG4CPLUS_TEXT("EXIT: ") + itsMsg, 
+																itsFile, itsLine);
+		}
+	}
+
+private:
+	log4cplus::LogLevel		itsLevel;
+	log4cplus::Logger		itsLogger;
+	log4cplus::tstring		itsMsg;
+	const char*				itsFile;
+	int						itsLine;
+};
+
+// The 'mother' of all trace-loggers is stored here.
+extern LoggerReference	theirTraceLoggerRef;
+// Function to return the 'mother' of all trace-loggers.
+inline LoggerReference&	getLogger() { return theirTraceLoggerRef; }
 
 } // namespace LOFAR
 using LOFAR::getLogger;
@@ -322,28 +374,44 @@ using LOFAR::getLogger;
 
 //#------------------------ Assert en FailWhen -------------------------------
 //#
-//# THROW_EXC (exception,stream)
-//# ASSERT	  (condition,stream)
-//# FAILWHEN  (condition,stream)
+//# THROW		  (exception,stream)
+//# (DBG)ASSERT	  (condition,stream)
+//# (DBG)FAILWHEN (condition,stream)
 //#
 
 namespace LOFAR {
 	EXCEPTION_CLASS(AssertError,Exception)
 }
 
-#define THROW_EXC(exc,stream) { \
+// The macro THROW first sends a logrequest to logger <module>.EXCEPTION
+// before executing the real throw.
+#define THROW(exc,stream) { \
 	std::ostringstream	oss;	\
 	oss << stream;				\
-	log4cplus::Logger::getInstance(PACKAGE ".EXCEPTION").log( \
+	log4cplus::Logger::getInstance(LOFARLOGGER_PACKAGE ".EXCEPTION").log( \
 					log4cplus::DEBUG_LOG_LEVEL, oss.str(), __FILE__, __LINE__); \
 	} \
 	throw (exc(stream, __HERE__))
 
+// If the condition of assert is NOT met a logrequest is sent to the logger
+// <module>.EXCEPTION and an AsserError exception is thrown.
 #define ASSERT(cond,stream) \
-	if (!(cond))  THROW_EXC(LOFAR::AssertError, "Assertion: " #cond)
+	if (!(cond))  THROW(LOFAR::AssertError, "Assertion: " #cond)
 
+// If the condition of failwhen is met a logrequest is sent to the logger
+// <module>.EXCEPTION and an AsserError exception is thrown.
 #define FAILWHEN(cond,stream) \
-	if (cond)  THROW_EXC(LOFAR::AssertError, "Failtest: " #cond)
+	if (cond)  THROW(LOFAR::AssertError, "Failtest: " #cond)
+
+// The DBG... version of ASSERT and FAILWHEN will only be in your compiled
+// code when the (pre)compiler flag ENABLE_DBGASSERT is defined.
+#ifdef ENABLE_DBGASSERT
+#define DBGASSERT(cond,stream)		ASSERT(cond,stream)
+#define DBGFAILWHEN(cond,stream)	FAILWHEN(cond,stream)
+#else
+#define DBGASSERT(cond,stream)
+#define DBGFAILWHEN(cond,stream)
+#endif
 
 #endif // file read before
 
