@@ -71,7 +71,9 @@ bool DH_SampleC::doFsWrite (ofstream& oss) const
   const BufferType* buf = itsBuffer;
   for (int i=0; i<itsNx; i++) {
     for (int j=0; j<itsNy; j++) {
-      oss << *buf++ << ' ' ;
+      oss << '(' << setw(20) << buf->real() << ',' << setw(20)
+	  << buf->imag() << ')' << ' ' ;
+      buf++;
     }
     oss << endl;
   }
