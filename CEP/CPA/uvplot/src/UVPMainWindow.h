@@ -32,10 +32,11 @@ class UVPMainWindow:public QMainWindow
 
  public:                        /* Public part */
 
-  enum e_menu_command{mc_open,
-                      mc_quit,
-                      mc_help,
-                      mc_information};
+  enum e_menu_command{mc_file_open,
+                      mc_file_quit,
+                      mc_plot_image,
+                      mc_plot_stop,
+                      mc_help_about};
 
   enum e_plotDataType{plotAmplitude, plotPhase, plotReal, plotImaginary};
 
@@ -50,12 +51,16 @@ class UVPMainWindow:public QMainWindow
   QPopupMenu*     m_plot_menu;
   QPopupMenu*     m_help_menu;
   
+  int            itsMenuPlotImageID;
+  int            itsMenuPlotStopID;
+
   QStatusBar*     itsStatusBar;
   QProgressBar*   itsProgressBar; /* Resides in Status bar */
   QLabel*         itsXPosLabel;
   QLabel*         itsYPosLabel;
 
   UVPTimeFrequencyPlot*  itsCanvas;
+  bool                   itsBusyPlotting;
   //  UVPUVCoverageArea* itsCanvas;      /* The drawing canvas */
   //  UVPImageCube*      itsCube;
 
@@ -68,6 +73,8 @@ class UVPMainWindow:public QMainWindow
   void slot_setProgress(int steps);
       
   void slot_plotTimeFrequencyImage();
+
+  void slot_quitPlotting();
 
   protected slots:
     
