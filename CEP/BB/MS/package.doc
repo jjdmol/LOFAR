@@ -1,0 +1,6 @@
+// \ingroup BB
+
+// \defgroup MS MS
+// MS contains the code to split/convert an AIPS++ MeasurementSet to make
+// it suitable for the BBS3 software.
+
