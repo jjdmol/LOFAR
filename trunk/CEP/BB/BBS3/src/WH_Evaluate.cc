@@ -29,7 +29,6 @@
 
 #include <BBS3/WH_Evaluate.h>
 #include <CEPFrame/Step.h>
-#include <Common/Debug.h>
 #include <BBS3/DH_WorkOrder.h>
 #include <BBS3/DH_Solution.h>
 #include <BBS3/SI_Peeling.h>
@@ -78,7 +77,7 @@ WH_Evaluate* WH_Evaluate::make (const string& name)
 
 void WH_Evaluate::process()
 {
-  TRACER3("WH_Evaluate process()");
+  LOG_TRACE_RTTI("WH_Evaluate process()");
 //   if (itsEventCnt > 0)
 //   {  readSolutions(); }
 
@@ -91,11 +90,11 @@ void WH_Evaluate::process()
   {
     if (itsEventCnt == 0)
     {
-      TRACER1( "Strategy: SIMPLE");
+      LOG_TRACE_OBJ( "Strategy: SIMPLE");
 
       // Define new simple work order
       DH_WorkOrder* wo = dynamic_cast<DH_WorkOrder*>(getDataManager().getInHolder(0));
-      AssertStr(wo != 0, "DataHolder cannot be cast to a DH_WorkOrder");
+      ASSERTSTR(wo != 0, "DataHolder cannot be cast to a DH_WorkOrder");
       wo->setWorkOrderID(theirNextWorkOrderID++);
       wo->setStatus(DH_WorkOrder::New);
       wo->setKSType("KS");
@@ -110,7 +109,7 @@ void WH_Evaluate::process()
 
       // Insert WorkOrder into database
       DH_PL* woPtr = dynamic_cast<DH_PL*>(wo);
-      AssertStr(woPtr != 0, "OutHolder cannot be cast to a DH_PL");
+      ASSERTSTR(woPtr != 0, "OutHolder cannot be cast to a DH_PL");
       woPtr->insertDB();
     }
   }
@@ -119,10 +118,10 @@ void WH_Evaluate::process()
   {
     if (itsEventCnt == 0)
     {
-      TRACER1("Strategy: PEEL");
+      LOG_TRACE_OBJ("Strategy: PEEL");
       // Define new peeling work order
       DH_WorkOrder* wo = dynamic_cast<DH_WorkOrder*>(getDataManager().getInHolder(0));
-      AssertStr(wo != 0, "DataHolder cannot be cast to a DH_WorkOrder");
+      ASSERTSTR(wo != 0, "DataHolder cannot be cast to a DH_WorkOrder");
       wo->setWorkOrderID(theirNextWorkOrderID++);
       wo->setStatus(DH_WorkOrder::New);
       wo->setKSType("KS");
@@ -134,7 +133,7 @@ void WH_Evaluate::process()
 
       // Insert WorkOrder into database
       DH_PL* woPtr = dynamic_cast<DH_PL*>(wo);
-      AssertStr(woPtr != 0, "OutHolder cannot be cast to a DH_PL");
+      ASSERTSTR(woPtr != 0, "OutHolder cannot be cast to a DH_PL");
       woPtr->insertDB(); 
       
       wo->dump();
@@ -156,9 +155,9 @@ void WH_Evaluate::postprocess()
 void WH_Evaluate::readSolutions()
 {
   DH_Solution* sol = dynamic_cast<DH_Solution*>(getDataManager().getInHolder(1));
-  AssertStr(sol != 0,  "DataHolder* can not be cast to a DH_Solution*");
+  ASSERTSTR(sol != 0,  "DataHolder* can not be cast to a DH_Solution*");
   DH_PL* solPtr = dynamic_cast<DH_PL*>(sol);
-  AssertStr(solPtr != 0,  "DH_Solution* can not be cast to a DH_PL*");
+  ASSERTSTR(solPtr != 0,  "DH_Solution* can not be cast to a DH_PL*");
 
 
   // Wait for solution

@@ -116,12 +116,7 @@ public:
  
   /*!
    * Solve for the data in the current domain.
-   * \returns Returns fit value to indicate fitness of the solution and
-   * updates the parameters for which to solve.
-   */
-  GlishRecord solve (Bool useSVD);
-
-  /*! Solve which returns solved parameter values in a vector and fit value 
+  /* Solve which returns solved parameter values in a vector and fit value 
    * in Quality object.
    */
   void solve (Bool useSVD,

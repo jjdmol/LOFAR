@@ -23,7 +23,7 @@
 #include <lofar_config.h>
 
 #include <BBS3/SI_Peeling.h>
-#include <Common/Debug.h>
+#include <Common/LofarLogger.h>
 #include <Common/KeyValueMap.h>
 #include <BBS3/MeqCalibraterImpl.h>
 
@@ -45,13 +45,13 @@ SI_Peeling::SI_Peeling(MeqCalibrater* cal, const KeyValueMap& args)
   itsEndChan = args.getInt("endChan", 0);
   itsAnt = (const_cast<KeyValueMap&>(args))["antennas"].getVecInt();
  
-  TRACER1("Creating Peeling strategy implementation with " 
-	  << "number of iterations = " << itsNIter << ", "
-	  << "number of sources = " << itsNSources << ", "
-	  << " time interval = " << itsTimeInterval<< ", "
-          << "start channel = " << itsStartChan << ", "
-          << "end channel = " << itsEndChan << ", "
-          << "number of antennas = " << itsAnt.size());
+  LOG_INFO_STR("Creating Peeling strategy implementation with " 
+		     << "number of iterations = " << itsNIter << ", "
+		     << "number of sources = " << itsNSources << ", "
+		     << " time interval = " << itsTimeInterval<< ", "
+		     << "start channel = " << itsStartChan << ", "
+		     << "end channel = " << itsEndChan << ", "
+		     << "number of antennas = " << itsAnt.size());
 
 }
 
@@ -64,7 +64,7 @@ bool SI_Peeling::execute(vector<string>& parmNames,
 			 Quality& resultQuality,
 			 int& resultIterNo)
 {
-  AssertStr(itsCal != 0, 
+  ASSERTSTR(itsCal != 0, 
 	    "Calibrator pointer not set for this peeling strategy");
 
   vector<string> srcParams;   // Source specific parameters
@@ -96,18 +96,18 @@ bool SI_Peeling::execute(vector<string>& parmNames,
 
     itsCal->resetIterator();
     itsCal->nextInterval();
-    TRACER1("Next interval");
+    LOG_TRACE_RTTI("Next interval");
    
     itsFirstCall = false;
   }
 
-  TRACER1("Next iteration: " << itsCurIter+1);
+  LOG_TRACE_RTTI_STR("Next iteration: " << itsCurIter+1);
   if (++itsCurIter >= itsNIter)          // Next iteration
   {                                      // Finished with all iterations
-    TRACER1("Next interval");
+    LOG_TRACE_RTTI("Next interval");
     if (itsCal->nextInterval() == false) // Next time interval
     {                                    // Finished with all time intervals
-      TRACER1("Next source: " << itsCurSource+1);
+      LOG_TRACE_RTTI_STR("Next source: " << itsCurSource+1);
      if (++itsCurSource >= itsStartSource+itsNSources)  // Next source
       {
 	itsCurIter = -1;
@@ -136,15 +136,15 @@ bool SI_Peeling::execute(vector<string>& parmNames,
 
 	itsCal->resetIterator();
 	itsCal->nextInterval();
-	TRACER1("Next interval");
+	LOG_TRACE_RTTI("Next interval");
       }
     }
     itsCurIter = 0;                      // Reset iterator
   }
 
   // The actual solve
-  TRACER1("Solve for source = " << itsCurSource << " of " << itsNSources 
-       << " iteration = " << itsCurIter << " of " << itsNIter);
+  LOG_TRACE_RTTI_STR("Solve for source = " << itsCurSource << " of " << itsNSources 
+		     << " iteration = " << itsCurIter << " of " << itsNIter);
  
   itsCal->solve(false, resultParmNames, resultParmValues, resultQuality);
 

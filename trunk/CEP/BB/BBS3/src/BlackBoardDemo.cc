@@ -30,8 +30,6 @@
 #include <stdlib.h>
 #include <Common/lofar_string.h>
 
-#include <Common/Debug.h>
-
 #include <CEPFrame/Step.h>
 #include <CEPFrame/WH_Empty.h>
 #include <CEPFrame/Profiler.h>
@@ -54,12 +52,12 @@ BlackBoardDemo::BlackBoardDemo()
   : itsKSSteps(0),
     itsNumberKS(0)
 {
-  TRACER1(">>>>>>>> BlackBoardDemo constructor <<<<<<<<<<");
+  LOG_TRACE_FLOW(">>>>>>>> BlackBoardDemo constructor <<<<<<<<<<");
 }
 
 BlackBoardDemo::~BlackBoardDemo()
 {
-  TRACER1(">>>>>>>> BlackBoardDemo destructor <<<<<<<<<<");
+  LOG_TRACE_FLOW(">>>>>>>> BlackBoardDemo destructor <<<<<<<<<<");
   undefine();
 }
 
@@ -140,20 +138,21 @@ void BlackBoardDemo::define(const KeyValueMap& params)
 }  
 
 void BlackBoardDemo::run(int nSteps) {
-  TRACER1("Call run()");
+  LOG_TRACE_FLOW("Call run()");
   Profiler::init();
   Step::clearEventCount();
 
-  TRACER4("Start Processing simul");    
+  LOG_TRACE_RTTI("Start Processing simul");    
   for (int i=0; i<nSteps; i++) {
     if (i==2) Profiler::activate();
-    TRACER2("Call simul.process() ");
+    LOG_TRACE_RTTI("Call simul.process() ");
     cout << "Run " << i << "/" << nSteps << endl;
     getComposite().process();
     if (i==5) Profiler::deActivate();
   }
 
-  TRACER4("END OF SIMUL on node " << TRANSPORTER::getCurrentRank () );
+  LOG_TRACE_RTTI_STR("END OF BLACKBOARDDEMO on node " 
+		     << TRANSPORTER::getCurrentRank () );
  
 #if 0
   //     close environment
@@ -170,13 +169,13 @@ void BlackBoardDemo::quit() {
 }
 
 void BlackBoardDemo::undefine() {
-  TRACER2("Enter BlackBoardDemo::undefine");
+  LOG_TRACE_FLOW("Enter BlackBoardDemo::undefine");
   if (itsKSSteps) 
     for (int iStep = 0; iStep < itsNumberKS; iStep++) 
       delete itsKSSteps[iStep];
   delete [] itsKSSteps;
 
-  TRACER2("Leaving BlackBoardDemo::undefine");
+  LOG_TRACE_FLOW("Leaving BlackBoardDemo::undefine");
 }
 
 
