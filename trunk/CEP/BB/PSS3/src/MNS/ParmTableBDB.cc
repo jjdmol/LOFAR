@@ -38,17 +38,8 @@ namespace LOFAR {
 
   ParmTableBDB::ParmTableBDB (const string& userName, const string& tableName) : 
     itsDb (NULL, 0),
-    itsTableName (tableName)
+    itsTableName ("/tmp/" + userName + "." + tableName + ".bdb")
   {
-    u_int32_t oFlags = DB_CREATE;
-    string dbfilename = "/tmp/" + userName + "." + tableName + ".bdb";
-    itsDb.set_flags(DB_DUPSORT);
-    //  if (itsDb.open(transid, filename, database, dbtype, flags, mode) !=0) {
-    if (itsDb.open(NULL, dbfilename.c_str(), NULL, DB_BTREE, oFlags, 0) != 0 ) {
-      itsDb.close(0);
-      ASSERTSTR(false, "no connection to database");    
-    }
-    LOG_TRACE_STAT("connected to database");
   }
 
   ParmTableBDB::~ParmTableBDB()
@@ -57,8 +48,31 @@ namespace LOFAR {
     itsDb.close(0);
   }
 
-  void ParmTableBDB::createTable(){
-    // Do nothing because the table was already created in the constructor
+  void ParmTableBDB::connect(){
+    u_int32_t oFlags = 0;
+    itsDb.set_flags(DB_DUPSORT);
+    //  if (itsDb.open(transid, filename, database, dbtype, flags, mode) !=0) {
+    if (itsDb.open(NULL, itsTableName.c_str(), NULL, DB_BTREE, oFlags, 0) != 0 ) {
+      itsDb.close(0);
+      ASSERTSTR(false, "no connection to database");    
+    }
+    LOG_TRACE_STAT("connected to database");
+  }
+
+  void ParmTableBDB::createTable(const string& userName, const string& tableName){
+    string fullTableName = "/tmp/" + userName + "." + tableName + ".bdb";
+    // Do the same as the connect but now with the flag DB_CREATE
+    cout<<"Creating database: " << fullTableName<<endl;
+    u_int32_t oFlags = DB_CREATE;
+    Db tmpDb(NULL, 0);
+    tmpDb.set_flags(DB_DUPSORT);
+    if (tmpDb.open(NULL, fullTableName.c_str(), NULL, DB_BTREE, oFlags, 0) != 0 ) {
+      tmpDb.close(0);
+      ASSERTSTR(false, "could not create database");    
+    }
+    LOG_TRACE_STAT("created database");
+    tmpDb.sync(0);
+    tmpDb.close(0);
   }
 
   void ParmTableBDB::clearTable(){
@@ -152,6 +166,15 @@ namespace LOFAR {
     cursorp->close();
     putNewCoeff (parmName, srcnr, statnr, polc);
   }
+
+  void ParmTableBDB::putDefCoeff (const string& parmName,
+				  int srcnr, int statnr,
+				  const MeqPolc& polc)
+  {
+    // For Berkeley DB there is no difference between a default and a normal parm (yet)
+    putCoeff (parmName, srcnr, statnr, polc);  
+  }
+
 
   void ParmTableBDB::putNewCoeff (const string& parmName,
 				  int srcnr, int statnr,
