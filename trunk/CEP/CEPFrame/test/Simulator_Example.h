@@ -20,39 +20,17 @@
 //
 //  $Id$
 //
-//  $Log$
-//  Revision 1.3  2002/05/07 08:54:36  gvd
-//  Added package to includes
-//
-//  Revision 1.2  2001/10/26 10:06:28  wierenga
-//  Wide spread changes to convert from Makedefs to autoconf/automake/libtool build environment
-//
-//  Revision 1.1  2001/08/30 09:12:23  gvd
-//  moved to test dir.
-//
-//  Revision 1.4  2001/03/23 10:00:40  gvd
-//  Improved documentation and test programs
-//  Added clearEventCount function to Step
-//
-//  Revision 1.3  2001/03/01 13:15:47  gvd
-//  Added type argument in DataHolder constructor which is used in
-//  the connect functions to check if the DH types match
-//  Improved the simulator parser
-//  Improved documentation
-//
-//  Revision 1.2  2001/02/05 14:53:05  loose
-//  Added GPL headers
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef BASESIM_SIMULATOR_EXAMPLE_H
-#define BASESIM_SIMULATOR_EXAMPLE_H
+#ifndef CEPFRAME_SIMULATOR_EXAMPLE_H
+#define CEPFRAME_SIMULATOR_EXAMPLE_H
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
 
-#include "BaseSim/Simulator.h"
+#include "CEPFrame/Simulator.h"
 
 /**
    This class is an example of a concrete Simulator.

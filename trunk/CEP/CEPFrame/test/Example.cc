@@ -19,17 +19,17 @@
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //
 //  $Id$
-
+//
+///////////////////////////////////////////////////////////////
 
 #include <Common/lofar_iostream.h>
-#include "BaseSim/Transport.h"
-#include "BaseSim/Step.h"
-#include "BaseSim/BaseSim.h"
-#include "BaseSim/Simul.h"
-#include "BaseSim/BaseSim.h"
-#include "BaseSim/WH_Example.h"
-#include "BaseSim/Simul2XML.h"
-#include "BaseSim/Profiler.h"
+#include "CEPFrame/Transport.h"
+#include "CEPFrame/Step.h"
+#include "CEPFrame/Simul.h"
+#include "CEPFrame/BaseSim.h"
+#include "CEPFrame/WH_Example.h"
+#include "CEPFrame/Simul2XML.h"
+#include "CEPFrame/Profiler.h"
 #include "Common/Debug.h"
 
 
@@ -73,7 +73,7 @@ int main (int argc, const char *argv[])
   int rank = TRANSPORTER::getCurrentRank ();
   unsigned int size = TRANSPORTER::getNumberOfNodes();
   int appl = Step::getCurAppl();
-  cout << "BaseSim Processor " << rank << " of " << size
+  cout << "CEPFrame Processor " << rank << " of " << size
        << " operational  (appl=" << appl << ')' << endl;
 
   // A simple example. Four steps connected to each other.

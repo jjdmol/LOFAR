@@ -20,22 +20,17 @@
 //
 //  $Id$
 //
-//  $Log$
-//  Revision 1.1  2002/06/27 14:21:59  schaaf
-//
-//  %[BugId: 58]%
-//  New Tester program
 //
 // 
 ///////////////////////////////////////////////////////////////////////
 
-#include "BaseSim/BaseSim.h"
-#include "BaseSim/Transport.h"
-#include "BaseSim/Step.h"
-#include "BaseSim/Simul.h"
-#include "BaseSim/DH_Tester.h"
-#include "BaseSim/WH_TestOnDemandData.h"
-#include "BaseSim/Profiler.h"
+#include "CEPFrame/BaseSim.h"
+#include "CEPFrame/Transport.h"
+#include "CEPFrame/Step.h"
+#include "CEPFrame/Simul.h"
+#include "CEPFrame/DH_Tester.h"
+#include "CEPFrame/WH_TestOnDemandData.h"
+#include "CEPFrame/Profiler.h"
 #include "Common/Debug.h"
 
 int main (int argc, char *argv[])
@@ -47,7 +42,7 @@ int main (int argc, char *argv[])
   int rank = TRANSPORTER::getCurrentRank ();
   unsigned int size = TRANSPORTER::getNumberOfNodes();
   int appl = Step::getCurAppl ();
-  cout << "BaseSim Processor " << rank << " of " << size
+  cout << "CEPFrame Processor " << rank << " of " << size
        << " operational  (appl=" << appl << ')' << endl;
 
   // create the main Simul; Steps and Simuls will be added to this one

@@ -22,46 +22,6 @@
 //
 //  $Id$
 //
-//  $Log$
-//  Revision 1.8  2002/07/19 14:10:12  wierenga
-//
-//  %[BugId: 66]%
-//  Renamed difftime to cbt_difftime to solve conflict with insure.
-//
-//  Revision 1.7  2002/06/13 11:56:58  wierenga
-//  %[BugId: 2]%
-//  Remove maxclients argument from CyclicBuffer constructor, it is not needed.
-//
-//  Revision 1.6  2002/06/04 12:25:17  wierenga
-//  %[BugId:2]%
-//  Fixed bug in CyclicBufferTest. The UNIX signal facility does not
-//  combine well with pthreads :-). The signal handler was only used
-//  to periodically print the status of the circular buffer. After taking
-//  out the SIGALRM signal the code works fine.
-//
-//  Revision 1.5  2002/05/28 14:33:57  wierenga
-//  %[BugId:2]%
-//  Trying to get the CyclicBufferTest to work on multi-CPU machine (lofar8).
-//  It is currently failing in some cases.
-//
-//  Revision 1.4  2002/05/28 08:06:45  wierenga
-//  %[BugId:2]%
-//  Lock global counter using pthread mutex.
-//
-//  Revision 1.3  2002/05/28 07:45:03  wierenga
-//  %[BugId:2]%
-//  Needed global lock around global counter.
-//  Moved Lock.h from BaseSim/Corba to BaseSim.
-//
-//  Revision 1.2  2002/05/24 14:40:02  wierenga
-//  %[BugId: 2]%
-//  First completed version of the CyclicBuffer implementation.
-//  This includes a test program in BaseSim/test which will be run
-//  if you run 'make check'.
-//
-//  Revision 1.1  2002/05/23 11:16:16  wierenga
-//  %[BugId: 2]%
-//  New test program for CyclicBuffer implementation.
 //
 //////////////////////////////////////////////////////////////////////
 
@@ -70,8 +30,8 @@
 #endif
 
 #include "Common/Debug.h"
-#include "BaseSim/CyclicBuffer.h"
-#include "BaseSim/Lock.h"
+#include "CEPFrame/CyclicBuffer.h"
+#include "CEPFrame/Lock.h"
 #include <stdio.h>
 #include <pthread.h>
 #include <sys/time.h>

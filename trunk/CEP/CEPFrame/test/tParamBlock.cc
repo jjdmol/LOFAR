@@ -20,25 +20,12 @@
 //
 //  $Id$
 //
-//  $Log$
-//  Revision 1.4  2002/05/07 08:54:36  gvd
-//  Added package to includes
-//
-//  Revision 1.3  2002/05/03 11:21:33  gvd
-//  Changed for new build environment (mostly added package name to include)
-//
-//  Revision 1.2  2002/03/01 08:28:54  gvd
-//  Use new lofar_*.h for correct namespaces
-//  Use Debug.h instead of firewall.h
-//
-//  Revision 1.1  2001/09/04 10:08:30  gvd
-//  Test program for ParamBlock/Value classes
 //
 //
 //////////////////////////////////////////////////////////////////////
 
 
-#include "BaseSim/ParamBlock.h"
+#include "CEPFrame/ParamBlock.h"
 #include <Common/lofar_iostream.h>
 
 
