@@ -1,4 +1,4 @@
-//#  WGSync.cc: implementation of the WGSync class
+//#  RCUWrite.cc: implementation of the RCUWrite class
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,10 +20,11 @@
 //#
 //#  $Id$
 
-#include "WGSync.h"
+#include "RCUWrite.h"
 #include "EPA_Protocol.ph"
-#include "RSP_Protocol.ph"
 #include "Cache.h"
+
+#include <string.h>
 
 #undef PACKAGE
 #undef VERSION
@@ -42,33 +43,52 @@
 using namespace RSP;
 using namespace LOFAR;
 using namespace EPA_Protocol;
-using namespace RSP_Protocol;
 
-WGSync::WGSync(GCFPortInterface& board_port, int board_id)
+RCUWrite::RCUWrite(GCFPortInterface& board_port, int board_id)
   : SyncAction(board_port, board_id, N_BLP)
 {
 }
 
-WGSync::~WGSync()
+RCUWrite::~RCUWrite()
 {
   /* TODO: delete event? */
 }
 
-void WGSync::sendrequest()
+void RCUWrite::sendrequest()
 {
   uint8 global_blp = (getBoardId() * N_BLP) + getCurrentBLP() * 2;
 
-  EPAWgsettingsEvent wgsettings;
-  MEP_WGSETTINGS(wgsettings.hdr, MEPHeader::WRITE, getCurrentBLP());
+  EPARcusettingsEvent rcusettings;
+  MEP_RCUSETTINGS(rcusettings.hdr, MEPHeader::WRITE, getCurrentBLP());
 
-  WGSettings& w = Cache::getInstance().getBack().getWGSettings();
+  RCUSettings::RCURegisterType& x = Cache::getInstance().getBack().getRCUSettings()()(global_blp);
+  RCUSettings::RCURegisterType& y = Cache::getInstance().getBack().getRCUSettings()()(global_blp + 1);
 
-  memcpy(&wgsettings.freq, &(w()(global_blp)), sizeof(WGSettings::WGRegisterType));
+#ifdef TOGGLE_LEDS
+  if (x.filter_0)
+  {
+    x.filter_0 = 0;
+    x.filter_1 = 1;
+  }
+  else
+  {
+    x.filter_0 = 1;
+    x.filter_1 = 0;
+  }
 
-  getBoardPort().send(wgsettings);
+  RCUSettings::RCURegisterType& x1 = Cache::getInstance().getFront().getRCUSettings()()(global_blp);
+  RCUSettings::RCURegisterType& y1 = Cache::getInstance().getFront().getRCUSettings()()(global_blp + 1);
+  x1=x;
+  y1=y;
+#endif
+
+  memcpy(&rcusettings.x, &x, sizeof(uint8));
+  memcpy(&rcusettings.y, &y, sizeof(uint8));
+
+  getBoardPort().send(rcusettings);
 }
 
-void WGSync::sendrequest_status()
+void RCUWrite::sendrequest_status()
 {
   // send read status request to check status of the write
   EPARspstatusReadEvent rspstatus;
@@ -77,7 +97,7 @@ void WGSync::sendrequest_status()
   getBoardPort().send(rspstatus);
 }
 
-GCFEvent::TResult WGSync::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
+GCFEvent::TResult RCUWrite::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
 {
   EPARspstatusEvent ack(event);
 

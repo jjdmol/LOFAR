@@ -1,6 +1,6 @@
 //#  -*- mode: c++ -*-
 //#
-//#  StatsSync.h: Synchronize statistics with RSP hardware.
+//#  RCURead.h: Synchronize rcu settings with RSP hardware.
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -22,23 +22,23 @@
 //#
 //#  $Id$
 
-#ifndef STATSSYNC_H_
-#define STATSSYNC_H_
+#ifndef RCUREAD_H_
+#define RCUREAD_H_
 
 #include "SyncAction.h"
 
 namespace RSP
 {
-  class StatsSync : public SyncAction
+  class RCURead : public SyncAction
   {
     public:
       /**
-       * Constructors for a StatsSync object.
+       * Constructors for a RCURead object.
        */
-      StatsSync(GCFPortInterface& board_port, int board_id);
-	  
-      /* Destructor for StatsSync. */
-      virtual ~StatsSync();
+      RCURead(GCFPortInterface& board_port, int board_id);
+
+      /* Destructor for RCURead. */
+      virtual ~RCURead();
 
       /**
        * Send the write message.
@@ -59,4 +59,4 @@ namespace RSP
   };
 };
      
-#endif /* STATSSYNC_H_ */
+#endif /* RCUREAD_H_ */

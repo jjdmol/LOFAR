@@ -1,6 +1,6 @@
 //#  -*- mode: c++ -*-
 //#
-//#  VersionsSync.h: Synchronize system versions with RSP hardware.
+//#  StatusRead.h: Synchronize system status with RSP hardware.
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -22,31 +22,31 @@
 //#
 //#  $Id$
 
-#ifndef VERSIONSSYNC_H_
-#define VERSIONSSYNC_H_
+#ifndef STATUSREAD_H_
+#define STATUSREAD_H_
 
 #include "SyncAction.h"
 
 namespace RSP
 {
-  class VersionsSync : public SyncAction
+  class StatusRead : public SyncAction
   {
     public:
       /**
-       * Constructors for a VersionsSync object.
+       * Constructors for a StatusRead object.
        */
-      VersionsSync(GCFPortInterface& board_port, int board_id);
+      StatusRead(GCFPortInterface& board_port, int board_id);
 	  
-      /* Destructor for VersionsSync. */
-      virtual ~VersionsSync();
+      /* Destructor for StatusRead. */
+      virtual ~StatusRead();
 
       /**
-       * Send the write message.
+       * Send the read message.
        */
       virtual void sendrequest();
 
       /**
-       * Send the read request.
+       * This will be an empty implementation.
        */
       virtual void sendrequest_status();
 
@@ -59,4 +59,4 @@ namespace RSP
   };
 };
      
-#endif /* VERSIONSSYNC_H_ */
+#endif /* STATUSREAD_H_ */

@@ -76,8 +76,8 @@ libepa_la_SOURCES = \
 	MEPData.h \
 	MEPData.cc \
 	EPA_Protocol.cc \
-	RawDispatch.h \
-	RawDispatch.cc
+	RawEvent.h \
+	RawEvent.cc
 
 bin_PROGRAMS = RSPDriver
 
@@ -112,18 +112,25 @@ RSPDriver_SOURCES = \
 	BWWrite.cc \
 	BWRead.h \
 	BWRead.cc \
-	SSSync.h \
-	SSSync.cc \
-	RCUSync.h \
-	RCUSync.cc \
-	WGSync.h \
-	WGSync.cc \
-	StatusSync.h \
-	StatusSync.cc \
-	StatsSync.h \
-	StatsSync.cc \
-	VersionsSync.h \
-	VersionsSync.cc
+	SSWrite.h \
+	SSWrite.cc \
+	SSRead.h \
+	SSRead.cc \
+	RCUWrite.h \
+	RCUWrite.cc \
+	RCURead.h \
+	RCURead.cc \
+	StatusRead.h \
+	StatusRead.cc \
+	StatsRead.h \
+	StatsRead.cc \
+	VersionsRead.h \
+	VersionsRead.cc \
+	WGWrite.h \
+	WGWrite.cc \
+	WGRead.h \
+	WGRead.cc
+
 
 RSPDriver_LDADD = \
 	$(top_builddir)/src/librsp.la \

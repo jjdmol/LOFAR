@@ -1,5 +1,5 @@
 //#
-//#  RawDispatch.cc: implementation of the rawdispatch function
+//#  RawEvent.cc: implementation of the RawEvent class.
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -21,7 +21,7 @@
 //#
 //#  $Id$
 
-#include "RawDispatch.h"
+#include "RawEvent.h"
 #include "MEPHeader.h"
 #include "EPA_Protocol.ph"
 #include <GCF/GCF_ETHRawPort.h>
@@ -37,9 +37,6 @@ using namespace LOFAR;
 /**
  * Lookup table to map MEP message header to GCFEvent signal.
  */
-#define N_PIDS  8
-#define N_REGS  4
-#define N_TYPES 4
 static unsigned short signal_lut[MEPHeader::MAX_PID + 1][MEPHeader::MAX_REGID + 1][MEPHeader::MAX_TYPE + 1] = 
 {
   /* pid = 0x00 (STATUS) */
@@ -49,6 +46,7 @@ static unsigned short signal_lut[MEPHeader::MAX_PID + 1][MEPHeader::MAX_REGID + 
       EPA_RSPSTATUS_READ, /* READ    */
       EPA_RSPSTATUS,      /* WRITE   */
       EPA_RSPSTATUS,      /* READRES */
+      EPA_READERR, /* READERR */
     },
 
     /* reg = 0x01 (Version) */
@@ -56,6 +54,7 @@ static unsigned short signal_lut[MEPHeader::MAX_PID + 1][MEPHeader::MAX_REGID + 
       EPA_FWVERSION_READ, /* READ    */
       0,                  /* WRITE   */
       EPA_FWVERSION,      /* READRES */
+      EPA_READERR, /* READERR */
     },
   },
 
@@ -66,6 +65,7 @@ static unsigned short signal_lut[MEPHeader::MAX_PID + 1][MEPHeader::MAX_REGID + 
       0,            /* READ    */
       EPA_SELFTEST, /* WRITE   */
       0,            /* READRES */
+      EPA_READERR, /* READERR */
     },
   },
 
@@ -76,6 +76,7 @@ static unsigned short signal_lut[MEPHeader::MAX_PID + 1][MEPHeader::MAX_REGID + 
       0,         /* READ    */
       EPA_RESET, /* WRITE   */
       0,         /* READRES */
+      EPA_READERR, /* READERR */
     },
 
     /* reg = 0x01 (Reprogram) */
@@ -83,6 +84,7 @@ static unsigned short signal_lut[MEPHeader::MAX_PID + 1][MEPHeader::MAX_REGID + 
       0,             /* READ    */
       EPA_REPROGRAM, /* WRITE   */
       0,             /* READRES */
+      EPA_READERR, /* READERR */
     },
   },
 
@@ -93,6 +95,7 @@ static unsigned short signal_lut[MEPHeader::MAX_PID + 1][MEPHeader::MAX_REGID + 
       EPA_WGSETTINGS_READ, /* READ    */
       EPA_WGSETTINGS,      /* WRITE   */
       EPA_WGSETTINGS,      /* READRES */
+      EPA_READERR, /* READERR */
     },
 
     /* reg = 0x01 (User waveform) */
@@ -100,6 +103,7 @@ static unsigned short signal_lut[MEPHeader::MAX_PID + 1][MEPHeader::MAX_REGID + 
       EPA_WGUSER_READ, /* READ    */
       EPA_WGUSER,      /* WRITE   */
       EPA_WGUSER,      /* READRES */
+      EPA_READERR, /* READERR */
     },
   },
 
@@ -110,6 +114,7 @@ static unsigned short signal_lut[MEPHeader::MAX_PID + 1][MEPHeader::MAX_REGID + 
       EPA_NRSUBBANDS_READ, /* READ    */
       EPA_NRSUBBANDS,      /* WRITE   */
       EPA_NRSUBBANDS,      /* READRES */
+      EPA_READERR, /* READERR */
     },
 
     /* reg = 0x01 (Subband Select parameters) */
@@ -117,6 +122,7 @@ static unsigned short signal_lut[MEPHeader::MAX_PID + 1][MEPHeader::MAX_REGID + 
       EPA_SUBBANDSELECT_READ, /* READ    */
       EPA_SUBBANDSELECT,      /* WRITE   */
       EPA_SUBBANDSELECT,      /* READRES */
+      EPA_READERR, /* READERR */
     },
   },
 
@@ -127,24 +133,28 @@ static unsigned short signal_lut[MEPHeader::MAX_PID + 1][MEPHeader::MAX_REGID + 
       EPA_BFCOEFS_READ, /* READ    */
       EPA_BFCOEFS,      /* WRITE   */
       EPA_BFCOEFS,      /* READRES */
+      EPA_READERR, /* READERR */
     },
     /* reg = 0x01 (Coefs Xim) */
     { 0,
       EPA_BFCOEFS_READ, /* READ    */
       EPA_BFCOEFS,      /* WRITE   */
       EPA_BFCOEFS,      /* READRES */
+      EPA_READERR, /* READERR */
     },
     /* reg = 0x02 (Coefs Yre) */
     { 0,
       EPA_BFCOEFS_READ, /* READ    */
       EPA_BFCOEFS,      /* WRITE   */
       EPA_BFCOEFS,      /* READRES */
+      EPA_READERR, /* READERR */
     },
     /* reg = 0x03 (Coefs Yim) */
     { 0,
       EPA_BFCOEFS_READ, /* READ    */
       EPA_BFCOEFS,      /* WRITE   */
       EPA_BFCOEFS,      /* READRES */
+      EPA_READERR, /* READERR */
     },
   },
 
@@ -155,6 +165,7 @@ static unsigned short signal_lut[MEPHeader::MAX_PID + 1][MEPHeader::MAX_REGID + 
       EPA_STSTATS_READ, /* READ    */
       EPA_STSTATS,      /* WRITE   */
       EPA_STSTATS,      /* READRES */
+      EPA_READERR, /* READERR */
     },
 
     /* reg = 0x01 (Power) */
@@ -162,6 +173,7 @@ static unsigned short signal_lut[MEPHeader::MAX_PID + 1][MEPHeader::MAX_REGID + 
       EPA_STSTATS_READ, /* READ    */
       EPA_STSTATS,      /* WRITE   */
       EPA_STSTATS,      /* READRES */
+      EPA_READERR, /* READERR */
     },
   },
 
@@ -172,6 +184,7 @@ static unsigned short signal_lut[MEPHeader::MAX_PID + 1][MEPHeader::MAX_REGID + 
       EPA_RCUSETTINGS_READ, /* READ    */
       EPA_RCUSETTINGS,      /* WRITE   */
       EPA_RCUSETTINGS,      /* READRES */
+      EPA_READERR, /* READERR */
     },
   },
 };
@@ -209,9 +222,9 @@ GCFEvent::TResult RawEvent::dispatch(GCFTask& task, GCFPortInterface& port)
   // Decode the header fields
   //
   unsigned short signal = 0;
-  if (hdr.m_fields.addr.pid < N_PIDS
-      && hdr.m_fields.addr.regid < N_REGS
-      && hdr.m_fields.type < N_TYPES)
+  if (   hdr.m_fields.addr.pid   <= MEPHeader::MAX_PID
+      && hdr.m_fields.addr.regid <= MEPHeader::MAX_REGID
+      && hdr.m_fields.type       <= MEPHeader::MAX_TYPE)
   {
     signal = signal_lut[hdr.m_fields.addr.pid][hdr.m_fields.addr.regid][hdr.m_fields.type];
   }
@@ -236,16 +249,15 @@ GCFEvent::TResult RawEvent::dispatch(GCFTask& task, GCFPortInterface& port)
     memcpy((char*)event + sizeof(GCFEvent), &hdr.m_fields, sizeof(hdr.m_fields));
     
     //
-    // Copy the MEP payload
+    // Get the payload
     //
+#if 0
+    size = port.recv((char*)event + sizeof(GCFEvent) + sizeof(hdr.m_fields), hdr.m_fields.size);
+#endif
     if (size - offset >= hdr.m_fields.size)
     {
       memcpy((char*)event + sizeof(GCFEvent) + sizeof(hdr.m_fields), buf + offset, hdr.m_fields.size);
       offset += hdr.m_fields.size;
-#if 0
-      port.recv((char*)event + sizeof(GCFEvent) + sizeof(hdr.m_fields),
-		hdr.m_fields.size);
-#endif
     }
 
     if (size - offset > 0)
@@ -275,6 +287,10 @@ GCFEvent::TResult RawEvent::dispatch(GCFTask& task, GCFPortInterface& port)
     // Free the memory for the event
     //
     delete [] (char*)event;
+  }
+  else
+  {
+    LOG_WARN("F_DATAIN: Discarding unknown message.");
   }
 
   return status;

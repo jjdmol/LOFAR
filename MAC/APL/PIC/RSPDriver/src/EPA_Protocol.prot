@@ -442,10 +442,10 @@ event = {
   noheader;
   signal = READERR;
   dir = OUT;
-  param = {
-    name = "dummy";
-    type = "int";
-  };
+//   param = {
+//     name = "dummy";
+//     type = "int";
+//   };
 };
 
 event = {

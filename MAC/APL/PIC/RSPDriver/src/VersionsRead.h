@@ -1,6 +1,6 @@
 //#  -*- mode: c++ -*-
 //#
-//#  RCUSync.h: Synchronize rcu settings with RSP hardware.
+//#  VersionsRead.h: Synchronize system versions with RSP hardware.
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -22,23 +22,23 @@
 //#
 //#  $Id$
 
-#ifndef RCUSYNC_H_
-#define RCUSYNC_H_
+#ifndef VERSIONSREAD_H_
+#define VERSIONSREAD_H_
 
 #include "SyncAction.h"
 
 namespace RSP
 {
-  class RCUSync : public SyncAction
+  class VersionsRead : public SyncAction
   {
     public:
       /**
-       * Constructors for a RCUSync object.
+       * Constructors for a VersionsRead object.
        */
-      RCUSync(GCFPortInterface& board_port, int board_id);
-
-      /* Destructor for RCUSync. */
-      virtual ~RCUSync();
+      VersionsRead(GCFPortInterface& board_port, int board_id);
+	  
+      /* Destructor for VersionsRead. */
+      virtual ~VersionsRead();
 
       /**
        * Send the write message.
@@ -59,4 +59,4 @@ namespace RSP
   };
 };
      
-#endif /* RCUSYNC_H_ */
+#endif /* VERSIONSREAD_H_ */

@@ -33,15 +33,18 @@
 #include "GetStatusCmd.h"
 #include "BWWrite.h"
 #include "BWRead.h"
-#include "SSSync.h"
-#include "RCUSync.h"
-#include "StatusSync.h"
-#include "StatsSync.h"
-#include "WGSync.h"
-#include "VersionsSync.h"
+#include "SSWrite.h"
+#include "SSRead.h"
+#include "RCUWrite.h"
+#include "RCURead.h"
+#include "StatusRead.h"
+#include "StatsRead.h"
+#include "WGWrite.h"
+#include "WGRead.h"
+#include "VersionsRead.h"
 #include "WriteReg.h"
 #include "Cache.h"
-#include "RawDispatch.h"
+#include "RawEvent.h"
 #include <blitz/array.h>
 
 #undef PACKAGE
@@ -107,13 +110,19 @@ bool RSPDriverTask::isEnabled()
 /**
  * Add all synchronization actions per board.
  * Order is:
- * - BWWrite       // sync of beamformer weights info
- * - SSSync       // sync of subband selection parameters
- * - RCUSync      // sync of RCU control info
- * - StatusSync   // sync of system status info
- * - StatsSync    // sync of statistics info
- * - WGSync       // sync of WG control info
- * - VersionsSync // sync of version info
+ * - BF:     write beamformer weights          // BWWrite
+ * - SS:     write subband selection settings  // SSWrite
+ * - RCU:    write RCU control settings        // RCUWrite
+ * - STATUS (RSP Status): read RSP status info // StatusRead
+ * - ST:     read statistics                   // StatsRead
+ * - WG:     write waveform generator settings // WGWrite
+ * - STATUS (Version): read version info       // VersionsSync
+ *
+ * For testing purposes, read back register that have just been written
+ * - BF:  read beamformer weights          // BWRead
+ * - SS:  read subbands selection settings // SSRead
+ * - RCU: read RCU control settings        // RCURead
+ * - WG:  read waveform generator settings // WGRead
  */
 void RSPDriverTask::addAllSyncActions()
 {
@@ -139,28 +148,29 @@ void RSPDriverTask::addAllSyncActions()
 
     if (1 == GET_CONFIG("WRITE_SS", i))
     {
-      SSSync* sssync = new SSSync(m_board[boardid], boardid);
-      m_scheduler.addSyncAction(sssync);
+      SSWrite* sswrite = new SSWrite(m_board[boardid], boardid);
+      m_scheduler.addSyncAction(sswrite);
     }
     
     if (1 == GET_CONFIG("WRITE_RCU", i))
     {
-      RCUSync* rcusync = new RCUSync(m_board[boardid], boardid);
-      m_scheduler.addSyncAction(rcusync);
+      RCUWrite* rcuwrite = new RCUWrite(m_board[boardid], boardid);
+      m_scheduler.addSyncAction(rcuwrite);
     }
     
     if (1 == GET_CONFIG("READ_STATUS", i))
     {
-      StatusSync* statussync = new StatusSync(m_board[boardid], boardid);
-      m_scheduler.addSyncAction(statussync);
+      StatusRead* statusread = new StatusRead(m_board[boardid], boardid);
+      m_scheduler.addSyncAction(statusread);
     }
     
     if (1 == GET_CONFIG("READ_ST", i))
     {
-      StatsSync* statssync = new StatsSync(m_board[boardid], boardid);
-      m_scheduler.addSyncAction(statssync);
+      StatsRead* statsread = new StatsRead(m_board[boardid], boardid);
+      m_scheduler.addSyncAction(statsread);
     }
-    
+
+#if 0    
     if (1 == GET_CONFIG("WRITE_WG", i))
     {
       WriteReg* writereg = new WriteReg(m_board[boardid], boardid,
@@ -171,18 +181,18 @@ void RSPDriverTask::addAllSyncActions()
       writereg->setSrcAddress(&(Cache::getInstance().getBack().getWGSettings()()(0)));
       m_scheduler.addSyncAction(writereg);
     }
-#if 0
+#else
     if (1 == GET_CONFIG("WRITE_WG", i))
     {
-      WGSync* wgsync = new WGSync(m_board[boardid], boardid);
-      m_scheduler.addSyncAction(wgsync);
+      WGWrite* wgwrite = new WGWrite(m_board[boardid], boardid);
+      m_scheduler.addSyncAction(wgwrite);
     }
 #endif
 
     if (1 == GET_CONFIG("READ_VERSION", i))
     {
-      VersionsSync* versionsync = new VersionsSync(m_board[boardid], boardid);
-      m_scheduler.addSyncAction(versionsync);
+      VersionsRead* versionread = new VersionsRead(m_board[boardid], boardid);
+      m_scheduler.addSyncAction(versionread);
     }
 
     if (1 == GET_CONFIG("READ_BF", i))
@@ -197,6 +207,23 @@ void RSPDriverTask::addAllSyncActions()
       m_scheduler.addSyncAction(bwsync);
       bwsync = new BWRead(m_board[boardid], boardid, MEPHeader::BFYIM);
       m_scheduler.addSyncAction(bwsync);
+    }
+
+    if (1 == GET_CONFIG("READ_SS", i))
+    {
+      SSRead* ssread = new SSRead(m_board[boardid], boardid);
+      m_scheduler.addSyncAction(ssread);
+    }
+
+    if (1 == GET_CONFIG("READ_RCU", i))
+    {
+      RCURead* rcuread = new RCURead(m_board[boardid], boardid);
+      m_scheduler.addSyncAction(rcuread);
+    }
+    if (1 == GET_CONFIG("READ_WG", i))
+    {
+      WGRead* wgread = new WGRead(m_board[boardid], boardid);
+      m_scheduler.addSyncAction(wgread);
     }
   }
 }
