@@ -64,7 +64,6 @@ void DBRep<DH_PL>::fromDBRep (DH_PL& obj) const
 
 //# Force the instantiation of the templates.
 template class TPersistentObject<DH_PL>;
-template class DBRep<DH_PL>;
 
 
   }  // end namespace PL

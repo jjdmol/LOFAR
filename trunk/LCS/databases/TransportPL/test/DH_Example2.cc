@@ -115,7 +115,6 @@ void DBRep<DH_Example2>::toDBRep (const DH_Example2& obj)    //PL
 
 //# Force the instantiation of the templates.                //PL
 template class TPersistentObject<DH_Example2>;               //PL
-template class DBRep<DH_Example2>;                           //PL
 
 }  // end namespace PL                                       //PL 
 
