@@ -60,7 +60,7 @@ class APLInterTaskPort : public GCFRawPort
     virtual bool open ();
     virtual bool close ();
     
-    virtual bool setRemoteAddr(const string& remotetask, const string& remoteport);
+//    virtual bool setRemoteAddr(const string& remotetask, const string& remoteport);
     /**
     * send/recv functions
     */

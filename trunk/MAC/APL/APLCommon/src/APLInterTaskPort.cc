@@ -67,6 +67,7 @@ bool APLInterTaskPort::close()
   return true;
 }
 
+/*
 bool APLInterTaskPort::setRemoteAddr(const string& remotetask, const string& remoteport)
 {
   if (_type == SAP)
@@ -77,6 +78,7 @@ bool APLInterTaskPort::setRemoteAddr(const string& remotetask, const string& rem
   }
   return false;
 }
+*/
 
 /**
  * ::send

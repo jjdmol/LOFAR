@@ -99,6 +99,7 @@ const char TYPE_LCU_PIC_RCU[]           = "TLcuPicRCU";
 const char TYPE_LCU_PIC_ADCStatistics[] = "TLcuPicADCStatistics";
 const char TYPE_LCU_PIC_LFA[]           = "TLcuPicLFA";
 const char TYPE_LCU_PIC_HFA[]           = "TLcuPicHFA";
+const char TYPE_LCU_PAC_LogicalDeviceScheduler[]  = "TLcuPacLogicalDeviceScheduler";
 
 
 // the following constants cannot be defined as const char because they are used

@@ -25,6 +25,9 @@
 
 namespace AVT
 {
+
+const char SCOPESEPARATOR[] = "_";
+const char PROPERTYSEPARATOR[] = ".";
   
 const char APC_SBF[]                      = "ApcStationBeamformer";
 const char APC_VT[]                       = "ApcVirtualTelescope";

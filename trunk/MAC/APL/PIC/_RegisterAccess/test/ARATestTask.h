@@ -78,7 +78,7 @@ namespace ARA
       
       GCFExtPropertySet m_extPropSetAP1;
       GCFExtPropertySet m_extPropSetAP1RCUmaintenance;
-      GCFExtPropertySet m_extPropSetAP1RCUalert;
+      GCFExtPropertySet m_extPropSetBoardAlert;
       GCFExtPropertySet m_extPropSetStationMaintenance;
       GCFExtPropertySet m_extPropSetLDS;
       
