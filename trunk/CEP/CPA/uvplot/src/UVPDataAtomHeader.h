@@ -49,7 +49,7 @@ class UVPDataAtomHeader
   unsigned int itsFieldID;
   
   //! The U,V,W coordinates in meters
-  std::vector<double>  itsUVW;
+  double       itsUVW[3];
 
   //! What kind of data is this anyway?
   /*! Possible kinds are Raw, Corrected and Model.
