@@ -38,7 +38,7 @@ namespace LOFAR
     class EarthCoord;
     class TimeCoord;
 
-    // \todo This must later become a "full blown" struct/union. For now,
+    // \todo This should later become a "full blown" struct/union. For now,
     // let's use a simple typedef.
     typedef uint32 ConverterOperation;
 
@@ -60,18 +60,16 @@ namespace LOFAR
       virtual DH_Converter* clone() const;
 
       void send(ConverterOperation oper,
-                const vector<SkyCoord>& sc,
-                const vector<EarthCoord>& ec,
-                const vector<TimeCoord>& tc);
+                const vector<SkyCoord>&,
+                const vector<EarthCoord>&,
+                const vector<TimeCoord>&);
       
-      void receive(vector<SkyCoord>& sc,
-                   vector<EarthCoord>& ec,
-                   vector<TimeCoord>& tc);
+      void receive(vector<SkyCoord>&);
         
     private:
 
       // Version number for this class
-      static uint32 theirVersionNr;
+      const static uint32 theirVersionNr;
      
 //       // @name Definition of pointers within the DH_Conversion data blob.
 //       // @{
