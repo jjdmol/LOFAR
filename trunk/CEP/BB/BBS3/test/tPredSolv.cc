@@ -303,8 +303,9 @@ int main (int argc, const char* argv[])
       for (uint i=0; i<antVec.size(); ++i) {
 	antVec[i] = 2*i;
       }
+      vector<vector<int> > srcgrp;
       Prediffer pre1(argv[2], argv[3], argv[4], "aips", argv[1], "", "",
-		     antVec, "LOFAR.RI", false, true);
+		     antVec, "LOFAR.RI", srcgrp, false, true);
       // Do a further selection of a few stations.
       vector<int> antVec2(10);
       for (uint i=0; i<antVec2.size(); ++i) {
@@ -328,8 +329,9 @@ int main (int argc, const char* argv[])
       for (uint i=0; i<antVec.size(); ++i) {
 	antVec[i] = 2*i;
       }
+      vector<vector<int> > srcgrp;
       Prediffer pre1(argv[2], argv[3], argv[4], "aips", argv[1], "", "",
-		     antVec, "LOFAR.RI", false, true);
+		     antVec, "LOFAR.RI", srcgrp, false, true);
       // Do a further selection of a few stations.
       vector<int> antVec2(10);
       for (uint i=0; i<antVec2.size(); ++i) {
@@ -351,10 +353,11 @@ int main (int argc, const char* argv[])
       for (uint i=0; i<antVec.size(); ++i) {
 	antVec[i] = 2*i;
       }
+      vector<vector<int> > srcgrp;
       Prediffer pre1(argv[2], argv[3], argv[4], "aips", argv[1], "", "",
-		     antVec, "LOFAR.RI", false, true);
+		     antVec, "LOFAR.RI", srcgrp, false, true);
       Prediffer pre2(argv[2], argv[3], argv[4], "aips", argv[1], "", "",
-		     antVec, "LOFAR.RI", false, true);
+		     antVec, "LOFAR.RI", srcgrp, false, true);
       // Do a further selection of a few stations.
       vector<int> antVec2(10);
       for (uint i=0; i<antVec2.size(); ++i) {
@@ -377,8 +380,9 @@ int main (int argc, const char* argv[])
       for (uint i=0; i<antVec.size(); ++i) {
 	antVec[i] = 4*i;
       }
+      vector<vector<int> > srcgrp;
       Prediffer pre1(argv[2], argv[3], argv[4], "aips", argv[1], "", "",
-		     antVec, "LOFAR.RI", false, true);
+		     antVec, "LOFAR.RI", srcgrp, false, true);
       // Only use first correlation.
       vector<int> corrVec(1, 0);
       vector<int> antVec2;
@@ -398,8 +402,9 @@ int main (int argc, const char* argv[])
       for (uint i=0; i<antVec.size(); ++i) {
 	antVec[i] = 2*i;
       }
+      vector<vector<int> > srcgrp;
       Prediffer pre1(argv[2], argv[3], argv[4], "aips", argv[1], "", "",
-		     antVec, "LOFAR.RI", false, true);
+		     antVec, "LOFAR.RI", srcgrp, false, true);
       // Do a further selection of a few stations.
       vector<int> antVec2(10);
       for (uint i=0; i<antVec2.size(); ++i) {
