@@ -94,7 +94,7 @@ UVPMainWindow::UVPMainWindow()
 
   QWidget  *CentralWidget = new QWidget(this);
   setCentralWidget(CentralWidget);
-  itsGraphSettingsWidget = new UVPGraphSettingsWidget(30, CentralWidget);
+  itsGraphSettingsWidget = new UVPGraphSettingsWidget(30, 1, CentralWidget);
 
   itsScrollView        = new QScrollView(CentralWidget);
   itsCanvas            = new UVPTimeFrequencyPlot(itsScrollView->viewport());
@@ -117,6 +117,9 @@ UVPMainWindow::UVPMainWindow()
           this, SLOT(slot_redraw()));
 
   connect(itsGraphSettingsWidget, SIGNAL(signalFieldsChanged()),
+          this, SLOT(slot_redraw()));
+
+  connect(itsGraphSettingsWidget, SIGNAL(signalSpectralWindowChanged(unsigned int)),
           this, SLOT(slot_redraw()));
 
   connect(itsGraphSettingsWidget, SIGNAL(signalLoadButtonClicked()),
@@ -351,7 +354,8 @@ void UVPMainWindow::drawDataSet()
 
   
   UVPDataAtomHeader::Correlation Correlation = itsGraphSettingsWidget->getSettings().getCorrelation();
-  unsigned int                   SpectralWindowID = 0;
+
+  unsigned int  SpectralWindowID = itsGraphSettingsWidget->getSettings().getSpectralWindow();
 
 
   for(UVPDataSet::iterator p = Start;
@@ -521,6 +525,7 @@ void UVPMainWindow::slot_loadData()
 //==================>>>  UVPMainWindow::slot_openMS  <<<==================
 
 void UVPMainWindow::slot_openMS()
+try
 {
   QString filename = QFileDialog::getExistingDirectory(".",
                                                        this, 
@@ -531,17 +536,28 @@ void UVPMainWindow::slot_openMS()
     itsInputType     = MS;
     updateCaption();
 
-    MeasurementSet ms(filename.latin1());
-    MSAntenna      AntennaTable(ms.antenna());
-    MSField        FieldTable(ms.field());
+    MeasurementSet    ms(filename.latin1());
+    MSAntenna         AntennaTable(ms.antenna());
+    MSField           FieldTable(ms.field());
+    MSDataDescription DataDescTable(ms.dataDescription());
+
     itsGraphSettingsWidget->setNumberOfAntennae(AntennaTable.nrow());
+    itsGraphSettingsWidget->setNumberOfSpectralWindows(DataDescTable.nrow());
+
     //itsGraphSettingsWidget->setNumberOfFields(FieldTable.nrow());
 #if(DEBUG_MODE)
-    std::cout << __FUNCTION__ << "Fields: " << FieldTable.nrow() << std::endl;
+    std::cout << __FUNCTION__ << ":Fields: " << FieldTable.nrow() << std::endl;
 #endif
   }
 }
-
+catch(AipsError &err)
+{
+  QMessageBox::critical(0, "Aips++", (const char*)err.getMesg().c_str(), QMessageBox::Ok|QMessageBox::Default,QMessageBox::NoButton);
+}
+catch(...)
+{
+  std::cerr << "slot_openMS: Unhandled exception caught." << std::endl << std::flush;
+}
 
 
 

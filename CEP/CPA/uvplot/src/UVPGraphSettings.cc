@@ -25,6 +25,7 @@
 
 UVPGraphSettings::UVPGraphSettings(unsigned int                   antenna1,
                                    unsigned int                   antenna2,
+                                   unsigned int                 spectralWindow,
                                    UVPDataAtomHeader::Correlation corr,
                                    const std::string&             columnName,
                                    ValueType                      valueType,
@@ -32,6 +33,7 @@ UVPGraphSettings::UVPGraphSettings(unsigned int                   antenna1,
                                    const std::vector<bool>&       fieldsToPlot)
   : itsAntenna1(antenna1),
     itsAntenna2(antenna2),
+    itsSpectralWindow(spectralWindow),
     itsCorrelation(corr),
     itsColumnName(columnName),
     itsValueType(valueType),
@@ -60,6 +62,16 @@ unsigned int UVPGraphSettings::getAntenna1() const
 unsigned int UVPGraphSettings::getAntenna2() const
 {
   return itsAntenna2;//(itsAntenna1 > itsAntenna2 ? itsAntenna1 : itsAntenna2);
+}
+
+
+
+
+//====================>>>  UVPGraphSettings::getSpectralWindow  <<<====================
+
+unsigned int UVPGraphSettings::getSpectralWindow() const
+{
+  return itsSpectralWindow;//(itsAntenna1 > itsAntenna2 ? itsAntenna1 : itsAntenna2);
 }
 
 
@@ -131,6 +143,16 @@ void UVPGraphSettings::setAntenna1(unsigned int antenna1)
 void UVPGraphSettings::setAntenna2(unsigned int antenna2)
 {
   itsAntenna2 = antenna2;
+}
+
+
+
+
+//====================>>>  UVPGraphSettings::setSpectralWindow  <<<====================
+
+void UVPGraphSettings::setSpectralWindow(unsigned int spw)
+{
+  itsSpectralWindow = spw;
 }
 
 

@@ -39,6 +39,7 @@ public:
 
   UVPGraphSettings(unsigned int       antenna1           = 0,
                    unsigned int       antenna2           = 0,
+                   unsigned int       spectralWindow     = 0,
                    UVPDataAtomHeader::Correlation  corr  = UVPDataAtomHeader::None,
                    const std::string& columnName         = "",
                    ValueType          valueType          = eAbs,
@@ -47,6 +48,7 @@ public:
 
   unsigned int                    getAntenna1() const;
   unsigned int                    getAntenna2() const;
+  unsigned int                    getSpectralWindow() const;
   UVPDataAtomHeader::Correlation  getCorrelation() const;
   std::string                     getColumnName() const;
   ValueType                       getValueType() const;
@@ -56,6 +58,7 @@ public:
 
   void         setAntenna1(unsigned int antenna1);
   void         setAntenna2(unsigned int antenna2);
+  void         setSpectralWindow(unsigned int spectralWindow);
   void         setCorrelation(UVPDataAtomHeader::Correlation corr);
   void         setColumnName(const std::string& columnName);
   void         setValueType(ValueType valueType);
@@ -76,6 +79,7 @@ private:
   
   unsigned int                   itsAntenna1;
   unsigned int                   itsAntenna2;
+  unsigned int                   itsSpectralWindow;
   UVPDataAtomHeader::Correlation itsCorrelation;
   std::string                    itsColumnName;
   ValueType                      itsValueType;
