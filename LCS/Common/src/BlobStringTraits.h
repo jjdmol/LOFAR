@@ -32,7 +32,11 @@
 #include <config.h>
 #endif
 
-#if defined(__GNUC__) && (__GNUC__ >= 3) && !defined(HAVE_DTL)
+#if defined(HAVE_DTL)
+# include <dtl/dtl_config.h>
+#else
+# if defined(__GNUC__) && (__GNUC__ >= 3)
+
 
 #include <Common/LofarTypedefs.h>
 #include <string>
@@ -116,5 +120,7 @@ namespace std
 }
 
 
+# endif
 #endif
+
 #endif
