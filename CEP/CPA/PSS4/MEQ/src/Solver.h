@@ -110,13 +110,12 @@ private:
   // Fill the solution (per parmid) in the DataRecord.
     //##ModelId=400E53550276
   void fillSolution (DataRecord& rec, const vector<int> spids,
-		     const Vector<double>& solution);
+		     const Vector<double>& solution,bool save_polc);
 
     //##ModelId=400E53550257
   int             itsNumCondeqs;
   std::vector<bool> itsIsCondeq;
-    //##ModelId=400E53550259
-  DataRecord::Ref itsSolvableParms;
+  
     //##ModelId=400E5355025A
   FitLSQ          itsSolver;
     //##ModelId=400E5355025C
@@ -125,6 +124,9 @@ private:
   double          itsEpsilon;
     //##ModelId=400E5355025F
   bool            itsUseSVD;
+  
+  // solvable parm group for this solver ("Parm" by default)
+  HIID            itsParmGroup;
 };
 
 

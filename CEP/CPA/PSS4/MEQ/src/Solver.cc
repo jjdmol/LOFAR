@@ -37,7 +37,8 @@ namespace Meq {
 Solver::Solver()
 : itsSolver  (1, LSQBase::REAL),
   itsNumStep (1),
-  itsEpsilon (0)
+  itsEpsilon (0),
+  itsParmGroup(AidParm)
 {}
 
 //##ModelId=400E53550261
@@ -104,16 +105,14 @@ int Solver::getResult (Result::Ref &resref,
   // normalize the request ID to make sure iteration counters, etc,
   // are part of it
   HIID rqid = makeNormalRequestId(request.id());
-  // Copy the request and attach the solvable parms to it.
+  // Copy the request and attach the solvable parm specification
   Request::Ref reqref;
   Request & newReq = reqref <<= new Request(request.cells(),calcDeriv,rqid);
-  
-  if (state()[FSolvableParm].exists()) {
-    if (! newReq[FNodeState].exists()) {
-      newReq[FNodeState] <<= new DataRecord();
-    }
-    newReq[FNodeState][FSolvableParm] <<= 
-      wstate()[FSolvableParm].as_wp<DataRecord>();
+  if( state()[FSolvable].exists() )
+  {
+    newReq[FRider] <<= new DataRecord;
+    newReq[FRider][itsParmGroup] <<= wstate()[FSolvable].as_wp<DataRecord>();
+    newReq.validateRider();
   }
   // Iterate as many times as needed.
   int step;
@@ -240,15 +239,16 @@ int Solver::getResult (Result::Ref &resref,
     solrec[FMu] = mu;
     solrec[FStdDev] = stddev;
     //  solrec[FChi   ] = itsSolver.getChi());
-    // Put the solution in the FNodeState,FByNodeIndex data record.
-    // That will contain a DataRecord for each parm with the parmid
-    // as the index.
-    DataRecord& dr1 =
-      newReq[FNodeState][FSolvableParm].replace() <<= new DataRecord;
-    DataRecord& dr2 = dr1[FByNodeIndex] <<= new DataRecord;
-    fillSolution (dr2, spids, solution);
-    // Lock all parm tables used.
-    ParmTable::lockTables();
+    
+    // Put the solution in the rider:
+    //    [FRider][<parm_group>][CommandByNodeIndex][<parmid>]
+    // will contain a DataRecord for each parm 
+    DataRecord& dr1 = newReq[FRider][itsParmGroup].replace() <<= new DataRecord;
+    fillSolution(dr1[FCommandByNodeIndex] <<= new DataRecord, 
+                 spids,solution,false);
+    newReq.validateRider();
+//    // Lock all parm tables used.
+//    ParmTable::lockTables();
     // update request ID
     newReq.setId(nextIterationId(rqid));
     // Unlock all parm tables used.
@@ -260,15 +260,14 @@ int Solver::getResult (Result::Ref &resref,
   // Do that in an empty request.
   Request & lastReq = reqref <<= new Request;
   lastReq.setId(rqid);
-  DataRecord& rider = lastReq[FRider] <<= new DataRecord;
-  rider[FSavePolc] = true;
-  DataRecord& ldr1 = lastReq[FNodeState] <<= new DataRecord;
-  DataRecord& ldr2 = ldr1[FSolvableParm] <<= new DataRecord;
-  DataRecord& dr2 = ldr2[FByNodeIndex] <<= new DataRecord;
-  fillSolution (dr2, spids, solution);
+  lastReq[FRider] <<= new DataRecord;
+  DataRecord &dr1 = lastReq[FRider][itsParmGroup] <<= new DataRecord;
+  fillSolution(dr1[FCommandByNodeIndex] <<= new DataRecord, 
+               spids,solution,true);
   // Lock all parm tables used.
   ParmTable::lockTables();
   // Update the parms.
+  lastReq.validateRider();
   Node::pollChildren (child_results, resref, lastReq);
   // Unlock all parm tables used.
   ParmTable::unlockTables();
@@ -280,7 +279,7 @@ int Solver::getResult (Result::Ref &resref,
 
 //##ModelId=400E53550276
 void Solver::fillSolution (DataRecord& rec, const vector<int> spids,
-                           const Vector<double>& solution)
+                           const Vector<double>& solution,bool save_polc)
 {
   // Split the solution into vectors for each parm.
   // Reserve enough space in the vector.
@@ -291,14 +290,18 @@ void Solver::fillSolution (DataRecord& rec, const vector<int> spids,
   for (uint i=0; i<nspid; i++) {
     if (spids[i]/256 != lastParmid) {
       DataRecord& drp = rec[lastParmid] <<= new DataRecord;
-      drp[FValue] = parmSol;
+      drp[FSetValue] = parmSol;
       lastParmid = spids[i] / 256;
       parmSol.resize(0);
+      if( save_polc )
+        drp[FSavePolc] = true;
     }
     parmSol.push_back (solution[i]);
   }
   DataRecord& drp = rec[lastParmid] <<= new DataRecord;
-  drp[FValue] = parmSol;
+  drp[FSetValue] = parmSol;
+  if( save_polc )
+    drp[FSavePolc] = true;
 }
 
 //##ModelId=400E53550267
@@ -308,6 +311,7 @@ void Solver::setStateImpl (DataRecord& newst,bool initializing)
   getStateField(itsNumStep,newst,FNumSteps);
   getStateField(itsEpsilon,newst,FEpsilon);
   getStateField(itsUseSVD,newst,FUseSVD);
+  getStateField(itsParmGroup,newst,FParmGroup);
 }
 
 
