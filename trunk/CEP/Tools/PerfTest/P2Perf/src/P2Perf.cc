@@ -21,6 +21,9 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.13  2001/11/28 16:15:40  schaaf
+//  .
+//
 //  Revision 1.12  2001/11/05 17:02:38  schaaf
 //  set divisor variable for MPI
 //
@@ -163,15 +166,15 @@ void P2Perf::define(const ParamBlock& params)
     char name[20];
     sprintf(name, "GrowSize[%d]", iStep);
     workholders[iStep] = new WH_GrowSize(name, 
-					 (iStep==0?true:false), 
+					 false, 
 					 1, 
 					 1, 
 					 MAX_GROW_SIZE);
 
     steps[iStep] = new Step(workholders[iStep], "GrowSizeStep", iStep);
 
-    //steps[iStep]->runOnNode(0); // MPICH 1 process
-       steps[iStep]->runOnNode(iStep);
+    //steps[iStep]->runOnNode(0); // MPI 1 process
+    steps[iStep]->runOnNode(iStep);
 
     if ( ((iStep % 2) == divisor) || (divisor < 0))
     {
@@ -184,8 +187,8 @@ void P2Perf::define(const ParamBlock& params)
 #ifdef HAVE_CORBA
       steps[iStep]->connectInput(steps[iStep-1], corbaProto);
 #else
-      //     steps[iStep]->runOnNode(0); //MPICH 1 process
-        steps[iStep]->runOnNode(iStep);
+      // steps[iStep]->runOnNode(0); //MPI 1 process
+      steps[iStep]->runOnNode(iStep);
       steps[iStep]->connectInput(steps[iStep-1]);
 #endif
     }
