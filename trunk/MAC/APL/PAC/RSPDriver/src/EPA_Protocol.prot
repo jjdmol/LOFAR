@@ -32,7 +32,7 @@ namespace EPA_Protocol
   static const int N_AP            = 4;    // number of AP's per board
   static const int N_COEF          = MEPHeader::FRAGMENT_SIZE / sizeof(int16);
   static const int BF_N_FRAGMENTS  = MEPHeader::BF_XROUT_SIZE / MEPHeader::FRAGMENT_SIZE;
-  static const int N_SAMPLES       = MEPHeader::WG_XWAVE_SIZE / sizeof(uint16);
+  static const int N_WAVE_SAMPLES  = MEPHeader::WG_XWAVE_SIZE / sizeof(int16);
   static const int N_STATS         = MEPHeader::FRAGMENT_SIZE / sizeof(uint32);
   static const int BST_N_FRAGMENTS = MEPHeader::BST_POWER_SIZE / MEPHeader::FRAGMENT_SIZE;
   static const int SST_N_FRAGMENTS = MEPHeader::SST_POWER_SIZE / MEPHeader::FRAGMENT_SIZE;
@@ -454,8 +454,8 @@ event = {
     userdefined;
   };
   param = {
-    name = "sample";
-    type = "int16[EPA_Protocol::N_SAMPLES]";
+    name = "samples";
+    type = "int16[EPA_Protocol::N_WAVE_SAMPLES]";
   };
 };
 

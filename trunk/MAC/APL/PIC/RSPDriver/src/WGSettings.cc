@@ -22,6 +22,7 @@
 
 #include "WGSettings.h"
 #include "Marshalling.h"
+#include "EPA_Protocol.ph"
 
 #undef PACKAGE
 #undef VERSION
@@ -29,9 +30,74 @@
 #include <Common/LofarLogger.h>
 using namespace LOFAR;
 
+#include <math.h>
+
+using namespace EPA_Protocol;
 using namespace RSP_Protocol;
 using namespace std;
 using namespace blitz;
+
+// preset waveforms for the 4 types sine, square, triangle and ramp
+Array<int16, 2> WGSettings::m_presets;
+
+void WGSettings::initWaveformPresets()
+{
+  m_presets.resize(N_WAVEFORM_PRESETS, N_WAVE_SAMPLES);
+  
+  //
+  // Initialize SINE waveform
+  //
+  for (int i = 0; i < N_WAVE_SAMPLES; i++)
+  {
+    WGSettings::m_presets(PRESET_SINE, i) = (int16)(sin((double)i * 2.0 * M_PI / N_WAVE_SAMPLES) * (1<<15));
+  }
+  cout << "sine=" << WGSettings::m_presets(PRESET_SINE, Range::all()) << endl;
+
+  //
+  // Initialize SQUARE waveform
+  //
+  for (int i = 0; i < N_WAVE_SAMPLES / 2; i++)
+  {
+    WGSettings::m_presets(PRESET_SQUARE, i) = ((1<<15)-1);
+  }
+  for (int i = 0; i < N_WAVE_SAMPLES / 2; i++)
+  {
+    WGSettings::m_presets(PRESET_SQUARE, i + N_WAVE_SAMPLES / 2) = -(1<<15);
+  }
+  cout << "square=" << WGSettings::m_presets(PRESET_SQUARE, Range::all()) << endl;
+
+  //
+  // Initialize TRIANGLE waveform
+  //
+  for (int i = 0; i < N_WAVE_SAMPLES / 4; i++)
+  {
+    WGSettings::m_presets(PRESET_TRIANGLE, i) = i * (1<<8);
+  }
+  for (int i = 0; i < N_WAVE_SAMPLES / 2; i++)
+  {
+    WGSettings::m_presets(PRESET_TRIANGLE, i + N_WAVE_SAMPLES / 4)
+      = ((1<<15)-1) - i * (1<<8);
+  }
+  for (int i = 0; i < N_WAVE_SAMPLES / 4; i++)
+  {
+    WGSettings::m_presets(PRESET_TRIANGLE, i + 3 * N_WAVE_SAMPLES / 4)
+      = -(1<<15) + i * (1<<8);
+  }
+  cout << "triangle=" << WGSettings::m_presets(PRESET_TRIANGLE, Range::all()) << endl;
+
+  //
+  // Initialize RAMP waveform
+  //
+  for (int i = 0; i < N_WAVE_SAMPLES / 2; i++)
+  {
+    WGSettings::m_presets(PRESET_RAMP, i) = i * (1<<7);
+  }
+  for (int i = 0; i < N_WAVE_SAMPLES / 2; i++)
+  {
+    WGSettings::m_presets(PRESET_RAMP, i + N_WAVE_SAMPLES / 2) = -(1<<15) + i * (1<<7);
+  }
+  cout << "ramp=" << WGSettings::m_presets(PRESET_RAMP, Range::all()) << endl;
+}
 
 unsigned int WGSettings::getSize()
 {
@@ -55,3 +121,12 @@ unsigned int WGSettings::unpack(void *buffer)
 
   return offset;
 }
+
+Array<int16, 1> WGSettings::preset(int index)
+{
+  // if index is invalid, return PRESET_SINE
+  if (index < 0 || index >= WGSettings::N_WAVEFORM_PRESETS) index = 0;
+  
+  return WGSettings::m_presets(index, Range::all());
+}
+

@@ -82,9 +82,9 @@ do { \
   } \
 } while(0)
 
-SetWG::SetWG(string name, int rcu, uint8 phase, uint8 ampl, double freq)
+SetWG::SetWG(string name, int rcu, uint8 phase, uint8 ampl, double freq, int preset)
   : GCFTask((State)&SetWG::initial, name), Test(name),
-    m_rcu(rcu), m_phase(phase), m_ampl(ampl), m_freq(freq)
+    m_rcu(rcu), m_phase(phase), m_ampl(ampl), m_freq(freq), m_preset(preset)
 {
   registerProtocol(RSP_PROTOCOL, RSP_PROTOCOL_signalnames);
 
@@ -171,18 +171,18 @@ GCFEvent::TResult SetWG::enabled(GCFEvent& e, GCFPortInterface& port)
 	wg.settings()(0).freq = (uint16)(((m_freq * (1 << 16)) / SAMPLE_FREQUENCY) + 0.5);
 	wg.settings()(0).phase = m_phase;
 	wg.settings()(0).ampl = m_ampl;
-	wg.settings()(0).nof_samples = 512;
+	wg.settings()(0).nof_samples = N_WAVE_SAMPLES;
 	wg.settings()(0).mode = WGSettings::MODE_CALC;
-	wg.settings()(0)._pad = 0; // keep valgrind happy
+	wg.settings()(0).preset = m_preset;
       }
       else
       {
 	wg.settings()(0).freq = 0;
 	wg.settings()(0).phase = 0;
 	wg.settings()(0).ampl = 0;
-	wg.settings()(0).nof_samples = 512;
+	wg.settings()(0).nof_samples = N_WAVE_SAMPLES;
 	wg.settings()(0).mode = WGSettings::MODE_OFF;
-	wg.settings()(0)._pad = 0; // keep valgrind happy
+	wg.settings()(0).preset = m_preset;
       }
       
       if (!m_server.send(wg))
@@ -313,6 +313,17 @@ int main(int argc, char** argv)
   }
 
   //
+  // Read function
+  //
+  cout << "Which Function? (0==SINE, 1==SQUARE, 2==TRIANGLE, 3==RAMP): ";
+  int preset = atoi(fgets(buf, 32, stdin));
+  if (preset < 0 || preset >= WGSettings::N_WAVEFORM_PRESETS)
+  {
+    LOG_FATAL(formatString("Invalid function, should be in range [0:%d]", WGSettings::N_WAVEFORM_PRESETS - 1));
+    exit(EXIT_FAILURE);
+  }
+
+  //
   // Read RCU
   //
   cout << "Which RCU? (-1 means all): ";
@@ -325,7 +336,7 @@ int main(int argc, char** argv)
   }
   
   Suite s("SetWG", &cerr);
-  s.addTest(new SetWG("SetWG", rcu, (uint8)0, (uint8)(ampl*(double)(1<<7)/100.0), freq)); // set phase to 0 for now
+  s.addTest(new SetWG("SetWG", rcu, (uint8)0, (uint8)(ampl*(double)(1<<7)/100.0), freq, preset)); // set phase to 0 for now
   s.run();
   long nFail = s.report();
   s.free();

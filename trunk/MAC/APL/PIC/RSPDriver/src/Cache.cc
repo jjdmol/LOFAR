@@ -105,8 +105,12 @@ CacheBuffer::CacheBuffer()
   init.ampl        = 0;
   init.nof_samples = 0;
   init.mode = WGSettings::MODE_OFF;
-  init._pad = 0;
+  init.preset = WGSettings::PRESET_SINE;
   m_wgsettings() = init;
+
+  m_wgsettings.waveforms().resize(GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL,
+				  N_WAVE_SAMPLES);
+  m_wgsettings.waveforms() = 0;
 
   m_subbandstats().resize(GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL,
 			  MEPHeader::N_SUBBANDS);
@@ -155,6 +159,7 @@ CacheBuffer::~CacheBuffer()
   m_subbandselection().free();
   m_rcusettings().free();
   m_wgsettings().free();
+  m_wgsettings.waveforms().free();
   m_subbandstats().free();
   m_beamletstats().free();
   m_systemstatus.board().free();
@@ -225,6 +230,11 @@ Cache& Cache::getInstance()
 
 Cache::Cache() : m_front(0), m_back(0)
 {
+  //
+  // initialize preset waveforms
+  //
+  WGSettings::initWaveformPresets();
+
   m_front = new CacheBuffer();
   m_back = new CacheBuffer();
 }
