@@ -207,7 +207,7 @@ int main (int argc, const char** argv) {
     correlator.baseDefine(kvm);
     cout << "defined" << endl;
     correlator.basePrerun();
-    cout << "init" << endl;
+    cout << "init done" << endl;
     correlator.baseRun(1);
     cout << "run" << endl;
     correlator.baseDump();

@@ -73,12 +73,32 @@ WH_Transpose* WH_Transpose::make(const string& name) {
 }
 
 void WH_Transpose::process() {
+  // note that this transpose only works for our initial demo of two RSP boards
+  // it is not generic enough to handle other configurations
+
+  DH_CorrCube* myDH  = static_cast<DH_CorrCube*> (getDataManager().getOutHolder(0));
+
+  // first check if the blockID's of the Input dataHolders match (this should not fail)
+  if ( static_cast<DH_StationData*>(getDataManager().getInHolder(0))->getBlockID() ==
+       static_cast<DH_StationData*>(getDataManager().getInHolder(1))->getBlockID() ) {
+    myDH->setBlockID(static_cast<DH_StationData*>(getDataManager().getInHolder(0))->getBlockID());
+  } else {
+    // something nasty happened
+    
+  }
+
+  // set the flag of the outDH as the bitwise OR of the flags of the input DHs
+  if ( (static_cast<DH_StationData*>(getDataManager().getInHolder(0))->getFlag() | static_cast<DH_StationData*>(getDataManager().getInHolder(1))->getFlag()) != 0 ) {
+    myDH->setFlag( static_cast<DH_StationData*>(getDataManager().getInHolder(0))->getFlag() |
+		   static_cast<DH_StationData*>(getDataManager().getInHolder(1))->getFlag() );
+  }
+
+
   DH_StationData::BufferType* val_ptr_0 = static_cast<DH_StationData*>(getDataManager().getInHolder(0))->getBuffer();
   DH_StationData::BufferType* val_ptr_1 = static_cast<DH_StationData*>(getDataManager().getInHolder(1))->getBuffer();
 
   int offset = 0;
 
-  DH_CorrCube* myDH  = static_cast<DH_CorrCube*> (getDataManager().getOutHolder(0));
   for (int sample = 0; sample < itsNpacketsinframe; sample++) {
     offset += itsNpolarisations + itsNbeamletsinpacket;
     for (int channel = 0; channel < itsNchannels; channel++) {
