@@ -35,6 +35,10 @@ event = {
 		type = "int[2]";
 	};
 	param = {
+		name = "param10";
+		type = "unsigned int[4]";
+	};
+	param = {
 		name = "ext1";		
 		type = "int[]";
 	};

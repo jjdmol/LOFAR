@@ -11,6 +11,10 @@ if __name__ == "__main__":
     print ba.param1
     ba.param2 = 20
 
+    print ba.param10
+    ba.param10 = [1,2,3,4]
+    print ba.param10
+    
     ba.ext1Dim = 100
     ext1 = int_array(ba.ext1Dim);
 
