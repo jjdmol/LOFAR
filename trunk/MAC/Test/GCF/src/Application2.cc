@@ -1014,11 +1014,11 @@ GCFEvent::TResult Application::test6_6(GCFEvent& e, GCFPortInterface& /*p*/)
       if (pResponse->internal) break;
       assert(strcmp(pResponse->pPropName, "A_K.P1") == 0);
       TESTC((unsigned int)((GCFPVInteger*)pResponse->pValue)->getValue() == _counter);
-      cerr << "Received nr " << (unsigned int)((GCFPVInteger*)pResponse->pValue)->getValue() << " from A_K_P1 (" << _counter << ")" << endl;
+      cerr << "Received nr " << (unsigned int)((GCFPVInteger*)pResponse->pValue)->getValue() << " from A_K.P1 (" << _counter << ")" << endl;
       _counter++;
       GCFPVInteger iv;
       iv.copy(*(pResponse->pValue));
-      cerr << "Send nr " << iv.getValue() << " to A_K.P1 (" << _counter << ")" << endl;
+      cerr << "Send nr " << iv.getValue() << " to A_C.P1 (" << _counter << ")" << endl;
       TESTC_ABORT_ON_FAIL(_ePropertySetAC.setValue("P1", iv) == GCF_NO_ERROR);
       if (_counter == 1000)
       {

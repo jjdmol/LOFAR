@@ -62,9 +62,10 @@ EXTRA_DIST = \
 configfilesdir=$(bindir)
 configfiles_DATA= \
 	test.ns \
-	test.top
+	test.top \
+	log4cplus.properties
 	
-%.properties: $(MAC_CONFIG)/%.properties
+%.properties: $(top_srcdir)/../../Config/%.properties
 	cp $< $@
 	
 %.ns: %.ns.in
