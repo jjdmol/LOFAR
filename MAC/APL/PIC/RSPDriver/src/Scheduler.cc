@@ -186,12 +186,35 @@ bool Scheduler::syncHasCompleted()
   return result;
 }
 
-void Scheduler::cancel(GCFPortInterface& /*port*/)
+void Scheduler::pqueue_remove_port(pqueue& pq, GCFPortInterface& port)
+{
+  // copy pq
+  pqueue tmp = pq;
+
+  // clear pq, it will be filled again in the next loop
+  while (!pq.empty()) pq.pop();
+
+  while (!tmp.empty())
+  {
+    // pop item from the queue
+    Command* c = tmp.top();
+    tmp.pop();
+
+    // if port matches, delete c, else push back onto pq
+    if (c->getPort() == &port) delete c;
+    else pq.push(c);
+  }
+}
+
+void Scheduler::cancel(GCFPortInterface& port)
 {
   // cancel all commands related to this port
-  
-  // TODO: need to remove commands from the priority queue
-  // how can we remove things from a std::priority_queue?
+  // irrespective of the queue they are in
+
+  pqueue_remove_port(m_later_queue,    port);
+  pqueue_remove_port(m_now_queue,      port);
+  pqueue_remove_port(m_periodic_queue, port);
+  pqueue_remove_port(m_done_queue,     port);
 }
 
 void Scheduler::addSyncAction(SyncAction* action)
