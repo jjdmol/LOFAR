@@ -27,12 +27,12 @@
 
 //# Includes
 #include <tinyCEP/WorkHolder.h>
-#include <tinyCEP/ApplicationHolder.h>
+#include <tinyCEP/TinyApplicationHolder.h>
 
 namespace LOFAR
 {
 
-  class tinyOnlineProto: public LOFAR::ApplicationHolder {
+  class tinyOnlineProto: public LOFAR::TinyApplicationHolder {
     
   public:
     tinyOnlineProto();

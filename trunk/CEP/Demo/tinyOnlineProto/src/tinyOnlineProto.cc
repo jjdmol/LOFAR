@@ -113,8 +113,8 @@ void tinyOnlineProto::define(const KeyValueMap& params) {
 	(*myWHPreProcess[s]->getDataManager().getInHolder(b),
 	 TH_Mem());
       
-      myWHStations[s]->getDataManager().getOutHolder(b)->setBlocking(false);
-      myWHPreProcess[s]->getDataManager().getInHolder(b)->setBlocking(false);
+      myWHStations[s]->getDataManager().getOutHolder(b)->getTransporter().setIsBlocking(false);
+      myWHPreProcess[s]->getDataManager().getInHolder(b)->getTransporter().setIsBlocking(false);
     }
 
     
@@ -124,8 +124,8 @@ void tinyOnlineProto::define(const KeyValueMap& params) {
       (*myWHFringeControl->getDataManager().getOutHolder(s),
        TH_Mem());
     
-    myWHPreProcess[s]->getDataManager().getInHolder(NBeamlets)->setBlocking(false);
-    myWHFringeControl->getDataManager().getOutHolder(s)->setBlocking(false);
+    myWHPreProcess[s]->getDataManager().getInHolder(NBeamlets)->getTransporter().setIsBlocking(false);
+    myWHFringeControl->getDataManager().getOutHolder(s)->getTransporter().setIsBlocking(false);
   }
 
 
@@ -144,7 +144,9 @@ void tinyOnlineProto::define(const KeyValueMap& params) {
     itsWHs[itsWHcount] = myWHTranspose[b];
     itsWHcount++;
 
-    myWHTranspose[b]->getDataManager().setOutputRate(NVis);
+    for (int i = 0 ; i < NVis; i++) {
+      myWHTranspose[b]->getDataManager().getOutHolder(i)->getTransporter().setRate(NVis);
+    }
   }
   
   
@@ -161,8 +163,8 @@ void tinyOnlineProto::define(const KeyValueMap& params) {
 	(*myWHPreProcess[s]->getDataManager().getOutHolder(b),
 	 TH_Mem());
       
-      myWHTranspose[b]->getDataManager().getInHolder(s)->setBlocking(false);
-      myWHPreProcess[s]->getDataManager().getOutHolder(b)->setBlocking(false);
+      myWHTranspose[b]->getDataManager().getInHolder(s)->getTransporter().setIsBlocking(false);
+      myWHPreProcess[s]->getDataManager().getOutHolder(b)->getTransporter().setIsBlocking(false);
     }
   }
   
@@ -181,9 +183,8 @@ void tinyOnlineProto::define(const KeyValueMap& params) {
     itsWHs[itsWHcount] = myWHCorrelate[c];
     itsWHcount++;
 
-    myWHCorrelate[c]->getDataManager().setInputRate(NVis);
-    myWHCorrelate[c]->getDataManager().setProcessRate(NVis);
-    myWHCorrelate[c]->getDataManager().setOutputRate(NVis);
+    myWHCorrelate[c]->getDataManager().getInHolder(0)->getTransporter().setRate(NVis);
+    myWHCorrelate[c]->getDataManager().getOutHolder(0)->getTransporter().setRate(NVis);
 
   }
 
@@ -201,8 +202,8 @@ void tinyOnlineProto::define(const KeyValueMap& params) {
 	( *myWHTranspose[b]->getDataManager().getOutHolder(f),
 	  TH_Mem() );
 
-      myWHCorrelate[correlator]->getDataManager().getInHolder(0)->setBlocking(false);
-      myWHTranspose[b]->getDataManager().getOutHolder(f)->setBlocking(false);
+      myWHCorrelate[correlator]->getDataManager().getInHolder(0)->getTransporter().setIsBlocking(false);
+      myWHTranspose[b]->getDataManager().getOutHolder(f)->getTransporter().setIsBlocking(false);
 
       correlator++;
     }
@@ -228,11 +229,10 @@ void tinyOnlineProto::define(const KeyValueMap& params) {
       (*myWHCorrelate[c]->getDataManager().getOutHolder(0),
        TH_Mem());
 
-    myWHDump[c]->getDataManager().getInHolder(0)->setBlocking(false);
-    myWHCorrelate[c]->getDataManager().getOutHolder(0)->setBlocking(false);
+    myWHDump[c]->getDataManager().getInHolder(0)->getTransporter().setIsBlocking(false);
+    myWHCorrelate[c]->getDataManager().getOutHolder(0)->getTransporter().setIsBlocking(false);
 
-    myWHDump[c]->getDataManager().setInputRate(NVis);
-    myWHDump[c]->getDataManager().setProcessRate(NVis);
+    myWHDump[c]->getDataManager().getInHolder(0)->getTransporter().setRate(NVis);
   }
 
 
