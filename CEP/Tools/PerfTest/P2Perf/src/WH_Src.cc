@@ -28,7 +28,7 @@
 #include <math.h>
 
 #include "CEPFrame/Step.h"
-#include <Common/Debug.h>
+#include <Common/LofarLogger.h>
 
 #include "P2Perf/WH_Src.h"
 #include "P2Perf/StopWatch.h"

@@ -87,7 +87,6 @@ private:
 };
 
 inline void WH_Src::setReportPerformance(bool doreport){
-  TRACER4("Set output for " << getName() << " to " << doreport);
   itsReportPerformance = doreport;
 }
 #endif

@@ -93,7 +93,7 @@ void P2Perf::define(const KeyValueMap& params)
   // free any memory previously allocated
   undefine();
 
-  TRACER2("P2Perf Processor " << rank << " of " << size << " operational.");
+  LOG_TRACE_VAR_STR("P2Perf Processor " << rank << " of " << size << " operational.");
 
   WH_Empty empty;
 
@@ -187,7 +187,7 @@ void P2Perf::define(const KeyValueMap& params)
     Dsteps[iStep] = new Step(Dworkholders[iStep], "DestStep", iStep);
     // Determine the node and process to run in
     if (WithMPI) {
-      TRACER2("Dest MPI runonnode (" << iStep + itsSourceSteps << ")");
+      LOG_TRACE_VAR_STR("Dest MPI runonnode (" << iStep + itsSourceSteps << ")");
       Dsteps[iStep]->runOnNode(iStep+itsSourceSteps,0); // run in App 0
       //Dsteps[iStep]->runOnNode(0,0); // run in App 0
     } else if (useSockets != 0) {
@@ -205,12 +205,12 @@ void P2Perf::define(const KeyValueMap& params)
   // Now Add the steps to the simul;
   // first ALL the sources....
   for (int iStep = 0; iStep < itsSourceSteps; iStep++) {
-    TRACER4("Add Source step " << iStep);
+    LOG_TRACE_OBJ_STR("Add Source step " << iStep);
     comp.addStep(Ssteps[iStep]);
   }
   // ...then the destinations
   for (int iStep = 0; iStep < itsDestSteps; iStep++) {
-    TRACER4("Add Dest step " << iStep);
+    LOG_TRACE_OBJ_STR("Add Dest step " << iStep);
     comp.addStep(Dsteps[iStep]);
   }
   
@@ -227,7 +227,7 @@ void P2Perf::define(const KeyValueMap& params)
                             TH_Corba());
 #else
 #ifdef HAVE_MPI
-      TRACER2("Connect using MPI");
+      LOG_TRACE_VAR("Connect using MPI");
       if (useShMem)
       {
         Dsteps[step]->connect(Ssteps[ch],
@@ -273,19 +273,19 @@ void P2Perf::define(const KeyValueMap& params)
 
 
 void P2Perf::run(int nSteps) {
-  TRACER1("Ready with definition of configuration");
+  LOG_TRACE_FLOW("Ready with definition of configuration");
   Profiler::init();
   Step::clearEventCount();
 
-  TRACER4("Start Processing simul P2Perf");    
+  LOG_TRACE_FLOW("Start Processing simul P2Perf");    
   for (int i=0; i<nSteps; i++) {
     //    if (i==2) Profiler::activate();
-    TRACER2("Call simul.process() ");
+    LOG_TRACE_VAR("Call simul.process() ");
     getComposite().process();
     //    if (i==5) Profiler::deActivate();
   }
 
-  TRACER4("END OF SIMUL on node " << TRANSPORTER::getCurrentRank () );
+  LOG_TRACE_FLOW_STR("END OF SIMUL on node " << TRANSPORTER::getCurrentRank () );
  
 #if 0
   //     close environment
