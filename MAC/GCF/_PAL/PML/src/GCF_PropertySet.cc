@@ -241,7 +241,8 @@ void GCFPropertySet::dispatchAnswer(unsigned short sig, TGCFResult result)
   if (_pAnswerObj != 0)
   {
     GCFPropSetAnswerEvent e(sig);
-    e.pScope = getScope().c_str();
+    string fullScope(getFullScope());
+    e.pScope = fullScope.c_str();
     e.result = result;
     _pAnswerObj->handleAnswer(e);
   }

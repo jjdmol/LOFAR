@@ -70,7 +70,7 @@ class Echo : public GCFTask
    * are sent through the server port.
    */
   GCFPort server;
-  Service service;
+  Service* _pService;
 };
 
 #endif

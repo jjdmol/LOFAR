@@ -30,6 +30,11 @@
 TPIResult convertPAToPIResult(TPAResult result);
 TPAResult convertPIToPAResult(TPIResult result);
 
+GPIPropertySet::~GPIPropertySet() 
+{ 
+  unsubscribeAllProps();
+}
+
 void GPIPropertySet::propSubscribed(const string& /*propName*/)
 {
   assert(_state == S_LINKING || _state == S_DELAYED_DISABLING);
@@ -161,17 +166,7 @@ void GPIPropertySet::disable(const PIUnregisterScopeEvent& requestIn)
   switch (_state)
   {
     case S_LINKED:
-      for (list<string>::iterator iter = _propsSubscribed.begin(); 
-           iter != _propsSubscribed.end(); ++iter)
-      {
-        string fullName;
-        assert(_scope.length() > 0);
-        fullName = _scope + GCF_PROP_NAME_SEP + *iter;
-        if (GCFPVSSInfo::propExists(fullName))
-        {
-          unsubscribeProp(fullName);          
-        }
-      }
+      unsubscribeAllProps();
       // intentional fall through
     case S_ENABLED:
       if (_savedSeqnr == 0)
@@ -222,6 +217,7 @@ void GPIPropertySet::disabled(const PAScopeUnregisteredEvent& responseIn)
   {
     case S_DISABLING:
     {
+      
       responseOut.result = convertPAToPIResult(responseIn.result);
       _state = S_DISABLED;
       break;
@@ -390,27 +386,7 @@ void GPIPropertySet::unlinkPropSet(const PAUnlinkPropSetEvent& requestIn)
     case S_LINKED:
     {    
       _state = S_UNLINKING;
-      TPAResult result(PA_NO_ERROR);
-      for (list<string>::iterator iter = _propsSubscribed.begin(); 
-           iter != _propsSubscribed.end(); ++iter)
-      {
-        string fullName;        
-        if (_scope.length() > 0)
-        {
-          fullName = _scope + GCF_PROP_NAME_SEP + *iter;
-        }
-        else
-        {
-          fullName = *iter;
-        }
-        if (GCFPVSSInfo::propExists(fullName))
-        {
-          if (unsubscribeProp(fullName) != GCF_NO_ERROR)
-          {
-            result = PA_PI_INTERNAL_ERROR;
-          }
-        }
-      }
+      TPAResult result = unsubscribeAllProps();
       if (result == PA_NO_ERROR)
       {
         PIUnlinkPropSetEvent requestOut;
@@ -475,6 +451,34 @@ void GPIPropertySet::propSetUnlinkedInPI(TPAResult result)
   response.scope = _scope;
   response.result = result;
   sendMsgToPA(response);
+}
+
+
+TPAResult GPIPropertySet::unsubscribeAllProps()
+{
+  TPAResult result(PA_NO_ERROR);
+  for (list<string>::iterator iter = _propsSubscribed.begin(); 
+       iter != _propsSubscribed.end(); ++iter)
+  {
+    string fullName;        
+    if (_scope.length() > 0)
+    {
+      fullName = _scope + GCF_PROP_NAME_SEP + *iter;
+    }
+    else
+    {
+      fullName = *iter;
+    }
+    if (GCFPVSSInfo::propExists(fullName))
+    {
+      if (unsubscribeProp(fullName) != GCF_NO_ERROR)
+      {
+        result = PA_PI_INTERNAL_ERROR;
+      }
+    }
+  }
+  _propsSubscribed.clear();
+  return result;
 }
 
 void GPIPropertySet::wrongState(const char* request)

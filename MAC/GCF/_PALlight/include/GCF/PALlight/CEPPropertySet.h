@@ -28,6 +28,7 @@
 #include <Common/lofar_list.h>
 #include <Common/lofar_map.h>
 #include <GCF/PALlight/CEPProperty.h>
+#include <GCF/Mutex.h>
 
 class GCFPValue;
 
@@ -134,13 +135,13 @@ class CEPPropertySet
     //         if not found
     GCFPValue* getValue (const string& propName);             
                
-  private: 
+  private: // methods called by CEPProperty
     friend class CEPProperty;
     // will be invoked by CEPProperty if the value of the property has changed
     // and the property set is in monitoring state
-    void valueSet(const string& propName, const GCFPValue& value) const;
+    void valueSet(const string& propName, const GCFPValue& value);
     
-  private:
+  private: // methods called by PIClient
     friend class PIClient;
     // response of an enable method call invoked by PIClient
     void scopeRegistered (bool succeed);
@@ -151,6 +152,7 @@ class CEPPropertySet
     void linkProperties ();    
     void unlinkProperties ();
     // </group>
+    void connectionLost();
 
   private: // helper methods    
     void addProperty(const string& propName, CEPProperty& prop);
@@ -187,6 +189,7 @@ class CEPPropertySet
     CEPProperty         _dummyProperty; 
     // pointer to PIClient singleton
     PIClient*           _pClient;
+    GCF::Thread::Mutex  _stateMutex;
 };
 
 inline const string& CEPPropertySet::getScope () const 
@@ -202,10 +205,14 @@ inline TPSCategory CEPPropertySet::getCategory () const
   { return _category; }
   
 inline bool CEPPropertySet::isEnabled () 
-  { return (_state == S_ENABLED || _state == S_LINKED); }
+  { GCF::Thread::Mutex::Lock(_stateMutex);
+    return (_state == S_ENABLED || _state == S_LINKED); 
+  }
   
 inline bool CEPPropertySet::isMonitoringOn()
-  { return _state == S_LINKED; }
+  { GCF::Thread::Mutex::Lock(_stateMutex);
+    return _state == S_LINKED; 
+  }
 
   } // namespace CEPPMLlight
  } // namespace GCF

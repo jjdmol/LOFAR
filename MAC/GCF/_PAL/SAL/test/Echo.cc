@@ -31,7 +31,7 @@
 using std::cout;
 using std::endl;
 
-Echo::Echo(string name) : GCFTask((State)&Echo::initial, name)
+Echo::Echo(string name) : GCFTask((State)&Echo::initial, name) , _pService(0)
 {
   // register the protocol for debugging purposes
   registerProtocol(ECHO_PROTOCOL, ECHO_PROTOCOL_signalnames);
@@ -88,8 +88,11 @@ GCFEvent::TResult Echo::connected(GCFEvent& e, GCFPortInterface& p)
   switch (e.signal)
   {
     case F_DISCONNECTED:
-      service.dpDelete(propName);
-      service.dpDelete(propName + "_test");
+      if (_pService)
+      {
+        _pService->dpDelete(propName);
+        _pService->dpDelete(propName + "_test");
+      }
       cout << "Lost connection to client" << endl;
       p.close();
       break;
@@ -104,67 +107,69 @@ GCFEvent::TResult Echo::connected(GCFEvent& e, GCFPortInterface& p)
       switch (ping.seqnr % 13)
       {
         case 0:
-          service.dpCreate(propName, "ExampleDP_Bit");
+          if (_pService) delete _pService;
+          _pService = new Service();
+          _pService->dpCreate(propName, "ExampleDP_Bit");
           break;
         case 1:
-          service.dpCreate(propName + "_test", "ExampleDP_Int");
+          _pService->dpCreate(propName + "_test", "ExampleDP_Int");
           break;
         case 2:
-          service.dpeSubscribe(propName);
+          _pService->dpeSubscribe(propName);
           break;
         case 3:
-          service.dpeSubscribe(propName + "_test");
+          _pService->dpeSubscribe(propName + "_test");
           break;
         case 4:
-          service.dpeGet(propName);
+          _pService->dpeGet(propName);
           break;
         case 5:
         {
           GCFPVBool wrongTestVal(true);
-          service.dpeSet(propName + "_test", wrongTestVal);
+          _pService->dpeSet(propName + "_test", wrongTestVal);
           GCFPVInteger goodTestVal(1000);
-          service.dpeSet(propName + "_test", goodTestVal);
+          _pService->dpeSet(propName + "_test", goodTestVal);
           break;
         }
         case 6:
-          service.dpeUnsubscribe(propName + "_test1");
-          service.dpeUnsubscribe(propName + "_test");
-          service.dpeUnsubscribe(propName);
+          _pService->dpeUnsubscribe(propName + "_test1");
+          _pService->dpeUnsubscribe(propName + "_test");
+          _pService->dpeUnsubscribe(propName);
           break;
         case 7:
         {
           GCFPVInteger testVal(2000);
-          service.dpeSet(propName + "_test", testVal);
+          _pService->dpeSet(propName + "_test", testVal);
           break;
         }
         case 8:
         {
-          service.dpeSubscribe(propName);
-          service.dpeUnsubscribe(propName);
+          _pService->dpeSubscribe(propName);
+          _pService->dpeUnsubscribe(propName);
           GCFPVBool testVal(true);
-          service.dpeSet(propName, testVal);
+          _pService->dpeSet(propName, testVal);
           break;
         }
         case 9:
-          service.dpeSubscribe(propName);
+          _pService->dpeSubscribe(propName);
           break;
         case 10:
-          service.dpeGet(propName);
-          service.dpeUnsubscribe(propName);
+          _pService->dpeGet(propName);
+          _pService->dpeUnsubscribe(propName);
           break;
         case 11:
         {
-          service.dpeSubscribe(propName);
-          service.dpeUnsubscribe(propName);
-          service.dpeSubscribe(propName);
+          _pService->dpeSubscribe(propName);
+          _pService->dpeUnsubscribe(propName);
+          _pService->dpeSubscribe(propName);
           GCFPVBool testVal(false);
-          service.dpeSet(propName, testVal);
+          _pService->dpeSet(propName, testVal);
           break;
         }
         case 12:
-          service.dpDelete(propName);
-          service.dpDelete(propName + "_test");
-          break;          
+          _pService->dpDelete(propName);
+          _pService->dpDelete(propName + "_test");
+          break;                
       }
       
       
