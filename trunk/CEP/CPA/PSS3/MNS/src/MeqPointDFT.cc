@@ -132,20 +132,20 @@ MeqResult MeqPointDFT::getResult (const MeqRequest& request)
   // In the future that might also be the case for UVW.
   MeqMatrix perturbation;
   for (int spinx=0; spinx<request.nspid(); spinx++) {
-    bool eval = false;
-    if (rak.isDefined(spinx)) {
-      eval = true;
-      perturbation = rak.getPerturbation(spinx);
-      radiff = rak.getPerturbedValue(spinx) - itsRefRa;
-    } else if (deck.isDefined(spinx)) {
-      eval = true;
-      perturbation = deck.getPerturbation(spinx);
-      cosdec = cos(deck.getPerturbedValue(spinx));
-    }
-    if (eval) {
-      lk = cosdec * sin(radiff);
+    if (rak.isDefined(spinx)  ||  deck.isDefined(spinx)) {
+      MeqMatrix pcosdec = cosdec;
+      MeqMatrix pradiff = radiff;
+      if (rak.isDefined(spinx)) {
+	perturbation = rak.getPerturbation(spinx);
+	pradiff = rak.getPerturbedValue(spinx) - itsRefRa;
+      }
+      if (deck.isDefined(spinx)) {
+	perturbation = deck.getPerturbation(spinx);
+	pcosdec = cos(deck.getPerturbedValue(spinx));
+      }
+      lk = pcosdec * sin(pradiff);
       mk = sin(deck.getPerturbedValue(spinx))*itsCosRefDec -
-	   cosdec*itsSinRefDec*cos(radiff);
+	   pcosdec*itsSinRefDec*cos(pradiff);
       MeqMatrixTmp nks = MeqMatrixTmp(1.) - sqr(lk) - sqr(mk);
       AssertStr (min(nks).getDouble() > 0, "source " << request.getSourceNr()
 	     << " too far from phaseref " << itsRefRa << ", " << itsRefDec);
