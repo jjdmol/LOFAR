@@ -1,7 +1,6 @@
 
 AM_CPPFLAGS = \
-	-I$(top_srcdir)/src \
-	-DTOGGLE_LEDS
+	-I$(top_srcdir)/src
 
 INSTALL=install -C
 
