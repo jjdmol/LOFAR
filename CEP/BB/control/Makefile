@@ -17,6 +17,11 @@ SOURCES = \
 		control/Control.cpp \
 		control/TopLevelStrategy.cpp \
 		knowledge/WorkerWrapper.cpp \
+		directives/Directive.cpp\
+		directives/DirectiveData.cpp\
+		directives/Parser.cpp\
+
+#		directives/SelectScriptID.cpp\
 
 
 OBJS       = $(SOURCES:.cpp=.o)
@@ -27,7 +32,7 @@ OPT     = -pg -g
 
 CFLAGS     = -D_REENTRANT -I./ -I$(DTLINCLUDE) $(MPI_INCLUDES) $(MPI_CXX_INCLUDES) $(OPT) $(CC_MACH_FLAGS) 
 
-%.o : %.cpp
+%.o : %.cpp Makefile
 	$(CCC) -c $(CFLAGS) $< -o $@
 
 $(TARGET):   $(OBJS)
@@ -40,3 +45,7 @@ bbdb:	blackboard/createdb.o
 
 clean:
 	rm -f $(OBJS) $(TARGET).o $(TARGET) core 
+
+new:
+	make clean
+	make

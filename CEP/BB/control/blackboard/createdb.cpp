@@ -9,7 +9,7 @@
     //util consts
 bool debug(true);
 
-const char *controlTableName = "controldata";
+const char *deploymentTableName = "deploymentdata";
 
 const char *connectString = "UID=bb;DSN=lofar16;";
 
@@ -20,7 +20,7 @@ void create(void);
 int main(char ** av, int ac)
 {
    connect();
-       //<todo>How to handle none existend controldata table?</todo>
+       //<todo>How to handle none existend deploymentdata table?</todo>
    create();
    return 0;
 }
@@ -42,12 +42,12 @@ void connect()
    }
 }
 
-    //create the control data, it should allready exist
+    //create the deployment data, it should allready exist
 void create()
 {
    try {
       DEBUG("Creating new table..");
-      dtl::DBStmt("CREATE TABLE controldata (\
+      dtl::DBStmt("CREATE TABLE deploymentdata (\
                 rank INTEGER,\
                 role VARCHAR(30),\
                 master INTEGER)").Execute();

@@ -4,6 +4,8 @@
 #include "Strategy.h"
 #include "blackboard/MPIProgramEntry.h"
 
+#include <vector>
+
 //##ModelId=3F3A4C45002E
 //##Documentation
 //## The top level strategy is the top of the control hierarchy. It can exist
@@ -14,25 +16,21 @@ class TopLevelStrategy : public Strategy, public MPIProgramEntry
     //##ModelId=3F4225A301D4
   //    void run();
     //##ModelId=3F43262B0291
-    run();
+    void run();
     //##ModelId=3F43262B0291
     static TopLevelStrategy &Instance();
 
-
-
     //##ModelId=3F3A4C8201F4
-    IntermediateLevelStrategy intermediateStrategies;
+    std::vector<IntermediateLevelStrategy> *intermediateStrategies;
   protected:
     //##ModelId=3F4326D20214
     TopLevelStrategy();
+    virtual ~TopLevelStrategy();
 
   private:
     //##ModelId=3F43290401D9
     static TopLevelStrategy * _instance;
 
-
 };
-
-
 
 #endif /* TOPLEVELSTRATEGY_H_HEADER_INCLUDED_C0C4B372 */

@@ -22,6 +22,7 @@ bool debug(true);
     // wants to use debug:
 #include "blackboard/NoSuchBlackBoardComponentException.h"
 
+const char *deploymentTableName = "deploymentdata";
 const char *controlTableName = "controldata";
 const char *BlackBoardName = "BlackBoard";
 const char *ControllerName = "Controller";
@@ -34,30 +35,43 @@ void connect(void);
 const std::string & getRole(const int rank);
 MPIProgramEntry *getObjectThatCanFulfill(const std::string &role);
 
-    //the control data object
-class ControlData 
+    //the deployment data object
+class DeploymentData 
 {
-   public:
-      int rank;
+public:
+  int rank;
           //      char role[31];
-      std::string role;
+  std::string role;
+  int master;
 
-      ControlData(const int initRank, const std::string& initRole):rank(initRank),role(initRole) 
-      {
-             //         strncpy(role,initRole,30);
-         role[31]='\0';
-         
-      }
-      ControlData():rank(-1),role("<none>")
-      {
-             //         strcpy(role,"<none>");
-      }
+  DeploymentData(const int initRank,
+		 const std::string& initRole,
+		 const int initMaster):
+    rank(initRank),
+    role(initRole),
+    master(initMaster)
+  {
+    //         strncpy(role,initRole,30);
+    //	   role[31]='\0'; // just make sure (when we still had char*)
+  }
+
+  DeploymentData():rank(-1),role("<none>"),master(-1)
+  {
+    //         strcpy(role,"<none>");
+  }
 };
 
 class RankClause
 {
    public:
       int rank;
+};
+
+//<todo>rank en masterclause should not be 2 classes, should they?</todo>
+class MasterClause
+{
+   public:
+      int master;
 };
 
 
@@ -70,17 +84,27 @@ class SelectOnRank
       }
 };
 
+class SelectOnMaster
+{
+   public:
+      void operator()(dtl::BoundIOs & position, MasterClause &masterParam)
+      {
+         position[0] << masterParam.master;
+      }
+};
+
 
     //BEGIN_DTL_NAMESPACE
-class ControlBCA {
+class DeploymentBCA {
 public:
       void operator() (dtl::BoundIOs &cols, 
-                       ControlData  &rowbuf) {
+                       DeploymentData  &rowbuf) {
 
-         DEBUG("bind ControlBCA");
+         DEBUG("bind DeploymentBCA");
          
          cols["rank"] << rowbuf.rank;
          cols["role"] << rowbuf.role;
+	 cols["master"] << rowbuf.master;
       }
 };
     //END_DTL_NAMESPACE
@@ -94,11 +118,12 @@ int main( int ac, char ** av)
   DEBUG("My rank is: " << rank);
 
    connect();
-       //<todo>How to handle none existend controldata table?</todo>
+       //<todo>How to handle none existent deploymentdata table?</todo>
 
        //<todo>MPI has been init'ed here</todo>
    
-   std::string role(getRole(rank));
+   std::string role;
+   role = getRole(rank);
 
    DEBUG("My role is: " << role);
 
@@ -144,24 +169,24 @@ const std::string & getRole(const int rank)
 {
    static std::string rc = "<none>";
 
-   DEBUG("accessing control-data..");
+   DEBUG("accessing deployment-data..");
 
-   dtl::DBView<ControlData,RankClause> view(controlTableName,ControlBCA(),"WHERE rank = (?)",SelectOnRank());
+   dtl::DBView<DeploymentData,RankClause> view(deploymentTableName,DeploymentBCA(),"WHERE rank = (?)",SelectOnRank());
    DEBUG("creating iterator..");
 
-   dtl::DBView<ControlData,RankClause>::select_iterator iter = view.begin();
+   dtl::DBView<DeploymentData,RankClause>::select_iterator iter = view.begin();
    iter.Params().rank = rank;
 
    DEBUG("looking for rank: " << rank);
 
    DEBUG("Reading element #" << iter.GetLastCount());
-   ControlData dat;
+   //   DeploymentData dat;
 
    if (iter != view.end())
    {
       DEBUG("found: " << iter->role);
 
-          //<todo>What if more then onbe row can be returned? can "I" perform more then one role?</todo>
+          //<todo>What if more then one row can be returned? can "I" perform more then one role?</todo>
           //<todo>take good care of this former here memory leak</todo>
       rc = iter->role;
    }

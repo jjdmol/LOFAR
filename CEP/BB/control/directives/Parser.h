@@ -2,18 +2,21 @@
 #define PARSER_H_HEADER_INCLUDED_C0B1CBD5
 #include "Directive.h"
 
+#include <string>
+#include <vector>
+
 //##ModelId=3F4DE33A0399
 class Parser
 {
   public:
     //##ModelId=3F4DE363005D
-    void setText(string text);
+    void setText(std::string text);
 
     //##ModelId=3F4DE3900109
-    string getText();
+    std::string getText();
 
     //##ModelId=3F4DE3CF031C
-    vector<Directive> *getNested();
+    std::vector<Directive> *getNested();
 
 };
 
