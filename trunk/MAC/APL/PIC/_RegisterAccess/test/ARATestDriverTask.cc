@@ -60,7 +60,11 @@ ARATestDriverTask::ARATestDriverTask() :
   m_substatusPeriod(0.0),
   m_substatsPeriod(0.0),
   m_updStatusTimerId(0),
-  m_updStatsTimerId(0)
+  m_updStatsTimerId(0),
+  m_updStatsHandleSP(0),
+  m_updStatsHandleSM(0),
+  m_updStatsHandleBP(0),
+  m_updStatsHandleBM(0)
 {
   registerProtocol(RSP_PROTOCOL, RSP_PROTOCOL_signalnames);
   m_answer.setTask(this);
@@ -68,13 +72,13 @@ ARATestDriverTask::ARATestDriverTask() :
   m_systemStatus.board().resize(N_BOARDS_PER_SUBRACK);
   m_systemStatus.rcu().resize(N_RCUS);
   
-  m_stats().resize(RSP_Protocol::Statistics::N_STAT_TYPES,N_RCUS,RSP_Protocol::MAX_N_BEAMLETS);
+  m_stats().resize(RSP_Protocol::Statistics::N_STAT_TYPES,N_RCUS,RSP_Protocol::MAX_N_BLPS);
   int i,j,k;
   for(i=0;i<RSP_Protocol::Statistics::N_STAT_TYPES;i++)
   {
     for(j=0;j<N_RCUS;j++)
     {
-      for(k=0;k<RSP_Protocol::MAX_N_BEAMLETS;k++)
+      for(k=0;k<RSP_Protocol::MAX_N_BLPS;k++)
       {
         m_stats()(i,j,k) = 0;
       }
@@ -575,10 +579,10 @@ void ARATestDriverTask::updateStats()
   {
     for(j=0;j<N_RCUS;j++)
     {
-      for(k=0;k<RSP_Protocol::MAX_N_BEAMLETS;k++)
+      for(k=0;k<RSP_Protocol::MAX_N_BLPS;k++)
       {
 //        m_stats()(i,j,k) = statVal*(j+1)*sin(k*2*3.1415926/60) * 1000;
-        m_stats()(i,j,k) = k+j*k+i*j*k;
+        m_stats()(i,j,k) = 100;//k+j*k+i*j*k;
       }
     }
   }
@@ -588,10 +592,28 @@ void ARATestDriverTask::updateStats()
   RSPUpdstatsEvent updStatsEvent;
   updStatsEvent.timestamp.setNow();
   updStatsEvent.status=SUCCESS;
-  updStatsEvent.handle=1; // ignore
   updStatsEvent.stats().reference(m_stats().copy());
   
-  m_RSPserver.send(updStatsEvent);
+  if(m_updStatsHandleSP != 0)
+  {
+    updStatsEvent.handle=m_updStatsHandleSP; 
+    m_RSPserver.send(updStatsEvent);
+  }
+  if(m_updStatsHandleSM != 0)
+  {
+    updStatsEvent.handle=m_updStatsHandleSM; 
+    m_RSPserver.send(updStatsEvent);
+  }
+  if(m_updStatsHandleBP != 0)
+  {
+    updStatsEvent.handle=m_updStatsHandleBP; 
+    m_RSPserver.send(updStatsEvent);
+  }
+  if(m_updStatsHandleBM != 0)
+  {
+    updStatsEvent.handle=m_updStatsHandleBM;
+    m_RSPserver.send(updStatsEvent);
+  }
 }
 
 bool ARATestDriverTask::isEnabled()
@@ -735,13 +757,37 @@ GCFEvent::TResult ARATestDriverTask::enabled(GCFEvent& event, GCFPortInterface& 
       LOG_INFO("RSP_SUBSTATS received");
       RSPSubstatsEvent substats(event);
       
-      m_substatsPeriod = (double)substats.period;
-      m_updStatsTimerId = port.setTimer(m_substatsPeriod);
-
       RSPSubstatsackEvent ack;
       ack.timestamp.setNow();
       ack.status = SUCCESS;
-      ack.handle = (int)&ack;
+      if(substats.type == RSP_Protocol::Statistics::SUBBAND_POWER)
+      {
+        m_updStatsHandleSP = 11;
+        ack.handle = m_updStatsHandleSP;
+      }
+      else if(substats.type == RSP_Protocol::Statistics::SUBBAND_MEAN)
+      {
+        m_updStatsHandleSM = 12;
+        ack.handle = m_updStatsHandleSM;
+      }
+      else if(substats.type == RSP_Protocol::Statistics::BEAMLET_POWER)
+      {
+        m_updStatsHandleBP = 21;
+        ack.handle = m_updStatsHandleBP;
+      }
+      else if(substats.type == RSP_Protocol::Statistics::BEAMLET_MEAN)
+      {
+        m_updStatsHandleBM = 22;
+        ack.handle = m_updStatsHandleBM;
+      }
+      else
+      {
+        ack.status = FAILURE;
+        ack.handle = 0;
+      }      
+      m_substatsPeriod = (double)substats.period;
+      m_updStatsTimerId = port.setTimer(m_substatsPeriod);
+
       port.send(ack);
       break;
     }

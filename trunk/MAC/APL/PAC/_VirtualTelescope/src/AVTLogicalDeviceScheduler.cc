@@ -456,21 +456,25 @@ GCFEvent::TResult AVTLogicalDeviceScheduler::initial_state(GCFEvent& event, GCFP
 
       // create receptor groups
       vector<shared_ptr<AVTStationReceptor> > receptorsSRG1;
+      vector<shared_ptr<AVTStationReceptor> > receptorsSRG2;
+      vector<shared_ptr<AVTStationReceptor> > receptorsSRG3;
+      vector<shared_ptr<AVTStationReceptor> > receptorsSRG4;
+      
       receptorsSRG1.push_back(receptors[0]);
       receptorsSRG1.push_back(receptors[1]);
-      receptorsSRG1.push_back(receptors[2]);
-      receptorsSRG1.push_back(receptors[3]);
-      receptorsSRG1.push_back(receptors[4]);
-      receptorsSRG1.push_back(receptors[5]);
-      receptorsSRG1.push_back(receptors[6]);
-      receptorsSRG1.push_back(receptors[7]);
-      vector<shared_ptr<AVTStationReceptor> > receptorsSRG2(receptors.begin(),receptors.begin()+4);
-      vector<shared_ptr<AVTStationReceptor> > receptorsSRG3;
-      vector<shared_ptr<AVTStationReceptor> > receptorsSRG4(receptors.begin()+5,receptors.begin()+8);
-      receptorsSRG3.push_back(receptors[1]);
-      receptorsSRG3.push_back(receptors[3]);
+      
+      receptorsSRG2.push_back(receptors[2]);
+      receptorsSRG2.push_back(receptors[3]);
+      
+      receptorsSRG3.push_back(receptors[4]);
       receptorsSRG3.push_back(receptors[5]);
-      receptorsSRG3.push_back(receptors[7]);
+      
+      receptorsSRG4.push_back(receptors[0]);
+      receptorsSRG4.push_back(receptors[1]);
+      receptorsSRG4.push_back(receptors[2]);
+      receptorsSRG4.push_back(receptors[3]);
+      receptorsSRG4.push_back(receptors[4]);
+      receptorsSRG4.push_back(receptors[5]);
 
       addReceptorGroup(string("SRG1"),propertySetSRG1,receptorsSRG1);
       addReceptorGroup(string("SRG2"),propertySetSRG2,receptorsSRG2);
@@ -994,7 +998,6 @@ void AVTLogicalDeviceScheduler::sendWGsettings()
   ABSWgsettingsEvent wgSettingsEvent;
   wgSettingsEvent.frequency = m_WGfrequency;
   wgSettingsEvent.amplitude = static_cast<unsigned char>(m_WGamplitude);
-  wgSettingsEvent.sample_period = static_cast<unsigned char>(m_WGsamplePeriod);
   
 // m_beamServer.send(wgSettingsEvent);
   if(m_pBeamServer!=0)

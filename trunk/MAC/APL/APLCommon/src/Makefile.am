@@ -7,6 +7,9 @@ DOCHDRS	=	$(include_HEADERS) \
       
 noinst_LTLIBRARIES 	= libaplcommon.la
 
+libaplcommon_la__CPPFLAGS= \
+  -Wno-deprecated 
+
 libaplcommon_la_SOURCES= $(DOCHDRS) \
 	APLInterTaskPort.cc \
 	suite.cpp \

@@ -1,7 +1,6 @@
 [ARA]
 host=localhost
 ARAtestRSPserver.type=TCP
-ARAtestRSPserver.port=22040
 
 [ARATest]
 host=localhost
@@ -28,3 +27,9 @@ host=localhost
 server.port=20040 # MSPP
 server.type=TCP
 
+[RSP]
+cmd=../src/RSPDriver
+host=localhost
+spid.port=0
+acceptor.type=TCP
+acceptor.port=30230

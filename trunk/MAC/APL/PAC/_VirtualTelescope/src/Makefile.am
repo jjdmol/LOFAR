@@ -1,18 +1,20 @@
-noinst_PROGRAMS 		= AVTLogicalDeviceServer
+bin_PROGRAMS 		= LogicalDeviceServer
 
 AUTOGEN = autogen
 SUFFIXES = .ph
 %.ph: %.prot
-	$(AUTOGEN) --writable -L $(top_srcdir)/../MACCommon/autogen -L $(top_builddir)/PAC/BeamServer/src $<
+	$(AUTOGEN) --writable -L $(top_srcdir)/../MACCommon/autogen $<
+%.cc: %.prot
+	$(AUTOGEN) --writable -L $(top_srcdir)/../MACCommon/autogen $<
 
-AVTLogicalDeviceServer_CPPFLAGS= \
+LogicalDeviceServer_CPPFLAGS= \
 	-I$(top_srcdir)/APLCommon/src \
-	-I$(top_srcdir)/PAC/BeamServer/src \
 	-DBOOST_DISABLE_THREADS \
+  -Wno-deprecated \
 	-fmessage-length=0 \
 	-fdiagnostics-show-location=once
 
-AVTLogicalDeviceServer_SOURCES 		= \
+LogicalDeviceServer_SOURCES 		= \
 	AVTUtilities.cc \
 	AVTAPCAnswer.cc \
 	AVTLogicalDevice.cc \
@@ -24,29 +26,31 @@ AVTLogicalDeviceServer_SOURCES 		= \
 	AVTStationReceptor.cc \
 	AVTStationReceptorGroup.cc \
 	AVTLogicalDeviceServerMain.cc \
-	LogicalDevice_Protocol.cc \
-	ABS_Protocol.cc
+	LogicalDevice_Protocol.cc
 	
-AVTLogicalDeviceServer_LDADD		= \
+LogicalDeviceServer_LDADD		= \
 	$(top_builddir)/APLCommon/src/libaplcommon.la \
+	-labs \
 	-lboost_date_time-gcc-1_31
 	
-AVTLogicalDeviceServer_DEPENDENCIES	= \
+LogicalDeviceServer_DEPENDENCIES	= \
 	$(top_builddir)/APLCommon/src/libaplcommon.la
 
 BUILT_SOURCES = \
-	$(top_builddir)/PAC/BeamServer/src/ABS_Protocol.ph \
 	LogicalDevice_Protocol.ph \
 	avt.ns \
 	avt.top \
 	log4cplus.properties	
 
 EXTRA_DIST = \
-  $(top_builddir)/PAC/BeamServer/src/ABS_Protocol.ph \
   LogicalDevice_Protocol.ph \
 	avt.ns \
 	avt.top \
 	log4cplus.properties
+
+sysconf_DATA = \
+	avt.ns \
+	avt.top
 	
 %.properties: %.properties.in
 	cp $< $@

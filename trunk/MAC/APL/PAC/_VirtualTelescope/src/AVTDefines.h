@@ -24,6 +24,7 @@
 #define AVTDefines_H
 
 #define PREPARE_TIME 5   
+#define AVT_N_BEAMLETS 128
 
 #define LD_COMMAND_SCHEDULE           "SCHEDULE"
 #define LD_COMMAND_CANCEL             "CANCEL"

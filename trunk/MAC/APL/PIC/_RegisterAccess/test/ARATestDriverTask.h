@@ -86,6 +86,10 @@ namespace ARA
       double          m_substatsPeriod;
       long            m_updStatusTimerId;
       long            m_updStatsTimerId;
+      uint32          m_updStatsHandleSP;
+      uint32          m_updStatsHandleSM;
+      uint32          m_updStatsHandleBP;
+      uint32          m_updStatsHandleBM;
   };  
 };
 

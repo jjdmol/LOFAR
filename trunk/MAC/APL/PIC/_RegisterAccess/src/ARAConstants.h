@@ -26,7 +26,8 @@
 
 namespace ARA
 {
-  
+  const int STATUS_UPDATE_INTERVAL = 2;
+  const int STATISTICS_UPDATE_INTERVAL = 2;
 };
      
 #endif /* ARACONSTANTS_H_ */

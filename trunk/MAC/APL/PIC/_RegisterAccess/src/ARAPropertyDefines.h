@@ -29,7 +29,7 @@
 const int N_RACKS               = 1; // 6
 const int N_SUBRACKS_PER_RACK   = 1; // 4
 const int N_BOARDS_PER_SUBRACK  = 1;
-const int N_APS_PER_BOARD       = 4;
+const int N_APS_PER_BOARD       = 1;
 const int N_RCUS_PER_AP         = 2;
 const int N_RCUS                = N_RCUS_PER_AP*
                                   N_APS_PER_BOARD*
@@ -94,20 +94,24 @@ const char SCOPE_PIC_RackN_SubRackN_BoardN_Alert[] =                  "PIC_Rack%
 #define PROPNAME_OVERFLOW        "overflow"
 #define PROPNAME_FROMTIME        "fromTime"
 #define PROPNAME_TOTIME          "toTime"
-#define PROPNAME_STATISTICSMEAN  "statisticsMean"
-#define PROPNAME_STATISTICSPOWER "statisticsPower"
+#define PROPNAME_STATISTICSSUBBANDMEAN  "statisticsSubbandMean"
+#define PROPNAME_STATISTICSSUBBANDPOWER "statisticsSubbandPower"
+#define PROPNAME_STATISTICSBEAMLETMEAN  "statisticsBeamletMean"
+#define PROPNAME_STATISTICSBEAMLETPOWER "statisticsBeamletPower"
 
 
 const TProperty PROPS_Station[] =
 {
   {PROPNAME_STATUS, GCFPValue::LPT_UNSIGNED, GCF_READABLE_PROP | GCF_WRITABLE_PROP, "0"},
-  {PROPNAME_STATISTICSMEAN, GCFPValue::LPT_DYNUNSIGNED, GCF_READABLE_PROP | GCF_WRITABLE_PROP, ""},
-  {PROPNAME_STATISTICSPOWER, GCFPValue::LPT_DYNUNSIGNED, GCF_READABLE_PROP | GCF_WRITABLE_PROP, ""},
+  {PROPNAME_STATISTICSSUBBANDMEAN, GCFPValue::LPT_DYNDOUBLE, GCF_READABLE_PROP | GCF_WRITABLE_PROP, ""},
+  {PROPNAME_STATISTICSSUBBANDPOWER, GCFPValue::LPT_DYNDOUBLE, GCF_READABLE_PROP | GCF_WRITABLE_PROP, ""},
+  {PROPNAME_STATISTICSBEAMLETMEAN, GCFPValue::LPT_DYNDOUBLE, GCF_READABLE_PROP | GCF_WRITABLE_PROP, ""},
+  {PROPNAME_STATISTICSBEAMLETPOWER, GCFPValue::LPT_DYNDOUBLE, GCF_READABLE_PROP | GCF_WRITABLE_PROP, ""},
 };
 
 const TPropertySet PROPSET_PIC = 
 {
-  3, "PIC", PROPS_Station
+  5, "PIC", PROPS_Station
 };
 
 const TProperty PROPS_Rack[] =
