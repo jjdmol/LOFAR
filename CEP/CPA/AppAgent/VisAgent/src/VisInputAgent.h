@@ -54,7 +54,7 @@ class VisInputAgent : public virtual AppAgent
     //##          WAIT      header has not yet arrived (only for wait=False)
     //##          CLOSED    stream closed
     //##          OUTOFSEQ  next object in stream is not a header (i.e. a tile)
-      virtual int getHeader   (DataRecord::Ref &hdr,bool wait = True) =0;
+      virtual int getHeader   (DataRecord::Ref &hdr,int wait = AppAgent::WAIT) =0;
   
     //##ModelId=3DF9FECF03A9
     //##Documentation
@@ -64,7 +64,7 @@ class VisInputAgent : public virtual AppAgent
     //##          WAIT      a tile has not yet arrived (only for wait=False)
     //##          CLOSED    stream closed
     //##          OUTOFSEQ  next object in stream is not a tile (i.e. a header)
-      virtual int getNextTile (VisTile::Ref &tile,bool wait = True) =0;
+      virtual int getNextTile (VisTile::Ref &tile,int wait = AppAgent::WAIT) =0;
       
     //##ModelId=3DF9FED0005A
     //##Documentation
@@ -100,6 +100,10 @@ class VisInputAgent : public virtual AppAgent
     //## in combination with suspend()/resume() to control the data flow. 
       virtual int  numPendingTiles ()
       { return hasTile() == SUCCESS ? 1 : 0; }
+      
+  protected:
+    //##ModelId=3E3AA72F01DD
+      AppAgent::getEvent;
 };
  
 #endif

@@ -16,7 +16,7 @@ class VisOutputAgent : virtual public AppAgent
     //## Returns: SUCCESS   on success
     //##          WAIT      stream has been suspended from other end
     //##          CLOSED    stream closed
-    virtual int putHeader   (DataRecord::Ref &hdr, bool wait = True) = 0;
+    virtual int putHeader   (DataRecord::Ref &hdr) = 0;
 
     // temporarily
     //##ModelId=3E28276D022A
@@ -27,22 +27,12 @@ class VisOutputAgent : virtual public AppAgent
     //## Returns: SUCCESS   on success
     //##          WAIT      stream has been suspended from other end    //## Gets next available tile from input stream. If wait=True, blocks until
     //##          CLOSED    stream closed
-    virtual int putNextTile (VisTile::Ref &tile, bool wait = True) = 0;
+    virtual int putNextTile (VisTile::Ref &tile) = 0;
 
-    //##ModelId=3E2827940038
-    //##Documentation
-    //## True if stream has been suspended
-    virtual bool isSuspended() 
-    { return False; }
+  protected:
+    //##ModelId=3E3AA73B002A
+      AppAgent::getEvent;
     
-    //##ModelId=3E2829DB01F9
-    //##Documentation
-    //## Blocks until stream has been resumed. If stream is not
-    //## suspended, returns SUCCESS immediately.
-    //## Returns: SUCCESS   on success
-    //##          CLOSED    stream closed
-    virtual int  waitForResume ()
-    { return SUCCESS; }
 };
 
 

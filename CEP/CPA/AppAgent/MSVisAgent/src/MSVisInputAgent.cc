@@ -218,13 +218,17 @@ void MSVisInputAgent::close ()
 }
 
 //##ModelId=3DF9FECD021B
-int MSVisInputAgent::getNextTile (VisTile::Ref &tileref,bool wait)
+int MSVisInputAgent::getNextTile (VisTile::Ref &tileref,int wait)
 {
   try
   {
     int res = hasTile();
     if( res != SUCCESS )
+    {
+      FailWhen( res == WAIT && wait != AppAgent::NOWAIT,
+          "can't wait here: would block indefinitely" );
       return res;
+    }
 
   // any more tiles in cache? Return one
     if( tileiter_ != tiles_.end() )

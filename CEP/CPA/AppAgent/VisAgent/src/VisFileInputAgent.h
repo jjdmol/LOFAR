@@ -64,7 +64,7 @@ class VisFileInputAgent : public VisInputAgent, public VisFileAgentBase
   public:
       
     //##ModelId=3DF9FECE03D1
-      virtual int getHeader (DataRecord::Ref &hdr,bool wait = True);
+      virtual int getHeader (DataRecord::Ref &hdr,int wait = AppAgent::WAIT);
   
     //##ModelId=3DF9FECF009D
       virtual int hasHeader ();

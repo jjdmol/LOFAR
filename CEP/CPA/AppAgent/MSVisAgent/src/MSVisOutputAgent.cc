@@ -80,7 +80,7 @@ bool MSVisOutputAgent::setupDataColumn (Column &col)
 
 
 //##ModelId=3E28316403E4
-int MSVisOutputAgent::putHeader (DataRecord::Ref &hdr, bool)
+int MSVisOutputAgent::putHeader (DataRecord::Ref &hdr)
 {
   try
   {
@@ -146,7 +146,7 @@ int MSVisOutputAgent::putHeader (DataRecord::Ref &hdr, bool)
 }
 
 //##ModelId=3E28316B012D
-int MSVisOutputAgent::putNextTile (VisTile::Ref &tileref, bool)
+int MSVisOutputAgent::putNextTile (VisTile::Ref &tileref)
 {
   if( fileState() != DATA && fileState() != HEADER  )
     return AppAgent::ERROR;

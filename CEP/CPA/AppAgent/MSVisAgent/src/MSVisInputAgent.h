@@ -49,7 +49,7 @@
 //##       +--[FChannelEndIndex]   (int)     ending channel (default: last chan.)
 //##       +--[FSelectionString] (string)    additional TaQL selection applied 
 //##                                           to MS
-class MSVisInputAgent : public VisFileInputAgent, public MSVisAgentDebugContext
+class MSVisInputAgent : public VisFileInputAgent
 {
   public:
     //##ModelId=3DF9FECD0219
@@ -62,7 +62,7 @@ class MSVisInputAgent : public VisFileInputAgent, public MSVisAgentDebugContext
       virtual void close ();
       
     //##ModelId=3DF9FECD021B
-      virtual int getNextTile (VisTile::Ref &tile,bool wait = False);
+      virtual int getNextTile (VisTile::Ref &tile,int wait = AppAgent::WAIT);
       
     //##ModelId=3DF9FECD0246
     //##Documentation
