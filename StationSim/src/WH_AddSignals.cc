@@ -57,7 +57,8 @@ WH_AddSignals::WH_AddSignals (const string& name,
     sprintf (str, "%d", i);
     itsOutHolders[i] = new DH_SampleC (string ("out_") + str, 1, 1);
   }
-//   // DEBUG
+
+  // DEBUG
 //   itsCount = 0;
 //   itsFileOutReal.open ("/home/alex/data/add_real.txt");
 //   itsFileOutComplex.open ("/home/alex/data/add_complex.txt");
@@ -101,13 +102,13 @@ void WH_AddSignals::process ()
 
     for (int i = 0; i < getInputs (); i++) {
       for (int j = 0; j < itsNrcu; j++) {
-	itsOutHolders[j]->getBuffer ()[0] += itsInHolders[i]->getBuffer ()[j];
+		itsOutHolders[j]->getBuffer ()[0] += itsInHolders[i]->getBuffer ()[j];
       }
     }
 	
 // 	// DEBUG
 //     for (int i = 0; i < itsNrcu && real (itsOutHolders[i]->getBuffer ()[0]) != 0; i++) {
-//       itsFileOutReal << real (itsOutHolders[i]->getBuffer ()[0]) << " ";
+//       itsFileOutReal << itsOutHolders[i]->getBuffer ()[0] << " ";
 // 	  itsFileOutComplex << imag (itsOutHolders[i]->getBuffer ()[0]) << " ";
 // 	}
 //     itsFileOutReal << endl;
