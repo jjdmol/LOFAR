@@ -199,16 +199,17 @@ analyseInfoFile()
 	/[ \t]*$/			{ gsub("^[ 	]*", "") }		# skip trailing spaces
 	/^;/				{ next }					# remove loose ;
 	/^#/				{ File=$3 ; next }			# remember the sourcefile
-	/[ \t]*const[ \t]*/	{ gsub("[ \t]*const", "") }	# remove const
+	/[ \t]*const[ \t]*/	{ gsub("[ \t]*const[ \t]*", "") }	# remove const
+	/[ \t]*static[ \t]*/{ gsub("[ \t]*static[ \t]*", "") }	# remove static
 	/\[.*[a-zA-Z]+.*]/	{ bpos=index($0,"[")		# function in array size?
 						  epos=index($0,"]")		# replace it with @@@
 						  $0=substr($0,1,bpos) "@@@" substr($0,epos)
 						}
 	/^using /			{ next }					# skip using commands
 	/^friend/			{ next }					# skip friend lines
-	/^public:/			{ Mode="publ" ; gsub("public:[ \t]*"   ,"") }
-	/^protected:/		{ Mode="prot" ; gsub("protected:[ \t]*","") }
-	/^private:/			{ Mode="priv" ; gsub("private:[ \t]*"  ,"") }
+	/^public[ \t]*:/	{ Mode="publ" ; gsub("public[ \t]*:[ \t]*"   ,"") }
+	/^protected[ \t]*:/	{ Mode="prot" ; gsub("protected[ \t]*:[ \t]*","") }
+	/^private[ \t]*:/	{ Mode="priv" ; gsub("private[ \t]*:[ \t]*"  ,"") }
 	/^mutable/			{ gsub("mutable[ \t]*"  ,"") }
 	/^__extension__/	{ gsub("__extension__[ \t]*"  ,"") }
 	/^typedef/			{ handleTypedef() }
