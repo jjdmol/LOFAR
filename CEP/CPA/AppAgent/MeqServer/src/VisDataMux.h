@@ -52,8 +52,11 @@ class VisDataMux
     Meq::Forest & forest_;
  
     //  list of columns to be added to output tiles
+    //##ModelId=3FAA52A6008E
     std::vector<int>     out_columns_;
+    //##ModelId=3FAA52A6014F
     std::vector<string>  out_colnames_;
+    //##ModelId=3FAA52A6018C
     VisTile::Format::Ref out_format_;
 };
 
