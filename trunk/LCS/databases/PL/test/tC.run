@@ -1,14 +1,8 @@
 #!/bin/sh
-
-# Remove srcdir from argument list
-shift
-
 psql -h dop50 -U postgres test <<_EOF_ > tC_tmp.psql_out 2>&1
 \i ../../../test/ABC.sql
 \q
 _EOF_
 
-# $@ to add a command (like valgrind) to the executable.
-# the command has to be supplied via the call to this .run script
-# (eg  source tC.run or source tC.run valgrind -log=test.log)
-$@ ./tC
+# LOFAR_CHECKTOOL can define a command (like valgrind) for the executable.
+$LOFAR_CHECKTOOL ./tC
