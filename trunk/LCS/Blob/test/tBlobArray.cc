@@ -38,7 +38,12 @@ uint doOut (BlobOBuffer* bb)
   vec[1] = double(1e10);
   vec[2] = double(-3.1);
   bs << vec;
-  return reserveBlobArray1<fcomplex> (bs, 2, false);
+  int pos = bs.tellPos();
+  Assert (bs.align(0) == 0);
+  Assert (bs.align(1) == 0);
+  Assert (bs.align(8) == 0);
+  Assert (bs.align(128) == uint(128-pos));
+  return setSpaceBlobArray1<fcomplex> (bs, 2, false);
 }
 
 void doIn (BlobIBuffer* bb, bool read2=false)
@@ -51,6 +56,11 @@ void doIn (BlobIBuffer* bb, bool read2=false)
   Assert (vec[1] == double(1e10));
   Assert (vec[2] == double(-3.1));
   if (read2) {
+    int pos = bs.tellPos();
+    Assert (bs.align(0) == 0);
+    Assert (bs.align(1) == 0);
+    Assert (bs.align(8) == 0);
+    Assert (bs.align(128) == uint(128-pos));
     std::vector<fcomplex> vecc;
     bs >> vecc;
     Assert (vecc.size() == 2);
@@ -89,8 +99,13 @@ int main()
 	BlobIStream bs(&bob2);
 	std::vector<double> vec;
 	bs >> vec;
+	int pos = bs.tellPos();
+	Assert (bs.align(0) == 0);
+	Assert (bs.align(1) == 0);
+	Assert (bs.align(8) == 0);
+	Assert (bs.align(128) == uint(128-pos));
 	std::vector<uint32> shape;
-	uint cpos = findBlobArray<fcomplex> (bs, shape, false);
+	uint cpos = getSpaceBlobArray<fcomplex> (bs, shape, false);
 	Assert (shape.size() == 1);
 	Assert (shape[0] == 2);
 	const fcomplex* ptr = bob2.getPointer<fcomplex> (cpos);
