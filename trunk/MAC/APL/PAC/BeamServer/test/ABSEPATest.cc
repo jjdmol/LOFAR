@@ -129,7 +129,7 @@ GCFEvent::TResult EPATest::test001(GCFEvent& e, GCFPortInterface& /*port*/)
 	// send wgenable
 	ABSWgsettingsEvent wgs;
 	wgs.frequency=1e6;
-	wgs.amplitude=128; // was 128
+	wgs.amplitude=16; // was 128
 	wgs.sample_period=2;
 
 	_test(sizeof(wgs) == beam_server.send(wgs));
@@ -154,6 +154,8 @@ GCFEvent::TResult EPATest::test001(GCFEvent& e, GCFPortInterface& /*port*/)
 	{
 	    alloc.subbands[i] = i;
 	}
+	//alloc.subbands[0]   = 6;
+	//alloc.subbands[127] = 6;
 
 	_test(sizeof(alloc) == beam_server.send(alloc));
       }
@@ -179,7 +181,7 @@ GCFEvent::TResult EPATest::test001(GCFEvent& e, GCFPortInterface& /*port*/)
 
 #if 0
 	// send pointto command (northern horizon)
-	pointto.time = time(0) + 25;
+	pointto.time = time(0) + 30;
 	pointto.angle1=1.0;
 	pointto.angle2=0.0;
 
@@ -187,7 +189,7 @@ GCFEvent::TResult EPATest::test001(GCFEvent& e, GCFPortInterface& /*port*/)
 #endif
 
 	// let the beamformer compute for 30 seconds
-	timerid = beam_server.setTimer((long)30);
+	timerid = beam_server.setTimer((long)120);
       }
       break;
 
