@@ -163,7 +163,7 @@ int Parm::getResult (Result::Ref &resref,
 {
   const Domain &domain = request.cells().domain();
   HIID domain_id = getDomainId(request.id()); 
-  if( domain_id != itsCurrentDomainId )
+  if( domain_id.empty() || domain_id != itsCurrentDomainId )
   {
     initDomain(domain);
     wstate()[FDomainId] = itsCurrentDomainId = domain_id;
