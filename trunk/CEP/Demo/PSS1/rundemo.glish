@@ -1,0 +1,4 @@
+include 'demo.g'
+
+init(fname='pss1.demo');
+demo(fname='pss1.demo',sleep=F,sleeptime=1,wait=F);
