@@ -1,0 +1,83 @@
+V 10
+1
+LANG:1 8 (NoName)
+PANEL,526 241 901 608 N "_3DFace" 4
+"$configDatapoint"
+"$selectedElementDpType"
+"$selectedView"
+"$viewName"
+EEE E E 1 -1 -1 0  -1 -1
+"" 0 1
+EE 2
+"CBRef""1"
+"EClose"E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+2 0
+"Text1"
+""
+1 80 180 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+1 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 82 182 183 198
+0 2 0 "s" 0 0 0 192 0 0  82 182
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 18 control_config.pnl
+1 5 1 "" 57
+0
+1 6 1 "" 54
+0
+1 7 1 "" 55
+0
+1 8 1 "" 58
+0
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+3 1 ""
+"navigator\\navigator_config_tab.pnl" 110 300 T 3 1 0 1  -91 -256  
+4
+"$configDatapoint""$configDatapoint"
+"$selectedElementDpType""$selectedElementDpType"
+"$selectedView""$selectedView"
+"$viewName""$viewName"
+0

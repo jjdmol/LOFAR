@@ -1,0 +1,3518 @@
+V 10
+1
+LANG:1 8 (NoName)
+PANEL,258 138 950 740 N "_3DFace" 0
+EEE E E 1 -1 -1 0  10 150
+"" 0 1
+EE 2
+"CBRef""1"
+"EClose"E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+6 97
+"Border44"
+""
+1 10 70 E E E 1 E 1 E N "_WindowText" E N {51,102,255} E E
+ E E
+97 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 10 50 920 70
+6 41
+"Border38"
+""
+1 10 150 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+42 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 10 130 920 150
+6 37
+"Border35"
+""
+1 10 130 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+38 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 10 110 920 130
+6 33
+"Border32"
+""
+1 10 110 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+34 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 10 90 920 110
+6 45
+"Border41"
+""
+1 10 90 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+46 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 10 70 920 90
+2 46
+"Text4"
+""
+1 23 71 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+47 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 25 73 282 89
+0 2 0 "s" 0 0 0 192 0 0  25 73
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 37 Rack1_SubRack1_Board1_AP1.temperature
+6 64
+"Border49"
+""
+1 600 113 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+65 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 600 113 917 129
+6 65
+"Border50"
+""
+1 603 116 E E E 1 E 1 E N {0,0,0} E N "Lofar_background_light" E E
+ E E
+66 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 603 116 745 124
+6 68
+"Border1"
+""
+1 600 133 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+68 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 600 133 917 149
+6 69
+"Border30"
+""
+1 603 136 E E E 1 E 1 E N {0,0,0} E N "Lofar_background_light" E E
+ E E
+69 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 603 136 799 144
+6 70
+"Border31"
+""
+1 600 93 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+70 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 600 93 917 109
+6 71
+"Border33"
+""
+1 603 96 E E E 1 E 1 E N {0,0,0} E N "Lofar_background_light" E E
+ E E
+71 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 603 96 742 104
+6 72
+"Border34"
+""
+1 600 73 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+72 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 600 73 917 89
+6 73
+"Border36"
+""
+1 603 76 E E E 1 E 1 E N {0,0,0} E N "Lofar_background_light" E E
+ E E
+73 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 603 76 744 84
+2 74
+"Text1"
+""
+1 23 91 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+74 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 25 93 282 109
+0 2 0 "s" 0 0 0 192 0 0  25 93
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 37 Rack1_SubRack1_Board1_AP2.temperature
+2 75
+"Text2"
+""
+1 23 111 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+75 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 25 113 282 129
+0 2 0 "s" 0 0 0 192 0 0  25 113
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 37 Rack1_SubRack1_Board1_AP3.temperature
+2 76
+"Text3"
+""
+1 23 131 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+76 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 25 133 282 149
+0 2 0 "s" 0 0 0 192 0 0  25 133
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 37 Rack1_SubRack1_Board1_AP4.temperature
+6 78
+"Border37"
+""
+1 420 73 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+78 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 420 73 529 89
+6 80
+"Border39"
+""
+1 420 93 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+80 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 420 93 529 109
+2 81
+"Text16"
+""
+1 460 91 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+81 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 462 93 487 109
+0 2 0 "s" 0 0 0 192 0 0  462 93
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 4 44.8
+6 82
+"Border40"
+""
+1 420 113 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+82 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 420 113 529 129
+6 84
+"Border42"
+""
+1 420 133 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+84 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 420 133 529 149
+2 86
+"Text19"
+""
+1 460 111 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+86 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 462 113 487 129
+0 2 0 "s" 0 0 0 192 0 0  462 113
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 4 45.1
+2 87
+"Text20"
+""
+1 460 131 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+87 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 462 133 487 149
+0 2 0 "s" 0 0 0 192 0 0  462 133
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 4 65.7
+2 88
+"Text21"
+""
+1 460 71 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+88 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 462 73 487 89
+0 2 0 "s" 0 0 0 192 0 0  462 73
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 4 46.5
+6 89
+"Border43"
+""
+1 540 133 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+89 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 540 133 590 149
+2 90
+"Text22"
+""
+1 556 131 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+90 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 558 133 572 149
+0 2 0 "s" 0 0 0 192 0 0  558 133
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 2 °C
+4 91
+"Line1"
+""
+1 410 70 E E E 1 E 1 E N {102,102,102} E N "_Transparent" E E
+ E E
+91 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  410 150 410 70
+4 92
+"Line2"
+""
+1 534 70 E E E 1 E 1 E N {102,102,102} E N "_Transparent" E E
+ E E
+92 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  534 150 534 70
+4 93
+"Line3"
+""
+1 594 70 E E E 1 E 1 E N {102,102,102} E N "_Transparent" E E
+ E E
+93 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  594 150 594 70
+2 94
+"Text23"
+""
+1 550 50 E E E 1 E 1 E N {255,255,255} E N "_Transparent" E E
+ E E
+94 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 552 52 575 68
+0 2 0 "s" 0 0 0 192 0 0  552 52
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 4 Unit
+2 95
+"Text24"
+""
+1 453 50 E E E 1 E 1 E N {255,255,255} E N "_Transparent" E E
+ E E
+95 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 455 52 488 68
+0 2 0 "s" 0 0 0 192 0 0  455 52
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 5 Value
+2 96
+"Text25"
+""
+1 23 50 E E E 1 E 1 E N {255,255,255} E N "_Transparent" E E
+ E E
+96 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 25 52 80 68
+0 2 0 "s" 0 0 0 192 0 0  25 52
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 9 Datapoint
+2 101
+"Text26"
+""
+1 600 50 E E E 1 E 1 E N {255,255,255} E N "_Transparent" E E
+ E E
+101 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 602 52 609 68
+0 2 0 "s" 0 0 0 192 0 0  602 52
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 1 0
+2 102
+"Text27"
+""
+1 890 50 E E E 1 E 1 E N {255,255,255} E N "_Transparent" E E
+ E E
+102 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 892 52 913 68
+0 2 0 "s" 0 0 0 192 0 0  892 52
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 3 100
+6 103
+"Border46"
+""
+1 540 113 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+103 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 540 113 590 129
+2 104
+"Text28"
+""
+1 556 111 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+104 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 558 113 572 129
+0 2 0 "s" 0 0 0 192 0 0  558 113
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 2 °C
+6 105
+"Border47"
+""
+1 540 93 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+105 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 540 93 590 109
+2 106
+"Text29"
+""
+1 556 91 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+106 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 558 93 572 109
+0 2 0 "s" 0 0 0 192 0 0  558 93
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 2 °C
+6 107
+"Border48"
+""
+1 540 73 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+107 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 540 73 590 89
+2 108
+"Text30"
+""
+1 556 71 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+108 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 558 73 572 89
+0 2 0 "s" 0 0 0 192 0 0  558 73
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 2 °C
+6 109
+"Border51"
+""
+1 10 230 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+109 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 10 210 920 230
+6 110
+"Border52"
+""
+1 10 210 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+110 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 10 190 920 210
+6 111
+"Border53"
+""
+1 10 190 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+111 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 10 170 920 190
+6 112
+"Border54"
+""
+1 10 170 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+112 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 10 150 920 170
+2 113
+"Text31"
+""
+1 23 151 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+113 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 25 153 282 169
+0 2 0 "s" 0 0 0 192 0 0  25 153
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 37 Rack1_SubRack2_Board1_AP1.temperature
+6 114
+"Border55"
+""
+1 600 193 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+114 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 600 193 917 209
+6 115
+"Border56"
+""
+1 603 196 E E E 1 E 1 E N {0,0,0} E N "Lofar_background_light" E E
+ E E
+115 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 603 196 745 204
+6 116
+"Border57"
+""
+1 600 213 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+116 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 600 213 917 229
+6 117
+"Border58"
+""
+1 603 216 E E E 1 E 1 E N {0,0,0} E N "Lofar_background_light" E E
+ E E
+117 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 603 216 799 224
+6 118
+"Border59"
+""
+1 600 173 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+118 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 600 173 917 189
+6 119
+"Border60"
+""
+1 603 176 E E E 1 E 1 E N {0,0,0} E N "Lofar_background_light" E E
+ E E
+119 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 603 176 742 184
+6 120
+"Border61"
+""
+1 600 153 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+120 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 600 153 917 169
+6 121
+"Border62"
+""
+1 603 156 E E E 1 E 1 E N {0,0,0} E N "Lofar_background_light" E E
+ E E
+121 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 603 156 744 164
+2 122
+"Text32"
+""
+1 23 171 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+122 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 25 173 282 189
+0 2 0 "s" 0 0 0 192 0 0  25 173
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 37 Rack1_SubRack2_Board1_AP2.temperature
+2 123
+"Text33"
+""
+1 23 191 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+123 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 25 193 282 209
+0 2 0 "s" 0 0 0 192 0 0  25 193
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 37 Rack1_SubRack2_Board1_AP3.temperature
+2 124
+"Text34"
+""
+1 23 211 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+124 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 25 213 282 229
+0 2 0 "s" 0 0 0 192 0 0  25 213
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 37 Rack1_SubRack2_Board1_AP4.temperature
+6 125
+"Border63"
+""
+1 420 153 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+125 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 420 153 529 169
+6 126
+"Border64"
+""
+1 420 173 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+126 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 420 173 529 189
+2 127
+"Text35"
+""
+1 460 171 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+127 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 462 173 487 189
+0 2 0 "s" 0 0 0 192 0 0  462 173
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 4 44.8
+6 128
+"Border65"
+""
+1 420 193 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+128 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 420 193 529 209
+6 129
+"Border66"
+""
+1 420 213 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+129 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 420 213 529 229
+2 130
+"Text36"
+""
+1 460 191 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+130 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 462 193 487 209
+0 2 0 "s" 0 0 0 192 0 0  462 193
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 4 45.1
+2 131
+"Text37"
+""
+1 460 211 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+131 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 462 213 487 229
+0 2 0 "s" 0 0 0 192 0 0  462 213
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 4 65.7
+2 132
+"Text38"
+""
+1 460 151 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+132 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 462 153 487 169
+0 2 0 "s" 0 0 0 192 0 0  462 153
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 4 46.5
+6 133
+"Border67"
+""
+1 540 213 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+133 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 540 213 590 229
+2 134
+"Text39"
+""
+1 556 211 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+134 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 558 213 572 229
+0 2 0 "s" 0 0 0 192 0 0  558 213
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 2 °C
+4 135
+"Line4"
+""
+1 410 150 E E E 1 E 1 E N {102,102,102} E N "_Transparent" E E
+ E E
+135 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  410 230 410 150
+4 136
+"Line5"
+""
+1 534 150 E E E 1 E 1 E N {102,102,102} E N "_Transparent" E E
+ E E
+136 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  534 230 534 150
+4 137
+"Line6"
+""
+1 594 150 E E E 1 E 1 E N {102,102,102} E N "_Transparent" E E
+ E E
+137 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  594 230 594 150
+6 138
+"Border68"
+""
+1 540 193 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+138 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 540 193 590 209
+2 139
+"Text40"
+""
+1 556 191 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+139 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 558 193 572 209
+0 2 0 "s" 0 0 0 192 0 0  558 193
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 2 °C
+6 140
+"Border69"
+""
+1 540 173 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+140 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 540 173 590 189
+2 141
+"Text41"
+""
+1 556 171 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+141 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 558 173 572 189
+0 2 0 "s" 0 0 0 192 0 0  558 173
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 2 °C
+6 142
+"Border70"
+""
+1 540 153 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+142 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 540 153 590 169
+2 143
+"Text42"
+""
+1 556 151 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+143 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 558 153 572 169
+0 2 0 "s" 0 0 0 192 0 0  558 153
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 2 °C
+6 144
+"Border71"
+""
+1 10 310 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+144 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 10 290 920 310
+6 145
+"Border72"
+""
+1 10 290 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+145 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 10 270 920 290
+6 146
+"Border73"
+""
+1 10 270 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+146 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 10 250 920 270
+6 147
+"Border74"
+""
+1 10 250 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+147 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 10 230 920 250
+2 148
+"Text43"
+""
+1 23 231 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+148 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 25 233 282 249
+0 2 0 "s" 0 0 0 192 0 0  25 233
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 37 Rack1_SubRack3_Board1_AP1.temperature
+6 149
+"Border75"
+""
+1 600 273 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+149 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 600 273 917 289
+6 150
+"Border76"
+""
+1 603 276 E E E 1 E 1 E N {0,0,0} E N "Lofar_background_light" E E
+ E E
+150 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 603 276 745 284
+6 151
+"Border77"
+""
+1 600 293 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+151 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 600 293 917 309
+6 152
+"Border78"
+""
+1 603 296 E E E 1 E 1 E N {0,0,0} E N "Lofar_background_light" E E
+ E E
+152 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 603 296 799 304
+6 153
+"Border79"
+""
+1 600 253 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+153 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 600 253 917 269
+6 154
+"Border80"
+""
+1 603 256 E E E 1 E 1 E N {0,0,0} E N "Lofar_background_light" E E
+ E E
+154 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 603 256 742 264
+6 155
+"Border81"
+""
+1 600 233 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+155 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 600 233 917 249
+6 156
+"Border82"
+""
+1 603 236 E E E 1 E 1 E N {0,0,0} E N "Lofar_background_light" E E
+ E E
+156 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 603 236 744 244
+2 157
+"Text44"
+""
+1 23 251 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+157 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 25 253 282 269
+0 2 0 "s" 0 0 0 192 0 0  25 253
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 37 Rack1_SubRack3_Board1_AP2.temperature
+2 158
+"Text45"
+""
+1 23 271 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+158 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 25 273 282 289
+0 2 0 "s" 0 0 0 192 0 0  25 273
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 37 Rack1_SubRack3_Board1_AP3.temperature
+2 159
+"Text46"
+""
+1 23 291 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+159 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 25 293 282 309
+0 2 0 "s" 0 0 0 192 0 0  25 293
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 37 Rack1_SubRack3_Board1_AP4.temperature
+6 160
+"Border83"
+""
+1 420 233 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+160 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 420 233 529 249
+6 161
+"Border84"
+""
+1 420 253 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+161 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 420 253 529 269
+2 162
+"Text47"
+""
+1 460 251 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+162 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 462 253 487 269
+0 2 0 "s" 0 0 0 192 0 0  462 253
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 4 44.8
+6 163
+"Border85"
+""
+1 420 273 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+163 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 420 273 529 289
+6 164
+"Border86"
+""
+1 420 293 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+164 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 420 293 529 309
+2 165
+"Text48"
+""
+1 460 271 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+165 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 462 273 487 289
+0 2 0 "s" 0 0 0 192 0 0  462 273
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 4 45.1
+2 166
+"Text49"
+""
+1 460 291 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+166 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 462 293 487 309
+0 2 0 "s" 0 0 0 192 0 0  462 293
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 4 65.7
+2 167
+"Text50"
+""
+1 460 231 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+167 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 462 233 487 249
+0 2 0 "s" 0 0 0 192 0 0  462 233
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 4 46.5
+6 168
+"Border87"
+""
+1 540 293 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+168 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 540 293 590 309
+2 169
+"Text51"
+""
+1 556 291 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+169 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 558 293 572 309
+0 2 0 "s" 0 0 0 192 0 0  558 293
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 2 °C
+4 170
+"Line7"
+""
+1 410 230 E E E 1 E 1 E N {102,102,102} E N "_Transparent" E E
+ E E
+170 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  410 310 410 230
+4 171
+"Line8"
+""
+1 534 230 E E E 1 E 1 E N {102,102,102} E N "_Transparent" E E
+ E E
+171 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  534 310 534 230
+4 172
+"Line9"
+""
+1 594 230 E E E 1 E 1 E N {102,102,102} E N "_Transparent" E E
+ E E
+172 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  594 310 594 230
+6 173
+"Border88"
+""
+1 540 273 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+173 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 540 273 590 289
+2 174
+"Text52"
+""
+1 556 271 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+174 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 558 273 572 289
+0 2 0 "s" 0 0 0 192 0 0  558 273
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 2 °C
+6 175
+"Border89"
+""
+1 540 253 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+175 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 540 253 590 269
+2 176
+"Text53"
+""
+1 556 251 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+176 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 558 253 572 269
+0 2 0 "s" 0 0 0 192 0 0  558 253
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 2 °C
+6 177
+"Border90"
+""
+1 540 233 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+177 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 540 233 590 249
+2 178
+"Text54"
+""
+1 556 231 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+178 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 558 233 572 249
+0 2 0 "s" 0 0 0 192 0 0  558 233
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 2 °C
+6 179
+"Border91"
+""
+1 10 700 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+179 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 10 680 920 700
+6 180
+"Border92"
+""
+1 10 680 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+180 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 10 660 920 680
+6 181
+"Border93"
+""
+1 10 660 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+181 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 10 640 920 660
+6 182
+"Border94"
+""
+1 10 640 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+182 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 10 620 920 640
+2 183
+"Text55"
+""
+1 23 621 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+183 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 25 623 282 639
+0 2 0 "s" 0 0 0 192 0 0  25 623
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 37 Rack1_SubRack4_Board1_AP1.temperature
+6 184
+"Border95"
+""
+1 411 663 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+184 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 411 663 728 679
+6 185
+"Border96"
+""
+1 414 666 E E E 1 E 1 E N {0,0,0} E N "Lofar_background_light" E E
+ E E
+185 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 414 666 556 674
+6 186
+"Border97"
+""
+1 411 683 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+186 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 411 683 728 699
+6 187
+"Border98"
+""
+1 414 686 E E E 1 E 1 E N {0,0,0} E N "Lofar_background_light" E E
+ E E
+187 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 414 686 610 694
+6 188
+"Border99"
+""
+1 411 643 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+188 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 411 643 728 659
+6 189
+"Border100"
+""
+1 414 646 E E E 1 E 1 E N {0,0,0} E N "Lofar_background_light" E E
+ E E
+189 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 414 646 553 654
+6 190
+"Border101"
+""
+1 411 623 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+190 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 411 623 728 639
+6 191
+"Border102"
+""
+1 414 626 E E E 1 E 1 E N {0,0,0} E N "Lofar_background_light" E E
+ E E
+191 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 414 626 555 634
+2 192
+"Text56"
+""
+1 23 641 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+192 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 25 643 282 659
+0 2 0 "s" 0 0 0 192 0 0  25 643
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 37 Rack1_SubRack4_Board1_AP2.temperature
+2 193
+"Text57"
+""
+1 23 661 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+193 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 25 663 282 679
+0 2 0 "s" 0 0 0 192 0 0  25 663
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 37 Rack1_SubRack4_Board1_AP3.temperature
+2 194
+"Text58"
+""
+1 23 681 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+194 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 25 683 282 699
+0 2 0 "s" 0 0 0 192 0 0  25 683
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 37 Rack1_SubRack4_Board1_AP4.temperature
+2 214
+"Text67"
+""
+1 730 50 E E E 1 E 1 E N {255,255,255} E N "_Transparent" E E
+ E E
+214 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 732 52 769 68
+0 2 0 "s" 0 0 0 192 0 0  732 52
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 5 Range
+6 215
+"Border111"
+""
+1 10 460 E E E 1 E 1 E N "_WindowText" E N {51,102,255} E E
+ E E
+215 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 10 440 920 460
+6 216
+"Border112"
+""
+1 10 540 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+216 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 10 520 920 540
+6 217
+"Border113"
+""
+1 10 520 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+217 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 10 500 920 520
+6 218
+"Border114"
+""
+1 10 500 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+218 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 10 480 920 500
+6 219
+"Border115"
+""
+1 10 480 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+219 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 10 460 920 480
+2 220
+"Text68"
+""
+1 23 461 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+220 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 25 463 282 479
+0 2 0 "s" 0 0 0 192 0 0  25 463
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 37 Rack1_SubRack1_Board1_AP1.temperature
+6 221
+"Border116"
+""
+1 411 503 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+221 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 411 503 728 519
+6 222
+"Border117"
+""
+1 414 506 E E E 1 E 1 E N {0,0,0} E N "Lofar_background_light" E E
+ E E
+222 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 414 506 556 514
+6 223
+"Border118"
+""
+1 411 523 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+223 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 411 523 728 539
+6 224
+"Border119"
+""
+1 414 526 E E E 1 E 1 E N {0,0,0} E N "Lofar_background_light" E E
+ E E
+224 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 414 526 610 534
+6 225
+"Border120"
+""
+1 411 483 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+225 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 411 483 728 499
+6 226
+"Border121"
+""
+1 414 486 E E E 1 E 1 E N {0,0,0} E N "Lofar_background_light" E E
+ E E
+226 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 414 486 553 494
+6 227
+"Border122"
+""
+1 411 463 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+227 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 411 463 728 479
+6 228
+"Border123"
+""
+1 414 466 E E E 1 E 1 E N {0,0,0} E N "Lofar_background_light" E E
+ E E
+228 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 414 466 555 474
+2 229
+"Text69"
+""
+1 23 481 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+229 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 25 483 282 499
+0 2 0 "s" 0 0 0 192 0 0  25 483
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 37 Rack1_SubRack1_Board1_AP2.temperature
+2 230
+"Text70"
+""
+1 23 501 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+230 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 25 503 282 519
+0 2 0 "s" 0 0 0 192 0 0  25 503
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 37 Rack1_SubRack1_Board1_AP3.temperature
+2 231
+"Text71"
+""
+1 23 521 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+231 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 25 523 282 539
+0 2 0 "s" 0 0 0 192 0 0  25 523
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 37 Rack1_SubRack1_Board1_AP4.temperature
+2 247
+"Text79"
+""
+1 23 440 E E E 1 E 1 E N {255,255,255} E N "_Transparent" E E
+ E E
+247 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 25 442 80 458
+0 2 0 "s" 0 0 0 192 0 0  25 442
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 9 Datapoint
+2 248
+"Text80"
+""
+1 411 440 E E E 1 E 1 E N {255,255,255} E N "_Transparent" E E
+ E E
+248 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 413 442 420 458
+0 2 0 "s" 0 0 0 192 0 0  413 442
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 1 0
+2 249
+"Text81"
+""
+1 701 440 E E E 1 E 1 E N {255,255,255} E N "_Transparent" E E
+ E E
+249 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 703 442 724 458
+0 2 0 "s" 0 0 0 192 0 0  703 442
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 3 100
+6 256
+"Border132"
+""
+1 10 620 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+256 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 10 600 920 620
+6 257
+"Border133"
+""
+1 10 600 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+257 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 10 580 920 600
+6 258
+"Border134"
+""
+1 10 580 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+258 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 10 560 920 580
+6 259
+"Border135"
+""
+1 10 560 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+259 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 10 540 920 560
+2 260
+"Text85"
+""
+1 23 541 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+260 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 25 543 282 559
+0 2 0 "s" 0 0 0 192 0 0  25 543
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 37 Rack1_SubRack2_Board1_AP1.temperature
+6 261
+"Border136"
+""
+1 411 583 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+261 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 411 583 728 599
+6 262
+"Border137"
+""
+1 414 586 E E E 1 E 1 E N {0,0,0} E N "Lofar_background_light" E E
+ E E
+262 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 414 586 556 594
+6 263
+"Border138"
+""
+1 411 603 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+263 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 411 603 728 619
+6 264
+"Border139"
+""
+1 414 606 E E E 1 E 1 E N {0,0,0} E N "Lofar_background_light" E E
+ E E
+264 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 414 606 610 614
+6 265
+"Border140"
+""
+1 411 563 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+265 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 411 563 728 579
+6 266
+"Border141"
+""
+1 414 566 E E E 1 E 1 E N {0,0,0} E N "Lofar_background_light" E E
+ E E
+266 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 414 566 553 574
+6 267
+"Border142"
+""
+1 411 543 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+267 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 411 543 728 559
+6 268
+"Border143"
+""
+1 414 546 E E E 1 E 1 E N {0,0,0} E N "Lofar_background_light" E E
+ E E
+268 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 414 546 555 554
+2 269
+"Text86"
+""
+1 23 561 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+269 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 25 563 282 579
+0 2 0 "s" 0 0 0 192 0 0  25 563
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 37 Rack1_SubRack2_Board1_AP2.temperature
+2 270
+"Text87"
+""
+1 23 581 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+270 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 25 583 282 599
+0 2 0 "s" 0 0 0 192 0 0  25 583
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 37 Rack1_SubRack2_Board1_AP3.temperature
+2 271
+"Text88"
+""
+1 23 601 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+271 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 25 603 282 619
+0 2 0 "s" 0 0 0 192 0 0  25 603
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 37 Rack1_SubRack2_Board1_AP4.temperature
+2 291
+"Text97"
+""
+1 541 440 E E E 1 E 1 E N {255,255,255} E N "_Transparent" E E
+ E E
+291 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 543 442 580 458
+0 2 0 "s" 0 0 0 192 0 0  543 442
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 5 Range
+6 292
+"Border103"
+""
+1 746 623 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+292 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 746 623 855 639
+6 293
+"Border104"
+""
+1 746 643 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+293 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 746 643 855 659
+2 294
+"Text59"
+""
+1 786 641 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+294 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 788 643 813 659
+0 2 0 "s" 0 0 0 192 0 0  788 643
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 4 44.8
+6 295
+"Border105"
+""
+1 746 663 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+295 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 746 663 855 679
+6 296
+"Border106"
+""
+1 746 683 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+296 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 746 683 855 699
+2 297
+"Text60"
+""
+1 786 661 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+297 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 788 663 813 679
+0 2 0 "s" 0 0 0 192 0 0  788 663
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 4 45.1
+2 298
+"Text61"
+""
+1 786 681 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+298 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 788 683 813 699
+0 2 0 "s" 0 0 0 192 0 0  788 683
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 4 65.7
+2 299
+"Text62"
+""
+1 786 621 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+299 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 788 623 813 639
+0 2 0 "s" 0 0 0 192 0 0  788 623
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 4 46.5
+6 300
+"Border107"
+""
+1 866 683 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+300 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 866 683 916 699
+2 301
+"Text63"
+""
+1 882 681 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+301 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 884 683 898 699
+0 2 0 "s" 0 0 0 192 0 0  884 683
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 2 °C
+4 302
+"Line10"
+""
+1 736 620 E E E 1 E 1 E N {102,102,102} E N "_Transparent" E E
+ E E
+302 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  736 700 736 620
+4 303
+"Line11"
+""
+1 860 620 E E E 1 E 1 E N {102,102,102} E N "_Transparent" E E
+ E E
+303 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  860 700 860 620
+6 305
+"Border108"
+""
+1 866 663 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+305 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 866 663 916 679
+2 306
+"Text64"
+""
+1 882 661 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+306 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 884 663 898 679
+0 2 0 "s" 0 0 0 192 0 0  884 663
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 2 °C
+6 307
+"Border109"
+""
+1 866 643 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+307 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 866 643 916 659
+2 308
+"Text65"
+""
+1 882 641 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+308 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 884 643 898 659
+0 2 0 "s" 0 0 0 192 0 0  884 643
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 2 °C
+6 309
+"Border110"
+""
+1 866 623 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+309 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 866 623 916 639
+2 310
+"Text66"
+""
+1 882 621 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+310 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 884 623 898 639
+0 2 0 "s" 0 0 0 192 0 0  884 623
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 2 °C
+6 311
+"Border124"
+""
+1 746 463 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+311 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 746 463 855 479
+6 312
+"Border125"
+""
+1 746 483 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+312 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 746 483 855 499
+2 313
+"Text72"
+""
+1 786 481 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+313 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 788 483 813 499
+0 2 0 "s" 0 0 0 192 0 0  788 483
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 4 44.8
+6 314
+"Border126"
+""
+1 746 503 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+314 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 746 503 855 519
+6 315
+"Border127"
+""
+1 746 523 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+315 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 746 523 855 539
+2 316
+"Text73"
+""
+1 786 501 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+316 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 788 503 813 519
+0 2 0 "s" 0 0 0 192 0 0  788 503
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 4 45.1
+2 317
+"Text74"
+""
+1 786 521 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+317 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 788 523 813 539
+0 2 0 "s" 0 0 0 192 0 0  788 523
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 4 65.7
+2 318
+"Text75"
+""
+1 786 461 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+318 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 788 463 813 479
+0 2 0 "s" 0 0 0 192 0 0  788 463
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 4 46.5
+6 319
+"Border128"
+""
+1 866 523 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+319 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 866 523 916 539
+2 320
+"Text76"
+""
+1 882 521 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+320 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 884 523 898 539
+0 2 0 "s" 0 0 0 192 0 0  884 523
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 2 °C
+4 321
+"Line13"
+""
+1 736 460 E E E 1 E 1 E N {102,102,102} E N "_Transparent" E E
+ E E
+321 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  736 540 736 460
+4 322
+"Line14"
+""
+1 860 460 E E E 1 E 1 E N {102,102,102} E N "_Transparent" E E
+ E E
+322 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  860 540 860 460
+2 324
+"Text77"
+""
+1 876 440 E E E 1 E 1 E N {255,255,255} E N "_Transparent" E E
+ E E
+324 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 878 442 901 458
+0 2 0 "s" 0 0 0 192 0 0  878 442
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 4 Unit
+2 325
+"Text78"
+""
+1 779 440 E E E 1 E 1 E N {255,255,255} E N "_Transparent" E E
+ E E
+325 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 781 442 814 458
+0 2 0 "s" 0 0 0 192 0 0  781 442
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 5 Value
+6 326
+"Border129"
+""
+1 866 503 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+326 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 866 503 916 519
+2 327
+"Text82"
+""
+1 882 501 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+327 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 884 503 898 519
+0 2 0 "s" 0 0 0 192 0 0  884 503
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 2 °C
+6 328
+"Border130"
+""
+1 866 483 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+328 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 866 483 916 499
+2 329
+"Text83"
+""
+1 882 481 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+329 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 884 483 898 499
+0 2 0 "s" 0 0 0 192 0 0  884 483
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 2 °C
+6 330
+"Border131"
+""
+1 866 463 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+330 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 866 463 916 479
+2 331
+"Text84"
+""
+1 882 461 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+331 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 884 463 898 479
+0 2 0 "s" 0 0 0 192 0 0  884 463
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 2 °C
+6 332
+"Border144"
+""
+1 746 543 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+332 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 746 543 855 559
+6 333
+"Border145"
+""
+1 746 563 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+333 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 746 563 855 579
+2 334
+"Text89"
+""
+1 786 561 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+334 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 788 563 813 579
+0 2 0 "s" 0 0 0 192 0 0  788 563
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 4 44.8
+6 335
+"Border146"
+""
+1 746 583 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+335 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 746 583 855 599
+6 336
+"Border147"
+""
+1 746 603 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+336 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 746 603 855 619
+2 337
+"Text90"
+""
+1 786 581 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+337 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 788 583 813 599
+0 2 0 "s" 0 0 0 192 0 0  788 583
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 4 45.1
+2 338
+"Text91"
+""
+1 786 601 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+338 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 788 603 813 619
+0 2 0 "s" 0 0 0 192 0 0  788 603
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 4 65.7
+2 339
+"Text92"
+""
+1 786 541 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+339 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 788 543 813 559
+0 2 0 "s" 0 0 0 192 0 0  788 543
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 4 46.5
+6 340
+"Border148"
+""
+1 866 603 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+340 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 866 603 916 619
+2 341
+"Text93"
+""
+1 882 601 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+341 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 884 603 898 619
+0 2 0 "s" 0 0 0 192 0 0  884 603
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 2 °C
+4 342
+"Line16"
+""
+1 736 540 E E E 1 E 1 E N {102,102,102} E N "_Transparent" E E
+ E E
+342 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  736 620 736 540
+4 343
+"Line17"
+""
+1 860 540 E E E 1 E 1 E N {102,102,102} E N "_Transparent" E E
+ E E
+343 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  860 620 860 540
+4 344
+"Line18"
+""
+1 400 460 E E E 1 E 1 E N {102,102,102} E N "_Transparent" E E
+ E E
+344 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  400 700 400 460
+6 345
+"Border149"
+""
+1 866 583 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+345 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 866 583 916 599
+2 346
+"Text94"
+""
+1 882 581 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+346 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 884 583 898 599
+0 2 0 "s" 0 0 0 192 0 0  884 583
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 2 °C
+6 347
+"Border150"
+""
+1 866 563 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+347 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 866 563 916 579
+2 348
+"Text95"
+""
+1 882 561 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+348 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 884 563 898 579
+0 2 0 "s" 0 0 0 192 0 0  884 563
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 2 °C
+6 349
+"Border151"
+""
+1 866 543 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ E E
+349 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  1 E 866 543 916 559
+2 350
+"Text96"
+""
+1 882 541 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+350 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 884 543 898 559
+0 2 0 "s" 0 0 0 192 0 0  884 543
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 2 °C
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+0
