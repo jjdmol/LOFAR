@@ -62,8 +62,11 @@ namespace LOFAR
       // Remove all elements from our container.
       void clear() { itsContainer.clear(); }
 
+      // Return whether our container is empty.
+      bool empty() const { return itsContainer.empty(); }
+
       // Return the number of elements in our container.
-      size_type size() { return itsContainer.size(); }
+      size_type size() const { return itsContainer.size(); }
 
     private:
 
