@@ -20,11 +20,12 @@ void waitForAnswer()
 	if (!IsSync) {
 		cout << "Waiting for result from command" << endl;
 		ACClient->processACmsgFromServer();
-		if (delayTime) {
-			cout << "Command is placed on stack, waiting for real result" 
-				 << endl;
-			ACClient->processACmsgFromServer();
-		}
+	}
+
+	if (delayTime) {
+		cout << "Command is placed on stack, waiting for real result" 
+			 << endl;
+		ACClient->processACmsgFromServer();
 	}
 }
 
