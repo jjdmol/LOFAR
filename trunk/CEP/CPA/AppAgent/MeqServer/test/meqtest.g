@@ -16,7 +16,7 @@ default_debuglevels := [  MeqNode       =3,
                           MeqSpigot     =3,
                           MeqVisHandler =3,
                           MeqServer     =3,
-                          meqserver     =3      ];
+                          meqserver     =1      ];
 
 # inits a meqserver
 const mqsinit := function (verbose=3,debug=[=],gui=F)
@@ -272,8 +272,8 @@ const mep_test := function ()
   tablename := 'test.mep';
   print 'Initializing MEP table ',tablename;
   
-  include 'meq/parmtable.g';
-  pt := parmtable(tablename,create=T);
+  include 'meq/meptable.g';
+  pt := meptable(tablename,create=T);
   pt.putdef('a');
   pt.putdef('b');
   pt.done();
@@ -294,6 +294,34 @@ const mep_test := function ()
   
   res := mqs.meq('Node.Publish.Results',[name='a'],T);
   res := mqs.meq('Node.Execute',[name='a',request=request],T);
+}
+
+const mep_grow_test := function ()
+{
+  if( is_fail(mqsinit(verbose=4,gui=F)) )
+  {
+    print mqs;
+    fail;
+  }
+  mqs.setdebug('MeqParm',5);
+  
+  polc := meqpolc(array([1,1,1,0],2,2),domain=meqdomain(0,1,0,1));
+  polc.grow_domain := T;
+  print 'Polc is ',polc;
+  defrec := meqparm('a',polc,config_groups='Solvable.Parm');
+  mqs.meq('Create.Node',defrec,T);
+  
+  global cells,request,res1,res2;
+  cells := meqcells(meqdomain(0,1,0,1),num_freq=4,times=[.1,.2,.3,.4],time_steps=[.1,.1,.1,.1]);
+  request := meqrequest(cells,calc_deriv=0);
+  
+  mqs.meq('Node.Publish.Results',[name='a'],T);
+  res1 := mqs.meq('Node.Execute',[name='a',request=request],T);
+
+  cells := meqcells(meqdomain(0,2,0,2),num_freq=4,times=[.2,.4,.6,.8],time_steps=[.1,.1,.1,.1]);
+  request := meqrequest(cells,calc_deriv=0);
+  
+  res2 := mqs.meq('Node.Execute',[name='a',request=request],T);
 }
 
 # cells := meqcells(meqdomain(0,10,0,10),num_freq=20,times=[1.,2.,3.],time_steps=[1.,2.,3.]);

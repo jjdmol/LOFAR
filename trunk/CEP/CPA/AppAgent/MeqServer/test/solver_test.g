@@ -15,7 +15,7 @@ if( any(argv == '-runtest' ) ) {
 }
   
 include spaste(meq_path,'/meqserver.g')
-include spaste(meq_path,'/parmtable.g')
+include spaste(meq_path,'/meptable.g')
 
 default_debuglevels := [  MeqNode       =2,
                           MeqForest     =2,
@@ -74,7 +74,7 @@ const solver_test := function (stage=0,gui=T,debug=[=],verbose=1)
   {
     # use table for parms
     tablename := 'test.mep';
-    pt := parmtable(tablename,create=T);
+    pt := meptable(tablename,create=T);
     pt.putdef('x',0);
     pt.putdef('y',0);
     pt.done();

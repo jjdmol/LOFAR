@@ -1,5 +1,7 @@
 MEQ in general:
 
+  * Update documentation!
+
     - Specify child labels in node constructor; check them in init().
       Process named children properly.
       01/01/04: done, need to test w/glish (glish not working on my laptop)
@@ -24,6 +26,8 @@ MEQ in general:
     
   * Fix MeqServer/test/solver_test to run in a "clean" environment
     (i.e. no install, no .glishrc, etc -- mostly related to include paths)
+    10/02/04: symlinks to ../pkginc/*.g do part of the job. What do we do
+    about *.g files installed in subdirectories though?
    
   * How to tell all the nodes to shut up?
     
@@ -112,6 +116,7 @@ Vells and VellSets and Results:
 
   * Vells(DataArray*) constructor: if rank<2 but nelements==1, reform the 
     array (otherwise, won't instantiate from scalars!)
+    09/02/04: perhaps unnecessary, seeing as we have a meqpolc() glish function?
     
     - double-differencing?
       02/02/04 done for VellSets, needs real testing
@@ -134,16 +139,17 @@ DMI & Debug:
           mean declaring an operator [] on CountedRefs? 
           30/01/04 done
           
-  * provide conversions between scalars and single-element arrays
+        + provide conversions between scalars and single-element arrays
+          09/02/04 done & tested
 
   * add protect feature to container fields (for use in classes such as 
-    Meq::Result etc.)
+    Meq::Result etc.) 
+    (merged with: expose lock()/unlock() of DataRecord fields. Do not lock 
+    fields by default. Use locking to "protect" fields, e.g., in the MEQ 
+    Request & Result classes.)
 
   * ? implement CountedRef::makeWritable since this seems to be a very common
     operation
-    
-  * expose lock()/unlock() of DataRecord fields. Do not lock fields by default.
-    Use locking to "protect" fields, e.g., in the MEQ Request & Result classes.
     
   * implement Hook = Hook and Hook <<= Hook, should be easy to do now
     
