@@ -1,7 +1,6 @@
 
-// Copyright Notice
+// Copyright notice should go here
 
-// $ID
 
 
 #include <uvplot/UVPDataTransferWP.h>
@@ -192,6 +191,7 @@ int  UVPDataTransferWP::receive(MessageRef &messageRef)
     (*IntMsg)["Num.Channel"] = 1;
     (*IntMsg)["Num.Time"]    = 10;
     (*IntMsg)["Num.Patch"]   = 1;
+    (*IntMsg)["Flag.Ignore"] = True;
     
     MessageRef MsgRef;
     MsgRef <<= new Message(MSIntegrate, IntMsg);
