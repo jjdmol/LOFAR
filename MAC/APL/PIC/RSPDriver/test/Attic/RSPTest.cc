@@ -599,15 +599,14 @@ GCFEvent::TResult RSPTest::test009(GCFEvent& e, GCFPortInterface& port)
 
       RSPSetwgEvent wgset;
       wgset.timestamp.setNow();
-      wgset.blpmask.reset();
-      wgset.blpmask.set(0);
+      wgset.rcumask.reset();
+      wgset.rcumask.set(0);
       wgset.settings().resize(1);
       wgset.settings()(0).freq            = 0xaabb;
       wgset.settings()(0).phase           = 0;
       wgset.settings()(0).ampl            = 0xccdd;
       wgset.settings()(0).nof_samples     = 0x1122;
       wgset.settings()(0).mode            = 0;
-      wgset.settings()(0)._pad            = 0; // keep valgrind happy
       
       TESTC_ABORT(m_server.send(wgset), RSPTest::final);
     }
@@ -624,8 +623,8 @@ GCFEvent::TResult RSPTest::test009(GCFEvent& e, GCFPortInterface& port)
       RSPGetwgEvent wgget;
 
       wgget.timestamp.setNow(1);
-      wgget.blpmask.reset();
-      wgget.blpmask.set(0);
+      wgget.rcumask.reset();
+      wgget.rcumask.set(0);
       wgget.cache = false;
 
       TESTC_ABORT(m_server.send(wgget), RSPTest::final);
