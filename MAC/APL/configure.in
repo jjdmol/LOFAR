@@ -56,12 +56,13 @@ lofar_QATOOLS
 lofar_DOCXX
 lofar_MPI(0)
 lofar_PVSS(1)
-lofar_EXTERNAL(common,1,Common/LofarTypes.h,,~/workspace/LOFAR/installed/gnu_debug)
-lofar_EXTERNAL(lofarlogger,1,LofarLogger/LofarLogger.h,,~/workspace/LOFAR/installed/gnu_debug)
+lofar_EXTERNAL(common,1,Common/LofarTypes.h,,)
+lofar_EXTERNAL(lofarlogger,1,LofarLogger/LofarLogger.h,,)
 lofar_EXTERNAL(xercesc,1,xercesc/sax2/SAX2XMLReader.hpp,xerces-c,)
 lofar_EXTERNAL(log4cplus,1,log4cplus/logger.h,,)
 lofar_EXTERNAL(boost,1,boost/shared_ptr.hpp,"")
-lofar_EXTERNAL(gcf,1,GCF/GCF_Task.h,,~/workspace/LOFAR/installed/gnu_debug)
+lofar_EXTERNAL(BLITZ,1,blitz/blitz.h,,,,'gnu3:-Wno-unused gnu3:-ftemplate-depth-30',,-lm)
+lofar_EXTERNAL(gcf,1,GCF/GCF_Task.h,,)
 
 dnl
 dnl Output Makefiles
