@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,258 168 258 47 N "_3DFace" 4
+PANEL,224 108 258 47 N "_3DFace" 4
 "$TraceNr"
 "$TrendNr"
 "$configDatapoint"
@@ -57,7 +57,7 @@ E E 0 1 1 0 1 E U  0 E 10 10 155 34
 14 1
 "txt_LegendName"
 ""
-1 75 10 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 75 10 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
  "main()
 {
 		// Local data
@@ -84,7 +84,8 @@ E E 0 1 1 0 1 E U  0 E 10 10 155 34
   	//Configure Trace
   	case 2:
 				ChildPanelOnCentral(\"navigator/views/trend_view_trace_config.pnl\",
-	  		                    \"Configure trace \" + $TraceNr, makeDynString(\"$datapoint:\" + $datapoint, \"$configDatapoint:\" + $configDatapoint, \"$TrendNr:\" + $TrendNr, \"$TraceNr:\" + $TraceNr));
+	  		                    \"Configure Trace \" + $TraceNr +\" of Trend \"+$TrendNr, makeDynString(\"$datapoint:\" + $datapoint, \"$configDatapoint:\" + $configDatapoint, \"$TrendNr:\" + $TrendNr, \"$TraceNr:\" + $TraceNr));
+
   			break;
   	//Delete trace
    	case 3:
@@ -139,9 +140,13 @@ EP_textFieldInCB(string dp1, string LegendName,
 {
   setValue(\"\", \"text\", LegendName);
   if (\"\"==dpName)
+  {
 		setValue(\"\", \"backCol\", \"_3DFace\");
+  }
 	else
+	{
   	setValue(\"\", \"backCol\", \"white\");
+  }
 }" 0
 
 E

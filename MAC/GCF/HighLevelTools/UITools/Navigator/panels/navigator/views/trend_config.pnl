@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 12 trend_config
-PANEL,399 195 879 680 N "_3DFace" 8
+PANEL,403 125 879 680 N "_3DFace" 8
 "$configDatapoint"
 "$controlAttributes"
 "$controlNames"
@@ -23,19 +23,6 @@ DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
 LAYER, 0 
 1
 LANG:1 6 Layer1
-6 219
-"Border2"
-""
-1 10 223 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-140 0 0 0 0 0
-EE E
-1
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 10 200 264 223
 1 17 4 "" 0
 0
 1 18 4 "" 2
@@ -104,7 +91,7 @@ E E 0 2 1 0 1 E  690 194 10 194
 4 69
 "Line2"
 ""
-1 270 194 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 260 194 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 44 0 0 0 0 0
 EE E
@@ -113,7 +100,7 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 2 1 0 1 E  270 290 270 194
+E E 0 2 1 0 1 E  260 290 260 194
 6 114
 "Border9"
 ""
@@ -605,19 +592,6 @@ LANG:1 0
 E E 0 1 1 0 1 E  72 471 10 471
 1 217 35 "" 57
 0
-6 218
-"Border1"
-""
-1 248 221 E E E 1 E 1 E N "_Transparent" E N "_Transparent" E E
- E E
-139 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  2 0 3 "pictures/icon_return.bmp" 13434828 E 248 201 259 221
 1 18 4 "" 1
 0
 1 162 24 "" 0
@@ -813,6 +787,11 @@ EP_textFieldInCB(string dp, string fileName)
 {
   setValue(\"\", \"enabled\", TRUE);
   setValue(\"\", \"text\", fileName);
+  if (\"\"==fileName)
+		setValue(\"\", \"backCol\", \"_3DFace\");
+	else
+  	setValue(\"\", \"backCol\", \"white\");
+  
 }
 " 0
 

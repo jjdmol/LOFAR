@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 10 trend_view
-PANEL,328 259 954 748 N "_3DFace" 2
+PANEL,224 108 954 748 N "_3DFace" 2
 "$configDatapoint"
 "$datapoint"
 "main()
@@ -73,6 +73,10 @@ ArrangeTrendPlots(string dp1, bool StandardTrend, string dp2, bool Trend2Active,
  	  setTrend1Properties();
 		setTrendVisible(1, TRUE);
 		setTrendVisible(2, FALSE);
+    dpConnect(\"CalculateTimeInterval\", \"__nav_SingleElement_Trend.1.Days\",
+                                       \"__nav_SingleElement_Trend.1.Hours\",
+                                       \"__nav_SingleElement_Trend.1.Minutes\",
+                                       \"__nav_SingleElement_Trend.1.Seconds\");
   }
   //Standard Trend-plot on dpType
   else if ((dpGetElementName($datapoint)==\"\") && StandardTrend)
@@ -163,6 +167,7 @@ CalculateTimeInterval(string dp1, int Days, string dp2, int Hours,
   setValue(\"Trend\" + TrendNumber, \"trendStop\");
   setValue(\"Trend\" + TrendNumber, \"timeInterval\", interval-starttime);
   setValue(\"Trend\" + TrendNumber, \"trendRun\");
+  DebugN(\"Days : \" +Days +\" Hours: \" +Hours+\" Minutes: \" +Minutes+\" Seconds: \" +Seconds);
 }
 
 
@@ -302,9 +307,9 @@ void TracePlot (string dp1, string dpName, string dp2, bool AutoScale,
     }
     if (AutoScale==FALSE)
 	  {
-      setValue(\"Trend\"+TrendNumber, \"curveMin\", \"curve\"+TraceNumber, ScaleMin);
       if (ScaleMin==ScaleMax)
         ScaleMax = ScaleMin + 10;
+      setValue(\"Trend\"+TrendNumber, \"curveMin\", \"curve\"+TraceNumber, ScaleMin);
       setValue(\"Trend\"+TrendNumber, \"curveMax\", \"curve\"+TraceNumber, ScaleMax);
 	  }
   }
