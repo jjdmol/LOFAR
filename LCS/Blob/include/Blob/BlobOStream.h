@@ -60,7 +60,8 @@ public:
   void clear();
 
   // Get the total size.
-  uint64 size() const;
+  uint64 size() const
+    { return itsCurLength; }
 
   // Start putting a blob. It writes the header containing data that are
   // checked when reading the blob back in BlobIStream::getStart.
