@@ -27,7 +27,7 @@ namespace LOFAR
 {
    MAC::MAC ()
      {
-	c = 299792480;
+	c = 299792480.0;
 	w_e = 2 * pi / (24 * 3600);
 
 	itsIntegrationTime = 0.001;
@@ -35,7 +35,7 @@ namespace LOFAR
 	itsStartHourangle = 0;
 	itsChannelBandwidth = 1000;       
 	itsFrequencies.resize (itsNumberOfBeamlets);
-	itsFrequencies = tensor::i;
+	itsFrequencies = blitz::tensor::i;
 	itsBeamletSize = 256;
 	itsTotalBandwidth = 32768000;
 	itsLOfrequency = 20000000;
@@ -46,25 +46,26 @@ namespace LOFAR
 	  itsStations[i] = new Station (i, 0, 0, 0);
 	}
      }
-   
-   MAC::MAC (const MAC& m);
-     {
-	c = m.c;
-	w_e = m.w_e;
 
-	m.itsIntegrationTime = itsIntegrationTime;           
-	m.itsDeclination = itsDeclination;
-	m.itsStartHourangle = itsStartHourangle;
-	m.itsChannelBandwidth = itsChannelBandwidth;       
-	m.itsFrequencies = itsFrequencies;
-	m.itsBeamletSize = itsBeamletSize;
-	m.itsTotalBandwidth = itsTotalBandwidth;
-	m.itsLOfrequency = itsLOfrequency;
-	m.itsNumberOfStations = itsNumberOfStations;
-	m.itsNumberOfBeamlets = itsNumberOfBeamlets;
+   
+   MAC::MAC (const MAC& m)
+     {
+	c = c;
+	w_e = w_e;
+
+	itsIntegrationTime = m.itsIntegrationTime;           
+	itsDeclination = m.itsDeclination;
+	itsStartHourangle = m.itsStartHourangle;
+	itsChannelBandwidth = m.itsChannelBandwidth;       
+	itsFrequencies = m.itsFrequencies;
+	itsBeamletSize = m.itsBeamletSize;
+	itsTotalBandwidth = m.itsTotalBandwidth;
+	itsLOfrequency = m.itsLOfrequency;
+	itsNumberOfStations = m.itsNumberOfStations;
+	itsNumberOfBeamlets = m.itsNumberOfBeamlets;
 
 	for (int i = 0; i < itsNumberOfStations; i++) {
-	  itsStations[i] = m.itsStation[i];
+	  m.itsStations[i] = itsStations[i];
 	}
      }
       
