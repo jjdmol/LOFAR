@@ -10,7 +10,7 @@
 #
 # $Id$
 #
-VERSION="v2.2"
+VERSION="v2.3"
 
 #
 # RECaddBCA class
@@ -246,9 +246,10 @@ TPOaddInitRoutine()
 		Relation=`echo $line | cut -d':' -f5`
 		RelClass=`echo $line | cut -d':' -f6`
 
+		echo "	{"
 		echo "	// create new TPersistentObject for ${Relation} ${RelClass}"
 		if [ "${Relation}" == "BaseClass" ]; then
-			echo "	Pointer p(new TPersistentObject<${RelClass}>(*itsObjectPtr));"
+			echo "	Pointer p(new TPersistentObject<${RelClass}>(data()));"
 		else
 			echo "	Pointer p(new TPersistentObject<${RelClass}>(data().${Member}));"
 		fi
@@ -256,6 +257,7 @@ TPOaddInitRoutine()
 		echo "	p->metaData().ownerOid() = metaData().oid();"
 		echo "	// add newly created TPersistentObject to container of ownedPOs."
 		echo "	ownedPOs().push_back(p);"
+		echo "	}"
 	done
 
 	echo "	// set the correct database table name"
@@ -290,10 +292,13 @@ TPOaddAttributemap()
 	# add code for all classes and base classes.
 	grep ^$Class ${MAPWRKFILE} | grep -v "::" | while read line
 	do
+		Member=`echo $line | cut -d":" -f4`
 		RelType=`echo $line | cut -d":" -f5`
-		if [ "${RelType}" != "BaseClass" ]; then
-			Member=`echo $line | cut -d":" -f4`
-			SubClass=`echo $line | cut -d':' -f6`
+		SubClass=`echo $line | cut -d':' -f6`
+		if [ "${RelType}" == "BaseClass" ]; then
+			echo "	theirAttribMap[\"${SubClass}::\"]	="
+			echo "		\"@\" + string(typeid(TPersistentObject<${SubClass}>).name());"
+		else
 			echo "	theirAttribMap[\"${Member}\"]	="
 			echo "		\"@\" + string(typeid(TPersistentObject<${SubClass}>).name());"
 		fi
@@ -347,7 +352,8 @@ initSrcfile()
 		echo "using namespace dtl;"
 		echo ""
 	else	# its a headerfile
-		typeset -u FileLabel=${FILEPREFIX}${Class}_H
+		TimeStamp=`date +%y%m%d%H%M%S`
+		typeset -u FileLabel=${TimeStamp}_${FILEPREFIX}${Class}_H
 		echo "//# only include this file once"
 		echo "#if !defined(${FileLabel})"
 		echo "#define ${FileLabel}"
@@ -401,6 +407,7 @@ cleanlist()
 # Allowed linesyntax of  the mapfile:
 #	Class	<ClassName>
 #	Table	<TableName>
+#	File	<Filename>
 #	<Ctype>	<MemberName>	<ColumnName>	<DBtype>
 #	<Ctype>	<MemberName>	class			<ClassName>
 #
@@ -426,6 +433,9 @@ convertMapfile()
 			;;
 		Table|table|TABLE)				# Table keyword
 			CurTable=$name
+			;;
+		File|file|FILE)					# File keyword
+			CurFile=$name
 			;;
 		*)								# no keyword, assume fieldname
 			# label (=c_type) may be xxx::yyy, change it to xxx!yyy
