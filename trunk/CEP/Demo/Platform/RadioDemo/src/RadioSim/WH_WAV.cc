@@ -57,7 +57,7 @@ void WH_WAV::takeSamples(){
 
   if (itsChannel == 0) { 
       // record 1 second of sound into WAV file
-      system("rsh astron5 ~/RadioDemo/record_sample_sim.csh antenna1");
+      system("rsh astron5 ~/RadioDemo/record_sample.csh antenna1");
   }
   
   cout << "wait for ready file" << endl;
