@@ -180,7 +180,7 @@ void WH_Correlator::process() {
   cmults = itsNsamples * itsNchannels * (itsNelements*itsNelements/2 + ceil(itsNelements/2.0));
   MPI_Reduce(&cmults, &max_cmults, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
   
-  if (TH_MPI::getCurrentRank() == 0) {
+  if ((TH_MPI::getCurrentRank() == 0) && (t_start.tv_sec != 0) && (t_start.tv_usec != 0)) {
     
     cout << 10e-6*max_cmults/(stoptime-starttime) << " Mcprod/sec" << endl;
     //   cout << itsNsamples << " " << itsNelements << " " << 10e-6*cmults/(stoptime-starttime) << endl;
@@ -188,7 +188,6 @@ void WH_Correlator::process() {
 
 #endif
   gettimeofday(&t_start, NULL);
-
 #endif
 }				     
 

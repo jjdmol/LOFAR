@@ -32,9 +32,8 @@ int main (int argc, const char** argv) {
   TH_MPI::init(argc, argv);
 #endif
 
-
-  for (int samples = min_samples; samples <= max_samples; samples++) {
-    for (int elements = min_elements; elements <= max_elements; elements++) {
+  for (int samples = min_samples; samples <= max_samples; samples=samples+stp_samples) {
+    for (int elements = min_elements; elements <= max_elements; elements=elements+stp_elements) {
       
       try {
 		
