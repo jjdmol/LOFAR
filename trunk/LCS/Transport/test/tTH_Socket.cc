@@ -62,7 +62,9 @@ int32 readAndCheckData(DH_Socket&	inDH, bool		reverseOrder)
 	// receive data
 	LOG_INFO(formatString("Receiving %sdata", reverseOrder ? "reverse ordered " :""));
 	inDH.setBufferSize(BUF_SZ);
-	inDH.read();
+	while (!inDH.read()) {
+		sleep(1);
+	}
 
 	const uchar* c = static_cast<uchar*>(inDH.getBuffer());
 	for (int16 i = 0; i < BUF_SZ; i++) {
@@ -82,20 +84,6 @@ void showSocketInfo(DH_Socket	&DH)
 {
 	LOG_INFO_STR("DH name is " << DH.getName());	
 	LOG_INFO(formatString("DH state is %s blocking", DH.isBlocking() ? "" : "NON"));	
-#if 0
-	Transporter		Tp = DH.getTransporter();
-	LOG_INFO_STR("Transporter has ID "    << Tp.getItsID());
-	LOG_INFO_STR("Transporter ReadTag = " << Tp.getReadTag() << 
-						  ", writeTag = " << Tp.getWriteTag());
-
-	TransportHolder*	TH = Tp.getTransportHolder();
-	LOG_INFO_STR("TH is of type " << TH->getType());
-	LOG_INFO(formatString("TH %s bidirectional connections", 
-				TH->isBidirectional() ? "supports" : "does NOT support"));
-
-	TH_Socket*	THS = dynamic_cast<TH_Socket*>(TH);
-	LOG_INFO(formatString("TH state is %s blocking", THS->isBlocking() ? "" : "NON"));	
-#endif
 
 }
 
@@ -195,6 +183,7 @@ int main (int32 argc, char*	argv[]) {
 			blocking ? "" : "non",
 			bidirectional ? "bi" : "uni"));
 	
+		sleep(2);
 		result += doTest();
 	}
 
