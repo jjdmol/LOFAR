@@ -21,14 +21,6 @@
 //#  $Id$
 
 #include <PL/ObjectId.h>
-
-/****************************************************************************
- * The methods get_random_fd() and get_random_bytes() were taken from       *
- * gen_uuid.c which is part of the linux package e2fsprogs. These sources   *
- * may be distributed under the terms of the GNU Library General Public     *
- * License.                                                                 *
- ****************************************************************************/
-
 #include <cstdlib>
 #include <unistd.h>
 #include <sys/time.h>
@@ -48,23 +40,51 @@ namespace LCS
 {
   namespace PL
   {
-    //
-    // Definition of static members
-    //
-    const ObjectId::oid_t ObjectId::NullId = ObjectId::oid_t();
-    bool ObjectId::theirInitFlag = false;
 
-    //
-    // Implementation of class methods
-    //
-    void ObjectId::generate()
+    ////////////////////////////////////////////////////////////////
+    //                                                            //
+    //                Definition of static members                //
+    //                                                            //
+    ////////////////////////////////////////////////////////////////
+
+    const ObjectId::oid_t ObjectId::NullId = ObjectId::oid_t();
+    bool ObjectId::theirRandomGeneratorIsInitialized = false;
+
+
+    ///////////////////////////////////////////////////////////////////
+    //                                                               //
+    //                Implementation of class methods                //
+    //                                                               //
+    ///////////////////////////////////////////////////////////////////
+
+    ObjectId::ObjectId(bool doGenerate) : 
+      itsOid(NullId), itsOidIsSet(!doGenerate) 
     {
-      if (!theirInitFlag) {
+    }
+
+    const ObjectId::oid_t& ObjectId::get() const
+    {
+      if (!itsOidIsSet) {
+        generate();
+        itsOidIsSet = true;
+      }
+      return itsOid;
+    }
+    
+    void ObjectId::set(const ObjectId::oid_t& aOid) 
+    {
+      itsOid = aOid;
+      itsOidIsSet = true;
+    }
+
+    void ObjectId::generate() const
+    {
+      if (!theirRandomGeneratorIsInitialized) {
         // Initialize the random generator using a random seed.
         timeval tv;
         gettimeofday(&tv, 0);
         srand((getpid() << 16) ^ getuid() ^ tv.tv_sec ^ tv.tv_usec);
-        theirInitFlag = true;
+        theirRandomGeneratorIsInitialized = true;
       }
 
       // Generate our random number one byte at a time.
