@@ -86,7 +86,7 @@ bool TH_Ethernet::init()
 
 string TH_Ethernet::getType() const
 {
-    return "TH_Ethernet";
+  return "TH_Ethernet"; 
 }
 
 bool TH_Ethernet::recvBlocking(void* buf, int nbytes, int tag)
@@ -261,6 +261,7 @@ void TH_Ethernet::Init()
   
   char ownMac[ETH_ALEN];
   if (strcmp(_ownMac,"" )== 0) {
+    cout << "MacAddress will be extracted from ethernetcard" << endl;
     // Find ownMAC address for specified interface
     // Mac address will be stored ownMac
     strncpy(ifr.ifr_name,_ifname, IFNAMSIZ);
@@ -274,6 +275,7 @@ void TH_Ethernet::Init()
     for (int i=0;i<ETH_ALEN;i++) ownMac[i] = ifr.ifr_hwaddr.sa_data[i];
   }
   else {
+    cout << "User defined Mac address: " << _ownMac << " will be used" << endl; 
     // Convert _ownMac HWADDR string to sll_addr
     unsigned int ohx[ETH_ALEN] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
     sscanf(_ownMac, "%x:%x:%x:%x:%x:%x", 
