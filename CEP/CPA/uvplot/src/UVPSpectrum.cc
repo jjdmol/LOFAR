@@ -114,46 +114,34 @@ void UVPSpectrum::copy(const UVPSpectrum &other)
 
 void UVPSpectrum::copyFast(const double *values)
 {
-#if(DEBUG_MODE)
-  TRACER2(__FUNCTION__);
-#endif
-  
   register unsigned int N(itsNumberOfChannels);
   
   if(N > 0) {
-    register unsigned int i(0);
+    //    register unsigned int i(0);
     register double tempMin(*values);
     register double tempMax(*values);
     register double temp(0);
     
-#if(DEBUG_MODE)
-    TRACER2("N: " << N);
-    TRACER2("i: " << i);
-#endif
-    
-    while( i < N){
+    register double*       target = itsValues;
+    register const double* source = values;
+    register const double* end    = source + N;
+
+    while(source != end){
       
-      itsValues[i] = values[i];
-      
-      temp = values[i];
+      //      itsValues[i] = values[i];    
+      //      temp = values[i];
+  
+      temp      = *source;
+      *target++ = *source++;
       tempMin = (temp < tempMin ? temp : tempMin);
       tempMax = (temp > tempMax ? temp : tempMax);
-#if(DEBUG_MODE)
-      TRACER3("i: " << i);
-      TRACER3("temp: " << temp);
-      TRACER3("tempMin: " << tempMin);
-      TRACER3("tempMax: " << tempMax);
-#endif
-      i++;
+      //      i++;
+      //      std::cout << temp << std::endl;
     }
 
     itsMinValue = tempMin;
     itsMaxValue = tempMax;
   }
-
-#if(DEBUG_MODE)
-  TRACER2("End: " << __FUNCTION__);
-#endif
 }
 
 
