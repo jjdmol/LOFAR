@@ -100,9 +100,9 @@ void WH_PreProcess::process()
     for (int j = 1; j < itsMac.getBeamletSize (); j++) { 
       *((DH_Beamlet*)getDataManager().getInHolder(i))->getBufferElement(j) 
 	= *((DH_Beamlet*)getDataManager().getOutHolder(i))->getBufferElement(j);
-      std::cout << *((DH_Beamlet*)getDataManager().getOutHolder(i))->getBufferElement(j) << ' ';
+      //std::cout << *((DH_Beamlet*)getDataManager().getOutHolder(i))->getBufferElement(j) << ' ';
     }
-    std::cout << std::endl;
+    //std::cout << std::endl;
   }
 }
 
