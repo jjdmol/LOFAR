@@ -12,7 +12,7 @@
 
 //## Module: Dispatcher%3C7B7F300041; Package specification
 //## Subsystem: PSCF%3C5A73670223
-//## Source file: F:\lofar8\oms\LOFAR\cep\cpa\pscf\src\pscf\Dispatcher.h
+//## Source file: F:\lofar8\oms\LOFAR\CEP\CPA\PSCF\src\pscf\Dispatcher.h
 
 #ifndef Dispatcher_h
 #define Dispatcher_h 1
@@ -47,12 +47,18 @@ const int EV_CONT = 0,      // continuous event (keeps firing until removed)
           EV_ONESHOT = 1,   // one-shot event (clears itself first time it fires)
           EV_DISCRETE = 2,  // signal: deliver discrete events for each signal
           // (default is to not generate a signal if one is already enqueued)
+          EV_IGNORE   = 4,  // signal: do not deliver messages, but do 
+                            // catch the signal
+                            
+// NB: when a WP does an addSignal with EV_IGNORE, it will not receive any 
+// messages, but the signal will be caught by Dispatcher's handler, and its
+// counters (if supplied to addInput)  will be incremented
                             
           // for addInput:
-          EV_FDREAD       = 0x10,  // report when fd available for reading
-          EV_FDWRITE      = 0x20,  // report when fd available for writing
-          EV_FDEXCEPTION  = 0x40,  // report when exception on fd
-          EV_FDALL        = 0x70;  // mask of all flags for inputs
+          EV_FDREAD       = 0x100,  // report when fd available for reading
+          EV_FDWRITE      = 0x200,  // report when fd available for writing
+          EV_FDEXCEPTION  = 0x400,  // report when exception on fd
+          EV_FDALL        = 0x700;  // mask of all flags for inputs
 
 
 //## end module%3C7B7F300041.additionalDeclarations
@@ -75,6 +81,9 @@ const int EV_CONT = 0,      // continuous event (keeps firing until removed)
 class Dispatcher : public PSCFDebugContext  //## Inherits: <unnamed>%3C7FA32C016D
 {
   //## begin Dispatcher%3C7B6A3E00A0.initialDeclarations preserve=yes
+  public:
+      // iterator type (for iterate(), below)
+      typedef map<WPID,WPRef>::const_iterator WPIter;
   //## end Dispatcher%3C7B6A3E00A0.initialDeclarations
 
   public:
@@ -88,16 +97,21 @@ class Dispatcher : public PSCFDebugContext  //## Inherits: <unnamed>%3C7FA32C016
 
     //## Other Operations (specified)
       //## Operation: attach%3C8CDDFD0361
-      void attach (WPRef &wpref);
+      const MsgAddress & attach (WPRef &wpref);
 
       //## Operation: attach%3C7B885A027F
-      void attach (WPInterface* wp, int flags);
+      const MsgAddress & attach (WPInterface* wp, int flags);
 
       //## Operation: detach%3C8CA2BD01B0
       void detach (WPInterface* wp);
 
       //## Operation: detach%3C8CDE320231
       void detach (const WPID &id);
+
+      //## Operation: declareForwarder%3C95C73F022A
+      //	Marks a WP as a "forwarder", i.e., can deliver messages to remote
+      //	hosts.
+      void declareForwarder (WPInterface *wp);
 
       //## Operation: start%3C7DFF770140
       void start ();
@@ -128,16 +142,26 @@ class Dispatcher : public PSCFDebugContext  //## Inherits: <unnamed>%3C7FA32C016
       void addInput (WPInterface* pwp, int fd, int flags, int priority);
 
       //## Operation: addSignal%3C7DFF4A0344
-      void addSignal (WPInterface* pwp, int signum, int flags, int priority);
+      void addSignal (WPInterface* pwp, int signum, int flags, volatile int* counter, int priority);
 
       //## Operation: removeTimeout%3C7D28F202F3
       bool removeTimeout (WPInterface* pwp, const HIID &id);
 
       //## Operation: removeInput%3C7D2947002F
-      bool removeInput (WPInterface* pwp, int fd);
+      bool removeInput (WPInterface* pwp, int fd, int flags);
 
       //## Operation: removeSignal%3C7DFF57025C
       bool removeSignal (WPInterface* pwp, int signum);
+
+      //## Operation: initWPIter%3C98D4530076
+      //	Returns an iterator pointing to the first WP in the list. Use with
+      //	iterate().
+      Dispatcher::WPIter initWPIter ();
+
+      //## Operation: getWPIter%3C98D47B02B9
+      //	Gets info for WP pointed to by iterator and  increments the
+      //	iterator. Returns False when iterator becomes invalid.
+      bool getWPIter (Dispatcher::WPIter &iter, WPID &wpid, const WPInterface *&pwp);
 
     //## Get and Set Operations for Class Attributes (generated)
 
@@ -182,6 +206,7 @@ class Dispatcher : public PSCFDebugContext  //## Inherits: <unnamed>%3C7FA32C016
       class SignalInfo : public EventInfo
       {
         public: int       signum,flags;
+                volatile int *counter;
                 SignalInfo( WPInterface *pwp,const HIID &id,int priority )
                     : EventInfo(pwp,AidMsgSignal|id,priority) {};
       };

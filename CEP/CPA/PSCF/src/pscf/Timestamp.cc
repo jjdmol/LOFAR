@@ -12,12 +12,13 @@
 
 //## Module: Timestamp%3C7F3B77034D; Package body
 //## Subsystem: PSCF%3C5A73670223
-//## Source file: F:\lofar8\oms\LOFAR\cep\cpa\pscf\src\pscf\Timestamp.cc
+//## Source file: F:\lofar8\oms\LOFAR\CEP\CPA\PSCF\src\pscf\Timestamp.cc
 
 //## begin module%3C7F3B77034D.additionalIncludes preserve=no
 //## end module%3C7F3B77034D.additionalIncludes
 
 //## begin module%3C7F3B77034D.includes preserve=yes
+#include <math.h>
 //## end module%3C7F3B77034D.includes
 
 // Timestamp
@@ -34,6 +35,19 @@
 //## begin Timestamp::tsnow%3C8F68EA004C.attr preserve=no  private: static Timestamp {U} 
 Timestamp Timestamp::tsnow;
 //## end Timestamp::tsnow%3C8F68EA004C.attr
+
+Timestamp::Timestamp (double sec1)
+  //## begin Timestamp::Timestamp%3C95C5F90389.hasinit preserve=no
+  //## end Timestamp::Timestamp%3C95C5F90389.hasinit
+  //## begin Timestamp::Timestamp%3C95C5F90389.initialization preserve=yes
+  //## end Timestamp::Timestamp%3C95C5F90389.initialization
+{
+  //## begin Timestamp::Timestamp%3C95C5F90389.body preserve=yes
+  sec_ = (long) floor(sec1);
+  usec_ = (long) floor((sec1-sec_)*1e+6);
+  //## end Timestamp::Timestamp%3C95C5F90389.body
+}
+
 
 
 //## Other Operations (implementation)

@@ -61,12 +61,6 @@ class WorkProcess : public WPInterface  //## Inherits: <unnamed>%3C8F263A00E6
 
 
     //## Other Operations (specified)
-      //## Operation: start%3C9216B701CA
-      virtual void start ();
-
-      //## Operation: stop%3C9216C10015
-      virtual void stop ();
-
       //## Operation: addTimeout%3C7D285803B0
       void addTimeout (const Timestamp &period, const HIID &id = HIID(), int flags = 0, int priority = Message::PRI_EVENT);
 
@@ -74,42 +68,28 @@ class WorkProcess : public WPInterface  //## Inherits: <unnamed>%3C8F263A00E6
       void addInput (int fd, int flags, int priority = Message::PRI_EVENT);
 
       //## Operation: addSignal%3C7DFE520239
-      void addSignal (int signum, int flags, int priority = Message::PRI_EVENT);
+      void addSignal (int signum, int flags = 0, volatile int* counter = 0, int priority = Message::PRI_EVENT);
 
       //## Operation: removeTimeout%3C7D287F02C6
       bool removeTimeout (const HIID &id);
 
       //## Operation: removeInput%3C7D28A30141
-      bool removeInput (int fd);
+      bool removeInput (int fd, int flags = EV_FDALL);
 
       //## Operation: removeSignal%3C7DFE480253
       bool removeSignal (int signum);
 
-      //## Operation: send%3C7CB9E802CF
-      //	Sends message to specified address. Note that the ref is taken over
-      //	by this call, then privatized for writing. See Dispatcher::send()
-      //	for more details.
-      int send (MessageRef msg, MsgAddress to);
+      //## Operation: detachMyself%3C95A89D015E
+      void detachMyself ();
 
-      //## Operation: publish%3C7CB9EB01CF
-      //	Publishes message with the specified scope. Note that the ref is
-      //	taken over by this call, then privatized for writing. This method is
-      //	just a shorthand for send(), with "Publish" in some parts of the
-      //	address, as determined by scope).
-      int publish (MessageRef msg, int scope = Message::GLOBAL);
+      //## Operation: attachWP%3C95BA1602D9
+      const MsgAddress & attachWP (WPRef &wpref);
 
-    //## Get and Set Operations for Class Attributes (generated)
-
-      //## Attribute: state%3C8F256E024B
-      int getState () const;
-      void setState (int value);
+      //## Operation: attachWP%3C95BA1A02D5
+      const MsgAddress & attachWP (WPInterface* wp, int flags);
 
     // Additional Public Declarations
       //## begin WorkProcess%3C8F25430087.public preserve=yes
-      // import in the message result-codes
-      typedef Message::MessageResults MessageResults;
-      
-      Declare_sdebug( );
       //## end WorkProcess%3C8F25430087.public
   protected:
     // Additional Protected Declarations
@@ -130,12 +110,6 @@ class WorkProcess : public WPInterface  //## Inherits: <unnamed>%3C8F263A00E6
       //## end WorkProcess%3C8F25430087.private
 
   private: //## implementation
-    // Data Members for Class Attributes
-
-      //## begin WorkProcess::state%3C8F256E024B.attr preserve=no  public: int {U} 
-      int state;
-      //## end WorkProcess::state%3C8F256E024B.attr
-
     // Additional Implementation Declarations
       //## begin WorkProcess%3C8F25430087.implementation preserve=yes
       //## end WorkProcess%3C8F25430087.implementation
@@ -146,22 +120,6 @@ class WorkProcess : public WPInterface  //## Inherits: <unnamed>%3C8F263A00E6
 //## end WorkProcess%3C8F25430087.postscript
 
 // Class WorkProcess 
-
-//## Get and Set Operations for Class Attributes (inline)
-
-inline int WorkProcess::getState () const
-{
-  //## begin WorkProcess::getState%3C8F256E024B.get preserve=no
-  return state;
-  //## end WorkProcess::getState%3C8F256E024B.get
-}
-
-inline void WorkProcess::setState (int value)
-{
-  //## begin WorkProcess::setState%3C8F256E024B.set preserve=no
-  state = value;
-  //## end WorkProcess::setState%3C8F256E024B.set
-}
 
 //## begin module%3C7B7F3000C3.epilog preserve=yes
 //## end module%3C7B7F3000C3.epilog

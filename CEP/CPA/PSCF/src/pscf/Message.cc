@@ -12,12 +12,13 @@
 
 //## Module: Message%3C7B7F2F024A; Package body
 //## Subsystem: PSCF%3C5A73670223
-//## Source file: F:\lofar8\oms\LOFAR\cep\cpa\pscf\src\pscf\Message.cc
+//## Source file: F:\lofar8\oms\LOFAR\CEP\CPA\PSCF\src\pscf\Message.cc
 
 //## begin module%3C7B7F2F024A.additionalIncludes preserve=no
 //## end module%3C7B7F2F024A.additionalIncludes
 
 //## begin module%3C7B7F2F024A.includes preserve=yes
+#include "DynamicTypeManager.h"
 //## end module%3C7B7F2F024A.includes
 
 // Message
@@ -45,7 +46,7 @@ Message::Message(const Message &right)
   //## begin Message::Message%3C7B6A2D01F0_copy.hasinit preserve=no
   //## end Message::Message%3C7B6A2D01F0_copy.hasinit
   //## begin Message::Message%3C7B6A2D01F0_copy.initialization preserve=yes
-    : CountedRefTarget()
+    : BlockableObject()
   //## end Message::Message%3C7B6A2D01F0_copy.initialization
 {
   //## begin Message::Message%3C7B6A2D01F0_copy.body preserve=yes
@@ -121,16 +122,6 @@ Message::Message (const HIID &id1, const char *data, size_t sz, int pri)
   //## end Message::Message%3C7BB3BD0266.body
 }
 
-Message::Message (char *block, size_t sz)
-  //## begin Message::Message%3C7B9E29013F.hasinit preserve=no
-  //## end Message::Message%3C7B9E29013F.hasinit
-  //## begin Message::Message%3C7B9E29013F.initialization preserve=yes
-  //## end Message::Message%3C7B9E29013F.initialization
-{
-  //## begin Message::Message%3C7B9E29013F.body preserve=yes
-  //## end Message::Message%3C7B9E29013F.body
-}
-
 
 Message::~Message()
 {
@@ -142,14 +133,17 @@ Message::~Message()
 Message & Message::operator=(const Message &right)
 {
   //## begin Message::operator=%3C7B6A2D01F0_assign.body preserve=yes
-  id_ = right.id_;
-  priority_ = right.priority_;
-  from_ = right.from_;
-  to_ = right.to_;
-  state_ = right.state_;
-//  timestamp_ = right.timestamp_;
-  payload_.copy(right.payload_,DMI::PRESERVE_RW|DMI::PERSIST);
-  block_.copy(right.block_,DMI::PRESERVE_RW|DMI::PERSIST);
+  if( &right != this )
+  {
+    id_ = right.id_;
+    priority_ = right.priority_;
+    from_ = right.from_;
+    to_ = right.to_;
+    state_ = right.state_;
+  //  timestamp_ = right.timestamp_;
+    payload_.copy(right.payload_,DMI::PRESERVE_RW|DMI::PERSIST);
+    block_.copy(right.block_,DMI::PRESERVE_RW|DMI::PERSIST);
+  }
   return *this;
   //## end Message::operator=%3C7B6A2D01F0_assign.body
 }
@@ -209,6 +203,80 @@ void Message::privatize (int flags, int depth)
       block_.privatize(flags,depth-1);
   }
   //## end Message::privatize%3C7E32C1022B.body
+}
+
+int Message::fromBlock (BlockSet& set)
+{
+  //## begin Message::fromBlock%3C960F1B0373.body preserve=yes
+  int blockcount = 1;
+  // get and unpack header
+  BlockRef href;
+  set.pop(href);
+  const HeaderBlock & hdr = *reinterpret_cast<const HeaderBlock*>(href->data());
+  FailWhen(href->size() < sizeof(HeaderBlock) ||
+           href->size() != sizeof(HeaderBlock) + 
+           hdr.idsize + hdr.fromsize + hdr.tosize,"corrupt header block");
+  priority_ = hdr.priority;
+  state_    = hdr.state;
+  const char *buf = href->data() + sizeof(HeaderBlock);
+  id_.unpack(buf,hdr.idsize);     buf += hdr.idsize;
+  from_.unpack(buf,hdr.fromsize); buf += hdr.fromsize;
+  to_.unpack(buf,hdr.tosize);
+  //  got a data block?
+  if( hdr.has_block )
+  {
+    set.pop(block_);
+    blockcount++;
+  }
+  else
+    block_.detach();
+  // got a payload?
+  if( hdr.payload_type )
+  {
+    BlockableObject *obj = DynamicTypeManager::construct(hdr.payload_type);
+    blockcount += obj->fromBlock(set);
+    payload_.attach(obj,DMI::ANON|DMI::WRITE);
+  }
+  else
+    payload_.detach();
+  
+  return blockcount;
+  //## end Message::fromBlock%3C960F1B0373.body
+}
+
+int Message::toBlock (BlockSet &set) const
+{
+  //## begin Message::toBlock%3C960F20037A.body preserve=yes
+  // create a header block
+  int idsize = id_.packSize(),
+      tosize = to_.packSize(),
+      fromsize = from_.packSize();
+  SmartBlock *hdrblock = new SmartBlock(sizeof(HeaderBlock)+idsize+tosize+fromsize);
+  HeaderBlock & hdr = *reinterpret_cast<HeaderBlock*>(hdrblock->data());
+  hdr.priority  = priority_;
+  hdr.state     = state_;
+  hdr.idsize    = idsize;
+  hdr.fromsize  = fromsize;
+  hdr.tosize    = tosize;
+  hdr.has_block = block_.valid(); 
+  hdr.payload_type = payload_.valid() ? payload_->objectType() : NullType;
+  char *buf = hdrblock->data() + sizeof(HeaderBlock);
+  buf += id_.pack(buf);      
+  buf += from_.pack(buf);    
+  to_.pack(buf);      
+  
+  // attach to set
+  set.pushNew().attach(hdrblock,DMI::WRITE|DMI::ANON);
+  int blockcount = 1;
+  if( block_.valid() )
+  {
+    set.pushNew().copy(block_,DMI::PRESERVE_RW);
+    blockcount++;
+  }
+  if( payload_.valid() )
+    blockcount += payload_->toBlock(set);
+  return blockcount;
+  //## end Message::toBlock%3C960F20037A.body
 }
 
 // Additional Declarations

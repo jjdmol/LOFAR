@@ -12,7 +12,7 @@
 
 //## Module: Dispatcher%3C7B7F30004B; Package body
 //## Subsystem: PSCF%3C5A73670223
-//## Source file: F:\lofar8\oms\LOFAR\cep\cpa\pscf\src\pscf\Dispatcher.cc
+//## Source file: F:\lofar8\oms\LOFAR\CEP\CPA\PSCF\src\pscf\Dispatcher.cc
 
 //## begin module%3C7B7F30004B.additionalIncludes preserve=no
 //## end module%3C7B7F30004B.additionalIncludes
@@ -31,6 +31,9 @@
 //## end module%3C7B7F30004B.declarations
 
 //## begin module%3C7B7F30004B.additionalDeclarations preserve=yes
+// pulls in registry definitions
+static int dum = aidRegistry_PSCF();
+
 Dispatcher * Dispatcher::dispatcher = 0;
 sigset_t Dispatcher::raisedSignals,Dispatcher::allSignals;
 struct sigaction * Dispatcher::orig_sigaction[_NSIG];
@@ -39,6 +42,11 @@ struct sigaction * Dispatcher::orig_sigaction[_NSIG];
 void Dispatcher::signalHandler (int signum,siginfo_t *,void *)
 {
   sigaddset(&raisedSignals,signum);
+  // if this signal is in the maps, increment its counters
+  pair<CSMI,CSMI> rng = dispatcher->signals.equal_range(signum);
+  for( CSMI iter = rng.first; iter != rng.second; iter++ )
+    if( iter->second.counter )
+      (*iter->second.counter)++;
 }
 //## end module%3C7B7F30004B.additionalDeclarations
 
@@ -82,7 +90,7 @@ Dispatcher::~Dispatcher()
 
 
 //## Other Operations (implementation)
-void Dispatcher::attach (WPRef &wpref)
+const MsgAddress & Dispatcher::attach (WPRef &wpref)
 {
   //## begin Dispatcher::attach%3C8CDDFD0361.body preserve=yes
   FailWhen( !wpref.isWritable(),"writable ref required" ); 
@@ -95,23 +103,22 @@ void Dispatcher::attach (WPRef &wpref)
   wp.setAddress( MsgAddress(wpid,processId(),hostId()) );
   // add to map
   wps[wpid] = wpref;
-  if( wp.isGateway() )
-    gateways[wpid] = &wp;
   dprintf(1)("attaching WP: %s\n",wp.sdebug().c_str());
   wp.attach(this);
   if( running )
   {
-    wp.init();
-    wp.start();
+    wp.do_init();
+    wp.do_start();
   }
+  return wp.address();
   //## end Dispatcher::attach%3C8CDDFD0361.body
 }
 
-void Dispatcher::attach (WPInterface* wp, int flags)
+const MsgAddress & Dispatcher::attach (WPInterface* wp, int flags)
 {
   //## begin Dispatcher::attach%3C7B885A027F.body preserve=yes
   WPRef ref(wp,flags|DMI::WRITE);
-  attach(ref);
+  return attach(ref);
   //## end Dispatcher::attach%3C7B885A027F.body
 }
 
@@ -130,12 +137,22 @@ void Dispatcher::detach (const WPID &id)
   WPI iter = wps.find(id); 
   FailWhen( iter == wps.end(),
       "wpid '"+id.toString()+"' is not attached to this dispatcher");
-  iter->second().stop();
+  iter->second().do_stop();
   wps.erase(iter);
   GWI iter2 = gateways.find(id);
   if( iter2 != gateways.end() )
     gateways.erase(iter2);
   //## end Dispatcher::detach%3C8CDE320231.body
+}
+
+void Dispatcher::declareForwarder (WPInterface *wp)
+{
+  //## begin Dispatcher::declareForwarder%3C95C73F022A.body preserve=yes
+  CWPI iter = wps.find(wp->wpid()); 
+  FailWhen( iter == wps.end() || iter->second.deref_p() != wp,
+      "WP not attached to this dispatcher");
+  gateways[wp->wpid()] = wp;
+  //## end Dispatcher::declareForwarder%3C95C73F022A.body
 }
 
 void Dispatcher::start ()
@@ -147,7 +164,7 @@ void Dispatcher::start ()
   dprintf(1)("starting\n");
   dprintf(2)("start: initializing WPs\n");
   for( WPI iter = wps.begin(); iter != wps.end(); iter++ )
-    iter->second().init();
+    iter->second().do_init();
   // setup signal handler for SIGALRM
   sigemptyset(&raisedSignals);
   rebuildSignals();
@@ -159,7 +176,7 @@ void Dispatcher::start ()
   // say start to all WPs
   dprintf(2)("start: starting WPs\n");
   for( WPI iter = wps.begin(); iter != wps.end(); iter++ )
-    iter->second().start();
+    iter->second().do_start();
   dprintf(2)("start: complete\n");
   //## end Dispatcher::start%3C7DFF770140.body
 }
@@ -174,7 +191,7 @@ void Dispatcher::stop ()
   setitimer(ITIMER_REAL,&tval,0);
   // tell all WPs that we are stopping
   for( WPI iter = wps.begin(); iter != wps.end(); iter++ )
-    iter->second().stop();
+    iter->second().do_stop();
   // clear all event lists
   timeouts.clear();
   inputs.clear();
@@ -218,7 +235,8 @@ int Dispatcher::send (MessageRef &msg, const MsgAddress &to)
         {
           dprintf(2)("  b-casting to %s\n",iter->second->debug(1));
         }
-        else if( wpc == AidPublish && iter->second->subscribesTo(msg.deref()) )
+        else if( wpc == AidPublish && 
+                 iter->second->getSubscriptions().matches(msg.deref()) )
         {
           dprintf(2)("  publishing to %s\n",iter->second->debug(1));
         }
@@ -236,7 +254,7 @@ int Dispatcher::send (MessageRef &msg, const MsgAddress &to)
     dprintf(2)("  destination address is not local\n");
   // If the message has a remote/broadcast destination, then deliver it to
   // all gateways. The only exception is Publish, which is already taken
-  // care of in the loop above.
+  // care of (at least for gateways) in the loop above.
   if( to.wpclass() != AidPublish && 
       to.host() != hostId()  && to.process() != processId() )
   {
@@ -361,7 +379,7 @@ void Dispatcher::addInput (WPInterface* pwp, int fd, int flags, int priority)
   //## end Dispatcher::addInput%3C7D28E3032E.body
 }
 
-void Dispatcher::addSignal (WPInterface* pwp, int signum, int flags, int priority)
+void Dispatcher::addSignal (WPInterface* pwp, int signum, int flags, volatile int* counter, int priority)
 {
   //## begin Dispatcher::addSignal%3C7DFF4A0344.body preserve=yes
   FailWhen(signum<0,Debug::ssprintf("addSignal: invalid signal %d",signum));
@@ -379,6 +397,7 @@ void Dispatcher::addSignal (WPInterface* pwp, int signum, int flags, int priorit
   SignalInfo si(pwp,AtomicID(signum),priority);
   si.signum = signum;
   si.flags = flags;
+  si.counter = counter;
   si.msg().setState(0);
   signals.insert( SMPair(signum,si) );
   rebuildSignals();
@@ -404,19 +423,27 @@ bool Dispatcher::removeTimeout (WPInterface* pwp, const HIID &id)
   //## end Dispatcher::removeTimeout%3C7D28F202F3.body
 }
 
-bool Dispatcher::removeInput (WPInterface* pwp, int fd)
+bool Dispatcher::removeInput (WPInterface* pwp, int fd, int flags)
 {
   //## begin Dispatcher::removeInput%3C7D2947002F.body preserve=yes
-  for( IILI iter = inputs.begin(); iter != inputs.end(); )
+  for( IILI iter = inputs.begin(); iter != inputs.end(); iter++ )
   {
+    MessageRef & ref = iter->last_msg;
+    // is an input message sitting intill undelivered?
+    // (WPInterface::poll() will reset its state to 0 when delivered)
+    if( ref.valid() && ref->state() != 0 )
+    // input messages are dequeued/modified inside WorkProcess::removeInput.
     if( iter->pwp == pwp && iter->fd == fd ) 
     {   
-      repoll |= pwp->dequeue(iter->msg->id());
-      inputs.erase(iter++);
+       // is an input message sitting in the queue, undelivered? Clear its flags
+      MessageRef & ref = iter->last_msg;
+      if( ref.valid() && ref.isWritable() && ref->state() )
+        ref().setState(ref->state()&~flags);
+      // clear flags of input
+      if( ( iter->flags &= ~flags ) == 0 ) // removed all modes? 
+        inputs.erase(iter);
       return True;
     }
-    else
-      iter++;
   }
   return False;
   //## end Dispatcher::removeInput%3C7D2947002F.body
@@ -454,6 +481,24 @@ bool Dispatcher::removeSignal (WPInterface* pwp, int signum)
   
   return res;
   //## end Dispatcher::removeSignal%3C7DFF57025C.body
+}
+
+Dispatcher::WPIter Dispatcher::initWPIter ()
+{
+  //## begin Dispatcher::initWPIter%3C98D4530076.body preserve=yes
+  return wps.begin();
+  //## end Dispatcher::initWPIter%3C98D4530076.body
+}
+
+bool Dispatcher::getWPIter (Dispatcher::WPIter &iter, WPID &wpid, const WPInterface *&pwp)
+{
+  //## begin Dispatcher::getWPIter%3C98D47B02B9.body preserve=yes
+  if( iter == wps.end() )
+    return False;
+  wpid = iter->first;
+  pwp = iter->second.deref_p();
+  return True;
+  //## end Dispatcher::getWPIter%3C98D47B02B9.body
 }
 
 // Additional Declarations
@@ -617,6 +662,9 @@ bool Dispatcher::checkEvents()
       pair<SMI,SMI> rng = signals.equal_range(sig);
       for( SMI iter = rng.first; iter != rng.second; )
       {
+        // no message generated for EV_IGNORE
+        if( iter->second.flags&EV_IGNORE )
+          continue;
         // discrete signal events requested, so always enqueue a message
         if( iter->second.flags&EV_DISCRETE )
         {
@@ -657,7 +705,9 @@ string Dispatcher::sdebug ( int detail,const string &,const char *name ) const
   string out;
   if( detail>=0 ) // basic detail
   {
-    out = Debug::ssprintf("%s/%s",name?name:"Dispatcher",address.toString().c_str());
+    if( name )
+      out = string(name) + "/";
+    out += address.toString();
     if( detail>3 )
       out += Debug::ssprintf("/%08x",this);
   }
