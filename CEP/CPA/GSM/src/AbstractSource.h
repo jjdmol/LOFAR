@@ -144,24 +144,23 @@ public:
      * NUMBER    ScalarColumn<int>
      * NAME      ScalarColumn<std::string>
      * TYPE      ScalarColumn<int>
-     * RaPARMS   ArrayColumn<double>
+     * RAPARMS   ArrayColumn<double>
      * DECPARMS  ArrayColumn<double>
      * IPARMS    ArrayColumn<double>
      * QPARMS    ArrayColumn<double>
      * UPARMS    ArrayColumn<double>
      * VPARMS    ArrayColumn<double>
 
-     
    */
-  virtual MeqDomain load(const Table& table,
-                         unsigned int row);
+  virtual MeqDomain store(Table&       table,
+                          unsigned int row) const;
 
   //! Loads state from an Aips++ table.
   /*! Description of the table
-      format can be found in the description of \method load.
+      format can be found in the description of \method store.
   */
-  virtual MeqDomain store(Table&       table,
-                          unsigned int row) const;
+  virtual MeqDomain load(const Table& table,
+                         unsigned int row);
 
 
 

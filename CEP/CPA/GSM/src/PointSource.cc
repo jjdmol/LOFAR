@@ -125,7 +125,7 @@ MeqDomain PointSource::load(const Table& table,
 //====================>>>  PointSource::store  <<<====================
 
 MeqDomain PointSource::store(Table&       table,
-                        unsigned int row)
+			     unsigned int row) const
 {
   MeqDomain            Domain(AbstractSource::store(table, row));
   std::vector<MeqPolc> Polcs(1);
