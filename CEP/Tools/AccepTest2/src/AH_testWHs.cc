@@ -201,6 +201,7 @@ namespace LOFAR
   }
   
   void AH_testWHs::run(int nsteps) {
+    TH_MPI::synchroniseAllProcesses();
     // call process method on all WH's
     int NoWHs = itsWHs.size();
     for (int s = 0; s < nsteps; s++) {
