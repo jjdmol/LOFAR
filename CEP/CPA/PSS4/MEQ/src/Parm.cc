@@ -311,7 +311,7 @@ void Parm::setStateImpl (DataRecord& rec, bool initializing)
     int npolc = rec[FPolcs].size(TpDataRecord);
     itsPolcs.resize(npolc);
     for( int i=0; i<npolc; i++ )
-      itsPolcs[i] = Polc(rec[FPolcs][i]);
+      itsPolcs[i] = Polc(rec[FPolcs][i].as_wr<DataRecord>());
     initSolvable();
   }
   else
