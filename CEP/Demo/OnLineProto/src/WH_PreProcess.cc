@@ -92,26 +92,37 @@ void WH_PreProcess::process()
 {
   TRACER4("WH_PreProcess::Process()");
 
+  complex<float> phase;
+  complex<float> imag (0,1);
   int b =  itsMac.getNumberOfBeamlets();
+  Station* station = itsMac.getStations();
+
   for (int i = 0; i < b; i++) {
     // set elapsed time
     ((DH_Beamlet*)getDataManager().getOutHolder(i))->setElapsedTime(((DH_Beamlet*)getDataManager().getInHolder(i))->getElapsedTime());
-    // cout << "WH_PreProcess : " << ((DH_Beamlet*)getDataManager().getOutHolder(i))->getElapsedTime() << endl;
-    for (int j = 1; j < itsMac.getBeamletSize (); j++) {
+    for (int j = 0; j < itsMac.getBeamletSize (); j++) {
        if (ENABLE_FS == 1) {
-	  Station* station = itsMac.getStations();
-//	  float t_i = station[StationID].getY * sin(
-	  complex<float> phase = 1.0;
-	    
-	    
-	    
-	    
-	    //*((DH_Phase*)getDataManager().getInHolder(b))->getBuffer();
-	  *((DH_Beamlet*)getDataManager().getOutHolder(i))->getBufferElement(j) 
-	    = phase * *((DH_Beamlet*)getDataManager().getInHolder(i))->getBufferElement(j);
+	 // calculate hourangle
+	 float ha = ((DH_Beamlet*)getDataManager().getInHolder(i))->getElapsedTime() * itsMac.getWe() + itsMac.getStartHourangle();
+
+	 // calculate time delay
+	 float t_i = (station[itsStationID].getY() * sin(ha) * cos (itsMac.getDeclination()) 
+		      + station[itsStationID].getX() * cos (ha) * cos (itsMac.getDeclination())) / itsMac.getC();
+	 
+	 // delay tracking phase rotation
+	 phase = exp (imag * (complex<float>)2 * (complex<float>)pi 
+		      * (itsMac.getFrequency(b) + j * itsMac.getChannelBandwidth() + itsMac.getChannelBandwidth() 
+			 / (complex<float>)2)  * t_i);
+	 
+	 // fringe stopping phase rotation
+	 phase *= exp (imag * (complex<float>)2 * (complex<float>)pi * itsMac.getLOfrequency() * t_i);
+	 
+	 // apply phase shift
+	 *((DH_Beamlet*)getDataManager().getOutHolder(i))->getBufferElement(j) 
+	   = phase * *((DH_Beamlet*)getDataManager().getInHolder(i))->getBufferElement(j);
        } else {
-	  *((DH_Beamlet*)getDataManager().getOutHolder(i))->getBufferElement(j)
-	    = *((DH_Beamlet*)getDataManager().getInHolder(i))->getBufferElement(j);
+	 *((DH_Beamlet*)getDataManager().getOutHolder(i))->getBufferElement(j)
+	   = *((DH_Beamlet*)getDataManager().getInHolder(i))->getBufferElement(j);
        }
     }
   }

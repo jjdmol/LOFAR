@@ -10,7 +10,7 @@
 #define NVis (BFBW/FSIZE)
 #define TFACTOR (BFBW/FSIZE)
 #define NCorr (NBEAMLETS*BFBW)  
-#define ENABLE_FS 1
+#define ENABLE_FS 0
 
 #define MIN(X,Y) ( (X) < (Y) ? (X) : (Y) )
 #endif
