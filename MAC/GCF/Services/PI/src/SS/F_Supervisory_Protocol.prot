@@ -18,9 +18,8 @@ prefix = "F_SV"; // for the signal names
 
 prelude = << PRELUDE_END
 enum {
-  ERR_NO_VALID_LOCNAME = -7,
-  ERR_NO_VALID_TASKNAME = -6,
-  ERR_GET_NOT_ALLOWED = -5,
+  ERR_NO_VALID_LOCNAME = -6,
+  ERR_NO_VALID_TASKNAME = -5,
   ERR_SET_NOT_ALLOWED = -4,
   ERR_MSG_CORRUPT = -3,
   ERR_NO_VALID_PROP_NAME = -2,
@@ -32,12 +31,7 @@ enum {
 PRELUDE_END;
 
 event = {
-	signal = GETNAME;
-	dir = OUT;
-};
-
-event = {
-	signal = NAMEGET;
+	signal = NAME;
 	dir = IN;
 };
 
@@ -65,12 +59,7 @@ event = {
 		name = "seqNr";
 		type = "unsigned short int";
 	};
-	param = {
-		name = "type";
-		type = "unsigned char";
-	};
 };
-
 
 event = {
 	signal = VALUECHANGED;
