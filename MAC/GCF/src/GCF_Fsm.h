@@ -82,20 +82,20 @@ class GCFDummyPort : public GCFPortInterface
                           long  /*delay_usec*/,
                           long  /*interval_sec*/,
                           long  /*interval_usec*/,
-                          const void* /*arg*/) 
+                          void* /*arg*/) 
     {
       return 0;
     }
 
     inline long setTimer (double /*delay_seconds*/, 
                           double /*interval_seconds*/,
-                          const void*  /*arg*/)
+                          void*  /*arg*/)
     {
       return 0;
     }
 
     inline int cancelTimer (long /*timerid*/, 
-                            const void** /*arg*/) 
+                            void** /*arg*/) 
     {
       return 0;
     }
