@@ -48,7 +48,7 @@ public:
 
 
 
-  class HeapAllocator: public Allocator
+class HeapAllocator: public Allocator
 {
 public:
   HeapAllocator()

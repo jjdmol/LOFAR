@@ -1,14 +1,17 @@
 SUBDIRS	= shmem .
 
 INSTHDRS = \
-Allocator.h BlobStringType.h BlobString.h \
+Allocator.h BlobStringType.h BlobString.h BlobStringTraits.h \
 BlobHeader.h BlobArrayHeader.h BlobOStream.h BlobIStream.h BlobArray.h \
 BlobIBuffer.h BlobIBufStream.h BlobOBuffer.h BlobOBufStream.h \
 BlobIBufChar.h BlobIBufVector.h BlobOBufChar.h BlobOBufVector.h \
+BlobOBufString.h BlobIBufString.h BlobOBufNull.h \
 LofarTypedefs.h LofarTypes.h TypeNames.h DataFormat.h DataConvert.h \
+KeyValue.h KeyValueMap.h \
 Debug.h \
 Exception.h \
 Net/Socket.h \
+Thread.h \
 Thread/Thread.h \
 Thread/Key.h \
 Thread/Mutex.h \
@@ -16,17 +19,17 @@ Thread/Condition.h \
 Thread/SmartLock.h \
 Stopwatch.h \
 CheckConfig.h \
-Lorrays.h \
-Lorrays-Blitz.h \
+Lorrays.h Lorrays-Blitz.h blitz_array-impl.h BlitzToAips.h \
 Lonumerics.h \
 lofar_iostream.h				\
+lofar_fstream.h					\
 lofar_strstream.h				\
 lofar_algorithm.h				\
+lofar_deque.h					\
 lofar_list.h					\
 lofar_vector.h					\
 lofar_complex.h					\
 lofar_map.h					\
-lofar_fstream.h					\
 lofar_stack.h					\
 lofar_iosfwd.h					\
 lofar_string.h					\
@@ -48,9 +51,10 @@ lib_LTLIBRARIES 	= libcommon.la
 libcommon_la_SOURCES 	= \
 Allocator.cc BlobStringType.cc BlobString.cc \
 BlobOStream.cc BlobIStream.cc BlobArray.cc \
-BlobIBufStream.cc BlobOBufStream.cc BlobOBufString.cc \
+BlobIBufStream.cc BlobOBufStream.cc BlobOBufString.cc BlobOBufNull.cc \
 BlobIBufChar.cc BlobOBufChar.cc \
 TypeNames.cc DataConvert.cc \
+KeyValue.cc KeyValueMap.cc \
 Debug.cc \
 Exception.cc \
 Stopwatch.cc \
@@ -60,8 +64,6 @@ Thread/SmartLock.cc \
 Profiling/PerfProfile.cc
 
 libcommon_la_LIBADD	= shmem/libshmem.la
-
-EXTRA_DIST = assay
 
 bin_PROGRAMS		= LimitExec
 LimitExec_SOURCES	= LimitExec.c
