@@ -14,7 +14,7 @@ CXXFLAGS += \
 	-DMORECORE_CANNOT_TRIM=1 \
 	-DSHMEM_ALLOC
 
-check_PROGRAMS			= Example TestBidirectional ExampleMem ExampleBlMem ExamplePL ExamplePL2 ExamplePL3 ExamplePL4 ExampleShMem ExampleMPI ExampleSocket ExampleSocketPerf 
+check_PROGRAMS			= Example TestBidirectional ExampleMem ExampleBlMem ExamplePL ExamplePL2 ExamplePL3 ExamplePL4 ExampleShMem ExampleMPI ExampleSocket ExampleSocketPerf tTH_Socket
 
 Example_SOURCES 		= Example.cc DH_Example.cc
 
@@ -40,11 +40,12 @@ ExampleSocketPerf_SOURCES	= ExampleSocketPerf.cc DH_Example.cc StopWatch.cc
 
 TestBidirectional_SOURCES 	= TestBidirectional.cc DH_Example.cc
 
+tTH_Socket_SOURCES 			= tTH_Socket.cc DH_Socket.cc
+tTH_Socket_LDADD 			= ../src/libtransport.la
+tTH_Socket_DEPENDENCIES 	= ../src/libtransport.la $(LOFAR_DEPEND)
+
 LDADD				= ../src/libtransport.la 
 DEPENDENCIES			= ../src/libtransport.la $(LOFAR_DEPEND)
-
-#Example_LDADD 			= ../src/libcepframe.la
-#Example_DEPENDENCIES		= ../src/libcepframe.la $(LOFAR_DEPEND)
 
 TESTS_ENVIRONMENT		= top_srcdir=$(top_srcdir) \
 				  lofar_sharedir=$(lofar_sharedir) \
@@ -62,7 +63,8 @@ TESTS	=					\
 	ExamplePL4_test.sh			\
 	ExampleShMem_test.sh			\
 	ExampleMPI_test.sh			\
-	ExampleSocket_test.sh
+	ExampleSocket_test.sh		\
+	tTH_Socket_test.sh
 
 
 include $(lofar_sharedir)/Makefile.common
