@@ -42,7 +42,7 @@ NOINSTHDRS =
 TCCHDRS = \
 BlobHeader.tcc BlobArray.tcc TypeNames.tcc
 
-include_HEADERS = $(INSTHDRS) $(TCCHDRS)
+pkginclude_HEADERS = $(INSTHDRS) $(TCCHDRS)
 
 noinst_HEADERS = $(NOINSTHDRS)
 
