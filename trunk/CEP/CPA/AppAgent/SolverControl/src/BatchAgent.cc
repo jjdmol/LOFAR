@@ -24,6 +24,8 @@
 
 namespace SolverControl {
 
+using namespace AppState;
+
 //##ModelId=3DFF2CCD01A1
 BatchAgent::BatchAgent(const HIID &initf)
     : SolverControlAgent(initf)

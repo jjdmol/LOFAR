@@ -30,6 +30,20 @@
 #pragma aidgroup SolverControl
 #pragma aid Start End Stop Iteration Solution Solver Control Message Convergence 
 #pragma aid Next Step Domain Num All Params Solved Index
+
+namespace AppState
+{
+  // define additional control states for the solver
+  //##ModelId=3E00AA5100D5
+  typedef enum
+  {
+    NEXT_SOLUTION  = 0x100,   // should go on to next solution
+    NEXT_DOMAIN    = 0x101,   // should go on to next domain
+
+  }
+  ExtraSolverControlStates;
+};
+
     
 namespace SolverControl {
 
@@ -75,17 +89,6 @@ const HIID
     //    Solution parameters (in status record)
     FSolutionParams     = AidSolution|AidParams;
     
-// define additional control states for the solver
-//##ModelId=3E00AA5100D5
-typedef enum
-{
-  NEXT_SOLUTION  = 0x100,   // should go on to next solution
-  NEXT_DOMAIN    = 0x101,   // should go on to next domain
-      
-}
-SolutionStates;
-
-
 //##ModelId=3DFF2B6D01FF
 //##Documentation
 //## This is an abstract prototype class for solver control agents. It
@@ -157,13 +160,13 @@ class SolverControlAgent : public AppControlAgent
     //## the given event on behalf of the application. The current status 
     //## record will be attached to the event. If a message is supplied,
     //## it will be placed into the status record as [FMessage].
-    void stopSolution (const string &msg = "", int newstate = NEXT_DOMAIN,
+    void stopSolution (const string &msg = "", int newstate = AppState::NEXT_SOLUTION,
                         const HIID &event = StopSolutionEvent );
     
     //##ModelId=3E00650B036F
     //## Alias for stopSolution(msg,newstate,EndSolutionEvent)
     //## Meant to be called to end a successful (i.e. converged) solution
-    void endSolution  (const string &msg = "", int newstate = NEXT_SOLUTION)
+    void endSolution  (const string &msg = "", int newstate = AppState::NEXT_SOLUTION)
     { stopSolution(msg,newstate,EndSolutionEvent); }
     
     //##ModelId=3DFF37F3018B

@@ -69,7 +69,7 @@ class InputAgent : public AppEventAgentBase
     //##          WAIT      header has not yet arrived (only for wait=False)
     //##          CLOSED    stream closed
     //##          OUTOFSEQ  next object in stream is not a header (i.e. a tile)
-      virtual int getHeader   (DataRecord::Ref &hdr,int wait = AppEventSink::WAIT);
+      virtual int getHeader   (DataRecord::Ref &hdr,int wait = AppEvent::WAIT);
   
     //##ModelId=3DF9FECF03A9
     //##Documentation
@@ -79,7 +79,7 @@ class InputAgent : public AppEventAgentBase
     //##          WAIT      a tile has not yet arrived (only for wait=False)
     //##          CLOSED    stream closed
     //##          OUTOFSEQ  next object in stream is not a tile (i.e. a header)
-      virtual int getNextTile (VisTile::Ref &tile,int wait = AppEventSink::WAIT);
+      virtual int getNextTile (VisTile::Ref &tile,int wait = AppEvent::WAIT);
       
     //##ModelId=3DF9FED0005A
     //##Documentation
@@ -115,7 +115,7 @@ class InputAgent : public AppEventAgentBase
     //## obliged to implement this. Control agents are meant to use this method
     //## in combination with suspend()/resume() to control the data flow. 
       virtual int  numPendingTiles ()
-      { return hasTile() == SUCCESS ? 1 : 0; }
+      { return hasTile() == AppEvent::SUCCESS ? 1 : 0; }
       
     //##ModelId=3E41141D029F
       virtual string sdebug(int detail = 1, const string &prefix = "", const char *name = 0) const;

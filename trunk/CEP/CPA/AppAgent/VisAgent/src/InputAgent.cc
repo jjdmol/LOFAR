@@ -1,6 +1,8 @@
 #include "InputAgent.h"
 
 namespace VisAgent {
+
+using namespace AppEvent;
   
 static int dum = aidRegistry_VisAgent();
     

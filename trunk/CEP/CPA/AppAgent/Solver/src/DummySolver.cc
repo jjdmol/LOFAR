@@ -25,7 +25,7 @@ void DummySolver::run ()
     // second loop over solve jobs. Each call to startSoltion
     // returns a different set of params and the code RUNNING; once all sets 
     // have been run through, the return code is NEXT_DOMAIN.
-    while( control().startSolution(params) == AppControlAgent::RUNNING )
+    while( control().startSolution(params) == AppState::RUNNING )
     {
       cdebug(1)<< "startSolution: "<<params->sdebug(3)<<endl;
       cdebug(3)<< sdebug(3) <<endl;
@@ -38,7 +38,7 @@ void DummySolver::run ()
         converge /= 10;
         niter++;
       }
-      while( control().endIteration(converge) == AppControlAgent::RUNNING );
+      while( control().endIteration(converge) == AppState::RUNNING );
       // endIteration() will return RUNNING as long as you still need
       // to iterate. Once the solution has converged (or the max iter count is
       // exceeded), it returns NEXT_SOLUTION (if more jobs are scheduled)
