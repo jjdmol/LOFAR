@@ -36,12 +36,8 @@
 # include <qglobal.h>
 #else
 using LOFAR::TYPES::uchar;
-# if !defined(_SYS_TYPES_H) || !defined(__USE_MISC)
-using LOFAR::TYPES::ushort;
-using LOFAR::TYPES::uint;
-using LOFAR::TYPES::ulong;
-# endif
-#endif // QT
+# include <sys/types.h>
+#endif
 using LOFAR::TYPES::longlong;
 using LOFAR::TYPES::ulonglong;
 using LOFAR::TYPES::ldouble;
