@@ -81,7 +81,7 @@ class VisInputAgent : public virtual AppAgent
     //##Documentation
     //## generated when a data set ends   
       static const HIID & EndDataEvent ()  { return VisAgentVocabulary::EndDataEvent; }
-    //##ModelId=3DF9FECF02EB    
+    //##ModelId=3DF9FECF02EB
     //##Documentation
     //## generated when an error occurs
       static const HIID & InputErrorEvent ()  { return VisAgentVocabulary::InputErrorEvent; }

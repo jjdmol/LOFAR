@@ -23,10 +23,8 @@
 #define AIPSPP_HOOKS
 #include <MSVisAgent/MSVisInputAgent.h>
 #include <Common/BlitzToAips.h>
-#include <UVD/UVD.h>
 #include <DMI/AIPSPP-Hooks.h>
 
-using namespace UVD;
 using namespace MSVisAgentVocabulary;
 
 #include <aips/MeasurementSets/MSAntenna.h>
@@ -71,7 +69,6 @@ void MSVisInputAgent::fillHeader (DataRecord &hdr,const DataRecord &select)
   hdr[FSelection] <<= new DataRecord(select,DMI::DEEP|DMI::READONLY);
   
   // get phase reference from FIELD subtable
-  // just use the first field for now
   {
     MSField mssub(ms_.field());
     ROMSFieldColumns mssubc(mssub);
@@ -94,20 +91,14 @@ void MSVisInputAgent::fillHeader (DataRecord &hdr,const DataRecord &select)
     hdr[FChannelFreq]  = mssubc.chanFreq()(spw);
     hdr[FChannelWidth] = mssubc.chanWidth()(spw);
     num_channels_ = hdr[FChannelFreq].size();
-    // now get the correlations
+    // now get the correlations & their types
     int polzn = mssub1c.polarizationId()(ddid);
     MSPolarization mssub2(ms_.polarization());
     ROMSPolarizationColumns mssub2c(mssub2);
     num_corrs_ = mssub2c.numCorr()(polzn);
     hdr[FCorr] = mssub2c.corrType()(spw);
-// Commented out: do this check elsewhere!
-// So far, only equal frequency spacings are possible.
-//    if (! allEQ (chanWidth, chanWidth(0))) {
-//      throw AipsError("Channels must have equal spacings");
-//    }
   }
   // get antenna positions from ANTENNA subtable
-  // inputs: ant1 and ant2: LoVecs of antenna numbers
   {
     MSAntenna          mssub(ms_.antenna());
     ROMSAntennaColumns mssubc(mssub);
@@ -136,7 +127,7 @@ void MSVisInputAgent::openMS (DataRecord &header,const DataRecord &select)
   // figure out max ifr index
   num_ifrs_ = ifrNumber(num_antennas_-1,num_antennas_-1) + 1;
   
-  // We only handle the given field & data desc id, and antennas.
+  // We only handle the given field & data desc id
   TableExprNode expr = ( ms_.col("FIELD_ID")==fieldid && ms_.col("DATA_DESC_ID") == ddid );
   selms_ = ms_(expr);
   
@@ -197,14 +188,15 @@ bool MSVisInputAgent::init (const DataRecord::Ref &data)
 
     setFileState(HEADER);
   }
-  catch( std::exception &exc )
-  {
-    setErrorState(exc.what());
-    return False;
-  }
+//  catch( std::exception &exc )
+//  {
+//    setErrorState(exc.what());
+//    return False;
+//  }
   catch( AipsError &err )
   {
-    setErrorState("AIPS++ error: "+err.getMesg());
+    Throw("AIPS++ error: "+string(err.getMesg()));
+//    setErrorState("AIPS++ error: "+err.getMesg());
     return False;
   }
   return True;
@@ -214,10 +206,11 @@ bool MSVisInputAgent::init (const DataRecord::Ref &data)
 void MSVisInputAgent::close ()
 {
   // close & detach from everything
-  initHeader();
+  initHeader();  // empties the header
   selms_ = MeasurementSet();
   ms_ = MeasurementSet();
   tiles_.clear();
+  tileformat_.detach();
   setFileState(CLOSED);
 }
 

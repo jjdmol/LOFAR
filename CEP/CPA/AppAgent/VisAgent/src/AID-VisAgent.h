@@ -15,7 +15,7 @@ const int AidData_int = -1107;
 #endif
 #ifndef _defined_id_AidEnd
 #define _defined_id_AidEnd 1
-const AtomicID AidEnd(-1131);                     // from /home/oms/LOFAR/CEP/CPA/AppAgent/VisAgent/src/VisInputAgent.h:32
+const AtomicID AidEnd(-1131);                     // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/VisAgent/src/VisAgent.aidlist:2
 const int AidEnd_int = -1131;
 #endif
 #ifndef _defined_id_AidError
@@ -30,12 +30,12 @@ const int AidEvent_int = -1060;
 #endif
 #ifndef _defined_id_AidHave
 #define _defined_id_AidHave 1
-const AtomicID AidHave(-1132);                    // from /home/oms/LOFAR/CEP/CPA/AppAgent/VisAgent/src/VisInputAgent.h:32
+const AtomicID AidHave(-1132);                    // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/VisAgent/src/VisAgent.aidlist:5
 const int AidHave_int = -1132;
 #endif
 #ifndef _defined_id_AidHeader
 #define _defined_id_AidHeader 1
-const AtomicID AidHeader(-1133);                  // from /home/oms/LOFAR/CEP/CPA/AppAgent/VisAgent/src/VisInputAgent.h:32
+const AtomicID AidHeader(-1133);                  // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/VisCube/src/VisCube.aidlist:30
 const int AidHeader_int = -1133;
 #endif
 #ifndef _defined_id_AidInput
@@ -50,27 +50,27 @@ const int AidMessage_int = -1067;
 #endif
 #ifndef _defined_id_AidOutput
 #define _defined_id_AidOutput 1
-const AtomicID AidOutput(-1130);                  // from /home/oms/LOFAR/CEP/CPA/AppAgent/VisAgent/src/VisInputAgent.h:32
+const AtomicID AidOutput(-1130);                  // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/VisAgent/src/VisAgent.aidlist:9
 const int AidOutput_int = -1130;
 #endif
 #ifndef _defined_id_AidVis
 #define _defined_id_AidVis 1
-const AtomicID AidVis(-1116);                     // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/VisAgent/src/VisAgent.aidlist:1
+const AtomicID AidVis(-1116);                     // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/VisAgent/src/VisAgent.aidlist:10
 const int AidVis_int = -1116;
 #endif
 #ifndef _defined_id_AidVisAgent
 #define _defined_id_AidVisAgent 1
-const AtomicID AidVisAgent(-1113);                // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/VisAgent/src/VisAgent.aidlist:2
+const AtomicID AidVisAgent(-1113);                // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/VisAgent/src/VisAgent.aidlist:11
 const int AidVisAgent_int = -1113;
 #endif
 #ifndef _defined_id_AidVisInputAgent
 #define _defined_id_AidVisInputAgent 1
-const AtomicID AidVisInputAgent(-1115);           // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/VisAgent/src/VisAgent.aidlist:3
+const AtomicID AidVisInputAgent(-1115);           // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/VisAgent/src/VisAgent.aidlist:12
 const int AidVisInputAgent_int = -1115;
 #endif
 #ifndef _defined_id_AidVisOutputAgent
 #define _defined_id_AidVisOutputAgent 1
-const AtomicID AidVisOutputAgent(-1114);          // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/VisAgent/src/VisAgent.aidlist:4
+const AtomicID AidVisOutputAgent(-1114);          // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/VisAgent/src/VisAgent.aidlist:13
 const int AidVisOutputAgent_int = -1114;
 #endif
 
