@@ -1,0 +1,9 @@
+#!/bin/sh
+
+psql -h dop50 -U postgres test << _EOF_ > tAtrr1_tmp.psql_out 2>&1
+\i ../../../test/PO_tAttr1.sql
+\q
+_EOF_
+
+# Let tAttr1 fill the db.
+./tAttr1 1
