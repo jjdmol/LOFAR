@@ -1,0 +1,10 @@
+These are the drivers used in the MAC software. These currently consist of 
+
+spid.o : a Simple Parallel (Port) Interrupt Driver kernel module.
+
+The aviary-spid kernel module allows us to connect the distibuted clock
+board to the parallel port of a normal pc. This is used to generate a
+trigger which is distributed over the connected Twin Input Module
+(TIM) boards.
+
+Tilman Muller <tilman.mueller@ordina.nl>
