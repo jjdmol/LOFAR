@@ -1,0 +1,96 @@
+common_top_builddir=@common_top_builddir@
+
+CFLAGS += \
+	-DUSE_PUBLIC_MALLOC_WRAPPERS \
+	-DUSE_DL_PREFIX \
+	-DHAVE_MMAP=0 \
+	-DMORECORE=shmbrk \
+	-DMORECORE_CONTIGUOUS=0 \
+	-DMORECORE_CANNOT_TRIM=1 \
+	-DSHMEM_ALLOC
+
+CXXFLAGS += \
+	-DUSE_PUBLIC_MALLOC_WRAPPERS \
+	-DUSE_DL_PREFIX \
+	-DHAVE_MMAP=0 \
+	-DMORECORE=shmbrk \
+	-DMORECORE_CONTIGUOUS=0 \
+	-DMORECORE_CANNOT_TRIM=1 \
+	-DSHMEM_ALLOC
+
+check_PROGRAMS			= Example 		\
+				  Simulator_Example	\
+				  Tester		\
+				  tSAXSimulParser	\
+				  tParamBlock		\
+				  shmem_alloc1		\
+				  shmem_alloc2		\
+				  CyclicBufferTest	\
+				  tmat
+
+Example_SOURCES 		= Example.cc
+Simulator_Example_SOURCES	= Simulator_Example.cc Simulator_Example.h
+Tester_SOURCES			= Tester.cc
+tSAXSimulParser_SOURCES		= tSAXSimulParser.cc
+tParamBlock_SOURCES		= tParamBlock.cc
+tmat_SOURCES			= tmat.cc
+shmem_alloc1_SOURCES		= shmem_alloc1.cc
+shmem_alloc2_SOURCES		= shmem_alloc2.cc
+CyclicBufferTest_SOURCES	= CyclicBufferTest.cc
+
+
+LDADD				= ../src/libbasesim.la
+DEPENDENCIES			= ../src/libbasesim.la $(LOFAR_DEPEND)
+
+CyclicBufferTest_LDADD		= ../src/libbasesim.la -lpthread
+CyclicBufferTest_DEPENDENCIES	= ../src/libbasesim.la $(LOFAR_DEPEND) -lpthread
+
+#Example_LDADD 			= ../src/libbasesim.la
+#Example_DEPENDENCIES		= ../src/libbasesim.la $(LOFAR_DEPEND)
+#Simulator_Example_LDADD	= ../src/libbasesim.la
+#Simulator_Example_DEPENDENCIES	= ../src/libbasesim.la $(LOFAR_DEPEND)
+#Tester_LDADD			= ../src/libbasesim.la
+#Tester_DEPENDENCIES		= ../src/libbasesim.la $(LOFAR_DEPEND)
+#tSAXSimulParser_LDADD		= ../src/libbasesim.la
+#tSAXSimulParser_DEPENDENCIES	= ../src/libbasesim.la $(LOFAR_DEPEND)
+#tParamBlock_LDADD		= ../src/libbasesim.la
+#tParamBlock_DEPENDENCIES	= ../src/libbasesim.la $(LOFAR_DEPEND)
+
+TESTS_ENVIRONMENT		= top_srcdir=$(top_srcdir) \
+				  lofar_sharedir=$(lofar_sharedir) \
+				  common_top_builddir=$(common_top_builddir)
+
+TESTS	=					\
+	Example_test.sh				\
+	Simulator_Example_test.sh		\
+	Tester_test.sh				\
+	tSAXSimulParser_test.sh			\
+	tParamBlock_test.sh			\
+	tmat_test.sh				\
+	shmem_alloc1.sh				\
+	shmem_alloc2.sh				\
+	CyclicBufferTest.sh
+
+EXTRA_DIST = 					\
+	Example_test.sh				\
+	Example.out				\
+	Simulator_Example.in			\
+	Simulator_Example.out			\
+	Simulator_Example_test.sh		\
+	Tester.out				\
+	Tester_test.sh				\
+	tSAXSimulParser.in			\
+	tSAXSimulParser_test.sh			\
+	tSAXSimulParser.out			\
+	tParamBlock_test.sh			\
+	tParamBlock.out				\
+	tmat_test.sh				\
+	shmem_alloc1.sh				\
+	shmem_alloc2.sh				\
+	CyclicBufferTest.sh			\
+	runtest.sh				\
+	cleanipc				\
+	checkipc
+
+
+include $(lofar_sharedir)/Makefile.common
