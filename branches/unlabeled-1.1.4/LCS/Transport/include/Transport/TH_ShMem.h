@@ -89,12 +89,6 @@ public:
 
   virtual void waitForSent(void* buf, int nbytes, int tag);
 
-  // Read the total message length of the next message.
-  virtual void readTotalMsgLengthBlocking(int tag, int& nrBytes);
-
-  // Read the total message length of the next message.
-  virtual bool readTotalMsgLengthNonBlocking(int tag, int& nrBytes);
-
   /// Get the type of transport.
   virtual string getType() const;
 
