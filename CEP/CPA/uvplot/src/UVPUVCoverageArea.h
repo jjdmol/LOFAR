@@ -36,7 +36,6 @@ class UVPUVCoverageArea : public UVPDisplayArea
 
   // Just a pointer. The datastructure is managed by an external object
   const UVPImageCube* itsCurrentImage;
-  QImage*               itsCurrentQImage;
 };
 
 
