@@ -118,6 +118,84 @@ int main()
 	Assert (vec(i) == double(i));
       }
     }
+
+    {
+      const int n1=2;
+      const int n2=3;
+      const int n3=4;
+      LoMat_double mat1(n1,n2);
+      Assert (mat1.rows() == n1);
+      Assert (mat1.cols() == n2);
+      LoMat_double mat2(n2,n3);
+      int k = 0;
+      for (int j=0; j<n2; j++) {
+	for (int i=0; i<n1; i++) {
+	  mat1(i,j) = k++;
+	}
+	for (int i=0; i<n3; i++) {
+	  mat2(j,i) = k++;
+	}
+      }
+      LoMat_double mat3 = LCSMath::matMult (mat1, mat2);
+      LoMat_double mat4(n1,n3);
+      mat4 = sum(mat1(blitz::tensor::i, blitz::tensor::k) *
+		 mat2(blitz::tensor::k, blitz::tensor::j),
+		 blitz::tensor::k);
+      Assert (mat3.extent(0) == n1);
+      Assert (mat3.extent(1) == n3);
+      Assert (mat4.extent(0) == n1);
+      Assert (mat4.extent(1) == n3);
+      for (int i=0; i<n3; i++) {
+	for (int j=0; j<n1; j++) {
+	  Assert (mat3(j,i) == mat4(j,i));
+	}
+      }
+    }
+    {
+      const int n1=20;
+      const int n2=30;
+      const int n3=40;
+      LoMat_double mat1(n1,n2);
+      LoMat_double mat2(n2,n3);
+      int k = 0;
+      for (int j=0; j<n2; j++) {
+	for (int i=0; i<n1; i++) {
+	  mat1(i,j) = k++;
+	}
+	for (int i=0; i<n3; i++) {
+	  mat2(j,i) = k++;
+	}
+      }
+      Stopwatch timer;
+      for (int i=0; i<1000; i++) {
+	LoMat_double mat3 = LCSMath::matMult (mat1, mat2);
+      }
+      cout << "1000x MatMult -10 " << timer.sdelta() << endl;
+    }
+    {
+      const int n1=20;
+      const int n2=30;
+      const int n3=40;
+      LoMat_double mat1(n1,n2);
+      LoMat_double mat2(n2,n3);
+      int k = 0;
+      for (int j=0; j<n2; j++) {
+	for (int i=0; i<n1; i++) {
+	  mat1(i,j) = k++;
+	}
+	for (int i=0; i<n3; i++) {
+	  mat2(j,i) = k++;
+	}
+      }
+      Stopwatch timer;
+      for (int i=0; i<1000; i++) {
+	LoMat_double mat4(n1,n3);
+	mat4 = sum(mat1(blitz::tensor::i, blitz::tensor::k) *
+		   mat2(blitz::tensor::k, blitz::tensor::j),
+		   blitz::tensor::k);
+      }
+      cout << "1000x Blitz Mult  " << timer.sdelta() << endl;
+    }
   } catch (...) {
     cout << "Unexpected exception" << endl;
     return 1;
