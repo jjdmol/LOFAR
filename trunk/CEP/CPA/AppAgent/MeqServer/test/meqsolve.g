@@ -8,32 +8,47 @@ include 'quanta.g'
 # the name, separated by dots.
 const fq_name := function (name,...) 
 {
-  return paste(name,...,sep='.');
+  res := name;
+  for( i in 1:num_args(...) )
+  {
+    q := nth_arg(i,...);
+    if( !is_string(q) || q )
+      res := paste(res,q,sep='.');
+  }
+  return res;
 }
 
+# creates common nodes:
+#   'ra0' 'dec0':       phase center
+const create_common_parms := function (ra0,dec0)
+{
+  mqs.createnode(meq.parm('ra0',ra0));
+  mqs.createnode(meq.parm('dec0',dec0));
+}
 
 # creates all source-related nodes and subtrees:
 #   'stokesI':          flux
 #   'ra' 'dec':         source position
-#   'ra0' 'dec0':       phase center
 #   'lmn','n':          LMN coordinates, N coordinate
-const create_source_subtrees := function (sti,ra,dec,ra0,dec0)
+# src specifies the source suffix ('' for none)
+const create_source_subtrees := function (sti,ra,dec,src='')
 {
   # meq.parm(), meq.node() return init-records
   # mqs.createnode() actually creates a node from an init-record.
   
-  mqs.createnode(meq.parm('stokes_i',sti,groups="a"));
+  mqs.createnode(meq.parm(fq_name('stokes_i',src),sti,groups="a"));
   # note the nested-record syntax here, to create child nodes implicitly
-  mqs.createnode(meq.node('MeqLMN','lmn',children=[
-                  ra_0  =meq.parm('ra0',ra0),
-                  dec_0 =meq.parm('dec0',dec0),
-                  ra    =meq.parm('ra',ra,groups="a"),
-                  dec   =meq.parm('dec',dec,groups="a")]));
-  mqs.createnode(meq.node('MeqSelector','n',[index=3],children="lmn"));
+  mqs.createnode(meq.node('MeqLMN',fq_name('lmn',src),children=[
+                  ra_0  ='ra0',
+                  dec_0 ='dec0',
+                  ra    =meq.parm(fq_name('ra',src),ra,groups="a"),
+                  dec   =meq.parm(fq_name('dec',src),dec,groups="a")]));
+  mqs.createnode(meq.node('MeqSelector',fq_name('n',src),[index=3],
+                            children=fq_name("lmn",src)));
 }
 
 # builds an init-record for a "dft" tree for one station (st)
-const sta_dft_tree := function (st)
+const sta_dft_tree := function (st,src='')
 {
   global ms_antpos; # station positions from MS
   global mepuvw;    # MEP table with UVWs
@@ -73,31 +88,44 @@ const sta_dft_tree := function (st)
     
   # builds an init-rec for a node called 'dft.N' with two children: 
   # lmn and uvw.N
-  return meq.node('MeqStatPointSourceDFT',fq_name('dft',st),[link_or_create=T],children=[
-              lmn = 'lmn',uvw = uvw ]);
+  return meq.node('MeqStatPointSourceDFT',fq_name('dft',src,st),[link_or_create=T],children=[
+              lmn = fq_name('lmn',src),uvw = uvw ]);
 }
 
-# builds an init-record for a "dft" tree for two stations (st1,st2)
-const ifr_predict_tree := function (st1,st2)
+# builds an init-record for a "dft" tree for source 'src' and two stations (st1,st2)
+const ifr_source_predict_tree := function (st1,st2,src='')
 {
-  return meq.node('MeqMultiply',fq_name('predict',st1,st2),children=meq.list(
-      'stokes_i',
+  return meq.node('MeqMultiply',fq_name('predict',src,st1,st2),children=meq.list(
+      fq_name('stokes_i',src),
       meq.node('MeqPointSourceDFT',fq_name('dft',st1,st2),children=[
-               st_dft_1 = sta_dft_tree(st1),
-               st_dft_2 = sta_dft_tree(st2),
-               n = 'n' ] ) ));
+               st_dft_1 = sta_dft_tree(st1,src),
+               st_dft_2 = sta_dft_tree(st2,src),
+               n = fq_name('n',src) ] ) ));
+}
+
+# builds an init-record for a sum of "dft" trees for all sources and st1,st2
+const ifr_predict_tree := function (st1,st2,src=[''])
+{
+  if( len(src) == 1 )
+    return ifr_predict_tree(st1,st2,src);
+  list := dmi.list();
+  for( s in src ) 
+    dmi.add_list(list,ifr_predict_tree(st1,st2,s));
+  return meq.node('MeqAdd',fq_name('predict',st1,st2),children=list);
 }
 
 # creates nodes shared among trees: source parms, array center (x0,y0,z0)
-const make_shared_nodes := function (stokesi=1,dra=0,ddec=0)
+const make_shared_nodes := function (stokesi=1,dra=0,ddec=0,src=[''])
 {
   global ms_phasedir;
   ra0  := ms_phasedir[1];  # phase center
   dec0 := ms_phasedir[2];
   # setup source parameters and subtrees
-  ra   := ra0 + dra;
-  dec  := dec0 + ddec;
-  create_source_subtrees(stokesi,ra,dec,ra0,dec0);
+  create_common_parms(ra0,dec0);
+  for( i in 1:len(src) ) {
+    print src[i];
+    print create_source_subtrees(stokesi[i],ra0+dra[i],dec0+ddec[i],src[i]);
+  }
   # setup zero position
   global ms_antpos;
   names := "x0 y0 z0";
@@ -106,24 +134,31 @@ const make_shared_nodes := function (stokesi=1,dra=0,ddec=0)
 }
 
 # builds a predict tree for stations st1, st2
-const make_predict_tree := function (st1,st2)
+const make_predict_tree := function (st1,st2,src=[''])
 {
   sinkname := fq_name('sink',st1,st2);
-  
+  if( len(src) == 1 )
+    pred := ifr_predict_tree(st1,st2,src);
+  else 
+  {
+    list := dmi.list();
+    for( s in src ) 
+      dmi.add_list(list,ifr_predict_tree(st1,st2,s));
+    pred := meq.node('MeqAdd',fq_name('predict',st1,st2),children=list);
+  }
   # create a sink
   mqs.createnode(meq.node('MeqSink',sinkname,
                          [ output_col      = 'PREDICT',   # init-rec for sink
                            station_1_index = st1,
                            station_2_index = st2,
-                           corr_index      = [1] ],
-                            children=meq.list(       # meq.list() builds a list
-                            ifr_predict_tree(st1,st2))));
-  
+                           corr_index      = [1] ],children=dmi.list(
+                            ifr_predict_tree(st1,st2,src)
+                           )));
   return sinkname;
 }
 
 # builds a read-predict-subtract tree for stations st1, st2
-const make_subtract_tree := function (st1,st2)
+const make_subtract_tree := function (st1,st2,src=[''])
 {
   sinkname := fq_name('sink',st1,st2);
   
@@ -144,7 +179,7 @@ const make_subtract_tree := function (st1,st2)
             station_2_index=st2,
             input_column='DATA'])
         )),
-        ifr_predict_tree(st1,st2)
+        ifr_predict_tree(st1,st2,src)
       ))
     ))
   );
@@ -153,10 +188,10 @@ const make_subtract_tree := function (st1,st2)
 
 
 # builds a solve tree for stations st1, st2
-const make_solve_tree := function (st1,st2,subtract=F)
+const make_solve_tree := function (st1,st2,src=[''],subtract=F)
 {
   sinkname := fq_name('sink',st1,st2);
-  predtree := ifr_predict_tree(st1,st2);
+  predtree := ifr_predict_tree(st1,st2,src);
   predname := predtree.name;
   mqs.createnode(predtree);
   
@@ -334,10 +369,10 @@ const do_test := function (predict=F,subtract=F,solve=F,run=T,
   else # else build trees
   {  
     # create common nodes (source parms and such)
-    dra :=  2 * pi/(180*60*60); # perturb position by # seconds
-    ddec := 2 * pi/(180*60*60);
+    dra :=  30 * pi/(180*60*60); # perturb position by # seconds
+    ddec := 30 * pi/(180*60*60);
 #    dra := ddec := 0;
-    make_shared_nodes(1.1,dra,ddec);
+    make_shared_nodes(src_sti,src_dra,src_ddec,src_names);
 
     # make a solver node (since it's only one)
     if( solve )
@@ -351,15 +386,18 @@ const do_test := function (predict=F,subtract=F,solve=F,run=T,
       rec := meq.node('MeqSolver','solver',[
           parm_group = hiid("a"),
           default    = [ num_iter=10,save_polcs=F,last_update=F ],
-          solvable   = meq.solvable_list("stokes_i ra dec") ],
+          solvable   = meq.solvable_list("stokes_i.a ra.a dec.a stokes_i.b ra.b dec.b") ],
         children=condeqs);
       mqs.createnode(rec);
     }
     if( publish>0 )
     {
-      mqs.meq('Node.Publish.Results',[name="ra"]);
-      mqs.meq('Node.Publish.Results',[name="dec"]);
-      mqs.meq('Node.Publish.Results',[name="stokes_i"]);
+      for( s in src_names )
+      {
+        mqs.meq('Node.Publish.Results',[name=fq_name("ra",s)]);
+        mqs.meq('Node.Publish.Results',[name=fq_name("dec",s)]);
+        mqs.meq('Node.Publish.Results',[name=fq_name("stokes_i",s)]);
+      }
     }
     rootnodes := [];
     # make predict/condeq trees
@@ -369,19 +407,20 @@ const do_test := function (predict=F,subtract=F,solve=F,run=T,
         {
           if( solve )
           {
-            rootnodes := [rootnodes,make_solve_tree(st1,st2,subtract=subtract)];
+            rootnodes := [rootnodes,make_solve_tree(st1,st2,src=src_names,subtract=subtract)];
             if( publish>1 )
               mqs.meq('Node.Publish.Results',[name=fq_name('ce',st1,st2)]);
           }
           else if( subtract )
-            rootnodes := [rootnodes,make_subtract_tree(st1,st2)];
+            rootnodes := [rootnodes,make_subtract_tree(st1,st2,src_names)];
           else
-            rootnodes := [rootnodes,make_predict_tree(st1,st2)];
+            rootnodes := [rootnodes,make_predict_tree(st1,st2,src_names)];
           if( publish>2 )
             mqs.meq('Node.Publish.Results',[name=fq_name('predict',st1,st2)]);
         }
     # resolve children on all root nodes
-    print 'Root nodes are: ',rootnodes;
+#    print 'Root nodes are: ',rootnodes;
+    print "Resolving root nodes";
     for( r in rootnodes )
       mqs.resolve(r);
   }
@@ -391,7 +430,7 @@ const do_test := function (predict=F,subtract=F,solve=F,run=T,
   
   # get a list of nodes
   nodelist := mqs.getnodelist(children=T);
-  print 'Nodes: ',nodelist.name;
+  # print 'Nodes: ',nodelist.name;
   
   # enable publishing of solver results
   if( solve && publish>0 )
@@ -411,6 +450,12 @@ msname := 'test.ms';
 mepuvw := T;
 filluvw := F;
 
+src_dra  := [0,128] + 10 * pi/(180*60*60); # perturb positions by # seconds
+src_ddec := [0,128] + 10 * pi/(180*60*60);
+src_sti  := [1,1]   + 0.1;
+src_names := "a b";
+
+
 # fill UVW parms from MS if requested
 if( mepuvw )
 {
@@ -428,8 +473,10 @@ outputrec := [ write_flags=F,predict_column=outcol ];
 
 #do_test(predict=T,run=T,st1set=1,st2set=2,publish=2);
 # do_test(solve=T,run=T,st1set=1,st2set=1,publish=2);
+
 do_test(msname=msname,solve=T,subtract=F,run=T,
-  st1set=1:2,st2set=1:100,
+  st1set=[1:20]*4,st2set=[1:20]*4,
+#  st1set=1:100,st2set=1:100,
   publish=1,mepuvw=mepuvw,msuvw=msuvw);
 #do_test(solve=T,run=T,publish=2,load='solve-100.forest');
 
