@@ -81,7 +81,8 @@ int Parm::initDomain (const Domain& domain, int spidIndex)
     Polc polc;
     if (itsTable) {
       polc = itsTable->getInitCoeff (itsName);
-    } else {
+    }
+    if (polc.ncoeff() == 0) {
       polc.setCoeff (itsDefault);
       polc.setSimCoeff (itsDefault);
       polc.setPertSimCoeff (Vells(0.));
