@@ -35,9 +35,10 @@ PACKAGES = \
          DMI \
          BaseSim \
          LOFARSim \
-         CEP/Tools/PerfTest/P2Perf
-#         CEP/CPA/PSCF \
-#         CEP/Demo/Platform/RingSim \
+         StationSim \
+         CEP/Tools/PerfTest/P2Perf \
+         CEP/CPA/OCTOPUSSY \
+         CEP/CPA/UVD
 #
 
 # Find all variants to be built for this host (without possible domain).
