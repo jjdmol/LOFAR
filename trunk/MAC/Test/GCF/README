@@ -1,6 +1,0 @@
-Using: Application<1|2>
-
-Precondition:
-- The ServiceBroker, PropertAgent and PropertyInterface of GCF are running (see README in GCF)
-- be sure log4cplus.properties, Application1.conf, Application2.conf, RTPing, RTEcho, RTPing.conf and RTEcho.conf are in the same path as the test applications
-- Load DPType's and DP's before starting the test apps by: PVSS00api -in src/gcftesttypes.dpl -proj <proj>

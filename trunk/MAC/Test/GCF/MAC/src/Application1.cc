@@ -57,6 +57,8 @@ GCFEvent::TResult Application::initial(GCFEvent& e, GCFPortInterface& /*p*/)
   switch (e.signal)
   {
     case F_INIT:
+      system("killall RTPing");
+      system("killall RTEcho");
       NEXT_TEST(1_1, "Port connection, one client, one server");
       break;
 
@@ -208,7 +210,7 @@ GCFEvent::TResult Application::test2_1(GCFEvent& e, GCFPortInterface& p)
       GCFPropSetAnswerEvent* pResponse = (GCFPropSetAnswerEvent*)(&e);
       if (TESTC(pResponse))
       {
-        TESTC(strcmp(pResponse->pScope, _propertySetA1.getScope().c_str()) == 0);
+        TESTC(strcmp(pResponse->pScope, _propertySetA1.getFullScope().c_str()) == 0);
         TESTC(pResponse->result == GCF_NO_ERROR);
       }
       TESTC(&p == &_supTask1.getPort());
@@ -247,7 +249,7 @@ GCFEvent::TResult Application::test2_2(GCFEvent& e, GCFPortInterface& p)
       GCFPropSetAnswerEvent* pResponse = (GCFPropSetAnswerEvent*)(&e);
       if (TESTC(pResponse))
       {
-        TESTC(strcmp(pResponse->pScope, _propertySetA1.getScope().c_str()) == 0);
+        TESTC(strcmp(pResponse->pScope, _propertySetA1.getFullScope().c_str()) == 0);
         TESTC(pResponse->result == GCF_NO_ERROR);
       }
       TESTC(&p == &_supTask1.getPort());
@@ -284,7 +286,7 @@ GCFEvent::TResult Application::test2_3(GCFEvent& e, GCFPortInterface& p)
       GCFPropSetAnswerEvent* pResponse = (GCFPropSetAnswerEvent*)(&e);
       if (TESTC(pResponse))
       {
-        TESTC(strcmp(pResponse->pScope, _propertySetB1.getScope().c_str()) == 0);
+        TESTC(strcmp(pResponse->pScope, _propertySetB1.getFullScope().c_str()) == 0);
         TESTC(pResponse->result == GCF_NO_ERROR);
       }
       TESTC(&p == &_supTask1.getPort());
@@ -336,21 +338,21 @@ GCFEvent::TResult Application::test2_5(GCFEvent& e, GCFPortInterface& p)
         TESTC(pResponse->result == GCF_NO_ERROR);
         if (strcmp(pResponse->pScope, "A_B") == 0)
         {
-          TESTC(strcmp(pResponse->pScope, _propertySetA1.getScope().c_str()) == 0);
+          TESTC(strcmp(pResponse->pScope, _propertySetA1.getFullScope().c_str()) == 0);
           TESTC(&p == &_supTask1.getPort());
           TESTC(_propertySetA1.isEnabled());
           TESTC_DESCR(GCFPVSSInfo::propExists("A_B__enabled"), "may fail");
         }
         else if (strcmp(pResponse->pScope, "A_D") == 0)
         {
-          TESTC(strcmp(pResponse->pScope, _propertySetB2.getScope().c_str()) == 0);
+          TESTC(strcmp(pResponse->pScope, _propertySetB2.getFullScope().c_str()) == 0);
           TESTC(&p == &_supTask2.getPort());
           TESTC(_propertySetB2.isEnabled());
           TESTC_DESCR(GCFPVSSInfo::propExists("A_D__enabled"), "may fail");
         }
         else if (strcmp(pResponse->pScope, "A_E") == 0)
         {
-          TESTC(strcmp(pResponse->pScope, _propertySetB3.getScope().c_str()) == 0);
+          TESTC(strcmp(pResponse->pScope, _propertySetB3.getFullScope().c_str()) == 0);
           TESTC(&p == &_supTask2.getPort());
           TESTC(_propertySetB3.isEnabled());
           TESTC_DESCR(GCFPVSSInfo::propExists("A_E__enabled"), "may fail");
@@ -378,28 +380,28 @@ GCFEvent::TResult Application::test2_5(GCFEvent& e, GCFPortInterface& p)
         TESTC(pResponse->result == GCF_NO_ERROR);
         if (strcmp(pResponse->pScope, "A_B") == 0)
         {
-          TESTC(strcmp(pResponse->pScope, _propertySetA1.getScope().c_str()) == 0);
+          TESTC(strcmp(pResponse->pScope, _propertySetA1.getFullScope().c_str()) == 0);
           TESTC(&p == &_supTask1.getPort());
           TESTC(!_propertySetA1.isEnabled());
           TESTC_DESCR(!GCFPVSSInfo::propExists("A_B__enabled"), "may fail");
         }
         else if (strcmp(pResponse->pScope, "A_C") == 0)
         {
-          TESTC(strcmp(pResponse->pScope, _propertySetB1.getScope().c_str()) == 0);
+          TESTC(strcmp(pResponse->pScope, _propertySetB1.getFullScope().c_str()) == 0);
           TESTC(&p == &_supTask1.getPort());
           TESTC(!_propertySetB1.isEnabled());
           TESTC_DESCR(!GCFPVSSInfo::propExists("A_C__enabled"), "may fail");
         }
         else if (strcmp(pResponse->pScope, "A_D") == 0)
         {
-          TESTC(strcmp(pResponse->pScope, _propertySetB2.getScope().c_str()) == 0);
+          TESTC(strcmp(pResponse->pScope, _propertySetB2.getFullScope().c_str()) == 0);
           TESTC(&p == &_supTask2.getPort());
           TESTC(!_propertySetB2.isEnabled());
           TESTC_DESCR(!GCFPVSSInfo::propExists("A_D__enabled"), "may fail");
         }
         else if (strcmp(pResponse->pScope, "A_E") == 0)
         {
-          TESTC(strcmp(pResponse->pScope, _propertySetB3.getScope().c_str()) == 0);
+          TESTC(strcmp(pResponse->pScope, _propertySetB3.getFullScope().c_str()) == 0);
           TESTC(&p == &_supTask2.getPort());
           TESTC(!_propertySetB3.isEnabled());
           TESTC_DESCR(!GCFPVSSInfo::propExists("A_E__enabled"), "may fail");
@@ -449,7 +451,7 @@ GCFEvent::TResult Application::test3_4(GCFEvent& e, GCFPortInterface& p)
       GCFPropSetAnswerEvent* pResponse = (GCFPropSetAnswerEvent*)(&e);
       if (TESTC(pResponse))
       {
-        TESTC(strcmp(pResponse->pScope, _propertySetXX.getScope().c_str()) == 0);
+        TESTC(strcmp(pResponse->pScope, _propertySetXX.getFullScope().c_str()) == 0);
         TESTC(pResponse->result != GCF_NO_ERROR);
       }
       TESTC(&p == &_supTask1.getPort());
@@ -482,7 +484,7 @@ GCFEvent::TResult Application::test4_1(GCFEvent& e, GCFPortInterface& p)
       GCFPropSetAnswerEvent* pResponse = (GCFPropSetAnswerEvent*)(&e);
       if (TESTC(pResponse))
       {
-        TESTC(strcmp(pResponse->pScope, _propertySetB1.getScope().c_str()) == 0);
+        TESTC(strcmp(pResponse->pScope, _propertySetB1.getFullScope().c_str()) == 0);
         TESTC(pResponse->result == GCF_NO_ERROR);
       }
       TESTC(&p == &_supTask1.getPort());
@@ -542,7 +544,7 @@ GCFEvent::TResult Application::test4_3(GCFEvent& e, GCFPortInterface& /*p*/)
       GCFPropSetAnswerEvent* pResponse = (GCFPropSetAnswerEvent*)(&e);
       if (TESTC(pResponse))
       {
-        TESTC(strcmp(pResponse->pScope, _ePropertySetAC.getScope().c_str()) == 0);
+        TESTC(strcmp(pResponse->pScope, _ePropertySetAC.getFullScope().c_str()) == 0);
         TESTC(pResponse->result == GCF_NO_ERROR);
       }
             
@@ -564,7 +566,7 @@ GCFEvent::TResult Application::test4_3(GCFEvent& e, GCFPortInterface& /*p*/)
       GCFPropSetAnswerEvent* pResponse = (GCFPropSetAnswerEvent*)(&e);
       if (TESTC(pResponse))
       {
-        TESTC(strcmp(pResponse->pScope, _ePropertySetAC.getScope().c_str()) == 0);
+        TESTC(strcmp(pResponse->pScope, _ePropertySetAC.getFullScope().c_str()) == 0);
         TESTC(pResponse->result == GCF_NO_ERROR);
       }
             
@@ -609,7 +611,7 @@ GCFEvent::TResult Application::test5_1(GCFEvent& e, GCFPortInterface& /*p*/)
       GCFPropSetAnswerEvent* pResponse = (GCFPropSetAnswerEvent*)(&e);
       if (TESTC(pResponse))
       {
-        TESTC(strcmp(pResponse->pScope, _propertySetE1.getScope().c_str()) == 0);
+        TESTC(strcmp(pResponse->pScope, _propertySetE1.getFullScope().c_str()) == 0);
         TESTC(pResponse->result == GCF_NO_ERROR);
       }
                   
@@ -622,7 +624,7 @@ GCFEvent::TResult Application::test5_1(GCFEvent& e, GCFPortInterface& /*p*/)
       GCFPropSetAnswerEvent* pResponse = (GCFPropSetAnswerEvent*)(&e);
       if (TESTC(pResponse))
       {
-        TESTC(strcmp(pResponse->pScope, _propertySetE1.getScope().c_str()) == 0);
+        TESTC(strcmp(pResponse->pScope, _propertySetE1.getFullScope().c_str()) == 0);
         TESTC(pResponse->result == GCF_NO_ERROR);
       }      
       TESTC_ABORT_ON_FAIL(_ePropertySetAL.isLoaded());
@@ -633,7 +635,7 @@ GCFEvent::TResult Application::test5_1(GCFEvent& e, GCFPortInterface& /*p*/)
     {
       GCFConfAnswerEvent* pResponse = (GCFConfAnswerEvent*)(&e);
       TESTC_ABORT_ON_FAIL(pResponse);
-      TESTC(strcmp(pResponse->pScope, _propertySetE1.getScope().c_str()) == 0);
+      TESTC(strcmp(pResponse->pScope, _propertySetE1.getFullScope().c_str()) == 0);
       TESTC(strcmp(pResponse->pApcName, "e1") == 0);
       TESTC_ABORT_ON_FAIL(pResponse->result == GCF_NO_ERROR);
 
@@ -1152,7 +1154,7 @@ GCFEvent::TResult Application::test7_1(GCFEvent& e, GCFPortInterface& /*p*/)
       GCFPropSetAnswerEvent* pResponse = (GCFPropSetAnswerEvent*)(&e);
       if (pResponse->result != GCF_NO_ERROR)
       {
-        if (strcmp(pResponse->pScope, "B_A_BRD1") == 0)
+        if (strcmp(pResponse->pScope, "LCU1:B_A_BRD1") == 0)
         {
           TESTC_ABORT_ON_FAIL(_ePropertySetBRD1.load() == GCF_NO_ERROR);
         }

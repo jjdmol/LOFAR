@@ -18,7 +18,7 @@ libgcftest_la_SOURCES= $(libgcftest_la_DOCHDRS) \
  	Answer.cc \
  	TST_Protocol.cc
 
-bin_PROGRAMS   		= Application1 Application2
+bin_PROGRAMS   		= Application1 Application2 Application3
   
 Application1_SOURCES		    = Application1.cc
 Application1_LDADD		      = libgcftest.la 
@@ -27,6 +27,10 @@ Application1_DEPENDENCIES		= libgcftest.la $(LOFAR_DEPEND)
 Application2_SOURCES		    = Application2.cc
 Application2_LDADD		      = libgcftest.la 
 Application2_DEPENDENCIES		= libgcftest.la $(LOFAR_DEPEND)
+
+Application3_SOURCES		    = Application3.cc
+Application3_LDADD		      = libgcftest.la 
+Application3_DEPENDENCIES		= libgcftest.la $(LOFAR_DEPEND)
 
 BUILT_SOURCES = \
 	TST_Protocol.ph \
@@ -43,6 +47,7 @@ configfilesdir=$(bindir)
 configfiles_DATA= \
 	Application1.conf \
 	Application2.conf \
+	Application3.conf \
 	mac.log_prop \
 	customPrepPVSSDB.ctl
 
