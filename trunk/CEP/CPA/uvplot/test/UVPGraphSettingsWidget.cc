@@ -179,11 +179,11 @@ void UVPGraphSettingsWidget::setNumberOfFields(unsigned int numberOfFields)
   for(unsigned int i = 0; i < numberOfFields; i++) {
     std::ostringstream num;
     num << i + 1;
-#if QT_VERSION > 300
-    itsFieldSelections.push_back(new QCheckBox(num.str(), this));
-#else
+    //#if QT_VERSION > 300
+    //    itsFieldSelections.push_back(new QCheckBox(num.str(), this));
+    //#else
     itsFieldSelections.push_back(new QCheckBox(num.str().c_str(), this));
-#endif
+    //#endif
     itsFieldLayout->addWidget(itsFieldSelections[i]);
     itsFieldSelections[i]->toggle();
     itsSettings.setPlotField(i, true);
