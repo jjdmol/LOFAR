@@ -1,32 +1,22 @@
 #Gnuplot script file for displaying the P2Perf output
-#call with:
-# call "plot_bandwidth" "<filename>"  0  500
-#                                                          ^  ^  min and max bandwidth bin
 #
-set xlabel "log10(Data packet size)"
+
+set xlabel "Data packet size (Bytes)"
 set ylabel "bandwidth [MByte/s]"
 
 # Set the terminal type for file output
-#set terminal gif medium
-#set output "$0.gif"
-set terminal postscript
-set output "$0.ps"
-
-set title "$0"
-set multiplot
-plot [][$1:$2] "$0.out" using 2:3 notitle w p pt 1 
-plot [][$1:$2] "$0.out" using 2:5 notitle w p pt 2
-plot [][$1:$2] "$0.out" using 2:7 notitle w p pt 3 
-plot [][$1:$2] "$0.out" using 2:9 notitle w p pt 4 
-set nomultiplot
-
-#Now, make a sceen plot
-#set terminal windows
 set terminal x11
-set output
-set multiplot
-plot [][$1:$2] "$0.out" using 2:3 notitle w p pt 1 
-plot [][$1:$2] "$0.out" using 2:5 notitle w p pt 2
-plot [][$1:$2] "$0.out" using 2:7 notitle w p pt 3
-plot [][$1:$2] "$0.out" using 2:9 notitle w p pt 4
-set nomultiplot
+
+set title ""
+set logscale x
+set data style points
+
+set autoscale
+
+plot [100:1000000][0:] "lofar17" using 1:3,\
+     "lofar13" using 1:3, \
+     "lofar6" using 1:3, \
+     "hpclf1" using 1:3
+
+pause -1
+
