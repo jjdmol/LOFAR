@@ -28,6 +28,8 @@
 //# Includes
 #include <tinyCEP/WorkHolder.h>
 #include <tinyCEP/TinyApplicationHolder.h>
+#include <Transport/TH_Socket.h>
+
 
 //# include definitions for simulation size etc.
 #include <BlueGeneCorrelator/definitions.h>
@@ -48,13 +50,14 @@ namespace LOFAR
     virtual void quit();
     
   private:
-    WorkHolder* itsWHs[NCorr];
+    WorkHolder* itsWHs[1];
     int         itsWHcount;
     bool        itsInput;
     int         itsPort;
     int         itsRank;
     
-
+    TH_Socket* proto_input;
+    TH_Socket* proto_output;
   };
 
 } // namespace LOFAR

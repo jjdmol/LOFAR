@@ -20,8 +20,8 @@
 //#
 //# $Id$
 
-#ifndef BLUEGENEDEMO_WH_CORRELATE_H
-#define BLUEGENEDEMO_WH_CORRELATE_H
+#ifndef BG_CORRELATOR_WH_CORRELATE_H
+#define BG_CORRELATOR_WH_CORRELATE_H
 
 #include <lofar_config.h>
 #include <Common/lofar_complex.h>
@@ -70,14 +70,15 @@ public:
   virtual void dump();
 
 private:
-  static const int itsNelements = NSTATIONS;  // number of stations/inputs
-  static const int itsNsamples  = SAMPLES;    // number of time samples to integrate over
-  static const int itsNchannels = CHANNELS;   // number of selected freq. channels to correlate
+  static const int itsNelements = NSTATIONS;   // number of stations/inputs
+  static const int itsNsamples  = NSAMPLES;    // number of time samples to integrate over
+  static const int itsNchannels = NCHANNELS;   // number of selected freq. channels to correlate
 
   int myrank;
+  int mysize;
 
-  complex<float> signal[itsNelements][itsNsamples][itsNchannels] ;
-  complex<float> corr  [itsNelements][itsNelements][itsNchannels] ;
+  complex<float> sig_buf [itsNchannels][itsNelements][itsNsamples] ;
+  complex<float> corr_buf[itsNchannels][itsNelements][itsNelements] ;
    
   /// Forbid copy constructor.
   WH_Correlate (const WH_Correlate&);
@@ -86,14 +87,14 @@ private:
   WH_Correlate& operator= (const WH_Correlate&);
 
   // main correlator routine
-  void correlator_core(complex<float> signal[NSTATIONS][SAMPLES], 
-		       complex<float> corr[NSTATIONS][NSTATIONS]);
+  void correlator_core(complex<float> signal_buffer[itsNelements][itsNsamples],
+		       complex<float> corr_buffer[itsNelements][itsNelements]); 
 
   // correlator core (unrolled)
-  void correlator_core_unrolled(complex<float> s[NSTATIONS][SAMPLES],
-  				complex<float> c[NSTATIONS][NSTATIONS]);
+  void correlator_core_unrolled(complex<float> s[NSTATIONS][NSAMPLES],
+				complex<float> c[NSTATIONS][NSTATIONS]);
 
-  void master();
+		       void master();
   void slave(const int rank);
     
   int itsFBW; // frequency bandwidth of the DH_Beamlet 

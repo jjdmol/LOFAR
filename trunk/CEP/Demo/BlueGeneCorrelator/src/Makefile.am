@@ -1,4 +1,4 @@
-bin_PROGRAMS	= BlueGeneCorrelator BlueGeneFrontEnd
+bin_PROGRAMS	=  BlueGeneCorrelator BlueGeneFrontEnd
 
 DOCHDRS 	=				\
 DH_CorrCube.h					\

@@ -58,7 +58,7 @@ void DH_Vis::preprocess()
   postprocess();
 
   // Determine the number of bytes needed for DataPacket and buffer.
-  itsBufSize = NSTATIONS * NSTATIONS; // * sizeof(BufferType);
+  itsBufSize = NSTATIONS * NSTATIONS * NCHANNELS; // * sizeof(BufferType);
 //   unsigned int size = sizeof(DataPacket) + itsBufSize;
 //   char* ptr = new char[size];
 //   // Fill in the data packet pointer and initialize the memory.
@@ -71,6 +71,7 @@ void DH_Vis::preprocess()
 //   setDataPacket (itsDataPacket, size);
   addField("Buffer", BlobField<BufferType>(1, itsBufSize));
   createDataBlock();
+  itsBuffer = getData<BufferType> ("Buffer");
   for (unsigned int i=0; i<itsBufSize; i++) {
     itsBuffer[i] = 0;
   }
