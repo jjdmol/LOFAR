@@ -249,8 +249,21 @@ bool MSFiller::addChunk (const DataRecord &rec)
   int ddi = ddimap[corrtype];
   
   // add rows to MS
+  // (count up record rows not flagged as missing)
+  int nadd;
+  if( rec[FRowFlag].exists() )
+  {
+    int sz;
+    const int *pfl = rec[FRowFlag].as_int_p(sz),*pend = pfl+sz;
+    FailWhen(sz!=nrows,"Mismatch in size of "+FRowFlag.toString()+" column");
+    for( nadd=0; pfl != pend; pfl++ )
+      if( *pfl != FlagMissing )
+        nadd++;
+  }
+  else
+    nadd = nrows;
   int irow = ms_.nrow();
-  ms_.addRow(nrows);
+  ms_.addRow(nadd);
   
   // setup pointers to data and flags
   const dcomplex *pdata = &rec[FData];
@@ -279,8 +292,16 @@ bool MSFiller::addChunk (const DataRecord &rec)
   Matrix<Double> uvw = rec[FUVW].as_Array_double();
 
   // loop over all rows in the chunk
-  for( int i=0; i<nrows; i++,irow++ )
+  for( int i=0; i<nrows; i++ )
   {
+    // skip row completely if missing data
+    if( rowflag[i] == FlagMissing )
+    {
+      pdata += num_channels;
+      if( pflag )
+        pflag += num_channels;
+      continue;
+    }
     // build data and flag vectors
     if( pflag )
     {
@@ -330,6 +351,7 @@ bool MSFiller::addChunk (const DataRecord &rec)
                   const_cast<float*>(psigma),SHARE));
       psigma += num_channels;
     }
+    irow++;
   }
   return True;
   //## end MSFiller::addChunk%3CEB5E3E00C6.body

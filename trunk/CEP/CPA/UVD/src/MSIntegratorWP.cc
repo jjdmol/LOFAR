@@ -205,6 +205,7 @@ bool MSIntegratorWP::initMS (const Message &msg,MeasurementSet &ms)
   (*shrec)[FFieldName] = string();
   (*shrec)[FNumIntTimes] <<= new DataField(Tpint,num_ifrs);
   (*shrec)[FUVW] <<= new DataArray(TpArray_double,IPosition(2,3,num_ifrs));
+  (*shrec)[FRowFlag] <<= new DataField(Tpint,num_ifrs);
 
   pexp = &(*shrec)[FExposure];
   pnumtimes = &(*shrec)[FNumIntTimes];  
@@ -217,8 +218,8 @@ bool MSIntegratorWP::initMS (const Message &msg,MeasurementSet &ms)
     {
       int ifr = UVD::ifrNumber(a1,a2);
       pifr[ifr] = ifr;
-      pant[ifr*2] = a1;
-      pant[ifr*2+1] = a2;
+      pant[ifr*2] = a2;
+      pant[ifr*2+1] = a1;
     }
 
   return True;
@@ -352,12 +353,17 @@ void MSIntegratorWP::finishIntegration (bool reset)
   (*shrec)[FTimeSlotIndex] = integrated_timeslot;
   // average IFR-based data (exposures and UVW coordinates)
   for( int ifr=0; ifr < num_ifrs; ifr++ )
+  {
     if( pnumtimes[ifr] )
     {
       pexp[ifr] /= pnumtimes[ifr];
       for( int j=0; j<3; j++ )
         puvw[ifr*3+j] /= pnumtimes[ifr];
+      (*shrec)[FRowFlag][ifr] = 0;
     }
+    else
+      (*shrec)[FRowFlag][ifr] = FlagMissing;
+  }
   //  send off chunks for each patch and correlation
   int num_points = num_ifrs*num_integrated_channels;
   int iacc=0;
