@@ -122,8 +122,8 @@ int main(int argc, const char* argv[])
   for (UsedMap::const_iterator iter = depPtr->begin();
        iter != depPtr->end();
        iter++) {
-    if (iter->second.itsNused == 0) {
+    //    if (iter->second.itsNused == 0) {
       writeDep (iter->first, *depPtr, "", 0, maxdepth);
-    }
+      //    }
   }
 }
