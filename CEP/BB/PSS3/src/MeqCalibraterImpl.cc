@@ -677,7 +677,7 @@ void MeqCalibrater::resetIterator()
 // Set the request belonging to that.
 //
 //----------------------------------------------------------------------
-bool MeqCalibrater::nextInterval()
+bool MeqCalibrater::nextInterval(bool callInitParms)
 {
   itsCurRows.resize(0);
   // Exit when no more chunks.
@@ -711,7 +711,10 @@ bool MeqCalibrater::nextInterval()
   itsSolveDomain = MeqDomain(timeStart, timeStart + nrtim*timeStep,
 			     itsStartFreq + itsFirstChan*itsStepFreq,
 			     itsStartFreq + (itsLastChan+1)*itsStepFreq);
-  initParms (itsSolveDomain);
+  if (callInitParms) {
+    initParms (itsSolveDomain);
+  }
+
   itsSolveColName = itsDataColName;
   return true;
 }
