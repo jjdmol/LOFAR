@@ -32,7 +32,7 @@ CTRLparams=[
 
 KSparams=[
   MSName="demo3p-",        // Name of the Measurement Set
-  DBHost="dop50",          // Parameter database host name
+  DBHost="dop50.astron.nl",// Parameter database host name
   DBType="aips",           // Parameter database type
   DBPwd="",                // Parameter database password
   meqTableName="demo3-",     // Meq model table name *       

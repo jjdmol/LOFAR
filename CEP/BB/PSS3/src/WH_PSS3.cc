@@ -129,7 +129,7 @@ void WH_PSS3::process()
   string skyModel = itsArgs.getString("skyTableName", "skymodel") + itsNr;
   string dbType = itsArgs.getString("DBType", "postgres");
   string dbName = itsArgs.getString("DBName", "test");
-  string dbHost = itsArgs.getString("DBHost", "dop50");
+  string dbHost = itsArgs.getString("DBHost", "dop50.astron.nl");
   string dbPwd = itsArgs.getString("DBPwd", "");
 
   vector<int> antennas =                                   // Should this be a KS parameter?

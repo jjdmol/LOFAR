@@ -64,7 +64,7 @@ int main (int argc, const char** argv)
     KSparams["MSName"] = "/data/meijeren/10Sources/demo10-"; // Name of the Measurement Set
                                                    // Currently each KS takes its own MS: KS1 takes <MSName>1
                                                    // (here: demo10-1,) KS3 takes <MSName>3 (demo10-3) etc.
-    KSparams["DBHost"] = string("dop50");          // Parameter database host name
+    KSparams["DBHost"] = string("dop50.astron.nl");// Parameter database host name
     KSparams["DBType"] = string("postgres");       // Parameter database type
     KSparams["DBName"] = string("meijeren");       // Parameter database name
     KSparams["DBPwd"] = string("");                // Parameter database password
