@@ -48,7 +48,6 @@ Transporter::Transporter(const Transporter& that, BaseDataHolder* dataHolder)
   : itsBaseDataHolder  (dataHolder),
     itsTransportHolder (0),
     itsID              (that.itsID),
-    itsNode            (that.itsNode),
     itsReadTag         (that.itsReadTag),
     itsWriteTag        (that.itsWriteTag),
     itsStatus          (that.itsStatus),
@@ -114,14 +113,14 @@ bool Transporter::read()
     {
       result = getTransportHolder()->recvBlocking(getDataPtr(),
 						  getDataPacketSize(),
-						  1, // getNode ()
+						  getSourceAddr()->getNode(),
 						  getReadTag());
     }
     else
     {
       result = getTransportHolder()->recvNonBlocking(getDataPtr(),
 						     getDataPacketSize(),
-						     1, // getNode ()
+						     getSourceAddr()->getNode(),
 						     getReadTag());
     }      
     setStatus(Transporter::Clean);
@@ -143,14 +142,14 @@ void Transporter::write()
     {
       getTransportHolder()->sendBlocking(getDataPtr(),
 					 getDataPacketSize(),
-					 1, // getNode ()
+					 getTargetAddr()->getNode(),
 					 getWriteTag());
     }
     else
     {
       getTransportHolder()->sendNonBlocking(getDataPtr(),
 					    getDataPacketSize(),
-					    1, // getNode ()
+					    getTargetAddr()->getNode(),
 					    getWriteTag());
     }
     setStatus(Transporter::Dirty);

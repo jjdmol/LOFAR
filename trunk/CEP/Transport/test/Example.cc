@@ -52,7 +52,7 @@ int main()
   //  TR2.setSourceAddr(15);
   
   // connect DH1 to DH2
-  TR2.connectTo(&TR1, TH_Mem::proto);
+  TR1.connectTo(&TR2, TH_Mem::proto);
     
   // initialize the TransportHolders and DataHolders
   TR1.init();

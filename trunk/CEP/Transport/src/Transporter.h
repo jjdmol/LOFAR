@@ -138,9 +138,6 @@ private:
   // ID of this Transporter
   int itsID;
   
-  // The node where this data is running.
-  int itsNode;
-  
   // The tag used for MPI send/receive.
   int itsReadTag;
 
@@ -167,11 +164,6 @@ private:
 
 inline void Transporter::setItsID (int aID)
   { itsID = aID; }
-
-#if 0
-inline void Transporter::setItsOutNode (int aNode)
-  { itsOutNode = aNode; }
-#endif
 
 inline int Transporter::getItsID()  const
   { return itsID; } 
