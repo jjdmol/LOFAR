@@ -30,13 +30,7 @@
 
 #include <exception>
 #include <string>
-#include <iosfwd>
-
-//# GCC 2.95.x does not declare ostringstream in iosfwd, 
-//# so we must include sstream here :-(
-#if defined(__GNUC__) && (__GNUC__ < 3)
 #include <sstream>
-#endif
 
 
 namespace LCS {
@@ -49,14 +43,6 @@ namespace LCS {
   public:
     Exception(const std::string& text, const std::string& file="",
 	      int line=0, const std::string& func="");
-
-    // This constructor was added to support the THROW macro below.
-    // Otherwise THROW would have to convert the stringstream to
-    // a string, using the member function str(), thus forcing us
-    // to include <sstream> in this header file (or forcing the user
-    // of the THROW macro to include <sstream>).
-    Exception(const std::ostringstream& oss, const std::string& file="",
-	      int line=0, const std::string& func=""); 
 
     virtual ~Exception() throw();
 
@@ -152,7 +138,9 @@ public: \
 //
 #define THROW(excp,strm) \
 { \
-  throw excp(strm,__HERE__); \
+  std::ostringstream oss; \
+  oss << strm; \
+  throw excp(oss.str(),__HERE__); \
 }
 
 //@}
