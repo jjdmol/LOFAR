@@ -24,6 +24,7 @@
 #define GCF_DEFINES_H
 
 #include <LofarLogger/LofarLogger.h>
+#include <assert.h>
 
 #define GCF_PROP_NAME_SEP     '_'
 
