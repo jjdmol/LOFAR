@@ -61,7 +61,25 @@ private:
 };
 
 
-class U : public Function
+class UVWFunc : public Function
+{
+public:
+  UVWFunc();
+
+  virtual ~UVWFunc();
+
+  // Get the result for the given request.
+  void makeResult (Result::Ref &resref, const Request&, const Result& res);
+
+  // Check and convert the children.
+  void checkChildren();
+
+protected:
+  UVW* itsUVW;
+};
+
+
+class U : public UVWFunc
 {
 public:
   U();
@@ -70,16 +88,10 @@ public:
 
   // Get the result for the given request.
   virtual int getResultImpl (Result::Ref &resref, const Request&, bool newReq);
-
-  // Check and convert the children.
-  void checkChildren();
-
-private:
-  UVW* itsUVW;
 };
 
 
-class V : public Function
+class V : public UVWFunc
 {
 public:
   V();
@@ -88,16 +100,10 @@ public:
 
   // Get the result for the given request.
   virtual int getResultImpl (Result::Ref &resref, const Request&, bool newReq);
-
-  // Check and convert the children.
-  void checkChildren();
-
-private:
-  UVW* itsUVW;
 };
 
 
-class W : public Function
+class W : public UVWFunc
 {
 public:
   W();
@@ -106,12 +112,6 @@ public:
 
   // Get the result for the given request.
   virtual int getResultImpl (Result::Ref &resref, const Request&, bool newReq);
-
-  // Check and convert the children.
-  void checkChildren();
-
-private:
-  UVW* itsUVW;
 };
 
 
