@@ -23,7 +23,7 @@ rec_add_BCA()
 	echo "public:"
 	echo "	void operator()(BoundsIO& cols, ${Class}& rowbuf) {"
 	# get all 'basic' members of the class
-	grep ^$Class $TMPFILE | grep "::" | while read line
+	grep ^$Class ${TMPFILE} | grep "::" | while read line
 	do
 		ColName=`echo $line | cut -d":" -f5`
 		Member=`echo $line | cut -d":" -f4`
@@ -39,7 +39,7 @@ rec_add_BCA()
 rec_add_insert_routine()
 {
 	Class=$1
-	Table=`grep ^$Class $TMPFILE | head -1 | cut -d":" -f2`
+	Table=`grep ^$Class ${TMPFILE} | head -1 | cut -d":" -f2`
 
 	echo "//"
 	echo "// Routine for insert this ${Class} object in the database."
@@ -59,12 +59,12 @@ rec_add_search_routine()
 {
 	Class=$1
 	Clause=$2
-	Table=`grep ^$Class $TMPFILE | head -1 | cut -d":" -f2`
+	Table=`grep ^$Class ${TMPFILE} | head -1 | cut -d":" -f2`
 
 	echo "vector<${Class}> read_${Class}() {"
 	echo "	vector<${Class}> 		results;"
 	echo "	DBView<${Class}>			view(\"${Table}\", ${Class}_BCA(),"
-	echo "								\"$1\");"
+	echo "								\"${Clause}\");"
 	echo "	DBView<${Class}>::select_iterator	read_iter = view.begin();\n"
 	echo "	for ( ; read_iter != view.end(); ++read_iter) {"
 	echo "		results.push_back(*read_iter);"
@@ -74,27 +74,23 @@ rec_add_search_routine()
 }
 
 #
-# rec_add_update_routine
+# rec_add_update_routine class clause
 #
 rec_add_update_routine()
 {
 	Class=$1
 	Clause=$2
-	Table=`grep ^$Class $TMPFILE | head -1 | cut -d":" -f2`
+	Table=`grep ^$Class ${TMPFILE} | head -1 | cut -d":" -f2`
 
 	echo "//"
 	echo "// Routine for updating this ${Class} object in the database."
 	echo "//"
 	echo "void update_${Class}(${Class}&	theRecord) {"
-	echo "	DBView<${Class}, ${Class}_PAR>"
-	echo "			view(\"${Table}\", ${Class}_BCA(),"
-	echo "			\"$1\", ${Class}_PAR());"
-	echo "	DBView<${Class}, ${Class}_PAR>::update_iterator	upd_iter = view;"
+	echo "	DBView<${Class}>			view(\"${Table}\", ${Class}_BCA(),"
+	echo "								\"${Clause}\");"
+	echo "	DBView<${Class}>::update_iterator	upd_iter = view;"
 	echo ""
-	echo "	// Setup the selection parameters"
-	echo "	upd_iter.Params().??? = ???;"
-	echo ""
-	echo " // update the database"
+	echo "	// update the database"
 	echo "	*upd_iter=*theRecord;"
 	echo "}\n"
 }
@@ -106,7 +102,7 @@ rec_add_update_routine()
 tpo_add_generic_structures()
 {
 	# define a struct with the PO fields and the DataObj fields
-	echo "// --------------- generic DTL strucures -----------------------"
+	echo "// --------------- generic DTL structures -----------------------"
 	echo "// The Persistency Layer uses an ObjectID to unique identify"
 	echo "// an object. This field can be used in queries to update"
 	echo "// or delete an object. Since the ObjectID is the same for"
@@ -132,6 +128,44 @@ tpo_add_generic_structures()
 }
 
 #
+# tpo_add_header_info class
+#
+tpo_add_header_info()
+{
+	Class=$1
+
+	# construct a headerfile for all the methods and members of the TPO
+	echo "template<>"
+	echo "void TPO<${Class}>::toDatabaseRep(${Class}_DTL	&dest) const;"
+	echo ""
+	echo "template<>"
+	echo "void TPO<${Class}>::fromDatabaseRep(const ${Class}_DTL	&org);"
+	echo ""
+
+	cleanlist $FUNFILE | grep ^${Class} | while read theClass theAction rest
+	do
+		echo "template<>"
+		typeset -u theAction=${theAction}
+		case $theAction in
+		I)	echo "void TPO<${Class}>::insert(const long			theState,"
+			;;
+		D)	echo "void TPO<${Class}>::erase(const long			theState,"
+			;;
+		U)	echo "void TPO<${Class}>::update(const long			theState,"
+			;;
+		S)	echo "void TPO<${Class}>::search(const long			theState,"
+			;;
+		*)	echo "Unknown function >$function< for class ${Class} in file ${FUNFILE}" >&2
+			;;
+		esac
+	
+		echo "							const ObjectId		theParent,"
+		echo "							const SQLTimeStamp	theTime);"
+		echo ""
+	done
+}
+
+#
 # tpo_add_BCA class
 #
 tpo_add_BCA()
@@ -151,7 +185,7 @@ tpo_add_BCA()
 	echo "	SQLTimeStamp	Timestamp;"
 
 	# add all 'basic' members of the DataObj
-	grep ^$Class $TMPFILE | grep "::" | while read line
+	grep ^$Class ${TMPFILE} | grep "::" | while read line
 	do
 		MemType=`echo $line | cut -d":" -f3`
 		Member=`echo $line | cut -d":" -f4`
@@ -171,7 +205,7 @@ tpo_add_BCA()
 	echo "		cols[\"Timestamp\"]	== rowbuf.Timestamp;"
 
 	# add all 'basic' members of the class
-	grep ^$Class $TMPFILE | grep "::" | while read line
+	grep ^$Class ${TMPFILE} | grep "::" | while read line
 	do
 		ColName=`echo $line | cut -d":" -f5`
 		Member=`echo $line | cut -d":" -f4`
@@ -180,6 +214,138 @@ tpo_add_BCA()
 
 	echo "	}"
 	echo "}\n"
+}
+
+#
+# tpo_add_to_X_DTL class 
+#
+# Adds code that copies the values from the real data-objects and the
+# persistency object to a local xxx_DTL class.
+#
+tpo_add_to_X_DTL() 
+{
+	Class=$1
+
+	echo ""
+	echo "// toDatabaseRep copies the fields of the persistency layer"
+	echo "// and of the ${Class} class to the given ${Class}_DTL structure"
+
+	echo "template<>"
+	echo "void TPO<${Class}>::toDatabaseRep(${Class}_DTL	&dest) const"
+	echo "{"
+	echo "	// copy info of the ${Class} to the ${Class}_DTL class"
+	echo "	// First copy the PO part"
+	echo "	dest->Oid		= itsOid;"
+	echo "	dest->Parent	= itsParent;"
+	echo "	dest->Timestamp	= itsTime;"
+	echo ""
+	echo "	// Finally copy the info from ${Class}"
+
+	# add all 'basic' members of the Dataobj
+	grep ^$Class ${TMPFILE} | grep "::" | while read line
+	do
+		Member=`echo $line | cut -d":" -f4`
+		echo "	dest->${Member}	= itsT->${Member};"
+	done
+	echo "}\n"
+}
+
+#
+# tpo_add_from_X_DTL class
+#
+# Adds code that copies the values from the local XXX_DTL class to the
+# real data-objects and the persistency object.
+#
+tpo_add_from_X_DTL() 
+{
+	Class=$1
+	Action=$2
+
+	echo ""
+	echo "// fromDatabaseRep copies the fields of the ${Class}_DTL structure"
+	echo "// to the persistency layer and the ${Class} class."
+
+	echo "template<>"
+	echo "void TPO<${Class}>::fromDatabaseRep(const ${Class}_DTL	&org)"
+	echo "{"
+	echo "	// copy info of the ${Class} to the ${Class}_DTL class"
+	echo "	// First copy the PO part"
+	echo "	itsOid			= org->Oid;"
+	echo "	itsParent		= org->Parent;"
+	echo "	itsTimestamp	= org->Time;"
+	echo ""
+	echo "	// Finally copy the info from ${Class}"
+
+	# add all 'basic' members of the Dataobj
+	grep ^$Class ${TMPFILE} | grep "::" | while read line
+	do
+		Member=`echo $line | cut -d":" -f4`
+		echo "	itsT->${Member}	= org->${Member};"
+	done
+	echo "}\n"
+}
+
+#
+# tpo_add_class_spec class
+#
+tpo_add_class_spec()
+{
+	Class=$1
+
+	# When the Class contains subclasses we must make an specialisation
+	# for the constructor of the Class.
+
+	# See if there are any subclasses.
+	# Note: grep returns 0 if something found, 1 or -1 if not.
+	grep ^$Class ${TMPFILE} | grep -v "::" >>/dev/null
+	GrepOk=`echo $?`
+	if [ ${GrepOk} != "0" ]; then			# no subclasses found?
+		return
+	fi
+
+	# Add a template specialisation for this class
+	echo ""
+	echo "// ${Class} contains subclasses so we need template specialisation"
+	echo "template<>"
+	echo "class TPO<${Class}> : public PersistentObject"
+	echo "{"
+	echo "public:"
+	echo "	TPO(const ${Class}&	t);"
+	echo ""
+	echo "private:"
+	echo "	${Class}*		itsT;"
+	echo "	long			itsOid;"
+	echo "	date			itsTimeStamp;"
+	echo "	bool			itsPersistent;"
+
+	# Add the specialisation part
+	echo "	// Also create subclasses"
+	grep ^$Class ${TMPFILE} | grep -v "::" | while read line
+	do
+		VarName=`echo $line | cut -d':' -f4`
+		SubClass=`echo $line | cut -d':' -f6`
+		echo "	TPO<${SubClass}>	its${VarName}TPO;"
+	done
+
+	echo "}\n"
+
+	# Add a constructor method to the TPO class
+	echo "// We also need a spec. for the TPO<${Class}> constructor"
+	echo "template<>"
+	echo "TPO<${Class}>::TPO(const ${Class}& theObj) :"
+	echo "	itsT(&x),"
+	echo "	itsOid(0),"
+	echo "	itsTimeStamp(0),"
+	echo -n "	itsPersistent(false)"
+	grep ^$Class ${TMPFILE} | grep -v "::" | while read line
+	do
+		VarName=`echo $line | cut -d':' -f4`
+		SubClass=`echo $line | cut -d':' -f6`
+		echo ","
+		echo "	its${VarName}(theObj->${VarName})"
+	done
+	echo "{ };\n"
+
 }
 
 #
@@ -195,23 +361,13 @@ tpo_code_copy_to_local()
 
 	echo "	// copy info of the ${Class} to the ${Class}_DTL class"
 	echo "	${Class}_DTL		rec;"
-	echo ""
-	echo "	// First copy the PO part"
+	echo "	toDatabaseRep (&rec);"
+
 	if [ "${Action}" == "insert" ]; then
-		echo "	rec.Oid			= newnumber();"
-	else
-		echo "	rec.Oid			= itsOid;"
+		echo "	rec.Oid			= newnumber();		// use new number for Oid"
 	fi
 	echo "	rec.Parent		= theParent;"
 	echo "	rec.Timestamp	= theTime;"
-	echo "	// Finally copy the info from ${Class}"
-
-	# add all 'basic' members of the Dataobj
-	grep ^$Class $TMPFILE | grep "::" | while read line
-	do
-		Member=`echo $line | cut -d":" -f4`
-		echo "	rec.${Member}	= itsT->${Member};"
-	done
 }
 
 #
@@ -229,7 +385,7 @@ tpo_code_handle_all_subclasses()
 
 	# Grep all subclasses of this class.
 	# Note: grep returns 0 if something found, 1 or -1 if not.
-	grep ^$Class $TMPFILE | grep -v "::" >>/dev/null
+	grep ^$Class ${TMPFILE} | grep -v "::" >>/dev/null
 	GrepOk=`echo $?`
 	
 	if [ ${GrepOk} != "0" ]; then			# nothing found?
@@ -245,7 +401,7 @@ tpo_code_handle_all_subclasses()
 	echo "		// Note: all (sub(sub))subclasses use the OID of the root"
 
 	# Call all subclasses
-	grep ^$Class $TMPFILE | grep -v "::" | while read line
+	grep ^$Class ${TMPFILE} | grep -v "::" | while read line
 	do
 		Member=`echo $line | cut -d':' -f4`
 		echo "		PO_${Member}.${Action}(theState, (rec.Parent == ROOT_PARENT_NR) ? "
@@ -258,7 +414,7 @@ tpo_code_handle_all_subclasses()
 	if [ "${Action}" == "erase" ]; then
 		echo "		DBConnection::GetDefaultConnection().RollbackAll();"
 	fi
-	grep ^$Class $TMPFILE | grep -v "::" | while read line
+	grep ^$Class ${TMPFILE} | grep -v "::" | while read line
 	do
 		Member=`echo $line | cut -d':' -f4`
 		echo "		PO_${Member}.rollback(theState);"
@@ -303,12 +459,13 @@ tpo_code_update_current_state()
 tpo_add_insert_routine()
 {
 	Class=$1
-	Table=`grep ^$Class $TMPFILE | head -1 | cut -d":" -f2`
+	Table=`grep ^$Class ${TMPFILE} | head -1 | cut -d":" -f2`
 
 	# generate a DBview with table and standard BCA
 	echo "//"
 	echo "// Routine for insert this ${Class} object in the database."
 	echo "//"
+	echo "template<>"
 	echo "void TPO<${Class}>::insert(const long			theState,"
 	echo "								const ObjectId		theParent,"
 	echo "								const SQLTimeStamp	theTime) {"
@@ -343,12 +500,13 @@ tpo_add_update_routine()
 {
 	Class=$1
 	Clause=$2
-	Table=`grep ^$Class $TMPFILE | head -1 | cut -d":" -f2`
+	Table=`grep ^$Class ${TMPFILE} | head -1 | cut -d":" -f2`
 
 	# generate a DBview with table and standard BCA
 	echo "//"
 	echo "// Routine for updating this ${Class} object in the database."
 	echo "//"
+	echo "template<>"
 	echo "void TPO<${Class}>::update(const long			theState,"
 	echo "								const ObjectId		theParent,"
 	echo "								const SQLTimeStamp	theTime) {"
@@ -389,12 +547,13 @@ tpo_add_delete_routine()
 {
 	Class=$1
 	Clause=$2
-	Table=`grep ^$Class $TMPFILE | head -1 | cut -d":" -f2`
+	Table=`grep ^$Class ${TMPFILE} | head -1 | cut -d":" -f2`
 
 	# generate a DBview with table and standard BCA
 	echo "//"
 	echo "// Routine for deleting this ${Class} object in the database."
 	echo "//"
+	echo "template<>"
 	echo "void TPO<${Class}>::erase(const long			theState,"
 	echo "								const ObjectId		theParent,"
 	echo "								const SQLTimeStamp	theTime) {"
@@ -431,26 +590,113 @@ tpo_add_delete_routine()
 #
 init_tmpfile()
 {
-	(
 	echo "#This temporarely file was generated by genDTL"
 	echo "#It should have been cleaned up by genDTL, please remove it"
-	echo "#ClassName:TableName:Ctype:MemberName:ColumnName:SubclassName:DBtype" 	) >$TMPFILE
+	echo "#ClassName:TableName:Ctype:MemberName:ColumnName:SubclassName:DBtype"
 }
 
 #
-# init_srcfile
+# init_srcfile filetype class
 #
-# Adds an informational header to the C++ sourcefile.
+# Adds an informational header to the C++ source- of headerfile.
 #
 init_srcfile()
 {
-	echo -n "// This file was generated by genDTL ${VERSION} on " ; date
-	echo "// with the command: genDTL ${MAPFILE} ${FUNFILE} ${LAYER} ${CLASS}"
-	echo -n "// from the directory: " ; pwd
-	echo "//"
-	echo "// EDITING THIS FILE MANUALLY IS AT YOUR OWN RISK"
-	echo "// ITS MIGHT BE OVERWRITTEN BY THE NEXT MAKE OF YOUR PROJECT"
-	echo "//"
+	FileType=$1
+	Class=$2
+
+	echo -n "//# This file was generated by genDTL ${VERSION} on " ; date
+	echo "//# with the command: genDTL ${MAPFILE} ${FUNFILE} ${LAYER} ${CLASS}"
+	echo -n "//# from the directory: " ; pwd
+	echo "//#"
+	echo "//# EDITING THIS FILE MANUALLY IS AT YOUR OWN RISK"
+	echo "//# ITS MIGHT BE OVERWRITTEN BY THE NEXT MAKE OF YOUR PROJECT"
+	echo "//#"
+
+	# include the headerfiles in the C++ sourcefile
+	if [ "${FileType}" == "cc" ]; then
+		echo "#include \"${FILEPREFIX}${Class}.h\""
+
+		# Grep all subclasses of this class and include those headerfiles also.
+		grep ^${Class} ${TMPFILE} | grep -v "::" | while read line
+		do
+			subClass=`echo $line | cut -d':' -f6`
+			echo "#include \"${FILEPREFIX}${subClass}.h\""
+		done
+	else	# its a headerfile
+		typeset -u FileLabel=${FILEPREFIX}${Class}_H
+		echo "//# only include this file once"
+		echo "#if !defined(${FileLabel})"
+		echo "#define ${FileLabel}"
+		echo ""
+	fi
+}
+
+#
+# close_headerfile
+#
+# write the last '#endif' to the headerfile
+#
+close_headerfile()
+{
+	echo "#endif"
+}
+#
+# cleanlist filename
+#
+# Removes all (partial) comment lines from the file
+#
+cleanlist()
+{
+	cut -d"#" -f1 $1 | awk '{ if (NF > 0) print $0 }'
+}
+
+#
+# convert_mapfile mapfile
+#
+# Convert the user format from the mapfile into something more convenient
+# and store this in the tempfile.
+#
+# Allowed linesyntax of  the mapfile:
+#	Class	<ClassName>
+#	Table	<TableName>
+#	<Ctype>	<MemberName>	<ColumnName>	<DBtype>
+#	<Ctype>	<MemberName>	class			<ClassName>
+#
+# Syntax of the constructed temp-file:
+# ClassName:TableName:Ctype:MemberName:ColumnName:SubclassName:DBtype
+#
+convert_mapfile()
+{
+	Mapfile=$1
+
+	cleanlist ${Mapfile} | while read label name dbname fldtype
+	do
+		# comment is stripped off, check rest of line
+		if [ -z "$label" -o -z "$name" ]; then		# need two fields
+			continue
+		fi
+
+		case $label in
+		Class|class|CLASS)				# Class keyword
+			CurClass=$name
+			;;
+		Table|table|TABLE)				# Table keyword
+			CurTable=$name
+			;;
+		*)								# no keyword, assume fieldname
+			typeset -l SubClass=`echo $dbname | cut -d" " -f1`
+			# what kind of field is this?
+			if [ "${SubClass}" == "class" ]; then
+				# it's a (sub)class, get its name.
+				SubClassName=`echo $fldtype | cut -d" " -f1`
+			echo "$CurClass:$CurTable:$label:$name:$dbname:$SubClassName:OID"
+			else
+				echo "$CurClass:$CurTable:$label:$name:$dbname::$fldtype"
+			fi
+			;;
+		esac
+	done
 }
 
 #------------------------------- MAIN program ---------------------------------
@@ -492,9 +738,10 @@ fi
 
 # Check Layer type
 #
-case "$LAYER" in
-R|P)	;;
-*)		echo "Layer should be R(ecord) or P(ersistency), not >$LAYER<\n"
+case "${LAYER}" in
+R)		FILEPREFIX="rec_"		;;
+P)		FILEPREFIX="PO_"		;;
+*)		echo "Layer should be R(ecord) or P(ersistency), not >${LAYER}<\n"
 		exit 1
 esac
 
@@ -502,103 +749,91 @@ esac
 
 # Initialize some variables
 #
+LCSBASEFILE="LCS_base.h"
 TMPFILE=map.genDTL.$$
 
-init_tmpfile
-
-# Convert the user format from the mapfile into something more convenient
-# and store this in the tempfile.
-#
-# Allowed linesyntax of  the mapfile:
-#	Class	<ClassName>
-#	Table	<TableName>
-#	<Ctype>	<MemberName>	<ColumnName>	<DBtype>
-#	<Ctype>	<MemberName>	class			<ClassName>
-#
-# Syntax of the constructed temp-file:
-# ClassName:TableName:Ctype:MemberName:ColumnName:SubclassName:DBtype
-#
-cut -d"#" -f1 $MAPFILE | while read label name dbname fldtype
-do
-	# comment is stripped off, check rest of line
-	if [ -z "$label" -o -z "$name" ]; then		# need two fields
-		continue
-	fi
-
-	case $label in
-	Class|class|CLASS)				# Class keyword
-		CurClass=$name
-		;;
-	Table|table|TABLE)				# Table keyword
-		CurTable=$name
-		;;
-	*)								# no keyword, assume fieldname
-		typeset -l SubClass=`echo $dbname | cut -d" " -f1`
-		# what kind of field is this?
-		if [ "${SubClass}" == "class" ]; then
-			# it's a (sub)class, get its name.
-			SubClassName=`echo $dbname | cut -d" " -f2`
-			echo "$CurClass:$CurTable:$label:$name:$dbname:$SubClassName:OID" >>$TMPFILE
-		else
-			echo "$CurClass:$CurTable:$label:$name:$dbname::$fldtype" >>$TMPFILE
-		fi
-		;;
-	esac
-done
+# convert the human readable format of the mapfile into something
+# more convenient for shell-programming
+init_tmpfile					> ${TMPFILE}
+convert_mapfile ${MAPFILE}		>>${TMPFILE}
 
 #
 # Build the sourcecode for the record- or the persistency-layer
 #
-init_srcfile							# write header to source file
-
 if [ "${LAYER}" == "P" ]; then
-	tpo_add_generic_structures			# always need this in the tpo layer
+	# always need this in the tpo layer
+	init_srcfile "h" no_class 	> ${LCSBASEFILE}
+	tpo_add_generic_structures	>>${LCSBASEFILE}
 fi
 
 # Scan the functionfile to determine what code should be generated
 #
 PrevClass="Unknown"
-eval "cut -d'#' -f1 $FUNFILE $GREPMASK" | \
-while read class function clause
+#eval "cut -d'#' -f1 $FUNFILE $GREPMASK" | \
+eval "cleanlist $FUNFILE $GREPMASK" | \
+while read class action clause
 do
 	# minimal check on layout of line
-	if [ -z "$class" -o -z "$function" ]; then
+	if [ -z "$class" -o -z "$action" ]; then
 		continue
 	fi
 
+	# New class? generate the necc. structures in the new sourcefile.
 	# generate exacly one BCA for each class
-	if [ "$PrevClass" != "$class" ]; then
-		case $LAYER in
-		R) 	rec_add_BCA $class		;;
-		P) 	tpo_add_BCA $class 		;;
+	if [ "${PrevClass}" != "${class}" ]; then
+		case ${LAYER} in
+		R) 	SOURCEFILE=${FILEPREFIX}${class}.cc
+			HEADERFILE=${FILEPREFIX}${class}.h
+			init_srcfile "cc" ${class}  > ${SOURCEFILE}
+			rec_add_BCA 	  ${class}  >>${SOURCEFILE}
+			;;
+		P) 	# if this is not the first class, close the headerfile
+			# of the last class
+			if [ "${PrevClass}" != "Unknown" ]; then
+				close_headerfile	>>${HEADERFILE}
+			fi
+			# start a new headerfile and sourcefile
+			SOURCEFILE=${FILEPREFIX}${class}.cc
+			HEADERFILE=${FILEPREFIX}${class}.h
+			init_srcfile "cc"		${class} 	> ${SOURCEFILE}
+			tpo_add_class_spec		${class} 	>>${SOURCEFILE} 
+			tpo_add_to_X_DTL		${class} 	>>${SOURCEFILE} 
+			tpo_add_from_X_DTL		${class} 	>>${SOURCEFILE} 
+			tpo_add_BCA 			${class} 	>>${SOURCEFILE}
+			init_srcfile "h"		${class} 	> ${HEADERFILE}
+			tpo_add_header_info		${class} 	>>${HEADERFILE}
+			;;
 		esac
-		PrevClass=$class
+		PrevClass=${class}
 	fi
 
-	# dispatch the function
-	typeset -u function							# to uppercase
-	case $LAYER in
+	# dispatch the action
+	typeset -u action=${action}						# to uppercase
+	case ${LAYER} in
 	R)
-		case $function in
-		I) rec_add_insert_routine $class 				;;
-		U) rec_add_update_routine $class $clause		;;
-		D) rec_add_delete_routine $class $clause		;;
-		S) rec_add_search_routine $class $clause		;;
-		*) echo "ERROR:Unknown function >$function< for class >$class< in file >$FUNFILE<"
+		case $action in
+		I) rec_add_insert_routine $class 			>>${SOURCEFILE}		;;
+		U) rec_add_update_routine $class "$clause"	>>${SOURCEFILE}		;;
+		D) rec_add_delete_routine $class "$clause"	>>${SOURCEFILE}		;;
+		S) rec_add_search_routine $class "$clause"	>>${SOURCEFILE}		;;
+		*) echo "ERROR:Unknown function >$action< for class >$class< in file >$FUNFILE<"
 		   ;;
 		esac
 		;;
 	P)
-		case $function in
-		I) tpo_add_insert_routine $class 				;;
-		U) tpo_add_update_routine $class $clause		;;
-		D) tpo_add_delete_routine $class $clause		;;
-		S) tpo_add_search_routine $class $clause		;;
-		*) echo "ERROR:Unknown function >$function< for class >$class< in file >$FUNFILE<"
+		case $action in
+		I) tpo_add_insert_routine $class 			>>${SOURCEFILE}		;;
+		U) tpo_add_update_routine $class "$clause"	>>${SOURCEFILE}		;;
+		D) tpo_add_delete_routine $class "$clause"	>>${SOURCEFILE}		;;
+		S) tpo_add_search_routine $class "$clause"	>>${SOURCEFILE}		;;
+		*) echo "ERROR:Unknown function >$action< for class >$class< in file >$FUNFILE<"
 		   ;;
 		esac
 		;;
 	esac
 done
+
+# close last headerfile
+#close_headerfile	>>${HEADERFILE}		@@@ HEADERFILE IS UNKNOWN HERE!
 
 rm -f ${TMPFILE}
