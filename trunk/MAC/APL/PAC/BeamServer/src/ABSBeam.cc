@@ -212,6 +212,7 @@ int Beam::convertPointings(time_period period)
 
       if (pointing.direction().type() != Direction::LOFAR_LMN)
       {
+	m_pointing_queue.pop(); // discard pointing
 	LOG_ERROR("Direction type not supported yet, pointing discarded.");
 	continue;
       }

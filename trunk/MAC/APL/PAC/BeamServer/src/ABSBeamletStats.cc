@@ -51,7 +51,7 @@ BeamletStats::BeamletStats(int n_beamlets, int n_integrations) :
     m_count(0),
     m_seqnr(0),
     m_selected_beamlet(0),
-    m_beamlet_power(n_beamlets, N_POLARIZATIONS, N_PHASE),
+    m_beamlet_power(n_beamlets, N_POLARIZATIONS),
     m_pset(BeamServerPSet, "BeamServer", this)
 {
   m_pset.load();
@@ -95,12 +95,15 @@ void BeamletStats::update(Array<unsigned int,3>& power_sum, unsigned int seqnr)
       // divide by number of samples = m_count * EPA_INTEGRATION_COUNT
       m_beamlet_power /= m_count * EPA_INTEGRATION_COUNT;
 
+      LOG_DEBUG(formatString("Updating statistics properties: totalpower = %f",
+			     sum(m_beamlet_power)));
+
       char propnamex[64];
       char propnamey[64];
       for (int i = 0; i < m_nbeamlets; i++)
       {
-	  snprintf(propnamex, 64, "power%03dx", i);
-	  snprintf(propnamey, 64, "power%03dy", i);
+	  snprintf(propnamex, 64, "power%03d_x", i);
+	  snprintf(propnamey, 64, "power%03d_y", i);
 
 	  //m_pset[i*2  ].setValue(GCFPVDouble(m_beamlet_power(i, 0)));
 	  //m_pset[i*2+1].setValue(GCFPVDouble(m_beamlet_power(i, 1)));
