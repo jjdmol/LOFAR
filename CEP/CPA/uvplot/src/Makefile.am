@@ -10,8 +10,9 @@ uvplot_SOURCES := main.cc \
                   UVPTimeFrequencyPlot.cc UVPTimeFrequencyPlot.moc.cc \
                   UVPUVCoverageArea.cc UVPUVCoverageArea.moc.cc \
                   UVPDataTransferWP.cc \
-                  UVPDataAtom.cc       \
                   UVPDataHeader.cc     \
+                  UVPDataAtomHeader.cc \
+                  UVPDataAtom.cc       \
                   AID-uvplot-Registry.cc
 
 
@@ -19,7 +20,7 @@ uvplot_SOURCES := main.cc \
 UVPLOT_DIR := $(top_srcdir)/src
 
 
-CXXFLAGS += -DDEBUG_MODE -pg
+CXXFLAGS += -DDEBUG_MODE
 
 
 
