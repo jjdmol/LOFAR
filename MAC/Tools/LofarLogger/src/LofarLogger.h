@@ -29,8 +29,8 @@
 #include "LofarLoggerNames.h"
 
 // forward declaration
-
 // define convenience macros
+#ifndef NOLOG
 #define LOFAR_LOG_TRACE_SCOPE(logger,logEvent) \
     LofarScopeTraceLogger _scopeLogger(logger,LofarLogger::formatString logEvent ,__FILE__,__LINE__);
 #define LOFAR_LOG_TRACE(logger,logEvent) \
@@ -45,7 +45,22 @@
     LofarLogger::getInstance().error(logger,LofarLogger::formatString logEvent ,__FILE__,__LINE__);
 #define LOFAR_LOG_FATAL(logger,logEvent) \
     LofarLogger::getInstance().fatal(logger,LofarLogger::formatString logEvent ,__FILE__,__LINE__);
-
+#else    
+#define LOFAR_LOG_TRACE_SCOPE(logger,logEvent) \
+    {};
+#define LOFAR_LOG_TRACE(logger,logEvent) \
+    {};
+#define LOFAR_LOG_DEBUG(logger,logEvent) \
+    {};
+#define LOFAR_LOG_INFO(logger,logEvent)  \
+    {};
+#define LOFAR_LOG_WARN(logger,logEvent)  \
+    {};
+#define LOFAR_LOG_ERROR(logger,logEvent) \
+    {};
+#define LOFAR_LOG_FATAL(logger,logEvent) \
+    {};
+#endif
 /**
  *
  * The LofarLogger class wraps the log4cplus::Logger class
