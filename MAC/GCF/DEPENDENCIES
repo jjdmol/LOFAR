@@ -12,7 +12,7 @@ PVSS II 2.12.1
 	> newproj <project path>
 	> export PVSS_II=<project path>/config/config
 	> start_pvss2
-	> PVSS00ascii -in LofarPropertyTypes.pvss
+	> PVSS00ascii -in <lofar root>/MAC/Config/LofarPropertyTypes.pvss
 	- now the started project is ready for GCF
 	
 xerces-c
@@ -30,5 +30,6 @@ xerces-c
 	contains 2 compiler errors (line 1054: add '/'; line 1189: add an 'a' befor the 'g'). 
 	These error have to be fixed first. 
 		
-LOFAR PACKAGES:
-MAC/Tools/LofarLogger ( indirect external log4cplus)
+MAC/Tools/LofarLogger
+log4cplus (see LofarLogger
+LCS/Common

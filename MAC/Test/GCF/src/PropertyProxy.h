@@ -23,7 +23,7 @@
 #ifndef PROPERTYPROXY_H
 #define PROPERTYPROXY_H
 
-#include <PML/GCF_PropertyProxy.h>
+#include <GCF/GCF_PropertyProxy.h>
 
 class SupervisedTask;
 

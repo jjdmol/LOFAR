@@ -1,7 +1,8 @@
 #include "Application2.h"
 #include "Defines.h"
-#include <SAL/GCF_PVInteger.h>
-#include <SAL/GCF_PVDouble.h>
+#include <GCF/GCF_PVInteger.h>
+#include <GCF/GCF_PVDouble.h>
+#include <GCF/GCF_Property.h>
 #include <math.h>
 #define DECLARE_SIGNAL_NAMES
 #include "TST_Protocol.ph"
@@ -27,7 +28,15 @@ Application::Application() :
   _counter(0),
   _curRemoteTestNr(0),
   _pSTPort1(0),
-  _pSTPort2(0)
+  _pSTPort2(0),
+  _propertySetC1(propertySetC1, &_supTask3.getAnswerObj()),
+  _propertySetD1(propertySetD1, &_supTask3.getAnswerObj()),
+  _propertySetB4(propertySetB4, &_supTask3.getAnswerObj()),
+  _apcT1("ApcT1", "A_C", &_supTask3.getAnswerObj()),
+  _apcT1K("ApcT1", "A_K", &_supTask3.getAnswerObj()),
+  _apcT1a("ApcT1a", "A_C", &_supTask3.getAnswerObj()),
+  _apcT1b("ApcT1b", "A", &_supTask3.getAnswerObj()),
+  _apcT3("ApcT3", "A_H", &_supTask3.getAnswerObj())
 {
     // register the protocol for debugging purposes
   registerProtocol(TST_PROTOCOL, TST_PROTOCOL_signalnames);  
@@ -59,7 +68,7 @@ GCFEvent::TResult Application::test101(GCFEvent& e, GCFPortInterface& /*p*/)
   switch (e.signal)
   {
     case F_ENTRY_SIG:
-      skiped(101);
+      skipped(101);
       TRAN(Application::test102);
       break;
 
@@ -85,7 +94,7 @@ GCFEvent::TResult Application::test102(GCFEvent& e, GCFPortInterface& /*p*/)
   switch (e.signal)
   {
     case F_ENTRY_SIG:
-      skiped(102);
+      skipped(102);
       TRAN(Application::test103);
       break;
 
@@ -111,7 +120,7 @@ GCFEvent::TResult Application::test103(GCFEvent& e, GCFPortInterface& /*p*/)
   switch (e.signal)
   {
     case F_ENTRY_SIG:
-      skiped(103);
+      skipped(103);
       TRAN(Application::test104);
       break;
 
@@ -149,7 +158,7 @@ GCFEvent::TResult Application::test104(GCFEvent& e, GCFPortInterface& p)
     }
     case F_ENTRY_SIG:
       if (_curRemoteTestNr == 0) break;
-      if (_supTask3.loadMyProperties(propertySetC1) != GCF_NO_ERROR)
+      if (_propertySetC1.load() != GCF_NO_ERROR)
       {
         failed(104);
         TRAN(Application::test105);
@@ -161,9 +170,9 @@ GCFEvent::TResult Application::test104(GCFEvent& e, GCFPortInterface& p)
       }      
       break;
 
-    case F_MYLOADED_SIG:
+    case F_MYPLOADED_SIG:
     {
-      GCFPMLMYPAnswerEvent* pResponse = static_cast<GCFPMLMYPAnswerEvent*>(&e);
+      GCFMYPropAnswerEvent* pResponse = static_cast<GCFMYPropAnswerEvent*>(&e);
       assert(pResponse);
       switch (_counter)
       {
@@ -172,7 +181,7 @@ GCFEvent::TResult Application::test104(GCFEvent& e, GCFPortInterface& p)
               (pResponse->result == GCF_NO_ERROR) &&
               (&p == &_supTask3.getPort()))
           {
-            if (_supTask3.loadMyProperties(propertySetD1) != GCF_NO_ERROR)
+            if (_propertySetD1.load() != GCF_NO_ERROR)
             {
               failed(104);
               TRAN(Application::test105);
@@ -186,7 +195,7 @@ GCFEvent::TResult Application::test104(GCFEvent& e, GCFPortInterface& p)
               (pResponse->result == GCF_NO_ERROR) &&
               (&p == &_supTask3.getPort()))
           {
-            if (_supTask3.unloadMyProperties(propertySetC1.scope) != GCF_NO_ERROR)
+            if (_propertySetC1.unload() != GCF_NO_ERROR)
             {
               failed(104);
               TRAN(Application::test105);
@@ -197,9 +206,9 @@ GCFEvent::TResult Application::test104(GCFEvent& e, GCFPortInterface& p)
       }
       break;
     }      
-    case F_MYUNLOADED_SIG:
+    case F_MYPUNLOADED_SIG:
     {
-      GCFPMLMYPAnswerEvent* pResponse = static_cast<GCFPMLMYPAnswerEvent*>(&e);
+      GCFMYPropAnswerEvent* pResponse = static_cast<GCFMYPropAnswerEvent*>(&e);
       assert(pResponse);
       switch (_counter)
       {
@@ -208,7 +217,7 @@ GCFEvent::TResult Application::test104(GCFEvent& e, GCFPortInterface& p)
               (pResponse->result == GCF_NO_ERROR) &&
               (&p == &_supTask3.getPort()))
           {
-            if (_supTask3.unloadMyProperties(propertySetD1.scope) != GCF_NO_ERROR)
+            if (_propertySetD1.unload() != GCF_NO_ERROR)
             {
               failed(104);
               TRAN(Application::test105);
@@ -254,7 +263,7 @@ GCFEvent::TResult Application::test105(GCFEvent& e, GCFPortInterface& p)
   switch (e.signal)
   {
     case F_ENTRY_SIG:
-      if (_supTask3.loadMyProperties(propertySetC1) != GCF_NO_ERROR)
+      if (_propertySetC1.load() != GCF_NO_ERROR)
       {
         failed(105);
         TRAN(Application::test201);
@@ -265,9 +274,9 @@ GCFEvent::TResult Application::test105(GCFEvent& e, GCFPortInterface& p)
       }      
       break;
 
-    case F_MYLOADED_SIG:
+    case F_MYPLOADED_SIG:
     {
-      GCFPMLMYPAnswerEvent* pResponse = static_cast<GCFPMLMYPAnswerEvent*>(&e);
+      GCFMYPropAnswerEvent* pResponse = static_cast<GCFMYPropAnswerEvent*>(&e);
       assert(pResponse);
       switch (_counter)
       {
@@ -276,7 +285,7 @@ GCFEvent::TResult Application::test105(GCFEvent& e, GCFPortInterface& p)
               (pResponse->result == GCF_NO_ERROR) &&
               (&p == &_supTask3.getPort()))
           {
-            if (_supTask3.loadMyProperties(propertySetD1) != GCF_NO_ERROR)
+            if (_propertySetD1.load() != GCF_NO_ERROR)
             {
               failed(105);
               TRAN(Application::test201);
@@ -330,7 +339,7 @@ GCFEvent::TResult Application::test201(GCFEvent& e, GCFPortInterface& p)
     }
     case F_ENTRY_SIG:
       if (_curRemoteTestNr != 105) break;
-      if (_supTask3.loadAPC("ApcT1-D", "A_C") != GCF_NO_ERROR)
+      if (_apcT1.load() != GCF_NO_ERROR)
       {
         failed(201);
         TRAN(Application::test202);
@@ -344,17 +353,17 @@ GCFEvent::TResult Application::test201(GCFEvent& e, GCFPortInterface& p)
 
     case F_APCLOADED_SIG:
     {
-      GCFPMLAPCAnswerEvent* pResponse = static_cast<GCFPMLAPCAnswerEvent*>(&e);
+      GCFAPCAnswerEvent* pResponse = static_cast<GCFAPCAnswerEvent*>(&e);
       assert(pResponse);
       switch (_counter)
       {
         case 1:
           if ((strcmp(pResponse->pScope, "A_C") == 0) &&
-              (strcmp(pResponse->pApcName, "ApcT1-D") == 0) &&
+              (strcmp(pResponse->pApcName, "ApcT1") == 0) &&
               (pResponse->result == GCF_NO_ERROR) &&
               (&p == &_supTask3.getPort()))
           {
-            if (_supTask3.unloadAPC("ApcT1", "A_C") != GCF_NO_ERROR)
+            if (_apcT1.unload() != GCF_NO_ERROR)
             {
               failed(201);
               TRAN(Application::test202);
@@ -367,7 +376,7 @@ GCFEvent::TResult Application::test201(GCFEvent& e, GCFPortInterface& p)
     }      
     case F_APCUNLOADED_SIG:
     {
-      GCFPMLAPCAnswerEvent* pResponse = static_cast<GCFPMLAPCAnswerEvent*>(&e);
+      GCFAPCAnswerEvent* pResponse = static_cast<GCFAPCAnswerEvent*>(&e);
       assert(pResponse);
       switch (_counter)
       {
@@ -409,7 +418,7 @@ GCFEvent::TResult Application::test202(GCFEvent& e, GCFPortInterface& p)
   switch (e.signal)
   {
     case F_ENTRY_SIG:
-      if (_supTask3.loadAPC("ApcT1", "A_C") != GCF_NO_ERROR)
+      if (_apcT1.load(false) != GCF_NO_ERROR)
       {
         failed(202);
         TRAN(Application::test203);
@@ -423,7 +432,7 @@ GCFEvent::TResult Application::test202(GCFEvent& e, GCFPortInterface& p)
 
     case F_APCLOADED_SIG:
     {
-      GCFPMLAPCAnswerEvent* pResponse = static_cast<GCFPMLAPCAnswerEvent*>(&e);
+      GCFAPCAnswerEvent* pResponse = static_cast<GCFAPCAnswerEvent*>(&e);
       assert(pResponse);
       switch (_counter)
       {
@@ -464,8 +473,8 @@ GCFEvent::TResult Application::test203(GCFEvent& e, GCFPortInterface& p)
 
   switch (e.signal)
   {
-    case F_ENTRY_SIG:
-      if (_supTask3.unloadAPC("ApcT1", "A_C") != GCF_NO_ERROR)
+    case F_ENTRY_SIG:    
+      if (_apcT1.unload() != GCF_NO_ERROR)
       {
         failed(203);
         TRAN(Application::test204);
@@ -478,7 +487,7 @@ GCFEvent::TResult Application::test203(GCFEvent& e, GCFPortInterface& p)
 
     case F_APCUNLOADED_SIG:
     {
-      GCFPMLAPCAnswerEvent* pResponse = static_cast<GCFPMLAPCAnswerEvent*>(&e);
+      GCFAPCAnswerEvent* pResponse = static_cast<GCFAPCAnswerEvent*>(&e);
       assert(pResponse);
       if (_counter == 1)
       {
@@ -513,7 +522,7 @@ GCFEvent::TResult Application::test204(GCFEvent& e, GCFPortInterface& p)
   switch (e.signal)
   {
     case F_ENTRY_SIG:
-      if (_supTask3.loadAPC("ApcT1-D", "A_C") != GCF_NO_ERROR)
+      if (_apcT1.load() != GCF_NO_ERROR)
       {
         failed(204);
         TRAN(Application::test205);
@@ -526,17 +535,17 @@ GCFEvent::TResult Application::test204(GCFEvent& e, GCFPortInterface& p)
 
     case F_APCLOADED_SIG:
     {
-      GCFPMLAPCAnswerEvent* pResponse = static_cast<GCFPMLAPCAnswerEvent*>(&e);
+      GCFAPCAnswerEvent* pResponse = static_cast<GCFAPCAnswerEvent*>(&e);
       assert(pResponse);
       switch (_counter)
       {
         case 1:
           if ((strcmp(pResponse->pScope, "A_C") == 0) &&
-              (strcmp(pResponse->pApcName, "ApcT1-D") == 0) &&
+              (strcmp(pResponse->pApcName, "ApcT1") == 0) &&
               (pResponse->result == GCF_NO_ERROR) &&
               (&p == &_supTask3.getPort()))
           {
-            if (_supTask3.reloadAPC("ApcT1-D", "A_C") != GCF_NO_ERROR)
+            if (_apcT1.reload() != GCF_NO_ERROR)
             {
               failed(204);
               TRAN(Application::test205);
@@ -549,13 +558,13 @@ GCFEvent::TResult Application::test204(GCFEvent& e, GCFPortInterface& p)
     }      
     case F_APCRELOADED_SIG:
     {
-      GCFPMLAPCAnswerEvent* pResponse = static_cast<GCFPMLAPCAnswerEvent*>(&e);
+      GCFAPCAnswerEvent* pResponse = static_cast<GCFAPCAnswerEvent*>(&e);
       assert(pResponse);
       switch (_counter)
       {
         case 2:
           if ((strcmp(pResponse->pScope, "A_C") == 0) &&
-              (strcmp(pResponse->pApcName, "ApcT1-D") == 0) &&
+              (strcmp(pResponse->pApcName, "ApcT1") == 0) &&
               (pResponse->result == GCF_NO_ERROR) &&
               (&p == &_supTask3.getPort()))
           {
@@ -605,7 +614,7 @@ GCFEvent::TResult Application::test205(GCFEvent& e, GCFPortInterface& p)
       else
       {
         started = true;
-        if (_supTask3.unloadAPC("ApcT1", "A_C") != GCF_NO_ERROR)
+        if (_apcT1.unload() != GCF_NO_ERROR)
         {
           failed(205);
           TRAN(Application::test206);
@@ -619,7 +628,7 @@ GCFEvent::TResult Application::test205(GCFEvent& e, GCFPortInterface& p)
     }
     case F_APCUNLOADED_SIG:
     {
-      GCFPMLAPCAnswerEvent* pResponse = static_cast<GCFPMLAPCAnswerEvent*>(&e);
+      GCFAPCAnswerEvent* pResponse = static_cast<GCFAPCAnswerEvent*>(&e);
       assert(pResponse);
       switch (_counter)
       {
@@ -657,7 +666,7 @@ GCFEvent::TResult Application::test206(GCFEvent& e, GCFPortInterface& p)
   {
     case F_ENTRY_SIG:
       _counter = 0;
-      if (_supTask3.loadAPC("ApcT1-D", "A_C") != GCF_NO_ERROR)
+      if (_apcT1.load() != GCF_NO_ERROR)
       {
         failed(204);
         TRAN(Application::test205);
@@ -675,7 +684,7 @@ GCFEvent::TResult Application::test206(GCFEvent& e, GCFPortInterface& p)
       _curRemoteTestNr = pIndication->testnr;
       if (_counter == 2)
       {
-        if (_supTask3.unloadAPC("ApcT1", "A_C") != GCF_NO_ERROR)
+        if (_apcT1.unload() != GCF_NO_ERROR)
         {
           failed(206);
           TRAN(Application::test207);
@@ -686,16 +695,16 @@ GCFEvent::TResult Application::test206(GCFEvent& e, GCFPortInterface& p)
     }
     case F_APCLOADED_SIG:
     {
-      GCFPMLAPCAnswerEvent* pResponse = static_cast<GCFPMLAPCAnswerEvent*>(&e);
+      GCFAPCAnswerEvent* pResponse = static_cast<GCFAPCAnswerEvent*>(&e);
       assert(pResponse);
       if (_counter == 1)
       {
         if ((strcmp(pResponse->pScope, "A_C") == 0) &&
-            (strcmp(pResponse->pApcName, "ApcT1-D") == 0) &&
+            (strcmp(pResponse->pApcName, "ApcT1") == 0) &&
             (pResponse->result == GCF_NO_ERROR) &&
             (&p == &_supTask3.getPort()))
         {
-          if (_supTask3.reloadAPC("ApcT1-D", "A_C") != GCF_NO_ERROR)
+          if (_apcT1.reload() != GCF_NO_ERROR)
           {
             failed(206);
             TRAN(Application::test207);
@@ -708,12 +717,12 @@ GCFEvent::TResult Application::test206(GCFEvent& e, GCFPortInterface& p)
     case F_APCRELOADED_SIG:
     {
    
-      GCFPMLAPCAnswerEvent* pResponse = static_cast<GCFPMLAPCAnswerEvent*>(&e);
+      GCFAPCAnswerEvent* pResponse = static_cast<GCFAPCAnswerEvent*>(&e);
       assert(pResponse);
       if (_counter == 2)
       {
         if ((strcmp(pResponse->pScope, "A_C") == 0) &&
-            (strcmp(pResponse->pApcName, "ApcT1-D") == 0) &&
+            (strcmp(pResponse->pApcName, "ApcT1") == 0) &&
             (pResponse->result == GCF_NO_ERROR) &&
             (&p == &_supTask3.getPort()))
         {
@@ -726,7 +735,7 @@ GCFEvent::TResult Application::test206(GCFEvent& e, GCFPortInterface& p)
     }
     case F_APCUNLOADED_SIG:
     {
-      GCFPMLAPCAnswerEvent* pResponse = static_cast<GCFPMLAPCAnswerEvent*>(&e);
+      GCFAPCAnswerEvent* pResponse = static_cast<GCFAPCAnswerEvent*>(&e);
       assert(pResponse);
       if (_counter == 3)
       {
@@ -770,7 +779,7 @@ GCFEvent::TResult Application::test207(GCFEvent& e, GCFPortInterface& p)
     }    
     case F_ENTRY_SIG:
       if (_curRemoteTestNr == 0) break;
-      if (_supTask3.loadAPC("ApcT1a", "A_C") != GCF_NO_ERROR)
+      if (_apcT1a.load(false) != GCF_NO_ERROR)
       {
         failed(207);
         TRAN(Application::test208);
@@ -783,7 +792,7 @@ GCFEvent::TResult Application::test207(GCFEvent& e, GCFPortInterface& p)
 
     case F_APCLOADED_SIG:
     {
-      GCFPMLAPCAnswerEvent* pResponse = static_cast<GCFPMLAPCAnswerEvent*>(&e);
+      GCFAPCAnswerEvent* pResponse = static_cast<GCFAPCAnswerEvent*>(&e);
       assert(pResponse);
       switch (_counter)
       {
@@ -793,7 +802,7 @@ GCFEvent::TResult Application::test207(GCFEvent& e, GCFPortInterface& p)
               (pResponse->result == GCF_NO_ERROR) &&
               (&p == &_supTask3.getPort()))
           {
-            if (_supTask3.unloadAPC("ApcT1a", "A_C") != GCF_NO_ERROR)
+            if (_apcT1a.unload() != GCF_NO_ERROR)
             {
               failed(207);
               TRAN(Application::test208);
@@ -806,7 +815,7 @@ GCFEvent::TResult Application::test207(GCFEvent& e, GCFPortInterface& p)
     }      
     case F_APCUNLOADED_SIG:
     {
-      GCFPMLAPCAnswerEvent* pResponse = static_cast<GCFPMLAPCAnswerEvent*>(&e);
+      GCFAPCAnswerEvent* pResponse = static_cast<GCFAPCAnswerEvent*>(&e);
       assert(pResponse);
       switch (_counter)
       {
@@ -840,8 +849,8 @@ GCFEvent::TResult Application::test208(GCFEvent& e, GCFPortInterface& p)
 
   switch (e.signal)
   {
-    case F_ENTRY_SIG:
-      if (_supTask3.loadAPC("ApcT1b", "A") != GCF_NO_ERROR)
+    case F_ENTRY_SIG:      
+      if (_apcT1b.load(false) != GCF_NO_ERROR)
       {
         failed(208);
         TRAN(Application::test301);
@@ -854,7 +863,7 @@ GCFEvent::TResult Application::test208(GCFEvent& e, GCFPortInterface& p)
 
     case F_APCLOADED_SIG:
     {
-      GCFPMLAPCAnswerEvent* pResponse = static_cast<GCFPMLAPCAnswerEvent*>(&e);
+      GCFAPCAnswerEvent* pResponse = static_cast<GCFAPCAnswerEvent*>(&e);
       assert(pResponse);
       switch (_counter)
       {
@@ -864,7 +873,7 @@ GCFEvent::TResult Application::test208(GCFEvent& e, GCFPortInterface& p)
               (pResponse->result == GCF_NO_ERROR) &&
               (&p == &_supTask3.getPort()))
           {
-            if (_supTask3.unloadAPC("ApcT1b", "A") != GCF_NO_ERROR)
+            if (_apcT1b.unload() != GCF_NO_ERROR)
             {
               failed(208);
               TRAN(Application::test301);
@@ -882,7 +891,7 @@ GCFEvent::TResult Application::test208(GCFEvent& e, GCFPortInterface& p)
     }      
     case F_APCUNLOADED_SIG:
     {
-      GCFPMLAPCAnswerEvent* pResponse = static_cast<GCFPMLAPCAnswerEvent*>(&e);
+      GCFAPCAnswerEvent* pResponse = static_cast<GCFAPCAnswerEvent*>(&e);
       assert(pResponse);
       switch (_counter)
       {
@@ -918,6 +927,7 @@ GCFEvent::TResult Application::test208(GCFEvent& e, GCFPortInterface& p)
   return status;
 }
 
+// Will be skipped due to problems in the design 
 GCFEvent::TResult Application::test209(GCFEvent& e, GCFPortInterface& p)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
@@ -932,7 +942,8 @@ GCFEvent::TResult Application::test209(GCFEvent& e, GCFPortInterface& p)
       TSTTestreadyEvent* pIndication = static_cast<TSTTestreadyEvent*>(&e);
       assert(pIndication);
       _curRemoteTestNr = pIndication->testnr;
-      if (_supTask3.loadAPC("ApcT3", "A_C") != GCF_NO_ERROR)
+      _apcT3.setScope("A_C");
+      if (_apcT3.load(false) != GCF_NO_ERROR)
       {
         failed(209);
         TRAN(Application::test210);
@@ -945,7 +956,7 @@ GCFEvent::TResult Application::test209(GCFEvent& e, GCFPortInterface& p)
     }
     case F_APCLOADED_SIG:
     {
-      GCFPMLAPCAnswerEvent* pResponse = static_cast<GCFPMLAPCAnswerEvent*>(&e);
+      GCFAPCAnswerEvent* pResponse = static_cast<GCFAPCAnswerEvent*>(&e);
       assert(pResponse);
       switch (_counter)
       {
@@ -973,7 +984,8 @@ GCFEvent::TResult Application::test209(GCFEvent& e, GCFPortInterface& p)
   return status;
 }
 
-GCFEvent::TResult Application::test210(GCFEvent& e, GCFPortInterface& p)
+// Will be skipped due to combinations of other tests coverts this test
+GCFEvent::TResult Application::test210(GCFEvent& e, GCFPortInterface& /*p*/)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
@@ -990,14 +1002,14 @@ GCFEvent::TResult Application::test210(GCFEvent& e, GCFPortInterface& p)
   return status;
 }
 
-GCFEvent::TResult Application::test301(GCFEvent& e, GCFPortInterface& p)
+GCFEvent::TResult Application::test301(GCFEvent& e, GCFPortInterface& /*p*/)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (e.signal)
   {
     case F_ENTRY_SIG:
-      skiped(301);
+      skipped(301);
       TRAN(Application::test302);
       break;
 
@@ -1017,16 +1029,15 @@ GCFEvent::TResult Application::test301(GCFEvent& e, GCFPortInterface& p)
   return status;
 }
 
-GCFEvent::TResult Application::test302(GCFEvent& e, GCFPortInterface& p)
+GCFEvent::TResult Application::test302(GCFEvent& e, GCFPortInterface& /*p*/)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (e.signal)
   {
     case F_ENTRY_SIG:
-      skiped(302);
-      if (_curRemoteTestNr == 302)
-        TRAN(Application::test303);
+      skipped(302);
+      TRAN(Application::test303);
       break;
 
     case TST_TESTREADY:
@@ -1034,8 +1045,6 @@ GCFEvent::TResult Application::test302(GCFEvent& e, GCFPortInterface& p)
       TSTTestreadyEvent* pIndication = static_cast<TSTTestreadyEvent*>(&e);
       assert(pIndication);
       _curRemoteTestNr = pIndication->testnr;
-      if (_curRemoteTestNr == 302)
-        TRAN(Application::test303);
       break;
     }
 
@@ -1051,6 +1060,8 @@ GCFEvent::TResult Application::test303(GCFEvent& e, GCFPortInterface& p)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
+  static GCFProperty propertyACP1("A_C_P1");
+  propertyACP1.setAnswer(&_supTask3.getAnswerObj());
   switch (e.signal)
   {
     case TST_TESTREADY:
@@ -1060,8 +1071,8 @@ GCFEvent::TResult Application::test303(GCFEvent& e, GCFPortInterface& p)
       _curRemoteTestNr = pIndication->testnr;
     }
     case F_ENTRY_SIG:
-      if (_curRemoteTestNr != 302) break;
-      if (_supTask3.loadAPC("ApcT1", "A_C") != GCF_NO_ERROR)
+      if (_curRemoteTestNr != 302) break;      
+      if (_apcT1.load(false) != GCF_NO_ERROR)
       {
         failed(303);
         TRAN(Application::test304);
@@ -1074,14 +1085,14 @@ GCFEvent::TResult Application::test303(GCFEvent& e, GCFPortInterface& p)
     
     case F_APCLOADED_SIG:
     {
-      GCFPMLAPCAnswerEvent* pResponse = static_cast<GCFPMLAPCAnswerEvent*>(&e);
+      GCFAPCAnswerEvent* pResponse = static_cast<GCFAPCAnswerEvent*>(&e);
       assert(pResponse);
       if ((strcmp(pResponse->pScope, "A_C") == 0) &&
           (strcmp(pResponse->pApcName, "ApcT1") == 0) &&
           (pResponse->result == GCF_NO_ERROR) &&
           (&p == &_supTask3.getPort()))
       {           
-        if (_supTask3.getProxy().subscribe("A_C_P1") != GCF_NO_ERROR)
+        if (propertyACP1.subscribe() != GCF_NO_ERROR)
         {
           failed(303);
           TRAN(Application::test304);            
@@ -1097,7 +1108,7 @@ GCFEvent::TResult Application::test303(GCFEvent& e, GCFPortInterface& p)
 
     case F_SUBSCRIBED_SIG:
     {
-      GCFPMLAnswerEvent* pResponse = static_cast<GCFPMLAnswerEvent*>(&e);
+      GCFPropAnswerEvent* pResponse = static_cast<GCFPropAnswerEvent*>(&e);
       assert(pResponse);
       if ((strcmp(pResponse->pPropName, "A_C_P1") == 0) &&
           (&p == &_supTask3.getPort()))
@@ -1116,9 +1127,9 @@ GCFEvent::TResult Application::test303(GCFEvent& e, GCFPortInterface& p)
     
     case F_VCHANGEMSG_SIG:
     {
-      GCFPMLValueEvent* pResponse = static_cast<GCFPMLValueEvent*>(&e);
+      GCFPropValueEvent* pResponse = static_cast<GCFPropValueEvent*>(&e);
       assert(pResponse);
-      if ((pResponse->pValue->getType() == GCFPValue::LPT_INTEGER) &&
+      if ((pResponse->pValue->getType() == GCFPValue::INTEGER_VAL) &&
           (strcmp(pResponse->pPropName, "A_C_P1") == 0) &&
           (((GCFPVInteger*)pResponse->pValue)->getValue() == 22) &&
           (&p == &_supTask3.getPort()))
@@ -1134,7 +1145,7 @@ GCFEvent::TResult Application::test303(GCFEvent& e, GCFPortInterface& p)
       break;
     }    
     case F_EXIT_SIG:
-      _supTask3.getProxy().unsubscribe("A_C_P1");
+      propertyACP1.unsubscribe();
       break;
     default:
       status = GCFEvent::NOT_HANDLED;
@@ -1170,7 +1181,7 @@ GCFEvent::TResult Application::test304(GCFEvent& e, GCFPortInterface& p)
         {
           propName[8] = j + '0';
           dv.setValue(((double) (i * 10 + j)) / 100.0 );
-          if (_supTask3.set(propName, dv) == GCF_NO_ERROR)
+          if (_supTask3.getProxy().setPropValue(propName, dv) == GCF_NO_ERROR)
           {
             _counter++;
           }
@@ -1187,9 +1198,9 @@ GCFEvent::TResult Application::test304(GCFEvent& e, GCFPortInterface& p)
     }
     case F_VCHANGEMSG_SIG:
     {
-      GCFPMLValueEvent* pResponse = static_cast<GCFPMLValueEvent*>(&e);
+      GCFPropValueEvent* pResponse = static_cast<GCFPropValueEvent*>(&e);
       assert(pResponse);
-      if ((pResponse->pValue->getType() == GCFPValue::LPT_DOUBLE) &&
+      if ((pResponse->pValue->getType() == GCFPValue::DOUBLE_VAL) &&
           (strncmp(pResponse->pPropName, "A_H_J_P", 7) == 0) &&
           (&p == &_supTask3.getPort()))
       {
@@ -1202,13 +1213,14 @@ GCFEvent::TResult Application::test304(GCFEvent& e, GCFPortInterface& p)
         }
         else 
         {
-          cerr << "Propvalue: " << doubleVal << " PropNr: " << propNr << endl;
+          double dv = ((GCFPVDouble*)pResponse->pValue)->getValue();
+          cerr << "Propvalue: " << dv << " PropNr: " << propNr << endl;
           nrOfFaults++;
         }
       }
       else
       {
-        cerr << "Propname fails " << pResponse->pPropName << endl;
+        cerr << "Propname fails" << pResponse->pPropName << endl;
         nrOfFaults++;
       }
       if (_counter == 100 )
@@ -1236,11 +1248,14 @@ GCFEvent::TResult Application::test305(GCFEvent& e, GCFPortInterface& p)
   GCFEvent::TResult status = GCFEvent::HANDLED;
   static unsigned int nrOfFaults = 0;
 
+  static GCFProperty propertyAHJP00("A_H_J_P00");
+  propertyAHJP00.setAnswer(&_supTask3.getAnswerObj());
+
   switch (e.signal)
   {
     case F_ENTRY_SIG:
       _counter = 0;
-      if (_supTask3.loadAPC("ApcT3", "A_H") != GCF_NO_ERROR)
+      if (_apcT3.load(false) != GCF_NO_ERROR)
       {
         failed(305);
         TRAN(Application::test306);
@@ -1249,14 +1264,14 @@ GCFEvent::TResult Application::test305(GCFEvent& e, GCFPortInterface& p)
 
     case F_APCLOADED_SIG:
     {
-      GCFPMLAPCAnswerEvent* pResponse = static_cast<GCFPMLAPCAnswerEvent*>(&e);
+      GCFAPCAnswerEvent* pResponse = static_cast<GCFAPCAnswerEvent*>(&e);
       assert(pResponse);
       if ((strcmp(pResponse->pScope, "A_H") == 0) &&
           (strcmp(pResponse->pApcName, "ApcT3") == 0) &&
           (pResponse->result == GCF_NO_ERROR) &&
           (&p == &_supTask3.getPort()))
       {
-        if (_supTask3.getProxy().subscribe("A_H_J_P00") != GCF_NO_ERROR)
+        if (propertyAHJP00.subscribe() != GCF_NO_ERROR)
         {
           failed(305);
           TRAN(Application::test306);
@@ -1271,7 +1286,7 @@ GCFEvent::TResult Application::test305(GCFEvent& e, GCFPortInterface& p)
     }  
     case F_SUBSCRIBED_SIG:
     {
-      GCFPMLAnswerEvent* pResponse = static_cast<GCFPMLAnswerEvent*>(&e);
+      GCFPropAnswerEvent* pResponse = static_cast<GCFPropAnswerEvent*>(&e);
       assert(pResponse);
       if ((strcmp(pResponse->pPropName, "A_H_J_P00") == 0) &&
           (&p == &_supTask3.getPort()))
@@ -1296,7 +1311,7 @@ GCFEvent::TResult Application::test305(GCFEvent& e, GCFPortInterface& p)
       {
         GCFPVDouble dv(3.12);
         _counter = 0;
-        if (_supTask3.set("A_H_J_P00", dv) != GCF_NO_ERROR)
+        if (propertyAHJP00.setValue(dv) != GCF_NO_ERROR)
         {
           failed(305);
           TRAN(Application::test306);          
@@ -1306,9 +1321,9 @@ GCFEvent::TResult Application::test305(GCFEvent& e, GCFPortInterface& p)
     }
     case F_VCHANGEMSG_SIG:
     {
-      GCFPMLValueEvent* pResponse = static_cast<GCFPMLValueEvent*>(&e);
+      GCFPropValueEvent* pResponse = static_cast<GCFPropValueEvent*>(&e);
       assert(pResponse);
-      if ((pResponse->pValue->getType() == GCFPValue::LPT_DOUBLE) &&
+      if ((pResponse->pValue->getType() == GCFPValue::DOUBLE_VAL) &&
           (strcmp(pResponse->pPropName, "A_H_J_P00") == 0) &&
           (((GCFPVDouble*)pResponse->pValue)->getValue() == 3.12) &&
           (&p == &_supTask3.getPort()))
@@ -1348,22 +1363,22 @@ GCFEvent::TResult Application::test306(GCFEvent& e, GCFPortInterface& p)
   switch (e.signal)
   {
     case F_ENTRY_SIG:
-      if (_supTask3.loadMyProperties(propertySetB4) != GCF_NO_ERROR)
+      if (_propertySetB4.load() != GCF_NO_ERROR)
       {
         failed(306);
         TRAN(Application::test403);
       }
       break;
   
-    case F_MYLOADED_SIG:
+    case F_MYPLOADED_SIG:
     {
-      GCFPMLMYPAnswerEvent* pResponse = static_cast<GCFPMLMYPAnswerEvent*>(&e);
+      GCFMYPropAnswerEvent* pResponse = static_cast<GCFMYPropAnswerEvent*>(&e);
       assert(pResponse);
       if ((strcmp(pResponse->pScope, propertySetB4.scope) == 0) &&
           (pResponse->result == GCF_NO_ERROR) &&
           (&p == &_supTask3.getPort()))
       {
-        if (_supTask3.loadAPC("ApcT1", "A_K") != GCF_NO_ERROR)
+        if (_apcT1K.load(false) != GCF_NO_ERROR)
         {
           failed(306);
           TRAN(Application::test403);
@@ -1380,14 +1395,14 @@ GCFEvent::TResult Application::test306(GCFEvent& e, GCFPortInterface& p)
     }
     case F_APCLOADED_SIG:
     {
-      GCFPMLAPCAnswerEvent* pResponse = static_cast<GCFPMLAPCAnswerEvent*>(&e);
+      GCFAPCAnswerEvent* pResponse = static_cast<GCFAPCAnswerEvent*>(&e);
       assert(pResponse);
       if ((strcmp(pResponse->pScope, "A_K") == 0) &&
           (strcmp(pResponse->pApcName, "ApcT1") == 0) &&
           (pResponse->result == GCF_NO_ERROR) &&
           (&p == &_supTask3.getPort()))
       {           
-        if (_supTask3.getProxy().subscribe("A_K_P1") != GCF_NO_ERROR)
+        if (_supTask3.getProxy().subscribeProp("A_K_P1") != GCF_NO_ERROR)
         {
           failed(306);
           TRAN(Application::test403);
@@ -1402,7 +1417,7 @@ GCFEvent::TResult Application::test306(GCFEvent& e, GCFPortInterface& p)
     }
     case F_SUBSCRIBED_SIG:
     {
-      GCFPMLAnswerEvent* pResponse = static_cast<GCFPMLAnswerEvent*>(&e);
+      GCFPropAnswerEvent* pResponse = static_cast<GCFPropAnswerEvent*>(&e);
       assert(pResponse);
       if ((strcmp(pResponse->pPropName, "A_K_P1") == 0) &&
           (&p == &_supTask3.getPort()))
@@ -1421,10 +1436,10 @@ GCFEvent::TResult Application::test306(GCFEvent& e, GCFPortInterface& p)
     }
     case F_VCHANGEMSG_SIG:
     {
-      GCFPMLValueEvent* pResponse = static_cast<GCFPMLValueEvent*>(&e);
+      GCFPropValueEvent* pResponse = static_cast<GCFPropValueEvent*>(&e);
       assert(pResponse);
       if (pResponse->internal) break;
-      if ((pResponse->pValue->getType() == GCFPValue::LPT_INTEGER) &&
+      if ((pResponse->pValue->getType() == GCFPValue::INTEGER_VAL) &&
           (strcmp(pResponse->pPropName, "A_K_P1") == 0) &&
           (((GCFPVInteger*)pResponse->pValue)->getValue() == _counter) &&
           (&p == &_supTask3.getPort()))
@@ -1438,7 +1453,7 @@ GCFEvent::TResult Application::test306(GCFEvent& e, GCFPortInterface& p)
       _counter++;
       GCFPVInteger iv;
       iv.copy(*(pResponse->pValue));
-      if (_supTask3.set("A_C_P1", iv) != GCF_NO_ERROR)
+      if (_supTask3.getProxy().setPropValue("A_C_P1", iv) != GCF_NO_ERROR)
       {
         failed(306);
         TRAN(Application::test403);
@@ -1601,14 +1616,13 @@ GCFEvent::TResult Application::test402(GCFEvent& e, GCFPortInterface& p)
   return status;
 }
 
-GCFEvent::TResult Application::test403(GCFEvent& e, GCFPortInterface& p)
+GCFEvent::TResult Application::test403(GCFEvent& e, GCFPortInterface& /*p*/)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (e.signal)
   {
     case F_ENTRY_SIG:
-      GCFTask::stop();    
       break;
 
     default:
