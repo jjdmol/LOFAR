@@ -3,7 +3,7 @@ include 'image.g'
 include 'table.g'
 
 mkimg := function (msname, imgname, type='model', npix=500, nchan=0,
-start=1, step=1, msselect)
+		   start=1, step=1, msselect='')
 {
   t:=table(msname, readonly=F);
   a:=t.getcell('DATA',1);

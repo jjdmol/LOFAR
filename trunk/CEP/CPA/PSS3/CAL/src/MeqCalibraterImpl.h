@@ -42,9 +42,12 @@
 #include <MNS/MeqJonesExpr.h>
 #include <MNS/MeqMatrix.h>
 #include <MNS/MeqParm.h>
+#include <MNS/MeqPhaseRef.h>
+#include <MNS/MeqPointSource.h>
 #include <MNS/MeqRequest.h>
 #include <MNS/MeqStation.h>
-#include <MNS/MeqUVWPolc.h>
+#include <MNS/MeqStatSources.h>
+#include <MNS/MeqStatUVW.h>
 #include <MNS/ParmTable.h>
 #include <GSM/SkyModel.h>
 
@@ -168,10 +171,6 @@ public:
   //@}
 
 private:
-
-  //! calculate the UVW polcs for all frequency domains per hour wide time domain
-  void calcUVWPolc();
-
   /**
    * \defgroup DisallowedContructors Dissallowed constructors.
    */
@@ -198,9 +197,6 @@ private:
   //! Create the expressions for each baseline.
   void makeWSRTExpr ();
 
-  //! Calculate the UVW polynomial coefficients.
-  void calcUVWPolc  (const Table& ms);
-
   //! Append the current value of the parameters (as MeqMatrix) to rec
   void MeqCalibrater::addParm(const MeqParm& parm, GlishRecord& rec);
 
@@ -220,14 +216,16 @@ private:
   int                   itsFirstChan;   //# first channel selected
   int                   itsLastChan;    //# last channel selected
 
-  MDirection            itsPhaseRef;    //# Phase reference position in J2000
+  MeqPhaseRef           itsPhaseRef;    //# Phase reference position in J2000
   MeqDomain             itsSolveDomain;
 
   Matrix<int>           itsBLIndex;     //# baseline index of antenna pair
+  vector<MeqPointSource> itsSources;
   vector<MeqStation*>   itsStations;
+  vector<MeqStatUVW*>   itsStatUVW;
+  vector<MeqStatSources*> itsStatSrc;
   vector<MeqJonesExpr*> itsStatExpr;    //# Expression per station
   vector<MVBaseline>    itsBaselines;
-  vector<MeqUVWPolc*>   itsUVWPolc;     //# UVW polynomial per baseline
   vector<MeqHist>       itsCelltHist;   //# Histogram of #cells in time
   vector<MeqHist>       itsCellfHist;   //# Histogram of #cells in freq
   vector<MeqJonesExpr*> itsExpr;        //# expression tree per baseline

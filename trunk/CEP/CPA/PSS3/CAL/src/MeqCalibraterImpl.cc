@@ -88,9 +88,11 @@ void MeqCalibrater::getPhaseRef()
 {
   MSField mssub(itsMS.field());
   ROMSFieldColumns mssubc(mssub);
-  // Get the phase reference of the first field.
-  MDirection dir = mssubc.phaseDirMeasCol()(0)(IPosition(1,0));
-  itsPhaseRef = MDirection::Convert (dir, MDirection::J2000)();
+  // Use the phase reference of the first field.
+  MDirection phaseRef = mssubc.phaseDirMeasCol()(0)(IPosition(1,0));
+  // Use the time in the first MS row.
+  double startTime = itsMSCol.time()(0);
+  itsPhaseRef = MeqPhaseRef (phaseRef, startTime);
 }
 
 //----------------------------------------------------------------------
@@ -104,7 +106,7 @@ void MeqCalibrater::getPhaseRef()
 void MeqCalibrater::getFreq (int ddid)
 {
   // Get the frequency domain of the given data descriptor id
-  // which gives as the spwid.
+  // which gives the spwid.
   MSDataDescription mssub1(itsMS.dataDescription());
   ROMSDataDescColumns mssub1c(mssub1);
   int spw = mssub1c.spectralWindowId()(ddid);
@@ -206,10 +208,27 @@ void MeqCalibrater::fillBaselines (const Vector<int>& ant1,
 //----------------------------------------------------------------------
 void MeqCalibrater::makeWSRTExpr()
 {
-  // Make an expression for each station.
-  itsStatExpr = vector<MeqJonesExpr*> (itsStations.size(), (MeqJonesExpr*)0);
+  // Get the point sources from the GSM.
+  itsGSM.getPointSources (itsSources);
+  for (unsigned int i=0; i<itsSources.size(); i++) {
+    itsSources[i].setSourceNr (i);
+    itsSources[i].setPhaseRef (&itsPhaseRef);
+  }
+
+  // Make expressions for each station.
+  itsStatUVW  = vector<MeqStatUVW*>     (itsStations.size(),
+					 (MeqStatUVW*)0);
+  itsStatSrc  = vector<MeqStatSources*> (itsStations.size(),
+					 (MeqStatSources*)0);
+  itsStatExpr = vector<MeqJonesExpr*>   (itsStations.size(),
+					 (MeqJonesExpr*)0);
   for (unsigned int i=0; i<itsStations.size(); i++) {
     if (itsStations[i] != 0) {
+      // Expression to calculate UVW per station
+      itsStatUVW[i] = new MeqStatUVW (itsStations[i], &itsPhaseRef);
+      // Expression to calculate contribution per station per source.
+      itsStatSrc[i] = new MeqStatSources (itsStatUVW[i], &itsSources);
+      // Expression representing station parameters.
       MeqExpr* frot = new MeqStoredParmPolc ("frot." +
 					     itsStations[i]->getName(),
 					     &itsMEP);
@@ -229,24 +248,20 @@ void MeqCalibrater::makeWSRTExpr()
     }
   }    
 
-  // Get the point sources from the GSM.
-  vector<MeqPointSource> sources;
-  itsGSM.getPointSources (sources);
-
   // Make an expression for each baseline.
-  itsExpr.resize (itsUVWPolc.size());
+  itsExpr.resize (itsBaselines.size());
   // Create the histogram object for couting of used #cells in time and freq
-  itsCelltHist.resize (itsUVWPolc.size());
-  itsCellfHist.resize (itsUVWPolc.size());
+  itsCelltHist.resize (itsBaselines.size());
+  itsCellfHist.resize (itsBaselines.size());
   int nrant = itsBLIndex.nrow();
   for (int ant2=0; ant2<nrant; ant2++) {
     for (int ant1=0; ant1<nrant; ant1++) {
       int blindex = itsBLIndex(ant1,ant2);
       if (blindex >= 0) {
 	// Create the DFT kernel.
-	MeqPointDFT* dft = new MeqPointDFT(sources, itsPhaseRef,
-					   itsUVWPolc[blindex]);
-	MeqWsrtPoint* pnt = new MeqWsrtPoint (sources, dft,
+	MeqPointDFT* dft = new MeqPointDFT (itsStatSrc[ant1],
+					    itsStatSrc[ant2]);
+	MeqWsrtPoint* pnt = new MeqWsrtPoint (itsSources, dft,
 					      &itsCelltHist[blindex],
 					      &itsCellfHist[blindex]);
 	itsExpr[blindex] = new MeqWsrtInt (pnt, itsStatExpr[ant1],
@@ -258,89 +273,10 @@ void MeqCalibrater::makeWSRTExpr()
 
 //----------------------------------------------------------------------
 //
-// ~calcUVWPolc
-//
-// Calculate per baseline the polynomial coefficients for the UVW coordinates
-// for the given MS which should be in order of baseline.
-//
-//----------------------------------------------------------------------
-void MeqCalibrater::calcUVWPolc (const Table& ms)
-{
-  // Create all MeqUVWPolc objects.
-  itsUVWPolc.resize (itsBaselines.size());
-  for (vector<MeqUVWPolc*>::iterator iter = itsUVWPolc.begin();
-       iter != itsUVWPolc.end();
-       iter++) {
-    *iter = new MeqUVWPolc();
-  }
-  // The MS is already sorted in order of baseline.
-  Block<String> keys(2);
-  keys[0] = "ANTENNA1";
-  keys[1] = "ANTENNA2";
-  // Iterate through the MS per baseline.
-  TableIterator iter (ms, keys, TableIterator::Ascending,
-		      TableIterator::NoSort);
-  // Calculate the uvwpolc for the whole domain of the measurementset
-  while (!iter.pastEnd()) {
-    Table tab = iter.table();
-    ROScalarColumn<int> ant1col(tab, "ANTENNA1");
-    ROScalarColumn<int> ant2col(tab, "ANTENNA2");
-    ROArrayColumn<double> uvwcol(tab, "UVW");
-    ROScalarColumn<double> timcol(tab, "TIME");
-    Vector<double> dt = timcol.getColumn();
-    Matrix<double> uvws = uvwcol.getColumn();
-    int nrtim = dt.nelements();
-    uInt ant1 = ant1col(0);
-    uInt ant2 = ant2col(0);
-    Assert (ant1 < itsBLIndex.nrow()  &&  ant2 < itsBLIndex.nrow()
-	    &&  itsBLIndex(ant1,ant2) >= 0);
-    int blindex = itsBLIndex(ant1,ant2);
-    // Divide the data into chunks of 1 hour (assuming it is equally spaced).
-    // Make all chunks about equally long.
-    double interval = (dt(nrtim-1) - dt(0)) / (nrtim-1);
-    int chunkLength = int(3600. / interval + 0.5);
-    int nrChunk = 1 + (nrtim-1) / chunkLength;
-    chunkLength = nrtim / nrChunk;
-    int chunkRem = nrtim % nrChunk;
-    Assert (chunkLength > 4);
-    // Loop through the data in periods of one hour.
-    // Take care that the remainder is evenly spread over the chunks.
-    int nrdone = 0;
-
-    char baselineName[64];
-    snprintf(baselineName, 64, ".ST_%d_%d", ant1, ant2);
-
-    for (int i=0; i<chunkRem; i++) {
-      itsUVWPolc[blindex]->calcCoeff (dt(Slice(nrdone,chunkLength+1)),
-				      uvws(Slice(0,3),
-					   Slice(nrdone,chunkLength+1)));
-      itsUVWPolc[blindex]->setName(baselineName);
-      nrdone += chunkLength+1;
-    }
-    for (int i=chunkRem; i<nrChunk; i++) {
-      itsUVWPolc[blindex]->calcCoeff (dt(Slice(nrdone,chunkLength)),
-				      uvws(Slice(0,3),
-					   Slice(nrdone,chunkLength)));
-      itsUVWPolc[blindex]->setName(baselineName);
-      nrdone += chunkLength;
-    }
-    Assert (nrdone == nrtim);
-      ///      cout << "UVWs: " << blindex << ' ' << ant1 << ' ' << ant2 << ' '
-      ///	   << itsUVWPolc[blindex]->getUCoeff().getPolcs()[0].getCoeff()
-	///	   << itsUVWPolc[blindex]->getVCoeff().getPolcs()[0].getCoeff()
-	///	   << itsUVWPolc[blindex]->getWCoeff().getPolcs()[0].getCoeff()
-      ///	   << endl;
-    iter++;
-  }
-}
-
-//----------------------------------------------------------------------
-//
 // ~MeqCalibrater
 //
 // Constructor. Initialize a MeqCalibrater object.
 //
-// Calculate UVW polc.
 // Create list of stations and list of baselines from MS.
 // Create the MeqExpr tree for the WSRT.
 //
@@ -382,10 +318,12 @@ MeqCalibrater::MeqCalibrater(const String& msName,
   Block<String> keys(2);
   keys[0] = "ANTENNA1";
   keys[1] = "ANTENNA2";
-  Table sortMS = itsSelMS.sort (keys);
   // Sort uniquely to get all baselines.
+  // It looks as if QuicSort|NoDuplicates is incorrect
+  // (it looks as if it skips some entries).
+  Table sortMS = itsSelMS.sort (keys, Sort::Ascending);
   Table blMS = sortMS.sort (keys, Sort::Ascending,
-			    Sort::NoDuplicates + Sort::InsSort);
+			    Sort::InsSort | Sort::NoDuplicates);
 
   // Generate the baseline objects for the baselines.
   // If we ever want to solve for station positions, we cannot use the
@@ -394,17 +332,14 @@ MeqCalibrater::MeqCalibrater(const String& msName,
   // It also forms an index giving for each (ordered) antenna pair the
   // index in the vector of baselines. -1 means that no baseline exists
   // for that antenna pair.
-  ROScalarColumn<int> ant1(blMS, "ANTENNA1");
-  ROScalarColumn<int> ant2(blMS, "ANTENNA2");
-  Vector<int> ant1data = ant1.getColumn();
-  Vector<int> ant2data = ant2.getColumn();
+  ROScalarColumn<int> ant1col(blMS, "ANTENNA1");
+  ROScalarColumn<int> ant2col(blMS, "ANTENNA2");
+  Vector<int> ant1data = ant1col.getColumn();
+  Vector<int> ant2data = ant2col.getColumn();
   // First find all used stations (from the ANTENNA subtable of the MS).
   fillStations (ant1data, ant2data);
   Matrix<int> index;
   fillBaselines (ant1data, ant2data);
-
-  // Calculate the UVW polynomial coefficients for each baseline.
-  calcUVWPolc (sortMS);
 
   // Set up the expression tree for all baselines.
   makeWSRTExpr();
@@ -445,8 +380,13 @@ MeqCalibrater::~MeqCalibrater()
        iter++) {
     delete *iter;
   }
-  for (vector<MeqUVWPolc*>::iterator iter = itsUVWPolc.begin();
-       iter != itsUVWPolc.end();
+  for (vector<MeqStatSources*>::iterator iter = itsStatSrc.begin();
+       iter != itsStatSrc.end();
+       iter++) {
+    delete *iter;
+  }
+  for (vector<MeqStatUVW*>::iterator iter = itsStatUVW.begin();
+       iter != itsStatUVW.end();
        iter++) {
     delete *iter;
   }
@@ -1039,6 +979,8 @@ void MeqCalibrater::predict (const String& modelDataColName)
   // Loop through all rows in the current solve domain.
   for (unsigned int i=0; i<itsCurRows.nelements(); i++) {
     int rownr = itsCurRows(i);
+    ///    cout << "Processing row " << rownr << " out of "
+      ///	 << itsCurRows.nelements() << endl;
     ///    MeqPointDFT::doshow = rownr==44;
     uInt ant1 = itsMSCol.antenna1()(rownr);
     uInt ant2 = itsMSCol.antenna2()(rownr);
@@ -1084,6 +1026,7 @@ void MeqCalibrater::predict (const String& modelDataColName)
     mdcol.put (rownr, data);
   }
 
+  timer.show();
   if (Debug(1)) timer.show();
 }
 
