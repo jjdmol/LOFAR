@@ -77,6 +77,7 @@ public:
 		 const String& skyModel,
 		 const String& dbType,
 		 const String& dbName,
+		 const String& dbHost,
 		 const String& dbPwd,
 		 uInt ddid,
 		 const Vector<Int>& ant1,
