@@ -73,22 +73,26 @@ void DBRep<MeqParmDefHolder>::toDBRep (const MeqParmDefHolder& obj)
   BlobOBufString bb(bstr);
   BlobOStream bs(bb);
   {
-    bstr.resize(0);
+    bb.clear();
+    bs.clear();
     bs << obj.getPolc().getCoeff();
     itsCoeff = bstr.getString();
   }
   {
-    bstr.resize(0);
+    bb.clear();
+    bs.clear();
     bs << obj.getPolc().getSimCoeff();
     itsSimCoeff = bstr.getString();
   }
   {
-    bstr.resize(0);
+    bb.clear();
+    bs.clear();
     bs << obj.getPolc().getPertSimCoeff();
     itsPertSimCoeff = bstr.getString();
   }
   {
-    bstr.resize(0);
+    bb.clear();
+    bs.clear();
     //    bs << std::vector<bool>(1,true);
     bs << std::vector<int>(1,1);
     itsMask = bstr.getString();
