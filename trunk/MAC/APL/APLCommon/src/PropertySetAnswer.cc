@@ -27,6 +27,8 @@
 using namespace LOFAR;
 using namespace APLCommon;
 
+INIT_TRACER_CONTEXT(PropertySetAnswer,LOFARLOGGER_PACKAGE);
+
 PropertySetAnswer::PropertySetAnswer(PropertySetAnswerHandlerInterface& handler) :
   ::GCFAnswer(),
   m_handler(handler)

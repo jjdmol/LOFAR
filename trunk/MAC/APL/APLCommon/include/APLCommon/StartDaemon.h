@@ -29,6 +29,7 @@
 //# GCF Includes
 #include <GCF/PAL/GCF_MyPropertySet.h>
 #include <GCF/PAL/GCF_PVSSPort.h>
+#include <GCF/TM/GCF_TCPPort.h>
 #include <GCF/TM/GCF_Task.h>
 #include <GCF/TM/GCF_Event.h>
 
@@ -99,19 +100,25 @@ namespace APLCommon
       bool _isChildPort(::GCFPortInterface& port);
       void _disconnectedHandler(::GCFPortInterface& port);
 
+#ifdef USE_TCPPORT_INSTEADOF_PVSSPORT
+      typedef GCFTCPPort  TThePortTypeInUse;
+#else      
+      typedef GCFPVSSPort TThePortTypeInUse;
+#endif
       typedef map<TLogicalDeviceTypes,boost::shared_ptr<LogicalDeviceFactory> > TFactoryMap;
       typedef vector<boost::shared_ptr<LogicalDevice> > TLogicalDeviceVector;
-      typedef vector<boost::shared_ptr< ::GCFPVSSPort> > TPVSSPortVector;
+      typedef vector<boost::shared_ptr<TThePortTypeInUse> > TPortVector;
 
       PropertySetAnswer               m_propertySetAnswer;
       ::GCFMyPropertySet              m_properties;
       string                          m_serverPortName;
-      ::GCFPVSSPort                   m_serverPort; // listening port
-      TPVSSPortVector                 m_childPorts;    // connected childs
+      TThePortTypeInUse               m_serverPort; // listening port
+      TPortVector                     m_childPorts;    // connected childs
 
       TFactoryMap                     m_factories;
       TLogicalDeviceVector            m_logicalDevices;
     
+      ALLOC_TRACER_CONTEXT  
   };
 };//APLCommon
 };//LOFAR

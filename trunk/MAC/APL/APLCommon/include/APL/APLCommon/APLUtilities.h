@@ -48,7 +48,7 @@ class APLUtilities
     virtual ~APLUtilities();
 
     static void decodeCommand(const string& commandString, string& command, vector<string>& parameters);
-    static void decodeParameters(const string& parametersString, vector<string>& parameters); 
+    static void string2Vector(const string& parametersString, vector<string>& parameters); 
     
   protected:
     // protected copy constructor
@@ -57,6 +57,8 @@ class APLUtilities
     APLUtilities& operator=(const APLUtilities&);
 
   private:
+
+    ALLOC_TRACER_CONTEXT  
 };
 
 };//APL

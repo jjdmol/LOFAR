@@ -44,17 +44,23 @@ const string StartDaemon::SD_PROPNAME_STATUS("status");
 const string StartDaemon::SD_COMMAND_SCHEDULE("SCHEDULE");
 const string StartDaemon::SD_COMMAND_STOP("STOP");
 
+INIT_TRACER_CONTEXT(StartDaemon,LOFARLOGGER_PACKAGE);
+
 StartDaemon::StartDaemon(const string& name) :
-  ::GCFTask((State)&StartDaemon::initial_state,"StartDaemon"),
+  ::GCFTask((State)&StartDaemon::initial_state,name),
   PropertySetAnswerHandlerInterface(),
   m_propertySetAnswer(*this),
   m_properties(name.c_str(),PSTYPE_STARTDAEMON.c_str(),PS_CAT_TEMPORARY,&m_propertySetAnswer),
-  m_serverPortName(name + string("_server")),
+  m_serverPortName(string("server")),
   m_serverPort(*this, m_serverPortName, ::GCFPortInterface::MSPP, STARTDAEMON_PROTOCOL),
   m_childPorts(),
   m_factories(),
   m_logicalDevices()
 {
+#ifdef USE_TCPPORT_INSTEADOF_PVSSPORT
+  LOG_WARN("Using GCFTCPPort in stead of GCFPVSSPort");
+#endif
+
   registerProtocol(STARTDAEMON_PROTOCOL, STARTDAEMON_PROTOCOL_signalnames);
   LOG_DEBUG(formatString("StartDaemon(%s)::StartDaemon",getName().c_str()));
   
@@ -117,7 +123,7 @@ bool StartDaemon::_isServerPort(::GCFPortInterface& port)
 bool StartDaemon::_isChildPort(::GCFPortInterface& port)
 {
   bool found=false;
-  TPVSSPortVector::iterator it=m_childPorts.begin();
+  TPortVector::iterator it=m_childPorts.begin();
   while(!found && it != m_childPorts.end())
   {
     found = (&port == (*it).get()); // comparing two pointers. yuck?
@@ -135,7 +141,7 @@ void StartDaemon::_disconnectedHandler(::GCFPortInterface& port)
   else if(_isChildPort(port))
   {
     bool found=false;
-    TPVSSPortVector::iterator it=m_childPorts.begin();
+    TPortVector::iterator it=m_childPorts.begin();
     while(!found && it != m_childPorts.end())
     {
       found = (&port == (*it).get()); // comparing two pointers. yuck?
@@ -202,10 +208,10 @@ void StartDaemon::_disconnectedHandler(::GCFPortInterface& port)
 
     case F_ACCEPT_REQ:
     {
-      boost::shared_ptr<GCFPVSSPort> client(new GCFPVSSPort);
-      client->init(*this, m_serverPortName, GCFPortInterface::SPP, STARTDAEMON_PROTOCOL);
-      m_serverPort.accept(*(client.get()));
-      m_childPorts.push_back(client);
+      boost::shared_ptr<TThePortTypeInUse> server(new TThePortTypeInUse);
+      server->init(*this, m_serverPortName, GCFPortInterface::SPP, STARTDAEMON_PROTOCOL);
+      m_serverPort.accept(*(server.get()));
+      m_childPorts.push_back(server);
       break;
     }
   

@@ -57,6 +57,7 @@ namespace APLCommon
 
     private:
     
+      ALLOC_TRACER_CONTEXT  
   };
 };//APLCommon
 };//LOFAR

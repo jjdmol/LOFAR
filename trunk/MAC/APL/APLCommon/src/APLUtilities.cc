@@ -20,10 +20,13 @@
 //#
 //#  $Id$
 
+#include <Common/LofarLogger.h>
 #include "APLCommon/APLUtilities.h"
 
 using namespace LOFAR;
 using namespace APLCommon;
+
+INIT_TRACER_CONTEXT(APLUtilities,LOFARLOGGER_PACKAGE);
 
 APLUtilities::APLUtilities()
 {
@@ -44,11 +47,14 @@ void APLUtilities::decodeCommand(const string& commandString, string& command, v
   else
   {
     command=commandString.substr(0,delim);
-    APLUtilities::decodeParameters(commandString.substr(delim+1),parameters);
+    APLUtilities::string2Vector(commandString.substr(delim+1),parameters);
   }
 }
 
-void APLUtilities::decodeParameters(const string& parametersString, vector<string>& parameters)
+/*
+ * Converts a , delimited string to a vector of strings
+ */
+void APLUtilities::string2Vector(const string& parametersString, vector<string>& parameters)
 {
   unsigned int parametersStringLen=parametersString.length();
   unsigned int delim(0);
