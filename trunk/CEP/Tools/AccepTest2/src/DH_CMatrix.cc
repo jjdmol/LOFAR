@@ -42,6 +42,9 @@ namespace LOFAR
       itsYname(yname)
   {
     LOG_TRACE_STAT_STR("constructing matrix of "<<xsize<<" by "<<ysize);
+    char myType[128];
+    sprintf(myType, "DH_CMatrix_%dx%d", xsize, ysize);
+    setType(myType);
   }
 
   DH_CMatrix::DH_CMatrix(const DH_CMatrix& that)
@@ -55,6 +58,9 @@ namespace LOFAR
     itsXname = that.itsXname;
     itsYname = that.itsYname;
     LOG_TRACE_STAT("constructing matrix");
+    char myType[128];
+    sprintf(myType, "DH_CMatrix_%dx%d", itsXsize, itsYsize);
+    setType(myType);
   }
 
   DH_CMatrix::~DH_CMatrix()
