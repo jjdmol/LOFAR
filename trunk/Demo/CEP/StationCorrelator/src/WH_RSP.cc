@@ -36,14 +36,14 @@ using namespace LOFAR;
 
 WH_RSP::WH_RSP(const string& name, 
                const KeyValueMap kvm) 
-  : WorkHolder (1, 1, name, "WH_RSP"),
+  : WorkHolder (1, kvm.getInt("NoWH_Correlator", 7), name, "WH_RSP"),
     itsKVM (kvm)
 {
   char str[5];
   
   int beamletsinpacket   = kvm.getInt("NoRSPbeamlets", 92);
   int packetsinframe     = kvm.getInt("NoPacketsInFrame", 8);
-  int stationdataholders = kvm.getInt("NoDH_StationData", 7);
+  int stationdataholders = kvm.getInt("NoWH_Correlator", 7);
   int polarisations      = kvm.getInt("polarisations",2);
   
   // Create buffer for incoming dataholders 
