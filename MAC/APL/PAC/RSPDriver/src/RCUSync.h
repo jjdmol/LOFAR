@@ -33,8 +33,8 @@ namespace RSP
 	  /**
 	   * Constructors for a RCUSync object.
 	   */
-	  explicit RCUSync(State initial);
-	  
+	  RCUSync();
+
 	  /* Destructor for RCUSync. */
 	  virtual ~RCUSync();
 
@@ -42,9 +42,6 @@ namespace RSP
 	   * Initial state handler.
 	   */
 	  GCFEvent::TResult initial_state(GCFEvent& event, GCFPortInterface& port);
-
-      private:
-	  RCUSync();
 
       private:
       };

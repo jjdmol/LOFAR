@@ -36,7 +36,6 @@ SyncAction::SyncAction(State handler) : GCFFsm(handler), m_priority(0), m_final(
 
 SyncAction::~SyncAction()
 {
-  /* TODO: delete event? */
 }
 
 void SyncAction::setPriority(int priority)

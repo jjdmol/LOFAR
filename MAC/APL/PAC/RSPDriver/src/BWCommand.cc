@@ -1,4 +1,4 @@
-//#  SyncAction.cc: implementation of the SyncAction class
+//#  BWCommand.cc: implementation of the BWCommand class
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,7 +20,8 @@
 //#
 //#  $Id$
 
-#include "SyncAction.h"
+#include "RSP_Protocol.ph"
+#include "BWCommand.h"
 
 #undef PACKAGE
 #undef VERSION
@@ -29,27 +30,27 @@
 
 using namespace RSP;
 using namespace LOFAR;
+using namespace RSP_Protocol;
 
-SyncAction::SyncAction(State handler) : GCFFsm(handler), m_priority(0), m_final(false)
+BWCommand::BWCommand(GCFEvent& event, GCFPortInterface& port, Operation oper)
+{
+  RSPSetweightsEvent* m_event = new RSPSetweightsEvent(event);
+
+  setOperation(oper);
+  setPeriod(0);
+}
+
+BWCommand::~BWCommand()
+{
+  delete m_event;
+}
+
+void BWCommand::apply()
 {
 }
 
-SyncAction::~SyncAction()
+const Timestamp& BWCommand::getTimestamp()
 {
+  return m_event->timestamp;
 }
 
-void SyncAction::setPriority(int priority)
-{
-  /* TODO: check range of priority argument ?*/
-  m_priority = priority;
-}
-
-void SyncAction::setFinal(bool final)
-{
-  m_final = final;
-}
-
-bool SyncAction::isFinal() const
-{
-  return m_final;
-}

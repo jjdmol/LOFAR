@@ -30,13 +30,12 @@
 using namespace RSP;
 using namespace LOFAR;
 
-Command::Command() : m_period(0), m_event(0), m_answerport(0), m_operation(READ)
+Command::Command() : m_period(0), m_answerport(0), m_operation(READ)
 {
 }
 
 Command::~Command()
 {
-  /* TODO: delete event? */
 }
 
 void Command::setPeriod(int16 period)
@@ -44,23 +43,23 @@ void Command::setPeriod(int16 period)
   m_period = period;
 }
 
-void Command::setEvent(GCFEvent* event)
-{
-  /* TODO: delete preexisting event? */
-
-  m_event = event;
-}
-
-void Command::setAnswerPort(GCFPortInterface* port)
-{
-  m_answerport = port;
-}
-
 void Command::setOperation(Operation oper)
 {
   m_operation = oper;
 }
 
+#if 0
+void Command::setEvent(const GCFEvent& event, GCFPortInterface& port, Operation oper, int16 period)
+{
+  /* copy the event to the Command */
+  m_event = (GCFEvent*)new char[sizeof(event) + event.length];
+  memcpy(m_event, (const char*)&event, sizeof(event) + event.length);
+  m_answerport = &port;
+  m_operation = oper;
+  m_period = period;
+}
+
 void Command::apply()
 {
 }
+#endif

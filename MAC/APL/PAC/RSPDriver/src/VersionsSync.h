@@ -33,7 +33,7 @@ namespace RSP
 	  /**
 	   * Constructors for a VersionsSync object.
 	   */
-	  explicit VersionsSync(State initial);
+	  VersionsSync();
 	  
 	  /* Destructor for VersionsSync. */
 	  virtual ~VersionsSync();
@@ -42,9 +42,6 @@ namespace RSP
 	   * Initial state handler.
 	   */
 	  GCFEvent::TResult initial_state(GCFEvent& event, GCFPortInterface& port);
-
-      private:
-	  VersionsSync();
 
       private:
       };

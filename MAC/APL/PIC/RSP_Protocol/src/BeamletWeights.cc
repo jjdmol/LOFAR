@@ -22,6 +22,8 @@
 
 #include "BeamletWeights.h"
 
+#include <Common/LofarTypes.h>
+
 #undef PACKAGE
 #undef VERSION
 #include <lofar_config.h>
@@ -30,20 +32,67 @@ using namespace LOFAR;
 
 using namespace RSP_Protocol;
 using namespace std;
+using namespace blitz;
 
 unsigned int BeamletWeights::getSize()
 {
-  return sizeof(struct timeval);
+  /* NDIM extent values plus the array data itself */
+  return
+      ((NDIM * sizeof(int32))
+       + (m_weights.size() * sizeof(complex<double>)));
 }
 
 unsigned int BeamletWeights::pack  (void* buffer)
 {
-  buffer = buffer;
-  return 0;
+    char* bufptr = (char*)buffer;
+    unsigned int offset = 0;
+
+    for (int dim = firstDim; dim < firstDim + m_weights.dimensions(); dim++)
+    {
+	int32 extent = m_weights.extent(dim);
+	memcpy(bufptr + offset, &extent, sizeof(int32));
+	offset += sizeof(int32);
+    }
+
+    if (m_weights.isStorageContiguous())
+    {
+	memcpy(bufptr + offset, m_weights.data(), m_weights.size() * sizeof(complex<double>));
+	offset += m_weights.size() * sizeof(complex<double>);
+    }
+    else
+    {
+	cerr << "NON-CONTIGUOUS ARRAY STORAGE!" << endl;
+    }
+    
+    return offset;
 }
 
 unsigned int BeamletWeights::unpack(void *buffer)
 {
-  buffer = buffer;
-  return 0;
+  char* bufptr = (char*)buffer;
+  unsigned int offset = 0;
+  TinyVector<int, NDIM> extent;
+
+  for (int dim = firstDim; dim < firstDim + m_weights.dimensions(); dim++)
+  {
+      int32 extenttmp = m_weights.extent(dim);
+      memcpy(&extenttmp, bufptr + offset, sizeof(int32));
+      offset += sizeof(int32);
+      extent(dim - firstDim) = extenttmp;
+  }
+
+  // resize the array to the correct size
+  m_weights.resize(extent);
+
+  if (m_weights.isStorageContiguous())
+  {
+      memcpy(m_weights.data(), bufptr+offset, m_weights.size() * sizeof(complex<double>));
+      offset += m_weights.size() * sizeof(complex<double>);
+  }
+  else
+  {
+	cerr << "NON-CONTIGUOUS ARRAY STORAGE!" << endl;
+  }
+    
+  return offset;
 }

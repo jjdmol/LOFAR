@@ -1,4 +1,5 @@
-//#  SyncAction.cc: implementation of the SyncAction class
+//#
+//#  RSPTestSuite.h: Macros for using the testsuite more effectively.
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -19,37 +20,38 @@
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
 //#  $Id$
+//#
 
-#include "SyncAction.h"
+#ifndef RSPTESTSUITE_H_
+#define RSPTESTSUITE_H_
 
-#undef PACKAGE
-#undef VERSION
-#include <lofar_config.h>
-#include <Common/LofarLogger.h>
+#include <Suite/test.h>
+#include <Suite/suite.h>
 
-using namespace RSP;
-using namespace LOFAR;
+#define START_TEST(_test_, _descr_) \
+  setCurSubTest(#_test_, _descr_)
 
-SyncAction::SyncAction(State handler) : GCFFsm(handler), m_priority(0), m_final(false)
-{
-}
+#define STOP_TEST() \
+  reportSubTest()
 
-SyncAction::~SyncAction()
-{
-}
+#define FAIL_ABORT(_txt_, _final_state_) \
+  { \
+    FAIL(_txt_);  \
+    ABORT_TESTS(_final_state_; \
+  }
 
-void SyncAction::setPriority(int priority)
-{
-  /* TODO: check range of priority argument ?*/
-  m_priority = priority;
-}
+#define TESTC_ABORT(cond, _final_state_) \
+  if (!TESTC(cond)) \
+  { \
+    TRAN(_final_state_); \
+    break; \
+  }
 
-void SyncAction::setFinal(bool final)
-{
-  m_final = final;
-}
+#define TESTC_DESCR_ABORT(cond, _descr_, _final_state_) \
+  if (!TESTC_DESCR(cond, _descr_)) \
+  { \
+    TRAN(_final_state_); \
+    break; \
+  }
 
-bool SyncAction::isFinal() const
-{
-  return m_final;
-}
+#endif

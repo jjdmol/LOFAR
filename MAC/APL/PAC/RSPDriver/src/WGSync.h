@@ -33,7 +33,7 @@ namespace RSP
 	  /**
 	   * Constructors for a WGSync object.
 	   */
-	  explicit WGSync(State initial);
+	  WGSync();
 	  
 	  /* Destructor for WGSync. */
 	  virtual ~WGSync();
@@ -42,9 +42,6 @@ namespace RSP
 	   * Initial state handler.
 	   */
 	  GCFEvent::TResult initial_state(GCFEvent& event, GCFPortInterface& port);
-
-      private:
-	  WGSync();
 
       private:
       };

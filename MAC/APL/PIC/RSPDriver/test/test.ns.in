@@ -1,0 +1,15 @@
+[RSPTest]
+host=localhost
+server.type=TCP
+
+[RSP]
+cmd=../src/RSPDriver
+host=localhost
+client.type=TCP
+client.port=30230
+board.type=TCP
+
+[EPAStub]
+host=localhost
+client.type=TCP
+client.port=30229

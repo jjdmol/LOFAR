@@ -22,6 +22,8 @@
 
 #include "Timestamp.h"
 
+#include <math.h>
+
 #undef PACKAGE
 #undef VERSION
 #include <lofar_config.h>
@@ -30,3 +32,25 @@ using namespace LOFAR;
 
 using namespace RSP_Protocol;
 using namespace std;
+
+void Timestamp::setNow(double delay)
+{
+  (void)gettimeofday(&m_tv, 0);
+  m_tv.tv_sec += (long)trunc(delay);
+
+  /**
+   * For future use it may be required to have higher
+   * precision than seconds.
+   */
+#if 0
+  m_tv.tv_usec = 0;
+#else
+  m_tv.tv_usec += (int)(10e6 * (delay - trunc(delay)));
+  if (m_tv.tv_usec > (int)(10e6))
+  {
+      m_tv.tv_usec -= (int)(10e6);
+      m_tv.tv_sec++;
+  }
+#endif
+}
+
