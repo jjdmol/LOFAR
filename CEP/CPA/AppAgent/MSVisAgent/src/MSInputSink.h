@@ -133,6 +133,11 @@ class MSInputSink : public FileSink
     //##ModelId=3DF9FECD01E6
       int num_ifrs_;
       
+      //## flag: flip frequency axis. Output frequencies will always be
+      //## in increasing order; if MS freqs are decreasing, then the freq axis
+      //## must be flipped. This flag is set in fillHeader()
+      bool flip_freq_;
+      
       // count of timeslots already returned
     //##ModelId=3DFDFC060354
       int current_timeslot_;
