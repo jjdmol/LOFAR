@@ -44,7 +44,7 @@ typedef vector<MParm> MParmSet;
 typedef MeqParmDefHolder MParmDef;
 typedef vector<MParmDef> MParmDefSet;
 
-string dbName, dbType, dbUser, tableName;
+string dbHost, dbName, dbType, dbUser, tableName;
 
 char bool2char (bool val)
 {
@@ -140,8 +140,6 @@ MeqMatrix getArray (const KeyValueMap& kvmap, const std::string& arrName,
   uint ny = vec.size() / nx;
   MeqMatrix mat (double(0), nx, ny, false);
   memcpy (mat.doubleStorage(), &vec[0], sizeof(double)*vec.size());
-  cout<<"read array: "<<mat<<endl;
-  cout<<"from vector: "<<vec<<endl;
   return mat;
 }
 
@@ -162,20 +160,25 @@ void newParmDef (const std::string& tableName, const std::string& parmName,
   polc.setX0 (kvmap.getDouble ("time0", 0.));
   polc.setY0 (kvmap.getDouble ("freq0", 0.));
 
-  ParmTableMySQL PTS ("dop50", "zwart", tableName+"def");
-  PTS.putNewDefCoeff(parmName, srcnr, statnr, polc);
+  if (dbType=="postgres"){
+    ParmTablePGSQL PTS (dbHost, dbUser, tableName+"def");
+    PTS.putNewDefCoeff(parmName, srcnr, statnr, polc);
+  } else if (dbType=="mysql") {
+    ParmTableMySQL PTS (dbHost, dbUser, tableName+"def");
+    PTS.putNewDefCoeff(parmName, srcnr, statnr, polc);
+  } else {
+    cerr<<"Unknown database type: '"<<dbType<<"'"<<endl;
+    exit(1);
+  };
 }
 
 void doIt()
 {
   char cstra[1024];
   char* cstr = cstra;
-  std::string dbUser = getUserName();
-  std::string tableName = "MeqParm";
   // Loop until stop is given.
   while (true) {
     try {
-      cout << "Command: ";
       if (! cin.getline (cstr, sizeof(cstra))) {
 	cerr << "Error while reading command" << endl;
 	break;
@@ -191,8 +194,11 @@ void doIt()
       if (command == 5) {
 	// Connect to database
 	KeyValueMap kvmap = KeyParser::parse (cstr);
-	std::string dbName = kvmap.getString ("db", dbUser);
-	std::string dbType = kvmap.getString ("dbtype", "postgres");
+	dbUser = kvmap.getString ("user", getUserName());
+	tableName = "MeqParm";
+	dbHost = kvmap.getString ("host", "dop50");
+	dbName = kvmap.getString ("db", dbUser);
+	dbType = kvmap.getString ("dbtype", "postgres");
 	tableName = kvmap.getString ("tablename", "MeqParm");
 	cout << "Connected to " << dbType << " database " << dbName
 	     << endl;
