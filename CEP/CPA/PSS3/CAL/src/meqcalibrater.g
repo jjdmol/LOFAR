@@ -176,6 +176,18 @@ const _define_meqcalibrater := function(ref agent, id) {
         return defaultservers.run(self.agent, self.getsolvedomainRec);
     }
 
+    self.getstatisticsRec := [_method="getstatistics", _sequence=self.id._sequence]
+    public.getstatistics := function (detailed=F) {
+    
+        wider self;
+        
+        # argument assignment
+        self.getstatisticsRec.detailed := detailed
+
+        # return
+        return defaultservers.run(self.agent, self.getstatisticsRec);
+    }
+    
     public.id := function() {
 	wider self;
 	return self.id.objectid;

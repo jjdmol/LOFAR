@@ -234,6 +234,9 @@ void MeqCalibrater::makeWSRTExpr()
 
   // Make an expression for each baseline.
   itsExpr.resize (itsUVWPolc.size());
+  // Create the histogram object for couting of used #cells in time and freq
+  itsCelltHist.resize (itsUVWPolc.size());
+  itsCellfHist.resize (itsUVWPolc.size());
   int nrant = itsBLIndex.nrow();
   for (int ant2=0; ant2<nrant; ant2++) {
     for (int ant1=0; ant1<nrant; ant1++) {
@@ -242,7 +245,9 @@ void MeqCalibrater::makeWSRTExpr()
 	// Create the DFT kernel.
 	MeqPointDFT* dft = new MeqPointDFT(sources, itsPhaseRef,
 					   itsUVWPolc[blindex]);
-	MeqWsrtPoint* pnt = new MeqWsrtPoint (sources, dft);
+	MeqWsrtPoint* pnt = new MeqWsrtPoint (sources, dft,
+					      &itsCelltHist[blindex],
+					      &itsCellfHist[blindex]);
 	itsExpr[blindex] = new MeqWsrtInt (pnt, itsStatExpr[ant1],
 					   itsStatExpr[ant2]);
       }
@@ -409,9 +414,22 @@ MeqCalibrater::MeqCalibrater(const String& msName,
 //----------------------------------------------------------------------
 MeqCalibrater::~MeqCalibrater()
 {
-  itsMS.flush();
-
   cout << "MeqCalibrater destructor" << endl;
+  for (vector<MeqJonesExpr*>::iterator iter = itsExpr.begin();
+       iter != itsExpr.end();
+       iter++) {
+    delete *iter;
+  }
+  for (vector<MeqJonesExpr*>::iterator iter = itsStatExpr.begin();
+       iter != itsStatExpr.end();
+       iter++) {
+    delete *iter;
+  }
+  for (vector<MeqUVWPolc*>::iterator iter = itsUVWPolc.begin();
+       iter != itsUVWPolc.end();
+       iter++) {
+    delete *iter;
+  }
 }
 
 //----------------------------------------------------------------------
@@ -1192,6 +1210,43 @@ Bool MeqCalibrater::select(const String& where)
 
 //----------------------------------------------------------------------
 //
+// ~getParms
+//
+// Get a description of the parameters whose name matches the
+// parmPatterns pattern. The description shows the result of the
+// evaluation of the parameter on the current time domain.
+//
+//----------------------------------------------------------------------
+GlishRecord MeqCalibrater::getStatistics (bool detailed)
+{
+  GlishRecord rec;
+
+  cout << "getStatistics: " << endl;
+
+  // Get the total counts.
+  rec.add ("timecellstotal", MeqHist::merge (itsCelltHist));
+  rec.add ("freqcellstotal", MeqHist::merge (itsCellfHist));
+
+  if (detailed) {
+    // Get the counts per station.
+    int nrant = itsBLIndex.nrow();
+    for (int ant2=0; ant2<nrant; ant2++) {
+      String str2 = String::toString(ant2);
+      for (int ant1=0; ant1<nrant; ant1++) {
+	int blindex = itsBLIndex(ant1,ant2);
+	if (blindex >= 0) {
+	  String str = String::toString(ant1) + '_' + str2;
+	  rec.add ("timecells_" + str, itsCelltHist[blindex].get());
+	  rec.add ("freqcells_" + str, itsCellfHist[blindex].get());
+	}
+      }
+    }
+  }
+  return rec;
+}
+
+//----------------------------------------------------------------------
+//
 // ~className
 //
 // Return the name of this DO class.
@@ -1211,7 +1266,7 @@ String MeqCalibrater::className() const
 //----------------------------------------------------------------------
 Vector<String> MeqCalibrater::methods() const
 {
-  Vector<String> method(12);
+  Vector<String> method(13);
 
   method(0)  = "settimeinterval";
   method(1)  = "resetiterator";
@@ -1222,9 +1277,10 @@ Vector<String> MeqCalibrater::methods() const
   method(6)  = "solve";
   method(7)  = "saveparms";
   method(8)  = "saveresidualdata";
-  method(9) = "getparms";
+  method(9)  = "getparms";
   method(10) = "getsolvedomain";
   method(11) = "select";
+  method(12) = "getstatistics";
 
   return method;
 }
@@ -1365,6 +1421,17 @@ MethodResult MeqCalibrater::runMethod(uInt which,
 			      ParameterSet::In);
 
       if (runMethod) select(where());
+    }
+    break;
+
+  case 12: // getstatistics
+    {
+      Parameter<Bool> detailed(inputRecord, "detailed",
+			       ParameterSet::In);
+      Parameter<GlishRecord> returnval(inputRecord, "returnval",
+				       ParameterSet::Out);
+
+      if (runMethod) returnval() = getStatistics (detailed());
     }
     break;
 
