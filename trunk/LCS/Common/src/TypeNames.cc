@@ -121,4 +121,30 @@ namespace LOFAR
       static std::string str ("dcomplex");
       return str;
     }
+
+#ifdef LOFAR_BUILTIN_COMPLEXINT
+  const std::string& typeName (const std::complex<int16>*)
+    {
+      static std::string str ("i16complex");
+      return str;
+    }
+  const std::string& typeName (const std::complex<uint16>*)
+    {
+      static std::string str ("u16complex");
+      return str;
+    }
+#endif
+
+#ifdef LOFAR_BUILTIN_COMPLEXFP
+  const std::string& typeName (const std::complex<float>*)
+    {
+      static std::string str ("fcomplex");
+      return str;
+    }
+  const std::string& typeName (const std::complex<double>*)
+    {
+      static std::string str ("dcomplex");
+      return str;
+    }
+#endif
 }
