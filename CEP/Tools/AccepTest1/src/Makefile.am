@@ -1,9 +1,10 @@
-bin_PROGRAMS = Correlator FrontEnd
+bin_PROGRAMS = Correlator FrontEnd BackEnd
 
 DOCHDRS			=				\
 Config.h						\
 Correlator.h						\
-FrontEnd.h						\
+AH_FrontEnd.h						\
+AH_BackEnd.h						\
 DH_Vis.h						\
 DH_CorrCube.h						\
 WH_Correlator.h						\
@@ -31,10 +32,16 @@ WH_Dump.cc
 #
 
 Correlator_SOURCES	=	$(SHAREDSRCS)		\
-Correlator.cc						
+CorrelatorMain.cc					\
+AH_Correlator.cc					
 
 FrontEnd_SOURCES 	=	$(SHAREDSRCS)		\
-FrontEnd.cc						
+FrontEndMain.cc						\
+AH_FrontEnd.cc
+
+BackEnd_SOURCES 	=	$(SHAREDSRCS)		\
+BackEndMain.cc						\
+AH_BackEnd.cc
 
 Correlator_LDADD = # /bgl/broekema/traceback/traceback.o
 Correlator_DEPENDENCIES = $(LOFAR_DEPEND)
