@@ -50,7 +50,7 @@ class GPIPropertySet : public GCFPropertyProxy
       _tmpPIResult(PI_NO_ERROR) 
       {}
       
-    virtual ~GPIPropertySet() { }
+    virtual ~GPIPropertySet();
 
     // handling the enable request of a PI client
     void enable(const PIRegisterScopeEvent& requestIn);
@@ -91,6 +91,7 @@ class GPIPropertySet : public GCFPropertyProxy
     void propValueChanged(const string& propName, const GCFPValue& value);
   
   private: //helper methods
+    TPAResult unsubscribeAllProps();
     void sendMsgToPA(GCFEvent& msg);
     void sendMsgToClient(GCFEvent& msg);
     void wrongState(const char* request);

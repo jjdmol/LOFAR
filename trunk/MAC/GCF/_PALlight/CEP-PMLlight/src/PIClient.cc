@@ -37,6 +37,13 @@ namespace LOFAR {
 
 PIClient* PIClient::_pInstance = 0;
 
+bool operator == (const PIClient::TAction& a, const PIClient::TAction& b)
+{
+  return ((a.pPropSet == b.pPropSet) &&
+          (a.eventID == b.eventID) &&
+          (a.extraData == b.extraData));
+}
+
 void logResult(TPIResult result, CEPPropertySet& propSet);
 
 PIClient::PIClient() : 
@@ -129,9 +136,9 @@ void PIClient::run()
     }
   } while (retry);
 
-    
+  bool connected(false);  
   do
-  {
+  {    
     retry = false;
     try
     {
@@ -139,6 +146,7 @@ void PIClient::run()
       // real synchronous connect with the Property Interface
       if (_dhPIClient.init())
       {    
+        connected = true;
         LOG_DEBUG("Connected to PropertyInterface of MAC");
       }
       else
@@ -183,23 +191,36 @@ void PIClient::run()
           e.what()));
       retry = true;
  
-      _propSetMutex.lock();  
-      for (TMyPropertySets::iterator iter = _myPropertySets.begin();
-           iter != _myPropertySets.end(); ++iter)
+      if (connected)
       {
-        iter->second->scopeUnregistered(false);
+        _bufferMutex.lock();
+        for (TBufferedActions::iterator iter = _bufferedActions.begin();
+             iter != _bufferedActions.end(); ++iter)
+        {
+          delete [] iter->extraData;
+        }
+        for (TBufferedActions::iterator iter = _bufferedValues.begin();
+             iter != _bufferedValues.end(); ++iter)
+        {
+          delete [] iter->extraData;
+        }
+        _bufferedActions.clear();
+        _bufferedValues.clear();
+        _bufferMutex.unlock();
+        
+        _propSetMutex.lock();  
+        TMyPropertySets tempMyPropertySets(_myPropertySets);
+        _startedSequences.clear();
+        _propSetMutex.unlock();
+  
+        for (TMyPropertySets::iterator iter = tempMyPropertySets.begin();
+             iter != tempMyPropertySets.end(); ++iter)
+        {
+          iter->second->connectionLost();
+        }
+        connected = false;  
+        sleep(10);
       }
-      TMyPropertySets tempMyPropertySets(_myPropertySets);
-      _myPropertySets.clear();
-
-      for (TMyPropertySets::iterator iter = tempMyPropertySets.begin();
-           iter != tempMyPropertySets.end(); ++iter)
-      {
-        iter->second->enable();
-      }
-
-      _propSetMutex.unlock();
-      sleep(10);
     }
   }
   while (retry);
@@ -217,24 +238,35 @@ void PIClient::deletePropSet(const CEPPropertySet& propSet)
   {
     if (iter->second == &propSet)
     {
-      seqToDelete.push_back(iter->first);
+      iter->second = 0;
     }
-  }
-  for (list<uint16>::iterator iter = seqToDelete.begin();
-       iter != seqToDelete.end(); ++iter)
-  {
-    _startedSequences.erase(*iter);
   }
   for (TBufferedActions::iterator iter = _bufferedActions.begin();
        iter != _bufferedActions.end(); ++iter)
   {
     if (iter->pPropSet == &propSet)
     {
+      delete [] iter->extraData;
       iter = _bufferedActions.erase(iter);
-      if (iter != _bufferedActions.end()) break;
+      iter--;
+    }    
+  }
+  for (TBufferedActions::iterator iter = _bufferedValues.begin();
+       iter != _bufferedValues.end(); ++iter)
+  {
+    if (iter->pPropSet == &propSet)
+    {
+      delete [] iter->extraData;
+      iter = _bufferedValues.erase(iter);
+      iter--;
     }    
   }
   _bufferMutex.unlock();
+  _propSetMutex.lock();
+
+  _myPropertySets.erase(propSet.getScope());
+
+  _propSetMutex.unlock();
 }
 
 bool PIClient::registerScope(CEPPropertySet& propSet)
@@ -255,6 +287,7 @@ bool PIClient::registerScope(CEPPropertySet& propSet)
     _myPropertySets[propSet.getScope()] = &propSet;
     _propSetMutex.unlock();
       
+    _bufferMutex.lock();
     BlobOStream extraData(_extraDataBuf);
     extraData.clear();
     _extraDataBuf.clear();
@@ -264,21 +297,45 @@ bool PIClient::registerScope(CEPPropertySet& propSet)
     extraData << (char) propSet.getCategory();  
     
     bufferAction(DH_PIProtocol::REGISTER_SCOPE, &propSet);
+    _bufferMutex.unlock();
   }
 
   return succeed;
 }
 
-void PIClient::unregisterScope(CEPPropertySet& propSet)
+void PIClient::unregisterScope(CEPPropertySet& propSet, bool stillEnabling)
 {
+  // will be called from user thread context  
+  _bufferMutex.lock();
   BlobOStream extraData(_extraDataBuf);
   extraData.clear();
   _extraDataBuf.clear();
   extraData.putStart(0);
   extraData << propSet.getScope();
-  
-  // will be called from user thread context
-  bufferAction(DH_PIProtocol::UNREGISTER_SCOPE, &propSet);
+  uint16 waitForSeqNr = 0;
+  if (stillEnabling)
+  {
+    
+    for (TStartedSequences::iterator iter = _startedSequences.begin();
+         iter != _startedSequences.end(); ++iter)
+    {
+      if (iter->second == &propSet)
+      {
+        LOG_DEBUG(formatString(
+            "Unregister of '%s' will be send delayed (after compl. seq. %d)!",
+            propSet.getScope().c_str(),
+            iter->first));
+        assert(iter->second->_state == CEPPropertySet::S_ENABLING);
+        waitForSeqNr = iter->first;
+        // response not needed to be forwarded to the prop. set.
+        iter->second = 0; 
+        break;
+      }
+    }
+    
+  }
+  bufferAction(DH_PIProtocol::UNREGISTER_SCOPE, &propSet, waitForSeqNr);
+  _bufferMutex.unlock();
 
   _propSetMutex.lock();
 
@@ -289,20 +346,23 @@ void PIClient::unregisterScope(CEPPropertySet& propSet)
 
 void PIClient::propertiesLinked(const string& scope, TPIResult result)
 {
+  // will be called in piClient thread context
+  _bufferMutex.lock();
   BlobOStream extraData(_extraDataBuf);
   extraData.clear();
   _extraDataBuf.clear();
   extraData.putStart(0);
   extraData << scope;
   extraData << (uint16) result;
-  
-  // will be called in piClient thread context
+    
   bufferAction(DH_PIProtocol::PROPSET_LINKED, 0);
+  _bufferMutex.unlock();
 }
 
 void PIClient::propertiesUnlinked(const string& scope, TPIResult result)
 {
   // will be called in piClient thread context
+  _bufferMutex.lock();
   BlobOStream extraData(_extraDataBuf);
   extraData.clear();
   _extraDataBuf.clear();
@@ -310,11 +370,13 @@ void PIClient::propertiesUnlinked(const string& scope, TPIResult result)
   extraData << scope;
   extraData << (uint16) result;
   bufferAction(DH_PIProtocol::PROPSET_UNLINKED, 0);  
+  _bufferMutex.unlock();  
 }
 
-void PIClient::valueSet(const string& propName, const GCFPValue& value)
+void PIClient::valueSet(CEPPropertySet& propSet, const string& propName, const GCFPValue& value)
 {
   // will be called from user thread context
+  _bufferMutex.lock();
   BlobOStream extraData(_extraDataBuf);
   extraData.clear();
   _extraDataBuf.clear();
@@ -335,7 +397,8 @@ void PIClient::valueSet(const string& propName, const GCFPValue& value)
   value.pack(_valueBuf);
   extraData.put(_valueBuf, valSize);
 
-  bufferAction(DH_PIProtocol::VALUE_SET, 0);  
+  bufferAction(DH_PIProtocol::VALUE_SET, &propSet);  
+  _bufferMutex.unlock();
 }
 
 void PIClient::scopeRegistered()
@@ -344,22 +407,36 @@ void PIClient::scopeRegistered()
   CEPPropertySet* pPropertySet = _startedSequences[_dhPIClient.getSeqNr()];
   _startedSequences.erase(_dhPIClient.getSeqNr());
     
-  assert(pPropertySet);
-
-  // unpacks the extra blob
-  BlobIStream& blob = _dhPIClient.getExtraBlob();
-  uint16 result;
-  blob >> result;
-  _propSetMutex.lock();
-  logResult((TPIResult) result, *pPropertySet);
-  if (result != PI_NO_ERROR)
+  _bufferMutex.lock();
+  for (TBufferedActions::iterator iter = _bufferedActions.begin();
+       iter != _bufferedActions.end(); ++iter)
   {
+    if (iter->waitForSeqNr == _dhPIClient.getSeqNr()) 
+    {
+      // buffered action, which waits for this response can now send
+      iter->waitForSeqNr = 0; 
+      break;
+    }
+  }
+  _bufferMutex.unlock();
+  if (pPropertySet)
+  {
+    // unpacks the extra blob
+    BlobIStream& blob = _dhPIClient.getExtraBlob();
+    uint16 result;
+    blob >> result;
 
-    _myPropertySets.erase(pPropertySet->getScope());
-    
-  }        
-  pPropertySet->scopeRegistered((result == PI_NO_ERROR));
-  _propSetMutex.unlock();
+    _propSetMutex.lock();
+    logResult((TPIResult) result, *pPropertySet);
+
+    if (result != PI_NO_ERROR)
+    {
+      _myPropertySets.erase(pPropertySet->getScope());      
+    }
+    pPropertySet->scopeRegistered((result == PI_NO_ERROR));
+    _propSetMutex.unlock();
+  }
+  // else it is deleted in the meanwhile
 }
 
 void PIClient::scopeUnregistered()
@@ -369,17 +446,21 @@ void PIClient::scopeUnregistered()
   
   _startedSequences.erase(_dhPIClient.getSeqNr());
   
-  assert(pPropertySet);
-  BlobIStream& blob = _dhPIClient.getExtraBlob();
-  uint16 result;
-  blob >> result;
-
-  _propSetMutex.lock();
-
-  logResult((TPIResult) result, *pPropertySet);
-  pPropertySet->scopeUnregistered((result == PI_NO_ERROR));
-
-  _propSetMutex.unlock();
+  if (pPropertySet)
+  {
+    // unpacks the extra blob
+    BlobIStream& blob = _dhPIClient.getExtraBlob();
+    uint16 result;
+    blob >> result;
+  
+    _propSetMutex.lock();
+  
+    logResult((TPIResult) result, *pPropertySet);
+    pPropertySet->scopeUnregistered((result == PI_NO_ERROR));
+  
+    _propSetMutex.unlock();
+  }
+  // else it is deleted in the meanwhile
 }
 
 void PIClient::linkPropSet()
@@ -443,13 +524,14 @@ void PIClient::unlinkPropSet()
 }
 
 void PIClient::bufferAction(DH_PIProtocol::TEventID event, 
-                            CEPPropertySet* pPropSet)
+                            CEPPropertySet* pPropSet,
+                            uint16 waitForSeqNr)
 {
   // will be called in different thread context
   TAction action;
   action.eventID = event;
   action.pPropSet = pPropSet;
-  //action.sent = false;
+  action.waitForSeqNr = waitForSeqNr;
   
   uint32 neededSize = _extraDataBuf.size() - sizeof(BlobHeader);
   // _extraDataBuf is set in the calling method
@@ -457,11 +539,18 @@ void PIClient::bufferAction(DH_PIProtocol::TEventID event,
   memcpy(action.extraData, _extraDataBuf.getBuffer() + sizeof(BlobHeader), neededSize);
   action.extraDataSize = neededSize;
 
-  _bufferMutex.lock();
-
-  _bufferedActions.push_back(action); 
-  
-  _bufferMutex.unlock();
+  if (event == DH_PIProtocol::VALUE_SET)
+  {
+    if (_bufferedValues.size() > 1000)
+    {
+      _bufferedValues.pop_front();
+    }
+    _bufferedValues.push_back(action);
+  }
+  else
+  {
+    _bufferedActions.push_back(action); 
+  }
 }
 
 uint16 PIClient::startSequence(CEPPropertySet& propSet)
@@ -484,12 +573,27 @@ uint16 PIClient::startSequence(CEPPropertySet& propSet)
 void PIClient::processOutstandingActions()
 {
   // will be called in piClient thread context
-  _bufferMutex.lock();
   bool sent(true);
-  CEPPropertySet* pPropSet;
-  for (TBufferedActions::iterator iter = _bufferedActions.begin();
-       iter != _bufferedActions.end() && sent; ++iter)
+  CEPPropertySet* pPropSet(0);
+  TBufferedActions::iterator iter;
+  TAction action;
+  while (sent)
   {
+    _bufferMutex.lock();
+    iter = _bufferedActions.begin();
+    if (iter == _bufferedActions.end())
+    {
+      _bufferMutex.unlock();
+      break;
+    }
+    if (iter->waitForSeqNr > 0) 
+    {
+      _bufferMutex.unlock();
+      // pretend this action is sent, because it must be skipped
+      sent = true; 
+      // skip this action, which waits for a response of another sequence
+      continue; 
+    }
     _dhPIClient.setEventID(iter->eventID);
     BlobOStream& blob = _dhPIClient.createExtraBlob();
     switch (iter->eventID)
@@ -498,33 +602,84 @@ void PIClient::processOutstandingActions()
       case DH_PIProtocol::UNREGISTER_SCOPE:
         pPropSet = iter->pPropSet;
         assert(pPropSet);
-
         _dhPIClient.setSeqNr(startSequence(*pPropSet));
-
+        LOG_DEBUG(formatString(
+            "Send request for '%s' to PI with seq. nr. %d.",
+            pPropSet->getScope().c_str(),
+            _dhPIClient.getSeqNr()));
+        break;
       default:
         break;
     }
     blob.put(iter->extraData, iter->extraDataSize);
+    action = *iter;
+    _bufferMutex.unlock();  
     
-    sent = false;
-    try
-    {
-      sent = _dhPIClient.write();
-    }
-    catch (std::exception& e)
-    {
-      LOG_ERROR(formatString (
-          "Exception: %s", 
-          e.what()));
-    }
+    sent = _dhPIClient.write();
     if (sent)
     {
-      delete [] iter->extraData;
-      _bufferedActions.erase(iter);
-      iter--;
+      // now the action can be removed
+      // because the action could be removed between the last unlock and
+      // lock of the mutex, we must be carefull 
+      // thats why the 'action' is remembered and searched
+      // action, if still exists, should still the first in the buffer
+      // if 'action' differs the current first action in the buffer no erase
+      // is needed anymore
+      _bufferMutex.lock();     
+      iter = _bufferedActions.begin();
+      if (iter != _bufferedActions.end())
+      {
+        if (*iter == action)
+        {
+          delete [] action.extraData;
+          _bufferedActions.erase(iter);
+        }
+      }
+      _bufferMutex.unlock();
+    }
+  }
+  while (sent)
+  {
+    // lock again for the value buffer
+    _bufferMutex.lock();
+    iter = _bufferedValues.begin();
+    if (iter == _bufferedValues.end()) 
+    {
+      _bufferMutex.unlock();
+      break;
+    }
+    if (iter->waitForSeqNr > 0) 
+    {
+      _bufferMutex.unlock();
+      // pretend this action is sent, because it must be skipped
+      sent = true; 
+      // skip this action, which waits for a response of another sequence
+      continue; 
+    }
+    _dhPIClient.setEventID(iter->eventID);
+    BlobOStream& blob = _dhPIClient.createExtraBlob();
+    assert(iter->eventID == DH_PIProtocol::VALUE_SET);
+    blob.put(iter->extraData, iter->extraDataSize);
+    action = *iter;
+    _bufferMutex.unlock();
+    
+    sent = _dhPIClient.write();
+    if (sent)
+    {
+      // see description for the following above
+      _bufferMutex.lock();     
+      iter = _bufferedValues.begin();
+      if (iter != _bufferedValues.end())
+      {
+        if (*iter == action)
+        {
+          delete [] action.extraData;
+          _bufferedValues.erase(iter);
+        }
+      }
+      _bufferMutex.unlock();
     }
   }  
-  _bufferMutex.unlock();  
 }
 
 void logResult(TPIResult result, CEPPropertySet& propSet)

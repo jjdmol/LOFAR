@@ -113,8 +113,6 @@ void connectionsChanged(string dp, dyn_uint value, string manType)
 	string sysNr = getSystemId(dpSubStr(dp, DPSUB_SYS));
 	
 	dyn_string msg;
-	string manString;
-	dyn_uint deletedLocalManNums;
 	int i, j;
 	bool manNumFound = false;
 	dyn_string newItem;
@@ -122,7 +120,9 @@ void connectionsChanged(string dp, dyn_uint value, string manType)
 	{
 		for (j = 1; j <= dynlen(gConnManList); j++)
 		{
-			if (gConnManList[j][1] == sysNr && gConnManList[j][2] == manType && value[i] == gConnManList[j][3]) 
+			if (gConnManList[j][1] == sysNr && 
+					gConnManList[j][2] == manType && 
+					value[i] == gConnManList[j][3]) 
 			{
 				manNumFound = true;
 				break;	
@@ -141,7 +141,9 @@ void connectionsChanged(string dp, dyn_uint value, string manType)
 	}
 	for (i = 1; i <= dynlen(gConnManList); i++)
 	{
-		if (gConnManList[i][1] == sysNr && gConnManList[i][2] == manType && !dynContains(value, gConnManList[i][3])) 
+		if (gConnManList[i][1] == sysNr && 
+				gConnManList[i][2] == manType && 
+				!dynContains(value, gConnManList[i][3])) 
 		{
 			// a (remote) manager is disconnected from PVSS so inform the local property agent
 			msg = "d" + sysNr + ":" + manType + ":" + gConnManList[i][3] + ":";

@@ -68,13 +68,15 @@ class PIClient
     // called by CEPPropertySet
     // <group>
     bool registerScope (CEPPropertySet& propSet);
-    void unregisterScope (CEPPropertySet& propSet);
+    void unregisterScope (CEPPropertySet& propSet, bool stillEnabling);
        
     void propertiesLinked (const string& scope, 
                            TPIResult result);
     void propertiesUnlinked (const string& scope, 
                             TPIResult result);
-    void valueSet(const string& propName, const GCFPValue& value);
+    void valueSet(CEPPropertySet& propSet, 
+                  const string& propName, 
+                  const GCFPValue& value);
     void deletePropSet(const CEPPropertySet& propSet);
     // </group>
     
@@ -83,7 +85,8 @@ class PIClient
 
   private: // helper methods
     void bufferAction (DH_PIProtocol::TEventID event, 
-                       CEPPropertySet* pPropSet);
+                       CEPPropertySet* pPropSet,
+                       uint16 waitForSeqNr = 0);
                        
     void processOutstandingActions();
 
@@ -117,16 +120,19 @@ class PIClient
     typedef map<string /* scope */, CEPPropertySet*>  TMyPropertySets;
     TMyPropertySets _myPropertySets;
 
-  private: // admistrative members
+  public:
     typedef struct
     {
       CEPPropertySet* pPropSet;
       DH_PIProtocol::TEventID eventID;
       char* extraData;
       uint32 extraDataSize;
+      uint16 waitForSeqNr;
     } TAction;
+  private: // admistrative members
     typedef list<TAction>  TBufferedActions;
     TBufferedActions _bufferedActions;    
+    TBufferedActions _bufferedValues;    
 
     typedef map<uint16 /*seqnr*/, CEPPropertySet*>  TStartedSequences;
     TStartedSequences _startedSequences;    

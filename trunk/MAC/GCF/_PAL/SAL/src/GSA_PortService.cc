@@ -46,13 +46,19 @@ void GSAPortService::start ()
   assert(!_isSubscribed);
   if (GCFPVSSInfo::propExists(_port.getPortAddr()))
   {
-    if (dpeSubscribe(_port.getPortAddr()) != SA_NO_ERROR) _port.serviceStarted(false);
+    if (dpeSubscribe(_port.getPortAddr()) != SA_NO_ERROR) 
+    {
+      _port.serviceStarted(false);
+    }
   }
   else
   {
     string portAddr = _port.getPortAddr();
     portAddr.erase(0, GCFPVSSInfo::getLocalSystemName().length() + 1);
-    if (dpCreate(portAddr, "GCFDistPort") != SA_NO_ERROR) _port.serviceStarted(false);
+    if (dpCreate(portAddr, "GCFDistPort") != SA_NO_ERROR) 
+    {
+      _port.serviceStarted(false);
+    }
   }
 }
 
@@ -99,7 +105,10 @@ ssize_t GSAPortService::recv (void* buf, size_t count)
 void GSAPortService::dpCreated(const string& dpName)
 {
   assert(dpName.find(_port.getPortAddr()) < dpName.length());
-  if (dpeSubscribe(_port.getPortAddr()) != SA_NO_ERROR) _port.serviceStarted(false);  
+  if (dpeSubscribe(_port.getPortAddr()) != SA_NO_ERROR) 
+  { 
+    _port.serviceStarted(false);
+  }
 }
 
 void GSAPortService::dpDeleted(const string& /*dpName*/)

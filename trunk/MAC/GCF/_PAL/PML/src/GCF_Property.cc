@@ -40,6 +40,10 @@ GCFProperty::GCFProperty (const TPropertyInfo& propInfo, GCFPropertySet* pProper
 GCFProperty::~GCFProperty()
 {
   assert (_pPropertySet == 0);
+  if (exists()) // can already be deleted by the Property Agent
+  {      
+    unsubscribe();
+  }
   delete _pPropService;
   _pPropService = 0;
 }

@@ -71,10 +71,14 @@ CEPPropertySet::~CEPPropertySet ()
 {
   assert(_pClient);
   // delete this set from the PIClient administration permanent
-  _pClient->unregisterScope(*this); 
+  if (_state != S_DISABLED && _state != S_DISABLING)
+  {
+    _pClient->unregisterScope(*this, (_state == S_ENABLING));
+  }
+  _pClient->deletePropSet(*this);  
+
   clearAllProperties();  
 
-  _pClient->deletePropSet(*this);  
   PIClient::release(); 
   _pClient = 0;
 }
@@ -86,6 +90,8 @@ bool CEPPropertySet::enable ()
   LOG_INFO(formatString ( 
       "REQ: Enable property set '%s'",
       getScope().c_str()));
+
+  _stateMutex.lock();
   if (_state != S_DISABLED)
   {
     wrongState("enable");
@@ -107,6 +113,7 @@ bool CEPPropertySet::enable ()
       result = GCF_SCOPE_ALREADY_REG;
     }
   }
+  _stateMutex.unlock();
   return (result == GCF_NO_ERROR);
 }
 
@@ -117,13 +124,17 @@ bool CEPPropertySet::disable ()
   LOG_INFO(formatString ( 
       "REQ: Disable property set '%s'",
       getScope().c_str()));
+
+  _stateMutex.lock();
+      
   switch (_state)
   {
     case S_LINKED:
     case S_ENABLED:
+    case S_ENABLING:
       assert(_pClient);
   
-      _pClient->unregisterScope(*this);
+      _pClient->unregisterScope(*this, (_state == S_ENABLING));
       _state = S_DISABLING;      
       break;
 
@@ -132,11 +143,14 @@ bool CEPPropertySet::disable ()
       result = GCF_WRONG_STATE;
       break;
   }
+  _stateMutex.unlock();
   return (result == GCF_NO_ERROR);
 }
 
 void CEPPropertySet::scopeRegistered (bool succeed)
 {
+  _stateMutex.lock();
+ 
   assert(_state == S_ENABLING);
   LOG_INFO(formatString ( 
       "PA-RESP: Property set '%s' is enabled%s",
@@ -144,10 +158,14 @@ void CEPPropertySet::scopeRegistered (bool succeed)
       (succeed ? "" : " (with errors)")));
 
   _state = (succeed ? S_ENABLED : S_DISABLED);
+  
+  _stateMutex.unlock();
 }
 
 void CEPPropertySet::scopeUnregistered (bool succeed)
 {
+  _stateMutex.lock();
+
   assert(_state == S_DISABLING);
    
   LOG_INFO(formatString ( 
@@ -156,11 +174,16 @@ void CEPPropertySet::scopeUnregistered (bool succeed)
       (succeed ? "" : " (with errors)")));
 
   _state = S_DISABLED;
+
+  _stateMutex.unlock();
 }
 
 void CEPPropertySet::linkProperties()
 {
   assert(_pClient);
+
+  _stateMutex.lock();
+  
   switch (_state)
   {
     case S_ENABLED:
@@ -178,11 +201,15 @@ void CEPPropertySet::linkProperties()
       _pClient->propertiesLinked(getScope(), PI_WRONG_STATE);
       break;
   }
+  _stateMutex.unlock();
 }
 
 void CEPPropertySet::unlinkProperties()
 {
   assert(_pClient);
+
+  _stateMutex.lock();
+
   switch (_state)
   {
     case S_DISABLED:
@@ -200,6 +227,31 @@ void CEPPropertySet::unlinkProperties()
       _pClient->propertiesUnlinked(getScope(), PI_WRONG_STATE);
       break;
   }
+
+  _stateMutex.unlock();
+}
+
+void CEPPropertySet::connectionLost()
+{
+  assert(_pClient);
+  _stateMutex.lock();
+  
+  switch (_state)
+  {
+    case S_DISABLED:
+      break;
+
+    case S_DISABLING:
+      _state = S_DISABLED;
+      break;
+
+    default:
+      _pClient->deletePropSet(*this);
+      _pClient->registerScope(*this);
+      _state = S_ENABLING;
+      break;
+  }
+  _stateMutex.unlock();
 }
 
 CEPProperty* CEPPropertySet::getProperty (const string& propName) const
@@ -284,12 +336,12 @@ bool CEPPropertySet::exists (const string& propName) const
   return (pProperty != 0);
 }
 
-void CEPPropertySet::valueSet(const string& propName, const GCFPValue& value) const
+void CEPPropertySet::valueSet(const string& propName, const GCFPValue& value)
 {
   assert(_pClient);
   // a user has changed the property value and monitoring is switched on
   // changed value will be forward to the PIClient
-  _pClient->valueSet(propName, value);  
+  _pClient->valueSet(*this, propName, value);  
 }
 
 void CEPPropertySet::addProperty(const string& propName, CEPProperty& prop)
