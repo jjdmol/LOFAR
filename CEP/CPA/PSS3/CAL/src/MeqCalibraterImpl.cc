@@ -604,6 +604,7 @@ void MeqCalibrater::initParms (const MeqDomain& domain)
   {
     itsIsParmSolvable[i] = false;
     if (*iter) {
+      (*iter)->readPolcs (domain);
       int nr = (*iter)->initDomain (domain, itsNrScid);
       if (nr > 0) {
 	itsIsParmSolvable[i] = true;
