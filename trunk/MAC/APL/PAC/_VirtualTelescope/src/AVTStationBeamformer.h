@@ -45,6 +45,8 @@ class AVTStationBeamformer : public AVTLogicalDevice
                                   string& beamServerPortName); 
     virtual ~AVTStationBeamformer();
 
+    void setDirection(const string type,const double angle1, const double angle2);
+    
   protected:
     // protected default constructor
     AVTStationBeamformer();
@@ -64,7 +66,7 @@ class AVTStationBeamformer : public AVTLogicalDevice
     /**
      * returns true if the preparing state has finished
      */
-    virtual GCFEvent::TResult concrete_preparing_state(GCFEvent& e, GCFPortInterface& p, bool& stateFinished);
+    virtual GCFEvent::TResult concrete_preparing_state(GCFEvent& e, GCFPortInterface& p, bool& stateFinished, bool& error);
     /**
      * returns true if the releasing state has finished
      */
@@ -74,7 +76,7 @@ class AVTStationBeamformer : public AVTLogicalDevice
     virtual void handleAPCAnswer(GCFEvent& answer);
 
     virtual void concreteClaim(GCFPortInterface& port);
-    virtual void concretePrepare(GCFPortInterface& port);
+    virtual void concretePrepare(GCFPortInterface& port,string& parameters);
     virtual void concreteResume(GCFPortInterface& port);
     virtual void concreteSuspend(GCFPortInterface& port);
     virtual void concreteRelease(GCFPortInterface& port);
@@ -88,5 +90,14 @@ class AVTStationBeamformer : public AVTLogicalDevice
 
     // The BeamServer SAP
     GCFPort m_beamServer;
+
+    time_t m_startTime;
+    time_t m_stopTime;
+    double m_frequency;
+    vector<int> m_subbands;
+    int    m_directionType;
+    double m_directionAngle1;
+    double m_directionAngle2;
+    int    m_beamID;
 };
 #endif

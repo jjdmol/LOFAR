@@ -120,7 +120,7 @@ class AVTLogicalDevice : public GCFTask,
     /**
      * Preparing state additional behaviour must be implemented in the derived classes. 
      */
-    virtual GCFEvent::TResult concrete_preparing_state(GCFEvent& e, GCFPortInterface& p, bool& stateFinished)=0;
+    virtual GCFEvent::TResult concrete_preparing_state(GCFEvent& e, GCFPortInterface& p, bool& stateFinished, bool& error)=0;
     /**
      * Releasing state additional behaviour must be implemented in the derived classes. 
      */
@@ -132,7 +132,7 @@ class AVTLogicalDevice : public GCFTask,
     /**
      * Implementation of the Prepare method is done in the derived classes. 
      */
-    virtual void concretePrepare(GCFPortInterface& port)=0;
+    virtual void concretePrepare(GCFPortInterface& port,string& parameters)=0;
     /**
      * Implementation of the Resume method is done in the derived classes. 
      */

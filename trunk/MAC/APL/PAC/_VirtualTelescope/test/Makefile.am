@@ -3,6 +3,7 @@ noinst_PROGRAMS 		= avttest
 TESTS			= #avttest
 
 avttest_SOURCES 		= \
+	AVTTestAnswer.cc \
 	AVTTest.cc \
 	AVTTestTask.cc \
 	AVTTestMain.cc

@@ -25,6 +25,7 @@
 
 //# Includes
 //# Common Includes
+#include <time.h>
 #include <lofar_config.h>
 #include <Common/lofar_string.h>
 //# GCF Includes
@@ -45,6 +46,10 @@ class AVTVirtualTelescope : public AVTLogicalDevice
                                  const string& APCScope,
                                  AVTStationBeamformer& sbf); 
     virtual ~AVTVirtualTelescope();
+    
+    void setStartTime(const time_t startTime);
+    void setStopTime(const time_t stopTime);
+    void setFrequency(const double frequency);
 
   protected:
     // protected default constructor
@@ -65,7 +70,7 @@ class AVTVirtualTelescope : public AVTLogicalDevice
     /**
      * returns true if the preparing state has finished
      */
-    virtual GCFEvent::TResult concrete_preparing_state(GCFEvent& e, GCFPortInterface& p, bool& stateFinished);
+    virtual GCFEvent::TResult concrete_preparing_state(GCFEvent& e, GCFPortInterface& p, bool& stateFinished, bool& error);
     /**
      * returns true if the releasing state has finished
      */
@@ -75,7 +80,7 @@ class AVTVirtualTelescope : public AVTLogicalDevice
     virtual void handleAPCAnswer(GCFEvent& answer);
 
     virtual void concreteClaim(GCFPortInterface& port);
-    virtual void concretePrepare(GCFPortInterface& port);
+    virtual void concretePrepare(GCFPortInterface& port,string& parameters);
     virtual void concreteResume(GCFPortInterface& port);
     virtual void concreteSuspend(GCFPortInterface& port);
     virtual void concreteRelease(GCFPortInterface& port);
@@ -91,5 +96,10 @@ class AVTVirtualTelescope : public AVTLogicalDevice
     AVTStationBeamformer& m_stationBeamformer;
     // The BeamFormer SAP
     GCFPort m_beamFormerClient;
+    
+    time_t m_startTime;
+    time_t m_stopTime;
+    double m_frequency;
+    
 };
 #endif
