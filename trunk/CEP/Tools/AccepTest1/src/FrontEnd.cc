@@ -62,7 +62,8 @@ void FrontEnd::define(const KeyValueMap& /*params*/) {
 			       1, 
 			       itsNelements, 
 			       itsNsamples,
-			       itsNchannels
+			       itsNchannels, 
+			       itsNtargets
 			       );
 
   if (isFrontEnd) {

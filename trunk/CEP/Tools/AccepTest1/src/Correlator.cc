@@ -28,12 +28,13 @@ extern "C" void traceback (void);
 using namespace LOFAR;
 
 Correlator::Correlator(int elements, int samples, int channels, 
-		       char* ip, int baseport):
+		       char* ip, int baseport, int targets):
   itsNelements(elements),
   itsNsamples (samples),
   itsNchannels(channels), 
   itsIP       (ip),
-  itsBaseport (baseport)
+  itsBaseport (baseport),
+  itsNtargets (targets)
 {
 }  
 
@@ -48,7 +49,8 @@ void Correlator::define(const KeyValueMap& /*params*/) {
 					  1, 
 					  itsNelements, 
 					  itsNsamples,
-					  itsNchannels);
+					  itsNchannels, 
+					  itsNtargets);
   
   // now create two dummy workholders to connect to
   // these will not exist outside the scope of this method
@@ -72,7 +74,7 @@ void Correlator::define(const KeyValueMap& /*params*/) {
   
   itsWH->getDataManager().getOutHolder(0)->connectTo
     ( *myWHDump.getDataManager().getInHolder(0), 
-      TH_Socket(itsIP, itsIP, itsBaseport+TH_MPI::getNumberOfNodes()+TH_MPI::getCurrentRank(), false));
+      TH_Socket(itsIP, itsIP, itsBaseport+itsNtargets+TH_MPI::getCurrentRank(), false));
 }
 
 void Correlator::undefine() {
@@ -166,7 +168,7 @@ int main (int argc, const char** argv) {
 	
 	try {
 	  
-	  Correlator correlator(elements, samples, channels, frontend_ip, port);
+	  Correlator correlator(elements, samples, channels, frontend_ip, port, targets);
 	  correlator.setarg(argc, argv);
 	  
 	  /* Automatic run of the correlator */

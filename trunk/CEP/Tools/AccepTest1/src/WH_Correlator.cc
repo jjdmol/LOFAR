@@ -37,11 +37,13 @@ WH_Correlator::WH_Correlator(const string& name,
 			     unsigned int nout, 
 			     const int    elements,
 			     const int    samples,
-			     const int    channels) 
+			     const int    channels, 
+			     const int    targets) 
   : WorkHolder( nin, nout, name, "WH_Correlator"),
     itsNelements(elements),
     itsNsamples (samples),
-    itsNchannels(channels)
+    itsNchannels(channels),
+    itsNtargets (targets)
 {
 
   char str[8];
@@ -69,9 +71,10 @@ WorkHolder* WH_Correlator::construct (const string& name,
 				     unsigned int nout, 
 				     const int    nelements, 
 				     const int    nsamples,
-				     const int    nchannels)
+				     const int    nchannels, 
+				     const int    ntargets)
 {
-  return new WH_Correlator(name, nin, nout, nelements, nsamples, nchannels);
+  return new WH_Correlator(name, nin, nout, nelements, nsamples, nchannels, ntargets);
 }
 
 WH_Correlator* WH_Correlator::make (const string& name) {
@@ -80,7 +83,8 @@ WH_Correlator* WH_Correlator::make (const string& name) {
 			   getDataManager().getOutputs(),
 			   itsNelements,
 			   itsNsamples,
-			   itsNchannels);
+			   itsNchannels, 
+			   itsNtargets);
 }
 
 void WH_Correlator::process() {
