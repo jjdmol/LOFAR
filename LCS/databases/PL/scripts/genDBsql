@@ -10,7 +10,7 @@
 #
 # $Id$
 #
-VERSION="v1.0"
+VERSION="v1.1"
 
 #---------------------------- Global routines ---------------------------------
 #
@@ -128,7 +128,7 @@ addCreateTableCommand()
 
 		ColumnName=`echo $line | cut -d':' -f5`
 		ColumnType=`echo $line | cut -d':' -f7`
-		if [ "${ColumnName}" != "Class" ]; then
+		if [ "${ColumnName}" != "Class" -a "${ColumnName}" != "BaseClass" ]; then
 			echo ","
 			echo -n "	${ColumnName}	${ColumnType}"
 		fi
