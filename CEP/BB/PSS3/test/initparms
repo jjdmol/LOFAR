@@ -1,0 +1,107 @@
+#!/bin/sh
+
+# initparms: fill default parameter tables for bbstest
+#
+#  Copyright (C) 2004
+#  ASTRON (Netherlands Foundation for Research in Astronomy)
+#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+#
+#  This program is free software; you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either version 2 of the License, or
+#  (at your option) any later version.
+#
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program; if not, write to the Free Software
+#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#
+#  $Id$
+
+# the following options can be given:
+# -dbtype  Database type (right now only monet, postgres and mysql are supported)
+# -host    Host (default = localhost)
+# -user    User
+# -filler  Path to the program that puts the default parameters in the tables 
+#          (default is ./src/fillsqldb)
+
+TABLEFILLER="./parmdb"
+
+DBTYPE="mysql"
+HOST="localhost"
+USER=`whoami`
+
+while [ 1 = 1 ]
+do
+  if [ "$1" = "-host" ]; then
+    shift
+    HOST="$1"
+    shift
+  elif [ "$1" = "-dbtype" ]; then
+    shift
+    DBTYPE="$1"
+    shift
+  elif [ "$1" = "-user" ]; then
+    shift
+    USER="$1"
+    shift
+  elif [ "$1" = "-filler" ]; then
+    shift
+    TABLEFILLER="$1"
+    shift
+  else
+    break;
+  fi
+done
+
+
+PARMDBCONNECT="connect db='$USER', dbtype='$DBTYPE', host='$HOST', user ='$USER'"
+if [ "$DBTYPE" = "monet" ]; then
+# for monet the user needs to monetdb (for now):
+    PARMDBCONNECT="connect db='$USER', dbtype='$DBTYPE', host='$HOST', user ='monetdb'"
+fi
+
+tablename=demo3-1
+echo $PARMDBCONNECT ",  tablename='${tablename}'" > fill.parmdb
+echo "adddef frot values=0" >> fill.parmdb
+echo "adddef drot values=0" >> fill.parmdb
+echo "adddef dell values=0" >> fill.parmdb
+echo "adddef gain.11 values=1" >> fill.parmdb
+echo "adddef gain.22 values=1" >> fill.parmdb
+echo "adddef EJ11.real values=1" >> fill.parmdb
+echo "adddef EJ12.real values=0" >> fill.parmdb
+echo "adddef EJ21.real values=0" >> fill.parmdb
+echo "adddef EJ22.real values=1" >> fill.parmdb
+echo "adddef EJ11.imag values=1" >> fill.parmdb
+echo "adddef EJ12.imag values=0" >> fill.parmdb
+echo "adddef EJ21.imag values=0" >> fill.parmdb
+echo "adddef EJ22.imag values=1" >> fill.parmdb
+echo "quit" >> fill.parmdb
+$TABLEFILLER < fill.parmdb
+    
+tablename=demo3_gsm-1
+echo $PARMDBCONNECT ", tablename='${tablename}'" > fill.parmdb
+echo "adddef RA.CP1 values=2.734, absPertValues=0.000003, diffrel=F" >> fill.parmdb
+echo "adddef DEC.CP1 values=0.45379, absPertValues=-0.0000005, diffrel=F" >> fill.parmdb
+echo "adddef StokesI.CP1 values=1.0, absPertValues=0.0, diffrel=F" >> fill.parmdb
+echo "adddef StokesQ.CP1 values=0 " >> fill.parmdb
+echo "adddef StokesU.CP1 values=0 " >> fill.parmdb
+echo "adddef StokesV.CP1 values=0" >> fill.parmdb
+echo "adddef RA.CP2 values=2.73402, absPertValues=0.0000005, diffrel=F" >> fill.parmdb
+echo "adddef DEC.CP2 values=0.45369, absPertValues=-0.00000025, diffrel=F" >> fill.parmdb
+echo "adddef StokesI.CP2 values=0.5, absPertValues=0.5, diffrel=F" >> fill.parmdb
+echo "adddef StokesQ.CP2 values=0 " >> fill.parmdb
+echo "adddef StokesU.CP2 values=0 " >> fill.parmdb
+echo "adddef StokesV.CP2 values=0" >> fill.parmdb
+echo "adddef RA.CP3 values=2.73398, absPertValues=0.000001, diffrel=F" >> fill.parmdb
+echo "adddef DEC.CP3 values=0.45375, absPertValues=0.00000025, diffrel=F" >> fill.parmdb
+echo "adddef StokesI.CP3 values=0.3, absPertValues=0.7, diffrel=F" >> fill.parmdb
+echo "adddef StokesQ.CP3 values=0 " >> fill.parmdb
+echo "adddef StokesU.CP3 values=0 " >> fill.parmdb
+echo "adddef StokesV.CP3 values=0" >> fill.parmdb
+echo "quit" >> fill.parmdb
+$TABLEFILLER < fill.parmdb

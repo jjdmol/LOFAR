@@ -12,6 +12,7 @@ ln -s ../../../../src/clearParamTables .
 ln -s ../../../../src/createParamTables .
 ln -s ../../../../test/initparms .
 ln -s ../tBBS2 . 
+ln -s ../../src/parmdb . 
 ln -s ../../../../test/generalinfo.sh .
 ln -s ../../../../test/cp2web.sh .
 

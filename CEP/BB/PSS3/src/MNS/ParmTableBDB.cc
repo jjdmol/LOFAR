@@ -57,6 +57,15 @@ namespace LOFAR {
     itsDb.close(0);
   }
 
+  void ParmTableBDB::createTable(){
+    // Do nothing because the table was already created in the constructor
+  }
+
+  void ParmTableBDB::clearTable(){
+    u_int32_t count;
+    itsDb.truncate(NULL, &count, 0);
+  }
+
   vector<MeqPolc> ParmTableBDB::getPolcs (const string& parmName,
 					  int, int,
 					  const MeqDomain& domain)

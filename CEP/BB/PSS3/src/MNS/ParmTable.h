@@ -66,6 +66,17 @@ public:
 
   // Unlock the underlying table.
   virtual void unlock() = 0;
+
+  // Create the database or table
+  virtual void createTable() = 0;
+  // clear database or table
+  virtual void clearTable() = 0;
+  virtual void putNewDefCoeff (const string& parmName,
+			    int srcnr, int statnr,
+			    const MeqPolc& polc) = 0;
+  virtual void putNewCoeff (const string& parmName,
+			    int srcnr, int statnr,
+			    const MeqPolc& polc) = 0;
 };
 
 
@@ -82,7 +93,7 @@ public:
 	     const string& dbName, const string& pwd, const string& hostName = "localhost");
 
   ~ParmTable()
-    { delete itsRep; }
+    {delete itsRep; }
 
   // Get the parameter values for the given parameter and domain.
   // The matchDomain argument is set telling if the found parameter
@@ -91,12 +102,16 @@ public:
   vector<MeqPolc> getPolcs (const string& parmName,
 			    int sourceNr, int station,
 			    const MeqDomain& domain)
-    { return itsRep->getPolcs (parmName, sourceNr, station, domain);}
+    { 
+      return itsRep->getPolcs (parmName, sourceNr, station, domain); 
+    }
 
   // Get the initial polynomial coefficients for the given parameter.
   MeqPolc getInitCoeff (const string& parmName,
 			int sourceNr, int station)
-    { return itsRep->getInitCoeff (parmName, sourceNr, station);}
+    { 
+      return itsRep->getInitCoeff (parmName, sourceNr, station); 
+    }
 
   // Put the polynomial coefficient for the given parameter and domain.
   void putCoeff (const string& parmName,
@@ -124,6 +139,7 @@ private:
   ParmTable& operator= (const ParmTable&);
 
   ParmTableRep* itsRep;
+
 };
 
 }

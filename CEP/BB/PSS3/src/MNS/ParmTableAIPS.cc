@@ -64,6 +64,13 @@ ParmTableAIPS::~ParmTableAIPS()
   delete itsInitIndex;
 }
 
+void ParmTableAIPS::createTable() {
+  ASSERTSTR(false, "createTable not yet implemented for aips");
+}
+void ParmTableAIPS::clearTable() {
+  ASSERTSTR(false, "clear table not yet implemented for aips");
+}
+
 vector<MeqPolc> ParmTableAIPS::getPolcs (const string& parmName,
 					 int srcnr, int statnr,
 					 const MeqDomain& domain)
