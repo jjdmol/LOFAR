@@ -50,9 +50,13 @@ void WH_RingOut::process ()
   memcpy((void*)aDH->getPacket(),
 	 (void*)itsInDataHolders[0]->getPacket(), 
 	 itsInDataHolders[0]->getDataPacketSize());
-  itsQDataHolders.push(aDH);
-  //  cout << "Added to Q " << getInstanceCnt() << " size now is " << itsQDataHolders.size() 
-  //     << "\t " << aDH->getBuffer()[0] << endl;
+  if (aDH->getPacket()->destination != NOTADDRESSED) {
+    itsQDataHolders.push(aDH);
+  } else {
+    cout << "Skip push of not-addressed package" << endl;
+  }
+  cout << "Added to Q " << getInstanceCnt() << " size now is " << itsQDataHolders.size() 
+       << "\t " << aDH->getBuffer()[0] << endl;
 
   Firewall::Assert(itsQDataHolders.size() <= 50,
 		   __HERE__,

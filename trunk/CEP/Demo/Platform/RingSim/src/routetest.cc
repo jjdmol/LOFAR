@@ -68,7 +68,7 @@ main (int argc, char *argv[])
   Profiler::init();
 
   cout << endl <<  "Start Process" << endl;    
-  for (int i = 0; i < 121; i++) {
+  for (int i = 0; i < 221; i++) {
     if (i%1 == 0) { // print a dot after every 10 process steps
       TRACER(monitor,"====================== " 
 	     << i << " ===============================" );

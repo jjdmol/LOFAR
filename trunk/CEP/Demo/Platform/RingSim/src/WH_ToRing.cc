@@ -3,6 +3,7 @@
 //////////////////////////////////////////////////////////////////////
 
 #include "WH_ToRing.h"
+#include "WH_Ring.h" // need NOTADDRESSED
 #include "Step.h"
 
 short WH_ToRing::itsInstanceCnt = 0;
@@ -52,7 +53,7 @@ void WH_ToRing::process ()
 	 << itsOutDataHolders[0]->getBuffer()[0] << " To " 
 	 << itsOutDataHolders[0]->getPacket()->destination << endl;
   } else {
-    // ? set to NOTADDRESSED ??
+    itsOutDataHolders[0]->getPacket()->destination = NOTADDRESSED;
   }
 
 }
