@@ -27,17 +27,12 @@ public:
   /// are created and how many elements there are in the buffer.
   /// The first WorkHolder should have nin=0.
   explicit WH_Dump (const string& name,
-		    const int    elements, 
-		    const int    channels,
-		    const int    polarisations);
+		    const KeyValueMap& kvm);
 
   virtual ~WH_Dump();
 
   /// Static function to create an object.
-  static WorkHolder* construct (const string& name, 
-				const int    elements,
-				const int    channels,
-				const int    polarisations);
+  static WorkHolder* construct (const string& name, const KeyValueMap& kvm);
 
   /// Make a fresh copy of the WH object.
   virtual WH_Dump* make (const string& name);
@@ -71,6 +66,8 @@ private:
   struct timeval stoptime;
 
   float bandwidth;    // stores 'measured' bandwidth in bytes/sec
+
+  KeyValueMap itsKVM;
 
 };
 

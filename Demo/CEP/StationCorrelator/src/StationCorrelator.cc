@@ -75,6 +75,7 @@ void StationCorrelator::undefine() {
 void StationCorrelator::define(const KeyValueMap& /*kvm*/) {
 
   char H_name[128];
+  char old_name[128];
 
   vector<WH_RSP*>        RSPNodes;
   vector<WH_Transpose*>  TransposeNodes;
@@ -91,7 +92,7 @@ void StationCorrelator::define(const KeyValueMap& /*kvm*/) {
     snprintf(H_name, 128, "RSPNode_%d_of_%d", i, itsNrsp);
     
     WH_RSP whRSP(H_name, itsKVM);
-    Step step(whRSP);
+    Step step(whRSP, H_name, false);
     comp.addStep(step); 
   }
 
@@ -100,25 +101,29 @@ void StationCorrelator::define(const KeyValueMap& /*kvm*/) {
     // to rearrange the data coming from the RSP boards.
     sprintf(H_name, "TransposeNode_%d_of_%d", i, itsNcorrelator);
 
-//     WH_Transpose whTranspose(H_name, itsKVM);
-//     Step step1(whTranspose);
-//     comp.addStep(step1);
+    WH_Transpose whTranspose(H_name, itsKVM);
+    Step step1(whTranspose);
+    comp.addStep(step1);
+
+//     step1.connect("");
 
     sprintf(H_name, "CorrelatorNode_%d_of_%d", i, itsNcorrelator);
 
-    WH_Correlator whCorrelator(H_name, 1, 0, 0, 0, 0);
+    WH_Correlator whCorrelator(H_name, itsKVM);
     Step step2(whCorrelator);
     comp.addStep(step2);
 
-//     step2.connectInput(&step1, TH_Mem());
+    step2.connectInput(&step1, TH_Mem());
   }
 
   for (unsigned int i = 0; i < itsNdump; i++) {
     sprintf(H_name, "DumpNode_%d_of_%d", i, itsNdump);
 
-    WH_Dump whDump(H_name, 0, 0, 0);
+    WH_Dump whDump(H_name, itsKVM);
     Step step(whDump);
     comp.addStep(step);
+
+//    step.connectInput();
   }
 }
 
@@ -157,8 +162,11 @@ int main (int argc, const char** argv) {
     StationCorrelator correlator(kvm);
     correlator.setarg(argc, argv);
     correlator.baseDefine(kvm);
+    cout << "defined" << endl;
     correlator.basePrerun();
-    correlator.baseRun();
+    cout << "init" << endl;
+    correlator.baseRun(1);
+    cout << "run" << endl;
     correlator.baseDump();
     correlator.baseQuit();
 

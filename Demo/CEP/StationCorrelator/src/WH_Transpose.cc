@@ -36,16 +36,14 @@ WH_Transpose::WH_Transpose(const string& name, KeyValueMap kvm)
 {
   char str[128];
   
-  int stations          = itsKVM.getInt("stations", 2);
-  int samples           = itsKVM.getInt("samples", 256000);
-  int channels          = itsKVM.getInt("channels", 46);
-  int polarisations     = itsKVM.getInt("polarisations", 2);
-  int beamletsinpacket  = kvm.getInt("NoRSPbeamlets", 92);
-  int packetsinframe    = kvm.getInt("NoPacketsInFrame", 8);
+  int itsNstations         = itsKVM.getInt("stations", 2);
+  int itsNsamples          = itsKVM.getInt("samples", 256000);
+  int itsNchannels         = itsKVM.getInt("channels", 46);
+  int itsNpolarisations    = itsKVM.getInt("polarisations", 2);
+  int itsNbeamletsinpacket = itsKVM.getInt("NoRSPbeamlets", 92);
+  int itsNpacketsinframe   = itsKVM.getInt("NoPacketsInFrame", 8);
 
-  int bufsize = (beamletsinpacket / stations) * polarisations * packetsinframe;
- 
-  itsKVM.show(cout);
+  int bufsize = (itsNbeamletsinpacket / itsNstations) * itsNpolarisations * itsNpacketsinframe;
 
   itsNinputs = itsKVM.getInt("noWH_Correlator", 7);
   itsNoutputs = 1; // there is one connection to the corresponding WH_Correlator
@@ -56,10 +54,10 @@ WH_Transpose::WH_Transpose(const string& name, KeyValueMap kvm)
   for (int i = 0; i < itsNoutputs; i++) {
     snprintf(str, 128, "output_%d_of _%d", i, itsNoutputs);
     getDataManager().addOutDataHolder(i, new DH_CorrCube(str, 
-							 stations, 
-							 samples, 
-							 channels, 
-							 polarisations));
+							 itsNstations, 
+							 itsNsamples, 
+							 itsNchannels, 
+							 itsNpolarisations));
   }
 }
 
@@ -75,4 +73,28 @@ WH_Transpose* WH_Transpose::make(const string& name) {
 }
 
 void WH_Transpose::process() {
+  DH_StationData::BufferType* val_ptr_0 = static_cast<DH_StationData*>(getDataManager().getInHolder(0))->getBuffer();
+  DH_StationData::BufferType* val_ptr_1 = static_cast<DH_StationData*>(getDataManager().getInHolder(1))->getBuffer();
+
+  int offset = 0;
+
+  for (int sample = 0; sample < itsNpacketsinframe; sample++) {
+    offset += itsNpolarisations + itsNbeamletsinpacket;
+    for (int channel = 0; channel < itsNchannels; channel++) {
+      offset += itsNpolarisations;
+      for (int polarisation = 0; polarisation < itsNpolarisations; polarisation++) {
+	static_cast<DH_CorrCube*> (getDataManager().getOutHolder(0))->setBufferElement(channel, 
+										       sample, 
+										       0,
+										       polarisation,
+										       val_ptr_0+offset);
+	static_cast<DH_CorrCube*> (getDataManager().getOutHolder(0))->setBufferElement(channel, 
+										       sample, 
+										       1,
+										       polarisation,
+										       val_ptr_1+offset);
+	offset++;
+      }
+    }
+  }
 }
