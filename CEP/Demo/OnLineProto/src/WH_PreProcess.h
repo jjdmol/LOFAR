@@ -28,7 +28,8 @@
 #include "CEPFrame/WorkHolder.h"
 #include "OnLineProto/DH_Beamlet.h"
 #include "OnLineProto/DH_Phase.h"
-#include "OnLineProto/MAC.h"
+#include <ACC/ParameterSet.h>
+#include <OnLineProto/definitions.h>
 
 namespace LOFAR
 {
@@ -39,14 +40,18 @@ public:
   /// It is possible to specify how many input and output data holders
   /// are created and how many elements there are in the buffer.
   /// The first WorkHolder should have nin=0.
-  explicit WH_PreProcess (const string& name, const int nchan, MAC mac,
-			  int StationID);
+  explicit WH_PreProcess (const string& name, 
+			  const int nchan, 
+			  const ParameterSet& ps,
+			  const int StationID);
 
   virtual ~WH_PreProcess();
 
   /// Static function to create an object.
-  static WorkHolder* construct (const string& name, const int nchan, MAC mac,
-				int StationID);
+  static WorkHolder* construct (const string& name, 
+				const int nchan, 
+				const ParameterSet& ps,
+				const int StationID);
 
   /// Make a fresh copy of the WH object.
   virtual WH_PreProcess* make (const string& name);
@@ -64,7 +69,7 @@ private:
   /// Forbid assignment.
   WH_PreProcess& operator= (const WH_PreProcess&);
 
-  MAC itsMac;
+  ParameterSet itsPS;
   int itsStationID;
   int itsCounter;
 };

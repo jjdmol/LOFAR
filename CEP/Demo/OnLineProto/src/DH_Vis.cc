@@ -30,20 +30,19 @@
 namespace LOFAR
 {
 
-DH_Vis::DH_Vis (const string& name)
+DH_Vis::DH_Vis (const string& name, const ParameterSet& ps)
 : DataHolder    (name, "DH_Vis"),
   itsDataPacket (0),
-  itsBuffer     (0)
-{
-
-}
+  itsBuffer     (0),
+  itsPS         (ps)
+{}
 
 DH_Vis::DH_Vis(const DH_Vis& that)
   : DataHolder(that),
     itsDataPacket(0),
-    itsBuffer(0)
-{
-}
+    itsBuffer(0),
+    itsPS(that.itsPS)
+{}
 
 DH_Vis::~DH_Vis()
 {
@@ -61,7 +60,8 @@ void DH_Vis::preprocess()
   postprocess();
 
   // Determine the number of bytes needed for DataPacket and buffer.
-  itsBufSize = NSTATIONS * NSTATIONS * sizeof(BufferType);
+  itsBufSize = itsPS.getInt("general.nstations") * itsPS.getInt("general.nstations") 
+    * sizeof(BufferType);
   unsigned int size = sizeof(DataPacket) + itsBufSize;
   char* ptr = new char[size];
   // Fill in the data packet pointer and initialize the memory.

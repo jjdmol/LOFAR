@@ -25,9 +25,9 @@
 
 #include <lofar_config.h>
 
-#include "CEPFrame/WorkHolder.h"
-#include "OnLineProto/DH_Phase.h"
-#include "OnLineProto/MAC.h"
+#include <CEPFrame/WorkHolder.h>
+#include <OnLineProto/DH_Phase.h>
+#include <ACC/ParameterSet.h>
 
 namespace LOFAR
 {
@@ -40,14 +40,14 @@ public:
   /// The first WorkHolder should have nin=0.
   explicit WH_FringeControl (const string& name,
 			     const int nout,
-			     MAC mac);
+			     const ParameterSet& ps);
 
   virtual ~WH_FringeControl();
 
   /// Static function to create an object.
   static WorkHolder* construct (const string& name,
 				const int nout,
-				MAC mac);
+				const ParameterSet& ps);
 
   /// Make a fresh copy of the WH object.
   virtual WH_FringeControl* make (const string& name);
@@ -65,7 +65,7 @@ private:
   /// Forbid assignment.
   WH_FringeControl& operator= (const WH_FringeControl&);
   
-  MAC itsMac;
+  ParameterSet itsPS;
 };
 
 }

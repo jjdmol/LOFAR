@@ -39,12 +39,12 @@ namespace LOFAR
   WH_SimStation::WH_SimStation (const string& name,
 				const int nout,
 				const string fileName,
-				MAC mac,
+				const ParameterSet& ps,
 				const int ID)
     : WorkHolder   (1, nout, name,"WH_SimStation"),
       itsFileName  (fileName),
       itsInputFile (fileName.c_str(),  ifstream::binary|ifstream::in),
-      itsMac       (mac),
+      itsPS        (ps),
       itsID        (ID)
   {
     char str[8];
@@ -52,24 +52,24 @@ namespace LOFAR
     // create the dummy input dataholder
     sprintf (str, "%d", 1);
     getDataManager().addInDataHolder(0, new DH_Empty (string("in_") + str), true);
+    int bs = itsPS.getInt("station.nbeamlets"); 
     
     // create the output dataholders
-    for (int i = 0; i < mac.getNumberOfBeamlets (); i++) {
+    for (int i = 0; i < bs; i++) {
       sprintf (str, "%d", i);
-      int bs = mac.getBeamletSize (); 
       getDataManager().addOutDataHolder (i, 
 					 new DH_Beamlet (string("out_") + str,
 							 ID,
-							 mac.getFrequency(i),
-							 mac.getChannelBandwidth(),
-							 mac.getStartHourangle(),
-							 mac.getBeamletSize()));
+							 itsPS.getFloat(string("station.beamlet.") + str),
+							 itsPS.getFloat("station.chan_bw"),
+							 itsPS.getFloat("observation.ha_0"),
+							 itsPS.getInt("station.nchannels")));
     }
 
     // Allocate buffer data, the add one is for the elapsed time
     // so the structure is t0 c1 ... cn  
     //                     t1 c1 ... cn  where n is the total number of channels
-    itsData = (complex<float>*)malloc((mac.getNumberOfBeamlets()*mac.getBeamletSize()+1) * sizeof (complex<float>));
+    itsData = (complex<float>*)malloc((bs*itsPS.getInt("station.nchannels")+1) * sizeof (complex<float>));
     itsCounter = 0;
   }
   
@@ -81,16 +81,16 @@ namespace LOFAR
   WorkHolder* WH_SimStation::construct (const string& name, 
 					const int nout,
 					const string fileName,
-					const MAC mac,
+					const ParameterSet& ps,
 					const int ID)
   {
-    return new WH_SimStation (name, nout, fileName, mac, ID);
+    return new WH_SimStation (name, nout, fileName, ps, ID);
   }
   
   WH_SimStation* WH_SimStation::make (const string& name)
   {
     return new WH_SimStation (name, getDataManager().getOutputs(), 
-			      itsFileName, itsMac, itsID);
+			      itsFileName, itsPS, itsID);
   }
   
   void WH_SimStation::process()
@@ -99,18 +99,19 @@ namespace LOFAR
 
     if (itsCounter == 0) {
       ReadData ();
-      itsCounter = DATA_ITERATION;
+      itsCounter = itsPS.getInt("corr.tsize");
     } else {
       itsCounter--;
     }
 
-    float t = (float)(itsData[0].real())+ (0.05*(DATA_ITERATION-itsCounter)/DATA_ITERATION);
+    float t = (float)(itsData[0].real())+ (0.05*(itsPS.getInt("corr.tsize")-itsCounter)
+					   /itsPS.getInt("corr.tsize"));
     
-    for (int i = 0; i < itsMac.getNumberOfBeamlets(); ++i) {
+    for (int i = 0; i < itsPS.getInt("station.nbeamlets"); ++i) {
       ((DH_Beamlet*)getDataManager().getOutHolder(i))->setElapsedTime(t);
-      for (int j = 0; j < itsMac.getBeamletSize(); j++) { 
+      for (int j = 0; j < itsPS.getInt("station.nchannels"); j++) { 
 	*((DH_Beamlet*)getDataManager().getOutHolder(i))->getBufferElement(j) 
-	  = itsData[i * itsMac.getBeamletSize() + j + 1];
+	  = itsData[i * itsPS.getInt("station.nchannels") + j + 1];
       }
     }
   }
@@ -119,10 +120,9 @@ namespace LOFAR
   {
     cout << "WH_SimStation " << getName () << " Buffers:" << endl;
 
-    for (int i = 0; i < MIN(itsMac.getNumberOfBeamlets(), 1) ; i++) { 
-      for (int j = 0; j < MIN(itsMac.getBeamletSize(), 10) ; j++) { 
+    for (int i = 0; i < MIN(itsPS.getInt("station.nbeamlets"), 1) ; i++) { 
+      for (int j = 0; j < MIN(itsPS.getInt("station.nchannels"), 10) ; j++) { 
 	cout << *((DH_Beamlet*)getDataManager().getOutHolder(i))->getBufferElement(j) << ' ';
-
       }
       cout << endl;
     }
@@ -130,21 +130,19 @@ namespace LOFAR
 
   void WH_SimStation::ReadData ()
   {
-    complex<float> InputData[NINPUT_BEAMLETS*itsMac.getBeamletSize()+1];
+    complex<float> InputData[NINPUT_BEAMLETS*itsPS.getInt("station.nchannels")+1];
 
-    // Read the data into the blitz array / matrix
+    // Read the data
     if (!itsInputFile.eof()) {
       itsInputFile.read((char*)InputData, 
-		  (NINPUT_BEAMLETS*itsMac.getBeamletSize()+1)*sizeof(complex<float>));
+		  (NINPUT_BEAMLETS*itsPS.getInt("station.nchannels")+1)*sizeof(complex<float>));
     } else {
       // Wrap around
-      itsInputFile.clear();
       itsInputFile.seekg(0);
-      
       itsInputFile.read((char*)InputData,
-		  (NINPUT_BEAMLETS*itsMac.getBeamletSize()+1)*sizeof(complex<float>));
+		  (NINPUT_BEAMLETS*itsPS.getInt("station.nchannels")+1)*sizeof(complex<float>));
     }
 
-    memcpy (itsData, InputData, itsMac.getNumberOfBeamlets()*itsMac.getBeamletSize()*sizeof(complex<float>));
+    memcpy (itsData, InputData, itsPS.getInt("station.nbeamlets")*itsPS.getInt("station.nchannels")*sizeof(complex<float>));
   }
 }// namespace LOFAR

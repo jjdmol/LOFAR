@@ -30,20 +30,19 @@
 namespace LOFAR
 {
 
-DH_CorrCube::DH_CorrCube (const string& name)
+DH_CorrCube::DH_CorrCube (const string& name, const ParameterSet& ps)
 : DataHolder    (name, "DH_CorrCube"),
   itsDataPacket (0),
-  itsBuffer     (0)
-{
-
-}
+  itsBuffer     (0),
+  itsPS         (ps)
+{}
 
 DH_CorrCube::DH_CorrCube(const DH_CorrCube& that)
   : DataHolder(that),
     itsDataPacket(0),
-    itsBuffer(0)
-{
-}
+    itsBuffer(0),
+    itsPS(that.itsPS)
+{}
 
 DH_CorrCube::~DH_CorrCube()
 {
@@ -61,7 +60,8 @@ void DH_CorrCube::preprocess()
   postprocess();
 
   // Determine the number of bytes needed for DataPacket and buffer.
-  itsBufSize = NSTATIONS * FSIZE * TSIZE * sizeof(BufferType);
+  itsBufSize = itsPS.getInt("general.nstations")*itsPS.getInt("corr.fsize")
+    *itsPS.getInt("corr.tsize")* sizeof(BufferType);
   unsigned int size = sizeof(DataPacket) + itsBufSize;
   char* ptr = new char[size];
   // Fill in the data packet pointer and initialize the memory.

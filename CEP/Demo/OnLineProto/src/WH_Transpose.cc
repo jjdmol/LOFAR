@@ -42,10 +42,11 @@ namespace LOFAR
 WH_Transpose::WH_Transpose (const string& name,
 			    unsigned int nin,
 			    unsigned int nout,
-			    const int FBW)
+			    const ParameterSet& ps)
   : WorkHolder    (nin, nout, name,"WH_Transpose"),
-    itsFBW(FBW),
-    itsIntegrationTime(0)
+    itsFBW(ps.getInt("station.nchannels")),
+    itsIntegrationTime(0),
+    itsPS(ps)
 {
   char str[8];
   // create the input dataholders
@@ -59,7 +60,7 @@ WH_Transpose::WH_Transpose (const string& name,
   for (unsigned int i=0; i<nout; i++) {
     sprintf (str, "%d", i);
     getDataManager().addOutDataHolder(i, 
-				      new DH_CorrCube (string("out_") + str), 
+				      new DH_CorrCube (string("out_") + str, ps), 
 				      true);
   }
 }
@@ -71,9 +72,9 @@ WH_Transpose::~WH_Transpose()
 WorkHolder* WH_Transpose::construct (const string& name, 
 				     unsigned int nin,
 				     unsigned int nout,
-				     const int FBW)
+				     const ParameterSet& ps)
 {
-  return new WH_Transpose (name, nin, nout, FBW);
+  return new WH_Transpose (name, nin, nout, ps);
 }
 
 WH_Transpose* WH_Transpose::make (const string& name)
@@ -81,7 +82,7 @@ WH_Transpose* WH_Transpose::make (const string& name)
   return new WH_Transpose (name, 
 			   getDataManager().getInputs(), 
 			   getDataManager().getOutputs(),
-			   itsFBW);
+			   itsPS);
 }
 
 void WH_Transpose::process()
@@ -100,7 +101,7 @@ void WH_Transpose::process()
 
   // loop over input stations and channels within the corresponding beamlets
   for (int station=0; station< getDataManager().getInputs(); station++) {
-    for (int freq=0; freq<BFBW; freq++) {
+    for (int freq=0; freq<itsPS.getInt("station.nchannels"); freq++) {
      
       // in this version we make the corrcube monochromatic (see assert above)
       // therefore  the outholder channel corresponds to the freq.
@@ -127,7 +128,9 @@ void WH_Transpose::process()
 	 } 
   }
   // keep track of the time channel
-  if (itsIntegrationTime++ == TSIZE-1) itsIntegrationTime=0;
+  itsIntegrationTime++;
+  if (itsIntegrationTime == itsPS.getInt("corr.tsize")-1) itsIntegrationTime=0;
+  cout << itsIntegrationTime << " ";
 }
 
 void WH_Transpose::dump()
@@ -150,7 +153,7 @@ void WH_Transpose::dump()
   for (int s=0; s<10; s++) {
     cout << "out station=" << s << ":  ";
     for (int t=0; t<10; t++) {
-      cout << *((DH_CorrCube*)getDataManager().getOutHolder(1))
+      cout << *((DH_CorrCube*)getDataManager().getOutHolder(0))
 	->getBufferElement(s, 0, t) ;
 
     }

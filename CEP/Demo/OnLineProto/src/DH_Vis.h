@@ -28,6 +28,7 @@
 
 #include "CEPFrame/DataHolder.h"
 #include <Common/lofar_complex.h>
+#include <ACC/ParameterSet.h>
 
 // ToDo: pass these values through configuration parameters
 #include <OnLineProto/definitions.h>
@@ -44,7 +45,7 @@ class DH_Vis: public DataHolder
 public:
   typedef complex<float> BufferType;
 
-  explicit DH_Vis (const string& name);
+  explicit DH_Vis (const string& name, const ParameterSet& ps);
 
   DH_Vis(const DH_Vis&);
 
@@ -89,7 +90,7 @@ private:
   unsigned int itsBufSize;
   
   int          itsFBW; // number of frequency channels within this beamlet
-
+  const ParameterSet itsPS;
 };
 
 inline DH_Vis::BufferType* DH_Vis::getBuffer()
@@ -100,7 +101,7 @@ inline const DH_Vis::BufferType* DH_Vis::getBuffer() const
 
 inline DH_Vis::BufferType* DH_Vis::getBufferElement(int s1, int s2)
 { 
-  return itsBuffer+s1*NSTATIONS+s2;
+  return itsBuffer+s1*itsPS.getInt("general.nstations")+s2;
 }
 
 inline const int DH_Vis::getFBW() const

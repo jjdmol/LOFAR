@@ -28,9 +28,10 @@
 
 #include "CEPFrame/DataHolder.h"
 #include <Common/lofar_complex.h>
+#include <ACC/ParameterSet.h>
 
 // ToDo: pass these values through configuration parameters
-#include <OnLineProto/definitions.h>
+//#include <OnLineProto/definitions.h>
 
 namespace LOFAR
 {
@@ -44,7 +45,7 @@ class DH_CorrCube: public DataHolder
 public:
   typedef complex<float> BufferType;
 
-  explicit DH_CorrCube (const string& name);
+  explicit DH_CorrCube (const string& name, const ParameterSet& ps);
 
   DH_CorrCube(const DH_CorrCube&);
 
@@ -91,7 +92,7 @@ private:
   unsigned int itsBufSize;
   
   int          itsFBW; // number of frequency channels within this beamlet
-
+  const ParameterSet itsPS; // necessary configuration parameters
 };
 
 inline DH_CorrCube::BufferType* DH_CorrCube::getBuffer()
@@ -104,7 +105,8 @@ inline DH_CorrCube::BufferType* DH_CorrCube::getBufferElement(int station,
 							      int time, 
 							      int freq)
 { 
-  return itsBuffer+station*TSIZE*FSIZE+time*FSIZE+freq;
+  return itsBuffer+station*itsPS.getInt("corr.tsize")*itsPS.getInt("corr.fsize")
+    +time*itsPS.getInt("corr.fsize")+freq;
 }
    
 inline void DH_CorrCube::setBufferElement(int station, 
@@ -112,7 +114,8 @@ inline void DH_CorrCube::setBufferElement(int station,
 			     int freq, 
   			     DH_CorrCube::BufferType* valueptr) 
 {
-   DH_CorrCube::BufferType* ptr= itsBuffer+station*TSIZE*FSIZE+time*FSIZE+freq;
+   DH_CorrCube::BufferType* ptr= itsBuffer+station*itsPS.getInt("corr.tsize")*
+     itsPS.getInt("corr.fsize")+time*itsPS.getInt("corr.fsize")+freq;
    *ptr = *valueptr;
 }
    
