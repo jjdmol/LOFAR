@@ -32,6 +32,7 @@ UVPDataAtomHeader::UVPDataAtomHeader(unsigned int antenna1,
                                      float        exposureTime,
                                      Correlation  correlationType,
                                      unsigned int fieldID,
+                                     unsigned int spectralWindowID,
                                      const std::vector<double>& uvw,
                                      DataType     dataType)
   : itsAntenna1(antenna1),
@@ -39,6 +40,7 @@ UVPDataAtomHeader::UVPDataAtomHeader(unsigned int antenna1,
     itsTime(time),
     itsExposureTime(exposureTime),
     itsCorrelationType(correlationType),
+    itsSpectralWindowID(spectralWindowID),
     itsFieldID(fieldID),
     itsDataType(dataType)
 {
@@ -63,15 +65,19 @@ bool UVPDataAtomHeader::operator < (const UVPDataAtomHeader &other) const
     if(itsAntenna2 < other.itsAntenna2) {
       return true;
     } else if(itsAntenna2 == other.itsAntenna2) {
-      if(itsCorrelationType < other.itsCorrelationType) {
+      if(itsSpectralWindowID < other.itsSpectralWindowID) {
         return true;
-      } else if(itsCorrelationType == other.itsCorrelationType) {
-        if(itsTime < other.itsTime) {
+      } else if(itsSpectralWindowID == other.itsSpectralWindowID) {
+        if(itsCorrelationType < other.itsCorrelationType) {
           return true;
-        } else if(itsTime == other.itsTime) {
-          return false;
-        } // itsTime
-      } // itsCorrelationType
+        } else if(itsCorrelationType == other.itsCorrelationType) {
+          if(itsTime < other.itsTime) {
+            return true;
+          } else if(itsTime == other.itsTime) {
+            return false;
+          } // itsTime
+        } // itsCorrelationType
+      } // itsSpectralWindowID
     } // itsAntenna2
   } // itsAntenna1
   
@@ -92,6 +98,7 @@ void UVPDataAtomHeader::store(std::ostream& out) const
   out.write((const void*)&itsAntenna2    , sizeof(unsigned int));
   out.write((const void*)&itsTime        , sizeof(double));
   out.write((const void*)&itsExposureTime, sizeof(float));
+  out.write((const void*)&itsSpectralWindowID, sizeof(unsigned int));
   out.write((const void*)&itsFieldID     , sizeof(unsigned int));
   out.write((const void*)&itsUVW         , 3*sizeof(double));
   out.write(& (unsigned char)itsCorrelationType, 1);
@@ -109,6 +116,7 @@ void UVPDataAtomHeader::load(std::istream& in)
   in.read((void*)&itsAntenna2    , sizeof(unsigned int));
   in.read((void*)&itsTime        , sizeof(double));
   in.read((void*)&itsExposureTime, sizeof(float));
+  in.read((void*)&itsSpectralWindowID, sizeof(unsigned int));
   in.read((void*)&itsFieldID     , sizeof(unsigned int));
   in.read((void*)&itsUVW         , 3*sizeof(double));
   in.read(& (unsigned char)itsCorrelationType, 1);

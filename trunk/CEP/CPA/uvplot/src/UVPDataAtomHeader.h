@@ -70,6 +70,9 @@ class UVPDataAtomHeader
   //! Polarization type of correlation.
   Correlation  itsCorrelationType;
 
+  //! Zero based spectral window identifier
+  unsigned int itsSpectralWindowID;
+
   //! Zero based field indentifier.
   unsigned int itsFieldID;
   
@@ -93,11 +96,12 @@ class UVPDataAtomHeader
                     float        exposureTime    = 0.0,
                     Correlation  correlationType = None,
                     unsigned int fieldID         = 0,
+                    unsigned int spectralWindowID= 0,
                     const std::vector<double>& uvw = std::vector<double>(3,0),
                     DataType     dataType        = Raw);
   
   //! Less-than operator. Keys are
-  //itsAntenna1-itsAntenna2-itsCorrelationType-itsTime.
+  //itsAntenna1-itsAntenna2-itsSpectralWidnowID-itsCorrelationType-itsTime.
   bool operator < (const UVPDataAtomHeader &other) const;
   
   //! Stores internal state in binary format.
@@ -106,12 +110,13 @@ class UVPDataAtomHeader
     - Bytes  4- 7:     unsigned int     Antenna 2
     - Bytes  8-15:     double           Time (mid integration)
     - Bytes 16-19:     float            Exposure time
-    - Bytes 20-23:     unsigned int     Field ID
-    - Bytes 24-31:     double           U (ITRF, meters)
-    - Bytes 32-39:     double           V (ITRF, meters)
-    - Bytes 40-48:     double           W (ITRF, meters)
-    - Byte  49   :     unsigned char    Correlation type
-    - Byte  50   :     unsigned char    Data type
+    - Bytes 20-23:     unsigned int     Spectral Window ID
+    - Bytes 24-27:     unsigned int     Field ID
+    - Bytes 28-35:     double           U (ITRF, meters)
+    - Bytes 36-43:     double           V (ITRF, meters)
+    - Bytes 44-52:     double           W (ITRF, meters)
+    - Byte  53   :     unsigned char    Correlation type
+    - Byte  54   :     unsigned char    Data type
    */
   void store(std::ostream &out) const;
 

@@ -319,6 +319,7 @@ void UVPMainWindow::drawDataSet()
 
   
   UVPDataAtomHeader::Correlation Correlation = itsGraphSettingsWidget->getSettings().getCorrelation();
+  unsigned int                   SpectralWindowID = 0;
 
 #if(DEBUG_MODE)
   TRACER1("Correlation= " << Correlation);
@@ -331,7 +332,8 @@ void UVPMainWindow::drawDataSet()
     const   UVPDataAtom *dataAtom = &(p->second);
     
     //********** Data are only added if correlation type is right ********
-    if(dataAtom->getHeader().itsCorrelationType == Correlation) {
+    if(dataAtom->getHeader().itsCorrelationType == Correlation &&
+       dataAtom->getHeader().itsSpectralWindowID == SpectralWindowID) {
 
       unsigned int NumChan = dataAtom->getNumberOfChannels();
       double*      Values  = new double[NumChan];
@@ -603,6 +605,7 @@ try
   ROScalarColumn<Double> TimeColumn    (Selection, "TIME");
   ROScalarColumn<Int>    Antenna1Column(Selection, "ANTENNA1");
   ROScalarColumn<Int>    Antenna2Column(Selection, "ANTENNA2");
+  ROScalarColumn<Int>    DataDescColumn(Selection, "DATA_DESC_ID");
   ROScalarColumn<Int>    FieldColumn   (Selection, "FIELD_ID");
   ROArrayColumn<Bool>    FlagColumn    (Selection, "FLAG");
   ROScalarColumn<Double> ExposureColumn(Selection, "EXPOSURE");
@@ -645,7 +648,7 @@ try
   for(unsigned int i = 0; i < NumSelected && itsBusyPlotting; i++) {
     
     bool           DeleteData;
-    Array<Complex> DataArray(DataColumn(i));
+    Array<Complex> DataArray(DataColumn(i)); // IMPORTANT, prevents "Data" pointer from dangling!!!
     const Complex* Data = DataArray.getStorage(DeleteData);
 
     bool           DeleteFlag;
@@ -661,11 +664,16 @@ try
     }
 
     for(unsigned int k = 0; k < NumPolarizations; k++) {
-      Headers[k].itsTime         = TimeColumn(i);
-      Headers[k].itsAntenna1     = Antenna1Column(i);
-      Headers[k].itsAntenna2     = Antenna2Column(i);
-      Headers[k].itsExposureTime = ExposureColumn(i);
-      Headers[k].itsFieldID      = FieldColumn(i);
+      Headers[k].itsTime             = TimeColumn(i);
+      Headers[k].itsAntenna1         = Antenna1Column(i);
+      Headers[k].itsAntenna2         = Antenna2Column(i);
+      Headers[k].itsExposureTime     = ExposureColumn(i);
+      Headers[k].itsFieldID          = FieldColumn(i);
+      Headers[k].itsSpectralWindowID = DataDescColumn(i); 
+/*Very simple. Should in fact be the value of the DataDescColumn(i)-th
+  row of the SPECTRAL_WINDOW_ID column of the data description
+  subtable.
+*/
 
       Array<Double> UVWArray;
       bool          DeleteUVW;
