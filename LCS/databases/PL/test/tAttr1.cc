@@ -31,6 +31,10 @@ using namespace std;
 
 vector<string> theirAttr;
 
+typedef bool testResFunc (int i[],
+			  int v0, int v1, int v2, int v3, int v4,
+			  int v5, int v6, int v7, int v8, int v9);
+
 // Fill the database with values 0 and 1 for each attribute.
 void filldb (PersistenceBroker& pb)
 {
@@ -69,7 +73,9 @@ void clearRes(bool res[128])
 
 // Set the flags where a result is expected.
 // Return the nr of flags set.
-int orRes(bool res[128], int value1, int ax1, int value2, int ax2)
+int fillRes( testResFunc* func, bool res[128],
+	    int v0=0, int v1=0, int v2=0, int v3=0, int v4=0,
+	    int v5=0, int v6=0, int v7=0, int v8=0, int v9=0)
 {
   int nrf=0;
   int inx=0;
@@ -82,7 +88,7 @@ int orRes(bool res[128], int value1, int ax1, int value2, int ax2)
 	  for (i[4]=0; i[4]<2; i[4]++) {
 	    for (i[5]=0; i[5]<2; i[5]++) {
 	      for (i[6]=0; i[6]<2; i[6]++) {
-		if (i[ax1] == value1  ||  i[ax2] == value2) {
+		if (func(i, v0,v1,v2,v3,v4,v5,v6,v7,v8,v9)) {
 		  res[inx] = true;
 		  nrf++;
 		}
@@ -96,265 +102,70 @@ int orRes(bool res[128], int value1, int ax1, int value2, int ax2)
   }
   return nrf;
 }
-
-int or2Res(bool res[128], int ax1, int ax2, int ax3, int ax4)
+// Set the flags where a result is expected.
+// Return the nr of flags set.
+bool orRes(int i[], int value1, int ax1, int value2, int ax2,
+	   int, int, int, int, int, int)
 {
-  int nrf=0;
-  int inx=0;
-  clearRes(res);
-  int i[7];
-  for (i[0]=0; i[0]<2; i[0]++) {
-    for (i[1]=0; i[1]<2; i[1]++) {
-      for (i[2]=0; i[2]<2; i[2]++) {
-        for (i[3]=0; i[3]<2; i[3]++) {
-          for (i[4]=0; i[4]<2; i[4]++) {
-            for (i[5]=0; i[5]<2; i[5]++) {
-              for (i[6]=0; i[6]<2; i[6]++) {
-                if (i[ax1] == i[ax2]  ||  i[ax3] == i[ax4]) {
-                  res[inx] = true;
-                  nrf++;
-                }
-                inx++;
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-  return nrf;
+  return (i[ax1] == value1  ||  i[ax2] == value2);
 }
 
-int or3Res(bool res[128], int ax1, int ax2, int ax3, int ax4, int ax5, int ax6)
+bool or2Res(int i[], int ax1, int ax2, int ax3, int ax4,
+	    int, int, int, int, int, int)
 {
-  int nrf=0;
-  int inx=0;
-  clearRes(res);
-  int i[7];
-  for (i[0]=0; i[0]<2; i[0]++) {
-    for (i[1]=0; i[1]<2; i[1]++) {
-      for (i[2]=0; i[2]<2; i[2]++) {
-        for (i[3]=0; i[3]<2; i[3]++) {
-          for (i[4]=0; i[4]<2; i[4]++) {
-            for (i[5]=0; i[5]<2; i[5]++) {
-              for (i[6]=0; i[6]<2; i[6]++) {
-                if (i[ax1]==i[ax2] || i[ax3]==i[ax4] || i[ax5]==i[ax6]) {
-                  res[inx] = true;
-                  nrf++;
-                }
-                inx++;
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-  return nrf;
+  return (i[ax1] == i[ax2]  ||  i[ax3] == i[ax4]);
 }
 
-int andRes(bool res[128], int value1, int ax1, int value2, int ax2)
+bool or3Res(int i[], int ax1, int ax2, int ax3, int ax4, int ax5, int ax6,
+	    int, int, int, int)
 {
-  int nrf=0;
-  int inx=0;
-  clearRes(res);
-  int i[7];
-  for (i[0]=0; i[0]<2; i[0]++) {
-    for (i[1]=0; i[1]<2; i[1]++) {
-      for (i[2]=0; i[2]<2; i[2]++) {
-	for (i[3]=0; i[3]<2; i[3]++) {
-	  for (i[4]=0; i[4]<2; i[4]++) {
-	    for (i[5]=0; i[5]<2; i[5]++) {
-	      for (i[6]=0; i[6]<2; i[6]++) {
-		if (i[ax1] == value1  &&  i[ax2] == value2) {
-		  res[inx] = true;
-		  nrf++;
-		}
-		inx++;
-	      }
-	    }
-	  }
-	}
-      }
-    }
-  }
-  return nrf;
+  return (i[ax1]==i[ax2] || i[ax3]==i[ax4] || i[ax5]==i[ax6]);
 }
 
-int plusRes(bool res[128], int value, int ax1, int ax2)
+bool andRes(int i[], int value1, int ax1, int value2, int ax2,
+	    int, int, int, int, int, int)
 {
-  int nrf=0;
-  int inx=0;
-  clearRes(res);
-  int i[7];
-  for (i[0]=0; i[0]<2; i[0]++) {
-    for (i[1]=0; i[1]<2; i[1]++) {
-      for (i[2]=0; i[2]<2; i[2]++) {
-	for (i[3]=0; i[3]<2; i[3]++) {
-	  for (i[4]=0; i[4]<2; i[4]++) {
-	    for (i[5]=0; i[5]<2; i[5]++) {
-	      for (i[6]=0; i[6]<2; i[6]++) {
-		if (i[ax1] + i[ax2] == value) {
-		  res[inx] = true;
-		  nrf++;
-		}
-		inx++;
-	      }
-	    }
-	  }
-	}
-      }
-    }
-  }
-  return nrf;
+  return (i[ax1] == value1  &&  i[ax2] == value2);
 }
 
-int plus2Res(bool res[128], int ax1, int ax2, int ax3)
+bool plusRes(int i[], int value, int ax1, int ax2,
+	     int, int, int, int, int, int, int)
 {
-  int nrf=0;
-  int inx=0;
-  clearRes(res);
-  int i[7];
-  for (i[0]=0; i[0]<2; i[0]++) {
-    for (i[1]=0; i[1]<2; i[1]++) {
-      for (i[2]=0; i[2]<2; i[2]++) {
-	for (i[3]=0; i[3]<2; i[3]++) {
-	  for (i[4]=0; i[4]<2; i[4]++) {
-	    for (i[5]=0; i[5]<2; i[5]++) {
-	      for (i[6]=0; i[6]<2; i[6]++) {
-		if (i[ax1] + i[ax2] == i[ax3]) {
-		  res[inx] = true;
-		  nrf++;
-		}
-		inx++;
-	      }
-	    }
-	  }
-	}
-      }
-    }
-  }
-  return nrf;
+  return (i[ax1] + i[ax2] == value);
 }
 
-int betweenRes(bool res[128], int value1, int ax1, int value2, int ax2)
+bool plus2Res(int i[], int ax1, int ax2, int ax3,
+	    int, int, int, int, int, int, int)
 {
-  int nrf=0;
-  int inx=0;
-  clearRes(res);
-  int i[7];
-  for (i[0]=0; i[0]<2; i[0]++) {
-    for (i[1]=0; i[1]<2; i[1]++) {
-      for (i[2]=0; i[2]<2; i[2]++) {
-	for (i[3]=0; i[3]<2; i[3]++) {
-	  for (i[4]=0; i[4]<2; i[4]++) {
-	    for (i[5]=0; i[5]<2; i[5]++) {
-	      for (i[6]=0; i[6]<2; i[6]++) {
-		if (value1 <= (i[ax1] - i[ax2]) &&
-		    (i[ax1] - i[ax2]) <= value2) {
-		  res[inx] = true;
-		  nrf++;
-		}
-		inx++;
-	      }
-	    }
-	  }
-	}
-      }
-    }
-  }
-  return nrf;
+  return (i[ax1] + i[ax2] == i[ax3]);
 }
 
-int notBetweenRes(bool res[128], int value1, int ax1, int value2, int ax2)
+bool betweenRes(int i[], int value1, int ax1, int value2, int ax2,
+		int, int, int, int, int, int)
 {
-  int nrf=0;
-  int inx=0;
-  clearRes(res);
-  int i[7];
-  for (i[0]=0; i[0]<2; i[0]++) {
-    for (i[1]=0; i[1]<2; i[1]++) {
-      for (i[2]=0; i[2]<2; i[2]++) {
-	for (i[3]=0; i[3]<2; i[3]++) {
-	  for (i[4]=0; i[4]<2; i[4]++) {
-	    for (i[5]=0; i[5]<2; i[5]++) {
-	      for (i[6]=0; i[6]<2; i[6]++) {
-		if ((i[ax1] - i[ax2]) < value1 ||
-		    (i[ax1] - i[ax2]) > value2) {
-		  res[inx] = true;
-		  nrf++;
-		}
-		inx++;
-	      }
-	    }
-	  }
-	}
-      }
-    }
-  }
-  return nrf;
+  return (value1 <= (i[ax1] - i[ax2]) && (i[ax1] - i[ax2]) <= value2);
 }
 
-int inRes(bool res[128], int ax1, int ax2, int value1, 
-	  int value2, int value3)
+bool notBetweenRes(int i[], int value1, int ax1, int value2, int ax2,
+		   int, int, int, int, int, int)
 {
-  int nrf=0;
-  int inx=0;
-  clearRes(res);
-  int i[7];
-  for (i[0]=0; i[0]<2; i[0]++) {
-    for (i[1]=0; i[1]<2; i[1]++) {
-      for (i[2]=0; i[2]<2; i[2]++) {
-	for (i[3]=0; i[3]<2; i[3]++) {
-	  for (i[4]=0; i[4]<2; i[4]++) {
-	    for (i[5]=0; i[5]<2; i[5]++) {
-	      for (i[6]=0; i[6]<2; i[6]++) {
-		if ((i[ax1] - i[ax2] == value1) ||
-		    (i[ax1] - i[ax2] == value2) ||
-		    (i[ax1] - i[ax2] == value3) ) {
-		  res[inx] = true;
-		  nrf++;
-		}
-		inx++;
-	      }
-	    }
-	  }
-	}
-      }
-    }
-  }
-  return nrf;
+  return ((i[ax1] - i[ax2]) < value1 || (i[ax1] - i[ax2]) > value2);
 }
 
-int notInRes(bool res[128], int ax1, int ax2, int value1, 
-	     int value2, int value3)
+bool inRes(int i[], int ax1, int ax2, int value1, int value2, int value3,
+	   int, int, int, int, int)
 {
-  int nrf=0;
-  int inx=0;
-  clearRes(res);
-  int i[7];
-  for (i[0]=0; i[0]<2; i[0]++) {
-    for (i[1]=0; i[1]<2; i[1]++) {
-      for (i[2]=0; i[2]<2; i[2]++) {
-	for (i[3]=0; i[3]<2; i[3]++) {
-	  for (i[4]=0; i[4]<2; i[4]++) {
-	    for (i[5]=0; i[5]<2; i[5]++) {
-	      for (i[6]=0; i[6]<2; i[6]++) {
-		if ((i[ax1] - i[ax2] != value1) &&
-		    (i[ax1] - i[ax2] != value2) &&
-		    (i[ax1] - i[ax2] != value3) ) {
-		  res[inx] = true;
-		  nrf++;
-		}
-		inx++;
-	      }
-	    }
-	  }
-	}
-      }
-    }
-  }
-  return nrf;
+  return ((i[ax1] - i[ax2] == value1) ||
+	  (i[ax1] - i[ax2] == value2) ||
+	  (i[ax1] - i[ax2] == value3) );
+}
+
+bool notInRes(int i[], int ax1, int ax2, int value1, int value2, int value3,
+	      int, int, int, int, int)
+{
+  return ((i[ax1] - i[ax2] != value1) &&
+	  (i[ax1] - i[ax2] != value2) &&
+	  (i[ax1] - i[ax2] != value3) );
 }
 
 // Test if the entire result is true.
@@ -398,7 +209,7 @@ bool querySingle (PersistenceBroker& pb, int value, int ax)
     pb.retrieve<F>(attrib(tpof, theirAttr[ax]) == value);
   // Set the expected result.
   bool exp[128];
-  int nrexp = andRes(exp, value, ax, value, ax);
+  int nrexp = fillRes (andRes, exp, value, ax, value, ax);
   // Check the result.
   return checkRes(exp, nrexp, set);
 }
@@ -417,7 +228,7 @@ bool queryOr (PersistenceBroker& pb, int value1, int ax1,
   // Set the expected result.
   bool exp[128];
   clearRes(exp);
-  int nrexp = orRes (exp, value1, ax1, value2, ax2);
+  int nrexp = fillRes (orRes, exp, value1, ax1, value2, ax2);
   // Check the result.
   return checkRes(exp, nrexp, set);
 }
@@ -438,7 +249,7 @@ bool queryOr2 (PersistenceBroker& pb, int ax1, int ax2,
   // Set the expected result.
   bool exp[128];
   clearRes(exp);
-  int nrexp = or2Res (exp, ax1, ax2, ax3, ax4);
+  int nrexp = fillRes (or2Res, exp, ax1, ax2, ax3, ax4);
   // Check the result.
   return checkRes(exp, nrexp, set);
 }
@@ -462,7 +273,7 @@ bool queryOr3 (PersistenceBroker& pb, int ax1, int ax2,
   // Set the expected result.
   bool exp[128];
   clearRes(exp);
-  int nrexp = or3Res (exp, ax1, ax2, ax3, ax4, ax5, ax6);
+  int nrexp = fillRes (or3Res, exp, ax1, ax2, ax3, ax4, ax5, ax6);
   // Check the result.
   return checkRes(exp, nrexp, set);
 }
@@ -480,7 +291,7 @@ bool queryAnd (PersistenceBroker& pb, int value1, int ax1,
 		   attrib(tpof, theirAttr[ax2]) == value2);
   // Set the expected result.
   bool exp[128];
-  int nrexp = andRes (exp, value1, ax1, value2, ax2);
+  int nrexp = fillRes (andRes, exp, value1, ax1, value2, ax2);
   // Check the result.
   return checkRes(exp, nrexp, set);
 }
@@ -497,7 +308,7 @@ bool queryPlus (PersistenceBroker& pb, int value, int ax1, int ax2)
 		   attrib(tpof, theirAttr[ax2]) == value);
   // Set the expected result.
   bool exp[128];
-  int nrexp = plusRes (exp, value, ax1, ax2);
+  int nrexp = fillRes (plusRes, exp, value, ax1, ax2);
   // Check the result.
   return checkRes(exp, nrexp, set);
 }
@@ -515,7 +326,7 @@ bool queryPlus2 (PersistenceBroker& pb, int ax1, int ax2, int ax3)
 		   attrib(tpof, theirAttr[ax3]));
   // Set the expected result.
   bool exp[128];
-  int nrexp = plus2Res (exp, ax1, ax2, ax3);
+  int nrexp = fillRes (plus2Res, exp, ax1, ax2, ax3);
   // Check the result.
   return checkRes(exp, nrexp, set);
 }
@@ -542,7 +353,7 @@ bool queryBetween (PersistenceBroker& pb, int value1, int ax1,
 		   .between(value1,value2));
   // Set the expected result.
   bool exp[128];
-  int nrexp = betweenRes (exp, value1, ax1, value2, ax2);
+  int nrexp = fillRes (betweenRes, exp, value1, ax1, value2, ax2);
   // Check the result.
   return checkRes(exp, nrexp, set);
 }
@@ -569,7 +380,7 @@ bool queryNotBetween (PersistenceBroker& pb, int value1, int ax1,
 		   .notBetween(value1,value2));
   // Set the expected result.
   bool exp[128];
-  int nrexp = notBetweenRes (exp, value1, ax1, value2, ax2);
+  int nrexp = fillRes (notBetweenRes, exp, value1, ax1, value2, ax2);
   // Check the result.
   return checkRes(exp, nrexp, set);
 }
@@ -594,7 +405,7 @@ bool queryIn (PersistenceBroker& pb, int ax1, int ax2, int value1,
 		   .in (c));
   // Set the expected result.
   bool exp[128];
-  int nrexp = inRes (exp, ax1, ax2, value1, value2, value3);
+  int nrexp = fillRes (inRes, exp, ax1, ax2, value1, value2, value3);
   // Check the result.
   return checkRes(exp, nrexp, set);
 }
@@ -619,7 +430,7 @@ bool queryNotIn (PersistenceBroker& pb, int ax1, int ax2,
 		   .notIn (c));
   // Set the expected result.
   bool exp[128];
-  int nrexp = notInRes (exp, ax1, ax2, value1, value2, value3);
+  int nrexp = fillRes (notInRes, exp, ax1, ax2, value1, value2, value3);
   // Check the result.
   return checkRes(exp, nrexp, set);
 }
