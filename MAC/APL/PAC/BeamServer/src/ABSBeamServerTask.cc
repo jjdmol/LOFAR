@@ -140,7 +140,7 @@ GCFEvent::TResult BeamServerTask::initial(GCFEvent& e, GCFPortInterface& port)
 	}
 	
 	// start with WG disabled.
-	if (board.isConnected()) wgdisable_action();
+	//if (board.isConnected()) wgdisable_action();
       }
       break;
 
@@ -316,7 +316,7 @@ GCFEvent::TResult BeamServerTask::enabled(GCFEvent& e, GCFPortInterface& port)
 
     case ABS_WGDISABLE:
       {
-	wgdisable_action();
+	  //wgdisable_action();
       }
       break;
 
@@ -361,7 +361,7 @@ GCFEvent::TResult BeamServerTask::enabled(GCFEvent& e, GCFPortInterface& port)
 	  }
 
 	// disable the waveform generator
-	wgdisable_action();
+	//wgdisable_action();
 
 	// cancel timers
 	board.cancelAllTimers();
