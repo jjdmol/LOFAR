@@ -163,7 +163,13 @@ void MSInputSink::openMS (DataRecord &header,const DataRecord &select)
     FailWhen( !selms_.nrow(),"selection yields empty table" );
     tableiter_  = TableIterator(selms_, "TIME");
   } 
+  
+  // get the first timeslot 
   header[FTime] = ROScalarColumn<double>(selms_, "TIME")(0);
+  // get the original shape of the data array
+  LoShape datashape = ROArrayColumn<Complex>(selms_,dataColName_).shape(0);
+  header[FOriginalDataShape] = datashape;
+  
   dprintf(1)("MS selection yields %d rows\n",selms_.nrow());
   tableiter_.reset();
   current_timeslot_ = 0;
@@ -177,15 +183,15 @@ bool MSInputSink::init (const DataRecord &params)
   DataRecord &header = *new DataRecord;
   ObjRef href(header,DMI::ANONWR); 
 
+  // get MS and selection
   msname_ = params[FMSName].as<string>();
   const DataRecord &selection = params[FSelection];
-
-  openMS(header,selection);  
-
   // get name of data column (default is DATA)
   dataColName_ = params[FDataColumnName].as<string>("DATA");
   // get # of timeslots per tile (default is 1)
   tilesize_ = params[FTileSize].as<int>(1);
+
+  openMS(header,selection);  
 
   // init common tile format and place it into header
   tileformat_ <<= new VisTile::Format;

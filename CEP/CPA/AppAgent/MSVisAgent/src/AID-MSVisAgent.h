@@ -93,6 +93,11 @@ const int AidName_int = -1163;
 const AtomicID AidNon(-1380);                     // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/MSVisAgent/src/MSVisAgent.aidlist:17
 const int AidNon_int = -1380;
 #endif
+#ifndef _defined_id_AidOriginal
+#define _defined_id_AidOriginal 1
+const AtomicID AidOriginal(-1387);                // from /home/oms/LOFAR/CEP/CPA/AppAgent/MSVisAgent/src/MSVisAgentVocabulary.h:37
+const int AidOriginal_int = -1387;
+#endif
 #ifndef _defined_id_AidOutput
 #define _defined_id_AidOutput 1
 const AtomicID AidOutput(-1130);                  // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/VisAgent/src/VisAgent.aidlist:6
@@ -122,6 +127,11 @@ const int AidResiduals_int = -1257;
 #define _defined_id_AidSelection 1
 const AtomicID AidSelection(-1124);               // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/MSVisAgent/src/MSVisAgent.aidlist:23
 const int AidSelection_int = -1124;
+#endif
+#ifndef _defined_id_AidShape
+#define _defined_id_AidShape 1
+const AtomicID AidShape(-1388);                   // from /home/oms/LOFAR/CEP/CPA/AppAgent/MSVisAgent/src/MSVisAgentVocabulary.h:37
+const int AidShape_int = -1388;
 #endif
 #ifndef _defined_id_AidSize
 #define _defined_id_AidSize 1
@@ -180,7 +190,7 @@ const int Aidstart_int = -1043;
 #endif
 #ifndef _defined_id_Aidstring
 #define _defined_id_Aidstring 1
-const AtomicID Aidstring(-48);                    // from /home/oms/LOFAR/autoconf_share/../DMI/src/DMI.aidlist:45
+const AtomicID Aidstring(-48);                    // from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/MSVisAgent/src/MSVisAgent.aidlist:35
 const int Aidstring_int = -48;
 #endif
 
