@@ -1,6 +1,6 @@
-#include <UVPPVDInput.h>
+#include <uvplot/UVPPVDInput.h>
 
-#include <UVPMessagesToFileWP.h>
+#include <uvplot/UVPMessagesToFileWP.h>
 
 #include <OCTOPUSSY/Message.h>
 #include <UVD/UVD.h>

@@ -9,8 +9,8 @@
 
 #include <DMI/BOIO.h>
 
-#include <UVPDataAtom.h>
-#include <UVPDataSet.h>
+#include <uvplot/UVPDataAtom.h>
+#include <uvplot/UVPDataSet.h>
 
 //! Interface to PVD dataset
 /*! Uses BOIO to read the data from a file */

@@ -5,8 +5,8 @@
 
 // $Id$
 
-#include <UVPDataAtomHeader.h>
-#include <UVPDataAtom.h>
+#include <uvplot/UVPDataAtomHeader.h>
+#include <uvplot/UVPDataAtom.h>
 
 
 //! Base class of the familie of classes that make up the data cache tree.

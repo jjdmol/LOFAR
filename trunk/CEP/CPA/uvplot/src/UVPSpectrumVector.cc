@@ -3,7 +3,7 @@
 // $ID$
 
 
-#include <UVPSpectrumVector.h>
+#include <uvplot/UVPSpectrumVector.h>
 
 #if(DEBUG_MODE)
 #include <cassert>

@@ -5,8 +5,8 @@
 
 // $Id$
 
-#include <UVPDisplayArea.h>
-#include <UVPSpectrumVector.h>
+#include <uvplot/UVPDisplayArea.h>
+#include <uvplot/UVPSpectrumVector.h>
 
 
 #include <vector>

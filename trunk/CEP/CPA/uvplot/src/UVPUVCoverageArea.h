@@ -7,8 +7,8 @@
 
 
 
-#include <UVPDisplayArea.h>
-#include <UVPImageCube.h>
+#include <uvplot/UVPDisplayArea.h>
+#include <uvplot/UVPImageCube.h>
 
 #include <qimage.h>
 

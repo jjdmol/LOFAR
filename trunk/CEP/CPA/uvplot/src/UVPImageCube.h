@@ -6,8 +6,8 @@
 // $Id$
 
 // Includes
-#include <UVPPixel.h>
-#include <UVPAxis.h>
+#include <uvplot/UVPPixel.h>
+#include <uvplot/UVPAxis.h>
 
 
 #include <vector>

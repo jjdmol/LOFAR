@@ -5,9 +5,9 @@
 
 // $Id$
 
-#include <UVPDataCacheElement.h>
-#include <UVPCorrelationDataCache.h>
-#include <UVPDataAtom.h>
+#include <uvplot/UVPDataCacheElement.h>
+#include <uvplot/UVPCorrelationDataCache.h>
+#include <uvplot/UVPDataAtom.h>
 
 
 

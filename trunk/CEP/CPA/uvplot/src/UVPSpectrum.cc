@@ -2,7 +2,7 @@
 
 // $ID$
 
-#include <UVPSpectrum.h>
+#include <uvplot/UVPSpectrum.h>
 
 #if(DEBUG_MODE)
 #include <cassert>

@@ -2,7 +2,7 @@
 
 // $ID$
 
-#include <UVPPixel.h>
+#include <uvplot/UVPPixel.h>
 
 
 #if(DEBUG_MODE)

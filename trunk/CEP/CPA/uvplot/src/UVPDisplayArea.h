@@ -12,7 +12,7 @@
 #include <qwidget.h>
 #include <qpixmap.h>
 
-#include <UVPAxis.h>
+#include <uvplot/UVPAxis.h>
 
 
 

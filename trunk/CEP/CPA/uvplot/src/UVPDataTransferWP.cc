@@ -4,7 +4,7 @@
 // $ID
 
 
-#include <UVPDataTransferWP.h>
+#include <uvplot/UVPDataTransferWP.h>
 #include <UVD/MSIntegratorWP.h>
 
 #if(DEBUG_MODE)

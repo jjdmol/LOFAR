@@ -5,7 +5,7 @@
 
 // $Id$
 
-#include <UVPGraphSettings.h>
+#include <uvplot/UVPGraphSettings.h>
 
 #include <qlineedit.h>
 #include <qlabel.h>

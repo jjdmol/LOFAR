@@ -14,9 +14,9 @@
 #include <qlabel.h>
 #include <qscrollview.h>
 
-#include <UVPTimeFrequencyPlot.h>
-#include <UVPGraphSettingsWidget.h>
-#include <UVPDataSet.h>
+#include <uvplot/UVPTimeFrequencyPlot.h>
+#include <uvplot/UVPGraphSettingsWidget.h>
+#include <uvplot/UVPDataSet.h>
 
 
 #if(DEBUG_MODE)

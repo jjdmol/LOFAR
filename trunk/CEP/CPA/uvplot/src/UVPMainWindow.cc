@@ -4,9 +4,9 @@
 #include <OCTOPUSSY/Gateways.h>
 //#include <UVD/MSIntegratorWP.h>
 
-#include <UVPMainWindow.h>
-#include <UVPDataTransferWP.h>    // Communications class
-#include <UVPPVDInput.h>
+#include <uvplot/UVPMainWindow.h>
+#include <uvplot/UVPDataTransferWP.h>    // Communications class
+#include <uvplot/UVPPVDInput.h>
 
 
 #include <qapplication.h>       // qApp

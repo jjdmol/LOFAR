@@ -3,7 +3,7 @@
 // $ID$
 
 // Includes
-#include <UVPImageCube.h>
+#include <uvplot/UVPImageCube.h>
 
 
 #if(DEBUG_MODE)
