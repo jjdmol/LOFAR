@@ -40,5 +40,5 @@ echo "localhost" >> tBBS3_tmp.machinefile
 echo "localhost" >> tBBS3_tmp.machinefile
 # tBBS3 tBBS3.testDefault $niter $usernm >& testDefault.out
 #  mpirun -np 3 -machinefile tBBS3_tmp.machinefile tBBS3 tBBS3.testDefault $niter $usernm >& testDefault.out
-  /usr/local/mpich/bin/mpirun -np 3 -machinefile tBBS3_tmp.machinefile tBBS3 tBBS3.testDefault $niter $usernm > testDefault.out
+  /usr/local/mpich/bin/mpirun -np 3 -machinefile tBBS3_tmp.machinefile tBBS3 tBBS3.testDefault $niter $usernm >& testDefault.out
 

@@ -34,8 +34,6 @@
 #include <iomanip>
 #include <malloc.h>
 
-#include <Common/hexdump.h>
-
 #include <Common/BlobOStream.h>
 #include <Common/BlobIStream.h>
 #include <Common/BlobOBufChar.h>
@@ -110,8 +108,6 @@ void doSolve (Prediffer& pre1, const vector<string>& solv, bool toblob)
       ASSERT (more);
     }
     ASSERT (nres == nreq);
-    cout << "*** buffer " << i << " ***" << endl;
-    ///    hexdump(buffer, nrval);
     solver.setEquations (buffer, nreq, shape[1]-1, shape[0], 0);
     // Define equations for a 2nd time to see if solution changes.
     if (toblob) {
