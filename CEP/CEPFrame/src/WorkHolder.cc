@@ -45,7 +45,6 @@ WorkHolder::WorkHolder (int inputs, int outputs,
   itsNoutputs         (outputs),
   itsName             (name),
   itsType             (type),
-  itsProcMode         (Process),
   itsFirstProcessCall (true)
 {
   TRACER2("WorkHolder constructor");
@@ -57,7 +56,6 @@ WorkHolder::WorkHolder (const WorkHolder& that)
   itsNoutputs         (that.itsNoutputs),
   itsName             (that.itsName),
   itsType             (that.itsType),
-  itsProcMode         (that.itsProcMode),
   itsDataManager      (0),
   itsFirstProcessCall (that.itsFirstProcessCall)
 {}
@@ -74,7 +72,6 @@ WorkHolder& WorkHolder::operator= (const WorkHolder& that)
     itsNoutputs         = that.itsNoutputs;
     itsName             = that.itsName;
     itsType             = that.itsType;
-    itsProcMode         = that.itsProcMode;
     itsDataManager      = 0;
     itsFirstProcessCall = that.itsFirstProcessCall;
   }
@@ -135,25 +132,10 @@ void WorkHolder::baseProcess ()
     }
   } 
 
-  switch (WorkHolder::getProcMode()) {
-  case Process:
-    process();
-    break;
-  case Zeroes:
-    // initialize all output
-    for (int output=0; output<itsNoutputs; output++) {
-      getDataManager().getOutHolder(output)->setZeroes();
-    }
-    break;
-  case Ones :
-    // initialize all output
-    for (int output=0; output<itsNoutputs; output++) {
-      getDataManager().getOutHolder(output)->setOnes();
-    }
-    break;
-  default :
-    break;
-  }
+  // Now we have the input data avialable
+  // and it is time to do the real work; call the process()
+  process();
+  
 
   for (int output=0; output<itsNoutputs; output++)	{
     if (getDataManager().getGeneralOutHolder(output)->doHandle()) {
