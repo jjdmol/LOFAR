@@ -45,13 +45,23 @@
 #define INIT_LOGGER(filename) \
 	LOFAR::lofarLoggerInitNode(); \
 	LofarInitTracingModule \
-	log4cplus::PropertyConfigurator::doConfigure(filename);
+	if (!strstr(filename, ".log_prop")) { \
+		log4cplus::PropertyConfigurator::doConfigure(log4cplus::tstring(filename)+".log_prop"); \
+	} \
+	else  {\
+		log4cplus::PropertyConfigurator::doConfigure(filename); \
+	}
 
 #ifdef USE_THREADS
 # define INIT_LOGGER_AND_WATCH(filename,watchinterval) \
-	 LOFAR::lofarLoggerInitNode(); \
-	 LofarInitTracingModule \
-	 log4cplus::ConfigureAndWatchThread tmpWatchThread(filename,watchinterval);
+	LOFAR::lofarLoggerInitNode(); \
+	LofarInitTracingModule \
+	if (!strstr(filename, ".log_prop")) { \
+		log4cplus::ConfigureAndWatchThread tmpWatchThread(log4cplus::tstring(filename)+".log_prop",watchinterval); \
+	} \
+	else  {\
+		log4cplus::ConfigureAndWatchThread tmpWatchThread(filename,watchinterval); \
+	}
 #else
 # define INIT_LOGGER_AND_WATCH(filename,watchinterval) INIT_LOGGER(filename)
 #endif
