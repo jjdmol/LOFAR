@@ -6,6 +6,7 @@
 %\usepackage{amsmath,amsthm, amsfonts, amssymb, amsxtra,amsopn}
 %\usepackage{graphicx}
 \usepackage{float}
+%\usepackage{floatflt}
 \usepackage{makeidx}
 %\usepackage{times}
 \usepackage{fancybox}
@@ -60,13 +61,34 @@
 
       \subsubsection{What can not be found in this document}
 
-        There is no explanation of self-calibration in this document.
+        The subjects in the following list are deemed irrelevant or
+        understood.
 
-        There is no detailed design of the self-calibration engine in
-        this document.
+        \begin{itemize}
 
-        There is no description or design of the self-calibration
-        algorithm in this document.
+          \item There is no explanation of self-calibration in this
+            document.
+
+          \item There is no detailed design of the self-calibration
+            engine in this document.
+
+          \item There is no description or design of the
+            self-calibration algorithm in this document.
+
+          \item There is no explanation of MPI, the message passing
+            interface.
+
+          \item There is no explanation on cluster-, multi-threaded or
+            other forms of parallel programming.
+
+          \item The concept of (architectural) pattern is not
+            explained.
+
+          \item The blackboard architectural pattern is not explained
+            in length. A not extensive list of background papers can
+            be found in \cite{bib:LOFAR-ASTRON-MEM-096}.
+
+        \end{itemize}
 
     \subsection{context}
     \label{subsec:context}\hypertarget{subsec:context}{}
@@ -80,6 +102,21 @@
   \section{architecture}
   \label{sec:architecture}\hypertarget{sec:architecture}{}
 
+    In this section several architectural aspects of the system will
+    be discussed. Aspects discussed are the human perspective, system
+    internals, the internal - and peripheral protocols and the code
+    organisation. Aspects not discussed on purpose are logging and
+    security. Of course there are other things that might be
+    considered that the writer(s) did not think about.
+
+    \begin{figure}{428pt}
+      \includegraphics[]{../figures/CEP_Cluster_Selfcal_mapped.eps}
+      \hypertarget{fig:selfcalMapped}{}
+      \caption{a sample mapping of a selfcal application on the
+        LOFAR cluster.\label{fig:selfcalMapped}}
+    \end{figure}
+
+
     \subsection{human perspectives}
 
       This section describes how different human beings can have
@@ -88,18 +125,19 @@
       \subsubsection{management}
 
         The Blackboard framework handles the distribution of an
-        application over a part of the cluster. From the management
-        perspective only a priority has to be given to the
-        application. On this high level this only means: ``how many
-        nodes may it use?'' and ``For what period of time may it use
-        them?''\footnote{It is yet to be considered what is to be done
-        when tho maximum execution time is exceeded. One thing might
-        be to settle for the present time intermediate
+        application over a part of the cluster (see figure
+        \hyperlink{fig:selfcalMapped}{\ref{fig:selfcalMapped}}). From
+        the management perspective only a priority has to be given to
+        the application. On this high level this only means: ``how
+        many nodes may it use?'' and ``For what period of time may it
+        use them?''\footnote{It is yet to be considered what is to be
+        done when tho maximum execution time is exceeded. One thing
+        might be to settle for the present time intermediate
         results. Another might be to add an extra request to the
-        job-queue.\label{execution-duration}}. The application has been
-        given strategy scripts to handle on that node that define the
-        internal priorities and the distribution within the appointed
-        sub-cluster.
+        job-queue.\label{execution-duration}}. The application has
+        been given a hierarchy of strategy scripts to handle, that
+        define the internal priorities and the distribution within the
+        appointed sub-cluster.
 
         \begin{requirement}
           It must be possible to configure the number of nodes to use
@@ -117,7 +155,11 @@
         mechanisms need some scripting or configuring. A lot of this
         can be automated, but a system administrator has to be aware
         of those mechanisms and the way the BlackBoard framework uses
-        them.
+        them. In figure
+        \hyperlink{fig:main.usecase}{\ref{fig:main.usecase}} the use
+        of the blackboard system is depicted. Hopefully the use-cases
+        that are not initiated by ``operational control'', will never
+        concern human beings or external programs.
 
         \begin{requirement}
           It must be possible to configure exactly what nodes to use
@@ -125,18 +167,17 @@
           \caption{specification of nodes\label{req:specification-of-nodes}}
         \end{requirement}
 
-        \begin{figure}
-          \includegraphics[]{../figures/CEP_Cluster_Selfcal_mapped.eps}
-          \hypertarget{fig:selfcalMapped}{}
-          \caption{a sample mapping of a selfcal application on the
-          LOFAR cluster.\label{fig:selfcalMapped}}
-        \end{figure}
-
         \begin{prerequisite}
           It must be possible to specify what software ``might'' be
           needed at what nodes.
           \caption{software availability\label{pre:software-availability}}
         \end{prerequisite}
+
+        \begin{figure}{340pt}
+          \includegraphics[]{../figures/main.usecase.eps}
+          \hypertarget{fig:main.usecase}{}
+          \caption{the main use-cases for the calibration program\label{fig:main.usecase}}
+        \end{figure}
 
       \subsubsection{instrumentalist}
 
@@ -246,11 +287,111 @@
 
       \subsubsection{control hierarchy}
 
+      \begin{figure}{449pt}
+        \includegraphics[]{../figures/control-hierarchy.eps}
+        \hypertarget{fig:control-hierarchy}{}
+        \caption{The required mapping of strategies on a control structure.\label{fig:control-hierarchy}}
+      \end{figure}
+
+      A mapping of a user-defined strategy onto a runtime set of
+      controlling components is needed. Figure
+      \hyperlink{fig:control-hierarchy}{\ref{fig:control-hierarchy}}
+      shows the expected structure of such a mapping, with on the left
+      the controlling hierarchy and on the right the strategy planned.
+
+\begin{verbatim}
+calibrate_observation {
+  competition {
+    part peeling [ source 2 + 5 , 3:6 , 1 ] {
+      competition {
+        part devide [ time  0:49999 , 100000:149999 ] {
+          collaboration {
+            part devide [source 3:5] {}
+            part devide [source 1, 6:7] {}
+          }
+        }
+        part devide [ time  50000:199999 , 200000:249999 ] {
+          collaboration {
+            part devide [source 1] {}
+            part devide [source 3,4] {}
+            part devide [source 5:7] {}
+          }
+        }
+        part devide [ time  150000:199999 , 250000:399999 ] {
+          collaboration {
+            part devide [source 1 , 3:7] {}
+          }
+        }
+      }
+    }
+    part monte-carlo {
+      competition {
+        part devide [ frequency 21.3:220 ]{}
+      }
+    }
+    part brute_force {
+      collaboration {
+        part devide [ frequency 21.3:29.9 , 40-49.9 ] {
+          collaboration {
+            part devide [ time  0:99999 ]{
+            }
+            part devide [ time 100000:199999 ] {
+            }
+            part devide [ time  200000:299999 ] {
+            }
+          }
+        }
+        part devide [ frequency 30-39.9 , 50-80 ] {
+          collaboration {
+            part devide [ time  0:199999 ] {
+            }
+            part devide [ time  200000:299999 ] {
+              collaboration {
+                part devide [ baseline 1:999 ] {
+                }
+                part devide [ baseline 1000:1999 ] {
+                }
+                part devide [ baseline 2000:2999 ] {
+                }
+                part devide [ baseline 3000:3999 ] {
+                }
+                part devide [ baseline 4000:4950 ] {
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+\end{verbatim}
+
+        The above script will result at run-time to the control
+        hierarchy as shown in figure
+        \hyperlink{fig:hierarchy-example}{\ref{fig:hierarchy-example}}. The
+        implementation is slightly more complicated as shown in the
+        fragment from this control hierarchy in figure
+        \hyperlink{fig:hierarchy-instance}{\ref{fig:hierarchy-instance}}.
+
+        \begin{figure}{308pt}
+          \includegraphics[]{../figures/hierarchy-example.eps}
+          \hypertarget{fig:hierarchy-example}{}
+          \caption{An example of a control hierarchy.\label{fig:hierarchy-example}}
+        \end{figure}
+
+        \begin{figure}{264pt}
+          \includegraphics[]{../figures/hierarchy-instance.eps}
+                \hypertarget{fig:hierarchy-instance}{}
+          \caption{the actual structure of a control hierarchy\label{fig:hierarchy-instance}}
+        \end{figure}
+
       \subsubsection{collaboration}
+        T.B.W.
 
       \subsubsection{dynamic model}
 
-        \begin{figure}
+        \begin{figure}{510pt}
           \includegraphics[]{../figures/overview2.eps}
           \hypertarget{fig:overview2}{}
           \caption{the overall structure of a BlackBoard-application\label{fig:overview2}}
@@ -262,11 +403,13 @@
         executable. In the main function a switch is made over the
         result of a database query that has the program instance as
         parameter and returns the role that the program instance has
-        to play. This means that the data-table has to be filled by
-        the same human action that produces the startup script. Errors
-        will result if this is done otherwise.
+        to play (see figure
+        \hyperlink{fig:startOfExecutable}{\ref{fig:startOfExecutable}}). This
+        means that the data-table has to be filled by the same human
+        action that produces the startup script. Errors will result if
+        this is done otherwise.
 
-        \begin{figure}
+        \begin{figure}{296pt}
           \includegraphics[]{../figures/startOfExecutable.eps}
           \hypertarget{fig:startOfExecutable}{}
           \caption{the startup sequence of the blackboard{\label{fig:startOfExecutable}}}
@@ -298,7 +441,7 @@
       are embedded in the messages posted on the blackboard protocols
       that must maintain and guarantee the validity of the
       system-state at all times. In figure
-      \hyperlink{fig:overview}{\ref{fig:overview2}}, these are
+      \hyperlink{fig:overview2}{\ref{fig:overview2}}, these are
       represented by the dotted dependency lines. The actual
       communication is embedded in whatever is put on the
       blackboard. A valid system state in this context would mean that
@@ -410,30 +553,30 @@
 
     \subsection{deployment}
 
-      \begin{figure}
+      \begin{figure}{399pt}
         \includegraphics[]{../figures/deployment-hierarchy.eps}
         \hypertarget{fig:deployment-hierarchy}{}
-        \caption{a schema for a possible deployment hierarchy. the
-        placement of nodes has no significance to the actual placing on
-        the LOFAR cluster.\label{fig:deployment-hierarchy}}
+        \caption{a schema for a possible deployment hierarchy.\label{fig:deployment-hierarchy}}
       \end{figure}
 
       In figure
       \hyperlink{fig:deployment-hierarchy}{\ref{fig:deployment-hierarchy}},
-      a simple possibility of an distribution of components is
-      shown. This examples assumes that there is going to be a set of
-      blackboards in the system. This can be convenient if the problem
-      at hand can be partitioned in reasonably independent parts. If
-      the blackboard are going to be exchanging vast quantities of
-      relatively small chunks of information. It will probably be a
-      better idea to keep one centralised blackboard.
+      a simple possibility of an distribution of components is shown.
+      The placement of nodes has no significance to the actual placing
+      on the LOFAR cluster. This examples assumes that there is going
+      to be a set of blackboards in the system. This can be convenient
+      if the problem at hand can be partitioned in reasonably
+      independent parts. If the blackboard are going to be exchanging
+      vast quantities of relatively small chunks of information. It
+      will probably be a better idea to keep one centralised
+      blackboard.
 
       The deployment is organised by means of a data-table called
       ``deploymentdata''.
 
     \subsection{code organisation}
 
-      \begin{figure}
+      \begin{figure}{288pt}
         \includegraphics[]{../figures/components.eps}
         \hypertarget{fig:components}{}
         \caption{The components in the blackboard framework.\label{fig:components}}
@@ -445,7 +588,7 @@
       are standard for the framework. The sixth is ``Selfcal'' which
       is application specific. The package ``parser'' contains a
       c-parser in bison and flex. The capitalized packages contain c++
-      classes for different tasks.
+      classes for different tasks. 
 
       \subsubsection{writing enhancements}
 
@@ -496,7 +639,7 @@
         originator.
       \end{requirement}
 
-      \begin{figure}
+      \begin{figure}{424pt}
         \includegraphics[]{../figures/local-_global-commit.eps}
         \hypertarget{fig:localGlobalCommit}{}
         \caption{a simple topology for a distributed blackboard database\label{fig:localGlobalCommit}}
@@ -513,12 +656,14 @@
       over. Therefore it must have all parameters to its
       disposal.
 
-      \begin{verse}{Note}
+      In figure
+      \hyperlink{fig:localGlobalCommit}{\ref{fig:localGlobalCommit}}
+      such a sub-cluster holds a database, and runs a data-engine and
+      three clients (possibly a controller and two selfcal-engines).
 
-        The parameters will have to be at it's disposal in
-        principal. But not necessarily available at all time?
-
-      \end{verse}
+      Note that the parameters will have to be at the disposal of a
+      sub-cluster in principal, but it does not necessarily have to
+      have the latest versions available at all time?
 
       A calibrating cluster is converging parameters from initial
       values to corrected values. This converging might go in the
@@ -531,7 +676,8 @@
       The essence of the requirement is that we have logical
       transactions that have to be nested. The fact that they seem to
       be centered around separate database-engines does not seem to be
-      important. We need only one level of nesting.
+      important. As far as we can tell we need only one level of
+      nesting.
 
       \subsubsection{nested cooperative transactions}
       \label{subsubsec:nested-cooperative-transaction}\hypertarget{subsubsec:nested-cooperative-transaction}{}
@@ -542,7 +688,7 @@
         with their own connections to the database must be able to
         participate in a single global level transaction.
 
-        \begin{figure}
+        \begin{figure}{305pt}
           \includegraphics[]{../figures/database.eps}
           \hypertarget{fig:database}{}
           \caption{database use in a distributed blackboard\label{fig:database}}
@@ -550,22 +696,32 @@
 
         For this nesting to make sense, a database client must be able
         to start a transaction and get an transaction id to distribute
-        among co-workers.
+        among co-workers. For the scheme in figure
+        \hyperlink{fig:database}{\ref{fig:database}} it would be nice
+        for the thread working an A.b using A.a to be able to access
+        A.a, and get new versions when decision on A.b results in more
+        work on A.b. The thread that works on A.b using B.a might not
+        (have to) be able to access newer versions of B.a at anytime
+        and might have to do with whatever version was available as
+        the thread started.
 
-        These co-workers can then work on the global transaction, by
-        ``connecting to'' or ``joining'' a transaction by id. Once joined,
-        they can change data within the scope of global
+        The threads working on A.a and on A.b are co-workers. These
+        co-workers can then work on the global transaction, by
+        ``connecting to'' or ``joining'' a transaction by id. Once
+        joined, they can change data within the scope of global
         transaction. This can be as singular operations or as
         transactions. Any changes committed is valid an visible to any
-        client joining in the transaction. Once the owner decides so
+        client joining in the transaction. Once the owner decides so,
         he can close the global transaction. This closing can be a
         commit as well as a rollback, both with the expected result.
-     
+
         So should participants be notified of the closing of the
         transaction?  No, they will notice when trying to manipulate
-        data.
+        data, as is shown in figure
+        \hyperlink{fig:nestedTransaction}{\ref{fig:nestedTransaction}},
+        where a similar scenario is depicted in a sequence diagram.
 
-        \begin{figure}
+        \begin{figure}{424pt}
           \includegraphics[]{../figures/nestedTransaction.eps}
           \hypertarget{fig:nestedTransaction}{}
           \caption{an action sequence that asks for nested transactions\label{fig:nestedTransactions}}
@@ -574,13 +730,15 @@
       \subsubsection{selective replication}
       \label{subsubsec:selective-replication}\hypertarget{subsubsec:selective-replication}{}%
 
-        Another solution would be to use selective replication. This
-        could mean that records will only be replicated after a
-        specific trigger. It could also mean that only part of the
-        datamodel will be replicated to other engines.
+        Another solution is to use selective replication. This can
+        mean two things. First it can mean that records will only be
+        replicated after a specific trigger, telling the engine that
+        this data is ready for replication. Second it can also mean
+        that only part of the data model will be replicated to other
+        engines.
 
     \subsection{Datasets}
-    \label{subsec:Datasets}\hypertarget{subsec:Datasets}{}%
+    \label{subsec:Datasets}\hypertarget{subsec:Datasets}{}
 
       Datasets are high-volume and intensively queried. Updates are
       mostly copies. Using a database engine would be to much of a
@@ -621,7 +779,7 @@
       being synchronized and with integrity guaranteed, will be hard
       to implement.
 
-      \begin{figure}
+      \begin{figure}{424pt}
         \includegraphics[]{../figures/strategy_interpreter.eps}
         \hypertarget{fig:strategy_interpreter}{}
         \caption{strategy interpreter\label{fig:strategy_interpreter}}
@@ -646,12 +804,6 @@
 
   \section{distributed hierarchical blackboard}
   \label{sec:distributed-hierarchical-blackboard}\hypertarget{sec:distributed-hierarchical-blackboard}{}%
-
-      \begin{figure}
-        \includegraphics[]{../figures/main.usecase.eps}
-        \hypertarget{fig:main.usecase}{}
-        \caption{the main use-cases for the calibration program\label{fig:main.usecase}}
-      \end{figure}
 
     \subsection{distribution over nodes and sub-clusters}
     \label{subsec:distribution}\hypertarget{subsec:distribution}{}%
@@ -743,10 +895,10 @@
         knowledge sources associated with the blackboard.
 
         The decision is made that for the time being there will be
-        only one BlackbBoard. There will be a control-hierarchy that
+        only one BlackBoard. There will be a control-hierarchy that
         will at a low level start knowledge sources.
 
-        \begin{figure}
+        \begin{figure}{430pt}
           \includegraphics[]{../figures/control-hierarchy2.eps}
           \hypertarget{fig:control-hierarchy2}{}
           \caption{the contstruction of a control
@@ -764,7 +916,7 @@
 
         \paragraph{simple watchers}
         \label{par:simple-watchers}\hypertarget{par:simple-watchers}{}
-          \begin{figure}
+          \begin{figure}{331pt}
             \includegraphics[]{../figures/watch.eps}
             \hypertarget{fig:watchers}{}
             \caption{The case that a watcher decides to advice
@@ -807,13 +959,12 @@
     \label{subsec:workload-distribution-2}\hypertarget{subsec:workload-distribution-2}{}
 
       The data, resulting from an observation will be several TB in
-      volume
-      \cite{bib:LOFAR-ASTRON-MEM-035}. To
-      conveniently handle this it will have to be partitioned. To
-      handle part of the data a specialised sub-cluster will be
-      defined. (see \hyperlink{fig:bb.subcluster}{Figure \ref{fig:bb.subcluster}}).
+      volume \cite{bib:LOFAR-ASTRON-MEM-035}. To conveniently handle
+      this it will have to be partitioned. To handle part of the data
+      a specialised sub-cluster will be defined. (see figure
+      \hyperlink{fig:bb.subcluster}{Figure \ref{fig:bb.subcluster}}).
 
-      \begin{figure}
+      \begin{figure}{294pt}
         \includegraphics[]{../figures/bb.subcluster.eps}
         \hypertarget{fig:bb.subcluster}{}
         \caption{the layout of a self-calibration sub-cluster.\label{fig:bb.subcluster}}
@@ -1001,21 +1152,24 @@
       to fill different workers with work, in a efficient way.
 
     \subsection{extra figures}
-    \begin{figure}
-      \includegraphics[]{../figures/control-hierarchy.eps}
-    \end{figure}
 
-    \begin{figure}
+    \begin{figure}{311pt}
       \includegraphics[]{../figures/fork.eps}
+      \hypertarget{fig:fork}{}
+      \caption{The forking taking place.\label{fig:fork}}
     \end{figure}
 
-    \begin{figure}
+    \begin{figure}{357pt}
       \includegraphics[]{../figures/solve-step.eps}
+      \hypertarget{fig:solve-step}{}
+      \caption{One solve step from the blackboard control structure perspective.\label{fig:solve-step}}
     \end{figure}
 
-    \begin{figure}
-      \includegraphics[]{../figures/strategy-distribution.eps}
-    \end{figure}
+%    \begin{figure}{502pt}
+%      \includegraphics[]{../figures/strategy-distribution.eps}
+%      \hypertarget{fig:strategy-distribution}{}
+%      \caption{A possible control hierarchy snapshot during interpretation.\label{fig:strategy-distribution}}
+%    \end{figure}
 
 \newcommand{\dbappendix}[1]{\section{#1}}%
 
@@ -1079,4 +1233,4 @@
 
 % LocalWords:  blackboard Blackboard BlackBoard LOFAR API ThreadController Hoogland SQL ASTRON Schaaf
 % LocalWords:  ThreadWatcher der Kjeld Daan selfcal deploymentdata
-% LocalWords:  WorkerWrapper
+% LocalWords:  WorkerWrapper selfcalMapped startOfExecutable localGlobalCommit
