@@ -1,17 +1,14 @@
 Compiler version:
-compat-2.96 (special compiler for the RedHat 8.0 distribution; almost the same as 2.95 but extended with STL)
-Because the 3.2 is already installed with RedHat 8.0 the gcc and g++ of the compat 
-installation must be renamed (to for instance gcc296 and g++296).
+Default compiler of RedHat 8 installation (gccc3.x)
 
 EXTERNAL PACKAGES:
-PVSS II 2.12.1
+PVSS II 3.0
 	> export PATH=$PATH:<pvss root>/bin
-	> export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:<pvss root>/bin
+	> export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:<pvss root>/bin:<pvss root>/api/lib.linux_RH90
 	> export API_ROOT=<pvss root>/api
 	- if no pvss project exist yet which is prepared for using GCF
-	> newproj <project path>
-	> export PVSS_II=<project path>/config/config
-	> start_pvss2
+	> startPA
+	- use Project Adminstrator of PVSSII to create new project and start it if wanted to used
 	> PVSS00ascii -in <lofar root>/MAC/Config/LofarPropertyTypes.pvss
 	- now the started project is ready for GCF
 	
@@ -25,7 +22,7 @@ xerces-c
 	> export XERCESCROOT=<root of all xercesc files>
 	> cd XERCESCROOT/src/xercesc
 	- Replace -D_REENTRANT with -DAPP_NO_THREADS in 'compile' options under LINUX specific options in Makefile.incl
-	> runConfigure -p linux -c gcc296 -x g++296 -t IconvGNU -m inmem -P /usr/local -r none
+	> runConfigure -p linux -t IconvGNU -m inmem -P /usr/local -r none
 	NOTE: The file XERCESCROOT/src/xercesc/util/Transcoders/IconvGNU/IconvGNUTransService.cpp
 	contains 2 compiler errors (line 1054: add '/'; line 1189: add an 'a' befor the 'g'). 
 	These error have to be fixed first. 
