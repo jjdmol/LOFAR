@@ -1,0 +1,5 @@
+#!/bin/sh
+
+./Simulator_Example -dGlobal=0
+STATUS=$?
+exit $STATUS
