@@ -27,20 +27,20 @@
   \end{abstract}
 
   \section{introduction}
-  \label{id2719843}\hypertarget{id2719843}{}%
+  \label{sec:introduction}\hypertarget{sec:introduction}{}
 
     \subsection{Purpose of this document}
-    \label{subsection-purpose}\hypertarget{subsection-purpose}{}%
+    \label{subsec:purpose}\hypertarget{subsec:purpose}{}
 
       This document describes how the Blackboard architectural pattern
       is implemented to fit the need and requirement for the LOFAR
       self-calibration-application. An demo application has been made,
       and test-runs have been performed in order to get a feeling of
       what is really needed. Those are described in
-      \hyperlink{LOFAR-ASTRON-MEM-xxx}{[LOFAR-ASTRON-MEM-xxx]}.
+      \hyperlink{bib:LOFAR-ASTRON-MEM-096}{[LOFAR-ASTRON-MEM-096]}.
 
     \subsection{context}
-    \label{subsection-context}\hypertarget{subsection-context}{}
+    \label{subsec:context}\hypertarget{subsec:context}{}
 
       This document describes a high-level design of a blackboard
       framework for use in imaging applications within th LOFAR Central
@@ -48,8 +48,8 @@
       even though it refers to the self-calibration a lot, it is
       intended to be as generic as possible.
 
-  \section{data-storage}
-  \label{id2719754}\hypertarget{id2719754}{}%
+  \section{data storage}
+  \label{sec:data-storage}\hypertarget{sec:data-storage}{}
 
     The major classes of storage requirements are
 
@@ -74,7 +74,7 @@
     \end{itemize}
 
     \subsection{Parameter administration}
-    \label{id2720046}\hypertarget{id2720046}{}%
+    \label{subsec:parameter-administration}\hypertarget{subsec:parameter-administration}{}
 
       Parameters are solved locally, on subclusters of the LOFAR
       central processor and then distributed or discarded along the
@@ -82,8 +82,8 @@
 
       \begin{figure}
         \includegraphics[]{../figures/local-_global-commit.eps}
-        \hypertarget{figure-localGlobalCommit}{}
-        \caption{a simple topology for a distributed blackboard database\label{figure-localGlobalCommit}}
+        \hypertarget{fig:localGlobalCommit}{}
+        \caption{a simple topology for a distributed blackboard database\label{fig:localGlobalCommit}}
       \end{figure}
 
       In the distributed selfcal program, the available cluster will
@@ -110,7 +110,7 @@
       important. We need only one level of nesting.
 
       \subsubsection{nested cooperative transactions}
-      \label{id2719612}\hypertarget{id2719612}{}%
+      \label{subsubsec:nested-cooperative-transaction}\hypertarget{subsubsec:nested-cooperative-transaction}{}%
 
         One solution for this requirement is that transactions in fact
         can be nested by virtue of the database-vendor. Let's assume
@@ -120,8 +120,8 @@
 
         \begin{figure}
           \includegraphics[]{../figures/database.eps}
-          \hypertarget{figure-database}{}
-          \caption{database use in a distributed blackboard\label{figure-database}}
+          \hypertarget{fig:database}{}
+          \caption{database use in a distributed blackboard\label{fig:database}}
         \end{figure}
 
         For this nesting to make sense, a database client must be able
@@ -147,12 +147,12 @@
 
         \begin{figure}
           \includegraphics[]{../figures/nestedTransaction.eps}
-          \hypertarget{figure-nestedTransaction}{}
-          \caption{an action sequence that asks for nested transactions\label{figure-nestedTransactions}}
+          \hypertarget{fig:nestedTransaction}{}
+          \caption{an action sequence that asks for nested transactions\label{fig:nestedTransactions}}
         \end{figure}
 
       \subsubsection{selective replication}
-      \label{id2719816}\hypertarget{id2719816}{}%
+      \label{subsubsec:selective-replication}\hypertarget{subsubsec:selective-replication}{}%
 
         Another solution would be to use selective replication. This
         could mean that records will only be replicated after a
@@ -160,14 +160,14 @@
         datamodel will be replicated to other engines.
 
     \subsection{Datasets}
-    \label{id2720237}\hypertarget{id2720237}{}%
+    \label{subsec:Datasets}\hypertarget{subsec:Datasets}{}%
 
       Datasets are high-volume and intensively queried. Updates are
       mostly copies. Using a database engine would be to much of a
       CPU-cycle and memory hog.
 
     \subsection{The strategy}{A high level script}
-    \label{id2721184}\hypertarget{id2721184}{}%
+    \label{subsec:strategy}\hypertarget{subsec:strategy}{}
 
       The implementation of the strategy is a python script using the
       components defined in the selfcal framework. In the final
@@ -188,26 +188,26 @@
 
       \begin{figure}
         \includegraphics[]{../figures/strategy_interpreter.eps}
-        \hypertarget{figure-strategy_interpreter}{}
-        \caption{strategy interpreter\label{figure-strategy_interpreter}}
+        \hypertarget{fig:strategy_interpreter}{}
+        \caption{strategy interpreter\label{fig:strategy_interpreter}}
       \end{figure}
 
     \subsection{The blackboard logistics}
-    \label{id2721238}\hypertarget{id2721238}{}%
+    \label{subsec:blackboard-logistics}\hypertarget{subsec:blackboard-logistics}{}%
 
       For the blackboard to function several protocols need to be
       described. To guarantee loose coupling between components it is
       not desirable to have the dialogs in these protocols be needing
       real-time message interchange. Therefor a database-based
       approach is chosen, which is described in
-      \hyperlink{section-logistical-datamodel}{Section
-      \ref{section-logistical-datamodel}}.
+      \hyperlink{sec:logistical-datamodel}{Section
+      \ref{sec:logistical-datamodel}}.
 
   \section{distributed hierarchical blackboard}
-  \label{id2721216}\hypertarget{id2721216}{}%
+  \label{sec:distributed-hierarchical-blackboard}\hypertarget{sec:distributed-hierarchical-blackboard}{}%
 
     \subsection{distribution over nodes and sub-clusters}
-    \label{id2721220}\hypertarget{id2721220}{}%
+    \label{subsec:distribution}\hypertarget{subsec:distribution}{}%
 
       For performance reasons we want to divide the measurement data
       over the cluster in a way that distributes the disk-usage and
@@ -229,7 +229,7 @@
       \begin{em}\large{Note: }Continuity in a function for a parameter over time will pose a problem at the edges of the time frame.\end{em}
 
     \subsection{Workload distribution}
-    \label{id2721283}\hypertarget{id2721283}{}%
+    \label{subsec:workload-distribution}\hypertarget{subsec:workload-distribution}{}%
 
       The workload for a self-calibration process, might be
       distributed in several ways. It is a design choice to decide
@@ -272,7 +272,7 @@
       \end{em}
 
     \subsection{controllers}
-    \label{id2721330}\hypertarget{id2721330}{}%
+    \label{subsec:controllers}\hypertarget{subsec:controllers}{}%
 
       A Blackboard has a controller that can be asked to start a
       process for a blackboard. Such a process can be a
@@ -281,13 +281,13 @@
 
       \begin{figure}
         \includegraphics[]{../figures/start.usecase.eps}
-        \hypertarget{figure-start.usecase}{}
-        \caption{a simple demo use-case\label{figure-start.usecase}}
+        \hypertarget{fig:start.usecase}{}
+        \caption{a simple demo use-case\label{fig:start.usecase}}
       \end{figure}
 
   \section{logistical database}
-  \label{section-logistical-datamodel}
-  \hypertarget{section-logistical-datamodel}{}
+  \label{sec:logistical-datamodel}
+  \hypertarget{sec:logistical-datamodel}{}
 
     \subsection{Workload distribution}
     \label{id2721376}\hypertarget{id2721376}{}
@@ -301,8 +301,8 @@
 
       \begin{figure}
         \includegraphics[]{../figures/bb.subcluster.eps}
-        \hypertarget{figure-bb.subcluster}{}
-        \caption{the layout of a self-calibration sub-cluster.\label{figure-bb.subcluster}}
+        \hypertarget{fig:bb.subcluster}{}
+        \caption{the layout of a self-calibration sub-cluster.\label{fig:bb.subcluster}}
       \end{figure}
 
       As a result of this partitioning the Blackboard will be
@@ -501,11 +501,11 @@
       Description} , Kjeld van der Schaaf, Copyright \copyright{} 2002
       ASTRON. \label{LOFAR-ASTRON-MEM-035}
 
-    \bibitem[LOFAR-ASTRON-MEM-xxx]{LOFAR-ASTRON-MEM-xxx}
+    \bibitem[LOFAR-ASTRON-MEM-096]{LOFAR-ASTRON-MEM-096}
       \emph{The use of the Blackboard architectural pattern, in the LOFAR Central Processor, for the selfcal control system},
       D.\ Hoogland,
       Copyright \copyright{} 2003 ASTRON.
-      \label{LOFAR-ASTRON-MEM-xxx}
+      \label{LOFAR-ASTRON-MEM-096}
 
   \end{thebibliography}
 
