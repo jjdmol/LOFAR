@@ -145,7 +145,7 @@ solve := function(fname='demo', ant=4*[0:20],
         print len(parms);
         nrpos := len(parms) / 3;
         if (nrpos > 0) {
-            annotator.hold();
+#            annotator.hold();
             for (i in [1:nrpos]) {
                 ra      := parms[spaste('RA.CP',i)].value[1];
                 dec     := parms[spaste('DEC.CP',i)].value[1];
@@ -153,11 +153,11 @@ solve := function(fname='demo', ant=4*[0:20],
                 print 'src = ', i, ' ra = ', ra, ' dec = ', dec,
                     ' I = ', stokesI;
 
-                annotator.change_marker_size(src_mrk[i], stokesI*100);
-                if (is_fail(annotator)) fail;
-                annotator.add_marker(i, real(ra), real(dec), i==nrpos);
+#                annotator.change_marker_size(src_mrk[i], stokesI*100);
+#                if (is_fail(annotator)) fail;
+#                annotator.add_marker(i, real(ra), real(dec), i==nrpos);
             }
-            annotator.release();
+#            annotator.release();
         }
         
         for (i in [1:niter]) {
@@ -169,7 +169,7 @@ solve := function(fname='demo', ant=4*[0:20],
             parms := mc.getparms("RA.* DEC.* StokesI.*");
             nrpos := len(parms) / 3;
             if (nrpos > 0) {
-                annotator.hold();
+#                annotator.hold();
                 for (j in [1:nrpos]) {
                     ra  := parms[spaste('RA.CP',j)].value[1];
                     dec := parms[spaste('DEC.CP',j)].value[1];
@@ -177,11 +177,11 @@ solve := function(fname='demo', ant=4*[0:20],
                     print 'src = ', j, ' ra = ', ra, ' dec = ', dec,
                         ' I = ', stokesI;
                     
-                    annotator.change_marker_size(src_mrk[j], stokesI*100);
-                    if (is_fail(annotator)) fail;
-                    annotator.add_marker(j, real(ra), real(dec), j==nrpos);
+#                    annotator.change_marker_size(src_mrk[j], stokesI*100);
+#                    if (is_fail(annotator)) fail;
+#                    annotator.add_marker(j, real(ra), real(dec), j==nrpos);
                 }
-                annotator.release();
+#                annotator.release();
             }
             sleep_cmd := spaste('sleep ', sleeptime);
             if (sleep) shell(sleep_cmd);
@@ -198,7 +198,8 @@ solve := function(fname='demo', ant=4*[0:20],
         ant +:=1;               # msselect adds 1 to ANTENNA1,2
         mssel := spaste('all([ANTENNA1,ANTENNA2] in ',substitutevar(ant), ')');
     }
-    mkimg(spaste(fname, '.MS'), spaste(fname, '.imgs', src[1]),
+    mkimg(spaste(fname, '.MS'), npix=1000, cellx='1arcsec', celly='1arcsec', 
+          spaste(fname, '.imgs', src[1]),
           msselect=mssel, type='corrected');
 
     return solverec;    
@@ -236,7 +237,8 @@ solveej := function(fname='demo', ant=4*[0:20],
 
     mc.settimeinterval(3600); # calibrate per 3600 seconds
     mc.clearsolvableparms();
-    mc.setsolvableparms("EJ11.phase.*");
+    mc.setsolvableparms(parmpatterns="EJ11.phase.*", excludepatterns="EJ11.phase.SR1.CP1");
+
 #    mc.setsolvableparms("EJ11.SR{1,5,9,13,17,21,25,29,33,37}.*");
 #    print mc.getparmnames();
 

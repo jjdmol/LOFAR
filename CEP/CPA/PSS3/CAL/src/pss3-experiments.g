@@ -115,6 +115,11 @@ demo_2source_experiments := function(niter=10, offset=2)
 }
 
 
+# src =  1  ra =  2.73363548  dec =  0.593979132  I =  1
+# src =  2  ra =  2.73413272  dec =  0.593266501  I =  0.5
+# src =  3  ra =  2.7350632  dec =  0.594400742  I =  0.3
+# src =  4  ra =  2.73496382  dec =  0.594580166  I =  0.1
+# src =  5  ra =  2.73403914  dec =  0.593785252  I =  0.05
 
 init_gsm_ionosphere := function(fname='')
 {
@@ -124,52 +129,30 @@ init_gsm_ionosphere := function(fname='')
     
     arcsec_per_radian := 180.0*3600.0/pi;
     alpha0 := (10.0+26.0/60 + 36.3/3600)*15.0*pi/180;
-    delta0 := 26.0*pi/180.0;
+    delta0 := (34.0+1.0/60.0 +33.0/3600.0)*pi/180.0;
     print 'alpha0 = ', alpha0;
+    print 'delta0 = ', delta0;
 
-    l   := 117.42/arcsec_per_radian;
-    m   := 28.38/arcsec_per_radian;
-    pos := lm_to_alpha_delta(l,m, alpha0, delta0);    
     tg.addpointsource ('CP1', [0,1e20], [0,1e20],
-                       pos[1], pos[2], 1, 0, 0, 0);
-    print pos;
+                       2.73363548, 0.593979132 , 1, 0, 0, 0);
 
 
-    l   := -34.74/arcsec_per_radian;
-    m   := -30.33/arcsec_per_radian;
-    pos := lm_to_alpha_delta(l,m, alpha0, delta0);    
     tg.addpointsource ('CP2', [0,1e20], [0,1e20],
-                       pos[1], pos[2], 0.5, 0, 0, 0);
-    print pos;
+                       2.73413272, 0.593266501, 0.5, 0, 0, 0);
 
-    l   := -65.56/arcsec_per_radian;
-    m   := 66.54/arcsec_per_radian;
-    pos := lm_to_alpha_delta(l,m, alpha0, delta0);    
     tg.addpointsource ('CP3', [0,1e20], [0,1e20],
-                       pos[1], pos[2], 0.3, 0, 0, 0);
-    print pos;
+                       2.73506320, 0.594400742 , 0.3, 0, 0, 0);
 
-    l   := -93.44/arcsec_per_radian;
-    m   := 65.07/arcsec_per_radian;
-    pos := lm_to_alpha_delta(l,m, alpha0, delta0);    
     tg.addpointsource ('CP4', [0,1e20], [0,1e20],
-                       pos[1], pos[2], 0.1, 0, 0, 0);
-    print pos;
+                       2.73496382, 0.594580166, 0.1, 0, 0, 0);
 
-    l   := 8.81/arcsec_per_radian;
-    m   := -56.26/arcsec_per_radian;
-    pos := lm_to_alpha_delta(l,m, alpha0, delta0);    
     tg.addpointsource ('CP5', [0,1e20], [0,1e20],
-                       pos[1], pos[2], 0.05, 0, 0, 0);
-    print pos;
-
-
+                       2.73403914, 0.593785252, 0.05, 0, 0, 0);
 
     tg.done();
     pt := parmtable(spaste(fname,'_gsm.MEP'), T);
     pt.loadgsm (spaste(fname,'.GSM'));
     pt.done();
-  
 }
 
 
@@ -178,28 +161,24 @@ init_gsm_ionosphere := function(fname='')
 
 
 
-solve_no_ionosphere := function(solver=0,niter=50,fname='',sleep=F,
+solve_no_ionosphere := function(niter=50,fname='',sleep=F,
                                 sleeptime=2,wait=F)
 {
-    global annotator;
+    solverec := [];
 
-    setparms(fname);
     init_gsm_ionosphere(fname);
+    setparms(fname);
     mssel := '';
 
     mkimg(spaste(fname, '.MS'), spaste(fname, '.img'), msselect=mssel,
           cellx='1arcsec', celly='1arcsec', npix=1000, type='observed');
 
-    if (0 == solver)
-    {
-        annotator:=solve(fname=fname, niter=niter,ant=[0:99],
-                         sleep=sleep, sleeptime=sleeptime, wait=wait,
-                         solve_fluxes=F);
-    }
-    else
-    {
-        annotator:=solvepos(fname=fname, niter=niter);
-    }
+    solverec := solve(fname=fname, niter=niter,ant=[0:99],
+                      sleep=sleep, sleeptime=sleeptime, wait=wait,
+                      solve_fluxes=F);
+
+    mkimg(spaste(fname, '.MS'), spaste(fname, '.img-solved'), msselect=mssel,
+          cellx='1arcsec', celly='1arcsec', npix=1000, type='corrected');
 }
 
 
@@ -217,9 +196,8 @@ solve_ionosphere_simultaneous := function(niter=10, fname='')
     
     init_gsm_ionosphere(fname);
     setparms(fname);
-
-    
     mssel:='';
+
     mkimg(spaste(fname, '.MS'), spaste(fname, '.img'), msselect=mssel,
           cellx='1arcsec', celly='1arcsec', npix=1000, type='observed');
 
