@@ -10,17 +10,36 @@ try:
  db.query("DROP TABLE blackboards")
 except:
  print "blackboards didn't exsist"
-db.query("CREATE TABLE blackboards ( starttime DATE, \
+db.query("CREATE TABLE blackboards ( children oid[] default '{}', \
+                                     starttime DATE, \
                                      endtime DATE, \
                                      low FLOAT default '10', \
                                      high FLOAT default '100', \
+                                     baseline INTEGER[2] default '{1, 4950}', \
                                      north FLOAT, \
                                      east FLOAT, \
                                      south FLOAT, \
                                      west FLOAT, \
-                                     first INTEGER, \
-                                     last INTEGER\
+                                     objects INTEGER[2] \
                                     ) WITH OIDS")
+
+## db.query("CREATE FUNCTION bla (VARCHAR,INTEGER) RETURNS INTEGER AS '\
+##             BEGIN \
+##               RETURN;\
+##             END;\
+##           ' LANGUAGE 'sql';\
+##         ");
+
+## db.query("CREATE FUNCTION no_child (blackboards) RETURNS VOID AS '\
+##             DECLARE var  mybb ALIAS FOR $1;\
+##             BEGIN\
+##               UPDATE blackboards SET children[1] = oid WHERE OID = obj_id ;\
+##               RETURN;\
+##             END;\
+##           ' LANGUAGE 'sql';\
+##         ");
+
+## db.query("CREATE TRIGGER no_child BEFORE INSERT ON blackboards FOR EACH ROW EXECUTE PROCEDURE no_child();");
 
 try:
  db.query("DROP TABLE watchers")

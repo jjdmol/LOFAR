@@ -31,6 +31,39 @@
  </artheader>
 
  <section>
+  <title>distribution over nodes and sub-clusters</title>
+  <para>
+
+   For performance reasons we want to divide the measurement data over
+   the cluster in a way that distributes the disk-usage and minimizes
+   the network-usage.
+
+  </para>
+
+  <para>
+
+   Logically there is only one Blackboard. It is a distributed
+   application however, each instance dividing it's workload to it's
+   own liking. Each blackboard <note>no capital here</note> knows what
+   nodes it has to start KnowledgeSources on.
+
+  </para>
+
+  <para>
+
+   For this to work it has to be possible to distribute responsibility
+   in this fashion as well. For instance; If a blackboard has
+   responsibility for a certain time-frame, it must be able to change
+   any time dependent parameters at will as long as they fall
+   completely in this time frame. <note>Continuity in a function for a
+   parameter over time will pose a problem at the edges of the time
+   frame.</note>
+
+  </para>
+
+ </section>
+
+ <section>
   <title>Workload distribution</title>
   <para>
 

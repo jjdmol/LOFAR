@@ -8,9 +8,11 @@ $Id$
 """
 
 import pg;
+from Assignment import Assignment;
+
 db = pg.DB(dbname="bb");
 
-class Workload:
+class Workload(Assignment):
   """ something to do """
 
   workload_count = 0;

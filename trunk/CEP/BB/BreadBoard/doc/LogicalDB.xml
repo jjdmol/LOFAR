@@ -81,7 +81,7 @@
   </para>
   <para>
 
-   {self}1, {parent-id}1, {time}1, {frequency}1, {field}1, {objects}1
+   {self}1, {parent-id}1, {time}1, {frequency}1, {baselines}1, {objects}1
 
    <itemizedlist>
     <listitem>
@@ -90,14 +90,14 @@
       "self" is the id of this blackboard.
 
      </para>
-    <listitem>
+    </listitem>
     <listitem>
      <para>
 
-      parent_id is the obvious.
+      "parent_id" is the obvious.
 
      </para>
-    <listitem>
+    </listitem>
     <listitem>
      <para>
 
@@ -105,7 +105,7 @@
       with. <note>We'll assume no time-gaps for now.</note>
 
      </para>
-    <listitem>
+    </listitem>
     <listitem>
      <para>
 
@@ -114,15 +114,15 @@
       now.</note>
 
      </para>
-    <listitem>
+    </listitem>
     <listitem>
      <para>
 
-      "field" is the field in the sky. <note>We assume a rectangular
-      field wit no gaps.</note>
+      "baselines" is the set of baselines that this BlackBoard is
+      responsible for.
 
      </para>
-    <listitem>
+    </listitem>
     <listitem>
      <para>
 
@@ -130,7 +130,7 @@
       model.
 
      </para>
-    <listitem>
+    </listitem>
    </itemizedlist>
 
   </para>
@@ -144,9 +144,16 @@
   </para>
   <para>
 
-   {child-id}1, {self}1, {time}1, {frequency}1, {field}1, {objects}1
+   {child-id}1, {self}1, {time}1, {frequency}1, {baselines}1, {objects}1
 
   </para>
+  <para>
+
+   For all of "time" through "objects" goes that they are a subset of
+   the parents fields with the same name.
+
+  </para>
+
 
  </section>
 
