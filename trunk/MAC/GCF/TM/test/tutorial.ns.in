@@ -36,3 +36,4 @@ client.type=TCP   # SAP
 host=localhost
 server.port=20031 # SPP
 server.type=TCP
+spid.port=0

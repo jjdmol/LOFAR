@@ -83,7 +83,8 @@ int GTMSocket::setFD(int fd)
 
 void GTMSocket::workProc()
 {
-  unsigned long bytesRead;
+  unsigned long bytesRead = 0;
+  
   if (ioctl(_socketFD, FIONREAD, &bytesRead) > -1)
   {
     if (bytesRead == 0)
