@@ -81,7 +81,7 @@ int main(int argc, char* argv[])
   try {
     if (argc < 2) {
       cerr << "Run as:  tCAL msname mepname gsmname scenario loopcnt "
-	   << "stchan endchan selection" << endl;
+	   << "stchan endchan selection calcuvw" << endl;
       cerr << " msname:    name of MS without .MS extension" << endl;
       cerr << " mepname:   name of MEP table   (default is msname)" << endl;
       cerr << " gsmname:   name of GSM table   (default is msname)" << endl;
@@ -92,6 +92,7 @@ int main(int argc, char* argv[])
 	   << endl;
       cerr << " endchan:   last channel        (default is stchan)" << endl;
       cerr << " selection: TaQL selection string (default is empty)" << endl;
+      cerr << " calcuvw:   calculate UVW       (default is 1)" << endl;
       return 0;
     }
     string msname (argv[1]);
@@ -100,7 +101,7 @@ int main(int argc, char* argv[])
     if (argc > 2) {
       mepname = argv[2];
     }
-    if ("0" == mepname) {
+    if ("0" == mepname  ||  "" == mepname) {
       mepname = msname;
     }
 
@@ -108,7 +109,7 @@ int main(int argc, char* argv[])
     if (argc > 3) {
       gsmname = argv[3];
     }
-    if ("0" == gsmname) {
+    if ("0" == gsmname  ||  "" == gsmname) {
       gsmname = msname;
     }
 
@@ -116,7 +117,7 @@ int main(int argc, char* argv[])
     if (argc > 4) {
       modelType = argv[4];
     }
-    if ("0" == modelType) {
+    if ("0" == modelType  ||  "" == modelType) {
       modelType = "LOFAR";
     }
 
@@ -124,7 +125,7 @@ int main(int argc, char* argv[])
     if (argc > 5) {
       scenario = argv[5];
     }
-    if ("0" == scenario) {
+    if ("0" == scenario  ||  "" == scenario) {
       scenario = "predict";
     }
 
@@ -150,6 +151,12 @@ int main(int argc, char* argv[])
       selstr = argv[9];
     }
 
+    bool calcuvw=true;
+    if (argc > 10) {
+      istringstream iss(argv[10]);
+      iss >> calcuvw;
+    }
+
     cout << "tCAL parameters:" << endl;
     cout << " msname:    " << msname << endl;
     cout << " mepname:   " << mepname << endl;
@@ -160,10 +167,11 @@ int main(int argc, char* argv[])
     cout << " stchan:    " << stchan << endl;
     cout << " endchan:   " << endchan << endl;
     cout << " selection: " << selstr << endl;
+    cout << " calcuvw  : " << calcuvw << endl;
 
     Vector<Int> ant;
     MeqCalibrater meqcal (msname+".MS", mepname, gsmname, 0, ant, ant,
-			  modelType);
+			  modelType, calcuvw);
 
     if (stchan >= 0  ||  endchan >= 0  ||  !selstr.empty()) {
       if (stchan < 0) {
