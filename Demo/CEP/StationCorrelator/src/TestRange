@@ -13,9 +13,9 @@ polarisations    = 2,
 SzEPAheader      = 14,	# Size (in bytes) of the header of an EPA-packet
 NoPacketsInFrame = 8,	# Number of EPA-packets in one RSP ethernet frame
 NoWH_RSP         = 2,	   
-NoWH_Correlator  = 7,	# This also defines the number of WH_Transpose as well as the number of Transpose inputs
+NoWH_Correlator  = 1,	# This also defines the number of WH_Transpose as well as the number of Transpose inputs
 samples          = 100,	# number of samples to integrate 
 NoWH_Dump        = 1,	
-outFileName      = "/tmp/StationCorrelator.out"	# Filename for dump outputfile
+outFileName      = ["/tmp/SC1.out", "/tmp/SC2.out"]	# Filename for dump outputfile
 
 
