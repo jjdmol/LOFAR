@@ -21,6 +21,9 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.2  2002/05/07 11:15:38  schaaf
+//  minor
+//
 //  Revision 1.1.1.1  2002/05/06 11:49:20  schaaf
 //  initial version
 //
@@ -104,26 +107,32 @@ void WH_FillTFMatrix::process()
 {  
   {
     int timestep;
+    int cnt=0;
+    DH_2DMatrix *DHptr;
+    int Xsize,Ysize; 
     itsTime += (timestep = getOutHolder(0)->getXSize()); // increase the local clock
     // the time step is the Xsize; 
     for (int outch=0; outch<getOutputs(); outch++) {
       DbgAssertStr(timestep == getOutHolder(0)->getXSize(),
 		   "All Output DataHolders must have the same time (X) dimension");
-      getOutHolder(outch)->setTimeStamp(itsTime);
-      getOutHolder(outch)->setXOffset(itsTime);
-      getOutHolder(outch)->setZ(itsSourceID);      
-      getOutHolder(outch)->setYOffset(getOutHolder(outch)->getYSize()*outch);
-      for (int x=0; x < getOutHolder(outch)->getXSize(); x++) { 
-	for (int y=0; y < getOutHolder(outch)->getYSize(); y++) {
+      DHptr = getOutHolder(outch);
+      DHptr->setTimeStamp(itsTime);
+      DHptr->setXOffset(itsTime);
+      DHptr->setZ(itsSourceID);      
+      DHptr->setYOffset(DHptr->getYSize()*outch);
+      Xsize = DHptr->getXSize();
+      for (int x=0; x < Xsize; x++) {
+	Ysize = DHptr->getYSize();
+	for (int y=0; y < Ysize; y++) {
 	  // fill autput buffer with random integer 0-99
-	  int* iptr = getOutHolder(outch)->getBuffer(x,y);
-	  *(getOutHolder(outch)->getBuffer(x,y)) = 
-	    (int)(100.0*rand()/RAND_MAX+1.0);
+	  *(DHptr->getBuffer(x,y)) = 
+	    cnt++;
+	  //(int)(100.0*rand()/RAND_MAX+1.0);
 	}
       }
     }
   }
-  //  dump();
+  //dump();
 }
 
 
