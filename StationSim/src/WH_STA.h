@@ -33,7 +33,6 @@
 #include <StationSim/DH_SampleR.h>
 #include <Common/Lorrays.h>
 
-
 class WH_STA: public WorkHolder
 {
 public:
@@ -46,8 +45,9 @@ public:
 		  int nout,
 		  int nant,
 		  int maxnrfi,
-		  int buflength
-	  );
+		  int buflength,
+		  int alg
+		  );
   virtual ~WH_STA();
 
   /// Static function to create an object.
@@ -81,6 +81,9 @@ private:
   WH_STA& operator= (const WH_STA&);
 
   LoMat_dcomplex CreateContigeousBuffer (const LoMat_dcomplex& aBuffer, int pos);
+  LoMat_dcomplex TransposeMatrix (const LoMat_dcomplex& aMat);
+  LoVec_double ReverseVector (const LoVec_double& aVec);
+  LoMat_dcomplex ReverseMatrix (const LoMat_dcomplex& aMat, int dim);
 
   /// In- and OutHolders
   DH_SampleC** itsInHolders;
@@ -97,7 +100,10 @@ private:
   LoMat_dcomplex itsEvectors;
   LoVec_double   itsEvalues;
   LoMat_dcomplex itsAcm;
-  int delay;
+  int            itsAlg;
+
+  
+  // DEBUG
   ifstream itsFileInput;
   LoMat_dcomplex itsTestVector;
   int itsCount;

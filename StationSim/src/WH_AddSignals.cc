@@ -57,12 +57,12 @@ WH_AddSignals::WH_AddSignals (const string& name,
     sprintf (str, "%d", i);
     itsOutHolders[i] = new DH_SampleC (string ("out_") + str, 1, 1);
   }
-  // DEBUG
-  itsCount = 0;
-  itsFileOutReal.open ("/home/alex/data/add_real.txt");
-  itsFileOutComplex.open ("/home/alex/data/add_complex.txt");
-  itsFileOutReal.precision(20);
-  itsFileOutComplex.precision(20);
+//   // DEBUG
+//   itsCount = 0;
+//   itsFileOutReal.open ("/home/alex/data/add_real.txt");
+//   itsFileOutComplex.open ("/home/alex/data/add_complex.txt");
+//   itsFileOutReal.precision(20);
+//   itsFileOutComplex.precision(20);
 }
 
 WH_AddSignals::~WH_AddSignals ()
@@ -75,8 +75,8 @@ WH_AddSignals::~WH_AddSignals ()
     delete itsOutHolders[i];
   }
   delete[]itsOutHolders;
-  itsFileOutReal.close ();
-  itsFileOutComplex.close ();
+//   itsFileOutReal.close ();
+//   itsFileOutComplex.close ();
 }
 
 WorkHolder* WH_AddSignals::construct (const string& name, 
@@ -105,13 +105,13 @@ void WH_AddSignals::process ()
       }
     }
 	
-	// DEBUG
-    for (int i = 0; i < itsNrcu && real (itsOutHolders[i]->getBuffer ()[0]) != 0; i++) {
-      itsFileOutReal << real (itsOutHolders[i]->getBuffer ()[0]) << " ";
-	  itsFileOutComplex << imag (itsOutHolders[i]->getBuffer ()[0]) << " ";
-	}
-    itsFileOutReal << endl;
-    itsFileOutComplex << endl;
+// 	// DEBUG
+//     for (int i = 0; i < itsNrcu && real (itsOutHolders[i]->getBuffer ()[0]) != 0; i++) {
+//       itsFileOutReal << real (itsOutHolders[i]->getBuffer ()[0]) << " ";
+// 	  itsFileOutComplex << imag (itsOutHolders[i]->getBuffer ()[0]) << " ";
+// 	}
+//     itsFileOutReal << endl;
+//     itsFileOutComplex << endl;
 
 	//cout << itsCount++ << endl;
   }
