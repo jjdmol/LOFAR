@@ -37,7 +37,7 @@ ParameterSet::ParameterSet()
 //#
 //# Construction by reading a parameter file.
 //#
-ParameterSet::ParameterSet(const string	theFilename)
+ParameterSet::ParameterSet(const string&	theFilename)
 {
 	readFile(theFilename, false);
 }
@@ -89,7 +89,7 @@ std::ostream&	operator<< (std::ostream& os, const ParameterSet &thePS)
 // that start with the given baseKey. The baseKey is cut off from the Keynames
 // in the created subset.
 //
-ParameterSet ParameterSet::makeSubset(const string baseKey) const
+ParameterSet ParameterSet::makeSubset(const string& baseKey) const
 {
 	const_iterator		scanner    = begin();
 	int					baseKeyLen = strlen(baseKey.c_str());
@@ -114,7 +114,7 @@ ParameterSet ParameterSet::makeSubset(const string baseKey) const
 //#
 // Adds the parameters from the file to the current ParameterSet.
 //
-void ParameterSet::adoptFile(const string	theFilename)
+void ParameterSet::adoptFile(const string&	theFilename)
 {
 	readFile(theFilename, true);
 }
@@ -124,7 +124,7 @@ void ParameterSet::adoptFile(const string	theFilename)
 //#
 // Adds the parameters from the string to the current ParameterSet.
 //
-void ParameterSet::adoptBuffer(const string	theBuffer)
+void ParameterSet::adoptBuffer(const string&	theBuffer)
 {
 	readBuffer(theBuffer, true);
 }
@@ -135,7 +135,7 @@ void ParameterSet::adoptBuffer(const string	theBuffer)
 //#
 // Disentangles the file and adds the Key-Values pair to the current ParameterSet.
 //
-void ParameterSet::readFile(const	string	theFilename,
+void ParameterSet::readFile(const	string&	theFilename,
 							const	bool	merge)
 {
 	ifstream		paramFile;
@@ -157,7 +157,7 @@ void ParameterSet::readFile(const	string	theFilename,
 //#
 // Disentangles the file and adds the Key-Values pair to the current ParameterSet.
 //
-void ParameterSet::readBuffer(const	string	theBuffer,
+void ParameterSet::readBuffer(const	string&	theBuffer,
 							  const	bool	merge)
 {
 	istringstream		iss(theBuffer, istringstream::in);
@@ -221,7 +221,7 @@ void ParameterSet::addStream(istream&	inputStream, bool	merge)
 //#
 //#	getInt(key)
 //#
-int ParameterSet::getInt(const string theKey) const
+int ParameterSet::getInt(const string& theKey) const
 {
 	int				theInt;
 	const_iterator	iter = find (theKey);
@@ -238,7 +238,7 @@ int ParameterSet::getInt(const string theKey) const
 //#
 //# getDouble(key)
 //#
-double ParameterSet::getDouble(const string theKey) const
+double ParameterSet::getDouble(const string& theKey) const
 
 {
 	double			theDouble;
@@ -256,7 +256,7 @@ double ParameterSet::getDouble(const string theKey) const
 //#
 //# getString(key)
 //#
-string ParameterSet::getString(const string theKey) const
+string ParameterSet::getString(const string& theKey) const
 {
 	const_iterator	iter = find (theKey);
 
@@ -273,7 +273,7 @@ string ParameterSet::getString(const string theKey) const
 // Writes the Key-Values pair from the current ParameterSet to the given file
 // thereby overwritting any file contents.
 //
-void ParameterSet::writeFile(const string	theFilename) const
+void ParameterSet::writeFile(const string&	theFilename) const
 {
 	ofstream		paramFile;
 

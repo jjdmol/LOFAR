@@ -98,7 +98,7 @@ Socket& Socket::operator=(const Socket& that)
 //#			service		Service name or portnumber to connect to.
 //#	Out:	--
 //#	Return:	bool indicating the result of the connection request.
-bool Socket::connect (const string			hostname,
+bool Socket::connect (const string&			hostname,
 			  		  const int16			portnr) 
 {
 	//# Try to resolve the hostname, it may be a quartet of digits but

@@ -45,9 +45,9 @@ public:
 	~Event();
 	Event(const int16		theType,
 		  const uint32		theTime,
-		  const string		theInfo);
+		  const string&		theInfo);
 	// The Event may be construction by reading a ParameterSet string
-	explicit Event(const string		ParamString);
+	explicit Event(const string&		ParamString);
 	
 	// Copying is allowed.
 	Event(const Event& that);
