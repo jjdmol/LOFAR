@@ -5,8 +5,8 @@
 
 // $Id$
 
-#include <UVPDataCacheElement.h>
-#include <UVPDataAtom.h>
+#include <uvplot/UVPDataCacheElement.h>
+#include <uvplot/UVPDataAtom.h>
 
 
 #include <vector>

@@ -1,6 +1,6 @@
 // Copyright notice should go here
 
-#include <UVPGraphSettings.h>
+#include <uvplot/UVPGraphSettings.h>
 
 
 //====================>>>  UVPGraphSettings::UVPGraphSettings  <<<====================

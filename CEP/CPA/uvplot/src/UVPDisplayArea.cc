@@ -2,7 +2,7 @@
 
 // $ID$
 
-#include <UVPDisplayArea.h>
+#include <uvplot/UVPDisplayArea.h>
 #include <qpainter.h>
 #include <cmath>
 

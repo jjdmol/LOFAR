@@ -3,7 +3,7 @@
 // $ID$
 
 // Includes
-#include <UVPAxis.h>
+#include <uvplot/UVPAxis.h>
 
 #if(DEBUG_MODE)
 #include <cassert>

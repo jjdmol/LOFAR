@@ -1,6 +1,6 @@
 // Copyright notice
 
-#include <UVPDataAtom.h>
+#include <uvplot/UVPDataAtom.h>
 
 #if(DEBUG_MODE)
 #include <cassert>

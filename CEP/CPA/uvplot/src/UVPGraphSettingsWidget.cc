@@ -2,7 +2,7 @@
 
 
 
-#include <UVPGraphSettingsWidget.h>
+#include <uvplot/UVPGraphSettingsWidget.h>
 
 #include <qlayout.h>
 

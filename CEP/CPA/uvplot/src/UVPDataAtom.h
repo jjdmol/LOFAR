@@ -9,7 +9,7 @@
 #include <vector>
 #include <complex>
 
-#include <UVPDataAtomHeader.h>
+#include <uvplot/UVPDataAtomHeader.h>
 
 //! Manages a vector of visibilities recorded for one correlation, on
 //! one baseline at a given time.

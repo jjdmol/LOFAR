@@ -15,9 +15,9 @@
 #include <Common/Debug.h>
 #endif
 
-#include <UVPDataHeader.h>
-#include <UVPDataAtom.h>
-#include <UVPDataSet.h>
+#include <uvplot/UVPDataHeader.h>
+#include <uvplot/UVPDataAtom.h>
+#include <uvplot/UVPDataSet.h>
 
 
 

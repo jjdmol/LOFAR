@@ -1,7 +1,7 @@
 #include <qapplication.h>
 
 
-#include <UVPMainWindow.h>
+#include <uvplot/UVPMainWindow.h>
 
 #include <Common/Debug.h>
 
