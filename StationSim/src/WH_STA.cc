@@ -60,6 +60,12 @@ WH_STA::WH_STA (const string& name, unsigned int nin, unsigned int nout,
 
 WH_STA::~WH_STA()
 {
+  for (int i=0; i< getInputs(); i++) {
+    delete itsInHolders[i];
+  }
+  delete [] itsInHolders;
+
+  delete itsOutHolder;
 }
 
 WH_STA* WH_STA::make (const string& name) const
@@ -145,13 +151,14 @@ void WH_STA::dump() const
 
 DH_SampleC* WH_STA::getInHolder (int channel)
 {
+  AssertStr (channel < getInputs(), "Input channel too high");
+
   return itsInHolders[channel];
 }
 
 DH_SampleC* WH_STA::getOutHolder (int channel)
 {
-  AssertStr (channel < getOutputs(),
- 	     "output channel too high");
+  AssertStr (channel < getOutputs(), "output channel too high");
   
   return itsOutHolder;
 }

@@ -57,7 +57,7 @@ WH_Projection::WH_Projection (const string& name, unsigned int nin, unsigned int
   
   if (nout > 0) {
     // The resulting Weight vector  
-    itsOutHolder = new DH_SampleC("out", itsNrcu, itsMaxRFI);
+    itsOutHolder = new DH_SampleC("out", itsNrcu, 1);
   }
 }
 
@@ -82,31 +82,24 @@ void WH_Projection::process()
 
   itsWeight = steerv;
 
-  memcpy(itsOutHolder->getBuffer(), itsWeight.data(), 
-	 itsNrcu * sizeof(DH_SampleC::BufferType));
+  //  memcpy(itsOutHolder->getBuffer(), itsWeight.data(), itsNrcu * sizeof(DH_SampleC::BufferType));
 }
 
 void WH_Projection::dump() const
 {
-  using namespace blitz;
 
-//   LoVec_dcomplex weight(itsOutHolder->getBuffer(), itsNrcu, duplicateData);    
-
-//   cout << "Weight vector Buffer: " << endl;
-//   cout << weight<< endl;
 }
 
 
 DH_SampleC* WH_Projection::getInHolder (int channel)
 {
+  AssertStr (channel < getInputs(), "Input channel too high");  
   return itsInHolders[channel];
 }
 
 DH_SampleC* WH_Projection::getOutHolder (int channel)
 {
-  AssertStr (channel < getOutputs(),
- 	     "output channel too high");
-  
+  AssertStr (channel < getOutputs(), "Output channel too high");  
   return itsOutHolder;
 }
 

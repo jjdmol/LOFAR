@@ -99,7 +99,7 @@ void StationSim::define (const ParamBlock& params)
   const int delayMod              = modulationWindowSize - 1;
   const int delayPhase            = nfft_phaseshift - 1;
   const int delaySubFilt          = nrcu * (nsubband - 1);
-  const int delayBeamForm         = 2;
+  const int delayBeamForm         = 1;
 
   // Read in the configuration for the sources
   DataGenerator* DG_Config = new DataGenerator (datagenFileName);
@@ -244,16 +244,16 @@ void StationSim::define (const ParamBlock& params)
     simul.addStep (sta);
   }
 
-//   // the Weight Determination Object
-//   for (int i = 0;i < nsubband; ++i) {
-//     sprintf (suffix, "%d", i);
-//     Step weight_det (WH_WeightDetermination("wd", 0, 1, nrcu), 
-// 		      string("weight_det_") + suffix, false);
+  // the Weight Determination Object
+  for (int i = 0;i < nsubband; ++i) {
+    sprintf (suffix, "%d", i);
+    Step weight_det (WH_WeightDetermination("wd", 0, 1, nrcu), 
+		      string("weight_det_") + suffix, false);
     
-//     weight_det.getOutData (0).setWriteDelay (delayMod + delayPhase + delaySubFilt);
+    weight_det.getOutData (0).setWriteDelay (delayMod + delayPhase + delaySubFilt);
     
-//     simul.addStep(weight_det);
-//  }
+    simul.addStep(weight_det);
+ }
 	     
   // the projection object
   for (int i = 0; i < nsubband; i++) {
@@ -264,13 +264,10 @@ void StationSim::define (const ParamBlock& params)
     projection.getInData (0).setReadDelay (delayMod + delayPhase + delaySubFilt);
     projection.getInData (1).setReadDelay (delayMod + delayPhase + delaySubFilt);
     projection.getOutData (0).setWriteDelay (delayMod + delayPhase + delaySubFilt);
-
-    simul.addStep(projection);
-    
+    simul.addStep(projection); 
   }
 
-
-  
+ 
   // Connect the steps.
   for (int i = 0; i < DG_Config->itsNumberOfSources; ++i) {
     sprintf (suffix2, "%d", i);
@@ -336,22 +333,18 @@ void StationSim::define (const ParamBlock& params)
     simul.connect (string ("projection_") + suffix2 + string (".out"),
 		   string ("beam_former_") + suffix2 + string (".weights"));
     
-//     // connect the Weight determinator to Projection
-//     simul.connect (string ("weight_det_") + suffix2 + string (".out"),
-// 		   string ("projection_") + suffix2 + string (".in-wd"));
+    // connect the Weight determinator to Projection
+    simul.connect (string ("weight_det_") + suffix2 + string (".out"),
+		   string ("projection_") + suffix2 + string (".in-wd"));
   }
 
-
-
   // Connect the data_reader to the subband filterbank  
+
 //   for (int i = 0; i < nrcu; ++i) { 
 // 	sprintf (suffix, "%d", i);
 // 	simul.connect (string ("data_reader_") + suffix + string (".out_0"), 
 // 				   string ("subband_filter_") + suffix + string (".in"));
 //   }
-
-
-
 
 
   // end of dataprocessor definition
