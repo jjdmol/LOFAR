@@ -22,17 +22,17 @@
 
 #include <PSS3/MeqCalibraterImpl.h>
 
-#include <MNS/MeqJonesNode.h>
-#include <MNS/MeqStatExpr.h>
-#include <MNS/MeqMatrixTmp.h>
-#include <MNS/MeqStoredParmPolc.h>
-#include <MNS/MeqParmSingle.h>
-#include <MNS/MeqPointDFT.h>
-#include <MNS/MeqPointSource.h>
-#include <MNS/MeqWsrtInt.h>
-#include <MNS/MeqWsrtPoint.h>
-#include <MNS/MeqLofarPoint.h>
-#include <MNS/MeqMatrixComplexArr.h>
+#include <PSS3/MNS/MeqJonesNode.h>
+#include <PSS3/MNS/MeqStatExpr.h>
+#include <PSS3/MNS/MeqMatrixTmp.h>
+#include <PSS3/MNS/MeqStoredParmPolc.h>
+#include <PSS3/MNS/MeqParmSingle.h>
+#include <PSS3/MNS/MeqPointDFT.h>
+#include <PSS3/MNS/MeqPointSource.h>
+#include <PSS3/MNS/MeqWsrtInt.h>
+#include <PSS3/MNS/MeqWsrtPoint.h>
+#include <PSS3/MNS/MeqLofarPoint.h>
+#include <PSS3/MNS/MeqMatrixComplexArr.h>
 
 #include <Common/Debug.h>
 

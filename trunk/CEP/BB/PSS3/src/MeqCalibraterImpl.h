@@ -36,19 +36,19 @@
 #include <tasking/Glish/GlishRecord.h>
 #include <tasking/Glish/GlishValue.h>
 
-#include <MNS/MeqDomain.h>
-#include <MNS/MeqHist.h>
-#include <MNS/MeqJonesExpr.h>
-#include <MNS/MeqMatrix.h>
-#include <MNS/MeqParm.h>
-#include <MNS/MeqPhaseRef.h>
-#include <MNS/MeqSourceList.h>
-#include <MNS/MeqRequest.h>
-#include <MNS/MeqStation.h>
-#include <MNS/MeqStatSources.h>
-#include <MNS/MeqLofarStatSources.h>
-#include <MNS/MeqStatUVW.h>
-#include <MNS/ParmTable.h>
+#include <PSS3/MNS/MeqDomain.h>
+#include <PSS3/MNS/MeqHist.h>
+#include <PSS3/MNS/MeqJonesExpr.h>
+#include <PSS3/MNS/MeqMatrix.h>
+#include <PSS3/MNS/MeqParm.h>
+#include <PSS3/MNS/MeqPhaseRef.h>
+#include <PSS3/MNS/MeqSourceList.h>
+#include <PSS3/MNS/MeqRequest.h>
+#include <PSS3/MNS/MeqStation.h>
+#include <PSS3/MNS/MeqStatSources.h>
+#include <PSS3/MNS/MeqLofarStatSources.h>
+#include <PSS3/MNS/MeqStatUVW.h>
+#include <PSS3/MNS/ParmTable.h>
 #include <PSS3/Quality.h>
 
 namespace LOFAR
