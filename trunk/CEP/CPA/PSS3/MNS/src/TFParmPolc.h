@@ -70,8 +70,8 @@ public:
   // Update the solvable parameter with the new value.
   virtual void update (const MnsMatrix& value);
 
-  // Make the new value persistent.
-  virtual void save();
+  // Make the new value persistent (for the given domain).
+  virtual void save (const TFDomain&);
 
 private:
   int            itsNx;

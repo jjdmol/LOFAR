@@ -69,6 +69,9 @@ public:
   // Update the parameter with the new value.
   virtual void update (const MnsMatrix& value) = 0;
 
+  // Make the new value persistent (for the given domain).
+  virtual void save (const TFDomain&) = 0;
+
   // Get the list of all TFParm objects.
   static const vector<TFParm*>& getParmList();
 
