@@ -22,6 +22,7 @@
 
 #include <Common/StringUtil.h>
 #include <Common/LofarLogger.h>
+#include <cmath>
 #include <iostream>
 #include <limits>
 
