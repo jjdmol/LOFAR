@@ -25,11 +25,11 @@
 
 //# Includes
 #include <MNS/MeqExpr.h>
+#include <MNS/MeqUVWPolc.h>
 #include <Common/lofar_vector.h>
 
 //# Forward declarations
 class MeqPointSource;
-class MeqUVWPolc;
 class MeqDomain;
 class MDirection;
 
@@ -49,12 +49,18 @@ public:
   // Get the result of the expression for the given domain.
   virtual MeqResult getResult (const MeqRequest&);
 
+  // Calculate the UVW coordinates.
+  void calcUVW (const MeqRequest& request)
+    { itsUVW->calcUVW (request); }
+
   // Find nr of cells to use for the given source and domain.
-  vector<int> ncells (const MeqPointSource&, const MeqDomain&) const;
+  vector<int> ncells (MeqPointSource&, const MeqDomain&);
 
 private:
   double itsRefRa;
   double itsRefDec;
+  double itsCosRefDec;
+  double itsSinRefDec;
   vector<MeqPointSource> itsSources;
   MeqUVWPolc* itsUVW;
 };

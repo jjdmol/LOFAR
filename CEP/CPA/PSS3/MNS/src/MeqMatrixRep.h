@@ -32,6 +32,7 @@ class MeqMatrixRealSca;
 class MeqMatrixComplexSca;
 class MeqMatrixRealArr;
 class MeqMatrixComplexArr;
+#include <Common/lofar_iostream.h>
 #include <aips/iosfwd.h>
 
 
@@ -40,14 +41,14 @@ class MeqMatrixRep
 public:
   MeqMatrixRep (int nx, int ny, int elemLength)
     : itsCount(0), itsNx(nx), itsNy(ny), itsLength(nx*ny),
-      itsElemLength(elemLength) {}
+      itsElemLength(elemLength) {nctor++;}
 
   virtual ~MeqMatrixRep();
 
   virtual MeqMatrixRep* clone() const = 0;
 
   MeqMatrixRep* link()
-    { itsCount++; return this; }
+  { itsCount++; return this; }
 
   static void unlink (MeqMatrixRep*);
 
@@ -124,6 +125,9 @@ public:
   virtual MeqMatrixRep* max() = 0;
   virtual MeqMatrixRep* mean() = 0;
   virtual MeqMatrixRep* sum() = 0;
+
+  static int nctor;
+  static int ndtor;
 
 protected:
   int offset (int x, int y) const

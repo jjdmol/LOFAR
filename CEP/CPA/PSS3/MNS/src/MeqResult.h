@@ -80,6 +80,9 @@ public:
 
   void show (ostream&) const;
 
+  static int nctor;
+  static int ndtor;
+
 private:
   // Forbid copy and assignment.
   MeqResultRep (const MeqResultRep&);
