@@ -31,6 +31,8 @@
 
 std::deque<MeqMatrixComplexArr*> MeqMatrixComplexArr::theirPool;
 
+using namespace LOFAR;
+
 // allocation will be done from the pool for matrices of theirNElements
 // or smaller matrices
 int MeqMatrixComplexArr::theirNElements = 0;

@@ -33,6 +33,7 @@
 #include <casa/Arrays/Matrix.h>
 
 using namespace casa;
+using namespace LOFAR;
 
 MeqWsrtPoint::MeqWsrtPoint (MeqSourceList* sources,
 			    MeqPointDFT* dft,
