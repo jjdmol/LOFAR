@@ -91,26 +91,33 @@ void WH_Correlate::preprocess() {
   MPI_Type_commit(&my_complex);
 #endif
 
-
+#ifdef __MPE_LOGGING__
+  if (myrank == 0) {
     MPE_Describe_state( 1,  2, "SendToSlave", "red");
     MPE_Describe_state( 3,  4, "ReceiveFromSlave","blue");
-    MPE_Describe_state( 5,  6, "ReceiveFromSocket","green");
-    MPE_Describe_state( 7,  8, "SendToSocket", "yellow");
+    MPE_Describe_state( 5,  6, "SocketTransport","green");
     MPE_Describe_state( 9, 10, "CorrectBuffer", "orange");
 
     MPE_Describe_state(11, 12, "ReceiveFromMaster", "gray");
     MPE_Describe_state(13, 14, "SendToMaster", "purple");
     MPE_Describe_state(15, 16, "ComputeCM", "black");
-
-
+  }
+#endif
 
 }
 
 void WH_Correlate::process() {
 
-   if (myrank == 0) {
-      
+  if (myrank == 0) {
+#ifdef __MPE_LOGGING__
+    if (!firstProcess) MPE_Log_event(6, 0, "");
+#endif
+
     WH_Correlate::master();
+
+#ifdef __MPE_LOGGING__
+    MPE_Log_event(5, 0, "");
+#endif
 
     memcpy(((DH_Vis*)getDataManager().getOutHolder(0))->getBuffer(),
 	   corr_buf,
@@ -587,7 +594,7 @@ void WH_Correlate::master() {
 #endif
     task_id++;
   }
-  //  cout << "Blocks to be corrected later: "<< pre_received_blocks << endl;
+
 #endif
 }
 
