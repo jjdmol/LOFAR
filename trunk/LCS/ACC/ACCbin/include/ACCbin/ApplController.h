@@ -54,7 +54,8 @@ private:
 	void handleProcMessage  (APAdmin*	        anAP);
 	void sendExecutionResult(uint16				result,
 							 const string&		comment);
-	void acceptOrRefuseACMsg(DH_ApplControl*	anACMsg);
+	void acceptOrRefuseACMsg(DH_ApplControl*	anACMsg,
+							 bool				passOwnership);
 	void startCmdState      ();
 	void createParSubsets   ();
 

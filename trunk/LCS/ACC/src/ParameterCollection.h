@@ -129,17 +129,21 @@ bool	isValidVersionNrRef(const string& versionNr);
 uint32	seqNr(const string& aString);
 
 // Returns the last part of a fullkeyname being the keyname (a.k.o. dirname).
-string	keyName			   (const string& fullKeyName);
+string	keyName	   (const string& fullKeyName);
 
 // Returns everthing except the last part of a fullkeyname being the modulename
 // the key belongs to. (a.k.o. basename).
-string	moduleName		   (const string& fullKeyName);
+string	moduleName (const string& fullKeyName);
 
 // Returns the keypart of a parameterline
-string	keyPart			   (const string& parameterLine);
+string	keyPart	   (const string& parameterLine);
 
 // Returns the value of a parameterline
-string	valuePart		   (const string& parameterLine);
+string	valuePart  (const string& parameterLine);
+
+// Returns the value of the index if the string contains an index otherwise
+// 0 is returned.
+int32 	indexValue (const string&	label, char	indexMarker[2]);
 
 } // namespace ACC
 } // namespace LOFAR

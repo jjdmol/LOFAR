@@ -43,8 +43,6 @@ ProcRule::ProcRule(const string&  aName,
 
 bool ProcRule::start()
 {
-	// TODO: do something with itsNodeName
-
 	if (itsIsStarted) {
 		LOG_TRACE_OBJ_STR("ProcRule:" << itsName << " is already started");
 		return (true);
@@ -52,6 +50,8 @@ bool ProcRule::start()
 
 	LOG_TRACE_OBJ_STR ("ProcRule:start " << itsName);
 
+	// TODO: do something with itsNodeName when starting the process.
+	// Perhaps this should be implemented in ApplController::createPSubsets
 	int32 result = system (itsStartCmd.c_str());
 
 	if (result == 0) {
@@ -65,11 +65,12 @@ bool ProcRule::stop()
 {
 	// TODO: do something with itsNodeName
 
-	if (!itsIsStarted) {
-		LOG_TRACE_OBJ_STR("ProcRule:" << itsName << " is already stopped");
-		return (true);
-	}
-
+//	if (!itsIsStarted) {
+//		LOG_TRACE_OBJ_STR("ProcRule:" << itsName << " is already stopped");
+//		return (true);
+//	}
+	// Note: always execute the stop command because it may also cleanup
+	// some mess the process left behind.
 	LOG_TRACE_OBJ_STR ("ProcRule:stop " << itsName);
 
 	int32 result = system (itsStopCmd.c_str());

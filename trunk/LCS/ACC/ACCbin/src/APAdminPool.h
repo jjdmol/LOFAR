@@ -145,8 +145,12 @@ inline void APAdminPool::startAckCollection(PCCmd  aCommand)
 inline void APAdminPool::registerAck(PCCmd			aCommand,
 									 APAdmin*		anAPAdmin)
 {
-	ASSERTSTR (aCommand == itsLastCmd, "Process" << anAPAdmin->getName() <<
-		"is out of sync, Ack received for " << aCommand << "iso " << itsLastCmd);
+	if (aCommand != itsLastCmd) {
+		LOG_DEBUG_STR("Process" << anAPAdmin->getName() <<
+					  "is out of sync, Ack received for " << aCommand << 
+					  "iso " << itsLastCmd);
+		return;
+	}
 
 	if (FD_ISSET(anAPAdmin->getSocketID(), &itsAckList)) {
 		FD_CLR(anAPAdmin->getSocketID(), &itsAckList);

@@ -223,11 +223,16 @@ void ApplController::createParSubsets()
 	for (iter = itsProcList->begin(), procNr = 1; iter != itsProcList->end(); 
 															++iter, ++procNr) {
 		// First construct some names
+		// baseProcName : processname			== name executable!
+		// procName     : processname<nr>
+		// fileName     : processname".ps"
 		string baseProcName = *iter;			// = procname[n]
-		rtrim(baseProcName, "0123456789[]");	// strip off seqnr.
-		string procName = formatString("%s%d", baseProcName.c_str(), procNr);
+		int32  index = indexValue(baseProcName,"[]");
+		rtrim(baseProcName, "0123456789[]");	// strip off indexnr.
+		string procName = formatString("%s%d", baseProcName.c_str(), 
+															index ? index : 1);
 		string fileName = procName+".ps";
-		LOG_DEBUG_STR("Creating parameterfile for process" << procName);
+		LOG_DEBUG_STR("Creating parameterfile for process " << procName);
 
 		// Step 1: A parameterset for a process is constructed from three set:
 		// [A] the params for procName[0]
@@ -243,11 +248,24 @@ void ApplController::createParSubsets()
 		}
 
 		// [B] construct parameter subset with process specific settings
-		ParameterSet	procPS = itsApplParamSet->makeSubset(
-							applName+"."+*iter+".", procName+".");
+		string		procNameIndexed(baseProcName);
+		if (index) {
+			procNameIndexed = formatString("%s[%d]", 
+											baseProcName.c_str(), index);
+		}
+		// merge the two subsets, take baseSet as a basis (sounds logical)
+		ParameterSet	procPS(basePS);
+		// overwrite/extend with proc specific settings
+		procPS.adoptCollection(itsApplParamSet->makeSubset(
+											applName+"."+procNameIndexed+".", 
+											procName+"."));
 
-		// merge the two sets
-		procPS.adoptCollection(basePS);
+		// [C] Add AC parameters of any interest to process
+		// TODO add some more like hostname and others?
+		procPS.add("process.name", procName);
+		procPS.add(procName+".ACport", 
+								 itsParamSet->getString("AC.process.APportnr"));
+
 
 		// Step 2: The start/stop information (ruler info) is not for the
 		// process but for the AC. Remove it from the paramset and store it in
@@ -257,13 +275,16 @@ void ApplController::createParSubsets()
 		string	nodeName = procPS.getString(procName+".node");
 		string	startCmd = procPS.getString(procName+".start");
 
-		// II. Substitute <@paramfile@> in start command
+		// II. Substitute <@paramfile@> in start/stop command with filename
 		uint32	pos;
 		string	pfLabel  = "<@parameterfile@>";
 		while ((pos = startCmd.find(pfLabel, 0)) != string::npos) {
 			startCmd.replace(pos, pfLabel.length(), fileName);
 		}
-		// III. Substitute <@procID@> in start and stop command
+		while ((pos = stopCmd.find(pfLabel, 0)) != string::npos) {
+			stopCmd.replace(pos, pfLabel.length(), fileName);
+		}
+		// III. Substitute <@procID@> in start and stop command with procName
 		pfLabel  = "<@procID@>";
 		while ((pos = startCmd.find(pfLabel, 0)) != string::npos) {
 			startCmd.replace(pos, pfLabel.length(), procName);
@@ -271,19 +292,13 @@ void ApplController::createParSubsets()
 		while ((pos = stopCmd.find(pfLabel, 0)) != string::npos) {
 			stopCmd.replace(pos, pfLabel.length(), procName);
 		}
-		// IV. Add proc ruling info in separate map
-		itsProcRuler.add(ProcRule(*iter, startCmd, stopCmd, nodeName));
+		// IV. Save proc ruling info in separate map for later
+		itsProcRuler.add(ProcRule(procName, startCmd, stopCmd, nodeName));
 
-		// V. Remove meta data from set
+		// V. Remove meta data from Parameterset for process
 		procPS.remove(procName+".start");
 		procPS.remove(procName+".stop");
 		procPS.remove(procName+".startstoptype");
-
-		// [C] Add AC parameters of any interest to process
-		// TODO add some more like hostname and others?
-		procPS.add("process.name", procName);
-		procPS.add(procName+".ACport", 
-								 itsParamSet->getString("AC.process.APportnr"));
 
 		// Finally write process paramset to a file.
 		procPS.writeFile(fileName);
@@ -349,6 +364,12 @@ void ApplController::startCmdState()
 	case StateSnapshotCmd:
 	case StateReinitCmd:
 	case StateQuitCmd:
+		// if nothing is online we are ready
+		if (itsAPAPool->onlineCount() == 0) {
+			itsStateEngine->ready();
+			break;
+		}
+
 		if (itsCurState == StatePauseCmd) {
 			// overrule default wait time
 			itsStateEngine->setStateLifeTime(itsCurACMsg->getWaitTime());
@@ -364,13 +385,14 @@ void ApplController::startCmdState()
 }
 
 //
-// acceptOrRefuseACMsg(command)
+// acceptOrRefuseACMsg(command, passOwnership)
 //
 // Decides whether or not the given command may be executed in this stage.
 // When execution is not allowed, e.g. because the previous command is still
 // running than a Nack is send to the ACuser. Otherwise the command is started.
 //
-void ApplController::acceptOrRefuseACMsg(DH_ApplControl*	anACMsg) 
+void ApplController::acceptOrRefuseACMsg(DH_ApplControl*	anACMsg,
+										 bool				passOwnership) 
 {
 	// what command should we execute?
 	ACCmd newCmd = anACMsg->getCommand();
@@ -389,7 +411,12 @@ void ApplController::acceptOrRefuseACMsg(DH_ApplControl*	anACMsg)
 	if (itsCurACMsg) {
 		delete itsCurACMsg;			// delete previous message
 	}
-	itsCurACMsg = anACMsg->makeDataCopy();
+	if (passOwnership) {
+		itsCurACMsg = anACMsg;
+	}
+	else {
+		itsCurACMsg = anACMsg->makeDataCopy();
+	}
 
 	// Initialize the stateEngine and store our new state.
 	itsStateEngine->startSequence(newCmd);
@@ -430,8 +457,12 @@ void ApplController::doEventLoop()
 		}
 
 		cout << *itsAPAPool; 		// temp debug info
+		cout << *itsStateEngine;
 
-		sleep (1);
+		// Only sleep when idle
+		if (itsCurState == StateNone) {
+			sleep (1);
+		}
 	}
 }
 
@@ -462,7 +493,7 @@ void ApplController::checkForACCommands()
 		itsCurTime = time(0);
 		if (execTime <= itsCurTime) {			// execute immediately?
 			LOG_TRACE_FLOW("Immediate command");
-			acceptOrRefuseACMsg(newMsg);
+			acceptOrRefuseACMsg(newMsg, false);
 		}
 		else {									// future command
 			LOG_TRACE_FLOW("Scheduling command");
@@ -579,7 +610,7 @@ void ApplController::checkCmdStack()
 	LOG_DEBUG("Time for a stack command?");
 
 	if (itsCmdStack->timeExpired()) {
-		acceptOrRefuseACMsg(itsCmdStack->pop());
+		acceptOrRefuseACMsg(itsCmdStack->pop(), true);
 	}
 }
 
