@@ -299,7 +299,7 @@ void MeqServer::disablePublishResults (DataRecord::Ref &out,DataRecord::Ref::Xfe
   out[AidMessage] = "nodes no longer publishing results";
 }
 
-int MeqServer::receiveEvent (const EventIdentifier &evid,const ObjRef::Xfer &evdata) 
+int MeqServer::receiveEvent (const EventIdentifier &evid,const ObjRef::Xfer &evdata,void *) 
 {
   cdebug(4)<<"received event "<<evid.id()<<endl;
   control().postEvent(evid.id(),evdata);

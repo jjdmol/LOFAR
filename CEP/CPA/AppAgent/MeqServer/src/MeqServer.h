@@ -72,7 +72,7 @@ class MeqServer : public VisRepeater, public EventRecepient
     void publishResults (DataRecord::Ref &out,DataRecord::Ref::Xfer &in);
     void disablePublishResults (DataRecord::Ref &out,DataRecord::Ref::Xfer &in);
     
-    virtual int receiveEvent (const EventIdentifier &evid,const ObjRef::Xfer &evdata);
+    virtual int receiveEvent (const EventIdentifier &evid,const ObjRef::Xfer &,void *);
     
     //##ModelId=3F5F195E0156
     virtual string sdebug(int detail = 1, const string &prefix = "", const char *name = 0) const;
