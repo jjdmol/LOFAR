@@ -88,7 +88,7 @@ enum {
     F_TIMER_ID,         // timer expired
     F_DATAIN_ID,        // data available for reading
     F_DATAOUT_ID,       // space available to write
-    F_RAW_ID,           // no event!, only the data is sent (used with direct ports)
+    F_RAW_DATA_ID,           // no event!, only the data is sent (used with direct ports)
     F_ACCEPT_REQ_ID,    // indicatation of the port provider to the user about a client connect request (SAP)
 };
 
@@ -99,7 +99,7 @@ enum {
 #define F_TIMER         F_SIGNAL(F_PORT_PROTOCOL, F_TIMER_ID,         F_IN)
 #define F_DATAIN        F_SIGNAL(F_PORT_PROTOCOL, F_DATAIN_ID,        F_IN)
 #define F_DATAOUT       F_SIGNAL(F_PORT_PROTOCOL, F_DATAOUT_ID,       F_IN)
-#define F_RAW           F_SIGNAL(F_PORT_PROTOCOL, F_RAW_ID,           F_INOUT)
+#define F_RAW_DATA      F_SIGNAL(F_PORT_PROTOCOL, F_RAW_DATA_ID,      F_INOUT)
 #define F_ACCEPT_REQ    F_SIGNAL(F_PORT_PROTOCOL, F_ACCEPT_REQ_ID,    F_IN)
 
 extern const char* F_PORT_PROTOCOL_names[]; // defined in GCF_TMProtocols.cc
@@ -113,6 +113,7 @@ struct GCFTimerEvent : public GCFEvent
 
   long        sec;
   long        usec;
+  unsigned long id;
   const void* arg;
 };
 

@@ -57,13 +57,13 @@ class GCFEvent
 {
   public:
     GCFEvent() :
-      signal(0), length(0), _unpackDone(false), _buffer(0), _upperbound(0),
-      _base(0)
+      signal(0), length(0), _unpackDone(false), _buffer(0),
+      _base(0), _upperbound(0)
     {}
 
     GCFEvent(unsigned short sig) :
-      signal(sig), length(0), _unpackDone(false), _buffer(0), _upperbound(0),
-      _base(0)
+      signal(sig), length(0), _unpackDone(false), _buffer(0),
+      _base(0), _upperbound(0)
     {}
 
     virtual ~GCFEvent();
@@ -104,8 +104,7 @@ class GCFEvent
   protected: // member functions
     GCFEvent(GCFEvent& e) :
       signal(e.signal), length(e.length), _unpackDone(true), _buffer(0), 
-      _upperbound(0),
-      _base(&e)
+      _base(&e), _upperbound(0)      
     {}
 
     void resizeBuf(unsigned int requiredSize);
@@ -118,7 +117,7 @@ class GCFEvent
     GCFEvent* _base;
 
   private:
-    GCFEvent& operator= (const GCFEvent& e);
+    GCFEvent& operator= (GCFEvent& e);
     unsigned int _upperbound;
     
 };

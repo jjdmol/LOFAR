@@ -12,8 +12,6 @@
 [+ DEFINE protocol_name +][+ (string-upcase (base-name)) +][+ ENDDEF +]
 [+ DEFINE event_class_member_type +][+ IF (*== (get "type") "]") +][+ (substring (get "type") 0 (string-index (get "type") #\[)) +][+ ELSE +][+ (get "type") +][+ ENDIF +][+ ENDDEF +]
 [+ DEFINE event_class_member +][+ event_class_member_type +][+ IF (*== (get "type") "[]") +]*[+ ENDIF +] [+ (get "name") +][+ IF (and (*== (get "type") "]") (not (*== (get "type") "[]"))) +][+ (substring (get "type") (string-index (get "type") #\[) (string-length (get "type"))) +][+ ENDIF +][+ ENDDEF +]
-[+ DEFINE from_type +][+ IF (or (== (get "type") "long") (== (get "type") "int")) +]Py[+ (string-capitalize! (get "type")) +]_FromLong[+ ELSE +][+ IF (or (== (get "type") "float") (== (get "type") "double")) +]PyFloat_FromDouble[+ ELSE +][+ ENDIF +][+ ENDIF +][+ ENDDEF +]
-[+ DEFINE to_type +][+ IF (or (== (get "type") "long") (== (get "type") "int")) +]Py[+ (string-capitalize! (get "type")) +]_AsLong(o);[+ ELSE +][+ IF (or (== (get "type") "float") (== (get "type") "double")) +]PyFloat_AsDouble(o);[+ ELSE +][+ ENDIF +][+ ENDIF +][+ ENDDEF +]
 
 [+ (out-pop) +]
 //
@@ -35,7 +33,7 @@ using namespace [+ (base-name) +];
 const char* [+ protocol_name +]_signalnames[] = 
 {
   "[+ protocol_name +]: invalid signal",[+ FOR event "," +]
-  "[+ signal_name +]"[+ ENDFOR +]
+  "[+ signal_name +] ([+ (get "dir") +])"[+ ENDFOR +]
 };
 [+ ELSE +]
 #ifndef [+ protocol_name +]_H
@@ -88,13 +86,10 @@ extern const char* [+ protocol_name +]_signalnames[];
 #endif
 
 namespace [+ (base-name) +]
-{[+ (out-push-add "/dev/null") +]
-[+ ENDIF +]
-[+ FOR event "" +][+ IF (= (suffix) "ph") +]
-[+ FOR param "" +]
+{[+ ENDIF +]
+[+ FOR event "" +][+ IF (= (suffix) "ph") +][+ FOR param "" +]
 [+ IF (*== (get "type") "&") +][+ (error "reference types not supported") +][+ ENDIF +]
 [+ IF (and (==* (get "type") "string") (> (string-length (get "type")) 6)) +][+ (error "only scalar 'string' are supported") +][+ ENDIF +][+ ENDFOR +]
-[+ (out-pop) +]
   class [+ event_class_decl +]
   {
     public:
@@ -140,7 +135,7 @@ void* [+ event_class_name +]::pack(unsigned int& packsize)
 {
   [+ FOR param "" +][+ IF (or (*== (get "type") "[]") (*== (get "type") "*")) +]assert([+ (get "name") +]);[+ ENDIF +]
   [+ ENDFOR +]
-  unsigned int requiredSize = sizeof(signal) + sizeof(length) + [+ FOR param " +" +]
+  unsigned int requiredSize = [+ IF (not (exist? "noheader")) +]sizeof(signal) + sizeof(length) + [+ ENDIF +][+ FOR param " +" +]
     [+ IF (exist? "userdefined") +][+ (get "name") +][+ IF (*== (get "type") "*") +]->[+ ELSE +].[+ ENDIF +]getSize()
     [+ ELIF (not (*== (get "type") "]")) +][+ IF (== (get "type") "string") +][+ (get "name") +].length() + sizeof(unsigned int)[+ ELSE +]sizeof([+ (get "name") +])[+ ENDIF+]
     [+ ELIF (*== (get "type") "[]") +]sizeof([+ (get "name") +]Dim) + ([+ (get "name") +]Dim * sizeof([+ (get "name") +][0]))
@@ -148,7 +143,8 @@ void* [+ event_class_name +]::pack(unsigned int& packsize)
 
   resizeBuf(requiredSize);
   unsigned int offset = 0;
-  GCFEvent::pack(offset);
+  [+ IF (not (exist? "noheader")) +]
+  GCFEvent::pack(offset);[+ ENDIF +]
   [+ FOR param "" +]
   [+ IF (exist? "userdefined") +]
   offset += [+ (get "name") +][+ IF (*== (get "type") "*") +]->[+ ELSE +].[+ ENDIF +]pack(_buffer + offset);
@@ -172,9 +168,10 @@ void* [+ event_class_name +]::pack(unsigned int& packsize)
 
 void [+ event_class_name +]::unpack()
 {
-  unsigned int offset = sizeof(GCFEvent);
-  if (offset < length)
+  [+ IF (not (exist? "noheader")) +]
+  if (length > 0)
   {
+  	unsigned int offset = sizeof(GCFEvent);
     char* data = (char*) _base;
     [+ FOR param "" +]
     [+ IF (exist? "userdefined") +]
@@ -186,7 +183,7 @@ void [+ event_class_name +]::unpack()
       [+ IF (== (get "type") "string") +]
     offset += GCFEvent::unpackString([+ (get "name") +], data + offset);
       [+ ELSE +]
-    memcpy(&[+ (get "name") +], data, sizeof([+ (get "type") +]));
+    memcpy(&[+ (get "name") +], data + offset, sizeof([+ (get "type") +]));
     offset += sizeof([+ (get "type") +]);
       [+ ENDIF +]
     [+ ELIF (*== (get "type") "[]") +]
@@ -195,10 +192,13 @@ void [+ event_class_name +]::unpack()
     memcpy([+ (get "name") +], (data + offset), sizeof([+ (get "name") +]));
     offset += sizeof([+ (get "name") +]);
     [+ ENDIF +][+ ENDFOR +]
-  }
+  }[+ ENDIF +]
 }[+ ENDIF +][+ ENDFOR +]
 [+ IF (= (suffix) "ph") +]
 } // namespace [+ (base-name) +]
+
+
+using namespace [+ (base-name) +];
 
 #endif
 [+ ENDIF +]
