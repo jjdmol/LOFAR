@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,258 108 950 740 N "_3DFace" 5
+PANEL,432 344 950 740 N "_3DFace" 5
 "$configDatapoint"
 "$datapoint"
 "$selectedElementDpType"
@@ -61,7 +61,7 @@ LANG:1 0
     setValue(\"\", \"text\", \"datapoint type not found\");
   }
 }" 0
- E 0 1 1 0 1 E U  0 E 202 52 332 68
+ E 0 1 1 0 1 E U  0 E 202 52 511 68
 0 2 0 "s" 0 0 0 64 0 0  202 52
  1
 1
@@ -254,6 +254,7 @@ LANG:1 4 Load
     SplitfileName = strsplit(fileName, \"/\");
     getSubviewName(subViewName);
     dpSet(\"System1:__nav_subview_Panel_\" + subViewName + \".filename\", SplitfileName[dynlen(SplitfileName)]);
+    navConfigTriggerNavigatorRefresh();
   }
 }" 0
  E E "main()

@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 15 LOFAR Navigator
-PANEL,410 315 1260 960 N "_3DFace" 0
+PANEL,278 141 1260 960 N "_3DFace" 0
 "main()
 {
 	Navigator_HandleEventInitialize();
@@ -122,7 +122,7 @@ E E 0 1 1 0 1 E U  1 E 4 -106 130
 6 65
 "Border1"
 ""
-1 1134 39 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+1 1134 39 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
  E E
 38 0 0 0 0 0
 EE E
@@ -574,6 +574,634 @@ LANG:1 3 ...
 }
 " 0
  E E E
+13 73
+"Button4"
+""
+1 570 0 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+45 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+568 -2 592 32
+T 
+1
+LANG:1 1 1
+"main()
+{
+
+  long nodeID;
+  string temp = \"System1:PIC_Stations_Station04\";
+  nodeID = getNodeFromDatapoint(temp);
+  fwTreeView_prune(nodeID, \"\");
+  fwTreeView_draw();  
+//System1:PIC_Stations_Station04
+
+/** Remove a node and all of its children (if it has any).
+ * @param index index of the node to remove
+ */
+//fwTreeView_prune(unsigned index, string referenceName = \"\")
+  //nodeID = getNodeFromDatapoint(temp);
+  // 
+  //g_curSelNode = nodeID; //update global info
+}" 0
+ E E E
+13 74
+"Button9"
+""
+1 330 0 E E E 1 E 0 E N "_3DText" E N "_3DFace" E E
+ E E
+46 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+328 -2 372 22
+T 
+1
+LANG:1 5 id2dp
+"main()
+{
+  DebugN(\"g_itemID2datapoint\");
+  DebugN(g_itemID2datapoint);
+}" 0
+ E E E
+13 75
+"Button10"
+""
+1 330 20 E E E 1 E 0 E N "_3DText" E N "_3DFace" E E
+ E E
+47 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+328 18 372 42
+T 
+1
+LANG:1 5 dp2id
+"main()
+{
+DebugN(\"g_datapoint2itemID\");
+DebugN(g_datapoint2itemID);
+}" 0
+ E E E
+13 76
+"Button11"
+""
+1 600 0 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+47 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+598 -2 622 32
+T 
+1
+LANG:1 1 2
+"main()
+{
+  string temp = \"System1:PIC_Stations_Station04.status\";
+  long nodeID = getNodeFromDatapoint(temp);  
+  DebugN(\"nodeID: \" + nodeID);
+  DebugN(\"getnode: \" +fwTreeView_getNode(nodeID, \"\"));
+  //fwTreeView_removeNode(nodeID, \"\");
+  DebugN(\"fwTreeView_view2TreeIndex: \" + fwTreeView_view2TreeIndex(nodeID, \"\"));
+  DebugN(\"fwTreeView_Tree2ViewIndex: \" + fwTreeView_Tree2ViewIndex(nodeID, \"\"));
+  //g_datapoint2itemID[datapointName];
+  DebugN(\"g_datapoint2itemID: \" + g_datapoint2itemID[temp]);
+//  fwTreeView_Tree2ViewIndex
+//fwTreeView_view2TreeIndex
+}" 0
+ E E E
+13 77
+"Button12"
+""
+1 620 0 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+48 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+618 -2 652 32
+T 
+1
+LANG:1 3 tst
+"main()
+{
+//  long node =30;
+  //fwTreeView_insertTreeNode(parentIndex+i,name,value,handle,level,referenceName);
+  //fwTreeView_insertTreeNode(10,\"Roltrap\",\"\",\"\",6,\"\");
+//  fwTreeView_insertTreeNode(12,\"System1:PAC_Roltrap\",\"\",0,6,\"\");
+/*  PVSS00NG1:[\"name: VirtualInstruments\"]
+PVSS00NG1:[\"value: \"]
+PVSS00NG1:[\"handle: 0\"]
+PVSS00NG1:[\"level: 2\"]
+PVSS00NG1:[\"parentIndex+i: 12\"]*/
+
+//global dyn_string  g_itemID2datapoint;
+//global mapping  g_datapoint2itemID;
+  long nodeID;
+  string temp = \"System1:PIC_Stations.status\";
+  nodeID = getNodeFromDatapoint(temp);
+
+//nodeId = g_datapoint2itemID[datapointName];
+  //DebugN(\"dpName: \" + g_itemID2datapoint[fwTreeView_view2TreeIndex(nodeID,\"\")]);
+  //DebugN(\"fwTreeView_view2TreeIndex: \" + fwTreeView_view2TreeIndex(nodeID,\"\"));
+  //DebugN(\"fwTreeView_Tree2ViewIndex: \" + fwTreeView_Tree2ViewIndex(nodeID,\"\"));
+  
+  
+DebugN(\"mapping: \"+mappingGetValue(g_datapoint2itemID,nodeID)); 
+DebugN(\"nodeID: \" + nodeID);
+DebugN(\"Key    : \"+mappingGetKey(g_datapoint2itemID,fwTreeView_view2TreeIndex(nodeID,\"\")));
+
+
+
+//    DebugN(\"Remove: \"+mappingRemove(g_datapoint2itemID,temp)); 
+//    DebugN(\"Remove: \"+ dynRemove(g_itemID2datapoint,nodeID)); 
+
+/*
+
+PVSS00NG1:[\"g_datapoint2itemID\"]
+PVSS00NG1:[mapping 5 items
+PVSS00NG1:\"System1\" : 1
+PVSS00NG1:\"System1:PIC\" : 2
+PVSS00NG1:\"System1:PIC.status\" : 3
+PVSS00NG1:\"System1:PAC\" : 4
+PVSS00NG1:\"System1:PAC.status\" : 5
+PVSS00NG1:]
+PVSS00NG1:[\"g_itemID2datapoint\"]
+PVSS00NG1:[dyn_string 5 items
+PVSS00NG1:     1:\"System1\"
+PVSS00NG1:     2:\"System1:PIC\"
+PVSS00NG1:     3:\"System1:PIC.status\"
+PVSS00NG1:     4:\"System1:PAC\"
+PVSS00NG1:     5:\"System1:PAC.status\"
+PVSS00NG1:]*/
+}" 0
+ E E E
+13 79
+"Button14"
+""
+1 510 0 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+49 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+508 -2 632 25
+T 
+1
+LANG:1 15 _trees_AWqOe1L6
+"main()
+{
+DebugN(_trees_AWqOe1L6);
+}" 0
+ E E E
+13 80
+"Button15"
+""
+1 470 10 E E E 1 E 0 E N "_3DText" E N "_3DFace" E E
+ E E
+50 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+468 8 552 35
+T 
+1
+LANG:1 10 OnCollapse
+"main()
+{
+
+
+
+
+  long Node=8;
+  fwTreeView_pruneChildren(Node, \"\");
+  dyn_string datapoint = getNames2Delete(Node);
+  DebugN(datapoint);
+  //long nodeID_start=getNodeFromDatapoint(datapoint[1]);
+  for(int i=1; i<=dynlen(datapoint); i++)
+  {
+    //DebugN(getNodeFromDatapoint(datapoint[i]));
+    DebugN(\"######################################\");
+    DebugN(\"#####         START        ###########\");
+    long nodeID=getNodeFromDatapoint(datapoint[i]);
+    DebugN(\"This is it:   \"+dynContains(g_itemID2datapoint,datapoint[i]));
+    DebugN(g_itemID2datapoint);
+    DebugN(\"Remove: \" + dynRemove(g_itemID2datapoint,dynContains(g_itemID2datapoint,datapoint[i])));      
+    DebugN(\"Remove: \" + mappingRemove(g_datapoint2itemID,datapoint[i]));
+    DebugN(\"datapoint[i]: \" +datapoint[i]);
+    //DebugN(\"nodeID_start: \" +nodeID_start);
+    DebugN(\"nodeID      : \" +nodeID);
+    DebugN(\"######################################\");
+  }
+
+  //mark the node as COLLAPSED
+  int index=Node;
+  string referenceName=\"\";
+  dyn_anytype parentNode;
+  parentNode = fwTreeView_getNode(index, referenceName);
+  parentNode[fwTreeView_STATE] = parentNode[fwTreeView_STATE] & ~fwTreeView_EXPANDED;
+  fwTreeView_replaceNode(parentNode, index, referenceName);
+  fwTreeView_draw();
+  
+  }
+/*
+      long Node=6;
+      fwTreeView_pruneChildren(Node, \"\");
+      
+      string datapointPath = buildPathFromNode(Node);
+      dyn_string resources = navConfigGetResources(datapointPath,1);
+    long nodeID_start=getNodeFromDatapoint(resources[1]);
+  for(int i=2; i<=dynlen(resources); i++)
+  {
+      long nodeID=getNodeFromDatapoint(resources[i]);
+      
+      DebugN(\"Remove: \"+mappingRemove(g_datapoint2itemID,resources[i])); //OK!!
+      DebugN(\"Remove: \"+ dynRemove(g_itemID2datapoint,nodeID_start+1));                       //OK!!
+      //DebugN(\"Remove: \"+mappingRemove(g_datapoint2itemID,buildPathFromNode(nodeID))); //OK!!
+      //DebugN(\"Remove: \"+ dynRemove(g_itemID2datapoint,nodeID));                       //OK!!
+
+  }
+
+      DebugN(resources);
+      DebugN(\"resources\");
+      */
+
+
+
+
+
+
+
+ 
+      // get top level resources. \"\" means no parent, 1 means: 1 level deep
+
+//      LOG_DEBUG(\"adding resources: \",LOG_DYN(resources));
+//      treeAddDatapoints(resources);
+
+
+
+
+/** Remove a node and all of its children (if it has any).
+ * @param index index of the node to remove
+ */
+ /*
+fwTreeView_pruneChildren(unsigned index, string referenceName = \"\")
+{
+	unsigned len;
+	unsigned pos;
+	unsigned subFolderDepth;
+	dyn_anytype node;
+	dyn_anytype parentNode;
+
+	if(index >  fwTreeView_getNodeCount(referenceName))
+	{
+		DebugN(	\"collapseFolder(dyn_anytype& tree,\"
+				\" unsigned index): index out of bounds)\");
+	}
+	else
+	{
+		//DebugN(\"index=\"+index);
+		// parent node:
+		parentNode = fwTreeView_getNode(index, referenceName);
+		
+		// index of first child node to remove
+		pos = index + 1; 
+		
+		len = fwTreeView_getNodeCount(referenceName);
+		while((pos <= len ) && ((node = fwTreeView_getNode(pos, referenceName))[fwTreeView_LEVEL] > parentNode[fwTreeView_LEVEL]))
+		{
+			// remove child node:
+			fwTreeView_removeNode(pos, referenceName);
+			len--;
+		}
+	}
+}
+
+
+dyn_string getNames2Delete(long node)
+{
+  dyn_string names = navConfigGetResources(buildPathFromNode(node),1);
+
+//  int namesIndex=1;
+  dyn_dyn_string elementNames;
+  dyn_dyn_int elementTypes;
+  dyn_string addNames;
+  int dynStringLength=dynlen(names);
+  for(int namesIndex=1; namesIndex<=dynStringLength; namesIndex++)
+  {
+    dpTypeGet(dpTypeName(names[namesIndex]),elementNames,elementTypes);
+    names[(dynStringLength+namesIndex)] = names[namesIndex] + \".\" + elementNames[2][2];
+  }
+  dynRemove(names,1);
+  return names;
+}
+
+*/" 0
+ E E E
+13 82
+"Button17"
+""
+1 240 10 E E E 1 E 0 E N "_3DText" E N "_3DFace" E E
+ E E
+52 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+238 8 272 32
+T 
+1
+LANG:1 8 Button17
+"main()
+{
+    LOG_TRACE(\"g_subViews = \",g_subViews);
+    
+}" 0
+ E E E
+13 83
+"Button18"
+""
+1 710 0 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+53 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+708 -2 832 22
+T 
+1
+LANG:1 15 OnCollapse GOED
+"main()
+{
+dyn_string datapoint= makeDynString(\"System1:PIC_WAN.status\",
+                                    \"System1:PIC_WAN_Switch01\",
+                                    \"System1:PIC_WAN_Switch01.status\",
+                                    \"System1:PIC_WAN_Switch02\",
+                                    \"System1:PIC_WAN_Switch02.status\",
+                                    \"System1:PIC_WAN_Switch03\",
+                                    \"System1:PIC_WAN_Switch03.status\",
+                                    \"System1:PIC_WAN_Switch04\",
+                                    \"System1:PIC_WAN_Switch04.status\");
+
+  long Node=8;
+  fwTreeView_pruneChildren(Node, \"\");
+                                    
+  long nodeID_start=getNodeFromDatapoint(datapoint[1]);
+  for(int i=1; i<=dynlen(datapoint); i++)
+  {
+    DebugN(getNodeFromDatapoint(datapoint[i]));
+    long nodeID=getNodeFromDatapoint(datapoint[i]);
+    DebugN(\"Remove: \"+mappingRemove(g_datapoint2itemID,datapoint[i]));
+    DebugN(\"Remove: \"+ dynRemove(g_itemID2datapoint,nodeID_start));      
+  }
+  
+  fwTreeView_draw();  
+/*
+PVSS00NG1:\"System1:PIC_WAN_Switch04.status\" : 17
+PVSS00NG1:\"System1:PIC_WAN_Switch04\" : 16
+PVSS00NG1:\"System1:PIC_WAN_Switch03.status\" : 15
+PVSS00NG1:\"System1:PIC_WAN_Switch03\" : 14
+PVSS00NG1:\"System1:PIC_WAN_Switch02.status\" : 13
+PVSS00NG1:\"System1:PIC_WAN_Switch02\" : 12
+PVSS00NG1:\"System1:PIC_WAN_Switch01.status\" : 11
+PVSS00NG1:\"System1:PIC_WAN_Switch01\" : 10
+      long Node=6;
+      fwTreeView_pruneChildren(Node, \"\");
+      
+      string datapointPath = buildPathFromNode(Node);
+      dyn_string resources = navConfigGetResources(datapointPath,1);
+    long nodeID_start=getNodeFromDatapoint(resources[1]);
+  for(int i=2; i<=dynlen(resources); i++)
+  {
+      long nodeID=getNodeFromDatapoint(resources[i]);
+      
+      DebugN(\"Remove: \"+mappingRemove(g_datapoint2itemID,resources[i])); //OK!!
+      DebugN(\"Remove: \"+ dynRemove(g_itemID2datapoint,nodeID_start+1));                       //OK!!
+      //DebugN(\"Remove: \"+mappingRemove(g_datapoint2itemID,buildPathFromNode(nodeID))); //OK!!
+      //DebugN(\"Remove: \"+ dynRemove(g_itemID2datapoint,nodeID));                       //OK!!
+
+  }
+
+      DebugN(resources);
+      DebugN(\"resources\");
+      */
+
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// TreeView_OnCollapse
+// 
+// called when an item is expanded
+///////////////////////////////////////////////////////////////////////////
+TreeView_OnCollapse(unsigned pos)
+{
+  LOG_DEBUG(\"TreeView_OnCollapse\",pos);
+//  TreeCtrl_HandleEventOnCollapse(pos);
+
+  // also call the default OnExpand implementation to expand the node
+//  fwTreeView_defaultExpand(pos);
+  // the last line of code of each fwTreeView event handler MUST be the following:
+  id = -1; 
+}
+
+
+
+ 
+      // get top level resources. \"\" means no parent, 1 means: 1 level deep
+
+//      LOG_DEBUG(\"adding resources: \",LOG_DYN(resources));
+//      treeAddDatapoints(resources);
+
+
+
+
+/** Remove a node and all of its children (if it has any).
+ * @param index index of the node to remove
+ */
+fwTreeView_pruneChildren(unsigned index, string referenceName = \"\")
+{
+	unsigned len;
+	unsigned pos;
+	unsigned subFolderDepth;
+	dyn_anytype node;
+	dyn_anytype parentNode;
+
+	if(index >  fwTreeView_getNodeCount(referenceName))
+	{
+		DebugN(	\"collapseFolder(dyn_anytype& tree,\"
+				\" unsigned index): index out of bounds)\");
+	}
+	else
+	{
+		//DebugN(\"index=\"+index);
+		// parent node:
+		parentNode = fwTreeView_getNode(index, referenceName);
+		
+		// index of first child node to remove
+		pos = index + 1; 
+		
+		len = fwTreeView_getNodeCount(referenceName);
+		while((pos <= len ) && ((node = fwTreeView_getNode(pos, referenceName))[fwTreeView_LEVEL] > parentNode[fwTreeView_LEVEL]))
+		{
+			// remove child node:
+			fwTreeView_removeNode(pos, referenceName);
+			len--;
+		}
+	}
+}
+
+" 0
+ E E E
+13 84
+"Button13"
+""
+1 480 10 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+53 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+478 8 515 35
+T 
+1
+LANG:1 4 sort
+"main()
+{
+
+  dyn_string resources = navConfigGetResources(\"\",1);
+  DebugN(resources);
+}
+" 0
+ E E E
+13 85
+"Button16"
+""
+1 400 0 E E E 1 E 0 E N "_3DText" E N "_3DFace" E E
+ E E
+53 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+398 -2 522 25
+T 
+1
+LANG:1 16 g_subViewConfigs
+"main()
+{
+ DebugN(\"##g_subViewConfigs\");
+ DebugN(g_subViewConfigs);
+}" 0
+ E E E
+13 86
+"Button19"
+""
+1 400 22 E E E 1 E 0 E N "_3DText" E N "_3DFace" E E
+ E E
+54 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+398 20 522 44
+T 
+1
+LANG:1 10 g_subViews
+"main()
+{
+ DebugN(\"##g_subViews\");
+ DebugN(g_subViews);
+}" 0
+ E E E
+13 87
+"Button20"
+""
+1 50 10 E E E 1 E 0 E N "_3DText" E N "_3DFace" E E
+ E E
+55 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+48 8 122 32
+T 
+1
+LANG:1 7 addNode
+"main()
+{
+dyn_int internalNodeMapping = 9;
+dyn_string internalFullDPName = \"\";
+
+//addedNode = treeAddNode(parentIds[elementLevel],pathIndex-1+elementLevel,elementName); 
+              elementName=\"RCU1\";
+              fullDPname = \"System1:PIC_Stations_Station01_Rack1_SubRack1_Board1_AP1_RCU1\";
+insertInternalNodeMapping(internalNodeMapping, internalFullDPName);
+}" 0
+ E E E
 0
 LAYER, 1 
 1
@@ -606,7 +1234,7 @@ LANG:1 6 Layer8
 3 3 "TreeView1"
 "fwTreeView\\fwTreeView.pnl" 30 30 T 17 1 0 1.441281138790036  -19 1.085409252669037  
 5
-"$sOnCollapse"""
+"$sOnCollapse""TreeView_OnCollapse"
 "$sOnExpand""TreeView_OnExpand"
 "$sOnInit""TreeView_OnInit"
 "$sOnRightClick"""

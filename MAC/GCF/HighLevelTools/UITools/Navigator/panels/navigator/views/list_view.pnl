@@ -1,13 +1,16 @@
 V 10
 1
 LANG:1 17 NavigatorListView
-PANEL,391 108 950 740 N "_3DFace" 2
+PANEL,432 344 950 740 N "_3DFace" 2
 "$configDatapoint"
 "$datapoint"
 "main()
 {
 	if ((dpGetElementName($datapoint)==\"\") && dpExists($configDatapoint + \".customList\"))
   {
+    TableProperties.tableMode(TABLE_SELECT_BROWSE);
+    TableProperties.selectByClick(TABLE_SELECT_LINE_COLUMN);
+
     setValue (\"txt_selectionQuery\", \"visible\", TRUE);  
     setValue (\"txt_amount\", \"visible\", TRUE);  
     setValue (\"label_amount\", \"visible\", TRUE);  
@@ -383,9 +386,13 @@ E E 0 1 1 0 1 E U  0 E 10 670 944 740
 1 9 40 E E E 1 E 0 E N "_WindowText" E N {255,255,255} E E
  E E
 72 0 0 0 0 0
-E"main()
+"main()
 {
-DebugN(\"Lost Focus\");
+//DebugN(\"Set focus\");
+}" 0
+"main()
+{
+//DebugN(\"Lost Focus\");
 }" 0
  E
 0

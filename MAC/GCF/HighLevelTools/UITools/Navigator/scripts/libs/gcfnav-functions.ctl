@@ -320,7 +320,7 @@ long treeAddNode(long parentId,int level,string text)
   else
   {
     nodeId = fwTreeView_appendToParentNode(parentId,text,"",0,level);
-	treeAddCount++;
+	  treeAddCount++;
   }
   return nodeId;
 }
@@ -354,13 +354,14 @@ void treeAddDatapoints(dyn_string names)
 	  }
 	  else
 	  {
-		addedNode = treeAddNode(-1,0,systemName);
-		LOG_TRACE("Added root node: ",addedNode,systemName);
-        insertDatapointNodeMapping(addedNode,systemName);
-      }  
+		  addedNode = treeAddNode(-1,0,systemName);
+      LOG_TRACE("Added root node: ",addedNode,systemName);
+      insertDatapointNodeMapping(addedNode,systemName);
+    }  
 	  
-      dyn_int internalNodeMapping;
-      dyn_string internalFullDPName;    
+    dyn_int internalNodeMapping;
+    dyn_string internalFullDPName;
+
 	  // go through the list of datapoint names
 	  for(namesIndex=1;namesIndex<=dynlen(names);namesIndex++)
 	  {
@@ -396,17 +397,23 @@ void treeAddDatapoints(dyn_string names)
 		      }
 		      else
 		      {
+//		        DebugN("## addedDatapoints:" + addedDatapoints);
+		        DebugN("## addingDPpart:   " + addingDPpart);
 		        // item does not exist
 		        dynAppend(addedDatapoints,addingDPpart);
 		        if(addingDPpart != systemName)
 		        {
+		          //DebugN("dpPathElements[pathIndex]: " + dpPathElements[pathIndex]);
 		          addedNode = treeAddNode(parentId,pathIndex,dpPathElements[pathIndex]); 
-				  if (addedNode!=0)
-			      {
-			        internalNodeMapping[dynlen(internalNodeMapping)+1]=addedNode;
-			        internalFullDPName[dynlen(internalFullDPName)+1] = addingDPpart;
-			      }
-                  LOG_TRACE("Added node: ",addedNode,parentId,pathIndex,dpPathElements[pathIndex]);
+              DebugN("## treeAddNode: ", parentId, pathIndex, dpPathElements[pathIndex], pathIndex);
+   		        DebugN("## addingDPpart:   " + addingDPpart);
+				      if (addedNode!=0)
+			        {
+			          internalNodeMapping[dynlen(internalNodeMapping)+1]=addedNode;
+			          internalFullDPName[dynlen(internalFullDPName)+1] = addingDPpart;
+			        }
+
+              LOG_TRACE("Added node: ",addedNode,parentId,pathIndex,dpPathElements[pathIndex]);
 				  //# This is not used until further order. Alert displays NOT in tree control
 		          //if(dpPathElements[pathIndex] == "Alert")
 		          //{
@@ -415,7 +422,7 @@ void treeAddDatapoints(dyn_string names)
 		          //  dpConnect("AlertStatusHandler",TRUE,names[namesIndex] + ".status:_online.._value");
 		          //}
 		        }
-               }
+          }
 		      parentId = addedNode;
               if(pathIndex<dynlen(dpPathElements))
               {
@@ -429,12 +436,24 @@ void treeAddDatapoints(dyn_string names)
   		        }
               }
 		    }
+			  
         // get the datapoint structure
         dynClear(elementNames);
         dynClear(elementTypes);
         
-        dpTypeGet(dpTypeName(names[namesIndex]),elementNames,elementTypes);
-   
+        if(names[namesIndex]=="System1:PAC_VirtualInstruments_Station01")
+        {
+          dpTypeGet(dpTypeName("System1:PIC_Stations_Station01"),elementNames,elementTypes);
+          DebugN("## elementNames  ##");
+          DebugN(elementNames);
+          DebugN("###################");
+        }
+        else
+        {
+          dpTypeGet(dpTypeName(names[namesIndex]),elementNames,elementTypes);
+        }
+        
+        //DebugN(dynContains(elementNames,"__refs")); 
         // add elements of this datapoint, if any, skip system stuff
         if(addedNode != 0 && addingDPpart != systemName && dynlen(elementNames) > 1)
         {
@@ -450,13 +469,29 @@ void treeAddDatapoints(dyn_string names)
           int max;
           if (namesIndex == 1)  max = dynlen(elementNames);
           else max = 2;
+          string fullDPname;
+          DebugN("## namesIndex: " + namesIndex);
           for(elementIndex=2;elementIndex<=max;elementIndex++) 
           {
             // every last item of each array contains an element name (see help on dpTypeGet())
             // file:///opt/pvss/pvss2_v3.0/help/en_US.iso88591/WebHelp/ControlA_D/dpTypeGet.htm
+            //Arjan
+            //DebugN(elementNames);
             int elementLevel = dynlen(elementNames[elementIndex])-1; // how deep is the element?
             string elementName = elementNames[elementIndex][elementLevel+1];
-            string fullDPname = addingDPpart+parentNodes[elementLevel]+"."+elementName;
+            if(elementName=="__refs")
+            {
+              names[dynlen(names)+1]= "System1:PAC_VirtualInstruments_Station01";
+              DebugN("## Insert ref in names");
+              DebugN("## addingDPpart:   " + addingDPpart);
+              //elementName="SubRack1";
+              //fullDPname = "System1:PIC_Stations_Station01_Rack1_SubRack1";
+            }
+            else
+            {
+              fullDPname = addingDPpart+parentNodes[elementLevel]+"."+elementName;
+            }
+            
             if(mappingHasKey(g_datapoint2itemID,fullDPname))
             {
               addedNode = g_datapoint2itemID[fullDPname];
@@ -464,7 +499,9 @@ void treeAddDatapoints(dyn_string names)
             else
             {
               addedNode = treeAddNode(parentIds[elementLevel],pathIndex-1+elementLevel,elementName); 
+              DebugN("## treeAddNode: ",addedNode,parentIds[elementLevel],pathIndex-1+elementLevel,fullDPname);
               LOG_TRACE("Added element node: ",addedNode,parentIds[elementLevel],pathIndex-1+elementLevel,fullDPname);
+
 			        if (addedNode!=0)
  		       	  {
     			       internalNodeMapping[dynlen(internalNodeMapping)+1]=addedNode;
@@ -481,7 +518,7 @@ void treeAddDatapoints(dyn_string names)
 	  if(dynlen(internalNodeMapping)!=0)
 	  { 
 	    insertInternalNodeMapping(internalNodeMapping, internalFullDPName);
-      }
+    }
   }
 }
 
@@ -503,17 +540,17 @@ insertInternalNodeMapping(dyn_int internalNodeMapping, dyn_string fullDPname)
   {
     for(int i= (length+ dynlen(internalNodeMapping)); i>=internalNodeMapping[1]; i--)
     {
-	  if (i > internalNodeMapping[dynlen(internalNodeMapping)])
-	  {
-	    g_itemID2datapoint[i] = g_itemID2datapoint[(i-dynlen(internalNodeMapping))];
+	    if (i > internalNodeMapping[dynlen(internalNodeMapping)])
+	    {
+	      g_itemID2datapoint[i] = g_itemID2datapoint[(i-dynlen(internalNodeMapping))];
         g_datapoint2itemID[g_itemID2datapoint[(i-dynlen(internalNodeMapping))]] = i;
-	  }
-	  else if (i>=internalNodeMapping[1] && i<=internalNodeMapping[dynlen(internalNodeMapping)])
-	  {
-	    g_itemID2datapoint[i] = fullDPname[dynlen(fullDPname) + teller];
-		g_datapoint2itemID[fullDPname[dynlen(fullDPname) + teller]] = i;
-		teller--;
-	  }
+	    }
+	    else if (i>=internalNodeMapping[1] && i<=internalNodeMapping[dynlen(internalNodeMapping)])
+	    {
+	      g_itemID2datapoint[i] = fullDPname[dynlen(fullDPname) + teller];
+		    g_datapoint2itemID[fullDPname[dynlen(fullDPname) + teller]] = i;
+		    teller--;
+	    }
     }
   }
   else
@@ -964,9 +1001,24 @@ void TreeCtrl_HandleEventOnExpand(long Node)
     if(Node != 0)
     {
       string datapointPath = buildPathFromNode(Node);
- 
+      if(Node==1)
+      {
+        datapointPath="";
+      }
       // get top level resources. "" means no parent, 1 means: 1 level deep
       dyn_string resources = navConfigGetResources(datapointPath,1);
+
+//      DebugN("## resources ##");
+//      DebugN(resources);
+      //#############################################################
+/*      if(Node==6)
+      {
+        resources = makeDynString("System1:PAC_VirtualInstruments_Station01",
+                                  "System1:PAC_VirtualInstruments_Station02",
+                                  "System1:PAC_VirtualInstruments_Station03",
+                                  "System1:PAC_VirtualInstruments_Station04");
+      }*/
+      //#############################################################
       LOG_DEBUG("adding resources: ",LOG_DYN(resources));
       treeAddDatapoints(resources);
     }
@@ -976,6 +1028,73 @@ void TreeCtrl_HandleEventOnExpand(long Node)
     LOG_DEBUG("TreeCtrl_HandleEventOnExpand suppressed while initializing ");
   }
 }
+
+///////////////////////////////////////////////////////////////////////////
+// TreeView_OnCollapse
+// 
+// called when an item is expanded
+///////////////////////////////////////////////////////////////////////////
+TreeView_OnCollapse(unsigned pos)
+{
+  LOG_DEBUG("TreeView_OnCollapse",pos);
+  TreeCtrl_HandleEventOnCollapse(pos);
+
+  // the last line of code of each fwTreeView event handler MUST be the following:
+  id = -1; 
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+//Function TreeCtrl_HandleEventOnCollapse(long Node)
+// 
+// expands a node in the Resources treeview
+///////////////////////////////////////////////////////////////////////////
+void TreeCtrl_HandleEventOnCollapse(unsigned Node)
+{
+  int collapsedNodes=1;
+  dyn_string datapoint ;
+  int k=1;
+  string temp;
+
+  fwTreeView_pruneChildren(Node, collapsedNodes, ""); //get all nodes which will be collapsed and
+                                                      //clear these nodes from the tree
+  //retrieve all dpnames for these nodes
+  for(int j=Node+1; j<=(Node+collapsedNodes);j++)
+  {
+    datapoint[k]= g_itemID2datapoint[j];
+    k++;
+  }
+
+  //delete the collapse nodes from g_itemID2datapoint and g_datapoint2itemID
+  for(int i=1; i<=dynlen(datapoint); i++)
+  {
+    long nodeID=getNodeFromDatapoint(datapoint[i]);
+    dynRemove(g_itemID2datapoint,dynContains(g_itemID2datapoint,datapoint[i]));      
+    mappingRemove(g_datapoint2itemID,datapoint[i]);
+  }
+
+  //renumber the mapping of the dp's
+  if(mappinglen(g_datapoint2itemID)>1)
+  {
+    for(int i=1 ; i<=mappinglen(g_datapoint2itemID); i++)
+    {
+      temp = g_itemID2datapoint[i];
+      if(temp!="" && temp !=0)
+      {
+        g_datapoint2itemID[temp]=i;
+      }
+    }
+  }
+
+  //mark the node as COLLAPSED
+  dyn_anytype parentNode;
+  parentNode = fwTreeView_getNode(Node, "");
+  parentNode[fwTreeView_STATE] = parentNode[fwTreeView_STATE] & ~fwTreeView_EXPANDED;
+  fwTreeView_replaceNode(parentNode, Node, "");
+  fwTreeView_draw();
+}
+
+
 
 ///////////////////////////////////////////////////////////////////////////
 //Function TreeCtrl_HandleEventOnDrawCell
@@ -1242,3 +1361,28 @@ void setSelectedPosition2Expand(long pos)
       }
     }
 }
+
+
+//////////////////////////////////////////////////////////////////////////////
+//Function getNames2Delete
+// 
+// givens the names of the children of a node at a given position in the tree
+//////////////////////////////////////////////////////////////////////////////
+/*
+dyn_string getNames2Delete(long node)
+{
+  dyn_string names = navConfigGetResources(buildPathFromNode(node),1);
+
+  dyn_dyn_string elementNames;
+  dyn_dyn_int elementTypes;
+  dyn_string addNames;
+  int dynStringLength=dynlen(names);
+  for(int namesIndex=1; namesIndex<=dynStringLength; namesIndex++)
+  {
+    dpTypeGet(dpTypeName(names[namesIndex]),elementNames,elementTypes);
+    names[(dynStringLength+namesIndex)] = names[namesIndex] + "." + elementNames[2][2];
+  }
+  dynRemove(names,1);
+  return names;
+}
+*/

@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 9 ConfigTab
-PANEL,453 345 946 43 N "_3DFace" 4
+PANEL,547 209 946 43 N "_3DFace" 4
 "$configDatapoint"
 "$selectedElementDpType"
 "$selectedView"
@@ -24,8 +24,8 @@ PANEL,453 345 946 43 N "_3DFace" 4
     }
     else
     {
-      DebugN(\"nrOfSubViews: \" + nrOfSubViews);
-      DebugN(\"nrOfSubViews[$selectedView]: \" + nrOfSubViews[$selectedView]);
+      //DebugN(\"nrOfSubViews: \" + nrOfSubViews);
+      //DebugN(\"nrOfSubViews[$selectedView]: \" + nrOfSubViews[$selectedView]);
       if(nrOfSubViews[$selectedView] > 1)
       {
         btnRemove.enabled = TRUE;
