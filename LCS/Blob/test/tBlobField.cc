@@ -133,7 +133,7 @@ void doIn2 (BlobFieldSet& fset, BlobIBufChar& bb)
   // Check if data matches as put in doOut.
   if (convert) {
     LOFAR::DataFormat fmt =
-      ((BlobHeaderBase*)(bb.getBuffer()))->getDataFormat();
+      ((BlobHeader*)(bb.getBuffer()))->getDataFormat();
     fcomplex valfc;
     XX valxx(0,0);
     ASSERT (LOFAR::dataConvert (fmt, *pint) == 3);
