@@ -187,6 +187,12 @@ void doItParse()
   cout << KeyParser::parse ("key1=12:34:56.78, key2=-12.34.56.78") << endl;
   cout << KeyParser::parse ("key1=12::.78, key2=-12..0.78") << endl;
   cout << KeyParser::parse ("key1=12::, key2=-12..") << endl;
+
+  try {
+    cout << KeyParser::parseFile ("tKeyValueMap.in") << endl;
+  } catch (std::exception& x) {
+    cout << x.what() << endl;
+  }
   try {
     KeyParser::parse ("key1=12a:34:56.78");
   } catch (std::exception& x) {
