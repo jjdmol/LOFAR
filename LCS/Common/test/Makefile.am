@@ -1,9 +1,13 @@
-check_PROGRAMS			= tDebug testLogger \
-                                  tBlobString \
-                                  tBlobStream tBlobArray tBlobField \
-				  tDataConvert tKeyValueMap \
-				  tStringUtil 
-#				  tLorrays
+check_PROGRAMS	      =	tDebug testLogger tBlobString \
+			tBlobStream tBlobArray tBlobField \
+			tDataConvert tKeyValueMap tStringUtil 
+#			tLorrays
+
+# programs to run through supplied checktools
+CHECKTOOLPROGS 	      =	tDebug testLogger tBlobString \
+			tBlobStream tBlobArray tBlobField \
+			tDataConvert tKeyValueMap tStringUtil 
+#ENDCHECKTOOLPROGS
 
 TESTS	= tDebug_test.sh \
 	  testLogger_test.sh \
