@@ -23,6 +23,11 @@ int main()
   TR1.setItsID(1);
   TR2.setItsID(2);
 
+  // TH_Mem doesn't implement a blocking send
+  TR1.setIsBlocking(false);
+  TR2.setIsBlocking(false);
+  
+
   TR1.setSourceAddr(TR1.getBaseDataHolder());
   TR2.setSourceAddr(TR2.getBaseDataHolder());
   //  TR2.setSourceAddr(15);
@@ -49,7 +54,7 @@ int main()
   DH1.write();
   DH2.read();
     
-  cout << "After transport : " 
+  cout << "After transport  : " 
        << DH1.getBuffer()[0] 
        << " -- " 
        << DH2.getBuffer()[0] 
