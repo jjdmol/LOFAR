@@ -2,47 +2,47 @@
 #define SOLVER_SRC_DUMMYSOLVER_H_HEADER_INCLUDED_D8FEA530
     
 #include <Solver/BaseSolver.h>
-#include <AppUtils/src/ApplicationBase.h>
-#include <SolverControl/src/SolverControlAgent.h>
-#include <VisAgent/src/InputAgent.h>
-#include <VisAgent/src/OutputAgent.h>
 
+namespace SolverVocabulary
+{
+  using namespace ApplicationVocabulary;
+  
+  const HIID  FDomainSize         = AidDomain|AidSize;
+  
+  const HIID  InputInitFailed     = AidInput|AidInit|AidFail,
+              OutputInitFailed    = AidOutput|AidInit|AidFail;
+};
+    
 //##ModelId=3E00ACBD03DD
-class DummySolver : public ApplicationBase
+class DummySolver : public BaseSolver
 {
   public:
-    //##ModelId=3E00ACF002AB
-    DummySolver (VisAgent::InputAgent &in, VisAgent::OutputAgent &out, SolverControlAgent &ctrl);
-
     //##ModelId=3E00ACED00BB
-    virtual void run (DataRecord::Ref& initrec);
+    virtual void run ();
     
-    //##ModelId=3E00B22801E4
-    virtual string sdebug(int detail = 1, const string &prefix = "", const char *name = 0) const;
+//    virtual string sdebug(int detail = 1, const string &prefix = "", const char *name = 0) const;
 
   private:
-    //##ModelId=3E63622A0380
-    VisAgent::InputAgent &  input_;
-    //##ModelId=3E63627000D3
-    VisAgent::OutputAgent & output_;
-    //##ModelId=3E6362BD011B
-    SolverControlAgent &    control_;
+    //##ModelId=3E6F603A01D6
+    void addTileToDomain (VisTile::Ref &tileref);
+    //##ModelId=3E6F603A0256
+    void checkInputState (int instat);
+    //##ModelId=3E6F603A02D1
+    void endDomain ();
+    //##ModelId=3E6F603A030B
+    void endSolution (const DataRecord &endrec);
+      
+    //##ModelId=3E6F60390007
+    double domain_start;
+    //##ModelId=3E6F6039007B
+    double domain_end;
+    //##ModelId=3E6F603900E3
+    double domain_size;
+    //##ModelId=3E6F60390147
+    bool in_domain;
     
-    AppAgent::Ref input_ref;
-    AppAgent::Ref output_ref;
-    
-  public:
-    //##ModelId=3E00C7DC027D
-    VisAgent::InputAgent &  input   ()
-    { return input_; }
-    //##ModelId=3E00C7DC0304
-    VisAgent::OutputAgent & output  ()
-    { return output_; }
-    //##ModelId=3E00C7DC0393
-    SolverControlAgent &    control ()
-    { return control_; }
-
-
+    //##ModelId=3E77394100CA
+    int ntiles;
 };
 
 #endif /* SOLVER_SRC_DUMMYSOLVER_H_HEADER_INCLUDED_D8FEA530 */

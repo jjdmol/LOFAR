@@ -1,69 +1,257 @@
 #include "DummySolver.h"
 
-//##ModelId=3E00ACF002AB
-DummySolver::DummySolver (VisAgent::InputAgent &in, VisAgent::OutputAgent &out, SolverControlAgent &control)
-    : ApplicationBase(ctrl),input_ref(in),output_ref(out)
+using namespace AppState;
+using namespace SolverVocabulary;
+    
+//##ModelId=3E6F603A01D6
+void DummySolver::addTileToDomain (VisTile::Ref &tileref)
 {
+  const VisTile &tile = *tileref;
+  // first tile of new domain
+  if( domain_start == 0 )
+  {
+    control().startDomain();
+    domain_start = tile.time(0);
+    domain_end = domain_start + domain_size;
+    cdebug(2)<<"starting new domain with Tstart="<<domain_start<<endl;
+    in_domain = True;
+    ntiles = 1;
+  }
+  // does tile belong to next domain?
+  else
+  {
+    if( tile.time(0) >= domain_end )
+    {
+      cdebug(2)<<"tile time past end of domain, closing domain"<<endl;
+      endDomain();
+      return;
+    }
+  }
+  // assume the domain size is a multiple of the tile size (in time),
+  // so at this point the tile fully belongs to our domain
+  // Detach the tileref; in real life we would actually xfer it to some
+  // internal container 
+  tileref.detach();
+  ntiles++;
+ cdebug(2)<<"adding tile to domain"<<endl;
 }
 
+//##ModelId=3E6F603A0256
+void DummySolver::checkInputState (int instat)
+{
+  // if input stream is ERROR or CLOSED, say endOfData() to the 
+  // control agent, and end the current domain
+  // error on the input stream? terminate the transaction
+  if( instat == AppEvent::ERROR )
+  {
+    cdebug(2)<<"error on input: "<<input().stateString()<<endl;
+    control().endData(InputErrorEvent);
+    endDomain();
+  }
+  // closed the input stream? terminate the transaction
+  else if( instat == AppEvent::CLOSED )
+  {
+    cdebug(2)<<"input closed: "<<input().stateString()<<endl;
+    control().endData(InputErrorEvent);
+    endDomain();
+  }
+}
+
+//##ModelId=3E6F603A02D1
+void DummySolver::endDomain ()
+{
+  if( in_domain )
+  {
+    control().endDomain();
+    domain_start = 0;
+    in_domain = False;
+  }
+}
+
+//##ModelId=3E6F603A030B
+void DummySolver::endSolution (const DataRecord &endrec)
+{
+  cdebug(2)<< "end solution: "<<endrec.sdebug(3)<<endl;
+}
+
+
 //##ModelId=3E00ACED00BB
-void DummySolver::run (DataRecord::Ref& initrec)
+void DummySolver::run ()
 {
   using namespace SolverControl;
+  DataRecord::Ref initrec;
   
-  
-  
-  
-  cdebug(1)<< "starting run()\n";
-  while( control().state() >= 0 )
+  for(;;)
   {
-    DataRecord::Ref params;
-    // outer loop is over time domains. For every time domain, we run through
-    // the same fixed set of "solve jobs". A "solve job" is described by a 
-    // DataRecord.
-    for( int dom = 0; dom < 3; dom++ )
+    // init the control agent, and get the init record from it
+    if( control().start(initrec) == HALTED )
     {
-      control().startDomain();
-      // second loop over solve jobs. Each call to startSoltion
-      // returns a different set of params and the code RUNNING; once all sets 
-      // have been run through, the return code is IDLE
-      while( control().startSolution(params) > 0 )
+      cdebug(1)<<"halting"<<endl;
+      control().close();
+      return;
+    }
+    // [re]initialize i/o agents with record returned by control
+    cdebug(1)<<"initializing I/O agents\n";
+    if( !input().init(*initrec) )
+    {
+      control().postEvent(InputInitFailed);
+      control().setState(STOPPED);
+      continue;
+    }
+    if( !output().init(*initrec) )
+    {
+      control().postEvent(OutputInitFailed);
+      control().setState(STOPPED);
+      continue;
+    }
+    // set up our parameters from init record
+        // default is 1 min domains
+    domain_size = (*initrec)[FDomainSize].as<double>(60);
+    cdebug(1)<< "starting run()\n";
+    // run main loop
+    DataRecord::Ref header;
+    VisTile::Ref tile;
+    while( control().checkState() > 0 )  // while in a running state
+    {
+      int instat;
+      // -------------- receive data set header
+      // check for a cached header (once a new header is received, it stays 
+      // in cache until all solutions on the previous data set have been 
+      // finished) and/or wait for a header to arrive
+      while( !header.valid() && control().checkState() > 0 )
       {
-        cdebug(1)<< "startSolution: "<<params->sdebug(3)<<endl;
-        cdebug(3)<< sdebug(3) <<endl;
-
+        instat = input().getHeader(header,AppEvent::WAIT);
+        if( instat == AppEvent::SUCCESS )
+        {
+          // got header? break out
+          // setup whatever's needed from the header
+          cdebug(1)<<"got header: "<<header->sdebug(2)<<endl;
+          break;
+        }
+        else if( instat == AppEvent::OUTOFSEQ )
+        {
+          instat = input().getNextTile(tile,AppEvent::WAIT);
+          if( instat == AppEvent::SUCCESS )
+          {
+            // got tile? drop it
+            cdebug(3)<<"received tile "<<tile->tileId()<<" before header, dropping\n";
+            tile.detach();
+          }
+        }
+        // checks for end-of-data or error on the input stream and changes
+        // the control state accordingly
+        checkInputState(instat);
+      }
+      if( control().checkState() <= 0 )
+        continue;
+      // we have a valid header now
+      // ought to post the header to the output later, because the solver
+      // may want to update something in it.
+      // DummySolver doesn't post anything to the output.
+      
+      // --------- read full domain from input ---------------------------
+      in_domain = True;
+      domain_start = 0;
+      while( in_domain && control().checkState() > 0 )
+      {
+        // a tile may be left over from the previous iteration
+        if( !tile.valid() && input().state() == RUNNING )
+        {
+          // if not, then go look for one from the input agent
+          cdebug(4)<<"looking for tile\n";
+          instat = input().getNextTile(tile,AppEvent::WAIT);
+          if( instat == AppEvent::SUCCESS )
+          { // got a tile? do nothing (addTileToDomain will be called below)
+            // cdebug(3)<<"received tile "<<tile->tileId()<<endl;
+          }
+          else if( instat == AppEvent::OUTOFSEQ ) // out of sequence? Check for a header instead
+          {
+            cdebug(4)<<"looking for header\n";
+            instat = input().getHeader(header,AppEvent::WAIT);
+            if( instat == AppEvent::SUCCESS )
+            { // got a header? end the current domain
+              endDomain();
+            }
+          }
+          // checks for end-of-data or error on the input stream and changes
+          // the control state accordingly
+          checkInputState(instat);
+        }
+        // recheck, have we received a tile? Add it to the domain then.
+        // addTileToDomain will detach the ref if it accepts the tile. If
+        // the tile belongs to the next domain, it will leave the ref in place
+        // and clear the in_domain flag.
+        if( tile.valid() )
+          addTileToDomain(tile);
+      }
+      if( control().checkState() <= 0 )
+        continue;
+      // ought to check that we've actually got a domain of data (we could
+      // have received two headers in a row, for example). If no data,
+      // do a continue to top of loop. But we won't bother for now.
+      
+      // We have a full domain of data now. Start the solution loop
+      // control state ought to be IDLE at start of every solution. (Otherwise,
+      // it's either NEXT_DOMAIN, or a terminal state)
+      while( control().state() == IDLE )
+      {
+        DataRecord::Ref params,endrec;
+        // get solution parameters, break out if none
+        if( control().startSolution(params) != RUNNING )
+          break;
+        cdebug(2)<< "startSolution: "<<params->sdebug(3)<<endl;
         int niter = 0;
         double converge = 1000;
-        // inner loop iterates solutions
+        // iterate the solution until stopped
         do
         {
           converge /= 10;
           niter++;
         }
         while( control().endIteration(converge) == AppState::RUNNING );
-        // endIteration() will return RUNNING as long as you still need
-        // to iterate. Once the solution has converged (or the max iter count is
-        // exceeded), it returns NEXT_SOLUTION (if more jobs are scheduled)
-        // or NEXT_DOMAIN (no more jobs, proceed to next domain). We do not
-        // differentiate between the two here, since the while( startSolution()...)
-        // condition does the same thing for us.
-        // On a user interrupt it will return STOPPED or HALTED.
-        cdebug(1)<< "stopped after "<<niter<<" iterations, converge="<<converge<<endl;
-        cdebug(3)<< sdebug(3) <<endl;
+        
+        // if state is ENDSOLVE, end the solution properly
+        if( control().state() == ENDSOLVE )
+        {
+          cdebug(2)<<"ENDSOLVE after "<<niter<<" iterations, converge="<<converge<<endl;
+          int res = control().endSolution(endrec);
+          if( res > 0 )
+          {
+            // successful end of solution
+            endSolution(*endrec);
+          }
+          else 
+          { // unsuccessful (probably a terminal state)
+            cdebug(2)<<"endSolution returns "<<res<<endl;
+          }
+        }
+        // else we were probably interrupted
+        else
+        {
+          cdebug(2)<<"stopped with state "<<control().stateString()<<" after "<<niter<<" iterations, converge="<<converge<<endl;
+        }
       }
-      control().endDomain();
+      // end of solving in this domain, for whatever reason.
+      // output data and/or whatever
+      
+      // go back to top of loop and check for state
+    }
+    // broke out of main loop -- close i/o agents
+    input().close();
+    output().close();
+    // if control is non-asynchronous, we can exit now since it's not going
+    // to change state
+    if( !control().isAsynchronous() )
+    {
+      cdebug(1)<<"control non-asynchronous, halting"<<endl;
+      control().close();
+      return;
     }
   }
-  
-  input().close();
-  output().close();
-  control().close();
-  
-  cdebug(1)<< "run() finished\n";
 }
 
 //##ModelId=3E00B22801E4
-string DummySolver::sdebug(int detail, const string &prefix, const char *name) const
-{
-}
+//string DummySolver::sdebug(int detail, const string &prefix, const char *name) const
+//{
+//}
 
