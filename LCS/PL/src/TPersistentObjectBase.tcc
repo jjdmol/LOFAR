@@ -28,45 +28,39 @@ namespace LCS
   {
 
     template<typename T>
-    inline void 
-    TPersistentObjectBase<T>::erase(const PersistenceBroker* const b)
+    void TPersistentObjectBase<T>::erase(const PersistenceBroker* const b)
     {
       THROW(NotImplemented, "Method is not yet implemented");
     }
 
     template<typename T>
-    inline void 
-    TPersistentObjectBase<T>::insert(const PersistenceBroker* const b)
+    void TPersistentObjectBase<T>::insert(const PersistenceBroker* const b)
     {
-      itsOid.get();    // This effectively initializes itsOid
-      doInsert(itsOid);
+      doInsert(itsOwnerOid);
     }
 
     template<typename T>
-    inline void 
-    TPersistentObjectBase<T>::retrieve(const PersistenceBroker* const b)
+    void TPersistentObjectBase<T>::retrieve(const PersistenceBroker* const b)
     {
       THROW(NotImplemented, "Method is not yet implemented");
     }
 
     template<typename T>
-    inline void 
-    TPersistentObjectBase<T>::save(const PersistenceBroker* const b)
+    void TPersistentObjectBase<T>::save(const PersistenceBroker* const b)
     {
       if (isPersistent()) {
-        doUpdate(itsOid);
+        doUpdate(itsOwnerOid);
       }
       else {
-        doInsert(itsOid);
+        doInsert(itsOwnerOid);
       }
       isPersistent(true);
     }
 
     template<typename T>
-    inline void 
-    TPersistentObjectBase<T>::update(const PersistenceBroker* const b)
+    void TPersistentObjectBase<T>::update(const PersistenceBroker* const b)
     {
-      doUpdate(itsOid);
+      doUpdate(itsOwnerOid);
     }
 
   } // namespace PL
