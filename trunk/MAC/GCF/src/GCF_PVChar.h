@@ -32,7 +32,7 @@
 class GCFPVChar : public GCFPValue  
 {
   public:
-  	GCFPVChar (char val = 0) : GCFPValue(CHAR_VAL), _value(val) {;}
+  	GCFPVChar (char val = 0) : GCFPValue(LPT_CHAR), _value(val) {;}
   	virtual ~GCFPVChar () {;}
 
     /** Changes the value of this object */

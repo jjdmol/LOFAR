@@ -32,7 +32,7 @@
 class GCFPVInteger : public GCFPValue
 {
   public:
-  	GCFPVInteger (int val = 0) : GCFPValue(INTEGER_VAL), _value(val) {;}
+  	GCFPVInteger (int val = 0) : GCFPValue(LPT_INTEGER), _value(val) {;}
   	virtual ~GCFPVInteger () {;}
     
     /** Changes the value of this object */
