@@ -355,6 +355,12 @@ void UVPMainWindow::slot_readMeasurementSet(const std::string& msName)
                                   msTable.col("ANTENNA2") == ant1) )
                          );
 
+  if(Selection.nrow() == 0) {
+    QMessageBox::information(0, "Information", "Selection contains no data",
+                             QMessageBox::Ok|QMessageBox::Default);
+    return;
+  }
+
   ROArrayColumn<Complex> DataColumn(Selection, "DATA");
   //  ROScalarColumn<Float>  TimeColumn(Selection, "TIME");
 
