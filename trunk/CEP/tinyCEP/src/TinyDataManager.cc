@@ -43,15 +43,19 @@ namespace LOFAR
     itsOutputRates = new int[noutputs];
     itsDoAutoTriggerIn = new bool[ninputs];
     itsDoAutoTriggerOut = new bool[noutputs];
+    itsReadyInFlag = new bool[ninputs];
+    itsReadyOutFlag = new bool[noutputs];
     for (int i = 0; i < ninputs; i++)
     {
       itsDoAutoTriggerIn[i]=true;
       itsInputRates[i]=1;
+      itsReadyInFlag[i]=false;
     }
     for (int j = 0; j < noutputs; j++)
     {
       itsDoAutoTriggerOut[j]=true;
       itsOutputRates[j]=1;
+      itsReadyOutFlag[j]=false;
     }
 
   }
@@ -63,6 +67,8 @@ namespace LOFAR
     delete [] itsOutputRates;
     delete [] itsDoAutoTriggerIn;
     delete [] itsDoAutoTriggerOut;
+    delete [] itsReadyInFlag;
+    delete [] itsReadyOutFlag;
 
     // DataHolder clean-up:
     for (int i = 0; i < itsNinputs; i++)
@@ -164,8 +170,19 @@ namespace LOFAR
   }
 
   void TinyDataManager::initializeInputs() {
-    // todo: why empty??
+    for (int ch = 0; ch < itsNinputs; ch++) {
+      if (doAutoTriggerIn(ch) && ( getInputRate(ch) == 1 )) { 
+	// only execute the zeroth call for rate==1 
+	LOG_TRACE_COND_STR("Execute Initial read call on channel = " 
+			   << ch << " step=1   rate= " << getInputRate(ch));
+	itsInDHs[ch]->read();
+      } else {
+	LOG_TRACE_COND_STR("Skip initial read on channel = " 
+			   << ch << " step=1   rate= " << getInputRate(ch));
+      }
+    }
   }
+
 
   DataHolder* TinyDataManager::getGeneralInHolder(int channel) {
     assertChannel(channel, true);
@@ -180,17 +197,23 @@ namespace LOFAR
   void TinyDataManager::readyWithInHolder(int channel) {
     // The user has to call the ready with InHolder method 
     // in his own WorkHolder
-    
-    itsInDHs[channel]->read();
-
+    if(!getReadyInFlag(channel)) { //only execute the DH->read() call once
+      setReadyInFlag(channel);
+      itsInDHs[channel]->read();
+    } else {
+      LOG_TRACE_COND_STR("readyWithInHolder already called; Skipped call to read()");
+    }
   }
   
   void TinyDataManager::readyWithOutHolder(int channel) {
     // The user has to call the ready with InHolder method 
     // in his own WorkHolder
-
-    itsOutDHs[channel]->write();
-
+    if(!getReadyOutFlag(channel)) {
+      setReadyOutFlag(channel);
+      itsOutDHs[channel]->write();
+    } else {
+      LOG_TRACE_COND_STR("readyWithOutHolder already called; Skipped call to write()");
+    }
   }
 
 void TinyDataManager::setInputSelector(Selector* selector)
