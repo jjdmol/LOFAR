@@ -138,6 +138,10 @@ void WH_Prediff::process()
   }
 
   // write result
+
+  // Update workorder status
+  wo->setStatus(DH_WOPrediff::Executed);
+  woPtr->updateDB();
 }
 
 void WH_Prediff::dump()
