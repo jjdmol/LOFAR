@@ -15,7 +15,7 @@ dTransport_LDADD	= ../src/libpl.la
 dTransport_DEPENDENCIES	= ../src/libpl.la $(LOFAR_DEPEND)
 
 dComplex_SOURCES	= dComplex.cc \
-			  Complex.h \
+			  Complex.h
 dComplex_LDADD		= ../src/libpl.la
 dComplex_DEPENDENCIES	= ../src/libpl.la $(LOFAR_DEPEND)
 
