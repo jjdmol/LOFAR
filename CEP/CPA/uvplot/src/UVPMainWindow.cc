@@ -34,47 +34,17 @@ InitDebugContext(UVPMainWindow, "DEBUG_CONTEXT");
 UVPMainWindow::UVPMainWindow()
   : QMainWindow()
 {
-
   // Construct a menu
-  itsFileMenu = new QPopupMenu;
-  itsFileMenu->insertItem("&Open MS", this, SLOT(slot_openMS()));
-  itsFileMenu->insertItem("&Open PVD", this, SLOT(slot_openPVD()));
-  itsFileMenu->insertItem("&Quit", qApp, SLOT(quit()));
-
-  itsPlotMenu = new QPopupMenu;
-  itsMenuPlotImageID = itsPlotMenu->insertItem("&Image", this,
-                                               SLOT(slot_plotTimeFrequencyImage()));
-  itsMenuPlotStopID  = itsPlotMenu->insertItem("&Stop", this,
-                                               SLOT(slot_quitPlotting()));
-
-  itsPlotMenu->setItemEnabled(itsMenuPlotImageID, true);
-  itsPlotMenu->setItemEnabled(itsMenuPlotStopID, false);
-
-
-  itsHelpMenu = new QPopupMenu;
-  itsHelpMenu->insertItem("&About uvplot", this, SLOT(slot_about_uvplot()));
-
-  itsMenuBar = new QMenuBar(this);
-  itsMenuBar->insertItem("&File", itsFileMenu);
-  itsMenuBar->insertItem("&Plot", itsPlotMenu);
-  itsMenuBar->insertSeparator();
-  itsMenuBar->insertItem("&Help", itsHelpMenu);
+  buildMenuBar();
   // Menu constructed
 
 
-  itsStatusBar   = new QStatusBar(this);
-  itsProgressBar = new QProgressBar(itsStatusBar);
-  itsXPosLabel   = new QLabel(itsStatusBar);
-  itsYPosLabel   = new QLabel(itsStatusBar);
-  itsTimeLabel   = new QLabel(itsStatusBar);
+  buildStatusBar();
 
-  itsStatusBar->addWidget(itsXPosLabel, 2, true);
-  itsStatusBar->addWidget(itsYPosLabel, 2, true);
-  itsStatusBar->addWidget(itsTimeLabel, 2, true);
-  itsStatusBar->addWidget(itsProgressBar, 5, true);
+
+  itsInputType     = NoInput;
+  itsInputFilename = "";
   
-  itsStatusBar->show();
-
   itsBusyPlotting = false;
 
   itsNumberOfChannels  = 0;
@@ -123,6 +93,63 @@ UVPMainWindow::UVPMainWindow()
 UVPMainWindow::~UVPMainWindow()
 {
   //  delete itsDataSet;
+}
+
+
+
+
+
+//===============>>>  UVPMainWindow::buildMenuBar  <<<===============
+
+void UVPMainWindow::buildMenuBar()
+{
+  itsFileMenu = new QPopupMenu;
+  itsFileMenu->insertItem("&Open MS", this, SLOT(slot_openMS()));
+  itsFileMenu->insertItem("&Open PVD", this, SLOT(slot_openPVD()));
+  itsFileMenu->insertItem("&Quit", qApp, SLOT(quit()));
+
+  itsPlotMenu = new QPopupMenu;
+  itsMenuPlotImageID = itsPlotMenu->insertItem("&Image", this,
+                                               SLOT(slot_plotTimeFrequencyImage()));
+  itsMenuPlotStopID  = itsPlotMenu->insertItem("&Stop", this,
+                                               SLOT(slot_quitPlotting()));
+
+  itsPlotMenu->setItemEnabled(itsMenuPlotImageID, true);
+  itsPlotMenu->setItemEnabled(itsMenuPlotStopID, false);
+
+
+  itsHelpMenu = new QPopupMenu;
+  itsHelpMenu->insertItem("&About uvplot", this, SLOT(slot_about_uvplot()));
+
+  itsMenuBar = new QMenuBar(this);
+  itsMenuBar->insertItem("&File", itsFileMenu);
+  itsMenuBar->insertItem("&Plot", itsPlotMenu);
+  itsMenuBar->insertSeparator();
+  itsMenuBar->insertItem("&Help", itsHelpMenu);
+}
+
+
+
+
+
+
+
+//===============>>>  UVPMainWindow::buildStatusBar  <<<===============
+
+void UVPMainWindow::buildStatusBar()
+{
+  itsStatusBar   = new QStatusBar(this);
+  itsProgressBar = new QProgressBar(itsStatusBar);
+  itsXPosLabel   = new QLabel(itsStatusBar);
+  itsYPosLabel   = new QLabel(itsStatusBar);
+  itsTimeLabel   = new QLabel(itsStatusBar);
+
+  itsStatusBar->addWidget(itsXPosLabel, 2, true);
+  itsStatusBar->addWidget(itsYPosLabel, 2, true);
+  itsStatusBar->addWidget(itsTimeLabel, 2, true);
+  itsStatusBar->addWidget(itsProgressBar, 5, true);
+  
+  itsStatusBar->show();
 }
 
 
@@ -321,7 +348,8 @@ void UVPMainWindow::slot_openMS()
                                                        "", 
                                                        "Open Measurement Set");
   if(!filename.isNull()) {
-    
+    itsInputFilename = filename.latin1();
+    itsInputType     = MS;
     slot_readMeasurementSet(filename.latin1());
   }
 }
@@ -339,7 +367,8 @@ void UVPMainWindow::slot_openPVD()
                                                   "", 
                                                   "Open Patch Visibility Database");
   if(!filename.isNull()) {
-    
+    itsInputFilename = filename.latin1();
+    itsInputType     = PVD;
     slot_readPVD(filename.latin1());
   }
 }
@@ -352,6 +381,9 @@ void UVPMainWindow::slot_openPVD()
 void UVPMainWindow::slot_plotTimeFrequencyImage()
 {
   if(!itsBusyPlotting) {
+    itsInputFilename = "*** DMI ***";
+    itsInputType     = DMI;
+
     itsPlotMenu->setItemEnabled(itsMenuPlotImageID, false);
     itsPlotMenu->setItemEnabled(itsMenuPlotStopID, true);
     
@@ -401,6 +433,9 @@ void UVPMainWindow::slot_plotTimeFrequencyImage()
 
     itsPlotMenu->setItemEnabled(itsMenuPlotImageID, true);
     itsPlotMenu->setItemEnabled(itsMenuPlotStopID, false);
+
+    itsInputFilename = "";
+    itsInputType     = NoInput;
   }
 
 }
