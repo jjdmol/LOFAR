@@ -1,12 +1,32 @@
 #!/usr/bin/ksh
 #
-# genLCSbase
+# genLCSbase : generates a mapfile and a functionfile for genLCScode.
 #
-# Generates a mapfile and a functionfile for genLCScode.
+# Copyright (C) 2003
+# ASTRON (Netherlands Foundation for Research in Astronomy)
+# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#
+#
+# Syntax: genLCSbase modulename headerfiles
+#
 # The generated files must be manually adjusted before they
 # can be used by genLCScode.
 #
-# Syntax: genLCSbase modulename headerfiles
+# $:Id $
 #
 VERSION="v1.0"
 
@@ -15,7 +35,7 @@ VERSION="v1.0"
 # InitTmpfile
 #
 # Writes an informational header to the tempfile in case the file was not
-# removed by this script.
+# removed by this script and to simplify debugging.
 #
 InitTmpfile()
 {
@@ -27,7 +47,7 @@ InitTmpfile()
 #
 # InitSrcfile
 #
-# Adds an informational header to the C++ source- of headerfile.
+# Adds an informational header to the result files
 #
 InitSrcfile()
 {
@@ -43,7 +63,7 @@ InitSrcfile()
 #
 # ConvertToMapfile filename
 #
-# Removes all (partial) comment lines from the file
+# Scans the header (and C++?) files to substract the class definitions
 #
 ConvertToMapfile()
 {
@@ -57,23 +77,28 @@ ConvertToMapfile()
 	# process the remaining lines
 	awk -v TMPFILE="$TMPFILE" ' 	
 	BEGIN { 
+		# By counting the '{' and '}' we know how deep we are nested. We are
+		# only interrested in level 1 information (declarations in a class).
 		NestedLevel=0
-		BasicType["short"]	= "SMALLINT"
-		BasicType["ushort"] = "SMALLINT"
-		BasicType["int"]	= "INTEGER"
-		BasicType["uint"]	= "INTEGER"
-		BasicType["long"]	= "BIGINT"
-		BasicType["ulong"]	= "BIGINT"
-		BasicType["double"]	= "DOUBLE PRECISION"
-		BasicType["float"]	= "FLOAT"
-		BasicType["bool"]	= "SMALLINT"
-		BasicType["date"]	= "TIMESTAMP"
-		BasicType["string"]	= "TEXT"
-		BasicType["char"]	= "TEXT"
-		BasicType["blob"]	= "TEXT"
-		BasicType["uchar"]	= "TEXT"
-		BasicType["char"]	= "TEXT"
-		BasicType["void"]	= "???"
+
+		# This table is used for transforming C types to Postgres types.
+		BasicType["short"]				= "SMALLINT"
+		BasicType["ushort"] 			= "SMALLINT"
+		BasicType["int"]				= "INTEGER"
+		BasicType["uint"]				= "INTEGER"
+		BasicType["long"]				= "BIGINT"
+		BasicType["ulong"]				= "BIGINT"
+		BasicType["double"]				= "DOUBLE PRECISION"
+		BasicType["float"]				= "FLOAT"
+		BasicType["bool"]				= "SMALLINT"
+		BasicType["TIMESTAMP_STRUCT"]	= "TIMESTAMP"
+		BasicType["string"]				= "TEXT"
+		BasicType["blob"]				= "TEXT"
+		BasicType["char["]				= "VARCHAR"
+		BasicType["uchar["]				= "VARCHAR"
+		BasicType["char"]				= "VARCHAR"
+		BasicType["uchar"]				= "VARCHAR"
+		BasicType["void"]				= "@@@???"
 	}
 	{ 
 		# skip empty and comment lines
@@ -97,14 +122,16 @@ ConvertToMapfile()
 			if (index($0,";")) {
 				next
 			}
+
+			# It looks like a real class
 			ClassName=$2
 			NestedBrackets=0
 			printf "\n"
 			printf "Class		%s\n",	ClassName
 			printf "Table		%s\n",	ClassName
 			printf "#\n"
-			printf "#TYPE           MEMBER          COLUMN          TYPE\n"
-			printf "#--------------------------------------------------------\n"
+			printf "#TYPE              MEMBER             COLUMN             TYPE\n"
+			printf "#--------------------------------------------------------------------\n"
 			next
 		}
 
@@ -133,21 +160,39 @@ ConvertToMapfile()
 			next
 		}
 
-		# A brace on the line? ignore this line its not a variable.
+		# A brace on the line? ignore this line its prob. not a variable.
 		if (index($0,"{") || index($0,"}")) {
 			next
 		}
 
-		# seems we have found a variable declaration
-		# change the 'unsigned' word into 'u'xxxx
+		# Seems we have found a variable declaration
+		# Change the 'unsigned' word into 'u'xxxx
 		if ($1 == "unsigned") {
 			MemberType="u"$2
 			MemberName=$3
+			ArgNr=3
 		}
-		else {
+		else {							# no keyword 'unsigned'
 			MemberType=$1
 			MemberName=$2
+			ArgNr=2
 		}
+		if (MemberName == "long") {		# (unsigned) long long ?
+			MemberType=MemberType MemberName
+			MemberName=$(++ArgNr)
+		}
+
+		# When the member is a pointer or a reference append
+		# a * to the MemberType and remove to original & or *
+		# NOTE: it is trivial whether is was a * or a & we dont
+		# handle both types in this version
+
+		# * or & attached to membername? move it to membertype
+		if ((MemberName == "&") || (MemberName == "*")) {
+			MemberType=MemberType"*"
+			MemberName=$(++ArgNr)
+		}
+		gsub("&","*",MemberType)		# treat & as *
 		gsub(";","",MemberName)			# strip off line termination
 
 		# move pointer and references to the MemberType
@@ -157,19 +202,34 @@ ConvertToMapfile()
 			MemberType=MemberType"*"
 		}
 
+		# When the variable is an array, find out its length
+		ArrSize=1
+		ArrOpen=index($0,"[")
+		ArrClose=index($0,"]")
+		if (ArrOpen && ArrClose) {
+			ArrSize=0+substr($0,ArrOpen+1, ArrClose-ArrOpen)
+			pos=index(MemberName,"[")		# attached to membername?
+			if (pos) {
+				MemberName=substr(MemberName,1,pos-1)
+			}
+		}
+
 		# Construct the database equivalents
 		PlainMemberType=MemberType
 		gsub("*","",PlainMemberType)		# MemberType without '*'
 		if (PlainMemberType in BasicType) {
 			ColumnType=BasicType[PlainMemberType]
 			ColumnName=toupper(MemberName)
+			if (ColumnType == "VARCHAR") {
+				ColumnType=ColumnType "(" ArrSize ")"
+			}
 		}
 		else {
-			ColumnType=PlainMemberType
+			ColumnType="@@@"PlainMemberType
 			ColumnName="Class"
 		}
 
-		printf "%-15s %-15s %-15s %s\n", MemberType, MemberName, ColumnName, ColumnType
+		printf "%-18s %-18s %-18s %s\n", MemberType, MemberName, ColumnName, ColumnType
 
 		printf "%s\n", ClassName >>TMPFILE
 	}'
@@ -208,14 +268,12 @@ TMPFILE=map.genLCSbase.$$
 MAPFILE=${MODULE}.map.proto
 FUNFILE=${MODULE}.fun.proto
 
-# convert the human readable format of the mapfile into something
-# more convenient for shell-programming
+# Write headers to the result files.
 InitTmpfile		> ${TMPFILE}
 InitSrcfile  	> ${MAPFILE}
 InitSrcfile  	> ${FUNFILE}
 
-# Scan the functionfile to determine what code should be generated
-#
+# Scan the headerfiles and substract the class hierarchy
 for file in ${HEADERFILES}
 do
 	ConvertToMapfile $file >>${MAPFILE}
