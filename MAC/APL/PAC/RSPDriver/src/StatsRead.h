@@ -36,7 +36,7 @@ namespace RSP
       /**
        * Constructors for a StatsRead object.
        */
-      StatsRead(GCFPortInterface& board_port, int board_id, uint8 type);
+      StatsRead(GCFPortInterface& board_port, int board_id, uint8 type, uint8 nfragments);
 	  
       /* Destructor for StatsRead. */
       virtual ~StatsRead();
@@ -57,7 +57,8 @@ namespace RSP
       virtual GCFEvent::TResult handleack(GCFEvent& event, GCFPortInterface& port);
 
     private:
-      uint8 m_type; // statistics type
+      uint8 m_type;       // statistics type
+      uint8 m_nfragments; // register is too large for ethernet packet, use this many fragments
   };
 };
      

@@ -40,7 +40,7 @@ namespace RSP_Test
        * up connection establishment information using the GTMNameService and
        * GTMTopologyService classes.
        */
-      EPAStub(string name, int boardnr);
+      EPAStub(string name);
       virtual ~EPAStub();
 
       // state methods
@@ -62,8 +62,9 @@ namespace RSP_Test
       /**
        * Request handlers.
        */
-      GCFEvent::TResult fwversion(GCFEvent& event, GCFPortInterface& port);
-      GCFEvent::TResult rspstatus(GCFEvent& event, GCFPortInterface& port);
+      GCFEvent::TResult read_rsr_status(EPAReadEvent& event, GCFPortInterface& port);
+      GCFEvent::TResult read_rsr_version(EPAReadEvent& event, GCFPortInterface& port);
+      GCFEvent::TResult read_stats(EPAReadEvent& event, GCFPortInterface& port);
       /*@}*/
 
       /**

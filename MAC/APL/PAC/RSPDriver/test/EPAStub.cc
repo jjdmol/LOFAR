@@ -47,17 +47,22 @@ using namespace RSP_Test;
 using namespace std;
 using namespace LOFAR;
 
-EPAStub::EPAStub(string name, int boardnr)
-    : GCFTask((State)&EPAStub::initial, name), Test(name)
+#define ETHERTYPE_EPA 0x10FA
+
+EPAStub::EPAStub(string name)
+  : GCFTask((State)&EPAStub::initial, name), Test(name)
 {
   registerProtocol(EPA_PROTOCOL, EPA_PROTOCOL_signalnames);
 
   char addrstr[64];
   snprintf(addrstr, 64, "RSPDriver.MAC_ADDR_LCU");
+
+  LOG_INFO("EPAStub constructor");
   
   m_client.init(*this, "client", GCFPortInterface::SAP, EPA_PROTOCOL, true /*raw*/);
   m_client.setAddr(GET_CONFIG_STRING("RSPDriver.IF_NAME"),
 		   GET_CONFIG_STRING(addrstr));
+  m_client.setEtherType(ETHERTYPE_EPA);
 }
 
 EPAStub::~EPAStub()
@@ -140,9 +145,11 @@ GCFEvent::TResult EPAStub::connected(GCFEvent& event, GCFPortInterface& port)
 	  {
 	    case MEPHeader::RSR_STATUS:
 	      LOG_INFO("READ RSR_STATUS");
+	      status = read_rsr_status(read, port);
 	      break;
 	    case MEPHeader::RSR_VERSION:
 	      LOG_INFO("READ RSR_VERSION");
+	      status = read_rsr_version(read, port);
 	      break;
 	  }
 	  break;
@@ -208,26 +215,10 @@ GCFEvent::TResult EPAStub::connected(GCFEvent& event, GCFPortInterface& port)
 	  break;
 
 	case MEPHeader::BST:
-	  switch (regid)
-	  {
-	    case MEPHeader::BST_MEAN:
-	      LOG_INFO("READ BST_MEAN");
-	      break;
-	    case MEPHeader::BST_POWER:
-	      LOG_INFO("READ BST_POWER");
-	      break;
-	  }
-	  break;
-
 	case MEPHeader::SST:
-	  switch (regid)
 	  {
-	    case MEPHeader::SST_MEAN:
-	      LOG_INFO("READ SST_MEAN");
-	      break;
-	    case MEPHeader::SST_POWER:
-	      LOG_INFO("READ SST_POWER");
-	      break;
+	    LOG_INFO("READ STATS");
+	    status = read_stats(read, port);
 	  }
 	  break;
 
@@ -276,70 +267,41 @@ GCFEvent::TResult EPAStub::connected(GCFEvent& event, GCFPortInterface& port)
     }
     break;
 
+    //
     // All register write requests arrive as specific signals
+    // and are all handled in the same way, simply acknowledge
+    // with success status.
+    //
     case EPA_RSR_STATUS:
-      LOG_INFO("WRITE RSR_STATUS");
-      break;
-      
     case EPA_RSR_VERSION:
-      LOG_INFO("WRITE RSR_VERSIOn");
-      break;
-      
     case EPA_TST_SELFTEST:
-      LOG_INFO("WRITE TST_SELFTEST");
-      break;
-      
     case EPA_CFG_RESET:
-      LOG_INFO("WRITE CFG_RESET");
-      break;
-      
     case EPA_CFG_REPROGRAM:
-      LOG_INFO("WRITE CFG_REPROGRAM");
-      break;
-      
     case EPA_WG_SETTINGS:
-      LOG_INFO("WRITE WG_SETTINGS");
-      break;
-      
     case EPA_WG_WAVE:
-      LOG_INFO("WRITE WG_WAVE");
-      break;
-      
     case EPA_SS_SELECT:
-      LOG_INFO("WRITE SS_SELECT");
-      break;
-      
     case EPA_BF_COEFS:
-      LOG_INFO("WRITE BF_COEFS");
-      break;
-      
     case EPA_STATS:
-      LOG_INFO("WRITE STATS");
-      break;
-      
     case EPA_RCU_SETTINGS:
-      LOG_INFO("WRITE RCU_SETTINGS");
-      break;
-
     case EPA_CRR_SOFTRESET:
-      LOG_INFO("WRITE CRR_SOFTRESET");
-      break;
-      
     case EPA_CRR_SOFTPPS:
-      LOG_INFO("WRITE CRR_SOFTPPS");
-      break;
-      
     case EPA_CRB_SOFTRESET:
-      LOG_INFO("WRITE CRB_SOFTRESET");
-      break;
-      
     case EPA_CRB_SOFTPPS:
-      LOG_INFO("WRITE CRB_SOFTPPS");
-      break;
-      
     case EPA_CDO_SETTINGS:
-      LOG_INFO("WRITE CDO_SETTINGS");
-      break;
+    {
+      EPAWriteEvent write(event);
+      LOG_INFO(formatString("Received event (pid=0x%02x, regid=0x%02x)",
+			    write.hdr.m_fields.addr.pid,
+			    write.hdr.m_fields.addr.regid));
+      EPAWriteackEvent writeack;
+      
+      writeack.hdr = write.hdr;
+      writeack.hdr.m_fields.type  = MEPHeader::WRITEACK;
+      writeack.hdr.m_fields.error = 0;
+
+      port.send(writeack);
+    }
+    break;
       
     case F_DISCONNECTED:
     {
@@ -384,42 +346,54 @@ GCFEvent::TResult EPAStub::final(GCFEvent& event, GCFPortInterface& /*port*/)
   return status;
 }
 
-GCFEvent::TResult EPAStub::fwversion(GCFEvent& /*event*/, GCFPortInterface& port)
+GCFEvent::TResult EPAStub::read_rsr_status(EPAReadEvent& event, GCFPortInterface& port)
 {
-#if 0
-  EPARsrVersionEvent version;
+  EPARsrStatusEvent rsr_status;
 
-  // set the correct header info
-  version.hdr.set(MEPHeader::RSR_VERSION_HDR,
-		  
-  MEP_FWVERSION(version.hdr, MEPHeader::READRES);
-  version.rsp_version = (1 << 4) & 2; // version 1.2
-  version.bp_version = (3 << 4) & 4;  // version 2.4
-  
-  for (int i = 0; i < EPA_Protocol::N_AP; i++)
-  {
-    version.ap_version[i] = (5 << 4) & 6; // version 5.6
-  }
-  
-  port.send(version);
+  rsr_status.hdr = event.hdr;
+  rsr_status.hdr.m_fields.type  = MEPHeader::READACK;
+  rsr_status.hdr.m_fields.error = 0;
+
+  memset(&rsr_status.board, 0, sizeof(EPA_Protocol::BoardStatus));
+
+  port.send(rsr_status);
 
   return GCFEvent::HANDLED;
-#endif
 }
 
-GCFEvent::TResult EPAStub::rspstatus(GCFEvent& /*event*/, GCFPortInterface& port)
+GCFEvent::TResult EPAStub::read_rsr_version(EPAReadEvent& event, GCFPortInterface& port)
 {
-#if 0
-  EPARspstatusEvent rspstatus;
+  EPARsrVersionEvent rsr_version;
 
-  // set the correct header info
-  MEP_RSPSTATUS(rspstatus.hdr, MEPHeader::READRES);
-  memset(&rspstatus.board, 0, MEPHeader::RSPSTATUS_SIZE);
+  rsr_version.hdr = event.hdr;
+  rsr_version.hdr.m_fields.type  = MEPHeader::READACK;
+  rsr_version.hdr.m_fields.error = 0;
 
-  port.send(rspstatus);
+  rsr_version.rsp_version = 0x12;
+  rsr_version.bp_version  = 0x34;
+  rsr_version.ap_version  = 0x56;
+
+  port.send(rsr_version);
 
   return GCFEvent::HANDLED;
-#endif
+}
+
+GCFEvent::TResult EPAStub::read_stats(EPAReadEvent& event, GCFPortInterface& port)
+{
+  EPAStatsEvent stats;
+
+  stats.hdr = event.hdr;
+  stats.hdr.m_fields.type  = MEPHeader::READACK;
+  stats.hdr.m_fields.error = 0;
+
+  for (uint32 i = 0; i < stats.hdr.m_fields.size / sizeof(uint32); i++)
+  {
+    stats.stat[i] = i + (stats.hdr.m_fields.offset / sizeof(uint32));
+  }
+
+  port.send(stats);
+
+  return GCFEvent::HANDLED;
 }
 
 void EPAStub::run()
@@ -430,8 +404,6 @@ void EPAStub::run()
 
 int main(int argc, char** argv)
 {
-  int boardnr = 0;
-  
   GCFTask::init(argc, argv);
 
   try
@@ -445,6 +417,7 @@ int main(int argc, char** argv)
     exit(EXIT_FAILURE);
   }
 
+#if 0
   for (int arg = 0; arg < argc; arg++)
   {
     if (!strcmp(argv[arg], "-boardnr"))
@@ -452,11 +425,12 @@ int main(int argc, char** argv)
       if (arg++ < argc) boardnr = atoi(argv[arg]);
     }
   }
+#endif
 
   LOG_INFO(formatString("Program %s has started", argv[0]));
 
   Suite s("EPA Firmware Stub", &cerr);
-  s.addTest(new EPAStub("EPAStub", boardnr));
+  s.addTest(new EPAStub("EPAStub"));
   s.run();
   long nFail = s.report();
   s.free();

@@ -187,15 +187,15 @@ namespace EPA_Protocol
       
       static const uint16 SS_SELECT_SIZE     = N_BEAMLETS * N_POL * sizeof(uint16);
 
-      static const uint16 BF_XROUT_SIZE      = N_BEAMLETS * N_PHASEPOL * sizeof(uint16);
-      static const uint16 BF_XIOUT_SIZE      = N_BEAMLETS * N_PHASEPOL * sizeof(uint16);
-      static const uint16 BF_YROUT_SIZE      = N_BEAMLETS * N_PHASEPOL * sizeof(uint16);
-      static const uint16 BF_YIOUT_SIZE      = N_BEAMLETS * N_PHASEPOL * sizeof(uint16);
+      static const uint16 BF_XROUT_SIZE      = N_BEAMLETS * N_PHASEPOL * sizeof(int16);
+      static const uint16 BF_XIOUT_SIZE      = N_BEAMLETS * N_PHASEPOL * sizeof(int16);
+      static const uint16 BF_YROUT_SIZE      = N_BEAMLETS * N_PHASEPOL * sizeof(int16);
+      static const uint16 BF_YIOUT_SIZE      = N_BEAMLETS * N_PHASEPOL * sizeof(int16);
       
-      static const uint16 BST_MEAN_SIZE      = N_BEAMLETS * N_PHASEPOL * sizeof(uint32);
+      static const uint16 BST_MEAN_SIZE      = N_BEAMLETS * N_PHASEPOL * sizeof(int32);
       static const uint16 BST_POWER_SIZE     = N_BEAMLETS * N_PHASEPOL * sizeof(uint32);
 
-      static const uint16 SST_MEAN_SIZE      = N_SUBBANDS * N_POL * N_PHASE * sizeof(uint32);
+      static const uint16 SST_MEAN_SIZE      = N_SUBBANDS * N_POL * N_PHASE * sizeof(int32);
       static const uint16 SST_POWER_SIZE     = N_SUBBANDS * N_POL * N_PHASE * sizeof(uint32);
       
       static const uint16 RCU_SETTINGS_SIZE  = 2;

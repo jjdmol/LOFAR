@@ -29,18 +29,21 @@ namespace EPA_Protocol
    * These constants are all derived from the leading
    * constants in MEPHeader.h.
    */
-  static const int N_AP          = 4;    // number of AP's per board
-  static const int N_COEF        = MEPHeader::BF_XROUT_SIZE / sizeof(uint16);
-  static const int N_SAMPLES     = MEPHeader::WG_XWAVE_SIZE / sizeof(uint16);
-  static const int N_STATS       = MEPHeader::FRAGMENT_SIZE / sizeof(uint16);
+  static const int N_AP            = 4;    // number of AP's per board
+  static const int N_COEF          = FRAGMENT_SIZE / sizeof(int16);
+  static const int BF_N_FRAGMENTS  = MEPHeader::BF_XROUT_SIZE / MEPHeader::FRAGMENT_SIZE;
+  static const int N_SAMPLES       = MEPHeader::WG_XWAVE_SIZE / sizeof(uint16);
+  static const int N_STATS         = MEPHeader::FRAGMENT_SIZE / sizeof(uint32);
+  static const int BST_N_FRAGMENTS = MEPHeader::BST_MEAN_SIZE / MEPHeader::FRAGMENT_SIZE;
+  static const int SST_N_FRAGMENTS = MEPHeader::SST_MEAN_SIZE / MEPHeader::FRAGMENT_SIZE;
   /*@}*/
 
   typedef struct RSPStatus
   {
       uint8  voltage_15; // measured voltage on 1.5V circuit
       uint8  voltage_33; // measured voltage on 3.3V circuit
-
-      uint16 ffi;
+      uint8  ffi0;
+      uint8  ffi1;
   };
 
   typedef struct FPGAStatus
@@ -56,7 +59,8 @@ namespace EPA_Protocol
       uint8  ap4_status; // antenna processor 4 status
       uint8  ap4_temp;   // antenna processor 4 temperature
 
-      uint16 ffi;
+      uint8  ffi0;
+      uint8  ffi1;
   };
 
   typedef struct ETHStatus
@@ -72,10 +76,10 @@ namespace EPA_Protocol
   typedef struct MEPStatus
   {
       uint16 read_seqnr;  // sequence number of last received read message
-      uint8  read_error;  // error status of last received read message
+      uint8  read_error;     // error status of last received read message
       uint8  ffi0;
       uint16 write_seqnr; // sequence number of last received write message
-      uint8  write_error; // error status of last received write message
+      uint8  write_error;    // error status of last received write message
       uint8  ffi1;
   };
   
@@ -111,7 +115,6 @@ namespace EPA_Protocol
       FPGAStatus      fpga;
       ETHStatus       eth;
       MEPStatus       mep;
-      MEPStatus       write;
       SYNCStatus      sync;
       BoardRCUStatus  ap1_rcu;
       BoardRCUStatus  ap2_rcu;
@@ -490,7 +493,7 @@ event = {
   };
   param = {
     name = "stat";
-    type = "int16[EPA_Protocol::N_STATS]";
+    type = "uint32[EPA_Protocol::N_STATS]";
   };
 };
 

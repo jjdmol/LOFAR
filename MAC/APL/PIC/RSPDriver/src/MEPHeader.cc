@@ -108,14 +108,14 @@ void MEPHeader::set(uint8  type,
 void MEPHeader::set(MEPHeader::FieldsType hdrtemplate,
 		    uint8  dstid,
 		    uint8  type,
-		    uint16 offset,
-		    uint16 size)
+		    uint16 size,
+		    uint16 offset)
 {
   m_fields = hdrtemplate;
 
   if (MEPHeader::TYPE_UNSET != type) m_fields.type = type;
   m_fields.addr.dstid = dstid;
   m_fields.offset = offset;
-  if (m_fields.size) m_fields.size = size;
+  if (size) m_fields.size = size;
 }
 

@@ -208,13 +208,17 @@ void RSPDriver::addAllSyncActions()
     if (1 == GET_CONFIG("RSPDriver.READ_ST", i))
     {
       StatsRead* statsread = 0;
-      statsread = new StatsRead(m_board[boardid], boardid, Statistics::SUBBAND_MEAN);
+      statsread = new StatsRead(m_board[boardid], boardid,
+				Statistics::SUBBAND_MEAN, EPA_Protocol::SST_N_FRAGMENTS);
       m_scheduler.addSyncAction(statsread);
-      statsread = new StatsRead(m_board[boardid], boardid, Statistics::SUBBAND_POWER);
+      statsread = new StatsRead(m_board[boardid], boardid,
+				Statistics::SUBBAND_POWER, EPA_Protocol::SST_N_FRAGMENTS);
       m_scheduler.addSyncAction(statsread);
-      statsread = new StatsRead(m_board[boardid], boardid, Statistics::BEAMLET_MEAN);
+      statsread = new StatsRead(m_board[boardid], boardid,
+				Statistics::BEAMLET_MEAN, EPA_Protocol::BST_N_FRAGMENTS);
       m_scheduler.addSyncAction(statsread);
-      statsread = new StatsRead(m_board[boardid], boardid, Statistics::BEAMLET_POWER);
+      statsread = new StatsRead(m_board[boardid], boardid,
+				Statistics::BEAMLET_POWER, EPA_Protocol::BST_N_FRAGMENTS);
       m_scheduler.addSyncAction(statsread);
     }
 

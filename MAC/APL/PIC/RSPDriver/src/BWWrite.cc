@@ -44,7 +44,7 @@ using namespace EPA_Protocol;
 using namespace blitz;
 
 BWWrite::BWWrite(GCFPortInterface& board_port, int board_id, int regid)
-  : SyncAction(board_port, board_id, GET_CONFIG("RS.N_BLPS", i)),
+  : SyncAction(board_port, board_id, GET_CONFIG("RS.N_BLPS", i) * BF_N_FRAGMENTS),
     m_regid(regid)
 {
 }
@@ -55,7 +55,10 @@ BWWrite::~BWWrite()
 
 void BWWrite::sendrequest()
 {
-  uint8 global_blp = (getBoardId() * GET_CONFIG("RS.N_BLPS", i)) + getCurrentBLP();
+  uint8 global_blp = (getBoardId() * GET_CONFIG("RS.N_BLPS", i)) + (getCurrentBLP() / BF_N_FRAGMENTS);
+
+  // coef int16 offset - divide by N_PHASE to get offset in complex<int16>
+  uint16 offset = ((getCurrentBLP() % BF_N_FRAGMENTS) * MEPHeader::FRAGMENT_SIZE) / sizeof(int16);
 
   if (m_regid < MEPHeader::BF_XROUT || m_regid > MEPHeader::BF_YIOUT)
   {
@@ -74,25 +77,33 @@ void BWWrite::sendrequest()
   switch (m_regid)
   {
     case MEPHeader::BF_XROUT:
-      bfcoefs.hdr.set(MEPHeader::BF_XROUT_HDR, getCurrentBLP());
+      bfcoefs.hdr.set(MEPHeader::BF_XROUT_HDR, getCurrentBLP() / BF_N_FRAGMENTS);
       break;
     case MEPHeader::BF_XIOUT:
-      bfcoefs.hdr.set(MEPHeader::BF_XIOUT_HDR, getCurrentBLP());
+      bfcoefs.hdr.set(MEPHeader::BF_XIOUT_HDR, getCurrentBLP() / BF_N_FRAGMENTS);
       break;
     case MEPHeader::BF_YROUT:
-      bfcoefs.hdr.set(MEPHeader::BF_YROUT_HDR, getCurrentBLP());
+      bfcoefs.hdr.set(MEPHeader::BF_YROUT_HDR, getCurrentBLP() / BF_N_FRAGMENTS);
       break;
     case MEPHeader::BF_YIOUT:
-      bfcoefs.hdr.set(MEPHeader::BF_YIOUT_HDR, getCurrentBLP());
+      bfcoefs.hdr.set(MEPHeader::BF_YIOUT_HDR, getCurrentBLP() / BF_N_FRAGMENTS);
       break;
   }
   
   // copy weights from the cache to the message
-  Array<complex<int16>, 2> weights((complex<int16>*)&bfcoefs.coef,
-				   shape(MEPHeader::N_BEAMLETS, MEPHeader::N_POL),
+  Array<complex<int16>, 2> weights((complex<int16>*)&bfcoefs.coef + offset,
+				   shape(MEPHeader::FRAGMENT_SIZE / sizeof(int16) / MEPHeader::N_POL, MEPHeader::N_POL),
 				   neverDeleteData);
 
-  weights = Cache::getInstance().getBack().getBeamletWeights()()(0, global_blp, Range::all(), Range::all());
+  LOG_FATAL_STR("offset=" << offset << "; global_blp=" << (int)global_blp << "; blp=" << getCurrentBLP() / BF_N_FRAGMENTS);
+  LOG_FATAL_STR("weights shape=" << weights.shape());
+  LOG_FATAL_STR("weights range=" << Range(offset / MEPHeader::N_PHASE,
+					  (MEPHeader::FRAGMENT_SIZE / sizeof(int16)) / MEPHeader::N_PHASE));
+
+  weights = Cache::getInstance().getBack().getBeamletWeights()()(0, global_blp,
+								 Range(offset / MEPHeader::N_PHASE,
+								       (MEPHeader::FRAGMENT_SIZE / sizeof(int16)) / MEPHeader::N_PHASE),
+								 Range::all());
 
   switch (m_regid)
   {
@@ -130,32 +141,19 @@ void BWWrite::sendrequest()
 
 void BWWrite::sendrequest_status()
 {
-  LOG_DEBUG("sendrequest_status");
-
-#if WRITE_ACK_VERREAD
-  // send version read request
-  EPARsrVersionEvent versionread;
-  versionread.hdr.m_fields = MEPHeader::RSR_VERSION_HDR;
-
-  getBoardPort().send(versionread);
-#else
-  // send read status request to check status of the write
-  EPARsrStatusEvent rspstatus;
-  rspstatus.hdr.m_fields = MEPHeader::RSR_VERSION_HDR;
-
-  getBoardPort().send(rspstatus);
-#endif
+  // intentionally left empty
 }
 
 GCFEvent::TResult BWWrite::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
 {
-#if WRITE_ACK_VERREAD
-  EPARsrVersionEvent ack(event);
-#else
-  EPARsrStatusEvent rspstatus(event);
-#endif
-
   LOG_DEBUG("handleack");
+  
+  EPAWriteackEvent ack(event);
+  
+  if (ack.hdr.m_fields.error)
+  {
+    LOG_ERROR_STR("BWWrite::handleack: error " << ack.hdr.m_fields.error);
+  }
 
   return GCFEvent::HANDLED;
 }
