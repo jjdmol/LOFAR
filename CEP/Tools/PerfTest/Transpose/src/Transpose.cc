@@ -22,6 +22,11 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.5  2002/05/23 15:38:57  schaaf
+//
+//  %[BugId: 11]%
+//  Add correlator steps
+//
 //  Revision 1.4  2002/05/16 15:08:00  schaaf
 //  overall update; removed command line arguments
 //
@@ -53,6 +58,7 @@
 #include "Transpose/WH_Transpose.h"
 #include "Transpose/WH_Correlate.h"
 #include "BaseSim/WH_Empty.h"
+#include "BaseSim/ShMem/TH_ShMem.h"
 #include TRANSPORTERINCLUDE
 
 #ifdef HAVE_CORBA
@@ -87,18 +93,16 @@ void Transpose::define(const ParamBlock& params)
   AssertStr (BS_Corba::init(), "Could not initialise CORBA environment");
 #endif
   
+#ifdef HAVE_MPI
+  // TH_ShMem only works in combination with MPI
+  // initialize TH_ShMem
+  TH_ShMem::init(0, NULL);
+#endif
+
+  params.show (cout);
 
   char name[20];  // name used during Step/WH creation
-  int    argc = 0;
-  char** argv = NULL;
   
-#ifdef HAVE_CORBA
-  TH_Corba corbaProto;
-#endif
-#ifdef HAVE_MPI
-  TH_MPI mpiProto;
-#endif
-
   int rank = TRANSPORTER::getCurrentRank();
   unsigned int size = TRANSPORTER::getNumberOfNodes();
 
@@ -116,9 +120,9 @@ void Transpose::define(const ParamBlock& params)
   
   TRACER2("Default settings");
   simul.setCurAppl(0);
-  itsSourceSteps = 2;
-  itsDestSteps   = 2;
-  
+  itsSourceSteps = params.getInt("stations",1); // nr of stations (?)
+  itsDestSteps   = params.getInt("correlators",1);
+  cout << "stations = " << itsSourceSteps << "  correlators = " << itsDestSteps << endl;
   
   // Create the Workholders and Steps
   Sworkholders = new (WH_FillTFMatrix*)[itsSourceSteps];
@@ -133,16 +137,17 @@ void Transpose::define(const ParamBlock& params)
   // should be made later...
 
   // Create the Source Steps
-  int timeDim = 1;
-  int freqDim = 4096;
+  int timeDim = params.getInt("times",1);
+  int freqDim = params.getInt("freqbandsize",4096);
   for (int iStep = 0; iStep < itsSourceSteps; iStep++) {
     
     // Create the Source Step
     sprintf(name, "Filler[%d]", iStep);
     Sworkholders[iStep] = new WH_FillTFMatrix(name,
 					      iStep, // source ID
-					      1,     // should be 0 
-					      itsDestSteps,
+					      1,     // in; should be 0
+					             //     ...see %[BugId: 14]% 
+					      itsDestSteps, //nout
 					      timeDim,
 					      freqDim);
     
@@ -209,25 +214,24 @@ void Transpose::define(const ParamBlock& params)
     for (int ch = 0; ch < itsSourceSteps; ch++) {
       // Set up the connections
       // Correlator Style
+      TRACER2("Transpose; try to connect " << step << "   " << ch);
 #ifdef HAVE_CORBA
-      Dsteps[step]->connect(Ssteps[ch],ch,step,1,corbaProto);
+      Dsteps[step]->connect(Ssteps[ch],ch,step,1,TH_Corba::proto);
+#elif HAVE_MPI
+      Dsteps[step]->connect(Ssteps[ch],ch,step,1,TH_MPI::proto);
 #else
-#ifdef HAVE_MPI
-      TRACER2("Transpose; try to connect " << step << "   " << ch);
-      Dsteps[step]->connect(Ssteps[ch],ch,step,1,mpiProto);
-#else
-      TRACER2("Transpose; try to connect " << step << "   " << ch);
       Dsteps[step]->connect(Ssteps[ch],ch,step,1);
-#endif
 #endif
     }
   }
+  // simul.optimizeConnectionsWith(TH_ShMem::proto);
 }
 
 void doIt (Simul& simul, const std::string& name, int nsteps) {
 #if 0
   simul.resolveComm();
 #endif
+
   TRACER1("Ready with definition of configuration");
   Profiler::init();
   Step::clearEventCount();
@@ -235,7 +239,7 @@ void doIt (Simul& simul, const std::string& name, int nsteps) {
   TRACER4("Start Processing simul " << name);    
   for (int i=0; i<nsteps; i++) {
 #ifdef HAVE_MPI
-//      TH_MPI::synchroniseAllProcesses();
+     TH_MPI::synchroniseAllProcesses();
 #endif
     if (i==2) Profiler::activate();
     simul.process();
