@@ -68,21 +68,26 @@ void MeqStatExpr::calcResult (const MeqRequest& request)
   MeqMatrix cosdrot = cos(drot.getValue());
   MeqMatrix sindell = sin(dell.getValue());
   MeqMatrix cosdell = cos(dell.getValue());
-  // Precalculate the multiplications and put them in a MeqMatrixTmp.
-  // This has the advantage that the - operation reuses the object.
-  // So use those - operations only when the Tmp objects are not used further.
-  MeqMatrixTmp cdecdr = cosdell * cosdrot;
-  MeqMatrixTmp sdesdr = sindell * sindrot;
-  MeqMatrixTmp cdesdr = cosdell * sindrot;
-  MeqMatrixTmp sdecdr = sindell * cosdrot;
-  MeqMatrix d12 = tocomplex( cdesdr,  sdecdr);
-  MeqMatrix d21 = tocomplex(-cdesdr,  sdecdr);
-  MeqMatrix d22 = tocomplex( cdecdr,  sdesdr);
+  // Multiple dell and drot matrices as:
+  //        cde -sde       cdr isdr
+  //        sde  cde      isdr  cdr
+  // Precalculate the multiplications.
+  // Thereafter multiple the result with the frot matrix
+  //            cosfrot -sinfrot
+  //            sinfrot  cosfrot
+  // This is described in AIPS++ note 185.
+  MeqMatrix cdecdr = cosdell * cosdrot;
+  MeqMatrix sdesdr = sindell * sindrot;
+  MeqMatrix cdesdr = cosdell * sindrot;
+  MeqMatrix sdecdr = sindell * cosdrot;
   MeqMatrix d11 = tocomplex( cdecdr, -sdesdr);
-  MeqMatrix df11 = d11 * cosfrot - d21 * sinfrot;
-  MeqMatrix df12 = d11 * sinfrot + d21 * cosfrot;
-  MeqMatrix df21 = d12 * cosfrot - d22 * sinfrot;
-  MeqMatrix df22 = d12 * sinfrot + d22 * cosfrot;
+  MeqMatrix d12 = tocomplex(-cdesdr,  sdecdr);
+  MeqMatrix d21 = tocomplex( cdesdr,  sdecdr);
+  MeqMatrix d22 = tocomplex( cdecdr,  sdesdr);
+  MeqMatrix df11 = d11 * cosfrot + d12 * sinfrot;
+  MeqMatrix df12 = d12 * cosfrot - d11 * sinfrot;
+  MeqMatrix df21 = d21 * cosfrot + d22 * sinfrot;
+  MeqMatrix df22 = d22 * cosfrot - d21 * sinfrot;
   // Calculate the final result.
   result11.setValue (g1.getValue() * df11);
   result12.setValue (g1.getValue() * df12);
@@ -122,14 +127,14 @@ void MeqStatExpr::calcResult (const MeqRequest& request)
 	  perturbation = dell.getPerturbation(spinx);
 	}
 	if (eval) {
-	  MeqMatrixTmp cdecdr = pcosdell * pcosdrot;
-	  MeqMatrixTmp sdesdr = psindell * psindrot;
-	  MeqMatrixTmp cdesdr = pcosdell * psindrot;
-	  MeqMatrixTmp sdecdr = psindell * pcosdrot;
-	  pd12 = tocomplex(cdesdr, sdecdr);
-	  pd21 = tocomplex(-cdesdr, sdecdr);
-	  pd22 = tocomplex(cdecdr, sdesdr);
-	  pd11 = tocomplex(cdecdr, -sdesdr);
+	  MeqMatrix cdecdr = pcosdell * pcosdrot;
+	  MeqMatrix sdesdr = psindell * psindrot;
+	  MeqMatrix cdesdr = pcosdell * psindrot;
+	  MeqMatrix sdecdr = psindell * pcosdrot;
+	  pd11 = tocomplex( cdecdr, -sdesdr);
+	  pd12 = tocomplex(-cdesdr,  sdecdr);
+	  pd21 = tocomplex( cdesdr,  sdecdr);
+	  pd22 = tocomplex( cdecdr,  sdesdr);
 	}
 	if (frot.isDefined(spinx)) {
 	  eval = true;
@@ -138,10 +143,10 @@ void MeqStatExpr::calcResult (const MeqRequest& request)
 	  perturbation = frot.getPerturbation(spinx);
 	}
 	if (eval) {
-	  pdf11 = pd11 * pcosfrot - pd21 * psinfrot;
-	  pdf12 = pd11 * psinfrot + pd21 * pcosfrot;
-	  pdf21 = pd12 * pcosfrot - pd22 * psinfrot;
-	  pdf22 = pd12 * psinfrot + pd22 * pcosfrot;
+	  pdf11 = pd11 * pcosfrot + pd12 * psinfrot;
+	  pdf12 = pd12 * pcosfrot - pd11 * psinfrot;
+	  pdf21 = pd21 * pcosfrot + pd22 * psinfrot;
+	  pdf22 = pd22 * pcosfrot - pd21 * psinfrot;
 	}
 	bool evalg = eval;
 	if (g1.isDefined(spinx)) {
@@ -151,7 +156,7 @@ void MeqStatExpr::calcResult (const MeqRequest& request)
 	if (evalg) {
 	  const MeqMatrix& pert = g1.getPerturbedValue(spinx);
 	  result11.setPerturbedValue (spinx, pert * pdf11);
-	  result12.setPerturbedValue (spinx, pert * pdf21);
+	  result12.setPerturbedValue (spinx, pert * pdf12);
 	  result11.setPerturbation (spinx, perturbation);
 	  result12.setPerturbation (spinx, perturbation);
 	}
@@ -162,7 +167,7 @@ void MeqStatExpr::calcResult (const MeqRequest& request)
 	}
 	if (evalg) {
 	  const MeqMatrix& pert = g2.getPerturbedValue(spinx);
-	  result21.setPerturbedValue (spinx, pert * pdf12);
+	  result21.setPerturbedValue (spinx, pert * pdf21);
 	  result22.setPerturbedValue (spinx, pert * pdf22);
 	  result21.setPerturbation (spinx, perturbation);
 	  result22.setPerturbation (spinx, perturbation);
