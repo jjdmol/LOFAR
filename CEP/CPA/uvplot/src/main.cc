@@ -32,15 +32,19 @@
 int main(int argc, char *argv[])
 try
 {
+  std::cout << "Uvplot main" << std::endl << std::flush;
   QApplication app(argc, argv);
   Debug::initLevels(argc, (const char **)argv);       // Initialize debugging
   OctopussyConfig::initGlobal(argc,(const char **)argv);
 
 
+  std::cout << "Create mainwindow" << std::endl;
   UVPMainWindow *mainwin = new UVPMainWindow;
   mainwin->resize(800, 800);
 
+  std::cout << "Set Mainwidget" << std::endl;
   app.setMainWidget(mainwin);
+  std::cout << "Show" << std::endl;
   mainwin->show();
   return app.exec();
 }
