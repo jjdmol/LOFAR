@@ -24,9 +24,7 @@
 //////////////////////////////////////////////////////////////////////
 
 #include <Common/lofar_iostream.h>
-#include <Common/lofar_strstream.h>
 #include <Common/lofar_algorithm.h>    // for min,max
-
 #include "CEPFrame/StepRep.h"
 #include "CEPFrame/SimulRep.h"
 #include "CEPFrame/Step.h"
@@ -38,6 +36,9 @@
 #include "CEPFrame/Corba/BS_Corba.h"
 #include "CEPFrame/Corba/CorbaMonitor.h"
 #endif 
+
+#include <sstream>
+using namespace std;
 
 // this will give all instances of Step the same event in the Profiling output
 int          StepRep::theirProcessProfilerState=0;
