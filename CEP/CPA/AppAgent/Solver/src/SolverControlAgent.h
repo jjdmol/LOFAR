@@ -24,11 +24,11 @@
 #define SOLVERCONTROL_SRC_SOLVERCONTROLAGENT_H_HEADER_INCLUDED_E43EA503
     
 #include <AppAgent/AppControlAgent.h>
-#include <SolverControl/AID-SolverControl.h>
+#include <Solver/AID-Solver.h>
 #include <Common/Thread/Mutex.h>
 class AppEventSink;
 
-#pragma aidgroup SolverControl
+#pragma aidgroup Solver
 #pragma aid Start End Stop Iteration Solution Solver Control Message Convergence 
 #pragma aid Next Step Domain Data Num All Params Solved Index Peel Accept
 #pragma aid When Max Converged Iter Command Add Queue Size
@@ -172,11 +172,8 @@ class SolverControlAgent : public AppControlAgent
     SolverControlAgent(AppEventSink *sink, int dmiflags, const HIID &initf = AidControl)
       : AppControlAgent(sink,dmiflags,initf) {}
     
-    //##ModelId=3E01FD1D03DB
-    //##Documentation
-    //## inits various counters
-    virtual bool init (const DataRecord &data);
-  
+    int start (DataRecord::Ref &initrec);
+    
     //##ModelId=3DFF2D300027
     //##Documentation
     //## Called by application to start solving for a new domain.
@@ -258,16 +255,17 @@ class SolverControlAgent : public AppControlAgent
     //##    terminal state (<=0): see class documentation above.
     virtual int endSolution  (DataRecord::Ref &endrec);
     
-    //##ModelId=3E5B879D036E
-    //##Documentation
-    //## Version sets up data record with a single AidText field
-    int endSolution  (const string &msg,const HIID &event = EndSolutionEvent);
-
     //##ModelId=3DFF2D6400EA
     //##Documentation
     //## Clears flags and solution parameters
     virtual void close ();
     
+    //##ModelId=3E56097E031F
+    //##Documentation
+    //## Calls getCommand() to check for change of state (i.e. 
+    //## reinit, stop, halt, pause/resume, etc.)
+    int checkState (int wait = AppEvent::NOWAIT);
+
     //##ModelId=3E5647EB0294
     void addSolution (const DataRecord::Ref &params);
 
@@ -288,15 +286,6 @@ class SolverControlAgent : public AppControlAgent
     //## another command is received)
     bool getLastCommand (HIID &id, DataRecord::Ref &data, bool flush = True);
 
-    //##ModelId=3E560979013D
-    //##Documentation
-    //## Called after the state() changes to INIT (i.e., reinitialized via
-    //## external command) to get the init record delivered via that command.
-    //## If state is not INIT, will set the state to STOPPED, and block until 
-    //## a reinit or halt command is received.
-    //## Returns: INIT or HALTED.
-    int getInitRecord (DataRecord::Ref &initrec);
-    
     //##ModelId=3E56097902C1
     //##Documentation
     //## Returns current convergence parameter
@@ -333,6 +322,11 @@ class SolverControlAgent : public AppControlAgent
     
 
   protected:
+    //##ModelId=3E01FD1D03DB
+    //##Documentation
+    //## inits various counters
+    virtual bool init (const DataRecord &data);
+  
   
     //##ModelId=3E56097E00FD
     //##Documentation
@@ -340,13 +334,10 @@ class SolverControlAgent : public AppControlAgent
     //## a StartSolutionEvent. Meant to be called from a child
     //## class's startSolution()
     void initSolution (const DataRecord::Ref &params);
+  
+    //##ModelId=3E70A2C703BA
+    std::deque<DataRecord::Ref> & solveQueue ();
     
-    //##ModelId=3E56097E031F
-    //##Documentation
-    //## Calls getCommand() to check for change of state (i.e. 
-    //## reinit, stop, halt, pause/resume, etc.)
-    int checkState (int wait = AppEvent::NOWAIT);
-
   private:
     //##ModelId=3E56097F03DD
     SolverControlAgent(const SolverControlAgent& right);
@@ -399,12 +390,6 @@ class SolverControlAgent : public AppControlAgent
     //## Data of most recently received command
     DataRecord::Ref last_command_data_;
 
-    //##ModelId=3E5609780061
-    //##Documentation
-    //## When an Init command has been received, this holds the init record
-    //## (can be claimed by getInitRecord())
-    DataRecord::Ref initrec_;
-    
     //##ModelId=3E5BA4CC017C
     //##Documentation
     //## When a solution has ended, this holds the end-record, until it is
@@ -465,6 +450,12 @@ inline Thread::Mutex & SolverControlAgent::mutex() const
 inline bool SolverControlAgent::endOfData() const
 {
   return endOfData_;
+}
+
+//##ModelId=3E70A2C703BA
+inline std::deque<DataRecord::Ref> & SolverControlAgent::solveQueue ()
+{
+  return solve_queue_;
 }
 
 } // namespace SolverControl

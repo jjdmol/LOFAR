@@ -80,16 +80,10 @@ void DummySolver::run ()
 {
   using namespace SolverControl;
   DataRecord::Ref initrec;
-  
-  for(;;)
+  // repeat the [re]start sequence as long as the control agent gives us
+  // a non-terminal state
+  while( control().start(initrec) > 0)
   {
-    // init the control agent, and get the init record from it
-    if( control().start(initrec) == HALTED )
-    {
-      cdebug(1)<<"halting"<<endl;
-      control().close();
-      return;
-    }
     // [re]initialize i/o agents with record returned by control
     cdebug(1)<<"initializing I/O agents\n";
     if( !input().init(*initrec) )
@@ -215,15 +209,7 @@ void DummySolver::run ()
         {
           cdebug(2)<<"ENDSOLVE after "<<niter<<" iterations, converge="<<converge<<endl;
           int res = control().endSolution(endrec);
-          if( res > 0 )
-          {
-            // successful end of solution
-            endSolution(*endrec);
-          }
-          else 
-          { // unsuccessful (probably a terminal state)
-            cdebug(2)<<"endSolution returns "<<res<<endl;
-          }
+          endSolution(*endrec);
         }
         // else we were probably interrupted
         else
@@ -239,15 +225,9 @@ void DummySolver::run ()
     // broke out of main loop -- close i/o agents
     input().close();
     output().close();
-    // if control is non-asynchronous, we can exit now since it's not going
-    // to change state
-    if( !control().isAsynchronous() )
-    {
-      cdebug(1)<<"control non-asynchronous, halting"<<endl;
-      control().close();
-      return;
-    }
   }
+  cdebug(1)<<"exiting with control state "<<control().stateString()<<endl;
+  control().close();
 }
 
 //##ModelId=3E00B22801E4

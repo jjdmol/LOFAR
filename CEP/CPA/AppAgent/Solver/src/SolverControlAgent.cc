@@ -27,7 +27,7 @@ namespace SolverControl
   
 using namespace AppState;
   
-static int __dum = aidRegistry_SolverControl();
+static int __dum = aidRegistry_Solver();
 
 InitDebugContext(SolverControlAgent,"SolverControl");
 
@@ -37,11 +37,20 @@ bool SolverControlAgent::init (const DataRecord &data)
 {
   if( !AppControlAgent::init(data) )
     return False;
-  stop_on_end_ = data[initfield()][FStopWhenEnd].as_bool(False);
+  if( !data[initfield()].exists() )
+    return False;
+  stop_on_end_ = data[initfield()][FStopWhenEnd].as<bool>(False);
   status()[FEndData] = endOfData_ = False;
   domainNum_ = -1;
-  setState(NEXT_DOMAIN);
   return True;
+}
+
+int SolverControlAgent::start (DataRecord::Ref &initrec)
+{
+  // instead of running state, go into NEXT_DOMAIN state.
+  if( AppControlAgent::start(initrec) == RUNNING )
+    setState(NEXT_DOMAIN);
+  return state();
 }
 
 
@@ -52,10 +61,11 @@ int SolverControlAgent::startDomain  (const DataRecord::Ref::Xfer &data)
   if( checkState() <= 0 )
     return state(); 
   FailWhen(state()!=IDLE && state()!=NEXT_DOMAIN,"unexpected state (IDLE or NEXT_DOMAIN wanted)");
+  setState(IDLE);
   status()[FEndData] = endOfData_ = False;
   status()[FDomainNumber] = domainNum_++;
   nextDomain_ = False;
-  dprintf(1)("starting solution for domain %d\n",domainNum_);
+  dprintf(1)("starting domain %d\n",domainNum_);
   postEvent(StartDomainEvent,data);
   return state();
 }
@@ -102,24 +112,24 @@ int SolverControlAgent::startSolution (DataRecord::Ref &params)
   initSolution(params);
   dprintf(2)("startSolution: %s\n",params->sdebug(2).c_str());
   // get convergence criterion, if any
-  conv_threshold_ = (*params)[FConvergence].as_double(-1);
+  conv_threshold_ = (*params)[FConvergence].as<double>(-1);
   if( conv_threshold_ >= 0 )
   {
     dprintf(2)("convergence threshold is %f\n",conv_threshold_);
     if( (*params)[FWhenConverged].exists() )
-      endrec_converged.attach( (*params)[FWhenConverged].as_DataRecord() );
+      endrec_converged.attach( (*params)[FWhenConverged].as<DataRecord>() );
     else
       endrec_converged <<= new DataRecord;
   }
   else
     endrec_converged.detach();
   // get max iter criterion
-  max_iterations_ = (*params)[FMaxIterations].as_int(-1);
+  max_iterations_ = (*params)[FMaxIterations].as<int>(-1);
   if( max_iterations_ >= 0 )
   {
     dprintf(2)("max iterations: %d\n",max_iterations_);
     if( (*params)[FWhenMaxIter].exists() )
-      endrec_maxiter.attach( (*params)[FWhenMaxIter].as_DataRecord() );
+      endrec_maxiter.attach( (*params)[FWhenMaxIter].as<DataRecord>() );
     else
       endrec_maxiter <<= new DataRecord;
   }
@@ -162,7 +172,7 @@ int SolverControlAgent::endSolution  (DataRecord::Ref &endrec)
   endrec = endrec_;
   // do we have a next domain command in the end record? Raise the flag
   if( endrec.valid() )
-    nextDomain_ |= (*endrec)[FNextDomain].as_bool(False); 
+    nextDomain_ |= (*endrec)[FNextDomain].as<bool>(False); 
   // post end event
   postEvent(EndSolutionEvent);
   return setEndSolutionState();
@@ -174,6 +184,7 @@ void SolverControlAgent::addSolution (const DataRecord::Ref &params)
   Thread::Mutex::Lock lock(mutex()); 
   solve_queue_.push_back(params.copy(DMI::PRESERVE_RW));
   status()[FQueueSize] = solve_queue_.size(); 
+  dprintf(2)("added solution %d, raising event flag\n",solve_queue_.size());
   sink().raiseEventFlag(); // more solutions to come
 }
 
@@ -185,20 +196,18 @@ int SolverControlAgent::setEndSolutionState ()
     Thread::Mutex::Lock lock(mutex());
     setState(nextDomain_?NEXT_DOMAIN:IDLE);
     nextDomain_ = False;
-    if( endOfData() && solve_queue_.empty() )
+    if( solve_queue_.empty() )
     {
-      dprintf(2)("no more data or solutions for now\n");
+      dprintf(2)("no more solutions for now, clearing event flag\n");
       sink().clearEventFlag(); // no more events for now
-      if( stop_on_end_ )
+      if( endOfData() )
       {
-        dprintf(1)("end of data, no more solutions, stopping\n");
-        setState(STOPPED);
+        if( stop_on_end_ )
+        {
+          dprintf(1)("end of data, stopping\n");
+          setState(STOPPED);
+        }
       }
-    }
-    else
-    {
-      dprintf(2)("more data or solutions coming up\n");
-      sink().raiseEventFlag(); // more solutions to come
     }
   }
   return state();
@@ -211,7 +220,7 @@ void SolverControlAgent::stopSolution (const string &msg,
 {
   Thread::Mutex::Lock lock(mutex());
   FailWhen( state() != RUNNING,"unexpected state (RUNNING wanted)" );
-  dprintf(1)("stopping solution: %s",msg.c_str());
+  dprintf(1)("stopping solution: %s\n",msg.c_str());
   if( event.length() )
     postEvent(event,msg);
   endrec_ = endrec;
@@ -238,22 +247,14 @@ void SolverControlAgent::initSolution (const DataRecord::Ref &params)
   status()[FSolutionParams] <<= params.copy(DMI::READONLY);
   status()[FDomainNumber] = domainNum();
   postEvent(StartSolutionEvent);
-  sink().clearEventFlag(); // no events until solution converges
 }
 
 //##ModelId=3E56097E031F
 int SolverControlAgent::checkState (int wait)
 {
   int res = getCommand(last_command_id_,last_command_data_,wait);
-  // got a state-change command?
-  if( res == AppEvent::NEWSTATE )
-  {
-    // are we being reinitialized?
-    if( state() == INIT )
-      initrec_.copy(last_command_data_,DMI::PRESERVE_RW);
-  }
-  // else check for solver-specific commands
-  else if( res == AppEvent::SUCCESS )
+  // check for solver-specific commands
+  if( res == AppEvent::SUCCESS )
   {
     // catch all errors during processing of commands
     try
@@ -315,28 +316,6 @@ bool SolverControlAgent::getLastCommand (HIID& id, DataRecord::Ref &data, bool f
     data.copy(last_command_data_,DMI::PRESERVE_RW);
   return True;
 }
-
-//##ModelId=3E560979013D
-int SolverControlAgent::getInitRecord (DataRecord::Ref &initrec)
-{
-  // halted? return immediately
-  if( state() == HALTED )
-    return HALTED;
-  // else wait for init or halt
-  if( state() != INIT )
-  {
-    setState(STOPPED);
-    // sit there checking (and ignoring) commands until an init/halt
-    while( state() != INIT && state() != HALTED )
-      checkState(AppEvent::BLOCK);
-  }
-  // return init record
-  if( state() == INIT )
-    initrec = initrec_;
-  
-  return state();
-}
-
 
 //##ModelId=3E56097A02C5
 string SolverControlAgent::sdebug ( int detail,const string &prefix,

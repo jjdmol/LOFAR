@@ -64,8 +64,8 @@ MSInputAgent::MSInputAgent (const HIID &initf)
 void MSInputAgent::fillHeader (DataRecord &hdr,const DataRecord &select)
 {
   // get relevant selection parameters
-  int ddid = select[FDDID].as_int(0);        
-  int fieldid = select[FFieldIndex].as_int(0);        
+  int ddid = select[FDDID].as<int>(0);        
+  int fieldid = select[FFieldIndex].as<int>(0);        
   
   // place current selection into header
   // clone a readonly snapshot, since selection will not change
@@ -119,8 +119,8 @@ void MSInputAgent::openMS (DataRecord &header,const DataRecord &select)
   dprintf(1)("opened MS %s, %d rows\n",msname_.c_str(),ms_.nrow());
   
   // get DDID and Field ID (default is 0)
-  int ddid = select[FDDID].as_int(0);        
-  int fieldid = select[FFieldIndex].as_int(0);        
+  int ddid = select[FDDID].as<int>(0);        
+  int fieldid = select[FFieldIndex].as<int>(0);        
   
   // fill header from MS
   fillHeader(header,select);
@@ -138,11 +138,11 @@ void MSInputAgent::openMS (DataRecord &header,const DataRecord &select)
   header[FVDSID] = static_cast<HIID&>(vdsid_);
   
   // Get range of channels (default values: all channles)
-  channels_[0] = header[FChannelStartIndex] = select[FChannelStartIndex].as_int(0);
-  channels_[1] = header[FChannelEndIndex]   = select[FChannelEndIndex].as_int(header[FChannelFreq].size()-1);
+  channels_[0] = header[FChannelStartIndex] = select[FChannelStartIndex].as<int>(0);
+  channels_[1] = header[FChannelEndIndex]   = select[FChannelEndIndex].as<int>(header[FChannelFreq].size()-1);
   
   // get and apply selection string
-  String where = select[FSelectionString].as_string("");
+  String where = select[FSelectionString].as<string>("");
   dprintf(1)("select ddid=%d, field=%d, where=\"%s\", channels=[%d:%d]\n",
       ddid,fieldid,where.c_str(),channels_[0],channels_[1]);
   if( where.empty() ) 
@@ -163,7 +163,7 @@ void MSInputAgent::openMS (DataRecord &header,const DataRecord &select)
 //##ModelId=3DF9FECD0235
 bool MSInputAgent::init (const DataRecord &data)
 {
-  bool rethrow = data[FThrowError].as_bool(False);
+  bool rethrow = data[FThrowError].as<bool>(False);
   try
   {
     FailWhen( !FileInputAgent::init(data),"FileInputAgent init failed" );
@@ -172,15 +172,15 @@ bool MSInputAgent::init (const DataRecord &data)
         
     DataRecord &header = initHeader();
     
-    msname_ = params[FMSName].as_string();
+    msname_ = params[FMSName].as<string>();
     const DataRecord &selection = params[FSelection];
     
     openMS(header,selection);  
 
     // get name of data column (default is DATA)
-    dataColName_ = params[FDataColumnName].as_string("DATA");
+    dataColName_ = params[FDataColumnName].as<string>("DATA");
     // get # of timeslots per tile (default is 1)
-    tilesize_ = params[FTileSize].as_int(1);
+    tilesize_ = params[FTileSize].as<int>(1);
 
     // init common tile format and place it into header
     tileformat_ <<= new VisTile::Format;
@@ -234,10 +234,10 @@ int MSInputAgent::getNextTile (VisTile::Ref &tileref,int wait)
   try
   {
     int res = hasTile();
-    if( res != SUCCESS )
-    {
+    if( res == CLOSED )
+      return res;
+    else if( res != SUCCESS )
       return sink().waitOtherEvents(wait);
-    }
 
   // any more tiles in cache? Return one
     if( tileiter_ != tiles_.end() )

@@ -46,7 +46,7 @@ MSOutputAgent::MSOutputAgent (const HIID &initf)
 //##ModelId=3E28315F0001
 bool MSOutputAgent::init (const DataRecord &data)
 {
-  bool rethrow = data[FThrowError].as_bool(False);
+  bool rethrow = data[FThrowError].as<bool>(False);
   try
   {
     FailWhen( !FileOutputAgent::init(data),"FileInputAgent init failed" );
@@ -106,29 +106,29 @@ int MSOutputAgent::putHeader (const DataRecord::Ref::Xfer &hdr)
     const DataRecord &header = *hdr;
     // open the MS named in the header (incidentally, this will also
     // flush & close any previously named MS)
-    msname_ = header[FMSName].as_string();
+    msname_ = header[FMSName].as<string>();
     ms_ = MeasurementSet(msname_,Table::Update);
     // get range of channels from header and setup slicer
-    int chan0 = header[FChannelStartIndex].as_int(),
-        chan1 = header[FChannelEndIndex].as_int();
+    int chan0 = header[FChannelStartIndex].as<int>(),
+        chan1 = header[FChannelEndIndex].as<int>();
     int ncorr = header[FCorr].size(Tpint);
     column_slicer_ = Slicer(IPosition(2,0,chan0),IPosition(2,ncorr-1,chan1),
                      Slicer::endIsLast);
     // setup parameters from default record
-    write_flags_       = params_[FWriteFlags].as_bool(False);
-    flagmask_          = params_[FFlagMask].as_int(0xFFFFFFFF);
-    datacol_.name      = params_[FDataColumn].as_string("");
-    predictcol_.name   = params_[FPredictColumn].as_string("");
-    rescol_.name       = params_[FResidualsColumn].as_string("");
+    write_flags_       = params_[FWriteFlags].as<bool>(False);
+    flagmask_          = params_[FFlagMask].as<int>(0xFFFFFFFF);
+    datacol_.name      = params_[FDataColumn].as<string>("");
+    predictcol_.name   = params_[FPredictColumn].as<string>("");
+    rescol_.name       = params_[FResidualsColumn].as<string>("");
     // and override them from the header
     if( header[FOutputParams].exists() )
     {
-      const DataRecord &hparm = header[FOutputParams].as_DataRecord();
-      write_flags_       = hparm[FWriteFlags].as_bool(write_flags_);
-      flagmask_          = hparm[FFlagMask].as_int(flagmask_);
-      datacol_.name      = hparm[FDataColumn].as_string(datacol_.name);
-      predictcol_.name   = hparm[FPredictColumn].as_string(predictcol_.name);
-      rescol_.name       = hparm[FResidualsColumn].as_string(rescol_.name);
+      const DataRecord &hparm = header[FOutputParams].as<DataRecord>();
+      write_flags_       = hparm[FWriteFlags].as<bool>(write_flags_);
+      flagmask_          = hparm[FFlagMask].as<int>(flagmask_);
+      datacol_.name      = hparm[FDataColumn].as<string>(datacol_.name);
+      predictcol_.name   = hparm[FPredictColumn].as<string>(predictcol_.name);
+      rescol_.name       = hparm[FResidualsColumn].as<string>(rescol_.name);
     }
     // setup columns
     setupDataColumn(datacol_);

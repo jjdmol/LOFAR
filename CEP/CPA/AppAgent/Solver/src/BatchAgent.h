@@ -22,10 +22,11 @@
 #ifndef SOLVERCONTROL_SRC_BATCHAGENT_H_HEADER_INCLUDED_FC8CF8CF
 #define SOLVERCONTROL_SRC_BATCHAGENT_H_HEADER_INCLUDED_FC8CF8CF
     
-#include <SolverControl/SolverControlAgent.h>
+#include <Solver/SolverControlAgent.h>
 #include <vector>
 class AppEventSink;
 
+#pragma aidgroup Solver
 #pragma aid Batch Solver Control Job Jobs 
 
 namespace SolverControl {
@@ -68,6 +69,18 @@ class BatchAgent : public SolverControlAgent
     //##ModelId=3E00C7F3027E
     string sdebug ( int detail = 1,const string &prefix = "",
                     const char *name = 0 ) const;
+    //##ModelId=3E70A1C501BB
+    //##Documentation
+    //## Called by the solver application to acknowledge end of solution.
+    //## Posts an end-of-solution event.
+    //## An end record will be attached to endrec upon return.
+    //## Entry state must be ENDSOLVE (else if terminal, function will return
+    //## immediately, or throw an exception in other states).
+    //## Returns the current state, which will be one of:
+    //##    IDLE (>0): proceed
+    //##    terminal state (<=0): see class documentation above.
+    virtual int endSolution(DataRecord::Ref &endrec);
+
 
   private:
     //##ModelId=3E42781C03A6

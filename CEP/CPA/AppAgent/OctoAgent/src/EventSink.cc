@@ -149,7 +149,7 @@ int EventSink::getDefaultScope (const DataRecord &map)
     // publish scope can be specified as string or int
     if( map[FDefaultScope].type() == Tpstring )
     {
-      string str = map[FDefaultScope].as_string(); // .upcase();
+      string str = map[FDefaultScope].as<string>(); // .upcase();
       if( str == "LOCAL" )
         return Message::LOCAL;
       else if( str == "HOST" )
@@ -162,7 +162,7 @@ int EventSink::getDefaultScope (const DataRecord &map)
       }
     }
     else
-      return map[FDefaultScope].as_int(); 
+      return map[FDefaultScope].as<int>(); 
   }
   return Message::GLOBAL;
 }
@@ -219,14 +219,14 @@ int EventSink::getDefaultPriority (const DataRecord &map)
   // above)
   HIID id; 
   if( map[FDefaultPriority].type() == TpHIID )
-    id = map[FDefaultPriority].as_HIID();
+    id = map[FDefaultPriority].as<HIID>();
   else if( map[FDefaultPriority].type() == TpAtomicID )
-    id = map[FDefaultPriority].as_AtomicID();
+    id = map[FDefaultPriority].as<AtomicID>();
   else if( map[FDefaultPriority].type() == Tpstring )
-    id = map[FDefaultPriority].as_string();
+    id = map[FDefaultPriority].as<string>();
   // if none of those, then try to interpret as an integer
   else
-    return map[FDefaultPriority].as_int(Message::PRI_NORMAL);
+    return map[FDefaultPriority].as<int>(Message::PRI_NORMAL);
   // use resolvePriority() above to map to a priority constant
   int pri = resolvePriority(id,Message::PRI_NORMAL);
   // ID must be empty now, else error
@@ -285,7 +285,7 @@ void EventSink::setPostMap (const DataRecord &map)
     if( id == FDefaultScope || id == FDefaultPriority )
       continue;
     FailWhen(type != TpHIID || size != 1,"illegal output map entry "+id.toString());
-    HIID msgid = map[id].as_HIID();
+    HIID msgid = map[id].as<HIID>();
     int scope = resolveScope(msgid,defscope);
     int priority = resolvePriority(msgid,defpri);
     // interpret Unmapped.Prefix argument

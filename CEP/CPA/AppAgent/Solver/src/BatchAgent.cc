@@ -29,7 +29,7 @@ using namespace AppState;
 //##ModelId=3E005A8403E5
 bool BatchAgent::init (const DataRecord &data)
 {
-  bool rethrow = data[FThrowError].as_bool(False);
+  bool rethrow = data[FThrowError].as<bool>(False);
   try
   {
     FailWhen( !SolverControlAgent::init(data),"base init failed" );
@@ -45,7 +45,7 @@ bool BatchAgent::init (const DataRecord &data)
     for( int i=0; i<nparams; i++ )
     {
       // attach a ref to the parameter subrecord
-      jobs_[i].attach(rec[FBatchJobs][i].as_DataRecord());
+      jobs_[i].attach(rec[FBatchJobs][i].as<DataRecord>());
     }
     dprintf(1)("init: %d solve jobs initialized\n",nparams);  
     return True;
@@ -73,7 +73,16 @@ int BatchAgent::startDomain (const DataRecord::Ref &data)
   return res;
 }
 
-
+//##ModelId=3E70A1C501BB
+int BatchAgent::endSolution (DataRecord::Ref &endrec)
+{
+  int res = SolverControlAgent::endSolution(endrec);
+  // no more solutions pending? Force NEXT_DOMAIN state
+  if( res == IDLE && solveQueue().empty() )
+    return setState(NEXT_DOMAIN);
+  else
+    return res;
+}
 
 //##ModelId=3E009B2E01DF
 void BatchAgent::close ()
@@ -99,3 +108,4 @@ string BatchAgent::sdebug ( int detail,const string &prefix,
 }
 
 } // namespace SolverControl
+
