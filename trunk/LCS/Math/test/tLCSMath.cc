@@ -25,6 +25,8 @@
 #include <Common/LofarLogger.h>
 #include <Common/Stopwatch.h>
 
+using namespace LOFAR;
+
 int main()
 {
   try {
