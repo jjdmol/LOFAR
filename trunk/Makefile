@@ -117,15 +117,17 @@ check: $(VARIANTS:.variant=.variant_check)
 bootstrap: bootstrap_rule
 
 bootstrap_rule:
-	@for d in $(PACKAGES); do \
+	@for pkg in $(PACKAGES); do \
+	    if test -d $$pkg ; then \
 		( echo \
-		&& echo ":::::: BOOTSTRAPPING $$d" \
+		&& echo ":::::: BOOTSTRAPPING $$pkg" \
 		&& echo \
-		&& ( ( cd $$d && ( ./bootstrap; ./bootstrap )) \
+		&& ( ( cd $$pkg && ( ./bootstrap; ./bootstrap )) \
 			|| echo ":::::: ERROR" ) \
 		&& echo \
-		&& echo ":::::: DONE BOOTSTRAPPING $$d" \
+		&& echo ":::::: DONE BOOTSTRAPPING $$pkg" \
 		&& echo ) ; \
+	    fi \
 	done
 
 #
@@ -141,6 +143,7 @@ configure: $(VARIANTS:.variant=.variant_configure)
 	@date; \
 	variant=`basename $@ .variant_configure`; \
 	for pkg in $(PACKAGES); do \
+	    if test -d $$pkg; then \
 		( echo \
 		&& echo ":::::: CONFIGURING VARIANT $$variant FOR PACKAGE $$pkg" \
 		&& echo \
@@ -153,6 +156,7 @@ configure: $(VARIANTS:.variant=.variant_configure)
 		&& echo \
 		&& echo ":::::: FINISHED CONFIGURING VARIANT $$variant FOR PACKAGE $$pkg" \
 		&& echo ; ) \
+	    fi\
 	done; \
 	date
 
@@ -167,6 +171,7 @@ configure: $(VARIANTS:.variant=.variant_configure)
 	@date; \
 	variant=`basename $@ .variant`; \
 	for pkg in $(PACKAGES); do \
+	    if test -d $$pkg; then \
 		( echo \
 		&& echo ":::::: BUILDING VARIANT $$variant FOR PACKAGE $$pkg" \
 		&& echo \
@@ -177,6 +182,7 @@ configure: $(VARIANTS:.variant=.variant_configure)
 		&& echo \
 		&& echo ":::::: FINISHED BUILDING VARIANT $$variant FOR PACKAGE $$pkg" \
 		&& echo ; ) \
+	    fi\
 	done; \
 	date
 
@@ -188,6 +194,7 @@ configure: $(VARIANTS:.variant=.variant_configure)
 	@date; \
 	variant=`basename $@ .variant_build`; \
 	for pkg in $(PACKAGES); do \
+	    if test -d $$pkg; then \
 		( echo \
 		&& echo ":::::: BUILDING VARIANT $$variant FOR PACKAGE $$pkg" \
 		&& echo \
@@ -198,6 +205,7 @@ configure: $(VARIANTS:.variant=.variant_configure)
 		&& echo \
 		&& echo ":::::: FINISHED BUILDING VARIANT $$variant FOR PACKAGE $$pkg" \
 		&& echo ; ) \
+	    fi\
 	done; \
 	date
 
@@ -210,6 +218,7 @@ configure: $(VARIANTS:.variant=.variant_configure)
 	@date; \
 	variant=`basename $@ .variant_rebuild`; \
 	for pkg in $(PACKAGES); do \
+	    if test -d $$pkg; then \
 		( echo \
 		&& echo ":::::: REBUILDING VARIANT $$variant FOR PACKAGE $$pkg" \
 		&& echo \
@@ -221,6 +230,7 @@ configure: $(VARIANTS:.variant=.variant_configure)
 		&& echo \
 		&& echo ":::::: FINISHED REBUILDING VARIANT $$variant FOR PACKAGE $$pkg" \
 		&& echo ; ) \
+	    fi\
 	done; \
 	date
 
@@ -232,6 +242,7 @@ configure: $(VARIANTS:.variant=.variant_configure)
 	@date; \
 	variant=`basename $@ .variant_check`; \
 	for pkg in $(PACKAGES); do \
+	    if test -d $$pkg; then \
 		( echo \
 		&& echo ":::::: CHECKING VARIANT $$variant FOR PACKAGE $$pkg" \
 		&& echo \
@@ -242,6 +253,7 @@ configure: $(VARIANTS:.variant=.variant_configure)
 		&& echo \
 		&& echo ":::::: FINISHED CHECKING VARIANT $$variant FOR PACKAGE $$pkg" \
 		&& echo ; \
+	    fi\
 	done; \
 	date
 
