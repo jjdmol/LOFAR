@@ -91,6 +91,8 @@ Spigot:
 
 Parm:
 
+  * develop different strategies for handling multiple polcs
+
         + If a polc with the right domain is already specified in the init-record,
           do not read the tables
           11/02/04: done: added inf_domain and grow_domain attributes to a polc
