@@ -4,13 +4,8 @@ Because the 3.2 is already installed with RedHat 8.0 the gcc and g++ of the comp
 installation must be renamed (to for instance gcc296 and g++296).
 
 EXTERNAL PACKAGES:
-PVSS II 2.12.1
-	> export PATH=$PATH:<pvss root>/bin
-	> export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:<pvss root>/bin
-	> export API_ROOT=<pvss root>/api
-	- if no pvss project exist yet which is prepared for using GCF
-	> newproj <project path>
-	> export PVSS_II=<project path>/config/config
-	> start_pvss2
-	> PVSS00ascii -in LofarPropertyTypes.pvss
-	- now the started project is ready for GCF
+PVSS II 2.12.1 (see MAC/GCF)
+LCS/Common
+MAC/Tools/LofarLogger
+MAC/GCF
+log4cplus

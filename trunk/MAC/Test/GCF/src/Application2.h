@@ -1,8 +1,10 @@
 #ifndef APPLICATION_H
 #define APPLICATION_H
 
-#include <TM/GCF_Task.h>
+#include <GCF/GCF_Task.h>
 #include "SupervisedTask.h"
+#include <GCF/GCF_MyPropertySet.h>
+#include <GCF/GCF_Apc.h>
 
 class GCFEvent;
 class GCFPortInterface;
@@ -49,9 +51,9 @@ class Application : public GCFTask
       cerr << "Test " << failedTest << " failed\n";
       _failed++;
     }
-    void skiped(unsigned int skipedTest)
+    void skipped(unsigned int skippedTest)
     {
-      cerr << "Nothing to do in test " << skipedTest << " => skiped\n";
+      cerr << "Nothing to do in test " << skippedTest << " => skipped\n";
     }
   
   private:
@@ -63,5 +65,13 @@ class Application : public GCFTask
     unsigned int _curRemoteTestNr;
     GCFTCPPort* _pSTPort1;
     GCFTCPPort* _pSTPort2;
+    GCFMyPropertySet _propertySetC1;
+    GCFMyPropertySet _propertySetD1;
+    GCFMyPropertySet _propertySetB4;
+    GCFApc  _apcT1;
+    GCFApc  _apcT1K;
+    GCFApc  _apcT1a;
+    GCFApc  _apcT1b;
+    GCFApc  _apcT3;
 };
 #endif

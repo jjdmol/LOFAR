@@ -6,26 +6,31 @@ SUFFIXES = .ph
 
 DOCHDRS	=	\
 	SupervisedTask.h \
-  PropertyProxy.h
+  	PropertyProxy.h \
+  	Answer.h
 
-lib_LTLIBRARIES 	= libgcf.la
+noinst_LTLIBRARIES 	= libgcftest.la
 
-libgcf_la_SOURCES= $(DOCHDRS) \
+libgcftest_la_SOURCES= $(DOCHDRS) \
 	SupervisedTask.cc \
-  PropertyProxy.cc
+ 	PropertyProxy.cc \
+ 	Answer.cc
 
-bin_PROGRAMS   		= Application1 Application2
+noinst_PROGRAMS   		= Application1 Application2
   
 Application1_SOURCES		    = Application1.cc
-Application1_LDADD		      = libgcf.la 
-Application1_DEPENDENCIES	= libgcf.la $(LOFAR_DEPEND)
+Application1_LDADD		      = libgcftest.la 
+Application1_DEPENDENCIES	= libgcftest.la $(LOFAR_DEPEND)
 
 Application2_SOURCES		    = Application2.cc
-Application2_LDADD		      = libgcf.la 
-Application2_DEPENDENCIES	= libgcf.la $(LOFAR_DEPEND)
+Application2_LDADD		      = libgcftest.la 
+Application2_DEPENDENCIES	= libgcftest.la $(LOFAR_DEPEND)
 
 BUILT_SOURCES = \
-	TST_Protocol.ph
+	TST_Protocol.ph \
+	test.ns \
+	test.top \
+	log4cplus.properties
 
 EXTRA_DIST = \
 	TST_Protocol.ph \
@@ -33,11 +38,6 @@ EXTRA_DIST = \
 	test.top \
 	log4cplus.properties
 	
-pkgdata_DATA = \
-	test.ns \
-	test.top \
-	log4cplus.properties
-
 %.properties: $(MAC_CONFIG)/%.properties
 	cp $< $@
 	

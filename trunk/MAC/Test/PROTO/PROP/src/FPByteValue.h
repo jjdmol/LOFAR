@@ -26,9 +26,37 @@
 
 #include "FPValue.h"
 
+/**
+  *@author pvss        longlong
+  */
+
+class FPUCharValue : public FPValue  {
+public: 
+	FPUCharValue(const uchar& val = 0) : FPValue(UCHAR_VAL), value_(val) {;}
+	virtual ~FPUCharValue() {;}
+  /** No descriptions */
+  int setValue(FPValue* newValue);
+  /** Write property of unsigned char value_. */
+  virtual inline void setValue( const uchar newVal) {value_ = newVal;}
+  /** Read property of unsigned char value_. */
+  virtual inline uchar getValue() const {return value_;}
+  /** No descriptions */
+  virtual FPValue* clone() const;
+  /** No descriptions */
+  virtual void copy(const FPValue* pValue);
+
+private: // Private attributes
+  /** No descriptions */
+  virtual uint unpack(const char* valBuf);
+  /** No descriptions */
+  virtual uint pack(char* valBuf) const;
+  /**  */
+  uchar value_;
+};
+
 class FPCharValue : public FPValue  {
 public:
-	FPCharValue(const char& val = 0) : FPValue(LPT_CHAR), value_(val) {;}
+	FPCharValue(const char& val = 0) : FPValue(CHAR_VAL), value_(val) {;}
 	virtual ~FPCharValue() {;}
   /** No descriptions */
   int setValue(FPValue* newValue);

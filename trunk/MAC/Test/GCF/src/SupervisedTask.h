@@ -1,20 +1,25 @@
 #ifndef SUPERVISEDTASK_H
 #define SUPERVISEDTASK_H
 
-#include <PML/GCF_SupTask.h>
-#include <TM/Socket/GCF_TCPPort.h>
-#include <TM/GCF_TMProtocols.h>
-#include <GCFCommon/GCF_Defines.h>
+#include <GCF/GCF_Task.h>
+#include <GCF/GCF_TCPPort.h>
+#include <GCF/GCF_TMProtocols.h>
+#include <GCF/GCF_Defines.h>
 #include "PropertyProxy.h"
+#include "Answer.h"
 
-class SupervisedTask : public GCFSupervisedTask
+class SupervisedTask : public GCFTask
 {
   public:
     SupervisedTask(GCFTask& a, string taskName);
     ~SupervisedTask();
     
     inline GCFTCPPort& getPort() {return _port;}
-    inline PropertyProxy& getProxy() {return _proxy;}    
+    inline PropertyProxy& getProxy() {return _proxy;}
+    inline Answer& getAnswerObj() {return _answer;}
+    
+    inline void handleAnswer(GCFEvent& answer) 
+      { _application.dispatch(answer, _port); }
   
   private: // state methods
     int initial(GCFEvent& e, GCFPortInterface& p);
@@ -23,93 +28,13 @@ class SupervisedTask : public GCFSupervisedTask
     friend class PropertyProxy;
     void propSubscribed(const string& propName);
     void propUnsubscribed(const string& propName);
-
-  private: // definition of abstract methods of GCFSupervisedTask
-    void valueChanged(const string& propName, const GCFPValue& value);
     void propValueChanged(const string& propName, const GCFPValue& value);
-    void valueGet(const string& propName, const GCFPValue& value);
-    void apcLoaded(const string& apcName, const string& scope, TGCFResult result);
-    void apcUnloaded(const string& apcName, const string& scope, TGCFResult result);
-    void apcReloaded(const string& apcName, const string& scope, TGCFResult result);
-    void myPropertiesLoaded(const string& scope, TGCFResult result);
-    void myPropertiesUnloaded(const string& scope, TGCFResult result);
+    void valueGet(const string& propName, const GCFPValue& value);    
     
   private:
     GCFTCPPort _port;
     GCFTask& _application; 
     PropertyProxy _proxy;   
+    Answer _answer;
 };
-
-// only for internal use
-struct GCFPMLValueEvent : public GCFEvent
-{
-  GCFPMLValueEvent(unsigned short sig) : GCFEvent(sig)
-  {
-      length = sizeof(GCFPMLValueEvent);
-  }
-  const GCFPValue* pValue;
-  const char* pPropName;
-  bool internal;
-};
-
-struct GCFPMLAnswerEvent : public GCFEvent
-{
-  GCFPMLAnswerEvent(unsigned short sig) : GCFEvent(sig)
-  {
-      length = sizeof(GCFPMLAnswerEvent);
-  }
-  const char* pPropName;
-};
-
-struct GCFPMLAPCAnswerEvent : public GCFEvent
-{
-  GCFPMLAPCAnswerEvent(unsigned short sig) : GCFEvent(sig)
-  {
-      length = sizeof(GCFPMLAPCAnswerEvent);
-  }
-  const char* pApcName;
-  const char* pScope;
-  TGCFResult result;
-};
-
-struct GCFPMLMYPAnswerEvent : public GCFEvent
-{
-  GCFPMLMYPAnswerEvent(unsigned short sig) : GCFEvent(sig)
-  {
-      length = sizeof(GCFPMLMYPAnswerEvent);
-  }
-  const char* pScope;
-  TGCFResult result;
-};
-
-enum {
-  F_PML_PROTOCOL = F_GCF_PROTOCOL,
-};
-/**
- * F_PML_PROTOCOL signals
- */
-enum {
-  F_SUBSCRIBED_ID = 1,                                 
-  F_UNSUBSCRIBED_ID,      
-  F_VCHANGEMSG_ID,               
-  F_VGETRESP_ID,        
-  F_APCLOADED_ID,
-  F_APCUNLOADED_ID,
-  F_APCRELOADED_ID,
-  F_MYLOADED_ID,
-  F_MYUNLOADED_ID,
-};
-
-#define F_SUBSCRIBED_SIG    F_SIGNAL(F_PML_PROTOCOL, F_SUBSCRIBED_ID,    F_IN)
-#define F_UNSUBSCRIBED_SIG  F_SIGNAL(F_PML_PROTOCOL, F_UNSUBSCRIBED_ID,  F_IN)
-#define F_VCHANGEMSG_SIG    F_SIGNAL(F_PML_PROTOCOL, F_VCHANGEMSG_ID,    F_IN)
-#define F_VGETRESP_SIG      F_SIGNAL(F_PML_PROTOCOL, F_VGETRESP_ID,      F_IN)
-#define F_APCLOADED_SIG     F_SIGNAL(F_PML_PROTOCOL, F_APCLOADED_ID,     F_IN)
-#define F_APCUNLOADED_SIG   F_SIGNAL(F_PML_PROTOCOL, F_APCUNLOADED_ID,   F_IN)
-#define F_APCRELOADED_SIG   F_SIGNAL(F_PML_PROTOCOL, F_APCRELOADED_ID,   F_IN)
-#define F_MYLOADED_SIG      F_SIGNAL(F_PML_PROTOCOL, F_MYLOADED_ID,      F_IN)
-#define F_MYUNLOADED_SIG    F_SIGNAL(F_PML_PROTOCOL, F_MYUNLOADED_ID,    F_IN)
-
-extern const char* F_PML_PROTOCOL_signalnames[];
-
 #endif
