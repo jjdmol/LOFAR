@@ -42,7 +42,7 @@ MeqPointDFT::MeqPointDFT (const vector<MeqPointSource>& sources,
   itsRefDec = angles.getBaseValue()(1);
   itsCosRefDec = cos(itsRefDec);
   itsSinRefDec = sin(itsRefDec);
-  cout << "MeqPointDFT phaseRef: " << itsRefRa << ' ' << itsRefDec << endl;
+  // cout << "MeqPointDFT phaseRef: " << itsRefRa << ' ' << itsRefDec << endl;
 }
 
 MeqPointDFT::~MeqPointDFT()
