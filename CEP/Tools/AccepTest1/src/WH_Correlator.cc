@@ -85,8 +85,14 @@ WH_Correlator* WH_Correlator::make (const string& name) {
 void WH_Correlator::process() {
   double starttime, stoptime, cmults;
   // variables to store prefetched antenna data
+#ifdef HAVE_BGL
   _Complex float *s1_val_0, *s1_val_1;
   _Complex float *s2_val_0, *s2_val_1;
+#else
+  complex<float> *s1_val_0, *s1_val_1;
+  complex<float> *s2_val_0, *s2_val_1;
+#endif
+
 
 #ifdef DO_TIMING
   double agg_bandwidth = 0.0;
@@ -165,18 +171,19 @@ void WH_Correlator::process() {
 
       for (int   station1 = 0; station1 < itsNelements; station1++) {
 	int s1_addr = sample_addr+itsNpolarisations*station1;
+#ifdef HAVE_BGL
 	// prefetch station1, both polarisation 0 and 1
 	s1_val_0 = reinterpret_cast<_Complex float*>( in_buffer + s1_addr );
 	s1_val_1 = reinterpret_cast<_Complex float*>( in_buffer + s1_addr + 1 );
-
+#endif
 	for (int station2 = 0; station2 <= station1; station2++) {
 	  int s2_addr = sample_addr+itsNpolarisations*station2;
 
+#ifdef HAVE_BGL
  	    // prefetch station2, both polarisation 0 and 1
   	    s2_val_0 = reinterpret_cast<_Complex float*>( in_buffer + s2_addr );
 	    s2_val_1 = reinterpret_cast<_Complex float*>( in_buffer + s2_addr + 1 ) ;
 
-#ifdef HAVE_BGL
 	    // load prefetched values into FPU
 	    // (now done inside the intrinsic)
 //  	    __lfps((float*) s1_val_0);
