@@ -30,6 +30,7 @@
 
 //## begin module%3CF2376F01E4.additionalDeclarations preserve=yes
 using namespace UVD;
+//##ModelId=3CF237080217
 //## end module%3CF2376F01E4.additionalDeclarations
 
 
@@ -45,6 +46,7 @@ MSReader::MSReader()
   //## end MSReader::MSReader%3CF237080203_const.body
 }
 
+//##ModelId=3DB9388F01AB
 MSReader::MSReader (const MeasurementSet &ms)
   //## begin MSReader::MSReader%3CF237080217.hasinit preserve=no
   //## end MSReader::MSReader%3CF237080217.hasinit
@@ -57,6 +59,7 @@ MSReader::MSReader (const MeasurementSet &ms)
 }
 
 
+//##ModelId=3DB9388F01DD
 MSReader::~MSReader()
 {
   //## begin MSReader::~MSReader%3CF237080203_dest.body preserve=yes
@@ -65,6 +68,7 @@ MSReader::~MSReader()
 
 
 
+//##ModelId=3CF4A1F100DC
 //## Other Operations (implementation)
 void MSReader::attach (const MeasurementSet &ms)
 {
@@ -73,6 +77,7 @@ void MSReader::attach (const MeasurementSet &ms)
   //## end MSReader::attach%3CF4A1F100DC.body
 }
 
+//##ModelId=3CF4AC140048
 void MSReader::makeHeader (DataRecord &hdr)
 {
   //## begin MSReader::makeHeader%3CF4AC140048.body preserve=yes
@@ -110,6 +115,7 @@ static void addRowFlag( DataRecord &subtable,const ROScalarColumn<Bool> &col )
 }
 
 
+//##ModelId=3DB9388F02A5
 void MSReader::readAntenna (DataRecord &rec)
 {
   try 
@@ -136,6 +142,7 @@ void MSReader::readAntenna (DataRecord &rec)
   }
 }
 
+//##ModelId=3DB9388F031D
 void MSReader::readSource (DataRecord &rec)
 {
   try 
@@ -185,6 +192,7 @@ void MSReader::readSource (DataRecord &rec)
 // }
 // 
 
+//##ModelId=3DB9388F0396
 void MSReader::readSpectralWindow (DataRecord &rec)
 {
   try
@@ -235,6 +243,7 @@ void MSReader::readSpectralWindow (DataRecord &rec)
 //   }
 // }
 // 
+//##ModelId=3DB93890003A
 void MSReader::readField (DataRecord &rec)
 {
   try
@@ -262,6 +271,7 @@ void MSReader::readField (DataRecord &rec)
   }
 }
 
+//##ModelId=3DB9389000E4
 void MSReader::readFeed (DataRecord &rec)
 {
   try

@@ -59,15 +59,19 @@ using namespace UVD;
 
 // this helper class implements a virtual columns
 // (in lieu of truly virtual array dimensions)
+//##ModelId=3DB95AB40296
 template<class T>
 class Virtual
 {
   protected:
+    //##ModelId=3DB95AB40369
       const T* data;
+    //##ModelId=3DB95AB40374
       bool is_vec;
 
   public:
       // initializes a virtual column
+    //##ModelId=3DB95AB40379
       void init (const NestableContainer &rec,const HIID &id,int nrow)
       {
         int sz;
@@ -77,13 +81,16 @@ class Virtual
           FailWhen(sz != nrow,"mismatch in size of column "+id.toString());
       }
       
+    //##ModelId=3DB95AB40383
       Virtual () {};
 
+    //##ModelId=3DB95AB40384
       Virtual (const NestableContainer &rec,const HIID &id,int nrow)
       {
         init(rec,id,nrow);
       }
 
+    //##ModelId=3DB95AB4038D
       T operator [] (int n) const 
       {
         return data[ is_vec ? n : 0 ];
@@ -92,14 +99,17 @@ class Virtual
 
 // this helper class implements an optional virtual column
 // same as Virtual, except the column is allowed to not exist
+//##ModelId=3DB95AB4027C
 template<class T>
 class Optional : public Virtual<T>
 {
   protected:
+    //##ModelId=3DB95AB40331
       T defval;
   
   public:
       // initializes an optional/virtual column
+    //##ModelId=3DB95AB4033A
       Optional(const NestableContainer &rec,const HIID &id,int nrow,T Defval = 0 )
         : defval(Defval)
       {
@@ -109,9 +119,11 @@ class Optional : public Virtual<T>
           data = 0;
       }
 
+    //##ModelId=3DB95AB40342
       bool exists () const
       { return data != 0; };
 
+    //##ModelId=3DB95AB40344
       T operator [] (int n) const 
       {
         if( !data )
@@ -120,6 +132,8 @@ class Optional : public Virtual<T>
       }
 };
 
+//##ModelId=3CEB5F5A027D
+//##ModelId=3DB9387F0313
 //## end module%3CEA4ACC0191.additionalDeclarations
 
 
@@ -139,6 +153,7 @@ MSFiller::MSFiller (const string &msname, const DataRecord &hdr)
 }
 
 
+//##ModelId=3DB9387F02EB
 MSFiller::~MSFiller()
 {
   //## begin MSFiller::~MSFiller%3CEA4A9E0070_dest.body preserve=yes
@@ -153,6 +168,7 @@ MSFiller::~MSFiller()
 
 
 
+//##ModelId=3CEA4AFB02B9
 //## Other Operations (implementation)
 bool MSFiller::create (const string &msname, const DataRecord &hdr)
 {
@@ -218,6 +234,7 @@ bool MSFiller::create (const string &msname, const DataRecord &hdr)
   //## end MSFiller::create%3CEA4AFB02B9.body
 }
 
+//##ModelId=3CEB5AA201D5
 bool MSFiller::startSegment (const DataRecord &hdr)
 {
   //## begin MSFiller::startSegment%3CEB5AA201D5.body preserve=yes
@@ -229,6 +246,7 @@ bool MSFiller::startSegment (const DataRecord &hdr)
   //## end MSFiller::startSegment%3CEB5AA201D5.body
 }
 
+//##ModelId=3CEB5E3E00C6
 bool MSFiller::addChunk (const DataRecord &rec)
 {
   //## begin MSFiller::addChunk%3CEB5E3E00C6.body preserve=yes
@@ -357,6 +375,7 @@ bool MSFiller::addChunk (const DataRecord &rec)
   //## end MSFiller::addChunk%3CEB5E3E00C6.body
 }
 
+//##ModelId=3CEB5E4F01CF
 bool MSFiller::endSegment ()
 {
   //## begin MSFiller::endSegment%3CEB5E4F01CF.body preserve=yes
@@ -364,6 +383,7 @@ bool MSFiller::endSegment ()
   //## end MSFiller::endSegment%3CEB5E4F01CF.body
 }
 
+//##ModelId=3CECBBD102DA
 void MSFiller::close ()
 {
   //## begin MSFiller::close%3CECBBD102DA.body preserve=yes
@@ -380,6 +400,7 @@ void MSFiller::close ()
 }
 
 // Additional Declarations
+//##ModelId=3DB9388102D7
   //## begin MSFiller%3CEA4A9E0070.declarations preserve=yes
   //## end MSFiller%3CEA4A9E0070.declarations
 
@@ -423,6 +444,7 @@ void MSFiller::allocateDDI (int spwid,const vector<int> &corrs)
   }
 }
 
+//##ModelId=3DB938820075
 void MSFiller::fillAntenna (const DataRecord &rec)
 {
   // use AIPS++ antenna subtable, if it exists
@@ -450,6 +472,7 @@ void MSFiller::fillAntenna (const DataRecord &rec)
   }
 }
 
+//##ModelId=3DB938820379
 void MSFiller::fillSource (const DataRecord &rec)
 {
   if( rec[AidAIPSPP|FSourceSubtable].exists() )
@@ -475,6 +498,7 @@ void MSFiller::fillSource (const DataRecord &rec)
   }
 }
 
+//##ModelId=3DB938830225
 void MSFiller::fillSpectralWindow (const DataRecord &rec)
 {
   // use AIPS++ antenna subtable, if it exists
@@ -507,6 +531,7 @@ void MSFiller::fillSpectralWindow (const DataRecord &rec)
   }
 }
 
+//##ModelId=3DB9388300D1
 void MSFiller::fillField (const DataRecord &rec)
 {
   // use AIPS++ antenna subtable, if it exists
@@ -533,6 +558,7 @@ void MSFiller::fillField (const DataRecord &rec)
   }
 }
 
+//##ModelId=3DB9388201A2
 void MSFiller::fillFeed (const DataRecord &rec)
 {
   if( rec[AidAIPSPP|FFeedSubtable].exists() )
