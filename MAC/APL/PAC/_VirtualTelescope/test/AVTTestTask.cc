@@ -21,58 +21,28 @@
 //#  $Id$
 
 #include <GCF/GCF_PValue.h>
+#include <GCF/GCF_PVString.h>
+#include <GCF/GCF_PVDouble.h>
 #include "AVTTest.h"
 #include "AVTTestTask.h"
+#include "PropertyDefines.h" 
+
 #include "../src/LogicalDevice_Protocol.ph"
 
 #include <stdio.h>
 
-string sTaskName          = "AVTTest";
-string sSBFName           = "AVTTestSBF1";
-const string sSBFAPCName  = "AVTTestSBFAPC";
-const string sSBFAPCScope = "AVTTestSBFAPCScope";
-string sVTName            = "AVTTestVT1";
-const string sVTAPCName   = "AVTTestVTAPC";
-const string sVTAPCScope  = "AVTTestVTAPCScope";
-string sBSName            = "BeamServer";
-
-const TProperty  propertySBFStatus =
-{
-  "status",
-  GCFPValue::LPT_STRING,
-  GCF_READABLE_PROP|GCF_WRITABLE_PROP,
-  "unknown"
-};
-
-const TPropertySet primaryPropertySetSBF =
-{
-  1,
-  "LCU1_VT1",
-  &propertySBFStatus
-};
- 
-const TProperty propertyVTStatus = 
-{
-  "status",
-  GCFPValue::LPT_STRING,
-  GCF_READABLE_PROP|GCF_WRITABLE_PROP,
-  "unknown"
-};
-
-const TPropertySet primaryPropertySetVT = 
-{
-  1,
-  "LCU1",
-  &propertyVTStatus
-};
+string AVTTestTask::m_taskName("AVTTest");
 
 AVTTestTask::AVTTestTask(AVTTest& tester) :
-  GCFTask((State)&AVTTestTask::initial, sTaskName),
-  m_beamformer(),
-  m_virtualTelescope(),
-  m_BFPort(),
-  m_VTPort(),
-  m_tester(tester)
+  GCFTask((State)&AVTTestTask::initial, m_taskName),
+  m_tester(tester),
+  m_answer(*this),
+  m_propertyLDScommand(scopedPropertyLDScommand),
+  m_propertyLDSstatus(scopedPropertyLDSstatus),
+  m_propertySBFdirectionType(scopedPropertySBFdirectionType),
+  m_propertySBFdirectionAngle1(scopedPropertySBFdirectionAngle1),
+  m_propertySBFdirectionAngle2(scopedPropertySBFdirectionAngle2),
+  m_propertySBFstatus(scopedPropertySBFstatus)
 {
 }
 
@@ -87,8 +57,8 @@ GCFEvent::TResult AVTTestTask::initial(GCFEvent& e, GCFPortInterface& /*p*/)
   switch (e.signal)
   {
     case F_INIT_SIG:
-      m_BFPort.init(*m_beamformer.get(), "AVTTestClient", GCFPortInterface::SAP, LOGICALDEVICE_PROTOCOL);
-      m_VTPort.init(*m_virtualTelescope.get(), "AVTTestClient", GCFPortInterface::SAP, LOGICALDEVICE_PROTOCOL);
+      m_propertyLDSstatus.subscribe();
+      m_propertySBFstatus.subscribe();
       TRAN(AVTTestTask::test1);
       break;
 
@@ -146,7 +116,7 @@ GCFEvent::TResult AVTTestTask::test2(GCFEvent& e, GCFPortInterface& /*p*/)
 }
 
 /* 
- * Test case: create beamformer
+ * Test case: create virtual telescope
  */
 GCFEvent::TResult AVTTestTask::test3(GCFEvent& e, GCFPortInterface& /*p*/)
 {
@@ -156,15 +126,42 @@ GCFEvent::TResult AVTTestTask::test3(GCFEvent& e, GCFPortInterface& /*p*/)
   {
     case F_ENTRY_SIG:
     {
-      
-      m_beamformer.reset(new AVTStationBeamformer(sSBFName,primaryPropertySetSBF,sSBFAPCName,sSBFAPCScope,sBSName));
-      
-      m_virtualTelescope.reset(new AVTVirtualTelescope(sVTName,primaryPropertySetVT,sVTAPCName,sVTAPCScope,*m_beamformer.get()));
-      
-      m_tester._avttest(m_beamformer.get()!=0 && m_virtualTelescope.get()!=0);
-      TRAN(AVTTestTask::test4);
+      // SCHEDULE <vt_name>,<bf_name>,<srg_name>,<starttime>,<stoptime>,
+      //          <frequency>,<subbands>,<direction>
+      string cmd("SCHEDULE ");
+      string devices("VT1,SBF1,SRG1,");
+      string times("0,0,");
+      string freq("110.0,");
+      string subbands("0|1|2|3|4|5|6|7|8|9|10|11,");
+      string direction("AZEL,0.0,0.0");
+      GCFPVString command(cmd+devices+times+freq+subbands+direction);
+      if (m_propertyLDScommand.setValue(command) != GCF_NO_ERROR)
+      {
+        m_tester._avttest(false);
+        TRAN(AVTTestTask::test4);
+      }
       break;
     }
+    
+    case F_VCHANGEMSG_SIG:
+    {
+      GCFPropValueEvent* pResponse = static_cast<GCFPropValueEvent*>(&e);
+      assert(pResponse);
+      string expectedProperty=m_propertyLDSstatus.getFullName();
+      if(strncmp(pResponse->pPropName, expectedProperty.c_str(), expectedProperty.length()) == 0)
+      {
+        if(((GCFPVString*)pResponse->pValue)->getValue() == string("OK"))
+        {
+          m_tester._avttest(true);
+        }
+        else
+        {
+          m_tester._avttest(true);
+        }
+        TRAN(AVTTestTask::test4);
+      }
+    }
+      
     default:
       status = GCFEvent::NOT_HANDLED;
       break;
@@ -183,9 +180,34 @@ GCFEvent::TResult AVTTestTask::test4(GCFEvent& e, GCFPortInterface& /*p*/)
   switch (e.signal)
   {
     case F_ENTRY_SIG:
-      m_tester._avttest(true);
-      TRAN(AVTTestTask::test5);
+    {
+//      GCFPVString command(string("0"));
+//      if (m_propertySBFsubbandSelection.setValue(command) != GCF_NO_ERROR)
+      {
+        m_tester._avttest(false);
+        TRAN(AVTTestTask::test5);
+      }
       break;
+    }
+    
+    case F_VCHANGEMSG_SIG:
+    {
+      GCFPropValueEvent* pResponse = static_cast<GCFPropValueEvent*>(&e);
+      assert(pResponse);
+      string expectedProperty=m_propertyLDSstatus.getFullName();
+      if(strncmp(pResponse->pPropName, expectedProperty.c_str(), expectedProperty.length()) == 0)
+      {
+        if(((GCFPVString*)pResponse->pValue)->getValue() == string("OK"))
+        {
+          m_tester._avttest(true);
+        }
+        else
+        {
+          m_tester._avttest(true);
+        }
+        TRAN(AVTTestTask::test5);
+      }
+    }
 
     default:
       status = GCFEvent::NOT_HANDLED;
@@ -227,9 +249,38 @@ GCFEvent::TResult AVTTestTask::test6(GCFEvent& e, GCFPortInterface& /*p*/)
   switch (e.signal)
   {
     case F_ENTRY_SIG:
-      m_tester._avttest(true);
-      TRAN(AVTTestTask::test7);
+    {
+      GCFPVString directionType(string("AZEL"));
+      GCFPVDouble directionAngle1(45.0);
+      GCFPVDouble directionAngle2(45.0);
+      if(m_propertySBFdirectionType.setValue(directionType) != GCF_NO_ERROR ||
+         m_propertySBFdirectionAngle1.setValue(directionAngle1) != GCF_NO_ERROR ||
+         m_propertySBFdirectionAngle2.setValue(directionAngle2) != GCF_NO_ERROR)
+      {
+        m_tester._avttest(false);
+        TRAN(AVTTestTask::test7);
+      }
       break;
+    }
+    
+    case F_VCHANGEMSG_SIG:
+    {
+      GCFPropValueEvent* pResponse = static_cast<GCFPropValueEvent*>(&e);
+      assert(pResponse);
+      string expectedProperty=m_propertySBFstatus.getFullName();
+      if(strncmp(pResponse->pPropName, expectedProperty.c_str(), expectedProperty.length()) == 0)
+      {
+        if(((GCFPVString*)pResponse->pValue)->getValue() == string("OK"))
+        {
+          m_tester._avttest(true);
+        }
+        else
+        {
+          m_tester._avttest(true);
+        }
+        TRAN(AVTTestTask::test7);
+      }
+    }
 
     default:
       status = GCFEvent::NOT_HANDLED;
@@ -262,7 +313,7 @@ GCFEvent::TResult AVTTestTask::test7(GCFEvent& e, GCFPortInterface& /*p*/)
 }
 
 /* 
- * Test case: cleanup
+ * Test case: to be done
  */
 GCFEvent::TResult AVTTestTask::test8(GCFEvent& e, GCFPortInterface& /*p*/)
 {
@@ -284,7 +335,7 @@ GCFEvent::TResult AVTTestTask::test8(GCFEvent& e, GCFPortInterface& /*p*/)
 }
 
 /* 
- * Test case: tbd
+ * Test case: cleanup
  */
 GCFEvent::TResult AVTTestTask::test9(GCFEvent& e, GCFPortInterface& /*p*/)
 {
@@ -305,7 +356,6 @@ GCFEvent::TResult AVTTestTask::test9(GCFEvent& e, GCFPortInterface& /*p*/)
   return status;
 }
 
-
 /* 
  * End of all tests
  */
@@ -316,6 +366,8 @@ GCFEvent::TResult AVTTestTask::finished(GCFEvent& e, GCFPortInterface& /*p*/)
   switch (e.signal)
   {
     case F_ENTRY_SIG:
+      m_propertyLDSstatus.unsubscribe();
+      m_propertySBFstatus.unsubscribe();
       GCFTask::stop();
       break;
 

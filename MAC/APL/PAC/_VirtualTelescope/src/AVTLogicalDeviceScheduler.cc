@@ -28,28 +28,19 @@
 #include "AVTLogicalDeviceScheduler.h"
 #define DECLARE_SIGNAL_NAMES
 #include "LogicalDevice_Protocol.ph"
+#include "../test/PropertyDefines.h"
+#include "AVTDefines.h"
+#include "AVTStationBeamformer.h"
+#include "AVTVirtualTelescope.h"
+#include "AVTUtilities.h"
 
-const TProperty propertiesLDS[] =
-{
-  {"command", GCFPValue::LPT_STRING, (GCF_READABLE_PROP | GCF_WRITABLE_PROP), ""},
-  {"status", GCFPValue::LPT_STRING, (GCF_READABLE_PROP | GCF_WRITABLE_PROP), ""},
-};
-
-const TPropertySet propertySetLDS = 
-{
-  2, "Station_LogicalDeviceScheduler", propertiesLDS
-};
-
-string gSchedulerTaskName("AVTLogicalDeviceScheduler");
-
+string AVTLogicalDeviceScheduler::m_schedulerTaskName("AVTLogicalDeviceScheduler");
 
 AVTLogicalDeviceScheduler::AVTLogicalDeviceScheduler() :
-  GCFTask((State)&AVTLogicalDeviceScheduler::initial_state,gSchedulerTaskName),
+  GCFTask((State)&AVTLogicalDeviceScheduler::initial_state,m_schedulerTaskName),
   AVTPropertySetAnswerHandlerInterface(),
   m_propertySetAnswer(*this),
   m_properties(propertySetLDS,&m_propertySetAnswer),
-  m_serverPortName(string("AVTLogicalDeviceScheduler_server")),
-  m_logicalDeviceSchedulerPort(*this, m_serverPortName, GCFPortInterface::SPP, LOGICALDEVICE_PROTOCOL),
   m_logicalDeviceMap()
 {
   LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTLogicalDeviceScheduler::AVTLogicalDeviceScheduler(%s)",getName().c_str()));
@@ -59,11 +50,6 @@ AVTLogicalDeviceScheduler::AVTLogicalDeviceScheduler() :
 AVTLogicalDeviceScheduler::~AVTLogicalDeviceScheduler()
 {
   LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTLogicalDeviceScheduler::~AVTLogicalDeviceScheduler(%s)",getName().c_str()));
-}
-
-string& AVTLogicalDeviceScheduler::getServerPortName()
-{
-  return m_serverPortName;
 }
 
 GCFEvent::TResult AVTLogicalDeviceScheduler::initial_state(GCFEvent& event, GCFPortInterface& /*port*/)
@@ -80,8 +66,6 @@ GCFEvent::TResult AVTLogicalDeviceScheduler::initial_state(GCFEvent& event, GCFP
 
     case F_ENTRY_SIG:
       LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTLogicalDeviceScheduler::initial_state, F_ENTRY_SIG (%s)",getName().c_str()));
-      // open all ports
-      m_logicalDeviceSchedulerPort.open();
       break;
 
     case F_CONNECTED_SIG:
@@ -90,12 +74,10 @@ GCFEvent::TResult AVTLogicalDeviceScheduler::initial_state(GCFEvent& event, GCFP
 
     case F_DISCONNECTED_SIG:
       LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTLogicalDeviceScheduler::initial_state, F_DISCONNECTED_SIG (%s)",getName().c_str()));
-      m_logicalDeviceSchedulerPort.setTimer(1.0); // try again after 1 second
       break;
 
     case F_TIMER_SIG:
       LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTLogicalDeviceScheduler::initial_state, F_TIMER_SIG (%s)",getName().c_str()));
-      m_logicalDeviceSchedulerPort.open(); // try again
       break;
 
     default:
@@ -109,7 +91,7 @@ GCFEvent::TResult AVTLogicalDeviceScheduler::initial_state(GCFEvent& event, GCFP
 void AVTLogicalDeviceScheduler::handlePropertySetAnswer(GCFEvent& answer)
 {
   LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTLogicalDeviceScheduler::handlePropertySetAnswer (%s)",getName().c_str()));
-  //todo
+
   switch(answer.signal)
   {
     case F_VCHANGEMSG_SIG:
@@ -118,66 +100,79 @@ void AVTLogicalDeviceScheduler::handlePropertySetAnswer(GCFEvent& answer)
       GCFPropValueEvent* pPropAnswer = static_cast<GCFPropValueEvent*>(&answer);
       assert(pPropAnswer);
       if ((pPropAnswer->pValue->getType() == GCFPValue::LPT_STRING) &&
-          (strstr(pPropAnswer->pPropName, "VirtualTelescope_command") != 0))
+          (strstr(pPropAnswer->pPropName, propertyLDScommand.c_str()) != 0))
       {
         // command received
-        string command(((GCFPVString*)pPropAnswer->pValue)->getValue());
-        // decode command
-        unsigned int delim=command.find(' ');
-        if(delim==string::npos)
+        string commandString(((GCFPVString*)pPropAnswer->pValue)->getValue());
+        vector<string> parameters;
+        string command;
+        AVTUtilities::decodeCommand(commandString,command,parameters);
+        
+        // SCHEDULE <vt_name>,<bf_name>,<srg_name>,<starttime>,<stoptime>,
+        //          <frequency>,<subbands>,<direction>
+        if(command==string("SCHEDULE"))
         {
-          delim=command.length(); // no space found
-        }
-        string subCommand=command.substr(0,delim);
-        // SCHEDULE <vt_name>,<bf_name>,<srg_name>
-        if(subCommand==string("SCHEDULE"))
-        {
-          string parameters[3];
-          for(int i=0;i<3;i++)
+          if(parameters.size()==8)
           {
-            unsigned int nextDelim=command.find(',',delim);
-            if(nextDelim==string::npos)
-            {
-              nextDelim=command.length()-delim; // no space found
-            }
-            if(nextDelim!=0)
-            {
-              parameters[i] = command.substr(delim,nextDelim);
-              delim=nextDelim;
-            } 
-          }
-          if(parameters[0]!=""&&parameters[1]!=""&&parameters[2]!="")
-          {
+            LogicalDeviceInfoT            srgInfo;
+            LogicalDeviceInfoT            sbfInfo;
+            SchedulableLogicalDeviceInfoT vtInfo;
+            
             // create SRG
-//            m_logicalDeviceMap[parameters[2]]=new AVTStationReceptorGroup();
+//            boost::shared_ptr<> srg(new AVTStationReceptorGroup());        
+//            srgInfo.logicalDevice=srg;
             
             // create SBF
-//            boost::shared_ptr<AVTStationBeamformer> beamformer=new AVTStationBeamformer(parameters[1],primaryPropertySetSBF,sSBFAPCName,sSBFAPCScope,sBSName);
-//            m_logicalDeviceMap[parameters[1]]=beamformer;
+            boost::shared_ptr<AVTStationBeamformer> sbf(new AVTStationBeamformer(parameters[1],primaryPropertySetSBF,sSBFAPCName,sSBFAPCScope,sBSName));
+            sbfInfo.logicalDevice=sbf;
             
             // create VT
-//            m_logicalDeviceMap[parameters[0]]=new AVTVirtualTelescope(parameters[0],primaryPropertySetVT,sVTAPCName,sVTAPCScope,*beamformer.get());
+            boost::shared_ptr<AVTVirtualTelescope> vt(new AVTVirtualTelescope(parameters[0],primaryPropertySetVT,sVTAPCName,sVTAPCScope,*sbf.get()));
+            vtInfo.logicalDevice=vt;
+            vtInfo.clientPort.reset(new GCFPort(*this, vt->getServerPortName(), GCFPortInterface::SAP, LOGICALDEVICE_PROTOCOL));
+            vtInfo.children[parameters[1]]=sbfInfo;
+            vtInfo.children[parameters[2]]=srgInfo;
+            vtInfo.startTime=atoi(parameters[3].c_str());
+            vtInfo.stopTime=atoi(parameters[4].c_str());
+            vtInfo.parameters.push_back(parameters[3]); // send start time also to VT to trigger activation
+            vtInfo.parameters.push_back(parameters[4]); // send stop time also to VT to trigger deactivation
+            vtInfo.parameters.push_back(parameters[5]); // frequency
+            vtInfo.parameters.push_back(parameters[6]); // subbands
+            vtInfo.parameters.push_back(parameters[7]); // direction type
+            vtInfo.parameters.push_back(parameters[8]); // angle1
+            vtInfo.parameters.push_back(parameters[9]); // angle2
+            
+            m_logicalDeviceMap[parameters[0]]=vtInfo;
+            
+            // increment1: ignore starting and stopping time, start the damn thing right now!
+            // in the future, the scheduler will claim, prepare and resume the scheduled Logical Devices.
+            
+            // claim
+            GCFEvent claimEvent(LOGICALDEVICE_CLAIM);
+            vtInfo.clientPort->send(claimEvent);
+            
+            // prepare
+            char prepareParameters[700];
+            AVTUtilities::encodeParameters(vtInfo.parameters,prepareParameters,700);
+            
+            LOGICALDEVICEPrepareEvent prepareEvent(prepareParameters);
+            // send prepare to Virtual Telescope. VT will send prepare to SBF and SRG
+            vtInfo.clientPort->send(prepareEvent);
+            
+            // the logical device resumes itself after preparation using the starttime
           }
         }
         // RELEASE <name>
-        else if(subCommand==string("RELEASE"))
+        else if(command==string("RELEASE"))
         {
-          string parameter;
-          unsigned int nextDelim=command.find(',',delim);
-          if(nextDelim==string::npos)
+          if(parameters.size()==1)
           {
-            nextDelim=command.length()-delim; // no space found
-          }
-          if(nextDelim!=0)
-          {
-            parameter = command.substr(delim,nextDelim);
-            if(parameter!="")
+            SchedulableLogicalDeviceMapT::iterator it=m_logicalDeviceMap.find(parameters[0]);
+            if(it!=m_logicalDeviceMap.end())
             {
-              LogicalDeviceMapT::iterator it=m_logicalDeviceMap.find(parameter);
-              if(it!=m_logicalDeviceMap.end())
-              {
-                it->second.reset(); // destroy object
-              }
+              // remove the object from the map. The Port instance and children Logical Device instances
+              // are destroyed too because they are smart pointers.
+              m_logicalDeviceMap.erase(it);
             }
           } 
         }

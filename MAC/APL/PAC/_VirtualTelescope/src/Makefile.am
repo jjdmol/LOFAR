@@ -5,6 +5,8 @@ SUFFIXES = .ph
 	chmod a+w $@
 
 DOCHDRS	=	\
+	AVTDefines.h \
+	AVTUtilities.h \
 	AVTAPCAnswer.h \
 	AVTAPCAnswerHandlerInterface.h \
 	AVTLogicalDevice.h \
@@ -17,6 +19,7 @@ DOCHDRS	=	\
 noinst_LTLIBRARIES 	= libvirtualtelescope.la
 
 libvirtualtelescope_la_SOURCES= $(DOCHDRS) \
+	AVTUtilities.cc \
 	AVTAPCAnswer.cc \
 	AVTLogicalDevice.cc \
 	AVTLogicalDeviceScheduler.cc \

@@ -24,6 +24,7 @@
 #include "AVTVirtualTelescope.h"
 #include "AVTStationBeamformer.h"
 #include "LogicalDevice_Protocol.ph"
+#include "AVTUtilities.h"
 
 AVTVirtualTelescope::AVTVirtualTelescope(string& taskName, 
                                          const TPropertySet& primaryPropertySet,
@@ -32,7 +33,10 @@ AVTVirtualTelescope::AVTVirtualTelescope(string& taskName,
                                          AVTStationBeamformer& sbf) :
   AVTLogicalDevice(taskName,primaryPropertySet,APCName,APCScope),
   m_stationBeamformer(sbf),
-  m_beamFormerClient(*this, sbf.getServerPortName(), GCFPortInterface::SAP, LOGICALDEVICE_PROTOCOL)
+  m_beamFormerClient(*this, sbf.getServerPortName(), GCFPortInterface::SAP, LOGICALDEVICE_PROTOCOL),
+  m_startTime(0),
+  m_stopTime(0),
+  m_frequency(0.0)
 {
   LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTVirtualTelescope::AVTVirtualTelescope(%s)",getName().c_str()));
 }
@@ -41,6 +45,23 @@ AVTVirtualTelescope::AVTVirtualTelescope(string& taskName,
 AVTVirtualTelescope::~AVTVirtualTelescope()
 {
   LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTVirtualTelescope::~AVTVirtualTelescope(%s)",getName().c_str()));
+}
+
+void AVTVirtualTelescope::setStartTime(const time_t startTime)
+{
+  // activate timer that triggers the prepare command
+  m_startTime=startTime;
+}
+
+void AVTVirtualTelescope::setStopTime(const time_t stopTime)
+{
+  // activate timer that triggers the suspend command
+  m_stopTime=stopTime;
+}
+
+void AVTVirtualTelescope::setFrequency(const double frequency)
+{
+  m_frequency=frequency;
 }
 
 bool AVTVirtualTelescope::_isBeamFormerClient(GCFPortInterface& port)
@@ -136,10 +157,12 @@ GCFEvent::TResult AVTVirtualTelescope::concrete_claiming_state(GCFEvent& event, 
   return status;
 }
 
-GCFEvent::TResult AVTVirtualTelescope::concrete_preparing_state(GCFEvent& event, GCFPortInterface& port, bool& stateFinished)
+GCFEvent::TResult AVTVirtualTelescope::concrete_preparing_state(GCFEvent& event, GCFPortInterface& port, bool& stateFinished, bool& error)
 {
   LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTVirtualTelescope::concrete_preparing_state (%s)",getName().c_str()));
   GCFEvent::TResult status = GCFEvent::HANDLED;
+  stateFinished=false;
+  error=false;
 
   switch (event.signal)
   {
@@ -186,10 +209,18 @@ GCFEvent::TResult AVTVirtualTelescope::concrete_releasing_state(GCFEvent& event,
   return status;
 }
 
-void AVTVirtualTelescope::handlePropertySetAnswer(GCFEvent& /*answer*/)
+void AVTVirtualTelescope::handlePropertySetAnswer(GCFEvent& answer)
 {
   LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTVirtualTelescope::handlePropertySetAnswer (%s)",getName().c_str()));
-  //todo
+
+  switch(answer.signal)
+  {
+    case F_VCHANGEMSG_SIG:
+      break;
+
+    default:
+      break;
+  }  
 }
 
 void AVTVirtualTelescope::handleAPCAnswer(GCFEvent& /*answer*/)
@@ -208,14 +239,23 @@ void AVTVirtualTelescope::concreteClaim(GCFPortInterface& /*port*/)
   m_beamFormerClient.send(event);
 }
 
-void AVTVirtualTelescope::concretePrepare(GCFPortInterface& /*port*/)
+void AVTVirtualTelescope::concretePrepare(GCFPortInterface& /*port*/,string& parameters)
 {
-  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTVirtualTelescope::concrete_initial_state (%s)",getName().c_str()));
+  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTVirtualTelescope::concretePrepare (%s)",getName().c_str()));
   // prepare my own resources
+  vector<string> decodedParameters;
+  AVTUtilities::decodeParameters(parameters,decodedParameters);
+  // parameters: start time,stop time,frequency,subbands,direction type,angle1,angle2
+  setStartTime(atoi(decodedParameters[0].c_str()));
+  setStopTime(atoi(decodedParameters[1].c_str()));
+  setFrequency(atof(decodedParameters[2].c_str()));
   
   // send prepare message to BeamFormer
-  GCFEvent event(LOGICALDEVICE_PREPARE);
-  m_beamFormerClient.send(event);
+  // all parameters are forwarded to the beamformer
+  char prepareParameters[700];
+  strncpy(prepareParameters,parameters.c_str(),700);
+  LOGICALDEVICEPrepareEvent prepareEvent(prepareParameters);
+  m_beamFormerClient.send(prepareEvent);
 }
 
 void AVTVirtualTelescope::concreteResume(GCFPortInterface& /*port*/)

@@ -75,14 +75,31 @@ class AVTLogicalDeviceScheduler : public GCFTask,
     AVTLogicalDeviceScheduler& operator=(const AVTLogicalDeviceScheduler&);
 
   private:
+    static string m_schedulerTaskName;
+    
+
     AVTPropertySetAnswer  m_propertySetAnswer;
     GCFMyPropertySet      m_properties;
-    string                m_serverPortName;
-    // LogicalDeviceScheduler SPP
-    GCFPort               m_logicalDeviceSchedulerPort;
     
-    typedef map<string,boost::shared_ptr<AVTLogicalDevice> > LogicalDeviceMapT;
-    LogicalDeviceMapT     m_logicalDeviceMap;
-   
+    typedef struct LogicalDeviceInfoT
+    {
+      boost::shared_ptr<AVTLogicalDevice> logicalDevice;
+      vector<string>                      parameters;
+      map<string,LogicalDeviceInfoT>      children; // recursive
+    };
+    typedef map<string,LogicalDeviceInfoT> LogicalDeviceMapT;
+    
+    typedef struct SchedulableLogicalDeviceInfoT
+    {
+      boost::shared_ptr<AVTLogicalDevice> logicalDevice;
+      boost::shared_ptr<GCFPort>          clientPort;
+      int                                 startTime;
+      int                                 stopTime;
+      vector<string>                      parameters;
+      LogicalDeviceMapT                   children; // recursive
+    };
+    typedef map<string,SchedulableLogicalDeviceInfoT> SchedulableLogicalDeviceMapT;
+    
+    SchedulableLogicalDeviceMapT  m_logicalDeviceMap;
 };
 #endif

@@ -204,7 +204,14 @@ GCFEvent::TResult AVTLogicalDevice::claimed_state(GCFEvent& event, GCFPortInterf
       if(_isLogicalDeviceServerPort(port))
       {
         TRAN(AVTLogicalDevice::preparing_state);
-        concretePrepare(port);
+        
+        string parameters;
+        LOGICALDEVICEPrepareEvent* pPrepareEvent=static_cast<LOGICALDEVICEPrepareEvent*>(&event);
+        if(pPrepareEvent!=0)
+        {
+          parameters=pPrepareEvent->parameters;
+        }
+        concretePrepare(port,parameters);
       }
       else
       {
@@ -257,11 +264,19 @@ GCFEvent::TResult AVTLogicalDevice::preparing_state(GCFEvent& event, GCFPortInte
       LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTLogicalDevice::preparing_state, default (%s)",getName().c_str()));
       // call the implementation of the derived class
       bool stateFinished=false;
-      status = concrete_preparing_state(event,port,stateFinished);
-      if(stateFinished)
+      bool error=false;
+      status = concrete_preparing_state(event,port,stateFinished,error);
+      if(error)
       {
-        port.send(LOGICALDEVICE_PREPARED);
-        TRAN(AVTLogicalDevice::suspended_state);
+        TRAN(AVTLogicalDevice::claimed_state);
+      }
+      else
+      {
+        if(stateFinished)
+        {
+          port.send(LOGICALDEVICE_PREPARED);
+          TRAN(AVTLogicalDevice::suspended_state);
+        }
       }
       break;
   }
@@ -285,7 +300,14 @@ GCFEvent::TResult AVTLogicalDevice::suspended_state(GCFEvent& event, GCFPortInte
       if(_isLogicalDeviceServerPort(port))
       {
         TRAN(AVTLogicalDevice::preparing_state);
-        concretePrepare(port);
+
+        string parameters;
+        LOGICALDEVICEPrepareEvent* pPrepareEvent=static_cast<LOGICALDEVICEPrepareEvent*>(&event);
+        if(pPrepareEvent!=0)
+        {
+          parameters=pPrepareEvent->parameters;
+        }
+        concretePrepare(port,parameters);
       }
       else
       {

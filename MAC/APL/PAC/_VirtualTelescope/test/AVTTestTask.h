@@ -29,13 +29,14 @@
 //# GCF Includes
 #include <GCF/GCF_Task.h>
 #include <GCF/GCF_Port.h>
-#include <GCF/GCF_MyPropertySet.h>
-#include <GCF/GCF_Apc.h>
+#include <GCF/GCF_Property.h>
 #include <boost/shared_ptr.hpp>
 
 //# VirtualTelescope Includes
 #include "../src/AVTVirtualTelescope.h"
 #include "../src/AVTStationBeamformer.h"
+
+#include "AVTTestAnswer.h"
 
 // forward declaration
 class GCFEvent;
@@ -67,12 +68,17 @@ class AVTTestTask : public GCFTask
     GCFEvent::TResult test9(GCFEvent& e, GCFPortInterface& p);
     GCFEvent::TResult finished(GCFEvent& e, GCFPortInterface& p);
     
-    boost::shared_ptr<AVTStationBeamformer> m_beamformer;
-    boost::shared_ptr<AVTVirtualTelescope>  m_virtualTelescope;
-    GCFPort              m_BFPort;
-    GCFPort              m_VTPort;
+    static string m_taskName;
     
-    AVTTest& m_tester;
+    AVTTest&        m_tester;
+    AVTTestAnswer   m_answer;
+    GCFProperty     m_propertyLDScommand;
+    GCFProperty     m_propertyLDSstatus;
+    GCFProperty     m_propertySBFdirectionType;
+    GCFProperty     m_propertySBFdirectionAngle1;
+    GCFProperty     m_propertySBFdirectionAngle2;
+    GCFProperty     m_propertySBFstatus;
+    
 };
 
 #endif

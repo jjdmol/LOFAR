@@ -23,7 +23,8 @@
 #include "../../../APLCommon/src/APL_Defines.h"
 #include "AVTStationBeamformer.h"
 #include "LogicalDevice_Protocol.ph"
-#include "APLCommon/src/BeamServer_Protocol.ph"
+#include "AVTUtilities.h"
+#include "PAC/BeamServer/src/ABS_Protocol.ph"
 
 AVTStationBeamformer::AVTStationBeamformer(string& taskName, 
                                            const TPropertySet& primaryPropertySet,
@@ -31,7 +32,15 @@ AVTStationBeamformer::AVTStationBeamformer(string& taskName,
                                            const string& APCScope,
                                            string& beamServerPortName) :
   AVTLogicalDevice(taskName,primaryPropertySet,APCName,APCScope),
-  m_beamServer(*this, beamServerPortName, GCFPortInterface::SAP, BEAMSERVER_PROTOCOL)
+  m_beamServer(*this, beamServerPortName, GCFPortInterface::SAP, BEAMSERVER_PROTOCOL),
+  m_startTime(0),
+  m_stopTime(0),
+  m_frequency(0.0),
+  m_subbands(),
+  m_directionType(0),
+  m_directionAngle1(0.0),
+  m_directionAngle2(0.0),
+  m_beamID(-1)
 {
   LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTStationBeamformer::AVTStationBeamformer(%s)",getName().c_str()));
 }
@@ -40,6 +49,24 @@ AVTStationBeamformer::AVTStationBeamformer(string& taskName,
 AVTStationBeamformer::~AVTStationBeamformer()
 {
   LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTStationBeamformer::~AVTStationBeamformer(%s)",getName().c_str()));
+}
+
+void AVTStationBeamformer::setDirection(const string type,const double angle1, const double angle2)
+{
+  if(type==string("J2000"))
+  {
+    m_directionType=1;
+  }
+  else if(type==string("LMN"))
+  {
+    m_directionType=3;
+  }
+  else
+  {
+    m_directionType=2;
+  }
+  m_directionAngle1=angle1;
+  m_directionAngle2=angle2;
 }
 
 bool AVTStationBeamformer::_isBeamServerPort(GCFPortInterface& port)
@@ -140,10 +167,12 @@ GCFEvent::TResult AVTStationBeamformer::concrete_claiming_state(GCFEvent& event,
   return status;
 }
 
-GCFEvent::TResult AVTStationBeamformer::concrete_preparing_state(GCFEvent& event, GCFPortInterface& port, bool& stateFinished)
+GCFEvent::TResult AVTStationBeamformer::concrete_preparing_state(GCFEvent& event, GCFPortInterface& port, bool& stateFinished, bool& error)
 {
   LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTStationBeamformer::concrete_preparing_state (%s)",getName().c_str()));
   GCFEvent::TResult status = GCFEvent::HANDLED;
+  stateFinished=true;
+  error=false;
 
   switch (event.signal)
   {
@@ -152,11 +181,34 @@ GCFEvent::TResult AVTStationBeamformer::concrete_preparing_state(GCFEvent& event
       stateFinished=true;
       break;
       
-    case BEAMSERVER_ACK: // or something like that
-      LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTStationBeamformer::concrete_preparing_state, BEAMSERVER_ACK (%s)",getName().c_str()));
+    case ABS_BEAMALLOC_ACK: 
+      LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTStationBeamformer::concrete_preparing_state, ABS_BEAMALLOC_ACK (%s)",getName().c_str()));
       // prepared event is received from the beam server
       if(_isBeamServerPort(port))
       {
+        // check the beam ID and status of the ACK message
+        boost::shared_ptr<ABSBeamalloc_AckEvent> pAckEvent;
+        pAckEvent.reset(static_cast<ABSBeamalloc_AckEvent*>(&event));
+        if(pAckEvent.get()!=0)
+        {
+          if(pAckEvent->beam_index==m_beamID && pAckEvent->status==0)
+          {
+            // point the new beam
+            struct timeval timeArg;
+            timeArg.tv_sec=m_startTime;
+            timeArg.tv_usec=0;
+            ABSBeampointtoEvent beamPointToEvent(m_beamID,timeArg,m_directionType,m_directionAngle1,m_directionAngle2);
+            m_beamServer.send(beamPointToEvent);
+          }
+          else
+          {
+            error=true;
+          }
+        }
+        else
+        {
+          error=true;
+        }
         stateFinished=true;
       }
       break;
@@ -217,7 +269,7 @@ void AVTStationBeamformer::concreteClaim(GCFPortInterface& port)
   LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTStationBeamformer::concreteClaim (%s)",getName().c_str()));
   // claim my own resources
   
-  // send claim message to BeamFormer
+  // send claim message to BeamServer
   
   // if claiming is an async process, then the end of the claiming state
   // is determined in the concrete_claiming_state() method
@@ -226,18 +278,34 @@ void AVTStationBeamformer::concreteClaim(GCFPortInterface& port)
   dispatch(event,port);
 }
 
-void AVTStationBeamformer::concretePrepare(GCFPortInterface& port)
+void AVTStationBeamformer::concretePrepare(GCFPortInterface& port,string& parameters)
 {
   LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTStationBeamformer::concretePrepare (%s)",getName().c_str()));
   // prepare my own resources
+  vector<string> decodedParameters;
+  AVTUtilities::decodeParameters(parameters,decodedParameters);
+  // parameters: start time,stop time,frequency,subbands,direction type,angle1,angle2
+  m_startTime=atoi(decodedParameters[0].c_str());
+  m_stopTime=atoi(decodedParameters[1].c_str());
+  m_frequency=atof(decodedParameters[2].c_str());
+  AVTUtilities::decodeSubbandsParameter(decodedParameters[3],m_subbands);
+  setDirection(decodedParameters[4],atof(decodedParameters[5].c_str),atof(decodedParameters[6].c_str));
   
-  // send prepare message to BeamFormer
+  m_beamID=0; // TODO
+  int spectral_window(0);
+  int n_subbands(m_subbands.size());
+  int subbandsArray[N_BEAMLETS];
   
-  // if preparing is an async process, then the end of the preparing state
-  // is determined in the concrete_preparing_state() method
-  // Otherwise, it is done here by calling dispatch
-  GCFEvent event(LOGICALDEVICE_PREPARED);
-  dispatch(event,port);
+  memset(subbandsArray,0,sizeof(subbandsArray[0])*N_BEAMLETS);
+  vector<int>::iterator vectorIterator=m_subbands.begin();
+  int arrayIndex(0);
+  while(arrayIndex<N_BEAMLETS && vectorIterator!=m_subbands.end())
+  {
+    subbandsArray[arrayIndex++]=m_subbands[vectorIterator++];
+  }
+  
+  ABSBeamallocEvent beamAllocEvent(m_beamID,spectral_window,n_subbands,subbandsArray);
+  m_beamServer.send(beamAllocEvent);
 }
 
 void AVTStationBeamformer::concreteResume(GCFPortInterface& /*port*/)

@@ -53,32 +53,26 @@ event = {
 event = {
 	signal = CLAIM;
 	dir = IN;
-//	param = {
-//		name = "seqnr";
-//		type = "unsigned int";
-//	};
-//	param = {
-//		name = "ping_time";
-//		type = "timeval";
-//	};
 };
 
 event = {
 	signal = CLAIMED;
-	dir = IN;
+	dir = OUT;
 };
 
 event = {
 	signal = PREPARE;
 	dir = IN;
-//	param = {
-//		name = "seqnr";
-//		type = "unsigned int";
-//	};
-//	param = {
-//		name = "ping_time";
-//		type = "timeval";
-//	};
+	param = {
+		name = "parameters";
+		type = "char";
+		dim = "700";
+	};
+};
+
+event = {
+	signal = PREPARED;
+	dir = OUT;
 };
 
 event = {
@@ -95,6 +89,11 @@ event = {
 };
 
 event = {
+	signal = RESUMED;
+	dir = OUT;
+};
+
+event = {
 	signal = SUSPEND;
 	dir = IN;
 //	param = {
@@ -108,8 +107,8 @@ event = {
 };
 
 event = {
-	signal = PREPARED;
-	dir = IN;
+	signal = SUSPENDED;
+	dir = OUT;
 };
 
 event = {
@@ -127,6 +126,6 @@ event = {
 
 event = {
 	signal = RELEASED;
-	dir = IN;
+	dir = OUT;
 };
 
