@@ -255,8 +255,13 @@ bool MSFiller::addChunk (const DataRecord &rec)
   // setup pointers to data and flags
   const dcomplex *pdata = &rec[FData];
   const int *pflag = rec[FDataFlag].exists() ? rec[FDataFlag].as_int_p() : 0;
-  Vector<Complex> datavec(num_channels);
-  Vector<Bool> flagvec(num_channels,False);
+  
+  Complex data_arr[num_channels];
+  Bool flag_arr[num_channels];
+  if( !pflag )
+    memset(flag_arr,0,sizeof(flag_arr));
+  const Matrix<Complex> data_matrix(IPosition(2,1,num_channels),data_arr,SHARE);
+  const Matrix<Bool> flag_matrix(IPosition(2,1,num_channels),flag_arr,SHARE);
   
   const float *pweight = rec[FWeight].exists() ? rec[FWeight].as_float_p() : 0;
   const float *psigma  = rec[FSigma].exists() ? rec[FSigma].as_float_p() : 0;
@@ -268,6 +273,7 @@ bool MSFiller::addChunk (const DataRecord &rec)
   Optional<double> 
     centroid(rec,FTimeCentroid,nrows),
     interval(rec,FInterval,nrows);
+  Optional<int> rowflag(rec,FRowFlag,nrows);
   
   // get UVW matrix (3,nrows)
   Matrix<Double> uvw = rec[FUVW].as_Array_double();
@@ -280,17 +286,17 @@ bool MSFiller::addChunk (const DataRecord &rec)
     {
       for( int j=0; j<num_channels; j++,pdata++ )
       {
-        datavec(i) = Complex(pdata->real(),pdata->imag());
-        flagvec(i) = *pflag++;
+        data_arr[j] = Complex(pdata->real(),pdata->imag());
+        flag_arr[j] = *pflag++;
       }
     }
     else
       for( int j=0; j<num_channels; j++,pdata++ )
-        datavec(i) = Complex(pdata->real(),pdata->imag());
+        data_arr[j] = Complex(pdata->real(),pdata->imag());
     // write row to MS
-    mscol_->data().put(irow,datavec);
-    mscol_->flag().put(irow,flagvec);
-	  mscol_->flagRow().put(irow,rec[FRowFlag][i].as_int(0));
+    mscol_->data().put(irow,data_matrix);
+    mscol_->flag().put(irow,flag_matrix);
+	  mscol_->flagRow().put(irow,rowflag[i]);
 	  mscol_->time().put(irow,time[i]);
 	  mscol_->antenna1().put(irow,ant_vec ? rec[FAntennaIndex](0,i).as_int() : rec[FAntennaIndex][0].as_int());
 	  mscol_->antenna2().put(irow,ant_vec ? rec[FAntennaIndex](1,i).as_int() : rec[FAntennaIndex][1].as_int());
@@ -515,13 +521,14 @@ void MSFiller::fillFeed (const DataRecord &rec)
     MSFeedColumns msfeedCol(msfeed);
     int nfeed = feed[FAntennaIndex].size();
     msfeed.addRow(nfeed);
+    Vector<Int> numrecpt = feed[FNumReceptors];
     
     msfeedCol.antennaId().putColumn(feed[FAntennaIndex].as_Vector<Int>());
     msfeedCol.feedId().putColumn(feed[FFeedIndex].as_Vector<Int>());
     msfeedCol.spectralWindowId().putColumn(feed[FSPWIndex].as_Vector<Int>());
     msfeedCol.time().putColumn(feed[FTime].as_Vector<Double>());
     msfeedCol.interval().putColumn(feed[FInterval].as_Vector<Double>());
-    msfeedCol.numReceptors().putColumn(feed[FNumReceptors].as_Vector<Int>());
+    msfeedCol.numReceptors().putColumn(numrecpt);
     msfeedCol.beamId().putColumn(feed[FBeamIndex].as_Vector<Int>());
     msfeedCol.beamOffset().putColumn(feed[FBeamOffset].as_Array_double());
     msfeedCol.polResponse().putColumn(feed[FPolznResponse].as_Array_fcomplex());
@@ -530,7 +537,7 @@ void MSFiller::fillFeed (const DataRecord &rec)
       
     for( int i=0; i<nfeed; i++) 
     {
-      int nfeed = feed[FNumReceptors][i].as_int();
+      int nfeed = numrecpt(i);
       // split feed[FPolznType][i] at spaces, and fill in vector
       String poltype[nfeed];
       split(feed[FPolznType][i].as_string(),poltype,nfeed," ");

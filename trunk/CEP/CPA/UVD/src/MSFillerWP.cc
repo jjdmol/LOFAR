@@ -165,7 +165,7 @@ int MSFillerWP::receive (MessageRef &mref)
   else if( mref->id().matches(chunk_hdr_id) )
   {
     dprintf(2)("got segment header: %s\n",mref->sdebug(1).c_str());
-    if( state() == DATA )
+    if( state() != DATA )
     {
       lprintf(1,LogWarning,"no MS header yet, ignoring segment header %s",mref->id().toString().c_str());
       return Message::ACCEPT;
@@ -176,7 +176,7 @@ int MSFillerWP::receive (MessageRef &mref)
   else if( mref->id().matches(chunk_id) )
   {
     dprintf(2)("got data chunk: %s\n",mref->sdebug(1).c_str());
-    if( state() == DATA )
+    if( state() != DATA )
     {
       lprintf(1,LogWarning,"no MS header yet, ignoring chunk %s",mref->sdebug(1).c_str());
       return Message::ACCEPT;
@@ -186,7 +186,7 @@ int MSFillerWP::receive (MessageRef &mref)
   else if( mref->id().matches(footer_id) )
   {
     dprintf(1)("got MS footer: %s\n",mref->sdebug(1).c_str());
-    if( state() == DATA )
+    if( state() != DATA )
     {
       lprintf(1,LogWarning,"no MS header yet, ignoring footer %s",mref->id().toString().c_str());
       return Message::ACCEPT;
