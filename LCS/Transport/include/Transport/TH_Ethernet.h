@@ -23,6 +23,9 @@
 #ifndef TRANSPORT_TH_ETHERNET_H
 #define TRANSPORT_TH_ETHERNET_H
 
+// \file TH_Ethernet.h
+// Transport mechanism for Ethernet 
+
 #include <lofar_config.h>
 #include <Transport/TransportHolder.h>
 
@@ -34,11 +37,13 @@
 namespace LOFAR
 {
 
-/**
-   This class defines the transport mechanism for RAW Ethernet communication
-*/
+// \addtogroup Transport
+// @{
 
 #define MIN_FRAME_LEN 200
+
+// This class defines the transport mechanism for RAW Ethernet 
+// communication between dataholders.
 
 class TH_Ethernet: public TransportHolder
 {
@@ -53,17 +58,23 @@ public:
   // Returns if socket initialization was successful 
   virtual bool init();
 
-  // Read the data.
+  // \name Read the data
+  // @{
   virtual bool recvBlocking(void* buf, int nbytes, int tag);
   virtual bool recvVarBlocking(int tag);
   virtual bool recvNonBlocking(void* buf, int nbytes, int tag);
   virtual bool recvVarNonBlocking(int tag);
+  // @}
+
   // Wait for the data to be received
   virtual bool waitForReceived(void* buf, int nbytes, int tag);
 
-  // Write the data.
+  // \name Write the data
+  // @{
   virtual bool sendBlocking(void* buf, int nbytes, int tag);
   virtual bool sendNonBlocking(void* buf, int nbytes, int tag);
+  // @}
+
   // Wait for the data to be sent
   virtual bool waitForSent(void* buf, int nbytes, int tag);
 
@@ -99,6 +110,8 @@ public:
 
 inline bool TH_Ethernet::isBidirectional() const
   { return true; }
+
+// @} // Doxygen endgroup Transport
 
 }
 

@@ -24,6 +24,10 @@
 #ifndef TRANSPORT_TH_SOCKET_H
 #define TRANSPORT_TH_SOCKET_H
 
+// \file TH_Socket.h
+// Socket based TransportHolder. Based on the Socket wrapper class from
+// Common.
+
 #include <lofar_config.h>
 #include <Common/lofar_string.h>
 #include <Transport/TransportHolder.h>
@@ -31,6 +35,9 @@
 
 namespace LOFAR
 {
+  // \addtogroup Transport
+  // @{
+
   class TH_Socket: public TransportHolder
   {
   public:
@@ -70,21 +77,27 @@ namespace LOFAR
 	// Sets up the connection(s) between server and client
 	virtual bool	init();
      
-    /// Get the type of transport.
+    // Get the type of transport.
     virtual string getType() const;
 
-    /// Read the data.
+    // \name Read the data.
+    // @{
     virtual bool recvBlocking 		(void* buf, int32 nbytes, int32 tag);
     virtual bool recvVarBlocking 	(int32 tag);
     virtual bool recvNonBlocking 	(void* buf, int32 nbytes, int32 tag);
     virtual bool recvVarNonBlocking (int32 tag);
-    /// Wait for the data to be received
+    // @}
+
+    // Wait for the data to be received
     virtual bool waitForReceived 	(void* buf, int32 nbytes, int32 tag);
 
-    /// Write the data.
+    // \name Write the data.
+    // @{
     virtual bool sendBlocking 		(void* buf, int32 nbytes, int32 tag);
     virtual bool sendNonBlocking	(void* buf, int32 nbytes, int32 tag);
-    /// Wait for the data to be sent
+    // @}
+
+    // Wait for the data to be sent
     virtual bool waitForSent 		(void* buf, int32 nbytes, int32 tag);
 
     virtual bool connectionPossible (int32 srcRank, int32 dstRank) const;
@@ -124,6 +137,8 @@ inline Socket* TH_Socket::getDataSocket() const
 {
 	return (itsDataSocket);
 }
+
+  // @} // Doxygen endgroup Transport
 
 } // namespace LOFAR
 

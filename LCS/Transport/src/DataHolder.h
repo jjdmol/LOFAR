@@ -1,4 +1,4 @@
-///# DataHolder.h: Abstract base class for the data holders
+//# DataHolder.h: Abstract base class for the data holders
 //#
 //# Copyright (C) 2000, 2001
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -23,6 +23,9 @@
 #ifndef TRANSPORT_DATAHOLDER_H
 #define TRANSPORT_DATAHOLDER_H
 
+// \file DataHolder.h
+// Abstract base class for the data holders
+
 #include <lofar_config.h>
 
 //# Includes
@@ -35,6 +38,9 @@
 
 namespace LOFAR
 {
+
+// \addtogroup Transport
+// @{
 
 //# Forward Declarations
 class BlobOStream;
@@ -171,19 +177,21 @@ public:
   // The return reference can be used to store the fields in.
   // It is meant for DataHolders writing data.
   BlobOStream& createExtraBlob();
+
   // Clear the extra blob output buffer.
   // This is needed, because an extra blob is kept until overwritten.
   void clearExtraBlob();
-  // Get read access to the extra blob last created or read.
+
+  // \name Get read access to the extra blob last created or read.
   // If a created blob is used, only the data written so far can be accessed.
-  // <br>found=false is set if there is no extra blob. The first version
-  // throws an exception if there is no extra blob.
   // <group>
+  // Throws an exception if there is no extra blob.
   BlobIStream& getExtraBlob();
+  // \a found is false if there is no extra blob.
   BlobIStream& getExtraBlob (bool& found, int& version);
   // </group>
 
-  // Get access to the data blob.
+  // \name Get access to the data blob.
   // <group>
   BlobString& getDataBlock();
   const BlobString& getDataBlock() const;
@@ -202,7 +210,7 @@ protected:
   // Copy constructor
   DataHolder(const DataHolder&);
 
-  // Add a field to the data block definition.
+  // \name Add a field to the data block definition.
   // Optionally a (unique) name can be given to the field.
   // It returns the index of the field.
   // Note that the timestamp is always the first
@@ -212,7 +220,7 @@ protected:
   uint addField (const std::string& fieldName, const BlobFieldBase&);
   // </group>
 
-  // Setup the data block.
+  // \name Setup the data block.
   // This function needs to be called only once (in preprocess) if
   // all data fields have a fixed shape.
   // It fields have a variable shape, the function has to be called again
@@ -222,7 +230,7 @@ protected:
   void openDataBlock();
   // </group>
 
-  // Get access to the BlobField.
+  // \name Get access to the BlobField.
   // It makes it possible to get the shape of a variable shaped input array
   // or to set the shape of a variable shaped output array.
   // <group>
@@ -230,9 +238,11 @@ protected:
   BlobFieldBase& getDataField (const std::string& fieldName);
   // </group>
 
-  // Get a pointer to a data field in the blob (by index or by name)
+  // \name Get a pointer to a data field in the blob
   // <group>
+  // Get a pointer by index.
   template<typename T> T* getData (uint fieldIndex);
+  // Get a pointer by name.
   template<typename T> T* getData (const std::string& fieldName);
   // </group>
 
@@ -279,13 +289,13 @@ private:
   BlobString*     itsData;
   BlobOBufString* itsDataBlob;
   Transporter  itsTransporter;
-  int          itsMaxDataSize;   //# <0 is not filled in
+  int          itsMaxDataSize;   ///< <0 is not filled in
   bool         itsIsAddMax;
   string       itsName;
   string       itsType;
   int          itsVersion;
-  int          itsReadConvert;   //# data conversion needed after a read?
-                                 //# 0=no, 1=yes, else=not known yet
+  int          itsReadConvert;   ///< data conversion needed after a read?
+                                 ///< 0=no, 1=yes, else=not known yet
   uint64*      itsTimeStampPtr;
   DataBlobExtra* itsExtraPtr;
 };
@@ -384,6 +394,7 @@ inline uint DataHolder::getDataLength (const void* buffer)
   return static_cast<const BlobHeader*>(buffer)->getLength();
 }
 
+// @} // Doxygen endgroup Transport
 
 } // end namespace
 

@@ -23,6 +23,9 @@
 #ifndef TRANSPORT_TH_MPI_H
 #define TRANSPORT_TH_MPI_H
 
+// \file TH_MPI.h
+// Transport mechanism for MPI
+
 #include <lofar_config.h>
 
 #ifdef HAVE_MPI
@@ -49,12 +52,12 @@
 
 namespace LOFAR
 {
+// \addtogroup Transport
+// @{
 
-/**
-   This class defines the transport mechanism for MPI to be
-   able to run the simulation in a parallel way on multiple nodes.
-   It is the default TransportHolder when compiling with MPI=1.
-*/
+// This class defines the transport mechanism for MPI to be
+// able to run the simulation in a parallel way on multiple nodes.
+// It is the default TransportHolder when compiling with MPI=1.
 
 class TH_MPI: public TransportHolder
 {
@@ -67,21 +70,27 @@ public:
   void lock();
   void unlock();
 
-  /// Read the data.
+  // \name Read the data.
+  // @{
   virtual bool recvBlocking(void* buf, int nbytes, int tag);
   virtual bool recvVarBlocking(int tag);
   virtual bool recvNonBlocking(void* buf, int nbytes, int tag);
   virtual bool recvVarNonBlocking(int tag);
-  /// Wait for the data to be received
+  // @}
+
+  // Wait for the data to be received
   virtual bool waitForReceived(void* buf, int nbytes, int tag);
 
-  /// Write the data.
+  // \name Write the data.
+  // @{
   virtual bool sendBlocking(void* buf, int nbytes, int tag);
   virtual bool sendNonBlocking(void* buf, int nbytes, int tag);
-  /// Wait for the data to be sent
+  // @}
+
+  // Wait for the data to be sent
   virtual bool waitForSent(void* buf, int nbytes, int tag);
 
-  /// Get the type of transport.
+  // Get the type of transport.
   virtual string getType() const;
 
   virtual bool isBidirectional() const;
@@ -134,6 +143,8 @@ private:
 
 inline bool TH_MPI::isBidirectional() const
   { return true; }
+
+// @} // Doxygen group Transport
 
 }
 

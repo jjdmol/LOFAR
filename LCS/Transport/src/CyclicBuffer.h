@@ -23,6 +23,9 @@
 #ifndef _CYCLIC_BUFFER_H_
 #define _CYCLIC_BUFFER_H_
 
+// \file CyclicBuffer.h
+// Cyclic buffer interface
+
 #ifdef USE_THREADS
 
 #include <lofar_config.h>
@@ -33,6 +36,8 @@
 
 namespace LOFAR
 {
+// \addtogroup Transport
+// @{
 
 #define CEPF_MIN(a,b) ((a)<(b)?(a):(b))
 
@@ -340,6 +345,8 @@ int CyclicBuffer<TYPE>::GetCount(void)
 {
   return itsCount;
 }
+
+// @} // Doxygen endgroup Transport
 
 }
 #endif // USE_THREADS

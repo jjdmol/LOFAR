@@ -22,7 +22,10 @@
 
 #ifndef TRANSPORT_TRANSPORTER_H
 #define TRANSPORT_TRANSPORTER_H
- 
+
+// \file Transporter.h
+// Class which handles transport between DataHolders
+
 #include <lofar_config.h>
 
 //# Includes
@@ -31,6 +34,9 @@
 
 namespace LOFAR
 {
+// \addtogroup Transport
+// @{
+
 //# Forward declarations
 class DataHolder;
 
@@ -42,72 +48,72 @@ class Transporter
 {
  public:
 
-  /// Construct the Transporter object.
+  // Construct the Transporter object.
   // It sets the pointer to the DataHolder object.
   Transporter(DataHolder*);
 
-  /// Copy constructor for another DataHolder.
+  // Copy constructor for another DataHolder.
   Transporter (const Transporter&, DataHolder*);
 
   ~Transporter();
 
-  /// Send the data to the connected Transport object.
+  // Send the data to the connected Transport object.
   bool write (bool fixedSized);
 
-  /// Read the data from the connected Transport object.
+  // Read the data from the connected Transport object.
   bool read (bool fixedSized);
 
-  /// Write the Transporter definition to stdout.
+  // Write the Transporter definition to stdout.
   void dump() const;
 
-  /// Make a TransportHolder from the given prototype.
-  /// If one already exists, it will first be deleted.
+  // Make a TransportHolder from the given prototype.
+  // If one already exists, it will first be deleted.
   void makeTransportHolder (const TransportHolder& prototype);
 
-  /// Get the TransportHolder for this object.
+  // Get the TransportHolder for this object.
   TransportHolder* getTransportHolder();
 
-  /// Connect two transporters
+  // Connect two transporters
   bool connect(Transporter& targetTP, const TransportHolder& prototype, 
 	       bool blockingComm);
 
-  /// Connect two transporters bidirectionally
+  // Connect two transporters bidirectionally
   bool connectBidirectional(Transporter& targetTP, 
 			    const TransportHolder& thisTH,
 			    const TransportHolder& targetTH,
 			    bool blockingComm);
 
-  /// After setting the connection, the init() method must be called
+  // After setting the connection, the init() method must be called
   bool init();
 
-  /// Set/get the ID.
+  // Set/get the ID.
   void setItsID (int aID);
   int getItsID() const;
 
-  /// Set/get the tag to be used for MPI reads or writes.
+  // Set/get the tag to be used for MPI reads or writes.
   void setReadTag (int tag);
   int getReadTag() const;
   void setWriteTag (int tag);
   int getWriteTag() const;
 
-  /// Status of the data
+  // Status of the data
   enum Status {Unknown, Clean, Dirty, Modified};
 
   void setStatus (Status s);
   Status getStatus() const;
 
-  /// True when data is valid; i.e. after a Read() or before a Write()
+  // True when data is valid; i.e. after a Read() or before a Write()
   bool isValid() const;
 
-  /// Get the DataHolder object for this object.
+  // Get the DataHolder object for this object.
   DataHolder* getDataHolder ();
 
-  /// Get pointer to the data from the DataHolder.
+  // Get pointer to the data from the DataHolder.
   void* getDataPtr() const;
-  /// Get the size of the data in the DataHolder.
+  // Get the size of the data in the DataHolder.
   int getDataSize() const;
 
-  /// Get/set the (other) DataHolder this Transporter is connected to.
+  // Get/set the (other) DataHolder this Transporter is connected to.
   DataHolder* getSourceDataHolder();
   void setSourceDataHolder(DataHolder* dh);
 
@@ -115,19 +121,19 @@ class Transporter
   void setIsBlocking(bool);
 
 private:
-  /// Forbid copy constructor.
+  // Forbid copy constructor.
   Transporter (const Transporter&);
 
-  /// Forbid assignment.
+  // Forbid assignment.
   Transporter& operator= (const Transporter&);
 
-  /// The DataHolder this Transporter belongs to.
+  // The DataHolder this Transporter belongs to.
   DataHolder* itsDataHolder;
 
-  /// The DataHolder where the data comes from.
+  // The DataHolder where the data comes from.
   DataHolder* itsSourceDH;
  
-  /// The actual TransportHolder.
+  // The actual TransportHolder.
   TransportHolder* itsTransportHolder;
 
   // ID of this Transporter
@@ -198,6 +204,8 @@ inline DataHolder* Transporter::getSourceDataHolder()
 
 inline void Transporter::setSourceDataHolder(DataHolder* dh)
   { itsSourceDH = dh; }
+
+// @} // Doxygen endgroup Transport
 
 } // end namespace
 
