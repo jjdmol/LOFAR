@@ -78,8 +78,9 @@ namespace EPA_Protocol
       static const uint8 WG      = 0x03; /* Waveform generator */
       static const uint8 SS      = 0x04; /* Subband select */
       static const uint8 BF      = 0x05; /* Beam former */
-      static const uint8 ST      = 0x06; /* Statistics */
-      static const uint8 RCU     = 0x07; /* RCU control */
+      static const uint8 ST      = 0x06; /* Beamlet Statistics */
+      static const uint8 STSUB   = 0x07; /* Subbands Statistics */
+      static const uint8 RCU     = 0x08; /* RCU control */
 
       static const int MAX_PID = RCU; /* counting from 0 */
       /*@}*/
@@ -98,6 +99,7 @@ namespace EPA_Protocol
 
       static const uint8 WGSETTINGS    = 0x00;
       static const uint8 WGUSER        = 0x01;
+      static const uint8 WGSOFTPPS     = 0x02;
 
       static const uint8 NRSUBBANDS    = 0x00;
       static const uint8 SUBBANDSELECT = 0x01;
@@ -128,7 +130,9 @@ namespace EPA_Protocol
       /**
        * Read/write sizes in octets (= bytes)
        */
-      static const uint16 RSPSTATUS_SIZE     = 44;
+      
+      // RSSTATUS_SIZE was 44, now includes sample sequence number (32 bits) and pps sequence number (32bits)
+      static const uint16 RSPSTATUS_SIZE     = 52;
       static const uint16 FWVERSION_SIZE     = 2;
 
       static const uint16 SELFTEST_SIZE      = 1;
@@ -138,6 +142,7 @@ namespace EPA_Protocol
 
       static const uint16 WGSETTINGS_SIZE    = 7;
       static const uint16 WGUSER_SIZE        = 1024;
+      static const uint16 WGSOFTPPS_SIZE     = 0;
 
       static const uint16 NRSUBBANDS_SIZE    = 2;
       static const uint16 SUBBANDSELECT_SIZE = 512;
@@ -223,6 +228,8 @@ namespace EPA_Protocol
   (hdr).set(oper,         dstid, CTX(WG),     CTX(WGSETTINGS),    CTX(WGSETTINGS_SIZE))
 #define MEP_WGUSER(hdr, oper, dstid) \
   (hdr).set(oper,         dstid, CTX(WG),     CTX(WGUSER),        CTX(WGUSER_SIZE))
+#define MEP_WGSOFTPPS(hdr) \
+  (hdr).set(CTX(WRITE),CTX(DST_RSP), CTX(WG), CTX(WGSOFTPPS),     CTX(WGSOFTPPS_SIZE))
 #define MEP_NRSUBBANDS(hdr, oper, dstid) \
   (hdr).set(oper,         dstid, CTX(SS),     CTX(NRSUBBANDS),    CTX(NRSUBBANDS_SIZE))
 #define MEP_SUBBANDSELECT(hdr, oper, dstid) \
