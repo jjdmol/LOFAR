@@ -40,7 +40,7 @@ namespace LOFAR {
     // This exception is thrown when an error occurs during a delete
     // operation on the database.
     //
-    EXCEPTION_CLASS(DeleteError, PLException);
+    EXCEPTION_CLASS(EraseError, PLException);
 
     //
     // This exception is thrown when an error occurs during an insert
@@ -52,7 +52,7 @@ namespace LOFAR {
     // This exception is thrown when an error occurs during a select
     // operation on the database.
     //
-    EXCEPTION_CLASS(SelectError, PLException);
+    EXCEPTION_CLASS(RetrieveError, PLException);
 
     //
     // This exception is thrown when an error occurs during an update
