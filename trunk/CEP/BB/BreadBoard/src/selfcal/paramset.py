@@ -27,7 +27,6 @@ def list2ParamSet(lst):
   return myparams;
 
 def ParamSet2list(paramset):
-  debug = True;
   lst = [];
   if debug :
     print "paramset: " , paramset;

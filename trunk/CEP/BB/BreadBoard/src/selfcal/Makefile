@@ -1,5 +1,5 @@
 CFLAGS+=-I/usr/include/python2.2
-CPPFLAGS+=-I/usr/local/include/python2.3
+CPPFLAGS+=-I/usr/include/python2.3
 
 %.cc:	%.cxx
 	cp $< $@
