@@ -54,66 +54,29 @@ ARATestDriverTask::ARATestDriverTask() :
   m_answer(),
   m_RSPserver(),
   m_propMap(),
-  m_bpStatus(0),
-  m_ap1Status(0),
-  m_ap2Status(0),
-  m_ap3Status(0),
-  m_ap4Status(0),
-  m_ethStatus(0),
-  m_rcu1Status(0),
-  m_rcu2Status(0),
-  m_rcu3Status(0),
-  m_rcu4Status(0),
-  m_rcu5Status(0),
-  m_rcu6Status(0),
-  m_rcu7Status(0),
-  m_rcu8Status(0)
+  m_systemStatus()
 {
   registerProtocol(RSP_PROTOCOL, RSP_PROTOCOL_signalnames);
   m_answer.setTask(this);
 
   // fill APCs map
   addPropertySet(SCOPE_PIC);
-  addPropertySet(SCOPE_PIC_Rack1);
-  addPropertySet(SCOPE_PIC_Rack1_SubRack1);
-  addPropertySet(SCOPE_PIC_Rack1_SubRack1_Board1);
-  addPropertySet(SCOPE_PIC_Rack1_SubRack1_Board1_ETH);
-  addPropertySet(SCOPE_PIC_Rack1_SubRack1_Board1_BP);
-  addPropertySet(SCOPE_PIC_Rack1_SubRack1_Board1_AP1);
-  addPropertySet(SCOPE_PIC_Rack1_SubRack1_Board1_AP2);
-  addPropertySet(SCOPE_PIC_Rack1_SubRack1_Board1_AP3);
-  addPropertySet(SCOPE_PIC_Rack1_SubRack1_Board1_AP4);
-  addPropertySet(SCOPE_PIC_Rack1_SubRack1_Board1_AP1_RCU1);
-  addPropertySet(SCOPE_PIC_Rack1_SubRack1_Board1_AP1_RCU2);
-  addPropertySet(SCOPE_PIC_Rack1_SubRack1_Board1_AP2_RCU1);
-  addPropertySet(SCOPE_PIC_Rack1_SubRack1_Board1_AP2_RCU2);
-  addPropertySet(SCOPE_PIC_Rack1_SubRack1_Board1_AP3_RCU1);
-  addPropertySet(SCOPE_PIC_Rack1_SubRack1_Board1_AP3_RCU2);
-  addPropertySet(SCOPE_PIC_Rack1_SubRack1_Board1_AP4_RCU1);
-  addPropertySet(SCOPE_PIC_Rack1_SubRack1_Board1_AP4_RCU2);
-  addPropertySet(SCOPE_PIC_Rack1_SubRack1_Board1_AP1_RCU1_ADCStatistics);
-  addPropertySet(SCOPE_PIC_Rack1_SubRack1_Board1_AP1_RCU2_ADCStatistics);
-  addPropertySet(SCOPE_PIC_Rack1_SubRack1_Board1_AP2_RCU1_ADCStatistics);
-  addPropertySet(SCOPE_PIC_Rack1_SubRack1_Board1_AP2_RCU2_ADCStatistics);
-  addPropertySet(SCOPE_PIC_Rack1_SubRack1_Board1_AP3_RCU1_ADCStatistics);
-  addPropertySet(SCOPE_PIC_Rack1_SubRack1_Board1_AP3_RCU2_ADCStatistics);
-  addPropertySet(SCOPE_PIC_Rack1_SubRack1_Board1_AP4_RCU1_ADCStatistics);
-  addPropertySet(SCOPE_PIC_Rack1_SubRack1_Board1_AP4_RCU2_ADCStatistics);
   addPropertySet(SCOPE_PIC_Maintenance);
-  addPropertySet(SCOPE_PIC_Rack1_Maintenance);
-  addPropertySet(SCOPE_PIC_Rack1_SubRack1_Maintenance);
-  addPropertySet(SCOPE_PIC_Rack1_SubRack1_Board1_Maintenance);
-  addPropertySet(SCOPE_PIC_Rack1_SubRack1_Board1_AP1_RCU1_Maintenance);
-  addPropertySet(SCOPE_PIC_Rack1_SubRack1_Board1_AP1_RCU2_Maintenance);
-  addPropertySet(SCOPE_PIC_Rack1_SubRack1_Board1_AP2_RCU1_Maintenance);
-  addPropertySet(SCOPE_PIC_Rack1_SubRack1_Board1_AP2_RCU2_Maintenance);
-  addPropertySet(SCOPE_PIC_Rack1_SubRack1_Board1_AP3_RCU1_Maintenance);
-  addPropertySet(SCOPE_PIC_Rack1_SubRack1_Board1_AP3_RCU2_Maintenance);
-  addPropertySet(SCOPE_PIC_Rack1_SubRack1_Board1_AP4_RCU1_Maintenance);
-  addPropertySet(SCOPE_PIC_Rack1_SubRack1_Board1_AP4_RCU2_Maintenance);
-  addPropertySet(SCOPE_PIC_Rack1_Alert);
-  addPropertySet(SCOPE_PIC_Rack1_SubRack1_Alert);
-  addPropertySet(SCOPE_PIC_Rack1_SubRack1_Board1_Alert);
+  addPropertySet(SCOPE_PIC_RackN);
+  addPropertySet(SCOPE_PIC_RackN_Alert);
+  addPropertySet(SCOPE_PIC_RackN_Maintenance);
+  addPropertySet(SCOPE_PIC_RackN_SubRackN);
+  addPropertySet(SCOPE_PIC_RackN_SubRackN_Maintenance);
+  addPropertySet(SCOPE_PIC_RackN_SubRackN_Alert);
+  addPropertySet(SCOPE_PIC_RackN_SubRackN_BoardN);
+  addPropertySet(SCOPE_PIC_RackN_SubRackN_BoardN_Maintenance);
+  addPropertySet(SCOPE_PIC_RackN_SubRackN_BoardN_Alert);
+  addPropertySet(SCOPE_PIC_RackN_SubRackN_BoardN_ETH);
+  addPropertySet(SCOPE_PIC_RackN_SubRackN_BoardN_BP);
+  addPropertySet(SCOPE_PIC_RackN_SubRackN_BoardN_APN);
+  addPropertySet(SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN);
+  addPropertySet(SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN_ADCStatistics);
+  addPropertySet(SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN_Maintenance);
   
   m_RSPserver.init(*this, "ARAtestRSPserver", GCFPortInterface::SPP, RSP_PROTOCOL);
   
@@ -125,82 +88,213 @@ ARATestDriverTask::~ARATestDriverTask()
 
 void ARATestDriverTask::addPropertySet(string scope)
 {
+  char scopeString[300];
+  int rack;
+  int subrack;
+  int board;
+  int ap;
+  int rcu;
+  
   if(scope == string(SCOPE_PIC))
   {
     addAllProperties(scope,static_cast<TProperty*>(PROPS_Station),sizeof(PROPS_Station)/sizeof(PROPS_Station[0]));
   }
-  else if(scope == string(SCOPE_PIC_Rack1))
+  else if(scope == string(SCOPE_PIC_RackN))
   {
-    addAllProperties(scope,static_cast<TProperty*>(PROPS_Rack),sizeof(PROPS_Rack)/sizeof(PROPS_Rack[0]));
+    for(rack=1;rack<=N_RACKS;rack++)
+    {
+      sprintf(scopeString,scope.c_str(),rack);
+      addAllProperties(scopeString,static_cast<TProperty*>(PROPS_Rack),sizeof(PROPS_Rack)/sizeof(PROPS_Rack[0]));
+    }
   }
-  else if(scope == string(SCOPE_PIC_Rack1_SubRack1))
+  else if(scope == string(SCOPE_PIC_RackN_SubRackN))
   {
-    addAllProperties(scope,static_cast<TProperty*>(PROPS_SubRack),sizeof(PROPS_SubRack)/sizeof(PROPS_SubRack[0]));
+    for(rack=1;rack<=N_RACKS;rack++)
+    {
+      for(subrack=1;subrack<=N_SUBRACKS_PER_RACK;subrack++)
+      {
+        sprintf(scopeString,scope.c_str(),rack,subrack);
+        addAllProperties(scopeString,static_cast<TProperty*>(PROPS_SubRack),sizeof(PROPS_SubRack)/sizeof(PROPS_SubRack[0]));
+      }
+    }
   }
-  else if(scope == string(SCOPE_PIC_Rack1_SubRack1_Board1))
+  else if(scope == string(SCOPE_PIC_RackN_SubRackN_BoardN))
   {
-    addAllProperties(scope,static_cast<TProperty*>(PROPS_Board),sizeof(PROPS_Board)/sizeof(PROPS_Board[0]));
+    for(rack=1;rack<=N_RACKS;rack++)
+    {
+      for(subrack=1;subrack<=N_SUBRACKS_PER_RACK;subrack++)
+      {
+        for(board=1;board<=N_BOARDS_PER_SUBRACK;board++)
+        {
+          sprintf(scopeString,scope.c_str(),rack,subrack,board);
+          addAllProperties(scopeString,static_cast<TProperty*>(PROPS_Board),sizeof(PROPS_Board)/sizeof(PROPS_Board[0]));
+        }
+      }
+    }
   }
-  else if(scope == string(SCOPE_PIC_Rack1_SubRack1_Board1_ETH))
+  else if(scope == string(SCOPE_PIC_RackN_SubRackN_BoardN_ETH))
   {
-    addAllProperties(scope,static_cast<TProperty*>(PROPS_Ethernet),sizeof(PROPS_Ethernet)/sizeof(PROPS_Ethernet[0]));
+    for(rack=1;rack<=N_RACKS;rack++)
+    {
+      for(subrack=1;subrack<=N_SUBRACKS_PER_RACK;subrack++)
+      {
+        for(board=1;board<=N_BOARDS_PER_SUBRACK;board++)
+        {
+          sprintf(scopeString,scope.c_str(),rack,subrack,board);
+          addAllProperties(scopeString,static_cast<TProperty*>(PROPS_Ethernet),sizeof(PROPS_Ethernet)/sizeof(PROPS_Ethernet[0]));
+        }
+      }
+    }
   }
-  else if(scope == string(SCOPE_PIC_Rack1_SubRack1_Board1_BP) ||
-     scope == string(SCOPE_PIC_Rack1_SubRack1_Board1_AP1) ||
-     scope == string(SCOPE_PIC_Rack1_SubRack1_Board1_AP2) ||
-     scope == string(SCOPE_PIC_Rack1_SubRack1_Board1_AP3) ||
-     scope == string(SCOPE_PIC_Rack1_SubRack1_Board1_AP4))
+  else if(scope == string(SCOPE_PIC_RackN_SubRackN_BoardN_BP))
   {
-    addAllProperties(scope,static_cast<TProperty*>(PROPS_FPGA),sizeof(PROPS_FPGA)/sizeof(PROPS_FPGA[0]));
+    for(rack=1;rack<=N_RACKS;rack++)
+    {
+      for(subrack=1;subrack<=N_SUBRACKS_PER_RACK;subrack++)
+      {
+        for(board=1;board<=N_BOARDS_PER_SUBRACK;board++)
+        {
+          sprintf(scopeString,scope.c_str(),rack,subrack,board);
+          addAllProperties(scopeString,static_cast<TProperty*>(PROPS_FPGA),sizeof(PROPS_FPGA)/sizeof(PROPS_FPGA[0]));
+        }
+      }
+    }
   }
-  else if(scope == string(SCOPE_PIC_Rack1_SubRack1_Board1_AP1_RCU1) ||
-     scope == string(SCOPE_PIC_Rack1_SubRack1_Board1_AP1_RCU2) ||
-     scope == string(SCOPE_PIC_Rack1_SubRack1_Board1_AP2_RCU1) ||
-     scope == string(SCOPE_PIC_Rack1_SubRack1_Board1_AP2_RCU2) ||
-     scope == string(SCOPE_PIC_Rack1_SubRack1_Board1_AP3_RCU1) ||
-     scope == string(SCOPE_PIC_Rack1_SubRack1_Board1_AP3_RCU2) ||
-     scope == string(SCOPE_PIC_Rack1_SubRack1_Board1_AP4_RCU1) ||
-     scope == string(SCOPE_PIC_Rack1_SubRack1_Board1_AP4_RCU2))
+  else if(scope == string(SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN))
   {
-    addAllProperties(scope,static_cast<TProperty*>(PROPS_RCU),sizeof(PROPS_RCU)/sizeof(PROPS_RCU[0]));
+    for(rack=1;rack<=N_RACKS;rack++)
+    {
+      for(subrack=1;subrack<=N_SUBRACKS_PER_RACK;subrack++)
+      {
+        for(board=1;board<=N_BOARDS_PER_SUBRACK;board++)
+        {
+          for(ap=1;ap<=N_APS_PER_BOARD;ap++)
+          {
+            for(rcu=1;rcu<=N_RCUS_PER_AP;rcu++)
+            {
+              sprintf(scopeString,scope.c_str(),rack,subrack,board,ap,rcu);
+              addAllProperties(scopeString,static_cast<TProperty*>(PROPS_RCU),sizeof(PROPS_RCU)/sizeof(PROPS_RCU[0]));
+            }
+          }
+        }
+      }
+    }
   }
-  else if(scope == string(SCOPE_PIC_Rack1_SubRack1_Board1_AP1_RCU1_ADCStatistics) ||
-     scope == string(SCOPE_PIC_Rack1_SubRack1_Board1_AP1_RCU2_ADCStatistics) ||
-     scope == string(SCOPE_PIC_Rack1_SubRack1_Board1_AP2_RCU1_ADCStatistics) ||
-     scope == string(SCOPE_PIC_Rack1_SubRack1_Board1_AP2_RCU2_ADCStatistics) ||
-     scope == string(SCOPE_PIC_Rack1_SubRack1_Board1_AP3_RCU1_ADCStatistics) ||
-     scope == string(SCOPE_PIC_Rack1_SubRack1_Board1_AP3_RCU2_ADCStatistics) ||
-     scope == string(SCOPE_PIC_Rack1_SubRack1_Board1_AP4_RCU1_ADCStatistics) ||
-     scope == string(SCOPE_PIC_Rack1_SubRack1_Board1_AP4_RCU2_ADCStatistics))
+  else if(scope == string(SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN_ADCStatistics))
   {
-    addAllProperties(scope,static_cast<TProperty*>(PROPS_ADCStatistics),sizeof(PROPS_ADCStatistics)/sizeof(PROPS_ADCStatistics[0]));
+    for(rack=1;rack<=N_RACKS;rack++)
+    {
+      for(subrack=1;subrack<=N_SUBRACKS_PER_RACK;subrack++)
+      {
+        for(board=1;board<=N_BOARDS_PER_SUBRACK;board++)
+        {
+          for(ap=1;ap<=N_APS_PER_BOARD;ap++)
+          {
+            for(rcu=1;rcu<=N_RCUS_PER_AP;rcu++)
+            {
+              sprintf(scopeString,scope.c_str(),rack,subrack,board,ap,rcu);
+              addAllProperties(scopeString,static_cast<TProperty*>(PROPS_ADCStatistics),sizeof(PROPS_ADCStatistics)/sizeof(PROPS_ADCStatistics[0]));
+            }
+          }
+        }
+      }
+    }
   }
-  else if(scope == string(SCOPE_PIC_Maintenance) ||
-     scope == string(SCOPE_PIC_Rack1_Maintenance) ||
-     scope == string(SCOPE_PIC_Rack1_SubRack1_Maintenance) ||
-     scope == string(SCOPE_PIC_Rack1_SubRack1_Board1_Maintenance) ||
-     scope == string(SCOPE_PIC_Rack1_SubRack1_Board1_AP1_RCU1_Maintenance) ||
-     scope == string(SCOPE_PIC_Rack1_SubRack1_Board1_AP1_RCU2_Maintenance) ||
-     scope == string(SCOPE_PIC_Rack1_SubRack1_Board1_AP2_RCU1_Maintenance) ||
-     scope == string(SCOPE_PIC_Rack1_SubRack1_Board1_AP2_RCU2_Maintenance) ||
-     scope == string(SCOPE_PIC_Rack1_SubRack1_Board1_AP3_RCU1_Maintenance) ||
-     scope == string(SCOPE_PIC_Rack1_SubRack1_Board1_AP3_RCU2_Maintenance) ||
-     scope == string(SCOPE_PIC_Rack1_SubRack1_Board1_AP4_RCU1_Maintenance) ||
-     scope == string(SCOPE_PIC_Rack1_SubRack1_Board1_AP4_RCU2_Maintenance))
+  else if(scope == string(SCOPE_PIC_Maintenance))
   {
     addAllProperties(scope,static_cast<TProperty*>(PROPS_Maintenance),sizeof(PROPS_Maintenance)/sizeof(PROPS_Maintenance[0]));
   }
-  else if(scope == string(SCOPE_PIC_Rack1_Alert) ||
-     scope == string(SCOPE_PIC_Rack1_SubRack1_Alert) ||
-     scope == string(SCOPE_PIC_Rack1_SubRack1_Board1_Alert))
+  else if(scope == string(SCOPE_PIC_RackN_Maintenance))
   {
-    addAllProperties(scope,static_cast<TProperty*>(PROPS_Alert),sizeof(PROPS_Alert)/sizeof(PROPS_Alert[0]));
+    for(rack=1;rack<=N_RACKS;rack++)
+    {
+      sprintf(scopeString,scope.c_str(),rack);
+      addAllProperties(scopeString,static_cast<TProperty*>(PROPS_Maintenance),sizeof(PROPS_Maintenance)/sizeof(PROPS_Maintenance[0]));
+    }
+  }
+  else if(scope == string(SCOPE_PIC_RackN_SubRackN_Maintenance))
+  {
+    for(rack=1;rack<=N_RACKS;rack++)
+    {
+      for(subrack=1;subrack<=N_SUBRACKS_PER_RACK;subrack++)
+      {
+        sprintf(scopeString,scope.c_str(),rack,subrack);
+        addAllProperties(scopeString,static_cast<TProperty*>(PROPS_Maintenance),sizeof(PROPS_Maintenance)/sizeof(PROPS_Maintenance[0]));
+      }
+    }
+  }
+  else if(scope == string(SCOPE_PIC_RackN_SubRackN_BoardN_Maintenance))
+  {
+    for(rack=1;rack<=N_RACKS;rack++)
+    {
+      for(subrack=1;subrack<=N_SUBRACKS_PER_RACK;subrack++)
+      {
+        for(board=1;board<=N_BOARDS_PER_SUBRACK;board++)
+        {
+          sprintf(scopeString,scope.c_str(),rack,subrack,board);
+          addAllProperties(scopeString,static_cast<TProperty*>(PROPS_Maintenance),sizeof(PROPS_Maintenance)/sizeof(PROPS_Maintenance[0]));
+        }
+      }
+    }
+  }
+  else if(scope == string(SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN_Maintenance))
+  {
+    for(rack=1;rack<=N_RACKS;rack++)
+    {
+      for(subrack=1;subrack<=N_SUBRACKS_PER_RACK;subrack++)
+      {
+        for(board=1;board<=N_BOARDS_PER_SUBRACK;board++)
+        {
+          for(ap=1;ap<=N_APS_PER_BOARD;ap++)
+          {
+            for(rcu=1;rcu<=N_RCUS_PER_AP;rcu++)
+            {
+              sprintf(scopeString,scope.c_str(),rack,subrack,board,ap,rcu);
+              addAllProperties(scopeString,static_cast<TProperty*>(PROPS_Maintenance),sizeof(PROPS_Maintenance)/sizeof(PROPS_Maintenance[0]));
+            }
+          }
+        }
+      }
+    }
+  }
+  else if(scope == string(SCOPE_PIC_RackN_Alert))
+  {
+    for(rack=1;rack<=N_RACKS;rack++)
+    {
+      sprintf(scopeString,scope.c_str(),rack);
+      addAllProperties(scopeString,static_cast<TProperty*>(PROPS_Alert),sizeof(PROPS_Alert)/sizeof(PROPS_Alert[0]));
+    }
+  }
+  else if(scope == string(SCOPE_PIC_RackN_SubRackN_Alert))
+  {
+    for(rack=1;rack<=N_RACKS;rack++)
+    {
+      for(subrack=1;subrack<=N_SUBRACKS_PER_RACK;subrack++)
+      {
+        sprintf(scopeString,scope.c_str(),rack,subrack);
+        addAllProperties(scopeString,static_cast<TProperty*>(PROPS_Alert),sizeof(PROPS_Alert)/sizeof(PROPS_Alert[0]));
+      }
+    }
+  }
+  else if(scope == string(SCOPE_PIC_RackN_SubRackN_BoardN_Alert))
+  {
+    for(rack=1;rack<=N_RACKS;rack++)
+    {
+      for(subrack=1;subrack<=N_SUBRACKS_PER_RACK;subrack++)
+      {
+        for(board=1;board<=N_BOARDS_PER_SUBRACK;board++)
+        {
+          sprintf(scopeString,scope.c_str(),rack,subrack,board);
+          addAllProperties(scopeString,static_cast<TProperty*>(PROPS_Alert),sizeof(PROPS_Alert)/sizeof(PROPS_Alert[0]));
+        }
+      }
+    }
   }
 }
 
 void ARATestDriverTask::addAllProperties(string scope, TProperty* ptp, int numProperties)
 {
-  for(unsigned int i=0;i<numProperties;i++)
+  for(int i=0;i<numProperties;i++)
   {
     string propName = scope+string("_")+string(ptp[i].propName);
     boost::shared_ptr<GCFProperty> propPtr(new GCFProperty(propName));
@@ -218,10 +312,21 @@ void ARATestDriverTask::subscribeAllProperties()
   }
 }
 
-void ARATestDriverTask::updateETHstatus(string& propName,unsigned int& ethStatus,GCFPVUnsigned& pvUnsigned)
+void ARATestDriverTask::updateETHstatus(string& propName,const GCFPValue* pvalue)
 {
   LOG_INFO(formatString("updateETHstatus %s", propName.c_str()));
   
+  GCFPVUnsigned pvUnsigned;
+  pvUnsigned.copy(*pvalue);
+  
+  int rack;
+  int subrack;
+  int board;
+
+  sscanf(propName.c_str(),SCOPE_PIC_RackN_SubRackN_BoardN_ETH,&rack,&subrack,&board);
+  
+  EPA_Protocol::ETHStatus ethStatus = m_systemStatus.board()(board-1).eth;
+
   // layout eth status: 
   // 31......24  23.....16  15........8  7........0       
   // #RX[15..8]  #RX[7..0]  #Err[15..8]  #Err[7..0]  
@@ -231,22 +336,72 @@ void ARATestDriverTask::updateETHstatus(string& propName,unsigned int& ethStatus
   }
   else if(propName.find(string(PROPNAME_PACKETSRECEIVED),0) != string::npos)
   {
-    unsigned int tempStatus = ethStatus & 0x0000FFFF; // reset bits
-    tempStatus = tempStatus | ((pvUnsigned.getValue()&0xFFFF)<<16);
-    updateSystemStatus(ethStatus,tempStatus);
+    if(ethStatus.nof_frames != pvUnsigned.getValue())
+    {
+      m_systemStatus.board()(board-1).eth.nof_frames = pvUnsigned.getValue();
+      updateSystemStatus();
+    }
   }
   else if(propName.find(string(PROPNAME_PACKETSERROR),0) != string::npos)
   {
-    unsigned int tempStatus = ethStatus & 0xFFFF0000; // reset bits
-    tempStatus = tempStatus | (pvUnsigned.getValue()&0xFFFF);
-    updateSystemStatus(ethStatus,tempStatus);
+    if(ethStatus.nof_errors != pvUnsigned.getValue())
+    {
+      m_systemStatus.board()(board-1).eth.nof_errors = pvUnsigned.getValue();
+      updateSystemStatus();
+    }
+  }
+  else if(propName.find(string(PROPNAME_LASTERROR),0) != string::npos)
+  {
+    if(ethStatus.last_error != pvUnsigned.getValue())
+    {
+      m_systemStatus.board()(board-1).eth.last_error = pvUnsigned.getValue();
+      updateSystemStatus();
+    }
+  }
+  else if(propName.find(string(PROPNAME_FFI0),0) != string::npos)
+  {
+    if(ethStatus.ffi0 != pvUnsigned.getValue())
+    {
+      m_systemStatus.board()(board-1).eth.ffi0 = pvUnsigned.getValue();
+      updateSystemStatus();
+    }
+  }
+  else if(propName.find(string(PROPNAME_FFI1),0) != string::npos)
+  {
+    if(ethStatus.ffi1 != pvUnsigned.getValue())
+    {
+      m_systemStatus.board()(board-1).eth.ffi1 = pvUnsigned.getValue();
+      updateSystemStatus();
+    }
+  }
+  else if(propName.find(string(PROPNAME_FFI2),0) != string::npos)
+  {
+    if(ethStatus.ffi2 != pvUnsigned.getValue())
+    {
+      m_systemStatus.board()(board-1).eth.ffi2 = pvUnsigned.getValue();
+      updateSystemStatus();
+    }
   }
 }
   
-void ARATestDriverTask::updateFPGAstatus(string& propName,unsigned int& fpgaStatus,GCFPVBool& pvBool, GCFPVDouble& pvDouble)
+void ARATestDriverTask::updateAPstatus(string& propName,const GCFPValue* pvalue)
 {
-  LOG_INFO(formatString("updateFPGAstatus %s", propName.c_str()));
+  LOG_INFO(formatString("updateAPstatus %s", propName.c_str()));
   
+  GCFPVUnsigned pvUnsigned;
+  GCFPVDouble   pvDouble;
+  pvUnsigned.copy(*pvalue);
+  pvDouble.copy(*pvalue);
+  
+  int rack;
+  int subrack;
+  int board;
+  int ap;
+
+  sscanf(propName.c_str(),SCOPE_PIC_RackN_SubRackN_BoardN_APN,&rack,&subrack,&board,&ap);
+  
+  EPA_Protocol::FPGAStatus apStatus = m_systemStatus.board()(board-1).ap[ap-1];
+
   // layout fpga status: 
   // 15..9 8       7........0       
   // ----- alive   temperature
@@ -256,15 +411,16 @@ void ARATestDriverTask::updateFPGAstatus(string& propName,unsigned int& fpgaStat
   }
   else if(propName.find(string(PROPNAME_ALIVE),0) != string::npos)
   {
-    unsigned int tempStatus = fpgaStatus & 0x000000FF; // reset bits
-    tempStatus = tempStatus | ((unsigned int)(pvBool.getValue())<<8);
-    updateSystemStatus(fpgaStatus,tempStatus);
+    if(apStatus.status != pvUnsigned.getValue())
+    {
+      m_systemStatus.board()(board-1).ap[ap-1].status = pvUnsigned.getValue();
+      updateSystemStatus();
+    }
   }
   else if(propName.find(string(PROPNAME_TEMPERATURE),0) != string::npos)
   {
-    unsigned int tempStatus = fpgaStatus & 0x00000100; // reset bits
-    tempStatus = tempStatus | ((unsigned int)(pvDouble.getValue()*100)&0xFF); // mult with 100 to get 2 significant decimals
-    updateSystemStatus(fpgaStatus,tempStatus);
+    m_systemStatus.board()(board-1).ap[ap-1].temp = (uint8)(pvDouble.getValue()*100);
+    updateSystemStatus();
   }
   if(propName.find(string(PROPNAME_VERSION),0) != string::npos)
   {
@@ -272,82 +428,125 @@ void ARATestDriverTask::updateFPGAstatus(string& propName,unsigned int& fpgaStat
   }
 }
 
-void ARATestDriverTask::updateRCUstatus(string& propName,unsigned int& rcuStatus,GCFPVBool& pvBool)
+void ARATestDriverTask::updateBPstatus(string& propName,const GCFPValue* pvalue)
+{
+  LOG_INFO(formatString("updateBPstatus %s", propName.c_str()));
+  
+  GCFPVUnsigned pvUnsigned;
+  GCFPVDouble   pvDouble;
+  pvUnsigned.copy(*pvalue);
+  pvDouble.copy(*pvalue);
+  
+  int rack;
+  int subrack;
+  int board;
+
+  sscanf(propName.c_str(),SCOPE_PIC_RackN_SubRackN_BoardN_BP,&rack,&subrack,&board);
+  
+  EPA_Protocol::FPGAStatus bpStatus = m_systemStatus.board()(board-1).bp;
+
+  // layout fpga status: 
+  // 15..9 8       7........0       
+  // ----- alive   temperature
+  if(propName.find(string(PROPNAME_STATUS),0) != string::npos)
+  {
+    // nothing to be done here
+  }
+  else if(propName.find(string(PROPNAME_ALIVE),0) != string::npos)
+  {
+    if(bpStatus.status != pvUnsigned.getValue())
+    {
+      m_systemStatus.board()(board-1).bp.status = pvUnsigned.getValue();
+      updateSystemStatus();
+    }
+  }
+  else if(propName.find(string(PROPNAME_TEMPERATURE),0) != string::npos)
+  {
+    m_systemStatus.board()(board-1).bp.temp = (uint8)(pvDouble.getValue()*100);
+    updateSystemStatus();
+  }
+  if(propName.find(string(PROPNAME_VERSION),0) != string::npos)
+  {
+    // nothing to be done here
+  }
+}
+
+void ARATestDriverTask::updateRCUstatus(string& propName,const GCFPValue* pvalue)
 {
   LOG_INFO(formatString("updateRCUstatus %s", propName.c_str()));
+  
+  GCFPVBool pvBool;
+  pvBool.copy(*pvalue);
+  
+  int rack;
+  int subrack;
+  int board;
+  int ap;
+  int rcu;
+
+  sscanf(propName.c_str(),SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN,&rack,&subrack,&board,&ap,&rcu);
+  int rcuNumber = rcu + N_RCUS_PER_AP*(ap-1) + N_RCUS_PER_AP*N_APS_PER_BOARD*(board-1);
+  
+  uint8 rcuStatus = m_systemStatus.rcu()(rcuNumber-1).status;
   
   // layout rcu status: 
   // 7 6       5       4       3 2 1 0
   // - ringerr rcuHerr rcuVerr - - - statsReady
   if(propName.find(string(PROPNAME_RINGERR),0) != string::npos)
   {
-    unsigned int tempStatus = rcuStatus & 0x00000031; // reset bits
-    tempStatus = tempStatus | ((unsigned int)(pvBool.getValue())<<6);
-    updateSystemStatus(rcuStatus,tempStatus);
+    uint8 tempStatus = rcuStatus & 0x00000031; // reset bits
+    tempStatus = tempStatus | ((uint8 )(pvBool.getValue())<<6);
+    if(rcuStatus != tempStatus)
+    {
+      m_systemStatus.rcu()(rcuNumber-1).status = tempStatus;
+      updateSystemStatus();
+    }
   }
   else if(propName.find(string(PROPNAME_RCUHERR),0) != string::npos)
   {
-    unsigned int tempStatus = rcuStatus & 0x00000051; // reset bits
-    tempStatus = tempStatus | ((unsigned int)(pvBool.getValue())<<5);
-    updateSystemStatus(rcuStatus,tempStatus);
+    uint8 tempStatus = rcuStatus & 0x00000051; // reset bits
+    tempStatus = tempStatus | ((uint8 )(pvBool.getValue())<<5);
+    if(rcuStatus != tempStatus)
+    {
+      m_systemStatus.rcu()(rcuNumber-1).status = tempStatus;
+      updateSystemStatus();
+    }
   }
   else if(propName.find(string(PROPNAME_RCUVERR),0) != string::npos)
   {
-    unsigned int tempStatus = rcuStatus & 0x00000061; // reset bits
-    tempStatus = tempStatus | ((unsigned int)(pvBool.getValue())<<4);
-    updateSystemStatus(rcuStatus,tempStatus);
+    uint8 tempStatus = rcuStatus & 0x00000061; // reset bits
+    tempStatus = tempStatus | ((uint8 )(pvBool.getValue())<<4);
+    if(rcuStatus != tempStatus)
+    {
+      m_systemStatus.rcu()(rcuNumber-1).status = tempStatus;
+      updateSystemStatus();
+    }
   }
   if(propName.find(string(PROPNAME_STATSREADY),0) != string::npos)
   {
-    unsigned int tempStatus = rcuStatus & 0x00000070; // reset bits
-    tempStatus = tempStatus | ((unsigned int)(pvBool.getValue())<<0);
-    updateSystemStatus(rcuStatus,tempStatus);
+    uint8 tempStatus = rcuStatus & 0x00000070; // reset bits
+    tempStatus = tempStatus | ((uint8 )(pvBool.getValue())<<0);
+    if(rcuStatus != tempStatus)
+    {
+      m_systemStatus.rcu()(rcuNumber-1).status = tempStatus;
+      updateSystemStatus();
+    }
   }
 }
 
-void ARATestDriverTask::updateSystemStatus(unsigned int& statusItem,unsigned int newStatus)
+void ARATestDriverTask::updateSystemStatus()
 {
-  LOG_INFO(formatString("updateSystemStatus %d -> %d", statusItem,newStatus));
-  
-  // statusItem is a reference to the member variable that may have to be changed.
-  // 
-  if(statusItem != newStatus)
-  {
-    LOG_INFO(formatString("updateSystemStatus: status changed (%d -> %d), sending UPDSTATUS", statusItem,newStatus));
-    statusItem = newStatus;
-    
-    // send new status to RA application
-    RSPUpdstatusEvent updStatusEvent;
-    struct timeval timeValNow;
-    time(&timeValNow.tv_sec);
-    timeValNow.tv_usec=0;
-    updStatusEvent.timestamp.set(timeValNow);
-    updStatusEvent.status=0; // ignore ??
-    updStatusEvent.handle=1; // ignore
-    blitz::Array<uint16, 1>& ap_status = updStatusEvent.sysstatus.ap_status();
-    blitz::Array<uint16, 1>& bp_status = updStatusEvent.sysstatus.bp_status();
-    blitz::Array<uint32, 1>& eth_status = updStatusEvent.sysstatus.eth_status();
-    blitz::Array<uint16, 1>& rcu_status = updStatusEvent.sysstatus.rcu_status();
-    
-    LOG_ERROR("bp_status(0) = m_bpStatus; crashes!!");
-/*
-    bp_status(0) = m_bpStatus; // crash!!
-    ap_status(0) = m_ap1Status;
-    ap_status(1) = m_ap2Status;
-    ap_status(2) = m_ap3Status;
-    ap_status(3) = m_ap4Status;
-    eth_status(0) = m_ethStatus;
-    rcu_status(0) = m_rcu1Status;
-    rcu_status(1) = m_rcu2Status;
-    rcu_status(2) = m_rcu3Status;
-    rcu_status(3) = m_rcu4Status;
-    rcu_status(4) = m_rcu5Status;
-    rcu_status(5) = m_rcu6Status;
-    rcu_status(6) = m_rcu7Status;
-    rcu_status(7) = m_rcu8Status;
-*/
-    m_RSPserver.send(updStatusEvent);
-  }  
+  // send new status to RA application
+  RSPUpdstatusEvent updStatusEvent;
+  struct timeval timeValNow;
+  time(&timeValNow.tv_sec);
+  timeValNow.tv_usec=0;
+  updStatusEvent.timestamp.set(timeValNow);
+  updStatusEvent.status=0; // ignore ??
+  updStatusEvent.handle=1; // ignore
+  updStatusEvent.sysstatus = m_systemStatus;
+
+  m_RSPserver.send(updStatusEvent);
 }
 
 bool ARATestDriverTask::isEnabled()
@@ -485,61 +684,22 @@ GCFEvent::TResult ARATestDriverTask::enabled(GCFEvent& event, GCFPortInterface& 
       // for now, we are only interested in changes of the BP status, AP status,
       // ETH status or RCU status;
       string propName(pPropAnswer->pPropName);
-      if(propName.find(string(SCOPE_PIC_Rack1_SubRack1_Board1_ETH),0) != string::npos)
+
+      if(propName.find(string("_ETH_"),0) != string::npos)
       {
-        updateETHstatus(propName,m_ethStatus,pvUnsigned);
+        updateETHstatus(propName,pPropAnswer->pValue);
       }
-      else if(propName.find(string(SCOPE_PIC_Rack1_SubRack1_Board1_BP),0) != string::npos)
+      else if(propName.find(string("_BP_"),0) != string::npos)
       {
-        updateFPGAstatus(propName,m_bpStatus,pvBool,pvDouble);
+        updateBPstatus(propName,pPropAnswer->pValue);
       }
-      else if(propName.find(string(SCOPE_PIC_Rack1_SubRack1_Board1_AP1),0) != string::npos)
+      else if(propName.find(string("_AP"),0) != string::npos)
       {
-        updateFPGAstatus(propName,m_ap1Status,pvBool,pvDouble);
+        updateAPstatus(propName,pPropAnswer->pValue);
       }
-      else if(propName.find(string(SCOPE_PIC_Rack1_SubRack1_Board1_AP2),0) != string::npos)
+      else if(propName.find(string("_RCU"),0) != string::npos)
       {
-        updateFPGAstatus(propName,m_ap2Status,pvBool,pvDouble);
-      }
-      else if(propName.find(string(SCOPE_PIC_Rack1_SubRack1_Board1_AP3),0) != string::npos)
-      {
-        updateFPGAstatus(propName,m_ap3Status,pvBool,pvDouble);
-      }
-      else if(propName.find(string(SCOPE_PIC_Rack1_SubRack1_Board1_AP4),0) != string::npos)
-      {
-        updateFPGAstatus(propName,m_ap4Status,pvBool,pvDouble);
-      }
-      else if(propName.find(string(SCOPE_PIC_Rack1_SubRack1_Board1_AP1_RCU1),0) != string::npos)
-      {
-        updateRCUstatus(propName,m_rcu1Status,pvBool);
-      }
-      else if(propName.find(string(SCOPE_PIC_Rack1_SubRack1_Board1_AP1_RCU2),0) != string::npos)
-      {
-        updateRCUstatus(propName,m_rcu2Status,pvBool);
-      }
-      else if(propName.find(string(SCOPE_PIC_Rack1_SubRack1_Board1_AP2_RCU1),0) != string::npos)
-      {
-        updateRCUstatus(propName,m_rcu3Status,pvBool);
-      }
-      else if(propName.find(string(SCOPE_PIC_Rack1_SubRack1_Board1_AP2_RCU2),0) != string::npos)
-      {
-        updateRCUstatus(propName,m_rcu4Status,pvBool);
-      }
-      else if(propName.find(string(SCOPE_PIC_Rack1_SubRack1_Board1_AP3_RCU1),0) != string::npos)
-      {
-        updateRCUstatus(propName,m_rcu5Status,pvBool);
-      }
-      else if(propName.find(string(SCOPE_PIC_Rack1_SubRack1_Board1_AP3_RCU2),0) != string::npos)
-      {
-        updateRCUstatus(propName,m_rcu6Status,pvBool);
-      }
-      else if(propName.find(string(SCOPE_PIC_Rack1_SubRack1_Board1_AP4_RCU1),0) != string::npos)
-      {
-        updateRCUstatus(propName,m_rcu7Status,pvBool);
-      }
-      else if(propName.find(string(SCOPE_PIC_Rack1_SubRack1_Board1_AP4_RCU2),0) != string::npos)
-      {
-        updateRCUstatus(propName,m_rcu8Status,pvBool);
+        updateRCUstatus(propName,pPropAnswer->pValue);
       }
       break;
     }

@@ -26,6 +26,7 @@
 #include <GCF/GCF_Control.h>
 #include <GCF/GCF_MyPropertySet.h>
 #include <GCF/GCF_Apc.h>
+#include <Common/LofarTypes.h>
 #include <boost/shared_ptr.hpp>
 #include <map>
 
@@ -106,15 +107,20 @@ namespace ARA
       /**
        * update eth properties based on status bits
        */
-      void updateETHproperties(string scope,unsigned int status);
+      void updateETHproperties(string scope,uint32 frames,
+                                            uint32 errors,
+                                            uint8  lastError,
+                                            uint8  ffi0,
+                                            uint8  ffi1,
+                                            uint8  ffi2);
       /**
        * update fpga properties based on status bits
        */
-      void updateFPGAproperties(string scope,unsigned int status);
+      void updateFPGAproperties(string scope,uint8 status, uint8 temp);
       /**
        * update rcu properties based on status bits
        */
-      void updateRCUproperties(string scope,unsigned int status);
+      void updateRCUproperties(string scope,uint8 status);
       
     private:
     
