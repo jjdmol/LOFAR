@@ -29,18 +29,10 @@
   #include <Common/Lonumerics.h>
 #endif
     
-<<<<<<< Lorrays.h
-//#if defined(HAVE_BLITZ) && !defined(USE_AIPS_ARRAYS)
-  #include <Common/Lorrays-Blitz.h>
-//#else
-//  #include <Common/Lorrays-Aips.h>
-//#endif
-=======
 #if !defined(HAVE_BLITZ) 
   #error Blitz not configured
 #endif
 
 #include <Common/Lorrays-Blitz.h>
->>>>>>> 1.5
     
 #endif
