@@ -30,23 +30,24 @@
 namespace EPA_Protocol
 {
   class MEPData
-    {
-      public:
+  {
+    public:
       /**
        * Constructors for a MEPData object.
        */
-      MEPData() { }
+      MEPData() : m_dataptr(0), m_count(0) { }
 	  
       /* Destructor for MEPData. */
       virtual ~MEPData() {}
 
-      public:
+    public:
       /**
        * Member access.
        */
-      void setBuffer(void* buf, size_t size);
+      void  setBuffer(void* buf, size_t size);
+      void* getBuffer() const;
 
-      public:
+    public:
       /*@{*/
       /**
        * marshalling methods
@@ -56,13 +57,13 @@ namespace EPA_Protocol
       unsigned int unpack(void *buffer);
       /*@}*/
 
-      public:
+    private:
       /**
        * MEP Payload data
        */
       void*  m_dataptr; // pointer to user data, not owned by this class
       size_t m_count;
-    };
+  };
 };
 
 #endif /* MEPDATA_H_ */

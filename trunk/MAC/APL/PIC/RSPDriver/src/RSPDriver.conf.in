@@ -70,6 +70,23 @@ RSPDriver.IF_NAME=eth0
 RSPDriver.IDENTITY_WEIGHTS=1
 
 #
+# Select LOOPBACK_MODE mode
+#
+# If LOOPBACK_MODE == 0, the WRITE is done first.
+# In this mode you can check with Ethereal that what was
+# written is correctly read back from the board. This can
+# be used to check that the RSP board or the EPAStub
+# functions correctly.
+#
+# If LOOPBACK_MODE == 1, the READ is done first.
+# In this mode you can check with Ethereal that what was
+# read from the RSP board or EPAStub is written back in
+# the same way. This is used to check whether the RSPDriver
+# stores the information at the correct location in its cache.
+#
+RSPDriver.LOOPBACK_MODE=0
+
+#
 # Enable/disable certain parts of the update cycle.
 # The order of these config variables does not
 # alter the order the update actions are performed.
@@ -83,8 +100,7 @@ RSPDriver.WRITE_WG=1
 RSPDriver.READ_VERSION=1
 
 #
-# Optionally read back settings that
-# have just been written to the boards.
+# Optionally read RW-registers.
 #
 RSPDriver.READ_BF=1
 RSPDriver.READ_SS=1
