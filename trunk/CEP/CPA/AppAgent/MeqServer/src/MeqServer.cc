@@ -1,7 +1,8 @@
 #include "MeqServer.h"
 #include "AID-MeqServer.h"
-#include "DMI/AID-DMI.h"
+#include <DMI/AID-DMI.h>
 #include <MEQ/AID-Meq.h>
+#include <MeqGen/AID-MeqGen.h>
 #include <MEQ/Request.h>
 #include <MEQ/Result.h>
     
@@ -14,7 +15,9 @@ using namespace VisAgent;
 namespace Meq 
 {
   
-static int dum = aidRegistry_MeqServer() + aidRegistry_Meq();
+static int dum =  aidRegistry_MeqServer() + 
+                  aidRegistry_Meq() + 
+                  aidRegistry_MeqGen();
 
 const HIID DataProcessingError = AidData|AidProcessing|AidError;
   
