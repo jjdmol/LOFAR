@@ -38,13 +38,14 @@ namespace LOFAR
     {
       typedef dtl::DBView< DBRep<T> >  DBViewType;
 
-      TPersistentObject<T> tpo;
       Collection< TPersistentObject<T> > ctpo;
 
-      DBViewType view(tpo.tableName(), BCA<T>(), query.getSql());
+      DBViewType view(tableName(), BCA<T>(), query.getSql());
       typename DBViewType::select_iterator iter = view.begin();
 
       for (int nr = 0; iter != view.end() && nr < maxObjects; ++iter, ++nr) {
+	TPersistentObject<T> tpo;
+	tpo.tableName (tableName());
 	tpo.fromDatabaseRep(*iter);
         // If the object T is spread among several tables we must call
         // retrieve() in order to get the data from all the tables. Otherwise,
@@ -115,7 +116,7 @@ namespace LOFAR
       toDatabaseRep (rec);
 
       // setup the selection parameters
-      iter.Params().itsOid = rec.itsOid;
+      iter.Params().itsOid = rec.getOid();
 
       // save this record
       *iter = rec;
