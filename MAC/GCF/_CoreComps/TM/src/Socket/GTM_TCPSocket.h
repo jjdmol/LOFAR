@@ -59,10 +59,6 @@ class GTMTCPSocket : public GTMSocket
   protected:
     friend class GTMSocketHandler;
     friend class GTMTCPServerSocket;
-
-    virtual void workProc ();
-
-    GCFTCPPort&   _port;
   
   private:
     GTMTCPSocket ();
@@ -71,7 +67,6 @@ class GTMTCPSocket : public GTMSocket
      */
     GTMTCPSocket (const GTMTCPSocket&);
     GTMTCPSocket& operator= (const GTMTCPSocket&);
-    GCFEvent::TResult eventReceived (const GCFEvent& e);
 };
 
 #endif

@@ -26,6 +26,7 @@
 #include <GCF/GCF_Defines.h>
 #include <GCF/GCF_RawPort.h>
 #include <GCF/GCF_PeerAddr.h>
+#include "GTM_ETHSocket.h"
 
 #include <linux/if_packet.h>
 #include <linux/if_ether.h>
@@ -53,7 +54,8 @@ class GCFETHRawPort : public GCFRawPort
     /** @param protocol NOT USED */    
     GCFETHRawPort (GCFTask& task,
                    string name,
-                   TPortType type);
+                   TPortType type, 
+                   bool transportRawData = false);
     GCFETHRawPort();
 
     virtual ~GCFETHRawPort();
@@ -94,19 +96,15 @@ class GCFETHRawPort : public GCFRawPort
     // addr is remote addres if getType == SAP
     void setAddr(const char* ifname,
   	       const char* dest_mac);
-    void convertCcp2sllAddr(const char* destMacStr,
-  			                    char destMac[ETH_ALEN]);
   
-    virtual void            close_handle();
-
   protected:
+    friend class GTMSocket;
     friend class GTMETHSocket;
 
-  private:
-    
-    GTMETHSocket* _pSocket;
+  private:    
     char* _ifname;
     char* _destMacStr;
+    GTMETHSocket _socket;
 };
 
 #endif /* GCF_ETHRAWPORT_H */

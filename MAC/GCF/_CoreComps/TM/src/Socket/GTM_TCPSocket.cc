@@ -34,7 +34,7 @@
 #include <stdio.h>
 
 GTMTCPSocket::GTMTCPSocket(GCFTCPPort& port) :
-  GTMSocket(), _port(port)
+  GTMSocket(port)
 {
 }
 
@@ -91,70 +91,3 @@ int GTMTCPSocket::connect(GCFPeerAddr& serveraddr)
   }
   return (result > -1 ? 0 : -1);
 } 
-
-void GTMTCPSocket::workProc()
-{
-  GCFEvent e(F_DISCONNECTED_SIG);
-  GCFEvent::TResult status;
-  
-  ssize_t bytesRead = read(_socketFD, &e, sizeof(e));
-  if (bytesRead == 0)
-  {
-    status = _port.dispatch(e);    
-  }
-  else if (bytesRead == sizeof(e))
-  {
-    status = eventReceived(e);
-    if (status != GCFEvent::HANDLED)
-    {
-      LOFAR_LOG_INFO(TM_STDOUT_LOGGER, (
-        "Event %s for task %s on port %s not handled or an error occured",
-        _port.evtstr(e),
-        _port.getTask()->getName().c_str(), 
-        _port.getName().c_str()
-        ));
-    }
-  }
-}
-
-GCFEvent::TResult GTMTCPSocket::eventReceived(const GCFEvent& e)
-{
-  GCFEvent::TResult status = GCFEvent::NOT_HANDLED;
-  char*   event_buf  = 0;
-  GCFEvent* full_event = 0;
-
-  event_buf = (char*)malloc(e.length);
-  full_event = (GCFEvent*)event_buf;
-
-  memcpy(event_buf, &e, sizeof(e));
-  if (e.length - sizeof(e) > 0)
-  {
-    // recv the rest of the message (payload)
-    ssize_t payloadLength = e.length - sizeof(e);
-    
-    ssize_t count = recv(event_buf + sizeof(e),
-                          payloadLength);
-    
-    if (payloadLength != count)
-    {
-      LOFAR_LOG_FATAL(TM_STDOUT_LOGGER, (
-          "truncated recv on event %s (missing %d bytes)",
-          _port.evtstr(e),
-          payloadLength - count
-          ));
-    }
-    if (payloadLength != count) // retry to read the rest
-    {
-      //TODO: Make this retry more secure
-      usleep(10);
-      count += recv(event_buf + sizeof(e) + count ,
-                           payloadLength - count);
-      assert(payloadLength == count);
-    }
-  }
-
-  status = _port.dispatch(*full_event);
-
-  free(event_buf);
-  return status;
-}

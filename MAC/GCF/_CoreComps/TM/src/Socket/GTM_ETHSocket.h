@@ -49,7 +49,8 @@ class GTMETHSocket : public GTMSocket
     /**
      * open/close functions
      */
-    virtual int open (GCFPeerAddr& addr);
+    virtual int open (const char* ifname,
+                      const char* destMac);
   
     /**
      * send/recv functions
@@ -57,13 +58,6 @@ class GTMETHSocket : public GTMSocket
     virtual ssize_t send (void* buf, size_t count);
     virtual ssize_t recv (void* buf, size_t count);
 
-  protected:
-    friend class GTMSocketHandler;
-
-    virtual void workProc ();
-
-    GCFETHRawPort&   _port;
-  
   private:
     GTMETHSocket ();
     /**
@@ -71,7 +65,9 @@ class GTMETHSocket : public GTMSocket
      */
     GTMETHSocket (const GTMETHSocket&);
     GTMETHSocket& operator= (const GTMETHSocket&);
-    GCFEvent::TResult eventReceived (const GCFEvent& e);
+
+    void convertCcp2sllAddr(const char* destMacStr,
+                            char destMac[ETH_ALEN]);
     
   private:
     char  _recvPacket[ETH_FRAME_LEN];   

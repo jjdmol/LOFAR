@@ -39,8 +39,8 @@ GCFPort::GCFPort(GCFTask& task,
                  string& name, 
                  TPortType type, 
                  int protocol, 
-                 bool exchangeRawData) : 
-    GCFPortInterface(&task, name, type, protocol, exchangeRawData), _pSlave(0)
+                 bool transportRawData) : 
+    GCFPortInterface(&task, name, type, protocol, transportRawData), _pSlave(0)
 {
 }
 
@@ -48,7 +48,7 @@ GCFPort::GCFPort(GCFTask& task,
  * ::GCFPort default constructor
  */
 GCFPort::GCFPort() :
-    GCFPortInterface(0, "", SAP, 0), _pSlave(0)
+    GCFPortInterface(0, "", SAP, 0, false), _pSlave(0)
 {
 }
 
@@ -72,9 +72,9 @@ void GCFPort::init(GCFTask& task,
 		 string name,
 		 TPortType type,
 		 int protocol, 
-     bool exchangeRawData)
+     bool transportRawData)
 {
-    GCFPortInterface::init(task, name, type, protocol, exchangeRawData);
+    GCFPortInterface::init(task, name, type, protocol, transportRawData);
     _pSlave = 0;
 }
 

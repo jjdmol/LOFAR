@@ -30,6 +30,8 @@
 #include <netinet/in.h>
 #include <net/if.h>
 #include <net/if_arp.h>
+#include <sys/ioctl.h>
+#include <stdio.h>
 
 //#required includes according to man packet(7)
 #include <sys/socket.h>
@@ -45,7 +47,7 @@
 
 
 GTMETHSocket::GTMETHSocket(GCFETHRawPort& port) :
-  GTMSocket(), _port(port)
+  GTMSocket(port)
 {
 }
 
@@ -84,21 +86,24 @@ ssize_t GTMETHSocket::recv(void* buf, size_t count)
   return result - sizeof(struct ethhdr);
 }
 
-int GTMETHSocket::open(GCFPeerAddr& /*addr*/)
+int GTMETHSocket::open(const char* ifname,
+       const char* destMacStr)
 {
   if (_socketFD > -1)
     return 0;
   else
   {
-    int socketID = 0;
+    int socketFD = 0;
+    char destMac[ETH_ALEN];
+    
     // open the raw socket
-    socketID = socket(PF_PACKET, SOCK_RAW, htons(ETH_P_ALL));
-    if (socketID < 0) return _socketID;
+    socketFD = socket(PF_PACKET, SOCK_RAW, htons(ETH_P_ALL));
+    if (socketFD < 0) return _socketFD;
   
     // find MAC address for specified interface
     struct ifreq ifr;
-    strncpy(ifr.ifr_name, _ifname, IFNAMSIZ-1);
-    if (ioctl(_socketID, SIOCGIFHWADDR, &ifr) < 0)
+    strncpy(ifr.ifr_name, ifname, IFNAMSIZ-1);
+    if (ioctl(_socketFD, SIOCGIFHWADDR, &ifr) < 0)
     {
       LOFAR_LOG_FATAL(TM_STDOUT_LOGGER, ( 
           "ioctl(SIOCGIFHWADDR)"));
@@ -106,31 +111,38 @@ int GTMETHSocket::open(GCFPeerAddr& /*addr*/)
       return -1;
     }
   
+    string macAddress;
+    unsigned int hx;
+    char macPart[3];
     // print MAC addres for source
-    LOFAR_LOG_TRACE(TM_STDOUT_LOGGER, ( 
-        "SRC (%s) HWADDR: ", 
-        _ifname));
     for (int i = 0; i < ETH_ALEN; i++)
     {
-      unsigned int hx = ifr.ifr_hwaddr.sa_data[i] & 0xff;
-      printf("%02x", hx);
-      if (i < ETH_ALEN - 1) printf(":");
-      else                  printf("\n");
+      hx = ifr.ifr_hwaddr.sa_data[i] & 0xff;
+      sprintf(macPart, "%02x", hx);
+      macAddress += macPart;
+      if (i < ETH_ALEN - 1) macAddress += ':';
     }
-  
+    LOFAR_LOG_TRACE(TM_STDOUT_LOGGER, ( 
+        "SRC (%s) HWADDR: %s", 
+        ifname, 
+        macAddress.c_str()));
+    
     // convert HWADDR string to sll_addr
-    convertCcp2sllAddr(_destMacStr, destMac);
+    convertCcp2sllAddr(destMacStr, destMac);
   
     // print MAC address for destination
     printf("DEST HWADDR: ");
-    unsigned int hx;
+    macAddress = "";
     for (int i = 0; i < ETH_ALEN; i++)
     {
       hx = destMac[i] & 0xff;
-      printf("%02x", hx);
-      if (i < ETH_ALEN - 1) printf(":");
-      else                  printf("\n");
+      sprintf(macPart, "%02x", hx);
+      macAddress += macPart;
+      if (i < ETH_ALEN - 1) macAddress += ':';
     }
+    LOFAR_LOG_TRACE(TM_STDOUT_LOGGER, ( 
+        "DEST HWADDR: %s", 
+        macAddress.c_str()));
   
     // fill in packet header for sending messages
     struct ethhdr* hdr = (struct ethhdr*)_sendPacket;
@@ -139,8 +151,8 @@ int GTMETHSocket::open(GCFPeerAddr& /*addr*/)
     hdr->h_proto = 0x0000;
   
     // get interface index number
-    strncpy(ifr.ifr_name, _ifname, IFNAMSIZ-1);
-    if (ioctl(socketID, SIOCGIFINDEX, &ifr) < 0)
+    strncpy(ifr.ifr_name, ifname, IFNAMSIZ-1);
+    if (ioctl(socketFD, SIOCGIFINDEX, &ifr) < 0)
     {
         LOFAR_LOG_FATAL(TM_STDOUT_LOGGER, ( 
             "ioctl(SIOCGIFINDEX)"));
@@ -157,7 +169,7 @@ int GTMETHSocket::open(GCFPeerAddr& /*addr*/)
     _sockaddr.sll_protocol = htons(ETH_P_ALL);
     _sockaddr.sll_ifindex = ifindex;
     _sockaddr.sll_hatype = ARPHRD_ETHER;
-    if (bind(socketID, (struct sockaddr*)&_sockaddr, sizeof(sockaddr)) < 0)
+    if (bind(socketFD, (struct sockaddr*)&_sockaddr, sizeof(sockaddr)) < 0)
     {
         LOFAR_LOG_FATAL(TM_STDOUT_LOGGER, ( 
             "GCFETHRawPort::open; bind"));
@@ -171,7 +183,7 @@ int GTMETHSocket::open(GCFPeerAddr& /*addr*/)
     so.mr_type = PACKET_MR_PROMISC;
     so.mr_alen = 0;
     memset(&so.mr_address, 0, sizeof(so.mr_address));
-    if (setsockopt(socketID, SOL_PACKET, PACKET_ADD_MEMBERSHIP,
+    if (setsockopt(socketFD, SOL_PACKET, PACKET_ADD_MEMBERSHIP,
        (void*)&so, sizeof(struct packet_mreq)) < 0)
     {
     }
@@ -195,76 +207,22 @@ int GTMETHSocket::open(GCFPeerAddr& /*addr*/)
     // initialize the data
     memset(_sendPacketData, 0, ETH_DATA_LEN);
     
-    setFD(socketID);
+    setFD(socketFD);
   
-    schedule_connected();
     return (_socketFD < 0 ? -1 : 0);
   }
 }
 
-void GTMETHSocket::workProc()
+void GTMETHSocket::convertCcp2sllAddr(const char* destMacStr,
+              char destMac[ETH_ALEN])
 {
-  GCFEvent e(F_DISCONNECTED_SIG);
-  GCFEvent::TResult status;
-  
-  ssize_t bytesRead = read(_socketFD, &e, sizeof(e));
-  if (bytesRead == 0)
+  unsigned int hx[ETH_ALEN] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+
+  sscanf(destMacStr, "%x:%x:%x:%x:%x:%x",
+   &hx[0], &hx[1], &hx[2], &hx[3], &hx[4], &hx[5]);
+   
+  for (int i = 0; i < ETH_ALEN; i++)
   {
-    status = _port.dispatch(e);    
+      destMac[i] = (char)hx[i];
   }
-  else if (bytesRead == sizeof(e))
-  {
-    status = eventReceived(e);
-    if (status != GCFEvent::HANDLED)
-    {
-      LOFAR_LOG_INFO(TM_STDOUT_LOGGER, (
-        "Event %s for task %s on port %s not handled or an error occured",
-        _port.evtstr(e),
-        _port.getTask()->getName().c_str(), 
-        _port.getName().c_str()
-        ));
-    }
-  }
-}
-
-GCFEvent::TResult GTMETHSocket::eventReceived(const GCFEvent& e)
-{
-  GCFEvent::TResult status = GCFEvent::NOT_HANDLED;
-  char*   event_buf  = 0;
-  GCFEvent* full_event = 0;
-
-  event_buf = (char*)malloc(e.length);
-  full_event = (GCFEvent*)event_buf;
-
-  memcpy(event_buf, &e, sizeof(e));
-  if (e.length - sizeof(e) > 0)
-  {
-    // recv the rest of the message (payload)
-    ssize_t payloadLength = e.length - sizeof(e);
-    
-    ssize_t count = recv(event_buf + sizeof(e),
-                          payloadLength);
-    
-    if (payloadLength != count)
-    {
-      LOFAR_LOG_FATAL(TM_STDOUT_LOGGER, (
-          "truncated recv on event %s (missing %d bytes)",
-          _port.evtstr(e),
-          payloadLength - count
-          ));
-    }
-    if (payloadLength != count) // retry to read the rest
-    {
-      //TODO: Make this retry more secure
-      usleep(10);
-      count += recv(event_buf + sizeof(e) + count ,
-                           payloadLength - count);
-      assert(payloadLength == count);
-    }
-  }
-
-  status = _port.dispatch(*full_event);
-
-  free(event_buf);
-  return status;
 }
