@@ -28,6 +28,9 @@ public:
   double minIm() const;
   double maxIm() const;
 
+  double min() const;
+  double max() const;
+
   void   add(const UVPDataAtom *atom);
   
 protected:
@@ -37,6 +40,9 @@ private:
   double itsMaxRe;
   double itsMinIm;
   double itsMaxIm;
+  
+  double itsMin;
+  double itsMax;
 };
 
 

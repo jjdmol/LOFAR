@@ -10,7 +10,9 @@ UVPDataAtomVector::UVPDataAtomVector()
     itsMinRe(0),
     itsMaxRe(0),
     itsMinIm(0),
-    itsMaxIm(0)
+    itsMaxIm(0),
+    itsMin(0),
+    itsMax(0)
 {
 }
 
@@ -64,6 +66,26 @@ double UVPDataAtomVector::maxIm() const
 {
   return itsMaxIm;
 }
+
+
+
+//===============>>>  UVPDataAtomVector::min  <<<===============
+
+double UVPDataAtomVector::min() const
+{
+  return itsMin;
+}
+
+
+
+
+//===============>>>  UVPDataAtomVector::max  <<<===============
+
+double UVPDataAtomVector::max() const
+{
+  return itsMax;
+}
+
 
 
 
@@ -121,6 +143,9 @@ void UVPDataAtomVector::add(const UVPDataAtom *atom)
       }
     } // If size() ...
 
+    itsMin = (itsMinIm < itsMinRe ? itsMinIm : itsMinRe);
+    itsMax = (itsMaxIm > itsMaxRe ? itsMaxIm : itsMaxRe);
+    
   } // If N > 0
   
 }
