@@ -67,10 +67,12 @@ void UVSorterWP::init ()
   header_hiid = id | AidHeader | AidCorr | AidTimeslot;
   chunk_hiid = id | AidData | AidCorr | AidTimeslot | mycorr | AidAny;
   footer_hiid = id | AidFooter | AidCorr | AidTimeslot;
+  msfooter_hiid = "UVData.?.Footer.Corr.Timeslot"; 
   
   subscribe(header_hiid);
   subscribe(chunk_hiid);
   subscribe(footer_hiid);
+  subscribe(msfooter_hiid);
 
   setState(IDLE);  
   uvset_id = segment_id = -1;
@@ -105,7 +107,8 @@ int UVSorterWP::receive (MessageRef &mref)
     num_channels = hdr[FNumChannels];
     
     // init record for per-IFR accumulators
-    DataRecord &rec = prec_template_ref <<= new DataRecord;
+    DataRecord &rec = *new DataRecord;
+    prec_template_ref <<= &rec;
     rec[FTimeSlotIndex] <<= new DataField(Tpint,num_times);
     rec[FTime] <<= new DataField(Tpdouble,num_times);
     
@@ -249,6 +252,21 @@ int UVSorterWP::receive (MessageRef &mref)
       uvset_id = segment_id = -1;
       setState(IDLE);
     }
+  }
+  else if( msg.id().matches(msfooter_hiid) )
+  {
+    if( uvset_id<0 )
+    {
+      dprintf(1)("no header yet, ignoring uvset footer\n");
+    }
+    else if( msg.id()[1] != uvset_id )
+    {
+      dprintf(1)("mismatch in uvset id, ignoring uvset footer\n");
+    }
+    dprintf(1)("got footer for uvset %d\n",uvset_id);
+    MessageRef mref;
+    mref <<= new Message(AidUVData|uvset_id|AidFooter|AidCorr|AidIFR);
+    publish(mref);
   }
   else 
     dprintf(1)("ignoring unrecognized message: %s\n",msg.sdebug(1).c_str());

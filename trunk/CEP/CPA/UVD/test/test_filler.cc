@@ -19,21 +19,22 @@ int main (int argc,const char *argv[])
   {
     Dispatcher dsp;
     dsp.attach(new LoggerWP(10,Message::LOCAL),DMI::ANON);
-    dsp.attach(new MSIntegratorWP, DMI::ANON);
+    dsp.attach(new MSIntegratorWP("test.ms","WP.Hello.UVSorterWP.*"), DMI::ANON);
     dsp.attach(new UVSorterWP(0,5),DMI::ANON);
+    dsp.attach(new UVSorterWP(0,8),DMI::ANON);
     
-    /*    MSFillerWP *fwp = new MSFillerWP;
+    MSFillerWP *fwp = new MSFillerWP;
     fwp->setHeader("UVData.?.Header");
-    fwp->setSegmentHeader("UVData.?.0.Patch.0.Header.Corr.Timeslot");
-    fwp->setSegmentHeader("UVData.?.0.Patch.0.Header.Corr.Timeslot");
-    fwp->setChunk("UVData.?.?.Patch.0.Data.Corr.Timeslot.*");
-    fwp->setFooter("UVData.?.?.Patch.0.Footer.Corr.Timeslot");
+    fwp->setSegmentHeader("UVData.?.?.Patch.0.Header.Corr.IFR");
+    fwp->setChunk("UVData.?.?.Patch.0.Data.Corr.IFR.*");
+    fwp->setFooter("UVData.?.Footer.Corr.IFR");
     fwp->setMSName("%M.p0.ms");
     
     dsp.attach(fwp,DMI::ANON);
-    */
+    
     initGateways(dsp);
     dsp.start();
+    
     dsp.pollLoop();
     dsp.stop();
   }
