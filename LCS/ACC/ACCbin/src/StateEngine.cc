@@ -74,7 +74,7 @@ time_t	StateLifeTime [NR_OF_STATES];
 StateEngine::StateEngine() :
 	itsSequence       (0),
 	itsStepNr         (0),
-	itsWantNewState   (false),
+	itsStateFinished  (false),
 	itsStateExpireTime(0)		
 {
 	StateLifeTime[StateInitController] = 900;	// should be long enough
@@ -108,7 +108,7 @@ void StateEngine::reset()
 
 	itsSequence        = 0;
 	itsStepNr          = 0;
-	itsWantNewState    = false;
+	itsStateFinished   = false;
 	itsStateExpireTime = 0;
 }
 
@@ -120,7 +120,7 @@ ACState StateEngine::startSequence(ACCmd	aStartPoint) throw (Exception)
 			// startpoint of sequence found, start with first state
 			itsSequence     = i;
 			itsStepNr       = 0;
-			itsWantNewState = false;
+			itsStateFinished= false;
 			ACState	stateNr = theirCmdSeqTable[itsSequence].cmdSeq[itsStepNr];
 
 			LOG_DEBUG (formatString("Start stateSequence[%d][%d]=%s, time=%d",
@@ -146,7 +146,7 @@ ACState StateEngine::getState()
 ACState StateEngine::nextState()
 {
 	itsStepNr++;
-	itsWantNewState = false;
+	itsStateFinished = false;
 
 	ASSERTSTR(itsStepNr < CMD_SEQ_LENGTH, "itsStepNr became " << itsStepNr);
 

@@ -27,7 +27,6 @@
 #include <Common/Exception.h>
 #include <Common/StringUtil.h>
 #include <ACC/CmdStack.h>
-#include <Common/hexdump.h>		// @@
 namespace LOFAR {
   namespace ACC {
 
@@ -49,11 +48,6 @@ void CmdStack::add(time_t				scheduleTime,
 	pair < iterator, bool>	result;
 	DH_ApplControl*			newDHAC = aDHAC->makeDataCopy();
 	LOG_TRACE_RTTI_STR("newDHAC=" << newDHAC);
-
-	cout << "\naDHAC contents\n";
-	hexdump (aDHAC, sizeof(DH_ApplControl));
-	cout << "\nnewaDHAC contents\n";
-	hexdump (newDHAC, sizeof(DH_ApplControl));
 
 	result = itsStack.insert(std::make_pair(scheduleTime, newDHAC));
 	if (!result.second) {

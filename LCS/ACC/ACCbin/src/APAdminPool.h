@@ -62,9 +62,10 @@ public:
 	void stopAckCollection ();
 	bool allAcksReceived   ();
 
-	APAdmin*	poll      (time_t			waitTime);
-	APAdmin*	cleanup   ();
-	uint16		size      ();
+	APAdmin*	poll        (time_t			waitTime);
+	APAdmin*	cleanup     ();
+	uint16		processCount();
+	uint16		onlineCount ();
 	void 		writeToAll(PCCmd			command,
 						   time_t			waitTime,
 						   const string&	options);
@@ -104,9 +105,14 @@ inline void APAdminPool::setCurElement(uint16	aValue)
 	}
 }
 
-inline uint16 APAdminPool::size()
+inline uint16 APAdminPool::processCount()
 {
 	return (itsNrElements);
+}
+
+inline uint16 APAdminPool::onlineCount()
+{
+	return (itsNrOnline);
 }
 
 //

@@ -5,4 +5,4 @@
 $2 $3 &
 pid=`echo $!`
 echo "pid=$pid"
-echo "$pid" >> $1.pid
+echo "$pid" > $1.pid

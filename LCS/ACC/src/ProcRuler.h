@@ -56,6 +56,8 @@ public:
 
 	void markAsStopped(const string& aProcName);
 
+	uint16	size();
+
 	void show();	// TEMP
 private:
 	// Copying is not allowed
@@ -65,6 +67,11 @@ private:
 	//# Datamembers
 	map<string, ProcRule>		itsProcPool;
 };
+
+inline uint16 ProcRuler::size()
+{
+	return (itsProcPool.size());
+}
 
   } // namespace ACC
 } // namespace LOFAR
