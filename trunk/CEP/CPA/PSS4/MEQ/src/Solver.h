@@ -152,6 +152,8 @@ private:
   
   // solvable parm group for this solver ("Parm" by default)
   HIID            itsParmGroup;
+  
+  int             itsSolveDependMask;
 };
 
 

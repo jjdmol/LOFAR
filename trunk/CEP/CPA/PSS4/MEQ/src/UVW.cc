@@ -40,6 +40,7 @@ const HIID child_labels[] = { AidRA,AidDec,AidStX,AidStY,AidStZ };
 //##ModelId=400E535502D1
 UVW::UVW()
 {
+  setDependMask(RQIDM_CELLS);
   // Use the Dwingeloo position for the frame.
   Assert (MeasTable::Observatory(itsEarthPos, "DWL"));
   ///  itsRefU = itsU;
@@ -115,8 +116,7 @@ int UVW::getResult (Result::Ref &resref,
       matW(j,i) = xyz(2);
     }
   }
-  // result depends on domain, is updated with new request
-  return RES_DEP_DOMAIN|(newreq?RES_UPDATED:0);
+  return 0;
 }
 
 //##ModelId=400E535502DC

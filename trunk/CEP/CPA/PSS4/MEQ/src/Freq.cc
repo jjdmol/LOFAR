@@ -30,7 +30,9 @@ namespace Meq {
 
 //##ModelId=400E53050214
 Freq::Freq()
-{}
+{ 
+  setDependMask(RQIDM_CELLS);
+}
 
 //##ModelId=400E53050215
 Freq::~Freq()
@@ -61,7 +63,7 @@ int Freq::getResult (Result::Ref &resref,
   for( int i=0; i<ntime; i++ ) 
     arr(blitz::Range::all(),i) = freq;
   // result depends on domain; is updated if request is new.
-  return RES_DEP_DOMAIN|(newreq?RES_UPDATED:0);
+  return 0;
 }
 
 } // namespace Meq

@@ -1,3 +1,7 @@
+  * revised the request_id structure; added depend_mask to all nodes,
+    plus solve_depend_mask to Solver, and domain_depend_mask + 
+    solve_depend_mask to Parm. Defaults should be fine 99% of the time.
+
   * added MeqReqMux node: request multiplexer
     can be used to drive one tree at full resolution, and the other at
     partial resolution

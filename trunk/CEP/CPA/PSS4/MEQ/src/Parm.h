@@ -185,6 +185,9 @@ private:
   
   HIID         solve_domain_id_;
   
+  int          domain_depend_mask_;
+  int          solve_depend_mask_;
+  
   //##Documentation
   //## active polcs for current domain 
   vector<Polc::Ref> polcs_;

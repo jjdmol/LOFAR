@@ -30,7 +30,9 @@ namespace Meq {
 
 //##ModelId=400E535502AC
 Time::Time()
-{}
+{ 
+  setDependMask(RQIDM_CELLS);
+}
 
 //##ModelId=400E535502AD
 Time::~Time()
@@ -61,7 +63,7 @@ int Time::getResult (Result::Ref &resref,
   for( int i=0; i<nfreq; i++ ) 
     arr(i,blitz::Range::all()) = time;
   // result depends on domain; is updated if request is new.
-  return RES_DEP_DOMAIN|(newreq?RES_UPDATED:0);
+  return 0;
 }
 
 } // namespace Meq
