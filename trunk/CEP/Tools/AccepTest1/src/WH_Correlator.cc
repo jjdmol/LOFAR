@@ -12,6 +12,10 @@
 // General includes
 #include <Common/LofarLogger.h>
 
+#ifdef HAVE_MPI
+#include <Transport/TH_MPI.h>
+#endif
+
 // Application specific includes
 #include <DH_Vis.h>
 #include <DH_CorrCube.h>
@@ -96,6 +100,11 @@ void WH_Correlator::process() {
   // calculate the correlations and add to output DataHolder.
   DH_Vis::BufferType s1_val, s2_val;
   for (int sample = 0; sample < itsNsamples; sample++) {
+
+#ifdef HAVE_MPE
+    MPE_Log_event(1, sample, "correlating"); 
+#endif
+
     for (int fchannel = 0; fchannel < itsNchannels; fchannel++) {
       for (int   station1 = 0; station1 < itsNelements; station1++) {
 	for (int station2 = 0; station2 <= station1;    station2++) {
@@ -119,6 +128,9 @@ void WH_Correlator::process() {
 	}
       }
     }
+#ifdef HAVE_MPE
+    MPE_Log_event(2, sample, "correlated");
+#endif 
   }
   
 #ifdef DO_TIMING

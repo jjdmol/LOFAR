@@ -88,7 +88,17 @@ void AH_Correlator::init() {
 
 void AH_Correlator::run(int nsteps) {
   for (int i = 0; i < nsteps; i++) {
+
+#ifdef HAVE_MPE
+    if (i != 0) MPE_Log_event(4, i, "transported");
+#endif
+
     itsWH->baseProcess();
+
+#ifdef HAVE_MPE
+    if (i < nsteps-1) MPE_Log_event(3, i, "transporting");
+#endif
+
   }
 }
 

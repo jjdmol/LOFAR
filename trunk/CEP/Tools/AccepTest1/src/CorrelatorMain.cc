@@ -22,10 +22,15 @@ int main (int argc, const char** argv) {
   if (true) {
 #endif
 
+#ifdef HAVE_MPE
+    MPE_Init_log();
+
+    MPE_Describe_state(1, 2, "Correlating","red");
+    MPE_Describe_state(3, 4, "Transporting", "blue");
+#endif 
+
     for (int samples = min_samples; samples <= max_samples; samples++) {
       for (int elements = min_elements; elements <= max_elements; elements++) {
-	
-	// init the MPI environment.
 	
 	try {
 	  
@@ -57,6 +62,10 @@ int main (int argc, const char** argv) {
       }
     }
   }
+
+#ifdef HAVE_MPE
+  MPE_Finish_log("correlator.log");
+#endif
 
 #ifdef HAVE_MPI
   // finalize the MPI environment
