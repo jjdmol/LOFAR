@@ -50,7 +50,7 @@ namespace LOFAR
     //     MatrixY*NoRndNodes must be a multiple of NoSplitsPerSplitter
     //     and of course NoSplitters <= NoHeatLines
     int NoRndNodes = kvm.getInt("RandomNodes", 2);
-    int NoHeatLines = kvm.getInt("HeatLines", 1);
+    int NoHeatLines = kvm.getInt("HeatLines", 2);
     int NoSplitters = kvm.getInt("Splitters", 1);
     int NoSplitsPerSplitter = kvm.getInt("HeatsPerSplit", 3);
     int MatrixX = kvm.getInt("RandomMatrixX", 8);
@@ -58,6 +58,7 @@ namespace LOFAR
     ASSERTSTR(NoSplitters<NoHeatLines, "There should be more heat lines than splitted heat lines.");
 
 #ifdef HAVE_MPI
+
     int totalNumberOfNodes = ( NoSplitsPerSplitter + 2 ) * NoSplitters + 3 * NoHeatLines + NoRndNodes;
     int MPINodes = TH_MPI::getNumberOfNodes();
     if (totalNumberOfNodes>MPINodes) {
