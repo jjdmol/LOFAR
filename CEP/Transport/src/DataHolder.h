@@ -63,8 +63,19 @@ namespace LOFAR
   \endcode
 */
 
-  class DataHolder: public BaseDataHolder
-    {
-    };
+class DataHolder: public BaseDataHolder
+{
+
+public:
+  /// Construct a DataHolder with a default name
+  DataHolder (const string& name="aDataHolder",
+	      const string& type="DH");
+  
+private:
+  string       itsName;
+  string       itsType;
+};
+
+
 }
 #endif
