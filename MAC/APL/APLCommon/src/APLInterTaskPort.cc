@@ -31,6 +31,8 @@
 using namespace LOFAR;
 using namespace std;
 
+INIT_TRACER_CONTEXT(APLInterTaskPort,LOFARLOGGER_PACKAGE);
+
 /**
  * ::APLInterTaskPort constructor
  */

@@ -87,5 +87,7 @@ class APLInterTaskPort : public GCFRawPort
     GCFTask&       m_slaveTask;
     std::set<long> m_toClientTimerId;
     std::set<long> m_toServerTimerId;
+
+    ALLOC_TRACER_CONTEXT  
 };
 #endif

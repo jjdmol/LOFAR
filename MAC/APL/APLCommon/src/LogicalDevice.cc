@@ -28,6 +28,7 @@
 #include <GCF/GCF_PVString.h>
 #include <GCF/GCF_PVInteger.h>
 #include <GCF/GCF_PVDynArr.h>
+#include <GCF/ParameterSet.h>
 #include "APLCommon/APL_Defines.h"
 #include "APLCommon/APLUtilities.h"
 #include "APLCommon/LogicalDevice.h"
@@ -42,8 +43,6 @@ namespace LOFAR
 {
 namespace APLCommon
 {
-
-const string LogicalDevice::LD_SHARED_FILE_LOCATION     = string("/home/lofar/MACTransport/share/");
 
 const string LogicalDevice::LD_STATE_STRING_INITIAL     = string("Initial");
 const string LogicalDevice::LD_STATE_STRING_IDLE        = string("Idle");
@@ -67,32 +66,43 @@ const string LogicalDevice::LD_COMMAND_RESUME           = string("RESUME");
 const string LogicalDevice::LD_COMMAND_SUSPEND          = string("SUSPEND");
 const string LogicalDevice::LD_COMMAND_RELEASE          = string("RELEASE");
 
+INIT_TRACER_CONTEXT(LogicalDevice,LOFARLOGGER_PACKAGE);
+
 LogicalDevice::LogicalDevice(const string& taskName, const string& parameterFile) throw (APLCommon::ParameterFileNotFoundException, APLCommon::ParameterNotFoundException) :
   ::GCFTask((State)&LogicalDevice::initial_state,taskName),
   PropertySetAnswerHandlerInterface(),
   m_propertySetAnswer(*this),
   m_propertySet(),
-  m_serverPortName(taskName+string("_server")),
+  m_parameterSet(),
+  m_serverPortName(string("server")),
   m_parentPort(),
-  m_serverPort(*this, m_serverPortName, ::GCFPortInterface::SPP, LOGICALDEVICE_PROTOCOL),
+  m_serverPort(*this, m_serverPortName, ::GCFPortInterface::MSPP, LOGICALDEVICE_PROTOCOL),
   m_childPorts(),
+  m_connectedChildPorts(),
   m_childStartDaemonPorts(),
   m_apcLoaded(false),
   m_logicalDeviceState(LOGICALDEVICE_STATE_IDLE),
   m_prepareTimerId(0),
   m_startTimerId(0),
   m_stopTimerId(0),
-  m_parameterSet()
+  m_retrySendTimerId(0),
+  m_eventBuffer()
 {
-  registerProtocol(LOGICALDEVICE_PROTOCOL, LOGICALDEVICE_PROTOCOL_signalnames);
-  LOG_DEBUG(formatString("LogicalDevice(%s)::LogicalDevice",getName().c_str()));
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
+  
+#ifdef USE_TCPPORT_INSTEADOF_PVSSPORT
+  LOG_WARN("Using GCFTCPPort in stead of GCFPVSSPort");
+#endif
 
-  string psName;
-  string psType;
+  registerProtocol(LOGICALDEVICE_PROTOCOL, LOGICALDEVICE_PROTOCOL_signalnames);
+
+  string host("");
+  string psName("");
+  string psType("");
   
   try
   {
-    m_parameterSet.adoptFile(LD_SHARED_FILE_LOCATION + parameterFile);
+    m_parameterSet.adoptFile(_getShareLocation() + string("share/") + parameterFile);
   }
   catch(Exception& e)
   {
@@ -108,6 +118,14 @@ LogicalDevice::LogicalDevice(const string& taskName, const string& parameterFile
   {
     THROW(APLCommon::ParameterNotFoundException,e.message());
   }
+  try
+  {
+    host   = m_parameterSet.getString("startDaemonHost");
+    psName = host + string(":") + psName;
+  }
+  catch(Exception& e)
+  {
+  }
   
   m_propertySet = boost::shared_ptr<GCFMyPropertySet>(new GCFMyPropertySet(
       psName.c_str(),
@@ -115,12 +133,13 @@ LogicalDevice::LogicalDevice(const string& taskName, const string& parameterFile
       PS_CAT_TEMPORARY,
       &m_propertySetAnswer));
   m_propertySet->enable();
+  LOG_TRACE_FLOW(formatString("LogicalDevice(%s)::LogicalDevice end",getName().c_str()));
 }
 
 
 LogicalDevice::~LogicalDevice()
 {
-  LOG_DEBUG(formatString("LogicalDevice(%s)::~LogicalDevice",getName().c_str()));
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,getName().c_str());
   m_propertySet->disable();
 }
 
@@ -129,7 +148,7 @@ string& LogicalDevice::getServerPortName()
   return m_serverPortName;
 }
 
-void LogicalDevice::_addChildPort(TPortPtr childPort)
+void LogicalDevice::_addChildPort(TPortSharedPtr childPort)
 {
   m_childPorts.push_back(childPort);
 }
@@ -146,18 +165,26 @@ LogicalDevice::TLogicalDeviceState LogicalDevice::getLogicalDeviceState() const
 
 void LogicalDevice::handlePropertySetAnswer(::GCFEvent& answer)
 {
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(answer)).c_str());
   switch(answer.signal)
   {
     case F_MYPS_ENABLED:
     {
       GCFPropSetAnswerEvent* pPropAnswer=static_cast<GCFPropSetAnswerEvent*>(&answer);
-      if(pPropAnswer->result == GCF_NO_ERROR)
+      if(strstr(pPropAnswer->pScope, m_parameterSet.getString("propertysetName").c_str()) != 0)
       {
-        // property set loaded, now load apc?
+        if(pPropAnswer->result == GCF_NO_ERROR)
+        {
+          // property set loaded, now load apc?
+        }
+        else
+        {
+          LOG_ERROR(formatString("%s : PropertySet %s NOT ENABLED",getName().c_str(),pPropAnswer->pScope));
+        }
       }
       else
       {
-        LOG_ERROR(formatString("%s : PropertySet %s NOT ENABLED",getName().c_str(),pPropAnswer->pScope));
+        concrete_handlePropertySetAnswer(answer);
       }
       break;
     }
@@ -165,14 +192,21 @@ void LogicalDevice::handlePropertySetAnswer(::GCFEvent& answer)
     case F_PS_CONFIGURED:
     {
       GCFConfAnswerEvent* pConfAnswer=static_cast<GCFConfAnswerEvent*>(&answer);
-      if(pConfAnswer->result == GCF_NO_ERROR)
+      if(strstr(pConfAnswer->pApcName, m_parameterSet.getString("propertysetName").c_str()) != 0)
       {
-        LOG_DEBUG(formatString("%s : apc %s Loaded",getName().c_str(),pConfAnswer->pApcName));
-        //apcLoaded();
+        if(pConfAnswer->result == GCF_NO_ERROR)
+        {
+          LOG_DEBUG(formatString("%s : apc %s Loaded",getName().c_str(),pConfAnswer->pApcName));
+          //apcLoaded();
+        }
+        else
+        {
+          LOG_ERROR(formatString("%s : apc %s NOT LOADED",getName().c_str(),pConfAnswer->pApcName));
+        }
       }
       else
       {
-        LOG_ERROR(formatString("%s : apc %s NOT LOADED",getName().c_str(),pConfAnswer->pApcName));
+        concrete_handlePropertySetAnswer(answer);
       }
       break;
     }
@@ -181,111 +215,203 @@ void LogicalDevice::handlePropertySetAnswer(::GCFEvent& answer)
     {
       // check which property changed
       GCFPropValueEvent* pPropAnswer=static_cast<GCFPropValueEvent*>(&answer);
-      if ((pPropAnswer->pValue->getType() == LPT_STRING) &&
-          (strstr(pPropAnswer->pPropName, LD_PROPNAME_COMMAND.c_str()) != 0))
+      if(strstr(pPropAnswer->pPropName, m_parameterSet.getString("propertysetName").c_str()) != 0)
       {
-        // command received
-        string commandString(((GCFPVString*)pPropAnswer->pValue)->getValue());
-        vector<string> parameters;
-        string command;
-        APLUtilities::decodeCommand(commandString,command,parameters);
-        
-        // SCHEDULE <fileName>
-        if(command==string(LD_COMMAND_SCHEDULE))
+        // it is my own propertyset
+        if((pPropAnswer->pValue->getType() == LPT_STRING) &&
+           (strstr(pPropAnswer->pPropName, LD_PROPNAME_COMMAND.c_str()) != 0))
         {
-          if(parameters.size()==1)
+          // command received
+          string commandString(((GCFPVString*)pPropAnswer->pValue)->getValue());
+          vector<string> parameters;
+          string command;
+          APLUtilities::decodeCommand(commandString,command,parameters);
+          
+          // SCHEDULE <fileName>
+          if(command==string(LD_COMMAND_SCHEDULE))
           {
+            if(parameters.size()==1)
+            {
+              m_parameterSet.adoptFile(_getShareLocation() + string("share/") + parameters[0]);
+              _schedule();
+            }
+            else
+            {
+              TLDResult result = LD_RESULT_INCORRECT_NUMBER_OF_PARAMETERS;
+              m_propertySet->setValue(LD_PROPNAME_STATUS,GCFPVInteger(result));
+            }
+          }
+          // CANCELSCHEDULE
+          else if(command==string(LD_COMMAND_CANCELSCHEDULE))
+          {
+            if(parameters.size()==0)
+            {
+              _cancelSchedule();
+            }
+            else
+            {
+              TLDResult result = LD_RESULT_INCORRECT_NUMBER_OF_PARAMETERS;
+              m_propertySet->setValue(LD_PROPNAME_STATUS,GCFPVInteger(result));
+            }
+          }
+          // CLAIM
+          else if(command==string(LD_COMMAND_CLAIM))
+          {
+            if(parameters.size()==0)
+            {
+              _claim();
+            }
+            else
+            {
+              TLDResult result = LD_RESULT_INCORRECT_NUMBER_OF_PARAMETERS;
+              m_propertySet->setValue(LD_PROPNAME_STATUS,GCFPVInteger(result));
+            }
+          }
+          // PREPARE
+          else if(command==string(LD_COMMAND_PREPARE))
+          {
+            if(parameters.size()==0)
+            {
+              _prepare();
+            }
+            else
+            {
+              TLDResult result = LD_RESULT_INCORRECT_NUMBER_OF_PARAMETERS;
+              m_propertySet->setValue(LD_PROPNAME_STATUS,GCFPVInteger(result));
+            }
+          }
+          // RESUME
+          else if(command==string(LD_COMMAND_RESUME))
+          {
+            if(parameters.size()==0)
+            {
+              _resume();
+            }
+            else
+            {
+              TLDResult result = LD_RESULT_INCORRECT_NUMBER_OF_PARAMETERS;
+              m_propertySet->setValue(LD_PROPNAME_STATUS,GCFPVInteger(result));
+            }
+          }
+          // SUSPEND
+          else if(command==string(LD_COMMAND_SUSPEND))
+          {
+            if(parameters.size()==0)
+            {
+              _suspend();
+            }
+            else
+            {
+              TLDResult result = LD_RESULT_INCORRECT_NUMBER_OF_PARAMETERS;
+              m_propertySet->setValue(LD_PROPNAME_STATUS,GCFPVInteger(result));
+            }
+          }
+          // RELEASE
+          else if(command==string(LD_COMMAND_RELEASE))
+          {
+            if(parameters.size()==0)
+            {
+              _release();
+            }
+            else
+            {
+              TLDResult result = LD_RESULT_INCORRECT_NUMBER_OF_PARAMETERS;
+              m_propertySet->setValue(LD_PROPNAME_STATUS,GCFPVInteger(result));
+            }
           }
           else
           {
-            TLDResult result = LD_RESULT_INCORRECT_NUMBER_OF_PARAMETERS;
+            TLDResult result = LD_RESULT_UNKNOWN_COMMAND;
             m_propertySet->setValue(LD_PROPNAME_STATUS,GCFPVInteger(result));
           }
         }
-        // CANCELSCHEDULE <fileName>
-        else if(command==string(LD_COMMAND_CANCELSCHEDULE))
-        {
-          if(parameters.size()==1)
-          {
-          }
-          else
-          {
-            TLDResult result = LD_RESULT_INCORRECT_NUMBER_OF_PARAMETERS;
-            m_propertySet->setValue(LD_PROPNAME_STATUS,GCFPVInteger(result));
-          }
-        }
-        // CLAIM
-        else if(command==string(LD_COMMAND_CLAIM))
-        {
-          if(parameters.size()==0)
-          {
-          }
-          else
-          {
-            TLDResult result = LD_RESULT_INCORRECT_NUMBER_OF_PARAMETERS;
-            m_propertySet->setValue(LD_PROPNAME_STATUS,GCFPVInteger(result));
-          }
-        }
-        // PREPARE
-        else if(command==string(LD_COMMAND_PREPARE))
-        {
-          if(parameters.size()==0)
-          {
-          }
-          else
-          {
-            TLDResult result = LD_RESULT_INCORRECT_NUMBER_OF_PARAMETERS;
-            m_propertySet->setValue(LD_PROPNAME_STATUS,GCFPVInteger(result));
-          }
-        }
-        // RESUME
-        else if(command==string(LD_COMMAND_RESUME))
-        {
-          if(parameters.size()==0)
-          {
-          }
-          else
-          {
-            TLDResult result = LD_RESULT_INCORRECT_NUMBER_OF_PARAMETERS;
-            m_propertySet->setValue(LD_PROPNAME_STATUS,GCFPVInteger(result));
-          }
-        }
-        // SUSPEND
-        else if(command==string(LD_COMMAND_SUSPEND))
-        {
-          if(parameters.size()==0)
-          {
-          }
-          else
-          {
-            TLDResult result = LD_RESULT_INCORRECT_NUMBER_OF_PARAMETERS;
-            m_propertySet->setValue(LD_PROPNAME_STATUS,GCFPVInteger(result));
-          }
-        }
-        // RELEASE
-        else if(command==string(LD_COMMAND_RELEASE))
-        {
-          if(parameters.size()==0)
-          {
-          }
-          else
-          {
-            TLDResult result = LD_RESULT_INCORRECT_NUMBER_OF_PARAMETERS;
-            m_propertySet->setValue(LD_PROPNAME_STATUS,GCFPVInteger(result));
-          }
-        }
-        else
-        {
-          TLDResult result = LD_RESULT_UNKNOWN_COMMAND;
-          m_propertySet->setValue(LD_PROPNAME_STATUS,GCFPVInteger(result));
-        }
+      }
+      else
+      {
+        concrete_handlePropertySetAnswer(answer);
       }
       break;
     }  
 
     default:
+      concrete_handlePropertySetAnswer(answer);
       break;
   }  
+}
+
+time_t LogicalDevice::_decodeTimeParameter(const string& timeStr) const
+{
+  time_t returnTime=time(0);
+  string::size_type plusPos = timeStr.find('+');
+  if(plusPos != string::npos)
+  {
+    returnTime += atoi(timeStr.substr(plusPos+1).c_str());
+  }
+  else
+  {
+    returnTime = atoi(timeStr.c_str());
+  }
+  return returnTime;
+}
+
+void LogicalDevice::_schedule()
+{
+  //
+  // set timers
+  // specified times are in UTC, seconds since 1-1-1970
+  time_t timeNow = time(0);
+  time_t prepareTime = _decodeTimeParameter(m_parameterSet.getString("prepareTime"));
+  time_t startTime   = _decodeTimeParameter(m_parameterSet.getString("startTime"));
+  time_t stopTime    = _decodeTimeParameter(m_parameterSet.getString("stopTime"));
+  
+  m_prepareTimerId = m_serverPort.setTimer(prepareTime - timeNow);
+  m_startTimerId = m_serverPort.setTimer(startTime - timeNow);
+  m_stopTimerId = m_serverPort.setTimer(stopTime - timeNow);
+
+  _sendScheduleToClients();
+}
+
+void LogicalDevice::_cancelSchedule()
+{
+  m_serverPort.cancelTimer(m_prepareTimerId);
+  m_serverPort.cancelTimer(m_startTimerId);
+  m_serverPort.cancelTimer(m_stopTimerId);
+  
+  // propagate to childs
+  LOGICALDEVICECancelscheduleEvent cancelEvent;
+  _sendToAllChilds(cancelEvent);
+  
+  _suspend();
+}
+
+void LogicalDevice::_claim()
+{
+  LOGICALDEVICEClaimEvent claimEvent;
+  dispatch(claimEvent,m_parentPort);
+}
+
+void LogicalDevice::_prepare()
+{
+  LOGICALDEVICEPrepareEvent prepareEvent;
+  dispatch(prepareEvent,m_parentPort);
+}
+
+void LogicalDevice::_resume()
+{
+  LOGICALDEVICEResumeEvent resumeEvent;
+  dispatch(resumeEvent,m_parentPort);
+}
+
+void LogicalDevice::_suspend()
+{
+  LOGICALDEVICESuspendEvent suspendEvent;
+  dispatch(suspendEvent,m_parentPort);
+}
+
+void LogicalDevice::_release()
+{
+  LOGICALDEVICEReleaseEvent releaseEvent;
+  dispatch(releaseEvent,m_parentPort);
 }
 
 bool LogicalDevice::_isParentPort(::GCFPortInterface& port)
@@ -329,10 +455,17 @@ bool LogicalDevice::_isChildStartDaemonPort(::GCFPortInterface& port, string& st
 void LogicalDevice::_sendToAllChilds(::GCFEvent& event)
 {
   // send to all childs
-  TPortVector::iterator it=m_childPorts.begin();
-  while(it != m_childPorts.end())
+  TPortMap::iterator it=m_connectedChildPorts.begin();
+  while(it != m_connectedChildPorts.end())
   {
-    (*it)->send(event);
+    try
+    {
+      it->second->send(event);
+    }
+    catch(Exception& e)
+    {
+      LOG_FATAL(formatString("Fatal error while sending message to child %s: %s",it->first.c_str(),e.message().c_str()));
+    }
     ++it;
   }
 }
@@ -430,6 +563,52 @@ void LogicalDevice::_handleTimers(::GCFEvent& event, ::GCFPortInterface& port)
       LOGICALDEVICESuspendEvent suspendEvent;
       port.send(suspendEvent);
     }
+    else if(timerEvent.id == m_retrySendTimerId)
+    {
+      int retryTimeout = 1*60*60; // retry sending buffered events for 1 hour
+      int retryPeriod = 30; // retry sending buffered events every 30 seconds
+      GCF::ParameterSet* pParamSet = GCF::ParameterSet::instance();
+      try
+      {
+        retryTimeout = pParamSet->getInt("retryTimeout");
+        retryPeriod  = pParamSet->getInt("retryPeriod");
+      } 
+      catch(Exception& e)
+      {
+        LOG_WARN(formatString("retryTimeout parameter not found. Using %d",e.message().c_str(),retryTimeout));
+      }
+
+      // loop through the buffered events and try to send each one.
+      TEventBufferVector::iterator it = m_eventBuffer.begin();
+      while(it != m_eventBuffer.end())
+      {
+        ssize_t sentBytes = it->port->send(*(it->event));
+        time_t timeNow = time(0);
+        
+        if((sentBytes == 0 && timeNow - it->entryTime > retryPeriod) || sentBytes != 0)
+        {
+          // events are removed from the buffer if:
+          // a. the event was sent or
+          // b. the event was not sent AND it is longer than 1 hour in the buffer
+          if(sentBytes != 0)
+          {
+            LOG_INFO(formatString("Buffered event successfully sent to %s:%s",it->port->getTask()->getName().c_str(),it->port->getName().c_str()));
+          }
+          else
+          {
+            LOG_FATAL(formatString("Unable to send event to %s:%s",it->port->getTask()->getName().c_str(),it->port->getName().c_str()));
+          }
+          it = m_eventBuffer.erase(it);  // erase() returns an iterator that points to the next item
+        }
+        else 
+        {
+          ++it;
+        }
+      }
+
+      // keep on polling
+      m_retrySendTimerId = m_serverPort.setTimer(static_cast<long int>(retryPeriod));
+    }
   }
 }
 
@@ -456,43 +635,100 @@ vector<string> LogicalDevice::_getChildKeys()
   return childKeys;
 }
 
-void LogicalDevice::_sendClientSchedule(const string& startDaemonKey)
+// Send the event to the port. If it fails, the event is added to a buffer
+// The logical device periodically retries to send the events in the buffer
+void LogicalDevice::_sendEvent(::GCFEvent& event, ::GCFPortInterface& port)
 {
-  // get the port
-  TPortMap::iterator it = m_childStartDaemonPorts.find(startDaemonKey);
-  if(it == m_childStartDaemonPorts.end())
+  ssize_t sentBytes = port.send(event);
+  if(sentBytes == 0)
   {
-    LOG_WARN(formatString("StartDaemon %s not available",startDaemonKey.c_str()));
+    // add to buffer and keep retrying until it succeeds
+    TBufferedEventInfo bufferedEvent(time(0),&port,&event);
+    m_eventBuffer.push_back(bufferedEvent);
+  }
+}
+
+void LogicalDevice::_sendScheduleToClients()
+{
+  if(m_connectedChildPorts.empty())
+  {
+    // no childs available: send schedule to startdaemons
+    TPortMap::iterator it = m_childStartDaemonPorts.begin();
+    while(it != m_childStartDaemonPorts.end())
+    {
+      try
+      {
+        // extract the parameterset for the child
+        string startDaemonKey = it->first;
+        TPortSharedPtr startDaemonPort = it->second;
+        ACC::ParameterSet psSubset = m_parameterSet.makeSubset(startDaemonKey + string("."));
+        string parameterFileName = startDaemonKey+string(".ps"); 
+        string remoteSystem = psSubset.getString("startDaemonHost");
+        psSubset.writeFile(_getShareLocation() + string("mnt/") + remoteSystem + string("/") + parameterFileName);
+  
+        // send the schedule to the startdaemon of the child
+        TLogicalDeviceTypes ldType = static_cast<TLogicalDeviceTypes>(psSubset.getInt("logicalDeviceType"));
+        STARTDAEMONScheduleEvent scheduleEvent;
+        scheduleEvent.logicalDeviceType = ldType;
+        scheduleEvent.taskName = startDaemonKey;
+        scheduleEvent.fileName = parameterFileName;
+        startDaemonPort->send(scheduleEvent);
+      }
+      catch(Exception& e)
+      {
+        LOG_FATAL(formatString("Fatal error while scheduling child: %s",e.message().c_str()));
+      }
+      ++it;
+    }
   }
   else
   {
-    try
+    // send schedule to clients
+    TPortMap::iterator it = m_connectedChildPorts.begin();
+    while(it != m_connectedChildPorts.end())
     {
-      // extract the parameterset for the child
-      TPortPtr startDaemonPort = it->second;
-      ParameterSet psSubset = m_parameterSet.makeSubset(startDaemonKey + string("."));
-      string parameterFileName = startDaemonKey+string(".ps"); 
-      psSubset.writeFile(string("/home/lofar/MACTransport/mnt/mars/")+parameterFileName);// TODO: share name config
-
-      // send the schedule to the startdaemon of the child
-      TLogicalDeviceTypes ldType = static_cast<TLogicalDeviceTypes>(psSubset.getInt("logicalDeviceType"));
-      STARTDAEMONScheduleEvent scheduleEvent;
-      scheduleEvent.logicalDeviceType = ldType;
-      scheduleEvent.taskName = startDaemonKey;
-      scheduleEvent.fileName = parameterFileName;
-      startDaemonPort->send(scheduleEvent);
-    }
-    catch(Exception& e)
-    {
-      LOG_FATAL(formatString("Fatal error while scheduling child: %s",e.message().c_str()));
+      try
+      {
+        // extract the parameterset for the child
+        string childKey = it->first;
+        TPortSharedPtr childPort = it->second;
+        ACC::ParameterSet psSubset = m_parameterSet.makeSubset(childKey + string("."));
+        string parameterFileName = childKey+string(".ps"); 
+        string remoteSystem = psSubset.getString("startDaemonHost");
+        psSubset.writeFile(_getShareLocation() + string("mnt/") + remoteSystem + string("/") + parameterFileName);
+  
+        // send the schedule to the child
+        LOGICALDEVICEScheduleEvent scheduleEvent;
+        scheduleEvent.fileName = parameterFileName;
+        childPort->send(scheduleEvent);
+      }
+      catch(Exception& e)
+      {
+        LOG_FATAL(formatString("Fatal error while scheduling child: %s",e.message().c_str()));
+      }
+      ++it;
     }
   }
 }
 
+string LogicalDevice::_getShareLocation() const
+{
+  string shareLocation("/home/lofar/MACTransport/");
+  GCF::ParameterSet* pParamSet = GCF::ParameterSet::instance();
+  try
+  {
+    shareLocation = pParamSet->getString("shareLocation");
+  } 
+  catch(Exception& e)
+  {
+    LOG_WARN(formatString("Sharelocation parameter not found. Using /home/lofar/MACTransport/",e.message().c_str()));
+  }
+  return shareLocation;
+}
+
 ::GCFEvent::TResult LogicalDevice::initial_state(::GCFEvent& event, ::GCFPortInterface& port)
 {
-  LOG_DEBUG(formatString("LogicalDevice(%s)::initial_state (%s)",getName().c_str(),evtstr(event)));
-
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
   ::GCFEvent::TResult status = ::GCFEvent::HANDLED;
   
   switch (event.signal)
@@ -514,12 +750,12 @@ void LogicalDevice::_sendClientSchedule(const string& startDaemonKey)
         // connect to child startdaemon.
         try
         {
+          string startDaemonHostName = m_parameterSet.getString((*chIt) + string(".startDaemonHost"));
           string startDaemonPortName = m_parameterSet.getString((*chIt) + string(".startDaemonPort"));
           string startDaemonTaskName = m_parameterSet.getString((*chIt) + string(".startDaemonTask"));
-          string childPsName         = m_parameterSet.getString((*chIt) + string(".propertysetName"));
+          string childPsName         = startDaemonHostName + string(":") + m_parameterSet.getString((*chIt) + string(".propertysetName"));
           
-          
-          TPortPtr startDaemonPort(new TThePortTypeInUse(*this,startDaemonTaskName,::GCFPortInterface::SAP,0));
+          TPortSharedPtr startDaemonPort(new TRemotePort(*this,startDaemonTaskName,::GCFPortInterface::SAP,0));
           TPeerAddr peerAddr;
           peerAddr.taskname = startDaemonTaskName;
           peerAddr.portname = startDaemonPortName;
@@ -547,22 +783,17 @@ void LogicalDevice::_sendClientSchedule(const string& startDaemonKey)
       // connect to parent.
       string parentPortName = m_parameterSet.getString("parentPort");
       string parentTaskName = m_parameterSet.getString("parentTask");
-      m_parentPort.init(*this,parentTaskName,::GCFPortInterface::SAP, STARTDAEMON_PROTOCOL);
+      m_parentPort.init(*this,parentTaskName,::GCFPortInterface::SAP, LOGICALDEVICE_PROTOCOL);
       TPeerAddr peerAddr;
       peerAddr.taskname = parentTaskName;
       peerAddr.portname = parentPortName;
       m_parentPort.setAddr(peerAddr);
       m_parentPort.open();
+
+      _schedule();
       
-      // set timers
-      // specified times are in UTC, seconds since 1-1-1970
-      time_t timeNow = time(0);
-      time_t prepareTime = m_parameterSet.getInt("prepareTime");
-      time_t startTime   = m_parameterSet.getInt("startTime");
-      time_t stopTime    = m_parameterSet.getInt("stopTime");
-      m_prepareTimerId = m_serverPort.setTimer(prepareTime - timeNow);
-      m_startTimerId = m_serverPort.setTimer(startTime - timeNow);
-      m_stopTimerId = m_serverPort.setTimer(stopTime - timeNow);
+      // poll retry buffer every 10 seconds
+      m_retrySendTimerId = m_serverPort.setTimer(10L);
       break;
     }
   
@@ -572,18 +803,15 @@ void LogicalDevice::_sendClientSchedule(const string& startDaemonKey)
       if(_isParentPort(port))
       {
         LOGICALDEVICEConnectEvent connectEvent;
+        connectEvent.nodeId = getName();
         port.send(connectEvent);
-      }
-      else if(_isChildStartDaemonPort(port,startDaemonKey))
-      {
-        _sendClientSchedule(startDaemonKey);
       }
       break;
     }
     
     case LOGICALDEVICE_CONNECTED:
     {
-      LOGICALDEVICEConnectedEvent connectedEvent;
+      LOGICALDEVICEConnectedEvent connectedEvent(event);
       if(connectedEvent.result == LD_RESULT_NO_ERROR)
       {
         _doStateTransition(LOGICALDEVICE_STATE_IDLE);
@@ -596,6 +824,7 @@ void LogicalDevice::_sendClientSchedule(const string& startDaemonKey)
       break;
 
     case F_TIMER:
+      _handleTimers(event,port);
       break;
     
     default:
@@ -603,18 +832,16 @@ void LogicalDevice::_sendClientSchedule(const string& startDaemonKey)
       status = ::GCFEvent::NOT_HANDLED;
       break;
   }    
-  if(status == ::GCFEvent::NOT_HANDLED)
-  {
-    TLogicalDeviceState newState;
-    status = concrete_initial_state(event, port, newState);
-    _doStateTransition(newState);
-  }
-  return status;
+  TLogicalDeviceState newState=LOGICALDEVICE_STATE_NOSTATE;
+  ::GCFEvent::TResult concreteStatus;
+  concreteStatus = concrete_initial_state(event, port, newState);
+  _doStateTransition(newState);
+  return (status==::GCFEvent::HANDLED||concreteStatus==::GCFEvent::HANDLED?::GCFEvent::HANDLED : ::GCFEvent::NOT_HANDLED);
 }
 
 ::GCFEvent::TResult LogicalDevice::idle_state(::GCFEvent& event, ::GCFPortInterface& port)
 {
-  LOG_DEBUG(formatString("LogicalDevice(%s)::idle_state (%s)",getName().c_str(),evtstr(event)));
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
   ::GCFEvent::TResult status = ::GCFEvent::HANDLED;
 
   switch (event.signal)
@@ -640,10 +867,10 @@ void LogicalDevice::_sendClientSchedule(const string& startDaemonKey)
   
     case F_ACCEPT_REQ:
     {
-      TPortPtr client(new TThePortTypeInUse);
-      client->init(*this, m_serverPortName, GCFPortInterface::SPP, LOGICALDEVICE_PROTOCOL);
-      m_serverPort.accept(*(client.get()));
-      _addChildPort(client);
+      TPortSharedPtr server(new TRemotePort);
+      server->init(*this, m_serverPortName, GCFPortInterface::SPP, LOGICALDEVICE_PROTOCOL);
+      m_serverPort.accept(*(server.get()));
+      _addChildPort(server);
       break;
     }
 
@@ -657,6 +884,10 @@ void LogicalDevice::_sendClientSchedule(const string& startDaemonKey)
 
     case LOGICALDEVICE_CONNECT:
     {
+      LOGICALDEVICEConnectEvent connectEvent(event);
+      TPortSharedPtr portPtr(static_cast<TRemotePort*>(&port));
+      m_connectedChildPorts[connectEvent.nodeId] = TPortSharedPtr(portPtr);
+      
       LOGICALDEVICEConnectedEvent connectedEvent;
       connectedEvent.result = LD_RESULT_NO_ERROR;
       port.send(connectedEvent);
@@ -672,14 +903,17 @@ void LogicalDevice::_sendClientSchedule(const string& startDaemonKey)
       LOG_DEBUG(formatString("LogicalDevice(%s)::idle_state, default",getName().c_str()));
       status = ::GCFEvent::NOT_HANDLED;
       break;
-  }
-
-  return status;
+  }    
+  TLogicalDeviceState newState=LOGICALDEVICE_STATE_NOSTATE;
+  ::GCFEvent::TResult concreteStatus;
+  concreteStatus = concrete_idle_state(event, port, newState);
+  _doStateTransition(newState);
+  return (status==::GCFEvent::HANDLED||concreteStatus==::GCFEvent::HANDLED?::GCFEvent::HANDLED : ::GCFEvent::NOT_HANDLED);
 }
 
 ::GCFEvent::TResult LogicalDevice::claiming_state(::GCFEvent& event, ::GCFPortInterface& port)
 {
-  LOG_DEBUG(formatString("LogicalDevice(%s)::claiming_state (%s)",getName().c_str(),evtstr(event)));
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
   ::GCFEvent::TResult status = ::GCFEvent::HANDLED;
 
   switch (event.signal)
@@ -703,6 +937,10 @@ void LogicalDevice::_sendClientSchedule(const string& startDaemonKey)
       _disconnectedHandler(port);
       break;
       
+    case F_TIMER:
+      _handleTimers(event,port);
+      break;
+
     // the LOGICALDEVICE_CLAIMED event cannot result in a transition to 
     // the claimed state here, because the logical device may have several 
     // children that all send their LOGICALDEVICE_CLAIMED message. 
@@ -712,19 +950,19 @@ void LogicalDevice::_sendClientSchedule(const string& startDaemonKey)
     
     default:
       LOG_DEBUG(formatString("LogicalDevice(%s)::claiming_state, default",getName().c_str()));
-      // call the implementation of the derived class
-      TLogicalDeviceState newState;
-      status = concrete_claiming_state(event,port,newState);
-      _doStateTransition(newState);
+      status = ::GCFEvent::NOT_HANDLED;
       break;
   }
-
-  return status;
+  TLogicalDeviceState newState=LOGICALDEVICE_STATE_NOSTATE;
+  ::GCFEvent::TResult concreteStatus;
+  concreteStatus = concrete_claiming_state(event, port, newState);
+  _doStateTransition(newState);
+  return (status==::GCFEvent::HANDLED||concreteStatus==::GCFEvent::HANDLED?::GCFEvent::HANDLED : ::GCFEvent::NOT_HANDLED);
 }
 
 ::GCFEvent::TResult LogicalDevice::claimed_state(::GCFEvent& event, ::GCFPortInterface& port)
 {
-  LOG_DEBUG(formatString("LogicalDevice(%s)::claimed_state (%s)",getName().c_str(),evtstr(event)));
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
   ::GCFEvent::TResult status = ::GCFEvent::HANDLED;
 
   switch (event.signal)
@@ -776,7 +1014,7 @@ void LogicalDevice::_sendClientSchedule(const string& startDaemonKey)
 
 ::GCFEvent::TResult LogicalDevice::preparing_state(::GCFEvent& event, ::GCFPortInterface& port)
 {
-  LOG_DEBUG(formatString("LogicalDevice(%s)::preparing_state (%s)",getName().c_str(),evtstr(event)));
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
   ::GCFEvent::TResult status = ::GCFEvent::HANDLED;
 
   switch (event.signal)
@@ -803,6 +1041,10 @@ void LogicalDevice::_sendClientSchedule(const string& startDaemonKey)
       _disconnectedHandler(port);
       break;
       
+    case F_TIMER:
+      _handleTimers(event,port);
+      break;
+
     // the LOGICALDEVICE_PREPARED event cannot result in a transition to 
     // the suspended state here, because the logical device may have several 
     // children that all send their LOGICALDEVICE_PREPARED message. 
@@ -812,18 +1054,19 @@ void LogicalDevice::_sendClientSchedule(const string& startDaemonKey)
     
     default:
       LOG_DEBUG(formatString("LogicalDevice(%s)::preparing_state, default",getName().c_str()));
-      // call the implementation of the derived class
-      TLogicalDeviceState newState;
-      status = concrete_preparing_state(event,port,newState);
-      _doStateTransition(newState);
+      status = ::GCFEvent::NOT_HANDLED;
       break;
   }
-  return status;
+  TLogicalDeviceState newState=LOGICALDEVICE_STATE_NOSTATE;
+  ::GCFEvent::TResult concreteStatus;
+  concreteStatus = concrete_preparing_state(event, port, newState);
+  _doStateTransition(newState);
+  return (status==::GCFEvent::HANDLED||concreteStatus==::GCFEvent::HANDLED?::GCFEvent::HANDLED : ::GCFEvent::NOT_HANDLED);
 }
 
 ::GCFEvent::TResult LogicalDevice::suspended_state(::GCFEvent& event, ::GCFPortInterface& port)
 {
-  LOG_DEBUG(formatString("LogicalDevice(%s)::suspended_state (%s)",getName().c_str(),evtstr(event)));
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
   ::GCFEvent::TResult status = ::GCFEvent::HANDLED;
 
   switch (event.signal)
@@ -891,7 +1134,7 @@ void LogicalDevice::_sendClientSchedule(const string& startDaemonKey)
 
 ::GCFEvent::TResult LogicalDevice::active_state(::GCFEvent& event, ::GCFPortInterface& port)
 {
-  LOG_DEBUG(formatString("LogicalDevice(%s)::active_state (%s)",getName().c_str(),evtstr(event)));
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
   ::GCFEvent::TResult status = ::GCFEvent::HANDLED;
 
   switch (event.signal)
@@ -938,16 +1181,18 @@ void LogicalDevice::_sendClientSchedule(const string& startDaemonKey)
     
     default:
       LOG_DEBUG(formatString("LogicalDevice(%s)::active_state, default",getName().c_str()));
-      status = concrete_active_state(event,port);
+      status = ::GCFEvent::NOT_HANDLED;
       break;
   }
-
-  return status;
+  TLogicalDeviceState newState=LOGICALDEVICE_STATE_NOSTATE;
+  ::GCFEvent::TResult concreteStatus;
+  concreteStatus = concrete_active_state(event, port, newState);
+  return (status==::GCFEvent::HANDLED||concreteStatus==::GCFEvent::HANDLED?::GCFEvent::HANDLED : ::GCFEvent::NOT_HANDLED);
 }
 
 ::GCFEvent::TResult LogicalDevice::releasing_state(::GCFEvent& event, ::GCFPortInterface& port)
 {
-  LOG_DEBUG(formatString("LogicalDevice(%s)::releasing_state (%s)",getName().c_str(),evtstr(event)));
+  LOG_TRACE_LIFETIME(TRACE_LEVEL_FLOW,formatString("%s - event=%s",getName().c_str(),evtstr(event)).c_str());
   ::GCFEvent::TResult status = ::GCFEvent::HANDLED;
 
   switch (event.signal)
@@ -967,6 +1212,10 @@ void LogicalDevice::_sendClientSchedule(const string& startDaemonKey)
       _disconnectedHandler(port);
       break;
 
+    case F_TIMER:
+      _handleTimers(event,port);
+      break;
+
     // the LOGICALDEVICE_RELEASED event cannot result in a transition to 
     // the idle state here, because the logical device may have several 
     // children that all send their LOGICALDEVICE_RELEASED message. 
@@ -976,14 +1225,14 @@ void LogicalDevice::_sendClientSchedule(const string& startDaemonKey)
     
     default:
       LOG_DEBUG(formatString("LogicalDevice(%s)::releasing_state, default",getName().c_str()));
-      // call the implementation of the derived class
-      TLogicalDeviceState newState;
-      status = concrete_releasing_state(event,port,newState);
-      _doStateTransition(newState);
+      status = ::GCFEvent::NOT_HANDLED;
       break;
   }
-
-  return status;
+  TLogicalDeviceState newState=LOGICALDEVICE_STATE_NOSTATE;
+  ::GCFEvent::TResult concreteStatus;
+  concreteStatus = concrete_releasing_state(event, port, newState);
+  _doStateTransition(newState);
+  return (status==::GCFEvent::HANDLED||concreteStatus==::GCFEvent::HANDLED?::GCFEvent::HANDLED : ::GCFEvent::NOT_HANDLED);
 }
 
 };

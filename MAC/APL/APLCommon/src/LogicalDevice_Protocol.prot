@@ -1,5 +1,6 @@
 //#  LogicalDevice_Protocol.prot: Protocol definition for the LogicalDevice server
 //#
+//#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
 //#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
@@ -19,6 +20,8 @@
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
 //#  $Id$
+
+
 autogen definitions protocol;
 
 description = "Protocol for LogicalDevice servers";
@@ -48,102 +51,152 @@ PRELUDE_END;
 // "dir" can be one of "IN" or "OUT".
 // A "param" has a "name" and a "type".
 //
+
+//
+// CONNECT - sent by a child after connecting to it's parent to identify itself
+//
 event = {
   signal = CONNECT;
-  dir = IN;
+  dir = IN; // from child to parent
+  param = {
+    name = "nodeId";
+    type = "string";
+  };
 };
 
+//
+// CONNECTED - result of the CONNECT request
+//
 event = {
   signal = CONNECTED;
-  dir = OUT;
+  dir = OUT; // from parent to child
   param = {
     name = "result";
     type = "TLDResult";
   };
 };
 
+//
+// SCHEDULE - sent by a parent to all childs to inform them of a new schedule or
+// a change in the existing schedule
+//
 event = {
 	signal = SCHEDULE;
-	dir = IN;
+	dir = OUT; // from parent to child
 	param = {
 		name = "fileName";
 		type = "string";
 	};
 };
 
+//
+// SCHEDULED - result of the SCHEDULE request
+//
 event = {
 	signal = SCHEDULED;
-	dir = OUT;
+	dir = IN; // from child to parent
 	param = {
 	  name = "result";
 	  type = "TLDResult";
 	};
 };
 
+//
+// CANCELSCHEDULE - sent by a parent to all childs to cancel the existing schedule
+//
 event = {
 	signal = CANCELSCHEDULE;
-	dir = IN;
-	param = {
-		name = "fileName";
-		type = "string";
-	};
+	dir = OUT; // from parent to child
 };
 
+//
+// SCHEDULECANCELLED - result of the SCHEDULECANCEL request
+//
 event = {
 	signal = SCHEDULECANCELLED;
-	dir = OUT;
+	dir = IN; // from child to parent
 	param = {
 	  name = "result";
 	  type = "TLDResult";
 	};
 };
 
+//
+// CLAIM - sent by a parent to all childs to claim the resources
+//
 event = {
 	signal = CLAIM;
-	dir = IN;
+	dir = OUT; // from parent to child
 };
 
+//
+// CLAIMED - result of the CLAIM request
+//
 event = {
 	signal = CLAIMED;
-	dir = OUT;
+	dir = IN; // from child to parent
 };
 
+//
+// PREPARE - sent by a parent to all childs to prepare itself
+//
 event = {
 	signal = PREPARE;
-	dir = IN;
+	dir = OUT; // from parent to child
 };
 
+//
+// PREPARED - result of the PREPARE request
+//
 event = {
 	signal = PREPARED;
-	dir = OUT;
+	dir = IN; // from child to parent
 };
 
+//
+// RESUME - sent by a parent to all childs to resume itself
+//
 event = {
 	signal = RESUME;
-	dir = IN;
+	dir = OUT; // from parent to child
 };
 
+//
+// RESUMED - result of the RESUME request
+//
 event = {
 	signal = RESUMED;
-	dir = OUT;
+	dir = IN; // from child to parent
 };
 
+//
+// SUSPEND - sent by a parent to all childs to suspend itself
+//
 event = {
 	signal = SUSPEND;
-	dir = IN;
+	dir = OUT; // from parent to child
 };
 
+//
+// SUSPEND - result of the SUSPEND request
+//
 event = {
 	signal = SUSPENDED;
-	dir = OUT;
+	dir = IN; // from child to parent
 };
 
+//
+// RELEASE - sent by a parent to all childs to release itself
+//
 event = {
 	signal = RELEASE;
-	dir = IN;
+	dir = OUT; // from parent to child
 };
 
+//
+// RELEASED - result of the RELEASE request
+//
 event = {
 	signal = RELEASED;
-	dir = OUT;
+	dir = IN; // from child to parent
 };
