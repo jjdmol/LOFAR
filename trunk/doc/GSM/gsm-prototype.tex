@@ -16,7 +16,7 @@
 \begin{abstract}
   
   The LOFAR Global Sky Model (GSM) will be an all-sky database of some 100
-  million (?) objects, with flux \& polarization measurements in the 20--200
+  million objects, with flux \& polarization measurements in the 20--200
   MHz range. The primary function of the GSM is to support LOFAR calibration
   and data reduction. The GSM is expected to provide a model of all
   sufficiently  bright sources in any given field, having enough detail and
@@ -70,6 +70,7 @@
   do this, we first need to consider the basic use cases:
 
 \subsection{A source maps to a set of MeqNodes?} 
+\label{sec:sourcetomeqnodes}
   
   For use with a MeqTree, a GSM source has to map to a collection of MeqNodes.
   In the simplest case (i.e. vanilla point source), these are basic MeqParms:
@@ -91,9 +92,14 @@
   \item Complex sources and Cat II sources bring in a whole zoo of concepts:
   images, shapelets, etc. These will definitely require specialized MeqNodes
   and/or MeqExprs. 
-
+  
   \end{itemize}
   
+  The complexity of this representation may also vary depending on domain. For
+  example, a point source at higher frequencies may have spatially extended
+  emission at lower frequencies. Thus, we may need to switch between different
+  sub-tree representations depending on frequency.
+
   Note also that the GSM$\leftrightarrow$MeqNodes representation has to be
   bidirectional. Once a source has been solved for, we may want to store the
   new parameter values back into the GSM. But see below.
@@ -462,7 +468,7 @@ defrec.solvable := T
            ... ],
     *2 = [ class    = 'meqparm',
            name     = 'freq',           
-           polc     = [0,-1],
+           polc     = [0,1],
            solvable = F
            ... ] 
   ]
@@ -473,8 +479,8 @@ defrec.solvable := T
   $\exp({x_1...x_n})$ function. The {\tt children} field contains a list of
   child defrecs -- in this case, $x_1$ is a MeqParm representing the [solvable]
   spectral index, and $x_2$ is frequency term (the {\tt polc} array given
-  corresponds to $-f$).\footnote{The conventional spectral index representation 
-  $(\nu^{-n})$ differs only by a renormalization term.} Essentially, we're
+  corresponds to $f$).\footnote{The conventional spectral index representation 
+  $(\nu^n, n<0)$ differs only by a renormalization term.} Essentially, we're
   representing a tiny tree here. The {\tt MeqParm.define()} method can then
   recursively define the child nodes (to any level of nesting!), followed by
   the top-level node.
