@@ -5,6 +5,9 @@
 #ifndef AFX_WH_Ring_H__
 #define AFX_WH_Ring_H__
 
+#include <map>
+#include <queue>
+
 #include "WorkHolder.h"
 #include "DH_Test.h"
 #include "DH_Ring.h"
@@ -27,10 +30,15 @@ class WH_Ring:public WorkHolder
   DH_Ring<T>* getOutHolder (int channel); 
 
  private:
+
+  ///   The routing information is stored in a map.
+    /// The first field is the destination ID, 
+    /// the second field the corresponding output channel
+  map<int,int> itsRoutingTable;
   
   /// return whether the input slot is stil to be sent(false) or 
   /// is already delivered and thus "empty" (true)
-  bool slotIsEmpty() const;
+  bool slotIsEmpty(int slotnr=1) const;
 
   /// return whether the input DH is still to be sent
   bool inputIsEmpty() const;
@@ -39,7 +47,10 @@ class WH_Ring:public WorkHolder
   void markOutputEmpty();
   void markSlotEmpty();
   void copySlot2Output();
-  void copyInput2Slot();
+  void copyQ2Output();
+  void copySlot2OutQ(int slotnr);
+  void copyInput2Slot(int slotnr);  
+  void copySlot2Slot(int srcslotnr, int destslotnr);
 
   /// test for data destined for this workholder and handle it.
   bool receiveFromRing();
@@ -47,6 +58,9 @@ class WH_Ring:public WorkHolder
   /// if the cuurent DH slot is not occupied, put input data in it (if available)
   /// return if the slot is occupied after return.
   bool putInputToRing();
+
+  /// copy data from one slot to another if needed according to routing table.
+  void reRoute();
 
    /** vector with pointers to the input dataholders
 	  The derived classes should add a similar typed vector for their DataHolders
@@ -61,6 +75,8 @@ class WH_Ring:public WorkHolder
   static short itsInstanceCnt;
   short        myInstanceCnt;
   bool         itsLastBufferSent;
+  
+  queue<DH_Ring<T>*> itsOutQ;
 };
 
 const unsigned short NOTADDRESSED = 9999;
@@ -81,8 +97,8 @@ inline short    WH_Ring<T>::getInstanceCnt()           {
 }
 
 template <class T>
-inline bool     WH_Ring<T>::slotIsEmpty() const {
-  return itsInDataHolders[1]->getPacket()->destination == NOTADDRESSED;
+inline bool     WH_Ring<T>::slotIsEmpty(int slotnr) const {
+  return itsInDataHolders[slotnr]->getPacket()->destination == NOTADDRESSED;
 }
 
 template <class T>
@@ -113,12 +129,38 @@ inline void WH_Ring<T>::copySlot2Output(){
 	 itsInDataHolders[1]->getDataPacketSize());
 }
 
+template <class T>
+inline void WH_Ring<T>::copyQ2Output(){
+  DH_Ring<T>* aDH = itsOutQ.front();
+  itsOutQ.pop();
+  memcpy((void*)itsOutDataHolders[0]->getPacket(),
+	 (void*)aDH->getPacket(),
+	 itsInDataHolders[1]->getDataPacketSize());
+  delete aDH; // created in copySlot2OutQ()
+}
 
 template <class T>
-inline void WH_Ring<T>::copyInput2Slot() {
-  memcpy((void*)itsOutDataHolders[1]->getPacket(),
+inline void WH_Ring<T>::copySlot2OutQ(int slotnr){
+  DH_Ring<T>* aDH = new DH_Ring<T>();
+  memcpy((void*)aDH->getPacket(),
+	 (void*)itsInDataHolders[slotnr]->getPacket(),
+	 itsInDataHolders[slotnr]->getDataPacketSize());
+  itsOutQ.push(aDH);
+}
+
+
+template <class T>
+inline void WH_Ring<T>::copyInput2Slot(int slotnr) {
+  memcpy((void*)itsOutDataHolders[slotnr]->getPacket(),
 	 (void*)itsInDataHolders[0]->getPacket(), 
 	 itsInDataHolders[1]->getDataPacketSize());
+}
+
+template <class T>
+inline void WH_Ring<T>::copySlot2Slot(int srcslotnr, int destslotnr) {
+  memcpy((void*)itsOutDataHolders[destslotnr]->getPacket(),
+	 (void*)itsInDataHolders[srcslotnr]->getPacket(), 
+	 itsInDataHolders[srcslotnr]->getDataPacketSize());
 }
 
 
@@ -133,12 +175,12 @@ itsLastBufferSent(true)
   itsInDataHolders.reserve(2);
   itsOutDataHolders.reserve(2);
   
-  itsInDataHolders.push_back(new DH_Ring<DH_Test>()); // input
+  itsInDataHolders.push_back(new DH_Ring<T>()); // input
   
-  DH_Ring<DH_Test>* aDH = new DH_Ring<DH_Test>();
+  DH_Ring<DH_Test>* aDH = new DH_Ring<T>();
   itsInDataHolders.push_back(aDH); // Slot
   
-  itsOutDataHolders.push_back(new DH_Ring<DH_Test>()); // output
+  itsOutDataHolders.push_back(new DH_Ring<T>()); // output
 
   itsOutDataHolders.push_back(aDH); // Slot
   
@@ -146,6 +188,10 @@ itsLastBufferSent(true)
   Firewall::Assert(myInstanceCnt != NOTADDRESSED
 		   ,__HERE__,
 		   "InstanceCnt == NOTADDRESSED flag %i",NOTADDRESSED);
+  
+  for (int destination = 0; destination<10; destination++) {
+    itsRoutingTable[destination] = 1;
+  }
 }
 
 
@@ -179,6 +225,7 @@ inline void WH_Ring<T>::process ()
   markOutputEmpty();
   receiveFromRing();
   putInputToRing();
+  reRoute();
   
   TRACER(monitor,"RingNode " << getInstanceCnt() << " OUTDATA:  destination " 
 	 << itsOutDataHolders[1]->getPacket()->destination << "  "
@@ -190,26 +237,32 @@ inline void WH_Ring<T>::process ()
 
 template <class T>
 inline bool WH_Ring<T>::receiveFromRing() {
-  if (getInstanceCnt() == itsInDataHolders[1]->getPacket()->destination) {
-    TRACER(monitor, "Packet arrived at WorkHolder" << getInstanceCnt()
-	   << " Destination = " << itsInDataHolders[1]->getPacket()->destination 
-	   << " Data = " << itsInDataHolders[1]->getBuffer()[0]);
-    //copy the data to the outholder
-    copySlot2Output();
-
-    // mark the DH as received
-    markSlotEmpty();
-   return true;
-  } else {
+  // test all Slots for data to be received and store into queue
+  //  then, check for data in queue and copy it into the Output
+  //  (therefore, this may be data received in a earlier call
+  for (int slotnr=1; slotnr<getInputs(); slotnr++) {
+    if (getInstanceCnt() == itsInDataHolders[slotnr]->getPacket()->destination) {
+      TRACER(monitor, "Packet arrived at WorkHolder" << getInstanceCnt()
+	     << " Destination = " << itsInDataHolders[slotnr]->getPacket()->destination 
+	     << " Data = " << itsInDataHolders[slotnr]->getBuffer()[0]);
+      //copy the data to the queue
+      copySlot2OutQ(slotnr);
+      // mark the DH as received
+      markSlotEmpty();
+    }
+  } 
+  if (itsOutQ.size() > 0) {
+    // copy queued data to output
+    copyQ2Output();
   }
-  return false;
+  return true;
 }
 
 template <class T>
 inline bool WH_Ring<T>::putInputToRing() {
   if ((slotIsEmpty()) &&  !inputIsEmpty()) {
     // OK we have input data to put on the ring
-    copyInput2Slot();
+    copyInput2Slot(itsRoutingTable[itsInDataHolders[0]->getPacket()->destination]);
     itsLastBufferSent = true;
     markInputEmpty();
     TRACER(monitor,"Added to ring data for node " 
@@ -219,6 +272,19 @@ inline bool WH_Ring<T>::putInputToRing() {
   } 
   return false;
 }
+
+template <class T>
+inline void WH_Ring<T>::reRoute() {
+  for (int slotnr=1; slotnr<getInputs(); slotnr++) {
+    if (!slotIsEmpty(slotnr)) {
+      int destslot = itsRoutingTable[itsInDataHolders[slotnr]->getPacket()->destination];
+      if ( destslot != slotnr) 
+	cout << "reRoute destination slot : " << slotnr << " --> " << destslot << endl;
+      copySlot2Slot(slotnr,destslot);
+    }
+  }
+}
+
 
 template <class T>
 inline void WH_Ring<T>::dump () const
