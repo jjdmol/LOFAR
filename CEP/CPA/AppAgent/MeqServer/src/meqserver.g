@@ -87,7 +87,7 @@ const meqserver := function (appid='MeqServer',
       rqid := self.new_requestid();
       reqname := spaste('Command.',cmd_name);
       replyname := to_lower(cmd_name ~ s/\./_/g);
-      replyname := public.eventname('out_app_result',replyname,rqid);
+      replyname := paste('app_result',replyname,rqid,sep='_');
       self.dprint(3,'sending command ',cmd_name);
       self.dprint(5,'arguments are ',args);
       res := public.command(reqname,[request_id=rqid,args=args]);
@@ -96,8 +96,8 @@ const meqserver := function (appid='MeqServer',
         self.dprint(3,'command sending failed');
         fail;
       }
-      self.dprint(3,'awaiting reply ',replyname);
-      await self.octoagent->[replyname];
+      self.dprint(3,'awaiting reply ',replyname,' from relay');
+      await self.relay->[replyname];
       return $value;
     }
     else
