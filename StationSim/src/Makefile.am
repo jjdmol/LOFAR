@@ -25,11 +25,13 @@ WH_STA.h					\
 WH_WeightDetermination.h			\
 WH_Projection.h					\
 WH_SubBandSel.h					\
-WH_DetNulls.h					\
 GnuPlotInterface.h				\
+QMinterface.h					\
 PASTd.h						\
-SelSubbands.h					\
-QMinterface.h
+DH_CubeC.h                                      \
+WH_DataGenerator.h                              \
+WH_Station.h					\
+WH_LopesDataReader.h
 
 lib_LTLIBRARIES 	= libstationsim.la
 
@@ -60,11 +62,13 @@ WH_STA.cc					\
 WH_WeightDetermination.cc			\
 WH_Projection.cc				\
 WH_SubBandSel.cc				\
-WH_DetNulls.cc					\
 GnuPlotInterface.cc				\
+QMinterface.cc					\
 PASTd.cc					\
-SelSubbands.cc					\
-QMinterface.cc
+DH_CubeC.cc                                     \
+WH_DataGenerator.cc                             \
+WH_Station.cc					\
+WH_LopesDataReader.cc
 
 bin_PROGRAMS		= Simulate
 Simulate_SOURCES 	= Simulate.cc Simulate.in
