@@ -140,4 +140,4 @@ crontab:
 	else \
 	  echo "New crontab will be created; existing saved in $$HOME/crontab_$$$$"; \
 	fi
-	#crontab autoconf_share/crontab.builds;
+	crontab autoconf_share/crontab.builds;
