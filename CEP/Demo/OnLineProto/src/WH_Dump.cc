@@ -68,20 +68,19 @@ WH_Dump::WH_Dump (const string& name,
 				      new DH_Empty (string("out_") + str), 
 				      true);
     // open output file. filename is hardcoded.
-    itsOutputFile.open("output.out");
 
     itsBuffer.resize(NSTATIONS);
     itsBuffer = complex<float> (0,0);
 
-    if (itsRank == -1) {
-      cout << "opening gnuplot handle" << endl;
-      handle = gnuplot_init ();
+    if ( (0 == itsRank)  && (handle == 0) ) {
+      handle = gnuplot_init();
     }
 }
 
 
 WH_Dump::~WH_Dump()
 {
+  gnuplot_close(handle);
   itsOutputFile.close();
 }
 
