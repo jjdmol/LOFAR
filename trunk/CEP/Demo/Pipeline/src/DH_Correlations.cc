@@ -21,6 +21,12 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.2  2002/11/20 11:05:43  schaaf
+//
+//  %[BugId: 117]%
+//
+//  working initial version for Scali
+//
 //  Revision 1.1.1.1  2002/11/13 15:58:06  schaaf
 //  %[BugId: 117]%
 //
@@ -76,7 +82,9 @@ void DH_Correlations::reset() {
   TRACER4("Entering Reset");
   for (int stationA=0; stationA < itsStations; stationA++) {
     for (int stationB=0; stationB <= stationA; stationB++) {
-      *getBuffer(stationA,stationB) = 0; 
+      for (int pol=0; pol < itsPols; pol++) {
+	*getBuffer(stationA,stationB,pol) = 0; 
+      }
     }
   }
   TRACER4("Reset completed");
