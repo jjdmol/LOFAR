@@ -1,4 +1,4 @@
-//# PredifferImpl.cc: Read and predict read visibilities
+//# Prediffer.cc: Read and predict read visibilities
 //#
 //# Copyright (C) 2004
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -23,7 +23,7 @@
 #include <lofar_config.h>
 
 #include <BBS3/Prediffer.h>
-
+#include <BBS3/MMap.h>
 #include <BBS3/MNS/MeqJonesNode.h>
 #include <BBS3/MNS/MeqStatExpr.h>
 #include <BBS3/MNS/MeqMatrixTmp.h>
@@ -38,6 +38,10 @@
 
 #include <Common/Timer.h>
 #include <Common/LofarLogger.h>
+#include <Common/BlobIStream.h>
+#include <Common/BlobIBufStream.h>
+#include <Common/BlobArray.h>
+#include <Common/VectorUtil.h>
 
 #include <casa/Arrays/ArrayIO.h>
 #include <casa/Arrays/ArrayMath.h>
@@ -53,12 +57,6 @@
 #include <casa/Utilities/Regex.h>
 #include <casa/OS/Timer.h>
 #include <casa/Exceptions/Error.h>
-
-#include <Common/BlobIStream.h>
-#include <Common/BlobIBufStream.h>
-#include <Common/BlobArray.h>
-
-#include <BBS3/MMap.h>
 
 #include <stdexcept>
 #include <iostream>
@@ -84,7 +82,6 @@ Prediffer::Prediffer(const string& msName,
 		     const string& dbName,
 		     const string& dbHost,
 		     const string& dbPwd,
-		     uInt    ddid,
 		     const vector<int>& ant,
 		     const string& modelType,
 		     bool    calcUVW,
@@ -108,7 +105,6 @@ Prediffer::Prediffer(const string& msName,
 		<< "'" << msName   << "', "
 		<< "'" << meqModel << "', "
 		<< "'" << skyModel << "', "
-		<< ddid << ", "
 		<< itsCalcUVW << ")" );
 
   readDescriptiveData (msName);
@@ -593,11 +589,12 @@ void Prediffer::initParms (const MeqDomain& domain, bool readPolcs)
   const vector<MeqParm*>& parmList = MeqParm::getParmList();
 
   itsIsParmSolvable.resize (parmList.size());
-  int i = 0;
+  itsParmData.clear();
   itsNrScid = 0;
+  int i = 0;
   for (vector<MeqParm*>::const_iterator iter = parmList.begin();
        iter != parmList.end();
-       iter++)
+       ++iter, ++i)
   {
     itsIsParmSolvable[i] = false;
     if (*iter) {
@@ -607,12 +604,14 @@ void Prediffer::initParms (const MeqDomain& domain, bool readPolcs)
 
       int nr = (*iter)->initDomain (domain, itsNrScid);
       if (nr > 0) {
+	itsParmData.push_back (ParmData((*iter)->getName(), nr, itsNrScid,
+					(*iter)->getCoeffValues()));
 	itsIsParmSolvable[i] = true;
 	itsNrScid += nr;
       }
     }
-    i++;
   }
+
   // Unlock the parm tables.
   itsMEP.unlock();
   itsGSMMEP.unlock();
@@ -626,8 +625,8 @@ void Prediffer::initParms (const MeqDomain& domain, bool readPolcs)
 // Set the request belonging to that.
 //
 //----------------------------------------------------------------------
-bool Prediffer::setDomain (double fstart, double flength,
-			   double tstart, double tlength)
+vector<uint32> Prediffer::setDomain (double fstart, double flength,
+				     double tstart, double tlength)
 {
   NSTimer mapTimer;
   mapTimer.start();
@@ -647,7 +646,7 @@ bool Prediffer::setDomain (double fstart, double flength,
   }
   // Exit when no more chunks.
   if (itsTimeIndex >= itsTimes.nelements()) {
-    return false;
+    return vector<uint32>();
   }
   
   cout << "BBSTest: BeginOfInterval" << endl;
@@ -686,8 +685,13 @@ bool Prediffer::setDomain (double fstart, double flength,
   parmTimer.stop();
   cout << "BBSTest: initparms    " << parmTimer << endl;
 
+  // Create the shape vector.
+  vector<uint32> shape(3);
+  shape[0] = itsNrTimes*itsNrChan*itsNPol;
+  shape[1] = itsNrScid;
+  shape[2] = itsNrBl;
 //   itsSolveColName = itsDataColName;
-  return true;
+  return shape;
 }
 
 
@@ -703,18 +707,16 @@ void Prediffer::clearSolvableParms()
   LOG_TRACE_FLOW( "clearSolvableParms" );
 
   const vector<MeqParm*>& parmList = MeqParm::getParmList();
-  itsSolvableParms.resize(0);
 
   for (vector<MeqParm*>::const_iterator iter = parmList.begin();
        iter != parmList.end();
        iter++)
   {
-    if (*iter)
-    {
-      //cout << "clearSolvable: " << (*iter)->getName() << endl;
+    if (*iter) {
       (*iter)->setSolvable(false);
     }
   }
+  itsParmData.resize (0);
 }
 
 //----------------------------------------------------------------------
@@ -726,23 +728,18 @@ void Prediffer::clearSolvableParms()
 //
 //----------------------------------------------------------------------
 void Prediffer::setSolvableParms (vector<string>& parms,
-				      vector<string>& excludePatterns,
-				      bool isSolvable)
+				  vector<string>& excludePatterns,
+				  bool isSolvable)
 {
   LOG_INFO_STR( "setSolvableParms: "
 		<< "isSolvable = " << isSolvable);
 
-  itsSolvableParms.resize(parms.size());
-  for (unsigned int i = 0; i < parms.size(); i++)
-  {
-    itsSolvableParms[i] = parms[i];
-  }
   const vector<MeqParm*>& parmList = MeqParm::getParmList();
 
   // Convert patterns to regexes.
   vector<Regex> parmRegex;
-  for (unsigned int i=0; i<itsSolvableParms.nelements(); i++) {
-    parmRegex.push_back (Regex::fromPattern(itsSolvableParms[i]));
+  for (unsigned int i=0; i<parms.size(); i++) {
+    parmRegex.push_back (Regex::fromPattern(parms[i]));
   }
 
   vector<Regex> excludeRegex;
@@ -750,45 +747,47 @@ void Prediffer::setSolvableParms (vector<string>& parms,
     excludeRegex.push_back (Regex::fromPattern(excludePatterns[i]));
   }
 
-  //
-  // Find all parms matching the itsSolvableParms
+  // Find all parms matching the parms.
   // Exclude them if matching an excludePattern
-  //
   for (vector<MeqParm*>::const_iterator iter = parmList.begin();
        iter != parmList.end();
        iter++)
   {
     String parmName ((*iter)->getName());
-
+    // Loop through all regex-es until a match is found.
     for (vector<Regex>::const_iterator incIter = parmRegex.begin();
 	 incIter != parmRegex.end();
 	 incIter++)
     {
-      {
-	if (parmName.matches(*incIter))
+      if (parmName.matches(*incIter)) {
+	bool parmExc = false;
+	// Test if not excluded.
+	for (vector<Regex>::const_iterator excIter = excludeRegex.begin();
+	     excIter != excludeRegex.end();
+	     excIter++)
 	{
-	  bool parmExc = false;
-	  for (vector<Regex>::const_iterator excIter = excludeRegex.begin();
-	       excIter != excludeRegex.end();
-	       excIter++)
-	  {
-	    if (parmName.matches(*excIter))
-	    {
-	      parmExc = true;
-	      break;
-	    }
+	  if (parmName.matches(*excIter)) {
+	    parmExc = true;
+	    break;
 	  }
-	  if (!parmExc) {
-	    LOG_TRACE_OBJ_STR( "setSolvable: " << (*iter)->getName());
-	    (*iter)->setSolvable(isSolvable);
-	  }
-	  break;
 	}
+	if (!parmExc) {
+	  LOG_TRACE_OBJ_STR( "setSolvable: " << (*iter)->getName());
+	  (*iter)->setSolvable(isSolvable);
+	}
+	break;
       }
     }
   }
 }
 
+//----------------------------------------------------------------------
+//
+// ~getCondeq
+//
+// Get the condition equation for the given baseline.
+//
+//----------------------------------------------------------------------
 vector<MeqResult> getCondeq (const MeqRequest& request,
 			     int bl, int ant1, int ant2,
 			     bool showd)
@@ -1251,7 +1250,7 @@ void Prediffer::select (const vector<int>& ant1,
 //   }
 //   ASSERT (itsFirstChan <= itsLastChan);
 
-  ASSERT ( ant1.size() == ant2.size());
+  ASSERT (ant1.size() == ant2.size());
   itsBLSelection = false;
 //   if (ant1.size() == 0)  // If no baselines specified, select all baselines
 //   {
@@ -1532,7 +1531,7 @@ void Prediffer::showSettings() const
   cout << "  msname:    " << itsMSName << endl;
   cout << "  mepname:   " << itsMEPName << endl;
   cout << "  gsmname:   " << itsGSMMEPName << endl;
-  cout << "  solvparms: " << itsSolvableParms << endl;
+  cout << "  solvparms: " << itsParmData << endl;
   cout << "  stchan:    " << itsFirstChan << endl;
   cout << "  endchan:   " << itsLastChan << endl;
   cout << "  calcuvw  : " << itsCalcUVW << endl;
@@ -1550,7 +1549,7 @@ void Prediffer::updateSolvableParms()
 
 }
 
-std::list<MeqResult> Prediffer::getEquations ()
+void Prediffer::getEquations (dcomplex*, const vector<uint32>& shape)
 {
   LOG_TRACE_FLOW("Prediffer::getEquations");
 }

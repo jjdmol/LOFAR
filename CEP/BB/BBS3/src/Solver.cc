@@ -113,7 +113,7 @@ void Solver::solve (bool useSVD,
 
 
 void Solver::setEquations (const dcomplex* data, int nresult, int nrspid,
-			   int nrtime, int nrfreq, int prediffer)
+			   int nval, int prediffer)
 {
   ASSERT (uint(prediffer) < itsIndices.size());
   vector<int>& predInx = itsIndices[prediffer];
@@ -122,7 +122,7 @@ void Solver::setEquations (const dcomplex* data, int nresult, int nrspid,
   vector<double> derivVec(nrspid);
   double* derivs = &(derivVec[0]);
   // Treat a dcomplex as 2 doubles.
-  int nrval = 2*nrtime*nrfreq;
+  int nrval = 2*nval;
   const double* ddata = (const double*)(data);
   // Each result is a 2d array of [nrval,nrspid+1] (nrval varies most rapidly).
   // The first value is the difference; the others the derivatives. 

@@ -74,7 +74,6 @@ public:
 	     const string& dbName,
 	     const string& dbHost,
 	     const string& dbPwd,
-	     uint ddid,
 	     const vector<int>& ant,
 	     const string& modelType,
 	     bool calcUVW,
@@ -88,10 +87,11 @@ public:
 
   // Set the domain (in frequency and time).
   // Hereafter getSolvableParmData can be called.
-  // It returns false if the domain is outside the observation domain.
+  // It returns a vector containing the 3-dim shape of the expected data.
+  // The vector is empty if the domain is outside the observation domain.
   // Length is trimmed if beyond end of observation.
-  bool setDomain (double startFreq, double lengthFreq,
-		  double startTime, double lengthTime);
+  vector<uint32> setDomain (double startFreq, double lengthFreq,
+			    double startTime, double lengthTime);
 
   // Update the solvable parm values (reread from table).
   void updateSolvableParms();
@@ -111,7 +111,10 @@ public:
 			 bool isSolvable);
 
   // Get the equations for all selected baselines.
-  std::list<MeqResult> getEquations();
+  // The values are stored into the buffer as a 3-dim array with axes
+  // nresult,nspid+1,nval.
+  // It is checked if the shape of the buffer is correct.
+  void getEquations (dcomplex* buffer, const vector<uint32>& shape);
 
   // Set the source numbers to use in this peel step.
   bool setPeelSources (const vector<int>& peelSources,
@@ -219,7 +222,6 @@ private:
 
   int          itsNrScid;             //# Nr of solvable parameter coeff.
   vector<bool> itsIsParmSolvable;     //# is corresponding parmlist solvable?
-  casa::Vector<casa::String> itsSolvableParms;    // Solvable parameters
   vector<ParmData> itsParmData;       // solvable parm info. 
 
   casa::Vector<int>    itsAnt1Data;         // Antenna 1 data
