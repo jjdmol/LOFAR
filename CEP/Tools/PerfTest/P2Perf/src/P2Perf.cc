@@ -22,6 +22,9 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.21  2002/05/02 12:21:07  schaaf
+//  Use monitor object in first step
+//
 //  Revision 1.20  2002/04/18 07:55:03  schaaf
 //  Documentation and code update
 //
@@ -90,20 +93,20 @@
 #include <stdlib.h>
 #include <string>
 
-#include "Debug.h"
-#include "Transport.h"
-#include "Step.h"
-#include "P2Perf.h"
-#include "Simul.h"
-#include "Profiler.h"
-#include "WH_Empty.h"
-#include "WH_GrowSize.h"
-#include "ParamBlock.h"
+#include "Common/Debug.h"
+#include "BaseSim/Transport.h"
+#include "BaseSim/Step.h"
+#include "P2Perf/P2Perf.h"
+#include "BaseSim/Simul.h"
+#include "BaseSim/Profiler.h"
+#include "BaseSim/WH_Empty.h"
+#include "P2Perf/WH_GrowSize.h"
+#include "BaseSim/ParamBlock.h"
 #include TRANSPORTERINCLUDE
 
 #ifdef HAVE_CORBA
-#include "BS_Corba.h"
-#include "TH_Corba.h"
+#include "BaseSim/Corba/BS_Corba.h"
+#include "BaseSim/Corba/TH_Corba.h"
 #endif
 
 
@@ -128,6 +131,7 @@ P2Perf::~P2Perf()
  */
 void P2Perf::define(const ParamBlock& params)
 {
+
 #ifdef HAVE_CORBA
   // Start Orb Environment
   AssertStr (BS_Corba::init(), "Could not initialise CORBA environment");
@@ -141,6 +145,10 @@ void P2Perf::define(const ParamBlock& params)
 #ifdef HAVE_CORBA
   TH_Corba corbaProto;
 #endif
+#ifdef HAVE_MPI
+  TH_MPI mpiProto;
+#endif
+
 
   int rank = TRANSPORTER::getCurrentRank();
   unsigned int size = TRANSPORTER::getNumberOfNodes();
@@ -176,7 +184,7 @@ void P2Perf::define(const ParamBlock& params)
   bool SplitInTwoApps = false;
   bool OddSide=false;
   bool UseMPIRanks = true;
-  if ((argc == 4 )
+  if ((argc >= 4 )
       && (((!strncmp(argv[3], "-odd", 4))) ||  ((!strncmp(argv[3], "-odd", 4)))) ){
     TRACER4("Split in Two Apps");
     if ((!strncmp(argv[3], "-odd", 4))) {
@@ -188,13 +196,11 @@ void P2Perf::define(const ParamBlock& params)
       OddSide = false;
       simul.setCurAppl(1);
     } 
-  } else if ((argc == 2 )
-	     && ((!strncmp(argv[3], "-one", 4))) ){
+  } else if ((!strncmp(argv[3], "-one", 4))){
     TRACER4("Run in One Appl");
     simul.setCurAppl(0);
     RunInOneAppl = true;
-  } else  if ((argc == 2 )
-	      && ((!strncmp(argv[3], "-mpi", 4))) ){
+  } else  if (!strncmp(argv[3], "-mpi", 4)){
     TRACER4("Split in MPI applications");
 #ifdef HAVE_MPI    
     UseMPIRanks = true;
@@ -250,7 +256,8 @@ void P2Perf::define(const ParamBlock& params)
     } else if (RunInOneAppl) {
       Ssteps[iStep]->runOnNode(iStep  ,0); // run in App 0
     } else if (UseMPIRanks) {
-      Ssteps[iStep]->runOnNode(iStep  ,iStep); // run in App 0
+      TRACER2("Source MPI runonnode (" << iStep << ")");
+      Ssteps[iStep]->runOnNode(iStep  ,0); // run in App 0
     }    
   }
   // Report performance of the first source Step
@@ -277,7 +284,8 @@ void P2Perf::define(const ParamBlock& params)
     } else if (RunInOneAppl) {
       Dsteps[iStep]->runOnNode(iStep+1,0); // run in App 0
     } else if (UseMPIRanks) {
-      Dsteps[iStep]->runOnNode(iStep+1,iStep); // run in App 0
+      TRACER2("Dest MPI runonnode (" << iStep << ")");
+      Dsteps[iStep]->runOnNode(iStep,0); // run in App 0
     }    
   }
   
@@ -302,8 +310,12 @@ void P2Perf::define(const ParamBlock& params)
 #ifdef HAVE_CORBA
       Dsteps[step]->connect(Ssteps[ch],ch,step,1,corbaProto);
 #else
-      //Dsteps[DStep]->connectInput(Ssteps[DStep]);
+#ifdef HAVE_MPI
+      TRACER2("Connect using MPI");
+      Dsteps[step]->connect(Ssteps[ch],ch,step,1,mpiProto);
+#else
       Dsteps[step]->connect(Ssteps[ch],ch,step,1);
+#endif
 #endif
     }
   }

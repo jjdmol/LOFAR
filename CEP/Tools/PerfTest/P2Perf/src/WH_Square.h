@@ -21,6 +21,9 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.3  2001/10/26 10:06:28  wierenga
+//  Wide spread changes to convert from Makedefs to autoconf/automake/libtool build environment
+//
 //  Revision 1.2  2001/08/16 15:14:23  wierenga
 //  Implement GrowSize DH and WH for performance measurements. Timing code still needs to be added.
 //
@@ -37,8 +40,8 @@
 #include <config.h>
 #endif
 
-#include "WorkHolder.h"
-#include "DH_IntArray.h"
+#include "BaseSim/WorkHolder.h"
+#include "P2Perf/DH_IntArray.h"
 
 
 /**

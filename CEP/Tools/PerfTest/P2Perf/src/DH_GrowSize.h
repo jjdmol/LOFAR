@@ -22,6 +22,9 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.7  2002/04/18 07:55:03  schaaf
+//  Documentation and code update
+//
 //  Revision 1.6  2002/04/09 10:59:54  schaaf
 //  minor
 //
@@ -50,8 +53,8 @@
 #include <config.h>
 #endif
 
-#include "DataHolder.h"
-#include "Debug.h"
+#include "BaseSim/DataHolder.h"
+#include "Common/Debug.h"
 #include <complex>
 
 /**

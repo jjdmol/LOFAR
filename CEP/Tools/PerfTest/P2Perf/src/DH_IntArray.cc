@@ -21,6 +21,9 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.2  2002/03/08 11:38:42  wierenga
+//  Upgraded from firewalls.h use to Debug.h use. This version was used for performance tests.
+//
 //  Revision 1.1  2001/08/09 15:48:48  wierenga
 //  Implemented first version of TH_Corba and test program
 //
@@ -28,8 +31,8 @@
 //////////////////////////////////////////////////////////////////////
 
 
-#include "DH_IntArray.h"
-#include "Debug.h"
+#include "P2Perf/DH_IntArray.h"
+#include "Common/Debug.h"
 
 
 DH_IntArray::DH_IntArray (const string& name, unsigned int nbuffer)

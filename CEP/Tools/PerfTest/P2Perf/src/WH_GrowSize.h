@@ -22,6 +22,9 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.7  2002/05/02 12:21:56  schaaf
+//  Produce simple monitoring data in getMonitorValue() method
+//
 //  Revision 1.6  2002/04/18 07:55:03  schaaf
 //  Documentation and code update
 //
@@ -50,9 +53,9 @@
 #include <config.h>
 #endif
 
-#include "WorkHolder.h"
-#include "DH_GrowSize.h"
-#include "StopWatch.h"
+#include "BaseSim/WorkHolder.h"
+#include "P2Perf/DH_GrowSize.h"
+#include "P2Perf/StopWatch.h"
 
 /**
    The WH_Growsize class implements a workholder with DH_Growsize

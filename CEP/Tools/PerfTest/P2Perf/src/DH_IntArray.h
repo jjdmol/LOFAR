@@ -21,6 +21,9 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.2  2001/10/26 10:06:28  wierenga
+//  Wide spread changes to convert from Makedefs to autoconf/automake/libtool build environment
+//
 //  Revision 1.1  2001/08/09 15:48:48  wierenga
 //  Implemented first version of TH_Corba and test program
 //
@@ -34,7 +37,7 @@
 #include <config.h>
 #endif
 
-#include "DataHolder.h"
+#include "BaseSim/DataHolder.h"
 #include <complex>
 
 /**
