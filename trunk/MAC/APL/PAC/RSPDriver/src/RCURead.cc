@@ -47,10 +47,10 @@ RCURead::~RCURead()
 
 void RCURead::sendrequest()
 {
-  EPARcuSettingsEvent rcusettingsread;
+  EPAReadEvent rcusettingsread;
   rcusettingsread.hdr.set(MEPHeader::RCU_SETTINGS_HDR,
-			  MEPHeader::READ,
-			  getCurrentBLP());
+			  getCurrentBLP(),
+			  MEPHeader::READ);
 
   getBoardPort().send(rcusettingsread);
 }
@@ -64,7 +64,8 @@ GCFEvent::TResult RCURead::handleack(GCFEvent& event, GCFPortInterface& /*port*/
 {
   if (event.signal != EPA_RCU_SETTINGS) return GCFEvent::HANDLED;
   
-  uint8 global_blp = (getBoardId() * GET_CONFIG("RS.N_BLPS", i)) + getCurrentBLP() * 2;
+  uint8 global_blp = (getBoardId() * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL)
+    + (getCurrentBLP() * MEPHeader::N_POL);
 
   EPARcuSettingsEvent rcusettings(event);
 

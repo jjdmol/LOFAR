@@ -48,7 +48,8 @@ RCUWrite::~RCUWrite()
 
 void RCUWrite::sendrequest()
 {
-  uint8 global_blp = (getBoardId() * GET_CONFIG("RS.N_BLPS", i)) + getCurrentBLP();
+  uint8 global_blp = (getBoardId() * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL)
+    + (getCurrentBLP() * MEPHeader::N_POL);
 
   EPARcuSettingsEvent rcusettings;
   rcusettings.hdr.set(MEPHeader::RCU_SETTINGS_HDR, getCurrentBLP());
