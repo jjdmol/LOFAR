@@ -1,7 +1,6 @@
 #include <Common/lofar_iostream.h>
 #include <string.h>
-
-#include "P2Perf/StopWatch.h"
+#include <StopWatch.h>
 
 StopWatch* StopWatch::theirGlobalStopWatch = 0;
 
