@@ -34,17 +34,17 @@
 #include <aips/Mathematics/Complex.h>
 #include <aips/OS/Timer.h>
 #include <aips/Exceptions/Error.h>
-#include <aips/iostream.h>
-#include <aips/strstream.h>
+#include <iostream>
+#include <sstream>
 
 
 void showDouble (const MeqMatrixTmp& v)
 {
-  cout << v << endl;
+  std::cout << v << std::endl;
 }
 void showDComplex (const MeqMatrixTmp& v)
 {
-  cout << v << endl;
+  std::cout << v << std::endl;
 }
 
 void doIt()
@@ -137,7 +137,7 @@ int main (int argc, char** argv)
 {
   uInt nr = 100;
   if (argc > 1) {
-    istrstream istr(argv[1]);
+    std::istringstream istr(argv[1]);
     istr >> nr;
   }
   try {
@@ -153,13 +153,13 @@ int main (int argc, char** argv)
       mr3 = mr1;
     }
   } catch (AipsError x) {
-    cout << "Caught an exception: " << x.getMesg() << endl;
+    std::cout << "Caught an exception: " << x.getMesg() << std::endl;
     return 1;
   }
-  cout << "MeqMat " << MeqMatrixRep::nctor << ' ' << MeqMatrixRep::ndtor
-       << ' ' << MeqMatrixRep::nctor + MeqMatrixRep::ndtor << endl;
-  cout << "MeqRes " << MeqResultRep::nctor << ' ' << MeqResultRep::ndtor
-       << ' ' << MeqResultRep::nctor + MeqResultRep::ndtor << endl;
-  cout << "OK" << endl;
+  std::cout << "MeqMat " << MeqMatrixRep::nctor << ' ' << MeqMatrixRep::ndtor
+       << ' ' << MeqMatrixRep::nctor + MeqMatrixRep::ndtor << std::endl;
+  std::cout << "MeqRes " << MeqResultRep::nctor << ' ' << MeqResultRep::ndtor
+       << ' ' << MeqResultRep::nctor + MeqResultRep::ndtor << std::endl;
+  std::cout << "OK" << std::endl;
   return 0;
 }
