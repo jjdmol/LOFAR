@@ -29,6 +29,10 @@
 #uses "gcf-util.ctl"
 
 global unsigned g_PAclientId = 0;  // client ID used during all communication with the PML
+global string    NAVPML_DPNAME_ENABLED   = "__enabled";
+global string    NAVPML_ENABLED_PERM     =  "perm";
+global string    NAVPML_ENABLED_TEMP     =  "temp";
+global string    NAVPML_ENABLED_AUTOLOAD =  "autoload";
 
 ///////////////////////////////////////////////////////////////////////////
 //Function navPMLinitialize
@@ -63,7 +67,10 @@ bool navPMLunloadPropertySet(string datapoint)
   LOG_TRACE("navPMLunloadPropertySet",datapoint);
   if(dpExists(datapoint))
   {
-	  gcfUnloadPS(g_PAclientId,datapoint);
+    if(!navPMLisAutoLoaded(datapoint))
+    {
+  	  gcfUnloadPS(g_PAclientId,datapoint);
+    }
 	}
 	else
 	{
@@ -81,7 +88,10 @@ void navPMLloadPropertySet(string datapoint)
   LOG_TRACE("navPMLloadPropertySet",datapoint);
   if(dpExists(datapoint))
   {
-	  gcfLoadPS(g_PAclientId,datapoint);
+    if(!navPMLisAutoLoaded(datapoint))
+    {
+      gcfLoadPS(g_PAclientId,datapoint);
+    }
 	}
 	else
 	{
@@ -146,3 +156,31 @@ void pmlCallback(dyn_string response)
   }
 }
 
+///////////////////////////////////////////////////////////////////////////
+//Function navPMLisAutoLoaded
+//
+// returns true if the propertyset is auto loaded
+///////////////////////////////////////////////////////////////////////////
+bool navPMLisAutoLoaded(string datapoint)
+{
+  bool autoLoaded=false;
+  LOG_TRACE("navPMLisAutoLoaded",datapoint);
+  if(dpExists(datapoint))
+  {
+    // check if the propertyset is autoloaded by GCF
+    if(dpExists(datapoint + NAVPML_DPNAME_ENABLED))
+    {
+      string enabled="";
+      dpGet(datapoint + NAVPML_DPNAME_ENABLED,enabled);
+      if(enabled == NAVPML_ENABLED_AUTOLOAD)
+      {
+        autoLoaded = true;
+      }
+    }
+  }
+  else
+ {
+    LOG_TRACE("navPMLloadPropertySet -- Datapoint does not exist",datapoint);
+  }
+  return autoLoaded;
+}
