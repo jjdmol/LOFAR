@@ -26,6 +26,7 @@
 #include "CAL_Protocol.ph"
 
 #include "CalServer.h"
+#include "SpectralWindow.h"
 
 #ifndef CAL_SYSCONF
 #define CAL_SYSCONF "."
@@ -35,6 +36,7 @@
 #undef VERSION
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
+#include <GCF/ParameterSet.h>
 
 #include <blitz/array.h>
 
@@ -59,7 +61,7 @@ CalServer::~CalServer()
 
 bool CalServer::isEnabled()
 {
-  return m_acmserver.isConnected();
+  return false; //m_acmserver.isConnected();
 }
 
 GCFEvent::TResult CalServer::initial(GCFEvent& e, GCFPortInterface& port)
@@ -75,7 +77,7 @@ GCFEvent::TResult CalServer::initial(GCFEvent& e, GCFPortInterface& port)
 
     case F_ENTRY:
     {
-      if (!m_acmserver.isConnected()) m_acmserver.open();
+      //if (!m_acmserver.isConnected()) m_acmserver.open();
     }
     break;
 
@@ -203,19 +205,36 @@ int main(int argc, char** argv)
 
   LOG_INFO(formatString("Program %s has started", argv[0]));
 
-#if 0
+  vector<SpectralWindow> spws;
+  
   try 
   {
-    GCF::ParameterSet::instance()->adoptFile("BeamServer.conf");
-    GCF::ParameterSet::instance()->adoptFile("BeamServerPorts.conf");
+    ParameterSet spw_ps(string(CAL_SYSCONF) + "/" + string("SpectralWindow.conf"));
+
+    spws = SPWLoader::loadFromBlitzStrings(spw_ps[string("SpectralWindow.params")],
+					   spw_ps[string("SpectralWindow.names")]);
+  }
+  catch (Exception e) 
+  {
+    cout << "Failed to load SpectralWindow.conf: " << e << endl;
+    exit(EXIT_FAILURE);
+  }
+
+  for (unsigned int i = 0; i < spws.size(); i++)
+  {
+    cout << "SPW[" << i << "]=" << spws[i].getName() << endl;
+  }
+  
+
+  try 
+  {
     GCF::ParameterSet::instance()->adoptFile("RemoteStation.conf");
   }
   catch (Exception e)
   {
-    cerr << "Failed to load configuration files: " << e.text() << endl;
+    cerr << "Failed to load configuration file: " << e.text() << endl;
     exit(EXIT_FAILURE);
   }
-#endif
 
   CalServer cal("CalServer");
 
