@@ -22,6 +22,7 @@
 
 
 #include <qpainter.h>
+#include <qcursor.h>
 
 
 #if(DEBUG_MODE)

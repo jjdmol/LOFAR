@@ -25,7 +25,7 @@
 
 #include <uvplot/UVPMainWindow.h>
 //***#include <uvplot/UVPDataTransferWP.h>    // Communications class
-#include <uvplot/UVPPVDInput.h>
+//***#include <uvplot/UVPPVDInput.h>
 
 
 #include <qapplication.h>       // qApp
@@ -142,7 +142,7 @@ void UVPMainWindow::buildMenuBar()
   itsDatasourceMenu = new QPopupMenu;
   itsDatasourceMenu->insertItem("&Open MS", this, SLOT(slot_openMS()));
   itsDatasourceMenu->insertItem("&VDM pipeline", this, SLOT(slot_vdmInput()));
-  itsDatasourceMenu->insertItem("Open &PVD", this, SLOT(slot_openPVD()));
+  //  itsDatasourceMenu->insertItem("Open &PVD", this, SLOT(slot_openPVD()));
 
 
   itsProcessControlMenu = new QPopupMenu;
@@ -486,7 +486,7 @@ void UVPMainWindow::slot_openMS()
 
 
 //==================>>>  UVPMainWindow::slot_openPVD  <<<==================
-
+/*
 void UVPMainWindow::slot_openPVD()
 {
   QString filename = QFileDialog::getOpenFileName(".",
@@ -501,7 +501,7 @@ void UVPMainWindow::slot_openPVD()
     slot_readPVD(filename.latin1());
   }
 }
-
+*/
 
 
 
@@ -724,7 +724,7 @@ catch(...)
 
 
 //==================>>>  UVPMainWindow::slot_readPVD  <<<==================
-
+/*
 void UVPMainWindow::slot_readPVD(const std::string& pvdName)
 {
   itsDataSet.clear();
@@ -762,7 +762,7 @@ void UVPMainWindow::slot_readPVD(const std::string& pvdName)
 
   itsBusyPlotting = false;
 }
-
+*/
 
 
 
