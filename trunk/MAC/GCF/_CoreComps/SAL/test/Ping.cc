@@ -187,20 +187,9 @@ int Ping::awaiting_echo(GCFEvent& e, GCFPortInterface& /*p*/)
   return status;
 }
 
-int main(int, char**)
+int main(int argc, char** argv)
 {
-  const char* ns_file  = "tutorial";
-
-  if (GTMNameService::instance()->init(ns_file) < 0)
-  {
-    cerr << "Could not open NameService configuration file: " << ns_file << endl;
-    exit(1);
-  }
-  if (GTMTopologyService::instance()->init(ns_file) < 0)
-  {
-    cerr << "Could not open TopologyService configuration file: " << ns_file << endl;
-    exit(1);
-  }
+  GCFTask::init(argc, argv);
 
   Ping ping_task("PING");
 

@@ -97,7 +97,7 @@ int GCFPort::open()
     			    _name, _remoteAddr) < 0)
     {
       LOFAR_LOG_DEBUG(TM_STDOUT_LOGGER, (
-          "No address found for port '%s' of task '%s'\n",
+          "No address found for port '%s' of task '%s'",
           _name.c_str(), _pTask->getName().c_str()));
     
       return -1;
@@ -109,7 +109,7 @@ int GCFPort::open()
 				      _localAddr) < 0)
   {
     LOFAR_LOG_ERROR(TM_STDOUT_LOGGER, (
-        "Could not find own address for task '%s'.\n", 
+        "Could not find own address for task '%s'.", 
         _pTask->getName().c_str()));
     
     return -1;
@@ -119,7 +119,7 @@ int GCFPort::open()
 					  _localAddr))
   {
     LOFAR_LOG_ERROR(TM_STDOUT_LOGGER, (
-        "Could not find port info for port '%s' of task '%s'.\n", 
+        "Could not find port info for port '%s' of task '%s'.", 
         _name.c_str(), _pTask->getName().c_str()));
     
     return -1;
@@ -128,7 +128,7 @@ int GCFPort::open()
   if (SAP == _type)
   {
     LOFAR_LOG_DEBUG(TM_STDOUT_LOGGER, (
-        "Connecting local SAP [%s:%s] to remote SPP [%s(%s,%d):%s].\n",
+        "Connecting local SAP [%s:%s] to remote SPP [%s(%s,%d):%s].",
         _pTask->getName().c_str(),
         _name.c_str(),
         _remoteAddr.getTaskname().c_str(),
@@ -139,7 +139,7 @@ int GCFPort::open()
   else if (SPP == _type && MSPP == _type)
   {
     LOFAR_LOG_DEBUG(TM_STDOUT_LOGGER, (
-        "Local SPP [%s:%s] listening on port %d for connections.\n",
+        "Local SPP [%s:%s] listening on port %d for connections.",
         _localAddr.getTaskname().c_str(),
         _localAddr.getPortname().c_str(),
         _localAddr.getPortnumber()));
@@ -178,7 +178,7 @@ int GCFPort::close()
   if (!_pSlave)
   {
     LOFAR_LOG_ERROR(TM_STDOUT_LOGGER, (
-        "GCFPort::close: _pSlave == 0\n"));
+        "GCFPort::close: _pSlave == 0"));
     
     return -1;
   }
@@ -197,7 +197,7 @@ ssize_t GCFPort::send(const GCFEvent& e, void* buf, size_t count)
     {
       LOFAR_LOG_ERROR(TM_STDOUT_LOGGER, (
           "Trying to send IN event '%s' on SPP "
-		      "port '%s'; discarding this event.\n",
+		      "port '%s'; discarding this event.",
 		      getTask()->evtstr(e), _name.c_str()));
          
       return -1; // RETURN
@@ -209,7 +209,7 @@ ssize_t GCFPort::send(const GCFEvent& e, void* buf, size_t count)
     {
       LOFAR_LOG_ERROR(TM_STDOUT_LOGGER, (
           "Trying to send OUT event '%s' on SAP "
-		      "port '%s'; discarding this event.\n",
+		      "port '%s'; discarding this event.",
 		      getTask()->evtstr(e), _name.c_str()));
       return -1; // RETURN
     }
@@ -218,7 +218,7 @@ ssize_t GCFPort::send(const GCFEvent& e, void* buf, size_t count)
   {
      LOFAR_LOG_ERROR(TM_STDOUT_LOGGER, (
         "Trying to send event '%s' by means of the portprovider: %s (MSPP). "
-        "Not supported yet\n",
+        "Not supported yet",
          getTask()->evtstr(e), _name.c_str()));
       return -1; // RETURN
   }
@@ -244,7 +244,7 @@ ssize_t GCFPort::sendv(const GCFEvent& e, const iovec buffers[], int n)
     {
       LOFAR_LOG_ERROR(TM_STDOUT_LOGGER, (
           "Trying to send IN event '%s' on SPP "
-		      "port '%s'; discarding this event.\n",
+		      "port '%s'; discarding this event.",
 		      getTask()->evtstr(e), _name.c_str()));
       return -1; // RETURN
     }
@@ -255,7 +255,7 @@ ssize_t GCFPort::sendv(const GCFEvent& e, const iovec buffers[], int n)
     {
       LOFAR_LOG_ERROR(TM_STDOUT_LOGGER, (
           "Trying to send OUT event '%s' on SAP "
-		      "port '%s'; discarding this event.\n",
+		      "port '%s'; discarding this event.",
 		      getTask()->evtstr(e), _name.c_str()));
       return -1; // RETURN
     }
@@ -264,7 +264,7 @@ ssize_t GCFPort::sendv(const GCFEvent& e, const iovec buffers[], int n)
   {
      LOFAR_LOG_ERROR(TM_STDOUT_LOGGER, (
         "Trying to send event '%s' by means of the portprovider: %s (MSPP). "
-        "Not supported yet\n",
+        "Not supported yet",
          getTask()->evtstr(e), _name.c_str()));
       return -1; // RETURN
   }
@@ -366,7 +366,7 @@ int GCFPort::resetTimerInterval(long timerid,
 void GCFPort::debug_signal(const GCFEvent& e)
 {
   LOFAR_LOG_DEBUG(TM_STDOUT_LOGGER, (
-      "[%s:%s] %s %s\n",
+      "[%s:%s] %s %s",
 	    _pTask->getName().c_str(), _name.c_str(),
 	    ((F_EVT_INOUT(e) & F_IN) ? "<-" : "->"), _pTask->evtstr(e)));
 }
@@ -379,7 +379,7 @@ void GCFPort::debug_send(const GCFEvent& e)
   if (SAP == _type)
   {      
     LOFAR_LOG_DEBUG(TM_STDOUT_LOGGER, (
-        "%s: port=%s event=%s ====> [%s:%s]\n",
+        "%s: port=%s event=%s ====> [%s:%s]",
 	      _pTask->getName().c_str(), _name.c_str(),
 	      _pTask->evtstr(e),
 	      _remoteAddr.getTaskname().c_str(),
@@ -389,7 +389,7 @@ void GCFPort::debug_send(const GCFEvent& e)
   else
   {
     LOFAR_LOG_DEBUG(TM_STDOUT_LOGGER, (
-        "%s: port=%s event=%s ====>\n",
+        "%s: port=%s event=%s ====>",
         _pTask->getName().c_str(), getName().c_str(),
         _pTask->evtstr(e)));
   }

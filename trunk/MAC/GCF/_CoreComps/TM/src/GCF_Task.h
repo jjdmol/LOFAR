@@ -55,9 +55,11 @@ class GCFTask : public GCFFsm
     *
     *     class MyTask : public GCFTask { ... }
     *
-    *     int main(int,char**)
+    *     int main(int argc, char** argv)
     *     {
     *         // create two tasks, a and b.
+    *         GCFTask::init(argc, argv);
+    * 
     *         MyTask a("a");
     *         MyTask b("b");
     *		      a.start();
@@ -69,6 +71,7 @@ class GCFTask : public GCFFsm
     * @endcode
     */
     void start();
+    static void init(int argc, char** argv);
     static void run();
     static void registerHandler(GCFHandler& handler);
     static void stop();

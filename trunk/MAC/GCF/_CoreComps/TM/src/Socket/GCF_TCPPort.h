@@ -23,8 +23,8 @@
 #ifndef GCF_TCPPORT_H
 #define GCF_TCPPORT_H
 
-#include <PortInterface/GCF_RawPort.h>
-#include <PortInterface/GCF_PeerAddr.h>
+#include <TM/PortInterface/GCF_RawPort.h>
+#include <TM/PortInterface/GCF_PeerAddr.h>
 #include <Common/lofar_string.h>
 
 // forward declaration
@@ -55,6 +55,7 @@ class GCFTCPPort : public GCFRawPort
     virtual int open();
     virtual int close();
   
+    virtual int accept(GCFTCPPort& port);
     /**
      * send/recv functions
      */

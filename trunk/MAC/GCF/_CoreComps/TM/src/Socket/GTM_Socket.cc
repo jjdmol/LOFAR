@@ -152,7 +152,7 @@ int GTMSocket::eventReceived(const GCFEvent& e)
     
     if ((ssize_t)(e.length - sizeof(e)) != count)
     {
-      fprintf(stderr, "truncated recv (count=%d)\n", count);
+      fprintf(stderr, "truncated recv (count=%d)", count);
       exit(1);
     }
   }

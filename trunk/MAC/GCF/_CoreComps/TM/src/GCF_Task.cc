@@ -23,11 +23,18 @@
 
 #include <GCF_Task.h>
 #include <GTM_Defines.h>
-#include <PortInterface/GCF_PortInterface.h>
 #include <GCF_TMProtocols.h>
 #include <GCF_Handler.h>
+
+#include <PortInterface/GCF_PortInterface.h>
+#include <PortInterface/GTM_NameService.h>
+#include <PortInterface/GTM_TopologyService.h>
+
+#include <GCFCommon/CmdLine.h>
+
 #include <signal.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 bool GCFTask::_doExit = false;
 vector<GCFHandler*> GCFTask::_handlers;
@@ -48,10 +55,61 @@ GCFTask::~GCFTask()
 {
 }
 
+void GCFTask::init(int argc, char** argv)
+{
+  _argc = argc;
+  _argv = argv;
+  
+  string serviceFilesPrefix("mac");
+  string serviceFilesPath(".");
+  if (_argv != 0)
+  {
+    CCmdLine cmdLine;
+
+    // parse argc,argv 
+    if (cmdLine.SplitLine(_argc, _argv) > 0)
+    {
+      serviceFilesPrefix = cmdLine.GetSafeArgument("-sfp", 0, "mac");
+      serviceFilesPath = cmdLine.GetSafeArgument("-p", 0, "./");
+    }            
+  }
+  
+  if (serviceFilesPrefix == "mac")
+  {
+    char* macConfigPath = getenv("MAC_CONFIG");
+    if (macConfigPath)
+    {
+      serviceFilesPath = macConfigPath;
+    }
+  }
+  if (serviceFilesPath.rfind("/") != (serviceFilesPath.length() - 1))
+    serviceFilesPath += '/';
+  
+  serviceFilesPrefix = serviceFilesPath + serviceFilesPrefix;
+    
+  if (GTMNameService::instance()->init(serviceFilesPrefix.c_str()) < 0)
+  {
+    LOFAR_LOG_ERROR(TM_STDOUT_LOGGER, ( 
+        "Could not open NameService configuration file: %s.ns",
+        serviceFilesPrefix.c_str()));
+    _doExit = true;
+  }
+  if (GTMTopologyService::instance()->init(serviceFilesPrefix.c_str()) < 0)
+  {
+    LOFAR_LOG_ERROR(TM_STDOUT_LOGGER, ( 
+        "Could not open TopologyService configuration file: %s.top",
+        serviceFilesPrefix.c_str()));
+    _doExit = true;
+  }
+  if (_doExit)
+    exit(-1);
+}
+
 void GCFTask::run()
 {
   signal(SIGINT,  GCFTask::signalHandler);
   signal(SIGTERM, GCFTask::signalHandler);
+  
 
   while (!_doExit)
   {

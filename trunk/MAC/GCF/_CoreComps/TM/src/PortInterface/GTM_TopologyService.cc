@@ -50,7 +50,7 @@ int GTMTopologyService::init(const char* top_config_file)
   catch (...)
   {
     LOFAR_LOG_ERROR(TM_STDOUT_LOGGER, (
-        "Failed to open TopologyService config file '%s'\n",
+        "Failed to open TopologyService config file '%s'",
         top_config_file));
     return -1;
   }
@@ -91,7 +91,7 @@ int GTMTopologyService::getPeerAddr(string& localtaskname,
     {
       LOFAR_LOG_ERROR(TM_STDOUT_LOGGER, (
           "Missing remote port name in port connection "
-          "for port '%s'\n", 
+          "for port '%s'", 
           localportname.c_str()));
     }
     sRemoteTaskName = pRemoteTaskName;
@@ -100,7 +100,7 @@ int GTMTopologyService::getPeerAddr(string& localtaskname,
     {
       LOFAR_LOG_ERROR(TM_STDOUT_LOGGER, (
           "Could not find task '%s' in "
-          "name service configuration file.\n",
+          "name service configuration file.",
           sRemoteTaskName.c_str()));
     }
     string sPortName = colon + 1;
@@ -113,7 +113,7 @@ int GTMTopologyService::getPeerAddr(string& localtaskname,
     {
       LOFAR_LOG_ERROR(TM_STDOUT_LOGGER, (
           "Could not find port '%s' of task '%s' in "
-          "name service configuration file.\n",
+          "name service configuration file.",
           peeraddr.getPortname().c_str(), sRemoteTaskName.c_str()));
     }
   }
@@ -121,7 +121,7 @@ int GTMTopologyService::getPeerAddr(string& localtaskname,
   {
     LOFAR_LOG_ERROR(TM_STDOUT_LOGGER, (
         "Task '%s' or local port '%s' not found in "
-        "application topology configuration file.\n",
+        "application topology configuration file.",
         localtaskname.c_str(), localportname.c_str()));
   }
 

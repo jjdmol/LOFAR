@@ -170,7 +170,7 @@ bool GCFRawPort::findAddr(GCFPeerAddr& addr)
 				      _name, theaddr) < 0)
     {
       LOFAR_LOG_DEBUG(TM_STDOUT_LOGGER, (
-          "No remote address found for port '%s' of task '%s'\n",
+          "No remote address found for port '%s' of task '%s'",
           _name.c_str(), _pTask->getName().c_str()));
       
       return false;
@@ -178,7 +178,7 @@ bool GCFRawPort::findAddr(GCFPeerAddr& addr)
 
     LOFAR_LOG_DEBUG(TM_STDOUT_LOGGER, (
         "Connecting local SAP [%s:%s] "
-        "to remote SPP [%s:%s]@(%s:%d).\n",
+        "to remote SPP [%s:%s]@(%s:%d).",
         _pTask->getName().c_str(),
         _name.c_str(),
         theaddr.getTaskname().c_str(),
@@ -195,7 +195,7 @@ bool GCFRawPort::findAddr(GCFPeerAddr& addr)
      
       LOFAR_LOG_ERROR(TM_STDOUT_LOGGER, (
           "Could not find own address for "
-          "task '%s'.\n", 
+          "task '%s'.", 
           _pTask->getName().c_str()));
       return false;
     }
@@ -205,13 +205,13 @@ bool GCFRawPort::findAddr(GCFPeerAddr& addr)
     {
       LOFAR_LOG_ERROR(TM_STDOUT_LOGGER, (
           "Could not find port info for port '%s' of "
-          "task '%s'.\n", _name.c_str(), 
+          "task '%s'.", _name.c_str(), 
           _pTask->getName().c_str()));
      
       return false;
     }
     
-    LOFAR_LOG_DEBUG(TM_STDOUT_LOGGER, ("Listening on port %d for clients.\n",
+    LOFAR_LOG_INFO(TM_STDOUT_LOGGER, ("Listening on port %d for clients.",
                 theaddr.getPortnumber()));
   }
   else 

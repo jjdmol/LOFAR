@@ -1,4 +1,4 @@
-//#  GCF_Defines.h: preprocessor definitions of various constants
+//#  GCF_PValue.cc: 
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,16 +20,5 @@
 //#
 //#  $Id$
 
-#ifndef GCF_DEFINES_H
-#define GCF_DEFINES_H
 
-#define LOG_ERROR(X) do {} while (0)
-#define LOG_DEBUG(X) do {} while (0)
-#define LOG_WARNING(X) do {} while (0)
-#define LOG_INFO(X) do {} while (0)
-#define MAX_PORTNAME_LEN 63
-#define MAX_TASKNAME_LEN 63
-#define MAX_PORTTYPE_LEN 31
-#define MAXHOSTNAMELEN 31
-
-#endif
+#include "GCF_PValue.h"

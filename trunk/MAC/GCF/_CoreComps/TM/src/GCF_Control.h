@@ -59,11 +59,4 @@
 #include <TM/GCF_Event.h>
 #endif
 
-#ifndef GTM_NAMESERVICE_H
-#include <TM/PortInterface/GTM_NameService.h>
-#endif
-
-#ifndef GTM_TOPOLOGYSERVICE_H
-#include <TM/PortInterface/GTM_TopologyService.h>
-#endif
 #endif /* GCF_CONTROL_H */
