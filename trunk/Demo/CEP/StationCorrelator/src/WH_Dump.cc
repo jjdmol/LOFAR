@@ -30,7 +30,7 @@ WH_Dump::WH_Dump(const string& name, const KeyValueMap& kvm)
     itsKvm(kvm)
 {
   itsOutputFileName = kvm.getString("outFileName", "StatCor.out");
-  itsNelements      = kvm.getInt("stations", 2);
+  itsNelements      = kvm.getInt("NoWH_RSP", 2);
   itsNchannels      = kvm.getInt("NoRSPBeamlets", 92)/kvm.getInt("NoWH_Correlator", 92);
   itsNpolarisations = kvm.getInt("polarisations", 2);
   
