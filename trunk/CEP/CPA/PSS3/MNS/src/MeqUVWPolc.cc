@@ -23,6 +23,8 @@
 #include <MNS/MeqUVWPolc.h>
 #include <Common/Debug.h>
 
+#include <MNS/MeqPointDFT.h>
+
 MeqUVWPolc::MeqUVWPolc()
 : itsPoly   (3),
   itsUCoeff ("u"),
@@ -33,7 +35,8 @@ MeqUVWPolc::MeqUVWPolc()
 }
 
 void MeqUVWPolc::calcCoeff (const Vector<double>& times,
-			    const Matrix<double>& uvws)
+			    const Matrix<double>& uvws,
+			    bool addPolc)
 {
   int nr = times.nelements();
   Assert (uvws.shape()(0) == 3  &&  uvws.shape()(1) == nr);
@@ -42,6 +45,12 @@ void MeqUVWPolc::calcCoeff (const Vector<double>& times,
   Vector<double> normTimes(nr);
   for (int i=0; i<nr; i++) {
     normTimes(i) = domain.normalizeX (times(i));
+  }
+  if (!addPolc) {
+    vector<MeqPolc> emptyPolc;
+    itsUCoeff.setPolcs (emptyPolc);
+    itsVCoeff.setPolcs (emptyPolc);
+    itsWCoeff.setPolcs (emptyPolc);
   }
   MeqPolc polc;
   polc.setDomain (domain);
@@ -61,6 +70,11 @@ void MeqUVWPolc::calcCoeff (const Vector<double>& times,
 
 void MeqUVWPolc::calcUVW (const MeqRequest& request)
 {
+  if (MeqPointDFT::doshow) {
+    cout << "UCoeff: " << itsUCoeff.getPolcs()[0].getCoeff() << endl;
+    cout << "VCoeff: " << itsVCoeff.getPolcs()[0].getCoeff() << endl;
+    cout << "WCoeff: " << itsWCoeff.getPolcs()[0].getCoeff() << endl;
+  }
   itsU = itsUCoeff.getResult (request);
   itsV = itsVCoeff.getResult (request);
   itsW = itsWCoeff.getResult (request);

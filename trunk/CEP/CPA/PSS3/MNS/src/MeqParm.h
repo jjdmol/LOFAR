@@ -63,7 +63,11 @@ public:
   // Get the result of the parameter for the given domain.
   virtual MeqResult getResult (const MeqRequest&) = 0;
 
-  // Update the parameter with the new value.
+  // Get the current values of the solvable parameter and store them
+  // in the argument.
+  virtual void getInitial (MeqMatrix& values) const = 0;
+
+  // Update the parameter with the new values.
   virtual void update (const MeqMatrix& value) = 0;
 
   // Make the new value persistent (for the given domain).

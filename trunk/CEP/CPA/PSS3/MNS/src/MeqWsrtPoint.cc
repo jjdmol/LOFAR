@@ -91,13 +91,17 @@ void MeqWsrtPoint::calcResult (const MeqRequest& request)
     MeqResult vk = iter->getV()->getResult (dftReq);
     MeqResult dft = itsDFT->getResult (dftReq);
     MeqMatrix ivk = tocomplex(0., vk.getValue());
-    ///    cout << "MeqWsrtPoint iquvk,dft: " << ik.getValue() << ' '
-    ///	 << qk.getValue() << ' ' << uk.getValue() << ' ' << vk.getValue()
-      ///	 << ' ' << ivk << ' ' << dft.getValue() << endl;
+    if (MeqPointDFT::doshow) {
+      cout << "MeqWsrtPoint iquvk,dft: " << ik.getValue() << ' '
+	   << qk.getValue() << ' ' << uk.getValue() << ' ' << vk.getValue()
+	   << ' ' << ivk << ' ' << dft.getValue() << endl;
+    }
     // Calculate XX, etc. Note that the values should be divided by 2.
     // That is done later in MeqWsrtInt, because that is less expensive.
     MeqMatrix xx = (ik.getValue() + qk.getValue()) * dft.getValue();
-    ///cout << "MeqWsrtPoint abs(xx) " << abs(xx.getDComplex(0,0)) << endl;
+    if (MeqPointDFT::doshow) {
+      cout << "MeqWsrtPoint abs(xx) " << abs(xx.getDComplex(0,0)) << endl;
+    }
     MeqMatrix yx = (uk.getValue() - ivk) * dft.getValue();
     MeqMatrix xy = (uk.getValue() + ivk) * dft.getValue();
     MeqMatrix yy = (ik.getValue() - qk.getValue()) * dft.getValue();
@@ -105,7 +109,9 @@ void MeqWsrtPoint::calcResult (const MeqRequest& request)
     itsXY.getValueRW() += xy;
     itsYX.getValueRW() += yx;
     itsYY.getValueRW() += yy;
-    ///    cout << "MeqWsrtPoint XX: " << xx << endl << itsXX.getValue() << endl;
+    if (MeqPointDFT::doshow) {
+      cout << "MeqWsrtPoint XX: " << xx << endl << itsXX.getValue() << endl;
+    }
 
     // Evaluate (if needed) for the perturbed parameter values.
     MeqMatrix perturbation;
