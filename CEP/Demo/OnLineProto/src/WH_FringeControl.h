@@ -40,14 +40,14 @@ public:
   /// The first WorkHolder should have nin=0.
   explicit WH_FringeControl (const string& name,
 			     const int nout,
-			     const ParameterSet& ps);
+			     const ACC::ParameterSet& ps);
 
   virtual ~WH_FringeControl();
 
   /// Static function to create an object.
   static WorkHolder* construct (const string& name,
 				const int nout,
-				const ParameterSet& ps);
+				const ACC::ParameterSet& ps);
 
   /// Make a fresh copy of the WH object.
   virtual WH_FringeControl* make (const string& name);
@@ -65,7 +65,7 @@ private:
   /// Forbid assignment.
   WH_FringeControl& operator= (const WH_FringeControl&);
   
-  ParameterSet itsPS;
+  ACC::ParameterSet itsPS;
 };
 
 }

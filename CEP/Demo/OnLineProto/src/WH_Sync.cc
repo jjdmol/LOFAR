@@ -37,7 +37,7 @@ namespace LOFAR
 {
 WH_Sync::WH_Sync (const string& name, 
 			      const int nbeamlets, 
-			      const ParameterSet& ps, 
+			      const ACC::ParameterSet& ps, 
 			      const int StationID)
   : WorkHolder    (nbeamlets+1, nbeamlets, name,"WH_Sync"),
     itsPS (ps),
@@ -73,7 +73,7 @@ WH_Sync::~WH_Sync()
 
 WorkHolder* WH_Sync::construct (const string& name, 
 				      const int nbeamlets, 
-				      const ParameterSet& ps,
+				      const ACC::ParameterSet& ps,
 				      const int StationID)
 {
   return new WH_Sync (name, nbeamlets, ps, StationID);

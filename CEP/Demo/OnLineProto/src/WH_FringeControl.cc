@@ -40,7 +40,7 @@ namespace LOFAR
 
 WH_FringeControl::WH_FringeControl (const string& name,
 				    const int nout,
-				    const ParameterSet& ps)
+				    const ACC::ParameterSet& ps)
   : WorkHolder    (1, nout, name,"WH_FringeControl"),
     itsPS        (ps)
 {
@@ -63,7 +63,7 @@ WH_FringeControl::~WH_FringeControl()
 
 WorkHolder* WH_FringeControl::construct (const string& name,
 					 const int nout,
-					 const ParameterSet& ps)
+					 const ACC::ParameterSet& ps)
 {
   return new WH_FringeControl (name, nout, ps);
 }

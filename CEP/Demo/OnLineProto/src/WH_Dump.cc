@@ -45,7 +45,7 @@ namespace LOFAR
 
 WH_Dump::WH_Dump (const string& name,
 		  unsigned int  nin,
-		  const ParameterSet& ps,
+		  const ACC::ParameterSet& ps,
 		  int           rank)
   : WorkHolder    (nin, 1, name,"WH_Dump"),
     itsIndex   (1),
@@ -85,7 +85,7 @@ WH_Dump::~WH_Dump()
 
 WorkHolder* WH_Dump::construct (const string& name, 
 				int nin, 
-				const ParameterSet& ps,
+				const ACC::ParameterSet& ps,
 				int rank)
 {
   return new WH_Dump (name, nin, ps, rank);

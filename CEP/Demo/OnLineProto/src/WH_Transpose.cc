@@ -42,7 +42,7 @@ namespace LOFAR
 WH_Transpose::WH_Transpose (const string& name,
 			    unsigned int nin,
 			    unsigned int nout,
-			    const ParameterSet& ps)
+			    const ACC::ParameterSet& ps)
   : WorkHolder    (nin, nout, name,"WH_Transpose"),
     itsFBW(ps.getInt("station.nchannels")),
     itsIntegrationTime(0),
@@ -70,7 +70,7 @@ WH_Transpose::~WH_Transpose()
 WorkHolder* WH_Transpose::construct (const string& name, 
 				     unsigned int nin,
 				     unsigned int nout,
-				     const ParameterSet& ps)
+				     const ACC::ParameterSet& ps)
 {
   return new WH_Transpose (name, nin, nout, ps);
 }

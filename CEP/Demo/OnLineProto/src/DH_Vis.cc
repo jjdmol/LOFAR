@@ -30,7 +30,7 @@
 namespace LOFAR
 {
 
-DH_Vis::DH_Vis (const string& name, const ParameterSet& ps)
+DH_Vis::DH_Vis (const string& name, const ACC::ParameterSet& ps)
 : DataHolder    (name, "DH_Vis"),
   itsBufferptr  (0),
   itsPS         (ps)

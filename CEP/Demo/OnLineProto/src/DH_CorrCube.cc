@@ -30,7 +30,7 @@
 namespace LOFAR
 {
 
-DH_CorrCube::DH_CorrCube (const string& name, const ParameterSet& ps)
+DH_CorrCube::DH_CorrCube (const string& name, const ACC::ParameterSet& ps)
 : DataHolder    (name, "DH_CorrCube"),
   itsBufferptr  (0),
   itsPS         (ps)

@@ -38,7 +38,7 @@ namespace LOFAR
 {
 WH_PreProcess::WH_PreProcess (const string& name, 
 			      const int nbeamlets, 
-			      const ParameterSet& ps, 
+			      const ACC::ParameterSet& ps, 
 			      const int StationID)
   : WorkHolder    (nbeamlets+1, nbeamlets, name,"WH_PreProcess"),
     itsPS (ps),
@@ -76,7 +76,7 @@ WH_PreProcess::~WH_PreProcess()
 
 WorkHolder* WH_PreProcess::construct (const string& name, 
 				      const int nbeamlets, 
-				      const ParameterSet& ps,
+				      const ACC::ParameterSet& ps,
 				      const int StationID)
 {
   return new WH_PreProcess (name, nbeamlets, ps, StationID);

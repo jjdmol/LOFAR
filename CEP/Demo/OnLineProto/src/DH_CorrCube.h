@@ -43,7 +43,7 @@ public:
   typedef complex<float> BufferType;
 
   explicit DH_CorrCube (const string& name, 
-			const ParameterSet& ps);
+			const ACC::ParameterSet& ps);
 
   DH_CorrCube(const DH_CorrCube&);
 
@@ -82,7 +82,7 @@ private:
    complex<float>* itsBufferptr; // array containing frequency spectrum.
 
    int itsBufSize;  // calculate required buffer size in C'tor  
-   const ParameterSet itsPS; // necessary configuration parameters
+   const ACC::ParameterSet itsPS; // necessary configuration parameters
 };
 
 inline DH_CorrCube::BufferType* DH_CorrCube::getBuffer()
