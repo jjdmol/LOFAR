@@ -1,7 +1,5 @@
 // Copyright notice should go here
 
-// $ID$
-
 
 #include <uvplot/UVPSpectrumVector.h>
 
