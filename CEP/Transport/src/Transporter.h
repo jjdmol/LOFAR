@@ -114,6 +114,9 @@ class Transporter
   */
   //  bool doHandle() const;
 
+  bool isBlocking() const ;
+
+
 protected:
 
   /// Copy constructor.
@@ -154,6 +157,8 @@ private:
       Rate=1 means always issue TransportHolder->read/write.
   */
   int itsRate; 
+  
+  bool itsIsBlocking;
 
 };
 
@@ -222,6 +227,9 @@ inline void Transporter::setRate (int aRate)
 
 inline int Transporter::getRate() const
   { return itsRate; }
+
+inline bool Transporter::isBlocking() const
+  { return itsIsBlocking; }
 
 }
 #endif 

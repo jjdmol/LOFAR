@@ -23,7 +23,7 @@
 //
 //////////////////////////////////////////////////////////////////////
 
-#include "TH_File.h"
+#include <TH_File.h>
 #include <Common/Debug.h>
 
 namespace LOFAR
@@ -79,7 +79,7 @@ bool TH_File::connectionPossible(int, int) const
   return true; //srcRank == dstRank;
 }
 
-bool TH_File::recv(void* buf, int nbytes, int, int)
+bool TH_File::recvBlocking(void* buf, int nbytes, int, int)
 { 
   bool result = true;
   if (itsDirection == Read) {
@@ -121,7 +121,7 @@ bool TH_File::recv(void* buf, int nbytes, int, int)
   return result;
 }
 
-bool TH_File::send(void* buf, int nbytes, int, int)
+bool TH_File::sendBlocking(void* buf, int nbytes, int, int)
 {
   bool result = true;
   if (itsDirection == Write) {

@@ -91,7 +91,7 @@ void TH_Mem_Bl::initConditionVariables(int tag)
   }
 }
 
-bool TH_Mem_Bl::recv(void* buf, int nbytes, int, int tag)
+bool TH_Mem_Bl::recvBlocking(void* buf, int nbytes, int, int tag)
 { 
     Msg m;
     pthread_mutex_lock(&theirTHMemLock);
@@ -130,9 +130,27 @@ bool TH_Mem_Bl::recv(void* buf, int nbytes, int, int tag)
 }
 
 /**
-   The send function must now add the buffer to.
+   The send function must now add the buffer to the map containing messages.
  */
-bool TH_Mem_Bl::send(void* buf, int nbytes, int, int tag)
+bool TH_Mem_Bl::sendBlocking(void* buf, int nbytes, int, int tag)
+{
+  pthread_mutex_lock(&theirTHMemLock);
+  if (itsFirstCall)
+  {
+    initConditionVariables(tag);
+    itsFirstCall = false;
+  }
+
+  Msg      m(buf, nbytes, tag);
+  messages[tag] = m;
+  pthread_cond_signal(&dataAvailable[tag]); // Signal data available
+  pthread_cond_wait(&dataReceived[tag], &theirTHMemLock);  // Wait for data received
+  pthread_mutex_unlock(&theirTHMemLock);
+  
+  return true;
+}
+
+bool TH_Mem_Bl::sendNonBlocking(void* buf, int nbytes, int, int tag)
 {
   pthread_mutex_lock(&theirTHMemLock);
   if (itsFirstCall)
@@ -149,6 +167,18 @@ bool TH_Mem_Bl::send(void* buf, int nbytes, int, int tag)
   Msg      m(buf, nbytes, tag);
   messages[tag] = m;
   pthread_cond_signal(&dataAvailable[tag]);
+  pthread_mutex_unlock(&theirTHMemLock);
+  
+  return true;
+}
+
+bool TH_Mem_Bl::waitForSendAcknowledged(void*, int, int, int tag)
+{
+  pthread_mutex_lock(&theirTHMemLock);
+  if (messages.find(tag) != messages.end())  // Wait for send to finish
+  {
+    pthread_cond_wait(&dataReceived[tag], &theirTHMemLock);
+  }
   pthread_mutex_unlock(&theirTHMemLock);
   
   return true;

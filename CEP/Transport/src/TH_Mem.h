@@ -20,12 +20,12 @@
 //#
 //# $Id$
 
-#ifndef CEPFRAME_TH_MEM_H
-#define CEPFRAME_TH_MEM_H
+#ifndef LIBTRANSPORT_TH_MEM_H
+#define LIBTRANSPORT_TH_MEM_H
 
 #include <lofar_config.h>
 
-#include "TransportHolder.h"
+#include <TransportHolder.h>
 #include <Common/lofar_map.h>
 
 namespace LOFAR
@@ -61,7 +61,7 @@ public:
      Receive the data. This call does the actual data transport
      by memcpy'ing the data from the sender.
   */
-  virtual bool recv(void* buf, int nbytes, int source, int tag);
+  virtual bool recvBlocking(void* buf, int nbytes, int source, int tag);
 
   /**
      Send the data.
@@ -70,14 +70,12 @@ public:
      which can be matched by the recv call.
      The only thing it does is setting the status.
   */
-  virtual bool send(void* buf, int nbytes, int destination, int tag);
+  virtual bool sendNonBlocking(void* buf, int nbytes, int destination, int tag);
 
   /// Get the type of transport.
   virtual string getType() const;
 
   virtual bool connectionPossible(int srcRank, int dstRank) const;
-
-  virtual bool isBlocking() const { return false; }
 
   /// Declare a TH_Mem prototype variable
   /// that can be used in functions

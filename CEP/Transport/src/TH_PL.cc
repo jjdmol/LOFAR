@@ -98,7 +98,7 @@ string TH_PL::getType() const
 bool TH_PL::connectionPossible(int srcRank, int dstRank) const
   { return srcRank == dstRank; }
 
-bool TH_PL::send(void* buf, int nbytes, int, int tag)
+bool TH_PL::sendBlocking(void* buf, int nbytes, int, int tag)
 {
   if (getTransporter() -> getBaseDataHolder() != 0) {
         
@@ -116,7 +116,7 @@ bool TH_PL::send(void* buf, int nbytes, int, int tag)
   return true;
 }
 
-bool TH_PL::recv(void* buf, int nbytes, int, int tag)
+bool TH_PL::recvBlocking(void* buf, int nbytes, int, int tag)
 { 
   DbgAssertStr( (getTransporter() -> getBaseDataHolder () != 0),
 		"TH_PL::recv():Transportable not found.");

@@ -20,8 +20,8 @@
 //#
 //# $Id$
 
-#ifndef CEPFRAME_TRANSPORTHOLDER_H
-#define CEPFRAME_TRANSPORTHOLDER_H
+#ifndef LIBTRANSPORT_TRANSPORTHOLDER_H
+#define LIBTRANSPORT_TRANSPORTHOLDER_H
 
 #include <lofar_config.h>
 
@@ -33,7 +33,7 @@ class BlobStringType;
 
 /**
    This class defines the base class for transport mechanism classes
-   to transport data between connected DataHolders.
+   to transport data between connected BaseDataHolders.
    Actually, the data transport is done between 2 TransportHolder objects
    belonging to the communicating DataHolder objects.
 
@@ -58,11 +58,28 @@ public:
   /// Make an instance of the derived TransportHolder.
   virtual TransportHolder* make() const = 0;
 
-  /// Recv the data sent by the connected TransportHolder.
-  virtual bool recv (void* buf, int nbytes, int source, int tag) = 0;
+  /// Recv the data sent by the connected TransportHolder and wait
+  /// until data has been received into buf.
+  virtual bool recvBlocking (void* buf, int nbytes, int source, int tag);
+
+  /// Start receiving the data sent by the connected TransportHolder.
+  virtual bool recvNonBlocking (void* buf, int nbytes, int source, int tag);
+
+  /// Wait until data has been received into buf.
+  virtual bool waitForReceived(void* buf, int nbytes, int source, int tag);
+
+  /// Send the data to the connected TransportHolder and wait until data
+  /// has been sent.
+  virtual bool sendBlocking (void* buf, int nbytes, int destination, int tag);
 
   /// Send the data to the connected TransportHolder.
-  virtual bool send (void* buf, int nbytes, int destination, int tag) = 0;
+  virtual bool sendNonBlocking (void* buf, int nbytes, int destination, int tag);
+
+  /// Wait until the data has been sent.
+  virtual bool waitForSent(void* buf, int nbytes, int destination, int tag);
+
+  /// Wait until the receiving TransportHolder has received the data.
+  virtual bool waitForSendAcknowledged(void* buf, int nbytes, int destination, int tag);
 
   /// Get the type of transport as a string.
   virtual string getType() const = 0;
@@ -70,14 +87,14 @@ public:
   // Get the type of BlobString needed for the DataHolder.
   virtual BlobStringType blobStringType() const;
 
+  /// Check if a connection is possible between two processes.
   virtual bool connectionPossible (int srcRank, int dstRank) const;
 
-  Transporter* getTransporter()
+  /// Accessor method for its Transporter
+   Transporter* getTransporter()
     { return itsTransporter; }
   void setTransporter (Transporter* tp)
     { itsTransporter = tp; }
-
-  virtual bool isBlocking() const = 0;
 
 private:
   Transporter* itsTransporter;
