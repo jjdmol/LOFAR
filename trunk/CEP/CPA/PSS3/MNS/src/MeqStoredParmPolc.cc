@@ -36,7 +36,7 @@ MeqStoredParmPolc::MeqStoredParmPolc (const string& name, int srcnr,
 MeqStoredParmPolc::~MeqStoredParmPolc()
 {}
 
-int MeqStoredParmPolc::initDomain (const MeqDomain& domain, int spidIndex)
+void MeqStoredParmPolc::readPolcs (const MeqDomain& domain)
 {
   // Find the polc(s) for the given domain.
   vector<MeqPolc> polcs = itsTable->getPolcs (getName(), getSourceNr(),
@@ -56,7 +56,21 @@ int MeqStoredParmPolc::initDomain (const MeqDomain& domain, int spidIndex)
     }
     ///    itsTable->putCoeff (getName(), getSourceNr(), getStation(), polc);
     polcs.push_back (polc);
-  } else if (isSolvable()) {
+  } else {
+    // Check if the polc domains cover the entire domain and if they
+    // do not overlap.
+    // Not implemented yet!!!
+  }
+  setPolcs (polcs);
+  itsDomain = domain;
+}
+
+int MeqStoredParmPolc::initDomain (const MeqDomain& domain, int spidIndex)
+{
+  AssertStr (domain==itsDomain, "MeqStoredParmPolc::initDomain - "
+	     "domain mismatches domain given in last readPolcs");
+  if (isSolvable()) {
+    const vector<MeqPolc>& polcs = getPolcs();
     AssertMsg (polcs.size() == 1, "Solvable parameter " << getName() <<
 	       " has multiple matching domains for time "
 	       << domain.startX() << ':' << domain.endX() << " and freq "
@@ -70,11 +84,7 @@ int MeqStoredParmPolc::initDomain (const MeqDomain& domain, int spidIndex)
 	       " has a partially instead of fully matching entry for time "
 		 << domain.startX() << ':' << domain.endX() << " and freq "
 		 << domain.startY() << ':' << domain.endY());
-  } else {
-    // Check if the polc domains cover the entire domain and if they
-    // do not overlap.
   }
-  setPolcs (polcs);
   return MeqParmPolc::initDomain (domain, spidIndex);
 }
 

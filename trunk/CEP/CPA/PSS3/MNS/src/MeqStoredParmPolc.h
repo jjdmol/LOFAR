@@ -49,7 +49,11 @@ public:
   int getStation() const
     { return itsStatnr; }
 
-  // Initialize the parameter for the given domain.
+  // Read the polcs for the given domain.
+  virtual void readPolcs (const MeqDomain& domain);
+
+  // Initialize the solvable parameter for the given domain.
+  // It checks if the given domain matches the one used for the last readPolcs.
   virtual int initDomain (const MeqDomain&, int spidIndex);
 
   // Make the new value persistent (for the given domain).
@@ -59,6 +63,7 @@ private:
   int        itsSrcnr;
   int        itsStatnr;
   ParmTable* itsTable;
+  MeqDomain  itsDomain;
 };
 
 

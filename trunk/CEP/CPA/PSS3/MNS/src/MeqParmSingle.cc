@@ -37,6 +37,9 @@ MeqParmSingle::MeqParmSingle (const string& name, double value)
 MeqParmSingle::~MeqParmSingle()
 {}
 
+void MeqParmSingle::readPolcs (const MeqDomain&)
+{}
+
 int MeqParmSingle::initDomain (const MeqDomain&, int spidIndex)
 {
   if (isSolvable()) {

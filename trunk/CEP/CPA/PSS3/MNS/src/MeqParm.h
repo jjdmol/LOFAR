@@ -57,7 +57,10 @@ public:
   unsigned int getParmId() const
     { return itsParmId; }
 
-  // Initialize the parameter for the given domain.
+  // Read the polcs for the given domain.
+  virtual void readPolcs (const MeqDomain& domain) = 0;
+
+  // Initialize the solvable parameter for the given domain.
   virtual int initDomain (const MeqDomain&, int spidIndex) = 0;
 
   // Make parameter solvable, thus perturbed values have to be calculated.
