@@ -210,7 +210,7 @@ public:	\
 	oss << stream;
 
 #define	cLog(level,levelname,message) \
-	DebugTestAndLog(level) << setw(5) << left << levelname \
+	DebugTestAndLog(level) << std::setw(5) << std::left << levelname \
 		<< " [" << LOFARLOGGER_FULLPACKAGE << "] " << message << endl;
 
 #define cLogstr(level,levelname,stream) { \
@@ -219,7 +219,7 @@ public:	\
 	}
 
 #define	cDebug(level,levelname,message) \
-	DebugTestAndLog(level) << setw(5) << left << levelname \
+	DebugTestAndLog(level) << std::setw(5) << std::left << levelname \
 		<< " [" << LOFARLOGGER_FULLPACKAGE << "] " << message \
 		<< ", File:" << __FILE__ << ", Line:" << __LINE__ << endl;
 
@@ -235,9 +235,9 @@ namespace LOFAR
 {
   namespace LFDebug
   {
-    extern ostream * dbg_stream_p;
+    extern std::ostream * dbg_stream_p;
   
-    inline ostream & getDebugStream () { return *dbg_stream_p; }
+    inline std::ostream & getDebugStream () { return *dbg_stream_p; }
 
     // Typedef the exception type, so we can change whenever needed.
     EXCEPTION_CLASS(Fail,LOFAR::Exception);
