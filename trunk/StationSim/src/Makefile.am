@@ -2,7 +2,6 @@ DOCHDRS		 	= 			\
 ArrayConfig.h					\
 DH_SampleC.h					\
 DH_SampleR.h					\
-DH_Weight.h					\
 DataGenConfig.h					\
 FFTW.h						\
 FilterBank.h					\
@@ -18,7 +17,8 @@ WH_Modulate.h					\
 WH_PhaseShift.h					\
 WH_ReadSignal.h					\
 WH_BandSep.h					\
-GnuPlotInterface.h
+GnuPlotInterface.h				\
+WH_BeamFormer.h
 
 
 lib_LTLIBRARIES 	= libstationsim.la
@@ -27,7 +27,6 @@ libstationsim_la_SOURCES 	= $(DOCHDRS)	\
 ArrayConfig.cc					\
 DH_SampleC.cc					\
 DH_SampleR.cc					\
-DH_Weight.cc					\
 DataGenConfig.cc				\
 FFTW.cc						\
 FilterBank.cc					\
@@ -43,7 +42,8 @@ WH_Modulate.cc					\
 WH_PhaseShift.cc				\
 WH_ReadSignal.cc				\
 WH_BandSep.cc					\
-GnuPlotInterface.cc
+GnuPlotInterface.cc				\
+WH_BeamFormer.cc
 
 bin_PROGRAMS		= Simulate
 Simulate_SOURCES 	= Simulate.cc Simulate.in

@@ -22,7 +22,7 @@
 
 #include <stdio.h>             // for sprintf
 #include <fstream.h>
-#include <filterbank.h>
+#include <StationSim/FilterBank.h>
 
 template<class Type>
 FilterBank<Type>::FilterBank(string CoefficientFile, int OverlapSamples, int Real)

@@ -48,6 +48,7 @@
 #include <StationSim/WH_PhaseShift.h>
 #include <StationSim/WH_ReadSignal.h>
 #include <StationSim/WH_BandSep.h>
+#include <StationSim/WH_BeamFormer.h>
 
 
 StationSim::StationSim()
@@ -200,18 +201,23 @@ void StationSim::define (const ParamBlock& params)
   }
 
 
-//   // Create the individual steps. Set the rate of the steps 
-//   // The beamformer object
-//   Step beam (WH_BeamFormer("", nrcu+1, nrcu+1, nrcu, nselsubband, 
-// 						   nbeam, maxNtarget, maxNrfi,
-// 			   fifolength, buflength), "beamformer", false);
+  // Create the individual steps. Set the rate of the steps 
+  // The beamformer object
+  for (int i = 0; i < nsubband; ++i) {
+	sprintf (suffix, "%d", i);
 
-//   for (int j = 0; j < nrcu+1; ++j) {
-// 	beam.getInData (j).setReadDelay (delayMod + delayPhase);
-// 	beam.getOutData (j).setWriteDelay (delayMod + delayPhase);
-//   }
-//   simul.addStep (beam);
+	Step beam (WH_BeamFormer("", nrcu, nrcu, nrcu, nbeam, maxNtarget, maxNrfi), 
+			   string("beam_former_") + suffix, 
+			   false);
 
+	for (int j = 0; j < nrcu; ++j) {
+	  beam.getInData (j).setReadDelay (delayMod + delayPhase + delaySubFilt);
+	  beam.getOutData (j).setWriteDelay (delayMod + delayPhase + delaySubFilt);
+	}
+
+	simul.addStep (beam);
+  } 
+  
 //   // The AWE object
 //   Step awe (WH_AWE("", 1, 1, nrcu, buflength),"awe", false);
 //   awe.getInData (0).setReadDelay (delayMod + delayPhase);
@@ -261,6 +267,16 @@ void StationSim::define (const ParamBlock& params)
 				   suffix, string ("subband_filter_") + suffix + string (".in"));
   }
 
+  // Connect the subband filterbank with the beam former
+//   for (int s = 0; s < nsubband; ++s) {
+// 	for (int r = 0; r < nrcu; ++r) { 
+// 	  sprintf (suffix, "%d", r);
+// 	  sprintf (suffix2, "%d", s);
+
+// 	  simul.connect (string ("subband_filter_") + suffix + string (".out_") + suffix2,
+// 					 string ("beam_former_") + suffix2 + string (".in_") + suffix);
+// 	}
+//   }
 
   // end of dataprocessor definition
   simul.checkConnections();
