@@ -23,7 +23,8 @@ class BlackBoardController:
     newThread = Thread();
     return newThread;
 
-  def fork(self, newBB):
+  def fork(self):
     newBB = BlackBoard.BlackBoard(self.bb);
     newBB.parent(self.bb.id);
+    self.bb.add_child(newBB.id);
     return newBB;
