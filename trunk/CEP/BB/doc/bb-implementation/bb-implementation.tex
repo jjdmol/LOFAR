@@ -250,6 +250,39 @@
 
       \subsubsection{dynamic model}
 
+        \begin{figure}
+          \includegraphics[]{../figures/overview2.eps}
+          \hypertarget{fig:overview2}{}
+          \caption{the overall structure of a BlackBoard-application\label{fig:overview2}}
+        \end{figure}
+
+        Figure \hyperlink{fig:overview2}{\ref{fig:overview2}} shows
+        the basic components of a running system. The three
+        ``MPIProgramEntry'''s are different instances of the same
+        executable. In the main function a switch is made over the
+        result of a database query that has the program instance as
+        parameter and returns the role that the program instance has
+        to play. This means that the data-table has to be filled by
+        the same human action that produces the startup script. Errors
+        will result if this is done otherwise.
+
+        \begin{figure}
+          \includegraphics[]{../figures/startOfExecutable.eps}
+          \hypertarget{fig:startOfExecutable}{}
+          \caption{the startup sequence of the blackboard{\label{fig:startOfExecutable}}}
+        \end{figure}
+
+        For this to work, the entity that fills the database has to be
+        able to determine what MPI-identity what program is going to
+        have on forehand.
+
+        \begin{assumption}
+          It will be possible to identify which executable on which
+          machine we are running and to control the assignment of
+          identifications.
+          \caption{identification of executables\label{ass:ident}}
+        \end{assumption}
+
         \paragraph{lifetimes of objects}
 
     \subsection{protocol semantics}
@@ -260,12 +293,12 @@
 
       First there is the way the blackboard is addressed by other
       components. In figure
-      \hyperlink{fig:overview}{\ref{fig:overview}}, these are
+      \hyperlink{fig:overview2}{\ref{fig:overview2}}, these are
       represented by the straight dependency connections. Then there
       are embedded in the messages posted on the blackboard protocols
       that must maintain and guarantee the validity of the
       system-state at all times. In figure
-      \hyperlink{fig:overview}{\ref{fig:overview}}, these are
+      \hyperlink{fig:overview}{\ref{fig:overview2}}, these are
       represented by the dotted dependency lines. The actual
       communication is embedded in whatever is put on the
       blackboard. A valid system state in this context would mean that
@@ -275,12 +308,6 @@
       External knowledge source\index{blackboard!knowledge source}s, that are being embedded in a
       BlackBoard-instance are going to have to adhere to some rules on
       the communications.
-
-      \begin{figure}
-        \includegraphics[]{../figures/overview.eps}
-        \hypertarget{fig:overview}{}
-        \caption{the overall structure of a BlackBoard-application\label{fig:overview}}
-      \end{figure}
 
       Then the final group of protocols are those with external
       components like data-persistency mechanisms.
