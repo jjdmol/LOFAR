@@ -21,6 +21,10 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.4  2003/09/30 10:38:47  loose
+//  %[ER: 19]%
+//  Forgot to modify one instance of HAVE___FUNCTION__. Did it now.
+//
 //  Revision 1.3  2003/09/29 15:44:08  smirnov
 //  %[ER: 16]%
 //  Based Debug (and Assert) errors off of LCS::Exception.
@@ -236,15 +240,14 @@ namespace Debug
 #endif
 };
 
-// Use this macro to conditionally printf a debugging message.
-//    dprintf(1)(format,whatever)
-#define dprintf1(level) if( Debug(level) && Debug::printf_time() ) printf
-#define dprintf(level) if( Debug(level) && Debug::printf_time() ) printf("%s: ",sdebug(0).c_str()),printf
-// use this macro to conditionally stream a debugging message.
+// Use this macro to conditionally stream a debugging message.
 //    cdebug(1)<<whatever
 #define cdebug1(level)  if( Debug(level) && Debug::stream_time() ) ::Debug::dbg_stream
 #define cdebug(level)  cdebug1(level)<<sdebug(0)<<": "
-
+// Use this macro to conditionally printf a debugging message.
+//    dprintf(1)(format,whatever)
+#define dprintf1(level) cdebug1(level)<<Debug::ssprintf
+#define dprintf(level) cdebug(level)<<Debug::ssprintf
 
 // Use this macro to write trace output.
 // Similar as dprintf, but uses iostream instead of printf.
@@ -356,30 +359,28 @@ namespace Debug
 // this global definition of sdebug allows the use of "non-1" macros everywhere
 inline string sdebug (int=0) { return ""; };
 
-// The Throw macro throws an exception, using
-// CodeStatus to add on filename, line, current debugging 
-// context, and possible object debug status. 
-// The default exception type is Debug::Error which is currently
-// typdef-ed as std::logic_error.
-
+// The ThrowExc macro throws an exception of the specified type, using
+// CodeStatus to add on filename, line, current debugging context, and 
+// possible object debug status. 
 const char exception_message[] = "\n==================================== EXCEPTION ================================\n\n";
-#define ThrowExc(exc,msg)  { ::Debug::dbg_stream<<exception_message<<CodeStatus(msg)<<"\n"; throw(exc(CodeStatus_nf(msg),__HERE__)); }
-#define ThrowExc1(exc,msg)  { ::Debug::dbg_stream<<exception_message<<CodeStatus1(msg)<<"\n"; throw(exc(CodeStatus_nf1(msg),__HERE__)); }
+#define ThrowExc(exc,msg)  { cdebug(1)<<exception_message<<CodeStatus(msg)<<endl; throw(exc(CodeStatus_nf(msg),__HERE__)); }
+#define ThrowExc1(exc,msg)  { cdebug1(1)<<exception_message<<CodeStatus1(msg)<<endl; throw(exc(CodeStatus_nf1(msg),__HERE__)); }
 
+// Retain old Throw/Throw1 for compatibility. Throws LCS::Exception.
 #define Throw(msg)  ThrowExc(LCS::Exception,msg)
 #define Throw1(msg) ThrowExc1(LCS::Exception,msg)
 
-// The Assert macro will do a Throw if condition is FALSE.
+// The Assert macro will Throw an AssertError if condition is FALSE.
 #define Assert(cond)  { if( !(cond) ) ThrowExc(LCS::AssertError,"Assert failed: " #cond); }
 #define Assert1(cond)  { if( !(cond) ) ThrowExc1(LCS::AssertError,"Assert failed: " #cond); }
 
-// The FailWhen macro will Throw a message if condition is TRUE
+// The FailWhen macro will Throw a Debug::Fail if condition is TRUE
 // Always defined (even with debugging off)
 #define FailWhen(cond,msg)  { if( cond ) ThrowExc(Debug::Fail,msg); }
 #define FailWhen1(cond,msg)  { if( cond ) ThrowExc1(Debug::Fail,msg); }
 
-// The DbgFailWhen macro is like FailWhen, but
-// defined to do nothing if debugging is off.
+// The DbgFailWhen macro is like FailWhen, but defined to do nothing if 
+// debugging is off.
 #ifdef ENABLE_DBGASSERT
 # define DbgFailWhen(cond,msg)  FailWhen(cond,msg)
 # define DbgFailWhen1(cond,msg)  FailWhen1(cond,msg)
@@ -388,8 +389,8 @@ const char exception_message[] = "\n==================================== EXCEPTI
 # define DbgFailWhen1(cond,msg)  
 #endif
 
-// The DbgAssert macro is like Assert, but
-// defined to do nothing if debugging is off.
+// The DbgAssert macro is like Assert, but defined to do nothing if 
+// debugging is off.
 #ifdef ENABLE_DBGASSERT
 # define DbgAssert(cond) { if( !(cond) ) ThrowExc(LCS::AssertError,"DbgAssert failed: " #cond); }
 # define DbgAssert1(cond) { if( !(cond) ) ThrowExc1(LCS::AssertError,"DbgAssert failed: " #cond); }
@@ -453,8 +454,8 @@ namespace Debug
   // loads debug levels from file (default: progname.debug) 
   void loadLevels ( string fname = "" );
 
-  // copies string into static buffer. NB: current implementation is not
-  // thread-safe, but can be made so.
+  // copies string into static buffer. Thread-safe (i.e. each thread
+  // has its own buffer)
   const char * staticBuffer( const string &str );
 
   // appends strings and inserts a space, if needed
