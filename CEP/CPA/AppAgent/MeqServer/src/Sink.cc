@@ -95,30 +95,31 @@ void Sink::fillTileColumn (T *coldata,const LoShape &colshape,
                            const blitz::Array<U,2> &arr,int icorr)
 {
   const LoShape arrshape = arr.shape();
+  FailWhen(arrshape[1]!=colshape.back(),"shape of child result does not match output column");
   // option 1 is writing to a 2D column with same shape
-  if( colshape == arrshape )
+  if( colshape.size() == 2 && colshape[0] == arrshape[0] )
   {
     blitz::Array<T,2> colarr(coldata,colshape,blitz::neverDeleteData);
     colarr = blitz::cast<T>(arr);
   }
   // option 2 is writing to a cube column using the current correlation
-  else if( colshape.size() == 3 &&
-           colshape[1] == arrshape[1] && colshape[2] == arrshape[2] )
+  else if( colshape.size() == 3 && colshape[1] == arrshape[0] )
   {
     blitz::Array<T,3> colarr(coldata,colshape,blitz::neverDeleteData);
     colarr(icorr,LoRange::all(),LoRange::all()) = blitz::cast<T>(arr);
   }
   else
   {
-    Throw("child result does not match output column format")
+    Throw("shape of child result does not match output column")
   }
 }
   
 //##ModelId=3F98DAE6021E
-int Sink::deliver (const Request &req,VisTile::Ref::Copy &tileref)
+int Sink::deliver (const Request &req,VisTile::Ref::Copy &tileref,
+                   VisTile::Format::Ref &outformat)
 {
   const VisTile &tile = *tileref;
-  const VisTile::Format &tileformat = tile.format();
+  const VisTile::Format * pformat = &(tile.format());
   
   cdebug(3)<<"deliver: processing tile "<<tile.tileId()<<" of "<<tile.ntime()<<" timeslots"<<endl;
   
@@ -140,16 +141,40 @@ int Sink::deliver (const Request &req,VisTile::Ref::Copy &tileref)
     int icol = output_cols[ichild], icorr = child_icorrs[ichild];
     if( icol >= 0 && icorr >= 0 )
     {
-      // make ref writable if so required
+      // make tile writable if so required
       if( !ptile )
       {
         if( !tileref.isWritable() )
           tileref.privatize(DMI::WRITE|DMI::DEEP);
         ptile = tileref.dewr_p();
       }
+      // add output column to tile as needed
+      if( !pformat->defined(icol) )
+      {
+        // if column is not present in default output format, add it
+        if( !outformat.valid() )
+          outformat.copy(tile.formatRef(),DMI::PRESERVE_RW);
+        if( !outformat->defined(icol) )
+        {
+          if( icol == VisTile::PREDICT || icol == VisTile::RESIDUALS )
+          {
+            outformat.privatize(DMI::WRITE|DMI::DEEP);
+            outformat().add(icol,outformat->type(VisTile::DATA),
+                                 outformat->shape(VisTile::DATA));
+          }
+          else
+          {
+            Throw("output column format is not known");
+          }
+        }
+        ptile->changeFormat(outformat);
+        pformat = outformat.deref_p();
+      }
+      // fill column
       void *coldata = ptile->wcolumn(icol);
-      TypeId coltype = tileformat.type(icol);
-      LoShape colshape = tileformat.shape(icol);
+      TypeId coltype = pformat->type(icol);
+      LoShape colshape = pformat->shape(icol);
+      colshape.push_back(tile.nrow()); // add third dimension to column shape
       if( flags[ichild] != RES_FAIL )
       {
         cdebug(3)<<"child "<<ichild<<" result is "<<flags[ichild]<<endl;

@@ -105,7 +105,7 @@ void MSInputAgent::fillHeader (DataRecord &hdr,const DataRecord &select)
   {
     MSAntenna          mssub(ms_.antenna());
     ROMSAntennaColumns mssubc(mssub);
-    num_antennas_ = mssub.nrow();
+    hdr[FNumAntenna] = num_antennas_ = mssub.nrow();
     // Just get all positions as a single array
     hdr[FAntennaPos] = mssubc.position().getColumn();
   }

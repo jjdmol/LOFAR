@@ -1,4 +1,5 @@
 #include "VisDataMux.h"
+#include "AID-MeqServer.h"
 #include <VisCube/VisVocabulary.h>
 #include <MEQ/Forest.h>
 #include <MEQ/Cells.h>
@@ -10,17 +11,33 @@ namespace MEQ
              FStation2      = AidStation|2|AidIndex;
 }
 
+//##ModelId=3F9FF71B006A
+//##ModelId=3F9FF71B00AE
+//##ModelId=3F9FF71B00C7
 MEQ::VisDataMux::VisDataMux (MEQ::Forest &frst)
     : forest_(frst)
 {
+  // use reasonable default
+  handlers_.resize(VisVocabulary::ifrNumber(30,30)+1);
 }
 
 //##ModelId=3F98DAE6024A
 void MEQ::VisDataMux::init (const DataRecord &header)
 {
   // check header for number of stations, use a reasonable default
-  int nstations = header[AidNum|AidAntenna].as<int>(30);
+  int nstations = header[AidNum|AidAntenna].as<int>(-1);
+  if( nstations>0 )
+  {
+    cdebug(2)<<"header indicates "<<nstations<<" stations\n";
+  }
+  else
+  {
+    nstations = 30;
+    cdebug(2)<<"no NumStations parameter in header, assuming 30\n";
+  }
   handlers_.resize(VisVocabulary::ifrNumber(nstations,nstations)+1);
+  // init default output tile format, if found
+  output_format_.attach(header[AidTile|AidFormat].as_p<VisTile::Format>(),DMI::READONLY);
 }
 
 //##ModelId=3F992F280174
@@ -54,7 +71,7 @@ void MEQ::VisDataMux::addNode (Node &check_node)
   node->setDataId(did);
   // add list of handlers for this data id (if necessary)
   if( did >= int(handlers_.size()) )
-    handlers_.resize(did+1);
+    handlers_.resize(did+100);
   // add node to list of handlers
   VisHandlerList &hlist = handlers_[did];
   VisHandlerList::const_iterator iter = hlist.begin();
@@ -95,10 +112,16 @@ int MEQ::VisDataMux::deliver (VisTile::Ref::Copy &tileref)
 {
   int result_flag = 0;
   int did = formDataId(tileref->antenna1(),tileref->antenna2());
+  if( did > int(handlers_.size()) )
+  {
+    cdebug(4)<<"no handlers for did "<<did<<", skipping tile "<<tileref->sdebug(DebugLevel-2)<<endl;
+    return 0;
+  }
   VisHandlerList &hlist = handlers_[did];
   if( hlist.empty() )
   {
     cdebug(4)<<"no handlers for did "<<did<<", skipping tile "<<tileref->sdebug(DebugLevel-2)<<endl;
+    return 0;
   }
   else
   {
@@ -110,7 +133,7 @@ int MEQ::VisDataMux::deliver (VisTile::Ref::Copy &tileref)
     // deliver to all known handlers
     VisHandlerList::iterator iter = hlist.begin();
     for( ; iter != hlist.end(); iter++ )
-      result_flag |= (*iter)->deliver(req,tileref);
+      result_flag |= (*iter)->deliver(req,tileref,output_format_);
   }
   return result_flag;
 }
