@@ -94,21 +94,11 @@ namespace LOFAR
 
     void PersistentObject::retrieve(const ObjectId& oid)
     {
-      // Implementation could be something like:
       doRetrieve(oid, isOwned());
       POContainer::const_iterator it;
       for(it = itsOwnedPOs.begin(); it != itsOwnedPOs.end(); ++it) {
 	(*it)->retrieve(*metaData().oid());
       }
-      // where doRetrieve is defined pure virtual and must be
-      // implemented in TPersistentObject<T>.
-      // Or maybe, we'd have to loop over all elements in POContainer,
-      // exactly the way that e.g. insert() is implemented.
-      // We can do this, because this is a non-static member function.
-      // In that case, however, the result of the query should be stored
-      // in "DTL format", in order to avoid multiple queries to the
-      // database. I think it is possible to do this "caching" in the
-      // static retrieve() method in TPersistentObject<T>.
     }
 
     void PersistentObject::save() const
