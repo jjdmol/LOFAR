@@ -91,6 +91,18 @@ Function:
           12/12/03 done
 
 General:
+    - How to use different (gcc-version-specific) libstdc++ versions?
+      This can be addressed via LD_LIBRARY_PATH; ideally, we'd like to list
+      all gcc/../lib dirs in /etc/ld.so.conf and not worry about it. Can we
+      make the binary select the correct library via DT_RUNPATH somehow (see
+      the ld.so(1) man page)?
+      + solution: pass the following flags to the linker: 
+          --enable-new-dtags -rpath /usr/local/gcc-x.y.z/lib/blahblahblah
+        This adds an RPATH section to the binary which makes it select the
+        correct library.
+
+        merged: * tDataArray segfaults (gcc 3.3.2)
+                  14/01/04: ldd was using wrong libstdc++ version.
 
   * In Debug: add capability to redirect the debug message stream
 
@@ -114,13 +126,6 @@ General:
     race condition somewhere? NB: a sure way to do it (on zeppelin) seems to
     enable wait_reply=T in the Resolve.Children calls in meqtest.g.
     
-  * How to use different (gcc-version-specific) libstdc++ versions?
-    This can be addressed via LD_LIBRARY_PATH; ideally, we'd like to list
-    all gcc/../lib dirs in /etc/ld.so.conf and not worry about it. Can we
-    make the binary select the correct library via DT_RUNPATH somehow (see
-    the ld.so(1) man page)?
-      merged: * tDataArray segfaults (gcc 3.3.2)
-                14/01/04: ldd was using wrong libstdc++ version.
                 
   * DataField: getting a non-existing element as an ObjRef makes the
     element MODIFIED. This can cause confusion later on. Perhaps it
