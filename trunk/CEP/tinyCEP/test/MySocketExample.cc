@@ -46,7 +46,7 @@ namespace LOFAR
 
       itsWHs[0]->getDataManager().getOutHolder(0)->connectTo 
 	( *itsWHs[1]->getDataManager().getInHolder(0),
-	  TH_Socket("127.0.0.1", "127.0.0.1", 8192, false) );
+	  TH_Socket("127.0.0.1", "127.0.0.1", 8192, true) );
 
     } else {
 
@@ -55,7 +55,7 @@ namespace LOFAR
 
       itsWHs[1]->getDataManager().getOutHolder(0)->connectTo 
 	( *itsWHs[0]->getDataManager().getInHolder(0),
-	  TH_Socket("127.0.0.1", "127.0.0.1", 8192, false) );
+	  TH_Socket("127.0.0.1", "127.0.0.1", 8192, true) );
     }
   }
 
