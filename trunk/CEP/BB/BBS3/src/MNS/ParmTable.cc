@@ -20,13 +20,10 @@
 //#
 //# $Id$
 
-#include <BBS3/MNS/ParmTable.h>
-#include <BBS3/MNS/ParmTableAIPS.h>
-#include <BBS3/MNS/ParmTablePGSQL.h>
-#include <BBS3/MNS/ParmTableMySQL.h>
-#include <BBS3/MNS/ParmTableMonet.h>
-#include <BBS3/MNS/ParmTableBDB.h>
-#include <BBS3/MNS/MeqStoredParmPolc.h>
+#include <PSS3/MNS/ParmTable.h>
+#include <PSS3/MNS/ParmTableAIPS.h>
+#include <PSS3/MNS/ParmTableBDB.h>
+#include <PSS3/MNS/MeqStoredParmPolc.h>
 #include <Common/Debug.h>
 #include <casa/Arrays/Vector.h>
 #include <casa/Utilities/GenSort.h>
@@ -36,32 +33,26 @@ using namespace casa;
 namespace LOFAR {
 
 ParmTable::ParmTable (const string& dbType, const string& tableName,
-		      const string& userName, const string& passwd,
-		      const string& hostName)
+		      const string& userName, const string& passwd, const string& hostName)
 : itsRep (0)
 {
   if (dbType == "aips") {
     itsRep = new ParmTableAIPS (userName, tableName);
-  } else if (dbType == "postgres") {
-    itsRep = new ParmTablePGSQL (hostName, userName, tableName);
-  } else if (dbType == "mysql") {
-    itsRep = new ParmTableMySQL (hostName, userName, tableName);
-  } else if (dbType == "monet") {
-    itsRep = new ParmTableMonet (hostName, "monetdb", tableName);
   } else if (dbType == "bdb") {
     itsRep = new ParmTableBDB (userName, tableName);
   } else {
     Assert (dbType=="aips");
   }
+  itsRep->connect();
 }
 
-MeqSourceList ParmTable::getPointSources (const casa::Vector<int>& srcnrs)
+MeqSourceList ParmTable::getPointSources (const Vector<int>& srcnrs)
 {
   vector<MeqExpr*> exprDel;
   return getPointSources (srcnrs, exprDel);
 }
 
-MeqSourceList ParmTable::getPointSources (const casa::Vector<int>& srcnrs,
+MeqSourceList ParmTable::getPointSources (const Vector<int>& srcnrs,
 					  vector<MeqExpr*>& exprDel)
 {
   // Get the vector of all parms containing a source name.
@@ -85,7 +76,7 @@ MeqSourceList ParmTable::getPointSources (const casa::Vector<int>& srcnrs,
     }
   }
   // Sort the srcnrs uniquely.
-  casa::Vector<uInt> index;
+  Vector<uInt> index;
   int nr = GenSortIndirect<int>::sort (index, &srcs[0], srcs.size(),
 				       Sort::Ascending,
 				       Sort::QuickSort|Sort::NoDuplicates);

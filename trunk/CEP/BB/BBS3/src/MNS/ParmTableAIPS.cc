@@ -20,13 +20,17 @@
 //#
 //# $Id$
 
-#include <BBS3/MNS/ParmTableAIPS.h>
-#include <BBS3/MNS/MeqDomain.h>
+#include <PSS3/MNS/ParmTableAIPS.h>
+#include <PSS3/MNS/MeqDomain.h>
 #include <Common/LofarLogger.h>
+#include <tables/Tables/TableDesc.h>
+#include <tables/Tables/SetupNewTab.h>
 #include <tables/Tables/ExprNode.h>
 #include <tables/Tables/ExprNodeSet.h>
 #include <tables/Tables/ScalarColumn.h>
 #include <tables/Tables/ArrayColumn.h>
+#include <tables/Tables/ScaColDesc.h>
+#include <tables/Tables/ArrColDesc.h>
 #include <tables/Tables/TableRecord.h>
 #include <casa/Arrays/Matrix.h>
 #include <casa/Arrays/Vector.h>
@@ -46,6 +50,10 @@ ParmTableAIPS::ParmTableAIPS (const string& userName, const string& tableName)
   itsIndexName   (itsIndex.accessKey(), "NAME"),
   itsInitIndex   (0)
 {
+  itsTableName = string("/tmp/") + userName + string(".") + tableName + string(".MEP");
+
+
+  // these things should be done in the connect (just like the initialization of itsTable etc)
   if (itsTable.keywordSet().isDefined ("DEFAULTVALUES")) {
     itsInitTable = itsTable.keywordSet().asTable ("DEFAULTVALUES");
     itsInitIndex = new ColumnsIndex (itsInitTable,
@@ -63,6 +71,69 @@ ParmTableAIPS::ParmTableAIPS (const string& userName, const string& tableName)
 ParmTableAIPS::~ParmTableAIPS()
 {
   delete itsInitIndex;
+}
+
+void ParmTableAIPS::connect() {
+  // connect was done in the constructor
+}
+
+void ParmTableAIPS::createTable(const string& userName, const string& tableName) {
+  string fullTableName = string("/tmp/") + userName + string(".") + tableName + string(".MEP");
+  TableDesc td("PSS parameter table", TableDesc::New);
+  td.comment() = String("Table containing parameters for PSS");
+  td.addColumn (ScalarColumnDesc<String>("NAME"));
+  td.addColumn (ScalarColumnDesc<Int>   ("SRCNR"));
+  td.addColumn (ScalarColumnDesc<Int>   ("STATNR"));
+  td.addColumn (ScalarColumnDesc<double>("STARTTIME"));
+  td.addColumn (ScalarColumnDesc<double>("ENDTIME"));
+  td.addColumn (ScalarColumnDesc<double>("STARTFREQ"));
+  td.addColumn (ScalarColumnDesc<double>("ENDFREQ"));
+  td.addColumn (ArrayColumnDesc <double>("VALUES"));
+  td.addColumn (ArrayColumnDesc <double>("SIM_VALUES"));
+  td.addColumn (ArrayColumnDesc <double>("SIM_PERT"));
+  td.addColumn (ScalarColumnDesc<double>("TIME0"));
+  td.addColumn (ScalarColumnDesc<double>("FREQ0"));
+  td.addColumn (ScalarColumnDesc<bool>  ("NORMALIZED"));
+  td.addColumn (ArrayColumnDesc <bool>  ("SOLVABLE"));
+  td.addColumn (ScalarColumnDesc<double>("DIFF"));
+  td.addColumn (ScalarColumnDesc<bool>  ("DIFF_REL"));
+
+  SetupNewTable newtab(fullTableName, td, Table::New);
+
+  TableDesc tddef("PSS default parameter values", TableDesc::New);
+  tddef.comment() = String("Table containing default parameters for PSS");
+  tddef.addColumn (ScalarColumnDesc<String>("NAME"));
+  tddef.addColumn (ScalarColumnDesc<Int>   ("SRCNR"));
+  tddef.addColumn (ScalarColumnDesc<Int>   ("STATNR"));
+  tddef.addColumn (ArrayColumnDesc <double>("VALUES"));
+  tddef.addColumn (ArrayColumnDesc <double>("SIM_VALUES"));
+  tddef.addColumn (ArrayColumnDesc <double>("SIM_PERT"));
+  tddef.addColumn (ScalarColumnDesc<double>("TIME0"));
+  tddef.addColumn (ScalarColumnDesc<double>("FREQ0"));
+  tddef.addColumn (ScalarColumnDesc<bool>  ("NORMALIZED"));
+  tddef.addColumn (ArrayColumnDesc <bool>  ("SOLVABLE"));
+  tddef.addColumn (ScalarColumnDesc<double>("DIFF"));
+  tddef.addColumn (ScalarColumnDesc<bool>  ("DIFF_REL"));
+
+  SetupNewTable newdeftab(fullTableName+string("/DEFAULTVALUES"), tddef, Table::New);
+
+  Table tab(newtab);
+  Table deftab(newdeftab);
+  tab.rwKeywordSet().defineTable("DEFAULTVALUES", deftab);  
+
+  tab.tableInfo().setType ("MEP");
+  tab.tableInfo().readmeAddLine ("PSS ME Parameter values");
+  deftab.tableInfo().setType ("MEPinit");
+  deftab.tableInfo().readmeAddLine ("Initial PSS ME Parameter values");
+
+
+  // some descriptions could be added to the tables
+}
+void ParmTableAIPS::clearTable() {
+  Vector<uInt> initRows = itsInitTable.rowNumbers();
+  itsInitTable.removeRow(initRows);
+  Vector<uInt> rows = itsTable.rowNumbers();
+  itsTable.removeRow(rows);
 }
 
 vector<MeqPolc> ParmTableAIPS::getPolcs (const string& parmName,
@@ -125,7 +196,7 @@ MeqPolc ParmTableAIPS::getInitCoeff (const string& parmName,
 	  *itsInitIndexName   = name;
 	  Vector<uInt> rownrs = itsInitIndex->getRowNumbers();
 	  if (rownrs.nelements() > 0) {
-	    ASSERT (rownrs.nelements() == 1);
+	    ASSERTSTR (rownrs.nelements() == 1, "Too many default coefficients in parmtableAIPS");
 	    int row = rownrs(0);
 	    ROArrayColumn<bool> maskCol (itsInitTable, "SOLVABLE");
 	    ROArrayColumn<Double> valCol (itsInitTable, "VALUES");
@@ -200,6 +271,51 @@ void ParmTableAIPS::putCoeff (const string& parmName,
     valCol.put (0, polc.getCoeff().getDoubleMatrix());
   } else {
     putNewCoeff(parmName, srcnr, statnr, polc);
+  }
+}
+
+void ParmTableAIPS::putDefCoeff (const string& parmName,
+			      int srcnr, int statnr,
+			      const MeqPolc& polc)
+{
+  itsInitTable.reopenRW();
+  //const MeqMatrix& values = polc.getCoeff();
+  //const MeqMatrix& simvalues = polc.getSimCoeff();
+  //const MeqMatrix& pertsimvalues = polc.getPertSimCoeff();
+  // First see if the parameter name exists at all.
+  *itsInitIndexSrcnr = srcnr;
+  *itsInitIndexStatnr = statnr;
+  *itsInitIndexName   = parmName;
+  Vector<uInt> rownrs = itsInitIndex->getRowNumbers();
+  if (rownrs.nelements() == 1) {
+    Table sel = itsInitTable(rownrs);
+    uInt rownr=0;
+    ScalarColumn<String> namCol (sel, "NAME");
+    ScalarColumn<int> srcCol   (sel, "SRCNR");
+    ScalarColumn<int> statCol  (sel, "STATNR");
+    ScalarColumn<double> t0Col (sel, "TIME0");
+    ScalarColumn<double> f0Col (sel, "FREQ0");
+    ScalarColumn<bool> normCol (sel, "NORMALIZED");
+    ScalarColumn<double> diffCol (sel, "DIFF");
+    ScalarColumn<bool> drelCol (sel, "DIFF_REL");
+    namCol.put (rownr, parmName);
+    srcCol.put (rownr, srcnr);
+    statCol.put (rownr, statnr);
+    ArrayColumn<double> valCol (sel, "VALUES");
+    ArrayColumn<double> simvalCol (sel, "SIM_VALUES");
+    ArrayColumn<double> simpertCol (sel, "SIM_PERT");
+    valCol.put (rownr, polc.getCoeff().getDoubleMatrix());
+    simvalCol.put (rownr, polc.getSimCoeff().getDoubleMatrix());
+    simpertCol.put (rownr, polc.getPertSimCoeff().getDoubleMatrix());
+    t0Col.put   (rownr, polc.getX0());
+    f0Col.put   (rownr, polc.getY0());
+    normCol.put (rownr, polc.isNormalized());
+    diffCol.put (rownr, polc.getPerturbation());
+    drelCol.put (rownr, polc.isRelativePerturbation());
+  } else if (rownrs.nelements() == 0) {
+    putNewDefCoeff(parmName, srcnr, statnr, polc);
+  } else {
+    ASSERTSTR (false, "Too many default parms with the same name/domain")
   }
 }
 

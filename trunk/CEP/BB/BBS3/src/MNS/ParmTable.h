@@ -24,8 +24,8 @@
 #define MNS_PARMTABLE_H
 
 //# Includes
-#include <BBS3/MNS/MeqPolc.h>
-#include <BBS3/MNS/MeqSourceList.h>
+#include <PSS3/MNS/MeqPolc.h>
+#include <PSS3/MNS/MeqSourceList.h>
 #include <Common/lofar_vector.h>
 
 //# Forward Declarations
@@ -64,11 +64,32 @@ public:
 			 int sourceNr, int station,
 			 const MeqPolc& polc) = 0;
 
+  // Put the default coefficients
+  virtual void putDefCoeff (const string& parmName,
+			    int srcnr, int statnr,
+			    const MeqPolc& polc) = 0;
+
   // Get the names of all sources in the table.
   virtual vector<string> getSources() = 0;
 
   // Unlock the underlying table.
   virtual void unlock() = 0;
+
+  // Connect to the database or table
+  virtual void connect() = 0;
+  // Create the database or table
+  //  This has now become a static function and so it can't be overloaded.
+  //  When creating a new ParmTable class, you can implement this function 
+  //  and use it in parmdb just like with the other ParmTables.
+  //virtual void createTable() = 0;
+  // clear database or table
+  virtual void clearTable() = 0;
+  virtual void putNewDefCoeff (const string& parmName,
+			    int srcnr, int statnr,
+			    const MeqPolc& polc) = 0;
+  virtual void putNewCoeff (const string& parmName,
+			    int srcnr, int statnr,
+			    const MeqPolc& polc) = 0;
 };
 
 
@@ -82,11 +103,10 @@ public:
   // otherwise a database of the given type.
   // For an AIPS++ table, the extension .MEP is added to the table name.
   ParmTable (const string& dbType, const string& tableName,
-	     const string& dbName, const string& pwd,
-	     const string& hostName = "localhost");
+	     const string& dbName, const string& pwd, const string& hostName = "localhost");
 
   ~ParmTable()
-    { delete itsRep; }
+    {delete itsRep; }
 
   // Get the parameter values for the given parameter and domain.
   // The matchDomain argument is set telling if the found parameter
@@ -95,12 +115,16 @@ public:
   vector<MeqPolc> getPolcs (const string& parmName,
 			    int sourceNr, int station,
 			    const MeqDomain& domain)
-    { return itsRep->getPolcs (parmName, sourceNr, station, domain);}
+    { 
+      return itsRep->getPolcs (parmName, sourceNr, station, domain); 
+    }
 
   // Get the initial polynomial coefficients for the given parameter.
   MeqPolc getInitCoeff (const string& parmName,
 			int sourceNr, int station)
-    { return itsRep->getInitCoeff (parmName, sourceNr, station);}
+    { 
+      return itsRep->getInitCoeff (parmName, sourceNr, station); 
+    }
 
   // Put the polynomial coefficient for the given parameter and domain.
   void putCoeff (const string& parmName,
@@ -128,6 +152,7 @@ private:
   ParmTable& operator= (const ParmTable&);
 
   ParmTableRep* itsRep;
+
 };
 
 }
