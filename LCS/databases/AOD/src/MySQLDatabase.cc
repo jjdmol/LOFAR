@@ -142,6 +142,10 @@ void	MySQLDatabase::try2connect ()
 		return;
 	}
 
+	struct timeval	t1, t2;
+	int				ds, du;
+	gettimeofday(&t1, 0L);
+
 	// Allocate connection and try to connect
 	itsConn = new Connection(true);
 	itsConn->connect (database(), server(),
@@ -153,12 +157,20 @@ void	MySQLDatabase::try2connect ()
 	// Update state
 	LofarDatabase::connected(true);
 
+	gettimeofday(&t2, 0L);
+	ds = t2.tv_sec - t1.tv_sec;
+	du = t2.tv_usec - t1.tv_usec;
+	if (t2.tv_usec < t1.tv_usec) {
+		ds -= 1;
+		du += 1000000;
+	}
+	cout << "connect time: " << ds << "." << du << endl;
 }
 
 int		MySQLDatabase::add		(const char	*fields,
 								 const char	*values)
 {
-	char	sqlCmd[512];
+	char	sqlCmd[4096];
 
 	// Construct an INSERT statement
 	sprintf (sqlCmd, "INSERT INTO %s (%s) VALUES (%s)", tablename(), fields,
@@ -174,7 +186,7 @@ int		MySQLDatabase::add		(const char	*fields,
 
 int		MySQLDatabase::remove	(const char	*condition)
 {
-	char	sqlCmd[512];
+	char	sqlCmd[4096];
 
 	// Construct an DELETE statement
 	if (condition && *condition)
@@ -201,7 +213,7 @@ int		MySQLDatabase::find		(const char	*fields,
 								 char		**result)
 
 {
-	char			sqlCmd[512];
+	char			sqlCmd[4096];
 	const char		*fieldList = "*";
 	struct timeval	t1, t2;
 	int				ds, du;
@@ -218,6 +230,7 @@ int		MySQLDatabase::find		(const char	*fields,
 																	condition);
 	else
 		sprintf (sqlCmd, "SELECT %s FROM %s", fieldList, tablename());
+	cout << "Query: " << sqlCmd << endl;
 
 	// Execute the query
 	gettimeofday(&t1, 0L);
@@ -231,9 +244,8 @@ int		MySQLDatabase::find		(const char	*fields,
 	}
 
 	// Show some results
-	cout << "Query: " << sqlCmd << endl;
 	cout << "Found " << res.size() << " records" << endl;
-	cout << "time: " << ds << "." << du << endl;
+	cout << "find time: " << ds << "." << du << endl;
 
 	if (res.size() < 10) {
 		// variables for showing the results
@@ -267,7 +279,9 @@ int		MySQLDatabase::find		(const char	*fields,
 int		MySQLDatabase::update	(const char	*condition,
 								 const char	*modification)
 {
-	char	sqlCmd[512];
+	char	sqlCmd[4096];
+	struct timeval	t1, t2;
+	int				ds, du;
 
 	// Construct an SELECT statement
 	if (condition && *condition)
@@ -277,10 +291,20 @@ int		MySQLDatabase::update	(const char	*condition,
 		sprintf (sqlCmd, "UPDATE %s SET %s", tablename(), modification);
 
 	// Execute the query
+	gettimeofday(&t1, 0L);
 	itsQuery->exec(sqlCmd);
+	gettimeofday(&t2, 0L);
+	ds = t2.tv_sec - t1.tv_sec;
+	du = t2.tv_usec - t1.tv_usec;
+	if (t2.tv_usec < t1.tv_usec) {
+		ds -= 1;
+		du += 1000000;
+	}
 
-	printf ("%d rows were modified by the cmd: %s\n", itsConn->affected_rows(), 
-																		sqlCmd);
+	cout << itsConn->affected_rows() << " rows were modified by the cmd: " << 
+																sqlCmd << endl;
+	cout << "update time: " << ds << "." << du << endl;
+
 	return itsConn->affected_rows();
 }
 
