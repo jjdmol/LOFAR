@@ -8,5 +8,6 @@ NoWH_Dump        = 1,
 SzDH_RSP         = 6000,   # Size (payload in bytes) of RSP ethernet frame
 NoRSPbeamlets    = 92,     # Number of beamlets in one EPA-packet
 NoPacketsInFrame = 8,      # Number of EPA-packets in one RSP ethernet frame
-SzEPAheader      = 14      # Size (in bytes) of the header of an EPA-packet
+SzEPAheader      = 14,     # Size (in bytes) of the header of an EPA-packet
+outFileName      = "/tmp/StationCorrelator.out" # Filename for dump outputfile
 

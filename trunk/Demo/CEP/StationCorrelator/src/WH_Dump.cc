@@ -9,6 +9,8 @@
 
 
 #include <stdio.h>           // for sprintf
+#include <sys/types.h>       // for file output
+#include <fcntl.h>           // for file output
 
 // General includes
 #include <Common/LofarLogger.h>
@@ -21,34 +23,33 @@
 using namespace LOFAR;
 
 
-WH_Dump::WH_Dump(const string& name,
-		 const KeyValueMap& kvm)
-
-  : WorkHolder(1, 0, name, "WH_Dump"),
-    itsKVM    (kvm)
+WH_Dump::WH_Dump(const string& name, KeyValueMap& kvm)
+  : WorkHolder(kvm.getInt("NoWH_Correlator",1)/kvm.getInt("NoWH_Dump", 1), 0, name, "WH_Dump"),
+    itsOutputFile(0),
+    itsBandwidth(0),
+    itsKvm(kvm)
 {
-  itsNelements      = itsKVM.getInt("stations", 2);
-  itsNchannels      = itsKVM.getInt("channels", 46);
-  itsNpolarisations = itsKVM.getInt("polarisations", 2);
-
-  getDataManager().addInDataHolder(0, new DH_Vis("in_", 
-						 itsNelements, 
-						 itsNchannels, 
-						 itsNpolarisations));
-
-  starttime.tv_sec = 0;
-  starttime.tv_usec = 0;
-
-  stoptime.tv_sec = 0;
-  stoptime.tv_usec = 0;
+  itsOutputFileName = kvm.getString("outFileName", "StatCor.out");
+  itsNelements      = kvm.getInt("stations", 2);
+  itsNchannels      = kvm.getInt("channels", 46);
+  itsNpolarisations = kvm.getInt("polarisations", 2);
+  // We are behind the correlator so we have the amount of polarisation is squared
+  itsNpolarisations = itsNpolarisations*itsNpolarisations; 
   
-  bandwidth = 0.0;
+  char DHName[20];
+  for (int i=0; i<itsNinputs; i++) {
+    sprintf(DHName, "input_%3d_of_%3d", i, itsNinputs);
+    getDataManager().addInDataHolder(i, new DH_Vis(DHName, 
+						   itsNelements, 
+						   itsNchannels, 
+						   itsNpolarisations));
+  }
 
-  itsIndex = 0;
+  itsLastTime.tv_sec = 0;
+  itsLastTime.tv_usec = 0;
 }
 
 WH_Dump::~WH_Dump() {
-
 }
 
 WorkHolder* WH_Dump::construct (const string& name, 
@@ -57,30 +58,76 @@ WorkHolder* WH_Dump::construct (const string& name,
   return new WH_Dump(name, kvm);
 }
 
-WH_Dump* WH_Dump::make(const string& name) 
-{
-  return new WH_Dump(name, itsKVM);
+WH_Dump* WH_Dump::make(const string& name) {
+
+  return new WH_Dump(name, itsKvm); 
+}
+
+void WH_Dump::preprocess() {
+  cout<<"opening "<<itsOutputFileName<<endl;
+  int openFlags = O_WRONLY | O_CREAT | O_TRUNC | O_LARGEFILE;
+  mode_t permissions = S_IREAD | S_IWRITE | S_IRGRP | S_IROTH;
+  itsOutputFile = open(itsOutputFileName.c_str(), openFlags, permissions);
+  ASSERTSTR(itsOutputFile != -1, "Could not open outputfile " << itsOutputFileName);
 }
 
 void WH_Dump::process() {
+  cout<<"in wh process"<<endl;
 
-  // negative indices are invalid. This are results calculated from 
-  // uninitialized values.
-//   cout << "COR [" << itsIndex++ <<"]: "<< *((DH_Vis*)getDataManager().getInHolder(0))->getBufferElement(0,0,0,0) << endl;
-  if (starttime.tv_sec != 0 && starttime.tv_usec != 0) {
-    // determine the approximate bandwidth. This does include some overhead 
-    // incurred by the framework, but earlier measurements put this in the 
-    // order of 1-2%
-    gettimeofday(&stoptime, NULL);
+  struct timeval newTime;
+  long recSize = 0;
+  long written = 0;
+  long totalWritten = 0;
+  long totalWrittenKB = 0;
+  DH_Vis* dhp;
 
-    bandwidth = ((DH_Vis*)getDataManager().getInHolder(0))->getBufSize()*sizeof(DH_Vis::BufferType)/
-      (stoptime.tv_sec + 1.0e-6*stoptime.tv_usec -
-       starttime.tv_sec + 1.0e-6*starttime.tv_usec);
-
+  // Right now we write to disk per frequency block
+  // If the data is sorted in DH_Vis in the right way, we could also read blocks
+  //   of memory from it.
+  DH_Vis::BufferPrimitive freqBlock[itsNelements*itsNelements*itsNpolarisations];
+  
+  for (int i=0; i<itsNinputs; i++) {
+    dhp = (DH_Vis*)getDataManager().getInHolder(i);
+    recSize += dhp->getBufSize()*sizeof(DH_Vis::BufferType);
+    for (int channel=0; channel<itsNchannels; channel++) {
+      for (int el1=0; el1<itsNelements; el1++){
+	for (int el2=el1+1; el2<itsNelements; el2++){
+	  int offsetIm = el1 * (itsNelements * itsNpolarisations) + el2 * itsNpolarisations;
+	  int offsetRe = el2 * (itsNelements * itsNpolarisations) + el1 * itsNpolarisations;
+	  for (int pol=0; pol<itsNpolarisations; pol++){
+	    freqBlock[ offsetIm + pol ] = dhp->getBufferElement(el1, el2, channel, pol)->imag();
+	    freqBlock[ offsetRe + pol ] = dhp->getBufferElement(el1, el2, channel, pol)->real();
+	  }
+	}
+      }
+    written = write(itsOutputFile, freqBlock, itsNelements * itsNelements * itsNpolarisations);
+    if (written == -1) {
+      cerr<<"Something went wrong during write!"<<endl;
+    }
+    totalWritten += written;
+    // there is no error checking yet
+    }
   }
-  
-  
-  gettimeofday(&starttime, NULL);
+  recSize = recSize / 1024; // from now recSize is in kB
+  totalWrittenKB = totalWritten / 1024;
+  gettimeofday(&newTime, NULL);
+  if (itsLastTime.tv_sec != 0) {
+    double elapsed = newTime.tv_sec - itsLastTime.tv_sec + 10e-6*(newTime.tv_usec - itsLastTime.tv_usec);
+    itsBandwidth = recSize/elapsed;
+    cout << "Received " 
+	 << recSize << " kB (" 
+	 << itsBandwidth / elapsed << " kB/s), written " 
+	 << written << " kB (" 
+	 << written / elapsed <<" kB/s)"
+	 << endl;    
+  }
+
+  memcpy(&itsLastTime, &newTime, sizeof(struct timeval));
+}
+
+void WH_Dump::postProcess() {
+  close(itsOutputFile);
+  itsOutputFile = 0;
 }
 
 void WH_Dump::dump() {
