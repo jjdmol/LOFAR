@@ -25,6 +25,7 @@
 #ifndef RCUWRITE_H_
 #define RCUWRITE_H_
 
+#include "MEPHeader.h"
 #include "SyncAction.h"
 
 namespace RSP
@@ -56,6 +57,7 @@ namespace RSP
       virtual GCFEvent::TResult handleack(GCFEvent& event, GCFPortInterface& port);
 
     private:
+      EPA_Protocol::MEPHeader m_hdr;
   };
 };
      

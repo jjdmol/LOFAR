@@ -41,6 +41,7 @@ using namespace blitz;
 BstRead::BstRead(GCFPortInterface& board_port, int board_id, uint8 type)
   : SyncAction(board_port, board_id, BST_N_FRAGMENTS), m_type(type)
 {
+  memset(&m_hdr, 0, sizeof(MEPHeader));
 }
 
 BstRead::~BstRead()
@@ -71,6 +72,7 @@ void BstRead::sendrequest()
       break;
   }
 
+  m_hdr = bstread.hdr;
   getBoardPort().send(bstread);
 }
 
@@ -98,7 +100,19 @@ inline complex<double> convert_uint32_to_double(complex<uint32> val)
 
 GCFEvent::TResult BstRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
 {
+  if (EPA_STATS != event.signal)
+  {
+    LOG_WARN("BstRead::handleack: unexpected ack");
+    return GCFEvent::NOT_HANDLED;
+  }
+
   EPAStatsEvent ack(event);
+
+  if (!ack.hdr.isValidAck(m_hdr))
+  {
+    LOG_ERROR("BstRead::handleack: invalid ack");
+    return GCFEvent::NOT_HANDLED;
+  }
 
   uint16 offset = ack.hdr.m_fields.offset / MEPHeader::N_PHASE / sizeof(int32);
   

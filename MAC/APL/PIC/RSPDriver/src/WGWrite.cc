@@ -40,6 +40,7 @@ using namespace RSP_Protocol;
 WGWrite::WGWrite(GCFPortInterface& board_port, int board_id)
   : SyncAction(board_port, board_id, GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL)
 {
+  memset(&m_hdr, 0, sizeof(MEPHeader));
 }
 
 WGWrite::~WGWrite()
@@ -70,8 +71,7 @@ void WGWrite::sendrequest()
   wgsettings.nof_samples = w()(global_rcu).nof_samples;
   wgsettings.mode        = w()(global_rcu).mode;
   
-//  memcpy(&wgsettings.freq, w()(blitz::Range(global_blp,global_blp)).data(), sizeof(WGSettings::WGRegisterType));
-
+  m_hdr = wgsettings.hdr;
   getBoardPort().send(wgsettings);
 }
 
@@ -82,13 +82,18 @@ void WGWrite::sendrequest_status()
 
 GCFEvent::TResult WGWrite::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
 {
-  LOG_DEBUG("handleack");
+  if (EPA_WRITEACK != event.signal)
+  {
+    LOG_WARN("WGWrite::handleack: unexpected ack");
+    return GCFEvent::NOT_HANDLED;
+  }
 
   EPAWriteackEvent ack(event);
 
-  if (ack.hdr.m_fields.error)
+  if (!ack.hdr.isValidAck(m_hdr))
   {
-    LOG_ERROR_STR("WGWrite::handleack: error " << ack.hdr.m_fields.error);
+    LOG_ERROR("WGWrite::handleack: invalid ack");
+    return GCFEvent::NOT_HANDLED;
   }
   
   return GCFEvent::HANDLED;

@@ -42,6 +42,7 @@ using namespace blitz;
 SSRead::SSRead(GCFPortInterface& board_port, int board_id)
   : SyncAction(board_port, board_id, GET_CONFIG("RS.N_BLPS", i))
 {
+  memset(&m_hdr, 0, sizeof(MEPHeader));
 }
 
 SSRead::~SSRead()
@@ -54,6 +55,7 @@ void SSRead::sendrequest()
   ssread.hdr.set(MEPHeader::SS_SELECT_HDR, getCurrentBLP(),
 		 MEPHeader::READ);
 
+  m_hdr = ssread.hdr;
   getBoardPort().send(ssread);
 }
 
@@ -64,12 +66,19 @@ void SSRead::sendrequest_status()
 
 GCFEvent::TResult SSRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
 {
-  LOG_DEBUG("handleack");
-
-  if (event.signal != EPA_SS_SELECT)
+  if (EPA_SS_SELECT != event.signal)
   {
-    LOG_WARN_STR("unrecognised event: " << event.signal);
-    return GCFEvent::HANDLED;
+    LOG_WARN("SSRead::handleack: unexpected ack");
+    return GCFEvent::NOT_HANDLED;
+  }
+
+  // unpack ss message
+  EPASsSelectEvent ss(event);
+
+  if (!ss.hdr.isValidAck(m_hdr))
+  {
+    LOG_ERROR("SSRead::handleack: invalid ack");
+    return GCFEvent::NOT_HANDLED;
   }
 
   uint8 global_blp = (getBoardId() * GET_CONFIG("RS.N_BLPS", i)) + getCurrentBLP();
@@ -78,9 +87,6 @@ GCFEvent::TResult SSRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
 
   LOG_DEBUG(formatString(">>>> SSRead(%s) global_blp=%d",
 			 getBoardPort().getName().c_str(), global_blp));
-  
-  // unpack ss message
-  EPASsSelectEvent ss(event);
   
   // create array point to data in the response event
   Array<uint16, 1> subbands((uint16*)&ss.ch,

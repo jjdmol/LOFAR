@@ -39,6 +39,7 @@ using namespace EPA_Protocol;
 RCUWrite::RCUWrite(GCFPortInterface& board_port, int board_id)
   : SyncAction(board_port, board_id, GET_CONFIG("RS.N_BLPS", i))
 {
+  memset(&m_hdr, 0, sizeof(MEPHeader));
 }
 
 RCUWrite::~RCUWrite()
@@ -59,6 +60,7 @@ void RCUWrite::sendrequest()
   memcpy(&rcusettings.x, &x, sizeof(uint8));
   memcpy(&rcusettings.y, &y, sizeof(uint8));
 
+  m_hdr = rcusettings.hdr;
   getBoardPort().send(rcusettings);
 }
 
@@ -69,11 +71,18 @@ void RCUWrite::sendrequest_status()
 
 GCFEvent::TResult RCUWrite::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
 {
-  EPAWriteackEvent ack(event);
-  
-  if (ack.hdr.m_fields.error)
+  if (EPA_WRITEACK != event.signal)
   {
-    LOG_ERROR_STR("RCUWrite::handleack: error " << ack.hdr.m_fields.error);
+    LOG_WARN("RCUWrite::handleack:: unexpected ack");
+    return GCFEvent::NOT_HANDLED;
+  }
+  
+  EPAWriteackEvent ack(event);
+
+  if (!ack.hdr.isValidAck(m_hdr))
+  {
+    LOG_ERROR("RCUWrite::handleack: invalid ack");
+    return GCFEvent::NOT_HANDLED;
   }
 
   return GCFEvent::HANDLED;

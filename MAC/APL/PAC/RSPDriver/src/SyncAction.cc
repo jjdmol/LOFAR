@@ -32,7 +32,7 @@ using namespace RSP;
 using namespace LOFAR;
 using namespace EPA_Protocol;
 
-#define N_RETRIES 2
+#define N_RETRIES 10
 
 SyncAction::SyncAction(GCFPortInterface& board_port, int board_id, int n_blps)
   : GCFFsm((State)&SyncAction::idle_state),
@@ -139,7 +139,7 @@ GCFEvent::TResult SyncAction::waitack_state(GCFEvent& event, GCFPortInterface& p
 
     case EPA_READACK_ERROR:
     case EPA_WRITEACK_ERROR:
-      LOG_ERROR("\nRead/write error during SyncAction. Aborting sync action.\n");
+      LOG_ERROR("Read/write error during SyncAction. Aborting sync action.");
 
       setCompleted(true); // done with this statemachine
       TRAN(SyncAction::idle_state);
@@ -155,27 +155,32 @@ GCFEvent::TResult SyncAction::waitack_state(GCFEvent& event, GCFPortInterface& p
 	// OK, move on to the next BLP
 	m_current_blp++;
 	m_retries = 0;
+
+	if (m_current_blp < m_n_blps)
+	{
+	  // send next bit of data
+	  TRAN(SyncAction::sendrequest_state);
+	}
+	else
+	{
+	  // we've completed the update
+	  setCompleted(true); // done with this statemachine
+	  TRAN(SyncAction::idle_state);
+	}
       }
       else
       {
+	//
+	// didn't receive what we expected, simply wait
+	// for another (hopefully correct) event,
+	// but only allow m_retries of these situations.
+	//
 	if (m_retries++ > N_RETRIES)
 	{
 	  // abort
 	  LOG_FATAL("maximum retries reached!");
 	  exit(EXIT_FAILURE);
 	}
-      }
-
-      if (m_current_blp < m_n_blps)
-      {
-	// send next bit of data
-	TRAN(SyncAction::sendrequest_state);
-      }
-      else
-      {
-	// we've completed the update
-	setCompleted(true); // done with this statemachine
-	TRAN(SyncAction::idle_state);
       }
     }
     break;

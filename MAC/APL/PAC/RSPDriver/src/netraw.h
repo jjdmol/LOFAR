@@ -1,6 +1,5 @@
-//#  -*- mode: c++ -*-
 //#
-//#  StatusRead.h: Synchronize system status with RSP hardware.
+//#  netraw.cc: change capabilities to allow raw ethernet access by non-root user.
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -22,43 +21,11 @@
 //#
 //#  $Id$
 
-#ifndef STATUSREAD_H_
-#define STATUSREAD_H_
+#ifndef __NETRAW_H_
+#define __NETRAW_H_
 
-#include "SyncAction.h"
-#include "MEPHeader.h"
+#if defined(ENABLE_CAP_NET_RAW)
+bool enable_cap_net_raw();
+#endif
 
-namespace RSP
-{
-  class StatusRead : public SyncAction
-  {
-    public:
-      /**
-       * Constructors for a StatusRead object.
-       */
-      StatusRead(GCFPortInterface& board_port, int board_id);
-	  
-      /* Destructor for StatusRead. */
-      virtual ~StatusRead();
-
-      /**
-       * Send the read message.
-       */
-      virtual void sendrequest();
-
-      /**
-       * This will be an empty implementation.
-       */
-      virtual void sendrequest_status();
-
-      /**
-       * Handle the read result.
-       */
-      virtual GCFEvent::TResult handleack(GCFEvent& event, GCFPortInterface& port);
-
-    private:
-      EPA_Protocol::MEPHeader m_hdr;
-  };
-};
-     
-#endif /* STATUSREAD_H_ */
+#endif

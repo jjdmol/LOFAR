@@ -41,6 +41,7 @@ using namespace blitz;
 SstRead::SstRead(GCFPortInterface& board_port, int board_id, uint8 type)
   : SyncAction(board_port, board_id, GET_CONFIG("RS.N_BLPS", i) * SST_N_FRAGMENTS), m_type(type)
 {
+  memset(&m_hdr, 0, sizeof(MEPHeader));
 }
 
 SstRead::~SstRead()
@@ -71,6 +72,7 @@ void SstRead::sendrequest()
       break;
   }
 
+  m_hdr = sstread.hdr;
   getBoardPort().send(sstread);
 }
 
@@ -98,7 +100,19 @@ inline complex<double> convert_uint32_to_double(complex<uint32> val)
 
 GCFEvent::TResult SstRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
 {
+  if (EPA_STATS != event.signal)
+  {
+    LOG_WARN("SstRead::handleack: unexpected ack");
+    return GCFEvent::NOT_HANDLED;
+  }
+
   EPAStatsEvent ack(event);
+
+  if (!ack.hdr.isValidAck(m_hdr))
+  {
+    LOG_ERROR("SstRead::handleack: invalid ack");
+    return GCFEvent::NOT_HANDLED;
+  }
 
   uint8 global_blp = (getBoardId() * GET_CONFIG("RS.N_BLPS", i)) + (getCurrentBLP() / SST_N_FRAGMENTS);
 

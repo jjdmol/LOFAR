@@ -47,6 +47,7 @@ BWWrite::BWWrite(GCFPortInterface& board_port, int board_id, int regid)
   : SyncAction(board_port, board_id, GET_CONFIG("RS.N_BLPS", i) * BF_N_FRAGMENTS),
     m_regid(regid)
 {
+  memset(&m_hdr, 0, sizeof(MEPHeader));
 }
 
 BWWrite::~BWWrite()
@@ -141,7 +142,8 @@ void BWWrite::sendrequest()
     }
     break;
   }
-  
+
+  m_hdr = bfcoefs.hdr;
   getBoardPort().send(bfcoefs);
 }
 
@@ -152,13 +154,18 @@ void BWWrite::sendrequest_status()
 
 GCFEvent::TResult BWWrite::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
 {
-  LOG_DEBUG("handleack");
+  if (EPA_WRITEACK != event.signal)
+  {
+    LOG_WARN("BWWrite::handleack: unexpected ack");
+    return GCFEvent::NOT_HANDLED;
+  }
   
   EPAWriteackEvent ack(event);
-  
-  if (ack.hdr.m_fields.error)
+
+  if (!ack.hdr.isValidAck(m_hdr))
   {
-    LOG_ERROR_STR("BWWrite::handleack: error " << ack.hdr.m_fields.error);
+    LOG_ERROR("BWWrite::handleack: invalid ack");
+    return GCFEvent::NOT_HANDLED;
   }
 
   return GCFEvent::HANDLED;

@@ -47,6 +47,7 @@ BWRead::BWRead(GCFPortInterface& board_port, int board_id, int regid)
   : SyncAction(board_port, board_id, GET_CONFIG("RS.N_BLPS", i) * BF_N_FRAGMENTS),
     m_regid(regid)
 {
+  memset(&m_hdr, 0, sizeof(MEPHeader));
 }
 
 BWRead::~BWRead()
@@ -92,7 +93,8 @@ void BWRead::sendrequest()
 		      MEPHeader::READ, N_COEF * sizeof(int16), offset * sizeof(int16));
       break;
   }
-  
+
+  m_hdr = bfcoefs.hdr;
   getBoardPort().send(bfcoefs);
 }
 
@@ -103,14 +105,24 @@ void BWRead::sendrequest_status()
 
 GCFEvent::TResult BWRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
 {
-  uint16 offset = ((getCurrentBLP() % BF_N_FRAGMENTS) * MEPHeader::FRAGMENT_SIZE) / sizeof(int16);
+  if (EPA_BF_COEFS != event.signal)
+  {
+    LOG_WARN("BWRead::handleack: unexpected ack");
+    return GCFEvent::NOT_HANDLED;
+  }
 
-  if (event.signal != EPA_BF_COEFS) return GCFEvent::HANDLED;
+  EPABfCoefsEvent bfcoefs(event);
+
+  if (!bfcoefs.hdr.isValidAck(m_hdr))
+  {
+    LOG_ERROR("BWRead::handlack: invalid ack");
+    return GCFEvent::NOT_HANDLED;
+  }
+  
+  uint16 offset = ((getCurrentBLP() % BF_N_FRAGMENTS) * MEPHeader::FRAGMENT_SIZE) / sizeof(int16);
 
   uint8 global_blp = (getBoardId() * GET_CONFIG("RS.N_BLPS", i)) + (getCurrentBLP() / BF_N_FRAGMENTS);
 
-  EPABfCoefsEvent bfcoefs(event);
-  
   // copy weights from the message to the cache
   Array<complex<int16>, 2> weights((complex<int16>*)&bfcoefs.coef,
 				   shape(N_COEF / MEPHeader::N_PHASEPOL, MEPHeader::N_POL),
