@@ -132,10 +132,9 @@ Socket::~Socket()
 {
 	LOG_TRACE_OBJ (formatString("~Socket(%d)", itsSocketID));
 
-	if (itsSocketID >=0) {
-		LOG_TRACE_FLOW(formatString("close(%d)", itsSocketID));
-		close (itsSocketID);
-	}
+        if (close() != SK_OK) {
+          LOG_ERROR(formatString(errstr().c_str()));
+        }
 
 	if (itsIsServer && (itsType == Socket::UNIX) && itsUnixAddr.sun_path[0]) {
 		int32 result = unlink(itsUnixAddr.sun_path);
@@ -189,7 +188,7 @@ int32 Socket::initServer (const string& service, int32 protocol, int32 backlog)
 	if ((::bind (itsSocketID, addrPtr,addrLen )) < 0) {
 		LOG_DEBUG(formatString("Socket(%d):Bind error for port %s, err = %d", 
 										itsSocketID, itsPort.c_str(), errno));
-		close(itsSocketID);
+		::close(itsSocketID);
 		itsSocketID = -1;
 		return (setErrno(BIND));
 	}
@@ -202,7 +201,7 @@ int32 Socket::initServer (const string& service, int32 protocol, int32 backlog)
 			LOG_DEBUG(formatString(
 					"Socket(%d):Listen error for port %s, err = %d(%s)", 
 					itsSocketID, itsPort.c_str(), errno, strerror(errno)));
-			close(itsSocketID);
+			::close(itsSocketID);
 			itsSocketID = -1;
 			return (setErrno(LISTEN));
 		}
@@ -300,7 +299,7 @@ int32 Socket::initUnixSocket(bool		asServer)
 												itsSocketID, path.c_str()));
 
     if (setDefaults() < 0) {
-		close (itsSocketID);
+		::close (itsSocketID);
 		itsSocketID = -1;
 		return (itsErrno);
     }
@@ -402,7 +401,7 @@ int32 Socket::initTCPSocket(bool	asServer)
 
     // set default options
     if (setDefaults() < 0) {
-		close(itsSocketID);
+		::close(itsSocketID);
 		itsSocketID = -1;
 		return (itsErrno);
 	}
@@ -642,6 +641,20 @@ Socket* Socket::accept(int32	waitMs)
 }
 
 
+int32 Socket::close()
+{
+  if (itsSocketID < 0) {
+    return itsErrno = NOINIT;
+  }
+  if (itsIsConnected) {
+    LOG_TRACE_FLOW(formatString("close(%d)", itsSocketID));
+    if (::close(itsSocketID) < 0) {
+      return setErrno(CLOSE);
+    }
+  }
+  return itsErrno = SK_OK;
+}
+
 //
 // shutdown (receive = true, send = true)
 //
@@ -667,7 +680,7 @@ int32 Socket::shutdown (bool receive, bool send)
 	}
 
 	if (send && receive) {				// update administration
-		close(itsSocketID);
+		::close(itsSocketID);
 		itsSocketID    = -1;
 		itsIsConnected = false;
 	}
@@ -956,8 +969,9 @@ string Socket::errstr () const
 		"timeout (%d: %s)",
 		"connect in progress (%d: %s)",
 		"No more clients (%d: %s)",
-		"General failure",
-		"Uninitialized socket" 
+		"Shutdown failure(%d: %s)",
+                "Close failure(%d: %s)",
+		"Uninitialized socket"
 	};  
 
 	if (itsErrno < NOINIT || itsErrno > 0) {

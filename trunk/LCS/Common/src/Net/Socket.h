@@ -107,6 +107,9 @@ public:
 	//
 	Socket* accept(int32 waitMs = -1);
 
+  // Close the socket. 
+  int32 close();
+
 	// Shuts down the socket for receive and/or send
 	int32 shutdown(bool receive = true, bool send = true);
 
@@ -176,61 +179,62 @@ public:
 	// Get human readable reason for failure.
 	string errstr() const;
 
-	// Socket errorcode
-	inline int32			errcode() 		const;
-	// System errorcode
-	inline int32			errnoSys()		const;
-	// Socket ID (filedesc.)
-	inline int32			getSid()		const;
-	// Protocoltype
-	inline int16			getType()		const;
-	// Socket role
-	inline bool				isServer()		const;
-	// Connected to other side
-	inline bool				isConnected()	const;
-	// in blocking mode or not
-	inline bool				isBlocking()	const;
-	// Host connected to
-	inline const string&	host()			const;
-	// Port connected to
-	inline const string&	port()			const;
-	// Connected and no errors
-	inline bool				ok()			const;
-	//# </group>
-	
+        // Socket errorcode
+        inline int32                    errcode()               const;
+        // System errorcode
+        inline int32                    errnoSys()              const;
+        // Socket ID (filedesc.)
+        inline int32                    getSid()                const;
+        // Protocoltype
+        inline int16                    getType()               const;
+        // Socket role
+        inline bool                             isServer()              const;
+        // Connected to other side
+        inline bool                             isConnected()   const;
+        // in blocking mode or not
+        inline bool                             isBlocking()    const;
+        // Host connected to
+        inline const string&    host()                  const;
+        // Port connected to
+        inline const string&    port()                  const;
+        // Connected and no errors
+        inline bool                             ok()                    const;
+        //# </group>
+
 	//# Additional Public Declarations
 	// Socket types. 
-	typedef enum { 
-		UDP,			///< UDP datagram socket
-		TCP,			///< TCP(stream) socket over network
-		UNIX,			///< unix socket(local)
-		LOCAL=UNIX 
-	} SocketTypes;
+        typedef enum { 
+                UDP,                    ///< UDP datagram socket
+                TCP,                    ///< TCP(stream) socket over network
+                UNIX,                   ///< unix socket(local)
+                LOCAL=UNIX 
+        } SocketTypes;
 
 	// Error codes
-	typedef enum {
-		SK_OK         =  0,	///< Ok
-		SOCKET        = -1,	///< Can't create socket
-		BIND          = -2,	///< Can't bind local address
-		CONNECT       = -3,	///< Can't connect to server
-		ACCEPT        = -4,	///< Can't accept client socket
-		BADHOST       = -5,	///< Bad server host name given
-		BADADDRTYPE   = -6,	///< Bad address type
-		READERR       = -7,	///< Read error
-		WRITERR       = -8,	///< Write error
-		PEERCLOSED    = -9,	///< Remote client closed connection
-		INCOMPLETE    = -10,	///< Couldn't read/write whole message
-		INVOP         = -11,	///< Invalid operation
-		SOCKOPT       = -12,	///< sockopt() failure
-		PORT          = -13,	///< wrong port/service specified
-		PROTOCOL      = -14,	///< invalid protocol
-		LISTEN        = -15,	///< listen() error
-		TIMEOUT       = -16,	///< timeout
-		INPROGRESS    = -17,	///< connect() in progress
-		NOMORECLI     = -18,	///< No more clients
-		SHUTDOWN      = -19,	///< shutdown() failure
-		NOINIT        = -20	///< uninitialized socket
-	} ErrorCodes;
+        typedef enum {
+                SK_OK         =  0,     ///< Ok
+                SOCKET        = -1,     ///< Can't create socket
+                BIND          = -2,     ///< Can't bind local address
+                CONNECT       = -3,     ///< Can't connect to server
+                ACCEPT        = -4,     ///< Can't accept client socket
+                BADHOST       = -5,     ///< Bad server host name given
+                BADADDRTYPE   = -6,     ///< Bad address type
+                READERR       = -7,     ///< Read error
+                WRITERR       = -8,     ///< Write error
+                PEERCLOSED    = -9,     ///< Remote client closed connection
+                INCOMPLETE    = -10,    ///< Couldn't read/write whole message
+                INVOP         = -11,    ///< Invalid operation
+                SOCKOPT       = -12,    ///< sockopt() failure
+                PORT          = -13,    ///< wrong port/service specified
+                PROTOCOL      = -14,    ///< invalid protocol
+                LISTEN        = -15,    ///< listen() error
+                TIMEOUT       = -16,    ///< timeout
+                INPROGRESS    = -17,    ///< connect() in progress
+                NOMORECLI     = -18,    ///< No more clients
+                SHUTDOWN      = -19,    ///< shutdown() failure
+                CLOSE         = -20,	///< close() failure
+                NOINIT        = -21     ///< uninitialized socket
+        } ErrorCodes;
 
 protected:
 	// Constructs a generic socket for an incoming connection on a server
@@ -262,34 +266,34 @@ private:
 
 	//# ---------- Data Members ----------
 
-	// Name of socket given by user
-	string				itsSocketname;
-	// Own error number
-	int32				itsErrno;
-	// System error number
-	int32				itsSysErrno;
-	// File descriptor of the socket
-	int32				itsSocketID;
-	// Socket type
-	int16				itsType;
-	// Server or Client Socket
-	bool				itsIsServer;
-	// Connected or not
-	bool				itsIsConnected;
-	// Name of host at other side
-	string				itsHost;
-	// Portnr of server
-	string				itsPort;
-	// Interrupt read/write block call
-	bool				itsAllowIntr;
-	// Socket is initialized
-	bool				itsIsInitialized;
-	// Blocking mode or not
-	bool				itsIsBlocking;
-	// Connected client address(TCP)
-	struct sockaddr_in		itsTCPAddr;
-	// Connected client address(UNIX)
-	struct sockaddr_un		itsUnixAddr;
+        // Name of socket given by user
+        string                          itsSocketname;
+        // Own error number
+        int32                           itsErrno;
+        // System error number
+        int32                           itsSysErrno;
+        // File descriptor of the socket
+        int32                           itsSocketID;
+        // Socket type
+        int16                           itsType;
+        // Server or Client Socket
+        bool                            itsIsServer;
+        // Connected or not
+        bool                            itsIsConnected;
+        // Name of host at other side
+        string                          itsHost;
+        // Portnr of server
+        string                          itsPort;
+        // Interrupt read/write block call
+        bool                            itsAllowIntr;
+        // Socket is initialized
+        bool                            itsIsInitialized;
+        // Blocking mode or not
+        bool                            itsIsBlocking;
+        // Connected client address(TCP)
+        struct sockaddr_in              itsTCPAddr;
+        // Connected client address(UNIX)
+        struct sockaddr_un              itsUnixAddr;
 
 	//# Support for sigpipes
 	const volatile int32*	sigpipeCounter;
