@@ -253,25 +253,25 @@ void MeqWsrtInt::calcResult (const MeqRequest& request)
 	  if (itsStat1->getResult11().isDefined(spinx)) {
 	    ps11 = itsStat1->getResult11().getPerturbedValue(spinx).getDComplex();
 	  }
-	  if (itsStat1->getResult11().isDefined(spinx)) {
+	  if (itsStat1->getResult12().isDefined(spinx)) {
 	    ps12 = itsStat1->getResult12().getPerturbedValue(spinx).getDComplex();
 	  }
-	  if (itsStat1->getResult11().isDefined(spinx)) {
+	  if (itsStat1->getResult21().isDefined(spinx)) {
 	    ps21 = itsStat1->getResult21().getPerturbedValue(spinx).getDComplex();
 	  }
-	  if (itsStat1->getResult11().isDefined(spinx)) {
+	  if (itsStat1->getResult22().isDefined(spinx)) {
 	    ps22 = itsStat1->getResult22().getPerturbedValue(spinx).getDComplex();
 	  }
-	  if (itsStat1->getResult11().isDefined(spinx)) {
+	  if (itsStat2->getResult11().isDefined(spinx)) {
 	    pconj11 = conj(itsStat2->getResult11().getPerturbedValue(spinx).getDComplex());
 	  }
-	  if (itsStat1->getResult11().isDefined(spinx)) {
+	  if (itsStat2->getResult12().isDefined(spinx)) {
 	    pconj12 = conj(itsStat2->getResult12().getPerturbedValue(spinx).getDComplex());
 	  }
-	  if (itsStat1->getResult11().isDefined(spinx)) {
+	  if (itsStat2->getResult21().isDefined(spinx)) {
 	    pconj21 = conj(itsStat2->getResult21().getPerturbedValue(spinx).getDComplex());
 	  }
-	  if (itsStat1->getResult11().isDefined(spinx)) {
+	  if (itsStat2->getResult22().isDefined(spinx)) {
 	    pconj22 = conj(itsStat2->getResult22().getPerturbedValue(spinx).getDComplex());
 	  }
 	  if (evalxx[spinx]) {

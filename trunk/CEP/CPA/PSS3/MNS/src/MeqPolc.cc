@@ -81,6 +81,7 @@ MeqResult MeqPolc::getResult (const MeqRequest& request)
 	result.setPerturbedValue (itsSpidInx[0],
 				  MeqMatrix(itsCoeff.getDouble()
 					    + itsPerturbation.getDouble()));
+	result.setPerturbation (itsSpidInx[0], itsPerturbation);
       }
     } else { 
       result.setValue (MeqMatrix(itsCoeff.getDComplex()));
@@ -88,8 +89,9 @@ MeqResult MeqPolc::getResult (const MeqRequest& request)
 	result.setPerturbedValue (itsSpidInx[0],
 				  MeqMatrix(itsCoeff.getDComplex()
 					    + itsPerturbation.getDComplex()));
+	result.setPerturbation (itsSpidInx[0], itsPerturbation);
       }
-   }
+    }
   } else {
     // The polynomial has multiple coefficients.
     // Get the step and start values in the normalized domain.
@@ -272,21 +274,21 @@ MeqResult MeqPolc::getResult (const MeqRequest& request)
 	valy += stepy;
       }
     }
-  }
-  // Set the perturbations.
-  if (itsMaxNrSpid) {
-    if (itsCoeff.isDouble()) {
-      const double* pert  = itsPerturbation.doubleStorage();
-      for (unsigned int i=0; i<itsSpidInx.size(); i++) {
-	if (itsSpidInx[i] >= 0) {
-	  result.setPerturbation (itsSpidInx[i], pert[i]);
+    // Set the perturbations.
+    if (itsMaxNrSpid) {
+      if (itsCoeff.isDouble()) {
+	const double* pert  = itsPerturbation.doubleStorage();
+	for (unsigned int i=0; i<itsSpidInx.size(); i++) {
+	  if (itsSpidInx[i] >= 0) {
+	    result.setPerturbation (itsSpidInx[i], pert[i]);
+	  }
 	}
-      }
-    } else {
-      const complex<double>* pert  = itsPerturbation.dcomplexStorage();
-      for (unsigned int i=0; i<itsSpidInx.size(); i++) {
-	if (itsSpidInx[i] >= 0) {
-	  result.setPerturbation (itsSpidInx[i], pert[i]);
+      } else {
+	const complex<double>* pert  = itsPerturbation.dcomplexStorage();
+	for (unsigned int i=0; i<itsSpidInx.size(); i++) {
+	  if (itsSpidInx[i] >= 0) {
+	    result.setPerturbation (itsSpidInx[i], pert[i]);
+	  }
 	}
       }
     }
