@@ -52,10 +52,11 @@ namespace LOFAR
         if (isNull()) return;
         os << "(";
         itsValue.print(os);
-        os << ")" << itsOperation;
+        os << itsOperation;
         itsLower.print(os);
         os << " AND ";
         itsUpper.print(os);
+        os << ")";
       }
 
       Expr BetweenExprNode::getConstraint() const
@@ -86,9 +87,7 @@ namespace LOFAR
       void InExprNode::print(std::ostream& os) const
       {
         if (isNull()) return;
-        os << "(";
         itsLeft.print(os);
-        os << ")";
         if (!itsRight.empty()) {
           ostringstream oss;
           Collection<Expr>::const_iterator it;
@@ -172,9 +171,8 @@ namespace LOFAR
           }
         }
 
-        os << "(";
         itsLeft.print(os);
-        os << ")" << itsOperation << pattern << " ESCAPE '\\\\'";
+        os << itsOperation << pattern << " ESCAPE '\\\\'";
       }
 
 
