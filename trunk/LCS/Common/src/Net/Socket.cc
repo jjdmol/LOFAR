@@ -478,23 +478,27 @@ int32 Socket::connect (int32 waitMs)
 		return (itsErrno = INPROGRESS);
 	}
 
-#if defined(__sun)
+#ifdef HAVE_BGL
+	errno = 0;
+#else
+# if defined(__sun)
 	char		connRes [16];
 	int			resLen = sizeof(connRes);
 	if ((getsockopt(itsSocketID, SOL_SOCKET, SO_ERROR, connRes, &resLen))) {
 		return (setErrno(CONNECT));		// getsockopt failed, assume conn failed
 	}
 	errno = atoi(connRes);				// put it were it belongs
-#else
+# else
 	int32		connRes;				// check for sys errors
 	socklen_t	resLen = sizeof(connRes);
 	if ((getsockopt(itsSocketID, SOL_SOCKET, SO_ERROR, &connRes, &resLen))) {
 		return (setErrno(CONNECT));		// getsockopt failed, assume conn failed
 	}
 	errno = connRes;					// put it were it belongs
-#endif
+# endif
+#endif	// HAVE_BGL
 
-	if (connRes != 0) {					// not yet connected
+	if (errno != 0) {					// not yet connected
 		LOG_DEBUG(formatString("Socket(%d):delayed connect failed also, err=%d(%s)",
 											itsSocketID, errno, strerror(errno)));
 		if ((errno == EINPROGRESS) || (errno == EALREADY)) {
@@ -597,27 +601,29 @@ Socket* Socket::accept(int32	waitMs)
 		return (0);
 	}
 
-#if defined(__sun)
+#ifndef HAVE_BGL
+# if defined(__sun)
 	char		connRes [16];
 	int			resLen = sizeof(connRes);
 	if ((getsockopt(itsSocketID, SOL_SOCKET, SO_ERROR, connRes, &resLen))) {
-#else
+# else
 	int32		connRes;				// check for errors
 	socklen_t	resLen = sizeof(connRes);
 	if ((getsockopt(itsSocketID, SOL_SOCKET, SO_ERROR, &connRes, &resLen))) {
-#endif
+# endif
 		setErrno(ACCEPT);				// getsockopt failed, assume conn failed
 		return (0);
 	}
 
-#if defined (__sun)
+# if defined (__sun)
 	if (atoi(connRes) != 0) {			// not yet connected
-#else
+# else
 	if (connRes != 0) {					// not yet connected
-#endif
+# endif
 		setErrno(INPROGRESS);
 		return (0);
 	}
+#endif // HAVE_BGL
 
 	newSocketID = ::accept(itsSocketID, addrPtr, &addrLen);
 	ASSERT (newSocketID > 0);
@@ -766,7 +772,7 @@ int32 Socket::read (void	*buf, int32	maxBytes)
 			}
 
 			if (bytesRead == 0) {					// conn reset by peer?
-				shutdown();
+//!!				shutdown();
 				return (setErrno(PEERCLOSED));
 			}
 
@@ -777,7 +783,7 @@ int32 Socket::read (void	*buf, int32	maxBytes)
 	}
   
 	if (sigpipe) {
-		shutdown();
+//!!		shutdown();
 		return (setErrno(PEERCLOSED));
 	}
 
@@ -858,7 +864,7 @@ int32 Socket::write (const void*	buf, int32	nrBytes)
 			}
 
 			if (bytesWritten == 0) {
-				shutdown();
+//!!				shutdown();
 				return (itsErrno = PEERCLOSED);
 			}
 
@@ -869,7 +875,7 @@ int32 Socket::write (const void*	buf, int32	nrBytes)
 	}
   
 	if (sigpipe) {
-		shutdown();
+//!!		shutdown();
 		return (itsErrno = PEERCLOSED);
 	}
   
@@ -1030,6 +1036,7 @@ int32 Socket::setDefaults ()
 
 	setBlocking(itsIsBlocking);				// be sure blocking mode is right.
 
+#ifndef HAVE_BGL
 	uint32 			val = 1;
 	struct linger 	lin = { 1, 1 };
 
@@ -1052,6 +1059,7 @@ int32 Socket::setDefaults ()
 															sizeof(lin)) < 0) {
 		return (setErrno(SOCKOPT));
 	}
+#endif  // HAVE_BGL
 
 	return (SK_OK);
 }
