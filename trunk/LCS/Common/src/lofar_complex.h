@@ -33,7 +33,7 @@ namespace LOFAR
   using std::tan;
   using std::exp;
   using std::sqrt;
-  using std::conj;
+  //    using std::conj;
 }
 
 #ifdef MAKE_LOFAR_SYMBOLS_GLOBAL
@@ -44,7 +44,7 @@ using std::cos;
 using std::tan;
 using std::exp;
 using std::sqrt;
-using std::conj;
+//using std::conj;
 #endif
 
 #endif
