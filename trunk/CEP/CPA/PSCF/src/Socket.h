@@ -12,7 +12,7 @@
 
 //## Module: Socket%3C90D43B0094; Package specification
 //## Subsystem: Networking%3C90D442031F
-//## Source file: F:\lofar8\oms\LOFAR\CEP\CPA\PSCF\src\pscf\Socket.h
+//## Source file: F:\lofar8\oms\LOFAR\CEP\CPA\PSCF\src\Socket.h
 
 #ifndef Socket_h
 #define Socket_h 1

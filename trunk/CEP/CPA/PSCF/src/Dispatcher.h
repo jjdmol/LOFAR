@@ -27,6 +27,7 @@
 #include <sys/time.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include "Timestamp.h"
 //## end module%3C7B7F300041.includes
 
 // WPInterface

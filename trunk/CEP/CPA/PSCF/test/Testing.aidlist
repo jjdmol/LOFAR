@@ -1,8 +1,8 @@
-Count                            84         # from /home/oms/LOFAR/autoconf_share/../CEP/CPA/PSCF/test/Testing.aidlist:1
-Data                             83         # from /home/oms/LOFAR/autoconf_share/../CEP/CPA/PSCF/test/Testing.aidlist:2
-EchoWP                           40         # from /home/oms/LOFAR/autoconf_share/../CEP/CPA/PSCF/test/Testing.aidlist:3
-Invert                           61         # from /home/oms/LOFAR/autoconf_share/../CEP/CPA/PSCF/test/Testing.aidlist:4
-Ping                             85         # from /home/oms/LOFAR/autoconf_share/../CEP/CPA/PSCF/test/Testing.aidlist:5
-Pong                             43         # from /home/oms/LOFAR/autoconf_share/../CEP/CPA/PSCF/test/Testing.aidlist:6
-Reply                            37         # from /home/oms/LOFAR/autoconf_share/../CEP/CPA/PSCF/test/Testing.aidlist:7
-Timestamp                        87         # from /home/oms/LOFAR/autoconf_share/../CEP/CPA/PSCF/src/pscf/PSCF.aidlist:21
+Count                            82         ; from /home/oms/LOFAR/autoconf_share/../CEP/CPA/PSCF/test/Testing.aidlist:1
+Data                             81         ; from /home/oms/LOFAR/autoconf_share/../CEP/CPA/PSCF/test/Testing.aidlist:2
+EchoWP                           68         ; from /home/oms/LOFAR/autoconf_share/../CEP/CPA/PSCF/test/Testing.aidlist:3
+Invert                           76         ; from /home/oms/LOFAR/autoconf_share/../CEP/CPA/PSCF/test/Testing.aidlist:4
+Ping                             83         ; from /home/oms/LOFAR/autoconf_share/../CEP/CPA/PSCF/test/Testing.aidlist:5
+Pong                             71         ; from /home/oms/LOFAR/autoconf_share/../CEP/CPA/PSCF/test/Testing.aidlist:6
+Reply                            66         ; from /home/oms/LOFAR/autoconf_share/../CEP/CPA/PSCF/test/Testing.aidlist:7
+Timestamp                        85         ; from /home/oms/LOFAR/autoconf_share/../CEP/CPA/PSCF/src/PSCF.aidlist:19

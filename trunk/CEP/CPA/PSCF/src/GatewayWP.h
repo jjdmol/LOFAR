@@ -12,7 +12,7 @@
 
 //## Module: GatewayWP%3C90BFDD0236; Package specification
 //## Subsystem: PSCF%3C5A73670223
-//## Source file: F:\lofar8\oms\LOFAR\CEP\CPA\PSCF\src\pscf\GatewayWP.h
+//## Source file: F:\lofar8\oms\LOFAR\CEP\CPA\PSCF\src\GatewayWP.h
 
 #ifndef GatewayWP_h
 #define GatewayWP_h 1
@@ -26,7 +26,7 @@
 //## end module%3C90BFDD0236.includes
 
 // Socket
-#include "pscf/Socket.h"
+#include "Socket.h"
 // WorkProcess
 #include "WorkProcess.h"
 //## begin module%3C90BFDD0236.declarations preserve=no

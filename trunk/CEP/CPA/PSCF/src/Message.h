@@ -23,6 +23,7 @@
 //## end module%3C7B7F2F0248.additionalIncludes
 
 //## begin module%3C7B7F2F0248.includes preserve=yes
+#include "TID-PSCF.h"
 //## end module%3C7B7F2F0248.includes
 
 // SmartBlock
