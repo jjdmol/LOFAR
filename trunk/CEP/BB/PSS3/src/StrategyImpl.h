@@ -1,4 +1,4 @@
-//#  Solution.cc: 
+//#  StrategyImpl.h: A base class for all calibration strategies
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,35 +20,42 @@
 //#
 //#  $Id$
 
+#ifndef PSS3_STRATEGYIMPL_H
+#define PSS3_STRATEGYIMPL_H
+
+#if defined(HAVE_CONFIG_H)
+#include <config.h>
+#endif
+
+//# Includes
+#include <aips/Arrays/Vector.h>
+#include <Common/lofar_string.h>
 #include <PSS3/Solution.h>
 
+//# Forward Declarations
+class Calibrator;
 
-Solution::Solution():
-  itsSolFlag(false),
-  itsRank(0),
-    itsFit(0.),
-  itsMu(0.),
-  itsStddev(0.),
-  itsChi(0.) {
-}
+// This is a base class for all calibration strategies.
 
-Solution::~Solution() {
-}
+class StrategyImpl
+{
+public:
+  StrategyImpl();
 
-void Solution::init() {
-  itsSolFlag = false;
-  itsRank = 0;
-  itsFit = 0.;
-  itsMu = 0.;
-  itsStddev = 0.;
-  itsChi = 0.;
-}
+  virtual ~StrategyImpl();
 
-void Solution::show(ostream& os) const {
-  os << "itsSolFlag: " <<  itsSolFlag << endl;
-  os << "itsRank   : " <<  itsRank    << endl;
-  os << "itsFit    : " <<  itsFit     << endl;
-  os << "itsMu     : " <<  itsMu      << endl;
-  os << "itsStddev : " <<  itsStddev  << endl;
-  os << "itsChi    : " <<  itsChi     << endl;
-}
+  /// Execute the strategy
+  virtual bool execute(Vector<String>& paramNames,     // Parameters for which 
+		                                       // to solve  
+		       Vector<float>& paramValues,    // Parameter values
+		       Solution& solutionQuality) = 0; // Solution quality
+    
+  /// Get strategy implementation type
+  virtual string getType() const = 0;
+
+ private:
+
+};
+
+
+#endif

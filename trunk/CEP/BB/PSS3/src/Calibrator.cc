@@ -20,9 +20,9 @@
 //
 // $Id: 
 
-#include <CAL/MeqCalibraterImpl.h>
+#include <PSS3/MeqCalibraterImpl.h>
 #include <Common/lofar_iostream.h>
-#include <Calibrator.h>
+#include <PSS3/Calibrator.h>
 
 const int DefaultAntennaCount = 21;
 

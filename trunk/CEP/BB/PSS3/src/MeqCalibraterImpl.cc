@@ -20,8 +20,8 @@
 //#
 //# $Id$
 
-#include <CAL/MeqCalibraterImpl.h>
-#include <CAL/Solution.h>
+#include <PSS3/MeqCalibraterImpl.h>
+#include <PSS3/Solution.h>
 
 #include <MNS/MeqJonesNode.h>
 #include <MNS/MeqStatExpr.h>

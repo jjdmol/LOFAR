@@ -20,8 +20,8 @@
 //#
 //# $Id$
 
-#ifndef CAL_MEQCALIBRATER_H
-#define CAL_MEQCALIBRATER_H
+#ifndef PSS3_MEQCALIBRATER_H
+#define PSS3_MEQCALIBRATER_H
 
 class Solution;
 #include <aips/Arrays/Matrix.h>
@@ -51,7 +51,7 @@ class Solution;
 #include <MNS/MeqLofarStatSources.h>
 #include <MNS/MeqStatUVW.h>
 #include <MNS/ParmTable.h>
-#include <CAL/Solution.h>
+#include <PSS3/Solution.h>
 
 /*!
  * Class to perform self-calibration on a MeasurementSet using the
