@@ -39,7 +39,7 @@ ParmTable::ParmTable (const string& dbType, const string& tableName,
 : itsRep (0)
 {
   if (dbType == "aips") {
-    itsRep = new ParmTableAIPS (tableName);
+    itsRep = new ParmTableAIPS (userName, tableName);
   } else if (dbType == "postgres") {
     itsRep = new ParmTablePGSQL (hostName, userName, tableName);
   } else if (dbType == "mysql") {

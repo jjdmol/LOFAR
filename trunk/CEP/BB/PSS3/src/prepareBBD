@@ -30,7 +30,7 @@
 DBTYPE="mysql"
 HOST="lofar6"
 BBHOST="dop50"
-USER="zwart"
+USER=`whoami`
 
 while [ 1 = 1 ]
 do

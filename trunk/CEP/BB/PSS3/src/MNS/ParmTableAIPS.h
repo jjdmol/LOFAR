@@ -39,7 +39,7 @@ class ParmTableAIPS : public ParmTableRep, public ParmTableFiller
 public:
   // Create the ParmTableAIPS object.
   // The extension .MEP is added to the table name.
-  explicit ParmTableAIPS (const string& tableName);
+  explicit ParmTableAIPS (const string& userName, const string& tableName);
 
   virtual ~ParmTableAIPS();
 

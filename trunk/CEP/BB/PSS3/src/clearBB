@@ -27,7 +27,7 @@
 # -user    User
 
 BBHOST="dop50"
-BBUSER="zwart"
+BBUSER=`whoami`
 
 while [ 1 = 1 ]
 do

@@ -33,7 +33,7 @@ TABLEFILLER="src/fillsqldb"
 
 DBTYPE="mysql"
 HOST="localhost"
-USER="zwart"
+USER=`whoami`
 
 while [ 1 = 1 ]
 do
