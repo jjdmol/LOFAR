@@ -63,6 +63,9 @@ namespace LOFAR
     bool hasInputSelector();
     bool hasOutputSelector();
 
+    void setDoAutoTriggerIn(bool trigger);
+    void setDoAutoTriggerOut(bool trigger);
+
     bool doAutoTriggerIn(int channel) const;
     bool doAutoTriggerOut(int channel) const;
 
@@ -101,6 +104,8 @@ namespace LOFAR
     int itsInputRate;
     int itsOutputRate;
 
+    bool itsDoAutoTriggerIn;
+    bool itsDoAutoTriggerOut;
   };
 
 inline int MiniDataManager::getInputs() const
@@ -115,11 +120,17 @@ inline bool MiniDataManager::hasInputSelector()
 inline bool MiniDataManager::hasOutputSelector()
 { return false; }
 
+inline void MiniDataManager::setDoAutoTriggerIn(bool trigger) 
+{ itsDoAutoTriggerIn = trigger; }
+
+inline void MiniDataManager::setDoAutoTriggerOut(bool trigger) 
+{ itsDoAutoTriggerOut = trigger; }
+
 inline bool MiniDataManager::doAutoTriggerIn(int channel) const
-{ return false; }
+{ return itsDoAutoTriggerIn; }
 
 inline bool MiniDataManager::doAutoTriggerOut(int channel) const
-{ return false; }
+{ return itsDoAutoTriggerOut; }
 
 inline void MiniDataManager::setProcessRate(int rate)
 { itsProcessRate = rate; }
