@@ -18,9 +18,9 @@ int main(int argc, char *argv[])
 
   Dispatcher dsp;
   dsp.attach(new MSIntegratorWP, DMI::ANON);
-  dsp.attach(new UVSorterWP(0,5),DMI::ANON);
-  dsp.attach(new UVSorterWP(0,8),DMI::ANON);
-  dsp.attach(new UVPMessagesToFileWP("test.ms", "test.pvd"), DMI::ANON);
+  //  dsp.attach(new UVSorterWP(0,5),DMI::ANON);
+  //  dsp.attach(new UVSorterWP(0,8),DMI::ANON);
+  dsp.attach(new UVPMessagesToFileWP("test.ms", "test.pvd", false), DMI::ANON);
 
   initGateways(dsp);
   dsp.start();

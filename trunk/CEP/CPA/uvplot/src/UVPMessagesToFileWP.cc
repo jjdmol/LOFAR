@@ -9,14 +9,54 @@
 //====================>>>  UVPMessagesToFileWP::UVPMessagesToFileWP  <<<====================
 
 UVPMessagesToFileWP::UVPMessagesToFileWP(const std::string& inputFilename,
-                         const std::string& outputFilename)
+                                         const std::string& outputFilename,
+                                         bool               useSorter)
   : WorkProcess(AidUVPMessagesToFileWP),
     itsInputFilename(inputFilename),
     itsBOIO(outputFilename, BOIO::WRITE),
     itsIntegratorIsPresent(false),
     itsSorterIsPresent(false),
-    itsIntegratorIsStarted(false)
+    itsIntegratorIsStarted(false),
+    itsUseSorter(useSorter)
 {
+  itsSorterHeaderHIID  = HIID(AidUVData|
+                              AidAny|  // UV-Set ID
+                              AidAny|  // Segment ID
+                              AidPatch|
+                              AidAny|  // Patch ID
+                              AidHeader|
+                              AidCorr|
+                              AidIFR);
+
+  itsSorterMessageHIID = HIID(AidUVData|
+                              AidAny| // UV-Set ID
+                              AidAny| // Segment ID
+                              AidPatch|
+                              AidAny| // Patch ID
+                              AidData|
+                              AidCorr|
+                              AidIFR|
+                              AidAny| // Correlation ID
+                              AidAny);// IFR
+
+  itsIntegraterHeaderHIID  = HIID(AidUVData|
+                                  AidAny|
+                                  AidAny|
+                                  AidPatch|
+                                  AidAny|
+                                  AidHeader|
+                                  AidCorr|
+                                  AidTimeslot);
+  itsIntegraterMessageHIID = HIID(AidUVData|
+                                  AidAny|
+                                  AidAny|
+                                  AidPatch|
+                                  AidAny|
+                                  AidData|
+                                  AidCorr|
+                                  AidTimeslot|
+                                  AidAny|
+                                  AidAny);
 }
 
 
@@ -30,29 +70,13 @@ void UVPMessagesToFileWP::init()
 {
   WorkProcess::init();
 
-
-  itsHeaderHIID  = HIID(AidUVData|
-                        AidAny|  // UV-Set ID
-                        AidAny|  // Segment ID
-                        AidPatch|
-                        AidAny|  // Patch ID
-                        AidHeader|
-                        AidCorr|
-                        AidIFR);
-
-  itsMessageHIID = HIID(AidUVData|
-                        AidAny| // UV-Set ID
-                        AidAny| // Segment ID
-                        AidPatch|
-                        AidAny| // Patch ID
-                        AidData|
-                        AidCorr|
-                        AidIFR|
-                        AidAny| // Correlation ID
-                        AidAny);// IFR
-
-  subscribe(itsHeaderHIID);
-  subscribe(itsMessageHIID);
+  if(itsUseSorter) {
+    subscribe(itsSorterHeaderHIID);
+    subscribe(itsSorterMessageHIID);
+  } else {
+    subscribe(itsIntegraterHeaderHIID);
+    subscribe(itsIntegraterMessageHIID);
+  }
   subscribe(MsgHello|"MSIntegratorWP.*");
   subscribe(MsgHello|"UVSorterWP.*");
 }
@@ -97,7 +121,8 @@ int UVPMessagesToFileWP::receive(MessageRef &messageRef)
     itsBOIO << message;
   }
   
-  if(itsIntegratorIsPresent && itsSorterIsPresent) {
+  if( (itsIntegratorIsPresent && itsSorterIsPresent && !itsIntegratorIsStarted && itsUseSorter) ||
+      (itsIntegratorIsPresent && !itsIntegratorIsStarted && !itsUseSorter)) {
     DataRecord *IntMsg(new DataRecord);
     
     (*IntMsg)["MS"]          = itsInputFilename;
