@@ -207,19 +207,19 @@ ssize_t GCFPort::send(GCFEvent& e)
 
   if (SPP == _type)
   {
-    if (F_EVT_INOUT(e) & F_IN)
+    if (!(F_EVT_INOUT(e) & F_OUT))
     {
       LOFAR_LOG_ERROR(TM_STDOUT_LOGGER, (
           "Trying to send IN event '%s' on SPP "
 		      "port '%s'; discarding this event.",
 		      getTask()->evtstr(e), _name.c_str()));
-         
+
       return -1; // RETURN
     }
   }
   else if (SAP == _type)
   {
-    if (F_EVT_INOUT(e) & F_OUT)
+    if (!(F_EVT_INOUT(e) & F_IN))
     {
       LOFAR_LOG_ERROR(TM_STDOUT_LOGGER, (
           "Trying to send OUT event '%s' on SAP "
