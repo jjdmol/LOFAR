@@ -67,13 +67,6 @@ namespace LOFAR {
     EXCEPTION_CLASS(QueryError, Exception);
 
     //
-    // This exception is thrown when a called method is not (yet) implemented.
-    // One common situation for this exception is the use of a template
-    // method for which a specialization is required.
-    //
-    EXCEPTION_CLASS(NotImplemented, Exception);
-
-    //
     // This exception is thrown when an error occurs within the 
     // PersistenceBroker class.
     //
