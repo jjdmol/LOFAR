@@ -55,7 +55,7 @@ lofar_DEBUG_OPTIMIZE
 lofar_QATOOLS
 lofar_DOCXX
 lofar_BLITZ(1)
-lofar_FFTW
+lofar_FFTW2
 lofar_LAPACK
 lofar_PACKAGE(LCS/Common)
 

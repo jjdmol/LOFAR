@@ -57,7 +57,7 @@ lofar_MPI
 lofar_QATOOLS
 lofar_DOCXX
 lofar_BLITZ
-lofar_FFTW
+lofar_FFTW2
 lofar_LAPACK(1)
 
 lofar_PACKAGE(BaseSim)

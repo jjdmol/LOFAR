@@ -26,7 +26,7 @@
 #include <Common/LofarLogger.h>
 #include <Common/lofar_vector.h>
 
-#ifdef HAVE_FFTW
+#ifdef HAVE_FFTW2
 # include <rfftw.h>
 # include <fftw.h>
 #endif
@@ -311,7 +311,7 @@ namespace LOFAR
 
     LoVec_dcomplex hilbert (const LoVec_double& input)
     {
-#ifdef HAVE_FFTW
+#ifdef HAVE_FFTW2
       int npts = input.size();
       int centre;
       rfftwnd_plan fftplancomplex_forward = rfftwnd_create_plan(1, &npts, FFTW_REAL_TO_COMPLEX, FFTW_ESTIMATE);

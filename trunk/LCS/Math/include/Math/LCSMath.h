@@ -26,7 +26,7 @@
 //# Includes
 #include <Common/Lorrays-Blitz.h>
 
-#ifdef HAVE_FFTW
+#ifdef HAVE_FFTW2
 # include <rfftw.h>
 # include <fftw.h>
 #endif
