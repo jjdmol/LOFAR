@@ -12,6 +12,8 @@
 [+ DEFINE protocol_name +][+ (string-upcase (base-name)) +][+ ENDDEF +]
 [+ DEFINE event_class_member_type +][+ IF (*== (get "type") "]") +][+ (substring (get "type") 0 (string-index (get "type") #\[)) +][+ ELSE +][+ (get "type") +][+ ENDIF +][+ ENDDEF +]
 [+ DEFINE event_class_member +][+ event_class_member_type +][+ IF (*== (get "type") "[]") +]*[+ ENDIF +] [+ (get "name") +][+ IF (and (*== (get "type") "]") (not (*== (get "type") "[]"))) +][+ (substring (get "type") (string-index (get "type") #\[) (string-length (get "type"))) +][+ ENDIF +][+ ENDDEF +]
+[+ DEFINE from_type +][+ IF (or (== (get "type") "long") (== (get "type") "int")) +]Py[+ (string-capitalize! (get "type")) +]_FromLong[+ ELSE +][+ IF (or (== (get "type") "float") (== (get "type") "double")) +]PyFloat_FromDouble[+ ELSE +][+ ENDIF +][+ ENDIF +][+ ENDDEF +]
+[+ DEFINE to_type +][+ IF (or (== (get "type") "long") (== (get "type") "int")) +]Py[+ (string-capitalize! (get "type")) +]_AsLong(o);[+ ELSE +][+ IF (or (== (get "type") "float") (== (get "type") "double")) +]PyFloat_AsDouble(o);[+ ELSE +][+ ENDIF +][+ ENDIF +][+ ENDDEF +]
 
 [+ (out-pop) +]
 //
@@ -46,8 +48,9 @@ const char* [+ protocol_name +]_signalnames[] =
 %include std_string.i
 [+ FOR include "" +]
 %include [+ (get "include") +][+ ENDFOR +]
-%array_class(int, int_array)
-%array_class(char, char_array)
+[+ FOR unbounded_array_types "" +][+ FOR type "" +]
+%array_class([+ (get "type") +], [+ (get "type") +]_array)
+[+ ENDFOR +][+ ENDFOR +]
 %{
 #include "[+ (base-name) +].ph"[+ FOR include "" +]
 #include [+ (get "include") +][+ ENDFOR +]
@@ -57,6 +60,7 @@ const char* [+ protocol_name +]_signalnames[] =
 [+ FOR include "" +]
 #include [+ (get "include") +][+ ENDFOR +]
 #include <GCF/GCF_TMProtocols.h>
+#include <string>
 #endif
 
 //
@@ -77,7 +81,9 @@ enum { [+ FOR event "," +]
 #define [+ prefix_ucase +]_[+ (get "signal") +] F_SIGNAL([+ protocol_name +], [+ prefix_ucase +]_[+ (get "signal") +]_ID, F_[+ (get "dir")+])[+ ENDFOR event +]
 
 // extern declaration of protocol event names
+#ifndef SWIG
 extern const char* [+ protocol_name +]_signalnames[];
+#endif
 
 namespace [+ (base-name) +]
 {[+ (out-push-add "/dev/null") +]
@@ -89,6 +95,47 @@ namespace [+ (base-name) +]
 [+ (out-pop) +]
   class [+ event_class_decl +]
   {
+#ifdef SWIG
+%typemap(in) std::string* ($*1_ltype tempstr) {
+	char * temps; int templ;
+	if (PyString_AsStringAndSize($input, &temps, &templ)) return NULL;
+	tempstr = $*1_ltype(temps, templ);
+	$1 = &tempstr;
+}
+%typemap(out) std::string* {
+	$result = PyString_FromStringAndSize($1->data(), $1->length());
+}
+[+ FOR bounded_array_types "" +][+ FOR type "" +][+ IF (not (== (get "type") "char")) +]
+%typemap(in) [+ (get "type")+] [ANY] ([+ (get "type") +] temp[$1_dim0]) {
+  int i;
+  if (!PySequence_Check($input)) {
+    PyErr_SetString(PyExc_ValueError,"Expected a sequence");
+    return NULL;
+  }
+  if (PySequence_Length($input) != $1_dim0) {
+    PyErr_SetString(PyExc_ValueError,"Size mismatch. Expected $1_dim0 elements");
+    return NULL;
+  }
+  for (i = 0; i < $1_dim0; i++) {
+    PyObject *o = PySequence_GetItem($input,i);
+    if (PyNumber_Check(o)) {
+      temp[i] = ([+ (get "type")+])[+ to_type +]
+    } else {
+      PyErr_SetString(PyExc_ValueError,"Sequence elements must be numbers");
+      return NULL;
+    }
+  }
+  $1 = temp;
+}
+%typemap(out) [+ (get "type")+] [ANY] {
+  int i;
+  $result = PyList_New($1_dim0);
+  for (i = 0; i < $1_dim0; i++) {
+    PyObject *o = [+ from_type +](([+ (get "type") +]) $1[i]);
+    PyList_SetItem($result,i,o);
+  }
+}[+ ENDIF +][+ ENDFOR +][+ ENDFOR +]
+#endif
     public:
       [+ event_class_name +](GCFEvent& e);
       [+ event_class_name +]();
