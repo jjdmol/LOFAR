@@ -31,6 +31,7 @@
 
 //# Includes
 #include <PL/PersistentObject.h>
+#include <PL/PLfwd.h>
 #include <dtl/BoundIO.h>
 #include <climits>
 
@@ -38,14 +39,6 @@ namespace LOFAR
 {
   namespace PL
   {
-    //# Forward Declarations
-    class QueryObject;
-    class ObjectId;
-    template<typename T> class Collection;
-    template<typename T> struct DBRep;
-    template<typename T> class DBRepHolder;
-
-    //
     // This templated class acts as a surrogate container class for instances
     // of T. The container provides the functionality to make instances of T
     // persistent. 
@@ -53,7 +46,6 @@ namespace LOFAR
     // does not act as a real STL-like container. TPersistentObject stores
     // a \e pointer to the instance of T instead of storing a \e copy, which
     // is what STL-like containers do.
-    //
     template<typename T>
     class TPersistentObject : public PersistentObject
     {

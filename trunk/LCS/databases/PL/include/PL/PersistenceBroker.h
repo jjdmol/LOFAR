@@ -24,6 +24,7 @@
 #define LOFAR_PL_PERSISTENCEBROKER_H
 
 //# Includes
+#include <PL/PLfwd.h>
 #include <string>
 #include <climits>
 
@@ -31,19 +32,10 @@ namespace LOFAR
 {
   namespace PL
   {
-    //# Forward Declarations
-    class QueryObject;
-    class ObjectId;
-    class PersistentObject;
-    template<typename T> class TPersistentObject;
-    template<typename T> class Collection;
-
-    // 
     // PersistenceBroker is responsible for handling (bulk) save and retrieve 
     // operations on (a collection) of persistent objects. PersistenceBroker 
     // "knows" in which database the data reside or must be saved. 
     // PersistenceBroker provides transactions at the object level.
-    //
     class PersistenceBroker
     {
     public:

@@ -29,11 +29,12 @@ namespace LOFAR
 {
   namespace PL
   {
-    //# Forward Declarations
-
     class PersistentObject;
-    template<typename T> class TPersistentObject;
+    class QueryObject;
+    template<typename T> class Collection;
     template<typename T> class DBRep;
+    template<typename T> class TPersistentObject;
+    template<typename T> class DBRepHolder;
 
     namespace Query
     {
