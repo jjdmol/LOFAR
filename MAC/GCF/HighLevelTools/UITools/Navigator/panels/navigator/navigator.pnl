@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 15 LOFAR Navigator
-PANEL,258 168 1260 960 N "_3DFace" 0
+PANEL,328 229 1260 960 N "_3DFace" 0
 "main()
 {
 	Navigator_HandleEventInitialize();
