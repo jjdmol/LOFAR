@@ -48,7 +48,9 @@ public:
 
   // Initialize all Calibrator members to their default values. 
   // Note: This method does not affect the MeqCalImpl object. 
-  Calibrator ();
+  Calibrator (const string & MSName, const string & MEPName, 
+    const string & GSMName, const string & DBType, const string & DBName, 
+    const string & DBPasswd);
 
   // Destroys the MeqCalImpl object.
   virtual ~Calibrator ();
