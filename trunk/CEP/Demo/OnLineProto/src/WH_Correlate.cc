@@ -118,8 +118,8 @@ void WH_Correlate::process()
 
   corr = complex<float> (0,0);
 
-  WH_Correlate::correlator_core(signal, corr);
-  //  WH_Correlate::correlator_core_unrolled(signal, corr);
+  //  WH_Correlate::correlator_core(signal, corr);
+  WH_Correlate::correlator_core_unrolled(signal, corr);
   
   // copy the correlation matrix to the output
   memcpy(OutDHptr->getBuffer(), corr.data(), itsNelements*itsNelements*sizeof(DH_Vis::BufferType));
@@ -138,7 +138,7 @@ void WH_Correlate::correlator_core(blitz::Array<complex<float>, 2>& signal,
   for (int time = 0; time < itsNitems; time++) {
     for (x = 0; x < itsNelements; x++) {
       for (y = 0; y <= x; y++) {
-	corr(x,y) += (
+	corr(x,y) += complex<float> (
 		      signal(x, time).real() * signal(y, time).real() -  // real 
 		      signal(x, time).imag() * signal(y, time).imag(), 
 		      
@@ -160,210 +160,210 @@ void WH_Correlate::correlator_core_unrolled(blitz::Array<complex<float>, 2>& s,
   for ( x = 0; (x+loop) < itsNelements; x += loop ) {
     for ( y = 0; (y+loop) <= x; y += loop ) {
 
-      c(x  ,y  ) += (
+      c(x  ,y  ) += complex<float> (
 		     s(x  ,time).real() * s(y  ,time).real() - s(x  ,time).imag() * s(y  ,time).imag(),
 		     s(x  ,time).real() * s(y  ,time).imag() + s(x  ,time).imag() * s(y  ,time).real()
 		     );
       
-      c(x  ,y+1) += (
+      c(x  ,y+1) += complex<float> (
 		     s(x  ,time).real() * s(y+1,time).real() - s(x  ,time).imag() * s(y+1,time).imag(),
 		     s(x  ,time).real() * s(y+1,time).imag() + s(x  ,time).imag() * s(y+1,time).real()
 		     );
       
-      c(x  ,y+2) += (
+      c(x  ,y+2) += complex<float> (
 		     s(x  ,time).real() * s(y+2,time).real() - s(x  ,time).imag() * s(y+2,time).imag(),
 		     s(x  ,time).real() * s(y+2,time).imag() + s(x  ,time).imag() * s(y+2,time).real()
 		     );
       
-      c(x  ,y+3) += (
+      c(x  ,y+3) += complex<float> (
 		     s(x  ,time).real() * s(y+3,time).real() - s(x  ,time).imag() * s(y+3,time).imag(),
 		     s(x  ,time).real() * s(y+3,time).imag() + s(x  ,time).imag() * s(y+3,time).real()
 		     );
       
-      c(x  ,y+4) += (
+      c(x  ,y+4) += complex<float> (
 		     s(x  ,time).real() * s(y+4,time).real() - s(x  ,time).imag() * s(y+4,time).imag(),
 		     s(x  ,time).real() * s(y+4,time).imag() + s(x  ,time).imag() * s(y+4,time).real() 
 		     );
       
       
       
-      c(x+1,y  ) += (
+      c(x+1,y  ) += complex<float> (
 		     s(x+1,time).real() * s(y  ,time).real() - s(x+1,time).imag() * s(y  ,time).imag(),
 		     s(x+1,time).real() * s(y  ,time).imag() + s(x+1,time).imag() * s(y  ,time).real()
 		     );
       
-      c(x+1,y+1) += (
+      c(x+1,y+1) += complex<float> (
 		     s(x+1,time).real() * s(y+1,time).real() - s(x+1,time).imag() * s(y+1,time).imag(),
 		     s(x+1,time).real() * s(y+1,time).imag() + s(x+1,time).imag() * s(y+1,time).real()
 		     );
       
-      c(x+1,y+2) += (
+      c(x+1,y+2) += complex<float> (
 		     s(x+1,time).real() * s(y+2,time).real() - s(x+1,time).imag() * s(y+2,time).imag(),
 		     s(x+1,time).real() * s(y+2,time).imag() + s(x+1,time).imag() * s(y+2,time).real()
 		     );
       
-      c(x+1,y+3) += (
+      c(x+1,y+3) += complex<float> (
 		     s(x+1,time).real() * s(y+3,time).real() - s(x+1,time).imag() * s(y+3,time).imag(),
 		     s(x+1,time).real() * s(y+3,time).imag() + s(x+1,time).imag() * s(y+3,time).real() 
 		     );
       
-      c(x+1,y+4) += (
+      c(x+1,y+4) += complex<float> (
 		     s(x+1,time).real() * s(y+4,time).real() - s(x+1,time).imag() * s(y+4,time).imag(),
 		     s(x+1,time).real() * s(y+4,time).imag() + s(x+1,time).imag() * s(y+4,time).real()
 		     );
       
       
-      c(x+2,y  ) += (
+      c(x+2,y  ) += complex<float> (
 		     s(x+2,time).real() * s(y  ,time).real() - s(x+2,time).imag() * s(y  ,time).imag(),
 		     s(x+2,time).real() * s(y  ,time).imag() + s(x+2,time).imag() * s(y  ,time).real()
 		     );
       
-      c(x+2,y+1) += (
+      c(x+2,y+1) += complex<float> (
 		     s(x+2,time).real() * s(y+1,time).real() - s(x+2,time).imag() * s(y+1,time).imag(),
 		     s(x+2,time).real() * s(y+1,time).imag() + s(x+2,time).imag() * s(y+1,time).real()
 		     );
       
-      c(x+2,y+2) += (
+      c(x+2,y+2) += complex<float> (
 		     s(x+2,time).real() * s(y+2,time).real() - s(x+2,time).imag() * s(y+2,time).imag(),
 		     s(x+2,time).real() * s(y+2,time).imag() + s(x+2,time).imag() * s(y+2,time).real()
 		     );
       
-      c(x+2,y+3) += (
+      c(x+2,y+3) += complex<float> (
 		     s(x+2,time).real() * s(y+3,time).real() - s(x+2,time).imag() * s(y+3,time).imag(),
 		     s(x+2,time).real() * s(y+3,time).imag() + s(x+2,time).imag() * s(y+3,time).real()
 		     );
       
-      c(x+2,y+4) += (
+      c(x+2,y+4) += complex<float> (
 		     s(x+2,time).real() * s(y+4,time).real() - s(x+2,time).imag() * s(y+4,time).imag(),
 		     s(x+2,time).real() * s(y+4,time).imag() + s(x+2,time).imag() * s(y+4,time).real()
 		     );
       
       
-      c(x+3,y  ) += (
+      c(x+3,y  ) += complex<float> (
 		     s(x+3,time).real() * s(y  ,time).real() - s(x+3,time).imag() * s(y  ,time).imag(),
 		     s(x+3,time).real() * s(y  ,time).imag() + s(x+3,time).imag() * s(y  ,time).real()
 		     );
       
-      c(x+3,y+1) += (
+      c(x+3,y+1) += complex<float> (
 		     s(x+3,time).real() * s(y+1,time).real() - s(x+3,time).imag() * s(y+1,time).imag(),
 		     s(x+3,time).real() * s(y+1,time).imag() + s(x+3,time).imag() * s(y+1,time).real()
 		     );
       
-      c(x+3,y+2) += (
+      c(x+3,y+2) += complex<float> (
 		     s(x+3,time).real() * s(y+2,time).real() - s(x+3,time).imag() * s(y+2,time).imag(),
 		     s(x+3,time).real() * s(y+2,time).imag() + s(x+3,time).imag() * s(y+2,time).real()
 		     );
       
-      c(x+3,y+3) += (
+      c(x+3,y+3) += complex<float> (
 		     s(x+3,time).real() * s(y+3,time).real() - s(x+3,time).imag() * s(y+3,time).imag(),
 		     s(x+3,time).real() * s(y+3,time).imag() + s(x+3,time).imag() * s(y+3,time).real()
 		     );
       
-      c(x+3,y+4) += (
+      c(x+3,y+4) += complex<float> (
 		     s(x+3,time).real() * s(y+4,time).real() - s(x+3,time).imag() * s(y+4,time).imag(),
 		     s(x+3,time).real() * s(y+4,time).imag() + s(x+3,time).imag() * s(y+4,time).real()
 		     );
       
       
-      c(x+4,y  ) += (
+      c(x+4,y  ) += complex<float> (
 		     s(x+4,time).real() * s(y  ,time).real() - s(x+4,time).imag() * s(y  ,time).imag(),
 		     s(x+4,time).real() * s(y  ,time).imag() + s(x+4,time).imag() * s(y  ,time).real()
 		     );
       
-      c(x+4,y+1) += (
+      c(x+4,y+1) += complex<float> (
 		     s(x+4,time).real() * s(y+1,time).real() - s(x+4,time).imag() * s(y+1,time).imag(),
 		     s(x+4,time).real() * s(y+1,time).imag() + s(x+4,time).imag() * s(y+1,time).real()
 		     );
       
-      c(x+4,y+2) += (
+      c(x+4,y+2) += complex<float> (
 		     s(x+4,time).real() * s(y+2,time).real() - s(x+4,time).imag() * s(y+2,time).imag(),
 		     s(x+4,time).real() * s(y+2,time).imag() + s(x+4,time).imag() * s(y+2,time).real()
 		     );
       
-      c(x+4,y+3) += (
+      c(x+4,y+3) += complex<float> (
 		     s(x+4,time).real() * s(y+3,time).real() - s(x+4,time).imag() * s(y+3,time).imag(),
 		     s(x+4,time).real() * s(y+3,time).imag() + s(x+4,time).imag() * s(y+3,time).real()
 		     );
       
-      c(x+4,y+4) += (
+      c(x+4,y+4) += complex<float> (
 		     s(x+4,time).real() * s(y+4,time).real() - s(x+4,time).imag() * s(y+4,time).imag(),
 		     s(x+4,time).real() * s(y+4,time).imag() + s(x+4,time).imag() * s(y+4,time).real()
 		     );
       
     }
     /* Process the leftovers */
-    c(x  ,y  ) += (
+    c(x  ,y  ) += complex<float> (
 		   s(x  ,time).real() * s(y  ,time).real() - s(x  ,time).imag() * s(y  ,time).imag(),
 		   s(x  ,time).real() * s(y  ,time).imag() + s(x  ,time).imag() * s(y  ,time).real()
 		   );
     
-    c(x+1,y  ) += (
+    c(x+1,y  ) += complex<float> (
 		   s(x+1,time).real() * s(y  ,time).real() - s(x+1,time).imag() * s(y  ,time).imag(),
 		   s(x+1,time).real() * s(y  ,time).imag() + s(x+1,time).imag() * s(y  ,time).real()
 		   );
     
-    c(x+1,y+1) += (
+    c(x+1,y+1) += complex<float> (
 		   s(x+1,time).real() * s(y+1,time).real() - s(x+1,time).imag() * s(y+1,time).imag(),
 		   s(x+1,time).real() * s(y+1,time).imag() + s(x+1,time).imag() * s(y+1,time).real()
 		   );
     
-    c(x+2,y  ) += (
+    c(x+2,y  ) += complex<float> (
 		   s(x+2,time).real() * s(y  ,time).real() - s(x+2,time).imag() * s(y  ,time).imag(),
 		   s(x+2,time).real() * s(y  ,time).imag() + s(x+2,time).imag() * s(y  ,time).real()
 		   );
     
-    c(x+2,y+1) += (
+    c(x+2,y+1) += complex<float> (
 		   s(x+2,time).real() * s(y+1,time).real() - s(x+2,time).imag() * s(y+1,time).imag(),
 		   s(x+2,time).real() * s(y+1,time).imag() + s(x+2,time).imag() * s(y+1,time).real()
 		   );
     
-    c(x+2,y+2) += (
+    c(x+2,y+2) += complex<float> (
 		   s(x+2,time).real() * s(y+2,time).real() - s(x+2,time).imag() * s(y+2,time).imag(),
 		   s(x+2,time).real() * s(y+2,time).imag() + s(x+2,time).imag() * s(y+2,time).real()
 		   );
     
     
-    c(x+3,y  ) += (
+    c(x+3,y  ) += complex<float> (
 		   s(x+3,time).real() * s(y  ,time).real() - s(x+3,time).imag() * s(y  ,time).imag(),
 		   s(x+3,time).real() * s(y  ,time).imag() + s(x+3,time).imag() * s(y  ,time).real()
 		   );
     
-    c(x+3,y+1) += (
+    c(x+3,y+1) += complex<float> (
 		   s(x+3,time).real() * s(y+1,time).real() - s(x+3,time).imag() * s(y+1,time).imag(),
 		   s(x+3,time).real() * s(y+1,time).imag() + s(x+3,time).imag() * s(y+1,time).real()
 		   );
     
-    c(x+3,y+2) += (
+    c(x+3,y+2) += complex<float> (
 		   s(x+3,time).real() * s(y+2,time).real() - s(x+3,time).imag() * s(y+2,time).imag(),
 		   s(x+3,time).real() * s(y+2,time).imag() + s(x+3,time).imag() * s(y+2,time).real()
 		   );
     
-    c(x+3,y+3) += (
+    c(x+3,y+3) += complex<float> (
 		   s(x+3,time).real() * s(y+3,time).real() - s(x+3,time).imag() * s(y+3,time).imag(),
 		   s(x+3,time).real() * s(y+3,time).imag() + s(x+3,time).imag() * s(y+3,time).real()
 		   );
     
-    c(x+4,y  ) += (
+    c(x+4,y  ) += complex<float> (
 		   s(x+4,time).real() * s(y  ,time).real() - s(x+4,time).imag() * s(y  ,time).imag(),
 		   s(x+4,time).real() * s(y  ,time).imag() + s(x+4,time).imag() * s(y  ,time).real()
 		   );
     
-    c(x+4,y+1) += (
+    c(x+4,y+1) += complex<float> (
 		   s(x+4,time).real() * s(y+1,time).real() - s(x+4,time).imag() * s(y+1,time).imag(),
 		   s(x+4,time).real() * s(y+1,time).imag() + s(x+4,time).imag() * s(y+1,time).real()
 		   );
     
-    c(x+4,y+2) += (
+    c(x+4,y+2) += complex<float> (
 		   s(x+4,time).real() * s(y+2,time).real() - s(x+4,time).imag() * s(y+2,time).imag(),
 		   s(x+4,time).real() * s(y+2,time).imag() + s(x+4,time).imag() * s(y+2,time).real()
 		   );
     
-    c(x+4,y+3) += (
+    c(x+4,y+3) += complex<float> (
 		   s(x+4,time).real() * s(y+3,time).real() - s(x+4,time).imag() * s(y+3,time).imag(),
 		   s(x+4,time).real() * s(y+3,time).imag() + s(x+4,time).imag() * s(y+3,time).real()
 		   );
     
-    c(x+4,y+4) += (
+    c(x+4,y+4) += complex<float> (
 		   s(x+4,time).real() * s(y+4,time).real() - s(x+4,time).imag() * s(y+4,time).imag(),
 		   s(x+4,time).real() * s(y+4,time).imag() + s(x+4,time).imag() * s(y+4,time).real()
 		   );
