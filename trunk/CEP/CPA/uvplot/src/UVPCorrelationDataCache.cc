@@ -1,6 +1,9 @@
 // Copyright notice
 
-//===============>>>  UVPCorrelationDataCache::UVPCorrelationDataCache  <<<===============
+#include <UVPCorrelationDataCache.h>
+
+
+//=========>>>  UVPCorrelationDataCache::UVPCorrelationDataCache  <<<=========
 
 UVPCorrelationDataCache::UVPCorrelationDataCache(unsigned int size)
   : itsSpectrumDataCache(size)
@@ -11,7 +14,7 @@ UVPCorrelationDataCache::UVPCorrelationDataCache(unsigned int size)
 
 
 
-//====================>>>  UVPCorrelationDataCache::size  <<<====================
+//==================>>>  UVPCorrelationDataCache::size  <<<==================
 
 unsigned int UVPCorrelationDataCache::size() const
 {
@@ -22,7 +25,7 @@ unsigned int UVPCorrelationDataCache::size() const
 
 
 
-//====================>>>  UVPCorrelationDataCache::resize  <<<====================
+//==================>>>  UVPCorrelationDataCache::resize  <<<==================
 
 unsigned int UVPCorrelationDataCache::resize(unsigned int newSize) const
 {
@@ -35,7 +38,7 @@ unsigned int UVPCorrelationDataCache::resize(unsigned int newSize) const
 
 
 
-//====================>>>  UVPCorrelationDataCache::addSpectrum  <<<====================
+//===============>>>  UVPCorrelationDataCache::addSpectrum  <<<===============
 
 bool UVPCorrelationDataCache::addSpectrum(const UVPDataAtomHeader &header,
                                           const UVPDataAtom       &data)
@@ -58,7 +61,7 @@ bool UVPCorrelationDataCache::addSpectrum(const UVPDataAtomHeader &header,
 
 
 
-//====================>>>  UVPCorrelationDataCache::getSpectrum  <<<====================
+//===============>>>  UVPCorrelationDataCache::getSpectrum  <<<===============
 
 const UVPDataAtom *UVPCorrelationDataCache::getSpectrum(const UVPDataAtomHeader &header) const
 {
@@ -76,7 +79,7 @@ const UVPDataAtom *UVPCorrelationDataCache::getSpectrum(const UVPDataAtomHeader 
 
 
 
-//===============>>>  UVPCorrelationDataCache::getLocationOfSpectrum  <<<===============
+//==========>>>  UVPCorrelationDataCache::getLocationOfSpectrum  <<<==========
 
 UVPDataCacheElement *UVPCorrelationDataCache::getLocationOfSpectrum(const UVPDataAtomHeader &header)
 {
