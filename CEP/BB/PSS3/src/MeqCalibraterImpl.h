@@ -23,8 +23,9 @@
 #ifndef BB_PSS3_MEQCALIBRATER_H
 #define BB_PSS3_MEQCALIBRATER_H
 
+#include <casa/Arrays/Vector.h>
 #include <casa/Arrays/Matrix.h>
-#include <scimath/Fitting/FitLSQ.h>
+#include <scimath/Fitting/LSQaips.h>
 #include <ms/MeasurementSets/MSMainColumns.h>
 #include <ms/MeasurementSets/MeasurementSet.h>
 #include <casa/Quanta/MVBaseline.h>
@@ -244,7 +245,7 @@ private:
   void initParms    (const MeqDomain& domain, bool callReadPocs);
 
   //! Get the phase reference position of the first field.
-  void getPhaseRef  ();
+  void getPhaseRef  (double ra, double dec, double startTime);
 
   //! Get the frequency info of the given data desc (spectral window).
   void getFreq      (int ddid);
@@ -315,7 +316,7 @@ private:
   String itsSolveColName;               //# column to be used in solve
                                         //# (is dataColName or resColName)
 
-  FitLSQ       itsSolver;
+  LSQaips      itsSolver;
   int          itsNrScid;               //# Nr of solvable parameter coeff.
   vector<bool> itsIsParmSolvable;       //# is corresponding parmlist solvable?
   MeqMatrix    itsSolution;             //# Solution as complex numbers
