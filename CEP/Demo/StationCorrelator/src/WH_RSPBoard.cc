@@ -44,10 +44,15 @@ WH_RSPBoard::WH_RSPBoard(const string& name,
     itsStamp(2, 0)
 {
   char str[32];
-  
+
+  int DHSize = kvm.getInt("NoPacketsInFrame", 8)       // number of EPA-packets in RSP-ethernetframe
+               * (kvm.getInt("SzEPAheader", 14)        // headersize in bytes
+                  + (kvm.getInt("polarisations",2)     // number of polarisations
+		     * kvm.getInt("NoRSPBeamlets", 92) // number of beamlets per packet
+		     * sizeof(complex<uint16>)));
   for (int i=0; i<itsNoutputs; i++) {
     sprintf(str, "DH_Boardout_%d2", i);
-    getDataManager().addOutDataHolder(i, new DH_RSP(str, kvm.getInt("SzDH_RSP",6000))); // buffer of char
+    getDataManager().addOutDataHolder(i, new DH_RSP(str, DHSize)); // buffer of char
   }  
 }
 
