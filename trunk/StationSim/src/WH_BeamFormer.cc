@@ -35,44 +35,38 @@
 using namespace blitz;
 
 WH_BeamFormer::WH_BeamFormer (const string& name,
-			      unsigned int nin,
-			      unsigned int nout,
-			      unsigned int nrcu,
-			      unsigned int nbeam,
-			      unsigned int maxNtarget, unsigned int maxNrfi)
-: WorkHolder    (nin, nout, name,"WH_BeamFormer"),  // Check number of inputs and outputs
-  itsInHolders  (0),
-  itsWeight     (0),
-  itsOutHolders (0),
-  itsNrcu       (nrcu),
-  itsNbeam      (nbeam),
-  itsMaxNtarget (maxNtarget),
-  itsMaxNrfi    (maxNrfi)
+							  unsigned int nin,
+							  unsigned int nout,
+							  unsigned int nrcu,
+							  unsigned int nbeam,
+							  unsigned int maxNtarget, unsigned int maxNrfi)
+  : WorkHolder    (nin, nout, name,"WH_BeamFormer"),  // Check number of inputs and outputs
+	itsInHolders  (0),
+	itsOutHolders (0),
+	itsWeight     ("weights", nrcu, 1),
+	itsNrcu       (nrcu),
+	itsNbeam      (nbeam),
+	itsMaxNtarget (maxNtarget),
+	itsMaxNrfi    (maxNrfi),
+	sample        (nrcu)
 {
-
+  char str[8];
   // the number of inputs is equal to the number of reveiving elements
   if (nin > 0) {
     itsInHolders = new DH_SampleC* [nrcu];
   }
-  char str[8];
-  for (unsigned int i=0; i<nrcu; i++) {
+  for (unsigned int i = 0; i < nrcu; i++) {
     sprintf (str, "%d",i);
     itsInHolders[i] = new DH_SampleC (string("in_") + str, 1, 1);
   }
-
-  // The first time the weights should not be read.
-  itsWeight = new DH_SampleC("weights", itsNrcu, 1);
-
-
   // idem for the number of outputs
   if (nout > 0) {
     itsOutHolders = new DH_SampleC* [nout];
   }
-  for (unsigned int i=0; i<nout; i++) {
+  for (unsigned int i = 0; i < nout; i++) {
     sprintf (str, "%d", i);
     itsOutHolders[i] = new DH_SampleC (string("out_") + str, 1, 1);
   }
-  sample.resize(itsNrcu);
 
   //DEBUG
 //   itsFileOutReal.open ((string ("/home/alex/gerdes/BF_real_") + name + string (".txt")).c_str ());
@@ -85,18 +79,15 @@ WH_BeamFormer::WH_BeamFormer (const string& name,
 
 WH_BeamFormer::~WH_BeamFormer()
 {
-  for (int i=0; i< itsNrcu; i++) {
+  for (int i = 0; i < itsNrcu; i++) {
     delete itsInHolders[i];
   }
-  delete itsWeight;
-
   delete [] itsInHolders;
-  for (int i=0; i<getOutputs(); i++) {
+  for (int i = 0; i < getOutputs(); i++) {
     delete itsOutHolders[i];
   }
   delete [] itsOutHolders;
-
-  // DEBUG
+//   // DEBUG
 //   itsFileOutReal.close ();
 //   itsFileOutComplex.close ();
 //   itsFileInput.close ();
@@ -106,7 +97,6 @@ WH_BeamFormer::~WH_BeamFormer()
 WorkHolder* WH_BeamFormer::construct (const string& name,
 									  int ninput, int noutput, const ParamBlock& params)
 {
-  Assert (ninput == 4);
   return new WH_BeamFormer (name, ninput, noutput,
 							params.getInt ("nrcu", 10),
 							params.getInt ("nbeam", 10),
@@ -117,33 +107,33 @@ WorkHolder* WH_BeamFormer::construct (const string& name,
 WH_BeamFormer* WH_BeamFormer::make (const string& name) const
 {
   return new WH_BeamFormer (name, getInputs(), getOutputs(),
-			    itsNrcu, itsNbeam, itsMaxNtarget, itsMaxNrfi);
+							itsNrcu, itsNbeam, itsMaxNtarget, itsMaxNrfi);
 }
 
 
 void WH_BeamFormer::process()
 {
-  for (int i = 0; i < itsNrcu; i++) {
-    sample(i) = (dcomplex)itsInHolders[i]->getBuffer()[0]; 
-  }
+  if (getOutputs () > 0) {
+	for (int i = 0; i < itsNrcu; i++) {
+	  sample(i) = (dcomplex)itsInHolders[i]->getBuffer()[0]; 
+	}
+	LoVec_dcomplex weight(itsWeight.getBuffer(), itsNrcu, duplicateData);    
+	
+	dcomplex output = 0; 
+	for (int i = 0; i < itsNrcu; i++) {
+	  output += (2 * real(weight(i)) - weight(i)) * sample(i); // w^H * x(t)
+	}
 
-  // the weights are calculated in WH_AWE
-  if (getOutputs() > 0) {
-    
-    LoVec_dcomplex weight(itsWeight->getBuffer(), itsNrcu, duplicateData);    
-    sample *= weight;
-    //	sample = itsTestVector * weight;
-
-    for (int j = 0; j < itsNrcu; j++) {
+    for (int j = 0; j < getOutputs(); j++) {
       // copy the sample to the outHolders
-      itsOutHolders[j]->getBuffer ()[0] = sample(j);
+      itsOutHolders[j]->getBuffer ()[0] = output;
     }
 
-	// DEBUG
+	//  // DEBUG
 	//	cout << sample << " " << real(sample(0)) << " " << imag(sample(0)) << endl;
-// 	itsFileOutReal << real(sample) << endl;
-// 	itsFileOutComplex << imag (sample) << " " << endl;
-	//cout << sample << endl;	
+	// 	itsFileOutReal << real(sample) << endl;
+	// 	itsFileOutComplex << imag (sample) << " " << endl;
+	//  cout << sample << endl;	
   }
 }
 
@@ -165,19 +155,17 @@ void WH_BeamFormer::dump() const
 
 DataHolder* WH_BeamFormer::getInHolder (int channel)
 {
-  AssertStr (channel < getInputs(),
-	     "input channel too high");
-  if (channel < itsNrcu) {
+  AssertStr (channel < getInputs(), "input channel too high");
+  if (channel < getInputs() - 1) {
     return itsInHolders[channel];
   } else {
-    return itsWeight;
+    return &itsWeight;
   }
 }
 
 DataHolder* WH_BeamFormer::getOutHolder (int channel)
 {
-  AssertStr (channel < getOutputs(),
-	     "output channel too high");
+  AssertStr (channel < getOutputs(), "output channel too high");
   return itsOutHolders[channel];
 }
 

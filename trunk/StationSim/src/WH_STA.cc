@@ -34,58 +34,48 @@
 
 
 WH_STA::WH_STA (const string& name, unsigned int nin, unsigned int nout,
-		unsigned int nant, unsigned int maxnrfi, unsigned int buflength)
-: WorkHolder    (nin, nout, name, "WH_STA"),
-  itsInHolders  (0),
-  itsOutHolders (0),
-  itsNrcu       (nant),
-  itsMaxRFI     (maxnrfi),
-  itsBufLength  (4),
-  itsBuffer     (0),
-  itsSnapshot   (0)
+				unsigned int nant, unsigned int maxnrfi, unsigned int buflength)
+: WorkHolder      (nin, nout, name, "WH_STA"),
+  itsInHolders    (0),
+  itsOutHolders   (0),
+  itsNumberOfRFIs ("out_mdl", 1, 1),
+  itsNrcu         (nant),
+  itsMaxRFI       (maxnrfi),
+  itsBufLength    (4),
+  itsBuffer       (itsNrcu, itsBufLength),
+  itsSnapshot     (itsNrcu),
+  itsCurPos       (0)
 {
-  if (nin > 0) {
-    itsInHolders = new DH_SampleC* [nin];
-  }
   char str[8];
-  for (unsigned int i=0; i<nin; i++) {
+  if (nant > 0) {
+    itsInHolders = new DH_SampleC* [nant];
+  }
+  for (int i = 0; i < nant; i++) {
     sprintf (str, "%d",i);
     itsInHolders[i] = new DH_SampleC (string("in_") + str, 1, 1);
+  } 
+  if (nout - 1 > 0) {
+    itsOutHolders = new DH_SampleC* [nout - 1];
   }
-  
-  if (nout > 0) {
-    itsOutHolders = new DH_SampleC* [nout];
+  for (int i = 0; i < nout - 1; i++) {
+    sprintf (str, "%d",i);
     // Define a space large enough to contain the max number of 
     // RFI sources. This should be implemented more elegantly.
-    itsOutHolders[0] = new DH_SampleC("out", itsNrcu, itsMaxRFI);    
+    itsOutHolders[i] = new DH_SampleC (string("out_") + str, itsNrcu, itsMaxRFI);    
   }
-
-  itsNumberOfRFIs = new DH_SampleR("mdl",1, 1);
-
-  // init the buffer
-  itsBuffer.resize(itsNrcu,itsBufLength);
-//   for (int i = 0; i < itsNrcu; i++) {
-//     for (int j = 0; j < itsBufLength; j++) {
-//       itsBuffer(i,j) = dcomplex (i,j);
-//     }
-//   }
-
-  itsSnapshot.resize(itsNrcu);
 }
 
 WH_STA::~WH_STA()
 {  
-  for (int i=0; i< getInputs(); i++) {
+  for (int i = 0; i < getInputs(); i++) {
     delete itsInHolders[i];
   }
   delete [] itsInHolders;
   
-  delete itsOutHolders[0];
-  delete itsOutHolders[1];
-
-  delete [] itsOutHolders;
-
-  delete itsNumberOfRFIs;
+ for (int i = 0; i < getOutputs() - 1; i++) {
+  delete itsOutHolders[i];
+ }
+ delete [] itsOutHolders;
 }
 
 WH_STA* WH_STA::make (const string& name) const
@@ -101,7 +91,6 @@ void WH_STA::preprocess()
 
 void WH_STA::process()
 {
-
   using namespace blitz;
 
   for (int i = 0; i < itsNrcu; i++) {
@@ -135,7 +124,7 @@ void WH_STA::process()
   LoMat_dcomplex itsAcm (itsNrcu, itsNrcu) ;
 //   itsAcm = LCSMath::acm(itsBuffer);
   itsAcm = LCSMath::acm(testVector);
-  cout << itsAcm << endl;
+  //  cout << itsAcm << endl;
   
 //   // EVD - using the ACM, calculate eigen vectors and values.
 //   LoMat_dcomplex itsEvectors;
@@ -179,7 +168,6 @@ void WH_STA::dump() const
 {
 }
 
-
 DH_SampleC* WH_STA::getInHolder (int channel)
 {
   AssertStr (channel < getInputs(), "Input channel too high");
@@ -188,10 +176,10 @@ DH_SampleC* WH_STA::getInHolder (int channel)
 
 DataHolder* WH_STA::getOutHolder (int channel)
 {
-  AssertStr (channel < getOutputs(), "output channel too high"); 
-  if (channel < 1)
+  AssertStr (channel < getOutputs(), "Output channel too high"); 
+  if (channel < getOutputs() - 1)
 	return itsOutHolders[channel];
   else
-	return itsNumberOfRFIs;  
+	return &itsNumberOfRFIs;  
 }
 

@@ -45,8 +45,8 @@ public:
   /// are created and how many elements there are in the buffer.
   /// The first WorkHolder should have nin=0.
   WH_BeamFormer (const string& name,
-		 unsigned int nin, unsigned int nout, unsigned int nrcu,
-		 unsigned int nbeam, unsigned int maxNtarget, unsigned int maxNrfi);
+				 unsigned int nin, unsigned int nout, unsigned int nrcu,
+				 unsigned int nbeam, unsigned int maxNtarget, unsigned int maxNrfi);
 		 
 
   virtual ~WH_BeamFormer();
@@ -80,8 +80,8 @@ private:
   WH_BeamFormer& operator= (const WH_BeamFormer&);
 
   DH_SampleC** itsInHolders;
-  DH_SampleC*  itsWeight; 
   DH_SampleC** itsOutHolders;
+  DH_SampleC   itsWeight; 
  
   int itsNrcu;       // Number of (active) antennas
   int itsNbeam;      // Number of beams

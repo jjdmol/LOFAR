@@ -36,34 +36,46 @@
 using namespace blitz;
 
 WH_Projection::WH_Projection (const string& name, unsigned int nin, unsigned int nout,
-			      unsigned int nant, unsigned int maxnrfi)
+							  unsigned int nant, unsigned int maxnrfi)
 : WorkHolder       (nin, nout, name, "WH_Projection"),
   itsInHolders     (0),
-  itsOutHolder     (0),
-  itsNumberOfRFIs  (0),
+  itsOutHolders    (0),
+  itsNumberOfRFIs  ("in_mdl", 1, 1),
+  itsRFISources    ("in_rfi", nant, maxnrfi),
   itsNrcu          (nant),
   itsMaxRFI        (maxnrfi),
-  itsWeight        ()
+  itsWeight        (itsNrcu)
 {
-  if (nin > 0) {
-    itsInHolders = new DH_SampleC* [nin];
+  char str[8];
+  // nin is the number of steering vectors that will be used as an input (at least one
+  // for the weight determination and possibly more for deterministic nulls).
+  if (nin - 2 > 0) {
+    itsInHolders = new DH_SampleC* [nin - 2];
   }
-  for (unsigned int i=0; i < nin; i++) {
-    // Define a space large enough to contain the max number of 
-    // RFI sources. This should be implemented more elegantly.
-    itsInHolders[0]= new DH_SampleC("in-sta", itsNrcu, itsMaxRFI);
-    // The weight vector from the Weight Determination
-    itsInHolders[1]= new DH_SampleC("in-wd", itsNrcu, 1);
+  for (unsigned int i = 0; i < nin - 2; i++) { // The weight vector from the Weight Determination
+    sprintf (str, "%d",i);
+    itsInHolders[i]= new DH_SampleC(string("in_") + str, itsNrcu, 1);
   }
   if (nout > 0) {
-    // The resulting Weight vector  
-    itsOutHolder = new DH_SampleC("out", itsNrcu, 1);
+    itsOutHolders = new DH_SampleC* [nout];
   }
-  itsNumberOfRFIs = new DH_SampleR("in-mdl", 1, 1);
+  for (unsigned int i = 0; i < nout; i++) {  // The resulting Weight vector
+    sprintf (str, "%d",i);                      
+    itsOutHolders[i] = new DH_SampleC (string("out_") + str, itsNrcu, 1);
+  }
 }
 
 WH_Projection::~WH_Projection()
 {
+  for (int i = 0; i < getInputs() - 2; i++) {
+    delete itsInHolders[i];
+  }
+  delete [] itsInHolders;
+  
+ for (int i = 0; i < getOutputs(); i++) {
+  delete itsOutHolders[i];
+ }
+ delete [] itsOutHolders;
 }
 
 WH_Projection* WH_Projection::make (const string& name) const
@@ -71,76 +83,79 @@ WH_Projection* WH_Projection::make (const string& name) const
   return new WH_Projection (name, getInputs(), getOutputs(), itsNrcu, itsMaxRFI);
 }
 
-void WH_Projection::preprocess()
-{
-}
-
-
 void WH_Projection::process()
 {
   if (getOutputs() > 0) {
 	// Get the number of detected RFI sources from the STA comp. (internally calc. by MDL)
-	int detectedRFIs = (int)*itsNumberOfRFIs->getBuffer();
-	
+	int detectedRFIs = (int)(itsNumberOfRFIs.getBuffer()[0]);
+	detectedRFIs = 2;
+
 	// Read in the eigenvectors from the STA component. They are the detected rfi sources and
 	// should be nulled.
 	//  LoMat_dcomplex V (itsInHolders[0]->getBuffer(), shape(itsNrcu, itsMaxRFI), duplicateData);
-	LoMat_dcomplex V (itsInHolders[0]->getBuffer(), shape(itsNrcu, detectedRFIs), duplicateData);
+	LoMat_dcomplex V (itsRFISources.getBuffer(), shape(itsNrcu, detectedRFIs), duplicateData);
 	
-	// Get the steering vector form the weight determination comp.
-	LoVec_dcomplex a (itsInHolders[1]->getBuffer(), itsNrcu, duplicateData);
-	
-	itsWeight.resize(itsNrcu);
+	// Get the steering vector form the weight determination comp. assume that only one will be put in.
+	LoVec_dcomplex a (itsInHolders[0]->getBuffer(), itsNrcu, duplicateData);
+
+	// Calculate the weights using the eigenvectors and the steering vector
 	itsWeight = getWeights(V, a);
   
+	// DEBUG matrix inverse 
+// 	int N = 3; 
+// 	LoMat_dcomplex Orig(N,N); 
+// 	LoMat_dcomplex A(N, N);
+// 	LoVec_dcomplex Vec(N);
 
+// 	Vec = 1, 1, 1;
+// 	Orig = 1,2,3,
+// 	  4,5,6,
+// 	  7,8,9;
+// 	Orig(0,0)=dcomplex(0,1);
 
-//   // DEBUG matrix inverse
-//   int N = 3;
-//   LoMat_dcomplex A(N,N);
-//   LoMat_dcomplex Orig(N,N);
-//   dcomplex d;
+// 	cout << Orig << endl;
+// 	A = LCSMath::invert(Orig);
+// 	cout << A << endl;
+	
+// 	cout << LCSMath::matMult(A, Orig) << endl;
 
-//   Orig = 1,2,3,
-// 	     4,5,6,
-//          7,8,9;
-//   Orig(0,0)=dcomplex(0,1);
+// 	cout << Orig << endl << Vec << endl << vm_mult(Vec,Orig) << endl;
+	// END DEBUG matrix inverse
 
-//   cout << Orig << endl;
-//   A = LCSMath::invert(Orig);
-//   cout << A << endl << d << endl;
-
-//   cout << LCSMath::matMult(A, Orig) << endl;
-
-	memcpy(itsOutHolder->getBuffer(), itsWeight.data(), itsNrcu * sizeof(DH_SampleC::BufferType));
+	// Copy output to the next step
+	for (int i = 0; i < getOutputs(); i++) {
+	  memcpy(itsOutHolders[i]->getBuffer(), itsWeight.data(), itsNrcu * sizeof(DH_SampleC::BufferType));
+	}
   }
 }
 
 void WH_Projection::dump() const
 {
-
 }
-
 
 DataHolder* WH_Projection::getInHolder (int channel)
 {
   AssertStr (channel < getInputs(), "Input channel too high");  
-  if (channel < 2)
+  if (channel < getInputs() - 2) {
 	return itsInHolders[channel];
-  else
-	return itsNumberOfRFIs;
+  } else if (channel == getInputs() - 2) {
+	return &itsNumberOfRFIs;
+  } else {
+	return &itsRFISources;
+  }
 }
 
 DH_SampleC* WH_Projection::getOutHolder (int channel)
 {
   AssertStr (channel < getOutputs(), "Output channel too high");  
-  return itsOutHolder;
+  return itsOutHolders[channel];
 }
 
 
 LoVec_dcomplex WH_Projection::getWeights (LoVec_dcomplex V, LoVec_dcomplex a) 
 {
   AssertStr(V.size() == a.size(), "Error. WH_Projection::getWeights() encountered non equal size arrays");
+
   LoVec_dcomplex w (V.size());
   LoMat_dcomplex Pv (V.size(), V.size());
   w = 1;
@@ -166,12 +181,20 @@ LoVec_dcomplex WH_Projection::getWeights (LoMat_dcomplex V, LoVec_dcomplex a)
   LoMat_dcomplex Pv (V.shape());  
   LoMat_dcomplex I = LCSMath::diag(w);        // Create Identity matrix
 
-  Pv = LCSMath::invert(LCSMath::matMult(LCSMath::hermitianTranspose(V), V)); // (VHV)^-1
+  //cout << w << endl << Pv << endl << I << endl << V << endl << a << endl;
+
+  LoMat_dcomplex temp = LCSMath::matMult(LCSMath::hermitianTranspose(V), V);
+  //  cout << temp << endl;
+  Pv = LCSMath::invert(temp); // (VHV)^-1
+  //  cout << Pv << endl;
   Pv = LCSMath::matMult(V, LCSMath::matMult(Pv, LCSMath::hermitianTranspose(V))); // VPvVH
+  //  cout << Pv << endl;
   Pv = I - Pv;
+  //  cout << Pv << endl;
 
   w = mv_mult(Pv, a); // w = Pv a;
-  
+  //  cout << w << endl;  
+
   return w;
 }
 
@@ -181,8 +204,7 @@ LoVec_dcomplex WH_Projection::mv_mult (LoMat_dcomplex A, LoVec_dcomplex B)
   for (int i=0; i < A.rows(); i++) {
     dcomplex res = 0;
     for (int j=0; j < A.cols(); j++) {
-      res = res + A(i,j)* B(j);
-      
+      res = res + A(i,j)* B(j);     
     }
     tmp(i)=res;
   }

@@ -45,11 +45,11 @@ public:
   /// are created and how many elements there are in the buffer.
   /// The first WorkHolder should have nin=0.
   WH_Projection (const string& name,
-	  unsigned int nin, 
-	  unsigned int nout,
-	  unsigned int nant,
-   	  unsigned int maxnrfi);
-		 
+				 unsigned int nin, 
+				 unsigned int nout,
+				 unsigned int nant,
+				 unsigned int maxnrfi);
+  
   virtual ~WH_Projection();
 
   /// Static function to create an object.
@@ -58,8 +58,6 @@ public:
 
   /// Make a fresh copy of the WH object.
   virtual WH_Projection* make (const string& name) const;
-
-  virtual void preprocess();
 
   /// Do a process step.
   virtual void process();
@@ -82,18 +80,15 @@ private:
   /// Forbid assignment.
   WH_Projection& operator= (const WH_Projection&);
 
-  /// Calculate a steer vector
-
   /// In- and OutHolders
   DH_SampleC** itsInHolders;
-  DH_SampleC* itsOutHolder; 
-  DH_SampleR* itsNumberOfRFIs;
+  DH_SampleC** itsOutHolders; 
+  DH_SampleR itsNumberOfRFIs;
+  DH_SampleC itsRFISources;
 
   /// Length of buffers.
   unsigned int itsNrcu;
   unsigned int itsMaxRFI;
-  unsigned int itsBufLength;
-
   LoVec_dcomplex itsWeight;
 
   LoVec_dcomplex WH_Projection::getWeights (LoVec_dcomplex B, LoVec_dcomplex d) ;
