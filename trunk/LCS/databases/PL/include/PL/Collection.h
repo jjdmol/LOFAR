@@ -39,7 +39,7 @@ namespace LOFAR
     {
     public:
 
-      // This is the type of container we're gonna store our elements in.
+      // This is the type of container we're going to store our elements in.
       typedef std::list<T> container_t;
 
       typedef typename container_t::const_iterator const_iterator;
@@ -57,7 +57,7 @@ namespace LOFAR
       void add(const T& t) { itsContainer.push_back(t); }
 
       // Remove \e all elements from the collection that are equal to \c t.
-      void remove(const T& t) { return itsContainer.remove(t); }
+      void remove(const T& t) { itsContainer.remove(t); }
       
       // Remove all elements from our container.
       void clear() { itsContainer.clear(); }
