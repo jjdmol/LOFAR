@@ -107,7 +107,7 @@ namespace LOFAR
 
       Expr Expr::operator! () const
       {
-        return new LogicalUnaryExprNode("NOT ", *this);
+        return new UnaryExprNode("NOT ", *this);
       }
 
 
@@ -214,14 +214,14 @@ namespace LOFAR
       {
         if (lhs.isNull()) return rhs;
         if (rhs.isNull()) return lhs;
-        return new LogicalBinaryExprNode(" AND ", lhs, rhs);
+        return new BinaryExprNode(" AND ", lhs, rhs);
       }
 
       Expr operator|| (const Expr& lhs, const Expr& rhs)
       {
         if (lhs.isNull()) return rhs;
         if (rhs.isNull()) return lhs;
-        return new LogicalBinaryExprNode(" OR ", lhs, rhs);
+        return new BinaryExprNode(" OR ", lhs, rhs);
       }
 
 
