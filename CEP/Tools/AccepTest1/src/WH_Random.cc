@@ -93,7 +93,7 @@ namespace LOFAR
          starttime.tv_sec + 1.0e-6*starttime.tv_usec);
     }
 
-//     DH_Vis::BufferType acc = DH_Vis::BufferType(0,0);
+    DH_Vis::BufferType acc = DH_Vis::BufferType(0,0);
     float seed = rand();
     seed = seed/(RAND_MAX);
 
@@ -103,7 +103,7 @@ namespace LOFAR
 	  for (int polarisation = 0; polarisation < itsNpolarisations; polarisation++) {
 	    DH_CorrCube::BufferType rval = DH_CorrCube::BufferType ((DH_CorrCube::BufferPrimitive) round(10*seed) , (DH_CorrCube::BufferPrimitive) round(2*seed));
 
-// 	    if (channel == 0 && station == 0 && polarisation == 0) {
+	    if (channel == 0 && station == 0 && polarisation == 0) {
 // 	      acc += DH_CorrCube::BufferType(
 // 					     rval.real() * rval.real() - 
 // 					     rval.imag() * rval.imag(), 
@@ -111,9 +111,9 @@ namespace LOFAR
 // 					     rval.real() * rval.imag() +
 // 					     rval.imag() * rval.real() 
 // 					     );
-
-// 	      acc += rval * rval;
-// 	    }
+	      acc += rval * rval;
+// 	      cout << acc << endl;
+	    }
 
 	  
 	    ((DH_CorrCube*)getDataManager().getOutHolder(0))->setBufferElement(channel, 
@@ -125,6 +125,7 @@ namespace LOFAR
 	}
       }
     }
+    cout << "REF[" << itsIndex++ << "]: " << acc << endl;
     gettimeofday(&starttime, NULL);
   }
 

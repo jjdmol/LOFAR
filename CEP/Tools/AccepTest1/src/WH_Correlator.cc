@@ -85,15 +85,6 @@ WH_Correlator* WH_Correlator::make (const string& name) {
 
 void WH_Correlator::process() {
   double starttime, stoptime, cmults;
-  // variables to store prefetched antenna data
-#ifdef HAVE_BGL
-  _Complex float *s1_val_0, *s1_val_1;
-  _Complex float *s2_val_0, *s2_val_1;
-#else
-  complex<float> *s1_val_0, *s1_val_1;
-  complex<float> *s2_val_0, *s2_val_1;
-#endif
-
 
 #ifdef DO_TIMING
   if (t_start.tv_sec != 0 && t_start.tv_usec != 0) {
@@ -122,23 +113,20 @@ void WH_Correlator::process() {
   // reset integrator.
   memset(outDH->getBuffer(), 
 	 0,
-	 itsNchannels*itsNelements*itsNelements*itsNpolarisations*itsNpolarisations*sizeof(DH_Vis::BufferType));
+	 outDH->getBufSize()*sizeof(DH_Vis::BufferType));
 
 
 
   //
   // this block of code does the cast from complex<uint16> to complex<float>
   // 
-  // This is an uint16 pointer
-
-  // consider the input buffer of complex<uint16> to be uint16 of twice that size
-  // we can now offer the compiler a single for loop which has great potential to unroll
 #ifdef HAVE_BGL
   DH_CorrCube::BufferPrimitive* in_ptr = (DH_CorrCube::BufferPrimitive*) inDH->getBuffer();
-  _Complex float* in_buffer = new _Complex float[2*inDH->getBufSize()];
-  for ( unsigned int i = 0; i < inDH->getBufSize(); i++ ) {
-    *(in_buffer+i) = static_cast<_Complex float> ( *(in_ptr+i) ); 
-  }
+  _Complex float* in_buffer = new _Complex float[inDH->getBufSize()];
+//   for ( unsigned int i = 0; i < inDH->getBufSize(); i=i+2 ) {
+//     __real__ *(in_buffer+i) =  *(in_ptr+i);    
+//     __imag__ *(in_buffer+i) =  *(in_ptr+i+1);
+//   }
 #else
   DH_CorrCube::BufferType* in_ptr = (DH_CorrCube::BufferType*) inDH->getBuffer();
   // The float pointer is explicit, since DH_Vis is now complex<double>
@@ -170,6 +158,8 @@ void WH_Correlator::process() {
   __alignx(16, out_ptr);
   __alignx(8 , in_buffer);
 
+  int c = 0;
+
   for (int fchannel = 0; fchannel < itsNchannels; fchannel++) {
     int c_addr = itsNpolarisations*itsNelements*itsNsamples*fchannel;
     for (int station1 = 0; station1 < itsNelements; station1++) {
@@ -179,17 +169,13 @@ void WH_Correlator::process() {
 	out_ptr = reinterpret_cast<_Complex double*> (outDH->getBufferElement(station1, station2, fchannel, 0));
 #pragma unroll(10)
 	for (int sample = 0; sample < itsNsamples; sample++) {
-#if 0
-	  *out_ptr   += *(in_buffer+s1_addr+sample) * *(in_buffer+s2_addr+sample);     // XX
- 	  out_ptr++;
-	  *out_ptr   += *(in_buffer+s1_addr+sample) * *(in_buffer+s2_addr+sample+1);   // XY
- 	  out_ptr++;
-	  *out_ptr   += *(in_buffer+s1_addr+sample+1) * *(in_buffer+s2_addr+sample);   // YX
- 	  out_ptr++;
-	  *out_ptr   += *(in_buffer+s1_addr+sample+1) * *(in_buffer+s2_addr+sample+1); // YY
-#endif 
-
 #if 1
+	  *out_ptr     += *(in_buffer+s1_addr+sample) * *(in_buffer+s2_addr+sample);     // XX	  
+	  *(out_ptr+1) += *(in_buffer+s1_addr+sample) * *(in_buffer+s2_addr+sample+1);   // XY
+	  *(out_ptr+2) += *(in_buffer+s1_addr+sample+1) * *(in_buffer+s2_addr+sample);   // YX
+	  *(out_ptr+3) += *(in_buffer+s1_addr+sample+1) * *(in_buffer+s2_addr+sample+1); // YY
+	  c++;
+#else
 	  // XX
 	  *out_ptr = __fxcpmadd( *out_ptr, *(in_buffer+s1_addr+sample), __real__ *(in_buffer+s2_addr+sample) );
 	  *out_ptr = __fxcxnpma( *out_ptr, *(in_buffer+s1_addr+sample), __imag__ *(in_buffer+s2_addr+sample) );
@@ -209,6 +195,8 @@ void WH_Correlator::process() {
     } // station1
   } // fchannel
 
+
+  cout << c << " " << itsNchannels*itsNelements*itsNelements*itsNsamples/2 << endl;
 
 #else
 
