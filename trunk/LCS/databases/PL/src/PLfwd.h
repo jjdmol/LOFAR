@@ -45,7 +45,4 @@ namespace LOFAR
 
 } // namespace LOFAR
 
-using LOFAR::PL::TPersistentObject;
-using LOFAR::PL::DBRep;
-
 #endif
