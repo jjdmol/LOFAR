@@ -78,7 +78,7 @@ void StationCorrelator::define(const KeyValueMap& /*kvm*/) {
 
   LOG_TRACE_FLOW_STR("Read KVM parameters");
   char H_name[128];
-  int fast_rate = itsKVM.getInt("samples",256000)/itsKVM.getInt("NoPacketsInFrame",8);
+  int slow_rate = itsKVM.getInt("samples",256000)/itsKVM.getInt("NoPacketsInFrame",8);
 
   LOG_TRACE_FLOW_STR("Create the top-level composite");
   WH_Empty empty;
@@ -122,11 +122,6 @@ void StationCorrelator::define(const KeyValueMap& /*kvm*/) {
       itsRSPsteps[i]->connect(&StepRSPemulator, 0, i, 1, TH_Mem(), false); 
     }
 
-    // set the rates of this Step.
-    itsRSPsteps[i]->setInRate(fast_rate);
-    itsRSPsteps[i]->setProcessRate(fast_rate);
-    itsRSPsteps[i]->setOutRate(fast_rate);
-
     comp.addStep(itsRSPsteps[i]); 
 
     if (i != 0) {
@@ -147,8 +142,7 @@ void StationCorrelator::define(const KeyValueMap& /*kvm*/) {
     itsTsteps[i] = new Step(whTranspose, H_name, false);
     // the transpose collects data to intergrate over, so only the input 
     // and process methods run fast
-    itsTsteps[i]->setInRate(fast_rate);
-    itsTsteps[i]->setProcessRate(fast_rate);
+    itsTsteps[i]->setOutRate(slow_rate);
 
     comp.addStep(itsTsteps[i]);
 
@@ -166,6 +160,9 @@ void StationCorrelator::define(const KeyValueMap& /*kvm*/) {
 
     WH_Correlator whCorrelator(H_name, itsKVM);
     itsCsteps[i] = new Step(whCorrelator, H_name, false);
+    itsCsteps[i]->setInRate(slow_rate);
+    itsCsteps[i]->setProcessRate(slow_rate);
+    itsCsteps[i]->setOutRate(slow_rate);
     comp.addStep(itsCsteps[i]);
     
     itsCsteps[i]->connectInput(itsTsteps[i], TH_Mem(), 
@@ -180,6 +177,9 @@ void StationCorrelator::define(const KeyValueMap& /*kvm*/) {
 
     WH_Dump whDump(H_name, itsKVM);
     Step dumpstep(whDump, H_name);
+    dumpstep.setInRate(slow_rate);
+    dumpstep.setProcessRate(slow_rate);
+    dumpstep.setOutRate(slow_rate);
     comp.addStep(dumpstep);
     
     for (unsigned int in = 0; in < (itsNcorrelator/itsNdump); in++) {
@@ -231,7 +231,7 @@ int main (int argc, const char** argv) {
     cout << "defined" << endl;
     correlator.basePrerun();
     cout << "init done" << endl;
-    correlator.baseRun(1);
+    correlator.baseRun(10000);
     cout << "run" << endl;
     correlator.baseDump();
     correlator.baseQuit();
