@@ -45,7 +45,7 @@ const meqsink_test := function (gui=use_gui)
   print mqs.meq('Create.Node',sinkrec);
   
   # resolve its children
-  print mqs.meq('Resolve.Children',[name='sink1'],F);
+  print mqs.resolve('sink1',F);
   
   # activate input agent and watch the fireworks
   global inputrec;
@@ -85,7 +85,7 @@ const meqsel_test := function (gui=use_gui)
   print mqs.meq('Create.Node',rec);
   
   # resolve children
-  print mqs.meq('Resolve.Children',[name='select3']);
+  print mqs.resolve('select3');
   
   global cells,request,res;
   cells := meq.cells(meq.domain(0,10,0,10),20,3);
@@ -125,7 +125,7 @@ const state_test_init := function (gui=use_gui)
   print mqs.meq('Create.Node',meq.node('MeqComposer','compose3',children="select1 select2"));
   
   # resolve children
-  print mqs.meq('Resolve.Children',[name='compose3']);
+  print mqs.resolve('compose3');
 }
 
 const state_test := function (gui=use_gui)
@@ -216,7 +216,7 @@ const solver_test := function (gui=use_gui,verbose=4,publish=T)
   global cells,cells2,request,request2,res,res2,st1,st2,st3;
   
   # resolve children
-  print mqs.meq('Resolve.Children',[name='solver1']);
+  print mqs.resolve('solver1');
   
   st1 := mqs.getnodestate('a');
   cells  := meq.cells(meq.domain(0,.5,0,.5),num_freq=4,num_time=4);
@@ -392,11 +392,11 @@ const flagger_test := function (verbose=4,gui=use_gui)
   defrec.flag_mask := -1;
   mqs.meq('Create.Node',defrec,T);
   
-  mqs.meq('Node.Resolve.Children',[name='add1'],T);
-  mqs.meq('Node.Resolve.Children',[name='add2'],T);
-  mqs.meq('Node.Resolve.Children',[name='add3'],T);
-  mqs.meq('Node.Resolve.Children',[name='add4'],T);
-  mqs.meq('Node.Resolve.Children',[name='add5'],T);
+  mqs.resolve('add1',T);
+  mqs.resolve('add2',T);
+  mqs.resolve('add3',T);
+  mqs.resolve('add4',T);
+  mqs.resolve('add5',T);
   
   global res1,res2,res3,res4,res5;
   res1 := mqs.meq('Node.Execute',[name='add1',request=request],T);
@@ -519,7 +519,7 @@ const ars_test := function ()
   defrec := meq.node('MeqComposer','compose',children="add1 add2");
   mqs.meq('Create.Node',defrec,T);
   
-  print mqs.meq('Resolve.Children',[name='compose'],T);
+  print mqs.resolve('compose',T);
   
   req := meq.request(cells,calc_deriv=0);
   res := mqs.execute('compose',req);
@@ -567,7 +567,7 @@ const stress_test := function (n=10000,verbose=0)
       rec.children.c.children :=
       rec.children.d.children := spaste('const',i);
     mqs.meq('Create.Node',rec,wait_reply=F,silent=T); # wait_reply=((i%10)==0),silent=T); 
-    mqs.meq('Resolve.Children',[name=rec.name],wait_reply=F,silent=T);
+    mqs.resolve(rec.name,wait_reply=F,silent=T);
   }
   print 'getting node list';
   list := mqs.getnodelist();

@@ -8,8 +8,11 @@ for file in $REQUIRES; do
 done
 
 echo "Running solver_test.g"
-glish -l ${srcdir}/solver_test.g -runtest 2>&1 | tee solver_test.log
+echo >solver_test.log
+tail +0f solver_test.log &
+tailpid=$!
+glish -l ${srcdir}/solver_test.g -runtest &>solver_test.log
 retval=$?
-
 echo "Glish exited with status $retval"
+kill $tailpid 
 exit $retval

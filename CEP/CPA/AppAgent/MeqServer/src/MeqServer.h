@@ -44,22 +44,22 @@ class MeqServer : public VisRepeater, public EventRecepient
     virtual void run();
 
     //##ModelId=3F61920F01A8
-    void createNode (DataRecord::Ref &out,DataRecord::Ref::Xfer &initrec);
+    void createNode   (DataRecord::Ref &out,DataRecord::Ref::Xfer &in);
     //##ModelId=3F61920F01FA
-    void deleteNode (DataRecord::Ref &out,DataRecord::Ref::Xfer &in);
+    void deleteNode   (DataRecord::Ref &out,DataRecord::Ref::Xfer &in);
     //##ModelId=3F61920F024E
     void nodeGetState (DataRecord::Ref &out,DataRecord::Ref::Xfer &in);
     //##ModelId=3F61920F02A4
     void nodeSetState (DataRecord::Ref &out,DataRecord::Ref::Xfer &in);
     //##ModelId=3F98D91A03B9
-    void resolveChildren (DataRecord::Ref &out,DataRecord::Ref::Xfer &in);
+    void resolve      (DataRecord::Ref &out,DataRecord::Ref::Xfer &in);
     //##ModelId=3F98D91B0064
-    void getNodeList (DataRecord::Ref &out,DataRecord::Ref::Xfer &in);
+    void getNodeList  (DataRecord::Ref &out,DataRecord::Ref::Xfer &in);
     
     void getNodeIndex (DataRecord::Ref &out,DataRecord::Ref::Xfer &in);
     
     //##ModelId=400E5B6C015E
-    void nodeExecute (DataRecord::Ref &out,DataRecord::Ref::Xfer &in);
+    void nodeExecute  (DataRecord::Ref &out,DataRecord::Ref::Xfer &in);
     //##ModelId=400E5B6C01DD
     void nodeClearCache (DataRecord::Ref &out,DataRecord::Ref::Xfer &in);
     //##ModelId=400E5B6C0247

@@ -158,7 +158,17 @@ const meq.server := function (appid='MeqServer',
     wider public;
     return public.meq('Create.Node',initrec,wait_reply=wait_reply,silent=silent);
   }
+
+  # define shortcuts for common methods
+  # ------ createnode()
   
+  const public.resolve := function (node,wait_reply=F,silent=F)
+  {
+    wider public;
+    rec := self.makenodespec(node);
+    return public.meq('Resolve',rec,wait_reply=wait_reply,silent=silent);
+  }
+
   # ------ getnodestate()
   
   const public.getnodestate := function (node)
