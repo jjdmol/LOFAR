@@ -25,14 +25,23 @@
 
 #include <GPI_PMLlightServer.h>
 #include <GPI_TH_Port.h>
-#include <DH_PIProtocol.h>
+#include <GCF/Protocols/DH_PIProtocol.h>
 
 using LOFAR::GPITH_Port;
-using LOFAR::DH_PIProtocol;
+using LOFAR::GCF::DH_PIProtocol;
 
 
-/**
- */
+// This special PMLlight server class handles all messages from and to a CEP-PIA 
+// and all message from the PA determined for a CEP-PIA. For this purpose it 
+// uses the special DataHolder implementation and the special TransportHolder 
+// implementation combined with GCFTCPPort (thePortToClient) of the baseclass. 
+// For communication with PA it uses the GCFTCPPort (thePortToPA) of the 
+// baseclass too. Because the DataHolder’s are constructed with Blob’s and the 
+// GCF port concept is based on GCFEvents, this class must also convert Blob’s 
+// to GCFEvents and visa versa. 
+// Note: Messages received from PA needed not be converted to Blob’s. 
+// They will be first processed by the GPIPropertySet, which generates PI 
+// messages for the PIA. These messages than has to be converted to Blob’s. 
  
 class GPICEPServer: public GPIPMLlightServer
 {
@@ -40,22 +49,25 @@ class GPICEPServer: public GPIPMLlightServer
 		GPICEPServer (GPIController& controller);
 		virtual ~GPICEPServer ();
    
+    // specialized implementation of the method defined in the baseclass
+    // it converts the message (based on the GCFEvent concept and determined for
+    // the CEP-PMLlight) to Blob's (from LCS/Common)
     virtual void sendMsgToClient(GCFEvent& msg);        
       
 	private: // helper methods
-    void convertToGCFEvent();
-    void convertToBlob();
         
 	private: // state methods
+    // overrides the state method of the baseclass to convert incomming messages
+    // from CEP-PMLlight in the right way
     GCFEvent::TResult operational (GCFEvent& e, GCFPortInterface& p);
     
-  private: // (copy)constructors
+  private: // (copy) constructors
     GPICEPServer();
-    /**
-     * Don't allow copying of this object.
-     */
+    // Don't allow copying of this object.
+    // <group>
     GPICEPServer (const GPICEPServer&);
     GPICEPServer& operator= (const GPICEPServer&);
+    // </group>
 
 	private: // data members
     GPITH_Port      _thPort;

@@ -48,7 +48,7 @@ class GCFTask : public GCFFsm
 
   protected:
     explicit GCFTask (State initial, 
-                      string& name); 
+                      const string& name); 
   private:
     /// Is private to avoid initialising a task without giving an inital state and the task name
     GCFTask();
@@ -61,7 +61,7 @@ class GCFTask : public GCFFsm
     /** static method; 
      * inits a number of services for the GCF based application:
      * - holds the argc and argv parameters in static data members
-     * - lofar logger("log4cplus.properties")
+     * - lofar logger("mac.log_prop")
      * - parameterset(argv[0] + ".conf")
      */     
     static void init (int argc, char** argv);

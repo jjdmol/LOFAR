@@ -27,7 +27,7 @@
 
 #include <GCF/GCF_Defines.h>
 
-#define PARAM_PI_HOST "mac.gcf.pi.cephost"
-#define PARAM_PI_PORT "mac.gcf.pi.cepport"
+#define PARAM_PI_HOST "mac.ns.GCF-PI.cep-provider.host"
+#define PARAM_PI_PORT "mac.ns.GCF-PI.cep-provider.port"
 
 #endif

@@ -22,6 +22,11 @@
 
 
 #include <GCF/GCF_PVDynArr.h>
+#include <Common/DataConvert.h>
+#include <Common/LofarTypes.h>
+
+using LOFAR::TYPES::uint16;
+
 
 GCFPVDynArr::GCFPVDynArr(TMACValueType itemType, const GCFPValueArray& val) :
   GCFPValue((TMACValueType) (LPT_DYNARR | itemType))
@@ -44,15 +49,21 @@ GCFPVDynArr::~GCFPVDynArr()
 unsigned int GCFPVDynArr::unpackConcrete(const char* valBuf)
 {
   unsigned int unpackedBytes(0);
-  cleanup();
-  unsigned int arraySize(0);
+  uint16 arraySize(0);
   unsigned int curUnpackedBytes(0);
   GCFPValue* pNewValue(0);
-  memcpy((void *) &arraySize, valBuf, sizeof(unsigned int));
-  unpackedBytes += sizeof(unsigned int);
+
+  cleanup();
+
+  memcpy((void *) &arraySize, valBuf, sizeof(uint16));
+  unpackedBytes += sizeof(uint16);
+  if (mustConvert()) LOFAR::dataConvert(LOFAR::dataFormat(), &arraySize, 1);
+
   for (unsigned int i = 0; i < arraySize; i++)
   {
     pNewValue = GCFPValue::createMACTypeObject((TMACValueType) (getType() | LPT_DYNARR));
+    
+    pNewValue->setDataFormat(_dataFormat);
     
     curUnpackedBytes = pNewValue->unpackConcrete(valBuf + unpackedBytes);
     if (curUnpackedBytes > 0)
@@ -72,10 +83,12 @@ unsigned int GCFPVDynArr::unpackConcrete(const char* valBuf)
 unsigned int GCFPVDynArr::packConcrete(char* valBuf) const
 {
   unsigned int packedBytes(0);  
-  unsigned int arraySize(_values.size());
-  memcpy(valBuf, (void *) &arraySize, sizeof(unsigned int));
-  packedBytes += sizeof(unsigned int);
-  unsigned int curPackedBytes = 0;
+  unsigned int curPackedBytes(0);
+  uint16 arraySize(_values.size());
+
+  memcpy(valBuf, (void *) &arraySize, sizeof(uint16));
+  packedBytes += sizeof(uint16);
+
   for (GCFPValueArray::const_iterator iter = _values.begin();
        iter != _values.end(); ++iter)
   {
@@ -92,7 +105,7 @@ unsigned int GCFPVDynArr::packConcrete(char* valBuf) const
 
 unsigned int GCFPVDynArr::getConcreteSize() const
 {
-  unsigned int totalSize(sizeof(unsigned int));
+  unsigned int totalSize(sizeof(uint16));
 
   for (GCFPValueArray::const_iterator iter = _values.begin();
        iter != _values.end(); ++iter)
@@ -102,7 +115,7 @@ unsigned int GCFPVDynArr::getConcreteSize() const
   return totalSize;
 }
 
-TGCFResult GCFPVDynArr::setValue(const string value)
+TGCFResult GCFPVDynArr::setValue(const string& value)
 {
   TGCFResult result(GCF_NO_ERROR);
   

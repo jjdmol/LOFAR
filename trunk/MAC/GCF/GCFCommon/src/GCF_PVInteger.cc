@@ -22,20 +22,22 @@
 
 
 #include <GCF/GCF_PVInteger.h>
+#include <Common/DataConvert.h>
 
 unsigned int GCFPVInteger::unpackConcrete(const char* valBuf)
 {
-  memcpy((void*) &_value, valBuf, sizeof(int));
-  return sizeof(int);
+  memcpy((void*) &_value, valBuf, sizeof(int32));
+  if (mustConvert()) LOFAR::dataConvert(LOFAR::dataFormat(), &_value, 1);
+  return sizeof(int32);
 }
 
 unsigned int GCFPVInteger::packConcrete(char* valBuf) const
 {
-  memcpy(valBuf, (void*) &_value, sizeof(int));
-  return sizeof(int);
+  memcpy(valBuf, (void*) &_value, sizeof(int32));
+  return sizeof(int32);
 }
 
-TGCFResult GCFPVInteger::setValue(const string valueData)
+TGCFResult GCFPVInteger::setValue(const string& valueData)
 {
   TGCFResult result(GCF_VALUESTRING_NOT_VALID);
   

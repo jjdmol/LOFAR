@@ -21,10 +21,10 @@
 //  $Id$
 
 
-#include "DH_PIProtocol.h"
+#include <DH_PIProtocol.h>
 
-namespace LOFAR
-{
+namespace LOFAR {
+  namespace GCF {
 
 DH_PIProtocol::DH_PIProtocol (const string& name)
 : DataHolder (name, "DH", 1),
@@ -74,5 +74,5 @@ void DH_PIProtocol::postprocess()
   setEventID(NO_EVENTID_SET);
   setSeqNr(0);
 }
-
-} // end namespace
+  } // namespace GCF
+} // namespace LOFAR

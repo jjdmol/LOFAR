@@ -22,8 +22,9 @@
 
 
 #include <GCF/GCF_PVBlob.h>
+#include <Common/DataConvert.h>
 
-GCFPVBlob::GCFPVBlob(unsigned char* val, unsigned int length, bool clone) 
+GCFPVBlob::GCFPVBlob(unsigned char* val, uint16 length, bool clone) 
   : GCFPValue(LPT_BLOB), _value(val), _length(length), _isDataHolder(clone)
 {
   if (clone)
@@ -39,6 +40,8 @@ unsigned int GCFPVBlob::unpackConcrete(const char* valBuf)
   // first read length field
   memcpy((void *) &_length, valBuf, sizeof(_length));
   unpackedBytes += sizeof(_length);
+
+  if (mustConvert()) LOFAR::dataConvert(LOFAR::dataFormat(), &_length, 1);
   
   // if it is the data holder the blob buffer space must be freed first
   if (_isDataHolder)
@@ -66,7 +69,7 @@ unsigned int GCFPVBlob::packConcrete(char* valBuf) const
   return packedBytes;
 }
 
-TGCFResult GCFPVBlob::setValue(unsigned char* value, unsigned int length, bool clone)
+TGCFResult GCFPVBlob::setValue(unsigned char* value, uint16 length, bool clone)
 { 
   TGCFResult result(GCF_NO_ERROR);
   _length = length; 
@@ -87,7 +90,7 @@ TGCFResult GCFPVBlob::setValue(unsigned char* value, unsigned int length, bool c
   return result;
 }
  
-TGCFResult GCFPVBlob::setValue(const string value)
+TGCFResult GCFPVBlob::setValue(const string& value)
 {
   TGCFResult result(GCF_NO_ERROR);
 

@@ -1,16 +1,71 @@
 //
-// Protocol definition for the Supervisory Server(ERTC)/Property Interface(MAC/GCF)
+// Protocol definition for the RTC-PMLlight/Property Interface(MAC/GCF)
 //
 autogen definitions protocol;
 
-description = "Protocol definition for the Supervisory Server(ERTC)/Property Interface(MAC/GCF)";
+description = "Protocol definition for the RTC-PMLlight/Property Interface(MAC/GCF)";
 prefix = "PI"; // for the signal names
 id = "(F_GCF_PROTOCOL + 1)";
 // specify extra include files
 // e.g.
 //include = '<sys/time.h>';
-include = '<GPI_Defines.h>';
-include = '<GPI_PValue.h>';
+include = '<GCF/GCF_PValue.h>';
+
+prelude = << PRELUDE_END
+
+enum TPIResult 
+{
+  PI_NO_ERROR, 
+  PI_UNKNOWN_ERROR,
+  PI_WRONG_STATE,
+  PI_PS_GONE,
+  PI_MISSING_PROPS,
+  PI_PROP_SET_NOT_EXISTS,
+  PI_PROP_SET_ALLREADY_EXISTS,
+  PI_DPTYPE_UNKNOWN,
+  PI_INTERNAL_ERROR,
+  PI_PA_INTERNAL_ERROR,
+  PI_PA_NOTCONNECTED,
+  PI_PROP_NOT_VALID,
+  PI_EMPTY_SCOPE,
+  PI_MACTYPE_UNKNOWN,  
+};
+
+class PValue : public GCFTransportable
+{
+  public:
+    PValue() : _pValue(0), _unpacked(false) {};
+    PValue(const GCFPValue& value) : _pValue(&value), _unpacked(false) {};
+
+    virtual ~PValue() 
+    {
+      if (_unpacked) delete _pValue;
+    }
+
+    unsigned int pack(char* buffer)
+    {
+      assert(_pValue);
+      return _pValue->pack(buffer);
+    }
+    unsigned int unpack(char* buffer)
+    {
+      assert(!_pValue);
+      _unpacked = true;
+      _pValue = GCFPValue::unpackValue(buffer);
+      return _pValue->getSize();
+    }
+    unsigned int getSize()
+    {
+      assert(_pValue);
+      return _pValue->getSize();
+    }
+
+    const GCFPValue* _pValue;
+
+  private:
+    bool _unpacked;
+};
+PRELUDE_END;
 
 // An "event" has a "signal" and a "dir" (direction)
 // and zero or more "param"s.
@@ -135,7 +190,7 @@ event = {
 	};
 	param = {
 		name = "value";
-		type = "GPIPValue";
+		type = "PValue";
 		userdefined;
 	};
 };
@@ -153,7 +208,7 @@ event = {
 	};
 	param = {
 		name = "value";
-		type = "GPIPValue";
+		type = "PValue";
 		userdefined;
 	};
 };

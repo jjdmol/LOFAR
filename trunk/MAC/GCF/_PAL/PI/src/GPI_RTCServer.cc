@@ -22,10 +22,8 @@
 
 #include <GPI_RTCServer.h>
 
-static string sPLSTaskName("GCF-PI-RTC");
-
 GPIRTCServer::GPIRTCServer(GPIController& controller) : 
-  GPIPMLlightServer(controller, sPLSTaskName, false)
+  GPIPMLlightServer(controller, PI_RTCPLS_TASK_NAME, false)
 {
 }
 

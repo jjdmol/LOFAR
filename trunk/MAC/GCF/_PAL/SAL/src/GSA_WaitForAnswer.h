@@ -26,6 +26,8 @@
 #include <HotLinkWaitForAnswer.hxx>   
 #include <Common/lofar_string.h>
 
+using std::string;
+
 class GSAService;
 class DpMsgAnswer;
 class DpHLGroup;
@@ -54,8 +56,8 @@ class GSAWaitForAnswer : public HotLinkWaitForAnswer
     virtual ~GSAWaitForAnswer () {};
     
     void hotLinkCallBack (DpMsgAnswer& answer);
-    inline const string& getDpName () const {return _dpName;}
-    inline void setDpName (const string& dpName) {_dpName = dpName;}
+    const string& getDpName () const {return _dpName;}
+    void setDpName (const string& dpName) {_dpName = dpName;}
 
   protected:
     // Answer on conenct

@@ -23,22 +23,22 @@ ServiceBroker_CPPFLAGS= -I$(top_srcdir)/include
 ServiceBroker_CXXFLAGS=-fmessage-length=0
 
 BUILT_SOURCES = \
-	log4cplus.properties \
+	mac.log_prop \
 	ServiceBroker.conf
 
 EXTRA_DIST = \
-	log4cplus.properties \
+	mac.log_prop \
 	ServiceBroker.conf
 
 MAC_CONFIG = $(top_srcdir)/../../Config
 
-%.properties: $(MAC_CONFIG)/%.properties
+%.log_prop: $(MAC_CONFIG)/%.log_prop
 	cp $< $@
 	
 configfilesdir=$(bindir)
 configfiles_DATA= \
 	ServiceBroker.conf \
-	log4cplus.properties
+	mac.log_prop
 
 install-data-local:
 	echo "mac.gcf.sb.host=`hostname -s`" >> $(bindir)/ServiceBroker.conf

@@ -78,7 +78,7 @@ class GCFTask;
 class GCFHandler
 {
   public:
-    /// @return true if no other object uses this handler anymore othewise false
+    /// @return true if no other objects use this handler anymore otherwise false
     bool mayDeleted() { return (_usecount == 0);}
     /// increments the uscount
     void use() { _usecount++;}

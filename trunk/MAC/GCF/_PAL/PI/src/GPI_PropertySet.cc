@@ -25,44 +25,15 @@
 #include <GCF/GCF_PValue.h>
 #include <GCF/Utils.h>
 #include <GCF/PAL/GCF_PVSSInfo.h>
-#include <PI_Protocol.ph>
 
-TPAResult convertPIToPAResult(TPIResult result)
-{
-  switch (result)
-  {
-    case PI_WRONG_STATE: return PA_WRONG_STATE;
-    case PI_PS_GONE: return PA_PS_GONE;
-    case PI_PROP_SET_NOT_EXISTS: return PA_PROP_SET_NOT_EXISTS;
-    case PI_PROP_SET_ALLREADY_EXISTS: return PA_PROP_SET_ALLREADY_EXISTS;
-    case PI_DPTYPE_UNKNOWN: return PA_DPTYPE_UNKNOWN;
-    case PI_INTERNAL_ERROR: return PA_PI_INTERNAL_ERROR;
-    case PI_PA_INTERNAL_ERROR: return PA_INTERNAL_ERROR; 
-    case PI_NO_ERROR: return PA_NO_ERROR;
-    case PI_MISSING_PROPS: return PA_MISSING_PROPS;
-    default: return PA_UNKNOWN_ERROR;
-  }
-}
 
-TPIResult convertPAToPIResult(TPAResult result)
-{
-  switch (result)
-  {
-    case PA_WRONG_STATE: return PI_WRONG_STATE;
-    case PA_PS_GONE: return PI_PS_GONE;
-    case PA_PROP_SET_NOT_EXISTS: return PI_PROP_SET_NOT_EXISTS;
-    case PA_PROP_SET_ALLREADY_EXISTS: return PI_PROP_SET_ALLREADY_EXISTS;
-    case PA_DPTYPE_UNKNOWN: return PI_DPTYPE_UNKNOWN;
-    case PA_INTERNAL_ERROR: return PI_PA_INTERNAL_ERROR;
-    case PA_PI_INTERNAL_ERROR: return PI_INTERNAL_ERROR; 
-    case PA_NO_ERROR: return PI_NO_ERROR;
-    case PA_MISSING_PROPS: return PI_MISSING_PROPS;
-    default: return PI_UNKNOWN_ERROR;
-  }
-}
+TPIResult convertPAToPIResult(TPAResult result);
+TPAResult convertPIToPAResult(TPIResult result);
 
 void GPIPropertySet::propSubscribed(const string& /*propName*/)
 {
+  assert(_state == S_LINKING);
+  
   _counter--;
   if (_counter == 0)
   {
@@ -76,15 +47,18 @@ void GPIPropertySet::propSubscribed(const string& /*propName*/)
 
 void GPIPropertySet::propValueChanged(const string& propName, const GCFPValue& value)
 {
-  PIValueChangedEvent indicationOut;
-  indicationOut.scopeLength = _scope.length();
-  indicationOut.name = propName;
-  if (indicationOut.name.find(':') < propName.length())
+  if (_state == S_LINKED)
   {
-    indicationOut.name.erase(0, indicationOut.name.find(':') + 1); 
+    PIValueChangedEvent indicationOut;
+    indicationOut.scopeLength = _scope.length();
+    indicationOut.name = propName;
+    if (indicationOut.name.find(':') < propName.length())
+    {
+      indicationOut.name.erase(0, indicationOut.name.find(':') + 1); 
+    }
+    indicationOut.value._pValue = &value;
+    sendMsgToClient(indicationOut);
   }
-  indicationOut.value._pValue = &value;
-  sendMsgToClient(indicationOut);
 }
 
 void GPIPropertySet::enable(const PIRegisterScopeEvent& requestIn)
@@ -160,14 +134,7 @@ void GPIPropertySet::enabled(TPAResult result)
     case S_ENABLING:
     {
       responseOut.result = convertPAToPIResult(result);
-      if (result == PA_NO_ERROR)
-      {    
-        _state = S_ENABLED;
-      }
-      else
-      {    
-        _state = S_DISABLED;
-      }
+      _state = (result == PA_NO_ERROR ? S_ENABLED : S_DISABLED);
       break;
     }
     default:
@@ -178,6 +145,7 @@ void GPIPropertySet::enabled(TPAResult result)
     }
   }
   sendMsgToClient(responseOut);
+  _savedSeqnr = 0;
 }
 
 void GPIPropertySet::disable(const PIUnregisterScopeEvent& requestIn)
@@ -200,44 +168,54 @@ void GPIPropertySet::disable(const PIUnregisterScopeEvent& requestIn)
           unsubscribeProp(fullName);          
         }
       }
-      break;    
+      // intentional fall through
+    case S_ENABLED:
+      if (_savedSeqnr == 0)
+      {
+        _savedSeqnr = requestIn.seqnr;
+      }     
+      disabling(_savedSeqnr);
+      _savedSeqnr = 0;
+      break;
+
+    case S_UNLINKING:
     case S_LINKING:
       assert(_counter > 0);
       _state = S_DELAYED_DISABLING;
       _savedSeqnr = requestIn.seqnr;
       break;
-    case S_UNLINKING:
-    case S_ENABLING:
-    case S_ENABLED:
-    {
-      _state = S_DISABLING;
-      PAUnregisterScopeEvent requestOut;
-      requestOut.scope = _scope;
-      requestOut.seqnr = _savedSeqnr;
-      sendMsgToPA(requestOut);      
-      break;
-    }
+      
     default:
     {
       wrongState("disable");
-      PIScopeUnregisteredEvent erResponse;
-      erResponse.seqnr = _savedSeqnr;
-      erResponse.result = PI_WRONG_STATE;
-      sendMsgToClient(erResponse);     
+      PIScopeUnregisteredEvent errResponse;
+      errResponse.seqnr = requestIn.seqnr;
+      errResponse.result = PI_WRONG_STATE;
+      sendMsgToClient(errResponse);
+      _savedSeqnr = 0;
       break;
     }
   }
 }
 
-void GPIPropertySet::disabled(TPAResult result)
+void GPIPropertySet::disabling(unsigned int seqnr)
+{
+  _state = S_DISABLING;
+  PAUnregisterScopeEvent requestOut;
+  requestOut.scope = _scope;
+  requestOut.seqnr = seqnr;
+  sendMsgToPA(requestOut);      
+}
+
+void GPIPropertySet::disabled(const PAScopeUnregisteredEvent& responseIn)
 {
   PIScopeUnregisteredEvent responseOut;
-  responseOut.seqnr = _savedSeqnr;
+  responseOut.seqnr = responseIn.seqnr;
   switch (_state)
   {
     case S_DISABLING:
     {
-      responseOut.result = convertPAToPIResult(result);
+      responseOut.result = convertPAToPIResult(responseIn.result);
       _state = S_DISABLED;
       break;
     }
@@ -253,8 +231,8 @@ void GPIPropertySet::disabled(TPAResult result)
 
 void GPIPropertySet::linkPropSet(const PALinkPropSetEvent& requestIn)
 {
-  PAPropSetLinkedEvent erResponse;
-  erResponse.scope = _scope;
+  PAPropSetLinkedEvent errResponse;
+  errResponse.scope = _scope;
   switch (_state)
   {
     case S_ENABLED:
@@ -270,39 +248,45 @@ void GPIPropertySet::linkPropSet(const PALinkPropSetEvent& requestIn)
       LOG_DEBUG(formatString ( 
           "Property set with scope %s is deleting in the meanwhile", 
           _scope.c_str()));
-      erResponse.result = PA_PS_GONE;   
-      sendMsgToPA(erResponse);
+      errResponse.result = PA_PS_GONE;   
+      sendMsgToPA(errResponse);
       break;
+      
     default:
-    {
       wrongState("linkProperties");
-      erResponse.result = PA_WRONG_STATE;
-      sendMsgToPA(erResponse);
+      errResponse.result = PA_WRONG_STATE;
+      sendMsgToPA(errResponse);
       break;
-    }
   }
 }
 
 bool GPIPropertySet::propSetLinkedInClient(const PIPropSetLinkedEvent& responseIn)
 {
-  if (_state == S_LINKING)
-  {    
-    assert(_counter == 0);
-    if (responseIn.result != PI_PS_GONE)
-    {
-      Utils::convStringToList(_propsSubscribed, responseIn.propList);
-      _tmpPIResult = responseIn.result;
-      return trySubscribing();
-    }
-    else
-    {
-      propSetLinkedInPI(PA_PS_GONE);
-    }
-  }
-  else
+  switch (_state)
   {
-    wrongState("propSetLinked");
-    propSetLinkedInPI(PA_WRONG_STATE);
+    case S_LINKING:
+      assert(_counter == 0);
+      if (responseIn.result != PI_PS_GONE)
+      {
+        Utils::convStringToList(_propsSubscribed, responseIn.propList);
+        _tmpPIResult = responseIn.result;
+        return trySubscribing();
+      }
+      else
+      {
+        propSetLinkedInPI(PA_PS_GONE);
+      }
+      break;
+
+    case S_DELAYED_DISABLING:
+      propSetLinkedInPI(convertPIToPAResult(responseIn.result));
+      disabling(_savedSeqnr);
+      _savedSeqnr = 0;
+      break;
+      
+    default:
+      wrongState("propSetLinked");
+      propSetLinkedInPI(PA_WRONG_STATE);
   }
   return true;
 }
@@ -347,10 +331,10 @@ bool GPIPropertySet::trySubscribing()
       }      
       if (_counter == 0)
       {
-        if (_missing == _propsSubscribed.size())
+        if (_missing == _propsSubscribed.size() && _propsSubscribed.size() > 0)
         {
           // propset is not yet known in this application, retry it with a 
-          // 0 timer
+          // null timer in the server
           _missing = 0;
           successful = false;
           break;
@@ -359,9 +343,9 @@ bool GPIPropertySet::trySubscribing()
         // no more properties needed to be linked 
         // so we can return a response to the controller
         _state = S_LINKED;
-        if (_missing > 0)
+        if (_missing > 0 && result == PA_NO_ERROR)
         {         
-          propSetLinkedInPI((result == PA_NO_ERROR ? PA_MISSING_PROPS : result));
+          propSetLinkedInPI(PA_MISSING_PROPS);
         }
         else
         {        
@@ -373,7 +357,7 @@ bool GPIPropertySet::trySubscribing()
     case S_DELAYED_DISABLING:
     {
       propSetLinkedInPI(PA_PS_GONE);
-      _state = S_ENABLED;
+      _state = S_LINKED;
       PIUnregisterScopeEvent dummy;
       disable(dummy);
       break;
@@ -382,6 +366,7 @@ bool GPIPropertySet::trySubscribing()
     case S_DISABLING:
       propSetLinkedInPI(PA_PS_GONE);
       break;
+      
     default:
       wrongState("trySubscribing");
       propSetLinkedInPI(PA_WRONG_STATE);
@@ -436,10 +421,11 @@ void GPIPropertySet::unlinkPropSet(const PAUnlinkPropSetEvent& requestIn)
     case S_DISABLED:
     case S_DISABLING:
       LOG_DEBUG(formatString ( 
-          "Property set with scope %s is deleting in the meanwhile", 
+          "Property set with scope %s is deleted in the meanwhile", 
           _scope.c_str()));
       propSetUnlinkedInPI(PA_PS_GONE);
       break;
+      
     default:
       wrongState("unlinkPropSet");
       propSetUnlinkedInPI(PA_WRONG_STATE);
@@ -449,18 +435,29 @@ void GPIPropertySet::unlinkPropSet(const PAUnlinkPropSetEvent& requestIn)
 
 void GPIPropertySet::propSetUnlinkedInClient(const PIPropSetUnlinkedEvent& responseIn)
 {
-  if (_state == S_UNLINKING)
+  switch (_state)
   {
-    PAPropSetUnlinkedEvent responseOut;    
-    responseOut.result = convertPIToPAResult(responseIn.result);
-    responseOut.scope = responseIn.scope;
-    _state = S_ENABLED;
-    sendMsgToPA(responseOut);
-  }
-  else
-  {
-    wrongState("propSetUnlinked");
-    propSetLinkedInPI(PA_WRONG_STATE);
+    case S_UNLINKING:
+    {
+      PAPropSetUnlinkedEvent responseOut;    
+      responseOut.result = convertPIToPAResult(responseIn.result);
+      responseOut.scope = responseIn.scope;
+      _state = S_ENABLED;
+      sendMsgToPA(responseOut);
+      break;
+    }
+    case S_DELAYED_DISABLING:
+    {
+      propSetUnlinkedInPI(convertPIToPAResult(responseIn.result));
+      _state = S_ENABLED;
+      PIUnregisterScopeEvent dummy;
+      disable(dummy);
+      break;
+    }
+    default:
+      wrongState("propSetUnlinked");
+      propSetLinkedInPI(PA_WRONG_STATE);
+      break;
   }
 }
 
@@ -490,4 +487,38 @@ void GPIPropertySet::wrongState(const char* request)
         request,
         getScope().c_str(),
         stateString[_state]));  
+}
+
+TPAResult convertPIToPAResult(TPIResult result)
+{
+  switch (result)
+  {
+    case PI_WRONG_STATE:              return PA_WRONG_STATE;
+    case PI_PS_GONE:                  return PA_PS_GONE;
+    case PI_PROP_SET_NOT_EXISTS:      return PA_PROP_SET_NOT_EXISTS;
+    case PI_PROP_SET_ALLREADY_EXISTS: return PA_PROP_SET_ALLREADY_EXISTS;
+    case PI_DPTYPE_UNKNOWN:           return PA_DPTYPE_UNKNOWN;
+    case PI_INTERNAL_ERROR:           return PA_PI_INTERNAL_ERROR;
+    case PI_PA_INTERNAL_ERROR:        return PA_INTERNAL_ERROR; 
+    case PI_NO_ERROR:                 return PA_NO_ERROR;
+    case PI_MISSING_PROPS:            return PA_MISSING_PROPS;
+    default:                          return PA_UNKNOWN_ERROR;
+  }
+}
+
+TPIResult convertPAToPIResult(TPAResult result)
+{
+  switch (result)
+  {
+    case PA_WRONG_STATE:              return PI_WRONG_STATE;
+    case PA_PS_GONE:                  return PI_PS_GONE;
+    case PA_PROP_SET_NOT_EXISTS:      return PI_PROP_SET_NOT_EXISTS;
+    case PA_PROP_SET_ALLREADY_EXISTS: return PI_PROP_SET_ALLREADY_EXISTS;
+    case PA_DPTYPE_UNKNOWN:           return PI_DPTYPE_UNKNOWN;
+    case PA_INTERNAL_ERROR:           return PI_PA_INTERNAL_ERROR;
+    case PA_PI_INTERNAL_ERROR:        return PI_INTERNAL_ERROR; 
+    case PA_NO_ERROR:                 return PI_NO_ERROR;
+    case PA_MISSING_PROPS:            return PI_MISSING_PROPS;
+    default:                          return PI_UNKNOWN_ERROR;
+  }
 }

@@ -116,7 +116,7 @@ class GCFRTMyPropertySet
     TGCFResult disable ();
 
     bool isEnabled () 
-      { return (_state == S_ENABLED || _state == S_LINKING || _state == S_LINKED); }    
+      { return (_state == S_ENABLED || _state == S_LINKED); }    
     
     virtual TGCFResult setValue (const string propName, ///< can be specified with or without the scope
                                  const string value);
@@ -178,9 +178,9 @@ class GCFRTMyPropertySet
     GCFRTAnswer*        _pAnswerObj;
 
   private: // administrative members
-    typedef enum TSTATE {S_DISABLED, S_DISABLING, S_ENABLING, S_ENABLED, 
-                         S_LINKING, S_LINKED, S_DELAYED_DISABLING};
-    TSTATE _state;
+    typedef enum TState {S_DISABLED, S_DISABLING, S_ENABLING, S_ENABLED, 
+                         S_LINKED, S_DELAYED_DISABLING};
+    TState _state;
     typedef list<TPropertyInfo> TPropInfoList;
     TPropInfoList       _propSetInfo;
     GCFRTMyProperty     _dummyProperty;

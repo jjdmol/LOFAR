@@ -22,20 +22,22 @@
 
 
 #include <GCF/GCF_PVUnsigned.h>
+#include <Common/DataConvert.h>
 
 unsigned int GCFPVUnsigned::unpackConcrete(const char* valBuf)
 {
-  memcpy((void*) &_value, valBuf, sizeof(unsigned int));
-  return sizeof(unsigned int);
+  memcpy((void*) &_value, valBuf, sizeof(uint32));
+  if (mustConvert()) LOFAR::dataConvert(LOFAR::dataFormat(), &_value, 1);
+  return sizeof(uint32);
 }
 
 unsigned int GCFPVUnsigned::packConcrete(char* valBuf) const
 {
-  memcpy(valBuf, (void*) &_value, sizeof(unsigned int));
-  return sizeof(unsigned int);
+  memcpy(valBuf, (void*) &_value, sizeof(uint32));
+  return sizeof(uint32);
 }
 
-TGCFResult GCFPVUnsigned::setValue(const string valueData)
+TGCFResult GCFPVUnsigned::setValue(const string& valueData)
 {
   TGCFResult result(GCF_VALUESTRING_NOT_VALID);
   

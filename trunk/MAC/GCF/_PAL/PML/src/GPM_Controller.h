@@ -30,9 +30,9 @@
 #include <GCF/PAL/GCF_PVSSPort.h>
 #include "GPM_Defines.h"
 #include "GPM_Converter.h"
-#include <GPA_Defines.h>
 #include <Common/lofar_map.h>
 #include <Common/lofar_list.h>
+#include <GCF/Protocols/PA_Protocol.ph>
 
 /**
    This singleton class forms the bridge between the PML API classes and the PA. 

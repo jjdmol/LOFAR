@@ -29,8 +29,8 @@
 
 //
 
-namespace LOFAR
-{
+namespace LOFAR {
+  namespace GCF {
 
 class DH_PIProtocol: public DataHolder
 {
@@ -57,24 +57,24 @@ class DH_PIProtocol: public DataHolder
   
     DataHolder* clone() const;
   
-    /// Set the EventID data member.
+    // Set the EventID data member.
     void setEventID (TEventID EventID);
-    /// Get the EventID data member.
+    // Get the EventID data member.
     TEventID getEventID() const;
     
-    /// Set the seqNr data member.
+    // Set the seqNr data member.
     void setSeqNr (uint16 seqNr);
-    /// Get the seqNr data member.
+    // Get the seqNr data member.
     uint16 getSeqNr() const;
     
-    /// init protocol static fields.
+    // init protocol static fields.
     virtual void preprocess();
   
-    /// leave protocol static fields.
+    // leave protocol static fields.
     virtual void postprocess();
 
   private:
-    /// Forbid assignment.
+    // Forbid assignment.
     DH_PIProtocol& operator= (const DH_PIProtocol&);
   
     // Fill the pointers (_eventID and _seqNr) to the data in the blob.
@@ -102,7 +102,7 @@ inline void DH_PIProtocol::setSeqNr (uint16 seqNr)
 inline uint16 DH_PIProtocol::getSeqNr() const
   { return *_seqNr; }
 
-
-}
+  } // namespace GCF
+} // namespace LOFAR
 
 #endif 

@@ -25,12 +25,12 @@
 #define PICLIENT_H
 
 #include "PICEPDefines.h"
-#include <GPI_Defines.h>
 #include <Common/lofar_map.h>
 #include <Common/lofar_list.h>
 #include <Common/Thread.h>    
 #include <Common/Thread/Mutex.h>
-#include <DH_PIProtocol.h>
+#include <GCF/Protocols/DH_PIProtocol.h>
+#include <GCF/Protocols/PI_Protocol.ph> // for the TPIResult enumeration
 
 // This singleton class forms the bridge between the CEP-PMLlight API classes 
 // and the PA via the PI. It is a hidden object in each CEP application, which 

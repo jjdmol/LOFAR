@@ -349,7 +349,7 @@ void GPAPropertySet::linked(PAPropSetLinkedEvent& response)
 {
   PAPropSetLoadedEvent loadedResponse;
   loadedResponse.seqnr = _savedSeqnr;
-  if (_state == S_LINKING)
+  if (_state == S_LINKING && response.result == PA_NO_ERROR)
   {
     _state = S_LINKED;
     loadedResponse.result = response.result;

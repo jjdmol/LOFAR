@@ -4,6 +4,9 @@
 #include <Common/lofar_string.h>
 #include <Common/lofar_list.h>
 
+using std::string;
+using std::list;
+
 class Utils
 {
   public:

@@ -23,8 +23,8 @@
 #ifndef GPI_PROPERTYSET_H
 #define GPI_PROPERTYSET_H
 
-#include <PA_Protocol.ph>
-#include "PI_Protocol.ph"
+#include <GCF/Protocols/PI_Protocol.ph>
+#include <GCF/Protocols/PA_Protocol.ph>
 #include "GPI_Defines.h"
 
 #include <Common/lofar_list.h>
@@ -33,36 +33,49 @@
 class GCFPValue;
 class GPIPMLlightServer;
 
-/**
- * This class provides for the GPISupervisoryServer class the possibility to 
- * (un)subscribe on/from properties, which requested from the Property Agent to 
- * (un)link to a property of the ERTC domain. Furthermore it forwards property 
- * value changes, detected by the SCADA system, to the right 
- * GPISupervisoryServer instance.
- */
+// This class represents a registered property sets. The idea of this class is 
+// the same as the GPAPropertySet, with some minor differences. 
+
 class GPIPropertySet : public GCFPropertyProxy
 {
   public:
-    GPIPropertySet(GPIPMLlightServer& pls) : 
-      _pls(pls), 
+    GPIPropertySet(GPIPMLlightServer& server) : 
+      _server(server), 
       _state(S_DISABLED),
       _counter(0),
       _missing(0),
-      _tmpPIResult(PI_NO_ERROR) {}
-    virtual ~GPIPropertySet() {assert(_state == S_DISABLED);}
+      _tmpPIResult(PI_NO_ERROR) 
+      {}
+      
+    virtual ~GPIPropertySet() { }
 
+    // handling the enable request of a PI client
     void enable(const PIRegisterScopeEvent& requestIn);
+    // retry handling the enable request of a PI client if property agent 
+    // was not available at the initial enable request time
     void retryEnable();
+    // PA responses the enable request
     void enabled(TPAResult result);
     
+    // handling the disable request of a PI client
     void disable(const PIUnregisterScopeEvent& requestIn);
-    void disabled(TPAResult result);
+    void disabling(unsigned int seqnr);
+    // PA responses the disable request
+    void disabled(const PAScopeUnregisteredEvent& responseIn);
 
+    // handling the link request of the PA
     void linkPropSet(const PALinkPropSetEvent& requestIn);
+    // PI client reponses the link request
+    // @return false if no subscription could be made
     bool propSetLinkedInClient(const PIPropSetLinkedEvent& responseIn);
+    // if the subscription could not be made in the propSetLinkedInClient method
+    // in the server a timer will be started, which enables the possibility
+    // to retry the subscription (until this succeeds)
     bool trySubscribing();
 
+    // handling the unlink request of the PA
     void unlinkPropSet(const PAUnlinkPropSetEvent& requestIn);
+    // PI client reponses the unlink request
     void propSetUnlinkedInClient(const PIPropSetUnlinkedEvent& responseIn);
     
     const string& getScope() const {return _scope;}
@@ -84,25 +97,24 @@ class GPIPropertySet : public GCFPropertyProxy
   
   private:
     GPIPropertySet();
-    /**
-     * Don't allow copying of this object.
-     */
+    //Don't allow copying of this object.
+    // <group>
     GPIPropertySet (const GPIPropertySet&);
     GPIPropertySet& operator= (const GPIPropertySet&);
-  
+    // </group>  
     
-  private:
-    GPIPMLlightServer& _pls;
+  private: // data members
+    GPIPMLlightServer& _server;
     string _scope;
     string _type;
     bool _isTemporary;
     unsigned long _savedSeqnr;
     
-    typedef enum TSTATE {S_DISABLED, S_DISABLING, S_ENABLING, S_ENABLED, 
+    typedef enum TState {S_DISABLED, S_DISABLING, S_ENABLING, S_ENABLED, 
                          S_LINKING, S_LINKED, S_UNLINKING, S_DELAYED_DISABLING};
-    TSTATE _state;
+    TState _state;
     
-  private:
+  private: // adminstrative members
     unsigned int  _counter;
     unsigned int  _missing;
     TPIResult     _tmpPIResult;
@@ -113,8 +125,9 @@ class GPIPropertySet : public GCFPropertyProxy
 #include "GPI_PMLlightServer.h"
 
 inline void GPIPropertySet::sendMsgToPA(GCFEvent& msg) 
-  { _pls.sendMsgToPA(msg); }
+  { _server.sendMsgToPA(msg); }
+  
 inline void GPIPropertySet::sendMsgToClient(GCFEvent& msg)  
-  { _pls.sendMsgToClient(msg); }
+  { _server.sendMsgToClient(msg); }
 
 #endif

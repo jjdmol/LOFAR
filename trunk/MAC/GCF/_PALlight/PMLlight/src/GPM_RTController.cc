@@ -24,7 +24,6 @@
 #include <GCF/PALlight/GCF_RTMyPropertySet.h>
 #include <stdio.h>
 #include <GCF/Utils.h>
-#include <PI_Protocol.ph>
 #include <GCF/ParameterSet.h>
 
 static string sPMLTaskName("GCF-PMLlight");

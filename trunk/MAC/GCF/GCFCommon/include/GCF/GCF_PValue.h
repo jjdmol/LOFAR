@@ -24,6 +24,7 @@
 #define GCF_PVALUE_H
 
 #include <GCF/GCF_Defines.h>
+#include <Common/DataFormat.h>
 
 class GCFPVDynArr;
 
@@ -48,7 +49,7 @@ class GCFPValue
      * Returns MAC type ID.
      * @return MAC type ID 
      */
-    inline const TMACValueType& getType () const {return _type;}
+    const TMACValueType& getType () const {return _type;}
 
     /** 
      * Pure virtual method
@@ -79,7 +80,7 @@ class GCFPValue
      * @return GCF_VALUESTRING_NOT_VALID if <b>value<b> could not be translated 
      * to the value of <b>this</b> object. Otherwise GCF_NO_ERROR.
      */
-    virtual TGCFResult setValue (const string value) = 0;
+    virtual TGCFResult setValue (const string& value) = 0;
 
     /** 
      * Static method
@@ -126,8 +127,17 @@ class GCFPValue
      * specific value object data
      * @return size of the object
      */
-    virtual unsigned int getSize() const { return 1 + getConcreteSize();}
+    virtual unsigned int getSize() const { return 2 + getConcreteSize();}
    
+   
+    /**
+     * @return true if local dataformat (ENDIANES) differes to the dataformat of this value
+     */
+    virtual bool mustConvert() { return (_dataFormat != LOFAR::dataFormat()); }
+    
+    /// provides the possibility to change the dataformat of a value
+    void setDataFormat(LOFAR::DataFormat dfmt = LOFAR::dataFormat()) {_dataFormat = dfmt; }
+     
   protected:
     friend class GCFPVDynArr;
     /**
@@ -135,7 +145,7 @@ class GCFPValue
      * Sets the type ID for each subclassed property value type class
      * @param type MAC property type ID
      */
-    explicit GCFPValue (TMACValueType type) : _type(type) {};
+    explicit GCFPValue (TMACValueType type) : _type(type), _dataFormat(LOFAR::dataFormat()) {};
   
     /**
      * Pure virtual method
@@ -156,7 +166,7 @@ class GCFPValue
      * the concrete getSize method of the concrete value object
      * @see getSize
      */
-    virtual unsigned int getConcreteSize() const = 0;
+    virtual unsigned int getConcreteSize() const = 0;        
  
   private: // private constructors
     /// Don't allow copying this object.
@@ -166,7 +176,9 @@ class GCFPValue
     
   private: // private data members
     /** Holds MAC property value type ID*/
-    TMACValueType _type;
+    TMACValueType       _type;
+    /// Holds the dataformat (ENDIANES) of this value
+    LOFAR::DataFormat   _dataFormat;
 };
 
 #endif

@@ -28,7 +28,7 @@
 #include <GCF/TM/GCF_Port.h>
 #include <GCF/TM/GCF_Handler.h>
 #include "GPM_RTDefines.h"
-#include <GPI_Defines.h>
+#include <GCF/Protocols/PI_Protocol.ph>
 #include <Common/lofar_map.h>
 #include <Common/lofar_list.h>
 

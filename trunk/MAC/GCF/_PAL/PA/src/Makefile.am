@@ -1,9 +1,3 @@
-AUTOGEN = autogen
-SUFFIXES = .ph
-%.ph: %.prot
-	$(AUTOGEN) -L $(top_srcdir)/../../MACCommon/autogen $< && \
-	chmod a+w $@
-
 DOCHDRS	=	\
 	GPA_Controller.h \
 	GPA_PropertySet.h \
@@ -17,8 +11,7 @@ libpa_la_SOURCES= $(DOCHDRS) \
 	GPA_Controller.cc \
 	GPA_PropertySet.cc \
 	GPA_RequestManager.cc \
-	GPA_Converter.cc \
-	PA_Protocol.cc
+	GPA_Converter.cc
 	
 libpa_la_CPPFLAGS= -I$(top_srcdir)/include \
 	-I$(top_srcdir)/SAL/src
@@ -34,12 +27,6 @@ PropertyAgent_DEPENDENCIES	= libpa.la $(LOFAR_DEPEND) \
 	
 PropertyAgent_CPPFLAGS= -I$(top_srcdir)/include \
 	-I$(top_srcdir)/SAL/src
-
-BUILT_SOURCES = \
-	PA_Protocol.ph
-
-EXTRA_DIST = \
-	PA_Protocol.ph
 
 #in case of make install these files will be copied to the bindir beside the test apps
 configfilesdir=$(bindir)

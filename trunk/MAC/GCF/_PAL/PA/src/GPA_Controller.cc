@@ -23,18 +23,15 @@
 #include <GPA_Controller.h>
 #include <GPA_PropertySet.h>
 #include <stdio.h>
-#include <PA_Protocol.ph>
+#include <GCF/Protocols/PA_Protocol.ph>
 #include <GCF/PAL/GCF_PVSSInfo.h>
 #include <GCF/ParameterSet.h>
 
 #define QUEUE_REQUEST(p, e)  \
   if (!mayContinue(e, p)) break;
 
-static string sPATaskName("GCF-PA");
-
 GPAController::GPAController() : 
-  GCFTask((State)&GPAController::initial, sPATaskName),
-  //_distClientManager(*this),
+  GCFTask((State)&GPAController::initial, PA_TASK_NAME),
   _isBusy(false),
   _isRegistered(false),
   _counter(0),
@@ -526,7 +523,7 @@ void GPAController::sendAndNext(GCFEvent& e)
       PAUnregisterScopeEvent request(*pEvent);
       GPAPropertySet* pPropSet = findPropSet(request.scope);
       _propertySets.erase(request.scope);
-      _propertySetGarbage.push_back(pPropSet);
+      if (pPropSet) _propertySetGarbage.push_back(pPropSet);
     }
     doNextRequest();
   }

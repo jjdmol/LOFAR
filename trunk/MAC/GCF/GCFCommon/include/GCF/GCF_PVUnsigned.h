@@ -24,6 +24,9 @@
 #define GCF_PVUNSIGNED_H
 
 #include <GCF/GCF_PValue.h>
+#include <Common/LofarTypes.h>
+
+using LOFAR::TYPES::uint32;
 
 /**
  * By means of this property type a unsigned integer (0 to 4,294,967,295) value 
@@ -32,23 +35,23 @@
 class GCFPVUnsigned : public GCFPValue
 {
   public:
-  	explicit GCFPVUnsigned(unsigned int val = 0) : GCFPValue(LPT_UNSIGNED), _value(val) {;}
+  	explicit GCFPVUnsigned(uint32 val = 0) : GCFPValue(LPT_UNSIGNED), _value(val) {;}
     explicit GCFPVUnsigned(const GCFPVUnsigned& val) : GCFPValue(LPT_UNSIGNED), _value(val.getValue()) {;}
 
   	virtual ~GCFPVUnsigned() {;}
     
     /** Changes the value of this object */
-     virtual inline void setValue( const unsigned int newVal) {_value = newVal;}
+    virtual void setValue( uint32 newVal) {_value = newVal;}
 
     /** 
      * Changes the value of this object by means of a stringbuffer, 
      * which will be translated.
      * @see GCFPValue::setValue(const string value)
      */
-    virtual TGCFResult setValue(const string value);
+    virtual TGCFResult setValue(const string& value);
 
     /** Returns the value of this object*/
-    virtual inline unsigned int getValue() const {return _value;}
+    virtual uint32 getValue() const {return _value;}
 
     /** @see GCFPValue::clone() */
     virtual GCFPValue* clone() const;
@@ -56,17 +59,18 @@ class GCFPVUnsigned : public GCFPValue
     /** @see GCFPValue::copy() */
     virtual TGCFResult copy(const GCFPValue& value);
  
+  private:
     /// @see GCFPValue::unpack()
-    virtual unsigned int unpackConcrete(const char* valBuf);
+    unsigned int unpackConcrete(const char* valBuf);
 
     /// @see GCFPValue::pack()
-    virtual unsigned int packConcrete(char* valBuf) const;
+    unsigned int packConcrete(char* valBuf) const;
 
     /// @see GCFPValue::getSize()
-    virtual unsigned int getConcreteSize() const { return sizeof(unsigned int); }
+    unsigned int getConcreteSize() const { return sizeof(uint32); }
     
   private: // Private attributes
     /** The value */
-    unsigned int _value;
+    uint32 _value;
 };
 #endif
