@@ -18,50 +18,31 @@ namespace LOFAR {
     // The BCA<C> structure 'binds' the database columns
     // to the members of the DBRep<C> class.
     template<>
-    void BCA<C>::operator()(BoundIOs& cols, DataObj& rowbuf) {
-	  cols["ObjID"]    == rowbuf.itsOid;
-	  cols["Owner"]  == rowbuf.itsOwnerOid;
-	  cols["VersionNr"]  == rowbuf.itsVersionNr;
-	  cols["ITSBLOB"]  == rowbuf.itsBlob;
-	  cols["ITSSTRING"]  == rowbuf.itsString;
-	}
-
-    // toDatabaseRep copies the fields of the persistency layer
-    // and of the C class to the given DBRep<C> structure
-    template<>
-    void TPersistentObject<C>::toDatabaseRep(DBRep<C>& dest) const
+    void BCA<C>::operator()(BoundIOs& cols, DataObj& rowbuf) 
     {
-      // copy info of the C to the DBRep<C> class
-      // First copy the meta data
-      dest.itsOid   = metaData().oid()->get();
-      dest.itsOwnerOid = metaData().ownerOid()->get();
-      dest.itsVersionNr  = metaData().versionNr();
+      BCA<PersistentObject::MetaData>()(cols,rowbuf);
+      cols["ITSBLOB"]  == rowbuf.itsBlob;
+      cols["ITSSTRING"]  == rowbuf.itsString;
+    }
 
-      // Finally copy the info from A
+    // toDBRep copies the fields of the C class to the DBRep<C> structure.
+    template<>
+    void TPersistentObject<C>::toDBRep(DBRep<C>& dest) const
+    {
       dest.itsBlob  = itsObjectPtr->itsBlob;
       dest.itsString  = itsObjectPtr->itsString;
     }
 
 
-    // fromDatabaseRep copies the fields of the DBRep<C> structure
-    // to the persistency layer and the C class.
+    // fromDBRep copies the fields of the DBRep<C> structure to the C class.
     template<>
-    void TPersistentObject<C>::fromDatabaseRep(const DBRep<C>& org)
+    void TPersistentObject<C>::fromDBRep(const DBRep<C>& org)
     {
-      // copy info of the A to the DBRep<A> class
-      // First copy the PO part
-      metaData().oid()->set(org.itsOid);
-      metaData().ownerOid()->set(org.itsOwnerOid);
-      metaData().versionNr() = org.itsVersionNr;
-
-      // Finally copy the info from C
       itsObjectPtr->itsBlob  = org.itsBlob;
       itsObjectPtr->itsString  = org.itsString;
     }
 
-    //
     // Initialize the internals of TPersistentObject<C>
-    //
     template<>
     void TPersistentObject<C>::init()
     {
@@ -73,6 +54,14 @@ namespace LOFAR {
       ownedPOs().push_back(p);
       // Set the correct database table name
       tableName("C");
+    }
+
+    // Initialize the attribute map for TPersistentObject<C>
+    template<>
+    void TPersistentObject<C>::initAttribMap()
+    {
+      theirAttribMap["itsBlob"]   = "ITSBLOB";
+      theirAttribMap["itsString"] = "ITSSTRING";
     }
 
   } // close namespace PL

@@ -2,6 +2,7 @@
 #include "PO_A.h"
 #include <PL/PersistenceBroker.h>
 #include <PL/Query.h>
+#include <PL/Attrib.h>
 #include <Common/Exception.h>
 #include <complex>
 #include <iostream>
@@ -88,11 +89,15 @@ int main()
     cout << "Retrieve collection of tpoa using query" << endl;
     Collection< TPersistentObject<A> > ctpoa;
     Collection< TPersistentObject<A> >::const_iterator iter;
-    ctpoa = broker.retrieve<A>(Query("WHERE ITSINT=42;"));
+//     ctpoa = broker.retrieve<A>(QueryObject("WHERE ITSINT=42;"));
+    QueryObject q(attrib<A>("itsInt") == 42);
+//     QueryObject q(attrib<B>("itsString") == "Bubbles");
+    ctpoa = broker.retrieve<A>(q);
     cout << "Found " << ctpoa.size() << " matches ..." << endl;
     for(iter = ctpoa.begin(); iter != ctpoa.end(); ++iter) {
       cout << "Press <Enter> to continue" << endl;
       cin.get();
+      cout << iter->metaData() << endl;
       cout << iter->data() << endl;
     }
 

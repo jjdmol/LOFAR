@@ -1,6 +1,7 @@
 #include <PL/TPersistentObject.h>
 #include <PL/PersistenceBroker.h>
 #include <PL/Query.h>
+#include <PL/Attrib.h>
 #include <iostream>
 #include <pwd.h>
 
@@ -35,7 +36,7 @@ namespace LOFAR {
 
 
       ObjectId::oid_t getOid() const
-        { return itsOid; }
+      { return itsOid; }
     };
 
     template<>
@@ -46,14 +47,14 @@ namespace LOFAR {
     }
     
     template<>
-    void TPersistentObject<X>::fromDatabaseRep(const DBRep<X>& org)
+    void TPersistentObject<X>::fromDBRep(const DBRep<X>& org)
     {
       metaData().oid()->set(org.itsOid);
       metaData().ownerOid()->set(org.itsOwnerOid);
     }
 
     template<>
-    void TPersistentObject<X>::toDatabaseRep(DBRep<X>& dest) const
+    void TPersistentObject<X>::toDBRep(DBRep<X>& dest) const
     {
       dest.itsOid   = metaData().oid()->get();
       dest.itsOwnerOid = metaData().ownerOid()->get();
@@ -64,6 +65,11 @@ namespace LOFAR {
       metaData().tableName() = "X"; 
     }
     
+    template<> void TPersistentObject<X>::initAttribMap()
+    {
+      theirAttribMap["world"] = "World";
+    }
+
     template<> struct DBRep<Y> 
     {
       ObjectId::oid_t  itsOid;
@@ -71,7 +77,7 @@ namespace LOFAR {
 
 
       ObjectId::oid_t getOid() const
-        { return itsOid; }
+      { return itsOid; }
     };
 
     template<>
@@ -82,17 +88,22 @@ namespace LOFAR {
     }
     
     template<>
-    void TPersistentObject<Y>::fromDatabaseRep(const DBRep<Y>& org)
+    void TPersistentObject<Y>::fromDBRep(const DBRep<Y>& org)
     {
       metaData().oid()->set(org.itsOid);
       metaData().ownerOid()->set(org.itsOwnerOid);
     }
 
     template<>
-    void TPersistentObject<Y>::toDatabaseRep(DBRep<Y>& dest) const
+    void TPersistentObject<Y>::toDBRep(DBRep<Y>& dest) const
     {
       dest.itsOid   = metaData().oid()->get();
       dest.itsOwnerOid = metaData().ownerOid()->get();
+    }
+
+    template<> void TPersistentObject<Y>::initAttribMap()
+    {
+      theirAttribMap["hello"] = "@Hello";
     }
 
     template<> void TPersistentObject<Y>::init() 
@@ -101,7 +112,10 @@ namespace LOFAR {
       p->metaData().ownerOid() = metaData().oid();
       ownedPOs().push_back(p);
       tableName("Y");
+      initAttribMap();
     }
+
+//     template<> TPersistentObject<Y>::attribmap_t theirAttribMap;
 
   }
 
@@ -114,7 +128,7 @@ int main()
 {
   Y y;
   ObjectId oid;
-  Query q;
+  QueryObject q;
   PersistenceBroker* b = new PersistenceBroker();
 
   try {
@@ -127,6 +141,14 @@ int main()
   cout << "  ok" << endl;
 
   TPersistentObject<Y> tpoy(y);
+  try {
+    cout << "tpoy.attrib(\"hello.world\") = " 
+         << attrib<Y>("hello.world") << endl;
+  }
+  catch (Exception& e) {
+    cerr << endl << e << endl;
+  }
+  return 0;
 
   try {
     cout << "Trying save() ...";

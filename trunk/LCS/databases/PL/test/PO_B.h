@@ -10,27 +10,21 @@
 #define LOFAR_PL_TEST_B_H
 
 #include "B.h"
-#include <PL/ObjectId.h>
+#include <PL/DBRep.h>
 
 namespace LOFAR {
 
   namespace PL {
 
-    // The DBRep<B> structure is a compilation of the fields
-    // of the B class and the persistency layer. It contains
-    // all fields that should be stored to the database
+    // The DBRep<B> structure is a contiguous representation of all the fields
+    // of the A class that should be stored in the database.
     template<>
-    struct DBRep<B> {
-      ObjectId::oid_t  itsOid;
-      ObjectId::oid_t  itsOwnerOid;
-      unsigned int     itsVersionNr;
+    struct DBRep<B> : public DBRepMeta
+    {
       bool             itsBool;
       short            itsShort;
       float            itsFloat;
       string           itsString;
-
-      ObjectId::oid_t getOid() const
-        { return itsOid; }
     };
 
   } // close namespace PL
