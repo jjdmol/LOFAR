@@ -383,9 +383,10 @@ const do_test := function (predict=F,subtract=F,solve=F,run=T,
           if( st1 < st2 )
             condeqs := [condeqs,fq_name('ce',st1,st2)];
       # note that child names will be resolved later
+      global solver_defaults;
       rec := meq.node('MeqSolver','solver',[
           parm_group = hiid("a"),
-          default    = [ num_iter=10,save_polcs=F,last_update=F ],
+          default    = solver_defaults,
           solvable   = meq.solvable_list("stokes_i.a ra.a dec.a stokes_i.b ra.b dec.b") ],
         children=condeqs);
       mqs.createnode(rec);
@@ -467,6 +468,8 @@ if( mepuvw )
 else
   mepuvw := F;
 
+solver_defaults := [ num_iter=1,save_polcs=F,last_update=F ];
+
 inputrec := [ ms_name = msname,data_column_name = 'DATA',tile_size=5,
               selection = [ channel_start_index=1,channel_end_index=1 ] ];
 outputrec := [ write_flags=F,predict_column=outcol ]; 
@@ -475,7 +478,8 @@ outputrec := [ write_flags=F,predict_column=outcol ];
 # do_test(solve=T,run=T,st1set=1,st2set=1,publish=2);
 
 do_test(msname=msname,solve=T,subtract=F,run=T,
-  st1set=[1:20]*4,st2set=[1:20]*4,
+#  st1set=[1:5]*4,st2set=[1:5]*4,
+  st1set=[1:21]*4,st2set=[1:21]*4,
 #  st1set=1:100,st2set=1:100,
   publish=1,mepuvw=mepuvw,msuvw=msuvw);
 #do_test(solve=T,run=T,publish=2,load='solve-100.forest');
