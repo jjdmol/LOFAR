@@ -59,6 +59,7 @@ lofar_DOCXX
 lofar_BLITZ
 lofar_PACKAGE(CEP/CEPFrame)
 lofar_PACKAGE(LCS/Common)
+lofar_PACKAGE(LCS/ACC)
 
 dnl
 dnl Output Makefiles
