@@ -53,7 +53,7 @@ WH_WAV::~WH_WAV ()
 }
 
 void WH_WAV::readFile(char *filename){
-  cout << "Read file " << filename << endl;
+  cout << "Read file :" << filename << endl;
   cout << "itsOffset = " << itsOffset << endl;
   FILE *infile;
   char ptr[10];
@@ -62,6 +62,7 @@ void WH_WAV::readFile(char *filename){
   char ready_name[256];
   struct stat ready_stat;
 
+  cout << "Size of (in) = " << sizeof(in) << endl;
   sprintf(ready_name, "%s.ready", filename);
   
   // wait for ready file
@@ -72,11 +73,11 @@ void WH_WAV::readFile(char *filename){
 
   infile = fopen(filename,"r");
   if (infile == NULL) {
-    printf("Could not open file \n");
+    cout << "Could not open file" << endl;
     return;
   }
   /* skip header (or about that size...)*/
-  for (i=0; i< 28; i++) {
+  for (i=0; i< 0x2c; i++) {
     fread(&in,sizeof(in),1,infile);
   }
 
@@ -84,7 +85,7 @@ void WH_WAV::readFile(char *filename){
   if (itsLags == 0) fread(&in,sizeof(in),1,infile);
 
   if (itsLags != 0) {
-    for (i=0; i< itsLags; i++) {
+    for (i=0; i< 2*(itsLags/2); i++) {
       fread(&in,sizeof(in),1,infile);
     }
   }
@@ -93,6 +94,7 @@ void WH_WAV::readFile(char *filename){
 	 && sample++ < 2*ANTSAMPLES) {
 
     float currentvalue=0.;
+
       
 #ifdef SWAPWAVVALUES
       /* swap first 2 bytes with last 2 bytes in the word */
@@ -110,6 +112,14 @@ void WH_WAV::readFile(char *filename){
     // skip the next sample since that is the other channel;
     fread(&in,sizeof(in),1,infile);
   }
+
+  for (int i=0; i<10; i++) {
+    cout << "Output [" << i << "]"
+	 << " = " << itsSampleBuffer[i] 
+	 << endl;
+  }
+  cout << "*************************************" << endl;
+
   itsOffset = 0;
   fclose(infile);
 }
@@ -117,23 +127,14 @@ void WH_WAV::readFile(char *filename){
 void WH_WAV::process () {
   if (WorkHolder::getProcMode() == Process) {
 
-#if 0
-    if (itsFirstCall) {
-      itsFirstCall = false;
-      readFile("/home/schaaf/1min-8000Hz.wav");
-    }
-#endif
-
     if (itsLags == 0) {
       itsOffset++;      
     }
 
     for (int i=0; i<ANTSAMPLES; i++) {
       itsOutDataHolders[0]->getBuffer()[i] = itsSampleBuffer[i+itsOffset];
-      // cout << "Output [" << i << "]"
-// 	   << " = " << itsOutDataHolders[0]->getBuffer()[i] 
-// 	   << endl;
     }
+
 
     //ANTSAMPLES
    
