@@ -129,7 +129,7 @@ void ResultSet::setCells (const Cells *cells,int flags)
 Result & ResultSet::setResult (int i,Result *result)
 {
   FailWhen(!isWritable(),"r/w access violation");
-  DbgFailWhen(isFail(),"ResultSet marked as a fail, can't set result");
+//  DbgFailWhen(isFail(),"ResultSet marked as a fail, can't set result");
   itsResults().put(i,result,DMI::ANONWR);
   return *result;
 }
@@ -137,7 +137,7 @@ Result & ResultSet::setResult (int i,Result *result)
 Result & ResultSet::setResult (int i,Result::Ref::Xfer &result)
 {
   FailWhen(!isWritable(),"r/w access violation");
-  DbgFailWhen(isFail(),"ResultSet marked as a fail, can't set result");
+//  DbgFailWhen(isFail(),"ResultSet marked as a fail, can't set result");
   Result *res;
   itsResults().put(i,res=result.dewr_p(),DMI::ANONWR);
   result.detach();
