@@ -85,6 +85,9 @@ private:
 				 const LoMat_dcomplex& skyScan, const int nrcu, 
 				 const int seconds);
 
+  void spectrumplot (gnuplot_ctrl* handle, const LoMat_dcomplex& buffer, 
+				    const LoVec_dcomplex& w);
+
   DH_SampleC** itsInHolders;
   DH_SampleC** itsOutHolders;
   DH_SampleC   itsWeight; 
@@ -102,6 +105,11 @@ private:
   LoMat_dcomplex itsTestVector;
   gnuplot_ctrl* handle;
   int iCount;
+
+  // EXPERIMENT TOOLS
+  LoMat_dcomplex itsBuffer;
+  int itsPos;
+
 };
 
 #endif

@@ -102,6 +102,7 @@ void StationSim::define (const ParamBlock& params)
   const string beamtrajectfile    = params.getString ("beamtrajectfile", "");
   const bool tapDG                = params.getInt    ("tapdg", 0);
   const bool tapFB1               = params.getInt    ("tapfb1", 0);
+  const bool tapPRJ               = params.getInt    ("tapprj", 0);
   const bool tapBF                = params.getInt    ("tapbf", 0);
   const int BF_Algorithm          = params.getInt    ("bfalg", 0);
   const bool enableDG             = params.getInt    ("enabledg", 1);
@@ -214,7 +215,6 @@ void StationSim::define (const ParamBlock& params)
 	}
   }
 
-
   /***********************************************************************************
    *  The creation of the beamforming workholders                                    *
    ***********************************************************************************/  
@@ -262,7 +262,7 @@ void StationSim::define (const ParamBlock& params)
 	  
 	  // the projection object
 	  int ninProj = 3;
-	  Step projection (WH_Projection(suffix, ninProj, 1, nrcu, maxNrfi), 
+	  Step projection (WH_Projection(suffix, ninProj, 1, nrcu, maxNrfi, tapPRJ), 
 					   string("projection_") + suffix, false);
 	  
 	  for (int i = 0; i < ninProj - 2; ++i) {
@@ -411,6 +411,3 @@ void StationSim::dump() const {
 
 void StationSim::quit()
 {}
-
-
-

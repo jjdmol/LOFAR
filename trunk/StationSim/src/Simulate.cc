@@ -26,7 +26,7 @@
 #include <Common/lofar_iostream.h>
 
 
-int main (int argc, char** argv)
+int main (int argc, const char** argv)
 {
   try {
     StationSim simulator;
