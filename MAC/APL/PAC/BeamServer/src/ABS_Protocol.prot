@@ -1,0 +1,106 @@
+//
+// Protocol definition for the Beam Server Protocol
+//
+autogen definitions protocol;
+
+description = "Protocol for the Beam Server";
+prefix = "ABS"; // for the signal names
+
+// specify extra include files
+// e.g.
+include = '<sys/time.h>';
+
+prelude = << PRELUDE_END
+enum {
+	ABS_PROTOCOL = F_APL_PROTOCOL + 10
+};
+PRELUDE_END;
+
+//
+// An "event" has a "signal" and a "dir" (direction)
+// and zero or more "param"s.
+// "dir" can be one of "IN" or "OUT".
+// A "param" has a "name" and a "type".
+//
+event = {
+      signal = ALLOCBEAM;
+      dir = IN;
+      param = {
+	    name = "beam_index";
+	    type = "int";
+      };
+      param = {
+	    name = "reference_frequency";
+	    type = "double";
+      };
+      param = {
+	    name = "n_subbands";
+	    type = "int";
+      };
+      param = {
+	    name = "subbands";
+	    type = "int";
+	    dim = 128;
+      };
+};
+
+event = {
+      signal = ALLOCBEAM_ACK;
+      dir = OUT;
+      param = {
+	    name = "beam_index";
+	    type = "int";
+      };
+      param = {
+	    name = "status";
+	    type = "int";
+      };
+};
+
+event = {
+      signal = FREEBEAM;
+      dir = IN;
+      param = {
+	    name = "beam_index";
+	    type = "int";
+      };
+};
+
+event = {
+      signal = FREEBEAM_ACK;
+      dir = OUT;
+      param = {
+	    name = "beam_index";
+	    type = "int";
+      };
+      param = {
+	    name = "status";
+	    type = "int";
+      };
+};
+
+event = {
+      signal = POINTTO;
+      dir = IN;
+      param = {
+	    name = "beam_index";
+	    type = "int";
+      };
+      param = {
+	    name = "activation_time";
+	    type = "struct timeval";
+      };
+      param = {
+	    name = "type"; // 1 == J2000, 2 = AZEL, 3 = LMN
+	    type = "int";
+      };
+      param = {
+	    name = "angle1";
+	    type = "double";
+      };
+      param = {
+	    name = "angle2";
+	    type = "double";
+      };
+};
+      
