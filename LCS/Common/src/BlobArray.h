@@ -73,27 +73,29 @@ BlobOStream& putBlobVector (BlobOStream& bs, const T* data, uint32 size);
 // It is only possible if the underlying buffer is seekable.
 // It is meant for use with the BlobOBufString buffer. The function
 // getPointer in that class can be used to turn the position into a pointer.
-// Note that BlobOStream::align can be used to ensure proper alignment
-// of the array data.
+// By default the data will be aligned on sizeof(T) bytes with a maximum of 8.
+// Note that BlobOStream::align can also be used explicitly to ensure
+// proper alignment of the array data.
 // <group>
 template<typename T>
 uint setSpaceBlobArray1 (BlobOStream& bs, uint32 size0,
-			 bool fortranOrder);
+			 bool fortranOrder, bool align=true);
 template<typename T>
 uint setSpaceBlobArray2 (BlobOStream& bs, uint32 size0, uint32 size1,
-			 bool fortranOrder);
+			 bool fortranOrder, bool align=true);
 template<typename T>
 uint setSpaceBlobArray3 (BlobOStream& bs, uint32 size0, uint32 size1,
-			 uint32 size2, bool fortranOrder);
+			 uint32 size2, bool fortranOrder, bool align=true);
 template<typename T>
 uint setSpaceBlobArray4 (BlobOStream& bs, uint32 size0, uint32 size1,
-			 uint32 size2, uint32 size3, bool fortranOrder);
+			 uint32 size2, uint32 size3,
+			 bool fortranOrder, bool align=true);
 template<typename T>
 uint setSpaceBlobArray (BlobOStream& bs, const std::vector<uint32>& shape,
-			bool fortranOrder);
+			bool fortranOrder, bool align=true);
 template<typename T>
 uint setSpaceBlobArray (BlobOStream& bs, uint32* shape, uint16 ndim,
-			bool fortranOrder);
+			bool fortranOrder, bool align=true);
 // </group>
 
 
@@ -154,10 +156,14 @@ BlobIStream& getBlobArray (BlobIStream& bs, T*& arr,
 // It is only possible if the underlying buffer is seekable.
 // It is meant for use with the BlobIBufString buffer. The function
 // getPointer in that class can be used to turn the position into a pointer.
+// By default the data will be assumed to be aligned on sizeof(T) bytes with
+// a maximum of 8. Note that BlobIStream::align can also be used explicitly
+// tell the proper alignment of the array data.
+// The alignment should match the one used in setSpaceBlobArray.
 template<typename T>
 uint getSpaceBlobArray (BlobIStream& bs,
 			std::vector<uint32>& shape,
-			bool fortranOrder);
+			bool fortranOrder, bool align=true);
 
 
 
@@ -165,9 +171,9 @@ uint getSpaceBlobArray (BlobIStream& bs,
 
 template<typename T>
 inline uint setSpaceBlobArray1 (BlobOStream& bs, uint32 size0,
-				bool fortranOrder)
+				bool fortranOrder, bool align)
 {
-  return setSpaceBlobArray<T> (bs, &size0, 1, fortranOrder);
+  return setSpaceBlobArray<T> (bs, &size0, 1, fortranOrder, align);
 }
 
 template<typename T>

@@ -53,45 +53,50 @@ BlobOStream& putBlobArray (BlobOStream& bs, const T* data, uint16 ndim,
 
 template<typename T>
 uint setSpaceBlobArray2 (BlobOStream& bs, uint32 size0, uint32 size1,
-			 bool fortranOrder)
+			 bool fortranOrder, bool align)
 {
   uint32 shp[2];
   shp[0] = size0;
   shp[1] = size1;
-  return setSpaceBlobArray<T> (bs, shp, 2, fortranOrder);
+  return setSpaceBlobArray<T> (bs, shp, 2, fortranOrder, align);
 }
 template<typename T>
 uint setSpaceBlobArray3 (BlobOStream& bs, uint32 size0, uint32 size1,
-			 uint32 size2, bool fortranOrder)
+			 uint32 size2, bool fortranOrder, bool align)
 {
   uint32 shp[3];
   shp[0] = size0;
   shp[1] = size1;
   shp[2] = size2;
-  return setSpaceBlobArray<T> (bs, shp, 3, fortranOrder);
+  return setSpaceBlobArray<T> (bs, shp, 3, fortranOrder, align);
 }
 template<typename T>
 uint setSpaceBlobArray4 (BlobOStream& bs, uint32 size0, uint32 size1,
-			 uint32 size2, uint32 size3, bool fortranOrder)
+			 uint32 size2, uint32 size3,
+			 bool fortranOrder, bool align)
 {
   uint32 shp[4];
   shp[0] = size0;
   shp[1] = size1;
   shp[2] = size2;
   shp[3] = size3;
-  return setSpaceBlobArray<T> (bs, shp, 4, fortranOrder);
+  return setSpaceBlobArray<T> (bs, shp, 4, fortranOrder, align);
 }
 template<typename T>
 uint setSpaceBlobArray (BlobOStream& bs, const std::vector<uint32>& shape,
-			bool fortranOrder)
+			bool fortranOrder, bool align)
 {
-  return setSpaceBlobArray<T> (bs, &shape[0], shape.size(), fortranOrder);
+  return setSpaceBlobArray<T> (bs, &shape[0], shape.size(),
+			       fortranOrder, align);
 }
 
 template<typename T>
 uint setSpaceBlobArray (BlobOStream& bs, uint32* shape, uint16 ndim,
-			bool fortranOrder)
+			bool fortranOrder, bool align)
 {
+  if (align) {
+    bs.align (std::min(sizeof(T),8u));
+  }
   bs.putStart (LOFAR::typeName((const T**)0), 1);     // version 1
   bs << fortranOrder << char(0) << ndim;
   bs.put (shape, ndim);
@@ -214,9 +219,12 @@ BlobIStream& getBlobArray (BlobIStream& bs, T*& arr,
 }
 
 template<typename T>
-uint getSpaceBlobArray (BlobIStream& bs,
-			std::vector<uint32>& shape, bool fortranOrder)
+uint getSpaceBlobArray (BlobIStream& bs, std::vector<uint32>& shape,
+			bool fortranOrder, bool align)
 {
+  if (align) {
+    bs.align (std::min(sizeof(T),8u));
+  }
   bs.getStart (LOFAR::typeName((const T**)0));
   bool fortranOrder1;
   uint16 ndim;
