@@ -131,14 +131,17 @@ void WH_PSS3::process()
   string dbName = itsArgs.getString("DBName", "test");
   string dbHost = itsArgs.getString("DBHost", "dop50");
   string dbPwd = itsArgs.getString("DBPwd", "");
+
   vector<int> antennas =                                   // Should this be a KS parameter?
     (const_cast<KeyValueMap&>(stratArgs))["antennas"].getVecInt();
   bool calcUVW = itsArgs.getBool("calcUVW", false);
+  bool lockMappedMem = itsArgs.getBool("lockMappedMem", false);
 
   bool outputAllIter = itsArgs.getBool("writeAllSols", true);
   itsCal = new MeqCalibrater(msName, meqModel, skyModel, dbType, 
 			     dbName, dbHost, dbPwd, itsDDID,
-			     antennas, itsModelType, calcUVW);
+			     antennas, itsModelType, calcUVW,
+			     lockMappedMem);
   
   // Create a strategy object
   TRACER1("Strategy number: " << wo->getStrategyNo());
