@@ -7,56 +7,51 @@ PANEL,286 70 810 490 N "_3DFace" 2
 "main()
 {
   DebugTN(\"ListView: $datapoint,$configDatapoint:\",$datapoint,$configDatapoint);
-  if(isDollarDefined(\"$datapoint\"))
+  if(isDollarDefined(\"$datapoint\") && strlen($datapoint) > 0)
   {
-    if(strlen($datapoint)==0)
-    {
-      TextDatapointName.text = \"Select a resource to view its properties...\";
-    }
-    else
-    {
-      string datapoint = dpSubStr($datapoint,DPSUB_DP_EL);
-      string systemName = strrtrim(dpSubStr($datapoint,DPSUB_SYS),\":\");
+    navPMLloadPropertySet($datapoint);
+
+    string datapoint = dpSubStr($datapoint,DPSUB_DP_EL);
+    string systemName = strrtrim(dpSubStr($datapoint,DPSUB_SYS),\":\");
 DebugTN(\"systemName,datpoint:\",systemName,datapoint);
 
-      TextDatapointName.text = $datapoint;
+    TextDatapointName.text = $datapoint;
 
-      string query=\"SELECT '_online.._value' FROM '\" + datapoint + \"' WHERE _LEAF AND _SYS=\\\"\" + systemName +\"\\\"\";
-      dyn_dyn_anytype table;
-      dpQuery(query, table);
+    string query=\"SELECT '_online.._value' FROM '\" + datapoint + \"' WHERE _LEAF AND _SYS=\\\"\" + systemName +\"\\\"\";
+    dyn_dyn_anytype table;
+    dpQuery(query, table);
 	
-      int z;
-      shape tableProperties=getShape(\"TableProperties\");
-      dyn_string propNames;
-      dyn_string propPaths;
-      dyn_anytype values;
-      for(z=2;z<=dynlen(table);z++)
-      {
-        dyn_anytype tempDynAnyType;
-        tempDynAnyType = table[z];
-			  
-        string dpel,dp,el;
-        anytype value = tempDynAnyType[2];
-        dpel = dpSubStr(tempDynAnyType[1],DPSUB_DP_EL);
-        dp = dpSubStr(tempDynAnyType[1],DPSUB_DP);
-        el = substr(dpel,strlen(dp)+1);
-			
-        dynAppend(propPaths,dpel);
-        dynAppend(propNames,el);
+    int z;
+    shape tableProperties=getShape(\"TableProperties\");
+    dyn_string propNames;
+    dyn_string propPaths;
+    dyn_anytype values;
+    for(z=2;z<=dynlen(table);z++)
+    {
+      dyn_anytype tempDynAnyType;
+      tempDynAnyType = table[z];
+		  
+      string dpel,dp,el;
+      anytype value = tempDynAnyType[2];
+      dpel = dpSubStr(tempDynAnyType[1],DPSUB_DP_EL);
+      dp = dpSubStr(tempDynAnyType[1],DPSUB_DP);
+      el = substr(dpel,strlen(dp)+1);
+ 		
+      dynAppend(propPaths,dpel);
+      dynAppend(propNames,el);
 				
-///////
+//////
 dyn_dyn_string names;
 dyn_dyn_int types;
 dpTypeGet(dpTypeName(dp),names,types);
 //				DebugN(\"lalalalie\",dp,dpTypeName(dp),names,types);
 ///////
 				
-        dynAppend(values,value);
-      }
-      tableProperties.appendLines(dynlen(propNames),\"propertyPath\",propPaths,\"propertyName\",propNames,\"value\",values);
-	
-      dpQueryConnectAll(\"UpdateTextFields\", true, \"onlineValues\", query);
+      dynAppend(values,value);
     }
+    tableProperties.appendLines(dynlen(propNames),\"propertyPath\",propPaths,\"propertyName\",propNames,\"value\",values);
+	
+    dpQueryConnectAll(\"UpdateTextFields\", true, \"onlineValues\", query);
   }
 }
 
@@ -83,10 +78,20 @@ int UpdateTextFields(string ident,dyn_dyn_anytype table)
   tableProperties.updateLines(1,\"propertyName\",propNames,\"value\",values);
 
   return 0;
-}" 0
- E E E E 1 -1 -1 0  20 40
+}
+" 0
+ "main()
+{
+  navPMLunloadPropertySet($datapoint);
+}
+
+" 0
+ E E E 1 -1 -1 0  20 40
 ""0  1
-E E 2
+E "#uses \"gcfnav-pmlinterface.ctl\"
+
+" 0
+ 2
 "CBRef""1"
 "EClose"E
 ""
