@@ -11,14 +11,14 @@ TESTS = \
 	avtstub.sh
 
 bin_PROGRAMS = \
-	AVTStub
+	AVTStub \
+	EPATest
 
 check_PROGRAMS = \
 	BeamServerTest \
 	CheckWeightsTest \
 	CheckWeightsTest2 \
 	EPAStub \
-	EPATest \
 	SweepTest \
 	SetFreq
 
@@ -87,10 +87,12 @@ BUILT_SOURCES = \
 	log4cplus.properties \
 	abstest.ns \
 	abstest.top \
-	AVTStub.conf
+	AVTStub.conf \
+	EPATest.conf
 
 sysconf_DATA = \
-	AVTStub.conf
+	AVTStub.conf \
+	EPATest.conf
 
 %.properties: $(MAC_CONFIG)/%.properties
 	cp $< $@

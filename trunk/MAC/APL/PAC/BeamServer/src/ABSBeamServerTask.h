@@ -181,9 +181,9 @@ namespace ABS
 	 * Current WG settings.
 	 */
 	struct {
-	    double         frequency;
-	    unsigned short amplitude;
-	    bool           enabled;
+	    double frequency;
+	    uint8  amplitude;
+	    bool   enabled;
 	} m_wgsetting;
 
 	/**

@@ -129,7 +129,7 @@ GCFEvent::TResult EPATest::test001(GCFEvent& e, GCFPortInterface& port)
 	// send wgenable
 	ABSWgsettingsEvent wgs;
 	wgs.frequency=1.5625e6; // 1.5625MHz
-	wgs.amplitude=0x8000; // 16-bits value
+	wgs.amplitude=128; // 8-bits value
 
 	TESTC(beam_server.send(wgs));
       }
@@ -148,7 +148,7 @@ GCFEvent::TResult EPATest::test001(GCFEvent& e, GCFPortInterface& port)
 	// send beam allocation, select all subbands
 	ABSBeamallocEvent alloc;
 	alloc.spectral_window = 0;
-//	alloc.n_subbands = N_BEAMLETS;
+	alloc.n_subbands = MEPHeader::N_BEAMLETS;
 	memset(alloc.subbands, 0, sizeof(alloc.subbands));
 	for (int i = 0; i < MEPHeader::N_BEAMLETS; i++)
 	{
@@ -182,8 +182,8 @@ GCFEvent::TResult EPATest::test001(GCFEvent& e, GCFPortInterface& port)
 	    TESTC(beam_server.send(pointto));
 	}
 
-	// let the beamformer compute for 20 seconds
-	timerid = beam_server.setTimer((long)20);
+	// let the beamformer compute for 3 minutes
+	timerid = beam_server.setTimer((long)180);
       }
       break;
 
