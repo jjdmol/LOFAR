@@ -928,26 +928,28 @@ void MeqCalibrater::saveResidualData(const String& colAName,
 // for the purpose of passing the information back to a glish script.
 //
 //----------------------------------------------------------------------
-static void addParm(const MeqParm& parm, GlishRecord& rec)
+void MeqCalibrater::addParm(const MeqParm& parm, GlishRecord& rec)
 {
   GlishRecord parmRec;
 
-#if 0
+  MeqMatrix m;
+  m = MeqMatrix (complex<double>(), itsNrScid, 1);
+  parm.getCurrentValue(m);
+  
+  Matrix<DComplex> coefs(m.nx(), m.ny());
 
-  // WHAT SHOULD THE VALUE OF THE nrx PARAMETER FOR MeqRequest BE?
+  for (int i=0; i < m.nx(); i++)
+  {
+    for (int j=0; j < m.ny(); j++)
+    {
+      coefs(i,j) = m.getDComplex(i,j);
+    }
+  }
 
-  //
-  // In order to fill in the result for the current domain
-  // we need some specification of the current domain.
-  // The domain should be set in the nextTimeInterval method.
-  //
-  MeqRequest mr(itsSolveDomain, ????, itsNrChan, itsNrScid);
-  MeqMatrix mm = parm->getResult(mr).getValue();	    
-  if (mm.isDouble()) rec->add("result", mm.getDoubleMatrix());
-  else               rec->add("result", mm.getDComplexMatrix());
-#endif
+  GlishArray ga(coefs);
 
   parmRec.add("parmid", Int(parm.getParmId()));
+  parmRec.add("value",  ga);
   
   rec.add(parm.getName(), parmRec);
 }

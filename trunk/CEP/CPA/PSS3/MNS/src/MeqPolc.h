@@ -87,6 +87,10 @@ public:
   // in the argument.
   void getInitial (MeqMatrix& values) const;
 
+  // Get the current value of the solvable parameter and store it
+  // in the argument.
+  void getCurrentValue(MeqMatrix& value) const;
+
   // Update the solvable parameters with the new values.
   void update (const MeqMatrix& value);
 

@@ -172,6 +172,9 @@ private:
   //! Calculate the UVW polynomial coefficients.
   void calcUVWPolc  (const Table& ms);
 
+  //! Append the current value of the parameters (as MeqMatrix) to rec
+  void MeqCalibrater::addParm(const MeqParm& parm, GlishRecord& rec);
+
   /**
    * \defgroup PrivVariable Private variables
    */

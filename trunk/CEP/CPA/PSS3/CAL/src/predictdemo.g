@@ -13,15 +13,23 @@ mkimg := function (msname, imgname, type='model', npix=2000)
   t.close();
 
   imgr := imager(msname);
-  imgr.setdata(mode='channel', nchan=nchannels, step=1, fieldid=1);
-  imgr.setimage(nx=npix, ny=npix, cellx='1arcsec', celly='1arcsec', mode='mfs',  facets=1);
-  imgr.weight('uniform');
-  imgr.makeimage(type=type, image=imgname);
+
+  if (!is_fail(imgr))
+  {
+    imgr.setdata(mode='channel', nchan=nchannels, step=1, fieldid=1);
+    imgr.setimage(nx=npix, ny=npix, cellx='1arcsec', celly='1arcsec', mode='mfs',  facets=1);
+    imgr.weight('uniform');
+    imgr.makeimage(type=type, image=imgname);
 
 #  include "image.g";
 
-  img := image(imgname);
-  img.view();
+    img := image(imgname);
+    
+    if (!is_fail(img))
+    {
+      img.view();
+    }
+  }
 }
 
 #
@@ -40,11 +48,19 @@ predict := function(msname)
 
     mc.settimeinterval(3600); # calibrate per 1 hour
     mc.clearsolvableparms();
-    mc.setsolvableparms("a.b.* f.g.*[34]", T);
-#    mc.setsolvableparms("Leakage.*", T);
+    mc.setsolvableparms("Leakage.*", T);
     
     mc.resetiterator()
     i := 0
+
+	parms := mc.getparms("GSM.0.RA");
+	print 'RA = ', parms["GSM.0.RA"].value[1,1];
+	parms := mc.getparms("GSM.0.DEC");	
+	print 'DEC= ', parms["GSM.0.DEC"].value[1,1];
+
+	parms := mc.getparms("*RTC*", "*12*");
+	print 'parms = ', parms
+
     while (mc.nextinterval())
     {
 	d := mc.getsolvedomain();
@@ -55,12 +71,17 @@ predict := function(msname)
 	# mc.saveresidualdata('DATA', 'MODEL_DATA', 'RESIDUAL_DATA');
 	# mc.saveparms();
 	
-	parms := mc.getparms("f.g.h.i.j.[1-5]");
-	print 'getparms = ', parms
-
 	i+:=1;
     }
 
+    parms := mc.getparms("GSM.0.RA");
+    print 'RA = ', parms["GSM.0.RA"].value[1,1];
+    parms := mc.getparms("GSM.0.DEC");	
+    print 'DEC= ', parms["GSM.0.DEC"].value[1,1];
+    
+    parms := mc.getparms("*RTC*", "*12*");
+    print 'parms = ', parms
+    
     mc.done();
 
     return T;
@@ -68,8 +89,8 @@ predict := function(msname)
 
 predictdemo := function()
 {
-    predict('/aips++/wierenga/michiel.MS');
+    predict('/aips++/wierenga/GER.MS');
 
-    mkimg('/aips++/wierenga/michiel.MS', '/aips++/wierenga/GER.img');
+    # mkimg('/aips++/wierenga/GER.MS', '/aips++/wierenga/KJW.img');
 }
     

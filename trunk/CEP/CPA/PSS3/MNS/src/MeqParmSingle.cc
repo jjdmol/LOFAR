@@ -87,6 +87,15 @@ void MeqParmSingle::getInitial (MeqMatrix& values) const
   }
 }
 
+void MeqParmSingle::getCurrentValue(MeqMatrix& value) const
+{
+  value = MeqMatrix(complex<double>(), 1, 1);
+
+  if (itsIsSolvable) {
+    value.dcomplexStorage()[0] = complex<double>(itsCurValue,0);
+  }
+}
+
 void MeqParmSingle::update (const MeqMatrix& value)
 {
   if (itsIsSolvable) {
