@@ -33,10 +33,6 @@ EXTRA_DIST = \
 # 	abs.ns \
 # 	abs.top
 
-include_HEADERS = \
-	RSP_Protocol.ph \
-	EPA_Protocol.ph
-
 %.properties: $(MAC_CONFIG)/%.properties
 	cp $< $@
 
@@ -49,31 +45,38 @@ include_HEADERS = \
 %.top: %.top.in
 	cp $< $@
 
-noinst_LTLIBRARIES = librsp.la libepa.la
+lib_LTLIBRARIES    = librsp.la
+noinst_LTLIBRARIES = libepa.la
+
+include_HEADERS = \
+	RSP_Protocol.ph \
+	Timestamp.h \
+	BeamletWeights.h \
+	SubbandSelection.h \
+	RCUSettings.h \
+	WGSettings.h \
+	SystemStatus.h \
+	Statistics.h \
+	Versions.h \
+	Marshalling.h \
+	\
+	EPA_Protocol.ph \
+	MEPHeader.h \
+	MEPData.h
 
 librsp_la_SOURCES = \
-	Timestamp.h \
 	Timestamp.cc \
-	BeamletWeights.h \
 	BeamletWeights.cc \
-	SubbandSelection.h \
 	SubbandSelection.cc \
-	RCUSettings.h \
 	RCUSettings.cc \
-	WGSettings.h \
 	WGSettings.cc \
-	SystemStatus.h \
 	SystemStatus.cc \
-	Statistics.h \
 	Statistics.cc \
-	Versions.h \
 	Versions.cc \
 	RSP_Protocol.cc
 
 libepa_la_SOURCES = \
-	MEPHeader.h \
 	MEPHeader.cc \
-	MEPData.h \
 	MEPData.cc \
 	EPA_Protocol.cc \
 	RawEvent.h \

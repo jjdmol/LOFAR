@@ -38,7 +38,7 @@ Command::~Command()
 {
 }
 
-void Command::setPeriod(int16 period)
+void Command::setPeriod(uint16 period)
 {
   m_period = period;
 }
@@ -67,18 +67,6 @@ GCFPortInterface* Command::getPort()
 {
   return m_port;
 }
-
-#if 0
-void Command::setEvent(const GCFEvent& event, GCFPortInterface& port, Operation oper, int16 period)
-{
-  /* copy the event to the Command */
-  m_event = (GCFEvent*)new char[sizeof(event) + event.length];
-  memcpy(m_event, (const char*)&event, sizeof(event) + event.length);
-  m_answerport = &port;
-  m_operation = oper;
-  m_period = period;
-}
-#endif
 
 bool Command::operator<(const Command& right)
 {

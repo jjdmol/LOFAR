@@ -30,8 +30,6 @@
 #include "RSPTestSuite.h"
 #include "RSPTest.h"
 
-#include "BeamletWeights.h"
-
 #include <iostream>
 #include <sys/time.h>
 #include <string.h>
@@ -49,7 +47,7 @@ using namespace blitz;
 using namespace EPA_Protocol;
 using namespace RSP_Protocol;
 
-#define N_BEAMLETS 256
+#define N_BEAMLETS 128
 
 RSPTest::RSPTest(string name)
     : GCFTask((State)&RSPTest::initial, name), Test(name)
@@ -81,7 +79,7 @@ GCFEvent::TResult RSPTest::initial(GCFEvent& e, GCFPortInterface& port)
 
     case F_CONNECTED:
     {
-      TRAN(RSPTest::test010);
+      TRAN(RSPTest::test001);
     }
     break;
 
@@ -370,7 +368,7 @@ GCFEvent::TResult RSPTest::test005(GCFEvent& e, GCFPortInterface& port)
       ss.subbands() = 0x77;
 
       // nr of subbands = 10
-      ss.subbands.nrsubbands() = 10;
+      ss.subbands.nrsubbands()(0) = 10;
       
       TESTC_ABORT(m_server.send(ss), RSPTest::final);
     }
@@ -696,7 +694,7 @@ GCFEvent::TResult RSPTest::test010(GCFEvent& e, GCFPortInterface& port)
       substatus.timestamp.setNow();
       substatus.rcumask.reset();
       substatus.rcumask.set(0);
-      substatus.period = 1;
+      substatus.period = 4;
       
       TESTC_ABORT(m_server.send(substatus) > 0, RSPTest::final);
     }
@@ -735,6 +733,94 @@ GCFEvent::TResult RSPTest::test010(GCFEvent& e, GCFPortInterface& port)
     case RSP_UNSUBSTATUSACK:
     {
       RSPUnsubstatusackEvent ack(e);
+
+      TESTC_ABORT(ack.status == SUCCESS, RSPTest::final);
+      LOG_INFO_STR("ack.time=" << ack.timestamp);
+
+      LOG_INFO_STR("ack.handle=" << ack.handle);
+
+      TRAN(RSPTest::test011);
+    }
+    break;
+
+    case F_DISCONNECTED:
+    {
+      port.close();
+
+      FAIL_ABORT("unexpected disconnect", RSPTest::final);
+    }
+    break;
+
+    case F_EXIT:
+    {
+      STOP_TEST();
+    }
+    break;
+
+    default:
+      status = GCFEvent::NOT_HANDLED;
+      break;
+  }
+
+  return status;
+}
+
+GCFEvent::TResult RSPTest::test011(GCFEvent& e, GCFPortInterface& port)
+{
+  static int updcount = 0;
+  
+  GCFEvent::TResult status = GCFEvent::HANDLED;
+  
+  switch (e.signal)
+  {
+    case F_ENTRY:
+    {
+      START_TEST("test011", "test UPDSTATS");
+
+      // subscribe to status updates
+      RSPSubstatsEvent substats;
+
+      substats.timestamp.setNow();
+      substats.rcumask.reset();
+      substats.rcumask.set(0);
+      substats.period = 1;
+      
+      TESTC_ABORT(m_server.send(substats) > 0, RSPTest::final);
+    }
+    break;
+
+    case RSP_SUBSTATSACK:
+    {
+      RSPSubstatsackEvent ack(e);
+
+      TESTC_ABORT(ack.status == SUCCESS, RSPTest::final);
+      LOG_INFO_STR("ack.time=" << ack.timestamp);
+    }
+    break;
+
+    case RSP_UPDSTATS:
+    {
+      RSPUpdstatsEvent upd(e);
+
+      TESTC_ABORT(upd.status == SUCCESS, RSPTest::final);
+      LOG_INFO_STR("upd.time=" << upd.timestamp);
+      LOG_INFO_STR("upd.handle=" << upd.handle);
+      
+      LOG_INFO_STR("upd.stats=" << upd.stats());
+
+      if (updcount++ > 20)
+      {
+	RSPUnsubstatsEvent unsub;
+	unsub.handle = upd.handle; // remove subscription with this handle
+
+	TESTC_ABORT(m_server.send(unsub) > 0, RSPTest::final);
+      }
+    }
+    break;
+    
+    case RSP_UNSUBSTATSACK:
+    {
+      RSPUnsubstatsackEvent ack(e);
 
       TESTC_ABORT(ack.status == SUCCESS, RSPTest::final);
       LOG_INFO_STR("ack.time=" << ack.timestamp);

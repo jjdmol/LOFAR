@@ -116,5 +116,14 @@ GCFEvent::TResult SSWrite::handleack(GCFEvent& event, GCFPortInterface& /*port*/
 
   LOG_DEBUG("handleack");
 
+  if (ack.board.write.error ||
+      ack.board.read.error)
+  {
+    LOG_ERROR_STR("SSWrite " 
+		  << (ack.board.write.error
+		      ? "write error"
+		      : "read error"));
+  }
+
   return GCFEvent::HANDLED;
 }

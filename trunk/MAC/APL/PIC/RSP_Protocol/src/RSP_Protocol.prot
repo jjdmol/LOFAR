@@ -352,7 +352,7 @@ event = {
   };
   param = {
     name = "period";
-    type = "int16";
+    type = "uint16";
   };
 };
 
@@ -475,7 +475,7 @@ event = {
   };
   param = {
     name = "period";
-    type = "int16";
+    type = "uint16";
   };
   param = {
     name = "type";
