@@ -43,7 +43,7 @@ class TH_Ethernet: public TransportHolder
 {
 public:
   TH_Ethernet(const char* ifname, 
-              const char* destMac, 
+              const char* remoteMac, 
               unsigned short ethertype = 0x0000);
   
   virtual ~TH_Ethernet();
@@ -78,7 +78,7 @@ public:
   int _socketFD;
   bool _initDone;
   char _ifname[IFNAMSIZ];
-  char _destMac[ETH_ALEN];
+  char _remoteMac[ETH_ALEN];
   char _recvPacket[ETH_FRAME_LEN];
   char _sendPacket[ETH_FRAME_LEN];
   char* _sendPacketData;
