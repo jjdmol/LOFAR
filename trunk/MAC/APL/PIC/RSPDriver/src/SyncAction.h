@@ -23,18 +23,17 @@
 #ifndef SYNCACTION_H_
 #define SYNCACTION_H_
 
-#include <Common/LofarTypes.h>
 #include <GCF/GCF_Control.h>
 
 namespace RSP
 {
-  class SyncAction
+  class SyncAction : public GCFFsm
       {
       public:
 	  /**
 	   * Constructors for a SyncAction object.
 	   */
-	  SyncAction();
+	  explicit SyncAction(State initial);
 	  
 	  /* Destructor for SyncAction. */
 	  virtual ~SyncAction();
@@ -46,8 +45,20 @@ namespace RSP
 	   */
 	  void setPriority(int priority);
 
+	  /**
+	   * Has the state machine reached its final state?
+	   */
+	  /*@{*/
+	  void setFinal(bool final);
+	  bool isFinal() const;
+	  /*@}*/
+
       private:
-	  int m_priority;
+	  SyncAction();
+
+      private:
+	  int  m_priority;
+	  bool m_final; /** indicates whether the state machine has reached its final state */
       };
 };
      

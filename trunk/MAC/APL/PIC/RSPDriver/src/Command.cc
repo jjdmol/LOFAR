@@ -56,6 +56,11 @@ void Command::setAnswerPort(GCFPortInterface* port)
   m_answerport = port;
 }
 
+void Command::setOperation(Operation oper)
+{
+  m_operation = oper;
+}
+
 void Command::apply()
 {
 }

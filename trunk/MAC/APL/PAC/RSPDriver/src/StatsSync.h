@@ -1,4 +1,4 @@
-//#  Scheduler.cc: implementation of the Scheduler class
+//#  StatsSync.h: Synchronize statistics with RSP hardware.
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,29 +20,34 @@
 //#
 //#  $Id$
 
-#include "Scheduler.h"
+#ifndef STATSSYNC_H_
+#define STATSSYNC_H_
 
-#undef PACKAGE
-#undef VERSION
-#include <lofar_config.h>
-#include <Common/LofarLogger.h>
+#include "SyncAction.h"
 
-using namespace RSP;
-using namespace LOFAR;
-
-Scheduler::Scheduler()
-{}
-
-Scheduler::~Scheduler()
-{}
-
-void Scheduler::run(GCFEvent& event, GCFPortInterface& port)
+namespace RSP
 {
-  //event = event;
-  port = port;
-}
+  class StatsSync : public SyncAction
+      {
+      public:
+	  /**
+	   * Constructors for a StatsSync object.
+	   */
+	  explicit StatsSync(State initial);
+	  
+	  /* Destructor for StatsSync. */
+	  virtual ~StatsSync();
 
-void Scheduler::enter(Command& command)
-{
-  
-}
+	  /**
+	   * Initial state handler.
+	   */
+	  GCFEvent::TResult initial_state(GCFEvent& event, GCFPortInterface& port);
+
+      private:
+	  StatsSync();
+
+      private:
+      };
+};
+     
+#endif /* STATSSYNC_H_ */

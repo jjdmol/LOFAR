@@ -1,4 +1,4 @@
-//#  Scheduler.cc: implementation of the Scheduler class
+//#  SSSync.cc: implementation of the SSSync class
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,7 +20,7 @@
 //#
 //#  $Id$
 
-#include "Scheduler.h"
+#include "SSSync.h"
 
 #undef PACKAGE
 #undef VERSION
@@ -30,19 +30,16 @@
 using namespace RSP;
 using namespace LOFAR;
 
-Scheduler::Scheduler()
-{}
-
-Scheduler::~Scheduler()
-{}
-
-void Scheduler::run(GCFEvent& event, GCFPortInterface& port)
+SSSync::SSSync() : SyncAction((State)&SSSync::initial_state)
 {
-  //event = event;
-  port = port;
 }
 
-void Scheduler::enter(Command& command)
+SSSync::~SSSync()
 {
-  
+  /* TODO: delete event? */
+}
+
+GCFEvent::TResult SSSync::initial_state(GCFEvent& event, GCFPortInterface& port)
+{
+  return GCFEvent::HANDLED;
 }

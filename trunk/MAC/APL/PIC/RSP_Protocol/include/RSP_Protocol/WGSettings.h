@@ -1,4 +1,4 @@
-//#  Scheduler.h: RSP Driver scheduler
+//#  WGSettings.h: Waveform Generator control information
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,40 +20,51 @@
 //#
 //#  $Id$
 
-#ifndef SCHEDULER_H_
-#define SCHEDULER_H_
+#ifndef WGSETTINGS_H_
+#define WGSETTINGS_H_
 
-#include <queue>
-#include <GCF/GCF_Control.h>
-#include "Command.h"
-#include "SyncAction.h"
+#include <complex>
+#include <blitz/array.h>
+#include <Common/LofarTypes.h>
 
-namespace RSP
+namespace RSP_Protocol
 {
-  class Scheduler
+  class WGSettings
       {
       public:
 	  /**
-	   * Constructors for a Scheduler object.
+	   * Constructors for a WGSettings object.
 	   * Currently the tv_usec part is always set to 0 irrespective
 	   * of the value passed in.
 	   */
-	  Scheduler();
+	  WGSettings() { }
 	  
-	  /* Destructor for Scheduler. */
-	  virtual ~Scheduler();
+	  /* Destructor for WGSettings. */
+	  virtual ~WGSettings() {}
 
-	  void run(GCFEvent& event, GCFPortInterface& port);
-	  void enter(Command& command);
+      public:
+	  /**
+	   * marshalling methods
+	   */
+	  /*@{*/
+	  unsigned int getSize();
+	  unsigned int pack  (void* buffer);
+	  unsigned int unpack(void *buffer);
+	  /*@}*/
 
       private:
-	  std::priority_queue<Command*> m_later_queue;
-	  std::priority_queue<Command*> m_now_queue;
-	  std::priority_queue<Command*> m_periodic_queue;
-	  std::priority_queue<Command*> m_done_queue;
+	  /**
+	   * Settings of the Waveform Generator
+	   */
+	  typedef struct WGRegister
+	  {
+	      uint16 mode;
+	      uint16 frequency;
+	      uint16 amplitude;
+	  };
 
-	  std::priority_queue<SyncAction*> m_syncactions;
+	  blitz::Array<WGRegister, 1> registers;
       };
 };
      
-#endif /* SCHEDULER_H_ */
+#endif /* WGSETTINGS_H_ */

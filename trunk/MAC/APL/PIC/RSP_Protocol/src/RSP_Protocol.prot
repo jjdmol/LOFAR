@@ -18,7 +18,7 @@ include = '"Timestamp.h"';
 include = '"BeamletWeights.h"';
 include = '"SubbandSelection.h"';
 include = '"RCUSettings.h"';
-include = '"WGSetting.h"';
+include = '"WGSettings.h"';
 include = '"SystemStatus.h"';
 include = '"Statistics.h"';
 include = '"Versions.h"';
@@ -275,8 +275,8 @@ event = {
 	type = "std::bitset<N_RCUBITS>";
     };
     param = {
-	name = "setting";
-	type = "WGSetting";
+	name = "settings";
+	type = "WGSettings";
 	userdefined;
     };
 };
@@ -326,8 +326,8 @@ event = {
 	type = "int16";
     };
     param = {
-	name = "setting";
-	type = "WGSetting";
+	name = "settings";
+	type = "WGSettings";
 	userdefined;
     };
 };

@@ -1,4 +1,4 @@
-//#  WGSetting.h: implementation of the WGSetting class
+//#  StatsSync.cc: implementation of the StatsSync class
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,30 +20,26 @@
 //#
 //#  $Id$
 
-#include "WGSetting.h"
+#include "StatsSync.h"
 
 #undef PACKAGE
 #undef VERSION
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
+
+using namespace RSP;
 using namespace LOFAR;
 
-using namespace RSP_Protocol;
-using namespace std;
-
-unsigned int WGSetting::getSize()
+StatsSync::StatsSync() : SyncAction((State)&StatsSync::initial_state)
 {
-  return sizeof(struct timeval);
 }
 
-unsigned int WGSetting::pack  (void* buffer)
+StatsSync::~StatsSync()
 {
-  buffer = buffer;
-  return 0;
+  /* TODO: delete event? */
 }
 
-unsigned int WGSetting::unpack(void *buffer)
+GCFEvent::TResult StatsSync::initial_state(GCFEvent& event, GCFPortInterface& port)
 {
-  buffer = buffer;
-  return 0;
+  return GCFEvent::HANDLED;
 }

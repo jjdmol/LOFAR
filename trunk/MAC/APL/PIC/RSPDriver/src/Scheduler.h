@@ -43,8 +43,8 @@ namespace RSP
 	  /* Destructor for Scheduler. */
 	  virtual ~Scheduler();
 
-	  void run(GCFEvent& event, GCFPortInterface& port, time_t tick);
-	  void enter(Command command);
+	  void run(GCFEvent& event, GCFPortInterface& port);
+	  void enter(Command& command);
 
       private:
 	  std::priority_queue<Command*> m_later_queue;
