@@ -23,7 +23,30 @@
 
 #include <GCF/GCF_PVDouble.h>
 
-/** No descriptions */
+unsigned int GCFPVDouble::unpack(const char* valBuf, unsigned int maxBufSize)
+{
+  unsigned int result(0);
+  unsigned int unpackedBytes = unpackBase(valBuf, maxBufSize);
+  if (maxBufSize >= unpackedBytes + sizeof(double))
+  {
+    memcpy((void *) &_value, valBuf + unpackedBytes, sizeof(double));
+    result = sizeof(double) + unpackedBytes;
+  }
+  return result;
+}
+
+unsigned int GCFPVDouble::pack(char* valBuf, unsigned int maxBufSize) const
+{
+  unsigned int result(0);
+  unsigned int packedBytes = packBase(valBuf, maxBufSize);
+  if (maxBufSize >= packedBytes + sizeof(double))
+  {
+    memcpy(valBuf + packedBytes, (void *) &_value, sizeof(double));
+    result = sizeof(double) + packedBytes;
+  }
+  return result;
+}
+
 TGCFResult GCFPVDouble::setValue(const string valueData)
 {
   TGCFResult result(GCF_VALUESTRING_NOT_VALID);
@@ -42,14 +65,12 @@ TGCFResult GCFPVDouble::setValue(const string valueData)
   return result;
 }
 
-/** No descriptions */
 GCFPValue* GCFPVDouble::clone() const
 {
   GCFPValue* pNewValue = new GCFPVDouble(_value);
   return pNewValue;
 }
 
-/** No descriptions */
 TGCFResult GCFPVDouble::copy(const GCFPValue& newVal)
 {
   TGCFResult result(GCF_NO_ERROR);

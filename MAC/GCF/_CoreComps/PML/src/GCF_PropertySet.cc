@@ -40,7 +40,7 @@ GCFPropertySet::GCFPropertySet(string apcName,
        pAPCProperty != pPropsFromAPC->end(); ++pAPCProperty)
   {
     pProperty = new GCFProperty(pAPCProperty->name, *this);
-    addProperty(pAPCProperty->name, pProperty);
+    addProperty(pAPCProperty->name, *pProperty);
   }
   if (pAnswerObj)
   {

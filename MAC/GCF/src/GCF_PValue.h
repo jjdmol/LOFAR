@@ -99,7 +99,18 @@ class GCFPValue
      * <b>IMPORTANT: must be deleted by "user" of this method</b>
      */
     static GCFPValue* createMACTypeObject (TMACValueType type);
+
+    static GCFPValue* unpackValue (const char* valBuf, unsigned int maxBufSize);
+
+    virtual unsigned int unpack(const char* valBuf, unsigned int maxBufSize) = 0;
+
+    virtual unsigned int pack(char* valBuf, unsigned int maxBufSize) const = 0;
    
+  protected:
+    unsigned int unpackBase(const char* valBuf, unsigned int maxBufSize);
+ 
+    unsigned int packBase(char* valBuf, unsigned int maxBufSize) const;
+ 
   private: // private data members
     /** Holds MAC property value type ID*/
     TMACValueType _type;

@@ -71,7 +71,7 @@ class GCFHandler
 
     virtual void workProc () = 0;
     virtual void stop () = 0;
-    friend GCFTask;
+    friend class GCFTask;
 
   private:
     //@{ 

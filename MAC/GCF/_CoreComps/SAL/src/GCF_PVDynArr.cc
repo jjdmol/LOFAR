@@ -41,7 +41,65 @@ GCFPVDynArr::~GCFPVDynArr()
   cleanup();
 }
 
-/** No descriptions */
+unsigned int GCFPVDynArr::unpack(const char* valBuf, unsigned int maxBufSize)
+{
+  unsigned int result(0);
+  unsigned int unpackedBytes = unpackBase(valBuf, maxBufSize);
+  if (maxBufSize >= unpackedBytes + sizeof(unsigned int))
+  {
+    cleanup();
+    unsigned int arraySize(0);
+    unsigned int curUnpackedBytes(0);
+    GCFPValue* pNewValue(0);
+    memcpy((void *) &arraySize, valBuf + unpackedBytes, sizeof(unsigned int));
+    unpackedBytes += sizeof(unsigned int);
+    for (unsigned int i = 0; i < arraySize; i++)
+    {
+      pNewValue = GCFPValue::createMACTypeObject((TMACValueType) (getType() | LPT_DYNARR));
+      
+      curUnpackedBytes = pNewValue->unpack(valBuf + unpackedBytes, maxBufSize - unpackedBytes);
+      if (curUnpackedBytes > 0)
+      {
+        unpackedBytes += curUnpackedBytes;
+        _values.push_back(pNewValue);
+      }
+      else
+      {
+        unpackedBytes = 0; 
+        break;
+      }
+    }
+    result = unpackedBytes;
+  }
+  return result;
+}
+
+unsigned int GCFPVDynArr::pack(char* valBuf, unsigned int maxBufSize) const
+{
+  unsigned int result(0);  
+  unsigned int packedBytes = packBase(valBuf, maxBufSize);
+  if (maxBufSize >= packedBytes + sizeof(unsigned int))
+  {
+    unsigned int arraySize(_values.size());
+    memcpy(valBuf + packedBytes, (void *) &arraySize, sizeof(unsigned int));
+    packedBytes += sizeof(unsigned int);
+    unsigned int curPackedBytes = 0;
+    for (GCFPValueArray::const_iterator iter = _values.begin();
+         iter != _values.end(); ++iter)
+    {
+      curPackedBytes = (*iter)->pack(valBuf + packedBytes, maxBufSize - packedBytes);
+      packedBytes += curPackedBytes;
+      if (curPackedBytes == 0)
+      {
+        packedBytes = 0;
+        break;
+      }        
+    }  
+    result = packedBytes;
+  }
+  return result;
+}
+
 TGCFResult GCFPVDynArr::setValue(const string value)
 {
   TGCFResult result(GCF_NO_ERROR);
@@ -60,14 +118,12 @@ void GCFPVDynArr::setValue(const GCFPValueArray& newVal)
   }
 }
 
-/** No descriptions */
 GCFPValue* GCFPVDynArr::clone() const
 {
   GCFPValue* pNewValue = new GCFPVDynArr(getType(), _values);
   return pNewValue;
 }
 
-/** No descriptions */
 TGCFResult GCFPVDynArr::copy(const GCFPValue& newVal)
 {
   TGCFResult result(GCF_NO_ERROR);

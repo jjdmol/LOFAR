@@ -26,8 +26,8 @@
 
 GTMTimer::GTMTimer(GCFRawPort& port, 
                    unsigned long timeVal, 
-                   unsigned long intervalTime = 0, 
-                   const void* arg = 0) :
+                   unsigned long intervalTime, 
+                   const void* arg) :
   _port(port), _time(timeVal), _timeLeft(timeVal), 
   _intervalTime(intervalTime), 
   _arg(arg), _elapsed(false), _canceled(false)

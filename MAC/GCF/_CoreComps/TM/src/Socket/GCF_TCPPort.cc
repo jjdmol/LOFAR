@@ -27,20 +27,24 @@
 #include <GCF/GCF_TMProtocols.h>
 #include <PortInterface/GTM_NameService.h>
 #include <PortInterface/GTM_TopologyService.h>
-#include <Socket/GTM_ServerSocket.h>
+#include <Socket/GTM_TCPServerSocket.h>
 
-GCFTCPPort::GCFTCPPort(GCFTask& task, string name, TPortType type, int protocol) 
-  : GCFRawPort(task, name, type, protocol),
+GCFTCPPort::GCFTCPPort(GCFTask& task, 
+                       string name, 
+                       TPortType type, 
+                       int protocol, 
+                       bool exchangeRawData) 
+  : GCFRawPort(task, name, type, protocol, exchangeRawData),
     _addrIsSet(false),
     _pSocket(0)
 {
   if (SPP == getType() || MSPP == getType())
   {
-    _pSocket = new GTMServerSocket(*this, (MSPP == type));
+    _pSocket = new GTMTCPServerSocket(*this, (MSPP == type));
   }
   else if (SAP == getType())
   {
-    _pSocket = new GTMSocket(*this);
+    _pSocket = new GTMTCPSocket(*this);
   }
 }
 
@@ -81,11 +85,11 @@ int GCFTCPPort::open()
   {
     if (SPP == getType() || MSPP == getType())
     {
-      _pSocket = new GTMServerSocket(*this, (MSPP == getType()));
+      _pSocket = new GTMTCPServerSocket(*this, (MSPP == getType()));
     }
     else if (SAP == getType())
     {
-      _pSocket = new GTMSocket(*this);
+      _pSocket = new GTMTCPSocket(*this);
     }
     
     if (findAddr(fwaddr))
@@ -223,12 +227,12 @@ int GCFTCPPort::accept(GCFTCPPort& port)
 {
   if (MSPP == getType() && SPP == port.getType())
   {
-    GTMServerSocket* pProvider = static_cast<GTMServerSocket*>(_pSocket);
+    GTMTCPServerSocket* pProvider = static_cast<GTMTCPServerSocket*>(_pSocket);
     if (pProvider)
     {
       if (port._pSocket == 0)
       {
-        port._pSocket = new GTMSocket(port);
+        port._pSocket = new GTMTCPSocket(port);
       }
       if (pProvider->accept(*port._pSocket) >= 0)
         port.schedule_connected();

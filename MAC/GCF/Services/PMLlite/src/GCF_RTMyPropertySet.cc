@@ -29,12 +29,11 @@
 GCFRTMyPropertySet::GCFRTMyPropertySet(const TPropertySet& propSet,
                                    GCFRTAnswer* pAnswerObj) : 
   _scope(propSet.scope), 
-  _pAnswerObj(pAnswerObj),
   _isLoaded(false),
+  _pAnswerObj(pAnswerObj),
   _isBusy(false),
-  _counter(0),
-  _missing(0),
-  _propSet(propSet)  
+  _propSet(propSet),
+  _dummyProperty(*this)
 {
   GCFRTMyProperty* pProperty;
   const char* propName;
@@ -43,7 +42,7 @@ GCFRTMyPropertySet::GCFRTMyPropertySet(const TPropertySet& propSet,
   {
     LOFAR_LOG_WARN(PML_STDOUT_LOGGER, ( 
         "Scope %s meets not the name convention! Set to \"\"",
-        scope.c_str()));
+        _scope.c_str()));
     _scope = "";
   }
   for (unsigned int i = 0; i < _propSet.nrOfProperties; i++)
@@ -94,7 +93,7 @@ TGCFResult GCFRTMyPropertySet::load ()
   {
     LOFAR_LOG_INFO(PML_STDOUT_LOGGER, ( 
         "REQ: Register scope %s",
-        getScope().c_str()));
+        _scope.c_str()));
     const TProperty* pPropertyFields;
     for (unsigned int i = 0; i < _propSet.nrOfProperties; i++)
     {
@@ -142,6 +141,17 @@ TGCFResult GCFRTMyPropertySet::unload ()
 
     GPMRTController* pController = GPMRTController::instance();
     assert(pController);
+    GCFRTMyProperty* pProperty;
+    for (TPropertyList::iterator iter = _properties.begin();
+         iter != _properties.end(); ++iter)
+    {
+      pProperty = iter->second;
+      assert(pProperty);
+      if (pProperty->isLinked())
+      {
+        pProperty->unlink();
+      }
+    }
 
     TPMResult pmResult = pController->unregisterScope(*this);
     assert(pmResult == PM_NO_ERROR);
@@ -151,6 +161,151 @@ TGCFResult GCFRTMyPropertySet::unload ()
   return result;
 }
 
+void GCFRTMyPropertySet::scopeRegistered (TGCFResult result)
+{
+  assert(!_isLoaded);
+  assert(_isBusy);
+  
+  _isBusy = false;
+  if (result == GCF_NO_ERROR)
+  {
+    _isLoaded = true;
+    LOFAR_LOG_INFO(PML_STDOUT_LOGGER, ( 
+        "PI-RESP: Scope %s registered",
+        _scope.c_str()));
+  }
+
+  dispatchAnswer(F_MYPLOADED_SIG, result);
+}
+
+void GCFRTMyPropertySet::scopeUnregistered (TGCFResult result)
+{
+  assert(_isLoaded);
+  assert(_isBusy);
+  
+  _isBusy = false;
+  _isLoaded = false;
+  
+  LOFAR_LOG_INFO(PML_STDOUT_LOGGER, ( 
+      "PI-RESP: Scope %s unregistered",
+      _scope.c_str()));
+
+  dispatchAnswer(F_MYPUNLOADED_SIG, result);
+}
+
+void GCFRTMyPropertySet::linkProperties(list<string>& properties)
+{
+  GPMRTController* pController = GPMRTController::instance();
+  assert(pController);
+  list<string> propsToSubscribe;
+  if (_isLoaded && !_isBusy)
+  {
+    unsigned int missing = 0;
+    GCFRTMyProperty* pProperty;
+    
+    for (list<string>::iterator iter = properties.begin(); 
+         iter != properties.end(); ++iter)
+    {
+      pProperty = getProperty(*iter);
+      if (pProperty)
+      {
+        pProperty->link();
+        if (pProperty->testAccessMode(GCF_WRITABLE_PROP))
+        {
+          propsToSubscribe.push_back(pProperty->getName());
+        }
+      }
+      else
+      {
+        missing++;
+      }
+    }
+    if (missing > 0)
+    {
+      pController->propertiesLinked(_scope, propsToSubscribe, PI_MISSING_PROPS);
+    }
+    else
+    {
+      pController->propertiesLinked(_scope, propsToSubscribe, PI_NO_ERROR);
+    }
+  }
+  else
+  {
+    pController->propertiesLinked(_scope, propsToSubscribe, PI_PROP_SET_GONE);
+  }  
+}
+
+void GCFRTMyPropertySet::unlinkProperties(list<string>& properties)
+{
+  list<string> propsToUnsubscribe;
+  GPMRTController* pController = GPMRTController::instance();
+  assert(pController);
+  if (_isLoaded && !_isBusy)
+  {
+    GCFRTMyProperty* pProperty;
+  
+    for (list<string>::iterator iter = properties.begin(); 
+         iter != properties.end(); ++iter)
+    {
+      pProperty = static_cast<GCFRTMyProperty*> (getProperty(*iter));
+      if (pProperty) 
+      {
+        pProperty->unlink();
+        if (pProperty->testAccessMode(GCF_WRITABLE_PROP))
+        {
+          propsToUnsubscribe.push_back(pProperty->getName());
+        }
+      }
+    }
+    pController->propertiesUnlinked(_scope, propsToUnsubscribe, PI_NO_ERROR);
+  }
+  else
+  {
+    pController->propertiesUnlinked(_scope, propsToUnsubscribe, PI_PROP_SET_GONE);
+  }
+}
+
+GCFRTMyProperty* GCFRTMyPropertySet::getProperty (const string propName) const
+{
+  string shortPropName(propName);
+  cutScope(shortPropName);
+  
+  TPropertyList::const_iterator iter = _properties.find(shortPropName);
+  
+  if (iter != _properties.end())
+  {
+    return iter->second;
+  }
+  else
+  {
+    return 0;
+  }
+}
+
+GCFRTMyProperty* GCFRTMyPropertySet::operator[] (const string propName)
+{ 
+  GCFRTMyProperty* pProperty = getProperty(propName);
+  if (!pProperty)
+  {
+    pProperty = &_dummyProperty;
+  }
+  return pProperty;
+}
+
+TGCFResult GCFRTMyPropertySet::setValue (const string propName, 
+                                         const GCFPValue& value)
+{
+  GCFRTMyProperty* pProperty = getProperty(propName);
+  if (pProperty)
+  {
+    return pProperty->setValue(value);    
+  }
+  else 
+  {
+    return GCF_PROP_NOT_IN_SET;
+  }
+}
+                             
 TGCFResult GCFRTMyPropertySet::setValue (const string propName, 
                                        const string value)
 {
@@ -191,124 +346,7 @@ GCFPValue* GCFRTMyPropertySet::getOldValue (const string propName)
   }
 }                                         
 
-void GCFRTMyPropertySet::scopeRegistered (TGCFResult result)
-{
-  assert(!_isLoaded);
-  assert(_isBusy);
-  
-  _isBusy = false;
-  if (result == GCF_NO_ERROR)
-  {
-    _isLoaded = true;
-    LOFAR_LOG_INFO(PML_STDOUT_LOGGER, ( 
-        "PI-RESP: Scope %s registered",
-        _scope.c_str()));
-  }
-
-  dispatchAnswer(F_MYPLOADED_SIG, result);
-}
-
-void GCFRTMyPropertySet::scopeUnregistered (TGCFResult result)
-{
-  assert(_isLoaded);
-  assert(_isBusy);
-  
-  _isBusy = false;
-  _isLoaded = false;
-  
-  LOFAR_LOG_INFO(PML_STDOUT_LOGGER, ( 
-      "PI-RESP: Scope %s unregistered",
-      _scope.c_str()));
-
-  dispatchAnswer(F_MYPUNLOADED_SIG, result);
-}
-
-void GCFRTMyPropertySet::linkProperties(list<string>& properties)
-{
-  GCFRTMyProperty* pProperty;
-  _missing = 0;
-
-  list<string>::iterator iter = properties.begin(); 
-
-  for (list<string>::iterator iter = properties.begin(); 
-       iter != properties.end(); ++iter)
-  {
-    pProperty = getProperty(*iter);
-    if (pProperty)
-    {
-      pProperty->link();
-    }
-    else
-    {
-      _missing++;
-    }
-  }    
-  GPMRTController* pController = GPMRTController::instance();
-  assert(pController);
-  pController->propertiesLinked(_scope, _missing > 0);
-}
-
-void GCFRTMyPropertySet::unlinkProperties(list<string>& properties)
-{
-  GCFRTMyProperty* pProperty;
-  
-  assert (_counter == 0);
-
-  for (list<string>::iterator iter = properties.begin(); 
-       iter != properties.end(); ++iter)
-  {
-    pProperty = static_cast<GCFRTMyProperty*> (getProperty(*iter));
-    if (pProperty) pProperty->unlink();
-  }
-
-  GPMRTController* pController = GPMRTController::instance();
-  assert(pController);
-  pController->propertiesUnlinked(_scope);
-}
-
-void GCFRTMyPropertySet::dispatchAnswer(unsigned short sig, TGCFResult result)
-{
-  if (_pAnswerObj != 0)
-  {
-    GCFMYPropAnswerEvent e(sig);
-    e.pScope = _scope.c_str();
-    e.result = result;
-    _pAnswerObj->handleAnswer(e);
-  }
-}
-
-GCFRTMyProperty* GCFRTMyPropertySet::getProperty (const string propName) const
-{
-  string shortPropName(propName);
-  cutScope(shortPropName);
-  
-  TPropertyList::const_iterator iter = _properties.find(shortPropName);
-  
-  if (iter != _properties.end())
-  {
-    return iter->second;
-  }
-  else
-  {
-    return 0;
-  }
-}
-
-TGCFResult GCFRTMyPropertySet::setValue (const string propName, 
-                                         const GCFPValue& value)
-{
-  GCFPropertyBase* pProperty = getProperty(propName);
-  if (pProperty)
-  {
-    return pProperty->setValue(value);    
-  }
-  else 
-  {
-    return GCF_PROP_NOT_IN_SET;
-  }
-}
-                             
-void GCFRTMyPropertySet::setAnswer (GCFAnswer* pAnswerObj)
+void GCFRTMyPropertySet::setAnswer (GCFRTAnswer* pAnswerObj)
 {
   GCFRTMyProperty* pProperty;
   for (TPropertyList::iterator iter = _properties.begin(); 
@@ -323,13 +361,37 @@ void GCFRTMyPropertySet::setAnswer (GCFAnswer* pAnswerObj)
 
 bool GCFRTMyPropertySet::exists (const string propName) const
 {
-  GCFPropertyBase* pProperty = getProperty(propName);
+  GCFRTMyProperty* pProperty = getProperty(propName);
   return (pProperty != 0);
+}
+
+void GCFRTMyPropertySet::valueSet(const string& propName, const GCFPValue& value) const
+{
+  GPMRTController* pController = GPMRTController::instance();
+  assert(pController);
+  pController->valueSet(propName, value);  
+}
+
+void GCFRTMyPropertySet::valueChanged(string propName, const GCFPValue& value)
+{
+  GCFRTMyProperty* pProperty = getProperty(propName);
+  assert(pProperty);
+  pProperty->valueChanged(value);
+}
+
+void GCFRTMyPropertySet::dispatchAnswer(unsigned short sig, TGCFResult result)
+{
+  if (_pAnswerObj != 0)
+  {
+    GCFMYPropAnswerEvent e(sig);
+    e.pScope = _scope.c_str();
+    e.result = result;
+    _pAnswerObj->handleAnswer(e);
+  }
 }
 
 void GCFRTMyPropertySet::addProperty(const string& propName, GCFRTMyProperty& prop)
 {
-  assert(pProperty);
   assert(propName.length() > 0);
   
   string shortPropName(propName);
@@ -366,18 +428,4 @@ void GCFRTMyPropertySet::clearAllProperties()
     assert(pProperty);
     delete pProperty;
   }
-}
-
-void GCFRTMyPropertySet::valueSet(const string& propName, const GCFPValue& value) const
-{
-  GPMRTController* pController = GPMRTController::instance();
-  assert(pController);
-  pController->valueSet(propName, value);  
-}
-
-void GCFRTMyPropertySet::valueChanged(string propName, const GCFPValue& value)
-{
-  GCFPropertyBase* pProperty = getProperty(propName);
-  assert(pProperty);
-  pProperty->valueChanged(value);
 }

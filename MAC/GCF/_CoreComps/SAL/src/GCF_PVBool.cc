@@ -23,7 +23,29 @@
 
 #include <GCF/GCF_PVBool.h>
 
-/** No descriptions */
+unsigned int GCFPVBool::unpack(const char* valBuf, unsigned int maxBufSize)
+{
+  unsigned int result(0);
+  unsigned int unpackedBytes = unpackBase(valBuf, maxBufSize);
+  if (maxBufSize >= unpackedBytes + 1)
+  {
+    _value = (valBuf[unpackedBytes] == 1 ? true : false);
+    result = unpackedBytes + 1;
+  }
+  return result;
+}
+
+unsigned int GCFPVBool::pack(char* valBuf, unsigned int maxBufSize) const
+{
+  unsigned int result(0);
+  unsigned int packedBytes = packBase(valBuf, maxBufSize);
+  if (maxBufSize >= packedBytes + 1)
+  {
+    valBuf[packedBytes] = (_value ? 1 : 0);
+    result = packedBytes + 1;
+  }
+  return result;
+}
 TGCFResult GCFPVBool::setValue(const string valueData)
 {
   TGCFResult result(GCF_NO_ERROR);
@@ -63,14 +85,12 @@ TGCFResult GCFPVBool::setValue(const string valueData)
   return result;
 }
 
-/** No descriptions */
 GCFPValue* GCFPVBool::clone() const
 {
   GCFPValue* pNewValue = new GCFPVBool(_value);
   return pNewValue;
 }
 
-/** No descriptions */
 TGCFResult GCFPVBool::copy(const GCFPValue& newVal)
 {
   TGCFResult result(GCF_NO_ERROR);

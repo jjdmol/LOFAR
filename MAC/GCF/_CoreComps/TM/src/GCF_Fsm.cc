@@ -33,7 +33,8 @@ void GCFFsm::initFsm()
   e.signal = F_INIT_SIG;
   if (GCFEvent::HANDLED != (this->*_state)(e, _gcfPort)) // initial transition
   {
-    cerr << "Fsm::init: initial transition F_SIGNAL(F_FSM_PROTOCOL, F_INIT_SIG) not handled." << endl;
+    LOFAR_LOG_FATAL(TM_STDOUT_LOGGER, (
+        "Fsm::init: initial transition F_SIGNAL(F_FSM_PROTOCOL, F_INIT_SIG) not handled."));
     exit(1); // EXIT
   }
 }

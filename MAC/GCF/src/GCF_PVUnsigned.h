@@ -54,6 +54,10 @@ class GCFPVUnsigned : public GCFPValue
     /** @see GCFPValue::copy() */
     virtual TGCFResult copy(const GCFPValue& value);
  
+    virtual unsigned int unpack(const char* valBuf, unsigned int bufLength);
+
+    virtual unsigned int pack(char* valBuf, unsigned int maxBufSize) const;
+
   private: // Private attributes
     /** The value */
     unsigned int _value;

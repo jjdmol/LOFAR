@@ -28,6 +28,7 @@
 #include <GCF/GCF_PropertyBase.h>
 
 class GCFRTMyPropertySet;
+class GCFRTAnswer;
 
 /**
  * 
@@ -42,7 +43,7 @@ class GCFRTMyProperty
     /// @return the given property name including the scope of the related property set
     virtual const string getFullName () const;
 
-    inline virtual void setAnswer (GCFAnswer* pAnswerObj) 
+    inline virtual void setAnswer (GCFRTAnswer* pAnswerObj) 
       {_pAnswerObj = pAnswerObj;}
 
     GCFPValue* getValue () const;
@@ -79,9 +80,10 @@ class GCFRTMyProperty
     
     GCFRTMyProperty (const TProperty& propertyFields, 
                      GCFRTMyPropertySet& propertySet);
+    GCFRTMyProperty(GCFRTMyPropertySet& propertySet);
     virtual ~GCFRTMyProperty ();
     
-    bool link ();
+    void link ();
     void unlink ();    
     
     void valueChanged (const GCFPValue& value);           
@@ -97,13 +99,13 @@ class GCFRTMyProperty
     //@}
 
   private:
+    string            _name;
+    GCFRTMyPropertySet& _propertySet;
     TAccessMode       _accessMode;
     GCFPValue*        _pCurValue;
     GCFPValue*        _pOldValue;
     bool              _isLinked;
-    GCFRTMyPropertySet& _propertySet;
     bool              _isBusy;
     GCFRTAnswer*      _pAnswerObj;
-    string            _name;
 };
 #endif

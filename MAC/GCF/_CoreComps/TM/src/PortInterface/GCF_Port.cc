@@ -35,8 +35,12 @@
 /**
  * ::GCFPort constructor
  */
-GCFPort::GCFPort(GCFTask& task, string& name, TPortType type, int protocol) : 
-    GCFPortInterface(&task, name, type, protocol), _pSlave(0)
+GCFPort::GCFPort(GCFTask& task, 
+                 string& name, 
+                 TPortType type, 
+                 int protocol, 
+                 bool exchangeRawData) : 
+    GCFPortInterface(&task, name, type, protocol, exchangeRawData), _pSlave(0)
 {
 }
 
@@ -67,9 +71,10 @@ GCFPort::~GCFPort()
 void GCFPort::init(GCFTask& task,
 		 string name,
 		 TPortType type,
-		 int protocol)
+		 int protocol, 
+     bool exchangeRawData)
 {
-    GCFPortInterface::init(task, name, type, protocol);
+    GCFPortInterface::init(task, name, type, protocol, exchangeRawData);
     _pSlave = 0;
 }
 

@@ -34,9 +34,12 @@ static GCFEvent disconnected_event(F_DISCONNECTED_SIG);
 static GCFEvent connected_event   (F_CONNECTED_SIG);
 static GCFEvent closed_event      (F_CLOSED_SIG);
 
-GCFRawPort::GCFRawPort(GCFTask& task, string& name, TPortType type,  
-                                                int protocol) : 
-    GCFPortInterface(&task, name, type, protocol),   
+GCFRawPort::GCFRawPort(GCFTask& task, 
+                       string& name, 
+                       TPortType type,  
+                       int protocol,
+                       bool exchangeRawData) : 
+    GCFPortInterface(&task, name, type, protocol, exchangeRawData),   
     _pMaster(0)
 {
 }
@@ -47,14 +50,19 @@ GCFRawPort::GCFRawPort() :
 {
 }
 
-void GCFRawPort::init(GCFTask& task, string name, TPortType type, int protocol)
+void GCFRawPort::init(GCFTask& task, 
+                      string name, 
+                      TPortType type, 
+                      int protocol,
+                      bool exchangeRawData)
 {
-    GCFPortInterface::init(task, name, type, protocol);
+    GCFPortInterface::init(task, name, type, protocol, exchangeRawData);
     _pMaster = 0;
 }
 
 GCFRawPort::~GCFRawPort()
 {
+  cancelAllTimers();
 }
 
 void GCFRawPort::setMaster(GCFPort* pMaster)

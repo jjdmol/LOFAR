@@ -22,24 +22,9 @@
 
 #include "GPI_SupervisoryServer.h"
 #include "GPI_Controller.h"
-#include <stdio.h>
-
-#include "SS/FPBoolValue.h"
-#include "SS/FPCharValue.h"
-#include "SS/FPStringValue.h"
-#include "SS/FPIntegerValue.h"
-#include "SS/FPUnsignedValue.h"
-#include "SS/FPDoubleValue.h"
-#include "SS/FPDynArrValue.h"
-#include "SS/FProperty.h"
-
-#include <GCF/GCF_PVBool.h>
-#include <GCF/GCF_PVChar.h>
-#include <GCF/GCF_PVInteger.h>
-#include <GCF/GCF_PVUnsigned.h>
-#include <GCF/GCF_PVDouble.h>
-#include <GCF/GCF_PVString.h>
-#include <GCF/GCF_PVDynArr.h>
+#include "GPI_PropertySet.h"
+#include <Utils.h>
+#include <GCF/GCF_PValue.h>
 
 #define DECLARE_SIGNAL_NAMES
 #include "PI_Protocol.ph"
@@ -49,9 +34,7 @@ static string sSSTaskName("SS");
 
 GPISupervisoryServer::GPISupervisoryServer(GPIController& controller) : 
   GCFTask((State)&GPISupervisoryServer::initial, sSSTaskName),
-  _controller(controller),
-  _propProxy(*this),
-  _isBusy(false)
+  _controller(controller)
 {
   // register the protocols for debugging purposes only
   registerProtocol(PI_PROTOCOL, PI_PROTOCOL_signalnames);
@@ -105,6 +88,8 @@ GCFEvent::TResult GPISupervisoryServer::operational(GCFEvent& e, GCFPortInterfac
   GCFEvent::TResult status = GCFEvent::HANDLED;
   static string scope = "";
   static char* pData = 0;
+  static GPIPropertySet* pPropertySet = 0;
+  static int timerID = -1;
 
   switch (e.signal)
   {      
@@ -115,8 +100,8 @@ GCFEvent::TResult GPISupervisoryServer::operational(GCFEvent& e, GCFPortInterfac
         for (TScopeRegister::iterator iter = _scopeRegister.begin();
                iter != _scopeRegister.end(); ++iter)
         {
-          rse.length = sizeof(GCFEvent) + Utils::packString(iter->first, _buffer, MAX_BUF_LENGTH);
-          _propertyInterface.send(rse, _buffer, rse.length - sizeof(GCFEvent));
+          rse.length = sizeof(GCFEvent) + Utils::packString(iter->first, _buffer, MAX_BUF_SIZE);
+          _propertyAgent.send(rse, _buffer, rse.length - sizeof(GCFEvent));
         }
       }  
       break;
@@ -138,22 +123,34 @@ GCFEvent::TResult GPISupervisoryServer::operational(GCFEvent& e, GCFPortInterfac
       {          
         p.open(); // try again
       }
+      else
+      {
+        bool retryAgain(false);
+        for (TScopeRegister::iterator iter = _scopeRegister.begin();
+             iter != _scopeRegister.end(); ++iter)
+        {
+          if (iter->second->retrySubscriptions())
+          {
+            retryAgain = true;
+          }
+        }
+        if (retryAgain) _ssPort.setTimer(0.0);
+        else            timerID = -1;
+      }
       break;
      
     case PI_REGISTERSCOPE:
     {
       pData = ((char*)&e) + sizeof(GCFEvent);
-      if (!findScope(pData, scope))
+      if (!findPropertySet(pData, scope))
       {
-        PARegisterscopeEvent pae(0);
-        forwardMsgToPA(pae, e);
-        // creates a new scope entry
-        _scopeRegister[scope] = SST_REGISTERING;
+        pPropertySet = new GPIPropertySet(*this, scope);
+        _scopeRegister[scope] = pPropertySet;
       }
       else
       {
-        PIScoperegisteredEvent response(PI_SCOPE_ALREADY_REGISTERED);
-        replyMsgToSS(response, pData);
+        PAScoperegisteredEvent response(0, PA_SCOPE_ALREADY_REGISTERED);
+        replyMsgToPA(response, pData);
       }      
 
       LOFAR_LOG_INFO(PI_STDOUT_LOGGER, ( 
@@ -166,35 +163,26 @@ GCFEvent::TResult GPISupervisoryServer::operational(GCFEvent& e, GCFPortInterfac
       PAScoperegisteredEvent* pResponse = static_cast<PAScoperegisteredEvent*>(&e);
       assert(pResponse);
       pData = ((char*)&e) + sizeof(PAScoperegisteredEvent);
-      bool scopeFound(false);
-      scopeFound = findScope(pData, scope);
+      pPropertySet = findPropertySet(pData, scope);
 
       LOFAR_LOG_INFO(PI_STDOUT_LOGGER, ( 
           "PA-RESP: Scope %s is registered", 
           scope.c_str()));
 
-      unsigned int scopeDataLength = scope.length() + Utils::SLENGTH_FIELD_SIZE;
-
-      if (scopeFound)
+      if (pPropertySet)
       {
-        PIScoperegisteredEvent pirse(PI_NO_ERROR);
-        assert(_ssPort.isConnected());
-        pirse.result = 
-        pirse.length += scopeDataLength;
-        _ssPort.send(pirse, pData, scopeDataLength);
-        if (pResponse->result == PA_NO_ERROR)
-        {
-          // creates a new scope entry
-          _scopeRegister[scope] = SST_REGISTERED;
-        }
+        pPropertySet->registerCompleted(pResponse->result);
       }
       else
       {
+        // in case a scope is gone due to a crash in a controller application on 
+        // the RTC
         if (pResponse->result == PA_NO_ERROR)
         {
-          GCFEvent urse(PA_UNREGISTERSCOPE);
-          urse.length += scopeDataLength;
-          _propertyAgent.send(urse, pData, scopeDataLength);
+          GCFEvent paUrsE(PA_UNREGISTERSCOPE);
+          unsigned int scopeDataLength = scope.length() + Utils::SLEN_FIELD_SIZE;
+          paUrsE.length += scopeDataLength;
+          _propertyAgent.send(paUrsE, pData, scopeDataLength);
         }        
         LOFAR_LOG_TRACE(PI_STDOUT_LOGGER, ( 
             "Property set with scope %d was deleted in the meanwhile", 
@@ -206,21 +194,14 @@ GCFEvent::TResult GPISupervisoryServer::operational(GCFEvent& e, GCFPortInterfac
     case PI_UNREGISTERSCOPE:
     {
       pData = ((char*)&e) + sizeof(GCFEvent);
-      if (findScope(pData, scope))
-      {
-        PAUnregisterscopeEvent pae(0);
-        forwardMsgToPA(pae, e);
-        _scopeRegister[scope] = SST_UNREGISTERING;
-      }
-      else
-      {
-        PIScoperunegisteredEvent response(PI_PROP_SET_GONE);
-        replyMsgToSS(response, pData);
-      }      
+      pPropertySet = findPropertySet(pData, scope);
 
       LOFAR_LOG_INFO(PI_STDOUT_LOGGER, ( 
           "SS-REQ: Unregister scope %s",
           scope.c_str()));
+
+      assert(pPropertySet);
+      pPropertySet->unregisterScope(e);
       break;
     }  
 
@@ -229,20 +210,17 @@ GCFEvent::TResult GPISupervisoryServer::operational(GCFEvent& e, GCFPortInterfac
       PAScopeunregisteredEvent* pResponse = static_cast<PAScopeunregisteredEvent*>(&e);
       assert(pResponse);
       pData = ((char*)&e) + sizeof(PAScopeunregisteredEvent);
-      unsigned int scopeDataLength = Utils::unpackString(pData, scope);
-
-      assert(_scopeRegister[scope] == SST_UNREGISTERING);
+      pPropertySet = findPropertySet(pData, scope);
 
       LOFAR_LOG_INFO(PI_STDOUT_LOGGER, ( 
           "PA-RESP: Scope %s is unregistered", 
           scope.c_str()));
-
-      PIScopeunregisteredEvent piurse(PI_NO_ERROR);
-      assert(_ssPort.isConnected());
-      piurse.result = 
-      piurse.length += scopeDataLength;
-      _ssPort.send(piurse, pData, scopeDataLength);
-      // creates a new scope entry
+          
+      if (pPropertySet)
+      {
+        pPropertySet->unregisterCompleted(pResponse->result);
+        delete pPropertySet;
+      }
       _scopeRegister.erase(scope);
       break;
     }
@@ -252,76 +230,91 @@ GCFEvent::TResult GPISupervisoryServer::operational(GCFEvent& e, GCFPortInterfac
       PALinkpropertiesEvent* pRequest = static_cast<PALinkpropertiesEvent*>(&e);
       assert(pRequest);
       pData = ((char*)&e) + sizeof(PALinkpropertiesEvent);
-      char logMsg[] = "PA-REQ: Link properties on scope %s";
-      GCFEvent pilpe(PI_LINKPROPERTIES);
-      pilpe.length += e.length - sizeof(PALinkpropertiesEvent);
-      if (!forwardMsgToSS(pilpe, pData, scope, logMsg))
+      pPropertySet = findPropertySet(pData, scope);
+      LOFAR_LOG_INFO(PI_STDOUT_LOGGER, ( 
+          "PA-REQ: Link properties on scope %s", 
+          scope.c_str()));
+      if (pPropertySet)
       {
-        PAPropertieslinkedEvent response(0, PA_PROP_SET_GONE);
-        replyMsgToPA(response, pData);
+        pPropertySet->linkProperties(*pRequest);
       }
       else
       {
-        _scopeRegister[scope] = SST_LINKING;
+        PAPropertieslinkedEvent response(0, PA_PROP_SET_GONE);
+        replyMsgToPA(response, pData);
+        LOFAR_LOG_TRACE(PI_STDOUT_LOGGER, ( 
+            "Property set with scope %d was deleted in the meanwhile", 
+            scope.c_str()));
       }
       break;
     }
     case PI_PROPERTIESLINKED:
+    {
+      PIPropertieslinkedEvent* pResponse = static_cast<PIPropertieslinkedEvent*>(&e);
+      assert(pResponse);
+      pData = ((char*)&e) + sizeof(PIPropertieslinkedEvent);
+      pPropertySet = findPropertySet(pData, scope);
+      pData += Utils::getStringDataLength(pData);
+      if (pPropertySet)
+      {
+        bool mustRetry = pPropertySet->propertiesLinked(pResponse->result, pData);
+        if (mustRetry && timerID == -1)
+        {
+          timerID = _ssPort.setTimer(0.0);
+        }        
+      }
       break;
-    
+    }
     case PA_UNLINKPROPERTIES:
     {
       PAUnlinkpropertiesEvent* pRequest = static_cast<PAUnlinkpropertiesEvent*>(&e);
       assert(pRequest);
       pData = ((char*)&e) + sizeof(PAUnlinkpropertiesEvent);
-      char logMsg[] = "PA-REQ: Unlink properties on scope %s";
-      GCFEvent piulpe(PI_LINKPROPERTIES);
-      piulpe.length += e.length - sizeof(PALinkpropertiesEvent);      
-      if (!forwardMsgToPMLlite(piulpe, pData, scope, logMsg))
+      pPropertySet = findPropertySet(pData, scope);
+      LOFAR_LOG_INFO(PI_STDOUT_LOGGER, ( 
+          "PA-REQ: Unlink properties on scope %s", 
+          scope.c_str()));
+      if (pPropertySet)
       {
-        PIPropertieslinkedEvent response(0, PA_PROP_SET_GONE);
-        replyMsgToPI(response, pData);
+        pPropertySet->unlinkProperties(*pRequest);
       }
       else
       {
-        _scopeRegister[scope] = SST_UNLINKING;
+        PAPropertiesunlinkedEvent response(0, PA_PROP_SET_GONE);
+        replyMsgToPA(response, pData);
+        LOFAR_LOG_TRACE(PI_STDOUT_LOGGER, ( 
+            "Property set with scope %d was deleted in the meanwhile", 
+            scope.c_str()));
       }
       break;
     }
 
     case PI_PROPERTIESUNLINKED:
-      break;
-      
-    case F_SV_SUBSCRIBED:
     {
-      F_SVSubscribedEvent *pResponse = static_cast<F_SVSubscribedEvent*>(&e);
-      if (pResponse->result >= NO_ERROR)
+      PIPropertiesunlinkedEvent* pResponse = static_cast<PIPropertiesunlinkedEvent*>(&e);
+      assert(pResponse);
+      pData = ((char*)&e) + sizeof(PIPropertiesunlinkedEvent);
+      pPropertySet = findPropertySet(pData, scope);
+      pData += Utils::getStringDataLength(pData);
+      if (pPropertySet)
       {
-        list<string> propertyList;
-        unpackPropertyList(
-            ((char*)pResponse) + sizeof(F_SVSubscribedEvent), 
-            e.length - sizeof(F_SVSubscribedEvent),
-            propertyList);
-        unLinkProperties(propertyList, (pResponse->result != UNSUBSCRIBED));
+        pPropertySet->propertiesUnlinked(pResponse->result, pData); 
       }
       break;
     }
-    case F_SV_VALUESET:
+    
+    case PI_VALUESET:
     {
-      F_SVValuesetEvent *pEvent = static_cast<F_SVValuesetEvent*>(&e);
-      switch (pEvent->result)
+      string propName;
+      pData = ((char*)&e) + sizeof(GCFEvent);
+      unsigned int propDataLength = Utils::unpackString(pData, propName);
+      unsigned int valueBufLength = e.length - propDataLength - sizeof(GCFEvent);
+      GCFPValue* pValue = GCFPValue::unpackValue(pData + propDataLength, valueBufLength); 
+      if (pValue)
       {
-        case NO_ERROR:
-        {
-          cerr << "Value was set succesfully" << endl;
-        }
+        _controller.getPropertyProxy().setPropValue(propName, *pValue);
+        delete pValue;
       }
-      break;
-    }
-    case F_SV_VALUECHANGED:
-    {
-      if (&p == &_ssPort)
-        localValueChanged(e);
       break;                                          
     }
 
@@ -358,28 +351,14 @@ GCFEvent::TResult GPISupervisoryServer::closing(GCFEvent& e, GCFPortInterface& p
   return status;
 }
 
-bool GPISupervisoryServer::findScope(char* pScopeData, string& scope)
+GPIPropertySet* GPISupervisoryServer::findPropertySet(char* pScopeData, string& scope)
 {
   if (pScopeData != 0)
   {
     Utils::unpackString(pScopeData, scope);
   }
-  for (TScopeRegister::iterator iter = _scopeRegister.begin();
-       iter != _scopeRegister.end(); ++iter)
-  {
-    if (iter->first == scope) return true;
-  }       
-  return false;
-}
-
-void GPISupervisoryServer::forwardMsgToPA(GCFEvent& pae, GCFEvent& pie)
-{
-  if (_propertyAgent.isConnected())
-  {
-    unsigned int pieDataLength = pie.length - sizeof(GCFEvent);
-    pae.length += pieDataLength;
-    _propertyAgent.send(pae, ((char*)pie) + sizeof(GCFEvent), pieDataLength);
-  }
+  TScopeRegister::iterator iter = _scopeRegister.find(scope);
+  return iter->second;
 }
 
 void GPISupervisoryServer::replyMsgToPA(GCFEvent& e, const string& scope)
@@ -390,339 +369,4 @@ void GPISupervisoryServer::replyMsgToPA(GCFEvent& e, const string& scope)
     e.length += scopeDataLength;
     _propertyAgent.send(e, _buffer, scopeDataLength);
   }
-}
-
-bool GSSController::forwardMsgToSS(GCFEvent& e, char* pData, string& scope, const char* logMsg)
-{
-  bool result(false);
-  Utils::unpackString(pData, scope);
-  
-  LOFAR_LOG_INFO(SS_STDOUT_LOGGER, ( 
-      logMsg, 
-      scope.c_str()));
-
-  TScopeRegister::iterator iter = _scopeRegister.find(scope);
-  if (iter != _scopeRegister.end() && iter != SST_UNREGISTERING)
-  {
-    assert(_ssPort.isConnected());
-    _ssPort.send(e, pData, e.length - sizeof(GCFEvent));    
-    result = true;
-  }
-  else
-  {
-    LOFAR_LOG_TRACE(PI_STDOUT_LOGGER, ( 
-        "Property set with scope %d was deleted/is deleting in the meanwhile", 
-        scope.c_str()));
-  }
-  return result;
-}
-
-void GPISupervisoryServer::replyMsgToSS(GCFEvent& e, char* pScopeData)
-{
-  assert(_ssPort.isConnected());
-  unsigned short scopeDataLength = Utils::getStringDataLength(pScopeData);
-  e.length += scopeDataLength;
-  _ssPort.send(e, pScopeData, scopeDataLength);
-}
-
-TPIResult GPISupervisoryServer::unLinkProperties(list<string>& properties, bool onOff)
-{
-  
-  TPIResult result(PI_NO_ERROR);
-  if (_counter > 0)
-  {
-    result = PI_SS_BUSY;
-  }
-  else 
-  {
-    string propName;
-    for (list<string>::iterator iter = properties.begin(); 
-         iter != properties.end(); ++iter)
-    {
-      propName = _name + GCF_PROP_NAME_SEP + *iter;
-      if (onOff)
-      {
-        result = (_propProxy.subscribeProp(propName) == GCF_NO_ERROR ?
-                  PI_NO_ERROR :
-                  PI_SCADA_ERROR);
-      }
-      else
-      {
-        result = (_propProxy.unsubscribeProp(propName) == GCF_NO_ERROR ?
-                  PI_NO_ERROR :
-                  PI_SCADA_ERROR);
-      }
-      if (result == PI_NO_ERROR)
-        _counter++;        
-    }
-  }
-    
-  return result;
-}
-
-void GPISupervisoryServer::propSubscribed(const string& /*propName*/)
-{
-  _counter--;
-  if (_counter == 0 && _propertyAgent.isConnected())
-  {
-    PAPropertieslinkedEvent e(0, PA_NO_ERROR);
-    string allPropNames;
-    // PA does expect but not use a property name list (for now)
-    unsigned short bufLength(_name.size() + allPropNames.size() + 6);
-    char* buffer = new char[bufLength + 1];
-    sprintf(buffer, "%03x%s%03x%s", _name.size(), _name.c_str(), 
-                                    allPropNames.size(), allPropNames.c_str());
-    e.length += bufLength;
-    _propertyAgent.send(e, buffer, bufLength);
-    delete [] buffer;
-  }
-}
-
-void GPISupervisoryServer::propUnsubscribed(const string& /*propName*/)
-{
-  _counter--;
-  if (_counter == 0 && _propertyAgent.isConnected())
-  {
-    PAPropertiesunlinkedEvent e(0, PA_NO_ERROR);
-    string allPropNames;
-    // PA does expect but not use a property name list (for now)
-    unsigned short bufLength(_name.size() + allPropNames.size() + 6);
-    char* buffer = new char[bufLength + 1];
-    sprintf(buffer, "%03x%s%03x%s", _name.size(), _name.c_str(), 
-                                    allPropNames.size(), allPropNames.c_str());
-    e.length += bufLength;
-    _propertyAgent.send(e, buffer, bufLength);
-    delete [] buffer;
-  }
-}
-
-void GPISupervisoryServer::propValueChanged(const string& propName, const GCFPValue& value)
-{
-  unsigned short bufLength(0);
-  FPValue* pVal(0);
-  static char buffer[1024];
-  
-  switch (value.getType())
-  {
-    case GCFPValue::LPT_BOOL:
-      pVal = new FPBoolValue(((GCFPVBool*)&value)->getValue());
-      break;
-    case GCFPValue::LPT_CHAR:
-      pVal = new FPCharValue(((GCFPVChar*)&value)->getValue());
-      break;
-    case GCFPValue::LPT_INTEGER:
-      pVal = new FPIntegerValue(((GCFPVInteger*)&value)->getValue());
-      break;
-    case GCFPValue::LPT_UNSIGNED:
-      pVal = new FPUnsignedValue(((GCFPVUnsigned*)&value)->getValue());
-      break;
-    case GCFPValue::LPT_DOUBLE:
-      pVal = new FPDoubleValue(((GCFPVDouble*)&value)->getValue());
-      break;
-    case GCFPValue::LPT_STRING:
-      pVal = new FPStringValue(((GCFPVString*)&value)->getValue());
-      break;
-
-    default: 
-      if (value.getType() > GCFPValue::LPT_DYNARR && 
-          value.getType() <= (GCFPValue::LPT_DYNARR & GCFPValue::LPT_STRING))
-      {
-        FPValueArray arrayTo;
-        FPValue* pItemValue;
-        FPValue::ValueType type(FPValue::NO_LPT);
-        // the type for the new FPValue must be determined 
-        // separat, because the array could be empty
-        switch (value.getType())
-        {
-          case GCFPValue::LPT_DYNBOOL:
-            type = FPValue::LPT_DYNBOOL;
-            break;
-          case GCFPValue::LPT_DYNCHAR:
-            type = FPValue::LPT_DYNCHAR;
-            break;
-          case GCFPValue::LPT_DYNINTEGER:
-            type = FPValue::LPT_DYNINTEGER;
-            break;
-          case GCFPValue::LPT_DYNUNSIGNED:
-            type = FPValue::LPT_DYNUNSIGNED;
-            break;
-          case GCFPValue::LPT_DYNDOUBLE:
-            type = FPValue::LPT_DYNDOUBLE;
-            break;
-          case GCFPValue::LPT_DYNSTRING:
-            type = FPValue::LPT_DYNSTRING;
-            break;
-        }
-        GCFPValue* pValue;
-        const GCFPValueArray& arrayFrom(((GCFPVDynArr*)&value)->getValue());
-        for (GCFPValueArray::const_iterator iter = arrayFrom.begin();
-             iter != arrayFrom.end(); ++iter)
-        {
-          pValue = (*iter);
-          switch (pValue->getType())
-          {
-            case GCFPValue::LPT_BOOL:
-              pItemValue  = new FPBoolValue(((GCFPVBool*)pValue)->getValue());
-              break;
-            case GCFPValue::LPT_CHAR:
-              pItemValue  = new FPCharValue(((GCFPVChar*)pValue)->getValue());
-              break;
-            case GCFPValue::LPT_INTEGER:
-              pItemValue  = new FPIntegerValue(((GCFPVInteger*)pValue)->getValue());
-              break;
-            case GCFPValue::LPT_UNSIGNED:
-              pItemValue  = new FPUnsignedValue(((GCFPVUnsigned*)pValue)->getValue());
-              break;
-            case GCFPValue::LPT_DOUBLE:
-              pItemValue  = new FPDoubleValue(((GCFPVDouble*)pValue)->getValue());
-              break;
-            case GCFPValue::LPT_STRING:
-              pItemValue  = new FPStringValue(((GCFPVString*)pValue)->getValue());
-              break;
-          }
-          arrayTo.push_back(pItemValue);
-        }
-        pVal = new FPDynArrValue(type, arrayTo);
-      }
-      break;
-  }
-  if (pVal)
-  {
-    FProperty property(propName.c_str(), *pVal);
-    bufLength = property.pack(buffer);
-    delete pVal;
-  }
-  F_SVSetvalueEvent e;
-  e.seqNr = 0;
-  e.length += bufLength;
-  _ssPort.send(e, buffer, bufLength);
-}
-
-void GPISupervisoryServer::localValueChanged(GCFEvent& e)
-{
-  char* buffer = ((char*)&e) + sizeof(GCFEvent);
-  unsigned char propNameLength(0);
-  unsigned char taskNameLength(0);
-  unsigned char bytesRead(0);
-  static char totalPropName[512];
-  static char locPropName[256];
-  static char taskName[256];
-  string propName;
-
-  memcpy((void*) &propNameLength, buffer, sizeof(unsigned char));
-  buffer += sizeof(unsigned char);
-  memcpy(locPropName, buffer, propNameLength);
-  locPropName[propNameLength] = 0;
-  buffer += propNameLength;
-  FPValue* pVal = FPValue::createValueObject((FPValue::ValueType) buffer[0]);
-  if (pVal)
-    bytesRead = pVal->unpack(buffer);
-  buffer += bytesRead;
-
-  memcpy((void *) &taskNameLength, buffer, sizeof(unsigned char));
-  buffer += sizeof(unsigned char);
-  memcpy(taskName, buffer, taskNameLength);
-  taskName[taskNameLength] = 0;
-
-  sprintf(totalPropName, "%s_%s_%s", _name.c_str(), taskName, locPropName);
-  propName = locPropName;
-
-  GCFPValue *pGCFVal(0);
-   
-  switch (pVal->getType())
-  {
-    case FPValue::LPT_BOOL:
-      pGCFVal = new GCFPVBool(((FPBoolValue*)pVal)->getValue());
-      break;
-    case FPValue::LPT_INTEGER:
-      pGCFVal = new GCFPVInteger(((FPIntegerValue*)pVal)->getValue());
-      break;
-    case FPValue::LPT_UNSIGNED:
-      pGCFVal = new GCFPVUnsigned(((FPUnsignedValue*)pVal)->getValue());
-      break;
-    case FPValue::LPT_DOUBLE:
-      pGCFVal = new GCFPVDouble(((FPDoubleValue*)pVal)->getValue());
-      break;
-    case FPValue::LPT_STRING:
-      pGCFVal = new GCFPVString(((FPStringValue*)pVal)->getValue());
-      break;
-    case FPValue::LPT_CHAR:
-      pGCFVal = new GCFPVChar(((FPCharValue*)pVal)->getValue());
-      break;
-    default:
-      if (pVal->getType() > FPValue::LPT_DYNARR && 
-          pVal->getType() <= FPValue::LPT_DYNDATETIME)
-      {
-        GCFPValueArray arrayTo;
-        GCFPValue* pItemValue(0);
-        GCFPValue::TMACValueType type(GCFPValue::LPT_DYNARR);
-        // the type for the new FPValue must be determined 
-        // separat, because the array could be empty
-        switch (pVal->getType())
-        {
-          case FPValue::LPT_DYNBOOL:
-            type = GCFPValue::LPT_DYNBOOL;
-            break;
-          case FPValue::LPT_DYNCHAR:
-            type = GCFPValue::LPT_DYNCHAR;
-            break;
-          case FPValue::LPT_DYNINTEGER:
-            type = GCFPValue::LPT_DYNINTEGER;
-            break;
-          case FPValue::LPT_DYNUNSIGNED:
-            type = GCFPValue::LPT_DYNUNSIGNED;
-            break;
-          case FPValue::LPT_DYNDOUBLE:
-            type = GCFPValue::LPT_DYNDOUBLE;
-            break;
-          case FPValue::LPT_DYNSTRING:
-            type = GCFPValue::LPT_DYNSTRING;
-            break;
-        }
-        FPValue* pValue(0);
-        const FPValueArray& arrayFrom(((FPDynArrValue*)pVal)->getValue());
-        for (FPValueArray::const_iterator iter = arrayFrom.begin();
-             iter != arrayFrom.end(); ++iter)
-        {
-          pValue = (*iter);
-          switch (pValue->getType())
-          {
-            case FPValue::LPT_BOOL:
-              pItemValue  = new GCFPVBool(((FPBoolValue*)pValue)->getValue());
-              break;
-            case FPValue::LPT_CHAR:
-              pItemValue  = new GCFPVChar(((FPCharValue*)pValue)->getValue());
-              break;
-            case FPValue::LPT_INTEGER:
-              pItemValue  = new GCFPVInteger(((FPIntegerValue*)pValue)->getValue());
-              break;
-            case FPValue::LPT_UNSIGNED:
-              pItemValue  = new GCFPVUnsigned(((FPUnsignedValue*)pValue)->getValue());
-              break;
-            case FPValue::LPT_DOUBLE:
-              pItemValue  = new GCFPVDouble(((FPDoubleValue*)pValue)->getValue());
-              break;
-            case FPValue::LPT_STRING:
-              pItemValue  = new GCFPVString(((FPStringValue*)pValue)->getValue());
-              break;
-          }
-          arrayTo.push_back(pItemValue);
-        }
-        pGCFVal = new GCFPVDynArr(type, arrayTo);
-      }
-      break;
-  }
-  
-  if (pGCFVal)
-  {
-    if (_propProxy.setPropValue(propName, *pGCFVal) != GCF_NO_ERROR)
-    {
-      LOFAR_LOG_ERROR(PI_STDOUT_LOGGER, (
-        "Value of property '%s' could not be set in the SCADA DB", 
-        propName.c_str()));
-    }   
-    delete pGCFVal;
-  }
-  if (pVal)
-    delete pVal;
 }

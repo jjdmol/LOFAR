@@ -47,7 +47,7 @@ GTMSocketHandler::GTMSocketHandler() : _running(true)
 void GTMSocketHandler::registerSocket(GTMSocket& socket)
 {
   FD_SET(socket.getFD(), &_readFDs);
-  _sockets.insert(_sockets.begin(), make_pair(socket.getFD(), &socket));
+  _sockets[socket.getFD()] = &socket;
 }
 
 void GTMSocketHandler::deregisterSocket(GTMSocket& socket)

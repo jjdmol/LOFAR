@@ -23,7 +23,30 @@
 
 #include <GCF/GCF_PVUnsigned.h>
 
-/** No descriptions */
+unsigned int GCFPVUnsigned::unpack(const char* valBuf, unsigned int maxBufSize)
+{
+  unsigned int result(0);
+  unsigned int unpackedBytes = unpackBase(valBuf, maxBufSize);
+  if (maxBufSize >= unpackedBytes + sizeof(unsigned int))
+  {
+    memcpy((void*) &_value, valBuf + unpackedBytes, sizeof(unsigned int));
+    result = sizeof(unsigned int) + unpackedBytes;
+  }
+  return result;
+}
+
+unsigned int GCFPVUnsigned::pack(char* valBuf, unsigned int maxBufSize) const
+{
+  unsigned int result(0);
+  unsigned int packedBytes = packBase(valBuf, maxBufSize);
+  if (maxBufSize >= packedBytes + sizeof(unsigned int))
+  {
+    memcpy(valBuf + packedBytes, (void*) &_value, sizeof(unsigned int));
+    result = sizeof(unsigned int) + packedBytes;
+  }
+  return result;
+}
+
 TGCFResult GCFPVUnsigned::setValue(const string valueData)
 {
   TGCFResult result(GCF_VALUESTRING_NOT_VALID);
@@ -45,14 +68,12 @@ TGCFResult GCFPVUnsigned::setValue(const string valueData)
   return result;
 }
 
-/** No descriptions */
 GCFPValue* GCFPVUnsigned::clone() const
 {
   GCFPValue* pNewValue = new GCFPVUnsigned(_value);
   return pNewValue;
 }
 
-/** No descriptions */
 TGCFResult GCFPVUnsigned::copy(const GCFPValue& newVal)
 {
   TGCFResult result(GCF_NO_ERROR);

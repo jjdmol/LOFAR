@@ -23,7 +23,38 @@
 
 #include <GCF/GCF_PVString.h>
 
-/** No descriptions */
+unsigned int GCFPVString::unpack(const char* valBuf, unsigned int maxBufSize)
+{
+  unsigned int result(0);
+  unsigned int unpackedBytes = unpackBase(valBuf, maxBufSize);
+  if (maxBufSize >= unpackedBytes + sizeof(unsigned int))
+  {
+    unsigned int stringLength(0);
+    memcpy((void *) &stringLength, valBuf + unpackedBytes, sizeof(unsigned int));
+    unpackedBytes += sizeof(unsigned int);
+    if (maxBufSize >= unpackedBytes + stringLength)
+    {
+      _value.assign(valBuf + unpackedBytes, stringLength); 
+      result = unpackedBytes + stringLength;
+    }
+  }
+  return result;
+}
+
+unsigned int GCFPVString::pack(char* valBuf, unsigned int maxBufSize) const
+{
+  unsigned int result(0);
+  unsigned int packedBytes = packBase(valBuf, maxBufSize);
+  if (maxBufSize >= packedBytes + sizeof(unsigned int) + _value.length())
+  {    
+    unsigned int stringLength(_value.length());
+    memcpy(valBuf + packedBytes, (void *) &stringLength, sizeof(unsigned int));
+    memcpy(valBuf + packedBytes + sizeof(unsigned int), (void *) _value.c_str(), stringLength);
+    result = sizeof(unsigned int) + packedBytes + stringLength;
+  }
+  return result;
+}
+
 TGCFResult GCFPVString::setValue(const string value)
 {
   TGCFResult result(GCF_NO_ERROR);
@@ -33,14 +64,12 @@ TGCFResult GCFPVString::setValue(const string value)
   return result;
 }
 
-/** No descriptions */
 GCFPValue* GCFPVString::clone() const
 {
   GCFPValue* pNewValue = new GCFPVString(_value);
   return pNewValue;
 }
 
-/** No descriptions */
 TGCFResult GCFPVString::copy(const GCFPValue& newVal)
 {
   TGCFResult result(GCF_NO_ERROR);

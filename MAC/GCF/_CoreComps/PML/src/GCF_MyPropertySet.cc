@@ -43,7 +43,7 @@ GCFMyPropertySet::GCFMyPropertySet(const TPropertySet& propSet,
     if (GSAService::validatePropName(propName))
     {
       pProperty = new GCFMyProperty(_propSet.properties[i], *this);
-      addProperty(propName, pProperty);
+      addProperty(propName, *pProperty);
     }
     else
     {
@@ -132,6 +132,17 @@ TGCFResult GCFMyPropertySet::unload ()
 
     GPMController* pController = GPMController::instance();
     assert(pController);
+    GCFMyProperty* pProperty;
+    for (TPropertyList::iterator iter = _properties.begin();
+         iter != _properties.end(); ++iter)
+    {
+      pProperty = static_cast<GCFMyProperty*>(iter->second);
+      assert(pProperty);
+      if (pProperty->isLinked())
+      {
+        pProperty->unlink();
+      }
+    }
 
     TPMResult pmResult = pController->unregisterScope(*this);
     assert(pmResult == PM_NO_ERROR);
@@ -181,17 +192,6 @@ GCFPValue* GCFMyPropertySet::getOldValue (const string propName)
   }
 }                                         
           
-void GCFMyPropertySet::linked ()
-{
-  _counter--;
-  if (_counter == 0 && _tempLinkList.size() == 0)
-  {
-    GPMController* pController = GPMController::instance();
-    assert(pController);
-    pController->propertiesLinked(getScope(), _missing > 0);
-  }
-}
-
 void GCFMyPropertySet::scopeRegistered (TGCFResult result)
 {
   assert(!_isLoaded);
@@ -224,74 +224,128 @@ void GCFMyPropertySet::scopeUnregistered (TGCFResult result)
   dispatchAnswer(F_MYPUNLOADED_SIG, result);
 }
 
+void GCFMyPropertySet::linkProperties(list<string>& properties)
+{
+  if (_isLoaded && !_isBusy)
+  {
+    GPMController* pController = GPMController::instance();
+    assert(pController);
+    pController->propertiesLinked(getScope(), PA_PROP_SET_GONE);
+  }
+  else
+  {  
+    _tempLinkList = properties;
+  
+    assert(_counter == 0);
+    
+    _missing = 0;
+    retryLinking();
+  }
+}
+
 void GCFMyPropertySet::retryLinking()
 {
-  if (_tempLinkList.size() > 0)
+  GPMController* pController = GPMController::instance();
+  assert(pController);
+  if (_isLoaded && !_isBusy)
   {
-    GCFMyProperty* pProperty;
-    string fullPropName;
-
-    list<string>::iterator iter = _tempLinkList.begin(); 
-
-    while (iter != _tempLinkList.end())
+    if (_tempLinkList.size() > 0)
     {
-      pProperty = static_cast<GCFMyProperty*> (getProperty(*iter));
-      if (pProperty)
+      GCFMyProperty* pProperty;
+      string fullPropName;
+  
+      list<string>::iterator iter = _tempLinkList.begin(); 
+  
+      while (iter != _tempLinkList.end())
       {
-        if (pProperty->exists())
+        pProperty = static_cast<GCFMyProperty*> (getProperty(*iter));
+        if (pProperty)
         {
-          if (pProperty->link()) // true means async
+          if (pProperty->exists())
           {
-            _counter++;
-          }      
-          iter = _tempLinkList.erase(iter);        
+            if (pProperty->link()) // true means async
+            {
+              _counter++;
+            }      
+            iter = _tempLinkList.erase(iter);        
+          }
+          else
+            break;
         }
         else
-          break;
+        {
+          _missing++;
+        }
+      }    
+      if (_counter == 0 && _tempLinkList.size() == 0)
+      {
+        // no more asyncronous link responses will be expected and 
+        // no more properties needed to be linked 
+        // so we can return a response to the controller
+        if (_missing > 0)
+        {
+          pController->propertiesLinked(getScope(), PA_MISSING_PROPS);
+        }
+        else
+        {
+          pController->propertiesLinked(getScope(), PA_NO_ERROR);
+        }
+      }
+    }
+  }
+  else
+  {
+    pController->propertiesLinked(getScope(), PA_PROP_SET_GONE);
+  }
+}
+
+void GCFMyPropertySet::linked ()
+{
+  _counter--;
+  if (_counter == 0 && _tempLinkList.size() == 0)
+  {
+    GPMController* pController = GPMController::instance();
+    assert(pController);
+    if (_isLoaded && !_isBusy)
+    {
+      if (_missing > 0)
+      {
+        pController->propertiesLinked(getScope(), PA_MISSING_PROPS);
       }
       else
       {
-        _missing++;
+        pController->propertiesLinked(getScope(), PA_NO_ERROR);
       }
-    }    
-    if (_counter == 0 && _tempLinkList.size() == 0)
+    }
+    else
     {
-      // no more asyncronous link responses will be expected and 
-      // no more properties needed to be linked 
-      // so we can return a response to the controller
-      GPMController* pController = GPMController::instance();
-      assert(pController);
-      pController->propertiesLinked(getScope(), _missing > 0);
+      pController->propertiesLinked(getScope(), PA_PROP_SET_GONE);
     }
   }
 }
 
-void GCFMyPropertySet::linkProperties(list<string>& properties)
-{
-  _tempLinkList = properties;
-
-  assert(_counter == 0);
-  
-  _missing = 0;
-  retryLinking();
-}
-
 void GCFMyPropertySet::unlinkProperties(list<string>& properties)
 {
-  GCFMyProperty* pProperty;
-  
-  assert (_counter == 0);
-
-  for (list<string>::iterator iter = properties.begin(); 
-       iter != properties.end(); ++iter)
-  {
-    pProperty = static_cast<GCFMyProperty*> (getProperty(*iter));
-    if (pProperty) pProperty->unlink();
-  }
-
   GPMController* pController = GPMController::instance();
   assert(pController);
-  pController->propertiesUnlinked(getScope());
+  if (_isLoaded && !_isBusy)
+  {
+    GCFMyProperty* pProperty;
+    
+    assert (_counter == 0);
+  
+    for (list<string>::iterator iter = properties.begin(); 
+         iter != properties.end(); ++iter)
+    {
+      pProperty = static_cast<GCFMyProperty*> (getProperty(*iter));
+      if (pProperty) pProperty->unlink();
+    }  
+    pController->propertiesUnlinked(getScope(), PA_NO_ERROR);
+  }
+  else
+  {
+    pController->propertiesUnlinked(getScope(), PA_PROP_SET_GONE);
+  }
 }
 
 void GCFMyPropertySet::dispatchAnswer(unsigned short sig, TGCFResult result)

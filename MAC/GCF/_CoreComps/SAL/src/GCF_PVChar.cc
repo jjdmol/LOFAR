@@ -23,7 +23,31 @@
 
 #include <GCF/GCF_PVChar.h>
 
+unsigned int GCFPVChar::unpack(const char* valBuf, unsigned int maxBufSize)
+{
+  unsigned int result(0);
+  unsigned int unpackedBytes = unpackBase(valBuf, maxBufSize);
+  if (maxBufSize >= unpackedBytes + 1)
+  {
+    _value = valBuf[unpackedBytes];
+    result = unpackedBytes + 1;
+  }
+  return result;
+}
+
 /** No descriptions */
+unsigned int GCFPVChar::pack(char* valBuf, unsigned int maxBufSize) const
+{
+  unsigned int result(0);
+  unsigned int packedBytes = packBase(valBuf, maxBufSize);
+  if (maxBufSize >= packedBytes + 1)
+  {
+    valBuf[packedBytes] = _value;
+    result = packedBytes + 1;
+  }
+  return result;
+}
+
 TGCFResult GCFPVChar::setValue(const string valueData)
 {
   TGCFResult result(GCF_NO_ERROR);
@@ -52,14 +76,12 @@ TGCFResult GCFPVChar::setValue(const string valueData)
   return result;
 }
 
-/** No descriptions */
 GCFPValue* GCFPVChar::clone() const
 {
   GCFPValue* pNewValue = new GCFPVChar(_value);
   return pNewValue;
 }
 
-/** No descriptions */
 TGCFResult GCFPVChar::copy(const GCFPValue& newVal)
 {
   TGCFResult result(GCF_NO_ERROR);

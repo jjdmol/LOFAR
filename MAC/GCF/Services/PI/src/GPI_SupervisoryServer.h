@@ -24,7 +24,6 @@
 #define GPI_SUPERVISORYSERVER_H
 
 #include <GPI_Defines.h>
-#include <GPI_PropertyProxy.h>
 #include <GCF/GCF_Task.h>
 #include <GCF/GCF_TCPPort.h>
 #include <Common/lofar_list.h>
@@ -32,6 +31,8 @@
 class GCFEvent;
 class GPIController;
 class GCFPValue;
+class GPIPropertySet;
+
 /**
  * This class represents and manages the connection with a Supervisory Server 
  * (part of ERTC framework). It acts as a PML with no owned properties. The 
@@ -42,25 +43,15 @@ class GPISupervisoryServer : public GCFTask
 	public:
 		GPISupervisoryServer (GPIController& controller);
 		virtual ~GPISupervisoryServer ();
+    inline GCFTCPPort& getPort()    {return _ssPort;}
+    inline GCFTCPPort& getPAPort()  {return _propertyAgent;}
       
-  public: // call back methods for the GPIPropertyProxy
-    void propSubscribed (const string& propName);
-    void propUnsubscribed (const string& propName);
-    void propValueChanged (const string& propName, const GCFPValue& value);
-    
 	private: // helper methods
-    void registerScope (const string& scope);
-    void subscribe (char* data, bool onOff);
-    void unpackPropertyList (char* pListData, 
-                             unsigned int listDataLength,
-                             list<string>& propertyList);
-    TPIResult unLinkProperties (list<string>& properties, 
-                                bool onOff);
-    void localValueChanged(GCFEvent& e);
-    
+    GPIPropertySet* findPropertySet(char* pScopeData, string& scope);
+    void replyMsgToPA(GCFEvent& e, const string& scope);
+        
 	private: // state methods
 		GCFEvent::TResult initial     (GCFEvent& e, GCFPortInterface& p);
-		GCFEvent::TResult connected   (GCFEvent& e, GCFPortInterface& p);
     GCFEvent::TResult operational (GCFEvent& e, GCFPortInterface& p);
     GCFEvent::TResult closing     (GCFEvent& e, GCFPortInterface& p);
     
@@ -76,22 +67,12 @@ class GPISupervisoryServer : public GCFTask
 		GCFTCPPort        _ssPort;
     GCFTCPPort        _propertyAgent;
     GPIController&    _controller;
-    GPIPropertyProxy  _propProxy;
-    string            _name;
-    typedef enum
-    {
-      SST_REGISTERING,
-      SST_REGISERED,
-      SST_UNREGISTERING,
-      SST_LINKING,
-      SST_UNLINKING
-    } TScopeState;
-    typedef map<string /*scope*/, TScopeState> TScopeRegister;
+    typedef map<string /*scope*/, GPIPropertySet*> TScopeRegister;
     TScopeRegister    _scopeRegister;
     
   private: // admin. data members
-    bool          _isBusy;
-    unsigned int  _counter;
+    static const unsigned int MAX_BUF_SIZE = 256;
+    char              _buffer[MAX_BUF_SIZE];
 };
 
 #endif

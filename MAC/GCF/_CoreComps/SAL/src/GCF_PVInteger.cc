@@ -23,7 +23,30 @@
 
 #include <GCF/GCF_PVInteger.h>
 
-/** No descriptions */
+unsigned int GCFPVInteger::unpack(const char* valBuf, unsigned int maxBufSize)
+{
+  unsigned int result(0);
+  unsigned int unpackedBytes = unpackBase(valBuf, maxBufSize);
+  if (maxBufSize >= unpackedBytes + sizeof(int))
+  {
+    memcpy((void*) &_value, valBuf + unpackedBytes, sizeof(int));
+    result = sizeof(int) + unpackedBytes;
+  }
+  return result;
+}
+
+unsigned int GCFPVInteger::pack(char* valBuf, unsigned int maxBufSize) const
+{
+  unsigned int result(0);
+  unsigned int packedBytes = packBase(valBuf, maxBufSize);
+  if (maxBufSize >= packedBytes + sizeof(int))
+  {
+    memcpy(valBuf + packedBytes, (void*) &_value, sizeof(int));
+    result = sizeof(int) + packedBytes;
+  }
+  return result;
+}
+
 TGCFResult GCFPVInteger::setValue(const string valueData)
 {
   TGCFResult result(GCF_VALUESTRING_NOT_VALID);
@@ -42,14 +65,12 @@ TGCFResult GCFPVInteger::setValue(const string valueData)
   return result;
 }
 
-/** No descriptions */
 GCFPValue* GCFPVInteger::clone() const
 {
   GCFPValue* pNewValue = new GCFPVInteger(_value);
   return pNewValue;
 }
 
-/** No descriptions */
 TGCFResult GCFPVInteger::copy(const GCFPValue& newVal)
 {
   TGCFResult result(GCF_NO_ERROR);
