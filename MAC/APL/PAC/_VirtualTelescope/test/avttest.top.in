@@ -35,7 +35,7 @@ client=ST3:server
 [PA]
 # has no SAP's
 
-[AVTTest]
+[AVTLogicalDeviceScheduler]
 client=AVTTestVT1:server
 
 [AVTTestVT1]

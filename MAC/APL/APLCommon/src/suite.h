@@ -40,7 +40,7 @@ class Suite
 {
 public:
     Suite(const string& name, ostream* osptr = 0);
-
+    
     string getName() const;
     long getNumPassed() const;
     long getNumFailed() const;

@@ -1,36 +1,45 @@
+noinst_PROGRAMS 		= AVTLogicalDeviceServer
+
 AUTOGEN = autogen
 SUFFIXES = .ph
 %.ph: %.prot
-	$(AUTOGEN) -L $(top_srcdir)/../MACCommon/autogen $< && \
-	chmod a+w $@
+	$(AUTOGEN) --writable -L $(top_srcdir)/../MACCommon/autogen -L $(top_builddir)/PAC/BeamServer/src $<
 
-DOCHDRS	=	\
-	AVTDefines.h \
-	AVTUtilities.h \
-	AVTAPCAnswer.h \
-	AVTAPCAnswerHandlerInterface.h \
-	AVTLogicalDevice.h \
-	AVTLogicalDeviceScheduler.h \
-	AVTPropertySetAnswer.h \
-	AVTPropertySetAnswerHandlerInterface.h \
-	AVTStationBeamformer.h \
-	AVTVirtualTelescope.h
+AVTLogicalDeviceServer_CPPFLAGS= \
+	-I$(top_srcdir)/APLCommon/src 
 
-noinst_LTLIBRARIES 	= libvirtualtelescope.la
-
-libvirtualtelescope_la_SOURCES= $(DOCHDRS) \
+AVTLogicalDeviceServer_SOURCES 		= \
 	AVTUtilities.cc \
 	AVTAPCAnswer.cc \
 	AVTLogicalDevice.cc \
 	AVTLogicalDeviceScheduler.cc \
 	AVTPropertySetAnswer.cc \
 	AVTStationBeamformer.cc \
-	AVTVirtualTelescope.cc
+	AVTVirtualTelescope.cc \
+	AVTLogicalDeviceServerMain.cc
 	
-BUILT_SOURCES = LogicalDevice_Protocol.ph
+AVTLogicalDeviceServer_LDADD		= \
+	$(top_builddir)/APLCommon/src/libaplcommon.la
+AVTLogicalDeviceServer_DEPENDENCIES	= \
+	$(top_builddir)/APLCommon/src/libaplcommon.la
 
-libvirtualtelescope_la_CPPFLAGS= \
-	-I$(top_srcdir)/APLCommon/src 
+BUILT_SOURCES = \
+  $(top_builddir)/PAC/BeamServer/src/ABS_Protocol.ph \
+  LogicalDevice_Protocol.ph \
+	log4cplus.properties	
+
+EXTRA_DIST = \
+  $(top_builddir)/PAC/BeamServer/src/ABS_Protocol.ph \
+  LogicalDevice_Protocol.ph \
+	log4cplus.properties
+	
+%.properties: $(MAC_CONFIG)/%.properties
+	cp $< $@
+	
+%.ns: %.ns.in
+	cp $< $@
+
+%.top: %.top.in
+	cp $< $@
 
 include $(lofar_sharedir)/Makefile.common
-

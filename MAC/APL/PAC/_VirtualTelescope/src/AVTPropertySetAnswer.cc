@@ -25,6 +25,7 @@
 #include "AVTPropertySetAnswerHandlerInterface.h"
 
 AVTPropertySetAnswer::AVTPropertySetAnswer(AVTPropertySetAnswerHandlerInterface& handler) :
+  GCFAnswer(),
   m_handler(handler)
 {
   LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTPropertySetAnswer::AVTPropertySetAnswer"));

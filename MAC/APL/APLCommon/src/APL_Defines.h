@@ -1,6 +1,6 @@
-//#  BeamServer_Protocol.prot: Protocol definition for the BeamServer
+//#  APL_Defines.h: preprocessor definitions of various constants
 //#
-//#  Copyright (C) 2002-2004
+//#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
 //#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -19,49 +19,15 @@
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
 //#  $Id$
-autogen definitions protocol;
 
-description = "Protocol for the BeamServer";
-prefix = "BeamServer"; // for the signal names
+#ifndef APL_DEFINES_H
+#define APL_DEFINES_H
 
-// specify extra include files
-// e.g.
-include = '<sys/time.h>';
+#include <LofarLogger/LofarLogger.h>
 
-prelude = << PRELUDE_END
-enum {
-	BEAMSERVER_PROTOCOL = F_APL_PROTOCOL
-};
-PRELUDE_END;
+#define APL_LOGGER_ROOT       (MAC_LOGGER_ROOT + string(".APL"))
+#define PAC_VT_LOGGER         (APL_LOGGER_ROOT + string(".PAC.VirtualTelescope"))
 
-//
-// An "event" has a "signal" and a "dir" (direction)
-// and zero or more "param"s.
-// "dir" can be one of "IN" or "OUT".
-// A "param" has a "name" and a "type".
-//
-event = {
-	signal = CREATE_BEAM;
-	dir = IN;
-//	param = {
-//		name = "seqnr";
-//		type = "unsigned int";
-//	};
-//	param = {
-//		name = "ping_time";
-//		type = "timeval";
-//	};
-};
+#define VT_STDOUT_LOGGER      (PAC_VT_LOGGER + string(".Logger"))
 
-event = {
-	signal = ACK;
-	dir = OUT;
-//	param = {
-//		name = "seqnr";
-//		type = "unsigned int";
-//	};
-//	param = {
-//		name = "ping_time";
-//		type = "timeval";
-//	};
-};
+#endif

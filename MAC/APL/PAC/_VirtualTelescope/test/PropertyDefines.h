@@ -23,39 +23,25 @@
 #ifndef PropertyDefines_H
 #define PropertyDefines_H
 
-string sSBFName           = "AVTTestSBF1";
-const string sSBFAPCName  = "AVTTestSBFAPC";
-const string sSBFAPCScope = "AVTTestSBFAPCScope";
-string sVTName            = "AVTTestVT1";
-const string sVTAPCName   = "AVTTestVTAPC";
-const string sVTAPCScope  = "AVTTestVTAPCScope";
-string sBSName            = "BeamServer";
+#define SBFAPCNAME        "ApcStationBeamformer"
+#define VTAPCNAME         "ApcVirtualTelescope"
 
-string ssep      = "_";
-string scopeLCU1 = "LCU1";
-string scopeLDS  = "LogicalDeviceScheduler";
-string scopeVT1  = "VT1";
-string scopeSBF1 = "SBF1";
+#define VTNAME            "VT1"
+#define SBFNAME           "BF1"
+#define SRGNAME           "SRG1"
+#define BSNAME            "BeamServer"
+#define LDSNAME           "LogicalDeviceScheduler"
 
-string propertyLDScommand = scopeLDS+ssep+string("command");
-string propertyLDSstatus  = scopeLDS+ssep+string("status");
-string propertyVTcommand  = scopeVT1+ssep+string("command");
-string propertyVTstatus   = scopeVT1+ssep+string("status");
-string propertySBFcommand = scopeSBF1+ssep+string("command");
-string propertySBFstatus  = scopeSBF1+ssep+string("status");
-string propertySBFdirectionType   = scopeSBF1+ssep+string("directionType");
-string propertySBFdirectionAngle1 = scopeSBF1+ssep+string("directionAngle1");
-string propertySBFdirectionAngle2 = scopeSBF1+ssep+string("directionAngle2");
 
-string scopedPropertyLDScommand = scopeLCU1+ssep+propertyLDScommand;
-string scopedPropertyLDSstatus  = scopeLCU1+ssep+propertyLDSstatus;
-string scopedPropertyVTcommand  = scopeLCU1+ssep+propertyVTcommand;
-string scopedPropertyVTstatus   = scopeLCU1+ssep+propertyVTstatus;
-string scopedPropertySBFcommand = scopeLCU1+ssep+scopeVT1+ssep+propertySBFcommand;
-string scopedPropertySBFstatus  = scopeLCU1+ssep+scopeVT1+ssep+propertySBFstatus;
-string scopedPropertySBFdirectionType   = scopeLCU1+ssep+scopeVT1+ssep+propertySBFdirectionType;
-string scopedPropertySBFdirectionAngle1 = scopeLCU1+ssep+scopeVT1+ssep+propertySBFdirectionAngle1;
-string scopedPropertySBFdirectionAngle2 = scopeLCU1+ssep+scopeVT1+ssep+propertySBFdirectionAngle2;
+#define PROPERTY_LDS_COMMAND          "LogicalDeviceScheduler_command"
+#define PROPERTY_LDS_STATUS           "LogicalDeviceScheduler_status"
+#define PROPERTY_VT_COMMAND           "VT1_command"
+#define PROPERTY_VT_STATUS            "VT1_status"
+#define PROPERTY_SBF_COMMAND          "VT1_BF1_command"
+#define PROPERTY_SBF_STATUS           "VT1_BF1_status"
+#define PROPERTY_SBF_DIRECTIONTYPE    "VT1_BF1_directionType"
+#define PROPERTY_SBF_DIRECTIONANGLE1  "VT1_BF1_directionAngle1"
+#define PROPERTY_SBF_DIRECTIONANGLE2  "VT1_BF1_directionAngle2"
 
 #define GCF_READWRITE_PROP (GCF_READABLE_PROP | GCF_WRITABLE_PROP)
 
@@ -67,31 +53,33 @@ const TProperty propertiesLDS[] =
 
 const TPropertySet propertySetLDS = 
 {
-  2, "PAC_LogicalDeviceScheduler", propertiesLDS
+  2, "LogicalDeviceScheduler", propertiesLDS
 };
 
 const TProperty primaryPropertiesVT[] =
 {
-  {"start-time", GCFPValue::LPT_INTEGER, GCF_READWRITE_PROP, "0"},
+  {"command", GCFPValue::LPT_STRING, GCF_READWRITE_PROP, ""},
   {"status", GCFPValue::LPT_STRING, GCF_READWRITE_PROP, ""},
+  {"startTime", GCFPValue::LPT_INTEGER, GCF_READWRITE_PROP, "0"},
 };
 
 const TPropertySet primaryPropertySetVT = 
 {
-  2, "PAC_VT", primaryPropertiesVT
+  3, "VT1", primaryPropertiesVT
 };
 
 const TProperty primaryPropertiesSBF[] =
 {
+  {"command", GCFPValue::LPT_STRING, GCF_READWRITE_PROP, ""},
+  {"status", GCFPValue::LPT_STRING, GCF_READWRITE_PROP, ""},
   {"directionType",   GCFPValue::LPT_STRING, GCF_READWRITE_PROP, "AZEL"},
   {"directionAngle1", GCFPValue::LPT_DOUBLE, GCF_READWRITE_PROP, "0.0"},
   {"directionAngle2", GCFPValue::LPT_DOUBLE, GCF_READWRITE_PROP, "0.0"},
-  {"status", GCFPValue::LPT_STRING, GCF_READWRITE_PROP, ""},
 };
 
 const TPropertySet primaryPropertySetSBF = 
 {
-  2, "PAC_VT_SBF", primaryPropertiesSBF
+  5, "VT1_BF1", primaryPropertiesSBF
 };
 
 

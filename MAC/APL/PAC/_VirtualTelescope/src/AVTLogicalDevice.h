@@ -27,6 +27,7 @@
 //# Common Includes
 #include <lofar_config.h>
 #include <Common/lofar_string.h>
+
 //# GCF Includes
 #include <GCF/GCF_Port.h>
 #include <GCF/GCF_Task.h>
@@ -38,6 +39,7 @@
 #include "AVTAPCAnswerHandlerInterface.h"
 #include "AVTPropertySetAnswer.h"
 #include "AVTAPCAnswer.h"
+#include "../../../APLCommon/src/APLInterTaskPort.h"
 
 // forward declaration
 
@@ -54,6 +56,7 @@ class AVTLogicalDevice : public GCFTask,
     virtual ~AVTLogicalDevice();
 
     string& getServerPortName();
+    void setClientInterTaskPort(APLInterTaskPort* clientPort);
     
     /**
      * The initial state handler. This handler is passed to the GCFTask constructor
@@ -149,15 +152,17 @@ class AVTLogicalDevice : public GCFTask,
      * Implementation of the Disconnected handler is done in the derived classes. 
      */
     virtual void concreteDisconnected(GCFPortInterface& port)=0;
-    
-  private:
+
+  protected:    
     AVTPropertySetAnswer  m_propertySetAnswer;
     AVTAPCAnswer          m_APCAnswer;
     GCFMyPropertySet      m_properties;
     GCFApc                m_APC;
+    
+  private:
     string                m_serverPortName;
     // LogicalDevice SPP
     GCFPort               m_logicalDeviceServerPort;
-    
+    APLInterTaskPort*     m_clientInterTaskPort;
 };
 #endif

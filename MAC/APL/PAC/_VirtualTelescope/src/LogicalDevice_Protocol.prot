@@ -30,7 +30,7 @@ include = '<sys/time.h>';
 
 prelude = << PRELUDE_END
 enum {
-	LOGICALDEVICE_PROTOCOL = (F_APL_PROTOCOL+100)
+	LOGICALDEVICE_PROTOCOL = (F_APL_PROTOCOL+1)
 };
 PRELUDE_END;
 
