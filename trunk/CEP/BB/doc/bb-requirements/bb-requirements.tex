@@ -28,7 +28,7 @@
     The use of the Blackboard architectural pattern, in the LOFAR
     Central Processor, for the selfcal control system.  For the LOFAR
     project a self-calibration program shall be written
-    \hyperlink{LOFAR-ASTRON-ADD-006}{[LOFAR-ASTRON-ADD-006]}. The idea
+    \hyperlink{LOFAR-ASTRON-ADD-006}{[SCH02-1]}. The idea
     is that this program will have the architectural structure of a
     "BlackBoard". Such a pattern caught in a framework will have
     broader use then just the self-calibration. The applicability of a
@@ -54,9 +54,9 @@
     they can to get nearer to the solution, and put the results back
     to that central place.
 
-    As described in \hyperlink{bib:Design-Alternatives}{[Design Alternatives]}, there are
+    As described in \hyperlink{bib:Design-Alternatives}{[COR89]}, there are
     several levels at which to implement parallel Blackboard
-    systems. In \hyperlink{bib:PDR-CEP-Software}{[PDR-CEP-Software]} it is
+    systems. In \hyperlink{bib:PDR-CEP-Software}{[SCH03]} it is
     described how this applies to the imaging applications in the
     LOFAR Central Processor.
 
@@ -161,7 +161,7 @@
     idea to have them implemented as servers. This can for instance be
     done by running them as unix-demons on nodes that might be used as
     hosts to the predict/solve knowledge
-    sources. \hyperlink{bib:Efficiency}{[Efficiency]} describes the
+    sources. \hyperlink{bib:Efficiency}{[HEW98]} describes the
     usefulness of this principle. However it is not to be expected
     that this will greatly enhance the execution speed as suggested in
     this paper, as our knowledge-sources will have longer execution
@@ -466,7 +466,7 @@
         \caption{the results of the second engine evolving through time\label{fig:2nd}}
       \end{figure}
 
-      in \hyperlink{2nd}{figure \ref{fig:2nd}} the same thing happens but
+      in \hyperlink{fig:2nd}{figure \ref{fig:2nd}} the same thing happens but
       in this case the value of parameter \#2 drags the value of
       parameter \#3 beyond the value that was expected.
 
@@ -769,7 +769,7 @@ void SelfcalEngineStub::dump() {
   \bibliography{}
   \begin{thebibliography}{WIDELABEL}
 
-    \bibitem[nii]{nii}
+    \bibitem[NII89]{NII}
       \emph{Blackboard Architectures and Applications} ,
       Penny Nii,
       Copyright \copyright{} 1989 Academic Press Inc.,
@@ -779,30 +779,30 @@ void SelfcalEngineStub::dump() {
       xix-xxix.
       \label{bib:nii}
 
-    \bibitem[Design Alternatives]{Design Alternatives}
+    \bibitem[COR89]{Design Alternatives}
       \emph{Design Alternatives for Paralel and Distributed Blackboard Systems} ,
       Daniel Corkill.
       \label{bib:Design-Alternatives}
 
-    \bibitem[Efficiency]{Efficiency}
+    \bibitem[HEW98]{Efficiency}
       \emph{EFFICIENCY MECHANISMS FOR A CLASS OF BLOACKBOARD SYSTEMS} ,
       Ratikorn Hewett and Micheal Hewett.
       \label{bib:Efficiency}
 
-    \bibitem[LOFAR-ASTRON-ADD-006]{LOFAR-ASTRON-ADD-006}
+    \bibitem[SCH02-1]{LOFAR-ASTRON-ADD-006}
       \emph{LOFAR Architectural Design Document} ,
       Kjeld van der Schaaf,
       Copyright \copyright{} 2002 ASTRON.
       \label{bib:LOFAR-ASTRON-ADD-006}
 
-    \bibitem[LOFAR-ASTRON-MEM-035]{LOFAR-ASTRON-MEM-035}
+    \bibitem[SCH02-2]{LOFAR-ASTRON-MEM-035}
       \emph{CEP Requirements Analysis, Architectural Design and
       Description} ,
       Kjeld van der Schaaf,
       Copyright \copyright{} 2002 ASTRON.
       \label{bib:LOFAR-ASTRON-MEM-035}
 
-    \bibitem[PDR-CEP-Software]{PDR-CEP-Software}
+    \bibitem[SCH03]{PDR-CEP-Software}
       \emph{CEP Software implementations} ,
       Kjeld van der Schaaf,
       Copyright \copyright{} 2003 ASTRON.
