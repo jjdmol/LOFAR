@@ -28,6 +28,7 @@
 #include <aips/Utilities/String.h>
 
 #include <aips/MeasurementSets/MeasurementSet.h>
+#include <MNS/ParmTable.h>
 
 class MeqCalibrater : public ApplicationObject
 {
@@ -75,10 +76,11 @@ class MeqCalibrater : public ApplicationObject
 
   // variables
   MeasurementSet ms;
+  ParmTable      mep;
 
   //
   Int timeIteration;
-  
+  Double fitValue;
 };
 
 class MeqCalibraterFactory : public ApplicationObjectFactory
