@@ -62,6 +62,7 @@ void Parm::init (DataRecord::Ref::Xfer& initrec, Forest* frst)
 
 int Parm::initDomain (const Domain& domain)
 {
+  itsCurrentDomain = domain;
   // Find the polc(s) for the given domain.
   vector<Polc> polcs;
   if (itsTable) {
@@ -129,13 +130,12 @@ int Parm::initDomain (const Domain& domain)
     }
   }
   // Store the polcs found into the state.
-  if (! wstate()[FPolcs].exists()) {
-    wstate()[FPolcs] <<= new DataRecord();
-  }
-  for (uint i=0; i<itsPolcs.size(); i++) {
-    DataRecord& rec = wstate()[FPolcs][i] <<= new DataRecord();
-    rec[FDomain] <<= static_cast<const DataField*>(&(itsPolcs[i].domain()));
-    rec[FVellSets] = itsPolcs[i].getCoeff().getRealArray();
+  DataRecord & polcrec = wstate()[FPolcs].replace() <<= new DataRecord();
+  for (uint i=0; i<itsPolcs.size(); i++) 
+  {
+    DataRecord& rec = polcrec[i] <<= new DataRecord();
+    rec[FDomain] <<= new Domain(itsPolcs[i].domain());
+    rec[FVellSets] <<= &(itsPolcs[i].getCoeff().getDataArray());
   }
   return nr;
 }
@@ -145,11 +145,8 @@ int Parm::getResult (Result::Ref &resref,
                      const Request &request,bool newreq)
 {
   const Domain & domain = request.cells().domain();
-//  if( reqdomain != current_domain )
-//  {
-  initDomain(domain);
-//    // set current_domain, too
-//  }
+  if( domain != itsCurrentDomain )
+    initDomain(domain);
   // Create result object and attach to the ref that was passed in
   Result &result = resref <<= new Result(1,request); // result has one vellset
   // *** NB: Should pass in the proper # of spids here, because
@@ -276,6 +273,8 @@ void Parm::save()
 
 void Parm::setStateImpl (DataRecord& rec, bool initializing)
 {
+  // inhibit changing of FPolcs field
+  protectStateField(rec,FPolcs);
   Function::setStateImpl(rec,initializing);
   // Get solvable flag
   getStateField(itsIsSolvable,rec,FSolvable);

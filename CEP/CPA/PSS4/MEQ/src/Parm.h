@@ -119,6 +119,8 @@ private:
   ParmTable*   itsTable;
   Vells        itsDefault;
   vector<Polc> itsPolcs;
+  
+  Domain       itsCurrentDomain;
 };
 
 
