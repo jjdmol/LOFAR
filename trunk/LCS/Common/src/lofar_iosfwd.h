@@ -32,6 +32,12 @@ namespace LOFAR
   using std::istream;
   using std::ostream;
   using std::iostream;
+  using std::istringstream;
+  using std::ostringstream;
+  using std::stringstream;
+  using std::ifstream;
+  using std::ofstream;
+  using std::fstream;
 }
 
 #ifdef MAKE_LOFAR_SYMBOLS_GLOBAL
@@ -39,6 +45,12 @@ namespace LOFAR
 using LOFAR::istream;
 using LOFAR::ostream;
 using LOFAR::iostream;
+using LOFAR::istringstream;
+using LOFAR::ostringstream;
+using LOFAR::stringstream;
+using LOFAR::ifstream;
+using LOFAR::ofstream;
+using LOFAR::fstream;
 #endif
 
 #endif
