@@ -41,14 +41,16 @@ class DH_CorrCube: public DataHolder
 public:
   typedef complex<float> BufferType;
 
-  explicit DH_CorrCube (const string& name);
+  explicit DH_CorrCube (const string& name, 
+			const int stations,
+			const int samples, 
+			const int channels); 
 
   DH_CorrCube(const DH_CorrCube&);
 
   virtual ~DH_CorrCube();
 
   DataHolder* clone() const;
-
 
   /// Allocate the buffers.
   virtual void preprocess();
@@ -62,8 +64,8 @@ public:
   const BufferType* getBuffer() const;
   BufferType* getBufferElement(int station, int channel, int sample);
   void setBufferElement(int station, int channel, int sample, BufferType* value); 
-   
-   const int         getFBW() const;
+
+  const int         getFBW() const;
 
 private:
   /// Forbid assignment.
@@ -75,8 +77,8 @@ private:
   int          itsFBW; // number of frequency channels within this beamlet
 
   int nstations;
-  int nsamples ;
   int nchannels;
+  int nsamples ;
 
   void fillDataPointers();
 };
@@ -86,9 +88,6 @@ inline DH_CorrCube::BufferType* DH_CorrCube::getBuffer()
 
 inline const DH_CorrCube::BufferType* DH_CorrCube::getBuffer() const
   { return itsBuffer; }
-
-   
-   
 
 inline const int DH_CorrCube::getFBW() const
   { return itsFBW; }

@@ -36,7 +36,7 @@ class DH_Vis: public DataHolder
 public:
   typedef complex<float> BufferType;
 
-  explicit DH_Vis (const string& name);
+  explicit DH_Vis (const string& name, const int stations, const int channel);
 
   DH_Vis(const DH_Vis&);
 
@@ -58,8 +58,6 @@ public:
   BufferType* getBufferElement(int station1, int station2, int channel);
   const int         getFBW() const;
 
-  int nchannels;
-  int nstations;
 
 private:
   /// Forbid assignment.
@@ -68,6 +66,9 @@ private:
   BufferType*  itsBuffer;    // array containing frequency spectrum.
   unsigned int itsBufSize;
   int          itsFBW; // number of frequency channels within this beamlet
+
+  int nstations;
+  int nchannels;
 
   void fillDataPointers();
 };

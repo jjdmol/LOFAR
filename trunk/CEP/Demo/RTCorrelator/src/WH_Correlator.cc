@@ -46,14 +46,31 @@ WH_Correlator::WH_Correlator(const string& name,
   char str[8];
   for (unsigned int i = 0; i < nin; i++) {
     sprintf(str, "%d", i);
-    getDataManager().addInDataHolder(i, new DH_CorrCube(string("in_")+str));
-  }
 
+    if (i == 0) {
+      getDataManager().addInDataHolder(i, new DH_CorrCube(string("in_") + str,
+							  itsNelements, 
+							  itsNsamples, 
+							  itsNchannels));
+    } else {
+      getDataManager().addInDataHolder(i, new DH_Vis(string("in_") + str,
+							    itsNelements, 
+							    itsNchannels));
+    }
+  }
+    
   for (unsigned int i = 0; i < nout; i++) {
     sprintf(str, "%d", i);
-    getDataManager().addOutDataHolder(i, new DH_Vis(string("out_")+str));
+    if (i == 0) {
+      getDataManager().addOutDataHolder(i, new DH_Vis(string("out_")+str,
+						      itsNelements, itsNchannels));
+    } else {
+      getDataManager().addOutDataHolder(i, new DH_CorrCube(string("out_") + str, 
+							   itsNelements, 
+							   itsNsamples, 
+							   itsNchannels));
+    }
   }
-  
 }
 
 WH_Correlator::~WH_Correlator() {
@@ -102,48 +119,72 @@ void WH_Correlator::dump() {
 }
 
 /* un-optimized correlator for now, but using pointers to save memcpy's */
-void WH_Correlator::correlator_core(complex<float>* sig, complex<float>* cor) {
+void WH_Correlator::correlator_core(DH_CorrCube::BufferType& sig, 
+				    DH_Vis::BufferType& cor) {
 
   /* This does the cross and autocorrelation on the lower half of the matrix */
   /* The upper half is not calculated, but is simply the complex conjugate   */
   /* the lower half. This should be implemented as a post correlation        */
   /* procedure later on, but is for now omitted. -- CB                       */
 
-  int x, y;
-  for (int time = 0; time < itsNsamples; time++) {
-    for (x = 0; x < itsNelements; x++) {
-      for (y = 0; y <= x; y++) {
-	*(cor+x*itsNelements+y) += complex<float> 
-				     (// real
-				      (sig+x*itsNelements+time)->real() * 
-				      (sig+y*itsNelements+time)->real() -
-				      (sig+x*itsNelements+time)->imag() *
-				      (sig+y*itsNelements+time)->imag(),
-				      // imag
-				      (sig+x*itsNelements+time)->real() * 
-				      (sig+y*itsNelements+time)->imag() +
-				      (sig+x*itsNelements+time)->imag() * 
-				      (sig+y*itsNelements+time)->real()
-				      );
-      }
-    }
-  }
+  cor = sig;
+
+//   cout << "Correlating" << endl;
+//   for (int time = 0; time < itsNsamples; time++) {
+//     for (int x = 0; x < itsNelements; x++) {
+//       for (int y = 0; y <= x; y++) {
+// 	*(cor+x*itsNelements+y) += DH_Vis::BufferType
+// 				     (// real
+// 				      (sig+x*itsNelements+time)->real() * 
+// 				      (sig+y*itsNelements+time)->real() -
+// 				      (sig+x*itsNelements+time)->imag() *
+// 				      (sig+y*itsNelements+time)->imag(),
+// 				      // imag
+// 				      (sig+x*itsNelements+time)->real() * 
+// 				      (sig+y*itsNelements+time)->imag() +
+// 				      (sig+x*itsNelements+time)->imag() * 
+// 				      (sig+y*itsNelements+time)->real()
+// 				      );
+//       }
+//     }
+//   }
 }
 
 void WH_Correlator::master() {
   
   for (int i = 1; i < TH_MPI::getNumberOfNodes(); i++) {
     
-    /* [FIXME] */
-    //     (complex<float>*)getDataManager().getOutHolder(i)->getDataPtr() = 
-    //       (complex<float>*)getDataManager().getInHolder(0)->getDataPtr()
-    //       + i*itsNelements*itsNsamples;
+    /* [CHECKME] */
+//     *(((DH_CorrCube*)getDataManager().getOutHolder(i))->getBuffer()) = 
+//       *(((DH_CorrCube*)getDataManager().getInHolder(0))->getBuffer()) + 
+//       DH_CorrCube::BufferType (itsNelements * itsNsamples * i);
+
+
+    memcpy((((DH_CorrCube*)getDataManager().getOutHolder(i))->getBuffer()), 
+	   (((DH_CorrCube*)getDataManager().getInHolder(0))->getBuffer()) +
+	   itsNelements * itsNsamples * i,
+	   itsNelements *itsNsamples);
+  }
+
+  /* Gather and assign results */ 
+  for (int i = 1; i < TH_MPI::getNumberOfNodes(); i++) {
+    
+    /* [CHECKME] */
+//     *(((DH_Vis*)getDataManager().getOutHolder(0))->getBuffer()) +
+//       DH_Vis::BufferType (itsNelements * itsNsamples * i) = 
+//       *(((DH_Vis*)getDataManager().getInHolder(i))->getBuffer());
+
+    memcpy((((DH_Vis*)getDataManager().getOutHolder(0))->getBuffer()) +
+	    itsNelements * itsNsamples * i, 
+	    (((DH_Vis*)getDataManager().getInHolder(i))->getBuffer()),
+	    itsNelements * itsNsamples);
     
   }
+  cout << "END"  << endl;
 }
 
 void WH_Correlator::slave() {
 
-  correlator_core((complex<float>*)getDataManager().getInHolder(0)->getDataPtr(), 
-		  (complex<float>*)getDataManager().getOutHolder(0)->getDataPtr());
+  correlator_core(*((DH_CorrCube*)getDataManager().getInHolder(0))->getBuffer(), 
+		  *((DH_Vis*)getDataManager().getOutHolder(0))->getBuffer());
 }

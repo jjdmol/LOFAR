@@ -30,9 +30,11 @@
 namespace LOFAR
 {
 
-DH_Vis::DH_Vis (const string& name)
+DH_Vis::DH_Vis (const string& name, const int stations, const int channels)
 : DataHolder    (name, "DH_Vis"),
-  itsBuffer     (0)
+  itsBuffer     (0),
+  nstations     (stations),
+  nchannels     (channels)
 {
 
 }

@@ -34,6 +34,8 @@ RTCorrelator::~RTCorrelator() {
 }
 
 void RTCorrelator::define(const KeyValueMap& /*params*/) {
+  cout << "RANK OF NODE: " << LOFAR::TH_MPI::getCurrentRank() << endl;
+
   if (LOFAR::TH_MPI::getCurrentRank() == 0) {
     /* Create the master correlator and connect it to it's slaves and to */
     /* the outside world. The in- and outHolders with rank 0 will be the */
@@ -48,7 +50,7 @@ void RTCorrelator::define(const KeyValueMap& /*params*/) {
     
     WH_Correlator aSlave("noname", 1, 1, nelements, nsamples, nchannels, nruns);
     WH_Random     aRandom("noname", 0, 1, nelements, nsamples, nchannels);
-    WH_Dump       aDump("noname", 1, 0);
+    WH_Dump       aDump("noname", 1, 0, nelements, nchannels);
 
     /* The correlator cannot accept connections because of the limitations   */
     /* of the BG/L socket implementation. Therefore all connections are      */
@@ -215,8 +217,11 @@ int main (int argc, const char** argv) {
     correlator.basePostrun();
     correlator.baseDump();
     correlator.baseQuit();
+
   } catch (...) {
+
     cout << "Unexpected exception" << endl;
+
   }
 #endif
 
