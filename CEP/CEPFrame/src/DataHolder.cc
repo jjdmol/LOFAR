@@ -39,23 +39,25 @@ namespace LOFAR
 // Construction/Destruction
 //////////////////////////////////////////////////////////////////////
 DataHolder::DataHolder(const string& name, const string& type)
-: itsTransportPtr   (0),
-  itsName           (name),
-  itsType           (type),
-  itsStep           (0),
-  itsReadDelay      (0),
-  itsWriteDelay     (0),
-  itsReadDelayCount (0),
-  itsWriteDelayCount(0),
-  itsIfsPtr         (0),
-  itsOfsPtr         (0)
+  : Transportable     (),
+    itsTransportPtr   (0),
+    itsName           (name),
+    itsType           (type),
+    itsStep           (0),
+    itsReadDelay      (0),
+    itsWriteDelay     (0),
+    itsReadDelayCount (0),
+    itsWriteDelayCount(0),
+    itsIfsPtr         (0),
+    itsOfsPtr         (0)
 {
   setDefaultDataPacket();
   itsTransportPtr = new Transport (this);
 }
 
 DataHolder::DataHolder(const DataHolder& that)
-  : itsDataPacketSize (that.itsDataPacketSize), 
+  : Transportable     (), 
+    itsDataPacketSize (that.itsDataPacketSize), 
     itsName           (that.itsName),
     itsType           (that.itsType),
     itsStep           (that.itsStep),

@@ -75,12 +75,12 @@ string TH_File::getType() const
     return "TH_File";
 }
 
-bool TH_File::connectionPossible(int srcRank, int dstRank) const
+bool TH_File::connectionPossible(int, int) const
 {
   return true; //srcRank == dstRank;
 }
 
-bool TH_File::recv(void* buf, int nbytes, int, int tag)
+bool TH_File::recv(void* buf, int nbytes, int, int)
 { 
   bool result = true;
   if (itsDirection == Read) {
@@ -122,7 +122,7 @@ bool TH_File::recv(void* buf, int nbytes, int, int tag)
   return result;
 }
 
-bool TH_File::send(void* buf, int nbytes, int, int tag)
+bool TH_File::send(void* buf, int nbytes, int, int)
 {
   bool result = true;
   if (itsDirection == Write) {
