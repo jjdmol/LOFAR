@@ -9,12 +9,11 @@
 //   solve source parameters
 //   pert=1e-6
 //   calcUVW=false
-//   useSVD=saveAllIter=true     // to measure difference with false
 //   model=LOFAR.RI
 //   time domain is all times
 
 
-nrKS=1,           // Number of Knowledge Sources
+nrPrediffers=1,           // Number of Knowledge Sources
 
 CTRLparams=[
   strategy="Simple",
@@ -27,18 +26,16 @@ CTRLparams=[
     endChan=49,            // End (frequency) channel
     sources=[0,1,2],       // Solvable source numbers (0 based)
     useSVD=T,              // Use Singular Value Decomposition in solve?
-    saveAllIter=T          // Save parameters in parameter database every iteration?
   ]
 ],
 
 KSparams=[
-  MSName="demo3-",         // Name of the Measurement Set
+  MSName="demo3-1",         // Name of the Measurement Set
   DBHost="dop50.astron.nl",          // Parameter database host name
   DBType="aips",           // Parameter database type
   DBPwd="",                // Parameter database password
-  meqTableName="demo3-",   // Meq model table name *       
-  skyTableName="demo3_gsm-", // Sky model table name *
+  meqTableName="demo3-1",   // Meq model table name *       
+  skyTableName="demo3_gsm-1", // Sky model table name *
   calcUVW=F,               // Calculate UVW coordinates?
   lockMappedMem=F,         // Call mlock immediately after mapping?
-  writeAllSols=F           // Write DH_Solutions in the BB database for every iteration?
 ]

@@ -8,7 +8,6 @@
 //   gain-polc is 0th order
 //   solve source parameters
 //   pert=1e-6
-//   useSVD=calcUVW=saveAllIter=false
 //   model=LOFAR.RI
 //   time domain is all times
 
