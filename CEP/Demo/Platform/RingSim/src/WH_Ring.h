@@ -218,16 +218,16 @@ inline WH_Ring<T>::~WH_Ring ()
 template <class T>
 inline void WH_Ring<T>::process ()
 {
-  cout << "RingNode " << getInstanceCnt()  << endl
-       << "\t Ring INDATA1:  destination " 
-       << itsInDataHolders[1]->getPacket()->destination << "  "
-       << itsInDataHolders[1]->getBuffer()[0] << endl
-       << "\t Ring INDATA2:  destination " 
-       << itsInDataHolders[2]->getPacket()->destination << "  "
-       << itsInDataHolders[2]->getBuffer()[0] << endl
-       << "\t ToRing INDATA1:  destination " 
-       << itsInDataHolders[0]->getPacket()->destination << "  "
-       << itsInDataHolders[0]->getBuffer()[0] << endl;
+/*   cout << "RingNode " << getInstanceCnt()  << endl */
+/*        << "\t Ring INDATA1:  destination "  */
+/*        << itsInDataHolders[1]->getPacket()->destination << "  " */
+/*        << itsInDataHolders[1]->getBuffer()[0] << endl */
+/*        << "\t Ring INDATA2:  destination "  */
+/*        << itsInDataHolders[2]->getPacket()->destination << "  " */
+/*        << itsInDataHolders[2]->getBuffer()[0] << endl */
+/*        << "\t ToRing INDATA1:  destination "  */
+/*        << itsInDataHolders[0]->getPacket()->destination << "  " */
+/*        << itsInDataHolders[0]->getBuffer()[0] << endl; */
 
   if (getInHolder(0)->doHandle()) {    
     Firewall::Assert(itsLastBufferSent,
@@ -242,15 +242,15 @@ inline void WH_Ring<T>::process ()
   reRoute();
   putInputToRing();
   
-  cout << "\t OUTDATA1:  destination " 
-       << itsOutDataHolders[1]->getPacket()->destination << "  "
-       << itsOutDataHolders[1]->getBuffer()[0] << endl
-       << "\t OUTDATA2:  destination " 
-       << itsOutDataHolders[2]->getPacket()->destination << "  "
-       << itsOutDataHolders[2]->getBuffer()[0] << endl
-       << "\t From Ring DATA: destination " 
-       << itsOutDataHolders[0]->getPacket()->destination << "  "
-       << itsOutDataHolders[0]->getBuffer()[0] << endl;
+/*   cout << "\t OUTDATA1:  destination "  */
+/*        << itsOutDataHolders[1]->getPacket()->destination << "  " */
+/*        << itsOutDataHolders[1]->getBuffer()[0] << endl */
+/*        << "\t OUTDATA2:  destination "  */
+/*        << itsOutDataHolders[2]->getPacket()->destination << "  " */
+/*        << itsOutDataHolders[2]->getBuffer()[0] << endl */
+/*        << "\t From Ring DATA: destination "  */
+/*        << itsOutDataHolders[0]->getPacket()->destination << "  " */
+/*        << itsOutDataHolders[0]->getBuffer()[0] << endl; */
 }
 
 template <class T>
