@@ -219,7 +219,7 @@ bool MSInputSink::init (const DataRecord &params)
 
   // get MS and selection
   msname_ = params[FMSName].as<string>();
-  const DataRecord &selection = params[FSelection];
+  const DataRecord &selection = params[FSelection].as<DataRecord>();
   // get name of data column (default is DATA)
   dataColName_ = params[FDataColumnName].as<string>("DATA");
   // get # of timeslots per tile (default is 1)
