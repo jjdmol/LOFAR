@@ -8,10 +8,8 @@
 #include "BaseSim.h"
 #include "Simul.h"
 #include "BaseSim.h"
-#include "DH_Test.h"
 #include "DH_Ring.h"
 #include "WH_Ring.h"
-#include "RingBuilder.h"
 #include "WH_ToRing.h"
 #include "WH_FromRing.h"
 #include "WH_Empty.h"
@@ -29,9 +27,38 @@ main (int argc, char *argv[])
 
   // create the main Simul; Steps and Simuls will be added to this one
   Simul RingSim(new WH_Empty(),"RingSim",0); //Uses an empty workholder.
-  Simul theRing(new RingBuilder<DH_Test>(10));
-  RingSim.addStep(&theRing);
+  RingSim.runOnNode(0);
+  
+  Step *RingStep[10];
+  Step *ToRingStep[10];
+  Step *FromRingStep[10];
 
+  // First define the pre-ring steps
+  for (int stepnr=0; stepnr<10; stepnr++) {
+    ToRingStep[stepnr] = new Step(new WH_ToRing());
+    ToRingStep[stepnr]->runOnNode(0);
+    ToRingStep[stepnr]->setOutRate(11);
+    RingSim.addStep (ToRingStep[stepnr]);
+  }
+
+  for (int stepnr=0; stepnr<10; stepnr++) {
+    RingStep[stepnr] = new Step(new WH_Ring<DH_Test>());
+    RingStep[stepnr]->runOnNode(0);
+    RingStep[stepnr]->setInRate(11,0); // set inrate for channel 0
+    if (stepnr >  0) RingStep[stepnr]->connect(RingStep[stepnr-1],1,1,1); 
+    RingSim.addStep (RingStep[stepnr]);
+    RingStep[stepnr]->connect(ToRingStep[stepnr],0,0,1);
+  }
+  RingStep[0]->connect(RingStep[9],1,1,1);
+  
+  // First define the post-ring steps
+  for (int stepnr=0; stepnr<10; stepnr++) {
+    FromRingStep[stepnr] = new Step(new WH_FromRing());
+    FromRingStep[stepnr]->runOnNode(0);
+    RingSim.addStep (FromRingStep[stepnr]);
+    FromRingStep[stepnr]->connect(RingStep[stepnr],0,0,1);
+    FromRingStep[stepnr]->setOutRate(11);
+  }
   //RingSim.connectOutputToArra((Step**)(&&step3),1)
    
   //RingSim.resolveComm();

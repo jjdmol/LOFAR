@@ -3,7 +3,7 @@
 #	Use MPI=1 if you want to compile with MPI support.		#
 #########################################################################
 
-EXES	= routetest
+EXES	= ttest routetest
 LIBNAME = routesim
 
 
