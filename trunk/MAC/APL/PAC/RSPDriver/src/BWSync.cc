@@ -210,11 +210,11 @@ void BWSync::writecoef(uint8 blp)
   //
   if (0 == (m_regid % 2))
   {
-    weights = real(Cache::getInstance().getBack().getBeamletWeights(blp).weights()(blp));
+    weights = real(Cache::getInstance().getBack().getBeamletWeights().weights()(blp, Range::all()));
   }
   else
   {
-    weights = imag(Cache::getInstance().getBack().getBeamletWeights(blp).weights()(blp));
+    weights = imag(Cache::getInstance().getBack().getBeamletWeights().weights()(blp, Range::all()));
   }
 
   getBoardPort().send(bfcoefs);

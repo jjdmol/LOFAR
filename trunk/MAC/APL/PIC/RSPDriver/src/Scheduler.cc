@@ -32,7 +32,9 @@ using namespace RSP;
 using namespace LOFAR;
 using namespace RSP_Protocol;
 
-Scheduler::Scheduler() : m_sync_done(false)
+#define SCHEDULING_DELAY 2
+
+Scheduler::Scheduler()
 {
 }
 
@@ -105,6 +107,7 @@ GCFEvent::TResult Scheduler::dispatch(GCFEvent& event, GCFPortInterface& port)
   GCFEvent::TResult status = GCFEvent::NOT_HANDLED;
   GCFTimerEvent timer;
   GCFEvent* current_event = &event;
+  bool sync_completed = true;
   
   /**
    * Dispatch the event to the first SyncAction that
@@ -116,6 +119,9 @@ GCFEvent::TResult Scheduler::dispatch(GCFEvent& event, GCFPortInterface& port)
   {
     if (!(*sa)->hasCompleted())
     {
+      // stil busy
+      sync_completed = false;
+
       status = (*sa)->dispatch(*current_event, (*sa)->getBoardPort());
 
       //
@@ -123,11 +129,13 @@ GCFEvent::TResult Scheduler::dispatch(GCFEvent& event, GCFPortInterface& port)
       // it will receive another event to continue
       //
       if (!(*sa)->hasCompleted()) break;
-      else current_event = &timer;
+      else current_event = &timer; 
     }
   }
 
-  if (m_sync_done)
+  if (sync_completed) m_sync_completed[&port] = true;
+
+  if (syncHasCompleted())
   {
     completeSync();
   }
@@ -135,9 +143,24 @@ GCFEvent::TResult Scheduler::dispatch(GCFEvent& event, GCFPortInterface& port)
   return status;
 }
 
+bool Scheduler::syncHasCompleted()
+{
+  bool result = true;
+  
+  for (map< GCFPortInterface*, bool >::iterator it = m_sync_completed.begin();
+       it != m_sync_completed.end();
+       it++)
+  {
+    if (!(*it).second) result = false;
+  }
+
+  return result;
+}
+
 void Scheduler::addSyncAction(SyncAction* action)
 {
   m_syncactions[&(action->getBoardPort())].push_back(action);
+  m_sync_completed[&(action->getBoardPort())] = false;
 }
 
 Timestamp Scheduler::enter(Command* command)
@@ -147,15 +170,15 @@ Timestamp Scheduler::enter(Command* command)
   Timestamp t = command->getTimestamp();
 
   /* determine at which time the command can actually be carried out */
-  if (t.sec() < m_current_time.sec() + 10)
+  if (t.sec() < m_current_time.sec() + SCHEDULING_DELAY)
   {
-#if 0
-    struct timeval tv;
-    m_current_time.get(&tv);
-    tv.sec += 10;
-    t.set(tv);
-#endif
-    t = m_current_time + 10;
+    if (t.sec() > 0)
+    {
+      LOG_WARN(formatString("command missed deadline by %d seconds",
+			    m_current_time.sec() - t.sec()));
+    }
+    
+    t = m_current_time + SCHEDULING_DELAY;
   }
 
   return t;
@@ -168,6 +191,11 @@ void Scheduler::setCurrentTime(long sec, long usec)
   tv.tv_sec  = sec;
   tv.tv_usec = usec;
   m_current_time.set(tv);
+}
+
+Timestamp Scheduler::getCurrentTime() const
+{
+  return m_current_time;
 }
 
 void Scheduler::scheduleCommands()
@@ -234,6 +262,9 @@ void Scheduler::initiateSync(GCFEvent& event)
        port != m_syncactions.end();
        port++)
   {
+    // reset completed flag
+    m_sync_completed[(*port).first] = false;
+
     for (vector<SyncAction*>::iterator sa = (*port).second.begin();
 	 sa != (*port).second.end();
 	 sa++)
@@ -254,38 +285,6 @@ void Scheduler::completeSync()
   Cache::getInstance().swapBuffers();
   completeCommands();
 }
-
-// GCFEvent::TResult Scheduler::syncCache(GCFEvent& event, GCFPortInterface& port)
-// {
-//   GCFEvent::TResult status = GCFEvent::NOT_HANDLED;
-//   bool done = true;
-
-//   if (m_current_priority < 0)
-//   {
-//     LOG_WARN("unhandled event, m_syncactions already completed");
-//     return GCFEvent::NOT_HANDLED;
-//   }
-  
-//   for (vector<SyncAction*>::iterator it = m_syncactions[m_current_priority].begin();
-//        it != m_syncactions[m_current_priority].end();
-//        it++)
-//   {
-//     if (!(*it)->isFinal())
-//     {
-//       status = (*it)->dispatch(event, port);
-//       if (GCFEvent::NOT_HANDLED == status)
-//       {
-// 	LOG_WARN("unhandled event");
-//       }
-//     }
-
-//     if (!(*it)->isFinal()) done = false;
-//   }
-
-//   if (done) m_current_priority--;
-  
-//   return GCFEvent::HANDLED;
-// }
 
 void Scheduler::completeCommands()
 {

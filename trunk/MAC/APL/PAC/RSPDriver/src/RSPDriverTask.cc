@@ -28,7 +28,8 @@
 
 #include "RSPDriverTask.h"
 #include "Command.h"
-#include "BWCommand.h"
+#include "SetWeightsCmd.h"
+#include "GetWeightsCmd.h"
 #include "BWSync.h"
 
 #undef PACKAGE
@@ -231,13 +232,29 @@ GCFEvent::TResult RSPDriverTask::enabled(GCFEvent& event, GCFPortInterface& port
 
     case RSP_SETWEIGHTS:
     {
-      /* enter the command in the scheduler's queue */
-      BWCommand* command = new BWCommand(event, port, Command::WRITE);
-
-      /* enter into the scheduler's queue */
+      /**
+       * Create the command for this event.
+       * Enter it in the scheduler queue.
+       * Acknowledge the command.
+       */
+      SetWeightsCmd* command = new SetWeightsCmd(event, port, Command::WRITE);
       command->setTimestamp(m_scheduler.enter(command));
-
       command->ack(Cache::getInstance().getFront());
+    }
+    break;
+
+    case RSP_GETWEIGHTS:
+    {
+      GetWeightsCmd* command = new GetWeightsCmd(event, port, Command::READ);
+      if (Timestamp(0,0) == command->getTimestamp())
+      {
+	command->setTimestamp(m_scheduler.getCurrentTime());
+	command->ack(Cache::getInstance().getFront());
+      }
+      else
+      {
+	command->setTimestamp(m_scheduler.enter(command));
+      }
     }
     break;
 

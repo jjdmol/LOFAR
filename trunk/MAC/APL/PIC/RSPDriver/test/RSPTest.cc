@@ -34,6 +34,7 @@
 #include <iostream>
 #include <sys/time.h>
 #include <string.h>
+#include <blitz/array.h>
 
 #undef PACKAGE
 #undef VERSION
@@ -43,6 +44,7 @@
 using namespace RSP_Test;
 using namespace std;
 using namespace LOFAR;
+using namespace blitz;
 
 RSPTest::RSPTest(string name)
     : GCFTask((State)&RSPTest::initial, name), Test(name)
@@ -114,8 +116,14 @@ GCFEvent::TResult RSPTest::test001(GCFEvent& e, GCFPortInterface& port)
 	  RSPSetweightsEvent sw;
 	  sw.timestamp.setNow(10);
 	  sw.rcumask.reset();
-	  sw.rcumask.set(10);
-	  sw.weights.weights().resize(1, sw.rcumask.count(), 10);
+	  sw.weights.weights().resize(1, N_BEAMLETS);
+
+	  for (int i = 0; i < sw.weights.weights().extent(1); i++)
+	  {
+	    sw.weights.weights()(0, i) = 0xff + i;
+	  }
+	  
+	  sw.rcumask.set(0);
 
 	  TESTC_ABORT(m_server.send(sw), RSPTest::final);
       }
@@ -124,6 +132,62 @@ GCFEvent::TResult RSPTest::test001(GCFEvent& e, GCFPortInterface& port)
       case RSP_SETWEIGHTSACK:
       {
 	  RSPSetweightsackEvent ack(e);
+
+	  TESTC_ABORT(ack.status == SUCCESS, RSPTest::final);
+
+	  TRAN(RSPTest::test002);
+      }
+      break;
+
+      case F_DISCONNECTED:
+      {
+	  port.setTimer((long)1);
+	  port.close();
+
+	  TRAN(RSPTest::final);
+      }
+      break;
+
+      case F_EXIT:
+      {
+	  STOP_TEST();
+      }
+      break;
+
+      default:
+	  status = GCFEvent::NOT_HANDLED;
+	  break;
+  }
+
+  return status;
+}
+
+GCFEvent::TResult RSPTest::test002(GCFEvent& e, GCFPortInterface& port)
+{
+  GCFEvent::TResult status = GCFEvent::HANDLED;
+  
+  switch (e.signal)
+  {
+      case F_ENTRY:
+      {
+	  START_TEST("test002", "test GETWEIGHTS");
+
+	  /* start of the test sequence */
+	  RSPGetweightsEvent sw;
+	  sw.timestamp.setNow(10);
+	  sw.rcumask.reset();
+	  sw.rcumask.set(20);
+	  sw.cache = false;
+	  
+	  TESTC_ABORT(m_server.send(sw), RSPTest::final);
+      }
+      break;
+
+      case RSP_GETWEIGHTSACK:
+      {
+	  RSPGetweightsackEvent ack(e);
+
+	  cout << "ack = " << ack.weights.weights() << endl;
 
 	  TESTC_ABORT(ack.status == SUCCESS, RSPTest::final);
 

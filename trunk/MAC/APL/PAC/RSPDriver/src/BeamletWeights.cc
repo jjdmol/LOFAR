@@ -39,7 +39,7 @@ unsigned int BeamletWeights::getSize()
   /* NDIM extent values plus the array data itself */
   return
     ((NDIM * sizeof(int32))
-     + (m_weights.size() * sizeof(complex<double>)));
+     + (m_weights.size() * sizeof(complex<int16>)));
 }
 
 unsigned int BeamletWeights::pack  (void* buffer)
@@ -56,8 +56,8 @@ unsigned int BeamletWeights::pack  (void* buffer)
 
   if (m_weights.isStorageContiguous())
   {
-    memcpy(bufptr + offset, m_weights.data(), m_weights.size() * sizeof(complex<double>));
-    offset += m_weights.size() * sizeof(complex<double>);
+    memcpy(bufptr + offset, m_weights.data(), m_weights.size() * sizeof(complex<int16>));
+    offset += m_weights.size() * sizeof(complex<int16>);
   }
   else
   {
@@ -86,8 +86,8 @@ unsigned int BeamletWeights::unpack(void *buffer)
 
   if (m_weights.isStorageContiguous())
   {
-    memcpy(m_weights.data(), bufptr+offset, m_weights.size() * sizeof(complex<double>));
-    offset += m_weights.size() * sizeof(complex<double>);
+    memcpy(m_weights.data(), bufptr+offset, m_weights.size() * sizeof(complex<int16>));
+    offset += m_weights.size() * sizeof(complex<int16>);
   }
   else
   {

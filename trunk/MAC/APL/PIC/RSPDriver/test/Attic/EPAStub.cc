@@ -120,6 +120,9 @@ GCFEvent::TResult EPAStub::connected(GCFEvent& event, GCFPortInterface& port)
       // set the correct header info
       MEP_RSPSTATUS(rspstatus.hdr, MEPHeader::READRES);
       rspstatus.rsp = 0;
+      memset(&rspstatus.ap[0], 0, N_AP*sizeof(uint16));
+      memset(&rspstatus.blp[0], 0, N_BLP*sizeof(uint16));
+      rspstatus.eth = 0;
 
       // early reply of status
       port.send(rspstatus);
@@ -173,7 +176,7 @@ GCFEvent::TResult EPAStub::final(GCFEvent& event, GCFPortInterface& /*port*/)
   return status;
 }
 
-GCFEvent::TResult EPAStub::rspstatus(GCFEvent& event, GCFPortInterface& port)
+GCFEvent::TResult EPAStub::rspstatus(GCFEvent& event, GCFPortInterface& /*port*/)
 {
   EPARspstatusEvent rspstatus(event);
 
