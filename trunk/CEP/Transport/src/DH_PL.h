@@ -44,15 +44,16 @@ namespace LOFAR {
 // <br>If one or more fields should be stored individually, the user needs
 // to add some extra code to tell PL which fields should be stored where.
 // An example can be found in test/DH_Example2. Please note that such
-// fields are also part of the blob, thus are stored twice. The only
-// advantage of storing them individually is that they are easier visible
-// in the database.
+// fields are also part of the blob, thus are stored twice. The advantage
+// of storing them individually is that they are easier visible in the
+// database and can be used in a query.
 
-class DH_PL : public DataHolder {
-
+class DH_PL : public DataHolder
+{
 public:
   typedef PL::TPersistentObject<DH_PL> PO_DH_PL;
 
+  // Create the DH_PL object.
   explicit DH_PL (const string& name="DH_PL", const string& type="DH_PL");
 
   virtual ~DH_PL ();
@@ -78,6 +79,21 @@ public:
     { return itsSeqNr; }
   // </group>
 
+  // Special functions to deal with database records in a special way.
+  // They only work if the DataHolder is connected with TH_PL.
+  // Otherwise they throw an exception.
+  // <group>
+
+  // Read from the database with the given query string.
+  // It returns the number of matching records. Only the first matching one
+  // is really retrieved.
+  int queryDB (const string& queryString);
+  // Insert the current record in the database.
+  void insertDB();
+  // Update the current record in the database.
+  void updateDB();
+  // <group>
+
 protected:
   // Copy constructor.
   DH_PL (const DH_PL&);
@@ -85,9 +101,9 @@ protected:
 private:
   // Forbid assignment.
   DH_PL& operator= (const DH_PL&);
-  
-  int   itsTag;
-  int64 itsSeqNr;
+
+  int    itsTag;
+  int64  itsSeqNr;
   PO_DH_PL* itsPODHPL;
 };
  

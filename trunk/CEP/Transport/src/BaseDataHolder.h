@@ -236,6 +236,13 @@ public:
   const BlobString& getDataBlock() const;
   // </group>
 
+protected:
+  // Handle the data read (check and convert it as needed).
+  void handleDataRead();
+
+  // Get the data field set.
+  const BlobFieldSet& dataFieldSet() const;
+
 private:
   // Get the type of BlobString needed from the transport holder.
   virtual BlobStringType blobStringType();
@@ -342,6 +349,11 @@ inline void BaseDataHolder::setBlocking(bool block)
 
 inline bool BaseDataHolder::isBlocking()
   { return itsTransporter.isBlocking(); }
+
+inline const BlobFieldSet& BaseDataHolder::dataFieldSet() const
+{
+  return itsDataFields;
+}
 
 inline BlobFieldBase& BaseDataHolder::getDataField (uint fieldIndex)
 {

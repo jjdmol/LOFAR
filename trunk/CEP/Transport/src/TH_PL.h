@@ -73,14 +73,22 @@ public:
   // <YourName> and userName="postgres".
   static void useDatabase (const string& dbDSN,
 			   const string& userName="postgres");
-  
+
+  // Special functions to deal with database records in a special way.
+  int queryDB (const string& queryString, void* buf, int nbytes, int tag);
+  void insertDB (void* buf, int nbytes, int tag);
+  void updateDB (void* buf, int nbytes, int tag);
+  // <group>
+
 protected:
    static PL::PersistenceBroker theirPersistenceBroker;
    static int theirInstanceCount;
 private:
-  // methods to manage the connection to the dbms
+  // Methods to manage the connection to the dbms.
+  // <group>
   void connectDatabase();
   void disconnectDatabase();
+  // </group>
 
   /// Strings containing the name specs describing the ODBC connection.
   static string theirDSN;
