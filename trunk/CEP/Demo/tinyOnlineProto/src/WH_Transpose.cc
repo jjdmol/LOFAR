@@ -131,7 +131,7 @@ void WH_Transpose::dump()
   cout << "--------------------------------------------------------" << endl;
   cout << "Dump WH_Transpose " << getName() << endl;
   cout << " input " << endl;
-  for (int s=0; s<10; s++) {
+  for (int s=0; s<getDataManager().getInputs(); s++) {
     cout << "in station=" << s << ":  ";
     for (int f=0; f<10; f++) {
       cout << 	*((DH_Beamlet*)getDataManager().getInHolder(s))
@@ -143,9 +143,9 @@ void WH_Transpose::dump()
   cout << " output " << endl;
 
   
-  for (int s=0; s<10; s++) {
+  for (int s=0; s<getDataManager().getInputs(); s++) {
     cout << "out station=" << s << ":  ";
-    for (int t=0; t<10; t++) {
+    for (int t=0; t<getDataManager().getOutputs()/getDataManager().getInputs(); t++) {
       cout << *((DH_CorrCube*)getDataManager().getOutHolder(1))
 	->getBufferElement(s, 0, t) ;
 

@@ -2,7 +2,7 @@
 #define TINYONLINEPROTO_DEFINITIONS_H
 
 #define FSIZE 1
-#define NSTATIONS 1
+#define NSTATIONS 10
 
 #define TSIZE 100
 #define NBEAMLETS 1
