@@ -23,6 +23,7 @@
 #include <CAL/MeqCalibraterImpl.h>
 
 #include <MNS/MeqJonesNode.h>
+#include <MNS/MeqStatExpr.h>
 #include <MNS/MeqMatrixTmp.h>
 #include <MNS/MeqStoredParmPolc.h>
 #include <MNS/MeqParmSingle.h>
@@ -223,7 +224,7 @@ void MeqCalibrater::makeWSRTExpr()
     MeqExpr* gain22 = new MeqStoredParmPolc ("gain.22." +
 					     itsStations[i].getName(),
 					     &itsMEP);
-    ///    MeqExpr* st11 = new MeqStatExpr (frot, drot, dell, gain11, gain22);
+    MeqJonesExpr* stat = new MeqStatExpr (frot, drot, dell, gain11, gain22);
   }    
 
   // Get the point sources from the GSM.
@@ -273,8 +274,7 @@ void MeqCalibrater::calcUVWPolc (const Table& ms)
   TableIterator iter (ms, keys, TableIterator::Ascending,
 		      TableIterator::NoSort);
   // Calculate the uvwpolc for the whole domain of the measurementset
-  while (!iter.pastEnd())
-  {
+  while (!iter.pastEnd()) {
     Table tab = iter.table();
     ROScalarColumn<int> ant1col(tab, "ANTENNA1");
     ROScalarColumn<int> ant2col(tab, "ANTENNA2");
@@ -290,22 +290,33 @@ void MeqCalibrater::calcUVWPolc (const Table& ms)
     int blindex = itsBLIndex(ant1,ant2);
     // Divide the data into chunks of 1 hour (assuming it is equally spaced).
     // Make all chunks about equally long.
-    int nrChunk = max(1, int((dt(nrtim-1) - dt(0)) / 3600 + 0.5));
-    int chunkLength = nrtim / nrChunk;
-    if (nrChunk > 1) {
-      Assert (chunkLength > 4);
-    }
+    double interval = (dt(nrtim-1) - dt(0)) / (nrtim-1);
+    int chunkLength = int(3600. / interval + 0.5);
+    int nrChunk = 1 + (nrtim-1) / chunkLength;
+    chunkLength = nrtim / nrChunk;
+    int chunkRem = nrtim % nrChunk;
+    Assert (chunkLength > 4);
     // Loop through the data in periods of one hour.
-    for (int nrdone=0; nrdone<nrtim; nrdone+=chunkLength) {
-      int todo = min(nrdone+chunkLength, nrtim);
-      itsUVWPolc[blindex]->calcCoeff (dt(Slice(nrdone,todo)),
-				      uvws(Slice(0,3), Slice(nrdone, todo)));
+    // Take care that the remainder is evenly spread over the chunks.
+    int nrdone = 0;
+    for (int i=0; i<chunkRem; i++) {
+      itsUVWPolc[blindex]->calcCoeff (dt(Slice(nrdone,chunkLength+1)),
+				      uvws(Slice(0,3),
+					   Slice(nrdone,chunkLength+1)));
+      nrdone += chunkLength+1;
+    }
+    for (int i=chunkRem; i<nrChunk; i++) {
+      itsUVWPolc[blindex]->calcCoeff (dt(Slice(nrdone,chunkLength)),
+				      uvws(Slice(0,3),
+					   Slice(nrdone,chunkLength)));
+      nrdone += chunkLength;
+    }
+    Assert (nrdone == nrtim);
       ///      cout << "UVWs: " << blindex << ' ' << ant1 << ' ' << ant2 << ' '
       ///	   << itsUVWPolc[blindex]->getUCoeff().getPolcs()[0].getCoeff()
 	///	   << itsUVWPolc[blindex]->getVCoeff().getPolcs()[0].getCoeff()
 	///	   << itsUVWPolc[blindex]->getWCoeff().getPolcs()[0].getCoeff()
-	///	   << endl;
-    }
+      ///	   << endl;
     iter++;
   }
 }
