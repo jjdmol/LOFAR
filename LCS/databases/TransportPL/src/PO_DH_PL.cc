@@ -29,7 +29,6 @@
 #include <Common/BlobArray.h>
 #include <string>
 
-
 namespace LOFAR {
   namespace PL {
 
@@ -46,14 +45,15 @@ void DBRep<DH_PL>::toDBRep (const DH_PL& obj)
   // Copy the info from DH_PL
   itsSeqNr = obj.getSeqNr();
   itsTag   = obj.getTag();
-  itsData  = obj.getDataBlock().getString();
+  itsData.assign (obj.getDataBlock().getString().data(),
+		  obj.getDataBlock().getString().size());
 }
 
 // fromDatabaseRep copies the fields of the DBRep<MeqParmHolder> structure
 // to the persistency layer and the MeqParmHolder class.
 void DBRep<DH_PL>::fromDBRep (DH_PL& obj) const
 {
-  dtl::blob& str =  obj.getDataBlock().getString();
+  std::basic_string<uchar>& str =  obj.getDataBlock().getString();
   if (str.size() != itsData.size()) {
     obj.resizeBuffer (itsData.size());
   }
