@@ -46,7 +46,7 @@ public:
   virtual ~DH_PL ();
 
   // get a reference to the PersistentObject.
-  PersistentObject& getPO(); const
+  PL::PersistentObject& getPO(); const
 			       
 			       
 protected:
@@ -91,13 +91,13 @@ private:
   
 };
  
- inline  DH_PL::PersistentObject& getPO() {
-   return itsPO;
- }
+inline  PL::PersistentObject& DH_PL::getPO() const {
+  return itsPO;
+}
+ 
  
 
-
-}
+}// namespace LOFAR
 
 #endif
 
