@@ -39,6 +39,7 @@ global dyn_string  g_itemID2datapoint;
 global mapping  g_datapoint2itemID;
 global bool     g_initializing         = true;
 global int      g_curSelNode = 0;
+global int 			STARTUP_DELAY = 1;
 
 ///////////////////////////////////////////////////////////////////////////
 //Function ActiveXSupported
@@ -133,19 +134,28 @@ shape getTabCtrl()
 ///////////////////////////////////////////////////////////////////////////
 long getSelectedNode()
 {
+	long selectedNode = 0;
   shape treeCtrl = getTreeCtrl(); 
   if(ActiveXSupported())
   {
-    return treeCtrl.Selected; 
+    selectedNode = treeCtrl.Selected; 
   }
   else
   {
     unsigned selectedPos;
     fwTreeView_getSelectedPosition(selectedPos);
-    
-    selectedPos = fwTreeView_view2TreeIndex(selectedPos);
-    return selectedPos;
+    LOG_TRACE("selected pos:",selectedPos);
+    if(selectedPos >= 1)
+    {
+    	selectedNode = fwTreeView_view2TreeIndex(selectedPos);
+    }
+    else
+    {
+    	selectedNode = selectedPos;
+    }
   }
+  LOG_TRACE("selected node:",selectedNode);
+  return selectedNode;
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -155,6 +165,7 @@ long getSelectedNode()
 ///////////////////////////////////////////////////////////////////////////
 void showView(string dpViewConfig, string datapointPath)
 {
+  LOG_DEBUG("showView",dpViewConfig,datapointPath);
   shape tabCtrl = getTabCtrl();
   string viewsPath = navConfigGetViewsPath();
   int selectedViewTabId=1;
@@ -599,7 +610,7 @@ void Navigator_HandleEventInitialize()
   InitializeTabViews();
 //  InitializeTree(); cannot do it here because tree will not be visible initially, only after double click. Strange but true
   
-  delay(1); // wait for the tree control to complete initialization
+  delay(STARTUP_DELAY); // wait for the tree control to complete initialization
   
   g_initializing = false;
 
