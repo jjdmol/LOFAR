@@ -26,7 +26,8 @@
 #include <MEQ/AID-Meq.h>
 
 
-#pragma aidgroup Meq
+#include <MeqNodes/TID-MeqNodes.h>
+#pragma aidgroup MeqNodes
 #pragma aid Node Class Name State Child Children Request Result VellSet 
 #pragma aid Rider Command Id Group Add Update Value Values Solve Solver
 #pragma aid Dependency Resolution Depend Mask Resample Integrated
@@ -37,7 +38,7 @@
 #pragma aid Cell Results Fail Origin Line Message Contagious  Normalized
 #pragma aid Solvable Config Groups All By List Polc Polcs Scale Matrix
 #pragma aid DbId Grow Inf Weight Epsilon UseSVD Set Auto Save Clear Invert
-#pragma aid Metrics Rank Fit Errors CoVar Flag Bit Mu StdDev Chi Iter Last Update
+#pragma aid Metrics Rank Fit Errors CoVar Flag Mu StdDev Chi Iter Last Update
 
 
 namespace Meq
