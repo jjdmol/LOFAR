@@ -35,10 +35,11 @@ PACKAGES = \
          DMI \
          BaseSim \
          LOFARSim \
-         CEP/CPA/PSCF \
-         CEP/Demo/Platform/RingSim \
          CEP/Tools/PerfTest/P2Perf
+#         CEP/CPA/PSCF \
+#         CEP/Demo/Platform/RingSim \
 #
+
 # Find all variants to be built for this host (without possible domain).
 # There can be multiple lines (one for each compiler).
 # Prepend each variant with the compiler type and append .variant.
