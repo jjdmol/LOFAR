@@ -81,12 +81,12 @@ void Solver::solve (bool useSVD,
 
   NSTimer timer;
   timer.start();
-  ASSERT (itsSolvableValues.size() > 0);
+  ASSERT ((unsigned) itsSolvableValues.size() > 0);
 
   // Initialize the solver (needed after a setSolvable).
   // Note it is usually already done in setEquations.
   if (itsDoSet) {
-    itsSolver.set (itsSolvableValues.size());
+    itsSolver.set ((unsigned) itsSolvableValues.size());
     itsNUsed = 0;
     itsNFlag = 0;
     itsDoSet = false;
@@ -136,7 +136,7 @@ void Solver::setEquations (const double* data, const char* flags,
   ASSERT (uint(prediffer) < itsIndices.size());
   // Initialize the solver (needed after a setSolvable).
   if (itsDoSet) {
-    itsSolver.set (itsSolvableValues.size());
+    itsSolver.set ((unsigned) itsSolvableValues.size());
     itsNUsed = 0;
     itsNFlag = 0;
     itsDoSet = false;
