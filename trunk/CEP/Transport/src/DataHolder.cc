@@ -181,9 +181,7 @@ void DataHolder::handleDataRead()
 void DataHolder::write()
 {
   // If there might be extra data, we have to write it.
-  if (itsExtraPtr) {
-    itsExtraPtr->write();
-  }
+  writeExtra();
   // Let the transporter write all data.
   // Determine if the block is fixed sized.
   bool fixedSized = itsDataFields.hasFixedShape()  &&
@@ -298,6 +296,13 @@ BlobIStream& DataHolder::openExtraBlob (int& version)
 {
   Assert (itsExtraPtr != 0);
   return itsExtraPtr->openBlock (version, *itsData);
+}
+
+void DataHolder::writeExtra ()
+{
+  if (itsExtraPtr) {
+    itsExtraPtr->write();
+  }
 }
 
 void DataHolder::putExtra (const void* data, uint size)

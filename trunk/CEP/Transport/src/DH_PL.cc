@@ -80,6 +80,7 @@ int DH_PL::queryDB (const string& queryString)
 
 void DH_PL::insertDB()
 {
+  writeExtra();
   TH_PL* ptr = dynamic_cast<TH_PL*>(getTransporter().getTransportHolder());
   ASSERT (ptr != 0);
   ptr->insertDB (getDataPtr(), getDataSize(),
@@ -88,6 +89,7 @@ void DH_PL::insertDB()
 
 void DH_PL::updateDB()
 {
+  writeExtra();
   TH_PL* ptr = dynamic_cast<TH_PL*>(getTransporter().getTransportHolder());
   ASSERT (ptr != 0);
   ptr->updateDB (getDataPtr(), getDataSize(),
