@@ -64,8 +64,8 @@ lofar_PACKAGE(Common)
 
 lofar_PACKAGE(CEP/CPA/OCTOPUSSY)
 lofar_PACKAGE(DMI)
-lofar_PACKAGE(CEP/CPA/VisCube)
-lofar_PACKAGE(CEP/CPA/AppAgent/MSVisAgent)
+dnl lofar_PACKAGE(CEP/CPA/VisCube)
+dnl lofar_PACKAGE(CEP/CPA/AppAgent/MSVisAgent)
 
 dnl
 dnl Output Makefiles
