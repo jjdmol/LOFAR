@@ -43,7 +43,9 @@ public:
   virtual bool init();
 
   virtual bool recvBlocking (void* buf, int nbytes, int tag);
+  virtual bool recvVarBlocking (int tag);
   virtual bool recvNonBlocking (void* buf, int nbytes, int tag);
+  virtual bool recvVarNonBlocking (int tag);
 
   virtual bool waitForReceived (void* buf, int nbytes, int tag);
 

@@ -26,6 +26,7 @@
 #include <Common/BlobField.h>
 #include <Common/BlobOStream.h>
 #include <Common/BlobIStream.h>
+#include <Common/BlobString.h>
 #include <Common/Debug.h>
 #include <vector>
 
@@ -72,14 +73,14 @@ BlobOStream& DataBlobExtra::createBlock()
   return *itsOut;
 }
 
-BlobIStream& DataBlobExtra::openBlock (int& version)
+BlobIStream& DataBlobExtra::openBlock (int& version, const BlobString& data)
 {
-  const BlobString& dataBlock = itsDH->getDataBlock();
-  int size = dataBlock.size() - (itsDataPtr - dataBlock.data());
-  itsBufIn = BlobIBufChar(itsDataPtr, size);
+  BlobIBufChar bibc(data.data(), data.size());
+  itsBufIn = itsDH->dataFieldSet().getExtraBlob (bibc);
   if (itsIn == 0) {
     itsIn = new BlobIStream(itsBufIn);
   }
+  itsIn->clear();
   version = itsIn->getStart (itsName);
   return *itsIn;
 }

@@ -1,27 +1,26 @@
-//# ExampleShMem.cc: Test program for class TH_ShMem
+//#  ExampleMPI.cc: a test program for the TH_MPI class
 //#
-//# Copyright (C) 2004
-//# ASTRON (Netherlands Foundation for Research in Astronomy)
-//# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+//#  Copyright (C) 2002-2003
+//#  ASTRON (Netherlands Foundation for Research in Astronomy)
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
-//# This program is free software; you can redistribute it and/or modify
-//# it under the terms of the GNU General Public License as published by
-//# the Free Software Foundation; either version 2 of the License, or
-//# (at your option) any later version.
+//#  This program is free software; you can redistribute it and/or modify
+//#  it under the terms of the GNU General Public License as published by
+//#  the Free Software Foundation; either version 2 of the License, or
+//#  (at your option) any later version.
 //#
-//# This program is distributed in the hope that it will be useful,
-//# but WITHOUT ANY WARRANTY; without even the implied warranty of
-//# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//# GNU General Public License for more details.
+//#  This program is distributed in the hope that it will be useful,
+//#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//#  GNU General Public License for more details.
 //#
-//# You should have received a copy of the GNU General Public License
-//# along with this program; if not, write to the Free Software
-//# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+//#  You should have received a copy of the GNU General Public License
+//#  along with this program; if not, write to the Free Software
+//#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
-//# $Id$
+//#  $Id$
 
 #include <DH_Example.h>
-#include <Transport/TH_ShMem.h>
 #include <Transport/TH_MPI.h>
 #include <Transport/TH_Mem.h>
 #include <Common/BlobOStream.h>
@@ -29,8 +28,6 @@
 #include <iostream>
 
 using namespace LOFAR;
-
-// This test program is meant for testing ShMem in an MPI environment.
 
 #ifdef HAVE_MPI
 
@@ -88,7 +85,7 @@ void test1 (bool isReceiver)
   DH_Example DH_Receiver("dh2", 1);
   DH_Sender.setID(1);
   DH_Receiver.setID(2);
-  DH_Sender.connectTo (DH_Receiver, TH_ShMem(0,1), true);
+  DH_Sender.connectTo (DH_Receiver, TH_MPI(0,1), true);
   DH_Sender.init();
   DH_Receiver.init();
 
@@ -111,15 +108,13 @@ void test1 (bool isReceiver)
   }
 }
 
-void test2 (bool isReceiver, int maxSize)
+void test2 (bool isReceiver)
 {
   DH_Example DH_Sender("dh1", 1, true);
-  DH_Sender.setMaxDataSize (maxSize, true);
   DH_Example DH_Receiver("dh2", 1, true);
-  DH_Receiver.setMaxDataSize (maxSize, true);
   DH_Sender.setID(1);
   DH_Receiver.setID(2);
-  DH_Sender.connectTo (DH_Receiver, TH_ShMem(0,1), true);
+  DH_Sender.connectTo (DH_Receiver, TH_MPI(0,1), true);
   DH_Sender.init();
   DH_Receiver.init();
 
@@ -157,19 +152,8 @@ void test2 (bool isReceiver, int maxSize)
 
 int main (int argc, const char** argv)
 {
-  int test=1;
-  if (argc > 1  &&  std::string(argv[1]) == "2") {
-    test = 2;
-  }
-  if (argc > 1  &&  std::string(argv[1]) == "3") {
-    test = 3;
-  }
-
   Debug::initLevels (argc, argv);
-  TH_ShMem::init (argc, argv);
-
-  MPI_Bcast (&test, 1, MPI_INT, 0, MPI_COMM_WORLD);
-  cout << "Transport ExampleShMem test program " << test << endl;
+  TH_MPI::init (argc, argv);
 
   string which;
   try {
@@ -177,7 +161,7 @@ int main (int argc, const char** argv)
     // isReceiver == false => this program must run as a server (receiver).
     // isReceiver == true  => this program must run as a client (sender).
 
-    if (TH_ShMem::getCurrentRank() == 0) {
+    if (TH_MPI::getCurrentRank() == 0) {
       cout << "(Server side)" << endl;
       isReceiver = false;
       which = "sender";
@@ -187,18 +171,9 @@ int main (int argc, const char** argv)
       which = "receiver";
     }
 
-    if (test == 1) {
-      test1(isReceiver);
-    } else if (test == 2) {
-      test2(isReceiver, 1000);
-    } else {
-      try {
-	test2(isReceiver, 0);
-      } catch (std::exception& x) {
-	cout << "Caught expected exception: " << x.what() << endl;
-      }
-    }
-    TH_ShMem::finalize();
+    test1(isReceiver);
+    test2(isReceiver);
+    TH_MPI::finalize();
   } catch (std::exception& x) {
     cout << "Unexpected exception in " << which << ": " << x.what() << endl;
     return 1;

@@ -31,6 +31,7 @@
 
 #include <Transport/TH_MPI.h>
 #include <Transport/BaseSim.h>
+#include <Transport/DataHolder.h>
 #include <Common/Debug.h>
 #include <Common/lofar_deque.h>
 #include <Common/lofar_list.h>
@@ -90,11 +91,38 @@ bool TH_MPI::recvBlocking(void* buf, int nbytes, int tag)
     return (result == MPI_SUCCESS);
 }
 
+bool TH_MPI::recvVarBlocking(int tag)
+{
+    int result = MPI_SUCCESS;
+
+    MPI_Status status;
+
+    TRACER2("MPI::probe ....");
+    result = MPI_Probe (itsSourceNode, tag, MPI_COMM_WORLD, &status);
+    int nbytes = status.count;
+    DataHolder* target = getTransporter()->getDataHolder();
+    target->resizeBuffer (nbytes);
+    void* buf = target->getDataPtr();
+    TRACER2("MPI::recv(" << buf << "," << nbytes << ",....)");
+    result = MPI_Recv (buf, nbytes, MPI_BYTE, itsSourceNode, tag,
+		       MPI_COMM_WORLD, &status);
+    if (MPI_SUCCESS != result) cerr << "result = " << result << endl;
+
+    return (result == MPI_SUCCESS);
+}
+
 bool TH_MPI::recvNonBlocking(void* buf, int nbytes, int tag)
 {
   cerr << "**Warning** TH_MPI::recvNonBlocking() is not implemented. " 
        << "recvBlocking() is used instead." << endl;    
   return recvBlocking(buf, nbytes, tag);
+}
+
+bool TH_MPI::recvVarNonBlocking(int tag)
+{
+  cerr << "**Warning** TH_MPI::recvVarNonBlocking() is not implemented. " 
+       << "recvVarBlocking() is used instead." << endl;    
+  return recvVarBlocking(tag);
 }
 
 bool TH_MPI::waitForReceived(void*, int, int)

@@ -155,7 +155,7 @@ int TH_PL::queryDB (const string& queryString,
   return result;  
 }  
 
-bool TH_PL::sendBlocking(void* buf, int nbytes, int tag)
+bool TH_PL::sendBlocking(void*, int, int tag)
 {
   PL::PersistentObject& aPO = itsDHPL->preparePO (tag, itsWriteSeqNo++);
   theirPersistenceBroker.save(aPO, PL::PersistenceBroker::INSERT);
@@ -174,8 +174,19 @@ bool TH_PL::waitForSent(void*, int, int)
   return true;
 }
 
-bool TH_PL::recvBlocking(void* buf, int nbytes, int tag)
-{ 
+bool TH_PL::recvBlocking(void*, int nbytes, int tag)
+{
+  bool result = recvVarBlocking (tag);
+  if (result) {
+    DbgAssertStr(int(itsDHPL->getDataBlock().size()) == nbytes,
+		 "TH_PL::recv - non matching size; found "
+		 << itsDHPL->getDataBlock().size() << ", expected " << nbytes);
+  }
+  return result;
+}
+
+bool TH_PL::recvVarBlocking(int tag)
+{
   // Get a reference to the DHPL's TPO object.
   PL::PersistentObject& aPO = itsDHPL->getPO();
   // PL is based on query objects to identify records in database
@@ -187,9 +198,6 @@ bool TH_PL::recvBlocking(void* buf, int nbytes, int tag)
   int result = aPO.retrieveInPlace(PL::QueryObject(q.str()));
   Assert (result == 1);
   // ToDo: DbgAssertStr(itsReadSeqnNo == ... ,"");
-  DbgAssertStr(int(itsDHPL->getDataBlock().size()) == nbytes,
-	       "TH_PL::recv - non matching size; found "
-	       << itsDHPL->getDataBlock().size() << ", expected " << nbytes);
   return true;
 }
 
@@ -197,7 +205,14 @@ bool TH_PL::recvNonBlocking(void* buf, int nbytes, int tag)
 { 
   cerr << "**Warning** TH_PL::recvNonBlocking() is not implemented. " 
        << "recvBlocking() is used instead." << endl;    
-  return recvBlocking(buf, nbytes, tag);
+  return recvBlocking (buf, nbytes, tag);
+}
+
+bool TH_PL::recvVarNonBlocking(int tag)
+{ 
+  cerr << "**Warning** TH_PL::recvVarNonBlocking() is not implemented. " 
+       << "recvBlocking() is used instead." << endl;    
+  return recvVarBlocking (tag);
 }
 
 bool TH_PL::waitForReceived(void*, int, int)

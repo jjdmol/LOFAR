@@ -55,52 +55,48 @@ public:
 
   virtual ~TransportHolder();
 
-  /// Make an instance of the derived TransportHolder.
+  // Make an instance of the derived TransportHolder.
   virtual TransportHolder* make() const = 0;
 
 
-  /// Initialise the Transport; this may for instance open a file,
-  /// port or dbms connection
+  // Initialise the Transport; this may for instance open a file,
+  // port or dbms connection
   virtual bool init();
 
-  /// Recv the data sent by the connected TransportHolder and wait
-  /// until data has been received into buf.
+  // Recv the fixed sized data sent by the connected TransportHolder
+  // and wait until data has been received into buf.
   virtual bool recvBlocking (void* buf, int nbytes, int tag);
 
-  /// Get the length in case of a variable length send.
-  // If -1 is returned, the length cannot be obtained directly
-  // and recvHeaderBlocking will be used by Transporter::read.
-  virtual int recvLengthBlocking (int tag);
+  // Recv the variable sized data sent by the connected TransportHolder
+  // and wait until data has been received into buf.
+  virtual bool recvVarBlocking (int tag);
 
-  /// Get the header (of the blob) in case of a variable length send.
-  // It returns the number of bytes skipped in the input stream.
-  // For example, TH_Mem returns 0, while TH_Socket returns nbytes.
-  virtual int recvHeaderBlocking (void* buf, int nbytes, int tag);
-
-  /// Start receiving the data sent by the connected TransportHolder.
+  // Start receiving the fixed sized data sent by the connected
+  // TransportHolder.
   virtual bool recvNonBlocking (void* buf, int nbytes, int tag);
 
-  /// Get the length in case of a variable length send.
-  // If -1 is returned, the length cannot be obtained directly
-  // and recvHeaderNonBlocking will be used by Transporter::read.
-  // 0 is returned if there is no data available yet.
-  virtual int recvLengthNonBlocking (int tag);
-
-  /// Get the header (of the blob) in case of a variable length send.
-  // It returns the number of bytes skipped in the input stream.
-  // For example, TH_Mem returns 0, while TH_Socket returns nbytes.
-  // -1 is returned if there is no data available yet.
-  virtual int recvHeaderNonBlocking (void* buf, int nbytes, int tag);
+  // Start receiving the variable sized data sent by the connected
+  // TransportHolder.
+  virtual bool recvVarNonBlocking (int tag);
 
   /// Wait until data has been received into buf.
   virtual bool waitForReceived(void* buf, int nbytes, int tag);
 
-  /// Send the data to the connected TransportHolder and wait until data
-  /// has been sent.
+  // Send the fixed sized data to the connected TransportHolder
+  // and wait until the data have been sent.
   virtual bool sendBlocking (void* buf, int nbytes, int tag);
 
-  /// Send the data to the connected TransportHolder.
+  // Send the variable sized data to the connected TransportHolder
+  // and wait until the data have been sent.
+  // The default implementation uses sendBlocking.
+  virtual bool sendVarBlocking (void* buf, int nbytes, int tag);
+
+  // Start sending the fixed sized data to the connected TransportHolder.
   virtual bool sendNonBlocking (void* buf, int nbytes, int tag);
+
+  // Start sending the variable sized data to the connected TransportHolder.
+  // The default implementation uses sendNonBlocking.
+  virtual bool sendVarNonBlocking (void* buf, int nbytes, int tag);
 
   /// Wait until the data has been sent.
   virtual bool waitForSent(void* buf, int nbytes, int tag);
@@ -114,14 +110,20 @@ public:
   // Get the type of BlobString needed for the DataHolder.
   virtual BlobStringType blobStringType() const;
 
+  // Tell if a data buffer can grow.
+  // The default implementation is true, but TH_ShMem is false.
+  virtual bool canDataGrow() const;
+
   /// Check if a connection is possible between two processes.
   virtual bool connectionPossible (int srcRank, int dstRank) const;
 
-  /// Accessor method for its Transporter
-   Transporter* getTransporter()
+  /// Accessor method for its Transporter.
+  // <group>
+  Transporter* getTransporter()
     { return itsTransporter; }
   void setTransporter (Transporter* tp)
     { itsTransporter = tp; }
+  // </group>
 
 private:
   Transporter* itsTransporter;

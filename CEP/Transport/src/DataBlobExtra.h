@@ -37,6 +37,7 @@ namespace LOFAR
 class DataHolder;
 class BlobOStream;
 class BlobIStream;
+class BlobString;
 
 /**
   Class DataHolder is the abstract base class for all data holders
@@ -67,9 +68,7 @@ class BlobIStream;
 class DataBlobExtra
 {
 public:
-  // Construct a DataHolder with a default name.
-  // The useExtraFields argument must be set to true if the DataHolder
-  // wants to add arbitrary fields to the blob using .
+  // Construct with the given name and version for the given DataHolder.
   DataBlobExtra (const string& name, int version, DataHolder*);
 
   ~DataBlobExtra();
@@ -81,7 +80,7 @@ public:
 
   // Get access to the extra input blob holding arbitrary fields.
   // It fills the version of the extra data blob.
-  BlobIStream& openBlock (int& version);
+  BlobIStream& openBlock (int& version, const BlobString& data);
 
   // Write the extra block into the main block.
   void write();
@@ -103,7 +102,7 @@ private:
   BlobOStream* itsOut;
   BlobIStream* itsIn;
   BlobOBufChar itsBufOut;   //# output buffer for extra blob data
-  BlobIBufChar itsBufIn;    //# output buffer for extra blob data
+  BlobIBufChar itsBufIn;    //# input buffer for extra blob data
   std::string  itsName;     //# blob type name for extra data
   int          itsVersion;  //# blob version for extra data
   char*        itsDataPtr;  //# Pointer to extra block in the main block

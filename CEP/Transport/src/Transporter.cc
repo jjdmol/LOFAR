@@ -123,105 +123,59 @@ bool Transporter::read (bool fixedSized)
   if (getTransportHolder() && getReadTag() >= 0) {
     TRACER3("Transport::read; call recv(" << getDataPtr() << "," 
 	    << getDataSize() << ",....)");
-    if (isBlocking())
-    {
+    if (isBlocking()) {
       if (fixedSized) {
 	result = getTransportHolder()->recvBlocking(getDataPtr(),
-						    getCurDataSize(),
+						    getDataSize(),
 						    getReadTag());
       } else {
-	// nrread keeps track of the #bytes already read.
-	int nrread = 0;
-	// First try to get the length directly.
-	// For example, TH_Mem and TH_MPI can give that.
-	int leng = getTransportHolder()->recvLengthBlocking (getReadTag());
-	if (leng < 0) {
-	  // If the length is not directly available, read the header
-	  // and extract the length from it.
-	  nrread = getDataHolder()->getHeaderSize();
-	  getDataHolder()->resizeBuffer (nrread);
-	  result = getTransportHolder()->recvHeaderBlocking (getDataPtr(),
-							     nrread,
-							     getReadTag());
-	  if (result) {
-	    leng = getDataHolder()->getDataLength (getDataPtr());
-	  }
-	}
-	// Read the remaining data (if there).
-	if (leng > 0) {
-	  getDataHolder()->resizeBuffer (leng);
-	  getTransportHolder()->recvBlocking
-	                       (static_cast<char*>(getDataPtr())+nrread,
-				leng-nrread,
-				getReadTag());
-	} else {
-	  result = false;
-	}
+	result = getTransportHolder()->recvVarBlocking(getReadTag());
       }
     }
     else
     {
       if (fixedSized) {
 	result = getTransportHolder()->recvNonBlocking(getDataPtr(),
-						       getCurDataSize(),
+						       getDataSize(),
 						       getReadTag());
       } else {
-	// nrread keeps track of the #bytes already read.
-	int nrread = 0;
-	// First try to get the length directly.
-	// For example, TH_MPI can give that.
-	int leng = getTransportHolder()->recvLengthNonBlocking (getReadTag());
-	if (leng < 0) {
-	  // If the length is not directly available, read the header
-	  // and extract the length from it.
-	  nrread = getDataHolder()->getHeaderSize();
-	  getDataHolder()->resizeBuffer (nrread);
-	  nrread = getTransportHolder()->recvHeaderNonBlocking (getDataPtr(),
-								nrread,
-								getReadTag());
-	  if (nrread >= 0) {
-	    leng = getDataHolder()->getDataLength (getDataPtr());
-	  }
-	}
-	// Read the remaining data (if there).
-	if (leng > 0) {
-	  getDataHolder()->resizeBuffer (leng);
-	  getTransportHolder()->recvNonBlocking
-	                       (static_cast<char*>(getDataPtr())+nrread,
-				leng-nrread,
-				getReadTag());
-	} else {
-	  result = false;
-	}
+	result = getTransportHolder()->recvVarNonBlocking(getReadTag());
       }
     }      
     setStatus(Transporter::Clean);
   }
   else
-    {
-      TRACER2("Skip Transport::read itsTransportHolder or getReadTag <= 0");
-      result = false;
-    }
-  
+  {
+    TRACER2("Skip Transport::read itsTransportHolder or getReadTag <= 0");
+  }
   return result;
 
 }
 
-void Transporter::write()
+void Transporter::write (bool fixedSized)
 {
   if (getTransportHolder() && getWriteTag() >= 0) {
     TRACER3("Transport::write; call send(" << getDataPtr() << "," << getDataSize() << ",....)");
-    if (isBlocking())
-    {
-      getTransportHolder()->sendBlocking(getDataPtr(),
-					 getCurDataSize(),
-					 getWriteTag());
-    }
-    else
-    {
-      getTransportHolder()->sendNonBlocking(getDataPtr(),
-					    getCurDataSize(),
-					    getWriteTag());
+    if (fixedSized) {
+      if (isBlocking()) {
+	getTransportHolder()->sendBlocking(getDataPtr(),
+					   getDataSize(),
+					   getWriteTag());
+      } else {
+	getTransportHolder()->sendNonBlocking(getDataPtr(),
+					      getDataSize(),
+					      getWriteTag());
+      }
+    } else {
+      if (isBlocking()) {
+	getTransportHolder()->sendVarBlocking(getDataPtr(),
+					      getDataSize(),
+					      getWriteTag());
+      } else {
+	getTransportHolder()->sendVarNonBlocking(getDataPtr(),
+						 getDataSize(),
+						 getWriteTag());
+      }
     }
     setStatus(Transporter::Dirty);
   }
@@ -235,24 +189,14 @@ void Transporter::dump() const
   
 }
 
-void* Transporter::getDataPtr()
+void* Transporter::getDataPtr() const
 {
   return itsDataHolder->getDataPtr();
-}
-
-int Transporter::getCurDataSize() const
-{
-  return itsDataHolder->getCurDataSize();  
 }
 
 int Transporter::getDataSize() const
 {
   return itsDataHolder->getDataSize();   
-}
-
-int Transporter::getMaxDataSize() const
-{
-  return itsDataHolder->getMaxDataSize();   
 }
 
 

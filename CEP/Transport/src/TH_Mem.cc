@@ -22,6 +22,8 @@
 
 
 #include <Transport/TH_Mem.h>
+#include <Transport/Transporter.h>
+#include <Transport/DataHolder.h>
 #include <Common/Debug.h>
 
 namespace LOFAR
@@ -33,28 +35,26 @@ namespace LOFAR
  * the tag which is a unique for each connection created in
  * the Transport.
  */
-map<int, TH_Mem::Msg> TH_Mem::messages;
+map<int, DataHolder*> TH_Mem::theSources;
 
 
-TH_Mem::TH_Mem() :
-  itsFirstSendCall(true),
-  itsFirstRecvCall(true),
-  itsDataSource(0)
-{
-}
+TH_Mem::TH_Mem()
+  : itsFirstSendCall (true),
+    itsFirstRecvCall (true),
+    itsDataSource    (0)
+{}
 
 TH_Mem::~TH_Mem()
-{
-}
+{}
 
 TH_Mem* TH_Mem::make() const
 {
-    return new TH_Mem();
+  return new TH_Mem();
 }
 
 string TH_Mem::getType() const
 {
-    return "TH_Mem";
+  return "TH_Mem";
 }
 
 bool TH_Mem::connectionPossible(int srcRank, int dstRank) const
@@ -62,74 +62,52 @@ bool TH_Mem::connectionPossible(int srcRank, int dstRank) const
   cdebug(3) << "TH_Mem::connectionPossible between "
             << srcRank << " and "
             << dstRank << "?" << endl;
-
-  // Assume that both DHs are in the same process if their 
-  // ranks are the same. 
-  //  This is at least true for MPI applications and single process apps
   return srcRank == dstRank;
 }
 
 bool TH_Mem::recvNonBlocking(void* buf, int nbytes, int tag)
 { 
-  if (itsFirstRecvCall) 
-  {
-
-    Msg m;
-
-    AssertStr(messages.end() != messages.find(tag), "no matching send for recv"); 
-    m = messages[tag];
-
-    if ( (m.isAvailable())
-           && (nbytes == m.getNBytes()))
-    {
-      itsDataSource = m.getBuf();
-
-      /// do the memcpy
-      memcpy(buf, itsDataSource, m.getNBytes());
-	
-      // erase the record
-      messages.erase(tag);
-    }
-    else
-    {
-      // erase the record
-      messages.erase(tag);
-	
-      Throw("No matching send for recv: ");
-    }
-
+  // If first time, get the source DataHolder.
+  if (itsFirstRecvCall) {
+    itsDataSource = theSources[tag];
+    AssertStr (itsDataSource != 0, "TH_Mem: no matching send for recv");
+    Assert (nbytes == itsDataSource->getDataSize());
+    // erase the record
+    theSources.erase (tag);
     itsFirstRecvCall = false;
-
   }
-  else
-  {
-    AssertStr(itsDataSource != 0, "No matching send for recv");
-
-    memcpy(buf, itsDataSource, nbytes);
-  }
-
+  DbgAssert (nbytes == itsDataSource->getDataSize());
+  memcpy(buf, itsDataSource->getDataPtr(), nbytes);
   return true;
-
 }
 
 /**
-   The send function must now add the buffer to the map
-   containing messages.
+   The send function must now add its DataHolder to the map
+   containing theSources.
  */
 bool TH_Mem::sendNonBlocking(void* buf, int nbytes, int tag)
 {
-
-  if (itsFirstSendCall)
-  { 
-
-    Msg      m(buf, nbytes, tag);
-
-    messages[tag] = m;
-
+  if (itsFirstSendCall) {
+    theSources[tag] = getTransporter()->getDataHolder();
     itsFirstSendCall = false;
-	
   }
+  return true;
+}
 
+bool TH_Mem::recvVarNonBlocking(int tag)
+{ 
+  // If first time, get the source DataHolder.
+  if (itsFirstRecvCall) {
+    itsDataSource = theSources[tag];
+    AssertStr (itsDataSource != 0, "TH_Mem: no matching send for recv");
+    // erase the record
+    theSources.erase (tag);
+    itsFirstRecvCall = false;
+  }
+  int nb = itsDataSource->getDataSize();
+  DataHolder* target = getTransporter()->getDataHolder();
+  target->resizeBuffer (nb);
+  memcpy (target->getDataPtr(), itsDataSource->getDataPtr(), nb);
   return true;
 }
 
@@ -160,15 +138,6 @@ void TH_Mem::finalize()
 {}
 
 void TH_Mem::synchroniseAllProcesses()
-{}
-
-TH_Mem::Msg::Msg() : itsIsAvailable(false)
-{
-}
-
-TH_Mem::Msg::Msg(void* buf, int nbytes, int tag) :
-    itsBuf(buf), itsNBytes(nbytes), itsTag(tag),
-    itsIsAvailable(true)
 {}
 
 }

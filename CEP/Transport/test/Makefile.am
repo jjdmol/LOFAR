@@ -14,8 +14,7 @@ CXXFLAGS += \
 	-DMORECORE_CANNOT_TRIM=1 \
 	-DSHMEM_ALLOC
 
-check_PROGRAMS			= Example TestBidirectional ExampleMemBL ExamplePL ExamplePL2 ExamplePL3 ExampleShMem ExampleSocket ExampleSocketPerf 
-
+check_PROGRAMS			= Example TestBidirectional ExampleMemBL ExamplePL ExamplePL2 ExamplePL3 ExampleShMem ExampleMPI ExampleSocket ExampleSocketPerf 
 
 Example_SOURCES 		= Example.cc DH_Example.cc
 
@@ -28,6 +27,8 @@ ExamplePL2_SOURCES 		= ExamplePL2.cc DH_Example2.cc
 ExamplePL3_SOURCES		= ExamplePL3.cc DH_Example2.cc
 
 ExampleShMem_SOURCES 		= ExampleShMem.cc DH_Example.cc
+
+ExampleMPI_SOURCES 		= ExampleMPI.cc DH_Example.cc
 
 ExampleSocket_SOURCES		= ExampleSocket.cc DH_Example.cc
 
@@ -43,7 +44,8 @@ DEPENDENCIES			= ../src/libtransport.la $(LOFAR_DEPEND)
 
 TESTS_ENVIRONMENT		= top_srcdir=$(top_srcdir) \
 				  lofar_sharedir=$(lofar_sharedir) \
-				  common_top_builddir=$(common_top_builddir)
+				  common_top_builddir=$(common_top_builddir) \
+				  MPIBIN=$(MPIBIN)
 
 TESTS	=					\
 	Example_test.sh				\
@@ -53,6 +55,7 @@ TESTS	=					\
 	ExamplePL2_test.sh			\
 	ExamplePL3_test.sh			\
 	ExampleShMem_test.sh			\
+	ExampleMPI_test.sh			\
 	ExampleSocket_test.sh
 
 
