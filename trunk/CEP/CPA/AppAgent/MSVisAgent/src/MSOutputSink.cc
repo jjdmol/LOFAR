@@ -158,7 +158,7 @@ void MSOutputSink::doPutHeader (const DataRecord &header)
   // get range of channels from header and setup slicer
   int chan0 = header[FChannelStartIndex].as<int>(),
       chan1 = header[FChannelEndIndex].as<int>();
-  int ncorr = header[FCorr].size(Tpint);
+  int ncorr = header[FCorr].size(Tpstring);
   column_slicer_ = Slicer(IPosition(2,0,chan0),IPosition(2,ncorr-1,chan1),
                    Slicer::endIsLast);
   IPosition origshape = LoShape(header[FOriginalDataShape].as_vector<int>());
