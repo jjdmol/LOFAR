@@ -21,6 +21,11 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.1.1.1  2002/11/13 15:58:06  schaaf
+//  %[BugId: 117]%
+//
+//  Initial working version
+//
 //  Revision 1.7  2002/08/19 20:40:48  schaaf
 //  %[BugId: 11]%
 //  Use preprocess method
@@ -55,6 +60,7 @@
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
+#include "myComplex.h"
 
 #include "BaseSim/DataHolder.h"
 #include "Common/Debug.h"
@@ -68,18 +74,21 @@ class DH_2DMatrix: public DataHolder
 {
 public:
 
+  typedef myComplex8 DataType;
+
   explicit DH_2DMatrix (const string& name,
 			int Xsize, const string& Xname,
 			int Ysize, const string& Xname,
-			const string& Zname);
+			const string& Zname,
+			int pols=1);
 
   virtual ~DH_2DMatrix();
 
   /// Allocate the buffers.
   virtual void preprocess();
   
-  int* getBuffer(int x, int y);
-  const int* getBuffer(int x, int y) const;
+  DataType* getBuffer(int x, int y, int pol=0);
+  const DataType* getBuffer(int x, int y, int pol=0) const;
   
   void setZ (int z);
   const int getZ() const;
@@ -108,7 +117,7 @@ protected:
     int itsZ;
     int itsSize;
 
-    int itsBuffer[];
+    DataType itsBuffer[];
   };
 
 private:
@@ -120,6 +129,7 @@ private:
   DataPacket* itsDataPacket;
   int itsXSize;
   int itsYSize;
+  int itsPols;
 
   string itsXName;
   string itsYName;
@@ -127,16 +137,18 @@ private:
 };
 
 
-inline int* DH_2DMatrix::getBuffer(int x, int y) { 
-  DbgAssertStr(x >= 0 && x < itsXSize , "x not in range");
-  DbgAssertStr(y >= 0 && y < itsYSize , "y not in range");
-  return &(itsDataPacket->itsBuffer[x*itsYSize+y]); 
+inline DH_2DMatrix::DataType* DH_2DMatrix::getBuffer(int x, int y, int pol) { 
+  DbgAssertStr(x   >= 0 && x   < itsXSize , "x not in range");
+  DbgAssertStr(y   >= 0 && y   < itsYSize , "y not in range");
+  DbgAssertStr(pol >= 0 && pol < itsPols  , "pol not in range");
+  return &(itsDataPacket->itsBuffer[(x*itsYSize+y)*itsPols + pol]); 
 }
 
-inline const int* DH_2DMatrix::getBuffer(int x, int y) const { 
-  DbgAssertStr(x >= 0 && x < itsXSize , "x not in range");
-  DbgAssertStr(y >= 0 && y < itsYSize , "y not in range");
-  return &(itsDataPacket->itsBuffer[x*itsYSize+y]); 
+inline const DH_2DMatrix::DataType* DH_2DMatrix::getBuffer(int x, int y, int pol) const { 
+  DbgAssertStr(x   >= 0 && x   < itsXSize , "x not in range");
+  DbgAssertStr(y   >= 0 && y   < itsYSize , "y not in range");
+  DbgAssertStr(pol >= 0 && pol < itsPols  , "pol not in range");
+  return &(itsDataPacket->itsBuffer[(x*itsYSize+y)*itsPols + pol]); 
 }
 
 inline void DH_2DMatrix::setZ (int z){ 

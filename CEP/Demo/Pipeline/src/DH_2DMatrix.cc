@@ -21,6 +21,11 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.1.1.1  2002/11/13 15:58:06  schaaf
+//  %[BugId: 117]%
+//
+//  Initial working version
+//
 //  Revision 1.5  2002/08/19 20:41:36  schaaf
 //  %[BugId: 11]%
 //  Memory allocation in preprocess method
@@ -50,10 +55,13 @@ DH_2DMatrix::DataPacket::DataPacket() {
 DH_2DMatrix::DH_2DMatrix (const string& name,
 			  int Xsize, const string& Xname,
 			  int Ysize, const string& Yname,
-			  const string& Zname)
+			  const string& Zname,
+			  int pols)
+  
   : DataHolder (name, "DH_2DMatrix"),
     itsXSize(Xsize),
-    itsYSize(Ysize)
+    itsYSize(Ysize),
+    itsPols(pols)
 {
 
   
@@ -71,7 +79,7 @@ void DH_2DMatrix::preprocess(){
   
   // Determine the number of bytes needed for DataPacket and buffer.
   // the size is that of the DataPacket object, plus the size of the Buffer
-  unsigned int size = sizeof(DataPacket) + ((itsXSize*itsYSize) * sizeof(int));
+  unsigned int size = sizeof(DataPacket) + ((itsXSize*itsYSize*itsPols) * sizeof(DH_2DMatrix::DataType));
   // allocate the memmory
   void* ptr = allocate(size+4); // extra 4 bytes to avoid problems with word allignment
   
@@ -81,7 +89,9 @@ void DH_2DMatrix::preprocess(){
   
   for (int x=0; x<itsXSize; x++) {
     for (int y=0; y<itsYSize; y++) {
-      *getBuffer(x,y) = 0;
+      for (int p=0; p<itsPols; p++ ) {
+      *getBuffer(x,y,p) = 0;
+      }
     }
   }
   // Initialize base class.

@@ -21,6 +21,11 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.1.1.1  2002/11/13 15:58:06  schaaf
+//  %[BugId: 117]%
+//
+//  Initial working version
+//
 //
 //////////////////////////////////////////////////////////////////////
 
@@ -30,7 +35,7 @@
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
-#include <complex>
+#include "myComplex.h"
 
 #include "BaseSim/DataHolder.h"
 #include "Common/Debug.h"
@@ -42,7 +47,7 @@
 class DH_Correlations: public DataHolder
 {
 public:
-  typedef std::complex<float> DataType;
+  typedef myComplex32 DataType;
 
   explicit DH_Correlations (const string& name,
 			    short stations,

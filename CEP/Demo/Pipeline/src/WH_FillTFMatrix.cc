@@ -22,6 +22,11 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.1.1.1  2002/11/13 15:58:06  schaaf
+//  %[BugId: 117]%
+//
+//  Initial working version
+//
 //  Revision 1.8  2002/08/19 20:36:59  schaaf
 //  %[BugId: 11]%
 //  Layout
@@ -55,6 +60,7 @@
 #include <stdio.h>             // for sprintf
 #include <math.h>
 #include <unistd.h>
+#include <stdlib.h>
 
 #include "BaseSim/Step.h"
 #include "BaseSim/Profiler.h"
@@ -70,14 +76,16 @@ WH_FillTFMatrix::WH_FillTFMatrix (const string& name,
 				  unsigned int nin, 
 				  unsigned int nout,
 				  int timeDim,
-				  int freqDim)
+				  int freqDim,
+				  int pols)
 : WorkHolder    (nin, nout, name),
   itsInHolders  (0),
   itsOutHolders (0),
   itsTime       (0),
   itsTimeDim    (timeDim),
   itsFreqDim    (freqDim),
-  itsSourceID   (sourceID)
+  itsSourceID   (sourceID),
+  itsPols       (pols)
 {
   TRACER4("Enter WH_FillTFMatrix C'tor " << name);
   DbgAssertStr (nout > 0,    "0 output DH_IntArray is not possible");
@@ -94,7 +102,8 @@ WH_FillTFMatrix::WH_FillTFMatrix (const string& name,
     itsOutHolders[i] = new DH_2DMatrix (std::string("out_") + str,
 					timeDim, std::string("Time"),
 					freqDim, std::string("Frequency"),
-					std::string("Station"));
+					std::string("Station"),
+					2); //pols
   }
   if (theirProcessProfilerState == 0) {
     theirProcessProfilerState = Profiler::defineState("WH_FillTFMatrix",
@@ -124,10 +133,13 @@ WorkHolder* WH_FillTFMatrix::make(const string& name) const
 			     getInputs(), 
 			     getOutputs(),
 			     itsTimeDim,
-			     itsFreqDim);
+			     itsFreqDim,
+			     itsPols);
 }
 
 void WH_FillTFMatrix::preprocess() {
+  // initialise the random number generation
+  srandom(itsSourceID*random());
     
   return;
 }
@@ -137,12 +149,14 @@ void WH_FillTFMatrix::process()
 {  
   Profiler::enterState (theirProcessProfilerState);
 
-  ///////////////////////// START OF PREPROCESS BLOCK ////////////////
   int cnt=0;
-  int *Rowstartptr;
   DH_2DMatrix *DHptr;
   int Xsize,Ysize; 
   // the time step is the Xsize; 
+  int timestep;      
+      itsTime += (timestep = getOutHolder(0)->getXSize()); // increase local clock
+
+      
   for (int outch=0; outch<getOutputs(); outch++) {
     DHptr = getOutHolder(outch);
     AssertStr(DHptr != 0, "GetOutHolder returned NULL");
@@ -151,33 +165,22 @@ void WH_FillTFMatrix::process()
     Xsize = DHptr->getXSize();
       for (int x=0; x < Xsize; x++) {
       Ysize = DHptr->getYSize();
-      Rowstartptr = DHptr->getBuffer(x,0);
       for (int y=0; y < Ysize; y++) {
-	*(Rowstartptr+y) = 
-    	  cnt++ + itsSourceID ;
-  	// fill output buffer with random integer 0-99
-	//(int)(100.0*rand()/RAND_MAX+1.0);
+	for (int pol=0; pol<itsPols; pol++) {
+//  	  int val = cnt++ + itsSourceID + pol;
+//  	  *DHptr->getBuffer(x,y,pol) = DH_2DMatrix::DataType(val,0);
+	  // fill output buffer with random integer 0-99
+	  *DHptr->getBuffer(x,y,pol) = DH_2DMatrix::DataType((int)(100.0*random()/RAND_MAX+1.0),(int)(100.0*random()/RAND_MAX+1.0));
+	}
       }
-    }
-  }
-  ///////////////////////// END OF PREPROCESS BLOCK ////////////////
-  
-
-  {
-    int timestep;
-    DH_2DMatrix *DHptr;
-    
-    itsTime += (timestep = getOutHolder(0)->getXSize()); // increase local clock
-    // the time step is the Xsize; 
-    for (int outch=0; outch<getOutputs(); outch++) {
+      
       DbgAssertStr(timestep == getOutHolder(0)->getXSize(),
 		   "All Output DataHolders must have the same time (X) dimension");
-      DHptr = getOutHolder(outch);
       DHptr->setZ(itsSourceID);      
       DHptr->setYOffset(DHptr->getYSize()*outch);
       DHptr->setTimeStamp(itsTime);
       DHptr->setXOffset(itsTime);
-    }
+      }
   }
   Profiler::leaveState (theirProcessProfilerState);
 }
@@ -185,7 +188,7 @@ void WH_FillTFMatrix::process()
 
 void WH_FillTFMatrix::dump() const
 {
-  cout << "WH_FillTFMatrix " << getName() << " ::dump()" << endl;
+  cout << "WH_FillTFMatrix " << getName() << " ::dump() " << itsSourceID<< endl;
   for (int outch=0; outch<min(10,getOutputs()); outch++) {
     cout << "Output " << outch << "   "
 	 << (const_cast<WH_FillTFMatrix*>(this))->getOutHolder(outch)->getZName() << " "
@@ -194,16 +197,19 @@ void WH_FillTFMatrix::dump() const
 	 << (const_cast<WH_FillTFMatrix*>(this))->getOutHolder(outch)->getXOffset() << "    "
 	 << (const_cast<WH_FillTFMatrix*>(this))->getOutHolder(outch)->getYName() << "Offset = "  
 	 << (const_cast<WH_FillTFMatrix*>(this))->getOutHolder(outch)->getYOffset() ;
-    for (int x=0; 
-	 x < min(10,(const_cast<WH_FillTFMatrix*>(this))->getOutHolder(outch)->getXSize());
-		 x++) {
-	   cout << endl 
-		<< (const_cast<WH_FillTFMatrix*>(this))->getOutHolder(outch)->getXName()
-		<< x << "   ";
-      for (int y=0; 
-	   y < min(10,(const_cast<WH_FillTFMatrix*>(this))->getOutHolder(outch)->getYSize());
-	   y++) {
-	cout << *(const_cast<WH_FillTFMatrix*>(this))->getOutHolder(outch)->getBuffer(x,y) << " ";
+    for (int pol=0; pol < itsPols; pol++) {
+      cout << endl << "Polarisation: " << pol;
+      for (int x=0; 
+	   x < min(10,(const_cast<WH_FillTFMatrix*>(this))->getOutHolder(outch)->getXSize());
+	   x++) {
+	cout << endl 
+	     << (const_cast<WH_FillTFMatrix*>(this))->getOutHolder(outch)->getXName()
+	     << x << "   ";
+	for (int y=0; 
+	     y < min(10,(const_cast<WH_FillTFMatrix*>(this))->getOutHolder(outch)->getYSize());
+	     y++) {
+	  cout << *(const_cast<WH_FillTFMatrix*>(this))->getOutHolder(outch)->getBuffer(x,y,pol) << " ";
+	}
       }
     }
     cout << endl;
