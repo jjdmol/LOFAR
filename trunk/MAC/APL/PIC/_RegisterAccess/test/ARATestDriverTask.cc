@@ -32,6 +32,7 @@
 
 #include <stdio.h>
 #include <blitz/array.h>
+#include <time.h>
 
 #undef PACKAGE
 #undef VERSION
@@ -54,13 +55,33 @@ ARATestDriverTask::ARATestDriverTask() :
   m_answer(),
   m_RSPserver(),
   m_propMap(),
-  m_systemStatus()
+  m_systemStatus(),
+  m_stats(),
+  m_substatusPeriod(0.0),
+  m_substatsPeriod(0.0),
+  m_updStatusTimerId(0),
+  m_updStatsTimerId(0)
 {
   registerProtocol(RSP_PROTOCOL, RSP_PROTOCOL_signalnames);
   m_answer.setTask(this);
 
   m_systemStatus.board().resize(N_BOARDS_PER_SUBRACK);
   m_systemStatus.rcu().resize(N_RCUS);
+  
+  m_stats().resize(RSP_Protocol::Statistics::N_STAT_TYPES,N_RCUS,RSP_Protocol::MAX_N_BEAMLETS);
+  int i,j,k;
+  for(i=0;i<RSP_Protocol::Statistics::N_STAT_TYPES;i++)
+  {
+    for(j=0;j<N_RCUS;j++)
+    {
+      for(k=0;k<RSP_Protocol::MAX_N_BEAMLETS;k++)
+      {
+        m_stats()(i,j,k) = 0;
+      }
+    }
+  }
+//  m_stats() = 0;
+//  m_stats().reference(m_stats().copy()); // make sure array is contiguous
 
   // fill APCs map
   addPropertySet(SCOPE_PIC);
@@ -342,7 +363,6 @@ void ARATestDriverTask::updateETHstatus(string& propName,const GCFPValue* pvalue
     if(ethStatus.nof_frames != pvUnsigned.getValue())
     {
       m_systemStatus.board()(board-1).eth.nof_frames = pvUnsigned.getValue();
-      updateSystemStatus();
     }
   }
   else if(propName.find(string(PROPNAME_PACKETSERROR),0) != string::npos)
@@ -350,7 +370,6 @@ void ARATestDriverTask::updateETHstatus(string& propName,const GCFPValue* pvalue
     if(ethStatus.nof_errors != pvUnsigned.getValue())
     {
       m_systemStatus.board()(board-1).eth.nof_errors = pvUnsigned.getValue();
-      updateSystemStatus();
     }
   }
   else if(propName.find(string(PROPNAME_LASTERROR),0) != string::npos)
@@ -358,7 +377,6 @@ void ARATestDriverTask::updateETHstatus(string& propName,const GCFPValue* pvalue
     if(ethStatus.last_error != pvUnsigned.getValue())
     {
       m_systemStatus.board()(board-1).eth.last_error = pvUnsigned.getValue();
-      updateSystemStatus();
     }
   }
   else if(propName.find(string(PROPNAME_FFI0),0) != string::npos)
@@ -366,7 +384,6 @@ void ARATestDriverTask::updateETHstatus(string& propName,const GCFPValue* pvalue
     if(ethStatus.ffi0 != pvUnsigned.getValue())
     {
       m_systemStatus.board()(board-1).eth.ffi0 = pvUnsigned.getValue();
-      updateSystemStatus();
     }
   }
   else if(propName.find(string(PROPNAME_FFI1),0) != string::npos)
@@ -374,7 +391,6 @@ void ARATestDriverTask::updateETHstatus(string& propName,const GCFPValue* pvalue
     if(ethStatus.ffi1 != pvUnsigned.getValue())
     {
       m_systemStatus.board()(board-1).eth.ffi1 = pvUnsigned.getValue();
-      updateSystemStatus();
     }
   }
   else if(propName.find(string(PROPNAME_FFI2),0) != string::npos)
@@ -382,7 +398,6 @@ void ARATestDriverTask::updateETHstatus(string& propName,const GCFPValue* pvalue
     if(ethStatus.ffi2 != pvUnsigned.getValue())
     {
       m_systemStatus.board()(board-1).eth.ffi2 = pvUnsigned.getValue();
-      updateSystemStatus();
     }
   }
 }
@@ -422,13 +437,11 @@ void ARATestDriverTask::updateAPstatus(string& propName,const GCFPValue* pvalue)
     if(apStatus.status != pvUnsigned.getValue())
     {
       m_systemStatus.board()(board-1).ap[ap-1].status = pvUnsigned.getValue();
-      updateSystemStatus();
     }
   }
   else if(propName.find(string(PROPNAME_TEMPERATURE),0) != string::npos)
   {
     m_systemStatus.board()(board-1).ap[ap-1].temp = (uint8)(pvDouble.getValue()*100);
-    updateSystemStatus();
   }
   if(propName.find(string(PROPNAME_VERSION),0) != string::npos)
   {
@@ -465,13 +478,11 @@ void ARATestDriverTask::updateBPstatus(string& propName,const GCFPValue* pvalue)
     if(bpStatus.status != pvUnsigned.getValue())
     {
       m_systemStatus.board()(board-1).bp.status = pvUnsigned.getValue();
-      updateSystemStatus();
     }
   }
   else if(propName.find(string(PROPNAME_TEMPERATURE),0) != string::npos)
   {
     m_systemStatus.board()(board-1).bp.temp = (uint8)(pvDouble.getValue()*100);
-    updateSystemStatus();
   }
   if(propName.find(string(PROPNAME_VERSION),0) != string::npos)
   {
@@ -509,7 +520,6 @@ void ARATestDriverTask::updateRCUstatus(string& propName,const GCFPValue* pvalue
     if(rcuStatus != tempStatus)
     {
       m_systemStatus.rcu()(rcuNumber-1).status = tempStatus;
-      updateSystemStatus();
     }
   }
   else if(propName.find(string(PROPNAME_RCUHERR),0) != string::npos)
@@ -519,7 +529,6 @@ void ARATestDriverTask::updateRCUstatus(string& propName,const GCFPValue* pvalue
     if(rcuStatus != tempStatus)
     {
       m_systemStatus.rcu()(rcuNumber-1).status = tempStatus;
-      updateSystemStatus();
     }
   }
   else if(propName.find(string(PROPNAME_RCUVERR),0) != string::npos)
@@ -529,7 +538,6 @@ void ARATestDriverTask::updateRCUstatus(string& propName,const GCFPValue* pvalue
     if(rcuStatus != tempStatus)
     {
       m_systemStatus.rcu()(rcuNumber-1).status = tempStatus;
-      updateSystemStatus();
     }
   }
   if(propName.find(string(PROPNAME_STATSREADY),0) != string::npos)
@@ -539,7 +547,6 @@ void ARATestDriverTask::updateRCUstatus(string& propName,const GCFPValue* pvalue
     if(rcuStatus != tempStatus)
     {
       m_systemStatus.rcu()(rcuNumber-1).status = tempStatus;
-      updateSystemStatus();
     }
   }
 }
@@ -548,15 +555,43 @@ void ARATestDriverTask::updateSystemStatus()
 {
   // send new status to RA application
   RSPUpdstatusEvent updStatusEvent;
-  struct timeval timeValNow;
-  time(&timeValNow.tv_sec);
-  timeValNow.tv_usec=0;
-  updStatusEvent.timestamp.set(timeValNow);
-  updStatusEvent.status=0; // ignore ??
+  updStatusEvent.timestamp.setNow();
+  updStatusEvent.status=SUCCESS;
   updStatusEvent.handle=1; // ignore
-  updStatusEvent.sysstatus = m_systemStatus;
+  updStatusEvent.sysstatus.board().reference(m_systemStatus.board().copy());
+  updStatusEvent.sysstatus.rcu().reference(m_systemStatus.rcu().copy());
 
   m_RSPserver.send(updStatusEvent);
+}
+
+void ARATestDriverTask::updateStats()
+{
+  // create new stats based on current time:
+  time_t timeNow = time(0);
+  int period = timeNow%60;
+  float statVal = sin(period*2*3.1415926/60);
+  int i,j,k;
+  for(i=0;i<RSP_Protocol::Statistics::N_STAT_TYPES;i++)
+  {
+    for(j=0;j<N_RCUS;j++)
+    {
+      for(k=0;k<RSP_Protocol::MAX_N_BEAMLETS;k++)
+      {
+//        m_stats()(i,j,k) = statVal*(j+1)*sin(k*2*3.1415926/60) * 1000;
+        m_stats()(i,j,k) = k+j*k+i*j*k;
+      }
+    }
+  }
+  
+  
+  // send new stats to RA application
+  RSPUpdstatsEvent updStatsEvent;
+  updStatsEvent.timestamp.setNow();
+  updStatsEvent.status=SUCCESS;
+  updStatsEvent.handle=1; // ignore
+  updStatsEvent.stats().reference(m_stats().copy());
+  
+  m_RSPserver.send(updStatsEvent);
 }
 
 bool ARATestDriverTask::isEnabled()
@@ -642,6 +677,124 @@ GCFEvent::TResult ARATestDriverTask::enabled(GCFEvent& event, GCFPortInterface& 
       break;
     }
 
+    case F_TIMER:
+    {
+      GCFTimerEvent& timerEvent=static_cast<GCFTimerEvent&>(event);
+      
+      if(timerEvent.id == (unsigned long)m_updStatusTimerId)
+      {
+        // send updstatus message;
+        updateSystemStatus();
+        
+        m_updStatusTimerId = port.setTimer(m_substatusPeriod);
+      }
+      else if(timerEvent.id == (unsigned long)m_updStatsTimerId)
+      {
+        // send updstats message;
+        updateStats();
+        
+        m_updStatsTimerId = port.setTimer(m_substatsPeriod);
+      }
+      break;
+    }
+    
+    case RSP_SUBSTATUS:
+    {
+      LOG_INFO("RSP_SUBSTATUS received");
+      RSPSubstatusEvent substatus(event);
+      
+      m_substatusPeriod = (double)substatus.period;
+      m_updStatusTimerId = port.setTimer(m_substatusPeriod);
+
+      RSPSubstatusackEvent ack;
+      ack.timestamp.setNow();
+      ack.status = SUCCESS;
+      ack.handle = (int)&ack;
+      port.send(ack);
+      break;
+    }
+    
+    case RSP_UNSUBSTATUS:
+    {
+      LOG_INFO("RSP_UNSUBSTATUS received");
+      RSPUnsubstatusEvent unsubstatus(event);
+      
+      m_substatusPeriod = 0.0;
+      m_updStatusTimerId = 0;
+
+      RSPUnsubstatusackEvent ack;
+      ack.timestamp.setNow();
+      ack.status = SUCCESS;
+      ack.handle = (int)&ack;
+      port.send(ack);
+      break;
+    }
+    
+    case RSP_SUBSTATS:
+    {
+      LOG_INFO("RSP_SUBSTATS received");
+      RSPSubstatsEvent substats(event);
+      
+      m_substatsPeriod = (double)substats.period;
+      m_updStatsTimerId = port.setTimer(m_substatsPeriod);
+
+      RSPSubstatsackEvent ack;
+      ack.timestamp.setNow();
+      ack.status = SUCCESS;
+      ack.handle = (int)&ack;
+      port.send(ack);
+      break;
+    }
+    
+    case RSP_UNSUBSTATS:
+    {
+      LOG_INFO("RSP_UNSUBSTATS received");
+      RSPUnsubstatsEvent unsubstats(event);
+      
+      m_substatsPeriod = 0.0;
+      m_updStatsTimerId = 0;
+
+      RSPUnsubstatsackEvent ack;
+      ack.timestamp.setNow();
+      ack.status = SUCCESS;
+      ack.handle = (int)&ack;
+      port.send(ack);
+      break;
+    }
+    
+    case RSP_GETVERSION:
+    {
+      LOG_INFO("RSP_GETVERSION received");
+      RSPGetversionEvent getversion(event);
+      
+      RSP_Protocol::Versions versions;
+      versions.rsp().resize(N_RACKS*N_SUBRACKS_PER_RACK*N_BOARDS_PER_SUBRACK);
+      versions.bp().resize(N_RACKS*N_SUBRACKS_PER_RACK*N_BOARDS_PER_SUBRACK);
+      versions.ap().resize(N_RACKS*N_SUBRACKS_PER_RACK*N_BOARDS_PER_SUBRACK*N_APS_PER_BOARD);
+      for(int board=0;board<N_RACKS*N_SUBRACKS_PER_RACK*N_BOARDS_PER_SUBRACK;board++)
+      {
+        versions.rsp()(board) = (board+1);
+        LOG_INFO(formatString("board[%d].version = 0x%x",board,versions.rsp()(board)));
+        versions.bp()(board) = (board+1)*8;
+        LOG_INFO(formatString("bp[%d].version = 0x%x",board,versions.bp()(board)));
+        for(int ap=0;ap<EPA_Protocol::N_AP; ap++)
+        {
+          versions.ap()(board * EPA_Protocol::N_AP + ap) = ((board+1)<<4)+ap;
+          LOG_INFO(formatString("ap[%d][%d].version = 0x%x",board,ap,versions.ap()(board * EPA_Protocol::N_AP + ap)));
+        }
+      }
+      
+      RSPGetversionackEvent ack;
+      ack.timestamp.setNow();
+      ack.status = SUCCESS;
+      ack.versions.rsp().reference(versions.rsp().copy());
+      ack.versions.bp().reference(versions.bp().copy());
+      ack.versions.ap().reference(versions.ap().copy());
+      
+      port.send(ack);
+      break;
+    }
+    
     case F_VCHANGEMSG:
     {
       // check which property changed

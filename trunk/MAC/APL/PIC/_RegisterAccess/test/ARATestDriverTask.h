@@ -66,6 +66,7 @@ namespace ARA
       void updateBPstatus(string& propName,const GCFPValue* pvalue);
       void updateRCUstatus(string& propName,const GCFPValue* pvalue);
       void updateSystemStatus();
+      void updateStats();
       bool isEnabled();
       GCFEvent::TResult initial(GCFEvent& e, GCFPortInterface& p);
       GCFEvent::TResult enabled(GCFEvent& e, GCFPortInterface& p);
@@ -79,6 +80,12 @@ namespace ARA
       TPropertyMap    m_propMap;
       
       RSP_Protocol::SystemStatus m_systemStatus;
+      RSP_Protocol::Statistics   m_stats;
+      
+      double          m_substatusPeriod;
+      double          m_substatsPeriod;
+      long            m_updStatusTimerId;
+      long            m_updStatsTimerId;
   };  
 };
 
