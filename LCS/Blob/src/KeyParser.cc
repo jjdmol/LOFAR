@@ -42,6 +42,17 @@ KeyValueMap* KeyParser::theirKeyMap = 0;
 
 KeyValueMap KeyParser::parse (const std::string& command)
 {
+  // Return an empty map if the command is empty.
+  bool empty = true;
+  for (uint i=0; i<command.size(); i++) {
+    if (command[i] != ' ') {
+      empty = false;
+      break;
+    }
+  }
+  if (empty) {
+    return KeyValueMap();
+  }
   //# Parse the command.
   //# Do a yyrestart(yyin) first to make the flex scanner reentrant.
   KeyTokenizerestart (KeyTokenizein);
