@@ -1151,7 +1151,7 @@ GlishRecord MeqCalibrater::solve(bool useSVD)
   for (int i=0; i<itsSolution.nelements(); i++) {
     sol[i] = solData[i];
   }
-  bool solFlag = itsSolver.solveLoop (fit, rank, sol);
+  bool solFlag = itsSolver.solveLoop (fit, rank, sol, useSVD);
   for (int i=0; i<itsSolution.nelements(); i++) {
     solData[i] = sol[i];
   }
@@ -1524,7 +1524,7 @@ void MeqCalibrater::solve(bool useSVD, vector<string>& resultParmNames,
   for (int i=0; i<itsSolution.nelements(); i++) {
     sol[i] = solData[i];
   }
-  bool solFlag = itsSolver.solveLoop (fit, rank, sol);
+  bool solFlag = itsSolver.solveLoop (fit, rank, sol, useSVD);
   for (int i=0; i<itsSolution.nelements(); i++) {
     solData[i] = sol[i];
   }
