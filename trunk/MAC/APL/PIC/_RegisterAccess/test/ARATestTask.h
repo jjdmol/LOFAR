@@ -36,6 +36,10 @@
 
 // forward declaration
 class GCFEvent;
+
+namespace LOFAR
+{
+
 namespace ARA
 {
   class ARATestTask : public GCFTask, public Test
@@ -84,5 +88,8 @@ namespace ARA
       
   };  
 };
+
+} // namespace LOFAR
+
 
 #endif

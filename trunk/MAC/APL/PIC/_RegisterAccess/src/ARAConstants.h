@@ -24,6 +24,9 @@
 #ifndef ARACONSTANTS_H_
 #define ARACONSTANTS_H_
 
+namespace LOFAR
+{
+  
 namespace ARA
 {
   
@@ -36,5 +39,6 @@ namespace ARA
   const char PARAM_STATISTICS_UPDATE_INTERVAL[]  = "mac.apl.ara.STATISTICS_UPDATE_INTERVAL";
   
 };
-     
+
+} // namespace LOFAR     
 #endif /* ARACONSTANTS_H_ */

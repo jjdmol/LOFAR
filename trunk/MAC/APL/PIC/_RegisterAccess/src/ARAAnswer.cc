@@ -28,8 +28,12 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 
-using namespace LOFAR;
-using namespace ARA;
+
+namespace LOFAR
+{
+  
+namespace ARA
+{
 
 ARAAnswer::ARAAnswer() : 
   m_dummyPort(),
@@ -51,3 +55,10 @@ void ARAAnswer::handleAnswer(GCFEvent& answer)
   if(m_task!=0)
     m_task->dispatch(answer,m_dummyPort);
 }
+
+
+} // namespace ARA
+
+
+} // namespace LOFAR
+

@@ -32,11 +32,17 @@
 #include <GCF/GCF_PVUnsigned.h>
 #include <GCF/ParameterSet.h>
 
-using namespace LOFAR;
-using namespace GCF;
-using namespace ARA;
 using namespace std;
 using namespace boost;
+
+
+namespace LOFAR
+{
+
+using namespace GCF;
+
+namespace ARA
+{
 
 ARAPhysicalModel::ARAPhysicalModel() : 
   m_maintenanceModel(),
@@ -141,3 +147,9 @@ void ARAPhysicalModel::inMaintenance(bool maintenance, string& resource)
     }
   }
 }
+
+} // namespace ARA
+
+
+} // namespace LOFAR
+

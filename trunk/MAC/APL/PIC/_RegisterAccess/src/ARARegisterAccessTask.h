@@ -32,6 +32,10 @@
 #include "ARAAnswer.h"
 #include "ARAPhysicalModel.h"
 
+
+namespace LOFAR
+{
+
 namespace ARA
 {
   class RegisterAccessTask : public GCFTask
@@ -82,9 +86,7 @@ namespace ARA
        * The subscribing states. In each state a SubStats message is sent
        */
       GCFEvent::TResult subscribingStatsSubbandPower(GCFEvent& e, GCFPortInterface &p);
-      GCFEvent::TResult subscribingStatsSubbandMean(GCFEvent& e, GCFPortInterface &p);
       GCFEvent::TResult subscribingStatsBeamletPower(GCFEvent& e, GCFPortInterface &p);
-      GCFEvent::TResult subscribingStatsBeamletMean(GCFEvent& e, GCFPortInterface &p);
       /**
        * The operational state. In this state the task can receives
        * status and statistics updates from the rsp driver
@@ -118,7 +120,7 @@ namespace ARA
       /**
        * create propertyset object, add it to the map
        */
-      void addMyPropertySet(const char* scope,const char* type, const TPropertyConfig propconfig[]);
+      void addMyPropertySet(const char* scope,const char* type, TPSCategory category, const TPropertyConfig propconfig[]);
       /**
        * create apc object, add it to the map
        */
@@ -126,8 +128,9 @@ namespace ARA
 
       void updateBoardProperties(string scope,
                                  uint8  voltage_15,
-                                 uint8  voltage_22,
-                                 uint8  ffi);
+                                 uint8  voltage_33,
+                                 uint8  ffi0,
+                                 uint8  ffi1);
       /**
        * update eth properties based on status bits
        */
@@ -142,17 +145,32 @@ namespace ARA
        */
       void updateMEPStatusProperties(string scope,uint32 seqnr,
                                                   uint8  error,
-                                                  uint8  ffi);
+                                                  uint8  ffi0);
       /**
        * update SYNC status properties 
        */
-      void updateSYNCStatusProperties(string scope,uint32 clock_count,
-                                                   uint32 count,
-                                                   uint32 errors);
+      void updateSYNCStatusProperties(string scope,uint32 sample_count,
+                                                   uint32 sync_count,
+                                                   uint32 error_count);
+      /**
+       * update fpga board properties based on status bits
+       */
+      void updateFPGAboardProperties(string scope, uint8 ffi0, 
+                                                   uint8 ffi1);
       /**
        * update fpga properties based on status bits
        */
-      void updateFPGAproperties(string scope,uint8 status, uint8 temp);
+      void updateFPGAproperties(string scope, uint8 status, 
+                                              uint8 temp);
+      /**
+       * update rcu board properties
+       */
+      void updateBoardRCUproperties(string scope,uint8  statusX,
+                                                 uint8  statusY,
+                                                 uint8  ffi0,
+                                                 uint8  ffi1,
+                                                 uint32 nof_overflowX,
+                                                 uint32 nof_overflowY);
       /**
        * update rcu properties based on status bits
        */
@@ -185,9 +203,7 @@ namespace ARA
       // subscriptions
       uint32            m_subStatusHandle;
       uint32            m_subStatsHandleSubbandPower;
-      uint32            m_subStatsHandleSubbandMean;
       uint32            m_subStatsHandleBeamletPower;
-      uint32            m_subStatsHandleBeamletMean;
 
       int               m_n_racks;
       int               m_n_subracks_per_rack;
@@ -201,5 +217,8 @@ namespace ARA
   };
 
 };
+
+} // namespace LOFAR
+
      
 #endif /* ARAREGISTERACCESSTASK_H_ */

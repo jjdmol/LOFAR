@@ -24,7 +24,6 @@
 #undef VERSION
 #include <GCF/CmdLine.h>
 #include <GCF/TM/GCF_Task.h>
-#include "APLCommon/suite.h"
 #include "ARATestTask.h"
 #include "ARATestDriverTask.h"
 #include <boost/shared_ptr.hpp>
@@ -35,10 +34,14 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 
-using namespace LOFAR;
-using namespace ARA;
 using namespace std;
 
+namespace LOFAR
+{
+
+namespace ARA
+{
+  
 int main(int argc, char* argv[])
 {
   int retval=-1;
@@ -77,4 +80,10 @@ int main(int argc, char* argv[])
   }
   return retval;
 }
+
+
+} // namespace ARA
+
+
+} // namespace LOFAR
 
