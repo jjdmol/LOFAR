@@ -38,7 +38,7 @@ namespace LOFAR
   {
   public:
 
-    explicit WH_Transpose(const string& name, KeyValueMap kvm);
+    explicit WH_Transpose(const string& name, const KeyValueMap kvm);
     virtual ~WH_Transpose();
     static WorkHolder* construct(const string& name, KeyValueMap kvm);
     virtual WH_Transpose* make(const string& name);
@@ -56,6 +56,7 @@ namespace LOFAR
     int itsNoutputs;
 
     int itsNstations;
+    int itsNcorrelators;
     int itsNchannels;
     int itsNpolarisations;
     int itsNsamples;
