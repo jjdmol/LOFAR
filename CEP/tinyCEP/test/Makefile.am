@@ -48,6 +48,7 @@ TESTS_ENVIRONMENT		= top_srcdir=$(top_srcdir) \
 
 TESTS	=					\
 	Example_test.sh				\
-	Example2_test.sh
+	Example2_test.sh			\
+	Example3_test.sh
 
 include $(lofar_sharedir)/Makefile.common
