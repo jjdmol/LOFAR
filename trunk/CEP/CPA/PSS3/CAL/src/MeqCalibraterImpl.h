@@ -190,7 +190,7 @@ private:
   void getFreq      (int ddid);
 
   //! Get the station info (position and name).
-  void fillStations ();
+  void fillStations (const Vector<int>& ant1, const Vector<int>& ant2);
 
   //! Get all baseline info.
   void fillBaselines(const Vector<int>& ant1, const Vector<int>& ant2);
@@ -224,7 +224,7 @@ private:
   MeqDomain             itsSolveDomain;
 
   Matrix<int>           itsBLIndex;     //# baseline index of antenna pair
-  vector<MeqStation>    itsStations;
+  vector<MeqStation*>   itsStations;
   vector<MeqJonesExpr*> itsStatExpr;    //# Expression per station
   vector<MVBaseline>    itsBaselines;
   vector<MeqUVWPolc*>   itsUVWPolc;     //# UVW polynomial per baseline

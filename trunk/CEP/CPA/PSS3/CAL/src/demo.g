@@ -70,23 +70,6 @@ solve := function(fname='michiel.demo', ant=4*[0:20], niter=1)
     # Plot initial position
     ss := mc.getparmnames();
     print len(ss),'parmnames:',ss[1:10],'...';           # rather long!
-    parms := mc.getparms("GSM.*.RA GSM.*.DEC GSM.*.I");
-    print parms
-    print len(parms)
-    nrpos := len(parms) / 3;
-    if (nrpos > 0) {
-        for (i in [1:nrpos]) {
-            ra      := parms[spaste('GSM.',i,'.RA')].value[1];
-            dec     := parms[spaste('GSM.',i,'.DEC')].value[1];
-            stokesI := parms[spaste('GSM.',i,'.I')].value[1];
-            print 'src = ', i, ' ra = ', ra, ' dec = ', dec, ' I = ', stokesI;
-
-	    annotator.change_marker_size(src_mrk[(i*2)-1], stokesI * 100);
-
-	    if (is_fail(annotator)) fail;
-            annotator.add_marker(i, real(ra), real(dec), i==nrpos);
-        }
-    }
 
     mc.settimeinterval(3600); # calibrate per 3600 seconds
     mc.clearsolvableparms();
@@ -102,6 +85,25 @@ solve := function(fname='michiel.demo', ant=4*[0:20], niter=1)
     {
         d := mc.getsolvedomain();
         print 'solvedomain = ', d;
+
+        parms := mc.getparms("GSM.*.RA GSM.*.DEC GSM.*.I");
+        print parms
+        print len(parms)
+        nrpos := len(parms) / 3;
+        if (nrpos > 0) {
+            for (i in [1:nrpos]) {
+                ra      := parms[spaste('GSM.',i,'.RA')].value[1];
+                dec     := parms[spaste('GSM.',i,'.DEC')].value[1];
+                stokesI := parms[spaste('GSM.',i,'.I')].value[1];
+                print 'src = ', i, ' ra = ', ra, ' dec = ', dec,
+		      ' I = ', stokesI;
+
+	        annotator.change_marker_size(src_mrk[(i*2)-1], stokesI * 100);
+
+	        if (is_fail(annotator)) fail;
+                annotator.add_marker(i, real(ra), real(dec), i==nrpos);
+            }
+        }
         
         for (i in [1:niter]) {
             print "iteration", i;
