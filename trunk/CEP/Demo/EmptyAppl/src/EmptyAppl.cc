@@ -106,8 +106,8 @@ void EmptyAppl::define(const ParamBlock& params)
 
 
   // Determine the node and process for each step to run in
-  // Example:    sourceStep.runOnNode(1, 0);
-  //             targetStep.runOnNode(2, 0);
+  // Example:    sourceStep.runOnNode(0, 0);
+  //             targetStep.runOnNode(1, 0);
 
 
   // Add all Step(s) to Simul
