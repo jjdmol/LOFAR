@@ -372,6 +372,5 @@ extern LoggerReference	theirTraceLoggerRef;
 inline LoggerReference&	getLogger() { return theirTraceLoggerRef; }
 
 } // namespace LOFAR
-using LOFAR::getLogger;
 
 #endif // file read before
