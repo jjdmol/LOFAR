@@ -1,6 +1,6 @@
-//# Socket.cc: Class for socket conections
+//# Socket.cc: Class for connections over TCP/IP or UDP
 //#
-//# Copyright (C) 2002
+//# Copyright (C) 2002-2004
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
 //# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -20,788 +20,945 @@
 //#
 //# $Id$
 
+//#include <Common/Net/Socket.h>
+#include <Common/Net/Socket.h>
+#include <Common/LofarLogger.h>
+#include <Common/StringUtil.h>
+#include <Common/hexdump.h>
 
-#include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/time.h>
+#include <sys/poll.h>
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <unistd.h>
-#include <string.h>
 #include <signal.h>
 #include <errno.h>
-#include <stdlib.h>
-#include <stdio.h>
 #include <fcntl.h>
-
-// Socket
-#include <Common/Net/Socket.h>
-#include <Common/lofar_algorithm.h>
 
 namespace LOFAR
 {
 
-  InitDebugContext(Socket,"Socket");
+//# NOTE: EAGAIN = EWOULDBLOCK so errors are only checked for EWOULDBLOCK
 
-  //##ModelId=3DB936CF02C9
-  int Socket::default_sigpipe_counter;
+int32 Socket::defaultSigpipeCounter;
 
-  //##ModelId=3DB936D300BC
-  int Socket::setBlocking (bool block)
-  {
-    if( fcntl(sid,F_SETFL,block?0:FNDELAY)<0 )
-      return set_errcode(SOCKOPT);
-    return 0;
-  }
+//
+// Socket(optionalname)
+//
+// Create trivial Socket object, not connected to anything
+//
+Socket::Socket (const string&	socketname) :
+	itsSocketname	(socketname),
+	itsErrno		(Socket::NOINIT),
+	itsSocketID		(-1),
+	itsType			(LOCAL),
+	itsIsServer		(false),
+	itsIsConnected	(false),
+	itsAllowIntr	(false),
+	itsIsInitialized(false),
+	itsIsBlocking	(false)
+{
+	LOG_TRACE_OBJ(formatString("Socket(%s)", socketname.c_str()));
 
-  //##ModelId=3C91BA4300F6
+	sigpipeCounter = &defaultSigpipeCounter;
+}
 
+//
+// Socket(socketname, service, optional protocol, optional backlog)
+//
+// Create server socket and start listener
+//
+Socket::Socket (const string&	socketname, 
+				const string&	service,
+				int32 			protocol, 
+				int32 			backlog) : 
+	itsSocketname	(socketname),
+	itsErrno		(Socket::NOINIT),
+	itsSocketID		(-1),
+	itsType			(LOCAL),
+	itsIsServer		(true),
+	itsIsConnected	(false),
+	itsAllowIntr	(false),
+	itsIsInitialized(false),
+	itsIsBlocking	(false)
+{
+	sigpipeCounter = &defaultSigpipeCounter;
+	initServer (service, protocol, backlog);
+}
 
-  // Class Socket 
+//
+// Socket(socketname, host, service, optional protocol)
+//
+// Create client socket
+//
+Socket::Socket (const string&	socketname, 
+				const string&	hostname,
+				const string&	service,
+				int32 			protocol) :
+	itsSocketname	(socketname),
+	itsErrno		(Socket::NOINIT),
+	itsSocketID		(-1),
+	itsType			(LOCAL),
+	itsIsServer		(false),
+	itsIsConnected	(false),
+	itsHost			(hostname),
+	itsPort			(service),
+	itsAllowIntr	(false),
+	itsIsInitialized(false),
+	itsIsBlocking	(false)
+{
+	sigpipeCounter = &defaultSigpipeCounter;
+	initClient (hostname, service, protocol);
+}
 
-  Socket::Socket (const string &sname)
-    : name(sname),errcode_(Socket::NOINIT),sid(-1),do_intr(false),bound(false)
-  {
-    sigpipe_counter = &default_sigpipe_counter;
-  }
+//
+// ~Socket()
+//
+Socket::~Socket()
+{
+	if (!itsIsInitialized) {
+		return;
+	}
 
-  //##ModelId=9FD2BC39FEED
-  Socket::Socket (const string &sname, const string &serv, int proto, int backlog)
-    : name(sname),port_(serv),do_intr(false),bound(false)
-  {
-    sigpipe_counter = &default_sigpipe_counter;
-    initServer(serv,proto,backlog);
-  }
+	LOG_TRACE_OBJ ("~Socket");
 
-  //##ModelId=C15CE2A5FEED
-  Socket::Socket (const string &sname, const string &host, const string &serv, int proto, int wait_ms)
-    : name(sname),host_(host),port_(serv),do_intr(false),bound(false)
-  {
-    sigpipe_counter = &default_sigpipe_counter;
-    initClient(host,serv,proto,wait_ms);
-  }
+	if (itsSocketID >=0) {
+		shutdown ();
+	}
 
-  //##ModelId=4760B82BFEED
-  Socket::Socket (int id, struct sockaddr_in &sa)
-    : name("client"),sid(id),type(TCP),host_(">tcp"),port_("0"),do_intr(false),bound(false)
-  {
-    connected = false;
-    sigpipe_counter = &default_sigpipe_counter;
-    dprintf(1)("creating connected socket\n");
-    // constructs a generic socket (used by accept(), below)
-    rmt_addr = sa;
-    if( setDefaults()<0 )
-    {
-      close(sid);
-      sid = -1;
-      return;
-    }
-    // Set non-blocking mode
-    if( fcntl(sid,F_SETFL,FNDELAY)<0 )
-      set_errcode(SOCKOPT);
-    // successfully created connected socket
-    connected = true;
-  }
+	if ((itsType == Socket::UNIX) && itsUnixAddr.sun_path[0]) {
+		int32 result = unlink(itsUnixAddr.sun_path);
+		LOG_TRACE_FLOW(formatString("unlink(%s) = %d (%s)", itsUnixAddr.sun_path,
+						(result < 0) ? errno : result, 
+						(result < 0) ? strerror(errno) :" OK"));
+	}
 
-  //##ModelId=3CC95D6E032A
-  Socket::Socket (int id, struct sockaddr_un &sa)
-    : name("client"),sid(id),type(UNIX),host_(">unix"),port_("0"),do_intr(false),bound(false)
-  {
-    connected = false;
-    sigpipe_counter = &default_sigpipe_counter;
-    dprintf(1)("creating connected socket\n");
-    unix_addr = sa;
-    if( setDefaults()<0 )
-    {
-      close(sid);
-      sid = -1;
-      return;
-    }
-    // Set non-blocking mode
-    if( fcntl(sid,F_SETFL,FNDELAY)<0 )
-      set_errcode(SOCKOPT);
-    // successfully created connected socket
-    connected = true;
-  }
-
-
-  //##ModelId=3DB936D00067
-  Socket::~Socket()
-  {
-    if( sid >=0 )
-    {
-      dprintf(1)("close(fd)\n");
-      close(sid);
-    }
-    if( bound && type == Socket::UNIX && unix_addr.sun_path[0] )
-    {
-      int res = unlink(unix_addr.sun_path);
-      dprintf(1)("unlink(%s) = %d (%s)\n",unix_addr.sun_path,res<0?errno:res,res<0?strerror(errno):"OK");
-    }
-    dprintf(1)("destroying socket\n");
-  }
+}
 
 
+//
+// initServer (service, protocol, backlog)
+//
+// Makes the socket a server socket by starting a listener.
+int32 Socket::initServer (const string& service, int32 protocol, int32 backlog)
+{
+	if (itsIsInitialized) {
+		return (SK_OK);
+	}
 
-  //##ModelId=3C91B9FC0130
-  int Socket::initServer (const string &serv, int proto, int backlog)
-  {
-    // open a server socket
-    errcode_ = errno_sys_ = 0;
-    sid = -1;
-    server = true;
-    connected = bound = false;
-    type = proto;
+	LOG_TRACE_FLOW(formatString("Socket::initServer(%s,%d,%d)", service.c_str(),
+														protocol, backlog));
+
+	itsErrno 	= SK_OK;
+	itsSysErrno = 0;
+	itsIsServer = true;
+	itsType 	= protocol;
+    itsPort		= service;
   
-    if( type == UNIX )
-    {
-      host_ = "unix";
-      port_ = serv;
-      // setup socket address
-      unix_addr.sun_family = AF_UNIX;
-      FailWhen( serv.length() >= sizeof(unix_addr.sun_path),"socket name too long");
-      if( serv[0] == '=' ) // abstract socket name
-      {
-        memset(unix_addr.sun_path,0,sizeof(unix_addr.sun_path));
-        serv.substr(1).copy(unix_addr.sun_path+1,sizeof(unix_addr.sun_path)-1);
-      }
-      else // socket in filesystem
-        serv.copy(unix_addr.sun_path,sizeof(unix_addr.sun_path));
-      // create socket
-      sid = socket(PF_UNIX,SOCK_STREAM,0);
-      if( sid < 0 )
-        return set_errcode(SOCKET);
-      dprintf(1)("creating unix socket %s\n",serv.c_str());
-      if( setDefaults()<0 )
-      {
-        close(sid);
-        sid = -1;
-        return errcode_;
-      }
-      // bind the socket
-      int res = bind(sid,(struct sockaddr*)&unix_addr,sizeof(unix_addr));
-      dprintf(1)("bind()=%d (%s)\n",res<0?errno:res,res<0?strerror(errno):"OK");
-      if( res<0 )
-      {
-        dprintf(1)("close(fd)\n");
-        close(sid);
-        sid = -1;
-        return set_errcode(BIND);
-      }
-      bound = true;
-      // start listening for connections
-      res = listen(sid,backlog);
-      dprintf(1)("listen()=%d (%s)\n",res<0?errno:res,res<0?strerror(errno):"OK");
-      if( res<0 )
-      {
-        dprintf(1)("close(fd)\n");
-        close(sid);
-        sid=-1;
-        return set_errcode(LISTEN);
-      }
-    } // endif type UNIX
-    else // networked socket (type TCP or UDP)
-    {
-      host_ = "localhost";
-      port_ = serv;
-    
-      struct servent     *pse;    // service info entry
-      struct protoent    *ppe;    // protocol entry
+	struct sockaddr*	addrPtr;
+	if (itsType == UNIX) {
+		itsHost = "unix";
+		if(initUnixSocket(itsIsServer) < 0) {
+			return(itsErrno);
+		}
+		addrPtr = (struct sockaddr*) &itsUnixAddr;
+	} 
+	else  { 		// networked socket (type TCP or UDP)
+    	itsHost		= "localhost";
+		if(initTCPSocket(itsIsServer) < 0) {
+			return(itsErrno);
+		}
+		addrPtr = (struct sockaddr*) &itsTCPAddr;
+	}
+		
+	// bind the socket (always blocking)
+	if ((::bind (itsSocketID, addrPtr, sizeof(*addrPtr))) < 0) {
+		LOG_DEBUG(formatString("Socket:Bind error for port %s, err = %d", 
+													itsPort.c_str(), errno));
+		close(itsSocketID);
+		itsSocketID = -1;
+		return (setErrno(BIND));
+	}
+	itsIsInitialized = true;
 
-      const char *prot = ( type == UDP ? "udp" : "tcp" );
-
-      memset(&rmt_addr,0,sizeof(rmt_addr));
-      rmt_addr.sin_family = AF_INET;
-      rmt_addr.sin_addr.s_addr = htonl(INADDR_ANY);
-
-      // try to get service by name or port
-      if( (pse = getservbyname(serv.c_str(),prot)) != 0 )
-        rmt_addr.sin_port = pse->s_port;
-      else if( !(rmt_addr.sin_port = htons((u_short)atoi(serv.c_str()))) )
-        return errcode_ = PORT;
-      // Map protocol name to protocol number
-      if( !(ppe = getprotobyname(prot)) )
-        return errcode_ = PROTOCOL;
-      // open the socket fd
-      int soktype = type == TCP ? SOCK_STREAM : SOCK_DGRAM;
-      sid = socket(PF_INET, soktype, ppe->p_proto);
-      if( sid < 0 )
-        return set_errcode(SOCKET);
-      dprintf(1)("created server socket, port %d, protocol %d\n",
-                 ntohs((ushort)rmt_addr.sin_port),(int)ppe->p_proto);
-      // set default options
-      if( setDefaults()<0 )
-      {
-        close(sid);
-        sid = -1;
-        return errcode_;
-      }
-      // bind to the socket
-      int res = bind(sid,(struct sockaddr*)&rmt_addr,sizeof(rmt_addr));
-      dprintf(1)("bind()=%d (%s)\n",res<0?errno:res,res<0?strerror(errno):"OK");
-      if( res<0 )
-      {
-        dprintf(1)("close(fd)\n");
-        close(sid);
-        sid = -1;
-        return set_errcode(BIND);
-      }
-      bound = true;
-      // start listening on the socket
-      if( type == TCP )
-      {
-        res = listen(sid,backlog);
-        dprintf(1)("listen()=%d (%s)\n",res<0?errno:res,res<0?strerror(errno):"OK");
-        if( res<0 )
-        {
-          dprintf(1)("close(fd)\n");
-          close(sid);
-          sid=-1;
-          return set_errcode(LISTEN);
-        }
-      }
-      else
-      {
-        memset(&rmt_addr,0,sizeof(rmt_addr));
-      }
-    } // end else TCP/UDP
-  
-    // set non-blocking mode
-    if( fcntl(sid,F_SETFL,FNDELAY)<0 )
-      return set_errcode(SOCKOPT);
-  
-    return 0;
-  }
-
-  //##ModelId=3C91BA16008E
-  int Socket::initClient (const string &host, const string &serv, int proto, int wait_ms)
-  {
-    errcode_ = errno_sys_ = 0;
-    sid = -1;
-    server = false;
-    connected = false;
-    type = proto;
-    host_ =  host;
-    port_ = serv;
-    if( type == UNIX )
-    {
-      // setup socket address
-      string path = host +":" +serv;
-      unix_addr.sun_family = AF_UNIX;
-      FailWhen(path.length() >= sizeof(unix_addr.sun_path),"socket name too long");
-      if( path[0] == '=' ) // abstract socket name
-      {
-        memset(unix_addr.sun_path,0,sizeof(unix_addr.sun_path));
-        path.substr(1).copy(unix_addr.sun_path+1,sizeof(unix_addr.sun_path)-1);
-      }
-      else // socket in filesystem
-        path.copy(unix_addr.sun_path,sizeof(unix_addr.sun_path));
-      // create socket
-      sid = socket(PF_UNIX,SOCK_STREAM,0);
-      if( sid < 0 )
-        return set_errcode(SOCKET);
-      dprintf(1)("connecting unix socket to %s\n",path.c_str());
-      if( setDefaults()<0 )
-      {
-        close(sid);
-        sid = -1;
-        return errcode_;
-      }
-    } // endif type UNIX
-    else // networked socket (type TCP or UDP)
-    {
-      // opens a client socket
-      struct servent     *pse;    // service info entry
-      struct hostent     *phe;    // server host entry
-      struct protoent    *ppe;    // protocol entry
-      string host_addr;           // address of server host
-
-      memset(&rmt_addr,0,sizeof(rmt_addr));
-      rmt_addr.sin_family = AF_INET;
-
-      const char *prot = ( proto == UDP ? "udp" : "tcp" );
-
-      // try to get service by name or port
-      if( (pse = getservbyname(serv.c_str(),prot)) != 0 )
-        rmt_addr.sin_port = pse->s_port;
-      else if( !(rmt_addr.sin_port = htons((u_short)atoi(serv.c_str()))) )
-        return errcode_ = PORT;
-      // try to get host by name
-      if( (phe = gethostbyname(host.c_str())) != 0 )
-      {
-        if( phe->h_addrtype != AF_INET )
-          return errcode_ = BADADDRTYPE; 
-        host_addr = inet_ntoa(*((struct in_addr*)*(phe->h_addr_list)));
-      }
-      else
-        host_addr = host;
-      // try using dot notation
-      if( (rmt_addr.sin_addr.s_addr = inet_addr(host_addr.c_str())) == INADDR_NONE )
-        return errcode_ = BADHOST;
-      // Map protocol name to protocol number
-      if( !(ppe = getprotobyname(prot)) )
-        return errcode_ = PROTOCOL;
-      dprintf(1)("connecting client socket to %s:%s, protocol %d\n",
-                 host_addr.c_str(),port_.c_str(),ppe->p_proto);
-      // open the socket fd
-      int soktype = type == TCP ? SOCK_STREAM : SOCK_DGRAM;
-      sid = socket(PF_INET,soktype,ppe->p_proto);
-      if( sid < 0 )
-        return set_errcode(SOCKET);
-      // set default options
-      if( setDefaults()<0 )
-      {
-        close(sid);
-        sid = -1;
-        return errcode_;
-      }
+	// start listening for connections on UNIX and TCP sockets
+	if (itsType == UNIX || itsType == TCP) {
+		if ((::listen (itsSocketID, backlog)) < 0) {	// always blocking
+			LOG_DEBUG(formatString("Socket:Listen error for port %s, err = %d(%s)", 
+									itsPort.c_str(), errno, strerror(errno)));
+			close(itsSocketID);
+			itsSocketID = -1;
+			return (setErrno(LISTEN));
+		}
+		LOG_DEBUG(formatString("Socket:Listener started at port %s", itsPort.c_str()));
+	}
+	else {	// UDP socket
+		memset(addrPtr, 0, sizeof(*addrPtr));
     }
   
-    // set non-blocking mode
-    if( fcntl(sid,F_SETFL,FNDELAY)<0 )
-      return set_errcode(SOCKOPT);
-    // try to connect
-    if( wait_ms >= 0 )
-      return connect(wait_ms);
-    return 0;
-  }
+	return (SK_OK);
+}
 
-  //##ModelId=F1A741D4FEED
-  string Socket::errstr () const
-  {
-    static char const *s_errstr[] = {
-      "OK",
-      "Can't create socket (%d: %s)",
-      "Can't bind local address (%d: %s)",
-      "Can't connect to server (%d: %s)",
-      "Can't accept client socket (%d: %s)",
-      "Bad server host name given",
-      "Bad address type",
-      "Read error (%d: %s)",
-      "Write error (%d: %s)",
-      "Remote client closed connection (%d: %s)",
-      "Couldn't read/write whole message (%d: %s)",
-      "Invalid operation",
-      "setsockopt() or getsockopt() failure (%d: %s)",
-      "wrong port/service specified (%d: %s)",
-      "invalid protocol (%d: %s)",
-      "listen() error (%d: %s)",
-      "timeout (%d: %s)",
-      "connect in progress (%d: %s)",
-      "No more clients (%d: %s)",
-      "General failure",
-      "Uninitialized socket" 
-    };  
-    if( errcode_ < NOINIT || errcode_ > 0 )
-      return "";
-    return Debug::ssprintf(s_errstr[-errcode_],errno,strerror(errno));
-  }
 
-  //##ModelId=6AE5AA36FEED
-  int Socket::connect (int wait_ms)
-  {
-    if( isServer() )
-      return errcode_=INVOP;
-    for(;;)
-    {
-      int res;
-      if( type == UNIX )
-        res = ::connect(sid,(struct sockaddr*)&unix_addr,sizeof(unix_addr));
-      else
-        res = ::connect(sid,(struct sockaddr*)&rmt_addr,sizeof(rmt_addr));
-      if( !res )
-        break; // connected? break out
-      else 
-      {
-        dprintf(2)("connect() failed: errno=%d (%s)\n",errno,strerror(errno));
-        if( errno == EINPROGRESS || errno == EALREADY )
-        {
-          {
-            errcode_ = INPROGRESS;
-            return 0;
-          }
-        }
-        close(sid);
-        sid = -1;
-        return set_errcode(CONNECT);
-      }
-    }
-    dprintf(1)("connect() successful\n");
-    connected = true;
-    errcode_ = 0;
-    return 1;
-  }
+//
+// initClient (host, service, optional protocol)
+//
+// Initializes the socket as client socket.
+//
+int32 Socket::initClient (const string&	hostname, 
+						const string&	service, 
+						int32 			protocol)
+{
+	if (itsIsInitialized) {
+		return (SK_OK);
+	}
 
-  //##ModelId=1357FC75FEED
-  Socket* Socket::accept ()
-  {
-    if( !isServer() )   
-    { errcode_=INVOP; return 0; }
-    if( sid<0 ) 
-    { errcode_=NOINIT; return 0; }
-    if( type == UDP ) 
-      return this;
-    int id; 
-    if( type == UNIX )
-    {
-      size_t len = sizeof(unix_addr);
-      id = ::accept(sid,(struct sockaddr*)&unix_addr,&len);
-    }
-    else
-    {
-      size_t len = sizeof(rmt_addr);
-      id = ::accept(sid,(struct sockaddr*)&rmt_addr,&len);
-    }
-    if( id < 0 )
-    {
-      dprintf(1)("accept() failed, errno=%d (%s)\n",errno,strerror(errno));
-      set_errcode(ACCEPT);
-      return 0;
-    }
-    else
-    {
-      dprintf(1)("accept() successful\n");
-      errcode_=0;
-      return type == UNIX 
-        ? new Socket(id,unix_addr) 
-        : new Socket(id,rmt_addr);
-    }
-  }
+	LOG_TRACE_FLOW(formatString("Socket::initClient(%s,%s,%d)", hostname.c_str(),
+							service.c_str(), protocol));
 
-  //##ModelId=5264A6A9FEED
-  int Socket::read (void *buf, int maxn)
-  {
-    if( sid<0 ) 
-      return errcode_=NOINIT; 
-    FailWhen(!buf,"null buffer");
-    errcode_ = 0;
-    if( !maxn ) 
-      return 0;
-    bool sigpipe = false;
+	itsErrno 	= SK_OK;
+	itsSysErrno = 0;
+	itsIsServer = false;
+	itsType 	= protocol;
+	itsHost		= hostname;
+	itsPort		= service;
+
+	struct sockaddr*	addrPtr;
+	if (itsType == UNIX) {
+		if(initUnixSocket(itsIsServer) < 0) {
+			return(itsErrno);
+		}
+		addrPtr = (struct sockaddr*) &itsUnixAddr;
+	} 
+	else  { 		// networked socket (type TCP or UDP)
+		if(initTCPSocket(itsIsServer) < 0) {
+			return(itsErrno);
+		}
+		addrPtr = (struct sockaddr*) &itsTCPAddr;
+	}
+		
+	itsIsInitialized = true;
+
+	return (SK_OK);
+}
+
+//
+// initUnixSocket(asServer)
+//
+// Tries to setup the socket by resolving hostname, service and protocol
+// and finally allocating the real socket.
+//
+int32 Socket::initUnixSocket(bool		asServer)
+{
+	string 		path;
+	if (asServer) {
+		path = itsPort;
+	}
+	else {
+		path = itsHost + ":" + itsPort;
+	}
+
+    // setup socket address
+    itsUnixAddr.sun_family = AF_UNIX;
+    ASSERTSTR (path.length() < sizeof(itsUnixAddr.sun_path), 
+													"socket name too long");
+
+    if (path[0] == '=')  { // abstract socket name
+		memset (itsUnixAddr.sun_path, 0, sizeof(itsUnixAddr.sun_path));
+		path.substr(1).copy(itsUnixAddr.sun_path+1, sizeof(itsUnixAddr.sun_path)-1);
+    }
+    else  { // socket in filesystem
+		path.copy (itsUnixAddr.sun_path, sizeof(itsUnixAddr.sun_path));
+	}
+
+    // create socket
+    itsSocketID = ::socket (PF_UNIX, SOCK_STREAM, 0);
+    if (itsSocketID < 0) {
+      return (setErrno(SOCKET));
+	}
+    LOG_TRACE_FLOW(formatString("creating unix socket %s", path.c_str()));
+
+    if (setDefaults() < 0) {
+		close (itsSocketID);
+		itsSocketID = -1;
+		return (itsErrno);
+    }
+
+	return (SK_OK);
+}
+
+//
+// initUnixSocket(asServer)
+//
+// Tries to setup the socket by resolving hostname, service and protocol
+// and finally allocating the real socket.
+//
+int32 Socket::initTCPSocket(bool	asServer)
+{
+	// Preinit part of TCP address structure
+	memset (&itsTCPAddr, 0, sizeof(itsTCPAddr));
+	itsTCPAddr.sin_family = AF_INET;
+	itsTCPAddr.sin_addr.s_addr = htonl(INADDR_ANY);
+
+	// as Client we must resolve the hostname to connect to.
+	if (!asServer) {
+		struct hostent*		hostEnt;		// server host entry
+		uint32				IPbytes;
+		// try if hostname is hard ip address
+		if ((IPbytes = inet_addr(itsHost.c_str())) == INADDR_NONE) {
+			// No, try to resolve the name
+			if (!(hostEnt = gethostbyname(itsHost.c_str()))) {
+				LOG_DEBUG("Socket:Hostname can not be resolved");
+				return (itsErrno = BADHOST);
+			}
+			// Check type
+			if (hostEnt->h_addrtype != AF_INET) {
+				LOG_DEBUG("Socket:Hostname is of wrong protocoltype");
+				return (itsErrno = BADADDRTYPE);
+			}
+			memcpy (&IPbytes, hostEnt->h_addr, sizeof (IPbytes));
+		}
+		memcpy ((char*) &itsTCPAddr.sin_addr.s_addr, (char*) &IPbytes, 
+															sizeof(IPbytes));
+	}
+			
+	// try to resolve the service
+	const char*			protocol = (itsType == UDP ? "udp" : "tcp");
+	struct servent*		servEnt;		// service info entry
+	if ((servEnt = getservbyname(itsPort.c_str(), protocol))) {
+		itsTCPAddr.sin_port = servEnt->s_port;
+	}
+	else {
+		if (!(itsTCPAddr.sin_port = htons((uint16)atoi(itsPort.c_str())))) {
+			LOG_DEBUG("Socket:Portnr/service can not be resolved");
+			return (itsErrno = PORT);
+		}
+	}
+
+	// Try to map protocol name to protocol number
+	struct protoent*	protoEnt;
+	if (!(protoEnt = getprotobyname(protocol))) {
+	  return (itsErrno = PROTOCOL);
+	}
+
+	// Finally time to open the real socket
+	int32	socketType = (itsType == TCP) ? SOCK_STREAM : SOCK_DGRAM;
+	if ((itsSocketID = ::socket(PF_INET, socketType, protoEnt->p_proto)) < 0) {
+		LOG_DEBUG(formatString("Socket:Can not get a socket, err = %d", errno));
+		return (setErrno(SOCKET));
+	}
+
+    LOG_DEBUG(formatString("Socket:Created %s socket, port %d, protocol %d",
+				asServer ? "server" : "client",
+                ntohs((ushort)itsTCPAddr.sin_port), (int)protoEnt->p_proto));
+
+    // set default options
+    if (setDefaults() < 0) {
+		close(itsSocketID);
+		itsSocketID = -1;
+		return (itsErrno);
+	}
+
+	return (SK_OK);
+}
+
+//
+// connect(waitMs = -1)
+//
+// Tries to connect to the server
+//
+// waitMs < 0: wait Blocking
+// 		  >=0: wait max waitMs milliseconds
+//
+// Return values:
+//	SK_OK		Successful connected
+//	INPROGRESS	Not connected within given timelimit, still in progress
+//	CONNECT		Some error occured, errnoSys() gives more info
+//
+int32 Socket::connect (int32 waitMs)
+{
+	if (itsIsServer) {							// only clients can connect
+		return (itsErrno = INVOP);
+	}
+
+	bool	blockingMode = itsIsBlocking;
+	setBlocking(waitMs < 0 ? true : false);		// switch temp to non-blocking?
+
+	struct sockaddr*	addrPtr;				// get pointer to result struct
+	if (itsType == UNIX) {
+		addrPtr = (struct sockaddr*) &itsUnixAddr;
+	}
+	else {
+		addrPtr = (struct sockaddr*) &itsTCPAddr;
+	}
+
+	if (::connect(itsSocketID, addrPtr, sizeof(*addrPtr)) >= 0) {
+		LOG_DEBUG("Socket:connect() successful");
+		itsIsConnected = true;
+		setBlocking (blockingMode);
+		return (itsErrno = SK_OK);
+	}
+
+	LOG_TRACE_FLOW(formatString("connect() failed: errno=%d (%s)", errno,
+														strerror(errno)));
+
+	if (errno != EINPROGRESS && errno != EALREADY) {// real error
+		setBlocking (blockingMode);					// reinstall blocking mode
+		return (setErrno(CONNECT));
+	}
+
+	// connecton request is still in progress, wait waitMs for a result
+	struct pollfd	pollInfo;
+	pollInfo.fd     = itsSocketID;
+	pollInfo.events = POLLWRNORM;
+	LOG_TRACE_FLOW(formatString("going into a poll for %d ms", waitMs));
+	int32 pollRes = poll (&pollInfo, 1, waitMs);	// poll max waitMs time
+	setBlocking (blockingMode);						// restore blocking mode
+
+	switch (pollRes) {
+	case -1:							// error on poll
+		return (setErrno(CONNECT));
+	case 0:								// timeout on poll let user do the rest
+		return (itsErrno = INPROGRESS);
+	}
+
+	int32		connRes;				// check for sys errors
+	socklen_t	resLen = sizeof(connRes);
+	if ((getsockopt(itsSocketID, SOL_SOCKET, SO_ERROR, &connRes, &resLen))) {
+		return (setErrno(CONNECT));		// getsockopt failed, assume conn failed
+	}
+	errno = connRes;					// put it were it belongs
+
+	if (connRes != 0) {					// not yet connected
+		LOG_TRACE_FLOW(formatString("delayed connect failed also, err=%d(%s)",
+													errno, strerror(errno)));
+		if ((errno == EINPROGRESS) || (errno == EALREADY)) {
+			return (setErrno(INPROGRESS));
+		}
+
+		return (setErrno(CONNECT));
+	}
+
+	LOG_DEBUG("Socket:delayed connect() succesful");
+	itsIsConnected = true;
+	setBlocking (blockingMode);
+	return (itsErrno = SK_OK);
+}
+
+//
+// accept(waitMS = -1)
+//
+// waitMs < 0: wait Blocking
+// 		  >=0: wait max waitMs milliseconds
+//
+// Returns: 0 on error otherwise pointer to new socket
+//
+Socket* Socket::accept(int32	waitMs)
+{
+	// Only possible on server sockets
+	if (!itsIsServer) {
+		itsErrno = INVOP; 
+		return (0); 
+	}
+
+	// Initialisatie must have been done already
+	if (itsSocketID < 0) { 
+		itsErrno = NOINIT; 
+		return (0); 
+	}
+
+	if (itsType == UDP)  {
+		return (this);
+	}
+
+	bool	blockingMode = itsIsBlocking;
+	setBlocking(waitMs < 0 ? true : false);		// switch temp to non-blocking?
+
+	struct sockaddr*	addrPtr;
+	if (itsType == UNIX) {
+		addrPtr = (struct sockaddr*) &itsUnixAddr;
+	}
+	else {
+		addrPtr = (struct sockaddr*) &itsTCPAddr;
+	}
+	socklen_t		addrLen = sizeof(*addrPtr);
+
+	itsErrno = SK_OK;
+	errno 	 = 0;
+	int32 	newSocketID = ::accept(itsSocketID, addrPtr, &addrLen);
+	if (newSocketID > 0) {
+	    LOG_DEBUG("Socket:accept() successful");
+		setBlocking(blockingMode);
+		Socket*		newSocket = (itsType == UNIX) ?
+								new Socket(newSocketID, itsUnixAddr) :
+							  	new Socket(newSocketID, itsTCPAddr);
+		newSocket->setBlocking(blockingMode);
+		return (newSocket);
+	}
+
+	LOG_TRACE_FLOW(formatString("accept() failed: errno=%d (%s)", errno,
+														strerror(errno)));
+
+	if ((errno != EWOULDBLOCK) && (errno != EALREADY)) {
+		// real error
+		setBlocking(blockingMode);
+		setErrno(ACCEPT);
+		return(0);
+	}
+
+	// accept request is still in progress, wait waitMs for a result
+	struct pollfd	pollInfo;
+	pollInfo.fd     = itsSocketID;
+	pollInfo.events = POLLIN;
+	LOG_TRACE_FLOW(formatString("going into a poll for %d ms", waitMs));
+	int32 pollRes = poll (&pollInfo, 1, waitMs);	// poll max waitMs time
+	setBlocking (blockingMode);					// restore blocking mode
+
+	switch (pollRes) {
+	case -1:							// error on poll
+		setErrno(ACCEPT);
+		return (0);
+	case 0:								// timeout on poll let user do the rest
+		setErrno(INPROGRESS);
+		return (0);
+	}
+
+	int32		connRes;				// check for errors
+	socklen_t	resLen = sizeof(connRes);
+	if ((getsockopt(itsSocketID, SOL_SOCKET, SO_ERROR, &connRes, &resLen))) {
+		setErrno(ACCEPT);				// getsockopt failed, assume conn failed
+		return (0);
+	}
+
+	if (connRes != 0) {			// not yet connected
+		setErrno(INPROGRESS);
+		return (0);
+	}
+
+	newSocketID = ::accept(itsSocketID, addrPtr, &addrLen);
+	ASSERT (newSocketID > 0);
+    LOG_DEBUG("Socket:accept() successful after delay");
+	itsErrno = 0;
+	setBlocking(blockingMode);
+	Socket*		newSocket = (itsType == UNIX) ?
+							new Socket(newSocketID, itsUnixAddr) :
+						  	new Socket(newSocketID, itsTCPAddr);
+	newSocket->setBlocking(blockingMode);
+	return (newSocket);
+}
+
+
+//
+// shutdown (receive = true, send = true)
+//
+int32 Socket::shutdown (bool receive, bool send)
+{
+	ASSERTSTR (receive || send, "neither receive nor send specified");
+
+	itsErrno = SK_OK;					// assume no failure
+
+	if (itsSocketID < 0) { 
+		return (itsErrno = NOINIT); 
+	}
+
+	if (itsIsConnected) {				// realy shutdown the socket.
+		itsErrno     = SK_OK;
+		int32 how    = receive ? (send ? SHUT_RDWR : SHUT_RD) : SHUT_WR;
+		int32 result = ::shutdown (itsSocketID, how);
+		LOG_DEBUG(formatString("Socket:shutdown(%d)=%d", how, result));
+		if (result < 0) {
+			setErrno(SHUTDOWN);
+		}
+	}
+
+	if (send && receive) {				// update administration
+		close(itsSocketID);
+		itsSocketID    = -1;
+		itsIsConnected = false;
+	}
+
+	return (itsErrno);
+}
+
+
+//
+// setBlocking (blockit)
+//
+int32 Socket::setBlocking (bool block)
+{
+	if (itsIsBlocking == block) {			// no mode change? ready!
+		return (SK_OK);
+	}
+
+	itsIsBlocking = block;					// register user wish
+
+	if (itsSocketID >= 0) {					// already a socket?
+		if (fcntl (itsSocketID, F_SETFL, block ? 0 : O_NONBLOCK) < 0) {
+			return (setErrno(SOCKOPT));
+		}
+	}
+
+	LOG_TRACE_FLOW(formatString("setBlocking(%s)", block ? "true" : "false"));
+
+	return (SK_OK);
+}
+
+
+//
+// read(buf, maxBytes)
+//
+// Returnvalue: < 0						error occured
+//				>= 0 != maxBytes		intr. occured or socket is nonblocking
+//				>= 0 == maxBytes		everthing went OK.
+int32 Socket::read (void	*buf, int32	maxBytes)
+{
+	if (itsSocketID < 0)  {
+		return (itsErrno = NOINIT); 
+	}
+
+	ASSERTSTR (buf, "read():null buffer");
+
+	itsErrno = SK_OK;
+	if (!maxBytes) {
+		return (SK_OK);
+	}
+
+	bool sigpipe = false;
   
-    int nread,nleft=maxn;
-    if( type != UDP )
-    {
-      while( nleft>0 && !errcode_ && !sigpipe )
-      {
-        errno = 0;
-        int old_counter = *sigpipe_counter;
-        nread = ::read( sid,buf,nleft ); // try to read something
-        sigpipe = old_counter != *sigpipe_counter; // check for SIGPIPE
-        dprintf(3)("read(%d)=%d%s, errno=%d (%s)\n",nleft,nread,
-                   sigpipe?" SIGPIPE":"",errno,strerror(errno));
-        if( Debug(10) && nread>0 )
-          printData(buf,min(nread,200));
-        if( nread<0 ) // error?
-        {
-          if( errno == EWOULDBLOCK || errno == EAGAIN ) 
-          { // if refuses to block, that's OK, return 0
-            errcode_ = TIMEOUT;
-            return maxn - nleft;
-          }
-          else // else a real error
-            return set_errcode(READERR);
-        }
-        else if( nread == 0 )
-          return errcode_ = PEERCLOSED;
-        else
-        {
-          buf = nread + (char*)buf;
-          nleft -= nread;
-        }
-      }
-    }
-    else // UDP socket
-    {
-      errno = 0;
-      //    if ((wres=Wait(rtimeout,SWAIT_READ))==0)
-      //      errcode_=SK_TIMEOUT;
-      //    else 
-      socklen_t alen = sizeof(rmt_addr);
-      if( (nread=recvfrom(sid,(char*)buf,maxn,0,
-                          (struct sockaddr*)&rmt_addr,&alen))<=0 ||
-          errno )
-        return set_errcode(READERR);
-      else
-      {
-        nleft = 0;
-        connected = true;
-      }
-    }
-  
-    if( sigpipe )
-      return errcode_ = PEERCLOSED;
+	int32	bytesRead = 0;
+	int32	bytesLeft = maxBytes;
+	if (itsType == UDP) {
+		// ----- UDP sockets -----
+	    errno = 0;
+		socklen_t alen = sizeof(itsTCPAddr);
+		if (((bytesRead = recvfrom(itsSocketID, (char*)buf, maxBytes, 0,
+						(struct sockaddr*)&itsTCPAddr, &alen)) <= 0) ||
+																errno) {
+			return (setErrno(READERR));
+		}
 
-    return maxn-nleft;
-  }
+		bytesLeft = 0;
+		itsIsConnected = true;
+	}
+	else { 
+		// ----- UNIX and TCP sockets -----
+		while (bytesLeft > 0 && !itsErrno && !sigpipe) {
+			errno = 0;								// reset system errno
+			int32 oldCounter = *sigpipeCounter;
 
-  //##ModelId=139EF112FEED
-  int Socket::write (const void *buf, int n)
-  {
-    if( sid<0 ) 
-      return errcode_=NOINIT; 
-    FailWhen(!buf,"null buffer");
-    errcode_ = 0;
-    if( !n ) 
-      return 0;
-    bool sigpipe = false;
+			// try to read something
+			LOG_TRACE_FLOW(formatString("read for %d bytes", bytesLeft));
+			bytesRead = ::recv (itsSocketID, buf, bytesLeft, 0);
+			sigpipe = (oldCounter != *sigpipeCounter); 	// check for SIGPIPE
+			LOG_TRACE_FLOW(formatString("read(%d)=%d%s, errno=%d (%s)", 
+						bytesLeft, bytesRead, sigpipe ? " SIGPIPE" : "", 
+						errno, strerror(errno)));
 
-    int nleft=n,nwr;
-    if( type != UDP ) // TCP or UNIX: write to stream
-    {
-      while( nleft>0 && !errcode_ && !sigpipe)
-      {
-        errno = 0;
-        int old_counter = *sigpipe_counter;
-        nwr = ::write(sid,buf,nleft);
-        sigpipe = old_counter != *sigpipe_counter; // check for SIGPIPE
-        dprintf(3)("write(%d)=%d%s, errno=%d (%s)\n",nleft,nwr,
-                   sigpipe?" SIGPIPE":"",errno,strerror(errno));
-        if( Debug(10) && nwr>0 )
-          printData(buf,min(nwr,200));
-        if( nwr<0 )
-        {
-          if( errno == EWOULDBLOCK || errno == EAGAIN ) 
-          { // if refuses to block, that's OK, return 0
-            errcode_ = TIMEOUT;
-            return n - nleft;
-          }
-          else // else a real error
-            return set_errcode(WRITERR);
-        }
-        else if( nwr==0 )
-          return errcode_ = PEERCLOSED;
-        else
-        {
-          buf = nwr + (char*)buf;
-          nleft -= nwr;
-        }
-      }
-    }
-    else // UDP
-    {
-      errno = 0;
-      if( !connected )
-        return errcode_ = WRITERR;
-      if( (nwr = sendto(sid,(char*)buf,n,0,(struct sockaddr*)&rmt_addr,
-                        sizeof(rmt_addr)))<=0 || errno )
-        return set_errcode(WRITERR);
-      else
-        nleft=0;
-    }
-  
-    if( sigpipe )
-      return errcode_ = PEERCLOSED;
-  
-    return n - nleft;
-  }
+			// allow interrupting threads
+			if (itsIsBlocking && itsAllowIntr)
+				return (setErrno(INCOMPLETE));
 
-  //##ModelId=890ACD77FEED
-  int Socket::shutdown (bool receive, bool send)
-  {
-    FailWhen(!receive && !send,"neither receive nor send specified");
-    if( sid<0 ) 
-      return errcode_ = NOINIT; 
-    errcode_ = 0;
-    int how = receive ? (send ? SHUT_RDWR : SHUT_RD) : SHUT_WR;
-    int res = ::shutdown(sid,how);
-    dprintf(1)("shutdown(%d)=%d",how,res);
-    if( res<0 )
-      return set_errcode(SHUTDOWN);
-    return 0;
-  }
+#ifdef ENABLE_TRACER
+			// trace databytes
+			if (bytesRead > 0) {
+				string	hdump;
+				hexdump (hdump, buf, bytesRead);
+				LOG_TRACE_VAR_STR ("data:" << endl << hdump);
+			}
+#endif
 
-  //##ModelId=3EE80597FEED
-  int Socket::setDefaults ()
-  {
-    if( sid<0 ) 
-      return errcode_ = NOINIT;
-  
-    uint val=1;
-    struct linger lin = { 1,1 };
+			if (bytesRead < 0) { 					// error?
+				if (errno == EWOULDBLOCK) { 
+					// if refuses to block, that's OK, return 0
+					itsErrno = INCOMPLETE;
+					return (maxBytes - bytesLeft);
+				}
+				else {								// else a real error
+					return (setErrno(READERR));
+				}
+			}
 
-  
-    if( setsockopt(sid,SOL_SOCKET,SO_REUSEADDR,(char*)&val,sizeof(val))<0 )
-      return set_errcode(SOCKOPT);
-  
-    // no more defaults for UNIX sockets
-    if( type == UNIX )
-      return 0;
+			if (bytesRead == 0) {					// conn reset by peer?
+				shutdown();
+				return (setErrno(PEERCLOSED));
+			}
 
-    if( setsockopt(sid,SOL_SOCKET,SO_KEEPALIVE,(char*)&val,sizeof(val) )<0)
-      return set_errcode(SOCKOPT);
-  
-    if( setsockopt(sid,SOL_SOCKET,SO_LINGER,(const char*)&lin,sizeof(lin))<0 )
-      return set_errcode(SOCKOPT);
-  
-    if( getsockopt(sid,SOL_SOCKET,SO_SNDBUF,(char*)&sbuflen,&val)<0 )
-      return set_errcode(SOCKOPT);
-  
-    if( getsockopt(sid,SOL_SOCKET,SO_RCVBUF,(char*)&rbuflen,&val)<0 )
-      return set_errcode(SOCKOPT);
-  
-    return 0;
-  }
+			buf = bytesRead + (char*)buf;
+			bytesLeft -= bytesRead;
 
-  // Additional Declarations
-  //##ModelId=3DB936D50067
-  int Socket::readblock (void *buf, int maxn)
-  {
-    if( sid<0 ) 
-      return errcode_=NOINIT; 
-    if( !maxn ) 
-      return 0;
-    FailWhen(!buf,"null buffer");
-    errcode_ = 0;
-    int nread,nleft=maxn;
-    if( type != UDP )
-    {
-      while( nleft>0 )
-      {
-        errno = 0;
-        nread = ::read( sid,buf,nleft ); // try to read something
-        dprintf(3)("read(%d)=%d, errno=%d (%s)\n",nleft,nread,errno,strerror(errno));
-        if( do_intr )
-          return set_errcode(INCOMPLETE);
-        if( Debug(10) && nread>0 )
-          printData(buf,min(nread,200));
-        if( nread<0 ) // error?
-        {
-          // return error (except in a few special cases)
-          if( errno != EWOULDBLOCK && errno != EAGAIN && errno != EINTR ) 
-            return set_errcode(READERR);
-        }
-        else if( nread == 0 )  // peer closed connection -- return
-          return errcode_ = PEERCLOSED;
-        else
-        {
-          buf = nread + (char*)buf;
-          nleft -= nread;
-        }
-      }
-    }
-    else // UDP socket
-    {
-      errno = 0;
-      //    if ((wres=Wait(rtimeout,SWAIT_READ))==0)
-      //      errcode_=SK_TIMEOUT;
-      //    else 
-      socklen_t alen = sizeof(rmt_addr);
-      if( (nread=recvfrom(sid,(char*)buf,maxn,0,
-                          (struct sockaddr*)&rmt_addr,&alen))<=0 ||
-          errno )
-        return set_errcode(READERR);
-      else
-      {
-        nleft = 0;
-        connected = true;
-      }
-    }
+		} // while
+	}
   
-    return maxn;
-  }
+	if (sigpipe) {
+		shutdown();
+		return (setErrno(PEERCLOSED));
+	}
 
-  //##ModelId=3DB936D6007C
-  int Socket::writeblock (const void *buf, int n)
-  {
-    if( sid<0 ) 
-      return errcode_=NOINIT; 
-    if( !n ) 
-      return 0;
-    FailWhen(!buf,"null buffer");
-    errcode_ = 0;
-  
-    int nleft=n,nwr;
-    if( type != UDP ) // TCP or UNIX: write to stream
-    {
-      while( nleft>0 )
-      {
-        errno = 0;
-        nwr = ::write(sid,buf,nleft);
-        dprintf(3)("write(%d)=%d, errno=%d (%s)\n",nleft,nwr,errno,strerror(errno));
-        if( do_intr )
-          return set_errcode(INCOMPLETE);
-        if( Debug(10) && nwr>0 )
-          printData(buf,min(nwr,200));
-        if( nwr<0 )
-        {
-          if( errno != EWOULDBLOCK && errno != EAGAIN && errno != EINTR ) 
-            return set_errcode(WRITERR);
-        }
-        else if( nwr==0 )
-          return errcode_ = PEERCLOSED;
-        else
-        {
-          buf = nwr + (char*)buf;
-          nleft -= nwr;
-        }
-      }
-    }
-    else // UDP
-    {
-      errno = 0;
-      if( !connected )
-        return errcode_ = WRITERR;
-      if( (nwr = sendto(sid,(char*)buf,n,0,(struct sockaddr*)&rmt_addr,
-                        sizeof(rmt_addr)))<=0 || errno )
-        return set_errcode(WRITERR);
-      else
-        nleft=0;
-    }
-  
-    return n;
-  }
+	return (maxBytes - bytesLeft);
+}
 
 
-  //##ModelId=3DB936D700EC
-  void Socket::printData (const void *buf,int n)
-  {
-    char hex[64],chars[32];
-    chars[20] = 0;
-    const unsigned char *ch=(const unsigned char*)buf;
-    for( int i=0; i<n; i++,ch++ )
-    {
-      int pos = i%20;
-      if( i && !pos )
-      {
-        printf("%-60s%-20s\n",hex,chars);
-        hex[0] = chars[0] = 0;
-      }
-      sprintf(hex+pos*3,"%02x ",(int)*ch);
-      chars[pos] = (*ch>=32 && *ch<=127) ? *ch : '.';
-    }
-    if( strlen(hex) )
-    {
-      if( n%20 )
-        chars[n%20] = 0;
-      printf("%-60s%-20s\n",hex,chars);
-    }
-  }
+//
+// write(buf, nrBytes)
+//
+// Returnvalue: < 0					error occured
+//				>= 0 != nrBytes		intr. occured or socket is nonblocking
+//				>= 0 == nrBytes		everthing went OK.
+int32 Socket::write (const void*	buf, int32	nrBytes)
+{
+	if (itsSocketID < 0)  {
+		return (itsErrno = NOINIT); 
+	}
 
-  //##ModelId=3DB936D3037B
-  void Socket::interrupt (bool intr)
-  {
-    do_intr = intr;
-  }
+	ASSERTSTR (buf, "write():null buffer");
 
-  string Socket::sdebug ( int detail,const string &,const char *name ) const
-  {
-    string out;
-    if( detail>=0 ) // basic detail
-    {
-      out = Debug::ssprintf("%s/%d",name?name:"Socket",sid);
-      if( server )
-        Debug::append(out,"S");
-      if( connected )
-        Debug::append(out,"c");
-    }
-    if( detail >= 1 || detail == -1 )   // normal detail
-    {
-      Debug::appendf(out,"err:%d",errcode_);
-      if( errcode_ )
-        Debug::append(out,errstr());
-    }
-    return out;
-  }
+	itsErrno = SK_OK;
+	if (!nrBytes)  {
+		return (SK_OK);
+	}
+
+	bool sigpipe = false;
+
+	int32	bytesLeft = nrBytes;
+	int32	bytesWritten = 0;
+	if (itsType == UDP) {
+		errno = 0;							// reset system errno
+
+		if (!itsIsConnected) {
+			return (itsErrno = WRITERR);
+		}
+
+		if ((bytesWritten = sendto (itsSocketID, (char*) buf, nrBytes, 0,
+									(struct sockaddr*)&itsTCPAddr,
+									sizeof (itsTCPAddr)) <= 0) || errno) {
+			return (setErrno(WRITERR));
+		}
+
+		bytesLeft = 0;
+	}
+	else { // UNIX or TCP socket
+		while (bytesLeft > 0 && !itsErrno && !sigpipe) {
+			errno = 0;								// reset system error
+			int32 oldCounter = *sigpipeCounter;
+			bytesWritten = ::write (itsSocketID, buf, bytesLeft);
+			sigpipe = (oldCounter != *sigpipeCounter); // check for SIGPIPE
+			LOG_DEBUG(formatString("Socket:write(%d)=%d%s, errno=%d (%s)", bytesLeft,
+							bytesWritten, sigpipe ? " SIGPIPE" : "",
+							errno, strerror(errno)));
+
+			// allow interrupting threads
+			if (itsIsBlocking && itsAllowIntr)
+				return (setErrno(INCOMPLETE));
+
+#ifdef ENABLE_TRACER
+			// trace databytes
+			string	hdump;
+			hexdump (hdump, buf, bytesWritten);
+			LOG_TRACE_VAR_STR ("data:" << endl << hdump);
+#endif
+
+			if (bytesWritten < 0) {
+				if (errno == EWOULDBLOCK) { // if refuses to block, that's OK, return 0
+					itsErrno = INCOMPLETE;
+					return (nrBytes - bytesLeft);
+				}
+				else  {// else a real error
+					return (setErrno(WRITERR));
+				} 
+			}
+
+			if (bytesWritten == 0) {
+				shutdown();
+				return (itsErrno = PEERCLOSED);
+			}
+
+			// bytesWritten > 0
+			buf = bytesWritten + (char*)buf;
+			bytesLeft -= bytesWritten;
+		} // while
+	}
+  
+	if (sigpipe) {
+		shutdown();
+		return (itsErrno = PEERCLOSED);
+	}
+  
+	return (nrBytes - bytesLeft);
+}
+
+//
+// readBlocking (buf, maxBytes)
+//
+// reads blocking independant of socket mode
+//
+int32 Socket::readBlocking (void *buf, int32 maxBytes)
+{
+	ASSERTSTR (buf, "readBlocking():null buffer");
+
+	bool	blockingMode = itsIsBlocking;
+	setBlocking(true);
+
+	LOG_TRACE_FLOW("readBlocking()");
+	int32 result = read(buf, maxBytes);
+
+	setBlocking (blockingMode);
+
+	return (result);
+}
+
+//
+// writeBlocking(buf, nrBytes)
+//
+int32 Socket::writeBlocking (const void *buf, int32	nrBytes)
+{
+	ASSERTSTR (buf, "writeBlocking():null buffer");
+
+	bool	blockingMode = itsIsBlocking;
+	setBlocking(true);
+
+	LOG_TRACE_FLOW("writeBlocking()");
+	int32 result = write(buf, nrBytes);
+
+	setBlocking (blockingMode);
+  
+	return (result);
+}
+
+//
+// errstr()
+//
+string Socket::errstr () const
+{
+	static char const *socketErrStr[] = {
+		"OK",
+		"Can't create socket (%d: %s)",
+		"Can't bind local address (%d: %s)",
+		"Can't connect to server (%d: %s)",
+		"Can't accept client socket (%d: %s)",
+		"Bad server host name given",
+		"Bad address type",
+		"Read error (%d: %s)",
+		"Write error (%d: %s)",
+		"Remote client closed connection (%d: %s)",
+		"Couldn't read/write whole message (%d: %s)",
+		"Invalid operation",
+		"setsockopt() or getsockopt() failure (%d: %s)",
+		"wrong port/service specified (%d: %s)",
+		"invalid protocol (%d: %s)",
+		"listen() error (%d: %s)",
+		"timeout (%d: %s)",
+		"connect in progress (%d: %s)",
+		"No more clients (%d: %s)",
+		"General failure",
+		"Uninitialized socket" 
+	};  
+
+	if (itsErrno < NOINIT || itsErrno > 0) {
+    	return ("");
+	}
+
+	return (formatString(socketErrStr[-itsErrno], errno, strerror(errno)));
+}
+
+
+// --------------- Protected mode ---------------
+
+//
+// Socket (socketID, inetAddress)
+//
+// Used by 'accept' after succesful accepted a connection
+//
+Socket::Socket (int32	aSocketID, struct sockaddr_in &inetAddr) : 
+	itsSocketname	("data"),
+	itsSocketID		(aSocketID),
+	itsType			(TCP),
+	itsIsServer		(false),
+	itsIsConnected	(false),
+	itsHost			(">tcp"),
+	itsPort			("0"),
+	itsAllowIntr	(false),
+	itsIsInitialized(false),
+	itsIsBlocking	(false)
+{
+	sigpipeCounter = &defaultSigpipeCounter;
+	LOG_TRACE_FLOW("creating connected socket");
+
+	itsTCPAddr = inetAddr;
+	if (setDefaults() < 0) {
+		shutdown();
+		return;
+	}
+
+	// successfully created connected socket
+	itsIsConnected = true;
+
+}
+
+//
+// Socket(socketID, unixAddr)
+//
+// Used by 'accept' after succesful accepting a connection
+//
+Socket::Socket (int32	aSocketID, struct sockaddr_un &unixAddr) : 
+	itsSocketname	("client"),
+	itsSocketID		(aSocketID),
+	itsType			(UNIX),
+	itsIsServer		(false),
+	itsIsConnected	(false),
+	itsHost			(">unix"),
+	itsPort			("0"),
+	itsAllowIntr	(false),
+	itsIsInitialized(false),
+	itsIsBlocking	(false)
+{
+	sigpipeCounter = &defaultSigpipeCounter;
+	itsUnixAddr = unixAddr;
+
+	if (setDefaults() < 0) {
+		shutdown();
+		return;
+	}
+
+	// successfully created connected socket
+	itsIsConnected = true;
+}
+
+//
+// setDefaults()
+//
+int32 Socket::setDefaults ()
+{
+	if (itsSocketID < 0)  {
+		return (itsErrno = NOINIT);
+	}
+
+	setBlocking(itsIsBlocking);				// be sure blocking mode is right.
+
+	uint32 			val = 1;
+	struct linger 	lin = { 1, 1 };
+
+	if (setsockopt(itsSocketID, SOL_SOCKET, SO_REUSEADDR, (char*)&val,
+															sizeof(val)) < 0) {
+		return (setErrno(SOCKOPT));
+	}
+
+	// no more defaults for UNIX sockets
+	if (itsType == UNIX) {
+		return (SK_OK);
+	}
+
+	if (setsockopt(itsSocketID, SOL_SOCKET, SO_KEEPALIVE, (char*)&val,
+															sizeof(val)) < 0) {
+		return (setErrno(SOCKOPT));
+	}
+
+	if (setsockopt(itsSocketID, SOL_SOCKET, SO_LINGER, (const char*)&lin, 
+															sizeof(lin)) < 0) {
+		return (setErrno(SOCKOPT));
+	}
+
+	return (SK_OK);
+}
 
 } // namespace LOFAR
