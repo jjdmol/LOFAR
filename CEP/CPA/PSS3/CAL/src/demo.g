@@ -214,12 +214,26 @@ solveej := function(fname='demo', ant=4*[0:20],
     sleep_cmd := spaste('sleep ', sleeptime);
     if (sleep) shell(sleep_cmd);
 
-    mc.resetiterator()
-        while (mc.nextinterval())
-        {
-            d := mc.getsolvedomain();
-            print 'solvedomain = ', d;
+    mc.resetiterator();
+    while (mc.nextinterval())
+    {
+        d := mc.getsolvedomain();
+        print 'solvedomain = ', d;
+        
+        parms := mc.getparms("EJ11.{real,imag}.SR{5,9}.*");
+        nrp := len(parms);
+        if (nrp > 0) {
+            for (nm in field_names(parms)) {
+                print nm, '=', parms[nm].value;
+            }
+        }
+        
+        for (i in [1:niter]) {
+            print "iteration", i;
 
+            srec := mc.solve();
+            solverec[spaste("iter",i)] := srec;
+            
             parms := mc.getparms("EJ11.{real,imag}.SR{5,9}.*");
             nrp := len(parms);
             if (nrp > 0) {
@@ -228,27 +242,13 @@ solveej := function(fname='demo', ant=4*[0:20],
                 }
             }
             
-            for (i in [1:niter]) {
-                print "iteration", i;
-
-                srec := mc.solve();
-                solverec[spaste("iter",i)] := srec;
-                
-                parms := mc.getparms("EJ11.{real,imag}.SR{5,9}.*");
-                nrp := len(parms);
-                if (nrp > 0) {
-                    for (nm in field_names(parms)) {
-                        print nm, '=', parms[nm].value;
-                    }
-                }
-                
-                sleep_cmd := spaste('sleep ', sleeptime);
-                if (sleep) shell(sleep_cmd);
-            }
-            print mc.getstatistics();
-            mc.saveresidualdata();
-            mc.saveparms();
+            sleep_cmd := spaste('sleep ', sleeptime);
+            if (sleep) shell(sleep_cmd);
         }
+        print mc.getstatistics();
+        mc.saveresidualdata();
+        mc.saveparms();
+    }
     
     mc.done();
 
@@ -569,33 +569,33 @@ solvegain := function(fname='demo', ant=4*[0:20], niter=1)
 #    parms := mc.getparmnames("*");
 #    print 'ALL PARMS = ', parms;
 
-    mc.resetiterator()
-        while (mc.nextinterval())
+    mc.resetiterator();
+    while (mc.nextinterval())
+    {
+        d := mc.getsolvedomain();
+        print 'solvedomain = ', d;
+
+        for (i in [1:niter])
         {
-            d := mc.getsolvedomain();
-            print 'solvedomain = ', d;
+            print "iteration", i
+                mc.solve();
 
-            for (i in [1:niter])
+            parms := mc.getparms("gain.11.*");
+            print 'GAIN SOLUTION = ';
+            for (k in [1:5])
             {
-                print "iteration", i
-                    mc.solve();
-
-                parms := mc.getparms("gain.11.*");
-                print 'GAIN SOLUTION = ';
-                for (k in [1:5])
-                {
-                    print parms[k].value[1];
-                }
-
-                parms := mc.getparms("gain.22.*");
-                print 'GAIN SOLUTION = ';
-                for (k in [1:5])
-                {
-                    print parms[k].value[1];
-                }
+                print parms[k].value[1];
             }
-            print mc.getstatistics()
+
+            parms := mc.getparms("gain.22.*");
+            print 'GAIN SOLUTION = ';
+            for (k in [1:5])
+            {
+                print parms[k].value[1];
             }
+        }
+        print mc.getstatistics();
+    }
 
     parms := mc.getparms("gain.11.*");
     print 'SOLUTION 11: ', parms;
@@ -604,6 +604,10 @@ solvegain := function(fname='demo', ant=4*[0:20], niter=1)
 
     mc.done();
 }
+
+
+
+
 
 initparms := function(fname='demo')
 {
@@ -637,6 +641,11 @@ initparms := function(fname='demo')
     pt.done();
 }
 
+
+
+
+
+
 setparms := function(fname='demo')
 {
     pt := parmtable(spaste(fname,'.MEP'), T);
@@ -657,6 +666,11 @@ setparms := function(fname='demo')
     pt.done();
 }
 
+
+
+
+
+
 initgsm := function(fname='demo')
 {
     tg := gsm(spaste(fname,'.GSM'), T);
@@ -673,6 +687,11 @@ initgsm := function(fname='demo')
     pt.done();
 }
 
+
+
+
+
+
 setej := function(fname='demo', mode=1, fact=1)
 {
     pt := parmtable(spaste(fname,'.MEP'));
@@ -686,6 +705,11 @@ setej := function(fname='demo', mode=1, fact=1)
     }
     pt.done();
 }
+
+
+
+
+
 
 setgsm := function(fname='demo')
 {
