@@ -197,7 +197,7 @@ void writeXHTMLHeader (ostream& os, const string& hdrtxt, const string& pkg,
   os << "    {" << endl;
   os << "      var folder = document.getElementById(id);" << endl;
   os << "      var l = 0;" << endl;
-  os << "      var vl = '/software/docxxhtml/ftv2vertline.png';" << endl;
+  os << "      var vl = '/software/TreeBrowser/images/ftv2vertline.png';" << endl;
   os << "      if (imageNode != null && imageNode.nodeName != 'IMG') " << endl;
   os << "      {" << endl;
   os << "        imageNode = findChildNode(imageNode, 'IMG');" << endl;
@@ -217,14 +217,14 @@ void writeXHTMLHeader (ostream& os, const string& hdrtxt, const string& pkg,
   os << "        if (imageNode != null) " << endl;
   os << "        {" << endl;
   os << "          l = imageNode.src.length;" << endl;
-  os << "          imageNode.nextSibling.src = '/software/docxxhtml/ftv2folderclosed.png';" << endl;
-  os << "          if (imageNode.src.substring(l-13,l) == '/software/docxxhtml/ftv2mnode.png')" << endl;
+  os << "          imageNode.nextSibling.src = '/software/TreeBrowser/images/ftv2folderclosed.png';" << endl;
+  os << "          if (imageNode.src.substring(l-13,l) == '/software/TreeBrowser/images/ftv2mnode.png')" << endl;
   os << "          {" << endl;
-  os << "            imageNode.src = '/software/docxxhtml/ftv2pnode.png';" << endl;
+  os << "            imageNode.src = '/software/TreeBrowser/images/ftv2pnode.png';" << endl;
   os << "          }" << endl;
-  os << "          else if (imageNode.src.substring(l-17,l) == '/software/docxxhtml/ftv2mlastnode.png')" << endl;
+  os << "          else if (imageNode.src.substring(l-17,l) == '/software/TreeBrowser/images/ftv2mlastnode.png')" << endl;
   os << "          {" << endl;
-  os << "            imageNode.src = '/software/docxxhtml/ftv2plastnode.png';" << endl;
+  os << "            imageNode.src = '/software/TreeBrowser/images/ftv2plastnode.png';" << endl;
   os << "          }" << endl;
   os << "        }" << endl;
   os << "        folder.style.display = 'none';" << endl;
@@ -240,14 +240,14 @@ void writeXHTMLHeader (ostream& os, const string& hdrtxt, const string& pkg,
   os << "        if (imageNode != null)" << endl; 
   os << "        {" << endl;
   os << "          l = imageNode.src.length;" << endl;
-  os << "          imageNode.nextSibling.src = '/software/docxxhtml/ftv2folderopen.png';" << endl;
-  os << "          if (imageNode.src.substring(l-13,l) == '/software/docxxhtml/ftv2pnode.png')" << endl;
+  os << "          imageNode.nextSibling.src = '/software/TreeBrowser/images/ftv2folderopen.png';" << endl;
+  os << "          if (imageNode.src.substring(l-13,l) == '/software/TreeBrowser/images/ftv2pnode.png')" << endl;
   os << "          {" << endl;
-  os << "            imageNode.src = '/software/docxxhtml/ftv2mnode.png';" << endl;
+  os << "            imageNode.src = '/software/TreeBrowser/images/ftv2mnode.png';" << endl;
   os << "          }" << endl;
-  os << "          else if (imageNode.src.substring(l-17,l) == '/software/docxxhtml/ftv2plastnode.png')" << endl;
+  os << "          else if (imageNode.src.substring(l-17,l) == '/software/TreeBrowser/images/ftv2plastnode.png')" << endl;
   os << "          {" << endl;
-  os << "            imageNode.src = '/software/docxxhtml/ftv2mlastnode.png';" << endl;
+  os << "            imageNode.src = '/software/TreeBrowser/images/ftv2mlastnode.png';" << endl;
   os << "          }" << endl;
   os << "        }" << endl;
   os << "        folder.style.display = 'block';" << endl;
@@ -298,27 +298,27 @@ void writeXHTML (ostream& os, const string& pkg, UsedMap& dep,
   os << indent << "<p>";
   for (int i=0; i<depth; ++i) {
     if (parentIsLast[i]) {
-      os << "<img src='/software/docxxhtml/ftv2blank.png' alt='&nbsp' width=16 height=22 />";
+      os << "<img src='/software/TreeBrowser/images/ftv2blank.png' alt='&nbsp' width=16 height=22 />";
     } else {
-      os << "<img src='/software/docxxhtml/ftv2vertline.png' alt='|' width=16 height=22 />";
+      os << "<img src='/software/TreeBrowser/images/ftv2vertline.png' alt='|' width=16 height=22 />";
     }
   }
   if (!doChildren) {
     if (isLast) {
-      os << "<img src='/software/docxxhtml/ftv2lastnode.png' alt='/' width=16 height=22 />";
+      os << "<img src='/software/TreeBrowser/images/ftv2lastnode.png' alt='/' width=16 height=22 />";
     } else {
-      os << "<img src='/software/docxxhtml/ftv2node.png' alt='o' width=16 height=22 />";
+      os << "<img src='/software/TreeBrowser/images/ftv2node.png' alt='o' width=16 height=22 />";
     }
-    os << "<img src='/software/docxxhtml/ftv2doc.png' alt='*' width=24 height=22 />";
+    os << "<img src='/software/TreeBrowser/images/openordner.png' alt='*' width=24 height=22 />";
   } else {
     if (isLast) {
-      os << "<img src='/software/docxxhtml/ftv2plastnode.png' alt='\\' width=16 height=22 onclick='toggleFolder(";
+      os << "<img src='/software/TreeBrowser/images/ftv2plastnode.png' alt='\\' width=16 height=22 onclick='toggleFolder(";
     } else {
-      os << "<img src='/software/docxxhtml/ftv2pnode.png' alt='o' width=16 height=22 onclick='toggleFolder(";
+      os << "<img src='/software/TreeBrowser/images/ftv2pnode.png' alt='o' width=16 height=22 onclick='toggleFolder(";
     }
     os << '"' << "node" << oss.str() << '"';
     os << ", this)'/>";
-    os << "<img src='/software/docxxhtml/ftv2folderclosed.png' alt='+' width=24 height=22 onclick='toggleFolder(";
+    os << "<img src='/software/TreeBrowser/images/ftv2folderclosed.png' alt='+' width=24 height=22 onclick='toggleFolder(";
     os << '"' << "node" << oss.str() << '"';
     os << ", this)'/>";
   }
