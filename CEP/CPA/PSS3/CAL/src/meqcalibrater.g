@@ -206,7 +206,7 @@ const meqcalibratertest := function()
     mc.settimeinterval(3600); # calibrate per 1 hour
     mc.clearsolvableparms();
     mc.setsolvableparms("a.b.* f.g.*[34]", T);
-#    mc.setsolvableparms("Leakage.*", T);
+    mc.setsolvableparms("Leakage.*", T);
     
     mc.resetiterator()
     i := 0

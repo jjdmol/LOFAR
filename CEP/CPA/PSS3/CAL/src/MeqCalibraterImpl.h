@@ -24,6 +24,7 @@
 #define CAL_MEQCALIBRATER_H
 
 #include <aips/Arrays/Matrix.h>
+#include <aips/Fitting/LSQ.h>
 #include <aips/MeasurementSets/MSMainColumns.h>
 #include <aips/MeasurementSets/MeasurementSet.h>
 #include <aips/Quanta/MVBaseline.h>
@@ -186,7 +187,6 @@ private:
 
   MDirection            itsPhaseRef;    //# Phase reference position in J2000
   MeqDomain             itsSolveDomain;
-  int                   itsNrScid;      //# nr of solvable coefficients
 
   Matrix<int>           itsBLIndex;     //# baseline index of antenna pair
   vector<MeqStation>    itsStations;
@@ -201,14 +201,14 @@ private:
   double itsEndFreq;
   int    itsNrChan;
 
-  Bool itsDataRead;
-
-  Matrix<DComplex> its_xx, its_xy, its_yx, its_yy;
+  LSQ          itsSolver;
+  int          itsNrScid;               //# Nr of solvable parameter coeff.
+  vector<bool> itsIsParmSolvable;       //# is corresponding parmlist solvable?
+  MeqMatrix    itsSolution;             //# Solution as complex numbers
+  vector<double> itsFitME;
+  vector<complex<double> > itsDeriv;   //# derivatives of predict
   
   /*@}*/
-
-  //! variable used in the dummy implementation
-  Double itsFitValue;
 };
 
 /*!

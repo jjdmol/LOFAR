@@ -113,7 +113,7 @@ vector<MeqStation> fillStations (const MeasurementSet& ms)
     MeqParmSingle* px = new MeqParmSingle ("AntPosX_"+String(str), antpos(0));
     MeqParmSingle* py = new MeqParmSingle ("AntPosY_"+String(str), antpos(1));
     MeqParmSingle* pz = new MeqParmSingle ("AntPosZ_"+String(str), antpos(2));
-    stations.push_back (MeqStation(px, py, pz));
+    stations.push_back (MeqStation(px, py, pz, ""));
   }
   return stations;
 }
@@ -246,6 +246,7 @@ int main(int argc, char* argv[])
 	 << ' ' << MeqResultRep::nctor + MeqResultRep::ndtor << endl;
     while (!iter.pastEnd()) {
       Table tab = iter.table();
+      ///      MeqPointDFT::doshow = tab.rowNumbers()(0) == 44;
       ArrayColumn<Complex> mdcol(tab, "MODEL_DATA");
       ROArrayColumn<Complex> dcol(tab, "DATA");
       ROArrayColumn<double> uvwcol(tab, "UVW");
@@ -254,7 +255,7 @@ int main(int argc, char* argv[])
       int npol = dcol(0).shape()(0);
       Vector<double> dt = timcol.getColumn();
       Matrix<double> uvws = uvwcol.getColumn();
-      uvwpolc.calcCoeff (dt, uvws);
+      uvwpolc.calcCoeff (dt, uvws, false);
       double step = intcol(0);
       int nrTime = dt.nelements();
       double startTime = dt(0)-step/2;
@@ -291,8 +292,11 @@ int main(int argc, char* argv[])
 	    data(2,i) = complex<float> (yxji.real(), yxji.imag());
 	  }
 	  const DComplex& yyji = yy(j,i);
-	  data(npol-1,i) = complex<float> (yyji.real(), yyji.imag());
+	  if (npol != 1) {
+	    data(npol-1,i) = complex<float> (yyji.real(), yyji.imag());
+	  }
 	}
+	///	cout <<"result: " << tab.rowNumbers()[j] << ' ' << data << endl;
 	mdcol.put (j, data);
       }
       iter++;

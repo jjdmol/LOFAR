@@ -214,17 +214,18 @@ void MeqCalibrater::makeWSRTExpr()
   itsGSM.getPointSources (sources);
 
   // Make an expression for each baseline.
-  itsExpr.reserve (itsUVWPolc.size());
+  itsExpr.resize (itsUVWPolc.size());
   int nrant = itsBLIndex.nrow();
   for (int ant2=0; ant2<nrant; ant2++) {
     for (int ant1=0; ant1<nrant; ant1++) {
-      if (itsBLIndex(ant1,ant2) >= 0) {
+      int blindex = itsBLIndex(ant1,ant2);
+      if (blindex >= 0) {
 	// Create the DFT kernel.
 	MeqPointDFT* dft = new MeqPointDFT(sources, itsPhaseRef,
-					   itsUVWPolc[itsBLIndex(ant1,ant2)]);
+					   itsUVWPolc[blindex]);
 	MeqWsrtPoint* pnt = new MeqWsrtPoint (sources, dft);
-	itsExpr.push_back (new MeqWsrtInt (pnt, itsStatExpr[ant1],
-					   itsStatExpr[ant2]));
+	itsExpr[blindex] = new MeqWsrtInt (pnt, itsStatExpr[ant1],
+					   itsStatExpr[ant2]);
       }
     }
   }
@@ -282,6 +283,11 @@ void MeqCalibrater::calcUVWPolc (const Table& ms)
       int todo = min(nrdone+chunkLength, nrtim);
       itsUVWPolc[blindex]->calcCoeff (dt(Slice(nrdone,todo)),
 				      uvws(Slice(0,3), Slice(nrdone, todo)));
+      ///      cout << "UVWs: " << blindex << ' ' << ant1 << ' ' << ant2 << ' '
+      ///	   << itsUVWPolc[blindex]->getUCoeff().getPolcs()[0].getCoeff()
+	///	   << itsUVWPolc[blindex]->getVCoeff().getPolcs()[0].getCoeff()
+	///	   << itsUVWPolc[blindex]->getWCoeff().getPolcs()[0].getCoeff()
+	///	   << endl;
     }
     iter++;
   }
@@ -308,7 +314,7 @@ MeqCalibrater::MeqCalibrater(const String& msName,
   itsMEP      (meqModel + ".MEP"),
   itsGSMTable (skyModel + ".GSM"),
   itsGSM      (itsGSMTable),
-  itsFitValue (10.0)
+  itsSolver   (1, LSQBase::COMPLEX)
 {
   cout << "MeqCalibrater constructor (";
   cout << "'" << msName   << "', ";
@@ -391,14 +397,39 @@ void MeqCalibrater::initParms (const MeqDomain& domain)
 {
   const vector<MeqParm*>& parmList = MeqParm::getParmList();
 
-  itsNrScid = 0;
+  itsIsParmSolvable.resize (parmList.size());
+  int i = 0;
   for (vector<MeqParm*>::const_iterator iter = parmList.begin();
        iter != parmList.end();
        iter++)
   {
+    itsIsParmSolvable[i] = false;
     if (*iter) {
-      itsNrScid += (*iter)->initDomain (domain, itsNrScid);
+      int nr = (*iter)->initDomain (domain, itsNrScid);
+      if (nr > 0) {
+	itsIsParmSolvable[i] = true;
+	itsNrScid += nr;
+      }
     }
+    i++;
+  }
+
+  if (itsNrScid > 0) {
+    // Get the initial values of all solvable parms.
+    // Resize the solution vector if needed.
+    if (itsSolution.nx() != itsNrScid) {
+      itsSolution = MeqMatrix (complex<double>(), itsNrScid, 1);
+    }
+    for (vector<MeqParm*>::const_iterator iter = parmList.begin();
+	 iter != parmList.end();
+	 iter++)
+    {
+      if (itsIsParmSolvable[i]) {
+	(*iter)->getInitial (itsSolution);
+      }
+    }
+    // Initialize the solver.
+    itsSolver.set (itsNrScid, 1, 0);
   }
 }
 
@@ -547,26 +578,178 @@ Double MeqCalibrater::solve()
 {
   cout << "solve" << endl;
 
-  if (!itsDataRead)
-  {
-    // read data from itsIter.table()
-
-    itsDataRead = true;
+  if (itsNrScid == 0) {
+    throw AipsError ("No parameters are set to solvable");
   }
-    
+  int nrpoint = 0;
+  Timer timer;
 
-  // invoke solver for the current domain
+  // Complex values are separated in real and imaginary.
+  // Loop through all rows in the current solve domain.
+  for (unsigned int i=0; i<itsCurRows.nelements(); i++) {
+    int rownr = itsCurRows(i);
+    ///    MeqPointDFT::doshow = rownr==44;
+    uInt ant1 = itsMSCol.antenna1()(rownr);
+    uInt ant2 = itsMSCol.antenna2()(rownr);
+    Assert (ant1 < itsBLIndex.nrow()  &&  ant2 < itsBLIndex.nrow()
+	    &&  itsBLIndex(ant1,ant2) >= 0);
+    int blindex = itsBLIndex(ant1,ant2);
+    ///    if (MeqPointDFT::doshow) {
+      ///      cout << "Info: " << ant1 << ' ' << ant2 << ' ' << blindex << endl;
+      ///    }
+    double time = itsMSCol.time()(rownr);
+    double step = itsMSCol.interval()(rownr);
+    MeqDomain domain(time-step/2, time+step/2, itsStartFreq, itsEndFreq);
+    MeqRequest request(domain, 1, itsNrChan, itsNrScid);
+    MeqJonesExpr& expr = *(itsExpr[blindex]);
+    expr.calcResult (request);
+    // Form the equations for this row.
+    Matrix<Complex> data = itsMSCol.data()(rownr);
+    int npol = data.shape()(0);
+    Assert (itsNrChan == data.shape()(1));
+    // Calculate the derivatives and get pointers to them.
+    vector<const complex<double>*> derivs(npol*itsNrScid);
+    for (int i=0; i<itsNrScid; i+=1) {
+      MeqMatrix val;
+      val = expr.getResult11().getPerturbedValue(i);
+      val -= expr.getResult11().getValue();
+      val /= expr.getResult11().getPerturbedValue(i);
+      derivs[i] = val.dcomplexStorage();
+      if (npol == 4) {
+	val = expr.getResult12().getPerturbedValue(i);
+	val -= expr.getResult12().getValue();
+	val /= expr.getResult12().getPerturbedValue(i);
+	derivs[i + itsNrScid] = val.dcomplexStorage();
+	val = expr.getResult21().getPerturbedValue(i);
+	val -= expr.getResult21().getValue();
+	val /= expr.getResult21().getPerturbedValue(i);
+	derivs[i + 2*itsNrScid] = val.dcomplexStorage();
+      }
+      if (npol > 1) {
+	val = expr.getResult22().getPerturbedValue(i);
+	val -= expr.getResult22().getValue();
+	val /= expr.getResult22().getPerturbedValue(i);
+	derivs[i + (npol-1)*itsNrScid] = val.dcomplexStorage();
+      }
+    }
+    // Get pointer to array storage; the data in it is contiguous.
+    Complex* dataPtr = &(data(0,0));
+    vector<complex<double> > derivVec;
+    // Fill in all equations.
+    if (npol == 1) {
+      const MeqMatrix& xx = expr.getResult11().getValue();
+      for (int i=0; i<itsNrChan; i++) {
+	for (int j=0; j<itsNrScid; j++) {
+	  derivVec[j] = derivs[j][i];
+	}
+	DComplex diff (dataPtr[i].real(), dataPtr[i].imag());
+	diff -= xx.getDComplex(0,i);
+	itsSolver.makeNorm (&derivVec[0], 1., &diff);
+	nrpoint++;
+      }
+    } else if (npol == 2) {
+      {
+	const MeqMatrix& xx = expr.getResult11().getValue();
+	for (int i=0; i<itsNrChan; i++) {
+	  for (int j=0; j<itsNrScid; j++) {
+	    derivVec[j] = derivs[j][i];
+	  }
+	  DComplex diff (dataPtr[i*2].real(), dataPtr[i*2].imag());
+	  diff -= xx.getDComplex(0,i);
+	  itsSolver.makeNorm (&derivVec[0], 1., &diff);
+	  nrpoint++;
+	}
+      }
+      {
+	const MeqMatrix& yy = expr.getResult22().getValue();
+	for (int i=0; i<itsNrChan; i++) {
+	  for (int j=0; j<itsNrScid; j++) {
+	    derivVec[j] = derivs[j+itsNrScid][i];
+	  }
+	  DComplex diff (dataPtr[i*2+1].real(), dataPtr[i*2+1].imag());
+	  diff -= yy.getDComplex(0,i);
+	  itsSolver.makeNorm (&derivVec[0], 1., &diff);
+	  nrpoint++;
+	}
+      }
+    } else if (npol == 4) {
+      {
+	const MeqMatrix& xx = expr.getResult11().getValue();
+	for (int i=0; i<itsNrChan; i++) {
+	  for (int j=0; j<itsNrScid; j++) {
+	    derivVec[j] = derivs[j][i];
+	  }
+	  DComplex diff (dataPtr[i*2].real(), dataPtr[i*2].imag());
+	  diff -= xx.getDComplex(0,i);
+	  itsSolver.makeNorm (&derivVec[0], 1., &diff);
+	  nrpoint++;
+	}
+      }
+      {
+	const MeqMatrix& xy = expr.getResult12().getValue();
+	for (int i=0; i<itsNrChan; i++) {
+	  for (int j=0; j<itsNrScid; j++) {
+	    derivVec[j] = derivs[j+itsNrScid][i];
+	  }
+	  DComplex diff (dataPtr[i*2+1].real(), dataPtr[i*2+1].imag());
+	  diff -= xy.getDComplex(0,i);
+	  itsSolver.makeNorm (&derivVec[0], 1., &diff);
+	  nrpoint++;
+	}
+      }
+      {
+	const MeqMatrix& yx = expr.getResult21().getValue();
+	for (int i=0; i<itsNrChan; i++) {
+	  for (int j=0; j<itsNrScid; j++) {
+	    derivVec[j] = derivs[j+2*itsNrScid][i];
+	  }
+	  DComplex diff (dataPtr[i*2+2].real(), dataPtr[i*2+2].imag());
+	  diff -= yx.getDComplex(0,i);
+	  itsSolver.makeNorm (&derivVec[0], 1., &diff);
+	  nrpoint++;
+	}
+      }
+      {
+	const MeqMatrix& yy = expr.getResult22().getValue();
+	for (int i=0; i<itsNrChan; i++) {
+	  for (int j=0; j<itsNrScid; j++) {
+	    derivVec[j] = derivs[j+3*itsNrScid][i];
+	  }
+	  DComplex diff (dataPtr[i*2+3].real(), dataPtr[i*2+3].imag());
+	  diff -= yy.getDComplex(0,i);
+	  itsSolver.makeNorm (&derivVec[0], 1., &diff);
+	  nrpoint++;
+	}
+      }
+    } else {
+      throw AipsError("Number of polarizations should be 1, 2, or 4");
+    }
+  }
+  timer.show("fill ");
+  
+  // Solve the equation.
+  uInt rank;
+  double fit;
+  vector<double> stddev(2*nrpoint);
+  double mu[2];
+  Assert (itsSolver.solveLoop (fit, rank, itsSolution.dcomplexStorage(),
+			       &(stddev[0]), mu));
+  timer.show("solve");
+  
+  // Update all parameters.
+  const vector<MeqParm*>& parmList = MeqParm::getParmList();
+  int i=0;
+  for (vector<MeqParm*>::const_iterator iter = parmList.begin();
+       iter != parmList.end();
+       iter++)
+  {
+    if (itsIsParmSolvable[i]) {
+      (*iter)->update (itsSolution);
+    }
+    i++;
+  }
 
-  // update the paramters
-
-#if 0
-  // Dummy implementation
-  itsFitValue /= 2.0;
-#else
-  itsFitValue = 0;
-#endif
-
-  return itsFitValue;
+  return fit;
 }
 
 //----------------------------------------------------------------------
@@ -582,15 +765,15 @@ void MeqCalibrater::saveParms()
 
   cout << "saveParms" << endl;
 
+  int i=0;
   for (vector<MeqParm*>::const_iterator iter = parmList.begin();
        iter != parmList.end();
        iter++)
   {
-    if (*iter)
-    {
-      //cout << "saveParm: " << (*iter)->getName() << endl;
-      (*iter)->save();
+    if (itsIsParmSolvable[i]) {
+      (*iter)->update (itsSolution);
     }
+    i++;
   }
 
   // Save the source parameters.
@@ -636,11 +819,15 @@ void MeqCalibrater::predict (const String& modelDataColName)
   // Loop through all rows in the current solve domain.
   for (unsigned int i=0; i<itsCurRows.nelements(); i++) {
     int rownr = itsCurRows(i);
+    ///    MeqPointDFT::doshow = rownr==44;
     uInt ant1 = itsMSCol.antenna1()(rownr);
     uInt ant2 = itsMSCol.antenna2()(rownr);
     Assert (ant1 < itsBLIndex.nrow()  &&  ant2 < itsBLIndex.nrow()
 	    &&  itsBLIndex(ant1,ant2) >= 0);
     int blindex = itsBLIndex(ant1,ant2);
+    ///    if (MeqPointDFT::doshow) {
+      ///      cout << "Info: " << ant1 << ' ' << ant2 << ' ' << blindex << endl;
+      ///    }
     double time = itsMSCol.time()(rownr);
     double step = itsMSCol.interval()(rownr);
     MeqDomain domain(time-step/2, time+step/2, itsStartFreq, itsEndFreq);
@@ -673,6 +860,7 @@ void MeqCalibrater::predict (const String& modelDataColName)
     } else if (1 != shp(0)) {
       throw AipsError("Number of polarizations should be 1, 2, or 4");
     }
+    ///    if (MeqPointDFT::doshow) cout << "result: " << data << endl;
     mdcol.put (rownr, data);
   }
 
