@@ -88,5 +88,6 @@ private:
   unsigned int itsNrcu;
   ArrayConfig itsArray;
   Trajectory itsBeamTraject;
+  int itsCount;
 };
 #endif

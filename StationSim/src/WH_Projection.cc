@@ -94,6 +94,9 @@ void WH_Projection::process()
 	  // Get the number of detected RFI sources from the STA comp. (internally calc. by MDL)
 	  int NumberOfEigenVectors = (int)(itsNumberOfRFIs.getBuffer()[0]);
 	  itsDetectedRFIs = NumberOfEigenVectors + getInputs() - 3;
+
+	  // DEBUG
+	  cout << itsDetectedRFIs << endl;
 	  
 	  // Read in the eigenvectors from the STA component. They are the detected rfi sources and
 	  // should be nulled. The deterministic nulls should be put in this matrix.

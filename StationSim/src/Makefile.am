@@ -24,7 +24,8 @@ WH_DataReader.h					\
 WH_STA.h					\
 WH_WeightDetermination.h			\
 WH_Projection.h					\
-GnuPlotInterface.h
+GnuPlotInterface.h				\
+PASTd.h
 
 lib_LTLIBRARIES 	= libstationsim.la
 
@@ -54,7 +55,8 @@ WH_DataReader.cc				\
 WH_STA.cc					\
 WH_WeightDetermination.cc			\
 WH_Projection.cc				\
-GnuPlotInterface.cc
+GnuPlotInterface.cc				\
+PASTd.cc
 
 bin_PROGRAMS		= Simulate
 Simulate_SOURCES 	= Simulate.cc Simulate.in

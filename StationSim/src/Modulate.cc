@@ -24,8 +24,6 @@
 #include <fftw.h>
 #include <rfftw.h>
 
-double theP;
-
 // implements the cumsum() function for blitz vectors:
 // (if y = cumsum(x), then y[tensor::i] = sum(x[0:tensor::i]))
 template < class T >
@@ -137,7 +135,8 @@ namespace modulate
 				   double fc,	
 				   double fs,	
 				   double opt,	
-				   double phase) 
+				   double phase,
+				   double* prev_cumsum) 
   {
     LoVec_double y (x.size ());
 
@@ -146,9 +145,9 @@ namespace modulate
 	}
 
     LoVec_double c = x;
-    c (0) += theP;
+    c (0) += *prev_cumsum;
     c = cumsum (c);
-    theP = c (x.size () - 1);
+    *prev_cumsum = c (c.ubound (blitz::firstDim));
     c *= opt;
 
     y = cos (2 * M_PI * fc * (tensor::i / fs + phase) + c);

@@ -77,10 +77,13 @@ WH_BeamFormer::WH_BeamFormer (const string& name,
   }
 
   //DEBUG
-//   itsFileInput.open ("/home/alex/temp/test_vectorEssai.txt");
-//   itsTestVector.resize(itsNrcu, 25445);
-//   itsFileInput >> itsTestVector;
+  itsTestVector.resize(itsNrcu, 25445);
+  if (name == "0") {
+	itsFileInput.open ("/home/alex/temp/test_vectorEssai.txt");
+	itsFileInput >> itsTestVector;
+  }
   handle = gnuplot_init ();
+  iCount = 0;
 }
 
 
@@ -96,8 +99,8 @@ WH_BeamFormer::~WH_BeamFormer()
   delete [] itsOutHolders;
 
   gnuplot_close (handle);
-//   DEBUG
-//   itsFileInput.close ();
+  //  DEBUG
+  itsFileInput.close ();
 }
 
 
@@ -124,9 +127,9 @@ void WH_BeamFormer::process()
   if (getOutputs () > 0) {
 	dcomplex temp;
 	for (int i = 0; i < itsNrcu; i++) {
-	  sample(i) = (dcomplex)itsInHolders[i]->getBuffer()[0]; 
-// 	  //DEBUG
-// 	  sample(i) = itsTestVector(i, itsPos);
+	  // 	  sample(i) = (dcomplex)itsInHolders[i]->getBuffer()[0]; 
+	  //DEBUG
+	  sample(i) = itsTestVector(i, iCount);
 	}
 	LoVec_dcomplex weight(itsWeight.getBuffer(), itsNrcu, duplicateData);   
 	
@@ -140,13 +143,10 @@ void WH_BeamFormer::process()
       itsOutHolders[j]->getBuffer ()[0] = output;
     }
 
-// 	int t = itsInHolders[0]->getTimeStamp ();
-// 	string n = getName ();
-// 	if (t % 500 == 0 && n == "0") {
-// 	  gnuplot_resetplot (handle);
-// 	  LoVec_double w = LCSMath::absVec (weight);
-// 	  gnuplot_plot_x (handle, w.data (), w.size (), "Power spectrum.");
-// 	}
+	string n = getName ();	
+	if (iCount++ % 25 == 0 && n == "0") {
+	  beamplot (handle, weight, itsTestVector, itsNrcu, 1);
+	}
   }
 }
 
@@ -182,3 +182,38 @@ DataHolder* WH_BeamFormer::getOutHolder (int channel)
   return itsOutHolders[channel];
 }
 
+void WH_BeamFormer::beamplot (gnuplot_ctrl* handle, const LoVec_dcomplex& w, 
+							  const LoMat_dcomplex& skyScan, const int nrcu, const int seconds)
+{
+  const int N = 180;                 // The resolution of the sky scan 
+  int index = 0;	
+  LoMat_dcomplex UVplane (N, N);
+  LoMat_double UVpower (N, N);
+  UVplane = 0;
+  
+  for (int u = 0; u < N; u++) {
+	for (int v = 0; v < N; v++) {
+	  if (sqrt (pow ((2 * (double) u / N) - 1, 2) + pow ((2 * (double) v / N) - 1, 2)) <= 1) {
+		for (int k = 0; k < nrcu; k++) {		
+		  UVplane (u, v) += skyScan (k, index) * conj (w (k)); 
+		}
+		UVpower (u, v) = abs (UVplane (u, v));
+		index++;
+	  }
+	}
+  }
+  UVpower /= max (UVpower);
+  
+  for (int u = 0; u < N; u++) {
+	for (int v = 0; v < N; v++) {
+	  if (UVpower (u, v) > 0) {
+		UVpower (u, v) = 20 * log10 (UVpower (u, v));
+	  } else {
+		UVpower (u, v) = -30;
+	  }
+	}
+  }
+  
+  gnuplot_splot (handle, UVpower, "Beam pattern");
+  //  gnuplot_contour_plot (handle, UVpower, "Beam pattern");
+}

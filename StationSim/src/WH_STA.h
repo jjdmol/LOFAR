@@ -101,5 +101,12 @@ private:
   LoVec_double   itsEvalues;
   LoMat_dcomplex itsAcm;
   int            itsAlg;
+  int            itsPASTdInterval;
+  double         itsPASTdBeta;
+
+  // DEBUG
+  ifstream itsFileInput;
+  LoMat_dcomplex itsTestVector;
+  int itsCount;
 };
 #endif

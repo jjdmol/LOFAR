@@ -85,8 +85,7 @@ void WH_ReadSignal::process ()
     itsFile >> sample;
   } else {
 	char s[256];
-	itsFile.close();
-	itsFile.open(itsFileName.c_str());
+	itsFile.seekg (0);
 
 	while (strncmp (s, "Data :", 6) != 0)
 	  itsFile.getline (s, 256);

@@ -66,7 +66,8 @@ namespace modulate
 				   double fc,	// carrier frequency
 				   double fs,	// sampling frequency 
 				   double opt,	// determines excursion in fq
-				   double phase);
+				   double phase,
+				   double* prev_cumsum);
   
   // PM
   // y = cos(2*pi*fc*t + opt*x)
