@@ -21,6 +21,9 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.10  2002/03/08 11:38:42  wierenga
+//  Upgraded from firewalls.h use to Debug.h use. This version was used for performance tests.
+//
 //  Revision 1.9  2001/12/18 12:57:58  schaaf
 //  Added tag for performance measurement report
 //
@@ -143,11 +146,10 @@ void WH_GrowSize::process()
 	  cout << itsInHolders[0]->getDataPacketSize() << " "
 	      << log10(itsInHolders[0]->getDataPacketSize()) << " ";
 	}
-	//cout << (itsInHolders[0]->getDataPacketSize() / (1024. * 1024.) / watch.elapsed()) 
-	//     << "  "
-	//     << watch.elapsed()
-	//     << "  "
-;
+	cout << (itsInHolders[0]->getDataPacketSize() / (1024. * 1024.) / watch.elapsed()) 
+	     << "  "
+	     << watch.elapsed()
+	     << "  ";
       }
     watch.start();
   }
