@@ -12,7 +12,7 @@
 #pragma aid IF Conv Chain Group Data Desc Polarization Code Poly Delay
 #pragma aid Dir Phase Pointing Lines Calibration Group Proper Motion Sigma Weight
 #pragma aid Origin Target Tracking Beam Product Meas Centroid
-#pragma aid AIPSPP
+#pragma aid AIPSPP Ignore
 
 #include "UVD/AID-UVD.h"
 #include "DMI/HIID.h"
