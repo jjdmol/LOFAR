@@ -28,63 +28,78 @@
 
 using namespace LOFAR;
 
+// This test program is meant for testing ShMem in an MPI environment.
+// However, if there is no MPI, TH_ShMem is the same as TH_Mem.
+// In that case the test program should run fine as well.
+
 int main(int argc, const char* argv[])
 {
-    
-  cout << "libTransport ExampleShMem test program" << endl;
+  try {  
+    cout << "Transport ExampleShMem test program" << endl;
 
-  TH_ShMem::init (argc, argv);
+    TH_ShMem::init (argc, argv);
     
-  DH_Example DH1("dh1", 1);
-  DH_Example DH2("dh2", 1);
-  Transporter& TR1 = DH1.getTransporter();
-  Transporter& TR2 = DH2.getTransporter();
+    DH_Example DH1("dh1", 1);
+    DH1.runOnNode (0);
+    DH_Example DH2("dh2", 1);
+    DH2.runOnNode (1);
+    Transporter& TR1 = DH1.getTransporter();
+    Transporter& TR2 = DH2.getTransporter();
     
-  // Assign an ID for each transporter by hand for now
-  // This will be done by the framework later on
-  TR1.setItsID(1);
-  TR2.setItsID(2);
+    // Assign an ID for each transporter by hand for now
+    // This will be done by the framework later on
+    TR1.setItsID(1);
+    TR2.setItsID(2);
 
-  // connect DH1 to DH2
-  TR1.connectTo(&TR2, TH_ShMem::proto);
-    
-  // initialize the DataHolders
-  DH1.init();
-  DH2.init();
-    
-  // fill the DataHolders with some initial data
-  DH1.getBuffer()[0] = fcomplex(17,-3.5);
-  DH2.getBuffer()[0] = 0;
-  DH1.setCounter(2);
-  DH2.setCounter(0);
-    
-  cout << "Before transport : " 
-       << DH1.getBuffer()[0] << ' ' << DH1.getCounter()
-       << " -- " 
-       << DH2.getBuffer()[0] << ' ' << DH2.getCounter()
-       << endl;
-    
-  // do the data transport
-  DH1.write();
-  DH2.read();
-  // note that transport is bi-directional.
-  // so this will also work:
-  //   DH2.write();
-  //   DH1.read();
-  // 
-  
-  int sts=0;
-  cout << "After transport  : " 
-       << DH1.getBuffer()[0] << ' ' << DH1.getCounter()
-       << " -- " 
-       << DH2.getBuffer()[0] << ' ' << DH2.getCounter()
-       << endl;
+    // TH_Mem doesn't implement a blocking send
+    TR1.setIsBlocking(false);
+    TR2.setIsBlocking(false);
 
-  if (DH1.getBuffer()[0] != DH2.getBuffer()[0]
-  ||  DH1.getCounter() != DH2.getCounter()) {
-    cout << "Data in receiving DataHolder is incorrect" << endl;
-    sts = 1;
+    // connect DH1 to DH2
+    TR1.connectTo(TR2, TH_ShMem());
+    
+    // initialize the DataHolders
+    TR1.init();
+    TR2.init();
+    
+    // fill the DataHolders with some initial data
+    DH1.getBuffer()[0] = fcomplex(17,-3.5);
+    DH2.getBuffer()[0] = 0;
+    DH1.setCounter(2);
+    DH2.setCounter(0);
+
+    int rank = TH_ShMem::getCurrentRank();
+    cout << rank << endl;
+    int sts=0;
+    if (rank <= 0 ) {
+      cout << "Before transport : " 
+	   << DH1.getBuffer()[0] << ' ' << DH1.getCounter()
+	   << " -- " 
+	   << DH2.getBuffer()[0] << ' ' << DH2.getCounter()
+	   << endl;
+      DH1.write();
+      cout << "write done" << endl;
+    }
+    if (rank == 1  ||  rank < 0) {
+      DH2.read();
+      cout << "read done" << endl;
+      cout << "After transport  : " 
+	   << DH1.getBuffer()[0] << ' ' << DH1.getCounter()
+	   << " -- " 
+	   << DH2.getBuffer()[0] << ' ' << DH2.getCounter()
+	   << endl;
+
+      if (DH1.getBuffer()[0] != DH2.getBuffer()[0]
+	  ||  DH1.getCounter() != DH2.getCounter()) {
+	cout << "Data in receiving DataHolder is incorrect" << endl;
+	sts = 1;
+      }
+    }
+    TH_ShMem::finalize();
+    return sts;
+
+  } catch (std::exception& x) {
+    cout << "Unexpected exception: " << x.what() << endl;
+    return 1;
   }
-  TH_ShMem::finalize();
-  return sts;
 }
