@@ -1,28 +1,9 @@
-//## begin module%1.4%.codegen_version preserve=yes
-//   Read the documentation to learn more about C++ code generator
-//   versioning.
-//## end module%1.4%.codegen_version
-
-//## begin module%3C90D43B0094.cm preserve=no
-//	  %X% %Q% %Z% %W%
-//## end module%3C90D43B0094.cm
-
-//## begin module%3C90D43B0094.cp preserve=no
-//## end module%3C90D43B0094.cp
-
-//## Module: Socket%3C90D43B0094; Package specification
-//## Subsystem: OCTOPUSSY::Net%3C90D442031F
-//## Source file: F:\lofar8\oms\LOFAR\src-links\OCTOPUSSY\Net\Socket.h
-
 #ifndef Socket_h
 #define Socket_h 1
 
-//## begin module%3C90D43B0094.additionalIncludes preserve=no
 #include "DMI/Common.h"
 #include "DMI/DMI.h"
-//## end module%3C90D43B0094.additionalIncludes
 
-//## begin module%3C90D43B0094.includes preserve=yes
 //#include <sys/file.h>
 //#include <sys/types.h>
 #include <resolv.h>
@@ -33,129 +14,120 @@
 //#include <fcntl.h>
 //#include <unistd.h>
 //#include <string.h>
-//## end module%3C90D43B0094.includes
-
-//## begin module%3C90D43B0094.declarations preserve=no
-//## end module%3C90D43B0094.declarations
-
-//## begin module%3C90D43B0094.additionalDeclarations preserve=yes
-//## end module%3C90D43B0094.additionalDeclarations
 
 
-//## begin Socket%3C90CE58024E.preface preserve=yes
-//## end Socket%3C90CE58024E.preface
-
-//## Class: Socket%3C90CE58024E
-//## Category: OCTOPUSSY::Net%3C90CF69020B
-//## Subsystem: OCTOPUSSY::Net%3C90D442031F
-//## Persistence: Transient
-//## Cardinality/Multiplicity: n
-
-
-
+//##ModelId=3C90CE58024E
 class Socket 
 {
-  //## begin Socket%3C90CE58024E.initialDeclarations preserve=yes
+    //##ModelId=3DB936CC0314
   LocalDebugSubContext;
-  //## end Socket%3C90CE58024E.initialDeclarations
 
   public:
-    //## Constructors (specified)
-      //## Operation: Socket%3C91BA4300F6
+      //##ModelId=3C91BA4300F6
       Socket (const string &sname = "");
 
-      //## Operation: Socket%9FD2BC39FEED; C++
-      //	Creates server socket
-      Socket (const string &sname, const string &serv, 	// service name/port number
+      //##ModelId=9FD2BC39FEED
+      //##Documentation
+      //## Creates server socket
+      Socket (
+          //##Documentation
+          //## service name/port number
+          const string &sname, const string &serv,
       int proto = Socket::TCP, int backlog = 5);
 
-      //## Operation: Socket%C15CE2A5FEED; C++
-      //	Creates client socket
-      Socket (const string &sname, const string &host, 	// remote host
-      const string &serv, 	// service name/port number
+      //##ModelId=C15CE2A5FEED
+      //##Documentation
+      //## Creates client socket
+      Socket (
+          //##Documentation
+          //## remote host
+          const string &sname, const string &host,
+          //##Documentation
+          //## service name/port number
+          const string &serv,
       int proto = Socket::TCP, int wait_ms = -1);
 
-    //## Destructor (generated)
+    //##ModelId=3DB936D00067
       ~Socket();
 
 
-    //## Other Operations (specified)
-      //## Operation: initServer%3C91B9FC0130
+      //##ModelId=3C91B9FC0130
       int initServer (const string &serv, int proto = Socket::TCP, int backlog = 5);
 
-      //## Operation: initClient%3C91BA16008E
+      //##ModelId=3C91BA16008E
       int initClient (const string &host, const string &serv, int proto = Socket::TCP, int wait_ms = -1);
 
-      //## Operation: errstr%F1A741D4FEED; C++
+      //##ModelId=F1A741D4FEED
       string errstr () const;
 
-      //## Operation: ok%3A99B058FEED; C++
+      //##ModelId=3A99B058FEED
       bool ok ();
 
-      //## Operation: connect%6AE5AA36FEED; C++
-      //	Attempts to connect to a server socket.
+      //##ModelId=6AE5AA36FEED
+      //##Documentation
+      //## Attempts to connect to a server socket.
       int connect (int wait_ms = 0);
 
-      //## Operation: accept%1357FC75FEED; C++
-      //	Tries to accept an incoming connection on a server socket.
+      //##ModelId=1357FC75FEED
+      //##Documentation
+      //## Tries to accept an incoming connection on a server socket.
       Socket* accept ();
 
-      //## Operation: read%5264A6A9FEED; C++
-      //	Reads up to maxn bytes from socket.
+      //##ModelId=5264A6A9FEED
+      //##Documentation
+      //## Reads up to maxn bytes from socket.
       int read (void *buf, int maxn);
 
-      //## Operation: write%139EF112FEED; C++
-      //	Writes n bytes to socket.
+      //##ModelId=139EF112FEED
+      //##Documentation
+      //## Writes n bytes to socket.
       int write (const void *buf, int n);
 
-      //## Operation: shutdown%890ACD77FEED; C++
-      //	Shuts down the socket for receive and/or send
+      //##ModelId=890ACD77FEED
+      //##Documentation
+      //## Shuts down the socket for receive and/or send
       int shutdown (bool receive, bool send);
 
-    //## Get and Set Operations for Class Attributes (generated)
-
-      //## Attribute: name%3C90CE5803BA
+    //##ModelId=3DB936D000E9
       const string& getName () const;
+    //##ModelId=3DB936D001E4
       void setName (const string& value);
 
-      //## Attribute: errcode%3C90CE5803C1
+    //##ModelId=3DB936D003C4
       int errcode () const;
 
-      //## Attribute: errno_sys%3C91B661029C
+    //##ModelId=3DB936D100CD
       int errno_sys () const;
 
-      //## Attribute: sid%3C90CE590017
+    //##ModelId=3DB936D101DB
       int getSid () const;
 
-      //## Attribute: type%3C90CE590038
+    //##ModelId=3DB936D102D5
       int getType () const;
 
-      //## Attribute: server%3C90CE590039
+    //##ModelId=3DB936D20006
       bool isServer () const;
 
-      //## Attribute: connected%3C90CE59009B
+    //##ModelId=3DB936D20128
       bool isConnected () const;
 
-      //## Attribute: host%3CC00CDC00EA
+    //##ModelId=3DB936D20255
       const string& host () const;
 
-      //## Attribute: port%3CC00CE902E8
+    //##ModelId=3DB936D20377
       const string& port () const;
 
     // Data Members for Class Attributes
 
-      //## Attribute: sigpipe_counter%3C90CE5803B3
-      //## begin Socket::sigpipe_counter%3C90CE5803B3.attr preserve=no  public: int {VT} 
-      //## end Socket::sigpipe_counter%3C90CE5803B3.attr
-
     // Additional Public Declarations
-      //## begin Socket%3C90CE58024E.public preserve=yes
+    //##ModelId=3DB936520032
       typedef enum { 
           UDP,         // UDP datagram socket
           TCP,         // TCP (stream) socket over network
           UNIX,        // unix socket (local)
           LOCAL=UNIX 
       } SocketTypes;
+    //##ModelId=3DB9365200B4
       typedef enum {
           SK_OK         =  0,   // Ok
           SOCKET        = -1,   // Can't create socket
@@ -182,215 +154,191 @@ class Socket
 
       // sets blocking mode on socket if block is true
       // (default sockets are non-blocking)
+    //##ModelId=3DB936D300BC
       int setBlocking (bool block=true);
       
       // interrupts readblock / writeblock calls (for multithreaded sockets)
+    //##ModelId=3DB936D3037B
       void interrupt (bool intr=True);
       
       // points socket at SIGPIPE counter
+    //##ModelId=3DB936D401F6
       void setSigpipeCounter (const volatile int *counter);
       
       //	Reads maxn bytes from socket (in blocking mode)
+    //##ModelId=3DB936D50067
       int readblock (void *buf, int maxn);
       //	Writes n bytes to socket (in blocking mode)
+    //##ModelId=3DB936D6007C
       int writeblock (const void *buf, int n);
 
       // helper function: prints formatted data from buffer
+    //##ModelId=3DB936D700EC
       static void printData (const void *buf,int n);
       
+    //##ModelId=3DB936D80210
       Declare_sdebug( );
+    //##ModelId=3DB936D802BA
       Declare_debug( );
-      //## end Socket%3C90CE58024E.public
   protected:
-    //## Constructors (specified)
-      //## Operation: Socket%4760B82BFEED; C++
-      //	Constructs a generic socket for an incoming connection on a server
-      //	socket.
+      //##ModelId=4760B82BFEED
+      //##Documentation
+      //## Constructs a generic socket for an incoming connection on a server
+      //## socket.
       Socket (int id, struct sockaddr_in &sa);
 
-      //## Operation: Socket%3CC95D6E032A
+      //##ModelId=3CC95D6E032A
       Socket (int id, struct sockaddr_un &sa);
 
 
-    //## Other Operations (specified)
-      //## Operation: setDefaults%3EE80597FEED; C++
-      //	Sets default socket options
+      //##ModelId=3EE80597FEED
+      //##Documentation
+      //## Sets default socket options
       int setDefaults ();
 
     // Additional Protected Declarations
-      //## begin Socket%3C90CE58024E.protected preserve=yes
+    //##ModelId=3DB936D8036E
       int set_errcode (int n);
-      //## end Socket%3C90CE58024E.protected
   private:
-    //## Constructors (generated)
+    //##ModelId=3DB936D902EE
       Socket(const Socket &right);
 
-    //## Assignment Operation (generated)
+    //##ModelId=3DB936DA0277
       Socket & operator=(const Socket &right);
 
-    // Additional Private Declarations
-      //## begin Socket%3C90CE58024E.private preserve=yes
-      //## end Socket%3C90CE58024E.private
-
-  private: //## implementation
+  private:
     // Data Members for Class Attributes
 
-      //## begin Socket::name%3C90CE5803BA.attr preserve=no  public: string {V} 
+      //##ModelId=3C90CE5803BA
       string name;
-      //## end Socket::name%3C90CE5803BA.attr
 
-      //## begin Socket::errcode%3C90CE5803C1.attr preserve=no  public: int {V} 
+      //##ModelId=3C90CE5803C1
       int errcode_;
-      //## end Socket::errcode%3C90CE5803C1.attr
 
-      //## begin Socket::errno_sys%3C91B661029C.attr preserve=no  public: int {U} 
+      //##ModelId=3C91B661029C
       int errno_sys_;
-      //## end Socket::errno_sys%3C91B661029C.attr
 
-      //## begin Socket::sid%3C90CE590017.attr preserve=no  public: int {V} 
+      //##ModelId=3C90CE590017
       int sid;
-      //## end Socket::sid%3C90CE590017.attr
 
-      //## begin Socket::type%3C90CE590038.attr preserve=no  public: int {V} 
+      //##ModelId=3C90CE590038
       int type;
-      //## end Socket::type%3C90CE590038.attr
 
-      //## begin Socket::server%3C90CE590039.attr preserve=no  public: bool {V} 
+      //##ModelId=3C90CE590039
       bool server;
-      //## end Socket::server%3C90CE590039.attr
 
-      //## begin Socket::connected%3C90CE59009B.attr preserve=no  public: bool {V} 
+      //##ModelId=3C90CE59009B
       bool connected;
-      //## end Socket::connected%3C90CE59009B.attr
 
-      //## begin Socket::host%3CC00CDC00EA.attr preserve=no  public: string {U} 
+      //##ModelId=3CC00CDC00EA
       string host_;
-      //## end Socket::host%3CC00CDC00EA.attr
 
-      //## begin Socket::port%3CC00CE902E8.attr preserve=no  public: string {U} 
+      //##ModelId=3CC00CE902E8
       string port_;
-      //## end Socket::port%3CC00CE902E8.attr
 
-      //## Attribute: sbuflen%3C90CE59009C
-      //## begin Socket::sbuflen%3C90CE59009C.attr preserve=no  protected: int {V} 
+      //##ModelId=3C90CE59009C
       int sbuflen;
-      //## end Socket::sbuflen%3C90CE59009C.attr
 
-      //## Attribute: rbuflen%3C90CE5900A1
-      //## begin Socket::rbuflen%3C90CE5900A1.attr preserve=no  protected: int {V} 
+      //##ModelId=3C90CE5900A1
       int rbuflen;
-      //## end Socket::rbuflen%3C90CE5900A1.attr
 
     // Additional Implementation Declarations
-      //## begin Socket%3C90CE58024E.implementation preserve=yes
+    //##ModelId=3DB936CE001E
       bool do_intr;  // flag: interrupt readblock/writeblock call
+    //##ModelId=3DB936CE01B9
       bool bound;
+    //##ModelId=3DB936CE0321
       struct sockaddr_in rmt_addr;  // connected client address (TCP)
+    //##ModelId=3DB936CF00CA
       struct sockaddr_un unix_addr; // connected client address (UNIX)
       
+    //##ModelId=3C90CE5803B3
       const volatile int *sigpipe_counter;
+    //##ModelId=3DB936CF02C9
       static int default_sigpipe_counter;
-      //## end Socket%3C90CE58024E.implementation
 };
-
-//## begin Socket%3C90CE58024E.postscript preserve=yes
-//## end Socket%3C90CE58024E.postscript
 
 // Class Socket 
 
 
-//## Other Operations (inline)
+//##ModelId=3A99B058FEED
 inline bool Socket::ok ()
 {
-  //## begin Socket::ok%3A99B058FEED.body preserve=yes
   return sid >= 0 && !errcode_;
-  //## end Socket::ok%3A99B058FEED.body
 }
 
-//## Get and Set Operations for Class Attributes (inline)
-
+//##ModelId=3DB936D000E9
 inline const string& Socket::getName () const
 {
-  //## begin Socket::getName%3C90CE5803BA.get preserve=no
   return name;
-  //## end Socket::getName%3C90CE5803BA.get
 }
 
+//##ModelId=3DB936D001E4
 inline void Socket::setName (const string& value)
 {
-  //## begin Socket::setName%3C90CE5803BA.set preserve=no
   name = value;
-  //## end Socket::setName%3C90CE5803BA.set
 }
 
+//##ModelId=3DB936D003C4
 inline int Socket::errcode () const
 {
-  //## begin Socket::errcode%3C90CE5803C1.get preserve=no
   return errcode_;
-  //## end Socket::errcode%3C90CE5803C1.get
 }
 
+//##ModelId=3DB936D100CD
 inline int Socket::errno_sys () const
 {
-  //## begin Socket::errno_sys%3C91B661029C.get preserve=no
   return errno_sys_;
-  //## end Socket::errno_sys%3C91B661029C.get
 }
 
+//##ModelId=3DB936D101DB
 inline int Socket::getSid () const
 {
-  //## begin Socket::getSid%3C90CE590017.get preserve=no
   return sid;
-  //## end Socket::getSid%3C90CE590017.get
 }
 
+//##ModelId=3DB936D102D5
 inline int Socket::getType () const
 {
-  //## begin Socket::getType%3C90CE590038.get preserve=no
   return type;
-  //## end Socket::getType%3C90CE590038.get
 }
 
+//##ModelId=3DB936D20006
 inline bool Socket::isServer () const
 {
-  //## begin Socket::isServer%3C90CE590039.get preserve=no
   return server;
-  //## end Socket::isServer%3C90CE590039.get
 }
 
+//##ModelId=3DB936D20128
 inline bool Socket::isConnected () const
 {
-  //## begin Socket::isConnected%3C90CE59009B.get preserve=no
   return connected;
-  //## end Socket::isConnected%3C90CE59009B.get
 }
 
+//##ModelId=3DB936D20255
 inline const string& Socket::host () const
 {
-  //## begin Socket::host%3CC00CDC00EA.get preserve=no
   return host_;
-  //## end Socket::host%3CC00CDC00EA.get
 }
 
+//##ModelId=3DB936D20377
 inline const string& Socket::port () const
 {
-  //## begin Socket::port%3CC00CE902E8.get preserve=no
   return port_;
-  //## end Socket::port%3CC00CE902E8.get
 }
 
-//## begin module%3C90D43B0094.epilog preserve=yes
+//##ModelId=3DB936D8036E
 inline int Socket::set_errcode ( int n )
 {
   errno_sys_ = errno;
   return errcode_ = n;
 }
 
+//##ModelId=3DB936D401F6
 inline void Socket::setSigpipeCounter (const volatile int *counter)
 {
   sigpipe_counter = counter;
 }
-//## end module%3C90D43B0094.epilog
 
 
 #endif
@@ -398,8 +346,6 @@ inline void Socket::setSigpipeCounter (const volatile int *counter)
 
 // Detached code regions:
 #if 0
-//## begin Socket::setSigpipe%3C9205370382.body preserve=yes
   sigpipe = True;
-//## end Socket::setSigpipe%3C9205370382.body
 
 #endif

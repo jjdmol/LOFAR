@@ -1,9 +1,9 @@
-/LogDebug                        724        ; from /home/oms/LOFAR/CEP/CPA/OCTOPUSSY/src/WorkProcess.h:36
-/LogError                        727        ; from /home/oms/LOFAR/CEP/CPA/OCTOPUSSY/src/WorkProcess.h:36
-/LogFatal                        728        ; from /home/oms/LOFAR/CEP/CPA/OCTOPUSSY/src/WorkProcess.h:36
-/LogNormal                       729        ; from /home/oms/LOFAR/CEP/CPA/OCTOPUSSY/src/WorkProcess.h:36
-/LogWarning                      726        ; from /home/oms/LOFAR/CEP/CPA/OCTOPUSSY/src/WorkProcess.h:36
-/MsgLog                          725        ; from /home/oms/LOFAR/CEP/CPA/OCTOPUSSY/src/WorkProcess.h:36
+/LogDebug                        739        ; from /home/oms/LOFAR/CEP/CPA/OCTOPUSSY/src/WorkProcess.h:11
+/LogError                        742        ; from /home/oms/LOFAR/CEP/CPA/OCTOPUSSY/src/WorkProcess.h:11
+/LogFatal                        743        ; from /home/oms/LOFAR/CEP/CPA/OCTOPUSSY/src/WorkProcess.h:11
+/LogNormal                       744        ; from /home/oms/LOFAR/CEP/CPA/OCTOPUSSY/src/WorkProcess.h:11
+/LogWarning                      741        ; from /home/oms/LOFAR/CEP/CPA/OCTOPUSSY/src/WorkProcess.h:11
+/MsgLog                          740        ; from /home/oms/LOFAR/CEP/CPA/OCTOPUSSY/src/WorkProcess.h:11
 Add                              616        ; from /home/oms/LOFAR/autoconf_share/../CEP/CPA/OCTOPUSSY/src/OCTOPUSSY.aidlist:7
 Argv                             574        ; from /home/oms/LOFAR/autoconf_share/../CEP/CPA/OCTOPUSSY/src/OCTOPUSSY.aidlist:8
 Bind                             583        ; from /home/oms/LOFAR/autoconf_share/../CEP/CPA/OCTOPUSSY/src/OCTOPUSSY.aidlist:9

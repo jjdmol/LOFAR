@@ -41,8 +41,10 @@
 //## begin module%3C90D43B0096.additionalDeclarations preserve=yes
 InitDebugSubContext(Socket,OctopussyDebugContext,"Socket");
 
+//##ModelId=3DB936CF02C9
 int Socket::default_sigpipe_counter;
 
+//##ModelId=3DB936D300BC
 int Socket::setBlocking (bool block)
 {
   if( fcntl(sid,F_SETFL,block?0:FNDELAY)<0 )
@@ -50,6 +52,7 @@ int Socket::setBlocking (bool block)
   return 0;
 }
 
+//##ModelId=3C91BA4300F6
 //## end module%3C90D43B0096.additionalDeclarations
 
 
@@ -67,6 +70,7 @@ Socket::Socket (const string &sname)
   //## end Socket::Socket%3C91BA4300F6.body
 }
 
+//##ModelId=9FD2BC39FEED
 Socket::Socket (const string &sname, const string &serv, int proto, int backlog)
   //## begin Socket::Socket%9FD2BC39FEED.hasinit preserve=no
   //## end Socket::Socket%9FD2BC39FEED.hasinit
@@ -80,6 +84,7 @@ Socket::Socket (const string &sname, const string &serv, int proto, int backlog)
   //## end Socket::Socket%9FD2BC39FEED.body
 }
 
+//##ModelId=C15CE2A5FEED
 Socket::Socket (const string &sname, const string &host, const string &serv, int proto, int wait_ms)
   //## begin Socket::Socket%C15CE2A5FEED.hasinit preserve=no
   //## end Socket::Socket%C15CE2A5FEED.hasinit
@@ -93,6 +98,7 @@ Socket::Socket (const string &sname, const string &host, const string &serv, int
   //## end Socket::Socket%C15CE2A5FEED.body
 }
 
+//##ModelId=4760B82BFEED
 Socket::Socket (int id, struct sockaddr_in &sa)
   //## begin Socket::Socket%4760B82BFEED.hasinit preserve=no
   //## end Socket::Socket%4760B82BFEED.hasinit
@@ -117,6 +123,7 @@ Socket::Socket (int id, struct sockaddr_in &sa)
   //## end Socket::Socket%4760B82BFEED.body
 }
 
+//##ModelId=3CC95D6E032A
 Socket::Socket (int id, struct sockaddr_un &sa)
   //## begin Socket::Socket%3CC95D6E032A.hasinit preserve=no
   //## end Socket::Socket%3CC95D6E032A.hasinit
@@ -141,6 +148,7 @@ Socket::Socket (int id, struct sockaddr_un &sa)
 }
 
 
+//##ModelId=3DB936D00067
 Socket::~Socket()
 {
   //## begin Socket::~Socket%3C90CE58024E_dest.body preserve=yes
@@ -160,6 +168,7 @@ Socket::~Socket()
 
 
 
+//##ModelId=3C91B9FC0130
 //## Other Operations (implementation)
 int Socket::initServer (const string &serv, int proto, int backlog)
 {
@@ -292,6 +301,7 @@ int Socket::initServer (const string &serv, int proto, int backlog)
   //## end Socket::initServer%3C91B9FC0130.body
 }
 
+//##ModelId=3C91BA16008E
 int Socket::initClient (const string &host, const string &serv, int proto, int wait_ms)
 {
   //## begin Socket::initClient%3C91BA16008E.body preserve=yes
@@ -386,6 +396,7 @@ int Socket::initClient (const string &host, const string &serv, int proto, int w
   //## end Socket::initClient%3C91BA16008E.body
 }
 
+//##ModelId=F1A741D4FEED
 string Socket::errstr () const
 {
   //## begin Socket::errstr%F1A741D4FEED.body preserve=yes
@@ -418,6 +429,7 @@ string Socket::errstr () const
   //## end Socket::errstr%F1A741D4FEED.body
 }
 
+//##ModelId=6AE5AA36FEED
 int Socket::connect (int wait_ms)
 {
   //## begin Socket::connect%6AE5AA36FEED.body preserve=yes
@@ -454,6 +466,7 @@ int Socket::connect (int wait_ms)
   //## end Socket::connect%6AE5AA36FEED.body
 }
 
+//##ModelId=1357FC75FEED
 Socket* Socket::accept ()
 {
   //## begin Socket::accept%1357FC75FEED.body preserve=yes
@@ -491,6 +504,7 @@ Socket* Socket::accept ()
   //## end Socket::accept%1357FC75FEED.body
 }
 
+//##ModelId=5264A6A9FEED
 int Socket::read (void *buf, int maxn)
 {
   //## begin Socket::read%5264A6A9FEED.body preserve=yes
@@ -559,6 +573,7 @@ int Socket::read (void *buf, int maxn)
   //## end Socket::read%5264A6A9FEED.body
 }
 
+//##ModelId=139EF112FEED
 int Socket::write (const void *buf, int n)
 {
   //## begin Socket::write%139EF112FEED.body preserve=yes
@@ -621,6 +636,7 @@ int Socket::write (const void *buf, int n)
   //## end Socket::write%139EF112FEED.body
 }
 
+//##ModelId=890ACD77FEED
 int Socket::shutdown (bool receive, bool send)
 {
   //## begin Socket::shutdown%890ACD77FEED.body preserve=yes
@@ -637,6 +653,7 @@ int Socket::shutdown (bool receive, bool send)
   //## end Socket::shutdown%890ACD77FEED.body
 }
 
+//##ModelId=3EE80597FEED
 int Socket::setDefaults ()
 {
   //## begin Socket::setDefaults%3EE80597FEED.body preserve=yes
@@ -671,6 +688,7 @@ int Socket::setDefaults ()
 }
 
 // Additional Declarations
+//##ModelId=3DB936D50067
   //## begin Socket%3C90CE58024E.declarations preserve=yes
 int Socket::readblock (void *buf, int maxn)
 {
@@ -728,6 +746,7 @@ int Socket::readblock (void *buf, int maxn)
   return maxn;
 }
 
+//##ModelId=3DB936D6007C
 int Socket::writeblock (const void *buf, int n)
 {
   //## begin Socket::write%139EF112FEED.body preserve=yes
@@ -781,6 +800,7 @@ int Socket::writeblock (const void *buf, int n)
 }
 
 
+//##ModelId=3DB936D700EC
 void Socket::printData (const void *buf,int n)
 {
   char hex[64],chars[32];
@@ -805,6 +825,7 @@ void Socket::printData (const void *buf,int n)
   }
 }
 
+//##ModelId=3DB936D3037B
 void Socket::interrupt (bool intr)
 {
   do_intr = intr;
