@@ -2,6 +2,8 @@ bin_PROGRAMS   := uvplot
 uvplot_SOURCES := main.cc \
                   UVPMainWindow.cc   UVPMainWindow.moc.cc  \
                   UVPDisplayArea.cc  UVPDisplayArea.moc.cc \
+                  UVPGraphSettings.cc    \
+                  UVPGraphSettingsWidget.cc UVPGraphSettingsWidget.moc.cc \
                   UVPPixel.cc            \
                   UVPAxis.cc             \
                   UVPImageCube.cc        \
@@ -14,6 +16,8 @@ uvplot_SOURCES := main.cc \
                   UVPDataAtomHeader.cc   \
                   UVPDataAtom.cc         \
                   UVPDataCacheElement.cc \
+#                  UVPCorrelationDataCache.cc \
+#                  UVPBaselineDataCache.cc    \
                   AID-uvplot-Registry.cc
 
 
@@ -21,7 +25,7 @@ uvplot_SOURCES := main.cc \
 UVPLOT_DIR := $(top_srcdir)/src
 
 
-CXXFLAGS += -DDEBUG_MODE
+CXXFLAGS += -DDEBUG_MODE=1
 
 
 
