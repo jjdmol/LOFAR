@@ -87,6 +87,10 @@ private:
 
   //  LoMat_dcomplex itsFifo;
   LoVec_dcomplex sample; // current sample in Blitz format
+
+  //DEBUG
+  ofstream itsFileOutReal;
+  ofstream itsFileOutComplex;
 };
 
 #endif

@@ -81,6 +81,7 @@ void StationSim::define (const ParamBlock& params)
   // Get the various controls from the ParamBlock.
   const int nrcu                  = params.getInt    ("nrcu", 2);
   const int nsubband              = params.getInt    ("nsubband", 16);
+  const int order                 = params.getInt    ("order", 12);
   const int nchannel              = params.getInt    ("nchannel", 16);
   const int nselsubband           = params.getInt    ("nselsubband", 4);
   const string selFileName        = params.getString ("selfilename", "");
@@ -96,13 +97,13 @@ void StationSim::define (const ParamBlock& params)
   const int maxNtarget            = params.getInt    ("maxntarget", 1);
   const int maxNrfi               = params.getInt    ("maxnrfi", 1);
 
-  const int delayMod              = modulationWindowSize - 1;
-  const int delayPhase            = nfft_phaseshift - 1;
-  const int delaySubFilt          = nrcu * (nsubband - 1);
-  const int delayBeamForm         = 1;
-
   // Read in the configuration for the sources
   DataGenerator* DG_Config = new DataGenerator (datagenFileName);
+
+  const int delayMod              = modulationWindowSize - 1;
+  const int delayPhase            = nfft_phaseshift - 1;
+  const int delaySubFilt          = (delayMod+1 + delayPhase+1) / nsubband + order;
+  const int delayBeamForm         = 1;
 
   // Check
   AssertStr (nrcu == DG_Config->itsArray->size(), "The array configfile doesn't match the simulator input!");
@@ -203,31 +204,34 @@ void StationSim::define (const ParamBlock& params)
 //   }
 
   // Create the subband filterbank
+  int nout = 2;
   for (int i = 0; i < nrcu; ++i) {
 	sprintf (suffix, "%d", i);
 	  
-	Step subband_filter (WH_BandSep(suffix,	nsubband, coeffFileNameSub, 2),
+	Step subband_filter (WH_BandSep(suffix,	nsubband, coeffFileNameSub, nout),
 			     string ("subband_filter_") + suffix,
 			     false);
 	subband_filter.getInData (0).setReadDelay (delayMod + delayPhase);
-	for (int j = 0; j < nsubband*2; ++j) {
-	  subband_filter.getOutData (j).setWriteDelay (delayMod + delayPhase + delaySubFilt);
+	for (int j = 0; j < nsubband * nout; ++j) {
+	  subband_filter.getOutData (j).setWriteDelay (delaySubFilt);
 	}
+	subband_filter.setOutRate(nsubband);
 	simul.addStep (subband_filter);	
   }
 
   // The beamformer object
   for (int i = 0; i < nsubband; ++i) {
     sprintf (suffix, "%d", i);
-    Step beam (WH_BeamFormer("bf", nrcu + 1, nrcu, nrcu, nbeam, maxNtarget, maxNrfi), 
+    Step beam (WH_BeamFormer(suffix, nrcu + 1, nrcu, nrcu, nbeam, maxNtarget, maxNrfi), 
 	       string("beam_former_") + suffix, false);
     for (int j = 0; j < nrcu; ++j) {
-      beam.getInData (j).setReadDelay (delayMod + delayPhase + delaySubFilt); 
+      beam.getInData (j).setReadDelay (delaySubFilt); 
     }
-    beam.getInData (nrcu).setReadDelay (delayMod + delayPhase + delaySubFilt + delayBeamForm); 
+    beam.getInData (nrcu).setReadDelay (delaySubFilt + delayBeamForm); 
     for (int j = 0; j < nrcu; ++j) {
-      beam.getOutData (j).setWriteDelay (delayMod + delayPhase + delaySubFilt + delayBeamForm);
+      beam.getOutData (j).setWriteDelay (delaySubFilt + delayBeamForm);
     }
+	beam.setRate(nsubband);
     simul.addStep (beam);
   } 
 
@@ -238,9 +242,10 @@ void StationSim::define (const ParamBlock& params)
     Step sta (WH_STA("", nrcu, 1, nrcu, maxNrfi, buflength), string ("sta_") + suffix, false);
 
     for (int j = 0; j < nrcu; ++j) {
-      sta.getInData (j).setReadDelay (delayMod + delayPhase + delaySubFilt);
+      sta.getInData (j).setReadDelay (delaySubFilt);
     }
-    sta.getOutData (0).setWriteDelay (delayMod + delayPhase + delaySubFilt);
+    sta.getOutData (0).setWriteDelay (delaySubFilt);
+	sta.setRate(nsubband);
     simul.addStep (sta);
   }
 
@@ -250,9 +255,9 @@ void StationSim::define (const ParamBlock& params)
     Step weight_det (WH_WeightDetermination("wd", 0, 1, nrcu), 
 		      string("weight_det_") + suffix, false);
     
-    weight_det.getOutData (0).setWriteDelay (delayMod + delayPhase + delaySubFilt);
-    
-    simul.addStep(weight_det);
+    weight_det.getOutData (0).setWriteDelay (delaySubFilt);
+	weight_det.setRate(nsubband);
+	simul.addStep(weight_det);
  }
 	     
   // the projection object
@@ -261,9 +266,10 @@ void StationSim::define (const ParamBlock& params)
     Step projection (WH_Projection("prj", 2, 1, nrcu, maxNrfi), 
 		     string("projection_") + suffix, false);
     
-    projection.getInData (0).setReadDelay (delayMod + delayPhase + delaySubFilt);
-    projection.getInData (1).setReadDelay (delayMod + delayPhase + delaySubFilt);
-    projection.getOutData (0).setWriteDelay (delayMod + delayPhase + delaySubFilt);
+    projection.getInData (0).setReadDelay (delaySubFilt);
+    projection.getInData (1).setReadDelay (delaySubFilt);
+    projection.getOutData (0).setWriteDelay (delaySubFilt);
+	projection.setRate(nsubband);
     simul.addStep(projection); 
   }
 
@@ -310,7 +316,6 @@ void StationSim::define (const ParamBlock& params)
   }
 
   // Connect the Beamformer objects
-
   for (int s = 0; s < nsubband; ++s) {
     sprintf(suffix2, "%d", s);
     for (int r = 0; r < nrcu; ++r) {
