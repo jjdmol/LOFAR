@@ -48,6 +48,14 @@ namespace LOFAR
 # define LOFARLOGGER_PACKAGE "Unknown_package"
 #endif
 
+//# The user may optionally define LOFARLOGGER_SUBPACKAGE. Concatenate the
+//# package and optional sub-package into LOFARLOGGER_FULLPACKAGE.
+#ifdef LOFARLOGGER_SUBPACKAGE
+# define LOFARLOGGER_FULLPACKAGE LOFARLOGGER_PACKAGE "." LOFARLOGGER_SUBPACKAGE
+#else
+# define LOFARLOGGER_FULLPACKAGE LOFARLOGGER_PACKAGE
+#endif
+
 //#
 //# AUTO_FUNCTION_NAME
 //#

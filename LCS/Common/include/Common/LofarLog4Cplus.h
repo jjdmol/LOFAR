@@ -292,7 +292,7 @@ void	initTraceModule(void);
 #define THROW(exc,stream) { \
 	std::ostringstream	oss;	\
 	oss << stream;				\
-	log4cplus::Logger::getInstance(LOFARLOGGER_PACKAGE ".EXCEPTION").log( \
+	log4cplus::Logger::getInstance(LOFARLOGGER_FULLPACKAGE ".EXCEPTION").log( \
 					log4cplus::DEBUG_LOG_LEVEL, oss.str(), __FILE__, __LINE__); \
 	throw (exc(oss.str(), __HERE__)); \
 	}
@@ -301,7 +301,7 @@ void	initTraceModule(void);
 
 // Define internal macro's for standard logging functions
 #define LofarLog(level,message) \
-	log4cplus::Logger::getInstance(LOFARLOGGER_PACKAGE).log(log4cplus::level, message, __FILE__, __LINE__);
+	log4cplus::Logger::getInstance(LOFARLOGGER_FULLPACKAGE).log(log4cplus::level, message, __FILE__, __LINE__);
 #define LofarLogStr(level,stream) {		\
 	std::ostringstream	oss;			\
 	oss << stream;						\
