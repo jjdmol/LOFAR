@@ -67,7 +67,7 @@ class MSIntegratorWP : public WorkProcess  //## Inherits: <unnamed>%3CD1338701E2
     //## Constructors (specified)
 
       //## Operation: MSIntegratorWP%3CD781CA01B8
-      MSIntegratorWP (string msname, const HIID &act_msg = HIID(), int nchan = 8, int ntime = 10, int npatch = 2);
+      MSIntegratorWP (string msname = "", const HIID &act_msg = HIID(), int nchan = 8, int ntime = 10, int npatch = 2);
 
     //## Destructor (generated)
       ~MSIntegratorWP();
