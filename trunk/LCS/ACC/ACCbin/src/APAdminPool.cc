@@ -26,7 +26,6 @@
 //# Includes
 #include <Common/LofarLogger.h>
 #include <ACC/APAdminPool.h>
-#include <Transport/TH_Socket.h>
 
 namespace LOFAR {
   namespace ACC {
