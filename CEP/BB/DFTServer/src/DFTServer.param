@@ -1,5 +1,4 @@
-DFTConnection.ClientHost = lofar17
-DFTConnection.ServerHost = lofar17
-DFTConnection.RequestPort= 17543
-DFTConnection.ResultPort = 17544
- 
+DFTConnection.ClientHost="lofar17"
+DFTConnection.ServerHost="lofar17"
+DFTConnection.RequestPort=17543
+DFTConnection.ResultPort=17544
