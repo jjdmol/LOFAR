@@ -27,15 +27,10 @@
 using namespace LOFAR;
 
 
-// these parameters should be set in a parameter file
-// for now defines will be used
-#define EPA_PACKETS_IN_RSP_FRAME  8
-#define BEAMLETS_PER_EPA_PACKET  92
-#define NO_DH_STATIONDATA         7
-#define POLARISATIONS             2
-
-DH_StationData::DH_StationData (const string& name)
+DH_StationData::DH_StationData (const string& name,
+                                const unsigned int bufsize)
   : DataHolder     (name, "DH_StationData"),
+    itsBufSize     (bufsize),
     itsBuffer      (0)
 { }
 
@@ -56,12 +51,6 @@ void DH_StationData::preprocess() {
   
   // first delete possible preexisting buffers
   postprocess();
-  
-  // Determine the buffersize
-  int transposefactor  = BEAMLETS_PER_EPA_PACKET / NO_DH_STATIONDATA;
-  itsBufSize = transposefactor *
-               POLARISATIONS *
-               EPA_PACKETS_IN_RSP_FRAME;
                         
   // Add the fields to the data definition
   addField("StationID", BlobField<int>(1, 1));
