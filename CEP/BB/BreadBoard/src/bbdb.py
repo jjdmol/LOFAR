@@ -6,6 +6,11 @@ import pg
 
 db = pg.DB(dbname="bb");
 try:
+ db.query("drop table blackboards")
+except:
+ print "blackboards didn't exsist"
+db.query("CREATE TABLE blackboards ( blackboard_id oid, start date, end date, low float, high float, float north, float east, float south, float west )")
+try:
  db.query("drop table watchers")
 except:
  print "watchers didn't exsist"

@@ -81,7 +81,57 @@
   </para>
   <para>
 
-   {self}1, {parent-id}1, {time}1, {frequency}1, {field}1, {beams}1
+   {self}1, {parent-id}1, {time}1, {frequency}1, {field}1, {objects}1
+
+   <itemizedlist>
+    <listitem>
+     <para>
+
+      "self" is the id of this blackboard.
+
+     </para>
+    <listitem>
+    <listitem>
+     <para>
+
+      parent_id is the obvious.
+
+     </para>
+    <listitem>
+    <listitem>
+     <para>
+
+      "time" is a time range this blackboard is concerned
+      with. <note>We'll assume no time-gaps for now.</note>
+
+     </para>
+    <listitem>
+    <listitem>
+     <para>
+
+      "frequency" is the frequency range or band this blackboard is
+      concerned with.  <note>We'll assume a single continuous band for
+      now.</note>
+
+     </para>
+    <listitem>
+    <listitem>
+     <para>
+
+      "field" is the field in the sky. <note>We assume a rectangular
+      field wit no gaps.</note>
+
+     </para>
+    <listitem>
+    <listitem>
+     <para>
+
+      "objects" is a list of objects that are used as a reference
+      model.
+
+     </para>
+    <listitem>
+   </itemizedlist>
 
   </para>
   <para>
@@ -94,7 +144,7 @@
   </para>
   <para>
 
-   {child-id}1, {self}1, {time}1, {frequency}1, {field}1, {beams}1
+   {child-id}1, {self}1, {time}1, {frequency}1, {field}1, {objects}1
 
   </para>
 
