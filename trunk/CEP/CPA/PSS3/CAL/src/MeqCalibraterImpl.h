@@ -127,6 +127,11 @@ public:
    */
   GlishRecord getSolveDomain();
 
+  /*!
+   * Make a selection of the MS to be used in the solve.
+   */
+  Bool select(const String& where);
+
   /**
    * \defgroup DOStandard Standard Distributed Object methods.
    */
@@ -181,14 +186,14 @@ private:
    * \defgroup PrivVariable Private variables
    */
   /*@{*/
-  MeasurementSet        itsMS;
+  MeasurementSet        itsMS;          //# MS as given
   ROMSMainColumns       itsMSCol;
   ParmTable             itsMEP;
   Table                 itsGSMTable;
   GSM::SkyModel         itsGSM;
 
   Vector<uInt>          itsCurRows;     //# Rows in the current iter step
-  TableIterator         itsIter;
+  TableIterator         itsIter;        //# Iterator on selected part of MS
 
   MDirection            itsPhaseRef;    //# Phase reference position in J2000
   MeqDomain             itsSolveDomain;

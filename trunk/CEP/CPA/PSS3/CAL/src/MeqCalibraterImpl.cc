@@ -65,6 +65,7 @@
 #include <aips/Tables/ColumnDesc.h>
 #include <aips/Tables/ExprNode.h>
 #include <aips/Tables/SetupNewTab.h>
+#include <aips/Tables/TableParse.h>
 #include <aips/Utilities/Regex.h>
 #include <trial/Fitting/LinearFit.h>
 #include <trial/Tasking/MethodResult.h>
@@ -638,7 +639,7 @@ void MeqCalibrater::setSolvableParms (Vector<String>& parmPatterns,
 //----------------------------------------------------------------------
 Double MeqCalibrater::solve (const String& colName)
 {
-  cout << "solve" << endl;
+  cout << "solve using column " << colName << endl;
 
   if (itsNrScid == 0) {
     throw AipsError ("No parameters are set to solvable");
@@ -1173,6 +1174,24 @@ GlishRecord MeqCalibrater::getSolveDomain()
 
 //----------------------------------------------------------------------
 //
+// ~select
+//
+// Create a subset of the MS using the given selection string
+// (which must be the WHERE part of a TaQL command).
+//
+//----------------------------------------------------------------------
+Bool MeqCalibrater::select(const String& where)
+{
+  cout << "select " << where << endl;
+  Table selms = tableCommand ("select from $1 where " + where, itsMS);
+  Assert (selms.nrow() > 0);
+  itsIter = TableIterator (selms, "TIME");
+  resetIterator();
+  return True;
+}
+
+//----------------------------------------------------------------------
+//
 // ~className
 //
 // Return the name of this DO class.
@@ -1192,7 +1211,7 @@ String MeqCalibrater::className() const
 //----------------------------------------------------------------------
 Vector<String> MeqCalibrater::methods() const
 {
-  Vector<String> method(11);
+  Vector<String> method(12);
 
   method(0)  = "settimeinterval";
   method(1)  = "resetiterator";
@@ -1205,6 +1224,7 @@ Vector<String> MeqCalibrater::methods() const
   method(8)  = "saveresidualdata";
   method(9) = "getparms";
   method(10) = "getsolvedomain";
+  method(11) = "select";
 
   return method;
 }
@@ -1336,6 +1356,15 @@ MethodResult MeqCalibrater::runMethod(uInt which,
 				       ParameterSet::Out);
 
       if (runMethod) returnval() = getSolveDomain();
+    }
+    break;
+
+  case 11: // select
+    {
+      Parameter<String> where(inputRecord, "where",
+			      ParameterSet::In);
+
+      if (runMethod) select(where());
     }
     break;
 
