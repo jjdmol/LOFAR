@@ -32,11 +32,6 @@ int main()
     // Connect to the database
     broker.connect("test","postgres");
 
-    DBConnection::GetDefaultConnection().SetAutoCommit(true);
-
-    cout << "DBConnection::GetDefaultConnection().GetAutoCommit() = "
-	 <<  DBConnection::GetDefaultConnection().GetAutoCommit() << endl;
-
     // Should call insert(), saving data in a
     cout << "Saving tpoa1 -- tpoa1.data() = " << tpoa1.data() << endl;
     broker.save(tpoa1); 
@@ -75,6 +70,14 @@ int main()
     cout << "Press <Enter> to continue" << endl;
     cin.get();
 
+    // Should erase the database entry for a2
+    tpoa2.erase();
+    cout << "Erased tpoa -- tpoa.data() (still present in memory) = " 
+         << tpoa2.data() << endl;
+
+    cout << "Press <Enter> to continue" << endl;
+    cin.get();
+
     cout << "Retrieve collection of tpoa using query" << endl;
     Collection< TPersistentObject<A> > ctpoa;
     Collection< TPersistentObject<A> >::const_iterator iter;
@@ -84,16 +87,15 @@ int main()
     for(iter = ctpoa.begin(); iter != ctpoa.end(); ++iter) {
       cout << "Press <Enter> to continue" << endl;
       cin.get();
-      cout << iter->metaData() << endl;
-      cout << iter->data() << endl;
+      cout << iter->metaData() << iter->data() << endl;
     }
 
   }
-  catch (Exception& e) {
+  catch (LOFAR::Exception& e) {
     cerr << e << endl;
     return 1;
   }
-  catch (exception& e) {
+  catch (std::exception& e) {
     cerr << "Caught std::exception: " << e.what() << endl;
     return 1;
   }
