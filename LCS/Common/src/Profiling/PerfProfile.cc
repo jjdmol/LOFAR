@@ -20,10 +20,6 @@
 //#
 //# $Id$
 
-#ifdef HAVE_CONFIG
-#include <config.h>
-#endif
-
 #include <Common/Profiling/PerfProfile.h>
 
 #if defined(HAVE_MPICH) && defined(HAVE_MPI_PROFILER)

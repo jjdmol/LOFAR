@@ -24,8 +24,6 @@
 #define COMMON_DATAFORMAT_H
 
 
-#include <config.h>
-
 // This file defines the data format on a machine.
 // Currently only little and big endian is possible with floating point
 // numbers as IEEE and characters in the ASCII representation.

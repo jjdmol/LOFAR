@@ -23,9 +23,7 @@
 #ifndef COMMON_KEYVALUE_H
 #define COMMON_KEYVALUE_H
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
+#include <lofar_config.h>
 
 //# Includes
 #include <Common/lofar_string.h>

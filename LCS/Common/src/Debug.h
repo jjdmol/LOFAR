@@ -19,127 +19,6 @@
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //
 //  $Id$
-//
-//  $Log$
-//  Revision 1.8  2003/12/03 12:52:07  diepen
-//  %[ER: 38]%
-//  Fixed typo in documentation
-//
-//  Revision 1.7  2003/12/01 12:48:24  loose
-//  %[ER: 61]%
-//  Moved Exception class from namespace LCS to namespace LOFAR.
-//
-//  Revision 1.6  2003/10/29 13:54:38  smirnov
-//  %[ER: 16]%
-//  Cleaned up debug context definition macros
-//
-//  Revision 1.5  2003/09/30 11:31:10  smirnov
-//  %[ER: 16]%
-//  Tied the debug stream to cerr rather than cout. This necessitated a change
-//  to the dprintf() macro.
-//  Throw() now dumps the exception message to the debug stream at level 1.
-//
-//  Revision 1.4  2003/09/30 10:38:47  loose
-//  %[ER: 19]%
-//  Forgot to modify one instance of HAVE___FUNCTION__. Did it now.
-//
-//  Revision 1.3  2003/09/29 15:44:08  smirnov
-//  %[ER: 16]%
-//  Based Debug (and Assert) errors off of LCS::Exception.
-//  Cleaned up Assert macros.
-//
-//  Revision 1.2  2003/09/19 13:23:45  loose
-//  %[ER: 19]%
-//  Changed check for HAVE___FUNCTION__ into check for both HAVE_PRETTY_FUNCTION
-//  and HAVE_FUNCTION which are defined by configure.
-//
-//  Revision 1.1  2003/08/21 11:20:32  diepen
-//  Moved Common to LCS
-//
-//  Revision 1.16  2003/05/27 09:09:08  diepen
-//  Also print error in AssertMsg
-//
-//  Revision 1.15  2002/11/26 08:02:33  diepen
-//  %[BugId: 76]%
-//  Use ostringstream instead of ostrstream
-//
-//  Revision 1.14  2002/10/30 10:02:56  diepen
-//
-//  %[BugId: 26]%
-//  Fixed incorrect definition of DbgFailWhen
-//
-//  Revision 1.13  2002/10/29 12:21:30  smirnov
-//  %[BugId: 26]%
-//  Added a DbgFailWhen() macro.
-//  Migrated to new Rose C++ add-in, hence a bunch of changes in the Rose
-//  markup comments.
-//
-//  Revision 1.12  2002/08/28 09:11:16  smirnov
-//  %[BugId: 26]%
-//  Added CheckConfig class to verify configurations options at run-time.
-//  Small fixes to Debug and Thread.
-//
-//  Revision 1.11  2002/08/06 08:56:53  diepen
-//  %[BugId: 76]%
-//  Removed.str() in TRACERF macro
-//
-//  Revision 1.10  2002/08/02 14:42:03  brentjens
-//
-//  %[BugId: 76]%
-//
-//  Cancelled previous change...
-//
-//  Revision 1.9  2002/08/02 10:06:38  brentjens
-//
-//  %[BugId: 76]%
-//
-//  TRACERPFN_INTERNAL: added own "{ }" block around the code to
-//  prevent error:
-//
-//  xxx_tmp_tracer_xxx previously defined
-//
-//  which occurred whenever TRACERPF2 was used more than once in the same
-//  {} block.
-//
-//  Revision 1.8  2002/07/03 14:15:29  smirnov
-//  %[BugId: 26]%
-//  Various fixes for multithreading and gcc 3.1.
-//  Added the Thread package.
-//  Added a Stopwatch class.
-//
-//  Revision 1.7  2002/05/31 15:04:03  smirnov
-//  %[BugId: 26]%
-//  Fixed default sdebug() to return string instead of const char *
-//
-//  Revision 1.6  2002/05/15 14:57:19  oms
-//  Re-added the Throw1, Assert1, FailWhen1, etc. macros that do not include
-//  an sdebug() call. The normal versions were causing trouble inside of static
-//  methods of classes that defined a non-static sdebug().
-//
-//  Revision 1.5  2002/05/14 06:47:18  gvd
-//  Fixed ifdef in Debug.h and include in tDebug
-//
-//  Revision 1.4  2002/05/13 15:01:03  oms
-//  Fixed bug in initLevels().
-//  Added initialized flag.
-//
-//  Revision 1.3  2002/05/08 12:26:11  oms
-//  Added checking of parent context (where did it go, anyway)?
-//
-//  Revision 1.2  2002/05/07 11:44:25  gvd
-//  Use COMMON_ instead of BASESIM_ in include guards
-//  Adapted Debug to Oleg's changes
-//
-//  Revision 1.1  2002/05/03 10:46:33  gvd
-//  Common source files
-//
-//  Revision 1.2  2002/03/14 14:25:46  wierenga
-//  system includes before local includes
-//
-//  Revision 1.1  2002/03/01 08:27:57  gvd
-//  Replaced firewall by Debug and changed code accordingly
-//  Added lofar_*.h for correct use of namespaces (for KAI and Intel C++)
-//
 
 #ifndef COMMON_DEBUG_H
 #define COMMON_DEBUG_H
@@ -155,9 +34,7 @@
 #include <sys/time.h>
 #endif
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
+#include <lofar_config.h>
 
 
 

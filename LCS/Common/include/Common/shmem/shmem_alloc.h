@@ -19,45 +19,14 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  * $Id$
- *
- * $Log$
- * Revision 1.3  2002/05/22 13:32:55  wierenga
- * %[BugId: 4]%
- * Fix errors and warnings found by KAI compiler.
- *
- * Revision 1.2  2002/05/22 11:44:11  wierenga
- *
- * %[BugId: 4]%
- * removed shmem_debug
- *
- * Revision 1.1  2002/05/22 11:24:38  wierenga
- * %[BugId: 4]%
- * Moved shmem_alloc code from BaseSim/src/ShMem to Common/shmem.
- *
- * Revision 1.4  2002/05/15 14:47:57  wierenga
- * New version of TH_ShMem TranportHolder.
- * Semaphore implementation working properly now.
- * Great performance on dual-processor machine ~1000M per sec.
- *
- * Revision 1.3  2002/05/08 14:22:02  wierenga
- * New synchronisation method (not using atomic.h). Cleanup of implementation.
- *
- * Revision 1.2  2002/04/04 14:20:15  wierenga
- * using atomic_inc/dec for sync after memcpy from shared memory
- *
- * Revision 1.1  2002/04/03 07:01:23  wierenga
- * Initial version of shared memory TransportHolder.
- *
  */
 
-#ifndef _SHMEM_ALLOC_H_
-#define _SHMEM_ALLOC_H_
+#ifndef COMMON_SHMEM_ALLOC_H_
+#define COMMON_SHMEM_ALLOC_H_
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
+#include <lofar_config.h>
 
-#include "Common/shmem/dlmalloc.h"
+#include <Common/shmem/dlmalloc.h>
 #include <stddef.h>
 
 #ifdef HAVE_ATOMIC_H

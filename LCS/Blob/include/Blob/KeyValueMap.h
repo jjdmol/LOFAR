@@ -23,10 +23,6 @@
 #ifndef COMMON_KEYVALUEMAP_H
 #define COMMON_KEYVALUEMAP_H
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
-
 #include <Common/KeyValue.h>
 #include <Common/lofar_map.h>
 #include <Common/lofar_iosfwd.h>
