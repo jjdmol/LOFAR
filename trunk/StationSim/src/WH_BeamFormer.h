@@ -93,6 +93,8 @@ private:
   //DEBUG
   ofstream itsFileOutReal;
   ofstream itsFileOutComplex;
+  ifstream itsFileInput;
+  LoVec_double itsTestVector;
 };
 
 #endif
