@@ -58,6 +58,8 @@ class WH_Solve : public LOFAR::WorkHolder
   virtual void dump();
 
  private:
+  typedef map<int, Solver*> SolverMap;
+
   // Forbid copy constructor
   WH_Solve(const WH_Solve&);
 
@@ -65,18 +67,18 @@ class WH_Solve : public LOFAR::WorkHolder
   WH_Solve& operator= (const WH_Solve&);
 
   // Create a Solver object
-  void createSolver(const KeyValueMap& args);
+  Solver* getSolver(int id, const KeyValueMap& args);
 
   // Read all Prediffer inputs
-  void readInputs();
+  void readInputs(Solver* solver);
   
   // Read all Prediffer inputs and set solvable parameter data.
-  void readInputsAndSetParmData();
+  void readInputsAndSetParmData(Solver* solver);
 
   int         itsNPrediffers;// Number of Prediffer inputs
   KeyValueMap itsArgs;       // Arguments
-  Solver*     itsSolver;     // Object actually calculating results
-
+  SolverMap   itsSolvers;    // Map of Solver objects, each associated
+                             // with a strategy (controller).
 };
 
 } // namespace LOFAR

@@ -55,10 +55,11 @@ public:
   void readSolution();
 
   bool        itsFirstCall;
-  int         itsWOID;
+  int         itsPrevWOID;
   KeyValueMap itsArgs;
   int         itsNrIterations;
   int         itsCurIter;
+  float       itsCurStartTime;
 };
 
 inline string SC_Simple::getType() const

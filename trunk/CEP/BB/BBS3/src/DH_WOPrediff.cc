@@ -43,17 +43,20 @@ const unsigned int MaxModelTypeLength = 16;
 DH_WOPrediff::DH_WOPrediff (const string& name)
   : DH_PL(name, "DH_WOPrediff", 1),
     itsWOID            (0),
+    itsSCID            (0),
     itsStatus          (0),
     itsKSType          (0),
     itsInitialize      (0),
     itsNextInterval    (0),
     itsFirstChan       (0),
     itsLastChan        (0),
+    itsStartTime       (0),
     itsTimeInterval    (0),
     itsDDID            (0),
     itsModelType       (0),
     itsCalcUVW         (0),
     itsLockMappedMem   (0),
+    itsCleanUp         (0),
     itsPODHWO          (0)
 {
   LOG_TRACE_FLOW("DH_WOPrediff constructor");
@@ -63,17 +66,20 @@ DH_WOPrediff::DH_WOPrediff (const string& name)
 DH_WOPrediff::DH_WOPrediff(const DH_WOPrediff& that)
   : DH_PL(that),
     itsWOID            (0),
+    itsSCID            (0),
     itsStatus          (0),
     itsKSType          (0),
     itsInitialize      (0),
     itsNextInterval    (0),
     itsFirstChan       (0),
     itsLastChan        (0),
+    itsStartTime       (0),
     itsTimeInterval    (0),
     itsDDID            (0),
     itsModelType       (0),
     itsCalcUVW         (0),
     itsLockMappedMem   (0),
+    itsCleanUp         (0),
     itsPODHWO          (0)
 {
   LOG_TRACE_FLOW("DH_WOPrediff copy constructor");
@@ -106,17 +112,20 @@ void DH_WOPrediff::preprocess()
 {
   // Add the fields to the data definition.
   addField ("WOID", BlobField<int>(1));
+  addField ("SCID", BlobField<int>(1));
   addField ("Status", BlobField<unsigned int>(1));
   addField ("KSType", BlobField<char>(1, MaxKSTypeLength));
   addField ("Initialize", BlobField<unsigned int>(1));
   addField ("NextInterval", BlobField<unsigned int>(1));
   addField ("FirstChan", BlobField<int>(1));
   addField ("LastChan", BlobField<int>(1));
+  addField ("StartTime", BlobField<float>(1));
   addField ("TimeInterval", BlobField<float>(1));
   addField ("DDID", BlobField<int>(1));
   addField ("ModelType", BlobField<char>(1, MaxModelTypeLength));
   addField ("CalcUVW", BlobField<unsigned int>(1));
   addField ("LockMappedMem", BlobField<unsigned int>(1));
+  addField ("CleanUp", BlobField<unsigned int>(1));
 
   // Create the data blob (which calls fillPointers).
   createDataBlock();
@@ -131,49 +140,58 @@ void DH_WOPrediff::preprocess()
     itsModelType[m] = 0;
   }
 
-  *itsWOID = -1;
+  *itsWOID = 0;
+  *itsSCID = -1;
   *itsStatus = DH_WOPrediff::New;
   *itsInitialize = 0;
   *itsNextInterval = 0;
   *itsFirstChan = 0;
   *itsLastChan = 0;
+  *itsStartTime = 0;
   *itsTimeInterval = 0;
   *itsDDID = 0;
   *itsCalcUVW = 0;
   *itsLockMappedMem = 0;
+  *itsCleanUp = 0;
 }
 
 void DH_WOPrediff::fillDataPointers()
 {
   // Fill in the pointers.
   itsWOID = getData<int> ("WOID");
+  itsSCID = getData<int> ("SCID");
   itsStatus = getData<unsigned int> ("Status");
   itsKSType = getData<char> ("KSType");
   itsInitialize = getData<unsigned int> ("Initialize");
   itsNextInterval = getData<unsigned int> ("NextInterval");
   itsFirstChan = getData<int> ("FirstChan");
   itsLastChan = getData<int> ("LastChan");
+  itsStartTime = getData<float> ("StartTime");
   itsTimeInterval = getData<float> ("TimeInterval");
   itsDDID = getData<int> ("DDID");
   itsModelType = getData<char> ("ModelType");
   itsCalcUVW = getData<unsigned int> ("CalcUVW");
   itsLockMappedMem = getData<unsigned int> ("LockMappedMem");
+  itsCleanUp = getData<unsigned int> ("CleanUp");
 }
 
 void DH_WOPrediff::postprocess()
 {
   itsWOID = 0;
+  itsSCID = 0;
   itsStatus = 0;
   itsKSType = 0;
   itsInitialize = 0;
   itsNextInterval = 0;
   itsFirstChan = 0;
   itsLastChan = 0;
+  itsStartTime = 0;
   itsTimeInterval = 0;
   itsDDID = 0;
   itsModelType = 0;
   itsCalcUVW = 0;
   itsLockMappedMem = 0;
+  itsCleanUp = 0;
 }
 
 void DH_WOPrediff::setKSType(const string& ksType)
@@ -301,17 +319,20 @@ void DH_WOPrediff::dump()
 {
   cout << "DH_WOPrediff: " << endl;
   cout << "ID = " << getWorkOrderID() << endl;
+  cout << "Controller ID = " << getStrategyControllerID() << endl;
   cout << "Status = " << getStatus() << endl;
   cout << "KS Type = " << getKSType() << endl;
   cout << "Initialize? = " << getInitialize() << endl;
   cout << "NextInterval? = " << getNextInterval() << endl;
   cout << "First channel = " << getFirstChannel() << endl;
   cout << "Last channel = " << getLastChannel() << endl;
+  cout << "Start time = " << getStartTime() << endl;
   cout << "Time interval = " << getTimeInterval() << endl;
   cout << "DDID = " << getDDID() << endl;
   cout << "Model type = " << getModelType() << endl;
   cout << "Calc UVW = " << getCalcUVW() << endl;
   cout << "Lock mapped memory = " << getLockMappedMemory() << endl;
+  cout << "Clean up = " << getCleanUp() << endl;
 
   KeyValueMap sArguments;
   vector<int> antNrs;
@@ -360,17 +381,20 @@ void DH_WOPrediff::clearData()
 {
   clearExtraBlob();
   setWorkOrderID(-1);
+  setStrategyControllerID(-1);
   setStatus(DH_WOPrediff::New);
   setKSType("");
   setInitialize(true);
   setNextInterval(true);
   setFirstChannel(-1);
   setLastChannel(-1);
+  setStartTime(0);
   setTimeInterval(0);
   setDDID(0);
   setModelType("");
   setCalcUVW(false);
   setLockMappedMemory(false);
+  setCleanUp(false);
 }
 
 namespace PL {
@@ -379,26 +403,32 @@ void DBRep<DH_WOPrediff>::bindCols (dtl::BoundIOs& cols)
 {
   DBRep<DH_PL>::bindCols (cols);
   cols["WOID"] == itsWOID;
+  cols["SCID"] == itsSCID;
   cols["STATUS"] == itsStatus;
   cols["KSTYPE"] == itsKSType;
   cols["INITIALIZE"] == itsInitialize;
   cols["NEXTINTERVAL"] == itsNextInterval;
   cols["FIRSTCHAN"] == itsFirstChan;
   cols["LASTCHAN"] == itsLastChan;
+  cols["STARTTIME"] == itsStartTime;
   cols["TIMEINTERVAL"] == itsTimeInterval;
+  cols["CLEANUP"] == itsCleanUp;
 }
 
 void DBRep<DH_WOPrediff>::toDBRep (const DH_WOPrediff& obj)
 {
   DBRep<DH_PL>::toDBRep (obj);
   itsWOID = obj.getWorkOrderID();
+  itsSCID = obj.getStrategyControllerID();
   itsStatus = obj.getStatus();
   itsKSType = obj.getKSType();
   itsInitialize = obj.getInitialize();
   itsNextInterval = obj.getNextInterval();
   itsFirstChan = obj.getFirstChannel();
   itsLastChan = obj.getLastChannel();
+  itsStartTime = obj.getStartTime();
   itsTimeInterval = obj.getTimeInterval();
+  itsCleanUp = obj.getCleanUp();
 }
 
 //# Force the instantiation of the templates.

@@ -59,19 +59,23 @@ class WH_Prediff : public LOFAR::WorkHolder
   virtual void dump();
 
  private:
+  typedef map<int, Prediffer*> PrediffMap;
+
   // Forbid copy constructor
   WH_Prediff(const WH_Prediff&);
 
   // Forbid assignment
   WH_Prediff& operator= (const WH_Prediff&);
 
-  // Create a Prediffer object
-  void createPrediffer(const KeyValueMap& args, const vector<int>& antNrs);
+  // Create a Prediffer object or get it from the Map
+  Prediffer* getPrediffer(int id, 
+			  const KeyValueMap& args, 
+			  const vector<int>& antNrs);
 
   int         itsID;         // Identification number
   KeyValueMap itsArgs;       // Arguments
-  Prediffer*  itsPrediffer;  // Object actually calculating results
-
+  PrediffMap  itsPrediffs;   // Map of Prediffer objects, each associated
+                                   // with a strategy (controller)
 };
 
 } // namespace LOFAR

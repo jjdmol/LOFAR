@@ -75,26 +75,35 @@ int main (int argc, const char** argv)
     }
     // Parse the command.
     KeyValueMap params = KeyParser::parse (keyv);
-    // Add the nriter if not defined.
-    KeyValueMap cmap(params["CTRLparams"].getValueMap());  // >>>Currenty only 1 strategy
-    KeyValueMap smap(cmap["SC1params"].getValueMap());
-    if (! smap.isDefined("nrIterations")) {
-      smap["nrIterations"] = nriter;
-      cmap["SC1params"] = smap;
-      params["CTRLparams"] = cmap;
-    }
-    // Add the dbname if not defined.
-    KeyValueMap msdbmap(smap["MSDBparams"].getValueMap());
-    if (! msdbmap.isDefined("DBName")) {
-      msdbmap["DBName"] = usernm;
-      smap["MSDBparams"] = msdbmap;
-      cmap["SC1params"] = smap; 
-      params["CTRLparams"] = cmap;     
-    }
-    if (! params.isDefined("BBDBname")) {
-      params["BBDBname"] = usernm;
-    }
 
+    KeyValueMap cmap(params["CTRLparams"].getValueMap()); 
+    int nrStrategies = cmap.getInt("nrStrategies", 0);
+
+    // Loop over all strategies
+    for (int i=1; i<=nrStrategies; i++)
+    {
+      char nrStr[32];
+      sprintf(nrStr, "%i", i);
+      string name = "SC" + string(nrStr) + "params";
+      // Add the nriter if not defined.   
+      KeyValueMap smap(cmap[name].getValueMap());
+      if (! smap.isDefined("nrIterations")) {
+	smap["nrIterations"] = nriter;
+	cmap[name] = smap;
+	params["CTRLparams"] = cmap;
+      }
+      // Add the dbname if not defined.
+      KeyValueMap msdbmap(smap["MSDBparams"].getValueMap());
+      if (! msdbmap.isDefined("DBName")) {
+	msdbmap["DBName"] = usernm;
+	smap["MSDBparams"] = msdbmap;
+	cmap[name] = smap; 
+	params["CTRLparams"] = cmap;     
+      }
+      if (! params.isDefined("BBDBname")) {
+	params["BBDBname"] = usernm;
+      }
+    }
     cout << params << endl;
 
     int nrRuns = params.getInt("nrRuns", 1);

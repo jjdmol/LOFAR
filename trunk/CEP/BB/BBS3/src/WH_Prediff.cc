@@ -36,8 +36,7 @@ namespace LOFAR
 
 WH_Prediff::WH_Prediff(const string& name, int id)
   : WorkHolder   (1, 2, name, "WH_Prediff"),
-    itsID        (id),
-    itsPrediffer (0)
+    itsID        (id)
 {
   LOG_TRACE_FLOW("WH_Prediff constructor");
   getDataManager().addInDataHolder(0, new DH_WOPrediff(name+"_in"));
@@ -53,7 +52,14 @@ WH_Prediff::WH_Prediff(const string& name, int id)
 WH_Prediff::~WH_Prediff()
 {
   LOG_TRACE_FLOW("WH_Prediff destructor");
-  delete itsPrediffer;
+  // Clean up map with Prediffer objects
+  PrediffMap::iterator iter;
+  for (iter=itsPrediffs.begin(); iter!=itsPrediffs.end(); iter++)
+  {
+    delete (*iter).second;
+  }
+  itsPrediffs.clear();
+
 }
 
 WH_Prediff* WH_Prediff::make (const string& name)
@@ -98,43 +104,41 @@ void WH_Prediff::process()
   DH_Prediff* dhRes = dynamic_cast<DH_Prediff*>(getDataManager().getOutHolder(0));
   //  dhRes->clearData();
 
+  KeyValueMap args;
+  vector<int> ant;
+  vector<string> pNames;
+  vector<int> peelSrcs;
+  wo->getVarData(args, ant, pNames, peelSrcs);
+  int contrID = wo->getStrategyControllerID();
+  Prediffer* pred = getPrediffer(contrID, args, ant);
+
   // Execute workorder
   if (wo->getInitialize())  // Initialize, nextInterval and getEquations (+send ParmData)
   {
-    KeyValueMap args;
-    vector<int> ant;
-    vector<string> pNames;
-    vector<int> peelSrcs;
-    wo->getVarData(args, ant, pNames, peelSrcs);
-    createPrediffer(args, ant);
-    itsPrediffer->select(ant, ant, wo->getFirstChannel(), wo->getLastChannel());
-    itsPrediffer->setTimeInterval(wo->getTimeInterval());
-    itsPrediffer->clearSolvableParms();
+    pred->select(ant, ant, wo->getFirstChannel(), wo->getLastChannel());
+    pred->clearSolvableParms();
     vector<string> emptyP(0);
-    itsPrediffer->setSolvableParms(pNames, emptyP, true);
+    pred->setSolvableParms(pNames, emptyP, true);
     vector<int> emptyS(0);
-    itsPrediffer->peel(peelSrcs, emptyS);
-    itsPrediffer->resetIterator();
-    itsPrediffer->nextInterval();
-    itsPrediffer->updateSolvableParms(); //????
-    //    itsPrediffer->getEquations();        // returns a std::list<MeqResult>
+    pred->peel(peelSrcs, emptyS);
+    pred->nextInterval(wo->getStartTime(), wo->getTimeInterval());
+    pred->updateSolvableParms(); //????
+    //    pred->getEquations();        // returns a std::list<MeqResult>
 
-    //    dhRes->setParmData(itsPrediffer->getSolvableParmData());
+    //    dhRes->setParmData(pred->getSolvableParmData());
   }
   else if (wo->getNextInterval())  // nextInterval and getEquations (+send ParmData)
   {
-    ASSERTSTR(itsPrediffer!=0, "The prediffer has not been created and initialized.");
-    itsPrediffer->nextInterval();
-    itsPrediffer->updateSolvableParms(); //????
-    //    itsPrediffer->getEquations();
+    pred->nextInterval(wo->getStartTime(), wo->getTimeInterval());
+    pred->updateSolvableParms(); //????
+    //    pred->getEquations();
 
-    //    itsPrediffer->getSolvableParmData();  // Returns a vector<ParmData>& -> set in dhRes
+    //    pred->getSolvableParmData();  // Returns a vector<ParmData>& -> set in dhRes
   }
   else                   // getEquations
   {
-    ASSERTSTR(itsPrediffer!=0, "The prediffer has not been created and initialized.");
-    //    itsPrediffer->updateSolvableParms(); //????
-    //    itsPrediffer->getEquations();
+    //    pred->updateSolvableParms(); //????
+    //    pred->getEquations();
   }
 
   // write result
@@ -142,6 +146,13 @@ void WH_Prediff::process()
   // Update workorder status
   wo->setStatus(DH_WOPrediff::Executed);
   woPtr->updateDB();
+
+  if (wo->getCleanUp())   // If Prediffer (cache) is no longer needed: clean up  
+  {
+    itsPrediffs.erase(contrID);
+  }
+
+
 }
 
 void WH_Prediff::dump()
@@ -149,26 +160,39 @@ void WH_Prediff::dump()
   LOG_TRACE_RTTI("WH_Prediff process()");
 }
 
-void WH_Prediff::createPrediffer(const KeyValueMap& args, const vector<int>& antNrs)
+Prediffer* WH_Prediff::getPrediffer(int id, const KeyValueMap& args, 
+				 const vector<int>& antNrs)
 {
-  // Create a Prediffer object
-  string msName = args.getString("MSName", "empty") + ".MS";
-  string meqModel = args.getString("meqTableName", "meqmodel");
-  string skyModel = args.getString("skyTableName", "skymodel");
-  string dbType = args.getString("DBType", "postgres");
-  string dbName = args.getString("DBName", "test");
-  string dbHost = args.getString("DBHost", "dop50");
-  string dbPwd = args.getString("DBPwd", "");
+  PrediffMap::iterator iter;
+  iter = itsPrediffs.find(id);
+  if (iter != itsPrediffs.end())
+  {
+    return (*iter).second;
+  }
+  else
+  {
+    // Create a Prediffer object
+    string msName = args.getString("MSName", "empty") + ".MS";
+    string meqModel = args.getString("meqTableName", "meqmodel");
+    string skyModel = args.getString("skyTableName", "skymodel");
+    string dbType = args.getString("DBType", "postgres");
+    string dbName = args.getString("DBName", "test");
+    string dbHost = args.getString("DBHost", "dop50");
+    string dbPwd = args.getString("DBPwd", "");
 
-  int ddid = args.getInt("ddid", 0);
-  string modelType = args.getString("modelType", "LOFAR.RI");
-  bool calcUVW = args.getBool("calcUVW", false);
-  bool lockMappedMem = args.getBool("lockMappedMem", false);
-
-  itsPrediffer = new Prediffer(msName, meqModel, skyModel, dbType, 
-			       dbName, dbHost, dbPwd, ddid,
-			       antNrs, modelType, calcUVW,
-			       lockMappedMem);
+    int ddid = args.getInt("ddid", 0);
+    string modelType = args.getString("modelType", "LOFAR.RI");
+    bool calcUVW = args.getBool("calcUVW", false);
+    bool lockMappedMem = args.getBool("lockMappedMem", false);
+    
+    Prediffer* pred = new Prediffer(msName, meqModel, skyModel, dbType, 
+				    dbName, dbHost, dbPwd, ddid,
+				    antNrs, modelType, calcUVW,
+				    lockMappedMem);
+    // add to map
+    itsPrediffs.insert(PrediffMap::value_type(id, pred));
+    return pred;
+  }
 }
 
 

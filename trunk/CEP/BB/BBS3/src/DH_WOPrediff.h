@@ -71,7 +71,10 @@ public:
 
   /// Data access methods.
   int getWorkOrderID() const;
-  void setWorkOrderID(int id);
+  void setNewWorkOrderID();
+
+  int getStrategyControllerID() const;
+  void setStrategyControllerID(int id);
 
   unsigned int getStatus() const ;
   void setStatus(unsigned int status);
@@ -91,6 +94,9 @@ public:
   int getLastChannel() const;
   void setLastChannel(int nr);
 
+  float getStartTime() const;
+  void setStartTime(float time);
+
   float getTimeInterval() const;
   void setTimeInterval(float time);
 
@@ -105,6 +111,9 @@ public:
 
   bool getLockMappedMemory() const;
   void setLockMappedMemory(bool lock);
+
+  bool getCleanUp() const;
+  void setCleanUp(bool clean);
 
   void setVarData(const KeyValueMap& predArgs,
 		  vector<int>& antNrs,
@@ -126,28 +135,43 @@ private:
   // Fill the pointers (itsCounter and itsBuffer) to the data in the blob.
   virtual void fillDataPointers();
 
+  void setWorkOrderID(int id);
+
   int*          itsWOID;                    // Unique workorder id
+  int*          itsSCID;                    // ID of the sending StrategyController (SC)
   unsigned int* itsStatus;                  // Workorder status
   char*         itsKSType;                  // Knowledge Source type
   unsigned int* itsInitialize;              // Do initialization?
   unsigned int* itsNextInterval;            // Do nextInterval?
   int*          itsFirstChan;               // First frequency channel
   int*          itsLastChan;                // Last frequency channel
+  float*        itsStartTime;               // Start time of time interval
   float*        itsTimeInterval;            // Time interval size (s)
   int*          itsDDID;
   char*         itsModelType;
   unsigned int* itsCalcUVW;
   unsigned int* itsLockMappedMem;
+  unsigned int* itsCleanUp;                 // Clean up Prediffer object when finished?
   
   PO_DH_WOPrediff* itsPODHWO; 
+  
 
 };
 
 inline int DH_WOPrediff::getWorkOrderID() const
 { return *itsWOID; }
 
+inline void DH_WOPrediff::setNewWorkOrderID()
+{ *itsWOID = *itsWOID + 1; }
+
 inline void DH_WOPrediff::setWorkOrderID(int id)
 { *itsWOID = id; }
+
+inline int DH_WOPrediff::getStrategyControllerID() const
+{ return *itsSCID; }
+
+inline void DH_WOPrediff::setStrategyControllerID(int id)
+{ *itsSCID = id; }
 
 inline unsigned int DH_WOPrediff::getStatus() const
 { return *itsStatus; }
@@ -182,6 +206,12 @@ inline int DH_WOPrediff::getLastChannel() const
 inline void DH_WOPrediff::setLastChannel(int nr)
 { *itsLastChan = nr; }
 
+inline float DH_WOPrediff::getStartTime() const
+{ return *itsStartTime; }
+
+inline void DH_WOPrediff::setStartTime(float time)
+{ *itsStartTime = time; }
+
 inline float DH_WOPrediff::getTimeInterval() const
 { return *itsTimeInterval; }
 
@@ -206,6 +236,12 @@ inline bool DH_WOPrediff::getLockMappedMemory() const
 inline void DH_WOPrediff::setLockMappedMemory(bool lock)
 { *itsLockMappedMem = lock; }
 
+inline bool DH_WOPrediff::getCleanUp() const
+{ return *itsCleanUp; }
+
+inline void DH_WOPrediff::setCleanUp(bool clean)
+{ *itsCleanUp = clean; }
+
 // Define the class needed to tell PL that there should be
 // extra fields stored in the database table.
 namespace PL {  
@@ -216,14 +252,17 @@ namespace PL {
       void bindCols (dtl::BoundIOs& cols);                      
       void toDBRep (const DH_WOPrediff&);                        
     private:                                                    
-      int itsWOID;                    // Temporarily stored in separate fields
-      unsigned int itsStatus;         // in order to facilitate debugging
-      string itsKSType;
+      int          itsWOID;                    // Temporarily stored in separate fields
+      int          itsSCID;                    // in order to facilitate debugging
+      unsigned int itsStatus;
+      string       itsKSType;
       unsigned int itsInitialize;
-      int itsNextInterval;
-      int itsFirstChan;
-      int itsLastChan;
-      float itsTimeInterval;
+      int          itsNextInterval;
+      int          itsFirstChan;
+      int          itsLastChan;
+      float        itsStartTime;
+      float        itsTimeInterval;
+      unsigned int itsCleanUp;
     };   
                                                       
 } // end namespace PL   

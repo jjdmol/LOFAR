@@ -37,9 +37,10 @@ SC_Simple::SC_Simple(int id, DH_Solution* inDH, DH_WOPrediff* woPD,
 		     DH_WOSolve* woSolve, const KeyValueMap& args)
   : StrategyController(id, inDH, woPD, woSolve),
     itsFirstCall      (true),
-    itsWOID           (0),
+    itsPrevWOID       (0),
     itsArgs           (args),
-    itsCurIter        (-1)
+    itsCurIter        (-1),
+    itsCurStartTime   (0)
 {
   itsNrIterations = itsArgs.getInt("nrIterations", 0);
 }
@@ -49,57 +50,70 @@ SC_Simple::~SC_Simple()
 
 bool SC_Simple::execute()
 {
-  itsWOID++;
   itsCurIter++;
+  bool nextInter = false;
   if (itsFirstCall)
   {
     itsFirstCall = false;
-    // Set prediffer workorder data
+    nextInter = true;
     itsWOPD->setInitialize(true);
-    itsWOPD->setStatus(DH_WOPrediff::New);
-    itsWOPD->setKSType("Prediff1");
-    itsWOPD->setFirstChannel (itsArgs.getInt ("startChan", 0));
-    itsWOPD->setLastChannel (itsArgs.getInt ("endChan", 0));
-    float timeInterval = itsArgs.getFloat ("timeInterval", 10);
-    itsWOPD->setTimeInterval (timeInterval);
-    itsWOPD->setDDID (itsArgs.getInt ("ddid", 0));
-    itsWOPD->setModelType (itsArgs.getString ("modelType", "notfound"));
-    itsWOPD->setCalcUVW (itsArgs.getBool ("calcUVW", false));
-    itsWOPD->setLockMappedMemory (itsArgs.getBool ("lockMappedMem", false));
-    KeyValueMap msParams = (const_cast<KeyValueMap&>(itsArgs))["MSDBparams"].getValueMap();
-    vector<int> ant = (const_cast<KeyValueMap&>(itsArgs))["antennas"].getVecInt();
-    vector<string> pNames = (const_cast<KeyValueMap&>(itsArgs))["solvableParams"].getVecString();
-    vector<int> srcs = (const_cast<KeyValueMap&>(itsArgs))["sources"].getVecInt();
-    itsWOPD->setVarData (msParams, ant, pNames, srcs);
-
-    // Set solver workorder data
     itsWOSolve->setInitialize(true);
-    itsWOSolve->setStatus(DH_WOSolve::New);
-    itsWOSolve->setKSType("Solver");
-    itsWOSolve->setUseSVD (itsArgs.getBool ("useSVD", false)); 
-    itsWOSolve->setVarData (msParams, timeInterval, pNames);
-
+    itsCurStartTime = itsArgs.getFloat ("startTime", 0);
   }
   else
   {
+    // Read solution of previously issued workorders
     readSolution();
+
     itsWOPD->setInitialize(false);
     itsWOSolve->setInitialize(false);
+
+    // If solution for this interval is good enough, go to next. TBA
+    // For now: if number of iterations reached: go to next interval.
+    if (fmod(itsCurIter, itsNrIterations) == 0)
+    {
+      nextInter = true;
+      itsCurStartTime += itsArgs.getFloat ("timeInterval", 10);
+    }
   }
 
-  // If solution for this interval is good enough, go to next. TBA
-  // For now: if number of iterations reached: go to next interval.
-  bool nextInter = false;
-  if (fmod(itsCurIter, itsNrIterations) == 0)
-  {
-    nextInter = true;
-  }
+  // Set prediffer workorder data
+  itsWOPD->setStatus(DH_WOPrediff::New);
+  itsWOPD->setKSType("Prediff1");
+  itsWOPD->setFirstChannel (itsArgs.getInt ("startChan", 0));
+  itsWOPD->setLastChannel (itsArgs.getInt ("endChan", 0));
+  itsWOPD->setStartTime (itsCurStartTime);
+  float timeInterval = itsArgs.getFloat ("timeInterval", 10);
+  itsWOPD->setTimeInterval (timeInterval);
+  itsWOPD->setDDID (itsArgs.getInt ("ddid", 0));
+  itsWOPD->setModelType (itsArgs.getString ("modelType", "notfound"));
+  itsWOPD->setCalcUVW (itsArgs.getBool ("calcUVW", false));
+  itsWOPD->setLockMappedMemory (itsArgs.getBool ("lockMappedMem", false));
+  KeyValueMap msParams = (const_cast<KeyValueMap&>(itsArgs))["MSDBparams"].getValueMap();
+  vector<int> ant = (const_cast<KeyValueMap&>(itsArgs))["antennas"].getVecInt();
+  vector<string> pNames = (const_cast<KeyValueMap&>(itsArgs))["solvableParams"].getVecString();
+  vector<int> srcs = (const_cast<KeyValueMap&>(itsArgs))["sources"].getVecInt();
+  itsWOPD->setVarData (msParams, ant, pNames, srcs);
 
-  itsWOPD->setWorkOrderID(itsWOID);
-  itsWOSolve->setWorkOrderID(itsWOID);
-  itsWOSolve->setNextInterval(nextInter);
+  itsWOPD->setNewWorkOrderID();
+  itsWOPD->setStrategyControllerID(getID());
   itsWOPD->setNextInterval(nextInter);
 
+  
+  // Set solver workorder data  
+  itsWOSolve->setStatus(DH_WOSolve::New);
+  itsWOSolve->setKSType("Solver");
+  itsWOSolve->setUseSVD (itsArgs.getBool ("useSVD", false));
+  itsWOSolve->setStartTime(itsCurStartTime);
+  itsWOSolve->setTimeInterval(timeInterval);
+  itsWOSolve->setVarData (msParams, pNames);
+
+  itsWOSolve->setNewWorkOrderID();
+  itsPrevWOID = itsWOSolve->getWorkOrderID();
+  itsWOSolve->setStrategyControllerID(getID());
+  itsWOSolve->setNextInterval(nextInter);
+
+  // Temporarily show on cout
   cout << "!!!!!!! Sent workorders: " << endl;
   itsWOPD->dump();
   itsWOSolve->dump();
@@ -121,7 +135,7 @@ void SC_Simple::readSolution()
 
   // Wait for solution
   bool firstTime = true;
-  int id = itsWOID - 1;
+  int id = itsPrevWOID;
   char str[32];
   sprintf(str, "WOID=%i", id);
   string query(str);

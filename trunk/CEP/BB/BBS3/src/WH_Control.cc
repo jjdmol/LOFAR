@@ -37,8 +37,6 @@
 
 namespace LOFAR
 {
-int WH_Control::theirNextWorkOrderID = 1;
-
 string i2str(int i) {
   char str[32];
   sprintf(str, "%i", i);
@@ -48,9 +46,6 @@ string i2str(int i) {
 WH_Control::WH_Control (const string& name,
 			const KeyValueMap& args)
   : WorkHolder     (3, 3, name,"WH_Control"),
-    itsCurrentRun  (0),
-    itsEventCnt    (0),
-    itsOldestSolIdx(0),
     itsArgs        (args),
     itsFirstCall   (true)
 {
@@ -99,20 +94,23 @@ void WH_Control::process()
   {
     itsFirstCall = false;
     createStrategyControllers();
+    itsCtrlIter = itsControllers.begin();
   }
 
-  list<StrategyController*>::iterator iter;
-  for (iter=itsControllers.begin(); iter!=itsControllers.end(); iter++)
+  if ((*itsCtrlIter)->execute() == false)  // Remove from list
   {
-    if ((*iter)->execute() == false)  // Remove from list
-    {
-      delete (*iter);
-      iter = itsControllers.erase(iter); // Returns an iterator that designates 
-                                         // the first element remaining beyond 
-                                         // any elements removed, or end()
-      iter--;
-    }
+    delete (*itsCtrlIter);
+    itsCtrlIter = itsControllers.erase(itsCtrlIter); // Returns an iterator that designates 
+                                                     // the first element remaining beyond 
+                                                     // any elements removed, or end()
+    itsCtrlIter--;
   }
+
+  if (++itsCtrlIter == itsControllers.end())  // Set the iterator to the next Controller.
+  {                                           // Restart at the beginning when at the end. 
+    itsCtrlIter = itsControllers.begin();
+  }
+
 }
 
 void WH_Control::dump()
@@ -140,8 +138,8 @@ void WH_Control::createStrategyControllers()
     // Create StrategyController and add to list
     if (stratType == "Simple")
     {
-      SC_Simple* sc = new SC_Simple(1, inp, pd, sv, params);
-      itsControllers.push_back(sc);
+      SC_Simple* sc = new SC_Simple(i, inp, pd, sv, params);  // Each StrategyController
+      itsControllers.push_back(sc);                           // must get an unique ID
     }
     else
     {

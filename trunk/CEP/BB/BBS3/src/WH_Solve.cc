@@ -38,8 +38,7 @@ namespace LOFAR
 
 WH_Solve::WH_Solve(const string& name, int nPrediffInputs)
   : WorkHolder    (nPrediffInputs+2, 2, name, "WH_Solve"),
-    itsNPrediffers(nPrediffInputs),
-    itsSolver     (0)
+    itsNPrediffers(nPrediffInputs)
 {
   LOG_TRACE_FLOW("WH_Solve constructor");
   // Add workorder input
@@ -66,6 +65,13 @@ WH_Solve::WH_Solve(const string& name, int nPrediffInputs)
 WH_Solve::~WH_Solve()
 {
   LOG_TRACE_FLOW("WH_Solve destructor");
+  // Clean up map with Solver objects
+  SolverMap::iterator iter;
+  for (iter=itsSolvers.begin(); iter!=itsSolvers.end(); iter++)
+  {
+    delete (*iter).second;
+  }
+  itsSolvers.clear();
 }
 
 WH_Solve* WH_Solve::make (const string& name)
@@ -111,36 +117,35 @@ void WH_Solve::process()
   vector<double> resultParmValues;
   Quality resultQuality;
 
-  // Read workorder
+  KeyValueMap msArgs;
+  vector<string> pNames;    // Parameter names
+  wo->getVarData(msArgs, pNames);
+  int contrID = wo->getStrategyControllerID();
+  Solver* solver = getSolver(contrID, msArgs);
+
   if (wo->getInitialize())           // Initialize, next interval and solve
   {
-    KeyValueMap msArgs;
-    float timeInterval;
-    vector<string> pNames;    // Parameter names
-    wo->getVarData(msArgs, timeInterval, pNames);
-    createSolver(msArgs);
-
-    itsSolver->nextInterval();
-    readInputsAndSetParmData();
-    itsSolver->solve(wo->getUseSVD(), resultParmNames, resultParmValues,
+    solver->nextInterval(wo->getStartTime(), wo->getTimeInterval());
+    readInputsAndSetParmData(solver);
+    solver->solve(wo->getUseSVD(), resultParmNames, resultParmValues,
 		     resultQuality);
-    itsSolver->saveParms();
+    solver->saveParms();
   }
   else if (wo->getNextInterval())         // Next interval and solve
   {
-    ASSERTSTR(itsSolver!=0, "The solver has not been created and initialized.");
-    itsSolver->nextInterval();
-    readInputsAndSetParmData();
-    itsSolver->solve(wo->getUseSVD(), resultParmNames, resultParmValues,
+    ASSERTSTR(solver!=0, "The solver has not been created and initialized.");
+    solver->nextInterval(wo->getStartTime(), wo->getTimeInterval());
+    readInputsAndSetParmData(solver);
+    solver->solve(wo->getUseSVD(), resultParmNames, resultParmValues,
 		     resultQuality);
-    itsSolver->saveParms();
+    solver->saveParms();
   }
   else
   {                                       // just solve
-    readInputs();
-    itsSolver->solve(wo->getUseSVD(), resultParmNames, resultParmValues,
+    readInputs(solver);
+    solver->solve(wo->getUseSVD(), resultParmNames, resultParmValues,
 		     resultQuality);
-    itsSolver->saveParms();
+    solver->saveParms();
   }
 
   // Write result
@@ -155,7 +160,11 @@ void WH_Solve::process()
   // Add solution to database and update work order
   solPtr->insertDB();
   woPtr->updateDB();
-
+  
+  if (wo->getCleanUp())   // If Solver (cache) is no longer needed: clean up  
+  {
+    itsSolvers.erase(contrID);
+  }
 }
 
 void WH_Solve::dump()
@@ -163,36 +172,45 @@ void WH_Solve::dump()
   LOG_TRACE_RTTI("WH_Solve process()");
 }
 
-void WH_Solve::createSolver(const KeyValueMap& args)
+Solver* WH_Solve::getSolver(int id, const KeyValueMap& args)
 {
-  delete itsSolver;
+  SolverMap::iterator iter;
+  iter = itsSolvers.find(id);
+  if (iter != itsSolvers.end())
+  {
+    return (*iter).second;
+  }
+  else
+  {
+    // Create a new Prediffer object
+    string meqModel = args.getString("meqTableName", "meqmodel");
+    string skyModel = args.getString("skyTableName", "skymodel");
+    string dbType = args.getString("DBType", "postgres");
+    string dbName = args.getString("DBName", "test");
+    string dbHost = args.getString("DBHost", "dop50");
+    string dbPwd = args.getString("DBPwd", "");
 
-  // Create a Prediffer object
-  //  string msName = args.getString("MSName", "empty") + ".MS";
-  string meqModel = args.getString("meqTableName", "meqmodel");
-  string skyModel = args.getString("skyTableName", "skymodel");
-  string dbType = args.getString("DBType", "postgres");
-  string dbName = args.getString("DBName", "test");
-  string dbHost = args.getString("DBHost", "dop50");
-  string dbPwd = args.getString("DBPwd", "");
-
-  itsSolver = new Solver(meqModel, skyModel, dbType, 
-			 dbName, dbHost, dbPwd);
+    Solver* slv = new Solver(meqModel, skyModel, dbType, 
+			     dbName, dbHost, dbPwd);
+    // add to map
+    itsSolvers.insert(SolverMap::value_type(id, slv));
+    return slv;
+  }
 }
 
-void WH_Solve::readInputs()
+void WH_Solve::readInputs(Solver* solver)
 {
   LOG_TRACE_FLOW("WH_Solve::readInputs");
 //   for (int i=1; i<=itsNPrediffers; i++)
 //   {
 //     DH_Prediff* dh = dynamic_cast<DH_Prediff*>(getDataManager().getInHolder(i));
 
-//     itsSolver->setEquations(dh->getDataPtr(), dh->getNResults(), dh->getNspids(),
+//     solver->setEquations(dh->getDataPtr(), dh->getNResults(), dh->getNspids(),
 //                             dh->getNTimes(), dh->getNFreq(), i);     // id = i or from prediffer?
 //   }
 }
 
-void WH_Solve::readInputsAndSetParmData()
+void WH_Solve::readInputsAndSetParmData(Solver* solver)
 {
   LOG_TRACE_FLOW("WH_Solve::readInputsAndSetParmData");
 //   for (int i=1; i<=itsNPrediffers; i++)
@@ -203,14 +221,13 @@ void WH_Solve::readInputsAndSetParmData()
 //     vector<ParmData>::iterator iter;
 //     for (iter=pData.begin(); iter!=pData.end(); iter++)
 //     {
-//       itsSolver->setSolvableParmData(*iter, i);           // id = i or from prediffer?
+//       solver->setSolvableParmData(*iter, i);           // id = i or from prediffer?
 //     }
 
-//     itsSolver->setEquations(dh->getDataPtr(), dh->getNResults(), dh->getNspids(),
+//     solver->setEquations(dh->getDataPtr(), dh->getNResults(), dh->getNspids(),
 //                             dh->getNTimes(), dh->getNFreq(), i);    // id = i or from prediffer?
 //   }
 
 }
-
 
 } // namespace LOFAR
