@@ -139,8 +139,6 @@ namespace Thread {
 
   };
 
-  // Class Thread::Mutex::Lock 
-
 //##ModelId=5571A783FEED
   inline Mutex::Lock::Lock()
     : pmutex(0)
@@ -149,7 +147,11 @@ namespace Thread {
 
   inline Mutex::Lock::Lock(const Mutex::Lock &right)
   {
-    init(*right.pmutex,0);
+    if( right.pmutex )
+      init(*right.pmutex,0);
+    else
+      pmutex = 0;
+      
   }
   
   inline Mutex::Lock & Mutex::Lock::operator =(const Mutex::Lock &right)
@@ -179,10 +181,7 @@ namespace Thread {
     if( pmutex ) 
       pthread_mutex_unlock(pmutex); 
   }
-
-
-
-//##ModelId=5FDF0A36FEED
+  
   inline void Mutex::Lock::init (const pthread_mutex_t &mtx, int options)
   {
     pmutex = const_cast<pthread_mutex_t *>(&mtx);
