@@ -2,6 +2,10 @@
 #ifndef __STOPWATCH_H__
 #define __STOPWATCH_H__
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #include <sys/time.h>
 #include <unistd.h>
 

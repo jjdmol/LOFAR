@@ -21,6 +21,9 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.3  2001/09/19 08:10:51  wierenga
+//  Changes to do perform bandwidth tests.
+//
 //  Revision 1.2  2001/09/19 08:00:13  wierenga
 //  Added code to do performance tests.
 //
@@ -38,6 +41,7 @@
 
 #include "WH_GrowSize.h"
 #include "StopWatch.h"
+#include "SeqSim.h"
 
 WH_GrowSize::WH_GrowSize (const string& name, bool first,
 			unsigned int nin, unsigned int nout,
@@ -85,6 +89,11 @@ WH_GrowSize::~WH_GrowSize()
   delete [] itsOutHolders;
 }
 
+WorkHolder* WH_GrowSize::make(const string& name) const
+{
+  return new WH_GrowSize(name, itsFirst, getInputs(), getOutputs(), itsBufLength);
+}
+
 void WH_GrowSize::process()
 {
   if (!strncmp("GrowSize[1]", getName().c_str(), 11))
@@ -106,8 +115,8 @@ void WH_GrowSize::process()
     {
       for (int i=0; i<getInputs(); i++)
       {
-	(void)itsInHolders[i]->increaseSize(exp(log(20*1024*1024)/1000));
-	(void)itsOutHolders[i]->increaseSize(exp(log(20*1024*1024)/1000));
+	(void)itsInHolders[i]->increaseSize(exp(log(MAX_GROW_SIZE)/1000));
+	(void)itsOutHolders[i]->increaseSize(exp(log(MAX_GROW_SIZE)/1000));
       }
     }
   }

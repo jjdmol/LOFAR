@@ -21,6 +21,9 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.2  2001/09/19 08:00:13  wierenga
+//  Added code to do performance tests.
+//
 //  Revision 1.1  2001/08/16 15:14:23  wierenga
 //  Implement GrowSize DH and WH for performance measurements. Timing code still needs to be added.
 //
@@ -29,6 +32,10 @@
 
 #ifndef WH_GROWSIZE_H
 #define WH_GROWSIZE_H
+
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
 
 #include "WorkHolder.h"
 #include "DH_GrowSize.h"
@@ -56,6 +63,8 @@ public:
 	      unsigned int nbuffer=10);
 
   virtual ~WH_GrowSize();
+
+  virtual WorkHolder* make(const string& name) const;
 
   /// Do a process step.
   virtual void process();

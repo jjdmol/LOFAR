@@ -1,8 +1,8 @@
 #include "SeqSim.h"
-#include "SimulatorParse.h"
+#include "SimulatorParseClass.h"
 #include <iostream>
 
-#ifdef CORBA_
+#ifdef HAVE_CORBA
 int atexit(void (*function)(void))
 {
   return 1;
@@ -14,7 +14,7 @@ int main (int argc, char** argv)
   try {
     SeqSim simulator;
     simulator.setarg (argc, argv);
-#ifdef NOMPI_
+#ifndef HAVE_MPI
         cout << endl;
 	cout << "  * Type 'define;' to define the simulation" << endl;
 	cout <<	"  * Type 'run;'    to run the simulation" << endl;

@@ -21,11 +21,18 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.1  2001/08/09 15:48:48  wierenga
+//  Implemented first version of TH_Corba and test program
+//
 //
 //////////////////////////////////////////////////////////////////////
 
 #ifndef BASESIM_DH_INTARRAY_H
 #define BASESIM_DH_INTARRAY_H
+
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
 
 #include "DataHolder.h"
 #include <complex>
@@ -61,9 +68,6 @@ protected:
     DataPacket() : itsCounter(0) {};
 
     int itsCounter;
-#if 1
-    BufferType itsFill;         // to ensure alignment
-#endif
   };
 
 private:
