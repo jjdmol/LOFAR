@@ -23,10 +23,17 @@
 #if !defined(MNS_MEQEXPR_H)
 #define MNS_MEQEXPR_H
 
+// \file MNS/MeqExpr.h
+// The base class of an expression
+
 //# Includes
 #include <Common/lofar_vector.h>
 
 namespace LOFAR {
+
+// \ingroup BBS3
+// \addtogroup MNS
+// @{
 
 //# Forward declarations
 class MeqRequest;
@@ -84,6 +91,8 @@ private:
   MeqExpr* itsAmpl;
   MeqExpr* itsPhase;
 };
+
+// @}
 
 }
 

@@ -23,12 +23,19 @@
 #if !defined(MNS_MEQLOFARSTATSOURCES_H)
 #define MNS_MEQLOFARSTATSOURCES_H
 
+// \file MNS/MeqLofarStatSources.h
+// The Jones expressions for all sources of a station
+
 //# Includes
 #include <BBS3/MNS/MeqJonesExpr.h>
 #include <BBS3/MNS/MeqStatSources.h>
 #include <Common/lofar_vector.h>
 
 namespace LOFAR {
+
+// \ingroup BBS3
+// \addtogroup MNS
+// @{
 
 // This class represents the Jones matrix for all sources for a station.
 
@@ -82,6 +89,8 @@ private:
   MeqMatrix             itsPertK;
   MeqRequestId          itsLastReqId;
 };
+
+// @}
 
 }
 

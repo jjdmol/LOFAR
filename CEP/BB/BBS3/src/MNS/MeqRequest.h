@@ -23,14 +23,20 @@
 #if !defined(MNS_MEQREQUEST_H)
 #define MNS_MEQREQUEST_H
 
+// \file MNS/MeqRequest.h
+// The request for an evaluation of an expression
+
 //# Includes
 #include <BBS3/MNS/MeqRequestId.h>
 #include <BBS3/MNS/MeqDomain.h>
 #include <BBS3/MNS/MeqMatrix.h>
 #include <Common/lofar_vector.h>
 
-
 namespace LOFAR {
+
+// \ingroup BBS3
+// \addtogroup MNS
+// @{
 
 // This class represents a request for which an expression has to be
 // evaluated. It contains the domain and the spids for which the
@@ -94,6 +100,8 @@ private:
 
   static MeqRequestId theirRequestId;
 };
+
+// @}
 
 }
 

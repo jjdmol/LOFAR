@@ -23,12 +23,19 @@
 #if !defined(MNS_MEQJONESEXPR_H)
 #define MNS_MEQJONESEXPR_H
 
+// \file MNS/MeqJonesExpr.h
+// The base class of a Jones matrix expression.
+
 //# Includes
 #include <BBS3/MNS/MeqResult.h>
 #include <BBS3/MNS/MeqRequest.h>
 
 
 namespace LOFAR {
+
+// \ingroup BBS3
+// \addtogroup MNS
+// @{
 
 // This class is the (abstract) base class for an expression.
 
@@ -117,6 +124,8 @@ private:
   MeqResult    its22;
   MeqRequestId itsLastReqId;
 };
+
+// @}
 
 }
 

@@ -23,11 +23,18 @@
 #if !defined(MNS_MEQPARMSINGLE_H)
 #define MNS_MEQPARMSINGLE_H
 
+// \file MNS/MeqParmSingle.h
+// The class for a single parameter
+
 //# Includes
 #include <BBS3/MNS/MeqParm.h>
 
 
 namespace LOFAR {
+
+// \ingroup BBS3
+// \addtogroup MNS
+// @{
 
 // This class is the (abstract) base class for parameters.
 // The constructor assigns a unique id to the parameter and adds
@@ -72,6 +79,8 @@ private:
   double  itsCurValue;
   int     itsSolveIndex;
 };
+
+// @}
 
 }
 

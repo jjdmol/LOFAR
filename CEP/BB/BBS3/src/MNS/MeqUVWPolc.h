@@ -23,6 +23,9 @@
 #if !defined(MNS_MEQUVWPOLC_H)
 #define MNS_MEQUVWPOLC_H
 
+// \file MNS/MeqUVWPolc.h
+// Class to calculate the UVW from a fitted polynomial
+
 //# Includes
 #include <BBS3/MNS/MeqResult.h>
 #include <BBS3/MNS/MeqRequestId.h>
@@ -33,6 +36,10 @@
 #include <Common/lofar_string.h>
 
 namespace LOFAR {
+
+// \ingroup BBS3
+// \addtogroup MNS
+// @{
 
 //# Forward Declarations
 class MeqRequest;
@@ -82,6 +89,8 @@ private:
   MeqResult itsV;
   MeqResult itsW;
 };
+
+// @}
 
 }
 

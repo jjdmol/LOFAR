@@ -23,12 +23,19 @@
 #if !defined(MNS_MEQHIST_H)
 #define MNS_MEQHIST_H
 
+// \file MNS/MeqHist.h
+// A class holding a histogram
+
 //# Includes
 #include <Common/lofar_vector.h>
 #include <casa/Arrays/Vector.h>
 
 
 namespace LOFAR {
+
+// \ingroup BBS3
+// \addtogroup MNS
+// @{
 
 // This class holds a histogram in a vector.
 // The histogram is extended as needed.
@@ -57,6 +64,8 @@ public:
 private:
   casa::Vector<int> itsVec;
 };
+
+// @}
 
 }
 

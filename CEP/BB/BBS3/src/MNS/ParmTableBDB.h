@@ -23,6 +23,9 @@
 #if !defined(MNS_PARMTABLEBDB_H)
 #define MNS_PARMTABLEBDB_H
 
+// \file MNS/ParmTableBDB.h
+// Object to hold parameters in a database table.
+
 //# Includes
 #include <lofar_config.h>
 #include <MNS/ParmTable.h>
@@ -41,6 +44,10 @@ namespace LOFAR {
 }
 
 namespace LOFAR {
+
+// \ingroup BBS3
+// \addtogroup MNS
+// @{
 
   class ParmTableBDB : public ParmTableRep{
   public:
@@ -133,6 +140,9 @@ namespace LOFAR {
       unsigned int stringSizes[4];
     };
   };
+
+  // @}
+
 }
 
 #endif

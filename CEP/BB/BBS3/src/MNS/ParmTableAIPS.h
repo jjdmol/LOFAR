@@ -23,6 +23,9 @@
 #if !defined(MNS_PARMTABLEAIPS_H)
 #define MNS_PARMTABLEAIPS_H
 
+// \file MNS/ParmTableAIPS.h
+// Object to hold parameters in an AIPS++ table.
+
 //# Includes
 #include <BBS3/MNS/ParmTable.h>
 #include <BBS3/MNS/MeqPolc.h>
@@ -30,8 +33,11 @@
 #include <tables/Tables/ColumnsIndex.h>
 #include <casa/Containers/RecordField.h>
 
-
 namespace LOFAR {
+
+// \ingroup BBS3
+// \addtogroup MNS
+// @{
 
 class ParmTableAIPS : public ParmTableRep
 {
@@ -97,6 +103,8 @@ private:
   string itsTableName;
 
 };
+
+// @}
 
 }
 

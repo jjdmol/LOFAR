@@ -23,6 +23,9 @@
 #if !defined(MNS_MEQPOINTSOURCE_H)
 #define MNS_MEQPOINTSOURCE_H
 
+// \file MNS/MeqPointSource.h
+// Class holding a point source
+
 //# Includes
 #include <BBS3/MNS/MeqExpr.h>
 #include <BBS3/MNS/MeqResult.h>
@@ -30,6 +33,10 @@
 #include <Common/lofar_string.h>
 
 namespace LOFAR {
+
+// \ingroup BBS3
+// \addtogroup MNS
+// @{
 
 //# Forward Declarations
 class MeqPhaseRef;
@@ -91,6 +98,8 @@ private:
   MeqResult itsN;
   MeqRequestId itsLastReqId;
 };
+
+// @}
 
 }
 

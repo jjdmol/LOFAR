@@ -23,6 +23,9 @@
 #if !defined(MNS_MEQSTATUVW_H)
 #define MNS_MEQSTATUVW_H
 
+// \file MNS/MeqStatUVW.h
+// The station UVW coordinates for a time domain
+
 //# Includes
 #include <BBS3/MNS/MeqResult.h>
 #include <BBS3/MNS/MeqRequest.h>
@@ -30,6 +33,10 @@
 #include <measures/Measures/MeasFrame.h>
 
 namespace LOFAR {
+
+// \ingroup BBS3
+// \addtogroup MNS
+// @{
 
 //# Forward declarations
 class MeqStation;
@@ -89,6 +96,8 @@ private:
   casa::MeasFrame    itsFrame;
   map<MeqTime,MeqUVW> itsUVW;    // association of time and UVW coordinates
 };
+
+// @}
 
 }
 

@@ -23,11 +23,18 @@
 #if !defined(MNS_MEQSTATION_H)
 #define MNS_MEQSTATION_H
 
+// \file MNS/MeqStation.h
+// Class holding the ITRF position expressions of a station
+
 //# Includes
 #include <BBS3/MNS/MeqExpr.h>
 #include <Common/lofar_string.h>
 
 namespace LOFAR {
+
+// \ingroup BBS3
+// \addtogroup MNS
+// @{
 
 // Class holding the ITRF position expressions of a station.
 
@@ -56,6 +63,8 @@ private:
   MeqExpr* itsZ;
   string   itsName;
 };
+
+// @}
 
 }
 

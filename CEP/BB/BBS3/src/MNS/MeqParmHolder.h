@@ -23,12 +23,19 @@
 #ifndef MNS_MEQPARMHOLDER_H
 #define MNS_MEQPARMHOLDER_H
 
+// \file MNS/MeqParmHolder.h
+// Holder containing a shared pointer to a MeqStoredParmPolc
+
 //# Includes
 #include <Common/lofar_string.h>
 #include <BBS3/MNS/MeqPolc.h>
 
 
 namespace LOFAR {
+
+// \ingroup BBS3
+// \addtogroup MNS
+// @{
 
 class MeqParmDefHolder
 {
@@ -72,6 +79,8 @@ public:
     : MeqParmDefHolder (name, polc)
     {}
 };
+
+// @}
 
 }
 

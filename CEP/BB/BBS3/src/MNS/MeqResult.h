@@ -23,6 +23,9 @@
 #if !defined(MNS_MEQRESULT_H)
 #define MNS_MEQRESULT_H
 
+// \file MNS/MeqResult.h
+// The result of an expression for a domain.
+
 //# Includes
 #include <BBS3/MNS/MeqMatrix.h>
 #include <Common/lofar_vector.h>
@@ -32,6 +35,10 @@
 // has been evaluated.
 
 namespace LOFAR {
+
+// \ingroup BBS3
+// \addtogroup MNS
+// @{
 
 class MeqResultRep
 {
@@ -208,6 +215,8 @@ public:
 private:
   MeqResultRep* itsRep;
 };
+
+// @}
 
 }
 

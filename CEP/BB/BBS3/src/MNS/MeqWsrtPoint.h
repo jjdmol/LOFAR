@@ -23,6 +23,9 @@
 #if !defined(MNS_MEQWSRTPOINT_H)
 #define MNS_MEQWSRTPOINT_H
 
+// \file MNS/MeqWsrtPoint.h
+// The total baseline prediction of point sources in the WSRT model
+
 //# Includes
 #include <BBS3/MNS/MeqJonesExpr.h>
 #include <BBS3/MNS/MeqSourceList.h>
@@ -30,6 +33,10 @@
 #include <Common/lofar_vector.h>
 
 namespace LOFAR {
+
+// \ingroup BBS3
+// \addtogroup MNS
+// @{
 
 //# Forward Declarations
 class MeqPointDFT;
@@ -60,6 +67,8 @@ private:
   MeqHist*       itsCellfHist;
   vector<int>    itsNcell;
 };
+
+// @}
 
 }
 

@@ -23,6 +23,9 @@
 #if !defined(MNS_MEQLOFARPOINT_H)
 #define MNS_MEQLOFARPOINT_H
 
+// \file MNS/MeqLofarPoint.h
+// The total baseline prediction of point sources in the LOFAR model
+
 //# Includes
 #include <BBS3/MNS/MeqJonesExpr.h>
 #include <BBS3/MNS/MeqSourceList.h>
@@ -31,6 +34,10 @@
 
 namespace LOFAR {
   
+// \ingroup BBS3
+// \addtogroup MNS
+// @{
+
 //# Forward Declarations
 class MeqHist;
 class MeqLofarStatSources;
@@ -60,6 +67,8 @@ private:
   MeqHist*             itsCellfHist;
   vector<int>          itsNcell;
 };
+
+// @}
 
 }
 

@@ -23,12 +23,17 @@
 #if !defined(MNS_MEQMATRIXREALARR_H)
 #define MNS_MEQMATRIXREALARR_H
 
+// \file MNS/MeqMatrixRealArr.h
+// Temporary matrix for Mns
 
 //# Includes
 #include <BBS3/MNS/MeqMatrixRep.h>
 
-
 namespace LOFAR {
+
+// \ingroup BBS3
+// \addtogroup MNS
+// @{
 
 class MeqMatrixRealArr : public MeqMatrixRep
 {
@@ -109,6 +114,8 @@ private:
 
   double* itsValue;
 };
+
+// @}
 
 }
 

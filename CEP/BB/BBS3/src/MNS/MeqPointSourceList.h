@@ -23,11 +23,17 @@
 #if !defined(MNS_MEQPOINTSOURCELIST_H)
 #define MNS_MEQPOINTSOURCELIST_H
 
+// \file MNS/MeqPointSourceList.h
+// Class for a list of point sources
+
 //# Includes
 #include <Mns/MeqSourceList.h>
 
-
 namespace LOFAR {
+
+// \ingroup BBS3
+// \addtogroup MNS
+// @{
 
 class MeqPointSourceList: public MeqSourceList
 {
@@ -51,6 +57,8 @@ private:
   vector<vector<double> > itsBuffer;    //# accumulator per interferometer
   vector<MeqPointSource>  itsSources;
 };
+
+// @}
 
 }
 

@@ -23,12 +23,18 @@
 #if !defined(MNS_MEQSTOREDPARMPOLC_H)
 #define MNS_MEQSTOREDPARMPOLC_H
 
+// \file MNS/MeqStoredParmPolc.h
+// Stored parameter with polynomial coefficients
+
 //# Includes
 #include <BBS3/MNS/MeqParmPolc.h>
 #include <BBS3/MNS/ParmTable.h>
 
-
 namespace LOFAR {
+
+// \ingroup BBS3
+// \addtogroup MNS
+// @{
 
 // This class contains the coefficients of a 2-dim polynomial.
 // The order in time and frequency must be given.
@@ -71,6 +77,8 @@ private:
   ParmTable* itsTable;
   MeqDomain  itsDomain;
 };
+
+// @}
 
 }
 

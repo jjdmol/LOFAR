@@ -23,6 +23,8 @@
 #if !defined(MNS_MEQMATRIXCOMPLEXARR_H)
 #define MNS_MEQMATRIXCOMPLEXARR_H
 
+// \file MNS/MeqMatrixComplexArr.h
+// Temporary matrix for Mns
 
 //# Includes
 #include <BBS3/MNS/MeqMatrixRep.h>
@@ -30,6 +32,10 @@
 #include <Common/lofar_stack.h>
 
 namespace LOFAR {
+
+// \ingroup BBS3
+// \addtogroup MNS
+// @{
 
 class MeqMatrixComplexArr : public MeqMatrixRep
 {
@@ -110,6 +116,8 @@ private:
   static int theirNElements;
   static size_t theirHeaderSize;
 };
+
+// @}
 
 }
 

@@ -23,15 +23,21 @@
 #if !defined(MNS_MEQPOINTDFT_H)
 #define MNS_MEQPOINTDFT_H
 
+// \file MNS/MeqPointDFT.h
+// The base class of an expression.
+
 //# Includes
 #include <BBS3/MNS/MeqExpr.h>
 #include <Common/lofar_vector.h>
 
 namespace LOFAR {
 
+// \ingroup BBS3
+// \addtogroup MNS
+// @{
+
 //# Forward declarations
 class MeqStatSources;
-
 
 // This class is the (abstract) base class for an expression.
 
@@ -54,6 +60,8 @@ private:
   MeqStatSources* itsLeft;
   MeqStatSources* itsRight;
 };
+
+// @}
 
 }
 

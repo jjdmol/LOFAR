@@ -23,12 +23,19 @@
 #if !defined(MNS_MEQPARMPOLC_H)
 #define MNS_MEQPARMPOLC_H
 
+// \file MNS/MeqParmPolc.h
+// Parameter with polynomial coefficients
+
 //# Includes
 #include <BBS3/MNS/MeqParm.h>
 #include <BBS3/MNS/MeqPolc.h>
 #include <Common/lofar_vector.h>
 
 namespace LOFAR {
+
+// \ingroup BBS3
+// \addtogroup MNS
+// @{
 
 //# Forward declarations
 class MeqDomain;
@@ -97,6 +104,8 @@ public:
 private:
   vector<MeqPolc> itsPolcs;
 };
+
+// @}
 
 }
 

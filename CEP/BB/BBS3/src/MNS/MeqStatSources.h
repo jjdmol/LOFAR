@@ -23,6 +23,9 @@
 #if !defined(MNS_MEQSTATSOURCES_H)
 #define MNS_MEQSTATSOURCES_H
 
+// \file MNS/MeqStatSources.h
+// The precalculated source DFT exponents for a station
+
 //# Includes
 #include <BBS3/MNS/MeqResult.h>
 #include <BBS3/MNS/MeqRequest.h>
@@ -31,10 +34,13 @@
 
 namespace LOFAR {
 
+// \ingroup BBS3
+// \addtogroup MNS
+// @{
+
 //# Forward declarations
 class MeqStatUVW;
 class MeqPhaseRef;
-
 
 class MeqStatSources
 {
@@ -83,6 +89,8 @@ private:
   vector<MeqResult> itsDeltas;
   MeqRequestId      itsLastReqId;
 };
+
+// @}
 
 }
 
