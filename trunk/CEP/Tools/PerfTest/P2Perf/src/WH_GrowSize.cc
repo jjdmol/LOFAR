@@ -22,6 +22,11 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.17  2002/05/08 14:28:37  wierenga
+//  DataHolder allocation moved from constructor to preprocess to be able to
+//  use TransportHolder::allocate.
+//  Bug fixes in P2Perf.cc for -mpi arguments.
+//
 //  Revision 1.16  2002/05/08 08:20:04  schaaf
 //  Modified includes for new build env
 //
@@ -200,14 +205,14 @@ void WH_GrowSize::dump() const
 
 DH_GrowSize* WH_GrowSize::getInHolder (int channel)
 {
-  AssertStr (channel >= 0,          "input channel too low");
-  AssertStr (channel < getInputs(), "input channel too high");
+  DbgAssertStr (channel >= 0,          "input channel too low");
+  DbgAssertStr (channel < getInputs(), "input channel too high");
   return itsInHolders[channel];
 }
 DH_GrowSize* WH_GrowSize::getOutHolder (int channel)
 {
-  AssertStr (channel >= 0,           "output channel too low");
-  AssertStr (channel < getOutputs(), "output channel too high");
+  DbgAssertStr (channel >= 0,           "output channel too low");
+  DbgAssertStr (channel < getOutputs(), "output channel too high");
   return itsOutHolders[channel];
 }
 
