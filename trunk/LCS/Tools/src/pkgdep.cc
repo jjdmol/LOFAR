@@ -43,7 +43,7 @@ struct Used
 // Define the map to hold the usage.
 typedef map<string,Used> UsedMap;
 
-// Write the dependency tree.
+// Write the dependency tree in ASCII format.
 void writeDep (const string& pkg, UsedMap& dep, const string& indent,
 	       int depth, int maxdepth)
 {
@@ -54,8 +54,63 @@ void writeDep (const string& pkg, UsedMap& dep, const string& indent,
     set<string> uses = dep[pkg].itsUses;
     for (set<string>::const_iterator iter = uses.begin();
 	 iter != uses.end();
-	 iter++) {
+	 ++iter) {
       writeDep (*iter, dep, newIndent, depth+1, maxdepth);
+    }
+  }
+}
+
+// Write JavaScript header.
+void writeHeader (const string& type)
+{
+  cout << "<html>" << endl;
+  cout << "<head>" << endl;
+  cout << "<script src='lib/TreeMenu.js' language='JavaScript' type='text/javascript'></script>" << endl;
+  cout << "<title>LOFAR Dependency Tree (" << type << ")</title>" << endl;
+  cout << "</head>" << endl;
+  cout << "<body>" << endl;
+  cout << "<center>" << endl;
+  cout << "<h1>LOFAR Dependency Tree (" << type << ")</h1>" << endl;
+  cout << "</center>" << endl;
+  cout << "<script language='javascript' type='text/javascript'>" << endl;
+  cout << "  objTreeMenu_1 = new TreeMenu('images', 'objTreeMenu_1', '_self', 'treeMenuDefault', true, false);" << endl;
+  cout << "  newNode = objTreeMenu_1.addItem(new TreeNode('Lofar dependencies', 'folder.gif', null, false, true, ''));" << endl;
+}
+
+// Write JavaScript footer.
+void writeFooter()
+{
+  cout << "  objTreeMenu_1.drawMenu();" << endl;
+  cout << "  objTreeMenu_1.resetBranches();" << endl;
+  cout << "</script></body>" << endl;
+  cout << "</html>" << endl;
+}
+
+// Write the dependency tree in JavaScript format.
+void writeJS (const string& pkg, UsedMap& dep, const string& parent,
+	      int depth, int maxdepth, int seqnr)
+{
+  // Form the name for this node.
+  ostringstream oss;
+  oss << parent << '_' << seqnr+1;
+  // Get children.
+  set<string> uses = dep[pkg].itsUses;
+  cout << "newNode" << oss.str()
+       << "= newNode" << parent << ".addItem(new TreeNode('"
+       << pkg << "', '";
+  if (uses.empty()) {
+    cout << "item";
+  } else {
+    cout << "folder";
+  }
+  cout << ".gif', null, false, true, ''));" << endl;
+  // Write used packages if any and if maxdepth not reached.
+  if (maxdepth < 0  ||  depth < maxdepth) {
+    int newSeqnr = 0;
+    for (set<string>::const_iterator iter = uses.begin();
+	 iter != uses.end();
+	 ++iter, ++newSeqnr) {
+      writeJS (*iter, dep, oss.str(), depth+1, maxdepth, newSeqnr);
     }
   }
 }
@@ -66,7 +121,7 @@ void findFlatDep (const string& pkg, UsedMap& dep, set<string>& flatUses)
   set<string> uses = dep[pkg].itsUses;
   for (set<string>::const_iterator iter = uses.begin();
        iter != uses.end();
-       iter++) {
+       ++iter) {
     flatUses.insert (*iter);
     findFlatDep (*iter, dep, flatUses);
   }
@@ -75,13 +130,16 @@ void findFlatDep (const string& pkg, UsedMap& dep, set<string>& flatUses)
 int main(int argc, const char* argv[])
 {
   if (argc < 2) {
-    cerr << "Use as:   pkgdep inputfile [flat|maxdepth=-1]" << endl;
+    cerr << "Use as:   pkgdep inputfile [flat|maxdepth=-1] [ascii]" << endl;
     return 1;
   }
   bool flat=false;
+  bool ascii=false;
   int maxdepth=-1;
-  if (argc > 2) {
-    if (string(argv[2]) == "flat") {
+  for (int i=2; i<argc; ++i) {
+    if (string(argv[i]) == "ascii") {
+      ascii = true;
+    } else if (string(argv[i]) == "flat") {
       flat = true;
       maxdepth = 1;
     } else {
@@ -111,19 +169,31 @@ int main(int argc, const char* argv[])
   if (flat) {
     for (UsedMap::const_iterator iter = dep.begin();
 	 iter != dep.end();
-	 iter++) {
+	 ++iter) {
       findFlatDep (iter->first, dep, flatdep[iter->first].itsUses);
     }
     depPtr = &flatdep;
   }
-    
+
+  if (!ascii) {
+    string name(argv[1]);
+    writeHeader(name.substr(name.find('.') + 1));
+  }
   // Write the dependencies starting at all root packages
   // (i.e. packages not used by others).
+  int seqnr = 0;
   for (UsedMap::const_iterator iter = depPtr->begin();
        iter != depPtr->end();
-       iter++) {
+       ++iter, ++seqnr) {
     //    if (iter->second.itsNused == 0) {
-      writeDep (iter->first, *depPtr, "", 0, maxdepth);
+      if (ascii) {
+	writeDep (iter->first, *depPtr, "", 0, maxdepth);
+      } else {
+	writeJS (iter->first, *depPtr, "", 0, maxdepth, seqnr);
+      }
       //    }
+  }
+  if (!ascii) {
+    writeFooter();
   }
 }
