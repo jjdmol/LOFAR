@@ -78,11 +78,9 @@ void DFTServer::define (const KeyValueMap& params)
   myClientStub.itsRequestDH.connectTo(ServerStep.getInData(0),  *(myClientStub.itsTHProtoResult ));
  
 
-  //////////////////////////////////////////////////////////////////////
-  //
-  // Finished configuration definition
-  // 
-  //////////////////////////////////////////////////////////////////////
+
+  LOG_TRACE_FLOW_STR("Finished configuration definition");
+
 }
 
 void DFTServer::run (int nsteps)
