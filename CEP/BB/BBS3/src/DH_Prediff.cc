@@ -40,6 +40,7 @@ namespace LOFAR
 
 DH_Prediff::DH_Prediff (const string& name)
   : DataHolder    (name, "DH_Prediff", 1),
+    itsDataSize   (0),
     itsDataBuffer (0),
     itsMoreData   (0)
 {
@@ -49,6 +50,7 @@ DH_Prediff::DH_Prediff (const string& name)
 
 DH_Prediff::DH_Prediff(const DH_Prediff& that)
   : DataHolder    (that),
+    itsDataSize   (0),
     itsDataBuffer (0),
     itsMoreData   (0)
 {
@@ -70,6 +72,7 @@ void DH_Prediff::preprocess()
 {
   LOG_TRACE_FLOW("DH_Prediff preprocess");
   // Add the fields to the data definition.
+  addField ("DataSize", BlobField<unsigned int>(1));
   addField ("MoreData", BlobField<unsigned int>(1));
   addField ("DataBuf", BlobField<double>(1, 0, 0, 0, false));
 
@@ -80,6 +83,7 @@ void DH_Prediff::preprocess()
 void DH_Prediff::fillDataPointers()
 {
   // Fill in the pointers.
+  itsDataSize = getData<unsigned int> ("DataSize");
   itsDataBuffer = getData<double> ("DataBuf");
   itsMoreData = getData<unsigned int> ("MoreData");
 }
@@ -127,7 +131,7 @@ void DH_Prediff::setParmData(const vector<ParmData>& pdata)
   }
 }
 
-void DH_Prediff::setDataSize(const vector<uint32>& shape)
+void DH_Prediff::setBufferSize(const vector<uint32>& shape)
 {
   DBGASSERT(shape.size() >= 3);
   vector<uint32> shp(3);
@@ -138,7 +142,7 @@ void DH_Prediff::setDataSize(const vector<uint32>& shape)
   createDataBlock();
 }
 
-const vector<uint32>& DH_Prediff::getDataSize()
+const vector<uint32>& DH_Prediff::getBufferSize()
 {
   return getDataField("DataBuf").getShape();
 }

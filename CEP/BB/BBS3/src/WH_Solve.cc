@@ -212,8 +212,8 @@ void WH_Solve::readInputs(Solver* solver, bool firstRead)
     {
 
       dh = dynamic_cast<DH_Prediff*>(getDataManager().getInHolder(i+2));
-      vector<uint32> shape = dh->getDataSize();
-      solver->setEquations(dh->getDataBuffer(), shape[2],
+      vector<uint32> shape = dh->getBufferSize();
+      solver->setEquations(dh->getDataBuffer(), dh->getDataSize(),
 			   shape[1]-1, shape[0], i);     // id = i or from prediffer?
       more = dh->moreDataToCome();
       cout << "***SetEquations with data timestamp: " << dh->getTimeStamp() << endl;
