@@ -61,6 +61,7 @@ using namespace boost::gregorian;
 #define SCALE (1<<(16-2))
 
 #define BEAMLETSTATS_INTEGRATION_COUNT 1000
+#define EPA_DELAY_TIME 10000
 
 BeamServerTask::BeamServerTask(string name)
     : GCFTask((State)&BeamServerTask::initial, name),
@@ -522,6 +523,7 @@ void BeamServerTask::wgenable_action()
   ee.sample_period = m_wgsetting.sample_period;
 
   board.send(GCFEvent(F_RAW_SIG), &ee.command, WGENABLE_PACKET_SIZE);
+  usleep(EPA_DELAY_TIME); // give EPA board time to process buffer
   
   LOG_DEBUG("SENT WGENABLE");
 }
@@ -539,6 +541,7 @@ void BeamServerTask::wgdisable_action()
   (void)memset(&de.reserved1, 0, 8);
 
   board.send(GCFEvent(F_RAW_SIG), &de.command, WGDISABLE_PACKET_SIZE);
+  usleep(EPA_DELAY_TIME); // give EPA board time to process buffer
 
   LOG_DEBUG("SENT WGDISABLE");
 }
@@ -576,6 +579,10 @@ void BeamServerTask::compute_timeout_action(long current_seconds)
        bi != m_beams.end(); ++bi)
   {
     (*bi)->convertPointings(compute_period);
+
+    LOG_DEBUG(formatString("current_pointing=(%f,%f)",
+			   (*bi)->pointing().direction().angle1(),
+			   (*bi)->pointing().direction().angle2()));
   }
 
   Beamlet::calculate_weights(m_pos, m_weights);
@@ -630,6 +637,7 @@ void BeamServerTask::send_weights(int period)
 
 	  bc.phasepol = pol;
 	  board.send(GCFEvent(F_RAW_SIG), &bc.command, BFCONFIGURE_PACKET_SIZE);
+	  usleep(EPA_DELAY_TIME); // give EPA board time to process buffer
       }
   }
 
@@ -641,6 +649,7 @@ void BeamServerTask::send_weights(int period)
   memset(&be.reserved1, 0, 8);
 
   board.send(GCFEvent(F_RAW_SIG), &be.command, BFENABLE_PACKET_SIZE);
+  usleep(EPA_DELAY_TIME); // give EPA board time to process buffer
 }
 
 void BeamServerTask::update_sbselection()
@@ -692,6 +701,7 @@ void BeamServerTask::send_sbselection()
       }
 
       board.send(GCFEvent(F_RAW_SIG), &ss.command, SBSELECT_PACKET_HDR_SIZE + m_sbsel.size()*2);
+      usleep(EPA_DELAY_TIME); // give EPA board time to process buffer
   }
 }
 

@@ -85,6 +85,11 @@ namespace ABS
 	  int handle() const;
 
 	  /**
+	   * @return Current pointing.
+	   */
+	  Pointing pointing() const;
+
+	  /**
 	   * Deallocate a beam.
 	   */
 	  int deallocate();
@@ -192,6 +197,7 @@ namespace ABS
 
   inline bool Beam::allocated() const { return m_allocated; }
   inline int  Beam::handle()    const { return m_index;     }
+  inline Pointing Beam::pointing() const { return m_pointing; }
 };
      
 #endif /* ABSBEAM_H_ */
