@@ -12,7 +12,7 @@
 
 //## Module: Timestamp%3C7F3B770339; Package specification
 //## Subsystem: PSCF%3C5A73670223
-//## Source file: F:\lofar8\oms\LOFAR\CEP\CPA\PSCF\src\pscf\Timestamp.h
+//## Source file: F:\lofar8\oms\LOFAR\CEP\CPA\PSCF\src\Timestamp.h
 
 #ifndef Timestamp_h
 #define Timestamp_h 1
@@ -57,10 +57,10 @@ class Timestamp
 
     //## Constructors (specified)
       //## Operation: Timestamp%3C7F3B580321
-      Timestamp (long sec1, long usec1 = 0);
+      explicit Timestamp (long sec1, long usec1 = 0);
 
       //## Operation: Timestamp%3C95C5F90389
-      explicit Timestamp (double sec1);
+      Timestamp (double sec1);
 
     //## Equality Operations (generated)
       bool operator==(const Timestamp &right) const;
@@ -81,11 +81,17 @@ class Timestamp
       //## Operation: now%3C8F67DD00BD
       static const Timestamp & now (Timestamp *pts = &Timestamp::tsnow);
 
+      //## Operation: toString%3CA06AE50335
+      string toString (const char *format = "%H:%M:%S %d/%m/%y") const;
+
       //## Operation: operator bool%3C8F18500073
       operator bool () const;
 
       //## Operation: operator !%3C8C9EAA005B
       bool operator ! () const;
+
+      //## Operation: operator double%3C9F3EF20221
+      operator double () const;
 
       //## Operation: operator +=%3C7F3D500287
       Timestamp & operator += (const Timestamp &other);
@@ -250,6 +256,13 @@ inline bool Timestamp::operator ! () const
   //## begin Timestamp::operator !%3C8C9EAA005B.body preserve=yes
   return ! static_cast<bool>(*this);
   //## end Timestamp::operator !%3C8C9EAA005B.body
+}
+
+inline Timestamp::operator double () const
+{
+  //## begin Timestamp::operator double%3C9F3EF20221.body preserve=yes
+  return sec_ + 1e-6*usec_;
+  //## end Timestamp::operator double%3C9F3EF20221.body
 }
 
 inline Timestamp Timestamp::operator + (const Timestamp &other) const

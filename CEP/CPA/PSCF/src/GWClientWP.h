@@ -23,6 +23,7 @@
 //## end module%3C95AADB016E.additionalIncludes
 
 //## begin module%3C95AADB016E.includes preserve=yes
+#include <list>
 //## end module%3C95AADB016E.includes
 
 // Socket
@@ -36,7 +37,7 @@
 
 //## begin module%3C95AADB016E.additionalDeclarations preserve=yes
 #pragma aidgroup PSCF
-#pragma aid Reconnect FailConnect Reopen
+#pragma aid Reconnect FailConnect Reopen Server List Hosts Ports
 //## end module%3C95AADB016E.additionalDeclarations
 
 
@@ -56,18 +57,32 @@
 class GWClientWP : public WorkProcess  //## Inherits: <unnamed>%3C95A941009C
 {
   //## begin GWClientWP%3C95A941002E.initialDeclarations preserve=yes
+  public:
+      typedef struct { string    host,port;
+                       Socket   *sock;
+                       int       state; 
+                       Timestamp retry,fail;
+      // When we spawn a child gateway, we watch for its bye message
+      // to know when to start connecting again. This holds its address.
+                       MsgAddress gw;
+      // Address of remote peer, initialized once we have discovered it.
+                       MsgAddress remote_peer;
+              } Connection;
   //## end GWClientWP%3C95A941002E.initialDeclarations
 
   public:
     //## Constructors (specified)
       //## Operation: GWClientWP%3C95A9410081
-      GWClientWP (const string &host1, const string &port1);
+      GWClientWP (const vector<string> &connlist);
 
     //## Destructor (generated)
       ~GWClientWP();
 
 
     //## Other Operations (specified)
+      //## Operation: init%3CA1C0C300FA
+      virtual void init ();
+
       //## Operation: start%3C95A941008B
       void start ();
 
@@ -80,24 +95,22 @@ class GWClientWP : public WorkProcess  //## Inherits: <unnamed>%3C95A941009C
       //## Operation: receive%3C95A9410095
       int receive (MessageRef& mref);
 
-    //## Get and Set Operations for Class Attributes (generated)
+      //## Operation: find%3CA1C0030307
+      GWClientWP::Connection * find (const string &host, const string &port);
 
-      //## Attribute: host%3C95A941007E
-      string getHost () const;
-
-      //## Attribute: port%3C95A941007F
-      string getPort () const;
+      //## Operation: find%3CA1C52E0108
+      GWClientWP::Connection * find (const MsgAddress &gw);
 
     // Additional Public Declarations
       //## begin GWClientWP%3C95A941002E.public preserve=yes
-      typedef enum { STOPPED,WAITING,CONNECTING,CONNECTED } States;
+      typedef enum { STOPPED=0,WAITING=1,CONNECTING=2,CONNECTED=3 } States;
       //## end GWClientWP%3C95A941002E.public
   protected:
     // Additional Protected Declarations
       //## begin GWClientWP%3C95A941002E.protected preserve=yes
       // tries to open and connect the socket
-      void tryConnect ();
-  
+      void tryConnect ( Connection &cx );
+      Timestamp now;
       bool reconnect_timeout_set;
        
       //## end GWClientWP%3C95A941002E.protected
@@ -115,30 +128,18 @@ class GWClientWP : public WorkProcess  //## Inherits: <unnamed>%3C95A941009C
       //## end GWClientWP%3C95A941002E.private
 
   private: //## implementation
-    // Data Members for Class Attributes
-
-      //## begin GWClientWP::host%3C95A941007E.attr preserve=no  public: string {U} 
-      string host;
-      //## end GWClientWP::host%3C95A941007E.attr
-
-      //## begin GWClientWP::port%3C95A941007F.attr preserve=no  public: string {U} 
-      string port;
-      //## end GWClientWP::port%3C95A941007F.attr
-
     // Data Members for Associations
 
       //## Association: PSCF::<unnamed>%3C95A941009D
-      //## Role: GWClientWP::sock%3C95A941009E
-      //## begin GWClientWP::sock%3C95A941009E.role preserve=no  private: Socket { -> 0..1RHgN}
-      Socket *sock;
-      //## end GWClientWP::sock%3C95A941009E.role
+      //## Role: GWClientWP::conns%3C95A941009E
+      //## begin GWClientWP::conns%3C95A941009E.role preserve=no  private: Socket { -> 0..*RHgN}
+      list<Connection> conns;
+      //## end GWClientWP::conns%3C95A941009E.role
 
     // Additional Implementation Declarations
       //## begin GWClientWP%3C95A941002E.implementation preserve=yes
-      // when we spawn a child gateway, we watch for its bye message
-      // to know when to start connecting again. This holds the
-      // id of that message.
-      HIID child_bye;
+      typedef list<Connection>::iterator CLI;
+      typedef list<Connection>::const_iterator CCLI;
       //## end GWClientWP%3C95A941002E.implementation
 };
 
@@ -146,22 +147,6 @@ class GWClientWP : public WorkProcess  //## Inherits: <unnamed>%3C95A941009C
 //## end GWClientWP%3C95A941002E.postscript
 
 // Class GWClientWP 
-
-//## Get and Set Operations for Class Attributes (inline)
-
-inline string GWClientWP::getHost () const
-{
-  //## begin GWClientWP::getHost%3C95A941007E.get preserve=no
-  return host;
-  //## end GWClientWP::getHost%3C95A941007E.get
-}
-
-inline string GWClientWP::getPort () const
-{
-  //## begin GWClientWP::getPort%3C95A941007F.get preserve=no
-  return port;
-  //## end GWClientWP::getPort%3C95A941007F.get
-}
 
 //## begin module%3C95AADB016E.epilog preserve=yes
 //## end module%3C95AADB016E.epilog

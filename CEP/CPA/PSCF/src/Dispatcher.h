@@ -12,7 +12,7 @@
 
 //## Module: Dispatcher%3C7B7F300041; Package specification
 //## Subsystem: PSCF%3C5A73670223
-//## Source file: F:\lofar8\oms\LOFAR\CEP\CPA\PSCF\src\pscf\Dispatcher.h
+//## Source file: F:\lofar8\oms\LOFAR\CEP\CPA\PSCF\src\Dispatcher.h
 
 #ifndef Dispatcher_h
 #define Dispatcher_h 1
@@ -27,6 +27,7 @@
 #include <sys/time.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <stack>
 #include "Timestamp.h"
 //## end module%3C7B7F300041.includes
 
@@ -90,7 +91,7 @@ class Dispatcher : public PSCFDebugContext  //## Inherits: <unnamed>%3C7FA32C016
   public:
     //## Constructors (specified)
       //## Operation: Dispatcher%3C7CD444039C
-      Dispatcher (AtomicID process, AtomicID host, int hz = 100);
+      Dispatcher (AtomicID process, AtomicID host, int argc = 0, const char **argv = 0, int hz = 100);
 
     //## Destructor (generated)
       ~Dispatcher();
@@ -104,10 +105,10 @@ class Dispatcher : public PSCFDebugContext  //## Inherits: <unnamed>%3C7FA32C016
       const MsgAddress & attach (WPInterface* wp, int flags);
 
       //## Operation: detach%3C8CA2BD01B0
-      void detach (WPInterface* wp);
+      void detach (WPInterface* wp, bool delay = False);
 
       //## Operation: detach%3C8CDE320231
-      void detach (const WPID &id);
+      void detach (const WPID &id, bool delay = False);
 
       //## Operation: declareForwarder%3C95C73F022A
       //	Marks a WP as a "forwarder", i.e., can deliver messages to remote
@@ -123,7 +124,7 @@ class Dispatcher : public PSCFDebugContext  //## Inherits: <unnamed>%3C7FA32C016
       //## Operation: send%3C7B8867015B
       //	Sends message to specified address. The ref must be writable.
       //	Read-only copies will be placed into the appropriate queue(s).
-      int send (MessageRef &msg, const MsgAddress &to);
+      int send (MessageRef &mref, const MsgAddress &to);
 
       //## Operation: poll%3C7B888E01CF
       //	Polls inputs, checks timeouts, and delivers any queued messages.
@@ -132,9 +133,13 @@ class Dispatcher : public PSCFDebugContext  //## Inherits: <unnamed>%3C7FA32C016
       void poll ();
 
       //## Operation: pollLoop%3C8C87AF031F
-      //	Goes into infinite polling loop. Shoud be called after start() to
-      //	run the system.
+      //	Goes into polling loop. Shoud be called after start() to run the
+      //	system. Returns when a SIGINT is received, or after someone has
+      //	called stopPolling().
       void pollLoop ();
+
+      //## Operation: stopPolling%3CA09EB503C1
+      void stopPolling ();
 
       //## Operation: addTimeout%3C7D28C30061
       void addTimeout (WPInterface* pwp, const Timestamp &period, const HIID &id, int flags, int priority);
@@ -154,6 +159,9 @@ class Dispatcher : public PSCFDebugContext  //## Inherits: <unnamed>%3C7FA32C016
       //## Operation: removeSignal%3C7DFF57025C
       bool removeSignal (WPInterface* pwp, int signum);
 
+      //## Operation: numWPs%3C9B05E0027D
+      int numWPs () const;
+
       //## Operation: initWPIter%3C98D4530076
       //	Returns an iterator pointing to the first WP in the list. Use with
       //	iterate().
@@ -164,10 +172,22 @@ class Dispatcher : public PSCFDebugContext  //## Inherits: <unnamed>%3C7FA32C016
       //	iterator. Returns False when iterator becomes invalid.
       bool getWPIter (Dispatcher::WPIter &iter, WPID &wpid, const WPInterface *&pwp);
 
+      //## Operation: getOption%3CA0329D0045
+      bool getOption (const string &name, string &out);
+
+      //## Operation: getOption%3CA0341E03A6
+      bool getOption (const string &name, int &out);
+
     //## Get and Set Operations for Class Attributes (generated)
 
       //## Attribute: address%3C7CD390002C
       const MsgAddress& getAddress () const;
+
+      //## Attribute: commandLine%3CA031080328
+      const vector<string>& getCommandLine () const;
+
+      //## Attribute: tick%3CA1A2B70107
+      ulong getTick () const;
 
     // Additional Public Declarations
       //## begin Dispatcher%3C7B6A3E00A0.public preserve=yes
@@ -182,7 +202,7 @@ class Dispatcher : public PSCFDebugContext  //## Inherits: <unnamed>%3C7FA32C016
                 
                 EventInfo( WPInterface *pwpi,const HIID &id,int priority )
                            : pwp(pwpi),
-                             msg( new Message(AidMsgEvent|id,priority),
+                             msg( new Message(AidEvent|id,priority),
                                   DMI::ANON|DMI::WRITE ) 
                            { 
                              msg().setFrom(pwp->dsp()->getAddress());
@@ -195,21 +215,21 @@ class Dispatcher : public PSCFDebugContext  //## Inherits: <unnamed>%3C7FA32C016
                 int       flags;
                 HIID      id;
                 TimeoutInfo( WPInterface *pwp,const HIID &id,int priority )
-                    : EventInfo(pwp,AidMsgTimeout|id,priority) {};
+                    : EventInfo(pwp,AidTimeout|id,priority) {};
       };
       class InputInfo : public EventInfo
       {
         public: int         fd,flags;
                 MessageRef  last_msg;
                 InputInfo( WPInterface *pwp,const HIID &id,int priority )
-                    : EventInfo(pwp,AidMsgInput|id,priority) {};
+                    : EventInfo(pwp,AidInput|id,priority) {};
       };
       class SignalInfo : public EventInfo
       {
         public: int       signum,flags;
                 volatile int *counter;
                 SignalInfo( WPInterface *pwp,const HIID &id,int priority )
-                    : EventInfo(pwp,AidMsgSignal|id,priority) {};
+                    : EventInfo(pwp,AidSignal|id,priority) {};
       };
       
       // hostId and processId
@@ -237,8 +257,13 @@ class Dispatcher : public PSCFDebugContext  //## Inherits: <unnamed>%3C7FA32C016
       bool running;
       // flag: repoll required
       bool repoll;
-      // flag: we are inside the pollLoop() function
-      bool inPollLoop;
+      // flag: stop the poll loop
+      static bool stop_polling;
+      // flag: we are inside the pollLoop() or start() method
+      bool in_pollLoop,in_start;
+      // This is the current poll depth (i.e., depth of nested polls)
+      // when <0, means no poll() calls should be made.
+      int poll_depth;
         
       // pointer to static dispatcher object
       static Dispatcher * dispatcher;
@@ -266,8 +291,11 @@ class Dispatcher : public PSCFDebugContext  //## Inherits: <unnamed>%3C7FA32C016
       typedef struct fdsets { fd_set r,w,x; } FDSets;
       FDSets fds_watched,fds_active;
       int max_fd,num_active_fds;
+      Timestamp next_select,inputs_poll_period;
       // rebuilds watched fds according to inputs list
-      void rebuildInputs ();
+      // If remove is specified, all entries for the WP are removed from the
+      // list (remove & rebuild).
+      void rebuildInputs ( WPInterface *remove = 0 );
       
       // signals map
       typedef multimap<int,SignalInfo> SigMap;
@@ -276,7 +304,9 @@ class Dispatcher : public PSCFDebugContext  //## Inherits: <unnamed>%3C7FA32C016
       typedef SigMap::const_iterator CSMI;
       typedef SigMap::value_type     SMPair;
       // rebuilds sigsets and sets up sigactions according to signals map
-      void rebuildSignals ();
+      // If remove is specified, all entries for the WP are removed from the
+      // list (remove & rebuild)..
+      void rebuildSignals (WPInterface *remove = 0);
       
       // checks all signals, timeouts and inputs, sets & returns repoll flag
       bool checkEvents ();
@@ -302,6 +332,14 @@ class Dispatcher : public PSCFDebugContext  //## Inherits: <unnamed>%3C7FA32C016
       MsgAddress address;
       //## end Dispatcher::address%3C7CD390002C.attr
 
+      //## begin Dispatcher::commandLine%3CA031080328.attr preserve=no  public: vector<string> {U} 
+      vector<string> commandLine;
+      //## end Dispatcher::commandLine%3CA031080328.attr
+
+      //## begin Dispatcher::tick%3CA1A2B70107.attr preserve=no  public: ulong {U} 
+      ulong tick;
+      //## end Dispatcher::tick%3CA1A2B70107.attr
+
     // Data Members for Associations
 
       //## Association: PSCF::<unnamed>%3C7E14150352
@@ -322,6 +360,13 @@ class Dispatcher : public PSCFDebugContext  //## Inherits: <unnamed>%3C7FA32C016
       typedef map<WPID,WPRef>::const_iterator CWPI;
       typedef map<WPID,WPInterface*>::iterator GWI;
       typedef map<WPID,WPInterface*>::const_iterator CGWI;
+      
+      // WPs detached with delay=True are placed into this stack,
+      // which is flushed only at a level-0 repoll 
+      stack<WPRef> detached_wps;
+      // WPs attached during Dispatcher::start() temporarily go here.
+      // This is done to avoid upsetting the iterators.
+      stack<WPRef> attached_wps;
       //## end Dispatcher%3C7B6A3E00A0.implementation
 };
 
@@ -330,6 +375,15 @@ class Dispatcher : public PSCFDebugContext  //## Inherits: <unnamed>%3C7FA32C016
 
 // Class Dispatcher 
 
+
+//## Other Operations (inline)
+inline int Dispatcher::numWPs () const
+{
+  //## begin Dispatcher::numWPs%3C9B05E0027D.body preserve=yes
+  return wps.size();
+  //## end Dispatcher::numWPs%3C9B05E0027D.body
+}
+
 //## Get and Set Operations for Class Attributes (inline)
 
 inline const MsgAddress& Dispatcher::getAddress () const
@@ -337,6 +391,20 @@ inline const MsgAddress& Dispatcher::getAddress () const
   //## begin Dispatcher::getAddress%3C7CD390002C.get preserve=no
   return address;
   //## end Dispatcher::getAddress%3C7CD390002C.get
+}
+
+inline const vector<string>& Dispatcher::getCommandLine () const
+{
+  //## begin Dispatcher::getCommandLine%3CA031080328.get preserve=no
+  return commandLine;
+  //## end Dispatcher::getCommandLine%3CA031080328.get
+}
+
+inline ulong Dispatcher::getTick () const
+{
+  //## begin Dispatcher::getTick%3CA1A2B70107.get preserve=no
+  return tick;
+  //## end Dispatcher::getTick%3CA1A2B70107.get
 }
 
 //## begin module%3C7B7F300041.epilog preserve=yes

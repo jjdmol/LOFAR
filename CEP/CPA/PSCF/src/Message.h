@@ -12,7 +12,7 @@
 
 //## Module: Message%3C7B7F2F0248; Package specification
 //## Subsystem: PSCF%3C5A73670223
-//## Source file: F:\lofar8\oms\LOFAR\CEP\CPA\PSCF\src\pscf\Message.h
+//## Source file: F:\lofar8\oms\LOFAR\CEP\CPA\PSCF\src\Message.h
 
 #ifndef Message_h
 #define Message_h 1
@@ -26,6 +26,12 @@
 #include "TID-PSCF.h"
 //## end module%3C7B7F2F0248.includes
 
+// PSCFDebugContext
+#include "PSCFDebugContext.h"
+// MsgAddress
+#include "MsgAddress.h"
+// CountedRef
+#include "CountedRef.h"
 // SmartBlock
 #include "SmartBlock.h"
 // NestableContainer
@@ -34,12 +40,6 @@
 #include "HIID.h"
 // BlockableObject
 #include "BlockableObject.h"
-// PSCFDebugContext
-#include "PSCFDebugContext.h"
-// MsgAddress
-#include "MsgAddress.h"
-// CountedRef
-#include "CountedRef.h"
 //## begin module%3C7B7F2F0248.declarations preserve=no
 //## end module%3C7B7F2F0248.declarations
 
@@ -81,10 +81,10 @@ class Message : public PSCFDebugContext, //## Inherits: <unnamed>%3C7FA31802FF
 
     //## Constructors (specified)
       //## Operation: Message%3C8CB2CE00DC
-      Message (const HIID &id1, short pri = 0);
+      explicit Message (const HIID &id1, short pri = 0);
 
       //## Operation: Message%3C7B9C490384
-      Message (const HIID &id1, BlockableObject *pload = 0, int flags = 0, int pri = 0);
+      Message (const HIID &id1, BlockableObject *pload, int flags = 0, int pri = 0);
 
       //## Operation: Message%3C7B9D0A01FB
       Message (const HIID &id1, ObjRef &pload, int flags = 0, int pri = 0);
@@ -240,7 +240,8 @@ class Message : public PSCFDebugContext, //## Inherits: <unnamed>%3C7FA31802FF
       typedef enum {
            GLOBAL        = 2,
            HOST          = 1,
-           PROCESS       = 0
+           PROCESS       = 0,
+           LOCAL         = 0
       } PublicationScope;
            
       typedef struct {
@@ -274,6 +275,16 @@ class Message : public PSCFDebugContext, //## Inherits: <unnamed>%3C7FA31802FF
       } MessageBlock;
       //## end Message%3C7B6A2D01F0.protected
   private:
+    //## Get and Set Operations for Class Attributes (generated)
+
+      //## Attribute: tmQueued%3CA1A00402E4
+      ulong tmQueued () const;
+      void setTmQueued (ulong value);
+
+      //## Attribute: tmSent%3CA1A03F0221
+      ulong tmSent () const;
+      void setTmSent (ulong value);
+
     // Additional Private Declarations
       //## begin Message%3C7B6A2D01F0.private preserve=yes
       //## end Message%3C7B6A2D01F0.private
@@ -288,6 +299,14 @@ class Message : public PSCFDebugContext, //## Inherits: <unnamed>%3C7FA31802FF
       //## begin Message::state%3C7E33F40330.attr preserve=no  public: int {U} 
       int state_;
       //## end Message::state%3C7E33F40330.attr
+
+      //## begin Message::tmQueued%3CA1A00402E4.attr preserve=no  private: ulong {U} 
+      ulong tmQueued_;
+      //## end Message::tmQueued%3CA1A00402E4.attr
+
+      //## begin Message::tmSent%3CA1A03F0221.attr preserve=no  private: ulong {U} 
+      ulong tmSent_;
+      //## end Message::tmSent%3CA1A03F0221.attr
 
     // Data Members for Associations
 
@@ -452,6 +471,34 @@ inline void Message::setState (int value)
   //## begin Message::setState%3C7E33F40330.set preserve=no
   state_ = value;
   //## end Message::setState%3C7E33F40330.set
+}
+
+inline ulong Message::tmQueued () const
+{
+  //## begin Message::tmQueued%3CA1A00402E4.get preserve=no
+  return tmQueued_;
+  //## end Message::tmQueued%3CA1A00402E4.get
+}
+
+inline void Message::setTmQueued (ulong value)
+{
+  //## begin Message::setTmQueued%3CA1A00402E4.set preserve=no
+  tmQueued_ = value;
+  //## end Message::setTmQueued%3CA1A00402E4.set
+}
+
+inline ulong Message::tmSent () const
+{
+  //## begin Message::tmSent%3CA1A03F0221.get preserve=no
+  return tmSent_;
+  //## end Message::tmSent%3CA1A03F0221.get
+}
+
+inline void Message::setTmSent (ulong value)
+{
+  //## begin Message::setTmSent%3CA1A03F0221.set preserve=no
+  tmSent_ = value;
+  //## end Message::setTmSent%3CA1A03F0221.set
 }
 
 //## Get and Set Operations for Associations (inline)

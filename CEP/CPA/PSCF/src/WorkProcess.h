@@ -12,7 +12,7 @@
 
 //## Module: WorkProcess%3C7B7F3000C3; Package specification
 //## Subsystem: PSCF%3C5A73670223
-//## Source file: F:\lofar8\oms\LOFAR\CEP\CPA\PSCF\src\pscf\WorkProcess.h
+//## Source file: F:\lofar8\oms\LOFAR\CEP\CPA\PSCF\src\WorkProcess.h
 
 #ifndef WorkProcess_h
 #define WorkProcess_h 1
@@ -33,6 +33,7 @@
 //## end module%3C7B7F3000C3.declarations
 
 //## begin module%3C7B7F3000C3.additionalDeclarations preserve=yes
+#pragma aid -MsgLog -LogNormal -LogWarning -LogError -LogDebug
 //## end module%3C7B7F3000C3.additionalDeclarations
 
 
@@ -88,9 +89,16 @@ class WorkProcess : public WPInterface  //## Inherits: <unnamed>%3C8F263A00E6
       //## Operation: attachWP%3C95BA1A02D5
       const MsgAddress & attachWP (WPInterface* wp, int flags);
 
+      //## Operation: lprintf%3CA0738D007F
+      void lprintf (int level, int type, const char *format, ... );
+
+      //## Operation: lprintf%3CA0739F0247
+      void lprintf (int level, const char *format, ... );
+
     // Additional Public Declarations
       //## begin WorkProcess%3C8F25430087.public preserve=yes
       //## end WorkProcess%3C8F25430087.public
+
   protected:
     // Additional Protected Declarations
       //## begin WorkProcess%3C8F25430087.protected preserve=yes

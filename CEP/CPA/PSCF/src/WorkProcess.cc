@@ -12,7 +12,7 @@
 
 //## Module: WorkProcess%3C7B7F3000C5; Package body
 //## Subsystem: PSCF%3C5A73670223
-//## Source file: F:\lofar8\oms\LOFAR\CEP\CPA\PSCF\src\pscf\WorkProcess.cc
+//## Source file: F:\lofar8\oms\LOFAR\CEP\CPA\PSCF\src\WorkProcess.cc
 
 //## begin module%3C7B7F3000C5.additionalIncludes preserve=no
 //## end module%3C7B7F3000C5.additionalIncludes
@@ -98,7 +98,7 @@ bool WorkProcess::removeSignal (int signum)
 void WorkProcess::detachMyself ()
 {
   //## begin WorkProcess::detachMyself%3C95A89D015E.body preserve=yes
-  dsp()->detach(this);
+  dsp()->detach(this,True);
   //## end WorkProcess::detachMyself%3C95A89D015E.body
 }
 
@@ -116,9 +116,39 @@ const MsgAddress & WorkProcess::attachWP (WPInterface* wp, int flags)
   //## end WorkProcess::attachWP%3C95BA1A02D5.body
 }
 
+void WorkProcess::lprintf (int level, int type, const char *format, ... )
+{
+  //## begin WorkProcess::lprintf%3CA0738D007F.body preserve=yes
+  if( level > logLevel() )
+    return;
+  // create the string
+  char str[1024];
+  va_list(ap);
+  va_start(ap,format);
+  vsnprintf(str,sizeof(str),format,ap);
+  va_end(ap);
+  log(str,level,type);
+  //## end WorkProcess::lprintf%3CA0738D007F.body
+}
+
+void WorkProcess::lprintf (int level, const char *format, ... )
+{
+  //## begin WorkProcess::lprintf%3CA0739F0247.body preserve=yes
+  if( level > logLevel() )
+    return;
+  char str[1024];
+  va_list(ap);
+  va_start(ap,format);
+  vsnprintf(str,sizeof(str),format,ap);
+  va_end(ap);
+  log(str,level,LogNormal);
+  //## end WorkProcess::lprintf%3CA0739F0247.body
+}
+
 // Additional Declarations
   //## begin WorkProcess%3C8F25430087.declarations preserve=yes
   //## end WorkProcess%3C8F25430087.declarations
+
 //## begin module%3C7B7F3000C5.epilog preserve=yes
 //## end module%3C7B7F3000C5.epilog
 

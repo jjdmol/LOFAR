@@ -28,7 +28,7 @@
 //## end module%3C7E49E90399.declarations
 
 //## begin module%3C7E49E90399.additionalDeclarations preserve=yes
-static HIID MsgPing(AidPing),MsgPong(AidPong);
+HIID MsgPing("Ping"),MsgPong("Pong");
 //## end module%3C7E49E90399.additionalDeclarations
 
 
@@ -42,6 +42,11 @@ EchoWP::EchoWP (int pingcount)
   //## end EchoWP::EchoWP%3C7E49B60327.initialization
 {
   //## begin EchoWP::EchoWP%3C7E49B60327.body preserve=yes
+  blocksize = 64*1024;
+  pipeline = 1;
+  invert = True;
+  msgcount = bytecount = 0;
+  ts = Timestamp::now();
   //## end EchoWP::EchoWP%3C7E49B60327.body
 }
 
@@ -59,10 +64,30 @@ void EchoWP::init ()
 {
   //## begin EchoWP::init%3C7F884A007D.body preserve=yes
   WorkProcess::init();
+  
+  dsp()->getOption("bs",blocksize);
+  lprintf(0,"setting blocksize = %d KB\n",blocksize);
+  blocksize *= 1024/sizeof(int);
+ 
+  dsp()->getOption("pc",pcount); 
+  lprintf(0,"setting pingcount = %d\n",pcount);
+
+  dsp()->getOption("pipe",pipeline);  
+  lprintf(0,"setting pipeline = %d\n",pipeline);
+  
+  int inv;
+  if( dsp()->getOption("invert",inv) )
+    invert = inv;
+  lprintf(0,"setting invert = %d\n",(int)invert);
+  
+
   if( !pcount )
     subscribe("Ping");
-  else
-    subscribe("MsgHello.EchoWP");
+  else if( pcount<0 )
+  {
+    subscribe("Ping");
+    subscribe("Hello.EchoWP.*");
+  }
   //## end EchoWP::init%3C7F884A007D.body
 }
 
@@ -70,9 +95,7 @@ void EchoWP::start ()
 {
   //## begin EchoWP::start%3C7E4AC70261.body preserve=yes
   WorkProcess::start();
-  if( pcount<0 )
-    addTimeout(5.0,0);
-  else if( pcount>0 )
+  if( pcount>0 )
     sendPing();
   //## end EchoWP::start%3C7E4AC70261.body
 }
@@ -80,33 +103,52 @@ void EchoWP::start ()
 int EchoWP::receive (MessageRef& mref)
 {
   //## begin EchoWP::receive%3C7E49AC014C.body preserve=yes
-  dprintf(2)("received %s\n",mref.debug(10));
-  if( mref->id() == MsgPing )
+  lprintf(4,"received %s\n",mref.debug(10));
+  if( mref->id() == MsgPing && mref->from() != address() )
   {
     // privatize message & payload
     Message & msg = mref.privatize(DMI::WRITE,1);
-    dprintf(2)("with ping count=%d\n",msg["Count"].as_int());
+    lprintf(3,"ping(%d) from %s\n",msg["Count"].as_int(),mref->from().toString().c_str());
     // timestamp the reply
+    int sz = msg["Data"].size();
     msg["Reply.Timestamp"] = Timestamp();
     // invert the data block if it's there
     if( msg["Invert"].as_bool() )
     {
       msg["Data"].privatize(DMI::WRITE);
-      int sz = msg["Data"].size();
       int *data = &msg["Data"];
-      dprintf(2)("inverting %d ints at %x\n",sz,(int)data);
+      lprintf(4,"inverting %d ints at %x\n",sz,(int)data);
       for( int i=0; i<sz; i++,data++ )
         *data = ~*data;
     }
     msg.setId(MsgPong);
-    dprintf(2)("replying with %s\n",msg.debug(1));
+    lprintf(3,"replying with pong(%d)\n",msg["Count"].as_int());
+//    stepCounters(sz*sizeof(int));
     send(mref,msg.from());
   }
   else if( mref->id() == MsgPong )
   {
+    lprintf(3,"pong(%d) from %s\n",mref.deref()["Count"].as_int(),mref->from().toString().c_str());
     if( !pcount )
-      exit(0);
-    sendPing();
+      dsp()->stopPolling();
+    else
+    {
+      stepCounters(mref.deref()["Data"].size()*sizeof(int));
+      sendPing();
+    }
+  }
+  else if( mref->id().matches("Hello.EchoWP.*") )
+  {
+    if( mref->from() != address() ) // not our own?
+    {
+      lprintf(0,"found a friend: %s\n",mref->from().toString().c_str());
+      bytecount = 0;
+      msgcount = 0;
+      ts = Timestamp::now();
+      for( int i=0; i<pipeline; i++ )
+        sendPing();
+//      addTimeout(1.0);
+    }
   }
   return Message::ACCEPT;
   //## end EchoWP::receive%3C7E49AC014C.body
@@ -122,25 +164,44 @@ int EchoWP::timeout (const HIID &)
 
 // Additional Declarations
   //## begin EchoWP%3C7E498E00D1.declarations preserve=yes
+void EchoWP::stepCounters ( size_t sz )
+{
+  msgcount ++;
+  bytecount += sz;
+  double ts1 = Timestamp::now();
+  if( ts1 - ts > 10 )
+  {
+    lprintf(0,"%.2f seconds elapsed since last report\n",ts1-ts);
+    lprintf(0,"%ld round-trip bytes (%.2f MB/s)\n",
+            bytecount,bytecount*2/(1024*1024*(ts1-ts)));
+    lprintf(0,"%ld round-trips (%.1f /s)\n",
+            msgcount,msgcount/(ts1-ts));
+    bytecount = msgcount = 0;
+    ts = ts1;
+  }
+}
+    
+    
 void EchoWP::sendPing ()
 {
   if( pcount )
   {
     Message &msg = *new Message(MsgPing,new DataRecord,DMI::ANON|DMI::WRITE);
     msg["Timestamp"] = Timestamp();
-    msg["Invert"] = (bool)True;
-    msg["Data"] <<= new DataField(Tpint,0x100000);
+    msg["Invert"] = invert;
+    msg["Data"] <<= new DataField(Tpint,blocksize);
     msg["Count"] = pcount;
     int sz = msg["Data"].size();
     int *data = &msg["Data"];
-    dprintf(2)("filling %d ints at %x\n",sz,(int)data);
+    lprintf(4,"filling %d ints at %x\n",sz,(int)data);
     for( int i=0; i<sz; i++ )
       data[i] = 0x07070707;
-    dprintf(2)("ping %d, publishing %s\n",pcount,msg.debug(1));
-    dprintf(2)("ping count in message is %d\n",msg["Count"].as_int());
+    lprintf(4,"ping %d, publishing %s\n",pcount,msg.debug(1));
+    lprintf(3,"sending ping(%d)\n",msg["Count"].as_int());
     MessageRef ref(msg,DMI::ANON|DMI::WRITE);
     publish(ref);
     pcount--;
+//    stepCounters(sz*sizeof(int));
   }
 }
   //## end EchoWP%3C7E498E00D1.declarations
