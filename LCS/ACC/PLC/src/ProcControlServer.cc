@@ -64,6 +64,11 @@ ProcControlServer::~ProcControlServer()
 	}
 }
 
+void	ProcControlServer::registerAtAC(const string&	aName) const
+{
+	itsCommChan->sendCmd (PCCmdStart, 0, aName);
+}
+
 // Returns a string containing the IP address and portnumber of the
 // Application controller the class is connected to.
 string		ProcControlServer::askInfo(const string&	keylist) const
@@ -129,14 +134,8 @@ bool ProcControlServer::handleMessage(DH_ProcControl*	theMsg)
 		result = itsPCImpl->reinit (scheduleTime, options);	
 		break;
 	default:
-		if (cmdType & PCCmdResult) {
-			handleAckMessage(); 
-			sendAnswer = false;
-		}
-		else {
-			//TODO
-			LOG_DEBUG_STR ("Message type " << cmdType << " not supported!\n");
-		}
+		//TODO
+		LOG_DEBUG_STR ("Message type " << cmdType << " not supported!\n");
 		break;
 	}
 
@@ -147,11 +146,6 @@ bool ProcControlServer::handleMessage(DH_ProcControl*	theMsg)
 	return (true);
 }
 
-
-void	ProcControlServer::handleAckMessage(void)
-{
-//	handleAckMessage();
-}
 
 void ProcControlServer::sendResult(uint16	aResult, const string&	someOptions) 
 {

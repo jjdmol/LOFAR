@@ -1,6 +1,6 @@
-//#  ApplControllerMain.cc: Executes the Application Controller.
+//#  ACDaemonMain.cc: daemon for launching application controllers.
 //#
-//#  Copyright (C) 2004
+//#  Copyright (C) 2002-2005
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
 //#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -24,51 +24,59 @@
 #include <lofar_config.h>
 
 //# Includes
-#include <signal.h>
-#include <Common/lofar_string.h>
-#include <Common/LofarLogger.h>
-#include <ACC/ApplController.h>
-#include <ACC/ParameterSet.h>
+#include<Common/LofarLogger.h>
+#include<ACC/ACDaemon.h>
 
 using namespace LOFAR;
 using namespace LOFAR::ACC;
 
 //
-// MAIN (ParameterFile)
+// MAIN (parameterfile)
 //
-int main (int	argc, char*	argv[]) {
+int main (int argc, char* argv[]) {
 
-	// Always get Logger up first
+	// Always bring up he logger first
 	string		progName = basename(argv[0]);
 	INIT_LOGGER (progName.c_str());
 
 	// Check invocation syntax
 	if (argc < 2) {
-		LOG_FATAL_STR ("Invocation error, syntax: " << progName << " configID");
-		cout << "Invocation error, syntax: " << progName << " configID" << endl;
+		LOG_FATAL_STR ("Invocation error, syntax: " << progName <<
+															" parameterfile");
 		return (-1);
 	}
 
-	// Tell operator we are tryingto start up.
+	// Tell operator we are trying to start up.
 	LOG_INFO_STR("Starting up: " << argv[0] << "(" << argv[1] << ")");
 
 	try {
-		signal (SIGPIPE, SIG_IGN);		// ignore write errors on sockets
+#if REAL_DAEMON
+		pid_t pid = fork();
+		switch (pid) {
+		case -1:	// error
+			LOG_FATAL("Unable to fork daemon process, exiting.");
+			return (-1);
+		case 0:		// child (the real daemon)
+			// do nothing;
+		default:	// parent
+			LOG_INFO_STR("Daemon succesfully started, pid = " << pid);
+			return (0);
+		}
+#endif		
 
-		ApplController		theAC(argv[1]);
+		ACDaemon	theDaemon(argv[1]);
 
-		theAC.startupNetwork();
+		theDaemon.doWork();
 
-		theAC.doEventLoop();
-		
 		LOG_INFO_STR("Shutting down: " << argv[0]);
 	}
-	catch (LOFAR::Exception&		ex) {
-		LOG_FATAL_STR("Caught exception: " << ex << endl);
-		LOG_FATAL 	 ("Terminated by exception!");
-		return(1);
+	catch (LOFAR::Exception&	ex) {
+		LOG_FATAL_STR("Caught exception: " << ex);
+		LOG_FATAL     ("Terminated by exception!");
+		return (1);
 	}
 
 	LOG_INFO("Terminated normally");
 	return (0);
+
 }

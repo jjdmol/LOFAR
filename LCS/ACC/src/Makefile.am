@@ -24,7 +24,6 @@ libacc_la_SOURCES = \
 					ParameterUnion.cc \
 					ParameterSet.cc \
 					DH_ApplControl.cc \
-					DH_AC_Connect.cc  \
 					ApplControlComm.cc \
 					ApplControlClient.cc \
 					ACSyncClient.cc  \
@@ -36,7 +35,7 @@ libacc_la_SOURCES = \
 #					ParCollRecord.cc  
 #					ConfigurationMgr.cc 
 
-bin_PROGRAMS = ApplController
+bin_PROGRAMS = ApplController ACDaemon
 
 ### ApplController ###
 ApplController_SOURCES      = ACCmdImpl.cc \
@@ -49,13 +48,14 @@ ApplController_SOURCES      = ACCmdImpl.cc \
 							  ItemList.cc \
 							  ApplController.cc \
 							  ApplControllerMain.cc
-# ApplProcess.cc 
-# ApplProcessPool.cc 
-# DataHolderSelector.cc 
-# CmdTimer.cc
-
 ApplController_DEPENDENCIES = $(LOFAR_DEPEND) libacc.la
 ApplController_LDADD        = libacc.la
+
+### ApplController ###
+ACDaemon_SOURCES      = ACDaemon.cc \
+					    ACDaemonMain.cc
+ACDaemon_DEPENDENCIES = $(LOFAR_DEPEND) libacc.la
+ACDaemon_LDADD        = libacc.la
 
 include $(lofar_sharedir)/Makefile.common
 

@@ -54,12 +54,11 @@ public:
 	// Destructor;
 	~ProcControlServer();
 
-
 	// Define a generic way to exchange info between client and server.
 	string	askInfo   (const string& 	keylist) const;
 
-	// Called in Async comm. to handle the (delayed) result of the command.
-	void	handleAckMessage();
+	// Report to AC that we are ready for message receiption.
+	void	registerAtAC(const string&	aName) const;
 
 	// Function to read a message an call the corresponding function.
 	bool	pollForMessage() const;
