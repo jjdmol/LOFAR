@@ -31,13 +31,17 @@ AVTLogicalDeviceServer_DEPENDENCIES	= \
 	$(top_builddir)/APLCommon/src/libaplcommon.la
 
 BUILT_SOURCES = \
-    $(top_builddir)/PAC/BeamServer/src/ABS_Protocol.ph \
-    LogicalDevice_Protocol.ph \
+	$(top_builddir)/PAC/BeamServer/src/ABS_Protocol.ph \
+	LogicalDevice_Protocol.ph \
+	avt.ns \
+	avt.top \
 	log4cplus.properties	
 
 EXTRA_DIST = \
-    $(top_builddir)/PAC/BeamServer/src/ABS_Protocol.ph \
-    LogicalDevice_Protocol.ph \
+  $(top_builddir)/PAC/BeamServer/src/ABS_Protocol.ph \
+  LogicalDevice_Protocol.ph \
+	avt.ns \
+	avt.top \
 	log4cplus.properties
 	
 %.properties: $(MAC_CONFIG)/%.properties
