@@ -10,6 +10,10 @@ AM_INIT_AUTOMAKE(APL, 1.0)
 dnl Initialize for LOFAR (may set compilers)
 lofar_INIT
 
+AC_DEFINE_UNQUOTED([ARA_SYSCONF],["${prefix}/etc"],[Path to ARA install prefix directory.])
+RSP_SYSCONF="${prefix}/etc"
+AC_SUBST([ARA_SYSCONF])
+
 dnl Checks for programs.
 AC_PROG_AWK
 AC_PROG_YACC
@@ -54,7 +58,8 @@ lofar_DEBUG_OPTIMIZE
 #lofar_QT
 lofar_QATOOLS
 lofar_DOCXX
-lofar_MPI(0)
+lofar_COMPILETOOLS
+#lofar_MPI(0)
 lofar_PVSS(1)
 lofar_EXTERNAL(common,1,Common/LofarTypes.h,,)
 lofar_EXTERNAL(lofarlogger,1,LofarLogger/LofarLogger.h,,)
