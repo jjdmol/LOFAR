@@ -20,11 +20,11 @@
 //#
 //#  $Id$
 
-#if !defined(PACKAGE_FILENAME_H)
+#ifndef PACKAGE_FILENAME_H
 #define PACKAGE_FILENAME_H
 
 //# Includes
-# include <otherpackage/file.h>
+#include <otherpackage/file.h>
 
 //# Forward Declarations
 class forward;
