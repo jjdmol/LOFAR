@@ -23,7 +23,7 @@
 //
 //////////////////////////////////////////////////////////////////////
 
-#include "Transporter.h"
+#include <Transporter.h>
 #include <Common/Debug.h>
 #include <Common/lofar_iostream.h>
 #include <stdlib.h>
@@ -42,6 +42,7 @@ Transporter::Transporter (BaseDataHolder* dataHolderPtr)
   itsSourceAddr      (0),
   itsTargetAddr      (0),
   itsRate            (1),
+  itsConnection      (0),
   itsIsBlocking      (true)
 {}
 
@@ -170,5 +171,15 @@ void Transporter::setTargetAddr (BaseDataHolder* addr)
 { 
   itsTargetAddr = addr;
 }
+
+bool Transporter::connectTo (Transporter* that)
+{
+  return itsConnection->connectTo(this, that); 
+}
+
+inline bool Transporter::connectFrom (Transporter* that) 
+{ 
+  return itsConnection->connectFrom(that, this);
+} 
 
 }
