@@ -57,8 +57,8 @@ void RCUWrite::sendrequest()
   RCUSettings::RCURegisterType& y = Cache::getInstance().getBack().getRCUSettings()()(global_blp + 1);
 
 #ifdef TOGGLE_LEDS
-  x.filter_0 = Cache::getInstance().ledstatus();
-  x.filter_1 = !Cache::getInstance().ledstatus();
+  x.lba_enable = Cache::getInstance().ledstatus();
+  x.hba_enable = !Cache::getInstance().ledstatus();
 #endif
 
   memcpy(&rcusettings.x, &x, sizeof(uint8));

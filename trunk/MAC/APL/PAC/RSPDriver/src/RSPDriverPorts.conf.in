@@ -66,18 +66,18 @@ mac.ns.RSPDriver.acceptor.type=TCP
 #
 mac.ns.RSPTest.host=localhost
 mac.ns.RSPTest.server.type=TCP
-mac.top.RSPTest.server=RSPDriver:acceptor
+mac.top.RSPTest.server.remoteservice=RSPDriver:acceptor
 
 #
 # ViewStats configuration
 #
 mac.ns.ViewStats.host=localhost
 mac.ns.ViewStats.server.type=TCP
-mac.top.ViewStats.server=RSPDriver:acceptor
+mac.top.ViewStats.remoteservice=RSPDriver:acceptor
 
 #
 # SetWG configuration
 #
 mac.ns.SetWG.host=localhost
 mac.ns.SetWG.server.type=TCP
-mac.top.SetWG.server=RSPDriver:acceptor
+mac.top.SetWG.server.remoteservice=RSPDriver:acceptor

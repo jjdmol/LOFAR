@@ -105,7 +105,6 @@ GCFEvent::TResult SyncAction::sendrequest_state(GCFEvent& event, GCFPortInterfac
     }
     break;
 
-
     default:
       status = GCFEvent::NOT_HANDLED;
       break;
