@@ -24,7 +24,6 @@
 // $Id$
 
 #include <UVPDisplayArea.h>
-#include <uvplot/UVPSpectrumVector.h>
 #include <uvplot/UVPDataAtomVector.h>
 
 
@@ -65,14 +64,6 @@ class UVPTimeFrequencyPlot: public UVPDisplayArea
 
   public slots:
   
-  //! Add a spectrum to itsSpectrum.
-  /*! Adds spectrum to itsSpectrum. The transferfunction of
-      itsValueAxis is NOT recalculated.  \param spectrum must have the
-      same number of channels as defined by setChannels().
-   */
-  void slot_addSpectrum(const UVPSpectrum& spectrum);
-  
-  
   //! Add a UVPDataAtom to itsComplexSpectrum.
   /*! \param atom points to an object that MUST exist during the
       entire lifetime of itsComplexSpectrumVector. That is, at least
@@ -95,7 +86,6 @@ class UVPTimeFrequencyPlot: public UVPDisplayArea
 
  private:
 
-  UVPSpectrumVector  itsSpectrum;
   UVPDataAtomVector  itsComplexSpectrum;
   
   UVPAxis            itsValueAxis;

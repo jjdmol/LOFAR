@@ -83,22 +83,10 @@ class UVPDisplayArea : public QWidget
 
  private:
   
-  std::vector<QColor> itsColormap;
   UVPAxis             itsXAxis;
   UVPAxis             itsYAxis;
 
 };
-
-
-
-
-
-//====================>>>  UVPDisplayArea::getColor  <<<====================
-
-inline const QColor *UVPDisplayArea::getColor(unsigned int color) const
-{
-  return &(itsColormap[color]);
-}
 
 
 #endif // UVPDISPLAYAREA_H
