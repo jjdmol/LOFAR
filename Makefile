@@ -66,9 +66,9 @@ all: build
 #
 # daily,weekly: Target to drive daily and weekly builds
 #
-daily: start_daily bootstrap $(VARIANTS) check stop_daily
+daily: start_daily bootstrap configure $(VARIANTS) check stop_daily
 
-weekly: start_weekly bootstrap $(VARIANTS) check stop_weekly
+weekly: start_weekly bootstrap configure $(VARIANTS) check stop_weekly
 
 #
 # build: Target to compile in a bootstrapped and configured tree
@@ -114,7 +114,7 @@ check: $(VARIANTS:.variant=.variant_check)
 # Bootstrap and configure all packages. Bootstrapping is only needed once,
 # configuration is needed for each variant
 #
-bootstrap: bootstrap_rule $(VARIANTS:.variant=.variant_configure)
+bootstrap: bootstrap_rule
 
 bootstrap_rule:
 	@for d in $(PACKAGES); do \
@@ -127,6 +127,11 @@ bootstrap_rule:
 		&& echo ":::::: DONE BOOTSTRAPPING $$d" \
 		&& echo ) ; \
 	done
+
+#
+# Configure all packages. Configuration is needed for each variant.
+#
+configure: $(VARIANTS:.variant=.variant_configure)
 
 #
 # Rule to configure variants
