@@ -235,6 +235,8 @@ private:
   Transporter* itsTransporter;
   string       itsName;
   string       itsType;
+  int          itsReadConvert;  //# conversion needed after a read?
+                                //# 0=no, 1=yes, else=not known yet
 
   // The read delay for a BaseDataHolder.
   int itsReadDelay;
