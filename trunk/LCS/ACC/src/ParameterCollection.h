@@ -32,6 +32,7 @@
 #include <lofar_config.h>
 
 //# Includes
+#include <Common/LofarTypes.h>
 #include <Common/lofar_string.h>
 #include <Common/lofar_map.h>
 #include <Common/lofar_iostream.h>
@@ -75,7 +76,7 @@ public:
 
 	// Writes the Key-Values pair from the current ParameterCollection to the file.
 	void	writeFile   (const string& theFilename) const;
-	void	writeBuffer (const string& theBuffer) const;
+	void	writeBuffer (      string& theBuffer) const;
 
 	// Creates a subset from the current ParameterCollection containing all the 
 	// parameters that start with the given baseKey. The baseKey is cut off 
@@ -110,8 +111,11 @@ private:
 bool	isValidVersionNr   (const string& versionNr);
 
 // Check if the given string is a valid versionnumber reference. This may be
-// x.y.z of the words stable or development.
+// x.y.z or the words stable or development.
 bool	isValidVersionNrRef(const string& versionNr);
+
+// Returns the value of the given string or 0 if it is not a valid seqnr
+uint32	seqNr(const string& aString);
 
 // Returns the last part of a fullkeyname being the keyname (a.k.o. dirname).
 string	keyName			   (const string& fullKeyName);
@@ -119,6 +123,12 @@ string	keyName			   (const string& fullKeyName);
 // Returns everthing except the last part of a fullkeyname being the modulename
 // the key belongs to. (a.k.o. basename).
 string	moduleName		   (const string& fullKeyName);
+
+// Returns the keypart of a parameterline
+string	keyPart			   (const string& parameterLine);
+
+// Returns the value of a parameterline
+string	valuePart		   (const string& parameterLine);
 
 } // namespace ACC
 } // namespace LOFAR

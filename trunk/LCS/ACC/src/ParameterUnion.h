@@ -25,8 +25,8 @@
 //#
 //#  $Id$
 
-#ifndef ACC_PARAMETERSET_H
-#define ACC_PARAMETERSET_H
+#ifndef ACC_PARAMETERUNION_H
+#define ACC_PARAMETERUNION_H
 
 #include <lofar_config.h>
 
