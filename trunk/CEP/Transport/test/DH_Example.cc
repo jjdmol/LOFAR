@@ -27,14 +27,14 @@ namespace LOFAR
 {
 
 DH_Example::DH_Example (const string& name, unsigned int nbuffer)
-: DataHolder (name, "DH_Example"),
+: DH_PL      (name, "DH_Example"),
   itsCounter (0),
   itsBuffer  (0),
   itsBufSize (nbuffer)
 {}
 
 DH_Example::DH_Example(const DH_Example& that)
-: DataHolder (that),
+: DH_PL      (that),
   itsCounter (0),
   itsBuffer  (0),
   itsBufSize (that.itsBufSize)
@@ -69,20 +69,4 @@ void DH_Example::postprocess()
   itsBuffer = 0;
 }
 
-}
-
-namespace LOFAR {
-  namespace PL {
-    void DBRep<DH_Example>::bindCols (dtl::BoundIOs& cols)
-    {
-      DBRep<DH_PL>::bindCols (cols);
-      cols["COUNTER"] == itsCounter;
-    }
-    
-    void DBRep<DH_PL>::toDBRep (const DH_PL& obj)
-    {
-      DBRep<DH_PL>::toDBRep (obj);
-      itsCounter = obj.getCounter();
-    }
-  }
-}
+} // end namespace
