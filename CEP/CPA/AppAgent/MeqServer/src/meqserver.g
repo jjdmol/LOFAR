@@ -164,10 +164,9 @@ const meqsink_test := function ()
   # create a small subtree
   defval1 := array(as_double(1),2,2);
   defval2 := array(as_double(2),1,1);
-  addrec := meqnode('MeqAdd','add1_2',
-              children=[  x=meqparm('p1',default=defval1), 
-                          y=meqparm('p2',default=defval2),
-                          z='spigot1' ]);
+  addrec := meqnode('Meqcompare','compare',
+              children=[ x=meqparm('p1',default=defval1), 
+                         y='spigot1' ]);
   print mqs.meq('Create.Node',addrec);
   # create spigot (note! for now, a spigot MUST be created first)
   spigrec := meqnode('MeqSpigot','spigot1');
@@ -178,7 +177,7 @@ const meqsink_test := function ()
   print mqs.meq('Create.Node',spigrec);
   
   # create sink
-  sinkrec := meqnode('MeqSink','sink1',children="add1_2");
+  sinkrec := meqnode('MeqSink','sink1',children="compare");
   sinkrec.output_col := 'PREDICT'; 
   sinkrec.corr_index := 1;
   sinkrec.station_1_index := 1;
