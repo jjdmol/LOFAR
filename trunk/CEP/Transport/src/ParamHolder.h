@@ -1,6 +1,6 @@
-//#  DataHolder.cc:
+//#  filename.h: one line description
 //#
-//#  Copyright (C) 2000, 2001
+//#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
 //#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -19,17 +19,22 @@
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
 //#  $Id$
-//#
-//#
-//#////////////////////////////////////////////////////////////////////
 
-#include <Common/lofar_iostream.h>
-#include <stdexcept>
+#ifndef LIBTRANSPORT_PARAMHOLDER_H
+#define LIBTRANSPORT_PARAMHOLDER_H
 
-#include "Transport.h"
-#include "DataHolder.h"
-#include <Common/Debug.h>
+#include <lofar_config.h>
+
+//# Includes
+#include <BaseDataHolder.h>
 
 namespace LOFAR
 {
-}
+  // Description of class.
+  class ParamHolder: public BaseDataHolder
+  {
+  };
+
+} // namespace LOFAR
+
+#endif
