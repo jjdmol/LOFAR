@@ -31,6 +31,7 @@
 #include <pwd.h>
 #include <MNS/ParmTablePGSQL.h>
 #include <MNS/ParmTableMySQL.h>
+#include <MNS/ParmTableMonet.h>
 
 using namespace LOFAR;
 using std::cout;
@@ -45,6 +46,7 @@ typedef MeqParmDefHolder MParmDef;
 typedef vector<MParmDef> MParmDefSet;
 
 string dbHost, dbName, dbType, dbUser, tableName;
+ParmTableFiller* PTR;
 
 char bool2char (bool val)
 {
@@ -160,25 +162,17 @@ void newParmDef (const std::string& tableName, const std::string& parmName,
   polc.setX0 (kvmap.getDouble ("time0", 0.));
   polc.setY0 (kvmap.getDouble ("freq0", 0.));
 
-  if (dbType=="postgres"){
-    ParmTablePGSQL PTS (dbHost, dbUser, tableName+"def");
-    PTS.putNewDefCoeff(parmName, srcnr, statnr, polc);
-  } else if (dbType=="mysql") {
-    ParmTableMySQL PTS (dbHost, dbUser, tableName+"def");
-    PTS.putNewDefCoeff(parmName, srcnr, statnr, polc);
-  } else {
-    cerr<<"Unknown database type: '"<<dbType<<"'"<<endl;
-    exit(1);
-  };
+  PTR->putNewDefCoeff(parmName, srcnr, statnr, polc);
 }
 
 void doIt()
 {
+  PTR=0;
   char cstra[1024];
   char* cstr = cstra;
   // Loop until stop is given.
   while (true) {
-    try {
+    //    try {
       if (! cin.getline (cstr, sizeof(cstra))) {
 	cerr << "Error while reading command" << endl;
 	break;
@@ -200,22 +194,30 @@ void doIt()
 	dbName = kvmap.getString ("db", dbUser);
 	dbType = kvmap.getString ("dbtype", "postgres");
 	tableName = kvmap.getString ("tablename", "MeqParm");
+	if (dbType=="postgres"){
+	  PTR = new ParmTablePGSQL (dbHost, dbUser, tableName+"def");
+	} else if (dbType=="mysql") {
+	  PTR = new ParmTableMySQL (dbHost, dbUser, tableName+"def");
+	} else if (dbType=="monet") {
+	  PTR = new ParmTableMonet (dbHost, dbUser, tableName+"def", true);
+	} else {
+	  cerr<<"Unknown database type: '"<<dbType<<"'"<<endl;
+	  exit(1);
+	};
 	cout << "Connected to " << dbType << " database " << dbName
 	     << endl;
       } else {
 	parmName = getParmName (cstr);
-	if (parmName.empty()) {
-	  parmName = "*";           // default for show is all parms
-	}
 	KeyValueMap kvmap = KeyParser::parse (cstr);
 	if (command == 12) {
 	  newParmDef (tableName, parmName, kvmap);
 	}
-      }
-    } catch (std::exception& x) {
-      cerr << "Exception: " << x.what() << endl;
-    }
+	      }
+      //    } catch (std::exception& x) {
+      //      cerr << "Exception: " << x.what() << endl;
+      //    }
   }
+  delete PTR;
 }
 
 int main()

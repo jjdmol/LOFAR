@@ -24,6 +24,7 @@
 #include <PSS3/MNS/ParmTableAIPS.h>
 #include <PSS3/MNS/ParmTablePGSQL.h>
 #include <PSS3/MNS/ParmTableMySQL.h>
+#include <PSS3/MNS/ParmTableMonet.h>
 #include <PSS3/MNS/MeqStoredParmPolc.h>
 #include <Common/Debug.h>
 #include <casa/Arrays/Vector.h>
@@ -39,10 +40,24 @@ ParmTable::ParmTable (const string& dbType, const string& tableName,
   } else if (dbType == "postgres") {
     itsRep = new ParmTablePGSQL (hostName, userName, tableName);
   } else if (dbType == "mysql") {
-    itsRep = new ParmTableMySQL (hostName, userName, tableName);
+    itsRep = new ParmTableMySQL ("lofar6", userName, tableName);
+  } else if (dbType == "monet") {
+    itsRep = new ParmTableMonet ("lofar6", "monetdb", tableName); // should be hostName of course
   } else {
     Assert (dbType=="aips");
   }
+
+  // following statements are for performance measurements only
+  itsPuts = 0;
+  itsGetPolcs = 0;
+  itsGetPSs = 0;
+  itsGetICs = 0;
+  itsPutTime = 0;
+  itsGetPolcsTime = 0;
+  itsGetPSTime = 0;
+  itsGetICTime = 0;
+  itsTableName = tableName;
+  cout<<"making rep for database:"<<dbType<<endl;
 }
 
 MeqSourceList ParmTable::getPointSources (const Vector<int>& srcnrs)
@@ -54,6 +69,8 @@ MeqSourceList ParmTable::getPointSources (const Vector<int>& srcnrs)
 MeqSourceList ParmTable::getPointSources (const Vector<int>& srcnrs,
 					  vector<MeqExpr*>& exprDel)
 {
+  itsGetPSs++;
+  itsWatch.reset();
   // Get the vector of all parms containing a source name.
   vector<string> nams = itsRep->getSources();
   vector<int> srcs(nams.size());
@@ -118,5 +135,6 @@ MeqSourceList ParmTable::getPointSources (const Vector<int>& srcnrs,
 //    cout << "Found source " << name << " (srcnr=" << srcnr << ')' << endl;
     }
   }
+  itsGetPSTime += itsWatch.delta().real(); 
   return sources;
 }
