@@ -56,6 +56,10 @@ int main (int argc, const char** argv)
       istringstream istr(argv[2]);
       istr >> nriter;
     }
+    string usernm = "test";
+    if (argc > 3) {
+      usernm = argv[3];
+    }
     // Read the input script until eof.
     // Remove // comments.
     // Combine it into a single key=value command.
@@ -83,6 +87,16 @@ int main (int argc, const char** argv)
       cmap["SC1params"] = smap;
       params["CTRLparams"] = cmap;
     }
+    // Add the dbname if not defined.
+    KeyValueMap ksmap(params["KSparams"].getValueMap());
+    if (! ksmap.isDefined("DBName")) {
+      ksmap["DBName"] = usernm;
+      params["KSparams"] = ksmap;
+    }
+    if (! ksmap.isDefined("BBDBname")) {
+      params["BBDBname"] = usernm;
+    }
+
     cout << params << endl;
 
     simulator.baseDefine(params);

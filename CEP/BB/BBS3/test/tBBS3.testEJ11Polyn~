@@ -1,12 +1,12 @@
-// Test7 with:
-//   demo3.MS (no noise)
+// Test1 with:
+//   demo3p.MS (no noise)
 //   nrsrc=3
 //   nrstat=100
 //   nrtime=5
 //   nrfreq=50
 //   nrpol=4
-//   gain-polc is 0th order
-//   solve EJ11.real parameters             to measure diff with source params
+//   gain-polc is 1st order in time            to measure diff with 0th order
+//   solve source parameters
 //   pert=1e-6
 //   useSVD=calcUVW=saveAllIter=false
 //   model=LOFAR.RI
@@ -14,11 +14,10 @@
 
 
 nrKS=1,           // Number of Knowledge Sources
-BBDBname="test",  // BlackBoard database name (must be a postgres database on dop50)
 
 CTRLparams=[
   strategy="Simple",
-  solvableParams=["EJ11.real.*"],
+  solvableParams=["StokesI.CP1","RA.CP1","DEC.CP1","StokesI.CP2","RA.CP2","DEC.CP2","StokesI.CP3","RA.CP3","DEC.CP3"],
 
   STRATparams=[
     timeInterval=10.0e0,   // Time interval (float)
@@ -32,12 +31,11 @@ CTRLparams=[
 ],
 
 KSparams=[
-  MSName="demo3-",         // Name of the Measurement Set
-  DBHost="dop50",          // Parameter database host name
+  MSName="demo3p-"         // Name of the Measurement Set
+  DBHost="dop50.astron.nl",          // Parameter database host name
   DBType="aips",           // Parameter database type
-  DBName="test",           // Parameter database name
   DBPwd="",                // Parameter database password
-  meqTableName="demo3-",   // Meq model table name *       
+  meqTableName="demo3p-",    // Meq model table name *       
   skyTableName="demo3_gsm-", // Sky model table name *
   calcUVW=F,               // Calculate UVW coordinates?
   lockMappedMem=F,         // Call mlock immediately after mapping?
