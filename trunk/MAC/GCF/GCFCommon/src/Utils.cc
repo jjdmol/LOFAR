@@ -1,5 +1,6 @@
 #include "Utils.h"
 #include <stdio.h>
+#include <assert.h>
 
 Utils::Utils()
 {}
