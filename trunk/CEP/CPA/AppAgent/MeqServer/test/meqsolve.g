@@ -205,10 +205,11 @@ const get_ms_info := function (msname='test.ms',uvw=T)
   {
     global ms_antuvw;
     ms_antuvw := array(0.,3,num_ant);
+    mss := ms.query('DATA_DESC_ID==0');
     # get UVW coordinates from ms
-    ant1 := ms.getcol('ANTENNA1');
-    ant2 := ms.getcol('ANTENNA2');
-    uvw  := ms.getcol('UVW');
+    ant1 := mss.getcol('ANTENNA1');
+    ant2 := mss.getcol('ANTENNA2');
+    uvw  := mss.getcol('UVW');
     mask1 := ant1 == 0;
     uvw0 := uvw[,mask1];
     ant2 := ant2[mask1];
@@ -375,17 +376,19 @@ const do_test := function (predict=F,subtract=F,solve=F,run=T,
   {
     # activate input and watch the fur fly  
     global inputrec,outputrec;
-    inputrec := [ ms_name = msname,data_column_name = 'DATA',tile_size=5,
-                  selection = [=]  ];
-    outputrec := [ write_flags=F,predict_column=outcol ]; 
     mqs.init(input=inputrec,output=outputrec); 
   }
 }
 
+# msname='test.ms';
+msname := 'test-wsrt.ms';
+inputrec := [ ms_name = msname,data_column_name = 'DATA',tile_size=5,
+              selection = [ channel_start_index=1,channel_end_index=1 ] ];
+outputrec := [ write_flags=F,predict_column=outcol ]; 
 
 #do_test(predict=T,run=T,st1set=1,st2set=2,publish=2);
 # do_test(solve=T,run=T,st1set=1,st2set=1,publish=2);
-do_test(solve=T,run=T,st1set=1:3,st2set=1:3,publish=3,msuvw=T);
+do_test(msname=msname,solve=T,run=T,st1set=1:3,st2set=1:3,publish=3,msuvw=T);
 #do_test(solve=T,run=T,publish=2,load='solve-100.forest');
 
 print 'errors reported:',mqs.num_errors();
