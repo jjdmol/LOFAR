@@ -1,3 +1,5 @@
+#uses "gcfpa-com.ctl"
+
 global dyn_dyn_string gCallBackList;	
 global dyn_dyn_string gSeqList;	
 global dyn_dyn_string gPSList;	
@@ -17,7 +19,7 @@ unsigned gcfInit(string callBackFuncName)
 	
 	DebugN("GCF: ID " + ID + " is claimed for unique communication with PA of GCF.");
 	dyn_string newItem;
-	string callBackDP = "DPA-client-UIM" + myManNum() +"-" + ID;
+	string callBackDP = "DPA_client_UIM" + myManNum() +"_" + ID;
 	if (!dpExists(callBackDP))
 	{
 		dpCreate(callBackDP, "LPT_BLOB");
@@ -26,11 +28,11 @@ unsigned gcfInit(string callBackFuncName)
 	dpConnect("gcfMainCallBack", FALSE, callBackDP + ".");			
 	newItem = makeDynString(callBackFuncName, ID, myManNum());
 	gCallBackList[dynlen(gCallBackList) + 1] = newItem;
-	if (!dpExists("DPA-WDGoneSys"))
+	if (!dpExists("DPA_WDGoneSys"))
  	{
- 		dpCreate("DPA-WDGoneSys", "LPT_UNSIGNED");
+ 		dpCreate("DPA_WDGoneSys", "LPT_UNSIGNED");
  	}		
- 	dpConnect("gcfWDGoneSys", FALSE, "DPA-WDGoneSys.");
+ 	dpConnect("gcfWDGoneSys", FALSE, "DPA_WDGoneSys.");
 	return ID;
 }
 
@@ -125,7 +127,7 @@ void gcfConfigurePS(unsigned ID, string psScope, string psApcName)
 
 void gcfMainCallBack(string callBackDP, blob value)
 {
-	dyn_string splittedDP = strsplit(callBackDP, "-");
+	dyn_string splittedDP = strsplit(dpSubStr(callBackDP, DPSUB_DP), "_");
 	unsigned lastElement = dynlen(splittedDP);
 	unsigned ID = splittedDP[lastElement];
 	string callBackFunc = findCallBackFunc(ID);
@@ -253,7 +255,7 @@ string buildPortId(unsigned ID)
 
 string buildCallBackDP(unsigned ID)
 {
- return getSystemName() + "DPA-client-UIM" + myManNum() +"-" + ID;		
+ return getSystemName() + "DPA_client_UIM" + myManNum() +"_" + ID;		
 }
 
 void callUserDefinedFunction(string& callBackFunc, dyn_string& response)
@@ -315,7 +317,7 @@ string getDPNameOnly(string& psScope)
 
 bool isPAOnline(string sysName)
 {
-	bool paOnline = dpExists(sysName + "DPA-server");
+	bool paOnline = dpExists(sysName + "DPA_server");
 	
 	if (!paOnline) DebugN("GCF ERROR: PA on system " + sysName + " not reachable!");
 	return paOnline;

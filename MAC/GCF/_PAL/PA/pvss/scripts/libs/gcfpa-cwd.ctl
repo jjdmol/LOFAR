@@ -1,3 +1,5 @@
+#uses "gcfpa-com.ctl"
+
 main()
 {
 	addGlobal("gConnManList", DYN_DYN_STRING_VAR);	
@@ -18,9 +20,9 @@ void gcfConnectionWatchDog()
  		retrieveManNums(gDistSysList[i]);	 		
  	}
  	dpConnect("distSystemChanged", FALSE, "_DistManager.State.SystemNums");
- 	if (!dpExists("DPA-WDGoneSys"))
+ 	if (!dpExists("DPA_WDGoneSys"))
  	{
- 		dpCreate("DPA-WDGoneSys", "LPT_UNSIGNED");
+ 		dpCreate("DPA_WDGoneSys", "LPT_UNSIGNED");
  	}
 	DebugN("GCF: Watch-dog started");
 }
@@ -80,10 +82,10 @@ void remoteSystemGone(unsigned sysNr)
 	dpGet("_Connections.Api.ManNums", manNums);
 	dyn_string apiDPNames;
 	msg = "u|" + getSystemId() + ":Ctrl:" + myManNum() + ":|" + 
-				getSystemName() + "DPA-server|gone|" + getSystemName() + "|";	
+				getSystemName() + "DPA_server|gone|" + getSystemName() + "|";	
 	for (int i = 1; i <= dynlen(manNums); i++)
 	{
-		apiDPNames = dpNames("DPA-client-API" + i + "-*", "LPT_BLOB");		
+		apiDPNames = dpNames("DPA_client_API" + i + "_*", "LPT_BLOB");		
 		for (int j = 1; j <= dynlen(apiDPNames); j++)
 		{
 			sendEvent(apiDPNames[j] + ".", msg);
@@ -97,7 +99,7 @@ void remoteSystemGone(unsigned sysNr)
 			dynRemove(gConnManList, i);
 		}
 	}
-	dpSet("DPA-WDGoneSys.", sysNr);
+	dpSet("DPA_WDGoneSys.", sysNr);
 }
 
 void uiConnectionsChanged(string dp, dyn_uint value)

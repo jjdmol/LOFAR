@@ -47,15 +47,13 @@ configfilesdir=$(bindir)
 configfiles_DATA= \
 	loadAPC \
 	preparePVSS-DB \
-	configurePVSSProj \
 	PropertyAgent.conf
 
 install-data-local:
 	mkdir -p $(bindir)/pvss/scripts
-	mkdir -p $(bindir)/pvss/config
+	mkdir -p $(bindir)/pvss/panels
 	cp -Rf $(top_srcdir)/PA/pvss/scripts $(bindir)/pvss/
-	cp -Rf $(top_srcdir)/PA/pvss/config/config.level $(bindir)/pvss/config/
-	chmod 777 $(bindir)/configurePVSSProj
+	cp -Rf $(top_srcdir)/PA/pvss/panels $(bindir)/pvss/
 	
 %.conf: gcf-pa.conf.in
 	cp $< $@

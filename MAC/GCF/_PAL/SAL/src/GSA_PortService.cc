@@ -65,7 +65,7 @@ ssize_t GSAPortService::send (void* buf, size_t count, const string& destDpName)
   GCFPVBlob convBv;
   
   GCFPVBlob* pBlobMsg = &bv;
-  if (destDpName.find("-UIM") < string::npos)
+  if (destDpName.find("_UIM") < string::npos)
   {
     assert(_pConverter);
     if (_pConverter->gcfEventToUIMMsg(bv, convBv))

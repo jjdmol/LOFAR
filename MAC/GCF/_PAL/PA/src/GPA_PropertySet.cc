@@ -475,10 +475,6 @@ void GPAPropertySet::configure(PAConfPropSetEvent& request)
       request.apcName.c_str()));
   if (GCFPVSSInfo::propExists(_name))
   {
-    string loadAPCcmd = formatString("loadAPC %s %s %s",
-         _name.c_str(),
-         request.apcName.c_str(),
-         GCFPVSSInfo::getProjectName().c_str());
     int result = system("chmod 777 loadAPC"); // execute rights are gone after check-out with eclipse
     if (result == -1)
     {
@@ -487,6 +483,9 @@ void GPAPropertySet::configure(PAConfPropSetEvent& request)
     }
     else
     {
+      string loadAPCcmd = formatString("loadAPC %s %s",
+           _name.c_str(),
+           request.apcName.c_str());
       result = system(loadAPCcmd.c_str());
       switch (result)
       {

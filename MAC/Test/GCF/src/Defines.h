@@ -1,6 +1,6 @@
 #include <GCF/GCF_Defines.h>
 
-#define DISTRIBUTED
+//#define DISTRIBUTED
 
 #ifdef DISTRIBUTED
 #define REMOTESYS1 "CCU1:"
