@@ -826,28 +826,29 @@ bool Dispatcher::checkEvents()
       for( SMI iter = rng.first; iter != rng.second; )
       {
         // no message generated for EV_IGNORE
-        if( iter->second.flags&EV_IGNORE )
-          continue;
-        // discrete signal events requested, so always enqueue a message
-        if( iter->second.flags&EV_DISCRETE )
+        if( !(iter->second.flags&EV_IGNORE) )
         {
-          repoll |= iter->second.pwp->enqueue(iter->second.msg.copy(DMI::WRITE),tick);
-        }
-        else // else see if event is already enqueued & not delivered
-        {
-          // is a previous message still undelivered?
-          // (WPInterface::poll() will reset its state to 0 when delivered)
-          if( iter->second.msg->state() )
+          // discrete signal events requested, so always enqueue a message
+          if( iter->second.flags&EV_DISCRETE )
           {
-            // simply ask for a repoll if the message is at top of queue
-            const WPInterface::QueueEntry *qe = iter->second.pwp->topOfQueue();
-            if( qe && qe->mref == iter->second.msg )
-              iter->second.pwp->setNeedRepoll(repoll=True);
-          }
-          else // not in queue anymore, so enqueue a message
-          {
-            iter->second.msg().setState(1); // state=1 means undelivered
             repoll |= iter->second.pwp->enqueue(iter->second.msg.copy(DMI::WRITE),tick);
+          }
+          else // else see if event is already enqueued & not delivered
+          {
+            // is a previous message still undelivered?
+            // (WPInterface::poll() will reset its state to 0 when delivered)
+            if( iter->second.msg->state() )
+            {
+              // simply ask for a repoll if the message is at top of queue
+              const WPInterface::QueueEntry *qe = iter->second.pwp->topOfQueue();
+              if( qe && qe->mref == iter->second.msg )
+                iter->second.pwp->setNeedRepoll(repoll=True);
+            }
+            else // not in queue anymore, so enqueue a message
+            {
+              iter->second.msg().setState(1); // state=1 means undelivered
+              repoll |= iter->second.pwp->enqueue(iter->second.msg.copy(DMI::WRITE),tick);
+            }
           }
         }
         // remove signal if one-shot
