@@ -25,6 +25,7 @@
 
 #include "ABSPointing.h"
 #include "ABSSpectralWindow.h"
+#include "SpectralWindowConfig.h"
 #include "ABSBeamlet.h"
 
 #include <queue>
@@ -72,7 +73,7 @@ namespace ABS
 	   * @param subbands Which set of subbands to allocate
 	   * (indices in the spectral window).
 	   */
-	  static Beam* allocate(SpectralWindow const & spw, std::set<int> subbands);
+	  static Beam* allocate(int spw_index, std::set<int> subbands);
 
 	  /**
 	   * Return allocation status of a beam.

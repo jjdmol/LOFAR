@@ -26,6 +26,7 @@
 #include "ABSSpectralWindow.h"
 #include "ABS_Protocol.ph"
 #include "ABSBeamlet.h"
+#include "SpectralWindowConfig.h"
 
 #include <GCF/TM/GCF_Control.h>
 
@@ -147,28 +148,10 @@ namespace ABS
 	 */
 	void send_sbselection();
 
-#if 0
 	/**
-	 * Defer an event from m_client to the save queue
-	 * for later processing.
+	 * Send rcu settings to the board.
 	 */
-	void saveq_defer(GCFEvent& e);
-
-	/**
-	 * Recall the least recently deferred event.
-	 */
-	GCFEvent* saveq_recall();
-
-	/**
-	 * Pop and delete the event.
-	 */
-	void saveq_pop();
-
-	/**
-	 * Clear the saveq.
-	 */
-	void saveq_clear();
-#endif
+	void send_rcusettings();
 
     private:
 	// member variables
@@ -182,6 +165,12 @@ namespace ABS
 	 * Current subband selection
 	 */
 	std::map<int, int> m_sbsel;
+
+	/**
+	 * Current spectral window usage.
+	 * Reference count spectral window i is at m_spw_refcount[i].
+	 */
+	int* m_spw_refcount;
 
 	/**
 	 * Set of curently allocated beams.
@@ -218,7 +207,7 @@ namespace ABS
 
 	GCFPort          m_rspdriver;
 	std::list<char*> m_saveq;
-	bool             m_subbands_modified;
+	bool             m_beams_modified;
     };
 
 };

@@ -46,12 +46,6 @@ include_HEADERS = \
 %.conf: %.conf.in
 	cp $< $@
 
-%.ns: %.ns.in
-	cp $< $@
-
-%.top: %.top.in
-	cp $< $@
-
 lib_LTLIBRARIES = libabs.la
 
 libabs_la_SOURCES = \
@@ -61,6 +55,8 @@ libabs_la_SOURCES = \
 	ABSPointing.cc \
 	ABSSpectralWindow.h \
 	ABSSpectralWindow.cc \
+	SpectralWindowConfig.h \
+	SpectralWindowConfig.cc \
 	ABSBeam.h \
 	ABSBeam.cc \
 	ABSBeamlet.h \

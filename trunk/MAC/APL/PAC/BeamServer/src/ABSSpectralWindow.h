@@ -24,6 +24,8 @@
 #define ABSSPECTRALWINDOW_H_
 
 #include "ABSDirection.h"
+
+#include <Common/LofarTypes.h>
 #include <sys/time.h>
 
 namespace ABS
@@ -39,7 +41,7 @@ namespace ABS
 	  /**
 	   * Constructors for a spectralwindow.
 	   */
-	  SpectralWindow(double start, double width, int n_subbands);
+	  SpectralWindow(double start, double width, int n_subbands, uint8 rcusettings);
 	  //@}
 
 	  //@{
@@ -49,6 +51,7 @@ namespace ABS
 	  double start() const;
 	  double width() const;
 	  int    nsubbands() const;
+	  uint8  rcusettings() const;
           //@}
 
 	  /**
@@ -69,11 +72,16 @@ namespace ABS
 
 	  /** the number of subbands */
 	  int m_nsubbands;
+
+	  /** the rcusettings for this spectral windows */
+	  uint8 m_rcusettings;
       };
 
-  inline double SpectralWindow::start() const     { return m_start; }
-  inline double SpectralWindow::width() const     { return m_width; }
-  inline int    SpectralWindow::nsubbands() const { return m_nsubbands; }
+  inline double SpectralWindow::start() const       { return m_start; }
+  inline double SpectralWindow::width() const       { return m_width; }
+  inline int    SpectralWindow::nsubbands() const   { return m_nsubbands; }
+  inline uint8  SpectralWindow::rcusettings() const { return m_rcusettings; }
+  
 
   inline double SpectralWindow::getFrequency(int subband) const
       {

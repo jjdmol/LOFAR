@@ -674,18 +674,9 @@ void AVTStub::run()
 
 int main(int argc, char** argv)
 {
-#if 0
-  char prop_path[PATH_MAX];
-  const char* mac_config = getenv("MAC_CONFIG");
-
-  snprintf(prop_path, PATH_MAX-1,
-	   "%s/%s", (mac_config?mac_config:"."),
-	   "log4cplus.properties");
-  INIT_LOGGER(prop_path);
-#endif
-  LOG_INFO(formatString("Program %s has started", argv[0]));
-
   GCFTask::init(argc, argv);
+
+  LOG_INFO(formatString("Program %s has started", argv[0]));
 
   Suite s("Beam Server Process Test Suite", &cerr);
   s.addTest(new AVTStub("AVTStub"));

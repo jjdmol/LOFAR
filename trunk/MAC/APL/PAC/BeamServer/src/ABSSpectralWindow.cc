@@ -24,7 +24,7 @@
 
 using namespace ABS;
 
-SpectralWindow::SpectralWindow(double start, double width, int nsubbands) :
-    m_start(start), m_width(width), m_nsubbands(nsubbands)
+SpectralWindow::SpectralWindow(double start, double width, int nsubbands, uint8 rcusettings) :
+  m_start(start), m_width(width), m_nsubbands(nsubbands), m_rcusettings(rcusettings)
 {
 }
