@@ -23,15 +23,21 @@
 #ifndef COMMON_LOFARTYPES_H
 #define COMMON_LOFARTYPES_H
 
-namespace LOFAR {
+#include <Common/LofarTypedefs.h>
 
-  typedef short               int16;
-  typedef int                 int32;
-  typedef long long           int64;
-  typedef unsigned short     uint16;
-  typedef unsigned int       uint32;
-  typedef unsigned long long uint64;
-}
+// Define some unsigned only if not already done is /usr/include/sys/types.h
+
+using LOFAR::uchar;
+#ifndef __USE_MISC
+using LOFAR::ushort;
+using LOFAR::uint;
+using LOFAR::ulong;
+#endif
+using LOFAR::longlong;
+using LOFAR::ulonglong;
+using LOFAR::ldouble;
+using LOFAR::fcomplex;
+using LOFAR::dcomplex;
 
 using LOFAR::int16;
 using LOFAR::int32;

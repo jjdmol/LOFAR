@@ -23,18 +23,9 @@
 #ifndef COMMON_LONUMERICS_H
 #define COMMON_LONUMERICS_H 1
 
+#include <Common/LofarTypes.h>
 #include <Common/lofar_complex.h>
     
-// standard type definitions
-typedef unsigned char uchar;
-typedef unsigned short ushort;
-typedef unsigned int uint;
-typedef unsigned long ulong;
-typedef long long longlong;
-typedef unsigned long long ulonglong;
-typedef long double ldouble;
-typedef std::complex<float> fcomplex;
-typedef std::complex<double> dcomplex;
 
 #ifndef DoForAllNumericTypes
 // 
