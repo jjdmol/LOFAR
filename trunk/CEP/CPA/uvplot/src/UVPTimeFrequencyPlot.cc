@@ -23,7 +23,7 @@ UVPTimeFrequencyPlot::UVPTimeFrequencyPlot(QWidget *parent)
   
 {
 #if(DEBUG_MODE)
-  TRACER1(__PRETTY_FUNCTION__);
+  TRACERF1("");
 #endif
 
   connect(this, SIGNAL(signal_paletteChanged()),
@@ -38,13 +38,13 @@ UVPTimeFrequencyPlot::UVPTimeFrequencyPlot(QWidget *parent)
 void UVPTimeFrequencyPlot::slot_paletteChanged()
 {
 #if(DEBUG_MODE)
-  TRACER1(__PRETTY_FUNCTION__);
+  TRACERF1("");
 #endif
 
   drawView();
 
 #if(DEBUG_MODE)
-  TRACER1("End: " << __PRETTY_FUNCTION__);
+  TRACERF1("End.");
 #endif
 }
 
@@ -77,7 +77,7 @@ void UVPTimeFrequencyPlot::slot_addSpectrum(const UVPSpectrum &spectrum)
 void UVPTimeFrequencyPlot::drawView()
 {
 #if(DEBUG_MODE)
-  TRACER1(__PRETTY_FUNCTION__);
+  TRACERF1("");
 #endif
   QPainter BufferPainter;
   
@@ -111,7 +111,7 @@ void UVPTimeFrequencyPlot::drawView()
   bitBlt(this, 0, 0, &itsBuffer);
 
 #if(DEBUG_MODE)
-  TRACER1("End: " << __PRETTY_FUNCTION__);
+  TRACERF1("End.");
 #endif
 }
 
