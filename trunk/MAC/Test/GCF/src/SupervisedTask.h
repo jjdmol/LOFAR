@@ -7,6 +7,7 @@
 #include <GCF/GCF_Defines.h>
 #include "PropertyProxy.h"
 #include "Answer.h"
+#include <Common/lofar_iostream.h>
 
 class SupervisedTask : public GCFTask
 {

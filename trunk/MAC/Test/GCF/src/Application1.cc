@@ -1497,6 +1497,7 @@ GCFEvent::TResult Application::test306(GCFEvent& e, GCFPortInterface& /*p*/)
       _counter = 0;
       if ((strcmp(pResponse->pPropName, "A_C_P1") == 0))
       {
+        cerr << "Send nr " << _counter << " to A_K_P1" << endl;
         GCFPVInteger iv(_counter);
         if (_supTask1.getProxy().setPropValue("A_K_P1", iv) != GCF_NO_ERROR)
         {
@@ -1527,6 +1528,7 @@ GCFEvent::TResult Application::test306(GCFEvent& e, GCFPortInterface& /*p*/)
       {
         nrOfFaults++;
       }
+      cerr << "Received nr " << (unsigned int)((GCFPVInteger*)pResponse->pValue)->getValue() << " from A_C_P1(" << _counter << ")" << endl;
       _counter++;
       if (nrOfSucceded == 1000)
       {
@@ -1540,6 +1542,7 @@ GCFEvent::TResult Application::test306(GCFEvent& e, GCFPortInterface& /*p*/)
       }
       else
       {
+        cerr << "Send nr " << _counter << " to A_K_P1" << endl;
         GCFPVInteger iv(_counter);
         if (_supTask1.getProxy().setPropValue("A_K_P1", iv) != GCF_NO_ERROR)
         {
@@ -1716,7 +1719,7 @@ GCFEvent::TResult Application::test501(GCFEvent& e, GCFPortInterface& /*p*/)
       if ((strcmp(pResponse->pScope, "B_RT1") == 0) &&
           (pResponse->result == GCF_NO_ERROR))
       {          
-        if (apc2.unload() != GCF_NO_ERROR)
+        //if (apc2.unload() != GCF_NO_ERROR)
         {
           TSTTestreadyEvent r;
           r.testnr = 501;
@@ -1749,13 +1752,13 @@ GCFEvent::TResult Application::test501(GCFEvent& e, GCFPortInterface& /*p*/)
       {
         int maxSeqNr = 20 + (int) (80.0 * rand() / (RAND_MAX + 1.0));
         maxSeqNrV.setValue(maxSeqNr);
-        _supTask1.getProxy().setPropValue("B_RT2_maxSeqNr", maxSeqNrV);
+        //_supTask1.getProxy().setPropValue("B_RT2_maxSeqNr", maxSeqNrV);
       }
-      if (_counter < 10)
+      if (_counter < 7)
       {
         if (_counter == 3)
         {
-          apc2.load(false);
+          //apc2.load(false);
         }
         _counter++;
         _supTask1.getPort().setTimer(40.0);
