@@ -25,8 +25,9 @@
 
 //# Includes
 #include <PL/ObjectId.h>
+#include <Common/LofarTypes.h>
 #include <boost/shared_ptr.hpp>
-#include <climits>
+#include <vector>
 
 namespace LCS
 {
@@ -44,22 +45,60 @@ namespace LCS
     //
     class PersistentObject
     {
-    protected:
+    public:
 
-      // The meta data for our persistent object will be stored in a
-      // separate struct. We do not want to keep these data inside our
-      // PersistentObject, because we want to be able to share these data
-      // among different copies of a PersistentObject. Remember that multiple
-      // copies of a PersistentObject can refer to the same data, so they
-      // should also refer to the same meta data.
-      struct MetaData {
+      // We will often need shared pointers to this base class, hence
+      // this typedef.
+      typedef boost::shared_ptr<PersistentObject> Pointer;
+
+      // The meta data for our persistent object will be stored in a separate
+      // class MetaData. We do not want to keep these meta data inside our
+      // PersistentObject, because we want to share these meta data. Hence,
+      // MetaData contains reference counted pointers to the actual meta
+      // data. Remember that multiple copies of a PersistentObject can refer
+      // to the same data, so they should also refer to the same meta data.
+      class MetaData
+      {
+      public:
 
         // Default constructor. 
-        MetaData() : itsOwnerOid(0), itsVersionNr(0) {}
+        MetaData() : 
+          itsOid(new ObjectId()), 
+          itsOwnerOid(new ObjectId(0)), 
+          itsVersionNr(new uint(0))
+        {}
+
+        // Clone the MetaData, i.e. make a deep copy.
+        // \note The cloned MetaData object is created on the heap, and 
+        // ownership is transferred to the caller.
+        //   MetaData* clone() const;
+
+        // Reset the attributes to their initial values.
+        void reset() const;
+
+        // Return the shared pointer to the object-id of this PersistentObject.
+        boost::shared_ptr<ObjectId>& oid() { return itsOid; }
+
+        // Return the shared pointer to the object-id of the owner of this
+        // PersistentObject.
+        boost::shared_ptr<ObjectId>& ownerOid() { return itsOwnerOid; }
+
+        // Return a reference to the version number of this PersistentObject.
+        uint& versionNr() const { return *itsVersionNr; }
+
+      private:
+  
+        // @name Data members of MetaData
+        // All data members of MetaData are using shared pointers. We want to
+        // be able to savely copy MetaData classes. However, we do not want
+        // multiple copies of the member data of MetaData, because that would
+        // lead to potential inconsistencies in the meta data.
+
+        //@{
 
         // ObjectId is used to uniquely identify every instance of a
         // PersistentObject.
-        ObjectId itsOid;
+        boost::shared_ptr<ObjectId> itsOid;
 
         // Each PersistentObject may be owned by another PersistentObject. 
         // We say that an object is owned by another object, when either 
@@ -76,8 +115,8 @@ namespace LCS
         // owns its parent. However, from a data point of view it is very
         // practical, because the member data of the parent object appear to
         // be part of the child object.
-        ObjectId itsOwnerOid;
-        
+        boost::shared_ptr<ObjectId> itsOwnerOid;
+  
         // Keep track of the number of \e updates that were done on this
         // object in the database. This counter can be used to implement
         // optimistic locking. Whenever itsVersionNr differs from the
@@ -85,31 +124,32 @@ namespace LCS
         // database \e after we retrieved it. In that case, we cannot 
         // continue with an update, because then we would overwrite modified
         // data.
-        unsigned int itsVersionNr;
+        boost::shared_ptr<uint> itsVersionNr;
 
-      };
+        //@}
 
-      // Default constructor.
-      PersistentObject() : itsMetaData(new MetaData()) {}
+      }; //# class MetaData
 
-      // We need a virtual destructor, cause this is our abstract base class.
-      virtual ~PersistentObject() {}
-
-public:
 
       // Remove this instance of PersistentObject from the database.
-      virtual void erase() const = 0;
+      void erase() const;
 
       // Insert the PersistentObject into the database.
       // \note insert() will \e always create a new stored object. This is
       // contrary to the behaviour of save() which will only create a \e new
       // stored object if it did not already exist in the database.
-      virtual void insert() const = 0;
+      void insert() const;
 
 //       // This method will typically be used to refresh an instance of 
 //       // PersistentObject that already resides in memory. We will need it if
 //       // another process or thread changed the data in the database.
-//       virtual void retrieve() = 0;
+//       void retrieve();
+      
+//       // Set the data in this PersistentObject equal to the data in the
+//       // database belonging to the object with the specified ObjectId. \c
+//       // isOwnerOid is used to indicate whether \c oid refers to the object
+//       // itself or to its owner.
+//       void retrieve(const ObjectId& oid);
 
       // Store the PersistentObject into the database. This method will
       // typically be called by the PersistenceBroker, because at this level 
@@ -117,37 +157,90 @@ public:
       // save() will automatically figure out whether the PersistentObject is
       // new and thus needs to be \e inserted into the database, or is already
       // present in the database and thus needs to be \e updated.
-      virtual void save() const = 0;
+      void save() const;
 
       // Update the PersistentObject into the database.
       // \note update() will \e always modify an existing stored object. 
       // Therefore, calling update() on a PersistentObject that is not
       // already present in the database is an error.
       // \throw LCS::PL::Exception
-      virtual void update() const = 0;
+      void update() const;
 
-      // Return a non-const reference to the meta data. Hey, we want to be
-      // able to modify these data, while inserting, updating, etc.
-      MetaData& metaData() const { return *itsMetaData; }
+      // Return a reference to the meta data.
+      // \note This method must be \c const because it is used by insert(),
+      // update(), etc. which are (logically) \c const.
+      MetaData& metaData() const { return itsMetaData; }
 
       // Return whether this PersistentObject is in the database.
-      bool isPersistent() const { return metaData().itsVersionNr != 0; }
+      bool isPersistent() const { return metaData().versionNr() != 0; }
 
-private:
+      // Return whether this PersistentObject is ownerd by another one.
+      bool isOwned() const { 
+        return metaData().ownerOid() != ObjectId::nullId();
+      }
 
-      // Shared pointer to the MetaData. We do not want different copies
-      // of PersistentObject to have different meta data.
-      boost::shared_ptr<MetaData> itsMetaData;
+    protected:
+
+      // Default constructor.
+      PersistentObject() {}
+
+      // We need a virtual destructor, cause this is our abstract base class.
+      virtual ~PersistentObject() {}
+
+      // This method \e must be called by every constructor. It must ensure
+      // that the POContainer is initialized properly and that the ownership
+      // relations between the PersistentObjects in this container are
+      // properly set in their associated MetaData objects.
+      virtual void init() = 0;
+
+      // This is the type of container that will hold the shared pointers
+      // to the PersistentObjects that we "own".
+      typedef std::vector<Pointer> POContainer;
+
+      // Return a reference to the container of "owned" PersistentObjects.
+      POContainer& ownedPOs() { return itsOwnedPOs; }
+      
+    private:
+
+      // This method is responsible for actually erasing the \e primitive
+      // data members of \c T.
+      virtual void doErase() const = 0;
+
+      // This method is responsible for actually inserting the \e primitive
+      // data members of \c T.
+      virtual void doInsert() const = 0;
+
+//       // This method is responsible for actually retrieving the \e primitive
+//       // data members of \c T.
+//       virtual void doRetrieve(const ObjectId& oid, bool isOwnerOid) const = 0;
+
+      // This method is responsible for actually erasing the \e primitive
+      // data members of \c T.
+      virtual void doUpdate() const = 0;
+
+      // Here we keep our meta data. MetaData can be copied savely, because
+      // the data members within MetaData use shared pointers.
+      // \note \c itsMetaData must be mutable because it is modified by
+      // logically \c const methods like insert(), update(), etc.
+      mutable MetaData itsMetaData;
+
+      // Vector of shared pointers to all the PersistentObjects that we "own".
+      // A PersistentObject can contain zero or more PersistentObjects. We
+      // chose, however, not to add them as member data, but to create them
+      // outside of this PersistentObject and retain a shared pointer to them.
+      // This is what we call "ownership", as the "contained"
+      // PersistentObjects will come and go with this PersistentObject.
+      POContainer itsOwnedPOs;
     };
 
 
-    // Compare two instances of PersistentObject. PersistentObjects
-    // are considered equal when their ObjectIds (which are stored in
-    // the struct MetaData) are equal.
+    // Compare two instances of PersistentObject. PersistentObjects are
+    // considered equal when their ObjectIds are equal. MetaData stores a
+    // shared pointer to the ObjectId, hence we can compare the pointers.
     inline bool operator==(const PersistentObject& lhs, 
                            const PersistentObject& rhs)
     {
-      return lhs.metaData().itsOid == rhs.metaData().itsOid;
+      return lhs.metaData().oid() == rhs.metaData().oid();
     }
 
 
