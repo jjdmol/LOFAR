@@ -714,8 +714,25 @@
         child-blackboard including its controller, or one of the
         knowledge sources associated with the blackboard.
 
+        The decision is made that for the time being there will be
+        only one BlackbBoard. There will be a control-hierarchy that
+        will at a low level start knowledge sources.
+
+        \begin{figure}
+          \includegraphics[]{../figures/control-hierarchy2.eps}
+          \hypertarget{fig:control-hierarchy2}{}
+          \caption{the contstruction of a control
+          hierarchy.\label{fig:control-hierarchy2}}
+        \end{figure}
+
       \subsubsection{watchers}
       \label{subsubsec:watchers}\hypertarget{subsubsec:watchers}{}
+
+        Watchers are controllers with the special responsibility to
+        compare multiple solution threads on-line. Though this
+        behaviour is integrated in the control-hierarchy, it justifies
+        a separate section. The duties of a ThreadWatcher are
+        described in this section.
 
         \paragraph{simple watchers}
         \label{par:simple-watchers}\hypertarget{par:simple-watchers}{}
@@ -729,7 +746,10 @@
           A watcher polls for changes in a couple of solution
           threads. It might decide that one of them is remarkably more
           sound then the others(see
-          hyperlink{fig:watchers}{\ref{fig:watchers}}).
+          \hyperlink{fig:watchers}{\ref{fig:watchers}}). The
+          ThreadWatcher in this figure might be the direct parent of
+          the ThreadController. It might also be somewhere higher in
+          the hierarchy, if the two threads are not direct siblings.
 
           Usually it will have to decide that it can't decide yet.
 

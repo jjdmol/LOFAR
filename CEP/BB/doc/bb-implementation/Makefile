@@ -13,6 +13,8 @@ bb-implementation.pdf: \
 	../figures/astronpro.eps \
 	../figures/astronple.eps \
 	../figures/llofar.eps \
+	../figures/control-hierarchy2.eps\
+
 
 view:	bb-implementation.pdf
 	acroread bb-implementation.pdf
