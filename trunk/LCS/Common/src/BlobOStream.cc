@@ -52,7 +52,7 @@ BlobOStream::~BlobOStream()
 // It increases the level for each object to hold the length.
 uint BlobOStream::doPutStart (const char* type, uint nrc, int version)
 {
-  BlobHeader<0> hdr("", version, itsLevel);
+  BlobHeaderBase hdr(version, itsLevel);
   Assert (nrc < 256);
   uint nalign = 0;
   if (itsHeader8) {
