@@ -1,5 +1,5 @@
 
-AM_CXXFLAGS = -I$(top_srcdir)/src
+AM_CXXFLAGS = -I$(top_srcdir)/src -DUSE_GNUPLOT
 
 AUTOGEN = autogen
 SUFFIXES = .ph
@@ -49,7 +49,9 @@ libabs_la_SOURCES = \
 	ABSBeamlet.cc \
 	ABSBeamletStats.h \
 	ABSBeamletStats.cc \
-	ABSBeamletStatsPSet.h
+	ABSBeamletStatsPSet.h \
+	gnuplot_i.h \
+	gnuplot_i.cc
 
 bin_PROGRAMS = BeamServer
 

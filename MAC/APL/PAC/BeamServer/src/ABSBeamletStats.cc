@@ -37,6 +37,19 @@
 
 #include <iostream>
 
+#ifdef USE_GNUPLOT
+#include <gnuplot_i.h>
+
+static gnuplot_ctrl* gp_handle_x = 0;
+static gnuplot_ctrl* gp_handle_y = 0;
+static gnuplot_ctrl* gp_handle_t = 0;
+static int snapshot_time = 0;
+
+#define N_TIME 60
+Array<double, 1> time_axis(N_TIME);
+Array<double, 1> power_t(N_TIME);
+#endif
+
 using namespace LOFAR;
 using namespace ABS;
 using namespace std;
@@ -58,10 +71,55 @@ BeamletStats::BeamletStats(int n_beamlets, int n_integrations) :
   m_beamlet_power = 0.0;
 
   if (m_nbeamlets > N_BEAMLETS) m_nbeamlets = N_BEAMLETS;
+
+#ifdef USE_GNUPLOT
+  gp_handle_x = gnuplot_init();
+  if (gp_handle_x)
+  {
+      gnuplot_setstyle(gp_handle_x, "impulses");
+      gnuplot_set_xlabel(gp_handle_x, "beamlet");
+      gnuplot_set_ylabel(gp_handle_x, "power_x");
+  }
+  gp_handle_y = gnuplot_init();
+  if (gp_handle_y)
+  {
+      gnuplot_setstyle(gp_handle_y, "impulses");
+      gnuplot_set_xlabel(gp_handle_y, "beamlet");
+      gnuplot_set_ylabel(gp_handle_y, "power_y");
+  }
+  gp_handle_t = gnuplot_init();
+  if (gp_handle_t)
+  {
+      //gnuplot_setstyle(gp_handle_t, "impulses");
+      gnuplot_set_xlabel(gp_handle_t, "time");
+      gnuplot_set_ylabel(gp_handle_t, "power_x(6)");
+  }
+
+  firstIndex i;
+  time_axis = i;
+  power_t = 0.0;
+#endif
 }
 
 BeamletStats::~BeamletStats()
 {
+#ifdef USE_GNUPLOT
+    if (gp_handle_x)
+    {
+	gnuplot_close(gp_handle_x);
+	gp_handle_x = 0;
+    }
+    if (gp_handle_y)
+    {
+	gnuplot_close(gp_handle_y);
+	gp_handle_y = 0;
+    }
+    if (gp_handle_t)
+    {
+	gnuplot_close(gp_handle_t);
+	gp_handle_t = 0;
+    }
+#endif
 }
 
 void BeamletStats::update(Array<unsigned int,3>& power_sum, unsigned int seqnr)
@@ -76,7 +134,7 @@ void BeamletStats::update(Array<unsigned int,3>& power_sum, unsigned int seqnr)
   {
       if (seqnr != m_seqnr + 1)
       {
-	  LOG_ERROR(formatString("missed %d packets?", seqnr - m_seqnr - 1));
+	  LOG_ERROR(formatString("\n\n**** MISSED %d PACKETS! ****", seqnr - m_seqnr - 1));
 	  m_seqnr = seqnr;
 	  return; // skip loose packet
       }
@@ -116,6 +174,46 @@ void BeamletStats::update(Array<unsigned int,3>& power_sum, unsigned int seqnr)
       }
       cout << endl;
 
+#ifdef USE_GNUPLOT
+      Array<double, 1> freq(m_nbeamlets);
+      firstIndex i;
+      freq = i;
+      Array<double, 1> power(m_nbeamlets);
+      power = m_beamlet_power(Range::all(), 0);
+      if (gp_handle_x)
+      {
+	  gnuplot_resetplot(gp_handle_x);
+	  gnuplot_plot_xy(gp_handle_x, 
+			  freq.data(), 
+			  power.data(), 
+			  m_nbeamlets, 
+			  "Power per beamlet x-polarization");
+      }
+      power = m_beamlet_power(Range::all(), 1);
+      if (gp_handle_y)
+      {
+	  gnuplot_resetplot(gp_handle_y);
+	  gnuplot_plot_xy(gp_handle_y, 
+			  freq.data(), 
+			  power.data(), 
+			  m_nbeamlets, 
+			  "Power per beamlet y-polarization");
+      }
+
+      power_t(snapshot_time) = m_beamlet_power(6, 0);
+      snapshot_time = (snapshot_time + 1) % N_TIME;
+
+      if (gp_handle_t)
+      {
+	  gnuplot_resetplot(gp_handle_t);
+	  gnuplot_plot_xy(gp_handle_t, 
+			  time_axis.data(), 
+			  power_t.data(), 
+			  N_TIME, 
+			  "Power per beamlet y-polarization");
+      }
+
+#else
       char propnamex[64];
       char propnamey[64];
       for (int i = 0; i < m_nbeamlets / 8; i++)
@@ -132,6 +230,7 @@ void BeamletStats::update(Array<unsigned int,3>& power_sum, unsigned int seqnr)
 
       // update the seqnr property
       m_pset["seqnr"].setValue(GCFPVUnsigned(m_seqnr));
+#endif
 
       // reset m_beamlet_power array
       m_beamlet_power = 0.0;
@@ -141,7 +240,11 @@ void BeamletStats::update(Array<unsigned int,3>& power_sum, unsigned int seqnr)
 
 bool BeamletStats::isReady()
 {
+#ifdef USE_GNUPLOT
+  return true;
+#else
   return m_pset.isLoaded();
+#endif
 }
 
 void BeamletStats::handleAnswer(GCFEvent& event)

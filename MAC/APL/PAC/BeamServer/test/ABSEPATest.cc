@@ -128,7 +128,7 @@ GCFEvent::TResult EPATest::test001(GCFEvent& e, GCFPortInterface& port)
 
 	// send wgenable
 	ABSWgsettingsEvent wgs;
-	wgs.frequency=1e6; // 1MHz
+	wgs.frequency=1.5e6; // 1.5MHz
 	wgs.amplitude=128; // was 128
 	wgs.sample_period=2;
 
@@ -170,21 +170,17 @@ GCFEvent::TResult EPATest::test001(GCFEvent& e, GCFPortInterface& port)
 	// send pointto command (zenith)
 	ABSBeampointtoEvent pointto;
 	pointto.handle = ack->handle;
-	pointto.time = time(0) + 20;
 	pointto.type=(int)Direction::LOFAR_LMN;
-	pointto.angle1=0.0;
-	pointto.angle2=0.0;
 
-	_test(sizeof(pointto) == beam_server.send(pointto));
+	time_t now = time(0);
+	for (int t = 0; t <= 60; t+=5)
+	{
+	    pointto.time = now + t + 10;
+	    pointto.angle1=0.0;
+	    pointto.angle2=cos(((double)t/60.0)*M_PI);
 
-#if 0
-	// send pointto command (northern horizon)
-	pointto.time = time(0) + 30;
-	pointto.angle1=1.0;
-	pointto.angle2=0.0;
-
-	_test(sizeof(pointto) == beam_server.send(pointto));
-#endif
+	    _test(sizeof(pointto) == beam_server.send(pointto));
+	}
 
 	// let the beamformer compute for 30 seconds
 	timerid = beam_server.setTimer((long)120);
