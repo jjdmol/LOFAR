@@ -34,7 +34,8 @@ WH_Correlator::WH_Correlator(const string& name,
     itsNsamples (samples),
     itsNchannels(channels),
     itsNpolarisations(polarisations),
-    itsNtargets (targets)
+    itsNtargets (targets),
+    itsResetBuffer(NULL)
 {
 
   getDataManager().addInDataHolder(0, new DH_CorrCube("in", 
@@ -50,9 +51,31 @@ WH_Correlator::WH_Correlator(const string& name,
   t_start.tv_usec = 0;
 
   bandwidth=0.0;
+
+  DH_Vis::BufferType* nul_value = new DH_Vis::BufferType(0,0);
+
+  (void*)itsResetBuffer = malloc(itsNchannels*
+				 itsNelements*
+				 itsNelements*
+				 itsNpolarisations*
+				 sizeof(DH_Vis::BufferType));
+  
+  for (int h = 0; h < itsNchannels; h++) {
+    for (int i = 0; i < itsNelements; i++){ 
+      for (int j = 0; j < itsNelements; j++) {
+	for (int k = 0; k < itsNpolarisations; k++) {
+	  *(itsResetBuffer+
+	    h*itsNelements*itsNelements*itsNpolarisations+
+	    i*itsNelements*itsNpolarisations+
+	    j*itsNpolarisations+ k) = *nul_value;
+	}
+      }
+    }
+  }
 }
 
 WH_Correlator::~WH_Correlator() {
+  free(itsResetBuffer);
 }
 
 WorkHolder* WH_Correlator::construct (const string& name, 
@@ -94,7 +117,6 @@ void WH_Correlator::process() {
     // collect partial bandwidths from all nodes
     MPI_Reduce(&bandwidth, &agg_bandwidth, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
 
-//    cout << "(" << TH_MPI::getCurrentRank() <<") " << bandwidth/(1024.0*1024.0) << " Mbit/sec" << endl;
     if (TH_MPI::getCurrentRank() == 0) {
       cout << itsNsamples  << " " ;
       cout << itsNchannels << " " ;
@@ -109,23 +131,14 @@ void WH_Correlator::process() {
   }
 #endif 
 
-
   DH_CorrCube *inDH  = (DH_CorrCube*)(getDataManager().getInHolder(0));
   DH_Vis      *outDH = (DH_Vis*)(getDataManager().getOutHolder(0));
 
   // reset integrator.
-  // todo: speed up by creating 0-filled array in C'tor and memcpy in one stroke.
-  DH_Vis::BufferType *zero = new DH_Vis::BufferType(0,0);
-    for (int fchannel = 0; fchannel < itsNchannels; fchannel++) {
-      for (int   station1 = 0; station1 < itsNelements; station1++) {
-	for (int station2 = 0; station2 <= station1;    station2++) {
-	  for (int polarisation = 0; polarisation < itsNpolarisations; polarisation++) {
-	    outDH->setBufferElement(station1, station2, fchannel, polarisation, zero);
-	  }
-	}
-      }
-    }
-
+  memcpy(outDH->getBuffer(), 
+	 itsResetBuffer, 
+	 itsNchannels*itsNelements*itsNelements*itsNpolarisations);
+ 
 #ifdef DO_TIMING
   starttime = timer();
 #endif
@@ -155,7 +168,6 @@ void WH_Correlator::process() {
 	    outDH->addBufferElementVal(station1, station2, fchannel, polarisation,
 				       s1_val * s2_val
 				       );
-
  	  }
 	}
       }
@@ -181,9 +193,7 @@ void WH_Correlator::process() {
   MPI_Reduce(&cmults, &max_cmults, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
   
   if ((TH_MPI::getCurrentRank() == 0) && (t_start.tv_sec != 0) && (t_start.tv_usec != 0)) {
-    
     cout << 10e-6*max_cmults/(stoptime-starttime) << " Mcprod/sec" << endl;
-    //   cout << itsNsamples << " " << itsNelements << " " << 10e-6*cmults/(stoptime-starttime) << endl;
   }
 
 #endif

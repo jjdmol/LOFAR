@@ -15,6 +15,8 @@
 #include <lofar_config.h>
 #include <tinyCEP/WorkHolder.h>
 
+#include <DH_Vis.h>
+
 namespace LOFAR
 {
 
@@ -63,6 +65,8 @@ class WH_Correlator: public WorkHolder
   struct timeval t_stop;
 
   double bandwidth;
+  
+  DH_Vis::BufferType* itsResetBuffer;
 };
 
  inline double WH_Correlator::getBandwidth() { return bandwidth; } 
