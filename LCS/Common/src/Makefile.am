@@ -18,6 +18,7 @@ Thread/Mutex.h \
 Thread/Condition.h \
 Thread/SmartLock.h \
 Stopwatch.h \
+StringUtil.h \
 CheckConfig.h \
 Lorrays.h Lorrays-Blitz.h blitz_array-impl.h BlitzToAips.h \
 Lonumerics.h \
@@ -58,6 +59,7 @@ KeyValue.cc KeyValueMap.cc \
 Debug.cc \
 Exception.cc \
 Stopwatch.cc \
+StringUtil.cc \
 Net/Socket.cc \
 Thread/Thread.cc \
 Thread/SmartLock.cc \
