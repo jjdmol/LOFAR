@@ -104,7 +104,8 @@ RECaddUpdateRoutine()
 #
 TPOopenNamespace()
 {
-	echo "namespace LCS { namespace PL {"
+	echo "namespace LCS {"
+	echo "	namespace PL {"
 	echo ""
 }
 
@@ -113,7 +114,8 @@ TPOopenNamespace()
 #
 TPOcloseNamespace()
 {
-	echo "} } // close namespaces"
+	echo "	} // close namespace PL"
+	echo "}	// close namespace LCS"
 	echo ""
 }
 
@@ -141,19 +143,35 @@ TPOaddGenericStructures()
 	echo "	ObjectId::oid_t		Oid;"
 	echo "};"
 	echo ""
-	echo "class Generic_DTL_BCA {"
+	echo "class Generic_OID_BCA {"
 	echo "public:"
 	echo "	void operator()(BoundIOs& cols, Generic_DTL_OID& rowbuf) {"
 	echo "		cols[\"ObjId\"]	== rowbuf.Oid;"
 	echo "	}"
-	echo "};\n"
+	echo "};"
 	echo ""
-	echo "class Generic_DTL_BPA {"
+	echo "class Generic_OID_BPA {"
 	echo "public:"
 	echo "	void operator()(BoundIOs& pos, Generic_DTL_OID& param) {"
 	echo "		pos[0]	== param.Oid;"
 	echo "	}"
-	echo "};\n"
+	echo "};"
+	echo ""
+	echo "struct Generic_DTL_PO_info {"
+	echo "	ObjectId::oid_t		Oid;"
+	echo "	ObjectId::oid_t		Parent;"
+	echo "	SQLTimeStamp		TimeStamp;"
+	echo "};"
+	echo ""
+	echo "class Generic_PO_BCA {"
+	echo "public:"
+	echo "	void operator()(BoundIOs& cols, Generic_DTL_PO_info& rowbuf) {"
+	echo "		cols[\"ObjId\"]		== rowbuf.Oid;"
+	echo "		cols[\"Parent\"]	== rowbuf.Parent;"
+	echo "		cols[\"ModTime\"]	== rowbuf.TimeStamp;"
+	echo "	}"
+	echo "};"
+	echo ""
 	echo "END_DTL_NAMESPACE"
 	echo ""
 	echo "#endif"
@@ -272,7 +290,7 @@ TPOaddDTLstruct()
 	# First add the PO fields, this is always the same
 	echo "	ObjectId::oid_t		Oid;"
 	echo "	ObjectId::oid_t		Parent;"
-	echo "	SQLTimeStamp		Timestamp;"
+	echo "	SQLTimeStamp		TimeStamp;"
 
 	# add all 'basic' members of the DataObj
 	grep ^$Class ${TMPFILE} | grep "::" | while read line
@@ -308,7 +326,7 @@ TPOaddBCA()
 	# First add the PO fields, this is always the same
 	echo "		cols[\"ObjID\"]		== rowbuf.Oid;"
 	echo "		cols[\"Parent\"]	== rowbuf.Parent;"
-	echo "		cols[\"Timestamp\"]	== rowbuf.Timestamp;"
+	echo "		cols[\"ModTime\"]	== rowbuf.TimeStamp;"
 
 	# add all 'basic' members of the class
 	grep ^$Class ${TMPFILE} | grep "::" | while read line
@@ -344,9 +362,9 @@ TPOaddToDatabaseRep()
 	echo "{"
 	echo "	// copy info of the ${Class} to the ${Class}_DBRep class"
 	echo "	// First copy the PO part"
-	echo "	dest.Oid		= itsOid.value();"
-	echo "	dest.Parent		= itsParent.value();"
-	echo "	dest.Timestamp	= itsTimeStamp;"
+	echo "	dest.Oid		= ObjectId(itsOid).get();		// 'this' is const"
+	echo "	dest.Parent		= ObjectId(itsParent).get();	// 'this' is const"
+	echo "	dest.TimeStamp	= itsTimeStamp;"
 	echo ""
 	echo "	// Finally copy the info from ${Class}"
 
@@ -381,9 +399,9 @@ TPOaddFromDatabaseRep()
 	echo "{"
 	echo "	// copy info of the ${Class} to the ${Class}_DBRep class"
 	echo "	// First copy the PO part"
-	echo "	itsOid.value   (org.Oid);"
-	echo "	itsParent.value(org.Parent);"
-	echo "	itsTimeStamp	= SQLTimeStamp(org.Timestamp);"
+	echo "	itsOid.set   (org.Oid);"
+	echo "	itsParent.set(org.Parent);"
+	echo "	itsTimeStamp	= SQLTimeStamp(org.TimeStamp);"
 	echo ""
 	echo "	// Finally copy the info from ${Class}"
 
@@ -412,10 +430,9 @@ TPOcodeCopyToLocal()
 	echo "	toDatabaseRep (rec);"
 
 	if [ "${Action}" == "insert" ]; then
-		echo "	rec.Oid			= itsOid.value();		// get current or new ID"
+		echo "	rec.Oid			= itsOid.get();		// get current or new ID"
 	fi
-	echo "	rec.Parent		= theParent.value();"
-	echo "//REO	rec.Timestamp	= theTime;"
+	echo "	rec.Parent		= ObjectId(theParent).get();	// theParent is const"
 }
 
 #
@@ -429,7 +446,13 @@ TPOcodeHandleAllSubclasses()
 {
 	Class=$1
 	Action=$2
-	typeset -u CapAction=${Action}
+	if [ "${Action}" == "erase" ]; then
+		ErrName="Delete"
+	else
+		typeset -u CapAction=${Action}
+		ErrName=`echo -n ${CapAction} | cut -c1`
+		ErrName=${ErrName}`echo -n ${Action} | cut -c2-`
+	fi
 
 	# Grep all subclasses of this class.
 	# Note: grep returns 0 if something found, 1 or -1 if not.
@@ -456,7 +479,7 @@ TPOcodeHandleAllSubclasses()
 
 	# Close the try and build the catch
 	echo "	}"
-	echo "	catch (LCS_${CapAction}_ERROR&	errObj) {"
+	echo "	catch (${ErrName}Error&	errObj) {"
 	if [ "${Action}" == "erase" ]; then
 		echo "		DBConnection::GetDefaultConnection().RollbackAll();"
 	fi
@@ -471,6 +494,31 @@ TPOcodeHandleAllSubclasses()
 	echo "	// We didn't ran into the catch, so everything went well"
 }
 
+
+#
+# TPOcodeGetDBTimestamp 
+#
+# Adds code to retrieve the key-fields from the current object from the 
+# database and copy the timestamp to the current object
+#
+TPOcodeGetDBTimestamp()
+{
+	echo "	//Now get the new timestamp from the database."
+	echo "	DBView<Generic_DTL_PO_info, Generic_DTL_OID>"
+	echo "						selView(\"${Table}\", Generic_PO_BCA(),"
+	echo "						\"WHERE OID=(?)\", Generic_OID_BPA());"
+	echo "	DBView<Generic_DTL_PO_info, Generic_DTL_OID>::select_iterator"
+	echo "						selIter = selView.begin();"
+	echo ""
+	echo "	// setup the selection parameters"
+	echo "	selIter.Params().Oid = itsOid.get();"
+	echo ""
+	echo "	Generic_DTL_PO_info	db_keys = *selIter;"
+	echo "	itsTimeStamp = SQLTimeStamp(db_keys.TimeStamp);"
+	echo ""
+}
+
+
 #
 # TPOcodeUpdateCurrentState action
 #
@@ -483,14 +531,14 @@ TPOcodeUpdateCurrentState()
 	Action=$1
 
 	if [ "${Action}" == "erase" ]; then
-		echo "	itsOid.value   (0);"
-		echo "	itsParent.value(0);"
+		echo "	itsOid.set   (0);"
+		echo "	itsParent.set(0);"
 		echo "//REO	itsTimeStamp  = 0;"
 		echo "	itsIsPersistent = false;"
 	else
-		echo "	itsOid.value   (rec.Oid);"
-		echo "	itsParent.value(rec.Parent);"
-		echo "	itsTimeStamp  = SQLTimeStamp(rec.Timestamp);"
+		echo "	itsOid.set   (rec.Oid);"
+		echo "	itsParent.set(rec.Parent);"
+		echo "	itsTimeStamp  = SQLTimeStamp(rec.TimeStamp);"
 		echo "	itsIsPersistent = true;"
 	fi
 	echo ""
@@ -537,6 +585,8 @@ TPOaddInsertRoutine()
 
 	TPOcodeHandleAllSubclasses ${Class} insert
 
+	TPOcodeGetDBTimestamp 
+
 	if [ ${ROLLBACKCODE} == true ]; then
 		TPOcodeUpdateCurrentState insert
 	fi
@@ -570,7 +620,7 @@ TPOaddUpdateRoutine()
 	echo "const ObjectId&	theParent) {"
 	echo "	DBView<${Class}_DBRep, Generic_DTL_OID>"
 	echo "			updView(\"${Table}\", ${Class}_DTL_BCA(),"
-	echo "			\"WHERE ObjId=(?)\", Generic_DTL_BPA());"
+	echo "			\"WHERE ObjId=(?)\", Generic_OID_BPA());"
 	echo "	DBView<${Class}_DBRep, Generic_DTL_OID>::update_iterator"
 	echo "			updIter = updView;"
 	echo ""
@@ -583,7 +633,7 @@ TPOaddUpdateRoutine()
 	TPOcodeCopyToLocal ${Class} update
 
 	echo ""
-	echo "	// setup the selection paramters"
+	echo "	// setup the selection parameters"
 	echo "	updIter.Params().Oid = rec.Oid;"
 	echo ""
 	echo "	// save this record"
@@ -624,7 +674,7 @@ TPOaddDeleteRoutine()
 	fi
 	echo "const ObjectId&	theParent) {"
 	echo "	DBView<Generic_DTL_OID>"
-	echo "			delView(\"${Table}\", Generic_DTL_BCA());"
+	echo "			delView(\"${Table}\", Generic_OID_BCA());"
 	echo "	DBView<Generic_DTL_OID>::delete_iterator"
 	echo "			delIter = delView;"
 	echo ""
@@ -634,9 +684,9 @@ TPOaddDeleteRoutine()
 		echo ""
 	fi
 
-	echo "	// setup the selection paramters"
+	echo "	// setup the selection parameters"
 	echo "	Generic_DTL_OID		rec;"
-	echo "	rec.Oid = itsOid.value();"
+	echo "	rec.Oid = itsOid.get();"
 	echo ""
 	echo "	// delete this record"
 	echo "	*delIter = rec;"
@@ -913,8 +963,8 @@ do
 			TPOaddDTLstruct					${class} 	>>${HEADERFILE}
 			if [ ${RedefineTPOclass} == true ]; then
 				TPOaddClassRedefinition		${class} 	>>${HEADERFILE}
-			else
-				TPOaddRoutineRedefinitions	${class} 	>>${HEADERFILE}
+			#else
+			#	TPOaddRoutineRedefinitions	${class} 	>>${HEADERFILE}
 			fi
 			TPOcloseNamespace							>>${HEADERFILE}
 			closeHeaderfile								>>${HEADERFILE}
