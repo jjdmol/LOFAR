@@ -49,15 +49,10 @@ APAdminPool&	APAdminPool::getInstance()
 
 
 APAdminPool::APAdminPool() :
-	itsNrElements  (0),
-	itsNrOnline    (0),
 	itsNrAcksToRecv(0),
 	itsLastCmd     (PCCmdNone),
 	itsCurElement  (0)
 {
-	FD_ZERO(&itsReadMask);
-	FD_ZERO(&itsOnlineMask);
-	FD_ZERO(&itsAckList);
 }
 
 APAdminPool::~APAdminPool()
@@ -71,8 +66,7 @@ void APAdminPool::add   (APAdmin*	anAPAdmin)
 	LOG_TRACE_RTTI_STR ("APAdminPool::add(" << anAPAdmin << ")");
 
 	itsAPAPool.insert (itsAPAPool.begin(), anAPAdmin);
-	FD_SET(anAPAdmin->getSocketID(), &itsReadMask);		// schedule for read
-	++itsNrElements;
+	itsReadMask.add(anAPAdmin->getSocketID());		// schedule for read
 }
 
 //
@@ -87,11 +81,10 @@ void APAdminPool::remove(APAdmin*	anAPAdmin) throw(Exception)
 	while (iter != itsAPAPool.end()) {				// search dataholder
 		if (*iter == anAPAdmin) {
 			// Don't read, write or expect an Ack from this AP anymore
-			FD_CLR(anAPAdmin->getSocketID(), &itsReadMask);
+			itsReadMask.remove(anAPAdmin->getSocketID());
 			markAsOffline(anAPAdmin);
 			registerAck  (itsLastCmd, *iter);
 			itsAPAPool.erase(iter);					// remove from pool
-			--itsNrElements;						// update size
 			setCurElement(itsCurElement);			// boundary check
 			return;									// ready
 		}
@@ -105,7 +98,7 @@ void APAdminPool::remove(APAdmin*	anAPAdmin) throw(Exception)
 // TODO:rewrite for select call
 APAdmin*	APAdminPool::poll(time_t		waitTime)
 {
-	for (int i = itsCurElement; i < itsNrElements; ++i) {
+	for (int i = itsCurElement; i < itsReadMask.count(); ++i) {
 		cout << "poll at " << i << endl;
 		if (itsAPAPool.at(i)->read()) {
 			setCurElement (i+1);
@@ -136,7 +129,7 @@ void APAdminPool::writeToAll(PCCmd			command,
 	int32		aSize   = DHCommand.getDataSize();
 	iterator	iter    = itsAPAPool.begin();
 	while (iter != itsAPAPool.end()) {				// search dataholder
-		if (FD_ISSET((*iter)->getSocketID(), &itsOnlineMask)) {
+		if (itsOnlineMask.isSet((*iter)->getSocketID())) {
 			// TODO: should we do something with the return value???
 			(*iter)->write(aBuffer, aSize);
 		}
@@ -159,7 +152,7 @@ void APAdminPool::writeToAll(PCCmd			command,
 APAdmin* 	APAdminPool::cleanup()
 {
 	APAdmin*		anAPA;
-	for (int i = 0; i < itsNrElements; ++i) {
+	for (int i = 0; i < itsReadMask.count(); ++i) {
 		anAPA = itsAPAPool.at(i);
 		if (anAPA->getState() == APSfail) {
 			LOG_DEBUG_STR("APAdminPool:cleanup " << i);
@@ -175,12 +168,15 @@ APAdmin* 	APAdminPool::cleanup()
 //
 std::ostream&	operator<< (std::ostream& os, const APAdminPool& anAPAP)
 {
-	os << "Reading: " << anAPAP.itsReadMask.fds_bits[0]   << 
-							"(" << anAPAP.itsNrElements   << ")" << endl;
-	os << "Writing: " << anAPAP.itsOnlineMask.fds_bits[0] << 
-							"(" << anAPAP.itsNrOnline     << ")" << endl;
-	os << "AckColl: " << anAPAP.itsAckList.fds_bits[0]    << 
-							"(" << anAPAP.itsNrAcksToRecv << ")" << endl;
+	os << "Reading: " << const_cast<FdSet*>
+						(&(anAPAP.itsReadMask))->getSet()->fds_bits[0]   << 
+						"(" << anAPAP.itsReadMask.count()   << ")" << endl;
+	os << "Writing: " << const_cast<FdSet*>
+						(&(anAPAP.itsOnlineMask))->getSet()->fds_bits[0] << 
+						"(" << anAPAP.itsOnlineMask.count() << ")" << endl;
+	os << "AckColl: " << const_cast<FdSet*>
+						(&(anAPAP.itsAckList))->getSet()->fds_bits[0]    << 
+						"(" << anAPAP.itsNrAcksToRecv << ")" << endl;
 	if (anAPAP.itsLastCmd != PCCmdNone) {
 		os << "Command: " << anAPAP.itsLastCmd << endl;
 	}

@@ -32,6 +32,7 @@
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 //# Includes
 #include <Common/lofar_vector.h>
+#include <Common/Net/FdSet.h>
 #include <ACC/APAdmin.h>
 
 namespace LOFAR {
@@ -167,12 +168,10 @@ private:
 	static		APAdminPool*		theirAPAdminPool;
 
 	APAList		itsAPAPool;			// vector of APAdmin objects
-	uint16		itsNrElements;		// nr elements in vector
-	fd_set		itsReadMask;		// selector mask
-	uint		itsNrOnline;		// Nr of processes online
-	fd_set		itsOnlineMask;		// Procs that are ready to receive commands
+	FdSet		itsReadMask;		// selector mask
+	FdSet		itsOnlineMask;		// Procs that are ready to receive commands
+	FdSet		itsAckList;			// Procs still to receive an Ack from
 	uint16		itsNrAcksToRecv;	// Nr of Acks still to receive.
-	fd_set		itsAckList;			// Procs still to receive an Ack from
 	PCCmd		itsLastCmd;			// Last/current outstanding AP command
 	uint16		itsCurElement;		// Last element we polled.
 };
@@ -183,7 +182,7 @@ private:
 //#
 inline void APAdminPool::setCurElement(uint16	aValue)
 {
-	if (aValue >= itsNrElements) {				// check upper boundary
+	if (aValue >= itsReadMask.count()) {		// check upper boundary
 		itsCurElement = 0;
 	}
 	else {
@@ -196,7 +195,7 @@ inline void APAdminPool::setCurElement(uint16	aValue)
 //#
 inline uint16 APAdminPool::processCount()
 {
-	return (itsNrElements);
+	return (itsReadMask.count());
 }
 
 //#
@@ -204,7 +203,7 @@ inline uint16 APAdminPool::processCount()
 //#
 inline uint16 APAdminPool::onlineCount()
 {
-	return (itsNrOnline);
+	return (itsOnlineMask.count());
 }
 
 //#
@@ -212,8 +211,7 @@ inline uint16 APAdminPool::onlineCount()
 //#
 inline void APAdminPool::markAsOnline(APAdmin*		anAPAdmin)
 {
-	FD_SET(anAPAdmin->getSocketID(), &itsOnlineMask);		// schedule for writes
-	++itsNrOnline;
+	itsOnlineMask.add(anAPAdmin->getSocketID());		// schedule for writes
 }
 	
 //#
@@ -221,10 +219,7 @@ inline void APAdminPool::markAsOnline(APAdmin*		anAPAdmin)
 //#
 inline void APAdminPool::markAsOffline(APAdmin*		anAPAdmin)
 {
-	if (FD_ISSET(anAPAdmin->getSocketID(), &itsOnlineMask)) {
-		FD_CLR(anAPAdmin->getSocketID(), &itsOnlineMask);
-		--itsNrOnline;
-	}
+	itsOnlineMask.remove(anAPAdmin->getSocketID());
 }
 	
 //#
@@ -233,7 +228,7 @@ inline void APAdminPool::markAsOffline(APAdmin*		anAPAdmin)
 inline void APAdminPool::startAckCollection(PCCmd  aCommand) 
 {
 	itsAckList      = itsOnlineMask;
-	itsNrAcksToRecv = itsNrOnline;
+	itsNrAcksToRecv = itsOnlineMask.count();
 	itsLastCmd      = aCommand;
 }
 
@@ -250,8 +245,8 @@ inline void APAdminPool::registerAck(PCCmd			aCommand,
 		return;
 	}
 
-	if (FD_ISSET(anAPAdmin->getSocketID(), &itsAckList)) {
-		FD_CLR(anAPAdmin->getSocketID(), &itsAckList);
+	if (itsAckList.isSet(anAPAdmin->getSocketID())) {
+		itsAckList.remove(anAPAdmin->getSocketID());
 		--itsNrAcksToRecv;
 	}
 }
@@ -261,7 +256,7 @@ inline void APAdminPool::registerAck(PCCmd			aCommand,
 //#
 inline void APAdminPool::stopAckCollection()
 {
-	FD_ZERO(&itsAckList);
+	itsAckList.clear();
 	itsNrAcksToRecv = 0;
 	itsLastCmd      = PCCmdNone;
 }

@@ -32,6 +32,7 @@
 //# Includes
 #include <Common/Exception.h>
 #include <Common/Net/Socket.h>
+#include <Common/Net/FdSet.h>
 #include <ACC/ParameterSet.h>
 #include <ACC/ACRequestPool.h>
 
@@ -84,6 +85,9 @@ private:
 
 	// The list with current active Application Controllers
 	ACRequestPool*	itsACPool;
+
+	// File descriptor set of connected sockets
+	FdSet			itsConnSet;
 
 };
 
