@@ -27,7 +27,7 @@
 #include <Common/Exception.h>
 #include <Common/StringUtil.h>
 #include <ACC/CmdStack.h>
-
+#include <Common/hexdump.h>		// @@
 namespace LOFAR {
   namespace ACC {
 
@@ -40,24 +40,36 @@ CmdStack::~CmdStack()
 	itsStack.clear();		// in case the destructor does not do this
 }
 
-void CmdStack::add(time_t			scheduleTime,
-				   ACCommand*		aCmd) 
+void CmdStack::add(time_t				scheduleTime,
+				   DH_ApplControl*		aDHAC) 
 {
-	pair < iterator, bool>	result;
+	LOG_TRACE_RTTI_STR("CmdStack::add: " << timeString(scheduleTime) <<
+					   ", " << aDHAC);
 
-	result = itsStack.insert(std::make_pair(scheduleTime, *aCmd));
+	pair < iterator, bool>	result;
+	DH_ApplControl*			newDHAC = aDHAC->makeDataCopy();
+	LOG_TRACE_RTTI_STR("newDHAC=" << newDHAC);
+
+	cout << "\naDHAC contents\n";
+	hexdump (aDHAC, sizeof(DH_ApplControl));
+	cout << "\nnewaDHAC contents\n";
+	hexdump (newDHAC, sizeof(DH_ApplControl));
+
+	result = itsStack.insert(std::make_pair(scheduleTime, newDHAC));
 	if (!result.second) {
 		THROW (Exception, "insert in CmdStack failed");
 	}
 
-	LOG_DEBUG_STR("CmdStack:Cmd added with timestamp = " << timeString(scheduleTime));
+	LOG_DEBUG_STR("CmdStack:Cmd added with timestamp = " << 
+													timeString(scheduleTime));
 }
  
-ACCommand	CmdStack::pop()
+DH_ApplControl*	CmdStack::pop()
 {
 	ASSERTSTR(!itsStack.empty(), "Cmdstack is empty");
 
-	ACCommand		theCmd = itsStack.begin()->second;
+//	DH_ApplControl*		theCmd = itsStack.begin()->second;
+	DH_ApplControl*		theCmd = (itsStack.begin()->second)->makeDataCopy();
 	itsStack.erase(itsStack.begin());
 
 	LOG_DEBUG("CmdStack: pop()");

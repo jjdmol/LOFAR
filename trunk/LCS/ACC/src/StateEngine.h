@@ -34,7 +34,7 @@ namespace LOFAR {
   namespace ACC {
 
 // define application controller states.
-enum ACState {  StateNone = 0, 
+enum ACState {  StateNone = 0, StateInitController,
 		StatePowerUpNodes, StatePowerDownNodes, StateCreatePSubset,
 	    StateStartupAppl,  StateDefineCmd,      StateInitCmd,
 	    StateRunCmd,       StatePauseCmd,       StateRecoverCmd, 
@@ -47,8 +47,11 @@ enum ACState {  StateNone = 0,
 class StateEngine
 {
 public:
-	StateEngine(const ParameterSet*	aPS);
+	StateEngine();
 	~StateEngine();
+
+	// Initialize the Engine with timer values.
+	void init(const ParameterSet* aPS);
 	
 	// Reset to original state.
 	void reset();
@@ -74,9 +77,10 @@ public:
 	void resetStateExpireTime();
 	bool IsStateExpired      ();
 
-private:
-	StateEngine();
+	// return name of state
+	string stateStr(uint16	stateNr) const;
 
+private:
 	uint16		itsSequence;
 	uint16		itsStepNr;
 	bool		itsWantNewState;
@@ -114,7 +118,6 @@ inline bool StateEngine::isNextStateWaiting()
 
 inline void StateEngine::setStateLifeTime(time_t		anInterval)
 {
-	LOG_DEBUG_STR("State lifetime = " << anInterval);
 	itsStateExpireTime = time(0) + anInterval;
 }
 

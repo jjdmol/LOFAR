@@ -82,23 +82,12 @@ bool	ApplControlServer::pollForMessage() const
 
 bool ApplControlServer::handleMessage(DH_ApplControl*	theMsg) 
 {
-	ACCommand	ACCmd(static_cast<int16>(theMsg->getCommand()),
-					  theMsg->getScheduleTime(),
-					  theMsg->getWaitTime(),
-					  theMsg->getOptions(),
-					  theMsg->getProcList(),
-					  theMsg->getNodeList());
-	return (handleMessage(&ACCmd));
-}
-
-bool ApplControlServer::handleMessage(ACCommand*	theMsg) 
-{
-	int16	cmdType 	 = theMsg->itsCommand;
-	time_t	scheduleTime = theMsg->itsScheduleTime;
-	time_t	waitTime     = theMsg->itsWaitTime;
-	string	options		 = theMsg->itsOptions;
-	string	procList	 = theMsg->itsProcList;
-	string	nodeList	 = theMsg->itsNodeList;
+	int16	cmdType 	 = theMsg->getCommand();
+	time_t	scheduleTime = theMsg->getScheduleTime();
+	time_t	waitTime     = theMsg->getWaitTime();
+	string	options		 = theMsg->getOptions();
+	string	procList	 = theMsg->getProcList();
+	string	nodeList	 = theMsg->getNodeList();
 	LOG_DEBUG_STR("cmd=" << cmdType << ", time=" << timeString(scheduleTime) 
 						 << ", waittime=" << waitTime 
 				  		 << ", options=[" << options << "]"

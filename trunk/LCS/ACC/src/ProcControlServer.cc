@@ -83,28 +83,13 @@ bool	ProcControlServer::pollForMessage() const
 
 bool ProcControlServer::handleMessage(DH_ProcControl*	theMsg) 
 {
-	ACCommand	PCCmd(static_cast<int16>(theMsg->getCommand()),
-					  0,
-					  theMsg->getWaitTime(),
-					  theMsg->getOptions(),
-					  "",
-					  "");
-	return (handleMessage(&PCCmd));
-}
-
-bool ProcControlServer::handleMessage(ACCommand*	theMsg) 
-{
-	int16	cmdType 	 = theMsg->itsCommand;
-	time_t	scheduleTime = theMsg->itsScheduleTime;
-	time_t	waitTime     = theMsg->itsWaitTime;
-	string	options		 = theMsg->itsOptions;
-	string	procList	 = theMsg->itsProcList;
-	string	nodeList	 = theMsg->itsNodeList;
-	LOG_DEBUG_STR("cmd=" << cmdType << ", time=" << timeString(scheduleTime) 
-						 << ", waittime=" << waitTime 
-				  		 << ", options=[" << options << "]"
-				  		 << ", options=[" << procList << "]"
-				  		 << ", options=[" << nodeList << "]" << endl);
+	int16	cmdType 	 = theMsg->getCommand();
+	time_t	waitTime     = theMsg->getWaitTime();
+	string	options		 = theMsg->getOptions();
+	time_t	scheduleTime = 0;	// TODO: do we need a schedule time????
+	LOG_DEBUG_STR("cmd=" << cmdType <<
+				  ", waittime=" << waitTime <<
+				  ", options=[" << options << "]" << endl);
 
 	bool	sendAnswer = true;
 	bool	result 	   = false;

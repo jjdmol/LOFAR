@@ -66,17 +66,17 @@ DH_ApplControl*		DH_ApplControl::clone() const
 	return new DH_ApplControl(*this);
 }
 
-DH_ApplControl*		DH_ApplControl::makeDataCopy(DH_ApplControl& that)
+DH_ApplControl*		DH_ApplControl::makeDataCopy() const
 {
 	DH_ApplControl*		newDHAC = new DH_ApplControl;
 	newDHAC->init();
-	newDHAC->setCommand     (that.getCommand());
-	newDHAC->setScheduleTime(that.getScheduleTime());
-	newDHAC->setWaitTime    (that.getWaitTime());
-	newDHAC->setOptions     (that.getOptions());
-	newDHAC->setProcList    (that.getProcList());
-	newDHAC->setNodeList    (that.getNodeList());
-	newDHAC->setResult      (that.getResult());
+	newDHAC->setCommand     (getCommand());
+	newDHAC->setScheduleTime(getScheduleTime());
+	newDHAC->setWaitTime    (getWaitTime());
+	newDHAC->setOptions     (getOptions());
+	newDHAC->setProcList    (getProcList());
+	newDHAC->setNodeList    (getNodeList());
+	newDHAC->setResult      (getResult());
 	newDHAC->pack();
 
 	return (newDHAC);

@@ -40,7 +40,6 @@ bin_PROGRAMS = ApplController
 
 ### ApplController ###
 ApplController_SOURCES      = ACCmdImpl.cc \
-							  ACCommand.cc \
 							  CmdStack.cc \
 							  StateEngine.cc \
 							  APAdmin.cc \

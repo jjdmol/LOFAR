@@ -51,38 +51,40 @@ public:
 	void doEventLoop();
 
 private:
-	void handleProcMessage(APAdmin*	anAP);
+	void handleProcMessage  (APAdmin*	        anAP);
 	void sendExecutionResult(uint16				result,
 							 const string&		comment);
-	void startCmdState(DH_ApplControl*	newMsg);
-	void createParSubsets();
+	void acceptOrRefuseACMsg(DH_ApplControl*	anACMsg);
+	void startCmdState      ();
+	void createParSubsets   ();
 
 	void checkForACCommands();
 	void checkForAPMessages();
 	void checkForConnectingAPs();
 	void checkForDisconnectingAPs();
 	void checkAckCompletion();
-	void checkCmdTimer();
+	void checkStateTimer();
 	void checkCmdStack();
 	void checkStateEngine();
 
 	// Datamembers
-	ParameterSet*		itsParamSet;
-	ItemList*			itsProcList;
-	ItemList*			itsNodeList;
+	ParameterSet*		itsParamSet;		// own PS, passed during birth
+	ParameterSet*		itsApplParamSet;	// PS of application, given by AM
+	ItemList*			itsProcList;		// All AP's according to ApplParSet
+	ItemList*			itsNodeList;		// All Nodes acc. to ApplParSet
 	ACCmdImpl*			itsACCmdImpl;		// The command implementation
 	CmdStack*			itsCmdStack;		// future commands
-	APAdminPool*		itsAPAPool;
-	ApplControlServer*	itsServerStub;
-	Socket*				itsProcListener;
+	APAdminPool*		itsAPAPool;			// communication with all AP's
+	ApplControlServer*	itsServerStub;		// communication with AM
+	Socket*				itsProcListener;	// for AP's to connect to
 	time_t				itsCurTime;			// Current timestamp
-	bool				itsIsRunning;
+	bool				itsIsRunning;		// alive or not
 
 	StateEngine*		itsStateEngine;		// State machine of the controller
 	ACState				itsCurState;		// State currently executing
 	DH_ApplControl*		itsCurACMsg;		// Command under handling
 
-	ProcRuler			itsProcRuler;
+	ProcRuler			itsProcRuler;		// Starts/stops all AP's
 };
 
   } // namespace ACC
