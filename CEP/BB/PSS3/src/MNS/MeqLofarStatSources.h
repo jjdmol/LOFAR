@@ -28,6 +28,7 @@
 #include <PSS3/MNS/MeqStatSources.h>
 #include <Common/lofar_vector.h>
 
+namespace LOFAR {
 
 // This class represents the Jones matrix for all sources for a station.
 
@@ -82,5 +83,6 @@ private:
   MeqRequestId          itsLastReqId;
 };
 
+}
 
 #endif

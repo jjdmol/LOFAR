@@ -24,6 +24,8 @@
 #include <Common/Debug.h>
 
 
+namespace LOFAR {
+
 void MeqSourceList::add (const MeqPointSource& source)
 {
   itsSelected.push_back (itsSources.size());
@@ -43,4 +45,6 @@ void MeqSourceList::setSelected (const vector<int>& sel)
     }
     itsSelected = sel;
   }
+}
+
 }

@@ -32,6 +32,7 @@
 #include <Common/Debug.h>
 #include <casa/Arrays/Matrix.h>
 
+namespace LOFAR {
 
 MeqLofarPoint::MeqLofarPoint (MeqSourceList* sources,
 			      MeqLofarStatSources* left,
@@ -388,5 +389,7 @@ void MeqLofarPoint::calcResult (const MeqRequest& request)
 //  	 << ' ' << resYY.getPerturbedValue(spinx)
 //  	 << endl;
    }
+
+}
 
 }

@@ -28,6 +28,8 @@
 #include <PSS3/MNS/MeqPolc.h>
 
 
+namespace LOFAR {
+
 class MeqParmDefHolder
 {
 public:
@@ -87,5 +89,6 @@ public:
     {}
 };
 
+}
 
 #endif

@@ -26,14 +26,16 @@
 
 //# Includes
 #include <Common/lofar_complex.h>
+#include <Common/lofar_iostream.h>
+#include <casa/iosfwd.h>
+
+namespace LOFAR {
 
 //# Forward Declarations
 class MeqMatrixRealSca;
 class MeqMatrixComplexSca;
 class MeqMatrixRealArr;
 class MeqMatrixComplexArr;
-#include <Common/lofar_iostream.h>
-#include <casa/iosfwd.h>
 
 
 class MeqMatrixRep
@@ -165,5 +167,6 @@ private:
   bool itsIsMalloced;
 };
 
+}
 
 #endif

@@ -34,6 +34,8 @@
 #include <casa/Arrays/Matrix.h>
 
 
+namespace LOFAR {
+
 MeqMatrix::MeqMatrix (double value)
 {
     MeqMatrixRealSca* v = new MeqMatrixRealSca (value);
@@ -360,4 +362,6 @@ LOFAR::BlobIStream& operator>> (LOFAR::BlobIStream& bs, MeqMatrix& vec)
   }
   bs.getEnd();
   return bs;
+}
+
 }

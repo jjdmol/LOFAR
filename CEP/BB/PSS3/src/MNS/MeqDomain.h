@@ -33,6 +33,8 @@
 //    scaledvalue = (realvalue - offset) / scale
 
 
+namespace LOFAR {
+
 class MeqDomain
 {
 public:
@@ -79,5 +81,6 @@ private:
   double itsScaleY;
 };
 
+}
 
 #endif

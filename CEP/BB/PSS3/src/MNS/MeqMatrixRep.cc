@@ -24,6 +24,8 @@
 #include <casa/Exceptions/Error.h>
 
 
+namespace LOFAR {
+
 int MeqMatrixRep::nctor = 0;
 int MeqMatrixRep::ndtor = 0;
 
@@ -76,4 +78,6 @@ MeqMatrixRep* MeqMatrixRep::tocomplexRep (MeqMatrixRealSca&)
 MeqMatrixRep* MeqMatrixRep::tocomplexRep (MeqMatrixRealArr&)
 {
   throw (AipsError ("MeqMatrixRep::tocomplex requires real arguments"));
+}
+
 }

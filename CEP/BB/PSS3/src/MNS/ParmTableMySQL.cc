@@ -28,7 +28,7 @@
 #include <stdlib.h>
 #include <sstream>
 
-using namespace LOFAR;
+namespace LOFAR {
 
 
 ParmTableMySQL::ParmTableMySQL (const string& hostName, const string& userName, const string& tableName) : itsTableName (tableName)
@@ -238,3 +238,4 @@ vector<string> ParmTableMySQL::getSources()
 void ParmTableMySQL::unlock()
   {};
 
+}

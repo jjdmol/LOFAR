@@ -30,6 +30,8 @@
 #include <Common/lofar_vector.h>
 
 
+namespace LOFAR {
+
 // This class represents a request for which an expression has to be
 // evaluated. It contains the domain and the spids for which the
 // derivative has to calculated.
@@ -93,6 +95,6 @@ private:
   static MeqRequestId theirRequestId;
 };
 
-
+}
 
 #endif

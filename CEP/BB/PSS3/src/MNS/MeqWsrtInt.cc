@@ -34,6 +34,8 @@
 #include <PSS3/MNS/MeqPointDFT.h>
 
 
+namespace LOFAR {
+
 MeqWsrtInt::MeqWsrtInt (MeqJonesExpr* vis, MeqJonesExpr* station1,
 			MeqJonesExpr* station2)
 : itsExpr  (vis),
@@ -451,4 +453,6 @@ void MeqWsrtInt::calcResult (const MeqRequest& request)
 // 	 << result22().getPerturbedValue(spinx)
 // 	 << endl;
   }
+}
+
 }

@@ -23,6 +23,8 @@
 #include <PSS3/MNS/MeqRequest.h>
 
 
+namespace LOFAR {
+
 MeqRequestId MeqRequest::theirRequestId = 0;
 
 
@@ -41,4 +43,6 @@ void MeqRequest::setDomain (const MeqDomain& domain, int nx, int ny)
   itsNy     = ny;
   itsStepX = (domain.endX() - domain.startX()) / nx;
   itsStepY = (domain.endY() - domain.startY()) / ny;
+}
+
 }

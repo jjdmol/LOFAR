@@ -28,6 +28,8 @@
 #include <PSS3/MNS/MeqMatrixRep.h>
 
 
+namespace LOFAR {
+
 class MeqMatrixRealArr : public MeqMatrixRep
 {
 friend class MeqMatrixRealSca;
@@ -108,6 +110,6 @@ private:
   double* itsValue;
 };
 
-
+}
 
 #endif

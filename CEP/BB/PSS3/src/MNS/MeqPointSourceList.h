@@ -27,6 +27,8 @@
 #include <Mns/MeqSourceList.h>
 
 
+namespace LOFAR {
+
 class MeqPointSourceList: public MeqSourceList
 {
 public:
@@ -50,5 +52,6 @@ private:
   vector<MeqPointSource>  itsSources;
 };
 
+}
 
 #endif

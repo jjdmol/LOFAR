@@ -23,6 +23,8 @@
 #include <PSS3/MNS/MeqDomain.h>
 #include <Common/Debug.h>
 
+namespace LOFAR {
+
 MeqDomain::MeqDomain()
 : itsOffsetX (0),
   itsScaleX  (1),
@@ -41,4 +43,6 @@ MeqDomain::MeqDomain (double startX, double endX,
   itsScaleX  = (endX - startX) * .5;
   itsOffsetY = (endY + startY) * .5;
   itsScaleY  = (endY - startY) * .5;
+}
+
 }

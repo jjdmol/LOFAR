@@ -25,6 +25,8 @@
 #include <PSS3/MNS/MeqJonesNode.h>
 #include <PSS3/MNS/MeqExpr.h>
 
+namespace LOFAR {
+
 MeqJonesNode::MeqJonesNode (MeqExpr* elem11, MeqExpr* elem12,
 			    MeqExpr* elem21, MeqExpr* elem22)
 : itsExpr11 (elem11),
@@ -44,4 +46,6 @@ void MeqJonesNode::calcResult (const MeqRequest& request)
   setResult12 (itsExpr12->getResult (request));
   setResult21 (itsExpr21->getResult (request));
   setResult22 (itsExpr22->getResult (request));
+}
+
 }

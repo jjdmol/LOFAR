@@ -29,6 +29,8 @@
 #include <PSS3/MNS/MeqRequest.h>
 #include <Common/lofar_string.h>
 
+namespace LOFAR {
+
 //# Forward Declarations
 class MeqPhaseRef;
 
@@ -90,5 +92,6 @@ private:
   MeqRequestId itsLastReqId;
 };
 
+}
 
 #endif

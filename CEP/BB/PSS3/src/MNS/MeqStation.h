@@ -27,6 +27,8 @@
 #include <PSS3/MNS/MeqExpr.h>
 #include <Common/lofar_string.h>
 
+namespace LOFAR {
+
 // Class holding the ITRF position expressions of a station.
 
 class MeqStation
@@ -55,5 +57,6 @@ private:
   string   itsName;
 };
 
+}
 
 #endif

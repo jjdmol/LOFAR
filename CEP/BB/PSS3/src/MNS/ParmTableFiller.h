@@ -23,6 +23,10 @@
 #ifndef PARMTABLEFILLER_H
 #define PARMTABLEFILLER_H
 
+#include <Common/lofar_string.h>
+
+namespace LOFAR {
+
 class ParmTableFiller
 {
 public:
@@ -32,5 +36,7 @@ public:
 			    int srcnr, int statnr,
 			    const MeqPolc& polc) = 0;
 };
+
+}
 
 #endif

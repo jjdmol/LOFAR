@@ -26,6 +26,8 @@
 //# Includes
 #include <PSS3/MNS/MeqJonesExpr.h>
 
+namespace LOFAR {
+
 //# Forward Declarations
 class MeqExpr;
 
@@ -55,5 +57,6 @@ private:
   MeqExpr* itsGain2;
 };
 
+}
 
 #endif

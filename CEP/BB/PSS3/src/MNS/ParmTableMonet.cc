@@ -28,7 +28,7 @@
 #include <stdlib.h>
 #include <sstream>
 
-using namespace LOFAR;
+namespace LOFAR {
 
 ParmTableMonet::ParmTableMonet (const string& hostName, const string& userName, const string& tableName, bool autocommit) : itsTableName (tableName)
 {
@@ -260,3 +260,5 @@ vector<string> ParmTableMonet::getSources()
 
 void ParmTableMonet::unlock()
   {};
+
+}

@@ -29,6 +29,8 @@
 #include <Common/lofar_complex.h>
 #include <Common/lofar_stack.h>
 
+namespace LOFAR {
+
 class MeqMatrixComplexArr : public MeqMatrixRep
 {
 friend class MeqMatrixRealSca;
@@ -109,5 +111,6 @@ private:
   static size_t theirHeaderSize;
 };
 
+}
 
 #endif

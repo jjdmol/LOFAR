@@ -27,6 +27,8 @@
 #include <PSS3/MNS/MeqExpr.h>
 #include <Common/lofar_vector.h>
 
+namespace LOFAR {
+
 //# Forward declarations
 class MeqStatSources;
 
@@ -53,5 +55,6 @@ private:
   MeqStatSources* itsRight;
 };
 
+}
 
 #endif

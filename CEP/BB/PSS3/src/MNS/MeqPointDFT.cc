@@ -30,6 +30,8 @@
 #include <casa/BasicSL/Constants.h>
 
 
+namespace LOFAR {
+
 bool MeqPointDFT::doshow = false;
 
 
@@ -211,4 +213,6 @@ MeqResult MeqPointDFT::getResult (const MeqRequest& request)
     }
   }
   return result;
+}
+
 }

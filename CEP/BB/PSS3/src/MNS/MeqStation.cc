@@ -22,6 +22,8 @@
 
 #include <PSS3/MNS/MeqStation.h>
 
+namespace LOFAR {
+
 MeqStation::MeqStation()
 : itsX (0),
   itsY (0),
@@ -35,3 +37,5 @@ MeqStation::MeqStation (MeqExpr* posX, MeqExpr* posY, MeqExpr* posZ,
   itsZ    (posZ),
   itsName (name)
 {}
+
+}

@@ -32,6 +32,8 @@
 #include <scimath/Fitting/LinearFit.h>
 #include <Common/lofar_string.h>
 
+namespace LOFAR {
+
 //# Forward Declarations
 class MeqRequest;
 
@@ -79,5 +81,6 @@ private:
   MeqResult itsW;
 };
 
+}
 
 #endif

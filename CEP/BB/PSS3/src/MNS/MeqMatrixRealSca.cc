@@ -30,6 +30,8 @@
 #include <Common/lofar_iostream.h>
 
 
+namespace LOFAR {
+
 MeqMatrixRealSca::~MeqMatrixRealSca()
 {}
 
@@ -183,19 +185,19 @@ MeqMatrixRep* MeqMatrixRealSca::negate()
 
 MeqMatrixRep* MeqMatrixRealSca::sin()
 {
-  itsValue = ::sin(itsValue);
+  itsValue = std::sin(itsValue);
   return this;
 }
 
 MeqMatrixRep* MeqMatrixRealSca::cos()
 {
-  itsValue = ::cos(itsValue);
+  itsValue = std::cos(itsValue);
   return this;
 }
 
 MeqMatrixRep* MeqMatrixRealSca::exp()
 {
-  itsValue = ::exp(itsValue);
+  itsValue = std::exp(itsValue);
   return this;
 }
 
@@ -207,7 +209,7 @@ MeqMatrixRep* MeqMatrixRealSca::sqr()
 
 MeqMatrixRep* MeqMatrixRealSca::sqrt()
 {
-  itsValue = ::sqrt(itsValue);
+  itsValue = std::sqrt(itsValue);
   return this;
 }
 
@@ -231,4 +233,6 @@ MeqMatrixRep* MeqMatrixRealSca::mean()
 MeqMatrixRep* MeqMatrixRealSca::sum()
 {
   return this;
+}
+
 }

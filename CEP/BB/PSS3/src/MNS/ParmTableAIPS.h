@@ -31,6 +31,8 @@
 #include <casa/Containers/RecordField.h>
 
 
+namespace LOFAR {
+
 class ParmTableAIPS : public ParmTableRep
 {
 public:
@@ -82,5 +84,6 @@ private:
   RecordFieldPtr<String> itsInitIndexName;
 };
 
+}
 
 #endif

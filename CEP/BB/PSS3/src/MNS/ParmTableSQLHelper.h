@@ -1,13 +1,12 @@
 #ifndef PARMTABLESQLHELPER_H
 #define PARMTABLESQLHELPER_H
 
-#include <string>
+#include <Common/lofar_string.h>
 #include <MNS/MeqDomain.h>
 #include <MNS/MeqParmHolder.h>
 #include <MNS/MeqPolc.h>
 
-using namespace std;
-using namespace LOFAR;
+namespace LOFAR {
 
 class ParmTableSQLHelper
 {
@@ -44,5 +43,6 @@ private:
   static   string MeqMat2string(const MeqMatrix &MM);
 };
 
+}
 
 #endif

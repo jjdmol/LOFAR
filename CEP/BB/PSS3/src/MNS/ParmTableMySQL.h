@@ -24,23 +24,23 @@
 #define MNS_PARMTABLEMYSQL_H
 
 //# Includes
+#include <lofar_config.h>
 #include <MNS/ParmTable.h>
 #include <MNS/ParmTableFiller.h>
 #include <MNS/MeqParmHolder.h>
 #include <MNS/MeqPolc.h>
 #include <Common/lofar_vector.h>
-
-#include <lofar_config.h>
-
+#include <Common/lofar_string.h>
 #include <mysql/mysql.h>
 
-typedef vector<MeqParmHolder> VMParm;
+template<class T> class Vector;
+
+namespace LOFAR {
 
 //# Forward Declarations
 class MeqDomain;
-template<class T> class Vector;
 
-using namespace std;
+typedef vector<MeqParmHolder> VMParm;
 
 class ParmTableMySQL : public ParmTableRep, public ParmTableFiller
 {
@@ -48,7 +48,8 @@ public:
   // Create the ParmTable object.
   // The dbType argument gives the database type.
   // It can be postgres.
-  ParmTableMySQL (const string& hostName, const string& userName, const string& tableName);
+  ParmTableMySQL (const string& hostName, const string& userName,
+		  const string& tableName);
 
   virtual ~ParmTableMySQL();
 
@@ -91,5 +92,7 @@ private:
 
   string itsTableName;
 };
+
+}
 
 #endif

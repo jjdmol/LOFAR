@@ -28,6 +28,8 @@
 #include <PSS3/MNS/ParmTable.h>
 
 
+namespace LOFAR {
+
 // This class contains the coefficients of a 2-dim polynomial.
 // The order in time and frequency must be given.
 // The nr of coefficients is (1+order(time)) * (1+order(freq)).
@@ -66,5 +68,6 @@ private:
   MeqDomain  itsDomain;
 };
 
+}
 
 #endif

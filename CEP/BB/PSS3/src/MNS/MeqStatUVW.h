@@ -29,6 +29,8 @@
 #include <Common/lofar_map.h>
 #include <measures/Measures/MeasFrame.h>
 
+namespace LOFAR {
+
 //# Forward declarations
 class MeqStation;
 class MeqPhaseRef;
@@ -88,5 +90,6 @@ private:
   map<MeqTime,MeqUVW> itsUVW;    // association of time and UVW coordinates
 };
 
+}
 
 #endif

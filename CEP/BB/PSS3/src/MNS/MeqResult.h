@@ -31,6 +31,8 @@
 // This class represents a result of a domain for which an expression
 // has been evaluated.
 
+namespace LOFAR {
+
 class MeqResultRep
 {
 public:
@@ -207,5 +209,6 @@ private:
   MeqResultRep* itsRep;
 };
 
+}
 
 #endif
