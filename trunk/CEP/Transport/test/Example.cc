@@ -23,9 +23,12 @@ int main()
   TR1.setItsID(1);
   TR2.setItsID(2);
 
+  TR1.setSourceAddr(TR1.getBaseDataHolder());
+  TR2.setSourceAddr(TR2.getBaseDataHolder());
+  //  TR2.setSourceAddr(15);
+  
   // connect DH1 to DH2
-  TH_Mem proto;
-  TR2.connectTo(&TR1, proto);
+  TR2.connectTo(&TR1, TH_Mem::proto);
     
   //initiate the DataHolders
   DH1.preprocess();
