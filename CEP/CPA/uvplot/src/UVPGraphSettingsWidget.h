@@ -45,7 +45,7 @@ public:
   ~UVPGraphSettingsWidget();
   
 
-  void setNumberOfBaselines(unsigned int numberOfBaselines);
+  void setNumberOfAntennae(unsigned int numberOfAntennae);
 
   const UVPGraphSettings &getSettings() const;
 
@@ -56,6 +56,7 @@ public slots:
   void slot_antenna1Changed(int antenna1);
   void slot_antenna2Changed(int antenna2);
   void slot_correlationChanged(int corr);
+  void slot_columnChanged     (int column);
 
 
 signals:
@@ -68,22 +69,29 @@ signals:
 
   void signalCorrelationChanged(UVPDataAtomHeader::Correlation corr);
   
-  void signalStartButtonClicked();
+  //! MS column changed
+  void signalColumnChanged(const std::string& columnName);
+  
+  void signalLoadButtonClicked();
   
 protected:
 private:
-  unsigned int     itsNumberOfBaselines;
+  unsigned int     itsNumberOfAntennae;
 
   QSlider*         itsAntenna1Slider;
   QLabel*          itsAntenna1Label;
 
+  QPushButton*     itsLoadButton;
+
+
   QSlider*         itsAntenna2Slider;
   QLabel*          itsAntenna2Label;
 
+  QLabel*          itsColumnLabel;
+  QComboBox*       itsColumnCombo;
+
   QComboBox*       itsCorrelationCombo;
   QLabel*          itsCorrelationLabel;
-
-  QPushButton*     itsStartButton;
 
   UVPGraphSettings itsSettings;
 };

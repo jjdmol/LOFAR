@@ -44,7 +44,8 @@ UVPMainWindow::UVPMainWindow()
 
   itsInputType     = NoInput;
   itsInputFilename = "";
-  
+  itsMSColumnName  = "DATA";
+
   itsBusyPlotting = false;
 
   itsNumberOfChannels  = 0;
@@ -506,10 +507,12 @@ void UVPMainWindow::slot_readMeasurementSet(const std::string& msName)
   MSAntenna      AntennaTable(ms.antenna());
   MSField        FieldTable(ms.field());
 
-  
+  itsGraphSettingsWidget->setNumberOfAntennae(AntennaTable.nrow());
+
   std::cout << "=========>>> Table thing  <<<=========" << std::endl;
   Int ant1 = Int(itsGraphSettingsWidget->getSettings().getAntenna1());
   Int ant2 = Int(itsGraphSettingsWidget->getSettings().getAntenna2());
+  itsMSColumnName = itsGraphSettingsWidget->getSettings().getColumnName();
 
 #if(DEBUG_MODE)
   TRACER1("Ant1: " << ant1);
@@ -527,7 +530,7 @@ void UVPMainWindow::slot_readMeasurementSet(const std::string& msName)
     return;
   }
 
-  ROArrayColumn<Complex> DataColumn    (Selection, "DATA");
+  ROArrayColumn<Complex> DataColumn    (Selection, itsMSColumnName);
   ROScalarColumn<Double> TimeColumn    (Selection, "TIME");
   ROScalarColumn<Int>    Antenna1Column(Selection, "ANTENNA1");
   ROScalarColumn<Int>    Antenna2Column(Selection, "ANTENNA2");

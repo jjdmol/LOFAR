@@ -26,12 +26,14 @@
 UVPGraphSettings::UVPGraphSettings(unsigned int                   antenna1,
                                    unsigned int                   antenna2,
                                    UVPDataAtomHeader::Correlation corr,
+                                   const std::string&             columnName,
                                    ValueType                      valueType,
                                    PlotType                       plotType,
                                    const std::vector<bool>&       fieldsToPlot)
   : itsAntenna1(antenna1),
     itsAntenna2(antenna2),
     itsCorrelation(corr),
+    itsColumnName(columnName),
     itsValueType(valueType),
     itsPlotType(plotType),
     itsPlotFields(fieldsToPlot)
@@ -84,6 +86,16 @@ UVPGraphSettings::ValueType UVPGraphSettings::getValueType() const
 
 
 
+//====================>>>  UVPGraphSettings::getColumnName  <<<====================
+
+std::string UVPGraphSettings::getColumnName() const
+{
+  return itsColumnName;
+}
+
+
+
+
 //====================>>>  UVPGraphSettings::getPlotType  <<<====================
 
 UVPGraphSettings::PlotType UVPGraphSettings::getPlotType() const
@@ -129,6 +141,16 @@ void UVPGraphSettings::setAntenna2(unsigned int antenna2)
 void UVPGraphSettings::setCorrelation(UVPDataAtomHeader::Correlation corr)
 {
   itsCorrelation = corr;
+}
+
+
+
+
+//=================>>>  UVPGraphSettings::setColumnName  <<<=================
+
+void UVPGraphSettings::setColumnName(const std::string& columnName)
+{
+  itsColumnName = columnName;
 }
 
 

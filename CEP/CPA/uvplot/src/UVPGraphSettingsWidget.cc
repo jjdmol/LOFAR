@@ -34,32 +34,40 @@ UVPGraphSettingsWidget::UVPGraphSettingsWidget(unsigned int numOfAntennae,
                                                const char * name,
                                                WFlags       f)
   : QWidget(parent, name, f),
-    itsNumberOfBaselines(0)
+    itsNumberOfAntennae(0)
 {
+  itsAntenna1Label  = new QLabel("Antenna 1: ", this);
   itsAntenna1Slider = new QSlider(1, numOfAntennae, 1, 1,
                                   QSlider::Horizontal, this, "Antenna 1");
-  itsAntenna2Slider = new QSlider(1, numOfAntennae, 1, numOfAntennae,
-                                  QSlider::Horizontal, this, "Antenna 2");
-  itsAntenna1Label  = new QLabel("Antenna 1: ", this);
-  itsAntenna2Label  = new QLabel("Antenna 2: ", this);
+
+  itsColumnLabel      = new QLabel("Load column:", this);
+  itsColumnCombo      = new QComboBox(true, this);
+
+  itsLoadButton    = new QPushButton("Load ant1/column", this);
 
 
   itsCorrelationCombo = new QComboBox(false, this);
   itsCorrelationLabel = new QLabel("Correlation:", this);
+  
+  itsAntenna2Label  = new QLabel("Antenna 2: ", this);
+  itsAntenna2Slider = new QSlider(1, numOfAntennae, 1, numOfAntennae,
+                                  QSlider::Horizontal, this, "Antenna 2");
+
+
 
   itsSettings.setAntenna1(itsAntenna1Slider->value()-1);
   itsSettings.setAntenna2(itsAntenna2Slider->value()-1);
   
-  itsStartButton    = new QPushButton("Update plot", this);
-
   QVBoxLayout *BaselineVLayout = new QVBoxLayout(this);
   BaselineVLayout->addWidget(itsAntenna1Label);
   BaselineVLayout->addWidget(itsAntenna1Slider);
+  BaselineVLayout->addWidget(itsColumnLabel);
+  BaselineVLayout->addWidget(itsColumnCombo);
+  BaselineVLayout->addWidget(itsLoadButton);
   BaselineVLayout->addWidget(itsAntenna2Label);
   BaselineVLayout->addWidget(itsAntenna2Slider);
   BaselineVLayout->addWidget(itsCorrelationLabel);
   BaselineVLayout->addWidget(itsCorrelationCombo);
-  BaselineVLayout->addWidget(itsStartButton);
   BaselineVLayout->addStretch();
   BaselineVLayout->activate();
 
@@ -73,17 +81,28 @@ UVPGraphSettingsWidget::UVPGraphSettingsWidget(unsigned int numOfAntennae,
   itsCorrelationCombo->insertItem("LR", 7);
   itsCorrelationCombo->insertItem("LL", 8);
 
+  itsColumnCombo->insertItem("", 0);
+  itsColumnCombo->insertItem("DATA", 1);
+  itsColumnCombo->insertItem("MODEL_DATA", 2);
+  itsColumnCombo->insertItem("CORRECTED_DATA", 3);
+  itsColumnCombo->insertItem("RESIDUAL_DATA", 4);
+  
+
   QObject::connect(itsAntenna1Slider, SIGNAL(valueChanged(int)),
                    this, SLOT(slot_antenna1Changed(int)) );
 
   QObject::connect(itsAntenna2Slider, SIGNAL(valueChanged(int)),
                    this, SLOT(slot_antenna2Changed(int)) );
 
-  QObject::connect(itsStartButton, SIGNAL(clicked()),
-                   this, SIGNAL(signalStartButtonClicked()));
+  QObject::connect(itsLoadButton, SIGNAL(clicked()),
+                   this, SIGNAL(signalLoadButtonClicked()));
+
+  QObject::connect(itsColumnCombo, SIGNAL(activated(int)),
+                   this, SLOT(slot_columnChanged(int)));
 
   QObject::connect(itsCorrelationCombo, SIGNAL(activated(int)),
                    this, SLOT(slot_correlationChanged(int)) );
+
 
   slot_antenna1Changed(itsAntenna1Slider->value());
   slot_antenna2Changed(itsAntenna2Slider->value());
@@ -105,11 +124,13 @@ UVPGraphSettingsWidget::~UVPGraphSettingsWidget()
 
 
 
-//=================>>>  UVPGraphSettingsWidget::setNumberOfBaselines  <<<=================
+//=================>>>  UVPGraphSettingsWidget::setNumberOfAntennae  <<<=================
 
-void UVPGraphSettingsWidget::setNumberOfBaselines(unsigned int numberOfBaselines)
+void UVPGraphSettingsWidget::setNumberOfAntennae(unsigned int numberOfAntennae)
 {
-  itsNumberOfBaselines = numberOfBaselines;
+  itsNumberOfAntennae = numberOfAntennae;
+  itsAntenna1Slider->setRange(1, numberOfAntennae);
+  itsAntenna2Slider->setRange(1, numberOfAntennae);
 }
 
 
@@ -158,6 +179,18 @@ void UVPGraphSettingsWidget::slot_correlationChanged(int corr)
 {
   itsSettings.setCorrelation(UVPDataAtomHeader::Correlation(corr));
   emit signalCorrelationChanged(UVPDataAtomHeader::Correlation(corr));
+}
+
+
+
+
+
+//============>>>  UVPGraphSettingsWidget::slot_columnChanged  <<<============
+
+void UVPGraphSettingsWidget::slot_columnChanged(int /*column*/)
+{
+  itsSettings.setColumnName(itsColumnCombo->currentText().latin1());
+  emit signalColumnChanged(itsColumnCombo->currentText().latin1());
 }
 
 
