@@ -21,6 +21,10 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.4  2002/06/10 09:12:46  schaaf
+//  %[BugId: 11]%
+//  Removed ^M characters
+//
 //  Revision 1.3  2002/05/15 07:23:27  schaaf
 //  Added profiler state
 //
@@ -89,7 +93,6 @@ private:
   /// Pointer to the array of output DataHolders.
   DH_2DMatrix** itsOutHolders;
 
-  int itsTime;
   int itsTimeDim;
   int itsFreqDim;
 
