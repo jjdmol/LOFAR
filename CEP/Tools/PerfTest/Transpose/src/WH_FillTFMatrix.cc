@@ -22,6 +22,11 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.9  2002/11/12 14:24:20  schaaf
+//
+//  %[BugId: 11]%
+//  ongoing development
+//
 //  Revision 1.8  2002/08/19 20:36:59  schaaf
 //  %[BugId: 11]%
 //  Layout
@@ -138,7 +143,7 @@ void WH_FillTFMatrix::process()
   Profiler::enterState (theirProcessProfilerState);
 
   ///////////////////////// START OF PREPROCESS BLOCK ////////////////
-//  int cnt=0;
+  int cnt=0;
   int *Rowstartptr;
   DH_2DMatrix *DHptr;
   int Xsize,Ysize; 
@@ -152,12 +157,12 @@ void WH_FillTFMatrix::process()
       for (int x=0; x < Xsize; x++) {
       Ysize = DHptr->getYSize();
       Rowstartptr = DHptr->getBuffer(x,0);
-//        for (int y=0; y < Ysize; y++) {
-//  	*(Rowstartptr+y) = 
-//      	  cnt++;
+        for (int y=0; y < Ysize; y++) {
+  	*(Rowstartptr+y) = 
+      	  cnt++;
 //    	// fill output buffer with random integer 0-99
 //  	//(int)(100.0*rand()/RAND_MAX+1.0);
-//        }
+        }
     }
   }
   ///////////////////////// END OF PREPROCESS BLOCK ////////////////
