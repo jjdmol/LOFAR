@@ -10,9 +10,9 @@ $Id$
 import pg;
 db = pg.DB(dbname="bb");
 
-import datetime;
+import util.pgdate;
 
-from BlackBoardController import BlackBoardController;
+import BlackBoardController;
 
 class BlackBoard:
   """something containing information about a problem to be solved."""
@@ -21,11 +21,14 @@ class BlackBoard:
     self.threads = {};
     self.workload = {};
     self.knowledgeSources = {};
-    self.controller = BlackBoardController(self);
+    self.controller =  BlackBoardController.BlackBoardController(self);
     if copy == None:
       self.id = db.query("INSERT INTO blackboards DEFAULT VALUES");
+##      print "self.id:= " + str(self.id);
     else:
-      self.id = db.insert("blackboards",copy.record);
+      rc = db.insert("blackboards",copy.record);
+      self.id = rc["oid_blackboards"];
+##      print "self.id:= " + str(self.id);
     self.refresh_data();
 
   def refresh_data(self):
@@ -34,17 +37,24 @@ class BlackBoard:
   def time(self, start, end):
     self.record["starttime"] = start;
     self.record["endtime"] = end;
-    data = db.query("UPDATE blackboards SET starttime = '"+ str(start) +"' , endtime = '" + str(end) + "' WHERE oid = " + str(self.id) );
-    print "time updated: " + str(data);
+##    print "self.record := " + str(self.record);
+##    print "self.id:= " + str(self.id);
+    qstr ="UPDATE blackboards SET starttime = '"+ str(start) +"' , endtime = '" + str(end) + "' WHERE oid = " + str(self.id)
+##    print qstr;
+    data = db.query(qstr);
+##    print "time updated: " + str(data);
 
   def split_over_time(self, early, late):
     early = BlackBoard(self);
     late = BlackBoard(self);
-    start = datetime.datetime.fromtimestamp(self.record["starttime"]);
-    end = datetime.datetime.fromtimestamp(self.record["endtime"]);
-    print self.record;
+##    nu = datetime.now()
+    start = util.pgdate.string2date(self.record["starttime"]);
+##    end = util.pgdate.pgDate();
+    end = util.pgdate.string2date(self.record["endtime"]);
+##    print str(start) + " ---- " + str(start + (end - start) /2);
     early.time(start, start + (end - start) /2);
     late.time(start + (end - start) /2, end);
+
 
   def parent(self, parent_id):
     db.query("UPDATE blackboards SET parent_id = " + str(parent_id) + " WHERE oid = " + str(self.id) );

@@ -10,7 +10,7 @@ $Id$
 import pg;
 db = pg.DB(dbname="bb");
 
-## from BlackBoard import BlackBoard;
+import BlackBoard;
 from Thread import Thread;
 
 class BlackBoardController:
@@ -22,6 +22,6 @@ class BlackBoardController:
   def spawn(self,newThread):
     newThread = Thread();
 
-##   def fork(self, newBB):
-##     newBB = BlackBoard(self.bb);
-##     newBB.parent(self.bb.id);
+  def fork(self, newBB):
+    newBB = BlackBoard.BlackBoard(self.bb);
+    newBB.parent(self.bb.id);
