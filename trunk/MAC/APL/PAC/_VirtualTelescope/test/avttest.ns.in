@@ -65,7 +65,7 @@ client.type=TCP   # SAP
 server.port=21040 # MSPP
 server.type=TCP
 
-[AVTTestSBF1_server]
+[AVTTestBF1_server]
 host=localhost
 client.type=TCP   # SAP
 server.port=21041 # MSPP

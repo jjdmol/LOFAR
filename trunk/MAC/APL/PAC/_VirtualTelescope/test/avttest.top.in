@@ -39,8 +39,8 @@ client=ST3:server
 client=AVTTestVT1:server
 
 [AVTTestVT1]
-client=AVTTestSBF1:server
+client=AVTTestBF1:server
 
-[AVTTestSBF1]
+[AVTTestBF1]
 client=BeamServer:server
 

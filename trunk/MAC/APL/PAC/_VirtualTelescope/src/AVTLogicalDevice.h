@@ -26,6 +26,7 @@
 //# Includes
 //# Common Includes
 #include <Common/lofar_string.h>
+#include <vector>
 
 //# GCF Includes
 #include <GCF/GCF_Port.h>
@@ -58,7 +59,7 @@ namespace AVT
       virtual ~AVTLogicalDevice();
 
       string& getServerPortName();
-      void setClientInterTaskPort(APLInterTaskPort* clientPort);
+      void addClientInterTaskPort(APLInterTaskPort* clientPort);
       virtual bool isPrepared(vector<string>& parameters);
 
       /**
@@ -168,17 +169,17 @@ namespace AVT
       virtual void concreteDisconnected(GCFPortInterface& port)=0;
 
     protected:    
-      AVTPropertySetAnswer  m_propertySetAnswer;
-      AVTAPCAnswer          m_APCAnswer;
-      GCFMyPropertySet      m_properties;
-      GCFApc                m_APC;
+      AVTPropertySetAnswer            m_propertySetAnswer;
+      AVTAPCAnswer                    m_APCAnswer;
+      GCFMyPropertySet                m_properties;
+      GCFApc                          m_APC;
 
     private:
-      string                m_serverPortName;
+      string                          m_serverPortName;
       // LogicalDevice SPP
-      GCFPort               m_logicalDeviceServerPort;
-      APLInterTaskPort*     m_clientInterTaskPort;
-      bool                  m_apcLoaded;
+      GCFPort                         m_logicalDeviceServerPort;
+      std::vector<APLInterTaskPort*>  m_clientInterTaskPorts;
+      bool                            m_apcLoaded;
   };
 };
 #endif

@@ -43,7 +43,7 @@ using namespace LOFAR;
 using namespace AVT;
 using namespace std;
 
-const string bsScope("BeamServer");
+const string bsScope("PAC_BeamServer");
 
 AVTStationBeamformer::AVTStationBeamformer(string& taskName, 
                                            const TPropertySet& primaryPropertySet,
@@ -461,6 +461,7 @@ void AVTStationBeamformer::handleAPCAnswer(GCFEvent& answer)
       m_numAPCsLoaded++;
       if(m_numAPCsLoaded==m_maxAPCs)
       {
+        LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTVirtualTelescope(%s)::apcLoaded",getName().c_str()));
         apcLoaded();
       }
       break;
@@ -481,8 +482,8 @@ void AVTStationBeamformer::concreteClaim(GCFPortInterface& port)
   // if claiming is an async process, then the end of the claiming state
   // is determined in the concrete_claiming_state() method
   // Otherwise, it is done here by calling dispatch
-  LOGICALDEVICEClaimEvent claimEvent;
-  dispatch(claimEvent,port);
+  LOGICALDEVICEClaimedEvent claimedEvent;
+  dispatch(claimedEvent,port);
 }
 
 void AVTStationBeamformer::concretePrepare(GCFPortInterface& /*port*/,string& parameters)

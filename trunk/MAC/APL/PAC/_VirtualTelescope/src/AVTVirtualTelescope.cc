@@ -52,15 +52,17 @@ AVTVirtualTelescope::AVTVirtualTelescope(string& taskName,
 // use process-internal-inter-task-port 
   m_beamFormerClient(sbf,*this, sbf.getServerPortName(), GCFPortInterface::SAP, LOGICALDEVICE_PROTOCOL),
   m_beamFormerConnected(false),
+  m_beamFormerState(LOGICALDEVICE_STATE_IDLE),
   m_stationReceptorGroupClient(srg,*this, srg.getServerPortName(), GCFPortInterface::SAP, LOGICALDEVICE_PROTOCOL),
   m_stationReceptorGroupConnected(false),
+  m_stationReceptorGroupState(LOGICALDEVICE_STATE_IDLE),
   m_startTime(0),
   m_stopTime(0),
   m_frequency(0.0)
 {
   LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTVirtualTelescope(%s)::AVTVirtualTelescope",getName().c_str()));
-  m_stationBeamformer.setClientInterTaskPort(&m_beamFormerClient);
-  m_stationReceptorGroup.setClientInterTaskPort(&m_stationReceptorGroupClient);
+  m_stationBeamformer.addClientInterTaskPort(&m_beamFormerClient);
+  m_stationReceptorGroup.addClientInterTaskPort(&m_stationReceptorGroupClient);
 }
 
 
@@ -96,10 +98,23 @@ bool AVTVirtualTelescope::_isStationReceptorGroupClient(GCFPortInterface& port)
   return (&port == &m_stationReceptorGroupClient); // comparing two pointers. yuck?
 }
 
-bool AVTVirtualTelescope::allInState(TLogicalDeviceState state)
+bool AVTVirtualTelescope::allInState(GCFPortInterface& port, TLogicalDeviceState state)
 {
-  return (state == m_beamFormerState && 
-          state == m_stationReceptorGroupState);
+  bool inState = false;
+  if(_isBeamFormerClient(port))
+  {
+    m_beamFormerState = state;
+  }
+  else if(_isStationReceptorGroupClient(port))
+  {
+    m_stationReceptorGroupState = state;
+  }
+  if(_isBeamFormerClient(port) || _isStationReceptorGroupClient(port))
+  {
+    inState = (state == m_beamFormerState && 
+               state == m_stationReceptorGroupState);
+  }
+  return inState;
 }
 
 void AVTVirtualTelescope::concreteDisconnected(GCFPortInterface& port)
@@ -208,12 +223,9 @@ GCFEvent::TResult AVTVirtualTelescope::concrete_claiming_state(GCFEvent& event, 
   {
     case LOGICALDEVICE_CLAIMED:
       // claimed event is received from the beam former or station receptor group
-      if(_isBeamFormerClient(port) || _isStationReceptorGroupClient(port))
+      if(allInState(port,LOGICALDEVICE_STATE_CLAIMED))
       {
-        if(allInState(LOGICALDEVICE_STATE_CLAIMED))
-        {
-          stateFinished=true;
-        }
+        stateFinished=true;
       }
       break;
     
@@ -237,12 +249,9 @@ GCFEvent::TResult AVTVirtualTelescope::concrete_preparing_state(GCFEvent& event,
   {
     case LOGICALDEVICE_PREPARED:
       // prepared event is received from the beam former or station receptor group
-      if(_isBeamFormerClient(port) || _isStationReceptorGroupClient(port))
+      if(allInState(port,LOGICALDEVICE_STATE_SUSPENDED))
       {
-        if(allInState(LOGICALDEVICE_STATE_SUSPENDED))
-        {
-          stateFinished=true;
-        }
+        stateFinished=true;
       }
       break;
     
@@ -264,12 +273,9 @@ GCFEvent::TResult AVTVirtualTelescope::concrete_releasing_state(GCFEvent& event,
   {
     case LOGICALDEVICE_RELEASED:
       // released event is received from the beam former
-      if(_isBeamFormerClient(port) || _isStationReceptorGroupClient(port))
+      if(allInState(port,LOGICALDEVICE_STATE_RELEASED))
       {
-        if(allInState(LOGICALDEVICE_STATE_RELEASED))
-        {
-          stateFinished=true;
-        }
+        stateFinished=true;
       }
       break;
     
@@ -354,6 +360,7 @@ void AVTVirtualTelescope::handleAPCAnswer(GCFEvent& answer)
   {
     case F_APCLOADED:
     {
+      LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTVirtualTelescope(%s)::apcLoaded",getName().c_str()));
       apcLoaded();
       break;
     }

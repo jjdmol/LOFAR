@@ -23,7 +23,7 @@
 #ifndef APLInterTaskPort_H
 #define APLInterTaskPort_H
 
-#include <boost/scoped_array.hpp>
+#include <set>
 #include <GCF/GCF_RawPort.h>
 
 // forward declaration
@@ -67,7 +67,7 @@ class APLInterTaskPort : public GCFRawPort
     virtual ssize_t recv (void* buf, 
                           size_t count);
                            
-    virtual ssize_t sendBack(const GCFEvent& e);
+    virtual ssize_t sendBack(GCFEvent& e);
 
   protected:
     virtual GCFEvent::TResult   dispatch (GCFEvent& event);
@@ -83,10 +83,8 @@ class APLInterTaskPort : public GCFRawPort
 
   private:
 
-    GCFTask&                            m_slaveTask;
-    boost::scoped_array<unsigned char>  m_toClientBuffer;
-    boost::scoped_array<unsigned char>  m_toServerBuffer;
-    long                                m_toClientTimerId;
-    long                                m_toServerTimerId;
+    GCFTask&       m_slaveTask;
+    std::set<long> m_toClientTimerId;
+    std::set<long> m_toServerTimerId;
 };
 #endif

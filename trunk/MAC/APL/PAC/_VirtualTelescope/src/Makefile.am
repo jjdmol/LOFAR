@@ -28,7 +28,9 @@ AVTLogicalDeviceServer_SOURCES 		= \
 	ABS_Protocol.cc
 	
 AVTLogicalDeviceServer_LDADD		= \
-	$(top_builddir)/APLCommon/src/libaplcommon.la
+	$(top_builddir)/APLCommon/src/libaplcommon.la \
+	-lboost_date_time-gcc-1_31
+	
 AVTLogicalDeviceServer_DEPENDENCIES	= \
 	$(top_builddir)/APLCommon/src/libaplcommon.la
 
@@ -46,7 +48,7 @@ EXTRA_DIST = \
 	avt.top \
 	log4cplus.properties
 	
-%.properties: $(MAC_CONFIG)/%.properties
+%.properties: %.properties.in
 	cp $< $@
 	
 %.ns: %.ns.in

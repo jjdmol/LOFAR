@@ -45,6 +45,7 @@
 #include <GCF/GCF_PVBool.h>
 #include <GCF/GCF_PVDouble.h>
 #include "ARAPropertyDefines.h"
+#include "ARAPhysicalModel.h"
 
 using namespace LOFAR;
 using namespace ARA;
@@ -63,11 +64,12 @@ RegisterAccessTask::RegisterAccessTask(string name)
       m_myPropsLoadCounter(0),
       m_APCsLoaded(false),
       m_APCsLoadCounter(0),
-      m_RSPclient(*this, m_RSPserverName, GCFPortInterface::SAP, RSP_PROTOCOL)
+      m_RSPclient(*this, m_RSPserverName, GCFPortInterface::SAP, RSP_PROTOCOL),
+      m_physicalModel()
 {
   registerProtocol(RSP_PROTOCOL, RSP_PROTOCOL_signalnames);
   m_answer.setTask(this);
-
+  
   char scopeString[300];
   int rack;
   int subrack;
@@ -177,6 +179,9 @@ RegisterAccessTask::RegisterAccessTask(string name)
       }
     }
   }
+  
+  // subscribe to maintenanace properties
+  
 }
 
 RegisterAccessTask::~RegisterAccessTask()
@@ -349,6 +354,11 @@ GCFEvent::TResult RegisterAccessTask::APCsLoaded(GCFEvent& e, GCFPortInterface& 
       GCFPropValueEvent* pPropAnswer = static_cast<GCFPropValueEvent*>(&e);
       assert(pPropAnswer);
       LOG_INFO(formatString("property '%s' changed", pPropAnswer->pPropName));
+
+      if(strstr(pPropAnswer->pPropName,"Maintenance") != 0)
+      {
+        handleMaintenance(string(pPropAnswer->pPropName),*pPropAnswer->pValue);
+      }
       break;
     }
     
@@ -405,6 +415,11 @@ GCFEvent::TResult RegisterAccessTask::connected(GCFEvent& e, GCFPortInterface& p
       GCFPropValueEvent* pPropAnswer = static_cast<GCFPropValueEvent*>(&e);
       assert(pPropAnswer);
       LOG_INFO(formatString("property '%s' changed", pPropAnswer->pPropName));
+
+      if(strstr(pPropAnswer->pPropName,"Maintenance") != 0)
+      {
+        handleMaintenance(string(pPropAnswer->pPropName),*pPropAnswer->pValue);
+      }
       break;
     }
     
@@ -586,4 +601,16 @@ void RegisterAccessTask::updateRCUproperties(string scope,uint8 status)
     pvBool.setValue(tempStatus);
     it->second->setValue(string(PROPNAME_STATSREADY),pvBool);
   }
+}
+
+void RegisterAccessTask::handleMaintenance(string propName, const GCFPValue& value)
+{
+  GCFPVBool pvBool;
+  pvBool.copy(value);
+  bool maintenanceFlag(pvBool.getValue());
+  
+  // strip last part of the property name to get the resource name.
+  int pos=propName.find_last_of("_.");
+  string resource = propName.substr(0,pos);
+  m_physicalModel.inMaintenance(maintenanceFlag,resource);
 }
