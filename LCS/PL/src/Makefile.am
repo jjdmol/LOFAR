@@ -6,6 +6,7 @@ DOCHDRS = Exception.h \
 
 lib_LTLIBRARIES = libpl.la
 
-libpl_la_SOURCES = $(DOCHDRS)
+libpl_la_SOURCES = $(DOCHDRS) \
+	  ObjectId.cc
 
 
