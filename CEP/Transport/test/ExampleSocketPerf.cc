@@ -127,8 +127,11 @@ int main (int argc, char** argv) {
     if (l< 256*1024) measurements = 100;
     if (l<  16*1024) measurements = 1000;
     if (l<   1*1024) measurements = 10000;
+    //    if (l ==     10) measurements = 100000000;
 
     //    cout << "len = " << l << "  meas: " << measurements << endl;
+    cout << "msg length = " << l << "bytes" 
+	 << "                       \r" << flush;
     
     if (!isReceiver) watch.start();
     for (int m=0; m< measurements; m++) {
