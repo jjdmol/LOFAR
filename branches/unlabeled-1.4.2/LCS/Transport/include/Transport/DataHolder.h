@@ -140,6 +140,12 @@ public:
   // Get the version of this DataHolder.
   int getVersion();
 
+  // Get access to the data blob.
+  // <group>
+  BlobString& getDataBlock();                    // Used by PO_DH_PL
+  const BlobString& getDataBlock() const;
+  // </group>
+
 protected:
   // Copy DataHolder
   DataHolder(const DataHolder&);
@@ -292,6 +298,15 @@ template<typename T>
 inline T* DataHolder::getData (const std::string& fieldName)
 {
   return itsDataFields[fieldName].getData<T> (*itsDataBlob);
+}
+
+inline BlobString& DataHolder::getDataBlock()
+{
+  return *itsData;
+}
+inline const BlobString& DataHolder::getDataBlock() const
+{
+  return *itsData;
 }
 
 inline uint DataHolder::getHeaderSize() const

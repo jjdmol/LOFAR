@@ -84,6 +84,9 @@ class Connection
   /// Is there a valid connection?
   bool isConnected() const;
 
+  /// Get its tag.
+  int getTag() const;
+
 private:
 
   typedef enum ReadState{Idle, TotalLength, Header, Message};
@@ -91,9 +94,6 @@ private:
   /// Private helper methods;
   bool readBlocking();
   bool readNonBlocking();
-
- /// Get its tag.
-  int getTag() const;
 
   static int theirNextTag;      // The next unique tag
 
