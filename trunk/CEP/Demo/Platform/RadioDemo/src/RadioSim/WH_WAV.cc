@@ -5,7 +5,6 @@
 #include "general.h"
 #include "WH_WAV.h"
 #include <math.h>
-#include <stdio.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -23,10 +22,10 @@ WH_WAV::WH_WAV (int inputs,int outputs, int channel):
   WorkHolder (inputs, outputs),
   itsChannel(channel),
   itsOffset(0),
-  itsFirstCall(true),
   itsDelay(0),
   itsTime(0.),
-  itsTimeStamp(0)
+  itsTimeStamp(0),
+  itsInfile(NULL)
 {
   int ch;
 
@@ -48,40 +47,41 @@ WH_WAV::~WH_WAV ()
 {
 }
 
-void WH_WAV::readFile(char *filename){
+void WH_WAV::takeSamples(){
 
-  FILE *infile;
   char ptr[10];
   int i, sample=0;
   unsigned short currentvalue, in , left, right;
   char ready_name[256];
   struct stat ready_stat;
 
-  system("record_sample_sim antenna1");
-  system("touch ./WAVE/antenna1.wav.ready");
-  cout << "Size of (in) = " << sizeof(in) << endl;
-  sprintf(ready_name, "%s.ready", filename);
+  if (itsChannel == 0) { 
+      // record 1 second of sound into WAV file
+      system("rsh astron5 ~/RadioDemo/record_sample_sim.csh antenna1");
+  }
   
-  // wait for ready file
-//    do {
-//      errno = 0;
-//      (void)stat(ready_name, &ready_stat);
-//    } while (errno == ENOENT);
-
-  infile = fopen(filename,"r");
-  if (infile == NULL) {
+  cout << "wait for ready file" << endl;
+  do {
+      errno = 0;
+      (void)stat("./WAVE/antenna1.wav.ready", &ready_stat);
+      (void)stat("./WAVE/antenna1.wav", &ready_stat);
+  } while (errno == ENOENT);
+  
+  cout << "open WAV file " << endl;
+  itsInfile = fopen("./WAVE/antenna1.wav","r");
+  if (itsInfile == NULL) {
     cout << "Could not open file" << endl;
     return;
   }
   /* skip header (or about that size...)*/
   for (i=0; i< 0x2c; i++) {
-    fread(&in,sizeof(in),1,infile);
+    fread(&in,sizeof(in),1,itsInfile);
   }
 
   // skip one sample; i.e. go to the second inpu channel of the stereo WAV file
-  if (itsChannel == 0) fread(&in,sizeof(in),1,infile);
+  if (itsChannel == 0) fread(&in,sizeof(in),1,itsInfile);
 
-  while (   fread(&in,sizeof(in),1,infile)
+  while (   fread(&in,sizeof(in),1,itsInfile)
 	 && sample++ < 2*ANTSAMPLES) {
     float currentvalue=0.;
       
@@ -94,7 +94,7 @@ void WH_WAV::readFile(char *filename){
       currentvalue = in;
       itsSampleBuffer[sample] = currentvalue;
     // skip the next sample since that is the other channel;
-    fread(&in,sizeof(in),1,infile);
+    fread(&in,sizeof(in),1,itsInfile);
   }
 
 //    for (int i=0; i<10; i++) {
@@ -105,7 +105,7 @@ void WH_WAV::readFile(char *filename){
 //    cout << "*************************************" << endl;
 
   itsOffset = 0;
-  fclose(infile);
+  fclose(itsInfile);
 }
 
 void WH_WAV::process () {
