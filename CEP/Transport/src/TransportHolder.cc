@@ -41,37 +41,44 @@ bool TransportHolder::init()
 
 bool TransportHolder::recvBlocking (void*, int, int)
 {
-  Throw("No blocking receive method implemented in this TransportHolder");
+  Throw("No blocking receive method implemented in this TransportHolder: " 
+	+ getType());
 }
 
 bool TransportHolder::recvNonBlocking (void*, int, int)
 {
-  Throw("No non-blocking receive method implemented in this TransportHolder");
+  Throw("No non-blocking receive method implemented in this TransportHolder: "
+	+ getType());
 }
 
 bool TransportHolder::waitForReceived(void*, int, int)
 {
-  Throw("No waitForReceived() method implemented in this TransportHolder");
+  Throw("No waitForReceived() method implemented in this TransportHolder: "
+	+ getType());
 }
 
 bool TransportHolder::sendBlocking (void*, int, int)
 {
-  Throw("No blocking send method implemented in this TransportHolder");
+  Throw("No blocking send method implemented in this TransportHolder: "
+	+ getType());
 }
 
 bool TransportHolder::sendNonBlocking (void*, int, int)
 {
-  Throw("No non-blocking send method  implemented in this TransportHolder");
+  Throw("No non-blocking send method implemented in this TransportHolder: "
+	+ getType());
 }
 
 bool TransportHolder::waitForSent(void*, int, int)
 {
-  Throw("No waitForSent() method implemented in this TransportHolder");
+  Throw("No waitForSent() method implemented in this TransportHolder: "
+	+ getType());
 }
 
 bool TransportHolder::waitForRecvAck(void*, int, int)
 {
-  Throw("No waitForRecvAck() method implemented in this TransportHolder");
+  Throw("No waitForRecvAck() method implemented in this TransportHolder: "
+	+ getType());
 }
 
 BlobStringType TransportHolder::blobStringType() const

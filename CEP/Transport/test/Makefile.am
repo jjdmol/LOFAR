@@ -23,7 +23,7 @@ ExamplePL_SOURCES 		= ExamplePL.cc DH_Example.cc
 
 ExamplePL2_SOURCES 		= ExamplePL2.cc DH_Example2.cc
 
-ExamplePL3_SOURCES 		= ExamplePL3.cc DH_Example2.cc
+ExamplePL3_SOURCES		= ExamplePL3.cc DH_Example2.cc
 
 ExampleShMem_SOURCES 		= ExampleShMem.cc DH_Example.cc
 

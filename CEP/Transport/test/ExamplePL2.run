@@ -16,9 +16,10 @@ _EOF_
 if [ "$1" = "" ]; then
   ./ExamplePL2
 fi
+   
+# Show the contents of the database. 
+psql -h dop50 -U postgres test << _EOF_ 
+select * from ExamplePL2 
+\q 
+_EOF_ 
 
-# Show the contents of the database.
-psql -h dop50 -U postgres test << _EOF_
-select * from ExamplePL2
-\q
-_EOF_

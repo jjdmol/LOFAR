@@ -53,7 +53,7 @@ class DH_PL : public DataHolder
 public:
   typedef PL::TPersistentObject<DH_PL> PO_DH_PL;
 
-  // Create the DH_PL object.
+  // Create the DH_PL object. 
   explicit DH_PL (const string& name="DH_PL", const string& type="DH_PL");
 
   virtual ~DH_PL ();

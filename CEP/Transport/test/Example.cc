@@ -40,12 +40,8 @@ int main()
   DH1.setID(1);
   DH2.setID(2);
 
-  // TH_Mem doesn't implement a blocking send
-  DH1.setBlocking(false);
-  DH2.setBlocking(false);
-
-  // connect DH1 to DH2
-  DH1.connectTo(DH2, TH_Mem());
+  // connect DH1 to DH2, TH_Mem doesn't implement a blocking send
+  DH1.connectTo(DH2, TH_Mem(), false);
     
   // initialize
   DH1.init();

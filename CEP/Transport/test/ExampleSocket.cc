@@ -55,12 +55,9 @@ int main (int argc, char** argv) {
   DH_Sender.setID(1);
   DH_Receiver.setID(2);
 
-  DH_Sender.setBlocking(true);
-  DH_Receiver.setBlocking(true);
-
   TH_Socket proto("localhost", "localhost", 8923);
 
-  DH_Sender.connectTo (DH_Receiver, proto);
+  DH_Sender.connectTo (DH_Receiver, proto, true);
 
   DH_Sender.init();
   DH_Receiver.init();

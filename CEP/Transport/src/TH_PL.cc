@@ -71,9 +71,9 @@ TH_PL* TH_PL::make() const
 
 bool TH_PL::init()
 {
-  // Do a dynamic cast of the BaseDataHolder to a DH_PL.
+  // Do a dynamic cast of the DataHolder to a DH_PL.
   // and check if it is correct.
-  itsDHPL = dynamic_cast<DH_PL*>(getTransporter()->getBaseDataHolder());
+  itsDHPL = dynamic_cast<DH_PL*>(getTransporter()->getDataHolder());
   if (itsDHPL == 0) {
     throw LOFAR::Exception("TH_PL: DataHolder used is not derived from DH_PL");
   }
@@ -121,31 +121,31 @@ bool TH_PL::connectionPossible (int srcRank, int dstRank) const
   return srcRank == dstRank;
 }
 
-void TH_PL::insertDB (void* buf, int nbytes, int tag)
-{
-  PL::PersistentObject& aPO = itsDHPL->preparePO (tag, itsWriteSeqNo++);
-  theirPersistenceBroker.save(aPO, PL::PersistenceBroker::INSERT);
-}
+void TH_PL::insertDB (void* buf, int nbytes, int tag)  
+{  
+  PL::PersistentObject& aPO = itsDHPL->preparePO (tag, itsWriteSeqNo++);  
+  theirPersistenceBroker.save(aPO, PL::PersistenceBroker::INSERT);  
+}  
 
-void TH_PL::updateDB (void* buf, int nbytes, int tag)
-{
-  PL::PersistentObject& aPO = itsDHPL->preparePO (tag, itsWriteSeqNo++);
-  theirPersistenceBroker.save(aPO, PL::PersistenceBroker::UPDATE);
-}
-
-int TH_PL::queryDB (const string& queryString,
-		    void* buf, int nbytes, int tag)
-{
-  // Get a reference to the DHPL's TPO object.
-  PL::PersistentObject& aPO = itsDHPL->getPO();
-  int result = aPO.retrieveInPlace(PL::QueryObject(queryString));
-  Assert (result > 0);
-  DbgAssertStr(int(itsDHPL->getDataBlock().size()) == nbytes,
-	       "TH_PL::queryDB - non matching size; found "
-	       << itsDHPL->getDataBlock().size() << ", expected " << nbytes);
-  itsReadSeqNo++;
-  return result;
-}
+void TH_PL::updateDB (void* buf, int nbytes, int tag)  
+{  
+  PL::PersistentObject& aPO = itsDHPL->preparePO (tag, itsWriteSeqNo++);  
+  theirPersistenceBroker.save(aPO, PL::PersistenceBroker::UPDATE);  
+}  
+     
+int TH_PL::queryDB (const string& queryString,  
+		    void* buf, int nbytes, int tag)  
+{  
+  // Get a reference to the DHPL's TPO object.  
+  PL::PersistentObject& aPO = itsDHPL->getPO();  
+  int result = aPO.retrieveInPlace(PL::QueryObject(queryString));  
+  Assert (result > 0);  
+  DbgAssertStr(int(itsDHPL->getDataBlock().size()) == nbytes,  
+	       "TH_PL::queryDB - non matching size; found "  
+	       << itsDHPL->getDataBlock().size() << ", expected " << nbytes);  
+  itsReadSeqNo++;  
+  return result;  
+}  
 
 bool TH_PL::sendBlocking(void* buf, int nbytes, int tag)
 {

@@ -22,6 +22,7 @@
 //#
 //#  $Id$
 
+
 #include <Transport/Socket.h>
 #include <Common/lofar_iostream.h>
 #include <Common/lofar_fstream.h>
@@ -57,16 +58,16 @@ Socket::~Socket()
   }
 }
 
-Socket::Socket(const Socket& that)
-  : itsHostname	   (that.itsHostname),
-    itsPortnr      (that.itsPortnr),
-    itsSocketID	   (that.itsSocketID),
-    itsRptr        (that.itsRptr),
-    itsWptr        (that.itsWptr),
-    itsData        (0),
-    itsConnected   (that.itsConnected),
-    itsIsMyBuffer  (false),
-    itsIsAllocated (that.itsIsAllocated)
+Socket::Socket(const Socket&	that) :
+	itsHostname		(that.itsHostname),
+	itsPortnr		(that.itsPortnr),
+	itsSocketID		(that.itsSocketID),
+	itsRptr			(that.itsRptr),
+	itsWptr			(that.itsWptr),
+	itsData			(0),
+	itsConnected            (that.itsConnected),
+        itsIsMyBuffer           (false),
+	itsIsAllocated          (that.itsIsAllocated)
 { 
 	//# alloc databuffer and copy data
 	allocBuffer(that.itsBufferSize);
