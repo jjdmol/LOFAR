@@ -30,10 +30,10 @@
 #include <lofar_config.h>
 
 //# Includes
-#include <ApplControl.h>
+#include <ACC/ApplControl.h>
 
-namespace LOFAR
-{
+namespace LOFAR {
+  namespace ACC {
 
 //# Forward Declarations
 //class forward;
@@ -128,6 +128,7 @@ private:
 };
 
 
+} // namespace ACC
 } // namespace LOFAR
 
 #endif

@@ -24,8 +24,8 @@
 #include <Common/LofarLogger.h>
 #include <Common/lofar_fstream.h>
 
-namespace LOFAR
-{
+namespace LOFAR {
+  namespace ACC {
 
 //#-------------------------- creation and destroy ---------------------------
 //#
@@ -321,4 +321,5 @@ void ParameterSet::writeFile(const string&	theFilename) const
 	paramFile.close();
 }
 
+} // namespace ACC
 } // namespace LOFAR

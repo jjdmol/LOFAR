@@ -35,8 +35,8 @@
 #include <sys/socket.h>
 #include <Transport/DataHolder.h>
 
-namespace LOFAR
-{
+namespace LOFAR {
+  namespace ACC {
 
 //# Forward Declarations
 //class forward;
@@ -100,6 +100,7 @@ private:
 };
 
 
+} // namespace ACC
 } // namespace LOFAR
 
 #endif

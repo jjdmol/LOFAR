@@ -33,10 +33,10 @@
 #include <Common/lofar_string.h>
 #include <Common/lofar_map.h>
 #include <Common/lofar_iostream.h>
-#include <Common/lofar_strstream.h>
+#include <Common/lofar_sstream.h>
 
-namespace LOFAR
-{
+namespace LOFAR {
+  namespace ACC {
 
 //# Forward Declarations
 class forward;
@@ -95,6 +95,7 @@ private:
 	void	addStream  (istream&	inputStream, const	bool merge);
 };
 
+} // namespace ACC
 } // namespace LOFAR
 
 #endif

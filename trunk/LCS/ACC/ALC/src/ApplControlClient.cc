@@ -27,47 +27,14 @@
 #include <lofar_config.h>
 
 //# Includes
-#include <ApplControlClient.h>
-#include <DH_AC_Connect.h>
-#include <DH_ApplControl.h>
+#include <ACC/ApplControlClient.h>
+#include <ACC/DH_AC_Connect.h>
+#include <ACC/DH_ApplControl.h>
 #include <Transport/TH_Socket.h>
+#include <Common/hexdump.h>
 
-namespace LOFAR
-{
-void hexdump (void	*dataptr, long	size)
-{
-#define BTS_P_LINE		16
-	long	left, index;
-	char	c;
-	char	*memblock;
-
-	memblock = static_cast<char *>(dataptr);
-
-	for (left = 0; left < size; left += BTS_P_LINE) {
-		printf ("%04lX: ", left);
-		for (index = 0; index < BTS_P_LINE; index ++) {
-			if (index == BTS_P_LINE / 2)			/* add extra space in	*/
-				printf (" ");					/* the middle o.t. line	*/
-
-			if (left + index < size)
-				printf ("%02X ", (unsigned char) memblock [left + index]);
-			else
-				printf ("   ");
-		}
-
-		for (index = 0; index < BTS_P_LINE; index ++) {	/* print char if	*/
-			if (left + index < size) {					/* printable char	*/
-				c = memblock [left + index];
-				if (c < 0x20 || c > 0x7e)
-					printf (".");
-				else
-					printf ("%c", c);
-			}
-		}
-		printf ("\n");
-	}
-}
-
+namespace LOFAR {
+  namespace ACC {
 
 ApplControlClient::ApplControlClient(const string&	hostID)
 {
@@ -77,21 +44,19 @@ ApplControlClient::ApplControlClient(const string&	hostID)
 	DH_AC_Connect	DH_AC_Server(hostID);
 	DH_AC_Client.setID(1);
 	DH_AC_Server.setID(2);
+	TH_Socket		TH_prototype(hostID, 5050, true);
 
 	//TODO define constant for 5050
 	
 	// try to make a connection with the generic AC master at the host.
 	LOG_DEBUG_STR("Trying to connect to master at " << hostID << ", " << 5050);
-	DH_AC_Client.connectBidirect(DH_AC_Server, 
-								 TH_Socket(hostID, 5050, false),
-								 TH_Socket(hostID, 5050, true),
-								 true);	// blocking
+	DH_AC_Client.connectTo(DH_AC_Server, TH_prototype, true);
+	DH_AC_Server.connectTo(DH_AC_Client, TH_prototype, true);
 	if (!DH_AC_Client.isValid()) {
 		LOG_DEBUG("Connection to master is not valid?!");
 		//TODO 
 	}
 	DH_AC_Client.init();
-	DH_AC_Server.init();
 
 	// send request for new AC to AC master
 	char	myHostname [256];
@@ -118,16 +83,14 @@ ApplControlClient::ApplControlClient(const string&	hostID)
 	DH_CtrlClient->setID(3);
 	DH_CtrlServer.setID(4);
 
-	DH_CtrlClient->connectBidirect(DH_CtrlServer, 
-								   TH_Socket(host, port, false),
-								   TH_Socket(host, port, true),
-								   true);	// blocking
+	DH_CtrlClient->connectTo(DH_CtrlServer, 
+							 TH_Socket(host, port, true),
+							 true);	// blocking
 	if (!DH_CtrlClient->isValid()) {
 		LOG_DEBUG("Connection to ACserver is not valid?!");
 		// TODO
 	}
 	DH_CtrlClient->init();
-	DH_CtrlServer.init();
 
 	itsDataHolder = DH_CtrlClient;
 
@@ -291,5 +254,6 @@ bool	ApplControlClient::processACmsgFromServer()					  const
 ApplControlClient::ApplControlClient() { }
 
 
+} // namespace ACC
 } // namespace LOFAR
 
