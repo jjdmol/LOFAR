@@ -6,9 +6,9 @@ BaseDataManager.h \
 MiniDataManager.h \
 ApplicationHolder.h \
 WorkHolder.h \
-WH_Example.h \
-DH_Example.h \
-MyExample.h
+# WH_Example.h \
+# DH_Example.h \
+# MyExample.h
 
 #bin_PROGRAMS 		= \
 # 			tinyCFmemcpy \
@@ -39,10 +39,10 @@ SimulatorParseClass.cc                          \
 MiniDataManager.cc \
 BaseDataManager.cc \
 ApplicationHolder.cc \
-WorkHolder.cc \
-DH_Example.cc  \
-WH_Example.cc \
-MyExample.cc
+WorkHolder.cc 
+# DH_Example.cc  \
+# WH_Example.cc \
+# MyExample.cc
 
 EXTRA_DIST = assay
 
