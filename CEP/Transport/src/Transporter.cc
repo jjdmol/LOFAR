@@ -38,8 +38,6 @@ Transporter::Transporter (BaseDataHolder* dataHolder)
     itsReadTag         (-1),
     itsWriteTag        (-1),
     itsStatus          (Unknown),
-    itsSourceAddr      (0),
-    itsTargetAddr      (0),
     itsRate            (1),
     itsIsBlocking      (true)
 {}
@@ -51,8 +49,6 @@ Transporter::Transporter(const Transporter& that, BaseDataHolder* dataHolder)
     itsReadTag         (that.itsReadTag),
     itsWriteTag        (that.itsWriteTag),
     itsStatus          (that.itsStatus),
-    itsSourceAddr      (that.itsSourceAddr),
-    itsTargetAddr      (that.itsTargetAddr),
     itsRate            (that.itsRate),
     itsIsBlocking      (that.itsIsBlocking)
 {
@@ -82,23 +78,40 @@ bool Transporter::init()
   return true;
 }
 
-bool Transporter::connectTo (Transporter& thatTP, 
-			     const TransportHolder& prototype)
-{
-  bool result = itsConnection.connect(*this, thatTP, prototype); 
-  // Init should not be done in the connection but seperate.
-  //  result |= init();
-  return result;
+bool Transporter::connect(Transporter& sourceTP,
+			  Transporter& targetTP,
+			  const TransportHolder& prototype) {
+
+  AssertStr(sourceTP.getRate() == targetTP.getRate(), 
+	    "Transporter::connect; inRate " << 
+	    sourceTP.getRate() << " and outRate " <<
+	    targetTP.getRate() << " not equal!");
+  
+  // Make a new TransportHolder for both the target and 
+  // the source Transporter.
+  sourceTP.makeTransportHolder (prototype);
+  targetTP.makeTransportHolder (prototype);
+
+  AssertStr(sourceTP.getTransportHolder()->getType() == 
+	    targetTP.getTransportHolder()->getType(),
+	    "Transporter::connect; inType " <<
+	    sourceTP.getTransportHolder()->getType() << 
+	    " and outType " <<
+	    targetTP.getTransportHolder()->getType() << 
+	    " not equal!");
+  
+  DbgAssert (sourceTP.getItsID() >= 0);
+  
+  // Use the source ID as the tag for MPI send/receive.
+  sourceTP.setWriteTag (sourceTP.getItsID());
+  targetTP.setReadTag (sourceTP.getItsID());
+  // And the other way around
+  sourceTP.setReadTag (targetTP.getItsID());
+  targetTP.setWriteTag (targetTP.getItsID());
+   
+  return true;
 }
 
-bool Transporter::connectFrom (Transporter& thatTP, 
-			       const TransportHolder& prototype) 
-{ 
-  bool result = itsConnection.connect(thatTP, *this, prototype);
-  // Init should not be done in the connection but seperate.
-  //  result  |= init();
-  return result;
-} 
 
 bool Transporter::read()
 {
@@ -111,14 +124,12 @@ bool Transporter::read()
     {
       result = getTransportHolder()->recvBlocking(getDataPtr(),
 						  getDataSize(),
-						  getSourceAddr()->getNode(),
 						  getReadTag());
     }
     else
     {
       result = getTransportHolder()->recvNonBlocking(getDataPtr(),
 						     getDataSize(),
-						     getSourceAddr()->getNode(),
 						     getReadTag());
     }      
     setStatus(Transporter::Clean);
@@ -140,14 +151,12 @@ void Transporter::write()
     {
       getTransportHolder()->sendBlocking(getDataPtr(),
 					 getDataSize(),
-					 getTargetAddr()->getNode(),
 					 getWriteTag());
     }
     else
     {
       getTransportHolder()->sendNonBlocking(getDataPtr(),
 					    getDataSize(),
-					    getTargetAddr()->getNode(),
 					    getWriteTag());
     }
     setStatus(Transporter::Dirty);

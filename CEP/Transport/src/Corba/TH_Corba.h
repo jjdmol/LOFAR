@@ -45,19 +45,19 @@ public:
   virtual TH_Corba* make() const;
 
   /// Read the data.
-  bool recvBlocking(void* buf, int nbytes, int source, int tag);
-  bool recvNonBlocking(void* buf, int nbytes, int source, int tag);
+  bool recvBlocking(void* buf, int nbytes, int tag);
+  bool recvNonBlocking(void* buf, int nbytes, int tag);
   /// Wait for the data to be received
-  bool waitForReceived(void* bug, int nbytes, int source, int tag);
+  bool waitForReceived(void* bug, int nbytes, int tag);
   
   /** Write the data.
       It does not really write, because the read is doing the memcpy.
       The only thing it does is setting the status.
   */
-  bool sendBlocking(void* buf, int nbytes, int destination, int tag);  
-  bool sendNonBlocking(void* buf, int nbytes, int destination, int tag);  
+  bool sendBlocking(void* buf, int nbytes, int tag);  
+  bool sendNonBlocking(void* buf, int nbytes, int tag);  
   /// Wait for the data to be sent
-  bool waitForSent(void* bug, int nbytes, int destination, int tag);
+  bool waitForSent(void* bug, int nbytes, int tag);
 
   /// Get the type of transport.
   virtual string getType() const;

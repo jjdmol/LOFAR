@@ -8,7 +8,6 @@ endif
 INSTHDRS = \
 BaseDataHolder.h \
 BaseSim.h \
-Connection.h \
 CyclicBuffer.h \
 DataHolder.h \
 Socket.h \
@@ -40,7 +39,6 @@ lib_LTLIBRARIES 	= libtransport.la
 
 libtransport_la_SOURCES = \
 BaseDataHolder.cc \
-Connection.cc \
 CyclicBuffer.cc \
 DataHolder.cc \
 Socket.cc \

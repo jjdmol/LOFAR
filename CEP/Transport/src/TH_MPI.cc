@@ -41,9 +41,10 @@ namespace LOFAR
 #ifndef THREAD_SAFE
 pthread_mutex_t TH_MPI::theirMPILock = PTHREAD_MUTEX_INITIALIZER;
 #endif
-TH_MPI TH_MPI::proto;
 
-TH_MPI::TH_MPI() 
+TH_MPI::TH_MPI(int sourceNode, int targetNode)
+  : itsSourceNode(sourceNode),
+    itsTargetNode(targetNode)
 {
 }
 
@@ -53,7 +54,7 @@ TH_MPI::~TH_MPI()
 
 TH_MPI* TH_MPI::make() const
 {
-    return new TH_MPI();
+    return new TH_MPI(itsSourceNode, itsTargetNode);
 }
 
 string TH_MPI::getType() const
@@ -75,53 +76,53 @@ void TH_MPI::unlock()
 #endif
 }
 
-bool TH_MPI::recvBlocking(void* buf, int nbytes, int source, int tag)
+bool TH_MPI::recvBlocking(void* buf, int nbytes, int tag)
 {
     int result = MPI_SUCCESS;
 
     MPI_Status status;
 
     TRACER2("MPI::recv(" << buf << "," << nbytes << ",....)");
-    result = MPI_Recv (buf, nbytes, MPI_BYTE, source, tag,
+    result = MPI_Recv (buf, nbytes, MPI_BYTE, itsSourceNode, tag,
 		       MPI_COMM_WORLD, &status);
     if (MPI_SUCCESS != result) cerr << "result = " << result << endl;
 
     return (result == MPI_SUCCESS);
 }
 
-bool TH_MPI::recvNonBlocking(void* buf, int nbytes, int source, int tag)
+bool TH_MPI::recvNonBlocking(void* buf, int nbytes, int tag)
 {
   cerr << "**Warning** TH_MPI::recvNonBlocking() is not implemented. " 
        << "recvBlocking() is used instead." << endl;    
-  return recvBlocking(buf, nbytes, source, tag);
+  return recvBlocking(buf, nbytes, tag);
 }
 
-bool TH_MPI::waitForReceived(void*, int, int, int)
+bool TH_MPI::waitForReceived(void*, int, int)
 {
   return true;
 }
 
-bool TH_MPI::sendBlocking(void* buf, int nbytes, int destination, int tag)
+bool TH_MPI::sendBlocking(void* buf, int nbytes, int tag)
 {
     int result;
 
     TRACER2("MPI::send(" << buf << "," << nbytes << ",....)");
     lock();
-    result = MPI_Send(buf, nbytes, MPI_BYTE, destination, tag,
+    result = MPI_Send(buf, nbytes, MPI_BYTE, itsTargetNode, tag,
 		      MPI_COMM_WORLD);
     unlock();
   
     return (result == MPI_SUCCESS);
 }
 
-bool TH_MPI::sendNonBlocking(void* buf, int nbytes, int destination, int tag)
+bool TH_MPI::sendNonBlocking(void* buf, int nbytes, int tag)
 {
   cerr << "**Warning** TH_MPI::sendNonBlocking() is not implemented. " 
        << "The sendBlocking() method is used instead." << endl;    
-  return sendBlocking(buf, nbytes, destination, tag);
+  return sendBlocking(buf, nbytes, tag);
 }
 
-bool TH_MPI::waitForSent(void*, int, int, int)
+bool TH_MPI::waitForSent(void*, int, int)
 {
   return true;
 }

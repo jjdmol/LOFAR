@@ -36,7 +36,6 @@ namespace LOFAR {
 
 void DBRep<DH_PL>::bindCols (dtl::BoundIOs& cols)
 {
-  cols["ID"]    == itsId;
   cols["SEQNR"] == itsSeqNr;
   cols["TAG"]   == itsTag;
   cols["DATA"]  == itsData;
@@ -45,7 +44,6 @@ void DBRep<DH_PL>::bindCols (dtl::BoundIOs& cols)
 void DBRep<DH_PL>::toDBRep (const DH_PL& obj)
 {
   // Copy the info from DH_PL
-  itsId    = obj.getId();
   itsSeqNr = obj.getSeqNr();
   itsTag   = obj.getTag();
   itsData  = obj.getDataBlock().getString();

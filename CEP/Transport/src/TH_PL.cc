@@ -121,29 +121,28 @@ bool TH_PL::connectionPossible (int srcRank, int dstRank) const
   return srcRank == dstRank;
 }
 
-bool TH_PL::sendBlocking(void* buf, int nbytes, int destination, int tag)
+bool TH_PL::sendBlocking(void* buf, int nbytes, int tag)
 {
   DbgAssertStr(getTransporter() -> getBaseDataHolder() != 0, 
 	       "TH_PL::send():Transportable not found.");
-  PL::PersistentObject& aPO = itsDHPL->preparePO (destination, tag,
-						  itsWriteSeqNo++);
+  PL::PersistentObject& aPO = itsDHPL->preparePO (tag, itsWriteSeqNo++);
   theirPersistenceBroker.save(aPO);
   return true;
 }
 
-bool TH_PL::sendNonBlocking(void* buf, int nbytes, int destination, int tag)
+bool TH_PL::sendNonBlocking(void* buf, int nbytes, int tag)
 {
   cerr << "**Warning** TH_PL::sendNonBlocking() is not implemented. " 
        << "The sendBlocking() method is used instead." << endl;    
-  return sendBlocking(buf, nbytes, destination, tag);
+  return sendBlocking(buf, nbytes, tag);
 }
 
-bool TH_PL::waitForSent(void*, int, int, int)
+bool TH_PL::waitForSent(void*, int, int)
 {
   return true;
 }
 
-bool TH_PL::recvBlocking(void* buf, int nbytes, int source , int tag)
+bool TH_PL::recvBlocking(void* buf, int nbytes, int tag)
 { 
   // Get a reference to the DHPL's TPO object.
   PL::PersistentObject& aPO = itsDHPL->getPO();
@@ -152,7 +151,7 @@ bool TH_PL::recvBlocking(void* buf, int nbytes, int source , int tag)
   // tables. A query object is now prepared to retrieve the record with
   // the correct tag and sequence number.
   std::ostringstream q;
-  q << "tag=" << tag << " AND seqnr=" << itsReadSeqNo << " AND id=" << source;
+  q << "tag=" << tag << " AND seqnr=" << itsReadSeqNo;
   itsReadSeqNo++;
   // Perform the actual query and obtain the record.
   // Check that only 1 is found.
@@ -172,14 +171,14 @@ bool TH_PL::recvBlocking(void* buf, int nbytes, int source , int tag)
   return true;
 }
 
-bool TH_PL::recvNonBlocking(void* buf, int nbytes, int source , int tag)
+bool TH_PL::recvNonBlocking(void* buf, int nbytes, int tag)
 { 
   cerr << "**Warning** TH_PL::recvNonBlocking() is not implemented. " 
        << "recvBlocking() is used instead." << endl;    
-  return recvBlocking(buf, nbytes, source, tag);
+  return recvBlocking(buf, nbytes, tag);
 }
 
-bool TH_PL::waitForReceived(void*, int, int, int)
+bool TH_PL::waitForReceived(void*, int, int)
 {
   return true;
 }

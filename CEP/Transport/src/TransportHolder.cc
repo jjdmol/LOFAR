@@ -39,37 +39,37 @@ bool TransportHolder::init()
   return true;
 }
 
-bool TransportHolder::recvBlocking (void*, int, int, int)
+bool TransportHolder::recvBlocking (void*, int, int)
 {
   Throw("No blocking receive method implemented in this TransportHolder");
 }
 
-bool TransportHolder::recvNonBlocking (void*, int, int, int)
+bool TransportHolder::recvNonBlocking (void*, int, int)
 {
   Throw("No non-blocking receive method implemented in this TransportHolder");
 }
 
-bool TransportHolder::waitForReceived(void*, int, int, int)
+bool TransportHolder::waitForReceived(void*, int, int)
 {
   Throw("No waitForReceived() method implemented in this TransportHolder");
 }
 
-bool TransportHolder::sendBlocking (void*, int, int, int)
+bool TransportHolder::sendBlocking (void*, int, int)
 {
   Throw("No blocking send method implemented in this TransportHolder");
 }
 
-bool TransportHolder::sendNonBlocking (void*, int, int, int)
+bool TransportHolder::sendNonBlocking (void*, int, int)
 {
   Throw("No non-blocking send method  implemented in this TransportHolder");
 }
 
-bool TransportHolder::waitForSent(void*, int, int, int)
+bool TransportHolder::waitForSent(void*, int, int)
 {
   Throw("No waitForSent() method implemented in this TransportHolder");
 }
 
-bool TransportHolder::waitForRecvAck(void*, int, int, int)
+bool TransportHolder::waitForRecvAck(void*, int, int)
 {
   Throw("No waitForRecvAck() method implemented in this TransportHolder");
 }

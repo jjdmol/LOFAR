@@ -49,14 +49,14 @@ namespace LOFAR
     virtual TH_Socket* make() const;
 
   
-    virtual bool recvBlocking    (void* buf, int nbytes, int, int tag);
-    virtual bool recvNonBlocking (void* buf, int nbytes, int, int tag);
-    virtual bool waitForReceived (void* buf, int nbytes, int, int tag);
+    virtual bool recvBlocking    (void* buf, int nbytes, int tag);
+    virtual bool recvNonBlocking (void* buf, int nbytes, int tag);
+    virtual bool waitForReceived (void* buf, int nbytes, int tag);
   
-    virtual bool sendBlocking      (void* buf, int nbytes, int, int tag);
-    virtual bool sendNonBlocking   (void* buf, int nbytes, int, int tag);
-    virtual bool waitForSend       (void* buf, int nbytes, int, int tag);
-    virtual bool waitForReceiveAck (void* buf, int nbytes, int, int tag);
+    virtual bool sendBlocking      (void* buf, int nbytes, int tag);
+    virtual bool sendNonBlocking   (void* buf, int nbytes, int tag);
+    virtual bool waitForSend       (void* buf, int nbytes, int tag);
+    virtual bool waitForReceiveAck (void* buf, int nbytes, int tag);
   
     virtual string getType() const;
   

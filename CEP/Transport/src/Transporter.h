@@ -27,7 +27,6 @@
 
 //# Includes
 #include <Transport/TransportHolder.h>
-#include <Transport/Connection.h>
 #include <Transport/BaseSim.h>
 
 namespace LOFAR
@@ -68,10 +67,10 @@ class Transporter
   /// Get the TransportHolder for this object.
   TransportHolder* getTransportHolder();
 
-  /// interface to the Connection class
-  /// after setting the connection, the init() method must be called
-  bool connectTo(Transporter& thatTP, const TransportHolder& prototype);
-  bool connectFrom(Transporter& thatTP, const TransportHolder& prototype);
+  /// Connect two transporters
+  bool connect(Transporter& sourceTP, Transporter& targetTP,
+	       const TransportHolder& prototype);
+  /// After setting the connection, the init() method must be called
   bool init();
 
   /// Set/get the ID.
@@ -95,12 +94,6 @@ class Transporter
 
   /// Get the DataHolder object for this object.
   BaseDataHolder* getBaseDataHolder ();
-
-  /// Set/get the source or target DataHolder.
-  void setSourceAddr (BaseDataHolder* anAddr);
-  void setTargetAddr (BaseDataHolder* anAddr);
-  BaseDataHolder* getSourceAddr();
-  BaseDataHolder* getTargetAddr();
 
   /// Get pointer to the data from the BaseDataHolder.
   void* getDataPtr();
@@ -143,18 +136,12 @@ private:
   // Status of the Transporter object
   Status itsStatus;
 
-   /// The source BaseDataHolder (where it gets its data from).
-  BaseDataHolder* itsSourceAddr;
-  /// The target BaseDataHolder (where it sends its data to).
-  BaseDataHolder* itsTargetAddr;
-
   /** The fraction of the Read/Write call to be actually executed;
       The read/write methods will check the static counter Step::EventCnt
       (this will only work if the simulation runs single-threaded).
       Rate=1 means always issue TransportHolder->read/write.
   */
   int itsRate; 
-  Connection itsConnection;
   bool itsIsBlocking;
 };
 
@@ -195,12 +182,6 @@ inline TransportHolder* Transporter::getTransportHolder()
 inline BaseDataHolder* Transporter::getBaseDataHolder()
   { return itsBaseDataHolder; }
 
-inline BaseDataHolder* Transporter::getSourceAddr() 
-  { return itsSourceAddr; }
-
-inline BaseDataHolder* Transporter::getTargetAddr() 
-  { return itsTargetAddr; }
-
 inline void Transporter::setRate (int aRate)
   { itsRate = aRate; }
 
@@ -218,13 +199,6 @@ inline void Transporter::setReadTag (int tag)
 
 inline void Transporter::setWriteTag (int tag)
   { itsWriteTag = tag; }
-
-inline void Transporter::setSourceAddr (BaseDataHolder* addr)
-  { itsSourceAddr = addr; }
-
-inline void Transporter::setTargetAddr (BaseDataHolder* addr)
-  { itsTargetAddr = addr; }
-
 
 } // end namespace
 

@@ -25,15 +25,6 @@
 
 #include <lofar_config.h>
 
-#ifndef HAVE_MPI
-
-#include <Transport/TH_Mem.h>
-namespace LOFAR {
-  typedef TH_Mem TH_ShMem;
-}
-
-#else
-
 //# Needed for shmem
 #define USE_PUBLIC_MALLOC_WRAPPERS
 #define USE_DL_PREFIX
@@ -67,7 +58,8 @@ class TH_ShMem: public TransportHolder
 {
 public:
   // Create an object to send data from source to destination.
-  TH_ShMem();
+  // Both must be running on the same node.
+  TH_ShMem(int sourceNode, int targetNode);
 
   virtual ~TH_ShMem();
 
@@ -78,8 +70,12 @@ public:
      Receive the data. This call does the actual data transport
      by memcpy'ing the data from the sender.
   */
-  void initRecv(void* buf, int source, int tag);
-  virtual bool recvBlocking(void* buf, int nbytes, int source, int tag);
+  void initRecv(void* buf, int tag);
+  virtual bool recvBlocking(void* buf, int nbytes, int tag);
+  virtual bool recvNonBlocking(void* buf, int nbytes, int tag);
+
+  // Wait for the data to be received
+  virtual bool waitForReceived(void* bug, int nbytes, int tag);
 
   /**
      Send the data.
@@ -88,8 +84,11 @@ public:
      which can be matched by the recv call.
      The only thing it does is setting the status.
   */
-  void initSend(void* buf, int destination, int tag);
-  virtual bool sendBlocking(void* buf, int nbytes, int destination, int tag);
+  void initSend(void* buf, int tag);
+  virtual bool sendBlocking(void* buf, int nbytes, int tag);
+  virtual bool sendNonBlocking(void* buf, int nbytes, int tag);
+
+  virtual bool waitForSent(void* buf, int nbytes, int tag);
 
   /// Get the type of transport.
   virtual string getType() const;
@@ -98,12 +97,7 @@ public:
   virtual BlobStringType blobStringType() const;
 
   virtual bool connectionPossible(int srcRank, int dstRank) const;
-
-  /// Declare a TH_ShMem prototype variable
-  /// that can be used in functions
-  /// requiring a TransportHolder prototype
-  static TH_ShMem proto;
-  
+ 
   static void   init (int argc, const char *argv[]);
   static void   finalize();
   static void   waitForBroadCast();
@@ -195,6 +189,8 @@ public:
       void*        itsBuf;
   };
 
+  int       itsSourceNode;
+  int       itsTargetNode;
   bool      itsFirstCall;
   ShMemBuf* itsSendBuf;
   ShMemBuf* itsRecvBuf;
@@ -207,5 +203,4 @@ public:
 
 }
 
-#endif
 #endif

@@ -64,7 +64,7 @@ public:
   virtual PL::PersistentObject& getPO() const;		       
 
   // Pass the seqnr and get a reference to the PersistentObject.
-  PL::PersistentObject& preparePO (int id, int tag, int64 seqnr);
+  PL::PersistentObject& preparePO (int tag, int64 seqnr);
   
   // Create a TPO object and set the table name in it.
   // It should be overridden in a derived class having its own TPO object.
@@ -72,8 +72,6 @@ public:
 
   // Get the variable values.
   // <group>
-  int getId() const
-    { return itsAppId; }
   int getTag() const
     { return itsTag; }
   int64 getSeqNr() const
@@ -88,16 +86,14 @@ private:
   // Forbid assignment.
   DH_PL& operator= (const DH_PL&);
   
-  int   itsAppId;
   int   itsTag;
   int64 itsSeqNr;
   PO_DH_PL* itsPODHPL;
 };
  
  
-inline PL::PersistentObject& DH_PL::preparePO (int id, int tag, int64 seqnr)
+inline PL::PersistentObject& DH_PL::preparePO (int tag, int64 seqnr)
 {
-  itsAppId = id;
   itsTag   = tag;
   itsSeqNr = seqnr;
   return getPO();
