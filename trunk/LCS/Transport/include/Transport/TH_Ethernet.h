@@ -29,6 +29,7 @@
 #include <lofar_config.h>
 #include <Transport/TransportHolder.h>
 #include <Common/LofarTypes.h>
+#include <Common/lofar_string.h>
 
 #include <net/if.h>
 #include <linux/if_packet.h>
@@ -48,11 +49,11 @@ namespace LOFAR
 class TH_Ethernet: public TransportHolder
 {
 public:
-  TH_Ethernet(char* ifname, 
-              char* rMac, 
-              char* oMac, 
-              uint16 etype  = 0x0000, 
-              bool dhheader = false);
+  TH_Ethernet(const string &ifname, 
+              const string &rMac, 
+              const string &oMac, 
+              const uint16 etype  = 0x0000, 
+              const bool dhheader = false);
   
   virtual ~TH_Ethernet();
 
@@ -88,13 +89,14 @@ public:
   int32 itsMaxdatasize;
   int32 itsMaxframesize;
   int32 itsDHheaderSize;
-  bool  itsDHheader;
   
+  bool itsDHheader;
   bool itsInitDone;
   
-  char* itsIfname;
-  char* itsRemoteMac;
-  char* itsOwnMac;
+  string itsIfname;
+  string itsRemoteMac;
+  string itsOwnMac;
+  
   char* itsRecvPacket; 
   char* itsSendPacket; 
   char* itsSendPacketData;

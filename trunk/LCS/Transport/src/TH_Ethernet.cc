@@ -48,10 +48,11 @@
 namespace LOFAR
 {
 
-TH_Ethernet::TH_Ethernet(char* ifname, 
-                         char* rMac, 
-                         char* oMac, uint16 etype, 
-                         bool dhheader)
+TH_Ethernet::TH_Ethernet(const string &ifname, 
+                         const string &rMac, 
+                         const string &oMac, 
+                         const uint16 etype, 
+                         const bool dhheader)
      : itsIfname(ifname), 
        itsRemoteMac(rMac),
        itsOwnMac(oMac), 
@@ -256,7 +257,7 @@ void TH_Ethernet::Init()
   struct ifreq ifr;
   // Get MTU of specified interface and allocate memory for 
   // send and receivebuffers
-  strncpy(ifr.ifr_name, itsIfname, IFNAMSIZ);
+  strncpy(ifr.ifr_name, itsIfname.c_str(), IFNAMSIZ);
   if (ioctl(itsSocketFD, SIOCGIFMTU, &ifr) <0) {
     LOG_ERROR_STR("TH_Ethernet: getting the socket MTU failed.");
     close(itsSocketFD);
@@ -282,10 +283,11 @@ void TH_Ethernet::Init()
   }
   
   char ownMac[ETH_ALEN];
-  if (strcmp(itsOwnMac,"" )== 0) {
+  //if (strcmp(itsOwnMac,"" )== 0) {
+  if (itsOwnMac == "") {
     // Find ownMAC address for specified interface
     // Mac address will be stored ownMac
-    strncpy(ifr.ifr_name,itsIfname, IFNAMSIZ);
+    strncpy(ifr.ifr_name,itsIfname.c_str(), IFNAMSIZ);
     if (ioctl(itsSocketFD, SIOCGIFHWADDR, &ifr) < 0)
     {
       LOG_ERROR_STR("TH_Ethernet: MAC address of ethernet device not found.");
@@ -297,7 +299,7 @@ void TH_Ethernet::Init()
   else {
     // Convert _ownMac HWADDR string to sll_addr
     unsigned int ohx[ETH_ALEN] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-    sscanf(itsOwnMac, "%x:%x:%x:%x:%x:%x", 
+    sscanf(itsOwnMac.c_str(), "%x:%x:%x:%x:%x:%x", 
      &ohx[0],&ohx[1],&ohx[2],&ohx[3],&ohx[4],&ohx[5]);
     for (int32 i=0;i<ETH_ALEN;i++) ownMac[i]=(char)ohx[i];
   }
@@ -305,7 +307,7 @@ void TH_Ethernet::Init()
   // Convert _remoteMac HWADDR string to sll_addr
   char remoteMac[ETH_ALEN];
   uint32 rhx[ETH_ALEN] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-  sscanf(itsRemoteMac, "%x:%x:%x:%x:%x:%x", 
+  sscanf(itsRemoteMac.c_str(), "%x:%x:%x:%x:%x:%x", 
      &rhx[0],&rhx[1],&rhx[2],&rhx[3],&rhx[4],&rhx[5]);
   for (int32 i=0;i<ETH_ALEN;i++) remoteMac[i]=(char)rhx[i];
   
@@ -338,7 +340,7 @@ void TH_Ethernet::Init()
   hdr->h_proto = htons(itsEthertype);
 
   // Get index number for specified interface
-  strncpy(ifr.ifr_name, itsIfname, IFNAMSIZ);
+  strncpy(ifr.ifr_name, itsIfname.c_str(), IFNAMSIZ);
   if (ioctl(itsSocketFD, SIOCGIFINDEX, &ifr) <0)
   {
     LOG_ERROR_STR("TH_Ethernet: Interface index number not found.");
