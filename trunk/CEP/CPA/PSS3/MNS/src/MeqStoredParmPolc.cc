@@ -54,7 +54,7 @@ int MeqStoredParmPolc::initDomain (const MeqDomain& domain, int spidIndex)
       polc.setCoeffOnly (polc.normalize(polc.getCoeff(), domain));
       polc.setSimCoeff  (polc.normalize(polc.getSimCoeff(), domain));
     }
-    ///    itsTable->putCoeff (getName(), getSourceNr(), getStation(), polc);
+    itsTable->putCoeff (getName(), getSourceNr(), getStation(), polc);
     polcs.push_back (polc);
   } else if (isSolvable()) {
     AssertMsg (polcs.size() == 1, "Solvable parameter " << getName() <<
