@@ -5,9 +5,9 @@
 # don't use channels, use NoRSPBeamlets instead
 # channels       = 46,	# the number of individual channels
 useRealRSPBoard  = F,	# Use the real RSPBoard T or the WH_RSPBoard F
-interfaces       = ["eth0", "eth0"], # interface names for all TH_Ethernets
-oMacs            = ["00:10:DC:F0:3A:35", "00:10:DC:F0:3A:35"], # interface names for all TH_Ethernets
-rMacs            = ["00:10:DC:F0:3A:35", "00:10:DC:F0:3A:35"], # interface names for all TH_Ethernets
+interfaces       = ["eth2", "eth1"], # interface names for all TH_Ethernets
+oMacs            = ["FF:FF:FF:FF:FF:FF", "FF:FF:FF:FF:FF:FF"], # interface names for all TH_Ethernets
+rMacs            = ["00:00:00:00:00:02", "00:00:00:00:00:01"], # interface names for all TH_Ethernets
 NoRSPBeamlets    = 92,	# Number of beamlets in one EPA-packet
 polarisations    = 2,	
 SzEPAheader      = 14,	# Size (in bytes) of the header of an EPA-packet
