@@ -21,6 +21,12 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.1  2004/03/12 08:45:22  wierenga
+//  %[ER: 70]%
+//
+//  Renamed LimitExec.c to LimitExec.cc to make sure it is compiled with
+//  the c++ compiler.
+//
 //  Revision 1.1  2003/08/21 11:20:32  diepen
 //  Moved Common to LCS
 //
@@ -59,6 +65,15 @@ void killchild(int sig)
 
   fprintf(stderr, "%s: Process %d has exceeded time limit and has been killed.\n",
 	  g_progname, g_child);
+}
+
+// Translate the exit status of a child process.
+// If the child was terminated by a signal, return -1; 
+// else return the child's exit status.
+int exit_status(int status)
+{
+  if (WIFSIGNALED(status)) return -1;
+  else return WEXITSTATUS(status);
 }
 
 int main(int argc, char** argv)
@@ -103,5 +118,5 @@ int main(int argc, char** argv)
     (void)wait(&status);
   }
 
-  return status;
+  return exit_status(status);
 }
