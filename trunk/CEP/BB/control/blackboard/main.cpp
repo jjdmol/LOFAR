@@ -17,7 +17,7 @@
 #include <mpi.h>
 
 //#define DEBUG(x) if(debug) std::cout << " rank(" << ::rank << "): " << x << std::endl;
-unsigned long long TRACE::level = 1;
+unsigned long long TRACE::level = 0;
     //util vars
 int rank(-1);
 bool debug(true);
