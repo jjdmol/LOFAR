@@ -74,3 +74,9 @@ void Command::setEvent(const GCFEvent& event, GCFPortInterface& port, Operation 
   m_period = period;
 }
 #endif
+
+bool Command::operator<(const Command& right)
+{
+  return (this->getTimestamp() < right.getTimestamp());
+}
+

@@ -79,6 +79,7 @@ namespace RSP_Protocol
 	  Timestamp& operator=(const Timestamp& rhs);
 	  Timestamp  operator+(long delay) const;
 	  bool       operator>(const Timestamp& rhs) const;
+	  bool       operator<(const Timestamp& rhs) const;
 	  bool       operator==(const Timestamp& rhs) const;
 	  /*@}*/
 
@@ -116,7 +117,8 @@ namespace RSP_Protocol
   inline unsigned int Timestamp::unpack(void *buffer) { memcpy(&m_tv, buffer, sizeof(struct timeval)); return sizeof(struct timeval); }
   inline Timestamp& Timestamp::operator=(const Timestamp& rhs) { m_tv = rhs.m_tv; m_tv.tv_usec = 0; return *this; }
   inline Timestamp Timestamp::operator+(long delay) const { Timestamp ts(m_tv); ts.m_tv.tv_sec += delay; return ts; }
-  inline bool Timestamp::operator>(const Timestamp& rhs) const { return (m_tv.tv_sec == rhs.m_tv.tv_sec ? m_tv.tv_usec > rhs.m_tv.tv_usec : (m_tv.tv_usec > rhs.m_tv.tv_usec ? true : false)); }
+  inline bool Timestamp::operator>(const Timestamp& rhs) const { return (m_tv.tv_sec == rhs.m_tv.tv_sec ? m_tv.tv_usec > rhs.m_tv.tv_usec : (m_tv.tv_sec > rhs.m_tv.tv_sec ? true : false)); }
+  inline bool Timestamp::operator<(const Timestamp& rhs) const { return (m_tv.tv_sec == rhs.m_tv.tv_sec ? m_tv.tv_usec < rhs.m_tv.tv_usec : (m_tv.tv_sec < rhs.m_tv.tv_sec ? true : false)); }
   inline bool Timestamp::operator==(const Timestamp& rhs) const { return (m_tv.tv_sec == rhs.m_tv.tv_sec && m_tv.tv_usec == rhs.m_tv.tv_usec); }
   inline long Timestamp::sec()  { return m_tv.tv_sec;  }
   inline long Timestamp::usec() { return m_tv.tv_usec; }

@@ -50,7 +50,7 @@ CacheBuffer::CacheBuffer()
   tv.tv_sec = 0; tv.tv_usec = 0;
   m_timestamp.set(tv);
 
-  m_beamletweights.resize(RSPDriverTask::N_RCU);
+  //m_beamletweights;
   m_subbandselection.resize(RSPDriverTask::N_RCU);
   m_rcusettings.resize(RSPDriverTask::N_RCU);
   m_wgsettings.resize(RSPDriverTask::N_RCU);
@@ -58,30 +58,21 @@ CacheBuffer::CacheBuffer()
   m_statistics.resize(RSPDriverTask::N_RCU);
   //m_versions;
 
-  for (int rcu = 0; rcu < m_beamletweights.extent(firstDim); rcu++)
-  {
-    m_beamletweights(rcu).weights().resize(RSPDriverTask::N_RCU,
-					   N_BEAMLETS);
-  }
+  m_beamletweights.weights().resize(RSPDriverTask::N_RCU,
+				    N_BEAMLETS);
 }
 
 CacheBuffer::~CacheBuffer()
 {
-  for (int rcu = 0; rcu < m_beamletweights.extent(firstDim); rcu++)
-  {
-    m_beamletweights(rcu).weights().free();
-  }
-
-  m_beamletweights.free();
   m_subbandselection.free();
   m_rcusettings.free();
   m_wgsettings.free();
   m_statistics.free();
 }
 
-BeamletWeights&   CacheBuffer::getBeamletWeights(int rcu)
+BeamletWeights&   CacheBuffer::getBeamletWeights()
 {
-  return m_beamletweights(rcu);
+  return m_beamletweights;
 }
 
 SubbandSelection& CacheBuffer::getSubbandSelection(int rcu)

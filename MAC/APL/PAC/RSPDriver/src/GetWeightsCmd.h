@@ -1,6 +1,6 @@
 //#  -*- mode: c++ -*-
 //#
-//#  BWCommand.h: Beamformer Weights settings command.
+//#  GetWeightsCmd.h: Beamformer Weights get command.
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -22,8 +22,8 @@
 //#
 //#  $Id$
 
-#ifndef BWCOMMAND_H_
-#define BWCOMMAND_H_
+#ifndef GETWEIGHTSCMD_H_
+#define GETWEIGHTSCMD_H_
 
 #include "Command.h"
 #include "RSP_Protocol.ph"
@@ -33,18 +33,16 @@
 
 namespace RSP
 {
-  class BWCommand : public Command
+  class GetWeightsCmd : public Command
   {
     public:
       /**
-       * Constructors for a BWCommand object.
-       * Currently the tv_usec part is always set to 0 irrespective
-       * of the value passed in.
+       * Constructors for a GetWeightsCmd object.
        */
-      BWCommand(GCFEvent& event, GCFPortInterface& port, Operation oper);
+      GetWeightsCmd(GCFEvent& event, GCFPortInterface& port, Operation oper);
 	  
-      /* Destructor for BWCommand. */
-      virtual ~BWCommand();
+      /* Destructor for GetWeightsCmd. */
+      virtual ~GetWeightsCmd();
 
       /**
        * Acknowledge the command by sending the appropriate
@@ -68,14 +66,14 @@ namespace RSP
       /**
        * get timestamp of the event
        */
-      virtual const Timestamp& getTimestamp();
+      virtual const Timestamp& getTimestamp() const;
       virtual void setTimestamp(const Timestamp& timestamp);
       /*@}*/
 
     private:
-      BWCommand();
-      RSPSetweightsEvent* m_event;
+      GetWeightsCmd();
+      RSPGetweightsEvent* m_event;
   };
 };
      
-#endif /* BWCOMMAND_H_ */
+#endif /* GETWEIGHTSCMD_H_ */

@@ -76,8 +76,10 @@ RSPDriver_SOURCES = \
 	Scheduler.cc \
 	Command.h \
 	Command.cc \
-	BWCommand.h \
-	BWCommand.cc \
+	SetWeightsCmd.h \
+	SetWeightsCmd.cc \
+	GetWeightsCmd.h \
+	GetWeightsCmd.cc \
 	Cache.h \
 	Cache.cc \
 	SyncAction.h \

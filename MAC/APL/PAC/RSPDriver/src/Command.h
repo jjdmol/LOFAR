@@ -34,80 +34,94 @@
 namespace RSP
 {
   class Command
+  {
+    public:
+
+      /** types */
+      enum Operation
       {
-      public:
-
-	  /** types */
-	  enum Operation
-	      {
-		  READ = 1,
-		  WRITE,
-	      };
-
-	  /**
-	   * Constructors for a Command object.
-	   * Currently the tv_usec part is always set to 0 irrespective
-	   * of the value passed in.
-	   */
-	  Command();
-	  
-	  /* Destructor for Command. */
-	  virtual ~Command();
-
-	  /*@{*/
-	  /**
-	   * Accessor methods for the period field.
-	   * The period (in seconds) with which this command should
-	   * be executed. The command will be executed every 'period' seconds.
-	   */
-	  void  setPeriod(int16 period);
-	  int16 getPeriod();
-	  /*@}*/
-
-	  /**
-	   * Set the type of operation READ/WRITE.
-	   */
-	  void setOperation(Operation oper);
-
-	  /*@{*/
-	  /**
-	   * Accessor methods for the port member.
-	   */
-	  void setPort(GCFPortInterface& port);
-	  GCFPortInterface* getPort();
-	  /*@}*/
-
-	  /**
-	   * Acknowledge the command by sending the appropriate
-	   * response on m_port.
-	   */
-	  virtual void ack(CacheBuffer& cache) = 0;
-
-	  /**
-	   * Make necessary changes to the cache for the next synchronization.
-	   * Any changes will be sent to the RSP boards.
-	   */
-	  virtual void apply(CacheBuffer& cache) = 0;
-
-	  /**
-	   * Complete the command by sending the appropriate response on
-	   * the m_port;
-	   */
-	  virtual void complete(CacheBuffer& cache) = 0 ;
-
-	  /**
-	   * Get or set the timestamp of the underlying event
-	   * for a command.
-	   */
-	  virtual const RSP_Protocol::Timestamp& getTimestamp() = 0;
-	  virtual void setTimestamp(const RSP_Protocol::Timestamp& timestamp) = 0;
-
-      private:
-	  int16              m_period;
-	  GCFEvent*          m_event;
-	  GCFPortInterface*  m_port;
-	  Operation          m_operation;
+	READ = 1,
+	WRITE,
       };
+
+      /**
+       * Constructors for a Command object.
+       * Currently the tv_usec part is always set to 0 irrespective
+       * of the value passed in.
+       */
+      Command();
+	  
+      /* Destructor for Command. */
+      virtual ~Command();
+
+      /*@{*/
+      /**
+       * Accessor methods for the period field.
+       * The period (in seconds) with which this command should
+       * be executed. The command will be executed every 'period' seconds.
+       */
+      void  setPeriod(int16 period);
+      int16 getPeriod();
+      /*@}*/
+
+      /**
+       * Set the type of operation READ/WRITE.
+       */
+      void setOperation(Operation oper);
+
+      /*@{*/
+      /**
+       * Accessor methods for the port member.
+       */
+      void setPort(GCFPortInterface& port);
+      GCFPortInterface* getPort();
+      /*@}*/
+
+      /**
+       * Acknowledge the command by sending the appropriate
+       * response on m_port.
+       */
+      virtual void ack(CacheBuffer& cache) = 0;
+
+      /**
+       * Make necessary changes to the cache for the next synchronization.
+       * Any changes will be sent to the RSP boards.
+       */
+      virtual void apply(CacheBuffer& cache) = 0;
+
+      /**
+       * Complete the command by sending the appropriate response on
+       * the m_port;
+       */
+      virtual void complete(CacheBuffer& cache) = 0 ;
+
+      /**
+       * Get or set the timestamp of the underlying event
+       * for a command.
+       */
+      virtual const RSP_Protocol::Timestamp& getTimestamp() const = 0;
+      virtual void setTimestamp(const RSP_Protocol::Timestamp& timestamp) = 0;
+
+      /**
+       * Compare operator to order commands in the queue
+       */
+      bool operator<(const Command& other);
+
+    private:
+      int16              m_period;
+      GCFEvent*          m_event;
+      GCFPortInterface*  m_port;
+      Operation          m_operation;
+  };
+
+  /**
+   * Comparison function to order a priority_queue of Command* pointers
+   * as it is used in the Scheduler class.
+   */
+  struct Command_compare { 
+      bool operator() (Command*& x, Command*& y) const 
+      { return x->getTimestamp() < y->getTimestamp(); }
+  };
 };
      
 #endif /* COMMAND_H_ */

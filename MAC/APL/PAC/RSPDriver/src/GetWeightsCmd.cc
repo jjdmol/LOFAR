@@ -1,4 +1,4 @@
-//#  BWCommand.cc: implementation of the BWCommand class
+//#  GetWeightsCmd.cc: implementation of the GetWeightsCmd class
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -22,7 +22,9 @@
 
 #include "RSP_Protocol.ph"
 #include "RSPDriverTask.h"
-#include "BWCommand.h"
+#include "GetWeightsCmd.h"
+
+#include <blitz/array.h>
 
 #undef PACKAGE
 #undef VERSION
@@ -32,56 +34,61 @@
 using namespace RSP;
 using namespace LOFAR;
 using namespace RSP_Protocol;
+using namespace blitz;
 
-BWCommand::BWCommand(GCFEvent& event, GCFPortInterface& port, Operation oper)
+GetWeightsCmd::GetWeightsCmd(GCFEvent& event, GCFPortInterface& port, Operation oper)
 {
-  m_event = new RSPSetweightsEvent(event);
+  m_event = new RSPGetweightsEvent(event);
 
   setOperation(oper);
   setPeriod(0);
   setPort(port);
 }
 
-BWCommand::~BWCommand()
+GetWeightsCmd::~GetWeightsCmd()
 {
   delete m_event;
 }
 
-void BWCommand::ack(CacheBuffer& /*cache*/)
+void GetWeightsCmd::ack(CacheBuffer& cache)
 {
-  RSPSetweightsackEvent ack;
+  RSPGetweightsackEvent ack;
 
   ack.timestamp = getTimestamp();
   ack.status = SUCCESS;
+
+  ack.weights.weights().resize(m_event->rcumask.count(), N_BEAMLETS);
+
+  int result_rcu = 0;
+  for (int cache_rcu = 0; cache_rcu < RSPDriverTask::N_RCU; cache_rcu++)
+  {
+    if (m_event->rcumask[result_rcu])
+    {
+      ack.weights.weights()(result_rcu, Range::all()) = 
+	cache.getBeamletWeights().weights()(cache_rcu, Range::all());
+      result_rcu++;
+    }
+  }
   
   getPort()->send(ack);
 }
 
-void BWCommand::apply(CacheBuffer& cache)
+void GetWeightsCmd::apply(CacheBuffer& /*cache*/)
 {
-  int inrcu = 0;
-  for (int outrcu = 0; outrcu < RSPDriverTask::N_RCU; outrcu++)
-  {
-    if (m_event->rcumask[outrcu])
-    {
-      cache.getBeamletWeights(outrcu).weights()
-	= m_event->weights.weights()(inrcu);
-
-      inrcu++;
-    }
-  }
+  // no-op
 }
 
-void BWCommand::complete(CacheBuffer& /*cache*/)
+void GetWeightsCmd::complete(CacheBuffer& cache)
 {
+  ack(cache);
 }
 
-const Timestamp& BWCommand::getTimestamp()
+const Timestamp& GetWeightsCmd::getTimestamp() const
 {
   return m_event->timestamp;
 }
 
-void BWCommand::setTimestamp(const Timestamp& timestamp)
+void GetWeightsCmd::setTimestamp(const Timestamp& timestamp)
 {
   m_event->timestamp = timestamp;
 }

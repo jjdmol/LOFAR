@@ -46,7 +46,7 @@ namespace RSP
 	  /**
 	   * Data access methods.
 	   */
-	  RSP_Protocol::BeamletWeights&   getBeamletWeights(int rcu);
+	  RSP_Protocol::BeamletWeights&   getBeamletWeights();
 	  RSP_Protocol::SubbandSelection& getSubbandSelection(int rcu);
 	  RSP_Protocol::RCUSettings&      getRCUSettings(int rcu);
 	  RSP_Protocol::WGSettings&       getWGSettings(int rcu);
@@ -58,7 +58,7 @@ namespace RSP
       private:
 	  RSP_Protocol::Timestamp        m_timestamp;
 
-	  blitz::Array<RSP_Protocol::BeamletWeights, 1>   m_beamletweights;
+	  BeamletWeights                                  m_beamletweights;
 	  blitz::Array<RSP_Protocol::SubbandSelection, 1> m_subbandselection;
 	  blitz::Array<RSP_Protocol::RCUSettings, 1>      m_rcusettings;
 	  blitz::Array<RSP_Protocol::WGSettings, 1>       m_wgsettings;

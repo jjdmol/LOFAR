@@ -130,7 +130,7 @@ namespace EPA_Protocol
       static const uint16 WGUSER_SIZE        = 1024;
 
       static const uint16 NRSUBBANDS_SIZE    = 2;
-      static const uint16 SUBBANDSELECT_SIZE = 256;
+      static const uint16 SUBBANDSELECT_SIZE = 512;
 
       static const uint16 BFCOEFS_SIZE       = 1024;
 

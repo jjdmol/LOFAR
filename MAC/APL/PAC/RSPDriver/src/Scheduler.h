@@ -57,6 +57,11 @@ namespace RSP
       GCFEvent::TResult dispatch(GCFEvent& event, GCFPortInterface& port);
 
       /**
+       * Indicate whether synchronization of all data has completed.
+       */
+      bool Scheduler::syncHasCompleted();
+
+      /**
        * Add a synchronization action to be carried out
        * periodically on the specified board.
        */
@@ -69,10 +74,13 @@ namespace RSP
        */
       RSP_Protocol::Timestamp enter(Command* command);
 
+      /*@{*/
       /**
-       * Set the current time (from the update triggering timeout event).
+       * Set/get the current time (from the update triggering timeout event).
        */
       void setCurrentTime(long sec, long usec);
+      Timestamp getCurrentTime() const;
+      /*@}*/
 
     private:
       /*@{*/
@@ -88,18 +96,19 @@ namespace RSP
       void              completeCommands();
       /*@}*/
 
-      std::priority_queue<Command*> m_later_queue;
-      std::priority_queue<Command*> m_now_queue;
-      std::priority_queue<Command*> m_periodic_queue;
-      std::priority_queue<Command*> m_done_queue;
+      typedef std::priority_queue<Command*, std::vector<Command*>, RSP::Command_compare> pqueue;
+      pqueue m_later_queue;
+      pqueue m_now_queue;
+      pqueue m_periodic_queue;
+      pqueue m_done_queue;
 
       std::map< GCFPortInterface*,
 		std::vector<SyncAction*> > m_syncactions;
+      std::map< GCFPortInterface*, bool >  m_sync_completed;
 
       RSP_Protocol::Timestamp m_current_time;
 
       int m_current_priority;
-      bool m_sync_done;
   };
 };
      

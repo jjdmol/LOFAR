@@ -59,6 +59,7 @@ namespace RSP_Test
        * beam_server port is connected.
        */
       GCFEvent::TResult test001(GCFEvent& e, GCFPortInterface &p);
+      GCFEvent::TResult test002(GCFEvent& e, GCFPortInterface &p);
 
       /**
        * Run the tests.
