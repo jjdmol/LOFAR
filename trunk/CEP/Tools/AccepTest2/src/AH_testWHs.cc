@@ -52,9 +52,10 @@ namespace LOFAR
     int NoHeatLines = 1;
     int NoSplitters = 1;
     int NoSplitsPerSplitter = 3;
-    int MatrixX = 8000;
-    int MatrixY = 300;
+    int MatrixX = 8;
+    int MatrixY = 3;
 
+#ifdef HAVE_MPI
     int totalNumberOfNodes = ( NoSplitsPerSplitter + 2 ) * NoSplitters + 3 * NoHeatLines + NoRndNodes;
     int MPINodes = TH_MPI::getNumberOfNodes();
     if (totalNumberOfNodes>MPINodes) {
@@ -65,6 +66,7 @@ namespace LOFAR
       cerr<<"This program was started on "<<TH_MPI::getNumberOfNodes()
 	  <<" nodes, but we need only "<<totalNumberOfNodes<<" nodes."<<endl;
     };
+#endif
     
     // you can choose the output for the WH_Dump here
     // of course this can also be done per workholder
@@ -159,26 +161,26 @@ namespace LOFAR
     for (int Hi = 0; Hi < NoHeatLines; Hi++) {
       // random nodes to transpose
       for (int Ri = 0; Ri < NoRndNodes; Ri++) {
-	connectWHs_MPI(RandomNodes[Ri], Hi, TransposeNodes[Hi], Ri);
+	connectWHs(RandomNodes[Ri], Hi, TransposeNodes[Hi], Ri);
       }
       // transpose nodes to heat1
-      connectWHs_MPI(TransposeNodes[Hi], 0, Heat1Nodes[Hi], 0);
+      connectWHs(TransposeNodes[Hi], 0, Heat1Nodes[Hi], 0);
     }
     for (int Si = 0; Si < NoSplitters; Si++) {
       // heat nodes to split
-      connectWHs_MPI(Heat1Nodes[Si], 0, SplitNodes[Si], 0);
+      connectWHs(Heat1Nodes[Si], 0, SplitNodes[Si], 0);
       for (int Hi = 0; Hi < NoSplitsPerSplitter; Hi++) {
 	// split nodes to heat2
-	connectWHs_MPI(SplitNodes[Si], Hi, Heat2Nodes[Si*NoSplitsPerSplitter+Hi], 0);
+	connectWHs(SplitNodes[Si], Hi, Heat2Nodes[Si*NoSplitsPerSplitter+Hi], 0);
 	// heat2 nodes to join
-	connectWHs_MPI(Heat2Nodes[Si*NoSplitsPerSplitter+Hi], 0, JoinNodes[Si], Hi);
+	connectWHs(Heat2Nodes[Si*NoSplitsPerSplitter+Hi], 0, JoinNodes[Si], Hi);
       }
       // dump nodes to the join
-      connectWHs_MPI(JoinNodes[Si], 0, DumpNodes[Si], 0);
+      connectWHs(JoinNodes[Si], 0, DumpNodes[Si], 0);
     }
     // connect the remaining Dump nodes directly to Heat1
     for (int Di = NoSplitters; Di < NoHeatLines; Di++) {
-      connectWHs_MPI(Heat1Nodes[Di], 0, DumpNodes[Di], 0);
+      connectWHs(Heat1Nodes[Di], 0, DumpNodes[Di], 0);
     }
   };
 
@@ -201,7 +203,9 @@ namespace LOFAR
   }
   
   void AH_testWHs::run(int nsteps) {
+#ifdef HAVE_MPI
     TH_MPI::synchroniseAllProcesses();
+#endif
     // call process method on all WH's
     int NoWHs = itsWHs.size();
     for (int s = 0; s < nsteps; s++) {
@@ -213,14 +217,23 @@ namespace LOFAR
     }
   }
   
-  void AH_testWHs::connectWHs_MPI(WorkHolder* srcWH, int srcDH, WorkHolder* dstWH, int dstDH, bool isBlocking) {
+  void AH_testWHs::connectWHs(WorkHolder* srcWH, int srcDH, WorkHolder* dstWH, int dstDH) {
+#ifdef HAVE_MPI
     srcWH->getDataManager().getOutHolder(srcDH)->connectTo
       ( *(dstWH->getDataManager().getInHolder(dstDH)), 
 	TH_MPI(srcWH->getNode(), dstWH->getNode()),
 	true);
+#else
+    srcWH->getDataManager().getOutHolder(srcDH)->connectTo
+      ( *(dstWH->getDataManager().getInHolder(dstDH)), 
+	TH_Mem(),
+	false);
+#endif
   }
 
   void AH_testWHs::quit() {
+#ifdef HAVE_MPI
     TH_MPI::finalize();
+#endif
   }
 }
