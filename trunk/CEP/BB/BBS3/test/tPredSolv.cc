@@ -22,6 +22,7 @@
 
 #include <BBS3/Prediffer.h>
 #include <BBS3/Solver.h>
+#include <BBS3/MNS/MeqStoredParmPolc.h>
 #include <Common/VectorUtil.h>
 #include <Common/LofarLogger.h>
 #include <Common/BlobOBufChar.h>
@@ -49,6 +50,23 @@ using namespace std;
 // demo3.MS contains 50 frequency channels of 500000 Hz with
 // center frequencies of 137750000-162250000 Hz.
 // There are 5 time stamps of 2 sec in it (centers 2.35208883e9 + 2-10).
+
+void writeParms (const vector<ParmData>& pData, const MeqDomain& domain)
+{
+  MeqParmGroup pgroup;
+  for (uint i=0; i<pData.size(); ++i) {
+    cout << "Writing parm " << pData[i].getName() << " into "
+	 << pData[i].getTableName() << ' ' << pData[i].getDBName()
+	 << " (" << pData[i].getDBType()
+	 << ") values=" << pData[i].getValues() << endl;
+    ParmTable ptab(pData[i].getDBType(), pData[i].getTableName(),
+		   pData[i].getDBName(), "");
+    MeqStoredParmPolc parm(pData[i].getName(), &pgroup, &ptab);
+    parm.readPolcs (domain);
+    parm.update (pData[i].getValues());
+    parm.save();
+  }
+}
 
 void doSolve (Prediffer& pre1, const vector<string>& solv, bool toblob,
 	      int niter)
@@ -123,6 +141,61 @@ void doSolve (Prediffer& pre1, const vector<string>& solv, bool toblob,
 	 << solver.getSolvableValues() << endl;
     cout.precision (prec);
     pre1.updateSolvableParms (solver.getSolvableParmData());
+  }
+  delete [] buffer;
+}
+
+void doSolve1 (Prediffer& pre1, const vector<string>& solv, int niter)
+{
+  // Set the solvable parameters.
+  pre1.clearSolvableParms();
+  pre1.setSolvableParms (solv, vector<string>(), true);
+  // Set a domain.
+  vector<uint32> shape = pre1.setDomain (137750000-250000, 4*500000,
+  //vector<uint32> shape = pre1.setDomain (0., 1e12,
+					 0., 1e12);
+  uint nrval = shape[0] * shape[1] * shape[2];
+  uint bufnreq = shape[2];
+  uint totnreq = shape[3];
+  uint nrloop = (totnreq + bufnreq - 1) / bufnreq;
+  cout << "bufShape " << shape << endl;
+  double* buffer = new double[nrval];
+    
+  // Get the ParmData from the Prediffer and send it to the solver.
+  // Optionally convert it to and from a blob to see if that works fine.
+  Solver solver;
+  solver.initSolvableParmData (1);
+  vector<ParmData> pData = pre1.getSolvableParmData();
+  solver.setSolvableParmData (pData, 0);
+  pre1.showSettings();
+  streamsize prec = cout.precision();
+  cout << "Before: " << setprecision(10) << solver.getSolvableValues() << endl;
+
+  for (int it=0; it<niter; ++it) {
+    // Get the equations from the prediffer and give them to the solver.
+    for (uint i=0; i<nrloop; i++) {
+      int nres;
+      bool more = pre1.getEquations (buffer, shape, nres);
+      int nreq = bufnreq;
+      if (i == nrloop-1) {
+	nreq = totnreq  - (nrloop-1)*bufnreq;
+	ASSERT (!more);
+      } else {
+	ASSERT (more);
+      }
+      ASSERT (nres == nreq);
+      ///cout << "*** buffer " << i << " ***" << endl;
+      ///    hexdump(buffer, nrval);
+      solver.setEquations (buffer, nreq, shape[1]-1, shape[0], 0);
+    }
+    // Do the solve.
+    Quality quality;
+    solver.solve (false, quality);
+    cout << "iter" << it << ":  " << setprecision(10)
+	 << solver.getSolvableValues() << endl;
+    cout.precision (prec);
+    writeParms (solver.getSolvableParmData(), pre1.getDomain());
+    pre1.updateSolvableParms();
   }
   delete [] buffer;
 }
@@ -301,6 +374,29 @@ int main (int argc, const char* argv[])
       solv[2] = "StokesI.*";
       doSolve (pre1, solv, false, 5);
       cout << "End of test with 21 antennas" << endl;
+    }
+    // Do a solve updating the parm table.
+    // This should be the last one.
+    {
+      cout << "Starting test with updating parmtable" << endl;
+      vector<int> antVec(10);
+      for (uint i=0; i<antVec.size(); ++i) {
+	antVec[i] = 2*i;
+      }
+      Prediffer pre1(argv[2], argv[3], argv[4], "aips", argv[1], "", "",
+		     antVec, "LOFAR.RI", false, true);
+      // Do a further selection of a few stations.
+      vector<int> antVec2(10);
+      for (uint i=0; i<antVec2.size(); ++i) {
+	antVec2[i] = 4*i;
+      }
+      pre1.select (antVec2, antVec2, false);    // no autocorrelations
+      vector<string> solv(3);
+      solv[0] = "RA.*";
+      solv[1] = "DEC.*";
+      solv[2] = "StokesI.*";
+      doSolve1 (pre1, solv, 5);
+      cout << "End of test with updating parmtable" << endl;
     }
   } catch (std::exception& x) {
     cerr << "Unexpected exception: " << x.what() << endl;

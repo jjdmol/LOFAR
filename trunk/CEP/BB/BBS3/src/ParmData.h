@@ -39,8 +39,9 @@ public:
   ParmData ();
   // Constructor.
   ParmData (const std::string& name,
-	    const std::string& tableType,
 	    const std::string& tableName,
+	    const std::string& dbType,
+	    const std::string& dbName,
 	    int nrSpid, int firstSpid,
 	    const MeqMatrix& values);
 
@@ -50,8 +51,10 @@ public:
     { return itsName; }
   const std::string& getTableName() const
     { return itsTableName; }
-  const std::string& getTableType() const
-    { return itsTableType; }
+  const std::string& getDBType() const
+    { return itsDBType; }
+  const std::string& getDBName() const
+    { return itsDBName; }
   int getIndex() const
     { return itsTableIndex; }
   int getNrSpid() const
@@ -92,7 +95,8 @@ private:
   int itsTableIndex;
   std::string itsName;
   std::string itsTableName;
-  std::string itsTableType;
+  std::string itsDBType;
+  std::string itsDBName;
   MeqMatrix itsValues;
 };
 

@@ -40,11 +40,15 @@ MeqStoredParmPolc::~MeqStoredParmPolc()
 
 string MeqStoredParmPolc::getTableName() const
 {
-  return itsTable->getName();
+  return itsTable->getTableName();
 }
-string MeqStoredParmPolc::getTableType() const
+string MeqStoredParmPolc::getDBType() const
 {
-  return itsTable->getType();
+  return itsTable->getDBType();
+}
+string MeqStoredParmPolc::getDBName() const
+{
+  return itsTable->getDBName();
 }
 
 void MeqStoredParmPolc::readPolcs (const MeqDomain& domain)
@@ -94,6 +98,20 @@ int MeqStoredParmPolc::initDomain (const MeqDomain& domain, int spidIndex)
 
   }
   return MeqParmPolc::initDomain (domain, spidIndex);
+}
+
+void MeqStoredParmPolc::updateFromTable()
+{
+  const vector<MeqPolc>& polcs = getPolcs();
+  ASSERT(1 == polcs.size());
+  ASSERTSTR (polcs[0].domain()==itsDomain,
+	     "MeqStoredParmPolc::updateFromTable - "
+	     "domain mismatches domain given in itsPolcs");
+  // Find the polc(s) for the current domain.
+  vector<MeqPolc> newPolcs = itsTable->getPolcs (getName(), itsDomain);
+  ASSERT(1 == newPolcs.size());
+  // Update the coefficients with the new ones.
+  update (newPolcs[0].getCoeff());
 }
 
 void MeqStoredParmPolc::save()

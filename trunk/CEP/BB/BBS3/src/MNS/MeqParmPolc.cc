@@ -176,6 +176,11 @@ void MeqParmPolc::update (const vector<double>& values)
   itsPolcs[0].update (values);
 }
 
+void MeqParmPolc::updateFromTable()
+{
+  ASSERTSTR(false, "MeqParmPolc::updatwFromTable not implemented");
+}
+
 void MeqParmPolc::save()
 {}
 

@@ -48,7 +48,8 @@ public:
   // Get the name and type of the table holding the parameter.
   // <group>
   virtual string getTableName() const;
-  virtual string getTableType() const;
+  virtual string getDBType() const;
+  virtual string getDBName() const;
   // </group>
 
   // Read the polcs for the given domain.
@@ -60,6 +61,11 @@ public:
 
   // Make the new value persistent (for the given domain).
   virtual void save();
+
+  // Update the solvable parameter coefficients with the new values
+  // in the table.
+  // The default implementation throws a "not implemented" exception.
+  virtual void updateFromTable();
 
 private:
   ParmTable* itsTable;
