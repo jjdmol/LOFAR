@@ -139,7 +139,9 @@ namespace LOFAR
 		  (NINPUT_BEAMLETS*itsMac.getBeamletSize()+1)*sizeof(complex<float>));
     } else {
       // Wrap around
+      itsInputFile.clear();
       itsInputFile.seekg(0);
+      
       itsInputFile.read((char*)InputData,
 		  (NINPUT_BEAMLETS*itsMac.getBeamletSize()+1)*sizeof(complex<float>));
     }
