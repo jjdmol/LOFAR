@@ -64,7 +64,7 @@ LOFARSim::LOFARSim()
 {
   // disable the RunInApp settings for all apps by default
   // later on, applications can be activated by setting to 0;
-  for (int i=0; i<10; i++) itsRunInApp[i]=999;
+  for (int i=0; i<10; i++) itsRunInApp[i]=0;//999;
 }
 
 
@@ -263,8 +263,8 @@ void LOFARSim::define(const ParamBlock&)
 	  correlator[beam*FREQBANDS+freqband]->connect(cpinput[station],
 						       station,
 						       beam*FREQBANDS+freqband,
-						       1   ,
-						       TH_Corba_Proto  );
+						       1   /*,
+							     TH_Corba_Proto*/);
 	}
       }
     } 
@@ -289,12 +289,14 @@ void LOFARSim::define(const ParamBlock&)
 void LOFARSim::run (int nsteps)
 {
 
+  if (nsteps <= 0) nsteps=40;
   unsigned int rank = TRANSPORTER::getCurrentRank ();
 
   // create the time Controller; All the simuls will be synchronized with this object
   Simul Controller(new WH_Controller(),"Controller",CONTROLLER_NODE);
 
-    while (1) {
+  //  for (int loops=0; loops<nsteps; loops++) {
+        while (1) {
 
 //      if (itsRunInApp[1]==0 && rank == 0)
 //        ((WH_WAV*)antenna[0][0]->getWorker())->takeSamples();
@@ -302,9 +304,8 @@ void LOFARSim::run (int nsteps)
 //        ((WH_WAV*)antenna[1][0]->getWorker())->takeSamples();
 
     //    nsteps = LAGS;
-    if (itsRunInApp[2]==0 && rank == CORRNODE) {
-      ((WH_Corr*)correlator[0]->getWorker())->openFile(CORR_TMP_FILE);
-    }
+    ((WH_Corr*)correlator[0]->getWorker())->openFile(CORR_TMP_FILE);
+    
 
 
 
@@ -331,7 +332,7 @@ void LOFARSim::run (int nsteps)
 #endif
   //  cout << endl << "END OF SIMUL on node " << rank << endl;
  
-  if (itsRunInApp[2]==0 && rank == CORRNODE) ((WH_Corr*)correlator[0]->getWorker())->closeFile();
+  ((WH_Corr*)correlator[0]->getWorker())->closeFile();
   usleep(500);
   system("/bin/cp ./WAVE/Corr.tmp ./WAVE/Corr.ext");
   usleep(500);

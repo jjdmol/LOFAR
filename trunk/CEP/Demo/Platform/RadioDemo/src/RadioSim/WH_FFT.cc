@@ -69,8 +69,6 @@ void WH_FFT::process ()
 
 	// Call 1D-fft function four1
 	four1(fft_data-1,(ANTSAMPLES),1);
-#if 0
-#endif
 
 	// Put fft-data back in output buffer
 	for(int freq =0; freq < FREQS; freq++) {
@@ -84,7 +82,6 @@ void WH_FFT::process ()
 	itsOutDataHolders[output]->getPacket()->timeStamp =
 	  itsInDataHolders[0]->getPacket()->timeStamp ;
       }
-
   }
   else { // zeroes,ones,infile,skip
     switch (WorkHolder::getProcMode()) {
@@ -130,8 +127,10 @@ void WH_FFT::dump () const
 //   cout << endl;
 
   if (getInstanceCnt() == FFT_GRAPH) {
-    cout << "Write FFT output (" << FFT_GRAPH << " to file: outData/FFT.ext" << endl
-	 << "For plotting in Matlab with: plot(load('outData/FFT.ext'))" << endl ;
+    //    cout << "Write FFT output (" << FFT_GRAPH << " to file: outData/FFT.ext" 
+    //         << endl
+    //	       << "For plotting in Matlab with: plot(load('outData/FFT.ext'))" 
+    //         << endl ;
     ofstream outfile("outData/FFT.ext");
     for (int freq = 0; freq < FREQS; freq++)
       { outfile << sqrt(itsOutDataHolders[0]->getBuffer()[freq].real () * 

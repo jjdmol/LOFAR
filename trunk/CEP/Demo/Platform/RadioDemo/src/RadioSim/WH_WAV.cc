@@ -52,7 +52,7 @@ void WH_WAV::takeSamples(){
     cout << "WH_WAV::takeSamples;  channel = " << itsChannel << endl;
     unsigned short in;
 
-    system ("rm -f ./WAVE/antenna1.wav");
+    //system ("rm -f ./WAVE/antenna1.wav");
     //system ("rm -f ./WAVE/antenna1.wav.ready");
     if (itsChannel == 0) { 
       // record 1 second of sound into WAV file
@@ -139,7 +139,8 @@ void WH_WAV::process () {
 //  	  	 << endl;
 //  	    }
 //  	    cout << "*************************************" << endl;
-      
+	dump();
+    
     }
     //cout << "WH_WAV::Process " << endl;
     itsTimeStamp++;
@@ -158,6 +159,19 @@ void WH_WAV::dump () const {
 //       itsOutDataHolders[output]->getBuffer() << " ";
 //     }
 //   cout << endl;
+
+  cout << "Dump Antenna samples" << endl;
+    char filename[80];
+    sprintf(filename,".WAVE/antenna%1i.dat",itsChannel);
+    ofstream outfile(filename);
+    for (int ch = 0; ch < ANTSAMPLES; ch++)
+      { outfile << ch << " , "
+		<< sqrt(itsOutDataHolders[0]->getBuffer()[ch].real () * 
+			itsOutDataHolders[0]->getBuffer()[ch].real () +
+			itsOutDataHolders[0]->getBuffer()[ch].imag () *
+			itsOutDataHolders[0]->getBuffer()[ch].imag ()) << endl;
+      }
+    return;
 }
 
 
