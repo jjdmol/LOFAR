@@ -104,18 +104,26 @@ void WH_PreProcess::process()
        if (ENABLE_FS == 1) {
 	 // calculate hourangle
 	 float ha = ((DH_Beamlet*)getDataManager().getInHolder(i))->getElapsedTime() * itsMac.getWe() + itsMac.getStartHourangle();
-
-	 // calculate time delay
-	 float t_i = (station[itsStationID].getY() * sin(ha) * cos (itsMac.getDeclination()) 
-		      + station[itsStationID].getX() * cos (ha) * cos (itsMac.getDeclination())) / itsMac.getC();
 	 
+	 float t_i;
+	 // calculate time delay
+	 if (itsStationID == 0) {
+	   t_i = (station[itsStationID].getY() * sin(ha) * cos (itsMac.getDeclination()) 
+			+ station[itsStationID].getX() * cos (ha) * cos (itsMac.getDeclination())) / itsMac.getC();
+	 } else {
+	   t_i = (350000 * cos (ha) * cos (itsMac.getDeclination())) / itsMac.getC();
+	 }
+
+	 //cout << "WH_PreProcess, time delay : " << t_i << endl;	 
+
 	 // delay tracking phase rotation
-	 phase = exp (imag * (complex<float>)2 * (complex<float>)pi 
-		      * (itsMac.getFrequency(b) + j * itsMac.getChannelBandwidth() + itsMac.getChannelBandwidth() 
-			 / (complex<float>)2)  * t_i);
+	 phase = exp (imag * (complex<float>)2 * (complex<float>)pi * 
+		      (complex<float>)(i *(32000000/32768)*256  + j * 32000000/32768)  * t_i);
 	 
 	 // fringe stopping phase rotation
-	 phase *= exp (imag * (complex<float>)2 * (complex<float>)pi * itsMac.getLOfrequency() * t_i);
+	 phase *= exp (imag * (complex<float>)2 * (complex<float>)pi * (complex<float>)224000000 * t_i);
+
+	 // cout << "WH_PreProcess, phase rotation : " << phase << endl;
 	 
 	 // apply phase shift
 	 *((DH_Beamlet*)getDataManager().getOutHolder(i))->getBufferElement(j) 
