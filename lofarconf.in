@@ -1,10 +1,11 @@
 LCS/Common
-LCS/databases/PL
 LCS/Math
 LCS/CRD/Coord
 LCS/CRD/CoordServer
-CEP/Transport
+LCS/Transport
 LCS/ACC
+LCS/databases/PL
+LCS/databases/TransportPL
 DMI
 CEP/CPA/PSS3
 CEP/CPA/OCTOPUSSY
