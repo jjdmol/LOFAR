@@ -200,6 +200,7 @@ bool Transporter::read (bool fixedSized)
   else
     {
       TRACER2("Skip Transport::read itsTransportHolder or getReadTag <= 0");
+      result = false;
     }
   
   return result;
