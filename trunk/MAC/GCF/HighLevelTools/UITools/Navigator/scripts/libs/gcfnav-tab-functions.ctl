@@ -1,5 +1,30 @@
-// global functions. All event handlers are implemented here
-//
+//# gcfnav-tab-functions.ctl
+//#
+//#  Copyright (C) 2002-2004
+//#  ASTRON (Netherlands Foundation for Research in Astronomy)
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+//#
+//#  This program is free software; you can redistribute it and/or modify
+//#  it under the terms of the GNU General Public License as published by
+//#  the Free Software Foundation; either version 2 of the License, or
+//#  (at your option) any later version.
+//#
+//#  This program is distributed in the hope that it will be useful,
+//#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//#  GNU General Public License for more details.
+//#
+//#  You should have received a copy of the GNU General Public License
+//#  along with this program; if not, write to the Free Software
+//#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+//#
+//#  $Id$
+
+//#
+//# global functions for the Tabs of the Navigator. All event handlers are implemented here
+//#
+
+#uses "gcf-util.ctl"
 
 global string  VIEW_COMBOBOX_CTRL      = "ComboBoxViews";
 global string  VIEW_TABS_CTRL          = "TabViews";
@@ -20,10 +45,10 @@ global int     g_selectedView;
 ///////////////////////////////////////////////////////////////////////////
 void mappingClear(mapping &map)
 {
-  DebugTN("mappingClear begin",map);
+  LOG_TRACE("mappingClear begin",map);
   while(mappinglen(map)>0)
     mappingRemove(map,mappingGetKey(map,1));
-  DebugTN("mappingClear end",map);
+  LOG_TRACE("mappingClear end",map);
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -36,7 +61,7 @@ void mappingClear(mapping &map)
 ///////////////////////////////////////////////////////////////////////////
 void PanelInitialize(string datapoint)
 {
-  DebugTN("PanelInitialize(datapoint): ",datapoint);
+  LOG_DEBUG("PanelInitialize(datapoint): ",datapoint);
   
   
   dyn_errClass err;
@@ -95,7 +120,7 @@ void PanelInitialize(string datapoint)
   }
   else
   {
-    DebugTN("dpGet:",g_selectedView,selectedSubView,views,nrOfSubViews,subViews,configs);
+    LOG_TRACE("dpGet:",g_selectedView,selectedSubView,views,nrOfSubViews,subViews,configs);
 
     // create the mapping
     int beginSubViews=1;
@@ -125,13 +150,13 @@ void PanelInitialize(string datapoint)
       }
       else
       {
-        DebugTN("subviewcaption,subviewfilename:",subViewCaption,subViewFileName);
+        LOG_DEBUG("subviewcaption,subviewfilename:",subViewCaption,viewsPath+subViewFileName);
         g_subViews[subViewCaption] = viewsPath+subViewFileName;
         g_subViewConfigs[subViewCaption] = configs[i];
       }
     }
-    DebugTN("g_subViews = ",g_subViews);
-    DebugTN("g_subViewConfigs = ",g_subViewConfigs);
+    LOG_TRACE("g_subViews = ",g_subViews);
+    LOG_TRACE("g_subViewConfigs = ",g_subViewConfigs);
     
     // fill the combobox
     for(int i=1;i<=mappinglen(g_subViews);i++)
@@ -169,7 +194,7 @@ void PanelInitialize(string datapoint)
 ///////////////////////////////////////////////////////////////////////////
 void ComboBoxViewsSelectionChanged()
 {
-  DebugTN("ComboBoxViewsSelectionChanged()");
+  LOG_TRACE("ComboBoxViewsSelectionChanged()");
   
   shape viewsComboBoxCtrl = getShape(VIEW_COMBOBOX_CTRL);  
   shape viewTabsCtrl      = getShape(VIEW_TABS_CTRL);  
@@ -196,15 +221,17 @@ void ComboBoxViewsSelectionChanged()
   dyn_string panelParameters = makeDynString(
     "$datapoint:" + g_datapoint,
     "$configDatapoint:" + g_subViewConfigs[selectedSubView]);
-  DebugTN("selectedSubView,selectedPanel,panelParameters: ",selectedSubView,selectedPanel,panelParameters);
+  LOG_TRACE("selectedSubView,selectedPanel,panelParameters: ",selectedSubView,selectedPanel,panelParameters);
   viewTabsCtrl.namedRegisterPanel(VIEW_TABS_VIEW_NAME,selectedPanel,panelParameters);
   
-  string datapointTypeName = dpTypeName(g_datapoint);
+  string datapointTypeName = "";
+  if(dpExists(g_datapoint))
+    datapointTypeName = dpTypeName(g_datapoint);
   dyn_string configPanelParameters = makeDynString(
     "$selectedView:" + g_selectedView,
     "$selectedElementDpType:" + datapointTypeName,
     "$configDatapoint:"+g_subViewConfigs[selectedSubView]);
-  DebugTN("configPanel,configParameters: ",g_configPanelFileName,configPanelParameters);
+  LOG_TRACE("configPanel,configParameters: ",g_configPanelFileName,configPanelParameters);
   viewTabsCtrl.namedRegisterPanel(VIEW_TABS_CONFIG_NAME,g_configPanelFileName,configPanelParameters);
 }
 

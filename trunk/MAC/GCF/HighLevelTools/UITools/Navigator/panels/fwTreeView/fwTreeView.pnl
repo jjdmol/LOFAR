@@ -122,6 +122,14 @@ main()
 	//restore selected position in tree view:
 	setValue(\"\", \"selectedPos\", treeViewPos);
 	setValue(\"\", \"enabled\", TRUE);
+
+	//	trigger onSelect event:
+	if($sOnSelect!=\"\"){
+		getValue(\"\", \"selectedPos\", pos);
+		index  = fwTreeView_view2TreeIndex(pos);
+		id = startThread($sOnSelect, index);
+		while(id!=-1) delay(0,100);
+	}
 }" 0
 
 0 0 0 0 0 0

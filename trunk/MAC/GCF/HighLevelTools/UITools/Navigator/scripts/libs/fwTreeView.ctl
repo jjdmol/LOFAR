@@ -455,12 +455,20 @@ fwTreeView_watchDog()
 
 /** This function returns the selected position of the given tree view
  * @param position: gives the selected position
- * @param exceptionInfo: returns details of any errors
  * @param referenceName: name given to the tree when it was inserted as a reference panel
  */
-fwTreeView_getSelectedPosition(unsigned &position, dyn_string &exceptionInfo, string referenceName = "")
+fwTreeView_getSelectedPosition(unsigned &position, string referenceName = "")
 {
 	getValue(referenceName + "list", "selectedPos", position);
+}
+
+/** This function changes the selected position of the given tree view
+ * @param position: gives the selected position
+ * @param referenceName: name given to the tree when it was inserted as a reference panel
+ */
+fwTreeView_setSelectedPosition(unsigned position, string referenceName = "")
+{
+	setValue(referenceName + "list", "selectedPos", position);
 }
 
 /** This function returns the selected node of the given tree view
