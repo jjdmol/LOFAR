@@ -18,6 +18,7 @@ libuvplot_la_SOURCES := UVPGraphSettings.cc    \
 #                       UVPBaselineDataCache.cc 
 
 
+
 bin_PROGRAMS   := uvplot
 uvplot_SOURCES := main.cc \
                   UVPMainWindow.cc   UVPMainWindow.moc.cc  \
