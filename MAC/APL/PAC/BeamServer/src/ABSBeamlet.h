@@ -23,10 +23,12 @@
 #ifndef ABSBEAMLET_H_
 #define ABSBEAMLET_H_
 
-#include "ABSSpectralWindow.h"
+#include <ABSSpectralWindow.h>
 
 namespace ABS
 {
+  // forward declaration of Beam
+  class Beam;
 
   class Beamlet
       {
@@ -59,7 +61,7 @@ namespace ABS
 	   * within the spectral window.
 	   * @return 0 if allocation succeeded, < 0 otherwise.
 	   */
-	  int allocate(SpectralWindow const& spw, int subband);
+	  int allocate(const Beam& beam, SpectralWindow const& spw, int subband);
 
 	  /**
 	   * Deallocate the beamlet
@@ -73,20 +75,36 @@ namespace ABS
 	  bool allocated() const;
 
 	  /**
-	   * Accessor method for index.
+	   * Get pointer to spectral window for this beamlet.
 	   */
 	  const SpectralWindow* spw() const;
+
+	  /**
+	   * Get index (from 0) of the subband within the spectral window.
+	   */
 	  int subband() const;
+
+	  /**
+	   * Get absolute index of this beamlet in the array
+	   * of all beamlets.
+	   */
 	  int index() const;
+
+	  /**
+	   * Get beam.
+	   */
+	  const Beam* getBeam() const;
+
+	  /**
+	   * Calculate weights for all beamlets (static method).
+	   */
+	  static void calculate_weights();
 
       protected:
 	  Beamlet(); // no direct construction
 	  virtual ~Beamlet();
 
       private:
-	  /** is the beamlet allocated? */
-	  bool m_allocated;
-
 	  /** spectral window of the subband */
 	  const SpectralWindow * m_spw;
 
@@ -95,6 +113,14 @@ namespace ABS
 
 	  /** index of the beamlet in the total beamles array */
 	  int m_index;
+
+	  /**
+	   * Index of the beam to which this beamlet belongs.
+	   * -1 means beamlet is not allocated.
+	   * >= 0 means beamlet is allocated to the beam
+	   * with the specified index.
+	   */
+	  const Beam* m_beam;
 
       private:
 	  //@{
@@ -111,7 +137,7 @@ namespace ABS
 	  Beamlet& operator= (const Beamlet&); // not implemented
       };
 
-  inline bool Beamlet::allocated() const { return m_allocated; }
+  inline bool Beamlet::allocated() const { return m_beam != 0; }
   inline const SpectralWindow* Beamlet::spw() const { return m_spw; }
   inline int  Beamlet::subband()   const { return m_subband; }
   inline int  Beamlet::index()     const { return m_index; }

@@ -29,6 +29,12 @@
 
 #include <iostream>
 
+#undef PACKAGE
+#undef VERSION
+#include <lofar_config.h>
+#include <Common/LofarLogger.h>
+using namespace LOFAR;
+
 #define N_BEAMS              (256)
 #define N_BEAMLETS           (256)
 #define N_SUBBANDS_PER_BEAM  (N_BEAMLETS/N_BEAMS)
@@ -71,10 +77,16 @@ public:
 	  emptyBeam();
 	  doubleAllocate();
 	  pointing();
+	  convert_pointings();
 
 	  tearDown();
 	}
 
+    /**
+     * create a spectral window from 10MHz to 90Mhz
+     * steps of 256kHz
+     * SpectralWindow spw(10e6, 256*1e3, 80*(1000/256));
+     */
     BeamServerTest() :
 	Test("BeamServerTest"),
 	m_spw(10e6, 256*1e3, 80*(1000/256))
@@ -86,9 +98,6 @@ public:
 
     void allocate()
 	{
-	  // create a spectral window from 10MHz to 90Mhz
-	  // steps of 256kHz
-	  //SpectralWindow spw(10e6, 256*1e3, 80*(1000/256));
 
 	  set<int> subbands;
 
@@ -181,10 +190,45 @@ public:
 	  _test(m_beam[0]->addPointing(Pointing(Direction(
 			    0.0, 0.0, Direction::J2000), t)) < 0);
 	}
+
+    void convert_pointings()
+	{
+	  allocate();
+
+	  // add a few pointings
+	  struct timeval t = {0,0};
+	  _test(m_beam[0]->addPointing(Pointing(Direction(
+			    0.0, 0.0, Direction::LOFAR_LMN), t)) == 0);
+
+	  static struct timeval lasttime = { 0, 0 };
+	  struct timeval fromtime = lasttime;
+	  gettimeofday(&lasttime, 0);
+	  lasttime.tv_sec += 20;
+
+	  // iterate over all beams
+	  for (int i = 0; i < N_BEAMS; i++)
+	  {
+	      int ret = 0;
+	      _test(0 == (ret = Beam::getInstance(i)->convertPointings(fromtime, 20)));
+	      if (ret < 0) { deallocate(); return; }
+	  }
+
+	  Beamlet::calculate_weights();
+
+	  deallocate();
+	}
 };
 
 int main(int /*argc*/, char** /*argv*/)
 {
+  char prop_path[PATH_MAX];
+  const char* mac_config = getenv("MAC_CONFIG");
+
+  snprintf(prop_path, PATH_MAX-1,
+	   "%s/%s", (mac_config?mac_config:"."),
+	   "log4cplus.properties");
+  INIT_LOGGER(prop_path);
+
   Suite s("Beam Server Test Suite", &cout);
 
   s.addTest(new BeamServerTest);

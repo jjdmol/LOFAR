@@ -24,6 +24,13 @@
 
 #include <iostream>
 #include <sys/time.h>
+#include <queue>
+
+#undef PACKAGE
+#undef VERSION
+#include <lofar_config.h>
+#include <Common/LofarLogger.h>
+using namespace LOFAR;
 
 using namespace ABS;
 using namespace std;
@@ -82,7 +89,7 @@ int Beam::allocate(SpectralWindow const& spw, set<int> subbands)
 
       if (!beamlet) goto failure;
 
-      if (beamlet->allocate(spw, *sb) < 0) goto failure;
+      if (beamlet->allocate(*this, spw, *sb) < 0) goto failure;
 
       m_beamlets.insert(beamlet);
   }
@@ -92,7 +99,13 @@ int Beam::allocate(SpectralWindow const& spw, set<int> subbands)
   return 0;
 
  failure:
+  //
   // cleanup on failure
+  // need to set allocated to true
+  // to prevent failure of deallocate
+  // will be reset to false in deallocate
+  //
+  m_allocated = true;
   (void)deallocate();
 
   return -1;
@@ -121,6 +134,11 @@ int Beam::deallocate()
   return 0;
 }
 
+bool Beam::allocated() const
+{
+  return m_allocated;
+}
+
 int Beam::addPointing(const Pointing& pointing)
 {
   if (!m_allocated) return -1;
@@ -131,50 +149,94 @@ int Beam::addPointing(const Pointing& pointing)
 
 int Beam::convertPointings(struct timeval fromtime, unsigned long duration)
 {
+  // only works on allocated beams
+  if (!allocated()) return -1;
+
   Pointing from(Direction(0.0,0.0,Direction::LOFAR_LMN), fromtime);
   struct timeval totime = fromtime;
-  totime.tv_usec += duration;
+  totime.tv_sec += duration;
   Pointing deadline(Direction(0.0,0.0,Direction::LOFAR_LMN), totime);
 
   // clear previous coordinate track, assumed to be empty
-  if (!m_coordinate_track.empty())
+  if (!m_coord_track.empty())
   {
-      cerr << "Warning: coordinate track not empty!" << endl;
-      while (!m_coordinate_track.empty()) m_coordinate_track.pop();
+      LOG_WARN(formatString("Coordinate track not empty; %d items left!",
+			    m_coord_track.size()));
+      while (!m_coord_track.empty()) m_coord_track.pop();
   }
 
-  while (!m_pointing_queue.empty())
+  if (m_pointing_queue.empty())
   {
-      Pointing pointing = m_pointing_queue.top();
-      if (pointing < from)
-      {
-	  // discard
-	  m_pointing_queue.pop();
+      // make sure there is always at least one pointing
+      // on the m_coord_track queue to drive the weights calculation.
 
-	  cerr << "Warning: deadline missed." << endl;
-      }
-      else if (pointing < deadline)
+      //
+      // convert direction
+      // INSERT COORDINATE CONVERSION CALL
+      //
+      m_coord_track.push(m_pointing);
+  }
+  else
+  {
+      do
       {
-	  if (pointing.direction().type() != Direction::LOFAR_LMN)
+	  Pointing pointing = m_pointing_queue.top();
+	  if (pointing < from)
 	  {
-	      cerr << "Error: direction type not yet supported" << endl;
-	      cerr << "       pointing discarded." << endl;
+	      // discard
+	      m_pointing_queue.pop();
+
+	      LOG_WARN(formatString("Deadline missed for pointing (%f,%f)",
+				    pointing.direction().angle1(),
+				    pointing.direction().angle2()));
+	  }
+	  else if (pointing < deadline)
+	  {
+	      if (pointing.direction().type() != Direction::LOFAR_LMN)
+	      {
+		  LOG_ERROR("Direction type not supported yet, pointing discarded.");
+	      }
+	      else
+	      {
+		  //
+		  // convert direction
+		  // INSERT COORDINATE CONVERSION CALL
+		  //
+		  Pointing p = pointing;
+		  for (unsigned long sec = 0; sec < duration; sec++)
+		  {
+		      p.time().tv_sec += sec;
+		      m_coord_track.push(p);
+		  }
+	      }
+
+	      m_pointing_queue.pop();
 	  }
 	  else
 	  {
-	      m_coordinate_track.push(pointing);  
-	  }
+	      // the current pointing should be updated
+	      m_pointing = pointing;
 
-	  m_pointing_queue.pop();
-      }
-      else break; // done
+	      break; // done
+	  }
+      } while (!m_pointing_queue.empty());
   }
   
   return 0;
 }
 
-int Beam::getPointings()
-{ return 0; }
+int Beam::getCoordinates(priority_queue<Pointing>& coords) const
+{
+  priority_queue<Pointing> coord_track = m_coord_track;
+
+  while (!coord_track.empty())
+  {
+      coords.push(coord_track.top());
+      coord_track.pop();
+  }
+
+  return 0;
+}
 
 void Beam::getSubbandSelection(map<int,int>& selection) const
 {

@@ -31,20 +31,20 @@
 #include "ABSBeam.h"
 #include "ABSBeamlet.h"
 
-#undef PACKAGE
-#undef VERSION
-#include <lofar_config.h>
-#include <Common/LofarLogger.h>
-
 #include <iostream>
 #include <sys/time.h>
 #include <string.h>
 
 #include <netinet/in.h>
 
+#undef PACKAGE
+#undef VERSION
+#include <lofar_config.h>
+#include <Common/LofarLogger.h>
+using namespace LOFAR;
+
 using namespace ABS;
 using namespace std;
-using namespace LOFAR;
 
 BeamServerTask::BeamServerTask(string name)
     : GCFTask((State)&BeamServerTask::initial, name),
@@ -211,6 +211,7 @@ GCFEvent::TResult BeamServerTask::enabled(GCFEvent& e, GCFPortInterface& port)
 
 	  LOG_DEBUG(formatString("time=(%d,%d)", now.tv_sec, now.tv_usec));
 
+#if 0
 	  phase = !phase;
 	  
 	  if (phase)
@@ -222,13 +223,10 @@ GCFEvent::TResult BeamServerTask::enabled(GCFEvent& e, GCFPortInterface& port)
 	      sbselect();
 	      wgenable_action();
 	  }
-
-#if 0
+#else
 	  compute_timeout_action();
 
 	  wgdisable_action(); // send event on raw ethernet port
-
-	  update_sbselection(); // update subband selection
 #endif
       }
       break;
@@ -324,6 +322,7 @@ void BeamServerTask::beamalloc_action(ABSBeamallocEvent* ba,
   Beam* beam = 0;
   ABSBeamalloc_AckEvent ack(ba->beam_index, SUCCESS);
 
+  // check parameters
   if (!(beam = Beam::getInstance(ba->beam_index))
       || ((spwindex = ba->spectral_window) != 0)
       || !(ba->n_subbands > 0 && ba->n_subbands < N_BEAMLETS))
@@ -334,22 +333,20 @@ void BeamServerTask::beamalloc_action(ABSBeamallocEvent* ba,
   }
 
   set<int> subbands;
-  for (int i = 0; i < ba->n_subbands; i++)
+  for (int i = 0; i < ba->n_subbands; i++) subbands.insert(ba->subbands[i]);
+
+  // allocate the beam
+  if (beam->allocate(*m_spws[spwindex], subbands) < 0)
   {
-      subbands.insert(ba->subbands[i]);
-
-      // allocate the beam
-      if (beam->allocate(*m_spws[spwindex], subbands) < 0)
-      {
-	  ack.status = ERR_BEAMALLOC;
-	  port.send(ack);
-      }
-
-      m_beams.insert(ba->beam_index);
+      ack.status = ERR_BEAMALLOC;
+      port.send(ack);
   }
-  
-  update_sbselection();
-  port.send(ack);
+  else
+  {
+      m_beams.insert(ba->beam_index);
+      update_sbselection();
+      port.send(ack);
+  }
 }
 
 void BeamServerTask::beamfree_action(ABSBeamfreeEvent* bf,
@@ -441,15 +438,24 @@ void BeamServerTask::wgdisable_action()
   cerr << "SENT WGDISABLE" << endl;
 }
 
+/**
+ * This method is called once every second
+ * to calculate the weights for all beamlets.
+ */
 void BeamServerTask::compute_timeout_action()
 {
   // convert_pointings for all beams for the next deadline
+
+  static struct timeval lasttime = { 0, 0 };
+  struct timeval fromtime = lasttime;
+  gettimeofday(&lasttime, 0);
+  lasttime.tv_sec += 20;
   
   // iterate over all beams
   for (set<int>::iterator bi = m_beams.begin();
        bi != m_beams.end(); ++bi)
   {
-      //Beam::getInstance(*bi)->convert_poitings(fromtime, duration);
+      Beam::getInstance(*bi)->convertPointings(fromtime, 20);
   }
 
   calculate_weights();
@@ -458,6 +464,8 @@ void BeamServerTask::compute_timeout_action()
 
 void BeamServerTask::calculate_weights()
 {
+  // iterate over all beamlets
+  Beamlet::calculate_weights();
 }
 
 void BeamServerTask::send_weights()
@@ -516,7 +524,7 @@ void BeamServerTask::send_sbselection()
 
       ss.command = 1; // 1 == subband selection
       ss.seqnr = 0;
-      ss.pktsize = 5 + m_sbsel.size()*2;
+      ss.pktsize = htons(5 + m_sbsel.size()*2);
       ss.nofbands = (m_sbsel.size() <= 0 ? 0 : m_sbsel.size()*2 - 1);
       
       memset(&ss.bands, 0, sizeof(ss.bands));
@@ -542,9 +550,10 @@ void BeamServerTask::send_sbselection()
 	  ss.bands[sel->first*2+1] = sel->second*2;
       }
 
-      board.send(GCFEvent(F_RAW_SIG), &ss.command, ss.pktsize);
+      board.send(GCFEvent(F_RAW_SIG), &ss.command, 5 + m_sbsel.size()*2);
   }
 }
+
 void BeamServerTask::sbselect()
 {
     EPASubbandselectEvent ss;

@@ -6,7 +6,7 @@ AM_CXXFLAGS = \
 	-I$(top_srcdir)/../../APLCommon/src
 
 TESTS = \
-	BeamServerTest
+	BeamServerTest avtstub.sh
 
 noinst_LTLIBRARIES = libunittest.la
 

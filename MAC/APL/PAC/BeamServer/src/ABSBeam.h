@@ -65,16 +65,55 @@ namespace ABS
 	   * (indices in the spectral window).
 	   */
 	  int allocate(SpectralWindow const & spw, std::set<int> subbands);
+
+	  /**
+	   * Return allocation status of a beam.
+	   */
+	  bool allocated() const;
+
+	  /**
+	   * Deallocate a beam.
+	   */
 	  int deallocate();
+
+	  /**
+	   * Add a pointing to a beam.
+	   */
 	  int addPointing(const Pointing& pointing);
 
 	  /**
 	   * Convert coordinates from the m_pointing_queue
 	   * to the local coordinate system, for times >= time
 	   * and time < time + duration.
+	   * Converted coordinates are put on the m_coordinate_track
+	   * queue.
+	   * @param time First time of pointing to convert, this is typically
+	   * the last time the method was called. E.g.
+	   * @code
+	   * fromtime=lasttime;
+	   * gettimeofday(&lasttime, 0);
+	   * lasttime.tv_sec += 20; // 20 seconds ahead in time
+	   * for (beam in beams)
+	   * {
+	   *   // convert coordinate for next 20 seconds
+	   *   beam->convertPointings(fromtime, 20);
+	   * }
+	   * @endcode
+	   * @param duration Convert coordinates for this number of seconds
+	   * starting at time.
 	   */
 	  int convertPointings(struct timeval time, unsigned long duration);
-	  int getPointings();
+
+	  /**
+	   * Get converted time-stamped coordinates from the queue.
+	   * This method is called by the Beamlet class to get a priority
+	   * queue of coordinates.
+	   * @param coord The priority queue to which to add the coordinates.
+	   * This method should NOT clear the queue before adding coordinates
+	   * to it. It is the intention that this method can be called to add
+	   * coordinates to the argument coords queue.
+	   */
+	  int getCoordinates(std::priority_queue<Pointing>& coords) const;
 
 	  /**
 	   * Get the mapping from input subbands to
@@ -101,7 +140,7 @@ namespace ABS
 	  std::priority_queue<Pointing> m_pointing_queue;
 
 	  /** current coordinate track */
-	  std::priority_queue<Pointing> m_coordinate_track;
+	  std::priority_queue<Pointing> m_coord_track;
 
 	  /**
 	   * Set of beamlets belonging to this beam.
