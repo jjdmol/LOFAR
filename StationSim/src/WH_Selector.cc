@@ -32,7 +32,7 @@
 WH_Selector::WH_Selector (const string& name,
 			  unsigned int nout, unsigned int nrcu,
 			  unsigned int nsubbandin, unsigned int nsubbandout)
-: WorkHolder    (2, nout, name,"WH_Selector"),
+: WorkHolder    (2, nout, name, "WH_Selector"),
   itsInHolder   ("in", nrcu, nsubbandin),
   itsInSel      ("sel", nsubbandin),
   itsOutHolders (0),
@@ -46,8 +46,7 @@ WH_Selector::WH_Selector (const string& name,
   char str[8];
   for (unsigned int i=0; i<nout; i++) {
     sprintf (str, "%d", i);
-    itsOutHolders[i] = new DH_SampleC (string("out_") + str, nrcu,
-				       nsubbandout);
+    itsOutHolders[i] = new DH_SampleC(string("out_") + str, nrcu, nsubbandout);
   }
 }
 
@@ -84,6 +83,7 @@ void WH_Selector::process()
     DH_SampleC::BufferType* bufin = itsInHolder.getBuffer();
     const int* sel = itsInSel.getBuffer();
     DH_SampleC::BufferType* bufout = itsOutHolders[0]->getBuffer();
+    
     // Copy the selected input subband to the given output subband.
     // Check if the selection is given correctly.
     for (int i=0; i<itsNbandin; i++) {
@@ -129,9 +129,10 @@ DataHolder* WH_Selector::getInHolder (int channel)
 {
   AssertStr (channel < 2,
 	     "input channel too high");
-  if (channel == 0) {
+  if (channel == 0) 
+  {
     return &itsInHolder;
-  }
+  } 
   return &itsInSel;
 }
 DH_SampleC* WH_Selector::getOutHolder (int channel)

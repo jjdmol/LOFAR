@@ -68,12 +68,15 @@ void DH_SampleC::postprocess()
 
 bool DH_SampleC::doFsWrite (ofstream& oss) const
 {
-  oss << "*** Step " << Step::getEventCount() << " ***" << endl;
+  //  oss << "*** Step " << Step::getEventCount() << " ***" << endl;
   const BufferType* buf = itsBuffer;
-  for (int i=0; i<itsNx; i++) {
-    for (int j=0; j<itsNy; j++) {
-      oss << '(' << setw(20) << buf->real() << ',' << setw(20)
-	  << buf->imag() << ')' << ' ' ;
+  for (int i=0; i<itsNx; i++) 
+  {
+    for (int j=0; j<itsNy; j++) 
+    {
+      oss.precision(20);
+//      oss << *buf++ << ' ';
+      oss << buf->real() << ' ' << buf->imag() << ' ';
       buf++;
     }
     oss << endl;

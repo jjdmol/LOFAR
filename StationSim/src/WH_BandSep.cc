@@ -110,7 +110,7 @@ void WH_BandSep::preprocess()
     Matrix<double> filter(IPosition(2, itsNsubband, itsFilterLength),
 			  &coeff[0], SHARE);
     //filter /= max(filter);
-    
+  
     itsFilterLength = ncoeff / itsNsubband;
 
     // Create for each subband the filter vector from the matrix.

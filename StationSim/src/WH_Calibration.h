@@ -1,4 +1,4 @@
-//#  WH_Selector.h:
+//#  WH_Calibration.h:
 //#
 //#  Copyright (C) 2002
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -21,8 +21,8 @@
 //#  $Id$
 //#
 
-#ifndef STATIONSIM_WH_SELECTOR_H
-#define STATIONSIM_WH_SELECTOR_H
+#ifndef STATIONSIM_WH_CALIBRATION_H
+#define STATIONSIM_WH_CALIBRATION_H
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
@@ -31,35 +31,35 @@
 #include <BaseSim/WorkHolder.h>
 #include <StationSim/DH_SampleC.h>
 #include <StationSim/DH_SampleR.h>
-#include <StationSim/DH_SubBandSel.h>
+#include <Common/lofar_vector.h>
+
+#include <aips/Arrays/Vector.h>
+#include <aips/Arrays/Matrix.h>
+#include <aips/Arrays/Cube.h>
 
 
 /**
-   This is an example of a WorkHolder class.
-   It has one input and one output DH_RCU object as DataHolders.
-
-   It shows which functions have to be implemented
+   This WorkHolder analyses the complex data buffer.
 */
 
-class WH_Selector: public WorkHolder
+class WH_Calibration: public WorkHolder
 {
 public:
   /// Construct the work holder and give it a name.
   /// It is possible to specify how many input and output data holders
   /// are created and how many elements there are in the buffer.
   /// The first WorkHolder should have nin=0.
-  WH_Selector (const string& name,
-	       unsigned int nout, unsigned int nrcu,
-	       unsigned int nsubbandin, unsigned int nsubbandout);
+  WH_Calibration(const string& name, unsigned nout,
+	       unsigned int nrcu, unsigned int nsub1);
 
-  virtual ~WH_Selector();
+  virtual ~WH_Calibration();
 
   /// Static function to create an object.
-  static WorkHolder* construct (const string& name, int ninput, int noutput,
-				const ParamBlock&);
+  static WorkHolder* construct(const string& name, int ninput, int noutput,
+			       const ParamBlock&);
 
   /// Make a fresh copy of the WH object.
-  virtual WH_Selector* make (const string& name) const;
+  virtual WH_Calibration* make(const string& name) const;
 
   /// Do a process step.
   virtual void process();
@@ -68,29 +68,36 @@ public:
   virtual void dump() const;
 
   /// Get a pointer to the i-th input DataHolder.
-  /// The first one is the sampled data.
-  /// The second one is the selected subbands.
-  virtual DataHolder* getInHolder (int channel);
+  virtual DH_SampleC* getInHolder(int channel);
 
   /// Get a pointer to the i-th output DataHolder.
-  virtual DH_SampleC* getOutHolder (int channel);
+  virtual DH_SampleR* getOutHolder(int channel);
 
 private:
   /// Forbid copy constructor.
-  WH_Selector (const WH_Selector&);
+  WH_Calibration(const WH_Calibration&);
 
   /// Forbid assignment.
-  WH_Selector& operator= (const WH_Selector&);
+  WH_Calibration& operator= (const WH_Calibration&);
 
+  /// Pointer to the array of input DataHolders.
   DH_SampleC itsInHolder;
-  DH_SubBandSel itsInSel;
-   /// Pointer to the array of output DataHolders.
-  DH_SampleC** itsOutHolders;
+  /// Pointer to the array of output DataHolders.
+  DH_SampleR** itsOutHolders;
 
   /// Length of buffers.
   int itsNrcu;
-  int itsNbandin;
-  int itsNbandout;
+  int itsNsub1;
+  int itsAveraging;
+  int itsPos;
+  int itsCount;
+
+  Cube<double> itsPowerBuffer;
+  Vector<double> itsMeanPower;
+  Vector<double> itsMedianPower;
+  Vector<double> itsMaxPower;
+  Vector<double> itsMinPower;
+  Vector<double> itsVariancePower;
 };
 
 
