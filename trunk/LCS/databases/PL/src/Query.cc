@@ -21,6 +21,7 @@
 //#  $Id$
 
 #include <PL/Query.h>
+#include <Common/Debug.h>
 #include <sstream>
 #include <iostream>
 
@@ -35,8 +36,7 @@ namespace LOFAR
       std::ostringstream oss;
       oss << "WHERE ";
       itsQueryExpr.print(oss);
-      std::cout << __PRETTY_FUNCTION__ << ": return value : " << oss.str() 
-                << std::endl;
+      TRACER1 (__PRETTY_FUNCTION__ << ": return value : " << oss.str());
       return oss.str();
     }
 

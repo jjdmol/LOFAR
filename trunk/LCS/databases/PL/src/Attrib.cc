@@ -31,8 +31,6 @@ namespace LOFAR
   {
 
     using std::string;
-    using std::cout;
-    using std::endl;
 
     // Try to resolve the argument \c nm into a PersistentObject::Pointer. A
     // class type specifier \e must start with a '@' character; this is the
@@ -48,16 +46,16 @@ namespace LOFAR
       if (nm.empty()) return p;
       AssertStr(nm[0] == '@', "Expected class type specifier in " << nm);
       string cls(nm.substr(1));
-      cout << "Searching \"" << cls << "\" among ownedPOs ..." << endl;
+      TRACER2 ("Searching \"" << cls << "\" among ownedPOs ...");
       if (cls.empty()) return p;
       PersistentObject::POContainer::const_iterator it;
       for (it = po.ownedPOs().begin(); it != po.ownedPOs().end(); ++it) {
-        cout << typeid(**it).name() << " : match?  ";
+        TRACER3 (typeid(**it).name() << " : match?  ");
         if (typeid(**it).name() == cls) {
           p = *it;
-          cout << "yes" << endl;
+          TRACER3 ("yes");
         }
-        else cout << "no" << endl;
+        else TRACER3 ("no");
       }
       return p;
     }
@@ -70,10 +68,10 @@ namespace LOFAR
       PersistentObject::attribmap_t::const_iterator it;
       string attr(nm);
       
-      cout << "Searching for \"" << attr << "\"" << endl;
-      cout << "Showing contents of attrMap: " << endl;
+      TRACER2 ("Searching for \"" << attr << "\"");
+      TRACER3 ("Showing contents of attrMap: ");
       for (it = attrMap.begin(); it != attrMap.end(); ++it) {
-        cout << " " << it->first << " = " << it->second << endl;
+        TRACER3 (" " << it->first << " = " << it->second);
       }
 
       // First let's try to find a match for the whole string attr. If the
@@ -82,10 +80,10 @@ namespace LOFAR
       // PersistentObject po. Hence we don't need to generate a join
       // expression for the ColumnExprNode.
       if ((it = attrMap.find(attr)) != attrMap.end()) {
-        cout << "Found a match:  " << attr << " --> " << it->second << endl;
+        TRACER2 ("Found a match:  " << attr << " --> " << it->second);
         return new Query::ColumnExprNode(po.tableName(), it->second);
       }
-      cout << "No match for \"" << attr << "\"" << endl;
+      TRACER2 ("No match for \"" << attr << "\"");
 
       // Now we need to search for a match using only part of the string attr.
       // We will start at the end of the string and move towards the beginning
@@ -102,8 +100,7 @@ namespace LOFAR
         string lhs = attr.substr(0,idx);
         string rhs = attr.substr(idx+1);
         if ((it = attrMap.find(lhs)) == attrMap.end()) continue;
-        cout << "Trying to resolve class type for \"" << it->second << "\"" 
-             << endl;
+        TRACER2 ("Trying to resolve class type for \"" << it->second << "\"");
         PersistentObject::Pointer p = resolveClassType(po,it->second);
         if (p)
         {
