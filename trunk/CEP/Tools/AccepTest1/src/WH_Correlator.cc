@@ -93,7 +93,10 @@ void WH_Correlator::process() {
     }
   }
 
+#define DO_TIMING
+#if DO_TIMING
   starttime = timer();
+#endif
 
   for (x = 0; x < itsNsamples; x++) {
     for (y = 0; y < itsNelements; y++) {
@@ -106,11 +109,15 @@ void WH_Correlator::process() {
     }
   }
   
+#if DO_TIMING
   stoptime = timer();
+#endif
 
+#if DO_TIMING
   cmults = itsNsamples * (itsNelements*itsNelements/2 + ceil(itsNelements/2.0));
-  //  cout << "Performance: " << 10e-6*cmults/(stoptime-starttime) << " Mcprod/sec" << endl;
-  //  cout << itsNsamples << " " << itsNelements << " " << 10e-6*cmults/(stoptime-starttime) << endl;
+  cout << "Performance: " << 10e-6*cmults/(stoptime-starttime) << " Mcprod/sec" << endl;
+  cout << itsNsamples << " " << itsNelements << " " << 10e-6*cmults/(stoptime-starttime) << endl;
+#endif
 }				     
 
 void WH_Correlator::dump() {
