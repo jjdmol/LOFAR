@@ -27,10 +27,10 @@
 
 // Socket
 #include "Socket.h"
-// WorkProcess
-#include "WorkProcess.h"
 // Subscriptions
 #include "Subscriptions.h"
+// WorkProcess
+#include "WorkProcess.h"
 //## begin module%3C90BFDD0236.declarations preserve=no
 //## end module%3C90BFDD0236.declarations
 
@@ -43,7 +43,7 @@
 //## end GatewayWP%3C90BEF001E5.preface
 
 //## Class: GatewayWP%3C90BEF001E5
-//## Category: PSCF%3BCEC935032A
+//## Category: OCTOPUSSY%3BCEC935032A
 //## Subsystem: PSCF%3C5A73670223
 //## Persistence: Transient
 //## Cardinality/Multiplicity: n
@@ -66,7 +66,7 @@ class GatewayWP : public WorkProcess  //## Inherits: <unnamed>%3C90BF100390
 
     //## Other Operations (specified)
       //## Operation: start%3C90BF460080
-      virtual void start ();
+      virtual bool start ();
 
       //## Operation: stop%3C90BF4A039D
       virtual void stop ();
@@ -202,13 +202,13 @@ class GatewayWP : public WorkProcess  //## Inherits: <unnamed>%3C90BF100390
   private: //## implementation
     // Data Members for Associations
 
-      //## Association: PSCF::<unnamed>%3C9225740182
+      //## Association: OCTOPUSSY::<unnamed>%3C9225740182
       //## Role: GatewayWP::sock%3C9225740345
       //## begin GatewayWP::sock%3C9225740345.role preserve=no  private: Socket { -> 0..1RHgN}
       Socket *sock;
       //## end GatewayWP::sock%3C9225740345.role
 
-      //## Association: PSCF::<unnamed>%3C9B06A30088
+      //## Association: OCTOPUSSY::<unnamed>%3C9B06A30088
       //## Role: GatewayWP::remote_subs%3C9B06A303D1
       //## begin GatewayWP::remote_subs%3C9B06A303D1.role preserve=no  private: Subscriptions { -> 0..*VHgN}
       map<MsgAddress,Subscriptions> remote_subs;
@@ -219,7 +219,6 @@ class GatewayWP : public WorkProcess  //## Inherits: <unnamed>%3C90BF100390
       typedef map<MsgAddress,Subscriptions>::iterator RSI;
       typedef map<MsgAddress,Subscriptions>::const_iterator CRSI;
       //## end GatewayWP%3C90BEF001E5.implementation
-
 };
 
 //## begin GatewayWP%3C90BEF001E5.postscript preserve=yes

@@ -93,7 +93,7 @@ void GWClientWP::init ()
   //## end GWClientWP::init%3CA1C0C300FA.body
 }
 
-void GWClientWP::start ()
+bool GWClientWP::start ()
 {
   //## begin GWClientWP::start%3C95A941008B.body preserve=yes
   WorkProcess::start();
@@ -104,6 +104,7 @@ void GWClientWP::start ()
     tryConnect(*iter);
   // add a re-open timeout
   addTimeout(ReopenTimeout,AidReopen);
+  return False;
   //## end GWClientWP::start%3C95A941008B.body
 }
 

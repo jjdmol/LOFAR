@@ -45,7 +45,7 @@
 //## end GWClientWP%3C95A941002E.preface
 
 //## Class: GWClientWP%3C95A941002E
-//## Category: PSCF%3BCEC935032A
+//## Category: OCTOPUSSY%3BCEC935032A
 //## Subsystem: PSCF%3C5A73670223
 //## Persistence: Transient
 //## Cardinality/Multiplicity: n
@@ -84,7 +84,7 @@ class GWClientWP : public WorkProcess  //## Inherits: <unnamed>%3C95A941009C
       virtual void init ();
 
       //## Operation: start%3C95A941008B
-      void start ();
+      bool start ();
 
       //## Operation: stop%3C95A9410092
       void stop ();
@@ -130,7 +130,7 @@ class GWClientWP : public WorkProcess  //## Inherits: <unnamed>%3C95A941009C
   private: //## implementation
     // Data Members for Associations
 
-      //## Association: PSCF::<unnamed>%3C95A941009D
+      //## Association: OCTOPUSSY::<unnamed>%3C95A941009D
       //## Role: GWClientWP::conns%3C95A941009E
       //## begin GWClientWP::conns%3C95A941009E.role preserve=no  private: Socket { -> 0..*RHgN}
       list<Connection> conns;

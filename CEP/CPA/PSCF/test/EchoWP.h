@@ -68,7 +68,7 @@ class EchoWP : public WorkProcess  //## Inherits: <unnamed>%3C8F26580162
       virtual void init ();
 
       //## Operation: start%3C7E4AC70261
-      virtual void start ();
+      virtual bool start ();
 
       //## Operation: receive%3C7E49AC014C
       virtual int receive (MessageRef& mref);

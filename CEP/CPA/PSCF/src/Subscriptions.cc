@@ -12,7 +12,7 @@
 
 //## Module: Subscriptions%3C999E14021C; Package body
 //## Subsystem: PSCF%3C5A73670223
-//## Source file: F:\lofar8\oms\LOFAR\CEP\CPA\PSCF\src\pscf\Subscriptions.cc
+//## Source file: F:\lofar8\oms\LOFAR\CEP\CPA\PSCF\src\Subscriptions.cc
 
 //## begin module%3C999E14021C.additionalIncludes preserve=no
 //## end module%3C999E14021C.additionalIncludes
@@ -121,27 +121,28 @@ bool Subscriptions::matches (const Message &msg) const
   //## end Subscriptions::matches%3C999D780005.body
 }
 
-size_t Subscriptions::pack (void* block) const
+size_t Subscriptions::pack (void* block, size_t &nleft) const
 {
   //## begin Subscriptions::pack%3C99AC2F01DF.body preserve=yes
-  size_t chksize = sizeof(size_t)*(1+2*subs.size());
-  Assert(chksize <= pksize ); // make sure our accounting is right
+  size_t hdrsize = sizeof(size_t)*(1+2*subs.size());
+  Assert(hdrsize <= pksize ); // make sure our accounting is right
+  FailWhen(nleft<hdrsize,"block too small");
   size_t * hdr = static_cast<size_t*>(block);
-  char *  data = static_cast<char*>(block) + chksize;
+  char *  data = static_cast<char*>(block) + hdrsize;
   
   *(hdr++) = subs.size(); 
+  nleft -= hdrsize;
   
   for( CSSI iter = subs.begin(); iter != subs.end(); iter++ )
   {
-    Assert(chksize <= pksize);
-    size_t sz1 = iter->mask.pack(data); data += sz1;
-    size_t sz2 = iter->scope.pack(data); data += sz2;
+    size_t sz1 = iter->mask.pack(data,nleft); data += sz1;
+    size_t sz2 = iter->scope.pack(data,nleft); data += sz2;
     *(hdr++) = sz1;
     *(hdr++) = sz2;
-    chksize += sz1+sz2;
+    hdrsize += sz1+sz2;
   }
-  Assert( chksize==pksize ); 
-  return chksize;
+  Assert( hdrsize==pksize ); 
+  return hdrsize;
   //## end Subscriptions::pack%3C99AC2F01DF.body
 }
 

@@ -12,7 +12,7 @@
 
 //## Module: Subscriptions%3C999E140208; Package specification
 //## Subsystem: PSCF%3C5A73670223
-//## Source file: F:\lofar8\oms\LOFAR\CEP\CPA\PSCF\src\pscf\Subscriptions.h
+//## Source file: F:\lofar8\oms\LOFAR\CEP\CPA\PSCF\src\Subscriptions.h
 
 #ifndef Subscriptions_h
 #define Subscriptions_h 1
@@ -26,12 +26,12 @@
 #include <list>
 //## end module%3C999E140208.includes
 
-// HIID
-#include "HIID.h"
 // MsgAddress
 #include "MsgAddress.h"
 // Message
 #include "Message.h"
+// HIID
+#include "HIID.h"
 //## begin module%3C999E140208.declarations preserve=no
 //## end module%3C999E140208.declarations
 
@@ -85,7 +85,7 @@ class Subscriptions
 
       //## Operation: pack%3C99AC2F01DF
       //	Stores HIID into raw data block
-      size_t pack (void* block) const;
+      size_t pack (void* block, size_t &nleft) const;
 
       //## Operation: unpack%3C99AC2F022F
       void unpack (const void* block, size_t sz);

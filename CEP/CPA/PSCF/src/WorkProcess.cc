@@ -47,6 +47,12 @@ WorkProcess::WorkProcess (AtomicID wpc)
 
 
 //## Other Operations (implementation)
+void WorkProcess::setPolling (bool enabled)
+{
+  //## begin WorkProcess::setPolling%3CB55CC301A7.body preserve=yes
+  //## end WorkProcess::setPolling%3CB55CC301A7.body
+}
+
 void WorkProcess::addTimeout (const Timestamp &period, const HIID &id, int flags, int priority)
 {
   //## begin WorkProcess::addTimeout%3C7D285803B0.body preserve=yes

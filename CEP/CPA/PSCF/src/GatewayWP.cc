@@ -64,7 +64,7 @@ GatewayWP::~GatewayWP()
 
 
 //## Other Operations (implementation)
-void GatewayWP::start ()
+bool GatewayWP::start ()
 {
   //## begin GatewayWP::start%3C90BF460080.body preserve=yes
   WorkProcess::start();
@@ -92,18 +92,16 @@ void GatewayWP::start ()
   SmartBlock *block = new SmartBlock(hdrsize+datasize);
   BlockRef blockref(block,DMI::ANON);
   size_t *hdr = static_cast<size_t*>(block->data());
-  char *data  = static_cast<char*>(block->data()) + hdrsize,
-       *enddata = data + datasize;
+  char *data  = static_cast<char*>(block->data()) + hdrsize;
   *(hdr++) = nwp;
   iter = dsp()->initWPIter();
   while( dsp()->getWPIter(iter,id,pwp) )
     if( id.wpclass() != AidGatewayWP ) // ignore gateway WPs
     {
-      Assert( data <= enddata );
-      data += *(hdr++) = pwp->address().pack(data);
-      data += *(hdr++) = pwp->getSubscriptions().pack(data);
+      data += *(hdr++) = pwp->address().pack(data,datasize);
+      data += *(hdr++) = pwp->getSubscriptions().pack(data,datasize);
     }
-  Assert( data == enddata );
+  Assert( !datasize );
   dprintf(1)("generating init message for %d subscriptions, block size %d\n",
       nwp,hdrsize+datasize);
   // put this block into a message and send it to peer
@@ -130,7 +128,7 @@ void GatewayWP::start ()
   statmon.counter = 0;
   statmon.read = statmon.written = 0;
   statmon.ts = Timestamp::now();
-  
+  return False;
   //## end GatewayWP::start%3C90BF460080.body
 }
 

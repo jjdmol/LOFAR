@@ -70,7 +70,7 @@ const int EV_CONT = 0,      // continuous event (keeps firing until removed)
 //## end Dispatcher%3C7B6A3E00A0.preface
 
 //## Class: Dispatcher%3C7B6A3E00A0
-//## Category: PSCF%3BCEC935032A
+//## Category: OCTOPUSSY%3BCEC935032A
 //## Subsystem: PSCF%3C5A73670223
 //## Persistence: Transient
 //## Cardinality/Multiplicity: 1..1
@@ -140,6 +140,9 @@ class Dispatcher : public PSCFDebugContext  //## Inherits: <unnamed>%3C7FA32C016
 
       //## Operation: stopPolling%3CA09EB503C1
       void stopPolling ();
+
+      //## Operation: setWPPolling%3CB55CE00220
+      void setWPPolling (WPInterface* pwp, bool enable);
 
       //## Operation: addTimeout%3C7D28C30061
       void addTimeout (WPInterface* pwp, const Timestamp &period, const HIID &id, int flags, int priority);
@@ -342,13 +345,13 @@ class Dispatcher : public PSCFDebugContext  //## Inherits: <unnamed>%3C7FA32C016
 
     // Data Members for Associations
 
-      //## Association: PSCF::<unnamed>%3C7E14150352
+      //## Association: OCTOPUSSY::<unnamed>%3C7E14150352
       //## Role: Dispatcher::wps%3C7E1416010E
       //## begin Dispatcher::wps%3C7E1416010E.role preserve=no  protected: WPInterface {1 -> 0..*RHN}
       map<WPID,WPRef> wps;
       //## end Dispatcher::wps%3C7E1416010E.role
 
-      //## Association: PSCF::<unnamed>%3C907A5C03B2
+      //## Association: OCTOPUSSY::<unnamed>%3C907A5C03B2
       //## Role: Dispatcher::gateways%3C907A5D01E6
       //## begin Dispatcher::gateways%3C907A5D01E6.role preserve=no  protected: WPInterface { -> 0..*RHN}
       map<WPID,WPInterface*> gateways;

@@ -127,7 +127,7 @@ const MsgAddress & Dispatcher::attach (WPRef &wpref)
     if( running )
     {
       wp.do_init();
-      wp.do_start();
+      repoll |= wp.do_start();
     }
   }
   return wp.address();
@@ -216,7 +216,7 @@ void Dispatcher::start ()
   // say start to all WPs
   dprintf(2)("start: starting WPs\n");
   for( WPI iter = wps.begin(); iter != wps.end(); iter++ )
-    iter->second().do_start();
+    repoll |= iter->second().do_start();
   in_start = False;
   // if someone has launched any new WPs already, start them now
   if( attached_wps.size() )
@@ -226,7 +226,7 @@ void Dispatcher::start ()
     {
       WPRef &ref = attached_wps.top();
       ref().do_init();
-      ref().do_start();
+      repoll |= ref().do_start();
       wps[ref->wpid()] = ref;
       attached_wps.pop();
     }
@@ -340,30 +340,22 @@ void Dispatcher::poll ()
   {
     tick++;
     // find max priority queue
-    int maxpri = Message::PRI_LOWEST;
+    int maxpri = -1;
     WPInterface *maxwp = 0;
     int num_repoll = 0; // # of WPs needing a repoll
-    // count num_repoll, and find queue with maximum priority
+    // Find WP with maximum polling priority
+    // Count the number of WPs that required polling, too
     for( WPI wpi = wps.begin(); wpi != wps.end(); wpi++ )
     {
       WPInterface *pwp = wpi->second;
-      if( pwp->needRepoll() && !pwp->queueLocked() )
+      int pri = pwp->getPollPriority(tick);
+      if( pri >= 0 )
       {
         num_repoll++;
-// note that we add the message age (tick - QueueEntry.tick) to its
-// priority. Thus, messages that have been sitting undelivered for a while
-// (perhaps because the system is saturated with higher-priority messages)
-// will eventually get bumped up and become favoured.
-        const WPInterface::QueueEntry * qe = pwp->topOfQueue();
-        if( qe )
+        if( pri >= maxpri )
         {
-          int pri = max(qe->priority,Message::PRI_LOWEST)
-                    + static_cast<int>(tick - qe->tick);
-          if( pri >= maxpri )
-          {
-            maxwp = pwp;
-            maxpri = pri;
-          }
+          maxwp = pwp;
+          maxpri = pri;
         }
       }
     }
@@ -372,8 +364,8 @@ void Dispatcher::poll ()
     // deliver message, if a queue was found
     if( maxwp )
     {
-      dprintf(3)("poll: max priority %d in %s\n",maxpri,maxwp->debug(1));
-      repoll |= maxwp->poll(tick);
+      dprintf(3)("poll: max priority %d in %s, repoll=%d\n",maxpri,maxwp->debug(1),(int)repoll);
+      repoll |= maxwp->do_poll(tick);
     }
   }
   --poll_depth;
@@ -414,6 +406,12 @@ void Dispatcher::stopPolling ()
   //## begin Dispatcher::stopPolling%3CA09EB503C1.body preserve=yes
   stop_polling = True;
   //## end Dispatcher::stopPolling%3CA09EB503C1.body
+}
+
+void Dispatcher::setWPPolling (WPInterface* pwp, bool enable)
+{
+  //## begin Dispatcher::setWPPolling%3CB55CE00220.body preserve=yes
+  //## end Dispatcher::setWPPolling%3CB55CE00220.body
 }
 
 void Dispatcher::addTimeout (WPInterface* pwp, const Timestamp &period, const HIID &id, int flags, int priority)
