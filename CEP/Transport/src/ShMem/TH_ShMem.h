@@ -31,7 +31,7 @@
 
 #ifdef HAVE_MPI
 
-#include <TransportHolder.h>
+#include <libTransport/TransportHolder.h>
 #include <Common/lofar_map.h>
 #include <Common/shmem/shmem_alloc.h>
 
@@ -84,8 +84,8 @@ public:
   /// Get the type of transport.
   virtual string getType() const;
 
-  virtual void* allocate(size_t size);
-  virtual void  deallocate(void*& ptr);
+  // Get the type of BlobString needed from the transport holder.
+  virtual BlobStringType blobStringType();
 
   virtual bool connectionPossible(int srcRank, int dstRank) const;
 
@@ -105,6 +105,25 @@ public:
   static string getHostName(int rank);
 
  private:
+
+  // The class ShMemAllocator allocates and deallocates the shared memory.
+  class ShMemAllocator
+  {
+  public:
+      ShMemAllocator()
+        {}
+
+      virtual ~ShMemAllocator();
+
+      // Clone the allocator.
+      virtual ShMemAllocator* clone() const;
+
+      // Allocate shared memory.
+      static void* allocate (size_t size);
+      // Deallocate shared memory.
+      static void  deallocate (void*& ptr);
+  };
+
 
   /**
      The class ShMemHandle keeps information on a remote shared
