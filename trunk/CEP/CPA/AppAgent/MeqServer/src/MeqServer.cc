@@ -1,6 +1,9 @@
 #include "MeqServer.h"
 #include "AID-MeqServer.h"
 #include "DMI/AID-DMI.h"
+#include <MEQ/AID-MEQ.h>
+#include <MEQ/Request.h>
+#include <MEQ/Result.h>
     
 using Debug::ssprintf;
 using namespace AppControlAgentVocabulary;
@@ -8,7 +11,7 @@ using namespace AppControlAgentVocabulary;
 namespace MEQ 
 {
   
-static int dum = aidRegistry_MeqServer();
+static int dum = aidRegistry_MeqServer() + aidRegistry_MEQ();
   
 InitDebugContext(MeqServer,"MeqServer");
   
@@ -20,6 +23,7 @@ MeqServer::MeqServer()
   command_map["Get.Node.State"] = &MeqServer::getNodeState;
   command_map["Set.Node.State"] = &MeqServer::setNodeState;
   command_map["Resolve.Children"] = &MeqServer::resolveChildren;
+  command_map["Get.Result"] = &MeqServer::getNodeResult;
 }
 
 
@@ -93,6 +97,19 @@ void MeqServer::resolveChildren (DataRecord::Ref &out,DataRecord::Ref::Xfer &in)
   Node & node = resolveNode(*in);
   cdebug(3)<<"resolveChildren for node "<<node.name()<<endl;
   node.resolveChildren();
+}
+
+void MeqServer::getNodeResult (DataRecord::Ref &out,DataRecord::Ref::Xfer &in)
+{
+  Node & node = resolveNode(*in);
+  cdebug(3)<<"getNodeResult for node "<<node.name()<<endl;
+  Request req((*in)[AidRequest].as<DataRecord>());
+  Result::Ref res;
+  int flags = node.getResult(res,req);
+  cdebug(3)<<"returns flags "<<flags<<" and result "<<res->getValue()<<endl;
+  out <<= new DataRecord;
+  out()[AidResult|AidCode] = flags;
+  out()[AidResult] <<= static_cast<DataRecord*>(res.dewr_p());
 }
 
 //##ModelId=3F608106021C

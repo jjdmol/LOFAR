@@ -10,25 +10,26 @@
     {
       static int res = 
 
-        AtomicID::registerId(-1423,"Node")+
+        AtomicID::registerId(-1427,"Node")+
         AtomicID::registerId(-1163,"Name")+
-        AtomicID::registerId(-1438,"NodeIndex")+
-        AtomicID::registerId(-1439,"MeqServer")+
-        AtomicID::registerId(-1440,"Create")+
-        AtomicID::registerId(-1441,"Delete")+
-        AtomicID::registerId(-1442,"Get")+
+        AtomicID::registerId(-1425,"NodeIndex")+
+        AtomicID::registerId(-1426,"MeqServer")+
+        AtomicID::registerId(-1428,"Create")+
+        AtomicID::registerId(-1429,"Delete")+
+        AtomicID::registerId(-1430,"Get")+
         AtomicID::registerId(-1381,"Set")+
         AtomicID::registerId(-1052,"State")+
         AtomicID::registerId(-1351,"Request")+
-        AtomicID::registerId(-1437,"Resolve")+
-        AtomicID::registerId(-1422,"Child")+
-        AtomicID::registerId(-1434,"Children")+
+        AtomicID::registerId(-1424,"Resolve")+
+        AtomicID::registerId(-1423,"Child")+
+        AtomicID::registerId(-1431,"Children")+
         AtomicID::registerId(-1137,"App")+
         AtomicID::registerId(-1338,"Command")+
-        AtomicID::registerId(-1436,"Args")+
+        AtomicID::registerId(-1422,"Args")+
         AtomicID::registerId(-1421,"Result")+
         AtomicID::registerId(-1071,"Error")+
         AtomicID::registerId(-1067,"Message")+
+        AtomicID::registerId(-1222,"Code")+
     0;
     return res;
   }
