@@ -57,17 +57,8 @@ void GetStatusCmd::ack(CacheBuffer& cache)
   ack.timestamp = getTimestamp();
   ack.status = SUCCESS;
 
-  ack.sysstatus.rsp().resize(  GET_CONFIG(N_RSPBOARDS));
-  ack.sysstatus.read().resize( GET_CONFIG(N_RSPBOARDS));
-  ack.sysstatus.write().resize(GET_CONFIG(N_RSPBOARDS));
-  ack.sysstatus.bp().resize(   GET_CONFIG(N_RSPBOARDS));
-  ack.sysstatus.ap().resize(   GET_CONFIG(N_RCU) / 2);
-
-  ack.sysstatus.rsp()   = cache.getSystemStatus().rsp();
-  ack.sysstatus.read()  = cache.getSystemStatus().read();  
-  ack.sysstatus.write() = cache.getSystemStatus().write();
-  ack.sysstatus.bp()    = cache.getSystemStatus().bp();
-  ack.sysstatus.ap()    = cache.getSystemStatus().ap();
+  ack.sysstatus.board().resize(GET_CONFIG(N_RSPBOARDS));
+  ack.sysstatus.board()   = cache.getSystemStatus().board();
 
   ack.sysstatus.rcu().resize(m_event->rcumask.count());
 
@@ -78,8 +69,8 @@ void GetStatusCmd::ack(CacheBuffer& cache)
     {
       if (result_rcu < GET_CONFIG(N_RCU))
       {
-	ack.sysstatus.ap()(result_rcu)
-	  = cache.getSystemStatus().ap()(cache_rcu);
+	ack.sysstatus.rcu()(result_rcu)
+	  = cache.getSystemStatus().rcu()(cache_rcu);
       }
       else
       {
@@ -126,24 +117,17 @@ void GetStatusCmd::ack_fail()
   ack.timestamp = Timestamp(0,0);
   ack.status = FAILURE;
 
-  ack.sysstatus.rsp().resize(  GET_CONFIG(N_RSPBOARDS));
-  ack.sysstatus.read().resize( GET_CONFIG(N_RSPBOARDS));
-  ack.sysstatus.write().resize(GET_CONFIG(N_RSPBOARDS));
-  ack.sysstatus.bp().resize(   GET_CONFIG(N_RSPBOARDS));
-  ack.sysstatus.ap().resize(   GET_CONFIG(N_RCU) / 2);
-  ack.sysstatus.rcu().resize(  GET_CONFIG(N_RCU));
+  ack.sysstatus.board().resize(GET_CONFIG(N_RSPBOARDS));
+  ack.sysstatus.rcu().resize(GET_CONFIG(N_RCU));
 
-  RSPStatus  rsp  = {0,0,0};
-  MEPStatus  mep  = {0,0,0};
-  FPGAStatus fpga = {0,0};
-  RCUStatus  rcu  = {0};
+  BoardStatus boardinit;
+  RCUStatus rcuinit;
+
+  memset(&boardinit, 0, sizeof(BoardStatus));
+  memset(&rcuinit, 0, sizeof(RCUStatus));
   
-  ack.sysstatus.rsp()   = rsp;
-  ack.sysstatus.read()  = mep;
-  ack.sysstatus.write() = mep;
-  ack.sysstatus.bp()    = fpga;
-  ack.sysstatus.ap()    = fpga;
-  ack.sysstatus.rcu()   = rcu;
+  ack.sysstatus.board() = boardinit;
+  ack.sysstatus.rcu()   = rcuinit;
 
   getPort()->send(ack);
 }

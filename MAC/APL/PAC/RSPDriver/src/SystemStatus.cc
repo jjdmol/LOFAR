@@ -39,11 +39,7 @@ using namespace blitz;
 unsigned int SystemStatus::getSize()
 {
   return
-      MSH_ARRAY_SIZE(m_rsp_status,   EPA_Protocol::RSPStatus)
-    + MSH_ARRAY_SIZE(m_read_status,  EPA_Protocol::MEPStatus)
-    + MSH_ARRAY_SIZE(m_write_status, EPA_Protocol::MEPStatus)
-    + MSH_ARRAY_SIZE(m_bp_status,    EPA_Protocol::FPGAStatus)
-    + MSH_ARRAY_SIZE(m_ap_status,    EPA_Protocol::FPGAStatus)
+      MSH_ARRAY_SIZE(m_board_status, EPA_Protocol::BoardStatus)
     + MSH_ARRAY_SIZE(m_rcu_status,   EPA_Protocol::RCUStatus);
 }
 
@@ -51,11 +47,7 @@ unsigned int SystemStatus::pack  (void* buffer)
 {
   unsigned int offset = 0;
   
-  MSH_PACK_ARRAY(buffer, offset, m_rsp_status,   EPA_Protocol::RSPStatus);
-  MSH_PACK_ARRAY(buffer, offset, m_read_status,  EPA_Protocol::MEPStatus);
-  MSH_PACK_ARRAY(buffer, offset, m_write_status, EPA_Protocol::MEPStatus);
-  MSH_PACK_ARRAY(buffer, offset, m_bp_status,    EPA_Protocol::FPGAStatus);
-  MSH_PACK_ARRAY(buffer, offset, m_ap_status,    EPA_Protocol::FPGAStatus);
+  MSH_PACK_ARRAY(buffer, offset, m_board_status, EPA_Protocol::BoardStatus);
   MSH_PACK_ARRAY(buffer, offset, m_rcu_status,   EPA_Protocol::RCUStatus);
 
   return offset;
@@ -65,12 +57,8 @@ unsigned int SystemStatus::unpack(void *buffer)
 {
   unsigned int offset = 0;
   
-  MSH_UNPACK_ARRAY(buffer, offset, m_rsp_status,   EPA_Protocol::RSPStatus,  1);
-  MSH_UNPACK_ARRAY(buffer, offset, m_read_status,  EPA_Protocol::MEPStatus,  1);
-  MSH_UNPACK_ARRAY(buffer, offset, m_write_status, EPA_Protocol::MEPStatus,  1);
-  MSH_UNPACK_ARRAY(buffer, offset, m_bp_status,    EPA_Protocol::FPGAStatus, 1);
-  MSH_UNPACK_ARRAY(buffer, offset, m_ap_status,    EPA_Protocol::FPGAStatus, 1);
-  MSH_UNPACK_ARRAY(buffer, offset, m_rcu_status,   EPA_Protocol::RCUStatus,  1);
+  MSH_UNPACK_ARRAY(buffer, offset, m_board_status, EPA_Protocol::BoardStatus, 1);
+  MSH_UNPACK_ARRAY(buffer, offset, m_rcu_status,   EPA_Protocol::RCUStatus,   1);
 
   return offset;
 }

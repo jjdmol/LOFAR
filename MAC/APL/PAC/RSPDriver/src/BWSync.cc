@@ -42,9 +42,7 @@ using namespace blitz;
 #define N_RETRIES 3
 
 BWSync::BWSync(GCFPortInterface& board_port, int board_id, int regid)
-  : SyncAction((State)&BWSync::initial_state, board_port, board_id),
-    m_current_blp(0),
-    m_retries(0),
+  : SyncAction(board_port, board_id),
     m_regid(regid)
 {
 }
@@ -53,135 +51,7 @@ BWSync::~BWSync()
 {
 }
 
-GCFEvent::TResult BWSync::initial_state(GCFEvent& event, GCFPortInterface& /*port*/)
-{
-  GCFEvent::TResult status = GCFEvent::HANDLED;
-
-  switch (event.signal)
-  {
-    case F_INIT:
-    {
-    }
-    break;
-      
-    case F_ENTRY:
-    {
-      // reset extended state variables on initialization
-      m_current_blp   = 0;
-      m_retries       = 0;
-    }
-    break;
-    
-    case F_TIMER:
-    {
-      TRAN(BWSync::writedata_state);
-    }
-    break;
-
-    default:
-      status = GCFEvent::NOT_HANDLED;
-      break;
-  }
-
-  return GCFEvent::HANDLED;
-}
-
-GCFEvent::TResult BWSync::writedata_state(GCFEvent& event, GCFPortInterface& /*port*/)
-{
-  GCFEvent::TResult status = GCFEvent::HANDLED;
-
-  switch (event.signal)
-  {
-    case F_ENTRY:
-    {
-      // send next set of coefficients
-      writedata((getBoardId() * N_BLP) + m_current_blp);
-
-      TRAN(BWSync::readstatus_state);
-    }
-    break;
-
-    case F_TIMER:
-    {
-      LOG_FATAL("missed real-time deadline");
-      exit(EXIT_FAILURE);
-    }
-    break;
-
-
-    default:
-      status = GCFEvent::NOT_HANDLED;
-      break;
-  }
-
-  return GCFEvent::HANDLED;
-}
-
-GCFEvent::TResult BWSync::readstatus_state(GCFEvent& event, GCFPortInterface& /*port*/)
-{
-  GCFEvent::TResult status = GCFEvent::HANDLED;
-
-  switch(event.signal)
-  {
-    case F_ENTRY:
-    {
-      readstatus();
-
-      // TODO start timer to check for broken comms link
-    }
-    break;
-
-    case F_TIMER:
-    {
-      LOG_FATAL("missed real-time deadline");
-      //exit(EXIT_FAILURE);
-    }
-    break;
-      
-    case EPA_RSPSTATUS:
-    {
-      EPARspstatusEvent rspstatus(event);
-      
-      // check status of previous write
-      if (rspstatus.write_status.error == 0)
-      {
-	// OK, move on to the next BLP
-	m_current_blp++;
-	m_retries = 0;
-      }
-      else
-      {
-	if (m_retries++ > N_RETRIES)
-	{
-	  // abort
-	  LOG_FATAL("maximum retries reached!");
-	  exit(EXIT_FAILURE);
-	}
-      }
-
-      if (m_current_blp < N_BLP)
-      {
-	// send next bit of data
-	TRAN(BWSync::writedata_state);
-      }
-      else
-      {
-	// we've completed the update
-	setCompleted(true); // done with this statemachine
-	TRAN(BWSync::initial_state);
-      }
-    }
-    break;
-
-    default:
-      status = GCFEvent::NOT_HANDLED;
-      break;
-  }
-
-  return GCFEvent::HANDLED;
-}
-
-void BWSync::writedata(uint8 blp)
+void BWSync::sendrequest(uint8 blp)
 {
   if (m_regid <= MEPHeader::BFXRE || m_regid > MEPHeader::BFYIM)
   {
@@ -220,14 +90,14 @@ void BWSync::writedata(uint8 blp)
   getBoardPort().send(bfcoefs);
 }
 
-void BWSync::readstatus()
+void BWSync::sendrequest_status()
 {
   // send read status request to check status of the write
   EPARspstatusEvent rspstatus;
   MEP_RSPSTATUS(rspstatus.hdr, MEPHeader::READ);
 
   // clear from first field onwards
-  memset(&rspstatus.rsp_status, 0, MEPHeader::RSPSTATUS_SIZE);
+  memset(&rspstatus.board, 0, MEPHeader::RSPSTATUS_SIZE);
 
 #if 0
   // on the read request don't send the data
@@ -237,6 +107,11 @@ void BWSync::readstatus()
   getBoardPort().send(rspstatus);
 }
 
+GCFEvent::TResult BWSync::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
+{
+  EPARspstatusEvent rspstatus(event);
 
+  return GCFEvent::HANDLED;
+}
 
 

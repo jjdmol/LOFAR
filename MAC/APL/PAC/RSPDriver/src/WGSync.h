@@ -45,6 +45,21 @@ namespace RSP
        */
       GCFEvent::TResult initial_state(GCFEvent& event, GCFPortInterface& port);
 
+      /**
+       * Send the write message.
+       */
+      virtual void sendrequest(uint8 blp);
+
+      /**
+       * Send the read request.
+       */
+      virtual void sendrequest_status();
+
+      /**
+       * Handle the read result.
+       */
+      virtual GCFEvent::TResult handleack(GCFEvent& event, GCFPortInterface& port);
+
     private:
   };
 };

@@ -40,9 +40,7 @@ using namespace blitz;
 #define N_RETRIES 3
 
 SSSync::SSSync(GCFPortInterface& board_port, int board_id)
-  : SyncAction((State)&SSSync::initial_state, board_port, board_id),
-    m_current_blp(0),
-    m_retries(0)
+  : SyncAction(board_port, board_id)
 {
 }
 
@@ -51,135 +49,7 @@ SSSync::~SSSync()
   /* TODO: delete event? */
 }
 
-GCFEvent::TResult SSSync::initial_state(GCFEvent& event, GCFPortInterface& /*port*/)
-{
-  GCFEvent::TResult status = GCFEvent::HANDLED;
-
-  switch (event.signal)
-  {
-    case F_INIT:
-    {
-    }
-    break;
-      
-    case F_ENTRY:
-    {
-      // reset extended state variables on initialization
-      m_current_blp   = 0;
-      m_retries       = 0;
-    }
-    break;
-    
-    case F_TIMER:
-    {
-      TRAN(SSSync::writedata_state);
-    }
-    break;
-
-    default:
-      status = GCFEvent::NOT_HANDLED;
-      break;
-  }
-
-  return GCFEvent::HANDLED;
-}
-
-GCFEvent::TResult SSSync::writedata_state(GCFEvent& event, GCFPortInterface& /*port*/)
-{
-  GCFEvent::TResult status = GCFEvent::HANDLED;
-
-  switch (event.signal)
-  {
-    case F_ENTRY:
-    {
-      // send next set of coefficients
-      writedata((getBoardId() * N_BLP) + m_current_blp);
-
-      TRAN(SSSync::readstatus_state);
-    }
-    break;
-
-    case F_TIMER:
-    {
-      LOG_FATAL("missed real-time deadline");
-      exit(EXIT_FAILURE);
-    }
-    break;
-
-
-    default:
-      status = GCFEvent::NOT_HANDLED;
-      break;
-  }
-
-  return GCFEvent::HANDLED;
-}
-
-GCFEvent::TResult SSSync::readstatus_state(GCFEvent& event, GCFPortInterface& /*port*/)
-{
-  GCFEvent::TResult status = GCFEvent::HANDLED;
-
-  switch(event.signal)
-  {
-    case F_ENTRY:
-    {
-      readstatus();
-
-      // TODO: start timer to check for broken comms link
-    }
-    break;
-
-    case F_TIMER:
-    {
-      LOG_FATAL("missed real-time deadline");
-      //exit(EXIT_FAILURE);
-    }
-    break;
-      
-    case EPA_RSPSTATUS:
-    {
-      EPARspstatusEvent rspstatus(event);
-      
-      // check status of previous write
-      if (rspstatus.write_status.error == 0)
-      {
-	// OK, move on to the next BLP
-	m_current_blp++;
-	m_retries = 0;
-      }
-      else
-      {
-	if (m_retries++ > N_RETRIES)
-	{
-	  // abort
-	  LOG_FATAL("maximum retries reached!");
-	  exit(EXIT_FAILURE);
-	}
-      }
-
-      if (m_current_blp < N_BLP)
-      {
-	// send next bit of data
-	TRAN(SSSync::writedata_state);
-      }
-      else
-      {
-	// we've completed the update
-	setCompleted(true); // done with this statemachine
-	TRAN(SSSync::initial_state);
-      }
-    }
-    break;
-
-    default:
-      status = GCFEvent::NOT_HANDLED;
-      break;
-  }
-
-  return GCFEvent::HANDLED;
-}
-
-void SSSync::writedata(uint8 blp)
+void SSSync::sendrequest(uint8 blp)
 {
   LOG_DEBUG(formatString(">>>> SSSync(%s) blp=%d",
 			 getBoardPort().getName().c_str(),
@@ -205,14 +75,14 @@ void SSSync::writedata(uint8 blp)
   subbands.free();
 }
 
-void SSSync::readstatus()
+void SSSync::sendrequest_status()
 {
   // send read status request to check status of the write
   EPARspstatusEvent rspstatus;
   MEP_RSPSTATUS(rspstatus.hdr, MEPHeader::READ);
   
   // clear from first field onwards
-  memset(&rspstatus.rsp_status, 0, MEPHeader::RSPSTATUS_SIZE);
+  memset(&rspstatus.board, 0, MEPHeader::RSPSTATUS_SIZE);
 
 #if 0
   // on the read request don't send the data
@@ -220,4 +90,11 @@ void SSSync::readstatus()
 #endif
 
   getBoardPort().send(rspstatus);
+}
+
+GCFEvent::TResult SSSync::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
+{
+  EPARspstatusEvent ack(event);
+
+  return GCFEvent::HANDLED;
 }

@@ -21,6 +21,7 @@
 //#  $Id$
 
 #include "VersionsSync.h"
+#include "EPA_Protocol.ph"
 
 #undef PACKAGE
 #undef VERSION
@@ -29,9 +30,10 @@
 
 using namespace RSP;
 using namespace LOFAR;
+using namespace EPA_Protocol;
 
 VersionsSync::VersionsSync(GCFPortInterface& board_port, int board_id)
-  : SyncAction((State)&VersionsSync::initial_state, board_port, board_id)
+  : SyncAction(board_port, board_id)
 {
 }
 
@@ -40,7 +42,30 @@ VersionsSync::~VersionsSync()
   /* TODO: delete event? */
 }
 
-GCFEvent::TResult VersionsSync::initial_state(GCFEvent& /*event*/, GCFPortInterface& /*port*/)
+void VersionsSync::sendrequest(uint8 /*blp*/)
 {
+}
+
+void VersionsSync::sendrequest_status()
+{
+  // send read status request to check status of the write
+  EPARspstatusEvent rspstatus;
+  MEP_RSPSTATUS(rspstatus.hdr, MEPHeader::READ);
+  
+  // clear from first field onwards
+  memset(&rspstatus.board, 0, MEPHeader::RSPSTATUS_SIZE);
+
+#if 0
+  // on the read request don't send the data
+  rspstatus.length -= RSPSTATUS_SIZE;
+#endif
+
+  getBoardPort().send(rspstatus);
+}
+
+GCFEvent::TResult VersionsSync::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
+{
+  EPARspstatusEvent ack(event);
+
   return GCFEvent::HANDLED;
 }

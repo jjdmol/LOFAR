@@ -21,6 +21,7 @@
 //#  $Id$
 
 #include "SyncAction.h"
+#include "EPA_Protocol.ph"
 
 #undef PACKAGE
 #undef VERSION
@@ -29,14 +30,146 @@
 
 using namespace RSP;
 using namespace LOFAR;
+using namespace EPA_Protocol;
 
-SyncAction::SyncAction(State handler, GCFPortInterface& board_port, int board_id) 
-  : GCFFsm(handler), m_board_port(board_port), m_board_id(board_id), m_completed(false)
+#define N_RETRIES 2
+
+SyncAction::SyncAction(GCFPortInterface& board_port, int board_id) 
+  : GCFFsm((State)&SyncAction::idle_state),
+    m_board_port(board_port),
+    m_board_id(board_id),
+    m_completed(false),
+    m_current_blp(0),
+    m_retries(0)
 {
 }
 
 SyncAction::~SyncAction()
 {
+}
+
+GCFEvent::TResult SyncAction::idle_state(GCFEvent& event, GCFPortInterface& /*port*/)
+{
+  GCFEvent::TResult status = GCFEvent::HANDLED;
+
+  switch (event.signal)
+  {
+    case F_INIT:
+    {
+    }
+    break;
+      
+    case F_ENTRY:
+    {
+      // reset extended state variables on initialization
+      m_current_blp   = 0;
+      m_retries       = 0;
+    }
+    break;
+    
+    case F_TIMER:
+    {
+      TRAN(SyncAction::sendrequest_state);
+    }
+    break;
+
+    default:
+      status = GCFEvent::NOT_HANDLED;
+      break;
+  }
+
+  return GCFEvent::HANDLED;
+}
+
+GCFEvent::TResult SyncAction::sendrequest_state(GCFEvent& event, GCFPortInterface& /*port*/)
+{
+  GCFEvent::TResult status = GCFEvent::HANDLED;
+
+  switch (event.signal)
+  {
+    case F_ENTRY:
+    {
+      // send next set of coefficients
+      sendrequest((getBoardId() * N_BLP) + m_current_blp);
+
+      TRAN(SyncAction::waitack_state);
+    }
+    break;
+
+    case F_TIMER:
+    {
+      LOG_FATAL("missed real-time deadline");
+      exit(EXIT_FAILURE);
+    }
+    break;
+
+
+    default:
+      status = GCFEvent::NOT_HANDLED;
+      break;
+  }
+
+  return GCFEvent::HANDLED;
+}
+
+GCFEvent::TResult SyncAction::waitack_state(GCFEvent& event, GCFPortInterface& port)
+{
+  GCFEvent::TResult status = GCFEvent::HANDLED;
+
+  switch(event.signal)
+  {
+    case F_ENTRY:
+    {
+      sendrequest_status();
+
+      // TODO start timer to check for broken comms link
+    }
+    break;
+
+    case F_TIMER:
+    {
+      LOG_FATAL("missed real-time deadline");
+      //exit(EXIT_FAILURE);
+    }
+    break;
+      
+    default:
+    {
+      status = handleack(event, port);
+      
+      // check status of previous write
+      if (GCFEvent::HANDLED == status)
+      {
+	// OK, move on to the next BLP
+	m_current_blp++;
+	m_retries = 0;
+      }
+      else
+      {
+	if (m_retries++ > N_RETRIES)
+	{
+	  // abort
+	  LOG_FATAL("maximum retries reached!");
+	  exit(EXIT_FAILURE);
+	}
+      }
+
+      if (m_current_blp < N_BLP)
+      {
+	// send next bit of data
+	TRAN(SyncAction::sendrequest_state);
+      }
+      else
+      {
+	// we've completed the update
+	setCompleted(true); // done with this statemachine
+	TRAN(SyncAction::idle_state);
+      }
+    }
+    break;
+  }
+
+  return GCFEvent::HANDLED;
 }
 
 int SyncAction::getBoardId()
