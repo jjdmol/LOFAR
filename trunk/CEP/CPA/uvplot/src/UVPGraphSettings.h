@@ -7,7 +7,7 @@
 
 #include <vector>
 
-//! Invariant: itsAntenna2 <= itsAntenna1
+//! Invariant: itsAntenna1 <= itsAntenna2
 class UVPGraphSettings
 {
 public:
