@@ -29,6 +29,8 @@
 
 #include "DMI/DataRecord.h"
 #include "DMI/DataArray.h"
+
+#include "UVD/MSReader.h"
 //## end module%3CD133DD02E0.includes
 
 // MSIntegratorWP
@@ -130,23 +132,30 @@ int MSIntegratorWP::receive (MessageRef &mref)
   else if( mref->id() == MSIntegrate )
   {
     MeasurementSet ms;
-    if( !initMS(mref.deref(),ms) )
-      return Message::ACCEPT;
-    
-    // create iterator, visbuffer & chunk manager
-    Block<Int> sortCol(1);
-    sortCol[0] = MeasurementSet::TIME;
-    ROVisibilityIterator vi(ms,sortCol,1000000000);
-    VisBuffer vb(vi);
-
-    // begin iterating over chunks -- each chunk has its own data description
-    // ID, so we treat it as, essentially, a separate MS
-    nchunk=0;
-    for( vi.originChunks(); vi.moreChunks(); vi.nextChunk(),nchunk++ ) 
+    try 
     {
-      initSegment(vi);
-      integrate(vi,vb);
-    } // end of loop over chunks
+      if( !initMS(mref.deref(),ms) )
+        return Message::ACCEPT;
+
+      // create iterator, visbuffer & chunk manager
+      Block<Int> sortCol(1);
+      sortCol[0] = MeasurementSet::TIME;
+      ROVisibilityIterator vi(ms,sortCol,1000000000);
+      VisBuffer vb(vi);
+
+      // begin iterating over chunks -- each chunk has its own data description
+      // ID, so we treat it as, essentially, a separate MS
+      nchunk=0;
+      for( vi.originChunks(); vi.moreChunks(); vi.nextChunk(),nchunk++ ) 
+      {
+        initSegment(vi);
+        integrate(vi,vb);
+      } // end of loop over chunks
+    }
+    catch( const AipsError &err )
+    {
+      lprintf(0,LogError,"AIPS++ error: %s",err.getMesg().c_str());
+    }
   } // end of MS processing
   return Message::ACCEPT;
   //## end MSIntegratorWP::receive%3CD133AB011C.body
@@ -162,15 +171,16 @@ bool MSIntegratorWP::initMS (const Message &msg,MeasurementSet &ms)
   window_time = msg["Num.Time"];
   num_patches = msg["Num.Patch"];
   // open the measurement set
-  try 
-  {
-    ms = MeasurementSet(msname.c_str());
-  } 
-  catch( const AipsError &err )
-  {
-    lprintf(0,LogError,"error opening %s: %s",msname.c_str(),err.getMesg().c_str());
-    return False;
-  }
+  ms = MeasurementSet(msname.c_str());
+  
+  // form a header with the required subtables
+  MSReader reader(ms);
+  DataRecord::Ref msheader(new DataRecord,DMI::ANONWR);
+  reader.makeHeader(msheader.dewr());
+  Message *hdrmsg = new Message(AidUVData|msid|AidHeader,msheader);
+  Message::Ref mref; mref <<= hdrmsg;
+  publish(mref);
+  
   // obtain number of antennas and interferometers
   const MSAntenna msant( ms.antenna() );
   num_antennas = msant.nrow();
@@ -182,7 +192,7 @@ bool MSIntegratorWP::initMS (const Message &msg,MeasurementSet &ms)
   msid++;
 // Create record of shared and/or constant datafields.
 // These fields are shared between all patches and correlations.
-  
+
   shrec_ref <<= shrec = new DataRecord;
   (*shrec)[FRowIndexing] = HIID("IFR"); // rows indexed by IFR
   (*shrec)[FTimeSlotIndex] = 0;

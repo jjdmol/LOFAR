@@ -6,10 +6,13 @@
 #pragma aid Control MS Integrate Flag Exposure Receptor Antenna IFR
 #pragma aid SPW Field UVW Data Integrated Point Source Segment Corr Name
 #pragma aid Header Footer Patch XX YY XY YX Chunk Indexing Index
-#pragma aid Subtable Type Station Mount Position Offset Dish Diameter
-#pragma aid AIPSPP Feed Interval Polarization Response Angle Ref Freq Width
-#pragma aid Measure Bandwidth Effective Resolution Total Net Sideband
-#pragma aid IF Conv Chain Group Data Desc Polarization
+#pragma aid Subtable Type Station Mount Pos Offset Dish Diameter
+#pragma aid Feed Interval Polarization Response Angle Ref Freq Width
+#pragma aid Bandwidth Effective Resolution Total Net Sideband
+#pragma aid IF Conv Chain Group Data Desc Polarization Code Poly Delay
+#pragma aid Dir Phase Pointing Lines Calibration Group Proper Motion Sigma Weight
+#pragma aid Origin Target Tracking Beam Product Meas Centroid
+#pragma aid AIPSPP
 
 #include "UVD/AID-UVD.h"
 #include "DMI/HIID.h"
@@ -46,6 +49,10 @@ namespace UVD
     FTimeSlotIndex  = AidTimeslot|AidIndex,
     FTime           = AidTime,
     FExposure       = AidExposure,
+    FInterval       = AidInterval,
+    FTimeCentroid   = AidTime|AidCentroid,
+    FSigma          = AidSigma,
+    FWeight         = AidWeight,
     FReceptorIndex  = AidReceptor|AidIndex,
     FAntennaIndex   = AidAntenna|AidIndex,
     FIFRIndex       = AidIFR|AidIndex,
@@ -56,37 +63,51 @@ namespace UVD
     FNumIntTimes    = AidNum|AidIntegrated|AidTimeslot,
     FNumIntPixels   = AidNum|AidIntegrated|AidPoint,
     FRowIndexing    = AidRow|AidIndexing,
+
+    FAipsMSName     = AidAIPSPP|AidMS|AidName,
     
 // field names for Antenna subtable
     FAntennaSubtable = AidAntenna|AidSubtable,
     FStationName     = AidStation|AidName,
     FType            = AidType,
     FMount           = AidMount,
-    FPosition        = AidPosition,
+    FPosition        = AidPos,
     FOffset          = AidOffset,
     FDishDiameter    = AidDish|AidDiameter,
 
-// // field names for Feed subtable
-//     FFeedSubtable    = AidFeed|AidSubtable,
-//     FFeedIndex       = AidFeed|AidIndex,
-//     FInterval        = AidInterval,    
-//     FNumReceptors     = AidNum|AidReceptor,
-//     FBeamIndex        = AidBeam|AidIndex,
-//     FBeamOffset       = AidBeam|AidOffset,
-//     FPolznType        = AidPolarization|AidType,
-//     FPolznResponse    = AidPolarization|AidResponse,
-//     FReceptorAngle    = AidReceptor|AidAngle,
+// field names for Pointing subtable
+    FPointingSubtable = AidPointing|AidSubtable,
+    // FAntennaIndex, FTime, FName, FInterval already defined
+    FNumPoly          = AidNum|AidPoly,
+    FTimeOrigin       = AidTime|AidOrigin,
+    FDirection        = AidDir,
+    FTarget           = AidTarget,
+    FTracking         = AidTracking,
+
+// field names for Feed subtable
+     FFeedSubtable    = AidFeed|AidSubtable,
+     // FAntennaIndex, FTime, FInterval, FPosition, FNumRecptors already defined
+     FNumReceptors    = AidNum|AidReceptor,
+     FFeedIndex       = AidFeed|AidIndex,
+     FBeamIndex       = AidBeam|AidIndex,
+     FBeamOffset      = AidBeam|AidOffset,
+     FPolznType       = AidPolarization|AidType,
+     FPolznResponse   = AidPolarization|AidResponse,
+     FReceptorAngle   = AidReceptor|AidAngle,
     
 // Field names for Polarization subtable
     FPolarizationSubtable = AidPolarization|AidSubtable,
+    FCorrType         = AidCorr|AidType,
+    FCorrProduct      = AidCorr|AidProduct,
 //      FCorr, FFlagRow - already defined
 
 // Field names for SpectralWindow subtable
     FSPWSubtable     = AidSPW|AidSubtable,
     FRefFreq         = AidRef|AidFreq,
+//    FNumChannels already defined
     FChannelFreq     = AidChannel|AidFreq,
     FChannelWidth    = AidChannel|AidWidth,
-    FMeasFreqRef     = AidMeasure|AidFreq|AidRef,
+    FMeasFreqRef     = AidMeas|AidFreq|AidRef,
     FEffectiveBW     = AidEffective|AidBandwidth,
     FResolution      = AidResolution,
     FTotalBW         = AidTotal|AidBandwidth,
@@ -95,15 +116,31 @@ namespace UVD
     FFreqGroup       = AidFreq|AidGroup,
     FFreqGroupName   = AidFreq|AidGroup|AidName,
     
+// Field names for SOURCE subtable
+    FSourceSubtable   = AidSource|AidSubtable,
+    FSourceIndex      = AidSource|AidIndex,
+    // FName, FTime, FInterval, FSPWIndex already defined
+    FNumLines         = AidNum|AidLines,
+    FCalibrationGroup = AidCalibration|AidGroup,
+    FCode             = AidCode,
+    // FDirection, FPosition already defined
+    FProperMotion     = AidProper|AidMotion,
+
 // Field names for Data Description subtable
     FDataDescriptionSubtable = AidData|AidDesc|AidSubtable,
     // FSPWIndex defined above
-    FPolarizationIndex = AidPolarization|AidIndex;
+    FPolarizationIndex = AidPolarization|AidIndex,
+    
+// Field  names for Field subtable
+    FFieldSubtable      = AidField|AidSubtable,
+    // FCode, FTime, FNumPoly already defined
+    FDelayDirMeas       = AidDelay|AidDir|AidMeas,
+    FPhaseDirMeas       = AidPhase|AidDir|AidMeas,
+    FRefDirMeas         = AidRef|AidDir|AidMeas,
+    // FSourceIndex already defined
     
     
-    
-    
-    
+    FThisIsTheLastDeclaration = HIID();
 
 // small function for converting antennas to IFR indices    
     inline int ifrNumber ( int ant1,int ant2 ) 
