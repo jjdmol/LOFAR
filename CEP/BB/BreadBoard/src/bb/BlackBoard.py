@@ -24,11 +24,9 @@ class BlackBoard:
     self.controller =  BlackBoardController.BlackBoardController(self);
     if copy == None:
       self.id = db.query("INSERT INTO blackboards DEFAULT VALUES");
-##      print "self.id:= " + str(self.id);
     else:
       rc = db.insert("blackboards",copy.record);
       self.id = rc["oid_blackboards"];
-##      print "self.id:= " + str(self.id);
     self.refresh_data();
 
   def refresh_data(self):
@@ -37,24 +35,33 @@ class BlackBoard:
   def time(self, start, end):
     self.record["starttime"] = start;
     self.record["endtime"] = end;
-##    print "self.record := " + str(self.record);
-##    print "self.id:= " + str(self.id);
     qstr ="UPDATE blackboards SET starttime = '"+ str(start) +"' , endtime = '" + str(end) + "' WHERE oid = " + str(self.id)
-##    print qstr;
     data = db.query(qstr);
-##    print "time updated: " + str(data);
 
-  def split_over_time(self, early, late):
+##  def split_over_time(self, early, late):
+    
+  def split_over_time(self):
     early = BlackBoard(self);
     late = BlackBoard(self);
-##    nu = datetime.now()
     start = util.pgdate.string2date(self.record["starttime"]);
-##    end = util.pgdate.pgDate();
     end = util.pgdate.string2date(self.record["endtime"]);
-##    print str(start) + " ---- " + str(start + (end - start) /2);
     early.time(start, start + (end - start) /2);
     late.time(start + (end - start) /2, end);
+    lst = {};
+    lst["early"] = early;
+    lst["late"] = late;
+    return lst;
 
+  def split_frequency(self):
+    low = controller.fork();
+    high = controller.fork();
+    middel = (self.record["low"] + self.record["high"])/2;
+    low.frequency(self.record["low"], middel);
+    high.frequency(middel, self.record["high"]);
+    lst = {};
+    lst["early"] = early;
+    lst["late"] = late;
+    return lst;
 
   def parent(self, parent_id):
     db.query("UPDATE blackboards SET parent_id = " + str(parent_id) + " WHERE oid = " + str(self.id) );

@@ -21,7 +21,9 @@ class BlackBoardController:
 
   def spawn(self,newThread):
     newThread = Thread();
+    return newThread;
 
   def fork(self, newBB):
     newBB = BlackBoard.BlackBoard(self.bb);
     newBB.parent(self.bb.id);
+    return newBB;
