@@ -18,9 +18,19 @@ CXXFLAGS += \
 	-DMORECORE_CANNOT_TRIM=1 \
 	-DSHMEM_ALLOC
 
-check_PROGRAMS			= Example 
+check_PROGRAMS			= Example Example2
 
-Example_SOURCES 		= Example.cc 
+Example_SOURCES 		= \
+				DH_Example.cc \
+				WH_Example.cc \
+				MyExample.cc  \
+				Example.cc 
+
+Example2_SOURCES		= \
+				DH_Example.cc \
+				WH_Example.cc \
+				MySecondExample.cc \
+				Example2.cc
 
 LDADD				= ../src/libtinycep.la
 DEPENDENCIES			= ../src/libtinycep.la $(LOFAR_DEPEND)
@@ -30,6 +40,7 @@ TESTS_ENVIRONMENT		= top_srcdir=$(top_srcdir) \
 				  common_top_builddir=$(common_top_builddir)
 
 TESTS	=					\
-	Example_test.sh				
+	Example_test.sh				\
+	Example2_test.sh
 
 include $(lofar_sharedir)/Makefile.common
