@@ -3,6 +3,7 @@ LCS/databases/PL
 LCS/Math
 LCS/CRD/Coord
 LCS/CRD/CoordServer
+CEP/Transport
 LCS/ACC
 DMI
 CEP/CPA/PSS3
@@ -11,7 +12,6 @@ CEP/CPA/OCTOGlish
 CEP/CPA/VisCube
 CEP/CPA/AppAgent
 CEP/CPA/PSS4
-CEP/Transport
 CEP/tinyCEP
 CEP/CEPFrame
 CEP/BB/DFTServer
