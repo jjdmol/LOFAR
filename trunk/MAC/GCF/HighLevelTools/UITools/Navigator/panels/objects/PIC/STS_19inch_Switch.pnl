@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,473 248 178 80 N "_3DFace" 0
+PANEL,239 108 178 80 N "_3DFace" 0
 EEE E E 1 -1 -1 0  20 50
 "" 0 1
 EE 2
@@ -24,7 +24,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E "// SimpleCtrlScriptStart {valid}
+E "// SimpleCtrlScriptStart {invalid}
+/*
 main()
 {
   EP_childPanelOn();
@@ -36,22 +37,12 @@ EP_childPanelOn()
       \"Switch details\",
       makeDynString(\"\"));
 }
-
-// SimpleCtrlScript {EP_childPanelOn}
-// Function {RootPanelOn}
-// File {Switch_Detail_Ref.pnl}
-// Panel {Switch details}
-// Parent {}
-// Module {}
-// OffsetX {0}
-// OffsetY {0}
-// SimpleCtrlScriptEnd {EP_childPanelOn}
-" 0
+*/" 0
  0 1 1 0 1 E U  1 E 20 20 148 52
 7 1
 "Ellipse7"
 ""
-1 141.5 26.5 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 141.5 26.5 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
  E E
 2 0 0 0 0 0
 EE E
@@ -64,7 +55,7 @@ E E 0 1 1 0 1 E 1.25 0 1.25  -35.875 -7.125  0 E 143.5 28.5 2 2
 7 2
 "Ellipse8"
 ""
-1 141.5 42.5 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 141.5 42.5 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
  E E
 3 0 0 0 0 0
 EE E
@@ -77,7 +68,7 @@ E E 0 1 1 0 1 E 1.25 0 1.25  -35.875 -11.125  0 E 143.5 44.5 2 2
 7 3
 "Ellipse9"
 ""
-1 22.5 26.5 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 22.5 26.5 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
  E E
 4 0 0 0 0 0
 EE E
@@ -90,7 +81,7 @@ E E 0 1 1 0 1 E 1.25 0 1.25  -6.125 -7.125  0 E 24.5 28.5 2 2
 7 4
 "Ellipse11"
 ""
-1 22.5 42.5 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 22.5 42.5 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
  E E
 5 0 0 0 0 0
 EE E
@@ -240,7 +231,7 @@ LANG:1 4 3com
 2 15
 "Text2"
 ""
-1 30 20 E E E 1 E 1 E N {255,255,255} E N {0,0,0} E E
+1 30 20 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
  E E
 16 0 0 0 0 0
 EE E
@@ -249,7 +240,7 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  1 E 32 22 71 34
+E E 0 1 1 0 1 E U  0 E 32 22 71 34
 0 2 0 "s" 0 0 0 64 0 0  32 22
  1
 1
