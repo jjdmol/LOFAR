@@ -22,6 +22,11 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.7  2002/06/07 11:37:41  schaaf
+//  %[BugId: 11]%
+//  Removed unnessesary Assert in C'tor
+//  Improved performance of process() inner loop
+//
 //  Revision 1.6  2002/05/24 10:47:52  schaaf
 //  %[BugId: 11]%
 //  Removed ^M characters
@@ -118,6 +123,7 @@ WorkHolder* WH_FillTFMatrix::make(const string& name) const
 }
 
 void WH_FillTFMatrix::preprocess() {
+    
   return;
 }
 
@@ -125,37 +131,50 @@ void WH_FillTFMatrix::preprocess() {
 void WH_FillTFMatrix::process()
 {  
   Profiler::enterState (theirProcessProfilerState);
+
+  ///////////////////////// START OF PREPROCESS BLOCK ////////////////
+  int cnt=0;
+  int *Rowstartptr;
+  DH_2DMatrix *DHptr;
+  int Xsize,Ysize; 
+  // the time step is the Xsize; 
+  for (int outch=0; outch<getOutputs(); outch++) {
+    DHptr = getOutHolder(outch);
+    AssertStr(DHptr != 0, "GetOutHolder returned NULL");
+    //    DHptr->setZ(itsSourceID);      
+    //    DHptr->setYOffset(DHptr->getYSize()*outch);
+    Xsize = DHptr->getXSize();
+      for (int x=0; x < Xsize; x++) {
+      Ysize = DHptr->getYSize();
+      Rowstartptr = DHptr->getBuffer(x,0);
+//        for (int y=0; y < Ysize; y++) {
+//  	*(Rowstartptr+y) = 
+//      	  cnt++;
+//    	// fill output buffer with random integer 0-99
+//  	//(int)(100.0*rand()/RAND_MAX+1.0);
+//        }
+    }
+  }
+  ///////////////////////// END OF PREPROCESS BLOCK ////////////////
+  
+
   {
     int timestep;
-    int cnt=0;
-    int *Rowstartptr;
     DH_2DMatrix *DHptr;
-    int Xsize,Ysize; 
-    itsTime += (timestep = getOutHolder(0)->getXSize()); // increase the local clock
+    
+    itsTime += (timestep = getOutHolder(0)->getXSize()); // increase local clock
     // the time step is the Xsize; 
     for (int outch=0; outch<getOutputs(); outch++) {
       DbgAssertStr(timestep == getOutHolder(0)->getXSize(),
 		   "All Output DataHolders must have the same time (X) dimension");
       DHptr = getOutHolder(outch);
-      DHptr->setTimeStamp(itsTime);
-      DHptr->setXOffset(itsTime);
       DHptr->setZ(itsSourceID);      
       DHptr->setYOffset(DHptr->getYSize()*outch);
-      Xsize = DHptr->getXSize();
-      for (int x=0; x < Xsize; x++) {
-	Ysize = DHptr->getYSize();
-	Rowstartptr = DHptr->getBuffer(x,0);
-	for (int y=0; y < Ysize; y++) {
-	  *(Rowstartptr+y) = 
-	    cnt++;
-	  // fill output buffer with random integer 0-99
-	  //(int)(100.0*rand()/RAND_MAX+1.0);
-	}
-      }
+      DHptr->setTimeStamp(itsTime);
+      DHptr->setXOffset(itsTime);
     }
   }
   Profiler::leaveState (theirProcessProfilerState);
-  //dump();
 }
 
 
