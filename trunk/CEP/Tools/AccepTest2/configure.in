@@ -58,8 +58,8 @@ lofar_QATOOLS
 lofar_DOCXX
 lofar_PACKAGE(LCS/Common)
 lofar_PACKAGE(CEP/tinyCEP)
-lofar_FFTW(1)
-
+dnl dit moet worden iets van lofar_fftw2 ofzo
+lofar_EXTERNAL(fftw2,1,fftw.h,fftw)
 
 dnl
 dnl Output Makefiles

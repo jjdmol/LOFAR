@@ -24,7 +24,9 @@
 #define WH_HEAT_H
 
 #include <lofar_config.h>
-
+#include <complex>
+#include <Common/lofar_complex.h>
+#include <fftw.h>
 #include <tinyCEP/WorkHolder.h>
 
 namespace LOFAR
@@ -54,8 +56,12 @@ namespace LOFAR
     /// Make a fresh copy of the WH object.
     virtual WH_Heat* make (const string& name);
 
+    /// Prepare the run
+    void preprocess();
     /// Do a process step.
     void process();
+    /// Clean up
+    void postprocess();
 
     /// Show the work holder on stdout.
     void dump();
@@ -69,7 +75,8 @@ namespace LOFAR
 
     int itsMatrixXSize;
     int itsMatrixYSize;
-    int itsFFTDirection;
+    fftw_direction itsFFTDirection;
+    fftw_plan itsFFTPlan;
   };
 }
 
