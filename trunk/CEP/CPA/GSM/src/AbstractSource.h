@@ -82,8 +82,11 @@ public:
     \param name is a canonical source name, like "M31", if available.
    */
            AbstractSource(SourceType         type,
+                          double             ra        = 0,
+                          double             dec       = 0,
                           unsigned int       catNumber = 0,
                           const std::string& name      = "");
+           
 
   //! Destructor
   virtual ~AbstractSource();
@@ -171,9 +174,9 @@ public:
 
 
   //! Writes state in machine readable ASCII. May be read back by readAscii.
-  virtual std::ostream&  writeAscii(std::ostream& out) const;
+  //  virtual std::ostream&  writeAscii(std::ostream& out) const;
   
-  virtual std::istream&  readAscii(std::istream& in);
+  //  virtual std::istream&  readAscii(std::istream& in);
 
   //! Writes state as human readable ASCII. Not readable by readAscii.
   virtual std::ostream&  writeNiceAscii(std::ostream& out)const;

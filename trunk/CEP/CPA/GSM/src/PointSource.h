@@ -34,8 +34,11 @@ class PointSource:public AbstractSource
 {
 public:
   
-   PointSource(unsigned int       catNumber = 0,
-               const std::string& name      = "");
+   PointSource(double             ra        = 0,
+               double             dec       = 0,
+               unsigned int       catNumber = 0,
+               const std::string& name      = "",
+               const std::vector<double>& flux = std::vector<double>(4));
 
   ~PointSource();
 
