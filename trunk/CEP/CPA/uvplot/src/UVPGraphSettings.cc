@@ -5,12 +5,14 @@
 
 //====================>>>  UVPGraphSettings::UVPGraphSettings  <<<====================
 
-UVPGraphSettings::UVPGraphSettings(unsigned int baselineCode,
+UVPGraphSettings::UVPGraphSettings(unsigned int antenna1,
+                                   unsigned int antenna2,
                                    unsigned int polarizationIndex,
                                    ValueType    valueType,
                                    PlotType     plotType,
                                    const std::vector<bool> fieldsToPlot)
-  : itsBaselineCode(baselineCode),
+  : itsAntenna1(antenna1),
+    itsAntenna2(antenna2),
     itsPolarizationIndex(polarizationIndex),
     itsValueType(valueType),
     itsPlotType(plotType),
@@ -23,11 +25,21 @@ UVPGraphSettings::UVPGraphSettings(unsigned int baselineCode,
 
 
 
-//====================>>>  UVPGraphSettings::getBaselineCode  <<<====================
+//====================>>>  UVPGraphSettings::getAntenna1  <<<====================
 
-unsigned int UVPGraphSettings::getBaselineCode() const
+unsigned int UVPGraphSettings::getAntenna1() const
 {
-  return itsBaselineCode;
+  return (itsAntenna1 < itsAntenna2 ? itsAntenna2 : itsAntenna1);
+}
+
+
+
+
+//====================>>>  UVPGraphSettings::getAntenna2  <<<====================
+
+unsigned int UVPGraphSettings::getAntenna2() const
+{
+  return (itsAntenna1 < itsAntenna2 ? itsAntenna1 : itsAntenna2);
 }
 
 
@@ -72,11 +84,23 @@ bool UVPGraphSettings::mustPlotField(unsigned int fieldIndex) const
 }
 
 
-//====================>>>  UVPGraphSettings::setBaselineCode  <<<====================
 
-void UVPGraphSettings::setBaselineCode(unsigned int baselineCode)
+
+//====================>>>  UVPGraphSettings::setAntenna1  <<<====================
+
+void UVPGraphSettings::setAntenna1(unsigned int antenna1)
 {
-  itsBaselineCode = baselineCode;
+  itsAntenna1 = antenna1;
+}
+
+
+
+
+//====================>>>  UVPGraphSettings::setAntenna2  <<<====================
+
+void UVPGraphSettings::setAntenna2(unsigned int antenna2)
+{
+  itsAntenna2 = antenna2;
 }
 
 
