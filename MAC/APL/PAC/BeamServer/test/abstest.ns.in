@@ -7,7 +7,13 @@ beam_server.type=TCP
 cmd=../src/BeamServer
 host=localhost
 client.type=TCP
-client.port=30230
+client.port=30229
+rspdriver.type=TCP # SAP
+
+[RSP]
+host=localhost
+acceptor.type=TCP
+acceptor.port=30230
 
 [EPATest]
 host=localhost

@@ -73,6 +73,20 @@ namespace ABS
 	 */
 	GCFEvent::TResult enabled(GCFEvent& e, GCFPortInterface &p);
 
+	/**
+	 * The waiting state. This state is entered when a request has
+	 * been sent to the RSP driver and the BeamServer is waiting
+	 * for the acknowledgement. After receiving the acknowledgement
+	 * the statemachine returns to the 'enabled' state.
+	 */
+	GCFEvent::TResult waiting(GCFEvent& e, GCFPortInterface &p);
+
+	/**
+	 * This handler handles all events that should be handled
+	 * irrespective of the state ('enabled' or 'waiting').
+	 */
+	GCFEvent::TResult handle_abs_request(GCFEvent& e, GCFPortInterface &p);
+
 	// action methods
 
 	/**
@@ -122,6 +136,7 @@ namespace ABS
 	/**
 	 * Send weights to the board.
 	 */
+	void send_weights();
 	void send_weights(int period);
 
 	/**
@@ -182,9 +197,8 @@ namespace ABS
 
     private:
 	// ports
-	GCFPort       client;
-	GCFETHRawPort board;
-
+	GCFPort       m_client;
+	GCFPort       m_rspdriver;
     };
 
 };

@@ -57,25 +57,25 @@ GCFEvent::TResult EPAStub::initial(GCFEvent& e, GCFPortInterface& port)
 
   switch(e.signal)
   {
-      case F_INIT_SIG:
+      case F_INIT:
       {
       }
       break;
 
-      case F_ENTRY_SIG:
+      case F_ENTRY:
       {
 	  beam_server.open();
       }
       break;
 
-      case F_CONNECTED_SIG:
+      case F_CONNECTED:
       {
 	  cout << "port connected: " << port.getName() << endl;
 	  TRAN(EPAStub::enabled);
       }
       break;
 
-      case F_DISCONNECTED_SIG:
+      case F_DISCONNECTED:
       {
 	  cout << "port disconnected: " << port.getName() << endl;
 	  port.setTimer((long)1);
@@ -83,7 +83,7 @@ GCFEvent::TResult EPAStub::initial(GCFEvent& e, GCFPortInterface& port)
       }
       break;
 
-      case F_TIMER_SIG:
+      case F_TIMER:
       {
 	  // try again
 	  beam_server.open();
@@ -104,7 +104,7 @@ GCFEvent::TResult EPAStub::enabled(GCFEvent& e, GCFPortInterface& /*port*/)
   
   switch (e.signal)
   {
-      case F_ENTRY_SIG:
+      case F_ENTRY:
       {
       }
       break;

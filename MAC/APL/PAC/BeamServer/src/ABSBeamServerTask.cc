@@ -24,7 +24,7 @@
 // this include needs to be first!
 #define DECLARE_SIGNAL_NAMES
 #include "ABS_Protocol.ph"
-#include "EPA_Protocol.ph"
+#include "RSP_Protocol.ph"
 
 #include "ABSBeamServerTask.h"
 
@@ -54,6 +54,8 @@ using namespace std;
 using namespace boost::posix_time;
 using namespace boost::gregorian;
 
+using namespace RSP_Protocol;
+
 #define MAX_N_SPECTRAL_WINDOWS 1
 #define COMPUTE_INTERVAL 10
 #define UPDATE_INTERVAL  1
@@ -68,13 +70,12 @@ BeamServerTask::BeamServerTask(string name)
       m_pos(N_ELEMENTS, N_POLARIZATIONS, 3),
       m_weights(COMPUTE_INTERVAL, N_ELEMENTS, N_SUBBANDS, N_POLARIZATIONS),
       m_weights16(COMPUTE_INTERVAL, N_ELEMENTS, N_SUBBANDS, N_POLARIZATIONS),
-      m_stats(N_BEAMLETS, BEAMLETSTATS_INTEGRATION_COUNT),
-      board(*this, "board", GCFPortInterface::SAP, true)
+      m_stats(N_BEAMLETS, BEAMLETSTATS_INTEGRATION_COUNT)
 {
   registerProtocol(ABS_PROTOCOL, ABS_PROTOCOL_signalnames);
 
-  client.init(*this, "client", GCFPortInterface::SPP, ABS_PROTOCOL);
-  //board.init(*this, "board", GCFPortInterface::SAP, EPA_PROTOCOL, true);
+  m_client.init(*this, "client", GCFPortInterface::SPP, ABS_PROTOCOL);
+  m_rspdriver.init(*this, "rspdriver", GCFPortInterface::SAP, RSP_PROTOCOL);
 
   (void)Beam::init(ABS::N_BEAMLETS,
 		   UPDATE_INTERVAL, COMPUTE_INTERVAL);
@@ -87,11 +88,11 @@ BeamServerTask::BeamServerTask(string name)
 
   // initialize antenna positions
   Range all = Range::all();
-  m_pos(0, 0, all) = 0.0;
-  m_pos(0, 0, 0)   = 0.0;
+  m_pos(all, 0, all) = 0.0;
+  m_pos(all, 0, 0)   = 0.0;
 
-  m_pos(0, 1, all) = 0.0;
-  m_pos(0, 1, 0)   = 100.0;
+  m_pos(all, 1, all) = 0.0;
+  m_pos(all, 1, 0)   = 100.0;
 
   // initialize weight matrix
   m_weights   = complex<W_TYPE>(0,0);
@@ -110,7 +111,7 @@ BeamServerTask::~BeamServerTask()
 
 bool BeamServerTask::isEnabled()
 {
-  return client.isConnected() && board.isConnected() && m_stats.isReady();
+  return m_client.isConnected() && m_rspdriver.isConnected() && m_stats.isReady();
 }
 
 GCFEvent::TResult BeamServerTask::initial(GCFEvent& e, GCFPortInterface& port)
@@ -119,70 +120,61 @@ GCFEvent::TResult BeamServerTask::initial(GCFEvent& e, GCFPortInterface& port)
   
   switch(e.signal)
   {
-      case F_INIT:
-      {
-	  // create a default spectral window from 0MHz to 20MHz
-	  // steps of 156.25 kHz
-	  SpectralWindow* spw = new SpectralWindow(0.0, 20.0e6/N_SUBBANDS, N_SUBBANDS);
-	  m_spws[0] = spw;
-      }
-      break;
+    case F_INIT:
+    {
+      // create a default spectral window from 0MHz to 20MHz
+      // steps of 156.25 kHz
+      SpectralWindow* spw = new SpectralWindow(0.0, 20.0e6/N_SUBBANDS, N_SUBBANDS);
+      m_spws[0] = spw;
+    }
+    break;
 
-      case F_ENTRY:
-      {
-	  if (!client.isConnected()) client.open(); // need this otherwise GTM_Sockethandler is not called
-	  board.setAddr("eth0", "aa:bb:cc:dd:ee:ff");
-	  if (!board.isConnected()) board.open();
-      }
-      break;
+    case F_ENTRY:
+    {
+      if (!m_client.isConnected())    m_client.open(); // need this otherwise GTM_Sockethandler is not called
+      if (!m_rspdriver.isConnected()) m_rspdriver.open();
+    }
+    break;
 
-      case F_CONNECTED:
+    case F_CONNECTED:
+    {
+      LOG_DEBUG(formatString("port '%s' connected", port.getName().c_str()));
+      if (isEnabled())
       {
-	LOG_DEBUG(formatString("port '%s' connected", port.getName().c_str()));
-	if (isEnabled())
-	{
-	  TRAN(BeamServerTask::enabled);
-	}
+	TRAN(BeamServerTask::enabled);
+      }
 	
-	// start with WG disabled.
-	//if (board.isConnected()) wgdisable_action();
-      }
-      break;
+      // start with WG disabled.
+      if (m_rspdriver.isConnected()) wgdisable_action();
+    }
+    break;
 
-      case F_DISCONNECTED:
-      {
-	  port.setTimer((long)3); // try again in 3 seconds
-	  LOG_WARN(formatString("port '%s' disconnected, retry in 3 seconds...", port.getName().c_str()));
-	  port.close();
-      }
-      break;
+    case F_DISCONNECTED:
+    {
+      port.setTimer((long)3); // try again in 3 seconds
+      LOG_WARN(formatString("port '%s' disconnected, retry in 3 seconds...", port.getName().c_str()));
+      port.close();
+    }
+    break;
 
-      case F_TIMER:
-      {
-	  LOG_INFO(formatString("port '%s' retry of open...", port.getName().c_str()));
-	  port.open();
-      }
-      break;
-
-      case F_DATAIN:
-      {
-	  if (&port == &board)
-	  {
-	      process_statistics();
-	  }
-      }
-      break;
+    case F_TIMER:
+    {
+      LOG_INFO(formatString("port '%s' retry of open...", port.getName().c_str()));
+      port.open();
+    }
+    break;
 
     case F_EXIT:
-      {
-	// cancel timers
-	board.cancelAllTimers();
-      }
-      break;
+    {
+      // cancel timers
+      m_client.cancelAllTimers();
+      m_rspdriver.cancelAllTimers();
+    }
+    break;
 
-      default:
-	  status = GCFEvent::NOT_HANDLED;
-	  break;
+    default:
+      status = GCFEvent::NOT_HANDLED;
+      break;
   }
 
   return status;
@@ -193,134 +185,55 @@ GCFEvent::TResult BeamServerTask::enabled(GCFEvent& e, GCFPortInterface& port)
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   static unsigned long update_timer = (unsigned long)-1;
-//  static unsigned long compute_timer = (unsigned long)-1;
   static int period = 0;
 
   switch (e.signal)
-    {
+  {
 #if 0
     case F_ACCEPT_REQ:
-      client.getPortProvider().accept();
+      m_client.getPortProvider().accept();
       break;
 #endif
     case F_ENTRY:
-      {
-	ptime nowtime = from_time_t(time(0)); 
-	time_duration now = nowtime - ptime(date(1970,1,1));
+    {
+      ptime nowtime = from_time_t(time(0)); 
+      time_duration now = nowtime - ptime(date(1970,1,1));
 
-	// update timer, once every UPDATE_INTERVAL exactly on the second
-	update_timer = board.setTimer((2 * UPDATE_INTERVAL) -
-				      (now.total_seconds() % UPDATE_INTERVAL), 0,
-				      UPDATE_INTERVAL, 0);
-
-#if 0
-	// compute timer, once every COMPUTE_INTERVAL exactly on the second
-	compute_timer = board.setTimer((2 * COMPUTE_INTERVAL)
-				       - (now.total_seconds() % COMPUTE_INTERVAL), 0,
-				       COMPUTE_INTERVAL, 0);
-#endif
-      }
-      break;
+      // update timer, once every UPDATE_INTERVAL exactly on the second
+      update_timer = m_rspdriver.setTimer((2 * UPDATE_INTERVAL) -
+					  (now.total_seconds() % UPDATE_INTERVAL), 0,
+					  UPDATE_INTERVAL, 0);
+    }
+    break;
 
     case F_TIMER:
+    {
+      GCFTimerEvent* timer = static_cast<GCFTimerEvent*>(&e);
+
+      LOG_DEBUG(formatString("timer=(%d,%d)", timer->sec, timer->usec));
+
+      if (0 == (period % COMPUTE_INTERVAL))
       {
-	GCFTimerEvent* timer = static_cast<GCFTimerEvent*>(&e);
+	period = 0;
+	// compute new weights after sending weights
+	compute_timeout_action(timer->sec);
 
-	LOG_DEBUG(formatString("timer=(%d,%d)", timer->sec, timer->usec));
-
-	if (0 == (period % COMPUTE_INTERVAL))
-	{
-	    period = 0;
-	    // compute new weights after sending weights
-	    compute_timeout_action(timer->sec);
-	}
-
-	send_weights(period);
-
-	period++;
-#if 0
-	if (timer->id == update_timer)
-	  {
-	    LOG_DEBUG(formatString("update_timer=(%d,%d)", timer->sec, timer->usec));
-	    send_weights();
-	  }
-	else if (timer->id == compute_timer)
-	  {
-	    LOG_DEBUG(formatString("compute_timer=(%d,%d)", timer->sec, timer->usec));
-	    compute_timeout_action(timer->sec);
-	  }
-	else
-	  {
-	    LOG_DEBUG(formatString("unknown timer %d", timer->id));
-	  }
-#endif
+	send_weights();
       }
-      break;
+
+      //send_weights(period);
+
+      period++;
+    }
+    break;
 
     case ABS_BEAMALLOC:
-      {
-	ABSBeamallocEvent* event = static_cast<ABSBeamallocEvent*>(&e);
-	beamalloc_action(event, port);
-
-#if 0
-	if (m_beams.size() == 1)
-	  {
-	    // enable on the first beam
-	    wgenable_action();
-	  }
-#endif
-      }
-      break;
-
     case ABS_BEAMFREE:
-      {
-	ABSBeamfreeEvent* event = static_cast<ABSBeamfreeEvent*>(&e);
-	beamfree_action(event, port);
-
-#if 0
-	if (m_beams.size() == 0)
-	  {
-	    // no more beams, disable WG
-	    wgdisable_action();
-	  }
-#endif
-      }
-      break;
-
     case ABS_BEAMPOINTTO:
-      {
-	ABSBeampointtoEvent* event = static_cast<ABSBeampointtoEvent*>(&e);
-	beampointto_action(event, port);
-      }
-      break;
-
     case ABS_WGSETTINGS:
-      {
-	ABSWgsettingsEvent* event = static_cast<ABSWgsettingsEvent*>(&e);
-	wgsettings_action(event, port);
-	if (m_wgsetting.enabled) wgenable_action();
-      }
-      break;
-
     case ABS_WGENABLE:
-      {
-	wgenable_action();
-      }
-      break;
-
     case ABS_WGDISABLE:
-      {
-	  //wgdisable_action();
-      }
-      break;
-
-    case F_DATAIN:
-      {
-	  if (&port == &board)
-	  {
-	      process_statistics();
-	  }
-      }
+      handle_abs_request(e, port);
       break;
 
     case F_DATAOUT:
@@ -328,41 +241,136 @@ GCFEvent::TResult BeamServerTask::enabled(GCFEvent& e, GCFPortInterface& port)
       break;
 
     case F_DISCONNECTED:
-      {
-	LOG_DEBUG(formatString("port %s disconnected", port.getName().c_str()));
-	port.close();
+    {
+      LOG_DEBUG(formatString("port %s disconnected", port.getName().c_str()));
+      port.close();
 
-	TRAN(BeamServerTask::initial);
-      }
-      break;
+      TRAN(BeamServerTask::initial);
+    }
+    break;
 
     case F_EXIT:
+    {
+      // deallocate all beams
+      for (set<Beam*>::iterator bi = m_beams.begin();
+	   bi != m_beams.end(); ++bi)
       {
-	// deallocate all beams
-	for (set<Beam*>::iterator bi = m_beams.begin();
-	     bi != m_beams.end(); ++bi)
-	  {
-	    (*bi)->deallocate();
-	  }
-
-	// disable the waveform generator
-	//wgdisable_action();
-
-	// cancel timers
-	board.cancelAllTimers();
+	(*bi)->deallocate();
       }
+
+      // disable the waveform generator
+      //wgdisable_action();
+
+      // cancel timers
+//      board.cancelAllTimers();
+    }
+    break;
+
+    default:
+      status = GCFEvent::NOT_HANDLED;
+      break;
+  }
+
+  return status;
+}
+
+GCFEvent::TResult BeamServerTask::waiting(GCFEvent& e, GCFPortInterface& port)
+{
+  GCFEvent::TResult status = GCFEvent::HANDLED;
+
+  switch (e.signal)
+  {
+    case ABS_BEAMALLOC:
+    case ABS_BEAMFREE:
+    case ABS_BEAMPOINTTO:
+    case ABS_WGSETTINGS:
+    case ABS_WGENABLE:
+    case ABS_WGDISABLE:
+      handle_abs_request(e, port);
       break;
 
     default:
       status = GCFEvent::NOT_HANDLED;
       break;
-    }
+  }
 
-  return status;
+  return status;  
+}
+
+GCFEvent::TResult BeamServerTask::handle_abs_request(GCFEvent& e, GCFPortInterface& port)
+{
+  GCFEvent::TResult status = GCFEvent::HANDLED;
+
+  switch (e.signal)
+  {
+    case ABS_BEAMALLOC:
+    {
+      ABSBeamallocEvent* event = static_cast<ABSBeamallocEvent*>(&e);
+      beamalloc_action(event, port);
+
+#if 0
+      if (m_beams.size() == 1)
+      {
+	// enable on the first beam
+	wgenable_action();
+      }
+#endif
+    }
+    break;
+
+    case ABS_BEAMFREE:
+    {
+      ABSBeamfreeEvent* event = static_cast<ABSBeamfreeEvent*>(&e);
+      beamfree_action(event, port);
+
+#if 0
+      if (m_beams.size() == 0)
+      {
+	// no more beams, disable WG
+	wgdisable_action();
+      }
+#endif
+    }
+    break;
+
+    case ABS_BEAMPOINTTO:
+    {
+      ABSBeampointtoEvent* event = static_cast<ABSBeampointtoEvent*>(&e);
+      beampointto_action(event, port);
+    }
+    break;
+
+    case ABS_WGSETTINGS:
+    {
+      ABSWgsettingsEvent* event = static_cast<ABSWgsettingsEvent*>(&e);
+      wgsettings_action(event, port);
+      if (m_wgsetting.enabled) wgenable_action();
+    }
+    break;
+
+    case ABS_WGENABLE:
+    {
+      wgenable_action();
+    }
+    break;
+
+    case ABS_WGDISABLE:
+    {
+      wgdisable_action();
+    }
+    break;
+
+    default:
+      status = GCFEvent::NOT_HANDLED;
+      break;
+  }
+
+  return status;  
 }
 
 void BeamServerTask::process_statistics()
 {
+#if 0
     static char data[ETH_DATA_LEN];
 
     ssize_t length = board.recv(data, ETH_DATA_LEN);
@@ -376,6 +384,7 @@ void BeamServerTask::process_statistics()
 					 neverDeleteData);
 	m_stats.update(power_sum, *seqnr);
     }
+#endif
 }
 
 void BeamServerTask::beamalloc_action(ABSBeamallocEvent* ba,
@@ -385,7 +394,7 @@ void BeamServerTask::beamalloc_action(ABSBeamallocEvent* ba,
   Beam* beam = 0;
   ABSBeamallocAckEvent ack;
   ack.handle = -1;
-  ack.status = SUCCESS;
+  ack.status = ABS_Protocol::SUCCESS;
 
   // check parameters
   if (((spwindex = ba->spectral_window) < 0)
@@ -434,7 +443,7 @@ void BeamServerTask::beamfree_action(ABSBeamfreeEvent* bf,
 {
   ABSBeamfreeAckEvent ack;
   ack.handle = bf->handle;
-  ack.status = SUCCESS;
+  ack.status = ABS_Protocol::SUCCESS;
 
   Beam* beam = 0;
   if (!(beam = Beam::getFromHandle(bf->handle)))
@@ -489,7 +498,7 @@ void BeamServerTask::wgsettings_action(ABSWgsettingsEvent* wgs,
 				       GCFPortInterface& port)
 {
   ABSWgsettingsAckEvent sa;
-  sa.status = SUCCESS;
+  sa.status = ABS_Protocol::SUCCESS;
 
   // max allowed frequency = 20MHz
   if ((wgs->frequency >= 1.0e-6)
@@ -513,6 +522,7 @@ void BeamServerTask::wgsettings_action(ABSWgsettingsEvent* wgs,
 
 void BeamServerTask::wgenable_action()
 {
+#if 0
   // mark enabled
   m_wgsetting.enabled = true;
 
@@ -533,10 +543,12 @@ void BeamServerTask::wgenable_action()
   usleep(EPA_DELAY_TIME); // give EPA board time to process buffer
   
   LOG_DEBUG("SENT WGENABLE");
+#endif
 }
 
 void BeamServerTask::wgdisable_action()
 {
+#if 0
   // mark disabled
   m_wgsetting.enabled = false;
 
@@ -551,6 +563,7 @@ void BeamServerTask::wgdisable_action()
   usleep(EPA_DELAY_TIME); // give EPA board time to process buffer
 
   LOG_DEBUG("SENT WGDISABLE");
+#endif
 }
 
 BZ_DECLARE_FUNCTION_RET(convert2complex_int16_t, complex<int16_t>)
@@ -639,8 +652,20 @@ void BeamServerTask::compute_timeout_action(long current_seconds)
   LOG_DEBUG(formatString("sizeof(m_weights16) = %d", m_weights16.size()*sizeof(int16_t)));
 }
 
-void BeamServerTask::send_weights(int period)
+void BeamServerTask::send_weights()
 {
+  RSPSetweightsEvent sw;
+
+  sw.timestamp.setNow();
+  LOG_INFO_STR("sw.time=" << sw.timestamp);
+
+  sw.rcumask.reset();
+  for (int i = 0; i < N_ELEMENTS * N_POLARIZATIONS; i++) sw.rcumask.set(i);
+}
+
+void BeamServerTask::send_weights(int /*period*/)
+{
+#if 0
   EPABfconfigureEvent bc;
   Range all = Range::all();
 
@@ -716,6 +741,7 @@ void BeamServerTask::send_weights(int period)
 
   //board.send(GCFEvent(F_RAW_DATA), &be.command, BFENABLE_PACKET_SIZE);
   usleep(EPA_DELAY_TIME); // give EPA board time to process buffer
+#endif
 }
 
 void BeamServerTask::update_sbselection()
@@ -734,41 +760,82 @@ void BeamServerTask::update_sbselection()
 
 void BeamServerTask::send_sbselection()
 {
+  RSPSetsubbandsEvent ss;
+  
+  ss.timestamp.setNow(0);
+
+  ss.rcumask.reset();
+  for (int i = 0; i < N_ELEMENTS * N_POLARIZATIONS; i++) ss.rcumask.set(i);
+
+  int nrsubbands = m_sbsel.size() <= 0 ? 0 : m_sbsel.size() * 2 - 1;
+  ss.subbands().resize(1, nrsubbands);
+
+  LOG_DEBUG(formatString("nrsubbands=%d", nrsubbands));
+
+  int i = 0;
+  for (map<int,int>::iterator sel = m_sbsel.begin();
+       sel != m_sbsel.end(); ++sel, ++i)
+  {
+    LOG_DEBUG(formatString("(%d,%d)", sel->first, sel->second));
+
+    if (i != sel->first)
+    {
+      LOG_ERROR(formatString("invalid src index %d", sel->first));
+      continue;
+    }
+    if (sel->second > N_BEAMLETS)
+    {
+      LOG_ERROR(formatString("invalid tgt index", sel->first));
+      continue;
+    }
+
+    // same selection for x and y polarization
+    ss.subbands()(sel->first*2)   = sel->second * 2;
+    ss.subbands()(sel->first*2+1) = sel->second * 2 + 1;
+  }
+
+  ss.subbands.nrsubbands().resize(1);
+  ss.subbands.nrsubbands()(0) = nrsubbands;
+
+  m_rspdriver.send(ss);
+
+#if 0
   if (m_sbsel.size() > 0)
   {
-      EPASubbandselectEvent ss;
+    EPASubbandselectEvent ss;
 
-      ss.command = 1; // 1 == subband selection
-      ss.seqnr = 0;
-      ss.pktsize = htons(SBSELECT_PACKET_HDR_SIZE + m_sbsel.size()*2);
-      ss.nofbands = (m_sbsel.size() <= 0 ? 0 : m_sbsel.size()*2 - 1);
+    ss.command = 1; // 1 == subband selection
+    ss.seqnr = 0;
+    ss.pktsize = htons(SBSELECT_PACKET_HDR_SIZE + m_sbsel.size()*2);
+    ss.nofbands = (m_sbsel.size() <= 0 ? 0 : m_sbsel.size()*2 - 1);
       
-      memset(&ss.bands, 0, sizeof(ss.bands));
-      int i = 0;
-      for (map<int,int>::iterator sel = m_sbsel.begin();
-	   sel != m_sbsel.end(); ++sel, ++i)
+    memset(&ss.bands, 0, sizeof(ss.bands));
+    int i = 0;
+    for (map<int,int>::iterator sel = m_sbsel.begin();
+	 sel != m_sbsel.end(); ++sel, ++i)
+    {
+      LOG_DEBUG(formatString("(%d,%d)", sel->first, sel->second));
+
+      if (i != sel->first)
       {
-	  LOG_DEBUG(formatString("(%d,%d)", sel->first, sel->second));
-
-	  if (i != sel->first)
-	  {
-	      LOG_ERROR(formatString("invalid src index %d", sel->first));
-	      continue;
-	  }
-	  if (sel->second > N_BEAMLETS)
-	  {
-	      LOG_ERROR(formatString("invalid tgt index", sel->first));
-	      continue;
-	  }
-
-	  // same selection for x and y polarization
-	  ss.bands[sel->first*2]   = sel->second * 2;
-	  ss.bands[sel->first*2+1] = sel->second * 2 + 1;
+	LOG_ERROR(formatString("invalid src index %d", sel->first));
+	continue;
+      }
+      if (sel->second > N_BEAMLETS)
+      {
+	LOG_ERROR(formatString("invalid tgt index", sel->first));
+	continue;
       }
 
-      //board.send(GCFEvent(F_RAW_DATA), &ss.command, SBSELECT_PACKET_HDR_SIZE + m_sbsel.size()*2);
-      usleep(EPA_DELAY_TIME); // give EPA board time to process buffer
+      // same selection for x and y polarization
+      ss.bands[sel->first*2]   = sel->second * 2;
+      ss.bands[sel->first*2+1] = sel->second * 2 + 1;
+    }
+
+    //board.send(GCFEvent(F_RAW_DATA), &ss.command, SBSELECT_PACKET_HDR_SIZE + m_sbsel.size()*2);
+    usleep(EPA_DELAY_TIME); // give EPA board time to process buffer
   }
+#endif
 }
 
 int main(int argc, char** argv)

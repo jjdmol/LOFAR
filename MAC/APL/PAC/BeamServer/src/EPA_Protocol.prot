@@ -65,7 +65,7 @@ event = {
       };
       param = {
 	    name = "bands";
-	    type = "unsigned char[]"; // max size == ABS::N_BEAMLETS * 2
+	    type = "unsigned char[ABS::N_BEAMLETS * 2]"; // max size == ABS::N_BEAMLETS * 2
       };
 };
 

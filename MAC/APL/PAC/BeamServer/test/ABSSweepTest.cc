@@ -28,7 +28,7 @@
 
 // this include needs to be first!
 
-#include "suite.h"
+#include <Suite/suite.h>
 #define DECLARE_SIGNAL_NAMES
 #include "ABS_Protocol.ph"
 #include "ABSDirection.h"
@@ -72,37 +72,37 @@ GCFEvent::TResult SweepTest::initial(GCFEvent& e, GCFPortInterface& port)
 
   switch(e.signal)
   {
-      case F_INIT_SIG:
+      case F_INIT:
       {
       }
       break;
 
-      case F_ENTRY_SIG:
+      case F_ENTRY:
       {
 	  beam_server.open();
       }
       break;
 
-      case F_CONNECTED_SIG:
+      case F_CONNECTED:
       {
 	  LOG_DEBUG(formatString("port %s connected", port.getName().c_str()));
 	  TRAN(SweepTest::test001);
       }
       break;
 
-      case F_DISCONNECTED_SIG:
+      case F_DISCONNECTED:
       {
 	  // only do 5 reconnects
 	  if (disconnect_count++ > 5)
 	  {
-	      _fail("timeout");
+	      FAIL("timeout");
 	      TRAN(SweepTest::done);
 	  }
 	  port.setTimer((long)2);
       }
       break;
 
-      case F_TIMER_SIG:
+      case F_TIMER:
       {
 	  // try again
 	  beam_server.open();
@@ -129,7 +129,7 @@ GCFEvent::TResult SweepTest::test001(GCFEvent& e, GCFPortInterface& port)
   
   switch (e.signal)
   {
-      case F_ENTRY_SIG:
+      case F_ENTRY:
       {
 	LOG_INFO("running test005");
 
@@ -140,18 +140,19 @@ GCFEvent::TResult SweepTest::test001(GCFEvent& e, GCFPortInterface& port)
 	wgs.amplitude=128; // was 128
 	wgs.sample_period=2;
 
-	_test(sizeof(wgs) == beam_server.send(wgs));
+	TESTC(beam_server.send(wgs));
       }
       break;
       
       case ABS_WGSETTINGS_ACK:
       {
 	  // check acknowledgement
-	  ABSWgsettings_AckEvent* wgsa = static_cast<ABSWgsettings_AckEvent*>(&e);
-	  _test(SUCCESS == wgsa->status);
+	  ABSWgsettingsAckEvent* wgsa = static_cast<ABSWgsettingsAckEvent*>(&e);
+	  TESTC(SUCCESS == wgsa->status);
 	  
 	  // send WGENABLE
-	  _test(sizeof(GCFEvent) == beam_server.send(GCFEvent(ABS_WGENABLE)));
+	  ABSWgenableEvent wgenable;
+	  TESTC(beam_server.send(wgenable));
 
 
 	  //
@@ -160,18 +161,18 @@ GCFEvent::TResult SweepTest::test001(GCFEvent& e, GCFPortInterface& port)
 	  //
 	  ABSBeamallocEvent alloc;
 	  alloc.spectral_window = 0;
-	  alloc.n_subbands = 1;
+//	  alloc.n_subbands = 1;
 	  memset(alloc.subbands, 0, sizeof(alloc.subbands));
 	  alloc.subbands[0] = m_subband;
 	  
-	  _test(sizeof(alloc) == beam_server.send(alloc));
+	  TESTC(beam_server.send(alloc));
       }
       break;
 
       case ABS_BEAMALLOC_ACK:
       {
-	ABSBeamalloc_AckEvent* ack = static_cast<ABSBeamalloc_AckEvent*>(&e);
-	_test(SUCCESS == ack->status);
+	ABSBeamallocAckEvent* ack = static_cast<ABSBeamallocAckEvent*>(&e);
+	TESTC(SUCCESS == ack->status);
 
 	beam_handle = ack->handle;
 	LOG_DEBUG(formatString("got beam_handle=%d", beam_handle));
@@ -183,11 +184,11 @@ GCFEvent::TResult SweepTest::test001(GCFEvent& e, GCFPortInterface& port)
 	{
 	  ABSBeamallocEvent alloc;
 	  alloc.spectral_window = 0;
-	  alloc.n_subbands = 1;
+//	  alloc.n_subbands = 1;
 	  memset(alloc.subbands, 0, sizeof(alloc.subbands));
 	  alloc.subbands[0] = m_subband;
 	  
-	  _test(sizeof(alloc) == beam_server.send(alloc));
+	  TESTC(beam_server.send(alloc));
 	}
 	else
 	{
@@ -204,10 +205,10 @@ GCFEvent::TResult SweepTest::test001(GCFEvent& e, GCFPortInterface& port)
 	    {
 		pointto.handle = beam;
 		pointto.time = now + 2 * 10;
-		pointto.angle1=0.0;
-		pointto.angle2=cos(((double)beam/N_BEAMLETS)*M_PI);
+		pointto.angle[0]=0.0;
+		pointto.angle[1]=cos(((double)beam/N_BEAMLETS)*M_PI);
 		
-		_test(sizeof(pointto) == beam_server.send(pointto));
+		TESTC(beam_server.send(pointto));
 	    }
 
 	    // let the beamformer compute for 120 seconds
@@ -216,36 +217,36 @@ GCFEvent::TResult SweepTest::test001(GCFEvent& e, GCFPortInterface& port)
       }
       break;
 
-      case F_TIMER_SIG:
+      case F_TIMER:
       {
 	  // done => send BEAMFREE
 	  ABSBeamfreeEvent beamfree;
 	  beamfree.handle = beam_handle;
 
-	  _test(sizeof(beamfree) == beam_server.send(beamfree));
+	  TESTC(beam_server.send(beamfree));
       }
       break;
 
       case ABS_BEAMFREE_ACK:
       {
-	ABSBeamfree_AckEvent* ack = static_cast<ABSBeamfree_AckEvent*>(&e);
-	_test(SUCCESS == ack->status);
-	_test(beam_handle == ack->handle);
+	ABSBeamfreeAckEvent* ack = static_cast<ABSBeamfreeAckEvent*>(&e);
+	TESTC(SUCCESS == ack->status);
+	TESTC(beam_handle == ack->handle);
 
 	// test completed, next test
 	TRAN(SweepTest::done);
       }
       break;
 
-      case F_DISCONNECTED_SIG:
+      case F_DISCONNECTED:
       {
-        _fail("disconnected");
+        FAIL("disconnected");
 	port.close();
 	TRAN(SweepTest::done);
       }
       break;
 
-      case F_EXIT_SIG:
+      case F_EXIT:
       {
 	// before leaving, cancel the timer
 	beam_server.cancelTimer(timerid);
@@ -268,7 +269,7 @@ GCFEvent::TResult SweepTest::done(GCFEvent& e, GCFPortInterface& /*port*/)
 
   switch(e.signal)
   {
-  case F_ENTRY_SIG:
+  case F_ENTRY:
     GCFTask::stop();
     break;
   }

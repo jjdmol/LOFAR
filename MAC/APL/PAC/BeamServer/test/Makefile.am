@@ -47,7 +47,7 @@ AVTStub_SOURCES = \
 
 AVTStub_LDADD = \
 	$(top_builddir)/src/libabs.la \
-	-lsuite -ltm -lgcfcommon
+	-lsuite -lgcf
 
 EPATest_SOURCES = \
 	ABSEPATest.h \
@@ -55,7 +55,7 @@ EPATest_SOURCES = \
 
 EPATest_LDADD = \
 	$(top_builddir)/src/libabs.la \
-	-lsuite -ltm -lgcfcommon
+	-lsuite -lgcf
 
 SweepTest_SOURCES = \
 	ABSSweepTest.h \
@@ -63,7 +63,7 @@ SweepTest_SOURCES = \
 
 SweepTest_LDADD = \
 	$(top_builddir)/src/libabs.la \
-	-lsuite -ltm -lgcfcommon
+	-lsuite -lgcf
 
 SetFreq_SOURCES = \
 	ABSSetFreq.h \
@@ -71,7 +71,7 @@ SetFreq_SOURCES = \
 
 SetFreq_LDADD = \
 	$(top_builddir)/src/libabs.la \
-	-l suite -ltm -lgcfcommon
+	-lsuite -lgcf
 
 EPAStub_SOURCES = \
 	ABSEPAStub.h \
@@ -79,7 +79,7 @@ EPAStub_SOURCES = \
 
 EPAStub_LDADD = \
 	$(top_builddir)/src/libabs.la \
-	-lsuite	-ltm -lgcfcommon
+	-lsuite	-lgcf
 
 BUILT_SOURCES = \
 	log4cplus.properties \

@@ -69,6 +69,6 @@ BeamServer_SOURCES = \
 	ABSBeamServerTask.cc
 
 BeamServer_LDADD = \
-	$(top_builddir)/src/libabs.la -lgcf
+	$(top_builddir)/src/libabs.la -lgcf -lrsp
 
 include $(lofar_sharedir)/Makefile.common

@@ -23,7 +23,7 @@
 
 // this include needs to be first!
 
-#include "suite.h"
+#include <Suite/suite.h>
 #define DECLARE_SIGNAL_NAMES
 #include "ABS_Protocol.ph"
 #include "ABSDirection.h"
@@ -42,7 +42,7 @@ using namespace boost::posix_time;
 #include <Common/LofarLogger.h>
 
 #include "ABS_Protocol.ph"
-#include "test.h"
+#include <Suite/test.h>
 
 #include <GCF/GCF_Control.h>
 #include <GCF/GCF_ETHRawPort.h>
@@ -110,18 +110,18 @@ GCFEvent::TResult SetFreq::initial(GCFEvent& e, GCFPortInterface& port)
 
   switch(e.signal)
   {
-      case F_INIT_SIG:
+      case F_INIT:
       {
       }
       break;
 
-      case F_ENTRY_SIG:
+      case F_ENTRY:
       {
 	  beam_server.open();
       }
       break;
 
-      case F_CONNECTED_SIG:
+      case F_CONNECTED:
       {
 	  LOG_DEBUG(formatString("port %s connected", port.getName().c_str()));
 
@@ -129,19 +129,19 @@ GCFEvent::TResult SetFreq::initial(GCFEvent& e, GCFPortInterface& port)
       }
       break;
 
-      case F_DISCONNECTED_SIG:
+      case F_DISCONNECTED:
       {
 	  // only do 5 reconnects
 	  if (disconnect_count++ > 5)
 	  {
-	      _fail("timeout");
+	      FAIL("timeout");
 	      TRAN(SetFreq::done);
 	  }
 	  port.setTimer((long)2);
       }
       break;
 
-      case F_TIMER_SIG:
+      case F_TIMER:
       {
 	  // try again
 	  beam_server.open();
@@ -166,7 +166,7 @@ GCFEvent::TResult SetFreq::setfreq(GCFEvent& e, GCFPortInterface& port)
 
   switch(e.signal)
   {
-      case F_ENTRY_SIG:
+      case F_ENTRY:
       {
 	  // this should finish within 1 second
 	  beam_server.setTimer((long)1);
@@ -177,40 +177,41 @@ GCFEvent::TResult SetFreq::setfreq(GCFEvent& e, GCFPortInterface& port)
 	  wgs.amplitude=128; // was 128
 	  wgs.sample_period=2;
 
-	  _test(sizeof(wgs) == beam_server.send(wgs));
+	  TESTC(beam_server.send(wgs));
       }
       break;
 
       case ABS_WGSETTINGS_ACK:
       {
 	  // check acknowledgement
-	  ABSWgsettings_AckEvent* wgsa = static_cast<ABSWgsettings_AckEvent*>(&e);
-	  _test(SUCCESS == wgsa->status);
+	  ABSWgsettingsAckEvent* wgsa = static_cast<ABSWgsettingsAckEvent*>(&e);
+	  TESTC(SUCCESS == wgsa->status);
 	  
 	  // send WGENABLE
-	  _test(sizeof(GCFEvent) == beam_server.send(GCFEvent(ABS_WGENABLE)));
+	  ABSWgenableEvent wgenable;
+	  TESTC(beam_server.send(wgenable));
 	  
 	  TRAN(SetFreq::done);
       }
       break;
 
-      case F_DISCONNECTED_SIG:
+      case F_DISCONNECTED:
       {
-	  _fail("disconnected");
+	  FAIL("disconnected");
 	  port.close();
 	  TRAN(SetFreq::done);
       }
       break;
 
-      case F_TIMER_SIG:
+      case F_TIMER:
       {
 	  // too late
-	  _fail("timeout");
+	  FAIL("timeout");
 	  TRAN(SetFreq::done);
       }
       break;
 
-      case F_EXIT_SIG:
+      case F_EXIT:
       {
 	  beam_server.cancelAllTimers();
       }
@@ -232,7 +233,7 @@ GCFEvent::TResult SetFreq::done(GCFEvent& e, GCFPortInterface& /*port*/)
 
   switch(e.signal)
   {
-  case F_ENTRY_SIG:
+  case F_ENTRY:
     GCFTask::stop();
     break;
   }

@@ -24,8 +24,7 @@
 #include "ABSSpectralWindow.h"
 #include "ABSBeam.h"
 
-#include "test.h"
-#include "suite.h"
+#include <Suite/suite.h>
 
 #include <iostream>
 #include <boost/date_time/posix_time/posix_time.hpp>
@@ -90,30 +89,30 @@ public:
 
 	  subbands.clear();
 	  for (int i = 0; i < N_SUBBANDS; i++) subbands.insert(i);
-	  _test(0 != (m_beam[0] = Beam::allocate(m_spw, subbands)));
+	  TESTC(0 != (m_beam[0] = Beam::allocate(m_spw, subbands)));
 
 	  ptime now = from_time_t(time(0));
 
 	  // add a few pointings
-	  _test(m_beam[0]->addPointing(Pointing(Direction(
+	  TESTC(m_beam[0]->addPointing(Pointing(Direction(
 			    0.0, 0.0,
 			    Direction::LOFAR_LMN), now + seconds(0))) == 0);
-	  _test(m_beam[0]->addPointing(Pointing(Direction(
+	  TESTC(m_beam[0]->addPointing(Pointing(Direction(
 			    0.0, 1.0,
 			    Direction::LOFAR_LMN), now + seconds(1))) == 0);
-	  _test(m_beam[0]->addPointing(Pointing(Direction(
+	  TESTC(m_beam[0]->addPointing(Pointing(Direction(
 			    1.0, 0.0,
 			    Direction::LOFAR_LMN), now + seconds(2))) == 0);
-	  _test(m_beam[0]->addPointing(Pointing(Direction(
+	  TESTC(m_beam[0]->addPointing(Pointing(Direction(
 			    sin(M_PI/4.0), sin(M_PI/4.0),
 			    Direction::LOFAR_LMN), now + seconds(3))) == 0);
-	  _test(m_beam[0]->addPointing(Pointing(Direction(
+	  TESTC(m_beam[0]->addPointing(Pointing(Direction(
 			    sin(M_PI/4.0), 0.0,
 			    Direction::LOFAR_LMN), now + seconds(4))) == 0);
-	  _test(m_beam[0]->addPointing(Pointing(Direction(
+	  TESTC(m_beam[0]->addPointing(Pointing(Direction(
 			    0.0, sin(M_PI/4.0),
 			    Direction::LOFAR_LMN), now + seconds(5))) == 0);
-	  _test(m_beam[0]->addPointing(Pointing(Direction(
+	  TESTC(m_beam[0]->addPointing(Pointing(Direction(
 			    sqrt(1.0/3.0), sqrt(1.0/3.0),
 			    Direction::LOFAR_LMN), now + seconds(6))) == 0);
 
@@ -122,7 +121,7 @@ public:
 	  // iterate over all beams
 	  time_period period(now, seconds(COMPUTE_INTERVAL));
 
-	  _test(0 == m_beam[0]->convertPointings(period));
+	  TESTC(0 == m_beam[0]->convertPointings(period));
 
 	  Array<W_TYPE, 3>          pos(N_ELEMENTS, N_POLARIZATIONS, 3);
 	  Array<complex<W_TYPE>, 4> weights(COMPUTE_INTERVAL, N_ELEMENTS, N_SUBBANDS, N_POLARIZATIONS);
@@ -155,21 +154,21 @@ public:
 	  // read in reference data
 	  //
 	  FILE* wfile = fopen("../../../test/weights.dat", "r");
-	  _test(wfile);
+	  TESTC(wfile);
 	  if (!wfile) return;
 
 	  for (int bl = 0; bl < N_BEAMLETS; bl++)
 	  {
-	    _test((size_t)weights_ref.size()
+	    TESTC((size_t)weights_ref.size()
 		  == fread(weights_ref.data(), sizeof(complex<W_TYPE>), weights_ref.size(), wfile));
 
 	    error = weights_ref - weights(all, all, bl, 0);
 	    cout << "error = abs(sum(error)) = " << abs(sum(error)) << endl;
-	    _test(abs(sum(error)) < 1e-8);
+	    TESTC(abs(sum(error)) < 1e-8);
 
 	    error = weights_ref - weights(all, all, bl, 1);
 	    cout << "error = abs(sum(error)) = " << abs(sum(error)) << endl;
-	    _test(abs(sum(error)) < 1e-8);
+	    TESTC(abs(sum(error)) < 1e-8);
 	  }
 	  fclose(wfile);
 
@@ -182,7 +181,7 @@ public:
 	  }
 	  LOG_INFO(formatString("calctime = %d sec %d msec", delay.tv_sec, delay.tv_usec/1000));
 
-	  _test(m_beam[0]->deallocate() == 0);
+	  TESTC(m_beam[0]->deallocate() == 0);
 	}
 };
 

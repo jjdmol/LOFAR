@@ -3,7 +3,7 @@
 beam_server=ABS:client
 
 [ABS]
-board=EPAStub:client
+board=RSP:acceptor
 
 [EPATest]
 beam_server=ABS:client
