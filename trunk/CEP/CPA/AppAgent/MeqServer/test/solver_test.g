@@ -71,7 +71,7 @@ const solver_test := function (gui=T,debug_level=2,verbose=1)
 
   global cells,request,res;
   cells := meqcells(meqdomain(0,1,0,1),num_freq=4,times=[0.,0.1,0.2,0.3],time_steps=[.1,.1,.1,.1]);
-  request := meqrequest(cells,calc_deriv=T);
+  request := meqrequest(cells,calc_deriv=2);
   res := mqs.meq('Node.Execute',[name='solver',request=request],T);
   print res;
 

@@ -6,8 +6,6 @@ MEQ in general:
       16/01/04: tested with default tests; now need to make some nodes
                 with child labels
                 
-1** publish intermediate results
-  
   * reconsider order or events in execute(): should cache be checked
     only after node_state and rider have been processed? Note that for
     repeated requests, this step is skipped, regardless. 
@@ -24,8 +22,15 @@ MEQ in general:
     perhaps there's a way for send() to block all updated recepients from 
     waking up until the entire send() cycle is complete.
     
+  * Fix MeqServer/test/solver_test to run in a "clean" environment
+   (i.e. no install, no .glishrc, etc -- mostly related to include paths)
+    
+        + publish intermediate results
+          29/01/04: done
+  
         + Clear.Forest command 
           04/01/04: done, need to test w/glish (glish not working on my laptop)
+          19/01/04: done
   
         + Persistent nodes: Save.Forest, Load.Forest, Clear.Cache commands
           01/01/04: done, need to test w/glish (glish not working on my laptop)
@@ -60,7 +65,6 @@ Solver:
 
         + Implement request ID hierarchy
           28/01/04: done
-        
   
         + Generate a valid RequestId even if the input request is NULL.
           This ties in to hierarchical requests, so maybe something simple for now
@@ -103,7 +107,8 @@ Vells and VellSets and Results:
   * Vells(DataArray*) constructor: if rank<2 but nelements==1, reform the 
     array (otherwise, won't instantiate from scalars!)
     
-2** double-differencing?
+    - double-differencing?
+      02/02/04 done for VellSets, needs real testing
     
         + Problem with in-place operators (+= etc.) and type promotion
           15/01/04 fixed
@@ -116,12 +121,17 @@ Function:
           
 DMI & Debug:
 
-  * In Debug: add capability to redirect the debug message stream
+        + In Debug: add capability to redirect the debug message stream
+          30/01/04 done
 
-  * Keep thinking about COWs. Perhaps make hooks implicit-COW? This would 
-    mean declaring an operator [] on CountedRefs? 
+        + Keep thinking about COWs. Perhaps make hooks implicit-COW? This would 
+          mean declaring an operator [] on CountedRefs? 
+          30/01/04 done
+          
+  * provide conversions between scalars and single-element arrays
 
-DMI COW:
+  * add protect feature to container fields (for use in classes such as 
+    Meq::Result etc.)
 
   * ? implement CountedRef::makeWritable since this seems to be a very common
     operation
