@@ -77,9 +77,7 @@ namespace LOFAR
 
       void Expr::print(std::ostream& os) const
       {
-        os << *this;
-        Expr cs(getConstraint());
-        if (!cs.isNull()) os << " AND " << cs;
+        itsNode->print(os);
       }
 
       bool Expr::isNull() const
@@ -233,7 +231,12 @@ namespace LOFAR
 
       std::ostream& operator<< (std::ostream& os, const Expr& exp)
       {
-        exp.itsNode->print(os);
+        exp.print(os);
+        Expr cs(exp.getConstraint());
+        if (!cs.isNull()) {
+          os << " AND ";
+          cs.print(os);
+        }
         return os;
       }
 
