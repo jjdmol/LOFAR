@@ -17,6 +17,7 @@
 %\usepackage{algorithmic}
 %\usepackage[dvips]{hyperref}
 %\DeclareGraphicsExtensions{.eps}
+%\DeclareGraphicsExtensions{.png}
 % ------------------------  End of you preamble.
   </xsl:variable>
 </xsl:stylesheet>
