@@ -43,6 +43,12 @@ Correlator::~Correlator() {
 
 void Correlator::define(const KeyValueMap& /*params*/) {
 
+#ifdef HAVE_MPI
+  sleep(TH_MPI::getCurrentRank());
+  cout << "defining node number " << TH_MPI::getCurrentRank() << endl;
+#endif
+
+
   // create the primary WorkHolder to do the actual work
   itsWH = (WorkHolder*) new WH_Correlator("noname",
 					  1, 
@@ -68,13 +74,19 @@ void Correlator::define(const KeyValueMap& /*params*/) {
 		   itsNchannels);
   
   // now connect to the dummy workholders. 
+#ifdef HAVE_MPI
   myWHRandom.getDataManager().getOutHolder(0)->connectTo 
     ( *itsWH->getDataManager().getInHolder(0), 
       TH_Socket(itsIP, itsIP, itsBaseport+TH_MPI::getCurrentRank(), true) );
-  
+
+  cout << itsBaseport+TH_MPI::getCurrentRank() << " " << endl;
+
   itsWH->getDataManager().getOutHolder(0)->connectTo
     ( *myWHDump.getDataManager().getInHolder(0), 
       TH_Socket(itsIP, itsIP, itsBaseport+itsNtargets+TH_MPI::getCurrentRank(), false));
+  cout << itsBaseport+itsNtargets+TH_MPI::getCurrentRank() << endl;
+#endif
+
 }
 
 void Correlator::undefine() {
@@ -157,9 +169,13 @@ int parse_config() {
 int main (int argc, const char** argv) {
 
   INIT_LOGGER("CorrelatorLogger.prop");
+#ifdef HAVE_MPI
   TH_MPI::init(argc, argv);
 
   if (TH_MPI::getCurrentRank() < targets) {
+#else 
+  if (true) {
+#endif
 
     for (int samples = min_samples; samples <= max_samples; samples++) {
       for (int elements = min_elements; elements <= max_elements; elements++) {
@@ -197,8 +213,10 @@ int main (int argc, const char** argv) {
     }
   }
 
+#ifdef HAVE_MPI
   // finalize the MPI environment
   TH_MPI::finalize();
+#endif
 
   return 0;
 }

@@ -90,9 +90,6 @@ WH_Correlator* WH_Correlator::make (const string& name) {
 void WH_Correlator::process() {
   
   int x, y, z;
-
-  int teller = 0;
-
   double starttime, stoptime, cmults;
 
   DH_CorrCube::BufferType*  signal;
@@ -111,7 +108,6 @@ void WH_Correlator::process() {
 
   starttime = timer();
 
-  teller=0;
   for (x = 0; x < itsNsamples; x++) {
     for (y = 0; y < itsNelements; y++) {
       for (z = 0; z <= y; z++) {
@@ -127,8 +123,9 @@ void WH_Correlator::process() {
 
   cmults = itsNsamples * (itsNelements*itsNelements/2 + ceil(itsNelements/2.0));
   //  cout << "Performance: " << 10e-6*cmults/(stoptime-starttime) << " Mcprod/sec" << endl;
-  cout << itsNsamples << " " << itsNelements << " " << 10e-6*cmults/(stoptime-starttime) << endl;
+  //  cout << itsNsamples << " " << itsNelements << " " << 10e-6*cmults/(stoptime-starttime) << endl;
 
+  cout << *corr << endl;
   memcpy(((DH_Vis*)getDataManager().getOutHolder(0))->getBuffer(), corr, itsNelements * itsNelements * sizeof(DH_Vis::BufferType));
   free(corr);
 }				     
