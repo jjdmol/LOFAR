@@ -29,11 +29,17 @@
 #include <sys/time.h>
 #include <sys/poll.h>
 #include <arpa/inet.h>
-#include <netdb.h>
 #include <unistd.h>
 #include <signal.h>
 #include <errno.h>
 #include <fcntl.h>
+
+#ifndef HAVE_BGL
+#include <netdb.h>
+#else
+// netdb is not available on BGL; all code using netdb will be 
+// conditionally included using the HAVE_BGL definition;
+#endif
 
 namespace LOFAR
 {
@@ -301,21 +307,29 @@ int32 Socket::initTCPSocket(bool	asServer)
 
 	// as Client we must resolve the hostname to connect to.
 	if (!asServer) {
-		struct hostent*		hostEnt;		// server host entry
 		uint32				IPbytes;
 		// try if hostname is hard ip address
 		if ((IPbytes = inet_addr(itsHost.c_str())) == INADDR_NONE) {
-			// No, try to resolve the name
-			if (!(hostEnt = gethostbyname(itsHost.c_str()))) {
-				LOG_DEBUG("Socket:Hostname can not be resolved");
-				return (itsErrno = BADHOST);
-			}
-			// Check type
-			if (hostEnt->h_addrtype != AF_INET) {
-				LOG_DEBUG("Socket:Hostname is of wrong protocoltype");
-				return (itsErrno = BADADDRTYPE);
-			}
-			memcpy (&IPbytes, hostEnt->h_addr, sizeof (IPbytes));
+#ifndef HAVE_BGL
+		  struct hostent*		hostEnt;		// server host entry
+		  // No, try to resolve the name
+		  if (!(hostEnt = gethostbyname(itsHost.c_str()))) {
+		    LOG_DEBUG("Socket:Hostname can not be resolved");
+		    return (itsErrno = BADHOST);
+		  }
+		  // Check type
+		  if (hostEnt->h_addrtype != AF_INET) {
+		    LOG_DEBUG("Socket:Hostname is of wrong protocoltype");
+		    return (itsErrno = BADADDRTYPE);
+		  }
+		  memcpy (&IPbytes, hostEnt->h_addr, sizeof (IPbytes));
+#else
+		  {
+		    // BGL Only
+		    LOG_ERROR("Socket:Hostname can not be resolved");
+		    return (itsErrno = BADHOST);
+		  }
+#endif
 		}
 		memcpy ((char*) &itsTCPAddr.sin_addr.s_addr, (char*) &IPbytes, 
 															sizeof(IPbytes));
@@ -323,6 +337,7 @@ int32 Socket::initTCPSocket(bool	asServer)
 			
 	// try to resolve the service
 	const char*			protocol = (itsType == UDP ? "udp" : "tcp");
+#ifndef HAVE_BGL
 	struct servent*		servEnt;		// service info entry
 	if ((servEnt = getservbyname(itsPort.c_str(), protocol))) {
 		itsTCPAddr.sin_port = servEnt->s_port;
@@ -339,7 +354,6 @@ int32 Socket::initTCPSocket(bool	asServer)
 	if (!(protoEnt = getprotobyname(protocol))) {
 	  return (itsErrno = PROTOCOL);
 	}
-
 	// Finally time to open the real socket
 	int32	socketType = (itsType == TCP) ? SOCK_STREAM : SOCK_DGRAM;
 	if ((itsSocketID = ::socket(PF_INET, socketType, protoEnt->p_proto)) < 0) {
@@ -347,10 +361,16 @@ int32 Socket::initTCPSocket(bool	asServer)
 		return (setErrno(SOCKET));
 	}
 
-    LOG_DEBUG(formatString("Socket:Created %s socket, port %d, protocol %d",
-				asServer ? "server" : "client",
-                ntohs((ushort)itsTCPAddr.sin_port), (int)protoEnt->p_proto));
+	LOG_DEBUG(formatString("Socket:Created %s socket, port %d, protocol %d",
+			       asServer ? "server" : "client",
+			       ntohs((ushort)itsTCPAddr.sin_port), (int)protoEnt->p_proto));
 
+#else
+	{// BGL Only 
+	  //! todo need some kind of check...
+	  //! and open the socket without using the protoEnt struct...
+	}
+#endif
     // set default options
     if (setDefaults() < 0) {
 		close(itsSocketID);
