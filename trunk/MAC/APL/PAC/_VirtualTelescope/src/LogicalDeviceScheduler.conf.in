@@ -10,6 +10,11 @@ mac.top.AVTTestBF1.client.remoteservice=BeamServer:server
 
 mac.LogicalDeviceScheduler.pvss.cmdline=-proj MAC
 
+mac.apl.avt.PREPARETIME=5
+mac.apl.avt.BEAMSERVERPORT=BeamServer
+mac.apl.avt.APC_VT1=ApcStationBeamformer_VT1
+mac.apl.avt.APC_BF1=ApcStationBeamformer_BF1
+
 mac.ns.VT1.VT1_server.type=TCP
 mac.ns.VT2.VT2_server.type=TCP
 mac.ns.VT3.VT3_server.type=TCP

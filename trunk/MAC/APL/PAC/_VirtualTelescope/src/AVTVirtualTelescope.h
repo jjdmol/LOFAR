@@ -28,9 +28,9 @@
 #include <time.h>
 #include <Common/lofar_string.h>
 //# GCF Includes
-#include <GCF/GCF_Port.h>
+#include <GCF/TM/GCF_Port.h>
 
-#include "../../../APLCommon/src/APLInterTaskPort.h"
+#include <APLCommon/APLInterTaskPort.h>
 
 //# VirtualTelescope Includes
 #include "AVTLogicalDevice.h"
@@ -45,10 +45,9 @@ namespace AVT
   {
     public:
 
-      explicit AVTVirtualTelescope(string& name, 
-                                  const TPropertySet& primaryPropertySet,
+      explicit AVTVirtualTelescope(string& name,
+                                  const string& scope,
                                   const string& APCName,
-                                  const string& APCScope,
                                   AVTStationBeamformer& sbf, 
                                   AVTStationReceptorGroup& srg); 
       virtual ~AVTVirtualTelescope();
@@ -88,7 +87,6 @@ namespace AVT
       virtual GCFEvent::TResult concrete_releasing_state(GCFEvent& e, GCFPortInterface& p, bool& stateFinished);
 
       virtual void handlePropertySetAnswer(GCFEvent& answer);
-      virtual void handleAPCAnswer(GCFEvent& answer);
 
       virtual void concreteClaim(GCFPortInterface& port);
       virtual void concretePrepare(GCFPortInterface& port,string& parameters);

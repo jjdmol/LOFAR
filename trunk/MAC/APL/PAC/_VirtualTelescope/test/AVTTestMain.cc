@@ -21,8 +21,8 @@
 //#  $Id$
 
 #include <CmdLine.h>
-#include <GCF/GCF_Task.h>
-#include "../../../APLCommon/src/suite.h"
+#include <GCF/TM/GCF_Task.h>
+#include <Suite/suite.h>
 #include "AVTTestTask.h"
 #include "AVTTestMAC2Task.h"
 #include <boost/shared_ptr.hpp>
@@ -57,20 +57,21 @@ int main(int argc, char* argv[])
     {
       Suite s("MAC.APL.PAC VirtualTelescope Test",&std::cout);
     
-      boost::shared_ptr<AVTTest<AVTTestTask> >      avtTestMac1;
-      boost::shared_ptr<AVTTest<AVTTestMAC2Task> >  avtTestMac2;
+      boost::shared_ptr<AVTTestTask>      avtTestMac1;
+      boost::shared_ptr<AVTTestMAC2Task>  avtTestMac2;
       if(mac1Test)
       {
-        avtTestMac1 = boost::shared_ptr<AVTTest<AVTTestTask> >(new AVTTest<AVTTestTask>(string("AVTTestMAC1")));
+        avtTestMac1 = boost::shared_ptr<AVTTestTask>(new AVTTestTask(string("AVTTestMAC1")));
         s.addTest(avtTestMac1.get());
       }
       if(mac2Test)
       {
-        avtTestMac2 = boost::shared_ptr<AVTTest<AVTTestMAC2Task> >(new AVTTest<AVTTestMAC2Task>(string("AVTTestMAC2")));
+        avtTestMac2 = boost::shared_ptr<AVTTestMAC2Task>(new AVTTestMAC2Task(string("AVTTestMAC2")));
         s.addTest(avtTestMac2.get());
       }
       s.run();
       retval=s.report();
+      s.free();
     }
   }
   return retval;

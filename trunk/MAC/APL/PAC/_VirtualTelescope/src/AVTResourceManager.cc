@@ -26,7 +26,7 @@
 #include <Common/LofarLogger.h>
 #include <boost/date_time/posix_time/posix_time.hpp>
 
-#include "../../../APLCommon/src/APL_Defines.h"
+#include <APLCommon/APL_Defines.h>
 #include "AVTResourceManager.h"
 #include "LogicalDevice_Protocol.ph"
 #include "AVTDefines.h"
@@ -48,17 +48,17 @@ void AVTResourceManager::checked_deleter::operator() (AVTResourceManager* _p)
 AVTResourceManager::AVTResourceManager() : boost::noncopyable(),
   m_resourceRequests()
 {
-  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("%s",__func__));
+  LOG_TRACE(formatString("%s",__func__));
 }
 
 AVTResourceManager::~AVTResourceManager()
 {
-  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("%s",__func__));
+  LOG_TRACE(formatString("%s",__func__));
 }
 
 AVTResourceManagerPtr AVTResourceManager::instance()
 {
-  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("%s",__func__));
+  LOG_TRACE(formatString("%s",__func__));
   
   AVTResourceManagerPtr tmp;
   if(s_avtResourceManagerInstance.expired())

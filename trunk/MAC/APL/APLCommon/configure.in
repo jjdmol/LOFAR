@@ -1,11 +1,11 @@
 dnl
 dnl Process this file with autoconf to produce a configure script.
 dnl
-AC_INIT(APLCommon/src/APL_Defines.h)
+AC_INIT(include/APLCommon/APL_Defines.h)
 dnl AC_CONFIG_AUX_DIR(config)
 dnl AM_CONFIG_HEADER(config/config.h)
 AM_CONFIG_HEADER(config.h)
-AM_INIT_AUTOMAKE(APL, 1.0)
+AM_INIT_AUTOMAKE(APLCommon, 1.0)
 
 dnl Initialize for LOFAR (may set compilers)
 lofar_INIT
@@ -65,24 +65,15 @@ lofar_EXTERNAL(common,1,Common/LofarTypes.h,,)
 lofar_EXTERNAL(xercesc,1,xercesc/sax2/SAX2XMLReader.hpp,xerces-c,)
 lofar_EXTERNAL(log4cplus,1,log4cplus/logger.h,,)
 lofar_EXTERNAL(boost,1,boost/shared_ptr.hpp,"")
-lofar_EXTERNAL(BLITZ,1,blitz/blitz.h,,,,'gnu3:-Wno-unused gnu3:-ftemplate-depth-30',,-lm)
-lofar_EXTERNAL(rsp,1,RSP_Protocol.ph,,)
-lofar_EXTERNAL(abs,1,ABS_Protocol.ph,,)
-lofar_EXTERNAL(gcf,1,GCF/GCF_Task.h,,)
+lofar_EXTERNAL(GCFTM,1,GCF/TM/GCF_Control.h,,)
+lofar_EXTERNAL(GCFCommon,1,GCF/GCF_Defines.h,,)
+lofar_EXTERNAL(GCFPAL,1,GCF/PAL/GCF_Property.h,,)
+lofar_EXTERNAL(GCFPALlight,1,GCF/PALlight/GCF_RTMyProperty.h,,)
 
 dnl
 dnl Output Makefiles
 dnl
 AC_OUTPUT(
-APLCommon/src/Makefile
-APLCommon/Makefile
-PAC/VirtualTelescope/src/Makefile
-PAC/VirtualTelescope/test/Makefile
-PAC/VirtualTelescope/Makefile
-PAC/Makefile
-PIC/RegisterAccess/src/Makefile
-PIC/RegisterAccess/test/Makefile
-PIC/RegisterAccess/Makefile
-PIC/Makefile
+src/Makefile
 Makefile
 )

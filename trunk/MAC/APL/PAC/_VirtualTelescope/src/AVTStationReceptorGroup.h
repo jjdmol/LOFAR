@@ -31,11 +31,12 @@
 #include <time.h>
 #include <Common/lofar_string.h>
 //# GCF Includes
-#include <GCF/GCF_Port.h>
+#include <GCF/TM/GCF_Port.h>
 
-#include "../../../APLCommon/src/APLInterTaskPort.h"
+#include <APLCommon/APLInterTaskPort.h>
 
 //# VirtualTelescope Includes
+#include "AVTDefines.h"
 #include "AVTLogicalDevice.h"
 
 namespace AVT
@@ -47,10 +48,9 @@ namespace AVT
   {
     public:
 
-      explicit AVTStationReceptorGroup(string& name, 
-                                       const TPropertySet& primaryPropertySet,
+      explicit AVTStationReceptorGroup(string& name,
+                                       const string& scope,
                                        const string& APCName,
-                                       const string& APCScope,
                                        std::vector<boost::shared_ptr<AVTStationReceptor> >& rcus); 
       virtual ~AVTStationReceptorGroup();
 
@@ -90,7 +90,6 @@ namespace AVT
       virtual GCFEvent::TResult concrete_releasing_state(GCFEvent& e, GCFPortInterface& p, bool& stateFinished);
 
       virtual void handlePropertySetAnswer(GCFEvent& answer);
-      virtual void handleAPCAnswer(GCFEvent& answer);
 
       virtual void concreteClaim(GCFPortInterface& port);
       virtual void concretePrepare(GCFPortInterface& port,string& parameters);

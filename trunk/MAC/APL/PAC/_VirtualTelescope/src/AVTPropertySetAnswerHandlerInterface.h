@@ -26,7 +26,7 @@
 //# Includes
 //# Common Includes
 //# GCF Includes
-#include <GCF/GCF_Event.h>
+#include <GCF/TM/GCF_Event.h>
 
 //# local includes
 

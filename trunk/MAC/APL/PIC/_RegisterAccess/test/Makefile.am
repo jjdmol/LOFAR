@@ -20,4 +20,18 @@ aratest_SOURCES 		= \
 	ARATestDriverTask.cc \
 	ARATestMain.cc
 	
+BUILT_SOURCES = \
+	aratest.conf \
+	log4cplus.properties
+	
+EXTRA_DIST = \
+	aratest.conf \
+	log4cplus.properties
+	
+%.properties: $(MAC_CONFIG)/%.properties
+	cp $< $@
+	
+%.conf: %.conf.in
+	cp $< $@
+
 include $(lofar_sharedir)/Makefile.common

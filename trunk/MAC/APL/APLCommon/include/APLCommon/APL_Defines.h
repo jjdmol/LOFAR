@@ -1,6 +1,6 @@
-//#  AVTTest.cc: Implementation of the Virtual Telescope test
+//#  APL_Defines.h: preprocessor definitions of various constants
 //#
-//#  Copyright (C) 2002-2004
+//#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
 //#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -19,38 +19,8 @@
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
 //#  $Id$
-#include "GCF/GCF_Task.h"
 
-template<class T>
-AVTTest<T>::AVTTest<T>(const string& name) :
-  Test(name),
-  m_testTask(*this)
-{
-}
+#ifndef APL_DEFINES_H
+#define APL_DEFINES_H
 
-template<class T>
-AVTTest<T>::~AVTTest<T>()
-{
-}
-
-template<class T>
-void AVTTest<T>::run()
-{ 
-  m_testTask.start();
-  
-  GCFTask::run();
-}
-
-template<class T>
-void AVTTest<T>::avt_do_test(bool cond, const string& lbl,
-                          const char* fname, long lineno)
-{
-  do_test(cond,lbl,fname,lineno);
-}
-
-template<class T>
-void AVTTest<T>::avt_do_fail(const string& lbl,
-                          const char* fname, long lineno)
-{
-  do_fail(lbl,fname,lineno);
-}
+#endif

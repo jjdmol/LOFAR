@@ -29,17 +29,14 @@
 #include <vector>
 
 //# GCF Includes
-#include <GCF/GCF_Port.h>
-#include <GCF/GCF_Task.h>
-#include <GCF/GCF_MyPropertySet.h>
-#include <GCF/GCF_Apc.h>
+#include <GCF/TM/GCF_Port.h>
+#include <GCF/TM/GCF_Task.h>
+#include <GCF/PAL/GCF_MyPropertySet.h>
 
 //# local includes
 #include "AVTPropertySetAnswerHandlerInterface.h"
-#include "AVTAPCAnswerHandlerInterface.h"
 #include "AVTPropertySetAnswer.h"
-#include "AVTAPCAnswer.h"
-#include "../../../APLCommon/src/APLInterTaskPort.h"
+#include <APLCommon/APLInterTaskPort.h>
 #include "AVTDefines.h"
 
 // forward declaration
@@ -48,15 +45,15 @@ namespace AVT
 {
 
   class AVTLogicalDevice : public GCFTask, 
-                                  AVTPropertySetAnswerHandlerInterface,
-                                  AVTAPCAnswerHandlerInterface
+                                  AVTPropertySetAnswerHandlerInterface
   {
     public:
 
       explicit AVTLogicalDevice(string& taskName, 
-                                const TPropertySet& primaryPropertySet,
-                                const string& APCName,
-                                const string& APCScope); 
+                                const string& scope,
+                                const string& type,
+                                const string& APCName
+                                ); 
       virtual ~AVTLogicalDevice();
 
       string& getServerPortName();
@@ -176,9 +173,8 @@ namespace AVT
 
     protected:    
       AVTPropertySetAnswer            m_propertySetAnswer;
-      AVTAPCAnswer                    m_APCAnswer;
       GCFMyPropertySet                m_properties;
-      GCFApc                          m_APC;
+      string                          m_APC;
 
     private:
       string                          m_serverPortName;

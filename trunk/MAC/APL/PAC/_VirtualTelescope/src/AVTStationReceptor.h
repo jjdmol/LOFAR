@@ -32,10 +32,10 @@
 #include <boost/shared_ptr.hpp>
 
 //# GCF Includes
-#include <GCF/GCF_Port.h>
-#include <GCF/GCF_Property.h>
+#include <GCF/PAL/GCF_Port.h>
+#include <GCF/PAL/GCF_Property.h>
 
-#include "../../../APLCommon/src/APLInterTaskPort.h"
+#include <APLCommon/APLInterTaskPort.h>
 
 //# VirtualTelescope Includes
 #include "AVTLogicalDevice.h"
@@ -46,11 +46,10 @@ namespace AVT
   {
     public:
 
-      explicit AVTStationReceptor(string& name, 
-                                  const TPropertySet& primaryPropertySet,
+      explicit AVTStationReceptor(string& name,
+                                  const string& scope,
                                   const string& APCName,
-                                  const string& APCScope,
-                                  const std::list<std::string>& requiredResources); 
+                                  const std::list<TPropertyInfo>& requiredResources); 
       virtual ~AVTStationReceptor();
 
       bool checkQualityRequirements();
@@ -88,7 +87,6 @@ namespace AVT
       virtual GCFEvent::TResult concrete_releasing_state(GCFEvent& e, GCFPortInterface& p, bool& stateFinished);
 
       virtual void handlePropertySetAnswer(GCFEvent& answer);
-      virtual void handleAPCAnswer(GCFEvent& answer);
 
       virtual void concreteClaim(GCFPortInterface& port);
       virtual void concretePrepare(GCFPortInterface& port,string& parameters);

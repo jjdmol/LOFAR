@@ -26,16 +26,16 @@
 //# Includes
 //# Common Includes
 #include <list>
+#include <Suite/test.h>
 
 //# GCF Includes
-#include <GCF/GCF_Task.h>
-#include <GCF/GCF_Port.h>
-#include <GCF/GCF_TCPPort.h>
-#include <GCF/GCF_Property.h>
-#include <GCF/GCF_MyPropertySet.h>
+#include <GCF/TM/GCF_Task.h>
+#include <GCF/TM/GCF_Port.h>
+#include <GCF/TM/GCF_TCPPort.h>
+#include <GCF/PAL/GCF_Property.h>
+#include <GCF/PAL/GCF_MyPropertySet.h>
 #include <boost/shared_ptr.hpp>
 
-#include "AVTTest.h"
 #include "AVTTestAnswer.h"
 
 // forward declaration
@@ -44,7 +44,7 @@ class GCFPortInterface;
 
 namespace AVT
 {
-  class AVTTestTask : public GCFTask
+  class AVTTestTask : public GCFTask, public Test
   {
     public:
       AVTTestTask(AVTTest<AVTTestTask>& tester);
@@ -77,27 +77,22 @@ namespace AVT
       
       static string m_taskName;
       
-      AVTTest<AVTTestTask>& m_tester;
       AVTTestAnswer         m_answer;
       GCFTCPPort            m_beamserver;
   
-      GCFProperty     m_propertyLDScommand;
-      GCFProperty     m_propertyLDSstatus;
-      GCFProperty     m_propertyLDSWGFrequency;
-      GCFProperty     m_propertyLDSWGAmplitude;
-      GCFProperty     m_propertySBFdirectionType;
-      GCFProperty     m_propertySBFdirectionAngle1;
-      GCFProperty     m_propertySBFdirectionAngle2;
-      GCFProperty     m_propertySBFstatus;
+      GCFExtPropertySet m_extPropsetLDS;
+      GCFExtPropertySet m_extPropsetLDSWG;
+      GCFExtPropertySet m_extPropsetSBF1;
+      bool m_propsetLDloaded;
+      bool m_propsetLDWGloaded;
+      bool m_propsetSBFloaded;
   
-      GCFMyPropertySet      m_beamServerProperties;
       bool m_BEAMALLOC_received;
       bool m_BEAMFREE_received;
       bool m_BEAMPOINTTO_received;
       bool m_WGSETTINGS_received;
       bool m_WGENABLE_received;
       bool m_WGDISABLE_received;
-      unsigned long m_statisticsTimerID;
       double m_beamAngle1;
       double m_beamAngle2;
       unsigned int m_seqnr;

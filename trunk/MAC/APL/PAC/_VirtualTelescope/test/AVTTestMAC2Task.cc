@@ -20,6 +20,7 @@
 //#
 //#  $Id$
 
+#define GCF4
 #ifdef GCF4
 // datapoint structs are supported in gcf4
 #define PROPERTY_BOARD1_MAINTENANCE_STATUS      "PIC_Rack1_SubRack1_Board1_Maintenance.status"
@@ -52,7 +53,7 @@
 #include <GCF/GCF_PVUnsigned.h>
 #include <GCF/GCF_PVDouble.h>
 
-#include "../../../APLCommon/src/APL_Defines.h"
+#include <APLCommon/APL_Defines.h>
 #include "AVTTestMAC2Task.h"
 #include "PropertyDefines.h" 
 
@@ -75,6 +76,64 @@ using namespace LOFAR;
 using namespace AVT;
 using namespace std;
 
+#define NEXT_TEST(_test_, _descr_) \
+  { \
+    setCurSubTest(#_test_, _descr_); \
+    TRAN(ARATestTask::test##_test_); \
+  }
+
+#define FINISH \
+  { \
+    reportSubTest(); \
+    TRAN(ARATestTask::finished); \
+  }
+
+#define ABORT_TESTS \
+  { \
+    cout << "TESTS ABORTED due to an ERROR or terminated" << endl; \
+    FINISH; \
+  }
+
+#define FAIL_AND_ABORT(_txt_) \
+  { \
+    FAIL(_txt_);  \
+    ABORT_TESTS; \
+  }
+
+#define TESTC_ABORT_ON_FAIL(cond) \
+  if (!TESTC(cond)) \
+  { \
+    ABORT_TESTS; \
+    break; \
+  }
+
+#define TESTC_DESCR_ABORT_ON_FAIL(cond, _descr_) \
+  if (!TESTC_DESCR(cond, _descr_)) \
+  { \
+    ABORT_TESTS; \
+    break; \
+  }
+
+#define ADDTRANTARGET(_targetvector_,_target_,_num_,_descr_) \
+  { \
+    TTranTarget tt={static_cast<State>(&_target_), #_target_,_num_,_descr_}; \
+    _targetvector_.push_back(tt); \
+  }
+  
+#define TESTTRAN(_trantarget_) \
+  { \
+    setCurSubTest(_trantarget_->testNum,_trantarget_->description); \
+    tran(static_cast<State>(_trantarget_->target), __func__, _trantarget_->targetName); \
+  }
+
+#define NEXTTEST(_iterator_) \
+  { \
+    std::vector<TTranTarget>::iterator tempIt = _iterator_; \
+    _iterator_++; \
+    TESTTRAN(tempIt); \
+  }
+  
+
 string AVTTestMAC2Task::m_taskName("AVTTestMAC2");
 string g_timerPortName("timerPort");
 
@@ -85,43 +144,42 @@ AVTTestMAC2Task::AVTTestMAC2Task(AVTTest<AVTTestMAC2Task>& tester) :
   m_tester(tester),
   m_answer(),
   m_timerPort(*this, g_timerPortName, GCFPortInterface::SPP, LOGICALDEVICE_PROTOCOL),
-  m_propertyLDScommand(string(PROPERTY_LDS_COMMAND)),
-  m_propertyLDSstatus(string(PROPERTY_LDS_STATUS)),
-  m_propBoard1MaintenanceStatus(string(PROPERTY_BOARD1_MAINTENANCE_STATUS)),
-  m_propAP1RCU1MaintenanceStatus(string(PROPERTY_AP1_RCU1_MAINTENANCE_STATUS)),
-  m_propAP1RCU2MaintenanceStatus(string(PROPERTY_AP1_RCU2_MAINTENANCE_STATUS)),
-  m_propAP1RCU1Status(string(PROPERTY_AP1_RCU1_STATUS)),
-  m_propAP2RCU1Status(string(PROPERTY_AP2_RCU1_STATUS)),
-  m_propAP3RCU1Status(string(PROPERTY_AP3_RCU1_STATUS)),
-  m_propVT1Command(string(PROPERTY_VT1_COMMAND)),
-  m_propVT1Status(string(PROPERTY_VT1_STATUS)),
-  m_propVT2Command(string(PROPERTY_VT2_COMMAND)),
-  m_propVT2Status(string(PROPERTY_VT2_STATUS)),
-  m_propVT3Status(string(PROPERTY_VT3_STATUS)),
+  m_propertyLDScommand({PROPERTY_LDS_COMMAND,LPT_STRING}),
+  m_propertyLDSstatus({PROPERTY_LDS_STATUS,LPT_STRING}),
+  m_propBoard1MaintenanceStatus({PROPERTY_BOARD1_MAINTENANCE_STATUS,LPT_UNSIGNED}),
+  m_propAP1RCU1MaintenanceStatus({PROPERTY_AP1_RCU1_MAINTENANCE_STATUS,LPT_UNSIGNED}),
+  m_propAP1RCU2MaintenanceStatus({PROPERTY_AP1_RCU2_MAINTENANCE_STATUS,LPT_UNSIGNED}),
+  m_propAP1RCU1Status({PROPERTY_AP1_RCU1_STATUS,LPT_UNSIGNED}),
+  m_propAP2RCU1Status({PROPERTY_AP2_RCU1_STATUS,LPT_UNSIGNED}),
+  m_propAP3RCU1Status({PROPERTY_AP3_RCU1_STATUS,LPT_UNSIGNED}),
+  m_propVT1Command({PROPERTY_VT1_COMMAND,LPT_STRING}),
+  m_propVT1Status({PROPERTY_VT1_STATUS,LPT_STRING}),
+  m_propVT2Command({PROPERTY_VT2_COMMAND,LPT_STRING}),
+  m_propVT2Status({PROPERTY_VT2_STATUS,LPT_STRING}),
+  m_propVT3Status({PROPERTY_VT3_STATUS,LPT_STRING}),
   m_maintenanceChangedCounter(0),
   m_suspendedCounter(0)
 {
   registerProtocol(LOGICALDEVICE_PROTOCOL, LOGICALDEVICE_PROTOCOL_signalnames);
   m_answer.setTask(this);
   
-  ADDTRANTARGET(m_testSequence,AVTTestMAC2Task::test_3_2_4_1);
-  ADDTRANTARGET(m_testSequence,AVTTestMAC2Task::test_3_2_4_2);
-  ADDTRANTARGET(m_testSequence,AVTTestMAC2Task::test_3_2_4_3);
-  ADDTRANTARGET(m_testSequence,AVTTestMAC2Task::test_3_2_4_4);
-  ADDTRANTARGET(m_testSequence,AVTTestMAC2Task::test_3_2_4_5);
-  ADDTRANTARGET(m_testSequence,AVTTestMAC2Task::test_3_2_4_6);
-  ADDTRANTARGET(m_testSequence,AVTTestMAC2Task::test_3_2_4_7);
-  ADDTRANTARGET(m_testSequence,AVTTestMAC2Task::test_3_2_4_8);
-  ADDTRANTARGET(m_testSequence,AVTTestMAC2Task::test_3_2_5_1);
-  ADDTRANTARGET(m_testSequence,AVTTestMAC2Task::test_3_2_5_2);
-  ADDTRANTARGET(m_testSequence,AVTTestMAC2Task::test_3_2_5_3);
-  ADDTRANTARGET(m_testSequence,AVTTestMAC2Task::test_3_2_5_4);
-  ADDTRANTARGET(m_testSequence,AVTTestMAC2Task::test_3_2_5_5);
-  ADDTRANTARGET(m_testSequence,AVTTestMAC2Task::test_3_2_6_1);
-  ADDTRANTARGET(m_testSequence,AVTTestMAC2Task::test_3_2_7_1);
-  ADDTRANTARGET(m_testSequence,AVTTestMAC2Task::test_3_2_7_2);
-  ADDTRANTARGET(m_testSequence,AVTTestMAC2Task::test_3_2_7_3);
-  ADDTRANTARGET(m_testSequence,AVTTestMAC2Task::finished);
+  ADDTRANTARGET(m_testSequence,AVTTestMAC2Task::test_3_2_4_1,1,"3_2_4_1: Start VT, all antennas in maintenance");
+  ADDTRANTARGET(m_testSequence,AVTTestMAC2Task::test_3_2_4_2,2,"3_2_4_2: Start VT, too many antennas in maintenance");
+  ADDTRANTARGET(m_testSequence,AVTTestMAC2Task::test_3_2_4_3,3,"3_2_4_3: Start VT, no antennas in maintenance");
+  ADDTRANTARGET(m_testSequence,AVTTestMAC2Task::test_3_2_4_4,4,"3_2_4_3: Start VT, no antennas in maintenance");
+  ADDTRANTARGET(m_testSequence,AVTTestMAC2Task::test_3_2_4_5,5,"3_2_4_5: Change antenna parameter using the first VT");
+  ADDTRANTARGET(m_testSequence,AVTTestMAC2Task::test_3_2_4_6,6,"3_2_4_5: Change antenna parameter using the first VT");
+  ADDTRANTARGET(m_testSequence,AVTTestMAC2Task::test_3_2_4_7,7,"3_2_4_7: Abort the first VT");
+  ADDTRANTARGET(m_testSequence,AVTTestMAC2Task::test_3_2_4_8,8,"3_2_4_8: Change antenna parameter using the second VT");
+  ADDTRANTARGET(m_testSequence,AVTTestMAC2Task::test_3_2_5_1,9,"3_2_5_2: Schedule the same VT at non-overlapping timespans");
+  ADDTRANTARGET(m_testSequence,AVTTestMAC2Task::test_3_2_5_2,10,"3_2_5_3: Schedule the same VT at overlapping timespans");
+  ADDTRANTARGET(m_testSequence,AVTTestMAC2Task::test_3_2_5_3,11,"3_2_5_4: Cancel a VT Schedule");
+  ADDTRANTARGET(m_testSequence,AVTTestMAC2Task::test_3_2_5_4,12,"3_2_5_5: Schedule two VT's at the same time");
+  ADDTRANTARGET(m_testSequence,AVTTestMAC2Task::test_3_2_5_5,13,"3_2_6_1: Display subband statistics of a running VT");
+  ADDTRANTARGET(m_testSequence,AVTTestMAC2Task::test_3_2_6_1,14,"3_2_7_1: Antenna defect, no VT uses this antenna");
+  ADDTRANTARGET(m_testSequence,AVTTestMAC2Task::test_3_2_7_1,15,"3_2_7_2: 1 antenna defect, VT keeps on running");
+  ADDTRANTARGET(m_testSequence,AVTTestMAC2Task::test_3_2_7_2,16,"3_2_7_3: more antennas defect, VT stops");
+  ADDTRANTARGET(m_testSequence,AVTTestMAC2Task::test_3_2_7_3,17,"3_2_7_3: more antennas defect, VT stops");
   m_testSequenceIt = m_testSequence.begin();
 
   m_propertyLDScommand.setAnswer(&m_answer);
@@ -143,7 +201,7 @@ AVTTestMAC2Task::~AVTTestMAC2Task()
 
 GCFEvent::TResult AVTTestMAC2Task::initial(GCFEvent& event, GCFPortInterface& /*port*/)
 {
-  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTTestMAC2Task(%s)::%s (%s)",getName().c_str(),__func__,evtstr(event)));
+  LOG_TRACE(formatString("AVTTestMAC2Task(%s)::%s (%s)",getName().c_str(),__func__,evtstr(event)));
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (event.signal)
@@ -157,7 +215,7 @@ GCFEvent::TResult AVTTestMAC2Task::initial(GCFEvent& event, GCFPortInterface& /*
       break;
     
     default:
-      LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTTestTask(%s)::%s, default",getName().c_str(),__func__));
+      LOG_TRACE(formatString("AVTTestTask(%s)::%s, default",getName().c_str(),__func__));
       status = GCFEvent::NOT_HANDLED;
       break;
   }
@@ -170,7 +228,7 @@ GCFEvent::TResult AVTTestMAC2Task::initial(GCFEvent& event, GCFPortInterface& /*
  */
 GCFEvent::TResult AVTTestMAC2Task::test_3_2_4_1(GCFEvent& event, GCFPortInterface& p)
 {
-  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTTestMAC2Task(%s)::%s (%s)",getName().c_str(),__func__,evtstr(event)));
+  LOG_TRACE(formatString("AVTTestMAC2Task(%s)::%s (%s)",getName().c_str(),__func__,evtstr(event)));
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (event.signal)
@@ -185,9 +243,7 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_4_1(GCFEvent& event, GCFPortInterfac
       // put board in maintenance.
       m_propBoard1MaintenanceStatus.subscribe();
       GCFPVUnsigned inMaintenance(1);
-      bool testOk = (GCF_NO_ERROR==m_propBoard1MaintenanceStatus.setValue(inMaintenance));
-      m_tester._avttest(testOk);
-      if(!testOk)
+      if(!TESTC(GCF_NO_ERROR==m_propBoard1MaintenanceStatus.setValue(inMaintenance)))
       {
         NEXTTEST(m_testSequenceIt);
       }
@@ -209,16 +265,13 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_4_1(GCFEvent& event, GCFPortInterfac
     case F_VCHANGEMSG:
     {
       // check which property changed
-      GCFPropValueEvent* pPropAnswer = static_cast<GCFPropValueEvent*>(&event);
-      assert(pPropAnswer);
-      if(strstr(pPropAnswer->pPropName,PROPERTY_BOARD1_MAINTENANCE_STATUS)!=0)
+      GCFPropValueEvent propAnswer(event);
+      if(strstr(propAnswer.pPropName,PROPERTY_BOARD1_MAINTENANCE_STATUS)!=0)
       {
         GCFPVUnsigned inMaintenance;
-        inMaintenance.copy(*pPropAnswer->pValue);
-        LOG_INFO(formatString("Value of '%s': %d",pPropAnswer->pPropName,inMaintenance.getValue()));
-        bool testOk = ( inMaintenance.getValue()!=0 );
-        m_tester._avttest(testOk);
-        if(!testOk)
+        inMaintenance.copy(*propAnswer.pValue);
+        LOG_INFO(formatString("Value of '%s': %d",propAnswer.pPropName,inMaintenance.getValue()));
+        if(!TESTC( inMaintenance.getValue()!=0 ))
         {
           NEXTTEST(m_testSequenceIt);
         }
@@ -233,26 +286,23 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_4_1(GCFEvent& event, GCFPortInterfac
           string subbands("0|1|2|3|4|5|6|7|8|9|10|11,");
           string direction("AZEL,0.0,0.0");
           GCFPVString command(cmd+devices+times+freq+subbands+direction);
-          if (m_propertyLDScommand.setValue(command) != GCF_NO_ERROR)
-          {
-            m_tester._avttest(false);
-          }
+
+          TESTC(m_propertyLDScommand.setValue(command) == GCF_NO_ERROR);
+
           if(GCF_NO_ERROR != m_propVT1Status.subscribe())
           {
             m_timerPort.setTimer(1.0);
           }
         }
       }
-      else if(strstr(pPropAnswer->pPropName,PROPERTY_VT1_STATUS)!=0)
+      else if(strstr(propAnswer.pPropName,PROPERTY_VT1_STATUS)!=0)
       {
         // the status of the Logical device scheduler has changed
         GCFPVString status;
-        status.copy(*pPropAnswer->pValue);
-        LOG_INFO(formatString("Value of '%s': %s",pPropAnswer->pPropName,status.getValue().c_str()));
-        bool testOk = ( status.getValue() == string("Releasing") );
-        if(testOk)
+        status.copy(*propAnswer.pValue);
+        LOG_INFO(formatString("Value of '%s': %s",propAnswer.pPropName,status.getValue().c_str()));
+        if(TESTC( status.getValue() == string("Releasing") ))
         {
-          m_tester._avttest(true);
           NEXTTEST(m_testSequenceIt);
         }
       }
@@ -262,17 +312,17 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_4_1(GCFEvent& event, GCFPortInterfac
     case F_VGETRESP:
     {
       // check which property changed
-      GCFPropValueEvent* pPropAnswer = static_cast<GCFPropValueEvent*>(&event);
-      assert(pPropAnswer);
-      if(strstr(pPropAnswer->pPropName,PROPERTY_VT1_STATUS)!=0)
+      GCFPropValueEvent propAnswer(event);
+      
+      if(strstr(propAnswer.pPropName,PROPERTY_VT1_STATUS)!=0)
       {
         // display the value:
         GCFPVString status;
-        status.copy(*pPropAnswer->pValue);
-        LOG_INFO(formatString("Value of '%s': %s",pPropAnswer->pPropName,status.getValue().c_str()));
+        status.copy(*propAnswer.pValue);
+        LOG_INFO(formatString("Value of '%s': %s",propAnswer.pPropName,status.getValue().c_str()));
         if( status.getValue() == string("Releasing") )
         {
-          m_tester._avttest(true);
+          TESTC(true);
           NEXTTEST(m_testSequenceIt);
         }
         else
@@ -293,7 +343,7 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_4_1(GCFEvent& event, GCFPortInterfac
     }
       
     default:
-      LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTTestTask(%s)::%s, default",getName().c_str(),__func__));
+      LOG_TRACE(formatString("AVTTestTask(%s)::%s, default",getName().c_str(),__func__));
       status = GCFEvent::NOT_HANDLED;
       break;
   }
@@ -305,7 +355,7 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_4_1(GCFEvent& event, GCFPortInterfac
  */
 GCFEvent::TResult AVTTestMAC2Task::test_3_2_4_2(GCFEvent& event, GCFPortInterface& p)
 {
-  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTTestMAC2Task(%s)::%s (%s)",getName().c_str(),__func__,evtstr(event)));
+  LOG_TRACE(formatString("AVTTestMAC2Task(%s)::%s (%s)",getName().c_str(),__func__,evtstr(event)));
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (event.signal)
@@ -322,10 +372,8 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_4_2(GCFEvent& event, GCFPortInterfac
       m_propAP1RCU1MaintenanceStatus.subscribe();
       m_propAP1RCU2MaintenanceStatus.subscribe();
       GCFPVUnsigned inMaintenance(1);
-      bool testOk = (GCF_NO_ERROR==m_propAP1RCU1MaintenanceStatus.setValue(inMaintenance) &&
-                     GCF_NO_ERROR==m_propAP1RCU2MaintenanceStatus.setValue(inMaintenance));
-      m_tester._avttest(testOk);
-      if(!testOk)
+      if(!TESTC(GCF_NO_ERROR==m_propAP1RCU1MaintenanceStatus.setValue(inMaintenance) &&
+                GCF_NO_ERROR==m_propAP1RCU2MaintenanceStatus.setValue(inMaintenance)))
       {
         NEXTTEST(m_testSequenceIt);
       }
@@ -347,18 +395,17 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_4_2(GCFEvent& event, GCFPortInterfac
     case F_VCHANGEMSG:
     {
       // check which property changed
-      GCFPropValueEvent* pPropAnswer = static_cast<GCFPropValueEvent*>(&event);
-      assert(pPropAnswer);
-      if(strstr(pPropAnswer->pPropName,PROPERTY_AP1_RCU1_MAINTENANCE_STATUS)!=0 ||
-         strstr(pPropAnswer->pPropName,PROPERTY_AP1_RCU2_MAINTENANCE_STATUS)!=0)
+      GCFPropValueEvent propAnswer(event);
+      
+      if(strstr(propAnswer.pPropName,PROPERTY_AP1_RCU1_MAINTENANCE_STATUS)!=0 ||
+         strstr(propAnswer.pPropName,PROPERTY_AP1_RCU2_MAINTENANCE_STATUS)!=0)
       {
         m_maintenanceChangedCounter++;
         GCFPVUnsigned inMaintenance;
-        inMaintenance.copy(*pPropAnswer->pValue);
-        LOG_INFO(formatString("Value of '%s': %d",pPropAnswer->pPropName,inMaintenance.getValue()));
-        bool testOk = ( inMaintenance.getValue()!=0 );
-        m_tester._avttest(testOk);
-        if(!testOk)
+        inMaintenance.copy(*propAnswer.pValue);
+        LOG_INFO(formatString("Value of '%s': %d",propAnswer.pPropName,inMaintenance.getValue()));
+
+        if(!TESTC( inMaintenance.getValue()!=0 ))
         {
           NEXTTEST(m_testSequenceIt);
         }
@@ -373,9 +420,8 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_4_2(GCFEvent& event, GCFPortInterfac
           string subbands("0|1|2|3|4|5|6|7|8|9|10|11,");
           string direction("AZEL,0.0,0.0");
           GCFPVString command(cmd+devices+times+freq+subbands+direction);
-          if (m_propertyLDScommand.setValue(command) != GCF_NO_ERROR)
+          if(!TESTC(m_propertyLDScommand.setValue(command) == GCF_NO_ERROR))
           {
-            m_tester._avttest(false);
             NEXTTEST(m_testSequenceIt);
           }
           if(GCF_NO_ERROR != m_propVT1Status.subscribe())
@@ -384,16 +430,16 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_4_2(GCFEvent& event, GCFPortInterfac
           }
         }
       }
-      else if(strstr(pPropAnswer->pPropName,PROPERTY_VT1_STATUS)!=0)
+      else if(strstr(propAnswer.pPropName,PROPERTY_VT1_STATUS)!=0)
       {
         // the status of the Logical device scheduler has changed
         GCFPVString status;
-        status.copy(*pPropAnswer->pValue);
-        LOG_INFO(formatString("Value of '%s': %s",pPropAnswer->pPropName,status.getValue().c_str()));
+        status.copy(*propAnswer.pValue);
+        LOG_INFO(formatString("Value of '%s': %s",propAnswer.pPropName,status.getValue().c_str()));
         bool testOk = ( status.getValue() == string("Releasing") );
         if(testOk)
         {
-          m_tester._avttest(testOk);
+          TESTC(testOk);
           NEXTTEST(m_testSequenceIt);
         }
       }
@@ -412,7 +458,7 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_4_2(GCFEvent& event, GCFPortInterfac
     }
     
     default:
-      LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTTestTask(%s)::%s, default",getName().c_str(),__func__));
+      LOG_TRACE(formatString("AVTTestTask(%s)::%s, default",getName().c_str(),__func__));
       status = GCFEvent::NOT_HANDLED;
       break;
   }
@@ -424,7 +470,7 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_4_2(GCFEvent& event, GCFPortInterfac
  */
 GCFEvent::TResult AVTTestMAC2Task::test_3_2_4_3(GCFEvent& event, GCFPortInterface& p)
 {
-  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTTestMAC2Task(%s)::%s (%s)",getName().c_str(),__func__,evtstr(event)));
+  LOG_TRACE(formatString("AVTTestMAC2Task(%s)::%s (%s)",getName().c_str(),__func__,evtstr(event)));
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (event.signal)
@@ -456,9 +502,8 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_4_3(GCFEvent& event, GCFPortInterfac
       string subbands("0|1|2|3|4|5|6|7|8|9|10|11,");
       string direction("AZEL,0.0,0.0");
       GCFPVString command(cmd+devices+times+freq+subbands+direction);
-      if (m_propertyLDScommand.setValue(command) != GCF_NO_ERROR)
+      if (!TESTC(m_propertyLDScommand.setValue(command) == GCF_NO_ERROR))
       {
-        m_tester._avttest(false);
         NEXTTEST(m_testSequenceIt);
       }
       if(GCF_NO_ERROR != m_propVT1Status.subscribe())
@@ -471,18 +516,18 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_4_3(GCFEvent& event, GCFPortInterfac
     case F_VCHANGEMSG:
     {
       // check which property changed
-      GCFPropValueEvent* pPropAnswer = static_cast<GCFPropValueEvent*>(&event);
-      assert(pPropAnswer);
-      if(strstr(pPropAnswer->pPropName,PROPERTY_VT1_STATUS)!=0)
+      GCFPropValueEvent propAnswer(event);
+      
+      if(strstr(propAnswer.pPropName,PROPERTY_VT1_STATUS)!=0)
       {
         // the status of the Logical device scheduler has changed
         GCFPVString status;
-        status.copy(*pPropAnswer->pValue);
-        LOG_INFO(formatString("Value of '%s': %s",pPropAnswer->pPropName,status.getValue().c_str()));
+        status.copy(*propAnswer.pValue);
+        LOG_INFO(formatString("Value of '%s': %s",propAnswer.pPropName,status.getValue().c_str()));
         bool testOk = ( status.getValue() == string("Active") );
         if(testOk)
         {
-          m_tester._avttest(testOk);
+          TESTC(testOk);
           NEXTTEST(m_testSequenceIt);
         }
       }
@@ -496,7 +541,7 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_4_3(GCFEvent& event, GCFPortInterfac
     }
     
     default:
-      LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTTestTask(%s)::%s, default",getName().c_str(),__func__));
+      LOG_TRACE(formatString("AVTTestTask(%s)::%s, default",getName().c_str(),__func__));
       status = GCFEvent::NOT_HANDLED;
       break;
   }
@@ -508,7 +553,7 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_4_3(GCFEvent& event, GCFPortInterfac
  */
 GCFEvent::TResult AVTTestMAC2Task::test_3_2_4_4(GCFEvent& event, GCFPortInterface& p)
 {
-  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTTestMAC2Task(%s)::%s (%s)",getName().c_str(),__func__,evtstr(event)));
+  LOG_TRACE(formatString("AVTTestMAC2Task(%s)::%s (%s)",getName().c_str(),__func__,evtstr(event)));
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (event.signal)
@@ -543,9 +588,8 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_4_4(GCFEvent& event, GCFPortInterfac
       string subbands("0|1|2|3|4|5|6|7|8|9|10|11,");
       string direction("AZEL,0.2,0.0");
       GCFPVString command(cmd+devices+times+freq+subbands+direction);
-      if (m_propertyLDScommand.setValue(command) != GCF_NO_ERROR)
+      if (!TESTC(m_propertyLDScommand.setValue(command) == GCF_NO_ERROR))
       {
-        m_tester._avttest(false);
         NEXTTEST(m_testSequenceIt);
       }
       if(GCF_NO_ERROR != m_propVT2Status.subscribe())
@@ -558,30 +602,30 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_4_4(GCFEvent& event, GCFPortInterfac
     case F_VCHANGEMSG:
     {
       // check which property changed
-      GCFPropValueEvent* pPropAnswer = static_cast<GCFPropValueEvent*>(&event);
-      assert(pPropAnswer);
-      if(strstr(pPropAnswer->pPropName,PROPERTY_LDS_STATUS)!=0)
+      GCFPropValueEvent propAnswer(event);
+      
+      if(strstr(propAnswer.pPropName,PROPERTY_LDS_STATUS)!=0)
       {
         // the status of the Logical device scheduler has changed
         GCFPVString status;
-        status.copy(*pPropAnswer->pValue);
-        LOG_INFO(formatString("Value of '%s': %s",pPropAnswer->pPropName,status.getValue().c_str()));
+        status.copy(*propAnswer.pValue);
+        LOG_INFO(formatString("Value of '%s': %s",propAnswer.pPropName,status.getValue().c_str()));
         if(status.getValue() == string("Error"))
         {
-          m_tester._avttest(false);
+          TESTC(false);
           NEXTTEST(m_testSequenceIt);
         }
       }
-      else if(strstr(pPropAnswer->pPropName,PROPERTY_VT2_STATUS)!=0)
+      else if(strstr(propAnswer.pPropName,PROPERTY_VT2_STATUS)!=0)
       {
         // the status of the Logical device scheduler has changed
         GCFPVString status;
-        status.copy(*pPropAnswer->pValue);
-        LOG_INFO(formatString("Value of '%s': %s",pPropAnswer->pPropName,status.getValue().c_str()));
+        status.copy(*propAnswer.pValue);
+        LOG_INFO(formatString("Value of '%s': %s",propAnswer.pPropName,status.getValue().c_str()));
         bool testOk = ( status.getValue() == string("Active") );
         if(testOk)
         {
-          m_tester._avttest(testOk);
+          TESTC(testOk);
           NEXTTEST(m_testSequenceIt);
         }
       }
@@ -596,7 +640,7 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_4_4(GCFEvent& event, GCFPortInterfac
     }
     
     default:
-      LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTTestTask(%s)::%s, default",getName().c_str(),__func__));
+      LOG_TRACE(formatString("AVTTestTask(%s)::%s, default",getName().c_str(),__func__));
       status = GCFEvent::NOT_HANDLED;
       break;
   }
@@ -608,7 +652,7 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_4_4(GCFEvent& event, GCFPortInterfac
  */
 GCFEvent::TResult AVTTestMAC2Task::test_3_2_4_5(GCFEvent& event, GCFPortInterface& /*p*/)
 {
-  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTTestMAC2Task(%s)::%s (%s)",getName().c_str(),__func__,evtstr(event)));
+  LOG_TRACE(formatString("AVTTestMAC2Task(%s)::%s (%s)",getName().c_str(),__func__,evtstr(event)));
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (event.signal)
@@ -625,9 +669,8 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_4_5(GCFEvent& event, GCFPortInterfac
       // SUSPEND VT1
       string cmd("SUSPEND");
       GCFPVString command(cmd);
-      if (m_propVT1Command.setValue(command) != GCF_NO_ERROR)
+      if (!TESTC(m_propVT1Command.setValue(command) == GCF_NO_ERROR))
       {
-        m_tester._avttest(false);
         NEXTTEST(m_testSequenceIt);
       }
       break;
@@ -636,14 +679,14 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_4_5(GCFEvent& event, GCFPortInterfac
     case F_VCHANGEMSG:
     {
       // check which property changed
-      GCFPropValueEvent* pPropAnswer = static_cast<GCFPropValueEvent*>(&event);
-      assert(pPropAnswer);
-      if(strstr(pPropAnswer->pPropName,PROPERTY_VT1_STATUS)!=0)
+      GCFPropValueEvent propAnswer(event);
+      
+      if(strstr(propAnswer.pPropName,PROPERTY_VT1_STATUS)!=0)
       {
         // the status of the VT has changed
         GCFPVString status;
-        status.copy(*pPropAnswer->pValue);
-        LOG_INFO(formatString("Value of '%s': %s",pPropAnswer->pPropName,status.getValue().c_str()));
+        status.copy(*propAnswer.pValue);
+        LOG_INFO(formatString("Value of '%s': %s",propAnswer.pPropName,status.getValue().c_str()));
         if(status.getValue() == string("Suspended"))
         {
           m_suspendedCounter++;
@@ -656,9 +699,8 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_4_5(GCFEvent& event, GCFPortInterfac
             string subbands("0|1|2|3|4|5|6|7|8|9|10|11,");
             string direction("AZEL,0.0,0.0");
             GCFPVString command(cmd+times+freq+subbands+direction);
-            if (m_propVT1Command.setValue(command) != GCF_NO_ERROR)
+            if (!TESTC(m_propVT1Command.setValue(command) == GCF_NO_ERROR))
             {
-              m_tester._avttest(false);
               NEXTTEST(m_testSequenceIt);
             }
           }
@@ -669,14 +711,14 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_4_5(GCFEvent& event, GCFPortInterfac
             GCFPVString command(cmd);
             if (m_propVT1Command.setValue(command) != GCF_NO_ERROR)
             {
-              m_tester._avttest(false);
+              TESTC(false);
               NEXTTEST(m_testSequenceIt);
             }
           }
         }
         else if(status.getValue() == string("Active"))
         {
-          m_tester._avttest(true);
+          TESTC(true);
           NEXTTEST(m_testSequenceIt);
         }
       }
@@ -690,7 +732,7 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_4_5(GCFEvent& event, GCFPortInterfac
     }
     
     default:
-      LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTTestTask(%s)::%s, default",getName().c_str(),__func__));
+      LOG_TRACE(formatString("AVTTestTask(%s)::%s, default",getName().c_str(),__func__));
       status = GCFEvent::NOT_HANDLED;
       break;
   }
@@ -702,7 +744,7 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_4_5(GCFEvent& event, GCFPortInterfac
  */
 GCFEvent::TResult AVTTestMAC2Task::test_3_2_4_6(GCFEvent& event, GCFPortInterface& /*p*/)
 {
-  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTTestMAC2Task(%s)::%s (%s)",getName().c_str(),__func__,evtstr(event)));
+  LOG_TRACE(formatString("AVTTestMAC2Task(%s)::%s (%s)",getName().c_str(),__func__,evtstr(event)));
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (event.signal)
@@ -720,9 +762,8 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_4_6(GCFEvent& event, GCFPortInterfac
       // SUSPEND VT2
       string cmd("SUSPEND");
       GCFPVString command(cmd);
-      if (m_propVT2Command.setValue(command) != GCF_NO_ERROR)
+      if (!TESTC(m_propVT2Command.setValue(command) == GCF_NO_ERROR))
       {
-        m_tester._avttest(false);
         NEXTTEST(m_testSequenceIt);
       }
       break;
@@ -731,26 +772,25 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_4_6(GCFEvent& event, GCFPortInterfac
     case F_VCHANGEMSG:
     {
       // check which property changed
-      GCFPropValueEvent* pPropAnswer = static_cast<GCFPropValueEvent*>(&event);
-      assert(pPropAnswer);
-      if(strstr(pPropAnswer->pPropName,PROPERTY_LDS_STATUS)!=0)
+      GCFPropValueEvent propAnswer(event);
+      
+      if(strstr(propAnswer.pPropName,PROPERTY_LDS_STATUS)!=0)
       {
         // the status of the Logical device scheduler has changed
         GCFPVString status;
-        status.copy(*pPropAnswer->pValue);
-        LOG_INFO(formatString("Value of '%s': %s",pPropAnswer->pPropName,status.getValue().c_str()));
-        if(status.getValue() == string("Error"))
+        status.copy(*propAnswer.pValue);
+        LOG_INFO(formatString("Value of '%s': %s",propAnswer.pPropName,status.getValue().c_str()));
+        if(!TESTC(status.getValue() != string("Error")))
         {
-          m_tester._avttest(false);
           NEXTTEST(m_testSequenceIt);
         }
       }
-      else if(strstr(pPropAnswer->pPropName,PROPERTY_VT2_STATUS)!=0)
+      else if(strstr(propAnswer.pPropName,PROPERTY_VT2_STATUS)!=0)
       {
         // the status of the VT has changed
         GCFPVString status;
-        status.copy(*pPropAnswer->pValue);
-        LOG_INFO(formatString("Value of '%s': %s",pPropAnswer->pPropName,status.getValue().c_str()));
+        status.copy(*propAnswer.pValue);
+        LOG_INFO(formatString("Value of '%s': %s",propAnswer.pPropName,status.getValue().c_str()));
         if(status.getValue() == string("Suspended"))
         {
           m_suspendedCounter++;
@@ -763,9 +803,8 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_4_6(GCFEvent& event, GCFPortInterfac
             string subbands("0|1|2|3|4|5|6|7|8|9|10|11,");
             string direction("AZEL,0.2,0.0");
             GCFPVString command(cmd+times+freq+subbands+direction);
-            if (m_propVT2Command.setValue(command) != GCF_NO_ERROR)
+            if (!TESTC(m_propVT2Command.setValue(command) == GCF_NO_ERROR))
             {
-              m_tester._avttest(false);
               NEXTTEST(m_testSequenceIt);
             }
           }
@@ -774,16 +813,15 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_4_6(GCFEvent& event, GCFPortInterfac
             // RESUME VT2
             string cmd = "RESUME";
             GCFPVString command(cmd);
-            if (m_propVT2Command.setValue(command) != GCF_NO_ERROR)
+            if (!TESTC(m_propVT2Command.setValue(command) == GCF_NO_ERROR))
             {
-              m_tester._avttest(false);
               NEXTTEST(m_testSequenceIt);
             }
           }
         }
         else if(status.getValue() == string("Active"))
         {
-          m_tester._avttest(true);
+          TESTC(true);
           NEXTTEST(m_testSequenceIt);
         }
       }
@@ -798,7 +836,7 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_4_6(GCFEvent& event, GCFPortInterfac
     }
     
     default:
-      LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTTestTask(%s)::%s, default",getName().c_str(),__func__));
+      LOG_TRACE(formatString("AVTTestTask(%s)::%s, default",getName().c_str(),__func__));
       status = GCFEvent::NOT_HANDLED;
       break;
   }
@@ -810,7 +848,7 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_4_6(GCFEvent& event, GCFPortInterfac
  */
 GCFEvent::TResult AVTTestMAC2Task::test_3_2_4_7(GCFEvent& event, GCFPortInterface& /*p*/)
 {
-  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTTestMAC2Task(%s)::%s (%s)",getName().c_str(),__func__,evtstr(event)));
+  LOG_TRACE(formatString("AVTTestMAC2Task(%s)::%s (%s)",getName().c_str(),__func__,evtstr(event)));
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (event.signal)
@@ -826,9 +864,8 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_4_7(GCFEvent& event, GCFPortInterfac
       // SUSPEND VT1
       string cmd("SUSPEND");
       GCFPVString command(cmd);
-      if (m_propVT1Command.setValue(command) != GCF_NO_ERROR)
+      if (!TESTC(m_propVT1Command.setValue(command) == GCF_NO_ERROR))
       {
-        m_tester._avttest(false);
         NEXTTEST(m_testSequenceIt);
       }
       break;
@@ -837,28 +874,27 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_4_7(GCFEvent& event, GCFPortInterfac
     case F_VCHANGEMSG:
     {
       // check which property changed
-      GCFPropValueEvent* pPropAnswer = static_cast<GCFPropValueEvent*>(&event);
-      assert(pPropAnswer);
-      if(strstr(pPropAnswer->pPropName,PROPERTY_VT1_STATUS)!=0)
+      GCFPropValueEvent propAnswer(event);
+      
+      if(strstr(propAnswer.pPropName,PROPERTY_VT1_STATUS)!=0)
       {
         // the status of the Logical device scheduler has changed
         GCFPVString status;
-        status.copy(*pPropAnswer->pValue);
-        LOG_INFO(formatString("Value of '%s': %s",pPropAnswer->pPropName,status.getValue().c_str()));
+        status.copy(*propAnswer.pValue);
+        LOG_INFO(formatString("Value of '%s': %s",propAnswer.pPropName,status.getValue().c_str()));
         if(status.getValue() == string("Suspended"))
         {
           // RELEASE VT1
           string cmd("RELEASE");
           GCFPVString command(cmd);
-          if (m_propVT1Command.setValue(command) != GCF_NO_ERROR)
+          if (!TESTC(m_propVT1Command.setValue(command) == GCF_NO_ERROR))
           {
-            m_tester._avttest(false);
             NEXTTEST(m_testSequenceIt);
           }
         }
         else if(status.getValue() == string("Releasing"))
         {
-          m_tester._avttest(true);
+          TESTC(true);
           NEXTTEST(m_testSequenceIt);
         }
       }
@@ -872,7 +908,7 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_4_7(GCFEvent& event, GCFPortInterfac
     }
     
     default:
-      LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTTestTask(%s)::%s, default",getName().c_str(),__func__));
+      LOG_TRACE(formatString("AVTTestTask(%s)::%s, default",getName().c_str(),__func__));
       status = GCFEvent::NOT_HANDLED;
       break;
   }
@@ -884,7 +920,7 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_4_7(GCFEvent& event, GCFPortInterfac
  */
 GCFEvent::TResult AVTTestMAC2Task::test_3_2_4_8(GCFEvent& event, GCFPortInterface& /*p*/)
 {
-  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTTestMAC2Task(%s)::%s (%s)",getName().c_str(),__func__,evtstr(event)));
+  LOG_TRACE(formatString("AVTTestMAC2Task(%s)::%s (%s)",getName().c_str(),__func__,evtstr(event)));
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (event.signal)
@@ -902,9 +938,8 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_4_8(GCFEvent& event, GCFPortInterfac
       // SUSPEND VT2
       string cmd("SUSPEND");
       GCFPVString command(cmd);
-      if (m_propVT2Command.setValue(command) != GCF_NO_ERROR)
+      if (!TESTC(m_propVT2Command.setValue(command) == GCF_NO_ERROR))
       {
-        m_tester._avttest(false);
         NEXTTEST(m_testSequenceIt);
       }
       break;
@@ -913,26 +948,25 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_4_8(GCFEvent& event, GCFPortInterfac
     case F_VCHANGEMSG:
     {
       // check which property changed
-      GCFPropValueEvent* pPropAnswer = static_cast<GCFPropValueEvent*>(&event);
-      assert(pPropAnswer);
-      if(strstr(pPropAnswer->pPropName,PROPERTY_LDS_STATUS)!=0)
+      GCFPropValueEvent propAnswer(event);
+      
+      if(strstr(propAnswer.pPropName,PROPERTY_LDS_STATUS)!=0)
       {
         // the status of the Logical device scheduler has changed
         GCFPVString status;
-        status.copy(*pPropAnswer->pValue);
-        LOG_INFO(formatString("Value of '%s': %s",pPropAnswer->pPropName,status.getValue().c_str()));
-        if(status.getValue() == string("Error"))
+        status.copy(*propAnswer.pValue);
+        LOG_INFO(formatString("Value of '%s': %s",propAnswer.pPropName,status.getValue().c_str()));
+        if(!TESTC(status.getValue() != string("Error")))
         {
-          m_tester._avttest(false);
           NEXTTEST(m_testSequenceIt);
         }
       }
-      else if(strstr(pPropAnswer->pPropName,PROPERTY_VT2_STATUS)!=0)
+      else if(strstr(propAnswer.pPropName,PROPERTY_VT2_STATUS)!=0)
       {
         // the status of the VT has changed
         GCFPVString status;
-        status.copy(*pPropAnswer->pValue);
-        LOG_INFO(formatString("Value of '%s': %s",pPropAnswer->pPropName,status.getValue().c_str()));
+        status.copy(*propAnswer.pValue);
+        LOG_INFO(formatString("Value of '%s': %s",propAnswer.pPropName,status.getValue().c_str()));
         if(status.getValue() == string("Suspended"))
         {
           m_suspendedCounter++;
@@ -945,9 +979,8 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_4_8(GCFEvent& event, GCFPortInterfac
             string subbands("0|1|2|3|4|5|6|7|8|9|10|11,");
             string direction("AZEL,0.2,0.0");
             GCFPVString command(cmd+times+freq+subbands+direction);
-            if (m_propVT2Command.setValue(command) != GCF_NO_ERROR)
+            if (!TESTC(m_propVT2Command.setValue(command) == GCF_NO_ERROR))
             {
-              m_tester._avttest(false);
               NEXTTEST(m_testSequenceIt);
             }
           }
@@ -956,16 +989,15 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_4_8(GCFEvent& event, GCFPortInterfac
             // RESUME VT2
             string cmd = "RESUME";
             GCFPVString command(cmd);
-            if (m_propVT2Command.setValue(command) != GCF_NO_ERROR)
+            if (!TESTC(m_propVT2Command.setValue(command) == GCF_NO_ERROR))
             {
-              m_tester._avttest(false);
               NEXTTEST(m_testSequenceIt);
             }
           }
         }
         else if(status.getValue() == string("Active"))
         {
-          m_tester._avttest(true);
+          TESTC(true);
           NEXTTEST(m_testSequenceIt);
         }
       }
@@ -992,7 +1024,7 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_4_8(GCFEvent& event, GCFPortInterfac
     }
     
     default:
-      LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTTestTask(%s)::%s, default",getName().c_str(),__func__));
+      LOG_TRACE(formatString("AVTTestTask(%s)::%s, default",getName().c_str(),__func__));
       status = GCFEvent::NOT_HANDLED;
       break;
   }
@@ -1004,7 +1036,7 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_4_8(GCFEvent& event, GCFPortInterfac
  */
 GCFEvent::TResult AVTTestMAC2Task::test_3_2_5_1(GCFEvent& event, GCFPortInterface& /*p*/)
 {
-  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTTestMAC2Task(%s)::%s (%s)",getName().c_str(),__func__,evtstr(event)));
+  LOG_TRACE(formatString("AVTTestMAC2Task(%s)::%s (%s)",getName().c_str(),__func__,evtstr(event)));
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (event.signal)
@@ -1042,9 +1074,8 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_5_1(GCFEvent& event, GCFPortInterfac
       string subbands("0|1|2|3|4|5|6|7|8|9|10|11,");
       string direction("AZEL,0.2,0.0");
       GCFPVString command(cmd+devices+times+freq+subbands+direction);
-      if (m_propertyLDScommand.setValue(command) != GCF_NO_ERROR)
+      if (!TESTC(m_propertyLDScommand.setValue(command) == GCF_NO_ERROR))
       {
-        m_tester._avttest(false);
         NEXTTEST(m_testSequenceIt);
       }
       break;
@@ -1053,24 +1084,16 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_5_1(GCFEvent& event, GCFPortInterfac
     case F_VCHANGEMSG:
     {
       // check which property changed
-      GCFPropValueEvent* pPropAnswer = static_cast<GCFPropValueEvent*>(&event);
-      assert(pPropAnswer);
-      if(strstr(pPropAnswer->pPropName,PROPERTY_LDS_STATUS)!=0)
+      GCFPropValueEvent propAnswer(event);
+      
+      if(strstr(propAnswer.pPropName,PROPERTY_LDS_STATUS)!=0)
       {
         // the status of the Logical device scheduler has changed
         GCFPVString status;
-        status.copy(*pPropAnswer->pValue);
-        LOG_INFO(formatString("Value of '%s': %s",pPropAnswer->pPropName,status.getValue().c_str()));
-        if(status.getValue() == string("Error"))
-        {
-          m_tester._avttest(false);
-          NEXTTEST(m_testSequenceIt);
-        }
-        else
-        {
-          m_tester._avttest(true);
-          NEXTTEST(m_testSequenceIt);
-        }
+        status.copy(*propAnswer.pValue);
+        LOG_INFO(formatString("Value of '%s': %s",propAnswer.pPropName,status.getValue().c_str()));
+        TESTC(status.getValue() != string("Error"));
+        NEXTTEST(m_testSequenceIt);
       }
       break;
     }
@@ -1082,7 +1105,7 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_5_1(GCFEvent& event, GCFPortInterfac
     }
     
     default:
-      LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTTestTask(%s)::%s, default",getName().c_str(),__func__));
+      LOG_TRACE(formatString("AVTTestTask(%s)::%s, default",getName().c_str(),__func__));
       status = GCFEvent::NOT_HANDLED;
       break;
   }
@@ -1094,7 +1117,7 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_5_1(GCFEvent& event, GCFPortInterfac
  */
 GCFEvent::TResult AVTTestMAC2Task::test_3_2_5_2(GCFEvent& event, GCFPortInterface& /*p*/)
 {
-  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTTestMAC2Task(%s)::%s (%s)",getName().c_str(),__func__,evtstr(event)));
+  LOG_TRACE(formatString("AVTTestMAC2Task(%s)::%s (%s)",getName().c_str(),__func__,evtstr(event)));
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (event.signal)
@@ -1132,9 +1155,8 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_5_2(GCFEvent& event, GCFPortInterfac
       string subbands("0|1|2|3|4|5|6|7|8|9|10|11,");
       string direction("AZEL,0.2,0.0");
       GCFPVString command(cmd+devices+times+freq+subbands+direction);
-      if (m_propertyLDScommand.setValue(command) != GCF_NO_ERROR)
+      if (!TESTC(m_propertyLDScommand.setValue(command) == GCF_NO_ERROR))
       {
-        m_tester._avttest(false);
         NEXTTEST(m_testSequenceIt);
       }
       break;
@@ -1143,24 +1165,16 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_5_2(GCFEvent& event, GCFPortInterfac
     case F_VCHANGEMSG:
     {
       // check which property changed
-      GCFPropValueEvent* pPropAnswer = static_cast<GCFPropValueEvent*>(&event);
-      assert(pPropAnswer);
-      if(strstr(pPropAnswer->pPropName,PROPERTY_LDS_STATUS)!=0)
+      GCFPropValueEvent propAnswer(event);
+      
+      if(strstr(propAnswer.pPropName,PROPERTY_LDS_STATUS)!=0)
       {
         // the status of the Logical device scheduler has changed
         GCFPVString status;
-        status.copy(*pPropAnswer->pValue);
-        LOG_INFO(formatString("Value of '%s': %s",pPropAnswer->pPropName,status.getValue().c_str()));
-        if(status.getValue() == string("Error"))
-        {
-          m_tester._avttest(false);
-          NEXTTEST(m_testSequenceIt);
-        }
-        else
-        {
-          m_tester._avttest(true);
-          NEXTTEST(m_testSequenceIt);
-        }
+        status.copy(*propAnswer.pValue);
+        LOG_INFO(formatString("Value of '%s': %s",propAnswer.pPropName,status.getValue().c_str()));
+        TESTC(status.getValue() != string("Error"));
+        NEXTTEST(m_testSequenceIt);
       }
       break;
     }
@@ -1172,7 +1186,7 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_5_2(GCFEvent& event, GCFPortInterfac
     }
     
     default:
-      LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTTestTask(%s)::%s, default",getName().c_str(),__func__));
+      LOG_TRACE(formatString("AVTTestTask(%s)::%s, default",getName().c_str(),__func__));
       status = GCFEvent::NOT_HANDLED;
       break;
   }
@@ -1184,7 +1198,7 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_5_2(GCFEvent& event, GCFPortInterfac
  */
 GCFEvent::TResult AVTTestMAC2Task::test_3_2_5_3(GCFEvent& event, GCFPortInterface& /*p*/)
 {
-  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTTestMAC2Task(%s)::%s (%s)",getName().c_str(),__func__,evtstr(event)));
+  LOG_TRACE(formatString("AVTTestMAC2Task(%s)::%s (%s)",getName().c_str(),__func__,evtstr(event)));
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (event.signal)
@@ -1222,9 +1236,8 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_5_3(GCFEvent& event, GCFPortInterfac
       string subbands("0|1|2|3|4|5|6|7|8|9|10|11,");
       string direction("AZEL,0.2,0.0");
       GCFPVString command(cmd+devices+times+freq+subbands+direction);
-      if (m_propertyLDScommand.setValue(command) != GCF_NO_ERROR)
+      if (!TESTC(m_propertyLDScommand.setValue(command) == GCF_NO_ERROR))
       {
-        m_tester._avttest(false);
         NEXTTEST(m_testSequenceIt);
       }
       break;
@@ -1233,22 +1246,15 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_5_3(GCFEvent& event, GCFPortInterfac
     case F_VCHANGEMSG:
     {
       // check which property changed
-      GCFPropValueEvent* pPropAnswer = static_cast<GCFPropValueEvent*>(&event);
-      assert(pPropAnswer);
-      if(strstr(pPropAnswer->pPropName,PROPERTY_LDS_STATUS)!=0)
+      GCFPropValueEvent propAnswer(event);
+      
+      if(strstr(propAnswer.pPropName,PROPERTY_LDS_STATUS)!=0)
       {
         // the status of the Logical device scheduler has changed
         GCFPVString status;
-        status.copy(*pPropAnswer->pValue);
-        LOG_INFO(formatString("Value of '%s': %s",pPropAnswer->pPropName,status.getValue().c_str()));
-        if(status.getValue() == string("Error"))
-        {
-          m_tester._avttest(true);
-        }
-        else
-        {
-          m_tester._avttest(true); // lds does not check overlapping schedules.
-        }
+        status.copy(*propAnswer.pValue);
+        LOG_INFO(formatString("Value of '%s': %s",propAnswer.pPropName,status.getValue().c_str()));
+        TESTC(status.getValue() == string("Error")); // Error is good
         NEXTTEST(m_testSequenceIt);
       }
       break;
@@ -1261,7 +1267,7 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_5_3(GCFEvent& event, GCFPortInterfac
     }
     
     default:
-      LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTTestTask(%s)::%s, default",getName().c_str(),__func__));
+      LOG_TRACE(formatString("AVTTestTask(%s)::%s, default",getName().c_str(),__func__));
       status = GCFEvent::NOT_HANDLED;
       break;
   }
@@ -1273,7 +1279,7 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_5_3(GCFEvent& event, GCFPortInterfac
  */
 GCFEvent::TResult AVTTestMAC2Task::test_3_2_5_4(GCFEvent& event, GCFPortInterface& /*p*/)
 {
-  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTTestMAC2Task(%s)::%s (%s)",getName().c_str(),__func__,evtstr(event)));
+  LOG_TRACE(formatString("AVTTestMAC2Task(%s)::%s (%s)",getName().c_str(),__func__,evtstr(event)));
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (event.signal)
@@ -1289,9 +1295,8 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_5_4(GCFEvent& event, GCFPortInterfac
       // CANCEL <scheduleid>
       string cmd("CANCEL 7");
       GCFPVString command(cmd);
-      if (m_propertyLDScommand.setValue(command) != GCF_NO_ERROR)
+      if (!TESTC(m_propertyLDScommand.setValue(command) == GCF_NO_ERROR))
       {
-        m_tester._avttest(false);
         NEXTTEST(m_testSequenceIt);
       }
       break;
@@ -1300,22 +1305,15 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_5_4(GCFEvent& event, GCFPortInterfac
     case F_VCHANGEMSG:
     {
       // check which property changed
-      GCFPropValueEvent* pPropAnswer = static_cast<GCFPropValueEvent*>(&event);
-      assert(pPropAnswer);
-      if(strstr(pPropAnswer->pPropName,PROPERTY_LDS_STATUS)!=0)
+      GCFPropValueEvent propAnswer(event);
+      
+      if(strstr(propAnswer.pPropName,PROPERTY_LDS_STATUS)!=0)
       {
         // the status of the Logical device scheduler has changed
         GCFPVString status;
-        status.copy(*pPropAnswer->pValue);
-        LOG_INFO(formatString("Value of '%s': %s",pPropAnswer->pPropName,status.getValue().c_str()));
-        if(status.getValue() == string("Error"))
-        {
-          m_tester._avttest(false);
-        }
-        else
-        {
-          m_tester._avttest(true);
-        }
+        status.copy(*propAnswer.pValue);
+        LOG_INFO(formatString("Value of '%s': %s",propAnswer.pPropName,status.getValue().c_str()));
+        TESTC(status.getValue() != string("Error"));
         NEXTTEST(m_testSequenceIt);
       }
       break;
@@ -1328,7 +1326,7 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_5_4(GCFEvent& event, GCFPortInterfac
     }
     
     default:
-      LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTTestTask(%s)::%s, default",getName().c_str(),__func__));
+      LOG_TRACE(formatString("AVTTestTask(%s)::%s, default",getName().c_str(),__func__));
       status = GCFEvent::NOT_HANDLED;
       break;
   }
@@ -1340,7 +1338,7 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_5_4(GCFEvent& event, GCFPortInterfac
  */
 GCFEvent::TResult AVTTestMAC2Task::test_3_2_5_5(GCFEvent& event, GCFPortInterface& /*p*/)
 {
-  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTTestMAC2Task(%s)::%s (%s)",getName().c_str(),__func__,evtstr(event)));
+  LOG_TRACE(formatString("AVTTestMAC2Task(%s)::%s (%s)",getName().c_str(),__func__,evtstr(event)));
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (event.signal)
@@ -1378,9 +1376,8 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_5_5(GCFEvent& event, GCFPortInterfac
       string subbands("0|1|2|3|4|5|6|7|8|9|10|11,");
       string direction("AZEL,0.2,0.0");
       GCFPVString command(cmd+devices+times+freq+subbands+direction);
-      if (m_propertyLDScommand.setValue(command) != GCF_NO_ERROR)
+      if (!TESTC(m_propertyLDScommand.setValue(command) == GCF_NO_ERROR))
       {
-        m_tester._avttest(false);
         NEXTTEST(m_testSequenceIt);
       }
       break;
@@ -1389,22 +1386,15 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_5_5(GCFEvent& event, GCFPortInterfac
     case F_VCHANGEMSG:
     {
       // check which property changed
-      GCFPropValueEvent* pPropAnswer = static_cast<GCFPropValueEvent*>(&event);
-      assert(pPropAnswer);
-      if(strstr(pPropAnswer->pPropName,PROPERTY_LDS_STATUS)!=0)
+      GCFPropValueEvent propAnswer(event);
+      
+      if(strstr(propAnswer.pPropName,PROPERTY_LDS_STATUS)!=0)
       {
         // the status of the Logical device scheduler has changed
         GCFPVString status;
-        status.copy(*pPropAnswer->pValue);
-        LOG_INFO(formatString("Value of '%s': %s",pPropAnswer->pPropName,status.getValue().c_str()));
-        if(status.getValue() == string("Error"))
-        {
-          m_tester._avttest(false);
-        }
-        else
-        {
-          m_tester._avttest(true);
-        }
+        status.copy(*propAnswer.pValue);
+        LOG_INFO(formatString("Value of '%s': %s",propAnswer.pPropName,status.getValue().c_str()));
+        TESTC(status.getValue() != string("Error"));
         NEXTTEST(m_testSequenceIt);
       }
       break;
@@ -1426,7 +1416,7 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_5_5(GCFEvent& event, GCFPortInterfac
     }
     
     default:
-      LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTTestTask(%s)::%s, default",getName().c_str(),__func__));
+      LOG_TRACE(formatString("AVTTestTask(%s)::%s, default",getName().c_str(),__func__));
       status = GCFEvent::NOT_HANDLED;
       break;
   }
@@ -1438,7 +1428,7 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_5_5(GCFEvent& event, GCFPortInterfac
  */
 GCFEvent::TResult AVTTestMAC2Task::test_3_2_6_1(GCFEvent& event, GCFPortInterface& /*p*/)
 {
-  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTTestMAC2Task(%s)::%s (%s)",getName().c_str(),__func__,evtstr(event)));
+  LOG_TRACE(formatString("AVTTestMAC2Task(%s)::%s (%s)",getName().c_str(),__func__,evtstr(event)));
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (event.signal)
@@ -1449,12 +1439,12 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_6_1(GCFEvent& event, GCFPortInterfac
     case F_ENTRY:
     {
       LOG_INFO("Test case 3_2_6_1: Display subband statistics of a running VT");
-      m_tester._avttest(false);
+      TESTC(false || "uh oh" );
       NEXTTEST(m_testSequenceIt);
       break;
     }
     default:
-      LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTTestTask(%s)::%s, default",getName().c_str(),__func__));
+      LOG_TRACE(formatString("AVTTestTask(%s)::%s, default",getName().c_str(),__func__));
       status = GCFEvent::NOT_HANDLED;
       break;
   }
@@ -1466,7 +1456,7 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_6_1(GCFEvent& event, GCFPortInterfac
  */
 GCFEvent::TResult AVTTestMAC2Task::test_3_2_7_1(GCFEvent& event, GCFPortInterface& p)
 {
-  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTTestMAC2Task(%s)::%s (%s)",getName().c_str(),__func__,evtstr(event)));
+  LOG_TRACE(formatString("AVTTestMAC2Task(%s)::%s (%s)",getName().c_str(),__func__,evtstr(event)));
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (event.signal)
@@ -1504,9 +1494,8 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_7_1(GCFEvent& event, GCFPortInterfac
       string subbands("0|1|2|3|4|5|6|7|8|9|10|11,");
       string direction("AZEL,0.2,0.0");
       GCFPVString command(cmd+devices+times+freq+subbands+direction);
-      if (m_propertyLDScommand.setValue(command) != GCF_NO_ERROR)
+      if (!TESTC(m_propertyLDScommand.setValue(command) == GCF_NO_ERROR))
       {
-        m_tester._avttest(false);
         NEXTTEST(m_testSequenceIt);
       }
       if(GCF_NO_ERROR != m_propVT3Status.subscribe())
@@ -1519,33 +1508,31 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_7_1(GCFEvent& event, GCFPortInterfac
     case F_VCHANGEMSG:
     {
       // check which property changed
-      GCFPropValueEvent* pPropAnswer = static_cast<GCFPropValueEvent*>(&event);
-      assert(pPropAnswer);
-      if(strstr(pPropAnswer->pPropName,PROPERTY_LDS_STATUS)!=0)
+      GCFPropValueEvent propAnswer(event);
+      
+      if(strstr(propAnswer.pPropName,PROPERTY_LDS_STATUS)!=0)
       {
         // the status of the Logical device scheduler has changed
         GCFPVString status;
-        status.copy(*pPropAnswer->pValue);
-        LOG_INFO(formatString("Value of '%s': %s",pPropAnswer->pPropName,status.getValue().c_str()));
-        if(status.getValue() == string("Error"))
+        status.copy(*propAnswer.pValue);
+        LOG_INFO(formatString("Value of '%s': %s",propAnswer.pPropName,status.getValue().c_str()));
+        if(!TESTC(status.getValue() != string("Error")))
         {
-          m_tester._avttest(false);
           NEXTTEST(m_testSequenceIt);
         }
       }
-      else if(strstr(pPropAnswer->pPropName,PROPERTY_VT3_STATUS)!=0)
+      else if(strstr(propAnswer.pPropName,PROPERTY_VT3_STATUS)!=0)
       {
         // the status of the Logical device scheduler has changed
         GCFPVString status;
-        status.copy(*pPropAnswer->pValue);
-        LOG_INFO(formatString("Value of '%s': %s",pPropAnswer->pPropName,status.getValue().c_str()));
+        status.copy(*propAnswer.pValue);
+        LOG_INFO(formatString("Value of '%s': %s",propAnswer.pPropName,status.getValue().c_str()));
         if(status.getValue() == string("Active"))
         {
           // VT is active
-          m_tester._avttest(true);
+          TESTC(true);
           GCFPVUnsigned inError(1);
-          bool testOk = (GCF_NO_ERROR==m_propAP3RCU1Status.setValue(inError));
-          m_tester._avttest(testOk);
+          TESTC(GCF_NO_ERROR==m_propAP3RCU1Status.setValue(inError));
           NEXTTEST(m_testSequenceIt);
         }
       }
@@ -1560,7 +1547,7 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_7_1(GCFEvent& event, GCFPortInterfac
     }
     
     default:
-      LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTTestTask(%s)::%s, default",getName().c_str(),__func__));
+      LOG_TRACE(formatString("AVTTestTask(%s)::%s, default",getName().c_str(),__func__));
       status = GCFEvent::NOT_HANDLED;
       break;
   }
@@ -1572,7 +1559,7 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_7_1(GCFEvent& event, GCFPortInterfac
  */
 GCFEvent::TResult AVTTestMAC2Task::test_3_2_7_2(GCFEvent& event, GCFPortInterface& /*p*/)
 {
-  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTTestMAC2Task(%s)::%s (%s)",getName().c_str(),__func__,evtstr(event)));
+  LOG_TRACE(formatString("AVTTestMAC2Task(%s)::%s (%s)",getName().c_str(),__func__,evtstr(event)));
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (event.signal)
@@ -1585,18 +1572,14 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_7_2(GCFEvent& event, GCFPortInterfac
       LOG_INFO("Test case 3_2_7_2: 1 antenna defect, VT keeps on running");
 
       GCFPVUnsigned inError(1);
-      bool testOk = (GCF_NO_ERROR==m_propAP1RCU1Status.setValue(inError));
-      m_tester._avttest(testOk);
-      if(!testOk)
+      if(!TESTC(GCF_NO_ERROR==m_propAP1RCU1Status.setValue(inError)))
       {
         NEXTTEST(m_testSequenceIt);
       }
       else
       {
         // get the status of VT3. it should be Active
-        testOk = (GCF_NO_ERROR==m_propVT3Status.requestValue());
-        m_tester._avttest(testOk);
-        if(!testOk)
+        if(!TESTC(GCF_NO_ERROR==m_propVT3Status.requestValue()))
         {
           NEXTTEST(m_testSequenceIt);
         }
@@ -1607,16 +1590,15 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_7_2(GCFEvent& event, GCFPortInterfac
     case F_VGETRESP:
     {
       // check which property changed
-      GCFPropValueEvent* pPropAnswer = static_cast<GCFPropValueEvent*>(&event);
-      assert(pPropAnswer);
-      if(strstr(pPropAnswer->pPropName,PROPERTY_VT3_STATUS)!=0)
+      GCFPropValueEvent propAnswer(event);
+      
+      if(strstr(propAnswer.pPropName,PROPERTY_VT3_STATUS)!=0)
       {
         // display the value:
         GCFPVString status;
-        status.copy(*pPropAnswer->pValue);
-        LOG_INFO(formatString("Value of '%s': %s",pPropAnswer->pPropName,status.getValue().c_str()));
-        bool testOk = (status.getValue() == string("Active"));
-        m_tester._avttest(testOk);
+        status.copy(*propAnswer.pValue);
+        LOG_INFO(formatString("Value of '%s': %s",propAnswer.pPropName,status.getValue().c_str()));
+        TESTC(status.getValue() == string("Active"));
         NEXTTEST(m_testSequenceIt);
       }
       break;
@@ -1628,7 +1610,7 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_7_2(GCFEvent& event, GCFPortInterfac
     }
     
     default:
-      LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTTestTask(%s)::%s, default",getName().c_str(),__func__));
+      LOG_TRACE(formatString("AVTTestTask(%s)::%s, default",getName().c_str(),__func__));
       status = GCFEvent::NOT_HANDLED;
       break;
   }
@@ -1640,7 +1622,7 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_7_2(GCFEvent& event, GCFPortInterfac
  */
 GCFEvent::TResult AVTTestMAC2Task::test_3_2_7_3(GCFEvent& event, GCFPortInterface& /*p*/)
 {
-  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTTestMAC2Task(%s)::%s (%s)",getName().c_str(),__func__,evtstr(event)));
+  LOG_TRACE(formatString("AVTTestMAC2Task(%s)::%s (%s)",getName().c_str(),__func__,evtstr(event)));
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (event.signal)
@@ -1654,11 +1636,9 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_7_3(GCFEvent& event, GCFPortInterfac
       m_propVT3Status.subscribe();
 
       GCFPVUnsigned inError(1);
-      bool testOk = (GCF_NO_ERROR==m_propAP2RCU1Status.setValue(inError));
-      m_tester._avttest(testOk);
-      if(!testOk)
+      if(!TESTC(GCF_NO_ERROR==m_propAP2RCU1Status.setValue(inError)))
       {
-        NEXTTEST(m_testSequenceIt);
+        FINISH;
       }
       break;
     }      
@@ -1666,18 +1646,18 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_7_3(GCFEvent& event, GCFPortInterfac
     case F_VCHANGEMSG:
     {
       // check which property changed
-      GCFPropValueEvent* pPropAnswer = static_cast<GCFPropValueEvent*>(&event);
-      assert(pPropAnswer);
-      if(strstr(pPropAnswer->pPropName,PROPERTY_VT3_STATUS)!=0)
+      GCFPropValueEvent propAnswer(event);
+      
+      if(strstr(propAnswer.pPropName,PROPERTY_VT3_STATUS)!=0)
       {
         // the status of the Logical device scheduler has changed
         GCFPVString status;
-        status.copy(*pPropAnswer->pValue);
-        LOG_INFO(formatString("Value of '%s': %s",pPropAnswer->pPropName,status.getValue().c_str()));
+        status.copy(*propAnswer.pValue);
+        LOG_INFO(formatString("Value of '%s': %s",propAnswer.pPropName,status.getValue().c_str()));
         if(status.getValue() == string("Suspended"))
         {
-          m_tester._avttest(true);
-          NEXTTEST(m_testSequenceIt);
+          TESTC(true);
+          FINISH;
         }
       }
       break;
@@ -1690,7 +1670,7 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_7_3(GCFEvent& event, GCFPortInterfac
     }
     
     default:
-      LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTTestTask(%s)::%s, default",getName().c_str(),__func__));
+      LOG_TRACE(formatString("AVTTestTask(%s)::%s, default",getName().c_str(),__func__));
       status = GCFEvent::NOT_HANDLED;
       break;
   }
@@ -1702,7 +1682,7 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_7_3(GCFEvent& event, GCFPortInterfac
  */
 GCFEvent::TResult AVTTestMAC2Task::finished(GCFEvent& event, GCFPortInterface& /*p*/)
 {
-  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTTestMAC2Task(%s)::%s (%s)",getName().c_str(),__func__,evtstr(event)));
+  LOG_TRACE(formatString("AVTTestMAC2Task(%s)::%s (%s)",getName().c_str(),__func__,evtstr(event)));
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (event.signal)
@@ -1715,7 +1695,7 @@ GCFEvent::TResult AVTTestMAC2Task::finished(GCFEvent& event, GCFPortInterface& /
       break;
 
     default:
-      LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTTestTask(%s)::%s, default",getName().c_str(),__func__));
+      LOG_TRACE(formatString("AVTTestTask(%s)::%s, default",getName().c_str(),__func__));
       status = GCFEvent::NOT_HANDLED;
       break;
   }
