@@ -70,7 +70,7 @@ perturbEJ11realPolyn () {
   if [ "$#" -eq "1" ]; then
     diff=$1 
   fi
-  add2file  "updatedef EJ11.real nx=2, values=[1.0, 0.01], absPertValues=[0.5, 0.5], diff=${diff}, time0=2352088832"
+  add2file  "updatedef EJ11.real ny=2, values=[1.0, 0.01], absPertValues=[0.5, 0.5], diff=${diff}, time0=2352088832"
   #exit
 }
 makeEJ11Poly () {
@@ -78,7 +78,7 @@ makeEJ11Poly () {
   if [ "$#" -eq "1" ]; then
     diff=$1 
   fi
-  add2file  "updatedef EJ11.real nx=2, values=[1.0, 0.01], diff=${diff}, time0=2352088832"
+  add2file  "updatedef EJ11.real ny=2, values=[1.0, 0.01], diff=${diff}, time0=2352088832"
 }
 
 # functions for creating the correct gsm models
