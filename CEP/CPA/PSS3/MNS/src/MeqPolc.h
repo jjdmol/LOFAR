@@ -121,6 +121,18 @@ public:
   const MeqMatrix& getPertSimCoeff() const
     { return itsPertSimCoeff; }
 
+  // Set the zero-point of the function.
+  void setX0 (double x0)
+    { itsX0 = x0; }
+  void setY0 (double y0)
+    { itsY0 = y0; }
+
+  // Get the zero-point of the function.
+  double getX0() const
+    { return itsX0; }
+  double getY0() const
+    { return itsY0; }
+
   // Tell if the coefficients have to be normalized.
   void setNormalize (bool normalize)
     { itsNormalized = normalize; }
@@ -153,6 +165,8 @@ private:
   int          itsMaxNrSpid;
   double       itsPertValue;
   bool         itsIsRelPert;   //# true = perturbation is relative
+  double       itsX0;
+  double       itsY0;
   bool         itsNormalized;  //# true = coefficients normalized to domain
 
   //# Pascal's triangle for the binomial coefficients needed when normalizing.
