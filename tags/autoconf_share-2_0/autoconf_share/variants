@@ -1,0 +1,63 @@
+gnu.compiler.conf: CXX=/usr/bin/g++
+kcc.compiler.conf:
+icc.compiler.conf:
+xlc.compiler.conf: CC=blrts_xlc CXX=blrts_xlC
+
+profile.variant.conf:	  $(profile_root) $(aipspp) $(profile) $(mpe)
+debug.variant.conf:	  $(debug_root) $(debug) $(aipspp) $(mtsupport)
+profopt.variant.conf:	  $(profopt_root) $(profopt) $(aipspp)
+opt.variant.conf:	  $(opt_root) $(optimize) $(aipspp) $(mtsupport)
+debugopt.variant.conf:	  $(debugopt_root) $(debugopt)
+mpich.variant.conf:	  $(mpich_root) $(mpich) $(aipspp)
+mpich-opt.variant.conf:	  $(mpich-opt_root) $(mpich) $(optimize) $(aipspp)
+lam.variant.conf:	  $(lam_root) $(lam) $(aipspp)
+lam-opt.variant.conf:	  $(lam-opt_root) $(lam) $(optimize) $(aipspp)
+corba.variant.conf:	  $(corba_root) $(vbroker) $(aipspp)
+mpich-corba.variant.conf: $(mpich-corba_root) $(mpich) $(vbroker) $(aipspp)
+lam-corba.variant.conf:   $(lam-corba_root) $(lam) $(vbroker) $(aipspp)
+scampi.variant.conf:	  $(scampi_root) $(scampi) 
+scampi-opt.variant.conf:  $(scampi-opt_root) $(scampi) $(optimize) 
+mpich-prof.variant.conf:  $(mpich-prof_root) $(mpich) --enable-mpi-profiler $(aipspp)
+bgl.variant.conf:         $(bgl_root) $(bgl_mpi) $(debugopt) $(nomtsupport) $(bgl_cpp) $(bgl_ldd) 
+fakebgl.variant.conf:     $(fakebgl_root) $(debug) $(nomtsupport) --without-log4cplus 
+nolog4cplus.variant.conf: $(debug_root) $(debug) --without-log4cplus 
+insure.variant.conf:	  $(insure_root) --with-insuretools $(aipspp)
+insure.variant.make:	  QA=insure
+
+profile_root.var:	   $(lofar_root)
+debug_root.var:		   $(lofar_root)
+profopt_root.var:	   $(lofar_root)
+opt_root.var:		   $(lofar_root)
+debugopt_root.var:	   $(lofar_root)
+mpich_root.var:		   $(lofar_root)
+mpich-opt_root.var:	   $(lofar_root)
+lam_root.var:		   $(lofar_root)
+lam-debug_root.var:	   $(lofar_root)
+corba_root.var:		   $(lofar_root)
+mpich-corba_root.var:	   $(lofar_root)
+lam-corba_root.var:	   $(lofar_root)
+scampi_root.var:	   $(lofar_root)
+scampi-opt_root.var:	   $(lofar_root)
+mpich-prof_root.var:	   $(lofar_root)
+bgl_root.var:		   $(lofar_root)
+fakebgl_root.var:	   $(lofar_root)
+insure_root.var:	   $(lofar_root)
+
+lofar_root.var:
+
+profile.var:		   --with-optimize='-pg -O2' --with-compiletools --with-ldflags='-lc_p'
+mpe.var:		   --with-mpich=/usr/local/mpich-1.2.5/ch_p4 --enable-mpi-profiler
+debug.var:		   --with-debug='-g'
+debugopt.var:		   --with-optimize='-g -O2'
+profopt.var:		   --with-optimize='-pg -O2' --with-ldflags='-lc_p'
+optimize.var:		   --with-optimize='-O2'
+aipspp.var:
+mpich.var:		   --with-mpich
+lam.var:		   --with-lam
+scampi.var:		   --with-scampi
+vbroker.var:		   --with-vbroker
+mtsupport.var:		   --with-threads
+nomtsupport.var: 	   --with-threads=no  
+bgl_mpi.var:		   --with-bglmpich
+bgl_cpp.var:               --with-cppflags='-qarch=440d -qinfo=pro:gen -qcpluscmt -I. -qlist -qsource -qmaxmem=64000 -I/bgl/BlueLight/floor/bglsys/include/'
+bgl_ldd.var:               --with-ldflags='-L/bgl/BlueLight/floor/bglsys/lib -lmpich.rts -lmsglayer.rts -lrts.rts -ldevices.rts -lstandalone.440 -lcrypt -lnss_files -lnss_dns -lresolv -lc -lnss_files -lnss_dns -lresolv -lm'
