@@ -25,9 +25,9 @@
 
 #include <lofar_config.h>
 
-#include "CEPFrame/WorkHolder.h"
+#include "tinyCEP/WorkHolder.h"
 #include "OnLineProto/DH_Beamlet.h"
-#include "OnLineProto/DH_Phase.h"
+#include "OnLineProto/DH_CorrectionMatrix.h"
 #include <ACC/ParameterSet.h>
 #include <OnLineProto/definitions.h>
 
@@ -41,7 +41,7 @@ public:
   /// are created and how many elements there are in the buffer.
   /// The first WorkHolder should have nin=0.
   explicit WH_PreProcess (const string& name, 
-			  const int nchan, 
+			  const int nbeamlets, 
 			  const ParameterSet& ps,
 			  const int StationID);
 
@@ -49,7 +49,7 @@ public:
 
   /// Static function to create an object.
   static WorkHolder* construct (const string& name, 
-				const int nchan, 
+				const int nbeamlets, 
 				const ParameterSet& ps,
 				const int StationID);
 

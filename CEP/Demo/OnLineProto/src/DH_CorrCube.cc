@@ -32,21 +32,26 @@ namespace LOFAR
 
 DH_CorrCube::DH_CorrCube (const string& name, const ParameterSet& ps)
 : DataHolder    (name, "DH_CorrCube"),
-  itsDataPacket (0),
-  itsBuffer     (0),
+  itsBufferptr  (0),
   itsPS         (ps)
-{}
+{
+  itsBufSize = 
+      itsPS.getInt("general.nstations")
+    * itsPS.getInt("corr.fsize")
+    * itsPS.getInt("corr.tsize") 
+    * sizeof( complex<float> );
+}
 
 DH_CorrCube::DH_CorrCube(const DH_CorrCube& that)
   : DataHolder(that),
-    itsDataPacket(0),
-    itsBuffer(0),
+    itsBufferptr(0),
     itsPS(that.itsPS)
-{}
+{
+  itsBufSize = that.itsBufSize;
+}
 
 DH_CorrCube::~DH_CorrCube()
 {
-  delete [] (char*)(itsDataPacket);
 }
 
 DataHolder* DH_CorrCube::clone() const
@@ -56,30 +61,38 @@ DataHolder* DH_CorrCube::clone() const
 
 void DH_CorrCube::preprocess()
 {
-  // First delete possible buffers.
-  postprocess();
+  // Add the fields to the data definition.
+  addField("BeamID",BlobField< int >(1,1));
+  addField("StartFrequency",BlobField< int >(1,1));
+  addField("StartSeqNoptr",BlobField< int >(1,1));
+  addField("FBW",BlobField< int >(1,1));
+  addField("Buffer", 
+	   BlobField<complex<float> >(1, //version 
+				      itsBufSize)); //no_elements
+  
 
-  // Determine the number of bytes needed for DataPacket and buffer.
-  itsBufSize = itsPS.getInt("general.nstations")*itsPS.getInt("corr.fsize")
-    *itsPS.getInt("corr.tsize")* sizeof(BufferType);
-  unsigned int size = sizeof(DataPacket) + itsBufSize;
-  char* ptr = new char[size];
-  // Fill in the data packet pointer and initialize the memory.
-  itsDataPacket = (DataPacket*)(ptr);
-  *itsDataPacket = DataPacket();
-  // Fill in the buffer pointer and initialize the buffer.
-  itsBuffer = (BufferType*)(ptr + sizeof(DataPacket));
+  // Create the data blob (which calls fillPointers).
+  createDataBlock();
 
-  // Initialize base class.
-  setDataPacket (itsDataPacket, size);
+}
+
+void DH_CorrCube::fillDataPointers()
+{
+  // Fill in the buffer pointer.
+  itsBeamIDptr         = getData<int> ("BeamID");
+  itsStartFrequencyptr = getData<int> ("StartFrequency");
+  itsStartSeqNoptr     = getData<int> ("StartSeqNoptr");
+  itsFBWptr            = getData<int> ("FBW");
+  itsBufferptr         = getData<complex<float> > ("Buffer");
 }
 
 void DH_CorrCube::postprocess()
 {
-  delete [] (char*)(itsDataPacket);
-  itsDataPacket = 0;
-  itsBuffer     = 0;
-  setDefaultDataPacket();
+  itsBeamIDptr = 0;
+  itsStartFrequencyptr = 0;
+  itsStartSeqNoptr = 0;
+  itsFBWptr = 0;
+  itsBufferptr     = 0;
 }
 
 }

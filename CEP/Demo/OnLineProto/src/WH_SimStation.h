@@ -27,8 +27,9 @@
 
 #include <lofar_config.h>
 
-#include "CEPFrame/WorkHolder.h"
+#include "tinyCEP/WorkHolder.h"
 #include "OnLineProto/DH_Beamlet.h"
+#include "OnLineProto/DH_TimeDist.h"
 #include <Common/Lorrays.h>
 #include <Common/lofar_complex.h>
 #include <ACC/ParameterSet.h>

@@ -26,7 +26,7 @@
 
 #include <lofar_config.h>
 
-#include "CEPFrame/DataHolder.h"
+#include "Transport/DataHolder.h"
 #include <Common/lofar_complex.h>
 #include <Common/Debug.h>
 
@@ -53,54 +53,53 @@ public:
   /// Deallocate the buffers.
   virtual void postprocess();
 
-  /// Get write access to the Buffer in the DataPacket.
-  BufferType* getBuffer();
-
-  /// Get read access to the Buffer in the DataPacket.
-  const BufferType* getBuffer() const;
-
+  // accessor functions to the blob data
+  void setPhaseAngle(float);
+  const complex<float> getPhaseFactor() const;
+  const float getPhaseAngle() const;
   float getElapsedTime () const;
   void setElapsedTime (float time);
   int getStationID() const;
 
-protected:
-  // Definition of the DataPacket type.
-  class DataPacket: public DataHolder::DataPacket
-  {
-  public:
-    DataPacket(){};
-    BufferType itsFill;         // to ensure alignment
-
-    int   itsStationID;        // source station ID
-    float itsElapsedTime;      // the hourangle
-  };
 
 private:
+  // Fill the pointers (itsCounter and itsBuffer) to the data in the blob.
+  virtual void fillDataPointers();
+
   /// Forbid assignment.
-    DH_Phase& operator= (const DH_Phase&);
+  DH_Phase& operator= (const DH_Phase&);
+  
+  /// ptrs to data in the blob; used for accessors
+  complex<float>*  itsBufferptr;     // array containing frequency spectrum.
+  float* itsPhaseptr;            // the phase rotation in rad
+  int*   itsStationIDptr;        // source station ID
+  float* itsElapsedTimeptr;      // the hourangle
 
-    DataPacket*  itsDataPacket;    
-    BufferType*  itsBuffer;     // array containing frequency spectrum.
-    unsigned int itsBufSize;  
+  //temporary values are stored between C'tor and preprocess
+  int itsStationID;
+  float itsElapsedTime;
 };
+ 
+inline void DH_Phase::setPhaseAngle(float angle)
+  { *itsPhaseptr = angle; }
 
-inline DH_Phase::BufferType* DH_Phase::getBuffer()
-  { return itsBuffer; }
+inline const float DH_Phase::getPhaseAngle() const
+  { return *itsPhaseptr; }
 
-inline const DH_Phase::BufferType* DH_Phase::getBuffer() const
-  { return itsBuffer; }
+inline const complex<float> DH_Phase::getPhaseFactor() const
+  { return complex<float>(cos(*itsPhaseptr),sin(*itsPhaseptr)); }
 
 inline float DH_Phase::getElapsedTime () const
-  { DbgAssertStr(itsDataPacket->itsElapsedTime >= 0, "itsElapsedTime not initialised"); 
-    return itsDataPacket->itsElapsedTime; 
+  { DbgAssertStr(*itsElapsedTimeptr >= 0, "itsElapsedTime not initialised"); 
+    return *itsElapsedTimeptr; 
   }
 
 inline void DH_Phase::setElapsedTime (float time)
-  {  itsDataPacket->itsElapsedTime = time; }
+  {  *itsElapsedTimeptr = time; }
 
 inline int DH_Phase::getStationID() const
-  { DbgAssertStr(itsDataPacket->itsStationID >= 0, "itsStationID not initialised"); 
-    return itsDataPacket->itsStationID; 
+  { DbgAssertStr(*itsStationIDptr >= 0, "itsStationID not initialised"); 
+    return *itsStationIDptr; 
   }
 }
 

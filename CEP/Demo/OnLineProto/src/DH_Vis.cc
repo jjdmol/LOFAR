@@ -1,4 +1,4 @@
-//  DH_Vis.cc:
+//  DH_Vis.cc: implementation of the Visibilities dataholder
 //
 //  Copyright (C) 2004
 //  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -32,21 +32,23 @@ namespace LOFAR
 
 DH_Vis::DH_Vis (const string& name, const ParameterSet& ps)
 : DataHolder    (name, "DH_Vis"),
-  itsDataPacket (0),
-  itsBuffer     (0),
+  itsBufferptr  (0),
   itsPS         (ps)
-{}
+{
+  itsBufSize = itsPS.getInt("general.nstations") * itsPS.getInt("general.nstations") 
+    * sizeof(BufferType);
+}
 
 DH_Vis::DH_Vis(const DH_Vis& that)
   : DataHolder(that),
-    itsDataPacket(0),
-    itsBuffer(0),
+    itsBufferptr(0),
     itsPS(that.itsPS)
-{}
+{
+  itsBufSize=that.itsBufSize;
+}
 
 DH_Vis::~DH_Vis()
 {
-  delete [] (char*)(itsDataPacket);
 }
 
 DataHolder* DH_Vis::clone() const
@@ -56,30 +58,36 @@ DataHolder* DH_Vis::clone() const
 
 void DH_Vis::preprocess()
 {
-  // First delete possible buffers.
-  postprocess();
+  addField("BeamID",BlobField< int >(1,1));
+  addField("StartFrequency",BlobField< int >(1,1));
+  addField("StartSeqNoptr",BlobField< int >(1,1));
+  addField("FBW",BlobField< int >(1,1));
+  addField("Buffer", 
+	   BlobField<complex<float> >(1, //version 
+				      itsBufSize)); //no_elements
+  
+  // Create the data blob (which calls fillPointers).
+  createDataBlock();
 
-  // Determine the number of bytes needed for DataPacket and buffer.
-  itsBufSize = itsPS.getInt("general.nstations") * itsPS.getInt("general.nstations") 
-    * sizeof(BufferType);
-  unsigned int size = sizeof(DataPacket) + itsBufSize;
-  char* ptr = new char[size];
-  // Fill in the data packet pointer and initialize the memory.
-  itsDataPacket = (DataPacket*)(ptr);
-  *itsDataPacket = DataPacket();
-  // Fill in the buffer pointer and initialize the buffer.
-  itsBuffer = (BufferType*)(ptr + sizeof(DataPacket));
+}
 
-  // Initialize base class.
-  setDataPacket (itsDataPacket, size);
+void DH_Vis::fillDataPointers()
+{
+  // Fill in the buffer pointer.
+  itsBeamIDptr         = getData<int> ("BeamID");
+  itsStartFrequencyptr = getData<int> ("StartFrequency");
+  itsStartSeqNoptr     = getData<int> ("StartSeqNoptr");
+  itsFBWptr            = getData<int> ("FBW");
+  itsBufferptr         = getData<complex<float> > ("Buffer");
 }
 
 void DH_Vis::postprocess()
 {
-  delete [] (char*)(itsDataPacket);
-  itsDataPacket = 0;
-  itsBuffer     = 0;
-  setDefaultDataPacket();
+  itsBeamIDptr = 0;
+  itsStartFrequencyptr = 0;
+  itsStartSeqNoptr = 0;
+  itsFBWptr = 0;
+  itsBufferptr     = 0;
 }
 
 }

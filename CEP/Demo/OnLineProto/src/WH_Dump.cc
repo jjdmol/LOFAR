@@ -60,15 +60,13 @@ WH_Dump::WH_Dump (const string& name,
   for (unsigned int i=0; i<nin; i++) {
     sprintf (str, "%d", i);
     getDataManager().addInDataHolder(i, 
-				     new DH_Vis (string("in_") + str, ps),
-				     true);
+				     new DH_Vis (string("in_") + str, ps));
   }
 
   // create the dummy output dataholder
     sprintf (str, "%d", 1);
     getDataManager().addOutDataHolder(0, 
-				      new DH_Empty (string("out_") + str), 
-				      true);
+				      new DH_Empty (string("out_") + str));
 
     itsBuffer.resize(PLOTSIZE);
     itsBuffer = complex<float> (0,0);

@@ -25,8 +25,8 @@
 
 #include <lofar_config.h>
 
-#include <CEPFrame/WorkHolder.h>
-#include <OnLineProto/DH_Phase.h>
+#include <tinyCEP/WorkHolder.h>
+#include <OnLineProto/DH_CorrectionMatrix.h>
 #include <ACC/ParameterSet.h>
 
 namespace LOFAR

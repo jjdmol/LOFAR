@@ -26,12 +26,9 @@
 
 #include <lofar_config.h>
 
-#include "CEPFrame/DataHolder.h"
+#include <Transport/DataHolder.h>
 #include <Common/lofar_complex.h>
 #include <ACC/ParameterSet.h>
-
-// ToDo: pass these values through configuration parameters
-//#include <OnLineProto/definitions.h>
 
 namespace LOFAR
 {
@@ -45,7 +42,8 @@ class DH_CorrCube: public DataHolder
 public:
   typedef complex<float> BufferType;
 
-  explicit DH_CorrCube (const string& name, const ParameterSet& ps);
+  explicit DH_CorrCube (const string& name, 
+			const ParameterSet& ps);
 
   DH_CorrCube(const DH_CorrCube&);
 
@@ -68,44 +66,37 @@ public:
   void setBufferElement(int station, int time, int freq, BufferType* value); 
    
    const int         getFBW() const;
-protected:
-  // Definition of the DataPacket type.
-  class DataPacket: public DataHolder::DataPacket
-  {
-  public:
-    DataPacket(){};
-
-    int itsBeamID;          // beam direction ID
-    int itsStartFrequency;  // frequency offste for this beamlet
-    int itsStartSeqNo;      // sequence number since last timestamp
-
-    BufferType itsFill;         // to ensure alignment
-  };
 
 private:
-  /// Forbid assignment.
-  DH_CorrCube& operator= (const DH_CorrCube&);
+  // Fill the pointers (itsCounter and itsBuffer) to the data in the blob.
+  virtual void fillDataPointers();
 
+   /// Forbid assignment.
+   DH_CorrCube& operator= (const DH_CorrCube&);
+   
+   /// pointers to elements in the blob; used for accessors
+   int* itsBeamIDptr;            // beam direction ID
+   int* itsStartFrequencyptr;    // frequency offste for this beamlet
+   int* itsStartSeqNoptr;        // sequence number since last timestamp
+   int* itsFBWptr;               // number of frequency channels within this beamlet
+   complex<float>* itsBufferptr; // array containing frequency spectrum.
 
-  DataPacket*  itsDataPacket;
-  BufferType*  itsBuffer;    // array containing frequency spectrum.
-  unsigned int itsBufSize;
-  
-  int          itsFBW; // number of frequency channels within this beamlet
-  const ParameterSet itsPS; // necessary configuration parameters
+   int itsBufSize;  // calculate required buffer size in C'tor  
+   const ParameterSet itsPS; // necessary configuration parameters
 };
 
 inline DH_CorrCube::BufferType* DH_CorrCube::getBuffer()
-  { return itsBuffer; }
+  { return itsBufferptr; }
 
 inline const DH_CorrCube::BufferType* DH_CorrCube::getBuffer() const
-  { return itsBuffer; }
+  { return itsBufferptr; }
 
 inline DH_CorrCube::BufferType* DH_CorrCube::getBufferElement(int station, 
 							      int time, 
 							      int freq)
 { 
-  return itsBuffer+station*itsPS.getInt("corr.tsize")*itsPS.getInt("corr.fsize")
+  // todo: cache corr. sizes
+  return itsBufferptr+station*itsPS.getInt("corr.tsize")*itsPS.getInt("corr.fsize")
     +time*itsPS.getInt("corr.fsize")+freq;
 }
    
@@ -114,15 +105,15 @@ inline void DH_CorrCube::setBufferElement(int station,
 			     int freq, 
   			     DH_CorrCube::BufferType* valueptr) 
 {
-   DH_CorrCube::BufferType* ptr= itsBuffer+station*itsPS.getInt("corr.tsize")*
-     itsPS.getInt("corr.fsize")+time*itsPS.getInt("corr.fsize")+freq;
-   *ptr = *valueptr;
+  // todo: cache corr. sizes
+  complex<float>* ptr= itsBufferptr+station*itsPS.getInt("corr.tsize")*
+    itsPS.getInt("corr.fsize")+time*itsPS.getInt("corr.fsize")+freq;
+  *ptr = *valueptr;
 }
-   
 
 inline const int DH_CorrCube::getFBW() const
-  { return itsFBW; }
+{ return *itsFBWptr; }
 
-}
+} //namespace
 
 #endif 

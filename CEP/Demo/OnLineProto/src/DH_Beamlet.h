@@ -26,7 +26,7 @@
 
 #include <lofar_config.h>
 
-#include "CEPFrame/DataHolder.h"
+#include <Transport/DataHolder.h>
 #include <Common/lofar_complex.h>
 #include <Common/Lorrays.h>
 #include <Common/Debug.h>
@@ -62,9 +62,8 @@ public:
   /// Deallocate the buffers.
   virtual void postprocess();
 
-  /// Get write access to the Buffer in the DataPacket.
+  /// Accessor functions to the data fileds in the Blob
   BufferType* getBuffer();
-  /// Get read access to the Buffer in the DataPacket.
   const BufferType* getBuffer() const;
   BufferType* getBufferElement(int freq);
   int getNumberOfChannels () const;
@@ -74,66 +73,72 @@ public:
   float getChannelWidth() const;
   int getStationID () const;
 
-protected:
-  // Definition of the DataPacket type.
-  class DataPacket: public DataHolder::DataPacket
-  {
-  public:
-    DataPacket(){};
-    BufferType itsFill;         // to ensure alignment
-
-    int itsStationID;        // source station ID
-    float itsFrequencyOffset;    // frequency offset for this beamlet
-    float itsElapsedTime;      // the hourangle
-    int itsNumberOfChannels; // number of frequency channels within this beamlet
-    float itsChannelWidth;      // frequency width of each frequency channel
-  };
 
 private:
+  // Fill the pointers (itsCounter and itsBuffer) to the data in the blob.
+  virtual void fillDataPointers();
+  
   /// Forbid assignment.
-    DH_Beamlet& operator= (const DH_Beamlet&);
+  DH_Beamlet& operator= (const DH_Beamlet&);
 
-    DataPacket*  itsDataPacket;    
-    BufferType* itsBuffer;     // array containing frequency spectrum.
-    int itsStationID;          // source station ID
-    float itsFrequencyOffset;  // frequency offset for this beamlet
-    float itsChannelWidth;     // frequency width of each frequency channel
-    float itsElapsedTime;      // the hourangle
-    int itsNumberOfChannels;   // number of frequency channels within this beamlet
-    unsigned int itsBufSize;  
+  /// pointers to the data fileds in the Blob
+  complex<float>* itsBufferptr;  // array containing frequency spectrum.
+  int*            itsStationIDptr;
+  float*          itsFrequencyOffsetptr;  
+  float*          itsChannelWidthptr;     
+  float*          itsElapsedTimeptr;      
+  int*            itsNumberOfChannelsptr; 
+  
+  // local attributed to store settings between construction
+  // and preprocess()
+  int   itsStationID;          // source station ID
+  float itsFrequencyOffset;  // frequency offset for this beamlet
+  float itsChannelWidth;     // frequency width of each frequency channel
+  float itsElapsedTime;      // the hourangle
+  int   itsNumberOfChannels;   // number of frequency channels within this beamlet
+  //  unsigned int itsBufSize;  
+
+  
+
 };
-
+ 
 inline DH_Beamlet::BufferType* DH_Beamlet::getBuffer()
-  { return itsBuffer; }
+  { return itsBufferptr; }
 
 inline const DH_Beamlet::BufferType* DH_Beamlet::getBuffer() const
-  { return itsBuffer; }
+  { return itsBufferptr; }
 
 inline DH_Beamlet::BufferType* DH_Beamlet::getBufferElement(int freq)
-  { return itsBuffer+freq; }
+  { return itsBufferptr+freq; }
 
 inline int DH_Beamlet::getNumberOfChannels () const
-  { return itsDataPacket->itsNumberOfChannels; }
+  { return *itsNumberOfChannelsptr; }
 
 inline float DH_Beamlet::getElapsedTime () const
-  { DbgAssertStr(itsDataPacket->itsElapsedTime >= 0, "itsElapsedTime not initialised"); 
-    return itsDataPacket->itsElapsedTime; 
+  { DbgAssertStr(*itsElapsedTimeptr >= 0, 
+		 "itsElapsedTime not initialised"); 
+    return *itsElapsedTimeptr; 
   }
 
 inline void DH_Beamlet::setElapsedTime (float time)
-  {  itsDataPacket->itsElapsedTime = time; }
+  {  *itsElapsedTimeptr = time; }
 
 inline float DH_Beamlet::getFrequencyOffset() const
-  { DbgAssertStr(itsDataPacket->itsFrequencyOffset >= 0, "itsFrequencyOffset not initialised"); 
-    return itsDataPacket->itsFrequencyOffset; }
+  { DbgAssertStr(*itsFrequencyOffsetptr >= 0, 
+		 "itsFrequencyOffset not initialised"); 
+  return *itsFrequencyOffsetptr;
+  }
 
 inline float DH_Beamlet::getChannelWidth() const
-  { DbgAssertStr(itsDataPacket->itsChannelWidth >= 0, "itsChannelWidth not initialised"); 
-    return itsDataPacket->itsChannelWidth; }
+  { DbgAssertStr(*itsChannelWidthptr >= 0, 
+		 "itsChannelWidth not initialised"); 
+    return *itsChannelWidthptr;
+  }
 
 inline int DH_Beamlet::getStationID() const
-  { DbgAssertStr(itsDataPacket->itsStationID >= 0, "itsStationID not initialised"); 
-    return itsDataPacket->itsStationID; 
+  { DbgAssertStr(*itsStationIDptr >= 0, 
+		 "itsStationID not initialised"); 
+  return *itsStationIDptr;
   }
 
 }
