@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+
+<T1a>
+  <P1> <MACType> MACInteger </MACType> <MACDefault> 200 </MACDefault> </P1>
+  <P2> <MACType> MACChar    </MACType> <MACDefault> 150 </MACDefault> </P2>
+</T1a>

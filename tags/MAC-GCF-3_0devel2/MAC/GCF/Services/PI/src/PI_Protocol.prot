@@ -1,0 +1,99 @@
+//
+// Protocol definition for the Supervisory Server(ERTC)/Property Interface(MAC/GCF)
+//
+autogen definitions protocol;
+
+description = "Protocol definition for the Supervisory Server(ERTC)/Property Interface(MAC/GCF)";
+prefix = "PI"; // for the signal names
+
+// specify extra include files
+// e.g.
+//include = '<sys/time.h>';
+
+// An "event" has a "signal" and a "dir" (direction)
+// and zero or more "param"s.
+// "dir" can be one of "IN" or "OUT".
+// A "param" has a "name" and a "type".
+//
+
+prelude = << PRELUDE_END
+enum {
+	PI_PROTOCOL = (F_GCF_PROTOCOL + 3)
+};
+#include <GPI_Defines.h>
+PRELUDE_END;
+
+event = {
+	signal = NAME;
+	dir = IN;
+};
+
+event = {
+	signal = REGISTERSCOPE;
+	dir = IN;
+};
+
+event = {
+	signal = UNREGISTERSCOPE;
+	dir = IN;
+};
+
+event = {
+	signal = SCOPEREGISTERED;
+	dir = OUT;
+	param = {
+		name = "result";
+		type = "TPIResult";
+	};
+};
+
+event = {
+	signal = SCOPEUNREGISTERED;
+	dir = OUT;
+	param = {
+		name = "result";
+		type = "TPIResult";
+	};
+};
+
+event = {
+	signal = LINKPROPERTIES;
+	dir = OUT;
+};
+
+event = {
+	signal = UNLINKPROPERTIES;
+	dir = OUT;
+};
+
+event = {
+	signal = PROPERTIESLINKED;
+	dir = IN;
+	param = {
+		name = "result";
+		type = "TPIResult";
+	};
+};
+
+event = {
+	signal = PROPERTIESUNLINKED;
+	dir = IN;
+	param = {
+		name = "result";
+		type = "TPIResult";
+	};
+};
+
+event = {
+	signal = VALUESET;
+	dir = IN;
+};
+
+event = {
+	signal = VALUECHANGED;
+	dir = OUT;
+	param = {
+		name = "scopeLength";
+		type = "unsigned short";
+	};
+};
