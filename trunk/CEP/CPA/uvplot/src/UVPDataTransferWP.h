@@ -17,6 +17,9 @@
 
 #include <UVPDataHeader.h>
 #include <UVPDataAtom.h>
+#include <UVPDataSet.h>
+
+
 
 //*********** AID mechanism declarations
 #include <UVD/UVD.h>
@@ -42,9 +45,8 @@ class UVPDataTransferWP: public WorkProcess
     ant1*(ant1+1)/2 + ant2.
     \param patchID     Number of the patch.
    */
-  UVPDataTransferWP(int correlation,
-                    int baseline,
-                    int patchID);
+  UVPDataTransferWP(int         patchID,
+                    UVPDataSet *dataSet);
 
   //!Initializes communication. Sets up the subscriptions. 
   /*!Overridden from WPInterface, the parent class of WorkProcess. These
@@ -66,24 +68,11 @@ class UVPDataTransferWP: public WorkProcess
   */
   virtual int receive(MessageRef &messageRef);
 
-  //! Returns the number of rows received up to now.
-  unsigned int size() const;
-
-  //! Returns a const pointer to a row.
-  /*! \param rowIndex is the index of the row that you are interested
-    in. One should make sure yourself that rowIndex < size(). rowIndex
-    is zero based.
-  */
-  const UVPDataAtom *getRow(unsigned int rowIndex) const;
-
-
  protected:
  private:
 
-  std::vector<UVPDataAtom> itsCachedData;
+  UVPDataSet*             itsCachedData;
 
-  int                     itsCorrelation;
-  int                     itsBaseline;
   int                     itsPatchID; /* Zero based */
   
   bool                     itsHeaderIsReceived;
