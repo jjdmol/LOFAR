@@ -220,6 +220,20 @@ int SolverControlAgent::endSolution  (DataRecord::Ref &endrec)
   return setEndSolutionState();
 }
 
+int SolverControlAgent::failSolution  (const string &msg)
+{
+  FailWhen(state()<0,"unexpected state");
+  dprintf(2)("failSolution: %s",msg.c_str());
+  // clear the nextDomain flag
+  nextDomain_ = False;
+  setState(ENDSOLVE);
+  setStatus(StSolverControl,DataRecord::Ref(DMI::ANONWR));
+  setStatus(StSolutionParams,DataRecord::Ref(DMI::ANONWR));
+  // post end event
+  postEvent(FailSolutionEvent,msg);
+  return setEndSolutionState();
+}
+
 //##ModelId=3E5647EB0294
 void SolverControlAgent::addSolution (const DataRecord::Ref &params)
 {

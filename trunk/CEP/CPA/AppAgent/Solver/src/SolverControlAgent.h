@@ -31,7 +31,7 @@ class AppEventSink;
 #pragma aidgroup Solver
 #pragma aid Start End Stop Iteration Solution Solver Control Message Convergence 
 #pragma aid Next Step Domain Data Num All Params Solved Index Peel Accept
-#pragma aid When Max Converged Iter Command Add Queue Size Single Step Defer
+#pragma aid When Max Converged Iter Command Add Queue Size Single Step Defer Fail
 
 
 namespace AppState
@@ -68,6 +68,8 @@ const HIID
     EndIterationEvent   = AidEnd|AidIteration,
     //    Posted when a solution is ended 
     EndSolutionEvent    = AidEnd|AidSolution,
+    //    Posted when a solution is ended 
+    FailSolutionEvent   = AidFail|AidSolution,
     //    Posted when a domain has been solved for
     EndDomainEvent      = AidEnd|AidDomain,
     //    Posted when a next-domain transition has been deferred
@@ -278,6 +280,10 @@ class SolverControlAgent : public AppControlAgent
     //##    IDLE (>0): proceed
     //##    terminal state (<=0): see class documentation above.
     virtual int endSolution  (DataRecord::Ref &endrec);
+    
+    
+    // called if a solution has failed
+    virtual int failSolution (const string &msg = "solution failed" );
     
     //##ModelId=3DFF2D6400EA
     //##Documentation
