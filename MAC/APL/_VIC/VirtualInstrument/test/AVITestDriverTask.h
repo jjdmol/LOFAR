@@ -67,7 +67,7 @@ namespace AVI
       static string m_taskName;
       
       AVITestAnswer     m_answer;
-      GCFExtPropertySet m_extPropSetVISD;
+      GCFExtPropertySet m_extPropSetCCU1VISD;
       GCFExtPropertySet m_extPropSetVI1;
   };  
 };

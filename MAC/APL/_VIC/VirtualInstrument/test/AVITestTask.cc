@@ -20,7 +20,7 @@
 //#
 //#  $Id$
 
-const char SCOPE_VIC_VIStartDaemon[] = "VIC_VIStartDaemon";
+const char SCOPE_VIC_VIStartDaemon[] = "CCU1_VIC_VIStartDaemon";
 const char SCOPE_VIC_VI1[] = "VIC_VI1";
 
 #define NEXT_TEST(_test_, _descr_) \
@@ -98,8 +98,8 @@ AVITestTask::AVITestTask() :
   m_answer(),
   m_test_passCounter(0),
   m_propsetLoadedCounter(0),
-  m_extPropSetVISD(SCOPE_VIC_VIStartDaemon,StartDaemon::PSTYPE_STARTDAEMON.c_str(),&m_answer),
-  m_extPropSetVI1(SCOPE_VIC_VI1,"TAplVI",&m_answer)
+  m_extPropSetCCU1VISD(SCOPE_VIC_VIStartDaemon,StartDaemon::PSTYPE_STARTDAEMON.c_str(),&m_answer),
+  m_extPropSetVI1(SCOPE_VIC_VI1,"TAplVicVI",&m_answer)
 {
   m_answer.setTask(this);
 }
@@ -125,7 +125,7 @@ GCFEvent::TResult AVITestTask::initial(GCFEvent& event, GCFPortInterface& port)
       break;
 
     case F_ENTRY:
-      m_extPropSetVISD.load();
+      m_extPropSetCCU1VISD.load();
       m_extPropSetVI1.load();
       break;
       

@@ -1,0 +1,416 @@
+//-------------------------------------------------------------
+//    SAS PROTOCOL SPECIFICATION for TestHarness
+//    BeamServer PROTOCOL SPECIFICATION for TestHarness
+//    version April 1, 2005 
+//
+//    This file contains a computer readable interpretation of
+//    the SAS and BeamServer protocols for Lofar
+//
+//    This file is intended to be used as an input file for the
+//    AutoTest Script Engine. It is not a formal definition of 
+//    The SAS and BeamServer protocols: 
+//
+//    Change track:
+//    ==========================================================
+//    April 1, 2005  : Initial release, 
+//                     Robert Blaakmeer
+//
+//    ==========================================================
+//    Notes:
+//    The following diagram shows the connections between the 
+//    Test engine and Lofar
+//     __________                                    _________________
+//    |Testengine|                                  | Lofar           |
+//    |          |                                  | apps            |
+//    |   _______|_    SAS Protocol                _|___________      |
+//    |  | client_1|----------------------------->|MACScheduler |     |
+//    |  |_________|<-----------------------------|_____________|     |
+//    |          |                                  |                 |
+//    |          |                                  |                 |
+//    |          |                                  |                 |
+//    |   _______|_    BeamServer Protocol         _|______________   |
+//    |  | server_2|<-----------------------------|VirtualTelescope|  |
+//    |  |_________|----------------------------->|________________|  |
+//    |          |                                  |                 |
+//    |__________|                                  |_________________|
+//                   
+//    This file contains four sections:
+//    [io]        : I/O configuration
+//    [type]      : type definitions
+//    [functions] : Messages sent to the Device under Test (DUT)
+//    [events]    : Messages received from the DuT.
+//
+//    The format of each section is explained in brief in the
+//    beginning of each section.
+
+
+[io]
+COM1 = { SOCKET, ccc , "client localhost 27000" }       // The machine running the MACScheduler
+COM2 = { SOCKET, ccc , "server localhost 27001" }       // The TestHarness computer (This machine computer-name/IP-address)
+
+// For serial ports: COM1 = { COM1, ccc , "Baud=1200 parity=N data=8 stop=1 octs=on" }
+
+
+#define PADDING        0x00
+
+[type]
+
+//    A type has a number of parameters: the first parameter
+//    defines the size in bytes. If there is a second and third
+//    parameter, these define the lower and upper limit.
+//
+//    If there is a fourth parameter, it can be a string
+//    with the following meanings:
+//    TIME          : Parameters of this type reflect a certain
+//                    time(span)
+//    ENUM          : Parameters of this type have a value with
+//                    an enumerated meaning.
+//    BITFIELD      : Parameters of this type are bitmap para-
+//                    meters.
+//    ASCII_0       : Field contains zero-terminated ASCII data.
+//                    Field is fixed-sized, but bytes following
+//                    the 0-byte are undefined and not checked.
+//    UNICODE_0     : Field contains zero-terminated UNICODE
+//                    data.
+//    ASCII         : Field contains non-terminated ASCII data.
+
+//
+//    The meaning of the remaining parameters depends of this
+//    string:
+//    TIME          : Has one additional parameter, which is
+//                    a float. This float indicates the time in
+//                    seconds intended of one unit.
+//    ENUM          : A list of additional parameters exists.
+//                    This list is intended to be self-explaining.
+//    BITFIELD      : A list of additional parameters exists.
+//                    If the bitfield is denoted as
+//                    (0xXXXX,0xXXXX), the first bitfield is
+//                    a mask, the second bitfield defines the
+//                    bits.
+
+
+//    First a small list of general purpose types is defined.
+//    Default type is interpreted as "Big endian"
+
+t_B1                  = {   1 }
+t_B2                  = {   2 }
+t_B3                  = {   3 }
+t_B4                  = {   4 }
+t_B6                  = {   6 }
+t_B8                  = {   8 }
+t_B16                 = {  16 }
+
+//    The remaining Lofar types:
+
+t_uShort              =  {   2 }
+t_Double              =  {   8 }
+t_Int                 =  {   4 }
+t_uInt                =  {   4 }
+t_Long                =  {   4 }
+t_uLong               =  {   4 }
+t_String50            = -{  50, ASCII_0 } // (-) indicates little endian; strings are padded with \0
+
+// SAS enums
+t_SAS_Result          = { 4, 0x00000000, 0x00000004, ENUM,
+                             0x00000000 : "NO_ERROR",
+                             0x00000001 : "ERROR_UNSPECIFIED",
+                             0x00000002 : "ERROR_VI_NOT_FOUND",
+                             0x00000003 : "ERROR_INCORRECT_NUMBER_OF_PARAMETERS",
+                             0x00000004 : "ERROR_UNKNOWN_COMMAND"
+                       }
+
+// ABS enums
+t_ABS_Result          = { 4, 0x00000000, 0x00000003, ENUM,
+                             0x00000000 : "SUCCESS",
+                             0x00000001 : "ERR_RANGE",
+                             0x00000002 : "ERR_BEAMALLOC",
+                             0x00000003 : "ERR_BEAMFREE"
+                       }
+
+//
+// Signal ID's
+//
+// SAS Protocol
+// 
+// 0x01   SCHEDULE
+// 0x02   UPDATESCHEDULE
+// 0x03   CANCELSCHEDULE
+// 0x04   RESPONSE
+// 0x05   REPLACEMENTREQUEST
+//
+// ABS Protocol
+//
+// 0x01   BEAMALLOC
+// 0x02   BEAMALLOC_ACK
+// 0x03   BEAMFREE
+// 0x04   BEAMFREE_ACK
+// 0x05   BEAMPOINTTO
+// 0x06   WGSETTINGS
+// 0x07   WGSETTINGS_ACK
+// 0x08   WGENABLE
+// 0x09   WGDISABLE
+//
+// direction and protocol definitions:
+//
+//                      IN    OUT   INOUT
+//  SAS (MACScheduler)  0x4D  0x8D  0xCD
+//  ABS (BeamServer)    0x54  0x94  0xD4
+//
+
+[functions]
+// -------------------------------SAS_Protocol------------------------
+SAS_SCHEDULE = 
+{ 
+  0x01, // signal Id
+  0x4D, // Direction and protocol
+  0x36000000, // message payload length. Depends on string length
+  0x32000000, // string length
+  VIrootID                    : t_String50
+}
+
+SAS_UPDATESCHEDULE = 
+{ 
+  0x02, // signal Id
+  0x4D, // Direction and protocol
+  0x36000000, // message payload length. Depends on string length
+  0x32000000, // string length
+  VIrootID                    : t_String50
+}
+
+SAS_CANCELSCHEDULE = 
+{ 
+  0x03, // signal Id
+  0x4D, // Direction and protocol
+  0x36000000, // message payload length. Depends on string length
+  0x32000000, // string length
+  VIrootID                    : t_String50
+}
+
+// -------------------------------ABS_Protocol------------------------
+ABS_BEAMALLOC_ACK = 
+{ 
+  0x02, // signal Id
+  0x94, // Direction and protocol
+  0x0800000, // message payload length
+  handle                      : t_Int,
+  status                      : t_ABS_Result
+}
+
+ABS_BEAMFREE_ACK = 
+{ 
+  0x04, // signal Id
+  0x94, // Direction and protocol
+  0x0800000, // message payload length
+  handle                      : t_Int,
+  status                      : t_ABS_Result
+}
+
+ABS_WGSETTINGS_ACK = 
+{ 
+  0x07, // signal Id
+  0x94, // Direction and protocol
+  0x04000000, // message payload length
+  status                      : t_ABS_Result
+}
+
+
+[events]
+// -------------------------------SAS_Protocol------------------------
+
+SAS_RESPONSE = 
+{ 
+  0x04, // signal Id 
+  0x8D, // Direction and protocol 
+  0x04000000, // message payload length
+  result                      : t_SAS_Result
+}
+
+SAS_REPLACEMENT_REQUEST = 
+{ 
+  0x05, // signal Id 
+  0x8D, // Direction and protocol 
+  0x36000000, // message payload length. Depends on string length
+  0x32000000, // string length
+  nodeID                      : t_String50
+}
+
+// -------------------------------ABS_Protocol------------------------
+ABS_BEAMALLOC = 
+{ 
+  0x01, // signal Id
+  0x54, // Direction and protocol
+  0x08040000, // message payload length
+  spectral_window             : t_Int,
+  n_subbands                  : t_Int,
+  subband1                    : t_Int, // the subbands array has a length of 128 integers
+  subband2                    : t_Int, 
+  subband3                    : t_Int, 
+  subband4                    : t_Int, 
+  subband5                    : t_Int, 
+  subband6                    : t_Int, 
+  subband7                    : t_Int, 
+  subband8                    : t_Int, 
+  subband9                    : t_Int, 
+  subband10                   : t_Int, 
+  subband11                   : t_Int,
+  subband12                   : t_Int, 
+  subband13                   : t_Int, 
+  subband14                   : t_Int, 
+  subband15                   : t_Int, 
+  subband16                   : t_Int, 
+  subband17                   : t_Int, 
+  subband18                   : t_Int, 
+  subband19                   : t_Int, 
+  subband20                   : t_Int, 
+  subband21                   : t_Int,
+  subband22                   : t_Int, 
+  subband23                   : t_Int, 
+  subband24                   : t_Int, 
+  subband25                   : t_Int, 
+  subband26                   : t_Int, 
+  subband27                   : t_Int, 
+  subband28                   : t_Int, 
+  subband29                   : t_Int, 
+  subband30                   : t_Int, 
+  subband31                   : t_Int,
+  subband32                   : t_Int, 
+  subband33                   : t_Int, 
+  subband34                   : t_Int, 
+  subband35                   : t_Int, 
+  subband36                   : t_Int, 
+  subband37                   : t_Int, 
+  subband38                   : t_Int, 
+  subband39                   : t_Int, 
+  subband40                   : t_Int, 
+  subband41                   : t_Int,
+  subband42                   : t_Int, 
+  subband43                   : t_Int, 
+  subband44                   : t_Int, 
+  subband45                   : t_Int, 
+  subband46                   : t_Int, 
+  subband47                   : t_Int, 
+  subband48                   : t_Int, 
+  subband49                   : t_Int, 
+  subband50                   : t_Int, 
+  subband51                   : t_Int,
+  subband52                   : t_Int, 
+  subband53                   : t_Int, 
+  subband54                   : t_Int, 
+  subband55                   : t_Int, 
+  subband56                   : t_Int, 
+  subband57                   : t_Int, 
+  subband58                   : t_Int, 
+  subband59                   : t_Int, 
+  subband60                   : t_Int, 
+  subband61                   : t_Int,
+  subband62                   : t_Int, 
+  subband63                   : t_Int, 
+  subband64                   : t_Int, 
+  subband65                   : t_Int, 
+  subband66                   : t_Int, 
+  subband67                   : t_Int, 
+  subband68                   : t_Int, 
+  subband69                   : t_Int, 
+  subband70                   : t_Int, 
+  subband71                   : t_Int,
+  subband72                   : t_Int, 
+  subband73                   : t_Int, 
+  subband74                   : t_Int, 
+  subband75                   : t_Int, 
+  subband76                   : t_Int, 
+  subband77                   : t_Int, 
+  subband78                   : t_Int, 
+  subband79                   : t_Int, 
+  subband80                   : t_Int, 
+  subband81                   : t_Int,
+  subband82                   : t_Int, 
+  subband83                   : t_Int, 
+  subband84                   : t_Int, 
+  subband85                   : t_Int, 
+  subband86                   : t_Int, 
+  subband87                   : t_Int, 
+  subband88                   : t_Int, 
+  subband89                   : t_Int, 
+  subband90                   : t_Int, 
+  subband91                   : t_Int,
+  subband92                   : t_Int, 
+  subband93                   : t_Int, 
+  subband94                   : t_Int, 
+  subband95                   : t_Int, 
+  subband96                   : t_Int, 
+  subband97                   : t_Int, 
+  subband98                   : t_Int, 
+  subband99                   : t_Int, 
+  subband100                  : t_Int, 
+  subband101                  : t_Int, 
+  subband102                  : t_Int, 
+  subband103                  : t_Int, 
+  subband104                  : t_Int, 
+  subband105                  : t_Int, 
+  subband106                  : t_Int, 
+  subband107                  : t_Int, 
+  subband108                  : t_Int, 
+  subband109                  : t_Int, 
+  subband110                  : t_Int, 
+  subband111                  : t_Int,
+  subband112                  : t_Int, 
+  subband113                  : t_Int, 
+  subband114                  : t_Int, 
+  subband115                  : t_Int, 
+  subband116                  : t_Int, 
+  subband117                  : t_Int, 
+  subband118                  : t_Int, 
+  subband119                  : t_Int, 
+  subband120                  : t_Int, 
+  subband121                  : t_Int,
+  subband122                  : t_Int, 
+  subband123                  : t_Int, 
+  subband124                  : t_Int, 
+  subband125                  : t_Int, 
+  subband126                  : t_Int, 
+  subband127                  : t_Int, 
+  subband128                  : t_Int
+}
+
+ABS_BEAMFREE = 
+{ 
+  0x03, // signal Id
+  0x54, // Direction and protocol
+  0x04000000, // message payload length
+  handle                      : t_Int
+}
+
+ABS_BEAMPOINTTO = 
+{ 
+  0x05, // signal Id
+  0x54, // Direction and protocol
+  0x1C000000, // message payload length
+  handle                      : t_Int,
+  time                        : t_Int,
+  type                        : t_Int,
+  angle1                      : t_Double,
+  angle2                      : t_Double
+}
+
+ABS_WGSETTINGS = 
+{ 
+  0x06, // signal Id
+  0x54, // Direction and protocol
+  0x0C000000, // message payload length
+  frequency                   : t_Double,
+  amplitude                   : t_uShort
+}
+
+ABS_WGENABLE = 
+{ 
+  0x08, // signal Id
+  0x54, // Direction and protocol
+  0x00000000 // message payload length
+}
+
+ABS_WGDISABLE = 
+{ 
+  0x09, // signal Id
+  0x54, // Direction and protocol
+  0x00000000 // message payload length
+}

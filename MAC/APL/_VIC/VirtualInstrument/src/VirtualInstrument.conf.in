@@ -1,17 +1,14 @@
-mac.ns.ARATest.ARAtestRSPserver.type=TCP
-mac.ns.ARATestDriver.ARAtestRSPserver.type=TCP
-mac.ns.RSP.acceptor.type=TCP
+mac.ns.CCU1_VIC_VIStartDaemon.server.type=TCP
+mac.ns.CCU1_VIC_VIStartDaemon.server.host=localhost
+mac.ns.CCU2_VIC_VIStartDaemon.server.type=TCP
+mac.ns.CCU2_VIC_VIStartDaemon.server.host=localhost
 
-mac.top.ARA.ARAtestRSPserver.remoteservice=ARATestDriver:ARAtestRSPserver
-#mac.top.ARA.ARAtestRSPserver.remoteservice=ARATest:ARAtestRSPserver
-#mac.top.ARA.ARAtestRSPserver.remoteservice=RSP:acceptor
 
-mac.apl.ara.N_RACKS=3
-mac.apl.ara.N_SUBRACKS_PER_RACK=1
-mac.apl.ara.N_BOARDS_PER_SUBRACK=1
-mac.apl.ara.N_APS_PER_BOARD=1
-mac.apl.ara.N_RCUS_PER_AP=2
-mac.apl.ara.STATUS_UPDATE_INTERVAL=1
-mac.apl.ara.STATISTICS_UPDATE_INTERVAL=1
+mac.ns.MACScheduler.VIparent_server.type=TCP
+mac.ns.MACScheduler.VIparent_server.host=localhost
+#
+# mac.ns.MACScheduler.VIparent_server.remoteservice is dynamically configured
+# because it depends on the VI name
+#
+mac.VirtualInstrument.pvss.cmdline=-proj MAC
 
-mac.RegisterAccess.pvss.cmdline=-proj MAC
