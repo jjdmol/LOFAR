@@ -40,13 +40,6 @@ if __name__ == "__main__":
 
     print ba.pObj1.value3
 
-    brecv = ABSBeamAllocEvent(ba)
-
-    print brecv.ext3
-    ba.ext3 = "after"
-    print brecv.ext3
-    print ba.ext3
-
     del ext1
     del transObj
     
