@@ -22,22 +22,30 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include <DH_PL.h>			// for class definition
+#include <DH_PL.h>				// for class definition
 #include <Common/lofar_iostream.h>		// for cout, cerr
 #include <Common/Debug.h>			// for AssertStr
-
 #include <sstream>				// for ostrstream
 
-#include "DH_PL_MessageRecord.h"
-#include "PO_DH_PL_MessageRecord.h"
+#include "DH_PL_MessageRecord.h"		// class MessageRecord
+#include "PO_DH_PL_MessageRecord.h"		// TPO of MessageRecord
 
 using namespace std;
 
-namespace LOFAR{
+namespace LOFAR {
 
+// Number of DH_PL objects currently instantiated. Used internally for
+// managing the database connection.
 
 ulong DH_PL::theirInstanceCount = 0L;
+
+// The PersistenceBroker is a management object from PL. One static
+// PersistenceBroker is used to optimally use resources.
+
 PersistenceBroker DH_PL::theirPersistenceBroker;
+
+// Default data source and account names for PL. You should override them
+// with a call to UseDatabase () in main ().
 
 string DH_PL::theirDSN = "tanaka";
 string DH_PL::theirUserName = "postgres";
@@ -46,35 +54,36 @@ string DH_PL::theirUserName = "postgres";
 DH_PL::DH_PL (const string& name, const string& type)
   : DH_Database (name, type) {
 
+  // If this is the first instance of DH_PL in the (current) process,
+  // connect to the database.
+
   if (DH_PL::theirInstanceCount == 0L) {
     ConnectDatabase ();
   }
 
   DH_PL::theirInstanceCount ++;
-
-  cerr << DH_PL::theirInstanceCount 
-      << ") DH_PL constructed." << endl;
 } 
 
 
 DH_PL::~DH_PL () {
-  cerr << DH_PL::theirInstanceCount
-       << ") DH_PL destroyed." << endl;
-
   DH_PL::theirInstanceCount --;
+
+  // If this was the last instance of DH_PL, disconnect from the database. 
 
   if (DH_PL::theirInstanceCount == 0L) {
     DisconnectDatabase ();
   }
 }
 
+
+// Static function, to be called at least once from main () to specifity
+// the connection string and database account. If not called, default
+// values are used.
+
 void DH_PL::UseDatabase 
   (char * dbDSN, char * userName) {
   DH_PL::theirDSN   = dbDSN;
   DH_PL::theirUserName = userName;
-
-  cerr << "DH_PL::UseaDatabase () Using " << dbDSN << ", "
-       << ", " << userName << endl;
 }
 
 
@@ -88,20 +97,16 @@ void DH_PL::ConnectDatabase (void) {
   }
 
   theirPersistenceBroker.connect (DH_PL::theirDSN, DH_PL::theirUserName);
-
-  cerr << "DH_PL::ConnectDatabase (): Succesfully connected "
-       << "to database" << endl;
 }
 
 
 void DH_PL::DisconnectDatabase (void) {
-  cerr << "DH_PL::Disconnect(); Disconnected from database." << endl;
 }
 
 
-bool DH_PL::StoreInDatabase (int, int tag, char * buf, int size) {
-  cerr << "DH_PL::StoreInDatabase () called." << endl;
+// Store message content in database table.
 
+bool DH_PL::StoreInDatabase (int, int tag, char * buf, int size) {
   // First create blob:
   int i;
   ostringstream ostr;
@@ -112,8 +117,12 @@ bool DH_PL::StoreInDatabase (int, int tag, char * buf, int size) {
     ostr << hexrep;
   }
 
+  // Now create a DH_PL_MessageRecord object. This object is a simple
+  // structure with members for storing all of the information needed for
+  // a message.
   DH_PL_MessageRecord mr;
 
+  // Fill its members with correct values.
   mr.AppId = 1234;
   mr.Tag = tag;
   mr.SeqNo = itsWriteSeqNo;
@@ -124,8 +133,12 @@ bool DH_PL::StoreInDatabase (int, int tag, char * buf, int size) {
   mr.Type = getName ();
   mr.Blob = ostr.str ();
 
+  // Create the PersistentObject class 'around' DH_PL_MessageRecord. The
+  // PersistentObject is a wrapper which knows how to store a
+  // DH_PL_MessageRecord on a (PL supported) database and make it persistent. 
   TPersistentObject <DH_PL_MessageRecord> po_mr (mr);
 
+  // Store the DH_PL_MessageRecord content.
   theirPersistenceBroker.save (po_mr);
 
   itsWriteSeqNo ++;
@@ -134,39 +147,43 @@ bool DH_PL::StoreInDatabase (int, int tag, char * buf, int size) {
 }
 
 
-bool DH_PL::RetrieveFromDatabase (int,int tag, char * buf, int size) { 
-  cerr << "DH_PL::RetrieveFromDatabase () called." << endl;
+// Retrieve message content from table.
 
+bool DH_PL::RetrieveFromDatabase (int,int tag, char * buf, int size) { 
+  // Now create a DH_PL_MessageRecord object. This object is a simple
+  // structure with members for storing all of the information needed for
+  // a message.
   DH_PL_MessageRecord mr;
 
+  // Create the PersistentObject class 'around' DH_PL_MessageRecord. The
+  // PersistentObject is a wrapper which knows how to retrieve a
+  // previously stored DH_PL_MessageRecord from a (PL supported) database.
   TPersistentObject <DH_PL_MessageRecord> po_mr (mr);
 
+  // PL is based on query objects to identify records in database
+  // tables. A query object is now prepared to retrieve the record with
+  // the correct tag and sequence number.
   char q [200]; 
   sprintf (q, "WHERE tag='%d' AND SeqNo='%ld'",
     tag, itsReadSeqNo);
+  Query qGetRecord (q);
 
-  Query qGetMarcel (q);
-
+  // The results from a query is returned as a collection of
+  // DH_PL_MessageRecord. So we need an object for that purpose:
   Collection<TPersistentObject<DH_PL_MessageRecord> > Results;
 
-  Results = theirPersistenceBroker.retrieve<DH_PL_MessageRecord> (qGetMarcel);
+  // Perform the actual query.
+  Results = theirPersistenceBroker.retrieve<DH_PL_MessageRecord> (qGetRecord);
 
-  if (Results.size () == 0) {
-    cerr << "msgrec not found." << endl;
-  }
-  if (Results.size () == 1) {
-    cerr << "Found msgrec." << endl;
-  }
-  if (Results.size () > 1) {
-    cerr << "Found more than one msg rec." << endl;
-  }
-
+  // Take the size of the first DH_PL_MessageRecord in the collection.
   int resSize = Results.begin () -> data().Size;
 
+  // Check its size.
   if (resSize != size) {
-    cerr << "Not matching size." << endl;
+    cerr << "DH_PL Warning: Not matching size, continuing anyway." << endl;
   }
 
+  // Unpack the blob
   unsigned int k;
   char token[40];
   istringstream istr (Results.begin () -> data().Blob);
@@ -175,69 +192,8 @@ bool DH_PL::RetrieveFromDatabase (int,int tag, char * buf, int size) {
     buf [k] = (char) strtoul (token, NULL, 16);
   }
 
-
   itsReadSeqNo ++;
-  /*
-  int i;
-  i = 0;
 
-  // Construct query
-  ostringstream q;
-
-  q << "SELECT * FROM message WHERE "
-    << "appid = " << 123 << " AND "
-    << "status = 'noStatus' AND "
-    << "tag = " << tag << " AND "
-    << "seqno = " << itsReadSeqNo << " AND "
-    << "appid = " << 123 << ";";
-
-  PGresult * res;
-
-  // Block until a packet appears in the table
-  do {
-    res = PQexec (DH_PL::theirConnection, (q.str ()).c_str ());
-  
-    AssertStr (PQresultStatus (res) == PGRES_TUPLES_OK,
-	       "DH_Postgressql::Retrieve (); Select query failed.")
-      // TODO: Do a PQclear here?
-  } while (PQntuples (res) == 0);
-
-  int nRows;
-  nRows = PQntuples (res);
-  AssertStr (nRows == 1, "DH_PL::Retrieve ();"
-    << "ERROR: Message table may not have been cleaned up before starting program.")
-  
-    // TODO: What to do with these?:
-  // Read the found tuple
-    //  setMessageTag       (atoi (PQgetvalue (res, 0, 1)));
-    //  setByteStringLength (atoi (PQgetvalue (res, 0, 4)));
-    //  setTimeStamp        (atoi (PQgetvalue (res, 0, 5)));
-    //  setType             (PQgetvalue (res, 0, 6));
-    //  setName             (PQgetvalue (res, 0, 7));
-
-  // Copy the data packet
-#if defined (__GNUC__) && (__GNUC__) > 2
-  unsigned char * ByteString;
-  size_t sizeRes;
-  ByteString = PQunescapeBytea 
-    ((unsigned char*)PQgetvalue (res, 0, 9), & sizeRes);
-  
-  memcpy (buf, ByteString, size);
-  // TODO: Must free ByteString here?
-#else
-  unsigned int k;
-  char token[40];
-  istringstream istr (PQgetvalue (res, 0, 8));
-  for (k = 0; k < (unsigned int) size; k ++) {
-    istr >> token;
-    buf [k] = (char) strtoul (token, NULL, 16);
-  }
-#endif
-    
-  PQclear (res);
-
-  itsReadSeqNo ++;
-  */
   return true;
 }
 
