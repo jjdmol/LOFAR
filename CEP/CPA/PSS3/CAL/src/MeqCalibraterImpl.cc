@@ -493,7 +493,7 @@ void MeqCalibrater::clearSolvableParms()
   {
     if (*iter)
     {
-      cout << "clearSolvable: " << (*iter)->getName() << endl;
+      //cout << "clearSolvable: " << (*iter)->getName() << endl;
       (*iter)->setSolvable(false);
     }
   }
@@ -526,7 +526,7 @@ void MeqCalibrater::setSolvableParms (Vector<String>& parmPatterns,
       {
 	if (String((*iter)->getName()).matches(pattern))
 	{
-	  cout << "setSolvable: " << (*iter)->getName() << endl;
+	  //cout << "setSolvable: " << (*iter)->getName() << endl;
 	  (*iter)->setSolvable(isSolvable);
 	}
       }
@@ -534,35 +534,6 @@ void MeqCalibrater::setSolvableParms (Vector<String>& parmPatterns,
   }
 
   cout << "isSolvable = " << isSolvable << endl;
-}
-
-//----------------------------------------------------------------------
-//
-// ~predict
-//
-// Predict visibilities for the current time domain.
-//
-//----------------------------------------------------------------------
-void MeqCalibrater::predict()
-{
-  cout << "predict'" << endl;
-
-  // Loop through all rows in the current solve domain.
-  Timer timer;
-  for (unsigned int i=0; i<itsCurRows.nelements(); i++) {
-    int rownr = itsCurRows(i);
-    uInt ant1 = itsMSCol.antenna1()(rownr);
-    uInt ant2 = itsMSCol.antenna2()(rownr);
-    Assert (ant1 < itsBLIndex.nrow()  &&  ant2 < itsBLIndex.nrow()
-	    &&  itsBLIndex(ant1,ant2) >= 0);
-    int blindex = itsBLIndex(ant1,ant2);
-    double time = itsMSCol.time()(rownr);
-    double step = itsMSCol.interval()(rownr);
-    MeqDomain domain(time-step/2, time+step/2, itsStartFreq, itsEndFreq);
-    MeqRequest request(domain, 1, itsNrChan, itsNrScid);
-    itsExpr[blindex]->calcResult (request);
-  }
-  timer.show();
 }
 
 //----------------------------------------------------------------------
@@ -617,7 +588,7 @@ void MeqCalibrater::saveParms()
   {
     if (*iter)
     {
-      cout << "saveParm: " << (*iter)->getName() << endl;
+      //cout << "saveParm: " << (*iter)->getName() << endl;
       (*iter)->save();
     }
   }
@@ -641,15 +612,17 @@ void MeqCalibrater::saveParms()
 
 //----------------------------------------------------------------------
 //
-// ~savePredictedData
+// ~predict
 //
-// Save the predicted data for the current time domain in column
-// with name modelDataColName.
+// Predict visibilities for the current time domain and save
+// in the column with name modelDataColName.
 //
 //----------------------------------------------------------------------
-void MeqCalibrater::savePredictedData (const String& modelDataColName)
+void MeqCalibrater::predict (const String& modelDataColName)
 {
-  cout << "savePredictedData('" << modelDataColName << "')" << endl;
+  cout << "predict('" << modelDataColName << "')" << endl;
+
+  Timer timer;
 
   ////  itsMS.reopenRW();
   // Add the dataColName column if not existing yet.
@@ -683,7 +656,7 @@ void MeqCalibrater::savePredictedData (const String& modelDataColName)
     Array<Complex> tmp0 (data(Slice(0,1), sliceFreq));
     convertArray (tmp0,
       itsExpr[blindex]->getResult11().getValue().getDComplexMatrix());
-    if (shp(0) > 2) {
+    if (4 == shp(0)) {
       Array<Complex> tmp1 (data(Slice(1,1), sliceFreq));
       convertArray (tmp1,
 	itsExpr[blindex]->getResult12().getValue().getDComplexMatrix());
@@ -693,13 +666,17 @@ void MeqCalibrater::savePredictedData (const String& modelDataColName)
       Array<Complex> tmp3 (data(Slice(3,1), sliceFreq));
       convertArray (tmp3,
 	itsExpr[blindex]->getResult22().getValue().getDComplexMatrix());
-    } else {
+    } else if (2 == shp(0)) {
       Array<Complex> tmp1 (data(Slice(1,1), sliceFreq));
       convertArray (tmp1,
 	itsExpr[blindex]->getResult22().getValue().getDComplexMatrix());
+    } else if (1 != shp(0)) {
+      throw AipsError("Number of polarizations should be 1, 2, or 4");
     }
     mdcol.put (rownr, data);
   }
+
+  timer.show();
 }
 
 //----------------------------------------------------------------------
@@ -897,7 +874,7 @@ String MeqCalibrater::className() const
 //----------------------------------------------------------------------
 Vector<String> MeqCalibrater::methods() const
 {
-  Vector<String> method(12);
+  Vector<String> method(11);
 
   method(0)  = "settimeinterval";
   method(1)  = "resetiterator";
@@ -907,10 +884,9 @@ Vector<String> MeqCalibrater::methods() const
   method(5)  = "predict";
   method(6)  = "solve";
   method(7)  = "saveparms";
-  method(8)  = "savepredicteddata";
-  method(9)  = "saveresidualdata";
-  method(10) = "getparms";
-  method(11) = "getsolvedomain";
+  method(8)  = "saveresidualdata";
+  method(9) = "getparms";
+  method(10) = "getsolvedomain";
 
   return method;
 }
@@ -982,7 +958,10 @@ MethodResult MeqCalibrater::runMethod(uInt which,
 
   case 5: // predict
     {
-      if (runMethod) predict();
+      Parameter<String> modelDataColName(inputRecord, "modeldatacolname",
+					 ParameterSet::In);
+
+      if (runMethod) predict(modelDataColName());
     }
     break;
 
@@ -1001,16 +980,7 @@ MethodResult MeqCalibrater::runMethod(uInt which,
     }
     break;
 
-  case 8: // savepredicteddata
-    {
-      Parameter<String> modelDataColName(inputRecord, "modeldatacolname",
-					 ParameterSet::In);
-
-      if (runMethod) savePredictedData(modelDataColName());
-    }
-    break;
-
-  case 9: // saveresidualdata
+  case 8: // saveresidualdata
     {
       Parameter<String> colAName(inputRecord, "colaname",
 				 ParameterSet::In);
@@ -1025,7 +995,7 @@ MethodResult MeqCalibrater::runMethod(uInt which,
     }
     break;
 
-  case 10: // getparms
+  case 9: // getparms
     {
       Parameter<Vector<String> > parmPatterns(inputRecord, "parmpatterns",
 					      ParameterSet::In);
@@ -1038,7 +1008,7 @@ MethodResult MeqCalibrater::runMethod(uInt which,
     }
     break;
 
-  case 11: // getsolvedomain
+  case 10: // getsolvedomain
     {
       Parameter<GlishRecord> returnval(inputRecord, "returnval",
 				       ParameterSet::Out);
