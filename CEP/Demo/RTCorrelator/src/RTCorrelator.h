@@ -25,19 +25,25 @@
 #define RTCORRELATOR_RTCORRELATOR_H
 
 
-#include <iostream>
 #include <fstream>
-
 #include <stdlib.h>
 #include <string.h>
 
+#include <lofar_config.h>
+
+#include <Common/lofar_iostream.h>
+#include <Common/Debug.h>
+#include <Common/LofarLogger.h>
+
+#include <Transport/TH_MPI.h>
+#include <Transport/TH_Socket.h>
+
+#include <tinyCEP/SimulatorParseClass.h>
 #include <tinyCEP/WorkHolder.h>
 #include <tinyCEP/TinyApplicationHolder.h>
-#include <Transport/TH_MPI.h>
 
 #include <WH_Correlator.h>
-//# Includes
-#include <lofar_config.h>
+
 #include <Config.h>
 
 using namespace std;
@@ -49,7 +55,8 @@ char* frontend_ip;
 
 int nchannels;
 int nelements;
-int niterations;
+int nsamples;
+int nruns;
 int baseport;
 
 int parse_config();
