@@ -21,6 +21,7 @@
 //#  $Id$
 
 #include "SystemStatus.h"
+#include "EPA_Protocol.ph"
 #include "MEPHeader.h"
 #include "Marshalling.h"
 #include <blitz/array.h>

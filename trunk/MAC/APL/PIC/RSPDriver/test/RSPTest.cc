@@ -68,40 +68,143 @@ GCFEvent::TResult RSPTest::initial(GCFEvent& e, GCFPortInterface& port)
 
   switch(e.signal)
   {
-      case F_INIT:
-      {
-      }
-      break;
+    case F_INIT:
+    {
+      // send write register message to RA test port
+      RSPUpdstatusEvent updStatusEvent;
+      struct timeval timeValNow;
+      time(&timeValNow.tv_sec);
+      timeValNow.tv_usec=0;
+      updStatusEvent.timestamp.set(timeValNow);
+      updStatusEvent.status=1;
+      updStatusEvent.handle=1;
+     
+      EPA_Protocol::BoardStatus boardStatus;
+      boardStatus.rsp.voltage_15 = 0;
+      boardStatus.rsp.voltage_22 = 0;
+      boardStatus.rsp.ffi = 0;
+      boardStatus.bp.status = 0;
+      boardStatus.bp.temp = static_cast<uint8>(27.13*100.0);
+      boardStatus.ap[0].status = 0;
+      boardStatus.ap[0].temp = static_cast<uint8>(27.23*100.0);
+      boardStatus.ap[1].status = 0;
+      boardStatus.ap[1].temp = static_cast<uint8>(27.33*100.0);
+      boardStatus.ap[2].status = 0;
+      boardStatus.ap[2].temp = static_cast<uint8>(27.43*100.0);
+      boardStatus.ap[3].status = 0;
+      boardStatus.ap[3].temp = static_cast<uint8>(27.53*100.0);
+      boardStatus.eth.nof_frames = 0;
+      boardStatus.eth.nof_errors = 0;
+      boardStatus.eth.last_error = 0;
+      boardStatus.eth.ffi0 = 0;
+      boardStatus.eth.ffi1 = 0;
+      boardStatus.eth.ffi2 = 0;
+      boardStatus.read.seqnr = 0;
+      boardStatus.read.error = 0;
+      boardStatus.read.ffi = 0;
+      boardStatus.write.seqnr = 0;
+      boardStatus.write.error = 0;
+      boardStatus.write.ffi = 0;
+ 
+      EPA_Protocol::RCUStatus rcuStatus;
+      std::bitset<8> rcuBitStatus;
+      rcuBitStatus[7] = 1; // overflow
+      rcuStatus.status = rcuBitStatus.to_ulong();
+      updStatusEvent.sysstatus.board().resize(1);
+      updStatusEvent.sysstatus.board()(0) = boardStatus;
+      updStatusEvent.sysstatus.rcu().resize(1);
+      updStatusEvent.sysstatus.rcu()(0) = rcuStatus;
+ 
+/////////////////////////////////  Debug requiredSize berekening 
+ 
+// volledig uitgeschreven gaat het goed:
+      unsigned int sizeOFsignal = sizeof(updStatusEvent.signal);
+      unsigned int sizeOFlength = sizeof(updStatusEvent.length);
+      unsigned int sizeOFtimestamp = updStatusEvent.timestamp.getSize();
+      unsigned int sizeOFstatus = sizeof(updStatusEvent.status);
+      unsigned int sizeOFhandle = sizeof(updStatusEvent.handle);
+      unsigned int sizeOFdimensions = updStatusEvent.sysstatus.board().dimensions()*sizeof(int32);
+      unsigned int sizeOFarray = updStatusEvent.sysstatus.board().size()*sizeof(EPA_Protocol::BoardStatus);
+      unsigned int sizeOFboard = sizeOFdimensions + sizeOFarray;
+      sizeOFdimensions = updStatusEvent.sysstatus.rcu().dimensions()*sizeof(int32);
+      sizeOFarray = updStatusEvent.sysstatus.rcu().size()*sizeof(EPA_Protocol::RCUStatus);
+      unsigned int sizeOFrcu = sizeOFdimensions + sizeOFarray;
+     
+      unsigned int sizeOFsysstatus = sizeOFboard + sizeOFrcu;
+ 
+      unsigned int requiredSize = sizeOFsignal + sizeOFlength
+        + sizeOFtimestamp
+       
+        + sizeOFstatus
+       
+        + sizeOFhandle
+       
+        + sizeOFsysstatus
+        ;
+      LOG_INFO(formatString("sizeOf UPDSTATUS: %d",requiredSize));
+ 
+// precies zoals in pack() gaat het niet goed:
+      requiredSize = sizeof(updStatusEvent.signal) + sizeof(updStatusEvent.length)
+	+ updStatusEvent.timestamp.getSize()
+   
+	+ sizeof(updStatusEvent.status)
+   
+	+ sizeof(updStatusEvent.handle)
+   
+	+ updStatusEvent.sysstatus.getSize()
+	;
+      LOG_INFO(formatString("sizeOf UPDSTATUS: %d",requiredSize));
+ 
+// precies zoals in pack(), maar dan met uitgeschreven macro's gaat het weer wel goed:
+      requiredSize = sizeof(updStatusEvent.signal) + sizeof(updStatusEvent.length)
+	+ updStatusEvent.timestamp.getSize()
+   
+	+ sizeof(updStatusEvent.status)
+   
+	+ sizeof(updStatusEvent.handle)
+   
+//    + updStatusEvent.sysstatus.getSize()
+	+ ((updStatusEvent.sysstatus.board().dimensions()*sizeof(int32)) + (updStatusEvent.sysstatus.board().size() * sizeof(EPA_Protocol::BoardStatus)))
+	+ ((updStatusEvent.sysstatus.rcu().dimensions()*sizeof(int32)) + (updStatusEvent.sysstatus.rcu().size() * sizeof(EPA_Protocol::RCUStatus)))
+	;
+      LOG_INFO(formatString("sizeOf UPDSTATUS: %d",requiredSize));
+ 
+      ////////////////////////////////////////////////  Debug requiredSize berekening
+ 
+      //m_RSPserver.send(updStatusEvent);
 
-      case F_ENTRY:
-      {
-	  m_server.open();
-      }
-      break;
+    }
+    break;
 
-      case F_CONNECTED:
-      {
-	  TRAN(RSPTest::test001);
-      }
-      break;
+    case F_ENTRY:
+    {
+      m_server.open();
+    }
+    break;
 
-      case F_DISCONNECTED:
-      {
-	  port.setTimer((long)1);
-	  port.close();
-      }
-      break;
+    case F_CONNECTED:
+    {
+      TRAN(RSPTest::test001);
+    }
+    break;
 
-      case F_TIMER:
-      {
-	  // try again
-	  m_server.open();
-      }
-      break;
+    case F_DISCONNECTED:
+    {
+      port.setTimer((long)1);
+      port.close();
+    }
+    break;
 
-      default:
-	  status = GCFEvent::NOT_HANDLED;
-	  break;
+    case F_TIMER:
+    {
+      // try again
+      m_server.open();
+    }
+    break;
+
+    default:
+      status = GCFEvent::NOT_HANDLED;
+      break;
   }
 
   return status;

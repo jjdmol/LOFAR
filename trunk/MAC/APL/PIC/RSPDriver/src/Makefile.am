@@ -4,7 +4,7 @@ AM_CXXFLAGS = \
 	-DEPA_Y_POL_IMAG_FIX \
 	-DWEIGHTS_IN_NETWORK_ORDER \
 	-DUSE_GNUPLOT \
-	-DDEFINE_N_AP=1 \
+	-DN_PROTO2_BLP=1 \
 	-DTOGGLE_LEDS
 
 AUTOGEN = autogen
@@ -93,6 +93,9 @@ RSPDriver_SOURCES = \
 	Scheduler.cc \
 	Command.h \
 	Command.cc \
+	Cache.h \
+	Cache.cc \
+	\
 	SetWeightsCmd.h \
 	SetWeightsCmd.cc \
 	GetWeightsCmd.h \
@@ -101,8 +104,7 @@ RSPDriver_SOURCES = \
 	SetSubbandsCmd.cc \
 	GetStatusCmd.h \
 	GetStatusCmd.cc \
-	Cache.h \
-	Cache.cc \
+	\
 	SyncAction.h \
 	SyncAction.cc \
 	BWSync.h \

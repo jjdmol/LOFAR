@@ -37,9 +37,9 @@ using namespace LOFAR;
 /**
  * Lookup table to map MEP message header to GCFEvent signal.
  */
-#define N_TYPES 4
 #define N_PIDS  8
 #define N_REGS  4
+#define N_TYPES 4
 static unsigned short signal_lut[MEPHeader::MAX_PID + 1][MEPHeader::MAX_REGID + 1][MEPHeader::MAX_TYPE + 1] = 
 {
   /* pid = 0x00 (STATUS) */
@@ -208,7 +208,13 @@ GCFEvent::TResult RawEvent::dispatch(GCFTask& task, GCFPortInterface& port)
   //
   // Decode the header fields
   //
-  unsigned short signal = signal_lut[hdr.m_fields.addr.pid][hdr.m_fields.addr.regid][hdr.m_fields.type];
+  unsigned short signal = 0;
+  if (hdr.m_fields.addr.pid < N_PIDS
+      && hdr.m_fields.addr.regid < N_REGS
+      && hdr.m_fields.type < N_TYPES)
+  {
+    signal = signal_lut[hdr.m_fields.addr.pid][hdr.m_fields.addr.regid][hdr.m_fields.type];
+  }
   
   if (signal) // status == 0 indicates unrecognised or invalid MEP message
   {
@@ -236,9 +242,9 @@ GCFEvent::TResult RawEvent::dispatch(GCFTask& task, GCFPortInterface& port)
     {
       memcpy((char*)event + sizeof(GCFEvent) + sizeof(hdr.m_fields), buf + offset, hdr.m_fields.size);
       offset += hdr.m_fields.size;
- #if 0
-    port.recv((char*)event + sizeof(GCFEvent) + sizeof(hdr.m_fields),
-	      hdr.m_fields.size);
+#if 0
+      port.recv((char*)event + sizeof(GCFEvent) + sizeof(hdr.m_fields),
+		hdr.m_fields.size);
 #endif
     }
 
