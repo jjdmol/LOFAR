@@ -4,6 +4,7 @@
 
 #include <UVPDisplayArea.h>
 #include <qpainter.h>
+#include <cmath>
 
 #if(DEBUG_MODE)
 #include <cassert>
@@ -13,8 +14,8 @@
 
 //==================>>>  UVPDisplayArea::UVPDisplayArea  <<<==================
 
-UVPDisplayArea::UVPDisplayArea(QWidget *parent,
-                               int      numColors)
+UVPDisplayArea::UVPDisplayArea(QWidget*     parent,
+                               unsigned int numColors)
   : QWidget(parent),
     itsColormap(numColors),
     itsXAxis(1, 0, "X", "arbitrary"),
@@ -77,9 +78,9 @@ void UVPDisplayArea::initColormap(double slope,
       col = max_color;
     }
     
-    col = int(col + 0.5);
+    int Col = int(col + 0.5);
 
-    itsColormap[i].setRgb(col, col, col); 
+    itsColormap[i].setRgb(Col, Col, Col); 
 
   }
 
@@ -93,7 +94,7 @@ void UVPDisplayArea::initColormap(double slope,
     if(green > max_color) {
       green = max_color;
     }
-    green = int(green + 0.5);
+    int Green = int(green + 0.5);
 
     for(unsigned int r = 0; r < numColors; r++) {
       double red  = (max_color-min_color)/2 + slope*(double(r)-center);
@@ -103,8 +104,8 @@ void UVPDisplayArea::initColormap(double slope,
       if(red > max_color) {
         red = max_color;
       }
-      red = int(red + 0.5);
-      itsComplexColormap[itsRealIndex[r]+itsImagIndex[i]].setRgb(red, green, 0);
+      int Red = int(red + 0.5);
+      itsComplexColormap[itsRealIndex[r]+itsImagIndex[i]].setRgb(Red, Green, 0);
     }
   }
 
@@ -239,7 +240,7 @@ void UVPDisplayArea::drawView()
   buffer_painter.begin(&itsBuffer);
 
   for(int y = 0; y < height(); y++) {
-    int val = int(128.0 + 127.0*std::sin(double(y)/100.0));
+    int val = int(128.0 + 127.0*sin(double(y)/100.0));
     
     buffer_painter.setPen(itsColormap[val]);
     buffer_painter.drawLine(0, y, width(), y);

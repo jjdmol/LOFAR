@@ -22,7 +22,8 @@ class UVPDisplayArea : public QWidget
     
  public:                        /* Public part */
 
-               UVPDisplayArea(QWidget *parent, int numColors=256);
+               UVPDisplayArea(QWidget *    parent,
+                              unsigned int numColors=256);
               ~UVPDisplayArea();
 
  void          initColormap(double slope,
