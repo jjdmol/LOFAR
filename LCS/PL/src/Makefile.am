@@ -2,7 +2,8 @@ DOCHDRS = Exception.h \
           ObjecId.h \
           PersistentObject.h \
           SQLTimeStamp.h \
-          TPersistentObject.h
+          TPersistentObject.h \
+          TPersistentObjectBase.h
 
 lib_LTLIBRARIES = libpl.la
 
