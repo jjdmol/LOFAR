@@ -31,20 +31,26 @@
 
 namespace LOFAR
 {
-  // Description of class.
-  class Connection: public Transporter
+  class Connection
   {
+    
   public:
-    Connection(Transporter&);
+    
+    Connection();
+    
     virtual ~Connection();
 
-    bool connectRep(const TransportHolder& prototype,
-		    Transporter& sourceTP,
-		    Transporter& targetTP);
+    bool connectTo(Transporter* sourceTP,
+		   Transporter* targetTP);
+    
+    bool connectFrom(Transporter* sourceTP, 
+		     Transporter* targetTP);
 
-    bool connectData(const TransportHolder& prototype,
-		     Transporter& sourceTP, 
-		     Transporter& targetTP);
+  private:
+
+    bool connectData(Transporter* sourceTP, 
+		     Transporter* targetTP);
+
   };
 
 } // namespace LOFAR

@@ -26,14 +26,15 @@
 #include <lofar_config.h>
 
 //# Includes
-#include <libTransport/TransportHolder.h>
-#include <libTransport/BaseSim.h>
+#include <TransportHolder.h>
+#include <Connection.h>
+#include <BaseSim.h>
 
 namespace LOFAR
 {
-
 //# Forward declarations
 class BaseDataHolder;
+class Connection;
 
 /**
    This is a class which handles data transport between BaseDataHolders.
@@ -113,7 +114,9 @@ class Transporter
       skipped (false) based on the Rate setting
   */
   //  bool doHandle() const;
-
+  
+  bool connectTo(Transporter* that);
+  bool connectFrom(Transporter* that);
   bool isBlocking() const ;
 
 
@@ -141,6 +144,7 @@ private:
   
   // The tag used for MPI send/receive.
   int itsReadTag;
+
   int itsWriteTag;
 
   // Status of the Transporter object
@@ -157,9 +161,8 @@ private:
       Rate=1 means always issue TransportHolder->read/write.
   */
   int itsRate; 
-  
+  Connection* itsConnection;
   bool itsIsBlocking;
-
 };
 
 
@@ -232,4 +235,5 @@ inline bool Transporter::isBlocking() const
   { return itsIsBlocking; }
 
 }
+
 #endif 
