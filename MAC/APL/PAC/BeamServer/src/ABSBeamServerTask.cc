@@ -137,6 +137,7 @@ GCFEvent::TResult BeamServerTask::initial(GCFEvent& e, GCFPortInterface& port)
       case F_DISCONNECTED_SIG:
       {
 	  LOG_FATAL(formatString("port '%s' disconnected", port.getName().c_str()));
+	  port.close();
 	  exit(EXIT_FAILURE);
       }
       break;
@@ -147,9 +148,7 @@ GCFEvent::TResult BeamServerTask::initial(GCFEvent& e, GCFPortInterface& port)
 	  {
 	      // read data to clear F_DATAIN_SIG
 	      char data[ETH_DATA_LEN];
-	      ssize_t length = board.recv(data, ETH_DATA_LEN);
-	      
-	      length=length; // keep compiler happy
+	      (void)board.recv(data, ETH_DATA_LEN);
 	  }
       }
       break;
@@ -286,26 +285,18 @@ GCFEvent::TResult BeamServerTask::enabled(GCFEvent& e, GCFPortInterface& port)
 
     case F_DATAIN_SIG:
       {
-	char data[ETH_DATA_LEN];
-	// ignore DATAIN
+	static char data[ETH_DATA_LEN];
+
 	ssize_t length = board.recv(data, ETH_DATA_LEN);
-	//cout << "received " << length << endl;
-
-	length=length; // keep compiler happy
-
-#if 0
-	EPADataEvent de;
+	if (sizeof(EPADataEvent)-sizeof(GCFEvent) == length)
+	{
+	  EPADataEvent de;
 	  
-	memcpy((void*)&de.fill, (void*)data, sizeof(de)-sizeof(GCFEvent));
+	  memcpy((void*)&de.fill, (void*)data, sizeof(de)-sizeof(GCFEvent));
 
-	cout << "sizeof(GCFEvent) = " << sizeof(GCFEvent) << endl;
-	cout << "sizeof(de) = " << sizeof(de) << endl;
-#endif
-
-#if 0
-	unsigned int* seqnr = (unsigned int*)&data[2];
-	cerr << "seqnr=" << *seqnr << endl;
-#endif
+	  unsigned int* seqnr = (unsigned int*)&data[2];
+	  cerr << "seqnr=" << *seqnr << endl;
+	}
       }
       break;
 
@@ -316,6 +307,7 @@ GCFEvent::TResult BeamServerTask::enabled(GCFEvent& e, GCFPortInterface& port)
     case F_DISCONNECTED_SIG:
       {
 	LOG_DEBUG(formatString("port %s disconnected", port.getName().c_str()));
+	port.close();
 
 	TRAN(BeamServerTask::initial);
       }
@@ -435,7 +427,7 @@ void BeamServerTask::wgsettings_action(ABSWgsettingsEvent* wgs,
 
   // max allowed frequency = 20MHz
   if ((wgs->frequency >= 1.0e-6)
-      && (wgs->frequency <= ABS::SYSTEM_CLOCK_FREQUENCY/4.0))
+      && (wgs->frequency <= ABS::SYSTEM_CLOCK_FREQ/4.0))
   {
       m_wgsetting.frequency     = wgs->frequency;
       m_wgsetting.amplitude     = wgs->amplitude;
@@ -531,8 +523,8 @@ void BeamServerTask::compute_timeout_action(long current_seconds)
   Beamlet::calculate_weights(m_pos, m_weights);
 
   // show weights for timestep 0, element 0, all subbands, both polarizations
-  Range all = Range::all();
-  cout << "m_weights=" << m_weights(0, 0, all, all) << endl;
+  //Range all = Range::all();
+  //cout << "m_weights=" << m_weights(0, 0, all, all) << endl;
 
   //
   // need complex conjugate of the weights
@@ -540,8 +532,8 @@ void BeamServerTask::compute_timeout_action(long current_seconds)
   //
   m_weights16 = convert2complex_int16_t(conj(m_weights));
 
-  LOG_DEBUG(formatString("m_weights16 contiguous storage? %s", (m_weights16.isStorageContiguous()?"yes":"no")));
-  LOG_DEBUG(formatString("sizeof(m_weights16) = %d", m_weights16.size()*sizeof(int16_t)));
+  //LOG_DEBUG(formatString("m_weights16 contiguous storage? %s", (m_weights16.isStorageContiguous()?"yes":"no")));
+  //LOG_DEBUG(formatString("sizeof(m_weights16) = %d", m_weights16.size()*sizeof(int16_t)));
 }
 
 void BeamServerTask::send_weights(int period)
@@ -551,13 +543,12 @@ void BeamServerTask::send_weights(int period)
 
   bc.command = 4; // 4 == beamformer configure
   bc.seqnr   = 0;
+  bc.pktsize = sizeof(EPABfconfigureEvent)-sizeof(GCFEvent);
   bc.pktsize = 1030;
 
   Array<complex<int16_t>, 2> weights((complex<int16_t>*)&bc.coeff,
 				     shape(N_SUBBANDS, N_POLARIZATIONS),
 				     neverDeleteData);
-
-  LOG_DEBUG(formatString("sizeof(weights) = %d", weights.size()*sizeof(complex<int16_t>)));
 
   for (int ant = 0; ant < N_ELEMENTS; ant++)
   {
@@ -592,7 +583,7 @@ void BeamServerTask::send_weights(int period)
 
   be.command = 5; // 5 == beamformer enable
   be.seqnr = 0;
-  be.pktsize = 12;
+  be.pktsize = htons(12);
   memset(&be.reserved1, 0, 8);
 
   board.send(GCFEvent(F_RAW_SIG), &be.command, be.pktsize);
