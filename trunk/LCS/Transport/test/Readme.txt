@@ -28,8 +28,9 @@ This file describes the tests in this directory (./LOFAR/LCS/Transport/test/):
 
 
 *** ExampleMPI ***
- Tests transport of fixed and variable size data via MPI.
- 
+ Tests transport of fixed and variable size data via MPI. Also tests bidirectional transport
+ with MPI.
+  
 
 *** ExampleSocket ***
  Tests transport of fixed and variable size data via sockets.

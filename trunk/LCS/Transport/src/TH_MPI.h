@@ -80,6 +80,8 @@ public:
   /// Get the type of transport.
   virtual string getType() const;
 
+  virtual bool isBidirectional() const;
+
   static void init (int argc, const char *argv[]);
   static void finalize();
   static void waitForBroadCast();
@@ -125,6 +127,9 @@ private:
  public:
 
 };
+
+inline bool TH_MPI::isBidirectional() const
+  { return true; }
 
 }
 
