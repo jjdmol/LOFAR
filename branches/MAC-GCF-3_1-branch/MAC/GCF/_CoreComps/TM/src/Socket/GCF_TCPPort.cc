@@ -84,13 +84,16 @@ int GCFTCPPort::open()
   }
   else if (!_addrIsSet && !isSlave())
   {
-    if (SPP == getType() || MSPP == getType())
+    if (!_pSocket)
     {
-      _pSocket = new GTMTCPServerSocket(*this, (MSPP == getType()));
-    }
-    else if (SAP == getType())
-    {
-      _pSocket = new GTMTCPSocket(*this);
+      if (SPP == getType() || MSPP == getType())
+      {
+        _pSocket = new GTMTCPServerSocket(*this, (MSPP == getType()));
+      }
+      else if (SAP == getType())
+      {
+        _pSocket = new GTMTCPSocket(*this);
+      }
     }
     
     if (findAddr(fwaddr))

@@ -85,13 +85,19 @@ int GCFETHRawPort::open()
     return -1;
   }
 
-  if (!_pSocket)
+  if (!_pSocket && isSlave())
   {
-      LOFAR_LOG_ERROR(TM_STDOUT_LOGGER, (
-			  "ERROR: Port %s is not initialised.",
-			  _name.c_str()));
-      retval = -1;
-  } else if (_pSocket->open(_ifname.c_str(), _destMacStr.c_str()) < 0)
+    LOFAR_LOG_ERROR(TM_STDOUT_LOGGER, (
+        "ERROR: Port %s is not initialised.",
+        _name.c_str()));
+    return -1;
+  } 
+  else if (!_pSocket && !isSlave())
+  {
+    _pSocket = new GTMETHSocket(*this);
+  }
+   
+  if (_pSocket->open(_ifname.c_str(), _destMacStr.c_str()) < 0)
   {
     _isConnected = false;
     if (SAP == getType())
