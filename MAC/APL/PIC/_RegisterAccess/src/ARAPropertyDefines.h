@@ -26,7 +26,13 @@
 #include "GCF/GCF_Defines.h"
 #include "GCF/GCF_PValue.h"
 
-const int N_RACKS               = 1; // 6
+namespace ARA
+{
+  
+const int STATUS_OK = 0;
+const int STATUS_ERROR = 1;
+
+const int N_RACKS               = 3; // 6
 const int N_SUBRACKS_PER_RACK   = 1; // 4
 const int N_BOARDS_PER_SUBRACK  = 1;
 const int N_APS_PER_BOARD       = 1;
@@ -260,6 +266,8 @@ const TProperty PROPS_Alert[] =
 const TPropertySet PROPSET_Alert = 
 {
   1, "Alert", PROPS_Alert
+};
+
 };
 
 #endif // ARAPropertyDefines_H

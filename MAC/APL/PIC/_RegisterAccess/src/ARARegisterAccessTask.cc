@@ -1116,24 +1116,38 @@ void RegisterAccessTask::updateRCUproperties(string scope,uint8 status)
   if(it != m_myPropertySetMap.end())
   {
     unsigned int tempStatus = (status >> 7 ) & 0x01;
-    GCFPVBool pvBool(tempStatus);
-    it->second->setValue(string(PROPNAME_OVERFLOW),pvBool);
+    GCFPVBool pvBoolOverflow(tempStatus);
+    it->second->setValue(string(PROPNAME_OVERFLOW),pvBoolOverflow);
     
     tempStatus = (status >> 6) & 0x01;
-    pvBool.setValue(tempStatus);
-    it->second->setValue(string(PROPNAME_RCUPWR),pvBool);
+    GCFPVBool pvBoolRcuPwr(tempStatus);
+    it->second->setValue(string(PROPNAME_RCUPWR),pvBoolRcuPwr);
 
     tempStatus = (status >> 5) & 0x01;
-    pvBool.setValue(tempStatus);
-    it->second->setValue(string(PROPNAME_HBAPWR),pvBool);
+    GCFPVBool pvBoolHbaPwr(tempStatus);
+    it->second->setValue(string(PROPNAME_HBAPWR),pvBoolHbaPwr);
 
     tempStatus = (status >> 4) & 0x01;
-    pvBool.setValue(tempStatus);
-    it->second->setValue(string(PROPNAME_LBAPWR),pvBool);
+    GCFPVBool pvBoolLbaPwr(tempStatus);
+    it->second->setValue(string(PROPNAME_LBAPWR),pvBoolLbaPwr);
 
     tempStatus = (status >> 0) & 0x0F;
     GCFPVUnsigned pvFilter(tempStatus);
     it->second->setValue(string(PROPNAME_FILTER),pvFilter);
+    
+    if(pvBoolOverflow.getStatus() ||
+       pvBoolRcuPwr.getStatus() ||
+       pvBoolHbaPwr.getStatus() ||
+       pvBoolLbaPwr.getStatus())
+    {
+      GCFPVUnsigned pvUnsignedStatus(STATUS_ERROR);
+      it->second->setValue(string(PROPNAME_STATUS),pvUnsignedStatus);
+    }       
+    else
+    {
+      GCFPVUnsigned pvUnsignedStatus(STATUS_OK);
+      it->second->setValue(string(PROPNAME_STATUS),pvUnsignedStatus);
+    }       
   }
 }
 
