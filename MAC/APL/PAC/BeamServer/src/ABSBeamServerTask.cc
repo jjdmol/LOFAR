@@ -32,6 +32,7 @@
 #include "ABSBeamlet.h"
 
 #include <iostream>
+#include <strstream>
 #include <time.h>
 #include <string.h>
 
@@ -90,6 +91,8 @@ BeamServerTask::BeamServerTask(string name)
   m_wgsetting.amplitude     = 0x8000 / 256;
   m_wgsetting.enabled       = false;
 
+  m_pos = 0;
+#if 0
   // initialize antenna positions
   Range all = Range::all();
   m_pos(all, 0, all) = 0.0;
@@ -97,6 +100,14 @@ BeamServerTask::BeamServerTask(string name)
 
   m_pos(all, 1, all) = 0.0;
   m_pos(all, 1, 0)   = 95.9358656;
+
+  LOG_DEBUG_STR(m_pos);
+#else
+  istrstream config_positions(GET_CONFIG_STRING("ANTENNA_POSITIONS"));
+  config_positions >> m_pos;
+
+  LOG_INFO_STR("ANTENNA_POSITIONS = " << m_pos);
+#endif
 
   // initialize weight matrix
   m_weights   = complex<W_TYPE>(0,0);
