@@ -32,6 +32,19 @@
 #include <Common/DataFormat.h>
 #include <complex>
 
+//# If std::complex is used for the complex types, their functions are
+//# template specialisations, so they need template<>.
+#ifndef LOFAR_BUILTIN_COMPLEXINT
+# define LFDC_TMPL_INT template<>
+# else
+# define LFDC_TMPL_INT
+#endif
+#ifndef LOFAR_BUILTIN_COMPLEXFP
+# define LFDC_TMPL_FP template<>
+# else
+# define LFDC_TMPL_FP
+#endif
+
 namespace LOFAR
 {
 // \ingroup Common
@@ -64,10 +77,10 @@ namespace LOFAR
   void dataConvert (DataFormat, double* inout, uint nrval);
   template<class T> void dataConvert (DataFormat, std::complex<T>* inout,
 				      uint nrval);
-  void dataConvert (DataFormat, i16complex* inout, uint nrval);
-  void dataConvert (DataFormat, u16complex* inout, uint nrval);
-  void dataConvert (DataFormat, fcomplex* inout, uint nrval);
-  void dataConvert (DataFormat, dcomplex* inout, uint nrval);
+  LFDC_TMPL_INT void dataConvert (DataFormat, i16complex* inout, uint nrval);
+  LFDC_TMPL_INT void dataConvert (DataFormat, u16complex* inout, uint nrval);
+  LFDC_TMPL_FP  void dataConvert (DataFormat, fcomplex* inout, uint nrval);
+  LFDC_TMPL_FP  void dataConvert (DataFormat, dcomplex* inout, uint nrval);
   // </group>
 
   // \name Convert char or uchar.
@@ -194,15 +207,15 @@ namespace LOFAR
     { dataConvert32 (fmt, inout, nrval); }
   inline void dataConvert (DataFormat fmt, double* inout, uint nrval)
     { dataConvert64 (fmt, inout, nrval); }
-  inline void dataConvert (DataFormat fmt, i16complex* inout, uint nrval)
-    { dataConvert16 (fmt, inout, 2*nrval); }
-  inline void dataConvert (DataFormat fmt, u16complex* inout, uint nrval)
-    { dataConvert16 (fmt, inout, 2*nrval); }
   inline void dataConvert (DataFormat fmt, std::complex<int16>* inout, uint nrval)
     { dataConvert16 (fmt, inout, 2*nrval); }
-  inline void dataConvert (DataFormat fmt, fcomplex* inout, uint nrval)
+  LFDC_TMPL_INT inline void dataConvert (DataFormat fmt, i16complex* inout, uint nrval)
+    { dataConvert16 (fmt, inout, 2*nrval); }
+  LFDC_TMPL_INT inline void dataConvert (DataFormat fmt, u16complex* inout, uint nrval)
+    { dataConvert16 (fmt, inout, 2*nrval); }
+  LFDC_TMPL_FP inline void dataConvert (DataFormat fmt, fcomplex* inout, uint nrval)
     { dataConvertFloat (fmt, inout, 2*nrval); }
-  inline void dataConvert (DataFormat fmt, dcomplex* inout, uint nrval)
+  LFDC_TMPL_FP inline void dataConvert (DataFormat fmt, dcomplex* inout, uint nrval)
     { dataConvertDouble (fmt, inout, 2*nrval); }
 
   inline char dataConvert (DataFormat, char in)
@@ -373,5 +386,8 @@ namespace LOFAR
 
 } // end namespace LOFAR
 
+
+#undef LFDC_TMPL_FP
+#undef LFDC_TMPL_INT
 
 #endif
