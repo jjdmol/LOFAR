@@ -85,23 +85,23 @@ const string timeString(time_t     aTime,
 //
 // NOTE: original string is truncated!
 //
-int32 	rtrim(char*	aCstring, int32		len = 0);
+int32 	rtrim(char*	aCstring, int32		len = 0, char* whiteSpace = " 	");
 
 //
 // char* ltrim(char*	Cstring)
 //
 // Skip leading spaces. A pointer to the first non-whitespace char is
 // returned. (points into original string)
-char*	ltrim(char*	aCstring);
+char*	ltrim(char*	aCstring, char* whiteSpace = " 	");
 
 //
 // rtrim(aString)
 //
 // Removes trailing whitespace from the string.
 //
-inline void rtrim(string&		aString)
+inline void rtrim(string&		aString, const string& whiteSpace = " 	")
 {
-	aString = aString.erase(aString.find_last_not_of(" 	")+1);
+	aString = aString.erase(aString.find_last_not_of(whiteSpace)+1);
 }
 
 //
@@ -109,9 +109,9 @@ inline void rtrim(string&		aString)
 //
 // Removes leading whitespace from the string.
 //
-inline void ltrim(string&		aString)
+inline void ltrim(string&		aString, const string&	whiteSpace = " 	")
 {
-	aString = aString.erase(0, aString.find_first_not_of(" 	"));
+	aString = aString.erase(0, aString.find_first_not_of(whiteSpace));
 }
 
 

@@ -87,7 +87,7 @@ const std::string timeString(time_t		aTime,
 //
 // NOTE: original string is truncated!
 //
-int32 rtrim(char*	aCstring, int32		len)
+int32 rtrim(char*	aCstring, int32		len, char*	whiteSpace)
 {
 	if (!aCstring || !(*aCstring)) {		// aCstring must be valid
 		return (0);
@@ -98,7 +98,7 @@ int32 rtrim(char*	aCstring, int32		len)
 	}
 	--len;									// set on last char
 
-	while ((len >= 0) && ((aCstring[len]==' ') || (aCstring[len]=='\t'))) {
+	while ((len >= 0) && (strchr(whiteSpace, aCstring[len]))) {
 		aCstring[len--] = '\0';
 	}
 
@@ -110,11 +110,9 @@ int32 rtrim(char*	aCstring, int32		len)
 //
 // skip leading spaces. A pointer to the first non-whitespace char is
 // returned.
-char*	ltrim(char*	aCstring)
+char*	ltrim(char*	aCstring, char*	whiteSpace)
 {
-	while ((*aCstring == ' ') || (*aCstring == '\t')) {
-		aCstring++;
-	}
+	aCstring += strspn(aCstring, whiteSpace);
 
 	return (aCstring);
 }
