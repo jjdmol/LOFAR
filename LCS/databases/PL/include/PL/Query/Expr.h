@@ -39,7 +39,22 @@ namespace LOFAR
     namespace Query
     {
 
-      // This class represents the WHERE clause of a query. 
+      // This class represents the WHERE clause of a query as an expression
+      // tree.
+      //
+      // An expression tree consists of an expression node, containing an
+      // operator and one or more operands. The operands are again expression
+      // trees, in general. Hence, an expression tree consists of one or more
+      // sub-trees.  
+      //
+      // All expression node classes inherit from the abstract base class
+      // ExprNode, which defines their interface.
+      //
+      // \see For a good example of a C++ implementation of an expression
+      // tree, see <a
+      // href="http://www.cs.wustl.edu/~schmidt/PDF/expression-trees4.pdf">
+      // <em>Object-Oriented Design Case Study with C++</em></a>, by Douglas
+      // C. Schmidt.
       class Expr
       {
       public:
