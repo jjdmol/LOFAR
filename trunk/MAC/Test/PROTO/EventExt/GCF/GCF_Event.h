@@ -27,6 +27,13 @@
 #include <sys/types.h>
 #include <string>
 
+#ifdef SWIG
+%module GCFEvent
+%{
+#include "GCF_Event.h"
+%}
+#endif
+
 using namespace std;
 
 /**
@@ -77,18 +84,28 @@ class GCFEvent
 	* <- I/O-><--- protocol ---------><--------- signal -------------->
 	* @endcode
 	*/
+#ifdef SWIG
+%immutable;
+#endif
 	unsigned short  signal; // lsb contains signal id (0-255)
 	                      // msb contains protocol id (0-255)
+#ifndef SWIG
 	unsigned short pad0; // DO NOT USE
+#endif
 	size_t          length; // length of the event (should be <= SSIZE_MAX)
+#ifdef SWIG
+%mutable;
+#endif
 };
 
 class GCFEventExt
 {
   public:
 
+#ifndef SWIG
     virtual void* pack(unsigned int& packsize) = 0;
     virtual GCFEvent& getEvent() = 0;
+#endif
 
   protected:
     char* _buffer;
