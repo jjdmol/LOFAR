@@ -38,6 +38,10 @@ public:
   /// Deallocate the buffers.
   virtual void postprocess();
 
+  /// Accessor funtion for the flagged inputs counter
+  int getFlagCounter() const;
+  void setFlagCounter(int); 
+
   /// Get write access to the Buffer in the DataPacket.
   BufferType* getBuffer();
   /// Get read access to the Buffer in the DataPacket.

@@ -87,7 +87,7 @@ private:
 inline int DH_CorrCube::getBlockID() const
   { return *itsBlockIDptr; }
 
-inline void DH_CorrCube::setBlockID(int blockid) 
+inline void DH_CorrCube::setBlockID(int blockid)
   { *itsBlockIDptr = blockid; }
 
 inline int DH_CorrCube::getFlag() const
