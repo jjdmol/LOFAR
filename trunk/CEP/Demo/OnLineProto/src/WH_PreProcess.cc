@@ -87,9 +87,9 @@ WH_PreProcess* WH_PreProcess::make (const string& name)
 
 void WH_PreProcess::process()
 {
-  dump();
+  //dump();
 
-  std::cout << "its number of beamlets: " << itsMac.getNumberOfBeamlets () << std::endl;
+  //std::cout << "its number of beamlets: " << itsMac.getNumberOfBeamlets () << std::endl;
 
   TRACER4("WH_PreProcess::Process()");
   for (int i = 0; i < itsMac.getNumberOfBeamlets (); i++) {
