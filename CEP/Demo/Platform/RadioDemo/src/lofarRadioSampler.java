@@ -251,7 +251,7 @@ public class lofarRadioSampler extends JPanel
 	    isSampling = true;
 	    String prog="";
 	    try {
-              prog=workDir+"/clean.csh";
+	      prog=workDir+"/clean.csh";
 	      thisSystem.exec(prog);
 	      //prog=workDir+"/record.csh";
 	      thisSystem.exec(prog);

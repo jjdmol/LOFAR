@@ -7,7 +7,7 @@
 # place where the samples and programs can be found.
 setenv LOFARWORKDIR $HOME/RadioDemo
 setenv WAVEDIR $LOFARWORKDIR/WAVE
-setenv MACHINE1 lofar2 
+setenv MACHINE1 astron5
 
 #remote start recording
 

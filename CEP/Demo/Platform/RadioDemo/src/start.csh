@@ -21,6 +21,6 @@ endif
 #rm -rf $WAVEDIR/*
 
 # start java script
-setenv DISPLAY lofar2:0.0
+setenv DISPLAY lofar0:0.0
 java -DWORKDIR=$LOFARWORKDIR lofarRadioSampler >& lofar.out &
 
