@@ -37,8 +37,8 @@ WH_FromRing::~WH_FromRing ()
 
 void WH_FromRing::process ()
 {
-  if (getInHolder(0)->doHandle()) {
 
+  if (getInHolder(0)->doHandle()) {
     if (itsInDataHolders[0]->getPacket()->destination != NOTADDRESSED) {
     cout << "WH_FromRing " << getInstanceCnt() << " Received: " 
 	 << itsInDataHolders[0]->getBuffer()[0] << " From " 

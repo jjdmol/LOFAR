@@ -29,6 +29,7 @@ main (int argc, char *argv[])
 
   // create the main Simul; Steps and Simuls will be added to this one
   Simul RingSim(new WH_Empty(),"RingSim",0); //Uses an empty workholder.
+  RingSim.connectInput(NULL);
 
   Step *ToRingStep[10];
 
@@ -37,6 +38,7 @@ main (int argc, char *argv[])
     ToRingStep[stepnr] = new Step(new WH_ToRing());
     ToRingStep[stepnr]->runOnNode(0);
     ToRingStep[stepnr]->setOutRate(11);
+    ToRingStep[stepnr]->connectInput(NULL);
     RingSim.addStep (ToRingStep[stepnr]);
   }
 
@@ -73,10 +75,13 @@ main (int argc, char *argv[])
       TRACER(monitor,"====================== " 
 	     << i << " ===============================" );
     }
-    if (i==3)   Profiler::activate();
+    if (i==31)  {
+      
+      Profiler::activate();
+    }
     RingSim.process ();
     //   RingSim.dump ();
-    if (i==3)   Profiler::deActivate();
+    if (i==43)   Profiler::deActivate();
     
   }
 

@@ -11,6 +11,7 @@
 #include "WorkHolder.h"
 #include "DH_Test.h"
 #include "DH_Ring.h"
+#include "Step.h"
 
 template <class T> 
 class WH_Ring:public WorkHolder
@@ -218,6 +219,15 @@ inline WH_Ring<T>::~WH_Ring ()
 template <class T>
 inline void WH_Ring<T>::process ()
 {
+
+  // set back the doRead flag which may have been lowered in order to
+  // prevent deadlock in the first call to a closed loop first element 
+  // 
+  
+  if (Step::EventCnt == 1) 
+    for (int channel=1; channel<getInputs(); channel++)
+      getInHolder(channel)->setRead(true); 
+
 /*   cout << "RingNode " << getInstanceCnt()  << endl */
 /*        << "\t Ring INDATA1:  destination "  */
 /*        << itsInDataHolders[1]->getPacket()->destination << "  " */
