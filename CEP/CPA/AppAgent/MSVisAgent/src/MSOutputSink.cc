@@ -28,6 +28,8 @@
 #include <tables/Tables/ArrayColumn.h>
 #include <tables/Tables/ScalarColumn.h>
 
+using namespace LOFAR;
+
 namespace MSVisAgent
 {
 using namespace VisAgent;

@@ -6,8 +6,6 @@
 #include <DMI/TypeId.h>
 #include <map>
 
-using LOFAR::Thread;
-    
 //##ModelId=3EB242510253
 class DataStreamMap
 {

@@ -72,7 +72,7 @@ void doIt (Composite& comp, const std::string& name, int nsteps)
 int main (int argc, const char *argv[])
 {
   // Set trace level.
-  Debug::initLevels (argc, argv);
+  ::Debug::initLevels (argc, argv);
 
   // A simple example. Four steps connected to each other.
   // Each WorkHolder has a single DataHolder.
