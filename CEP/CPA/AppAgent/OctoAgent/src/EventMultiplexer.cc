@@ -126,6 +126,9 @@ int EventMultiplexer::checkQueue (const HIID& mask,int wait,int sink_id)
     // First fart around until the queue's got something in it
     while( queue().empty() )
     {
+      // in case we get shut down within this loop
+      if( !isRunning() )
+        return CLOSED;
       cdebug(4)<<"message queue is empty, clearing event flag #"<<sink_id<<"\n";
       // Since we've locked an empty queue, receive() above can't be called 
       // (since it's only ever called when something's in the queue to begin with)
@@ -182,6 +185,7 @@ int EventMultiplexer::checkQueue (const HIID& mask,int wait,int sink_id)
         pheadmsg = &msg;
         assigned_sink = i;
         assigned_data.copy(msg.payload(),DMI::PRESERVE_RW);
+        assigned_source = msg.from();
         cdebug(3)<<"maps to "<<sinks[i]->sdebug(1)<<", event "<<assigned_event<<endl;
         if( i == uint(sink_id) && assigned_event.matches(mask) )
         {
@@ -201,7 +205,7 @@ int EventMultiplexer::checkQueue (const HIID& mask,int wait,int sink_id)
 }
 
 //##ModelId=3E26D2D6021D
-int EventMultiplexer::getEvent (HIID& id,ObjRef& data,const HIID& mask,int wait,int sink_id)
+int EventMultiplexer::getEvent (HIID& id,ObjRef& data,const HIID& mask,int wait,HIID &source,int sink_id)
 {
   // check the queue
   int res = checkQueue(mask,wait,sink_id);
@@ -210,6 +214,7 @@ int EventMultiplexer::getEvent (HIID& id,ObjRef& data,const HIID& mask,int wait,
     // return cached event if successful
     id = assigned_event;
     data = assigned_data;
+    source = assigned_source;
     pheadmsg = 0; // and clear the cache
     return SUCCESS;
   }

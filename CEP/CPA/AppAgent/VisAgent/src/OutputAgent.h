@@ -50,6 +50,8 @@ class OutputAgent : public AppEventAgentBase
     //##ModelId=3E41144B0245
     virtual string sdebug (int detail = 1, const string &prefix = "", const char *name = 0) const;
     
+    //##ModelId=3E9BD640010C
+    DefineRefTypes(OutputAgent,Ref);
     
   private:
     //##ModelId=3E4235C203D4

@@ -1,9 +1,9 @@
-Agent                            1249       ; from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/OctoAgent/src/OctoAgent.aidlist:1
+Agent                            1249       ; from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/VisAgent/src/VisAgent.aidlist:1
 Header                           1133       ; from /home/oms/LOFAR/autoconf_share/../CEP/CPA/VisCube/src/VisCube.aidlist:30
 Input                            1075       ; from /home/oms/LOFAR/autoconf_share/../CEP/CPA/OCTOPUSSY/src/OCTOPUSSY.aidlist:42
-Output                           1130       ; from /home/oms/LOFAR/autoconf_share/../CEP/CPA/MSAccess/src/MSAccess.aidlist:5
+Output                           1130       ; from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/VisAgent/src/VisAgent.aidlist:4
 Parameters                       1282       ; from /home/oms/LOFAR/autoconf_share/../CEP/CPA/OCTOPUSSY/src/OCTOPUSSY.aidlist:53
-Resume                           1251       ; from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/AppAgent/src/AppAgent.aidlist:10
-Suspend                          1252       ; from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/OctoAgent/src/OctoAgent.aidlist:20
-Tile                             1123       ; from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/OctoAgent/src/OctoAgent.aidlist:21
-Vis                              1116       ; from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/OctoAgent/src/OctoAgent.aidlist:23
+Resume                           1251       ; from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/VisAgent/src/VisAgent.aidlist:6
+Suspend                          1252       ; from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/VisAgent/src/VisAgent.aidlist:7
+Tile                             1123       ; from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/VisAgent/src/VisAgent.aidlist:8
+Vis                              1116       ; from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/VisAgent/src/VisAgent.aidlist:9

@@ -40,11 +40,14 @@ bool SolverControlAgent::init (const DataRecord &data)
   if( !data[initfield()].exists() )
     return False;
   stop_on_end_ = data[initfield()][FStopWhenEnd].as<bool>(False);
-  status()[FEndData] = endOfData_ = False;
+  setStatus(StEndData,endOfData_ = False);
+  DataRecord::Ref empty(DMI::ANONWR);
+  setStatus(StSolution,DataRecord::Ref(DMI::ANONWR));
   domainNum_ = -1;
   return True;
 }
 
+//##ModelId=3E8C1A5D0385
 int SolverControlAgent::start (DataRecord::Ref &initrec)
 {
   // instead of running state, go into NEXT_DOMAIN state.
@@ -62,8 +65,8 @@ int SolverControlAgent::startDomain  (const DataRecord::Ref::Xfer &data)
     return state(); 
   FailWhen(state()!=IDLE && state()!=NEXT_DOMAIN,"unexpected state (IDLE or NEXT_DOMAIN wanted)");
   setState(IDLE);
-  status()[FEndData] = endOfData_ = False;
-  status()[FDomainNumber] = domainNum_++;
+  setStatus(StEndData,endOfData_ = False);
+  setStatus(StDomainNumber,domainNum_++);
   nextDomain_ = False;
   dprintf(1)("starting domain %d\n",domainNum_);
   postEvent(StartDomainEvent,data);
@@ -84,7 +87,7 @@ int SolverControlAgent::endData (const HIID &event)
 {
   dprintf(1)("end of data\n");
   postEvent(event);
-  status()[FEndData] = endOfData_ = True;
+  setStatus(StEndData,endOfData_ = True);
   return checkState();
 }
 
@@ -108,33 +111,22 @@ int SolverControlAgent::startSolution (DataRecord::Ref &params)
   }
   params = solve_queue_.front();
   solve_queue_.pop_front();
-  status()[FQueueSize] = solve_queue_.size(); 
+  setStatus(StQueueSize,int(solve_queue_.size())); 
+  DataRecord::Ref solrec(DMI::ANONWR);
+  solrec()[FIterationNumber] = 0;
+  setStatus(StSolution,solrec);
   initSolution(params);
   dprintf(2)("startSolution: %s\n",params->sdebug(2).c_str());
-  // get convergence criterion, if any
-  conv_threshold_ = (*params)[FConvergence].as<double>(-1);
-  if( conv_threshold_ >= 0 )
-  {
-    dprintf(2)("convergence threshold is %f\n",conv_threshold_);
-    if( (*params)[FWhenConverged].exists() )
-      endrec_converged.attach( (*params)[FWhenConverged].as<DataRecord>() );
-    else
-      endrec_converged <<= new DataRecord;
-  }
-  else
-    endrec_converged.detach();
-  // get max iter criterion
-  max_iterations_ = (*params)[FMaxIterations].as<int>(-1);
-  if( max_iterations_ >= 0 )
-  {
-    dprintf(2)("max iterations: %d\n",max_iterations_);
-    if( (*params)[FWhenMaxIter].exists() )
-      endrec_maxiter.attach( (*params)[FWhenMaxIter].as<DataRecord>() );
-    else
-      endrec_maxiter <<= new DataRecord;
-  }
-  else
-    endrec_maxiter.detach();
+  // set default solution controls...
+  endrec_converged.detach();
+  endrec_maxiter.detach();
+  conv_threshold_ = -1;
+  max_iterations_ = -1;
+  iter_step_ = 0;
+  pause_at_iter_ = -1;
+  // ...and override them with anything present in the record
+  processControlRecord(*params);
+  
   return setState(RUNNING);
 }
 
@@ -143,36 +135,63 @@ int SolverControlAgent::endIteration (double conv)
 {
   // terminal state -- return immediately
   FailWhen(state()>0 && state()!=RUNNING && state()!=ENDSOLVE,"unexpected state (RUNNING or ENDSOLVE wanted)");
-  dprintf(3)("end iteration %d, conv=%f\n",iterationNum_,convergence_);
+  dprintf(3)("end iteration %d, conv=%f\n",iter_count_,convergence_);
   // update status
-  status()[FIterationNumber] = ++iterationNum_;
-  status()[FConvergence] = convergence_ = conv;
+  setStatus(StIterationNumber,++iter_count_);
+  setStatus(StConvergence,convergence_);
   // post end-of-iteration event
   DataRecord::Ref ref(new DataRecord,DMI::ANONWR);
-  ref()[FIterationNumber] = iterationNum_;
+  ref()[FIterationNumber] = iter_count_;
   ref()[FConvergence] = convergence_;
-  postEvent(EndIterationEvent);
-  // check if state has changed
-  if( checkState() == RUNNING )
+  postEvent(EndIterationEvent,ref);
+  // check if state has been changed for us
+  if( checkState() != RUNNING )
+    return state();
+  // still running? check for end conditions
+  // NB: gotta pause here if no end-record supplied
+  if( conv_threshold_ >= 0 && conv <= conv_threshold_ )
   {
-    // if still running, check for end-of-solution criteria
-    if( conv_threshold_ >= 0 && conv <= conv_threshold_ )
+    if( endrec_converged.valid() )
       stopSolution("Converged",endrec_converged.copy(),ConvergedEvent);
-    else if( max_iterations_ >= 0 && iterationNum_ >= max_iterations_ )
+    else
+      return pauseSolution("Converged, waiting for end-record");
+  }
+  else if( max_iterations_ >= 0 && iter_count_ >= max_iterations_ )
+  {
+    if( endrec_maxiter.valid() )
       stopSolution("Max iteration count reached",endrec_maxiter.copy(),MaxIterEvent);
+    else
+      return pauseSolution("Max iteration count reached, waiting for end-record");
+  }
+  // check for iteration stepping mode
+  if( iter_step_ > 0 && iter_count_ >= pause_at_iter_ )
+  {
+    pause_at_iter_ = iter_count_ + iter_step_;
+    return pauseSolution(
+            ssprintf("Iter-stepping mode: paused at iteration %d",iter_count_) );
   }
   return state();
 }
+
+int SolverControlAgent::pauseSolution (const string &msg)
+{
+  if( pause() == AppEvent::PAUSED ) // this ought to go into a separate function
+    postEvent(SolverPausedEvent,msg);
+  // go into checkState(), since that'll keep us paused
+  return checkState();
+} 
 
 //##ModelId=3E00650B036F
 int SolverControlAgent::endSolution  (DataRecord::Ref &endrec)
 {
   FailWhen(state()>0 && state()!=ENDSOLVE,"unexpected state (ENDSOLVE wanted)");
-  dprintf(2)("endSolution\n");
   endrec = endrec_;
   // do we have a next domain command in the end record? Raise the flag
   if( endrec.valid() )
     nextDomain_ |= (*endrec)[FNextDomain].as<bool>(False); 
+  dprintf(2)("endSolution, nextDomain=%d\n",int(nextDomain_));
+  setStatus(StSolution,DataRecord::Ref(DMI::ANONWR));
+  setStatus(StSolutionParams,DataRecord::Ref(DMI::ANONWR));
   // post end event
   postEvent(EndSolutionEvent);
   return setEndSolutionState();
@@ -183,7 +202,7 @@ void SolverControlAgent::addSolution (const DataRecord::Ref &params)
 {
   Thread::Mutex::Lock lock(mutex()); 
   solve_queue_.push_back(params.copy(DMI::PRESERVE_RW));
-  status()[FQueueSize] = solve_queue_.size(); 
+  setStatus(StQueueSize,int(solve_queue_.size())); 
   dprintf(2)("added solution %d, raising event flag\n",solve_queue_.size());
   sink().raiseEventFlag(); // more solutions to come
 }
@@ -224,13 +243,17 @@ void SolverControlAgent::stopSolution (const string &msg,
   if( event.length() )
     postEvent(event,msg);
   endrec_ = endrec;
-  setState(ENDSOLVE);
+  bool unpause = True;
+  if( endrec_.valid() && (*endrec_)[FPause].as<bool>(False) )
+    unpause = False;
+  setState(ENDSOLVE,unpause);
 }
     
 //##ModelId=3DFF2D6400EA
 void SolverControlAgent::close ()
 {
   dprintf(1)("closing\n");
+  setStatus(StSolution,DataRecord::Ref(DMI::ANONWR));
   Thread::Mutex::Lock lock(mutex());
   postEvent(SolverEndEvent);
   AppControlAgent::close();
@@ -242,62 +265,104 @@ void SolverControlAgent::initSolution (const DataRecord::Ref &params)
 {
   FailWhen(domainNum()<0,"illegal domain number -- perhaps startDomain() not called?");
   convergence_ = 1e+1000; // hmm, definitely unconverged
-  iterationNum_ = 0;
+  iter_count_ = 0;
   setState(RUNNING);
-  status()[FSolutionParams] <<= params.copy(DMI::READONLY);
-  status()[FDomainNumber] = domainNum();
+  setStatus(StSolutionParams,params.copy().privatize(DMI::WRITE|DMI::DEEP));
+  setStatus(StDomainNumber,domainNum());
   postEvent(StartSolutionEvent);
+}
+
+int SolverControlAgent::processCommand (const HIID &id,
+                          const DataRecord::Ref &data,const HIID &source)
+{
+  if( id == NextDomainCommand )
+  {
+    // in idle state, go into NEXT_DOMAIN immediately
+    if( state() == IDLE )
+    {
+      setState(NEXT_DOMAIN);
+      nextDomain_ = False;
+    }
+    else if( state() != NEXT_DOMAIN ) // else raise flag for later
+      nextDomain_ = True;
+  }
+  // end-of-solution command
+  else if( id == EndSolutionCommand )
+  {
+    stopSolution("stop command received",
+        // if solution is ended w/o a data record, init an empty one
+        data.valid() ? data.copy(DMI::PRESERVE_RW) : DataRecord::Ref(DMI::ANONWR),
+        StopSolutionEvent);
+  }
+  // add solution to queue
+  else if( id == AddSolutionCommand )
+  {
+    FailWhen(!data.valid(),
+              AddSolutionCommand.toString()+" must contain a DataRecord");
+    addSolution(data);
+  }
+  else if( id == ResumeEvent )
+  {
+    if( data.valid() )
+      processControlRecord(*data);
+    return resume();
+  }
+  else
+    return AppControlAgent::processCommand(id,data,source);
+  
+  return AppEvent::SUCCESS;    
+}
+
+void SolverControlAgent::processControlRecord (const DataRecord &rec)
+{
+  // enable iteration stepping mode, if specified
+  if( rec[FIterStep].exists() )
+  {
+    iter_step_ = rec[FIterStep].as<int>();
+    setStatus(StSolutionParams|AidSlash|FIterStep,iter_step_);
+    if( iter_step_ > 0 )
+      pause_at_iter_ = iter_count_ + iter_step_;
+    else
+      pause_at_iter_ = -1;
+  }
+  // get convergence criterion, if any
+  if( rec[FConvergence].exists() )
+  {
+    endrec_converged.detach();
+    conv_threshold_ = rec[FConvergence].as<double>();
+    setStatus(StSolutionParams|AidSlash|FConvergence,conv_threshold_);
+    if( conv_threshold_ >= 0 )
+    {
+      dprintf(2)("convergence threshold is %f\n",conv_threshold_);
+      if( rec[FWhenConverged].exists() )
+      {
+        endrec_converged.attach( rec[FWhenConverged].as<DataRecord>() );
+        setStatus(StSolutionParams|AidSlash|FWhenConverged,endrec_converged.copy());
+      }
+    }
+  }
+  // get max iter criterion
+  if( rec[FMaxIterations].exists() )
+  {
+    endrec_maxiter.detach();
+    max_iterations_ = rec[FMaxIterations].as<int>();
+    setStatus(StSolutionParams|AidSlash|FMaxIterations,max_iterations_);
+    if( max_iterations_ >= 0 )
+    {
+      dprintf(2)("max iterations: %d\n",max_iterations_);
+      if( rec[FWhenMaxIter].exists() )
+      {
+        endrec_maxiter.attach( rec[FWhenMaxIter].as<DataRecord>() );
+        setStatus(StSolutionParams|AidSlash|FWhenMaxIter,endrec_maxiter.copy());
+      }
+    }
+  }
 }
 
 //##ModelId=3E56097E031F
 int SolverControlAgent::checkState (int wait)
 {
   int res = getCommand(last_command_id_,last_command_data_,wait);
-  // check for solver-specific commands
-  if( res == AppEvent::SUCCESS )
-  {
-    // catch all errors during processing of commands
-    try
-    {
-      if( last_command_id_ == NextDomainCommand )
-      {
-        // in idle state, go into NEXT_DOMAIN immediately
-        if( state() == IDLE )
-        {
-          setState(NEXT_DOMAIN);
-          nextDomain_ = False;
-        }
-        else if( state() != NEXT_DOMAIN ) // else raise flag for later
-          nextDomain_ = True;
-      }
-      // end-of-solution command
-      else if( last_command_id_ == EndSolutionCommand )
-      {
-        // if solution is ended w/o a data record, init an empty one
-        if( !last_command_data_.valid() )
-          last_command_data_ <<= new DataRecord;
-        stopSolution("stop command received",last_command_data_.copy(DMI::PRESERVE_RW),StopSolutionEvent);
-      }
-      // add solution to queue
-      else if( last_command_id_ == AddSolutionCommand )
-      {
-        FailWhen(!last_command_data_.valid(),
-                  AddSolutionCommand.toString()+" must contain a DataRecord");
-        addSolution(last_command_data_);
-      }
-    }
-    catch( std::exception &exc )
-    {
-      DataRecord::Ref ref(new DataRecord,DMI::ANONWR);
-      ref()[AidText] = "Error processing command " +
-                        last_command_id_.toString() + ": " + exc.what();
-      ref()[AidError] = exc.what();
-      ref()[AidCommand] = last_command_id_;
-      if( last_command_data_.valid() )
-        ref()[AidData] <<= last_command_data_;
-      postEvent(CommandErrorEvent,ref);
-    }
-  }
   return state();
 }
 
