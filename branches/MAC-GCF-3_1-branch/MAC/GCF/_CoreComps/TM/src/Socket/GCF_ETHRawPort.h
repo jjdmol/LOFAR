@@ -94,6 +94,14 @@ class GCFETHRawPort : public GCFRawPort
     // addr is remote addres if getType == SAP
     void setAddr(const char* ifname,
   	       const char* dest_mac);
+
+    /**
+     * Set the ethernet type of the ethernet
+     * frames.
+     * If you don't call this method. Ethernet
+     * frames will have type 0x0000.
+     */
+    void setEtherType(unsigned short type);
   
   protected:
 //    friend class GTMSocket;
@@ -103,6 +111,7 @@ class GCFETHRawPort : public GCFRawPort
     string _ifname;
     string _destMacStr;
     GTMETHSocket* _pSocket;
+    unsigned short _ethertype;
 };
 
 #endif /* GCF_ETHRAWPORT_H */

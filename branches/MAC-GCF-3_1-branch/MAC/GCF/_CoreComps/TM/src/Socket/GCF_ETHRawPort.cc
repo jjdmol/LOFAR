@@ -35,7 +35,7 @@ GCFETHRawPort::GCFETHRawPort(GCFTask& task,
                           	 TPortType type, 
                              bool transportRawData) : 
    GCFRawPort(task, name, type, 0, transportRawData), 
-   _pSocket(0)
+   _pSocket(0), _ethertype(0x0000)
 {
   assert(MSPP != getType());
 
@@ -44,7 +44,7 @@ GCFETHRawPort::GCFETHRawPort(GCFTask& task,
 
 GCFETHRawPort::GCFETHRawPort() : 
   GCFRawPort(),       
-  _pSocket(0)
+  _pSocket(0), _ethertype(0x0000)
 {
   assert(MSPP != getType());
 }
@@ -97,7 +97,7 @@ int GCFETHRawPort::open()
     _pSocket = new GTMETHSocket(*this);
   }
    
-  if (_pSocket->open(_ifname.c_str(), _destMacStr.c_str()) < 0)
+  if (_pSocket->open(_ifname.c_str(), _destMacStr.c_str(), _ethertype) < 0)
   {
     _isConnected = false;
     if (SAP == getType())
@@ -154,3 +154,9 @@ void GCFETHRawPort::setAddr(const char* ifname,
   _ifname     = string(ifname);
   _destMacStr = string(destMac);
 }
+
+void GCFETHRawPort::setEtherType(unsigned short type)
+{
+  _ethertype = type;
+}
+

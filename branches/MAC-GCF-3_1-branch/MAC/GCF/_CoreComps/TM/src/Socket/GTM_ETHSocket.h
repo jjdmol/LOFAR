@@ -48,9 +48,13 @@ class GTMETHSocket : public GTMSocket
   
     /**
      * open/close functions
+     *
+     * Added ethertype argument to set the type
+     * of Ethernet frames being sent.
      */
     virtual int open (const char* ifname,
-                      const char* destMac);
+                      const char* destMac,
+		      unsigned short ethertype = 0x0000);
   
     /**
      * send/recv functions
