@@ -96,8 +96,8 @@ const make_shared_nodes := function (stokesi=1,dra=0,ddec=0)
   dec0 := ms_phasedir[2];
   # setup source parameters and subtrees
   sti  := 1;
-  ra   := ra0 + abs(ra0)*dra;
-  dec  := dec0 + abs(dec0)*ddec;
+  ra   := ra0*(1+dra);
+  dec  := dec0*(1+ddec);
   create_source_subtrees(stokesi,ra,dec,ra0,dec0);
   # setup zero position
   global ms_antpos;
@@ -331,7 +331,7 @@ const do_test := function (predict=F,subtract=F,solve=F,run=T,
   else # else build trees
   {  
     # create common nodes (source parms and such)
-    make_shared_nodes(1,.05,.05);
+    make_shared_nodes(1,0,.05);
 
     # make a solver node (since it's only one)
     if( solve )
@@ -344,13 +344,13 @@ const do_test := function (predict=F,subtract=F,solve=F,run=T,
       # note that child names will be resolved later
       rec := meq.node('MeqSolver','solver',[
           parm_group = hiid("a"),
-          default    = [ num_iter = 5 ],
-          solvable   = meq.solvable_list("stokes_i ra dec") ],
+          default    = [ num_iter=3,save_polcs=F,last_update=T ],
+          solvable   = meq.solvable_list("stokes_i dec") ],
         children=condeqs);
       mqs.createnode(rec);
     }
     if( publish>2 )
-      mqs.meq('Node.Publish.Results',[name="ra"]);
+      mqs.meq('Node.Publish.Results',[name="dec"]);
 
     rootnodes := [];
     # make predict/condeq trees
@@ -397,12 +397,13 @@ const do_test := function (predict=F,subtract=F,solve=F,run=T,
   }
 }
 
-# msname='test.ms';
-msname := 'test-wsrt.ms';
+msname := 'test.ms';
+# msname := 'test-wsrt.ms';
 mepuvw := T;
+filluvw := F;
 
 # fill UVW parms from MS if requested
-if( mepuvw )
+if( mepuvw && filluvw )
 {
   include 'meq/msuvw_to_mep.g'
   mepuvw := msname ~ s/.ms/.mep/;
