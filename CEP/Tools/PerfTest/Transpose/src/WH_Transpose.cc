@@ -21,6 +21,10 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.8  2002/07/18 09:35:57  schaaf
+//  %[BugId: 11]%
+//  Modified time handling
+//
 //  Revision 1.7  2002/06/10 09:07:13  schaaf
 //  %[BugId: 11]%
 //  Removed ^M characters
@@ -138,37 +142,39 @@ void WH_Transpose::process()
   unsigned long localtime = getInHolder(0)->getTimeStamp();
 
   Profiler::enterState (theirProcessProfilerState);
-  {
-    int Xsize,Ysize;
-    int Ysize_bytes;
-    DH_2DMatrix *InDHptr, *OutDHptr;
-    DbgAssertStr(getOutHolder(0)->getXSize() == getInputs(),
-		 "nr of stations not correct");
-    DbgAssertStr(getOutHolder(0)->getYSize() == getInHolder(0)->getYSize(),
-		 "nr of freqs not correct");
-    DbgAssertStr(getOutputs() == getInHolder(0)->getXSize(),
-		 "nr of times not correct");
-    DbgAssertStr(getInHolder(0)->getYSize() == getOutHolder(0)->getYSize(),
-		 "Y sizes not equal");
-
-    for (int time=0; time<getOutputs(); time++) {
-      OutDHptr = getOutHolder(time); 
-      OutDHptr->setTimeStamp(localtime);
-      Xsize = OutDHptr->getXSize();
-      Ysize = OutDHptr->getYSize();
-      Ysize_bytes = Ysize*sizeof(int);
-      for (int station=0; station < Xsize; station++) {
-	InDHptr = getInHolder (station);
-	// DH_2DMatrix::getBuffer(x,y) contiguous for fixed x.
-	memcpy(OutDHptr->getBuffer(station,0),
-	       InDHptr->getBuffer(time,0),
-	       Ysize_bytes   );
-	OutDHptr->setXOffset(getInHolder(0)->getZ());  // set station offset
-	OutDHptr->setYOffset(InDHptr->getYOffset());   // set freq offset
-	OutDHptr->setZ(InDHptr->getXOffset()); 	       // set time
-      }
+  
+  DH_2DMatrix *InDHptr, *OutDHptr;
+  DbgAssertStr(getOutHolder(0)->getXSize() == getInputs(),
+	       "nr of stations not correct");
+  DbgAssertStr(getOutHolder(0)->getYSize() == getInHolder(0)->getYSize(),
+	       "nr of freqs not correct");
+  DbgAssertStr(getOutputs() == getInHolder(0)->getXSize(),
+	       "nr of times not correct");
+  DbgAssertStr(getInHolder(0)->getYSize() == getOutHolder(0)->getYSize(),
+	       "Y sizes not equal");
+  
+  // The X and Y sizes are the same for all outputs (see C'tor),
+  //   so we can obtain them outside the loop
+  int Xsize = getOutHolder(0)->getXSize();
+  int Ysize = getOutHolder(0)->getYSize();
+  int Ysize_bytes = Ysize*sizeof(int); // OK; hard coded data type==int
+  int StationOffset = getInHolder(0)->getZ();
+  
+  for (int time=0; time<getOutputs(); time++) {
+    OutDHptr = getOutHolder(time); 
+    OutDHptr->setTimeStamp(localtime);
+    for (int station=0; station < Xsize; station++) {
+      InDHptr = getInHolder (station);
+      // DH_2DMatrix::getBuffer(x,y) contiguous for fixed x.
+      memcpy(OutDHptr->getBuffer(station,0),
+             InDHptr->getBuffer(time,0),
+             Ysize_bytes   );
+      OutDHptr->setXOffset(StationOffset);  // set station offset
+      OutDHptr->setYOffset(InDHptr->getYOffset());   // set freq offset
+      OutDHptr->setZ(InDHptr->getXOffset()); 	       // set time
     }
   }
+  
   Profiler::leaveState (theirProcessProfilerState);
   //dump();
 
