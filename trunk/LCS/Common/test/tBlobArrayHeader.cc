@@ -96,6 +96,7 @@ int main(int argc, const char* argv[])
 	Assert (xb.data[i][j] == k++);
       }
     }
+    delete [] data;
   }  
 
   cout << "OK" << endl;
