@@ -27,6 +27,7 @@
 #include <Common/Net/Socket.h>
 #include <Common/lofar_string.h>
 #include <Common/lofar_vector.h>
+using LOFAR::Socket;
 
 // Forward Declarations
 class SkyCoord;

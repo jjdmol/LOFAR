@@ -49,8 +49,8 @@ CoordClient::CoordClient (const string& host, const string& port)
   int isLittle = Endian().isLittleEndian();
   putEndian (isLittle);
   putVersion (1);
-  itsSocket.writeblock (itsBuffer, 2*sizeof(double));
-  itsSocket.readblock (itsBuffer, 2*sizeof(double));
+  itsSocket.writeBlocking (itsBuffer, 2*sizeof(double));
+  itsSocket.readBlocking (itsBuffer, 2*sizeof(double));
   // Determine if data has to be swapped.
   itsSwap = getEndian() != isLittle;
   ASSERT (getVersion() == 1);
@@ -59,7 +59,7 @@ CoordClient::CoordClient (const string& host, const string& port)
 CoordClient::~CoordClient()
 {
   putCommand (Disconnect);
-  itsSocket.writeblock (itsBuffer, sizeof(double));
+  itsSocket.writeBlocking (itsBuffer, sizeof(double));
   itsSocket.shutdown (true, true);
   deallocate();
 }
@@ -106,10 +106,10 @@ SkyCoord CoordClient::j2000ToAzel (const SkyCoord& radec,
   putNrEarth (1);
   putNrTime  (1);
   putCommand (J2000ToAzel);
-  itsSocket.writeblock (itsBuffer, (7+itsNrStart)*sizeof(double));
-  itsSocket.readblock (itsBuffer, sizeof(double));
+  itsSocket.writeBlocking (itsBuffer, (7+itsNrStart)*sizeof(double));
+  itsSocket.readBlocking (itsBuffer, sizeof(double));
   ASSERT (getInt(itsBuffer) == 1);
-  itsSocket.readblock (itsPosBuffer, 2*sizeof(double));
+  itsSocket.readBlocking (itsPosBuffer, 2*sizeof(double));
   return SkyCoord (itsPosBuffer[0], itsPosBuffer[1]);
 }
 
@@ -178,10 +178,10 @@ vector<SkyCoord> CoordClient::j2000ToAzel (const vector<SkyCoord>& radec,
   putNrEarth (pos.size());
   putNrTime  (time.size());
   putCommand (J2000ToAzel);
-  itsSocket.writeblock (itsBuffer, (nr+itsNrStart)*sizeof(double));
-  itsSocket.readblock (itsBuffer, sizeof(double));
+  itsSocket.writeBlocking (itsBuffer, (nr+itsNrStart)*sizeof(double));
+  itsSocket.readBlocking (itsBuffer, sizeof(double));
   ASSERT (getInt(itsBuffer) == nrval);
-  itsSocket.readblock (itsPosBuffer, 2*nrval*sizeof(double));
+  itsSocket.readBlocking (itsPosBuffer, 2*nrval*sizeof(double));
   result.reserve (nrval);
   for (int i=0; i<nrval; i++) {
     result.push_back (SkyCoord (itsPosBuffer[2*i], itsPosBuffer[2*i+1]));
@@ -205,10 +205,10 @@ SkyCoord CoordClient::azelToJ2000 (const SkyCoord& azel,
   putNrEarth (1);
   putNrTime  (1);
   putCommand (AzelToJ2000);
-  itsSocket.writeblock (itsBuffer, (7+itsNrStart)*sizeof(double));
-  itsSocket.readblock (itsBuffer, sizeof(double));
+  itsSocket.writeBlocking (itsBuffer, (7+itsNrStart)*sizeof(double));
+  itsSocket.readBlocking (itsBuffer, sizeof(double));
   ASSERT (getInt(itsBuffer) == 1);
-  itsSocket.readblock (itsPosBuffer, 2*sizeof(double));
+  itsSocket.readBlocking (itsPosBuffer, 2*sizeof(double));
   return SkyCoord (itsPosBuffer[0], itsPosBuffer[1]);
 }
 
@@ -241,10 +241,10 @@ vector<SkyCoord> CoordClient::azelToJ2000 (const vector<SkyCoord>& azel,
   putNrEarth (1);
   putNrTime  (1);
   putCommand (AzelToJ2000);
-  itsSocket.writeblock (itsBuffer, (nr+itsNrStart)*sizeof(double));
-  itsSocket.readblock (itsBuffer, sizeof(double));
+  itsSocket.writeBlocking (itsBuffer, (nr+itsNrStart)*sizeof(double));
+  itsSocket.readBlocking (itsBuffer, sizeof(double));
   ASSERT (getInt(itsBuffer) == nrval);
-  itsSocket.readblock (itsPosBuffer, 2*nrval*sizeof(double));
+  itsSocket.readBlocking (itsPosBuffer, 2*nrval*sizeof(double));
   result.reserve (nrval);
   for (int i=0; i<nrval; i++) {
     result.push_back (SkyCoord (itsPosBuffer[2*i], itsPosBuffer[2*i+1]));
@@ -290,10 +290,10 @@ vector<SkyCoord> CoordClient::azelToJ2000 (const vector<SkyCoord>& azel,
   putNrEarth (pos.size());
   putNrTime  (time.size());
   putCommand (AzelToJ2000);
-  itsSocket.writeblock (itsBuffer, (nr+itsNrStart)*sizeof(double));
-  itsSocket.readblock (itsBuffer, sizeof(double));
+  itsSocket.writeBlocking (itsBuffer, (nr+itsNrStart)*sizeof(double));
+  itsSocket.readBlocking (itsBuffer, sizeof(double));
   ASSERT (getInt(itsBuffer) == nrval);
-  itsSocket.readblock (itsPosBuffer, 2*nrval*sizeof(double));
+  itsSocket.readBlocking (itsPosBuffer, 2*nrval*sizeof(double));
   result.reserve (nrval);
   for (int i=0; i<nrval; i++) {
     result.push_back (SkyCoord (itsPosBuffer[2*i], itsPosBuffer[2*i+1]));
