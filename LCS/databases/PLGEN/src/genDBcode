@@ -24,11 +24,13 @@
 # Uses a .map file to lookup the references and a .fun file
 # for looking up the routines that should be generated
 #
-# Syntax: genDBcode mapfile functionfile R|P [class]
+# Syntax: genDBcode P mapfile [class]
+# or
+# Syntax: genDBcode R mapfile functionfile [class]
 #
 # $Id$
 #
-VERSION="v2.5"
+VERSION="v2.6"
 DEBUGMODE=false
 
 #
@@ -44,11 +46,11 @@ RECaddBCA()
 	echo "public:"
 	echo "	void operator()(dtl::BoundIOs& cols, ${Class}& rowbuf) {"
 	# get all 'basic' members of the class
-	grep ^$Class ${MAPWRKFILE} | grep "::" | while read line
+	grep ^$Class ${MAPWRKFILE} | grep "!!" | while read line
 	do
-		ColName=`echo $line | cut -d":" -f5`
-		Member=`echo $line | cut -d":" -f4`
-		echo "		cols[\"${ColName}\"]	== rowbuf.${Member};"
+		ColName=`echo $line | cut -d"!" -f5`
+		DBRepMember=`echo $line | cut -d"!" -f4 | sed "s/[\.:]/_/g"`
+		echo "		cols[\"${ColName}\"]	== rowbuf.${DBRepMember};"
 	done
 	echo "	}"
 	echo "};\n"
@@ -60,7 +62,7 @@ RECaddBCA()
 RECaddInsertRoutine()
 {
 	Class=$1
-	Table=`grep ^$Class ${MAPWRKFILE} | head -1 | cut -d":" -f2`
+	Table=`grep ^$Class ${MAPWRKFILE} | head -1 | cut -d"!" -f2`
 
 	echo "//"
 	echo "// Routine for insert this ${Class} object in the database."
@@ -74,13 +76,35 @@ RECaddInsertRoutine()
 }
 
 #
+# RECaddDeleteRoutine class 
+#
+RECaddDeleteRoutine()
+{
+	Class=$1
+	Table=`grep ^$Class ${MAPWRKFILE} | head -1 | cut -d"!" -f2`
+
+	echo "//"
+	echo "// Routine for deleting this ${Class} object from the database."
+	echo "//"
+	echo "void delete_${Class}(${Class}&	delRec) {"
+	echo "	DBView<${Class}>	delView(\"${Table}\", ${Class}_BCA());"
+	echo "	DBView<${Class}>::delete_iterator	delIter = delView;\n"
+	echo "	${Class}		delCondition;"
+	echo ""
+	echo "	delCondition = ...;"
+	echo ""
+	echo "	*delIter = delCondition;"
+	echo "}\n"
+}
+
+#
 # RECaddSearchRoutine class clause
 #
 RECaddSearchRoutine()
 {
 	Class=$1
 	Clause=$2
-	Table=`grep ^$Class ${MAPWRKFILE} | head -1 | cut -d":" -f2`
+	Table=`grep ^$Class ${MAPWRKFILE} | head -1 | cut -d"!" -f2`
 
 	echo "vector<${Class}> read_${Class}() {"
 	echo "	vector<${Class}> 		results;"
@@ -101,7 +125,7 @@ RECaddUpdateRoutine()
 {
 	Class=$1
 	Clause=$2
-	Table=`grep ^$Class ${MAPWRKFILE} | head -1 | cut -d":" -f2`
+	Table=`grep ^$Class ${MAPWRKFILE} | head -1 | cut -d"!" -f2`
 
 	echo "//"
 	echo "// Routine for updating this ${Class} object in the database."
@@ -157,11 +181,11 @@ TPOaddDTLstruct()
 	echo "	void bindCols(dtl::BoundIOs& cols);"
 
 	# add all 'basic' members of the DataObj
-	grep ^$Class ${MAPWRKFILE} | grep "::" | while read line
+	grep ^$Class ${MAPWRKFILE} | grep "!!" | while read line
 	do
-		MemType=`echo $line | cut -d":" -f3 | sed "s/!/::/"`
-		Member=`echo $line | cut -d":" -f4`
-		echo "	${MemType}			${Member};"
+		MemType=`echo $line | cut -d"!" -f3`
+		DBRepMember=`echo $line | cut -d"!" -f4 | sed "s/[\.:]/_/g"`
+		echo "	${MemType}			${DBRepMember};"
 	done
 
 	echo "};"
@@ -180,11 +204,11 @@ TPOaddBCA()
 	echo "void DBRep<${Class}>::bindCols(dtl::BoundIOs& cols) {"
 
 	# add all 'basic' members of the class
-	grep ^$Class ${MAPWRKFILE} | grep "::" | while read line
+	grep ^$Class ${MAPWRKFILE} | grep "!!" | while read line
 	do
-		ColName=`echo $line | cut -d":" -f5`
-		Member=`echo $line | cut -d":" -f4`
-		echo "	cols[\"${ColName}\"]	== ${Member};"
+		ColName=`echo $line | cut -d"!" -f5`
+		DBRepMember=`echo $line | cut -d"!" -f4 | sed "s/[\.:]/_/g"`
+		echo "	cols[\"${ColName}\"]	== ${DBRepMember};"
 	done
 
 	echo "}"
@@ -208,10 +232,11 @@ TPOaddToDatabaseRep()
 	echo "{"
 
 	# add all 'basic' members of the Dataobj
-	grep ^$Class ${MAPWRKFILE} | grep "::" | while read line
+	grep ^$Class ${MAPWRKFILE} | grep "!!" | while read line
 	do
-		Member=`echo $line | cut -d":" -f4`
-		echo "	dest.${Member}	= data().${Member};"
+		Member=`echo $line | cut -d"!" -f4`
+		DBRepMember=`echo $Member | sed "s/[\.:]/_/g"`
+		echo "	dest.${DBRepMember}	= data().${Member};"
 	done
 	echo "}\n"
 }
@@ -234,10 +259,11 @@ TPOaddFromDatabaseRep()
 	echo "{"
 
 	# add all 'basic' members of the Dataobj
-	grep ^$Class ${MAPWRKFILE} | grep "::" | while read line
+	grep ^$Class ${MAPWRKFILE} | grep "!!" | while read line
 	do
-		Member=`echo $line | cut -d":" -f4`
-		echo "	data().${Member}	= src.${Member};"
+		Member=`echo $line | cut -d"!" -f4`
+		DBRepMember=`echo $Member | sed "s/[\.:]/_/g"`
+		echo "	data().${Member}	= src.${DBRepMember};"
 	done
 	echo "}\n"
 }
@@ -258,12 +284,12 @@ TPOaddInitRoutine()
 	echo "{"
 
 	# generate initialization code for all classes and base classes.
-	grep ^$Class ${MAPWRKFILE} | grep -v "::" | while read line
+	grep ^$Class ${MAPWRKFILE} | grep -v "!!" | while read line
 	do
-		Table=`echo $line | cut -d':' -f2`
-		Member=`echo $line | cut -d':' -f4`
-		Relation=`echo $line | cut -d':' -f5`
-		RelClass=`echo $line | cut -d':' -f6`
+		Table=`echo $line | cut -d'!' -f2`
+		Member=`echo $line | cut -d'!' -f4`
+		Relation=`echo $line | cut -d'!' -f5`
+		RelClass=`echo $line | cut -d'!' -f6`
 
 		echo "	{"
 		echo "	// create new TPersistentObject for ${Relation} ${RelClass}"
@@ -301,19 +327,19 @@ TPOaddAttributemap()
 	echo "{"
 
 	# add all 'basic' members of the Dataobj
-	grep ^$Class ${MAPWRKFILE} | grep "::" | while read line
+	grep ^$Class ${MAPWRKFILE} | grep "!!" | while read line
 	do
-		Member=`echo $line | cut -d":" -f4`
-		Colname=`echo $line | cut -d":" -f5`
+		Member=`echo $line | cut -d"!" -f4`
+		Colname=`echo $line | cut -d"!" -f5`
 		echo "	theirAttribMap[\"${Member}\"]	= \"${Colname}\";"
 	done
 
 	# add code for all classes and base classes.
-	grep ^$Class ${MAPWRKFILE} | grep -v "::" | while read line
+	grep ^$Class ${MAPWRKFILE} | grep -v "!!" | while read line
 	do
-		Member=`echo $line | cut -d":" -f4`
-		RelType=`echo $line | cut -d":" -f5`
-		SubClass=`echo $line | cut -d':' -f6`
+		Member=`echo $line | cut -d"!" -f4`
+		RelType=`echo $line | cut -d"!" -f5`
+		SubClass=`echo $line | cut -d'!' -f6`
 		if [ "${RelType}" == "BaseClass" ]; then
 			echo "	theirAttribMap[\"${SubClass}::\"]	="
 			echo "		\"@\" + string(typeid(TPersistentObject<${SubClass}>).name());"
@@ -336,7 +362,7 @@ initTmpfile()
 {
 	echo "#This temporarely file was generated by genDBcode"
 	echo "#It should have been cleaned up by genDBcode, please remove it"
-	echo "#ClassName:TableName:Ctype:MemberName:ColumnName:SubclassName:DBtype:File"
+	echo "#ClassName!TableName!Ctype!MemberName!ColumnName!SubclassName!DBtype!File"
 }
 
 #
@@ -368,16 +394,16 @@ initSrcfile()
 
 		>${INCLUDEWRKFILE}							# clear the work file
 		# find the classes defined in the File ($2)
-		grep ":${File}.h" ${CLASSLOCATIONWRKFILE} | while read cl_line
+		grep "!${File}.h" ${CLASSLOCATIONWRKFILE} | while read cl_line
 		do
-			Class=`echo $cl_line | cut -d":" -f1`
+			Class=`echo $cl_line | cut -d"!" -f1`
 			# find their subclasses
-			grep "^${Class}:" ${MAPWRKFILE} | grep -v "::" | while read m_line
+			grep "^${Class}!" ${MAPWRKFILE} | grep -v "!!" | while read m_line
 			do
-				SubClass=`echo $m_line | cut -d':' -f6`
+				SubClass=`echo $m_line | cut -d'!' -f6`
 				# where is this sub class located? 
-				sl_line=`grep "${SubClass}:" ${CLASSLOCATIONWRKFILE}`
-				SubClassLocation=`echo $sl_line | cut -d":" -f2`
+				sl_line=`grep "${SubClass}!" ${CLASSLOCATIONWRKFILE}`
+				SubClassLocation=`echo $sl_line | cut -d"!" -f2`
 				if [ "${SubClassLocation}" != "${File}.h" ]; then
 					echo "#include \"${FILEPREFIX}${SubClassLocation}\"" >>${INCLUDEWRKFILE}
 				fi
@@ -458,7 +484,12 @@ cleanlist()
 #	<Ctype>	<MemberName>	BaseClass		<ClassName>
 #
 # Syntax of the constructed temp-file:
-# ClassName:TableName:Ctype:MemberName:ColumnName:SubclassName:DBtype:File
+# ClassName!TableName!Ctype!MemberName!ColumnName!SubclassName!DBtype!File
+#
+# ATTENTION: The are some issues to remind:
+#	Ctype      may be of the form xxx:yyy (like std::string)
+#	MemberName may be of the form X::y or X.y when the user merged some 
+#			   tables manually
 #
 # NOTE: THIS ROUTINE ALSO EXISTS IN genDBsql
 #
@@ -483,19 +514,18 @@ convertMapfile()
 		File|file|FILE)					# File keyword
 			CurFile=$name				
 			# NOTE: we assume that File always comes after Class!!!
-			echo "${CurClass}:${CurFile}" >> ${CLASSLOCATIONWRKFILE}
+			echo "${CurClass}!${CurFile}" >> ${CLASSLOCATIONWRKFILE}
 			;;
 		*)								# no keyword, assume fieldname
-			# label (=c_type) may be xxx::yyy, change it to xxx!yyy
-			ctype=`echo $label | sed "s/::/!/"`
+			ctype=$label				# less confusing
 			typeset -l SubClass=`echo $dbname | cut -d" " -f1`
 			# what kind of field is this?
 			if [ "${SubClass}" == "class" -o "${SubClass}" == "baseclass" ]; then
 				# it's a (sub)class, get its name.
 				SubClassName=`echo $fldtype | cut -d" " -f1`
-				echo "$CurClass:$CurTable:$ctype:$name:$dbname:$SubClassName:BIGINT:$CurFile"
+				echo "$CurClass!$CurTable!$ctype!$name!$dbname!$SubClassName!BIGINT!$CurFile"
 			else
-				echo "$CurClass:$CurTable:$ctype:$name:$dbname::$fldtype:$CurFile"
+				echo "$CurClass!$CurTable!$ctype!$name!$dbname!!$fldtype!$CurFile"
 			fi
 			;;
 		esac
@@ -512,7 +542,7 @@ hasSubClasses()
 	Class=$1
 
 	# Note: grep returns 0 if something found, 1 or -1 if not.
-	grep ^$Class ${MAPWRKFILE} | grep -v "::" >>/dev/null
+	grep ^$Class ${MAPWRKFILE} | grep -v "!!" >>/dev/null
 	GrepOk=`echo $?`
 	
 	if [ ${GrepOk} == "0" ]; then			# something found?
@@ -670,8 +700,8 @@ if [ "${LAYER}" == "P" ]; then
 	while read line
 	do
 		# Where is this line about?
-		Class=`echo $line | cut -d':' -f1`
-		File=`echo $line | cut -d':' -f8 | sed "s/\.h$//"`
+		Class=`echo $line | cut -d'!' -f1`
+		File=`echo $line | cut -d'!' -f8 | sed "s/\.h$//"`
 		
 		if [ "${PrevFile}" != "${File}" ]; then
 			SOURCEFILE=${DESTDIR}/${FILEPREFIX}${File}.tcc
