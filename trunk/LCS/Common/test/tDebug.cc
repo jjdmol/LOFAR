@@ -21,6 +21,9 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.1  2003/08/21 11:20:33  diepen
+//  Moved Common to LCS
+//
 //  Revision 1.5  2002/11/26 08:02:54  diepen
 //  %[BugId: 76]%
 //  Added test of AssertMsg
@@ -102,7 +105,7 @@ int main()
   int i1=1;
   try {
     AssertMsg (i0==i1, "should give exception");
-  } catch (Debug::Error& x) {
+  } catch (LCS::Exception& x) {
     cout << x.what() << endl;
   }
 }
