@@ -22,6 +22,11 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.8  2002/06/07 11:40:47  schaaf
+//  %[BugId: 11]%
+//  removed unused dummy in/out holders
+//  modified run() method
+//
 //  Revision 1.7  2002/06/06 07:45:25  wierenga
 //  %[BugId:11]%
 //  Add TH_ShMem support.
@@ -63,6 +68,7 @@
 #include "BaseSim/Simul.h"
 #include "BaseSim/Profiler.h"
 #include "Transpose/WH_FillTFMatrix.h"
+#include "Transpose/WH_Delay.h"
 #include "Transpose/WH_Transpose.h"
 #include "Transpose/WH_Correlate.h"
 #include "BaseSim/WH_Empty.h"
@@ -124,21 +130,27 @@ void Transpose::define(const ParamBlock& params)
 
   WH_Empty empty;
 
-  Simul simul(empty, "Transpose",true,true);
+  Simul simul(empty, params.getString("name","Transpose").c_str(),true,true);
   setSimul(simul);
-  simul.runOnNode(0);
+  int applicationnr = params.getInt("application",0); 
+  // the top-level simul
+  simul.runOnNode(1,applicationnr);
   
   
   TRACER2("Default settings");
-  simul.setCurAppl(0);
+  simul.setCurAppl(applicationnr);
   itsSourceSteps = params.getInt("stations",1); // nr of stations (?)
   itsDestSteps   = params.getInt("correlators",1);
   cout << "stations = " << itsSourceSteps << "  correlators = " << itsDestSteps << endl;
-  itsDoLogProfile = params.getBool("log",false);
-   
+  //itsDoLogProfile = params.getBool("log",false);
+  itsDoLogProfile = params.getInt("log",0) == 1;
+  if (itsDoLogProfile) cout << "Logging Enabled" << endl;
+ 
   // Create the Workholders and Steps
   Sworkholders = new (WH_FillTFMatrix*)[itsSourceSteps];
   Ssteps       = new (Step*)[itsSourceSteps];
+  Iworkholders = new (WH_Delay*)[itsSourceSteps];
+  Isteps       = new (Step*)[itsSourceSteps];
   Dworkholders = new (WH_Transpose*)[itsDestSteps];
   Dsteps       = new (Step*)[itsDestSteps];
   Cworkholders = new (WH_Correlate*)[itsDestSteps];
@@ -163,13 +175,29 @@ void Transpose::define(const ParamBlock& params)
 					      freqDim);
     
     Ssteps[iStep] = new Step(Sworkholders[iStep], "TransposeSourceStep", iStep);
-    //Ssteps[iStep]->connectInput(NULL);
 
     // Determine the node and process to run in
     // ... sory, this should go in a private method later
-    //Ssteps[iStep]->runOnNode(0); // MPI 1 process
-       Ssteps[iStep]->runOnNode(iStep ,0); // run in App 0
+    Ssteps[iStep]->runOnNode(iStep ,0); // run in App 0
   }
+
+//    // The intermediate steps
+//    for (int iStep = 0; iStep < itsSourceSteps; iStep++) {
+//      sprintf(name, "Delay[%d]", iStep);
+//      Iworkholders[iStep] = new WH_Delay(name,
+//  				       itsSourceSteps, //nin
+//  				       itsSourceSteps, // nout
+//  				       timeDim,
+//  				       freqDim); 
+    
+//      Isteps[iStep] = new Step(Iworkholders[iStep], "DelayStep", iStep);
+
+//      // Determine the node and process to run in
+//      // ... sory, this should go in a private method later
+//      Isteps[iStep]->runOnNode(iStep ,0); // run in App 0
+//      Isteps[iStep]->connectInput(Ssteps[iStep]);
+//    }
+
 
   // Create the destination steps
   for (int iStep = 0; iStep < itsDestSteps; iStep++) {
@@ -184,10 +212,14 @@ void Transpose::define(const ParamBlock& params)
     Dsteps[iStep] = new Step(Dworkholders[iStep], 
 			     "TransposeDestStep", 
 			     iStep);
-    Dsteps[iStep]->runOnNode(iStep+itsSourceSteps,0); 
+
+    int node = iStep+itsSourceSteps;
+    Dsteps[iStep]->runOnNode(node,0); 
+
+
 
     // Create the correlator step
-    sprintf(name, "Correlate[%d]", iStep);
+    sprintf(name, "Correlator[%d]", iStep);
     Cworkholders[iStep] = new WH_Correlate(name,
 					   timeDim,        // inputs
 					   timeDim,        // outputs
@@ -197,7 +229,7 @@ void Transpose::define(const ParamBlock& params)
     Csteps[iStep] = new Step(Cworkholders[iStep],
 			     "Correlator",
 			     iStep);
-    Csteps[iStep]->runOnNode(iStep+itsSourceSteps,0); 
+    Csteps[iStep]->runOnNode(node+1,0); 
     // connect the correlator to the corresponding transpose step
     Csteps[iStep]->connectInput(Dsteps[iStep]);
   }
@@ -226,16 +258,19 @@ void Transpose::define(const ParamBlock& params)
       // Set up the connections
       // Correlator Style
       TRACER2("Transpose; try to connect " << step << "   " << ch);
-#ifdef HAVE_CORBA
-      Dsteps[step]->connect(Ssteps[ch],ch,step,1,TH_Corba::proto);
-#elif HAVE_MPI
+#ifdef HAVE_MPI
       Dsteps[step]->connect(Ssteps[ch],ch,step,1,TH_MPI::proto);
 #else
+#ifdef HAVE_CORBA
+      Dsteps[step]->connect(Ssteps[ch],ch,step,1,TH_Corba::proto);
+#else 
       Dsteps[step]->connect(Ssteps[ch],ch,step,1);
 #endif
+#endif
+
     }
   }
-  //simul.optimizeConnectionsWith(TH_ShMem::proto);
+  //  simul.optimizeConnectionsWith(TH_ShMem::proto);
 }
 
 void Transpose::run(int nSteps) {
@@ -247,12 +282,12 @@ void Transpose::run(int nSteps) {
 
   TRACER4("Start Processing simul " );    
 #ifdef HAVE_MPI
-     TH_MPI::synchroniseAllProcesses();
+  TH_MPI::synchroniseAllProcesses();
   double starttime=MPI_Wtime();
 #endif
-   for (int i=0; i<nSteps; i++) {
+  for (int i=0; i<nSteps; i++) {
 #ifdef HAVE_MPI
-     //TH_MPI::synchroniseAllProcesses();
+    //TH_MPI::synchroniseAllProcesses();
 #endif
     if (i==2 && itsDoLogProfile) Profiler::activate();
     getSimul().process();
