@@ -46,6 +46,11 @@ namespace RSP_Protocol
 	  uint8 _pad;
       };
 
+      static const int MODE_OFF         = 0x0;
+      static const int MODE_SINE        = 0x1;
+      static const int MODE_USER_SINGLE = 0x3;
+      static const int MODE_USER_REPEAT = 0x5;
+
       /**
        * Constructors for a WGSettings object.
        * Currently the tv_usec part is always set to 0 irrespective
