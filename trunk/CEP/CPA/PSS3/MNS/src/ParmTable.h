@@ -41,6 +41,8 @@ class ParmTable
 public:
   explicit ParmTable (const string& tableName);
 
+  ~ParmTable();
+
   // Get the parameter values for the given parameter and domain.
   // The matchDomain argument is set telling if the found parameter
   // matches the domain exactly.
@@ -60,7 +62,11 @@ public:
 
   // Return point sources for the given source numbers.
   // An empty sourceNr vector means all sources.
+  // In the 2nd version the pointers to the created MeqParm objects
+  // are added to the vector of objects to be deleted.
   MeqSourceList getPointSources (const Vector<int>& sourceNrs);
+  MeqSourceList getPointSources (const Vector<int>& sourceNrs,
+				 vector<MeqExpr*>& exprDel);
 
 private:
   // Find the table subset containing the parameter values for the

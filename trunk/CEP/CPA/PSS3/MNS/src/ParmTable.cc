@@ -60,6 +60,11 @@ ParmTable::ParmTable (const string& tableName)
   }
 }
 
+ParmTable::~ParmTable()
+{
+  delete itsInitIndex;
+}
+
 vector<MeqPolc> ParmTable::getPolcs (const string& parmName,
 				     int srcnr, int statnr,
 				     const MeqDomain& domain)
@@ -242,6 +247,13 @@ Table ParmTable::find (const string& parmName,
 
 MeqSourceList ParmTable::getPointSources (const Vector<int>& srcnrs)
 {
+  vector<MeqExpr*> exprDel;
+  return getPointSources (srcnrs, exprDel);
+}
+
+MeqSourceList ParmTable::getPointSources (const Vector<int>& srcnrs,
+					  vector<MeqExpr*>& exprDel)
+{
   // Get all parm rows containing RA in the name.
   // Use the DEFAULTTABLE only if available.
   int st = 0;
@@ -289,16 +301,22 @@ MeqSourceList ParmTable::getPointSources (const Vector<int>& srcnrs)
     name = name.substr (idx+1);
     MeqStoredParmPolc* mr = new MeqStoredParmPolc("RA."+name,
 						  srcnr, -1, this);
+    exprDel.push_back (mr);
     MeqStoredParmPolc* md = new MeqStoredParmPolc("DEC."+name,
 						  srcnr, -1, this);
+    exprDel.push_back (md);
     MeqStoredParmPolc* mi = new MeqStoredParmPolc("StokesI."+name,
 						  srcnr, -1, this);
+    exprDel.push_back (mi);
     MeqStoredParmPolc* mq = new MeqStoredParmPolc("StokesQ."+name,
 						  srcnr, -1, this);
+    exprDel.push_back (mq);
     MeqStoredParmPolc* mu = new MeqStoredParmPolc("StokesU."+name,
 						  srcnr, -1, this);
+    exprDel.push_back (mu);
     MeqStoredParmPolc* mv = new MeqStoredParmPolc("StokesV."+name,
 						  srcnr, -1, this);
+    exprDel.push_back (mv);
     sources.add (MeqPointSource(name, mi, mq, mu, mv, mr, md));
     cout << "Found source " << name << " (srcnr=" << srcnr << ')' << endl;
   }
