@@ -13,7 +13,8 @@ ping_DEPENDENCIES	= $(LOFAR_DEPEND)
 AUTOGEN = autogen
 SUFFIXES = .ph
 %.ph: %.prot
-	$(AUTOGEN) -L $(top_srcdir)/../../GCFCommon/autogen $<
+	$(AUTOGEN) -L $(top_srcdir)/../../GCFCommon/autogen $< && \
+	chmod a+w $@
 
 BUILT_SOURCES = \
 	Echo_Protocol.ph

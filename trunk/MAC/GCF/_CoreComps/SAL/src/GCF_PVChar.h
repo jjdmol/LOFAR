@@ -1,4 +1,4 @@
-//#  GPA_Main.cc: 
+//#  GCF_PVChar.h: 
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,18 +20,28 @@
 //#
 //#  $Id$
 
-#include <GPA_Controller.h>
-#include <TM/GCF_Control.h>
+#ifndef GCF_PVCHAR_H
+#define GCF_PVCHAR_H
 
-int main(int argC, char *argV[])
+#include "GCF_PValue.h"
+
+class GCFPVChar : public GCFPValue  
 {
-  GCFTask::init(argC, argV);
+  public:
+  	GCFPVChar(char val = 0) : GCFPValue(CHAR_VAL), _value(val) {;}
+  	virtual ~GCFPVChar() {;}
+    /** Write property of char value. */
+    inline void setValue( const char newVal) {_value = newVal;}
+    /** Read property of char value. */
+    inline char getValue() const {return _value;}
+    /** No descriptions */
+    virtual GCFPValue* clone() const;
+    /** No descriptions */
+    virtual TSAResult copy(const GCFPValue& value);
   
-  GPAController propertyAgent; 
-  
-  propertyAgent.start(); // make initial transition
-  
-  GCFTask::run();
+  private: // Private attributes
+    /**  */
+    char _value;
+};
 
-  return 0;
-}
+#endif

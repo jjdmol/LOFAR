@@ -1,4 +1,4 @@
-//#  GPA_Main.cc: 
+//#  GCF_PVDynArr.h: 
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,18 +20,34 @@
 //#
 //#  $Id$
 
-#include <GPA_Controller.h>
-#include <TM/GCF_Control.h>
+#ifndef GCF_PVDYNARR_H
+#define GCF_PVDYNARR_H
 
-int main(int argC, char *argV[])
+#include "GCF_PValue.h"
+#include <Common/lofar_vector.h>
+
+typedef vector<GCFPValue*> GCFPValueArray;
+
+class GCFPVDynArr : public GCFPValue
 {
-  GCFTask::init(argC, argV);
+  public:
+  	GCFPVDynArr(TMACValueType itemType, const GCFPValueArray& val);
+    GCFPVDynArr(TMACValueType itemType);
+  	virtual ~GCFPVDynArr();
+    /** Write property of list value_. */
+    virtual void setValue(const GCFPValueArray& newVal);
+    /** Read property of list value_. */
+    virtual inline const GCFPValueArray& getValue() const {return _values;}
+    /** No descriptions */
+    virtual GCFPValue* clone() const;
+    /** No descriptions */
+    virtual TSAResult copy(const GCFPValue& value);
   
-  GPAController propertyAgent; 
-  
-  propertyAgent.start(); // make initial transition
-  
-  GCFTask::run();
-
-  return 0;
-}
+  private: // help members
+    void cleanup();
+    
+  private: // Private attributes
+    /**  */
+    GCFPValueArray _values;
+};
+#endif
