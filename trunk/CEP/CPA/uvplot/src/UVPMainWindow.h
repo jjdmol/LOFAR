@@ -58,14 +58,21 @@ class UVPMainWindow:public QMainWindow
 
   enum e_plotDataType{plotAmplitude, plotPhase, plotReal, plotImaginary};
 
-  
+  enum InputType{NoInput, DMI, MS, PVD};
+
+
+  //! Constructor
    UVPMainWindow();
+
+  //! Destructor
   ~UVPMainWindow();
 
+  //! Draws data set considering all current settings
   void drawDataSet();
 
   public slots:
   
+  //! Only calls drawDataSet
   void slot_redraw();
 
   void slot_setProgressTotalSteps(int steps);
@@ -88,8 +95,8 @@ class UVPMainWindow:public QMainWindow
   QPopupMenu*     itsPlotMenu;
   QPopupMenu*     itsHelpMenu;
   
-  int            itsMenuPlotImageID;
-  int            itsMenuPlotStopID;
+  int             itsMenuPlotImageID;
+  int             itsMenuPlotStopID;
 
   QStatusBar*     itsStatusBar;
   QProgressBar*   itsProgressBar; /* Resides in Status bar */
@@ -107,18 +114,27 @@ class UVPMainWindow:public QMainWindow
 
   UVPDataSet      itsDataSet;
 
+  InputType       itsInputType;
+  std::string     itsInputFilename;
+
   virtual void resizeEvent  (QResizeEvent* event);
   virtual void keyPressEvent(QKeyEvent*    event);
 
-  protected slots:
+ protected slots:
     
-    // Display the world coordinates of the mouse pointer in the statusbar
-    void slot_mouse_world_pos(double x,
-                              double y);
+  //! Display the world coordinates of the mouse pointer in the statusbar
+  void slot_mouse_world_pos(double x,
+                            double y);
   
-    void slot_about_uvplot();
+  void slot_about_uvplot();
 
   void slot_setTime(double time);
+
+
+private:
+  
+  void buildMenuBar();
+  void buildStatusBar();
 };
 
 #endif // UVPMAINWINDOW_H
