@@ -172,6 +172,7 @@ void UVPMainWindow::buildMenuBar()
   itsDatasourceMenu = new QPopupMenu;
   itsDatasourceMenu->insertItem("&Open MS", this, SLOT(slot_openMS()));
 #if(HAVE_VDM)
+  itsDatasourceMenu->insertItem("&VDM MS", this, SLOT(slot_vdmOpenMS()));
   itsDatasourceMenu->insertItem("&VDM pipeline", this, SLOT(slot_vdmOpenPipe()));
 #endif
 
@@ -566,6 +567,7 @@ catch(...)
 //==================>>>  UVPMainWindow::slot_vdmOpenMS  <<<==================
 
 void UVPMainWindow::slot_vdmOpenMS()
+try
 {
   QString filename = QFileDialog::getExistingDirectory(".",
                                                        this, 
@@ -573,6 +575,8 @@ void UVPMainWindow::slot_vdmOpenMS()
                                                        "Open Measurement Set");
   if(!filename.isNull()) {
     itsInputFilename = filename.latin1();
+    itsInputFilename           = itsInputFilename.substr(0, itsInputFilename.find_last_of("/"));
+    itsCurrentWorkingDirectory = itsInputFilename.substr(0, itsInputFilename.find_last_of("/"));
     itsInputType     = VDM;
     updateCaption();
 
@@ -584,6 +588,15 @@ void UVPMainWindow::slot_vdmOpenMS()
 
   }
 }
+catch(AipsError &err)
+{
+  QMessageBox::critical(0, "Aips++", (const char*)err.getMesg().c_str(), QMessageBox::Ok|QMessageBox::Default,QMessageBox::NoButton);
+}
+catch(...)
+{
+  std::cerr << "slot_openMS: Unhandled exception caught." << std::endl << std::flush;
+}
+
 
 
 
