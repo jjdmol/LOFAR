@@ -33,7 +33,7 @@
 #include <sstream>
 
 
-namespace LCS {
+namespace LOFAR {
 
   //
   // This is the base class for all LCS related exceptions.

@@ -21,6 +21,10 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.6  2003/10/29 13:54:38  smirnov
+//  %[ER: 16]%
+//  Cleaned up debug context definition macros
+//
 //  Revision 1.5  2003/09/30 11:31:10  smirnov
 //  %[ER: 16]%
 //  Tied the debug stream to cerr rather than cout. This necessitated a change
@@ -149,8 +153,8 @@
 
 
 
-// Define the LCS::Exception class
-namespace LCS 
+// Define the LOFAR::Exception class
+namespace LOFAR 
 {
   EXCEPTION_CLASS(AssertError,Exception)  
 }
@@ -431,13 +435,13 @@ const char exception_message[] = "\n==================================== EXCEPTI
 #define ThrowExc(exc,msg)  { cdebug(1)<<exception_message<<CodeStatus(msg)<<endl; throw(exc(CodeStatus_nf(msg),__HERE__)); }
 #define ThrowExc1(exc,msg)  { cdebug1(1)<<exception_message<<CodeStatus1(msg)<<endl; throw(exc(CodeStatus_nf1(msg),__HERE__)); }
 
-// Retain old Throw/Throw1 for compatibility. Throws LCS::Exception.
-#define Throw(msg)  ThrowExc(LCS::Exception,msg)
-#define Throw1(msg) ThrowExc1(LCS::Exception,msg)
+// Retain old Throw/Throw1 for compatibility. Throws LOFAR::Exception.
+#define Throw(msg)  ThrowExc(LOFAR::Exception,msg)
+#define Throw1(msg) ThrowExc1(LOFAR::Exception,msg)
 
 // The Assert macro will Throw an AssertError if condition is FALSE.
-#define Assert(cond)  { if( !(cond) ) ThrowExc(LCS::AssertError,"Assert failed: " #cond); }
-#define Assert1(cond)  { if( !(cond) ) ThrowExc1(LCS::AssertError,"Assert failed: " #cond); }
+#define Assert(cond)  { if( !(cond) ) ThrowExc(LOFAR::AssertError,"Assert failed: " #cond); }
+#define Assert1(cond)  { if( !(cond) ) ThrowExc1(LOFAR::AssertError,"Assert failed: " #cond); }
 
 // The FailWhen macro will Throw a Debug::Fail if condition is TRUE
 // Always defined (even with debugging off)
@@ -457,8 +461,8 @@ const char exception_message[] = "\n==================================== EXCEPTI
 // The DbgAssert macro is like Assert, but defined to do nothing if 
 // debugging is off.
 #ifdef ENABLE_DBGASSERT
-# define DbgAssert(cond) { if( !(cond) ) ThrowExc(LCS::AssertError,"DbgAssert failed: " #cond); }
-# define DbgAssert1(cond) { if( !(cond) ) ThrowExc1(LCS::AssertError,"DbgAssert failed: " #cond); }
+# define DbgAssert(cond) { if( !(cond) ) ThrowExc(LOFAR::AssertError,"DbgAssert failed: " #cond); }
+# define DbgAssert1(cond) { if( !(cond) ) ThrowExc1(LOFAR::AssertError,"DbgAssert failed: " #cond); }
 #else
 # define DbgAssert(cond)
 # define DbgAssert1(cond)
@@ -472,7 +476,7 @@ const char exception_message[] = "\n==================================== EXCEPTI
  { if( !(cond) ) { \
      std::ostringstream oss; \
      oss << stream; \
-     ThrowExc(LCS::AssertError,"Assertion `" #cond "' failed: " + oss.str()); \
+     ThrowExc(LOFAR::AssertError,"Assertion `" #cond "' failed: " + oss.str()); \
  }}
 
 // The DbgAssertStr macro is like AssertStr, but
@@ -482,7 +486,7 @@ const char exception_message[] = "\n==================================== EXCEPTI
  { if( !(cond) ) { \
      std::ostringstream oss; \
      oss << stream; \
-     ThrowExc(LCS::AssertError,"DbgAssert `" #cond "' failed: " + oss.str()); \
+     ThrowExc(LOFAR::AssertError,"DbgAssert `" #cond "' failed: " + oss.str()); \
  }}
 #else
 # define DbgAssertStr(cond,stream)
@@ -496,7 +500,7 @@ const char exception_message[] = "\n==================================== EXCEPTI
      std::ostringstream oss; \
      oss << stream; \
      ::Debug::dbg_stream << oss.str() << std::endl; \
-     throw LCS::AssertError(oss.str()); \
+     throw LOFAR::AssertError(oss.str()); \
  }}
 
 
@@ -505,7 +509,7 @@ namespace Debug
 {
   // Typedef the exception type, so we can change whenever needed.
 //##ModelId=3DB9546401F6
-  EXCEPTION_CLASS(Fail,LCS::Exception);
+  EXCEPTION_CLASS(Fail,LOFAR::Exception);
 
   // sets level of given context
   bool setLevel (const string &context,int level);
