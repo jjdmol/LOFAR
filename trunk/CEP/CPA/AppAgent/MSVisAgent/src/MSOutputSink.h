@@ -94,7 +94,7 @@ class MSOutputSink : public FileSink
     typedef struct 
     {
       string name;
-      ArrayColumn<Complex> col;
+      casa::ArrayColumn<casa::Complex> col;
       bool   valid;
     }
     Column;
@@ -135,7 +135,7 @@ class MSOutputSink : public FileSink
     string msname_;
         
     //##ModelId=3E2BC34C0076
-    MeasurementSet ms_;
+    casa::MeasurementSet ms_;
     
     //##ModelId=3E2D5FF503A1
     DataRecord params_;
@@ -151,7 +151,7 @@ class MSOutputSink : public FileSink
     int rowcount_;
         
     //##ModelId=3E2D5FF60119
-    Slicer column_slicer_;
+    casa::Slicer column_slicer_;
     
     //##ModelId=3E42745300A8
     Column datacol_;
@@ -161,12 +161,12 @@ class MSOutputSink : public FileSink
     Column rescol_;
     
     //##ModelId=3E2ED50E0113
-    ScalarColumn<Bool> rowFlagCol_;
+    casa::ScalarColumn<Bool> rowFlagCol_;
     //##ModelId=3E2ED50E0190
-    ArrayColumn<Bool> flagCol_;
+    casa::ArrayColumn<Bool> flagCol_;
     
     //##ModelId=3F5F43630379
-    Array<Complex> null_cell_;
+    casa::Array<casa::Complex> null_cell_;
     
     bool flip_freq_;
 };
