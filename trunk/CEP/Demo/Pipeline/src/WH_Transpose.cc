@@ -173,13 +173,13 @@ void WH_Transpose::dump() const
     for (int pol=0; pol<itsPols; pol++) {
       cout << endl << "Polarisation: " << pol ;
       for (int x=0; 
-	   x < min(10,(const_cast<WH_Transpose*>(this))->getOutHolder(outch)->getXSize());
+	   x < std::min(10,(const_cast<WH_Transpose*>(this))->getOutHolder(outch)->getXSize());
 	   x++) {
 	cout << endl 
 	     << (const_cast<WH_Transpose*>(this))->getOutHolder(outch)->getXName()
 	     << x << "   ";
 	for (int y=0; 
-	     y < min(10,(const_cast<WH_Transpose*>(this))->getOutHolder(outch)->getYSize());
+	     y < std::min(10,(const_cast<WH_Transpose*>(this))->getOutHolder(outch)->getYSize());
 	     y++) {
 	  cout << *(const_cast<WH_Transpose*>(this))->getOutHolder(outch)->getBuffer(x,y,pol) << " ";
 	}
