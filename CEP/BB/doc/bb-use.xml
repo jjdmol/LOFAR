@@ -16,6 +16,11 @@
    <para>
     $Id$
    </para>
+   <para>
+
+    This is a preliminary version, a concept.
+
+   </para>
   </releaseinfo>
 
   <!-- makes a summary from the content -->
@@ -25,9 +30,10 @@
     For the LOFAR project a self-calibration program shall be written
     <xref linkend="LOFAR-ASTRON-ADD-006"/>. The idea is that this
     program will have the architectural structure of a
-    "BlackBoard". The applicability of this design pattern will be
-    investigated and a rapport hereof will be included in this
-    document.
+    "BlackBoard". Such a pattern caught in a framework will have
+    broader use then just the self-calibration. The applicability of a
+    framework following this design pattern will be investigated and a
+    rapport hereof will be included in this document.
 
    </para>
   </abstract>
@@ -51,6 +57,15 @@
 
   <para>
 
+   As described in <xref linkend="DAfPaDBBS" />, there are several
+   levels at which to implement parallel Blackboard systems. In <xref
+   linkend="PDR-CEP-Software" /> it is described how this applies to
+   the imaging applications in the LOFAR Central Processor.
+
+  </para>
+
+  <para>
+
    In the case of the selfcal program, there is only one really
    important step that one takes in getting to the solution (calibrated
    data or measurement set). This is the predict-solve step. Though
@@ -58,6 +73,16 @@
    pealing strategy one can do a shift of the data-center in the UV
    data. And then there are some algorithms to decide if the present
    strategy is leading somewhere.
+
+   <note>
+
+    <para>
+
+     It is assumed that the quality of a preliminary result can be measured.
+
+    </para>
+
+   </note>
 
   </para>
 
@@ -73,7 +98,7 @@
 
  <section>
 
-  <title>selfcal requirements</title>
+  <title>LOFAR requirements</title>
 
   <para>
 
@@ -87,6 +112,42 @@
    sources) as well as high level strategies (by configuring the
    controller(s)).
 
+   <note>
+
+    <para>
+
+     It must be possible to add new knowledge sources to the system.
+
+    </para>
+
+    <para>
+
+     It must be possible to configure controllers to react in a
+     certain way to a certain state of the system.
+
+    </para>
+
+   </note>
+
+  </para>
+
+  <para>
+
+   The Blackboard system to be build is going to allow the programmer
+   to define a workload structure and a knowledge source that will
+   react on such a workload. Finally (s)he will define a partial
+   solution structure that results from the work. A controller will
+   then recognize such a workload and assign it to a fitting knowledge
+   source. It will be notified that a result is produced and think of
+   what next step to take.
+
+  </para>
+
+  <para>
+
+   Information on what type of knowledge source can take on what kind
+   of workload will be stored in a database.
+
   </para>
 
   <para>
@@ -97,6 +158,17 @@
    will be convenient. On top of that it will necessary to change or
    add control-strategies and low-level algorithms as we go.
 
+   <note>
+
+    <para>
+
+     It would be nice to have a library of strategies that would
+     include "conditions" and "actions to take".
+
+    </para>
+
+   </note>
+
   </para>
 
   <para>
@@ -105,6 +177,27 @@
    different algorithms by its loose coupling. The different protocols
    between components in the system need to be very well specified for
    this.
+
+  </para>
+
+  <para>
+
+   A knowledge source it's result definition must include an
+   interpreter object that can return a quality of the result. For a
+   controller it must be clear in what kind of new workload the result
+   results.
+
+  </para>
+
+  <para>
+
+   For fast invocation of calibration engines it might be a good idea
+   to have them running as demons on nodes that &quot;might&quot; be
+   used as predict/solve knowledge source hosts. this is one of the
+   techniques described in <xref linkend="EMfaCOBBS"/>. However it is
+   not to be expected that this will greatly enhance the execution
+   speed as suggested in this paper, as our knowledge-sources will
+   have longer execution times and less invocations.
 
   </para>
 
@@ -674,7 +767,7 @@ void SelfcalEngineStub::dump() {
  
    <biblioentry id="EMfaCOBBS">
     <title>EFFICIENCY MECHANISMS FOR A CLASS OF BLOACKBOARD SYSTEMS</title>
-    <abbrev>BBAnA</abbrev>
+    <abbrev>Efficiency</abbrev>
     <authorgroup>
      <author>
       <firstname>Ratikorn</firstname>
@@ -683,6 +776,17 @@ void SelfcalEngineStub::dump() {
      <author>
       <firstname>Micheal</firstname>
       <surname>Hewett</surname>
+     </author>
+    </authorgroup>
+   </biblioentry>
+ 
+   <biblioentry id="DAfPaDBBS">
+    <title>Design Alternatives for Paralel and Distributed Blackboard Systems</title>
+    <abbrev>Design Alternatives</abbrev>
+    <authorgroup>
+     <author>
+      <firstname>Daniel</firstname>
+      <surname>Corkill</surname>
      </author>
     </authorgroup>
    </biblioentry>
@@ -718,6 +822,19 @@ void SelfcalEngineStub::dump() {
     </copyright>
    </biblioentry>
 
+   <biblioentry id="PDR-CEP-Software" >
+    <title>CEP Software implementations</title>
+    <author>
+     <surname>Schaaf</surname>
+     <firstname>Kjeld</firstname>
+     <othername>van der</othername>
+    </author>
+    <copyright>
+     <year>2003</year>
+     <holder>ASTRON</holder>
+    </copyright>
+   </biblioentry>
+
   </bibliodiv>
 
  </bibliography>
@@ -726,6 +843,9 @@ void SelfcalEngineStub::dump() {
 
 <!--
 $Log$
+Revision 1.5  2003/06/24 17:35:36  daan
+rough scetch
+
 Revision 1.4  2003/06/19 17:42:54  daan
 some syntax
 
