@@ -66,7 +66,7 @@ int SolverControlAgent::startDomain  (const DataRecord::Ref::Xfer &data)
   FailWhen(state()!=IDLE && state()!=NEXT_DOMAIN,"unexpected state (IDLE or NEXT_DOMAIN wanted)");
   setState(IDLE);
   setStatus(StEndData,endOfData_ = False);
-  setStatus(StDomainNumber,domainNum_++);
+  setStatus(StDomainNumber,++domainNum_);
   nextDomain_ = False;
   dprintf(1)("starting domain %d\n",domainNum_);
   postEvent(StartDomainEvent,data);
@@ -135,10 +135,10 @@ int SolverControlAgent::endIteration (double conv)
 {
   // terminal state -- return immediately
   FailWhen(state()>0 && state()!=RUNNING && state()!=ENDSOLVE,"unexpected state (RUNNING or ENDSOLVE wanted)");
-  dprintf(3)("end iteration %d, conv=%f\n",iter_count_,convergence_);
   // update status
-  setStatus(StIterationNumber,++iter_count_);
-  setStatus(StConvergence,convergence_);
+  setStatus(StSolution,FIterationNumber,++iter_count_);
+  setStatus(StSolution,FConvergence,convergence_=conv);
+  dprintf(3)("end iteration %d, conv=%f\n",iter_count_,convergence_);
   // post end-of-iteration event
   DataRecord::Ref ref(new DataRecord,DMI::ANONWR);
   ref()[FIterationNumber] = iter_count_;
@@ -319,7 +319,7 @@ void SolverControlAgent::processControlRecord (const DataRecord &rec)
   if( rec[FIterStep].exists() )
   {
     iter_step_ = rec[FIterStep].as<int>();
-    setStatus(StSolutionParams|AidSlash|FIterStep,iter_step_);
+    setStatus(StSolutionParams,FIterStep,iter_step_);
     if( iter_step_ > 0 )
       pause_at_iter_ = iter_count_ + iter_step_;
     else
@@ -330,14 +330,14 @@ void SolverControlAgent::processControlRecord (const DataRecord &rec)
   {
     endrec_converged.detach();
     conv_threshold_ = rec[FConvergence].as<double>();
-    setStatus(StSolutionParams|AidSlash|FConvergence,conv_threshold_);
+    setStatus(StSolutionParams,FConvergence,conv_threshold_);
     if( conv_threshold_ >= 0 )
     {
       dprintf(2)("convergence threshold is %f\n",conv_threshold_);
       if( rec[FWhenConverged].exists() )
       {
         endrec_converged.attach( rec[FWhenConverged].as<DataRecord>() );
-        setStatus(StSolutionParams|AidSlash|FWhenConverged,endrec_converged.copy());
+        setStatus(StSolutionParams,FWhenConverged,endrec_converged.copy());
       }
     }
   }
@@ -346,14 +346,14 @@ void SolverControlAgent::processControlRecord (const DataRecord &rec)
   {
     endrec_maxiter.detach();
     max_iterations_ = rec[FMaxIterations].as<int>();
-    setStatus(StSolutionParams|AidSlash|FMaxIterations,max_iterations_);
+    setStatus(StSolutionParams,FMaxIterations,max_iterations_);
     if( max_iterations_ >= 0 )
     {
       dprintf(2)("max iterations: %d\n",max_iterations_);
       if( rec[FWhenMaxIter].exists() )
       {
         endrec_maxiter.attach( rec[FWhenMaxIter].as<DataRecord>() );
-        setStatus(StSolutionParams|AidSlash|FWhenMaxIter,endrec_maxiter.copy());
+        setStatus(StSolutionParams,FWhenMaxIter,endrec_maxiter.copy());
       }
     }
   }

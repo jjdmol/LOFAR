@@ -38,7 +38,7 @@ solver := function (suspend=F,verbose=1)
   # register standard event handlers
   whenever self.agentref->solver_out_app_notify_state do
   {
-    self.dprint(1,"== state: ",$value.state,"(",$value.state_string,")");
+    self.dprint(1,'  == state: ',$value.state,"(",$value.state_string,")");
     self.state := $value.state;
     self.paused := $value.paused;
     self.statestr := $value.state_string;
@@ -167,8 +167,19 @@ solv := solver(suspend=F,verbose=verbose);
 print "Creating event handlers"
 whenever solv.agentref()->* do 
 {
-  solv.dprint(2,'       ==========> Event: ', $name);
-  solv.dprint(3,'       value: ', $value);
+  if( $name ~ m/^solver_out_app_update_status/ ) 
+  {
+    solv.dprint(2,'  == status update: ',$value);
+  }
+  else if( $name ~ m/^solver_out_app_notify_state/ )
+  {
+  # do nothing -- already handled by event handler above
+  }
+  else
+  {
+    solv.dprint(2,'       ===> Event: ', $name);
+    solv.dprint(3,'            value: ', $value);
+  }
 }
 
 test := function ()
