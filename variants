@@ -13,12 +13,15 @@ mpich-corba.variant.conf: $(mpich) $(vbroker) $(aipspp)
 lam-corba.variant.conf:   $(lam) $(vbroker) $(aipspp)
 insure.variant.conf:	  --with-insure $(aipspp)
 insure.variant.make:	  QA=insure
-scampi.variant.conf:	  $(scampi) $(aipspp)
+scampi.variant.conf:	  $(scampi) $(mpiopt) $(aipspp)
 scampi-opt.variant.conf:  $(scampi) --with-optimize $(aipspp)
-mpich-prof.variant.conf:  $(mpich) --enable-mpi-profiler $(aipspp)
+scampi-debug.variant.conf:$(scampi) --with-debug    $(aipspp)
+mpich-prof.variant.conf:  $(mpich)  $(mpiopt) --enable-mpi-profiler $(aipspp)
+scampi-prof.variant.conf: $(scampi) $(mpiopt) --enable-mpi-profiler $(aipspp)
 
 aipspp.var:
 mpich.var:		   --with-mpich
 lam.var:		   --with-lam
 scampi.var:		   --with-scampi
 vbroker.var:		   --with-vbroker
+mpiopt.var:                --with-optimize
