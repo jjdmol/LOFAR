@@ -57,8 +57,7 @@ cleanlist()
 	cat $* |  \
 		# replace {} by ; , place { or } on new lines and force \n after ;
 		sed "s/{[ \t]*}/; /g ; s/[{}]/\n&\n/g ; s/;[ \t]/;\n/g" | \
-		# cut everthing after hashes
-		#		cut -d"#" -f1 | \
+		# skip empty lines
 		awk '{ if (NF > 0) print $0 }'
 }
 
@@ -71,7 +70,20 @@ cleanlist()
 #
 analyseInfoFile()
 {
+	# awk is used in this routine as pattern scanner. The lines of the
+	# infofile are sent through a set of patterns, when a lines matches
+	# a pattern the corresponding code is executed. In this way awk is
+	# used as a kind of lex and yacc.
+
 	awk '
+	# First define some functions for handling difficult actions
+
+	#
+	# skipTillNext delimiter
+	#
+	# Skips the inputstream until the given delimiter is found
+	# The delimiter may be an regular expression.
+	#
 	function skipTillNext(delimiter) {
 		while (match ($0, delimiter) == 0) {	# search delimiter
 			getline
@@ -80,22 +92,37 @@ analyseInfoFile()
 		gsub("^[ 	]*", "")					# skip leading spaces
 	}
 
+	#
+	# getTillNext delimiter
+	#
+	# Skips the inputstream until the given delimiter is found
+	# The skipped characters are return to the caller.
+	# The delimiter may be an regular expression.
+	#
 	function getTillNext(delimiter,     result) {
 		result=""
-		while (match ($0, delimiter) == 0) {	# search delimiter
-			result = sprintf ("%s%s", result, $0)
+		while (match ($0, delimiter) == 0) {	# delimiter found?
+			result=result $0					# No, add line to result
 			getline
 		}
-		result = sprintf ("%s%s", result, substr($0,1,RSTART+RLENGTH))
-		$0=substr($0, RSTART+RLENGTH)
+		result=result substr($0,1,RSTART+RLENGTH)  # add last part to result
+		$0=substr($0, RSTART+RLENGTH)			# cut last part from inputstream
 		gsub("^[ 	]*", "")					# skip leading spaces
-		gsub("[ \t][ \t]+", " ", result)		# skip double whitespace
+		gsub("[ \t]+", " ", result)				# skip double whitespace
 		return result
 	}
 
-	function handleTypedef(delimiter,    theTD) {
-		theTD=getTillNext(";");
-		if (index(theTD, "{") != 0) {
+	#
+	# handleTypedef 
+	#
+	# Cuts the typedef from the inputstream and stores them in the
+	# TYPEDEFS file.
+	# A typedef can have two forms:
+	# typedef xxx yyy;   or typedef xxx { aaa; bbb; };
+	#
+	function handleTypedef(    theTD) {
+		theTD=getTillNext(";");					# find first ;
+		if (index(theTD, "{") != 0) {			# { char in typedef? srch }
 			while (split(theTD, dummy, "{") > split(theTD, dummy, "}")) {
 				theTD=theTD getTillNext("}") getTillNext(";");
 			}
@@ -104,7 +131,15 @@ analyseInfoFile()
 		print theTD >> "typedefs.LCS"
 	}
 
-	function handleFunction(delimiter,    theFunc) {
+	#
+	# handleFunction 
+	#
+	# Cuts the function definition from the inputstream and stores it 
+	# in the FUNCTION file.
+	# The diff. with a typedef is that a function does not have a ;
+	# after the last }
+	#
+	function handleFunction(    theFunc) {
 		theFunct=getTillNext(";|{");
 		if (index(theFunct, "{") != 0) {
 			while (split(theFunct, dummy, "{") > split(theFunct, dummy, "}")) {
@@ -114,12 +149,25 @@ analyseInfoFile()
 		print theFunct >> "functions.LCS"
 	}
 
+	#
+	# pushOnStack type name
+	#
+	# This function is used to handle nested namespaces and classes.
+	# Whenever a namespace or class starts it pushes the current state
+	# on this stack. When a loose } is found the stack is used to see
+	# to which namespace or class it belongs.
+	#
 	function pushOnStack(theType, theName) {
 		nameStack[stackSize]=theName
 		typeStack[stackSize]=theType
 		stackSize++
 	}
 
+	#
+	# pullFromStack
+	#
+	# See comment of psuhOnStack
+	#
 	function pullFromStack(   topOfStack) {
 		stackSize--
 		topOfStack=typeStack[stackSize] nameStack[stackSize]
@@ -130,13 +178,16 @@ analyseInfoFile()
 		stackSize=1
 	}
 
-	/^[ 	]*/			{ gsub("^[ 	]*", "") }		# skip leading spaces
-	/[ 	]*$/			{ gsub("^[ 	]*", "") }		# skip trailing spaces
+	#
+	# All lines of the infofile are passed through these pattern filters.
+	#
+	/^[ \t]*/			{ gsub("^[ 	]*", "") }		# skip leading spaces
+	/[ \t]*$/			{ gsub("^[ 	]*", "") }		# skip trailing spaces
 	/^;/				{ next }					# remove loose ;
-	/^#/				{ File=$3 ; next }
+	/^#/				{ File=$3 ; next }			# remember the sourcefile
 	/[ \t]*const[ \t]*/	{ gsub("[ \t]*const", "") }	# remove const
-	/\[.*[a-zA-Z]+.*]/	{ bpos=index($0,"[")
-						  epos=index($0,"]")
+	/\[.*[a-zA-Z]+.*]/	{ bpos=index($0,"[")		# function in array size?
+						  epos=index($0,"]")		# replace it with @@@
 						  $0=substr($0,1,bpos) "@@@" substr($0,epos)
 						}
 	/^using /			{ next }					# skip using commands
@@ -146,38 +197,42 @@ analyseInfoFile()
 	/^private:/			{ Mode="priv" ; gsub("private:[ \t]*"  ,"") }
 	/^mutable/			{ gsub("mutable[ \t]*"  ,"") }
 	/^__extension__/	{ gsub("__extension__[ \t]*"  ,"") }
-	/^typedef/			{ handleTypedef(";|{") }
+	/^typedef/			{ handleTypedef() }
 	/^template/			{ skipTillNext(">") }
 	/^extern/			{ skipTillNext(";") }
 	/^enum/				{ skipTillNext("}") }
-	/^virtual/			{ handleFunction(";|{") }
-	/^inline/			{ handleFunction(";|{") }
-	/^[ \t]*\n/			{ next }
-	/^class|^struct/	{ if (index($0,";")) {		# forward declaration
+	/^virtual/			{ handleFunction() }
+	/^inline/			{ handleFunction() }
+	/^[ \t]*\n/			{ next }					# line with only whitespace
+	# at last something we are interested in
+	/^class|^struct/	{ if (index($0,";")) {		# forward declaration?
 							next
 						  }
 						  else {
-							pushOnStack("C", Class)
-							Class=getTillNext("{")
-							gsub("[ \t]*{", "", Class)
-							gsub("^class ", "", Class)
-							nrMembers=0
+							pushOnStack("C", Class)		# remember current state
+							Class=getTillNext("{")		# get name of class
+							gsub("[ \t]*{", "", Class)	# skip double spaces
+							gsub("^class ", "", Class)	# cut of class keyword
+							nrMembers=0					# no members yet
+							# note class may be of the form:
+							# xxx : public yyy;
 						  }
 						}
-	/^namespace/		{ pushOnStack("N", NameSpace)
-						  if (length(NameSpace) == 0) {
-							NameSpace=$2
+	/^namespace/		{ pushOnStack("N", NameSpace)	# remember current NS
+						  if (length(NameSpace) == 0) {	# no NS already?
+							NameSpace=$2				# just copy this one.
 						  }
-						  else {
+						  else {						# extend current NS
 							NameSpace=NameSpace "::" $2
 						  }
-						  skipTillNext("{")
+						  skipTillNext("{")				
 						}
+						# closing bracket from NS or class
 	/}/					{ prevName = pullFromStack() 
-						  if (substr(prevName,0,1) == "N") {
+						  if (substr(prevName,0,1) == "N") {	# from NS?
 							NameSpace=substr(prevName,2)
 						  }
-						  else {
+						  else {						# from Class
 	  						if (nrMembers > 0) {
 							  # end the class definition with a marker
 							  # the contains the filename and the classname
@@ -189,13 +244,16 @@ analyseInfoFile()
 						  next
 						}
 
-	# Finally the non-conditional code
+	# Finally the non-conditional code which might contain the members
 	{ if (index($0,"(")) {
-		handleFunction(";|{")
+		handleFunction()
 	  }
-	  if (length($0) == 0) {
+
+	  if (length($0) == 0) {		# nothing left?
 		next
 	  }
+
+	  # This must be a variable declaration
 	  printf "%s@%s@%s@%s@%s\n", File, NameSpace, Class, Mode, $0 >"members.LCS"
 	  nrMembers++
 	}
@@ -203,19 +261,22 @@ analyseInfoFile()
 }
 
 #
-# buildMapFile memberfile [class]
+# addToMapFile memberfile [class]
 #
-# scan the just created memberfile and construct the mapfile
-# expanding the classes in the core-headerfile
+# Scan the just created memberfile and construct the mapfile
+# This routine is first called without the class parameter, in that case
+# we must add all classes of the main headerfile. Then this function may
+# be called several times to add a single class to the mapfile.
 #
-buildMapFile()
+addToMapFile()
 {
 	if [ "$2" == "" ]; then
 		# no class specification: everything in main headerfile
 		# first line of preprocessed file contains name of this file
 		grepmask=`tail -1 $1 | cut -d"@" -f1`
-		grepmask="^${grepmask}"
+		grepmask="^${grepmask}"						# grep on filename
 	else
+		# grep @class@ or @class : public xxx@
 		grepmask="@$2[ \t:publiclastru]*[a-zA-Z0-9_]*@"
 	fi
 	eval "grep '$grepmask' $1" | awk '
@@ -381,6 +442,10 @@ buildMapFile()
 			return ColumnType
 	}
 
+	#
+	# addBaseClass classname
+	#
+	# Adds the given class as base class to the map file.
 	function addBaseClass(baseClass) {
 		if (length(baseClass) <= 0) {
 			return;
@@ -393,10 +458,10 @@ buildMapFile()
 	# MAIN awk loop
 	{ 
 		split($0, field, "@")
-		Class=field[3]
+		Class=field[3]							# xxx or xxx : public yyy
 		BaseClass=""
 		if (index(Class,":")>0) {				# is class derived from other?
-			gsub("[ \t]*:[ \t]*public", "", Class)
+			gsub("[ \t]*:[ \t]*public", "", Class)	# --> xxx yyy
 			split(Class, part, " ")
 			Class=part[1]
 			BaseClass=part[2]
@@ -405,7 +470,7 @@ buildMapFile()
 		if (Class != prevClass) {				# start of a new class?
 			addBaseClass(prevBaseClass);		# class last class
 
-			if (Class == "") {				# EndOfClass marker?
+			if (Class == "") {					# EndOfClass marker?
 				next
 			}
 
@@ -417,9 +482,11 @@ buildMapFile()
 			prevClass=Class
 			prevBaseClass=BaseClass
 
+			# remember this class is in the map file
 			print Class >>"mapped.LCS"
+
 			if (BaseClass != "") {
-				print BaseClass >>"needed.LCS"
+				print BaseClass >>"needed.LCS"		# add this class later
 			}
 		}
 
@@ -471,37 +538,46 @@ FUNFILE=${MODULE}.fun.proto
 InitResultFile  	> ${MAPFILE}
 InitResultFile  	> ${FUNFILE}
 
+# make sure there are no old overall results left
+rm -f mapped.LCS missing.LCS
+
 # Scan the headerfiles and substract the class hierarchy
 for file in ${HEADERFILES}
 do
-	rm -f typedefs.LCS functions.LCS members.LCS \
-		  needed.LCS mapped.LCS missing.LCS
+	# cleanup intermediate results
+	rm -f typedefs.LCS functions.LCS members.LCS needed.LCS
 
 	# First stage: break down precompiled headerfile into:
 	#		typedefs.LCS
 	#		functions.LCS
 	#		members.LCS
+	echo -n "${file}: analysing"
 	cleanlist $file | analyseInfoFile
 
 	# Second stage: Construct mapfile from all classes in main headerfile
-	buildMapFile members.LCS >>${MAPFILE}
+	#	This stage might produce a needed.LCS file.
+	echo -n ", adding main classes"
+	addToMapFile members.LCS >>${MAPFILE}
 
 	# Third stage (repeating): Add the base- and embedded- classes
+	echo -n ", adding base classes"
 	complete=false
 	while (! $complete)
 	do
-		if [ ! -f "needed.LCS" ]; then
-			complete=true
+		if [ ! -f "needed.LCS" ]; then		# nothing needed anymore?
+			complete=true					# then we are done
 			break
 		fi
 
-		sort needed.LCS | uniq >adding.LCS
-		rm -f needed.LCS
+		sort needed.LCS | uniq >adding.LCS	# skip doubles
+		rm -f needed.LCS					# will be recreated in next loop
 		cat adding.LCS | while read classname
 		do
+			# make sure this class is not already in the map file
 			grep $classname mapped.LCS >/dev/null 2>&1
-			if [ $? -ne 0 ]; then		# not found?
-				buildMapFile members.LCS $classname >>${MAPFILE}
+			if [ $? -ne 0 ]; then			# not found?
+				addToMapFile members.LCS $classname >>${MAPFILE}
+				# class succesfully added?
 				grep $classname mapped.LCS >/dev/null 2>&1
 				if [ $? -ne 0 ]; then		# still not found?
 					echo $classname >>missing.LCS
@@ -510,12 +586,26 @@ do
 		done
 		rm adding.LCS
 	done
-
-	ConstructFunfile mapped.LCS >>${FUNFILE}
+	echo ", ready"
 done
+
+# The embedded and base classes are still in the map file like @@@xxx
+# Remove the @@@ from the classes that were resolved.
+cat mapped.LCS | while read class
+do
+	cat ${MAPFILE} | sed "s/@@@${class}$/${class}/" >> ${MAPFILE}tmp
+	mv ${MAPFILE}tmp ${MAPFILE}
+done
+
+# Almost done, construct the fun file for the implemented classes
+ConstructFunfile mapped.LCS >>${FUNFILE}
 
 if [ -f missing.LCS ]; then
 	echo "WARNING: The following types or classes could not be resolved:"
 	cat missing.LCS
 fi
+
+# Finally cleanup our mess.
+#rm -f typedefs.LCS functions.LCS members.LCS needed.LCS mapped.LCS missing.LCS
+
 
