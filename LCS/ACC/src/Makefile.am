@@ -32,8 +32,8 @@ libacc_la_SOURCES = \
 					ApplControlServer.cc \
 					DH_ProcControl.cc \
 					ProcControlComm.cc  \
-					ProcControlServer.cc 
-#					ParCollRecord.cc 
+					ProcControlServer.cc  
+#					ParCollRecord.cc  
 #					ConfigurationMgr.cc 
 
 bin_PROGRAMS = ApplController
@@ -45,6 +45,9 @@ ApplController_SOURCES      = ACCmdImpl.cc \
 							  StateEngine.cc \
 							  APAdmin.cc \
 							  APAdminPool.cc \
+							  ProcRule.cc \
+							  ProcRuler.cc \
+							  ItemList.cc \
 							  ApplController.cc \
 							  ApplControllerMain.cc
 # ApplProcess.cc 

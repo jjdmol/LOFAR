@@ -35,6 +35,8 @@
 #include <ACC/APAdminPool.h>
 #include <ACC/DH_ProcControl.h>
 #include <ACC/ParameterSet.h>
+#include <ACC/ItemList.h>
+#include <ACC/ProcRuler.h>
 
 namespace LOFAR {
   namespace ACC {
@@ -53,6 +55,7 @@ private:
 	void sendExecutionResult(uint16				result,
 							 const string&		comment);
 	void startCmdState(DH_ApplControl*	newMsg);
+	void createParSubsets();
 
 	void checkForACCommands();
 	void checkForAPMessages();
@@ -65,6 +68,8 @@ private:
 
 	// Datamembers
 	ParameterSet*		itsParamSet;
+	ItemList*			itsProcList;
+	ItemList*			itsNodeList;
 	ACCmdImpl*			itsACCmdImpl;		// The command implementation
 	CmdStack*			itsCmdStack;		// future commands
 	APAdminPool*		itsAPAPool;
@@ -73,10 +78,11 @@ private:
 	time_t				itsCurTime;			// Current timestamp
 	bool				itsIsRunning;
 
-	StateEngine			itsStateEngine;		// State machine of the controller
+	StateEngine*		itsStateEngine;		// State machine of the controller
 	ACState				itsCurState;		// State currently executing
 	DH_ApplControl*		itsCurACMsg;		// Command under handling
 
+	ProcRuler			itsProcRuler;
 };
 
   } // namespace ACC
