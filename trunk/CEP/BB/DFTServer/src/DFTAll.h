@@ -69,6 +69,14 @@ public:
   // Receive the result from the DFTServer.
   void receive();
 
+  // Send an end message to the server.
+  void quit();
+
+  // Get access to the request.
+  const DH_DFTRequest& getRequest() const;
+  // Get access to the result.
+  const DH_DFTResult&  getResult() const;
+
 private:
   /// Forbid copy constructor.
   DFTAll(const DFTAll&);
@@ -102,6 +110,11 @@ inline void DFTAll::send()
 
   //#inline void DFTAll::receive()
   //#  { itsResult.read(); }
+
+inline const DH_DFTRequest& DFTAll::getRequest() const
+  { return itsRequest; }
+inline const DH_DFTResult&  DFTAll::getResult() const
+  { return itsResult; }
 
 }
 

@@ -57,4 +57,9 @@ namespace LOFAR
     ASSERT (itsResult.getNBaseline() == itsRequest.getNBaseline());
   }
 
+  void DFTAll::quit()
+  {
+    itsRequest.set (0., 0., 0, 0., 0., 0, 0, 0);
+    itsRequest.write();
+  }
 }

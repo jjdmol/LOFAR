@@ -1,9 +1,11 @@
-check_PROGRAMS	      =	tDFTServer
+check_PROGRAMS	      =	tDFTServer tmul
 
 # programs to run through supplied checktools
 CHECKTOOLPROGS 	      =	tDFTServer
 
 TESTS	= tDFTServer_test.sh
+
+tmul_SOURCES		= tmul.cc
 
 tDFTServer_SOURCES		= tDFTServer.cc
 tDFTServer_LDADD		= ../src/libdftserver.la

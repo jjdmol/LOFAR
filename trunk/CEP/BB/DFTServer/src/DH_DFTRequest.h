@@ -26,7 +26,7 @@
 
 #include <Common/LofarTypes.h>
 #include <Transport/DataHolder.h>
-
+#include <Common/lofar_iostream.h>
 namespace LOFAR
 {
 
@@ -131,7 +131,7 @@ inline double DH_DFTRequest::getL() const
 inline double DH_DFTRequest::getM() const
   { return *itsM; }
 inline double DH_DFTRequest::getN() const
-  { return std::sqrt(*itsL * *itsL + *itsM * *itsM); }
+  { return std::sqrt(1 - getL() * getL() - getM() * getM()); }
 
 inline const int32* DH_DFTRequest::getAnt() const
   { return itsAnt; }

@@ -1,7 +1,7 @@
 //# DFTServer.h: DFT server application for use in combination with 
 //#              BBS2 application.
 //#
-//# Copyright (C) 2000, 2001
+//# Copyright (C) 2004
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
 //# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#

@@ -50,7 +50,7 @@ void DH_DFTRequest::preprocess()
   // Add the fields to the data definition.
   // The dimensionality of UVW is variable.
   // Its axes are ntime and nantenna.
-  addField ("UVW", BlobField<double>(1, 0u, 0u));
+  addField ("UVW", BlobField<double>(1, 3u, 0u, 0u));
   addField ("StartFreq", BlobField<double>(1));
   addField ("StepFreq", BlobField<double>(1));
   addField ("NFreq", BlobField<uint32>(1));
@@ -77,9 +77,10 @@ void DH_DFTRequest::set (double startFreq, double stepFreq, int nFreq,
 		    double startTime, double stepTime, int nTime,
 		    int nAnt, int nBaseline)
 {
-  std::vector<uint32> shape(2);
-  shape[0] = nTime;
-  shape[1] = nAnt;
+  std::vector<uint32> shape(3);
+  shape[0] = 3;
+  shape[1] = nTime;
+  shape[2] = nAnt;
   getDataField("UVW").setShape (shape);
   getDataField("Ant").setShape (std::vector<uint32>(1,nAnt));
   getDataField("Ant1").setShape (std::vector<uint32>(1,nBaseline));
@@ -113,8 +114,9 @@ void DH_DFTRequest::fillDataPointers()
   itsNBaseline = getDataField("Ant1").getNelem();
   ASSERT (itsNBaseline == getDataField("Ant2").getNelem());
   const std::vector<uint32>& shape = getDataField("UVW").getShape();
-  ASSERT (shape.size() == 2);
-  ASSERT (itsNAnt == shape[1]);
+  ASSERT (shape.size() == 3);
+  ASSERT (3 == shape[0]);
+  ASSERT (itsNAnt == shape[2]);
 }
 
 
