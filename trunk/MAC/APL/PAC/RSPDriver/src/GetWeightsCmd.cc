@@ -20,8 +20,8 @@
 //#
 //#  $Id$
 
+#include <APLConfig.h>
 #include "RSP_Protocol.ph"
-#include "RSPConfig.h"
 #include "GetWeightsCmd.h"
 
 #include <blitz/array.h>
@@ -58,26 +58,27 @@ void GetWeightsCmd::ack(CacheBuffer& cache)
   ack.status = SUCCESS;
 
   ack.weights().resize(BeamletWeights::SINGLE_TIMESTEP,
-		       m_event->rcumask.count(),
-		       cache.getBeamletWeights()().extent(thirdDim));
+		       m_event->blpmask.count(),
+		       cache.getBeamletWeights()().extent(thirdDim),
+		       N_POL);
 
-  int result_rcu = 0;
-  for (int cache_rcu = 0; cache_rcu < GET_CONFIG("N_RCU", i); cache_rcu++)
+  int result_blp = 0;
+  for (int cache_blp = 0; cache_blp < GET_CONFIG("N_BLPS", i); cache_blp++)
   {
-    if (m_event->rcumask[result_rcu])
+    if (m_event->blpmask[result_blp])
     {
-      if (result_rcu < GET_CONFIG("N_RCU", i))
+      if (result_blp < GET_CONFIG("N_BLPS", i))
       {
-	ack.weights()(0, result_rcu, Range::all())
-	  = cache.getBeamletWeights()()(0, cache_rcu, Range::all());
+	ack.weights()(0, result_blp, Range::all(), Range::all())
+	  = cache.getBeamletWeights()()(0, cache_blp, Range::all(), Range::all());
       }
       else
       {
-	LOG_WARN(formatString("invalid RCU index %d, there are only %d RCU's",
-			      result_rcu, GET_CONFIG("N_RCU", i)));
+	LOG_WARN(formatString("invalid BLP index %d, there are only %d BLP's",
+			      result_blp, GET_CONFIG("N_BLPS", i)));
       }
       
-      result_rcu++;
+      result_blp++;
     }
   }
   
@@ -106,7 +107,7 @@ void GetWeightsCmd::setTimestamp(const Timestamp& timestamp)
 
 bool GetWeightsCmd::validate() const
 {
-  return (m_event->rcumask.count() <= (unsigned int)GET_CONFIG("N_RCU", i));
+  return (m_event->blpmask.count() <= (unsigned int)GET_CONFIG("N_BLPS", i));
 }
 
 bool GetWeightsCmd::readFromCache() const

@@ -20,8 +20,8 @@
 //#
 //#  $Id$
 
+#include <APLConfig.h>
 #include "RSP_Protocol.ph"
-#include "RSPConfig.h"
 #include "UpdStatusCmd.h"
 
 #include <blitz/array.h>
@@ -74,11 +74,11 @@ void UpdStatusCmd::complete(CacheBuffer& cache)
   ack.sysstatus.rcu().resize(m_event->rcumask.count());
 
   int result_rcu = 0;
-  for (int cache_rcu = 0; cache_rcu < GET_CONFIG("N_RCU", i); cache_rcu++)
+  for (int cache_rcu = 0; cache_rcu < GET_CONFIG("N_BLPS", i) * 2; cache_rcu++)
   {
     if (m_event->rcumask[result_rcu])
     {
-      if (result_rcu < GET_CONFIG("N_RCU", i))
+      if (result_rcu < GET_CONFIG("N_BLPS", i) * 2)
       {
 	ack.sysstatus.rcu()(result_rcu)
 	  = cache.getSystemStatus().rcu()(cache_rcu);
@@ -86,7 +86,7 @@ void UpdStatusCmd::complete(CacheBuffer& cache)
       else
       {
 	LOG_WARN(formatString("invalid RCU index %d, there are only %d RCU's",
-			      result_rcu, GET_CONFIG("N_RCU", i)));
+			      result_rcu, GET_CONFIG("N_BLPS", i) * 2));
       }
       
       result_rcu++;
@@ -108,5 +108,5 @@ void UpdStatusCmd::setTimestamp(const Timestamp& timestamp)
 
 bool UpdStatusCmd::validate() const
 {
-  return (m_event->rcumask.count() <= (unsigned int)GET_CONFIG("N_RCU", i));
+  return (m_event->rcumask.count() <= (unsigned int)GET_CONFIG("N_BLPS", i) * 2);
 }

@@ -49,7 +49,7 @@ using namespace LOFAR;
 using namespace blitz;
 
 SSWrite::SSWrite(GCFPortInterface& board_port, int board_id)
-  : SyncAction(board_port, board_id, N_BLP * 2 /* for nrsubbands and subbands */)
+  : SyncAction(board_port, board_id, N_BLP * 2 /* for NOF_SUBBANDS and SUBBANDS*/)
 {
 }
 
@@ -63,13 +63,10 @@ void SSWrite::sendrequest()
   if (0 == getCurrentBLP() % 2)
   {
     // send 'number of selected subbands'
-    uint8 global_blp = (getBoardId() * N_BLP) + (getCurrentBLP() / 2);
-    
-    // send subband select message
     EPANrsubbandsEvent nrsubbands;
     MEP_NRSUBBANDS(nrsubbands.hdr, MEPHeader::WRITE, getCurrentBLP() / 2);
 
-    nrsubbands.nof_subbands = Cache::getInstance().getBack().getSubbandSelection().nrsubbands()(global_blp);
+    nrsubbands.nof_subbands = N_BEAMLETS * 2 - 1;
     
     getBoardPort().send(nrsubbands);
   }
@@ -85,15 +82,12 @@ void SSWrite::sendrequest()
     MEP_SUBBANDSELECT(ss.hdr, MEPHeader::WRITE, getCurrentBLP() / 2);
     
     // create array to contain the subband selection
-    uint16 nr_subbands = Cache::getInstance().getBack().getSubbandSelection().nrsubbands()(global_blp);
-    LOG_DEBUG(formatString("nr_subbands=%d", nr_subbands));
-
     Array<uint16, 1> subbands((uint16*)&ss.ch,
-			      shape(EPA_Protocol::N_SUBBANDS),
+			      EPA_Protocol::N_BEAMLETS * N_POL,
 			      neverDeleteData);
     
     // copy the actual values from the cache
-    subbands = Cache::getInstance().getBack().getSubbandSelection()()(global_blp, Range(0, nr_subbands - 1));
+    subbands = Cache::getInstance().getBack().getSubbandSelection()()(global_blp, Range(0, N_BEAMLETS - 1));
     
     getBoardPort().send(ss);
   }
@@ -119,10 +113,10 @@ GCFEvent::TResult SSWrite::handleack(GCFEvent& event, GCFPortInterface& /*port*/
   if (ack.board.write.error ||
       ack.board.read.error)
   {
-    LOG_ERROR_STR("SSWrite " 
+    LOG_ERROR_STR("\nSSWrite " 
 		  << (ack.board.write.error
 		      ? "write error"
-		      : "read error"));
+		      : "read error\n"));
   }
 
   return GCFEvent::HANDLED;

@@ -1,6 +1,6 @@
 //#  -*- mode: c++ -*-
 //#
-//#  RSPConfig.h: Singleton class containing the
+//#  APLConfig.h: Singleton class containing the
 //#               configuration file configurable constants.
 //#
 //#  Copyright (C) 2002-2004
@@ -23,47 +23,44 @@
 //#
 //#  $Id$
 
-#ifndef RSPCONFIG_H_
-#define RSPCONFIG_H_
+#ifndef APLCONFIG_H_
+#define APLCONFIG_H_
 
 #include "Config.h"
 #include <string>
 
-#define RSPDRIVER_BLOCK "RSPDRIVER"
-
 #define GET_CONFIG(var, type) \
-(RSP::RSPConfig::getInstance()()(RSPDRIVER_BLOCK, var)? \
- (ato##type(RSP::RSPConfig::getInstance()()(RSPDRIVER_BLOCK, var))) : ato##type(""))
+(APLConfig::getInstance()()(APLConfig::getInstance().getBlockname(), var)? \
+ (ato##type(APLConfig::getInstance()()(APLConfig::getInstance().getBlockname(), var))) : ato##type(""))
 
 #define GET_CONFIG_STRING(var) \
-(RSP::RSPConfig::getInstance()()(RSPDRIVER_BLOCK, var)?RSP::RSPConfig::getInstance()()(RSPDRIVER_BLOCK, var):"unset")
+(APLConfig::getInstance()()(APLConfig::getInstance().getBlockname(), var)?APLConfig::getInstance()()(APLConfig::getInstance().getBlockname(), var):"unset")
 
-namespace RSP
+/**
+ * Singleton class holding the constants that
+ * are configurable from a configuration file.
+ *
+ * These constants can only be changed before starting
+ * the RSP driver.
+ */
+class APLConfig
 {
-  /**
-   * Singleton class holding the constants that
-   * are configurable from a configuration file.
-   *
-   * These constants can only be changed before starting
-   * the RSP driver.
-   */
-  class RSPConfig
-  {
-    public:
-      static RSPConfig& getInstance();
-      virtual ~RSPConfig();
+  public:
+    static APLConfig& getInstance();
+    virtual ~APLConfig();
 
-      void load(const char* filename);
+    void load(const char* blockname, const char* filename);
+    const char* getBlockname();
 
-      inline Config& operator()() { return m_config; }
+    inline Config& operator()() { return m_config; }
 
-    private:
-      RSPConfig();
+  private:
+    APLConfig();
 
-      static RSPConfig* m_instance;
+    static APLConfig* m_instance;
 
-      Config  m_config;
-  };
+    std::string m_blockname;
+    Config      m_config;
 };
 
-#endif /* RSPCONFIG_H_ */
+#endif /* APLCONFIG_H_ */

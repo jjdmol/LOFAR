@@ -15,7 +15,7 @@ BUILT_SOURCES = \
 	RSP_Protocol.ph \
 	EPA_Protocol.ph \
 	log4cplus.properties \
-	rsp.cfg
+	rspdriver.conf
 
 clean-local:
 	rm -f \
@@ -26,8 +26,9 @@ clean-local:
 
 EXTRA_DIST = \
 	RSP_Protocol.ph \
-	EPA_Protocol.ph \
-	rsp.cfg
+	EPA_Protocol.ph
+
+sysconf_DATA = rspdriver.conf
 
 # 	log4cplus.properties \
 # 	abs.ns \
@@ -36,7 +37,7 @@ EXTRA_DIST = \
 %.properties: $(MAC_CONFIG)/%.properties
 	cp $< $@
 
-%.cfg: %.cfg.in
+%.conf: %.conf.in
 	cp $< $@
 
 %.ns: %.ns.in
@@ -45,8 +46,7 @@ EXTRA_DIST = \
 %.top: %.top.in
 	cp $< $@
 
-lib_LTLIBRARIES    = librsp.la
-noinst_LTLIBRARIES = libepa.la
+lib_LTLIBRARIES    = libaplconfig.la librsp.la libepa.la
 
 include_HEADERS = \
 	RSP_Protocol.ph \
@@ -62,7 +62,10 @@ include_HEADERS = \
 	\
 	EPA_Protocol.ph \
 	MEPHeader.h \
-	MEPData.h
+	MEPData.h \
+	\
+	Config.h \
+	APLConfig.h
 
 librsp_la_SOURCES = \
 	Timestamp.cc \
@@ -82,14 +85,14 @@ libepa_la_SOURCES = \
 	RawEvent.h \
 	RawEvent.cc
 
+libaplconfig_la_SOURCES = \
+	Config.cc \
+	APLConfig.cc
+
 bin_PROGRAMS = RSPDriver
 
 RSPDriver_SOURCES = \
 	RefCount.h \
-	Config.h \
-	Config.cc \
-	RSPConfig.h \
-	RSPConfig.cc \
 	RSPDriver.h \
 	RSPDriver.cc \
 	Scheduler.h \
@@ -157,6 +160,7 @@ RSPDriver_SOURCES = \
 RSPDriver_LDADD = \
 	$(top_builddir)/src/librsp.la \
 	$(top_builddir)/src/libepa.la \
+	$(top_builddir)/src/libaplconfig.la \
 	-lgcf
 
 include $(lofar_sharedir)/Makefile.common

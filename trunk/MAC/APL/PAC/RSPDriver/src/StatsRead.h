@@ -26,6 +26,7 @@
 #define STATSREAD_H_
 
 #include "SyncAction.h"
+#include <Common/LofarTypes.h>
 
 namespace RSP
 {
@@ -35,7 +36,7 @@ namespace RSP
       /**
        * Constructors for a StatsRead object.
        */
-      StatsRead(GCFPortInterface& board_port, int board_id);
+      StatsRead(GCFPortInterface& board_port, int board_id, uint8 type);
 	  
       /* Destructor for StatsRead. */
       virtual ~StatsRead();
@@ -56,6 +57,7 @@ namespace RSP
       virtual GCFEvent::TResult handleack(GCFEvent& event, GCFPortInterface& port);
 
     private:
+      uint8 m_type; // statistics type
   };
 };
      

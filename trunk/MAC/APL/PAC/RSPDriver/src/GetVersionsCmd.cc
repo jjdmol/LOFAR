@@ -20,8 +20,8 @@
 //#
 //#  $Id$
 
+#include <APLConfig.h>
 #include "RSP_Protocol.ph"
-#include "RSPConfig.h"
 #include "GetVersionsCmd.h"
 
 #include <blitz/array.h>

@@ -97,7 +97,7 @@ GCFEvent::TResult BWRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
   
   // copy weights from the message to the cache
   Array<int16, 1> weights((int16*)&bfcoefs.coef,
-			  shape(RSP_Protocol::MAX_N_BEAMLETS),
+			  shape(N_BEAMLETS),
 			  neverDeleteData);
 
   if (0 == (m_regid % 2))

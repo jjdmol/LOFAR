@@ -20,8 +20,8 @@
 //#
 //#  $Id$
 
+#include <APLConfig.h>
 #include "RSP_Protocol.ph"
-#include "RSPConfig.h"
 #include "GetRCUCmd.h"
 
 #include <blitz/array.h>
@@ -60,18 +60,18 @@ void GetRCUCmd::ack(CacheBuffer& cache)
   ack.settings().resize(m_event->rcumask.count());
   
   int result_rcu = 0;
-  for (int cache_rcu = 0; cache_rcu < GET_CONFIG("N_RCU", i); cache_rcu++)
+  for (int cache_rcu = 0; cache_rcu < GET_CONFIG("N_BLPS", i) * EPA_Protocol::N_POL; cache_rcu++)
   {
     if (m_event->rcumask[result_rcu])
     {
-      if (result_rcu < GET_CONFIG("N_RCU", i))
+      if (result_rcu < GET_CONFIG("N_BLPS", i) * EPA_Protocol::N_POL)
       {
 	ack.settings()(result_rcu) = cache.getRCUSettings()()(cache_rcu);
       }
       else
       {
 	LOG_WARN(formatString("invalid RCU index %d, there are only %d RCU's",
-			      result_rcu, GET_CONFIG("N_RCU", i)));
+			      result_rcu, GET_CONFIG("N_BLPS", i) * EPA_Protocol::N_POL));
       }
       
       result_rcu++;
@@ -103,7 +103,7 @@ void GetRCUCmd::setTimestamp(const Timestamp& timestamp)
 
 bool GetRCUCmd::validate() const
 {
-  return ((m_event->rcumask.count() <= (unsigned int)GET_CONFIG("N_RCU", i)));
+  return ((m_event->rcumask.count() <= (unsigned int)GET_CONFIG("N_BLPS", i) * EPA_Protocol::N_POL));
 }
 
 bool GetRCUCmd::readFromCache() const

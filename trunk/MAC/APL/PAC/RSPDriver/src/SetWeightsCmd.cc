@@ -20,8 +20,8 @@
 //#
 //#  $Id$
 
+#include <APLConfig.h>
 #include "RSP_Protocol.ph"
-#include "RSPConfig.h"
 #include "SetWeightsCmd.h"
 
 #include <blitz/array.h>
@@ -42,8 +42,8 @@ SetWeightsCmd::SetWeightsCmd(RSPSetweightsEvent& sw_event, GCFPortInterface& por
   RSPSetweightsEvent* event = new RSPSetweightsEvent();
   m_event = event;
   
-  event->timestamp = sw_event.timestamp + timestep;
-  event->rcumask   = sw_event.rcumask;
+  event->timestamp   = sw_event.timestamp + timestep;
+  event->blpmask = sw_event.blpmask;
 
   setOperation(oper);
   setPeriod(0);
@@ -60,7 +60,7 @@ void SetWeightsCmd::setWeights(Array<complex<int16>, BeamletWeights::NDIM> weigh
   RSPSetweightsEvent* event = static_cast<RSPSetweightsEvent*>(m_event);
   
   event->weights().resize(BeamletWeights::SINGLE_TIMESTEP,
-			  event->rcumask.count(), weights.extent(thirdDim));
+			  event->blpmask.count(), weights.extent(thirdDim), EPA_Protocol::N_POL);
   event->weights() = weights;
 }
 
@@ -76,23 +76,23 @@ void SetWeightsCmd::ack(CacheBuffer& /*cache*/)
 
 void SetWeightsCmd::apply(CacheBuffer& cache)
 {
-  int input_rcu = 0;
-  for (int cache_rcu = 0; cache_rcu < GET_CONFIG("N_RCU", i); cache_rcu++)
+  int input_blp = 0;
+  for (int cache_blp = 0; cache_blp < GET_CONFIG("N_BLPS", i); cache_blp++)
   {
-    if (m_event->rcumask[cache_rcu])
+    if (m_event->blpmask[cache_blp])
     {
-      if (cache_rcu < GET_CONFIG("N_RCU", i))
+      if (cache_blp < GET_CONFIG("N_BLPS", i))
       {
-	cache.getBeamletWeights()()(0, cache_rcu, Range::all())
-	  = m_event->weights()(0, input_rcu, Range::all());
+	cache.getBeamletWeights()()(0, cache_blp, Range::all(), Range::all())
+	  = m_event->weights()(0, input_blp, Range::all(), Range::all());
       }
       else
       {
-	LOG_WARN(formatString("invalid RCU index %d, there are only %d RCU's",
-			      cache_rcu, GET_CONFIG("N_RCU", i)));
+	LOG_WARN(formatString("invalid BLP index %d, there are only %d BLP's",
+			      cache_blp, GET_CONFIG("N_BLPS", i)));
       }
 
-      input_rcu++;
+      input_blp++;
     }
   }
 }

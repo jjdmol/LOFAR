@@ -23,7 +23,7 @@
 #include "Config.h"
 
 using namespace std;
-using namespace RSP;
+//using namespace RSP;
 
 static int S_count(const std::string& s, char c);
 
@@ -215,7 +215,7 @@ Config::value(const char* block, const char* name, int col)
 const char*
 Config::value(const string& block, string& name, int col)
 {
-  if (name == "" || col < 1)
+  if (name == "" || col < 1 || 0 == _pSValue )
       return NULL;
 
   _pSValue = _pVStart;
@@ -247,7 +247,7 @@ Config::value(const char* name, int col)
 const char*
 Config::value(string& name, int col)
 {
-  if (name == "" || col < 1)
+  if (name == "" || col < 1 || 0 == _pSValue)
       return NULL;
 
   _pSValue = _pVStart;
@@ -282,7 +282,7 @@ Config::search_value(int col)
 const char*
 Config::_ivalue(const char* block, const char* name, int index, int col)
 {
-  if (index < 1 || col < 1)
+  if (index < 1 || col < 1 || 0 == _pSValue)
       return NULL;
 
   _pSValue = _pVStart;
@@ -414,7 +414,6 @@ Config::block(int index)
     
   return NULL;
 }
-
 
 int
 Config::read_config_file(void)

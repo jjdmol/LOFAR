@@ -56,7 +56,7 @@ WGWrite::~WGWrite()
 
 void WGWrite::sendrequest()
 {
-  uint8 global_blp = (getBoardId() * N_BLP) + getCurrentBLP() * 2;
+  uint8 global_blp = (getBoardId() * N_BLP) + getCurrentBLP();
 
   EPAWgsettingsEvent wgsettings;
   MEP_WGSETTINGS(wgsettings.hdr, MEPHeader::WRITE, getCurrentBLP());

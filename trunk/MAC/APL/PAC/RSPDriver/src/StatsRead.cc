@@ -45,8 +45,8 @@ using namespace EPA_Protocol;
 using namespace RSP_Protocol;
 using namespace blitz;
 
-StatsRead::StatsRead(GCFPortInterface& board_port, int board_id)
-  : SyncAction(board_port, board_id, N_BLP)
+StatsRead::StatsRead(GCFPortInterface& board_port, int board_id, uint8 type)
+  : SyncAction(board_port, board_id, N_BLP), m_type(type)
 {
 }
 
@@ -57,10 +57,22 @@ StatsRead::~StatsRead()
 
 void StatsRead::sendrequest()
 {
-  EPAStstatsReadEvent statsread;
-  MEP_ST(statsread.hdr, MEPHeader::READ, getCurrentBLP(), MEPHeader::MEAN);
+  if (m_type <= Statistics::SUBBAND_POWER)
+  {
+    EPAStsubstatsReadEvent statsread;
 
-  getBoardPort().send(statsread);
+    MEP_STSUB(statsread.hdr, MEPHeader::READ, getCurrentBLP(), m_type);
+
+    getBoardPort().send(statsread);
+  }
+  else
+  {
+    EPAStstatsReadEvent statsread;
+
+    MEP_ST(statsread.hdr, MEPHeader::READ, getCurrentBLP(), m_type - Statistics::BEAMLET_MEAN);
+
+    getBoardPort().send(statsread);
+  }
 }
 
 void StatsRead::sendrequest_status()
@@ -70,14 +82,77 @@ void StatsRead::sendrequest_status()
 
 GCFEvent::TResult StatsRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
 {
-  EPAStstatsEvent ack(event);
+  uint8 global_blp = (getBoardId() * N_BLP) + getCurrentBLP();
 
-  Statistics& stats = Cache::getInstance().getBack().getStatistics();
+  if (m_type <= Statistics::SUBBAND_POWER)
+  {
+    EPAStsubstatsEvent ack(event);
 
+    Array<complex<uint16>, 2> stats((complex<uint16>*)&ack.stat,
+				    shape(N_BEAMLETS, N_POL),
+				    neverDeleteData);
+
+    complex<double>* cacheptr = Cache::getInstance().getBack().getSubbandStats()()((int)m_type,
+										   global_blp * 2, Range::all()).data();
+    complex<uint16>* msgptr = stats.data();
+    
+    // copy stats for x-polarization, convert from uint16 to double
+    for (int bl = 0; bl < N_BEAMLETS; bl++)
+    {
+      *cacheptr++ = *msgptr++;
+      *msgptr++; // skip to next
+    }
+
+    cacheptr = Cache::getInstance().getBack().getSubbandStats()()((int)m_type,
+								  global_blp * 2 + 1, Range::all()).data();
+    msgptr = stats.data();
+    
+    // copy stats for y-polarization, convert from uint16 to double
+    msgptr++; // skip x-part
+    for (int bl = 0; bl < N_BEAMLETS; bl++)
+    {
+      *cacheptr++ = *msgptr++;
+      msgptr++;
+    }
+  }
+  else
+  {
+    EPAStstatsEvent ack(event);
+
+    Array<complex<uint16>, 2> stats((complex<uint16>*)&ack.stat,
+				    shape(N_BEAMLETS, N_POL),
+				    neverDeleteData);
+
+    complex<double>* cacheptr = Cache::getInstance().getBack().getBeamletStats()()((int)m_type - Statistics::BEAMLET_MEAN,
+										   global_blp * 2, Range::all()).data();
+    complex<uint16>* msgptr = stats.data();
+    
+    // copy stats for x-polarization, convert from uint16 to double
+    for (int bl = 0; bl < N_BEAMLETS; bl++)
+    {
+      *cacheptr++ = *msgptr++;
+      *msgptr++; // skip to next
+    }
+
+    cacheptr = Cache::getInstance().getBack().getSubbandStats()()((int)m_type - Statistics::BEAMLET_MEAN,
+								  global_blp * 2 + 1, Range::all()).data();
+    msgptr = stats.data();
+    
+    // copy stats for y-polarization, convert from uint16 to double
+    msgptr++; // skip x-part
+    for (int bl = 0; bl < N_BEAMLETS; bl++)
+    {
+      *cacheptr++ = *msgptr++;
+      msgptr++;
+    }
+  }
+
+#if 0
   memcpy(stats()(MEPHeader::MEAN,
 		 (getBoardId() * N_BLP) + ack.hdr.m_fields.addr.dstid,
 		 Range::all()).data(),
-	 &ack.stat, MAX_N_BEAMLETS);
+	 &ack.stat, N_BEAMLETS * sizeof(uint16));
+#endif
 
   return GCFEvent::HANDLED;
 }

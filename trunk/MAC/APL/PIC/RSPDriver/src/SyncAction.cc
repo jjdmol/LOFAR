@@ -139,7 +139,7 @@ GCFEvent::TResult SyncAction::waitack_state(GCFEvent& event, GCFPortInterface& p
       break;
 
     case EPA_READERR:
-      LOG_ERROR("Read error during SyncAction. Aborting sync action.");
+      LOG_ERROR("\nRead error during SyncAction. Aborting sync action.\n");
 
       setCompleted(true); // done with this statemachine
       TRAN(SyncAction::idle_state);

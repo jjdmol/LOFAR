@@ -69,7 +69,7 @@ void WGRead::sendrequest_status()
 
 GCFEvent::TResult WGRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
 {
-  uint8 global_blp = (getBoardId() * N_BLP) + getCurrentBLP() * 2;
+  uint8 global_blp = (getBoardId() * N_BLP) + getCurrentBLP();
 
   EPAWgsettingsEvent wgsettings(event);
 
