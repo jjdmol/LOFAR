@@ -26,29 +26,29 @@
 #ifndef PSS3_DH_WORKORDER_H
 #define PSS3_DH_WORKORDER_H
 
-#include <Common/lofar_complex.h>
-
+#include <Common/lofar_vector.h>
 #include <lofar_config.h>
 
-#include <CEPFrame/DH_Postgresql.h>
+#include <Transport/DH_PL.h>
+#include <Transport/PO_DH_PL.h>
 #include <PSS3/Quality.h>
 
-#define MAX_STRAT_ARGS_SIZE 32  // Change this value to the maximum
-                                // argument size of all strategy 
-                                // implementations
+namespace LOFAR
+{
 
 /**
-   This class is an example DataHolder which is only used in the
-   Example programs.
+   This class is a DataHolder which contains the work orders.
 */
 
-class DH_WorkOrder: public LOFAR::DH_Postgresql
+class DH_WorkOrder: public DH_PL
 {
 public:
 
   enum woStatus{New,Assigned,Executed};
 
-  explicit DH_WorkOrder (const string& name);
+  typedef PL::TPersistentObject<DH_WorkOrder> PO_DH_WO;
+
+  explicit DH_WorkOrder (const string& name = "dh_workorder");
 
   DH_WorkOrder(const DH_WorkOrder&);
 
@@ -56,128 +56,153 @@ public:
 
   DataHolder* clone() const;
 
+  // Get a reference to the PersistentObject.
+  virtual PL::PersistentObject& getPO() const;
+
+  // Create a TPO object and set the table name in it.
+  virtual void initPO (const string& tableName);
+
   /// Allocate the buffers.
   virtual void preprocess();
 
   /// Deallocate the buffers.
   virtual void postprocess();
 
-  /// Database store/retrieve methods
-  bool StoreInDatabase(int appId, int tag, char* buf, int size);
-  bool RetrieveFromDatabase(int appId, int tag, char* buf, int size);
+  /// overload the getcursize method;
+  /// reported data size may be altered with setCurDataSize() method
+  int  getCurDataSize() ;
+  void setCurDataSize(const int nbytes) ;
 
-  /// Data access functions.
-  int getWorkOrderID();
+  /// Data access methods.
+  int getWorkOrderID() const;
   void setWorkOrderID(int id);
 
-  woStatus getStatus();
-  void setStatus(woStatus status);
+  unsigned int getStatus() const ;
+  void setStatus(unsigned int status);
 
-  const string& getKSType();
+  string getKSType() const;
   void setKSType(const string& ksType);
+  int getKSTypeLength();
+  void setKSTypeLength(int length);
 
-  unsigned int getStrategyNo();
+  unsigned int getStrategyNo() const;
   void setStrategyNo(unsigned int no);
 
-  int getArgSize();
-  void setArgSize(int size);
-  char* getVarArgsPtr();
+  int getNoStartSolutions() const;
+  void setNoStartSolutions(int no);
 
-  const string& getParam1Name();
-  void setParam1Name(const string& name);
-  const string& getParam2Name();
-  void setParam2Name(const string& name);
-  const string& getParam3Name();
-  void setParam3Name(const string& name);
+  void useSolutionNumbers(const vector<int>& );
+  void getSolutionNumbers(vector<int>& ) const;
 
-  void useSolutionNumber(int id);
-  int getSolutionNumber();
+  char* getStrategyArgs();
+  unsigned int getArgsSize() const;
+  void setArgsSize(int size);
 
-protected:
-  // Definition of the DataPacket type.
-  // N.B.This datapacket can only be correctly transported with TH_Database
-  class DataPacket: public DH_Database::DataPacket
-  {
-  public:
-    DataPacket();
-    ~DataPacket() {};
-    int          itsWOID;
+  void getParamNames(vector<string>& names) const;
+  void setParamNames(vector<string>& names);
+  int getParamNameLength();
+  void setParamNameLength(int length);
+  unsigned int getNumberOfParam() const;
+  void setNumberOfParam(int number);
 
-    woStatus     itsStatus;        // WorkOrder status
-    string       itsKSType;        // Knowledge source type which is allowed to 
-                                   // execute the WorkOrder
-    unsigned int itsStrategyNo;    // Strategy number
-    int          itsArgSize;       // Size of strategy specific arguments in bytes
-    char         itsVarArgs[MAX_STRAT_ARGS_SIZE];
-                                   // Strategy specific arguments
-    string       itsParam1Name;    // Names of three parameters
-    string       itsParam2Name;
-    string       itsParam3Name;
-    int          itsStartSolution; // Use this solution
-  };
+  void dump();
 
 private:
   /// Forbid assignment.
   DH_WorkOrder& operator= (const DH_WorkOrder&);
-  DataPacket itsDataPacket;
+
+  // Fill the pointers (itsCounter and itsBuffer) to the data in the blob.
+  virtual void fillDataPointers();
+
+  int*          itsWOID;
+  unsigned int* itsStatus;
+  char*         itsKSType;
+  unsigned int* itsStrategyNo;
+  int*          itsNoStartSols;
+  int*          itsStartSolutions;
+  unsigned int* itsArgsSize; 
+  char*         itsStrategyArgs;
+  unsigned int* itsNumberOfParam;
+  char*         itsParamNames;
+
+  PO_DH_WO*    itsPODHWO; 
+
+  int itsCurDataSize;
 
   static int theirWriteCount;
   static int theirReadCount;
 
 };
 
-inline int DH_WorkOrder::getWorkOrderID()
-{ return itsDataPacket.itsWOID; }
+inline int DH_WorkOrder::getWorkOrderID() const
+{ return *itsWOID; }
 
 inline void DH_WorkOrder::setWorkOrderID(int id)
-{ itsDataPacket.itsWOID = id; }
+{ *itsWOID = id; }
 
-inline const string& DH_WorkOrder::getParam1Name()
-{ return itsDataPacket.itsParam1Name;}
+inline unsigned int DH_WorkOrder::getStatus() const
+{ return *itsStatus; }
 
-inline void DH_WorkOrder::setParam1Name(const string& name)
-{ itsDataPacket.itsParam1Name = name;}
+inline void DH_WorkOrder::setStatus(unsigned int status)
+{ *itsStatus = status; }
 
-inline const string& DH_WorkOrder::getParam2Name()
-{ return itsDataPacket.itsParam2Name;}
+inline string DH_WorkOrder::getKSType() const
+{  return string(itsKSType); }
 
-inline void DH_WorkOrder::setParam2Name(const string& name)
-{ itsDataPacket.itsParam2Name = name;}
-
-inline const string& DH_WorkOrder::getParam3Name()
-{ return itsDataPacket.itsParam3Name;}
-
-inline void DH_WorkOrder::setParam3Name(const string& name)
-{ itsDataPacket.itsParam3Name = name;}
-
-inline DH_WorkOrder::woStatus DH_WorkOrder::getStatus()
-{ return itsDataPacket.itsStatus; }
-
-inline void DH_WorkOrder::setStatus(DH_WorkOrder::woStatus status)
-{ itsDataPacket.itsStatus = status; }
-
-inline const string& DH_WorkOrder::getKSType()
-{ return itsDataPacket.itsKSType; }
-
-inline void DH_WorkOrder::setKSType(const string& ksType)
-{ itsDataPacket.itsKSType = ksType; }
-
-inline unsigned int DH_WorkOrder::getStrategyNo()
-{ return itsDataPacket.itsStrategyNo; }
+inline unsigned int DH_WorkOrder::getStrategyNo() const
+{ return *itsStrategyNo; }
 
 inline void DH_WorkOrder::setStrategyNo(unsigned int no)
-{ itsDataPacket.itsStrategyNo = no; }
+{ *itsStrategyNo = no; }
 
-inline int DH_WorkOrder::getArgSize()
-{ return itsDataPacket.itsArgSize; }
+inline char* DH_WorkOrder::getStrategyArgs()
+{ return itsStrategyArgs; }
 
-inline char* DH_WorkOrder::getVarArgsPtr()
-{ return itsDataPacket.itsVarArgs; }
+inline unsigned int DH_WorkOrder::getArgsSize() const
+{ return *itsArgsSize; }
 
-inline void DH_WorkOrder::useSolutionNumber(int id)
-{ itsDataPacket.itsStartSolution = id; }
+inline void DH_WorkOrder::setArgsSize(int size)
+{ *itsArgsSize = size; }
 
-inline int DH_WorkOrder::getSolutionNumber()
-{ return itsDataPacket.itsStartSolution; }
+inline int DH_WorkOrder::getNoStartSolutions() const
+{ return *itsNoStartSols; }
+
+inline void DH_WorkOrder::setNoStartSolutions(int no)
+{ *itsNoStartSols = no; }
+
+inline unsigned int DH_WorkOrder::getNumberOfParam() const
+{ return *itsNumberOfParam; }
+
+inline void DH_WorkOrder::setNumberOfParam(int number)
+{ *itsNumberOfParam = number; }
+
+inline int DH_WorkOrder::getCurDataSize() 
+{ return itsCurDataSize; }
+   
+inline void DH_WorkOrder::setCurDataSize(const int nbytes)
+{ itsCurDataSize = nbytes;  }
+
+// Define the class needed to tell PL that there should be
+// extra fields stored in the database table.
+namespace PL {                                                  
+  class DBRep<DH_WorkOrder> : public DBRep<DH_PL>               
+  {                                                             
+    public:                                                     
+      void bindCols (dtl::BoundIOs& cols);                      
+      void toDBRep (const DH_WorkOrder&);                        
+    private:                                                    
+      int itsWOID;                    // Temporarily stored in separate fields
+      unsigned int itsStatus;         // in order to facilitate debugging
+      string itsKSType;
+      unsigned int itsStrategyNo;
+      int itsNoStartSols;
+      unsigned int itsArgsSize;
+      unsigned int itsNumberOfParam;
+    };   
+                                                      
+} // end namespace PL   
+
+} // namespace LOFAR
 
 #endif 
+

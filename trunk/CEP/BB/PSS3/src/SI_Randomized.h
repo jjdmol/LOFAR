@@ -29,6 +29,9 @@
 #include <PSS3/StrategyImpl.h>
 #include <Common/lofar_string.h>
 
+namespace LOFAR
+{
+
 //# Forward Declarations
 
 // This is a class which implements the Randomized strategy.
@@ -81,5 +84,7 @@ public:
 
 inline string SI_Randomized::getType() const
 { return "Randomized"; }
+
+} // namespace LOFAR
 
 #endif

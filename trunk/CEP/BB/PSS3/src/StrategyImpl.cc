@@ -23,6 +23,9 @@
 #include <PSS3/StrategyImpl.h>
 #include <Common/Debug.h>
 
+namespace LOFAR
+{
+
 StrategyImpl::StrategyImpl()
 {}
 
@@ -36,3 +39,5 @@ bool StrategyImpl::useParms(const vector<string>&,
   TRACER1("This strategy does not support the useParms() method");
   return false;
 }
+
+} // namespace LOFAR

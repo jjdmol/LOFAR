@@ -25,10 +25,15 @@
 
 
 #include <PSS3/DH_Solution.h>
+#include <PL/TPersistentObject.h>
 #include <Common/Debug.h>
 #include <sstream>
 
-using namespace LOFAR;
+namespace LOFAR
+{
+
+const unsigned int MaxNumberOfParam = 32;  // These need NOT be the same as in DH_WorkOrder
+const unsigned int MaxParamNameLength = 16;
 
 string dtos(double dbl) // Convert double to string
 {
@@ -37,24 +42,39 @@ string dtos(double dbl) // Convert double to string
   return buf;
 }
 
-DH_Solution::DH_Solution (const string& name, const string& type)
-  : DH_Postgresql    (name, "DH_Solution"),
-    itsType          (type),
-    itsDBid          (-1)  
-{
-  setDataPacket (&itsDataPacket, sizeof(itsDataPacket));
-}
+DH_Solution::DH_Solution (const string& name)
+  : DH_PL           (name, "DH_Solution"),
+    itsID           (0),
+    itsWOID         (0),
+    itsIteration    (0),
+    itsFit          (0),
+    itsMu           (0),
+    itsStdDev       (0),
+    itsChi          (0),
+    itsNumberOfParam(0),
+    itsParamValues  (0),
+    itsParamNames   (0),
+    itsPODHSOL      (0)
+{}
 
 DH_Solution::DH_Solution(const DH_Solution& that)
-  : DH_Postgresql(that),
-    itsType      (that.itsType),
-    itsDBid      (that.itsDBid)
-{
-  setDataPacket (&itsDataPacket, sizeof(itsDataPacket));
-}
+  : DH_PL   (that),
+    itsID           (0),
+    itsWOID         (0),
+    itsIteration    (0),
+    itsFit          (0),
+    itsMu           (0),
+    itsStdDev       (0),
+    itsChi          (0),
+    itsNumberOfParam(0),
+    itsParamValues  (0),
+    itsParamNames   (0),
+    itsPODHSOL      (0)
+{}
 
 DH_Solution::~DH_Solution()
 {
+  delete itsPODHSOL;
 }
 
 DataHolder* DH_Solution::clone() const
@@ -62,196 +82,253 @@ DataHolder* DH_Solution::clone() const
   return new DH_Solution(*this);
 }
 
+void DH_Solution::initPO (const string& tableName)
+{                         
+  itsPODHSOL = new PO_DH_SOL(*this);
+  itsPODHSOL->tableName (tableName);
+}
+
+PL::PersistentObject& DH_Solution::getPO() const
+{
+  return *itsPODHSOL;
+} 
+
 void DH_Solution::preprocess()
 {
+  // Add the fields to the data definition.
+  addField ("ID", BlobField<int>(1));
+  addField ("WOID", BlobField<int>(1));
+  addField ("Iteration", BlobField<int>(1));
+  addField ("Fit", BlobField<double>(1));
+  addField ("Mu", BlobField<double>(1));
+  addField ("StdDev", BlobField<double>(1));
+  addField ("Chi", BlobField<double>(1));
+  addField ("NumberOfParam", BlobField<unsigned int>(1));
+  addField ("ParamValues", BlobField<double>(1, MaxNumberOfParam));
+  addField ("ParamNames", BlobField<char>(1, MaxParamNameLength, 
+                                          MaxNumberOfParam));
+  // Create the data blob (which calls fillPointers).
+  createDataBlock();
+  // Initialize the buffers.
+  for (unsigned int i=0; i<MaxNumberOfParam; i++) {
+     itsParamValues[i] = 0;
+     itsParamNames[i]= 0;
+  }
+  *itsID = -1;
+  *itsWOID = -1;
+  *itsIteration = -1;
+  *itsFit = 0;
+  *itsMu = 0;
+  *itsStdDev =0;
+  *itsChi = 0;
+  *itsNumberOfParam = 0;
+  // By default use the normal data size as current;
+  // only if the user explicitly set another CurDataSize
+  // we will send that length
+  setCurDataSize(getDataSize());
+}
+
+void DH_Solution::fillDataPointers()
+{
+ // Fill in the pointers.
+  itsID = getData<int> ("ID");
+  itsWOID = getData<int> ("WOID");
+  itsIteration = getData<int> ("Iteration");
+  itsFit = getData<double> ("Fit");
+  itsMu = getData<double> ("Mu");
+  itsStdDev = getData<double> ("StdDev");
+  itsChi = getData<double> ("Chi");
+  itsNumberOfParam = getData<unsigned int> ("NumberOfParam");
+  itsParamValues = getData<double> ("ParamValues");
+  itsParamNames  = getData<char> ("ParamNames");
 }
 
 void DH_Solution::postprocess()
 {
+  itsID = 0;
+  itsWOID = 0;
+  itsIteration = 0;
+  itsFit = 0;
+  itsMu = 0;
+  itsStdDev = 0;
+  itsChi = 0;
+  itsNumberOfParam = 0;
+  itsParamValues = 0;
+  itsParamNames = 0;
 }
 
-DH_Solution::DataPacket::DataPacket()
-  : itsID(-1),
-    itsWOID(-1),
-    itsIteration(-1)
+Quality DH_Solution::getQuality() const
 {
-  for (int i = 0; i < 10; i++)
-  {
-    itsRAValues[i] = 0;
-    itsDECValues[i] = 0;
-    itsStokesIValues[i] = 0;
-    itsQuality.init();
-  }
+  Quality qual;
+  qual.itsFit = *itsFit;
+  qual.itsMu = *itsMu;
+  qual.itsStddev = *itsStdDev;
+  qual.itsChi = *itsChi;
+  return qual;
 }
 
-bool DH_Solution::StoreInDatabase(int, int, char*, int)
+void DH_Solution::setQuality(const Quality& quality)
 {
-  // Create query
-  std::ostringstream q1;
-  q1 << "INSERT INTO BBSolutions VALUES ("
-     << getID() << ", "
-     << getWorkOrderID() << ", ";
-
-  for (int sourceNo = 1; sourceNo <= 10; sourceNo++)
-  {
-    q1 << dtos(getRAValue(sourceNo))  << ", "
-       << dtos(getDECValue(sourceNo)) << ", "
-       << dtos(getStokesIValue(sourceNo)) << ", ";
-  }
-  
-  q1 << getIterationNo() << ", "
-     << dtos(getQuality()->itsFit) << ", "
-     << dtos(getQuality()->itsMu) << ", "
-     << dtos(getQuality()->itsStddev) << ", "
-     << dtos(getQuality()->itsChi) << "); ";
-  
-  TRACER1("DH_Solution::StoreInDatabase <<< Insert Solution QUERY: " 
-	  << q1.str ());
-  
-  std::ostringstream q2;
-  q2 << "UPDATE BBWorkOrders SET "
-     << "Status = 2" << " "
-     << "WHERE WOid = " << getWorkOrderID() << " AND Status = 1 ;";
-  
-  TRACER1("DH_Solution::StoreInDatabase <<< Update WorkOrder status QUERY: " 
-	  << q2.str ());
-  
-  ExecuteSQLCommand(q1);
-  ExecuteSQLCommand(q2);
-
-  TRACER1("------ End of Knowledge Source write to database --------");
-    
-  return true;
+  *itsFit = quality.itsFit;
+  *itsMu = quality.itsMu;
+  *itsStdDev = quality.itsStddev;
+  *itsChi = quality.itsChi;
 }
 
-bool DH_Solution::RetrieveFromDatabase(int, int, char*, int)
+void DH_Solution::getParamValues(vector<double>& values) const
 {
-  if (itsType == "Control")
-  {
-    std::ostringstream q1;
-
-    q1 << "SELECT * FROM BBWorkOrders WHERE "
-       << "Status = " << 2 << ";";
-
-    TRACER1("DH_Solution::RetrieveFromDatabase <<< WorkOrder QUERY: "
-	    << q1.str ());
-
-    PGresult * res1;
-
-    // Block until a packet appears in the table
-    do 
-      {
-	//	cerr << '.';
-	res1 = PQexec (DH_Postgresql::theirConnection, (q1.str ()).c_str ());
-    
-	AssertStr (PQresultStatus (res1) == PGRES_TUPLES_OK,
-		   "DH_Postgressql::Retrieve (); Select query failed.");
-      } while (PQntuples (res1) == 0);
-
-    int nRows;
-    nRows = PQntuples (res1);
-    AssertStr (nRows == 1, "DH_Postgresql::Retrieve ();"
-	       << "ERROR: Message table may not have been cleaned up before starting program.");
-
-    setWorkOrderID(atoi(PQgetvalue(res1, 0, 0)));
- 
-    PQclear (res1);
-  
-    std::ostringstream q2;
-
-    q2 << "SELECT * FROM BBSolutions WHERE "
-       << "WOID = " << getWorkOrderID() << ";";
-
-    TRACER1("DH_Solution::RetrieveFromDatabase <<< Solution QUERY: " 
-	    << q2.str ());
-
-    PGresult * res2;
-
-    // Block until a packet appears in the table
-    do 
-      {
-	//	cerr << '.';
-	res2 = PQexec (DH_Postgresql::theirConnection, (q2.str ()).c_str ());
-    
-	AssertStr (PQresultStatus (res2) == PGRES_TUPLES_OK,
-		   "DH_Postgressql::Retrieve (); Select query failed.");
-      } while (PQntuples (res2) == 0);
-
-    nRows = PQntuples (res2);
-    AssertStr (nRows == 1, "DH_Postgresql::Retrieve ();"
-	       << "ERROR: Message table may not have been cleaned up before starting program.");
-
-    int base;
-    for (int sourceNo = 1; sourceNo <= 10; sourceNo++)
-    { 
-      base = 3*sourceNo;
-      setRAValue(sourceNo, atof(PQgetvalue(res2, 0, base-1)));
-      setDECValue(sourceNo, atof(PQgetvalue(res2, 0, base)));
-      setStokesIValue(sourceNo, atof(PQgetvalue(res2, 0, base+1)));
-    }
-
-     PQclear (res2);
-
-    TRACER1("------ End of Controller read from database --------");
+  values.clear();
+  values.resize(getNumberOfParam());
+  for (unsigned int i = 0; i < getNumberOfParam(); i++)
+  { 
+      values[i] = itsParamValues[i];
   }
-
-  else if (itsType == "KS")
-  {
-    std::ostringstream q1;
-
-    q1 << "SELECT * FROM BBSolutions WHERE "
-       << "id = " << itsDBid << ";";
-
-    TRACER1("DH_Solution::RetrieveFromDatabase <<< Solution QUERY: " 
-	    << q1.str ());
-
-    PGresult * resSol;
-
-    // Block until a packet appears in the table
-    do 
-      {
-	//	cerr << '.';
-	resSol = PQexec (DH_Postgresql::theirConnection, (q1.str ()).c_str ());
-    
-	AssertStr (PQresultStatus (resSol) == PGRES_TUPLES_OK,
-		   "DH_Postgressql::Retrieve (); Select query failed.");
-      } while (PQntuples (resSol) == 0);
-
-    int nRows = PQntuples (resSol);
-    AssertStr (nRows == 1, "DH_Postgresql::Retrieve ();"
-	       << "ERROR: Message table may not have been cleaned up before starting program.");
-
-    setID(atoi(PQgetvalue(resSol, 0, 0)));
-    setWorkOrderID(atoi(PQgetvalue(resSol, 0, 1)));
-
-    int base;
-    for (int sourceNo = 1; sourceNo <= 10; sourceNo++)
-    { 
-      base = 3*sourceNo;
-      setRAValue(sourceNo, atof(PQgetvalue(resSol, 0, base-1)));
-      setDECValue(sourceNo, atof(PQgetvalue(resSol, 0, base)));
-      setStokesIValue(sourceNo, atof(PQgetvalue(resSol, 0, base+1)));
-    }
-
-    PQclear (resSol);
-
-    TRACER1("------ End of Knowledge Source read from BlackBoard --------");
-  }
-
-  return true;
 }
 
+void DH_Solution::setParamValues(const vector<double>& values)
+{
+  AssertStr(values.size() <= MaxNumberOfParam, 
+            "The number of solution parameter values " << values.size() 
+            << " is larger than the maximum " << MaxNumberOfParam);
+  vector<double>::const_iterator iter;
+  int paramNo = 0;
+
+  for (iter = values.begin(); iter != values.end(); iter++)
+  {
+    itsParamValues[paramNo] = *iter;
+    paramNo++;
+  }
+  setNumberOfParam(paramNo);
+}
+
+void DH_Solution::getParamNames(vector<string>& names) const
+{
+  names.clear();
+  names.resize(getNumberOfParam());
+  char* ptr = itsParamNames;
+  for (unsigned int i = 0; i < getNumberOfParam(); i++)
+  {
+    names[i] = ptr;
+    ptr += MaxParamNameLength;
+  }
+}
+
+void DH_Solution::setParamNames(const vector<string>& names)
+{
+  AssertStr(names.size() <= MaxNumberOfParam, 
+            "The number of solution parameter names " << names.size() 
+            << " is larger than the maximum " << MaxNumberOfParam);
+
+  vector<string>::const_iterator iter;
+  int numberOfParam = 0;
+  char* ptr;
+  ptr = itsParamNames;
+  for (iter = names.begin(); iter != names.end(); iter++)
+  {
+    AssertStr(iter->length() < MaxParamNameLength, 
+              "Parameter name " << *iter << " is longer than maximum "
+	      << MaxParamNameLength <<".");
+    strcpy(ptr, iter->c_str());
+    ptr += MaxParamNameLength;    
+    numberOfParam++;
+  }
+  setNumberOfParam(numberOfParam);
+}
 
 void DH_Solution::clearData()
 {
   setID(-1);
   setWorkOrderID(-1);
   setIterationNo(-1);
-  for (int i = 0; i < 10; i++)
-  {
-    setRAValue(i, 0);
-    setDECValue(i, 0);
-    setStokesIValue(i, 0);
-    getQuality()->init();
+  Quality q;
+  setQuality(q);
+  setNumberOfParam(0);
+  for (unsigned int i=0; i<MaxNumberOfParam; i++) {
+     itsParamValues[i] = 0;
+     itsParamNames[i]=0;
   }
 }
+
+void DH_Solution::dump()
+{
+//   cout <<  "DH_Solution: " << endl;
+//   cout <<  "ID =  " << getID() << endl;
+//   cout <<  "workorder ID =  " << getWorkOrderID() << endl;
+//   cout <<  "iteration  =  " << getIterationNo() << endl;
+//   cout <<  "number of parameters =  " << getNumberOfParam() << endl;
+//   vector<string> pNames;
+//   getParamNames(pNames);
+//   vector<double> pValues;
+//   getParamValues(pValues);
+//   DbgAssertStr(pNames.size() == pValues.size(), 
+// 	            "The number of parameters and their values do not match ");
+//   cout <<  "PARAMETERS" << endl;
+
+//   char strVal [20];
+//   for (unsigned int i = 0; i < pNames.size(); i++)
+//   {
+//     cout <<  pNames[i] <<  " = " ;
+//     sprintf(strVal, "%1.10f ", pValues[i]);
+//     cout << strVal << endl;
+//   } 
+//   cout << endl;
+
+  cout << getIterationNo() << " " << endl;
+  vector<string> pNames;
+  getParamNames(pNames);
+  vector<double> pValues;
+  getParamValues(pValues);
+  DbgAssertStr(pNames.size() == pValues.size(), 
+	            "The number of parameters and their values do not match ");
+
+  char strVal [20];
+  for (unsigned int i = 0; i < pNames.size(); i++)
+  {
+    cout <<  pNames[i] <<  " " ;
+  } 
+  cout << endl;
+  for (unsigned int i = 0; i < pNames.size(); i++)
+  {
+    sprintf(strVal, "%1.10f ", pValues[i]);
+    cout << strVal << " ";
+  }
+  cout << endl;
+
+
+}
+
+namespace PL {
+
+void DBRep<DH_Solution>::bindCols (dtl::BoundIOs& cols)
+{
+  DBRep<DH_PL>::bindCols (cols);
+  cols["BBID"] == itsID;
+  cols["WOID"] == itsWOID;
+  cols["ITERATION"] == itsIteration;
+  cols["FIT"] == itsFit;
+  cols["MU"] == itsMu;
+  cols["STDDEV"] == itsStdDev;
+  cols["CHI"] == itsChi;
+  cols["NUMBEROFPARAM"] == itsNumberOfParam;
+}
+
+void DBRep<DH_Solution>::toDBRep (const DH_Solution& obj)
+{
+  DBRep<DH_PL>::toDBRep (obj);
+  itsID = obj.getID();
+  itsWOID = obj.getWorkOrderID();
+  itsIteration = obj.getIterationNo();
+  itsFit = obj.getQuality().itsFit;
+  itsMu = obj.getQuality().itsMu;
+  itsStdDev = obj.getQuality().itsStddev;
+  itsChi = obj.getQuality().itsChi;
+  itsNumberOfParam = obj.getNumberOfParam();
+}
+
+//# Force the instantiation of the templates.
+template class TPersistentObject<DH_Solution>;
+template class DBRep<DH_Solution>;
+
+}  // end namespace PL
+
+} // namespace LOFAR

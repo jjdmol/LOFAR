@@ -32,6 +32,9 @@
 
 #include <iostream>
 
+namespace LOFAR
+{
+
 // RMME: const int DefaultAntennaCount = 21;
 
 Calibrator::Calibrator (const string & ObservationData, 
@@ -332,7 +335,7 @@ void Calibrator::setParmValues (const vector<string>& names,
   itsPSS3CalibratorImpl -> setParmValues (names, values);
 }
 
-
+} // end namespace LOFAR
 
 
 

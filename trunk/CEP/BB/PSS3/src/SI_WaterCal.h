@@ -29,6 +29,9 @@
 #include <PSS3/StrategyImpl.h>
 #include <Common/lofar_string.h>
 
+namespace LOFAR
+{
+
 //# Forward Declarations
 
 // This is a class which implements the WaterCal strategy.
@@ -81,5 +84,7 @@ public:
 
 inline string SI_WaterCal::getType() const
 { return "WaterCal"; }
+
+} // namespace LOFAR
 
 #endif

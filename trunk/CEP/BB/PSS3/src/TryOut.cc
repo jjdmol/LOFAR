@@ -2,9 +2,9 @@
 using namespace std;
 
 #include <stdlib.h>
-#include "Quality.h"
-#include "CalibratorOld.h"
-#include "Calibrator.h"
+#include <PSS3/Quality.h>
+#include <PSS3/CalibratorOld.h>
+#include <PSS3/Calibrator.h>
 
 
 // Prototypes for different strategies
@@ -38,8 +38,8 @@ int RunOriginal (void);
 
 void TryOut (void) {
   //RunStandardPSS3NewCal (10);
-  RunRandom3srcNewCal (500, 1);
-  //RunNewCal10Sources (100);
+  //  RunRandom3srcNewCal (500, 1);
+  RunNewCal10Sources (20);
   //RunRandom (20, 1);
   //RunStandardPSS3Interval (10, 360);
   //RunStandardPSS3WithSaveResiduals (20);
@@ -56,7 +56,7 @@ void TryOut (void) {
 void RunStandardPSS3NewCal (int nIters) {
   try {
     cout << "********* RunStandardPSS3NewCal ************" << endl;
-    Calibrator cal ("demo", "skymodel", "tanaka");
+    LOFAR::Calibrator cal ("demo", "skymodel", "tanaka");
 
     cal.initialize ();
 
@@ -100,7 +100,7 @@ void RunStandardPSS3NewCal (int nIters) {
 void RunRandom3srcNewCal (int nParms, int nIters) {
   try {
     cout << "********* RunRandom3srcNewCal ************" << endl;
-    Calibrator cal ("demo", "skymodel", "tanaka");
+    LOFAR::Calibrator cal ("demo", "skymodel", "tanaka");
 
     cal.initialize ();
     cal.showSettings ();
@@ -199,7 +199,8 @@ void RunNewCal10Sources (int nIters) {
     cout << "********* RunNewCal10Sources ************" << endl;
     int i;
 
-    Calibrator cal ("demo", "skymodel", "tanaka");
+    LOFAR::Calibrator cal ("data/10Sources/demo1", "skymodel1", "meijeren",
+			   "meqmodel1", "postgres");
 
     //    cal.setTimeSlot (2);
     cal.initialize ();
@@ -226,6 +227,7 @@ void RunNewCal10Sources (int nIters) {
       for (i = 0; i < nIters; i ++) {
         cerr << "i = " << i << ':' << endl;
         cal.run ();
+	cal.showCurrentParms ();
       }
       // cal.SubtractOptimizedSources ();
       cal.commitOptimizedParameters ();
@@ -243,7 +245,7 @@ void RunNewCal10Sources (int nIters) {
 void RunStandardPSS3 (int nIters) {
   try {
     cout << "********* RunStandardPSS3 ************" << endl;
-    CalibratorOld cal ("demo", "meqmodel", "skymodel", "postgres", "tanaka", "");
+    LOFAR::CalibratorOld cal ("demo", "meqmodel", "skymodel", "postgres", "tanaka", "");
 
     cal.Initialize ();
 
@@ -279,7 +281,7 @@ void RunStandardPSS3 (int nIters) {
 void RunRandom (int nParms, int nIters) {
   try {
     cout << "********* RunRandom ************" << endl;
-    CalibratorOld cal ("demo", "meqmodel", "skymodel", "postgres", "tanaka", "");
+    LOFAR::CalibratorOld cal ("demo", "meqmodel", "skymodel", "postgres", "tanaka", "");
 
     cal.Initialize ();
 
@@ -374,7 +376,7 @@ void RunRandom (int nParms, int nIters) {
 void RunStandardPSS3Interval (int nIters, float intv) {
   try {
     cout << "********* RunStandardPSS3Interval ************" << endl;
-    CalibratorOld cal ("demo", "meqmodel", "skymodel", "postgres", "tanaka", "");
+    LOFAR::CalibratorOld cal ("demo", "meqmodel", "skymodel", "postgres", "tanaka", "");
 
     cal.setTimeInterval (intv);
     cal.Initialize ();
@@ -412,7 +414,7 @@ void RunStandardPSS3Interval (int nIters, float intv) {
 void RunSecondRipple (int nIters) {
   try {
     cout << "********* RunSesondRipple ************" << endl;
-    CalibratorOld cal ("demo", "meqmodel", "skymodel", "postgres", "tanaka", "");
+    LOFAR::CalibratorOld cal ("demo", "meqmodel", "skymodel", "postgres", "tanaka", "");
 
     cal.Initialize ();
 
@@ -449,7 +451,7 @@ void RunSecondRipple (int nIters) {
 void RunSecondRipple_v2 (int nIters) {
   try {
     cout << "********* RunSesondRipple_v2  ************" << endl;
-    CalibratorOld cal ("demo", "meqmodel", "skymodel", "postgres", "tanaka", "");
+    LOFAR::CalibratorOld cal ("demo", "meqmodel", "skymodel", "postgres", "tanaka", "");
 
     cal.Initialize ();
 
@@ -490,7 +492,7 @@ void RunSecondRipple_v2 (int nIters) {
 void RunStandardPSS3WithFastSaveParms (int nIters) {
   try {
     cout << "********* RunStandardPSS3WithFastSaveParms ************" << endl;
-    CalibratorOld cal ("demo", "meqmodel", "skymodel", "postgres", "tanaka", "");
+    LOFAR::CalibratorOld cal ("demo", "meqmodel", "skymodel", "postgres", "tanaka", "");
 
     cal.Initialize ();
 
@@ -526,7 +528,7 @@ void RunStandardPSS3WithFastSaveParms (int nIters) {
 void RunStandardPSS3WithSaveResiduals (int nIters) {
   try {
     cout << "********* RunStandardPSS3WithSaveResiduals ************" << endl;
-    CalibratorOld cal ("demo", "meqmodel", "skymodel", "postgres", "tanaka", "");
+    LOFAR::CalibratorOld cal ("demo", "meqmodel", "skymodel", "postgres", "tanaka", "");
 
     cal.Initialize ();
 
@@ -562,7 +564,7 @@ void RunStandardPSS3WithSaveResiduals (int nIters) {
 void RunPSS3DifferentSolveString (const string & solve, int nIters) {
   try {
     cout << "********* RunDifferentSolveString ************" << endl;
-    CalibratorOld cal ("demo", "meqmodel", "skymodel", "postgres", "tanaka", "");
+    LOFAR::CalibratorOld cal ("demo", "meqmodel", "skymodel", "postgres", "tanaka", "");
 
     cal.Initialize ();
 
@@ -597,7 +599,7 @@ void RunPSS3DifferentSolveString (const string & solve, int nIters) {
 void RunPSS3SolveString1By1 (int nIters) {
   try {
     cout << "********* RunPSS3SolveString1By1 ************" << endl;
-    CalibratorOld cal ("demo", "meqmodel", "skymodel", "postgres", "tanaka", "");
+    LOFAR::CalibratorOld cal ("demo", "meqmodel", "skymodel", "postgres", "tanaka", "");
 
     cal.Initialize ();
 
@@ -641,7 +643,7 @@ void RunPSS3SolveString1By1 (int nIters) {
 void RunPSS3Source1 (int nIters) {
   try {
     cout << "********* RunPSS3Source1 ************" << endl;
-    CalibratorOld cal ("demo", "meqmodel", "skymodel", "postgres", "tanaka", "");
+    LOFAR::CalibratorOld cal ("demo", "meqmodel", "skymodel", "postgres", "tanaka", "");
 
     cal.Initialize ();
 
@@ -679,7 +681,7 @@ void RunPSS3Source1 (int nIters) {
 void RunPSS3Source1_v2 (int nIters) {
   try {
     cout << "********* RunPSS3Source1_v2 ************" << endl;
-    CalibratorOld cal ("demo", "meqmodel", "skymodel", "postgres", "tanaka", "");
+    LOFAR::CalibratorOld cal ("demo", "meqmodel", "skymodel", "postgres", "tanaka", "");
 
     cal.Initialize ();
 
@@ -714,7 +716,7 @@ void RunPSS3Source1_v2 (int nIters) {
 void RunPSS3Source1_v3 (int nIters) {
   try {
     cout << "********* RunPSS3Source1_v3 ************" << endl;
-    CalibratorOld cal ("demo", "meqmodel", "skymodel", "postgres", "tanaka", "");
+    LOFAR::CalibratorOld cal ("demo", "meqmodel", "skymodel", "postgres", "tanaka", "");
 
     cal.Initialize ();
 
@@ -752,7 +754,7 @@ void RunPSS3Source1_v3 (int nIters) {
 void RunPSS3Source1_v4 (int nIters) {
   try {
     cout << "********* RunPSS3Source1_v4 ************" << endl;
-    CalibratorOld cal ("demo", "meqmodel", "skymodel", "postgres", "tanaka", "");
+    LOFAR::CalibratorOld cal ("demo", "meqmodel", "skymodel", "postgres", "tanaka", "");
 
     cal.Initialize ();
 
@@ -790,7 +792,7 @@ void RunPSS3Source1_v4 (int nIters) {
 void RunPSS3Source1_v5 (int nIters) {
   try {
     cout << "********* RunPSS3Source1_v5 ************" << endl;
-    CalibratorOld cal ("demo", "meqmodel", "skymodel", "postgres", "tanaka", "");
+    LOFAR::CalibratorOld cal ("demo", "meqmodel", "skymodel", "postgres", "tanaka", "");
 
     cal.Initialize ();
 
@@ -827,7 +829,7 @@ void RunPSS3Source1_v5 (int nIters) {
 void RunPSS3Cascade_v2 (int nIter) {
   try {
     cout << "********* RunPSS3Cascade_v2 ************" << endl;
-    CalibratorOld cal ("demo", "meqmodel", "skymodel", "postgres", "tanaka", "");
+    LOFAR::CalibratorOld cal ("demo", "meqmodel", "skymodel", "postgres", "tanaka", "");
 
     int src;
     int i;
@@ -869,7 +871,7 @@ void RunPSS3Cascade_v2 (int nIter) {
 void RunPSS3KvdS (void) {
   try {
     cout << "********* RunStandardKvdS ************" << endl;
-    CalibratorOld cal ("demo", "meqmodel", "skymodel", "postgres", "tanaka", "");
+    LOFAR::CalibratorOld cal ("demo", "meqmodel", "skymodel", "postgres", "tanaka", "");
 
     cal.Initialize ();
 
@@ -950,7 +952,7 @@ quit
   */
   try {
     cout << "********* RunPSS3KvdS_v2 ************" << endl;
-    CalibratorOld cal ("demo", "meqmodel", "skymodel", "postgres", "tanaka", "");
+    LOFAR::CalibratorOld cal ("demo", "meqmodel", "skymodel", "postgres", "tanaka", "");
 
     cal.Initialize ();
 

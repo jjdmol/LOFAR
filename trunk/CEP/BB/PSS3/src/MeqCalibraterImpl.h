@@ -49,7 +49,10 @@
 #include <MNS/MeqLofarStatSources.h>
 #include <MNS/MeqStatUVW.h>
 #include <MNS/ParmTable.h>
-#include "PSS3/Quality.h"
+#include <PSS3/Quality.h>
+
+namespace LOFAR
+{
 
 /*!
  * Class to perform self-calibration on a MeasurementSet using the
@@ -316,12 +319,13 @@ private:
   vector<bool> itsIsParmSolvable;       //# is corresponding parmlist solvable?
   MeqMatrix    itsSolution;             //# Solution as complex numbers
   vector<double> itsFitME;
-  vector<complex<double> > itsDeriv;   //# derivatives of predict
+  vector<complex<double> > itsDeriv;    //# derivatives of predict
   
-  Quality      itsSol;                  //# Solution quality
+  Quality itsSol;                       //# Solution quality
 
   /*@}*/
 };
 
+} // namespace LOFAR
 
 #endif

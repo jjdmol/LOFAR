@@ -31,6 +31,9 @@
 #include <PSS3/Quality.h>
 #include <PSS3/StrategyImpl.h>
 
+namespace LOFAR
+{
+
 //# Forward Declarations
 class CalibratorOld;
 
@@ -65,5 +68,7 @@ inline bool Strategy::useParms(const vector<string>& pNames,
 			       const vector<double>& pValues,
 			       const vector<int>& srcNumbers)
 {  return itsImpl->useParms(pNames, pValues, srcNumbers);  }
+
+} // namespace LOFAR
 
 #endif

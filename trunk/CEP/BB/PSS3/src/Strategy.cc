@@ -27,6 +27,9 @@
 #include <PSS3/SI_WaterCal.h>
 #include <PSS3/SI_Randomized.h>
 
+namespace LOFAR
+{
+
 Strategy::Strategy(int strategyNo, CalibratorOld* cal, 
 		   int varArgSize, char* varArgs)
 {
@@ -82,3 +85,4 @@ bool Strategy::execute(vector<string>& parmNames,
   }
 }
 
+} // namespace LOFAR

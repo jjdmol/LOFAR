@@ -28,6 +28,9 @@
 //# Includes
 #include <Common/lofar_iostream.h>
 
+namespace LOFAR
+{
+
 //# Forward Declarations
 
 
@@ -58,6 +61,8 @@ inline ostream& operator<< (ostream& os, const Quality& qual) {
   qual.show(os); 
   return os; 
 }
+
+} // namespace LOFAR
 
 #endif
 

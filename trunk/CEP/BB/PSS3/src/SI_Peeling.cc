@@ -24,6 +24,9 @@
 #include <Common/Debug.h>
 #include <PSS3/CalibratorOld.h>
 
+namespace LOFAR
+{
+
 SI_Peeling::SI_Peeling(CalibratorOld* cal, int argSize, char* args)
   : StrategyImpl(),
     itsCal(cal),
@@ -56,13 +59,22 @@ bool SI_Peeling::execute(vector<string>& parmNames,
   AssertStr(itsCal != 0, 
 	    "Calibrator pointer not set for this peeling strategy");
 
+  vector<string> srcParams;   // Source specific parameters
+  vector<string> genParams;   // Non-source specific (general) parameters
+  // Split source specific and other parameters
+  splitVector(parmNames, genParams, srcParams);
+
   if (itsFirstCall)
   {
     itsCal->Initialize();
     itsCal->ShowSettings();
-    for (unsigned int i=0; i < parmNames.size(); i++)      // Add all parms
+    for (unsigned int i=0; i < srcParams.size(); i++)      // Add source specific
+    {                                                      // parameters
+      itsCal->addSolvableParm(srcParams[i], itsCurSource);
+    }
+    for (unsigned int j=0; j < genParams.size(); j++)      // Add all other parameters
     { 
-      itsCal->addSolvableParm(parmNames[i], itsCurSource);
+      itsCal->addSolvableParm(genParams[j]);
     }
     itsCal->commitSolvableParms();
 
@@ -94,9 +106,13 @@ bool SI_Peeling::execute(vector<string>& parmNames,
       else
       {
 	itsCal->clearSolvableParms();
-	for (unsigned int i=0; i < parmNames.size(); i++) // Add all parms
+	for (unsigned int i=0; i < srcParams.size(); i++)    // Add source specific
+	{                                                    // parameters
+	  itsCal->addSolvableParm(srcParams[i], itsCurSource);
+	}
+	for (unsigned int j=0; j < genParams.size(); j++)   // Add all other parameters
 	{ 
-	  itsCal->addSolvableParm(parmNames[i], itsCurSource);
+	  itsCal->addSolvableParm(genParams[j]);
 	}
 	itsCal->commitSolvableParms();
 	//itsCal->clearPeelSources(); ///Temporary!!!!
@@ -117,8 +133,54 @@ bool SI_Peeling::execute(vector<string>& parmNames,
  
   itsCal->Run(resultParmNames, resultParmValues, resultQuality);
 
-  //  itsCal->SubtractOptimizedSources();
+  // itsCal->SubtractOptimizedSources();  // N.B. This affects the state of the MS
   itsCal->CommitOptimizedParameters(); // Write to parmTable
   resultIterNo = itsCurIter;
   return true;
 }
+
+void SI_Peeling::splitVector(vector<string>& allParams, vector<string>& params, 
+			     vector<string>& srcParams) const
+{
+  params.clear();
+  srcParams.clear();
+  for (unsigned int index=0; index < allParams.size(); index++)
+  {
+    string::size_type dotPos;
+    string subStr;
+    bool isGenParm = true;   // Is this a general parameter?
+    dotPos = allParams[index].find_last_of(".");
+    if (dotPos != string::npos)
+    {
+      string::size_type pos;
+      pos = allParams[index].find("CP", dotPos);
+      if (pos == dotPos+1)
+      {                            // Source specific parameter
+	isGenParm = false;
+	subStr = allParams[index].substr(0, pos-1);
+	bool srcFound = false;
+	for (unsigned int nr = 0; nr<srcParams.size(); nr++) // Check for double entries in srcParams
+	{
+	  if (srcParams[nr] == subStr)
+	  { 
+	    srcFound = true; 
+	    break;
+	  }
+	}
+	if (srcFound == false)        // Add to source specific parameter vector
+	{
+	  srcParams.push_back(subStr);
+	}
+      }
+    }
+
+    if (isGenParm == true)           // Add to general parameter vector
+    {
+      params.push_back(allParams[index]);
+    }
+
+  } 
+}
+
+
+} // namespace LOFAR

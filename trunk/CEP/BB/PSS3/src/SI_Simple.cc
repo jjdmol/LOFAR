@@ -24,6 +24,9 @@
 #include <Common/Debug.h>
 #include <PSS3/CalibratorOld.h>
 
+namespace LOFAR
+{
+
 SI_Simple::SI_Simple(CalibratorOld* cal, int argSize, char* args)
   : StrategyImpl(),
     itsCal(cal),
@@ -59,13 +62,10 @@ bool SI_Simple::execute(vector<string>& parmNames,
     itsCal->Initialize();
     itsCal->ShowSettings();
 
-    for (int srcNo = 1; srcNo <= itsNSources; srcNo++)
-    {
-      for (unsigned int i=0; i < parmNames.size(); i++)      // Add all parms
-      { 
-	itsCal->addSolvableParm(parmNames[i], srcNo);
-	TRACER1("Adding Parameter " << parmNames[i] << " for source " << srcNo);
-      }
+    for (unsigned int i=0; i < parmNames.size(); i++)      // Add all parms
+    { 
+      itsCal->addSolvableParm(parmNames[i]);
+      TRACER1("Adding Parameter " << parmNames[i] );
     }
     itsCal->commitSolvableParms();
 
@@ -109,3 +109,5 @@ bool SI_Simple::execute(vector<string>& parmNames,
   resultIterNo = itsCurIter;
   return true;
 }
+
+} // namespace LOFAR

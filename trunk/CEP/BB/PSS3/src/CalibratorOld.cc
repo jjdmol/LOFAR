@@ -30,6 +30,8 @@
 #include <aips/Exceptions/Error.h>
 #include "CalibratorOld.h"
 
+namespace LOFAR
+{
 
 // RMME: const int DefaultAntennaCount = 21;
 
@@ -192,12 +194,7 @@ void CalibratorOld::clearSolvableParms (void) {
   itsPSS3CalibratorImpl -> clearSolvableParms ();
 }
 
-
 void CalibratorOld::addSolvableParm (string parmName, int srcNo) {
-  AssertStr (parmName == "StokesI" || parmName == "RA" || parmName == "DEC",
-	     "parmName must be StokesI, RA or DEC.")
-
-
   ostringstream parm;
   parm << parmName << ".CP" << srcNo;
 
@@ -213,7 +210,7 @@ void CalibratorOld::addSolvableParm (string parmNames) {
 void CalibratorOld::commitSolvableParms (void) {
   // Create AIPS data structures to hold params
   Vector <String> pp (itsSolvableParms.size ());
-  Vector <String> ep (itsSolvableParms.size ());
+  Vector <String> ep (0);
 
   vector<string> :: iterator i;
   int idx = 0;
@@ -325,6 +322,7 @@ void CalibratorOld::setParmValues (const vector<string>& names,
   itsPSS3CalibratorImpl -> setParmValues (names, values);
 }
 
+} // end namespace LOFAR
 
 
 

@@ -24,30 +24,57 @@
 //////////////////////////////////////////////////////////////////////
 
 
-#include "PSS3/DH_WorkOrder.h"
+#include <PSS3/DH_WorkOrder.h>
+#include <PL/TPersistentObject.h>
 #include <Common/Debug.h>
 #include <sstream>
 #include <unistd.h> 
 
-using namespace LOFAR;
+namespace LOFAR
+{
 
 int DH_WorkOrder::theirWriteCount = 0;
 
+const unsigned int MaxKSTypeLength = 8;
+const unsigned int MaxNoStartSols = 16;
+const unsigned int MaxArgsSize = 32;
+const unsigned int MaxParamNameLength = 16;
+const unsigned int MaxNumberOfParam = 32;
+
 DH_WorkOrder::DH_WorkOrder (const string& name)
-  : DH_Postgresql(name, "DH_WorkOrder")
-{
-  setDataPacket (&itsDataPacket, sizeof(itsDataPacket));
-}
+  : DH_PL(name, "DH_WorkOrder"),
+    itsWOID            (0),
+    itsStatus          (0),
+    itsKSType          (0),
+    itsStrategyNo      (0),
+    itsNoStartSols     (0),
+    itsStartSolutions  (0),
+    itsArgsSize        (0),
+    itsStrategyArgs    (0),
+    itsNumberOfParam   (0),
+    itsParamNames      (0),
+    itsPODHWO          (0)
+{}
 
 DH_WorkOrder::DH_WorkOrder(const DH_WorkOrder& that)
-  : DH_Postgresql(that)
-{
-  setDataPacket (&itsDataPacket, sizeof(itsDataPacket));
-}
+  : DH_PL(that),
+    itsWOID            (0),
+    itsStatus          (0),
+    itsKSType          (0),
+    itsStrategyNo      (0),
+    itsNoStartSols     (0),
+    itsStartSolutions  (0),
+    itsArgsSize        (0),
+    itsStrategyArgs    (0),
+    itsNumberOfParam   (0),
+    itsParamNames      (0),
+    itsPODHWO          (0)
+{}
 
 DH_WorkOrder::~DH_WorkOrder()
 {
   TRACER4("DH_WorkOrder destructor");
+  delete itsPODHWO;
 }
 
 DataHolder* DH_WorkOrder::clone() const
@@ -55,162 +82,211 @@ DataHolder* DH_WorkOrder::clone() const
   return new DH_WorkOrder(*this);
 }
 
+void DH_WorkOrder::initPO (const string& tableName)
+{                         
+  itsPODHWO = new PO_DH_WO(*this);
+  itsPODHWO->tableName (tableName);
+}
+
+PL::PersistentObject& DH_WorkOrder::getPO() const
+{
+  return *itsPODHWO;
+} 
+
 void DH_WorkOrder::preprocess()
 {
+  // Add the fields to the data definition.
+  addField ("WOID", BlobField<int>(1));
+  addField ("Status", BlobField<unsigned int>(1));
+  addField ("KSType", BlobField<char>(1, MaxKSTypeLength));
+  addField ("StrategyNo", BlobField<unsigned int>(1));
+  addField ("NoStartSols", BlobField<int>(1));
+  addField ("StartSolutions", BlobField<int>(1, MaxNoStartSols));
+  addField ("ArgsSize", BlobField<unsigned int>(1));
+  addField ("StrategyArgs", BlobField<char>(1, MaxArgsSize));
+  addField ("NumberOfParam", BlobField<unsigned int> (1));
+  addField ("ParamNames", BlobField<char>(1, MaxParamNameLength,
+					  MaxNumberOfParam));
+  // Create the data blob (which calls fillPointers).
+  createDataBlock();
+  // Initialize the buffers.
+  for (unsigned int k=0; k<MaxKSTypeLength; k++)
+  {
+    itsKSType[k] = 0;
+  }
+  for (unsigned int m=0; m<MaxNoStartSols; m++)
+  {
+    *itsStartSolutions = 0;
+  }
+  for (unsigned int i=0; i<MaxNumberOfParam; i++) 
+  {
+    itsParamNames[i]= 0;     
+  }
+  *itsWOID = -1;
+  *itsStatus = DH_WorkOrder::New;
+  *itsStrategyNo = 0;
+  *itsNoStartSols = 0;
+  *itsArgsSize = 0;
+  *itsNumberOfParam = 0;
+
+   // By default use the normal data size as current;
+   // only if the user explicitly set another CurDataSize
+   // we will send that length
+   setCurDataSize(getDataSize());
+  
+}
+
+void DH_WorkOrder::fillDataPointers()
+{
+  // Fill in the pointers.
+  itsWOID = getData<int> ("WOID");
+  itsStatus = getData<unsigned int> ("Status");
+  itsKSType = getData<char> ("KSType");
+  itsStrategyNo = getData<unsigned int> ("StrategyNo");
+  itsNoStartSols = getData<int> ("NoStartSols");
+  itsStartSolutions = getData<int> ("StartSolutions");
+  itsArgsSize = getData<unsigned int> ("ArgsSize");
+  itsStrategyArgs = getData<char> ("StrategyArgs");
+  itsNumberOfParam = getData<unsigned int> ("NumberOfParam");
+  itsParamNames = getData<char> ("ParamNames");
 }
 
 void DH_WorkOrder::postprocess()
 {
+  itsWOID = 0;
+  itsStatus = 0;
+  itsKSType = 0;
+  itsStrategyNo = 0;
+  itsNoStartSols = 0;
+  itsStartSolutions = 0;
+  itsStrategyArgs = 0;
+  itsNumberOfParam = 0;
+  itsParamNames = 0;
 }
 
-DH_WorkOrder::DataPacket::DataPacket()
-  : itsWOID(-1),
-    itsStatus(New),
-    itsKSType("PSS3"),
-    itsStrategyNo(0),
-    itsArgSize(0),
-    itsParam1Name("StokesI"),
-    itsParam2Name("RA"),
-    itsParam3Name("DEC"),
-    itsStartSolution(-1)
+void DH_WorkOrder::setKSType(const string& ksType)
 {
+  AssertStr(ksType.size() < MaxKSTypeLength, "KS type name is too long");
+  char* ptr;
+  ptr = itsKSType;
+  strcpy(ptr, ksType.c_str());
 }
 
-void DH_WorkOrder::setArgSize(int size)
+void DH_WorkOrder::useSolutionNumbers(const vector<int>& ids)
 { 
-  AssertStr(size > 0, "Size is not greater than zero");
-  AssertStr(size <= MAX_STRAT_ARGS_SIZE, "Size is greater than buffer size,increase buffer size (MAX_STRAT_ARGS_SIZE)");
-  itsDataPacket.itsArgSize = size;
-}
-
-bool DH_WorkOrder::StoreInDatabase(int, int, char*, int)
-{
-    // First create blob:
-    int i;
-    std::ostringstream ostr;
-
-    // Put varArgs in blob
-    char hexrep [getArgSize()];
-    for (i = 0; i < getArgSize(); i ++) {  
-      sprintf (hexrep, "%02X ", itsDataPacket.itsVarArgs[i]);
-      ostr << hexrep;
-    }
-
-  // Create insertion commands
-  std::ostringstream q1;
-  
-  setWorkOrderID(theirWriteCount);
-
-  q1 << "INSERT INTO BBWorkOrders VALUES ("
-     << getWorkOrderID() << ", "
-     << getStatus() << ", "
-     << "'" << getKSType() << "', "
-     << getStrategyNo() << ", "
-     << getArgSize()    << ", "  
-     << "'" << ostr.str() << "', "
-     << "'" << getParam1Name() << "', "
-     << "'" << getParam2Name() << "', "
-     << "'" << getParam3Name() << "', "
-     << getSolutionNumber() << ");";
-
-  TRACER1("DH_WorkOrder::StoreInDatabase <<< Insert WorkOrder QUERY: " << q1.str ());
-
-  ExecuteSQLCommand(q1);
-  theirWriteCount ++;
-
-  TRACER1("------ End of Controller write to database --------");
-  
-  return true; 
-}
-
-bool DH_WorkOrder::RetrieveFromDatabase(int, int, char*, int)
-{
-  bool selectedWorkOrder = false;
-  PGresult* resWO;
-  PGresult* resUpd;
-  while (!selectedWorkOrder)   // Do this until a valid (single) workorder is found
+  unsigned int noSols = ids.size();
+  AssertStr(noSols <= MaxNoStartSols, "The number of start solutions "
+	    << noSols << " is larger than the maximum "
+	    << MaxNoStartSols );
+  for (unsigned int i = 0; i<noSols; i++)
   {
-
-    // Construct workorder query in table BBWorkOrders
-    std::ostringstream q1;
-
-    q1 << "SELECT * FROM BBWorkOrders WHERE "      // Look for own name and general workOrders
-       << "status = 0 AND "
-       << "(kstype = 'KS' OR " 
-       << "kstype = '" << getName() << "') ORDER BY kstype DESC, woid ASC;";      
-
-    TRACER1("DH_WorkOrder::RetrieveFromDatabase <<< WorkOrder QUERY: " << q1.str ());
-
-    resWO = PQexec (DH_Postgresql::theirConnection, (q1.str ()).c_str ());
-    // Block until a packet appears in the table
-    while (PQntuples (resWO) == 0)
-    {
-      //     cout << ".";
-      //     usleep(1000);
-      resWO = PQexec (DH_Postgresql::theirConnection, (q1.str ()).c_str ());
-      AssertStr (PQresultStatus (resWO) == PGRES_TUPLES_OK,
-		 "DH_Postgressql::Retrieve (); Select query failed.");
-    }
-
-    int identifier = atoi(PQgetvalue(resWO, 0, 0));    
-
-
-    // Update WorkOrder status in table BBWorkOrders
-    std::ostringstream q3;
-      
-    q3 << "UPDATE BBWorkOrders SET "
-       << "Status = 1" << " "
-       << "WHERE WOid = " << identifier << " AND "
-       << "Status = 0" << " ;";
-
-    TRACER1("DH_WorkOrder::RetrieveFromDatabase <<< UPDATE COMMAND: " << q3.str ());
-
-    resUpd = PQexec (DH_Postgresql::theirConnection, ((q3.str ()).c_str ()));
-
-    AssertStr (PQresultStatus (resUpd) == PGRES_COMMAND_OK,
-	       "ERROR: ExecuteCommand () Failed (" 
-	       << PQresStatus (PQresultStatus (resUpd)) 
-	       << "): " << q3.str ());
-	
-    
-    if (atoi(PQcmdTuples(resUpd)) == 1)
-    {
-      selectedWorkOrder = true;                      // Found a valid entry in database
-      TRACER1("Found WorkOrder with id " << identifier);
-    }
-    else
-    {
-      TRACER1("Update of WorkOrder failed. Number of rows affected by " 
-	      << q3.str () << " is " << PQcmdTuples(resUpd) << ". Trying again all queries.");
-      PQclear(resWO);
-    }
-    PQclear (resUpd);
-
+    itsStartSolutions[i] = ids[i];
   }
+  setNoStartSolutions(noSols);
+}
 
-  // Put results in DataPacket
-  setWorkOrderID(atoi(PQgetvalue(resWO, 0, 0)));
-  setStatus((DH_WorkOrder::woStatus) atoi(PQgetvalue(resWO, 0, 1)));
-  setKSType(PQgetvalue(resWO, 0, 2));
-  setStrategyNo(atoi(PQgetvalue(resWO, 0, 3)));
-  setArgSize(atoi(PQgetvalue(resWO, 0, 4)));
-  setParam1Name(PQgetvalue(resWO, 0, 6));
-  setParam2Name(PQgetvalue(resWO, 0, 7));
-  setParam3Name(PQgetvalue(resWO, 0, 8));
-  useSolutionNumber(atoi(PQgetvalue(resWO, 0, 9)));
-
-  char token[getArgSize()];
-     
-  std::istringstream istr (PQgetvalue (resWO, 0, 5));
-  for (int k = 0; k < getArgSize(); k ++) {
-    istr >> token;
-    itsDataPacket.itsVarArgs[k] = (char) strtoul (token, NULL, 16);
+void DH_WorkOrder::getSolutionNumbers(vector<int>& ids) const
+{ 
+  ids.clear();
+  ids.resize(getNoStartSolutions());
+  for (int i=0; i<getNoStartSolutions(); i++)
+  {
+    ids[i] = itsStartSolutions[i];
   }
+}
 
-  PQclear(resWO);
+void DH_WorkOrder::getParamNames(vector<string>& names) const
+{
+  names.clear();
+  names.resize(getNumberOfParam());
+  char* ptr = itsParamNames;
+  for (unsigned int i = 0; i < getNumberOfParam(); i++)
+  {
+     names[i] = ptr;
+     ptr += MaxParamNameLength;
+  }
+}
 
-  TRACER1("------ End of Knowledge Source read from database --------");
-    
-  return true;
+void DH_WorkOrder::setParamNames(vector<string>& names)
+{
+  AssertStr(names.size() <= MaxNumberOfParam, 
+	    "The number of work order parameters " << names.size() 
+	    << " is larger than the maximum " << MaxNumberOfParam);
+
+  vector<string>::const_iterator iter;
+  int paramNo = 0;
+
+  char* ptr;
+  ptr = itsParamNames;
+  for (iter = names.begin(); iter != names.end(); iter++)
+  {
+    AssertStr(iter->length() < MaxParamNameLength, 
+	      "Parameter name " << *iter << " is longer than maximum "
+	      << MaxParamNameLength << ".");
+    strcpy(ptr, iter->c_str());
+    ptr += MaxParamNameLength;
+    paramNo++;
+  }
+  setNumberOfParam(paramNo);
+}
+
+void DH_WorkOrder::dump()
+{
+  cout << "DH_WorkOrder: " << endl;
+  cout << "ID = " << getWorkOrderID() << endl;
+  cout << "Status = " << getStatus() << endl;
+  cout << "KS Type = " << getKSType() << endl;
+  cout << "Strategy number = " << getStrategyNo() << endl;
+  cout << "Number of start solutions = " << getNoStartSolutions() << endl;
+  vector<int> sols;
+  getSolutionNumbers(sols);
+  cout << "Start solutions : " << endl;
+  for (unsigned int i = 0; i < sols.size(); i++)
+  {
+    cout << sols[i] << endl;
+  }
+  cout << "Number of parameters = "  << getNumberOfParam() << endl;
+  vector<string> pNames;
+  getParamNames(pNames);
+  cout << "Parameter names : " << endl;
+  for (unsigned int i = 0; i < pNames.size(); i++)
+  {
+     cout <<  pNames[i] << endl ;
+  }
+  
 
 }
+
+namespace PL {
+
+void DBRep<DH_WorkOrder>::bindCols (dtl::BoundIOs& cols)
+{
+  DBRep<DH_PL>::bindCols (cols);
+  cols["WOID"] == itsWOID;
+  cols["STATUS"] == itsStatus;
+  cols["KSTYPE"] == itsKSType;
+  cols["STRATEGYNO"] == itsStrategyNo;
+  cols["NOSTARTSOLS"] == itsNoStartSols;
+  cols["ARGSSIZE"] == itsArgsSize;
+  cols["NUMBEROFPARAM"] == itsNumberOfParam;
+}
+
+void DBRep<DH_WorkOrder>::toDBRep (const DH_WorkOrder& obj)
+{
+  DBRep<DH_PL>::toDBRep (obj);
+  itsWOID = obj.getWorkOrderID();
+  itsStatus = obj.getStatus();
+  itsKSType = obj.getKSType();
+  itsStrategyNo = obj.getStrategyNo();
+  itsNoStartSols = obj.getNoStartSolutions();
+  itsArgsSize = obj.getArgsSize();
+  itsNumberOfParam = obj.getNumberOfParam();
+}
+
+//# Force the instantiation of the templates.
+template class TPersistentObject<DH_WorkOrder>;
+template class DBRep<DH_WorkOrder>;
+
+}  // end namespace PL
+
+} // namespace LOFAR
