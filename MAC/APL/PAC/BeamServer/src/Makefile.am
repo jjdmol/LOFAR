@@ -1,28 +1,29 @@
 
+AM_CXXFLAGS = -I$(top_srcdir)/src
+
 AUTOGEN = autogen
 SUFFIXES = .ph
 %.ph: %.prot
-	$(AUTOGEN) -L $(top_srcdir)/../../../GCF/GCFCommon/autogen $< && \
-	chmod a+w $@
+	$(AUTOGEN) --writable -L $(top_srcdir)/../../../GCF/GCFCommon/autogen $<
 
 BUILT_SOURCES = \
-	ABS_Protocol.ph \
-	EPA_Protocol.ph \
+	$(top_builddir)/src/ABS_Protocol.ph \
+	$(top_builddir)/src/EPA_Protocol.ph \
 	log4cplus.properties \
 	abs.ns \
 	abs.top
 
 EXTRA_DIST = \
-	ABS_Protocol.ph \
-	EPA_Protocol.ph \
+	$(top_builddir)/src/ABS_Protocol.ph \
+	$(top_builddir)/src/EPA_Protocol.ph \
 	log4cplus.properties \
 	abs.ns \
 	abs.top
 
 include_HEADERS = \
 	ABSConstants.h \
-	ABS_Protocol.ph \
-	EPA_Protocol.ph
+	$(top_builddir)/src/ABS_Protocol.ph \
+	$(top_builddir)/src/EPA_Protocol.ph
 
 %.properties: $(MAC_CONFIG)/%.properties
 	cp $< $@
@@ -32,8 +33,6 @@ include_HEADERS = \
 
 %.top: %.top.in
 	cp $< $@
-
-AM_CXXFLAGS = -I$(top_srcdir)/src
 
 noinst_LTLIBRARIES = libabs.la
 
