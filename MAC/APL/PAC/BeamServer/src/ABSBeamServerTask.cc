@@ -46,6 +46,8 @@
 #include <sys/time.h>
 #include <string.h>
 
+#include <netinet/in.h>
+
 using namespace ABS;
 using namespace std;
 
@@ -182,6 +184,7 @@ GCFEvent::TResult BeamServerTask::initial(GCFEvent& e, GCFPortInterface& port)
 GCFEvent::TResult BeamServerTask::enabled(GCFEvent& e, GCFPortInterface& port)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
+  static int phase = 0;
   
   switch (e.signal)
   {
@@ -196,7 +199,7 @@ GCFEvent::TResult BeamServerTask::enabled(GCFEvent& e, GCFPortInterface& port)
 
 	  // start second timer, exactly on the next second
 	  gettimeofday(&now, 0);
-	  board.setTimer(1, (long)1e6-now.tv_usec, 1, 0);
+	  board.setTimer(1, (long)1e6-now.tv_usec, 10, 0);
       }
       break;
 
@@ -207,11 +210,25 @@ GCFEvent::TResult BeamServerTask::enabled(GCFEvent& e, GCFPortInterface& port)
 
 	  LOG_DEBUG(formatString("time=(%d,%d)", now.tv_sec, now.tv_usec));
 
+	  phase = !phase;
+	  
+	  if (phase)
+	  {
+	      wgdisable_action();
+	  }
+	  else
+	  {
+	      sbselect();
+	      wgenable_action();
+	  }
+
+#if 0
 	  compute_timeout_action();
 
 	  wgdisable_action(); // send event on raw ethernet port
 
 	  update_sbselection(); // update subband selection
+#endif
       }
       break;
 
@@ -250,8 +267,25 @@ GCFEvent::TResult BeamServerTask::enabled(GCFEvent& e, GCFPortInterface& port)
       break;
 
       case F_DATAIN_SIG:
+      {
+	  char data[ETH_DATA_LEN];
 	  // ignore DATAIN
-	  break;
+	  ssize_t length = board.recv(data, ETH_DATA_LEN);
+	  //cout << "received " << length << endl;
+
+#if 0
+	  EPADataEvent de;
+	  
+	  memcpy((void*)&de.fill, (void*)data, sizeof(de)-sizeof(GCFEvent));
+
+	  cout << "sizeof(GCFEvent) = " << sizeof(GCFEvent) << endl;
+	  cout << "sizeof(de) = " << sizeof(de) << endl;
+#endif
+
+	  unsigned int* seqnr = (unsigned int*)&data[2];
+	  cerr << "seqnr=" << *seqnr << endl;
+      }
+      break;
 
       case F_DATAOUT_SIG:
 	  LOG_DEBUG("dataout");
@@ -357,16 +391,36 @@ void BeamServerTask::wgenable_action(ABSWgenableEvent* we)
   board.send(GCFEvent(F_RAW_SIG), &ee.command, ee.pktsize);
 }
 
+void BeamServerTask::wgenable_action()
+{
+  EPAWgenableEvent ee;
+  
+  ee.command       = 2; // 2 == waveform enable
+  ee.seqnr         = 0;
+  ee.pktsize       = htons(12);
+  ee.frequency     = htons((short)((1e6 * 65535) / SYSTEM_CLOCK_FREQ));
+  ee.reserved1     = 0;
+  ee.amplitude     = 128;
+  (void)memset(&ee.reserved2, 0, 3);
+  ee.sample_period = 2;
+
+  board.send(GCFEvent(F_RAW_SIG), &ee.command, 12);
+  
+  cerr << "SENT WGENABLE" << endl;
+}
+
 void BeamServerTask::wgdisable_action()
 {
   EPAWgdisableEvent de;
   
   de.command       = 3; // 3 == waveform disable
   de.seqnr         = 0;
-  de.pktsize       = 12;
+  de.pktsize       = htons(12);
   (void)memset(&de.reserved1, 0, 8);
 
-  board.send(GCFEvent(F_RAW_SIG), &de.command, de.pktsize);
+  board.send(GCFEvent(F_RAW_SIG), &de.command, 12);
+
+  cerr << "SENT WGDISABLE" << endl;
 }
 
 void BeamServerTask::compute_timeout_action()
@@ -472,6 +526,17 @@ void BeamServerTask::send_sbselection()
 
       board.send(GCFEvent(F_RAW_SIG), &ss.command, ss.pktsize);
   }
+}
+void BeamServerTask::sbselect()
+{
+    EPASubbandselectEvent ss;
+
+    ss.command = 1; // 1 == subband selection
+    ss.seqnr = 0;
+    ss.pktsize = htons(5+1);
+    ss.nofbands = 0;
+    ss.bands[0] = 0;
+    board.send(GCFEvent(F_RAW_SIG), &ss.command, 5+1);
 }
 
 int main(int argc, char** argv)

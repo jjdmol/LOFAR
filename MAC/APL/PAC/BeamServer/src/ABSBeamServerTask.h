@@ -90,6 +90,8 @@ namespace ABS
 	 * Enabling the waveform generator disables the ADC input.
 	 */
 	void wgenable_action(ABSWgenableEvent* we);
+	void wgenable_action();
+	void sbselect();
 
 	/**
 	 * Disable the waveform generator.

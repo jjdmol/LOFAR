@@ -198,5 +198,27 @@ event = {
 	    dim = 8;
       };
 };
+
+event = {
+      //
+      // Board data
+      //
+      signal = DATA;
+      dir = IN;
+      param = {
+	    name = "fill";
+	    type = "char";
+      };
+      param = {
+	    name = "seqnr";
+	    type = "unsigned int";
+      };
+      param = {
+	    name = "data";
+	    type = "signed int";
+	    dim = 256;
+      };
+};
+
 	    
 	    
