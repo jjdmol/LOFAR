@@ -30,15 +30,14 @@ namespace LOFAR
 	c = 299792480.0;
 	w_e = 2 * pi / (24 * 3600);
 
-	itsIntegrationTime = 0.001;
 	itsDeclination = 0;
 	itsStartHourangle = 0;
-	itsChannelBandwidth = 1000;       
-	itsNumberOfBeamlets = 128;
-	itsBeamletSize = 256;
-	itsTotalBandwidth = 32768000;
+	itsChannelBandwidth = 1000;       //Hz
+	itsNumberOfBeamlets = NBEAMLETS;
+	itsBeamletSize = BFBW;
+	itsTotalBandwidth = NBEAMLETS*BFBW*itsChannelBandwidth; //Hz
 	itsLOfrequency = 224000000;
-	itsNumberOfStations = nstations;
+	itsNumberOfStations = NSTATIONS;
 	itsFrequencies.resize (itsNumberOfBeamlets);
 	itsFrequencies = blitz::tensor::i *itsBeamletSize*itsChannelBandwidth+itsLOfrequency;
 
@@ -53,7 +52,6 @@ namespace LOFAR
 	c = c;
 	w_e = w_e;
 
-	itsIntegrationTime = m.itsIntegrationTime;           
 	itsDeclination = m.itsDeclination;
 	itsStartHourangle = m.itsStartHourangle;
 	itsChannelBandwidth = m.itsChannelBandwidth; 

@@ -22,8 +22,8 @@
 #ifndef ONLINEPROTO_MAC_H
 #define ONLINEPROTO_MAC_H
 
+#include <definitions.h>
 #define pi 3.1415926535897932384626433832795028841972
-#define nstations 2
 
 #include <lofar_config.h>
 #include <Common/Lorrays.h>
@@ -42,8 +42,6 @@ public:
    // Get/Set functions
    float getWe ();
    float getC ();
-   float getIntegrationTime ();
-   void setIntegrationTime (float t);
    float getDeclination ();
    void setDeclination (float d);
    float getStartHourangle (); 
@@ -67,7 +65,6 @@ public:
  private:
    float w_e;                       // The rotational speed of the earth
    float c;                         // The speed of light
-   float itsIntegrationTime;        // the correlator integration time
    
    // The pointing direction
    float itsDeclination;
@@ -82,7 +79,7 @@ public:
    int itsNumberOfBeamlets;
      
    // Station related parameters
-   Station* itsStations[nstations];          // the stationpositions 
+   Station* itsStations[NSTATIONS];          // the stationpositions 
    int itsNumberOfStations;
 };
 
@@ -91,12 +88,6 @@ inline float MAC::getWe ()
   { return w_e; }
 inline float MAC::getC ()
   { return c; }
-
-inline float MAC::getIntegrationTime ()
-  { return itsIntegrationTime; }
-
-inline void MAC::setIntegrationTime (float t)
-  { itsIntegrationTime = t; }
 
 inline float MAC::getDeclination ()
   { return itsDeclination; }
