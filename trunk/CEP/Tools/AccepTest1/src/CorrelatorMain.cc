@@ -14,6 +14,8 @@
 using namespace LOFAR;
 int main (int argc, const char** argv) {
 
+  INIT_LOGGER("CorrelatorLogger");
+
   KeyValueMap kvm;
   try {
     kvm = KeyParser::parseFile("TestRange");
@@ -35,13 +37,34 @@ int main (int argc, const char** argv) {
   const int runs = kvm.getInt("runs", 10);
   const int targets = kvm.getInt("targets", 8);
 
+#define NRFE 4 
+  const int targetgroups = kvm.getInt("targetgroups", NRFE);
+
   std::string frontend_ip = kvm.getString("frontend_ip", "192.168.100.31");
   std::string backend_ip = kvm.getString("backend_ip", "192.168.100.32");
-  const std::string loggerfile = kvm.getString("loggerfile", "CorrelatorLogger.prop");
+  //std::string loggerfile = kvm.getString("loggerfile", "CorrelatorLogger.prop");
+  kvm.show(cout);
 
 
-  INIT_LOGGER(loggerfile);
+  //ASSERTSTR(targetgroups == NRFE,"Code not unrolled for other than 4 target groups yet..." );
+  std::string FE_ip[NRFE];
+  std::string BE_ip[NRFE];
+  char f_ip[32];
+  char b_ip[32];
+  for (int n=0; n<NRFE; n++) { 
+    sprintf(f_ip,"frontend_ip_%i",n);
+    sprintf(b_ip,"backend_ip_%i",n);
+    FE_ip[n] = kvm.getString(f_ip,frontend_ip.c_str());
+    BE_ip[n] = kvm.getString(b_ip,backend_ip.c_str());
+    cout << f_ip << " = " << FE_ip[n] << endl;
+    cout << b_ip << " = " << BE_ip[n] << endl;
+  }
+  sleep(4);
 
+
+
+  //INIT_LOGGER(loggerfile);
+  
 #ifdef HAVE_MPI
   TH_MPI::init(argc, argv);
 
@@ -64,40 +87,59 @@ int main (int argc, const char** argv) {
 	  
 	  AH_Correlator* correlator;
 
-	  if ((samples+elements) % 2 == 0) {
-	    correlator = new AH_Correlator(elements, 
-					   samples, 
-					   channels, 
-					   polarisations, 
-					   const_cast<char*>(frontend_ip.c_str()), 
-					   const_cast<char*>(backend_ip.c_str()), 
-					   port, 
-					   targets);
-	  } else {
-	    correlator = new AH_Correlator(elements, 
-					   samples, 
-					   channels, 
-					   polarisations, 
-					   const_cast<char*>(frontend_ip.c_str()), 
-					   const_cast<char*>(backend_ip.c_str()), 
-					   port+2*targets, 
-					   targets);
-	  }
+       	  char my_fe_ip[32];
+       	  char my_be_ip[32];
+
+          int rank = TH_MPI::getCurrentRank();
+
+	  // logic for NRFE == 4
+	  strcpy(my_fe_ip, FE_ip[0].c_str());
+	  strcpy(my_be_ip, BE_ip[0].c_str());
+	  if (rank < 3*targets/4) 
+	    {
+	      strcpy(my_fe_ip, FE_ip[3].c_str());
+	      strcpy(my_be_ip, BE_ip[3].c_str());
+	    } 
+	  if (rank < 2*targets/4) 
+	    {
+	      strcpy(my_fe_ip, FE_ip[2].c_str());
+	      strcpy(my_be_ip, BE_ip[2].c_str());
+	    }
+	  if (rank < 1*targets/4) 
+	    {
+	      strcpy(my_fe_ip, FE_ip[1].c_str());
+	      strcpy(my_be_ip, BE_ip[1].c_str());
+	    }
+	
+	  cout << "rank " << rank << "   my fe_ip " << my_fe_ip << "  my be_ip " << my_be_ip << endl;
+	  int my_port = (((samples+elements) % 2 == 0) ? port : port+2*targets); 
+	  //	    correlator = new AH_Correlator(elements, samples, channels, polarisations, fe_ip, backend_ip, port, targets);
+	  correlator = new AH_Correlator(elements, 
+					 samples, 
+					 channels, 
+					 polarisations, 
+					 my_fe_ip, 
+					 my_be_ip, 
+					 my_port, 
+					 targets);
 	  
 	  /* Automatic run of the correlator */
 	  
 	  correlator->baseDefine();
 	  correlator->basePrerun();
-	  
+	 
 	  correlator->baseRun(runs);
-	  
+
+	  TH_MPI::synchroniseAllProcesses();
+
 	  correlator->basePostrun();
 	  // 	correlator.baseDump();
 	  correlator->baseQuit();
 
 	  delete correlator;
 
-#ifdef HAVE_MPI
+
+#ifdef NOTDEF
 	  TH_MPI::synchroniseAllProcesses();
 #endif
 
