@@ -104,6 +104,10 @@ public:
   // The name has to be unique.
   int add (const std::string& name, const BlobFieldBase& field);
 
+  // Get the version of the set.
+  uint version() const
+    { return itsVersion; }
+
   // Create the blob for output.
   // It defines the offsets of the data in the various fields.
   // Pointers to the data can be retrieved using BlobFieldBase::getData.
