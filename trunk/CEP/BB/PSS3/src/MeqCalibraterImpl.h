@@ -133,6 +133,9 @@ public:
   //! Save solved parameters to the MEP database.
   void saveParms();
 
+  //! Save all parameters to the MEP database.
+  void saveAllParms();
+
   /*!
    * Save residual data in the itsResColName column.
    * It does a predict for the sources to be peeled off and subtracts

@@ -1597,6 +1597,31 @@ void MeqCalibrater::saveParms()
 
 //----------------------------------------------------------------------
 //
+// ~saveAllParms
+//
+// Save all parameters.
+//
+//----------------------------------------------------------------------
+void MeqCalibrater::saveAllParms()
+{
+  const vector<MeqParm*>& parmList = MeqParm::getParmList();
+
+  cdebug(1) << "saveAllParms" << endl;
+
+  for (vector<MeqParm*>::const_iterator iter = parmList.begin();
+       iter != parmList.end();
+       iter++)
+  {
+      (*iter)->save();
+  }
+  // Unlock the parm tables.
+  itsMEP.unlock();
+  itsGSMMEP.unlock();
+}
+
+
+//----------------------------------------------------------------------
+//
 // ~predict
 //
 // Predict visibilities for the current time domain and save
@@ -2163,6 +2188,7 @@ Bool MeqCalibrater::peel(const Vector<Int>& peelSourceNrs,
   vector<int> src(sourceNrs.nelements());
   for (unsigned int i=0; i<src.size(); i++) {
     src[i] = sourceNrs[i];
+    cdebug(1) << "Predicting source " << sourceNrs[i] << endl;
   }
   itsSources.setSelected (src);
   itsPeelSourceNrs.reference (tmpPeel);
@@ -2385,12 +2411,13 @@ void MeqCalibrater::setParmValues (const vector<string>& names,
   Assert (names.size() == values.size());
   // Iterate through all parms and get solvable ones.
   const vector<MeqParm*>& parmList = MeqParm::getParmList();
-  int i=0;
+  int i;
   for (vector<MeqParm*>::const_iterator iter = parmList.begin();
        iter != parmList.end();
        iter++)
   {
     const string& pname = (*iter)->getName();
+    i = 0;
     for (vector<string>::const_iterator itern = names.begin();
 	 itern != names.end();
 	 itern++) {
@@ -2405,8 +2432,8 @@ void MeqCalibrater::setParmValues (const vector<string>& names,
 	pp->setPolcs (vector<MeqPolc>(1,polc));
 	break;
       }
+      i++;
       // A non-matching name is ignored; no warning is given.
     }
-    i++;
   }
 }
