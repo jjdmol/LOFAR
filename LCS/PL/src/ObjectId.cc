@@ -57,18 +57,6 @@ namespace LCS
     //                                                               //
     ///////////////////////////////////////////////////////////////////
 
-    boost::shared_ptr<ObjectId> ObjectId::nullId()
-    {
-      //# Warning: this is not thread-safe! We should use the Double
-      //# Checked Locking Optimization pattern (POSA2, p353) for this.
-      static boost::shared_ptr<ObjectId> theNullId;
-      if (!theNullId) 
-      {
-        theNullId.reset(new ObjectId(0));
-      }
-      return theNullId;
-    }
-    
     const ObjectId::oid_t& ObjectId::get() const
     {
       if (!itsOidIsSet) {

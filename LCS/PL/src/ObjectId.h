@@ -38,7 +38,7 @@ namespace LCS
     {
     public:
       // We will be using a 64-bit integer for our unique key
-      typedef uint64 oid_t;
+      typedef long oid_t; // (GML)
 
       // Default constructor. If \c doGenerate is true, \c itsOid will be
       // lazily initialized when get() is called, else \c itsOid will be 
@@ -46,10 +46,6 @@ namespace LCS
       explicit ObjectId(bool doGenerate = true) : 
 	itsOid(NullId), itsOidIsSet(!doGenerate) 
       {}
-
-      // Return a shared pointer to a "global" null object-id.
-      // \warning This method is currently \e not thread-safe.
-      static boost::shared_ptr<ObjectId> nullId();
 
       // Return the stored object-id.
       // \post \c itsOid will have been set if it wasn't already.
