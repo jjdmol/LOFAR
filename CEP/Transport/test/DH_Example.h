@@ -40,7 +40,7 @@ public:
   typedef complex<float> BufferType;
 
   explicit DH_Example (const string& name="dh_example",
-		       unsigned int nbuffer = 10,
+		       unsigned int initialNelements = 10,
 		       bool useExtra = false);
 
   DH_Example(const DH_Example&);
@@ -60,15 +60,13 @@ public:
   /// Deallocate the buffers.
   virtual void postprocess();
 
+  /// Reset the buffer size.
+  void setBufferSize (unsigned int nelements);
+
   /// Get write access to the Buffer in the DataPacket.
   BufferType* getBuffer();
   /// Get read access to the Buffer in the DataPacket.
   const BufferType* getBuffer() const;
-
-  /// overload the getcursize method;
-  /// reported data size may be altered with setDataPacketSize() method
-  int  getCurDataSize() ;
-  void setCurDataSize(const int nbytes);
 
  private:
   /// Forbid assignment.
@@ -81,7 +79,6 @@ public:
   int*         itsCounter;
   BufferType*  itsBuffer;
   unsigned int itsBufSize;
-   int         itsCurDataPacketSize;
 };
 
 
@@ -97,19 +94,7 @@ inline DH_Example::BufferType* DH_Example::getBuffer()
 inline const DH_Example::BufferType* DH_Example::getBuffer() const
   { return itsBuffer; }
 
-   
-inline int DH_Example::getCurDataSize() 
-  { return itsCurDataPacketSize; }
-   
-inline void DH_Example::setCurDataSize(const int nbytes)
-  {  
-    //! DbgAssertStr(nbytes <= (int)itsBufSize); 
-    itsCurDataPacketSize = nbytes;
-    return ;
-  }
-   
-   
+
 }
 
 #endif 
-   

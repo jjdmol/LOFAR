@@ -26,12 +26,12 @@
 namespace LOFAR
 {
 
-DH_Example::DH_Example (const string& name, unsigned int nbuffer,
+DH_Example::DH_Example (const string& name, unsigned int initialNelements,
 			bool useExtra)
 : DH_PL      (name, "DH_Example", 1),
   itsCounter (0),
   itsBuffer  (0),
-  itsBufSize (nbuffer)
+  itsBufSize (initialNelements)
 {
   if (useExtra) {
     setExtraBlob ("Extra", 1);
@@ -55,6 +55,8 @@ DataHolder* DH_Example::clone() const
 
 void DH_Example::preprocess()
 {
+  // Initialize the fieldset.
+  initDataFields();
   // Add the fields to the data definition.
   addField ("Counter", BlobField<int>(1));
   addField ("Buffer", BlobField<BufferType>(1, //version 
@@ -65,10 +67,12 @@ void DH_Example::preprocess()
   for (unsigned int i=0; i<itsBufSize; i++) {
     itsBuffer[i] = 0;
   }
-   // By default use the normal data size as current;
-   // only if the user explicitly set another CurDataSize
-   // we will send that length
-   setCurDataSize(getDataSize());
+}
+
+void DH_Example::setBufferSize (unsigned int nelements)
+{
+  itsBufSize = nelements;
+  preprocess();
 }
 
 void DH_Example::fillDataPointers()
