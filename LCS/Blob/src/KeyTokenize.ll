@@ -84,7 +84,6 @@ COMMENT   "#".*"\n"
 	  }
 {COMPLEX} {
             KeyParser::position() += yyleng;
-	    std::cerr <<"complex"<< KeyTokenizetext << endl;
             float valr,vali;
 	    sscanf(KeyTokenizetext, "%f%*c+%f%*ci", &valr, &vali);
             lvalp->val = new KeyValue (complex<float> (valr, vali));
@@ -92,7 +91,6 @@ COMMENT   "#".*"\n"
 	  }
 {IMAG} {
             KeyParser::position() += yyleng;
-	    std::cerr <<"imag"<< KeyTokenizetext << endl;
             float vali;
 	    sscanf(KeyTokenizetext, "%f%*ci", &vali);
             lvalp->val = new KeyValue (complex<float> (0., vali));
@@ -100,7 +98,6 @@ COMMENT   "#".*"\n"
 	  }
 {DCOMPLEX} {
             KeyParser::position() += yyleng;
-	    std::cerr <<"dcomplex"<< KeyTokenizetext << endl;
             double valr,vali;
 	    sscanf(KeyTokenizetext, "%lf+%lfi", &valr, &vali);
             lvalp->val = new KeyValue (complex<double> (valr, vali));
@@ -108,7 +105,6 @@ COMMENT   "#".*"\n"
 	  }
 {DIMAG} {
             KeyParser::position() += yyleng;
-	    std::cerr <<"dimag"<< KeyTokenizetext << endl;
             double vali;
 	    sscanf(KeyTokenizetext, "%lfi", &vali);
             lvalp->val = new KeyValue (complex<double> (0., vali));
