@@ -45,6 +45,8 @@ unsigned int mdl (LoMat_double d_mat, unsigned int nantl, unsigned int nsnsh)
   LoVec_double d;
   LoVec_double MDL(d_mat.cols());
 
+  nsnsh=1;
+
   if (d_mat.cols() == d_mat.rows()) {
     d.resize(d_mat.cols());
 
@@ -53,9 +55,11 @@ unsigned int mdl (LoMat_double d_mat, unsigned int nantl, unsigned int nsnsh)
     d.reverseSelf(firstDim);
     for ( int k = d.lbound(firstDim); k < d.ubound(firstDim); k++ ) {
 
-      denom = (1 /(double)(d.ubound(firstDim)-k)) * sum(d( Range( k+1, d.ubound(firstDim) ) ) ) ;
+      denom = (1 /(double)(d.ubound(firstDim)-k)) * 
+	sum(d( Range( k+1, d.ubound(firstDim) ) ) ) ;
       nom = product(d(Range(k+1,d.ubound(firstDim)))) ;
-      MDL(k) = nnsnsh * log(nom/(pow(denom,(1/(nantl-(k+1)))))) + (k+1)/2 * (2*nantl-(k+1)) * log(nsnsh);
+      MDL(k) = nnsnsh * log(nom/(pow(denom,(1/(nantl-(k+1)))))) + 
+	(k+1)/2 * (2*nantl-(k+1)) * log(nsnsh);
       if ( k == 0 ) {
 	// init
 	kmin = k+1;
@@ -83,7 +87,6 @@ unsigned int mdl (LoVec_double d_mat, unsigned int nantl, unsigned int nsnsh)
   LoVec_double MDL(d_mat.size());
 
   d.resize(d_mat.size());
-  d = d_mat;
   d = LCSMath::sort(d_mat);
   d.reverseSelf(firstDim);
   nsnsh=1;
@@ -91,10 +94,11 @@ unsigned int mdl (LoVec_double d_mat, unsigned int nantl, unsigned int nsnsh)
   int nnsnsh=-nsnsh;
   for ( int k = d.lbound(firstDim); k < d.ubound(firstDim); k++ ) {
 
-    denom = (1 /(double)(d.ubound(firstDim)-k)) * sum(d( Range( k+1, d.ubound(firstDim) ) ) ) ;
+    denom = (1 /(double)(d.ubound(firstDim)-k)) * 
+      sum(d( Range( k+1, d.ubound(firstDim) ) ) ) ;
     nom = product(d(Range(k+1,d.ubound(firstDim)))) ;
-    MDL(k) = nnsnsh * log(nom/(pow(denom,(1/(nantl-(k+1)))))) + (k+1)/2 * (2*nantl-(k+1)) * log(nsnsh);    cout << "MDL(k) : " << MDL(k) << endl;
-
+    MDL(k) = nnsnsh * log(nom/(pow(denom,(1/(nantl-(k+1)))))) + 
+      (k+1)/2 * (2*nantl-(k+1)) * log(nsnsh);
     if ( k == 0 ) {
       // init
       kmin = k+1;
