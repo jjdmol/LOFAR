@@ -61,6 +61,8 @@ MAKE_OPTIONS = -j2
 #
 all: start bootstrap $(VARIANTS) check stop
 
+nobootstrap: start $(VARIANTS) check stop
+
 start:
 	@echo && echo ":::::: BUILD START" && echo
 
@@ -103,14 +105,31 @@ bootstrap:
 		&& echo ":::::: BUILDING VARIANT $$variant FOR PACKAGE $$pkg" \
 		&& echo \
 		&& date \
-		&& $(RM) -rf $$pkg/build/$$variant \
+		&& (( $(RM) -rf $$pkg/build/$$variant \
 		&& mkdir -p $$pkg/build/$$variant \
 		&& cd $$pkg/build/$$variant \
-		&& ( (test "X$(CONFIGURE)" = "Xno" || $(LOFARDIR)/autoconf_share/lofarconf ) \
-			&& make -k $(MAKE_OPTIONS) `cat makeoptions` \
+		&& $(LOFARDIR)/autoconf_share/lofarconf \
+		&& make -k $(MAKE_OPTIONS) `cat makeoptions` ) \
 			|| echo ":::::: ERROR" ) \
 		&& echo \
 		&& echo ":::::: FINISHED BUILDING VARIANT $$variant FOR PACKAGE $$pkg" \
+		&& echo ; ) \
+	done; \
+	date
+
+%.variant_rebuild:
+	@date; \
+	variant=`basename $@ .variant_rebuild`; \
+	for pkg in $(PACKAGES); do \
+		( echo \
+		&& echo ":::::: REBUILDING VARIANT $$variant FOR PACKAGE $$pkg" \
+		&& echo \
+		&& date \
+		&& ((cd $$pkg/build/$$variant \
+		&& make -k $(MAKE_OPTIONS) `cat makeoptions` ) \
+			|| echo ":::::: ERROR" ) \
+		&& echo \
+		&& echo ":::::: FINISHED REBUILDING VARIANT $$variant FOR PACKAGE $$pkg" \
 		&& echo ; ) \
 	done; \
 	date
