@@ -93,15 +93,11 @@ void DH_Postgresql::ConnectDatabase (void) {
   ConnInfo << "host=" << DH_Postgresql::theirDBHost 
 	   << " dbname=" << DH_Postgresql::theirDBName
   	   << " user="<< DH_Postgresql::theirUserName;
-  cerr << "  using: " << ConnInfo.str () << endl;
 
   DH_Postgresql::theirConnection = PQconnectdb (ConnInfo.str (). c_str ());
 
   AssertStr (PQstatus (DH_Postgresql::theirConnection) == CONNECTION_OK, 
     "ConnectDatabase(); Could not connect to database.") 
-
-  cerr << "DH_Postgresql::ConnectDatabase (): Succesfully connected "
-       << "to database" << endl;
 #else
   AssertStr (false, "PSQL is not configured in");
 #endif
@@ -111,7 +107,6 @@ void DH_Postgresql::ConnectDatabase (void) {
 void DH_Postgresql::DisconnectDatabase (void) {
 #ifdef HAVE_PSQL
   PQfinish (theirConnection);
-  cerr << "DH_Postgresql::Disconnect(); Disconnected from database." << endl;
 #else
   AssertStr (false, "PSQL is not configured in");
 #endif
