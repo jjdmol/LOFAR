@@ -45,7 +45,7 @@ int main (int argv, char** argc) {
 
   TH_Socket proto("localhost", "localhost", 8923);
 
-  TR1.connectTo(&TR2, proto);
+  TR1.connectTo(TR2, proto);
 
   TR1.init();
   TR2.init();
