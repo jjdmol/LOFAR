@@ -75,7 +75,7 @@ ApplControlClient::ApplControlClient(const string&	hostID,
 	int16		port = DH_AC_Client.getServerPort();
 	LOG_DEBUG(formatString("Private ACserver is at %s:%d, trying to connect", 
 															host.c_str(), port));
-	DH_ApplControl*		DH_CtrlClient = new DH_ApplControl();
+	DH_ApplControl*		DH_CtrlClient = new DH_ApplControl;
 	DH_ApplControl		DH_CtrlServer;
 	DH_CtrlClient->setID(3);
 	DH_CtrlServer.setID(4);
@@ -86,12 +86,17 @@ ApplControlClient::ApplControlClient(const string&	hostID,
 										true);	// blocking
 	DH_CtrlClient->init();
 
-	itsDataHolder = DH_CtrlClient;
+	itsCommChan = new ApplControlComm;
+	itsCommChan->setDataHolder(DH_CtrlClient);
+	itsCommChan->setSync(syncClient);
 }
 
 // Destructor
 ApplControlClient::~ApplControlClient() 
 {
+	if (itsCommChan) {
+		delete itsCommChan;
+	}
 }
 
 // Copying is allowed.
@@ -111,57 +116,57 @@ ApplControlClient& 	ApplControlClient::operator=(const ApplControlClient& that)
 bool	ApplControlClient::boot (const time_t		scheduleTime,
 							  	 const string&		configID) const
 {
-	return(doRemoteCmd (CmdBoot, scheduleTime, 0, configID));
+	return(itsCommChan->doRemoteCmd (CmdBoot, scheduleTime, 0, configID));
 }
 
 bool	ApplControlClient::define(const time_t		scheduleTime) const
 {
-	return(doRemoteCmd (CmdDefine, scheduleTime, 0, ""));
+	return(itsCommChan->doRemoteCmd (CmdDefine, scheduleTime, 0, ""));
 }
 
 bool	ApplControlClient::init	 (const time_t	scheduleTime) const
 {
-	return(doRemoteCmd (CmdInit, scheduleTime, 0, ""));
+	return(itsCommChan->doRemoteCmd (CmdInit, scheduleTime, 0, ""));
 }
 
 bool	ApplControlClient::run 	 (const time_t	scheduleTime) const
 {
-	return(doRemoteCmd (CmdRun, scheduleTime, 0, ""));
+	return(itsCommChan->doRemoteCmd (CmdRun, scheduleTime, 0, ""));
 }
 
 bool	ApplControlClient::pause (const time_t	scheduleTime,
 								  const time_t	maxWaitTime,
 								  const string&	condition) const
 {
-	return(doRemoteCmd (CmdPause, scheduleTime, maxWaitTime, condition));
+	return(itsCommChan->doRemoteCmd (CmdPause, scheduleTime, maxWaitTime, condition));
 }
 
 bool	ApplControlClient::quit  (const time_t	scheduleTime) const
 {
-	return(doRemoteCmd (CmdQuit, scheduleTime, 0, ""));
+	return(itsCommChan->doRemoteCmd (CmdQuit, scheduleTime, 0, ""));
 }
 
 bool	ApplControlClient::shutdown  (const time_t	scheduleTime) const
 {
-	return(doRemoteCmd (CmdQuit, scheduleTime, 0, ""));
+	return(itsCommChan->doRemoteCmd (CmdQuit, scheduleTime, 0, ""));
 }
 
 bool	ApplControlClient::snapshot (const time_t	scheduleTime,
 								  	 const string&	destination) const
 {
-	return(doRemoteCmd (CmdSnapshot, scheduleTime, 0, destination));
+	return(itsCommChan->doRemoteCmd (CmdSnapshot, scheduleTime, 0, destination));
 }
 
 bool	ApplControlClient::recover  (const time_t	scheduleTime,
 							  		 const string&	source) const
 {
-	return(doRemoteCmd (CmdRecover, scheduleTime, 0, source));
+	return(itsCommChan->doRemoteCmd (CmdRecover, scheduleTime, 0, source));
 }
 
 bool	ApplControlClient::reinit(const time_t	scheduleTime,
 							  	  const string&	configID) const
 {
-	return(doRemoteCmd (CmdReinit, scheduleTime, 0, configID));
+	return(itsCommChan->doRemoteCmd (CmdReinit, scheduleTime, 0, configID));
 }
 
 bool	ApplControlClient::replace(const time_t	 scheduleTime,
@@ -169,15 +174,15 @@ bool	ApplControlClient::replace(const time_t	 scheduleTime,
 								   const string& nodeList,
 							  	   const string& configID) const
 {
-	return(doRemoteCmd (CmdReplace, scheduleTime, 0, configID));
+	return(itsCommChan->doRemoteCmd (CmdReplace, scheduleTime, 0, configID));
 }
 
 string	ApplControlClient::askInfo(const string&	keyList) const 
 {
-	if (!doRemoteCmd (CmdInfo, 0, 0, keyList))
+	if (!itsCommChan->doRemoteCmd (CmdInfo, 0, 0, keyList))
 		return (keyList);
 
-	return(itsDataHolder->getOptions());
+	return(itsCommChan->getDataHolder()->getOptions());
 }
 
 string	ApplControlClient::supplyInfo(const string&	keyList) const 

@@ -394,7 +394,7 @@ bool isValidVersionNr   (const string& versionNr)
 bool isValidVersionNrRef(const string& versionNr)
 {
 	return (isValidVersionNr(versionNr) || (versionNr == PC_QUAL_STABLE) || 
-		    (versionNr == PC_QUAL_DEVELOP));
+		    (versionNr == PC_QUAL_TEST) || (versionNr == PC_QUAL_DEVELOP));
 
 }
 

@@ -31,6 +31,7 @@
 
 //# Includes
 #include <ACC/ApplControl.h>
+#include <ACC/ApplControlComm.h>
 
 namespace LOFAR {
   namespace ACC {
@@ -116,6 +117,10 @@ public:
 protected:
 	// NOT default constructable;
 	ApplControlClient();
+
+	// Communication with other side.
+	ApplControlComm*	itsCommChan;
+
 };
 
 

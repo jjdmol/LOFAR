@@ -53,17 +53,19 @@ ACAsyncClient::~ACAsyncClient()
 // The returned boolean reflects the handling of a message.
 bool	ACAsyncClient::processACmsgFromServer()	const
 {
-	if (!getDataHolder()->read()) {
+	DH_ApplControl*		DHPtr = itsCommChan->getDataHolder();
+
+	if (!DHPtr->read()) {
 		return (false);
 	}
 
-	ACCmd	cmdType = getDataHolder()->getCommand();
+	ACCmd	cmdType = DHPtr->getCommand();
 	switch (cmdType) {
 	case CmdInfo:		
-		sendCmd(CmdAnswer, 0, 0, supplyInfo(getDataHolder()->getOptions()));
+		itsCommChan->sendCmd(CmdAnswer, 0, 0, supplyInfo(DHPtr->getOptions()));
 		break;
 	case CmdAnswer:		
-		handleAnswerMessage(getDataHolder()->getOptions());
+		handleAnswerMessage(DHPtr->getOptions());
 		break;
 	case CmdResult:		
 		handleAckMessage();

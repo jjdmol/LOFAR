@@ -168,7 +168,8 @@ void ConfigurationMgr::appendTU(TemplateUnion*	theTU,
 				string PTcomp(moduleName(PTfullcomp));// first block is parent
 				string PTsubcomp = keyName(PTfullcomp);	// real comp is last part
 				string subCompVersion;
-				if (right == PC_QUAL_STABLE || right == PC_QUAL_DEVELOP) {
+				if ((right == PC_QUAL_STABLE) || (right == PC_QUAL_TEST) || 
+												 (right == PC_QUAL_DEVELOP)) {
 					// user want latest version of given qualification
 					subCompVersion = resolveVersionnr(PTsubcomp, right);
 				}

@@ -42,6 +42,7 @@ namespace LOFAR {
   namespace ACC {
 
 const char PC_QUAL_STABLE[]   = { "stable"        };
+const char PC_QUAL_TEST[]     = { "test"          };
 const char PC_QUAL_DEVELOP[]  =	{ "development"   };
 const char PC_KEY_VERSIONNR[] = { "versionnr"     };
 const char PC_KEY_QUAL[]      =	{ "qualification" };
