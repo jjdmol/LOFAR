@@ -22,7 +22,7 @@
 
 # These can be uncommented (or set elsewhre prior to include) for debugging
 #
-   use_suspend  := T;
+#   use_suspend  := T;
 #   use_nostart  := T;
 #   use_valgrind := T;
    use_valgrind_opts := [ "",
@@ -44,6 +44,7 @@ if( has_field(lofar_software,'print_versions') &&
 include 'meq/meqserver.g'
 include 'meq/meptable.g'
 
+#------ getdomain()
 # Given a meqdomain x, returns x
 # Given a meqpolc x, returns domain of polc, or default ([0:1,0:1]) if
 # polc does not have a domain
@@ -62,7 +63,10 @@ const getdomain := function (x)
     fail 'getdomain(): argument is not a meqdomain or a meqpolc';
 }
 
-const merge2domains := function (d1,d2)
+#------ env2domains()
+# Computes the envelope of two meqdomains. If the first domain is
+# undefined, simply returns the second domain.
+const env2domains := function (d1,d2)
 {
   if( !is_dmi_type(d1,'MeqDomain') )
     return d2;
@@ -73,9 +77,13 @@ const merge2domains := function (d1,d2)
   return d1;
 }
 
-# Given a number of meqdomains or meqpolcs, returns a meqdomain containing
-# all the domains
-const superdomain := function (...)
+#------ envelope_domain()
+# Given a number of meqdomains or meqpolcs, returns a meqdomain that is 
+# an envelope of all the supplied domains.
+# The following arguments can be used:
+#   * meqpolcs or meqdomains
+#   * records (i.e. vectors) of meqpolcs or meqdomains
+const envelope_domain := function (...)
 {
   dom := F;
   for( i in 1:num_args(...) )
@@ -84,10 +92,10 @@ const superdomain := function (...)
     if( is_record(x) && !has_field(x::,'dmi_actual_type') )
     {
       for( i in 1:len(x) )
-        dom := merge2domains(dom,getdomain(x[i]));
+        dom := env2domains(dom,getdomain(x[i]));
     }
     else
-      dom := merge2domains(dom,getdomain(x));
+      dom := env2domains(dom,getdomain(x));
   }
   return dom;
 }
@@ -108,7 +116,7 @@ const fitpolcs := function (polcs,nx=1,ny=1,domain=F,scale=F,verbose=1,gui=F)
   }
   # compute domain of target polc
   if( is_boolean(domain) )
-    domain := superdomain(polcs);
+    domain := envelope_domain(polcs);
   if( verbose>0 )
   {
     print 'Merging ',len(polcs),' polcs; destination domain is ',domain;
@@ -151,11 +159,7 @@ const fitpolcs := function (polcs,nx=1,ny=1,domain=F,scale=F,verbose=1,gui=F)
   # perform a fit. 
   global cells,request,res;
   # figure out an appropriate cells first
-  ntimes := 2*ny;
-  timestep := (domain[4]-domain[3])/ntimes;
-  times := (1:(ny*2)-0.5)*timestep;
-  time_steps := array(timestep,ntimes);
-  cells := meqcells(domain,num_freq=2*nx,times=times,time_steps=time_steps);
+  cells := meqcells(domain,num_freq=2*nx,num_time=2*ny);
   request := meqrequest(cells,calc_deriv=2);
   res := mqs.meq('Node.Execute',[name='fitpolc_solver',request=request],T);
   
@@ -166,10 +170,60 @@ const fitpolcs := function (polcs,nx=1,ny=1,domain=F,scale=F,verbose=1,gui=F)
     fail fl[1].message;
   }
   
-  # print out the new polc
-  st2 := mqs.getnodestate('fitpolc_p2');
-  print st2;
-  return st2;
+  # return the new polc
+  return mqs.getnodestate('fitpolc_p2').polcs;
+}
+
+# eval_polc()
+# Evaluates a polc over either
+#   (a) a set of points -- x and y must be vectors of coordinates (in time/freq)
+#   (b) a meqcells -- x must be a meqcells object
+# Returns (a) vector of values conforming to x/y length 
+#         (b) matrix of values conforming to cells layout
+const eval_polc := function (polc,x=F,y=F,cells=F)
+{
+  if( is_dmi_type(cells,'MeqCells') )
+  {
+    # cells implies a regular grid -- compute & place grid points into xp, yp
+    xp := cells.domain[1] + 
+        (cells.domain[2]-cells.domain[1])*((1:cells.num_freq)-0.5)/cells.num_freq;
+    yp := cells.times;
+    # create composite arrays where every combination is present
+    x := rep(xp,len(yp));           # [x1,...,xn,x1,...,xn,x1,...,xn,x1 ...
+    y := array(0.,len(xp)*len(yp)); # [y1 ... y1,y2 ... y2,y3 ... y3,y4 ...
+    for( i in 1:len(yp) )
+      y[(i-1)*len(xp)+(1:len(xp))] := yp[i];
+    print 'x: ',x;
+    print 'y: ',y;
+  }
+  else
+  {
+    if( is_boolean(x) || is_boolean(y) )
+      fail 'numeric x and y vectors must be siupplied'
+    if( len(x) != len(y) )
+      fail 'lengths of x and y vectors must match';
+  }
+  # evaluate
+  x := (x-polc.freq_0)/polc.freq_scale;
+  y := (y-polc.time_0)/polc.time_scale;
+  res := array(0.,len(x));
+  powx := 1;
+  nx := shape(polc.coeff)[1];
+  ny := shape(polc.coeff)[2];
+  for( i in 1:nx )
+  {
+    powy := powx;
+    for( j in 1:ny )
+    {
+      res +:= polc.coeff[i,j]*powy;
+      powy *:= y;
+    }
+    powx *:= x;
+  }
+  # if input was a cells, reform the result into a matrix
+  if( is_dmi_type(cells,'MeqCells') )
+    res := array(res,cells.num_freq,len(cells.times));
+  return res;
 }
 
 
@@ -179,6 +233,7 @@ const fitpolcs_test := function ()
   polcs := [=];
   polcs[1] := meqpolc(array([0,1],2,1),domain=meqdomain(0,1,0,1));
   polcs[2] := meqpolc(array([2,-1],2,1),domain=meqdomain(1,2,0,1));
-  polc := fitpolcs(polcs,nx=3,ny=1,scale=[0,1,0,1],verbose=3);
+  polcs[3] := meqpolc(array([-2,1],2,1),domain=meqdomain(2,3,0,1));
+  polc := fitpolcs(polcs,nx=4,ny=1,scale=[0,1,0,1],verbose=1);
   print polc;
 }
