@@ -59,9 +59,9 @@ namespace LCS
       enum SaveMode { AUTOMATIC, INSERT, UPDATE };
 
       // Connect to the database identified by the Data Source Name aDSN, 
-      // using aUid as user-id and aPwd as password.
-      void connect(const std::string& aDsn, const std::string& aUid, 
-                   const std::string& aPwd);
+      // using an optional aUid as user-id and an optional aPwd as password.
+      void connect(const std::string& aDsn, const std::string& aUid = "", 
+                   const std::string& aPwd = "");
 
       // Erase the specified persistent object, i.e. delete it from the
       // database.
@@ -80,8 +80,8 @@ namespace LCS
 
       // Retrieve a collection of persistent objects, that match a specific
       // query. At most \c maxObjects are returned.
-      // \todo maxObjects should become part of the Query.
       // \throw LCS::PL::QueryError
+      // \todo maxObjects should become part of the Query.
       template<typename T> 
       static Collection<TPersistentObject<T> > 
       retrieve(const Query& q, int maxObjects = INT_MAX);
