@@ -79,6 +79,7 @@ GCFEvent::TResult EPAStub::initial(GCFEvent& e, GCFPortInterface& port)
       {
 	  cout << "port disconnected: " << port.getName() << endl;
 	  port.setTimer((long)1);
+	  port.close();
       }
       break;
 
