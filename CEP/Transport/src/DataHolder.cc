@@ -34,8 +34,7 @@ namespace LOFAR
 {
 
 DataHolder::DataHolder(const string& name, const string& type, int version)
-  : itsTimeStampPtr   (0),
-    itsDataFields     (type),
+  : itsDataFields     (type),
     itsData           (0),
     itsDataBlob       (0),
     itsTransporter    (this),
@@ -45,14 +44,14 @@ DataHolder::DataHolder(const string& name, const string& type, int version)
     itsType           (type),
     itsVersion        (version),
     itsReadConvert    (-1),
+    itsTimeStampPtr   (0),
     itsExtraPtr       (0)
 {
   initDataFields();
 }
 
 DataHolder::DataHolder(const DataHolder& that)
-  : itsTimeStampPtr   (0),
-    itsDataFields     (that.itsType),
+  : itsDataFields     (that.itsType),
     itsData           (0),
     itsDataBlob       (0),
     itsTransporter    (that.itsTransporter, this),
@@ -62,6 +61,7 @@ DataHolder::DataHolder(const DataHolder& that)
     itsType           (that.itsType),
     itsVersion        (that.itsVersion),
     itsReadConvert    (that.itsReadConvert),
+    itsTimeStampPtr   (0),
     itsExtraPtr       (0)
 {
   initDataFields();
@@ -233,7 +233,7 @@ void DataHolder::initDataFields()
 {
   // Make sure only the timestamp (version 1) is part of the data fields.
   BlobFieldSet fset(itsType);
-  fset.add (BlobField<unsigned long>(1));
+  fset.add (BlobField<uint64>(1));
   itsDataFields = fset;
 }
 
@@ -357,8 +357,4 @@ void DataHolder::fillDataPointers()
 {}
 
 } // namespace LOFAR
-
-
-// Instantiate the template.
-#include <Common/BlobField.cc>
 
