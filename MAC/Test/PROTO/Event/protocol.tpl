@@ -47,6 +47,7 @@ const char* [+ protocol_name +]_signalnames[] =
 %include carrays.i
 %include std_string.i
 %include typemaps.i
+%include array_typemaps.i
 [+ FOR include "" +]
 %include [+ (get "include") +][+ ENDFOR +]
 [+ FOR unbounded_array_types "" +][+ FOR type "" +]
@@ -96,47 +97,6 @@ namespace [+ (base-name) +]
 [+ (out-pop) +]
   class [+ event_class_decl +]
   {
-#ifdef SWIG
-%typemap(in) std::string* ($*1_ltype tempstr) {
-	char * temps; int templ;
-	if (PyString_AsStringAndSize($input, &temps, &templ)) return NULL;
-	tempstr = $*1_ltype(temps, templ);
-	$1 = &tempstr;
-}
-%typemap(out) std::string* {
-	$result = PyString_FromStringAndSize($1->data(), $1->length());
-}
-[+ FOR bounded_array_types "" +][+ FOR type "" +][+ IF (not (== (get "type") "char")) +]
-%typemap(in) [+ (get "type")+] [ANY] ([+ (get "type") +] temp[$1_dim0]) {
-  int i;
-  if (!PySequence_Check($input)) {
-    PyErr_SetString(PyExc_ValueError,"Expected a sequence");
-    return NULL;
-  }
-  if (PySequence_Length($input) != $1_dim0) {
-    PyErr_SetString(PyExc_ValueError,"Size mismatch. Expected $1_dim0 elements");
-    return NULL;
-  }
-  for (i = 0; i < $1_dim0; i++) {
-    PyObject *o = PySequence_GetItem($input,i);
-    if (PyNumber_Check(o)) {
-      temp[i] = ([+ (get "type")+])[+ to_type +]
-    } else {
-      PyErr_SetString(PyExc_ValueError,"Sequence elements must be numbers");
-      return NULL;
-    }
-  }
-  $1 = temp;
-}
-%typemap(out) [+ (get "type")+] [ANY] {
-  int i;
-  $result = PyList_New($1_dim0);
-  for (i = 0; i < $1_dim0; i++) {
-    PyObject *o = [+ from_type +](([+ (get "type") +]) $1[i]);
-    PyList_SetItem($result,i,o);
-  }
-}[+ ENDIF +][+ ENDFOR +][+ ENDFOR +]
-#endif
     public:
       [+ event_class_name +](GCFEvent& e);
       [+ event_class_name +]();
