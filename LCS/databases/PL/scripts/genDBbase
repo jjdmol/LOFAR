@@ -28,7 +28,7 @@
 #
 # $Id$
 #
-VERSION="v1.4"
+VERSION="v1.5"
 
 #---------------------------- Global routines ---------------------------------
 #
@@ -348,7 +348,7 @@ addToMapFile()
 	BEGIN {
 		prevClass="NoSuchClass"
 		prevBaseClass=""
-
+File
 		# This table is used for transforming C types to Postgres types.
 		BasicType["short"]				= "SMALLINT"
 		BasicType["ushort"] 			= "SMALLINT"
@@ -527,6 +527,8 @@ addToMapFile()
 	# MAIN awk loop
 	{ 
 		split($0, field, "@")
+		nrParts=split(field[1],pathParts, "/")
+		gsub("\"", "", pathParts[nrParts])
 		Class=field[3]							# xxx or xxx : public yyy
 		BaseClass=""
 		if (index(Class,":")>0) {				# is class derived from other?
@@ -546,6 +548,7 @@ addToMapFile()
 			printf "\n"
 			printf "Class		%s\n", Class
 			printf "Table		%s\n", Class
+			printf "File		%s\n", pathParts[nrParts]
 			printf "#TYPE              MEMBER             COLUMN             TYPE\n"
 			printf "#--------------------------------------------------------------------\n"
 			prevClass=Class
