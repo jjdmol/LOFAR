@@ -11,7 +11,7 @@
 #include <qpopupmenu.h>
 
 
-#include <UVPDisplayArea.h>
+#include <UVPUVCoverageArea.h>
 
 
 
@@ -25,7 +25,8 @@ class Tmain_window:public QWidget
   enum e_menu_command{mc_open, mc_quit, mc_help, mc_information};
 
   
-  Tmain_window();
+   Tmain_window();
+  ~Tmain_window();
 
  protected:                     /* Protected part */
   
@@ -34,8 +35,8 @@ class Tmain_window:public QWidget
   QPopupMenu*     m_view_menu;
   QPopupMenu*     m_help_menu;
 
-  UVPDisplayArea* m_canvas;      /* The drawing canvas */
-
+  UVPUVCoverageArea* m_canvas;      /* The drawing canvas */
+  UVPImageCube*   itsCube;
 
 
   virtual void resizeEvent(QResizeEvent *event);
