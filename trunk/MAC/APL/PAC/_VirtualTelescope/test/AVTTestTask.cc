@@ -48,7 +48,8 @@ AVTTestTask::AVTTestTask(AVTTest& tester) :
   m_propertySBFdirectionType(string(PROPERTY_SBF_DIRECTIONTYPE)),
   m_propertySBFdirectionAngle1(string(PROPERTY_SBF_DIRECTIONANGLE1)),
   m_propertySBFdirectionAngle2(string(PROPERTY_SBF_DIRECTIONANGLE2)),
-  m_propertySBFstatus(string(PROPERTY_SBF_STATUS))
+  m_propertySBFstatus(string(PROPERTY_SBF_STATUS)),
+  m_beamServerProperties(propertySetBeamServer,&m_answer)
 {
   registerProtocol(LOGICALDEVICE_PROTOCOL, LOGICALDEVICE_PROTOCOL_signalnames);
   registerProtocol(ABS_PROTOCOL, ABS_PROTOCOL_signalnames);
@@ -77,7 +78,11 @@ GCFEvent::TResult AVTTestTask::initial(GCFEvent& event, GCFPortInterface& /*p*/)
       break;
 
     case F_ENTRY_SIG:
+      m_beamServerProperties.load();
       m_beamserver.open(); // start listening
+      break;
+      
+    case F_MYPLOADED_SIG:
       if(m_sBeamServerOnly)
       {
         TRAN(AVTTestTask::beamServer);
