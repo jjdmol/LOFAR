@@ -5,7 +5,7 @@ AC_INIT(src/Application1.h)
 dnl AC_CONFIG_AUX_DIR(config)
 dnl AM_CONFIG_HEADER(config/config.h)
 AM_CONFIG_HEADER(config.h)
-AM_INIT_AUTOMAKE(TESTGCF, 4.0)
+AM_INIT_AUTOMAKE(Test/GCF, 4.2)
 
 dnl Initialize for LOFAR (may set compilers)
 lofar_INIT
@@ -56,13 +56,13 @@ lofar_QATOOLS
 lofar_DOCXX
 lofar_MPI(0)
 lofar_PVSS(1)
-lofar_INTERNAL(LCS/Common, common, Common_v1-0, 1, Common/LofarTypes.h,,)
-lofar_INTERNAL(MAC/GCF/GCFCommon, gcfcommon, MAC-GCF-4_2alpha, 1, GCF/GCF_Defines.h,,)
-lofar_INTERNAL(MAC/GCF/TM, gcftm, MAC-GCF-4_2alpha, 1, GCF/TM/GCF_Task.h,,)
-lofar_INTERNAL(MAC/GCF/PAL, GCFPAL, MAC-GCF-4_2alpha, 1, GCF/PAL/GCF_Property.h,,)
-lofar_INTERNAL(MAC/GCF/PALlight, GCFPALlight, MAC-GCF-4_2alpha, 1, GCF/PALlight/GCF_RTMyProperty.h,,)
-lofar_INTERNAL(MAC/GCF/Protocols, gcfpirtcprot, MAC-GCF-4_2alpha, 1, GCF/Protocols/PI_Protocol.ph,,)
-lofar_INTERNAL(MAC/GCF/Protocols, gcfpaprot, MAC-GCF-4_2alpha, 1, GCF/Protocols/PA_Protocol.ph,,)
+lofar_INTERNAL(LCS/Common, Common, LCS-Common-2_0, 1, Common/LofarTypes.h,,)
+lofar_INTERNAL(MAC/GCF/GCFCommon, gcfcommon, MAC-GCF-4_2alpha3, 1, GCF/GCF_Defines.h,,)
+lofar_INTERNAL(MAC/GCF/TM, gcftm, MAC-GCF-4_2alpha3, 1, GCF/TM/GCF_Task.h,,)
+lofar_INTERNAL(MAC/GCF/PAL, GCFPAL, MAC-GCF-4_2alpha3, 1, GCF/PAL/GCF_Property.h,,)
+lofar_INTERNAL(MAC/GCF/PALlight, GCFPALlight, MAC-GCF-4_2alpha3, 1, GCF/PALlight/GCF_RTMyProperty.h,,)
+lofar_INTERNAL(MAC/GCF/Protocols, gcfpirtcprot, MAC-GCF-4_2alpha3, 1, GCF/Protocols/PI_Protocol.ph,,)
+lofar_INTERNAL(MAC/GCF/Protocols, gcfpaprot, MAC-GCF-4_2alpha3, 1, GCF/Protocols/PA_Protocol.ph,,)
 lofar_PACKAGE(MAC/Test/Suite)
 
                        

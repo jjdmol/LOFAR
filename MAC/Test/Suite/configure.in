@@ -5,7 +5,7 @@ AC_INIT(src/suite.h)
 dnl AC_CONFIG_AUX_DIR(config)
 dnl AM_CONFIG_HEADER(config/config.h)
 AM_CONFIG_HEADER(config.h)
-AM_INIT_AUTOMAKE(test/suite, 1.0)
+AM_INIT_AUTOMAKE(test/suite, 4.2)
 
 dnl Initialize for LOFAR (may set compilers)
 lofar_INIT
@@ -55,7 +55,7 @@ lofar_DEBUG_OPTIMIZE
 lofar_QATOOLS
 lofar_DOCXX
 lofar_MPI(0)
-lofar_EXTERNAL(common,1,Common/LofarTypes.h,,)
+lofar_INTERNAL(LCS/Common, Common, LCS-Common-2_0, 1,Common/LofarTypes.h,,)
 
 dnl
 dnl Output Makefiles
