@@ -38,7 +38,7 @@ namespace LOFAR
   class BlueGeneDemo: public LOFAR::ApplicationHolder {
     
   public:
-    BlueGeneDemo();
+    BlueGeneDemo(bool BGl, int bgNodes=64);
     virtual ~BlueGeneDemo();
 
     // overloaded methods from the ApplicationHolder base class
@@ -49,8 +49,12 @@ namespace LOFAR
     virtual void quit();
 
   private:
-    WorkHolder* itsWHs[ NBEAMLETS + 2 * NBEAMLETS * BFBW ];
-    int         itsWHCount;
+    WorkHolder* itsOutsideWHs[ MAX_BG_NODES ]; // Frontend workholders
+    WorkHolder* itsInsideWHs [ NBEAMLETS * BFBW ]; // BGL workholders
+    int         itsOutsideWHCount;
+    int         itsInsideWHCount;
+    bool        itsIsBlueGene;
+    int         itsBlueGeneNodes;
   };
 
 
