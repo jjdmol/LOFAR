@@ -619,9 +619,95 @@ namespace LCSMath
 #endif
   }   
 
+    // Statistics routines
+    template <class T>
+    T sum (const blitz::Array <T, 1>& aVector, int length)
+    {
+	T s = (T) 0;
+	for (int i = 0; i < length; i++) {
+	    s += aVector (i);
+	}
+	return s;
+    }
+    
+    template <class T>
+    T sum_square (const blitz::Array <T, 1>& aVector, int length)
+    {
+	T s = (T) 0;
+	for (int i = 0; i < length; i++) {
+	    s += aVector (i) * aVector (i);
+	}
+	return s;
+    }
+
+    template <class T>
+    T mean (const blitz::Array <T, 1>& aVector, int length)
+    {
+	return (sum (aVector, length) / (T) length);
+    }
+
+    template <class T>
+    T variance (const blitz::Array <T, 1>& aVector, int length)
+    {
+	T s  = sum (aVector, length);
+	T s2 = sum_square (aVector, length);
+	T n  = (T) length;
+
+	return ((s2 - (s * s / n)) / (n - (T) 1));
+    }
+
+    template <class T>
+    T stdev (const blitz::Array <T, 1>& aVector, int length)
+    {
+	return (sqrt (variance (aVector, length)));
+    }
+
+    template <class T>
+    T median (blitz::Array <T, 1>& aVector, int length)
+    {
+	int half = 0;
+	blitz::Array <T, 1> aSortedVector = sort (aVector);
+
+	if ((length % 2) == 1) {
+	    return aSortedVector ((length - 1) / 2);
+	} else {
+	    half = length / 2;
+	    return ((aSortedVector (half - 1) + aSortedVector (half)) / (T) 2);
+	}
+    }
+    
+    template <class T>
+    T max (blitz::Array <T, 1>& aVector, int length)
+    {
+	blitz::Array <T, 1> aSortedVector = sort (aVector);
+	return aSortedVector (aSortedVector.ubound (blitz::firstDim));
+    }
+    
+    template <class T>
+    T min (blitz::Array <T, 1>& aVector, int length)
+    {
+	blitz::Array <T, 1> aSortedVector = sort (aVector);
+	return aSortedVector (aSortedVector.lbound (blitz::firstDim));
+    }
+
   // Explicit instantiations
   template blitz::Array<dcomplex,1> diag(const blitz::Array<dcomplex,2>&, int);
   template blitz::Array<dcomplex,2> diag(const blitz::Array<dcomplex,1>&, int);
   template blitz::Array<double,1> diag(const blitz::Array<double,2>&, int);
   template blitz::Array<double,2> diag(const blitz::Array<double,1>&, int);
+
+  template double sum (const blitz::Array <double, 1>& aVector, int length);
+  template double sum_square (const blitz::Array <double, 1>& aVector, int length);
+  template double mean (const blitz::Array <double, 1>& aVector, int length);
+  template double variance (const blitz::Array <double, 1>& aVector, int length);
+  template double stdev (const blitz::Array <double, 1>& aVector, int length);
+  template double median (blitz::Array <double, 1>& aVector, int length);
+  template double max (blitz::Array <double, 1>& aVector, int length);
+  template double min (blitz::Array <double, 1>& aVector, int length);
+
+  template dcomplex sum (const blitz::Array <dcomplex, 1>& aVector, int length);
+  template dcomplex sum_square (const blitz::Array <dcomplex, 1>& aVector, int length);
+  template dcomplex mean (const blitz::Array <dcomplex, 1>& aVector, int length);
+  template dcomplex variance (const blitz::Array <dcomplex, 1>& aVector, int length);
+  template dcomplex stdev (const blitz::Array <dcomplex, 1>& aVector, int length);
 }
