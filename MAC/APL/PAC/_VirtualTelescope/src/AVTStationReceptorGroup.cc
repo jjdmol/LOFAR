@@ -54,7 +54,7 @@ AVTStationReceptorGroup::TStationReceptorConnection::TStationReceptorConnection(
   clientPort(new APLInterTaskPort((GCFTask&)(*_rcu),_containerTask,_name,_type,_protocol)),
   connected(_connected)
 {
-  LOG_TRACE_FLOW(formatString("TStationReceptorConnection(0x%x)::TStationReceptorConnection",this));
+  LOG_DEBUG(formatString("TStationReceptorConnection(0x%x)::TStationReceptorConnection",this));
   rcu->addClientInterTaskPort(clientPort.get());
 }
 
@@ -68,7 +68,7 @@ AVTStationReceptorGroup::AVTStationReceptorGroup(string& taskName,
   m_stopTime(0),
   m_frequency(0.0)
 {
-  LOG_TRACE_FLOW(formatString("AVTStationReceptorGroup(%s)::AVTStationReceptorGroup",getName().c_str()));
+  LOG_DEBUG(formatString("AVTStationReceptorGroup(%s)::AVTStationReceptorGroup",getName().c_str()));
 
   vector<shared_ptr<AVTStationReceptor> >::iterator rIt;
   for(rIt=rcus.begin();rIt!=rcus.end();++rIt)
@@ -90,7 +90,7 @@ AVTStationReceptorGroup::AVTStationReceptorGroup(string& taskName,
 
 AVTStationReceptorGroup::~AVTStationReceptorGroup()
 {
-  LOG_TRACE_FLOW(formatString("AVTStationReceptorGroup(%s)::~AVTStationReceptorGroup",getName().c_str()));
+  LOG_DEBUG(formatString("AVTStationReceptorGroup(%s)::~AVTStationReceptorGroup",getName().c_str()));
 }
 
 bool AVTStationReceptorGroup::isPrepared(vector<string>& parameters)
@@ -106,7 +106,7 @@ bool AVTStationReceptorGroup::isPrepared(vector<string>& parameters)
 
 bool AVTStationReceptorGroup::checkQualityRequirements()
 {
-  LOG_TRACE_FLOW(formatString("AVTStationReceptorGroup(%s)::%s",getName().c_str(),__func__));
+  LOG_DEBUG(formatString("AVTStationReceptorGroup(%s)::%s",getName().c_str(),__func__));
   bool requirementsMet=true;
   int  unavailableCounter = 0;
   int maxUnavailable = ParameterSet::instance()->getInt(PARAM_MAX_SRG_RESOURCES_UNAVAILABLE);
@@ -149,7 +149,7 @@ void AVTStationReceptorGroup::setFrequency(const double frequency)
 
 bool AVTStationReceptorGroup::isStationReceptorClient(GCFPortInterface& port)
 {
-  LOG_TRACE_FLOW(formatString("AVTStationReceptorGroup(%s,0x%x)::isStationReceptorClient",getName().c_str(),this));
+  LOG_DEBUG(formatString("AVTStationReceptorGroup(%s,0x%x)::isStationReceptorClient",getName().c_str(),this));
   TStationReceptorVectorIter it = m_stationReceptors.begin();
   bool found=false;
   while(!found && it!=m_stationReceptors.end())
@@ -162,7 +162,7 @@ bool AVTStationReceptorGroup::isStationReceptorClient(GCFPortInterface& port)
 
 bool AVTStationReceptorGroup::setReceptorConnected(GCFPortInterface& port, bool connected)
 {
-  LOG_TRACE_FLOW(formatString("AVTStationReceptorGroup(%s,0x%x)::%s(0x%x,%s)",getName().c_str(),this,__func__,&port,(connected?"true":"false")));
+  LOG_DEBUG(formatString("AVTStationReceptorGroup(%s,0x%x)::%s(0x%x,%s)",getName().c_str(),this,__func__,&port,(connected?"true":"false")));
   TStationReceptorVectorIter it = m_stationReceptors.begin();
   bool found=false;
   while(!found && it!=m_stationReceptors.end())
@@ -189,7 +189,7 @@ bool AVTStationReceptorGroup::allReceptorsConnected()
     allConnected = (*it).connected;
     it++;
   }
-  LOG_TRACE_FLOW(formatString("AVTStationReceptorGroup(%s,0x%x)::%s: %s",getName().c_str(),this,__func__,(allConnected?"true":"false")));
+  LOG_DEBUG(formatString("AVTStationReceptorGroup(%s,0x%x)::%s: %s",getName().c_str(),this,__func__,(allConnected?"true":"false")));
   return allConnected;
 }
 
@@ -202,13 +202,13 @@ bool AVTStationReceptorGroup::allReceptorsInState(TLogicalDeviceState state)
     allInState = ((*it).rcu->getLogicalDeviceState()==state);
     it++;
   }
-  LOG_TRACE_FLOW(formatString("AVTStationReceptorGroup(%s,0x%x)::%s(%d): %s",getName().c_str(),this,__func__,state,(allInState?"true":"false")));
+  LOG_DEBUG(formatString("AVTStationReceptorGroup(%s,0x%x)::%s(%d): %s",getName().c_str(),this,__func__,state,(allInState?"true":"false")));
   return allInState;
 }
 
 void AVTStationReceptorGroup::sendToAllReceptors(GCFEvent& event)
 {
-  LOG_TRACE_FLOW(formatString("AVTStationReceptorGroup(%s,0x%x)::sendToAllReceptors",getName().c_str(),this));
+  LOG_DEBUG(formatString("AVTStationReceptorGroup(%s,0x%x)::sendToAllReceptors",getName().c_str(),this));
   TStationReceptorVectorIter it;
   for(it=m_stationReceptors.begin();it!=m_stationReceptors.end();++it)
   {
@@ -218,7 +218,7 @@ void AVTStationReceptorGroup::sendToAllReceptors(GCFEvent& event)
 
 void AVTStationReceptorGroup::concreteDisconnected(GCFPortInterface& port)
 {
-  LOG_TRACE_FLOW(formatString("AVTStationReceptorGroup(%s)::concreteDisconnected",getName().c_str()));
+  LOG_DEBUG(formatString("AVTStationReceptorGroup(%s)::concreteDisconnected",getName().c_str()));
   // go to initial state only if the connection with the receptor is lost.
   if(isStationReceptorClient(port))
   {
@@ -228,7 +228,7 @@ void AVTStationReceptorGroup::concreteDisconnected(GCFPortInterface& port)
 
 GCFEvent::TResult AVTStationReceptorGroup::concrete_initial_state(GCFEvent& event, GCFPortInterface& port)
 {
-  LOG_TRACE_FLOW(formatString("AVTStationReceptorGroup(%s)::concrete_initial_state (%s)",getName().c_str(),evtstr(event)));
+  LOG_DEBUG(formatString("AVTStationReceptorGroup(%s)::concrete_initial_state (%s)",getName().c_str(),evtstr(event)));
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (event.signal)
@@ -299,7 +299,7 @@ GCFEvent::TResult AVTStationReceptorGroup::concrete_initial_state(GCFEvent& even
     }
 
     default:
-      LOG_TRACE_FLOW(formatString("AVTStationReceptorGroup(%s)::concrete_initial_state, default (%s)",getName().c_str(),evtstr(event)));
+      LOG_DEBUG(formatString("AVTStationReceptorGroup(%s)::concrete_initial_state, default (%s)",getName().c_str(),evtstr(event)));
       status = GCFEvent::NOT_HANDLED;
       break;
   }
@@ -309,7 +309,7 @@ GCFEvent::TResult AVTStationReceptorGroup::concrete_initial_state(GCFEvent& even
 
 GCFEvent::TResult AVTStationReceptorGroup::concrete_claiming_state(GCFEvent& event, GCFPortInterface& /*port*/, bool& stateFinished)
 {
-  LOG_TRACE_FLOW(formatString("AVTStationReceptorGroup(%s)::concrete_claiming_state (%s)",getName().c_str(),evtstr(event)));
+  LOG_DEBUG(formatString("AVTStationReceptorGroup(%s)::concrete_claiming_state (%s)",getName().c_str(),evtstr(event)));
   GCFEvent::TResult status = GCFEvent::HANDLED;
   
   switch (event.signal)
@@ -325,7 +325,7 @@ GCFEvent::TResult AVTStationReceptorGroup::concrete_claiming_state(GCFEvent& eve
     }
     
     default:
-      LOG_TRACE_FLOW(formatString("AVTStationReceptorGroup(%s)::concrete_claiming_state, default",getName().c_str()));
+      LOG_DEBUG(formatString("AVTStationReceptorGroup(%s)::concrete_claiming_state, default",getName().c_str()));
       status = GCFEvent::NOT_HANDLED;
       break;
   }
@@ -335,7 +335,7 @@ GCFEvent::TResult AVTStationReceptorGroup::concrete_claiming_state(GCFEvent& eve
 
 GCFEvent::TResult AVTStationReceptorGroup::concrete_preparing_state(GCFEvent& event, GCFPortInterface& /*port*/, bool& stateFinished, bool& error)
 {
-  LOG_TRACE_FLOW(formatString("AVTStationReceptorGroup(%s)::concrete_preparing_state (%s)",getName().c_str(),evtstr(event)));
+  LOG_DEBUG(formatString("AVTStationReceptorGroup(%s)::concrete_preparing_state (%s)",getName().c_str(),evtstr(event)));
   GCFEvent::TResult status = GCFEvent::HANDLED;
   stateFinished=false;
   error=false;
@@ -353,7 +353,7 @@ GCFEvent::TResult AVTStationReceptorGroup::concrete_preparing_state(GCFEvent& ev
     }
     
     default:
-      LOG_TRACE_FLOW(formatString("AVTStationReceptorGroup(%s)::concrete_preparing_state, default",getName().c_str()));
+      LOG_DEBUG(formatString("AVTStationReceptorGroup(%s)::concrete_preparing_state, default",getName().c_str()));
       status = GCFEvent::NOT_HANDLED;
       break;
   }
@@ -363,13 +363,13 @@ GCFEvent::TResult AVTStationReceptorGroup::concrete_preparing_state(GCFEvent& ev
 
 GCFEvent::TResult AVTStationReceptorGroup::concrete_active_state(GCFEvent& event, GCFPortInterface& /*port*/)
 {
-  LOG_TRACE_FLOW(formatString("AVTStationReceptorGroup(%s)::%s (%s)",getName().c_str(),__func__,evtstr(event)));
+  LOG_DEBUG(formatString("AVTStationReceptorGroup(%s)::%s (%s)",getName().c_str(),__func__,evtstr(event)));
   return GCFEvent::NOT_HANDLED;
 }
 
 GCFEvent::TResult AVTStationReceptorGroup::concrete_releasing_state(GCFEvent& event, GCFPortInterface& /*port*/, bool& stateFinished)
 {
-  LOG_TRACE_FLOW(formatString("AVTStationReceptorGroup(%s)::concrete_releasing_state (%s)",getName().c_str(),evtstr(event)));
+  LOG_DEBUG(formatString("AVTStationReceptorGroup(%s)::concrete_releasing_state (%s)",getName().c_str(),evtstr(event)));
   GCFEvent::TResult status = GCFEvent::HANDLED;
   
   switch (event.signal)
@@ -385,7 +385,7 @@ GCFEvent::TResult AVTStationReceptorGroup::concrete_releasing_state(GCFEvent& ev
     }
     
     default:
-      LOG_TRACE_FLOW(formatString("AVTStationReceptorGroup(%s)::concrete_releasing_state, default",getName().c_str()));
+      LOG_DEBUG(formatString("AVTStationReceptorGroup(%s)::concrete_releasing_state, default",getName().c_str()));
       status = GCFEvent::NOT_HANDLED;
       break;
   }
@@ -417,7 +417,7 @@ void AVTStationReceptorGroup::handlePropertySetAnswer(GCFEvent& answer)
       GCFConfAnswerEvent* pConfAnswer=static_cast<GCFConfAnswerEvent*>(&answer);
       if(pConfAnswer->result == GCF_NO_ERROR)
       {
-        LOG_TRACE_FLOW(formatString("%s : apc %s Loaded",getName().c_str(),pConfAnswer->pApcName));
+        LOG_DEBUG(formatString("%s : apc %s Loaded",getName().c_str(),pConfAnswer->pApcName));
         apcLoaded();
       }
       else
@@ -483,7 +483,7 @@ void AVTStationReceptorGroup::handlePropertySetAnswer(GCFEvent& answer)
 
 void AVTStationReceptorGroup::concreteClaim(GCFPortInterface& /*port*/)
 {
-  LOG_TRACE_FLOW(formatString("AVTStationReceptorGroup(%s)::concreteClaim",getName().c_str()));
+  LOG_DEBUG(formatString("AVTStationReceptorGroup(%s)::concreteClaim",getName().c_str()));
   // claim my own resources
   AVTResourceManagerPtr resourceManager(AVTResourceManager::instance());
   
@@ -500,7 +500,7 @@ void AVTStationReceptorGroup::concreteClaim(GCFPortInterface& /*port*/)
 
 void AVTStationReceptorGroup::concretePrepare(GCFPortInterface& /*port*/,string& parameters)
 {
-  LOG_TRACE_FLOW(formatString("AVTStationReceptorGroup(%s)::concretePrepare",getName().c_str()));
+  LOG_DEBUG(formatString("AVTStationReceptorGroup(%s)::concretePrepare",getName().c_str()));
   // prepare my own resources
   vector<string> decodedParameters;
   AVTUtilities::decodeParameters(parameters,decodedParameters);
@@ -518,7 +518,7 @@ void AVTStationReceptorGroup::concretePrepare(GCFPortInterface& /*port*/,string&
 
 void AVTStationReceptorGroup::concreteResume(GCFPortInterface& /*port*/)
 {
-  LOG_TRACE_FLOW(formatString("AVTStationReceptorGroup(%s)::concreteResume",getName().c_str()));
+  LOG_DEBUG(formatString("AVTStationReceptorGroup(%s)::concreteResume",getName().c_str()));
   // resume my own resources
   
   // send resume message to receptors
@@ -528,7 +528,7 @@ void AVTStationReceptorGroup::concreteResume(GCFPortInterface& /*port*/)
 
 void AVTStationReceptorGroup::concreteSuspend(GCFPortInterface& /*port*/)
 {
-  LOG_TRACE_FLOW(formatString("AVTStationReceptorGroup(%s)::concreteSuspend",getName().c_str()));
+  LOG_DEBUG(formatString("AVTStationReceptorGroup(%s)::concreteSuspend",getName().c_str()));
   // suspend my own resources
   
   // send suspend message to receptors
@@ -538,7 +538,7 @@ void AVTStationReceptorGroup::concreteSuspend(GCFPortInterface& /*port*/)
 
 void AVTStationReceptorGroup::concreteRelease(GCFPortInterface& /*port*/)
 {
-  LOG_TRACE_FLOW(formatString("AVTStationReceptorGroup(%s)::concreteRelease",getName().c_str()));
+  LOG_DEBUG(formatString("AVTStationReceptorGroup(%s)::concreteRelease",getName().c_str()));
   // release my own resources
   AVTResourceManagerPtr resourceManager(AVTResourceManager::instance());
   

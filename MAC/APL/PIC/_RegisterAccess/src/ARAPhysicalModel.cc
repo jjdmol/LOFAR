@@ -107,11 +107,7 @@ void ARAPhysicalModel::inMaintenance(bool maintenance, string& resource)
       vector<string>::iterator mIt;
       for(mIt=pIt->second.begin();mIt!=pIt->second.end();++mIt)
       {
-        TPropertyInfo propInfo = 
-        {
-          *mIt + string(".") + string(PROPNAME_STATUS),
-          LPT_UNSIGNED
-        };
+        TPropertyInfo propInfo(*mIt + string(".") + string(PROPNAME_STATUS),LPT_UNSIGNED);
         GCFExtProperty extPropMaintenance(propInfo);
         GCFPVUnsigned inMaintenance(1);
         extPropMaintenance.setValue(inMaintenance);
@@ -134,11 +130,7 @@ void ARAPhysicalModel::inMaintenance(bool maintenance, string& resource)
         if(fIt == m_maintenanceFlags.end())
         {
           // maintenance of resource is not individually set
-          TPropertyInfo propInfo = 
-          {
-            *mIt + string(".") + string(PROPNAME_STATUS),
-            LPT_UNSIGNED
-          };
+          TPropertyInfo propInfo(*mIt + string(".") + string(PROPNAME_STATUS),LPT_UNSIGNED);
           GCFExtProperty extPropMaintenance(propInfo);
           GCFPVUnsigned inMaintenance(0);
           extPropMaintenance.setValue(inMaintenance);

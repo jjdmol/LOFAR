@@ -132,7 +132,7 @@ void AVTTestTask::run()
 
 GCFEvent::TResult AVTTestTask::initial(GCFEvent& event, GCFPortInterface& /*p*/)
 {
-  LOG_TRACE_FLOW(formatString("AVTTestTask(%s)::initial (%s)",getName().c_str(),evtstr(event)));
+  LOG_DEBUG(formatString("AVTTestTask(%s)::initial (%s)",getName().c_str(),evtstr(event)));
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (event.signal)
@@ -177,7 +177,7 @@ GCFEvent::TResult AVTTestTask::initial(GCFEvent& event, GCFPortInterface& /*p*/)
     }
     
     default:
-      LOG_TRACE_FLOW(formatString("AVTTestTask(%s)::initial, default",getName().c_str()));
+      LOG_DEBUG(formatString("AVTTestTask(%s)::initial, default",getName().c_str()));
       status = GCFEvent::NOT_HANDLED;
       break;
   }
@@ -187,7 +187,7 @@ GCFEvent::TResult AVTTestTask::initial(GCFEvent& event, GCFPortInterface& /*p*/)
 
 GCFEvent::TResult AVTTestTask::propertiesLoaded(GCFEvent& event, GCFPortInterface& /*p*/)
 {
-  LOG_TRACE_FLOW(formatString("AVTTestTask(%s)::propertiesLoaded (%s)",getName().c_str(),evtstr(event)));
+  LOG_DEBUG(formatString("AVTTestTask(%s)::propertiesLoaded (%s)",getName().c_str(),evtstr(event)));
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (event.signal)
@@ -199,7 +199,7 @@ GCFEvent::TResult AVTTestTask::propertiesLoaded(GCFEvent& event, GCFPortInterfac
     case F_ENTRY:
       if(GCF_NO_ERROR!=m_extPropsetLDS.subscribeProp(PROPNAME_STATUS))
       {
-        LOG_TRACE_FLOW(formatString("AVTTestTask(%s): unable to subscribe to LogicalDeviceProperties",getName().c_str()));
+        LOG_DEBUG(formatString("AVTTestTask(%s): unable to subscribe to LogicalDeviceProperties",getName().c_str()));
         m_beamserver.setTimer(1.0); // abuse the beamserver to set a timert
       }
       else
@@ -209,7 +209,7 @@ GCFEvent::TResult AVTTestTask::propertiesLoaded(GCFEvent& event, GCFPortInterfac
       break;
 
     default:
-      LOG_TRACE_FLOW(formatString("AVTTestTask(%s)::propertiesLoaded, default",getName().c_str()));
+      LOG_DEBUG(formatString("AVTTestTask(%s)::propertiesLoaded, default",getName().c_str()));
       status = GCFEvent::NOT_HANDLED;
       break;
   }
@@ -222,7 +222,7 @@ GCFEvent::TResult AVTTestTask::propertiesLoaded(GCFEvent& event, GCFPortInterfac
  */
 GCFEvent::TResult AVTTestTask::test1(GCFEvent& event, GCFPortInterface& /*p*/)
 {
-  LOG_TRACE_FLOW(formatString("AVTTestTask(%s)::test1 (%s)",getName().c_str(),evtstr(event)));
+  LOG_DEBUG(formatString("AVTTestTask(%s)::test1 (%s)",getName().c_str(),evtstr(event)));
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (event.signal)
@@ -237,7 +237,7 @@ GCFEvent::TResult AVTTestTask::test1(GCFEvent& event, GCFPortInterface& /*p*/)
       break;
 
     default:
-      LOG_TRACE_FLOW(formatString("AVTTestTask(%s)::test1, default",getName().c_str()));
+      LOG_DEBUG(formatString("AVTTestTask(%s)::test1, default",getName().c_str()));
       status = GCFEvent::NOT_HANDLED;
       break;
   }
@@ -250,7 +250,7 @@ GCFEvent::TResult AVTTestTask::test1(GCFEvent& event, GCFPortInterface& /*p*/)
  */
 GCFEvent::TResult AVTTestTask::test2(GCFEvent& event, GCFPortInterface& p)
 {
-  LOG_TRACE_FLOW(formatString("AVTTestTask(%s)::test3 (%d)",getName().c_str(),event.signal));
+  LOG_DEBUG(formatString("AVTTestTask(%s)::test3 (%d)",getName().c_str(),event.signal));
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   status = handleBeamServerEvents(event,p);
@@ -286,7 +286,7 @@ GCFEvent::TResult AVTTestTask::test2(GCFEvent& event, GCFPortInterface& p)
         if(strstr(pResponse->pPropName, SCOPE_PAC_LogicalDeviceScheduler) == 0)
         {
           string statusValue=((GCFPVString*)pResponse->pValue)->getValue();
-          LOG_TRACE_FLOW(formatString("AVTTestTask(%s)::test3 status changed (%s)",getName().c_str(),statusValue.c_str()));
+          LOG_DEBUG(formatString("AVTTestTask(%s)::test3 status changed (%s)",getName().c_str(),statusValue.c_str()));
           if(statusValue == string("Resumed"))
           {
             TESTC(true);
@@ -310,7 +310,7 @@ GCFEvent::TResult AVTTestTask::test2(GCFEvent& event, GCFPortInterface& p)
       }
               
       default:
-        LOG_TRACE_FLOW(formatString("AVTTestTask(%s)::test3, default",getName().c_str()));
+        LOG_DEBUG(formatString("AVTTestTask(%s)::test3, default",getName().c_str()));
         status = GCFEvent::NOT_HANDLED;
         break;
     }
@@ -323,7 +323,7 @@ GCFEvent::TResult AVTTestTask::test2(GCFEvent& event, GCFPortInterface& p)
  */
 GCFEvent::TResult AVTTestTask::test3(GCFEvent& event, GCFPortInterface& p)
 {
-  LOG_TRACE_FLOW(formatString("AVTTestTask(%s)::test2 (%s)",getName().c_str(),evtstr(event)));
+  LOG_DEBUG(formatString("AVTTestTask(%s)::test2 (%s)",getName().c_str(),evtstr(event)));
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   status=handleBeamServerEvents(event,p);
@@ -376,7 +376,7 @@ GCFEvent::TResult AVTTestTask::test3(GCFEvent& event, GCFPortInterface& p)
       }
               
       default:
-        LOG_TRACE_FLOW(formatString("AVTTestTask(%s)::test2, default",getName().c_str()));
+        LOG_DEBUG(formatString("AVTTestTask(%s)::test2, default",getName().c_str()));
         status = GCFEvent::NOT_HANDLED;
         break;
     }
@@ -389,7 +389,7 @@ GCFEvent::TResult AVTTestTask::test3(GCFEvent& event, GCFPortInterface& p)
  */
 GCFEvent::TResult AVTTestTask::test4(GCFEvent& event, GCFPortInterface& /*p*/)
 {
-  LOG_TRACE_FLOW(formatString("AVTTestTask(%s)::test4 (%s)",getName().c_str(),evtstr(event)));
+  LOG_DEBUG(formatString("AVTTestTask(%s)::test4 (%s)",getName().c_str(),evtstr(event)));
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (event.signal)
@@ -416,7 +416,7 @@ GCFEvent::TResult AVTTestTask::test4(GCFEvent& event, GCFPortInterface& /*p*/)
     }
             
     default:
-      LOG_TRACE_FLOW(formatString("AVTTestTask(%s)::test4, default",getName().c_str()));
+      LOG_DEBUG(formatString("AVTTestTask(%s)::test4, default",getName().c_str()));
       status = GCFEvent::NOT_HANDLED;
       break;
   }
@@ -429,7 +429,7 @@ GCFEvent::TResult AVTTestTask::test4(GCFEvent& event, GCFPortInterface& /*p*/)
  */
 GCFEvent::TResult AVTTestTask::test5(GCFEvent& event, GCFPortInterface& /*p*/)
 {
-  LOG_TRACE_FLOW(formatString("AVTTestTask(%s)::test5 (%s)",getName().c_str(),evtstr(event)));
+  LOG_DEBUG(formatString("AVTTestTask(%s)::test5 (%s)",getName().c_str(),evtstr(event)));
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (event.signal)
@@ -450,7 +450,7 @@ GCFEvent::TResult AVTTestTask::test5(GCFEvent& event, GCFPortInterface& /*p*/)
       }
               
     default:
-      LOG_TRACE_FLOW(formatString("AVTTestTask(%s)::test5, default",getName().c_str()));
+      LOG_DEBUG(formatString("AVTTestTask(%s)::test5, default",getName().c_str()));
       status = GCFEvent::NOT_HANDLED;
       break;
   }
@@ -463,7 +463,7 @@ GCFEvent::TResult AVTTestTask::test5(GCFEvent& event, GCFPortInterface& /*p*/)
  */
 GCFEvent::TResult AVTTestTask::test6(GCFEvent& event, GCFPortInterface& p)
 {
-  LOG_TRACE_FLOW(formatString("AVTTestTask(%s)::test6 (%s)",getName().c_str(),evtstr(event)));
+  LOG_DEBUG(formatString("AVTTestTask(%s)::test6 (%s)",getName().c_str(),evtstr(event)));
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   status=handleBeamServerEvents(event,p);
@@ -514,7 +514,7 @@ GCFEvent::TResult AVTTestTask::test6(GCFEvent& event, GCFPortInterface& p)
       }
               
       default:
-        LOG_TRACE_FLOW(formatString("AVTTestTask(%s)::test6, default",getName().c_str()));
+        LOG_DEBUG(formatString("AVTTestTask(%s)::test6, default",getName().c_str()));
         status = GCFEvent::NOT_HANDLED;
         break;
     }
@@ -527,7 +527,7 @@ GCFEvent::TResult AVTTestTask::test6(GCFEvent& event, GCFPortInterface& p)
  */
 GCFEvent::TResult AVTTestTask::test7(GCFEvent& event, GCFPortInterface& /*p*/)
 {
-  LOG_TRACE_FLOW(formatString("AVTTestTask(%s)::test7 (%s)",getName().c_str(),evtstr(event)));
+  LOG_DEBUG(formatString("AVTTestTask(%s)::test7 (%s)",getName().c_str(),evtstr(event)));
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (event.signal)
@@ -548,7 +548,7 @@ GCFEvent::TResult AVTTestTask::test7(GCFEvent& event, GCFPortInterface& /*p*/)
     }
             
     default:
-      LOG_TRACE_FLOW(formatString("AVTTestTask(%s)::test7, default",getName().c_str()));
+      LOG_DEBUG(formatString("AVTTestTask(%s)::test7, default",getName().c_str()));
       status = GCFEvent::NOT_HANDLED;
       break;
   }
@@ -561,7 +561,7 @@ GCFEvent::TResult AVTTestTask::test7(GCFEvent& event, GCFPortInterface& /*p*/)
  */
 GCFEvent::TResult AVTTestTask::test8(GCFEvent& event, GCFPortInterface& /*p*/)
 {
-  LOG_TRACE_FLOW(formatString("AVTTestTask(%s)::test8 (%s)",getName().c_str(),evtstr(event)));
+  LOG_DEBUG(formatString("AVTTestTask(%s)::test8 (%s)",getName().c_str(),evtstr(event)));
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (event.signal)
@@ -582,7 +582,7 @@ GCFEvent::TResult AVTTestTask::test8(GCFEvent& event, GCFPortInterface& /*p*/)
     }
             
     default:
-      LOG_TRACE_FLOW(formatString("AVTTestTask(%s)::test8, default",getName().c_str()));
+      LOG_DEBUG(formatString("AVTTestTask(%s)::test8, default",getName().c_str()));
       status = GCFEvent::NOT_HANDLED;
       break;
   }
@@ -595,7 +595,7 @@ GCFEvent::TResult AVTTestTask::test8(GCFEvent& event, GCFPortInterface& /*p*/)
  */
 GCFEvent::TResult AVTTestTask::test9(GCFEvent& event, GCFPortInterface& p)
 {
-  LOG_TRACE_FLOW(formatString("AVTTestTask(%s)::test9 (%s)",getName().c_str(),evtstr(event)));
+  LOG_DEBUG(formatString("AVTTestTask(%s)::test9 (%s)",getName().c_str(),evtstr(event)));
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   status = handleBeamServerEvents(event,p);
@@ -625,7 +625,7 @@ GCFEvent::TResult AVTTestTask::test9(GCFEvent& event, GCFPortInterface& p)
         if(strstr(pResponse->pPropName, SCOPE_PAC_LogicalDeviceScheduler) == 0)
         {
           string statusValue=((GCFPVString*)pResponse->pValue)->getValue();
-          LOG_TRACE_FLOW(formatString("AVTTestTask(%s)::test9 status changed (%s)",getName().c_str(),statusValue.c_str()));
+          LOG_DEBUG(formatString("AVTTestTask(%s)::test9 status changed (%s)",getName().c_str(),statusValue.c_str()));
           if(TESTC(statusValue == string("Released")))
           {
             FINISH;
@@ -642,7 +642,7 @@ GCFEvent::TResult AVTTestTask::test9(GCFEvent& event, GCFPortInterface& p)
       }
               
       default:
-        LOG_TRACE_FLOW(formatString("AVTTestTask(%s)::test9, default",getName().c_str()));
+        LOG_DEBUG(formatString("AVTTestTask(%s)::test9, default",getName().c_str()));
         status = GCFEvent::NOT_HANDLED;
         break;
     }
@@ -656,7 +656,7 @@ GCFEvent::TResult AVTTestTask::test9(GCFEvent& event, GCFPortInterface& p)
  */
 GCFEvent::TResult AVTTestTask::finished(GCFEvent& event, GCFPortInterface& /*p*/)
 {
-  LOG_TRACE_FLOW(formatString("AVTTestTask(%s)::finished (%s)",getName().c_str(),evtstr(event)));
+  LOG_DEBUG(formatString("AVTTestTask(%s)::finished (%s)",getName().c_str(),evtstr(event)));
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (event.signal)
@@ -670,7 +670,7 @@ GCFEvent::TResult AVTTestTask::finished(GCFEvent& event, GCFPortInterface& /*p*/
       break;
 
     default:
-      LOG_TRACE_FLOW(formatString("AVTTestTask(%s)::finished, default",getName().c_str()));
+      LOG_DEBUG(formatString("AVTTestTask(%s)::finished, default",getName().c_str()));
       status = GCFEvent::NOT_HANDLED;
       break;
   }
@@ -686,7 +686,7 @@ GCFEvent::TResult AVTTestTask::handleBeamServerEvents(GCFEvent& event, GCFPortIn
   {
     case ABS_BEAMALLOC:
     {
-      LOG_TRACE_FLOW(formatString("AVTTestTask(%s)::handleBeamServerEvents (ABS_BEAMALLOC)",getName().c_str(),event.signal));
+      LOG_DEBUG(formatString("AVTTestTask(%s)::handleBeamServerEvents (ABS_BEAMALLOC)",getName().c_str(),event.signal));
       ABSBeamallocAckEvent ack;
       ack.handle=0;
       ack.status=ABS_Protocol::SUCCESS;
@@ -697,7 +697,7 @@ GCFEvent::TResult AVTTestTask::handleBeamServerEvents(GCFEvent& event, GCFPortIn
      
     case ABS_BEAMFREE:
     {
-      LOG_TRACE_FLOW(formatString("AVTTestTask(%s)::handleBeamServerEvents (ABS_BEAMFREE)",getName().c_str(),event.signal));
+      LOG_DEBUG(formatString("AVTTestTask(%s)::handleBeamServerEvents (ABS_BEAMFREE)",getName().c_str(),event.signal));
       ABSBeamfreeAckEvent ack;
       ack.handle=0;
       ack.status=ABS_Protocol::SUCCESS;
@@ -708,7 +708,7 @@ GCFEvent::TResult AVTTestTask::handleBeamServerEvents(GCFEvent& event, GCFPortIn
      
     case ABS_BEAMPOINTTO:
     {
-      LOG_TRACE_FLOW(formatString("AVTTestTask(%s)::handleBeamServerEvents (ABS_BEAMPOINTTO)",getName().c_str(),event.signal));
+      LOG_DEBUG(formatString("AVTTestTask(%s)::handleBeamServerEvents (ABS_BEAMPOINTTO)",getName().c_str(),event.signal));
       m_BEAMPOINTTO_received=true;
       
       ABSBeampointtoEvent pointToEvent(event);
@@ -719,7 +719,7 @@ GCFEvent::TResult AVTTestTask::handleBeamServerEvents(GCFEvent& event, GCFPortIn
      
     case ABS_WGSETTINGS:
     {
-      LOG_TRACE_FLOW(formatString("AVTTestTask(%s)::handleBeamServerEvents (ABS_WGSETTINGS)",getName().c_str(),event.signal));
+      LOG_DEBUG(formatString("AVTTestTask(%s)::handleBeamServerEvents (ABS_WGSETTINGS)",getName().c_str(),event.signal));
       ABSWgsettingsAckEvent ack;
       ack.status=ABS_Protocol::SUCCESS;
       p.send(ack);
@@ -728,12 +728,12 @@ GCFEvent::TResult AVTTestTask::handleBeamServerEvents(GCFEvent& event, GCFPortIn
     }
     
     case ABS_WGENABLE:
-      LOG_TRACE_FLOW(formatString("AVTTestTask(%s)::handleBeamServerEvents (ABS_WGENABLE)",getName().c_str(),event.signal));
+      LOG_DEBUG(formatString("AVTTestTask(%s)::handleBeamServerEvents (ABS_WGENABLE)",getName().c_str(),event.signal));
       m_WGENABLE_received=true;
       break;
       
     case ABS_WGDISABLE:
-      LOG_TRACE_FLOW(formatString("AVTTestTask(%s)::handleBeamServerEvents (ABS_WGDISABLE)",getName().c_str(),event.signal));
+      LOG_DEBUG(formatString("AVTTestTask(%s)::handleBeamServerEvents (ABS_WGDISABLE)",getName().c_str(),event.signal));
       m_WGDISABLE_received=true;
       break;
 
@@ -748,7 +748,7 @@ GCFEvent::TResult AVTTestTask::handleBeamServerEvents(GCFEvent& event, GCFPortIn
     }
     
     default:
-      LOG_TRACE_FLOW(formatString("AVTTestTask(%s)::handleBeamServerEvents, default",getName().c_str()));
+      LOG_DEBUG(formatString("AVTTestTask(%s)::handleBeamServerEvents, default",getName().c_str()));
       status = GCFEvent::NOT_HANDLED;
       break;
   }
@@ -761,7 +761,7 @@ GCFEvent::TResult AVTTestTask::handleBeamServerEvents(GCFEvent& event, GCFPortIn
  */
 GCFEvent::TResult AVTTestTask::beamServer(GCFEvent& event, GCFPortInterface& p)
 {
-  LOG_TRACE_FLOW(formatString("AVTTestTask(%s)::beamServer (%d)",getName().c_str(),event.signal));
+  LOG_DEBUG(formatString("AVTTestTask(%s)::beamServer (%d)",getName().c_str(),event.signal));
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   status = handleBeamServerEvents(event,p);
@@ -794,7 +794,7 @@ GCFEvent::TResult AVTTestTask::beamServer(GCFEvent& event, GCFPortInterface& p)
         break;
               
       default:
-        LOG_TRACE_FLOW(formatString("AVTTestTask(%s)::beamServer, default",getName().c_str()));
+        LOG_DEBUG(formatString("AVTTestTask(%s)::beamServer, default",getName().c_str()));
         status = GCFEvent::NOT_HANDLED;
         break;
     }

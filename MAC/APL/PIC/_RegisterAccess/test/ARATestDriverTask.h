@@ -68,6 +68,7 @@ namespace ARA
       bool isEnabled();
       GCFEvent::TResult initial(GCFEvent& e, GCFPortInterface& p);
       GCFEvent::TResult enabled(GCFEvent& e, GCFPortInterface& p);
+      void getHardwareIndexes(const string& propName,const string& scope, vector<int>& hardwareIndexes);
       
       
       static string m_taskName;

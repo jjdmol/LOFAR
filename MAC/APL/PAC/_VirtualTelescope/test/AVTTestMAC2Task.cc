@@ -175,7 +175,7 @@ void AVTTestMAC2Task::run()
 
 GCFEvent::TResult AVTTestMAC2Task::initial(GCFEvent& event, GCFPortInterface& /*port*/)
 {
-  LOG_TRACE_FLOW(formatString("AVTTestMAC2Task(%s)::%s (%s)",getName().c_str(),__func__,evtstr(event)));
+  LOG_DEBUG(formatString("AVTTestMAC2Task(%s)::%s (%s)",getName().c_str(),__func__,evtstr(event)));
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (event.signal)
@@ -189,7 +189,7 @@ GCFEvent::TResult AVTTestMAC2Task::initial(GCFEvent& event, GCFPortInterface& /*
       break;
     
     default:
-      LOG_TRACE_FLOW(formatString("AVTTestTask(%s)::%s, default",getName().c_str(),__func__));
+      LOG_DEBUG(formatString("AVTTestTask(%s)::%s, default",getName().c_str(),__func__));
       status = GCFEvent::NOT_HANDLED;
       break;
   }
@@ -202,7 +202,7 @@ GCFEvent::TResult AVTTestMAC2Task::initial(GCFEvent& event, GCFPortInterface& /*
  */
 GCFEvent::TResult AVTTestMAC2Task::test_3_2_4_1(GCFEvent& event, GCFPortInterface& p)
 {
-  LOG_TRACE_FLOW(formatString("AVTTestMAC2Task(%s)::%s (%s)",getName().c_str(),__func__,evtstr(event)));
+  LOG_DEBUG(formatString("AVTTestMAC2Task(%s)::%s (%s)",getName().c_str(),__func__,evtstr(event)));
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (event.signal)
@@ -317,7 +317,7 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_4_1(GCFEvent& event, GCFPortInterfac
     }
       
     default:
-      LOG_TRACE_FLOW(formatString("AVTTestTask(%s)::%s, default",getName().c_str(),__func__));
+      LOG_DEBUG(formatString("AVTTestTask(%s)::%s, default",getName().c_str(),__func__));
       status = GCFEvent::NOT_HANDLED;
       break;
   }
@@ -329,7 +329,7 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_4_1(GCFEvent& event, GCFPortInterfac
  */
 GCFEvent::TResult AVTTestMAC2Task::test_3_2_4_2(GCFEvent& event, GCFPortInterface& p)
 {
-  LOG_TRACE_FLOW(formatString("AVTTestMAC2Task(%s)::%s (%s)",getName().c_str(),__func__,evtstr(event)));
+  LOG_DEBUG(formatString("AVTTestMAC2Task(%s)::%s (%s)",getName().c_str(),__func__,evtstr(event)));
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (event.signal)
@@ -432,7 +432,7 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_4_2(GCFEvent& event, GCFPortInterfac
     }
     
     default:
-      LOG_TRACE_FLOW(formatString("AVTTestTask(%s)::%s, default",getName().c_str(),__func__));
+      LOG_DEBUG(formatString("AVTTestTask(%s)::%s, default",getName().c_str(),__func__));
       status = GCFEvent::NOT_HANDLED;
       break;
   }
@@ -444,7 +444,7 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_4_2(GCFEvent& event, GCFPortInterfac
  */
 GCFEvent::TResult AVTTestMAC2Task::test_3_2_4_3(GCFEvent& event, GCFPortInterface& p)
 {
-  LOG_TRACE_FLOW(formatString("AVTTestMAC2Task(%s)::%s (%s)",getName().c_str(),__func__,evtstr(event)));
+  LOG_DEBUG(formatString("AVTTestMAC2Task(%s)::%s (%s)",getName().c_str(),__func__,evtstr(event)));
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (event.signal)
@@ -515,7 +515,7 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_4_3(GCFEvent& event, GCFPortInterfac
     }
     
     default:
-      LOG_TRACE_FLOW(formatString("AVTTestTask(%s)::%s, default",getName().c_str(),__func__));
+      LOG_DEBUG(formatString("AVTTestTask(%s)::%s, default",getName().c_str(),__func__));
       status = GCFEvent::NOT_HANDLED;
       break;
   }
@@ -527,7 +527,7 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_4_3(GCFEvent& event, GCFPortInterfac
  */
 GCFEvent::TResult AVTTestMAC2Task::test_3_2_4_4(GCFEvent& event, GCFPortInterface& p)
 {
-  LOG_TRACE_FLOW(formatString("AVTTestMAC2Task(%s)::%s (%s)",getName().c_str(),__func__,evtstr(event)));
+  LOG_DEBUG(formatString("AVTTestMAC2Task(%s)::%s (%s)",getName().c_str(),__func__,evtstr(event)));
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (event.signal)
@@ -614,7 +614,7 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_4_4(GCFEvent& event, GCFPortInterfac
     }
     
     default:
-      LOG_TRACE_FLOW(formatString("AVTTestTask(%s)::%s, default",getName().c_str(),__func__));
+      LOG_DEBUG(formatString("AVTTestTask(%s)::%s, default",getName().c_str(),__func__));
       status = GCFEvent::NOT_HANDLED;
       break;
   }
@@ -626,7 +626,7 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_4_4(GCFEvent& event, GCFPortInterfac
  */
 GCFEvent::TResult AVTTestMAC2Task::test_3_2_4_5(GCFEvent& event, GCFPortInterface& /*p*/)
 {
-  LOG_TRACE_FLOW(formatString("AVTTestMAC2Task(%s)::%s (%s)",getName().c_str(),__func__,evtstr(event)));
+  LOG_DEBUG(formatString("AVTTestMAC2Task(%s)::%s (%s)",getName().c_str(),__func__,evtstr(event)));
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (event.signal)
@@ -706,7 +706,7 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_4_5(GCFEvent& event, GCFPortInterfac
     }
     
     default:
-      LOG_TRACE_FLOW(formatString("AVTTestTask(%s)::%s, default",getName().c_str(),__func__));
+      LOG_DEBUG(formatString("AVTTestTask(%s)::%s, default",getName().c_str(),__func__));
       status = GCFEvent::NOT_HANDLED;
       break;
   }
@@ -718,7 +718,7 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_4_5(GCFEvent& event, GCFPortInterfac
  */
 GCFEvent::TResult AVTTestMAC2Task::test_3_2_4_6(GCFEvent& event, GCFPortInterface& /*p*/)
 {
-  LOG_TRACE_FLOW(formatString("AVTTestMAC2Task(%s)::%s (%s)",getName().c_str(),__func__,evtstr(event)));
+  LOG_DEBUG(formatString("AVTTestMAC2Task(%s)::%s (%s)",getName().c_str(),__func__,evtstr(event)));
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (event.signal)
@@ -810,7 +810,7 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_4_6(GCFEvent& event, GCFPortInterfac
     }
     
     default:
-      LOG_TRACE_FLOW(formatString("AVTTestTask(%s)::%s, default",getName().c_str(),__func__));
+      LOG_DEBUG(formatString("AVTTestTask(%s)::%s, default",getName().c_str(),__func__));
       status = GCFEvent::NOT_HANDLED;
       break;
   }
@@ -822,7 +822,7 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_4_6(GCFEvent& event, GCFPortInterfac
  */
 GCFEvent::TResult AVTTestMAC2Task::test_3_2_4_7(GCFEvent& event, GCFPortInterface& /*p*/)
 {
-  LOG_TRACE_FLOW(formatString("AVTTestMAC2Task(%s)::%s (%s)",getName().c_str(),__func__,evtstr(event)));
+  LOG_DEBUG(formatString("AVTTestMAC2Task(%s)::%s (%s)",getName().c_str(),__func__,evtstr(event)));
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (event.signal)
@@ -882,7 +882,7 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_4_7(GCFEvent& event, GCFPortInterfac
     }
     
     default:
-      LOG_TRACE_FLOW(formatString("AVTTestTask(%s)::%s, default",getName().c_str(),__func__));
+      LOG_DEBUG(formatString("AVTTestTask(%s)::%s, default",getName().c_str(),__func__));
       status = GCFEvent::NOT_HANDLED;
       break;
   }
@@ -894,7 +894,7 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_4_7(GCFEvent& event, GCFPortInterfac
  */
 GCFEvent::TResult AVTTestMAC2Task::test_3_2_4_8(GCFEvent& event, GCFPortInterface& /*p*/)
 {
-  LOG_TRACE_FLOW(formatString("AVTTestMAC2Task(%s)::%s (%s)",getName().c_str(),__func__,evtstr(event)));
+  LOG_DEBUG(formatString("AVTTestMAC2Task(%s)::%s (%s)",getName().c_str(),__func__,evtstr(event)));
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (event.signal)
@@ -998,7 +998,7 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_4_8(GCFEvent& event, GCFPortInterfac
     }
     
     default:
-      LOG_TRACE_FLOW(formatString("AVTTestTask(%s)::%s, default",getName().c_str(),__func__));
+      LOG_DEBUG(formatString("AVTTestTask(%s)::%s, default",getName().c_str(),__func__));
       status = GCFEvent::NOT_HANDLED;
       break;
   }
@@ -1010,7 +1010,7 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_4_8(GCFEvent& event, GCFPortInterfac
  */
 GCFEvent::TResult AVTTestMAC2Task::test_3_2_5_1(GCFEvent& event, GCFPortInterface& /*p*/)
 {
-  LOG_TRACE_FLOW(formatString("AVTTestMAC2Task(%s)::%s (%s)",getName().c_str(),__func__,evtstr(event)));
+  LOG_DEBUG(formatString("AVTTestMAC2Task(%s)::%s (%s)",getName().c_str(),__func__,evtstr(event)));
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (event.signal)
@@ -1079,7 +1079,7 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_5_1(GCFEvent& event, GCFPortInterfac
     }
     
     default:
-      LOG_TRACE_FLOW(formatString("AVTTestTask(%s)::%s, default",getName().c_str(),__func__));
+      LOG_DEBUG(formatString("AVTTestTask(%s)::%s, default",getName().c_str(),__func__));
       status = GCFEvent::NOT_HANDLED;
       break;
   }
@@ -1091,7 +1091,7 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_5_1(GCFEvent& event, GCFPortInterfac
  */
 GCFEvent::TResult AVTTestMAC2Task::test_3_2_5_2(GCFEvent& event, GCFPortInterface& /*p*/)
 {
-  LOG_TRACE_FLOW(formatString("AVTTestMAC2Task(%s)::%s (%s)",getName().c_str(),__func__,evtstr(event)));
+  LOG_DEBUG(formatString("AVTTestMAC2Task(%s)::%s (%s)",getName().c_str(),__func__,evtstr(event)));
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (event.signal)
@@ -1160,7 +1160,7 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_5_2(GCFEvent& event, GCFPortInterfac
     }
     
     default:
-      LOG_TRACE_FLOW(formatString("AVTTestTask(%s)::%s, default",getName().c_str(),__func__));
+      LOG_DEBUG(formatString("AVTTestTask(%s)::%s, default",getName().c_str(),__func__));
       status = GCFEvent::NOT_HANDLED;
       break;
   }
@@ -1172,7 +1172,7 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_5_2(GCFEvent& event, GCFPortInterfac
  */
 GCFEvent::TResult AVTTestMAC2Task::test_3_2_5_3(GCFEvent& event, GCFPortInterface& /*p*/)
 {
-  LOG_TRACE_FLOW(formatString("AVTTestMAC2Task(%s)::%s (%s)",getName().c_str(),__func__,evtstr(event)));
+  LOG_DEBUG(formatString("AVTTestMAC2Task(%s)::%s (%s)",getName().c_str(),__func__,evtstr(event)));
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (event.signal)
@@ -1241,7 +1241,7 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_5_3(GCFEvent& event, GCFPortInterfac
     }
     
     default:
-      LOG_TRACE_FLOW(formatString("AVTTestTask(%s)::%s, default",getName().c_str(),__func__));
+      LOG_DEBUG(formatString("AVTTestTask(%s)::%s, default",getName().c_str(),__func__));
       status = GCFEvent::NOT_HANDLED;
       break;
   }
@@ -1253,7 +1253,7 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_5_3(GCFEvent& event, GCFPortInterfac
  */
 GCFEvent::TResult AVTTestMAC2Task::test_3_2_5_4(GCFEvent& event, GCFPortInterface& /*p*/)
 {
-  LOG_TRACE_FLOW(formatString("AVTTestMAC2Task(%s)::%s (%s)",getName().c_str(),__func__,evtstr(event)));
+  LOG_DEBUG(formatString("AVTTestMAC2Task(%s)::%s (%s)",getName().c_str(),__func__,evtstr(event)));
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (event.signal)
@@ -1300,7 +1300,7 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_5_4(GCFEvent& event, GCFPortInterfac
     }
     
     default:
-      LOG_TRACE_FLOW(formatString("AVTTestTask(%s)::%s, default",getName().c_str(),__func__));
+      LOG_DEBUG(formatString("AVTTestTask(%s)::%s, default",getName().c_str(),__func__));
       status = GCFEvent::NOT_HANDLED;
       break;
   }
@@ -1312,7 +1312,7 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_5_4(GCFEvent& event, GCFPortInterfac
  */
 GCFEvent::TResult AVTTestMAC2Task::test_3_2_5_5(GCFEvent& event, GCFPortInterface& /*p*/)
 {
-  LOG_TRACE_FLOW(formatString("AVTTestMAC2Task(%s)::%s (%s)",getName().c_str(),__func__,evtstr(event)));
+  LOG_DEBUG(formatString("AVTTestMAC2Task(%s)::%s (%s)",getName().c_str(),__func__,evtstr(event)));
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (event.signal)
@@ -1390,7 +1390,7 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_5_5(GCFEvent& event, GCFPortInterfac
     }
     
     default:
-      LOG_TRACE_FLOW(formatString("AVTTestTask(%s)::%s, default",getName().c_str(),__func__));
+      LOG_DEBUG(formatString("AVTTestTask(%s)::%s, default",getName().c_str(),__func__));
       status = GCFEvent::NOT_HANDLED;
       break;
   }
@@ -1402,7 +1402,7 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_5_5(GCFEvent& event, GCFPortInterfac
  */
 GCFEvent::TResult AVTTestMAC2Task::test_3_2_6_1(GCFEvent& event, GCFPortInterface& /*p*/)
 {
-  LOG_TRACE_FLOW(formatString("AVTTestMAC2Task(%s)::%s (%s)",getName().c_str(),__func__,evtstr(event)));
+  LOG_DEBUG(formatString("AVTTestMAC2Task(%s)::%s (%s)",getName().c_str(),__func__,evtstr(event)));
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (event.signal)
@@ -1418,7 +1418,7 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_6_1(GCFEvent& event, GCFPortInterfac
       break;
     }
     default:
-      LOG_TRACE_FLOW(formatString("AVTTestTask(%s)::%s, default",getName().c_str(),__func__));
+      LOG_DEBUG(formatString("AVTTestTask(%s)::%s, default",getName().c_str(),__func__));
       status = GCFEvent::NOT_HANDLED;
       break;
   }
@@ -1430,7 +1430,7 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_6_1(GCFEvent& event, GCFPortInterfac
  */
 GCFEvent::TResult AVTTestMAC2Task::test_3_2_7_1(GCFEvent& event, GCFPortInterface& p)
 {
-  LOG_TRACE_FLOW(formatString("AVTTestMAC2Task(%s)::%s (%s)",getName().c_str(),__func__,evtstr(event)));
+  LOG_DEBUG(formatString("AVTTestMAC2Task(%s)::%s (%s)",getName().c_str(),__func__,evtstr(event)));
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (event.signal)
@@ -1521,7 +1521,7 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_7_1(GCFEvent& event, GCFPortInterfac
     }
     
     default:
-      LOG_TRACE_FLOW(formatString("AVTTestTask(%s)::%s, default",getName().c_str(),__func__));
+      LOG_DEBUG(formatString("AVTTestTask(%s)::%s, default",getName().c_str(),__func__));
       status = GCFEvent::NOT_HANDLED;
       break;
   }
@@ -1533,7 +1533,7 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_7_1(GCFEvent& event, GCFPortInterfac
  */
 GCFEvent::TResult AVTTestMAC2Task::test_3_2_7_2(GCFEvent& event, GCFPortInterface& /*p*/)
 {
-  LOG_TRACE_FLOW(formatString("AVTTestMAC2Task(%s)::%s (%s)",getName().c_str(),__func__,evtstr(event)));
+  LOG_DEBUG(formatString("AVTTestMAC2Task(%s)::%s (%s)",getName().c_str(),__func__,evtstr(event)));
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (event.signal)
@@ -1584,7 +1584,7 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_7_2(GCFEvent& event, GCFPortInterfac
     }
     
     default:
-      LOG_TRACE_FLOW(formatString("AVTTestTask(%s)::%s, default",getName().c_str(),__func__));
+      LOG_DEBUG(formatString("AVTTestTask(%s)::%s, default",getName().c_str(),__func__));
       status = GCFEvent::NOT_HANDLED;
       break;
   }
@@ -1596,7 +1596,7 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_7_2(GCFEvent& event, GCFPortInterfac
  */
 GCFEvent::TResult AVTTestMAC2Task::test_3_2_7_3(GCFEvent& event, GCFPortInterface& /*p*/)
 {
-  LOG_TRACE_FLOW(formatString("AVTTestMAC2Task(%s)::%s (%s)",getName().c_str(),__func__,evtstr(event)));
+  LOG_DEBUG(formatString("AVTTestMAC2Task(%s)::%s (%s)",getName().c_str(),__func__,evtstr(event)));
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (event.signal)
@@ -1644,7 +1644,7 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_7_3(GCFEvent& event, GCFPortInterfac
     }
     
     default:
-      LOG_TRACE_FLOW(formatString("AVTTestTask(%s)::%s, default",getName().c_str(),__func__));
+      LOG_DEBUG(formatString("AVTTestTask(%s)::%s, default",getName().c_str(),__func__));
       status = GCFEvent::NOT_HANDLED;
       break;
   }
@@ -1656,7 +1656,7 @@ GCFEvent::TResult AVTTestMAC2Task::test_3_2_7_3(GCFEvent& event, GCFPortInterfac
  */
 GCFEvent::TResult AVTTestMAC2Task::finished(GCFEvent& event, GCFPortInterface& /*p*/)
 {
-  LOG_TRACE_FLOW(formatString("AVTTestMAC2Task(%s)::%s (%s)",getName().c_str(),__func__,evtstr(event)));
+  LOG_DEBUG(formatString("AVTTestMAC2Task(%s)::%s (%s)",getName().c_str(),__func__,evtstr(event)));
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (event.signal)
@@ -1669,7 +1669,7 @@ GCFEvent::TResult AVTTestMAC2Task::finished(GCFEvent& event, GCFPortInterface& /
       break;
 
     default:
-      LOG_TRACE_FLOW(formatString("AVTTestTask(%s)::%s, default",getName().c_str(),__func__));
+      LOG_DEBUG(formatString("AVTTestTask(%s)::%s, default",getName().c_str(),__func__));
       status = GCFEvent::NOT_HANDLED;
       break;
   }

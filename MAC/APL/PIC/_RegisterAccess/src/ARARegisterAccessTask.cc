@@ -267,7 +267,7 @@ bool RegisterAccessTask::isConnected()
   return m_RSPclient.isConnected();
 }
 
-GCFEvent::TResult RegisterAccessTask::initial(GCFEvent& e, GCFPortInterface& /*port*/)
+GCFEvent::TResult RegisterAccessTask::initial(GCFEvent& e, GCFPortInterface& port)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
   
@@ -533,6 +533,16 @@ GCFEvent::TResult RegisterAccessTask::connected(GCFEvent& e, GCFPortInterface& p
       
       TRAN(RegisterAccessTask::subscribingStatsSubbandPower);
       
+      break;
+    }
+    
+    case RSP_UPDSTATUS:
+    {
+    	// handle updstatus events even though we are not subscribed to them yet
+    	// this is done to relax the requirements for the ARAtest application
+    	// (or you might call it lazyness)
+      LOG_INFO("RSP_UPDSTATUS received");
+      status = handleUpdStatus(e,port);
       break;
     }
     
@@ -1100,7 +1110,11 @@ void RegisterAccessTask::updateBoardProperties(string scope,
                                                uint8  ffi)
 {
   TMyPropertySetMap::iterator it=m_myPropertySetMap.find(scope);
-  if(it != m_myPropertySetMap.end())
+  if(it == m_myPropertySetMap.end())
+  {
+  	LOG_FATAL(formatString("PropertySet not found: %s",scope.c_str()));
+  }
+  else
   {
     GCFPVUnsigned pvTemp(voltage_15);
     it->second->setValue(string(PROPNAME_VOLTAGE15),pvTemp);
@@ -1125,7 +1139,11 @@ void RegisterAccessTask::updateETHproperties(string scope,
   // 31......24  23.....16  15........8  7........0       
   // #RX[15..8]  #RX[7..0]  #Err[15..8]  #Err[7..0]  
   TMyPropertySetMap::iterator it=m_myPropertySetMap.find(scope);
-  if(it != m_myPropertySetMap.end())
+  if(it == m_myPropertySetMap.end())
+  {
+  	LOG_FATAL(formatString("PropertySet not found: %s",scope.c_str()));
+  }
+  else
   {
     GCFPVUnsigned pvTemp(frames);
     it->second->setValue(string(PROPNAME_PACKETSRECEIVED),pvTemp);
@@ -1155,7 +1173,11 @@ void RegisterAccessTask::updateMEPStatusProperties(string scope,uint32 seqnr,
                                                                 uint8  ffi)
 {
   TMyPropertySetMap::iterator it=m_myPropertySetMap.find(scope);
-  if(it != m_myPropertySetMap.end())
+  if(it == m_myPropertySetMap.end())
+  {
+  	LOG_FATAL(formatString("PropertySet not found: %s",scope.c_str()));
+  }
+  else
   {
     GCFPVUnsigned pvTemp(seqnr);
     it->second->setValue(string(PROPNAME_SEQNR),pvTemp);
@@ -1173,7 +1195,11 @@ void RegisterAccessTask::updateSYNCStatusProperties(string scope,uint32 clock_co
                                                                  uint32 errors)
 {
   TMyPropertySetMap::iterator it=m_myPropertySetMap.find(scope);
-  if(it != m_myPropertySetMap.end())
+  if(it == m_myPropertySetMap.end())
+  {
+  	LOG_FATAL(formatString("PropertySet not found: %s",scope.c_str()));
+  }
+  else
   {
     GCFPVUnsigned pvTemp(clock_count);
     it->second->setValue(string(PROPNAME_CLOCKCOUNT),pvTemp);
@@ -1192,7 +1218,11 @@ void RegisterAccessTask::updateFPGAproperties(string scope,uint8 status, uint8 t
   // 15..9 8       7........0       
   // ----- alive   temperature
   TMyPropertySetMap::iterator it=m_myPropertySetMap.find(scope);
-  if(it != m_myPropertySetMap.end())
+  if(it == m_myPropertySetMap.end())
+  {
+  	LOG_FATAL(formatString("PropertySet not found: %s",scope.c_str()));
+  }
+  else
   {
     GCFPVBool pvBool(status & 0x01);
     it->second->setValue(string(PROPNAME_ALIVE),pvBool);
@@ -1208,7 +1238,11 @@ void RegisterAccessTask::updateRCUproperties(string scope,uint8 status)
   // 7        6       5       4       3 2 1 0
   // overflow rcu_pwr hba_pwr lba_pwr filter
   TMyPropertySetMap::iterator it=m_myPropertySetMap.find(scope);
-  if(it != m_myPropertySetMap.end())
+  if(it == m_myPropertySetMap.end())
+  {
+  	LOG_FATAL(formatString("PropertySet not found: %s",scope.c_str()));
+  }
+  else
   {
     unsigned int tempStatus = (status >> 7 ) & 0x01;
     GCFPVBool pvBoolOverflow(tempStatus);
@@ -1249,7 +1283,11 @@ void RegisterAccessTask::updateRCUproperties(string scope,uint8 status)
 void RegisterAccessTask::updateVersion(string scope, string version)
 {
   TMyPropertySetMap::iterator it=m_myPropertySetMap.find(scope);
-  if(it != m_myPropertySetMap.end())
+  if(it == m_myPropertySetMap.end())
+  {
+  	LOG_FATAL(formatString("PropertySet not found: %s",scope.c_str()));
+  }
+  else
   {
     GCFPVString pvString(version);
     it->second->setValue(string(PROPNAME_VERSION),pvString);

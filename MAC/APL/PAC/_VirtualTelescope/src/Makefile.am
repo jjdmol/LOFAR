@@ -42,7 +42,7 @@ EXTRA_DIST = \
 #in case of make install these files will be copied to the bindir beside the test apps
 configfilesdir=$(bindir)
 configfiles_DATA= \
-	LogicalDeviceScheduler.conf \
+	LogicalDeviceServer.conf \
 	log4cplus.properties
 	
 %.properties: $(MAC_CONFIG)/%.properties

@@ -30,7 +30,7 @@ int main(int argc, char* argv[])
 {
   GCFTask::init(argc, argv);
   
-  ParameterSet::instance()->adoptFile("LogicalDeviceScheduler.conf");
+  ParameterSet::instance()->adoptFile("LogicalDeviceServer.conf");
     
   AVTLogicalDeviceScheduler lds;
   lds.start(); // make initial transition

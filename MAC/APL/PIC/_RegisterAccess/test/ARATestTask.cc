@@ -23,7 +23,7 @@
 const char SCOPE_PAC_LDS[] = "PAC_LogicalDeviceScheduler";
 const char SCOPE_PIC_Rack1_SubRack1_Board1_AP1[] = "PIC_Rack1_SubRack1_Board1_AP1";
 const char SCOPE_PIC_Rack1_SubRack1_Board1_AP1_RCU1_Maintenance[] = "PIC_Rack1_SubRack1_Board1_AP1_RCU1_Maintenance";
-const char SCOPE_PIC_Rack1_SubRack1_Board1_AP1_RCU1_Alert[] = "PIC_Rack1_SubRack1_Board1_AP1_RCU1_Alert";
+const char SCOPE_PIC_Rack1_SubRack1_Board1_Alert[] = "PIC_Rack1_SubRack1_Board1_Alert";
 
 #define NEXT_TEST(_test_, _descr_) \
   { \
@@ -102,9 +102,9 @@ ARATestTask::ARATestTask() :
   m_propsetLoadedCounter(0),
   m_extPropSetAP1(SCOPE_PIC_Rack1_SubRack1_Board1_AP1,TYPE_LCU_PIC_FPGA,&m_answer),
   m_extPropSetAP1RCUmaintenance(SCOPE_PIC_Rack1_SubRack1_Board1_AP1_RCU1_Maintenance,TYPE_LCU_PIC_Maintenance,&m_answer),
-  m_extPropSetAP1RCUalert(SCOPE_PIC_Rack1_SubRack1_Board1_AP1_RCU1_Alert,TYPE_LCU_PIC_Alert,&m_answer),
+  m_extPropSetBoardAlert(SCOPE_PIC_Rack1_SubRack1_Board1_Alert,TYPE_LCU_PIC_Alert,&m_answer),
   m_extPropSetStationMaintenance(SCOPE_PIC_Maintenance,TYPE_LCU_PIC_Maintenance,&m_answer),
-  m_extPropSetLDS(SCOPE_PAC_LDS,"TLOFAR_LDS",&m_answer)
+  m_extPropSetLDS(SCOPE_PAC_LDS,TYPE_LCU_PAC_LogicalDeviceScheduler,&m_answer)
 {
   registerProtocol(RSP_PROTOCOL, RSP_PROTOCOL_signalnames);
   m_answer.setTask(this);
@@ -140,7 +140,7 @@ GCFEvent::TResult ARATestTask::initial(GCFEvent& event, GCFPortInterface& port)
     case F_ENTRY:
       m_extPropSetAP1.load();
       m_extPropSetAP1RCUmaintenance.load();
-      m_extPropSetAP1RCUalert.load();
+      m_extPropSetBoardAlert.load();
       m_extPropSetStationMaintenance.load();
       m_extPropSetLDS.load();
       break;
@@ -532,8 +532,10 @@ GCFEvent::TResult ARATestTask::test6(GCFEvent& event, GCFPortInterface& /*p*/)
       {
         NEXT_TEST(7,"schedule maintenance of entire station");
       }
-      printf("the resource will be put in maintenance in 10 seconds... Please wait\n");
-      
+      else
+      {
+	      printf("the resource will be put in maintenance in 10 seconds... Please wait\n");
+      }
       break;
     }
     
@@ -623,8 +625,10 @@ GCFEvent::TResult ARATestTask::test7(GCFEvent& event, GCFPortInterface& /*p*/)
       {
         NEXT_TEST(8,"simulate board defect");
       }
-      printf("the resource will be put in maintenance in 10 seconds... Please wait\n");
-      
+      else
+      {
+	      printf("the resource will be put in maintenance in 10 seconds... Please wait\n");
+      }    
       break;
     }
     
@@ -692,7 +696,7 @@ GCFEvent::TResult ARATestTask::test8(GCFEvent& event, GCFPortInterface& /*p*/)
     case F_ENTRY:
     {
       LOG_INFO("3.2.3.1: simulate board defect");
-      m_extPropSetAP1RCUalert.subscribeProp(PROPNAME_STATUS);
+      m_extPropSetBoardAlert.subscribeProp(PROPNAME_STATUS);
       
       // send write register message to RA test port
       RSPUpdstatusEvent updStatusEvent;
@@ -730,7 +734,7 @@ GCFEvent::TResult ARATestTask::test8(GCFEvent& event, GCFPortInterface& /*p*/)
       // check which property changed
       GCFPropValueEvent* pPropAnswer = static_cast<GCFPropValueEvent*>(&event);
       assert(pPropAnswer);
-      if(strstr(pPropAnswer->pPropName,SCOPE_PIC_Rack1_SubRack1_Board1_AP1_RCU1_Alert)!=0 &&
+      if(strstr(pPropAnswer->pPropName,SCOPE_PIC_Rack1_SubRack1_Board1_Alert)!=0 &&
          strstr(pPropAnswer->pPropName,PROPNAME_STATUS)!=0)
       {
         // check alert status
@@ -806,7 +810,7 @@ GCFEvent::TResult ARATestTask::test9(GCFEvent& event, GCFPortInterface& /*p*/)
       // check which property changed
       GCFPropValueEvent* pPropAnswer = static_cast<GCFPropValueEvent*>(&event);
       assert(pPropAnswer);
-      if(strstr(pPropAnswer->pPropName,SCOPE_PIC_Rack1_SubRack1_Board1_AP1_RCU1_Alert)!=0 &&
+      if(strstr(pPropAnswer->pPropName,SCOPE_PIC_Rack1_SubRack1_Board1_Alert)!=0 &&
          strstr(pPropAnswer->pPropName,PROPNAME_STATUS)!=0)
       {
         // check alert status
@@ -821,7 +825,6 @@ GCFEvent::TResult ARATestTask::test9(GCFEvent& event, GCFPortInterface& /*p*/)
     
     case F_EXIT:
     {
-      m_extPropSetAP1RCUalert.unsubscribeProp(PROPNAME_STATUS);
       break;
     }
      
@@ -893,14 +896,14 @@ GCFEvent::TResult ARATestTask::test10(GCFEvent& event, GCFPortInterface& /*p*/)
       // check which property changed
       GCFPropValueEvent* pPropAnswer = static_cast<GCFPropValueEvent*>(&event);
       assert(pPropAnswer);
-      if(strstr(pPropAnswer->pPropName,SCOPE_PIC_Rack1_SubRack1_Board1_AP1_RCU1_Alert)!=0 &&
+      if(strstr(pPropAnswer->pPropName,SCOPE_PIC_Rack1_SubRack1_Board1_Alert)!=0 &&
          strstr(pPropAnswer->pPropName,PROPNAME_STATUS)!=0)
       {
         // check alert status
         GCFPVUnsigned status;
         status.copy(*pPropAnswer->pValue);
         LOG_INFO(formatString("Value of '%s': %d",pPropAnswer->pPropName,status.getValue()));
-        TESTC(status.getValue()==0);
+        TESTC(status.getValue()!=0);
         FINISH
       }
       break;
@@ -908,7 +911,7 @@ GCFEvent::TResult ARATestTask::test10(GCFEvent& event, GCFPortInterface& /*p*/)
     
     case F_EXIT:
     {
-      m_extPropSetAP1RCUalert.unsubscribeProp(PROPNAME_STATUS);
+      m_extPropSetBoardAlert.unsubscribeProp(PROPNAME_STATUS);
       break;
     }
      

@@ -59,7 +59,7 @@ AVTVirtualTelescope::AVTVirtualTelescope(string& taskName,
   m_stopTime(0),
   m_frequency(0.0)
 {
-  LOG_TRACE_FLOW(formatString("AVTVirtualTelescope(%s)::AVTVirtualTelescope",getName().c_str()));
+  LOG_DEBUG(formatString("AVTVirtualTelescope(%s)::AVTVirtualTelescope",getName().c_str()));
   m_stationBeamformer.addClientInterTaskPort(&m_beamFormerClient);
   m_stationReceptorGroup.addClientInterTaskPort(&m_stationReceptorGroupClient);
 }
@@ -67,12 +67,12 @@ AVTVirtualTelescope::AVTVirtualTelescope(string& taskName,
 
 AVTVirtualTelescope::~AVTVirtualTelescope()
 {
-  LOG_TRACE_FLOW(formatString("AVTVirtualTelescope(%s)::~AVTVirtualTelescope",getName().c_str()));
+  LOG_DEBUG(formatString("AVTVirtualTelescope(%s)::~AVTVirtualTelescope",getName().c_str()));
 }
 
 bool AVTVirtualTelescope::checkQualityRequirements()
 {
-  LOG_TRACE_FLOW(formatString("AVTVirtualTelescope(%s)::%s",getName().c_str(),__func__));
+  LOG_DEBUG(formatString("AVTVirtualTelescope(%s)::%s",getName().c_str(),__func__));
   bool requirementsMet=false;
   
   // quality requirements for this Virtual Telescope:
@@ -163,7 +163,7 @@ bool AVTVirtualTelescope::allInState(GCFPortInterface& port, TLogicalDeviceState
 
 void AVTVirtualTelescope::concreteDisconnected(GCFPortInterface& port)
 {
-  LOG_TRACE_FLOW(formatString("AVTVirtualTelescope(%s)::concreteDisconnected",getName().c_str()));
+  LOG_DEBUG(formatString("AVTVirtualTelescope(%s)::concreteDisconnected",getName().c_str()));
   // go to initial state only if the connection with the beamformer is lost.
   if(_isBeamFormerClient(port))
   {
@@ -179,7 +179,7 @@ void AVTVirtualTelescope::concreteDisconnected(GCFPortInterface& port)
 
 GCFEvent::TResult AVTVirtualTelescope::concrete_initial_state(GCFEvent& event, GCFPortInterface& port)
 {
-  LOG_TRACE_FLOW(formatString("AVTVirtualTelescope(%s)::concrete_initial_state (%s)",getName().c_str(),evtstr(event)));
+  LOG_DEBUG(formatString("AVTVirtualTelescope(%s)::concrete_initial_state (%s)",getName().c_str(),evtstr(event)));
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (event.signal)
@@ -250,7 +250,7 @@ GCFEvent::TResult AVTVirtualTelescope::concrete_initial_state(GCFEvent& event, G
       break;
 
     default:
-      LOG_TRACE_FLOW(formatString("AVTVirtualTelescope(%s)::concrete_initial_state, default (%s)",getName().c_str(),evtstr(event)));
+      LOG_DEBUG(formatString("AVTVirtualTelescope(%s)::concrete_initial_state, default (%s)",getName().c_str(),evtstr(event)));
       status = GCFEvent::NOT_HANDLED;
       break;
   }
@@ -260,7 +260,7 @@ GCFEvent::TResult AVTVirtualTelescope::concrete_initial_state(GCFEvent& event, G
 
 GCFEvent::TResult AVTVirtualTelescope::concrete_claiming_state(GCFEvent& event, GCFPortInterface& port, bool& stateFinished)
 {
-  LOG_TRACE_FLOW(formatString("AVTVirtualTelescope(%s)::%s (%s)",getName().c_str(),__func__,evtstr(event)));
+  LOG_DEBUG(formatString("AVTVirtualTelescope(%s)::%s (%s)",getName().c_str(),__func__,evtstr(event)));
   GCFEvent::TResult status = GCFEvent::HANDLED;
   
   switch (event.signal)
@@ -286,7 +286,7 @@ GCFEvent::TResult AVTVirtualTelescope::concrete_claiming_state(GCFEvent& event, 
     }
     
     default:
-      LOG_TRACE_FLOW(formatString("AVTVirtualTelescope(%s)::concrete_claiming_state, default",getName().c_str()));
+      LOG_DEBUG(formatString("AVTVirtualTelescope(%s)::concrete_claiming_state, default",getName().c_str()));
       status = GCFEvent::NOT_HANDLED;
       break;
   }
@@ -296,7 +296,7 @@ GCFEvent::TResult AVTVirtualTelescope::concrete_claiming_state(GCFEvent& event, 
 
 GCFEvent::TResult AVTVirtualTelescope::concrete_preparing_state(GCFEvent& event, GCFPortInterface& port, bool& stateFinished, bool& error)
 {
-  LOG_TRACE_FLOW(formatString("AVTVirtualTelescope(%s)::concrete_preparing_state (%s)",getName().c_str(),evtstr(event)));
+  LOG_DEBUG(formatString("AVTVirtualTelescope(%s)::concrete_preparing_state (%s)",getName().c_str(),evtstr(event)));
   GCFEvent::TResult status = GCFEvent::HANDLED;
   stateFinished=false;
   error=false;
@@ -315,7 +315,7 @@ GCFEvent::TResult AVTVirtualTelescope::concrete_preparing_state(GCFEvent& event,
     }
         
     default:
-      LOG_TRACE_FLOW(formatString("AVTVirtualTelescope(%s)::concrete_preparing_state, default",getName().c_str()));
+      LOG_DEBUG(formatString("AVTVirtualTelescope(%s)::concrete_preparing_state, default",getName().c_str()));
       status = GCFEvent::NOT_HANDLED;
       break;
   }
@@ -325,7 +325,7 @@ GCFEvent::TResult AVTVirtualTelescope::concrete_preparing_state(GCFEvent& event,
 
 GCFEvent::TResult AVTVirtualTelescope::concrete_active_state(GCFEvent& event, GCFPortInterface& /*port*/)
 {
-  LOG_TRACE_FLOW(formatString("AVTVirtualTelescope(%s)::%s (%s)",getName().c_str(),__func__,evtstr(event)));
+  LOG_DEBUG(formatString("AVTVirtualTelescope(%s)::%s (%s)",getName().c_str(),__func__,evtstr(event)));
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (event.signal)
@@ -354,7 +354,7 @@ GCFEvent::TResult AVTVirtualTelescope::concrete_active_state(GCFEvent& event, GC
     }
         
     default:
-      LOG_TRACE_FLOW(formatString("AVTVirtualTelescope(%s)::concrete_preparing_state, default",getName().c_str()));
+      LOG_DEBUG(formatString("AVTVirtualTelescope(%s)::concrete_preparing_state, default",getName().c_str()));
       status = GCFEvent::NOT_HANDLED;
       break;
   }
@@ -364,7 +364,7 @@ GCFEvent::TResult AVTVirtualTelescope::concrete_active_state(GCFEvent& event, GC
 
 GCFEvent::TResult AVTVirtualTelescope::concrete_releasing_state(GCFEvent& event, GCFPortInterface& port, bool& stateFinished)
 {
-  LOG_TRACE_FLOW(formatString("AVTVirtualTelescope(%s)::concrete_releasing_state (%s)",getName().c_str(),evtstr(event)));
+  LOG_DEBUG(formatString("AVTVirtualTelescope(%s)::concrete_releasing_state (%s)",getName().c_str(),evtstr(event)));
   GCFEvent::TResult status = GCFEvent::HANDLED;
   
   switch (event.signal)
@@ -380,7 +380,7 @@ GCFEvent::TResult AVTVirtualTelescope::concrete_releasing_state(GCFEvent& event,
       break;
     }
     default:
-      LOG_TRACE_FLOW(formatString("AVTVirtualTelescope(%s)::concrete_releasing_state, default",getName().c_str()));
+      LOG_DEBUG(formatString("AVTVirtualTelescope(%s)::concrete_releasing_state, default",getName().c_str()));
       status = GCFEvent::NOT_HANDLED;
       break;
   }
@@ -412,7 +412,7 @@ void AVTVirtualTelescope::handlePropertySetAnswer(GCFEvent& answer)
       GCFConfAnswerEvent* pConfAnswer=static_cast<GCFConfAnswerEvent*>(&answer);
       if(pConfAnswer->result == GCF_NO_ERROR)
       {
-        LOG_TRACE_FLOW(formatString("%s : apc %s Loaded",getName().c_str(),pConfAnswer->pApcName));
+        LOG_DEBUG(formatString("%s : apc %s Loaded",getName().c_str(),pConfAnswer->pApcName));
         apcLoaded();
       }
       else
@@ -498,7 +498,7 @@ void AVTVirtualTelescope::handlePropertySetAnswer(GCFEvent& answer)
 
 void AVTVirtualTelescope::concreteClaim(GCFPortInterface& port)
 {
-  LOG_TRACE_FLOW(formatString("AVTVirtualTelescope(%s)::%s",getName().c_str(),__func__));
+  LOG_DEBUG(formatString("AVTVirtualTelescope(%s)::%s",getName().c_str(),__func__));
   // claim my own resources
   AVTResourceManagerPtr resourceManager(AVTResourceManager::instance());
   resourceManager->requestResource(getName(),m_stationBeamformer.getName());
@@ -526,7 +526,7 @@ void AVTVirtualTelescope::concreteClaim(GCFPortInterface& port)
 
 void AVTVirtualTelescope::concretePrepare(GCFPortInterface& /*port*/,string& parameters)
 {
-  LOG_TRACE_FLOW(formatString("AVTVirtualTelescope(%s)::%s(%s)",getName().c_str(),__func__,parameters.c_str()));
+  LOG_DEBUG(formatString("AVTVirtualTelescope(%s)::%s(%s)",getName().c_str(),__func__,parameters.c_str()));
   
   bool unableToPrepare = false;
   AVTResourceManagerPtr resourceManager(AVTResourceManager::instance());
@@ -584,7 +584,7 @@ void AVTVirtualTelescope::concretePrepare(GCFPortInterface& /*port*/,string& par
 
 void AVTVirtualTelescope::concreteResume(GCFPortInterface& port)
 {
-  LOG_TRACE_FLOW(formatString("AVTVirtualTelescope(%s)::%s",getName().c_str(),__func__));
+  LOG_DEBUG(formatString("AVTVirtualTelescope(%s)::%s",getName().c_str(),__func__));
   // resume my own resources
   
   // send resume message to BeamFormer and SRGT
@@ -613,7 +613,7 @@ void AVTVirtualTelescope::concreteResume(GCFPortInterface& port)
 
 void AVTVirtualTelescope::concreteSuspend(GCFPortInterface& /*port*/)
 {
-  LOG_TRACE_FLOW(formatString("AVTVirtualTelescope(%s)::%s",getName().c_str(),__func__));
+  LOG_DEBUG(formatString("AVTVirtualTelescope(%s)::%s",getName().c_str(),__func__));
   // suspend my own resources
   
   // send suspend message to BeamFormer and SRG
@@ -631,7 +631,7 @@ void AVTVirtualTelescope::concreteSuspend(GCFPortInterface& /*port*/)
 
 void AVTVirtualTelescope::concreteRelease(GCFPortInterface& /*port*/)
 {
-  LOG_TRACE_FLOW(formatString("AVTVirtualTelescope(%s)::%s",getName().c_str(),__func__));
+  LOG_DEBUG(formatString("AVTVirtualTelescope(%s)::%s",getName().c_str(),__func__));
   // release my own resources
   
   // claim my own resources
