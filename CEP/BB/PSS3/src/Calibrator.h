@@ -137,6 +137,12 @@ public:
   // model), commits the parameters to the internal storage of MeqCalImpl.
   void CommitOptimizedParameters (void);
 
+
+  void getParmValues (vector<string>& names,
+		      vector<double>& values);
+  void setParmValues (const vector<string>& names,
+		      const vector<double>& values);
+
 private:
   // The Calibrator members contain values which are used to initialize
   // and control the MeqCalImpl object:
