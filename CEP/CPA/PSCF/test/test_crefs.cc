@@ -31,20 +31,20 @@ void TestCountedRefs()
   cerr<<"======================= ref1 -> ref1a (copy constructor)\n";
   BlockRef ref1a(ref1,DMI::COPYREF|DMI::WRITE);
   paddr(ref1a);
-  Assert1( block1.refCount() == 2 );
+  Assert( block1.refCount() == 2 );
   cerr<<"======================= ref1a -> ref1b (copy() method)\n";
   BlockRef ref1b = ref1a.copy();
   paddr(ref1b);
-  Assert1( block1.refCount() == 3 );
+  Assert( block1.refCount() == 3 );
   cerr<<"======================= ref1b -> ref1c (xfer constructor)\n";
   BlockRef ref1c(ref1b);
   paddr(ref1c);
-  Assert1( block1.refCount() == 3 );
+  Assert( block1.refCount() == 3 );
 
   cerr<<"======================= privatizing ref3\n";
   ref3.privatize();
-  Assert1( block2->refCount() == 1 );
-  Assert1( ref3.deref().refCount() == 1);
+  Assert( block2->refCount() == 1 );
+  Assert( ref3.deref().refCount() == 1);
   cerr<<"======================= passing ref3 to function taking a LockedRef\n";
   TestFunc(ref3);
 
@@ -55,16 +55,16 @@ void TestCountedRefs()
 
   cerr<<"======================= copying ref2 -> ref2a (copy(PRESERVE_RW))\n";
   BlockRef ref2a = ref2.copy(DMI::PRESERVE_RW);
-  Assert1( block2->refCount() == 2 );
-  Assert1( ref2a.isWritable() );
+  Assert( block2->refCount() == 2 );
+  Assert( ref2a.isWritable() );
   cerr<<"======================= ref2a.privatize(DMI::WRITE|DMI::DLY_CLONE): no snapshot expected\n";
   ref2a.privatize(DMI::WRITE|DMI::DLY_CLONE);
-  Assert1( block2->refCount() == 2 );
+  Assert( block2->refCount() == 2 );
   cerr<<"======================= dereferencing ref2a\n";
   const SmartBlock *bl = &ref2a.deref();
-  Assert1( bl != block2 );
-  Assert1( block2->refCount() == 1 );
-  Assert1( bl->refCount() == 1 );
+  Assert( bl != block2 );
+  Assert( block2->refCount() == 1 );
+  Assert( bl->refCount() == 1 );
   cerr<<"======================= exiting CountedRef Block\n";
 }
 
@@ -130,7 +130,7 @@ void TestDataRecord ()
   rec["A.B.C.D"][20] = 5;
   cerr<<(int)(rec["A.B.C.D"][20])<<" "<<(int*)&(rec["A.B.C.D"][20])
       <<"  "<<rec["A.B.C.D"].as_int_p();
-  Assert1( rec["A.B.C.D/20"].as_int() == 5 );
+  Assert( rec["A.B.C.D/20"].as_int() == 5 );
   cerr<<"======================= record debug info:\n";
   cerr<<rec.sdebug(3)<<endl;
   cerr<<"======================= old field debug info:\n";
@@ -145,7 +145,7 @@ void TestDataRecord ()
   cerr<<"===== added subrecord B.C\n"<<rec.sdebug(10)<<endl;
   rec["B"]["C"]["A"] <<= new DataField(Tpint,32);
   rec["B/C/A/10"] = 5;
-  Assert1( rec["B/C/A"][10].as_int() == 5 );
+  Assert( rec["B/C/A"][10].as_int() == 5 );
   cerr<<"Record is "<<rec.sdebug(10)<<endl;
   
   cerr<<"======================= converting record to blockset\n";
@@ -161,13 +161,13 @@ void TestDataRecord ()
 
   cerr<<"======================= accessing cached field\n";
   cerr<<"Value: "<<rec2["B/C/A/10"].as_double()<<endl;
-  Assert1( rec2["B/C"]["A"]["10"].as_float() == 5 );
+  Assert( rec2["B/C"]["A"]["10"].as_float() == 5 );
   
   cerr<<"======================= changing field in original record\n";
   rec["B/C/A/10"] = 10;
   cerr<<"Values: "<<rec["B/C/A/10"].as_double()<<", "<<rec2["B/C/A/10"].as_double()<<endl;
-  Assert1( rec["B/C"]["A"]["10"].as_float() == 10 );
-  Assert1( rec2["B/C"]["A"]["10"].as_float() == 5 );
+  Assert( rec["B/C"]["A"]["10"].as_float() == 10 );
+  Assert( rec2["B/C"]["A"]["10"].as_float() == 5 );
   
   cerr<<"======================= exiting\n";
 }
