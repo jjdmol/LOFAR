@@ -21,6 +21,7 @@
 //  $Id$
 
 #include "VisFileInputAgent.h"
+#include "AID-VisAgent.h"
 
 static int dum = aidRegistry_VisAgent();
 
@@ -33,11 +34,13 @@ DataRecord & VisFileInputAgent::initHeader ()
 }
 
 //##ModelId=3DF9FECF009D
-int VisFileInputAgent::hasHeader () const
+int VisFileInputAgent::hasHeader ()
 {
-  if( filestate_ == HEADER )
+  if( suspended_ ) 
+    return WAIT;
+  if( fileState() == HEADER )
     return SUCCESS;
-  else if( filestate_ == DATA )
+  else if( fileState() == DATA )
     return OUTOFSEQ;
   else 
     return CLOSED;
@@ -46,6 +49,8 @@ int VisFileInputAgent::hasHeader () const
 //##ModelId=3DF9FECE03D1
 int VisFileInputAgent::getHeader (DataRecord::Ref &hdr,bool)
 {
+  if( suspended_ ) 
+    return WAIT;
   // is the file state correct for a header?
   int res = hasHeader();
   if( res == SUCCESS )
@@ -60,115 +65,31 @@ int VisFileInputAgent::getHeader (DataRecord::Ref &hdr,bool)
 
 
 //##ModelId=3DF9FECF00BF
-int VisFileInputAgent::hasTile   () const
+int VisFileInputAgent::hasTile   ()
 {
-  if( filestate_ == HEADER )
+  if( suspended_ ) 
+    return WAIT;
+  if( fileState() == HEADER )
     return OUTOFSEQ;
-  else if( filestate_ == DATA )
+  else if( fileState() == DATA )
     return SUCCESS;
   else 
     return CLOSED;
 }
 
-//##ModelId=3DF9FECE024A
-void VisFileInputAgent::generateEvent (const HIID &evname)
+//##ModelId=3E2C299201D6
+int VisFileInputAgent::state() const
 {
-  DataRecord::Ref dum;
-  generateEvent(evname,dum);
+  return fileState() != FILEERROR 
+          ? SUCCESS 
+          : ERROR;
 }
 
-//##ModelId=3DF9FECE02BA
-void VisFileInputAgent::generateEvent (const HIID &evname,DataRecord::Ref &data)
+//##ModelId=3E2C2999029A
+string VisFileInputAgent::stateString() const
 {
-  event_ = evname;
-  if( data.valid() )
-    eventdata_ = data;
-  else
-    eventdata_.detach();
+  return fileState() == FILEERROR 
+         ? "ERROR " + errorString()
+         :  "OK (" + fileStateString() + ")";
 }
 
-
-//##ModelId=3DFDFC07004C
-string VisFileInputAgent::fileStateString () const
-{
-  switch( filestate_ )
-  {
-    case CLOSED:    return "CLOSED";
-    case HEADER:    return "HEADER";
-    case DATA:      return "DATA";
-    case ENDFILE:   return "ENDFILE";
-    case ERROR:     return "ERROR";
-    default:        return "unknown";
-  }
-}
-
-
-//##ModelId=3DF9FECE0154
-void VisFileInputAgent::setFileState (FileState state)
-{
-  if( filestate_ == state )
-    return;
-  // generate events depending on new state
-  switch( state )
-  {
-    case CLOSED:
-        break;
-    
-    case HEADER:
-        generateEvent(HeaderEvent());
-        break;
-        
-    case DATA:
-        generateEvent(DataEvent());
-        break;
-        
-    case ENDFILE:
-        generateEvent(EndDataEvent());
-        break;
-        
-    case ERROR:
-        generateEvent(InputErrorEvent());
-        break;
-        
-    default:
-        Throw(Debug::ssprintf("Unknown filestate: %d",state));
-  }
-  filestate_ = state;
-}
-
-//##ModelId=3DF9FECE01CA
-void VisFileInputAgent::setErrorState (const string &msg)
-{
-  filestate_ = ERROR;
-  DataRecord::Ref data(new DataRecord,DMI::ANONWR);
-  data()[AidMessage] = msg;
-  generateEvent(InputErrorEvent(),data);
-}
-
-//##ModelId=3DF9FECF00DB
-bool VisFileInputAgent::getEvent (HIID &ev,DataRecord::Ref &evdata,bool wait)
-{
-  if( event_.empty() )
-  {
-    FailWhen( wait,"VisFileInputAgent can't wait for event: would wait forever");
-    return False;
-  }
-  ev = event_;
-  if( eventdata_.valid() )
-    evdata = eventdata_;  // transfers event data
-  else
-    evdata.detach();
-  // clears event
-  event_.clear();
-  return True;
-}
-      
-//##ModelId=3DF9FECF01DA
-bool VisFileInputAgent::hasEvent (const HIID &mask,bool)
-{
-  if( event_.empty() )
-    return False;
-  if( mask.empty() )
-    return True;
-  return event_.matches(mask);
-}
