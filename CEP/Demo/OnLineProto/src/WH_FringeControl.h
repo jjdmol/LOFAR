@@ -1,4 +1,4 @@
-//# WH_PreProcess.h: 
+//# WH_FringeControl.h: 
 //#
 //# Copyright (C) 2000, 2001
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,41 +20,37 @@
 //#
 //# $Id$
 
-#ifndef ONLINEPROTO_WH_PREPROCESS_H
-#define ONLINEPROTO_WH_PREPROCESS_H
+#ifndef ONLINEPROTO_WH_FRINGECONTROL_H
+#define ONLINEPROTO_WH_FRINGECONTROL_H
 
 #include <lofar_config.h>
 
 #include "CEPFrame/WorkHolder.h"
-#include "OnLineProto/DH_Beamlet.h"
+#include "OnLineProto/DH_Phase.h"
+#include "OnLineProto/MAC.h"
 
 namespace LOFAR
 {
-
-/**
-   TBW
-*/
-
-class WH_PreProcess: public WorkHolder
+class WH_FringeControl: public WorkHolder
 {
 public:
   /// Construct the work holder and give it a name.
   /// It is possible to specify how many input and output data holders
   /// are created and how many elements there are in the buffer.
   /// The first WorkHolder should have nin=0.
-  explicit WH_PreProcess (const string& name,
-			  unsigned int channels,
-			  const int FBW);
+  explicit WH_FringeControl (const string& name,
+			     const int nout,
+			     MAC mac);
 
-  virtual ~WH_PreProcess();
+  virtual ~WH_FringeControl();
 
   /// Static function to create an object.
-  static WorkHolder* construct (const string& name, 
-				unsigned int channels,
-				const int FBW);
+  static WorkHolder* construct (const string& name,
+				const int nout,
+				MAC mac);
 
   /// Make a fresh copy of the WH object.
-  virtual WH_PreProcess* make (const string& name);
+  virtual WH_FringeControl* make (const string& name);
 
   /// Do a process step.
   virtual void process();
@@ -64,13 +60,12 @@ public:
 
 private:
   /// Forbid copy constructor.
-  WH_PreProcess (const WH_PreProcess&);
+  WH_FringeControl (const WH_FringeControl&);
 
   /// Forbid assignment.
-  WH_PreProcess& operator= (const WH_PreProcess&);
+  WH_FringeControl& operator= (const WH_FringeControl&);
   
-  int itsFBW; // frequency bandwidth of the DH_Beamlet 
-
+  MAC itsMac;
 };
 
 }
