@@ -36,8 +36,8 @@ StrategyController::StrategyController(int id,
   : itsInDH      (inDH),
     itsWOPD      (outWOPD),
     itsWOSolve   (outWOSolve),
-    itsID        (id),
-    itsNrPrediffers(nrPrediffers)
+    itsNrPrediffers(nrPrediffers),
+    itsID        (id)
 {
   LOG_TRACE_FLOW("StrategyController constructor");
 }

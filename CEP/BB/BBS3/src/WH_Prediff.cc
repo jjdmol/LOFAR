@@ -103,7 +103,8 @@ void WH_Prediff::process()
   // Execute workorder
   if (wo->getNewBaselines())
   {
-    pred->select(ant, ant, wo->getUseAutoCorrelations());
+    vector<int> corr;
+    pred->select(ant, ant, wo->getUseAutoCorrelations(), corr);
 
     vector<int> emptyS(0);
     if (peelSrcs.size() > 0)
@@ -172,7 +173,8 @@ void WH_Prediff::process()
   do
   {
     dhRes = dynamic_cast<DH_Prediff*>(getDataManager().getOutHolder(2));
-    more = pred->getEquations(dhRes->getDataBuffer(), dhRes->getBufferSize(), nresult);
+    more = pred->getEquations(dhRes->getDataBuffer(), dhRes->getFlagBuffer(),
+			      dhRes->getBufferSize(), nresult);
     MeqDomain domain = pred->getDomain();
     dhRes->setDomain(domain.startX(), domain.endX(), domain.startY(), domain.endY());
     dhRes->setMoreData(more);
@@ -229,9 +231,9 @@ Prediffer* WH_Prediff::getPrediffer(int id, const KeyValueMap& args,
     string modelType = args.getString("modelType", "LOFAR.RI");
     bool calcUVW = args.getBool("calcUVW", false);
     bool lockMappedMem = args.getBool("lockMappedMem", false);
-    
+
     Prediffer* pred = new Prediffer(msName, meqModel, skyModel, dbType, 
-				    dbName, dbHost, dbPwd, antNrs, 
+				    dbName, dbHost, dbPwd, antNrs,
 				    modelType, calcUVW,lockMappedMem);
     // add to map
     itsPrediffs.insert(PrediffMap::value_type(id, pred));
@@ -273,7 +275,6 @@ void WH_Prediff::readSolution(int id, vector<ParmData>& solVec)
   DH_Solution* sol = dynamic_cast<DH_Solution*>(getDataManager().getInHolder(1));
 
   // Wait for solution
-  bool firstTime = true;
   char str[32];
   sprintf(str, "WOID=%i", id);
   string query(str);

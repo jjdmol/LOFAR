@@ -79,8 +79,8 @@ void MeqStatSources::calculate (const MeqRequest& request)
     const MeqResult& mrk  = src.getM(request);
     const MeqResult& nrk  = src.getN(request);
     MeqResult result(request.nspid());
-    MeqMatrix r1 = (u*lrk.getValue() + v*mrk.getValue() + w*nrk.getValue()) *
-                   wavel0;
+    MeqMatrix r1 = (u*lrk.getValue() + v*mrk.getValue() +
+		    w*(nrk.getValue() - 1.)) * wavel0;
     result.setValue (tocomplex(cos(r1), sin(r1)));
     MeqResult delta;
     if (calcDelta) {
@@ -120,7 +120,8 @@ void MeqStatSources::calculate (const MeqRequest& request)
       if (eval) {
 	r1 = (resU.getPerturbedValue(spinx) * lrk.getPerturbedValue(spinx) +
 	      resV.getPerturbedValue(spinx) * mrk.getPerturbedValue(spinx) +
-	      resW.getPerturbedValue(spinx) * nrk.getPerturbedValue(spinx))
+	      resW.getPerturbedValue(spinx) * 
+	      (nrk.getPerturbedValue(spinx) - 1.))
 	  * wavel0;
 	result.setPerturbedValue (spinx, tocomplex(cos(r1), sin(r1)));
 	result.setPerturbation (spinx, perturbation);

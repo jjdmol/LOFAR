@@ -24,6 +24,7 @@
 
 #include <BBS3/Prediffer.h>
 #include <BBS3/MMap.h>
+#include <BBS3/FlagsMap.h>
 #include <BBS3/MNS/MeqStatExpr.h>
 #include <BBS3/MNS/MeqMatrixTmp.h>
 #include <BBS3/MNS/MeqStoredParmPolc.h>
@@ -41,6 +42,8 @@
 #include <Common/BlobIBufStream.h>
 #include <Common/BlobArray.h>
 #include <Common/VectorUtil.h>
+#include <Common/DataConvert.h>
+#include <Common/LofarLogger.h>
 
 #include <casa/Arrays/ArrayIO.h>
 #include <casa/Arrays/ArrayMath.h>
@@ -93,13 +96,14 @@ Prediffer::Prediffer(const string& msName,
   itsGSMMEPName   (skyModel),
   itsGSMMEP       (dbType, skyModel, dbName, dbPwd, dbHost),
   itsCalcUVW      (calcUVW),
-  itsNPol         (0),
+  itsNCorr        (0),
   itsNrBl         (0),
   itsTimeIndex    (0),
   itsNrTimes      (0),
   itsNrTimesDone  (0),
   itsBlNext       (0),
   itsDataMap      (0),
+  itsFlagsMap     (0),
   itsLockMappedMem(lockMappedMem)
 {
   LOG_INFO_STR( "Prediffer constructor ("
@@ -108,10 +112,16 @@ Prediffer::Prediffer(const string& msName,
 		<< "'" << skyModel << "', "
 		<< itsCalcUVW << ")" );
 
+  // Initially use all correlations.
+  for (int i=0; i<4; ++i) {
+    itsCorr[i] = true;
+  }
+  // Read the meta data and map files.
   readDescriptiveData (msName);
-  fillStations (ant);     // Selected antennas
+  fillStations (ant);                  // Selected antennas
   fillBaselines (ant);
-  itsDataMap = new MMap(msName + ".dat", MMap::Read);
+  itsDataMap  = new MMap(msName + "/vis.dat", MMap::Read);
+  itsFlagsMap = new FlagsMap(msName + "/vis.flg", MMap::Read);
 
   // Set up the expression tree for all baselines.
   if (modelType == "WSRT") {
@@ -207,6 +217,7 @@ Prediffer::~Prediffer()
   }
 
   delete itsDataMap;
+  delete itsFlagsMap;
 
   // clear up the matrix pool
   MeqMatrixComplexArr::poolDeactivate();
@@ -222,8 +233,8 @@ Prediffer::~Prediffer()
 //-------------------------------------------------------------------
 void Prediffer::readDescriptiveData(const string& fileName)
 {
-  // Get ra, dec, npol, nfreq, startFreq, endFreq, stepFreq, a1, a2, tim2 from file
-  string name(fileName+".des");
+  // Get meta data from description file.
+  string name(fileName+"/vis.des");
   cout << fileName << endl;
   std::ifstream istr(name.c_str());
   BlobIBufStream bbs(istr);
@@ -232,7 +243,7 @@ void Prediffer::readDescriptiveData(const string& fileName)
   double ra, dec;
   bis >> ra;
   bis >> dec;
-  bis >> itsNPol;
+  bis >> itsNCorr;
   bis >> itsNrChan;
   bis >> itsStartFreq;
   bis >> itsEndFreq;
@@ -345,17 +356,17 @@ void Prediffer::fillBaselines (const vector<int>& antnrs)
       itsBaselines.push_back (MVBaseline (pos1, pos2));
     }
   }
-  countBaselines();
+  countBaseCorr();
 }
 
 //----------------------------------------------------------------------
 //
-// ~countBaselines
+// ~countBaseCorr
 //
-// Count the selected nr of baselines.
+// Count the selected nr of baselines and correlations
 //
 //----------------------------------------------------------------------
-void Prediffer::countBaselines()
+void Prediffer::countBaseCorr()
 {
   itsNrSelBl = 0;
   const bool* sel = itsBLSelection.data();
@@ -365,6 +376,14 @@ void Prediffer::countBaselines()
       itsNrSelBl++;
     }
   }
+  ASSERTSTR (itsNrSelBl > 0, "No valid baselines selected");
+  itsNSelCorr = 0;
+  for (int i=0; i<itsNCorr; ++i) {
+    if (itsCorr[i]) {
+      itsNSelCorr++;
+    }
+  }
+  ASSERTSTR (itsNSelCorr > 0, "No valid correlations selected");
 }
 
 //----------------------------------------------------------------------
@@ -640,6 +659,7 @@ vector<uint32> Prediffer::setDomain (double fstart, double flength,
   NSTimer mapTimer;
   mapTimer.start();
   itsDataMap->unmapFile();
+  itsFlagsMap->unmapFile();
   // Find the times matching the given time interval.
   // Normally the times are in sequential order, so we can continue searching.
   // Otherwise start the search at the start.
@@ -674,13 +694,18 @@ vector<uint32> Prediffer::setDomain (double fstart, double flength,
   endTime = itsTimes[itsTimeIndex-1] + itsIntervals[itsTimeIndex-1]/2;
   
   // Map the correct data subset (this time interval)
-  int64 startOffset = startIndex*itsNrBl*itsNrChan*itsNPol*sizeof(fcomplex);
-  size_t nrBytes = itsNrTimes*itsNrBl*itsNrChan*itsNPol*sizeof(fcomplex);
-  // Map this time interval
+  int64 startOffset = startIndex*itsNrBl*itsNrChan*itsNCorr*sizeof(fcomplex);
+  size_t nrBytes = itsNrTimes*itsNrBl*itsNrChan*itsNCorr*sizeof(fcomplex);
   itsDataMap->mapFile(startOffset, nrBytes); 
+  // Map the correct flags subset (this time interval)
+  startOffset = startIndex*itsNrBl*itsNrChan*itsNCorr;
+  
+  nrBytes = itsNrTimes*itsNrBl*itsNrChan*itsNCorr;
+  itsFlagsMap->mapFile(startOffset, nrBytes); 
   if (itsLockMappedMem) {
     // Make sure mapped data is resident in RAM
     itsDataMap->lockMappedMemory();
+    itsFlagsMap->lockMappedMemory();
   }
 
   mapTimer.stop();
@@ -702,11 +727,12 @@ vector<uint32> Prediffer::setDomain (double fstart, double flength,
   shape[0] = 2*(itsLastChan-itsFirstChan+1);
   shape[1] = itsNrScid+1;
   // Use a buffer of, say, up to 100 KBytes.
-  // All pol, freq and spid have to fit in it.
-  itsNrBufTB = std::max (1, int(0.5 + 100000. / (shape[0] * shape[1] * itsNPol)
+  // All corr, freq and spid have to fit in it.
+  itsNrBufTB = std::max (1, int(0.5 + 100000.
+				/ (shape[0] * shape[1] * itsNSelCorr)
 				/ sizeof(double)));
-  shape[2] = itsNrBufTB*itsNPol;
-  shape[3] = itsNPol * itsNrSelBl * itsNrTimes;   // total nr
+  shape[2] = itsNrBufTB*itsNSelCorr;
+  shape[3] = itsNSelCorr * itsNrSelBl * itsNrTimes;   // total nr
 //   itsSolveColName = itsDataColName;
   return shape;
 }
@@ -805,35 +831,38 @@ void Prediffer::setSolvableParms (const vector<string>& parms,
 // Get the condition equations for the selected baselines and domain.
 //
 //----------------------------------------------------------------------
-bool Prediffer::getEquations (double* result, const vector<uint32>& shape,
+bool Prediffer::getEquations (double* result, char* flagResult,
+			      const vector<uint32>& shape,
 			      int& nresult)
 {
   ASSERT (itsNrTimesDone < itsNrTimes);
   LOG_TRACE_FLOW("Prediffer::getEquations");
   // Check if the shape is correct.
   int nrchan = itsLastChan-itsFirstChan+1;
-  ASSERT (shape[2] == uint(itsNrBufTB*itsNPol)
+  ASSERT (shape[2] == uint(itsNrBufTB*itsNSelCorr)
 	  && shape[1] == uint(itsNrScid+1)
 	  && shape[0] == uint(2*nrchan));
   double startFreq = itsStartFreq + itsFirstChan*itsStepFreq;
   double endFreq   = itsStartFreq + (itsLastChan+1)*itsStepFreq;
-  unsigned int freqOffset = itsFirstChan*itsNPol;
+  unsigned int freqOffset = itsFirstChan*itsNCorr;
 
   // Get the pointer to the mapped data.
   fcomplex* dataStart = (fcomplex*)itsDataMap->getStart();
-  ASSERTSTR(dataStart!=0, "No memory region mapped. Call map(..) first."
+  void* flagStart = itsFlagsMap->getStart();
+  int flagStartBit = itsFlagsMap->getStartBit();
+  ASSERTSTR(dataStart!=0 && flagStart!=0,
+	    "No memory region mapped. Call map(..) first."
 	    << " Perhaps you have forgotten to call nextInterval().");
 
+  // Allocate a buffer to convert flags from bits to bools.
+  // Use Block instead of vector, because vector uses bits.
+  Block<bool> flags(nrchan*itsNCorr);
+  bool* flagsPtr = &(flags[0]);
   // Loop through all baselines/times and create a request.
-
   uint nrDone = 0;
   while (itsNrTimesDone<itsNrTimes) {
     uint tStep = itsNrTimesDone;
-    //    malloc_stats();
-    //cout << "Before calc";
-    //char ch;
-    //cin >> ch;
-    unsigned int timeOffset = tStep*itsNrBl*itsNrChan*itsNPol;
+    unsigned int timeOffset = tStep*itsNrBl*itsNrChan*itsNCorr;
     double time = itsTimes[itsTimeIndex-itsNrTimes+tStep];
     double interv = itsIntervals[itsTimeIndex-itsNrTimes+tStep];
     
@@ -849,12 +878,18 @@ bool Prediffer::getEquations (double* result, const vector<uint32>& shape,
 	if (nrDone == itsNrBufTB) {
 	  break;
 	}
-	unsigned int blOffset = itsBlNext*itsNrChan*itsNPol;
+	// Get pointer to correct data part.
+	unsigned int blOffset = itsBlNext*itsNrChan*itsNCorr;
 	fcomplex* data = dataStart + timeOffset + blOffset + freqOffset;
+	// Convert the flag bits to bools.
+	bitToBool (flagsPtr, flagStart, nrchan*itsNCorr,
+		   timeOffset + blOffset + freqOffset + flagStartBit);
 	// Get an equation for this baseline.
 	int blindex = itsBLIndex(ant1,ant2);
-	getEquation (result, data, request, blindex, ant1, ant2);
-	result += 2*nrchan*itsNPol*(itsNrScid+1);
+	getEquation (result, flagResult, data, flagsPtr,
+		     request, blindex, ant1, ant2);
+	result += 2*nrchan*itsNSelCorr*(itsNrScid+1);
+	flagResult += 2*nrchan*itsNSelCorr;
 	++nrDone;
       }
       ++itsBlNext;
@@ -867,11 +902,8 @@ bool Prediffer::getEquations (double* result, const vector<uint32>& shape,
     if (nrDone == itsNrBufTB) {
       break;
     }
-    //    malloc_stats();
-    //cout << "After calc";
-    //cin >> ch;
   }
-  nresult = nrDone*itsNPol;
+  nresult = nrDone*itsNSelCorr;
   if (itsNrTimesDone == itsNrTimes) {
     cout << "BBSTest: predict " << itsPredTimer << endl;
     cout << "BBSTest: formeqs " << itsEqTimer << endl;
@@ -887,7 +919,8 @@ bool Prediffer::getEquations (double* result, const vector<uint32>& shape,
 // Get the equation for the given baseline.
 //
 //----------------------------------------------------------------------
-void Prediffer::getEquation (double* result, const fcomplex* data,
+void Prediffer::getEquation (double* result, char* flagResult,
+			     const fcomplex* data, const bool* flags,
 			     const MeqRequest& request,
 			     int blindex, int ant1, int ant2)
 {
@@ -903,47 +936,54 @@ void Prediffer::getEquation (double* result, const fcomplex* data,
   // Put the results in a single array for easier handling.
   const MeqResult* predResults[4];
   predResults[0] = &(expr.getResult11());
-  if (itsNPol == 2) {
+  if (itsNCorr == 2) {
     predResults[1] = &(expr.getResult22());
-  } else if (itsNPol == 4) {
+  } else if (itsNCorr == 4) {
     predResults[1] = &(expr.getResult12());
     predResults[2] = &(expr.getResult21());
     predResults[3] = &(expr.getResult22());
   }
-  // Loop through the polarizations.
-  for (int pol=0; pol<itsNPol; ++pol) {
-    // Get the difference (measured - predicted) for all channels.
-    const MeqMatrix& val = predResults[pol]->getValue();
-    const double* vals = (const double*)(val.dcomplexStorage());
-    if (showd) {
-      cout << "pol=" << pol << ' ' << val << endl;
-    }
-    for (int ch=0; ch<nrchan; ++ch) {
-      *result++ = data[pol+ch*itsNPol].real() - vals[2*ch];
-      *result++ = data[pol+ch*itsNPol].imag() - vals[2*ch+1];
-      if (showd) cout << *(result-2) << ' ' << *(result-1) << ' ';
-    }
-    if (showd) cout << endl;
-    // Get the derivative for all solvable parameters.
-    for (int scinx=0; scinx<itsNrScid; ++scinx) {
-      if (! predResults[pol]->isDefined(scinx)) {
-	// Undefined, so set derivatives to 0.
-	for (int ch=0; ch<2*nrchan; ++ch) {
-	  *result++ = 0;
+  // Loop through the correlations.
+  for (int corr=0; corr<itsNCorr; ++corr) {
+    if (itsCorr[corr]) {
+      // Get the difference (measured - predicted) for all channels.
+      const MeqMatrix& val = predResults[corr]->getValue();
+      const double* vals = (const double*)(val.dcomplexStorage());
+      if (showd) {
+	cout << "corr=" << corr << ' ' << val << endl;
+      }
+      for (int ch=0; ch<nrchan; ++ch) {
+	*result++ = real(data[corr+ch*itsNCorr]) - vals[2*ch];
+	*result++ = imag(data[corr+ch*itsNCorr]) - vals[2*ch+1];
+	if (showd) cout << *(result-2) << ' ' << *(result-1) << ' ';
+	// Use same flag for real and imaginary part.
+	flagResult[0] = (flags[corr+ch*itsNCorr] ? 1:0);
+	flagResult[1] = flagResult[0];
+	flagResult += 2;
+      }
+      if (showd) cout << endl;
+      // Get the derivative for all solvable parameters.
+      for (int scinx=0; scinx<itsNrScid; ++scinx) {
+	if (! predResults[corr]->isDefined(scinx)) {
+	  // Undefined, so set derivatives to 0.
+	  for (int ch=0; ch<2*nrchan; ++ch) {
+	    *result++ = 0;
+	  }
+	} else {
+	  // Calculate the derivative for each channel (real and imaginary part).
+	  double pert = predResults[corr]->getPerturbation(scinx).getDouble();
+	  const MeqMatrix& pertVal = predResults[corr]->getPerturbedValue(scinx);
+	  const double* pertVals = (const double*)(pertVal.dcomplexStorage());
+	  if (showd) {
+	    cout << "corr=" << corr << " spid=" << scinx << ' '
+		 << pertVal << endl;
+	  }
+	  for (int ch=0; ch<2*nrchan; ++ch) {
+	    *result++ = (pertVals[ch] - vals[ch]) / pert;
+	    if (showd) cout << *(result-1) << ' ';
+	  }
+	  if (showd) cout << endl;
 	}
-      } else {
-	// Calculate the derivative for each channel (real and imaginary part).
-	double pert = predResults[pol]->getPerturbation(scinx).getDouble();
-	const MeqMatrix& pertVal = predResults[pol]->getPerturbedValue(scinx);
-	const double* pertVals = (const double*)(pertVal.dcomplexStorage());
-	if (showd) {
-	  cout << "pol=" << pol << " spid=" << scinx << ' ' << pertVal << endl;
-	}
-	for (int ch=0; ch<2*nrchan; ++ch) {
-	  *result++ = (pertVals[ch] - vals[ch]) / pert;
-	  if (showd) cout << *(result-1) << ' ';
-	}
-	if (showd) cout << endl;
       }
     }
   }
@@ -1020,8 +1060,8 @@ void Prediffer::subtractPeelSources (bool write)
   cout << "saveResidualData to '" << itsDataMap->getFileName() << "'" << endl;
 
   // Map the correct data subset (this time interval) for writing
-  int64 startOffset = (itsTimeIndex-itsNrTimes)*itsNrBl*itsNrChan*itsNPol*sizeof(fcomplex);
-  size_t nrBytes = itsNrTimes*itsNrBl*itsNrChan*itsNPol*sizeof(fcomplex);
+  int64 startOffset = (itsTimeIndex-itsNrTimes)*itsNrBl*itsNrChan*itsNCorr*sizeof(fcomplex);
+  size_t nrBytes = itsNrTimes*itsNrBl*itsNrChan*itsNCorr*sizeof(fcomplex);
   itsDataMap->mapFile(startOffset, nrBytes);
   if (itsLockMappedMem) {
     // Make sure mapped data is resident in RAM
@@ -1044,7 +1084,7 @@ void Prediffer::subtractPeelSources (bool write)
   // Loop over all times in current time interval.
   for (unsigned int tStep=0; tStep<itsNrTimes; tStep++)
   {
-    unsigned int timeOffset = tStep*itsNrBl*itsNrChan*itsNPol;
+    unsigned int timeOffset = tStep*itsNrBl*itsNrChan*itsNCorr;
     double time = itsTimes[itsTimeIndex-itsNrTimes+tStep];
     double interv = itsIntervals[itsTimeIndex-itsNrTimes+tStep];
 
@@ -1057,14 +1097,14 @@ void Prediffer::subtractPeelSources (bool write)
       uInt ant2 = itsAnt2[bl];
       if (itsBLSelection(ant1,ant2) == true)
       {
-        unsigned int blOffset = bl*itsNrChan*itsNPol;
-        unsigned int freqOffset = itsFirstChan*itsNPol;
+        unsigned int blOffset = bl*itsNrChan*itsNCorr;
+        unsigned int freqOffset = itsFirstChan*itsNCorr;
         // Set the data pointer
-        fcomplex* dataStart = (fcomplex*)itsDataMap->getStart();
+        Complex* dataStart = (Complex*)itsDataMap->getStart();
 
         ASSERTSTR(dataStart!=0, "No memory region mapped. Call map(..) first."
                   << " Perhaps you have forgotten to call nextInterval().");
-        fcomplex* dataPtr = dataStart + timeOffset + blOffset + freqOffset;
+        Complex* dataPtr = dataStart + timeOffset + blOffset + freqOffset;
 
 	ASSERT (ant1 < itsBLIndex.nrow()  &&  ant2 < itsBLIndex.nrow()
 		&&  itsBLIndex(ant1,ant2) >= 0);
@@ -1072,8 +1112,8 @@ void Prediffer::subtractPeelSources (bool write)
 
 	itsExpr[blindex]->calcResult (request);
 	
-	// Create a matrix from selected frequencies and all polarisations
-	Matrix<Complex> data(IPosition(2, itsNPol, nrchan), dataPtr, SHARE);
+	// Create a matrix from selected frequencies and all correlations.
+	Matrix<Complex> data(IPosition(2, itsNCorr, nrchan), dataPtr, SHARE);
 
 	Slice sliceFreq(0, nrchan);
 	// Convert the DComplex predicted results to a Complex data array.
@@ -1081,41 +1121,41 @@ void Prediffer::subtractPeelSources (bool write)
 	convertArray (tmpPredict,
 		      itsExpr[blindex]->getResult11().getValue().getDComplexMatrix());
 
-	// Subtract data for all frequencies of polarisation 1
-	Matrix<Complex> dataPol0 (data(Slice(0,1), sliceFreq));
-	dataPol0 -= tmpPredict;
+	// Subtract data for all frequencies of correlation 1
+	Matrix<Complex> dataCorr0 (data(Slice(0,1), sliceFreq));
+	dataCorr0 -= tmpPredict;
 
-	if (4 == itsNPol) 
+	if (4 == itsNCorr) 
 	{
-	  // Subtract data for all frequencies of polarisation 2
+	  // Subtract data for all frequencies of correlation 2
 	  convertArray (tmpPredict,
 			itsExpr[blindex]->getResult12().getValue().getDComplexMatrix());
-	  Matrix<Complex> dataPol1 (data(Slice(1,1), sliceFreq));
-	  dataPol1 -= tmpPredict;
+	  Matrix<Complex> dataCorr1 (data(Slice(1,1), sliceFreq));
+	  dataCorr1 -= tmpPredict;
 
-	  // Subtract data for all frequencies of polarisation 3
+	  // Subtract data for all frequencies of correlation 3
 	  convertArray (tmpPredict,
 			itsExpr[blindex]->getResult21().getValue().getDComplexMatrix());
-	  Matrix<Complex> dataPol2 (data(Slice(2,1), sliceFreq));
-	  dataPol2 -= tmpPredict;
+	  Matrix<Complex> dataCorr2 (data(Slice(2,1), sliceFreq));
+	  dataCorr2 -= tmpPredict;
 
-	  // Subtract data for all frequencies of polarisation 4
+	  // Subtract data for all frequencies of correlation 4
 	  convertArray (tmpPredict,
 			itsExpr[blindex]->getResult22().getValue().getDComplexMatrix());
-	  Matrix<Complex> dataPol3 (data(Slice(3,1), sliceFreq));
-	  dataPol3 -= tmpPredict;
+	  Matrix<Complex> dataCorr3 (data(Slice(3,1), sliceFreq));
+	  dataCorr3 -= tmpPredict;
 	} 
-	else if (2 == itsNPol)
+	else if (2 == itsNCorr)
 	{
-	  // Subtract data for all frequencies of polarisation 2
+	  // Subtract data for all frequencies of correlation 2
 	  convertArray (tmpPredict,
 			itsExpr[blindex]->getResult22().getValue().getDComplexMatrix());
-	  Matrix<Complex> dataPol1 (data(Slice(1,1), sliceFreq));
-	  dataPol1 -= tmpPredict;
+	  Matrix<Complex> dataCorr1 (data(Slice(1,1), sliceFreq));
+	  dataCorr1 -= tmpPredict;
 	} 
-	else if (1 != itsNPol)
+	else if (1 != itsNCorr)
 	{
-	  throw AipsError("Number of polarizations should be 1, 2, or 4");
+	  throw AipsError("Number of correlations should be 1, 2, or 4");
 	}
 	///    if (MeqPointDFT::doshow) cout << "result: " << data << endl;
 
@@ -1133,14 +1173,14 @@ void Prediffer::subtractPeelSources (bool write)
 //
 // ~select
 //
-// Select a subset of the MS data.                                        >>>>>>>> Keep this, possibility to use a subset of data (it sets itsFirstChan o.a.)
-// The baselines and the channels (frequency window) to be used can be specified.
+// Select a subset of the MS data.
 // This selection has to be done before the loop over domains.
 //
 //----------------------------------------------------------------------
 void Prediffer::select (const vector<int>& ant1, 
 			const vector<int>& ant2,
-			bool useAutoCorrelations)
+			bool useAutoCorrelations,
+			const vector<int>& corr)
 {
   ASSERT (ant1.size() == ant2.size());
   if (ant1.size() == 0) {
@@ -1162,7 +1202,21 @@ void Prediffer::select (const vector<int>& ant1,
       itsBLSelection(i,i) = false;
     }
   } 
-  countBaselines();
+  // Fill the correlations to use. Use all if vector is empty.
+  // If only 2 corr, YY is the 2nd one.
+  for (int i=0; i<4; ++i) {
+    itsCorr[i] = corr.empty();
+  }
+  for (uint i=0; i<corr.size(); ++i) {
+    if (corr[i] < 4) {
+      if (itsNCorr == 2  &&  corr[i] == 3) {
+	itsCorr[1] = true;
+      } else {
+	itsCorr[corr[i]] = true;
+      }
+    }
+  }
+  countBaseCorr();
 }
 
 //----------------------------------------------------------------------
@@ -1203,7 +1257,7 @@ void Prediffer::fillUVW()
   // Map uvw data into memory
   size_t nrBytes = itsTimes.nelements() * itsNrBl * 3 * sizeof(double);
   double* uvwDataPtr = 0;
-  MMap* mapPtr = new MMap(itsMSName+".uvw", MMap::Read);
+  MMap* mapPtr = new MMap(itsMSName+"/vis.uvw", MMap::Read);
   mapPtr->mapFile(0, nrBytes);
   if (itsLockMappedMem) {
     // Make sure mapped data is resident in RAM

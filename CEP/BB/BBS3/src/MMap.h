@@ -29,20 +29,19 @@
 //# Includes
 #include <Common/lofar_string.h>
 #include <Common/LofarTypes.h>
+#include <Common/lofar_string.h>
 
 namespace LOFAR
 {
 
 // \ addtogroup BBS3
 // @{
+// This class implements a mmap operation.
 
-/** 
-    This class implements a mmap operation
-*/
 
 class MMap
 {
- public:
+public:
 
   enum protection{Read, Write, ReWr};
 
@@ -50,16 +49,16 @@ class MMap
   MMap (const string& fileName, protection prot);
 
   // Destructor
-  virtual ~MMap();
+  ~MMap();
 
   // Map the desired area
-  void mapFile(long long startOffset, size_t nrBytes);
+  void mapFile (int64 startOffset, size_t nrBytes);
 
   // Unmap the last area
   void unmapFile();
 
-  // Guarantee this memory range is resident in RAM (disable paging). The memory range
-  // must be part of a mapped area.
+  // Guarantee this memory range is resident in RAM (disable paging).
+  // The memory range must be part of a mapped area.
   void lockMappedMemory();
 
   // Reenable paging 
@@ -69,9 +68,9 @@ class MMap
   void* getStart();
 
   // Get name of mapped file
-  const string& getFileName();
+  const string& getFileName() const;
 
- private:
+private:
 
   // Forbid copy constructor and assignment
   MMap (const MMap&);
@@ -89,8 +88,8 @@ class MMap
 inline void* MMap::getStart()
   { return itsPtr; }
 
-inline const string& MMap::getFileName()
-   { return itsFileName; }
+inline const string& MMap::getFileName() const
+  { return itsFileName; }
 
 // @}
 

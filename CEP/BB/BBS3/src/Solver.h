@@ -77,8 +77,8 @@ public:
   // Also note that setEquations cannot be called before setSolvableParmData
   // has been called for all prediffers.
   // After the last setEquations, the solve function can be called.
-  void setEquations (const double* data, int nresult, int nrspid,
-		     int nval, int prediffer);
+  void setEquations (const double* data, const char* flags,
+		     int nresult, int nrspid, int nval, int prediffer);
 
   // Solve which returns solved parameter values in a vector and fit value 
   // in Quality object.
@@ -106,6 +106,8 @@ private:
                                          //# to coefficient in solver
   vector<double>       itsSolvableValues;
   bool                 itsDoSet;         //# true = do itsSolver.set
+  int                  itsNUsed;         //# Nr of data points used
+  int                  itsNFlag;         //# Nr of data points flagged
 };
 
 // @}

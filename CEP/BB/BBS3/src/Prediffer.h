@@ -93,7 +93,7 @@ public:
 
   // Make a selection of the MS to be used in the domain iteration.
   void select (const vector<int>& ant1, const vector<int>& ant2,
-	       bool useAutoCorrelations);
+	       bool useAutoCorrelations, const vector<int>& corr);
 
   // Set the domain (in frequency and time).
   // Hereafter getSolvableParmData can be called.
@@ -124,13 +124,15 @@ public:
 			 bool isSolvable);
 
   // Get the equations for all selected baselines.
-  // The values are stored into the buffer as a 3-dim array with axes
+  // The values are stored into the buffer as a 3-dim double array with axes
   // nresult,nspid+1,nval.
+  // The flags are stored in a 2-dim boolean array with axes nresult,nval.
   // It is checked if the shape of the buffer is correct.
   // The function should be called until a false status is returned.
   // In nresult it returns the number of results put in the buffer.
   // Normally this is shape(2), but for the last time it can be less.
-  bool getEquations (double* result, const vector<uint32>& shape,
+  bool getEquations (double* result, char* flagResult,
+		     const vector<uint32>& shape,
 		     int& nresult);
 
   // Set the source numbers to use in this peel step.
@@ -185,8 +187,8 @@ private:
   // Get all baseline info.
   void fillBaselines (const vector<int>& antnrs);
 
-  // Count nr of baselines selected.
-  void countBaselines();
+  // Count nr of baselines and correlations selected.
+  void countBaseCorr();
 
   // Fill all UVW coordinates if they are not calculated.
   void fillUVW();
@@ -199,7 +201,8 @@ private:
   void makeLOFARExpr (casa::Bool asAP);
 
   // Get equations for a single time and baseline.
-  void getEquation (double* result, const fcomplex* data,
+  void getEquation (double* result, char* flagResult,
+		    const fcomplex* data, const bool* flags,
 		    const MeqRequest& request,
 		    int blindex, int ant1, int ant2);
 
@@ -245,9 +248,11 @@ private:
   int          itsNrScid;             //# Nr of solvable parameter coeff.
   vector<ParmData> itsParmData;       //# solvable parm info. 
 
+  bool                 itsCorr[4];     //# Correlations to use
   vector<int>          itsAnt1;        //# Antenna1 antenna numbers
   vector<int>          itsAnt2;        //# Antenna2 antenna numbers
-  int                  itsNPol;        //# Number of polarisations
+  int                  itsNCorr;       //# Number of correlations (XX, etc.)
+  int                  itsNSelCorr;    //# Number of correlations selected
   casa::Vector<double> itsTimes;       //# All times in MS
   casa::Vector<double> itsIntervals;   //# All intervals in MS
   casa::Matrix<double> itsAntPos;      //# All antenna positions
@@ -263,7 +268,7 @@ private:
   unsigned int   itsBlNext;        //# Next baseline to do in time domain
 
   MMap*          itsDataMap;       //# Data file to map
-  //  FlagsMap*      itsFlagsMap;      //# Flags file to map
+  FlagsMap*      itsFlagsMap;      //# Flags file to map
   bool           itsLockMappedMem; //# Lock memory immediately after mapping?
 
   NSTimer itsPredTimer;

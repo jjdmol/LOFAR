@@ -1,11 +1,11 @@
 #!/bin/sh
 
 \rm -rf /tmp/$USER.demo*
-ln -s /data/PSS3/diepen/BBS2/demo3 /tmp/$USER.demo
+ln -s /data/PSS3/diepen/BBS2/demo3_p1.MS /tmp/$USER.demo
 cp -r /data/PSS3/diepen/BBS2/demo3.MEP /tmp/$USER.demo.MEP
 cp -r /data/PSS3/diepen/BBS2/demo3_gsm.MEP /tmp/$USER.demo_gsm.MEP
 
-./tPredSolv $USER /tmp/$USER.demo/demo demo demo_gsm
+./tPredSolv $USER /tmp/$USER.demo demo demo_gsm
 status=$?
 #\rm -rf /tmp/$USER.demo*
 exit $status

@@ -76,6 +76,7 @@ public:
   unsigned int getDataSize() const;
 
   double* getDataBuffer();
+  char* getFlagBuffer();
 
   bool getParmData(vector<ParmData>& pdata); 
   void setParmData(const vector<ParmData>& pdata);
@@ -102,6 +103,7 @@ private:
 
   unsigned int* itsDataSize;    // Number of equations in data buffer
   double* itsDataBuffer;
+  char*   itsFlagBuffer;
   unsigned int* itsMoreData;   // More result to come?
   double* itsStartFreq;        // Start frequency of the domain
   double* itsEndFreq;          // End frequency of the domain
@@ -117,6 +119,9 @@ inline unsigned int DH_Prediff::getDataSize() const
 
 inline double* DH_Prediff::getDataBuffer()
 { return itsDataBuffer; }
+
+inline char* DH_Prediff::getFlagBuffer()
+{ return itsFlagBuffer; }
 
 inline bool DH_Prediff::moreDataToCome()
 { return ((*itsMoreData==0)?(false):(true));}
