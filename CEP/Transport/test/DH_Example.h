@@ -40,7 +40,8 @@ class DH_Example: public DH_PL
 public:
   typedef complex<float> BufferType;
 
-  explicit DH_Example (const string& name, unsigned int nbuffer = 10);
+  explicit DH_Example (const string& name="dh_example",
+		       unsigned int nbuffer = 10);
 
   DH_Example(const DH_Example&);
 
@@ -90,21 +91,5 @@ inline const DH_Example::BufferType* DH_Example::getBuffer() const
 
 }
 
-
-
-namespace LOFAR {
-  namespace PL {
-
-    class DBRep<DH_Example> : public DBRep<DH_PL>
-    {
-    public:
-      void bindCols (dtl::BoundIOs& cols);
-      void toDBRep (const DH_Example&);
-
-    private:
-      int itsCounter;
-    };
-  }
-}
 
 #endif 

@@ -20,7 +20,7 @@ CXXFLAGS += \
 
 check_PROGRAMS			= Example 		
 
-Example_SOURCES 		= Example.cc
+Example_SOURCES 		= Example.cc DH_Example.cc PO_DH_Example.cc
 
 LDADD				= ../src/libtransport.la 
 DEPENDENCIES			= ../src/libtransport.la $(LOFAR_DEPEND)
