@@ -30,6 +30,10 @@
 #include <tinyCEP/Profiler.h>
 #include <Common/LofarLogger.h>
 
+#ifdef HAVE_MPI
+#include <Transport/TH_MPI.h>
+#endif
+
 using namespace LOFAR;
 
 void doIt (Composite& comp, const std::string& name, int nsteps)
@@ -71,6 +75,9 @@ void doIt (Composite& comp, const std::string& name, int nsteps)
 
 int main (int argc, const char *argv[])
 {
+#ifdef HAVE_MPI
+  TH_MPI::init(argc, argv);
+#endif
   // Set trace level.
   INIT_LOGGER("Example.log_prop");
 

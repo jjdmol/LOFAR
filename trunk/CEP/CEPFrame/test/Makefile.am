@@ -52,7 +52,8 @@ CyclicBufferTest_DEPENDENCIES	= ../src/libcepframe.la $(LOFAR_DEPEND) -lpthread
 
 TESTS_ENVIRONMENT		= top_srcdir=$(top_srcdir) \
 				  lofar_sharedir=$(lofar_sharedir) \
-				  common_top_builddir=$(common_top_builddir)
+				  common_top_builddir=$(common_top_builddir) \
+                                  MPIBIN=$(MPIBIN)
 
 TESTS	=					\
 	Example_test.sh				\

@@ -3,3 +3,4 @@
 ./Tester -dGlobal=0
 STATUS=$?
 exit $STATUS
+
