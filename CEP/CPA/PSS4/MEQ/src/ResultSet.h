@@ -30,7 +30,6 @@
 #include <MEQ/Result.h>
 
 #pragma aidgroup Meq
-#pragma aid Cells Results Fail Node Class Name Origin Line Message
 #pragma type #Meq::ResultSet
 
 // This class represents a result of a domain for which an expression
@@ -50,9 +49,10 @@ public:
   // If <0, then the set is marked as a fail
   explicit ResultSet (int nresults=1);
   
-  ResultSet (int nresults,const Cells &cells,int flags = DMI::EXTERNAL|DMI::NONSTRICT);
+  explicit ResultSet (const Request &req);
   
-  ResultSet (const Cells &cells,int flags = DMI::EXTERNAL|DMI::NONSTRICT);
+  ResultSet (int nresults,const Request &req);
+  ResultSet (const Request &req,int nresults);
   
   // Construct from DataRecord. 
   ResultSet (const DataRecord &other,int flags=DMI::PRESERVE_RW,int depth=0);
@@ -91,18 +91,16 @@ public:
     return *itsCells; }
 
   // ------------------------ RESULTS
+  void allocateResults (int nresults);
+    
   int numResults () const
     { return itsResults.valid() ? itsResults->size() : 0; }
   
   const Result & resultConst (int i) const
-    { DbgFailWhen( isFail(),"ResultSet marked as a fail, can't access result");
-      return itsResults.deref()[i].as<Result>(); 
-    }
+    { return itsResults.deref()[i].as<Result>(); }
   
   Result & result (int i)
-    { DbgFailWhen( isFail(),"ResultSet marked as a fail, can't access result" );
-      return itsResults.dewr()[i].as_wr<Result>(); 
-    }
+    { return itsResults.dewr()[i].as_wr<Result>(); }
   
   Result & setResult (int i,Result *result);
   
@@ -115,34 +113,13 @@ public:
     return setResult(i,resref); 
   }
 
-  // ------------------------ FAIL RECORDS
-  // This marks the ResultSet as a FAIL, and adds a fail-record.
-  // Results, if any, are cleared, a Fail sub-record is created if necessary.
-  // The Fail subrecord can contain multiple fail records.
-  void addFail (const DataRecord *rec,int flags=DMI::ANON|DMI::READONLY);
-  void addFail (const string &nodename,const string &classname,
-                const string &origin,int origin_line,const string &msg);
-#if defined(HAVE_PRETTY_FUNCTION)
-# define ResultSet_FailLocation __PRETTY_FUNCTION__ "() " __FILE__ 
-#elif defined(HAVE_FUNCTION)
-# define ResultSet_FailLocation __FUNCTION__ "() " __FILE__ 
-#else
-# define ResultSet_FailLocation __FILE__ 
-#endif
-
-  // macro for automatically generating the correct fail location and adding
-  // a fail to the resultset
-#define MakeFailResult(res,msg) \
-    (res).addFail(name(),objectType().toString(),ResultSet_FailLocation,__LINE__,msg);
-    
-  // checks if this ResultSet is a fail
-  bool isFail () const
-  { return itsIsFail; }
-  // returns the number of fail records 
+  // ------------------------ FAIL RESULTS
+  // checks if this ResultSet has any fails in it
+  bool hasFails () const;
+  // returns the number of fails in the set
   int numFails () const;
-  // returns the i-th fail record
-  const DataRecord & getFail (int i=0) const;
   
+
   // dumps result to stream
   void show (std::ostream&) const;
 
@@ -157,11 +134,9 @@ protected:
   DataRecord::removeField;
   
 private:
-  void initNumResults (int nresults);
 
   DataField::Ref itsResults;
   const Cells    *itsCells;
-  bool           itsIsFail;
 };
 
 

@@ -20,14 +20,13 @@
 //#
 //# $Id$
 
-#include <MEQ/Selector.h>
-#include <MEQ/Request.h>
-#include <MEQ/Result.h>
-#include <MEQ/Cells.h>
+#include "Selector.h"
+#include "Request.h"
+#include "Result.h"
+#include "Cells.h"
+#include "MeqVocabulary.h"
 
 namespace Meq {    
-
-const HIID FIndex  = AidIndex;
 
 Selector::Selector()
 {}
@@ -64,7 +63,7 @@ int Selector::getResultImpl (ResultSet::Ref &resref, const Request& request, boo
   if( flag&RES_WAIT )
     return flag;
   // otherwise, select sub-results
-  ResultSet &result = resref <<= new ResultSet(selection.size()),
+  ResultSet &resset = resref <<= new ResultSet(selection.size(),request),
             &childres = childref();
   // select results from child set
   for( uint i=0; i<selection.size(); i++ )
@@ -72,15 +71,16 @@ int Selector::getResultImpl (ResultSet::Ref &resref, const Request& request, boo
     int isel = selection[i];
     if( isel<0 || isel>=childres.numResults() )
     {
-      MakeFailResult(result,
+      Result &res = resset.setNewResult(i);
+      MakeFailResult(res,
           Debug::ssprintf("selection index %d is out of range (%d results in set)",
-                          isel,childres.numResults()));
-      return RES_FAIL;
+                        isel,childres.numResults()));
     }
-    result.setResult(i,&(childres.result(isel)));
+    else
+    {
+      resset.setResult(i,&(childres.result(isel)));
+    }
   }
-  // copy cells from child set
-  result.setCells(request.cells()); 
   return flag;
 }
 

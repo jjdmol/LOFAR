@@ -142,28 +142,26 @@ void MeqServer::getNodeResult (DataRecord::Ref &out,DataRecord::Ref::Xfer &in)
   cdebug(2)<<"getNodeResult for node "<<node.name()<<endl;
   const Request & req = (*in)[AidRequest].as<Request>();
   cdebug(3)<<"    request is "<<req.sdebug(DebugLevel-1,"    ")<<endl;
-  ResultSet::Ref res;
-  int flags = node.getResult(res,req);
+  ResultSet::Ref resset;
+  int flags = node.getResult(resset,req);
   cdebug(2)<<"  getResult returns flags "<<flags<<" with result"<<endl;
-  cdebug(3)<<"    result is "<<res.sdebug(DebugLevel-1,"    ")<<endl;
-  if( DebugLevel>3 && res.valid() )
+  cdebug(3)<<"    result set is "<<resset.sdebug(DebugLevel-1,"    ")<<endl;
+  if( DebugLevel>3 && resset.valid() )
   {
-    if( res->isFail() ) {
-      cdebug(4)<<"  result is marked as FAIL"<<endl;
-    } else {
-      for( int i=0; i<res->numResults(); i++ ) {
-        cdebug(4)<<"  plane "<<i<<": "<<res->resultConst(i).getValue()<<endl;
+    for( int i=0; i<resset->numResults(); i++ ) 
+    {
+      const Result &res = resset->resultConst(i);
+      if( res.isFail() ) {
+        cdebug(4)<<"  plane "<<i<<": FAIL"<<endl;
+      } else {
+        cdebug(4)<<"  plane "<<i<<": "<<res.getValue()<<endl;
       }
     }
   }
   out <<= new DataRecord;
   out()[AidResult|AidCode] = flags;
-  if( res.valid() )
-  {
-    cdebug(1)<<"objectType: "<<res->objectType().toString()<<endl;
-    out()[AidResult] <<= res;
-    cdebug(1)<<"in-record objectType: "<<out()[AidResult].ref()->objectType()<<endl;
-  }
+  if( resset.valid() )
+    out()[AidResult] <<= resset;
 }
 
 //##ModelId=3F608106021C

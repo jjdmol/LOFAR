@@ -136,9 +136,10 @@ int Spigot::getResultImpl (ResultSet::Ref &resref,const Request &req,bool newreq
     // return fail if unable to satisfy this request
     if( req.id() != next_rqid )
     {
-      resref <<= new ResultSet(-1);
-      MakeFailResult(resref(),"spigot: got request id "+
-                              req.id().toString()+", expecting "+next_rqid.toString());
+      resref <<= new ResultSet(1,req);
+      Result &res = resref().setNewResult(0);
+      MakeFailResult(res,"spigot: got request id "+
+                          req.id().toString()+", expecting "+next_rqid.toString());
       return RES_FAIL;
     }
     // return result and clear cache

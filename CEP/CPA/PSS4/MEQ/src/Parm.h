@@ -31,7 +31,6 @@
 #include <Common/lofar_vector.h>
 
 #pragma aidgroup Meq
-#pragma aid Tablename Default
 #pragma types #Meq::Parm
 
 // The comments below are used to automatically generate a default
