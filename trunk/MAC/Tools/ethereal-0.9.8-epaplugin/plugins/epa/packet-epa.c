@@ -150,7 +150,7 @@ static const value_string bf_vals[] =
   { 0x00, "XR,XI,YR,YI coefficients for XR output" },
   { 0x01, "XR,XI,YR,YI coefficients for XI output" },
   { 0x02, "XR,XI,YR,YI coefficients for YR output" },
-  { 0x03, "XR,XI,YR,YI coefficients for YR output" },
+  { 0x03, "XR,XI,YR,YI coefficients for YI output" },
   { 0,     NULL       },
 };
 
