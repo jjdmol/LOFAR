@@ -77,7 +77,7 @@ void solve(MeqCalibrater& mc, int loopcnt)
 
 int main(int argc, char* argv[])
 {
-  PerfProfile::init(&argc, &argv);
+  PerfProfile::init(&argc, &argv, PP_LEVEL_2);
 
   try {
     if (argc < 2) {
