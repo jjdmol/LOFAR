@@ -25,13 +25,18 @@
 #ifndef CEPFRAME_DH_PL_H
 #define CEPFRAME_DH_PL_H
 
-#include <CEPFrame/DH_Database.h>		// for class definition
+#include <CEPFrame/DH_Database.h>		// for super-class definition
 #include <Common/LofarTypes.h>			// for ulong
-#include <PL/PersistenceBroker.h>
+#include <PL/PersistenceBroker.h>		// for PersistenceBroker
 
 using namespace std;
 using namespace LOFAR::PL;
+
 namespace LOFAR {
+
+/// DH_PL is a DataHolder implementation based on (LOFAR/Common) PL.  Note
+/// that the (current) implementation of PL uses DTL above ODBC above
+/// Postgresql.
 
 class DH_PL : public DH_Database {
 
@@ -40,9 +45,12 @@ public:
   explicit DH_PL (const string& name, const string& type);
   virtual ~DH_PL ();
 
+  // Communication methods for the messages.
   virtual bool StoreInDatabase (int appId, int tag, char * buf, int size);
   virtual bool RetrieveFromDatabase (int appId, int tag, char * buf, int size);
 
+  // Specify the data source name and account for PL. Usually dbDSN =
+  // <YourName> and userName="postgres".
   static void UseDatabase (char * dbDSN, char * userName);
 
 protected:
@@ -60,13 +68,15 @@ private:
   void ConnectDatabase (void);
   void DisconnectDatabase (void);
 
+  // Internal counters to synchronize the reads and writes.
   ulong itsReadSeqNo;
   ulong itsWriteSeqNo;
 
-  bool isConnected;
-
+  /// Counter for the number of DH_PL instances. Used to coordinate
+  /// the connection to the database.
   static ulong theirInstanceCount;
 
+  /// Strings containing the name specs describing the Postgresql connection.
   static string theirDSN;
   static string theirUserName;
 };
