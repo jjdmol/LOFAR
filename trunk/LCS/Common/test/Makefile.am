@@ -1,12 +1,12 @@
 check_PROGRAMS	      =	tDebug testLogger tBlobString \
 			tBlobStream tBlobArray tBlobField \
-			tDataConvert tKeyValueMap tStringUtil 
+			tDataConvert tKeyValueMap tStringUtil tHexdump
 #			tLorrays
 
 # programs to run through supplied checktools
 CHECKTOOLPROGS 	      =	tDebug testLogger tBlobString \
 			tBlobStream tBlobArray tBlobField \
-			tDataConvert tKeyValueMap tStringUtil 
+			tDataConvert tKeyValueMap tStringUtil tHexdump
 #ENDCHECKTOOLPROGS
 
 TESTS	= tDebug_test.sh \
@@ -17,7 +17,8 @@ TESTS	= tDebug_test.sh \
 	  tBlobField_test.sh \
 	  tDataConvert_test.sh \
 	  tKeyValueMap_test.sh \
-	  tStringUtil_test.sh 
+	  tStringUtil_test.sh \
+	  tHexdump
 #	  tLorrays_test.sh				
 
 tDebug_SOURCES			= tDebug.cc
@@ -55,6 +56,10 @@ tKeyValueMap_DEPENDENCIES	= ../src/libcommon.la $(LOFAR_DEPEND)
 tStringUtil_SOURCES		= tStringUtil.cc
 tStringUtil_LDADD		= ../src/libcommon.la	
 tStringUtil_DEPENDENCIES	= ../src/libcommon.la $(LOFAR_DEPEND)
+
+tHexdump_SOURCES		= tHexdump.cc
+tHexdump_LDADD			= ../src/libcommon.la	
+tHexdump_DEPENDENCIES	= ../src/libcommon.la $(LOFAR_DEPEND)
 
 #tLorrays_SOURCES		= tLorrays.cc
 #tLorrays_LDADD			= ../src/libcommon.la	
