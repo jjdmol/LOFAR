@@ -1,4 +1,4 @@
-//#  APExample.cc: Example program how a Application Process should respond.
+//#  APTest.cc: Example program how a Application Process should respond.
 //#
 //#  Copyright (C) 2002-2005
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -25,6 +25,7 @@
 
 //# Includes
 #include <time.h>
+#include <stdlib.h>						/// srand
 #include <Common/LofarLogger.h>
 #include <ACC/ProcControlServer.h>
 #include <ACC/ParameterSet.h>
@@ -78,6 +79,13 @@ int main (int argc, char *argv[]) {
 									  &itsAPCmdImpl);
 
 		// IMPLEMENT: do other launch activities like processing the ParamSet
+		// init random generator with some value for testing
+		uint32 seed = 0;
+		for (uint16 i = 0; i < itsProcID.length(); ++i) {
+			seed += itsProcID.data()[i];
+		}
+		srand(seed);
+		sleep(rand() % 5);			// simulate we are busy
 
 		// [B] Tell AC we are ready for commands
 		itsPCcomm.registerAtAC(itsProcID);
@@ -93,17 +101,20 @@ int main (int argc, char *argv[]) {
 				// we can update our runstate here if we like
 				itsIsRunning = (newMsg->getCommand() != PCCmdQuit);
 
+				// TEST: simulate we are busy
+				sleep (rand()%10);
+
 				// [D] let PCcomm dispatch and handle the message
 				itsPCcomm.handleMessage(newMsg);
 			}
 
 			// IMPLEMENT: do other stuff
 
-			// TEST: simulate we are busy
-			sleep (3);
 		}
 
 		LOG_INFO_STR("Shutting down: " << argv[0]);
+
+		// IMPLEMENT: do all neccesary shutdown actions.
 
 		// [E] unregister at AC and send last results
 		// As an example only 1 KV pair is returned but it is allowed to pass
@@ -112,10 +123,7 @@ int main (int argc, char *argv[]) {
 		string			resultBuffer;
 		resultSet.add(itsProcID+".result", "IMPLEMENT useful information");
 		resultSet.writeBuffer(resultBuffer);		// convert to stringbuffer
-LOG_TRACE_VAR_STR("=====" << resultBuffer << "======");
 		itsPCcomm.unregisterAtAC(resultBuffer);		// send to AC before quiting
-
-		// IMPLEMENT: do other neccesary shutdown actions.
 
 		// TEST: simulate we are busy.
 		sleep (3);

@@ -12,7 +12,7 @@ int main (int argc, char *argv[]) {
 	INIT_LOGGER ("default.log_prop");
 
 	myACClientFunctions		myACF;
-	ACAsyncClient			asyncClient(&myACF, "localhost");
+	ACAsyncClient			asyncClient(&myACF, "myUniqName", 10, 100);
 	ApplControlClient*		ACClient = &asyncClient;
 	LOG_DEBUG ("Connected to private AC server!");
 
