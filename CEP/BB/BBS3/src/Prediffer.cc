@@ -947,6 +947,48 @@ void Prediffer::getEquation (double* result, const fcomplex* data,
   itsEqTimer.stop();
 }
 
+//----------------------------------------------------------------------
+//
+// ~getResults
+//
+// Get the results for the selected baselines and domain.
+//
+//----------------------------------------------------------------------
+vector<MeqResult> Prediffer::getResults (bool calcDeriv)
+{
+  vector<MeqResult> results;
+  int nrchan = itsLastChan-itsFirstChan+1;
+  double startFreq = itsStartFreq + itsFirstChan*itsStepFreq;
+  double endFreq   = itsStartFreq + (itsLastChan+1)*itsStepFreq;
+  for (unsigned int tStep=0; tStep<itsNrTimes; tStep++)
+  {
+    double time = itsTimes[itsTimeIndex-itsNrTimes+tStep];
+    double interv = itsIntervals[itsTimeIndex-itsNrTimes+tStep];
+    MeqDomain domain(time-interv/2, time+interv/2, startFreq, endFreq);
+    MeqRequest request(domain, 1, nrchan, 0);
+    if (calcDeriv) {
+      request = MeqRequest(domain, 1, nrchan, itsNrScid);
+    }
+    for (unsigned int bl=0; bl<itsNrBl; bl++)
+    {
+      uInt ant1 = itsAnt1[bl];
+      uInt ant2 = itsAnt2[bl];
+      if (itsBLSelection(ant1,ant2) == true)
+      {
+	///showd = (ant1==4 && ant2==8);
+	// Get the result for this baseline.
+	int blindex = itsBLIndex(ant1,ant2);
+	MeqJonesExpr& expr = *(itsExpr[blindex]);
+	expr.calcResult (request);         // This is the actual predict
+	results.push_back (expr.getResult11());
+	results.push_back (expr.getResult12());
+	results.push_back (expr.getResult21());
+	results.push_back (expr.getResult22());
+      }
+    }
+  }
+  return results;
+}
 
 //----------------------------------------------------------------------
 //
@@ -1302,7 +1344,6 @@ void Prediffer::updateSolvableParms (const vector<double>& values)
       MeqParmPolc* ppc = dynamic_cast<MeqParmPolc*>(*iter);
       ASSERT (ppc);
       ppc->update (values);
-      break;
     }
   }
   resetEqLoop();
@@ -1347,7 +1388,6 @@ void Prediffer::updateSolvableParms()
       MeqParmPolc* ppc = dynamic_cast<MeqParmPolc*>(*iter);
       ASSERT (ppc);
       ppc->readPolcs (itsDomain);
-      break;
     }
   }
   resetEqLoop();
