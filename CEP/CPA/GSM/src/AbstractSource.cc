@@ -94,10 +94,10 @@ AbstractSource::AbstractSource(SourceType          type,
   std::string ParmName(createParmName());
 
   itsRa  = new MeqParmPolc(ParmName+"RA");
-  dynamic_cast<MeqParmPolc*>(itsRa)->setPolcs(RaPolcs);
+  itsRa->setPolcs(RaPolcs);
 
   itsDec = new MeqParmPolc(ParmName+"DEC");
-  dynamic_cast<MeqParmPolc*>(itsDec)->setPolcs(DecPolcs);
+  itsDec->setPolcs(DecPolcs);
 }
 
 
@@ -156,7 +156,7 @@ unsigned int AbstractSource::getNumberOfParameters() const
 
 //===============>>>  AbstractSource::getParameters  <<<===============
 
-unsigned int AbstractSource::getParameters(std::vector<MeqParm* > &parameters)
+unsigned int AbstractSource::getParameters(std::vector<MeqParmPolc* > &parameters)
 {
   unsigned int added=0;
   
@@ -174,7 +174,7 @@ unsigned int AbstractSource::getParameters(std::vector<MeqParm* > &parameters)
 
 //===============>>>  AbstractSource::getParameters  <<<===============
 
-unsigned int AbstractSource::getParameters(std::vector<const MeqParm* > &parameters) const
+unsigned int AbstractSource::getParameters(std::vector<const MeqParmPolc* > &parameters) const
 {
   unsigned int added=0;
   
@@ -192,17 +192,17 @@ unsigned int AbstractSource::getParameters(std::vector<const MeqParm* > &paramet
 
 //===============>>>  AbstractSource::setParameters  <<<===============
 
-unsigned int AbstractSource::setParameters(const std::vector<MeqParm* > &parameters)
+unsigned int AbstractSource::setParameters(const std::vector<MeqParmPolc* > &parameters)
 {
   unsigned int         read=0;
   std::vector<MeqPolc> Polcs;
 
-  Polcs = dynamic_cast<MeqParmPolc*>(parameters[read])->getPolcs();
-  dynamic_cast<MeqParmPolc*>(itsRa)->setPolcs(Polcs);
+  Polcs = parameters[read]->getPolcs();
+  itsRa->setPolcs(Polcs);
   read++;
 
-  Polcs = dynamic_cast<MeqParmPolc*>(parameters[read])->getPolcs();
-  dynamic_cast<MeqParmPolc*>(itsDec)->setPolcs(Polcs);
+  Polcs = parameters[read]->getPolcs();
+  itsDec->setPolcs(Polcs);
   read++;
 
   return read;
@@ -278,10 +278,10 @@ MeqDomain AbstractSource::store(Table&      table,
   Name.put  (row, itsName);
   Type.put  (row, int(itsSourceType));
 
-  Polcs = dynamic_cast<MeqParmPolc*>(itsRa)->getPolcs();
+  Polcs = itsRa->getPolcs();
   RaParms.put (row, Polcs[0].getCoeff().getDoubleMatrix());
 
-  Polcs = dynamic_cast<MeqParmPolc*>(itsDec)->getPolcs();
+  Polcs = itsDec->getPolcs();
   DecParms.put(row, Polcs[0].getCoeff().getDoubleMatrix());
 
   MeqDomain Domain = Polcs[0].domain();
@@ -332,12 +332,12 @@ MeqDomain AbstractSource::load(const Table& table,
   RaParms.get (row, coef, true);
   RaPolcs[0].setDomain(Domain);
   RaPolcs[0].setCoeff(coef);
-  dynamic_cast<MeqParmPolc*>(itsRa)->setPolcs(RaPolcs);
+  itsRa->setPolcs(RaPolcs);
 
   DecParms.get(row, coef, true);
   DecPolcs[0].setCoeff(coef);
   DecPolcs[0].setDomain(Domain);
-  dynamic_cast<MeqParmPolc*>(itsDec)->setPolcs(DecPolcs);
+  itsDec->setPolcs(DecPolcs);
 
   
   int temp;
@@ -372,7 +372,7 @@ std::ostream& AbstractSource::writeNiceAscii(std::ostream& out) const
 
   out << "Parms:" << endl;
 
-  std::vector<const MeqParm*> ParmList(getNumberOfParameters());
+  std::vector<const MeqParmPolc*> ParmList(getNumberOfParameters());
   getParameters(ParmList);
   out << "Number of parameters: " << getNumberOfParameters() << endl;
 
@@ -383,7 +383,7 @@ std::ostream& AbstractSource::writeNiceAscii(std::ostream& out) const
   }
 
   out << "itsRa: " << itsRa << endl;
-  std::vector<MeqPolc> Polcs = dynamic_cast<MeqParmPolc*>(itsRa)->getPolcs();
+  std::vector<MeqPolc> Polcs = itsRa->getPolcs();
 
   MeqMatrix mat(Polcs[0].getCoeff());
   
@@ -397,7 +397,7 @@ std::ostream& AbstractSource::writeNiceAscii(std::ostream& out) const
     out << endl;
   }
   out << "Dec : " << endl;
-  Polcs = dynamic_cast<MeqParmPolc*>(itsDec)->getPolcs();
+  Polcs = itsDec->getPolcs();
   coef = Polcs[0].getCoeff().getDoubleMatrix();
   for(unsigned int t = 0; t < coef.nrow(); t++) {
     for(unsigned int f = 0; f < coef.ncolumn(); f++) {
