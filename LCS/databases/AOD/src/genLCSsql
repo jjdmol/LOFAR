@@ -8,6 +8,8 @@
 #
 # Syntax: genLCSsql modulename headerfiles
 #
+# $Id$
+#
 VERSION="v1.0"
 
 #---------------------------- Global routines ---------------------------------
@@ -117,8 +119,13 @@ AddCreateTableCommand()
 	echo    "	Parent		INTEGER		NOT	NULL,"
 	echo -n "	ModTime		TIMESTAMP	NOT NULL"
 	
-	cleanlist ${TMPFILE} | while read line
+	cleanlist ${TMPFILE} | grep ":${Table}:" | while read line
 	do
+		TableName=`echo $line | cut -d':' -f2`
+		if [ "${TableName}" != "${Table}" ]; then
+			continue
+		fi
+
 		ColumnName=`echo $line | cut -d':' -f5`
 		ColumnType=`echo $line | cut -d':' -f7`
 		if [ "${ColumnName}" == "Class" ]; then
