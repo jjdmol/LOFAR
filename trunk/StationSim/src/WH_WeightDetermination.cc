@@ -63,8 +63,8 @@ void WH_WeightDetermination::preprocess()
 
 void WH_WeightDetermination::process()
 {
-  double phi = 0.2;
-  double theta = 0.4;
+  double phi = 0.1;
+  double theta = -0.2;
 
   
   LoVec_dcomplex d(itsNrcu);

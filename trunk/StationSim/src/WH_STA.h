@@ -30,6 +30,7 @@
 
 #include <BaseSim/WorkHolder.h>
 #include <StationSim/DH_SampleC.h>
+#include <StationSim/DH_SampleR.h>
 #include <Common/Lorrays.h>
 
 
@@ -70,7 +71,7 @@ public:
   virtual DH_SampleC* getInHolder (int channel);
 
   /// Get a pointer to the i-th output DataHolder.
-  virtual DH_SampleC* getOutHolder (int channel);
+  virtual DataHolder* getOutHolder (int channel);
 
 private:
   /// Forbid copy constructor.
@@ -84,6 +85,7 @@ private:
   /// In- and OutHolders
   DH_SampleC** itsInHolders;
   DH_SampleC** itsOutHolders; 
+  DH_SampleR* itsNumberOfRFIs;
 
   /// Length of buffers.
   unsigned int itsNrcu;

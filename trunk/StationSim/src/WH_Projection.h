@@ -32,6 +32,7 @@
 
 #include <BaseSim/WorkHolder.h>
 #include <StationSim/DH_SampleC.h>
+#include <StationSim/DH_SampleR.h>
 #include <StationSim/DataGenConfig.h>
 #include <Common/Lorrays.h>
 
@@ -69,7 +70,7 @@ public:
   /// Get a pointer to the i-th input DataHolder.
   /// The first one is the sampled data.
   /// The second one is the selected subbands.
-  virtual DH_SampleC* getInHolder (int channel);
+  virtual DataHolder* getInHolder (int channel);
 
   /// Get a pointer to the i-th output DataHolder.
   virtual DH_SampleC* getOutHolder (int channel);
@@ -86,6 +87,7 @@ private:
   /// In- and OutHolders
   DH_SampleC** itsInHolders;
   DH_SampleC* itsOutHolder; 
+  DH_SampleR* itsNumberOfRFIs;
 
   /// Length of buffers.
   unsigned int itsNrcu;
@@ -95,7 +97,8 @@ private:
   LoVec_dcomplex itsWeight;
 
   LoVec_dcomplex WH_Projection::getWeights (LoVec_dcomplex B, LoVec_dcomplex d) ;
-  LoVec_dcomplex WH_Projection::getWeights (LoMat_dcomplex B, LoVec_dcomplex d) ;
-  LoVec_dcomplex WH_Projection::mv_mult(LoMat_dcomplex A, LoVec_dcomplex B) ;
+  LoVec_dcomplex WH_Projection::getWeights (LoMat_dcomplex V, LoVec_dcomplex a) ;
+  LoVec_dcomplex WH_Projection::mv_mult(LoMat_dcomplex A, LoVec_dcomplex B);
+  LoVec_dcomplex WH_Projection::vm_mult (const LoVec_dcomplex& A, const LoMat_dcomplex& B); 
 };
 #endif
