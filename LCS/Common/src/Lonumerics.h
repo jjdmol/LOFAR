@@ -65,7 +65,7 @@
             Do(fcomplex,arg) sep \
             Do(dcomplex,arg) 
             
-#define DoForAllNumericTypes(Do,arg) DoForAllNumericTypes_Sep(Do,arg,;); 
+#define DoForAllNumericTypes(Do,arg) DoForAllNumericTypes_Sep(Do,arg,;)
         
 #define DoForAllNumericTypes1(Do,arg) \
         Do(bool,arg) , \
