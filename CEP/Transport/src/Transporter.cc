@@ -83,7 +83,7 @@ bool Transporter::init()
 }
 
 bool Transporter::connectTo (Transporter& thatTP, 
-			     TransportHolder& prototype)
+			     const TransportHolder& prototype)
 {
   bool result = itsConnection.connect(*this, thatTP, prototype); 
   // Init should not be done in the connection but seperate.
@@ -92,7 +92,7 @@ bool Transporter::connectTo (Transporter& thatTP,
 }
 
 bool Transporter::connectFrom (Transporter& thatTP, 
-			       TransportHolder& prototype) 
+			       const TransportHolder& prototype) 
 { 
   bool result = itsConnection.connect(thatTP, *this, prototype);
   // Init should not be done in the connection but seperate.

@@ -34,7 +34,6 @@ namespace LOFAR
 {
 //# Forward declarations
 class BaseDataHolder;
-class Connection;
 
 // This is a class which handles data transport between BaseDataHolders.
 // It uses an instance of the TransportHolder class to do
@@ -71,8 +70,8 @@ class Transporter
 
   /// interface to the Connection class
   /// after setting the connection, the init() method must be called
-  bool connectTo(Transporter& thatTP, TransportHolder& prototype);
-  bool connectFrom(Transporter& thatTP, TransportHolder& prototype);
+  bool connectTo(Transporter& thatTP, const TransportHolder& prototype);
+  bool connectFrom(Transporter& thatTP, const TransportHolder& prototype);
   bool init();
 
   /// Set/get the ID.
