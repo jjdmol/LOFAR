@@ -28,7 +28,7 @@ namespace LOFAR
 
   public:
     AH_FrontEnd(int port, int elements, int samples, 
-	     int channels, int polarisations, int runs, int targets, int targetgroups);
+	     int channels, int polarisations, int runs, int targets, int targetgroups, bool blocking);
     virtual ~AH_FrontEnd();
 
     // overload methods form the ApplicationHolder base class
@@ -52,6 +52,7 @@ namespace LOFAR
     int         itsNruns;
     int         itsNtargets;
     int         itsNtgroups;
+    bool        itsBlocking;
 
     struct timeval starttime;
     struct timeval stoptime;

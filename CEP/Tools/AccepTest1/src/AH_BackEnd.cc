@@ -26,7 +26,8 @@ using namespace LOFAR;
 AH_BackEnd::AH_BackEnd (int port, int elements, 
 			int samples, int channels, 
 			int polarisations, int runs, 
-			int targets, int targetgroups
+			int targets, int targetgroups,
+			bool blocking
 			):
   itsPort     (port),
   itsNelements(elements),
@@ -35,7 +36,8 @@ AH_BackEnd::AH_BackEnd (int port, int elements,
   itsNpolarisations(polarisations),
   itsNruns    (runs),
   itsNtargets (targets),
-  itsNtgroups (targetgroups)
+  itsNtgroups (targetgroups),
+  itsBlocking (blocking)
 {
 
   starttime.tv_sec = 0;
@@ -70,10 +72,10 @@ void AH_BackEnd::define(const KeyValueMap& /*params*/) {
 				 itsNelements, 
 				 itsNchannels,
 				 itsNpolarisations));
-    
+
     myWHCorrelator.getDataManager().getOutHolder(0)->connectTo
       ( *itsWHs.back()->getDataManager().getInHolder(0),
-	TH_Socket(LOCALHOST_IP, LOCALHOST_IP, itsPort+cn, true, true) );
+	TH_Socket(LOCALHOST_IP, LOCALHOST_IP, itsPort+cn, true, itsBlocking) );
   }
 }
 
@@ -88,6 +90,7 @@ void AH_BackEnd::undefine() {
 void AH_BackEnd::init() {
   vector<WorkHolder*>::iterator it = itsWHs.begin();
   for (; it != itsWHs.end(); it++) {
+    if (!itsBlocking) (*it)->getDataManager().getInHolder(0)->getTransporter().setIsBlocking(itsBlocking);
     (*it)->basePreprocess();
   }
 }

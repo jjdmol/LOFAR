@@ -37,7 +37,7 @@ int main (int argc, const char** argv) {
   const int runs = kvm.getInt("runs", 10);
   const int targets = kvm.getInt("targets", 8);
 
-  const int targetgroups = kvm.getInt("targetgroups", 1);
+  int targetgroups = kvm.getInt("targetgroups", 1);
 
   std::string frontend_ip = kvm.getString("frontend_ip", "192.168.100.31");
   std::string backend_ip = kvm.getString("backend_ip", "192.168.100.32");
