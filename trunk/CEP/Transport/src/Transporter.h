@@ -52,7 +52,7 @@ class Transporter
   ~Transporter();
 
   /// Send the data to the connected Transport object.
-  void write();
+  void write (bool fixedSized);
 
   /// Read the data from the connected Transport object.
   bool read (bool fixedSized);
@@ -96,11 +96,7 @@ class Transporter
   DataHolder* getDataHolder ();
 
   /// Get pointer to the data from the DataHolder.
-  void* getDataPtr();
-  /// Get the size of the current data in the DataHolder.
-  int getCurDataSize() const;
-  /// Get the maximal size of the data in the DataHolder.
-  int getMaxDataSize() const;
+  void* getDataPtr() const;
   /// Get the size of the data in the DataHolder.
   int getDataSize() const;
 

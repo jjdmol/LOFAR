@@ -30,19 +30,19 @@
 
 namespace LOFAR
 {
+//# Forward declarations.
+class DataHolder;
 
 /**
    This class defines the transport mechanism between data holders
    that have been connected using the TH_Mem prototype. This can
-   only be done when both data holder reside within the same address
-   space.  It uses memcpy to transport the data.
+   only be done when both data holders reside within the same address
+   space. It uses memcpy to transport the data.
   
    The match between send and receive is done using a map.  This map
    keeps track of all messages that have been sent through the
-   TH_Mem::send function. The tag argument is mapped to the private Msg
-   class which keeps record fo the address of the buffer that should be
-   sent, the number of bytes to send and the tag of the send.  The
-   assumption of this implementation is that the tag is unique for
+   TH_Mem::send function. The tag argument is mapped to the sending DataHolder.
+   The assumption of this implementation is that the tag is unique for
    communication between each pair of connected DataHolders and that
    there is no need to queue multiple sends (i.e. a send will always be
    followed by the matching receive before the next send is done).
@@ -58,13 +58,13 @@ public:
   virtual TH_Mem* make() const;
 
   /**
-     Receive the data. This call does the actual data transport
+     Receive fixed sized data. This call does the actual data transport
      by memcpy'ing the data from the sender.
   */
   virtual bool recvNonBlocking(void* buf, int nbytes, int tag);
 
   /**
-     Send the data.
+     Send fixed sized data.
      It does not really send, because the recv is doing the memcpy.
      This call only records the buf, nbytes, destination and tag
      which can be matched by the recv call.
@@ -72,11 +72,16 @@ public:
   */
   virtual bool sendNonBlocking(void* buf, int nbytes, int tag);
 
+  /**
+     Receive variable sized data. This call does the actual data transport
+     by memcpy'ing the data from the sender.
+  */
+  virtual bool recvVarNonBlocking(int tag);
+
   /// Get the type of transport.
   virtual string getType() const;
 
   virtual bool connectionPossible(int srcRank, int dstRank) const;
-
 
   // Static functions which are the same as those in TH_ShMem and TH_MPI.
   // They don't do anything. In this way templating on TH type can be done.
@@ -91,57 +96,15 @@ public:
   static void synchroniseAllProcesses();
   // </group>
 
- protected:
-
-  /**
-     This class keeps track of the messages in the message map.
-     The map is not a multi-map, so only one message per unique
-     tag can be stored. This is acceptable for the TH_Mem
-     TransportHolder since it is guaranteed that all sends will
-     be matched by their
-     receive before the next send is called.
-  */
-  class Msg
-  {
-  public:
-      /// Default constructor sets itsIsAvailable to false
-      Msg();
-
-      /**
-	 This constructor initializes the members and sets
-	 itsIsAvailable to true.
-      */
-      Msg(void* buf, int nbytes, int tag);
-
-      /// return number of bytes for the message
-      int   getNBytes()   { return itsNBytes; }
-
-      /// return pointer to the start address of the buffer
-      void* getBuf()      { return itsBuf; }
-
-     /// return bool indicating whether the Msg is available
-      bool isAvailable() { return itsIsAvailable; }
-
-  protected:
-      void*    itsBuf;
-      int      itsNBytes;
-      int      itsTag;
-
-  private:
-
-      bool    itsIsAvailable;
-  };
-
  private:
   /**
-     The map from tag to private Msg class which holds info
-     on the transfer.
+     The map from tag to source DataHolder object.
    */
-  static map<int, TH_Mem::Msg> messages;
+  static map<int, DataHolder*> theSources;
 
-  bool   itsFirstSendCall;
-  bool   itsFirstRecvCall;
-  void*  itsDataSource;
+  bool        itsFirstSendCall;
+  bool        itsFirstRecvCall;
+  DataHolder* itsDataSource;
 
 };
 

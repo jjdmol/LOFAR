@@ -68,12 +68,12 @@ int DH_PL::queryDB (const string& queryString)
   ASSERT (ptr != 0);
   int result;
   // If the data block is fixed shape and has version 1, we can simply read.
-  if (dataFieldSet().hasFixedShape()  &&  dataFieldSet().version() == 1) {
-    result = ptr->queryDB (queryString, getDataPtr(), getCurDataSize(),
+  ///  if (dataFieldSet().hasFixedShape()  &&  dataFieldSet().version() == 1) {
+    result = ptr->queryDB (queryString, getDataPtr(), getDataSize(),
                            getTransporter().getReadTag());
-  } else {
-    THROW (LOFAR::Exception, "queryDB cannot handle var.length yet");
-  }
+    ///  } else {
+      ///    THROW (LOFAR::Exception, "queryDB cannot handle var.length yet");
+      ///  }
   handleDataRead();
   return result;
 }
@@ -82,7 +82,7 @@ void DH_PL::insertDB()
 {
   TH_PL* ptr = dynamic_cast<TH_PL*>(getTransporter().getTransportHolder());
   ASSERT (ptr != 0);
-  ptr->insertDB (getDataPtr(), getCurDataSize(),
+  ptr->insertDB (getDataPtr(), getDataSize(),
                  getTransporter().getWriteTag());
 }
 
@@ -90,7 +90,7 @@ void DH_PL::updateDB()
 {
   TH_PL* ptr = dynamic_cast<TH_PL*>(getTransporter().getTransportHolder());
   ASSERT (ptr != 0);
-  ptr->updateDB (getDataPtr(), getCurDataSize(),
+  ptr->updateDB (getDataPtr(), getDataSize(),
                  getTransporter().getWriteTag());
 }
 

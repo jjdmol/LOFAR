@@ -55,7 +55,7 @@ void DBRep<DH_PL>::fromDBRep (DH_PL& obj) const
 {
   dtl::blob& str =  obj.getDataBlock().getString();
   if (str.size() != itsData.size()) {
-    str.resize (itsData.size());
+    obj.resizeBuffer (itsData.size());
   }
   memcpy (&(str[0]), itsData.data(), itsData.size());
 }

@@ -38,6 +38,8 @@ DataHolder::DataHolder(const string& name, const string& type)
     itsData           (0),
     itsDataBlob       (0),
     itsTransporter    (this),
+    itsMaxDataSize    (-1),
+    itsIsAddMax       (false),
     itsName           (name),
     itsType           (type),
     itsReadConvert    (-1),
@@ -51,6 +53,8 @@ DataHolder::DataHolder(const DataHolder& that)
     itsData           (0),
     itsDataBlob       (0),
     itsTransporter    (that.itsTransporter, this),
+    itsMaxDataSize    (that.itsMaxDataSize),
+    itsIsAddMax       (that.itsIsAddMax),
     itsName           (that.itsName),
     itsType           (that.itsType),
     itsReadConvert    (that.itsReadConvert),
@@ -130,7 +134,8 @@ bool DataHolder::read()
   bool result = false;
   // If the data block is fixed shape and has version 1, we can simply read.
   bool fixedSized = itsDataFields.hasFixedShape()  &&
-                    itsDataFields.version() == 1;
+                    itsDataFields.version() == 1  &&
+                    itsExtraPtr == 0;
   result = itsTransporter.read (fixedSized);
   if (result) {
     // Check and convert data if needed.
@@ -180,7 +185,11 @@ void DataHolder::write()
     itsExtraPtr->write();
   }
   // Let the transporter write all data.
-  itsTransporter.write();
+  // Determine if the block is fixed sized.
+  bool fixedSized = itsDataFields.hasFixedShape()  &&
+                    itsDataFields.version() == 1  &&
+                    itsExtraPtr == 0;
+  itsTransporter.write (fixedSized);
 }
 
 bool DataHolder::connectTo (DataHolder& thatDH,
@@ -239,10 +248,20 @@ BlobStringType DataHolder::blobStringType()
 void DataHolder::createDataBlock()
 {
   // Allocate buffer if needed. Otherwise clear it.
-  if (itsData) {
-    itsData->resize(0);
-  } else {
-    itsData = new BlobString (blobStringType());
+  if (!itsData) {
+    // If no max size set, see if the data can grow.
+    if (itsMaxDataSize < 0) {
+      itsMaxDataSize = 0;
+      itsIsAddMax = !getTransporter().getTransportHolder()->canDataGrow();
+    }
+    // If no or an additive maximum, determine the blob length.
+    int  initsz    = itsMaxDataSize;
+    bool canExpand = false;
+    if (itsMaxDataSize == 0  ||  itsIsAddMax) {
+      initsz += itsDataFields.findBlobSize();
+      canExpand = !itsIsAddMax;
+    }
+    itsData = new BlobString (blobStringType(), initsz, canExpand);
     itsDataBlob = new BlobOBufString (*itsData);
   }
   itsDataFields.createBlob (*itsDataBlob);
@@ -259,7 +278,11 @@ void DataHolder::openDataBlock()
 
 void DataHolder::resizeBuffer (uint newSize)
 {
-  itsData->resize (newSize);
+  char* oldPtr = itsData->data();
+  itsDataBlob->resize (newSize);
+  if (oldPtr != itsData->data()) {
+    fillAllDataPointers();
+  }
 }
 
 BlobOStream& DataHolder::createExtraBlob()
@@ -271,16 +294,24 @@ BlobOStream& DataHolder::createExtraBlob()
 BlobIStream& DataHolder::openExtraBlob (int& version)
 {
   Assert (itsExtraPtr != 0);
-  return itsExtraPtr->openBlock (version);
+  return itsExtraPtr->openBlock (version, *itsData);
 }
 
 void DataHolder::putExtra (const void* data, uint size)
 {
   char* oldPtr = itsData->data();
-  itsDataBlob->put (data, size);
+  itsDataFields.putExtraBlob (*itsDataBlob, data, size);
   if (oldPtr != itsData->data()) {
     fillAllDataPointers();
   }
+}
+
+int DataHolder::getMaxDataSize() const
+{
+  if (itsMaxDataSize == 0  ||  itsData == 0) {
+    return itsMaxDataSize;
+  }
+  return itsData->size();
 }
 
 void DataHolder::fillDataPointers()

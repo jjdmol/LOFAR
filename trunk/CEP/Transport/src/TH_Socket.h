@@ -21,66 +21,67 @@
 //#
 //# $Id$
 
-#ifndef CEPFRAME_TH_SOCKET_H
-#define CEPFRAME_TH_SOCKET_H
+#ifndef TRANSPORT_TH_SOCKET_H
+#define TRANSPORT_TH_SOCKET_H
 
 #include <lofar_config.h>
 #include <Transport/TransportHolder.h>
-#include <Transport/Socket.h>
+#include <Common/Net/Socket.h>
 
 namespace LOFAR
 {
   class TH_Socket: public TransportHolder
   {
   public:
-    TH_Socket (const std::string &sendhost, 
-	       const std::string &recvhost, 
-	       const int portno,
-	       const bool ServerAtSender=true); // determine who is the server
-                                                // this default is very usefull for CEPFrame
-
-    // ServerAtSender determines which peer opens the connection and is completely
-    // independent from the direction of the transfer (i.e. the sender can either
-    // open or accept a connection). The server is said to be the peer that accepts 
-    // the connection.
-
+    // Create the socket transport holder.
+    // Argument serverAtSender determines which peer opens the connection
+    // and is completely independent of the direction of the transfer
+    // (i.e. the sender can either open or accept a connection).
+    // The server is said to be the peer that accepts the connection.
+    TH_Socket (const std::string& sendhost, 
+	       const std::string& recvhost, 
+	       int portno,
+	       bool serverAtSender=true);
     
     virtual ~TH_Socket();
     
     virtual TH_Socket* make() const;
      
-    virtual bool recvBlocking    (void* buf, int nbytes, int tag);
-    virtual bool recvNonBlocking (void* buf, int nbytes, int tag);
-    virtual bool waitForReceived (void* buf, int nbytes, int tag);
-  
-    virtual bool sendBlocking      (void* buf, int nbytes, int tag);
-    virtual bool sendNonBlocking   (void* buf, int nbytes, int tag);
-    virtual bool waitForSend       (void* buf, int nbytes, int tag);
-    virtual bool waitForReceiveAck (void* buf, int nbytes, int tag);
-    
+    /// Get the type of transport.
     virtual string getType() const;
+
+    /// Read the data.
+    virtual bool recvBlocking (void* buf, int nbytes, int tag);
+    virtual bool recvVarBlocking (int tag);
+    virtual bool recvNonBlocking (void* buf, int nbytes, int tag);
+    virtual bool recvVarNonBlocking (int tag);
+    /// Wait for the data to be received
+    virtual bool waitForReceived (void* buf, int nbytes, int tag);
+
+    /// Write the data.
+    virtual bool sendBlocking (void* buf, int nbytes, int tag);
+    virtual bool sendNonBlocking (void* buf, int nbytes, int tag);
+    /// Wait for the data to be sent
+    virtual bool waitForSent (void* buf, int nbytes, int tag);
+
+    virtual bool connectionPossible (int srcRank, int dstRank) const;
+
+    virtual bool isBlocking() const
+      { return true; }
     
-    virtual bool connectionPossible(int srcRank, int dstRank) const;
-    virtual bool isBlocking() const { return true; }
-    
-    static TH_Socket proto;
-    
-    virtual bool init ();
+    virtual bool init();
     
   private:
+    bool connectToServer();
+    bool connectToClient();
+
     std::string itsSendingHostName;
     std::string itsReceivingHostName;
-    int itsPortNo;
-  
-    bool isConnected;
-  
-    Socket itsDataSocket;
-    Socket itsServerSocket;
-  
-    bool ConnectToServer (void);
-    bool ConnectToClient (void);
-
-    bool itsServerAtSender;
+    int         itsPortNo;
+    bool        itsIsConnected;
+    bool        itsServerAtSender;
+    Socket*     itsServerSocket;
+    Socket*     itsDataSocket;
   };
   
 }

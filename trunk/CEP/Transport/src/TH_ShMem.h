@@ -72,7 +72,9 @@ public:
   */
   void initRecv(void* buf, int tag);
   virtual bool recvBlocking(void* buf, int nbytes, int tag);
+  virtual bool recvVarBlocking(int tag);
   virtual bool recvNonBlocking(void* buf, int nbytes, int tag);
+  virtual bool recvVarNonBlocking(int tag);
 
   // Wait for the data to be received
   virtual bool waitForReceived(void* bug, int nbytes, int tag);
@@ -86,7 +88,9 @@ public:
   */
   void initSend(void* buf, int tag);
   virtual bool sendBlocking(void* buf, int nbytes, int tag);
+  virtual bool sendVarBlocking(int tag);
   virtual bool sendNonBlocking(void* buf, int nbytes, int tag);
+  virtual bool sendVarNonBlocking(int tag);
 
   virtual bool waitForSent(void* buf, int nbytes, int tag);
 
@@ -95,6 +99,9 @@ public:
 
   // Get the type of BlobString needed from the transport holder.
   virtual BlobStringType blobStringType() const;
+
+  // A data buffer can not grow.
+  virtual bool canDataGrow() const;
 
   virtual bool connectionPossible(int srcRank, int dstRank) const;
  

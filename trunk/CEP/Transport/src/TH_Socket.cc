@@ -22,6 +22,7 @@
 
 #include <Transport/TH_Socket.h>
 #include <Transport/Transporter.h>
+#include <Transport/DataHolder.h>
 #include <Common/Debug.h>
 #include <unistd.h>
 
@@ -29,32 +30,38 @@
 namespace LOFAR
 {
 
-//   TH_Socket TH_Socket::proto;
   
-  TH_Socket::TH_Socket 
-  (const std::string &sendhost, 
-   const std::string &recvhost, 
-   const int portno,
-   const bool ServerAtSender) :
-    itsSendingHostName (sendhost), 
-    itsReceivingHostName (recvhost), 
-    itsPortNo (portno),
-    isConnected (false),
-    itsServerAtSender(ServerAtSender)
-{
-  cout << "Creating a socket...(" << (ServerAtSender ? "SS" : "SC" ) << ")"<< endl;
-}
+  TH_Socket::TH_Socket (const std::string& sendhost, 
+			const std::string& recvhost, 
+			int portno,
+			bool serverAtSender)
+    : itsSendingHostName   (sendhost), 
+      itsReceivingHostName (recvhost), 
+      itsPortNo            (portno),
+      itsIsConnected       (false),
+      itsServerAtSender    (serverAtSender),
+      itsServerSocket      (0),
+      itsDataSocket        (0)
+  {
+    cout << "Creating a socket...(" << (serverAtSender ? "SS" : "SC" )
+	 << ")"<< endl;
+  }
 
-TH_Socket::~TH_Socket()
-{
+  TH_Socket::~TH_Socket()
+  {
+    if (itsIsConnected) {
+      itsDataSocket->shutdown (true, true);
+    }
+    delete itsServerSocket;
+    delete itsDataSocket;
   }
   
   TH_Socket* TH_Socket::make() const
   {
-      return new TH_Socket(itsSendingHostName, 
-			   itsReceivingHostName, 
-			   itsPortNo,
-			   itsServerAtSender);
+    return new TH_Socket(itsSendingHostName, 
+			 itsReceivingHostName, 
+			 itsPortNo,
+			 itsServerAtSender);
   }
   
   string TH_Socket::getType() const
@@ -62,131 +69,142 @@ TH_Socket::~TH_Socket()
     return "TH_Socket";
   }
   
-  bool TH_Socket::connectionPossible(int srcRank, int dstRank) const
+  bool TH_Socket::connectionPossible (int srcRank, int dstRank) const
   {
     return srcRank == dstRank;
   }
   
-  bool TH_Socket::recvBlocking (void * buf, int nbytes, int /*tag*/)
+  bool TH_Socket::recvBlocking (void* buf, int nbytes, int)
   { 
-    if (! isConnected) {
+    if (!itsIsConnected) {
       if (itsServerAtSender) {
 	// Client side behaviour (default)
-	ConnectToServer ();
+	connectToServer();
       } else {
 	// Server side behaviour
-	ConnectToClient ();
+	connectToClient();
       } 
     }// Now we should have a connection
-        
-    int received_len = itsDataSocket.recv((char *) buf, nbytes);
+
+    int received_len = itsDataSocket->readblock (buf, nbytes);
     //cout << "TH_Socket received " << received_len << "/" <<nbytes<<endl; 
     bool result = received_len == nbytes;
-    DbgAssertStr(result,"data not succesfully received")
+    DbgAssertStr(result,"TH_Socket: data not succesfully received")
     return result;
   }
   
-  
-  bool TH_Socket::recvNonBlocking (void * buf, int nbytes, int tag)
-  { 
-    cerr << "Warning (TH_Socket::recvNonBlocking ()): Non-blocking receive "
-         << "not yet implemented. Calling recvBlocking () in stead." << endl;
-  
-    recvBlocking (buf, nbytes, tag);
+  bool TH_Socket::recvVarBlocking (int tag)
+  {
+    // Read the blob header.
+    DataHolder* target = getTransporter()->getDataHolder();
+    void* buf = target->getDataPtr();
+    int hdrsz = target->getHeaderSize();
+    bool result = recvBlocking (buf, hdrsz, tag);
+    if (result) {
+      // Extract the length and resize the buffer.
+      int size = DataHolder::getDataLength (buf);
+      target->resizeBuffer (size);
+      buf = target->getDataPtr();
+      // Read the remainder.
+      result = recvBlocking (static_cast<char*>(buf)+hdrsz, size-hdrsz, tag);
+    }
+    return result;
+  }
+
+  bool TH_Socket::recvNonBlocking(void* buf, int nbytes, int tag)
+  {
+    cerr << "**Warning** TH_Socket::recvNonBlocking() is not implemented. " 
+	 << "recvBlocking() is used instead." << endl;    
+    return recvBlocking (buf, nbytes, tag);
+  }
+
+  bool TH_Socket::recvVarNonBlocking(int tag)
+  {
+    cerr << "**Warning** TH_Socket::recvVarNonBlocking() is not implemented. " 
+	 << "recvVarBlocking() is used instead." << endl;    
+    return recvVarBlocking (tag);
+  }
+
+  bool TH_Socket::waitForReceived(void*, int, int)
+  {
     return true;
   }
-  
-  
-  bool TH_Socket::waitForReceived (void * /*buf*/, int /*nbytes*/, int /*tag*/)
-  { 
-    cerr << "Warning (TH_Socket::waitForReceived ()): Non-blocking receive "
-         << "not yet implemented. Recption ready, ingoring call." << endl;
-  
-    return true;
-  }
-  
-  
+
   bool TH_Socket::sendBlocking (void* buf, int nbytes, int /*tag*/)
   {
     
-    if (! isConnected) {
+    if (!itsIsConnected) {
       if (itsServerAtSender) {
 	// Server side behaviour
-	ConnectToClient ();
+	connectToClient();
       } else {
-	ConnectToServer ();
+	connectToServer();
       } 
     }// Now we should have a connection
     int sent_len=0;
-    sent_len = itsDataSocket.send ((char *) buf, nbytes);
+    sent_len = itsDataSocket->writeblock (buf, nbytes);
     //cout << "TH_Socket sent " << sent_len << "/" << nbytes << " bytes" << endl;
     return true;
-    
   }  
    
-  bool TH_Socket::sendNonBlocking (void* buf, int nbytes, int tag)
+  bool TH_Socket::sendNonBlocking(void* buf, int nbytes, int tag)
   {
-    cerr << "Warning (TH_Socket::sendNonBlocking ()): Non-blocking send "
-         << "not yet implemented. Calling recvBlocking () in stead." << endl;
-  
-    sendNonBlocking (buf, nbytes, tag);
-  
-    return true;
+    cerr << "**Warning** TH_Socket::sendNonBlocking() is not implemented. " 
+	 << "The sendBlocking() method is used instead." << endl;    
+    return sendBlocking (buf, nbytes, tag);
   }
   
-  
-  bool TH_Socket::waitForSend (void* /*buf*/, int /*nbytes*/, int /*tag*/)
+  bool TH_Socket::waitForSent(void*, int, int)
   {
-    cerr << "Warning (TH_Socket::waitForSend ()): Non-blocking send "
-         << "not yet implemented. Sending is ready anyway. ignoring call." 
-         << endl;
-  
     return true;
   }
-  
-  
-  bool TH_Socket::waitForReceiveAck (void* /*buf*/, int /*nbytes*/, int /*tag*/)
-  {
-    cerr << "Warning (TH_Socket::waitForSend ()): Non-blocking send "
-         << "not yet implemented. Sending is ready anyway. ignoring call." 
-         << endl;
-  
-    return true;
-  }
-  
+
 
   bool TH_Socket::init () { 
     // Code to open the connection
     return true; 
   }
 
-
   // Called by Client
-  bool TH_Socket::ConnectToServer (void) {
+  bool TH_Socket::connectToServer (void)
+  {
     // The port number of the connection must be based the tag after
     // succesful testing.
-  
-    itsDataSocket.connect (itsSendingHostName, itsPortNo);
-    // tell the Socket object where to store data (e.g. in recv calls)
-    itsDataSocket.setBuffer(getTransporter()->getMaxDataSize(), 
-			    (char*)(getTransporter()->getDataPtr()));
-    
-    isConnected = true;
+    std::stringstream str;
+    str << itsPortNo;
+    itsDataSocket = new Socket ("TH_Socket", itsSendingHostName, str.str());
+    itsDataSocket->setBlocking();
+    int sts = itsDataSocket->connect();
+    int nr = 0;
+    while (sts <= 0  &&  nr++ < 1000) {
+      // Sleep 1 millisec.
+      usleep(1000);
+      delete itsDataSocket;
+      itsDataSocket = new Socket ("TH_Socket", itsSendingHostName, str.str());
+      itsDataSocket->setBlocking();
+      sts = itsDataSocket->connect();
+    }
+    AssertStr (sts > 0, "TH_Socket: could not connect to server");
+    itsIsConnected = true;
     return true;
   }
 
-
   // Called by Server
-   bool TH_Socket::ConnectToClient (void) {
-    itsServerSocket.openListener (itsPortNo);
-      
-      
-      cout << "Waiting to accept connection..." << endl;
-      itsDataSocket = itsServerSocket.accept();
-      itsDataSocket.setBuffer(getTransporter()->getMaxDataSize(), 
-			      (char*)(getTransporter()->getDataPtr()));
-      cout << "Accepted connection" << endl;
-      isConnected = true;
-      return true;
-   }
+  bool TH_Socket::connectToClient (void)
+  {
+    std::stringstream str;
+    str << itsPortNo;
+    itsServerSocket = new Socket("TH_Socket", str.str());
+    cout << "Waiting to accept connection..." << endl;
+    itsDataSocket = itsServerSocket->accept();
+    while (itsDataSocket == 0) {
+      // Sleep 0.1 millisec.
+      usleep(100);
+      itsDataSocket = itsServerSocket->accept();
+    }
+    itsDataSocket->setBlocking();
+    cout << "Accepted connection" << endl;
+    itsIsConnected = true;
+    return true;
+  }
 }

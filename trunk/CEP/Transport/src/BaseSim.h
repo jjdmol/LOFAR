@@ -20,8 +20,8 @@
 //#
 //# $Id$
 
-#ifndef CEPFRAME_BASESIM_H
-#define CEPFRAME_BASESIM_H
+#ifndef TRANSPORT_BASESIM_H
+#define TRANSPORT_BASESIM_H
 
 #include <lofar_config.h>
 

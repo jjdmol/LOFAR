@@ -21,10 +21,6 @@
 //#  along with this program; if not, write to the Free Software
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
-//#	 This class implements a container of key-value pairs. The KV pairs can
-//#  be read from a file or be merged with the values in another file.
-//#  The class also support the creation of subsets.
-//#
 //#  $Id$
 
 #ifndef CEPF_SOCKET_H

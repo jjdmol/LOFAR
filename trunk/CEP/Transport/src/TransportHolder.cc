@@ -22,6 +22,7 @@
 
 
 #include <Transport/TransportHolder.h>
+#include <Transport/DataHolder.h>
 #include <Common/BlobStringType.h>
 #include <Common/Debug.h>
 
@@ -41,65 +42,65 @@ bool TransportHolder::init()
 
 bool TransportHolder::recvBlocking (void*, int, int)
 {
-  Throw("No blocking receive method implemented in this TransportHolder: " 
+  Throw("No recvBlocking method implemented in this TransportHolder: " 
 	+ getType());
 }
 
-int TransportHolder::recvLengthBlocking (int)
+bool TransportHolder::recvVarBlocking (int tag)
 {
-  return -1;
-}
-
-int TransportHolder::recvHeaderBlocking (void*, int, int)
-{
-  Throw("No blocking receive header method implemented in this TransportHolder: " 
+  Throw("No recvVarBlocking method implemented in this TransportHolder: " 
 	+ getType());
 }
 
 bool TransportHolder::recvNonBlocking (void*, int, int)
 {
-  Throw("No non-blocking receive method implemented in this TransportHolder: "
+  Throw("No recvNonBlocking receive method implemented in this TransportHolder: "
 	+ getType());
 }
 
-int TransportHolder::recvLengthNonBlocking (int)
+bool TransportHolder::recvVarNonBlocking (int tag)
 {
-  return -1;
-}
-
-int TransportHolder::recvHeaderNonBlocking (void*, int, int)
-{
-  Throw("No non-blocking receive header method implemented in this TransportHolder: " 
+  Throw("No recvVarNonBlocking method implemented in this TransportHolder: " 
 	+ getType());
 }
 
 bool TransportHolder::waitForReceived(void*, int, int)
 {
-  Throw("No waitForReceived() method implemented in this TransportHolder: "
+  Throw("No waitForReceived method implemented in this TransportHolder: "
 	+ getType());
 }
 
 bool TransportHolder::sendBlocking (void*, int, int)
 {
-  Throw("No blocking send method implemented in this TransportHolder: "
+  Throw("No sendBlocking method implemented in this TransportHolder: "
 	+ getType());
+}
+
+bool TransportHolder::sendVarBlocking (void* buf, int nbytes, int tag)
+{
+  return sendBlocking (buf, nbytes, tag);
 }
 
 bool TransportHolder::sendNonBlocking (void*, int, int)
 {
-  Throw("No non-blocking send method implemented in this TransportHolder: "
+  Throw("No sendNonBlocking method implemented in this TransportHolder: "
 	+ getType());
+}
+
+bool TransportHolder::sendVarNonBlocking (void* buf, int nbytes, int tag)
+{
+  return sendNonBlocking (buf, nbytes, tag);
 }
 
 bool TransportHolder::waitForSent(void*, int, int)
 {
-  Throw("No waitForSent() method implemented in this TransportHolder: "
+  Throw("No waitForSent method implemented in this TransportHolder: "
 	+ getType());
 }
 
 bool TransportHolder::waitForRecvAck(void*, int, int)
 {
-  Throw("No waitForRecvAck() method implemented in this TransportHolder: "
+  Throw("No waitForRecvAck method implemented in this TransportHolder: "
 	+ getType());
 }
 
@@ -107,6 +108,11 @@ BlobStringType TransportHolder::blobStringType() const
 {
   // Use a char* buffer on the heap.
   return BlobStringType(false);
+}
+
+bool TransportHolder::canDataGrow() const
+{
+  return true;
 }
 
 bool TransportHolder::connectionPossible (int, int) const

@@ -153,23 +153,28 @@ public:
   // Functions to deal with handling the timestamp 
   int compareTimeStamp (const DataHolder& that) const;
 
+  // Set maximum data size.
+  // If used, it should be called before preprocess.
+  // Normally this is not needed, but for TH_ShMem transports it is useful,
+  // because a buffer in TH_ShMem cannot grow. For other TransportHolders
+  // it is not necessary, but can be useful in some cases.
+  // <br>nbytes=0 means no maximum.
+  // <br>isAddMax=false means that the maximum data size is the size of the
+  // data blob plus nbytes. This can be useful if the data in the blob
+  // is variable sized and/or if an extra blob is added.
+  // <br>The default maximum data size is 0, but for TransportHolders not
+  // supporting growable data, it is the size of all data fields.
+  void setMaxDataSize (uint nbytes, bool isAddMax=false);
+
+  // Get the MAXIMUM data block size supported (in bytes).
+  // 0 means no maximum.
+  int getMaxDataSize() const;
+
   // Get data size (in bytes);
-  // See also getCurDataSize() and getMaxDataSize()
-  // for operation with variable datas
-  int getDataSize();
-
-  // Get the size of the CURRENT data block (in bytes)
-  // For non-flexible data blocks, this is the same as 
-  // getDataSize()
-  virtual int getCurDataSize();
-
-  // Get the MAXIMUM data block size supported (in bytes)
-  // For non-flexible data blocks, this is the same as 
-  // getDataSize()
-  virtual int getMaxDataSize();
+  int getDataSize() const;
 
   // Get a pointer to the data (the beginning of the blob).
-  void* getDataPtr();
+  void* getDataPtr() const;
 
   // Get the data packet
   const DataPacket& getDataPacket() const;
@@ -262,7 +267,7 @@ public:
   uint getHeaderSize() const;
 
   // Extract the size from the blob header in the buffer.
-  uint getDataLength (const void* buffer) const;
+  static uint getDataLength (const void* buffer);
 
   // Resize the buffer to the given size (if needed).
   void resizeBuffer (uint newSize);
@@ -272,14 +277,14 @@ protected:
   void handleDataRead();
 
   // Get the data field set.
-  const BlobFieldSet& dataFieldSet() const;
+  BlobFieldSet& dataFieldSet();
+
+  // Initialize the data field set.
+  void initDataFields();
 
 private:
   // Get the type of BlobString needed from the transport holder.
   virtual BlobStringType blobStringType();
-
-  // Initialize the data field set.
-  void initDataFields();
 
   // Put the extra data block into the main data blob.
   // If possible and needed the buffer is resized.
@@ -301,6 +306,8 @@ private:
   BlobOBufString* itsDataBlob;
   DataPacket*  itsDataPacketPtr;
   Transporter  itsTransporter;
+  int          itsMaxDataSize;   //# <0 is not filled in
+  bool         itsIsAddMax;
   string       itsName;
   string       itsType;
   int          itsReadConvert;   //# data conversion needed after a read?
@@ -309,22 +316,13 @@ private:
 };
 
 
-inline int DataHolder::getDataSize()
+inline void DataHolder::setMaxDataSize (uint nbytes, bool isAddMax)
+  { itsMaxDataSize = nbytes; itsIsAddMax = isAddMax; }
+
+inline int DataHolder::getDataSize() const
   { return itsData->size(); }
 
-#ifndef abc_0
-inline int DataHolder::getCurDataSize(){
-  // overload in flexible datas
-  return getDataSize(); 
-}
-
-inline int DataHolder::getMaxDataSize(){
-  // overload in flexible datas
-  return getDataSize(); 
-}
-#endif
-
-inline void* DataHolder::getDataPtr()
+inline void* DataHolder::getDataPtr() const
   { return itsData->data(); }
 
 inline const DataHolder::DataPacket& DataHolder::getDataPacket() const
@@ -383,7 +381,7 @@ inline int DataHolder::getID() const
 inline bool DataHolder::isBlocking()
   { return itsTransporter.isBlocking(); }
 
-inline const BlobFieldSet& DataHolder::dataFieldSet() const
+inline BlobFieldSet& DataHolder::dataFieldSet()
   { return itsDataFields; }
 
 inline BlobFieldBase& DataHolder::getDataField (uint fieldIndex)
@@ -434,7 +432,7 @@ inline uint DataHolder::getHeaderSize() const
   return sizeof(BlobHeader);
 }
 
-inline uint DataHolder::getDataLength (const void* buffer) const
+inline uint DataHolder::getDataLength (const void* buffer)
 {
   return static_cast<const BlobHeader*>(buffer)->getLength();
 }

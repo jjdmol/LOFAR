@@ -22,7 +22,8 @@
 
 #include <DH_Example.h>
 #include <Transport/TH_Mem.h>
-#include <Transport/TH_Mem_Var.h>
+#include <Common/BlobOStream.h>
+#include <Common/BlobIStream.h>
 #include <iostream>
 
 using namespace LOFAR;
@@ -89,46 +90,82 @@ bool test2()
   DH1.setID(1);
   DH2.setID(2);
 
-  // connect DH1 to DH2, TH_Mem_Var implements a non-blocking send
-  DH1.connectTo(DH2, TH_Mem_Var(), false);
+  // connect DH1 to DH2, TH_Mem implements a non-blocking send
+  DH1.connectTo(DH2, TH_Mem(), false);
     
   // initialize
   DH1.init();
   DH2.init();
-    
-  // fill the DataHolders with some initial data
-  DH1.getBuffer()[0] = fcomplex(17,-3.5);
-  DH2.getBuffer()[0] = 0;
-  DH1.setCounter(2);
-  DH2.setCounter(0);
-    
-  cout << "Before transport : " 
-       << DH1.getBuffer()[0] << ' ' << DH1.getCounter()
-       << " -- " 
-       << DH2.getBuffer()[0] << ' ' << DH2.getCounter()
-       << endl;
-    
-  // do the data transport
-  DH1.write();
-  DH2.read();
-  // note that transport is bi-directional.
-  // so this will also work:
-  //   DH2.write();
-  //   DH1.read();
-  // 
-  
-  cout << "After transport  : " 
-       << DH1.getBuffer()[0] << ' ' << DH1.getCounter()
-       << " -- " 
-       << DH2.getBuffer()[0] << ' ' << DH2.getCounter()
-       << endl;
-
-  if (DH1.getBuffer()[0] == DH2.getBuffer()[0]
-  &&  DH1.getCounter() == DH2.getCounter()) {
-    return true;
+  {    
+    // fill the DataHolders.
+    DH1.getBuffer()[0] = fcomplex(17,-3.5);
+    DH2.getBuffer()[0] = 0;
+    DH1.setCounter(2);
+    DH2.setCounter(0);
+    // fill extra blob
+    BlobOStream& bos = DH1.createExtraBlob();
+    bos << "a string";
+    // do the data transport
+    DH1.write();
+    DH2.read();
+    if (! (DH1.getBuffer()[0] == DH2.getBuffer()[0]
+	   &&  DH1.getCounter() == DH2.getCounter())) {
+      return false;
+    }
+    int version;
+    BlobIStream& bis = DH2.openExtraBlob(version);
+    std::string str;
+    bis >> str;
+    bis.getEnd();
+    if (str != "a string") {
+      return false;
+    }
   }
-  cout << "Data in receiving DataHolder is incorrect" << endl;
-  return false;
+  {
+    DH1.getBuffer()[0] = fcomplex(15,-4.5);
+    DH2.getBuffer()[0] = 0;
+    DH1.setCounter(2);
+    DH2.setCounter(0);
+    // do the data transport (without data in the extra blob)
+    DH1.write();
+    DH2.read();
+    if (! (DH1.getBuffer()[0] == DH2.getBuffer()[0]
+	   &&  DH1.getCounter() == DH2.getCounter())) {
+      return false;
+    }
+    int version;
+    BlobIStream& bis = DH2.openExtraBlob(version);
+    bis.getEnd();
+  }
+  {
+    DH1.getBuffer()[0] = fcomplex(1.7,3.52);
+    DH2.getBuffer()[0] = 0;
+    DH1.setCounter(5);
+    DH2.setCounter(0);
+    BlobOStream& bos = DH1.createExtraBlob();
+    bos << int(1) << float(3);
+    bos.putStart ("p3", 3);
+    bos.putEnd();
+    // do the data transport
+    DH1.write();
+    DH2.read();
+    if (! (DH1.getBuffer()[0] == DH2.getBuffer()[0]
+	   &&  DH1.getCounter() == DH2.getCounter())) {
+      return false;
+    }
+    int version;
+    BlobIStream& bis = DH2.openExtraBlob(version);
+    int v1;
+    float v2;
+    bis >> v1 >> v2;
+    int vers = bis.getStart ("p3");
+    bis.getEnd();
+    bis.getEnd();
+    if (v1 != 1  ||  v2 != 3  ||  vers != 3) {
+      return false;
+    }
+  }
+  return true;
 }
 
 int main()
@@ -137,7 +174,7 @@ int main()
   try {
     cout << "Transport Example test program" << endl;
     cout << "test1 ..." << endl;
-    //    result &= test1();
+    result &= test1();
     cout << "test2 ..." << endl;
     result &= test2();
   } catch (std::exception& x) {
