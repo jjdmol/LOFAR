@@ -38,9 +38,7 @@ namespace LOFAR
 {
 
 const unsigned int MaxKSTypeLength = 8;
-const unsigned int MaxNoStartSols = 16;
-const unsigned int MaxParamNameLength = 16;
-const unsigned int MaxNumberOfParam = 32;
+const unsigned int MaxModelTypeLength = 16;
 
 DH_WOPrediff::DH_WOPrediff (const string& name)
   : DH_PL(name, "DH_WOPrediff", 1),
@@ -52,6 +50,10 @@ DH_WOPrediff::DH_WOPrediff (const string& name)
     itsFirstChan       (0),
     itsLastChan        (0),
     itsTimeInterval    (0),
+    itsDDID            (0),
+    itsModelType       (0),
+    itsCalcUVW         (0),
+    itsLockMappedMem   (0),
     itsPODHWO          (0)
 {
   LOG_TRACE_FLOW("DH_WOPrediff constructor");
@@ -68,6 +70,10 @@ DH_WOPrediff::DH_WOPrediff(const DH_WOPrediff& that)
     itsFirstChan       (0),
     itsLastChan        (0),
     itsTimeInterval    (0),
+    itsDDID            (0),
+    itsModelType       (0),
+    itsCalcUVW         (0),
+    itsLockMappedMem   (0),
     itsPODHWO          (0)
 {
   LOG_TRACE_FLOW("DH_WOPrediff copy constructor");
@@ -107,6 +113,10 @@ void DH_WOPrediff::preprocess()
   addField ("FirstChan", BlobField<int>(1));
   addField ("LastChan", BlobField<int>(1));
   addField ("TimeInterval", BlobField<int>(1));
+  addField ("DDID", BlobField<int>(1));
+  addField ("ModelType", BlobField<char>(1, MaxModelTypeLength));
+  addField ("CalcUVW", BlobField<unsigned int>(1));
+  addField ("LockMappedMem", BlobField<unsigned int>(1));
 
   // Create the data blob (which calls fillPointers).
   createDataBlock();
@@ -116,6 +126,11 @@ void DH_WOPrediff::preprocess()
     itsKSType[k] = 0;
   }
 
+  for (unsigned int m=0; m<MaxModelTypeLength; m++)
+  {
+    itsModelType[m] = 0;
+  }
+
   *itsWOID = -1;
   *itsStatus = DH_WOPrediff::New;
   *itsInitialize = 0;
@@ -123,6 +138,9 @@ void DH_WOPrediff::preprocess()
   *itsFirstChan = 0;
   *itsLastChan = 0;
   *itsTimeInterval = 0;
+  *itsDDID = 0;
+  *itsCalcUVW = 0;
+  *itsLockMappedMem = 0;
 }
 
 void DH_WOPrediff::fillDataPointers()
@@ -136,6 +154,10 @@ void DH_WOPrediff::fillDataPointers()
   itsFirstChan = getData<int> ("FirstChan");
   itsLastChan = getData<int> ("LastChan");
   itsTimeInterval = getData<int> ("TimeInterval");
+  itsDDID = getData<int> ("DDID");
+  itsModelType = getData<char> ("ModelType");
+  itsCalcUVW = getData<unsigned int> ("CalcUVW");
+  itsLockMappedMem = getData<unsigned int> ("LockMappedMem");
 }
 
 void DH_WOPrediff::postprocess()
@@ -148,6 +170,10 @@ void DH_WOPrediff::postprocess()
   itsFirstChan = 0;
   itsLastChan = 0;
   itsTimeInterval = 0;
+  itsDDID = 0;
+  itsModelType = 0;
+  itsCalcUVW = 0;
+  itsLockMappedMem = 0;
 }
 
 void DH_WOPrediff::setKSType(const string& ksType)
@@ -156,6 +182,19 @@ void DH_WOPrediff::setKSType(const string& ksType)
   char* ptr;
   ptr = itsKSType;
   strcpy(ptr, ksType.c_str());
+}
+
+string DH_WOPrediff::getModelType() const
+{
+  return itsModelType;
+}
+
+void DH_WOPrediff::setModelType(const string& type)
+{
+  ASSERTSTR(type.size() < MaxModelTypeLength, "Model type name is too long");
+  char* ptr;
+  ptr = itsModelType;
+  strcpy(ptr, type.c_str());
 }
 
 void DH_WOPrediff::setVarData(const KeyValueMap& predArgs,
@@ -269,16 +308,28 @@ void DH_WOPrediff::dump()
   cout << "First channel = " << getFirstChannel() << endl;
   cout << "Last channel = " << getLastChannel() << endl;
   cout << "Time interval = " << getTimeInterval() << endl;
+  cout << "DDID = " << getDDID() << endl;
+  cout << "Model type = " << getModelType() << endl;
+  cout << "Calc UVW = " << getCalcUVW() << endl;
+  cout << "Lock mapped memory = " << getLockMappedMemory() << endl;
 
   KeyValueMap sArguments;
+  vector<int> antNrs;
   vector<string> pNames;
-  vector<int> sols;
-  //  if (getVarData(sArguments, pNames, sols))
+  vector<int> srcs;
+  if (getVarData(sArguments, antNrs, pNames, srcs))
   { 
-    cout << "Start solutions : " << endl;
-    for (unsigned int i = 0; i < sols.size(); i++)
+    cout << "MS name = " << sArguments.getString ("MSName", "notfound");
+    cout << "Database host = " << sArguments.getString ("DBHost", "notfound");
+    cout << "Database type = " << sArguments.getString ("DBType", "notfound");
+    cout << "Database name = " << sArguments.getString ("DBName", "notfound");
+    cout << "Database password = " << sArguments.getString ("DBPwd", "notfound");
+    cout << "Meq table name = " << sArguments.getString ("meqTableName", "notfound");
+    cout << "Sky table name = " << sArguments.getString ("skyTableName", "notfound");
+    cout << "Antenna numbers : " << endl;
+    for (unsigned int i = 0; i < antNrs.size(); i++)
     {
-      cout << sols[i] << endl;
+      cout << antNrs[i] << endl;
     }
     cout << "Number of parameters = "  << pNames.size() << endl;
     
@@ -287,7 +338,14 @@ void DH_WOPrediff::dump()
     {
       cout << pNames[i] << endl ;
     }
+
+    cout << "Source numbers : " << endl;
+    for (unsigned int i = 0; i < srcs.size(); i++)
+    {
+      cout << srcs[i] << endl ;
+    }
   }
+
 }
 
 void DH_WOPrediff::clearData()
@@ -301,6 +359,10 @@ void DH_WOPrediff::clearData()
   setFirstChannel(-1);
   setLastChannel(-1);
   setTimeInterval(0);
+  setDDID(0);
+  setModelType("");
+  setCalcUVW(false);
+  setLockMappedMemory(false);
 }
 
 namespace PL {

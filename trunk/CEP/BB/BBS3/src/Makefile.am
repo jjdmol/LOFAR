@@ -11,6 +11,7 @@ BlackBoardDemo.h                                \
 Quality.h                                       \
 SC_Simple.cc					\
 MMap.h						\
+Prediffer.h					\
 MNS/MeqDomain.h \
 MNS/MeqExpr.h \
 MNS/MeqHist.h \
@@ -67,7 +68,6 @@ DOCHDRS	= $(INSTHDRS) $(NOINSTHDRS)
 lib_LTLIBRARIES = libbbs3.la
 
 libbbs3_la_SOURCES = \
-Simulate.cc                                             \
 DH_Solution.cc                                          \
 DH_WOSolve.cc						\
 DH_WOPrediff.cc						\

@@ -27,12 +27,12 @@
 //# Includes
 #include <BBS3/StrategyController.h>
 #include <Common/lofar_string.h>
+#include <Common/KeyValueMap.h>
 
 namespace LOFAR
 {
 
 //# Forward Declarations
-class KeyValueMap;
 
 class SC_Simple : public StrategyController
 {
@@ -54,8 +54,9 @@ public:
 
   void readSolution();
 
-  bool itsFirstCall;
-  int  itsWOID;
+  bool        itsFirstCall;
+  int         itsWOID;
+  KeyValueMap itsArgs;
 };
 
 inline string SC_Simple::getType() const

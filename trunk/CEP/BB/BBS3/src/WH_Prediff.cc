@@ -155,7 +155,6 @@ void WH_Prediff::createPrediffer(const KeyValueMap& args, const vector<int>& ant
   string modelType = args.getString("modelType", "LOFAR.RI");
   bool calcUVW = args.getBool("calcUVW", false);
   bool lockMappedMem = args.getBool("lockMappedMem", false);
-  bool outputAllIter = args.getBool("writeAllSols", true);
 
   itsPrediffer = new Prediffer(msName, meqModel, skyModel, dbType, 
 			       dbName, dbHost, dbPwd, ddid,

@@ -16,7 +16,7 @@
 nrPrediffers=1,   // Number of Prediffers
 BBDBname="test",  // BlackBoard database name (must be a postgres database on dop50)
 
-CTRLParams=[
+CTRLparams=[
   nrStrategies=1,   // Number of Strategy Controllers
 
   SC1params=[
@@ -32,7 +32,6 @@ CTRLParams=[
     modelType="LOFAR.RI",    // Model type
     calcUVW=F,               // Calculate UVW coordinates?
     lockMappedMem=F,         // Call mlock immediately after mapping?
-    writeAllSols=F           // Write DH_Solutions in the BB database for every iteration?
 
     MSDBparams=[
       MSName="demo3-",         // Name of the Measurement Set
