@@ -386,20 +386,10 @@ void UVPMainWindow::drawDataSet()
        dataAtom->getHeader().itsSpectralWindowID == SpectralWindowID &&
        itsGraphSettingsWidget->getSettings().mustPlotField(dataAtom->getHeader().itsFieldID)) {
 
-      unsigned int NumChan = dataAtom->getNumberOfChannels();
-      //      double*      Values  = new double[NumChan];
-      //      const UVPDataAtom::ComplexType* data = dataAtom->getData(0);
 
-      //      for(unsigned int j = 0; j < NumChan; j++) {
-      //Values[j] = std::abs(*data++);
-      //}
-      
-      //      UVPSpectrum Spectrum(NumChan, spectraAdded, Values);
-      
-      //      itsCanvas->slot_addSpectrum(Spectrum);
+      unsigned int NumChan = dataAtom->getNumberOfChannels();
       itsCanvas->slot_addDataAtom(dataAtom);
       spectraAdded++;
-      //      delete[] Values;
     }
   }
   itsCanvas->drawView();
@@ -675,24 +665,12 @@ try
   rec[AidInput][FEventMapIn] <<= new DataRecord;
   rec[AidInput][FEventMapIn][FDefaultPrefix] = hiidPrefix;
 
-  //  args[FMSName]         = itsInputFilename;
-  //  args[FDataColumnName] = itsMSColumnName;
-  //  args[FTileSize]       = 10;
-
-  // setup selection
-  //  DataRecord &select = args[FSelection] <<= new DataRecord;
-
-  //  select[FDDID]              = 0;
-  //  select[FFieldIndex]        = 0;
-  //  select[FChannelStartIndex] = 0;
-  //  select[FChannelEndIndex]   = 127;
-  //  select[FSelectionString]   = select_sstream.str();
-
 
   itsNumberOfChannels = 128;
   itsNumberOfTimeslots = 1500;
 
   itsScrollView->removeChild(itsCanvas);
+  itsCanvas->setChannels(itsNumberOfChannels);
   itsCanvas->setGeometry(0, 0, itsNumberOfChannels, itsNumberOfTimeslots);
   itsScrollView->addChild(itsCanvas);
   resizeEvent(0);
@@ -827,7 +805,11 @@ try
                     }
               
                     atom.setHeader(uvp_header);
+                    std::cout << "setData" << std::endl;
+                    std::cout << "Atom: " <<atom.getNumberOfChannels() << std::endl;
+                    std::cout << "data: " << data.shape()[0] << std::endl;
                     atom.setData(data);
+                    std::cout << "setFlags" << std::endl;
                     atom.setFlags(flags);
               
                     itsDataSet[uvp_header] = atom;
