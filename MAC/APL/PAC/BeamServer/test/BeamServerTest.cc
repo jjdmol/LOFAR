@@ -1,5 +1,5 @@
 //#
-//#  BeamServerTestSimple.cc: class definition for the Beam Server task.
+//#  BeamServerTest.cc: class definition for the Beam Server task.
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -36,7 +36,7 @@
 using namespace ABS;
 using namespace std;
 
-class BeamServerTestSimple : public Test
+class BeamServerTest : public Test
 {
 private:
     Beam*          m_beam[N_BEAMS];
@@ -70,12 +70,13 @@ public:
 	  oneTooManyBeamlet();
 	  emptyBeam();
 	  doubleAllocate();
+	  pointing();
 
 	  tearDown();
 	}
 
-    BeamServerTestSimple() :
-	Test("BeamServerTestSimple"),
+    BeamServerTest() :
+	Test("BeamServerTest"),
 	m_spw(10e6, 256*1e3, 80*(1000/256))
 	{
 	  //cerr << "c";
@@ -163,13 +164,30 @@ public:
 	  _test(m_beam[0]->allocate(m_spw, subbands) < 0);
 	  _test(m_beam[0]->deallocate() == 0);
 	}
+
+    void pointing()
+	{
+	  set<int> subbands;
+	  subbands.clear();
+	  struct timeval t = {0,0};
+
+	  // allocate beam, addPointing, should succeed
+	  _test(m_beam[0]->allocate(m_spw, subbands) == 0);
+	  _test(m_beam[0]->addPointing(Pointing(Direction(
+			    0.0, 0.0, Direction::J2000), t)) == 0);
+
+	  // deallocate beam, addPointing, should fail
+	  _test(m_beam[0]->deallocate() == 0);
+	  _test(m_beam[0]->addPointing(Pointing(Direction(
+			    0.0, 0.0, Direction::J2000), t)) < 0);
+	}
 };
 
 int main(int /*argc*/, char** /*argv*/)
 {
-  Suite s("BeamServerTestSimple Suite", &cout);
+  Suite s("Beam Server Test Suite", &cout);
 
-  s.addTest(new BeamServerTestSimple);
+  s.addTest(new BeamServerTest);
   s.run();
   long nFail = s.report();
   s.free();

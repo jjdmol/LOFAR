@@ -20,9 +20,10 @@
 //#
 //#  $Id$
 
-#include <ABSBeam.h>
+#include "ABSBeam.h"
 
 #include <iostream>
+#include <sys/time.h>
 
 using namespace ABS;
 using namespace std;
@@ -120,13 +121,57 @@ int Beam::deallocate()
   return 0;
 }
 
-void Beam::addPointing(const Pointing& pointing)
+int Beam::addPointing(const Pointing& pointing)
 {
+  if (!m_allocated) return -1;
+
   m_pointing_queue.push(pointing);
+  return 0;
 }
 
-int Beam::convertPointings()
-{ return 0; }
+int Beam::convertPointings(struct timeval fromtime, unsigned long duration)
+{
+  Pointing from(Direction(0.0,0.0,Direction::LOFAR_LMN), fromtime);
+  struct timeval totime = fromtime;
+  totime.tv_usec += duration;
+  Pointing deadline(Direction(0.0,0.0,Direction::LOFAR_LMN), totime);
+
+  // clear previous coordinate track, assumed to be empty
+  if (!m_coordinate_track.empty())
+  {
+      cerr << "Warning: coordinate track not empty!" << endl;
+      while (!m_coordinate_track.empty()) m_coordinate_track.pop();
+  }
+
+  while (!m_pointing_queue.empty())
+  {
+      Pointing pointing = m_pointing_queue.top();
+      if (pointing < from)
+      {
+	  // discard
+	  m_pointing_queue.pop();
+
+	  cerr << "Warning: deadline missed." << endl;
+      }
+      else if (pointing < deadline)
+      {
+	  if (pointing.direction().type() != Direction::LOFAR_LMN)
+	  {
+	      cerr << "Error: direction type not yet supported" << endl;
+	      cerr << "       pointing discarded." << endl;
+	  }
+	  else
+	  {
+	      m_coordinate_track.push(pointing);  
+	  }
+
+	  m_pointing_queue.pop();
+      }
+      else break; // done
+  }
+  
+  return 0;
+}
 
 int Beam::getPointings()
 { return 0; }
