@@ -28,7 +28,7 @@
 
 //# GCF Includes
 #include <GCF/GCF_Task.h>
-#include <GCF/GCF_Property.h>
+#include <GCF/GCF_ExtPropertySet.h>
 #include <boost/shared_ptr.hpp>
 
 #include "ARATestAnswer.h"
@@ -75,12 +75,13 @@ namespace ARA
       GCFPort         m_RSPserver;
       
       int             m_test_passCounter;
+      int             m_propsetLoadedCounter;
       
-      GCFProperty m_propAP1status;
-      GCFProperty m_propAP1RCUmaintenanceStatus;
-      GCFProperty m_propStationMaintenanceStatus;
-      GCFProperty m_propLDScommand;
-      GCFProperty m_propAP1RCU1AlertStatus;
+      GCFExtPropertySet m_extPropSetAP1;
+      GCFExtPropertySet m_extPropSetAP1RCUmaintenance;
+      GCFExtPropertySet m_extPropSetAP1RCUalert;
+      GCFExtPropertySet m_extPropSetStationMaintenance;
+      GCFExtPropertySet m_extPropSetLDS;
       
   };  
 };
