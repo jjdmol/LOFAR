@@ -49,7 +49,7 @@ namespace ABS
 	 * up connection establishment information using the GTMNameService and
 	 * GTMTopologyService classes.
 	 */
-	BeamServerTask(string name);
+	BeamServerTask(string name, int n_blps);
 	virtual ~BeamServerTask();
 
 	// state methods
@@ -208,6 +208,8 @@ namespace ABS
 	GCFPort          m_rspdriver;
 	std::list<char*> m_saveq;
 	bool             m_beams_modified;
+
+	int              m_n_blps;
     };
 
 };

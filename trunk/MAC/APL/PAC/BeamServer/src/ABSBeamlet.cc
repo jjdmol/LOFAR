@@ -134,7 +134,7 @@ void Beamlet::calculate_weights(const Array<W_TYPE, 3>&          pos,
   Range all = Range::all();
 
   if ((weights.extent(thirdDim) != m_ninstances)
-      || (pos.extent(firstDim) != nelements)
+      || (pos.extent(firstDim) < nelements)
       || (pos.extent(secondDim) != npolarizations))
   {
       LOG_ERROR("\nmismatching pos and weight array shapes\n");
