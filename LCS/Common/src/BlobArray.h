@@ -79,22 +79,28 @@ BlobOStream& putBlobVector (BlobOStream& bs, const T* data, uint32 size);
 // The data will be aligned on sizeof(T) bytes with a maximum of 8.
 // <group>
 template<typename T>
-uint setSpaceBlobArray1 (BlobOStream& bs, uint32 size0);
+uint setSpaceBlobArray1 (BlobOStream& bs, bool useBlobHeader,
+			 uint32 size0);
 template<typename T>
-uint setSpaceBlobArray2 (BlobOStream& bs, uint32 size0, uint32 size1,
+uint setSpaceBlobArray2 (BlobOStream& bs, bool useBlobHeader,
+			 uint32 size0, uint32 size1,
 			 bool fortranOrder);
 template<typename T>
-uint setSpaceBlobArray3 (BlobOStream& bs, uint32 size0, uint32 size1,
-			 uint32 size2, bool fortranOrder);
+uint setSpaceBlobArray3 (BlobOStream& bs, bool useBlobHeader,
+			 uint32 size0, uint32 size1, uint32 size2,
+			 bool fortranOrder);
 template<typename T>
-uint setSpaceBlobArray4 (BlobOStream& bs, uint32 size0, uint32 size1,
+uint setSpaceBlobArray4 (BlobOStream& bs, bool useBlobHeader,
+			 uint32 size0, uint32 size1,
 			 uint32 size2, uint32 size3,
 			 bool fortranOrder);
 template<typename T>
-uint setSpaceBlobArray (BlobOStream& bs, const std::vector<uint32>& shape,
+uint setSpaceBlobArray (BlobOStream& bs, bool useBlobHeader,
+			const std::vector<uint32>& shape,
 			bool fortranOrder);
 template<typename T>
-uint setSpaceBlobArray (BlobOStream& bs, const uint32* shape, uint16 ndim,
+uint setSpaceBlobArray (BlobOStream& bs, bool useBlobHeader,
+			const uint32* shape, uint16 ndim,
 			bool fortranOrder);
 // </group>
 
@@ -125,14 +131,20 @@ BlobIStream& operator>> (BlobIStream&, Array<T>&);
 #endif
 
 // Write a vector of objects.
+// <group>
+BlobOStream& operator<< (BlobOStream&, const std::vector<bool>&);
 template<typename T>
 BlobOStream& operator<< (BlobOStream&, const std::vector<T>&);
+// </group>
 
 // Read back a vector of objects.
 // The dimensionality found in the stream has to be 1.
 // The vector is resized as needed.
+// <group>
+BlobIStream& operator>> (BlobIStream&, std::vector<bool>&);
 template<typename T>
 BlobIStream& operator>> (BlobIStream&, std::vector<T>&);
+// </group>
 
 // Read back as a C-style vector.
 // It allocates the required storage and puts the pointer to it in arr.
@@ -159,7 +171,7 @@ BlobIStream& getBlobArray (BlobIStream& bs, T*& arr,
 // The data are assumed to be aligned on sizeof(T) bytes with a maximum of 8.
 // The alignment should match the one used in setSpaceBlobArray.
 template<typename T>
-uint getSpaceBlobArray (BlobIStream& bs,
+uint getSpaceBlobArray (BlobIStream& bs, bool useBlobHeader,
 			std::vector<uint32>& shape,
 			bool fortranOrder);
 
@@ -168,9 +180,10 @@ uint getSpaceBlobArray (BlobIStream& bs,
 
 // Reserve space for a 1-dim array of the given size.
 template<typename T>
-inline uint setSpaceBlobArray1 (BlobOStream& bs, uint32 size0)
+inline uint setSpaceBlobArray1 (BlobOStream& bs, bool useBlobHeader,
+				uint32 size0)
 {
-  return setSpaceBlobArray<T> (bs, &size0, 1, true);
+  return setSpaceBlobArray<T> (bs, useBlobHeader, &size0, 1, true);
 }
 
 // Put a vector object as an array.
@@ -189,7 +202,14 @@ inline BlobOStream& putBlobVector (BlobOStream& bs, const T* vec, uint32 size)
 
 // </group>
 
-// Get the ordering and dimensionality/
+// Put a blob array header. It returns the number of elements.
+// This is a helper function for the functions writing an array.
+uint32 putBlobArrayHeader (BlobOStream& bs, bool useBlobHeader,
+			   const std::string& headerName,
+			   const uint32* shape, uint16 ndim,
+			   bool fortranOrder, uint align=0);
+
+// Get the ordering and dimensionality.
 // This is a helper function for the functions reading an array.
 inline void getBlobArrayStart (BlobIStream& bs, bool& fortranOrder,
 			       uint16& ndim)
@@ -199,8 +219,9 @@ inline void getBlobArrayStart (BlobIStream& bs, bool& fortranOrder,
 }
 
 
-// Convert the header data.
-void convertArrayHeader (LOFAR::DataFormat, char* header);
+// Convert the array header data.
+void convertArrayHeader (LOFAR::DataFormat, char* header,
+			 bool useBlobHeader);
 
 // Get the shape of an array from the blob.
 // This is a helper function for the functions reading an array.
