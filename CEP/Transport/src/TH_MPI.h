@@ -53,9 +53,6 @@ public:
 
   virtual TH_MPI* make() const;
 
-  virtual void* allocate (size_t size);
-  virtual void  deallocate (void*& ptr);
-
   void lock();
   void unlock();
 
