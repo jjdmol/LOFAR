@@ -143,7 +143,7 @@ Retrieving tpoc2 (c) from database:
 (1 row)
 
 System call >>>./tC.in_sqld 4138257217158953629<<< returned : 0
-Retrieve collection of tpoc using query: WHERE (C.ITSSTRING='C4Y2')
+Retrieve collection of tpoc using query: WHERE C.ITSSTRING='C4Y2'
 Found 1 matches ...
 >>>
 
