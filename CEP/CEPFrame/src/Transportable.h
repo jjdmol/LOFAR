@@ -39,8 +39,8 @@ public:
 
   // The following mehtods are called by TH_Database.
 
-  virtual bool StoreInDatabase ();
-  virtual bool RetrieveFromDatabase ();
+  virtual bool StoreInDatabase (int appId, int tag);
+  virtual bool RetrieveFromDatabase (int appId, int tag);
 
   // Methods required for file-based transportation:
 
