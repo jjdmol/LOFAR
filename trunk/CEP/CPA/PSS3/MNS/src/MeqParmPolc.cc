@@ -142,8 +142,8 @@ MeqResult MeqParmPolc::getResult (const MeqRequest& request)
   complex<double>* datac = 0;
   double stepx = request.stepX();
   double stepy = request.stepY();
-  double halfStepx = stepx / 2;
-  double halfStepy = stepy / 2;
+  double halfStepx = stepx * .5;
+  double halfStepy = stepy * .5;
   double firstMidx = domain.startX() + halfStepx;
   double firstMidy = domain.startY() + halfStepy; 
   double lastMidx = firstMidx + (ndx-1) * stepx;
