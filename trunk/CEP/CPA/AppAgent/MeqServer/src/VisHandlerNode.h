@@ -39,7 +39,7 @@ class VisHandlerNode : public Node
     
     // returns Meq::Cells object corresponding to this VisTile
     //##ModelId=3F9FF6970269
-    static Cells makeCells (const VisTile &tile);
+    static Cells * makeCells (const VisTile &tile);
     
     //##ModelId=3F98DAE602DA
     LocalDebugContext;
