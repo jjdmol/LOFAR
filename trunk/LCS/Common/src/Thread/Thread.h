@@ -211,13 +211,13 @@ namespace LOFAR
   
 } // namespace LOFAR
 
-// OMS: 21/10/04: temporarily removed, reverting to using namespace LOFAR
-// in DMI etc.
-// #ifdef MAKE_LOFAR_SYMBOLS_GLOBAL
-// namespace Thread
-// {
-//   using namespace LOFAR::Thread;
-// }
-// #endif
+#ifdef MAKE_LOFAR_SYMBOLS_GLOBAL
+
+namespace Thread
+{
+  using namespace LOFAR::Thread;
+}
+
+#endif
 
 #endif
