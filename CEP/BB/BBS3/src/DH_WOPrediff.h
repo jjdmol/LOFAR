@@ -78,8 +78,6 @@ public:
 
   string getKSType() const;
   void setKSType(const string& ksType);
-  int getKSTypeLength();
-  void setKSTypeLength(int length);
 
   bool getInitialize() const;
   void setInitialize(bool doInitialize);
@@ -95,6 +93,18 @@ public:
 
   int getTimeInterval() const;
   void setTimeInterval(int time);
+
+  int getDDID() const;
+  void setDDID(int ddid);
+
+  string getModelType() const;
+  void setModelType(const string& type);
+
+  bool getCalcUVW() const;
+  void setCalcUVW(bool calc);
+
+  bool getLockMappedMemory() const;
+  void setLockMappedMemory(bool lock);
 
   void setVarData(const KeyValueMap& predArgs,
 		  vector<int>& antNrs,
@@ -124,7 +134,11 @@ private:
   int*          itsFirstChan;               // First frequency channel
   int*          itsLastChan;                // Last frequency channel
   int*          itsTimeInterval;            // Time interval size (s)
- 
+  int*          itsDDID;
+  char*         itsModelType;
+  unsigned int* itsCalcUVW;
+  unsigned int* itsLockMappedMem;
+  
   PO_DH_WOPrediff* itsPODHWO; 
 
 };
@@ -174,6 +188,23 @@ inline int DH_WOPrediff::getTimeInterval() const
 inline void DH_WOPrediff::setTimeInterval(int time)
 { *itsTimeInterval = time; }
 
+inline int DH_WOPrediff::getDDID() const
+{ return *itsDDID; }
+
+inline void DH_WOPrediff::setDDID(int ddid)
+{ *itsDDID = ddid; }
+
+inline bool DH_WOPrediff::getCalcUVW() const
+{ return ((*itsCalcUVW==0)?(false):(true)); }
+
+inline void DH_WOPrediff::setCalcUVW(bool calc)
+{ *itsInitialize = calc; }
+
+inline bool DH_WOPrediff::getLockMappedMemory() const
+{ return *itsLockMappedMem; }
+
+inline void DH_WOPrediff::setLockMappedMemory(bool lock)
+{ *itsLockMappedMem = lock; }
 
 // Define the class needed to tell PL that there should be
 // extra fields stored in the database table.

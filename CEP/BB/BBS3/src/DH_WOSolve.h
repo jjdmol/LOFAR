@@ -78,8 +78,6 @@ public:
 
   string getKSType() const;
   void setKSType(const string& ksType);
-  int getKSTypeLength();
-  void setKSTypeLength(int length);
 
   bool getInitialize() const;
   void setInitialize(bool doInitialize);

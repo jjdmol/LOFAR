@@ -37,7 +37,8 @@ SC_Simple::SC_Simple(int id, DH_Solution* inDH, DH_WOPrediff* woPD,
 		     DH_WOSolve* woSolve, const KeyValueMap& args)
   : StrategyController(id, inDH, woPD, woSolve),
     itsFirstCall      (true),
-    itsWOID           (0)
+    itsWOID           (0),
+    itsArgs           (args)
 {
 }
 
@@ -46,46 +47,65 @@ SC_Simple::~SC_Simple()
 
 bool SC_Simple::execute()
 {
+  itsWOID++;
   if (itsFirstCall)
   {
     itsFirstCall = false;
+    // Set prediffer workorder data
     itsWOPD->clearData();
-    itsWOSolve->clearData();
+    itsWOPD->setInitialize(true);
+    itsWOPD->setWorkOrderID(itsWOID);
+    itsWOPD->setStatus(DH_WOPrediff::New);
+    itsWOPD->setKSType("Prediff1");
+    itsWOPD->setFirstChannel (itsArgs.getInt ("startChan", 0));
+    itsWOPD->setLastChannel (itsArgs.getInt ("endChan", 0));
+    int timeInterval = itsArgs.getInt ("timeInterval", 10);
+    itsWOPD->setTimeInterval (timeInterval);
+    itsWOPD->setDDID (itsArgs.getInt ("ddid", 0));
+    itsWOPD->setModelType (itsArgs.getString ("modelType", "notfound"));
+    itsWOPD->setCalcUVW (itsArgs.getBool ("calcUVW", false));
+    itsWOPD->setLockMappedMemory (itsArgs.getBool ("lockMappedMem", false));
+    KeyValueMap msParams = (const_cast<KeyValueMap&>(itsArgs))["MSDBparams"].getValueMap();
+    vector<int> ant = (const_cast<KeyValueMap&>(itsArgs))["antennas"].getVecInt();
+    vector<string> pNames = (const_cast<KeyValueMap&>(itsArgs))["solvableParams"].getVecString();
+    vector<int> srcs = (const_cast<KeyValueMap&>(itsArgs))["sources"].getVecInt();
+    itsWOPD->setVarData (msParams, ant, pNames, srcs);
+
+    // Set solver workorder data
+    itsWOSolve->clearData(); 
+    itsWOSolve->setInitialize(true);
+    itsWOSolve->setWorkOrderID(itsWOID);
+    itsWOSolve->setStatus(DH_WOSolve::New);
+    itsWOSolve->setKSType("Solver");
+    itsWOSolve->setUseSVD (itsArgs.getBool ("useSVD", false)); 
+    itsWOSolve->setVarData (msParams, timeInterval, pNames);
   }
   else
   {
     readSolution();
-    itsWOPD->clearData();
-    itsWOSolve->clearData();    
+    itsWOPD->setInitialize(false);
+    itsWOSolve->setInitialize(false);
   }
 
-  // Post new workorders
-  itsWOID++;
-//       // Define new simple work order
-//       DH_WorkOrder* wo = dynamic_cast<DH_WorkOrder*>(getDataManager().getInHolder(0));
-//       ASSERTSTR(wo != 0, "DataHolder cannot be cast to a DH_WorkOrder");
-//       wo->setWorkOrderID(theirNextWorkOrderID++);
-//       wo->setStatus(DH_WorkOrder::New);
-//       wo->setKSType("KS");
-//       wo->setStrategyNo(1);
+  // If solution for this interval is good enough, go to next. TBA
+  itsWOPD->setNextInterval(true);
+  itsWOSolve->setNextInterval(true);
+  itsWOPD->dump();
+  itsWOSolve->dump();
 
-      
-//       // Set strategy arguments
-//       KeyValueMap stratArgs = (const_cast<KeyValueMap&>(itsArgs))["STRATparams"].getValueMap();
-//       wo->setVarData(stratArgs, pNames, itsStartSols);
-
-//       //  wo->dump();
-
-//       // Insert WorkOrder into database
-//       DH_PL* woPtr = dynamic_cast<DH_PL*>(wo);
-//       ASSERTSTR(woPtr != 0, "OutHolder cannot be cast to a DH_PL");
-//       woPtr->insertDB();
+  // Insert WorkOrders into database
+  DH_PL* woPD = dynamic_cast<DH_PL*>(itsWOPD);
+  woPD->insertDB();
+  DH_PL* woS = dynamic_cast<DH_PL*>(itsWOPD);
+  woS->insertDB();
 
   return true;
 }
 
 void SC_Simple::readSolution()
 {
+  LOG_TRACE_FLOW("SC_Simple reading solution");
+
   DH_PL* solPtr = dynamic_cast<DH_PL*>(getSolution());
 
   // Wait for solution

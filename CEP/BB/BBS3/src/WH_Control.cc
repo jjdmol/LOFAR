@@ -37,8 +37,13 @@
 
 namespace LOFAR
 {
-
 int WH_Control::theirNextWorkOrderID = 1;
+
+string i2string(int i) {
+  char str[32];
+  sprintf(str, "%i", i);
+  return string(str);
+}
 
 WH_Control::WH_Control (const string& name,
 			const KeyValueMap& args)
@@ -75,12 +80,30 @@ WorkHolder* WH_Control::construct (const string& name,
 
 void WH_Control::preprocess()
 {
-  // >>> Create StrategyController(s) and add to list
   DH_Solution* inp = dynamic_cast<DH_Solution*>(getDataManager().getInHolder(0));
   DH_WOPrediff* pd = dynamic_cast<DH_WOPrediff*>(getDataManager().getOutHolder(0));
   DH_WOSolve* sv = dynamic_cast<DH_WOSolve*>(getDataManager().getOutHolder(1));
-  SC_Simple* sc = new SC_Simple(1, inp, pd, sv, itsArgs);
-  itsControllers.push_back(sc);
+  int nrStrat = itsArgs.getInt("nrPrediffers", 0);
+
+  for (int i=1; i<=nrStrat; i++)
+  {
+    // Get strategy type
+    string nr = i2string(i);
+    string name = "SC" + nr + "params";
+    KeyValueMap params = (const_cast<KeyValueMap&>(itsArgs))["name"].getValueMap();
+    string stratType = params.getString("strategy", "noneDefined");
+    // Create StrategyController and add to list
+    if (stratType == "Simple")
+    {
+      SC_Simple* sc = new SC_Simple(1, inp, pd, sv, params);
+      itsControllers.push_back(sc);
+    }
+    else
+    {
+      THROW(LOFAR::Exception, "Strategy type " << stratType 
+	    << " unknown or not defined");
+    }
+  }
 }
 
 WH_Control* WH_Control::make (const string& name)
