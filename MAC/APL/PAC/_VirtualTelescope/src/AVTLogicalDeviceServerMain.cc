@@ -21,12 +21,16 @@
 //#  $Id$
 
 #include "AVTLogicalDeviceScheduler.h"
+#include <GCF/ParameterSet.h>
 
+using namespace GCF;
 using namespace AVT;
 
 int main(int argc, char* argv[])
 {
   GCFTask::init(argc, argv);
+  
+  ParameterSet::instance()->adoptFile("LogicalDeviceScheduler.conf");
     
   AVTLogicalDeviceScheduler lds;
   lds.start(); // make initial transition

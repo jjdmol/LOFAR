@@ -1,19 +1,18 @@
-include_HEADERS =
+pkgincludedir = $(includedir)/APLCommon
+pkginclude_HEADERS = \
+	../include/APLCommon/APLInterTaskPort.h \
+	../include/APLCommon/APL_Defines.h
 
 DOCHDRS	=	$(include_HEADERS) \
-	APLInterTaskPort.h \
-	suite.h \
-	test.h
+	APLInterTaskPort.h
       
-noinst_LTLIBRARIES 	= libaplcommon.la
+lib_LTLIBRARIES 	= libaplcommon.la
 
-libaplcommon_la__CPPFLAGS= \
-  -Wno-deprecated 
+libaplcommon_la_CPPFLAGS= \
+  -Wno-deprecated -I$(top_srcdir)/include
 
 libaplcommon_la_SOURCES= $(DOCHDRS) \
-	APLInterTaskPort.cc \
-	suite.cpp \
-	test.cpp
+	APLInterTaskPort.cc
 
 include $(lofar_sharedir)/Makefile.common
 

@@ -26,7 +26,7 @@
 //# Includes
 //# Common Includes
 //# GCF Includes
-#include <GCF/GCF_Answer.h>
+#include <GCF/PAL/GCF_Answer.h>
 //# VirtualTelescope Includes
 
 // forward declaration

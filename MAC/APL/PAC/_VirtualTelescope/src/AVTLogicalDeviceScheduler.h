@@ -30,11 +30,10 @@
 #include <boost/shared_ptr.hpp>
 
 //# GCF Includes
-#include <GCF/GCF_Port.h>
-#include <GCF/GCF_Task.h>
-#include <GCF/GCF_MyPropertySet.h>
-#include <GCF/GCF_Apc.h>
-#include <GCF/GCF_Property.h>
+#include <GCF/TM/GCF_Port.h>
+#include <GCF/TM/GCF_Task.h>
+#include <GCF/PAL/GCF_MyPropertySet.h>
+#include <GCF/PAL/GCF_Property.h>
 
 //# local includes
 #include "AVTPropertySetAnswerHandlerInterface.h"
@@ -141,11 +140,9 @@ namespace AVT
       typedef LogicalDeviceScheduleT::iterator                LogicalDeviceScheduleIterT;
       typedef map<unsigned long,MaintenanceScheduleInfoT>     MaintenanceScheduleT;
       typedef MaintenanceScheduleT::iterator                  MaintenanceScheduleIterT;
-      typedef map<string,TPropertySet>                        PropertySetMapT;
-      typedef PropertySetMapT::iterator                       PropertySetMapIterT;
 
-      boost::shared_ptr<AVTStationReceptor> addReceptor(string srName,const TPropertySet& propertySet, const list<string>& requiredResources);
-      void addReceptorGroup(string srName,const TPropertySet& propertySet, vector<boost::shared_ptr<AVTStationReceptor> >& receptors);
+      boost::shared_ptr<AVTStationReceptor> addReceptor(string srName,const list<TPropertyInfo>& requiredResources);
+      void addReceptorGroup(string srName,vector<boost::shared_ptr<AVTStationReceptor> >& receptors);
       LogicalDeviceMapIterT findLogicalDevice(const unsigned long scheduleId);
       LogicalDeviceMapIterT findClientPort(GCFPortInterface& port);
       LogicalDeviceScheduleIterT findSchedule(const string& deviceName,LogicalDeviceScheduleIterT beginIt);
@@ -179,15 +176,16 @@ namespace AVT
       void sendWGsettings();
       void sendWGenable();
       void sendWGdisable();
-      void getRequiredResources(list<string>& requiredResources, int rack, int subrack, int board, int ap, int rcu);
+      void getRequiredResources(list<TPropertyInfo>& requiredResources, int rack, int subrack, int board, int ap, int rcu);
 
       static string m_schedulerTaskName;
 
 
       AVTPropertySetAnswer  m_propertySetAnswer;
       GCFMyPropertySet      m_properties;
-      GCFApc                m_apcLDS;
-      bool                  m_initialized;
+      GCFMyPropertySet      m_propertiesWG;
+      bool                  m_propsetConfigured;
+      bool                  m_propsetWGConfigured;
   //    GCFPort               m_beamServer;
       GCFPort*              m_pBeamServer;
       double                m_WGfrequency;
@@ -200,9 +198,6 @@ namespace AVT
       GCFPort                 m_timerPort;
       
       AVTResourceManagerPtr   m_resourceManager;
-      
-      PropertySetMapT         m_propsetVTmap;
-      PropertySetMapT         m_propsetSBFmap;
   };
 };
 #endif

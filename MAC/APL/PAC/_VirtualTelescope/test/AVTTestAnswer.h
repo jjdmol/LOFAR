@@ -23,8 +23,8 @@
 #ifndef AVTTESTANSWER_H
 #define AVTTESTANSWER_H
 
-#include <GCF/GCF_Answer.h>
-#include <GCF/GCF_Port.h>
+#include <GCF/PAL/GCF_Answer.h>
+#include <GCF/TM/GCF_Port.h>
 
 class GCFEvent;
 class GCFTask;

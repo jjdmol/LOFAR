@@ -8,7 +8,6 @@ SUFFIXES = .ph
 	$(AUTOGEN) --writable -L $(top_srcdir)/../MACCommon/autogen $<
 
 LogicalDeviceServer_CPPFLAGS= \
-	-I$(top_srcdir)/APLCommon/src \
 	-DBOOST_DISABLE_THREADS \
   -Wno-deprecated \
 	-fmessage-length=0 \
@@ -29,28 +28,21 @@ LogicalDeviceServer_SOURCES 		= \
 	LogicalDevice_Protocol.cc
 	
 LogicalDeviceServer_LDADD		= \
-	$(top_builddir)/APLCommon/src/libaplcommon.la \
 	-labs \
 	-lboost_date_time-gcc-1_31
 	
-LogicalDeviceServer_DEPENDENCIES	= \
-	$(top_builddir)/APLCommon/src/libaplcommon.la
-
 BUILT_SOURCES = \
-	LogicalDevice_Protocol.ph \
-	log4cplus.properties	
-
+	LogicalDevice_Protocol.ph
+	
 EXTRA_DIST = \
-  LogicalDevice_Protocol.ph \
-	log4cplus.properties
-
+  LogicalDevice_Protocol.ph 
+  
 #in case of make install these files will be copied to the bindir beside the test apps
 configfilesdir=$(bindir)
 configfiles_DATA= \
-	LogicalDeviceScheduler.conf \
+	RegisterAccess.conf \
 	log4cplus.properties
 	
-MAC_CONFIG = $(top_srcdir)/../../Config
 %.properties: $(MAC_CONFIG)/%.properties
 	cp $< $@
 	

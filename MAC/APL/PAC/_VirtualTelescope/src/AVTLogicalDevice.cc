@@ -27,8 +27,10 @@
 
 #include <GCF/GCF_PVString.h>
 
-#include "../../../APLCommon/src/APL_Defines.h"
+#include <APLCommon/APL_Defines.h>
+#include "AVTPropertyDefines.h"
 #include "AVTLogicalDevice.h"
+
 #define DECLARE_SIGNAL_NAMES
 #include "LogicalDevice_Protocol.ph"
 
@@ -37,16 +39,14 @@ using namespace AVT;
 using namespace std;
 
 AVTLogicalDevice::AVTLogicalDevice(string& taskName, 
-                                   const TPropertySet& primaryPropertySet,
-                                   const string& APCName,
-                                   const string& APCScope) :
+                                   const string& scope,
+                                   const string& type,
+                                   const string& APCName) :
   GCFTask((State)&AVTLogicalDevice::initial_state,taskName),
   AVTPropertySetAnswerHandlerInterface(),
-  AVTAPCAnswerHandlerInterface(),
   m_propertySetAnswer(*this),
-  m_APCAnswer(*this),
-  m_properties(primaryPropertySet,&m_propertySetAnswer),
-  m_APC(APCName,APCScope,&m_APCAnswer),
+  m_properties(scope,type,false,&m_propertySetAnswer),
+  m_APC(APCName),
   m_serverPortName(taskName+string("_server")),
   m_logicalDeviceServerPort(*this, m_serverPortName, GCFPortInterface::SPP, LOGICALDEVICE_PROTOCOL),
   m_clientInterTaskPorts(),
@@ -54,17 +54,16 @@ AVTLogicalDevice::AVTLogicalDevice(string& taskName,
   m_logicalDeviceState(LOGICALDEVICE_STATE_IDLE)
 {
   registerProtocol(LOGICALDEVICE_PROTOCOL, LOGICALDEVICE_PROTOCOL_signalnames);
-  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTLogicalDevice(%s)::AVTLogicalDevice",getName().c_str()));
+  LOG_TRACE(formatString("AVTLogicalDevice(%s)::AVTLogicalDevice",getName().c_str()));
   
-  m_properties.load();
+  m_properties.enable();
 }
 
 
 AVTLogicalDevice::~AVTLogicalDevice()
 {
-  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTLogicalDevice(%s)::~AVTLogicalDevice",getName().c_str()));
-  m_APC.unload();
-  m_properties.unload();
+  LOG_TRACE(formatString("AVTLogicalDevice(%s)::~AVTLogicalDevice",getName().c_str()));
+  m_properties.disable();
 }
 
 string& AVTLogicalDevice::getServerPortName()
@@ -118,7 +117,7 @@ void AVTLogicalDevice::apcLoaded()
 
 GCFEvent::TResult AVTLogicalDevice::initial_state(GCFEvent& event, GCFPortInterface& port)
 {
-  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTLogicalDevice(%s)::initial_state (%s)",getName().c_str(),evtstr(event)));
+  LOG_TRACE(formatString("AVTLogicalDevice(%s)::initial_state (%s)",getName().c_str(),evtstr(event)));
 
   GCFEvent::TResult status = GCFEvent::HANDLED;
   
@@ -130,8 +129,8 @@ GCFEvent::TResult AVTLogicalDevice::initial_state(GCFEvent& event, GCFPortInterf
     case F_ENTRY:
     {
       m_logicalDeviceState = LOGICALDEVICE_STATE_IDLE;
-      GCFPVString status("Initial");
-      m_properties.setValue("status",status);
+      GCFPVString status(LD_STATE_STRING_INITIAL);
+      m_properties.setValue(PROPNAME_STATUS,status);
       break;
     }
   
@@ -146,7 +145,7 @@ GCFEvent::TResult AVTLogicalDevice::initial_state(GCFEvent& event, GCFPortInterf
       break;
 
     default:
-      LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTLogicalDevice(%s)::initial_state, default",getName().c_str()));
+      LOG_TRACE(formatString("AVTLogicalDevice(%s)::initial_state, default",getName().c_str()));
       status = GCFEvent::NOT_HANDLED;
       break;
   }    
@@ -159,7 +158,7 @@ GCFEvent::TResult AVTLogicalDevice::initial_state(GCFEvent& event, GCFPortInterf
 
 GCFEvent::TResult AVTLogicalDevice::idle_state(GCFEvent& event, GCFPortInterface& port)
 {
-  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTLogicalDevice(%s)::idle_state (%s)",getName().c_str(),evtstr(event)));
+  LOG_TRACE(formatString("AVTLogicalDevice(%s)::idle_state (%s)",getName().c_str(),evtstr(event)));
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (event.signal)
@@ -182,8 +181,8 @@ GCFEvent::TResult AVTLogicalDevice::idle_state(GCFEvent& event, GCFPortInterface
         ++it;
       }
       
-      GCFPVString status("Idle");
-      m_properties.setValue("status",status);
+      GCFPVString status(LD_STATE_STRING_IDLE);
+      m_properties.setValue(PROPNAME_STATUS,status);
       break;
     }
   
@@ -197,7 +196,7 @@ GCFEvent::TResult AVTLogicalDevice::idle_state(GCFEvent& event, GCFPortInterface
       break;
 
     default:
-      LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTLogicalDevice(%s)::idle_state, default",getName().c_str()));
+      LOG_TRACE(formatString("AVTLogicalDevice(%s)::idle_state, default",getName().c_str()));
       status = GCFEvent::NOT_HANDLED;
       break;
   }
@@ -207,7 +206,7 @@ GCFEvent::TResult AVTLogicalDevice::idle_state(GCFEvent& event, GCFPortInterface
 
 GCFEvent::TResult AVTLogicalDevice::claiming_state(GCFEvent& event, GCFPortInterface& port)
 {
-  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTLogicalDevice(%s)::claiming_state (%s)",getName().c_str(),evtstr(event)));
+  LOG_TRACE(formatString("AVTLogicalDevice(%s)::claiming_state (%s)",getName().c_str(),evtstr(event)));
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (event.signal)
@@ -218,8 +217,8 @@ GCFEvent::TResult AVTLogicalDevice::claiming_state(GCFEvent& event, GCFPortInter
     case F_ENTRY:
     {
       m_logicalDeviceState = LOGICALDEVICE_STATE_CLAIMING;
-      GCFPVString status("Claiming");
-      m_properties.setValue("status",status);
+      GCFPVString status(LD_STATE_STRING_CLAIMING);
+      m_properties.setValue(PROPNAME_STATUS,status);
       break;
     }
   
@@ -235,7 +234,7 @@ GCFEvent::TResult AVTLogicalDevice::claiming_state(GCFEvent& event, GCFPortInter
     // this baseclass.
     
     default:
-      LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTLogicalDevice(%s)::claiming_state, default",getName().c_str()));
+      LOG_TRACE(formatString("AVTLogicalDevice(%s)::claiming_state, default",getName().c_str()));
       // call the implementation of the derived class
       bool stateFinished=false;
       status = concrete_claiming_state(event,port,stateFinished);
@@ -251,7 +250,7 @@ GCFEvent::TResult AVTLogicalDevice::claiming_state(GCFEvent& event, GCFPortInter
 
 GCFEvent::TResult AVTLogicalDevice::claimed_state(GCFEvent& event, GCFPortInterface& port)
 {
-  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTLogicalDevice(%s)::claimed_state (%s)",getName().c_str(),evtstr(event)));
+  LOG_TRACE(formatString("AVTLogicalDevice(%s)::claimed_state (%s)",getName().c_str(),evtstr(event)));
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (event.signal)
@@ -262,8 +261,8 @@ GCFEvent::TResult AVTLogicalDevice::claimed_state(GCFEvent& event, GCFPortInterf
     case F_ENTRY:
     {
       m_logicalDeviceState = LOGICALDEVICE_STATE_CLAIMED;
-      GCFPVString status("Claimed");
-      m_properties.setValue("status",status);
+      GCFPVString status(LD_STATE_STRING_CLAIMED);
+      m_properties.setValue(PROPNAME_STATUS,status);
 
       // send claimed message to all my clients.
       LOGICALDEVICEClaimedEvent claimedEvent;
@@ -298,7 +297,7 @@ GCFEvent::TResult AVTLogicalDevice::claimed_state(GCFEvent& event, GCFPortInterf
       break;
 
     default:
-      LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTLogicalDevice(%s)::claimed_state, default",getName().c_str()));
+      LOG_TRACE(formatString("AVTLogicalDevice(%s)::claimed_state, default",getName().c_str()));
       status = GCFEvent::NOT_HANDLED;
       break;
     }
@@ -308,7 +307,7 @@ GCFEvent::TResult AVTLogicalDevice::claimed_state(GCFEvent& event, GCFPortInterf
 
 GCFEvent::TResult AVTLogicalDevice::preparing_state(GCFEvent& event, GCFPortInterface& port)
 {
-  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTLogicalDevice(%s)::preparing_state (%s)",getName().c_str(),evtstr(event)));
+  LOG_TRACE(formatString("AVTLogicalDevice(%s)::preparing_state (%s)",getName().c_str(),evtstr(event)));
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (event.signal)
@@ -319,8 +318,8 @@ GCFEvent::TResult AVTLogicalDevice::preparing_state(GCFEvent& event, GCFPortInte
     case F_ENTRY:
     {
       m_logicalDeviceState = LOGICALDEVICE_STATE_PREPARING;
-      GCFPVString status("Preparing");
-      m_properties.setValue("status",status);
+      GCFPVString status(LD_STATE_STRING_PREPARING);
+      m_properties.setValue(PROPNAME_STATUS,status);
       break;
     }
     
@@ -339,7 +338,7 @@ GCFEvent::TResult AVTLogicalDevice::preparing_state(GCFEvent& event, GCFPortInte
     // this baseclass.
     
     default:
-      LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTLogicalDevice(%s)::preparing_state, default",getName().c_str()));
+      LOG_TRACE(formatString("AVTLogicalDevice(%s)::preparing_state, default",getName().c_str()));
       // call the implementation of the derived class
       bool stateFinished=false;
       bool error=false;
@@ -371,7 +370,7 @@ GCFEvent::TResult AVTLogicalDevice::preparing_state(GCFEvent& event, GCFPortInte
 
 GCFEvent::TResult AVTLogicalDevice::suspended_state(GCFEvent& event, GCFPortInterface& port)
 {
-  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTLogicalDevice(%s)::suspended_state (%s)",getName().c_str(),evtstr(event)));
+  LOG_TRACE(formatString("AVTLogicalDevice(%s)::suspended_state (%s)",getName().c_str(),evtstr(event)));
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (event.signal)
@@ -382,8 +381,8 @@ GCFEvent::TResult AVTLogicalDevice::suspended_state(GCFEvent& event, GCFPortInte
     case F_ENTRY:
     {
       m_logicalDeviceState = LOGICALDEVICE_STATE_SUSPENDED;
-      GCFPVString status("Suspended");
-      m_properties.setValue("status",status);
+      GCFPVString status(LD_STATE_STRING_SUSPENDED);
+      m_properties.setValue(PROPNAME_STATUS,status);
       // send to all clients
       LOGICALDEVICESuspendedEvent suspendedEvent;
       vector<APLInterTaskPort*>::iterator it=m_clientInterTaskPorts.begin();
@@ -420,7 +419,7 @@ GCFEvent::TResult AVTLogicalDevice::suspended_state(GCFEvent& event, GCFPortInte
       break;
 
     default:
-      LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTLogicalDevice(%s)::suspended_state, default",getName().c_str()));
+      LOG_TRACE(formatString("AVTLogicalDevice(%s)::suspended_state, default",getName().c_str()));
       status = GCFEvent::NOT_HANDLED;
       break;
   }
@@ -429,7 +428,7 @@ GCFEvent::TResult AVTLogicalDevice::suspended_state(GCFEvent& event, GCFPortInte
 
 GCFEvent::TResult AVTLogicalDevice::active_state(GCFEvent& event, GCFPortInterface& port)
 {
-  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTLogicalDevice(%s)::active_state (%s)",getName().c_str(),evtstr(event)));
+  LOG_TRACE(formatString("AVTLogicalDevice(%s)::active_state (%s)",getName().c_str(),evtstr(event)));
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (event.signal)
@@ -440,8 +439,8 @@ GCFEvent::TResult AVTLogicalDevice::active_state(GCFEvent& event, GCFPortInterfa
     case F_ENTRY:
     {
       m_logicalDeviceState = LOGICALDEVICE_STATE_ACTIVE;
-      GCFPVString status("Active");
-      m_properties.setValue("status",status);
+      GCFPVString status(LD_STATE_STRING_ACTIVE);
+      m_properties.setValue(PROPNAME_STATUS,status);
 
       // send resumed message to all my clients.
       LOGICALDEVICEResumedEvent resumedEvent;
@@ -471,7 +470,7 @@ GCFEvent::TResult AVTLogicalDevice::active_state(GCFEvent& event, GCFPortInterfa
       break;
 
     default:
-      LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTLogicalDevice(%s)::active_state, default",getName().c_str()));
+      LOG_TRACE(formatString("AVTLogicalDevice(%s)::active_state, default",getName().c_str()));
       status = concrete_active_state(event,port);
       break;
   }
@@ -481,7 +480,7 @@ GCFEvent::TResult AVTLogicalDevice::active_state(GCFEvent& event, GCFPortInterfa
 
 GCFEvent::TResult AVTLogicalDevice::releasing_state(GCFEvent& event, GCFPortInterface& port)
 {
-  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTLogicalDevice(%s)::releasing_state (%s)",getName().c_str(),evtstr(event)));
+  LOG_TRACE(formatString("AVTLogicalDevice(%s)::releasing_state (%s)",getName().c_str(),evtstr(event)));
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (event.signal)
@@ -492,8 +491,8 @@ GCFEvent::TResult AVTLogicalDevice::releasing_state(GCFEvent& event, GCFPortInte
     case F_ENTRY:
     {
       m_logicalDeviceState = LOGICALDEVICE_STATE_RELEASING;
-      GCFPVString status("Releasing");
-      m_properties.setValue("status",status);
+      GCFPVString status(LD_STATE_STRING_RELEASING);
+      m_properties.setValue(PROPNAME_STATUS,status);
       break;
     }
   
@@ -509,7 +508,7 @@ GCFEvent::TResult AVTLogicalDevice::releasing_state(GCFEvent& event, GCFPortInte
     // this baseclass.
     
     default:
-      LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTLogicalDevice(%s)::releasing_state, default",getName().c_str()));
+      LOG_TRACE(formatString("AVTLogicalDevice(%s)::releasing_state, default",getName().c_str()));
       // call the implementation of the derived class
       bool stateFinished=false;
       status = concrete_releasing_state(event,port,stateFinished);

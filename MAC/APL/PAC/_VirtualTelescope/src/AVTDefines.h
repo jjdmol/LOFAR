@@ -23,7 +23,13 @@
 #ifndef AVTDefines_H
 #define AVTDefines_H
 
-#define PREPARE_TIME 5   
+namespace AVT
+{
+  
+const char PARAM_PREPARETIME[]    = "mac.apl.avt.PREPARETIME";
+const char PARAM_BEAMSERVERPORT[] = "mac.apl.avt.BEAMSERVERPORT";
+const char PARAM_APC[]            = "mac.apl.avt.APC_";
+
 #define AVT_N_BEAMLETS 128
 
 #define LD_COMMAND_SCHEDULE           "SCHEDULE"
@@ -39,29 +45,26 @@
 #define DIRECTIONTYPE_AZEL    "AZEL"
 #define DIRECTIONTYPE_LMN     "LMN"
 
-#define PROPERTYNAME_COMMAND              "command"
-#define PROPERTYNAME_DIRECTIONTYPE        "directionType"
-#define PROPERTYNAME_DIRECTIONANGLE1      "directionAngle1"
-#define PROPERTYNAME_DIRECTIONANGLE2      "directionAngle2"
-#define PROPERTYNAME_WAVEGENFREQUENCY     "WaveFormGenerator_frequency"
-#define PROPERTYNAME_WAVEGENAMPLITUDE     "WaveFormGenerator_amplitude"
-#define PROPERTYNAME_WAVEGENSAMPLEPERIOD  "WaveFormGenerator_samplePeriod"
-
-namespace AVT
+typedef enum
 {
-  typedef enum
-  {
-    LOGICALDEVICE_STATE_IDLE=0,
-    LOGICALDEVICE_STATE_CLAIMING,
-    LOGICALDEVICE_STATE_CLAIMED,
-    LOGICALDEVICE_STATE_PREPARING,
-    LOGICALDEVICE_STATE_SUSPENDED,
-    LOGICALDEVICE_STATE_ACTIVE,
-    LOGICALDEVICE_STATE_RELEASING,
-    LOGICALDEVICE_STATE_RELEASED
-  } TLogicalDeviceState;
+  LOGICALDEVICE_STATE_IDLE=0,
+  LOGICALDEVICE_STATE_CLAIMING,
+  LOGICALDEVICE_STATE_CLAIMED,
+  LOGICALDEVICE_STATE_PREPARING,
+  LOGICALDEVICE_STATE_SUSPENDED,
+  LOGICALDEVICE_STATE_ACTIVE,
+  LOGICALDEVICE_STATE_RELEASING,
+  LOGICALDEVICE_STATE_RELEASED
+} TLogicalDeviceState;
 
-
-};
+const char LD_STATE_STRING_INITIAL[]    = "Initial";
+const char LD_STATE_STRING_IDLE[]       = "Idle";
+const char LD_STATE_STRING_CLAIMING[]   = "Claiming";
+const char LD_STATE_STRING_CLAIMED[]    = "Claimed";
+const char LD_STATE_STRING_PREPARING[]  = "Preparing";
+const char LD_STATE_STRING_SUSPENDED[]  = "Suspended";
+const char LD_STATE_STRING_ACTIVE[]     = "Active";
+const char LD_STATE_STRING_RELEASING[]  = "Releasing";
+const char LD_STATE_STRING_RELEASED[]   = "Released";
 
 #endif

@@ -21,7 +21,7 @@
 //#  $Id$
 
 #include "AVTTestAnswer.h"
-#include <GCF/GCF_Task.h>
+#include <GCF/TM/GCF_Task.h>
 
 AVTTestAnswer::AVTTestAnswer() : 
   m_dummyPort(),

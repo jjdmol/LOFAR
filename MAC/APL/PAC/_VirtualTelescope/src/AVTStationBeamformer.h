@@ -30,7 +30,7 @@
 #include <boost/shared_ptr.hpp>
 
 //# GCF Includes
-#include <GCF/GCF_Port.h>
+#include <GCF/TM/GCF_Port.h>
 //# VirtualTelescope Includes
 #include "AVTLogicalDevice.h"
 
@@ -41,14 +41,13 @@ namespace AVT
   {
     public:
 
-      explicit AVTStationBeamformer(string& name, 
-                                    const TPropertySet& primaryPropertySet,
+      explicit AVTStationBeamformer(string& name,
+                                    const string& scope,
                                     const string& APCName,
-                                    const string& APCScope,
                                     string& beamServerPortName); 
       virtual ~AVTStationBeamformer();
 
-      GCFPort& getBeamServerPort(); // increment 1 only!!!
+      GCFPort& getBeamServerPort(); // increment 1 only!!! 
       virtual bool isPrepared(vector<string>& parameters);
       bool checkQualityRequirements();
 
@@ -82,7 +81,6 @@ namespace AVT
       virtual GCFEvent::TResult concrete_releasing_state(GCFEvent& e, GCFPortInterface& p, bool& stateFinished);
 
       virtual void handlePropertySetAnswer(GCFEvent& answer);
-      virtual void handleAPCAnswer(GCFEvent& answer);
 
       virtual void concreteClaim(GCFPortInterface& port);
       virtual void concretePrepare(GCFPortInterface& port,string& parameters);
@@ -109,12 +107,8 @@ namespace AVT
       time_t          m_startTime;
       time_t          m_stopTime;
       double          m_frequency;
-#ifdef USE_BEAMSERVER_STATISTICS
-      SubbandAPCMapT  m_subbands;
-      GCFApc          m_APCBeamServerStatistics;
-#else
       std::set<int>   m_subbands;
-#endif
+
       int             m_directionType;
       double          m_directionAngle1;
       double          m_directionAngle2;

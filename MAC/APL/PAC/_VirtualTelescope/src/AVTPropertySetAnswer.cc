@@ -20,7 +20,7 @@
 //#
 //#  $Id$
 
-#include "../../../APLCommon/src/APL_Defines.h"
+#include <APLCommon/APL_Defines.h>
 #include "AVTPropertySetAnswer.h"
 #include "AVTPropertySetAnswerHandlerInterface.h"
 
@@ -28,12 +28,12 @@ AVTPropertySetAnswer::AVTPropertySetAnswer(AVTPropertySetAnswerHandlerInterface&
   GCFAnswer(),
   m_handler(handler)
 {
-  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTPropertySetAnswer::AVTPropertySetAnswer"));
+  LOG_TRACE(formatString("AVTPropertySetAnswer::AVTPropertySetAnswer"));
 }
 
 AVTPropertySetAnswer::~AVTPropertySetAnswer()
 {
-  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTPropertySetAnswer::~AVTPropertySetAnswer"));
+  LOG_TRACE(formatString("AVTPropertySetAnswer::~AVTPropertySetAnswer"));
 }
 
 void AVTPropertySetAnswer::handleAnswer(GCFEvent& answer)

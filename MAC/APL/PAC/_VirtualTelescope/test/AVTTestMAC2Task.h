@@ -27,39 +27,22 @@
 //# Common Includes
 
 //# GCF Includes
-#include <GCF/GCF_Task.h>
-#include <GCF/GCF_Port.h>
-#include <GCF/GCF_Property.h>
+#include <GCF/TM/GCF_Task.h>
+#include <GCF/TM/GCF_Port.h>
+#include <GCF/PAL/GCF_ExtProperty.h>
 #include <boost/shared_ptr.hpp>
 #include <vector>
 
-#include "AVTTest.h"
 #include "AVTTestAnswer.h"
 
 typedef struct
 {
   GCFFsm::State target;
   const char*   targetName;
+  int           testNum;
+  const char*   description;
 } TTranTarget;
 
-#define ADDTRANTARGET(_targetvector_,_target_) \
-  { \
-    TTranTarget tt={static_cast<State>(&_target_), #_target_}; \
-    _targetvector_.push_back(tt); \
-  }
-  
-#define TESTTRAN(_trantarget_) \
-  { \
-    tran(static_cast<State>(_trantarget_->target), __func__, _trantarget_->targetName); \
-  }
-
-#define NEXTTEST(_iterator_) \
-  { \
-    std::vector<TTranTarget>::iterator tempIt = _iterator_; \
-    _iterator_++; \
-    TESTTRAN(tempIt); \
-  }
-  
 // forward declaration
 class GCFEvent;
 namespace AVT
@@ -106,21 +89,21 @@ namespace AVT
       AVTTestAnswer                       m_answer;
       GCFPort                             m_timerPort;
       
-      GCFProperty     m_propertyLDScommand;
-      GCFProperty     m_propertyLDSstatus;
-      GCFProperty     m_propBoard1MaintenanceStatus;
-      GCFProperty     m_propAP1RCU1MaintenanceStatus;
-      GCFProperty     m_propAP1RCU2MaintenanceStatus;
-      GCFProperty     m_propAP1RCU1Status;
-      GCFProperty     m_propAP2RCU1Status;
-      GCFProperty     m_propAP3RCU1Status;
-      GCFProperty     m_propVT1Command;
-      GCFProperty     m_propVT1Status;
-      GCFProperty     m_propVT2Command;
-      GCFProperty     m_propVT2Status;
-      GCFProperty     m_propVT3Status;
-      int             m_maintenanceChangedCounter;
-      int             m_suspendedCounter;
+      GCFExtProperty     m_propertyLDScommand;
+      GCFExtProperty     m_propertyLDSstatus;
+      GCFExtProperty     m_propBoard1MaintenanceStatus;
+      GCFExtProperty     m_propAP1RCU1MaintenanceStatus;
+      GCFExtProperty     m_propAP1RCU2MaintenanceStatus;
+      GCFExtProperty     m_propAP1RCU1Status;
+      GCFExtProperty     m_propAP2RCU1Status;
+      GCFExtProperty     m_propAP3RCU1Status;
+      GCFExtProperty     m_propVT1Command;
+      GCFExtProperty     m_propVT1Status;
+      GCFExtProperty     m_propVT2Command;
+      GCFExtProperty     m_propVT2Status;
+      GCFExtProperty     m_propVT3Status;
+      int                m_maintenanceChangedCounter;
+      int                m_suspendedCounter;
   };  
 };
 

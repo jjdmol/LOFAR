@@ -33,8 +33,8 @@
 #include <GCF/GCF_PVDouble.h>
 #include <GCF/GCF_PVUnsigned.h>
 
-#include "../../../APLCommon/src/APL_Defines.h"
-#include "../../../APLCommon/src/APLInterTaskPort.h"
+#include <APLCommon/APL_Defines.h>
+#include <APLCommon/APLInterTaskPort.h>
 #include "AVTLogicalDeviceScheduler.h"
 #include "LogicalDevice_Protocol.ph"
 #include "AVTDefines.h"
@@ -43,14 +43,12 @@
 #include "AVTStationReceptor.h"
 #include "AVTStationReceptorGroup.h"
 #include "AVTUtilities.h"
-#include "../../../PIC/RegisterAccess/src/ARAPropertyDefines.h"
+#include "AVTPropertyDefines.h"
 
 #undef PACKAGE
 #undef VERSION
 #define DECLARE_SIGNAL_NAMES
 #include "ABS_Protocol.ph"
-
-#include "../test/PropertyDefines.h"
 
 using namespace LOFAR;
 using namespace AVT;
@@ -58,17 +56,17 @@ using namespace ARA;
 using namespace std;
 using namespace boost;
 
-string AVTLogicalDeviceScheduler::m_schedulerTaskName(LDSNAME);
-string g_bsName(BSNAME);
-string g_timerPortName("timerPort");
+string AVTLogicalDeviceScheduler::m_schedulerTaskName("LogicalDeviceScheduler");
+const char timerPortName[] = "timerPort";
 
 AVTLogicalDeviceScheduler::AVTLogicalDeviceScheduler() :
   GCFTask((State)&AVTLogicalDeviceScheduler::initial_state,m_schedulerTaskName),
   AVTPropertySetAnswerHandlerInterface(),
   m_propertySetAnswer(*this),
-  m_properties(propertySetLDS,&m_propertySetAnswer),
-  m_apcLDS("ApcLogicalDeviceScheduler", "PAC_LogicalDeviceScheduler", &m_propertySetAnswer),
-  m_initialized(false),
+  m_properties(SCOPE_PAC_LogicalDeviceScheduler,TYPE_LogicalDeviceScheduler,false,&m_propertySetAnswer),
+  m_propertiesWG(SCOPE_PAC_LogicalDeviceScheduler_WaveFormGenerator,TYPE_WaveFormGenerator,false,&m_propertySetAnswer),
+  m_propsetConfigured(false),
+  m_propsetWGConfigured(false),
   m_pBeamServer(0),
   m_WGfrequency(0.0),
   m_WGamplitude(0),
@@ -77,48 +75,36 @@ AVTLogicalDeviceScheduler::AVTLogicalDeviceScheduler() :
   m_logicalDeviceSchedule(),
   m_maintenanceSchedule(),
   m_timerPort(*this, g_timerPortName, GCFPortInterface::SPP, LOGICALDEVICE_PROTOCOL),
-  m_resourceManager(AVTResourceManager::instance()),
-  m_propsetVTmap(),
-  m_propsetSBFmap()
+  m_resourceManager(AVTResourceManager::instance())
 {
   registerProtocol(LOGICALDEVICE_PROTOCOL, LOGICALDEVICE_PROTOCOL_signalnames);
-  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTLogicalDeviceScheduler::%s(%s)",__func__,getName().c_str()));
-  m_properties.load();
-  m_propsetVTmap["VT1"] = primaryPropertySetVT1;
-  m_propsetVTmap["VT2"] = primaryPropertySetVT2;
-  m_propsetVTmap["VT3"] = primaryPropertySetVT3;
-  m_propsetVTmap["VT4"] = primaryPropertySetVT4;
-  m_propsetVTmap["VT5"] = primaryPropertySetVT5;
-  m_propsetVTmap["VT6"] = primaryPropertySetVT6;
-  m_propsetVTmap["VT7"] = primaryPropertySetVT7;
-  m_propsetVTmap["VT8"] = primaryPropertySetVT8;
-  m_propsetSBFmap["BF1"] = primaryPropertySetSBF1;
-  m_propsetSBFmap["BF2"] = primaryPropertySetSBF2;
-  m_propsetSBFmap["BF3"] = primaryPropertySetSBF3;
-  m_propsetSBFmap["BF4"] = primaryPropertySetSBF4;
-  m_propsetSBFmap["BF5"] = primaryPropertySetSBF5;
-  m_propsetSBFmap["BF6"] = primaryPropertySetSBF6;
-  m_propsetSBFmap["BF7"] = primaryPropertySetSBF7;
-  m_propsetSBFmap["BF8"] = primaryPropertySetSBF8;
+  LOG_TRACE(formatString("AVTLogicalDeviceScheduler::%s(%s)",__func__,getName().c_str()));
+  m_properties.enable();
+  m_propertiesWG.enable();
 }
 
 
 AVTLogicalDeviceScheduler::~AVTLogicalDeviceScheduler()
 {
-  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTLogicalDeviceScheduler::%s(%s)",__func__,getName().c_str()));
-  m_apcLDS.unload();
+  LOG_TRACE(formatString("AVTLogicalDeviceScheduler::%s(%s)",__func__,getName().c_str()));
 }
 
-shared_ptr<AVTStationReceptor> AVTLogicalDeviceScheduler::addReceptor(string srName,const TPropertySet& propertySet, const list<string>& requiredResources)
+shared_ptr<AVTStationReceptor> AVTLogicalDeviceScheduler::addReceptor(string srName,const list<TPropertyInfo>& requiredResources)
 {
-  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("%s(%s)(%s)",__func__,getName().c_str(),srName.c_str()));
+  LOG_TRACE(formatString("%s(%s)(%s)",__func__,getName().c_str(),srName.c_str()));
   // create receptor logical device
-  LogicalDeviceInfoT      srInfo;
-  string srApcName(SRAPCNAME);
-  shared_ptr<AVTStationReceptor> sr(new AVTStationReceptor(srName,propertySet,srApcName,string("PAC_")+srName,requiredResources));
+  LogicalDeviceInfoT srInfo;
+  string srApcName(APC_SR);
+  if(ParameterSet::instance()->isDefined(string(PARAM_APC)+srName))
+  {
+    srApcName = ParameterSet::instance()->getString(string(PARAM_APC)+srName);
+  }
+  shared_ptr<AVTStationReceptor> sr(new AVTStationReceptor(srName,string("PAC_")+srName,srApcName,requiredResources));
   srInfo.logicalDevice = sr;
   srInfo.permanent = true;
   srInfo.clientPort.reset(new APLInterTaskPort(*sr,*this, sr->getServerPortName(), GCFPortInterface::SAP, LOGICALDEVICE_PROTOCOL));
+  // dynamically assign server task and port names
+  srgInfo.clientPort->setRemoteAddr(this->getName(),sr->getServerPortName());
   sr->addClientInterTaskPort(srInfo.clientPort.get());
   
   m_logicalDeviceMap[srName]=srInfo;
@@ -128,11 +114,15 @@ shared_ptr<AVTStationReceptor> AVTLogicalDeviceScheduler::addReceptor(string srN
   return sr;
 }
 
-void AVTLogicalDeviceScheduler::addReceptorGroup(string srgName,const TPropertySet& propertySet, vector<shared_ptr<AVTStationReceptor> >& receptors)
+void AVTLogicalDeviceScheduler::addReceptorGroup(string srgName,vector<shared_ptr<AVTStationReceptor> >& receptors)
 {
-  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("%s(%s)(%s)",__func__,getName().c_str(),srgName.c_str()));
+  LOG_TRACE(formatString("%s(%s)(%s)",__func__,getName().c_str(),srgName.c_str()));
   LogicalDeviceInfoT srgInfo;
-  string srgApcName(SRGAPCNAME);
+  string srgApcName(APC_SRG);
+  if(ParameterSet::instance()->isDefined(string(PARAM_APC)+srgName))
+  {
+    srgApcName = ParameterSet::instance()->getString(string(PARAM_APC)+srgName);
+  }
   
   // search receptor logical devices
   vector<shared_ptr<AVTStationReceptor> >::iterator rIt;
@@ -147,10 +137,13 @@ void AVTLogicalDeviceScheduler::addReceptorGroup(string srgName,const TPropertyS
   }
   
   // create receptor group logical device
-  shared_ptr<AVTStationReceptorGroup> srg(new AVTStationReceptorGroup(srgName,propertySet,srgApcName,string("PAC_")+srgName,receptors));
+  shared_ptr<AVTStationReceptorGroup> srg(new AVTStationReceptorGroup(srgName,string("PAC_")+srgName,srgApcName,receptors));
   srgInfo.logicalDevice = srg;
   srgInfo.permanent = true;
+  // create the connection with the new logical device
   srgInfo.clientPort.reset(new APLInterTaskPort(*srg,*this, srg->getServerPortName(), GCFPortInterface::SAP, LOGICALDEVICE_PROTOCOL));
+  // dynamically assign server task and port names
+  srgInfo.clientPort->setRemoteAddr(this->getName(),srg->getServerPortName());
   srg->addClientInterTaskPort(srgInfo.clientPort.get());
 
   m_logicalDeviceMap[srgName]=srgInfo;
@@ -160,12 +153,13 @@ void AVTLogicalDeviceScheduler::addReceptorGroup(string srgName,const TPropertyS
 
 bool AVTLogicalDeviceScheduler::isInitialized()
 {
-  return m_initialized;
+  return (m_propsetConfigured && m_propsetWGConfigured);
+;
 }
 
 AVTLogicalDeviceScheduler::LogicalDeviceMapIterT AVTLogicalDeviceScheduler::findLogicalDevice(const unsigned long scheduleId)
 {
-  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("%s(%s)(scheduleId=%d)",__func__,getName().c_str(),scheduleId));
+  LOG_TRACE(formatString("%s(%s)(scheduleId=%d)",__func__,getName().c_str(),scheduleId));
   LogicalDeviceMapIterT ldIt = m_logicalDeviceMap.end();
   
   // find the schedule
@@ -180,7 +174,7 @@ AVTLogicalDeviceScheduler::LogicalDeviceMapIterT AVTLogicalDeviceScheduler::find
 
 AVTLogicalDeviceScheduler::LogicalDeviceMapIterT AVTLogicalDeviceScheduler::findClientPort(GCFPortInterface& port)
 {
-  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("%s(%s)",__func__,getName().c_str()));
+  LOG_TRACE(formatString("%s(%s)",__func__,getName().c_str()));
   LogicalDeviceMapIterT it;
   for(it=m_logicalDeviceMap.begin();it!=m_logicalDeviceMap.end()&&(&port!=it->second.clientPort.get());++it);
   return it;
@@ -188,7 +182,7 @@ AVTLogicalDeviceScheduler::LogicalDeviceMapIterT AVTLogicalDeviceScheduler::find
 
 AVTLogicalDeviceScheduler::LogicalDeviceScheduleIterT AVTLogicalDeviceScheduler::findSchedule(const string& deviceName,LogicalDeviceScheduleIterT beginIt)
 {
-  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("%s(%s)(ld=%s)",__func__,getName().c_str(),deviceName.c_str()));
+  LOG_TRACE(formatString("%s(%s)(ld=%s)",__func__,getName().c_str(),deviceName.c_str()));
   LogicalDeviceScheduleIterT scheduleIt;
   for(scheduleIt=beginIt;scheduleIt!=m_logicalDeviceSchedule.end()&&(deviceName!=scheduleIt->second.deviceName);++scheduleIt);
   return scheduleIt;
@@ -201,9 +195,11 @@ bool AVTLogicalDeviceScheduler::submitSchedule(const unsigned long scheduleId,co
   int rawStartTime = atoi(scheduleParameters[0].c_str()); // starttime
   int rawStopTime  = atoi(scheduleParameters[1].c_str()); // stoptime
   
-  boost::posix_time::time_duration prepareDelay = boost::posix_time::seconds(PREPARE_TIME);
-  boost::posix_time::time_duration startDelay   = boost::posix_time::seconds(2*PREPARE_TIME);
-  boost::posix_time::time_duration stopDelay    = boost::posix_time::seconds(3*PREPARE_TIME);
+  int prepareTime = ParameterSet::instance()->getInt(PARAM_PREPARETIME);
+  
+  boost::posix_time::time_duration prepareDelay = boost::posix_time::seconds(prepareTime);
+  boost::posix_time::time_duration startDelay   = boost::posix_time::seconds(2*prepareTime);
+  boost::posix_time::time_duration stopDelay    = boost::posix_time::seconds(3*prepareTime);
   
   time_t timeNow = time(0);
   struct tm* utcTimeStruct = gmtime(&timeNow);
@@ -227,7 +223,7 @@ bool AVTLogicalDeviceScheduler::submitSchedule(const unsigned long scheduleId,co
   {
     stopTime = curUTCtime + stopDelay;
   }
-  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("(%s)\ncurrent time:          %sscheduled preparetime: %s\nscheduled starttime:   %s\nscheduled stoptime:    %s\n",__func__,posix_time::to_simple_string(curUTCtime).c_str(),posix_time::to_simple_string(prepareTime).c_str(),posix_time::to_simple_string(startTime).c_str(),posix_time::to_simple_string(stopTime).c_str()));
+  LOG_TRACE(formatString("(%s)\ncurrent time:          %sscheduled preparetime: %s\nscheduled starttime:   %s\nscheduled stoptime:    %s\n",__func__,posix_time::to_simple_string(curUTCtime).c_str(),posix_time::to_simple_string(prepareTime).c_str(),posix_time::to_simple_string(startTime).c_str(),posix_time::to_simple_string(stopTime).c_str()));
 
   // check if the schedule already exists
   LogicalDeviceScheduleIterT schIt = m_logicalDeviceSchedule.find(scheduleId);
@@ -327,7 +323,7 @@ bool AVTLogicalDeviceScheduler::checkPrepareTimer(const string& deviceName, unsi
       }
     }
   }
-  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("Timer %d is %sa schedule prepare timer",timerId,(isPrepareTimer?"":"NOT ")));
+  LOG_TRACE(formatString("Timer %d is %sa schedule prepare timer",timerId,(isPrepareTimer?"":"NOT ")));
   return isPrepareTimer;
 }
 
@@ -353,7 +349,7 @@ bool AVTLogicalDeviceScheduler::checkStartTimer(const string& deviceName, unsign
       }
     }
   }
-  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("Timer %d is %sa schedule start timer",timerId,(isStartTimer?"":"NOT ")));
+  LOG_TRACE(formatString("Timer %d is %sa schedule start timer",timerId,(isStartTimer?"":"NOT ")));
   return isStartTimer;
 }
 
@@ -379,7 +375,7 @@ bool AVTLogicalDeviceScheduler::checkStopTimer(const string& deviceName, unsigne
       }
     }
   }
-  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("Timer %d is %sa schedule stop timer",timerId,(isStopTimer?"":"NOT ")));
+  LOG_TRACE(formatString("Timer %d is %sa schedule stop timer",timerId,(isStopTimer?"":"NOT ")));
   return isStopTimer;
 }
 
@@ -395,7 +391,7 @@ bool AVTLogicalDeviceScheduler::checkMaintenanceStartTimer(unsigned long timerId
       ++scheduleIt;
     }
   }
-  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("Timer %d is %sa maintenance start timer",timerId,(isStartTimer?"":"NOT ")));
+  LOG_TRACE(formatString("Timer %d is %sa maintenance start timer",timerId,(isStartTimer?"":"NOT ")));
   return isStartTimer;
 }
 
@@ -411,13 +407,13 @@ bool AVTLogicalDeviceScheduler::checkMaintenanceStopTimer(unsigned long timerId,
       ++scheduleIt;
     }
   }
-  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("Timer %d is %sa maintenance stop timer",timerId,(isStopTimer?"":"NOT ")));
+  LOG_TRACE(formatString("Timer %d is %sa maintenance stop timer",timerId,(isStopTimer?"":"NOT ")));
   return isStopTimer;
 }
 
 GCFEvent::TResult AVTLogicalDeviceScheduler::initial_state(GCFEvent& event, GCFPortInterface& port)
 {
-  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("%s(%s) (%s)",__func__,getName().c_str(),evtstr(event)));
+  LOG_TRACE(formatString("%s(%s) (%s)",__func__,getName().c_str(),evtstr(event)));
 
   GCFEvent::TResult status = GCFEvent::HANDLED;
   
@@ -437,23 +433,23 @@ GCFEvent::TResult AVTLogicalDeviceScheduler::initial_state(GCFEvent& event, GCFP
       // create receptors
       vector<shared_ptr<AVTStationReceptor> > receptors;
       
-      list<string> requiredResources;
+      list<TPropertyInfo> requiredResources;
       getRequiredResources(requiredResources,1,1,1,1,1);
-      receptors.push_back(addReceptor(string("RCU1"),propertySetSR1,requiredResources));
+      receptors.push_back(addReceptor(string("RCU1"),requiredResources));
       getRequiredResources(requiredResources,1,1,1,1,2);
-      receptors.push_back(addReceptor(string("RCU2"),propertySetSR2,requiredResources));
+      receptors.push_back(addReceptor(string("RCU2"),requiredResources));
       getRequiredResources(requiredResources,1,1,1,2,1);
-      receptors.push_back(addReceptor(string("RCU3"),propertySetSR3,requiredResources));
+      receptors.push_back(addReceptor(string("RCU3"),requiredResources));
       getRequiredResources(requiredResources,1,1,1,2,2);
-      receptors.push_back(addReceptor(string("RCU4"),propertySetSR4,requiredResources));
+      receptors.push_back(addReceptor(string("RCU4"),requiredResources));
       getRequiredResources(requiredResources,1,1,1,3,1);
-      receptors.push_back(addReceptor(string("RCU5"),propertySetSR5,requiredResources));
+      receptors.push_back(addReceptor(string("RCU5"),requiredResources));
       getRequiredResources(requiredResources,1,1,1,3,2);
-      receptors.push_back(addReceptor(string("RCU6"),propertySetSR6,requiredResources));
+      receptors.push_back(addReceptor(string("RCU6"),requiredResources));
       getRequiredResources(requiredResources,1,1,1,4,1);
-      receptors.push_back(addReceptor(string("RCU7"),propertySetSR7,requiredResources));
+      receptors.push_back(addReceptor(string("RCU7"),requiredResources));
       getRequiredResources(requiredResources,1,1,1,4,2);
-      receptors.push_back(addReceptor(string("RCU8"),propertySetSR8,requiredResources));
+      receptors.push_back(addReceptor(string("RCU8"),requiredResources));
 
       // create receptor groups
       vector<shared_ptr<AVTStationReceptor> > receptorsSRG1;
@@ -477,10 +473,10 @@ GCFEvent::TResult AVTLogicalDeviceScheduler::initial_state(GCFEvent& event, GCFP
       receptorsSRG4.push_back(receptors[4]);
       receptorsSRG4.push_back(receptors[5]);
 
-      addReceptorGroup(string("SRG1"),propertySetSRG1,receptorsSRG1);
-      addReceptorGroup(string("SRG2"),propertySetSRG2,receptorsSRG2);
-      addReceptorGroup(string("SRG3"),propertySetSRG3,receptorsSRG3);
-      addReceptorGroup(string("SRG4"),propertySetSRG4,receptorsSRG4);
+      addReceptorGroup(string("SRG1"),receptorsSRG1);
+      addReceptorGroup(string("SRG2"),receptorsSRG2);
+      addReceptorGroup(string("SRG3"),receptorsSRG3);
+      addReceptorGroup(string("SRG4"),receptorsSRG4);
 
       m_timerPort.open();
       break;
@@ -559,9 +555,9 @@ GCFEvent::TResult AVTLogicalDeviceScheduler::initial_state(GCFEvent& event, GCFP
           // remove the object from the map. The Port instance and children Logical Device instances
           // are destroyed too because they are smart pointers.
 //          m_logicalDeviceMap.erase(it);
-          LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"));
-          LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("!!!!! NOT DESTROYING RELEASED OBJECT BECAUSE OF DESCTRUCTION PROBLEMS !!!!!!"));
-          LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"));
+          LOG_TRACE(formatString("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"));
+          LOG_TRACE(formatString("!!!!! NOT DESTROYING RELEASED OBJECT BECAUSE OF DESCTRUCTION PROBLEMS !!!!!!"));
+          LOG_TRACE(formatString("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"));
         }
       }
       break;
@@ -638,7 +634,7 @@ GCFEvent::TResult AVTLogicalDeviceScheduler::initial_state(GCFEvent& event, GCFP
     }
     
     default:
-      LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("%s(%s), default",__func__,getName().c_str()));
+      LOG_TRACE(formatString("%s(%s), default",__func__,getName().c_str()));
       status = GCFEvent::NOT_HANDLED;
       break;
   }
@@ -647,37 +643,67 @@ GCFEvent::TResult AVTLogicalDeviceScheduler::initial_state(GCFEvent& event, GCFP
 
 void AVTLogicalDeviceScheduler::handlePropertySetAnswer(GCFEvent& answer)
 {
-//  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("%s(%s) (%s)",__func__,getName().c_str(),evtstr(answer)));
+//  LOG_TRACE(formatString("%s(%s) (%s)",__func__,getName().c_str(),evtstr(answer)));
 
   switch(answer.signal)
   {
-    case F_MYPLOADED:
+    case F_MYPS_ENABLED:
     {
       // property set loaded, now load apc
-      m_apcLDS.load(false);
+      GCFPropSetAnswerEvent propAnswer(answer);
+      if(propAnswer.result == GCF_NO_ERROR)
+      {
+        if(strstr(propAnswer.pScope, SCOPE_PAC_LogicalDeviceScheduler_WaveFormGenerator) != 0)
+        {
+          m_propertiesWG.configure(APC_WaveformGenerator);
+        }
+        else if(strstr(propAnswer.pScope, SCOPE_PAC_LogicalDeviceScheduler) != 0)
+        {
+          m_properties.configure(APC_LogicalDeviceScheduler);
+        }
+      }
+      else
+      {
+        LOG_ERROR(formatString("%s : PropertySet %s NOT ENABLED",getName().c_str(),propAnswer.pScope));
+      }
       break;
     }
     
-    case F_APCLOADED:
+    case F_PS_CONFIGURED:
     {
-      m_initialized=true;
+      GCFConfAnswerEvent propAnswer(answer);
+      if(propAnswer.result == GCF_NO_ERROR)
+      {
+        if(strstr(propAnswer.pScope, SCOPE_PAC_LogicalDeviceScheduler_WaveFormGenerator) != 0)
+        {
+          m_propsetWGConfigured=true;
+        }
+        else if(strstr(propAnswer.pScope, SCOPE_PAC_LogicalDeviceScheduler) != 0)
+        {
+          m_propsetConfigured=true;
+        }
+      }
+      else
+      {
+        LOG_ERROR(formatString("%s : apc %s NOT LOADED",getName().c_str(),propAnswer.pApcName));
+      }
       break;
     }
     
     case F_VCHANGEMSG:
     {
       // check which property changed
-      GCFPropValueEvent* pPropAnswer = static_cast<GCFPropValueEvent*>(&answer);
-      assert(pPropAnswer);
-      if ((pPropAnswer->pValue->getType() == GCFPValue::LPT_STRING) &&
-          (strstr(pPropAnswer->pPropName, PROPERTY_LDS_COMMAND) != 0))
+      GCFPropValueEvent propAnswer(answer);
+      if (propAnswer.pValue->getType() == LPT_STRING &&
+          strstr(propAnswer.pPropName, SCOPE_PAC_LogicalDeviceScheduler) != 0 &&
+          strstr(propAnswer.pPropName, PROPNAME_COMMAND) != 0 )
       {
         // command received
-        string commandString(((GCFPVString*)pPropAnswer->pValue)->getValue());
+        string commandString(((GCFPVString*)propAnswer.pValue)->getValue());
         
         GCFPVString status("OK");
 
-        LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("Command received: (%s)",commandString.c_str()));
+        LOG_TRACE(formatString("Command received: (%s)",commandString.c_str()));
         
         vector<string> parameters;
         string command;
@@ -736,46 +762,38 @@ void AVTLogicalDeviceScheduler::handlePropertySetAnswer(GCFEvent& answer)
 
                     // create SBF
                     boost::shared_ptr<AVTStationBeamformer> sbf;
-                    PropertySetMapIterT psIt=m_propsetSBFmap.find(parameters[3]);
-                    if(psIt!=m_propsetSBFmap.end())
+                    string sbfApcName(APC_SBF);
+                    if(ParameterSet::instance()->isDefined(string(PARAM_APC)+parameters[3]))
                     {
-                      string sbfApcName(SBFAPCNAME);
-                      string bsName(BSNAME);
-                      sbf.reset(new AVTStationBeamformer(parameters[3],psIt->second,sbfApcName,string("PAC_")+parameters[2]+string("_")+parameters[3],bsName));
-                      sbfInfo.logicalDevice=sbf;
-                      sbfInfo.permanent = false;
-                      if(m_pBeamServer==0)
-                      {
-                        m_pBeamServer=&sbf->getBeamServerPort();
-                      }
+                      sbfApcName = ParameterSet::instance()->getString(string(PARAM_APC)+parameters[3]);
                     }
-                    else
+                    string bsName = ParameterSet::instance()->getString(PARAM_BEAMSERVERPORT);
+                    sbf.reset(new AVTStationBeamformer(parameters[3],string("PAC_")+parameters[2]+string("_")+parameters[3],sbfApcName,bsName));
+                    sbfInfo.logicalDevice=sbf;
+                    sbfInfo.permanent = false;
+                    if(m_pBeamServer==0)
                     {
-                      status.setValue(string("Error SCHEDULE,")+parameters[0]+string(",SBF PropertySet not found"));
-                      schedulingError=true;
+                      m_pBeamServer=&sbf->getBeamServerPort();
                     }
 
                     // create VT
-                    psIt=m_propsetVTmap.find(parameters[2]);
-                    if(psIt!=m_propsetVTmap.end())
+                    string vtApcName(APC_VT);
+                    if(ParameterSet::instance()->isDefined(string(PARAM_APC)+parameters[2]))
                     {
-                      string vtApcName(VTAPCNAME);
-                      boost::shared_ptr<AVTVirtualTelescope> vt(new AVTVirtualTelescope(parameters[2],psIt->second,vtApcName,string("PAC_")+parameters[2],*(sbf.get()),*(srg.get())));
-                      vtInfo.logicalDevice=vt;
-                      vtInfo.permanent = false;
-                      vtInfo.clientPort.reset(new APLInterTaskPort(*vt.get(),*this, vt->getServerPortName(), GCFPortInterface::SAP, LOGICALDEVICE_PROTOCOL));
-                      vt->addClientInterTaskPort(vtInfo.clientPort.get());
-                      vtInfo.children[parameters[3]]=sbfInfo;
-                      vtInfo.children[parameters[4]]=srgInfo;
-  
-                      // put the new logical device in the map
-                      m_logicalDeviceMap[parameters[2]]=vtInfo;
+                      vtApcName = ParameterSet::instance()->getString(string(PARAM_APC)+parameters[2]);
                     }
-                    else
-                    {
-                      status.setValue(string("Error SCHEDULE,")+parameters[0]+string(",VT PropertySet not found"));
-                      schedulingError=true;
-                    }
+                    boost::shared_ptr<AVTVirtualTelescope> vt(new AVTVirtualTelescope(parameters[2],string("PAC_")+parameters[2],vtApcName,*(sbf.get()),*(srg.get())));
+                    vtInfo.logicalDevice=vt;
+                    vtInfo.permanent = false;
+                    vtInfo.clientPort.reset(new APLInterTaskPort(*vt.get(),*this, vt->getServerPortName(), GCFPortInterface::SAP, LOGICALDEVICE_PROTOCOL));
+                    // dynamically assign server task and port names
+                    vtInfo.clientPort->setRemoteAddr(this->getName(),vt->getServerPortName());
+                    vt->addClientInterTaskPort(vtInfo.clientPort.get());
+                    vtInfo.children[parameters[3]]=sbfInfo;
+                    vtInfo.children[parameters[4]]=srgInfo;
+
+                    // put the new logical device in the map
+                    m_logicalDeviceMap[parameters[2]]=vtInfo;
                   }
                   else
                   {
@@ -951,14 +969,15 @@ void AVTLogicalDeviceScheduler::handlePropertySetAnswer(GCFEvent& answer)
           status.setValue(string("Error ")+command+string(",unknown command"));
         }
         
-        m_properties.setValue(PROPERTY_LDS_STATUS,status);
+        m_properties.setValue(PROPNAME_STATUS,status);
         
       }
-      else if ((pPropAnswer->pValue->getType() == GCFPValue::LPT_DOUBLE) &&
-               (strstr(pPropAnswer->pPropName, PROPERTYNAME_WAVEGENFREQUENCY) != 0))
+      else if (propAnswer.pValue->getType() == LPT_DOUBLE &&
+               strstr(propAnswer.pPropName, SCOPE_PAC_LogicalDeviceScheduler_WaveFormGenerator) != 0 &&
+               strstr(propAnswer.pPropName, PROPNAME_FREQUENCY) != 0 )
       {
         // wavegen frequency received
-        double frequency(((GCFPVDouble*)pPropAnswer->pValue)->getValue());
+        double frequency(((GCFPVDouble*)propAnswer.pValue)->getValue());
         if(frequency!=m_WGfrequency)
         {
           if(m_WGfrequency == 0.0)
@@ -979,25 +998,15 @@ void AVTLogicalDeviceScheduler::handlePropertySetAnswer(GCFEvent& answer)
           }
         }
       }      
-      else if ((pPropAnswer->pValue->getType() == GCFPValue::LPT_UNSIGNED) &&
-               (strstr(pPropAnswer->pPropName, PROPERTYNAME_WAVEGENAMPLITUDE) != 0))
+      else if (propAnswer.pValue->getType() == LPT_DOUBLE &&
+               strstr(propAnswer.pPropName, SCOPE_PAC_LogicalDeviceScheduler_WaveFormGenerator) != 0 &&
+               strstr(propAnswer.pPropName, PROPNAME_AMPLITUDE) != 0 )
       {
         // wavegen amplitude received
-        unsigned int amplitude(((GCFPVUnsigned*)pPropAnswer->pValue)->getValue());
+        unsigned int amplitude(((GCFPVUnsigned*)propAnswer.pValue)->getValue());
         if(amplitude!=m_WGamplitude)
         {
           m_WGamplitude = amplitude;
-          sendWGsettings();
-        }
-      }      
-      else if ((pPropAnswer->pValue->getType() == GCFPValue::LPT_UNSIGNED) &&
-               (strstr(pPropAnswer->pPropName, PROPERTYNAME_WAVEGENSAMPLEPERIOD) != 0))
-      {
-        // wavegen samplePeriod received
-        unsigned int samplePeriod(((GCFPVUnsigned*)pPropAnswer->pValue)->getValue());
-        if(samplePeriod!=m_WGsamplePeriod)
-        {
-          m_WGsamplePeriod = samplePeriod;
           sendWGsettings();
         }
       }      
@@ -1041,45 +1050,73 @@ void AVTLogicalDeviceScheduler::sendWGdisable()
   }
 }
 
-void AVTLogicalDeviceScheduler::getRequiredResources(list<string>& requiredResources, int rack, int subrack, int board, int ap, int rcu)
+void AVTLogicalDeviceScheduler::getRequiredResources(list<TPropertyInfo>& requiredResources, int rack, int subrack, int board, int ap, int rcu)
 {
   requiredResources.clear();
 
   char scopeString[300];
-  string propSeparator;
-#ifdef GCF4
-  propSeparator=".";
-#else
-  propSeparator="_";
-#endif
-  requiredResources.push_back(string(SCOPE_PIC)+propSeparator+string(PROPNAME_STATUS));
-  requiredResources.push_back(string(SCOPE_PIC_Maintenance)+propSeparator+string(PROPNAME_STATUS));
+  string propSeparator=".";
+  TPropertyInfo propInfo;
+
+  propInfo = {string(SCOPE_PIC)+propSeparator+string(PROPNAME_STATUS), LPT_UNSIGNED};
+  requiredResources.push_back(propInfo);
+  
+  propInfo = {string(SCOPE_PIC_Maintenance)+propSeparator+string(PROPNAME_STATUS), LPT_UNSIGNED};
+  requiredResources.push_back(propInfo);
+  
   sprintf(scopeString,SCOPE_PIC_RackN,rack);
-  requiredResources.push_back(string(scopeString)+propSeparator+string(PROPNAME_STATUS));
+  propInfo = {string(scopeString)+propSeparator+string(PROPNAME_STATUS), LPT_UNSIGNED};
+  requiredResources.push_back(propInfo);
+  
   sprintf(scopeString,SCOPE_PIC_RackN_Maintenance,rack);
-  requiredResources.push_back(string(scopeString)+propSeparator+string(PROPNAME_STATUS));
+  propInfo = {string(scopeString)+propSeparator+string(PROPNAME_STATUS), LPT_UNSIGNED};
+  requiredResources.push_back(propInfo);
+  
   sprintf(scopeString,SCOPE_PIC_RackN_Alert,rack);
-  requiredResources.push_back(string(scopeString)+propSeparator+string(PROPNAME_STATUS));
+  propInfo = {string(scopeString)+propSeparator+string(PROPNAME_STATUS), LPT_UNSIGNED};
+  requiredResources.push_back(propInfo);
+  
   sprintf(scopeString,SCOPE_PIC_RackN_SubRackN,rack,subrack);
-  requiredResources.push_back(string(scopeString)+propSeparator+string(PROPNAME_STATUS));
+  propInfo = {string(scopeString)+propSeparator+string(PROPNAME_STATUS), LPT_UNSIGNED};
+  requiredResources.push_back(propInfo);
+  
   sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_Maintenance,rack,subrack);
-  requiredResources.push_back(string(scopeString)+propSeparator+string(PROPNAME_STATUS));
+  propInfo = {string(scopeString)+propSeparator+string(PROPNAME_STATUS), LPT_UNSIGNED};
+  requiredResources.push_back(propInfo);
+  
   sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_Alert,rack,subrack);
-  requiredResources.push_back(string(scopeString)+propSeparator+string(PROPNAME_STATUS));
+  propInfo = {string(scopeString)+propSeparator+string(PROPNAME_STATUS), LPT_UNSIGNED};
+  requiredResources.push_back(propInfo);
+  
   sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN,rack,subrack,board);
-  requiredResources.push_back(string(scopeString)+propSeparator+string(PROPNAME_STATUS));
+  propInfo = {string(scopeString)+propSeparator+string(PROPNAME_STATUS), LPT_UNSIGNED};
+  requiredResources.push_back(propInfo);
+  
   sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_Maintenance,rack,subrack,board);
-  requiredResources.push_back(string(scopeString)+propSeparator+string(PROPNAME_STATUS));
+  propInfo = {string(scopeString)+propSeparator+string(PROPNAME_STATUS), LPT_UNSIGNED};
+  requiredResources.push_back(propInfo);
+  
   sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_Alert,rack,subrack,board);
-  requiredResources.push_back(string(scopeString)+propSeparator+string(PROPNAME_STATUS));
+  propInfo = {string(scopeString)+propSeparator+string(PROPNAME_STATUS), LPT_UNSIGNED};
+  requiredResources.push_back(propInfo);
+  
   sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_ETH,rack,subrack,board);
-  requiredResources.push_back(string(scopeString)+propSeparator+string(PROPNAME_STATUS));
+  propInfo = {string(scopeString)+propSeparator+string(PROPNAME_STATUS), LPT_UNSIGNED};
+  requiredResources.push_back(propInfo);
+  
   sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_BP,rack,subrack,board);
-  requiredResources.push_back(string(scopeString)+propSeparator+string(PROPNAME_STATUS));
+  propInfo = {string(scopeString)+propSeparator+string(PROPNAME_STATUS), LPT_UNSIGNED};
+  requiredResources.push_back(propInfo);
+  
   sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN,rack,subrack,board,ap);
-  requiredResources.push_back(string(scopeString)+propSeparator+string(PROPNAME_STATUS));
+  propInfo = {string(scopeString)+propSeparator+string(PROPNAME_STATUS), LPT_UNSIGNED};
+  requiredResources.push_back(propInfo);
+  
   sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN,rack,subrack,board,ap,rcu);
-  requiredResources.push_back(string(scopeString)+propSeparator+string(PROPNAME_STATUS));
+  propInfo = {string(scopeString)+propSeparator+string(PROPNAME_STATUS), LPT_UNSIGNED};
+  requiredResources.push_back(propInfo);
+  
   sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN_Maintenance,rack,subrack,board,ap,rcu);
-  requiredResources.push_back(string(scopeString)+propSeparator+string(PROPNAME_STATUS));
+  propInfo = {string(scopeString)+propSeparator+string(PROPNAME_STATUS), LPT_UNSIGNED};
+  requiredResources.push_back(propInfo);
 }

@@ -21,12 +21,14 @@
 //#  $Id$
 
 #include <stdio.h>
-#include <GCF/GCF_TMProtocols.h>
-#include <GCF/GCF_Task.h>
-#include <GCF/GCF_Event.h>
-#include "APLInterTaskPort.h"
-#include "APL_Defines.h"
+#include <Common/LofarLogger.h>
+#include <GCF/TM/GCF_Protocols.h>
+#include <GCF/TM/GCF_Task.h>
+#include <GCF/TM/GCF_Event.h>
+#include <APLCommon/APLInterTaskPort.h>
+#include <APLCommon/APL_Defines.h>
 
+using namespace LOFAR;
 using namespace std;
 
 /**
@@ -50,19 +52,19 @@ APLInterTaskPort::~APLInterTaskPort()
 /**
  * ::open
  */
-int APLInterTaskPort::open()
+bool APLInterTaskPort::open()
 {
   schedule_connected();
-  return 0;
+  return true;
 }
 
 /**
  * ::close
  */
-int APLInterTaskPort::close()
+bool APLInterTaskPort::close()
 {
   schedule_disconnected();
-  return 0;
+  return true;
 }
 
 /**
@@ -76,7 +78,7 @@ ssize_t APLInterTaskPort::send(GCFEvent& e)
   {
     if (F_EVT_INOUT(e) & F_IN)
     {
-      LOFAR_LOG_ERROR(APL_LOGGER_ROOT, (
+      LOG_DEBUG(formatString(
           "Trying to send IN event on SPP "
          "port '%s'; discarding this event.",
          _name.c_str()));
@@ -88,7 +90,7 @@ ssize_t APLInterTaskPort::send(GCFEvent& e)
   {
     if (F_EVT_INOUT(e) & F_OUT)
     {
-      LOFAR_LOG_ERROR(APL_LOGGER_ROOT, (
+      LOG_DEBUG(formatString(
           "Trying to send OUT event on SAP "
           "port '%s'; discarding this event.",
          _name.c_str()));
@@ -97,7 +99,7 @@ ssize_t APLInterTaskPort::send(GCFEvent& e)
   }
   else if (MSPP == _type)
   {
-    LOFAR_LOG_ERROR(APL_LOGGER_ROOT, (
+    LOG_DEBUG(formatString(
       "Trying to send event by means of the portprovider: %s (MSPP). "
       "Not supported yet",
        _name.c_str()));

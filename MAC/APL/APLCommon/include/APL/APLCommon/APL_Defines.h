@@ -1,6 +1,6 @@
-//#  AVTPropertySetAnswerHandlerInterface.h: interface for the APC answer handler.
+//#  APL_Defines.h: preprocessor definitions of various constants
 //#
-//#  Copyright (C) 2002-2004
+//#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
 //#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -20,37 +20,7 @@
 //#
 //#  $Id$
 
-#ifndef AVTAPCAnswerHandlerInterface_H
-#define AVTAPCAnswerHandlerInterface_H
+#ifndef APL_DEFINES_H
+#define APL_DEFINES_H
 
-//# Includes
-//# Common Includes
-//# GCF Includes
-#include <GCF/GCF_Event.h>
-
-//# local includes
-
-// forward declaration
-
-class AVTAPCAnswerHandlerInterface
-{
-  public:
-
-    AVTAPCAnswerHandlerInterface() {};  
-    virtual ~AVTAPCAnswerHandlerInterface() {};
-
-    /**
-     * APC answer handling is implemented in the derived classes. 
-     */
-    virtual void handleAPCAnswer(GCFEvent& answer)=0;
-
-  protected:
-    // protected copy constructor
-    AVTAPCAnswerHandlerInterface(const AVTAPCAnswerHandlerInterface&);
-    // protected assignment operator
-    AVTAPCAnswerHandlerInterface& operator=(const AVTAPCAnswerHandlerInterface&);
-
-  private:
-  
-};
 #endif

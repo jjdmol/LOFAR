@@ -17,7 +17,7 @@ RegisterAccess_SOURCES 		= \
 	ARAAnswer.cc \
 	ARAPhysicalModel.cc \
 	ARARegisterAccessTask.cc
-	
+
 #in case of make install these files will be copied to the bindir beside the test apps
 configfilesdir=$(bindir)
 configfiles_DATA= \
