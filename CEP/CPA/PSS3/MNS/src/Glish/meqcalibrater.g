@@ -1,7 +1,33 @@
+### 
+### meqcalibrater.g: Glish script to control MesTree based self-calibration.
+###
+### Copyright (C) 2002
+### ASTRON (Netherlands Foundation for Research in Astronomy)
+### P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+###
+### This program is free software; you can redistribute it and/or modify
+### it under the terms of the GNU General Public License as published by
+### the Free Software Foundation; either version 2 of the License, or
+### (at your option) any later version.
+###
+### This program is distributed in the hope that it will be useful,
+### but WITHOUT ANY WARRANTY; without even the implied warranty of
+### MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+### GNU General Public License for more details.
+###
+### You should have received a copy of the GNU General Public License
+### along with this program; if not, write to the Free Software
+### Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+###
+### $Id$
+
 pragma include once
 
 include 'servers.g'
 
+#
+# meqcalibrater closure
+#
 const _define_meqcalibrater := function(ref agent, id) {
 
     self       := [=]
@@ -11,70 +37,70 @@ const _define_meqcalibrater := function(ref agent, id) {
     public     := defaultservers.init_object(self)
     
     
-    self.setTimeIntervalSizeRec := [_method="setTimeIntervalSize",
+    self.settimeintervalsizeRec := [_method="settimeintervalsize",
 				    _sequence=self.id._sequence]
-    public.setTimeIntervalSize := function(secondsInterval) {
+    public.settimeintervalsize := function(secondsinterval) {
     
         wider self;
         
         # argument assignment
-        self.setTimeIntervalSizeRec.secondsInterval := secondsInterval
+        self.settimeintervalsizeRec.secondsinterval := secondsinterval
         
         # return
-        return defaultservers.run(self.agent, self.setTimeIntervalSizeRec);
+        return defaultservers.run(self.agent, self.settimeintervalsizeRec);
     }
     
-    self.resetTimeIteratorRec := [_method="resetTimeIterator",
+    self.resettimeiteratorRec := [_method="resettimeiterator",
 				  _sequence=self.id._sequence]
-    public.resetTimeIterator := function() {
+    public.resettimeiterator := function() {
     
         wider self;
         
         # return
-        return defaultservers.run(self.agent, self.resetTimeIteratorRec);
+        return defaultservers.run(self.agent, self.resettimeiteratorRec);
     }
     
-    self.nextTimeIntervalRec := [_method="nextTimeInterval",
+    self.nexttimeintervalRec := [_method="nexttimeinterval",
 				 _sequence=self.id._sequence]
-    public.nextTimeInterval := function() {
+    public.nexttimeinterval := function() {
     
         wider self;
         
         # return
-        return defaultservers.run(self.agent, self.nextTimeIntervalRec);
+        return defaultservers.run(self.agent, self.nexttimeintervalRec);
     }
     
-    self.clearSolvableParmsRec := [_method="clearSolvableParms",
+    self.clearsolvableparmsRec := [_method="clearsolvableparms",
 				   _sequence=self.id._sequence]
-    public.clearSolvableParms := function() {
+    public.clearsolvableparms := function() {
     
         wider self;
         
         # return
-        return defaultservers.run(self.agent, self.clearSolvableParmsRec);
+        return defaultservers.run(self.agent, self.clearsolvableparmsRec);
     }
     
-    self.setSolvableParmsRec := [_method="setSolvableParms",
+    self.setsolvableparmsRec := [_method="setsolvableparms",
 				 _sequence=self.id._sequence]
-    public.setSolvableParms := function(parmPatterns, isSolvable) {
+    public.setsolvableparms := function(parmpatterns, issolvable) {
     
         wider self;
         
         # argument assignment
-        self.setSolvableParmsRec.parmPatterns := parmPatterns
-        self.setSolvableParmsRec.isSolvable := isSolvable
+        self.setsolvableparmsRec.parmpatterns := parmpatterns
+        self.setsolvableparmsRec.issolvable := issolvable
         
         # return
-        return defaultservers.run(self.agent, self.setSolvableParmsRec);
+        return defaultservers.run(self.agent, self.setsolvableparmsRec);
     }
     
     self.predictRec := [_method="predict", _sequence=self.id._sequence]
-    public.predict := function(modelColName) {
+    public.predict := function(modelcolname) {
     
         wider self;
         
         # argument assignment
-        self.predictRec.modelColName := modelColName
+        self.predictRec.modelcolname := modelcolname
         
         # return
         return defaultservers.run(self.agent, self.predictRec);
@@ -89,61 +115,124 @@ const _define_meqcalibrater := function(ref agent, id) {
         return defaultservers.run(self.agent, self.solveRec);
     }
     
-    self.saveParmsRec := [_method="saveParms", _sequence=self.id._sequence]
-    public.saveParms := function() {
+    self.saveparmsRec := [_method="saveparms", _sequence=self.id._sequence]
+    public.saveparms := function() {
     
         wider self;
         
         # return
-        return defaultservers.run(self.agent, self.saveParmsRec);
+        return defaultservers.run(self.agent, self.saveparmsRec);
     }
     
-    self.saveDataRec := [_method="saveData", _sequence=self.id._sequence]
-    public.saveData := function(dataColName) {
-    
-        wider self;
-        
-        # argument assignment
-        self.saveDataRec.dataColName := dataColName
-        
-        # return
-        return defaultservers.run(self.agent, self.saveDataRec);
-    }
-    
-    self.saveResidualDataRec := [_method="saveResidualData", _sequence=self.id._sequence]
-    public.saveResidualData := function(colAName, colBName, residualColName) {
+    self.savedataRec := [_method="savedata", _sequence=self.id._sequence]
+    public.savedata := function(datacolname) {
     
         wider self;
         
         # argument assignment
-        self.saveResidualDataRec.colAName := colAName
-        self.saveResidualDataRec.colBName := colBName
-        self.saveResidualDataRec.residualColName := residualColName
+        self.savedataRec.datacolname := datacolname
         
         # return
-        return defaultservers.run(self.agent, self.saveResidualDataRec);
+        return defaultservers.run(self.agent, self.savedataRec);
     }
     
-    self.getParmsRec := [_method="getParms", _sequence=self.id._sequence]
-    public.getParms := function(parmPatterns) {
+    self.saveresidualdataRec := [_method="saveresidualdata", _sequence=self.id._sequence]
+    public.saveresidualdata := function(colaname, colbname, residualcolname) {
     
         wider self;
         
         # argument assignment
-        self.getParmsRec.parmPatterns := parmPatterns
+        self.saveresidualdataRec.colaname := colaname
+        self.saveresidualdataRec.colbname := colbname
+        self.saveresidualdataRec.residualcolname := residualcolname
         
         # return
-        return defaultservers.run(self.agent, self.getParmsRec);
+        return defaultservers.run(self.agent, self.saveresidualdataRec);
     }
     
+    self.getparmsRec := [_method="getparms", _sequence=self.id._sequence]
+    public.getparms := function(parmpatterns) {
+    
+        wider self;
+        
+        # argument assignment
+        self.getparmsRec.parmpatterns := parmpatterns
+        
+        # return
+        return defaultservers.run(self.agent, self.getparmsRec);
+    }
+
+    public.id := function() {
+	wider self;
+	return self.id.objectid;
+    }
+
+    public.done := function() {
+    	wider self, public;
+	ok := defaultservers.done(self.agent, public.id());
+	if (ok)
+	{
+	    self := F;
+	    val public := F;
+	}
+	return ok;
+    }
+
+    return ref public;
 }
 
-const meqcalibrater := function(msName, meqModel = "WSRT", skyModel = "GSM",
-				mepDB = "MEP", spw = 0,
+#
+# meqcalibrater constructor
+#
+const meqcalibrater := function(msname, meqmodel = 'WSRT', skymodel = 'GSM',
+				mepdb = 'MEP', spw = 0,
 				host='',forcenewserver=F) {
     agent := defaultservers.activate('meqcalibrater', host, forcenewserver)
     id := defaultservers.create(agent, 'meqcalibrater', 'meqcalibrater',
-                                [msName, meqModel, skyModel, mepDB, spw]);
-    return ref _define_MeqCalibrater(agent, id);
+                                [msname=msname, meqmodel=meqmodel,
+				 skymodel=skymodel, mepdb=mepdb, spw=spw]);
+    return ref _define_meqcalibrater(agent, id);
+}
+
+#
+# Test function demonstrating the solve loop.
+#
+const meqcalibratertest := function()
+{
+    local mc := meqcalibrater('test','meqModel','skyModel','mepDB');
+
+    if (is_fail(mc)) {
+	print "TEST> could not instantiate meqcalibrater"
+	fail
+    }
+
+    mc.settimeintervalsize(3600); # calibrate per 1 hour
+    mc.clearsolvableparms();
+    mc.setsolvableparms("a.*.b d.e.*", T);
+    
+    mc.resettimeiterator()
+    while (mc.nexttimeinterval())
+    {
+	print 'TEST> iteration';
+
+ 	fit := 1.0;
+	while (fit > 0.0001 || fit < -0.0001)
+	{
+	  mc.predict('MODEL_DATA');
+	  fit := mc.solve();
+	  
+	  print 'TEST> fit = ', fit
+	}
+
+	mc.savedata('MODEL_DATA');
+	mc.saveresidualdata('DATA', 'MODEL_DATA', 'RESIDUAL_DATA');
+	mc.saveparms();
+	
+	p := mc.getparms("a.b.* a.b.c.*.d");
+    }
+
+    mc.done();
+    
+    return T;
 }
 
