@@ -19,10 +19,11 @@
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //
 //  $Id$
+//
+//////////////////////////////////////////////////////////////////////
 
-
-#include "BaseSim/TH_Mem.h"
-#include "BaseSim/StepRep.h"
+#include "CEPFrame/TH_Mem.h"
+#include "CEPFrame/StepRep.h"
 #include "Common/Debug.h"
 
 /**

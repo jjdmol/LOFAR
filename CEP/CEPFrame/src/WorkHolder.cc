@@ -20,69 +20,11 @@
 //
 //  $Id$
 //
-//  $Log$
-//  Revision 1.21  2002/06/10 09:44:15  diepen
-//
-//  %[BugId: 37]%
-//  setRead and setWrite have been replaced by setReadDelay.
-//
-//  Revision 1.20  2002/05/16 15:17:55  schaaf
-//  modified TRACER levels and output
-//
-//  Revision 1.19  2002/05/14 07:54:47  gvd
-//  Moved virtual functions to .cc file
-//  Removed INCLUDES from ShMem Makefile.am
-//  Add LOFAR_DEPEND to test/Makefile.am
-//
-//  Revision 1.18  2002/05/08 14:20:51  wierenga
-//  Keep compiler happy (avoid warning).
-//
-//  Revision 1.17  2002/05/03 11:21:32  gvd
-//  Changed for new build environment (mostly added package name to include)
-//
-//  Revision 1.16  2002/05/02 12:16:24  schaaf
-//  Added method getMonitorValue
-//
-//  Revision 1.15  2002/03/15 13:28:09  gvd
-//  Added construct function to WH classes (for XML parser)
-//  Added getX functions to ParamBlock
-//  Added SAX classes for XML parser
-//  Improved testing scripts (added .run)
-//
-//  Revision 1.14  2002/03/04 12:54:01  gvd
-//  Let WorkHolder copy the name of DataHolders; done by creating baseMake
-//
-//  Revision 1.13  2002/03/01 08:27:57  gvd
-//  Replaced firewall by Debug and changed code accordingly
-//  Added lofar_*.h for correct use of namespaces (for KAI and Intel C++)
-//
-//  Revision 1.12  2001/12/07 13:58:20  gvd
-//  Changes to make connect by name possible
-//  Avoid leaks in firewall
-//  Replace resolveComm by a new simplifyConnections
-//
-//  Revision 1.11  2001/10/05 11:50:37  gvd
-//  Added getType function
-//
-//  Revision 1.10  2001/09/24 14:04:09  gvd
-//  Added preprocess and postprocess functions
-//
-//  Revision 1.9  2001/09/21 12:19:02  gvd
-//  Added make functions to WH classes to fix memory leaks
-//
-//  Revision 1.8  2001/03/23 10:00:40  gvd
-//  Improved documentation and test programs
-//  Added clearEventCount function to Step
-//
-//  Revision 1.7  2001/02/05 14:53:05  loose
-//  Added GPL headers
-//
-
 // WorkHolder.cc: implementation of the WorkHolder class.
 //
 //////////////////////////////////////////////////////////////////////
 
-#include "BaseSim/WorkHolder.h"
+#include "CEPFrame/WorkHolder.h"
 #include "Common/Debug.h"
 
 

@@ -22,14 +22,14 @@
 //
 //////////////////////////////////////////////////////////////////////
 
-#ifndef BASESIM_TH_FILE_H
-#define BASESIM_TH_FILE_H
+#ifndef CEPFRAME_TH_FILE_H
+#define CEPFRAME_TH_FILE_H
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
 
-#include "BaseSim/TransportHolder.h"
+#include "CEPFrame/TransportHolder.h"
 #include <stdio.h>
 
 /**

@@ -20,29 +20,20 @@
 //
 //  $Id$
 //
-//  $Log$
-//  Revision 1.2  2002/05/03 11:21:31  gvd
-//  Changed for new build environment (mostly added package name to include)
-//
-//  Revision 1.1  2002/03/15 13:28:08  gvd
-//  Added construct function to WH classes (for XML parser)
-//  Added getX functions to ParamBlock
-//  Added SAX classes for XML parser
-//  Improved testing scripts (added .run)
 //
 //
 //////////////////////////////////////////////////////////////////////
 
-#ifndef BASESIM_SAXPARSER_H
-#define BASESIM_SAXPARSER_H
+#ifndef CEPFRAME_SAXPARSER_H
+#define CEPFRAME_SAXPARSER_H
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
 
 #include <Common/lofar_string.h>
-#include "BaseSim/SAXHandler.h"
-#include "BaseSim/Simul.h"
+#include "CEPFrame/SAXHandler.h"
+#include "CEPFrame/Simul.h"
 
 #if !defined(HAVE_XERCES)
 class XMLCh;

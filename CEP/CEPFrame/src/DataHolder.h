@@ -20,72 +20,11 @@
 //#
 //#  $Id$
 //#
-//#  $Log$
-//#  Revision 1.26  2002/12/13 14:01:24  schaaf
-//#
-//#  %[BugId: 146]%
-//#  Added the writedelay counter
-//#
-//#  Revision 1.25  2002/06/10 09:44:15  diepen
-//#
-//#  %[BugId: 37]%
-//#  setRead and setWrite have been replaced by setReadDelay.
-//#
-//#  Revision 1.24  2002/05/08 14:11:07  wierenga
-//#  Added allocate/deallocate methods
-//#
-//#  Revision 1.23  2002/05/03 11:21:31  gvd
-//#  Changed for new build environment (mostly added package name to include)
-//#
-//#  Revision 1.22  2002/03/27 09:44:08  schaaf
-//#  Support Flexible DataHolder sizes
-//#
-//#  Revision 1.21  2002/03/14 14:18:56  wierenga
-//#  system include before local includes
-//#
-//#  Revision 1.20  2002/03/01 08:27:56  gvd
-//#  Replaced firewall by Debug and changed code accordingly
-//#  Added lofar_*.h for correct use of namespaces (for KAI and Intel C++)
-//#
-//#  Revision 1.19  2002/01/08 09:59:25  gvd
-//#  Added setName to DataHolder.h
-//#
-//#  Revision 1.18  2001/12/20 08:08:19  gvd
-//#  Use lofar_sharedir to include Makefile.common
-//#  Remove typo for doxygen
-//#
-//#  Revision 1.17  2001/10/26 10:06:27  wierenga
-//#  Wide spread changes to convert from Makedefs to autoconf/automake/libtool build environment
-//#
-//#  Revision 1.16  2001/09/24 14:04:08  gvd
-//#  Added preprocess and postprocess functions
-//#
-//#  Revision 1.15  2001/08/16 15:11:12  wierenga
-//#  Make getDataPacketSize virtual to make implementation of performance test DH/WH_GrowSize possible
-//#
-//#  Revision 1.14  2001/08/16 14:33:07  gvd
-//#  Determine TransportHolder at runtime in the connect
-//#
-//#  Revision 1.13  2001/03/23 10:00:40  gvd
-//#  Improved documentation and test programs
-//#  Added clearEventCount function to Step
-//#
-//#  Revision 1.12  2001/03/01 13:15:47  gvd
-//#  Added type argument in DataHolder constructor which is used in
-//#  the connect functions to check if the DH types match
-//#  Improved the simulator parser
-//#  Improved documentation
-//#
-//#  Revision 1.11  2001/02/05 15:42:15  gvd
-//#  Added copyright header again
-//#
-//#  Revision 1.9  2001/02/05 14:53:05  loose
-//#  Added GPL headers
 //#
 //#////////////////////////////////////////////////////////////////////
 
-#ifndef BASESIM_DATAHOLDER_H
-#define BASESIM_DATAHOLDER_H
+#ifndef CEPFRAME_DATAHOLDER_H
+#define CEPFRAME_DATAHOLDER_H
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
@@ -95,15 +34,15 @@
 #include <Common/lofar_string.h>
 #include <Common/lofar_fstream.h>
 
-#include "BaseSim/BaseSim.h"
-#include "BaseSim/TransportHolder.h"
+#include "CEPFrame/BaseSim.h"
+#include "CEPFrame/TransportHolder.h"
 
 //# Forward Declarations
 class Transport;
 
 /**
   Class DataHolder is the abstract base class for all data holders
-  in the BaseSim environment. Its main purpose is to offer a common interface
+  in the CEPFrame environment. Its main purpose is to offer a common interface
   to a class like WorkHolder. Apart from that it also offers some common
   functionality to the classes derived from it.
 

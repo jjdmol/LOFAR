@@ -19,18 +19,19 @@
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //
 //  $Id$
+//
+/////////////////////////////////////////////////////////////////////////////////
 
-
-#ifndef BASESIM_SIMULATOR_H
-#define BASESIM_SIMULATOR_H
+#ifndef CEPFRAME_SIMULATOR_H
+#define CEPFRAME_SIMULATOR_H
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
 
-#include "BaseSim/Simulator.h"
-#include "BaseSim/Simul.h"
-#include "BaseSim/ParamBlock.h"
+#include "CEPFrame/Simulator.h"
+#include "CEPFrame/Simul.h"
+#include "CEPFrame/ParamBlock.h"
 
 
 /**

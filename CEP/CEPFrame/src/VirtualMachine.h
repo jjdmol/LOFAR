@@ -18,14 +18,12 @@
 //  along with this program; if not, write to the Free Software
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //
-//  $Id: 
-//
-//  $Log: 
+//  $Id$
 //
 //////////////////////////////////////////////////////////////////////
 
-#ifndef BASESIM_VIRTUALMACHINE_H
-#define BASESIM_VIRTUALMACHINE_H
+#ifndef CEPFRAME_VIRTUALMACHINE_H
+#define CEPFRAME_VIRTUALMACHINE_H
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
@@ -35,7 +33,7 @@
 
 class VirtualMachine
 {
-public:
+ public:
   VirtualMachine();
   virtual ~VirtualMachine();
   

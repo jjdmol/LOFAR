@@ -20,34 +20,11 @@
 //
 //  $Id$
 //
-//  $Log$
-//  Revision 1.8  2002/05/14 07:54:47  gvd
-//  Moved virtual functions to .cc file
-//  Removed INCLUDES from ShMem Makefile.am
-//  Add LOFAR_DEPEND to test/Makefile.am
-//
-//  Revision 1.7  2002/05/03 11:21:32  gvd
-//  Changed for new build environment (mostly added package name to include)
-//
-//  Revision 1.6  2002/03/14 14:24:07  wierenga
-//  New TransportHolder interface and implementation. The TransportHolder
-//  is no longer dependent on the Transport class (this was a circular
-//  dependency) and may now be used independent of the Transport class.
-//
-//  Revision 1.5  2001/08/16 14:33:08  gvd
-//  Determine TransportHolder at runtime in the connect
-//
-//  Revision 1.4  2001/03/23 10:00:40  gvd
-//  Improved documentation and test programs
-//  Added clearEventCount function to Step
-//
-//  Revision 1.3  2001/02/05 14:53:05  loose
-//  Added GPL headers
 //
 //////////////////////////////////////////////////////////////////////
 
 
-#include "BaseSim/TransportHolder.h"
+#include "CEPFrame/TransportHolder.h"
 #include <stdlib.h>
 
 

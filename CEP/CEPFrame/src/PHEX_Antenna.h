@@ -20,33 +20,16 @@
 //
 //  $Id$
 //
-//  $Log$
-//  Revision 1.6  2002/05/03 11:21:31  gvd
-//  Changed for new build environment (mostly added package name to include)
-//
-//  Revision 1.5  2001/10/26 10:06:27  wierenga
-//  Wide spread changes to convert from Makedefs to autoconf/automake/libtool build environment
-//
-//  Revision 1.4  2001/03/23 10:00:40  gvd
-//  Improved documentation and test programs
-//  Added clearEventCount function to Step
-//
-//  Revision 1.3  2001/02/05 14:53:05  loose
-//  Added GPL headers
-//
-
-// PHEX_Antenna
-//
 //////////////////////////////////////////////////////////////////////
 
-#ifndef BASESIM_PHEX_ANTENNA_H
-#define BASESIM_PHEX_ANTENNA_H
+#ifndef CEPFRAME_PHEX_ANTENNA_H
+#define CEPFRAME_PHEX_ANTENNA_H
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
 
-#include "BaseSim/ParamHolder.h"
+#include "CEPFrame/ParamHolder.h"
 #include <math.h>
 
 /**

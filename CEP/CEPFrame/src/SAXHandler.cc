@@ -20,20 +20,11 @@
 //
 //  $Id$
 //
-//  $Log$
-//  Revision 1.2  2002/05/03 11:21:31  gvd
-//  Changed for new build environment (mostly added package name to include)
-//
-//  Revision 1.1  2002/03/15 13:28:08  gvd
-//  Added construct function to WH classes (for XML parser)
-//  Added getX functions to ParamBlock
-//  Added SAX classes for XML parser
-//  Improved testing scripts (added .run)
 //
 //
 //////////////////////////////////////////////////////////////////////
 
-#include "BaseSim/SAXHandler.h"
+#include "CEPFrame/SAXHandler.h"
 
 #ifdef HAVE_XERCES
 
@@ -44,10 +35,10 @@
 #include <xercesc/util/RefVectorOf.hpp>
 #include <xercesc/internal/VecAttributesImpl.hpp>
 
-#include "BaseSim/Transport.h"
-#include "BaseSim/ParamBlock.h"
-#include "BaseSim/WH_Empty.h"
-#include "BaseSim/SAXSimulParser.h"
+#include "CEPFrame/Transport.h"
+#include "CEPFrame/ParamBlock.h"
+#include "CEPFrame/WH_Empty.h"
+#include "CEPFrame/SAXSimulParser.h"
 #include "Common/Debug.h"
 
 

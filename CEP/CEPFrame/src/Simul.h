@@ -20,90 +20,18 @@
 //
 //  $Id$
 //
-//  $Log$
-//  Revision 1.25  2002/06/10 09:45:32  diepen
-//
-//  %[BugId: 38]%
-//  Added command dhfile to the parser and added function setOutFile to
-//  Simul.
-//
-//  Revision 1.24  2002/05/03 11:21:31  gvd
-//  Changed for new build environment (mostly added package name to include)
-//
-//  Revision 1.23  2002/05/02 12:19:59  schaaf
-//  Added CorbaMonitor object to C'tor
-//
-//  Revision 1.22  2002/03/26 13:29:14  gvd
-//  Moved CorbaController object to SimulRep (for better copy ctor semantics)
-//  Use fewer pointers and use switch instead of if
-//
-//  Revision 1.21  2002/03/26 11:37:33  schaaf
-//  Added CorbaController and access to VirtualMachine
-//
-//  Revision 1.20  2002/03/01 08:27:57  gvd
-//  Replaced firewall by Debug and changed code accordingly
-//  Added lofar_*.h for correct use of namespaces (for KAI and Intel C++)
-//
-//  Revision 1.19  2002/01/09 09:56:35  gvd
-//  Added getParent to Step (for Robbert)
-//
-//  Revision 1.18  2001/12/07 13:58:20  gvd
-//  Changes to make connect by name possible
-//  Avoid leaks in firewall
-//  Replace resolveComm by a new simplifyConnections
-//
-//  Revision 1.17  2001/11/02 14:29:41  gvd
-//  Added clone to Step/Simul and use it in SimulRep
-//
-//  Revision 1.16  2001/10/26 10:06:27  wierenga
-//  Wide spread changes to convert from Makedefs to autoconf/automake/libtool build environment
-//
-//  Revision 1.15  2001/10/19 14:24:42  gvd
-//  Added function getSteps and shortcutConnections
-//  Removed dataMap from SimulRep
-//
-//  Revision 1.14  2001/10/19 06:01:46  gvd
-//  Added checkConnections
-//  Cleaned up Transport and StepRep classes
-//
-//  Revision 1.13  2001/09/24 14:04:08  gvd
-//  Added preprocess and postprocess functions
-//
-//  Revision 1.12  2001/09/21 12:19:02  gvd
-//  Added make functions to WH classes to fix memory leaks
-//
-//  Revision 1.11  2001/09/18 12:07:28  gvd
-//  Changed to resolve Step and Simul memory leaks
-//  Introduced ref.counted StepRep and SimulRep classes for that purposes
-//  Changed several functions to pass by reference instead of pass by pointer
-//
-//  Revision 1.10  2001/08/16 14:33:07  gvd
-//  Determine TransportHolder at runtime in the connect
-//
-//  Revision 1.9  2001/03/23 10:00:40  gvd
-//  Improved documentation and test programs
-//  Added clearEventCount function to Step
-//
-//  Revision 1.8  2001/03/01 13:15:47  gvd
-//  Added type argument in DataHolder constructor which is used in
-//  the connect functions to check if the DH types match
-//  Improved the simulator parser
-//  Improved documentation
-//
-//  Revision 1.7  2001/02/05 14:53:05  loose
-//  Added GPL headers
 //
 //////////////////////////////////////////////////////////////////////
 
-#ifndef BASESIM_SIMUL_H
-#define BASESIM_SIMUL_H
+#ifndef CEPFRAME_SIMUL_H
+#define CEPFRAME_SIMUL_H
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
 
-#include "BaseSim/Step.h"
-#include "BaseSim/SimulRep.h"
+#include "CEPFrame/Step.h"
+#include "CEPFrame/SimulRep.h"
 
 class SimulBuilder;
 class CorbaController;

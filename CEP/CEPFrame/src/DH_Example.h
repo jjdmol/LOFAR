@@ -20,46 +20,11 @@
 //
 //  $Id$
 //
-//  $Log$
-//  Revision 1.11  2002/05/03 11:21:31  gvd
-//  Changed for new build environment (mostly added package name to include)
-//
-//  Revision 1.10  2002/03/14 14:15:31  wierenga
-//  system includes before local includes
-//
-//  Revision 1.9  2002/03/01 08:27:56  gvd
-//  Replaced firewall by Debug and changed code accordingly
-//  Added lofar_*.h for correct use of namespaces (for KAI and Intel C++)
-//
-//  Revision 1.8  2001/10/26 10:06:27  wierenga
-//  Wide spread changes to convert from Makedefs to autoconf/automake/libtool build environment
-//
-//  Revision 1.7  2001/09/24 14:04:08  gvd
-//  Added preprocess and postprocess functions
-//
-//  Revision 1.6  2001/09/21 12:19:02  gvd
-//  Added make functions to WH classes to fix memory leaks
-//
-//  Revision 1.5  2001/03/23 10:00:40  gvd
-//  Improved documentation and test programs
-//  Added clearEventCount function to Step
-//
-//  Revision 1.4  2001/03/16 10:20:34  gvd
-//  Updated comments and made buffer length dynamic
-//
-//  Revision 1.3  2001/03/01 13:15:47  gvd
-//  Added type argument in DataHolder constructor which is used in
-//  the connect functions to check if the DH types match
-//  Improved the simulator parser
-//  Improved documentation
-//
-//  Revision 1.2  2001/02/05 14:53:05  loose
-//  Added GPL headers
 //
 //////////////////////////////////////////////////////////////////////
 
-#ifndef BASESIM_DH_EXAMPLE_H
-#define BASESIM_DH_EXAMPLE_H
+#ifndef CEPFRAME_DH_EXAMPLE_H
+#define CEPFRAME_DH_EXAMPLE_H
 
 #include <Common/lofar_complex.h>
 
@@ -67,7 +32,7 @@
 #include <config.h>
 #endif
 
-#include "BaseSim/DataHolder.h"
+#include "CEPFrame/DataHolder.h"
 
 /**
    This class is an example DataHolder which is only used in the

@@ -20,75 +20,18 @@
 //
 //  $Id$
 //
-//  $Log$
-//  Revision 1.22  2002/06/10 09:49:37  diepen
-//
-//  %[BugId: 37]%
-//  Added basePreprocess and basePostprocess
-//
-//  Revision 1.21  2002/05/03 11:21:32  gvd
-//  Changed for new build environment (mostly added package name to include)
-//
-//  Revision 1.20  2002/05/02 12:16:24  schaaf
-//  Added method getMonitorValue
-//
-//  Revision 1.19  2002/03/15 13:28:09  gvd
-//  Added construct function to WH classes (for XML parser)
-//  Added getX functions to ParamBlock
-//  Added SAX classes for XML parser
-//  Improved testing scripts (added .run)
-//
-//  Revision 1.18  2002/03/14 14:25:27  wierenga
-//  system includes before local includes
-//
-//  Revision 1.17  2002/03/04 12:54:01  gvd
-//  Let WorkHolder copy the name of DataHolders; done by creating baseMake
-//
-//  Revision 1.16  2002/03/01 08:27:57  gvd
-//  Replaced firewall by Debug and changed code accordingly
-//  Added lofar_*.h for correct use of namespaces (for KAI and Intel C++)
-//
-//  Revision 1.15  2001/12/07 13:58:20  gvd
-//  Changes to make connect by name possible
-//  Avoid leaks in firewall
-//  Replace resolveComm by a new simplifyConnections
-//
-//  Revision 1.14  2001/10/26 10:06:27  wierenga
-//  Wide spread changes to convert from Makedefs to autoconf/automake/libtool build environment
-//
-//  Revision 1.13  2001/10/05 11:50:37  gvd
-//  Added getType function
-//
-//  Revision 1.12  2001/09/24 14:04:09  gvd
-//  Added preprocess and postprocess functions
-//
-//  Revision 1.11  2001/09/21 12:19:02  gvd
-//  Added make functions to WH classes to fix memory leaks
-//
-//  Revision 1.10  2001/03/23 10:00:40  gvd
-//  Improved documentation and test programs
-//  Added clearEventCount function to Step
-//
-//  Revision 1.9  2001/03/01 13:15:47  gvd
-//  Added type argument in DataHolder constructor which is used in
-//  the connect functions to check if the DH types match
-//  Improved the simulator parser
-//  Improved documentation
-//
-//  Revision 1.8  2001/02/05 14:53:05  loose
-//  Added GPL headers
 //
 //////////////////////////////////////////////////////////////////////
 
-#ifndef BASESIM_WORKHOLDER_H
-#define BASESIM_WORKHOLDER_H
+#ifndef CEPFRAME_WORKHOLDER_H
+#define CEPFRAME_WORKHOLDER_H
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
 
-#include "BaseSim/BaseSim.h"
-#include "BaseSim/DataHolder.h"
+#include "CEPFrame/BaseSim.h"
+#include "CEPFrame/DataHolder.h"
 #include <Common/lofar_iostream.h>
 #include <Common/lofar_string.h>
 #include <Common/lofar_map.h>
@@ -97,7 +40,7 @@ class ParamBlock;
 
 /**
   Class WorkHolder is the abstract base class for all work holders
-  in the BaseSim environment. It main purpose is to offer a common interface
+  in the CEPFrame environment. It main purpose is to offer a common interface
   to a class like Step. Apart from that it also offers some common
   functionality to the classes derived from it.
 */

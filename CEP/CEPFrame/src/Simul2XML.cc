@@ -20,7 +20,7 @@
 //
 //////////////////////////////////////////////////////////////////////
 
-#include "BaseSim/Simul2XML.h"
+#include "CEPFrame/Simul2XML.h"
 #include <Common/lofar_string.h>
 
 const int INDENT = 1;

@@ -20,39 +20,18 @@
 //
 //  $Id$
 //
-//  $Log$
-//  Revision 1.10  2002/05/03 11:21:31  gvd
-//  Changed for new build environment (mostly added package name to include)
-//
-//  Revision 1.9  2001/10/26 10:06:27  wierenga
-//  Wide spread changes to convert from Makedefs to autoconf/automake/libtool build environment
-//
-//  Revision 1.8  2001/09/21 12:19:02  gvd
-//  Added make functions to WH classes to fix memory leaks
-//
-//  Revision 1.7  2001/03/16 10:20:03  gvd
-//  Updated comments
-//
-//  Revision 1.6  2001/03/01 13:15:47  gvd
-//  Added type argument in DataHolder constructor which is used in
-//  the connect functions to check if the DH types match
-//  Improved the simulator parser
-//  Improved documentation
-//
-//  Revision 1.5  2001/02/05 14:53:05  loose
-//  Added GPL headers
 //
 //////////////////////////////////////////////////////////////////////
 
-#ifndef BASESIM_DH_EMPTY_H
-#define BASESIM_DH_EMPTY_H
+#ifndef CEPFRAME_DH_EMPTY_H
+#define CEPFRAME_DH_EMPTY_H
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
 
-#include "BaseSim/DataHolder.h"
-#include "BaseSim/BaseSim.h"
+#include "CEPFrame/DataHolder.h"
+#include "CEPFrame/BaseSim.h"
 
 /**
    This class represents an empty DataHolder.

@@ -20,44 +20,6 @@
 //
 //  $Id$
 //
-//  $Log$
-//  Revision 1.13  2002/05/16 15:17:55  schaaf
-//  modified TRACER levels and output
-//
-//  Revision 1.12  2002/05/08 14:19:56  wierenga
-//  Moved setReadTag and setWriteTag into .cc file.
-//
-//  Revision 1.11  2002/05/03 11:21:32  gvd
-//  Changed for new build environment (mostly added package name to include)
-//
-//  Revision 1.10  2002/03/14 14:23:05  wierenga
-//  Adapted to use the new TransportHolder interface. Transport must
-//  now pass more information to TransportHolder send and recv calls
-//  which was previously queries by the TransportHolder itself via a
-//  backreference to the containing Transport class.
-//
-//  Revision 1.9  2002/03/01 08:27:57  gvd
-//  Replaced firewall by Debug and changed code accordingly
-//  Added lofar_*.h for correct use of namespaces (for KAI and Intel C++)
-//
-//  Revision 1.8  2001/10/19 06:01:46  gvd
-//  Added checkConnections
-//  Cleaned up Transport and StepRep classes
-//
-//  Revision 1.7  2001/08/16 14:33:07  gvd
-//  Determine TransportHolder at runtime in the connect
-//
-//  Revision 1.6  2001/06/22 09:09:30  schaaf
-//  Use TRANSPORTERINCLUDE to select the TH_XXX.h include files
-//
-//  Revision 1.5  2001/03/01 13:15:47  gvd
-//  Added type argument in DataHolder constructor which is used in
-//  the connect functions to check if the DH types match
-//  Improved the simulator parser
-//  Improved documentation
-//
-//  Revision 1.4  2001/02/05 14:53:05  loose
-//  Added GPL headers
 //
 //////////////////////////////////////////////////////////////////////
 
@@ -65,10 +27,10 @@
 #include <stdlib.h>
 #include <memory.h>
 
-#include "BaseSim/Transport.h"
-#include "BaseSim/TransportHolder.h"
-#include "BaseSim/DataHolder.h"
-#include "BaseSim/Step.h"
+#include "CEPFrame/Transport.h"
+#include "CEPFrame/TransportHolder.h"
+#include "CEPFrame/DataHolder.h"
+#include "CEPFrame/Step.h"
 #include "Common/Debug.h"
 
 Transport::Transport (DataHolder* dataHolderPtr)
