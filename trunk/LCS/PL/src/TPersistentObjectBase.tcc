@@ -21,6 +21,7 @@
 //#  $Id$
 
 #include <PL/TPersistentObjectBase.h>
+#include <PL/Exception.h>
 
 namespace LCS
 {
