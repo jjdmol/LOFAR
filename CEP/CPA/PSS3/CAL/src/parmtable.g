@@ -79,9 +79,14 @@ parmtable := function (name, create=F)
 	if (is_fail(self.tab)) {
 	    fail;
 	}
-	self.itab := table (self.tab.getkeyword ('DEFAULTVALUES'), readonly=F);
-	if (is_fail(self.itab)) {
-	    fail;
+	kws := self.tab.getkeywords();
+	if (has_field (kws, 'DEFAULTVALUES')) {
+	    self.itab := table (kws.DEFAULTVALUES, readonly=F);
+	    if (is_fail(self.itab)) {
+		fail;
+	    }
+	} else {
+	    self.itab := F;
 	}
     }
 
@@ -89,7 +94,7 @@ parmtable := function (name, create=F)
     {
 	wider self, public;
 	self.tab.close();
-	self.itab.close();
+	if (is_record(self.itab)) self.itab.close();
 	val self := F;
 	val public := F;
 	return T;
@@ -106,6 +111,9 @@ parmtable := function (name, create=F)
 	if (trace) print funcname,' input=',input;
 	#----------------------------------------------------------------
 
+	if (!is_record(self.itab)) {
+	    fail "No DEFAULTVALUES subtable";
+	}
 	t1 := self.itab.query (spaste('NAME=="',parmname,'"'));
 	nr := t1.nrows();
 	t1.close();
@@ -264,6 +272,42 @@ parmtable := function (name, create=F)
 	return T;
     }
 
+    self.perturb := function (tab, where, perturbation, pertrelative)
+    {
+	t1 := ref tab;
+	if (where != '') {
+	    t1 := tab.query (where);
+	}
+	if (is_fail(t1)) fail;
+	if (t1.nrows() > 0) {
+	    for (row in [1:t1.nrows()]) {
+		if (t1.iscelldefined ('RVALUES',row)) {
+		    vals := t1.getcell ('SIM_RVALUES', row);
+		    if (pertrelative) {
+			valp := vals * perturbation;
+		    } else {
+			valp := vals + perturbation;
+		    }
+		    t1.putcell ('RVALUES', row, valp);
+		    t1.putcell ('SIM_RPERT', row, valp-vals);
+		} else {
+		    vals := t1.getcell ('SIM_CVALUES', row);
+		    if (pertrelative) {
+			valp := vals * perturbation;
+		    } else {
+			valp := vals + perturbation;
+		    }
+		    t1.putcell ('CVALUES', row, valp);
+		    t1.putcell ('SIM_CPERT', row, valp-vals);
+		}
+	    }
+	}
+	if (where != '') {
+	    t1.close();
+	}
+	return T;
+    }
+
     public.perturb := function (where='',
 				perturbation=1e-6, pertrelative=T,
 				trace=F)
@@ -275,47 +319,10 @@ parmtable := function (name, create=F)
 	if (trace) print funcname,' input=',input;
 	#----------------------------------------------------------------
 
-	for (i in [1,2]) {
-	    t1 := ref self.itab;
-	    if (i==1) {
-		if (where != '') {
-		    t1 := self.itab.query (where);
-		}
-	    } else {
-		if (where != '') {
-		    t1 := self.tab.query (where);
-		} else {
-		    t1 := ref self.tab;
-		}
-	    }
-	    if (is_fail(t1)) fail;
-	    if (t1.nrows() > 0) {
-		for (row in [1:t1.nrows()]) {
-		    if (t1.iscelldefined ('RVALUES',row)) {
-			vals := t1.getcell ('SIM_RVALUES', row);
-			if (pertrelative) {
-			    valp := vals * perturbation;
-			} else {
-			    valp := vals + perturbation;
-			}
-			t1.putcell ('RVALUES', row, valp);
-			t1.putcell ('SIM_RPERT', row, valp-vals);
-		    } else {
-			vals := t1.getcell ('SIM_CVALUES', row);
-			if (pertrelative) {
-			    valp := vals * perturbation;
-			} else {
-			    valp := vals + perturbation;
-			}
-			t1.putcell ('CVALUES', row, valp);
-			t1.putcell ('SIM_CPERT', row, valp-vals);
-		    }
-		}
-	    }
+	if (is_record(self.itab)) {
+	    self.perturb(self.itab, where, perturbation, pertrelative);
 	}
-	if (where != '') {
-	    t1.close();
-	}
+	self.perturb(self.tab, where, perturbation, pertrelative);
 	return T;
     }
 

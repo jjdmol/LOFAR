@@ -56,6 +56,15 @@ const imgannotator := function(fname, type='contour',
 
 	# construction ends here
 
+	public.hold := function()
+	{
+	    dv.hold();
+	}
+	public.release := function()
+	{
+	    dv.release();
+	}
+
 	public.add_marker := function(index, ra, dec, updatemarker=T,
 				      addtext=T,
 				      linewidth=1, size=10, style=0)
@@ -64,8 +73,6 @@ const imgannotator := function(fname, type='contour',
 		local opts;
 
 		a := self.annotator;
-
-		dv.hold();
 
 		# create the shape and lock it to World Coordinates
 		a.newshape(marker_template);
@@ -93,8 +100,6 @@ const imgannotator := function(fname, type='contour',
 		if (addtext) public.add_text(index, ra, dec, spaste(self.marker_index));
 		if (updatemarker) self.marker_index +:= 1;
 
-		dv.release();
-
 		return this_shape;
 	}
 
@@ -118,8 +123,6 @@ const imgannotator := function(fname, type='contour',
 
 		a := self.annotator;
 
-		dv.hold();
-
 		# create the shape and lock it to World Coordinates
 		a.newshape(text_template);
 #DEBUG		print a.getshapeoptions(self.shape_index);
@@ -138,8 +141,6 @@ const imgannotator := function(fname, type='contour',
 
 		this_shape := self.shape_index;
 		self.shape_index +:= 1;
-
-		dv.release();
 
 		return this_shape;
 	}
