@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+
+<TRT>
+  <maxSeqNr> 	<MACType> MACInteger 	</MACType> <MACDefault> 100 </MACDefault> </maxSeqNr>
+  <seqNr> 		<MACType> MACUnsigned </MACType> <MACDefault> 0   </MACDefault> </seqNr>
+</TRT>
