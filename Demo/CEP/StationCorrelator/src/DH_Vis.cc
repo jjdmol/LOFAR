@@ -24,12 +24,14 @@ DH_Vis::DH_Vis (const string& name, const int stations, const int channels, cons
   nchannels     (channels),
   npolarisations(polarisations)
 {
-
+  // Determine the number of bytes needed for DataPacket and buffer.
+  itsBufSize = nstations * nstations * nchannels * npolarisations*npolarisations; 
 }
 
 DH_Vis::DH_Vis(const DH_Vis& that)
   : DataHolder(that),
-    itsBuffer(0)
+    itsBuffer(0),
+    itsBufSize(that.itsBufSize)
 {
 }
 
@@ -46,9 +48,6 @@ void DH_Vis::preprocess()
 {
   // First delete possible buffers.
   postprocess();
-
-  // Determine the number of bytes needed for DataPacket and buffer.
-  itsBufSize = nstations * nstations * nchannels * npolarisations*npolarisations; 
 
   addField("Buffer", BlobField<BufferType>(1, itsBufSize));
   createDataBlock();
