@@ -636,9 +636,6 @@ try
 
 	  UVPDataAtom atom(nfreq, uvp_header);
       
-	  //      std::cout << ": " << ncorr << ":" << nfreq << ":" << ntime << std::endl;
-	  //      std::cout << ant1 << "-" << ant2 << endl;
-      
 	  for(VisTile::const_iterator iter=tile.deref().begin();
 	      iter != tile.deref().end();
 	      iter.next()) {
