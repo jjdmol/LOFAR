@@ -102,6 +102,8 @@ UVPMainWindow::UVPMainWindow()
   connect(itsCanvas, SIGNAL(signal_mouseWorldPosChanged(double, double)),
           this, SLOT(slot_mouse_world_pos(double, double)));
 
+  connect(itsGraphSettingsWidget, SIGNAL(signalAntenna2Changed(unsigned int)),
+          this, SLOT(slot_redraw()));
   resizeEvent(0);
   itsCanvas->drawView();
 
@@ -197,6 +199,14 @@ void UVPMainWindow::drawDataSet()
 }
 
 
+
+
+//================>>>  UVPMainWindow::slot_redraw  <<<================
+
+void UVPMainWindow::slot_redraw()
+{
+  drawDataSet();
+}
 
 
 
@@ -509,7 +519,7 @@ void UVPMainWindow::slot_readPVD(const std::string& pvdName)
   itsBusyPlotting = true;
 
   while(pvd.getDataAtoms(&itsDataSet, ant1, ant2) && itsBusyPlotting) {
-    if(pass % 20 == 0) {
+    if(pass % 10 == 0) {
       drawDataSet();
     }
     pass++;
