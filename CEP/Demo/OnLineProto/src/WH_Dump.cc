@@ -47,7 +47,7 @@ WH_Dump::WH_Dump (const string& name,
 		  unsigned int  nin,
 		  int           rank)
   : WorkHolder    (nin, 1, name,"WH_Dump"),
-    itsIndex   (0),
+    itsIndex   (1),
     itsCounter (0),
     itsBuffer  (0),
     handle     (0),
@@ -112,12 +112,13 @@ void WH_Dump::process()
 	    InDHptr->getBuffer(), 
 	    NSTATIONS*NSTATIONS*sizeof(DH_Vis::BufferType));
 
-    cout << itsIndex << endl;
-    cout << corr(blitz::Range(0,4), blitz::Range(0,4)) << endl;
-    
+    if (itsIndex % 50 == 0) {
+      cout << itsIndex << endl;
+      cout << corr(blitz::Range(0,4), blitz::Range(0,4)) << endl;
+    }
     itsBuffer(itsIndex % PLOTSIZE) = corr (1,0);
     
-    if (itsIndex >= PLOTSIZE-1) {
+    if (0 == itsIndex % PLOTSIZE) {
 
       // the buffer is filled, we can plot the resulting graph
 
@@ -129,10 +130,13 @@ void WH_Dump::process()
 // 		       itsBuffer.size(),
 // 		       "Power of correlation between station 0 and 99 over time" );
 
+//      gnuplot_close(handle);usleep(50);
+      handle = gnuplot_init();
       gnuplot_plot_x ( handle, 
 		       real ( itsBuffer ).data(),
 		       itsBuffer.size(), 
 		       "Real part of correlation between station 0 and 99 over time" );
+
     }
     itsIndex++;
   }

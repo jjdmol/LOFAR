@@ -94,7 +94,8 @@ void WH_Correlate::process()
 //   for (int i = 0; i < itsNelements; i++) {
 //     for (int j = 0; j < itsNitems; j++) {
       
-//        signal(i,j) = complex<float> (i,i);
+//       if (i == 0) signal (i,j) = complex<float> (0.05, 0.85);
+//       else signal (i,j) = complex<float> (-0.2, 0.03);
       
 //     }
 //   }
@@ -103,20 +104,22 @@ void WH_Correlate::process()
   // or by DH_CorrCube accessor(3); in order of expected performance
 
   
-  //1 signal = *InDHptr->getBuffer();
-  //2 memcpy(signal.data(), InDHptr->getBuffer(), itsNelements*itsNitems*sizeof(DH_CorrCube::BufferType));
-   for (int element = 0; element < itsNelements; element++) {
-     for (int item = 0; item < itsNitems; item++) {
-       signal(element,item) = *(InDHptr->getBufferElement(element,item,0));
-     }
-   }
+  //1 signal = *InDHptr->getBuffer(); // DOESN't work
+  memcpy(signal.data(), InDHptr->getBuffer(), itsNelements*itsNitems*sizeof(DH_CorrCube::BufferType));
+
+//    for (int element = 0; element < itsNelements; element++) {
+//      for (int item = 0; item < itsNitems; item++) {
+//        signal(element,item) = *(InDHptr->getBufferElement(element,item,0));
+//      }
+//    }
 //    cout << signal(5,5) << " ";
 //    cout << endl;
 
 
   corr = complex<float> (0,0);
 
-  WH_Correlate::correlator_core_unrolled(signal, corr);
+  WH_Correlate::correlator_core(signal, corr);
+  //  WH_Correlate::correlator_core_unrolled(signal, corr);
   
   // copy the correlation matrix to the output
   memcpy(OutDHptr->getBuffer(), corr.data(), itsNelements*itsNelements*sizeof(DH_Vis::BufferType));
