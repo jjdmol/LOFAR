@@ -20,6 +20,8 @@
 //#
 //#  $Id$
 
+#define LOFARLOGGER_SUBPACKAGE "SAL"
+
 #include <GCF/PAL/GCF_PVSSInfo.h>
 #include <GCF/Utils.h>
 #include "GSA_Service.h"

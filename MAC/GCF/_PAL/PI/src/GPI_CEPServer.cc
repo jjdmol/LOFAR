@@ -24,25 +24,29 @@
 #include <Common/BlobIStream.h>
 #include <Common/BlobOStream.h>
 #include <GCF/PAL/GCF_PVSSInfo.h>
+#include <GPI_TH_Port.h>
+
 using LOFAR::BlobIStream;
 using LOFAR::BlobOStream;
 using LOFAR::TYPES::uint16;
+using LOFAR::GPITH_Port;
 
 GPICEPServer::GPICEPServer(GPIController& controller) : 
   GPIPMLlightServer(controller, PI_CEPPLS_TASK_NAME, true),
-  _thPort(getClientPort()),
-  _dhProto(),
+  _dhServer("Server"),
   _valueBuf(0),
   _upperboundValueBuf(0)
 {
-  _dhProto.setID(1);
+  _dhServer.setID(2);
   // placeholder for the remote port (TH_Socket) in the PIClient (CEP application)
-  DH_PIProtocol dummy("dummy"); 
-  dummy.setID(2);
-  // NOTE: normally here a init of the dataholder is necessary. But in this case 
-  // init will do nothing. So only a "symbolic" connect is necessary. The 
-  // connection is already established in the baseclass (_plsPort).
-  _dhProto.connectTo(dummy, _thPort, false);
+  DH_PIProtocol dhPIClient("dummy"); 
+  dhPIClient.setID(1);
+
+  GPITH_Port   thFrom(getClientPort());
+  GPITH_Port   thTo(getClientPort());
+  
+  dhPIClient.connectBidirectional(_dhServer, thFrom, thTo, false);
+  _dhServer.init();
 }
 
 GPICEPServer::~GPICEPServer()
@@ -59,6 +63,7 @@ GCFEvent::TResult GPICEPServer::operational(GCFEvent& e, GCFPortInterface& p)
     case F_ENTRY:
     case F_CONNECTED:
     case F_DISCONNECTED:
+    case F_CLOSED:
     case F_TIMER:
     case PA_SCOPE_REGISTERED:
     case PA_SCOPE_UNREGISTERED:
@@ -72,77 +77,85 @@ GCFEvent::TResult GPICEPServer::operational(GCFEvent& e, GCFPortInterface& p)
     {
       // this indicates that there is data received from the CEP-PMLlight port
       // so read the data from the "port" via dataholder and transportholder
-      _dhProto.read();
-      BlobIStream& blob = _dhProto.getExtraBlob();
-      // the CEP application can not know on which PVSS system the PI is connected
-      // so this must be done here yet
-      string sysScope = GCFPVSSInfo::getLocalSystemName() + ":";
-      // The conversion from Blob to the GCFEvent concept!!!
-      switch (_dhProto.getEventID())
+      try
       {
-        case DH_PIProtocol::REGISTER_SCOPE:
+        _dhServer.read();
+        BlobIStream& blob = _dhServer.getExtraBlob();
+        uint16 result;
+        // The conversion from Blob to the GCFEvent concept!!!
+        switch (_dhServer.getEventID())
         {
-          PIRegisterScopeEvent requestIn;
-          requestIn.seqnr = _dhProto.getSeqNr();
-          blob >> requestIn.scope;
-          requestIn.scope = sysScope + requestIn.scope;
-          blob >> requestIn.type;
-          blob >> (char) requestIn.category;          
-          registerPropSet(requestIn);
-          break;
-        }
-        case DH_PIProtocol::UNREGISTER_SCOPE:
-        {
-          PIUnregisterScopeEvent requestIn;
-          requestIn.seqnr = _dhProto.getSeqNr();
-          blob >> requestIn.scope;
-          requestIn.scope = sysScope + requestIn.scope;
-          unregisterPropSet(requestIn);
-          break;
-        }
-        case DH_PIProtocol::PROPSET_LINKED:
-        {
-          PIPropSetLinkedEvent responseIn;
-          blob >> responseIn.scope;
-          responseIn.scope = sysScope + responseIn.scope;
-          blob >> (uint16) responseIn.result;
-          propSetLinked(responseIn);
-          break;
-        }
-        case DH_PIProtocol::PROPSET_UNLINKED:
-        {
-          PIPropSetUnlinkedEvent responseIn;
-          blob >> responseIn.scope;
-          responseIn.scope = sysScope + responseIn.scope;
-          blob >> (uint16) responseIn.result;
-          propSetUnlinked(responseIn);
-          break;
-        }
-        case DH_PIProtocol::VALUE_SET:
-        {
-          PIValueSetEvent indication;
-          blob >> indication.name;
-          uint16 valueSize;
-          blob >> valueSize;
-          if (_upperboundValueBuf < valueSize)
+          case DH_PIProtocol::REGISTER_SCOPE:
           {
-            // enlarge the value buffer
-            _upperboundValueBuf = valueSize;
-            if (_valueBuf) delete [] _valueBuf;
-            _valueBuf = new char[valueSize];
+            PIRegisterScopeEvent requestIn;
+            requestIn.seqnr = _dhServer.getSeqNr();
+            blob >> requestIn.scope;
+            blob >> requestIn.type;
+            char category;
+            blob >> category;
+            requestIn.category = (TPSCategory) category;
+            registerPropSet(requestIn);
+            break;
           }
-          // reuses the valueBuffer for storing value data
-          blob.get(_valueBuf, valueSize);
-          if (indication.value.unpack(_valueBuf) != valueSize)
+          case DH_PIProtocol::UNREGISTER_SCOPE:
           {
+            PIUnregisterScopeEvent requestIn;
+            requestIn.seqnr = _dhServer.getSeqNr();
+            blob >> requestIn.scope;
+            unregisterPropSet(requestIn);
+            break;
+          }
+          case DH_PIProtocol::PROPSET_LINKED:
+          {
+            PIPropSetLinkedEvent responseIn;
+            blob >> responseIn.scope;
+            blob >> result;
+            responseIn.result = (TPIResult) result;
+            propSetLinked(responseIn);
+            break;
+          }
+          case DH_PIProtocol::PROPSET_UNLINKED:
+          {
+            PIPropSetUnlinkedEvent responseIn;
+            blob >> responseIn.scope;
+            blob >> result;
+            responseIn.result = (TPIResult) result;
+            propSetUnlinked(responseIn);
+            break;
+          }
+          case DH_PIProtocol::VALUE_SET:
+          {
+            PIValueSetEvent indication;
+            blob >> indication.name;
+            uint16 valueSize;
+            blob >> valueSize;
+            if (_upperboundValueBuf < valueSize)
+            {
+              // enlarge the value buffer
+              _upperboundValueBuf = valueSize;
+              if (_valueBuf) delete [] _valueBuf;
+              _valueBuf = new char[valueSize];
+            }
+            // reuses the valueBuffer for storing value data
+            blob.get(_valueBuf, valueSize);
+            if (indication.value.unpack(_valueBuf) != valueSize)
+            {
+              assert(0);
+            }
+            valueSet(indication);
+            break;
+          }
+          default:
             assert(0);
-          }
-          valueSet(indication);
-          break;
+            break;
         }
-        default:
-          assert(0);
-          break;
+      }
+      catch (std::exception& x) 
+      {
+        LOG_ERROR(formatString(
+            "Exception in CEP server: %s",
+            x.what()));    
+        status = GCFEvent::NOT_HANDLED;
       }
       break;    
     }
@@ -158,50 +171,55 @@ void GPICEPServer::sendMsgToClient(GCFEvent& msg)
 {
   // The conversion of the GCFEvent concept to Blobs for the dataholder
   bool converted(true);
-  BlobOStream& blob = _dhProto.createExtraBlob();
-  string localScope;
-  switch (msg.signal)
+  try
   {
-    case PI_SCOPE_REGISTERED:
+    BlobOStream& blob = _dhServer.createExtraBlob();
+    string localScope;
+    switch (msg.signal)
     {
-      PIScopeRegisteredEvent* pResponseOut = (PIScopeRegisteredEvent*) &msg;
-      _dhProto.setEventID(DH_PIProtocol::SCOPE_REGISTERED);
-      _dhProto.setSeqNr(pResponseOut->seqnr);
-      blob << (uint16) pResponseOut->result;
-      break;
+      case PI_SCOPE_REGISTERED:
+      {
+        PIScopeRegisteredEvent* pResponseOut = (PIScopeRegisteredEvent*) &msg;
+        _dhServer.setEventID(DH_PIProtocol::SCOPE_REGISTERED);
+        _dhServer.setSeqNr(pResponseOut->seqnr);
+        blob << (uint16) pResponseOut->result;
+        break;
+      }
+      case PI_SCOPE_UNREGISTERED:
+      {
+        PIScopeUnregisteredEvent* pResponseOut = (PIScopeUnregisteredEvent*) &msg;
+        _dhServer.setEventID(DH_PIProtocol::SCOPE_UNREGISTERED);
+        _dhServer.setSeqNr(pResponseOut->seqnr);
+        blob << (uint16) pResponseOut->result;
+        break;
+      }
+      case PI_LINK_PROP_SET:
+      {
+        PILinkPropSetEvent* pRequestOut = (PILinkPropSetEvent*) &msg;
+        _dhServer.setEventID(DH_PIProtocol::LINK_PROPSET);
+        _dhServer.setSeqNr(0);
+        blob << pRequestOut->scope;
+        break;
+      }
+      case PI_UNLINK_PROP_SET:
+      {
+        PIUnlinkPropSetEvent* pRequestOut = (PIUnlinkPropSetEvent*) &msg;
+        _dhServer.setEventID(DH_PIProtocol::UNLINK_PROPSET);
+        _dhServer.setSeqNr(0);
+        blob << pRequestOut->scope;
+        break;
+      }
+      default:
+        // no other messages should be expected here to forward them to CEP-PMLlight
+        converted = false;
+        break;
     }
-    case PI_SCOPE_UNREGISTERED:
-    {
-      PIScopeUnregisteredEvent* pResponseOut = (PIScopeUnregisteredEvent*) &msg;
-      _dhProto.setEventID(DH_PIProtocol::SCOPE_UNREGISTERED);
-      _dhProto.setSeqNr(pResponseOut->seqnr);
-      blob << (uint16) pResponseOut->result;
-      break;
-    }
-    case PI_LINK_PROP_SET:
-    {
-      PILinkPropSetEvent* pRequestOut = (PILinkPropSetEvent*) &msg;
-      _dhProto.setEventID(DH_PIProtocol::LINK_PROPSET);
-      _dhProto.setSeqNr(0);
-      localScope = pRequestOut->scope; 
-      localScope.erase(0, localScope.find(':'));
-      blob << localScope;
-      break;
-    }
-    case PI_UNLINK_PROP_SET:
-    {
-      PIUnlinkPropSetEvent* pRequestOut = (PIUnlinkPropSetEvent*) &msg;
-      _dhProto.setEventID(DH_PIProtocol::UNLINK_PROPSET);
-      _dhProto.setSeqNr(0);
-      localScope = pRequestOut->scope; 
-      localScope.erase(0, localScope.find(':'));
-      blob << localScope;
-      break;
-    }
-    default:
-      // no other messages should be expected here to forward them to CEP-PMLlight
-      converted = false;
-      break;
+    if (converted) _dhServer.write();
   }
-  if (converted) _dhProto.write();
+  catch (std::exception& x) 
+  {
+    LOG_ERROR(formatString(
+        "Exception in CEP server: %s",
+        x.what()));    
+  }
 }

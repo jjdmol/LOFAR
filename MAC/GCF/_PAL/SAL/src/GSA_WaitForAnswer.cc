@@ -20,6 +20,8 @@
 //#
 //#  $Id$
 
+#define LOFARLOGGER_SUBPACKAGE "SAL"
+
 #include "GSA_WaitForAnswer.h"
 #include "GSA_Service.h"
 

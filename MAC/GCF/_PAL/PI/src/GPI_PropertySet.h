@@ -112,8 +112,10 @@ class GPIPropertySet : public GCFPropertyProxy
     string _type;
     TPSCategory _category;
     
-    typedef enum TState {S_DISABLED, S_DISABLING, S_ENABLING, S_ENABLED, 
-                         S_LINKING, S_LINKED, S_UNLINKING, S_DELAYED_DISABLING};
+    typedef enum TState {S_DISABLED, S_DISABLING, S_DELAYED_DISABLING, 
+                         S_ENABLING, S_ENABLED, 
+                         S_LINKING, S_LINKING_IN_CLIENT, S_LINKED, 
+                         S_UNLINKING};
     TState _state;
     
   private: // adminstrative members

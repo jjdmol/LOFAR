@@ -137,6 +137,7 @@ GCFEvent::TResult GPIController::operational(GCFEvent& e, GCFPortInterface& p)
             {
               _pmlLightServers.erase(iter);
               delete pPLS;
+              LOG_INFO("GCF-PI client deleted!");
               break;
             }
           }

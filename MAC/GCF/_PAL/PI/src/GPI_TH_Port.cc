@@ -117,7 +117,7 @@ void* GPITH_Port::GPIBlobEvent::pack(unsigned int& packsize)
 {
   resizeBuf(blobSize);
   
-  memcpy(_buffer, &blobData, blobSize);
+  memcpy(_buffer, blobData, blobSize);
 
   packsize = blobSize;
   return _buffer;

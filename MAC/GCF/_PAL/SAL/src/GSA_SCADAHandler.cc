@@ -21,6 +21,8 @@
 //#
 //#  $Id$
 
+#define LOFARLOGGER_SUBPACKAGE "SAL"
+
 #include "GSA_SCADAHandler.h"
 #include <GSA_Resources.h>
 #include <GCF/TM/GCF_Task.h>

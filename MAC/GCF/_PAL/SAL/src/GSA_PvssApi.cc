@@ -21,6 +21,8 @@
 //#
 //#  $Id$
 
+#define LOFARLOGGER_SUBPACKAGE "SAL"
+
 // GCF/SAL includes
 #include "GSA_Defines.h"
 #include "GSA_PvssApi.h"
