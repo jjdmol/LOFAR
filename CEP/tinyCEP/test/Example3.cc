@@ -36,7 +36,7 @@ int main (int argv, const char** argc) {
 
   MySocketExample* EX1;
 
-  ::Debug::initLevels(argv, argc);
+  //  ::Debug::initLevels(argv, argc);
   
   if (argv < 2) {
     cout << "Usage " << argc[0] << " -s|-r"<< endl;

@@ -41,7 +41,7 @@ int main(int argc, const char** argv)
 #endif
 
   // set trace levels
-  ::Debug::initLevels(argc, argv);
+  //  ::Debug::initLevels(argc, argv);
 
   MyExample EX1(1, 1);
   EX1.setarg(argc, argv);
