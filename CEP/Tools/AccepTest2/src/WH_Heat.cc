@@ -26,9 +26,6 @@
 #include <AccepTest2/WH_Heat.h>
 #include <Common/LofarLogger.h>
 #include <AccepTest2/DH_CMatrix.h>
-#include <complex>
-#include <Common/lofar_complex.h>
-#include <fftw3.h>
 
 namespace LOFAR
 {
@@ -74,14 +71,15 @@ namespace LOFAR
     return new WH_Heat (name, itsMatrixXSize, itsMatrixYSize, (itsFFTDirection == FFTW_FORWARD));
   }
 
+  void WH_Heat::preprocess()
+  {
+    itsFFTPlan = fftw_create_plan(itsMatrixYSize, itsFFTDirection, FFTW_MEASURE);
+  }
+
   void WH_Heat::process()
   {
-    // use fftwf_ and link with -lfftw3f if valueType is complex<float>
-    // use fftw_  and link with -lfftw3  if valueType is complex<double>
-    
     fftw_complex* in;
     fftw_complex* out;
-    fftw_plan p;
 
     DH_CMatrix* dh_in_matrix = (DH_CMatrix*)getDataManager().getInHolder(0);
     DH_CMatrix* dh_out_matrix = (DH_CMatrix*)getDataManager().getOutHolder(0);
@@ -89,12 +87,7 @@ namespace LOFAR
     for (int xi=0; xi<itsMatrixXSize; xi++) {
       in =  reinterpret_cast<fftw_complex*>(& dh_in_matrix->value(xi, 0));
       out = reinterpret_cast<fftw_complex*>(& dh_out_matrix->value(xi, 0));
-      // MEASURE takes a lot of time the first time it is called, but the next time it should be faster
-      p = fftw_plan_dft_1d(itsMatrixYSize, in, out, itsFFTDirection, FFTW_MEASURE);
-      // we should do this once with FFTW_MEASURE and then use the same plan
-      //p = fftw_plan_dft_1d(itsMatrixYSize, in, out, FFTW_FORWARD, FFTW_ESTIMATE);
-      fftw_execute(p);
-      fftw_destroy_plan(p);
+      fftw_one(itsFFTPlan, in, out);
     }
     dh_out_matrix->getXaxis().setBegin(dh_in_matrix->getXaxis().getBegin());
     dh_out_matrix->getXaxis().setEnd  (dh_in_matrix->getXaxis().getEnd());
@@ -102,6 +95,11 @@ namespace LOFAR
     dh_out_matrix->getYaxis().setEnd  (itsMatrixYSize / 
 				       (dh_in_matrix->getYaxis().getEnd() -
 					dh_in_matrix->getYaxis().getBegin()));
+  }
+
+  void WH_Heat::postprocess()
+  {
+    fftw_destroy_plan(itsFFTPlan);
   }
 
   void WH_Heat::dump()
