@@ -1,9 +1,10 @@
 
-_gsmtable = gsm.tab
+gsmtable = gsm.tab
 
-_gsmtablesrc = $(srcdir)/$(_gsmtable)
-_tablefiles = table.dat table.f0 table.info table.lock
-_gsmfiles = $(addprefix $(_gsmtablesrc)/,$(_tablefiles))
+gsmtablesrc = $(srcdir)/$(gsmtable)
+aipspp_tablefiles = table.dat table.f0 table.info table.lock
+
+gsmfiles = $(addprefix $(gsmtablesrc)/,$(tablefiles))
 
 # # OMS 19/08/03: commented this target out for now -- I'll just check in 
 # # the table statically into CVS 
@@ -11,6 +12,5 @@ _gsmfiles = $(addprefix $(_gsmtablesrc)/,$(_tablefiles))
 # $(_gsmfiles): 4C-Vizier.txt ../src/gsm_definitions.g
 #	  glish -l $(srcdir)/4c2gsm.g
 
-  
-gsmdir = $(datadir)/GSM/gsm.tab
-gsm_DATA = $(_gsmfiles)
+gsmdir = $(datadir)/GSM/$(gsmtable)
+dist_gsm_DATA = $(gsmfiles)
