@@ -77,8 +77,8 @@ private:
   int myrank;
   int mysize;
 
-  complex<float> sig_buf [itsNchannels][itsNelements][itsNsamples] ;
-  complex<float> corr_buf[itsNchannels][itsNelements][itsNelements] ;
+  complex<float> *sig_buf ;
+  complex<float> *corr_buf ;
    
   /// Forbid copy constructor.
   WH_Correlate (const WH_Correlate&);
