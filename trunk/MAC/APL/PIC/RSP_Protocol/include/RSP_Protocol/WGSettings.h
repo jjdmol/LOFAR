@@ -32,41 +32,48 @@
 namespace RSP_Protocol
 {
   class WGSettings
-      {
-      public:
-	  /**
-	   * Constructors for a WGSettings object.
-	   * Currently the tv_usec part is always set to 0 irrespective
-	   * of the value passed in.
-	   */
-	  WGSettings() { }
+  {
+  public:
+    /**
+     * Settings of the Waveform Generator
+     */
+    typedef struct WGRegisterType
+    {
+      uint16 freq;
+      uint16 ampl;
+      uint16 nof_usersamples;
+      uint8  mode;
+    };
+
+    /**
+     * Constructors for a WGSettings object.
+     * Currently the tv_usec part is always set to 0 irrespective
+     * of the value passed in.
+     */
+    WGSettings() { }
 	  
-	  /* Destructor for WGSettings. */
-	  virtual ~WGSettings() {}
+    /* Destructor for WGSettings. */
+    virtual ~WGSettings() {}
 
-      public:
-	  /*@{*/
-	  /**
-	   * marshalling methods
-	   */
-	  unsigned int getSize();
-	  unsigned int pack  (void* buffer);
-	  unsigned int unpack(void *buffer);
-	  /*@}*/
+    /* get reference to wg settings array */
+    blitz::Array<WGRegisterType, 1>& operator()();
 
-      private:
-	  /**
-	   * Settings of the Waveform Generator
-	   */
-	  typedef struct WGRegister
-	  {
-	      uint16 mode;
-	      uint16 frequency;
-	      uint16 amplitude;
-	  };
+  public:
+    /*@{*/
+    /**
+     * marshalling methods
+     */
+    unsigned int getSize();
+    unsigned int pack  (void* buffer);
+    unsigned int unpack(void *buffer);
+    /*@}*/
 
-	  blitz::Array<WGRegister, 1> registers;
-      };
+  private:
+    blitz::Array<WGRegisterType, 1> m_registers;
+  };
+
+  inline blitz::Array<WGSettings::WGRegisterType, 1>& WGSettings::operator()() { return m_registers; }
+
 };
      
 #endif /* WGSETTINGS_H_ */

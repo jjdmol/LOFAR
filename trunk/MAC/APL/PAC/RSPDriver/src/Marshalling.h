@@ -25,6 +25,7 @@
 #ifndef MARSHALLING_H_
 #define MARSHALLING_H_
 
+#include <Common/LofarTypes.h>
 #include <blitz/array.h>
 
 #define MSH_ARRAY_SIZE(array, datatype)					     \

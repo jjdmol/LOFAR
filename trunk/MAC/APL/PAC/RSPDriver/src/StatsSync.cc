@@ -21,7 +21,9 @@
 //#  $Id$
 
 #include "StatsSync.h"
+#include "Statistics.h"
 #include "EPA_Protocol.ph"
+#include "Cache.h"
 
 #undef PACKAGE
 #undef VERSION
@@ -31,9 +33,11 @@
 using namespace RSP;
 using namespace LOFAR;
 using namespace EPA_Protocol;
+using namespace RSP_Protocol;
+using namespace blitz;
 
 StatsSync::StatsSync(GCFPortInterface& board_port, int board_id)
-  : SyncAction(board_port, board_id, 1)
+  : SyncAction(board_port, board_id, N_BLP)
 {
 }
 
@@ -42,13 +46,12 @@ StatsSync::~StatsSync()
   /* TODO: delete event? */
 }
 
-void StatsSync::sendrequest(int /*iteration*/)
+void StatsSync::sendrequest(int local_blp)
 {
-  // send read status request to check status of the write
-  EPARspstatusReadEvent rspstatus;
-  MEP_RSPSTATUS(rspstatus.hdr, MEPHeader::READ);
+  EPAStstatsReadEvent statsread;
+  MEP_ST(statsread.hdr, MEPHeader::READ, local_blp, MEPHeader::MEAN);
 
-  getBoardPort().send(rspstatus);
+  getBoardPort().send(statsread);
 }
 
 void StatsSync::sendrequest_status()
@@ -58,7 +61,14 @@ void StatsSync::sendrequest_status()
 
 GCFEvent::TResult StatsSync::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
 {
-  EPARspstatusEvent ack(event);
+  EPAStstatsEvent ack(event);
+
+  Statistics& stats = Cache::getInstance().getBack().getStatistics();
+
+  memcpy(stats()(MEPHeader::MEAN,
+		 (getBoardId() * N_BLP) + ack.hdr.m_fields.addr.dstid,
+		 Range::all()).data(),
+	 &ack.stat, MAX_N_BEAMLETS);
 
   return GCFEvent::HANDLED;
 }

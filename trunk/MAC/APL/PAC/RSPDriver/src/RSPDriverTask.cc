@@ -61,14 +61,17 @@ RSPDriverTask::RSPDriverTask(string name)
 
   m_acceptor.init(*this, "acceptor", GCFPortInterface::MSPP, RSP_PROTOCOL);
 
-  m_board = new GCFTCPPort[GET_CONFIG("N_RSPBOARDS", i)];
+  m_board = new GCFETHRawPort[GET_CONFIG("N_RSPBOARDS", i)];
 
   for (int boardid = 0; boardid < GET_CONFIG("N_RSPBOARDS", i); boardid++)
   {
     char name[64] = "board";
     snprintf(name, 64, "board%d", boardid);
-    m_board[boardid].init(*this, name, GCFPortInterface::SAP, EPA_PROTOCOL,true /*raw*/);
-    //m_board[boardid].setAddr("eth0", "aa:bb:cc:dd:ee:ff");
+
+    GCFETHRawPort* p = new ((char*)&m_board[boardid]) GCFETHRawPort(*this, string(name), GCFPortInterface::SAP, true /*raw*/);
+    p = p; // keep compiler happy
+    //m_board[boardid].init(*this, name, GCFPortInterface::SAP, EPA_PROTOCOL,true /*raw*/);
+    m_board[boardid].setAddr(GET_CONFIG_STRING("IF_NAME"), GET_CONFIG_STRING("IF_MAC"));
   }
 
   addAllSyncActions();
@@ -232,15 +235,9 @@ GCFEvent::TResult RSPDriverTask::initial(GCFEvent& event, GCFPortInterface& port
       }
       else
       {
-	MEPHeader hdr;
-	port.recv(&hdr.m_fields, sizeof(hdr.m_fields));
-	
-	LOG_DEBUG(formatString("F_DATAIN: type=0x%02x, addr=(0x%02x 0x%02x 0x%02x 0x%02x)",
-			       hdr.m_fields.type,
-			       hdr.m_fields.addr.dstid,
-			       hdr.m_fields.addr.pid,
-			       hdr.m_fields.addr.regid,
-			       hdr.m_fields.addr.pageid));
+	// ignore in this state
+	static char buf[ETH_DATA_LEN];
+	(void)port.recv(buf, ETH_DATA_LEN);
       }
     }
     break;

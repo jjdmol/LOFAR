@@ -64,7 +64,7 @@ namespace EPA_Protocol
        * Destination ID
        */
       static const uint8 DST_BLP_BASE = 0x00; /* BLP's are addressed starting from 0x00 */
-      static const uint8 DST_RSP      = 0xFF; /* Board entity */
+      static const uint8 DST_RSP      = 0x00; /* Board entity, used to be 0xFF */
       /*@}*/
 
       /*@{*/
@@ -106,8 +106,8 @@ namespace EPA_Protocol
       static const uint8 BFYRE         = 0x02;
       static const uint8 BFYIM         = 0x03;
 
-      static const uint8 MEAN          = 0x00;
-      static const uint8 POWER         = 0x01;
+      static const uint8 MEAN          = 0x00; // used as index in statistics array
+      static const uint8 POWER         = 0x01; // used as index in statistics array
 
       static const uint8 RCUSETTINGS   = 0x00;
 
@@ -197,9 +197,9 @@ namespace EPA_Protocol
 #define CTX(a) EPA_Protocol::MEPHeader::a
 
 #define MEP_RSPSTATUS(hdr, oper) \
-  (hdr).set(oper,         CTX(DST_RSP),              CTX(STATUS), CTX(RSPSTATUS),     (CTX(READ) == oper?0:CTX(RSPSTATUS_SIZE)))
+  (hdr).set(oper,         CTX(DST_RSP),              CTX(STATUS), CTX(RSPSTATUS),     CTX(RSPSTATUS_SIZE))
 #define MEP_FWVERSION(hdr, oper) \
-  (hdr).set(oper,         CTX(DST_RSP),              CTX(STATUS), CTX(FWVERSION),     (CTX(READ) == oper?0:CTX(FWVERSION_SIZE)))
+  (hdr).set(oper,         CTX(DST_RSP),              CTX(STATUS), CTX(FWVERSION),     CTX(FWVERSION_SIZE))
 #define MEP_SELFTEST(hdr) \
   (hdr).set(CTX(WRITE),   CTX(DST_RSP),              CTX(TST),    CTX(SELFTEST),      CTX(SELFTEST_SIZE))
 #define MEP_RESET(hdr) \

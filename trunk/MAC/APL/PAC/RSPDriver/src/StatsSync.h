@@ -31,31 +31,31 @@ namespace RSP
 {
   class StatsSync : public SyncAction
   {
-    public:
-      /**
-       * Constructors for a StatsSync object.
-       */
-      StatsSync(GCFPortInterface& board_port, int board_id);
+  public:
+    /**
+     * Constructors for a StatsSync object.
+     */
+    StatsSync(GCFPortInterface& board_port, int board_id);
 	  
-      /* Destructor for StatsSync. */
-      virtual ~StatsSync();
+    /* Destructor for StatsSync. */
+    virtual ~StatsSync();
 
-      /**
-       * Send the write message.
-       */
-      virtual void sendrequest(int iteration);
+    /**
+     * Send the write message.
+     */
+    virtual void sendrequest(int iteration);
 
-      /**
-       * Send the read request.
-       */
-      virtual void sendrequest_status();
+    /**
+     * Send the read request.
+     */
+    virtual void sendrequest_status();
 
-      /**
-       * Handle the read result.
-       */
-      virtual GCFEvent::TResult handleack(GCFEvent& event, GCFPortInterface& port);
+    /**
+     * Handle the read result.
+     */
+    virtual GCFEvent::TResult handleack(GCFEvent& event, GCFPortInterface& port);
 
-    private:
+  private:
   };
 };
      

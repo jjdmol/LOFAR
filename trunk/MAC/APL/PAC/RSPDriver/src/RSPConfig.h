@@ -33,6 +33,9 @@
 (RSP::RSPConfig::getInstance()()(var)? \
  (ato##type(RSP::RSPConfig::getInstance()()(var))) : ato##type(""))
 
+#define GET_CONFIG_STRING(var) \
+(RSP::RSPConfig::getInstance()()(var)?RSP::RSPConfig::getInstance()()(var):"unset")
+
 namespace RSP
 {
   /**

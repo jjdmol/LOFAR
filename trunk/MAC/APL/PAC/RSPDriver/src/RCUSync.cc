@@ -45,16 +45,34 @@ RCUSync::~RCUSync()
   /* TODO: delete event? */
 }
 
-void RCUSync::sendrequest(int iteration)
+void RCUSync::sendrequest(int local_blp)
 {
-  uint8 blp = (getBoardId() * N_BLP) + iteration * 2;
+  uint8 global_blp = (getBoardId() * N_BLP) + local_blp * 2;
 
   EPARcusettingsEvent rcusettings;
-  MEP_RCUSETTINGS(rcusettings.hdr, MEPHeader::WRITE, 0);
-  rcusettings.hdr.m_fields.addr.dstid = blp;
+  MEP_RCUSETTINGS(rcusettings.hdr, MEPHeader::WRITE, local_blp);
 
-  RCUSettings x = Cache::getInstance().getBack().getRCUSettings(blp);
-  RCUSettings y = Cache::getInstance().getBack().getRCUSettings(blp + 1);
+  RCUSettings::RCURegisterType& x = Cache::getInstance().getBack().getRCUSettings()()(global_blp);
+  RCUSettings::RCURegisterType& y = Cache::getInstance().getBack().getRCUSettings()()(global_blp + 1);
+
+#ifdef TOGGLE_LEDS
+  if (x.filter_0)
+  {
+    x.filter_0 = 0;
+    x.filter_1 = 1;
+  }
+  else
+  {
+    x.filter_0 = 1;
+    x.filter_1 = 0;
+  }
+
+  RCUSettings::RCURegisterType& x1 = Cache::getInstance().getFront().getRCUSettings()()(global_blp);
+  RCUSettings::RCURegisterType& y1 = Cache::getInstance().getFront().getRCUSettings()()(global_blp + 1);
+  x1=x;
+  y1=y;
+#endif
+
   memcpy(&rcusettings.x, &x, sizeof(uint8));
   memcpy(&rcusettings.y, &y, sizeof(uint8));
 

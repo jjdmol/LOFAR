@@ -47,13 +47,12 @@ namespace RSP_Protocol
       /* Destructor for SystemStatus. */
       virtual ~SystemStatus() {}
 
-
       /*@{*/
       /**
        * Member accessor functions.
        */
-      blitz::Array<EPA_Protocol::BoardStatus,  1>& board();
-      blitz::Array<EPA_Protocol::RCUStatus,  1>& rcu();
+      blitz::Array<EPA_Protocol::BoardStatus, 1>& board();
+      blitz::Array<EPA_Protocol::RCUStatus,   1>& rcu();
       /*@}*/
 
     public:
@@ -75,8 +74,8 @@ namespace RSP_Protocol
        *  - m_board_status  [N_RSPBOARDS]
        *  - m_rcu_status    [N_RCU]
        */
-      blitz::Array<EPA_Protocol::BoardStatus,  1> m_board_status;
-      blitz::Array<EPA_Protocol::RCUStatus,  1>   m_rcu_status;
+      blitz::Array<EPA_Protocol::BoardStatus, 1> m_board_status;
+      blitz::Array<EPA_Protocol::RCUStatus,   1> m_rcu_status;
       /*@}*/
   };
 

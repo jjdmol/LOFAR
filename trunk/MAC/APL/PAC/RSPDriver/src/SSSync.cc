@@ -49,20 +49,19 @@ SSSync::~SSSync()
   /* TODO: delete event? */
 }
 
-void SSSync::sendrequest(int iteration)
+void SSSync::sendrequest(int local_blp)
 {
-  uint8 blp = (getBoardId() * N_BLP) + iteration;
-  LOG_DEBUG(formatString(">>>> SSSync(%s) blp=%d",
+  uint8 global_blp = (getBoardId() * N_BLP) + local_blp;
+  LOG_DEBUG(formatString(">>>> SSSync(%s) global_blp=%d",
 			 getBoardPort().getName().c_str(),
-			 blp));
+			 global_blp));
   
   // send subband select message
   EPASubbandselectEvent ss;
-  MEP_SUBBANDSELECT(ss.hdr, MEPHeader::WRITE, 0);
-  ss.hdr.m_fields.addr.dstid = blp;
+  MEP_SUBBANDSELECT(ss.hdr, MEPHeader::WRITE, local_blp);
   
   // create array to contain the subband selection
-  uint16 nr_subbands = Cache::getInstance().getBack().getSubbandSelection().nrsubbands()(blp);
+  uint16 nr_subbands = Cache::getInstance().getBack().getSubbandSelection().nrsubbands()(global_blp);
   LOG_DEBUG(formatString("nr_subbands=%d", nr_subbands));
   nr_subbands=256;
   Array<uint16, 1> subbands(nr_subbands);
@@ -71,7 +70,7 @@ void SSSync::sendrequest(int iteration)
 
   subbands = 0; // init
   
-  subbands = Cache::getInstance().getBack().getSubbandSelection()()(blp, Range(0, nr_subbands - 1));
+  subbands = Cache::getInstance().getBack().getSubbandSelection()()(global_blp, Range(0, nr_subbands - 1));
 
   getBoardPort().send(ss);
 
