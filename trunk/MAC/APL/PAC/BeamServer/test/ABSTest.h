@@ -25,7 +25,7 @@
 #ifndef ABSTEST_H_
 #define ABSTEST_H_
 
-#include <suite.h>
+#include <Suite/suite.h>
 
 #define START_TEST(_test_, _descr_) \
   setCurSubTest(#_test_, _descr_)

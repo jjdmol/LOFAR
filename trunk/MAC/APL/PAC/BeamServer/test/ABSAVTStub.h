@@ -24,7 +24,7 @@
 #define ABSAVTSTUB_H_
 
 #include "ABS_Protocol.ph"
-#include "test.h"
+#include <Suite/test.h>
 
 #include <GCF/GCF_Control.h>
 #include <GCF/GCF_ETHRawPort.h>

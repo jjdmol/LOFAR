@@ -162,7 +162,7 @@ void Beamlet::calculate_weights(const Array<W_TYPE, 3>&          pos,
 	      continue;
 	  }
 
-//	  LOG_DEBUG_STR("lmn(t=0)=" << (*lmn)(0,all));
+	  LOG_DEBUG_STR("lmn(t=0)=" << (*lmn)(0,all));
 
 	  if (compute_interval != lmn->extent(firstDim))
 	  {
@@ -180,19 +180,12 @@ void Beamlet::calculate_weights(const Array<W_TYPE, 3>&          pos,
   	  for (int si = 0; si < nelements; si++)
 	  {
 	    //
-	    // calculate (xm - yl - zn) for both polarizations
+	    // calculate (xm - yl + zn) for both polarizations
 	    // of all elements
 	    //
 	    
 	    for (int pol = 0; pol < npolarizations; pol++)
 	    {
-	      // x-polarization
-	      weights(all, si, bi, pol) =
-		(pos(si, pol, 0) * (*lmn)(all, 1))
-		- (pos(si, pol, 1) * (*lmn)(all, 0))
-		+ (pos(si, pol, 2) * (*lmn)(all, 2));
-	      
-	      // y-polarization
 	      weights(all, si, bi, pol) =
 		(pos(si, pol, 0) * (*lmn)(all, 1))
 		- (pos(si, pol, 1) * (*lmn)(all, 0))

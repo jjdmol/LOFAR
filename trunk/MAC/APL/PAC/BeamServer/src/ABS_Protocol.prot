@@ -154,10 +154,6 @@ event = {
       //
       signal = WGENABLE;
       dir = IN;
-      param = {
-	  name = "dummy";
-	  type = "int";
-      };
 };
 
 event = {
@@ -166,8 +162,4 @@ event = {
       //
       signal = WGDISABLE;
       dir = IN;
-      param = {
-	  name = "dummy";
-	  type = "int";
-      };
 };
