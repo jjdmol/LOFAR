@@ -46,8 +46,8 @@ StationSim.cc
 bin_PROGRAMS		= Simulate
 Simulate_SOURCES 	= Simulate.cc Simulate.in
 
-Simulate_LDADD		= ../src/libstationsim.la
-Simulate_DEPENDENCIES	= ../src/libstationsim.la $(LOFAR_DEPEND)
+Simulate_LDADD		= libstationsim.la
+Simulate_DEPENDENCIES	= libstationsim.la $(LOFAR_DEPEND)
 
 #EXTRA_DIST		=			\
 #Beam.m						\
