@@ -37,12 +37,13 @@ using namespace blitz;
 
 WH_Projection::WH_Projection (const string& name, unsigned int nin, unsigned int nout,
 			      unsigned int nant, unsigned int maxnrfi)
-: WorkHolder    (nin, nout, name, "WH_Projection"),
-  itsInHolders  (0),
-  itsOutHolder  (0),
-  itsNrcu       (nant),
-  itsMaxRFI     (maxnrfi),
-  itsWeight     ()
+: WorkHolder       (nin, nout, name, "WH_Projection"),
+  itsInHolders     (0),
+  itsOutHolder     (0),
+  itsNumberOfRFIs  (0),
+  itsNrcu          (nant),
+  itsMaxRFI        (maxnrfi),
+  itsWeight        ()
 {
   if (nin > 0) {
     itsInHolders = new DH_SampleC* [nin];
@@ -51,15 +52,14 @@ WH_Projection::WH_Projection (const string& name, unsigned int nin, unsigned int
     // Define a space large enough to contain the max number of 
     // RFI sources. This should be implemented more elegantly.
     itsInHolders[0]= new DH_SampleC("in-sta", itsNrcu, itsMaxRFI);
-    itsInHolders[1]= new DH_SampleC("in-mdl", 1, 1);
     // The weight vector from the Weight Determination
-    itsInHolders[2]= new DH_SampleC("in-wd", itsNrcu, 1);
+    itsInHolders[1]= new DH_SampleC("in-wd", itsNrcu, 1);
   }
-  
   if (nout > 0) {
     // The resulting Weight vector  
     itsOutHolder = new DH_SampleC("out", itsNrcu, 1);
   }
+  itsNumberOfRFIs = new DH_SampleR("in-mdl", 1, 1);
 }
 
 WH_Projection::~WH_Projection()
@@ -78,16 +78,42 @@ void WH_Projection::preprocess()
 
 void WH_Projection::process()
 {
-  // could be allocated earlier
-  LoMat_dcomplex rfis (itsInHolders[0]->getBuffer(), 
-		       shape(itsNrcu, itsMaxRFI), duplicateData);
-  dcomplex detectedRFIs =  *itsInHolders[1]->getBuffer();
-  LoVec_dcomplex steerv (itsInHolders[2]->getBuffer(), itsNrcu, duplicateData);
+  if (getOutputs() > 0) {
+	// Get the number of detected RFI sources from the STA comp. (internally calc. by MDL)
+	int detectedRFIs = (int)*itsNumberOfRFIs->getBuffer();
+	
+	// Read in the eigenvectors from the STA component. They are the detected rfi sources and
+	// should be nulled.
+	//  LoMat_dcomplex V (itsInHolders[0]->getBuffer(), shape(itsNrcu, itsMaxRFI), duplicateData);
+	LoMat_dcomplex V (itsInHolders[0]->getBuffer(), shape(itsNrcu, detectedRFIs), duplicateData);
+	
+	// Get the steering vector form the weight determination comp.
+	LoVec_dcomplex a (itsInHolders[1]->getBuffer(), itsNrcu, duplicateData);
+	
+	itsWeight.resize(itsNrcu);
+	itsWeight = getWeights(V, a);
+  
 
-  itsWeight.resize(itsNrcu);
-  itsWeight = steerv;
-  memcpy(itsOutHolder->getBuffer(), itsWeight.data(), itsNrcu * sizeof(DH_SampleC::BufferType));
 
+//   // DEBUG matrix inverse
+//   int N = 3;
+//   LoMat_dcomplex A(N,N);
+//   LoMat_dcomplex Orig(N,N);
+//   dcomplex d;
+
+//   Orig = 1,2,3,
+// 	     4,5,6,
+//          7,8,9;
+//   Orig(0,0)=dcomplex(0,1);
+
+//   cout << Orig << endl;
+//   A = LCSMath::invert(Orig);
+//   cout << A << endl << d << endl;
+
+//   cout << LCSMath::matMult(A, Orig) << endl;
+
+	memcpy(itsOutHolder->getBuffer(), itsWeight.data(), itsNrcu * sizeof(DH_SampleC::BufferType));
+  }
 }
 
 void WH_Projection::dump() const
@@ -96,11 +122,13 @@ void WH_Projection::dump() const
 }
 
 
-DH_SampleC* WH_Projection::getInHolder (int channel)
+DataHolder* WH_Projection::getInHolder (int channel)
 {
   AssertStr (channel < getInputs(), "Input channel too high");  
-
-  return itsInHolders[channel];
+  if (channel < 2)
+	return itsInHolders[channel];
+  else
+	return itsNumberOfRFIs;
 }
 
 DH_SampleC* WH_Projection::getOutHolder (int channel)
@@ -110,39 +138,45 @@ DH_SampleC* WH_Projection::getOutHolder (int channel)
 }
 
 
-LoVec_dcomplex WH_Projection::getWeights (LoVec_dcomplex B, LoVec_dcomplex d) {
-  LoVec_dcomplex w (B.size());
-  
-  if (B.size() != d.size()) {
-    cout << "Error. WH_Projection::getWeights() encountered non equal size arrays" << endl;
-  } else {
-    LoVec_dcomplex temp(B.size());
+LoVec_dcomplex WH_Projection::getWeights (LoVec_dcomplex V, LoVec_dcomplex a) 
+{
+  AssertStr(V.size() == a.size(), "Error. WH_Projection::getWeights() encountered non equal size arrays");
+  LoVec_dcomplex w (V.size());
+  LoMat_dcomplex Pv (V.size(), V.size());
+  w = 1;
+  LoMat_dcomplex I = LCSMath::diag(w);        // Create Identity matrix
+  LoVec_dcomplex temp (V.size());
 
-    // temp = (1/sum(B*B)) * B;
-    temp = (1/sum(B*(2 * real(B) - B))) * (2*real(B) - B) ;
-    w = d - ( sum(d*temp) * B );
-    AssertStr(0>1, "Temp stop");
-  }
+  dcomplex VHV = 1 / sum((2 * real(V) - V) * V);
+  temp = VHV * (2 * real(V) - V);
+  Pv = LCSMath::matMult(V, temp);
+  Pv = I - Pv;
+
+  w = mv_mult(Pv, a); // w = Pv a;
+
   return w;
 }
 
-LoVec_dcomplex WH_Projection::getWeights (LoMat_dcomplex B, LoVec_dcomplex d) {
-  LoVec_dcomplex w (B.rows());
+LoVec_dcomplex WH_Projection::getWeights (LoMat_dcomplex V, LoVec_dcomplex a) 
+{
+  AssertStr(V.rows() == a.size(), "Error. WH_Projection::getWeights() encountered non equal size arrays");
+
+  LoVec_dcomplex w (V.rows());
+  w = 1;
+  LoMat_dcomplex Pv (V.shape());  
+  LoMat_dcomplex I = LCSMath::diag(w);        // Create Identity matrix
+
+  Pv = LCSMath::invert(LCSMath::matMult(LCSMath::hermitianTranspose(V), V)); // (VHV)^-1
+  Pv = LCSMath::matMult(V, LCSMath::matMult(Pv, LCSMath::hermitianTranspose(V))); // VPvVH
+  Pv = I - Pv;
+
+  w = mv_mult(Pv, a); // w = Pv a;
   
-  if (B.rows() != d.size()) {
-    cout << "Error. WH_Projection::getWeights() encountered non equal size arrays" << endl;
-  } else {
-    LoMat_dcomplex temp(B.cols(),B.rows());
-    temp = LCSMath::hermitianTranspose(B);
-    // a inverse misses here
-    temp = LCSMath::matMult(LCSMath::matMult(temp, B), temp);
-    w = d - mv_mult(B, mv_mult(temp, d));
-    AssertStr(0>1, "Temp stop");
-  }
   return w;
 }
 
-LoVec_dcomplex WH_Projection::mv_mult (LoMat_dcomplex A, LoVec_dcomplex B) {
+LoVec_dcomplex WH_Projection::mv_mult (LoMat_dcomplex A, LoVec_dcomplex B) 
+{
   LoVec_dcomplex tmp(A.rows());
   for (int i=0; i < A.rows(); i++) {
     dcomplex res = 0;
@@ -153,4 +187,19 @@ LoVec_dcomplex WH_Projection::mv_mult (LoMat_dcomplex A, LoVec_dcomplex B) {
     tmp(i)=res;
   }
   return tmp;
+}
+
+LoVec_dcomplex WH_Projection::vm_mult (const LoVec_dcomplex& A, const LoMat_dcomplex& B) 
+{
+  AssertStr(A.size() == B.rows(), "Vector size and matrix columns aren't the same size!");
+  LoVec_dcomplex out (A.size());
+
+  for (int i = 0; i < B.cols(); i++) {
+    dcomplex res = 0;
+    for (int j = 0; j < B.rows(); j++) {
+      res += B(j,i) *  A(j);     
+    }
+    out(i) = res;
+  }
+  return out;
 }

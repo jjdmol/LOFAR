@@ -58,8 +58,9 @@ WH_STA::WH_STA (const string& name, unsigned int nin, unsigned int nout,
     // Define a space large enough to contain the max number of 
     // RFI sources. This should be implemented more elegantly.
     itsOutHolders[0] = new DH_SampleC("out", itsNrcu, itsMaxRFI);    
-    itsOutHolders[1] = new DH_SampleC("mdl",1, 1);
   }
+
+  itsNumberOfRFIs = new DH_SampleR("mdl",1, 1);
 
   // init the buffer
   itsBuffer.resize(itsNrcu,itsBufLength);
@@ -83,6 +84,8 @@ WH_STA::~WH_STA()
   delete itsOutHolders[1];
 
   delete [] itsOutHolders;
+
+  delete itsNumberOfRFIs;
 }
 
 WH_STA* WH_STA::make (const string& name) const
@@ -123,11 +126,17 @@ void WH_STA::process()
 //   // See if the PASTd algorithm need updating
 //   // Use either EVD or SVD for updating
 
-//   // EVD - first calculate the ACM
-//  cout << "Buffer : "<<itsBuffer << endl;
+  //DEBUG AG: put in a testvector into the ACM calc.
+  LoMat_dcomplex testVector(itsNrcu, itsNrcu);
+  testVector = 0;
+  testVector(0,Range::all()) = 1;
+
+  // EVD - first calculate the ACM
   LoMat_dcomplex itsAcm (itsNrcu, itsNrcu) ;
-  itsAcm = LCSMath::acm(itsBuffer);
-  //  cout << "ACM : "<< itsAcm << endl;
+//   itsAcm = LCSMath::acm(itsBuffer);
+  itsAcm = LCSMath::acm(testVector);
+  cout << itsAcm << endl;
+  
 //   // EVD - using the ACM, calculate eigen vectors and values.
 //   LoMat_dcomplex itsEvectors;
 //   LoVec_double   itsEvalues;
@@ -177,9 +186,12 @@ DH_SampleC* WH_STA::getInHolder (int channel)
   return itsInHolders[channel];
 }
 
-DH_SampleC* WH_STA::getOutHolder (int channel)
+DataHolder* WH_STA::getOutHolder (int channel)
 {
   AssertStr (channel < getOutputs(), "output channel too high"); 
-  return itsOutHolders[channel];
+  if (channel < 1)
+	return itsOutHolders[channel];
+  else
+	return itsNumberOfRFIs;  
 }
 
