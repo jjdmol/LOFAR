@@ -18,6 +18,7 @@
         Do(MEQMultiply,arg) separator \
         Do(MEQNode,arg) separator \
         Do(MEQParmPolcStored,arg) separator \
+        Do(MEQPow,arg) separator \
         Do(MEQSin,arg) separator \
         Do(MEQSqr,arg) separator \
         Do(MEQSqrt,arg) separator \
