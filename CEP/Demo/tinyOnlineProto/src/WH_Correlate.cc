@@ -100,7 +100,7 @@ void WH_Correlate::process()
  
   //  signal = *InDHptr->getBuffer(); // DOESN't work
   memcpy(signal, InDHptr->getBuffer(), itsNelements*itsNitems*sizeof(DH_CorrCube::BufferType));
-  getDataManager().readyWithInHolder(0);
+  //  getDataManager().readyWithInHolder(0);
 
 //   for (int element = 0; element < itsNelements; element++) {
 //      for (int item = 0; item < itsNitems; item++) {
@@ -113,7 +113,7 @@ void WH_Correlate::process()
 
 //  corr = complex<float> (0,0);
 
-  WH_Correlate::correlator_core(signal, corr);
+//  WH_Correlate::correlator_core(signal, corr);
   WH_Correlate::correlator_core_unrolled(signal, corr);
   
   // signal
@@ -129,7 +129,7 @@ void WH_Correlate::process()
 
   // copy the correlation matrix to the output
   memcpy(OutDHptr->getBuffer(), corr, itsNelements*itsNelements*sizeof(DH_Vis::BufferType));
-  getDataManager().readyWithOutHolder(0);
+  //  getDataManager().readyWithOutHolder(0);
 }
 
 

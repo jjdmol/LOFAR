@@ -107,7 +107,7 @@ void WH_Dump::process()
     }
     cout << endl;
   }
-  getDataManager().readyWithInHolder(0);
+  //  getDataManager().readyWithInHolder(0);
 }
 void WH_Dump::dump()
 {

@@ -109,7 +109,7 @@ void WH_Random::process()
   if (itsIntegrationTime++ == TSIZE-1) itsIntegrationTime=0;
 
   for (int i = 0; i < BFBW; i++) {
-    getDataManager().readyWithOutHolder(i);
+    //    getDataManager().readyWithOutHolder(i);
   }
 }
 
