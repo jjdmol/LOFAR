@@ -103,6 +103,7 @@ public:
   BlobOStream& operator<< (const double& value);
   BlobOStream& operator<< (const fcomplex& value);
   BlobOStream& operator<< (const dcomplex& value);
+  BlobOStream& operator<< (const scomplex& value);
   BlobOStream& operator<< (const std::string& value);
   BlobOStream& operator<< (const char* value);
   // </group>
@@ -123,6 +124,7 @@ public:
   void put (const double* values, uint nrval);
   void put (const fcomplex* values, uint nrval);
   void put (const dcomplex* values, uint nrval);
+  void put (const scomplex* values, uint nrval);
   void put (const std::string* values, uint nrval);
   // </group>
 
