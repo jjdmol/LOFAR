@@ -55,6 +55,7 @@ WH_RSP::WH_RSP(const string& name,
   itsNRSPOutputs   = kvm.getInt("NoWH_RSP", 2) - 1;  
   itsPolarisations = kvm.getInt("polarisations",2);           
   itsNbeamlets     = kvm.getInt("NoRSPBeamlets", 92) / itsNCorrOutputs; // number of EPA-packet beamlets per OutDataholder
+  itsNbeamlets     = kvm.getInt("NoRSPBeamlets", 92) / itsNCorrOutputs; // number of EPA-packet beamlets per OutDataholder
   itsNpackets      = kvm.getInt("NoPacketsInFrame", 8);             // number of EPA-packets in RSP-ethernetframe
   itsSzEPAheader   = kvm.getInt("SzEPAheader", 14);                 // headersize in bytes
   itsSzEPApacket   = (itsPolarisations * sizeof(complex<uint16>) * itsNbeamlets) + itsSzEPAheader;           // packetsize in bytes
@@ -152,8 +153,8 @@ void WH_RSP::process()
     inDHp = (DH_RSP*)getDataManager().getInHolder(0);
     thisStamp.setStamp(inDHp->getSeqID(), inDHp->getBlockID());
     
-//     cout<<"next timestamp: "<<itsNextStamp<<"    received: "<<thisStamp<<endl;
-//     cout<<"next timestamp + n: "<<(itsNextStamp+(itsNpackets-1))<<endl;
+    cout<<"next timestamp: "<<thisStamp<<endl;
+    thisStamp=itsNextStamp;
 
     if (thisStamp < itsNextStamp) {
 
@@ -187,9 +188,9 @@ void WH_RSP::process()
       for (int i=0;i<itsNpackets;i++) {
 	for (int j=0;j<itsNCorrOutputs;j++) {
 	  outDHp = (DH_StationData*)getDataManager().getOutHolder(j);
-          /*memset( &outDHp->getBuffer()[i * complex_uint16_blocksize], 
+          memset( &outDHp->getBuffer()[i * complex_uint16_blocksize], 
 		  0,
-		  char_blocksize );*/
+		  char_blocksize );
 	}
       }      
       // step out of the while loop and do not call readyWithInHolder
@@ -215,9 +216,9 @@ void WH_RSP::process()
       for (int i=0;i<itsNpackets;i++) {
 	for (int j=0;j<itsNCorrOutputs;j++) {
           outDHp = (DH_StationData*)getDataManager().getOutHolder(j);
-          /*memcpy( &outDHp->getBuffer()[i * complex_uint16_blocksize], 
+          memcpy( &outDHp->getBuffer()[i * complex_uint16_blocksize], 
 		  &inDHp->getBuffer()[(i * itsSzEPApacket)+ itsSzEPAheader + (j * char_blocksize)],
-		  char_blocksize );*/
+		  char_blocksize );
 	}
       }      
       
