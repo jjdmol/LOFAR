@@ -54,29 +54,38 @@ namespace LOFAR
       // Constructor that takes an SQL string. 
       // \todo Do we want to do some sanity checking on \c aString ?
       QueryObject(const std::string& aString) : 
- 	itsSqlString(aString) 
+ 	itsSqlString(aString), itsUseString(true) 
       {}
 
       QueryObject(const char* const aString) : 
-        itsSqlString(aString) 
+        itsSqlString(aString), itsUseString(true) 
       {}
       //@}
 
       // Constructor that takes a Query Expression.
       QueryObject(const Query::Expr& aExpr) : 
-        itsQueryExpr(aExpr)
+        itsQueryExpr(aExpr), itsUseString(false)
       {}
 
-      // Return the composed query as an SQL string.
-      // \todo In a future version, we will probably not store the query
-      // as plain SQL; at least not to begin with. So, getSql() will then
-      // have to generate (and cache) the SQL string based on the information
-      // stored in this object.
+      // Return the QueryObject as an SQL string. Depending on the value of
+      // \c itsUseString, this method will either return \c itsSqlString, or
+      // \c itsQueryExpr as a string.
       std::string getSql() const;
 
     private:
+      // The query stored as a query expression.
       Query::Expr itsQueryExpr;
+
+      // The query stored as a string.
       std::string itsSqlString;
+
+      // This flag indicates whether we should use \c itsQueryExpr or \c
+      // itsSqlString in the getSql() method. It depends on how the
+      // QueryObject was constructed; either using a \c string argument or
+      // using a Query::Expr argument. If itsUseString is \c true, getSql()
+      // will return \c itsSqlString; if itsUseString is \c false, getSql()
+      // will return the \c itsQueryExpr as a string.
+      bool itsUseString;
 
     };
 
