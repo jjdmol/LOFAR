@@ -2,6 +2,12 @@
 #include "SimulatorParse.h"
 #include <iostream>
 
+#ifdef CORBA_
+int atexit(void (*function)(void))
+{
+  return 0;
+}
+#endif
 
 int main (int argc, char** argv)
 {

@@ -5,7 +5,9 @@
 #include <stdio.h>
 #include "WH_Corr.h"
 #include "callspectralfft.h"
+#ifdef PROFILER
 #include "Profiler.h"
+#endif
 #include <fstream.h>
 
 short WH_Corr::itsInstanceCnt = 0;
@@ -36,7 +38,9 @@ WH_Corr::WH_Corr (int inputs,
   myInstanceCnt = itsInstanceCnt++;
 
   if (itsProcessProfilerState == 0) {
+#ifdef PROFILER
     itsProcessProfilerState = Profiler::defineState("Correlator_Process","grey");
+#endif
   }
 }
 
@@ -51,8 +55,10 @@ void WH_Corr::process () {
     int input, freq;		// loop counters
     float realpart, imagpart;
     TRACER(debug,"WH_Corr  Process");
+
+#ifdef PROFILER
     Profiler::enterState (itsProcessProfilerState);
-	
+#endif
     
     // test the synchronisation of the time stamps.
     for (input = 0; input < getInputs (); input++) {
@@ -131,7 +137,9 @@ void WH_Corr::process () {
       break;
     }
   }
+#ifdef PROFILER
   Profiler::leaveState (itsProcessProfilerState);
+#endif
   TRACER(debug,"Quit Corr");
 }
 

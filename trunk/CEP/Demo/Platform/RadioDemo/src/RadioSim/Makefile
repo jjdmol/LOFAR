@@ -3,15 +3,22 @@
 #	Use MPI=1 if you want to compile with MPI support.		#
 #########################################################################
 
-DIRPREFIX= ../
+DIRPREFIX=../
 EXES	= Simulate
 LIBNAME = lofarsim
-LIBS    = $(DIRPREFIX)../BaseSim/$(ALIBDIR)/libbasesim.a
+LIBS    = ../../BaseSim/$(ALIBDIR)/libbasesim.a
 
 AIPSPP  = 1
 
-include $(DIRPREFIX)../BaseSim/Makedefs 
+include ../../BaseSim/Makedefs 
+
+ifdef SCACORBA
+LIBS += -L/usr/local/inprise/vbroker/lib
+else
+LIBS += -L/opt/inprise/vbroker/lib
+endif
 
 ifdef CORBA
-LIBS += $(DIRPREFIX)../BaseSim/$(ALIBDIR)/libth_corba.a 
+LIBS += -lcosev_r -lcosnm_r -lvport_r -lorb_r -lpthread
+LIBS += ../../BaseSim/$(ALIBDIR)/libth_corba.a 
 endif
