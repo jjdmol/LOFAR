@@ -36,12 +36,6 @@ namespace LOFAR
     void 
     PersistenceBroker::erase(const Collection<TPersistentObject<T> >& ctpo) const
     {
-      // \todo This should all be done within one transaction!  We could then
-      // make the PersistenceBroker responsible for beginning and ending the
-      // transaction, and forward the iteration over the Collection to the
-      // TPersistentObject<T>. TPersistentObject<T> would then need an extra
-      // method like: template<typename T> void
-      // TPersistentObject<T>::erase(const Collection<TPersistentObject<T> >&);
       typename Collection<TPersistentObject<T> >::const_iterator it;
       for(it = ctpo.begin(); it != ctpo.end(); ++it) {
         it->erase();
@@ -56,13 +50,26 @@ namespace LOFAR
       return tpo.retrieve(query, maxObjects);
     }
 
-    template <typename T>
-    TPersistentObject<T> 
-    PersistenceBroker::retrieve(const ObjectId& oid) const
+    template<typename T>
+    void PersistenceBroker::save(const Collection<TPersistentObject<T> >& ctpo,
+                                 enum SaveMode sm) const
     {
-      TPersistentObject<T> tpo;
-      tpo.retrieve(oid);
-      return tpo;
+      typename Collection< TPersistentObject<T> >::const_iterator cit;
+      for (cit = ctpo.begin(); cit != ctpo.end(); ++cit) {
+        switch(sm) {
+        case AUTOMATIC:
+          cit->save();
+          break;
+        case INSERT:
+          cit->insert();
+          break;
+        case UPDATE:
+          cit->update();
+          break;
+        default:
+          THROW(BrokerException,"Invalid SaveMode");
+        }
+      }
     }
 
   } // namespace PL
