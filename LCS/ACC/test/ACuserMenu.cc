@@ -12,6 +12,31 @@ myACClientFunctions		myACF;
 ApplControlClient*		ACClient    = 0;
 bool					connected   = false;
 bool					IsSync		= false;
+time_t					delayTime	= 0;
+string					paramfile ("Observation-CygA.param");
+
+void waitForAnswer()
+{
+	if (!IsSync) {
+		cout << "Waiting for result from command" << endl;
+		ACClient->processACmsgFromServer();
+		if (delayTime) {
+			cout << "Command is placed on stack, waiting for real result" 
+				 << endl;
+			ACClient->processACmsgFromServer();
+		}
+	}
+}
+
+
+// enter delayTime
+void doDelayTime()
+{
+	cout << "Enter delaytime in seconds: ";
+	string	timeString;
+	cin >> timeString;
+	delayTime = atol(timeString.c_str());
+}
 
 // Connect to AC
 void doConnect()
@@ -51,13 +76,18 @@ void doDisconnect()
 // Boot(parameterfile): start nodes
 void doBoot()
 {
-	cout << "Sending boot command" << endl;
-	bool	result = ACClient->boot(time(0L), "configID");
-	if (!IsSync && result) {
-		cout << "Waiting for result from boot command" << endl;
-		ACClient->processACmsgFromServer();
+	cout << "Enter name of parameterfile (" << paramfile << "): ";
+	string	aParFile;
+	cin.clear();
+	cin >> aParFile;
+	if (aParFile.length() > 2) {
+		paramfile = aParFile;
 	}
 
+	cout << "Sending boot command" << endl;
+	if (ACClient->boot(time(0L)+delayTime, paramfile)) {
+		waitForAnswer();
+	}
 	cout << "Parameter subsets must have been made by now" << endl;
 
 }
@@ -66,10 +96,8 @@ void doBoot()
 void doDefine()
 {
 	cout << "Sending define command" << endl;
-	bool	result = ACClient->define(time(0L));
-	if (!IsSync && result) {
-		cout << "Waiting for result from define command" << endl;
-		ACClient->processACmsgFromServer();
+	if (ACClient->define(time(0L)+delayTime)) {
+		waitForAnswer();
 	}
 	cout << "Application processes must be running by now" << endl;
 }
@@ -78,10 +106,8 @@ void doDefine()
 void doInit()
 {
 	cout << "Sending init command" << endl;
-	bool	result = ACClient->init(time(0L));
-	if (!IsSync && result) {
-		cout << "Waiting for result from init command" << endl;
-		ACClient->processACmsgFromServer();
+	if (ACClient->init(time(0L)+delayTime)) {
+		waitForAnswer();
 	}
 	cout << "Application processes must mutual connected by now" << endl;
 }
@@ -90,10 +116,8 @@ void doInit()
 void doRun()
 {
 	cout << "Sending run command" << endl;
-	bool	result = ACClient->run(time(0L));
-	if (!IsSync && result) {
-		cout << "Waiting for result from run command" << endl;
-		ACClient->processACmsgFromServer();
+	if (ACClient->run(time(0L)+delayTime)) {
+		waitForAnswer();
 	}
 	cout << "Application processes must running now" << endl;
 
@@ -110,10 +134,8 @@ void doPause()
 void doStop()
 {
 	cout << "Sending quit command" << endl;
-	bool	result = ACClient->quit(0);
-	if (!IsSync && result) {
-		cout << "Waiting for result from quit command" << endl;
-		ACClient->processACmsgFromServer();
+	if (ACClient->quit(time(0)+delayTime)) {
+		waitForAnswer();
 	}
 	cout << "Application processes must be killed by now" << endl;
 
@@ -123,13 +145,16 @@ void doStop()
 void showMenu()
 {
 	cout << endl << endl << endl;
-	cout << formatString("%s connection with AC\n\n", 
-								connected ? (IsSync ? "Sync" : "Async")  : "Not");
+	cout << formatString("%s connection with AC\n", 
+							connected ? (IsSync ? "Sync" : "Async") : "No");
+	cout << "Time delay: " << delayTime << endl << endl;
 		
 	
 	cout << "Commands" << endl;
 	cout << "C		Connect to AC" << endl;
 	cout << "D		Disconnect from AC" << endl << endl;
+	
+	cout << "T		Set delayTime for commands" << endl << endl;
 
 	cout << "b		Boot(parameterfile): start nodes" << endl;
 	cout << "d		Define : start processes" << endl;
@@ -152,6 +177,7 @@ int main (int argc, char *argv[]) {
 		switch (aChoice) {
 		case 'C':	doConnect();	 	break;
 		case 'D':	doDisconnect();		break;
+		case 'T':	doDelayTime();		break;
 		case 'b':	doBoot();			break;
 		case 'd':	doDefine();			break;
 		case 'i':	doInit();			break;

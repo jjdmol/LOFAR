@@ -34,20 +34,26 @@ try {
 	DH_AC_Client.connectBidirectional(DH_AC_Server, TCPto, TCPfrom, true);	// blocking
 	DH_AC_Server.init();
 
-	DH_AC_Server.read();
-	LOG_INFO ("Connection request received!");
-	
+	for (;true;) {
+		while (!DH_AC_Server.read()) {
+			LOG_INFO("AFTER READ");
+		}
+		LOG_INFO ("Connection request received!");
+		
 #if defined (__APPLE__)
-	DH_AC_Server.setServerIP (0xA9FE3264);
+		DH_AC_Server.setServerIP (0xA9FE3264);
 #else
-	DH_AC_Server.setServerIP (0xC0A80175);
+		DH_AC_Server.setServerIP (0xC0A80175);
 #endif
-	DH_AC_Server.setServerPort (3801);
-	DH_AC_Server.write();
+		DH_AC_Server.setServerPort (3801);
+		DH_AC_Server.write();
 
-	LOG_DEBUG("Starting tACServer at port 3801");
-	int32	res = execl("./tACServer", "tACServer", "3801", NULL);
-	cout << "execl = " << res << ", errno = " << errno << strerror(errno) << endl;
+		LOG_DEBUG("Starting ApplicationController at port 3801");
+		int32	res = system("(cd ../src ; ./ApplController AC.param) &");
+		cout << "result = " << res << ", errno = " << errno 
+												   << strerror(errno) << endl;
+	}
+
 	return(0);
 }
 catch (LOFAR::Exception&	ex) {
