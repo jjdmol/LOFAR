@@ -1,7 +1,7 @@
 V 10
 1
-LANG:1 9 TREND_PNL
-PANEL,308 123 954 748 N "_3DFace" 2
+LANG:1 10 trend_view
+PANEL,258 138 954 748 N "_3DFace" 2
 "$configDatapoint"
 "$datapoint"
 "main()
@@ -188,38 +188,37 @@ void dpConnectTrend(int TrendNumber, int TraceNumber)
 /////////////////////////////////////////////////////////////////////
 void dpConnectElement2Trend()
 {
-	ConnectTrace(1);	
-	ConnectTrace(2);	
+	ConnectTrace(1);
+
+  setValue(\"Trend1\", \"curveVisible\", \"curve2\", FALSE);
+  setValue(\"Trend1\", \"curveScaleVisibility\", \"curve2\", FALSE);	
+  
+  setValue(\"Trend1\", \"curveVisible\", \"curve3\", FALSE);
+  setValue(\"Trend1\", \"curveScaleVisibility\", \"curve3\", FALSE);	
+  
+  setValue(\"Trend1\", \"curveVisible\", \"curve4\", FALSE);
+  setValue(\"Trend1\", \"curveScaleVisibility\", \"curve4\", FALSE);	
+  
+  setValue(\"Trend1\", \"curveVisible\", \"curve5\", FALSE);
+  setValue(\"Trend1\", \"curveScaleVisibility\", \"curve5\", FALSE);	
+  
+  setValue(\"Trend1\", \"curveVisible\", \"curve6\", FALSE);
+  setValue(\"Trend1\", \"curveScaleVisibility\", \"curve6\", FALSE);	
+  
+  setValue(\"Trend1\", \"curveVisible\", \"curve7\", FALSE);
+  setValue(\"Trend1\", \"curveScaleVisibility\", \"curve7\", FALSE);	
+  
+  setValue(\"Trend1\", \"curveVisible\", \"curve8\", FALSE);
+  setValue(\"Trend1\", \"curveScaleVisibility\", \"curve8\", FALSE);	
+/*	ConnectTrace(2);	
 	ConnectTrace(3);	
 	ConnectTrace(4);
 	ConnectTrace(5);
 	ConnectTrace(6);
 	ConnectTrace(7);
-	ConnectTrace(8);
+	ConnectTrace(8);*/
 }
 
-/*
-void dpConnectSingleElement2Trend()
-{
-	ConnectSingleTrace(1);	
-	ConnectSingleTrace(2);	
-	ConnectSingleTrace(3);	
-	ConnectSingleTrace(4);
-	ConnectSingleTrace(5);
-	ConnectSingleTrace(6);
-	ConnectSingleTrace(7);
-	ConnectSingleTrace(8);
-}
-
-ConnectSingleTrace(int TraceNumber)
-{
-	dpConnect(\"SingleTracePlot\", $configDatapoint + \".1.Trace\" + TraceNumber + \".dpName\",
-                               $configDatapoint + \".1.Trace\" + TraceNumber + \".AutoScale\",
-                               $configDatapoint + \".1.Trace\" + TraceNumber + \".ScaleMin\",
-                               $configDatapoint + \".1.Trace\" + TraceNumber + \".ScaleMax\",
-                               $configDatapoint + \".1.Trace\" + TraceNumber + \".LegendName\");
-}
-*/
 
 /////////////////////////////////////////////////////////////////////
 //
@@ -231,14 +230,13 @@ void setTrend1Properties()
 {
   float Trend1Height, Trend1Width, PanelWidth, PanelHeight;
   int Trend1_x, Trend1_y;
+
   panelSize(\"\", PanelWidth, PanelHeight);
-//  getValue(\"Trend1\", \"size\", Trend1Width, Trend1Height);
   Trend1Width = 941;
   Trend1Height = 351;
   getValue(\"Trend1\", \"position\", Trend1_x, Trend1_y);
-  setValue(\"Trend1\", \"scale\", (PanelWidth-5 - Trend1_x)/(Trend1Width), (PanelHeight-5 - Trend1_y)/(Trend1Height));
-//  DebugN(\"SetWidth: \"+((PanelWidth-5 - Trend1_x)/(Trend1Width))+\"  SetHeight: \" +((PanelHeight-5 - Trend1_y)/(Trend1Height)));
-//  DebugN(\"Trend1Width: \"+Trend1Width+\"  Trend1Height: \" +Trend1Height);
+  setValue(\"Trend1\", \"scale\", (PanelWidth-8 - Trend1_x)/(Trend1Width), (PanelHeight-5 - Trend1_y)/(Trend1Height));
+  // PanelWidth was voorheen: (PanelWidth-5)
 }
 
 
@@ -274,21 +272,22 @@ void TracePlot (string dp1, string dpName, string dp2, bool AutoScale,
   //Check for a filled in dpName, if present start configuring trace-plot
   getTrendNumber(dp1, TrendNumber);
   getTraceNumber(dp1, TraceNumber);
-  if (dpName ==\"\")
+  
+  if ((dpName ==\"\") || ($datapoint==\"\"))        //No datapoint configured for this Trace, or no selected item in tree
   {
     setValue(\"Trend\"+TrendNumber, \"curveVisible\", \"curve\"+TraceNumber, FALSE);
     setValue(\"Trend\"+TrendNumber, \"curveScaleVisibility\", \"curve\"+TraceNumber, FALSE);
   }
   else
 	{
-	  if (dpGetElementName($datapoint)!=\"\")
+	  if (dpGetElementName($datapoint)!=\"\")   //SelectedItem is a datapoint elemeent
 	  {
       setValue(\"Trend\"+TrendNumber,\"connectDirectly\", \"curve\"+TraceNumber, $datapoint + \":_online.._value\");
 	  }
 	  else
 	  {
 		  setValue(\"Trend\"+TrendNumber,\"connectDirectly\", \"curve\"+TraceNumber, $datapoint + \"_\" + dpName + \":_online.._value\");
-//		DebugN(\"dpName: \"+ dpName + \" |$datapoint: \"+ $datapoint);
+//		  DebugN(\"dpName: \"+ dpName + \" |$datapoint: \"+ $datapoint);
       setValue(\"Trend\"+TrendNumber,\"curveLegendName\", \"curve\"+TraceNumber, LegendName);
       setValue(\"Trend\"+TrendNumber,\"curveVisible\", \"curve\"+TraceNumber, TRUE);
       setValue(\"Trend\"+TrendNumber,\"curveScaleVisibility\", \"curve\"+TraceNumber, TRUE);
@@ -315,7 +314,6 @@ float GetRandomValue( float fOffset, float fSwing)
   float fValue;
   
   fRandom = rand();
-  
   fRandom = fRandom / 32767.0;
   fRandom *= fSwing;
   fRandom -= (fSwing / 2.0);
@@ -337,22 +335,22 @@ void Simulation()
   while(1 )
   {
     delay( 3, 0 );
-    dpSet(  \"System1:PIC_Rack1_SubRack1_Board1_AP1.temperature\", GetRandomValue( 10, 10 ));
-    dpSet(  \"System1:PIC_Rack1_SubRack1_Board1_AP2.temperature\", GetRandomValue( 20, 20 ));
-    dpSet(  \"System1:PIC_Rack1_SubRack1_Board1_AP3.temperature\", GetRandomValue( 30, 30 ));
-    dpSet(  \"System1:PIC_Rack1_SubRack1_Board1_AP4.temperature\", GetRandomValue( 40, 40 ));
-    dpSet(  \"System1:PIC_Rack1_SubRack2_Board1_AP1.temperature\", GetRandomValue( 50, 10 ));
-    dpSet(  \"System1:PIC_Rack1_SubRack2_Board1_AP2.temperature\", GetRandomValue( 70, 10 ));
-    dpSet(  \"System1:PIC_Rack1_SubRack2_Board1_AP3.temperature\", GetRandomValue( 60, 10 ));
-    dpSet(  \"System1:PIC_Rack1_SubRack2_Board1_AP4.temperature\", GetRandomValue( 90, 8 ));
-    dpSet(  \"System1:PIC_Rack1_SubRack3_Board1_AP1.temperature\", GetRandomValue( 60, 10 ));
-    dpSet(  \"System1:PIC_Rack1_SubRack3_Board1_AP2.temperature\", GetRandomValue( 2, -4 ));
-    dpSet(  \"System1:PIC_Rack1_SubRack3_Board1_AP3.temperature\", GetRandomValue( 30, 8 ));
-    dpSet(  \"System1:PIC_Rack1_SubRack3_Board1_AP4.temperature\", GetRandomValue( 30, -15 ));
-    dpSet(  \"System1:PIC_Rack1_SubRack4_Board1_AP1.temperature\", GetRandomValue( 60, 10 ));
-    dpSet(  \"System1:PIC_Rack1_SubRack4_Board1_AP2.temperature\", GetRandomValue( 15, 10 ));
-    dpSet(  \"System1:PIC_Rack1_SubRack4_Board1_AP3.temperature\", GetRandomValue( 25, 10 ));
-    dpSet(  \"System1:PIC_Rack1_SubRack4_Board1_AP4.temperature\", GetRandomValue( 20, 8 ));
+    dpSet(  \"System1:PIC_Rack1_SubRack1.status\", GetRandomValue( 10, 10 ));
+ //   dpSet(  \"System1:PIC_Rack1_SubRack2.status\", GetRandomValue( 20, 20 ));
+//    dpSet(  \"System1:PIC_Rack1_SubRack3.status\", GetRandomValue( 30, 30 ));
+//    dpSet(  \"System1:PIC_Rack1_SubRack4.status\", GetRandomValue( 40, 40 ));
+    dpSet(  \"System1:PIC_Rack2_SubRack1.status\", GetRandomValue( 50, 10 ));
+//    dpSet(  \"System1:PIC_Rack2_SubRack2.status\", GetRandomValue( 70, 10 ));
+//    dpSet(  \"System1:PIC_Rack2_SubRack3.status\", GetRandomValue( 60, 10 ));
+//    dpSet(  \"System1:PIC_Rack2_SubRack4.status\", GetRandomValue( 90, 8 ));
+    dpSet(  \"System1:PIC_Rack3_SubRack1.status\", GetRandomValue( 60, 10 ));
+//    dpSet(  \"System1:PIC_Rack3_SubRack2.status\", GetRandomValue( 2, -4 ));
+//    dpSet(  \"System1:PIC_Rack3_SubRack3.status\", GetRandomValue( 30, 8 ));
+//    dpSet(  \"System1:PIC_Rack3_SubRack4.status\", GetRandomValue( 30, -15 ));
+//    dpSet(  \"System1:PIC_Rack4_SubRack1.status\", GetRandomValue( 60, 10 ));
+//    dpSet(  \"System1:PIC_Rack4_SubRack2.status\", GetRandomValue( 15, 10 ));
+//    dpSet(  \"System1:PIC_Rack4_SubRack3.status\", GetRandomValue( 25, 10 ));
+//    dpSet(  \"System1:PIC_Rack4_SubRack4.status\", GetRandomValue( 20, 8 ));
   }
 }" 0
 EE E E 1 -1 -1 0  20 30

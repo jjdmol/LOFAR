@@ -1,7 +1,7 @@
 V 10
 1
-LANG:1 8 (NoName)
-PANEL,258 138 879 680 N "_3DFace" 8
+LANG:1 12 trend_config
+PANEL,434 240 879 680 N "_3DFace" 8
 "$configDatapoint"
 "$controlAttributes"
 "$controlNames"
@@ -23,6 +23,19 @@ DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
 LAYER, 0 
 1
 LANG:1 6 Layer1
+6 219
+"Border2"
+""
+1 10 223 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+140 0 0 0 0 0
+EE E
+1
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 10 200 264 223
 1 17 4 "" 0
 0
 1 18 4 "" 2
@@ -91,7 +104,7 @@ E E 0 2 1 0 1 E  690 194 10 194
 4 69
 "Line2"
 ""
-1 260 194 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 270 194 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 44 0 0 0 0 0
 EE E
@@ -100,7 +113,7 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 2 1 0 1 E  260 290 260 194
+E E 0 2 1 0 1 E  270 290 270 194
 6 114
 "Border9"
 ""
@@ -331,7 +344,11 @@ LANG:1 0
 "dashclr"N "_Transparent"
 "main()
 {
-setValue(\"\", \"text\", dpTypeName($datapoint));
+	DebugN(\"txt_dpTypeName: \" + $datapoint);
+	if ($datapoint==\"\")
+    setValue(\"\", \"text\", \"Datapoint type not found\");
+  else
+    setValue(\"\", \"text\", dpTypeName($datapoint));
 }" 0
  E 0 1 1 0 1 E U  0 E 262 62 392 78
 0 2 0 "s" 0 0 0 64 0 0  262 62
@@ -585,6 +602,19 @@ LANG:1 0
 E E 0 1 1 0 1 E  72 471 10 471
 1 217 35 "" 57
 0
+6 218
+"Border1"
+""
+1 248 221 E E E 1 E 1 E N "_Transparent" E N "_Transparent" E E
+ E E
+139 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  2 0 3 "pictures/icon_return.bmp" 13434828 E 248 201 259 221
 1 18 4 "" 1
 0
 1 162 24 "" 0
