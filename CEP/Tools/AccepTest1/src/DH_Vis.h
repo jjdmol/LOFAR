@@ -20,7 +20,7 @@ namespace LOFAR
 class DH_Vis: public DataHolder
 {
 public:
-  typedef float   BufferPrimitive;
+  typedef double  BufferPrimitive;
   typedef complex<BufferPrimitive> BufferType;
 
   explicit DH_Vis (const string& name, const int stations, const int channel, const int polarisations);
