@@ -16,8 +16,8 @@ consideration.
 
 """
 
-import pg;
-db = pg.DB(dbname="bb");
+## import pg;
+## db = pg.DB(dbname="bb");
 
 import util.pgdate;
 import util.pglist;
@@ -26,8 +26,9 @@ import util.pglist;
 from CompositeAssignment import CompositeAssignment;
 from Assignment import Assignment;
 from Workload import Workload;
+from Dataclass import Dataclass;
 
-class Thread(CompositeAssignment):
+class Thread(CompositeAssignment,Dataclass):
   """a series of actions hopefully leading to a satisfying result"""
   
   root = 0;
@@ -39,10 +40,22 @@ class Thread(CompositeAssignment):
     self.root = self.current = iwl;
     self.workloads.append(iwl);
 
-  def addWorkload(self, wl):
+  def addWl(self, wl):
     nwl = Workload(wl)
     self.current = nwl;
     self.workloads.append(self.current);
+
+  def addWorkload(self, wl):
+    wl.engine(self.current.engine());
+    self.current = wl;
+    self.workloads.append(self.current);
+
+  def deleteWorkload(self,wl):
+    c =  self.workloads.count(wl);
+    i = 0;
+    while i < c:
+      self.workloads.remove(wl);
+      i = i + 1;
 
   def addEngine(self,eng):
     self.current.engine(eng);
@@ -57,7 +70,7 @@ class Thread(CompositeAssignment):
     self.tablename = "threads"
     self.addAssignment(wl);
     self.create_initial_workload(wl);
-    self.id = db.query("INSERT INTO " + self.tablename + " DEFAULT VALUES");
+    Dataclass.__init__(self);
 
   def evaluate():
     # """while reason to go on"""

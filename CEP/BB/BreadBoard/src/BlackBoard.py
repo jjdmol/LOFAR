@@ -7,11 +7,11 @@ $Id$
 
 """
 from bb.BlackBoard import BlackBoard;
-from bb.Workload import Workload;
 from bb.Thread import Thread;
 from bb.Controller import Controller;
 from bb.Engine import Engine;
 from util import paramset;
+import util.pglist;
 
 #import bb;
 
@@ -23,15 +23,20 @@ blbchld2 = None;
 smllst = blb.split_over_time(2);
 blbchld1 = smllst[0];
 blbchld2 = smllst[1];
-numOfParams = 10;
-ps = paramset.mkParamSet(numOfParams);
-wl1 = wl2 = {};
+numOfParams = 4;
+ps = util.pglist.list2pgArray(paramset.mkParamSet(numOfParams));
+wl1 = {};
+wl2 = {};
 wl1["parameterset"] = ps
 paramset.unsetRandom();
-wl1["jobassignment"] = paramset.mkJobAssignment(numOfParams)
+##wl1["jobassignment"] = util.pglist.list2pgArray(paramset.mkJobAssignment(numOfParams))
+##wl1["jobassignment"] = util.pglist.list2pgArray([False, True, False, False, True, True, True, False, False, False])
+wl1["jobassignment"] = util.pglist.list2pgArray([False, True, True, True])
 wl1["status"] = "new";
 wl2["parameterset"] = ps 
-wl2["jobassignment"] = paramset.mkJobAssignment(numOfParams)
+##wl2["jobassignment"] = util.pglist.list2pgArray(paramset.mkJobAssignment(numOfParams))
+##wl2["jobassignment"] = util.pglist.list2pgArray([False, True, True, False, False, True, False, False, False, False])
+wl2["jobassignment"] = util.pglist.list2pgArray([True, True, True, False])
 wl2["status"] = "new";
 thr1 = Thread(wl1);
 thr2 = Thread(wl2);
@@ -54,4 +59,4 @@ smllst = [blbchld2chld1, blbchld2chld2, blbchld2chld3];
 smllst = blbchld2.split_frequency(3);
 ##print repr(blb);
 
-
+print "this is the end"

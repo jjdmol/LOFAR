@@ -8,25 +8,24 @@ $Id$
 """
 
 import pg;
-db = pg.DB(dbname="bb");
 
 import util.pgdate;
 import util.pglist;
 
 import BlackBoardController;
+from Dataclass import Dataclass;
 import threading;
 
-class BlackBoard(threading.Thread):
+class BlackBoard(threading.Thread,Dataclass):
   """something containing information about a problem to be solved."""
 
   def __init__(self, copy = None):
     self.tablename = "blackboards";
+    Dataclass.__init__(self);
     self.threads = {};
     self.workload = {};
     self.knowledgeSources = {};
     self.controller =  BlackBoardController.BlackBoardController(self);
-    self.id = db.query("INSERT INTO " + self.tablename + " DEFAULT VALUES");
-    self.refresh_data();
     if copy != None:
       self.parent(copy.record["parent"]);
       """ do not copy children """
@@ -44,19 +43,20 @@ class BlackBoard(threading.Thread):
       self.stopevent.wait(0.1);
 
   def join(self,timeout = None):
+    print "stopping bb: " , self.id;
     for i in self.knowledgeSources.values():
       i.join();
     threading.Thread.join(self,timeout)
     
 
   def refresh_data(self):
-    self.record = db.get(self.tablename, self.id, "oid");
+    self.record = self.db.get(self.tablename, self.id, "oid");
 
   def time(self, start, end):
     self.record["start_time"] = start;
     self.record["end_time"] = end;
     qstr ="UPDATE blackboards SET start_time = '"+ str(start) +"' , end_time = '" + str(end) + "' WHERE oid = " + str(self.id)
-    data = db.query(qstr);
+    data = self.db.query(qstr);
 
 ##  def split_over_time(self, early, late):
     
@@ -89,7 +89,7 @@ class BlackBoard(threading.Thread):
   def parent(self, parent_id):
     if(parent_id == None):
       parent_id = self.id;
-    db.query("UPDATE blackboards SET parent = " + str(parent_id) + " WHERE oid = " + str(self.id) );
+    self.db.query("UPDATE blackboards SET parent = " + str(parent_id) + " WHERE oid = " + str(self.id) );
 
   def add_child(self, child_id):
     s = self.record["children"];
@@ -101,13 +101,13 @@ class BlackBoard(threading.Thread):
     if(child_id not in chldlst):
       chldlst.append(child_id);
       self.record["children"] = util.pglist.list2pgArray(chldlst);
-      db.query("UPDATE blackboards SET children = '" + self.record["children"] + "' WHERE oid = " + str(self.id) );
+      self.db.query("UPDATE blackboards SET children = '" + self.record["children"] + "' WHERE oid = " + str(self.id) );
 
   def frequency(self, low, high):
-    db.query("UPDATE blackboards set low_freq = '"+ str(low) +"' , high_freq = '" + str(high) + "' WHERE oid = " + str(self.id) );
+    self.db.query("UPDATE blackboards set low_freq = '"+ str(low) +"' , high_freq = '" + str(high) + "' WHERE oid = " + str(self.id) );
 
   def range(self, low, high):
-    db.query("UPDATE blackboards set low_freq = '"+ str(low) +"' , high_freq = '" + str(high) + "' WHERE oid = " + str(self.id) );
+    self.db.query("UPDATE blackboards set low_freq = '"+ str(low) +"' , high_freq = '" + str(high) + "' WHERE oid = " + str(self.id) );
 
   def register(self,obj):
     """not usefull if obj is not a KnowledgeSource"""

@@ -17,6 +17,7 @@ class KnowledgeSource(threading.Thread):
 
   def __init__(self):
     self.stopevent = threading.Event()
+    self.keepsOnRunning = True;
     threading.Thread.__init__(self, name=str(self.id))
 
   def register(self,obj):
@@ -27,11 +28,18 @@ class KnowledgeSource(threading.Thread):
     debug = True;
     while not self.stopevent.isSet():
       if(debug):
-        print "action by " , self.id;
+        print "action by " , self.id, " ",;
       self.action();
       self.stopevent.wait(1);
 
+  def keepRunning(keepsOnRunning = None):
+    if keepsOnRunning :
+      self.keepsOnRunning = keepsOnRunning;
+    return self.keepsOnRunning;
+
   def join(self,timeout = None):
-    self.stopevent.set();
-    print self.id, " stopping"
+    if not self.keepsOnRunning :
+      self.stopevent.set();
+      print self.id, " stopping"
+      
     threading.Thread.join(self,timeout);
