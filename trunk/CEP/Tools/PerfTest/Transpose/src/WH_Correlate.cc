@@ -21,6 +21,11 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.1  2002/05/23 15:40:44  schaaf
+//
+//  %[BugId: 11]%
+//  Added WH_Correlate
+//
 //  Revision 1.5  2002/05/16 15:00:34  schaaf
 //
 //  overall update, added profiler states, removed command line processing, setZ/XOffset and Yoffset
@@ -64,10 +69,6 @@ WH_Correlate::WH_Correlate (const string& name,
   itsStationDim (stationDim),
   itsFreqDim    (freqDim)
 {
-  AssertStr (nin > 0,     "0 input for WH_Correlate is not possible");
-  AssertStr (nout > 0,    "0 output for WH_Correlate is not possible");
-  //   AssertStr (nout == nin, "number of inputs and outputs must match");
-  
   itsInHolders  = new DH_2DMatrix* [nin];
   itsOutHolders = new DH_Empty* [nout];
   char str[8];
@@ -119,30 +120,28 @@ void WH_Correlate::preprocess() {
 
 void WH_Correlate::process()
 {  
-
   Profiler::enterState (theirProcessProfilerState);
-  itsOutHolders[0]->setTimeStamp(itsTime++);
-  
-  int Stations,Frequencies;
-  int vis;
-  int Ysize_bytes;
-  DH_2DMatrix *InDHptr;
-  
-  for (int time=0; time<getOutputs(); time++) {
-    InDHptr = getInHolder(time);
-    Stations = InDHptr->getXSize();
-    Frequencies = InDHptr->getYSize();
-    for (int stationA = 0; stationA < Stations; stationA++) {
-      for (int stationB = 0; stationB <= stationA; stationB++) {
-	for (int freq=0; freq < Frequencies; freq++) {
-	  vis += *InDHptr->getBuffer(stationA,freq) * 
-	    *InDHptr->getBuffer(stationB,freq);
-	}
+   
+   int Stations,Frequencies;
+   int vis;
+   int *RowStartptrA, *RowStartptrB;
+   DH_2DMatrix *InDHptr;
+   for (int time=0; time<getOutputs(); time++) {
+      InDHptr = getInHolder(time);
+      Stations = InDHptr->getXSize();
+      Frequencies = InDHptr->getYSize();
+      for (int stationA = 0; stationA < Stations; stationA++) {
+	 for (int stationB = 0; stationB <= stationA; stationB++) {
+	    RowStartptrA = InDHptr->getBuffer(stationA,0);
+	    RowStartptrB = InDHptr->getBuffer(stationB,0);
+	    for (int freq=0; freq < Frequencies; freq++) {
+	       vis += *(RowStartptrA+freq) * *(RowStartptrB+freq);
+	    }
+	 }
       }
-    }
-  }
-  Profiler::leaveState (theirProcessProfilerState);
-  //dump();
+   }
+   Profiler::leaveState (theirProcessProfilerState);
+   //dump();
 }
 
 void WH_Correlate::dump() const
