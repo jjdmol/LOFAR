@@ -42,7 +42,8 @@ using namespace ABS;
 using namespace std;
 using namespace blitz;
 
-#define N_PHASE 2
+#define N_PHASE 2 // complex number has two components (re, im)
+#define EPA_INTEGRATION_COUNT 512 // number of samples in power_sum
 
 BeamletStats::BeamletStats(int n_beamlets, int n_integrations) :
     m_nbeamlets(n_beamlets),
@@ -91,8 +92,8 @@ void BeamletStats::update(Array<unsigned int,3>& power_sum, unsigned int seqnr)
 
   if ( (m_count % m_nintegrations) == 0)
   {
-      // divide by m_count
-      m_beamlet_power /= m_count;
+      // divide by number of samples = m_count * EPA_INTEGRATION_COUNT
+      m_beamlet_power /= m_count * EPA_INTEGRATION_COUNT;
 
       char propnamex[64];
       char propnamey[64];
