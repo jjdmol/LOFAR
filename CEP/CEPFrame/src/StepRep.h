@@ -236,8 +236,6 @@ private:
   // The parent Composite.
   CompositeRep*   itsParent;
   // This will give all instances of Step the same event in the
-  // Profiling output
-  static int          theirProcessProfilerState; 
   static unsigned int theirNextID;
   static unsigned int theirEventCnt;
   int                 itsID;   // the ID of the step
