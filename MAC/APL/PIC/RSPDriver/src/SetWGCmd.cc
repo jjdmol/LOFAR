@@ -62,21 +62,21 @@ void SetWGCmd::ack(CacheBuffer& /*cache*/)
 
 void SetWGCmd::apply(CacheBuffer& cache)
 {
-  for (int cache_blp = 0;
-       cache_blp < GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i);
-       cache_blp++)
+  for (int cache_rcu = 0;
+       cache_rcu < GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL;
+       cache_rcu++)
   {
-    if (m_event->blpmask[cache_blp])
+    if (m_event->rcumask[cache_rcu])
     {
-      if (cache_blp < GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i))
+      if (cache_rcu < GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL)
       {
-	cache.getWGSettings()()(cache_blp * 2)     = m_event->settings()(0);
-	cache.getWGSettings()()(cache_blp * 2 + 1) = m_event->settings()(0);
+	cache.getWGSettings()()(cache_rcu) = m_event->settings()(0);
+	cache.getWGSettings().setModified();
       }
       else
       {
-	LOG_WARN(formatString("invalid BLP index %d, there are only %d BLP's",
-			      cache_blp, GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i)));
+	LOG_WARN(formatString("invalid RCU index %d, there are only %d RCU's",
+			      cache_rcu, GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL));
       }
     }
   }
@@ -99,7 +99,7 @@ void SetWGCmd::setTimestamp(const Timestamp& timestamp)
 
 bool SetWGCmd::validate() const
 {
-  return ((m_event->blpmask.count() <= (unsigned int)GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i))
+  return ((m_event->rcumask.count() <= (unsigned int)GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL)
 	  && (1 == m_event->settings().dimensions())
 	  && (1 == m_event->settings().extent(firstDim)));
 }

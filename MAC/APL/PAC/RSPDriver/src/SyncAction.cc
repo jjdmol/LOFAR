@@ -94,7 +94,15 @@ GCFEvent::TResult SyncAction::sendrequest_state(GCFEvent& event, GCFPortInterfac
       // send next set of coefficients
       sendrequest();
 
-      TRAN(SyncAction::waitack_state);
+      // is sendrequest indicates completion, simply transition to idle_state
+      if (hasCompleted())
+      {
+	TRAN(SyncAction::idle_state);
+      }
+      else
+      {
+	TRAN(SyncAction::waitack_state);
+      }
     }
     break;
 
@@ -122,8 +130,6 @@ GCFEvent::TResult SyncAction::waitack_state(GCFEvent& event, GCFPortInterface& p
     case F_ENTRY:
     {
       sendrequest_status();
-
-      // TODO start timer to check for broken comms link
     }
     break;
 

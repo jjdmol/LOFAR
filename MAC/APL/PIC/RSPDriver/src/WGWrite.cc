@@ -50,6 +50,12 @@ WGWrite::~WGWrite()
 
 void WGWrite::sendrequest()
 {
+  if (!Cache::getInstance().getBack().getWGSettings().getModified())
+  {
+    setCompleted(true);
+    return;
+  }
+  
   uint8 global_rcu = (getBoardId() * GET_CONFIG("RS.N_BLPS", i)) + getCurrentBLP();
 
   EPAWgSettingsEvent wgsettings;
