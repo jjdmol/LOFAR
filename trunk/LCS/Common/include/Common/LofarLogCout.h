@@ -24,6 +24,7 @@
 #define COMMON_LOFAR_LOGCOUT_H
 
 #include <Common/lofar_iostream.h>
+#include <Common/lofar_iomanip.h>
 #include <Common/lofar_string.h>
 #include <Common/lofar_map.h>
 #include <Common/Exception.h>
@@ -50,7 +51,7 @@
 	} \
 	getDebugContext().setLevel(20); \
 	const char*     myargv[2] =  { "", longFilename }; \
-	Debug::initLevels (2, myargv, true); 
+	LOFAR::Debug::initLevels (2, myargv, true); 
 
 //# Note: 'watch' functionality not available
 #define INIT_LOGGER_AND_WATCH(filename,interval) \
@@ -133,22 +134,26 @@ public:	\
 #define TRACE_LEVEL_RTTI			12
 #define TRACE_LEVEL_FLOW			11
 
+//# The numbering of trace levels in log4cplus is reversed compared to Debug.
+//# This macro converts the Debug trace level to the log4cplus trace level.
+#define LOG4CPLUS_LEVEL(level) TRACE_LEVEL_LOOP-level+1
+
 //#
 //# LOG_TRACE_LIFETIME(_STR) (level, message|stream)
 //#
 #define LOG_TRACE_LIFETIME_STR(level, stream) \
 	Debug::Tracer objname; \
-    if( Debug(level) ) { \
+    if( DebugCheck(level) ) { \
 		constructStream(stream) \
-		objname.startMsg (level, __FILE__, __LINE__, \
-                        __PRETTY_FUNCTION__, 0, oss.str().c_str()); \
+		objname.startMsg (LOG4CPLUS_LEVEL(level), __FILE__, __LINE__, \
+                        __PRETTY_FUNCTION__, oss.str().c_str(), 0); \
     }
 #define LOG_TRACE_LIFETIME(level,message) \
 	LOG_TRACE_LIFETIME_STR(level, message)
 
 //# ---------- implementation details tracer part ----------
-#define cTrace(level, message)		cDebug(level, "TRACE" << level, message)
-#define cTracestr(level,stream) 	cDebugstr(level, "TRACE" << level, stream)
+#define cTrace(level, message)		cDebug(level, "TRACE" << LOG4CPLUS_LEVEL(level) << " TRC." << getDebugContext().name(), message)
+#define cTracestr(level,stream) 	cDebugstr(level, "TRACE" << LOG4CPLUS_LEVEL(level) << " TRC." << getDebugContext().name(), stream)
 
 #else	// ENABLE_TRACER
 //# define dummies if tracing is disabled
@@ -205,17 +210,19 @@ public:	\
 
 //# ---------- implementation details generic part ----------
 
-#define Debug(level)	getDebugContext().check(level)
+#define DebugCheck(level)	getDebugContext().check(level)
 
-#define DebugTestAndLog(level)	if (Debug(level) && Debug::stream_time()) \
-									Debug::getDebugStream()
+#define DebugTestAndLog(level) \
+	if (DebugCheck(level) && LOFAR::Debug::stream_time()) \
+		LOFAR::Debug::getDebugStream()
+
 #define	constructStream(stream) \
 	std::ostringstream	oss; \
 	oss << stream;
 
 #define	cLog(level,levelname,message) \
-	DebugTestAndLog(level) << levelname << "-[" << LOFARLOGGER_PACKAGE << "] " << \
-								  message << endl;
+	DebugTestAndLog(level) << setw(5) << left << levelname \
+		<< " [" << LOFARLOGGER_PACKAGE << "] " << message << endl;
 
 #define cLogstr(level,levelname,stream) { \
 		constructStream(stream) \
@@ -223,10 +230,9 @@ public:	\
 	}
 
 #define	cDebug(level,levelname,message) \
-	DebugTestAndLog(level) << levelname << "-[" << LOFARLOGGER_PACKAGE << "] " << \
-								  message << \
-								  ", File:" << __FILE__ << \
-								  ", Line:" << __LINE__ << endl;
+	DebugTestAndLog(level) << setw(5) << left << levelname \
+		<< " [" << LOFARLOGGER_PACKAGE << "] " << message \
+		<< ", File:" << __FILE__ << ", Line:" << __LINE__ << endl;
 
 #define cDebugstr(level,levelname,stream)  { \
 		constructStream(stream) \
@@ -238,35 +244,12 @@ public:	\
 
 namespace LOFAR
 {
-
   namespace Debug
   {
     extern ostream * dbg_stream_p;
   
     inline ostream & getDebugStream () { return *dbg_stream_p; }
 
-#ifdef ENABLE_LATENCY_STATS
-    extern struct timeval tv_init;
-    inline int printf_time ()
-    { 
-      struct timeval tv; gettimeofday(&tv,0);
-      printf("%ld.%06ld ",tv.tv_sec-tv_init.tv_sec,tv.tv_usec);
-      return 1;
-    }
-    inline int stream_time ()
-    {
-      struct timeval tv; gettimeofday(&tv,0);
-      getDebugStream()<<tv.tv_sec-tv_init.tv_sec<<"."<<tv.tv_usec;
-      return 1;
-    }
-#else
-    inline int printf_time () { return 1; };
-    inline int stream_time () { return 1; };
-#endif
-  };
-
-  namespace Debug
-  {
     // Typedef the exception type, so we can change whenever needed.
     EXCEPTION_CLASS(Fail,LOFAR::Exception);
 
@@ -366,13 +349,30 @@ namespace LOFAR
     };
 #endif
 
-  } // namespace Debug
+#ifdef ENABLE_LATENCY_STATS
+    extern struct timeval tv_init;
+    inline int printf_time ()
+    { 
+      struct timeval tv; gettimeofday(&tv,0);
+      printf("%ld.%06ld ",tv.tv_sec-tv_init.tv_sec,tv.tv_usec);
+      return 1;
+    }
+    inline int stream_time ()
+    {
+      struct timeval tv; gettimeofday(&tv,0);
+      getDebugStream() << formatString("%ld.%06ld ",tv.tv_sec-tv_init.tv_sec,tv.tv_usec);
+      return 1;
+    }
+#else
+    inline int printf_time () { return 1; };
+    inline int stream_time () { return 1; };
+#endif
 
-
-  namespace Debug {
     extern Context DebugContext;
     inline Context & getDebugContext ()  { return DebugContext; }
-  }
+
+  } // namespace Debug
+
 
   // Default DebugContext is the one in Debug.
   using Debug::getDebugContext;
