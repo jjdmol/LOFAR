@@ -3,6 +3,9 @@
 
 #include "SQLTimeStampTest.h"
 
+#include <iostream>
+using namespace std;
+
 CPPUNIT_TEST_SUITE_REGISTRATION(SQLTimeStampTest);
 
 //
@@ -44,7 +47,7 @@ void SQLTimeStampTest::tearDown()
 
 void SQLTimeStampTest::testConstructorThrows() 
 {
-  stsf = SQLTimeStamp(tsf);  // must throw LCS::Assert
+  stsf = SQLTimeStamp(tsf);  // must throw LCS::AssertError
 }
 
 void SQLTimeStampTest::testLessThanComparison()
@@ -54,8 +57,12 @@ void SQLTimeStampTest::testLessThanComparison()
   CPPUNIT_ASSERT(sts2 < sts3);
 }
 
-void SQLTimeStampTest::testLessThanComparisonFails()
+void SQLTimeStampTest::testLessThanIsNotEqual()
 {
   CPPUNIT_ASSERT(sts1 < sts1);  // should ALWAYS fail!
+}
+
+void SQLTimeStampTest::testShouldOverflow()
+{
   CPPUNIT_ASSERT(sts1 < sts4);  // demonstrates overflow of year field
 }
