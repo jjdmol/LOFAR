@@ -88,37 +88,37 @@ void AH_BackEnd::undefine() {
   itsWHs.clear();
 }
 
-void AH_BackEnd::init() {
+void AH_BackEnd:init() {
   struct timeval timestamp;
   vector<WorkHolder*>::iterator it = itsWHs.begin();
   int cn = 0;
   for (; it != itsWHs.end(); it++) {
-    cout << "init BE WH " << (*it)->getName() << " listening on port " << itsPort << endl;
+    usleep(50);
+    cout << "init BE WH " << (*it)->getName() << " listening on port " << itsPort+cn << endl;
 	// Get pointer to TH_Socket
     TH_Socket* THS = static_cast<TH_Socket*>
-			((*it)->getDataManager().getInHolder(0)->getTransporter().getTransportHolder());
-	std::stringstream	service;
-	service << THS->itsPort;
-	// Sneaky start the listener
-	THS->itsServerSocket = new Socket("TH_Socket", service.str());
-	if (THS->itsServerSocket->ok()) {
-	   cout << cn << ":listener OK" << endl;
-	}
-	else {
-	  cout << cn << ":listener NOT OK" << endl;
-	}
+                     ((*it)->getDataManager().getInHolder(0)->getTransporter().getTransportHolder());
+    std::stringstream	service;
+    service << THS->itsPort;
+    // Sneaky start the listener
+    THS->itsServerSocket = new Socket("TH_Socket", service.str());
+    if (!THS->itsServerSocket->ok()) {
+      cout << itsPort+cn << ":listener NOT OK" << endl;
+    }
 
-	cn++;
+    cn++;
   }
 
   // Now do the normal loop
   it = itsWHs.begin();
+  cn = 0;
   for (; it != itsWHs.end(); it++) {
-    cout << "init BE WH " << (*it)->getName() << " accepting on port " << itsPort << endl;
+    cout << "init BE WH " << (*it)->getName() << " accepting on port " << itsPort+cn << endl;
     (*it)->getDataManager().getInHolder(0)->getTransporter().setIsBlocking(itsBlocking);
     (*it)->basePreprocess();
     gettimeofday (&timestamp, NULL);
     cout << " connected on timestamp : "<< 1.0 * (timestamp.tv_sec - starttime.tv_sec) + 1.0 * (timestamp.tv_usec - starttime.tv_usec) / 1000000 << "sec"<<endl;
+    cn++;
   }
 }
 
