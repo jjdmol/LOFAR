@@ -87,7 +87,7 @@ namespace LOFAR
       } 
     }// Now we should have a connection
 
-    int received_len = itsDataSocket->readblock (buf, nbytes);
+    int received_len = itsDataSocket->readBlocking (buf, nbytes);
     //cout << "TH_Socket received " << received_len << "/" <<nbytes<<endl; 
     bool result = received_len == nbytes;
     DBGASSERTSTR(result,"TH_Socket: data not succesfully received")
@@ -142,7 +142,7 @@ namespace LOFAR
       } 
     }// Now we should have a connection
     int sent_len=0;
-    sent_len = itsDataSocket->writeblock (buf, nbytes);
+    sent_len = itsDataSocket->writeBlocking (buf, nbytes);
     //cout << "TH_Socket sent " << sent_len << "/" << nbytes << " bytes" << endl;
     return true;
   }  
