@@ -39,7 +39,7 @@ bool testMem()
   DH1.setID(1);
   DH2.setID(2);
 
-  // connect DH1 to DH2, TH_Mem doesn't implement a blocking send, so we select nonblocking
+  // connect DH1 to DH2 with non-blocking in-memory communication
   DH1.connectTo(DH2, TH_Mem(), false);
   // and reverse
   DH2.connectTo(DH1, TH_Mem(), false);
@@ -111,7 +111,7 @@ bool testPL()
   DH1.setID(1);
   DH2.setID(2);
 
-  // connect DH1 to DH2, TH_Mem doesn't implement a blocking send, so we select nonblocking
+  // connect DH1 to DH2 via a database
   DH1.connectTo(DH2, TH_PL("TestBidirectional"));
   // and reverse
   DH2.connectTo(DH1, TH_PL("TestBidirectional"));
