@@ -37,5 +37,31 @@ int main()
   for (string::size_type i = 0; i < vs.size(); i++) {
     cout << "vs[" << i << "] = \"" << vs[i] << "\"" << endl;
   }
+
+  string r1(" 	 	 a String with leading and trailing whitespace	 ");
+  string r2("a String without leading and trailing whitespace");
+
+  rtrim(r1);
+  ltrim(r1);
+  rtrim(r2);
+  ltrim(r2);
+
+  cout << "Trimmed C++ strings:" << endl;
+  cout << ">" << r1 << "<" << endl;
+  cout << ">" << r2 << "<" << endl;
+
+  char c1[] = { " 	 	 a String with leading and trailing whitespace	 " };
+  char c2[] = { "a String without leading and trailing whitespace" };
+  char* p1 = c1;
+  char* p2 = c2;
+  int32 len1, len2;
+
+  len1 = rtrim(p1 = ltrim(p1));
+  len2 = rtrim(p2 = ltrim(p2));
+
+  cout << "Trimmed C strings:" << endl;
+  cout << ">" << p1 << "< , len=" << len1 << endl;
+  cout << ">" << p2 << "< , len=" << len2 << endl;
+
   return 0;
 }
