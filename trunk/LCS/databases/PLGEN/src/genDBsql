@@ -83,25 +83,25 @@ initSQLfile()
 #	Class	<ClassName>
 #	Table	<TableName>
 #	File	<Filename>
-#	<Ctype>	<MemberName>	<ColumnName>	<DBtype>
-#	<Ctype>	<MemberName>	Class			<ClassName>
-#	<Ctype>	<MemberName>	BaseClass		<ClassName>
+#	<Ctype>	<MemberName> <Symb.Name> <ColumnName> <DBtype>
+#	<Ctype>	<MemberName> <Symb.Name> Class		  <ClassName>
+#	<Ctype>	<MemberName> <Symb.Name> BaseClass	  <ClassName>
 #
 # Syntax of the constructed temp-file:
-# ClassName!TableName!Ctype!MemberName!ColumnName!SubclassName!DBtype!File
+# ClassName!TableName!Ctype!MemberName!SymbName!ColumnName!SubclassName!DBtype!File
 #
 # ATTENTION: The are some issues to remind:
 #	Ctype      may be of the form xxx:yyy (like std::string)
 #	MemberName may be of the form X::y or X.y when the user merged some 
 #			   tables manually
 #
-# NOTE: THIS ROUTINE ALSO EXISTS IN genDBcode
+# NOTE: THIS ROUTINE ALSO EXISTS IN genDBsql
 #
 convertMapfile()
 {
 	Mapfile=$1
 
-	cleanlist ${Mapfile} | while read label name dbname fldtype
+	cleanlist ${Mapfile} | while read label name symbname dbname fldtype
 	do
 		# comment is stripped off, check rest of line
 		if [ -z "$label" -o -z "$name" ]; then		# need two fields
@@ -118,8 +118,7 @@ convertMapfile()
 		File|file|FILE)					# File keyword
 			CurFile=$name				
 			# NOTE: we assume that File always comes after Class!!!
-			# Not needed in genDBsql
-			#echo "${CurClass}!${CurFile}" >> ${CLASSLOCATIONWRKFILE}
+			echo "${CurClass}!${CurFile}" >> ${CLASSLOCATIONWRKFILE}
 			;;
 		*)								# no keyword, assume fieldname
 			ctype=$label				# less confusing
@@ -128,9 +127,9 @@ convertMapfile()
 			if [ "${SubClass}" == "class" -o "${SubClass}" == "baseclass" ]; then
 				# it's a (sub)class, get its name.
 				SubClassName=`echo $fldtype | cut -d" " -f1`
-				echo "$CurClass!$CurTable!$ctype!$name!$dbname!$SubClassName!BIGINT!$CurFile"
+				echo "$CurClass!$CurTable!$ctype!$name!$symbname!$dbname!$SubClassName!BIGINT!$CurFile"
 			else
-				echo "$CurClass!$CurTable!$ctype!$name!$dbname!!$fldtype!$CurFile"
+				echo "$CurClass!$CurTable!$ctype!$name!$symbname!$dbname!!$fldtype!$CurFile"
 			fi
 			;;
 		esac
@@ -159,8 +158,8 @@ addCreateTableCommand()
 			continue
 		fi
 
-		ColumnName=`echo $line | cut -d'!' -f5`
-		ColumnType=`echo $line | cut -d'!' -f7`
+		ColumnName=`echo $line | cut -d'!' -f6`
+		ColumnType=`echo $line | cut -d'!' -f8`
 		if [ "${ColumnName}" != "Class" -a "${ColumnName}" != "BaseClass" ]; then
 			echo ","
 			echo -n "	${ColumnName}	${ColumnType}"
