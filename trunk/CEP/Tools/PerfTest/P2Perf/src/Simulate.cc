@@ -28,7 +28,7 @@
 
 #include <tinyCEP/SimulatorParseClass.h>
 #include <Common/lofar_iostream.h>
-#include <Common/Debug.h>
+#include <Common/LofarLogger.h>
 #include "P2Perf/P2Perf.h"
 #ifdef HAVE_MPI
 #include <mpi.h>
@@ -43,8 +43,6 @@ int atexit(void (*function)(void))
 
 int main (int argc, const char** argv)
 {
-  Debug::initLevels (argc, argv);
-  Debug::getDebugContext().setLevel(4);
   // Set trace level.
 
 #ifdef HAVE_MPI

@@ -28,7 +28,7 @@
 #include <math.h>
 
 #include "CEPFrame/Step.h"
-#include <Common/Debug.h>
+#include <Common/LofarLogger.h>
 
 #include "P2Perf/WH_Dest.h"
 #include "P2Perf/StopWatch.h"
@@ -82,9 +82,9 @@ void WH_Dest::preprocess()
   {
     itsIteration = 0;
     // change size of the DataHolder
-    TRACER2("growing dataSize of " << getName() << " from " << getDataManager().getInHolder(0)->getDataSize() << " to ");
+    LOG_TRACE_VAR_STR("growing dataSize of " << getName() << " from " << getDataManager().getInHolder(0)->getDataSize() << " to ");
     itsDHGrowStrategy->growDHs (&getDataManager());
-    TRACER2(getDataManager().getInHolder(0)->getDataSize());
+    LOG_TRACE_VAR_STR(getDataManager().getInHolder(0)->getDataSize());
 
   }
 };
