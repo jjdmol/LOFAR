@@ -25,8 +25,9 @@
 #define GSS_CONTROLLER_H
 
 #include <GCF/GCF_Task.h>
+#include <GCF/GCF_TCPPort.h>
 #include <Common/lofar_list.h>
-#include <Common/lofar_string>
+#include <Common/lofar_string.h>
 
 /**
  * 
@@ -41,7 +42,7 @@ class GSSController : public GCFTask
 		*  this instance will be started, this name must correspond with
 		*  the name choosen in the mac.ns file (must always start with "SV")
 		*/
-		GSSController(const char* locName);
+		GSSController();
 		~GSSController();
 
 		/**
@@ -54,7 +55,7 @@ class GSSController : public GCFTask
     bool findScope(char* pScopeData, string& scope);
     void forwardMsgToPI(GCFEvent& e); 
     void replyMsgToPI(GCFEvent& e, const string& scope);
-    bool forwardMsgToPMLlite(GCFEvent& e, char* pScopeData, const char* logMsg);
+    bool forwardMsgToPMLlite(GCFEvent& e, char* pScopeData, string& scope, char* logMsg);
     void replyMsgToPMLlite(GCFEvent& e, GCFPortInterface& p, char* pScopeData);
     
 
@@ -62,11 +63,11 @@ class GSSController : public GCFTask
 		static const unsigned int MAX_NR_OF_CLIENTS = 64;
     static const unsigned int MAX_BUF_SIZE = 256;
 
-		GCFPortInterface* _supClientPorts[MAX_NR_OF_CLIENTS];
+		GCFTCPPort* _supClientPorts[MAX_NR_OF_CLIENTS];
     typedef map<string /*scope*/, GCFPortInterface*> TScopeRegister;
     TScopeRegister    _scopeRegister;
     GCFTCPPort        _scPortProvider;
-		GCFTCPFPort       _propertyInterface;
+		GCFTCPPort       _propertyInterface;
     char              _buffer[MAX_BUF_SIZE];
 };
 

@@ -176,18 +176,18 @@ TPMResult GPMController::unregisterScope(GCFMyPropertySet& propSet,
   return result;
 }
 
-void GPMController::propertiesLinked(const string& scope, bool missingProps)
+void GPMController::propertiesLinked(const string& scope, TPAResult result)
 {
   _counter--;
   LOFAR_LOG_DEBUG(PML_STDOUT_LOGGER, ( 
       "Link request %d counter", _counter));
-  PAPropertieslinkedEvent e(0, (missingProps ? PA_MISSING_PROPS : PA_NO_ERROR));
+  PAPropertieslinkedEvent e(0, result);
   sendMyPropSetMsg(e, scope);
 }
 
-void GPMController::propertiesUnlinked(const string& scope)
+void GPMController::propertiesUnlinked(const string& scope, TPAResult result)
 {
-  PAPropertiesunlinkedEvent e(0, PA_NO_ERROR);
+  PAPropertiesunlinkedEvent e(0, result);
   sendMyPropSetMsg(e, scope);
 }
 
@@ -429,7 +429,7 @@ GCFEvent::TResult GPMController::connected(GCFEvent& e, GCFPortInterface& /*p*/)
       }
       if (_counter > 0)
       {
-        _propertyAgent.setTimer(0, 0, 0, 0);
+        _propertyAgent.setTimer(0.0);
       }
       break;      
     default:

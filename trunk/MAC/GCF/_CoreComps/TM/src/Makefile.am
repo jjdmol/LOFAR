@@ -1,6 +1,6 @@
-include_HEADERS =	
+pkginclude_HEADERS = Socket/GCF_ETHRawPort.h
  
-DOCHDRS = $(include_HEADERS) \
+DOCHDRS = $(pkginclude_HEADERS) \
   GTM_Defines.h \
   PortInterface/GTM_Config.h \
   PortInterface/GTM_NameService.h \
@@ -8,8 +8,10 @@ DOCHDRS = $(include_HEADERS) \
   Timer/GTM_Timer.h \
   Timer/GTM_TimerHandler.h \
   Socket/GTM_Socket.h \
-  Socket/GTM_ServerSocket.h \
-  Socket/GTM_SocketHandler.h
+  Socket/GTM_TCPSocket.h \
+  Socket/GTM_TCPServerSocket.h \
+  Socket/GTM_SocketHandler.h \
+  Socket/GTM_ETHSocket.h
     
 noinst_LTLIBRARIES 	= libtm.la
 
@@ -27,8 +29,11 @@ libtm_la_SOURCES=  \
   Timer/GTM_TimerHandler.cc \
   Socket/GCF_TCPPort.cc \
   Socket/GTM_Socket.cc \
-  Socket/GTM_ServerSocket.cc \
-  Socket/GTM_SocketHandler.cc 
+  Socket/GTM_TCPSocket.cc \
+  Socket/GTM_TCPServerSocket.cc \
+  Socket/GTM_SocketHandler.cc \
+  Socket/GTM_ETHSocket.cc \
+  Socket/GCF_ETHRawPort.cc
 
 libtm_la_CPPFLAGS=-I$(top_srcdir)/GCFCommon/src
 

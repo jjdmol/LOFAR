@@ -22,7 +22,7 @@
 
 #include "GPI_Controller.h"
 #include "GPI_SupervisoryServer.h"
-#include "F_Supervisory_Protocol.ph"
+#include "PI_Protocol.ph"
 
 static string sPITaskName("PI");
 
@@ -31,10 +31,10 @@ GPIController::GPIController() :
   _isBusy(false)
 {
   // register the protocol for debugging purposes
-  registerProtocol(F_SUPERVISORY_PROTOCOL, F_SUPERVISORY_PROTOCOL_signalnames);
+  registerProtocol(PI_PROTOCOL, PI_PROTOCOL_signalnames);
 
   // initialize the port provider
-  _ssPortProvider.init(*this, "server", GCFPortInterface::MSPP, F_SUPERVISORY_PROTOCOL);
+  _ssPortProvider.init(*this, "server", GCFPortInterface::MSPP, PI_PROTOCOL);
 }
 
 GPIController::~GPIController()

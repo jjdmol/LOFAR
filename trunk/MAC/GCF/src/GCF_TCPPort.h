@@ -28,7 +28,7 @@
 
 // forward declaration
 class GCFTask;
-class GTMSocket;
+class GTMTCPSocket;
 class GCFEvent;
 
 /**
@@ -45,7 +45,8 @@ class GCFTCPPort : public GCFRawPort
     GCFTCPPort (GCFTask& task,
           	    string name,
           	    TPortType type,
-                int protocol = 0);
+                int protocol, 
+                bool exchangeRawData = false);
     GCFTCPPort ();
   
     virtual ~GCFTCPPort ();
@@ -79,8 +80,8 @@ class GCFTCPPort : public GCFRawPort
     void setAddr (const GCFPeerAddr& addr);
 
   protected:
-    friend class GTMSocket;
-    friend class GTMServerSocket;
+    friend class GTMTCPSocket;
+    friend class GTMTCPServerSocket;
   
   private:
     /**
@@ -91,7 +92,7 @@ class GCFTCPPort : public GCFRawPort
     
   private:
     bool                _addrIsSet;
-    GTMSocket*          _pSocket;
+    GTMTCPSocket*       _pSocket;
     GCFPeerAddr         _addr;
 };
 

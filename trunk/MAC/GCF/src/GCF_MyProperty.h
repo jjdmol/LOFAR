@@ -68,7 +68,7 @@ class GCFMyProperty : public GCFPropertyBase
     TGCFResult setValue (const string value);
     TGCFResult setValue (const GCFPValue& value);        
     //@}
-    inline bool isLinked () const {return _isLinked;}
+    inline bool isLinked () const {return _isLinked && !_isBusy;}
     //@{
     /** Access mode can be: GCF_READABLE_PROP and/or GCF_WRITABLE_PROP
      * NOTE: If both modes are set and the property is linked, the setValue 

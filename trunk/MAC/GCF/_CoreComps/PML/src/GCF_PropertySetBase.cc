@@ -103,9 +103,8 @@ bool GCFPropertySetBase::exists (const string propName) const
   }
 }
 
-void GCFPropertySetBase::addProperty(const string& propName, GCFPropertyBase* pProperty)
+void GCFPropertySetBase::addProperty(const string& propName, GCFPropertyBase& prop)
 {
-  assert(pProperty);
   assert(propName.length() > 0);
   
   string shortPropName(propName);
@@ -114,7 +113,7 @@ void GCFPropertySetBase::addProperty(const string& propName, GCFPropertyBase* pP
   TPropertyList::iterator iter = _properties.find(shortPropName);
   if (iter == _properties.end())
   {
-    _properties[shortPropName] = pProperty;
+    _properties[shortPropName] = &prop;
   }
 }
 

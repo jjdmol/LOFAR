@@ -20,7 +20,7 @@
 //#
 //#  $Id$
 
-#include <GCF/GCF_RTAnswer.h>
+#include "GCF_RTAnswer.h"
 
 /**
  * F_PVSS_PROTOCOL signal names

@@ -22,16 +22,18 @@
 //# $Id$
 //
 
-#define DEBUG_SIGNAL
 #include "GSS_Controller.h"
-#include <Common/lofar_vector.h>
-#include <Utils.h>
-#define DECLARE_SIGNAL_NAMES
-#include "PI_protocol.ph"
+#include "GSS_Defines.h"
 #include <GCF/GCF_Control.h>
+#include <Utils.h>
+#define DEBUG_SIGNAL
+#define DECLARE_SIGNAL_NAMES
+#include <PI_Protocol.ph>
 
-GSSController::GSSController(const char* boardName) :
-  GCFTask((State)&GSSController::initial_state, boardName)
+static string ssName = "SS";
+ 
+GSSController::GSSController() :
+  GCFTask((State)&GSSController::initial_state, ssName)
 {
   // register the protocol for debugging purposes
   registerProtocol(PI_PROTOCOL, PI_PROTOCOL_signalnames);
@@ -54,8 +56,7 @@ GSSController::~GSSController()
 
 GCFEvent::TResult GSSController::initial_state(GCFEvent& e, GCFPortInterface& p)
 {
-  static unsigned int connectedCount = 0;
-  int status = GCFEvent::HANDLED;
+  GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (e.signal)
   {
@@ -91,9 +92,9 @@ GCFEvent::TResult GSSController::initial_state(GCFEvent& e, GCFPortInterface& p)
 
 GCFEvent::TResult GSSController::operational_state(GCFEvent& e, GCFPortInterface& p)
 {
-  int status = GCFEvent::HANDLED;
+  GCFEvent::TResult status = GCFEvent::HANDLED;
   static string scope = "";
-  static char* pScopeData = 0;
+  static char* pData = 0;
 
   switch (e.signal)
   {
@@ -104,7 +105,7 @@ GCFEvent::TResult GSSController::operational_state(GCFEvent& e, GCFPortInterface
         for (TScopeRegister::iterator iter = _scopeRegister.begin();
                iter != _scopeRegister.end(); ++iter)
         {
-          rse.length = sizeof(GCFEvent) + Utils::packString(iter->first, _buffer, MAX_BUF_LENGTH);
+          rse.length = sizeof(GCFEvent) + Utils::packString(iter->first, _buffer, MAX_BUF_SIZE);
           _propertyInterface.send(rse, _buffer, rse.length - sizeof(GCFEvent));
         }
       }  
@@ -129,14 +130,14 @@ GCFEvent::TResult GSSController::operational_state(GCFEvent& e, GCFPortInterface
           if (iter->second == &p)
           {
             scopesToBeDeleted.push_back(iter->first);
-            urse.length = sizeof(GCFEvent) + Utils::packString(iter->first, _buffer, MAX_BUF_LENGTH);
+            urse.length = sizeof(GCFEvent) + Utils::packString(iter->first, _buffer, MAX_BUF_SIZE);
             _propertyInterface.send(urse, _buffer, urse.length - sizeof(GCFEvent));
           }
         }
         for (list<string>::iterator iter = scopesToBeDeleted.begin();
              iter != scopesToBeDeleted.end(); ++iter)
         {
-          _scopeRegister.erase(iter);
+          _scopeRegister.erase(*iter);
         }
         p.close(); // to avoid more DISCONNECTED signals for this port
       }
@@ -146,12 +147,13 @@ GCFEvent::TResult GSSController::operational_state(GCFEvent& e, GCFPortInterface
     {
       GCFTCPPort* pNewPMLPort = new GCFTCPPort();
       pNewPMLPort->init(*this, "ss", GCFPortInterface::SPP, PI_PROTOCOL);
-      _supClientPorts.accept(*pNewPMLPort);
+      _scPortProvider.accept(*pNewPMLPort);
       for (unsigned int i = 0; i < MAX_NR_OF_CLIENTS; i++)
       {
         if (_supClientPorts[i] == 0) 
         {
           _supClientPorts[i] = pNewPMLPort;
+          break;
         }
       }
       break;
@@ -162,7 +164,7 @@ GCFEvent::TResult GSSController::operational_state(GCFEvent& e, GCFPortInterface
       {          
         p.open(); // try again
       }
-      else if (&_pmlPortProvider == &p)
+      else if (&_scPortProvider == &p)
       {
         GCFTimerEvent* pTimer = static_cast<GCFTimerEvent*>(&e);
         GCFPortInterface* pPort = (GCFPortInterface*)(pTimer->arg);
@@ -174,6 +176,7 @@ GCFEvent::TResult GSSController::operational_state(GCFEvent& e, GCFPortInterface
             {
               delete _supClientPorts[i];
               _supClientPorts[i] = 0;
+              break;
             }
           }
         }
@@ -182,8 +185,8 @@ GCFEvent::TResult GSSController::operational_state(GCFEvent& e, GCFPortInterface
 
     case PI_REGISTERSCOPE:
     {      
-      pScopeData = ((char*)&e) + sizeof(GCFEvent);
-      if (!findScope(pScopeData, scope))
+      pData = ((char*)&e) + sizeof(GCFEvent);
+      if (!findScope(pData, scope))
       {
         forwardMsgToPI(e);
         // creates a new scope entry
@@ -192,7 +195,7 @@ GCFEvent::TResult GSSController::operational_state(GCFEvent& e, GCFPortInterface
       else
       {
         PIScoperegisteredEvent response(PI_SCOPE_ALREADY_REGISTERED);
-        replyMsgToPMLlite(response, p, pScopeData);
+        replyMsgToPMLlite(response, p, pData);
       }      
 
       LOFAR_LOG_INFO(SS_STDOUT_LOGGER, ( 
@@ -204,15 +207,15 @@ GCFEvent::TResult GSSController::operational_state(GCFEvent& e, GCFPortInterface
     {
       PIScoperegisteredEvent* pResponse = static_cast<PIScoperegisteredEvent*>(&e);
       assert(pResponse);
-      pScopeData = ((char*)&e) + sizeof(PIScoperegisteredEvent);      
+      pData = ((char*)&e) + sizeof(PIScoperegisteredEvent);      
       char logMsg[] = "PI-RESP: Scope %s is registered";
-      if (!forwardMsgToPMLlite(e, pScopeData, scope, logMsg) && 
+      if (!forwardMsgToPMLlite(e, pData, scope, logMsg) && 
           pResponse->result == PI_NO_ERROR)
       {
         GCFEvent urse(PI_UNREGISTERSCOPE);
-        unsigned short scopeDataLength = scope.length() + Utils::SLENGTH_FIELD_SIZE;
+        unsigned short scopeDataLength = scope.length() + Utils::SLEN_FIELD_SIZE;
         urse.length += scopeDataLength;
-        _propertyInterface.send(urse, pScopeData, scopeDataLength);
+        _propertyInterface.send(urse, pData, scopeDataLength);
       }      
       if (pResponse->result != PI_NO_ERROR)
       {
@@ -222,15 +225,15 @@ GCFEvent::TResult GSSController::operational_state(GCFEvent& e, GCFPortInterface
     }
     case PI_UNREGISTERSCOPE:
     {
-      pScopeData = ((char*)&e) + sizeof(GCFEvent);
-      if (!findScope(pScopeData, scope))
+      pData = ((char*)&e) + sizeof(GCFEvent);
+      if (!findScope(pData, scope))
       {
         forwardMsgToPI(e);
       }
       else
       {
         PIScopeunregisteredEvent response(PI_PROP_SET_GONE);
-        replyMsgToPMLlite(response, p, pScopeData);
+        replyMsgToPMLlite(response, p, pData);
       }      
 
       LOFAR_LOG_INFO(SS_STDOUT_LOGGER, ( 
@@ -242,35 +245,36 @@ GCFEvent::TResult GSSController::operational_state(GCFEvent& e, GCFPortInterface
     {
       PIScopeunregisteredEvent* pResponse = static_cast<PIScopeunregisteredEvent*>(&e);
       assert(pResponse);
-      pScopeData = ((char*)&e) + sizeof(PIScopeunregisteredEvent);      
+      pData = ((char*)&e) + sizeof(PIScopeunregisteredEvent);      
       char logMsg[] = "PI-RESP: Scope %s is unregistered";
-      forwardMsgToPMLlite(e, pScopeData, scope, logMsg);
+      forwardMsgToPMLlite(e, pData, scope, logMsg);
       // deletes the scope entry        
       _scopeRegister.erase(scope);
       break;
     }
     case PI_LINKPROPERTIES:
     {
-      pScopeData = ((char*)&e) + sizeof(GCFEvent);
+      pData = ((char*)&e) + sizeof(GCFEvent);
       char logMsg[] = "PI-REQ: Link properties on scope %s";  
-      if (!forwardMsgToPMLlite(e, pScopeData, scope, logMsg))
+      if (!forwardMsgToPMLlite(e, pData, scope, logMsg))
       {
         PIPropertieslinkedEvent response(PI_PROP_SET_GONE);
-        replyMsgToPI(response, pScopeData);
+        replyMsgToPI(response, pData);
       }
       break;
     }
     case PI_PROPERTIESLINKED:
       forwardMsgToPI(e);
       break;
-    case PA_UNLINKPROPERTIES:
+
+    case PI_UNLINKPROPERTIES:
     {
-      pScopeData = ((char*)&e) + sizeof(GCFEvent);
+      pData = ((char*)&e) + sizeof(GCFEvent);
       char logMsg[] = "PI-REQ: Unlink properties on scope %s";
-      if (!forwardMsgToPMLlite(e, pScopeData, scope, logMsg))
+      if (!forwardMsgToPMLlite(e, pData, scope, logMsg))
       {
         PIPropertieslinkedEvent response(PI_PROP_SET_GONE);
-        replyMsgToPI(response, pScopeData);
+        replyMsgToPI(response, pData);
       }
       break;
     }
@@ -279,22 +283,22 @@ GCFEvent::TResult GSSController::operational_state(GCFEvent& e, GCFPortInterface
       forwardMsgToPI(e);
       break;
 
-    case PI_PROPERTYCHANGED:
+    case PI_VALUESET:
       forwardMsgToPI(e);
       break;
 
-    case PI_PROPERTYWRITTEN:
+    case PI_VALUECHANGED:
     {
-      PIPropertywrittenEvent* pMsg = static_cast<PIPropertywrittenEvent*>(&e);
+      PIValuechangedEvent* pMsg = static_cast<PIValuechangedEvent*>(&e);
       assert(pMsg);
-      char* pPropNameData = ((char*)&e) + sizeof(PIPropertywrittenEvent);
-      scope.assign(pPropNameData + 3, pMsg->scopeLength);
+      char* pPropNameData = ((char*)&e) + sizeof(PIValuechangedEvent);
       string propName;
       Utils::unpackString(pPropNameData, propName);
+      scope.assign(propName, 0, pMsg->scopeLength);
 
       LOFAR_LOG_INFO(SS_STDOUT_LOGGER, ( 
-          "PI-MSG: Property %s written", 
-          pPropNameData.c_str()));
+          "PI-MSG: Property %s changed", 
+          propName.c_str()));
     
       GCFPortInterface* pPort = _scopeRegister[scope];
       if (pPort)
@@ -312,9 +316,9 @@ GCFEvent::TResult GSSController::operational_state(GCFEvent& e, GCFPortInterface
   return status;
 }
 
-bool GSSController::findScope(char* pScopeData, string& scope)
+bool GSSController::findScope(char* pData, string& scope)
 {
-  Utils::unpackString(pScopeData, scope);
+  Utils::unpackString(pData, scope);
   TScopeRegister::iterator iter = _scopeRegister.find(scope);
   return (iter != _scopeRegister.end());
 }
@@ -337,10 +341,10 @@ void GSSController::replyMsgToPI(GCFEvent& e, const string& scope)
   }
 }
 
-bool GSSController::forwardMsgToPMLlite(GCFEvent& e, char* pScopeData, string& scope, const char* logMsg)
+bool GSSController::forwardMsgToPMLlite(GCFEvent& e, char* pData, string& scope, char* logMsg)
 {
   bool result(false);
-  Utils::unpackString(pScopeData, scope);
+  Utils::unpackString(pData, scope);
   
   LOFAR_LOG_INFO(SS_STDOUT_LOGGER, ( 
       logMsg, 
@@ -362,56 +366,10 @@ bool GSSController::forwardMsgToPMLlite(GCFEvent& e, char* pScopeData, string& s
   return result;
 }
 
-void GSSController::replyMsgToPMLlite(GCFEvent& e, GCFPortInterface& p, char* pScopeData)
+void GSSController::replyMsgToPMLlite(GCFEvent& e, GCFPortInterface& p, char* pData)
 {
   assert(p.isConnected());
-  unsigned short scopeDataLength = Utils::getStringDataLength(pScopeData);
+  unsigned short scopeDataLength = Utils::getStringDataLength(pData);
   e.length += scopeDataLength;
-  p.send(e, pScopeData, scopeDataLength);
-}
-
-//
-// Program usage
-//
-void usage(const char* progname)
-{
-  fprintf(stderr, "usage: %s\n"
-		  "\t-locname <name of the location, e.g.:LCU or BOARD1 (unique on in a station)>\n"
-		  "\t[-help]\n"
-		  progname);
-}
-
-int main(int argc, char* argv[])
-{
-  GCFTask::init(argc, argv);
-
-  string locName;
-  
-  if (GCFTask::_argv != 0)
-  {
-    CCmdLine cmdLine;
-    // parse argc,argv 
-    if (cmdLine.SplitLine(GCFTask::_argc, GCFTask::_argv) > 0)
-    {
-      locName = cmdLine.GetSafeArgument("-locname", 0, "");
-      if (cmdLine.HasSwitch("-help"))
-      {
-        usage(argv[0]);
-        exit(0);
-      }      
-    }            
-  }
-  if (locName.length() == 0)
-  {
-    usage(argv[0]);
-    exit(0);
-  }
-
-  GSSController supervisoryServer(locName);
-
-  supervisoryServer.start(); // make initial transition
-
-  GCFTask::run();
-
-  return 0;
+  p.send(e, pData, scopeDataLength);
 }

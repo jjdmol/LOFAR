@@ -24,7 +24,6 @@
 #define GCF_TASK_H
 
 //# Includes
-#include <lofar_config.h>
 #include <GCF/GCF_Fsm.h>
 #include <Common/lofar_string.h>
 #include <Common/lofar_vector.h>
@@ -103,7 +102,6 @@ class GCFTask : public GCFFsm
 
   private:
     friend class GCFPort;
-    friend class GTMSocket;
     friend class GCFRawPort;
     const char* evtstr(const GCFEvent& e) const;
 		/// Is private to avoid initialising a task without giving an inital state and the task name

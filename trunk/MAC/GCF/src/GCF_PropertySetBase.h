@@ -64,11 +64,15 @@ class GCFPropertySetBase
   protected:
     GCFPropertySetBase (string scope, 
                         GCFAnswer* pAnswerObj);
-    void addProperty(const string& propName, GCFPropertyBase*);
+    void addProperty(const string& propName, GCFPropertyBase& prop);
     void clearAllProperties();
     inline GCFAnswer* getAnswerObj() const 
       { return _pAnswerObj; }
     
+  protected: 
+    typedef map<string /*propName*/, GCFPropertyBase*> TPropertyList;
+    TPropertyList _properties;
+
   private: // helper methods
     bool cutScope(string& propName) const;
   
@@ -80,8 +84,6 @@ class GCFPropertySetBase
     GCFPropertySetBase& operator= (const GCFPropertySetBase&);  
 
   private:
-    typedef map<string /*propName*/, GCFPropertyBase*> TPropertyList;
-    TPropertyList _properties;
     GCFAnswer*    _pAnswerObj;
     string        _scope;
 };

@@ -27,6 +27,7 @@
 #include <GCF/GCF_Task.h>
 #include <GCF/GCF_Port.h>
 #include "GPM_Defines.h"
+#include <GPA_Defines.h>
 #include <Common/lofar_map.h>
 #include <Common/lofar_list.h>
 
@@ -60,8 +61,8 @@ class GPMController : public GCFTask
     TPMResult unregisterScope (GCFMyPropertySet& propSet, 
                                bool permanent = false);
        
-    void propertiesLinked (const string& scope, bool missingProps);
-    void propertiesUnlinked (const string& scope);
+    void propertiesLinked (const string& scope, TPAResult result);
+    void propertiesUnlinked (const string& scope, TPAResult result);
   
   private:
     GPMController ();

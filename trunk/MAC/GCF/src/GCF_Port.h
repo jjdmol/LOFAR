@@ -49,7 +49,8 @@ class GCFPort : public GCFPortInterface
     GCFPort (GCFTask& containertask, 
              string& name, 
              TPortType type, 
-             int protocol);
+             int protocol, 
+             bool exchangeRawData = false);
     
     GCFPort ();
     
@@ -62,7 +63,8 @@ class GCFPort : public GCFPortInterface
     void init (GCFTask& containertask, 
                string name, 
                TPortType type, 
-               int protocol);
+               int protocol, 
+               bool exchangeRawData = false);
     
     /**
     * open/close functions

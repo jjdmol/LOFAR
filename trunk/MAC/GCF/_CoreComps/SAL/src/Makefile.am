@@ -24,6 +24,7 @@ libsal_la_SOURCES= $(DOCHDRS) \
 	GCF_PVChar.cc \
 	GCF_PVDynArr.cc \
 	GSA_WaitForAnswer.cc
+	
 libsal_sa_CPPFLAGS=-I$(top_srcdir)/GCFCommon/src \
 	-I$(top_srcdir)/CoreComps/TM/src
 	

@@ -84,3 +84,45 @@ GCFPValue* GCFPValue::createMACTypeObject(TMACValueType type)
   
   return pResult;
 }
+
+GCFPValue* GCFPValue::unpackValue(const char* valBuf, unsigned int maxBufSize)
+{
+  assert(maxBufSize > 1);
+  GCFPValue* pValue = createMACTypeObject((TMACValueType) *valBuf);
+  if (pValue)
+  {
+    unsigned int readLength = pValue->unpack(valBuf, maxBufSize);
+    if (maxBufSize != readLength)
+    {
+      delete pValue;
+      pValue = 0;
+    }
+  }
+  return pValue;
+}
+
+unsigned int GCFPValue::unpackBase(const char* valBuf, unsigned int maxBufSize)
+{
+  if (maxBufSize >= 1)
+  {
+    assert(_type == (TMACValueType) *valBuf);
+    return 1;
+  }
+  else 
+  {
+    return 0;
+  }
+}
+
+unsigned int GCFPValue::packBase(char* valBuf, unsigned int maxBufSize) const
+{
+  if (maxBufSize >= 1)
+  {
+    valBuf[0] = _type;
+    return 1;
+  }
+  else 
+  {
+    return 0;
+  }
+}

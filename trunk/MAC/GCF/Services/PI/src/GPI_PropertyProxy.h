@@ -27,7 +27,6 @@
 #include <GCF/GCF_PropertyProxy.h>
 
 class GCFPValue;
-class GPISupervisoryServer;
 
 /**
  * This class provides for the GPISupervisoryServer class the possibility to 
@@ -39,22 +38,19 @@ class GPISupervisoryServer;
 class GPIPropertyProxy : public GCFPropertyProxy
 {
   public:
-    GPIPropertyProxy(GPISupervisoryServer& ss) : _ss(ss) {}
-    virtual ~GPIPropertyProxy() {}
-
-    void propSubscribed(const string& propName);
-    void propUnsubscribed(const string& propName);
-    inline void propValueGet(const string& /*propName*/, const GCFPValue& /*value*/) {};
-    void propValueChanged(const string& propName, const GCFPValue& value);
+    GPIPropertyProxy() {;}
+    virtual ~GPIPropertyProxy() {;}
   
   private:
-    GPIPropertyProxy();
+    inline void propSubscribed(const string& /*propName*/) {;}
+    inline void propUnsubscribed(const string& /*propName*/) {;}
+    inline void propValueGet(const string& /*propName*/, const GCFPValue& /*value*/) {};
+    inline void propValueChanged(const string& /*propName*/, const GCFPValue& /*value*/) {;}
+
     /**
      * Don't allow copying of this object.
      */
     GPIPropertyProxy (const GPIPropertyProxy&);
     GPIPropertyProxy& operator= (const GPIPropertyProxy&);
-  
-    GPISupervisoryServer& _ss;
 };    
 #endif

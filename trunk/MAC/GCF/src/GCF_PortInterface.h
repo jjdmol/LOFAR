@@ -57,12 +57,14 @@ class GCFPortInterface
     GCFPortInterface (GCFTask* pTask, 
                       string name, 
                       TPortType type, 
-                      int protocol) :
+                      int protocol, 
+                      bool exchangeRawData) :
         _pTask(pTask), 
         _name(name), 
         _isConnected(false), 
         _type(type), 
-        _protocol(protocol)
+        _protocol(protocol),
+        _exchangeRawData(exchangeRawData)
     {
     }
     
@@ -118,6 +120,7 @@ class GCFPortInterface
     inline bool           isConnected () const {return _isConnected;}
     inline const GCFTask* getTask ()     const {return _pTask;}
     inline int            getProtocol () const {return _protocol;}
+    inline bool           rawDataExchange () const {return _exchangeRawData;}
 
   protected:
     GCFTask*  _pTask;
@@ -125,6 +128,7 @@ class GCFPortInterface
     bool      _isConnected;
     TPortType _type;
     int       _protocol; /**< NOT USED */
+    bool      _exchangeRawData;
     
     virtual inline void setIsConnected (bool connected) {_isConnected = connected;}
     
@@ -132,13 +136,15 @@ class GCFPortInterface
     virtual void init(GCFTask& task, 
                       string& name, 
                       TPortType type,  
-                      int protocol)
+                      int protocol, 
+                      bool exchangeRawData = false)
     {
       _pTask = &task;
       _name = name;  
       _type = type;
       _protocol = protocol;
       _isConnected = false;
+      _exchangeRawData = exchangeRawData;
     }
 };
 

@@ -26,10 +26,11 @@
 #include <GCF/GCF_Defines.h>
 
 #include <Common/lofar_list.h>
+#include "GCF_RTMyProperty.h"
 
-class GCFRTMyProperty;
 class GPMRTController;
 class GCFRTAnswer;
+class GCFPValue;
 
 /** 
  * This class represents a property set of owned (local) properties. It gives 
@@ -57,7 +58,7 @@ class GCFRTMyPropertySet
       { return _scope; }
 
     virtual void setAnswer (GCFRTAnswer* pAnswerObj);          
-    inline GCFAnswer* getAnswerObj() const 
+    inline GCFRTAnswer* getAnswerObj() const 
       { return _pAnswerObj; }
 
     virtual bool exists (const string propName) const;
@@ -67,14 +68,8 @@ class GCFRTMyPropertySet
      * @param propName with or without the scope
      * @returns 0 if not in this property set
      */
-    GCFPropertyBase* getProperty (const string propName) const;
-    /**
-     * Searches the property specified by the propName param
-     * @param propName with or without the scope
-     * @returns 0 if not in this property set
-     */
-    virtual TGCFResult setValue (const string propName, 
-                                 const GCFPValue& value);
+    GCFRTMyProperty* getProperty (const string propName) const;
+    GCFRTMyProperty* operator[] (const string propName);
 
     /**
      * Asynchronous method
@@ -107,12 +102,16 @@ class GCFRTMyPropertySet
     inline bool isLoaded () 
       { return _isLoaded; }
     
-    TGCFResult setValue (const string propName, ///< can be specified with or without the scope
-                         const string value);
-                         
-    TGCFResult setValue (const string propName, ///< can be specified with or without the scope
-                         const GCFPValue& value)                         
-      
+    virtual TGCFResult setValue (const string propName, ///< can be specified with or without the scope
+                                 const string value);
+                              
+    /**
+     * Searches the property specified by the propName param
+     * @param propName with or without the scope
+     * @returns 0 if not in this property set
+     */
+    virtual TGCFResult setValue (const string propName, 
+                                 const GCFPValue& value);
     //@{
     /**
      * @param propName can be specified with or without the scope
@@ -138,9 +137,12 @@ class GCFRTMyPropertySet
   private: // helper methods
     void retryLinking ();
     void dispatchAnswer (unsigned short sig, TGCFResult result);
+    void addProperty(const string& propName, GCFRTMyProperty& prop);
+    void clearAllProperties();
     bool cutScope(string& propName) const;
     
   private:
+    GCFRTMyPropertySet();
     //@{ 
     /// Copy contructors. Don't allow copying this object.
     GCFRTMyPropertySet (const GCFRTMyPropertySet&);
@@ -148,17 +150,16 @@ class GCFRTMyPropertySet
     //@}
 
   private: // attribute members
-    bool _isLoaded;
+    string  _scope;        
+    bool    _isLoaded;
+    typedef map<string /*propName*/, GCFRTMyProperty*> TPropertyList;
+    TPropertyList       _properties;
+    GCFRTAnswer*        _pAnswerObj;
 
   private: // administrative members
-    bool _isBusy;
-    list<string> _tempLinkList;
-    unsigned short _counter;
-    unsigned short _missing;
+    bool                _isBusy;
+    list<string>        _tempLinkList;
     const TPropertySet& _propSet;
-    typedef map<string /*propName*/, GCFRTMyProperty*> TPropertyList;
-    TPropertyList _properties;
-    GCFAnswer*    _pAnswerObj;
-    string        _scope;        
+    GCFRTMyProperty     _dummyProperty;
 };
 #endif

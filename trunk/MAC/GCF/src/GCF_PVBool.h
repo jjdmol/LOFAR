@@ -55,6 +55,11 @@ class GCFPVBool : public GCFPValue
     /** @see GCFPValue::copy() */
     virtual TGCFResult copy (const GCFPValue& value);
     
+    virtual unsigned int unpack(const char* valBuf, unsigned int bufLength);
+
+    virtual unsigned int pack(char* valBuf, unsigned int maxBufSize) const;
+    
+    
   private: // Private attributes
     /** The value */
     volatile bool _value;

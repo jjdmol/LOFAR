@@ -32,8 +32,8 @@ GCFRTMyProperty::GCFRTMyProperty(const TProperty& propertyFields,
   _pCurValue(0),
   _pOldValue(0),
   _isLinked(false),
-  _propertySet(propertySet),
-  _isBusy(false)  
+  _isBusy(false),
+  _pAnswerObj(0)  
 {
   _pCurValue = GCFPValue::createMACTypeObject((GCFPValue::TMACValueType) propertyFields.type);
   assert(_pCurValue);
@@ -42,6 +42,18 @@ GCFRTMyProperty::GCFRTMyProperty(const TProperty& propertyFields,
   {
     _pCurValue->setValue(propertyFields.defaultValue);
   }
+}
+
+GCFRTMyProperty::GCFRTMyProperty(GCFRTMyPropertySet& propertySet) :
+  _name(""), 
+  _propertySet(propertySet),
+  _accessMode(0),
+  _pCurValue(0),
+  _pOldValue(0),
+  _isLinked(false),
+  _isBusy(false),
+  _pAnswerObj(0)  
+{
 }
 
 GCFRTMyProperty::~GCFRTMyProperty()
@@ -68,8 +80,7 @@ TGCFResult GCFRTMyProperty::setValue(const string value)
   if ((_accessMode & GCF_READABLE_PROP))
   {
     assert(_pCurValue);
-    result = _propertySet.valueSet(getFullName(), *_pCurValue);
-    assert(result == GCF_NO_ERROR);
+    _propertySet.valueSet(getFullName(), *_pCurValue);
   }
   
   return result;
@@ -88,8 +99,7 @@ TGCFResult GCFRTMyProperty::setValue(const GCFPValue& value)
   if ((_accessMode & GCF_READABLE_PROP))
   {
     assert(_pCurValue);
-    result = _propertySet.valueSet(getFullName(), *_pCurValue);
-    assert(result == GCF_NO_ERROR);
+    _propertySet.valueSet(getFullName(), *_pCurValue);
   }
   
   return result;
@@ -115,12 +125,10 @@ void GCFRTMyProperty::link()
 {
   assert(!_isLinked);  
 
-  TGCFResult result(GCF_NO_ERROR);
   if (_accessMode & GCF_READABLE_PROP)
   {
     assert(_pCurValue);
-    result = _propertySet.valueSet(getFullName(), *_pCurValue);
-    assert(result == GCF_NO_ERROR);
+    _propertySet.valueSet(getFullName(), *_pCurValue);
   }
   _isLinked = true;
 }
@@ -140,16 +148,13 @@ void GCFRTMyProperty::setAccessMode(TAccessMode mode, bool on)
   else
     _accessMode &= ~mode;
   
-  TGCFResult result(GCF_NO_ERROR);
-  
   if ((~_accessMode & GCF_WRITABLE_PROP) && 
       (~oldAccessMode & GCF_READABLE_PROP) &&
       (_accessMode & GCF_READABLE_PROP) &&
       _isLinked)
   {
     assert(_pCurValue);
-    result = _propertySet.valueSet(getFullName(), *_pCurValue);    
-    assert(result == GCF_NO_ERROR);
+    _propertySet.valueSet(getFullName(), *_pCurValue);    
   }  
 }
 
@@ -179,22 +184,15 @@ void GCFRTMyProperty::valueChanged (const GCFPValue& value)
 
 const string GCFRTMyProperty::getFullName () const
 {
-  if (_pPropertySet == 0)
+  string scope = _propertySet.getScope();
+  if (scope.length() == 0)
   {
     return _name;
   }
   else
   {
-    string scope = _pPropertySet->getScope();
-    if (scope.length() == 0)
-    {
-      return _name;
-    }
-    else
-    {
-      string fullName = scope + GCF_PROP_NAME_SEP + _name;
-      return fullName;
-    }
+    string fullName = scope + GCF_PROP_NAME_SEP + _name;
+    return fullName;
   }
 }
 

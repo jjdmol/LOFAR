@@ -27,6 +27,7 @@
 #include <GCF/GCF_Task.h>
 #include <GCF/GCF_Port.h>
 #include "GPM_RTDefines.h"
+#include <GPI_Defines.h>
 #include <Common/lofar_map.h>
 #include <Common/lofar_list.h>
 
@@ -54,8 +55,12 @@ class GPMRTController : public GCFTask
     TPMResult unregisterScope (GCFRTMyPropertySet& propSet, 
                                bool permanent = false);
        
-    void propertiesLinked (const string& scope, bool missingProps);
-    void propertiesUnlinked (const string& scope);
+    void propertiesLinked (const string& scope, 
+                           list<string>& propsToSubscribe, 
+                           TPIResult result);
+    void propertiesUnlinked (const string& scope, 
+                           list<string>& propsToSubscribe, 
+                           TPIResult result);
     void valueSet(const string& propName, const GCFPValue& value);
   
   private:
@@ -67,7 +72,10 @@ class GPMRTController : public GCFTask
     GCFEvent::TResult connected (GCFEvent& e, GCFPortInterface& p);
         
   private: // helper methods
-    void sendMyPropSetMsg (GCFEvent& e, 
+    void sendMyPropSetMsg (GCFEvent& e,
+                           const string& scope,
+                           list<string>& props);
+    void sendMyPropSetMsg (GCFEvent& e,
                            const string& scope);
 
   private: // data members        

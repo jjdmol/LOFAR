@@ -33,6 +33,7 @@
 // #include "stdafx.h"
 
 #include "CmdLine.h"
+#include <ctype.h>
 
 /*------------------------------------------------------
   int CCmdLine::SplitLine(int argc, char **argv)

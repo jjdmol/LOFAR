@@ -26,11 +26,11 @@
 #include <GCF/GCF_PortInterface.h>
 #include <GCF/GCF_PeerAddr.h>
 #include <GCF/GCF_Event.h>
+#include <GCF/GCF_Task.h>
 #include <Common/lofar_string.h>
 #include <Common/lofar_map.h>
 
 // forward declaration
-class GCFTask;
 class GCFPort;
 class GTMTimer;
 
@@ -48,7 +48,8 @@ class GCFRawPort : public GCFPortInterface
   GCFRawPort (GCFTask& task, 
               string& name, 
               TPortType type, 
-              int protocol = 0);
+              int protocol, 
+              bool exchangeRawData = false);
 
   GCFRawPort ();
 
@@ -58,7 +59,8 @@ class GCFRawPort : public GCFPortInterface
   void init (GCFTask& task, 
              string name, 
              TPortType type, 
-             int protocol = 0 ); 
+             int protocol, 
+             bool exchangeRawData = false); 
 
   /// GCFPortInterface methods
 
@@ -99,6 +101,8 @@ class GCFRawPort : public GCFPortInterface
     virtual void                setMaster (GCFPort* pMaster);
     virtual GCFEvent::TResult   dispatch (GCFEvent& event);
     bool                        findAddr (GCFPeerAddr& addr);
+    inline const char* evtstr(const GCFEvent& e) const
+      { assert(_pTask); return _pTask->evtstr(e);}
 
  private:
 

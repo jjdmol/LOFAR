@@ -96,8 +96,8 @@ void GTMTimerHandler::saveDateTime()
 
 unsigned long GTMTimerHandler::setTimer(GCFRawPort& port, 
                        unsigned long delay_seconds, 
-                       unsigned long interval_seconds = 0,
-                       const void*  arg        = 0)
+                       unsigned long interval_seconds,
+                       const void*  arg)
 {
   unsigned long timerid(0);
   unsigned long foundTimerID(1);
@@ -118,7 +118,7 @@ unsigned long GTMTimerHandler::setTimer(GCFRawPort& port,
   }
   while (foundTimerID == timerid);
 
-  _timers.insert(_timers.begin(), make_pair(timerid, pNewTimer));
+  _timers[timerid] = pNewTimer;
   return timerid;
 }
 

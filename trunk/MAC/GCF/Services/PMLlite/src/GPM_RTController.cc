@@ -67,7 +67,7 @@ TPMResult GPMRTController::registerScope(GCFRTMyPropertySet& propSet)
   {
     _propertySets[propSet.getScope()] = &propSet;
 
-    GCFEvent e(PI_REGSITERSCOPE);
+    GCFEvent e(PI_REGISTERSCOPE);
     sendMyPropSetMsg(e, propSet.getScope());
   }
   return result;
@@ -93,29 +93,52 @@ TPMResult GPMRTController::unregisterScope(GCFRTMyPropertySet& propSet,
   return result;
 }
 
-void GPMRTController::propertiesLinked(const string& scope, bool missingProps)
+void GPMRTController::propertiesLinked(const string& scope, 
+                           list<string>& propsToSubscribe, 
+                           TPIResult result)
 {
-  PIPropertieslinkedEvent e((missingProps ? PI_MISSING_PROPS : PI_NO_ERROR));
-  sendMyPropSetMsg(e, scope);
+  PIPropertieslinkedEvent e(result);
+  sendMyPropSetMsg(e, scope, propsToSubscribe);
 }
 
-void GPMRTController::propertiesUnlinked(const string& scope)
+void GPMRTController::propertiesUnlinked(const string& scope, 
+                           list<string>& propsToUnsubscribe, 
+                           TPIResult result)
 {
-  PIPropertiesunlinkedEvent e(PI_NO_ERROR);
-  sendMyPropSetMsg(e, scope);
+  PIPropertiesunlinkedEvent e(result);
+  sendMyPropSetMsg(e, scope, propsToUnsubscribe);
 }
 
 void GPMRTController::valueSet(const string& propName, const GCFPValue& value)
 {
+  if (_supervisoryServer.isConnected())
+  {        
+    GCFEvent e(PI_VALUESET);
+    unsigned int dataLength = Utils::packString(propName, _buffer, MAX_BUF_SIZE);
+    dataLength += value.pack(_buffer + dataLength, MAX_BUF_SIZE - dataLength);
+    e.length += dataLength;    
+    _supervisoryServer.send(e, _buffer, dataLength);
+  }
+}
+
+void GPMRTController::sendMyPropSetMsg(GCFEvent& e, const string& scope, list<string>& props)
+{
+  if (_supervisoryServer.isConnected())
+  {    
+    unsigned short dataLength = Utils::packString(scope, _buffer, MAX_BUF_SIZE);
+    dataLength += Utils::packPropertyList(props, _buffer + dataLength, MAX_BUF_SIZE - dataLength);
+    e.length += dataLength;
+    _supervisoryServer.send(e, _buffer, dataLength);
+  }
 }
 
 void GPMRTController::sendMyPropSetMsg(GCFEvent& e, const string& scope)
 {
   if (_supervisoryServer.isConnected())
   {    
-    unsigned short scopeDataLength = packString(scope, _buffer, MAX_BUF_SIZE);                                    
-    e.length += scopeDataLength;
-    _supervisoryServer.send(e, _buffer, scopeDataLength);
+    unsigned short dataLength = Utils::packString(scope, _buffer, MAX_BUF_SIZE);
+    e.length += dataLength;
+    _supervisoryServer.send(e, _buffer, dataLength);
   }
 }
 
@@ -153,7 +176,9 @@ GCFEvent::TResult GPMRTController::connected(GCFEvent& e, GCFPortInterface& /*p*
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
   TGCFResult result;
-
+  static char* pData = 0;
+  static string scope = "";
+  
   switch (e.signal)
   {
     case F_DISCONNECTED_SIG:
@@ -176,10 +201,9 @@ GCFEvent::TResult GPMRTController::connected(GCFEvent& e, GCFPortInterface& /*p*
     {
       PIScoperegisteredEvent* pResponse = static_cast<PIScoperegisteredEvent*>(&e);
       assert(pResponse);
-      char* pScopeData = ((char*)&e) + sizeof(PIScoperegisteredEvent);
-      string scope;
-      Utils::unpackString(pScopeData, scope);
-      if (pResponse->result == PA_SCOPE_ALREADY_REGISTERED)
+      pData = ((char*)&e) + sizeof(PIScoperegisteredEvent);
+      Utils::unpackString(pData, scope);
+      if (pResponse->result == PI_SCOPE_ALREADY_REGISTERED)
       {
         LOFAR_LOG_INFO(PML_STDOUT_LOGGER, ( 
             "A property set with scope %s already exists in the system",
@@ -202,11 +226,10 @@ GCFEvent::TResult GPMRTController::connected(GCFEvent& e, GCFPortInterface& /*p*
     {
       PIScopeunregisteredEvent* pResponse = static_cast<PIScopeunregisteredEvent*>(&e);
       assert(pResponse);
-      char* pScopeData = ((char*)&e) + sizeof(PIScopeunregisteredEvent);
-      string scope;
-      Utils::unpackString(pScopeData, scope);
+      pData = ((char*)&e) + sizeof(PIScopeunregisteredEvent);
+      Utils::unpackString(pData, scope);
       GCFRTMyPropertySet* pPropertySet = _propertySets[scope];
-      result = (pResponse->result == PA_NO_ERROR ? GCF_NO_ERROR : GCF_MYPROPSUNLOAD_ERROR);
+      result = (pResponse->result == PI_NO_ERROR ? GCF_NO_ERROR : GCF_MYPROPSUNLOAD_ERROR);
       if (pPropertySet)
       {
         _propertySets.erase(scope);
@@ -217,17 +240,16 @@ GCFEvent::TResult GPMRTController::connected(GCFEvent& e, GCFPortInterface& /*p*
 
     case PI_LINKPROPERTIES:
     {
-      char* pScopeData = ((char*)&e) + sizeof(GCFEvent);
-      string scope;
-      unsigned int scopeDataLength = Utils::unpackString(pScopeData, scope);
-      string linkListData(pScopeData + scopeDataLength, 
+      pData = ((char*)&e) + sizeof(GCFEvent);
+      unsigned int scopeDataLength = Utils::unpackString(pData, scope);
+      string linkListData(pData + scopeDataLength, 
         e.length - sizeof(GCFEvent) - scopeDataLength);
       list<string> propertyList;
       LOFAR_LOG_INFO(PML_STDOUT_LOGGER, ( 
         "PI-REQ: Link properties %s on scope %s",
         linkListData.c_str(),
         scope.c_str()));
-      Utils::unpackPropertyList(pScopeData + scopeDataLength, propertyList);
+      Utils::unpackPropertyList(pData + scopeDataLength, propertyList);
       GCFRTMyPropertySet* pPropertySet = _propertySets[scope];
       if (pPropertySet)
       {
@@ -238,24 +260,23 @@ GCFEvent::TResult GPMRTController::connected(GCFEvent& e, GCFPortInterface& /*p*
         LOFAR_LOG_TRACE(PML_STDOUT_LOGGER, ( 
             "Property set with scope %d was deleted in the meanwhile", 
             scope.c_str()));
-        PIPropertieslinkedEvent e(PA_PROP_SET_GONE);
+        PIPropertieslinkedEvent e(PI_PROP_SET_GONE);
         sendMyPropSetMsg(e, scope);
       }
       break;
     }
     case PI_UNLINKPROPERTIES:
     {
-      char* pScopeData = ((char*)&e) + sizeof(GCFEvent);
-      string scope;
-      unsigned int scopeDataLength = Utils::unpackString(pScopeData, scope);
-      string unlinkListData(pScopeData + scopeDataLength, 
+      pData = ((char*)&e) + sizeof(GCFEvent);
+      unsigned int scopeDataLength = Utils::unpackString(pData, scope);
+      string unlinkListData(pData + scopeDataLength, 
         e.length - sizeof(GCFEvent) - scopeDataLength);
       LOFAR_LOG_INFO(PML_STDOUT_LOGGER, ( 
         "PI-REQ: Unlink properties %s on scope %s",
         unlinkListData.c_str(), 
         scope.c_str()));
       list<string> propertyList;
-      Utils::unpackPropertyList(pScopeData + scopeDataLength, propertyList);
+      Utils::unpackPropertyList(pData + scopeDataLength, propertyList);
       GCFRTMyPropertySet* pPropertySet = _propertySets[scope];
       if (pPropertySet)
       {
@@ -266,8 +287,38 @@ GCFEvent::TResult GPMRTController::connected(GCFEvent& e, GCFPortInterface& /*p*
         LOFAR_LOG_TRACE(PML_STDOUT_LOGGER, ( 
             "Property set with scope %d was deleted in the meanwhile", 
             scope.c_str()));
-        PIPropertiesunlinkedEvent e(PA_PROP_SET_GONE);
+        PIPropertiesunlinkedEvent e(PI_PROP_SET_GONE);
         sendMyPropSetMsg(e, scope);
+      }
+      break;
+    }
+    case PI_VALUECHANGED:
+    {
+      PIValuechangedEvent* pMsg = static_cast<PIValuechangedEvent*>(&e);
+      assert(pMsg);
+      pData = ((char*)&e) + sizeof(PIValuechangedEvent);
+      string propName;
+      unsigned int propDataLength = Utils::unpackString(pData, propName);
+      scope.assign(propName, 0, pMsg->scopeLength);
+
+      LOFAR_LOG_INFO(PML_STDOUT_LOGGER, ( 
+          "SS-MSG: Property %s changed", 
+          propName.c_str()));
+    
+      GCFRTMyPropertySet* pPropertySet = _propertySets[scope];
+      if (pPropertySet)
+      {
+        unsigned int valueBufLength = e.length - propDataLength - sizeof(PIValuechangedEvent);        
+        GCFPValue* pValue = GCFPValue::unpackValue(pData + propDataLength, valueBufLength);
+        assert(pValue);
+        pPropertySet->valueChanged(propName, *pValue);
+        delete pValue;
+      }
+      else
+      {
+        LOFAR_LOG_TRACE(PML_STDOUT_LOGGER, ( 
+            "Property set with scope %d was deleted in the meanwhile", 
+            scope.c_str()));
       }
       break;
     }

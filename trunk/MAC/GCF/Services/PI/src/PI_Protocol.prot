@@ -20,6 +20,7 @@ prelude = << PRELUDE_END
 enum {
 	PI_PROTOCOL = (F_GCF_PROTOCOL + 3)
 };
+#include <GPI_Defines.h>
 PRELUDE_END;
 
 event = {

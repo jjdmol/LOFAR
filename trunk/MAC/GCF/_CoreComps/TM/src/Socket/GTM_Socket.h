@@ -27,10 +27,8 @@
 #include <GCF/GCF_Event.h>
 
 // forward declaration
-class GCFTCPPort;
 class GCFPeerAddr;
 class GTMSocketHandler;
-class GTMServerSocket;
 
 /**
  * This class consists of the basic implementation of a socket. Beside that it 
@@ -40,42 +38,36 @@ class GTMServerSocket;
 class GTMSocket
 {
   public:
-    GTMSocket (GCFTCPPort& port);
+    GTMSocket ();
     virtual ~GTMSocket ();
   
     /**
      * open/close functions
      */
-    virtual int open (GCFPeerAddr& addr);
     virtual int close ();
-    virtual int connect (GCFPeerAddr& addr);
   
     /**
      * send/recv functions
      */
-    virtual ssize_t send (void* buf, size_t count);
-    virtual ssize_t recv (void* buf, size_t count);
+    virtual ssize_t send (void* buf, size_t count) = 0;
+    virtual ssize_t recv (void* buf, size_t count) = 0;
 
     virtual inline int getFD () const {return _socketFD;}
+    virtual int setFD (int fd);
     
   protected:
     friend class GTMSocketHandler;
-    friend class GTMServerSocket;
 
-    virtual int setFD (int fd);
-    virtual void workProc ();
+    virtual void workProc () = 0;
 
-    GCFTCPPort&   _port;
     int           _socketFD;
   
   private:
-    GTMSocket ();
     /**
      * Don't allow copying of the GTMSocket object.
      */
     GTMSocket (const GTMSocket&);
     GTMSocket& operator= (const GTMSocket&);
-    GCFEvent::TResult eventReceived (const GCFEvent& e);
 };
 
 #endif

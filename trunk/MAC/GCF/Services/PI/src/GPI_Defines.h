@@ -25,7 +25,7 @@
 
 #include <GCF/GCF_Defines.h>
 #include <GCF/GCF_TMProtocols.h>
-#define CORE_COMPS_PI_LOGGER  (GCF_LOGGER_ROOT + string(".CoreComps.PI"))
+#define CORE_COMPS_PI_LOGGER  (GCF_LOGGER_ROOT + string(".Services.PI"))
 
 #define PI_STDOUT_LOGGER      (CORE_COMPS_PI_LOGGER + string(".Logger"))
 
@@ -36,7 +36,7 @@ enum TPIResult
   PI_PA_NOTCONNECTED,
   PI_IS_BUSY,
   PI_SCADA_ERROR,
-  PI_SS_BUSY
+  PI_SS_BUSY,
   PI_SCOPE_ALREADY_REGISTERED,
   PI_PROP_SET_GONE,
   PI_MISSING_PROPS,

@@ -27,6 +27,7 @@
 #include <GCF/GCF_TCPPort.h>
 #include <GCF/GCF_Task.h>
 #include <Common/lofar_list.h>
+#include <GPI_PropertyProxy.h>
 
 class GCFEvent;
 class GPISupervisoryServer;
@@ -44,6 +45,7 @@ class GPIController : public GCFTask
 		GPIController ();
 		virtual ~GPIController ();
     inline GCFTCPPort& getPortProvider () {return _ssPortProvider;}
+    inline GPIPropertyProxy& getPropertyProxy () {return _propertyProxy;}
     
     void close (GPISupervisoryServer& ss);
 
@@ -64,6 +66,7 @@ class GPIController : public GCFTask
     
     TSupervisoryServers   _supervisoryServers;
 		GCFTCPPort            _ssPortProvider;
+    GPIPropertyProxy      _propertyProxy;
     
   private: // admin. data members
     bool          _isBusy;
