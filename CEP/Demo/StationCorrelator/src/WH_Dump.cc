@@ -31,10 +31,8 @@ WH_Dump::WH_Dump(const string& name, const KeyValueMap& kvm)
 {
   itsOutputFileName = kvm.getString("outFileName", "StatCor.out");
   itsNelements      = kvm.getInt("stations", 2);
-  itsNchannels      = kvm.getInt("channels", 46);
+  itsNchannels      = kvm.getInt("NoRSPBeamlets", 92)/kvm.getInt("NoWH_Correlator", 92);
   itsNpolarisations = kvm.getInt("polarisations", 2);
-  // We are behind the correlator so we have the amount of polarisation is squared
-  itsNpolarisations = itsNpolarisations*itsNpolarisations; 
   
   char DHName[20];
   for (int i=0; i<itsNinputs; i++) {
