@@ -21,6 +21,7 @@
 //#  $Id$
 
 #include <tinyCEP/TinyApplicationHolder.h>
+#include TRANSPORTERINCLUDE
 
 namespace LOFAR
 {
@@ -53,7 +54,7 @@ namespace LOFAR
     
   void TinyApplicationHolder::baseDefine(const KeyValueMap& params) {
     // Initialize MPI environment
-    //    TRANSPORTER::init(itsArgc, itsArgv);
+    TRANSPORTER::init(itsArgc, itsArgv);
 
     // Let derived class define the Application
     define(params);

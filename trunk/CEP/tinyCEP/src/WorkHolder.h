@@ -134,8 +134,30 @@ public:
   /// Determine if the processing step needs to be called
   bool doHandle();
 
+  /// Set node and application number
+  void runOnNode(int aNode, int applNr=0);
+
+  /// Get the node number for this WorkHolder.
+  int getNode() const; 
+
+  /// Get the application number for this WorkHolder.
+  int getAppl() const; 
+
+  /// Execute process here?
+  bool shouldProcess() const;
+
+  /// Get the application number of the current run.
+  static int getCurAppl();
+
+  /// Set the current application number.
+  static void setCurAppl (int applNr);
+
+
 protected:
   TinyDataManager* itsDataManager;
+
+  int itsCurRank;   // Rank of the current run. 
+  int itsProcessStep;
 
 private:
   /** Make a map of all DataHolders names. A separate map is made
@@ -156,7 +178,10 @@ private:
   mutable map<string,int> itsOutMap;
   bool itsFirstProcessCall;
   
-  int itsProcessStep;
+  static int theirCurAppl; // The application number of this run.
+
+  int itsNode;  // The node to run this WorkHolder on.
+  int itsAppl;  // The application to run this WorkHolder in.
 
   static map<string,WHConstruct*>* itsConstructMap;
 
@@ -173,6 +198,24 @@ inline void WorkHolder::setName (const string& name)
   { itsName = name; }
 inline const string& WorkHolder::getName() const
   { return itsName; }
+
+inline bool WorkHolder::shouldProcess() const
+{
+  return (itsNode == itsCurRank  ||  itsCurRank < 0)
+    && itsAppl == theirCurAppl;
+}
+
+inline int WorkHolder::getNode() const
+  { return itsNode; } 
+
+inline int WorkHolder::getAppl() const
+  { return itsAppl; } 
+
+inline int WorkHolder::getCurAppl()
+  { return theirCurAppl; } 
+
+inline void WorkHolder::setCurAppl (int applNr)
+  { theirCurAppl = applNr; } 
 
 }
 

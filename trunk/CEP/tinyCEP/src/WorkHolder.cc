@@ -26,12 +26,14 @@
 
 #include <tinyCEP/WorkHolder.h>
 #include <Common/Debug.h>
+#include TRANSPORTERINCLUDE
 
 namespace LOFAR
 {
 
 map<string,WorkHolder::WHConstruct*>* WorkHolder::itsConstructMap = 0;
 
+int WorkHolder::theirCurAppl=0;
 
 //////////////////////////////////////////////////////////////////////
 // Construction/Destruction
@@ -45,25 +47,32 @@ map<string,WorkHolder::WHConstruct*>* WorkHolder::itsConstructMap = 0;
 WorkHolder::WorkHolder (int inputs, int outputs,
 			const string& name,
 			const string& type)
-: itsNinputs          (inputs), 
-  itsNoutputs         (outputs),
-  itsName             (name),
-  itsType             (type),
-  itsFirstProcessCall (true),
-  itsProcessStep      (1)
+  :   itsProcessStep      (1),
+      itsNinputs          (inputs), 
+      itsNoutputs         (outputs),
+      itsName             (name),
+      itsType             (type),
+      itsFirstProcessCall (true),
+      itsNode             (0),
+      itsAppl             (0)
+
 {
 //   TRACER2("WorkHolder constructor");
   itsDataManager = new TinyDataManager(inputs, outputs);
+  itsCurRank = TRANSPORTER::getCurrentRank();
 }
 
 WorkHolder::WorkHolder (const WorkHolder& that)
 : itsDataManager      (0),
+  itsCurRank          (that.itsCurRank),
+  itsProcessStep      (that.itsProcessStep),
   itsNinputs          (that.itsNinputs), 
   itsNoutputs         (that.itsNoutputs),
   itsName             (that.itsName),
   itsType             (that.itsType),
   itsFirstProcessCall (that.itsFirstProcessCall),
-  itsProcessStep      (that.itsProcessStep)
+  itsNode             (that.itsNode),
+  itsAppl             (that.itsAppl)
 {}
 
 WorkHolder::~WorkHolder()
@@ -93,21 +102,28 @@ WorkHolder* WorkHolder::baseMake()
   return whp;
 }
 
-
 void WorkHolder::dump()
 {
-  for (int i=0; i<itsNinputs; i++) {
-   getDataManager().getInHolder(i)->dump();
-  }
-  for (int i=0; i<itsNoutputs; i++) {
-    getDataManager().getOutHolder(i)->dump();
+  if (shouldProcess())
+  {
+    for (int i=0; i<itsNinputs; i++) {
+      getDataManager().getInHolder(i)->dump();
+    }
+    for (int i=0; i<itsNoutputs; i++) {
+      getDataManager().getOutHolder(i)->dump();
+    }
   }
 }
 
 void WorkHolder::basePreprocess()
 {
-  getDataManager().preprocess();
-  preprocess();
+  if (shouldProcess()) 
+  {
+    TRACER4("basePreprocess Step " << getName() << " on node/appl (" 
+	    << getNode() << '/' << getAppl() << ')');
+    getDataManager().preprocess();
+    preprocess();
+  }
 }
 
 void WorkHolder::preprocess()
@@ -116,81 +132,93 @@ void WorkHolder::preprocess()
 
 void WorkHolder::baseProcess ()
 {
-  TRACER4("WorkHolder::baseprocess()");
-  if (itsFirstProcessCall) {
-    getDataManager().initializeInputs();
-    itsFirstProcessCall = false;
-  } else {     
-    // the getDM::initializeInputs() method also performs 
-    // the first read action.
-    
-    for (int input=0; input<itsNinputs; input++) {
-      //       if (getDataManager().getGeneralInHolder(input)->doHandle()) {
-      // temporary in-rate sollution
-      if ( itsProcessStep % getDataManager().getInputRate(input) == 0 ) {
-	LOG_TRACE_COND_STR("WorkHolder " << getName() << " << Allowed input handling;  step = " 
-			   << itsProcessStep << "   rate = " << getDataManager().getInputRate(input));
-	
-	// for selector type handle locking
-	if (getDataManager().hasInputSelector() == false) {
-	  // wait for unlocking if needed
-	  getDataManager().getInHolder(input);
-	}
-	
-	if (getDataManager().doAutoTriggerIn(input)) { 
-	  // signal the DM that we're done with the input channel.
-	  // The DM will initiate the read sequence now.
-	  getDataManager().readyWithInHolder(input); 
+ if (shouldProcess()) 
+ {
+   TRACER4("WorkHolder::baseprocess()");
+   if (itsFirstProcessCall) {
+     getDataManager().initializeInputs();
+     itsFirstProcessCall = false;
+   } else {     
+     // the getDM::initializeInputs() method also performs 
+     // the first read action.
+     
+     for (int input=0; input<itsNinputs; input++) {
+       //       if (getDataManager().getGeneralInHolder(input)->doHandle()) {
+       // temporary in-rate sollution
+       if ( itsProcessStep % getDataManager().getInputRate(input) == 0 ) {
+	 LOG_TRACE_COND_STR("WorkHolder " << getName() << " << Allowed input handling;  step = " 
+			    << itsProcessStep << "   rate = " << getDataManager().getInputRate(input));
+	 
+	 // for selector type handle locking
+	 if (getDataManager().hasInputSelector() == false) {
+	   // wait for unlocking if needed
+	   getDataManager().getInHolder(input);
+	 }
+	 
+	 if (getDataManager().doAutoTriggerIn(input)) { 
+	   // signal the DM that we're done with the input channel.
+	   // The DM will initiate the read sequence now.
+	   getDataManager().readyWithInHolder(input); 
 	  
-	}
-      } else {
-	LOG_TRACE_COND_STR("WorkHolder " << getName() << " << skipped input handling;  step = " 
-			   << itsProcessStep << "   rate = " << getDataManager().getInputRate(input));
-      }
-      
-    }
-  } 
-  
-  // Now we have the input data avialable
-  // and it is time to do the real work; call the process()
-  if ( (itsProcessStep % getDataManager().getProcessRate()) == 0) {
-    process();
-  }
-  
-  for (int output=0; output<itsNoutputs; output++)	{
+	 }
+       } else {
+	 LOG_TRACE_COND_STR("WorkHolder " << getName() << " << skipped input handling;  step = " 
+			    << itsProcessStep << "   rate = " << getDataManager().getInputRate(input));
+       }
+       
+     }
+   } 
+   
+   // Now we have the input data avialable
+   // and it is time to do the real work; call the process()
+   if ( (itsProcessStep % getDataManager().getProcessRate()) == 0) {
+     process();
+   }
+   
+   for (int output=0; output<itsNoutputs; output++)	{
+     
+     //     if (getDataManager().getGeneralOutHolder(output)->doHandle()) {
+     if ( itsProcessStep % getDataManager().getOutputRate(output) == 0 ) {
+       
+       if (getDataManager().hasOutputSelector() == false) {
+	 getDataManager().getOutHolder(output);
+       }
+       if (getDataManager().doAutoTriggerOut(output)) { 
+	 getDataManager().readyWithOutHolder(output); // Will cause writing of data
+       }
+       
+     } else {
+       LOG_TRACE_COND_STR("WorkHolder" << getName() << " << skipped output handling;  step = " 
+			  << itsProcessStep << "   rate = " << getDataManager().getOutputRate(output));
+     }
+     
+   } 
+   
+   
+   itsProcessStep++;
+ }
 
-    //     if (getDataManager().getGeneralOutHolder(output)->doHandle()) {
-    if ( itsProcessStep % getDataManager().getOutputRate(output) == 0 ) {
-      
-      if (getDataManager().hasOutputSelector() == false) {
-	getDataManager().getOutHolder(output);
-      }
-      if (getDataManager().doAutoTriggerOut(output)) { 
-	getDataManager().readyWithOutHolder(output); // Will cause writing of data
-      }
-      
-    } else {
-      LOG_TRACE_COND_STR("WorkHolder" << getName() << " << skipped output handling;  step = " 
-			 << itsProcessStep << "   rate = " << getDataManager().getOutputRate(output));
-    }
-    
-  } 
-  
-  
-  itsProcessStep++;
+ else {
+   TRACER4("WorkHolder " << getName() << " Not on right node/appl(" 
+           << getNode() << '/' << getAppl() << "); will skip Process"); 
+ }  
+
 }
 
 void WorkHolder::basePostprocess()
 {
-  TRACER4("WorkHolder::basePostprocess()");
-  postprocess();
-  for (int input=0; input<itsNinputs; input++)	{
-    getDataManager().getInHolder(input)->basePostprocess();
+  if (shouldProcess()) {
+    TRACER4("WorkHolder::basePostprocess " << getName() << " on node/appl (" 
+	   << getNode() << '/' << getAppl() << ')');
+    postprocess();
+    for (int input=0; input<itsNinputs; input++)	{
+      getDataManager().getInHolder(input)->basePostprocess();
+    }
+    for (int output=0; output<itsNoutputs; output++)	{
+      getDataManager().getOutHolder(output)->basePostprocess();
+    }
+    getDataManager().postprocess();
   }
-  for (int output=0; output<itsNoutputs; output++)	{
-    getDataManager().getOutHolder(output)->basePostprocess();
-  }
-  getDataManager().postprocess();
 }
 
 void WorkHolder::postprocess()
@@ -270,6 +298,12 @@ int WorkHolder::getMonitorValue (const char*)
 
 bool WorkHolder::doHandle() {
   return ( itsProcessStep % getDataManager().getProcessRate() == 0 );
+}
+
+void WorkHolder::runOnNode (int aNode, int applNr)
+{ 
+  itsNode = aNode;
+  itsAppl = applNr;
 }
 
 void WorkHolder::setDataManager(TinyDataManager* dmptr)
