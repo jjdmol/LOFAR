@@ -28,6 +28,7 @@
 
 #include <lofar_config.h>
 #include <Transport/TransportHolder.h>
+#include <Common/LofarTypes.h>
 
 #include <net/if.h>
 #include <linux/if_packet.h>
@@ -45,10 +46,12 @@ namespace LOFAR
 // This class defines the transport mechanism for RAW Ethernet 
 // communication between dataholders.
 
+#define MIN_FRAME_LEN 200
+
 class TH_Ethernet: public TransportHolder
 {
 public:
-  TH_Ethernet(char* ifname, char* rMac, char* oMac, unsigned short etype = 0x0000, bool dhcheck = true);
+  TH_Ethernet(char* ifname, char* rMac, char* oMac, uint16 etype = 0x0000, bool dhcheck = true);
   
   virtual ~TH_Ethernet();
 
@@ -58,37 +61,34 @@ public:
   // Returns if socket initialization was successful 
   virtual bool init();
 
-  // \name Read the data
-  // @{
-  virtual bool recvBlocking(void* buf, int nbytes, int tag);
-  virtual bool recvVarBlocking(int tag);
-  virtual bool recvNonBlocking(void* buf, int nbytes, int tag);
-  virtual bool recvVarNonBlocking(int tag);
-  // @}
+  // Read the data.
+  virtual bool recvBlocking(void* buf, int32 nbytes, int32 tag);
+  virtual bool recvVarBlocking(int32 tag);
+  virtual bool recvNonBlocking(void* buf, int32 nbytes, int32 tag);
+  virtual bool recvVarNonBlocking(int32 tag);
 
   // Wait for the data to be received
-  virtual bool waitForReceived(void* buf, int nbytes, int tag);
+  virtual bool waitForReceived(void* buf, int32 nbytes, int32 tag);
 
-  // \name Write the data
-  // @{
-  virtual bool sendBlocking(void* buf, int nbytes, int tag);
-  virtual bool sendNonBlocking(void* buf, int nbytes, int tag);
-  // @}
+  // Write the data.
+  virtual bool sendBlocking(void* buf, int32 nbytes, int32 tag);
+  virtual bool sendNonBlocking(void* buf, int32 nbytes, int32 tag);
 
   // Wait for the data to be sent
-  virtual bool waitForSent(void* buf, int nbytes, int tag);
+  virtual bool waitForSent(void* buf, int32 nbytes, int32 tag);
 
   // Get the type of transport.
   virtual string getType() const;
 
   virtual bool isBidirectional() const;
-
   
  private:  
-  int _socketFD;
-  int _maxdatasize;
-  int _maxframesize;
+  int32 _socketFD;
+  int32 _maxdatasize;
+  int32 _maxframesize;
+  bool _dhcheck;
   
+  bool _initDone;
   char* _ifname;
   char* _remoteMac;
   char* _ownMac;
@@ -96,10 +96,8 @@ public:
   char* _sendPacket; 
   char* _sendPacketData;
   
-  bool _dhcheck;
-  bool _initDone;
+  uint16 _ethertype;
   
-  unsigned short _ethertype;
   struct sockaddr_ll _sockaddr;
 
   void Init();

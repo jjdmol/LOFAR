@@ -48,7 +48,7 @@ namespace LOFAR
 {
 
 
-TH_Ethernet::TH_Ethernet(char* ifname, char* rMac, char* oMac, unsigned short etype, bool dhcheck)
+TH_Ethernet::TH_Ethernet(char* ifname, char* rMac, char* oMac, uint16 etype, bool dhcheck)
      : _ifname(ifname), 
        _remoteMac(rMac),
        _ownMac(oMac), 
@@ -89,75 +89,93 @@ string TH_Ethernet::getType() const
   return "TH_Ethernet"; 
 }
 
-bool TH_Ethernet::recvBlocking(void* buf, int nbytes, int tag)
+bool TH_Ethernet::recvBlocking(void* buf, int32 nbytes, int32 tag)
 {  
-  if (!_initDone) return false;
-
-  int framesize  = 0;
-  int bytesinbuf = 0;
+  if (!_initDone) {
+    return false;
+  }
+  int32 framesize;
+  int32 payloadsize;
+  char* endptr;
+  char* payloadptr;
   
   struct sockaddr_ll recvSockaddr;
   socklen_t recvSockaddrLen = sizeof(struct sockaddr_ll);
  
+  // Pointer to end of buffer
+  endptr = (char*)buf + nbytes;
+
+  // Pointer to received data excl. ethernetheader
+  payloadptr = _recvPacket + sizeof(struct ethhdr);
   // Repeat recvfrom call until 'buf' is filled with 'nbytes'
-  while (bytesinbuf < nbytes) {
+  while ((char*)buf < endptr) {
     
+    // Catch ethernet frame from Socket
     framesize = recvfrom(_socketFD, _recvPacket, _maxframesize , 0,
                           (struct sockaddr*)&recvSockaddr, &recvSockaddrLen);
     
+    // Calculate size of payload
+    payloadsize = framesize - sizeof(struct ethhdr);
+
     // Packets containing less than MIN_FRAME_LEN bytes will be ignored
-    if (framesize > MIN_FRAME_LEN) { 
-      // Copy payload, filter header
-      // Note that 'buf' cannot contain more than 'nbytes'
-      if (bytesinbuf + framesize - (int)sizeof(struct ethhdr) <= nbytes) {
-        memcpy((char*)buf + bytesinbuf, _recvPacket + sizeof(struct ethhdr), framesize - sizeof(struct ethhdr));
-        bytesinbuf += framesize - sizeof(struct ethhdr);  
-      }
-      else {
-        memcpy((char*)buf + bytesinbuf, _recvPacket + sizeof(struct ethhdr), nbytes - bytesinbuf);
-        bytesinbuf += nbytes - bytesinbuf;
-      }
+    if (framesize <= MIN_FRAME_LEN) {
+      continue;
+    } 
+    
+    // Copy payload, filter header
+    // Note that 'buf' cannot contain more than 'nbytes'
+    if ((char*)buf + payloadsize <= endptr) {
+      memcpy((char*)buf , payloadptr, payloadsize);
+      buf = (char*)buf + payloadsize;  
+    }
+    else {
+      memcpy((char*)buf, payloadptr, endptr - (char*)buf);
+      buf = endptr;
     }  
   }
-  if (_dhcheck )return (bytesinbuf == nbytes);
-  else return false;
+  if (_dhcheck ) {
+    return true;
+  }
+  return false;
 }
 
-bool TH_Ethernet::recvVarBlocking(int tag)
+bool TH_Ethernet::recvVarBlocking(int32 tag)
 {
   // Read dataholder info.
   DataHolder* target = getTransporter()->getDataHolder();
   void* buf = target->getDataPtr();
   int32 size = target->getDataSize();
   
-  if (!recvBlocking(buf, size, tag)) return false;  
+  if (!recvBlocking(buf, size, tag)) {
+    return false;  
+  }
 }
 
-bool TH_Ethernet::recvNonBlocking(void* buf, int nbytes, int tag)
+bool TH_Ethernet::recvNonBlocking(void* buf, int32 nbytes, int32 tag)
 {
   LOG_WARN( "TH_Ethernet::recvNonBlocking() is not implemented. recvBlocking() is used instead." );    
   return recvBlocking(buf, nbytes, tag);
 }
 
-bool TH_Ethernet::recvVarNonBlocking(int tag)
+bool TH_Ethernet::recvVarNonBlocking(int32 tag)
 {
   LOG_WARN( "TH_Ethernet::recvVarNonBlocking() is not implemented. recvVarBlocking() is used instead." );    
   return recvVarBlocking(tag);
 }
 
-bool TH_Ethernet::waitForReceived(void*, int, int)
+bool TH_Ethernet::waitForReceived(void*, int32, int32)
 {
   LOG_TRACE_RTTI("TH_Ethernet waitForReceived()");
   return true;
 }
 
 
-bool TH_Ethernet::sendBlocking(void* buf, int nbytes, int tag)
+bool TH_Ethernet::sendBlocking(void* buf, int32 nbytes, int32 tag)
 {
   if (!_initDone) return false;
 
-  int framesize   = 0;
-  int bytesoutbuf = 0;
+  int32 framesize;
+  int32 bytesoutbuf = 0;
  
   // Payload at least 46 bytes long 
   if (nbytes < 46) {
@@ -170,32 +188,34 @@ bool TH_Ethernet::sendBlocking(void* buf, int nbytes, int tag)
     memcpy(_sendPacketData, (char*)buf, nbytes);
     framesize = sendto(_socketFD, _sendPacket, nbytes + sizeof(struct ethhdr), 0,
   	  (struct sockaddr*)& _sockaddr, sizeof(struct sockaddr_ll));
-    bytesoutbuf = framesize - sizeof(struct ethhdr);
+    return ((framesize - sizeof(struct ethhdr)) == nbytes);
   }
   else {
     // Total message doesn't fit in one ethernet frame
     // Repeat sendto call until 'nbytes' are sent
     while (bytesoutbuf < nbytes) {
-      if (nbytes - bytesoutbuf < _maxdatasize)
+      if (nbytes - bytesoutbuf < _maxdatasize) {
         memcpy(_sendPacketData, (char*)buf + bytesoutbuf, nbytes - bytesoutbuf);
-      else
+      } 
+      else {
         memcpy(_sendPacketData, (char*)buf + bytesoutbuf, _maxdatasize);
+      }
 
       framesize = sendto(_socketFD, _sendPacket, _maxframesize, 0,
   	                  (struct sockaddr*)& _sockaddr, sizeof(struct sockaddr_ll));
       bytesoutbuf += framesize - sizeof(struct ethhdr);
     }
+    return true;
   }
-  return (bytesoutbuf == nbytes); 
 }
 
-bool TH_Ethernet::sendNonBlocking(void* buf, int nbytes, int tag)
+bool TH_Ethernet::sendNonBlocking(void* buf, int32 nbytes, int32 tag)
 {
   LOG_WARN( "TH_Ethernet::sendNonBlocking() is not implemented." );
   return false;
 }
 
-bool TH_Ethernet::waitForSent(void*, int, int)
+bool TH_Ethernet::waitForSent(void*, int32, int32)
 {
   LOG_WARN( "TH_Ethernet::waitForSent() is not implemented." );
   return false;
@@ -249,7 +269,7 @@ void TH_Ethernet::Init()
 
   // Make large send and receive buffers
   //((frames/sec)/2) * ((32*1024)+100)
-  int val = 262144;
+  int32 val = 262144;
   if (setsockopt(_socketFD, SOL_SOCKET, SO_RCVBUF, &val, sizeof(val)) < 0)
   {
     LOG_WARN("TH_Ethernet: send buffer size not increased, default size will be used.");
@@ -261,7 +281,6 @@ void TH_Ethernet::Init()
   
   char ownMac[ETH_ALEN];
   if (strcmp(_ownMac,"" )== 0) {
-    cout << "MacAddress will be extracted from ethernetcard" << endl;
     // Find ownMAC address for specified interface
     // Mac address will be stored ownMac
     strncpy(ifr.ifr_name,_ifname, IFNAMSIZ);
@@ -272,23 +291,22 @@ void TH_Ethernet::Init()
       close(_socketFD);
       return;
     }  
-    for (int i=0;i<ETH_ALEN;i++) ownMac[i] = ifr.ifr_hwaddr.sa_data[i];
+    for (int32 i=0;i<ETH_ALEN;i++) ownMac[i] = ifr.ifr_hwaddr.sa_data[i];
   }
   else {
-    cout << "User defined Mac address: " << _ownMac << " will be used" << endl; 
     // Convert _ownMac HWADDR string to sll_addr
     unsigned int ohx[ETH_ALEN] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
     sscanf(_ownMac, "%x:%x:%x:%x:%x:%x", 
      &ohx[0],&ohx[1],&ohx[2],&ohx[3],&ohx[4],&ohx[5]);
-    for (int i=0;i<ETH_ALEN;i++) ownMac[i]=(char)ohx[i];
+    for (int32 i=0;i<ETH_ALEN;i++) ownMac[i]=(char)ohx[i];
   }
   
   // Convert _remoteMac HWADDR string to sll_addr
   char remoteMac[ETH_ALEN];
-  unsigned int rhx[ETH_ALEN] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+  uint32 rhx[ETH_ALEN] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
   sscanf(_remoteMac, "%x:%x:%x:%x:%x:%x", 
      &rhx[0],&rhx[1],&rhx[2],&rhx[3],&rhx[4],&rhx[5]);
-  for (int i=0;i<ETH_ALEN;i++) remoteMac[i]=(char)rhx[i];
+  for (int32 i=0;i<ETH_ALEN;i++) remoteMac[i]=(char)rhx[i];
   
   // Store the MAC addresses in the incoming packet filter, so
   // only packets from remoteMAC (source) to ownMAC (destination) 
@@ -328,7 +346,7 @@ void TH_Ethernet::Init()
     close(_socketFD);
     return;
   }
-  int ifindex = ifr.ifr_ifindex;
+  int32 ifindex = ifr.ifr_ifindex;
 
   // Bind the socket to the interface
   // For bind only the sll_protocol and 
