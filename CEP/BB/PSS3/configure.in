@@ -58,6 +58,7 @@ lofar_MPI
 lofar_QATOOLS
 lofar_DOCXX
 lofar_PACKAGE(CEP/CPA/PSS3/MNS)
+lofar_PACKAGE(CEP/BB/DFTServer)
 lofar_PACKAGE(CEP/CEPFrame)
 lofar_EXTERNAL(psql,0,libpq-fe.h,pq)
 
