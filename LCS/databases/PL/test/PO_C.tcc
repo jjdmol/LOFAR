@@ -176,6 +176,7 @@ namespace LOFAR {
       for (int nrRecs = 0; selIter != selView.end() && nrRecs < maxObjects; ++selIter, ++nrRecs) {
 	TPersistentObject<C>    TPOC;
 	TPOC.fromDatabaseRep(*selIter);
+        TPOC.retrieve();
 	// No subclasses
 	selResult.add(TPOC);
       }

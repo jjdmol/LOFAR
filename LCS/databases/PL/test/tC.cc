@@ -83,8 +83,16 @@ int main()
     cout << "Press <Enter> to continue" << endl;
     cin.get();
 
-//     Collection< TPersistentObject<A> > ctpoc;
-//     ctpoc = broker.retrieve<A>(Query("SELECT * FROM A WHERE ITSINT=42;"));
+    cout << "Retrieve collection of tpoc using query" << endl;
+    Collection< TPersistentObject<C> > ctpoc;
+    Collection< TPersistentObject<C> >::const_iterator iter;
+    ctpoc = broker.retrieve<C>(Query("WHERE ItsString='C4Y2';"));
+    cout << "Found " << ctpoc.size() << " matches ..." << endl;
+    for(iter = ctpoc.begin(); iter != ctpoc.end(); ++iter) {
+      cout << "Press <Enter> to continue" << endl;
+      cin.get();
+      cout << iter->data() << endl;
+    }
 
   }
   catch (PLException& e) {
