@@ -96,13 +96,11 @@ CacheBuffer::CacheBuffer()
   init._pad = 0;
   m_wgsettings() = init;
 
-  m_subbandstats().resize(Statistics::N_STAT_TYPES / 2,
-			  GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL,
+  m_subbandstats().resize(GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL,
 			  MEPHeader::N_SUBBANDS);
   m_subbandstats() = 0;
 
-  m_beamletstats().resize(Statistics::N_STAT_TYPES / 2,
-			  GET_CONFIG("RS.N_RSPBOARDS", i) * MEPHeader::N_POL,
+  m_beamletstats().resize(GET_CONFIG("RS.N_RSPBOARDS", i) * MEPHeader::N_POL,
 			  MEPHeader::N_BEAMLETS);
   m_beamletstats() = 0;
 

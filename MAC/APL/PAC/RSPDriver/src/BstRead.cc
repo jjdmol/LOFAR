@@ -77,7 +77,7 @@ inline double convert_uint32_to_double(uint32 val)
   uint64 val64 = val;
   
   // check if bit 31 is set
-  if ((1<<31) & val64) val64 = val64 << 25;
+  //if ((1<<31) & val64) val64 = val64 << 25;
   
   return (double)val64;
 }
@@ -119,14 +119,14 @@ GCFEvent::TResult BstRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/
 			       MEPHeader::N_POL),
 			 neverDeleteData);
 
-  Array<double, 3>& cache(Cache::getInstance().getBack().getBeamletStats()());
+  Array<double, 2>& cache(Cache::getInstance().getBack().getBeamletStats()());
 
   // x-pol beamlet statistics: copy and convert to double
-  cache(0, getBoardId() * 2,     fragment_range) =
+  cache(getBoardId() * 2,     fragment_range) =
     convert_uint32_to_double(stats(Range::all(), 0));
 
   // y-pol beamlet statistics: copy and convert to double
-  cache(0, getBoardId() * 2 + 1, fragment_range) =
+  cache(getBoardId() * 2 + 1, fragment_range) =
     convert_uint32_to_double(stats(Range::all(), 1));
   
   return GCFEvent::HANDLED;

@@ -68,7 +68,7 @@ namespace RSP_Protocol
       virtual ~Statistics() {}
 
       /* get reference to the statistics array */
-      blitz::Array<double, 3>& operator()();
+      blitz::Array<double, 2>& operator()();
 
     public:
       /*@{*/
@@ -83,16 +83,16 @@ namespace RSP_Protocol
     private:
       /**
        * Statistics
-       * Dimensions are: (2, N_DEVICES, N_SUBBANDS); 2 for MEAN and POWER
+       * Dimensions are: (N_DEVICES, N_SUBBANDS);
        *
        * N_DEVICES == N_RSPBOARDS * N_POL for beamlet statistics
        * N_DEVICES == N_RSPBOARDS * N_BLPS * N_POL for subband statistics
        * 
        */
-      blitz::Array<double, 3> m_statistics;
+      blitz::Array<double, 2> m_statistics;
   };
   
-  inline blitz::Array<double, 3>& Statistics::operator()() { return m_statistics; }
+  inline blitz::Array<double, 2>& Statistics::operator()() { return m_statistics; }
 
 };
      

@@ -51,7 +51,7 @@ unsigned int Statistics::unpack(void *buffer)
 {
   unsigned int offset = 0;
 
-  MSH_UNPACK_ARRAY(buffer, offset, m_statistics, double, 3);
+  MSH_UNPACK_ARRAY(buffer, offset, m_statistics, double, 2);
 
   return offset;
 }

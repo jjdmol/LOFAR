@@ -245,10 +245,10 @@ GCFEvent::TResult ViewStats::enabled(GCFEvent& e, GCFPortInterface& port)
   return status;
 }
 
-void ViewStats::plot_statistics(Array<double, 3>& stats)
+void ViewStats::plot_statistics(Array<double, 2>& stats)
 {
   static gnuplot_ctrl* handle = 0;
-  int n_freqbands = stats.extent(thirdDim);
+  int n_freqbands = stats.extent(secondDim);
 
   Array<double, 1> freq(n_freqbands);
   Array<double, 1> value(n_freqbands);
@@ -271,14 +271,14 @@ void ViewStats::plot_statistics(Array<double, 3>& stats)
   gnuplot_cmd(handle, "set size 1,1");
   gnuplot_cmd(handle, "set origin 0,0");
   gnuplot_cmd(handle, "set multiplot");
-  gnuplot_cmd(handle, "set size 1,%f", 1.0 / stats.extent(secondDim));
+  gnuplot_cmd(handle, "set size 1,%f", 1.0 / stats.extent(firstDim));
 #endif
-  for (int device = stats.lbound(secondDim);
-       device <= stats.ubound(secondDim);
+  for (int device = stats.lbound(firstDim);
+       device <= stats.ubound(firstDim);
        device++)
   {
-    gnuplot_cmd(handle, "set origin 0,%f", 1.0 * device / stats.extent(secondDim));
-    if (device == stats.lbound(secondDim))
+    gnuplot_cmd(handle, "set origin 0,%f", 1.0 * device / stats.extent(firstDim));
+    if (device == stats.lbound(firstDim))
     {
       gnuplot_cmd(handle, "set xtics axis");
     }
@@ -288,9 +288,9 @@ void ViewStats::plot_statistics(Array<double, 3>& stats)
     }
     
     // compute logarithm of values
-    value  = stats(0, device, Range::all());
+    value  = stats(device, Range::all());
 
-    cout << "value=" << value << endl;
+    //cout << "value=" << value << endl;
 
 #if 0
     // signal + 1e-6 and +10dB calibrated this to the Marconi signal generator
@@ -298,9 +298,10 @@ void ViewStats::plot_statistics(Array<double, 3>& stats)
 #endif
 
     // add 1e-6 to prevent -inf result
+#if 1
     value = 20.0 * log10(value + 1e-6);
-    
-    cout << "value=" << value << endl;
+    //cout << "value=" << value << endl;
+#endif
 
     // set yrange for power
     //gnuplot_cmd(handle, "set ytics -100,20");
@@ -365,7 +366,7 @@ int main(int argc, char** argv)
     exit(EXIT_FAILURE);
   }
 
-  int n_devices = ((type <= Statistics::SUBBAND_POWER)?GET_CONFIG("RS.N_BLPS", i):1) * GET_CONFIG("RS.N_RSPBOARDS", i) * MEPHeader::N_POL;
+  int n_devices = ((type <= Statistics::SUBBAND_POWER) ? GET_CONFIG("RS.N_BLPS", i) * GET_CONFIG("RS.N_RSPBOARDS", i) : 1) * GET_CONFIG("RS.N_RSPBOARDS", i) * MEPHeader::N_POL;
 
   cout << "Which devices (RCU's for subband stats, RSP boards for beamlet stats (-1 means all):";
   int device = atoi(fgets(buf, 32, stdin));
