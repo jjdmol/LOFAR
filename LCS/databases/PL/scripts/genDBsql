@@ -205,7 +205,7 @@ cleanlist()
 
 #------------------------------- MAIN program ---------------------------------
 #
-# Check invocation syntax: genDBsql [-d destdir] module headerfiles
+# Check invocation syntax: genDBsql [-d destdir] mapfile
 #
 
 # Check option argument
@@ -228,7 +228,7 @@ case $# in
 	1)	MAPFILE=$1
 		MODULE=`echo ${MAPFILE} | cut -d"." -f1`
 		;;
-	*)	echo "Syntax: $0 mapfile"
+	*)	echo "Syntax: $0 [-d destdir] mapfile"
 		exit 0
 		;;
 esac
@@ -244,6 +244,7 @@ fi
 #
 MAPWORKFILE=/tmp/mapinfo.sql.LCS.$$
 MODULEFILE=${DESTDIR}/${MODULE}_create_databases.sql
+CLASSLOCATIONWRKFILE=/dev/null
 
 # Make sure there are no old workfiles left
 cleanupWorkFiles
