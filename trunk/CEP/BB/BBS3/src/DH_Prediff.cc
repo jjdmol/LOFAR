@@ -146,7 +146,7 @@ void DH_Prediff::setData(dcomplex* dataPtr, int size)
   vector<uint> sizeVec(1);
   sizeVec[0] = size;
   getDataField("DataBuf").setShape(sizeVec);
-  createDataBlock();    // Or call fillDataPointers(); ???
+  createDataBlock();
   for (int i=0; i<size; i++)
   {
     itsDataPtr[i] = dataPtr[i];     // TBA: Remove this data copy 
