@@ -128,7 +128,6 @@ defining_part : PART_TOKEN definition_part {
               ;
 
 definition_part : commandname control_block {
-                   report("parameterless command block");
                    if(level == 1)
                    {
                       char * bn = strdup(calculateBrancheNumber());
@@ -145,7 +144,6 @@ definition_part : commandname control_block {
                    }
                 }
                 | commandname param_block control_block {
-                   report("parameter command block");
                    if(level == 1) /* replace and save the nested part */
                    {
                       char * bn = strdup(calculateBrancheNumber());

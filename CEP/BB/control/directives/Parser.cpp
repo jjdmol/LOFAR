@@ -1,6 +1,8 @@
 #include "Parser.h"
+#include "parser/selfparse.h"
 
 #include <sstream>
+#include <iostream>
 
 //##ModelId=3F4DE363005D
 void Parser::setText(const std::string & text)
@@ -27,15 +29,49 @@ const std::vector<Directive> &Parser::getNested() const
   return nested;
 }
 
-#include <FlexLexer.h>
-#include "selfparse.h"
 std::vector<std::string> &parse(std::string txt)
 {
-   yyFlexLexer lexi;
    static std::vector<std::string> scripts;
-       // <todo>empty scripts</todo>
-   std::istringstream i(txt);
-   lexi.switch_streams(&i,NULL);
+   selfparseStream = new std::istringstream(txt);
    selfparseparse();
+       // <todo>empty scripts</todo>
    return scripts;
 }
+
+#ifdef __cplusplus
+extern "C" 
+{
+#endif
+   int report(char * s)
+   {
+          // if (debug_or_verbose)
+      return fprintf(stdout,s);
+   }
+
+   int selfparseerror(char * s)
+   {
+      extern int selfparselineno;
+      std::cerr <<
+         filename << ":"<<
+         selfparselineno << ":" <<
+         s << std::endl;
+      return 0;
+   }
+
+   void saveSubScript(char * bn, char * command, char * options , char * block)
+   {
+          // add to nested of the present Parser-object a directive
+          // containing std::string(command + " " + options + " " +
+          // block) as text
+   }
+
+   void saveScript( char * command, char * block)
+   {
+          // replace txt of the present Parser-object by
+          // std::string(command + block) both in the object and in
+          // the db
+   }
+
+#ifdef __cplusplus
+}
+#endif
