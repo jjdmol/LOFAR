@@ -37,6 +37,7 @@ try {
 	LOG_DEBUG("Starting tACServer at port 5051");
 	int32	res = execl("./tACServer", "tACServer", "5051", NULL);
 	cout << "execl = " << res << ", errno = " << errno << strerror(errno) << endl;
+	return(0);
 }
 catch (LOFAR::Exception&	ex) {
 	LOG_FATAL_STR("Caught exception: " << ex << endl);
