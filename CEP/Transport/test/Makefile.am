@@ -18,9 +18,13 @@ CXXFLAGS += \
 	-DMORECORE_CANNOT_TRIM=1 \
 	-DSHMEM_ALLOC
 
-check_PROGRAMS			= Example 		
+check_PROGRAMS			= Example ExamplePL ExamplePL2
 
-Example_SOURCES 		= Example.cc DH_Example.cc PO_DH_Example.cc
+Example_SOURCES 		= Example.cc DH_Example.cc
+
+ExamplePL_SOURCES 		= ExamplePL.cc DH_Example.cc
+
+ExamplePL2_SOURCES 		= ExamplePL2.cc DH_Example2.cc
 
 LDADD				= ../src/libtransport.la 
 DEPENDENCIES			= ../src/libtransport.la $(LOFAR_DEPEND)
@@ -33,10 +37,9 @@ TESTS_ENVIRONMENT		= top_srcdir=$(top_srcdir) \
 				  common_top_builddir=$(common_top_builddir)
 
 TESTS	=					\
-	Example_test.sh				
-
-EXTRA_DIST = 					\
 	Example_test.sh				\
-	Example.out				
+	ExamplePL_test.sh			\
+	ExamplePL2_test.sh			
+
 
 include $(lofar_sharedir)/Makefile.common

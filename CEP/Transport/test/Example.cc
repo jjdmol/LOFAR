@@ -35,19 +35,20 @@ int main()
   // connect DH1 to DH2
   TR2.connectTo(&TR1, TH_Mem::proto);
     
-  //initiate the DataHolders
-  // init is done in the connect method of Transporter
-  DH1.preprocess();
-  DH2.preprocess();
+  // initialize the DataHolders
+  DH1.init();
+  DH2.init();
     
   // fill the DataHolders with some initial data
-  DH1.getBuffer()[0] = 17;
+  DH1.getBuffer()[0] = fcomplex(17,-3.5);
   DH2.getBuffer()[0] = 0;
+  DH1.setCounter(2);
+  DH2.setCounter(0);
     
   cout << "Before transport : " 
-       << DH1.getBuffer()[0]
+       << DH1.getBuffer()[0] << ' ' << DH1.getCounter()
        << " -- " 
-       << DH2.getBuffer()[0] 
+       << DH2.getBuffer()[0] << ' ' << DH2.getCounter()
        << endl;
     
   // do the data transport
@@ -60,14 +61,15 @@ int main()
   // 
   
   cout << "After transport  : " 
-       << DH1.getBuffer()[0] 
+       << DH1.getBuffer()[0] << ' ' << DH1.getCounter()
        << " -- " 
-       << DH2.getBuffer()[0] 
+       << DH2.getBuffer()[0] << ' ' << DH2.getCounter()
        << endl;
 
-  if (DH1.getBuffer()[0] == DH2.getBuffer()[0]) {
+  if (DH1.getBuffer()[0] == DH2.getBuffer()[0]
+  &&  DH1.getCounter() == DH2.getCounter()) {
     return 0;
-  } else {
-    return -1;
   }
+  cout << "Data in receiving DataHolder is incorrect" << endl;
+  return 1;
 }

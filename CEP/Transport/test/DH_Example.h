@@ -1,6 +1,6 @@
-//# DH_Example.h: Example DataHolder
+//# DH_Example.h: Example DataHolder storing no individual fields
 //#
-//# Copyright (C) 2000
+//# Copyright (C) 2004
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
 //# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -27,7 +27,6 @@
 #include <lofar_config.h>
 #include "libTransport/DH_PL.h"
 #include <Common/lofar_complex.h>
-#include <PL/DBRep.h>
 
 namespace LOFAR
 {
