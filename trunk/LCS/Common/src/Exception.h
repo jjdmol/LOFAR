@@ -20,7 +20,7 @@
 //#
 //#  $Id$
 
-#if !defined(LCS_COMMON_EXCEPTION_H)
+#ifndef LCS_COMMON_EXCEPTION_H
 #define LCS_COMMON_EXCEPTION_H
 
 //# Includes
@@ -106,14 +106,17 @@ namespace LCS {
   }
 
 
-  //
-  //  @name Useful macros for lazy people
-  //@{
+} // namespace LCS
 
-  //
-  //  Define the \c __HERE__ macro, using \c __PRETTY_FUNCTION__ or
-  //  \c __FUNCTION__ if available.
-  //
+
+//
+//  @name Useful macros for lazy people
+//@{
+
+//
+//  Define the \c __HERE__ macro, using \c __PRETTY_FUNCTION__ or
+//  \c __FUNCTION__ if available.
+//
 #if defined(HAVE_PRETTY_FUNCTION)
 #define __HERE__ __FILE__,__LINE__,__PRETTY_FUNCTION__
 #elif defined(HAVE_FUNCTION)
@@ -122,12 +125,10 @@ namespace LCS {
 #define __HERE__ __FILE__,__LINE__
 #endif
 
-  // Create an exception object of the base-type Exception.
-  // Use this macro to insure that the  \c __HERE__ macro expands properly.
-#define EXCEPTION(txt) (Exception(txt,__HERE__))
-  
-  // Declare and define an exception class of type \c excp, which is derived
-  // from the exception class \c super.
+//
+// Declare and define an exception class of type \c excp, which is derived
+// from the exception class \c super.
+//
 #define EXCEPTION_CLASS(excp,super) \
 class excp : public super \
 { \
@@ -142,15 +143,15 @@ public: \
   } \
 };
 
-  // Throw an exception of type \c excp; use \c strm for the message. 
-  // Use this macro to insure that the  \c __HERE__ macro expands properly.
+//
+// Throw an exception of type \c excp; use \c strm for the message. 
+// Use this macro to insure that the  \c __HERE__ macro expands properly.
+//
 #define THROW(excp,strm) \
 { \
   throw excp(strm,__HERE__); \
 }
 
 //@}
-
-} // namespace LCS
 
 #endif
