@@ -47,7 +47,7 @@ DHPoolManager::~DHPoolManager()
 void DHPoolManager::preprocess()
 {
   AssertStr(itsDataHolder!=0, "DataHolder has not been set");
-  itsDataHolder->basePreprocess();
+  itsDataHolder->init();
 }
 
 int DHPoolManager::getSize()
