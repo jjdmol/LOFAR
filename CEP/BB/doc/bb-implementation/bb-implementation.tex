@@ -12,6 +12,7 @@
 \usepackage{theorem}
 \DeclareGraphicsExtensions{.eps}
 
+\floatstyle{ruled}
 \newfloat{assumption}{ht}{ass}[subsection]
 \newfloat{prerequisite}{ht}{pre}[subsection]
 \newfloat{requirement}{ht}{req}[subsection]
@@ -50,7 +51,7 @@
       self-calibration-application. An demo application has been made,
       and test-runs have been performed in order to get a feeling of
       what is really needed. Those are described in
-      \hyperlink{bib:LOFAR-ASTRON-MEM-096}{[HOO02]}.
+      \hyperlink{bib:LOFAR-ASTRON-MEM-096}{[HOO03]}.
 
     \subsection{context}
     \label{subsec:context}\hypertarget{subsec:context}{}
@@ -60,6 +61,73 @@
       Processor. It does not contain a design for such an application,
       even though it refers to the self-calibration a lot, it is
       intended to be as generic as possible.
+
+  \section{architecture}
+  \label{sec:architecture}\hypertarget{sec:architecture}{}
+
+    \subsection{human perspectives}
+
+      \subsubsection{management}
+
+        The Blackboard framework handles the distribution of an
+        application over a part of the cluster. From the management
+        perspective only a priority has to be given to the
+        application. On this high level this only means: ``how many
+        nodes may it use?'' The application has been given strategy
+        scripts to handle on that node that define the internal
+        priorities and the distribution within the appointed
+        sub-cluster.
+
+        \begin{requirement}
+          It must be possible to configure the number of nodes to use
+          for an instance of a BlackBoard application.
+          \caption{number of nodes\label{req:number-of-nodes}}
+        \end{requirement}
+
+      \subsubsection{system administration}
+
+        Given the appointed sub-cluster, the application must be able
+        to run. Therefore different components and utilities must be
+        deployed to the different nodes in the system. There are
+        mechanisms available in the LOFAR cluster to do this. These
+        mechanisms need some scripting or configuring. A lot of this
+        can be automated, but a system administrator has to be aware
+        of those mechanisms and the way the BlackBoard framework uses
+        them.
+
+      \subsubsection{astronomer-user}
+
+        The astronomer that has an observation approved by the LOFAR
+        board, will have to write an script to define his solution
+        strategy. In this script several things are defined. How is the data to be
+        solved for, being partitioned over the appointed cluster? How
+        is the responsibility over parameter to solve divided? Is a
+        ``peeling'' strategy applied? And so more.
+
+        During the calculation the a-user might ask for temporary
+        results, in order to see if things are going his way. Some
+        strategy directives can then be changed on the fly.
+
+    \subsection{system internals}
+
+      This section will contain some UML diagrams and accompanying
+      descriptions of the intended system internals.
+
+      \subsection{control hierarchy}
+
+      \subsection{collaboration}
+
+      \subsubsection{dynamic model}
+
+        \paragraph{lifetimes of objects}
+
+        \paragraph{protocol semantics}
+
+      \subsection{deployment}
+
+    \subsection{code organisation}
+
+      \subsubsection{writing enhancements}
 
   \section{data storage}
   \label{sec:data-storage}\hypertarget{sec:data-storage}{}
@@ -110,16 +178,24 @@
       \end{figure}
 
       In the distributed selfcal program, the available cluster will
-      be partitioned as well as the data the be calibrated on. several
+      be partitioned as well as the data to be calibrated on. Several
       sub-clusters will have responsibility over part of the data and
       hence part of the parameters to be calibrated.
 
       A calibrating cluster is a set of programs running on a (set of)
       node(s), that is doing part of the calibration.  A calibrating
       cluster might use more parameters then it has responsibility
-      over. Therefor it must have all parameters to its disposal.
+      over. Therefore it must have all parameters to its
+      disposal.
 
-      A calibrating cluster is converging parameters from assumed
+      \begin{verse}{Note}
+
+        The parameters will have to be at it's disposal in
+        principal. But not necessarily available at all time?
+
+      \end{verse}
+
+      A calibrating cluster is converging parameters from initial
       values to corrected values. This converging might go in the
       wrong direction so a set of transactions might be leading to
       invalid results and must not be distributed. It might also lead
@@ -152,7 +228,7 @@
         among co-workers.
 
         These co-workers can then work on the global transaction, by
-        "connecting to" or "joining" a transaction by id. Once joined,
+        ``connecting to'' or ``joining'' a transaction by id. Once joined,
         they can change data within the scope of global
         transaction. This can be as singular operations or as
         transactions. Any changes committed is valid an visible to any
@@ -183,11 +259,14 @@
 
       Datasets are high-volume and intensively queried. Updates are
       mostly copies. Using a database engine would be to much of a
-      CPU-cycle and memory hog.
+      CPU-cycle and memory hog. Therefore a more direct interface to
+      the filesystem is assumed.
 
       \begin{assumption}
         There is a measurement-set package in AIPS++ that will be used
-        for manipulating measurement data
+        for manipulating measurement data, as a temporary solution. A
+        more permanent solution will be provided by the Lofar Common
+        Software work-package.
         \caption{measurement-set package\label{ass:aips++}}
       \end{assumption}
 
@@ -211,7 +290,7 @@
       the fly. The database used supplies the possibility to watch
       progress on-line and intervene if needed.
 
-      The in core storage of the script byte be python byte code, but
+      The in core storage of the script might be python byte code, but
       it might be a database as well. It must be taken into account
       that user representation for both database and in-core code
       being synchronized and with integrity guaranteed, will be hard
@@ -228,14 +307,15 @@
 
       For the blackboard to function several protocols need to be
       described. To guarantee loose coupling between components it is
-      not desirable to have the dialogs in these protocols be needing
+      not desirable to have the dialogs in these protocols needing
       real-time message interchange. Therefor a database-based
       approach is chosen, which is described in
       \hyperlink{sec:logistical-datamodel}{Section
       \ref{sec:logistical-datamodel}}.
 
       \begin{requirement}
-        Protocol dialogues should be asynchronous.
+        Protocol dialogues between components in the BlackBoard should
+        be asynchronous.
         \caption{asynchronous dialogues\label{req:asynchronous}}
       \end{requirement}
 
@@ -264,9 +344,9 @@
       Logically there is only one Blackboard. It is a distributed
       application however, each instance dividing it's workload to
       it's own liking. Each blackboard
-      \begin{em}\large{Note: }
-        no capital here
-      \end{em}
+%      \begin{em}\large{Note: }
+%        no capital here
+%      \end{em}
       knows what nodes it has to start KnowledgeSources on.
 
       For this to work it has to be possible to distribute
@@ -320,7 +400,13 @@
       \end{itemize}
 
       The Blackboard will be configured to delegate tasks to children,
-      divided along one of these dimensions.
+      divided along one of these dimensions. For simplicity's sake it
+      is desirable not to partition in any dimension more then
+      once. From a logical point of view it doesn't seem necessary to
+      do so, even though it might be convenient at times. The
+      controlling software would be much simpler though if the
+      dimensions are fixed, and partitioned over only once,
+      preferably in a fixed order.
 
       \begin{assumption}
         It isn't necessary to divide along a dimension more then once.
@@ -387,7 +473,7 @@
       \hyperlink{bib:LOFAR-ASTRON-MEM-035}{[SCH02]}. To
       conveniently handle this it will have to be partitioned. To
       handle part of the data a specialised sub-cluster will be
-      defined. (see \hyperlink{fig:bb.subcluster}{Figure 1}).
+      defined. (see \hyperlink{fig:bb.subcluster}{Figure \ref{fig:bb.subcluster}}).
 
       \begin{figure}
         \includegraphics[]{../figures/bb.subcluster.eps}
@@ -569,7 +655,7 @@
     quality-of-results types for different knowledge-sources.
 
     All of this can be hard-coded in c++, as long as it is easy to
-    write and in the first place efficient to run.
+    write and, in the first place efficient to run.
 
     \subsection{extra figures}
     \begin{figure}
