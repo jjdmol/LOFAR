@@ -7,6 +7,7 @@
 
 #include <uvplot/UVPDisplayArea.h>
 #include <uvplot/UVPSpectrumVector.h>
+#include <uvplot/UVPDataAtomVector.h>
 
 
 #include <vector>
@@ -44,17 +45,24 @@ class UVPTimeFrequencyPlot: public UVPDisplayArea
    */
   void         setChannels(unsigned int numberOfChannels);
 
- public slots:
+public slots:
   
-   //! Add a spectrum to itsSpectrum.
-   /*! Adds spectrum to itsSpectrum. The transferfunction of
-       itsValueAxis is recalculated.
-       \param spectrum must have the same number of channels as defined
-       by setChannels().
+  //! Add a spectrum to itsSpectrum.
+  /*! Adds spectrum to itsSpectrum. The transferfunction of
+      itsValueAxis is recalculated.  \param spectrum must have the
+      same number of channels as defined by setChannels().
    */
-  void slot_addSpectrum(const UVPSpectrum &spectrum);
+ void slot_addSpectrum(const UVPSpectrum& spectrum);
+  
+  
+  //! Add a UVPDataATom to itsComplexSpectrum.
+  /*! \param atom points to an object that MUST exist during the
+      entire lifetime of itsComplexSpectrumVector. That is, at least
+      until the next setChannels() call.
+  */  
+  void slot_addDataAtom(const UVPDataAtom* atom);
  
- //! Redraws the image. Simply calls drawView().
+  //! Redraws the image. Simply calls drawView().
   void slot_paletteChanged();
   
   
@@ -62,6 +70,7 @@ class UVPTimeFrequencyPlot: public UVPDisplayArea
  private:
 
   UVPSpectrumVector  itsSpectrum;
+  UVPDataAtomVector  itsComplexSpectrum;
   
   UVPAxis            itsValueAxis;
 };
