@@ -23,8 +23,11 @@
 //
 //////////////////////////////////////////////////////////////////////
 
-#ifndef BBS3_DH_WOSOLVE_H
-#define BBS3_DH_WOSOLVE_H
+#ifndef LOFAR_BBS3_DH_WOSOLVE_H
+#define LOFAR_BBS3_DH_WOSOLVE_H
+
+// \file DH_WOSolve.h
+// DataHolder containing workorder for the solver
 
 #include <Common/lofar_vector.h>
 
@@ -35,8 +38,11 @@
 namespace LOFAR
 {
 
+// \addtogroup BBS3
+// @{
+
 /**
-   This class is a DataHolder which contains the work orders.
+   This class is a DataHolder which contains the work orders for the Solver.
 */
  //# Forward Declarations
 class KeyValueMap;
@@ -179,6 +185,8 @@ namespace PL {
     };   
                                                       
 } // end namespace PL   
+
+// @}
 
 } // namespace LOFAR
 

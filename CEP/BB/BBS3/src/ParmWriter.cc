@@ -31,6 +31,8 @@
 #include <MNS/ParmTable.h>
 #include <Common/LofarLogger.h>
 
+using namespace std;
+
 namespace LOFAR
 {
 ParmWriter::ParmWriter()
@@ -88,6 +90,13 @@ void ParmWriter::write(vector<ParmData>& pData, double fStart, double fEnd,
     polc.setPertSimCoeff(parmIter->getValues());
     // Store
     tableIter->second->putCoeff(parmIter->getName(), polc);
+
+//     streamsize prec = cout.precision();
+//     cout.precision(10);
+//     cout << "****Contr write: " << polc.getCoeff().getDouble()
+// 	 << " for parameter " << parmIter->getName() << endl;
+//     cout.precision (prec);
+
     tableIter->second->unlock();
   }
 }

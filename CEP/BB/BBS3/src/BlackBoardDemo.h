@@ -24,22 +24,21 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef BBS3_BLACKBOARDDEMO_H
-#define BBS3_BLACKBOARDDEMO_H
+#ifndef LOFAR_BBS3_BLACKBOARDDEMO_H
+#define LOFAR_BBS3_BLACKBOARDDEMO_H
 
+// \file BlackBoardDemo.h
+// This is an ApplicationHolder class which demonstrates the use of a blackboard control
+// architecture in combination with calibration software.
 
 #include <CEPFrame/ApplicationHolder.h>
 #include <Common/KeyValueMap.h>
 
-
-/**
-   This is a Simulator class which demonstrates the use of a blackboard control
-   architecture in combination with PSS3 calibration software.
-*/
-
-
 namespace LOFAR
 {
+
+// \addtogroup BBS3
+// @{
 
 class BlackBoardDemo: public LOFAR::ApplicationHolder
 {
@@ -59,6 +58,8 @@ private:
   LOFAR::Step** itsPDSteps;  // Pointer to array of Prediffer steps
   int itsNumberPD;           // Total number of Prediffers
 };
+
+// @}
 
 } // end namespace LOFAR
 

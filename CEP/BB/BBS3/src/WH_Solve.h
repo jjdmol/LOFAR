@@ -1,5 +1,4 @@
-//#  WH_Solve.h: predicts visibilities and determines difference to measured
-//#                data.
+//#  WH_Solve.h:  calculates new parameter values
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -21,9 +20,11 @@
 //#
 //#  $Id$
 
-#ifndef BBS3_WH_SOLVE_H
-#define BBS3_WH_SOLVE_H
+#ifndef LOFAR_BBS3_WH_SOLVE_H
+#define LOFAR_BBS3_WH_SOLVE_H
 
+// \file WH_Solve.h
+// Calculates new parameter values
 
 //# Includes
 #include <tinyCEP/WorkHolder.h>
@@ -31,6 +32,10 @@
 
 namespace LOFAR
 {
+
+// \addtogroup BBS3
+// @{
+
 //# Forward Declarations
 class Solver;
 
@@ -79,6 +84,8 @@ class WH_Solve : public LOFAR::WorkHolder
   SolverMap   itsSolvers;    // Map of Solver objects, each associated
                              // with a strategy (controller).
 };
+
+// @}
 
 } // namespace LOFAR
 

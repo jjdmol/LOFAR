@@ -20,8 +20,8 @@
 //#
 //#  $Id$
 
-#ifndef BB_BBS3_PARMWRITER_H
-#define BB_BBS3_PARMWRITER_H
+#ifndef LOFAR_BB_BBS3_PARMWRITER_H
+#define LOFAR_BB_BBS3_PARMWRITER_H
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
@@ -35,7 +35,7 @@
 
 namespace LOFAR
 {
-  // \addtogroup package
+  // \addtogroup BBS3
   // @{
   //# Forward Declarations
   class ParmData;

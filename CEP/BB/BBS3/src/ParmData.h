@@ -20,14 +20,20 @@
 //#
 //# $Id$
 
-#ifndef BB_BBS3_PARMDATA_H
-#define BB_BBS3_PARMDATA_H
+#ifndef LOFAR_BB_BBS3_PARMDATA_H
+#define LOFAR_BB_BBS3_PARMDATA_H
+
+// \file ParmData.h
+// The properties for solvable parameters
 
 //# Includes
 #include <BBS3/MNS/MeqMatrix.h>
 #include <string>
 
 namespace LOFAR {
+
+// \addtogroup BBS3
+// @{
 
 //# Forward Declarations.
 class BlobOStream;
@@ -100,6 +106,7 @@ private:
   MeqMatrix itsValues;
 };
 
+// @}
 
 }
 

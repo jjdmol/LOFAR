@@ -20,8 +20,11 @@
 //#
 //# $Id$
 
-#ifndef BB_BBS3_PREDIFFER_H
-#define BB_BBS3_PREDIFFER_H
+#ifndef LOFAR_BB_BBS3_PREDIFFER_H
+#define LOFAR_BB_BBS3_PREDIFFER_H
+
+// \file Prediffer.h
+// Read and predict read visibilities
 
 #include <casa/Arrays/Matrix.h>
 #include <casa/Quanta/MVBaseline.h>
@@ -49,6 +52,9 @@
 
 namespace LOFAR
 {
+
+// \addtogroup BBS3
+// @{
 
 //# Forward Declarations
 class MMap;
@@ -264,6 +270,8 @@ private:
   NSTimer itsEqTimer;
 
 };
+
+// @}
 
 } // namespace LOFAR
 

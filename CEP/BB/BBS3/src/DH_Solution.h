@@ -23,8 +23,11 @@
 //
 //////////////////////////////////////////////////////////////////////
 
-#ifndef BBS3_DH_SOLUTION_H
-#define BBS3_DH_SOLUTION_H
+#ifndef LOFAR_BBS3_DH_SOLUTION_H
+#define LOFAR_BBS3_DH_SOLUTION_H
+
+// \file DH_Solution.h
+// DataHolder for BlackBoard solutions
 
 #include <Common/lofar_vector.h>
 #include <TransportPL/DH_PL.h>
@@ -34,6 +37,9 @@
 
 namespace LOFAR
 {
+
+// \addtogroup BBS3
+// @{
 
 /**
    This class is a DataHolder which holds the parameters solved by
@@ -154,6 +160,7 @@ namespace PL {
                                                       
 } // end namespace PL   
 
+// @}
 
 } // namespace LOFAR
 

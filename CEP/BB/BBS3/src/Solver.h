@@ -20,8 +20,11 @@
 //#
 //# $Id$
 
-#ifndef BB_BBS3_SOLVER_H
-#define BB_BBS3_SOLVER_H
+#ifndef LOFAR_BB_BBS3_SOLVER_H
+#define LOFAR_BB_BBS3_SOLVER_H
+
+// \file Solver.h
+// Calculates parameter values using a least squares fitter
 
 #include <scimath/Fitting/LSQaips.h>
 #include <BBS3/ParmData.h>
@@ -33,6 +36,9 @@
 
 namespace LOFAR
 {
+
+// \addtogroup BBS3
+// @{
 
 // Solver calculates new parameter values from the equations given by the
 // Prediffer class.
@@ -101,6 +107,8 @@ private:
   vector<double>       itsSolvableValues;
   bool                 itsDoSet;         //# true = do itsSolver.set
 };
+
+// @}
 
 } // namespace LOFAR
 

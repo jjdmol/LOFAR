@@ -23,8 +23,11 @@
 //
 //////////////////////////////////////////////////////////////////////
 
-#ifndef BBS3_WH_CONTROL_H
-#define BBS3_WH_CONTROL_H
+#ifndef LOFAR_BBS3_WH_CONTROL_H
+#define LOFAR_BBS3_WH_CONTROL_H
+
+// \file WH_Control.h
+// This class implements the controller of the blackboard.
 
 #include <Common/lofar_vector.h>
 #include <tinyCEP/WorkHolder.h>
@@ -33,6 +36,9 @@
 #include <Common/lofar_list.h>
 namespace LOFAR
 {
+
+// \addtogroup BBS3
+// @{
 
 class StrategyController;
 
@@ -94,6 +100,8 @@ private:
   bool                     itsFirstCall;
 
 };
+
+// @}
 
 } // namespace LOFAR
 
