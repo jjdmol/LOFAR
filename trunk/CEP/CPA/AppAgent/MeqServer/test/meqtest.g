@@ -27,7 +27,7 @@ const mqsinit := function (verbose=3,debug=[=],gui=F)
     mqs := meq.server(verbose=verbose,options="-d0 -nogw -meq:M:O:MeqServer",gui=gui);
     if( is_fail(mqs) )
       fail;
-    mqs.setdebug('Glish',5);
+#    mqs.setdebug('Glish',5);
     r:=[=];
     r.a := function () {};
     r.b := T;
@@ -226,7 +226,7 @@ const freq_test := function ()
 
 const solver_test := function ()
 {
-  if( is_fail(mqsinit(verbose=4,gui=T)) )
+  if( is_fail(mqsinit(verbose=4,gui=T,debug=[MeqNode=3,MeqParm=5])) )
   {
     print mqs;
     fail;
@@ -234,27 +234,34 @@ const solver_test := function ()
   # create parms and condeq
   defval1 := array([3.,0.5,0.5,0.1],2,2);
   defval2 := array([2.,10.,2.,10. ],2,2);
-  print mqs.meq('Create.Node',meq.parm('parm1',defval1,groups='Parm'));
-  print mqs.meq('Create.Node',meq.parm('parm2',defval2,groups='Parm'));
-  print mqs.meq('Create.Node',meq.node('MeqCondeq','condeq1',children=[a='parm1',b='parm2']));
+  print mqs.meq('Create.Node',meq.parm('a',defval1,groups='Parm'));
+  print mqs.meq('Create.Node',meq.parm('b',defval2,groups='Parm'));
+  print mqs.meq('Create.Node',meq.node('MeqCondeq','condeq1',children="a b"));
   # create solver
   global rec;
   rec := meq.node('MeqSolver','solver1',children="condeq1");
   rec.num_steps := 3;
-  rec.solvable := meq.solvable_list("parm2");
+  rec.solvable := meq.solvable_list("a");
   rec.parm_group := hiid('Parm');
   print mqs.meq('Create.Node',rec);
+  
+  global cells,cells2,request,request2,res,res2,st1,st2,st3;
   
   # resolve children
   print mqs.meq('Resolve.Children',[name='solver1']);
   
-  global cells,request,res;
-  cells := meq.cells(meq.domain(1,4,-2,3),num_freq=4,times=[0.,1.,2.,3.],time_steps=[1.,1.,1.,1.]);
-  request := meq.request(cells,calc_deriv=1);
-  
+  st1 := mqs.getnodestate('a');
+  cells  := meq.cells(meq.domain(0,.5,0,.5),num_freq=4,num_time=4);
+  cells2 := meq.cells(meq.domain(.5,1,.5,1),num_freq=4,num_time=4);
+  request := meq.request(cells,calc_deriv=2);
+  request2 := meq.request(cells2,calc_deriv=0);
   res := mqs.meq('Node.Publish.Results',[name='condeq1'],T);
   res := mqs.meq('Node.Execute',[name='solver1',request=request],T);
   print res;
+  st2 := mqs.getnodestate('a');
+  res2 := mqs.meq('Node.Execute',[name='a',request=request2],T);
+  print res2;
+  st3 := mqs.getnodestate('a');
 }
 
 const save_test := function (clear=F)
@@ -281,7 +288,7 @@ const mep_test := function ()
   print 'Initializing MEP table ',tablename;
   
   include 'meq/meptable.g';
-  pt := meptable(tablename,create=T);
+  pt := meq.meptable(tablename,create=T);
   pt.putdef('a');
   pt.putdef('b');
   pt.done();
@@ -322,13 +329,13 @@ const mep_grow_test := function ()
   
   global cells,request,res1,res2;
   cells := meq.cells(meq.domain(0,1,0,1),num_freq=4,times=[.1,.2,.3,.4],time_steps=[.1,.1,.1,.1]);
-  request := meq.request(cells,calc_deriv=0);
+  request := meq.request(cells,calc_deriv=1);
   
   mqs.meq('Node.Publish.Results',[name='a'],T);
   res1 := mqs.meq('Node.Execute',[name='a',request=request],T);
 
   cells := meq.cells(meq.domain(0,2,0,2),num_freq=4,times=[.2,.4,.6,.8],time_steps=[.1,.1,.1,.1]);
-  request := meq.request(cells,calc_deriv=0);
+  request := meq.request(cells,calc_deriv=1);
   
   res2 := mqs.meq('Node.Execute',[name='a',request=request],T);
 }
