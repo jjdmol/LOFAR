@@ -41,16 +41,9 @@ BlobOStream& putBlobArray (BlobOStream& bs, const T* data,
 	                   const uint32* shape, uint16 ndim,
 			   bool fortranOrder)
 {
-  bs.putStart (LOFAR::typeName((const T**)0), 1);     // version 1
-  bs << fortranOrder << char(0) << ndim;
-  bs.put (shape, ndim);
-  if (ndim%2 == 0) {
-    bs << uint32(0);      // make #axes odd (to match BlobArrayHeader)
-  }
-  uint32 n = 1;
-  for (int i=0; i<ndim; i++) {
-    n *= shape[i];
-  }
+  uint32 n = putBlobArrayHeader (bs, true,
+				 LOFAR::typeName((const T**)0),
+				 shape, ndim, fortranOrder);
   putBlobArrayData (bs, data, n);
   bs.putEnd();
   return bs;
@@ -58,26 +51,29 @@ BlobOStream& putBlobArray (BlobOStream& bs, const T* data,
 
 
 template<typename T>
-uint setSpaceBlobArray2 (BlobOStream& bs, uint32 size0, uint32 size1,
+uint setSpaceBlobArray2 (BlobOStream& bs, bool useBlobHeader,
+			 uint32 size0, uint32 size1,
 			 bool fortranOrder)
 {
   uint32 shp[2];
   shp[0] = size0;
   shp[1] = size1;
-  return setSpaceBlobArray<T> (bs, shp, 2, fortranOrder);
+  return setSpaceBlobArray<T> (bs, useBlobHeader, shp, 2, fortranOrder);
 }
 template<typename T>
-uint setSpaceBlobArray3 (BlobOStream& bs, uint32 size0, uint32 size1,
-			 uint32 size2, bool fortranOrder)
+uint setSpaceBlobArray3 (BlobOStream& bs,  bool useBlobHeader,
+			 uint32 size0, uint32 size1, uint32 size2,
+			 bool fortranOrder)
 {
   uint32 shp[3];
   shp[0] = size0;
   shp[1] = size1;
   shp[2] = size2;
-  return setSpaceBlobArray<T> (bs, shp, 3, fortranOrder);
+  return setSpaceBlobArray<T> (bs, useBlobHeader, shp, 3, fortranOrder);
 }
 template<typename T>
-uint setSpaceBlobArray4 (BlobOStream& bs, uint32 size0, uint32 size1,
+uint setSpaceBlobArray4 (BlobOStream& bs, bool useBlobHeader,
+			 uint32 size0, uint32 size1,
 			 uint32 size2, uint32 size3,
 			 bool fortranOrder)
 {
@@ -86,33 +82,30 @@ uint setSpaceBlobArray4 (BlobOStream& bs, uint32 size0, uint32 size1,
   shp[1] = size1;
   shp[2] = size2;
   shp[3] = size3;
-  return setSpaceBlobArray<T> (bs, shp, 4, fortranOrder);
+  return setSpaceBlobArray<T> (bs, useBlobHeader, shp, 4, fortranOrder);
 }
 template<typename T>
-uint setSpaceBlobArray (BlobOStream& bs, const std::vector<uint32>& shape,
+uint setSpaceBlobArray (BlobOStream& bs, bool useBlobHeader,
+			const std::vector<uint32>& shape,
 			bool fortranOrder)
 {
-  return setSpaceBlobArray<T> (bs, &shape[0], shape.size(),
+  return setSpaceBlobArray<T> (bs, useBlobHeader, &shape[0], shape.size(),
 			       fortranOrder);
 }
 
 template<typename T>
-uint setSpaceBlobArray (BlobOStream& bs, const uint32* shape, uint16 ndim,
+uint setSpaceBlobArray (BlobOStream& bs, bool useBlobHeader,
+			const uint32* shape, uint16 ndim,
 			bool fortranOrder)
 {
-  bs.putStart (LOFAR::typeName((const T**)0), 1,      // version 1 
-	       std::min(sizeof(T),8u));               // align
-  bs << fortranOrder << char(0) << ndim;
-  bs.put (shape, ndim);
-  if (ndim%2 == 0) {
-    bs << uint32(0);      // make #axes odd (to match BlobArrayHeader)
-  }
-  uint32 n = 1;
-  for (int i=0; i<ndim; i++) {
-    n *= shape[i];
-  }
+  uint32 n = putBlobArrayHeader (bs, useBlobHeader,
+				 LOFAR::typeName((const T**)0),
+				 shape, ndim, fortranOrder,
+				 std::min(sizeof(T),8u));         // align
   uint pos = bs.setSpace (n*sizeof(T));
-  bs.putEnd();
+  if (useBlobHeader) {
+    bs.putEnd();
+  }
   return pos;
 }
 
@@ -231,10 +224,13 @@ BlobIStream& getBlobArray (BlobIStream& bs, T*& arr,
 }
 
 template<typename T>
-uint getSpaceBlobArray (BlobIStream& bs, std::vector<uint32>& shape,
+uint getSpaceBlobArray (BlobIStream& bs, bool useBlobHeader,
+			std::vector<uint32>& shape,
 			bool fortranOrder)
 {
-  bs.getStart (LOFAR::typeName((const T**)0));
+  if (useBlobHeader) {
+    bs.getStart (LOFAR::typeName((const T**)0));
+  }
   bool fortranOrder1;
   uint16 ndim;
   getBlobArrayStart (bs, fortranOrder1, ndim);
@@ -245,7 +241,9 @@ uint getSpaceBlobArray (BlobIStream& bs, std::vector<uint32>& shape,
     n *= shape[i];
   }
   uint pos = bs.getSpace (n*sizeof(T));
-  bs.getEnd();
+  if (useBlobHeader) {
+    bs.getEnd();
+  }
   return pos;
 }
 

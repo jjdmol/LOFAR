@@ -27,6 +27,26 @@
 namespace LOFAR
 {
 
+uint32 putBlobArrayHeader (BlobOStream& bs, bool useBlobHeader,
+			   const string& headerName,
+			   const uint32* shape, uint16 ndim,
+			   bool fortranOrder, uint align)
+{
+  if (useBlobHeader) {
+    bs.putStart (headerName, 1, align);                // version 1
+  }
+  bs << fortranOrder << char(0) << ndim;
+  bs.put (shape, ndim);
+  if (ndim%2 == 0) {
+    bs << uint32(0);      // make #axes odd (to match BlobArrayHeader)
+  }
+  uint32 n = 1;
+  for (int i=0; i<ndim; i++) {
+    n *= shape[i];
+  }
+  return n;
+}
+
 // Get the shape of an array from the blob.
 // This is a helper function for the functions reading an array.
 void getBlobArrayShape (BlobIStream& bs, uint32* shape, uint ndim,
@@ -48,11 +68,17 @@ void getBlobArrayShape (BlobIStream& bs, uint32* shape, uint ndim,
   }
 }
 
-void convertArrayHeader (LOFAR::DataFormat fmt, char* header)
+void convertArrayHeader (LOFAR::DataFormat fmt, char* header,
+			 bool useBlobHeader)
 {
-  BlobHeaderBase* hdr = (BlobHeaderBase*)header;
-  hdr->setLocalDataFormat();
-  char* buf = header + hdr->getHeaderLength() + 2;
+  char* buf = header;
+  if (useBlobHeader) {
+    BlobHeaderBase* hdr = (BlobHeaderBase*)header;
+    hdr->setLocalDataFormat();
+    buf += hdr->getHeaderLength();
+  }
+  // Skip the 2 characters that do not need to be converted.
+  buf += + 2;
   int ndim = dataConvert (fmt, *((uint16*)buf));
   dataConvert16 (fmt, buf);
   buf += 2;
@@ -60,6 +86,30 @@ void convertArrayHeader (LOFAR::DataFormat fmt, char* header)
     dataConvert32 (fmt, buf);
     buf += 4;
   }
+}
+
+BlobOStream& operator<< (BlobOStream& bs, const std::vector<bool>& vec)
+{
+  uint32 size = vec.size();
+  putBlobArrayHeader (bs, true,
+		      LOFAR::typeName((const bool**)0),
+		      &size, 1, true);
+  bs.putBoolVec (vec);
+  bs.putEnd();
+  return bs;
+}
+
+BlobIStream& operator>> (BlobIStream& bs, std::vector<bool>& vec)
+{
+  bs.getStart (LOFAR::typeName((const bool**)0));
+  bool fortranOrder;
+  uint16 ndim;
+  getBlobArrayStart (bs, fortranOrder, ndim);
+  Assert (ndim == 1);
+  uint32 size;
+  getBlobArrayShape (bs, &size, 1, false);
+  bs.getBoolVec (vec, size);
+  return bs;
 }
 
 } //end namespace LOFAR
