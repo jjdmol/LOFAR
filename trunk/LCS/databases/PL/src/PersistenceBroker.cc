@@ -47,13 +47,6 @@ namespace LOFAR
     }
 
 
-//     void PersistenceBroker::retrieve(PersistentObject& po, 
-//                                      const Query& q) const
-//     {
-//       po.retrieve(q);
-//     }
-
-
     void PersistenceBroker::save(const PersistentObject& po,
                                  enum SaveMode sm) const
     {
