@@ -12,14 +12,14 @@
 
 //## Module: MsgAddress%3C7B7F2F037E; Package specification
 //## Subsystem: PSCF%3C5A73670223
-//## Source file: F:\lofar8\oms\LOFAR\cep\cpa\pscf\src\pscf\MsgAddress.h
+//## Source file: F:\lofar8\oms\LOFAR\src-links\PSCF\MsgAddress.h
 
 #ifndef MsgAddress_h
 #define MsgAddress_h 1
 
 //## begin module%3C7B7F2F037E.additionalIncludes preserve=no
-#include "Common.h"
-#include "DMI.h"
+#include "DMI/Common.h"
+#include "DMI/DMI.h"
 //## end module%3C7B7F2F037E.additionalIncludes
 
 //## begin module%3C7B7F2F037E.includes preserve=yes
@@ -27,7 +27,7 @@
 //## end module%3C7B7F2F037E.includes
 
 // HIID
-#include "HIID.h"
+#include "DMI/HIID.h"
 //## begin module%3C7B7F2F037E.declarations preserve=no
 //## end module%3C7B7F2F037E.declarations
 
@@ -41,7 +41,7 @@
 //## end WPID%3C8F9A340206.preface
 
 //## Class: WPID%3C8F9A340206
-//## Category: PSCF%3BCEC935032A
+//## Category: OCTOPUSSY%3BCEC935032A
 //## Subsystem: PSCF%3C5A73670223
 //## Persistence: Transient
 //## Cardinality/Multiplicity: n
@@ -97,7 +97,7 @@ class WPID : public HIID  //## Inherits: <unnamed>%3C8F9A5B0343
 //## end MsgAddress%3C7B6F790197.preface
 
 //## Class: MsgAddress%3C7B6F790197
-//## Category: PSCF%3BCEC935032A
+//## Category: OCTOPUSSY%3BCEC935032A
 //## Subsystem: PSCF%3C5A73670223
 //## Persistence: Transient
 //## Cardinality/Multiplicity: n

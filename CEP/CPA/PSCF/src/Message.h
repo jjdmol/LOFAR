@@ -12,35 +12,35 @@
 
 //## Module: Message%3C7B7F2F0248; Package specification
 //## Subsystem: PSCF%3C5A73670223
-//## Source file: F:\lofar8\oms\LOFAR\CEP\CPA\PSCF\src\Message.h
+//## Source file: F:\lofar8\oms\LOFAR\src-links\PSCF\Message.h
 
 #ifndef Message_h
 #define Message_h 1
 
 //## begin module%3C7B7F2F0248.additionalIncludes preserve=no
-#include "Common.h"
-#include "DMI.h"
+#include "DMI/Common.h"
+#include "DMI/DMI.h"
 //## end module%3C7B7F2F0248.additionalIncludes
 
 //## begin module%3C7B7F2F0248.includes preserve=yes
-#include "TID-PSCF.h"
-#include "DataRecord.h"
+#include "PSCF/TID-PSCF.h"
+#include "DMI/DataRecord.h"
 //## end module%3C7B7F2F0248.includes
 
-// PSCFDebugContext
-#include "PSCFDebugContext.h"
-// MsgAddress
-#include "MsgAddress.h"
 // CountedRef
-#include "CountedRef.h"
+#include "DMI/CountedRef.h"
 // SmartBlock
-#include "SmartBlock.h"
+#include "DMI/SmartBlock.h"
 // NestableContainer
-#include "NestableContainer.h"
+#include "DMI/NestableContainer.h"
 // HIID
-#include "HIID.h"
+#include "DMI/HIID.h"
 // BlockableObject
-#include "BlockableObject.h"
+#include "DMI/BlockableObject.h"
+// PSCFDebugContext
+#include "PSCF/PSCFDebugContext.h"
+// MsgAddress
+#include "PSCF/MsgAddress.h"
 //## begin module%3C7B7F2F0248.declarations preserve=no
 //## end module%3C7B7F2F0248.declarations
 

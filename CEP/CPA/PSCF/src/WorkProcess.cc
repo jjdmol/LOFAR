@@ -12,7 +12,7 @@
 
 //## Module: WorkProcess%3C7B7F3000C5; Package body
 //## Subsystem: PSCF%3C5A73670223
-//## Source file: F:\lofar8\oms\LOFAR\CEP\CPA\PSCF\src\WorkProcess.cc
+//## Source file: F:\lofar8\oms\LOFAR\src-links\PSCF\WorkProcess.cc
 
 //## begin module%3C7B7F3000C5.additionalIncludes preserve=no
 //## end module%3C7B7F3000C5.additionalIncludes
@@ -23,7 +23,7 @@
 //## end module%3C7B7F3000C5.includes
 
 // WorkProcess
-#include "WorkProcess.h"
+#include "PSCF/WorkProcess.h"
 //## begin module%3C7B7F3000C5.declarations preserve=no
 //## end module%3C7B7F3000C5.declarations
 
@@ -47,12 +47,6 @@ WorkProcess::WorkProcess (AtomicID wpc)
 
 
 //## Other Operations (implementation)
-void WorkProcess::setPolling (bool enabled)
-{
-  //## begin WorkProcess::setPolling%3CB55CC301A7.body preserve=yes
-  //## end WorkProcess::setPolling%3CB55CC301A7.body
-}
-
 void WorkProcess::addTimeout (const Timestamp &period, const HIID &id, int flags, int priority)
 {
   //## begin WorkProcess::addTimeout%3C7D285803B0.body preserve=yes
@@ -122,35 +116,6 @@ const MsgAddress & WorkProcess::attachWP (WPInterface* wp, int flags)
   //## end WorkProcess::attachWP%3C95BA1A02D5.body
 }
 
-void WorkProcess::lprintf (int level, int type, const char *format, ... )
-{
-  //## begin WorkProcess::lprintf%3CA0738D007F.body preserve=yes
-  if( level > logLevel() )
-    return;
-  // create the string
-  char str[1024];
-  va_list(ap);
-  va_start(ap,format);
-  vsnprintf(str,sizeof(str),format,ap);
-  va_end(ap);
-  log(str,level,type);
-  //## end WorkProcess::lprintf%3CA0738D007F.body
-}
-
-void WorkProcess::lprintf (int level, const char *format, ... )
-{
-  //## begin WorkProcess::lprintf%3CA0739F0247.body preserve=yes
-  if( level > logLevel() )
-    return;
-  char str[1024];
-  va_list(ap);
-  va_start(ap,format);
-  vsnprintf(str,sizeof(str),format,ap);
-  va_end(ap);
-  log(str,level,LogNormal);
-  //## end WorkProcess::lprintf%3CA0739F0247.body
-}
-
 // Additional Declarations
   //## begin WorkProcess%3C8F25430087.declarations preserve=yes
   //## end WorkProcess%3C8F25430087.declarations
@@ -161,6 +126,29 @@ void WorkProcess::lprintf (int level, const char *format, ... )
 
 // Detached code regions:
 #if 0
+//## begin WorkProcess::lprintf%3CA0738D007F.body preserve=yes
+  if( level > logLevel() )
+    return;
+  // create the string
+  char str[1024];
+  va_list(ap);
+  va_start(ap,format);
+  vsnprintf(str,sizeof(str),format,ap);
+  va_end(ap);
+  log(str,level,type);
+//## end WorkProcess::lprintf%3CA0738D007F.body
+
+//## begin WorkProcess::lprintf%3CA0739F0247.body preserve=yes
+  if( level > logLevel() )
+    return;
+  char str[1024];
+  va_list(ap);
+  va_start(ap,format);
+  vsnprintf(str,sizeof(str),format,ap);
+  va_end(ap);
+  log(str,level,LogNormal);
+//## end WorkProcess::lprintf%3CA0739F0247.body
+
 //## begin WorkProcess::start%3C9216B701CA.body preserve=yes
   WPInterface::start();
 //## end WorkProcess::start%3C9216B701CA.body

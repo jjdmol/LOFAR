@@ -12,23 +12,23 @@
 
 //## Module: WorkProcess%3C7B7F3000C3; Package specification
 //## Subsystem: PSCF%3C5A73670223
-//## Source file: F:\lofar8\oms\LOFAR\CEP\CPA\PSCF\src\WorkProcess.h
+//## Source file: F:\lofar8\oms\LOFAR\src-links\PSCF\WorkProcess.h
 
 #ifndef WorkProcess_h
 #define WorkProcess_h 1
 
 //## begin module%3C7B7F3000C3.additionalIncludes preserve=no
-#include "Common.h"
-#include "DMI.h"
+#include "DMI/Common.h"
+#include "DMI/DMI.h"
 //## end module%3C7B7F3000C3.additionalIncludes
 
 //## begin module%3C7B7F3000C3.includes preserve=yes
 //## end module%3C7B7F3000C3.includes
 
 // WPInterface
-#include "WPInterface.h"
+#include "PSCF/WPInterface.h"
 // Dispatcher
-#include "Dispatcher.h"
+#include "PSCF/Dispatcher.h"
 //## begin module%3C7B7F3000C3.declarations preserve=no
 //## end module%3C7B7F3000C3.declarations
 
@@ -62,9 +62,6 @@ class WorkProcess : public WPInterface  //## Inherits: <unnamed>%3C8F263A00E6
 
 
     //## Other Operations (specified)
-      //## Operation: setPolling%3CB55CC301A7
-      void setPolling (bool enabled);
-
       //## Operation: addTimeout%3C7D285803B0
       void addTimeout (const Timestamp &period, const HIID &id = HIID(), int flags = 0, int priority = Message::PRI_EVENT);
 
@@ -91,12 +88,6 @@ class WorkProcess : public WPInterface  //## Inherits: <unnamed>%3C8F263A00E6
 
       //## Operation: attachWP%3C95BA1A02D5
       const MsgAddress & attachWP (WPInterface* wp, int flags);
-
-      //## Operation: lprintf%3CA0738D007F
-      void lprintf (int level, int type, const char *format, ... );
-
-      //## Operation: lprintf%3CA0739F0247
-      void lprintf (int level, const char *format, ... );
 
     // Additional Public Declarations
       //## begin WorkProcess%3C8F25430087.public preserve=yes

@@ -12,7 +12,7 @@
 
 //## Module: GlishClientWP%3CB562880397; Package body
 //## Subsystem: PSCF::Glish%3CB5A6190195
-//## Source file: F:\lofar8\oms\LOFAR\CEP\CPA\PSCF\src\Glish\GlishClientWP.cc
+//## Source file: F:\lofar8\oms\LOFAR\src-links\PSCF\Glish\GlishClientWP.cc
 
 //## begin module%3CB562880397.additionalIncludes preserve=no
 //## end module%3CB562880397.additionalIncludes
@@ -24,13 +24,13 @@
 #include <aips/Glish.h>
 #include <aips/Arrays/Array.h>
 
-#include <DataRecord.h>
-#include <DataField.h>
-#include <DynamicTypeManager.h>
+#include <DMI/DataRecord.h>
+#include <DMI/DataField.h>
+#include <DMI/DynamicTypeManager.h>
 //## end module%3CB562880397.includes
 
 // GlishClientWP
-#include "Glish/GlishClientWP.h"
+#include "PSCF/Glish/GlishClientWP.h"
 //## begin module%3CB562880397.declarations preserve=no
 //## end module%3CB562880397.declarations
 

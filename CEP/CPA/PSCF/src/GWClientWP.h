@@ -12,26 +12,26 @@
 
 //## Module: GWClientWP%3C95AADB016E; Package specification
 //## Subsystem: PSCF%3C5A73670223
-//## Source file: F:\lofar8\oms\LOFAR\CEP\CPA\PSCF\src\GWClientWP.h
+//## Source file: F:\lofar8\oms\LOFAR\src-links\PSCF\GWClientWP.h
 
 #ifndef GWClientWP_h
 #define GWClientWP_h 1
 
 //## begin module%3C95AADB016E.additionalIncludes preserve=no
-#include "Common.h"
-#include "DMI.h"
+#include "DMI/Common.h"
+#include "DMI/DMI.h"
 //## end module%3C95AADB016E.additionalIncludes
 
 //## begin module%3C95AADB016E.includes preserve=yes
 #include <list>
 //## end module%3C95AADB016E.includes
 
-// GatewayWP
-#include "GatewayWP.h"
-// WorkProcess
-#include "WorkProcess.h"
 // Socket
-#include "Socket.h"
+#include "PSCF/Socket.h"
+// GatewayWP
+#include "PSCF/GatewayWP.h"
+// WorkProcess
+#include "PSCF/WorkProcess.h"
 //## begin module%3C95AADB016E.declarations preserve=no
 //## end module%3C95AADB016E.declarations
 

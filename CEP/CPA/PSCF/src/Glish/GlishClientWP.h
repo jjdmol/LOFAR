@@ -12,14 +12,14 @@
 
 //## Module: GlishClientWP%3CB562880395; Package specification
 //## Subsystem: PSCF::Glish%3CB5A6190195
-//## Source file: F:\lofar8\oms\LOFAR\CEP\CPA\PSCF\src\Glish\GlishClientWP.h
+//## Source file: F:\lofar8\oms\LOFAR\src-links\PSCF\Glish\GlishClientWP.h
 
 #ifndef GlishClientWP_h
 #define GlishClientWP_h 1
 
 //## begin module%3CB562880395.additionalIncludes preserve=no
-#include "Common.h"
-#include "DMI.h"
+#include "DMI/Common.h"
+#include "DMI/DMI.h"
 //## end module%3CB562880395.additionalIncludes
 
 //## begin module%3CB562880395.includes preserve=yes
@@ -27,7 +27,7 @@
 //## end module%3CB562880395.includes
 
 // WorkProcess
-#include "WorkProcess.h"
+#include "PSCF/WorkProcess.h"
 //## begin module%3CB562880395.declarations preserve=no
 //## end module%3CB562880395.declarations
 
@@ -121,7 +121,6 @@ class GlishClientWP : public WorkProcess  //## Inherits: <unnamed>%3CB5619C036E
       // shuts down the link
       void shutdown ();
       //## end GlishClientWP%3CB5618B0373.private
-
   private: //## implementation
     // Data Members for Class Attributes
 

@@ -12,7 +12,7 @@
 
 //## Module: Dispatcher%3C7B7F30004B; Package body
 //## Subsystem: PSCF%3C5A73670223
-//## Source file: F:\lofar8\oms\LOFAR\CEP\CPA\PSCF\src\Dispatcher.cc
+//## Source file: F:\lofar8\oms\LOFAR\src-links\PSCF\Dispatcher.cc
 
 //## begin module%3C7B7F30004B.additionalIncludes preserve=no
 //## end module%3C7B7F30004B.additionalIncludes
@@ -25,9 +25,9 @@
 //## end module%3C7B7F30004B.includes
 
 // WPInterface
-#include "WPInterface.h"
+#include "PSCF/WPInterface.h"
 // Dispatcher
-#include "Dispatcher.h"
+#include "PSCF/Dispatcher.h"
 //## begin module%3C7B7F30004B.declarations preserve=no
 //## end module%3C7B7F30004B.declarations
 
@@ -62,7 +62,7 @@ Dispatcher::Dispatcher (AtomicID process, AtomicID host, int hz)
   //## begin Dispatcher::Dispatcher%3C7CD444039C.hasinit preserve=no
   //## end Dispatcher::Dispatcher%3C7CD444039C.hasinit
   //## begin Dispatcher::Dispatcher%3C7CD444039C.initialization preserve=yes
-    : DebugContext("Dsp",False,&PSCFDebugContext::DebugContext),
+    : DebugContext("Dsp",&PSCFDebugContext::getDebugContext()),
       heartbeat_hz(hz),
       config(OctopussyConfig::global())
   //## end Dispatcher::Dispatcher%3C7CD444039C.initialization
@@ -78,7 +78,7 @@ Dispatcher::Dispatcher (int hz)
   //## begin Dispatcher::Dispatcher%3CD012B70209.hasinit preserve=no
   //## end Dispatcher::Dispatcher%3CD012B70209.hasinit
   //## begin Dispatcher::Dispatcher%3CD012B70209.initialization preserve=yes
-    : DebugContext("Dsp",False,&PSCFDebugContext::DebugContext),
+    : DebugContext("Dsp",&PSCFDebugContext::getDebugContext()),
       heartbeat_hz(hz),
       config(OctopussyConfig::global())
   //## end Dispatcher::Dispatcher%3CD012B70209.initialization

@@ -12,25 +12,25 @@
 
 //## Module: GatewayWP%3C90BFDD0236; Package specification
 //## Subsystem: PSCF%3C5A73670223
-//## Source file: F:\lofar8\oms\LOFAR\CEP\CPA\PSCF\src\GatewayWP.h
+//## Source file: F:\lofar8\oms\LOFAR\src-links\PSCF\GatewayWP.h
 
 #ifndef GatewayWP_h
 #define GatewayWP_h 1
 
 //## begin module%3C90BFDD0236.additionalIncludes preserve=no
-#include "Common.h"
-#include "DMI.h"
+#include "DMI/Common.h"
+#include "DMI/DMI.h"
 //## end module%3C90BFDD0236.additionalIncludes
 
 //## begin module%3C90BFDD0236.includes preserve=yes
 //## end module%3C90BFDD0236.includes
 
-// Subscriptions
-#include "Subscriptions.h"
-// WorkProcess
-#include "WorkProcess.h"
 // Socket
-#include "Socket.h"
+#include "PSCF/Socket.h"
+// Subscriptions
+#include "PSCF/Subscriptions.h"
+// WorkProcess
+#include "PSCF/WorkProcess.h"
 //## begin module%3C90BFDD0236.declarations preserve=no
 //## end module%3C90BFDD0236.declarations
 

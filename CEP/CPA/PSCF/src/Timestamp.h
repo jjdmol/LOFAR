@@ -12,14 +12,14 @@
 
 //## Module: Timestamp%3C7F3B770339; Package specification
 //## Subsystem: PSCF%3C5A73670223
-//## Source file: F:\lofar8\oms\LOFAR\CEP\CPA\PSCF\src\Timestamp.h
+//## Source file: F:\lofar8\oms\LOFAR\src-links\PSCF\Timestamp.h
 
 #ifndef Timestamp_h
 #define Timestamp_h 1
 
 //## begin module%3C7F3B770339.additionalIncludes preserve=no
-#include "Common.h"
-#include "DMI.h"
+#include "DMI/Common.h"
+#include "DMI/DMI.h"
 //## end module%3C7F3B770339.additionalIncludes
 
 //## begin module%3C7F3B770339.includes preserve=yes
@@ -39,7 +39,7 @@
 //## end Timestamp%3C7F3B1D025E.preface
 
 //## Class: Timestamp%3C7F3B1D025E
-//## Category: PSCF%3BCEC935032A
+//## Category: OCTOPUSSY%3BCEC935032A
 //## Subsystem: PSCF%3C5A73670223
 //## Persistence: Transient
 //## Cardinality/Multiplicity: n
@@ -159,7 +159,7 @@ class Timestamp
 //## end Timeval%3C95AC350111.preface
 
 //## Class: Timeval%3C95AC350111
-//## Category: PSCF%3BCEC935032A
+//## Category: OCTOPUSSY%3BCEC935032A
 //## Subsystem: PSCF%3C5A73670223
 //## Persistence: Transient
 //## Cardinality/Multiplicity: n

@@ -12,7 +12,7 @@
 
 //## Module: OctopussyConfig%3CD0078A01F1; Package body
 //## Subsystem: PSCF%3C5A73670223
-//## Source file: F:\lofar8\oms\LOFAR\CEP\CPA\PSCF\src\OctopussyConfig.cc
+//## Source file: F:\lofar8\oms\LOFAR\src-links\PSCF\OctopussyConfig.cc
 
 //## begin module%3CD0078A01F1.additionalIncludes preserve=no
 //## end module%3CD0078A01F1.additionalIncludes
@@ -24,7 +24,7 @@
 //## end module%3CD0078A01F1.includes
 
 // OctopussyConfig
-#include "OctopussyConfig.h"
+#include "PSCF/OctopussyConfig.h"
 //## begin module%3CD0078A01F1.declarations preserve=no
 //## end module%3CD0078A01F1.declarations
 

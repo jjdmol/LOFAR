@@ -2,7 +2,7 @@ dmi_dir = $(lofar_sharedir)/../DMI
 
 SUBDIRS = . Glish
 
-INCLUDES = -I$(dmi_dir)/src -I$(lofar_sharedir)/../src-links
+# INCLUDES = -I$(dmi_dir)/src -I$(lofar_sharedir)/../src-links
 
 CXXFLAGS += -Wall -Wno-unknown-pragmas -pg
 

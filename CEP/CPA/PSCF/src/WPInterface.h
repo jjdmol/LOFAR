@@ -12,14 +12,14 @@
 
 //## Module: WPInterface%3C8F268F00DE; Package specification
 //## Subsystem: PSCF%3C5A73670223
-//## Source file: F:\lofar8\oms\LOFAR\CEP\CPA\PSCF\src\WPInterface.h
+//## Source file: F:\lofar8\oms\LOFAR\src-links\PSCF\WPInterface.h
 
 #ifndef WPInterface_h
 #define WPInterface_h 1
 
 //## begin module%3C8F268F00DE.additionalIncludes preserve=no
-#include "Common.h"
-#include "DMI.h"
+#include "DMI/Common.h"
+#include "DMI/DMI.h"
 //## end module%3C8F268F00DE.additionalIncludes
 
 //## begin module%3C8F268F00DE.includes preserve=yes
@@ -29,14 +29,14 @@
 #include "OctopussyConfig.h"
 //## end module%3C8F268F00DE.includes
 
-// Subscriptions
-#include "Subscriptions.h"
-// PSCFDebugContext
-#include "PSCFDebugContext.h"
-// Message
-#include "Message.h"
 // CountedRefTarget
-#include "CountedRefTarget.h"
+#include "DMI/CountedRefTarget.h"
+// Subscriptions
+#include "PSCF/Subscriptions.h"
+// PSCFDebugContext
+#include "PSCF/PSCFDebugContext.h"
+// Message
+#include "PSCF/Message.h"
 
 class Dispatcher;
 
@@ -82,6 +82,7 @@ class WPInterface : public PSCFDebugContext, //## Inherits: <unnamed>%3C7FA31F00
       
       Debug::Context DebugContext; 
       ::Debug::Context & getDebugContext() { return DebugContext; };
+      const ::Debug::Context & getDebugContext() const { return DebugContext; };
       
       typedef struct {  MessageRef mref; 
                         int priority; 

@@ -12,7 +12,7 @@
 
 //## Module: PSCFDebugContext%3C7FA335026A; Package body
 //## Subsystem: PSCF%3C5A73670223
-//## Source file: f:\lofar8\oms\LOFAR\cep\cpa\pscf\src\pscf\PSCFDebugContext.cc
+//## Source file: F:\lofar8\oms\LOFAR\src-links\PSCF\PSCFDebugContext.cc
 
 //## begin module%3C7FA335026A.additionalIncludes preserve=no
 //## end module%3C7FA335026A.additionalIncludes
@@ -21,7 +21,7 @@
 //## end module%3C7FA335026A.includes
 
 // PSCFDebugContext
-#include "PSCFDebugContext.h"
+#include "PSCF/PSCFDebugContext.h"
 //## begin module%3C7FA335026A.declarations preserve=no
 //## end module%3C7FA335026A.declarations
 

@@ -12,17 +12,17 @@
 
 //## Module: Message%3C7B7F2F024A; Package body
 //## Subsystem: PSCF%3C5A73670223
-//## Source file: F:\lofar8\oms\LOFAR\CEP\CPA\PSCF\src\Message.cc
+//## Source file: F:\lofar8\oms\LOFAR\src-links\PSCF\Message.cc
 
 //## begin module%3C7B7F2F024A.additionalIncludes preserve=no
 //## end module%3C7B7F2F024A.additionalIncludes
 
 //## begin module%3C7B7F2F024A.includes preserve=yes
-#include "DynamicTypeManager.h"
+#include "DMI/DynamicTypeManager.h"
 //## end module%3C7B7F2F024A.includes
 
 // Message
-#include "Message.h"
+#include "PSCF/Message.h"
 //## begin module%3C7B7F2F024A.declarations preserve=no
 //## end module%3C7B7F2F024A.declarations
 

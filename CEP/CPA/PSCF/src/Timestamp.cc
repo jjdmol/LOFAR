@@ -12,7 +12,7 @@
 
 //## Module: Timestamp%3C7F3B77034D; Package body
 //## Subsystem: PSCF%3C5A73670223
-//## Source file: F:\lofar8\oms\LOFAR\CEP\CPA\PSCF\src\Timestamp.cc
+//## Source file: F:\lofar8\oms\LOFAR\src-links\PSCF\Timestamp.cc
 
 //## begin module%3C7F3B77034D.additionalIncludes preserve=no
 //## end module%3C7F3B77034D.additionalIncludes
@@ -22,7 +22,7 @@
 //## end module%3C7F3B77034D.includes
 
 // Timestamp
-#include "Timestamp.h"
+#include "PSCF/Timestamp.h"
 //## begin module%3C7F3B77034D.declarations preserve=no
 //## end module%3C7F3B77034D.declarations
 
