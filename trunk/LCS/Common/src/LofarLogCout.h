@@ -20,8 +20,8 @@
 //
 //  $Id$
 
-#if !defined(COMMON_LOFAR_LOGCOUT_H)
-#define COMMON_LOFAR_LOGCOUT_H
+//# No include guard is used, because it should always be used from
+//# LofarLogger.h (and from LofarLogCout.cc).
 
 #include <Common/lofar_iostream.h>
 #include <Common/lofar_sstream.h>
@@ -35,21 +35,12 @@
 
 //# -------------------- Initialisation of the logger module -------------------
 //#
-// Initializes debug levels from command line (looks for options of
-// the form -dContext=#, or -d# for all levels, or filename.debug
-// to load from file, or -dl to load from default progname.debug file)
+// Initializes debug levels the file filename.debug
 //	- INIT_LOGGER
 //	- INIT_LOGGER_AND_WATCH
 //
 #define INIT_LOGGER(filename) \
-	char	longFilename[1024]; \
-	strcpy (longFilename, filename); \
-	if (!strstr(filename, ".debug")) { \
-		strcat (longFilename, ".debug"); \
-	} \
-	getDebugContext().setLevel(20); \
-	const char*     myargv[2] =  { "", longFilename }; \
-	LOFAR::Debug::initLevels (2, myargv, true); 
+	LOFAR::LFDebug::initLevels (string(filename) + ".debug"); 
 
 //# Note: 'watch' functionality not available
 #define INIT_LOGGER_AND_WATCH(filename,interval) \
@@ -96,15 +87,15 @@
 #ifdef ENABLE_TRACER
 #define ALLOC_TRACER_CONTEXT  \
 public:	\
-  static Debug::Context DebugContext; \
-  static inline Debug::Context & getDebugContext() \
+  static LFDebug::Context DebugContext; \
+  static inline LFDebug::Context & getDebugContext() \
             { return DebugContext; }
 
 #define INIT_TRACER_CONTEXT(scope, contextname)  \
-  Debug::Context scope::DebugContext(contextname)
+  LFDebug::Context scope::DebugContext(contextname)
 
 #define ALLOC_TRACER_ALIAS(other)  \
-  static inline Debug::Context & getDebugContext() \
+  static inline LFDebug::Context & getDebugContext() \
   { return other::getDebugContext(); }
 
 #define LOG_TRACE_LOOP(message)		cTrace(TRACE_LEVEL_LOOP, message)
@@ -140,7 +131,7 @@ public:	\
 //# LOG_TRACE_LIFETIME(_STR) (level, message|stream)
 //#
 #define LOG_TRACE_LIFETIME_STR(level, stream) \
-	Debug::Tracer objname; \
+	LFDebug::Tracer objname; \
     if( DebugCheck(level) ) { \
 		constructStream(stream) \
 		objname.startMsg (LOG4CPLUS_LEVEL(level), __FILE__, __LINE__, \
@@ -211,8 +202,8 @@ public:	\
 #define DebugCheck(level)	getDebugContext().check(level)
 
 #define DebugTestAndLog(level) \
-	if (DebugCheck(level) && LOFAR::Debug::stream_time()) \
-		LOFAR::Debug::getDebugStream()
+	if (DebugCheck(level) && LOFAR::LFDebug::stream_time()) \
+		LOFAR::LFDebug::getDebugStream()
 
 #define	constructStream(stream) \
 	std::ostringstream	oss; \
@@ -242,7 +233,7 @@ public:	\
 
 namespace LOFAR
 {
-  namespace Debug
+  namespace LFDebug
   {
     extern ostream * dbg_stream_p;
   
@@ -254,17 +245,9 @@ namespace LOFAR
     // sets level of given context
     bool setLevel (const string &context,int level);
      
-    void	initLevels (int argc,const char *argv[], bool save=true);
-    // saves debug to file (default: progname.debug) 
-    bool saveLevels ( string fname = "" );
-    // loads debug levels from file (default: progname.debug) 
-    void loadLevels ( string fname = "" );
-    // redirects debug output to file
-    int redirectOutput (const string &fname);
-
-    // copies string into static buffer. Thread-safe (i.e. each thread
-    // has its own buffer)
-    const char * staticBuffer( const string &str );
+    void initLevels (const string& fname);
+    // loads debug levels from file.
+    void loadLevels (const string& fname);
 
     // appends strings and inserts a space, if needed
     string& append( string &str,const string &str2,const string &sep = " " );
@@ -373,8 +356,6 @@ namespace LOFAR
 
 
   // Default DebugContext is the one in Debug.
-  using Debug::getDebugContext;
+  using LFDebug::getDebugContext;
 
 } // namespace LOFAR
-
-#endif	// file read before
