@@ -1,4 +1,4 @@
-//# Simulator.h: Abstract base class for simulator programs
+//# ApplicationHolder.h: Abstract base class for simulator programs
 //#
 //# Copyright (C) 2000, 2001
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,20 +20,20 @@
 //#
 //# $Id$
 
-#ifndef CEPFRAME_SIMULATOR_H
-#define CEPFRAME_SIMULATOR_H
+#ifndef CEPFRAME_APPLICATIONHOLDER_H
+#define CEPFRAME_APPLICATIONHOLDER_H
 
 #include <lofar_config.h>
 
-#include "CEPFrame/Simulator.h"
-#include "CEPFrame/Simul.h"
+#include <tinyCEP/TinyApplicationHolder.h>
+#include <CEPFrame/Composite.h>
 #include <Common/KeyValueMap.h>
 
 namespace LOFAR
 {
 
 /**
-   Simulator is the abstract base class for simulation application programs.
+   ApplicationHolder is the abstract base class for simulation application programs.
    It defines a few methods that need to be implemented in a derived class
    doing the simulation.
 
@@ -42,19 +42,13 @@ namespace LOFAR
    does the initialization and finalization of the transporter.
 */
 
-class Simulator
+class ApplicationHolder : public TinyApplicationHolder
 {
 public:
   /// Default constructor does nothing.
-  Simulator();
+  ApplicationHolder();
 
-  virtual ~Simulator();
-
-  /// Set the command line argument pointers (to be used by MPI).
-  void setarg (int argc, const char* argv[]);
-
-  /// Get the command line argument pointers (to be used by MPI).
-  void getarg (int* argc, const char** argv[]);
+  virtual ~ApplicationHolder();
 
   /** Define the simulation.
       It starts the transport and calls the define function.
@@ -76,9 +70,6 @@ public:
 
   /// Dump the simulation data by calling the dump function.
   void baseDump();
-
-  /// Set the output file of a data holder.
-  void baseDHFile (const string& dh, const string& name);
 
   /// Do a postrun on the simulation.
   void basePostrun();
@@ -107,40 +98,38 @@ protected:
   //@}
 
   /// Fill the pointer to the simulation.
-  void setSimul (const Simul&);
+  void setComposite (const Composite&);
 
   /// Get the pointer to the simulation.
-  Simul& getSimul();
-  const Simul& getSimul() const;
+  Composite& getComposite();
+  const Composite& getComposite() const;
 
 private:
   // Forbid copy constructor.
-  Simulator (const Simulator&);
+  ApplicationHolder (const ApplicationHolder&);
 
   // Forbid assignment.
-  Simulator& operator= (const Simulator&);
+  ApplicationHolder& operator= (const ApplicationHolder&);
 
 
   /** A pointer to the simulation.
       Note that the base destructor does not delete the pointer.
   */
-  Simul itsSimul;
+  Composite itsComposite;
 
-  int    itsArgc;
-  const char** itsArgv;
   bool   itsPreDone;
   bool   itsPostDone;
 };
 
 
-inline void Simulator::setSimul (const Simul& simul)
-  { itsSimul = simul; }
+inline void ApplicationHolder::setComposite (const Composite& comp)
+  { itsComposite = comp; }
 
-inline Simul& Simulator::getSimul()
-  { return itsSimul; }
+inline Composite& ApplicationHolder::getComposite()
+  { return itsComposite; }
 
-inline const Simul& Simulator::getSimul() const
-  { return itsSimul; }
+inline const Composite& ApplicationHolder::getComposite() const
+  { return itsComposite; }
 
 
 }

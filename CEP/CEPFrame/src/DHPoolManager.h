@@ -25,7 +25,7 @@
 
 /*  #include <lofar_config.h> */
 
-#include "CEPFrame/DataHolder.h"
+#include "Transport/DataHolder.h"
 
 namespace LOFAR
 {

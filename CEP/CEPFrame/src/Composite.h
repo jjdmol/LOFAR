@@ -1,4 +1,4 @@
-//# Simul.h: Class to hold a collection of Step objects
+//# Composite.h: Class to hold a collection of Step objects
 //#
 //# Copyright (C) 2000, 2001
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,101 +20,101 @@
 //#
 //# $Id$
 
-#ifndef CEPFRAME_SIMUL_H
-#define CEPFRAME_SIMUL_H
+#ifndef CEPFRAME_COMPOSITE_H
+#define CEPFRAME_COMPOSITE_H
 
 #include <lofar_config.h>
 
-#include "CEPFrame/Step.h"
-#include "CEPFrame/SimulRep.h"
+#include <CEPFrame/Step.h>
+#include <CEPFrame/CompositeRep.h>
 
 namespace LOFAR
 {
 
-class SimulBuilder;
+class NetworkBuilder;
 class CorbaController;
 
-/** The Simul class is related to the Step class following a Composit pattern.
-    Therefore, a Simul is a collection of Steps and/or Simuls
+/** The Composite class is related to the Step class following a Composite pattern.
+    Therefore, a Composite is a collection of Steps and/or Composites
     In the constructor the actual workholder is defined. 
     The actual simulation work is performed in the process() method
     (which calls the Workholder::process() method)
 */
 
-class Simul: public Step
+class Composite: public Step
 {
 public:
 
-  /** Create the Simul using the given WorkHolder.
-      The Simul must get a unique name. To make that process easy,
-      by default the suffix _n is added to the name when the Simul is
-      added to a Simul (where n is the sequence number starting with 0).
+  /** Create the Composite using the given WorkHolder.
+      The Composite must get a unique name. To make that process easy,
+      by default the suffix _n is added to the name when the Composite is
+      added to a Composite (where n is the sequence number starting with 0).
       The controllable argument is used to create a CorbaController object that 
-      will be connected to the VirtualMachine object of the SimulRep.
+      will be connected to the VirtualMachine object of the CompositeRep.
       The monitor argument is used to create a CorbaMonitor object (in Step class)
   */
-  explicit Simul (WorkHolder& worker,
-		  const string& name = "aSimul",
+  explicit Composite (WorkHolder& worker,
+		  const string& name = "aComposite",
 		  bool addNameSuffix = true,
 		  bool controllable = false, // flag for CorbaControl object
 		  bool monitor = false); // flag for Corbamonitor object
-  explicit Simul (WorkHolder* worker,
-		  const string& name = "aSimul",
+  explicit Composite (WorkHolder* worker,
+		  const string& name = "aComposite",
 		  bool addNameSuffix = true,
 		  bool controllable = false, // flag for CorbaControl object
 		  bool monitor = false); // flag for Corbamonitor object
 
   /// Construct the object using a builder object.
-  explicit Simul (SimulBuilder& builder,
-		  const string& name = "aSimul",
+  explicit Composite (NetworkBuilder& builder,
+		  const string& name = "aComposite",
 		  bool addNameSuffix = true,
 		  bool controllable = false,
 		  bool monitor = false);
 
-  /** Default constructor is only useful for a Simul class member
-      (as used in class Simulator).
-      It does not create a useful Simul object.
+  /** Default constructor is only useful for a Composite class member
+      (as used in class ApplicationHolder).
+      It does not create a useful Composite object.
   */
-  Simul();
+  Composite();
 
   /// Copy constructor (reference semantics).
-  Simul (const Simul&);
+  Composite (const Composite&);
 
-  /// Construct from an existing SimulRep (meant for internal use).
-  explicit Simul (SimulRep*);
+  /// Construct from an existing CompositeRep (meant for internal use).
+  explicit Composite (CompositeRep*);
 
-  virtual ~Simul();
+  virtual ~Composite();
   
   /// Assignment (reference semantics).
-  Simul& operator= (const Simul&);
+  Composite& operator= (const Composite&);
 
   /// Make a correct copy (reference semantics).
-  virtual Simul* clone() const;
+  virtual Composite* clone() const;
 
-  /** Add a Step to this Simul
+  /** Add a Step to this Composite
       An exception is thrown if the name of the step (possibly after
       adding the suffix (see constructor)) is not unique.
       Also an exception is thrown if the step has already been added to
       another simul.
   */
   void addStep (const Step* aStep)
-    { itsSimul->addStep (*aStep); }
+    { itsComposite->addStep (*aStep); }
   void addStep (const Step& aStep)
-    { itsSimul->addStep (aStep); }
+    { itsComposite->addStep (aStep); }
 
-  /// Get all Steps in the Simul.
+  /// Get all Steps in the Composite.
   const list<Step*>& getSteps() const
-    { return itsSimul->getSteps(); }
+    { return itsComposite->getSteps(); }
 
-  /// Is this Simul is not part of another Simul?
+  /// Is this Composite is not part of another Composite?
   bool isHighestLevel() const
-    { return itsSimul->isHighestLevel(); }
-  /// Clear the highest level flag (thus it is part of another Simul).
+    { return itsComposite->isHighestLevel(); }
+  /// Clear the highest level flag (thus it is part of another Composite).
   void setNotHighestLevel()
-    { itsSimul->setNotHighestLevel(); }
+    { itsComposite->setNotHighestLevel(); }
 
   /** Connect source and target DataHolders which must be
-      dataHolders of this Simul or of a Step inside this Simul.
+      dataHolders of this Composite or of a Step inside this Composite.
       The connection is done by means of names. A name can be given in 4 ways:
       - step.dataholder  to specify a dataholder in a step.
       - step             to specify a step
@@ -131,80 +131,81 @@ public:
 	   dhin1 of step3.
   */
   bool connect (const string& sourceName, const string& targetName,
-		const TransportHolder& prototype = TRANSPORTER())
-    { return itsSimul->connect (sourceName, targetName, prototype); }
+		const TransportHolder& prototype,
+		bool blockingComm=true)
+    { return itsComposite->connect (sourceName, targetName, prototype,
+				    blockingComm); }
 		
 
-  /// Connect this Simul to an array of Simuls.
-  bool connectInputArray (Simul* aSimul[],   // pointer to  array of ptrs to Steps
-			  int    nrItems=1, // nr of Steps in aStep[] array
-			  const TransportHolder& prototype = TRANSPORTER());
+  /// Connect this Composite to an array of Composites.
+  bool connectInputArray (Composite* aComposite[],   // pointer to  array of ptrs to Steps
+			  int    nrItems, // nr of Steps in aStep[] array
+			  const TransportHolder& prototype,
+			  bool blockingComm=true);
 
 
   /**
      Connect all input DataHolders in the aStep[] array to the input
      DataHolders of the current simul.
      This connection is needed in order to let the framework transport
-     the data read by the Simul to the DataHolders of the first Steps
-     in the Simul.
+     the data read by the Composite to the DataHolders of the first Steps
+     in the Composite.
   */
   bool connectInputToArray (Step* aStep[],  // pointer to  array of ptrs to Steps
-			    int    nrItems=1, // nr of Steps in aStep[] array
-			    int    skip=0,     // skip in inputs in aStep 
-			    int    offset=0,  // start with this input nr in aStep
-			    const TransportHolder& prototype = TRANSPORTER())
-    { return itsSimul->connectInputToArray (aStep, nrItems, skip,
-					    offset, prototype); }
+			    int    nrItems, // nr of Steps in aStep[] array
+			    int    skip,     // skip in inputs in aStep 
+			    int    offset,  // start with this input nr in aStep
+			    const TransportHolder& prototype,
+			    bool blockingComm=true)
+    { return itsComposite->connectInputToArray (aStep, nrItems, skip,
+						offset, prototype, blockingComm); }
 
   /**
      Connect all output DataHolders in the aStep[] array to the output
      DataHolders of the current simul.
      This connection is needed in order to let the framework transport
-     the data read by the Simul to the DataHolders of the first Steps
-     in the Simul.
+     the data read by the Composite to the DataHolders of the first Steps
+     in the Composite.
    */
   bool connectOutputToArray (Step* aStep[],  // pointer to  array of ptrs to Steps
-			     int    nrItems=1, // nr of Steps in aStep[] array
-			     int    skip=0,     // skip in inputs in aStep 
-			     int    offset=0,  // start with this input nr in aStep
-			     const TransportHolder& prototype = TRANSPORTER())
-    { return itsSimul->connectOutputToArray (aStep, nrItems, skip,
-					     offset, prototype); }
+			     int    nrItems, // nr of Steps in aStep[] array
+			     int    skip,     // skip in inputs in aStep 
+			     int    offset,  // start with this input nr in aStep
+			     const TransportHolder& prototype,
+			     bool blockingComm=true)
+    { return itsComposite->connectOutputToArray (aStep, nrItems, skip,
+						 offset, prototype, blockingComm); }
 
   /// Obtain a pointer to the VirtualMachine object
   VirtualMachine& getVM()
-    { return itsSimul->getVM(); }
-
-  /// Set the output file for the given data holder.
-  /// As in connect, the dhName has to be given as "step.dhname".
-  /// If the file name is empty, the output file is closed.
-  bool setDHFile (const string& dhName, const string& fileName)
-    { return itsSimul->setDHFile (dhName, fileName); }
+    { return itsComposite->getVM(); }
 
 private:
   /// Helper for ConnectInputToArray 
   bool connect_thisIn_In (Step* aStep,          
 			  int    thisChannelOffset,
 			  int    thatChannelOffset,
-			  int    skip=0,
-			  const TransportHolder& prototype = TRANSPORTER())
-    { return itsSimul->connect_thisIn_In (aStep, thisChannelOffset,
+			  int    skip,
+			  const TransportHolder& prototype ,
+			  bool blockingComm=true)
+    { return itsComposite->connect_thisIn_In (aStep, thisChannelOffset,
 					  thatChannelOffset, skip,
-					  prototype); }
+					  prototype, blockingComm); }
 
   /// Helper for ConnectOutputToArray 
   bool connect_thisOut_Out (Step* aStep,          
-			    int    thisChannelOffset=0,
-			    int    thatChannelOffset=0,
-			    int    skip=0,
-			    const TransportHolder& prototype = TRANSPORTER())
-    { return itsSimul->connect_thisOut_Out (aStep, thisChannelOffset,
-					    thatChannelOffset, skip,
-					    prototype); }
+			    int    thisChannelOffset,
+			    int    thatChannelOffset,
+			    int    skip,
+			    const TransportHolder& prototype ,
+			    bool blockingComm=true)
+    { return itsComposite->connect_thisOut_Out (aStep, thisChannelOffset,
+						thatChannelOffset, skip,
+						prototype, blockingComm); }
 
 
   // Pointer to the actual simul object.
-  SimulRep* itsSimul;
+  CompositeRep* itsComposite;
 };
 
 }

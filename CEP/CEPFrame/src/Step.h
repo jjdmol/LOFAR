@@ -26,14 +26,13 @@
 #include <lofar_config.h>
 
 //# Includes
-#include "CEPFrame/StepRep.h"
-#include TRANSPORTERINCLUDE
+#include <CEPFrame/StepRep.h>
 
 namespace LOFAR
 {
 
 //# Forward Declarations
-class Simul;
+class Composite;
 
 
 /** The Step class is the basic building block for simulations.
@@ -51,7 +50,7 @@ public:
   /** Build the Step using the given WorkHolder.
       The Step must get a unique name. To make that process easy,
       by default the suffix _n is added to the name when the Step is
-      added to a Simul (where n is the sequence number starting with 0).
+      added to a Composite (where n is the sequence number starting with 0).
   */
   explicit Step (WorkHolder& worker,
 		 const string& name = "aStep",
@@ -101,9 +100,9 @@ public:
   void dump() const
     { itsRep->dump(); }
 
-  /// Is the Step a Simul?
-  bool isSimul() const
-    { return itsRep->isSimul(); }
+  /// Is the Step a Composite?
+  bool isComposite() const
+    { return itsRep->isComposite(); }
 
   /// get WorkHolder.
   WorkHolder* getWorker()
@@ -115,13 +114,6 @@ public:
   /// Get i-th output DataHolder.
   DataHolder& getOutData (int dhIndex)
     { return itsRep->getOutData (dhIndex); }
-
-  /// Get Transport object for i-th input DataHolder.
-  Transport& getInTransport (int dhIndex) const
-    { return itsRep->getInTransport (dhIndex); }
-  /// Get Tranport object for i-th output DataHolder.
-  Transport& getOutTransport (int dhIndex) const
-    { return itsRep->getOutTransport (dhIndex); }
 
   /// Get ID of the Step.
   //  It will be obtained from the zeroth InData object in the Workholder
@@ -139,7 +131,7 @@ public:
   /**
      Set Node numbers for both In and OutData.
      Set application number as well.
-     This is done recursively, thus executed for all Steps in a Simul.
+     This is done recursively, thus executed for all Steps in a Composite.
   */
   void runOnNode (int aNode, int applNr=0)
     { itsRep->runOnNode (aNode, applNr); }
@@ -152,8 +144,8 @@ public:
   void setName (const string& name)
     { itsRep->setName(name); }
 
-  /// Get the parent simul object.
-  Simul getParent() const;
+  /// Get the parent Composite object.
+  Composite getParent() const;
 
   /** Basic connect function.
       Connect nrDH output DataHolders of aStep to input DataHolders of
@@ -162,12 +154,14 @@ public:
       DataHolders in input and output.
   */
   bool connect (Step* aStep, 
-		int thisDHIndex=0,
-		int thatDHIndex=0,
-		int nrDH=-1,
-		const TransportHolder& prototype = TRANSPORTER())
+		int thisDHIndex,
+		int thatDHIndex,
+		int nrDH,
+		const TransportHolder& prototype,
+		bool blockingComm = true)
     { return itsRep->connectRep (aStep->itsRep, thisDHIndex,
-				 thatDHIndex, nrDH, prototype); }
+				 thatDHIndex, nrDH, prototype,
+				 blockingComm); }
   
   /**
      Connect all output DataHolders of aStep to the input DataHolders of
@@ -175,63 +169,56 @@ public:
      This is the normal way of connecting two Steps to each other.
   */
   bool connectInput (Step* aStep,
-		     const TransportHolder& prototype = TRANSPORTER())
-    { return itsRep->connectInput (aStep, prototype); }
+		     const TransportHolder& prototype,
+		     bool blockingComm = true)
+    { return itsRep->connectInput (aStep, prototype, blockingComm); }
 
   /**
      Connect all output DataHolders in the array of Steps (aStep[]) to
      the input DataHolders of the current step. This is the normal way
-     of connecting the output of multiple Steps to a Simul object.
+     of connecting the output of multiple Steps to a Composite object.
      If the nrSteps argument is -1, it is assumed that
      each of the Steps in the array has only one input DataHolder
-     which will be connected to the output DataHolders of the Simul.
+     which will be connected to the output DataHolders of the Composite.
   */
   bool connectInputArray (Step* aStep[],   // pointer to array of ptrs to Steps
-			  int   nrSteps=-1, // nr of Steps in aStep[] array
-			  const TransportHolder& prototype = TRANSPORTER())
-    { return itsRep->connectInputArray (aStep, nrSteps, prototype); }
+			  int   nrSteps,   // nr of Steps in aStep[] array
+			  const TransportHolder& prototype,
+			  bool blockingComm = true)
+    { return itsRep->connectInputArray (aStep, nrSteps, prototype,
+					blockingComm); }
 
   /**
      Connect all input DataHolders in the array of Steps (aStep[]) to
      the output DataHolders of the current step. This is the normal
-     way of connecting the output of a Simul object to Steps.
+     way of connecting the output of a Composite object to Steps.
      If the nrSteps argument is -1, it is assumed that
      each of the Steps in the array has only one output DataHolder
-     which will be connected to the input DataHolders of the Simul.
+     which will be connected to the input DataHolders of the Composite.
   */
   bool connectOutputArray (Step* aStep[],   // pointer to array of ptrs to Steps
-			   int   nrSteps=-1, // nr of Steps in aStep[] array
-			   const TransportHolder& prototype = TRANSPORTER())
-    { return itsRep->connectOutputArray (aStep, nrSteps, prototype); }
+			   int   nrSteps,   // nr of Steps in aStep[] array
+			   const TransportHolder& prototype,
+			   bool blockingComm=true)
+    { return itsRep->connectOutputArray (aStep, nrSteps, prototype,
+					 blockingComm); }
 
-  /** 
-      Connect named parameter of step1 with that of step2 with given prototype
-  */ 
-  bool connectParam(const string& name, Step* aStep,
-                    const TransportHolder& prototype)
-    { return itsRep->connectParam(name, aStep, prototype); }
-
-  /** Check if all connections are correct and if everything is connected.
-      By default messages are written to cerr.
+  /** Replace the connections with using a specified TransportHolder.
   */
-  bool checkConnections (ostream& os=cerr)
-    { return checkConnections (os, 0); }
+  void replaceConnectionsWith(const TransportHolder& newTH, 
+			      bool blockingComm=true)
+    { return itsRep->replaceConnectionsWith(newTH, blockingComm); }
 
-  /** Shortcut the connections by removing all possible Simul
-      connections. In this way the steps in different simuls communicate
-      directly.
-      Note that hereafter checkConnections() will give more messages.
+  /** Set properties of a communication channel: synchronisity and sharing of DataHolders
+      by input and output.
   */
-  void shortcutConnections()
-    { return itsRep->shortcutConnections(); }
+  void setInBufferingProperties(int channel, bool synchronous, 
+                                bool shareDHs=false)
+    { return itsRep->setInBufferingProperties(channel, synchronous, shareDHs);}
 
-  /** Simplify the connections by using TH_Mem for all connections between
-      Steps running on the same node.
-  */
-  void simplifyConnections()
-    { return itsRep->simplifyConnections(); }
-  void optimizeConnectionsWith(const TransportHolder& newTH)
-    { return itsRep->optimizeConnectionsWith(newTH); }
+  void setOutBufferingProperties(int channel, bool synchronous, 
+                                 bool shareDHs=false)
+    { return itsRep->setOutBufferingProperties(channel, synchronous, shareDHs);}
 
   /** SetRate methods:
       These methods set the rate at which input/output dataholders are
@@ -277,13 +264,9 @@ protected:
   Step()
     : itsRep(0) {}
 
-  /// Check if all connections are correct.
-  bool checkConnections (ostream& os, const StepRep* parent)
-    { return itsRep->checkConnections (os, parent); }
-
-  /// Get the internal rep object (to be used by StepRep and SimulRep).
+  /// Get the internal rep object (to be used by StepRep and CompositeRep).
   friend class StepRep;
-  friend class SimulRep;
+  friend class CompositeRep;
   StepRep* getRep()
     { return itsRep; }
   const StepRep* getRep() const

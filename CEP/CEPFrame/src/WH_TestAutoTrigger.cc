@@ -32,8 +32,8 @@ namespace LOFAR
   : WorkHolder       (1, 1, name,"WH_TestAutoTrigger"),
     itsEventCount(0)
 {
-  getDataManager().addInDataHolder(0, new DH_Tester("in"), true);
-  getDataManager().addOutDataHolder(0, new DH_Tester("out"), true);
+  getDataManager().addInDataHolder(0, new DH_Tester("in"));
+  getDataManager().addOutDataHolder(0, new DH_Tester("out"));
 
   // switch both the input and output channel triggers off
   getDataManager().setAutoTriggerIn(0, false);

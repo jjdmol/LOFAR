@@ -26,15 +26,14 @@
 
 #include <lofar_config.h>
 
-#include "CEPFrame/DataHolder.h"
+#include "Transport/DataHolder.h"
 #include <Common/lofar_complex.h>
 
 namespace LOFAR
 {
 
 /**
-   This class is an example DataHolder which is only used in the
-   Example programs.
+   This class is an example DataHolder.
 */
 
 class DH_Example: public DataHolder
@@ -61,44 +60,51 @@ public:
   /// Deallocate the buffers.
   virtual void postprocess();
 
-  /// Get write access to the Buffer in the DataPacket.
+  /// Get write access to the Buffer.
   BufferType* getBuffer();
-  /// Get read access to the Buffer in the DataPacket.
+  /// Get read access to the Buffer.
   const BufferType* getBuffer() const;
 
-protected:
-  // Definition of the DataPacket type.
-  class DataPacket: public DataHolder::DataPacket
-  {
-  public:
-    DataPacket() : itsCounter(0) {};
-
-    int itsCounter;
-    BufferType itsFill;         // to ensure alignment
-  };
+ /// overload the getcursize method;
+  /// reported data size may be altered with setDataPacketSize() method
+  int  getCurDataSize() ;
+  void setCurDataSize(const int nbytes) ;
 
 private:
   /// Forbid assignment.
   DH_Example& operator= (const DH_Example&);
 
+  // Fill the pointers (itsCounter and itsBuffer) to the data in the blob.
+  virtual void fillDataPointers();
 
-  DataPacket*  itsDataPacket;
+  int*         itsCounter;
   BufferType*  itsBuffer;
   unsigned int itsBufSize;
+  int          itsCurDataPacketSize;
 };
 
 
 inline void DH_Example::setCounter (int counter)
-  { itsDataPacket->itsCounter = counter; }
+  { *itsCounter = counter; }
 
 inline int DH_Example::getCounter() const
-  { return itsDataPacket->itsCounter; }
+  { return *itsCounter; }
 
 inline DH_Example::BufferType* DH_Example::getBuffer()
   { return itsBuffer; }
 
 inline const DH_Example::BufferType* DH_Example::getBuffer() const
   { return itsBuffer; }
+
+inline int DH_Example::getCurDataSize() 
+  { return itsCurDataPacketSize; }
+   
+inline void DH_Example::setCurDataSize(const int nbytes)
+  {  
+    //! DbgAssertStr(nbytes <= (int)itsBufSize); 
+    itsCurDataPacketSize = nbytes;
+    return ;
+  }
 
 }
 

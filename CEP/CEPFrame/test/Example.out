@@ -1,11 +1,7 @@
 CEPFrame Processor -1 of 1 operational  (appl=0)
-CheckConn before shortcut:
-Output DataHolder out_0 of Step aSimul not connected to input of next Step
-CheckConn after shortcut:
-Output DataHolder out_0 of Step aSimul not connected to input of next Step
 
-Start Processing simul Example1
-Call simul.process() 0
+Start Processing composit Example1
+Call composit.process() 0
 Step1
 Processing Data! (0,0),(0,0)   --->  (2,0),(2,0)
 Step2
@@ -14,7 +10,7 @@ Step3
 Processing Data! (0,0),(0,0)   --->  (4,0),(4,0)
 Step4
 Processing Data! (0,0),(0,0)   --->  (5,0),(5,0)
-Call simul.process() 1
+Call composit.process() 1
 Step1
 Processing Data! (0,0),(0,0)   --->  (3,0),(3,0)
 Step2
@@ -23,7 +19,7 @@ Step3
 Processing Data! (0,0),(0,0)   --->  (5,0),(5,0)
 Step4
 Processing Data! (0,0),(0,0)   --->  (6,0),(6,0)
-Call simul.process() 2
+Call composit.process() 2
 Step1
 Processing Data! (0,0),(0,0)   --->  (4,0),(4,0)
 Step2
@@ -32,7 +28,7 @@ Step3
 Processing Data! (0,0),(0,0)   --->  (6,0),(6,0)
 Step4
 Processing Data! (0,0),(0,0)   --->  (7,0),(7,0)
-Call simul.process() 3
+Call composit.process() 3
 Step1
 Processing Data! (0,0),(0,0)   --->  (5,0),(5,0)
 Step2
@@ -41,7 +37,7 @@ Step3
 Processing Data! (0,0),(0,0)   --->  (7,0),(7,0)
 Step4
 Processing Data! (0,0),(0,0)   --->  (8,0),(8,0)
-Call simul.process() 4
+Call composit.process() 4
 Step1
 Processing Data! (0,0),(0,0)   --->  (6,0),(6,0)
 Step2
@@ -50,7 +46,7 @@ Step3
 Processing Data! (0,0),(0,0)   --->  (8,0),(8,0)
 Step4
 Processing Data! (0,0),(0,0)   --->  (9,0),(9,0)
-Call simul.process() 5
+Call composit.process() 5
 Step1
 Processing Data! (0,0),(0,0)   --->  (7,0),(7,0)
 Step2
@@ -59,7 +55,7 @@ Step3
 Processing Data! (0,0),(0,0)   --->  (9,0),(9,0)
 Step4
 Processing Data! (0,0),(0,0)   --->  (10,0),(10,0)
-Call simul.process() 6
+Call composit.process() 6
 Step1
 Processing Data! (0,0),(0,0)   --->  (8,0),(8,0)
 Step2
@@ -68,7 +64,7 @@ Step3
 Processing Data! (0,0),(0,0)   --->  (10,0),(10,0)
 Step4
 Processing Data! (0,0),(0,0)   --->  (11,0),(11,0)
-Call simul.process() 7
+Call composit.process() 7
 Step1
 Processing Data! (0,0),(0,0)   --->  (9,0),(9,0)
 Step2
@@ -77,7 +73,7 @@ Step3
 Processing Data! (0,0),(0,0)   --->  (11,0),(11,0)
 Step4
 Processing Data! (0,0),(0,0)   --->  (12,0),(12,0)
-Call simul.process() 8
+Call composit.process() 8
 Step1
 Processing Data! (0,0),(0,0)   --->  (10,0),(10,0)
 Step2
@@ -86,7 +82,7 @@ Step3
 Processing Data! (0,0),(0,0)   --->  (12,0),(12,0)
 Step4
 Processing Data! (0,0),(0,0)   --->  (13,0),(13,0)
-Call simul.process() 9
+Call composit.process() 9
 Step1
 Processing Data! (0,0),(0,0)   --->  (11,0),(11,0)
 Step2
@@ -108,42 +104,38 @@ WH_Example Step3 Buffers:
 WH_Example Step4 Buffers:
 (14,0),(14,0)
 
-END OF SIMUL on node -1
-CheckConn before shortcut:
-Output DataHolder out_0 of Step aSimul not connected to input of next Step
-CheckConn after shortcut:
-Output DataHolder out_0 of Step aSimul not connected to input of next Step
+END OF COMPOSIT on node -1
 
-Start Processing simul Example2
-Call simul.process() 0
+Start Processing composit Example2
+Call composit.process() 0
 Step1
 Processing Data! (0,0),(0,0)   --->  (2,0),(2,0)
 Step2
 Processing Data! (0,0),(0,0)   --->  (6,0),(6,0)
 Step3
 Processing Data! (0,0),(0,0)   --->  (21,0),(21,0)
-Call simul.process() 1
+Call composit.process() 1
 Step1
 Processing Data! (0,0),(0,0)   --->  (3,0),(3,0)
 Step2
 Processing Data! (0,0),(0,0)   --->  (8,0),(8,0)
 Step3
 Processing Data! (0,0),(0,0)   --->  (27,0),(27,0)
-Call simul.process() 2
+Call composit.process() 2
 Step1
 Processing Data! (0,0),(0,0)   --->  (4,0),(4,0)
 Step2
 Processing Data! (0,0),(0,0)   --->  (10,0),(10,0)
 Step3
 Processing Data! (0,0),(0,0)   --->  (33,0),(33,0)
-Call simul.process() 3
+Call composit.process() 3
 Step1
 Processing Data! (0,0),(0,0)   --->  (5,0),(5,0)
 Step2
 Processing Data! (0,0),(0,0)   --->  (12,0),(12,0)
 Step3
 Processing Data! (0,0),(0,0)   --->  (39,0),(39,0)
-Call simul.process() 4
+Call composit.process() 4
 Step1
 Processing Data! (0,0),(0,0)   --->  (6,0),(6,0)
 Step2
@@ -164,14 +156,10 @@ WH_Example Step2 Buffers:
 WH_Example Step3 Buffers:
 (45,0),(45,0)
 
-END OF SIMUL on node -1
-CheckConn before shortcut:
-Output DataHolder out_0 of Step aSimul not connected to input of next Step
-CheckConn after shortcut:
-Output DataHolder out_0 of Step aSimul not connected to input of next Step
+END OF COMPOSIT on node -1
 
-Start Processing simul Example3
-Call simul.process() 0
+Start Processing composit Example3
+Call composit.process() 0
 Step1
 Processing Data! (0,0),(0,0)   --->  (2,0),(2,0)
 Step2a
@@ -180,7 +168,7 @@ Step2b
 Processing Data! (0,0),(0,0)   --->  (3,0),(3,0)
 Step3
 Processing Data! (0,0),(0,0)   --->  (8,0),(8,0)
-Call simul.process() 1
+Call composit.process() 1
 Step1
 Processing Data! (0,0),(0,0)   --->  (3,0),(3,0)
 Step2a
@@ -189,7 +177,7 @@ Step2b
 Processing Data! (0,0),(0,0)   --->  (4,0),(4,0)
 Step3
 Processing Data! (0,0),(0,0)   --->  (10,0),(10,0)
-Call simul.process() 2
+Call composit.process() 2
 Step1
 Processing Data! (0,0),(0,0)   --->  (4,0),(4,0)
 Step2a
@@ -198,7 +186,7 @@ Step2b
 Processing Data! (0,0),(0,0)   --->  (5,0),(5,0)
 Step3
 Processing Data! (0,0),(0,0)   --->  (12,0),(12,0)
-Call simul.process() 3
+Call composit.process() 3
 Step1
 Processing Data! (0,0),(0,0)   --->  (5,0),(5,0)
 Step2a
@@ -207,7 +195,7 @@ Step2b
 Processing Data! (0,0),(0,0)   --->  (6,0),(6,0)
 Step3
 Processing Data! (0,0),(0,0)   --->  (14,0),(14,0)
-Call simul.process() 4
+Call composit.process() 4
 Step1
 Processing Data! (0,0),(0,0)   --->  (6,0),(6,0)
 Step2a
@@ -230,27 +218,10 @@ WH_Example Step2b Buffers:
 WH_Example Step3 Buffers:
 (16,0),(16,0)
 
-END OF SIMUL on node -1
-CheckConn before shortcut:
-Output DataHolder out_0 of Step simul1 not connected to input of next Step
-CheckConn after shortcut:
-Output DataHolder out_0 of Step simul1 not connected to input of next Step
-Output DataHolder out_0 of Step Step1 connected to input of a Step in another Simul
-Input DataHolder in_0 of Simul simcomp2 not connected to its first Step(s)
-Input DataHolder in_0 of Step simcomp2 not connected to output of previous Step
-Output DataHolder out_0 of Simul simcomp2 not connected to its last Step(s)
-Output DataHolder out_0 of Step simcomp2 not connected to input of next Step
-Input DataHolder in_0 of Simul simcomp1 not connected to its first Step(s)
-Input DataHolder in_0 of Step simcomp1 not connected to output of previous Step
-Output DataHolder out_0 of Simul simcomp1 not connected to its last Step(s)
-Output DataHolder out_0 of Step simcomp1 not connected to input of next Step
-Input DataHolder in_0 of Step Step2 connected to output of a Step in another Simul
-Output DataHolder out_0 of Step Step3 connected to input of a Step in another Simul
-Input DataHolder in_0 of Step Step4 connected to output of a Step in another Simul
-Output DataHolder out_0 of Step Step4 connected to input of a Step in another Simul
+END OF COMPOSIT on node -1
 
-Start Processing simul Example4
-Call simul.process() 0
+Start Processing composit Example4
+Call composit.process() 0
 Step1
 Processing Data! (0,0),(0,0)   --->  (2,0),(2,0)
 Step2
@@ -259,7 +230,7 @@ Step3
 Processing Data! (0,0),(0,0)   --->  (4,0),(4,0)
 Step4
 Processing Data! (0,0),(0,0)   --->  (5,0),(5,0)
-Call simul.process() 1
+Call composit.process() 1
 Step1
 Processing Data! (0,0),(0,0)   --->  (3,0),(3,0)
 Step2
@@ -268,7 +239,7 @@ Step3
 Processing Data! (0,0),(0,0)   --->  (5,0),(5,0)
 Step4
 Processing Data! (0,0),(0,0)   --->  (6,0),(6,0)
-Call simul.process() 2
+Call composit.process() 2
 Step1
 Processing Data! (0,0),(0,0)   --->  (4,0),(4,0)
 Step2
@@ -277,7 +248,7 @@ Step3
 Processing Data! (0,0),(0,0)   --->  (6,0),(6,0)
 Step4
 Processing Data! (0,0),(0,0)   --->  (7,0),(7,0)
-Call simul.process() 3
+Call composit.process() 3
 Step1
 Processing Data! (0,0),(0,0)   --->  (5,0),(5,0)
 Step2
@@ -286,7 +257,7 @@ Step3
 Processing Data! (0,0),(0,0)   --->  (7,0),(7,0)
 Step4
 Processing Data! (0,0),(0,0)   --->  (8,0),(8,0)
-Call simul.process() 4
+Call composit.process() 4
 Step1
 Processing Data! (0,0),(0,0)   --->  (6,0),(6,0)
 Step2
@@ -295,7 +266,7 @@ Step3
 Processing Data! (0,0),(0,0)   --->  (8,0),(8,0)
 Step4
 Processing Data! (0,0),(0,0)   --->  (9,0),(9,0)
-Call simul.process() 5
+Call composit.process() 5
 Step1
 Processing Data! (0,0),(0,0)   --->  (7,0),(7,0)
 Step2
@@ -304,7 +275,7 @@ Step3
 Processing Data! (0,0),(0,0)   --->  (9,0),(9,0)
 Step4
 Processing Data! (0,0),(0,0)   --->  (10,0),(10,0)
-Call simul.process() 6
+Call composit.process() 6
 Step1
 Processing Data! (0,0),(0,0)   --->  (8,0),(8,0)
 Step2
@@ -313,7 +284,7 @@ Step3
 Processing Data! (0,0),(0,0)   --->  (10,0),(10,0)
 Step4
 Processing Data! (0,0),(0,0)   --->  (11,0),(11,0)
-Call simul.process() 7
+Call composit.process() 7
 Step1
 Processing Data! (0,0),(0,0)   --->  (9,0),(9,0)
 Step2
@@ -322,7 +293,7 @@ Step3
 Processing Data! (0,0),(0,0)   --->  (11,0),(11,0)
 Step4
 Processing Data! (0,0),(0,0)   --->  (12,0),(12,0)
-Call simul.process() 8
+Call composit.process() 8
 Step1
 Processing Data! (0,0),(0,0)   --->  (10,0),(10,0)
 Step2
@@ -331,7 +302,7 @@ Step3
 Processing Data! (0,0),(0,0)   --->  (12,0),(12,0)
 Step4
 Processing Data! (0,0),(0,0)   --->  (13,0),(13,0)
-Call simul.process() 9
+Call composit.process() 9
 Step1
 Processing Data! (0,0),(0,0)   --->  (11,0),(11,0)
 Step2
@@ -347,9 +318,9 @@ WH_Example Example4 Buffers:
 WH_Example Step1 Buffers:
 (11,0),(11,0)
 WH_Example Composite2 Buffers:
-(0,0),(0,0)
+(14,0),(14,0)
 WH_Example Composite1 Buffers:
-(0,0),(0,0)
+(13,0),(13,0)
 WH_Example Step2 Buffers:
 (12,0),(12,0)
 WH_Example Step3 Buffers:
@@ -357,14 +328,10 @@ WH_Example Step3 Buffers:
 WH_Example Step4 Buffers:
 (14,0),(14,0)
 
-END OF SIMUL on node -1
-CheckConn before shortcut:
-Output DataHolder out_0 of Step aSimul not connected to input of next Step
-CheckConn after shortcut:
-Output DataHolder out_0 of Step aSimul not connected to input of next Step
+END OF COMPOSIT on node -1
 
-Start Processing simul Example1
-Call simul.process() 0
+Start Processing composit Example1
+Call composit.process() 0
 Step1
 Processing Data! (0,0),(0,0)   --->  (2,0),(2,0)
 Step2
@@ -373,7 +340,7 @@ Step3
 Processing Data! (0,0),(0,0)   --->  (4,0),(4,0)
 Step4
 Processing Data! (0,0),(0,0)   --->  (5,0),(5,0)
-Call simul.process() 1
+Call composit.process() 1
 Step1
 Processing Data! (0,0),(0,0)   --->  (3,0),(3,0)
 Step2
@@ -382,7 +349,7 @@ Step3
 Processing Data! (0,0),(0,0)   --->  (5,0),(5,0)
 Step4
 Processing Data! (0,0),(0,0)   --->  (6,0),(6,0)
-Call simul.process() 2
+Call composit.process() 2
 Step1
 Processing Data! (0,0),(0,0)   --->  (4,0),(4,0)
 Step2
@@ -391,7 +358,7 @@ Step3
 Processing Data! (0,0),(0,0)   --->  (6,0),(6,0)
 Step4
 Processing Data! (0,0),(0,0)   --->  (7,0),(7,0)
-Call simul.process() 3
+Call composit.process() 3
 Step1
 Processing Data! (0,0),(0,0)   --->  (5,0),(5,0)
 Step2
@@ -400,7 +367,7 @@ Step3
 Processing Data! (0,0),(0,0)   --->  (7,0),(7,0)
 Step4
 Processing Data! (0,0),(0,0)   --->  (8,0),(8,0)
-Call simul.process() 4
+Call composit.process() 4
 Step1
 Processing Data! (0,0),(0,0)   --->  (6,0),(6,0)
 Step2
@@ -409,7 +376,7 @@ Step3
 Processing Data! (0,0),(0,0)   --->  (8,0),(8,0)
 Step4
 Processing Data! (0,0),(0,0)   --->  (9,0),(9,0)
-Call simul.process() 5
+Call composit.process() 5
 Step1
 Processing Data! (0,0),(0,0)   --->  (7,0),(7,0)
 Step2
@@ -418,7 +385,7 @@ Step3
 Processing Data! (0,0),(0,0)   --->  (9,0),(9,0)
 Step4
 Processing Data! (0,0),(0,0)   --->  (10,0),(10,0)
-Call simul.process() 6
+Call composit.process() 6
 Step1
 Processing Data! (0,0),(0,0)   --->  (8,0),(8,0)
 Step2
@@ -427,7 +394,7 @@ Step3
 Processing Data! (0,0),(0,0)   --->  (10,0),(10,0)
 Step4
 Processing Data! (0,0),(0,0)   --->  (11,0),(11,0)
-Call simul.process() 7
+Call composit.process() 7
 Step1
 Processing Data! (0,0),(0,0)   --->  (9,0),(9,0)
 Step2
@@ -436,7 +403,7 @@ Step3
 Processing Data! (0,0),(0,0)   --->  (11,0),(11,0)
 Step4
 Processing Data! (0,0),(0,0)   --->  (12,0),(12,0)
-Call simul.process() 8
+Call composit.process() 8
 Step1
 Processing Data! (0,0),(0,0)   --->  (10,0),(10,0)
 Step2
@@ -445,7 +412,7 @@ Step3
 Processing Data! (0,0),(0,0)   --->  (12,0),(12,0)
 Step4
 Processing Data! (0,0),(0,0)   --->  (13,0),(13,0)
-Call simul.process() 9
+Call composit.process() 9
 Step1
 Processing Data! (0,0),(0,0)   --->  (11,0),(11,0)
 Step2
@@ -467,42 +434,38 @@ WH_Example Step3 Buffers:
 WH_Example Step4 Buffers:
 (14,0),(14,0)
 
-END OF SIMUL on node -1
-CheckConn before shortcut:
-Output DataHolder out_0 of Step aSimul not connected to input of next Step
-CheckConn after shortcut:
-Output DataHolder out_0 of Step aSimul not connected to input of next Step
+END OF COMPOSIT on node -1
 
-Start Processing simul Example2
-Call simul.process() 0
+Start Processing composit Example2
+Call composit.process() 0
 Step1
 Processing Data! (0,0),(0,0)   --->  (2,0),(2,0)
 Step2
 Processing Data! (0,0),(0,0)   --->  (6,0),(6,0)
 Step3
 Processing Data! (0,0),(0,0)   --->  (21,0),(21,0)
-Call simul.process() 1
+Call composit.process() 1
 Step1
 Processing Data! (0,0),(0,0)   --->  (3,0),(3,0)
 Step2
 Processing Data! (0,0),(0,0)   --->  (8,0),(8,0)
 Step3
 Processing Data! (0,0),(0,0)   --->  (27,0),(27,0)
-Call simul.process() 2
+Call composit.process() 2
 Step1
 Processing Data! (0,0),(0,0)   --->  (4,0),(4,0)
 Step2
 Processing Data! (0,0),(0,0)   --->  (10,0),(10,0)
 Step3
 Processing Data! (0,0),(0,0)   --->  (33,0),(33,0)
-Call simul.process() 3
+Call composit.process() 3
 Step1
 Processing Data! (0,0),(0,0)   --->  (5,0),(5,0)
 Step2
 Processing Data! (0,0),(0,0)   --->  (12,0),(12,0)
 Step3
 Processing Data! (0,0),(0,0)   --->  (39,0),(39,0)
-Call simul.process() 4
+Call composit.process() 4
 Step1
 Processing Data! (0,0),(0,0)   --->  (6,0),(6,0)
 Step2
@@ -523,14 +486,10 @@ WH_Example Step2 Buffers:
 WH_Example Step3 Buffers:
 (45,0),(45,0)
 
-END OF SIMUL on node -1
-CheckConn before shortcut:
-Output DataHolder out_0 of Step aSimul not connected to input of next Step
-CheckConn after shortcut:
-Output DataHolder out_0 of Step aSimul not connected to input of next Step
+END OF COMPOSIT on node -1
 
-Start Processing simul Example3
-Call simul.process() 0
+Start Processing composit Example3
+Call composit.process() 0
 Step1
 Processing Data! (0,0),(0,0)   --->  (2,0),(2,0)
 Step2a
@@ -539,7 +498,7 @@ Step2b
 Processing Data! (0,0),(0,0)   --->  (3,0),(3,0)
 Step3
 Processing Data! (0,0),(0,0)   --->  (8,0),(8,0)
-Call simul.process() 1
+Call composit.process() 1
 Step1
 Processing Data! (0,0),(0,0)   --->  (3,0),(3,0)
 Step2a
@@ -548,7 +507,7 @@ Step2b
 Processing Data! (0,0),(0,0)   --->  (4,0),(4,0)
 Step3
 Processing Data! (0,0),(0,0)   --->  (10,0),(10,0)
-Call simul.process() 2
+Call composit.process() 2
 Step1
 Processing Data! (0,0),(0,0)   --->  (4,0),(4,0)
 Step2a
@@ -557,7 +516,7 @@ Step2b
 Processing Data! (0,0),(0,0)   --->  (5,0),(5,0)
 Step3
 Processing Data! (0,0),(0,0)   --->  (12,0),(12,0)
-Call simul.process() 3
+Call composit.process() 3
 Step1
 Processing Data! (0,0),(0,0)   --->  (5,0),(5,0)
 Step2a
@@ -566,7 +525,7 @@ Step2b
 Processing Data! (0,0),(0,0)   --->  (6,0),(6,0)
 Step3
 Processing Data! (0,0),(0,0)   --->  (14,0),(14,0)
-Call simul.process() 4
+Call composit.process() 4
 Step1
 Processing Data! (0,0),(0,0)   --->  (6,0),(6,0)
 Step2a
@@ -589,28 +548,10 @@ WH_Example Step2b Buffers:
 WH_Example Step3 Buffers:
 (16,0),(16,0)
 
-END OF SIMUL on node -1
-wrote XML output to Example_tmp.xml.
-CheckConn before shortcut:
-Output DataHolder out_0 of Step simul1 not connected to input of next Step
-CheckConn after shortcut:
-Output DataHolder out_0 of Step simul1 not connected to input of next Step
-Output DataHolder out_0 of Step Step1 connected to input of a Step in another Simul
-Input DataHolder in_0 of Simul simcomp2 not connected to its first Step(s)
-Input DataHolder in_0 of Step simcomp2 not connected to output of previous Step
-Output DataHolder out_0 of Simul simcomp2 not connected to its last Step(s)
-Output DataHolder out_0 of Step simcomp2 not connected to input of next Step
-Input DataHolder in_0 of Simul simcomp1 not connected to its first Step(s)
-Input DataHolder in_0 of Step simcomp1 not connected to output of previous Step
-Output DataHolder out_0 of Simul simcomp1 not connected to its last Step(s)
-Output DataHolder out_0 of Step simcomp1 not connected to input of next Step
-Input DataHolder in_0 of Step Step2 connected to output of a Step in another Simul
-Output DataHolder out_0 of Step Step3 connected to input of a Step in another Simul
-Input DataHolder in_0 of Step Step4 connected to output of a Step in another Simul
-Output DataHolder out_0 of Step Step4 connected to input of a Step in another Simul
+END OF COMPOSIT on node -1
 
-Start Processing simul Example4
-Call simul.process() 0
+Start Processing composit Example4
+Call composit.process() 0
 Step1
 Processing Data! (0,0),(0,0)   --->  (2,0),(2,0)
 Step2
@@ -619,7 +560,7 @@ Step3
 Processing Data! (0,0),(0,0)   --->  (4,0),(4,0)
 Step4
 Processing Data! (0,0),(0,0)   --->  (5,0),(5,0)
-Call simul.process() 1
+Call composit.process() 1
 Step1
 Processing Data! (0,0),(0,0)   --->  (3,0),(3,0)
 Step2
@@ -628,7 +569,7 @@ Step3
 Processing Data! (0,0),(0,0)   --->  (5,0),(5,0)
 Step4
 Processing Data! (0,0),(0,0)   --->  (6,0),(6,0)
-Call simul.process() 2
+Call composit.process() 2
 Step1
 Processing Data! (0,0),(0,0)   --->  (4,0),(4,0)
 Step2
@@ -637,7 +578,7 @@ Step3
 Processing Data! (0,0),(0,0)   --->  (6,0),(6,0)
 Step4
 Processing Data! (0,0),(0,0)   --->  (7,0),(7,0)
-Call simul.process() 3
+Call composit.process() 3
 Step1
 Processing Data! (0,0),(0,0)   --->  (5,0),(5,0)
 Step2
@@ -646,7 +587,7 @@ Step3
 Processing Data! (0,0),(0,0)   --->  (7,0),(7,0)
 Step4
 Processing Data! (0,0),(0,0)   --->  (8,0),(8,0)
-Call simul.process() 4
+Call composit.process() 4
 Step1
 Processing Data! (0,0),(0,0)   --->  (6,0),(6,0)
 Step2
@@ -655,7 +596,7 @@ Step3
 Processing Data! (0,0),(0,0)   --->  (8,0),(8,0)
 Step4
 Processing Data! (0,0),(0,0)   --->  (9,0),(9,0)
-Call simul.process() 5
+Call composit.process() 5
 Step1
 Processing Data! (0,0),(0,0)   --->  (7,0),(7,0)
 Step2
@@ -664,7 +605,7 @@ Step3
 Processing Data! (0,0),(0,0)   --->  (9,0),(9,0)
 Step4
 Processing Data! (0,0),(0,0)   --->  (10,0),(10,0)
-Call simul.process() 6
+Call composit.process() 6
 Step1
 Processing Data! (0,0),(0,0)   --->  (8,0),(8,0)
 Step2
@@ -673,7 +614,7 @@ Step3
 Processing Data! (0,0),(0,0)   --->  (10,0),(10,0)
 Step4
 Processing Data! (0,0),(0,0)   --->  (11,0),(11,0)
-Call simul.process() 7
+Call composit.process() 7
 Step1
 Processing Data! (0,0),(0,0)   --->  (9,0),(9,0)
 Step2
@@ -682,7 +623,7 @@ Step3
 Processing Data! (0,0),(0,0)   --->  (11,0),(11,0)
 Step4
 Processing Data! (0,0),(0,0)   --->  (12,0),(12,0)
-Call simul.process() 8
+Call composit.process() 8
 Step1
 Processing Data! (0,0),(0,0)   --->  (10,0),(10,0)
 Step2
@@ -691,7 +632,7 @@ Step3
 Processing Data! (0,0),(0,0)   --->  (12,0),(12,0)
 Step4
 Processing Data! (0,0),(0,0)   --->  (13,0),(13,0)
-Call simul.process() 9
+Call composit.process() 9
 Step1
 Processing Data! (0,0),(0,0)   --->  (11,0),(11,0)
 Step2
@@ -707,9 +648,9 @@ WH_Example Example4 Buffers:
 WH_Example Step1 Buffers:
 (11,0),(11,0)
 WH_Example Composite2 Buffers:
-(0,0),(0,0)
+(14,0),(14,0)
 WH_Example Composite1 Buffers:
-(0,0),(0,0)
+(13,0),(13,0)
 WH_Example Step2 Buffers:
 (12,0),(12,0)
 WH_Example Step3 Buffers:
@@ -717,48 +658,4 @@ WH_Example Step3 Buffers:
 WH_Example Step4 Buffers:
 (14,0),(14,0)
 
-END OF SIMUL on node -1
-<?xml version="1.0" encoding="UTF-8" ?>
-<!DOCTYPE basesim SYSTEM "basesim.dtd">
-<basesim>
- <simul name="simul1107" node="node 0">
-  <workholder class="WH_Example">
-   <dataholder name="dh108" class="DH_Example" type="output"/>
-  </workholder>
-  <step name="Step1109" node="node 0">
-   <workholder class="WH_Example">
-    <dataholder name="dh110" class="DH_Example" connect="dh124" type="output"/>
-   </workholder>
-  </step>
-  <simul name="simcomp2123" node="node 0">
-   <workholder class="WH_Example">
-    <dataholder name="dh124" class="DH_Example" connect="dh121" type="input"/>
-    <dataholder name="dh125" class="DH_Example" connect="dh108" type="output"/>
-   </workholder>
-   <simul name="simcomp1120" node="node 0">
-    <workholder class="WH_Example">
-     <dataholder name="dh121" class="DH_Example" connect="dh112" type="input"/>
-     <dataholder name="dh122" class="DH_Example" connect="dh118" type="output"/>
-    </workholder>
-    <step name="Step2111" node="node 0">
-     <workholder class="WH_Example">
-      <dataholder name="dh112" class="DH_Example" type="input"/>
-      <dataholder name="dh113" class="DH_Example" connect="dh115" type="output"/>
-     </workholder>
-    </step>
-    <step name="Step3114" node="node 0">
-     <workholder class="WH_Example">
-      <dataholder name="dh115" class="DH_Example" type="input"/>
-      <dataholder name="dh116" class="DH_Example" connect="dh122" type="output"/>
-     </workholder>
-    </step>
-   </simul>
-   <step name="Step4117" node="node 0">
-    <workholder class="WH_Example">
-     <dataholder name="dh118" class="DH_Example" type="input"/>
-     <dataholder name="dh119" class="DH_Example" connect="dh125" type="output"/>
-    </workholder>
-   </step>
-  </simul>
- </simul>
-</basesim>
+END OF COMPOSIT on node -1

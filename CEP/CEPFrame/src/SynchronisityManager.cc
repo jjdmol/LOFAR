@@ -114,10 +114,10 @@ SynchronisityManager::~SynchronisityManager()
 
   delete [] itsInManagers;
   delete [] itsOutManagers;
-  delete itsInSynchronisities;
-  delete itsOutSynchronisities;
-  delete itsReaders;
-  delete itsWriters;
+  delete [] itsInSynchronisities;
+  delete [] itsOutSynchronisities;
+  delete [] itsReaders;
+  delete [] itsWriters;
   delete [] itsReadersData;
   delete [] itsWritersData;
 }
@@ -283,5 +283,17 @@ void SynchronisityManager::writeAsynchronous(int channel)
 
   pthread_mutex_unlock(&itsWritersData[channel].mutex);
 }
+
+void SynchronisityManager::sharePoolManager(int channel)
+{
+  if (itsOutManagers[channel] != 0)        // Sets output DHPoolManager pointer to 
+  {                                        // input DHPoolManager
+    delete itsOutManagers[channel];
+  }
+  itsOutManagers[channel] = itsInManagers[channel];
+  itsOutManagers[channel]->setSharing(true);
+  itsOutSynchronisities[channel] = itsInSynchronisities[channel];
+}
+
 
 }

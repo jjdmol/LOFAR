@@ -30,8 +30,8 @@
 #include <config.h>
 #endif
 
-#include "CEPFrame/Simulator.h"
-#include "CEPFrame/Step.h"
+#include <CEPFrame/ApplicationHolder.h>
+#include <CEPFrame/Step.h>
 
 namespace LOFAR
 {
@@ -40,7 +40,7 @@ namespace LOFAR
    This class is an example of a concrete Simulator.
 */
 
-class TestAutoTrigger: public LOFAR::Simulator
+class TestAutoTrigger: public LOFAR::ApplicationHolder
 {
 public:
   virtual ~TestAutoTrigger();

@@ -42,9 +42,7 @@ DHPoolManager::DHPoolManager ()
 }
 
 DHPoolManager::~DHPoolManager()
-{
-  delete itsDataHolder;
-}
+{}
 
 void DHPoolManager::preprocess()
 {

@@ -32,7 +32,7 @@
   purpose is to manage DataHolders in a cyclic buffer.
 */
 
-#include "CEPFrame/DataHolder.h"
+#include "Transport/DataHolder.h"
 #include "CEPFrame/DHPoolManager.h"
 
 namespace LOFAR

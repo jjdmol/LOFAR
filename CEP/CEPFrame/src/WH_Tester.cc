@@ -31,8 +31,8 @@ namespace LOFAR
 WH_Tester::WH_Tester (const string& name)
 : WorkHolder       (1, 1, name,"WH_Tester")
 {
-  getDataManager().addInDataHolder(0, new DH_Tester("in"), true);
-  getDataManager().addOutDataHolder(0, new DH_Tester("out"), true);
+  getDataManager().addInDataHolder(0, new DH_Tester("in"));
+  getDataManager().addOutDataHolder(0, new DH_Tester("out"));
 }
 
 

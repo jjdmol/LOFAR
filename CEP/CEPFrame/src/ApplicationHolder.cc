@@ -1,4 +1,4 @@
-//  Simulator.cc:
+//  ApplicationHolder.cc:
 //
 //  Copyright (C) 2000, 2001
 //  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -22,37 +22,24 @@
 //
 /////////////////////////////////////////////////////////////////////////////
 
-#include "CEPFrame/Simulator.h"
-#include "CEPFrame/SimulatorParseClass.h"
+#include <CEPFrame/ApplicationHolder.h>
+#include <tinyCEP/SimulatorParseClass.h>
 #include TRANSPORTERINCLUDE
 
 namespace LOFAR
 {
 
-Simulator::Simulator()
-: itsSimul(),
-  itsArgc (0),
-  itsArgv (0),
-  itsPreDone (true),
-  itsPostDone(true)
+ApplicationHolder::ApplicationHolder()
+  : TinyApplicationHolder(),
+    itsComposite(),
+    itsPreDone (true),
+    itsPostDone(true)
 {}
 
-Simulator::~Simulator()
+ApplicationHolder::~ApplicationHolder()
 {}
 
-void Simulator::setarg (int argc, const char** argv)
-{
-  itsArgc = argc;
-  itsArgv = argv;
-}
-
-void Simulator::getarg (int* argc, const char** argv[])
-{
-  *argc = itsArgc;
-  *argv = itsArgv;
-}
-
-void Simulator::baseDefine (const KeyValueMap& params)
+void ApplicationHolder::baseDefine (const KeyValueMap& params)
 {
   // Initialize MPI environment.
   TRANSPORTER::init (itsArgc, itsArgv);
@@ -66,24 +53,21 @@ void Simulator::baseDefine (const KeyValueMap& params)
   // Let derived class define the simulation.
   define (params);
   itsPreDone = false;
-  /////  itsSimul.shortcutConnections();
-  /////  itsSimul.simplifyConnections();
 }
 
-void Simulator::baseCheck()
+void ApplicationHolder::baseCheck()
 {
-  itsSimul.checkConnections();
   check();
 }
 
-void Simulator::basePrerun()
+void ApplicationHolder::basePrerun()
 {
   prerun();
   itsPreDone = true;
   itsPostDone = false;
 }
 
-void Simulator::baseRun (int nsteps)
+void ApplicationHolder::baseRun (int nsteps)
 {
   if (!itsPreDone) {
     basePrerun();
@@ -91,7 +75,7 @@ void Simulator::baseRun (int nsteps)
   run (nsteps);
 }
 
-void Simulator::basePostrun()
+void ApplicationHolder::basePostrun()
 {
   if (!itsPreDone) {
     basePrerun();
@@ -101,7 +85,7 @@ void Simulator::basePostrun()
   itsPreDone = false;
 }
 
-void Simulator::baseDump()
+void ApplicationHolder::baseDump()
 {
   if (!itsPreDone) {
     basePrerun();
@@ -109,15 +93,7 @@ void Simulator::baseDump()
   dump();
 }
 
-void Simulator::baseDHFile (const string& dh, const string& name)
-{
-  if (!itsPreDone) {
-    basePrerun();
-  }
-  itsSimul.setDHFile (dh, name);
-}
-
-void Simulator::baseQuit()
+void ApplicationHolder::baseQuit()
 {
   if (!itsPostDone) {
     basePostrun();
@@ -127,23 +103,23 @@ void Simulator::baseQuit()
   TRANSPORTER::finalize();
 }
 
-void Simulator::check()
+void ApplicationHolder::check()
 {}
 
-void Simulator::prerun()
+void ApplicationHolder::prerun()
 {
-  itsSimul.preprocess();
+  itsComposite.preprocess();
 }
 
-void Simulator::dump() const
+void ApplicationHolder::dump() const
 {}
 
-void Simulator::postrun()
+void ApplicationHolder::postrun()
 {
-  itsSimul.postprocess();
+  itsComposite.postprocess();
 }
 
-void Simulator::quit()
+void ApplicationHolder::quit()
 {}
 
 }

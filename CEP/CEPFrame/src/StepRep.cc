@@ -24,19 +24,18 @@
 //////////////////////////////////////////////////////////////////////
 
 #include "CEPFrame/StepRep.h"
-#include "CEPFrame/SimulRep.h"
+#include "CEPFrame/CompositeRep.h"
 #include "CEPFrame/Step.h"
+#include "CEPFrame/DataManager.h"
 #include TRANSPORTERINCLUDE
-#include "CEPFrame/TH_Mem.h"
-#include "CEPFrame/ParamTransport.h"
-#include "CEPFrame/ParamTransportManager.h"
+#include "Transport/TH_Mem.h"
 #include "CEPFrame/Profiler.h"
 #include <Common/Debug.h>
 #include <Common/lofar_iostream.h>
 #include <Common/lofar_algorithm.h>    // for min,max
 #ifdef HAVE_CORBA
-#include "CEPFrame/Corba/BS_Corba.h"
-#include "CEPFrame/Corba/CorbaMonitor.h"
+#include "Transport/Corba/BS_Corba.h"
+#include "Transport/Corba/CorbaMonitor.h"
 #endif 
 
 #include <sstream>
@@ -48,7 +47,6 @@ namespace LOFAR
 // this will give all instances of Step the same event in the Profiling output
 int          StepRep::theirProcessProfilerState=0;
 unsigned int StepRep::theirNextID=0;
-unsigned int StepRep::theirNextConnID=0;
 unsigned int StepRep::theirEventCnt=0;
 int          StepRep::theirCurAppl=0;
 
@@ -57,23 +55,28 @@ StepRep::StepRep (WorkHolder& worker,
 		  const string& name,
 		  bool addNameSuffix,
 		  bool monitor)
-: itsRefCount (1),
-  itsWorker   (0),
-  itsParent   (0),
-  itsID       (-1),
-  itsNode     (0),
-  itsAppl     (0),
-  itsRate     (1),
-  itsAddSuffix(addNameSuffix),
-  itsSeqNr    (-1),
-  itsName     (name),
-  itsMonitor  (0)
+: itsRefCount   (1),
+  itsWorker     (0),
+  itsDataManager(0),
+  itsParent     (0),
+  itsID         (-1),
+  itsNode       (0),
+  itsAppl       (0),
+  itsRate       (1),
+  itsAddSuffix  (addNameSuffix),
+  itsSeqNr      (-1),
+  itsName       (name),
+  itsMonitor    (0)
 {
   itsWorker = worker.baseMake();
+
+  // Replace the tinyDataManager with a DataManager
+  itsDataManager = new DataManager(itsWorker->getDataManager());
+  itsWorker->setDataManager(itsDataManager);
+
   itsCurRank = TRANSPORTER::getCurrentRank();
-  setID();
   if (monitor) {
-    TRACER2("Create controllable Simul " << name);
+    TRACER2("Create controllable Composite " << name);
 #ifdef HAVE_CORBA
     // Create a CorbaMonitor object    
     itsMonitor = new CorbaMonitor(BS_Corba::getPOA(),
@@ -81,7 +84,7 @@ StepRep::StepRep (WorkHolder& worker,
 				  name,
 				  getWorker());
 #else
-    TRACER1("CORBA is not configured, so CorbaMonitor cannot be used in Simul ");
+    TRACER1("CORBA is not configured, so CorbaMonitor cannot be used in Composite ");
 #endif 
   }
 
@@ -94,14 +97,14 @@ StepRep::StepRep (WorkHolder& worker,
 
 StepRep::~StepRep() 
 {
-  delete itsWorker;
+  delete itsWorker; // WorkHolder will delete DataManager.
 #ifdef HAVE_CORBA
   delete itsMonitor;
 #endif
 }
 
 
-bool StepRep::isSimul() const
+bool StepRep::isComposite() const
 {
   return false;
 }
@@ -162,126 +165,22 @@ void StepRep::runOnNode (int aNode, int applNr)
   itsNode = aNode;
   itsAppl = applNr;
 }
-
-
-void StepRep::setID()
-{
-  itsID = theirNextID++;
-  // Step pointer will be stored in the Data objects of the WorkHolder.
-  for (int ch=0; ch < itsWorker->getDataManager().getInputs(); ch++) {
-    itsWorker->getDataManager().getGeneralInHolder(ch)->setStep(*this);
-
-    // Set id of intransport
-    itsWorker->getDataManager().getGeneralInHolder(ch)->getTransport().setItsID(theirNextID++);
-
-  }
-  for (int ch=0; ch < itsWorker->getDataManager().getOutputs(); ch++) { 
-    itsWorker->getDataManager().getGeneralOutHolder(ch)->setStep(*this);
-    // Set id of outtransport
-    itsWorker->getDataManager().getGeneralOutHolder(ch)->getTransport().setItsID(theirNextID++);
-  }
-
-  // Set Step of ParamManager
-  itsWorker->getParamManager().setStep(*this);
-}
-
 		       
 bool StepRep::connectData (const TransportHolder& prototype,
 			   DataHolder& sourceData, 
-			   DataHolder& targetData)
+			   DataHolder& targetData,
+			   bool blockingComm)
 {
-  Transport& sourceTP = sourceData.getTransport();
-  Transport& targetTP = targetData.getTransport();
-  AssertStr (sourceTP.getRate() == targetTP.getRate(),
-	     "StepRep::connectData; inRate " <<
-	     sourceTP.getRate() << " and outRate " <<
-	     targetTP.getRate() << " not equal!");
-  AssertStr (sourceData.getType() == targetData.getType(),
-	     "StepRep::connectData; inType " <<
-	     sourceData.getType() << " and outType " <<
-	     targetData.getType() << " not equal!");
-  sourceTP.makeTransportHolder (prototype);
-  targetTP.makeTransportHolder (prototype);
-  DbgAssert (sourceTP.getItsID() >= 0);
-  // Use the source ID as the tag for MPI send/receive.
-  sourceTP.setWriteTag (sourceTP.getItsID());
-  targetTP.setReadTag (sourceTP.getItsID());
-  // Set the source DataHolder of a target.
-  targetTP.setSourceAddr (&sourceData);
-  // Set the target DataHolder of a source.
-  sourceTP.setTargetAddr (&targetData);
-  return true;
+  return sourceData.connectTo(targetData, prototype, blockingComm);
 }
 
-bool StepRep::connectParam(const string& name, Step* aStep,
-			   const TransportHolder& prototype)
-{
-  ParamHolder* ph1 = getWorker()->getParamManager().getParamHolder(name);
-  ParamHolder* ph2 = aStep->getWorker()->getParamManager().getParamHolder(name);
-  if (ph1 == 0 || ph2 == 0)
-  {
-    return false;
-  }
-
-  if (!(ph1->isParamOwner()) && !(ph2->isParamOwner()))
-  {
-    TRACER2("Neither of these two paramHolders has the right to publish");
-    return false;
-  }
-
-  if (ph1->isParamOwner())
-  {
-    connectParamHolders(*ph1, *ph2, prototype); // ph1 is source, ph2 target
-  }
-  if (ph2->isParamOwner())
-  {                                  
-    connectParamHolders(*ph2, *ph1, prototype); // ph2 is source, ph1 target
-  }
-  return true;
-}
-
-bool StepRep::connectParamHolders (ParamHolder& srcParam, 
-				   ParamHolder& tgtParam,
-				   const TransportHolder& prototype)
-{
-  AssertStr (srcParam.getType() == tgtParam.getType(),
-	     "StepRep::connectParamHolders; inType " <<
-	     srcParam.getType() << " and outType " <<
-	     tgtParam.getType() << " not equal!");
-  AssertStr(prototype.isBlocking(), "ParamHolders must be connected with a blocking TransportHolder");
-  DbgAssertStr(srcParam.isParamOwner(), "srcParam has no right to publish");
-  ParamTransportManager* srcMan = srcParam.getPTManager();
-  ParamTransportManager* tgtMan = tgtParam.getPTManager();
-  
-  ParamTransport* sourceTP = srcMan->makeNewTargetTransport(theirNextConnID);
-  sourceTP->setItsID(theirNextConnID++);
-  ParamTransport* targetTP = tgtMan->makeNewSourceTransport();
-  targetTP->setItsID(theirNextConnID++);
-
-  sourceTP->makeTransportHolder (prototype);
-  targetTP->makeTransportHolder (prototype);
-
-  DbgAssert (sourceTP->getItsID() >= 0);
-  // Use the source ID as the tag for MPI send/receive.
-  int id = sourceTP->getItsID();
-  sourceTP->setWriteTag (id);
-  sourceTP->setReadTag (id);
-  targetTP->setReadTag (id);
-  targetTP->setWriteTag(id);
-  // Set the source ParamHolder of a target.
-  targetTP->setSourceAddr (&srcParam);
-  targetTP->setTargetAddr (&srcParam);
-  // Set the target ParamHolder of a source.
-  sourceTP->setTargetAddr (&tgtParam);
-  sourceTP->setSourceAddr (&tgtParam);
-  return true;
-}
 
 bool StepRep::connectRep (StepRep* aStep,
 			  int   thisDHIndex,
 			  int   thatDHIndex,
 			  int   nrDH,
-			  const TransportHolder& prototype)
+			  const TransportHolder& prototype,
+			  bool blockingComm)
 {
   // determine how much DataHolders to loop
   if (nrDH < 0) {
@@ -293,16 +192,10 @@ bool StepRep::connectRep (StepRep* aStep,
     int thisInx = i + thisDHIndex;  // DataHolder nr in this Step
     int thatInx = i + thatDHIndex;  // DataHolder nr in aStep
 
-    // Check if blocking TransportHolder is used for asynchronous transport
-  if (!(itsWorker->getDataManager().isInSynchronous(thisInx)) || 
-      !(aStep->getWorker()->getDataManager().isOutSynchronous(thatInx)))
-  {
-    AssertStr(prototype.isBlocking(), 
-	   "Asynchronous data transport must have a blocking TransportHolder");
-  }
     result &= connectData (prototype,
 			   aStep->getOutData(thatInx),
-			   *itsWorker->getDataManager().getGeneralInHolder(thisInx));
+			   *itsWorker->getDataManager().getGeneralInHolder(thisInx), 
+			   blockingComm);
  
     TRACER2( "StepRep::connect " << getName().c_str() << " (ID = "
 	   << getID() << ") DataHolder " << thisInx << " to "
@@ -313,14 +206,16 @@ bool StepRep::connectRep (StepRep* aStep,
 }
 
 bool StepRep::connectInput (Step* aStep,
-			    const TransportHolder& prototype)
+			    const TransportHolder& prototype,
+			    bool blockingComm)
 {
-  return connectRep (aStep->getRep(), 0, 0, -1, prototype);
+  return connectRep (aStep->getRep(), 0, 0, -1, prototype, blockingComm);
 }
 
 bool StepRep::connectInputArray (Step* aStep[],
 				 int   nrSteps,
-				 const TransportHolder& prototype)
+				 const TransportHolder& prototype,
+				 bool blockingComm)
 {
   if (aStep==NULL) return false;
   if (nrSteps < 0) {  // set nrSteps automatically
@@ -332,7 +227,8 @@ bool StepRep::connectInputArray (Step* aStep[],
 	       dhIndex+aStep[item]->getWorker()->getDataManager().getOutputs(),
 	       "connect " << getName() << " - " << aStep[item]->getName() <<
 	       "; not enough inputs");
-    connectRep (aStep[item]->getRep(), dhIndex, 0, -1, prototype);
+    connectRep (aStep[item]->getRep(), dhIndex, 0, -1, prototype,
+		blockingComm);
     dhIndex += aStep[item]->getWorker()->getDataManager().getOutputs();
   }
   if (dhIndex != getWorker()->getDataManager().getInputs()) {
@@ -346,7 +242,8 @@ bool StepRep::connectInputArray (Step* aStep[],
 
 bool StepRep::connectOutputArray (Step* aStep[],
 				  int   nrSteps,
-				  const TransportHolder& prototype)
+				  const TransportHolder& prototype,
+				  bool blockingComm)
 {
   if (aStep == NULL) {
     return false;
@@ -361,7 +258,8 @@ bool StepRep::connectOutputArray (Step* aStep[],
 	       dhIndex+aStep[item]->getWorker()->getDataManager().getInputs(),
 	       "connect " << getName() << " - " << aStep[item]->getName() <<
 	       "; not enough inputs");
-    aStep[item]->getRep()->connectRep (this, 0, dhIndex, -1, prototype);
+    aStep[item]->getRep()->connectRep (this, 0, dhIndex, -1, prototype,
+				       blockingComm);
     dhIndex += aStep[item]->getWorker()->getDataManager().getInputs();
 
   }
@@ -373,147 +271,20 @@ bool StepRep::connectOutputArray (Step* aStep[],
   return true;
 }
 
-bool StepRep::checkConnections (ostream& os, const StepRep* parent)
+void StepRep::replaceConnectionsWith(const TransportHolder& newTH,
+				     bool blockingComm)
 {
-  bool result = true;
-  // The parent must match.
-  DbgAssert (getParent() == parent);
-  // Check if the input DataHolders are correctly connected.
-  for (int ch=0; ch<getWorker()->getDataManager().getInputs(); ch++) {
-    // Make sure the Transport belongs to this Step.
-    Transport& tp = getInTransport(ch);
-    DbgAssert (&(itsWorker->getDataManager().getGeneralInHolder(ch)->getStep())
-                  == this);
-    // An input DataHolder in a Step cannot have a target DataHolder
-    // (but in a Simul it must have one).
-    if (isSimul()  &&  tp.getTargetAddr() == 0) {
-      os << "Input DataHolder " << getInData(ch).getName() << " of Simul "
-	 << getName() << " not connected to its first Step(s)" << endl;
-      result = false;
-    }
-    if (!isSimul()  &&  tp.getTargetAddr() != 0) {
-      os << "Input DataHolder " << getInData(ch).getName() << " of Step "
-	 << getName() << " also connected as output to Step "
-	 << tp.getTargetAddr()->getStep().getName() << endl;
-      result = false;
-    }
-    // The input DataHolder must have a source DataHolder.
-    DataHolder* src = tp.getSourceAddr();
-    if (src == 0) {
-      os << "Input DataHolder " << getInData(ch).getName() << " of Step "
-	 << getName() << " not connected to output of previous Step" << endl;
-      result = false;
-    } else {
-      // That source DataHolder must have this DataHolder as the target.
-      // Otherwise a new connect might be done to another DataHolder.
-      DataHolder* dst = src->getTransport().getTargetAddr();
-      DbgAssert (dst == &(getInData(ch)));
-      // The source must belong to the given parent or must be the parent
-      // itself (in case Simul input is connected to Step input).
-      StepRep& srcstep = src->getStep();
-      bool first = (&srcstep == parent);
-      if (!first) {
-	if (srcstep.getParent() != parent) {
-	  os << "Input DataHolder " << dst->getName() << " of Step "
-	     << getName()
-	     << " connected to output of a Step in another Simul" << endl;
-	  result = false;
-	} else {
-	  if (srcstep.getSeqNr() >= dst->getStep().getSeqNr()) {
-	    os << "Input DataHolder " << dst->getName() << " of Step "
-	       << getName() << " connected to output of a later Step" << endl;
-	    result = false;
-	  }
-	}
-      }
-    }
-  }
-  for (int ch=0; ch<getWorker()->getDataManager().getOutputs(); ch++) {
-    Transport& tp = getOutTransport(ch);
-    DbgAssert (&(itsWorker->getDataManager().getGeneralOutHolder(ch)->getStep())
-	          == this);
-    // An output DataHolder in a Step cannot have a source DataHolder
-    // (but in a Simul it must have one).
-    if (isSimul()  &&  tp.getSourceAddr() == 0) {
-      os << "Output DataHolder " << getOutData(ch).getName() << " of Simul "
-	 << getName() << " not connected to its last Step(s)" << endl;
-      result = false;
-    }
-    // The output DataHolder must have a target DataHolder.
-    // Only the outer Simul does not need to have a destination.
-    DataHolder* dst = tp.getTargetAddr();
-    if (dst == 0) {
-      os << "Output DataHolder " << getOutData(ch).getName() << " of Step "
-	 << getName() << " not connected to input of next Step" << endl;
-      result = false;
-    } else {
-      // That target DataHolder must have this DataHolder as the source.
-      // Otherwise a new connect might be done to another DataHolder.
-      DataHolder* src = dst->getTransport().getSourceAddr();
-      DbgAssert (src == &(getOutData(ch)));
-      // The target must belong to the given parent or must be the parent
-      // itself (in case Step output is connected to Simul output).
-      StepRep& dststep = dst->getStep();
-      bool last = (&dststep == parent);
-      if (!last) {
-	if (dststep.getParent() != parent) {
-	  os << "Output DataHolder " << src->getName() << " of Step "
-	     << getName()
-	     << " connected to input of a Step in another Simul" << endl;
-	  result = false;
-	}
-      }
-    }
-  }
-  return result;
-}
-
-
-void StepRep::shortcutConnections()
-{}
-
-
-void StepRep::simplifyConnections()
-{
-  // Test for each input if connected to an output on the same node.
-  for (int ch=0; ch<getWorker()->getDataManager().getInputs(); ch++) {
-    DataHolder* dst = itsWorker->getDataManager().getGeneralInHolder(ch);
-    Transport& dsttp = dst->getTransport();
-    DataHolder* src = dsttp.getSourceAddr();
-    if (src) {
-      Transport& srctp = src->getTransport();
-      if ((src->getNode() == dst->getNode()) 
-	  && (srctp.getTransportHolder()->isBlocking() == false)) {
-	srctp.makeTransportHolder (TH_Mem());
-	dsttp.makeTransportHolder (TH_Mem());
-      }
-    }
-  }
-}
-
-void StepRep::optimizeConnectionsWith(const TransportHolder& newTH)
-{
-  cdebug(3) << "optimizeConnectionsWith  " << newTH.getType() << endl;
-  for (int ch=0; ch<getWorker()->getDataManager().getInputs(); ch++)
+  cdebug(3) << "replaceConnectionsWith  " << newTH.getType() << endl;
+  for (int ch=0; ch<itsDataManager->getInputs(); ch++)
   {
-    DataHolder* dst = itsWorker->getDataManager().getGeneralInHolder(ch);
-    Transport& dsttp = dst->getTransport();
-    DataHolder* src = dsttp.getSourceAddr();
-    if (src)
+    DataHolder* dh = itsDataManager->getGeneralInHolder(ch);
+    Transporter& transp = dh->getTransporter();
+    DataHolder* thatDH = transp.getSourceDataHolder();
+    if (thatDH)
     {
-      Transport& srctp = src->getTransport();
-
-      // attemptReplace returns pointer to allocated replacement
-      // TransportHolder or 0 if replacement is not possible.
-      if (newTH.connectionPossible(src->getNode(), dst->getNode()))
-      {
-	cdebug(3) << "replace source " << srctp.getTransportHolder()->getType()
-	     << " with " << newTH.getType() << endl;
-	cdebug(3) << "replace target " << dsttp.getTransportHolder()->getType()
-	     << " with " << newTH.getType() << endl;
-	srctp.makeTransportHolder(newTH);
-	dsttp.makeTransportHolder(newTH);
-      }
+      cdebug(3) << "replace " << transp.getTransportHolder()->getType()
+		<< " with " << newTH.getType() << endl;
+      dh->connectTo(*thatDH, newTH, blockingComm);
     }
   }
 }
@@ -540,12 +311,13 @@ bool StepRep::setInRate(int rate, int dhIndex)
   AssertStr (dhIndex >= -1,
 	     "Step dhIndex not within limits");
   if (dhIndex >= 0) {
-    getInTransport(dhIndex).setRate (rate); 
+    getInData(dhIndex).getTransporter().setRate (rate); 
     return true;
   } else {
     if (dhIndex == -1) {
       for (int ch=0; ch<getWorker()->getDataManager().getInputs(); ch++) {
-	getInTransport(ch).setRate (rate); 
+
+	getInData(ch).getTransporter().setRate (rate); 
       }
       return true;
     }
@@ -560,12 +332,12 @@ bool StepRep::setOutRate (int rate, int dhIndex)
   AssertStr (dhIndex >= -1,
 	     "Step dhIndex not within limits");
   if (dhIndex >= 0) {
-    getOutTransport(dhIndex).setRate (rate); 
+    getOutData(dhIndex).getTransporter().setRate (rate); 
     return true;
   } else {
     if (dhIndex == -1) {
       for (int ch=0; ch<getWorker()->getDataManager().getOutputs(); ch++) {
-	getOutTransport(ch).setRate (rate); 
+	getOutData(ch).getTransporter().setRate (rate); 
       }
       return true;
     }

@@ -1,7 +1,7 @@
 dnl
 dnl Process this file with autoconf to produce a configure script.
 dnl
-AC_INIT(src/BaseSim.h)
+AC_INIT
 dnl AC_CONFIG_AUX_DIR(config)
 dnl AM_CONFIG_HEADER(config/config.h)
 AM_CONFIG_HEADER(config.h)
@@ -60,6 +60,7 @@ lofar_MPI
 lofar_QATOOLS
 lofar_DOCXX
 lofar_PACKAGE(LCS/Common)
+lofar_PACKAGE(CEP/tinyCEP)
 lofar_EXTERNAL(psql,0,libpq-fe.h,pq)
 
 dnl
@@ -67,8 +68,6 @@ dnl Output Makefiles
 dnl
 AC_OUTPUT(
 src/Makefile
-src/ShMem/Makefile
-src/Corba/Makefile
 src/CorbaExe/Makefile
 test/Makefile
 Makefile

@@ -1,6 +1,6 @@
-//  matlabmex.cc: Class needed to compile/link code using matlab functions
+//  NetworkBuilder.cc:
 //
-//  Copyright (C) 2001
+//  Copyright (C) 2000, 2001
 //  ASTRON (Netherlands Foundation for Research in Astronomy)
 //  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //
@@ -20,21 +20,17 @@
 //
 //  $Id$
 //
-//  $Log$
-//  Revision 1.1.1.1  2003/02/21 11:14:36  schaaf
-//  copy from BaseSim tag "CEPFRAME"
-//
-//  Revision 1.2  2001/10/26 10:06:28  wierenga
-//  Wide spread changes to convert from Makedefs to autoconf/automake/libtool build environment
-//
-//  Revision 1.1  2001/09/28 07:41:50  gvd
-//  Renamed mexversion.cc to matlabmex.cc which now simply includes mexversion.c
-//
 //
 //////////////////////////////////////////////////////////////////////
 
-#include <lofar_config.h>
+#include "NetworkBuilder.h"
 
-#ifdef HAVE_MATLAB
-#include "../src/mexversion.c"
-#endif
+namespace LOFAR
+{
+
+NetworkBuilder::~NetworkBuilder()
+{
+  delete itsWorker;
+}
+
+}

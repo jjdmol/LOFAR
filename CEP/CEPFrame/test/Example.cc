@@ -23,45 +23,52 @@
 ///////////////////////////////////////////////////////////////
 
 #include <Common/lofar_iostream.h>
-#include "CEPFrame/Transport.h"
-#include "CEPFrame/Step.h"
-#include "CEPFrame/Simul.h"
-#include "CEPFrame/BaseSim.h"
-#include "CEPFrame/WH_Example.h"
-#include "CEPFrame/Simul2XML.h"
-#include "CEPFrame/Profiler.h"
-#include "Common/Debug.h"
+#include <CEPFrame/Step.h>
+#include <CEPFrame/Composite.h>
+#include <Transport/BaseSim.h>
+#include <CEPFrame/WH_Example.h>
+#include <CEPFrame/Profiler.h>
+#include <Common/Debug.h>
 
 using namespace LOFAR;
 
-void doIt (Simul& simul, const std::string& name, int nsteps)
+void doIt (Composite& comp, const std::string& name, int nsteps)
 {
-  cout << "CheckConn before shortcut:" << endl;
-  simul.checkConnections (cout);
-  simul.shortcutConnections();
-  cout << "CheckConn after shortcut:" << endl;
-  simul.checkConnections (cout);
   TRACER2("Ready with definition of configuration");
   Profiler::init();
   Step::clearEventCount();
 
-  simul.preprocess();
+  try {
+    comp.preprocess();
 
-  cout << endl << "Start Processing simul " << name << endl;    
-  for (int i=0; i<nsteps; i++) {
-    if (i==2) Profiler::activate();
-    cout << "Call simul.process() " << i << endl;
-    simul.process();
-    if (i==5) Profiler::deActivate();
-  }
+    cout << endl << "Start Processing composit " << name << endl;    
+    for (int i=0; i<nsteps; i++) {
+      if (i==2) Profiler::activate();
+      cout << "Call composit.process() " << i << endl;
+      comp.process();
+      if (i==5) Profiler::deActivate();
+    }
 
-  cout << endl << "DUMP Data from last Processing step: " << endl;
-  simul.dump ();
-  cout << endl << "END OF SIMUL on node " 
+    cout << endl << "DUMP Data from last Processing step: " << endl;
+    comp.dump ();
+    cout << endl << "END OF COMPOSIT on node " 
        << TRANSPORTER::getCurrentRank () 
        << endl;
  
-  simul.postprocess();
+    comp.postprocess();
+  }
+  catch (LOFAR::Exception& e)
+  {
+    cout << "Lofar exception: " << e.what() << endl;
+  }
+  catch (std::exception& e)
+  {
+    cout << "Standard exception: " << e.what() << endl;
+  }
+  catch (...) {
+    cout << "Unexpected exception in Simulate" << endl;
+  }
+
 }
 
 
@@ -82,9 +89,9 @@ int main (int argc, const char *argv[])
   {
     // Define the top-level simul object.
     WH_Example whex("Example1", 0);
-    Simul simul1 (whex);
-    // Tell the Simul where to run.
-    simul1.runOnNode(0);
+    Composite comp1 (whex);
+    // Tell the Composit where to run.
+    comp1.runOnNode(0);
     // Now start filling the simulation. 
     // First create the Steps.
     WH_Example whEx1("Step1", 0);
@@ -95,18 +102,18 @@ int main (int argc, const char *argv[])
     Step step3 (whEx3);
     WH_Example whEx4("Step4");
     Step step4 (whEx4);
-    simul1.addStep (step1);
-    simul1.addStep (step2);
-    simul1.addStep (step3);
-    simul1.addStep (step4);
-    step4.connectInput (&step3);
-    step3.connectInput (&step2);
-    step2.connectInput (&step1);
+    comp1.addStep (step1);
+    comp1.addStep (step2);
+    comp1.addStep (step3);
+    comp1.addStep (step4);
+    step4.connectInput (&step3, TRANSPORTER(), false);
+    step3.connectInput (&step2, TRANSPORTER(), false );
+    step2.connectInput (&step1, TRANSPORTER(), false);
     // Connect the output of the last step to the overall Simul WorkHolder.
     Step* stepPtr = &step4;
-    simul1.connectOutputToArray (&stepPtr, 1);
+    comp1.connectOutputToArray (&stepPtr, 1,0,0, TRANSPORTER(), false);
     // Run the simulation.
-    doIt (simul1, whex.getName(), 10);
+    doIt (comp1, whex.getName(), 10);
   }
 
   // A slightly more elaborate example.
@@ -115,8 +122,8 @@ int main (int argc, const char *argv[])
   // so still a simple connect can be used.
   {
     WH_Example whex("Example2", 0, 1, 20);
-    Simul simul1 (whex);
-    simul1.runOnNode(0);
+    Composite comp1 (whex);
+    comp1.runOnNode(0);
     // Now start filling the simulation. 
     WH_Example whex1("Step1", 0, 2, 20);
     WH_Example whex2("Step2", 2, 3, 20);
@@ -124,14 +131,14 @@ int main (int argc, const char *argv[])
     Step step1 (whex1);
     Step step2 (whex2);
     Step step3 (whex3);
-    simul1.addStep (step1);
-    simul1.addStep (step2);
-    simul1.addStep (step3);
-    step3.connectInput (&step2);
-    step2.connectInput (&step1);
+    comp1.addStep (step1);
+    comp1.addStep (step2);
+    comp1.addStep (step3);
+    step3.connectInput (&step2, TRANSPORTER(), false);
+    step2.connectInput (&step1, TRANSPORTER(), false);
     Step* stepPtr = &step3;
-    simul1.connectOutputToArray (&stepPtr, 1);
-    doIt (simul1, whex.getName(), 5);
+    comp1.connectOutputToArray (&stepPtr, 1, 0, 0, TRANSPORTER(), false);
+    doIt (comp1, whex.getName(), 5);
   }
 
   // In this example a WorkHolder with 2 output DataHolders is
@@ -139,8 +146,8 @@ int main (int argc, const char *argv[])
   // That is in its turn connected to a WorkHolder with 2 inputs.
   {
     WH_Example whex("Example3", 0);
-    Simul simul1 (whex);
-    simul1.runOnNode(0);
+    Composite comp1 (whex);
+    comp1.runOnNode(0);
     // Now start filling the simulation. 
     WH_Example whex1("Step1", 0, 2);
     WH_Example whex2a("Step2a");
@@ -150,25 +157,25 @@ int main (int argc, const char *argv[])
     Step step2a (whex2a);
     Step step2b (whex2b);
     Step step3 (whex3);
-    simul1.addStep (step1);
-    simul1.addStep (step2a);
-    simul1.addStep (step2b);
-    simul1.addStep (step3);
+    comp1.addStep (step1);
+    comp1.addStep (step2a);
+    comp1.addStep (step2b);
+    comp1.addStep (step3);
     Step* stepPtrs[2];
     stepPtrs[0] = &step2a;
     stepPtrs[1] = &step2b;
-    step3.connectInputArray (stepPtrs, 2);
-    step1.connectOutputArray (stepPtrs, 2);
+    step3.connectInputArray (stepPtrs, 2, TRANSPORTER(), false);
+    step1.connectOutputArray (stepPtrs, 2, TRANSPORTER(), false);
     stepPtrs[0] = &step3;
-    simul1.connectOutputToArray (stepPtrs, 1);
-    doIt (simul1, whex.getName(), 5);
+    comp1.connectOutputToArray (stepPtrs, 1, 0, 0, TRANSPORTER(), false);
+    doIt (comp1, whex.getName(), 5);
   }
 
-  // Use Simul composites.
+  // Use composites.
   {
     WH_Example whex("Example4", 0);
-    Simul simul1 (whex, "simul1");
-    simul1.runOnNode(0);
+    Composite comp1 (whex, "simul1");
+    comp1.runOnNode(0);
     // Now start filling the simulation. 
     WH_Example whex1("Step1", 0);
     WH_Example whex2("Step2");
@@ -180,40 +187,40 @@ int main (int argc, const char *argv[])
     Step step4 (whex4, "Step4", false);
     // Create the first composite, fill it, and make the internal connections.
     WH_Example whcomp1("Composite1");
-    Simul composite1 (whcomp1, "simcomp1", false);
+    Composite composite1 (whcomp1, "simcomp1", false);
     composite1.addStep (step2);
     composite1.addStep (step3);
-    step3.connectInput (&step2);
+    step3.connectInput (&step2, TRANSPORTER(), false);
     Step* stepPtr = &step2;
-    composite1.connectInputToArray (&stepPtr, 1);
+    composite1.connectInputToArray (&stepPtr, 1, 0, 0, TRANSPORTER(), false);
     stepPtr = &step3;
-    composite1.connectOutputToArray (&stepPtr, 1);
+    composite1.connectOutputToArray (&stepPtr, 1, 0, 0, TRANSPORTER(), false);
     // Create the second composite and fill it
     WH_Example whcomp2("Composite2");
-    Simul composite2 (whcomp2, "simcomp2", false);
+    Composite composite2 (whcomp2, "simcomp2", false);
     composite2.addStep (composite1);
     composite2.addStep (step4);
-    step4.connectInput (&composite1);
+    step4.connectInput (&composite1, TRANSPORTER(), false);
     stepPtr = &composite1;
-    composite2.connectInputToArray (&stepPtr, 1);
+    composite2.connectInputToArray (&stepPtr, 1, 0, 0, TRANSPORTER(), false);
     stepPtr = &step4;
-    composite2.connectOutputToArray (&stepPtr, 1);
+    composite2.connectOutputToArray (&stepPtr, 1, 0, 0, TRANSPORTER(), false);
     // Finally create the total Simul.
-    simul1.addStep (step1);
-    simul1.addStep (composite2);
-    composite2.connectInput (&step1);
+    comp1.addStep (step1);
+    comp1.addStep (composite2);
+    composite2.connectInput (&step1, TRANSPORTER(), false);
     stepPtr = &composite2;
-    simul1.connectOutputToArray (&stepPtr, 1);
-    doIt (simul1, whex.getName(), 10);
+    comp1.connectOutputToArray (&stepPtr, 1, 0, 0, TRANSPORTER(), false);
+    doIt (comp1, whex.getName(), 10);
   }
 
   // The same examples as above, but now connected by name.
   {
     // Define the top-level simul object.
     WH_Example whex("Example1", 0);
-    Simul simul1 (whex);
+    Composite comp1 (whex);
     // Tell the Simul where to run.
-    simul1.runOnNode(0);
+    comp1.runOnNode(0);
     // Now start filling the simulation. 
     // First create the Steps.
     WH_Example whEx1("Step1", 0);
@@ -224,17 +231,17 @@ int main (int argc, const char *argv[])
     Step step3 (whEx3);
     WH_Example whEx4("Step4");
     Step step4 (whEx4);
-    simul1.addStep (step1);
-    simul1.addStep (step2);
-    simul1.addStep (step3);
-    simul1.addStep (step4);
-    simul1.connect ("aStep_0", "aStep_1");
-    simul1.connect ("aStep_1", "aStep_2");
-    simul1.connect ("aStep_2", "aStep_3");
+    comp1.addStep (step1);
+    comp1.addStep (step2);
+    comp1.addStep (step3);
+    comp1.addStep (step4);
+    comp1.connect ("aStep_0", "aStep_1", TRANSPORTER(), false);
+    comp1.connect ("aStep_1", "aStep_2", TRANSPORTER(), false);
+    comp1.connect ("aStep_2", "aStep_3", TRANSPORTER(), false);
     // Connect the output of the last step to the overall Simul WorkHolder.
-    simul1.connect ("aStep_3", ".");
+    comp1.connect ("aStep_3", ".", TRANSPORTER(), false);
     // Run the simulation.
-    doIt (simul1, whex.getName(), 10);
+    doIt (comp1, whex.getName(), 10);
   }
 
   // A slightly more elaborate example.
@@ -243,8 +250,8 @@ int main (int argc, const char *argv[])
   // so still a simple connect can be used.
   {
     WH_Example whex("Example2", 0, 1, 20);
-    Simul simul1 (whex);
-    simul1.runOnNode(0);
+    Composite comp1 (whex);
+    comp1.runOnNode(0);
     // Now start filling the simulation. 
     WH_Example whex1("Step1", 0, 2, 20);
     WH_Example whex2("Step2", 2, 3, 20);
@@ -252,13 +259,13 @@ int main (int argc, const char *argv[])
     Step step1 (whex1);
     Step step2 (whex2);
     Step step3 (whex3);
-    simul1.addStep (step1);
-    simul1.addStep (step2);
-    simul1.addStep (step3);
-    simul1.connect ("aStep_0", "aStep_1");
-    simul1.connect ("aStep_1", "aStep_2");
-    simul1.connect ("aStep_2", ".");
-    doIt (simul1, whex.getName(), 5);
+    comp1.addStep (step1);
+    comp1.addStep (step2);
+    comp1.addStep (step3);
+    comp1.connect ("aStep_0", "aStep_1", TRANSPORTER(), false);
+    comp1.connect ("aStep_1", "aStep_2", TRANSPORTER(), false);
+    comp1.connect ("aStep_2", ".", TRANSPORTER(), false);
+    doIt (comp1, whex.getName(), 5);
   }
 
   // In this example a WorkHolder with 2 output DataHolders is
@@ -266,8 +273,8 @@ int main (int argc, const char *argv[])
   // That is in its turn connected to a WorkHolder with 2 inputs.
   {
     WH_Example whex("Example3", 0);
-    Simul simul1 (whex);
-    simul1.runOnNode(0);
+    Composite comp1 (whex);
+    comp1.runOnNode(0);
     // Now start filling the simulation. 
     WH_Example whex1("Step1", 0, 2);
     WH_Example whex2a("Step2a");
@@ -277,23 +284,23 @@ int main (int argc, const char *argv[])
     Step step2a (whex2a);
     Step step2b (whex2b);
     Step step3 (whex3);
-    simul1.addStep (step1);
-    simul1.addStep (step2a);
-    simul1.addStep (step2b);
-    simul1.addStep (step3);
-    simul1.connect ("aStep_0.out_0", "aStep_1");
-    simul1.connect ("aStep_0.out_1", "aStep_2");
-    simul1.connect ("aStep_1", "aStep_3.in_0");
-    simul1.connect ("aStep_2", "aStep_3.in_1");
-    simul1.connect ("aStep_3.out_0", ".out_0");
-    doIt (simul1, whex.getName(), 5);
+    comp1.addStep (step1);
+    comp1.addStep (step2a);
+    comp1.addStep (step2b);
+    comp1.addStep (step3);
+    comp1.connect ("aStep_0.out_0", "aStep_1", TRANSPORTER(), false);
+    comp1.connect ("aStep_0.out_1", "aStep_2", TRANSPORTER(), false);
+    comp1.connect ("aStep_1", "aStep_3.in_0", TRANSPORTER(), false);
+    comp1.connect ("aStep_2", "aStep_3.in_1", TRANSPORTER(), false);
+    comp1.connect ("aStep_3.out_0", ".out_0", TRANSPORTER(), false);
+    doIt (comp1, whex.getName(), 5);
   }
 
   // Use Simul composites.
   {
     WH_Example whex("Example4", 0);
-    Simul simul1 (whex, "simul1");
-    simul1.runOnNode(0);
+    Composite comp1 (whex, "comp1");
+    comp1.runOnNode(0);
     // Now start filling the simulation. 
     WH_Example whex1("Step1", 0);
     WH_Example whex2("Step2");
@@ -305,28 +312,26 @@ int main (int argc, const char *argv[])
     Step step4 (whex4, "Step4", false);
     // Create the first composite, fill it, and make the internal connections.
     WH_Example whcomp1("Composite1");
-    Simul composite1 (whcomp1, "simcomp1", false);
+    Composite composite1 (whcomp1, "simcomp1", false);
     composite1.addStep (step2);
     composite1.addStep (step3);
-    composite1.connect (".", "Step2");
-    composite1.connect ("Step2", "Step3");
-    composite1.connect ("Step3", ".");
+    composite1.connect (".", "Step2", TRANSPORTER(), false);
+    composite1.connect ("Step2", "Step3", TRANSPORTER(), false);
+    composite1.connect ("Step3", ".", TRANSPORTER(), false);
     // Create the second composite and fill it
     WH_Example whcomp2("Composite2");
-    Simul composite2 (whcomp2, "simcomp2", false);
+    Composite composite2 (whcomp2, "simcomp2", false);
     composite2.addStep (composite1);
     composite2.addStep (step4);
-    composite2.connect (".", "simcomp1");
-    composite2.connect ("simcomp1", "Step4");
-    composite2.connect ("Step4", ".");
+    composite2.connect (".", "simcomp1", TRANSPORTER(), false);
+    composite2.connect ("simcomp1", "Step4", TRANSPORTER(), false);
+    composite2.connect ("Step4", ".", TRANSPORTER(), false);
     // Finally create the total Simul.
-    simul1.addStep (step1);
-    simul1.addStep (composite2);
-    simul1.connect ("Step1", "simcomp2");
-    simul1.connect ("simcomp2", ".");
-    Simul2XML toxml(simul1);
-    toxml.write ("Example_tmp.xml");
-    doIt (simul1, whex.getName(), 10);
+    comp1.addStep (step1);
+    comp1.addStep (composite2);
+    comp1.connect ("Step1", "simcomp2", TRANSPORTER(), false);
+    comp1.connect ("simcomp2", ".", TRANSPORTER(), false);
+    doIt (comp1, whex.getName(), 10);
   }
 
   //     close environment

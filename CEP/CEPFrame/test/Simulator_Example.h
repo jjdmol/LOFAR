@@ -28,13 +28,13 @@
 
 #include <lofar_config.h>
 
-#include "CEPFrame/Simulator.h"
+#include <CEPFrame/ApplicationHolder.h>
 
 /**
-   This class is an example of a concrete Simulator.
+   This class is an example of a concrete ApplicationHolder.
 */
 
-class Simulator_Example: public LOFAR::Simulator
+class Simulator_Example: public LOFAR::ApplicationHolder
 {
 public:
   virtual ~Simulator_Example();

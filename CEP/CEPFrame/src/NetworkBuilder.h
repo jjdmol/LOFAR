@@ -1,4 +1,4 @@
-//# SimulBuilder.h:
+//# NetworkBuilder.h:
 //#
 //# Copyright (C) 2000, 2001
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,25 +20,25 @@
 //#
 //# $Id$
 
-#ifndef CEPFRAME_SIMULBUILDER_H_
-#define CEPFRAME_SIMULBUILDER_H_
+#ifndef CEPFRAME_NETWORKBUILDER_H_
+#define CEPFRAME_NETWORKBUILDER_H_
 
 #include <lofar_config.h>
 
-#include "CEPFrame/Simul.h"
+#include "CEPFrame/Composite.h"
 
 namespace LOFAR
 {
 
 /**
-   The SimulBuilder is part of the implementation of a Builder pattern
-   (Gamma). The SimulBuilder class is an abstract class from which
+   The NetworkBuilder is part of the implementation of a Builder pattern
+   (Gamma). The NetworkBuilder class is an abstract class from which
    concrete builders should inherit and overload the virtual methods.
-   A special constructor in the Simul class will first call
+   A special constructor in the Composite class will first call
    the Step constructor (which will call getWorker())in order to
    correctly set the internal references to the WorkHolder.)
-   Then the Simul constructor will call the buildSimul() method which
-   will build the Simul.
+   Then the Composite constructor will call the buildNetwork() method which
+   will build the Composite.
 
    The destructor should delete all objects created in the other
    calls, for example all Steps created with new.
@@ -46,19 +46,19 @@ namespace LOFAR
    See Change Request 26 for an example.
 */
 
-class SimulBuilder 
+class NetworkBuilder 
 {
 public:
-  SimulBuilder();
+  NetworkBuilder();
 
   /** The destructor.
   */
-  virtual ~SimulBuilder();
+  virtual ~NetworkBuilder();
 
-  /** The buildSimul method contains all the code that will build the
-      actual simul. The argument is a Simul object which has to build.
+  /** The buildNetwork method contains all the code that will build the
+      actual simul. The argument is a Composite object which has to build.
   */
-  virtual void buildSimul (Simul&) const = 0;
+  virtual void buildNetwork (Composite&) const = 0;
 
   /** The getWorker method is used by the Step constructor to obtain a
       reference to the workholder.
@@ -72,10 +72,10 @@ public:
 
 private:
   /// Forbid copy constructor.
-  SimulBuilder (const SimulBuilder&);
+  NetworkBuilder (const NetworkBuilder&);
 
   /// Forbid assignment..
-  SimulBuilder& operator= (const SimulBuilder&);
+  NetworkBuilder& operator= (const NetworkBuilder&);
 
 
   WorkHolder* itsWorker;
@@ -84,14 +84,14 @@ private:
 
 
 
-inline SimulBuilder::SimulBuilder()
+inline NetworkBuilder::NetworkBuilder()
 : itsWorker (0)
 {}
 
-inline WorkHolder& SimulBuilder::getWorker()
+inline WorkHolder& NetworkBuilder::getWorker()
 { return *itsWorker; }
 
-inline void SimulBuilder::setWorker (WorkHolder& worker)
+inline void NetworkBuilder::setWorker (WorkHolder& worker)
 { itsWorker = worker.baseMake(); }
 
 }

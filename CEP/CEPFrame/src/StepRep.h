@@ -25,9 +25,10 @@
 
 #include <lofar_config.h>
 
-#include "CEPFrame/BaseSim.h"
-#include "CEPFrame/WorkHolder.h"
-#include "CEPFrame/TransportHolder.h"
+#include <Transport/BaseSim.h>
+#include <tinyCEP/WorkHolder.h>
+#include <Transport/TransportHolder.h>
+#include <CEPFrame/DataManager.h>
 #include <stdlib.h>
 #include <Common/lofar_string.h>
 
@@ -35,7 +36,7 @@ namespace LOFAR
 {
 
 class Step;
-class SimulRep;
+class CompositeRep;
 class CorbaMonitor;
 
 /** The Step class is the basic building block for simulations.
@@ -84,8 +85,8 @@ public:
   /// Dump information to user
   virtual void dump() const;
 
-  /// This methods distinguishes between StepRep and SimulRep class.
-  virtual bool isSimul() const;
+  /// This methods distinguishes between StepRep and CompositeRep class.
+  virtual bool isComposite() const;
 
   /// returns pointer to the WorkHolder.
   WorkHolder* getWorker();
@@ -94,11 +95,6 @@ public:
   DataHolder& getInData (int dhIndex);
   /// Get i-th output DataHolder.
   DataHolder& getOutData (int dhIndex);
-
-  /// Get Transport object for i-th input DataHolder.
-  Transport& getInTransport (int dhIndex) const;
-  /// Get Tranport object for i-th output DataHolder.
-  Transport& getOutTransport (int dhIndex) const;
 
   /// Get ID of the StepRep.
   int getID() const;  
@@ -121,15 +117,15 @@ public:
   void setName (const string& name);
 
   /** Get the parent simul object.
-      0 means that the Step is not used in a Simul.
+      0 means that the Step is not used in a Composite.
   */
-  SimulRep* getParent() const;
+  CompositeRep* getParent() const;
 
   /// Set the parent simul object.
-  void setParent (SimulRep& parent);
+  void setParent (CompositeRep& parent);
 
-  /** Get the sequence number of the Step in its parent Simul. 
-      -1 means thar the Step is not used in a Simul.
+  /** Get the sequence number of the Step in its parent Composite. 
+      -1 means thar the Step is not used in a Composite.
   */
   int getSeqNr() const;
 
@@ -143,62 +139,57 @@ public:
 		   int thisDHIndex,
 		   int thatDHIndex,
 		   int nrDH,
-		   const TransportHolder& prototype);
+		   const TransportHolder& prototype,
+		   bool blockingComm);
   
   /**
      Connect the output DataHolders of aStep to the input DHs of the current
      Step. This is the normal way of connecting two Steps to each other.
   */
   bool connectInput (Step* aStep,
-		     const TransportHolder& prototype);
+		     const TransportHolder& prototype,
+		     bool blockingComm);
 
   /**
      Connect all output DataHolders in the array of Steps (aStep[]) to
      the input DataHolders of the current step. This is the normal way
-     of connecting the output of multiple Steps to a Simul object.
+     of connecting the output of multiple Steps to a Composite object.
      If the nrSteps argument is -1, it is assumed that
      each of the Steps in the array has only one input DataHolder
-     which will be connected to the output DataHolders of the Simul.
+     which will be connected to the output DataHolders of the Composite.
   */
   bool connectInputArray (Step* aStep[], // pointer to array of ptrs to Steps
 			  int   nrSteps, // nr of Steps in aStep[] array
-			  const TransportHolder& prototype);
+			  const TransportHolder& prototype,
+			  bool blockingComm);
 
   /**
      Connect all input DataHolders in the array of Steps (aStep[]) to
      the output DataHolders of the current step. This is the normal
-     way of connecting the output of a Simul object to Steps.
+     way of connecting the output of a Composite object to Steps.
      If the nrSteps argument is -1, it is assumed that
      each of the Steps in the array has only one output DataHolder
-     which will be connected to the input DataHolders of the Simul.
+     which will be connected to the input DataHolders of the Composite.
   */
   bool connectOutputArray (Step* aStep[], // pointer to array of ptrs to Steps
 			   int   nrSteps, // nr of Steps in aStep[] array
-			   const TransportHolder& prototype);
+			   const TransportHolder& prototype,
+			   bool blockingComm);
 
-  // Connect named parameter of aStep to that of the current step
-  bool connectParam(const string& name, Step* aStep,
-		    const TransportHolder& prototype);
 
-  // Check the connection.
-  virtual bool checkConnections (ostream&, const StepRep* parent);
-
-  /** Shortcut the connections by removing all possible Simul
-      connections. In this way the steps in different simuls communicate
-      directly.
-  */
-  virtual void shortcutConnections();
-
-  /** Simplify the connections by using TH_Mem for all connections between
-      Steps running on the same node.
-  */
-  virtual void simplifyConnections();
- 
  /** Optimize connections by replacing a TransportHolder with
       a possibly more efficient TransportHolder (newTH)
   */
-  virtual void optimizeConnectionsWith(const TransportHolder& newTH);
+  virtual void replaceConnectionsWith(const TransportHolder& newTH,
+				      bool blockingComm);
  
+  // Set properties of a communication channel: synchronisity and sharing of DataHolders
+  // by input and output
+  void setInBufferingProperties(int channel, bool synchronous, 
+                                bool shareDHs=false);
+  void setOutBufferingProperties(int channel, bool synchronous, 
+                                 bool shareDHs=false);
+
   /** SetRate methods:
       These methods set the rate at which input/output dataholders are
       read/written.
@@ -245,18 +236,16 @@ protected:
 
   /// Connect 2 transports with the given transport prototype.
   static bool connectData (const TransportHolder& prototype,
-			   DataHolder& sourceData, DataHolder& targetData);
+			   DataHolder& sourceData, DataHolder& targetData,
+			   bool blockingComm);
 
 private:
 
-  /// Connect 2 ParamHolders with the given transport holder prototype.
-  bool connectParamHolders (ParamHolder& srcParam, ParamHolder& tgtParam,
-			    const TransportHolder& prototype);
-
   int         itsRefCount;
   WorkHolder* itsWorker;
-  // The parent Simul.
-  SimulRep*   itsParent;
+  DataManager* itsDataManager;
+  // The parent Composite.
+  CompositeRep*   itsParent;
   // Rank of the current run from MPI::Get_Rank()
   int         itsCurRank;
   // The application number of this run.
@@ -266,7 +255,6 @@ private:
   // Profiling output
   static int          theirProcessProfilerState; 
   static unsigned int theirNextID;
-  static unsigned int theirNextConnID; // the ID of the next Param connection  
   int                 itsID;   // the ID of the step
   int                 itsNode; // the node to run this step on
   int                 itsAppl; // the application to run this step in
@@ -274,7 +262,7 @@ private:
   int                 itsRate;
   // Add the seqnr as the name suffix?
   bool                itsAddSuffix;
-  // Sequence number in the Simul. Used to know the Step order.
+  // Sequence number in the Composite. Used to know the Step order.
   int                 itsSeqNr;
   // Name of the Step object.
   string              itsName;
@@ -298,12 +286,6 @@ inline DataHolder& StepRep::getInData (int dhIndex)
 
 inline DataHolder& StepRep::getOutData (int dhIndex)
   { return *itsWorker->getDataManager().getGeneralOutHolder(dhIndex); }
-
-inline Transport& StepRep::getInTransport (int dhIndex) const
-  { return itsWorker->getDataManager().getGeneralInHolder(dhIndex)->getTransport(); }
-
-inline Transport& StepRep::getOutTransport (int dhIndex) const
-  { return itsWorker->getDataManager().getGeneralOutHolder(dhIndex)->getTransport(); }
 
 inline const string& StepRep::getName() const
   { return itsName; } 
@@ -344,14 +326,22 @@ inline bool StepRep::shouldProcess() const
     && itsAppl == theirCurAppl;
 }
 
-inline SimulRep* StepRep::getParent() const
+inline CompositeRep* StepRep::getParent() const
   { return itsParent; }
 
-inline void StepRep::setParent (SimulRep& parent)
+inline void StepRep::setParent (CompositeRep& parent)
   { itsParent = &parent; }
 
 inline int StepRep::getSeqNr() const
   { return itsSeqNr; }
+
+inline void StepRep::setInBufferingProperties(int channel, bool synchronous, 
+				       bool shareDHs)
+  { itsDataManager->setInBufferingProperties(channel, synchronous, shareDHs);}
+
+inline void StepRep::setOutBufferingProperties(int channel, bool synchronous, 
+					bool shareDHs)
+  { itsDataManager->setOutBufferingProperties(channel, synchronous, shareDHs);}
 
 }
 

@@ -1,4 +1,4 @@
-//  SimulRep.cc:
+//  CompositeRep.cc:
 //
 //  Copyright (C) 2000, 2001
 //  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -23,10 +23,9 @@
 //
 //////////////////////////////////////////////////////////////////////
 
-#include "CEPFrame/SimulRep.h"
+#include "CEPFrame/CompositeRep.h"
 #include "CEPFrame/Step.h"
-#include "CEPFrame/Simul.h"
-#include "CEPFrame/TH_Mem.h"
+#include "CEPFrame/Composite.h"
 #include "CEPFrame/Profiler.h"
 #include "CEPFrame/WH_Empty.h"
 #include "CEPFrame/VirtualMachine.h"
@@ -36,25 +35,25 @@
 #include <unistd.h>
 
 #ifdef HAVE_CORBA
-#include "CEPFrame/Corba/BS_Corba.h"
-#include "CEPFrame/Corba/CorbaController.h"
+#include "Transport/Corba/BS_Corba.h"
+#include "Transport/Corba/CorbaController.h"
 #endif 
 
 namespace LOFAR
 {
 
 // Set static variables
-int SimulRep::theirProcessProfilerState=0; 
-int SimulRep::theirInReadProfilerState=0; 
-int SimulRep::theirInWriteProfilerState=0; 
-int SimulRep::theirOutReadProfilerState=0; 
-int SimulRep::theirOutWriteProfilerState=0; 
+int CompositeRep::theirProcessProfilerState=0; 
+int CompositeRep::theirInReadProfilerState=0; 
+int CompositeRep::theirInWriteProfilerState=0; 
+int CompositeRep::theirOutReadProfilerState=0; 
+int CompositeRep::theirOutWriteProfilerState=0; 
 
 //////////////////////////////////////////////////////////////////////
 // Construction/Destruction
 //////////////////////////////////////////////////////////////////////
 
-SimulRep::SimulRep (WorkHolder& worker, 
+CompositeRep::CompositeRep (WorkHolder& worker, 
 		    const string& name,
 		    bool addNameSuffix, 
 		    bool controllable,
@@ -63,9 +62,9 @@ SimulRep::SimulRep (WorkHolder& worker,
   itsIsHighestLevel(true),
   itsController    (0)
 {
-  TRACER2("SimulRep C'tor");
+  TRACER2("CompositeRep C'tor");
   if (controllable) {
-    TRACER2("Create controllable Simul " << name);
+    TRACER2("Create controllable Composite " << name);
 #ifdef HAVE_CORBA
     // Create a CorbaController object and connect it to the VirtualMachine.
     itsController = new CorbaController (BS_Corba::getPOA(),
@@ -73,28 +72,28 @@ SimulRep::SimulRep (WorkHolder& worker,
 					 name, 
 					 &itsVM);
 #else
-    TRACER3("CORBA is not configured, so CorbaMonitor cannot be used in Simul ");
+    TRACER3("CORBA is not configured, so CorbaMonitor cannot be used in Composite ");
 #endif 
   }
 
   if (theirProcessProfilerState == 0) {
-    theirProcessProfilerState = Profiler::defineState("Simul_Process","grey");
+    theirProcessProfilerState = Profiler::defineState("Composite_Process","grey");
   }
   if (theirInReadProfilerState == 0) {
-    theirInReadProfilerState = Profiler::defineState("Simul_InRead","pink");
+    theirInReadProfilerState = Profiler::defineState("Composite_InRead","pink");
   }
   if (theirInWriteProfilerState == 0) {
-    theirInWriteProfilerState = Profiler::defineState("Simul_InWrite","purple");
+    theirInWriteProfilerState = Profiler::defineState("Composite_InWrite","purple");
   }
   if (theirOutReadProfilerState == 0) {
-    theirOutReadProfilerState = Profiler::defineState("Simul_OutRead","purple");
+    theirOutReadProfilerState = Profiler::defineState("Composite_OutRead","purple");
   }
   if (theirOutWriteProfilerState == 0) {
-    theirOutWriteProfilerState = Profiler::defineState("Simul_OutWrite","red");
+    theirOutWriteProfilerState = Profiler::defineState("Composite_OutWrite","red");
   }
 }
 
-SimulRep::~SimulRep()
+CompositeRep::~CompositeRep()
 {
   for (list<Step*>::iterator iter=itsSteps.begin();
        iter!=itsSteps.end(); iter++) {
@@ -105,9 +104,9 @@ SimulRep::~SimulRep()
 #endif
 }
 
-void SimulRep::addStep (const Step& step)
+void CompositeRep::addStep (const Step& step)
 {
-  TRACER2("Simul::addStep " << step.getName());
+  TRACER2("Composite::addStep " << step.getName());
   // Error if the step is already used in a simul.
   AssertStr (step.getRep()->getParent() == 0,
 	     "Step " << step.getName() << " already used in another simul");
@@ -125,16 +124,16 @@ void SimulRep::addStep (const Step& step)
   itsSteps.push_back (aStep);
   // Add the name to the map.
   itsNameMap[stepPtr->getName()] = stepPtr;
-  // Tell that the step has been added to a Simul.
+  // Tell that the step has been added to a Composite.
   stepPtr->setParent (*this);
-  if (stepPtr->isSimul()) {
-    SimulRep* simulPtr = dynamic_cast<SimulRep*>(stepPtr);
+  if (stepPtr->isComposite()) {
+    CompositeRep* simulPtr = dynamic_cast<CompositeRep*>(stepPtr);
     // update the ishighestlevel flag of the aStep
     simulPtr->setNotHighestLevel();
   }
 }
 
-void SimulRep::runOnNode (int aNode, int applNr)
+void CompositeRep::runOnNode (int aNode, int applNr)
 {
   StepRep::runOnNode (aNode, applNr);
   for (list<Step*>::iterator iter=itsSteps.begin();
@@ -144,8 +143,8 @@ void SimulRep::runOnNode (int aNode, int applNr)
 }
 
 
-bool SimulRep::connect (const string& sourceName, const string& targetName,
-			const TransportHolder& prototype)
+bool CompositeRep::connect (const string& sourceName, const string& targetName,
+			    const TransportHolder& prototype, bool blockingComm)
 {
   int sourceDH, targetDH;
   StepRep* sourceStep;
@@ -157,41 +156,44 @@ bool SimulRep::connect (const string& sourceName, const string& targetName,
     return false;
   }
   AssertStr (sourceStep != targetStep,
-	     "Attempt to connect Step/Simul " <<
+	     "Attempt to connect Step/Composite " <<
 	     sourceStep->getName() << " to itself");
   if (sourceStep == this) {
     if (sourceDH < 0  &&  targetDH < 0) {
       Step tgt(targetStep);
-      return connect_thisIn_In (&tgt, 0, 0, 0, prototype);
+      return connect_thisIn_In (&tgt, 0, 0, 0, prototype, blockingComm);
     } else {
       return connectData (prototype,
 			  sourceStep->getInData(max(0,sourceDH)),
-			  targetStep->getInData(max(0,targetDH)));
+			  targetStep->getInData(max(0,targetDH)),
+			  blockingComm);
     }
   } else if (targetStep == this) {
     if (sourceDH < 0  &&  targetDH < 0) {
       Step src(sourceStep);
-      connect_thisOut_Out (&src, 0, 0, 0, prototype);
+      connect_thisOut_Out (&src, 0, 0, 0, prototype, blockingComm);
     } else {
       return connectData (prototype,
 			  sourceStep->getOutData(max(0,sourceDH)),
-			  targetStep->getOutData(max(0,targetDH)));
+			  targetStep->getOutData(max(0,targetDH)),
+			  blockingComm);
     }
   } else {
     // If no DataHolders given, connect all of them in the steps.
     // Otherwise connect given DataHolder. Take first if not given.
     if (sourceDH < 0  &&  targetDH < 0) {
       Step src(sourceStep);
-      return targetStep->connectInput (&src, prototype);
+      return targetStep->connectInput (&src, prototype, blockingComm);
     } else {
       return targetStep->connectRep (sourceStep, max(0,targetDH),
-				     max(0,sourceDH), 1, prototype);
+				     max(0,sourceDH), 1, prototype,
+				     blockingComm);
     }
   }
   return false;
 }
 
-bool SimulRep::splitName (bool isSource, const string& name,
+bool CompositeRep::splitName (bool isSource, const string& name,
 			  StepRep*& step, int& dhIndex)
 {
   dhIndex = -1;
@@ -200,7 +202,7 @@ bool SimulRep::splitName (bool isSource, const string& name,
   bool takeOut = isSource;
   // Split the name at the .
   int i = name.find('.');
-  // Find the step part and object. No step part means this Simul.
+  // Find the step part and object. No step part means this Composite.
   if (i == 0) {
     step = this;
     takeOut = !isSource;
@@ -225,7 +227,7 @@ bool SimulRep::splitName (bool isSource, const string& name,
   // Find the DataHolder index in the WorkHolder of the Step.
   // It can be an input or an output DataHolder depending on:
   // - is it a source or target
-  // - is it this Simul or a Step in the Simul.
+  // - is it this Composite or a Step in the Composite.
   if (! dhName.empty()) {
     string type = "Output";
     if (takeOut) {
@@ -242,11 +244,12 @@ bool SimulRep::splitName (bool isSource, const string& name,
 }
 
 
-bool SimulRep::connect_thisOut_Out (Step* aStep,          
+bool CompositeRep::connect_thisOut_Out (Step* aStep,          
 				    int   thisChannelOffset,
 				    int   thatChannelOffset,
 				    int   skip,
-				    const TransportHolder& prototype)
+				    const TransportHolder& prototype,
+				    bool blockingComm)
 {
   if (aStep == NULL) {
     return false;
@@ -260,21 +263,23 @@ bool SimulRep::connect_thisOut_Out (Step* aStep,
     
     connectData (prototype,
 		 aStep->getOutData(thatchannel),
-		 this->getOutData(thischannel));
+		 this->getOutData(thischannel),
+		 blockingComm);
 
     TRACER2("connect_OutOut; Connect " << getName() << "(ID = "
 	   << getID() << " ) channel " << thischannel << "to : ("
 	   << aStep->getRep()->getID() << ") OutTransport ID = " 
-	   << aStep->getOutTransport(thatchannel).getItsID() << " ");  
+	   << aStep->getOutData(thatchannel).getID() << " ");  
   }
   return true;
 }
 
-bool SimulRep::connect_thisIn_In (Step* aStep,          
+bool CompositeRep::connect_thisIn_In (Step* aStep,          
 				  int   thisChannelOffset,
 				  int   thatChannelOffset,
 				  int   skip,
-				  const TransportHolder& prototype)
+				  const TransportHolder& prototype,
+				  bool blockingComm)
 {
   if (aStep == NULL) {
     return false;
@@ -288,21 +293,23 @@ bool SimulRep::connect_thisIn_In (Step* aStep,
     int thatchannel = channel+thatChannelOffset;  // channel nr in aStep
     connectData (prototype,
 		 this->getInData(thischannel),
-		 aStep->getInData(thatchannel));
+		 aStep->getInData(thatchannel),
+		 blockingComm);
 
     TRACER2( "connect_thisIn_In; Connect " << getName() << "(ID = " << getID() 
 	   << " ) channel " << thischannel << " : InTransport InID = " 
-	   << aStep->getInTransport(thatchannel).getItsID() << " ");  
+	   << aStep->getInData(thatchannel).getID() << " ");  
   }
   return true;
 }
 
 
-bool SimulRep::connectInputToArray (Step* aStep[],   // pointer to  array of ptrs to Steps
+bool CompositeRep::connectInputToArray (Step* aStep[],   // pointer to  array of ptrs to Steps
 				 int    nrItems, // nr of Steps in aStep[] array
 				 int    skip,     // skip in inputs in aStep 
 				 int    offset,   // start with this input nr in aStep
-				 const TransportHolder& prototype)
+				 const TransportHolder& prototype,
+				 bool blockingComm)
 {
 
   TRACER2("connectInputToArray " 
@@ -318,7 +325,8 @@ bool SimulRep::connectInputToArray (Step* aStep[],   // pointer to  array of ptr
 		       channelOffset, // offset in this
 		       offset,
 		       skip,         // offset in aStep
-		       prototype);
+		       prototype,
+		       blockingComm);
 
     channelOffset += aStep[item]->getWorker()->getDataManager().getInputs() - skip;
   }
@@ -326,11 +334,12 @@ bool SimulRep::connectInputToArray (Step* aStep[],   // pointer to  array of ptr
   
 }
 
-bool SimulRep::connectOutputToArray (Step* aStep[],  // array of ptrs to Steps
+bool CompositeRep::connectOutputToArray (Step* aStep[],  // array of ptrs to Steps
 				  int    nrItems,
 				  int    skip,    // skip in inputs in aStep 
 				  int    offset,  // start with this input nr in aStep
-				  const TransportHolder& prototype)
+				  const TransportHolder& prototype,
+				  bool blockingComm)
 { // nr of Steps in aStep[] array
   
   TRACER2( "connectOutputToArray " 
@@ -346,117 +355,27 @@ bool SimulRep::connectOutputToArray (Step* aStep[],  // array of ptrs to Steps
 			 channelOffset, // offset in this
 			 offset,
 			 skip,
-			 prototype);
+			 prototype,
+			 blockingComm);
     channelOffset += aStep[item]->getWorker()->getDataManager().getOutputs() - skip;
   }
   return true;
 }
 
-
-bool SimulRep::checkConnections (ostream& os, const StepRep* parent)
+void CompositeRep::replaceConnectionsWith(const TransportHolder& newTH, bool blockingComm)
 {
-  // Check if the Simul DataHolders are connected.
-  bool result = StepRep::checkConnections (os, parent);
-  // Check all steps in the simul.
+  // Do a simplifyComm for this Composite.
+  StepRep::replaceConnectionsWith(newTH, blockingComm);
+  // Do the same for all steps in this Composite.
   for (list<Step*>::iterator iter=itsSteps.begin();
        iter!=itsSteps.end(); iter++) {
-    result &= (*iter)->checkConnections (os, this);
-  }
-  return result;
-}
-
-
-void SimulRep::shortcutConnections()
-{
-  // Make a shortcut (if possible) for the DataHolders of this Simul.
-  for (int ch=0; ch<getWorker()->getDataManager().getInputs(); ch++) {
-    doShortcut (getInTransport(ch));
-  }
-  for (int ch=0; ch<getWorker()->getDataManager().getOutputs(); ch++) {
-    doShortcut (getOutTransport(ch));
-  }
-  // Do the same for all simuls in this Simul.
-  for (list<Step*>::iterator iter=itsSteps.begin();
-       iter!=itsSteps.end(); iter++) {
-    (*iter)->shortcutConnections();
+    (*iter)->replaceConnectionsWith(newTH, blockingComm);
   }
 }
 
-void SimulRep::doShortcut (Transport& tp)
+void CompositeRep::preprocess()
 {
-  // The Simul can be shortcut if it has a source and target.
-  DataHolder* src = tp.getSourceAddr();
-  DataHolder* dst = tp.getTargetAddr();
-  if (src && dst) {
-    Transport& srctp = src->getTransport();
-    Transport& dsttp = dst->getTransport();
-    DbgAssert (srctp.getTargetAddr() == tp.getDataHolder());
-    DbgAssert (dsttp.getSourceAddr() == tp.getDataHolder());
-    // There are two connections which might be replaced by a single one.
-    // That can be done if both connections have the same type or
-    // if one of the connections is a TH_Mem one.
-    // Also if both run on the same node, a single TH_Mem connection
-    // can be used.
-    bool replaced = false;
-    if (src->getNode() == dst->getNode()) {
-      srctp.makeTransportHolder (TH_Mem());
-      dsttp.makeTransportHolder (TH_Mem());
-      replaced = true;
-    } else {
-      // Shortcut is possible if they use the same Transport mechanism
-      // or if one of them uses TH_Mem.
-      // In the latter case we have to replace one of the mechanisms.
-      if (srctp.getTransportHolder()->getType() ==
-          dsttp.getTransportHolder()->getType()) {
-	replaced = true;
-      } else if (srctp.getTransportHolder()->getType() == "TH_Mem") {
-	srctp.makeTransportHolder (*(dsttp.getTransportHolder()));
-	replaced = true;
-      } else if (dsttp.getTransportHolder()->getType() == "TH_Mem") {
-	dsttp.makeTransportHolder (*(srctp.getTransportHolder()));
-	replaced = true;
-      }
-    }
-    // If replaced, set correct source and target, etc..
-    if (replaced) {
-      srctp.setTargetAddr (dsttp.getDataHolder());
-      dsttp.setSourceAddr (srctp.getDataHolder());
-      dsttp.setReadTag (tp.getReadTag());
-      // Clear transport for the Simul.
-      tp.setReadTag (-1);
-      tp.setWriteTag (-1);
-      tp.setSourceAddr (0);
-      tp.setTargetAddr (0);
-    }
-  }
-}
-
-
-void SimulRep::simplifyConnections()
-{
-  // Do a simplifyComm for this Simul.
-  StepRep::simplifyConnections();
-  // Do the same for all steps in this Simul.
-  for (list<Step*>::iterator iter=itsSteps.begin();
-       iter!=itsSteps.end(); iter++) {
-    (*iter)->simplifyConnections();
-  }
-}
-
-void SimulRep::optimizeConnectionsWith(const TransportHolder& newTH)
-{
-  // Do a simplifyComm for this Simul.
-  StepRep::optimizeConnectionsWith(newTH);
-  // Do the same for all steps in this Simul.
-  for (list<Step*>::iterator iter=itsSteps.begin();
-       iter!=itsSteps.end(); iter++) {
-    (*iter)->optimizeConnectionsWith(newTH);
-  }
-}
-
-void SimulRep::preprocess()
-{
-  TRACER4("Simul " << getName() << " preprocess");
+  TRACER4("Composite " << getName() << " preprocess");
   StepRep::preprocess();
   list<Step*>::iterator iList;
   for (iList = itsSteps.begin(); iList != itsSteps.end(); ++iList) {
@@ -464,13 +383,13 @@ void SimulRep::preprocess()
   }
 }
 
-void SimulRep::process()
+void CompositeRep::process()
 {
   /// 1) Read InData
   /// 2) process all steps
   /// 3) Write OutData
 
-  // The VirtualMachine controls the state of this SimulRep.
+  // The VirtualMachine controls the state of this CompositeRep.
   // The process() method will only do something while in the "running" mode.
   // The "aborting" state will cause an exit(0)
   // (which may be changed in later versions).
@@ -488,7 +407,7 @@ void SimulRep::process()
   bool onRightNode = true; // true if Node of this process == current rank
 
   if (getNode() < 0) {
-    TRACER4("Simul::Process Node<0 " << getName());	  
+    TRACER4("Composite::Process Node<0 " << getName());	  
     onRightNode = false;     
   }
 	
@@ -498,7 +417,7 @@ void SimulRep::process()
   }
 
   if (onRightNode) {
-    // Simuls run on ALL nodes.
+    // Composites run on ALL nodes.
     // Only read and write of the simul is on your own node
     for (int ch=0; ch < getWorker()->getDataManager().getInputs(); ch++) {
       // Read the source of inTransport
@@ -508,7 +427,7 @@ void SimulRep::process()
       Profiler::leaveState (theirInReadProfilerState);
       // Write the InTransport to the first step of this simul
       Profiler::enterState (theirInWriteProfilerState);
-      getWorker()->getDataManager().getInHolder(ch)->getTransport().write();
+      (getWorker()->getDataManager().getInHolder(ch))->write();
       Profiler::leaveState (theirInWriteProfilerState);
     }  
   }
@@ -516,9 +435,9 @@ void SimulRep::process()
   // Process all substeps (and simuls), even if this simul isn't running on this node 
   list<Step*>::iterator iList;
   for (iList = itsSteps.begin(); iList != itsSteps.end(); ++iList) {
-    if ((*iList)->isSimul()) {
-      TRACER4("Processing Simul " << (*iList)->getName());  
-    } else {            // not a Simul but a step
+    if ((*iList)->isComposite()) {
+      TRACER4("Processing Composite " << (*iList)->getName());  
+    } else {            // not a Composite but a step
       TRACER4("Processing step ID = " << (*iList)->getID());
     }
     (*iList)->process();
@@ -528,7 +447,7 @@ void SimulRep::process()
     for (int ch=0; ch < getWorker()->getDataManager().getOutputs(); ch++) {
       // Fill the outdata buffer by reading from last step
       Profiler::enterState (theirOutReadProfilerState);
-      getWorker()->getDataManager().getOutHolder(ch)->getTransport().read();
+      getWorker()->getDataManager().getOutHolder(ch)->read();
       Profiler::leaveState (theirOutReadProfilerState);
       // Write the Outtransport
       Profiler::enterState (theirOutWriteProfilerState);
@@ -538,9 +457,9 @@ void SimulRep::process()
   }
 }
 
-void SimulRep::postprocess()
+void CompositeRep::postprocess()
 {
-  TRACER4("Simul " << getName() << " postprocess");
+  TRACER4("Composite " << getName() << " postprocess");
   StepRep::postprocess();
   list<Step*>::iterator iList;
   for (iList = itsSteps.begin(); iList != itsSteps.end(); ++iList) {
@@ -548,9 +467,9 @@ void SimulRep::postprocess()
   }
 }
 
-void SimulRep::dump() const
+void CompositeRep::dump() const
 {
-  TRACER4("Simul " << getName() << " dump");
+  TRACER4("Composite " << getName() << " dump");
   StepRep::dump();
   list<Step*>::const_iterator iList;
   for (iList = itsSteps.begin(); iList != itsSteps.end(); ++iList) {
@@ -558,20 +477,10 @@ void SimulRep::dump() const
   }
 }
 
-bool SimulRep::isSimul() const
+bool CompositeRep::isComposite() const
 {
   return true;
 }
 
-bool SimulRep::setDHFile (const string& dhName, const string& fileName)
-{
-  int inxDH;
-  StepRep* step;
-  // Search in the output data holders.
-  if (! splitName (true, dhName, step, inxDH)) {
-    return false;
-  }
-  return step->getOutData(inxDH).setOutFile (fileName);
-}
 
 }
