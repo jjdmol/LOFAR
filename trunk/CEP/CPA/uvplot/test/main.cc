@@ -27,9 +27,56 @@
 
 #include <Common/Debug.h>
 
+
 #if(HAVE_VDM)
 #include <OCTOPUSSY/OctopussyConfig.h>
-#endif
+#endif // HAVE_VDM
+
+#include <unistd.h>
+#include <string>
+
+
+struct TSjob_parameters
+{
+  std::string HIID_prefix;
+  
+  TSjob_parameters(unsigned int argc, char *argv[]);
+};
+
+
+
+/*===============>>>  TSjob_parameters::TSjob_parameters  <<<================*/
+
+TSjob_parameters::TSjob_parameters(unsigned int argc, char *argv[])
+{
+   const char   *getopt_string = "p:";
+   signed char   ch = 0;
+   bool          invalid_commandline = false;
+
+   HIID_prefix = "";
+
+   for(ch = getopt(argc, argv, getopt_string);
+       ch != -1;
+       ch = getopt(argc, argv, getopt_string))
+     {
+       switch(ch)
+         {
+
+         case 'p':
+           {
+             HIID_prefix = std::string(optarg);
+           }
+           break;
+
+         } // switch
+
+     } // for
+}
+
+
+
+
+
 
 
 int main(int argc, char *argv[])
@@ -42,9 +89,16 @@ try
 #if(HAVE_VDM)
   OctopussyConfig::initGlobal(argc,(const char **)argv);
 #endif
+  TSjob_parameters Job(argc, argv);
+
 
   std::cout << "Create mainwindow" << std::endl;
-  UVPMainWindow *mainwin = new UVPMainWindow;
+  UVPMainWindow *mainwin;
+  if(Job.HIID_prefix == "") {
+    mainwin = new UVPMainWindow;
+  } else {
+    mainwin = new UVPMainWindow(Job.HIID_prefix, true);
+  }
   mainwin->resize(800, 800);
 
   std::cout << "Set Mainwidget" << std::endl;

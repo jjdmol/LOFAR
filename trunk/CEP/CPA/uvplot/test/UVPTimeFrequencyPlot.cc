@@ -159,12 +159,9 @@ void UVPTimeFrequencyPlot::drawView()
   unsigned int Nch(0);
   QColor Blue(0,0,255);
 
-  if(N>0) {
-    Nch = itsComplexSpectrum[0]->getNumberOfChannels();
-  }
-
 
   BufferPainter.eraseRect(0,0,width(), height());
+  int W = width();
 
   if(itsComplexSpectrum.min() != itsComplexSpectrum.max()) {
     for(unsigned int i = 0; i < N; i++) {
@@ -173,7 +170,9 @@ void UVPTimeFrequencyPlot::drawView()
       UVPDataAtom::FlagIterator        flag = itsComplexSpectrum[i]->getFlagBegin();
       unsigned int                     j(0);
       
-      while(j < Nch ) {
+      Nch = itsComplexSpectrum[0]->getNumberOfChannels();
+
+      while(j < Nch && j < W) {
         if(*flag) {
           BufferPainter.setPen(Blue);
         } else {

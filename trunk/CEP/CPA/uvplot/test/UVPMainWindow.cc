@@ -52,7 +52,7 @@
 #if(HAVE_VDM)
 // For VDM stuff
 #include <VisAgent/InputAgent.h>
-#include <MSVisAgent/MSInputAgent.h>
+#include <OctoAgent/EventMultiplexer.h>
 #include <AID-uvplot.h>
 using namespace VisAgent;
 #include <UVPOpenVDMDialog.h>
@@ -66,7 +66,8 @@ InitDebugContext(UVPMainWindow, "DEBUG_CONTEXT");
 
 //===================>>>  UVPMainWindow::UVPMainWindow  <<<===================
 
-UVPMainWindow::UVPMainWindow()
+UVPMainWindow::UVPMainWindow(const std::string& hiidPrefix,
+                             bool               kickstartVDM)
 #if(HAVE_VDM)
   : QMainWindow(),
     itsInputAgent(0)
@@ -74,6 +75,12 @@ UVPMainWindow::UVPMainWindow()
   : QMainWindow()
 #endif
 {
+
+#if(HAVE_VDM)
+  itsHIIDPrefix = HIID(hiidPrefix);
+  itsEventMultiplexer = new OctoAgent::EventMultiplexer(AidVisualizerWP);
+#endif
+
   // Construct a menu
   buildMenuBar();
   // Menu constructed
@@ -140,6 +147,14 @@ UVPMainWindow::UVPMainWindow()
   setFocusPolicy(QWidget::StrongFocus);
 
   updateCaption();
+#if(HAVE_VDM)
+  if(kickstartVDM) {
+    itsInputType     = VDM;
+    slot_vdmInit(itsHIIDPrefix);
+    updateCaption();
+    slot_vdmInput();
+  }
+#endif
 }
 
 
@@ -155,6 +170,7 @@ UVPMainWindow::~UVPMainWindow()
   if(itsInputAgent != 0) {
     delete itsInputAgent;
   }
+  delete itsEventMultiplexer;
 #endif
 }
 
@@ -335,6 +351,8 @@ void UVPMainWindow::drawDataSet()
   ToHeader.itsAntenna2 = ToHeader.itsAntenna2 + 1;
 
   itsCanvas->setChannels(itsNumberOfChannels); // Number of channels. Clears buffer.
+  itsCanvas->setGeometry(0, 0, itsNumberOfChannels, itsNumberOfTimeslots);
+
 
   UVPDataSet::iterator EndOfData = itsDataSet.end();
   UVPDataSet::iterator Start = itsDataSet.upper_bound(FromHeader);
@@ -367,19 +385,19 @@ void UVPMainWindow::drawDataSet()
        itsGraphSettingsWidget->getSettings().mustPlotField(dataAtom->getHeader().itsFieldID)) {
 
       unsigned int NumChan = dataAtom->getNumberOfChannels();
-      double*      Values  = new double[NumChan];
-      const UVPDataAtom::ComplexType* data = dataAtom->getData(0);
+      //      double*      Values  = new double[NumChan];
+      //      const UVPDataAtom::ComplexType* data = dataAtom->getData(0);
 
-      for(unsigned int j = 0; j < NumChan; j++) {
-        Values[j] = std::abs(*data++);
-      }
+      //      for(unsigned int j = 0; j < NumChan; j++) {
+      //Values[j] = std::abs(*data++);
+      //}
       
-      UVPSpectrum Spectrum(NumChan, spectraAdded, Values);
+      //      UVPSpectrum Spectrum(NumChan, spectraAdded, Values);
       
-      itsCanvas->slot_addSpectrum(Spectrum);
+      //      itsCanvas->slot_addSpectrum(Spectrum);
       itsCanvas->slot_addDataAtom(dataAtom);
       spectraAdded++;
-      delete[] Values;
+      //      delete[] Values;
     }
   }
   itsCanvas->drawView();
@@ -612,9 +630,8 @@ void UVPMainWindow::slot_vdmOpenPipe()
   try {
     if(ok) {
       HIID header(dlg.getHeaderText());
-      HIID data(dlg.getDataText());
     
-      slot_vdmInit(header, data);
+      slot_vdmInit(header);
     }
   }
   catch(...){
@@ -632,12 +649,11 @@ void UVPMainWindow::slot_vdmOpenPipe()
 
 //===============>>>  UVPMainWindow::slot_vdmInit  <<<===============
 
-void UVPMainWindow::slot_vdmInit(const HIID& header,
-                                 const HIID& data)
+void UVPMainWindow::slot_vdmInit(const HIID& hiidPrefix)
 try
 {
-  using namespace MSVisAgent;
   using namespace VisAgent;
+  using namespace OctoAgent;
   
   itsMSColumnName = itsGraphSettingsWidget->getSettings().getColumnName();
   int ant1        = int(itsGraphSettingsWidget->getSettings().getAntenna1());
@@ -654,23 +670,25 @@ try
  
   DataRecord& args = rec[AidInput] <<= new DataRecord;
 
-   
-  args[FMSName]         = itsInputFilename;
-  args[FDataColumnName] = itsMSColumnName;
-  args[FTileSize]       = 10;
+  rec[AidInput][FEventMapIn] <<= new DataRecord;
+  rec[AidInput][FEventMapIn][FDefaultPrefix] = hiidPrefix;
 
-    // setup selection
-  DataRecord &select = args[FSelection] <<= new DataRecord;
+  //  args[FMSName]         = itsInputFilename;
+  //  args[FDataColumnName] = itsMSColumnName;
+  //  args[FTileSize]       = 10;
 
-  select[FDDID]              = 0;
-  select[FFieldIndex]        = 0;
-  select[FChannelStartIndex] = 0;
-  select[FChannelEndIndex]   = 127;
-  select[FSelectionString]   = select_sstream.str();
+  // setup selection
+  //  DataRecord &select = args[FSelection] <<= new DataRecord;
+
+  //  select[FDDID]              = 0;
+  //  select[FFieldIndex]        = 0;
+  //  select[FChannelStartIndex] = 0;
+  //  select[FChannelEndIndex]   = 127;
+  //  select[FSelectionString]   = select_sstream.str();
 
 
   itsNumberOfChannels = 128;
-  itsNumberOfTimeslots = 1000;
+  itsNumberOfTimeslots = 1500;
 
   itsScrollView->removeChild(itsCanvas);
   itsCanvas->setGeometry(0, 0, itsNumberOfChannels, itsNumberOfTimeslots);
@@ -680,7 +698,10 @@ try
   
   // create agent
   if(itsInputAgent == 0) {
-    itsInputAgent   = new MSInputAgent(AidInput);
+#if(DEBUG_MODE)
+    std::cout << "itsInputAgent   = new MSInputAgent(AidInput);"<<std::endl;
+#endif
+    itsInputAgent   = new VisAgent::InputAgent(itsEventMultiplexer->newSink());
   }
 
 #if(DEBUG_MODE)
@@ -719,6 +740,7 @@ try
     itsBusyPlotting = true;
     if(itsInputAgent != 0) {
       itsDataSet.clear();
+      itsNumberOfChannels = 0;
     
       DataRecord::Ref header;
       cout<<"getHeader(): "<<itsInputAgent->getHeader(header)<<endl;
@@ -739,6 +761,10 @@ try
         int ant1  = tile.deref().antenna1();
         int ant2  = tile.deref().antenna2();
         
+        if(nfreq > itsNumberOfChannels) {
+          itsNumberOfChannels = nfreq;
+        }
+
         if(ncorr > 0 && nfreq > 0 && ntime > 0) {
           uvp_header.itsTime             = 0;
           uvp_header.itsAntenna1         = ant1;

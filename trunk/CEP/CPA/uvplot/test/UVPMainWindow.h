@@ -41,6 +41,9 @@
 namespace VisAgent{
 class InputAgent;
 };
+namespace OctoAgent{
+  class EventMultiplexer;
+};
 #include <DMI/HIID.h>
 
 #pragma aidgroup uvplot
@@ -75,7 +78,8 @@ class UVPMainWindow:public QMainWindow
 #endif
 
   //! Constructor
-   UVPMainWindow();
+   UVPMainWindow(const std::string& hiidPrefix="",
+                 bool               kickstartVDM=false);
 
   //! Destructor
   ~UVPMainWindow();
@@ -100,8 +104,7 @@ class UVPMainWindow:public QMainWindow
   void slot_vdmInput();
 
   //! Initialize VDM communications. Called from slot_vdmInput().
-  void slot_vdmInit(const HIID& header = HIID(""),
-                    const HIID& data   = HIID(""));
+  void slot_vdmInit(const HIID& hiidPrefix = HIID(""));
 
   //! Lets the user select an MS filename. Sets itsInputType to "VDM".
   void slot_vdmOpenMS();
@@ -161,7 +164,9 @@ class UVPMainWindow:public QMainWindow
   std::string     itsCurrentWorkingDirectory;
 
 #if(HAVE_VDM)
-  VisAgent::InputAgent*   itsInputAgent;
+  OctoAgent::EventMultiplexer* itsEventMultiplexer;
+  VisAgent::InputAgent*        itsInputAgent;
+  HIID                         itsHIIDPrefix;
 #endif
 
 
