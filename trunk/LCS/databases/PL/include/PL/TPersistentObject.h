@@ -78,9 +78,10 @@ namespace LOFAR
       }
       
       // Return a reference to the contained persistent object.
-      // \note This is a \e non-const reference, because we want to allow
-      // modification of *itsObjectPtr.
       T& data() { return *itsObjectPtr; }
+
+      // Return a const reference to the contained persistent object.
+      const T& data() const { return *itsObjectPtr; }
 
       // \todo Maybe this should be done completely different. It will depend
       // on how we can best iterate over the query result. We might e.g.
@@ -130,7 +131,6 @@ namespace LOFAR
 
       // This method is responsible for actually erasing the \e primitive
       // data members of \c T.
-      // \throw NotImplemented
       virtual void doErase() const 
       {
 	STATIC_CHECK(0, _Use_Explicit_Member_Specialization_);
@@ -140,7 +140,6 @@ namespace LOFAR
 
       // This method is responsible for actually inserting the \e primitive
       // data members of \c T.
-      // \throw NotImplemented
       virtual void doInsert() const 
       {
 	STATIC_CHECK(0, _Use_Explicit_Member_Specialization_);
@@ -160,7 +159,6 @@ namespace LOFAR
 
       // This method is responsible for actually erasing the \e primitive
       // data members of \c T.
-      // \throw NotImplemented
       virtual void doUpdate() const 
       {
 	STATIC_CHECK(0, _Use_Explicit_Member_Specialization_);
@@ -170,7 +168,6 @@ namespace LOFAR
 
       // This method is responsible for actually retrieving the \e primitive
       // data members of \c T.
-      // \throw NotImplemented
 //       static Collection<TPersistentObject<T> > 
 //       doRetrieve(const Query& query, int maxObjects)
 //       {
