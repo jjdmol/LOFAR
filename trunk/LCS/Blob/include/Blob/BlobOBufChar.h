@@ -93,7 +93,12 @@ public:
   template<typename U> U* getPointer (uint position);
 
   // Reserve at least the given size.
+  // An exception is thrown if the buffer needs to be expanded, but cannot.
   void reserve (uint newReservedSize);
+
+  // Resize the buffer.
+  // An exception is thrown if the buffer needs to be expanded, but cannot.
+  void resize (uint newSize);
 
 protected:
   // Set the buffer pointer.
@@ -104,6 +109,7 @@ private:
   bool resizeIfNeeded (uint newSize);
 
   // Try to expand the buffer to at least the given size.
+  // It returns false if the buffer cannot be expanded.
   bool expand (uint minSize);
 
   // Expand the buffer to the given size.

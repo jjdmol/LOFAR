@@ -56,6 +56,12 @@ BlobIStream::~BlobIStream()
 // the object type.
 const std::string& BlobIStream::getNextType()
 {
+  uint size;
+  return getNextType (size);
+}
+
+const std::string& BlobIStream::getNextType (uint& size)
+{
   // Return current type if already cached.
   if (itsHasCachedType) {
     return itsObjectType;
@@ -64,7 +70,8 @@ const std::string& BlobIStream::getNextType()
   BlobHeader hdr;
   itsStream->get ((char*)(&hdr), sizeof(hdr));
   ASSERT (hdr.checkMagicValue());
-  ASSERT (itsLevel == hdr.itsLevel);
+  // The level does not need to be equal in case of BlobFieldSet::putExtraBlob.
+  ASSERT (itsLevel >= hdr.itsLevel);
   // Determine if data has to be converted (in case data format mismatches).
   if (itsLevel == 0) {
     itsMustConvert = hdr.mustConvert();
@@ -75,7 +82,9 @@ const std::string& BlobIStream::getNextType()
   // Keep the current length read.
   itsLevel++;
   itsObjLen.push (itsCurLength);
-  itsObjTLN.push (hdr.getLength());
+  uint32 sz = hdr.getLength();
+  itsObjTLN.push (sz);
+  size = sz;
   itsVersion = hdr.getVersion();
   itsObjectType.resize (hdr.itsNameLength); // resize string adding trailing 0
   char* ptr = &(itsObjectType[0]);

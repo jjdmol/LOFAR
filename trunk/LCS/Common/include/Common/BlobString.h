@@ -79,6 +79,10 @@ public:
   size_t capacity() const
     { return itsCapacity; }
 
+  // Can the capacity be extended?
+  bool canExpand() const
+    { return itsCanIncr; }
+
   // Set the capacity. Nothing is done if the new capacity is not more.
   // An exception is thrown if the capacity has to be increased, but was
   // denied in the constructor.

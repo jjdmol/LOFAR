@@ -149,4 +149,10 @@ void BlobOBufChar::reserve (uint newReservedSize)
   }
 }
 
+void BlobOBufChar::resize (uint newSize)
+{
+  doExpand (newSize, newSize);
+  itsSize = newSize;
+}
+
 } // end namespace

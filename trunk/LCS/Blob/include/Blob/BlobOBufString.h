@@ -42,13 +42,7 @@ public:
   // It keeps a pointer to the given BlobString object, so that should
   // not be deleted before this object.
   explicit BlobOBufString (BlobString& buffer,
-			   uint expandSize=1024, uint start=0)
-    : BlobOBufChar (buffer.data(), buffer.capacity(),
-		    expandSize, start, false),
-      itsString    (&buffer)
-    {
-      ASSERT(start <= buffer.size());
-    }
+			   uint expandSize=1024, uint start=0);
 
   // Destructor.
   virtual ~BlobOBufString();

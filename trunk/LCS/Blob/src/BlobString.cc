@@ -78,7 +78,7 @@ void BlobString::reserve (size_t newSize)
 
 void BlobString::resize (size_t newSize)
 {
-  if (newSize > itsSize) {
+  if (newSize != itsSize) {
     if (newSize > itsCapacity) {
       reserve (newSize);
     }
