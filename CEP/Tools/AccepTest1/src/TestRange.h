@@ -6,10 +6,10 @@
 #define TESTRANGE_H
 
 const int min_elements  = 50;   // equals the #stations
-const int max_elements  = 100;
+const int max_elements  = 60;
 const int stp_elements  = 1;
 
-const int min_samples   = 500;   // integration time of the correlator
+const int min_samples   = 1000;   // integration time of the correlator
 const int max_samples   = 1000;
 const int stp_samples   = 5;
 
@@ -21,6 +21,8 @@ const int runs          = 20;     // length of the test run
 const int targets       = 8;     // The number of compute nodes per front end
 
 char* frontend_ip       = "192.168.100.254";
+char* backend_ip        = "192.168.100.11";
+
 //char* frontend_ip       = "172.24.1.32";  // bgfe02
 //char* frontend_ip       = "172.30.3.2"; // Rochester frontend
 

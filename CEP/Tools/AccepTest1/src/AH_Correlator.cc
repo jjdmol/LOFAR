@@ -15,12 +15,13 @@ extern "C" void traceback (void);
 using namespace LOFAR;
 
 AH_Correlator::AH_Correlator(int elements, int samples, int channels, int polarisations, 
-		       char* ip, int baseport, int targets):
+		       char* frontendip, char* backendip, int baseport, int targets):
   itsNelements(elements),
   itsNsamples (samples),
   itsNchannels(channels), 
   itsNpolarisations(polarisations),
-  itsIP       (ip),
+  itsFEIP       (frontendip),
+  itsBEIP       (backendip),
   itsBaseport (baseport),
   itsNtargets (targets),
   itsRank(0)
@@ -64,11 +65,11 @@ void AH_Correlator::define(const KeyValueMap& /*params*/) {
 
   myWHRandom.getDataManager().getOutHolder(0)->connectTo 
     ( *itsWH->getDataManager().getInHolder(0), 
-      TH_Socket(itsIP, itsIP, itsBaseport+itsRank, false, true) );
+      TH_Socket(itsFEIP, itsFEIP, itsBaseport+itsRank, false, true) );
 
   itsWH->getDataManager().getOutHolder(0)->connectTo
     ( *myWHDump.getDataManager().getInHolder(0), 
-      TH_Socket(itsIP, itsIP, itsBaseport+itsNtargets+itsRank, true, true));
+      TH_Socket(itsBEIP, itsBEIP, itsBaseport+itsNtargets+itsRank, true, true));
 }
 
 void AH_Correlator::undefine() {

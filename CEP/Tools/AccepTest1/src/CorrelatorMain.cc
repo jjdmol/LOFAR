@@ -34,7 +34,7 @@ int main (int argc, const char** argv) {
 	
 	try {
 	  
-	  AH_Correlator correlator(elements, samples, channels, polarisations, frontend_ip, port, targets);
+	  AH_Correlator correlator(elements, samples, channels, polarisations, frontend_ip, backend_ip, port, targets);
 	  correlator.setarg(argc, argv);
 	  
 	  /* Automatic run of the correlator */
