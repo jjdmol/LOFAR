@@ -27,12 +27,10 @@ namespace LOFAR {
   namespace GCF {
 
 DH_PIProtocol::DH_PIProtocol (const string& name)
-: DataHolder (name, "DH", 1),
+: DataHolder (name, "DH_PIProtocol", 1),
   _eventID (0), // pointer
   _seqNr(0)     // pointer
 {
-  setEventID(NO_EVENTID_SET);
-  setSeqNr(0);
   setExtraBlob ("DynData", 1);
 }
 

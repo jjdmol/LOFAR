@@ -49,7 +49,7 @@ class DH_PIProtocol: public DataHolder
       VALUE_SET
     } TEventID;
     
-    explicit DH_PIProtocol (const string& name = "PIProtocol");
+    explicit DH_PIProtocol (const string& name = "PIClient");
   
     DH_PIProtocol(const DH_PIProtocol&);
   
@@ -91,7 +91,7 @@ class DH_PIProtocol: public DataHolder
 };
 
 inline void DH_PIProtocol::setEventID (DH_PIProtocol::TEventID EventID)
-  { *_eventID = EventID; }
+  { *_eventID = (uint8) EventID; }
 
 inline DH_PIProtocol::TEventID DH_PIProtocol::getEventID() const
   { return (TEventID) *_eventID; }
