@@ -230,22 +230,6 @@ void Scheduler::addSyncAction(SyncAction* action)
 
 Timestamp Scheduler::enter(Ptr<Command> command, QueueID queue)
 {
-  switch (queue)
-  {
-    case LATER:
-      m_later_queue.push(command);
-      break;
-
-    case PERIODIC:
-      m_periodic_queue.push(command);
-      break;
-
-    default:
-      LOG_FATAL("invalid QueueID");
-      exit(EXIT_FAILURE);
-      break;
-  }
-  
   Timestamp scheduled_time = command->getTimestamp();
 
   /* determine at which time the command can actually be carried out */
@@ -268,11 +252,48 @@ Timestamp Scheduler::enter(Ptr<Command> command, QueueID queue)
      */
     scheduled_time = scheduled_time + SYNC_INTERVAL_INT;
   }
+  
+#if 0
+  //
+  // add increasing (in time) usec to commands that
+  // are entered within the same second, to order
+  // them properly
+  //
+  {
+    struct timeval tv, now;
+    scheduled_time.get(&tv);
+    (void)gettimeofday(&now, 0);
+    tv.tv_usec = now.tv_usec;
+    scheduled_time.set(tv);
+  }
+#endif
 
   // set the actual time at which the command is sent to the boards
   command->setTimestamp(scheduled_time);
-  LOG_INFO_STR("Scheduler::enter scheduled_time=" << scheduled_time);
+    
+  // print time, ugly
+  char timestr[32];
+  time_t sec = scheduled_time.sec();
+  strftime(timestr, 32, "%T", localtime(&sec));
+  LOG_INFO(formatString("Scheduler::enter scheduled_time=%s.%d", timestr, scheduled_time.usec()));
 
+  // push the command on the appropriate queue
+  switch (queue)
+  {
+    case LATER:
+      m_later_queue.push(command);
+      break;
+
+    case PERIODIC:
+      m_periodic_queue.push(command);
+      break;
+
+    default:
+      LOG_FATAL("invalid QueueID");
+      exit(EXIT_FAILURE);
+      break;
+  }
+  
   return Timestamp(0,0); // this return value should not be used anymore
 }
 

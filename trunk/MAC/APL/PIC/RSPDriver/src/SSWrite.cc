@@ -22,25 +22,19 @@
 
 #include "RSP_Protocol.ph"
 #include "EPA_Protocol.ph"
-
 #include "SSWrite.h"
 #include "Cache.h"
 
+#include <APLConfig.h>
 #include <blitz/array.h>
+
+// needed if htons is used
+//#include <netinet/in.h>
 
 #undef PACKAGE
 #undef VERSION
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
-
-//
-// Final RSP board will have 4 BLPs (N_BLP == 4)
-// Proto2 board has one BLP (N_PROTO2_BLP == 1)
-//
-#ifdef N_PROTO2_BLP
-#undef N_BLP
-#define N_BLP N_PROTO2_BLP
-#endif
 
 #define N_RETRIES 3
 
@@ -49,7 +43,7 @@ using namespace LOFAR;
 using namespace blitz;
 
 SSWrite::SSWrite(GCFPortInterface& board_port, int board_id)
-  : SyncAction(board_port, board_id, N_BLP * 2 /* for NOF_SUBBANDS and SUBBANDS*/)
+  : SyncAction(board_port, board_id, GET_CONFIG("N_BLPS", i) * 2 /* for NOF_SUBBANDS and SUBBANDS*/)
 {
 }
 
@@ -66,13 +60,13 @@ void SSWrite::sendrequest()
     EPANrsubbandsEvent nrsubbands;
     MEP_NRSUBBANDS(nrsubbands.hdr, MEPHeader::WRITE, getCurrentBLP() / 2);
 
-    nrsubbands.nof_subbands = N_BEAMLETS * 2 - 1;
+    nrsubbands.nof_subbands = N_BEAMLETS * 2;
     
     getBoardPort().send(nrsubbands);
   }
   else
   {
-    uint8 global_blp = (getBoardId() * N_BLP) + (getCurrentBLP() / 2);
+    uint8 global_blp = (getBoardId() * GET_CONFIG("N_BLPS", i)) + (getCurrentBLP() / 2);
     LOG_DEBUG(formatString(">>>> SSWrite(%s) global_blp=%d",
 			   getBoardPort().getName().c_str(),
 			   global_blp));
@@ -87,7 +81,7 @@ void SSWrite::sendrequest()
 			      neverDeleteData);
     
     // copy the actual values from the cache
-    subbands = Cache::getInstance().getBack().getSubbandSelection()()(global_blp, Range(0, N_BEAMLETS - 1));
+    subbands = Cache::getInstance().getBack().getSubbandSelection()()(global_blp, Range::all()); // (0, N_BEAMLETS - 1));
     
     getBoardPort().send(ss);
   }

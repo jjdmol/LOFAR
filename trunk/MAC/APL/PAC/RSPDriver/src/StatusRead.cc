@@ -25,19 +25,12 @@
 #include "RSP_Protocol.ph"
 #include "Cache.h"
 
+#include <APLConfig.h>
+
 #undef PACKAGE
 #undef VERSION
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
-
-//
-// Final RSP board will have 4 BLPs (N_BLP == 4)
-// Proto2 board has one BLP (N_PROTO2_BLP == 1)
-//
-#ifdef N_PROTO2_BLP
-#undef N_BLP
-#define N_BLP N_PROTO2_BLP
-#endif
 
 using namespace RSP;
 using namespace LOFAR;
@@ -81,9 +74,9 @@ GCFEvent::TResult StatusRead::handleack(GCFEvent& event, GCFPortInterface& /*por
 	 sizeof(BoardStatus));
 
   // copy rcu status
-  for (int ap = 0; ap < N_BLP; ap++)
+  for (int ap = 0; ap < GET_CONFIG("N_BLPS", i); ap++)
   {
-    memcpy(&status.rcu()((getBoardId() * N_BLP) + ap),
+    memcpy(&status.rcu()((getBoardId() * GET_CONFIG("N_BLPS", i)) + ap),
 	   &ack.rcu[ap],
 	   sizeof(RCUStatus));
   }

@@ -54,21 +54,46 @@ CacheBuffer::CacheBuffer()
 			    GET_CONFIG("N_BLPS", i),
 			    N_BEAMLETS,
 			    EPA_Protocol::N_POL);
-  m_beamletweights()(Range::all(), Range::all(), Range::all()) = complex<int16>(0,0);
-
   m_subbandselection().resize(GET_CONFIG("N_BLPS", i), N_BEAMLETS * EPA_Protocol::N_POL);
-  m_subbandselection() = 0;
-    
+
+  if (!GET_CONFIG("IDENTITY_WEIGHTS", i))
+  {
+    m_beamletweights()(Range::all(), Range::all(), Range::all()) =
+      complex<int16>(0, 0);
+    m_subbandselection() = 0;
+  }
+  else
+  {
+    // these weights ensure that the beamlet statistics
+    // exactly match the subband statistics
+    m_beamletweights()(Range::all(), Range::all(), Range::all()) =
+      complex<int16>(0x4000, 0);
+
+    //
+    // Set subbands selection in increasing value
+    //
+    firstIndex i;
+    m_subbandselection()(0, Range::all()) = i;
+  }
+
   m_rcusettings().resize(GET_CONFIG("N_BLPS", i) * EPA_Protocol::N_POL);
   m_rcusettings() = RCUSettings::RCURegisterType();
 
   m_wgsettings().resize(GET_CONFIG("N_BLPS", i));
-  m_wgsettings() = WGSettings::WGRegisterType();
+  
+  WGSettings::WGRegisterType init;
+  init.freq = 0;
+  init.ampl = 0;
+  init.nof_usersamples = 0;
+  init.mode = WGSettings::MODE_OFF;
+  init._pad = 0;
+  m_wgsettings() = init;
 
   m_subbandstats().resize(Statistics::N_STAT_TYPES / 2,
 			  GET_CONFIG("N_BLPS", i) * EPA_Protocol::N_POL,
 			  N_SUBBANDS);
   m_subbandstats() = 0;
+
   m_beamletstats().resize(Statistics::N_STAT_TYPES / 2,
 			  GET_CONFIG("N_BLPS", i) * EPA_Protocol::N_POL,
 			  N_BEAMLETS);

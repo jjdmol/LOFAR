@@ -70,12 +70,12 @@ void SetSubbandsCmd::apply(CacheBuffer& cache)
       {
 //	cache.getSubbandSelection()()(cache_blp, Range(0, N_BEAMLETS * 2 - 1))
 //	  = m_event->subbands()(0, Range(0, N_BEAMLETS * 2 - 1));
+
+	cache.getSubbandSelection()()(cache_blp, Range::all()) = 0;
 	cache.getSubbandSelection()()(cache_blp, Range(0, m_event->subbands().extent(secondDim) - 1))
-	  = m_event->subbands()(0, Range::all());
-	
-	// set remaining subbands to 0
-	cache.getSubbandSelection()()(cache_blp, Range(0, N_BEAMLETS * 2 - m_event->subbands().extent(secondDim) - 1))
-	  = 0;
+	  = m_event->subbands()(0, Range(0, m_event->subbands().extent(secondDim) - 1));
+
+	LOG_FATAL_STR("m_event->subbands() = " << m_event->subbands());
       }
       else
       {

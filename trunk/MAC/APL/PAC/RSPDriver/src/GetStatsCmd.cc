@@ -71,9 +71,9 @@ void GetStatsCmd::ack(CacheBuffer& cache)
   int result_rcu = 0;
   for (int cache_rcu = 0; cache_rcu < GET_CONFIG("N_BLPS", i) * N_POL; cache_rcu++)
   {
-    if (m_event->rcumask[result_rcu])
+    if (m_event->rcumask[cache_rcu])
     {
-      if (result_rcu < GET_CONFIG("N_BLPS", i) * N_POL)
+      if (cache_rcu < GET_CONFIG("N_BLPS", i) * N_POL)
       {
 	if (m_event->type <= Statistics::SUBBAND_POWER)
 	{
@@ -90,7 +90,7 @@ void GetStatsCmd::ack(CacheBuffer& cache)
       else
       {
 	LOG_WARN(formatString("invalid RCU index %d, there are only %d RCU's",
-			      result_rcu, GET_CONFIG("N_RCUS", i)));
+			      cache_rcu, GET_CONFIG("N_RCUS", i)));
       }
       
       result_rcu++;

@@ -65,9 +65,9 @@ void GetWeightsCmd::ack(CacheBuffer& cache)
   int result_blp = 0;
   for (int cache_blp = 0; cache_blp < GET_CONFIG("N_BLPS", i); cache_blp++)
   {
-    if (m_event->blpmask[result_blp])
+    if (m_event->blpmask[cache_blp])
     {
-      if (result_blp < GET_CONFIG("N_BLPS", i))
+      if (cache_blp < GET_CONFIG("N_BLPS", i))
       {
 	ack.weights()(0, result_blp, Range::all(), Range::all())
 	  = cache.getBeamletWeights()()(0, cache_blp, Range::all(), Range::all());
@@ -75,7 +75,7 @@ void GetWeightsCmd::ack(CacheBuffer& cache)
       else
       {
 	LOG_WARN(formatString("invalid BLP index %d, there are only %d BLP's",
-			      result_blp, GET_CONFIG("N_BLPS", i)));
+			      cache_blp, GET_CONFIG("N_BLPS", i)));
       }
       
       result_blp++;

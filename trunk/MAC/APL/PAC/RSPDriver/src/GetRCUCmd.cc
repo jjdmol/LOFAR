@@ -62,16 +62,16 @@ void GetRCUCmd::ack(CacheBuffer& cache)
   int result_rcu = 0;
   for (int cache_rcu = 0; cache_rcu < GET_CONFIG("N_BLPS", i) * EPA_Protocol::N_POL; cache_rcu++)
   {
-    if (m_event->rcumask[result_rcu])
+    if (m_event->rcumask[cache_rcu])
     {
-      if (result_rcu < GET_CONFIG("N_BLPS", i) * EPA_Protocol::N_POL)
+      if (cache_rcu < GET_CONFIG("N_BLPS", i) * EPA_Protocol::N_POL)
       {
 	ack.settings()(result_rcu) = cache.getRCUSettings()()(cache_rcu);
       }
       else
       {
 	LOG_WARN(formatString("invalid RCU index %d, there are only %d RCU's",
-			      result_rcu, GET_CONFIG("N_BLPS", i) * EPA_Protocol::N_POL));
+			      cache_rcu, GET_CONFIG("N_BLPS", i) * EPA_Protocol::N_POL));
       }
       
       result_rcu++;

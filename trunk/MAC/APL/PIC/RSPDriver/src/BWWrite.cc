@@ -25,6 +25,8 @@
 #include "RSP_Protocol.ph"
 #include "Cache.h"
 
+#include <APLConfig.h>
+
 #undef PACKAGE
 #undef VERSION
 #include <lofar_config.h>
@@ -34,15 +36,6 @@
 #include <string.h>
 #include <blitz/array.h>
 
-//
-// Final RSP board will have 4 BLPs (N_BLP == 4)
-// Proto2 board has one BLP (N_PROTO2_BLP == 1)
-//
-#ifdef N_PROTO2_BLP
-#undef N_BLP
-#define N_BLP N_PROTO2_BLP
-#endif
-
 #define N_RETRIES 3
 
 using namespace RSP;
@@ -51,7 +44,7 @@ using namespace EPA_Protocol;
 using namespace blitz;
 
 BWWrite::BWWrite(GCFPortInterface& board_port, int board_id, int regid)
-  : SyncAction(board_port, board_id, N_BLP),
+  : SyncAction(board_port, board_id, GET_CONFIG("N_BLPS", i)),
     m_regid(regid)
 {
 }
@@ -62,7 +55,7 @@ BWWrite::~BWWrite()
 
 void BWWrite::sendrequest()
 {
-  uint8 global_blp = (getBoardId() * N_BLP) + getCurrentBLP();
+  uint8 global_blp = (getBoardId() * GET_CONFIG("N_BLPS", i)) + getCurrentBLP();
 
   if (m_regid < MEPHeader::BFXRE || m_regid > MEPHeader::BFYIM)
   {

@@ -173,7 +173,8 @@ namespace EPA_Protocol
 	       uint8  dstid,
 	       uint8  pid,
 	       uint8  regid,
-	       uint16 size);
+	       uint16 size,
+	       uint8  pageid = PAGE_INACTIVE);
 
       void set(uint8  type,
 	       uint16 seqnr,
@@ -233,7 +234,7 @@ namespace EPA_Protocol
 #define MEP_NRSUBBANDS(hdr, oper, dstid) \
   (hdr).set(oper,         dstid, CTX(SS),     CTX(NRSUBBANDS),    CTX(NRSUBBANDS_SIZE))
 #define MEP_SUBBANDSELECT(hdr, oper, dstid) \
-  (hdr).set(oper,         dstid, CTX(SS),     CTX(SUBBANDSELECT), CTX(SUBBANDSELECT_SIZE))
+  (hdr).set(oper,         dstid, CTX(SS),     CTX(SUBBANDSELECT), CTX(SUBBANDSELECT_SIZE), MEPHeader::PAGE_ACTIVE)
 #define MEP_BF(hdr, oper, dstid, regid) \
   (hdr).set(oper,         dstid, CTX(BF),     (regid),            CTX(BFCOEFS_SIZE))
 #define MEP_ST(hdr, oper, dstid, regid) \

@@ -54,13 +54,15 @@ void MEPHeader::set(uint8 type,
 		    uint8 dstid,
 		    uint8 pid,
 		    uint8 regid,
-		    uint16 size)
+		    uint16 size,
+		    uint8 pageid)
 {
   memset(&m_fields, 0, sizeof(m_fields));
   m_fields.type = type;
   m_fields.addr.dstid = dstid;
   m_fields.addr.pid = pid;
   m_fields.addr.regid = regid;
+  m_fields.addr.pageid = pageid;
   m_fields.size = size;
 }
 
