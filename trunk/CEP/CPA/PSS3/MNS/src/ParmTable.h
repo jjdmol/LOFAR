@@ -28,10 +28,12 @@
 #include <aips/Tables/ColumnsIndex.h>
 #include <aips/Containers/RecordField.h>
 #include <MNS/MeqPolc.h>
+#include <MNS/MeqPointSource.h>
 #include <Common/lofar_vector.h>
 
 //# Forward Declarations
 class MeqDomain;
+template<class T> class Vector;
 
 
 class ParmTable
@@ -42,29 +44,41 @@ public:
   // Get the parameter values for the given parameter and domain.
   // The matchDomain argument is set telling if the found parameter
   // matches the domain exactly.
+  // Note that the requested domain may contain multiple polcs.
   vector<MeqPolc> getPolcs (const string& parmName,
+			    int sourceNr, int station,
 			    const MeqDomain& domain);
 
   // Get the initial polynomial coefficients for the given parameter.
-  MeqPolc getInitCoeff (const string& parmName);
+  MeqPolc getInitCoeff (const string& parmName,
+			int sourceNr, int station);
 
   // Put the polynomial coefficient for the given parameter and domain.
   void putCoeff (const string& parmName,
+		 int sourceNr, int station,
 		 const MeqPolc& polc);
+
+  // Return point sources for the given source numbers.
+  // An empty sourceNr vector means all sources.
+  vector<MeqPointSource> getPointSources (const Vector<int>& sourceNrs);
 
 private:
   // Find the table subset containing the parameter values for the
   // requested domain.
-  // The matchDomain argument is set telling if the found parameter
-  // matches the domain exactly.
-  Table find (const string& parmName, const MeqDomain& domain);
+  Table find (const string& parmName, 
+	      int sourceNr, int station,
+	      const MeqDomain& domain);
 
   Table                  itsTable;
-  ColumnsIndex           itsNameIndex;
-  RecordFieldPtr<String> itsIndexField;
+  ColumnsIndex           itsIndex;
+  RecordFieldPtr<Int>    itsIndexSrcnr;
+  RecordFieldPtr<Int>    itsIndexStatnr;
+  RecordFieldPtr<String> itsIndexName;
   Table                  itsInitTable;
-  ColumnsIndex*          itsInitNameIndex;
-  RecordFieldPtr<String> itsInitIndexField;
+  ColumnsIndex*          itsInitIndex;
+  RecordFieldPtr<Int>    itsInitIndexSrcnr;
+  RecordFieldPtr<Int>    itsInitIndexStatnr;
+  RecordFieldPtr<String> itsInitIndexName;
 };
 
 

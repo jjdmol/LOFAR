@@ -6,6 +6,8 @@ MeqExpr.h					\
 MeqHist.h					\
 MeqJonesExpr.h					\
 MeqJonesNode.h					\
+MeqLofarPoint.h					\
+MeqLofarStatSources.h				\
 MeqMatrix.h					\
 MeqMatrixComplexArr.h				\
 MeqMatrixComplexSca.h				\
@@ -41,6 +43,8 @@ MeqExpr.cc					\
 MeqHist.cc					\
 MeqJonesExpr.cc					\
 MeqJonesNode.cc					\
+MeqLofarPoint.cc				\
+MeqLofarStatSources.cc				\
 MeqMatrix.cc					\
 MeqMatrixComplexArr.cc				\
 MeqMatrixComplexSca.cc				\

@@ -36,7 +36,7 @@ class MeqWsrtInt: public MeqJonesExpr
 {
 public:
   // Construct from source list, pahse reference position and uvw.
-  MeqWsrtInt (MeqWsrtPoint*, MeqJonesExpr* station1,
+  MeqWsrtInt (MeqJonesExpr* vis, MeqJonesExpr* station1,
 	      MeqJonesExpr* station2);
 
   ~MeqWsrtInt();
@@ -45,9 +45,9 @@ public:
   void calcResult (const MeqRequest&);
 
 private:
-  MeqWsrtPoint*  itsExpr;
-  MeqJonesExpr*  itsStat1;
-  MeqJonesExpr*  itsStat2;
+  MeqJonesExpr* itsExpr;
+  MeqJonesExpr* itsStat1;
+  MeqJonesExpr* itsStat2;
 };
 
 

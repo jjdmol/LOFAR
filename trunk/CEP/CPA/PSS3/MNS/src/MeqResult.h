@@ -67,10 +67,11 @@ public:
 
   // Set the value.
   // The current value is replaced by the new one.
-  void setValue (const MeqMatrix&);
+  void setValue (const MeqMatrix& value)
+    { itsValue = value; }
 
   // Set the value with a given type and shape.
-  // It won't change if the current value type and shape matches.
+  // It won't change if the current value type and shape match.
   double* setDouble (int nx, int ny)
     { return itsValue.setDouble (nx, ny); }
   complex<double>* setDComplex (int nx, int ny)
@@ -78,6 +79,9 @@ public:
 
   // Remove all perturbed values.
   void clear();
+
+  int nperturbed() const
+    { return itsPerturbation.size(); }
 
   // Set the i-th perturbed value.
   void setPerturbedValue (int i, const MeqMatrix&);
@@ -173,6 +177,9 @@ public:
   // Remove all perturbed values.
   void clear()
     { itsRep->clear(); }
+
+  int nperturbed() const
+    { return itsRep->nperturbed(); }
 
   // Set the i-th perturbed value.
   void setPerturbedValue (int i, const MeqMatrix& value)

@@ -105,8 +105,17 @@ public:
   // Update the solvable parameters with the new values.
   void update (const MeqMatrix& value);
 
+  // Set the original coefficients.
+  void setOrigCoeff (const MeqMatrix& coeff)
+    { itsOrigCoeff = coeff; }
+
+  // Get the original coefficients.
+  const MeqMatrix& getOrigCoeff() const
+    { return itsOrigCoeff; }
+
 private:
   MeqMatrix    itsCoeff;
+  MeqMatrix    itsOrigCoeff;
   MeqMatrix    itsPerturbation;
   MeqDomain    itsDomain;
   vector<bool> itsMask;

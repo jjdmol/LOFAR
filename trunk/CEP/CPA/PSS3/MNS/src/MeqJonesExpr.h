@@ -25,9 +25,7 @@
 
 //# Includes
 #include <MNS/MeqResult.h>
-
-//# Forward declarations
-class MeqRequest;
+#include <MNS/MeqRequest.h>
 
 
 // This class is the (abstract) base class for an expression.
@@ -37,6 +35,7 @@ class MeqJonesExpr
 public:
   // The default constructor.
   MeqJonesExpr()
+    : itsLastReqId (InitMeqRequestId)
     {};
 
   virtual ~MeqJonesExpr();
@@ -54,6 +53,50 @@ public:
   const MeqResult& getResult22() const
     { return its22; }
 
+  // Get write access to the result.
+  MeqResult& result11()
+    { return its11; }
+  MeqResult& result12()
+    { return its12; }
+  MeqResult& result21()
+    { return its21; }
+  MeqResult& result22()
+    { return its22; }
+
+  // Get write access to the result.
+  // Calculate the result if a new request id is given.
+  MeqResult& result11 (const MeqRequest& request)
+    { if (request.getId() != itsLastReqId) {
+        calcResult(request);
+	itsLastReqId = request.getId();
+      }
+      return its11; }
+  MeqResult& result12 (const MeqRequest& request)
+    { if (request.getId() != itsLastReqId) {
+        calcResult(request);
+	itsLastReqId = request.getId();
+      }
+      return its12; }
+  MeqResult& result21 (const MeqRequest& request)
+    { if (request.getId() != itsLastReqId) {
+        calcResult(request);
+	itsLastReqId = request.getId();
+      }
+      return its21; }
+  MeqResult& result22 (const MeqRequest& request)
+    { if (request.getId() != itsLastReqId) {
+        calcResult(request);
+	itsLastReqId = request.getId();
+      }
+      return its22; }
+
+  // Multiply 2 Jones matrices and put the result in this one.
+  void multiply (const MeqJonesExpr& left, const MeqJonesExpr& right);
+
+  // Set the type and shape of the result objects.
+  //  void setDouble (int nx, int ny);
+  //  void setDComplex (int nx, int ny);
+
 protected:
   // Set the result.
   void setResult11 (const MeqResult& result)
@@ -65,21 +108,12 @@ protected:
   void setResult22 (const MeqResult& result)
     { its22 = result; }
 
-  // Get write access to the result.
-  MeqResult& result11()
-    { return its11; }
-  MeqResult& result12()
-    { return its12; }
-  MeqResult& result21()
-    { return its21; }
-  MeqResult& result22()
-    { return its22; }
-
 private:
-  MeqResult its11;
-  MeqResult its12;
-  MeqResult its21;
-  MeqResult its22;
+  MeqResult    its11;
+  MeqResult    its12;
+  MeqResult    its21;
+  MeqResult    its22;
+  MeqRequestId itsLastReqId;
 };
 
 

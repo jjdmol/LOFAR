@@ -24,6 +24,7 @@
 #define MNS_MEQWSRTPOINT_H
 
 //# Includes
+#include <MNS/MeqJonesExpr.h>
 #include <MNS/MeqPointSource.h>
 #include <MNS/MeqResult.h>
 #include <Common/lofar_vector.h>
@@ -33,7 +34,7 @@ class MeqPointDFT;
 class MeqHist;
 
 
-class MeqWsrtPoint
+class MeqWsrtPoint: public MeqJonesExpr
 {
 public:
   // The expressions give the coefficients of the 2-dim polynomial.
@@ -50,26 +51,12 @@ public:
   const vector<int>& ncells() const
     { return itsNcell; }
 
-  // Get the results of the expression.
-  const MeqResult& getResultXX() const
-    { return itsXX; }
-  const MeqResult& getResultXY() const
-    { return itsXY; }
-  const MeqResult& getResultYX() const
-    { return itsYX; }
-  const MeqResult& getResultYY() const
-    { return itsYY; }
-
 private:
   vector<MeqPointSource> itsSources;
   MeqPointDFT*           itsDFT;
   MeqHist*               itsCelltHist;
   MeqHist*               itsCellfHist;
   vector<int>            itsNcell;
-  MeqResult              itsXX;
-  MeqResult              itsXY;
-  MeqResult              itsYX;
-  MeqResult              itsYY;
 };
 
 

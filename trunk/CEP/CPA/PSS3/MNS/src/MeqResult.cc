@@ -42,10 +42,6 @@ MeqResultRep::~MeqResultRep()
   ndtor--;
 }
 
-void MeqResultRep::setValue (const MeqMatrix& value)
-{
-  itsValue = value;
-}
 
 void MeqResultRep::clear()
 {
