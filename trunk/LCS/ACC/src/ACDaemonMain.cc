@@ -24,10 +24,10 @@
 #include <lofar_config.h>
 
 //# Includes
-#include<libgen.h>				// basename
-#include<sys/stat.h>			// umask
-#include<Common/LofarLogger.h>
-#include<ACC/ACDaemon.h>
+#include <sys/stat.h>			// umask
+#include <unistd.h>                     // fork, basename
+#include <Common/LofarLogger.h>
+#include <ACC/ACDaemon.h>
 
 using namespace LOFAR;
 using namespace LOFAR::ACC;

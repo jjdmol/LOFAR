@@ -24,7 +24,7 @@
 #include <lofar_config.h>
 
 //# Includes
-#include <arpa/inet.h>			// inet_ntoa
+#include <unistd.h>                     // gethostname
 #include <Common/LofarLogger.h>
 #include <Common/hexdump.h>		// TEMP!!!
 #include <ACC/ACRequest.h>
