@@ -18,7 +18,8 @@ WH_PhaseShift.h					\
 WH_ReadSignal.h					\
 WH_BandSep.h					\
 GnuPlotInterface.h				\
-WH_BeamFormer.h
+WH_BeamFormer.h					\
+WH_DataReader.h
 
 
 lib_LTLIBRARIES 	= libstationsim.la
@@ -43,7 +44,8 @@ WH_PhaseShift.cc				\
 WH_ReadSignal.cc				\
 WH_BandSep.cc					\
 GnuPlotInterface.cc				\
-WH_BeamFormer.cc
+WH_BeamFormer.cc				\
+WH_DataReader.cc				
 
 bin_PROGRAMS		= Simulate
 Simulate_SOURCES 	= Simulate.cc Simulate.in

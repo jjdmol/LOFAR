@@ -49,6 +49,7 @@
 #include <StationSim/WH_ReadSignal.h>
 #include <StationSim/WH_BandSep.h>
 #include <StationSim/WH_BeamFormer.h>
+#include <StationSim/WH_DataReader.h>
 
 
 StationSim::StationSim()
@@ -184,6 +185,18 @@ void StationSim::define (const ParamBlock& params)
   }
   simul.addStep (add_signals);
 
+  // Create the NoEMI data readers
+//   for (int i = 0; i < nrcu; ++i) { 
+// 	sprintf (suffix, "%d", i);
+	  
+// 	Step data_reader (WH_DataReader(suffix,
+// 									1,
+// 									"/dop32_0/alex/files_data/ajb_data/f113ch1.dat"),
+// 					  string ("data_reader_") + suffix,
+// 					  false);
+// 	simul.addStep (data_reader);	
+//   }
+
   // Create the subband filterbank
   for (int i = 0; i < nrcu; ++i) {
 	sprintf (suffix, "%d", i);
@@ -201,22 +214,22 @@ void StationSim::define (const ParamBlock& params)
   }
 
 
-  // Create the individual steps. Set the rate of the steps 
-  // The beamformer object
-  for (int i = 0; i < nsubband; ++i) {
-	sprintf (suffix, "%d", i);
+//   // Create the individual steps. Set the rate of the steps 
+//   // The beamformer object
+//   for (int i = 0; i < nsubband; ++i) {
+// 	sprintf (suffix, "%d", i);
 
-	Step beam (WH_BeamFormer("", nrcu, nrcu, nrcu, nbeam, maxNtarget, maxNrfi), 
-			   string("beam_former_") + suffix, 
-			   false);
+// 	Step beam (WH_BeamFormer("", nrcu, nrcu, nrcu, nbeam, maxNtarget, maxNrfi), 
+// 			   string("beam_former_") + suffix, 
+// 			   false);
 
-	for (int j = 0; j < nrcu; ++j) {
-	  beam.getInData (j).setReadDelay (delayMod + delayPhase + delaySubFilt);
-	  beam.getOutData (j).setWriteDelay (delayMod + delayPhase + delaySubFilt);
-	}
+// 	for (int j = 0; j < nrcu; ++j) {
+// 	  beam.getInData (j).setReadDelay (delayMod + delayPhase + delaySubFilt);
+// 	  beam.getOutData (j).setWriteDelay (delayMod + delayPhase + delaySubFilt);
+// 	}
 
-	simul.addStep (beam);
-  } 
+// 	simul.addStep (beam);
+//   } 
   
 //   // The AWE object
 //   Step awe (WH_AWE("", 1, 1, nrcu, buflength),"awe", false);
@@ -266,6 +279,13 @@ void StationSim::define (const ParamBlock& params)
 	simul.connect (string ("add_signals") + string (".out_") +
 				   suffix, string ("subband_filter_") + suffix + string (".in"));
   }
+
+//   // Connect the data_reader to the subband filterbank  
+//   for (int i = 0; i < nrcu; ++i) { 
+// 	sprintf (suffix, "%d", i);
+// 	simul.connect (string ("data_reader_") + suffix + string (".out_0"), 
+// 				   string ("subband_filter_") + suffix + string (".in"));
+//   }
 
   // Connect the subband filterbank with the beam former
 //   for (int s = 0; s < nsubband; ++s) {
