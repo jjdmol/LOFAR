@@ -45,7 +45,6 @@ namespace MSVisAgent
   using namespace VisVocabulary;
   
   const HIID 
-       FDataType          = AidData|AidType,
        FDomainIndex       = AidDomain|AidIndex,
       
        FDDID              = AidDDID|AidIndex,

@@ -3,13 +3,14 @@ include 'app_proxy.g'
 
 solver := function (appid='Solver',
     server='./applauncher',options="-d0 -meq:M:M:Solver",
-    suspend=F,
-    verbose=1)
+    suspend=F,verbose=1,
+    gui=F,parent_frame=F)
 {
   self := [=];
   public := [=];
   # init app proxy
-  ret := define_app_proxy(self,public,appid,server,options,suspend,verbose);
+  ret := define_app_proxy(self,public,appid,server,options,
+                          suspend,verbose,gui,parent_frame);
   if( is_fail(ret) )
     fail;
   # define solver-specific methods
