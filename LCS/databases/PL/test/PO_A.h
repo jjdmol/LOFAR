@@ -10,6 +10,7 @@
 #define LOFAR_PL_TEST_A_H
 
 #include "A.h"
+#include <PL/ObjectId.h>
 
 namespace LOFAR {
 
@@ -18,6 +19,7 @@ namespace LOFAR {
     // The DBRep<A> structure is a compilation of the fields
     // of the A class and the persistency layer. It contains
     // all fields that should be stored to the database
+    template<>
     struct DBRep<A> {
       ObjectId::oid_t  itsOid;
       ObjectId::oid_t  itsOwnerOid;

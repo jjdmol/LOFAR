@@ -1,13 +1,24 @@
-#include "LCS_base.h"
 #include "A.h"
 #include "PO_A.h"
-#include <PL/TPersistentObject.h>
 #include <PL/PersistenceBroker.h>
+#include <PL/Query.h>
+#include <Common/Exception.h>
 #include <complex>
 #include <iostream>
+#include <pwd.h>
 
 using namespace std;
 using namespace LOFAR::PL;
+using namespace LOFAR;
+
+string getUserName()
+{
+  passwd* aPwd;
+  if ((aPwd = getpwuid(getuid())) == 0)
+    return "";
+  else
+    return aPwd->pw_name;
+}
 
 int main()
 {
@@ -27,7 +38,7 @@ int main()
     TPersistentObject<A> tpoa2;
 
     // Connect to the database
-    broker.connect("dtl_example","postgres");
+    broker.connect(getUserName(),"postgres");
 
     DBConnection::GetDefaultConnection().SetAutoCommit(true);
 
@@ -86,7 +97,7 @@ int main()
     }
 
   }
-  catch (PLException& e) {
+  catch (Exception& e) {
     cerr << e << endl;
     return 1;
   }
