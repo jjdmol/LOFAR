@@ -23,6 +23,10 @@
 #ifndef PACKAGE_FILENAME_H
 #define PACKAGE_FILENAME_H
 
+#if defined(HAVE_CONFIG_H)
+#include <config.h>
+#endif
+
 //# Includes
 #include <otherpackage/file.h>
 
