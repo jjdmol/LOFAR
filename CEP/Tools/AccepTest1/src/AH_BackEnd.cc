@@ -113,8 +113,10 @@ void AH_BackEnd::run(int nsteps) {
       aggregate_bandwidth += reinterpret_cast<WH_Dump*> (*it)->getBandwidth();
     }
 
-    cout << (8.0*aggregate_bandwidth)/(1024.0*1024.0) << " Mbit/sec       ";
-    cout << (800.0*aggregate_bandwidth)/(1024.0*1024.0*1024.0) << "% of theoretical peak (Gbit/sec)" << endl;
+    if (aggregate_bandwidth != 0.0) {
+      cout << (8.0*aggregate_bandwidth)/(1024.0*1024.0) << " Mbit/sec       ";
+      cout << (800.0*aggregate_bandwidth)/(1024.0*1024.0*1024.0) << "% of theoretical peak (Gbit/sec)" << endl;
+    }
 //     gettimeofday(&starttime, NULL);
   }
 }

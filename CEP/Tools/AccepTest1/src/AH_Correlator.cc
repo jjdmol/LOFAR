@@ -33,7 +33,6 @@ void AH_Correlator::define(const KeyValueMap& /*params*/) {
 
 #ifdef HAVE_MPI
   sleep(TH_MPI::getCurrentRank());
-  cout << "defining node number " << TH_MPI::getCurrentRank() << endl;
 #endif
 
 
@@ -67,12 +66,12 @@ void AH_Correlator::define(const KeyValueMap& /*params*/) {
     ( *itsWH->getDataManager().getInHolder(0), 
       TH_Socket(itsIP, itsIP, itsBaseport+TH_MPI::getCurrentRank(), false, true) );
 
-  cout << "reading from port number: " << itsBaseport+TH_MPI::getCurrentRank() << " " << endl;
+//   cout << "reading from port number: " << itsBaseport+TH_MPI::getCurrentRank() << " " << endl;
 
   itsWH->getDataManager().getOutHolder(0)->connectTo
     ( *myWHDump.getDataManager().getInHolder(0), 
       TH_Socket(itsIP, itsIP, itsBaseport+itsNtargets+TH_MPI::getCurrentRank(), true, true));
-  cout << "writing to port number: " << itsBaseport+itsNtargets+TH_MPI::getCurrentRank() << endl;
+//   cout << "writing to port number: " << itsBaseport+itsNtargets+TH_MPI::getCurrentRank() << endl;
 #endif
 
 }
