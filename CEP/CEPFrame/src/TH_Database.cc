@@ -26,6 +26,7 @@
 #include <TH_Database.h>
 #include <BaseTransport.h>
 #include <Transportable.h>
+#include <Common/lofar_iostream.h>
 
 namespace LOFAR
 {
@@ -47,9 +48,12 @@ bool TH_Database::connectionPossible(int srcRank, int dstRank) const
 
 bool TH_Database::recv(void* buf, int nbytes, int, int tag)
 { 
-  if (getBaseTransport () -> getSourceTransportable () != 0) {
-    (getBaseTransport () -> getSourceTransportable ())
+  if (getBaseTransport () -> getTransportable () != 0) {
+    (getBaseTransport () -> getTransportable ())
       -> RetrieveFromDatabase (0, tag, (char *) buf, nbytes);
+  } else {
+    cerr << "TH_Database::recv():Transportable not found." << endl;
+    return false;
   }
 
   return true;
@@ -58,9 +62,12 @@ bool TH_Database::recv(void* buf, int nbytes, int, int tag)
 
 bool TH_Database::send(void* buf, int nbytes, int, int tag)
 {
-  if (getBaseTransport () -> getTargetTransportable () != 0) {
-    (getBaseTransport () -> getTargetTransportable ())
+  if (getBaseTransport () -> getTransportable () != 0) {
+    (getBaseTransport () -> getTransportable ())
       -> StoreInDatabase (0, tag, (char *) buf, nbytes);
+  } else {
+    cerr << "TH_Database::send():Transportable not found." << endl;
+    return false;
   }
 
   return true;

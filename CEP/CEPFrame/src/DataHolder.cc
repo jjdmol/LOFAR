@@ -53,6 +53,7 @@ DataHolder::DataHolder(const string& name, const string& type)
 {
   setDefaultDataPacket();
   itsTransportPtr = new Transport (this);
+  itsTransportPtr -> setTransportable (this);
 }
 
 DataHolder::DataHolder(const DataHolder& that)
@@ -68,8 +69,9 @@ DataHolder::DataHolder(const DataHolder& that)
     itsIfsPtr         (0),
     itsOfsPtr         (0)
 {
-  itsTransportPtr = that.itsTransportPtr->clone();
-  itsTransportPtr->setDataHolder(this);
+  itsTransportPtr = that.itsTransportPtr -> clone ();
+  itsTransportPtr -> setDataHolder (this);
+  itsTransportPtr -> setTransportable (this);
 }
   
 
