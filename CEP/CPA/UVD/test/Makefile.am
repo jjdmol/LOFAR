@@ -1,4 +1,4 @@
-CXXFLAGS += -Wno-unknown-pragmas -D_GNU_SOURCE
+CXXFLAGS += -D_GNU_SOURCE
 
 check_PROGRAMS		= 
 
