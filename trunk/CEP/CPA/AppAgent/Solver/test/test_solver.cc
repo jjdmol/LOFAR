@@ -182,8 +182,7 @@ int main (int argc, const char *argv[])
     rec[FModelType] = modelType;
         
     // setup input agent parameters 
-    DataRecord &inpargs = rec[AidInput] <<= new DataRecord;
-    
+    DataRecord &inpargs = rec[AidInput] <<= new DataRecord;    
       inpargs[FMSName] = msname + ".MS";
       inpargs[FDataColumnName] = "MODEL_DATA";
       inpargs[FTileSize] = 1;
@@ -195,7 +194,8 @@ int main (int argc, const char *argv[])
 	if (endchan >= 0) select[FChannelEndIndex] = endchan;
         select[FSelectionString] = selstr;
     // setup output agent parameters 
-    //   ... none for now
+    DataRecord &outpargs = rec[AidOutput] <<= new DataRecord;    
+      outpargs[FResidualsColumn] = "CORRECTED_DATA";
         
     // setup batch control agent parameters 
     // use field of several records for several jobs
