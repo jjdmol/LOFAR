@@ -97,8 +97,30 @@ void AH_FrontEnd::init() {
   vector<WorkHolder*>::iterator it = itsWHs.begin();
   int cn = 0;
   for (; it != itsWHs.end(); it++) {
-    cout << "init FE WH " << (*it)->getName() << " listening on port " << itsPort+cn;
-    if (!itsBlocking) (*it)->getDataManager().getOutHolder(0)->getTransporter().setIsBlocking(itsBlocking);
+    cout << "init FE WH " << (*it)->getName() << " listening on port " << itsPort << endl;
+	// Get pointer to TH_Socket
+    TH_Socket* THS = static_cast<TH_Socket*>
+			((*it)->getDataManager().getOutHolder(0)->getTransporter().getTransportHolder());
+	std::stringstream	service;
+	service << THS->itsPort;
+	// Sneaky start the listener
+	THS->itsServerSocket = new Socket("TH_Socket", service.str());
+	if (THS->itsServerSocket->ok()) {
+	   cout << itsPort << ":listener OK" << endl;
+	}
+	else {
+	  cout << itsPort << ":listener NOT OK" << endl;
+	}
+
+	cn++;
+  }
+
+  // Now do the normal loop
+  it = itsWHs.begin();
+  cn = 0;
+  for (; it != itsWHs.end(); it++) {
+    cout << "init FE WH " << (*it)->getName() << " accepting on port " << itsPort << endl;
+    (*it)->getDataManager().getOutHolder(0)->getTransporter().setIsBlocking(itsBlocking);
     (*it)->basePreprocess();
     timestamp.tv_sec = 0;
     timestamp.tv_usec = 0;
