@@ -26,9 +26,8 @@
 
 namespace LOFAR {
 
-BlobOStream::BlobOStream (BlobOBuffer* bb, bool header8)
-: itsHeader8   (header8),
-  itsCurLength (0),
+BlobOStream::BlobOStream (BlobOBuffer* bb)
+: itsCurLength (0),
   itsLevel     (0),
   itsStream    (bb)
 {
@@ -51,25 +50,40 @@ BlobOStream::~BlobOStream()
 // If it is the root object, it initializes the dynamic buffers.
 // It puts the object type and version and reserves space for the length.
 // It increases the level for each object to hold the length.
-uint BlobOStream::doPutStart (const char* type, uint nrc, int version)
+uint BlobOStream::doPutStart (const char* type, uint nrc, int version,
+			      uint align)
 {
   BlobHeaderBase hdr(version, itsLevel);
   Assert (nrc < 256);
   uint nalign = 0;
-  if (itsHeader8) {
-    nalign = 7 - (hdr.plainSize() + nrc + 7) % 8;
+  if (align > 1) {
+    int64 pos = tellPos();
+    if (pos > 0) {
+      nalign = (pos + hdr.plainSize() + nrc) % align;
+      if (nalign > 0) {
+	nalign = align - nalign;
+      }
+    }
   }
-  hdr.itsReservedLength = nrc+nalign;
+  hdr.itsReservedLength = nrc + nalign;
   hdr.itsNameLength     = nrc;
   itsObjLen.push (itsCurLength);         // length of outer blob
   itsObjPtr.push (tellPos()+hdr.lengthOffset()); // remember where to put len
   itsCurLength = 0;                      // initialize object length
+  // Need to increment here, otherwise putBuf gives an exception.
+  itsLevel++;
   putBuf (&hdr, hdr.plainSize());
   putBuf (type, nrc);
   if (nalign > 0) {
-    putBuf ("        ", nalign);
-  }
-  itsLevel++;
+    // Alignment on <= 8 can be common, so do that a bit faster.
+    if (nalign < 8) {
+      putBuf ("        ", nalign);
+    } else {
+      for (uint i=0; i<nalign; i++) {
+	putBuf (" ", 1);
+      }
+    }
+  } 
   return itsLevel;
 }
 
@@ -78,8 +92,9 @@ uint BlobOStream::doPutStart (const char* type, uint nrc, int version)
 uint BlobOStream::putEnd()
 {
   Assert (itsLevel > 0);
+  uint32 eob = BlobHeaderBase::eobMagicValue();
+  *this << eob;                        // write end-of-blob
   uint32 len = itsCurLength;           // length of this object
-  Assert (itsLevel>0);
   itsCurLength = itsObjLen.top();      // length of parent object
   int64 pos    = itsObjPtr.top();
   itsObjLen.pop();
@@ -99,6 +114,7 @@ uint BlobOStream::putEnd()
 
 void BlobOStream::putBuf (const void* buf, uint sz)
 {
+  checkPut();
   uint sz1 = itsStream->put (static_cast<const char*>(buf), sz);
   AssertMsg (sz1 == sz,
 	     "BlobOStream::putBuf - " << sz << " bytes asked, but only "
@@ -272,6 +288,7 @@ void BlobOStream::put (const std::vector<bool>& values)
 
 int64 BlobOStream::setSpace (uint nbytes)
 {
+  checkPut();
   int64 pos = tellPos();
   AssertMsg (pos != -1, "BlobOStream::setSpace cannot be done; "
 	     "its BlobOBuffer is not seekable");
@@ -289,10 +306,24 @@ uint BlobOStream::align (uint n)
       nfill = pos % n;
     }
   }
-  for (uint i=0; i<nfill; i++) {
-    *this << char(0);
+  if (nfill > 0) {
+    char fill=0;
+    nfill = n-nfill;
+    for (uint i=0; i<nfill; i++) {
+      uint sz1 = itsStream->put (&fill, 1);
+      AssertMsg (sz1 == 1,
+		 "BlobOStream::align - could not write fill (pos="
+		 << tellPos() << ")");
+      itsCurLength++;
+    }
   }
   return nfill;
 }
+
+void BlobOStream::throwPut() const
+{
+  throw Exception("BlobOStream: putStart should be done first");
+}
+
 
 } // end namespace
