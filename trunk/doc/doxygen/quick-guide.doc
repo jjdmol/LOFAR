@@ -11,6 +11,9 @@ please refer to the Doxygen User Manual.
 \anchor contents
 <ul>
   <li>\ref documenting</li>
+  <ul>
+    <li>\ref docserver</li>
+  </ul>
   <li>\ref grouping</li>
   <ul>
     <li>\ref modules</li>
@@ -44,6 +47,33 @@ please refer to the Doxygen User Manual.
   For more information, please refer to the <a
   href="http://www.lofar.org/project/lofardoc/document.php?action=match&docname=LOFAR-ASTRON-MEM-008">LOFAR
   C++ Coding Standard</a>.
+
+
+\subsection docserver Refering to Documents on the LOFAR Document Server
+
+  There will be times when you want to point a reader to one or more documents
+  on the LOFAR Document Server
+  (http://www.lofar.org/project/lofardoc/document.php). In order to do so, you
+  need to know a little bit of the way that this site is structured.
+
+  The document server is powered by PHP. A document is searched in the
+  database, using a PHP query command. The general form of this command is:
+  \verbatim
+    ?action=match&docname=<docname>
+  \endverbatim
+
+  Documents names are composed as follows:
+  \verbatim
+    LOFAR-<origin>-<document-type>-<document number>
+  \endverbatim
+
+  So, for example, when you want to direct a reader to the document <a
+  href="http://www.lofar.org/project/lofardoc/document.php?action=match&docname=LOFAR-ASTRON-MEM-006">LOFAR
+  Build Environment</a>, which has the name <tt>LOFAR-ASTRON-MEM-006</tt>, you
+  should add the following URL in the documentation:
+  <br><tt>\<a
+  href="http://www.lofar.org/project/lofardoc/document.php?action=match&docname=LOFAR-ASTRON-MEM-006"\>LOFAR
+  Build Environment\</a\></tt>.
 
 
 \ref contents "[Back to Contents]"
