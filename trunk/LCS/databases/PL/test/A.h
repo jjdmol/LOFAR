@@ -3,40 +3,42 @@
 
 #include "B.h"
 #include <PL/PLfwd.h>
-#include <string>
-#include <complex>
-#include <iostream>
+#include <Common/lofar_string.h>
+#include <Common/lofar_complex.h>
+#include <Common/lofar_iostream.h>
 
-using std::string;
-using std::complex;
-
-class A
+namespace LOFAR
 {
-public:
-  A() : 
-    itsInt(0), itsDouble(0.0), itsString("class A") {}
-  A(int i, double d, const string& s, const complex<double>& c, 
-    const B& b) :
-    itsInt(i), itsDouble(d), itsString(s), itsComplex(c), itsB(b)
-  {}
-  friend std::ostream& operator<<(std::ostream& os, const A& a);
-private:
-  friend class    LOFAR::PL::TPersistentObject<A>;
-  int             itsInt;
-  double          itsDouble;
-  string          itsString;
-  complex<double> itsComplex;
-  B               itsB;
-};
 
-inline std::ostream& operator<<(std::ostream& os, const A& a) 
-{
-  os << std::endl << "A.itsInt     = " << a.itsInt
-     << std::endl << "A.itsDouble  = " << a.itsDouble
-     << std::endl << "A.itsString  = " << a.itsString
-     << std::endl << "A.itsComplex = " << a.itsComplex
-     << std::endl << "A.itsB       = " << a.itsB;
-  return os;
-}
+  class A
+  {
+  public:
+    A() : 
+      itsInt(0), itsDouble(0.0), itsString("class A") {}
+    A(int i, double d, const string& s, const complex<double>& c, 
+      const B& b) :
+      itsInt(i), itsDouble(d), itsString(s), itsComplex(c), itsB(b)
+    {}
+    friend ostream& operator<<(ostream& os, const A& a);
+  private:
+    friend class    LOFAR::PL::TPersistentObject<A>;
+    int             itsInt;
+    double          itsDouble;
+    string          itsString;
+    complex<double> itsComplex;
+    B               itsB;
+  };
+
+  inline ostream& operator<<(ostream& os, const A& a) 
+  {
+    os << endl << "A.itsInt     = " << a.itsInt
+       << endl << "A.itsDouble  = " << a.itsDouble
+       << endl << "A.itsString  = " << a.itsString
+       << endl << "A.itsComplex = " << a.itsComplex
+       << endl << "A.itsB       = " << a.itsB;
+    return os;
+  }
+
+} // namespace LOFAR
 
 #endif
