@@ -23,6 +23,7 @@
 #include <GCF/PAL/GCF_Property.h>
 #include <GCF/PAL/GCF_PropertySet.h>
 #include <GCF/PAL/GCF_Answer.h>
+#include <GCF/PAL/GCF_PVSSInfo.h>
 #include <GPM_PropertyService.h>
 
 GCFProperty::GCFProperty (const TProperty& propInfo, GCFPropertySet* pPropertySet) : 
@@ -45,24 +46,27 @@ GCFProperty::~GCFProperty()
 
 const string GCFProperty::getFullName () const
 {
+  string fullName;
   if (_pPropertySet == 0)
   {
-    return _propInfo.propName;
+    if (strchr(_propInfo.propName, ':') > 0)
+    {
+      fullName = _propInfo.propName;
+    }
+    else
+    { 
+      fullName = GCFPVSSInfo::getLocalSystemName() + ":" + _propInfo.propName;
+    }
   }
   else
   {
-    string scope = _pPropertySet->getScope();
-    if (scope.length() == 0)
-    {
-      return _propInfo.propName;
-    }
-    else
-    {
-      string fullName = scope + GCF_PROP_NAME_SEP + _propInfo.propName;
-      return fullName;
-    }
+    string scope = _pPropertySet->getFullScope();
+    assert(scope.length() > 0);
+    fullName = scope + GCF_PROP_NAME_SEP + _propInfo.propName;      
   }
+  return fullName;
 }
+
 TGCFResult GCFProperty::requestValue ()
 { 
   assert(_pPropService);
@@ -93,7 +97,7 @@ TGCFResult GCFProperty::setValue(const string& value)
 bool GCFProperty::exists () 
 { 
   assert(_pPropService);
-  return _pPropService->existsProp(getFullName()); 
+  return GCFPVSSInfo::propExists(getFullName()); 
 }
             
 TGCFResult GCFProperty::subscribe ()

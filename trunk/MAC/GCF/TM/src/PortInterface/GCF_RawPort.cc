@@ -306,11 +306,10 @@ GCFEvent::TResult GCFRawPort::recvEvent()
   {
     assert(getTask());
     LOG_INFO(formatString (
-      "%s for port '%s' in task '%s' not handled or an error occured",
+      "'%s' for port '%s' in task '%s' not handled or an error occured",
       getTask()->evtstr(e),
-      getTask()->getName().c_str(), 
-      getRealName().c_str()
-      ));
+      getRealName().c_str(),
+      getTask()->getName().c_str()));
   }
 
   return status;

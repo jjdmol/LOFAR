@@ -8,7 +8,7 @@ libsb_la_SOURCES= $(DOCHDRS) \
 	GSB_Controller.cc
 	
 libsb_la_CPPFLAGS= -I$(top_srcdir)/include
-
+libsb_la_CXXFLAGS=-fmessage-length=0
 
 bin_PROGRAMS   		= ServiceBroker
   
@@ -20,6 +20,7 @@ ServiceBroker_DEPENDENCIES	= libsb.la $(LOFAR_DEPEND) \
 	$(top_builddir)/src/libgcftm.la
 	
 ServiceBroker_CPPFLAGS= -I$(top_srcdir)/include
+ServiceBroker_CXXFLAGS=-fmessage-length=0
 
 BUILT_SOURCES = \
 	log4cplus.properties \

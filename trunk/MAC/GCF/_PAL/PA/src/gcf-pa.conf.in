@@ -1,2 +1,2 @@
 mac.ns.GCF-PA.provider.type=TCP
-mac.controller.pvss.cmdline=-num 1 -proj LCU
+mac.controller.pvss.cmdline=-proj LCU

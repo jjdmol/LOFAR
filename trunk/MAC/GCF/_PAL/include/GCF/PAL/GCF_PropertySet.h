@@ -25,8 +25,10 @@
 
 #include <GCF/GCF_Defines.h>
 #include <GCF/PAL/GCF_Property.h>
+#include <GCF/PAL/GCF_PVSSInfo.h>
 
 #include <Common/lofar_map.h>
+
 class GCFAnswer;
 class GCFPValue;
 class GPMController;
@@ -44,6 +46,8 @@ class GCFPropertySet
 
     const string& getScope () const 
       { return _scope; }
+    const string getFullScope () const;
+    
     const char* getType () const 
       { return _propSetInfo.typeName; }
     const bool isTemporary () const 

@@ -215,7 +215,7 @@ GCFEvent::TResult GPMRTController::connected(GCFEvent& e, GCFPortInterface& /*p*
   {
     case F_DISCONNECTED:
       LOG_WARN(LOFAR::formatString ( 
-          "Connection lost to Supervisory Server"));
+          "Connection lost to Property Interface"));
       TRAN(GPMRTController::initial);
       break;
 
@@ -282,7 +282,7 @@ GCFEvent::TResult GPMRTController::connected(GCFEvent& e, GCFPortInterface& /*p*
       else
       {
         LOG_DEBUG(LOFAR::formatString ( 
-            "Property set with scope %d was deleted in the meanwhile", 
+            "Property set with scope %s was deleted in the meanwhile", 
             request.scope.c_str()));
         PIPropSetLinkedEvent response;
         response.result = PI_PS_GONE;
@@ -304,7 +304,7 @@ GCFEvent::TResult GPMRTController::connected(GCFEvent& e, GCFPortInterface& /*p*
       else
       {
         LOG_DEBUG(LOFAR::formatString ( 
-            "Property set with scope %d was deleted in the meanwhile", 
+            "Property set with scope %s was deleted in the meanwhile", 
             request.scope.c_str()));
         PIPropSetUnlinkedEvent response;
         response.result = PI_PS_GONE;
@@ -330,7 +330,7 @@ GCFEvent::TResult GPMRTController::connected(GCFEvent& e, GCFPortInterface& /*p*
       else
       {
         LOG_DEBUG(LOFAR::formatString ( 
-            "Property set with scope %d was deleted in the meanwhile", 
+            "Property set with scope %s was deleted in the meanwhile", 
             scope.c_str()));
       }
       break;

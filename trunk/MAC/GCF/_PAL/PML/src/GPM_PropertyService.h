@@ -53,11 +53,6 @@ class GPMPropertyService : public GSAService
       return (GSAService::dpeSet(propName, value) == SA_NO_ERROR ? GCF_NO_ERROR : GCF_PML_ERROR);
     }
     
-    inline bool existsProp(const string& propName)
-    {
-      return GSAService::dpeExists(propName);
-    }
-
   protected:
     inline void dpCreated(const string& /*propName*/) {};
     inline void dpDeleted(const string& /*propName*/) {};

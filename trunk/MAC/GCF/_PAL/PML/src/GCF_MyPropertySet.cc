@@ -381,34 +381,19 @@ void GCFMyPropertySet::unlinkProperties()
 
 void GCFMyPropertySet::wrongState(const char* request)
 {
-  char* stateString(0);
-  switch (_state)
+  const char* stateString[] =
   {
-    case S_DISABLED:
-      stateString = "DISABLED";
-      break;
-    case S_DISABLING:
-      stateString = "DISABLING";
-      break;
-    case S_ENABLED:
-      stateString = "ENABLED";
-      break;
-    case S_ENABLING:
-      stateString = "ENABLING";
-      break;
-    case S_LINKING:
-      stateString = "LINKING";
-      break;
-    case S_LINKED:
-      stateString = "LINKED";
-      break;
-    case S_DELAYED_DISABLING:
-      stateString = "DELAYED_DISABLING";
-      break;    
-  }
+    "DISABLED", 
+    "DISABLING", 
+    "ENABLING", 
+    "ENABLED", 
+    "LINKING", 
+    "LINKED", 
+    "DELAYED_DISABLING"
+  };
   LOG_WARN(LOFAR::formatString ( 
         "Could not perform '%s' on property set '%s'. Wrong state: %s",
         request,
         getScope().c_str(),
-        stateString));  
+        stateString[_state]));  
 }

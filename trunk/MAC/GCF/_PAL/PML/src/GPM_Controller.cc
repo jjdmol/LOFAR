@@ -26,6 +26,7 @@
 #include <GCF/Utils.h>
 #include <PA_Protocol.ph>
 #include <GCF/ParameterSet.h>
+#include <Resources.hxx>
 
 using namespace GCF;
 
@@ -44,6 +45,10 @@ GPMController::GPMController() :
 
   // initialize the port
   _propertyAgent.init(*this, "client", GCFPortInterface::SAP, PA_PROTOCOL);
+
+  string portName = formatString("DPA-client%d", Resources::getManNum());
+  _distPropertyAgent.init(*this, portName, GCFPortInterface::SAP, PA_PROTOCOL);
+  
   ParameterSet::instance()->adoptFile("gcf-pml.conf");
   ParameterSet::instance()->adoptFile("PropertyAgent.conf");
 }
@@ -79,18 +84,27 @@ void GPMController::release()
 TPMResult GPMController::loadPropSet(GCFExtPropertySet& propSet)
 {
   TPMResult result(PM_NO_ERROR);
+
+  PALoadPropSetEvent request;
+
+  TAction action;
+  action.pPropSet = &propSet;
+  action.signal = request.signal;
   
-  if (_propertyAgent.isConnected())
+  request.seqnr = registerAction(action);
+  
+  if (_distPropertyAgent.isConnected())
   {
-    PALoadPropSetEvent request;
-    request.seqnr = registerAction(propSet);
     request.scope = propSet.getScope();
+    string::size_type index = request.scope.find(':');
+    if (index < request.scope.length())
+    {
+      request.scope.erase(0, index + 1);
+    }
+    request.requestor = _distPropertyAgent.getOwnAddr();
     
-    _propertyAgent.send(request);
-  }
-  else
-  {
-    result = PM_PA_NOTCONNECTED;
+    _distPropertyAgent.setDestAddr(determineDest(propSet.getScope()));
+    _distPropertyAgent.send(request);
   }
   return result;
 }
@@ -98,19 +112,29 @@ TPMResult GPMController::loadPropSet(GCFExtPropertySet& propSet)
 TPMResult GPMController::unloadPropSet(GCFExtPropertySet& propSet)
 {
   TPMResult result(PM_NO_ERROR);
+
+  PAUnloadPropSetEvent request;
+
+  TAction action;
+  action.pPropSet = &propSet;
+  action.signal = request.signal;
   
-  if (_propertyAgent.isConnected())
+  request.seqnr = registerAction(action);
+  
+  if (_distPropertyAgent.isConnected())
   {
-    PAUnloadPropSetEvent request;
-    request.seqnr = registerAction(propSet);
     request.scope = propSet.getScope();
-    
+    string::size_type index = request.scope.find(':');
+    if (index < request.scope.length())
+    {
+      request.scope.erase(0, index + 1);
+    }
+    request.requestor = _distPropertyAgent.getOwnAddr();
+
+    _distPropertyAgent.setDestAddr(determineDest(propSet.getScope()));
+    _distPropertyAgent.send(request);
+
     _extPropertySets.remove(&propSet);
-    _propertyAgent.send(request);
-  }
-  else
-  {
-    result = PM_PA_NOTCONNECTED;
   }
   return result;
 }
@@ -119,28 +143,40 @@ TPMResult GPMController::configurePropSet(GCFPropertySet& propSet, const string&
 {
   TPMResult result(PM_NO_ERROR);
   
-  if (_propertyAgent.isConnected())
+  PAConfPropSetEvent request;
+  
+  TAction action;
+  action.pPropSet = &propSet;
+  action.signal = request.signal;
+  action.apcName = apcName;
+  
+  request.seqnr = registerAction(action);
+
+  if (_distPropertyAgent.isConnected())
   {
-    PAConfPropSetEvent request;
-    request.seqnr = registerAction(propSet);
     request.scope = propSet.getScope();
+    string::size_type index = request.scope.find(':');
+    if (index < request.scope.length())
+    {
+      request.scope.erase(0, index + 1);
+    }
     request.apcName = apcName;
-    
-    _propertyAgent.send(request);
-  }
-  else
-  {
-    result = PM_PA_NOTCONNECTED;
+    request.requestor = _distPropertyAgent.getOwnAddr();
+
+    _distPropertyAgent.setDestAddr(determineDest(propSet.getScope()));
+    _distPropertyAgent.send(request);
   }
   return result;
 }
 
 void GPMController::deletePropSet(const GCFPropertySet& propSet)
 {
+  TAction* pAction;
   for (TActionSeqList::iterator iter = _actionSeqList.begin();
        iter != _actionSeqList.end(); ++iter)
   {
-    if (iter->second == &propSet)
+    pAction = &iter->second;
+    if (pAction->pPropSet == &propSet)
     {
       _actionSeqList.erase(iter);
       break;
@@ -158,11 +194,17 @@ TPMResult GPMController::registerScope(GCFMyPropertySet& propSet)
   }
   else
   {
+    PARegisterScopeEvent request;
+  
+    TAction action;
+    action.pPropSet = &propSet;
+    action.signal = request.signal;
+    
+    request.seqnr = registerAction(action);
+    
     _myPropertySets[propSet.getScope()] = &propSet;
     if (_propertyAgent.isConnected())
     {
-      PARegisterScopeEvent request;
-      request.seqnr = registerAction(propSet);
       request.scope = propSet.getScope();
       request.type = propSet.getType();
       request.isTemporary = propSet.isTemporary();
@@ -176,10 +218,16 @@ TPMResult GPMController::unregisterScope(GCFMyPropertySet& propSet)
 {
   TPMResult result(PM_NO_ERROR);
  
+  PAUnregisterScopeEvent request;
+
+  TAction action;
+  action.pPropSet = &propSet;
+  action.signal = request.signal;
+  
+  request.seqnr = registerAction(action);
+    
   if (_propertyAgent.isConnected())
   {
-    PAUnregisterScopeEvent request;
-    request.seqnr = registerAction(propSet);
     request.scope = propSet.getScope();
     _propertyAgent.send(request);
   }
@@ -188,7 +236,7 @@ TPMResult GPMController::unregisterScope(GCFMyPropertySet& propSet)
   return result;
 }
 
-unsigned short GPMController::registerAction(GCFPropertySet& propSet)
+unsigned short GPMController::registerAction(TAction& action)
 {
   unsigned short seqnr(1); // 0 is reserved for internal msg. in PA
   TActionSeqList::const_iterator iter;
@@ -198,7 +246,7 @@ unsigned short GPMController::registerAction(GCFPropertySet& propSet)
     iter = _actionSeqList.find(seqnr);
   } while (iter != _actionSeqList.end());
 
-  _actionSeqList[seqnr] = &propSet; 
+  _actionSeqList[seqnr] = action; 
 
   return seqnr;
 }
@@ -226,7 +274,7 @@ void GPMController::propertiesUnlinked(const string& scope, TPAResult result)
   }
 }
 
-GCFEvent::TResult GPMController::initial(GCFEvent& e, GCFPortInterface& /*p*/)
+GCFEvent::TResult GPMController::initial(GCFEvent& e, GCFPortInterface& p)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
   switch (e.signal)
@@ -235,16 +283,23 @@ GCFEvent::TResult GPMController::initial(GCFEvent& e, GCFPortInterface& /*p*/)
       break;
 
     case F_ENTRY:
-    case F_TIMER:
       _propertyAgent.open();
+      _distPropertyAgent.open();
+      break;
+    
+    case F_TIMER:
+      p.open();
       break;
 
     case F_CONNECTED:
-      TRAN(GPMController::connected);
+      if (_propertyAgent.isConnected() && _distPropertyAgent.isConnected())
+      {
+        TRAN(GPMController::connected);
+      }
       break;
 
     case F_DISCONNECTED:
-      _propertyAgent.setTimer(1.0); // try again after 1 second
+      p.setTimer(1.0); // try again after 1 second
       break;
 
     default:
@@ -271,26 +326,31 @@ GCFEvent::TResult GPMController::connected(GCFEvent& e, GCFPortInterface& /*p*/)
 
     case F_ENTRY:
     {
-      PARegisterScopeEvent regRequest;
-      GCFPropertySet* pPropertySet(0);
-      for (TMyPropertySets::iterator iter = _myPropertySets.begin();
-           iter != _myPropertySets.end(); ++iter)
+      TAction* pAction(0);
+      TActionSeqList tmpSeqList(_actionSeqList);
+      _actionSeqList.clear();
+      for (TActionSeqList::iterator iter = tmpSeqList.begin();
+           iter != tmpSeqList.end(); ++iter)
       {
-        pPropertySet = iter->second;
-        assert(pPropertySet);
-        regRequest.seqnr = registerAction(*pPropertySet);
-        regRequest.scope = iter->first;
-        regRequest.type = pPropertySet->getType();
-        regRequest.isTemporary = pPropertySet->isTemporary();
-        _propertyAgent.send(regRequest);
+        pAction = &iter->second;
+        switch (pAction->signal)
+        {
+          case PA_REGISTER_SCOPE: registerScope(* (GCFMyPropertySet*)pAction->pPropSet); break;
+          case PA_UNREGISTER_SCOPE: unregisterScope(*(GCFMyPropertySet*)pAction->pPropSet); break;
+          case PA_CONF_PROP_SET: configurePropSet(*pAction->pPropSet, pAction->apcName); break;
+          case PA_LOAD_PROP_SET: loadPropSet(*(GCFExtPropertySet*)pAction->pPropSet); break;
+          case PA_UNLOAD_PROP_SET: unloadPropSet(*(GCFExtPropertySet*)pAction->pPropSet); break;
+          default: assert(0);
+        }
       }
       break;
     }  
     case PA_SCOPE_REGISTERED:
     {
       PAScopeRegisteredEvent response(e);
-      result = (response.result == PA_NO_ERROR ? GCF_NO_ERROR : GCF_MYPS_ENABLE_ERROR);      
-      GCFMyPropertySet* pPropertySet = (GCFMyPropertySet*) _actionSeqList[response.seqnr];
+      result = (response.result == PA_NO_ERROR ? GCF_NO_ERROR : GCF_MYPS_ENABLE_ERROR);
+      TAction* pAction = &_actionSeqList[response.seqnr];
+      GCFMyPropertySet* pPropertySet = (GCFMyPropertySet*) pAction->pPropSet;
       _actionSeqList.erase(response.seqnr);
       if (pPropertySet)
       {
@@ -307,7 +367,8 @@ GCFEvent::TResult GPMController::connected(GCFEvent& e, GCFPortInterface& /*p*/)
     case PA_SCOPE_UNREGISTERED:
     {
       PAScopeUnregisteredEvent response(e);
-      GCFMyPropertySet* pPropertySet = (GCFMyPropertySet*) _actionSeqList[response.seqnr];
+      TAction* pAction = &_actionSeqList[response.seqnr];
+      GCFMyPropertySet* pPropertySet = (GCFMyPropertySet*) pAction->pPropSet;
       result = (response.result == PA_NO_ERROR ? GCF_NO_ERROR : GCF_MYPS_DISABLE_ERROR);
       _actionSeqList.erase(response.seqnr);
       if (pPropertySet)
@@ -370,7 +431,8 @@ GCFEvent::TResult GPMController::connected(GCFEvent& e, GCFPortInterface& /*p*/)
     {
       PAPropSetLoadedEvent response(e);
       result = (response.result == PA_NO_ERROR ? GCF_NO_ERROR : GCF_EXTPS_LOAD_ERROR);        
-      GCFExtPropertySet* pPropertySet = (GCFExtPropertySet*) _actionSeqList[response.seqnr];
+      TAction* pAction = &_actionSeqList[response.seqnr];
+      GCFExtPropertySet* pPropertySet = (GCFExtPropertySet*) pAction->pPropSet;
       _actionSeqList.erase(response.seqnr);
       if (pPropertySet)
       {
@@ -387,7 +449,8 @@ GCFEvent::TResult GPMController::connected(GCFEvent& e, GCFPortInterface& /*p*/)
     {
       PAPropSetUnloadedEvent response(e);
       result = (response.result == PA_NO_ERROR ? GCF_NO_ERROR : GCF_EXTPS_UNLOAD_ERROR);        
-      GCFExtPropertySet* pPropertySet = (GCFExtPropertySet*) _actionSeqList[response.seqnr];
+      TAction* pAction = &_actionSeqList[response.seqnr];
+      GCFExtPropertySet* pPropertySet = (GCFExtPropertySet*) pAction->pPropSet;
       _actionSeqList.erase(response.seqnr);
       if (pPropertySet)
       {
@@ -400,7 +463,8 @@ GCFEvent::TResult GPMController::connected(GCFEvent& e, GCFPortInterface& /*p*/)
     {
       PAPropSetConfEvent response(e);
       result = (response.result == PA_NO_ERROR ? GCF_NO_ERROR : GCF_PS_CONFIGURE_ERROR);        
-      GCFPropertySet* pPropertySet = _actionSeqList[response.seqnr];
+      TAction* pAction = &_actionSeqList[response.seqnr];
+      GCFPropertySet* pPropertySet = pAction->pPropSet;
       _actionSeqList.erase(response.seqnr);
       if (pPropertySet)
       {
@@ -525,4 +589,15 @@ void logResult(TPAResult result, GCFPropertySet& propSet)
     default:
       break;
   }
+}
+
+string GPMController::determineDest(const string& scope) const
+{
+  string::size_type index = scope.find(':');
+  string destDP("DPA-server");
+  if (index < scope.length())
+  {
+    destDP.insert(0, scope.c_str(), index + 1);
+  }
+  return destDP;
 }

@@ -44,7 +44,7 @@ class GPAPropertySet : public GSAService
 
     typedef struct
     {
-      GCFPortInterface* pPSClientPort;
+      string name;
       unsigned short count;
     } TPSClient;
 
@@ -57,11 +57,9 @@ class GPAPropertySet : public GSAService
     void linked(PAPropSetLinkedEvent& response);
     void unlinked(PAPropSetUnlinkedEvent& response);
     
-    void clientGone(GCFPortInterface& p);
-    
     bool isOwner(const GCFPortInterface& p) const { return (&p == &_serverPort); }
     bool mayDelete() const { return (_state == S_DISABLED); }
-    bool knowsClient(const GCFPortInterface& p) { return (findClient(p) != 0); }
+    bool knowsClient(const string& c) { return (findClient(c) != 0); }
     			
   protected:
     void dpCreated(const string& propName);
@@ -75,7 +73,7 @@ class GPAPropertySet : public GSAService
     void link();
     void unlink();
     void wrongState(const char* request);
-    TPSClient* findClient(const GCFPortInterface& p);
+    TPSClient* findClient(const string& c);
 
   private: // data members
     GPAController&	  _controller;

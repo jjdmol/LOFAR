@@ -189,8 +189,8 @@ void GCFPropertySet::configured(TGCFResult result, const string& apcName)
   LOG_INFO(LOFAR::formatString ( 
       "REQ: Prop. set '%s' with apc '%s' configured%s",
       getScope().c_str(), 
-      (result == GCF_NO_ERROR ? "" : " (with errors)"), 
-      apcName.c_str()));
+      apcName.c_str(), 
+      (result == GCF_NO_ERROR ? "" : " (with errors)")));
   if (_pAnswerObj != 0)
   {
     GCFConfAnswerEvent e;
@@ -250,5 +250,18 @@ void GCFPropertySet::dispatchAnswer(unsigned short sig, TGCFResult result)
     e.pScope = getScope().c_str();
     e.result = result;
     _pAnswerObj->handleAnswer(e);
+  }
+}
+
+const string GCFPropertySet::getFullScope () const 
+{ 
+  if (_scope.find(':') < _scope.length())
+  {
+    return _scope;
+  }
+  else
+  {
+    // system name is not specified on the scope
+    return GCFPVSSInfo::getLocalSystemName() + ":" + _scope; 
   }
 }

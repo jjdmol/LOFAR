@@ -35,36 +35,36 @@ GSASCADAHandler* GSASCADAHandler::instance()
   if (0 == _pInstance)
   {
     string cmdline;
-    string pvssCmdLineParam = PARAM_DEFAULT_PVSS_CMDLINE;
-    if (!ParameterSet::instance()->isDefined(pvssCmdLineParam))
+    for (unsigned int i = 0; i < GCFTask::_argc; i++)
     {
-      char* appName = strrchr(GCFTask::_argv[0], '/');      
+      cmdline += GCFTask::_argv[i];
+      cmdline += " ";
+    }
+    string pvssCmdLineParam = PARAM_DEFAULT_PVSS_CMDLINE;
+    char* appName = strrchr(GCFTask::_argv[0], '/');
+    if (!ParameterSet::instance()->isDefined(pvssCmdLineParam))
+    {            
       pvssCmdLineParam = formatString(PARAM_PVSS_CMDLINE, (appName ? appName + 1 : GCFTask::_argv[0]));
     }
     try 
     {
-      cmdline = ParameterSet::instance()->getString(pvssCmdLineParam);
+      cmdline += ParameterSet::instance()->getString(pvssCmdLineParam);
     }
     catch (...)
     {
-      cmdline = "-num 1 -proj LCU";
       LOG_WARN(formatString (
-          "Specify the requested (see above) key in your '%s.conf.in' file. Used default",
-          strrchr(GCFTask::_argv[0], '/') + 1));
+          "Specify the requested (see above) key in your '%s.conf.in' file.",
+          (appName ? appName + 1 : GCFTask::_argv[0])));
     }
     // The PVSS API 3.0.1 redirects stdout and stderr output automatically to 
     // a file created by the API
     // We don't want this, so we have to repair this    
     cmdline += " -log +stderr";
     unsigned int offset(0);
-    int nrOfWords(1);
+    int nrOfWords(0);
     int argc;
     char* argv[20];
-    char* words = new char[strlen(GCFTask::_argv[0]) + 1 + cmdline.length() + 1];
-    memcpy(words, GCFTask::_argv[0], strlen(GCFTask::_argv[0]));
-    offset = strlen(GCFTask::_argv[0]); 
-    words[offset] = 0;
-    offset++;
+    char* words = new char[cmdline.length() + 1];
     argv[0] = words;
     string::size_type indexf(0), indexl(0);
     do 
@@ -76,8 +76,7 @@ GSASCADAHandler* GSASCADAHandler::instance()
         if (indexl == string::npos)
         {
           indexl = cmdline.length();
-        }
-        //char* word = new char[indexl - indexf + 1];
+        }        
         argv[nrOfWords] = words + offset;
         memcpy(words + offset, cmdline.c_str() + indexf, indexl - indexf);
         offset += indexl - indexf;
@@ -139,7 +138,7 @@ void GSASCADAHandler::workProc()
 TSAResult GSASCADAHandler::isOperational()
 { 
   TSAResult result(SA_SCADA_NOT_AVAILABLE);
-  if (_pvssApi.getManagerState() == Manager::STATE_RUNNING && _running)
+  if (_pvssApi.getManagerState() == Manager::STATE_RUNNING)
     result = SA_NO_ERROR;
   return result;
 }

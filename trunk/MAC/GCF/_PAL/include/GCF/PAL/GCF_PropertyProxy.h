@@ -77,12 +77,6 @@ class GCFPropertyProxy
      */
     virtual TGCFResult setPropValue (const string& propName, 
                                  const GCFPValue& value);
-    /**
-     * Synchronous (!) request
-     * 
-     * @returns true if property exists in the SCADA DB, otherwise false
-     */
-    virtual bool exists (const string& propName);
 
   protected:
     friend class GPMPropertyProxy;

@@ -22,13 +22,14 @@
 
 #include "GPA_PropertySet.h"
 #include "GPA_Controller.h"
+#include <GCF/PAL/GCF_PVSSInfo.h>
 #include <strings.h>
 #include <stdio.h>
 #include <unistd.h>
 
 bool operator == (const GPAPropertySet::TPSClient& a, const GPAPropertySet::TPSClient& b)
 {
-  return (a.pPSClientPort == b.pPSClientPort);
+  return (a.name == b.name);
 }
 
 
@@ -56,7 +57,7 @@ bool GPAPropertySet::enable(PARegisterScopeEvent& request)
   response.seqnr = request.seqnr;
   response.result = PA_NO_ERROR;
   _savedSeqnr = request.seqnr;
-  LOG_INFO(LOFAR::formatString(
+  LOG_INFO(formatString(
       "Request to enable prop. set '%s' of type '%s'",
       request.scope.c_str(),
       request.type.c_str()));
@@ -71,19 +72,19 @@ bool GPAPropertySet::enable(PARegisterScopeEvent& request)
       _type = request.type;
       _isTemporary = request.isTemporary;
       TSAResult saResult(SA_NO_ERROR);
-      if (!typeExists(_type))
+      if (!GCFPVSSInfo::typeExists(_type))
       {
-        LOG_INFO(LOFAR::formatString (
+        LOG_INFO(formatString (
             "Type %s is not knwon in the PVSS DB!",
             _type.c_str()));
         response.result = PA_DPTYPE_UNKNOWN;
       }
-      else if (dpeExists(_name) && _isTemporary)
+      else if (GCFPVSSInfo::propExists(_name) && _isTemporary)
       {
         LOG_ERROR("DP's for temporary prop. sets may not already exists!");
         response.result = PA_PROP_SET_ALLREADY_EXISTS;
       }
-      else if (!dpeExists(_name) && !_isTemporary)
+      else if (!GCFPVSSInfo::propExists(_name) && !_isTemporary)
       {
         LOG_ERROR("DP's for permanent prop. sets must already exists");
         response.result = PA_PROP_SET_NOT_EXISTS;
@@ -131,7 +132,7 @@ void GPAPropertySet::disable(PAUnregisterScopeEvent& request)
   response.seqnr = request.seqnr;
   response.result = PA_NO_ERROR;
   _savedSeqnr = request.seqnr;
-  LOG_INFO(LOFAR::formatString(
+  LOG_INFO(formatString(
       "Request to disable prop. set '%s' of type '%s'",
       _name.c_str(),
       _type.c_str()));
@@ -142,17 +143,12 @@ void GPAPropertySet::disable(PAUnregisterScopeEvent& request)
       LOG_INFO("Inform all client MCA's, which has load this prop. set, about disabling it");
       PAPropSetGoneEvent indication;
       indication.scope = _name;
-      GCFPortInterface* pPSClientPort;
       for (TPSClients::iterator iter = _psClients.begin();
            iter != _psClients.end(); ++iter)
       {
-        pPSClientPort = iter->pPSClientPort;
-        assert(pPSClientPort);
-        
-        if (pPSClientPort->isConnected())
-        {          
-          pPSClientPort->send(indication);
-        }
+        GCFPVSSPort& port(_controller.getDistPmlPort());
+        port.setDestAddr(iter->name);
+        port.send(indication);
       }
       // list will be automatically cleaned up on destruction of this class
     }
@@ -165,9 +161,9 @@ void GPAPropertySet::disable(PAUnregisterScopeEvent& request)
       _counter = 0;
       if (_isTemporary)
       {
-        if (dpeExists(_name + string("_temp")))
+        if (GCFPVSSInfo::propExists(_name + string("_temp")))
         {
-          LOG_INFO(LOFAR::formatString (
+          LOG_INFO(formatString (
               "DP %s_temp must be removed!",
               _name.c_str()));
           if (dpDelete(_name + string("_temp")) != SA_NO_ERROR)
@@ -179,9 +175,9 @@ void GPAPropertySet::disable(PAUnregisterScopeEvent& request)
             _counter += 1;
           }
         }
-        if (dpeExists(_name))
+        if (GCFPVSSInfo::propExists(_name))
         {
-          LOG_INFO(LOFAR::formatString (
+          LOG_INFO(formatString (
               "DP %s still exists! Will be removed too!",
               _name.c_str()));
           if (dpDelete(_name) != SA_NO_ERROR)
@@ -221,7 +217,7 @@ void GPAPropertySet::load(PALoadPropSetEvent& request, GCFPortInterface& p)
   response.seqnr = request.seqnr;
   response.result = PA_NO_ERROR;
   _savedSeqnr = request.seqnr;
-  LOG_INFO(LOFAR::formatString(
+  LOG_INFO(formatString(
       "Request to load prop. set '%s' of type '%s'",
       _name.c_str(),
       _type.c_str()));
@@ -263,7 +259,7 @@ void GPAPropertySet::load(PALoadPropSetEvent& request, GCFPortInterface& p)
         // is 0 the requestor can be deleted from the list. Then the requestor
         // not needed to be and also will not be informed about disabling the 
         // property set.
-        TPSClient* pPSClient = findClient(p);
+        TPSClient* pPSClient = findClient(request.requestor);
         if (pPSClient)
         {
           pPSClient->count++;
@@ -271,7 +267,7 @@ void GPAPropertySet::load(PALoadPropSetEvent& request, GCFPortInterface& p)
         else // client not known yet
         {
           TPSClient psClient;
-          psClient.pPSClientPort = &p;
+          psClient.name = request.requestor;
           psClient.count = 1;
           _psClients.push_back(psClient);
         }
@@ -288,8 +284,8 @@ void GPAPropertySet::load(PALoadPropSetEvent& request, GCFPortInterface& p)
     }
     case S_LINKED:
     {
-      assert(dpeExists(_name));
-      TPSClient* pPSClient = findClient(p);
+      assert(GCFPVSSInfo::propExists(_name));
+      TPSClient* pPSClient = findClient(request.requestor);
       if (pPSClient)
       {
         pPSClient->count++;
@@ -297,12 +293,12 @@ void GPAPropertySet::load(PALoadPropSetEvent& request, GCFPortInterface& p)
       else // client not known yet
       {
         TPSClient psClient;
-        psClient.pPSClientPort = &p;
+        psClient.name = request.requestor;
         psClient.count = 1;
         _psClients.push_back(psClient);
       }
       _usecount++;
-      LOG_INFO(LOFAR::formatString(
+      LOG_INFO(formatString(
           "Prop. set already loaded! So only increase the usecount to %d",
           _usecount));
       _controller.sendAndNext(response);
@@ -318,10 +314,10 @@ void GPAPropertySet::load(PALoadPropSetEvent& request, GCFPortInterface& p)
 
 void GPAPropertySet::link()
 {
-  assert(dpeExists(_name));
+  assert(GCFPVSSInfo::propExists(_name));
   if (_serverPort.isConnected())
   {
-    LOG_INFO(LOFAR::formatString(
+    LOG_INFO(formatString(
         "Prop. set '%s' will be linked",
         _name.c_str()));
     // send a message to the state machine of the controller
@@ -365,7 +361,7 @@ void GPAPropertySet::unload(PAUnloadPropSetEvent& request, const GCFPortInterfac
   response.result = PA_NO_ERROR;
   _savedSeqnr = request.seqnr;
   _savedResult = PA_NO_ERROR;
-  LOG_INFO(LOFAR::formatString(
+  LOG_INFO(formatString(
       "Request to unload prop. set '%s' of type '%s'",
       _name.c_str(),
       _type.c_str()));
@@ -374,13 +370,13 @@ void GPAPropertySet::unload(PAUnloadPropSetEvent& request, const GCFPortInterfac
     case S_LINKED:
     {
       _usecount--;
-      LOG_INFO(LOFAR::formatString(
+      LOG_INFO(formatString(
           "Decrease the usecount to %d",          
           _usecount));
 
       // decrease the load counter and remove the client (if counter == 0),
       // see also 'load'
-      TPSClient* pPSClient = findClient(p);
+      TPSClient* pPSClient = findClient(request.requestor);
       if (pPSClient)
       {
         pPSClient->count--;
@@ -429,7 +425,7 @@ void GPAPropertySet::unlink()
 {
   if (_serverPort.isConnected())
   {
-    LOG_INFO(LOFAR::formatString(
+    LOG_INFO(formatString(
         "Prop. set '%s' will be unlinked",
         _name.c_str()));
     // send a message to the state machine of the controller
@@ -468,13 +464,16 @@ void GPAPropertySet::unlinked(PAPropSetUnlinkedEvent& response)
 void GPAPropertySet::configure(PAConfPropSetEvent& request)
 {
   TPAResult paResult(PA_NO_ERROR);
-  LOG_INFO(LOFAR::formatString(
+  LOG_INFO(formatString(
       "Request to configure prop. set '%s' with '%s.apc'",
       _name.c_str(),
       request.apcName.c_str()));
-  if (dpeExists(_name))
+  if (GCFPVSSInfo::propExists(_name))
   {
-    string loadAPCcmd = "loadAPC " + _name + " " + request.apcName;
+    string loadAPCcmd = formatString("loadAPC %s %s %s",
+         _name.c_str(),
+         request.apcName.c_str(),
+         GCFPVSSInfo::getProjectName().c_str());
     int result = system("chmod 777 loadAPC"); // execute rights are gone after check-out with eclipse
     if (result == -1)
     {
@@ -487,13 +486,14 @@ void GPAPropertySet::configure(PAConfPropSetEvent& request)
       switch (result)
       {
         case -1:
-          LOG_ERROR(LOFAR::formatString(
+          LOG_ERROR(formatString(
               "System call cannot execute: %s",
               loadAPCcmd.c_str()));
           paResult = PA_INTERNAL_ERROR;
           break;
         case 256:
-          LOG_ERROR("Apc file does exists in $MAC_CONFIG/Apc");
+          LOG_ERROR(formatString("Apc '%s' file does exists.", 
+              request.apcName.c_str()));
           paResult = PA_APC_NOT_EXISTS;
           break;
       }
@@ -503,7 +503,7 @@ void GPAPropertySet::configure(PAConfPropSetEvent& request)
   {
     paResult = PA_PROP_SET_NOT_EXISTS;
   }   
-  LOG_INFO(LOFAR::formatString(
+  LOG_INFO(formatString(
       "Ready with configuring prop. set '%s' (Error code: %d - see GPA_Defines.h)",
       _name.c_str(),
       paResult));
@@ -514,34 +514,13 @@ void GPAPropertySet::configure(PAConfPropSetEvent& request)
   _controller.sendAndNext(response);
 }
 
-void GPAPropertySet::clientGone(GCFPortInterface& p)
-{
-  assert (&p != &_serverPort);
-  // This means that all load requests of client 'p' have to be undone.
-  // So pretend a unload request is received
-  TPSClient* pPSClient = findClient(p);
-  if (pPSClient)
-  {
-    // this manipulation of the _usecount and the load counter pretends 
-    // that this is the last unload request of the client 'p' for this
-    // property set
-    _usecount -= (pPSClient->count - 1);
-    pPSClient->count = 1;
-
-    PAUnloadPropSetEvent request;
-    request.scope = _name;
-    request.seqnr = 0;
-    unload(request, p);
-  }  
-}
-
 void GPAPropertySet::dpCreated(const string& dpName)
 {
   switch (_state)
   {
     case S_ENABLING:
     {
-      assert(dpName == (_name + string("_temp")));
+      assert(dpName.find(_name + string("_temp")) < dpName.length());
       _state = S_ENABLED;
       PAScopeRegisteredEvent response;
       response.seqnr = _savedSeqnr;
@@ -550,7 +529,7 @@ void GPAPropertySet::dpCreated(const string& dpName)
       break;
     }
     case S_LINKING:
-      assert(dpName == _name);
+      assert(dpName.find(_name) < dpName.length());
       link();
       break;
     default:
@@ -583,13 +562,13 @@ void GPAPropertySet::dpDeleted(const string& /*dpName*/)
   }
 }
 
-GPAPropertySet::TPSClient* GPAPropertySet::findClient(const GCFPortInterface& p) 
+GPAPropertySet::TPSClient* GPAPropertySet::findClient(const string& c) 
 {
   TPSClient* pPSClient(0);
   for (TPSClients::iterator iter = _psClients.begin();
        iter != _psClients.end(); ++iter)
   {
-    if (iter->pPSClientPort == &p)
+    if (iter->name == c)
     {
       pPSClient = &(*iter);
       break;
@@ -600,34 +579,19 @@ GPAPropertySet::TPSClient* GPAPropertySet::findClient(const GCFPortInterface& p)
 
 void GPAPropertySet::wrongState(const char* request)
 {
-  char* stateString(0);
-  switch (_state)
+  const char* stateString[] = 
   {
-    case S_DISABLED:
-      stateString = "DISABLED";
-      break;
-    case S_DISABLING:
-      stateString = "DISABLING";
-      break;
-    case S_ENABLED:
-      stateString = "ENABLED";
-      break;
-    case S_ENABLING:
-      stateString = "ENABLING";
-      break;
-    case S_LINKING:
-      stateString = "LINKING";
-      break;
-    case S_UNLINKING:
-      stateString = "UNLINKING";
-      break;
-    case S_LINKED:
-      stateString = "LINKED";
-      break;
-  }
-  LOG_WARN(LOFAR::formatString ( 
+    "ENABLED",
+    "ENABLING",
+    "DISABLED",
+    "DISABLING",
+    "LINKING",
+    "LINKED",
+    "UNLINKING"
+  };
+  LOG_WARN(formatString ( 
         "Could not perform '%s' on property set '%s'. Wrong state: %s",
         request,
         _name.c_str(),
-        stateString));  
+        stateString[_state]));  
 }

@@ -61,6 +61,8 @@ libgcftm_la_SOURCES= $(DOCHDRS) \
 libgcftm_la_CPPFLAGS=-I$(top_srcdir)/include \
 	-I$(top_srcdir)/src/ServiceBroker
 
+libgcftm_la_CXXFLAGS=-fmessage-length=0
+
 BUILT_SOURCES = \
 	SB_Protocol.ph
 
