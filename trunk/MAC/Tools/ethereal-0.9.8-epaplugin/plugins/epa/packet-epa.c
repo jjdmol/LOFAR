@@ -51,20 +51,20 @@
  */
 static const value_string type_info_vals[] =
 {
-  { 0x00, "Invalid message type"  },
-  { 0x01, "READ   "  },
-  { 0x02, "WRITE  "  },
-  { 0x03, "READACK"  },
+  { 0x00, "Invalid "  },
+  { 0x01, "READ    "  },
+  { 0x02, "WRITE   "  },
+  { 0x03, "READACK "  },
   { 0x04, "WRITEACK" },
   { 0,     NULL                   },
 };
 
 static const value_string type_vals[] =
 {
-  { 0x00, "Invalid message type"          },
-  { 0x01, "Read  request     (READ)"      },
-  { 0x02, "Write command     (WRITE)"     },
-  { 0x03, "Read  acknowledge (READACK)"   },
+  { 0x00, "Invalid message type        "  },
+  { 0x01, "Read  request     (READ)    "  },
+  { 0x02, "Write command     (WRITE)   "  },
+  { 0x03, "Read  acknowledge (READACK) "  },
   { 0x04, "Write acknowledge (WRITEACK)"  },
   { 0,     NULL                   },
 };
@@ -78,18 +78,18 @@ static const value_string dst_vals[] =
 
 static const value_string pid_info_vals[] =
 {
-  { 0x00, "RSR   " },
-  { 0x01, "TST   " },
-  { 0x02, "CFG   " },
-  { 0x03, "WG    " },
-  { 0x04, "SS    " },
-  { 0x05, "BF    " },
-  { 0x06, "BST   " },
-  { 0x07, "SST   " },
-  { 0x08, "RCU   " },
-  { 0x09, "CRR   " },
-  { 0x0A, "CRB   " },
-  { 0x0B, "CDO   " },
+  { 0x00, "RSR" },
+  { 0x01, "TST" },
+  { 0x02, "CFG" },
+  { 0x03, "WG " },
+  { 0x04, "SS " },
+  { 0x05, "BF " },
+  { 0x06, "BST" },
+  { 0x07, "SST" },
+  { 0x08, "RCU" },
+  { 0x09, "CRR" },
+  { 0x0A, "CRB" },
+  { 0x0B, "CDO" },
   { 0,     NULL    },
 };
 
