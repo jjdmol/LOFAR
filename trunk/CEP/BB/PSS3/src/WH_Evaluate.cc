@@ -37,9 +37,12 @@
 
 using namespace LOFAR;
 
-WH_Evaluate::WH_Evaluate (const string& name)
+WH_Evaluate::WH_Evaluate (const string& name,
+			  const int NrKS)
   : WorkHolder    (1, 1, name,"WH_Evaluate"),
-    itsCurrentRun(0)
+    itsNrKS(NrKS),
+    itsCurrentRun(0),
+    itsEventCnt(0)
 {
   getDataManager().addInDataHolder(0, new DH_Solution("in_0", "Control"), true); 
   getDataManager().addOutDataHolder(0, new DH_WorkOrder("out_0"), true);
@@ -51,9 +54,15 @@ WH_Evaluate::~WH_Evaluate()
 {
 }
 
+WorkHolder* WH_Evaluate::construct (const string& name, 
+				    const int NrKS)
+{
+  return new WH_Evaluate (name, NrKS);
+}
+
 WH_Evaluate* WH_Evaluate::make (const string& name)
 {
-  return new WH_Evaluate(name);
+  return new WH_Evaluate(name, itsNrKS);
 }
 
 void WH_Evaluate::process()
@@ -61,8 +70,9 @@ void WH_Evaluate::process()
   TRACER3("WH_Evaluate process()");
 
 #define WATERCAL
+   
 
-  int iter=10;
+  int iter=3;
 #ifdef PEEL
   cout << "Strategy: PEEL" << endl;
   // Define new peeling work order
@@ -84,35 +94,42 @@ void WH_Evaluate::process()
 
 
 #elif defined WATERCAL
-  cout << "Strategy: WATERCAL" << endl;
-  for (int step=1; step <= 6; step++) {
-  // Define next WaterCal work order
-   DH_WorkOrder* outp = (DH_WorkOrder*)getDataManager().getOutHolder(0);
-  outp->setStatus(DH_WorkOrder::New);
-  char ksname[4];
-  sprintf(ksname,"KS%1i",step);
-  outp->setKSType(ksname);
-  outp->setStrategyNo(3);
-  if (step==1) {
-    outp->useSolutionNumber(-1);
-  } else {
-    outp->useSolutionNumber((step-1)*10000+iter-1);
+  DbgAssert(itsNrKS==3);
+  cout << "Strategy: WATERCAL with " << itsNrKS << " Knowledge Sources" <<endl;
+  for (int step=0; step < itsNrKS; step++) {
+    int sourceno = (step)%itsNrKS+1;
+    // Define next WaterCal work order
+    DH_WorkOrder* outp = (DH_WorkOrder*)getDataManager().getOutHolder(0);
+    outp->setStatus(DH_WorkOrder::New);
+    char ksname[4];
+    sprintf(ksname,"KS%1i",sourceno);
+    outp->setKSType(ksname);
+    outp->setStrategyNo(3);
+    if ((step==0) && (itsEventCnt==0)) {
+      //the very first step
+      outp->useSolutionNumber(-1);
+    } else {
+      int last_result_step = step        + (step==0 ? itsNrKS : 0);
+      int last_result_Ecnt = itsEventCnt - (step==0 ? 1       : 0);
+      outp->useSolutionNumber(   last_result_step   *10000 
+				 + (last_result_Ecnt+1)*iter -1);
+    }
+    // Set arguments for peeling
+    int size = sizeof(SI_WaterCal::WaterCal_data);
+    outp->setArgSize(size);
+    SI_WaterCal::WaterCal_data* data = 
+      (SI_WaterCal::WaterCal_data*)outp->getVarArgsPtr();
+    data->nIter = iter;
+    data->sourceNo = sourceno;
+    data->timeInterval = 3600.;
+    // To be added: set parameter names
+    getDataManager().readyWithOutHolder(0);
   }
-  // Set arguments for peeling
-  int size = sizeof(SI_WaterCal::WaterCal_data);
-  outp->setArgSize(size);
-  SI_WaterCal::WaterCal_data* data = 
-    (SI_WaterCal::WaterCal_data*)outp->getVarArgsPtr();
-  data->nIter = iter;
-  data->sourceNo = (step-1)%3+1;
-  data->timeInterval = 3600.;
-  // To be added: set parameter names
-  getDataManager().readyWithOutHolder(0);
-  }
+  itsEventCnt++;
 
 #elif defined RANDOM
   cout << "Strategy: RANDOM" << endl;
-  for (int step=1; step <= 6; step++) {
+   for (int step=1; step <= 3; step++) {
     int rndSrc;
     rndSrc = (rand () % 3) + 1;
     cout << itsCurrentRun << " ========> Random source: " << rndSrc << endl;
@@ -138,41 +155,6 @@ void WH_Evaluate::process()
     data->timeInterval = 3600.;
     // To be added: set parameter names
     getDataManager().readyWithOutHolder(0);
-  }
-
-#elif defined RANDOMOLD
-// Random strategy (Single Node)
-  for (int step=1; step<=6; step++) {
-  int rndSrc;
-
-  rndSrc = (rand () % 3) + 1;
-  cout << itsCurrentRun << " ========> Random source: " << rndSrc << endl;
-  cerr << itsCurrentRun << ' ';
-
-  DH_WorkOrder* woRandomSrc = (DH_WorkOrder*)
-    getDataManager().getOutHolder(0);
-  woRandomSrc->setStatus(DH_WorkOrder::New);
-  char ksname[4];
-  sprintf(ksname,"KS%1i",step);
-  woRandomSrc->setKSType(ksname);
-  woRandomSrc->setStrategyNo(4);
-  if (step==1) {
-    woRandomSrc->useSolutionNumber(-1);
-  } else {
-    woRandomSrc->useSolutionNumber((step-1)*10000+iter-1);
-  }
-  // Set arguments for peeling
-  int size3 = sizeof(SI_WaterCal::WaterCal_data);
-  woRandomSrc->setArgSize(size3);
-  SI_WaterCal::WaterCal_data* rndStratArgs = 
-    (SI_WaterCal::WaterCal_data*)woRandomSrc->getVarArgsPtr();
-  rndStratArgs->nIter = iter;
-  rndStratArgs->sourceNo = rndSrc;
-  rndStratArgs->timeInterval = 3600.;
-  // To be added: set parameter names
-  getDataManager().readyWithOutHolder(0);
-
-  itsCurrentRun ++;
   }
 
 #else // default to SIMPLE

@@ -42,12 +42,17 @@ public:
   /// It is possible to specify how many input and output data holders
   /// are created and how many elements there are in the buffer.
   /// The first WorkHolder should have nin=0.
-  explicit WH_Evaluate (const string& name="aWH_Evaluate");
+  explicit WH_Evaluate (const string& name="aWH_Evaluate",
+			const int     NrKS=1);
 
   virtual ~WH_Evaluate();
 
   /// Make a fresh copy of the WH object.
   virtual WH_Evaluate* make (const string& name);
+
+  /// Static function to create an object.
+  static WorkHolder* construct (const string& name, 
+				const int NrKS);
 
   /// Do a process step.
   virtual void process();
@@ -62,7 +67,9 @@ private:
   /// Forbid assignment.
   WH_Evaluate& operator= (const WH_Evaluate&);
 
+  int itsNrKS;        // number of KS available
   int itsCurrentRun;
+  int itsEventCnt;
 };
 
 
