@@ -111,7 +111,7 @@ void AH_FrontEnd::init() {
     TH_Socket* THS = static_cast<TH_Socket*>
 		     ((*it)->getDataManager().getOutHolder(0)->getTransporter().getTransportHolder());
     std::stringstream	service;	// construct string with portnumber
-    service << itsPort;
+    service << itsPort+cn;
 
     // Start the listener
     if (!THS->setListenSocket(new Socket("TH_Socket", service.str()))) {

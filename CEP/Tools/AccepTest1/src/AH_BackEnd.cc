@@ -107,7 +107,7 @@ void AH_BackEnd::init() {
     TH_Socket* THS = static_cast<TH_Socket*>
                      ((*it)->getDataManager().getInHolder(0)->getTransporter().getTransportHolder());
     std::stringstream	service;	// construct string with portnumber
-    service << itsPort;
+    service << itsPort+cn;
     // Start the listener first
     if (!THS->setListenSocket(new Socket("TH_Socket", service.str()))) {
       cout << itsPort+cn << ":listener NOT OK" << endl;
