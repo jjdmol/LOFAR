@@ -130,15 +130,16 @@ void Beamlet::calculate_weights()
 	  const Beam* beam = beamlet->getBeam();
 
 	  // get coordinates from beam
-	  track = &beam->getCoordinates();
+	  if (beam) track = &beam->getCoordinates();
       }
   }
 
   // calculating weights for the following coordinates
   LOG_INFO(formatString("Calculating weights for %d beamlets: %d coordinates.",
 			m_ninstances, coords.size()));
-  LOG_INFO(formatString("Storing in Array<double,2> track(%d,%d)",
-			track->extent(firstDim),
-			track->extent(secondDim)));
+  if (track)
+      LOG_INFO(formatString("Storing in Array<double,2> track(%d,%d)",
+			    track->extent(firstDim),
+			    track->extent(secondDim)));
 }
 

@@ -43,7 +43,9 @@ Beam* Beam::m_beams = 0;
 //static const int timestep = Beam::TIMESTEP;
 //static const int _n_timesteps_var = Beam::N_TIMESTEPS;
 
-Beam::Beam() : m_allocated(false), m_pointing(), m_track(2, N_TIMESTEPS)
+Beam::Beam() :
+    m_allocated(false), m_pointing(),
+    m_index(-1), m_track(2, N_TIMESTEPS)
 {}
 
 Beam::~Beam()
@@ -93,7 +95,7 @@ int Beam::setNInstances(int ninstances)
       m_beams[i].m_index = i; // assign index
   }
 
-  return (m_beams ? 0 : -1);
+  return 0;
 }
 
 Beam* Beam::allocate(SpectralWindow const& spw, set<int> subbands)
