@@ -64,6 +64,7 @@ lofar_QATOOLS
 lofar_DOCXX
 lofar_PACKAGE(Common)
 lofar_PACKAGE(CEP/CPA/MNS)
+lofar_PACKAGE(CEP/CPA/GSM)
 
 dnl
 dnl Output Makefiles
