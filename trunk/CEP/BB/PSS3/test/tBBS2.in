@@ -37,7 +37,7 @@ CTRLparams=[
 
 KSparams=[
   MSName="demo3-",         // Name of the Measurement Set
-  DBHost="dop50",          // Parameter database host name
+  DBHost="dop50.astron.nl",// Parameter database host name
   DBType="aips",           // Parameter database type
   DBName="test",           // Parameter database name
   DBPwd="",                // Parameter database password
