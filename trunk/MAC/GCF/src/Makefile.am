@@ -48,5 +48,17 @@ libgcf_la_DEPENDENCIES= $(LOFAR_DEPEND) \
 	$(top_builddir)/CoreComps/PML/src/libpml.la \
 	$(top_builddir)/Services/PMLlite/src/libpmllite.la
 
+BUILT_SOURCES =
+	log4cplus.properties
+
+EXTRA_DIST =
+	log4cplus.properties
+	
+%.properties: $(MAC_CONFIG)/%.properties
+	cp $< $@
+
+configfilesdir=$(bindir)
+configfiles_DATA=log4cplus.properties
+ 
 include $(lofar_sharedir)/Makefile.common
 
