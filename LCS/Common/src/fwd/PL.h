@@ -23,7 +23,7 @@
 #ifndef COMMON_FWD_PL_H
 #define COMMON_FWD_PL_H
 
-#include <lofar_config.h>
+#include <config.h>
 
 namespace LOFAR
 {
