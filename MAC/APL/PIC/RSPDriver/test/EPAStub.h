@@ -83,7 +83,7 @@ namespace RSP_Test
       typedef struct
       {
 	  char*  addr;
-	  uint32 size;
+	  uint16 size;
       } reginfo;
       
       reginfo m_reg[MEPHeader::MAX_PID + 1][MEPHeader::MAX_REGID + 1];

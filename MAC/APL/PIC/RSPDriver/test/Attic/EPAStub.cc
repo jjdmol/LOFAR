@@ -21,8 +21,6 @@
 //#
 //#  $Id$
 
-//#define EARLY_REPLY
-
 #include "EPA_Protocol.ph"
 #include "RawEvent.h"
 
@@ -113,6 +111,13 @@ EPAStub::EPAStub(string name)
     m_reg[MEPHeader::CRB][MEPHeader::CRB_SOFTPPS].size   = MEPHeader::CRB_SOFTPPS_SIZE;
     m_reg[MEPHeader::CDO][MEPHeader::CDO_SETTINGS].addr  = new char[MEPHeader::CDO_SETTINGS_SIZE];
     m_reg[MEPHeader::CDO][MEPHeader::CDO_SETTINGS].size  = MEPHeader::CDO_SETTINGS_SIZE;
+
+    // initialize allocated memory to zero
+    for (int pid = 0; pid <= MEPHeader::MAX_PID; pid++)
+      for (int regid = 0; regid <= MEPHeader::MAX_REGID; regid++)
+      {
+	if (m_reg[pid][regid].addr) memset(m_reg[pid][regid].addr, 0, m_reg[pid][regid].size);
+      }
   }
 }
 
@@ -192,138 +197,166 @@ GCFEvent::TResult EPAStub::connected(GCFEvent& event, GCFPortInterface& port)
     case EPA_READ:
     {
       EPAReadEvent read(event);
-      uint8 pid   = read.hdr.m_fields.addr.pid;
-      uint8 regid = read.hdr.m_fields.addr.regid;
+
+      uint8  pid    = read.hdr.m_fields.addr.pid;
+      uint8  regid  = read.hdr.m_fields.addr.regid;
+      uint16 offset = read.hdr.m_fields.offset;
+      uint16 size   = read.hdr.m_fields.size;
+
+      EPAReadackEvent ack;
+      ack.hdr = read.hdr;
+      ack.hdr.m_fields.type  = MEPHeader::READACK;
+      ack.hdr.m_fields.error = 0;
       
-      switch (pid)
+      ASSERT(pid <= MEPHeader::MAX_PID && regid <= MEPHeader::MAX_REGID);
+      ASSERT(m_reg[pid][regid].addr);
+
+      if (MEPHeader::DST_RSP == read.hdr.m_fields.addr.dstid)
       {
-	case MEPHeader::RSR:
-	  switch (regid)
-	  {
-	    case MEPHeader::RSR_STATUS:
-	      LOG_INFO("READ RSR_STATUS");
-	      status = read_rsr_status(read, port);
-	      break;
-	    case MEPHeader::RSR_VERSION:
-	      LOG_INFO("READ RSR_VERSION");
-	      status = read_rsr_version(read, port);
-	      break;
-	  }
-	  break;
+	// RSP register read
+	ASSERT(offset + size <= m_reg[pid][regid].size);
+      }
+      else
+      {
+	offset += read.hdr.m_fields.addr.dstid * m_reg[pid][regid].size;
+	ASSERT(offset + size <= m_reg[pid][regid].size * (int16)GET_CONFIG("RS.N_BLPS", i));
+      }
+      
+      ack.payload.setBuffer(m_reg[pid][regid].addr + offset, size);
 
-	case MEPHeader::TST:
-	  switch (regid)
-	  {
-	    case MEPHeader::TST_SELFTEST:
-	      LOG_INFO("READ TST_SELFTEST");
-	      break;
-	  }
-	  break;
-
-	case MEPHeader::CFG:
-	  switch (regid)
-	  {
-	    case MEPHeader::CFG_RESET:
-	      LOG_INFO("READ CFG_RESET");
-	      break;
-	    case MEPHeader::CFG_REPROGRAM:
-	      LOG_INFO("READ CFG_REPROGRAM");
-	      break;
-	  }
-	  break;
-
-	case MEPHeader::WG:
-	  switch (regid)
-	  {
-	    case MEPHeader::WG_XSETTINGS:
-	    case MEPHeader::WG_YSETTINGS:
-	      LOG_INFO("READ WG_SETTINGS");
-	      break;
-
-	    case MEPHeader::WG_XWAVE:
-	    case MEPHeader::WG_YWAVE:
-	      LOG_INFO("READ WG_WAVE");
-	      break;
-	  }
-	  break;
-
-	case MEPHeader::SS:
-	  switch (regid)
-	  {
-	    case MEPHeader::SS_SELECT:
-	      LOG_INFO("READ SS_SELECT");
-	      break;
-	  }
-	  break;
-
-	case MEPHeader::BF:
-	  switch (regid)
-	  {
-	    case MEPHeader::BF_XROUT:
-	    case MEPHeader::BF_XIOUT:
-	      LOG_INFO("READ BF_XOUT");
-	      break;
-
-	    case MEPHeader::BF_YROUT:
-	    case MEPHeader::BF_YIOUT:
-	      LOG_INFO("READ BF_YOUT");
-	      break;
-	  }
-	  break;
-
-	case MEPHeader::BST:
-	case MEPHeader::SST:
+      port.send(ack);
+    }
+    break;
+    
+#if 0  
+    switch (pid)
+    {
+      case MEPHeader::RSR:
+	switch (regid)
 	{
-	  LOG_INFO("READ STATS");
-	  status = read_stats(read, port);
+	  case MEPHeader::RSR_STATUS:
+	    LOG_INFO("READ RSR_STATUS");
+	    status = read_rsr_status(read, port);
+	    break;
+	  case MEPHeader::RSR_VERSION:
+	    LOG_INFO("READ RSR_VERSION");
+	    status = read_rsr_version(read, port);
+	    break;
 	}
 	break;
 
-	case MEPHeader::RCU:
-	  switch (regid)
-	  {
-	    case MEPHeader::RCU_SETTINGS:
-	      LOG_INFO("READ RCU_SETTINGS");
-	      break;
-	  }
-	  break;
+      case MEPHeader::TST:
+	switch (regid)
+	{
+	  case MEPHeader::TST_SELFTEST:
+	    LOG_INFO("READ TST_SELFTEST");
+	    break;
+	}
+	break;
 
-	case MEPHeader::CRR:
-	  switch (regid)
-	  {
-	    case MEPHeader::CRR_SOFTRESET:
-	      LOG_INFO("READ CRR_SOFTRESET");
-	      break;
-	    case MEPHeader::CRR_SOFTPPS:
-	      LOG_INFO("READ CRR_SOFTPPS");
-	      break;
-	  }
-	  break;
+      case MEPHeader::CFG:
+	switch (regid)
+	{
+	  case MEPHeader::CFG_RESET:
+	    LOG_INFO("READ CFG_RESET");
+	    break;
+	  case MEPHeader::CFG_REPROGRAM:
+	    LOG_INFO("READ CFG_REPROGRAM");
+	    break;
+	}
+	break;
 
-	case MEPHeader::CRB:
-	  switch (regid)
-	  {
-	    case MEPHeader::CRB_SOFTRESET:
-	      LOG_INFO("READ CRB_SOFTRESET");
-	      break;
-	    case MEPHeader::CRB_SOFTPPS:
-	      LOG_INFO("READ CRB_SOFTPPS");
-	      break;
-	  }
-	  break;
+      case MEPHeader::WG:
+	switch (regid)
+	{
+	  case MEPHeader::WG_XSETTINGS:
+	  case MEPHeader::WG_YSETTINGS:
+	    LOG_INFO("READ WG_SETTINGS");
+	    break;
 
-	case MEPHeader::CDO:
-	  switch (regid)
-	  {
-	    case MEPHeader::CDO_SETTINGS:
-	      LOG_INFO("READ CDO_SETTINGS");
-	      break;
-	  }
-	  break;
+	  case MEPHeader::WG_XWAVE:
+	  case MEPHeader::WG_YWAVE:
+	    LOG_INFO("READ WG_WAVE");
+	    break;
+	}
+	break;
+
+      case MEPHeader::SS:
+	switch (regid)
+	{
+	  case MEPHeader::SS_SELECT:
+	    LOG_INFO("READ SS_SELECT");
+	    break;
+	}
+	break;
+
+      case MEPHeader::BF:
+	switch (regid)
+	{
+	  case MEPHeader::BF_XROUT:
+	  case MEPHeader::BF_XIOUT:
+	    LOG_INFO("READ BF_XOUT");
+	    break;
+
+	  case MEPHeader::BF_YROUT:
+	  case MEPHeader::BF_YIOUT:
+	    LOG_INFO("READ BF_YOUT");
+	    break;
+	}
+	break;
+
+      case MEPHeader::BST:
+      case MEPHeader::SST:
+      {
+	LOG_INFO("READ STATS");
+	status = read_stats(read, port);
       }
-    }
-    break;
+      break;
 
+      case MEPHeader::RCU:
+	switch (regid)
+	{
+	  case MEPHeader::RCU_SETTINGS:
+	    LOG_INFO("READ RCU_SETTINGS");
+	    break;
+	}
+	break;
+
+      case MEPHeader::CRR:
+	switch (regid)
+	{
+	  case MEPHeader::CRR_SOFTRESET:
+	    LOG_INFO("READ CRR_SOFTRESET");
+	    break;
+	  case MEPHeader::CRR_SOFTPPS:
+	    LOG_INFO("READ CRR_SOFTPPS");
+	    break;
+	}
+	break;
+
+      case MEPHeader::CRB:
+	switch (regid)
+	{
+	  case MEPHeader::CRB_SOFTRESET:
+	    LOG_INFO("READ CRB_SOFTRESET");
+	    break;
+	  case MEPHeader::CRB_SOFTPPS:
+	    LOG_INFO("READ CRB_SOFTPPS");
+	    break;
+	}
+	break;
+
+      case MEPHeader::CDO:
+	switch (regid)
+	{
+	  case MEPHeader::CDO_SETTINGS:
+	    LOG_INFO("READ CDO_SETTINGS");
+	    break;
+	}
+	break;
+    }
+#endif
+      
     //
     // All register write requests arrive as specific signals
     // and are all handled in the same way,
@@ -353,8 +386,10 @@ GCFEvent::TResult EPAStub::connected(GCFEvent& event, GCFPortInterface& port)
 
       if (GET_CONFIG("EPAStub.LOOPBACK", i))
       {
-	uint8 pid   = write.hdr.m_fields.addr.pid;
-	uint8 regid = write.hdr.m_fields.addr.regid;
+	uint8  pid    = write.hdr.m_fields.addr.pid;
+	uint8  regid  = write.hdr.m_fields.addr.regid;
+	uint16 offset = write.hdr.m_fields.offset;
+	uint16 size   = write.hdr.m_fields.size;
 
 	ASSERT(pid <= MEPHeader::MAX_PID && regid <= MEPHeader::MAX_REGID);
 	ASSERT(m_reg[pid][regid].addr);
@@ -362,19 +397,16 @@ GCFEvent::TResult EPAStub::connected(GCFEvent& event, GCFPortInterface& port)
 	if (MEPHeader::DST_RSP == write.hdr.m_fields.addr.dstid)
 	{
 	  // copy to RSP register memory
-	  ASSERT(write.hdr.m_fields.size <= m_reg[pid][regid].size);
-	
-	  memcpy(m_reg[pid][regid].addr + write.hdr.m_fields.offset,
-		 &write.payload, write.hdr.m_fields.size);
+	  ASSERT(offset + size <= m_reg[pid][regid].size);
 	}
 	else
 	{
 	  // copy to BLP register memory
-	  uint32 offset = write.hdr.m_fields.addr.dstid * m_reg[pid][regid].size;
-	  ASSERT(offset + write.hdr.m_fields.size <= m_reg[pid][regid].size * GET_CONFIG("RS.N_BLPS", i));
-	  memcpy(m_reg[pid][regid].addr + offset,
-		 &write.payload, write.hdr.m_fields.size);
+	  offset += write.hdr.m_fields.addr.dstid * m_reg[pid][regid].size;
+	  ASSERT(offset + size <= m_reg[pid][regid].size * (int16)GET_CONFIG("RS.N_BLPS", i));
 	}
+
+	memcpy(m_reg[pid][regid].addr + offset, &write.payload, size);
       }
 
       EPAWriteackEvent writeack;
@@ -438,7 +470,9 @@ GCFEvent::TResult EPAStub::read_rsr_status(EPAReadEvent& event, GCFPortInterface
   rsr_status.hdr.m_fields.type  = MEPHeader::READACK;
   rsr_status.hdr.m_fields.error = 0;
 
-  memset(&rsr_status.board, 0, sizeof(EPA_Protocol::BoardStatus));
+  //memset(&rsr_status.board, 0, sizeof(EPA_Protocol::BoardStatus));
+  ASSERT(rsr_status.hdr.m_fields.size <= m_reg[MEPHeader::RSR][MEPHeader::RSR_STATUS].size);
+  memcpy(&rsr_status.board, m_reg[MEPHeader::RSR][MEPHeader::RSR_STATUS].addr, rsr_status.hdr.m_fields.size);
 
   port.send(rsr_status);
 
