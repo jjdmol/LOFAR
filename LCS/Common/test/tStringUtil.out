@@ -13,3 +13,24 @@ Trimmed C strings:
 >a String with leading and trailing whitespace< , len=45
 >a String without leading and trailing whitespace< , len=48
 >String with(out) itemnr and arrayindex< , len=38
+
+*** Conversion of fundamental arithmetic types to string ***
+min(bool) = false	 max(bool) = true
+min(char) = -128	 max(char) = 127
+min(unsigned char) = 0	 max(unsigned char) = 255
+min(short) = -32768	 max(short) = 32767
+min(unsigned short) = 0	 max(unsigned short) = 65535
+min(int) = -2147483648	 max(int) = 2147483647
+min(unsigned int) = 0	 max(unsigned int) = 4294967295
+min(long) = -2147483648	 max(long) = 2147483647
+min(unsigned long) = 0	 max(unsigned long) = 4294967295
+min(long long) = -9223372036854775808	 max(long long) = 9223372036854775807
+min(unsigned long long) = 0	 max(unsigned long long) = 18446744073709551615
+min(float) = 1.17549e-38	 max(float) = 3.40282e+38
+min(double) = 2.22507e-308	 max(double) = 1.79769e+308
+
+toString(int(42),"%06i") = 000042
+toString(float(M_E),"%e") = 2.718282e+00
+toString(float(M_PI),"%8.4f") =   3.1416
+toString(double(M_E),"%+08.12g") = +2.71828182846
+toString(double(M_PI*1e12),"%+08.12g") = +3.14159265359e+12

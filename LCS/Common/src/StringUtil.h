@@ -114,6 +114,107 @@ inline void ltrim(string&		aString, const string&	whiteSpace = " 	")
 	aString = aString.erase(0, aString.find_first_not_of(whiteSpace));
 }
 
+// @name Convert numeric value to string
+// Convert the value of any of the fundamental arithmetic data types to a
+// string representation. Most of the toString() methods provide the user with
+// a means to override the default formatting behaviour by supplying his/her
+// own formatting string, following the well-known <tt>printf</tt>-like
+// conversions.
+//
+// \attention The user is responsible for the correctness of the optional
+// conversion string. No checks are done by the toString() methods.
+
+// @{
+
+inline std::string toString(bool val)
+{
+  return val ? "true" : "false";
+}
+
+inline std::string toString(char val, const char* fmt = 0)
+{
+  if (fmt) return formatString(fmt, val);
+  else return formatString("%hhi", val);
+}
+
+inline std::string toString(unsigned char val, const char* fmt = 0)
+{
+  if (fmt) return formatString(fmt, val);
+  return formatString("%hhu", val);
+}
+
+inline std::string toString(short val, const char* fmt = 0)
+{
+  if (fmt) return formatString(fmt, val);
+  return formatString("%hi", val);
+}
+
+inline std::string toString(unsigned short val, const char* fmt = 0)
+{
+  if (fmt) return formatString(fmt, val);
+  return formatString("%hu", val);
+}
+
+inline std::string toString(int val, const char* fmt = 0)
+{
+  if (fmt) return formatString(fmt, val);
+  return formatString("%i", val);
+}
+
+inline std::string toString(unsigned int val, const char* fmt = 0)
+{
+  if (fmt) return formatString(fmt, val);
+  return formatString("%u", val);
+}
+
+inline std::string toString(long val, const char* fmt = 0)
+{
+  if (fmt) return formatString(fmt, val);
+  return formatString("%li", val);
+}
+
+inline std::string toString(unsigned long val, const char* fmt = 0)
+{
+  if (fmt) return formatString(fmt, val);
+  return formatString("%lu", val);
+}
+
+#if HAVE_LONG_LONG
+inline std::string toString(long long val, const char* fmt = 0)
+{
+  if (fmt) return formatString(fmt, val);
+  return formatString("%lli", val);
+}
+
+inline std::string toString(unsigned long long val, const char* fmt = 0)
+{
+  if (fmt) return formatString(fmt, val);
+  return formatString("%llu", val);
+}
+#endif
+
+
+inline std::string toString(float val, const char* fmt = 0)
+{
+  if (fmt) return formatString(fmt, val);
+  else return formatString("%g", val);
+}
+
+inline std::string toString(double val, const char* fmt = 0)
+{
+  if (fmt) return formatString(fmt, val);
+  else return formatString("%g", val);
+}
+
+#if HAVE_LONG_DOUBLE
+inline std::string toString(long double val, const char* fmt = 0)
+{
+  if (fmt) return formatString(fmt, val);
+  else return formatString("%Lg", val);
+}
+#endif
+
+// @}
 
 } // namespace LOFAR
 
