@@ -55,7 +55,7 @@ class Spigot : public VisHandlerNode
 
   protected:
     //##ModelId=3F9FF6AA0300
-    virtual int getResultImpl (ResultSet::Ref &resref, const Request &req,bool newreq);
+    virtual int getResult (Result::Ref &resref, const Request &req,bool newreq);
   
   private:
     //##ModelId=3F9FF6AA03D2
@@ -66,7 +66,7 @@ class Spigot : public VisHandlerNode
 //,icorr;
     
     //##ModelId=3F9FF6AA0221
-    ResultSet::Ref next_res;
+    Result::Ref next_res;
     //##ModelId=3F9FF6AA0238
     HIID next_rqid;
 };
