@@ -143,7 +143,7 @@ init_gsm_ionosphere := function(fname='')
     pos := lm_to_alpha_delta(l,m,alpha0, delta0);
     tg.addpointsource ('CP1', [0,1e20], [0,1e20],
                        2.7336354788504295676, 0.59397913192924178816,
-                       2.0, 0, 0, 0);
+                       1.0, 0, 0, 0);
 
 
     l := 9/arcsec_per_radian;
@@ -151,28 +151,28 @@ init_gsm_ionosphere := function(fname='')
     pos := lm_to_alpha_delta(l,m,alpha0, delta0);
     tg.addpointsource ('CP2', [0,1e20], [0,1e20],
                        2.7341327161798134604, 0.59326650097878796952,
-                       1.0, 0, 0, 0);
+                       0.5, 0, 0, 0);
 
     l := 168/arcsec_per_radian;
     m := 111/arcsec_per_radian;
     pos := lm_to_alpha_delta(l,m,alpha0, delta0);
     tg.addpointsource ('CP3', [0,1e20], [0,1e20],
                        2.7350631953284945119, 0.59440074164746736773,
-                       0.6, 0, 0, 0);
+                       0.3, 0, 0, 0);
 
     l := 151/arcsec_per_radian;
     m := 148/arcsec_per_radian;
     pos := lm_to_alpha_delta(l,m,alpha0, delta0);
     tg.addpointsource ('CP4', [0,1e20], [0,1e20],
                        2.7349638216242917466, 0.59458016577168659733,
-                       0.2, 0, 0, 0);
+                       0.1, 0, 0, 0);
 
     l := -7/arcsec_per_radian;
     m := -16/arcsec_per_radian;
     pos := lm_to_alpha_delta(l,m,alpha0, delta0);
     tg.addpointsource ('CP5', [0,1e20], [0,1e20],
                        2.7340391444793006315, 0.59378525189734854273,
-                       0.1, 0, 0, 0);
+                       0.05, 0, 0, 0);
 
     tg.done();
     pt := parmtable(spaste(fname,'_gsm.MEP'), T);
