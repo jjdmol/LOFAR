@@ -1,13 +1,13 @@
-//# Socket.h: Class for socket conections
+//# Socket.h: Class for connections over TCP/IP or UDP
 //#
-//# Copyright (C) 2002
-//# ASTRON (Netherlands Foundation for Research in Astronomy)
+//# Copyright(C) 2002-2004
+//# ASTRON(Netherlands Foundation for Research in Astronomy)
 //# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
 //# This program is free software; you can redistribute it and/or modify
 //# it under the terms of the GNU General Public License as published by
 //# the Free Software Foundation; either version 2 of the License, or
-//# (at your option) any later version.
+//#(at your option) any later version.
 //#
 //# This program is distributed in the hope that it will be useful,
 //# but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -23,7 +23,9 @@
 #if !defined(COMMON_SOCKET_H)
 #define COMMON_SOCKET_H
 
-#include <Common/Debug.h>
+#include <lofar_config.h>
+#include <Common/lofar_string.h>
+#include <Common/LofarTypes.h>
 
 #include <resolv.h>
 #include <errno.h>
@@ -32,338 +34,298 @@
 namespace LOFAR
 {
 
-  //##ModelId=3C90CE58024E
-  class Socket 
-  {
-    //##ModelId=3DB936CC0314
-    LocalDebugContext;
+// The Socket class gives you a service access point for communication on
+// TCP/IP or UDP sockets.
+class Socket {
+public:
+	//# ---------- Construction and destruction ----------
+	// Create a trivial Socket object, not yet connected to anything.
+	explicit Socket(const string&	socketName = "");
 
-  public:
-    //##ModelId=3C91BA4300F6
-    explicit Socket (const string &sname = "");
+	// Create server socket and start listener on given port.
+	Socket(const string&	socketname, 
+		   const string&	service,
+		   int32			proto = Socket::TCP, 
+		   int32			backlog = 5);
 
-    //##ModelId=9FD2BC39FEED
-    //##Documentation
-    //## Creates server socket
-    Socket (
-            //##Documentation
-            //## service name/port number
-            const string &sname, const string &serv,
-            int proto = Socket::TCP, int backlog = 5);
+	// Create client socket and try to connect to given host and port.
+	Socket(const string&	socketname, 
+		   const string&	hostname,
+		   const string&	service,
+		   int32			proto = Socket::TCP);
 
-    //##ModelId=C15CE2A5FEED
-    //##Documentation
-    //## Creates client socket
-    Socket (
-            //##Documentation
-            //## remote host
-            const string &sname, const string &host,
-            //##Documentation
-            //## service name/port number
-            const string &serv,
-            int proto = Socket::TCP, int wait_ms = -1);
+	~Socket();
 
-    //##ModelId=3DB936D00067
-    ~Socket();
+	// Routines for binding and connecting the socket object to the TCP/UDP
+	// stack.
+	// <group>
+	int32	initServer(const string&	service,
+					   int32			proto = Socket::TCP, 
+					   int32			backlog = 5);
+	int32	initClient(const string&	hostname,
+					   const string&	service,
+					   int32			proto = Socket::TCP);
+	// </group>
 
+	// Attempts to (re)connect to a server socket.
+	// waitMs: <0		blocking
+	//		   >=0		wait waitMs milliseconds for completion
+	//
+	// Returvalues:
+	//	SK_OK		Successful connected
+	//	INPROGRESS	Not connected within the given timelimit, still in progress
+	//	CONNECT		Some error occured, errnoSys() gives more info
+	//
+	int32 connect(int32 waitMs = -1);
 
-    //##ModelId=3C91B9FC0130
-    int initServer (const string &serv, int proto = Socket::TCP, int backlog = 5);
+	// Tries to (re)accept an incoming connection on a server socket.
+	// waitMs: <0		blocking
+	//		   >=0		wait waitMs milliseconds for completion
+	//
+	// Returvalues:
+	//			!=0		Pointer to new created socket.
+	//			0		Some problem occured, use errcode() to get info:
+	//	SK_OK		Successful connected
+	//	INV_OP		(Listener)socket must be a server socket
+	//	NOINIT		(Listener)socket not initialized yet.
+	//	INPROGRESS	Not connected within the given timelimit, still in progress
+	//	ACCEPT		Some error occured, errnoSys() gives more info
+	//
+	Socket* accept(int32 waitMs = -1);
 
-    //##ModelId=3C91BA16008E
-    int initClient (const string &host, const string &serv, int proto = Socket::TCP, int wait_ms = -1);
+	// Shuts down the socket for receive and/or send
+	int32 shutdown(bool receive = true, bool send = true);
 
-    //##ModelId=F1A741D4FEED
-    string errstr () const;
+	// Sets the socket in blocking or non-blocking mode. All consequent reads
+	// and writes in the socket are performed in this mode.
+	// Default sockets are blocking.
+	int32 setBlocking(bool blocking = true);
+      
+	// Interrupts readblocking/writeblocking calls(for multithreaded sockets)
+	inline void interrupt(bool allowInterrupt = true);
+      
+	// Reads up to maxbytes from socket. When the socket is in blocking mode
+	// the read waits until nrBytes are received. In non-blocking mode only
+	// the available bytes are read.
+	// Returns the number of bytes read or a (negative) errornumber
+	// Returnvalue: < 0					error occured
+	// 				>=0 != nrBytes		intr. occured or socket is nonblocking
+	//				>=0 == nrBytes		everthing went OK.
+	//
+	// Errors:	SK_OK		no error
+	//			NOINIT		socket not initialized yet.
+	//			INCOMPLETE	not all bytes are received yet.
+	//			READERR		Some generic error, errorSys() given more info
+	//			PEERCLOSED	Other sid has closed the connection.
+	int32 read(void*	buf,  int32	nrBytes);
 
-    //##ModelId=3A99B058FEED
-    bool ok ();
+	// Writes nrBytes bytes to the socket. 
+	// Returns the number of bytes written or a (negative) errornumber
+	// Returnvalue: < 0					error occured
+	// 				>=0 != maxBytes		intr. occured or socket is nonblocking
+	//				>=0 == maxBytes		everthing went OK.
+	//
+	// Errors:	SK_OK		no error
+	//			NOINIT		socket not initialized yet.
+	//			INCOMPLETE	not all bytes are written yet.
+	//			WRITEERR	Some generic error, errorSys() given more info
+	//			PEERCLOSED	Other sid has closed the connection.
+	int32 write(const void*	buf, int32	nrBytes);
 
-    //##ModelId=6AE5AA36FEED
-    //##Documentation
-    //## Attempts to connect to a server socket.
-    int connect (int wait_ms = 0);
+    // Does a blocking read INDEPENDANT of the current mode.
+	// Returnvalues and errors are identical to read().
+	int32 readBlocking(void*	buf, int32	nrBytes);
 
-    //##ModelId=1357FC75FEED
-    //##Documentation
-    //## Tries to accept an incoming connection on a server socket.
-    Socket* accept ();
+	// Does a blocking write INDEPENDANT of the current mode.
+	// Returnvalues and errors are identical to write().
+	//# Is this uberhaupt possible in TCP/IP ????
+	int32 writeBlocking(const void*	buf, int32	nrBytes);
 
-    //##ModelId=5264A6A9FEED
-    //##Documentation
-    //## Reads up to maxn bytes from socket.
-    int read (void *buf, int maxn);
+	// --------------- Miscellaneous functions ---------------
+	// Points socket at SIGPIPE counter.
+	// When a read or write is done on the Socket the value of the sigpipe-
+	// Counter is checked for value-changes. When the value was changed
+	// during the read or write, the function returns with SIGPIPE and
+	// will not process the data.
+	// Such it is possible to implement a sigpipe-handler as long as this 
+	// handler increments the sigpipeCounter everytime it handles some data.
+	inline void setSigpipeCounter(const volatile int*	counter);
+      
+	// Datamember access functions
+	// <group>  
+	// Get/set name of socket
+	inline const string& getName() const;
+	inline void setName(const string& value);
 
-    //##ModelId=139EF112FEED
-    //##Documentation
-    //## Writes n bytes to socket.
-    int write (const void *buf, int n);
+	// Get human readable reason for failure.
+	string errstr() const;
 
-    //##ModelId=890ACD77FEED
-    //##Documentation
-    //## Shuts down the socket for receive and/or send
-    int shutdown (bool receive, bool send);
-
-    //##ModelId=3DB936D000E9
-    const string& getName () const;
-    //##ModelId=3DB936D001E4
-    void setName (const string& value);
-
-    //##ModelId=3DB936D003C4
-    int errcode () const;
-
-    //##ModelId=3DB936D100CD
-    int errno_sys () const;
-
-    //##ModelId=3DB936D101DB
-    int getSid () const;
-
-    //##ModelId=3DB936D102D5
-    int getType () const;
-
-    //##ModelId=3DB936D20006
-    bool isServer () const;
-
-    //##ModelId=3DB936D20128
-    bool isConnected () const;
-
-    //##ModelId=3DB936D20255
-    const string& host () const;
-
-    //##ModelId=3DB936D20377
-    const string& port () const;
-
-    // Data Members for Class Attributes
-
+	inline int32			errcode() 		const;	// Socket errorcode
+	inline int32			errnoSys()		const;	// System errorcode
+	inline int32			getSid()		const;	// Socket ID (filedesc.)
+	inline int16			getType()		const;	// Protocoltype
+	inline bool				isServer()		const;	// Socket role
+	inline bool				isConnected()	const;	// Connected to other side
+	inline bool				isBlocking()	const;	// in blocking mode or not
+	inline const string&	host()			const;	// Host connected to
+	inline const string&	port()			const;	// Port connected to
+	inline bool				ok()			const;	// Connected and no errors
+	// <\group>
+	
     // Additional Public Declarations
-    //##ModelId=3DB936520032
-    typedef enum { 
-      UDP,         // UDP datagram socket
-      TCP,         // TCP (stream) socket over network
-      UNIX,        // unix socket (local)
-      LOCAL=UNIX 
-    } SocketTypes;
-    //##ModelId=3DB9365200B4
-    typedef enum {
-      SK_OK         =  0,   // Ok
-      SOCKET        = -1,   // Can't create socket
-      BIND          = -2,   // Can't bind local address
-      CONNECT       = -3,   // Can't connect to server
-      ACCEPT        = -4,   // Can't accept client socket
-      BADHOST       = -5,   // Bad server host name given
-      BADADDRTYPE   = -6,   // Bad address type
-      READERR       = -7,   // Read error
-      WRITERR       = -8,   // Write error
-      PEERCLOSED    = -9,   // Remote client closed connection
-      INCOMPLETE    = -10,  // Couldn't read/write whole message
-      INVOP         = -11,  // Invalid operation
-      SOCKOPT       = -12,  // sockopt() failure
-      PORT          = -13,  // wrong port/service specified
-      PROTOCOL      = -14,  // invalid protocol
-      LISTEN        = -15,  // listen() error
-      TIMEOUT       = -16,  // timeout
-      INPROGRESS    = -17,  // connect() in progress
-      NOMORECLI     = -18,  // No more clients
-      SHUTDOWN      = -19,  // shutdown() failure
-      NOINIT        = -20   // uninitialized socket
-    } ErrorCodes;
+	typedef enum { 
+		UDP,					// UDP datagram socket
+		TCP,					// TCP(stream) socket over network
+		UNIX,					// unix socket(local)
+		LOCAL=UNIX 
+	} SocketTypes;
+	typedef enum {
+		SK_OK         =  0,		// Ok
+		SOCKET        = -1,		// Can't create socket
+		BIND          = -2,		// Can't bind local address
+		CONNECT       = -3,		// Can't connect to server
+		ACCEPT        = -4,		// Can't accept client socket
+		BADHOST       = -5,		// Bad server host name given
+		BADADDRTYPE   = -6,		// Bad address type
+		READERR       = -7,		// Read error
+		WRITERR       = -8,		// Write error
+		PEERCLOSED    = -9,		// Remote client closed connection
+		INCOMPLETE    = -10,	// Couldn't read/write whole message
+		INVOP         = -11,	// Invalid operation
+		SOCKOPT       = -12,	// sockopt() failure
+		PORT          = -13,	// wrong port/service specified
+		PROTOCOL      = -14,	// invalid protocol
+		LISTEN        = -15,	// listen() error
+		TIMEOUT       = -16,	// timeout
+		INPROGRESS    = -17,	// connect() in progress
+		NOMORECLI     = -18,	// No more clients
+		SHUTDOWN      = -19,	// shutdown() failure
+		NOINIT        = -20		// uninitialized socket
+	} ErrorCodes;
 
-    // sets blocking mode on socket if block is true
-    // (default sockets are non-blocking)
-    //##ModelId=3DB936D300BC
-    int setBlocking (bool block=true);
-      
-    // interrupts readblock / writeblock calls (for multithreaded sockets)
-    //##ModelId=3DB936D3037B
-    void interrupt (bool intr=true);
-      
-    // points socket at SIGPIPE counter
-    //##ModelId=3DB936D401F6
-    void setSigpipeCounter (const volatile int *counter);
-      
-    //	Reads maxn bytes from socket (in blocking mode)
-    //##ModelId=3DB936D50067
-    int readblock (void *buf, int maxn);
-    //	Writes n bytes to socket (in blocking mode)
-    //##ModelId=3DB936D6007C
-    int writeblock (const void *buf, int n);
+protected:
+	// Constructs a generic socket for an incoming connection on a server
+	// socket.
+	Socket(int32 id, struct sockaddr_in &sa);
+	Socket(int32 id, struct sockaddr_un &sa);
 
-    // helper function: prints formatted data from buffer
-    //##ModelId=3DB936D700EC
-    static void printData (const void *buf,int n);
-      
-    //##ModelId=3DB936D80210
-    Declare_sdebug( );
-    //##ModelId=3DB936D802BA
-    Declare_debug( );
-  protected:
-    //##ModelId=4760B82BFEED
-    //##Documentation
-    //## Constructs a generic socket for an incoming connection on a server
-    //## socket.
-    Socket (int id, struct sockaddr_in &sa);
+	// Sets default socket options like reuse address, linger, etc.
+	int32 setDefaults();
 
-    //##ModelId=3CC95D6E032A
-    Socket (int id, struct sockaddr_un &sa);
+	// Saves given errorcode and system errorcode
+	inline int32 setErrno(int32 ErrorNr);
 
+	// Tries to init the socket by resolving all parameters and allocating
+	// the real socket.
+	int32 initUnixSocket(bool	asServer);
+	int32 initTCPSocket (bool	asServer);
 
-    //##ModelId=3EE80597FEED
-    //##Documentation
-    //## Sets default socket options
-    int setDefaults ();
+private:
+	//# ---------- Copying is not allowed ----------
+	Socket(const Socket&	that);
+	Socket&	operator=(const Socket&	that);
 
-    // Additional Protected Declarations
-    //##ModelId=3DB936D8036E
-    int set_errcode (int n);
-  private:
-    //##ModelId=3DB936D902EE
-    Socket(const Socket &right);
+	//# ---------- Data Members ----------
+	string				itsSocketname;		//# name of socket given by user
+	int32				itsErrno;			//# own error number
+	int32				itsSysErrno;		//# system error number
+	int32				itsSocketID;		//# filedescriptor of the socket
+	int16				itsType;			//# SocketType
+	bool				itsIsServer;		//# Server or Client Socket
+	bool				itsIsConnected;		//# Connected or not
+	string				itsHost;			//#	Name of host at other side
+	string				itsPort;			//# Portnr of server
+	bool				itsAllowIntr;		//# Interrupt read/writeblock call
+	bool				itsIsInitialized;	//# Socket is initialized
+	bool				itsIsBlocking;		//# Blocking mode or not
+	struct sockaddr_in	itsTCPAddr;			//# Connected client address(TCP)
+	struct sockaddr_un	itsUnixAddr;		//# Connected client address(UNIX)
 
-    //##ModelId=3DB936DA0277
-    Socket & operator=(const Socket &right);
+	//# ---------- Support for sigpipes ----------
+	const volatile int32*	sigpipeCounter;
+	static int32			defaultSigpipeCounter;
 
-  private:
-    // Data Members for Class Attributes
+};
 
-    //##ModelId=3C90CE5803BA
-    string name;
+//# --------------- Inline implementations ---------------
 
-    //##ModelId=3C90CE5803C1
-    int errcode_;
+inline bool Socket::ok() const
+{
+	return ((itsSocketID >= 0) && !itsErrno);
+}
 
-    //##ModelId=3C91B661029C
-    int errno_sys_;
+inline const string& Socket::getName() const
+{
+	return (itsSocketname);
+}
 
-    //##ModelId=3C90CE590017
-    int sid;
+inline void Socket::setName(const string& value)
+{
+	itsSocketname = value;
+}
 
-    //##ModelId=3C90CE590038
-    int type;
+inline int32 Socket::errcode() const
+{
+	return (itsErrno);
+}
 
-    //##ModelId=3C90CE590039
-    bool server;
+inline int32 Socket::errnoSys() const
+{
+	return (itsSysErrno);
+}
 
-    //##ModelId=3C90CE59009B
-    bool connected;
+inline int32 Socket::getSid() const
+{
+	return (itsSocketID);
+}
 
-    //##ModelId=3CC00CDC00EA
-    string host_;
+inline int16 Socket::getType() const
+{
+	return (itsType);
+}
 
-    //##ModelId=3CC00CE902E8
-    string port_;
+inline bool Socket::isServer() const
+{
+	return (itsIsServer);
+}
 
-    //##ModelId=3C90CE59009C
-    int sbuflen;
+inline bool Socket::isConnected() const
+{
+	return (itsIsConnected);
+}
 
-    //##ModelId=3C90CE5900A1
-    int rbuflen;
+inline bool Socket::isBlocking() const
+{
+	return (itsIsBlocking);
+}
 
-    // Additional Implementation Declarations
-    //##ModelId=3DB936CE001E
-    bool do_intr;  // flag: interrupt readblock/writeblock call
-    //##ModelId=3DB936CE01B9
-    bool bound;
-    //##ModelId=3DB936CE0321
-    struct sockaddr_in rmt_addr;  // connected client address (TCP)
-    //##ModelId=3DB936CF00CA
-    struct sockaddr_un unix_addr; // connected client address (UNIX)
-      
-    //##ModelId=3C90CE5803B3
-    const volatile int *sigpipe_counter;
-    //##ModelId=3DB936CF02C9
-    static int default_sigpipe_counter;
-  };
+inline const string& Socket::host() const
+{
+	return (itsHost);
+}
 
-  // Class Socket 
+inline const string& Socket::port() const
+{
+	return (itsPort);
+}
 
+inline int32 Socket::setErrno(int32 errorNr)
+{
+	itsSysErrno = errno;				// save system errno
+	return (itsErrno = errorNr);		// save and return given error
+}
 
-  //##ModelId=3A99B058FEED
-  inline bool Socket::ok ()
-  {
-    return sid >= 0 && !errcode_;
-  }
+inline void Socket::interrupt (bool intr)
+{
+	itsAllowIntr = intr;
+}
 
-  //##ModelId=3DB936D000E9
-  inline const string& Socket::getName () const
-  {
-    return name;
-  }
-
-  //##ModelId=3DB936D001E4
-  inline void Socket::setName (const string& value)
-  {
-    name = value;
-  }
-
-  //##ModelId=3DB936D003C4
-  inline int Socket::errcode () const
-  {
-    return errcode_;
-  }
-
-  //##ModelId=3DB936D100CD
-  inline int Socket::errno_sys () const
-  {
-    return errno_sys_;
-  }
-
-  //##ModelId=3DB936D101DB
-  inline int Socket::getSid () const
-  {
-    return sid;
-  }
-
-  //##ModelId=3DB936D102D5
-  inline int Socket::getType () const
-  {
-    return type;
-  }
-
-  //##ModelId=3DB936D20006
-  inline bool Socket::isServer () const
-  {
-    return server;
-  }
-
-  //##ModelId=3DB936D20128
-  inline bool Socket::isConnected () const
-  {
-    return connected;
-  }
-
-  //##ModelId=3DB936D20255
-  inline const string& Socket::host () const
-  {
-    return host_;
-  }
-
-  //##ModelId=3DB936D20377
-  inline const string& Socket::port () const
-  {
-    return port_;
-  }
-
-  //##ModelId=3DB936D8036E
-  inline int Socket::set_errcode ( int n )
-  {
-    errno_sys_ = errno;
-    return errcode_ = n;
-  }
-
-  //##ModelId=3DB936D401F6
-  inline void Socket::setSigpipeCounter (const volatile int *counter)
-  {
-    sigpipe_counter = counter;
-  }
+inline void Socket::setSigpipeCounter(const volatile int32 *counter)
+{
+	sigpipeCounter = counter;
+}
 
 } // namespace LOFAR
 
 #endif
 
-using LOFAR::Socket;
-
-// Detached code regions:
-#if 0
-sigpipe = True;
-
-#endif
