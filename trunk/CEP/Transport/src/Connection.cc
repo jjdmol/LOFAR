@@ -80,6 +80,9 @@ namespace LOFAR
     // Use the source ID as the tag for MPI send/receive.
     sourceTP->setWriteTag (sourceTP->getItsID());
     targetTP->setReadTag (sourceTP->getItsID());
+    // And the other way around
+    sourceTP->setReadTag (targetTP->getItsID());
+    targetTP->setWriteTag (targetTP->getItsID());
 
     // Set the source and target DataHolder 
     targetTP->setSourceAddr(sourceTP->getSourceAddr());
