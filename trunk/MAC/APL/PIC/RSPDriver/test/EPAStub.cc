@@ -364,7 +364,7 @@ GCFEvent::TResult EPAStub::connected(GCFEvent& event, GCFPortInterface& port)
       {
 	// copy to BLP register memory
 	uint32 offset = write.hdr.m_fields.addr.dstid * m_reg[pid][regid].size;
-	ASSERT(offset + write.hdr.m_fields.size <= m_reg[pid][regid].size);
+	ASSERT(offset + write.hdr.m_fields.size <= m_reg[pid][regid].size * GET_CONFIG("RS.N_BLPS", i));
 	memcpy(m_reg[pid][regid].addr + offset,
 	       &write.payload, write.hdr.m_fields.size);
       }
