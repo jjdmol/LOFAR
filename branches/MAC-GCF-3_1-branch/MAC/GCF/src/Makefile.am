@@ -55,6 +55,7 @@ BUILT_SOURCES =
 EXTRA_DIST =
 	log4cplus.properties
 	
+MAC_CONFIG = $(top_srcdir)/../Config
 %.properties: $(MAC_CONFIG)/%.properties
 	cp $< $@
 

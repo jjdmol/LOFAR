@@ -373,22 +373,30 @@ TPAResult GPAAPCFileReader::createMACValueObject(
   {
     *pReturnValue = GCFPValue::createMACTypeObject(GCFPValue::LPT_STRING);
   }
-/*  else if (macType == "LPT_BIT32")
+  else if (macType == "MACDynBool")
   {
-    *pMacValue = new GCFPVBit32(((Bit32Var *)&variable)->getValue());
+    *pReturnValue = GCFPValue::createMACTypeObject(GCFPValue::LPT_DYNBOOL);
   }
-  else if (macType == "LPT_REF")
+  else if (macType == "MACDynChar")
   {
-    *pMacValue = new GCFPVRef(((TextVar *)&variable)->getValue());
+    *pReturnValue = GCFPValue::createMACTypeObject(GCFPValue::LPT_DYNCHAR);
   }
-  else if (macType == "LPT_BLOB")
+  else if (macType == "MACDynUnsigned")
   {
-    *pMacValue = new GCFPVBlob(((BlobVar *)&variable)->getValue());
+    *pReturnValue = GCFPValue::createMACTypeObject(GCFPValue::LPT_DYNUNSIGNED);
   }
-  else if (macType == "LPT_DATETIME")
+  else if (macType == "MACDynInteger")
   {
-    *pMacValue = new GCFPVDateTime(((TimeVar *)&variable)->getValue());
-  }*/
+    *pReturnValue = GCFPValue::createMACTypeObject(GCFPValue::LPT_DYNINTEGER);
+  }
+  else if (macType == "MACDynDouble")
+  {
+    *pReturnValue = GCFPValue::createMACTypeObject(GCFPValue::LPT_DYNDOUBLE);
+  }
+  else if (macType == "MACDynString")
+  {
+    *pReturnValue = GCFPValue::createMACTypeObject(GCFPValue::LPT_DYNSTRING);
+  }
   else 
   {
     result = PA_MACTYPE_UNKNOWN;

@@ -42,6 +42,7 @@ EXTRA_DIST = \
 	tutorial.top \
 	log4cplus.properties
 
+MAC_CONFIG = $(top_srcdir)/../Config
 %.properties: $(MAC_CONFIG)/%.properties
 	cp $< $@
 
