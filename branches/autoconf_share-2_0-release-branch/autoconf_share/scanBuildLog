@@ -1,0 +1,627 @@
+#! /usr/bin/env python
+#
+# Script to read all the logfiles from a given LOFAR system build
+#
+# Usage:
+#        ./scanBuildLog -d [lofarBasDir] -f [base logname]
+# Args:
+#       base logname:  The base name for the logfiles.
+#
+#       for now we assume that builds are being logged in different files
+#       per Variant. The week/year number would be the basename.
+#       so a build would produce lognames like:
+#                                               week441-dbg.log
+#                                               week441-opt.log
+#                                               week441-mpich.log
+#                                               week441-iccdbg.log
+#                                               week441-docxxx.log
+#
+#      and the command to produce the html pages would be:
+#      ./scanBuildLog -d LOFAR -f week441
+#
+# The resulting html pages will be copied to the lofar apache server so
+# they can be accessed by others.
+#
+# 8-10-2004   Arthur Coolen
+#
+
+#
+# Import all packages we need
+#
+import sys
+import os
+import fnmatch
+import re
+import getopt
+
+def remoteFileMove(lofarServer,serverDir):
+  # move the html Files that reside in the "thisWeek" directory
+  # on the server and have to do with this machines build to the
+  # "lastWeek" directory
+  cmd="mv "+serverDir+"/BuildResults/thisWeek/*" + machineName() + \
+       "* "+serverDir+"/BuildResults/lastWeek/"
+  return os.system("ssh -1 "+lofarServer+"  " + cmd)
+
+def copyServerSideScript(lofarServer,serverDir,lofarDir):
+  #
+  # copy the Serverside script (createNewIndex) to the lofar server
+  # in the BuildResults directory.
+  return os.system("scp -oProtocol=1 "+lofarDir+"/autoconf_share/createNewIndex "+lofarServer+":"+serverDir+"/BuildResults")
+
+def runServerSideScript(lofarServer,serverDir,server):
+  #
+  # run the serverSideScript to generate the new index files
+  #
+  print 'ssh -1 '+lofarServer+' "cd '+serverDir+'/BuildResults;./createNewIndex -d '+serverDir+' -s '+server+'"'
+  return os.system('ssh -1 '+lofarServer+' "cd '+serverDir+'/BuildResults;./createNewIndex -d '+serverDir+' -s '+server+'"')
+
+def copyFiles2Server(copyDir,lofarServer):
+  #
+  # function to copy the generated html pages to the server
+  # The Protocol=1 flag will be passed to ssh on lofar0 to
+  # enable Protocol 1 authorisation. This is needed at the moment
+  # because lofar0 is still an older machine that has no ssh2 installed
+  #
+  return os.system("scp -oProtocol=1 *.html "+lofarServer+":"+copyDir)
+  
+def find(pattern, startdir=os.curdir):
+  #
+  #Function to walk directory structures and find pattern matches.
+  #
+  # args:
+  #   - pattern           filepattern to look for
+  #   - startdir          directory to start search from
+  #
+  matches=[]
+  os.path.walk(startdir, findvisitor, (matches, pattern))
+  matches.sort()
+  return matches
+
+def findvisitor((matches, pattern), thisdir, nameshere):
+  #
+  #Function called by find to search for patterns in directories
+  #
+  # args:
+  #   - matches           array containing found matches
+  #   - pattern           pattern to search for
+  #   - thisdir           present directory
+  #   - nameshere         all files in this directory
+  #
+  for name in nameshere:
+    if fnmatch.fnmatch(name, pattern):
+      fullpath = os.path.join(thisdir, name)
+      matches.append(fullpath)
+
+
+def machineName():
+  #
+  # Return the name from the machine we are running on.
+  #
+  return os.uname()[1]
+
+def openHTMLPage(file,title,withHeader):
+  #
+  #Function to make the uniform pageheader voor CM.
+  #
+  # args:
+  #   - file              file to print to
+  #   - title             title for the page
+  #   - withHeader        Will the header be printed on top of the page
+  #
+  file.write('<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2//EN">\n')
+  file.write("<html>\n")
+  file.write("<head>\n")
+  file.write("<title>"+title+"</title>\n")
+  file.write("<body>\n")
+  if withHeader:
+    file.write("<center>\n")
+    file.write("<h1>"+title+"</h1>\n")
+    file.write("</center>\n")
+    
+
+def closeHTMLPage(file):
+  #
+  # Closes the html page
+  #
+  # args:
+  #  - file               file to write the html stuff to
+
+  file.write("</body>\n")
+  file.write("</html>\n")
+  file.close()
+
+def findFailedTests(variant,package,testResultsArray):
+  #
+  # find if in a given PACKAGE and a given VARIANT testprograms
+  # failed.
+  #
+  # args:
+  # - variant            VARIANT looked for
+  # - package            PACKAGE looked for
+  # - testResultsArray   array that contains progname,variant,package pairs
+  #
+ 
+  for row in testResultsArray:
+    if (variant == row[1]) & (package == row[2]):
+      return 1
+  return 0
+
+def findFailedBuilds(variant,package,buildResultsArray):
+  #
+  # find if in a given PACKAGE and a given VARIANT compiling and
+  # / or linking failed.
+  #
+  # args:
+  # - variant            VARIANT looked for
+  # - package            PACKAGE looked for
+  # - buildResultsArray  array that contains progname,variant,package pairs
+  #
+ 
+  for row in buildResultsArray:
+    if (variant == row[1]) & (package == row[2]):
+      return 1
+  return 0
+
+def extendPackageArray(packageArray,allBuildablePackages):
+  #
+  # Find if a PACKAGE has more Packages under him that can be build also
+  # if so, extend the packageArray with those packages
+  #
+  newPackageArray=[]
+  for pck in packageArray:
+    for line in allBuildablePackages:
+      if line.find(pck) > -1:
+        newPackageArray.append(line)
+  return newPackageArray
+
+def usage():
+  print "usage: "+sys.argv[0]+" [-h] -n [-d arg] [-f arg] [-s arg] [-t arg]"
+  print "args:  -h,--help       - print usage"
+  print "       -n,--nocopy     - Do not copy thisWeek to lastWeek"
+  print "       -d,--directory  - LOFAR base directory"
+  print "       -f,--filebase   - basename from logfiles. E.g. week441"
+  print "       -t,--testserver - give an alternative testserver"
+  print "       -s,--serverdir  - give an alternative serverdirectory"
+  sys.exit(2)
+
+
+def main(argv):
+  lofarDir = "None"
+  fileBase = "None"
+  lofarServer ="lofar@lofar0.nfra.nl"
+  serverDir = "/usr/local/httpd/htdocs"
+  noCopy=0
+  try:
+    opts, args = getopt.getopt(argv, "d:f:hns:t:",
+                               ["directory=","help","filebase=",
+                                "testserver=","serverdir=","nocopy"])
+  except getopt.GetoptError:
+    usage()
+  for opt, arg in opts:
+    if opt in ("-h", "--help"):
+      usage()
+    elif opt in ("-n", "--nocopy"):
+      noCopy = 1
+    elif opt in ("-f", "--filebase"):
+      fileBase = arg
+    elif opt in ("-d", "--directory"):
+      lofarDir = arg
+    elif opt in ("-s", "--serverdir"):
+      serverDir = arg
+    elif opt in ("-t", "--testserver"):
+      lofarServer = arg
+
+  server=str.split(lofarServer,'@')[1]
+  if fileBase==None:
+    print "No filebase specified"
+    usage()
+  if lofarDir==None:
+    print "No LOFAR basedir specified"
+    usage()
+  if len(sys.argv) < 3:
+    usage()
+  if os.path.isdir(lofarDir) < 1:
+    print lofarDir+" Not found, or not a directory"
+    usage()
+
+
+  #
+  # print machine
+  #
+  print "This build took place on: " + machineName() + "\n\n"
+  print "Using : " + serverDir + " on "+lofarServer+"\n\n"
+
+
+  #
+  # make an array that contains the VARIANTS PACKAGES
+  # for each log file looked for.
+  #
+  variantPackageArray=[]
+  testResultsArray=[]
+  buildResultsArray=[]
+  allBuildablePackages=[]
+
+  #
+  # Patterns to look for in the logfile
+  #
+  # find the PACKAGE(S) line to get all Packages being build
+  #
+  packagePattern = re.compile('(PACKAGES *= *".*?")|(PACKAGES *= *[^ ]*)',re.IGNORECASE)
+  #
+  # find the VARIANT(S) line to get the Variant being build
+  #
+  variantPattern = re.compile('(VARIANTS *= *".*?")|(VARIANTS *= *[^ ]*)',re.IGNORECASE)
+  #
+  # find the Compiletool line for compiling
+  #
+  compilePattern = re.compile('^.*compiletool .*mode=compile.*$')
+  #
+  # find the Compiletool line for linking
+  #
+  linkPattern = re.compile('^.*compiletool .*mode=link.*$')
+  #
+  # find the Compiletool line for install
+  #
+  installPattern = re.compile('^.*compiletool .*mode=install.*$')
+  #
+  # find the target  file within a compile (link)line
+  #
+  linkTargetPattern=re.compile('^.*mode=link.* -o ([^ ]+).*$')
+  #
+  # find the sourcefile in a source= line
+  #
+  sourcePattern=re.compile("^.*source='(.*/)?(.*.cc).*object='(.*)'.*$")
+
+
+  #
+  # find configure.in in Lofar tree
+  # each directory that contains it can be build in the LOFAR builds
+  # So could potentially be in the PACKAGES line used for the build
+  #
+  pattern='configure.in'
+
+  for name in find(pattern, lofarDir):
+    #
+    # first drop the filename
+    #
+    head, tail = os.path.split(name)
+    package=str.replace(head,lofarDir+'/','')
+    allBuildablePackages.append(package)
+
+  files=find(fileBase+'*.log',os.curdir)
+  if len(files)<1:
+    print "Sorry, can't find any files starting with "+fileBase
+    usage()
+    
+  for file in files:
+
+
+    #
+    # keep last found build start
+    #
+    keepLastFoundBuildArray=[]
+
+    try:
+      readLogFile=open(file, 'r')
+      sfile=file.split(fileBase)
+      nfile=machineName()+sfile[1]+".html"
+      writeLogFile=open(nfile, 'w')
+    except IOError, message:
+      sys.exit( "Error opening file: %s" % message )
+
+
+    openHTMLPage(writeLogFile,"Tagged "+file+" on "+machineName(),"yes")
+    writeLogFile.write('<pre>\n')
+
+    aLine=readLogFile.readline()
+    print "File: "+file
+
+
+    while aLine != "":
+      #
+      # search for PACKAGES keyword
+      #
+      if str.find(aLine,"PACKAGES")>-1:
+        #
+        # If PACKAGES found then lift out the different PACKAGES
+        #
+        matchPackage = packagePattern.search(aLine)
+      
+        if matchPackage:
+          start,end=matchPackage.span()
+          pckArray = re.split(' *',re.sub('(PACKAGES *= *)|(packages *= *)'
+                                          ,'',re.sub('"','',aLine[start:end],2)))
+
+
+        #
+        # because a PACKAGE in the PACAKAGES line can also say that
+        # ALL the Subdirectories UNDER this PACKAGE can be build we must
+        # extend this array with those packages before we can continue
+        #
+        pckArray=extendPackageArray(pckArray,allBuildablePackages)
+
+
+        #
+        # search for VARIANTS in same line
+        #
+        matchVariant = variantPattern.search(aLine)
+        if matchVariant:
+          start,end=matchVariant.span()
+          for variant in re.split(' *',re.sub('(VARIANTS *= *)|(variants *= *)',
+                                              '',re.sub('"','',aLine[start:end],2))):
+            variantPackageArray.append([variant,pckArray])
+      #
+      # Find CONFIGURING start
+      #
+      
+      if str.find(aLine,":::::: CONFIGURING VARIANT")>-1:
+        keepLastFoundBuildArray=re.split(' *',re.sub('\n','',aLine))
+      
+      #
+      #  Find BUILDING start
+      #
+      if str.find(aLine,":::::: BUILDING VARIANT")>-1:
+        keepLastFoundBuildArray=re.split(' *',re.sub('\n','',aLine))
+      
+      #
+      # Find Failed test
+      #
+      if str.find(aLine[0:4],'FAIL:')>-1:
+        failedProg=re.sub('FAIL:','',re.sub('\n','',aLine))
+        testResultsArray.append([failedProg,keepLastFoundBuildArray[3],
+                                 keepLastFoundBuildArray[6],nfile])
+        #
+        # Write target in log file to be able to find the error later
+        #
+        writeLogFile.write('</pre>\n')
+        writeLogFile.write('<a name="'+keepLastFoundBuildArray[6]+
+                           '/'+failedProg+'">\n')
+        writeLogFile.write('<pre>\n')
+
+
+      #
+      # Find Configure errors
+      #
+      if str.find(aLine,'configure: error: ') > -1:
+        aFile=str.split(aLine,' ')
+        aPack=aFile[4]+" not configured"
+        buildResultsArray.append([aPack,keepLastFoundBuildArray[3],
+                                  keepLastFoundBuildArray[6],nfile])
+        #
+        # Write target in log file to be able to find the error later
+        #
+        writeLogFile.write('</pre>\n')
+        writeLogFile.write('<a name="'+keepLastFoundBuildArray[6]+
+                           '/'+aPack+'">\n')
+
+        writeLogFile.write('<pre>\n')
+
+      #
+      # Find Compile && Link errors
+      # Search for strings like:
+      #      make[5]: *** [PO_DH_PL.lo] Error 1
+      #
+      if str.find(aLine,' *** ') > -1:
+        if str.find(aLine,' Error ') > -1:
+          aFile=str.split(str.replace(str.replace(aLine,'[',''),']',''))[2]
+          aFile=re.sub('check-TESTS','',
+                       re.sub('check-am','',
+                              re.sub('check-recursive','',
+                                     re.sub('all','',
+                                            re.sub('all-recursive','',aFile)))))
+          if aFile:
+            buildResultsArray.append([aFile,keepLastFoundBuildArray[3],
+                                      keepLastFoundBuildArray[6],nfile])
+
+      #
+      # Find Source line and filter out the src that is been compiled here
+      #
+      match=sourcePattern.search(aLine)
+      if match:
+        writeLogFile.write('</pre>\n')
+        writeLogFile.write('<a name="'+keepLastFoundBuildArray[6]+
+                           '/'+match.group(2)+'">\n')
+        writeLogFile.write('<a name="'+keepLastFoundBuildArray[6]+
+                           '/'+match.group(3)+'">\n')
+        writeLogFile.write('<pre>\n')
+
+      #
+      # Find compiletool with mode=link
+      if linkPattern.search(aLine):
+        match=linkTargetPattern.search(aLine)
+        if match:
+          writeLogFile.write('</pre>\n')
+          writeLogFile.write('<a name="'+keepLastFoundBuildArray[6]+
+                           '/'+match.group(1)+'">\n')
+          writeLogFile.write('<pre>\n')
+
+
+        
+      #        elif installPattern.search(aLine):
+      #          print "found install line"
+
+      writeLogFile.write(aLine)
+      aLine=readLogFile.readline()
+    readLogFile.close()
+    writeLogFile.write('</pre>\n')
+    closeHTMLPage(writeLogFile)
+    writeLogFile.close()
+
+
+  #
+  # delete 'old' html files
+  #
+  for fileName in find('*_Failed_'+machineName()+'.html'):
+    os.remove(fileName)
+
+  #
+  # Open html pages for all packages/Variants that have
+  # failed something during the build
+  #
+  usedFiles=[]
+  for row in testResultsArray:
+    rawName=row[1]+'_'+row[2]+'_Failed_'+machineName()+'.html'
+    fileName=str.replace(rawName,'/','_')
+    if os.path.isfile(fileName):
+      try:
+        file=open(fileName,'a')
+      except IOError, message:
+        sys.exit( "Error opening file: %s" % message )
+
+    else:
+      try:
+        file=open(fileName,'w')
+      except IOError, message:
+        sys.exit( "Error opening file: %s" % message )
+
+      openHTMLPage(file,"Failed builds on "+machineName(),"yes")
+      file.write("<center><h3>Package: "+row[2]+
+                 '&nbsp &nbsp &nbsp &nbsp &nbsp '+
+                 "Variant: "+row[1]+"</h3></center>\n")
+      file.write('<ul>\n')
+      usedFiles.append(fileName)
+    file.write('<li><A href="'+row[3]+'#'+row[2]+'/'+row[0]+'">'+row[0]+'</A></li>\n')
+    file.close()
+
+  for row in buildResultsArray:
+    rawName=row[1]+'_'+row[2]+'_Failed_'+machineName()+'.html'
+    fileName=str.replace(rawName,'/','_')
+    if os.path.isfile(fileName):
+      try:
+        file=open(fileName,'a')
+      except IOError, message:
+        sys.exit( "Error opening file: %s" % message )
+    else:
+      try:
+        file=open(fileName,'w')
+      except IOError, message:
+        sys.exit( "Error opening file: %s" % message )
+      openHTMLPage(file,"Failed builds on "+machineName(),"yes")
+      file.write("<center><h3>Package: "+row[2]+
+                 '&nbsp &nbsp &nbsp &nbsp &nbsp '+
+                 "Variant: "+row[1]+"</h3></center>\n")
+      file.write('<ul>\n')
+      usedFiles.append(fileName)
+    file.write('<li><A href="'+row[3]+'#'+row[2]+'/'+row[0]+'">'+row[0]+'</A></li>\n')
+    file.close()
+
+  #
+  # loop over all opened files and close everything
+  #
+  for fileName in usedFiles:
+  
+    try:
+      file=open(fileName,'a')
+    except IOError, message:
+      sys.exit( "Error opening file: %s" % message )
+
+    file.write('</ul>\n')
+    closeHTMLPage(file)
+    file.close()
+
+
+  #
+  # open main HTML file for writing
+  #
+  htmlFile=open("BuildPage_"+machineName()+".html",'w')
+
+  #
+  # Open html page
+  #
+  openHTMLPage(htmlFile,"BuildReport on "+machineName(),"yes")
+
+
+  #
+  # Start the table
+  #
+  htmlFile.write("<table border cellspacing=2 cellpadding=5>\n")
+
+  #
+  # add all different variants to the collumns
+  #
+  htmlFile.write("<tr>\n<th> </th>\n")
+  for entry in variantPackageArray:
+    htmlFile.write("<th>"+entry[0]+"</th>\n")
+  htmlFile.write("</tr>\n")
+
+
+
+  for package in allBuildablePackages:
+    htmlFile.write("<tr>\n<th>\n"+package+"</th>\n")
+
+    #
+    # Look if this Package was also build in one of the variants
+    #
+    for entry in variantPackageArray:
+      found=0
+      for pck in entry[1]:
+        if package == pck:
+          found=1
+      if found:
+        if (findFailedTests(entry[0],package,testResultsArray) or
+            findFailedBuilds(entry[0],package,buildResultsArray)):
+          rawName=entry[0]+'_'+package+'_Failed_'+machineName()+'.html'
+          linkName=str.replace(rawName,'/','_')
+          htmlFile.write('<td bgcolor="RED">'
+                          '<a href="'+linkName+'">')
+          htmlFile.write('<font color="red">')
+          for i in entry[0][1:len(entry[0])]:
+            htmlFile.write('x')
+          
+          htmlFile.write('</font></a></td>\n')
+        else:
+          htmlFile.write('<td bgcolor="GREEN"> &nbsp</td>\n')
+      else:
+        htmlFile.write('<td bgcolor="GRAY"> &nbsp</td>\n')    
+    htmlFile.write("</tr>")
+  htmlFile.write("</table>\n")
+
+  #
+  # close html page
+  #
+  closeHTMLPage(htmlFile)
+
+
+  #
+  # Copy the "old" files from this machine in thisWeek to lastWeek
+  #
+  if noCopy==0:
+    if remoteFileMove(lofarServer,serverDir) > 0:
+      print "Move new to old on server not done because of errors"
+    else:
+      print "Move new to old on server done"
+
+  #
+  # Copy createNewIndex.py to the server
+  #
+  if copyServerSideScript(lofarServer,serverDir,lofarDir) > 0:
+    print "Move script to server not done because of errors"
+  else:
+    print "Move script to server done"
+
+  #
+  # Copy the new generated html files to the Server
+  #
+  if copyFiles2Server(serverDir+"/BuildResults/thisWeek",
+                      lofarServer) > 0:
+    print "Copy html files not done because of errors"
+  else:
+    print "Copy html files to server done"
+
+
+  #
+  # run server side script to generate new index files there
+  #
+  if runServerSideScript(lofarServer,serverDir,server) > 0:
+    print "Run script on server failed"
+  else:
+    print "Run script on server done"
+
+  sys.exit(0)
+
+
+#
+# this is the main entry
+#
+if __name__ == "__main__":
+  main(sys.argv[1:])
