@@ -195,7 +195,7 @@ DebugTN("g_datapoint",g_datapoint);
   LOG_TRACE("configPanel,configParameters: ",g_configPanelFileName,configPanelParameters);
   
   // check if the file exists:
-  if(access(getPath(PANELS_REL_PATH)+g_configPanelFileName,F_OK) == 0)
+  if(access(getPath(PANELS_REL_PATH)+g_configPanelFileName,F_OK) == 0 && g_configPanelFileName!="")
   {
     viewTabsCtrl.namedRegisterPanel(VIEW_TABS_CONFIG_NAME,g_configPanelFileName,configPanelParameters);
   }

@@ -207,7 +207,7 @@ void showActiveView(string dpViewConfig, string datapointPath)
     if(tabId != selectedViewTabId)
     {
       // load empty panel in non-visible tabs to enhance performance
-//      tabCtrl.registerPanel(selectedViewTabId-1,"",makeDynString(""));
+      tabCtrl.registerPanel(tabId-1,"navigator/views/nopanel.pnl",makeDynString(""));
     }
     else
     {
@@ -757,13 +757,11 @@ void Navigator_HandleUpdateTrigger(string dpe,int trigger)
   if ((newDatapoint !="") && dpExists(newDatapoint))
   {
   changeSelectedPosition(newDatapoint);
-  DebugN("start changeSelectedPosition");
   dpSet(DPNAME_NAVIGATOR + g_navigatorID + "." + ELNAME_NEWDATAPOINT, "");
   refreshNavigator();
   }
   else
   {
-  DebugN("only refreshNavigator");
   refreshNavigator();
   }
   
@@ -1091,9 +1089,9 @@ void changeSelectedPosition(string newDatapoint)
   long nodeID;
   setSelectedPosition2Expand(1);
   dyn_string datapointPath = splitDatapointPath(newDatapoint);
- 
   setSelectedPosition2Expand(1); //Expand Toplevel
   string temp = "";
+  string temp_dpe = "";
   for (i=1 ; i<=dynlen(datapointPath); i++)
   {
     if (i==1)
@@ -1102,13 +1100,26 @@ void changeSelectedPosition(string newDatapoint)
     }
     else
     {
-      temp = temp + "_" + datapointPath[i];
+	  if (i==dynlen(datapointPath)) //last element in datapointPath could be an datapoint element
+	  {
+	   temp_dpe = temp + "." + datapointPath[i];
+	  }
+      temp = temp + "_" + datapointPath[i]; //build datapoint
+	  
     }
     nodeID = getNodeFromDatapoint(temp);
     if (nodeID !=0)
     {
       setSelectedPosition2Expand(nodeID);
     }
+	else
+	{
+      nodeID = getNodeFromDatapoint(temp_dpe); //nodeID not found, try the datapoint element
+	  if (nodeID !=0)
+	  {
+	    setSelectedPosition2Expand(nodeID);
+	  }
+	}
   }
   fwTreeView_draw(); 
   g_curSelNode = nodeID; //update global info
@@ -1123,7 +1134,7 @@ void changeSelectedPosition(string newDatapoint)
 dyn_string splitDatapointPath(string newDatapoint)
 {
   int i;
-//  string dpe = "System1:PIC_Rack1_SubRack1_Board1_AP1_RCU1";
+  dyn_string datapointElement;
   dyn_string datapointPath= strsplit(newDatapoint, "_");
   string datapointName = datapointPath[1];
   // cut system name myself. Necessary for datapoint parts that are not datapoints themselves
@@ -1133,7 +1144,14 @@ dyn_string splitDatapointPath(string newDatapoint)
     datapointName = substr(datapointName,sepPos+1);
   }
   datapointPath[1] = datapointName;
-//  DebugN(datapointPath);
+  
+  // if datapointElement present, split last entry of datapointPath
+  datapointElement = strsplit(datapointPath[dynlen(datapointPath)], ".");
+  if (dynlen(datapointElement)>1)
+  {
+    datapointPath[dynlen(datapointPath)  ] = datapointElement[1];
+    datapointPath[dynlen(datapointPath)+1] = datapointElement[2];
+  }
   return datapointPath;
 }
 
@@ -1145,7 +1163,6 @@ dyn_string splitDatapointPath(string newDatapoint)
 ///////////////////////////////////////////////////////////////////////////
 void setSelectedPosition2Expand(long pos)
 {
-//  int index = pos;
   if(fwTreeView_getNode(pos)[fwTreeView_STATE] & fwTreeView_BRANCH)
 	{
 	// the folder is a branch => to expand
