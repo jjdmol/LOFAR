@@ -10,6 +10,7 @@ function SubbandSplitter
   SelectedSubBandSignals = SubbandSeparator(AntennaSignals, SelectedSubBands, DFTSystemResponse, ...
       NumberSubBands, SubbandFilterLength, NumberOfAntennas, sb_quant_signal, sb_quant_inputfft, sb_quant_outputfft);
 
+  FlaggingCube=1;
   if (RFIblanking)
     NewDataLength = size(SelectedSubBandSignals);   
            
@@ -23,4 +24,4 @@ function SubbandSplitter
     SelectedSubBandSignals = CleanSelectedSubbandSignals;
   end
   
-  save([dirpath '\antenna_signals.mat'], 'AntennaSignals','SelectedSubBandSignals');
+  save([dirpath '\antenna_signals.mat'], 'AntennaSignals','SelectedSubBandSignals','DFTSystemResponse','FlaggingCube');
