@@ -22,3 +22,65 @@
 
 
 #include "GCF_PValue.h"
+#include "GCF_PVBool.h"
+#include "GCF_PVDouble.h"
+#include "GCF_PVChar.h"
+#include "GCF_PVString.h"
+#include "GCF_PVInteger.h"
+#include "GCF_PVUnsigned.h"
+#include "GCF_PVDynArr.h"
+
+
+GCFPValue* GCFPValue::createMACTypeObject(TMACValueType type)
+{
+  GCFPValue* pResult(0);
+  
+  switch (type)
+  {
+    case BOOL_VAL:
+      pResult = new GCFPVBool();
+      break;
+    case CHAR_VAL:
+      pResult = new GCFPVChar();
+      break;
+    case UNSIGNED_VAL:
+      pResult = new GCFPVUnsigned();
+      break;
+    case INTEGER_VAL:
+      pResult = new GCFPVInteger();
+      break;
+    case DOUBLE_VAL:
+      pResult = new GCFPVDouble();
+      break;
+    case STRING_VAL:
+      pResult = new GCFPVString();
+      break;
+/*    case BIT32_VAL:
+      pResult = new GCFPVBit32();
+      break;
+    case REF_VAL:
+      pResult = new GCFPVRef();
+      break;
+    case BLOB_VAL:
+      pResult = new GCFPVBlob();
+      break;
+    case DATETIME_VAL:
+      pResult = new GCFPVDateTime();
+      break;*/
+    default:
+      if (type > DYNARR_VAL &&
+          type <= DYNSTRING_VAL)
+      {
+        pResult = new GCFPVDynArr(type);
+      }
+      else
+      {
+        LOFAR_LOG_ERROR(SAL_STDOUT_LOGGER, (
+            "Type of MAC value is unknown or not supported yet: '%d'", 
+            type));
+      }
+      break;
+  }  
+  
+  return pResult;
+}

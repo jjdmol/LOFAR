@@ -43,6 +43,10 @@ class GCFPValue
     virtual GCFPValue* clone() const = 0;
     /** No descriptions */
     virtual TSAResult copy(const GCFPValue& value) = 0;
+    
+    virtual TSAResult setValue(const string value) = 0;
+
+    static GCFPValue* createMACTypeObject(TMACValueType type);
    
   protected: // Protected attributes
     /**  */

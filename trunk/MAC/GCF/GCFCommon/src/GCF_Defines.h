@@ -28,26 +28,32 @@
 #define GCF_LOGGER_ROOT       (MAC_LOGGER_ROOT + string(".GCF"))
 
 enum TGCFResult {
-  GCF_NO_ERROR = 1, 
-  GCF_UNKNOWN_ERROR = 0,
+  GCF_NO_ERROR, 
+  GCF_UNKNOWN_ERROR,
   GCF_PML_ERROR, 
+  GCF_APCLOAD_ERROR,
+  GCF_APCRELOAD_ERROR,
+  GCF_APCUNLOAD_ERROR,
+  GCF_MYPROPSLOAD_ERROR,
+  GCF_MYPROPSUNLOAD_ERROR,
 };
 
-typedef unsigned short TAccessMode;
+typedef unsigned char TAccessMode;
 
 typedef struct
 {
-  char          propName[];
+  char          *propName;
   unsigned int  type;
-  TAccessMode                 accessMode;
+  TAccessMode   accessMode;
+  char          *defaultValue;
 }
 TProperty;
 
 typedef struct
 {
   unsigned int  nrOfProperties;
-  char          scope[];
-  TProperty*    properties;
+  char          *scope;
+  const TProperty*    properties;
 }
 TPropertySet;
 #endif

@@ -39,7 +39,7 @@ class GTMTopologyService
     
     int init(const char* top_config_file);
     
-    int getPeerAddr(string& localtaskname,
+    int getPeerAddr(const string& localtaskname,
     	  string& localportname,
     	  GCFPeerAddr& peeraddr);
 

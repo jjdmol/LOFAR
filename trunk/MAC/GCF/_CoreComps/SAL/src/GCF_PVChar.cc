@@ -24,6 +24,35 @@
 #include "GCF_PVChar.h"
 
 /** No descriptions */
+TSAResult GCFPVChar::setValue(const string valueData)
+{
+  TSAResult result(SA_NO_ERROR);
+  
+  if (valueData.length() == 1)
+  {
+    _value = valueData[0];
+  }
+  else if (valueData.length() > 0)
+  {
+    char* validPos(0);
+    long int value = strtol(valueData.c_str(), &validPos, 10);
+    if (*validPos == '\0')
+    {
+      if (value <= 0xFF || value >= -127)
+        _value = value;
+      else
+        result = SA_VALUESTRING_NOT_VALID;      
+    }
+    else
+      result = SA_VALUESTRING_NOT_VALID;
+  }
+  else
+    result = SA_VALUESTRING_NOT_VALID;
+  
+  return result;
+}
+
+/** No descriptions */
 GCFPValue* GCFPVChar::clone() const
 {
   GCFPValue* pNewValue = new GCFPVChar(_value);

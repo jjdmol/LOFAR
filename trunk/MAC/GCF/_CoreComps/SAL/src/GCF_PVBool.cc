@@ -24,6 +24,46 @@
 #include "GCF_PVBool.h"
 
 /** No descriptions */
+TSAResult GCFPVBool::setValue(const string valueData)
+{
+  TSAResult result(SA_NO_ERROR);
+
+  if (valueData.length() > 0)
+  {
+    char* validPos(0);
+    long int value = strtol(valueData.c_str(), &validPos, 10);
+    if (*validPos == '\0')
+    {
+      _value = (value != 0);
+    }
+    else if (validPos == valueData.c_str())
+    {
+      if ((strncasecmp(valueData.c_str(), "false", 5) == 0) || 
+          (strncasecmp(valueData.c_str(), "no", 2) == 0) ||
+          (strncasecmp(valueData.c_str(), "off", 3) == 0))
+      {
+        _value = false; 
+      }
+      else 
+      if ((strncasecmp(valueData.c_str(), "true", 5) == 0) || 
+          (strncasecmp(valueData.c_str(), "yes", 2) == 0) ||
+          (strncasecmp(valueData.c_str(), "on", 3) == 0))
+      {
+        _value = true;
+      }
+      else
+        result = SA_VALUESTRING_NOT_VALID;
+    }
+    else
+      result = SA_VALUESTRING_NOT_VALID;
+  }
+  else
+    result = SA_VALUESTRING_NOT_VALID;
+  
+  return result;
+}
+
+/** No descriptions */
 GCFPValue* GCFPVBool::clone() const
 {
   GCFPValue* pNewValue = new GCFPVBool(_value);

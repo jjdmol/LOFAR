@@ -94,11 +94,11 @@ class GCFPortInterface
     /**
     * Attribute access functions
     */
-    inline string& getName()          {return _name;}
-    inline TPortType  getType() const {return _type;}
-    inline bool  isConnected()  const {return _isConnected;}
-    inline GCFTask*  getTask()  const {return _pTask;}
-    inline int getProtocol()    const {return _protocol;}
+    inline const string&  getName()     const {return _name;}
+    inline TPortType      getType()     const {return _type;}
+    inline bool           isConnected() const {return _isConnected;}
+    inline const GCFTask* getTask()     const {return _pTask;}
+    inline int            getProtocol() const {return _protocol;}
 
   protected:
     GCFTask* _pTask;

@@ -48,5 +48,6 @@ const char* F_PORT_PROTOCOL_names[] =
     "F_DATAOUT_SIG (IN)",
     "F_RAW_SIG (IN_OUT)",
     "F_ACCEPT_REQ_SIG(IN)",
+    "F_DISPACHTED_SIG(IN)",
   };
 

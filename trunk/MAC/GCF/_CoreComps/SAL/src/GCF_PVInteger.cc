@@ -24,6 +24,25 @@
 #include "GCF_PVInteger.h"
 
 /** No descriptions */
+TSAResult GCFPVInteger::setValue(const string valueData)
+{
+  TSAResult result(SA_VALUESTRING_NOT_VALID);
+  
+  if (valueData.length() > 0)
+  {
+    char* validPos(0);
+    long int value = strtol(valueData.c_str(), &validPos, 10);
+    if (*validPos == '\0')
+    {
+      _value = value;
+      result = SA_NO_ERROR;
+    }
+  }
+  
+  return result;
+}
+
+/** No descriptions */
 GCFPValue* GCFPVInteger::clone() const
 {
   GCFPValue* pNewValue = new GCFPVInteger(_value);

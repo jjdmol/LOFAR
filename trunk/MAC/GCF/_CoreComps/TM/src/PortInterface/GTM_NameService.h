@@ -39,11 +39,11 @@ class GTMNameService
 
   int init(const char *ns_config_file);
 
-  int query(string& taskname,
+  int query(const string& taskname,
 	    GCFPeerAddr& peeraddr);
 
-  int queryPort(string& taskname,
-		string& portname,
+  int queryPort(const string& taskname,
+		const string& portname,
 		GCFPeerAddr& peeraddr);
 
   const char* getTask(int index);

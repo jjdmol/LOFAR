@@ -55,10 +55,10 @@ class GPISupervisoryServer : public GCFTask
     void localValueChanged(GCFEvent& e);
     
 	private: // state methods
-		int initial(GCFEvent& e, GCFPortInterface& p);
-		int connected(GCFEvent& e, GCFPortInterface& p);
-    int operational(GCFEvent& e, GCFPortInterface& p);
-    int closing(GCFEvent& e, GCFPortInterface& p);
+		GCFEvent::TResult initial(GCFEvent& e, GCFPortInterface& p);
+		GCFEvent::TResult connected(GCFEvent& e, GCFPortInterface& p);
+    GCFEvent::TResult operational(GCFEvent& e, GCFPortInterface& p);
+    GCFEvent::TResult closing(GCFEvent& e, GCFPortInterface& p);
 
 	private: // data members
 		GCFTCPPort        _ssPort;

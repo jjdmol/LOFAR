@@ -55,9 +55,7 @@ lofar_DEBUG_OPTIMIZE
 lofar_QATOOLS
 lofar_DOCXX
 lofar_MPI(0)
-lofar_PACKAGE(LCS/Common)
 lofar_PACKAGE(MAC/Tools/LofarLogger)
-lofar_EXTERNAL(log4cplus,1,log4cplus/logger.h,log4cplus,)
 
                        
 dnl

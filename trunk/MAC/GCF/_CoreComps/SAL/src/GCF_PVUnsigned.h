@@ -32,6 +32,8 @@ class GCFPVUnsigned : public GCFPValue
   	virtual ~GCFPVUnsigned() {;}
     /** Write property of unsigned value. */
     virtual inline void setValue( const unsigned int newVal) {_value = newVal;}
+    /** No descriptions */
+    virtual TSAResult setValue(const string value);
     /** Read property of unsigned value. */
     virtual inline unsigned int getValue() const {return _value;}
     /** No descriptions */

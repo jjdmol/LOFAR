@@ -57,6 +57,7 @@ class GPAAPC
     DOMBuilder*         _pXmlParser;
     list<TAPCProperty>  _properties;
     string              _scope;
+    string              _apcRootPath;
 };
 
 // ---------------------------------------------------------------------------

@@ -38,16 +38,16 @@ class GCFPeerAddr
         	    int portnumber = 0);
   virtual ~GCFPeerAddr();
 
-  string& getTaskname();
-  string& getHost();
-  int     getPortnumber();
-  string& getPortname();
-  string& getPorttype();
+  const string& getTaskname() const;
+  const string& getHost() const;
+  int     getPortnumber() const;
+  const string& getPortname() const;
+  const string& getPorttype() const;
 
-  void setTaskname(string& taskname);
-  void setHost(string& host);
-  void setPortname(string& portname);
-  void setPorttype(string& porttype);
+  void setTaskname(const string& taskname);
+  void setHost(const string& host);
+  void setPortname(const string& portname);
+  void setPorttype(const string& porttype);
   void setPortnumber(int portnumber);
 
  protected:

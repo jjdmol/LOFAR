@@ -27,6 +27,7 @@ GCFSupervisedTask::GCFSupervisedTask(State initial, string& name) :
   GCFTask(initial, name)
 {
   _pController = new GPMController(*this);
+  _pController->start();
 }
 
 GCFSupervisedTask::~GCFSupervisedTask()
@@ -59,7 +60,7 @@ TGCFResult GCFSupervisedTask::reloadAPC(const string apcName,
           GCF_PML_ERROR);
 }
 
-TGCFResult GCFSupervisedTask::loadMyProperties(TPropertySet& newSet)
+TGCFResult GCFSupervisedTask::loadMyProperties(const TPropertySet& newSet)
 {
   return (_pController->loadMyProperties(newSet) == PM_NO_ERROR ? 
           GCF_NO_ERROR : 

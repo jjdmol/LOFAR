@@ -35,7 +35,7 @@ struct GCFEvent
         signal(sig), pad0(0), length(sizeof(GCFEvent))
     {}
   
-    enum { ERROR = -1, HANDLED = 0, NOT_HANDLED = 1};
+    enum TResult { ERROR = -1, HANDLED = 0, NOT_HANDLED = 1};
 
 	/**
 	* @code

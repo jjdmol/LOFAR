@@ -33,6 +33,8 @@ class GCFPVDouble : public GCFPValue
     
     /** Write property of float value_. */
     inline void setValue( const double newVal) {_value = newVal;};
+    /** No descriptions */
+    virtual TSAResult setValue(const string value);
     /** Read property of float value_. */
     inline double getValue() const {return _value;};
     /** No descriptions */

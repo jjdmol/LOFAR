@@ -51,6 +51,7 @@ class GPAController : public GCFTask
 	private: // helper methods
     friend class GPAScopeManager;
     void doNextRequest();
+    bool mayContinue(GCFEvent& e, GCFPortInterface& p);
     void loadAPC(char* actionData);
     void apcLoaded(TPAResult result);
     void unloadAPC(char* actionData);
@@ -64,8 +65,8 @@ class GPAController : public GCFTask
     void unpackAPCActionData(char* pActionData);
     
 	private: // state methods
-		int initial(GCFEvent& e, GCFPortInterface& p);
-		int connected(GCFEvent& e, GCFPortInterface& p);
+		GCFEvent::TResult initial(GCFEvent& e, GCFPortInterface& p);
+		GCFEvent::TResult connected(GCFEvent& e, GCFPortInterface& p);
 
 	private: // data members
 		GPAUsecountManager 	_usecountManager;
@@ -79,7 +80,9 @@ class GPAController : public GCFTask
     string _curApcName;
     string _curScope;
     GCFPortInterface* _curRequestPort;
+    TPAResult _curResult;
     bool _isBusy;
+    bool _isRegistered;
     unsigned int _counter;
     GPAAPC _apc;
 };

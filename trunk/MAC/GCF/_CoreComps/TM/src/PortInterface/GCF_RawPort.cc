@@ -62,19 +62,18 @@ void GCFRawPort::setMaster(GCFPort* pMaster)
   _pMaster = pMaster;
 }
 
-int GCFRawPort::dispatch(GCFEvent& event)
+GCFEvent::TResult GCFRawPort::dispatch(GCFEvent& event)
 {
-  int status = GCFEvent::NOT_HANDLED;
-  // this dispatch function is only called when the port
-  // is used in raw mode => _pMaster must be 0
+  GCFEvent::TResult status = GCFEvent::NOT_HANDLED;
+  assert(_pTask);
   if ((F_DATAIN_SIG != event.signal) && 
       (F_DATAOUT_SIG != event.signal) &&
       (F_EVT_PROTOCOL(event) != F_FSM_PROTOCOL) &&
       (F_EVT_PROTOCOL(event) != F_PORT_PROTOCOL))
   {
-    cout << getTask()->getName() << ": RAW RECVD: "
-          << " on port " << getName()
-          << endl;
+    LOFAR_LOG_INFO(TM_STDOUT_LOGGER, (
+        "%s receives '%s' on port '%s'",
+        _pTask->getName().c_str(), _pTask->evtstr(event), _name.c_str()));    
   }
 
   if (event.signal == F_CONNECTED_SIG)
@@ -95,14 +94,24 @@ int GCFRawPort::dispatch(GCFEvent& event)
       return dispatch(*((GCFEvent*) pTE->arg));
     }
   }
-  else if (SPP == getType() && (F_EVT_INOUT(event) & F_OUT)) 
-  {
-    // developer error: received an out event in a SPP
+  else if (SPP == getType() && (F_EVT_INOUT(event) == F_OUT)) 
+  {    
+    LOFAR_LOG_ERROR(TM_STDOUT_LOGGER, (
+        "Developer error in %s (port %s): received an OUT event (%s) in a SPP",
+        _pTask->getName().c_str(), 
+        _name.c_str(), 
+        _pTask->evtstr(event)
+        ));    
     return status;
   }
-  else if (SAP == getType() && (F_EVT_INOUT(event) & F_IN)) 
+  else if (SAP == getType() && (F_EVT_INOUT(event) == F_IN)) 
   {
-    // developer error: received an IN event in a SAP
+    LOFAR_LOG_ERROR(TM_STDOUT_LOGGER, (
+        "Developer error in %s (port %s): received an IN event (%s) in a SAP",
+        _pTask->getName().c_str(), 
+        _name.c_str(), 
+        _pTask->evtstr(event)
+        ));    
     return status;
   }
 

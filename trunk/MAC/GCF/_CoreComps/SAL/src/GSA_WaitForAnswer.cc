@@ -31,7 +31,7 @@ GSAWaitForAnswer::GSAWaitForAnswer(GSAService& service) :
 
 void GSAWaitForAnswer::hotLinkCallBack(DpMsgAnswer& answer)
 {
-  _service.handleHotLink(answer);  
+  _service.handleHotLink(answer, *this);  
 }
 
 

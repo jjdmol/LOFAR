@@ -25,15 +25,8 @@
 #define DECLARE_SIGNAL_NAMES
 #include "PA_Protocol.ph"
 
-#define CHECK_REQUEST(p, e) \
-  _requestManager.registerRequest(p, e); \
-  if (!_isBusy) \
-  { \
-    _isBusy = true; \
-    _curRequestPort = &p; \
-  } \
-  else \
-    break;
+#define CHECK_REQUEST(p, e)  \
+  if (!mayContinue(e, p)) break;
 
 static string sPATaskName("PA");
 
@@ -41,7 +34,8 @@ GPAController::GPAController() :
   GCFTask((State)&GPAController::initial, sPATaskName),
   _usecountManager(*this),
   _scopeManager(*this),
-  _isBusy(false)
+  _isBusy(false),
+  _isRegistered(false)
 {
   // register the protocol for debugging purposes
   registerProtocol(PA_PROTOCOL, PA_PROTOCOL_signalnames);
@@ -54,9 +48,9 @@ GPAController::~GPAController()
 {
 }
 
-int GPAController::initial(GCFEvent& e, GCFPortInterface& p)
+GCFEvent::TResult GPAController::initial(GCFEvent& e, GCFPortInterface& p)
 {
-  int status = GCFEvent::HANDLED;
+  GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (e.signal)
   {
@@ -69,7 +63,7 @@ int GPAController::initial(GCFEvent& e, GCFPortInterface& p)
       break;
 
     case F_CONNECTED_SIG:
-      TRAN(&GPAController::connected);
+      TRAN(GPAController::connected);
       break;
 
     case F_DISCONNECTED_SIG:
@@ -85,9 +79,9 @@ int GPAController::initial(GCFEvent& e, GCFPortInterface& p)
   return status;
 }
 
-int GPAController::connected(GCFEvent& e, GCFPortInterface& p)
+GCFEvent::TResult GPAController::connected(GCFEvent& e, GCFPortInterface& p)
 {
-  int status = GCFEvent::HANDLED;
+  GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (e.signal)
   {
@@ -98,35 +92,36 @@ int GPAController::connected(GCFEvent& e, GCFPortInterface& p)
         _requestManager.deleteAllRequests();
         _usecountManager.deleteAllProperties();
         if (!_usecountManager.waitForAsyncResponses())
-          TRAN(&GPAController::initial);
+          TRAN(GPAController::initial);
         //TODO: all SPP's has to be closed to
         //TODO: don't try to reconnect before the _scopeManager 
         //      and the _usecountManager busy
       }
       else
       {
-        CHECK_REQUEST(p, e)
-        list<string> deletedScopes;
-        list<string> subScopes;
-        _scopeManager.deleteScopesByPort(p, deletedScopes);
-
-        _counter = 0;
-        
-        for (list<string>::iterator iter = deletedScopes.begin();
-             iter != deletedScopes.end(); ++iter)
-        {
-          _scopeManager.getSubScopes(*iter, subScopes);
-          if (_usecountManager.deletePropertiesByScope(*iter, subScopes))
-            _counter++;
-        }
-        if (deletedScopes.size() == 0 || _counter == 0)
-        {
-          _requestManager.deleteRequestsOfPort(p);
-          _pmlPortProvider.setTimer(0, 0, 0, 0, (void*) (&p));
-        }
+        p.close();
       }
       break;
+    
+    case F_CLOSED_SIG:
+    {
+      CHECK_REQUEST(p, e)
+      list<string> deletedScopes;
+      list<string> subScopes;
+      _scopeManager.deleteScopesByPort(p, deletedScopes);
 
+      for (list<string>::iterator iter = deletedScopes.begin();
+           iter != deletedScopes.end(); ++iter)
+      {
+        _scopeManager.getSubScopes(*iter, subScopes);
+        _usecountManager.deletePropertiesByScope(*iter, subScopes);
+      }
+      if (deletedScopes.size() == 0 || !_usecountManager.waitForAsyncResponses())
+      {
+        allPropertiesDeletedByScope();
+      }
+      break;
+    }
     case F_CONNECTED_SIG:   
       _pmlPorts.push_back(&p);
       break;
@@ -154,15 +149,15 @@ int GPAController::connected(GCFEvent& e, GCFPortInterface& p)
     }
     case PA_REGISTERSCOPE:
     {
-      PARegisterscopeEvent* request = static_cast<PARegisterscopeEvent*>(&e);
-      char* scopeData((char*)request + sizeof(PARegisterscopeEvent));
+      PARegisterscopeEvent* pRequest = static_cast<PARegisterscopeEvent*>(&e);
+      assert(pRequest);
+      char* scopeData((char*)pRequest + sizeof(PARegisterscopeEvent));
       unsigned int scopeNameLength(0);
       sscanf(scopeData, "%03x", &scopeNameLength);
       string scope(scopeData + 3, scopeNameLength);
-      TPAResult result = _scopeManager.registerScope(scope, p);
-      PAScoperegisteredEvent response(request->seqnr, result);
-      unsigned int scopeDataLength(0);
-      scopeDataLength = request->length - sizeof(PARegisterscopeEvent);
+      _curResult =  _scopeManager.registerScope(scope, p);
+      PAScoperegisteredEvent response(pRequest->seqnr, _curResult);
+      unsigned int scopeDataLength(pRequest->length - sizeof(PARegisterscopeEvent));
       response.length += scopeDataLength;
       p.send(response, scopeData, scopeDataLength);
       break;
@@ -170,20 +165,23 @@ int GPAController::connected(GCFEvent& e, GCFPortInterface& p)
     case PA_UNREGISTERSCOPE:
     {
       CHECK_REQUEST(p, e)
-      PAUnregisterscopeEvent* request = static_cast<PAUnregisterscopeEvent*>(&e);
-      unregisterScope((char*)request + sizeof(PAUnregisterscopeEvent));
+      PAUnregisterscopeEvent* pRequest = static_cast<PAUnregisterscopeEvent*>(&e);
+      assert(pRequest);
+      unregisterScope((char*)pRequest + sizeof(PAUnregisterscopeEvent));
       break;
     }
     case PA_PROPERTIESLINKED:
     {
-      PAPropertieslinkedEvent* response = static_cast<PAPropertieslinkedEvent*>(&e);
-      propertiesLinked((char*)response + sizeof(PAPropertieslinkedEvent));      
+      PAPropertieslinkedEvent* pResponse = static_cast<PAPropertieslinkedEvent*>(&e);
+      assert(pResponse);
+      propertiesLinked((char*)pResponse + sizeof(PAPropertieslinkedEvent));      
       break;
     }
     case PA_PROPERTIESUNLINKED:
     {
-      PAPropertiesunlinkedEvent* response = static_cast<PAPropertiesunlinkedEvent*>(&e);
-      propertiesUnlinked((char*)response + sizeof(PAPropertiesunlinkedEvent));      
+      PAPropertiesunlinkedEvent* pResponse = static_cast<PAPropertiesunlinkedEvent*>(&e);
+      assert(pResponse);
+      propertiesUnlinked((char*)pResponse + sizeof(PAPropertiesunlinkedEvent));      
       break;
     }
     case F_ACCEPT_REQ_SIG:
@@ -217,9 +215,28 @@ int GPAController::connected(GCFEvent& e, GCFPortInterface& p)
   return status;
 }
 
+bool GPAController::mayContinue(GCFEvent& e, GCFPortInterface& p)
+{
+  bool result(false);
+  if (!_isRegistered)
+    _requestManager.registerRequest(p, e);
+  
+  _isRegistered = false;
+  if (!_isBusy)
+  { 
+    _isBusy = true; 
+    _curRequestPort = &p;
+    _curResult = PA_NO_ERROR;
+    result = true;
+  }
+  return result;
+}
+
 void GPAController::propertiesCreated(list<string>& propList)
 {
   TPAResult result = _scopeManager.linkProperties(propList);
+  if (result != PA_NO_ERROR && _curResult == PA_NO_ERROR) 
+    _curResult = result;        
   if (!_scopeManager.waitForAsyncResponses())
     apcLoaded(result);
 }
@@ -227,6 +244,8 @@ void GPAController::propertiesCreated(list<string>& propList)
 void GPAController::propertiesDeleted(list<string>& propList)
 {
   TPAResult result = _scopeManager.unlinkProperties(propList);
+  if (result != PA_NO_ERROR && _curResult == PA_NO_ERROR) 
+    _curResult = result;        
   if (!_scopeManager.waitForAsyncResponses())
     apcUnloaded(result);
 }
@@ -238,43 +257,42 @@ void GPAController::allPropertiesDeletedByScope()
     
   if (pPort)
   {
-    if (pEvent->signal == F_DISCONNECTED_SIG)
+    if (pEvent->signal == F_CLOSED_SIG)
     {
-      _counter--;
-      if (_counter == 0)
+      _requestManager.deleteRequestsOfPort(*pPort);
+      _pmlPortProvider.setTimer(0, 0, 0, 0, (void*) pPort);
+      pPort = _requestManager.getOldestRequestPort();
+      pEvent = _requestManager.getOldestRequest();
+      _isBusy = false;
+      
+      if (pPort) // new action available?
       {
-        _requestManager.deleteRequestsOfPort(*pPort);
-        _pmlPortProvider.setTimer(0, 0, 0, 0, (void*) pPort);
-        pPort = _requestManager.getOldestRequestPort();
-        pEvent = _requestManager.getOldestRequest();
-        _isBusy = false;
-        if (pPort) // new action available?
-        {
-          dispatch(*pEvent, *pPort);
-        }
-      }        
+        _isRegistered = true;
+        dispatch(*pEvent, *pPort);
+      }
     }
     else if (pEvent->signal == PA_UNREGISTERSCOPE)
     {      
       if (pPort->isConnected())
       {
-        PAUnregisterscopeEvent* request = static_cast<PAUnregisterscopeEvent*>(pEvent);
-        
-        PAScopeunregisteredEvent response(request->seqnr, 0);
+        PAUnregisterscopeEvent* pRequest = static_cast<PAUnregisterscopeEvent*>(pEvent);
+        assert(pRequest);
+        PAScopeunregisteredEvent response(pRequest->seqnr, _curResult);
         // reuse the request data (scope) for the response
-        unsigned short bufLength(request->length - sizeof(PAUnregisterscopeEvent));
-        char* buffer = ((char*) request) + sizeof(PAUnregisterscopeEvent);
-        _isBusy = true;      
+        unsigned short bufLength(pRequest->length - sizeof(PAUnregisterscopeEvent));
+        char* buffer = ((char*) pRequest) + sizeof(PAUnregisterscopeEvent);
+        _isBusy = true;     
+        response.length += bufLength; 
         pPort->send(response, buffer, bufLength);     
       }
+      doNextRequest();
     }
   }
-  doNextRequest();
 }
 
 void GPAController::allPropertiesDeleted()
 {
-  TRAN(&GPAController::initial);
+  TRAN(GPAController::initial);
 }
 
 void GPAController::doNextRequest()
@@ -285,6 +303,7 @@ void GPAController::doNextRequest()
   _isBusy = false;
   if (pPort) // new action available ?
   {
+    _isRegistered = true;
     dispatch(*pEvent, *pPort);
   }
 }
@@ -295,9 +314,9 @@ void GPAController::loadAPC(char* actionData)
   unpackAPCActionData(actionData);
   _apc.load(_curApcName, _curScope);
   propsFromAPC = &_apc.getProperties();
-  TPAResult result = _usecountManager.incrementUsecount(*propsFromAPC);
+  _usecountManager.incrementUsecount(*propsFromAPC);
   if (!_usecountManager.waitForAsyncResponses())
-    apcLoaded(result);
+    apcLoaded(_curResult);
 }  
 
 void GPAController::apcLoaded(TPAResult result)
@@ -306,12 +325,16 @@ void GPAController::apcLoaded(TPAResult result)
   propsFromAPC = &_apc.getProperties();
 
   if (result == PA_NO_ERROR)
-  {
     result = _usecountManager.setDefaults(*propsFromAPC);
-  } 
+
+  if (result != PA_NO_ERROR && _curResult == PA_NO_ERROR) 
+    _curResult = result;
+  
   GCFEvent* pEvent = _requestManager.getOldestRequest();
+  assert(pEvent);
   PALoadapcEvent* pLoadapcE = static_cast<PALoadapcEvent*> (pEvent);
-  PAApcloadedEvent e(pLoadapcE->seqnr, result);
+  assert(pLoadapcE);
+  PAApcloadedEvent e(pLoadapcE->seqnr, _curResult);
   sendAPCActionResponse(e);
 }  
 
@@ -321,16 +344,18 @@ void GPAController::unloadAPC(char* actionData)
   unpackAPCActionData(actionData);
   _apc.load(_curApcName, _curScope);
   propsFromAPC = &_apc.getProperties();
-  TPAResult result = _usecountManager.decrementUsecount(*propsFromAPC);    
+  _usecountManager.decrementUsecount(*propsFromAPC);
   if (!_usecountManager.waitForAsyncResponses())
-    apcUnloaded(result);
+    apcUnloaded(_curResult);
 }  
 
 void GPAController::apcUnloaded(TPAResult result)
 {  
   GCFEvent* pEvent = _requestManager.getOldestRequest();
   PAUnloadapcEvent* pUnloadapcE = static_cast<PAUnloadapcEvent*> (pEvent);
-  PAApcunloadedEvent e(pUnloadapcE->seqnr, result);
+  if (result != PA_NO_ERROR && _curResult == PA_NO_ERROR) 
+    _curResult = result;
+  PAApcunloadedEvent e(pUnloadapcE->seqnr, _curResult);
   sendAPCActionResponse(e);
 }  
 
@@ -343,9 +368,12 @@ void GPAController::reloadAPC(char* actionData)
 
   TPAResult result = _usecountManager.setDefaults(*propsFromAPC);
 
+  if (result != PA_NO_ERROR && _curResult == PA_NO_ERROR) 
+    _curResult = result;
+
   GCFEvent* pEvent = _requestManager.getOldestRequest();
   PAReloadapcEvent* pReloadapcE = static_cast<PAReloadapcEvent*> (pEvent);
-  PAApcreloadedEvent e(pReloadapcE->seqnr, result);
+  PAApcreloadedEvent e(pReloadapcE->seqnr, _curResult);
   sendAPCActionResponse(e);
 }  
 
@@ -357,32 +385,28 @@ void GPAController::unregisterScope(char* pScopeData)
   list<string> subScopes;
   _scopeManager.getSubScopes(scope, subScopes);
   _usecountManager.deletePropertiesByScope(scope, subScopes);
-  _scopeManager.unregisterScope(scope);
+  TPAResult result = _scopeManager.unregisterScope(scope);
+  if (result != PA_NO_ERROR && _curResult == PA_NO_ERROR) 
+    _curResult = result;
+  if (!_usecountManager.waitForAsyncResponses())
+    allPropertiesDeletedByScope();
 }
 
 void GPAController::propertiesLinked(char* pResponseData)
 {
-  TPAResult result;
   unsigned int scopeNameLength(0);
   sscanf(pResponseData, "%03x", &scopeNameLength);
   string scope(pResponseData + 3, scopeNameLength);
   //TODO: remove props from SCADA DB if returned as not linked
-  if ((result = _scopeManager.propertiesLinked(scope)) != PA_NO_ERROR)
-  {
-    apcLoaded(result);
-  }
+  _scopeManager.propertiesLinked(scope);
 }
 
 void GPAController::propertiesUnlinked(char* pResponseData)
 {
-  TPAResult result;
   unsigned int scopeNameLength(0);
   sscanf(pResponseData, "%03x", &scopeNameLength);
   string scope(pResponseData + 3, scopeNameLength);
-  if ((result = _scopeManager.propertiesUnlinked(scope)) != PA_NO_ERROR)
-  {
-    apcUnloaded(result);
-  }
+  _scopeManager.propertiesUnlinked(scope);
 }
 
 void GPAController::sendAPCActionResponse(GCFEvent& e)

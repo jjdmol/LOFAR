@@ -21,27 +21,27 @@
 //#  $Id$
 
 #include "GPM_Property.h"
-#include <SAL/GCF_PVBool.h>
-#include <SAL/GCF_PVDouble.h>
-#include <SAL/GCF_PVChar.h>
-#include <SAL/GCF_PVString.h>
-#include <SAL/GCF_PVInteger.h>
-#include <SAL/GCF_PVUnsigned.h>
-#include <SAL/GCF_PVDynArr.h>
+#include <SAL/GCF_PValue.h>
 
 GPMProperty::GPMProperty(GCFPValue::TMACValueType type, string name) :
   _isLinked(false), _name(name)
 {
-  _pCurValue = createValue(type);
-  _pOldValue = createValue(type);
+  _pCurValue = GCFPValue::createMACTypeObject(type);  
+  assert(_pCurValue);
+  _pOldValue = _pCurValue->clone();
 }
 
-GPMProperty::GPMProperty(TProperty& propertyFields) :
+GPMProperty::GPMProperty(const TProperty& propertyFields) :
   _isLinked(false)
 {
   _name = propertyFields.propName;
-  _pCurValue = createValue((GCFPValue::TMACValueType) propertyFields.type);
-  _pOldValue = createValue((GCFPValue::TMACValueType) propertyFields.type);
+  _pCurValue = GCFPValue::createMACTypeObject((GCFPValue::TMACValueType) propertyFields.type);
+  assert(_pCurValue);
+  if (propertyFields.defaultValue)
+  {
+    _pCurValue->setValue(propertyFields.defaultValue);
+  }
+  _pOldValue = _pCurValue->clone();
   _accessMode = propertyFields.accessMode;
 }
 
@@ -124,58 +124,4 @@ void GPMProperty::setAccessMode(TAccessMode mode, bool on)
 bool GPMProperty::testAccessMode(TAccessMode mode) const
 {
   return (_accessMode & mode); 
-}
-
-GCFPValue* GPMProperty::createValue(GCFPValue::TMACValueType type) const
-{
-  GCFPValue* pResult(0);
-  
-  switch (type)
-  {
-    case GCFPValue::BOOL_VAL:
-      pResult = new GCFPVBool();
-      break;
-    case GCFPValue::CHAR_VAL:
-      pResult = new GCFPVChar();
-      break;
-    case GCFPValue::UNSIGNED_VAL:
-      pResult = new GCFPVUnsigned();
-      break;
-    case GCFPValue::INTEGER_VAL:
-      pResult = new GCFPVInteger();
-      break;
-    case GCFPValue::DOUBLE_VAL:
-      pResult = new GCFPVDouble();
-      break;
-    case GCFPValue::STRING_VAL:
-      pResult = new GCFPVString();
-      break;
-/*    case GCFPValue::BIT32_VAL:
-      pResult = new GCFPVBit32();
-      break;
-    case GCFPValue::REF_VAL:
-      pResult = new GCFPVRef();
-      break;
-    case GCFPValue::BLOB_VAL:
-      pResult = new GCFPVBlob();
-      break;
-    case GCFPValue::DATETIME_VAL:
-      pResult = new GCFPVDateTime();
-      break;*/
-    default:
-      if (type > GCFPValue::DYNARR_VAL &&
-          type <= GCFPValue::DYNSTRING_VAL)
-      {
-        pResult = new GCFPVDynArr(type);
-      }
-      else
-      {
-        LOFAR_LOG_ERROR(PML_STDOUT_LOGGER, (
-            "Type of MAC value is unknown or not supported yet: '%d'", 
-            type));
-      }
-      break;
-  }  
-  
-  return pResult;
 }

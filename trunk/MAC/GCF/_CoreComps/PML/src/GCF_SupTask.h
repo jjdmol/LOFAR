@@ -33,26 +33,27 @@ class GCFSupervisedTask : public GCFTask
 {
   public:
     virtual ~GCFSupervisedTask();
-  
-  protected:
-    GCFSupervisedTask(State initial, string& name);
-    
+
     TGCFResult loadAPC(const string apcName, const string scope);
     TGCFResult unloadAPC(const string apcName, const string scope);
     TGCFResult reloadAPC(const string apcName, const string scope);
-    TGCFResult loadMyProperties(TPropertySet& newSet);
+    TGCFResult loadMyProperties(const TPropertySet& newSet);
     TGCFResult unloadMyProperties(const string scope);
     TGCFResult set(const string propName, const GCFPValue& value);
     TGCFResult get(const string propName);
     TGCFResult getMyOldValue(const string propName, GCFPValue** pValue);
+  
+  protected:
+    GCFSupervisedTask(State initial, string& name);
+    
     friend class GPMController;
     virtual void valueChanged(const string& propName, const GCFPValue& value) = 0;
     virtual void valueGet(const string& propName, const GCFPValue& value) = 0;
-    virtual void apcLoaded(const string& apcName, const string& scope) = 0;
-    virtual void apcUnloaded(const string& apcName, const string& scope) = 0;
-    virtual void apcReloaded(const string& apcName, const string& scope) = 0;
-    virtual void myPropertiesLoaded(const string& scope) = 0;
-    virtual void myPropertiesUnloaded(const string& scope) = 0;
+    virtual void apcLoaded(const string& apcName, const string& scope, TGCFResult result) = 0;
+    virtual void apcUnloaded(const string& apcName, const string& scope, TGCFResult result) = 0;
+    virtual void apcReloaded(const string& apcName, const string& scope, TGCFResult result) = 0;
+    virtual void myPropertiesLoaded(const string& scope, TGCFResult result) = 0;
+    virtual void myPropertiesUnloaded(const string& scope, TGCFResult result) = 0;
   
   private:
     GPMController* _pController;

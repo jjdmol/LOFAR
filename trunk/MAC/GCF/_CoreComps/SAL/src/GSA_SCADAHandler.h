@@ -27,6 +27,7 @@
 #include <TM/GCF_Handler.h>
 #include <SAL/GSA_PvssApi.h>
 #include <SAL/GSA_Defines.h>
+#include <Common/lofar_list.h>
 
 class GSASCADAHandler : GCFHandler
 {
@@ -36,6 +37,8 @@ class GSASCADAHandler : GCFHandler
     void workProc();
     void stop();
     TSAResult isOperational();
+    void registerTask(GCFTask& task);
+    void deregisterTask(GCFTask& task);
 
   private:
     GSASCADAHandler();
@@ -49,5 +52,6 @@ class GSASCADAHandler : GCFHandler
     
     GSAPvssApi _pvssApi;
     bool  _running;
+    list<GCFTask*> _registerdTasks;
 };
 #endif

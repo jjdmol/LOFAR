@@ -36,6 +36,8 @@ class GCFPVDynArr : public GCFPValue
   	virtual ~GCFPVDynArr();
     /** Write property of list value_. */
     virtual void setValue(const GCFPValueArray& newVal);
+    /** No descriptions */
+    virtual TSAResult setValue(const string value);
     /** Read property of list value_. */
     virtual inline const GCFPValueArray& getValue() const {return _values;}
     /** No descriptions */

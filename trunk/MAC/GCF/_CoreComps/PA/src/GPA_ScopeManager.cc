@@ -58,49 +58,30 @@ TPAResult GPAScopeManager::unlinkProperties(list<string>& propList)
   return result;
 }
 
-TPAResult GPAScopeManager::propertiesLinked(const string& scope)
+void GPAScopeManager::propertiesLinked(const string& scope)
 {
-  TPAResult result(PA_NO_ERROR);
-  TScopeData* pScopeData(0);
   TScopeListIter iter = _scopeList.find(scope);
-  if (iter->first == scope)
+  assert(iter->first == scope);
+
+  // TODO: find out a safer way to see whether all responses are received
+  _counter--;
+  if (_counter == 0)
   {
-    pScopeData = &iter->second;
-    if (pScopeData)
-    {
-      // TODO: find out a safer way to see whether all responses are received
-      pScopeData->respond = true; // does nothing for now
-      _counter--;
-      if (_counter == 0)
-      {
-        _controller.apcLoaded(result);
-      }
-    }    
+    _controller.apcLoaded(PA_NO_ERROR);
   }
-  
-  return result;
 }
 
-TPAResult GPAScopeManager::propertiesUnlinked(const string& scope)
+void GPAScopeManager::propertiesUnlinked(const string& scope)
 {
-  TPAResult result(PA_NO_ERROR);
-  TScopeData* pScopeData(0);
   TScopeListIter iter = _scopeList.find(scope);
-  if (iter->first == scope)
+  assert(iter->first == scope);
+
+  // TODO: find out a safer way to see whether all responses are received
+  _counter--;
+  if (_counter == 0)
   {
-    pScopeData = &iter->second;
-    if (pScopeData)
-    {
-      // TODO: find out a safer way to see whether all responses are received
-      pScopeData->respond = true; // does nothing for now
-      _counter--;
-      if (_counter == 0)
-      {
-        _controller.apcUnloaded(result);
-      }
-    }    
+    _controller.apcUnloaded(PA_NO_ERROR);
   }
-  return result;
 }
 
 TPAResult GPAScopeManager::registerScope(const string& scope, GCFPortInterface& port)
@@ -142,12 +123,10 @@ void GPAScopeManager::deleteScopesByPort(const GCFPortInterface& requestPort,
        iter != _scopeList.end(); ++iter)
   {
     pScopeData = &iter->second;
-    if (pScopeData)
+    assert(pScopeData);
+    if (&requestPort == pScopeData->pPort)
     {
-      if (&requestPort == pScopeData->pPort)
-      {
-        deletedScopes.push_back(iter->first);
-      }
+      deletedScopes.push_back(iter->first);
     }
   }
   for (list<string>::iterator iter = deletedScopes.begin();
@@ -240,20 +219,24 @@ void GPAScopeManager::sendUnLinkEvents(GCFEvent& e)
   TScopeData* pScopeData;
   const string* pScope;
   list<string>* pPropList;
+  unsigned int oldEventLength(e.length);
 
   for (TScopeListIter iter = _scopeList.begin(); 
        iter != _scopeList.end(); ++iter)
   {
     pScope = &iter->first;
     pScopeData = &iter->second;
-    if (pScopeData)
+
+    assert(pScopeData);
+
+    pPropList = &pScopeData->propList;
+    if (pPropList->size() > 0)
     {
-      pPropList = &pScopeData->propList;
-      if (pPropList->size() > 0)
+      pScopeData->respond = false;
+      GCFPortInterface* pPort = pScopeData->pPort;
+      if (pPort->isConnected())
       {
-        pScopeData->respond = false;
         _counter++;
-        GCFPortInterface* pPort = pScopeData->pPort;
         string allPropNames;
         for (list<string>::iterator pPropName = pPropList->begin(); 
              pPropName != pPropList->end(); ++pPropName)
@@ -265,7 +248,7 @@ void GPAScopeManager::sendUnLinkEvents(GCFEvent& e)
         char* buffer = new char[bufLength + 1];
         sprintf(buffer, "%03x%s%03x%s", pScope->size(), pScope->c_str(), 
                                         allPropNames.size(), allPropNames.c_str());
-        e.length += bufLength;
+        e.length = oldEventLength + bufLength;
         pPort->send(e, buffer, bufLength);
         delete [] buffer;
       }

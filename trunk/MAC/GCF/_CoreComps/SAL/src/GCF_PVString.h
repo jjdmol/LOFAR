@@ -30,8 +30,8 @@ class GCFPVString : public GCFPValue
   public:
   	GCFPVString(string val = "") : GCFPValue(STRING_VAL), _value(val) {;}
   	virtual ~GCFPVString() {;}
-    /** Write property of string value. */
-    virtual inline void setValue(const string newVal) {_value = newVal;}
+    /** No descriptions */
+    virtual TSAResult setValue(const string value);
     /** Read property of string value. */
     virtual inline const string& getValue() const {return _value;}
     /** No descriptions */

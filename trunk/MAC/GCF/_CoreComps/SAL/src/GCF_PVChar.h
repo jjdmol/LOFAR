@@ -32,6 +32,8 @@ class GCFPVChar : public GCFPValue
   	virtual ~GCFPVChar() {;}
     /** Write property of char value. */
     inline void setValue( const char newVal) {_value = newVal;}
+    /** No descriptions */
+    virtual TSAResult setValue(const string value);
     /** Read property of char value. */
     inline char getValue() const {return _value;}
     /** No descriptions */

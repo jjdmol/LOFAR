@@ -33,6 +33,8 @@ class GCFPVBool : public GCFPValue
     
     /** Write property of bool value_. */
     inline void setValue( const bool newVal) {_value = newVal;};
+    /** No descriptions */
+    virtual TSAResult setValue(const string value);
     /** Read property of bool value_. */
     inline bool getValue() const {return _value;};
     /** No descriptions */

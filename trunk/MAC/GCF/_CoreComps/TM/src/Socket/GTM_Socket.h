@@ -24,12 +24,14 @@
 #define GTM_SOCKET_H
 
 #include "unistd.h"
+#include <GCF_Event.h>
+
 // forward declaration
 class GCFTCPPort;
 class GCFPeerAddr;
 class GTMSocketHandler;
 class GTMServerSocket;
-class GCFEvent;
+
 
 class GTMSocket
 {
@@ -69,7 +71,7 @@ class GTMSocket
      */
     GTMSocket(const GTMSocket&);
     GTMSocket& operator=(const GTMSocket&);
-    int eventReceived(const GCFEvent& e);
+    GCFEvent::TResult eventReceived(const GCFEvent& e);
 };
 
 #endif

@@ -67,7 +67,7 @@ int GTMNameService::init(const char *ns_config_file)
   return 0;
 }
 
-int GTMNameService::query(string& taskname,
+int GTMNameService::query(const string& taskname,
 			GCFPeerAddr& peeraddr)
 {
   if (!_pConfig) return -1;
@@ -90,8 +90,8 @@ int GTMNameService::query(string& taskname,
   return -1; // failure
 }
 
-int GTMNameService::queryPort(string& taskname,
-			    string& portname,
+int GTMNameService::queryPort(const string& taskname,
+			    const string& portname,
 			    GCFPeerAddr& peeraddr)
 {
   if (!_pConfig) return -1;

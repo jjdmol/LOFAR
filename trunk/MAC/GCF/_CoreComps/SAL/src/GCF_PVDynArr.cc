@@ -41,6 +41,14 @@ GCFPVDynArr::~GCFPVDynArr()
   cleanup();
 }
 
+/** No descriptions */
+TSAResult GCFPVDynArr::setValue(const string value)
+{
+  TSAResult result(SA_NO_ERROR);
+  
+  return result;
+}
+
 void GCFPVDynArr::setValue(const GCFPValueArray& newVal)
 {
   cleanup();
