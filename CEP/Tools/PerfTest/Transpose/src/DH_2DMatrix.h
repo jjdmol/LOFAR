@@ -21,6 +21,9 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.3  2002/05/14 11:39:41  gvd
+//  Changed for new build environment
+//
 //  Revision 1.2  2002/05/07 11:16:20  schaaf
 //  changed indexing mistake in getBuffer()
 //
@@ -80,11 +83,13 @@ protected:
   {
   public:
     DataPacket() ;
-    int* itsBuffer;
 
     int itsXOffset;
     int itsYOffset;
     int itsZ;
+    int itsSize;
+
+    int itsBuffer[];
   };
 
 private:
