@@ -43,7 +43,9 @@ int main(int argc, const char** argv)
   MyExample EX1(1, 1);
   EX1.setarg(argc, argv);
 
-#if 1
+#if 0
+
+  // use this branch for interactive tests.
   try {
     LOFAR::SimulatorParse::parse(EX1);
   } catch (LOFAR::SimulatorParseError x) {
@@ -60,5 +62,15 @@ int main(int argc, const char** argv)
   EX1.baseQuit();
 #endif
   
-  return 0;
+  if ( 
+      ( ((DH_Example*)EX1.itsWorkHolder->getDataManager().getInHolder(0))->getBuffer()[0] == 
+        ((DH_Example*)EX1.itsWorkHolder->getDataManager().getOutHolder(0))->getBuffer()[0]) &&
+      ( ((DH_Example*)EX1.itsWorkHolder->getDataManager().getInHolder(0))->getCounter() ==
+	((DH_Example*)EX1.itsWorkHolder->getDataManager().getOutHolder(0))->getCounter() ) ) {
+	
+    // success
+    return 0;
+  } else {
+    return -1;
+  }
 }

@@ -28,6 +28,7 @@ namespace LOFAR
     void quit();
     void dump() const;
 
+    WH_Example* itsWorkHolder;
   private:
     int    itsArgv;
     char** itsArgc;
@@ -35,7 +36,6 @@ namespace LOFAR
     DataHolder* itsProto;
     //    MiniDataManager* itsDataManager;
 
-    WH_Example* itsWorkHolder;
     DH_Example* dhptr;
 
     int itsNinputs;
