@@ -41,39 +41,32 @@ void Selector::setStateImpl (DataRecord &rec,bool initializing)
     selection = rec[FIndex].as_vector<int>();
 }
 
-int Selector::getResult (Result::Ref &resref, const Request& request, bool)
+int Selector::getResult (Result::Ref &resref, 
+                         const std::vector<Result::Ref> &childref,
+                         const Request &request,bool)
 {
-  Result::Ref childref;
-  int flag = getChild(0).execute(childref,request);
-  // if child returns a fail, pass it on up
-  if( flag == RES_FAIL )
-  {
-    resref = childref;
-    return RES_FAIL;
-  }
-  // return wait if child waits
-  if( flag&RES_WAIT )
-    return flag;
   // otherwise, select sub-results
-  Result &resset = resref <<= new Result(selection.size(),request),
-            &childres = childref();
+  Result &result = resref <<= new Result(selection.size(),request),
+         &childres = childref[0]();
+  int nvs = childres.numVellSets();
   // select results from child set
   for( uint i=0; i<selection.size(); i++ )
   {
     int isel = selection[i];
-    if( isel<0 || isel>=childres.numVellSets() )
+    if( isel<0 || isel>=nvs )
     {
-      VellSet &res = resset.setNewVellSet(i);
-      MakeFailVellSet(res,
+      VellSet &vs = result.setNewVellSet(i);
+      MakeFailVellSet(vs,
           Debug::ssprintf("selection index %d is out of range (%d results in set)",
-                        isel,childres.numVellSets()));
+                        isel,nvs));
     }
     else
     {
-      resset.setVellSet(i,&(childres.vellSet(isel)));
+      result.setVellSet(i,&(childres.vellSet(isel)));
     }
   }
-  return flag;
+  // no additional dependencies
+  return 0;
 }
 
 } // namespace Meq

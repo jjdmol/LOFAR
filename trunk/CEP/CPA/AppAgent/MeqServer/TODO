@@ -64,6 +64,10 @@ Function:
     the single-plane result as a scalar
 
 General:
+  
+  * GlishUtil: interpret record field name "#nnn" as AtomicID(atoi("nnn"))
+  
+  * DataField: check how type mismatches are reported; clean up
 
   * Check how a zero-length string or hiid array from Glish shows up in
     AppAgent -- because it looked like a 1-element DataField when 

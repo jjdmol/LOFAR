@@ -67,12 +67,21 @@ void Solver::checkChildren()
   Assert (itsCondeqs.size() > 0);
 }
 
-int Solver::getResult (Result::Ref &resref, const Request& request,
-			   bool)
+// do nothing here -- we'll do it manually in getResult()
+int Solver::pollChildren (std::vector<Result::Ref> &,
+                          Result::Ref &,const Request &)
+{
+  return 0; 
+}
+
+// Get the result for the given request.
+int Solver::getResult (Result::Ref &resref, 
+                       const std::vector<Result::Ref> &,
+                       const Request &request,bool newreq)
 {
   // The result has 1 plane.
-  Result& resultset = resref <<= new Result(request,1);
-  VellSet& result = resultset.vellSet(0);
+  Result& result = resref <<= new Result(request,1);
+  VellSet& vellset = result.setNewVellSet(0);
   // Allocate variables needed for the solution.
   uInt rank;
   double fit;
@@ -80,9 +89,8 @@ int Solver::getResult (Result::Ref &resref, const Request& request,
   double mu;
   Matrix<double> covar;
   Vector<double> errors;
-  // Allocate results.
   int nrch = itsCondeqs.size();
-  vector<Result::Ref> child_results(nrch);
+  std::vector<Result::Ref> child_results(nrch);
   // Copy the request and attach the solvable parms to it.
   Request newReq = request;
   if (state()[FSolvableParm].exists()) {
@@ -93,29 +101,24 @@ int Solver::getResult (Result::Ref &resref, const Request& request,
       state()[FSolvableParm].as_p<DataRecord>();
   }
   // Iterate as many times as needed.
-  int flag;
   for (int step=0; step<itsNumStep; step++) {
-    flag = 0;
-    // collect child_results from children
-    for (int i=0; i<nrch; i++) {
-      flag |= getChild(i).execute (child_results[i], newReq);
-      child_results[i].persist();
-    }
-    // return flag if at least one child wants to wait
-    if (flag & Node::RES_WAIT) {
-      return flag;
-    }
-    vector<VellSet*> chresults;
-    chresults.reserve (nrch * child_results[0]->numVellSets());
+    // collect child results, using Node's standard method
+    int retcode = Node::pollChildren(child_results,resref,request);
+    // a fail or a wait is returned immediately
+    if( retcode&(RES_FAIL|RES_WAIT) )
+      return retcode;
+    // else process 
+    vector<VellSet*> chvellsets;
+    chvellsets.reserve(nrch * child_results[0]->numVellSets());
     // Find the set of all spids from all results.
     for (int i=0; i<nrch; i++) {
       for (int iplane=0; iplane<child_results[i]->numVellSets(); iplane++) {
-	if (! child_results[i]().vellSet(iplane).isFail()) {
-	  chresults.push_back (&(child_results[i]().vellSet(iplane)));
-	}
+        if (! child_results[i]().vellSet(iplane).isFail()) {
+          chvellsets.push_back (&(child_results[i]().vellSet(iplane)));
+        }
       }
     }
-    vector<int> spids = Function::findSpids (chresults);
+    vector<int> spids = Function::findSpids (chvellsets);
     // Initialize solver.
     uint nspid = spids.size();
     itsSolver.set (nspid, 1u, 0u);
@@ -124,65 +127,65 @@ int Solver::getResult (Result::Ref &resref, const Request& request,
     vector<double> derivReal(nspid);
     vector<double> derivImag(nspid);
     // Loop through all results and fill the deriv vectors.
-    for (uint i=0; i<chresults.size(); i++) {
-      VellSet& chresult = *chresults[i];
+    for (uint i=0; i<chvellsets.size(); i++) {
+      VellSet& chresult = *chvellsets[i];
       bool isReal = chresult.getValue().isReal();
       // Get nr of elements in the values.
       int nrval = chresult.getValue().nelements();
       // Get pointer to all perturbed values.
       int index=0;
       if (isReal) {
-	const double* values = chresult.getValue().realStorage();
-	vector<const double*> perts(nspid, 0);
-	for (uint j=0; j<nspid; j++) {
-	  if (chresult.isDefined (spids[j], index)) {
-	    Assert (chresult.getPerturbedValue(index-1).nelements() == nrval);
-	    perts[j] = chresult.getPerturbedValue(index-1).realStorage();
-	  }
-	}
-	// Generate an equation for each value element.
-	// An equation contains the value and all derivatives.
-	for (int j=0; j<nrval; j++) {
-	  for (uint spid=0; spid<perts.size(); spid++) {
-	    if (perts[spid]) {
-	      derivReal[spid] = perts[spid][j];
-	    } else {
-	      derivReal[spid] = 0;
-	    }
-	  }
-	  itsSolver.makeNorm (&derivReal[0], 1., values+j);
-	}
+        const double* values = chresult.getValue().realStorage();
+        vector<const double*> perts(nspid, 0);
+        for (uint j=0; j<nspid; j++) {
+          if (chresult.isDefined (spids[j], index)) {
+            Assert (chresult.getPerturbedValue(index-1).nelements() == nrval);
+            perts[j] = chresult.getPerturbedValue(index-1).realStorage();
+          }
+        }
+        // Generate an equation for each value element.
+        // An equation contains the value and all derivatives.
+        for (int j=0; j<nrval; j++) {
+          for (uint spid=0; spid<perts.size(); spid++) {
+            if (perts[spid]) {
+              derivReal[spid] = perts[spid][j];
+            } else {
+              derivReal[spid] = 0;
+            }
+          }
+          itsSolver.makeNorm (&derivReal[0], 1., values+j);
+        }
       } else {
-	const dcomplex* values = chresult.getValue().complexStorage();
-	vector<const dcomplex*> perts(nspid, 0);
-	for (uint j=0; j<nspid; j++) {
-	  if (chresult.isDefined (spids[j], index)) {
-	    Assert (chresult.getPerturbedValue(index-1).nelements() == nrval);
-	    perts[j] = chresult.getPerturbedValue(index-1).complexStorage();
-	  }
-	}
-	// Generate an equation for each value element.
-	// An equation contains the value and all derivatives.
-	double val;
-	for (int j=0; j<nrval; j++) {
-	  for (uint spid=0; spid<perts.size(); spid++) {
-	    if (perts[spid]) {
-	      derivReal[spid] = perts[spid][j].real();
-	      derivImag[spid] = perts[spid][j].imag();
-	    } else {
-	      derivReal[spid] = 0;
-	      derivImag[spid] = 0;
-	    }
-	  }
-	  val = values[j].real();
-	  itsSolver.makeNorm (&derivReal[0], 1., &val);
-	  val = values[j].imag();
-	  itsSolver.makeNorm (&derivImag[0], 1., &val);
-	}
+        const dcomplex* values = chresult.getValue().complexStorage();
+        vector<const dcomplex*> perts(nspid, 0);
+        for (uint j=0; j<nspid; j++) {
+          if (chresult.isDefined (spids[j], index)) {
+            Assert (chresult.getPerturbedValue(index-1).nelements() == nrval);
+            perts[j] = chresult.getPerturbedValue(index-1).complexStorage();
+          }
+        }
+        // Generate an equation for each value element.
+        // An equation contains the value and all derivatives.
+        double val;
+        for (int j=0; j<nrval; j++) {
+          for (uint spid=0; spid<perts.size(); spid++) {
+            if (perts[spid]) {
+              derivReal[spid] = perts[spid][j].real();
+              derivImag[spid] = perts[spid][j].imag();
+            } else {
+              derivReal[spid] = 0;
+              derivImag[spid] = 0;
+            }
+          }
+          val = values[j].real();
+          itsSolver.makeNorm (&derivReal[0], 1., &val);
+          val = values[j].imag();
+          itsSolver.makeNorm (&derivImag[0], 1., &val);
+        }
       }
     }
     // Solve the equation.
-    double* sol = result.setReal(nspid, 1).data();
+    double* sol = vellset.setReal(nspid, 1).data();
     Vector<double> solution (IPosition(1,nspid), sol, SHARE);
     solution = 0;
     // It looks as if LSQ has a bug so that solveLoop and getCovariance
@@ -192,28 +195,23 @@ int Solver::getResult (Result::Ref &resref, const Request& request,
     tmpSolver.getCovariance (covar);
     tmpSolver.getErrors (errors);
     bool solFlag = itsSolver.solveLoop (fit, rank, solution,
-					stddev, mu, itsUseSVD);
+                                        stddev, mu, itsUseSVD);
     cout << "Solution after:  " << solution << endl;
     // Remove the rider for the next iterations.
     if (state()[FSolvableParm].exists()) {
       newReq[FNodeState][FSolvableParm].remove();
     }
   }
-  return flag;
+  // result depends on domain, and has -- most likely -- been updated
+  return RES_DEP_DOMAIN|RES_UPDATED;
 }
 
 void Solver::setStateImpl (DataRecord& newst,bool initializing)
 {
   Node::setStateImpl(newst,initializing);
-  if (newst[FNumSteps].exists()) {
-    itsNumStep = newst[FNumSteps].as<int>();
-  }
-  if (newst[FEpsilon].exists()) {
-    itsEpsilon = newst[FEpsilon].as<double>();
-  }
-  if (newst[FUseSVD].exists()) {
-    itsUseSVD = newst[FUseSVD].as<bool>();
-  }
+  getStateField(itsNumStep,newst,FNumSteps);
+  getStateField(itsEpsilon,newst,FEpsilon);
+  getStateField(itsUseSVD,newst,FUseSVD);
 }
 
 

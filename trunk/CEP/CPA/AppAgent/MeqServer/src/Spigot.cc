@@ -35,7 +35,6 @@ void Spigot::setStateImpl (DataRecord &rec,bool initializing)
       NodeThrow(FailWithoutCleanup,"unknown input column "+colname);
     }
     icolumn = iter->second;
-    wstate()[FInputColumn] = colname;
   }
 }
 
@@ -116,7 +115,9 @@ int Spigot::deliver (const Request &req,VisTile::Ref::Copy &tileref,
 }
 
 //##ModelId=3F9FF6AA0300
-int Spigot::getResult (Result::Ref &resref,const Request &req,bool newreq)
+int Spigot::getResult (Result::Ref &resref, 
+                       const std::vector<Result::Ref> &,
+                       const Request &req,bool newreq)
 {
   // have we got a cached result?
   if( next_res.valid() )
@@ -134,7 +135,7 @@ int Spigot::getResult (Result::Ref &resref,const Request &req,bool newreq)
     resref = next_res;
     next_rqid.clear();
     wstate()[FNext].remove();
-    return RES_UPDATED;
+    return RES_DEP_DOMAIN|RES_UPDATED;
   }
   else // no result at all, return WAIT
   {

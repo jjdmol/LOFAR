@@ -51,7 +51,9 @@ class Spigot : public VisHandlerNode
 
   protected:
     //##ModelId=3F9FF6AA0300
-    virtual int getResult (Result::Ref &resref, const Request &req,bool newreq);
+    virtual int getResult (Result::Ref &resref, 
+                           const std::vector<Result::Ref> &childres,
+                           const Request &req,bool newreq);
   
     virtual void checkInitState (DataRecord &rec);
     

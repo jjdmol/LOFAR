@@ -84,7 +84,9 @@ public:
     { return itsIsSolvable; }
 
   // Get the requested result of the parameter.
-  virtual int getResult (Result::Ref&, const Request&, bool newReq);
+  virtual int getResult (Result::Ref &resref, 
+                         const std::vector<Result::Ref> &childres,
+                         const Request &req,bool newreq);
 
   // Initialize the parameter for the given domain.
   virtual int initDomain (const Domain&);

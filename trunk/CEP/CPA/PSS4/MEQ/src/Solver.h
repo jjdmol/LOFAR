@@ -55,10 +55,18 @@ public:
 //  virtual void init (DataRecord::Ref::Xfer& initrec, Forest* frst);
 
 protected:
-  // Get the result for the given request.
-  virtual int getResult (Result::Ref &resref, const Request&,bool newReq);
-//  virtual void checkInitState (DataRecord &rec);
+  // virtual void checkInitState (DataRecord &rec);
   virtual void setStateImpl (DataRecord& rec,bool initializing);
+  
+  // override this, since we poll children ourselves
+  virtual int pollChildren (std::vector<Result::Ref> &child_results,
+                            Result::Ref &resref,
+                            const Request &req);
+  
+  // Get the result for the given request.
+  virtual int getResult (Result::Ref &resref, 
+                         const std::vector<Result::Ref> &childres,
+                         const Request &req,bool newreq);
 
 private:
   vector<Condeq*> itsCondeqs;

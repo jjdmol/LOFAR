@@ -51,8 +51,10 @@ class Selector : public Node
     { return TpMeqSelector; }
     
   protected:
-    virtual int getResult (Result::Ref &resref, const Request& request, bool newReq);
     virtual void setStateImpl (DataRecord &rec,bool initializing);
+    virtual int getResult (Result::Ref &resref, 
+                           const std::vector<Result::Ref> &childres,
+                           const Request &req,bool newreq);
   
   private:
     vector<int> selection;

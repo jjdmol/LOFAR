@@ -276,8 +276,8 @@ void checkUVW (const string& msName, const string& mepName, double threshold)
       Meq::Parm pu1(parmName, &ptab);
       snprintf (parmName, 32, "U[s=%d]", ant2);
       Meq::Parm pu2(parmName, &ptab);
-      pu1.getResult (resset1, request, true);
-      pu2.getResult (resset2, request, true);
+      pu1.execute (resset1, request);
+      pu2.execute (resset2, request);
       res1 = &(resset1->vellSetConst(0));
       res2 = &(resset2->vellSetConst(0));
       LoMat_double diff(LoMatShape(1,nrtim));
@@ -295,8 +295,8 @@ void checkUVW (const string& msName, const string& mepName, double threshold)
       Meq::Parm pu1(parmName, &ptab);
       snprintf (parmName, 32, "V[s=%d]", ant2);
       Meq::Parm pu2(parmName, &ptab);
-      pu1.getResult (resset1, request, true);
-      pu2.getResult (resset2, request, true);
+      pu1.execute (resset1, request);
+      pu2.execute (resset2, request);
       res1 = &(resset1->vellSetConst(0));
       res2 = &(resset2->vellSetConst(0));
       LoMat_double diff(LoMatShape(1,nrtim));
@@ -314,8 +314,8 @@ void checkUVW (const string& msName, const string& mepName, double threshold)
       Meq::Parm pu1(parmName, &ptab);
       snprintf (parmName, 32, "W[s=%d]", ant2);
       Meq::Parm pu2(parmName, &ptab);
-      pu1.getResult (resset1, request, true);
-      pu2.getResult (resset2, request, true);
+      pu1.execute (resset1, request);
+      pu2.execute (resset2, request);
       res1 = &(resset1->vellSetConst(0));
       res2 = &(resset2->vellSetConst(0));
       LoMat_double diff(LoMatShape(1,nrtim));

@@ -27,6 +27,7 @@
 
 #pragma aidgroup Meq
 #pragma types #Meq::UVW
+#pragma aid RA Dec StX StY StZ
 
 namespace Meq {    
 
@@ -42,7 +43,9 @@ public:
     { return TpMeqUVW; }
 
   // Get the result for the given request.
-  virtual int getResult (Result::Ref &resref, const Request&, bool newReq);
+  virtual int getResult (Result::Ref &resref, 
+                         const std::vector<Result::Ref> &childres,
+                         const Request &req,bool newreq);
 
   // Check and convert the children.
   void checkChildren();

@@ -50,7 +50,9 @@ class Sink : public VisHandlerNode
     
   protected:
     //##ModelId=3F98DAE60217
-    virtual int getResult (Result::Ref &resref, const Request &req,bool newreq);
+    virtual int getResult (Result::Ref &resref, 
+                           const std::vector<Result::Ref> &childres,
+                           const Request &req,bool newreq);
   
     virtual void checkInitState (DataRecord &rec);
     
@@ -60,9 +62,6 @@ class Sink : public VisHandlerNode
 //    //##ModelId=3F98DD7400A9
 //    void assignOutputColumn (int ichild,string colname);
   
-    //##ModelId=3F9918390169
-    void setStateImpl (const DataRecord &rec);
-    
     // maps plane to output correlation
     int mapOutputCorr (int iplane);
     

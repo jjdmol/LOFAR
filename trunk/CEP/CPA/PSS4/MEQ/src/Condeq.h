@@ -41,9 +41,6 @@ public:
 
   virtual ~Condeq();
 
-  // Get the result for the given request.
-  virtual int getResult (Result::Ref &resref, const Request&,
-			     bool newReq);
 
   // Returns the class TypeId
   virtual TypeId objectType() const;
@@ -52,6 +49,14 @@ public:
   // The order of the children is the order as given when the Node object
   // was created.
   virtual void checkChildren();
+
+protected:
+    
+  // Get the result for the given request.
+  virtual int getResult (Result::Ref &resref, 
+                         const std::vector<Result::Ref> &childres,
+                         const Request &req,bool newreq);
+
 };
 
 

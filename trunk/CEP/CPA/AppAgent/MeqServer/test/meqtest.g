@@ -7,13 +7,18 @@ use_valgrind_opts := [ "",
 #  "--gdb-path=/home/oms/bin/valddd", 
   ""];
   
-include 'meq/meqserver.g'
+include '../../src/meqserver.g'
 
 const meqserver_test := function ()
 {
   global mqs;
   # create meqserver object
   mqs := meqserver(verbose=4);
+  if( is_fail(mqs) )
+  {
+    print mqs;
+    fail;
+  }
   # set verbose debugging messages
   mqs.setdebug('MeqNode',5);
   # initialize meqserver
@@ -66,7 +71,12 @@ const meqserver_test := function ()
 const meqsink_test := function ()
 {
   global mqs;
-  mqs := meqserver(verbose=4,options="-d0 -meq:M:O:MeqServer",gui=T);
+  mqs := meqserver(verbose=4,options="-d0 -meq:M:O:MeqServer",gui=F);
+  if( is_fail(mqs) )
+  {
+    print mqs;
+    fail;
+  }
   # set verbose debugging messages
   mqs.setdebug("MeqNode MeqForest MeqSink MeqSpigot",1);
   mqs.setdebug("MeqNode MeqForest MeqSink MeqSpigot MeqNode",2);
@@ -112,7 +122,12 @@ const meqsink_test := function ()
 const meqsel_test := function ()
 {
   global mqs;
-  mqs := meqserver(verbose=4,options="-d0 -meq:M:O:MeqServer",gui=T);
+  mqs := meqserver(verbose=4,options="-d0 -meq:M:O:MeqServer",gui=F);
+  if( is_fail(mqs) )
+  {
+    print mqs;
+    fail;
+  }
   # set verbose debugging messages
   mqs.setdebug("MeqNode MeqForest MeqSink MeqSpigot",5);
   mqs.setdebug("MeqNode MeqForest MeqSink MeqSpigot",5);
@@ -153,6 +168,83 @@ const meqsel_test := function ()
   res := mqs.meq('Node.Execute',[name='select3',request=request],T);
   print res;
 }
+
+const state_test := function ()
+{
+  global mqs;
+  mqs := meqserver(verbose=4,options="-d0 -meq:M:O:MeqServer",gui=F);
+  if( is_fail(mqs) )
+  {
+    print mqs;
+    fail;
+  }
+  # set verbose debugging messages
+  mqs.setdebug("MeqNode MeqForest MeqSink MeqSpigot",5);
+  mqs.setdebug("MeqNode MeqForest MeqSink MeqSpigot",5);
+  mqs.setdebug("MeqServ MeqVisHandler",5);
+  mqs.setdebug("meqserver",1);
+  # initialize meqserver
+  mqs.init([output_col="PREDICT"],wait=T);
+  
+  # create a small subtree
+  defval1 := array(as_double(1),1,1);
+  defval2 := array(as_double(2),1,1);
+  defval3 := array(as_double(3),1,1);
+  print mqs.meq('Create.Node',meqparm('parm1',defval1));
+  print mqs.meq('Create.Node',meqparm('parm2',defval2));
+  print mqs.meq('Create.Node',meqparm('parm3',defval3));
+  print mqs.meq('Create.Node',meqparm('parm4',defval1));
+  print mqs.meq('Create.Node',meqparm('parm5',defval2));
+  print mqs.meq('Create.Node',meqparm('parm6',defval3));
+  print mqs.meq('Create.Node',meqnode('MeqComposer','compose1',children="parm1 parm2 parm3"));
+  print mqs.meq('Create.Node',meqnode('MeqComposer','compose2',children="parm4 parm5 parm6"));
+  rec := meqnode('MeqSelector','select1',children="compose1");
+  rec.index := 1;
+  rec.config_groups := hiid('a');
+  print mqs.meq('Create.Node',rec);
+  rec := meqnode('MeqSelector','select2',children="compose2");
+  rec.index := 1;
+  rec.config_groups := hiid('a');
+  print mqs.meq('Create.Node',rec);
+  print mqs.meq('Create.Node',meqnode('MeqComposer','compose3',children="select1 select2"));
+  
+  # resolve children
+  print mqs.meq('Resolve.Children',[name='compose3']);
+  
+  # get indices
+  ni_sel1 := mqs.getnodestate('select1').nodeindex;
+  ni_sel2 := mqs.getnodestate('select2').nodeindex;
+  
+  global cells,request,res;
+  cells := meqcells(meqdomain(0,10,0,10),nfreq=20,times=[1.,2.,3.],timesteps=[1.,2.,3.]);
+  request := meqrequest(cells);
+  
+  res1 := mqs.meq('Node.Execute',[name='compose3',request=request],T);
+  print res1;
+  
+  request := meqrequest(cells);
+  request.addstate('a','select1',[index=2]);
+  request.addstate('b','select2',[index=3]);
+  res2 := mqs.meq('Node.Execute',[name='compose3',request=request],T);
+  print res2;
+  
+  request := meqrequest(cells);
+  request.addstate('a',"select1 select2",[index=3]);
+  res3 := mqs.meq('Node.Execute',[name='compose3',request=request],T);
+  print res3;
+  
+  request := meqrequest(cells);
+  request.addstate('b','select1',[index=2]);
+  request.addstate('b','*',[index=1]);
+  res4 := mqs.meq('Node.Execute',[name='compose3',request=request],T);
+  print res4;
+  
+  print 'Expecting 1,1: ',res1;
+  print 'Expecting 2,3: ',res2;
+  print 'Expecting 3,3: ',res3;
+  print 'Expecting 2,1: ',res4;
+}
+
 
 cells := meqcells(meqdomain(0,10,0,10),nfreq=20,times=[1.,2.,3.],timesteps=[1.,2.,3.]);
 request := meqrequest(cells,1);

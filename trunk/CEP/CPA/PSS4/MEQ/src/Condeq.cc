@@ -43,31 +43,18 @@ void Condeq::checkChildren()
   Assert (numChildren() == 2);
 }
 
-int Condeq::getResult (Result::Ref &resref, const Request& request,
-			   bool)
+int Condeq::getResult (Result::Ref &resref, 
+                       const std::vector<Result::Ref> &child_result,
+                       const Request &request,bool)
 {
-  int nrch = numChildren();
-  FailWhen (nrch!=2, "no 2 children");
-  vector<Result::Ref> child_results(nrch);
-  // collect child_results from children
-  int flag = 0;
-  for (int i=0; i<nrch; i++) {
-    flag |= getChild(i).execute (child_results[i], request);
-    child_results[i].persist();
-  }
-  // return flag is at least one child wants to wait
-  if (flag & Node::RES_WAIT) {
-    return flag;
-  }
+  int nrch = child_result.size();
+  Assert(nrch==2);
   // Check that number of child planes is the same
-  int nplanes = child_results[0]->numVellSets();
-  for( int i=1; i<nrch; i++ )
-  {
-    FailWhen(child_results[i]->numVellSets()!=nplanes,
-        "mismatch in sizes of child result sets");
-  }
+  int nplanes = child_result[0]->numVellSets();
+  FailWhen(child_result[1]->numVellSets()!=nplanes,
+           "mismatch in sizes of child results");
   // Create result object and attach to the ref that was passed in
-  Result & resultset = resref <<= new Result(nplanes);
+  Result & result = resref <<= new Result(nplanes,request);
   vector<VellSet*> child_res(nrch);
   for( int iplane=0; iplane<nplanes; iplane++ )
   {
@@ -76,15 +63,15 @@ int Condeq::getResult (Result::Ref &resref, const Request& request,
     vector<Vells*> values(nrch);
     for( int i=0; i<nrch; i++ )
     {
-      child_res[i] = &(child_results[i]().vellSet(iplane));
+      child_res[i] = &(child_result[i]().vellSet(iplane));
       values[i] = &(child_res[i]->getValueRW());
     }
     // Find all spids from the children.
     vector<int> spids = Function::findSpids(child_res);
     // allocate new result object with given number of spids, add to set
-    VellSet &result = resultset.setNewVellSet(spids.size());
+    VellSet &vellset = result.setNewVellSet(iplane,spids.size());
     // The main value is measured-predicted.
-    result.setValue (*values[0] - *values[1]);
+    vellset.setValue (*values[0] - *values[1]);
     // Evaluate all perturbed values.
     vector<Vells*> perts(nrch);
     vector<int> indices(nrch, 0);
@@ -94,23 +81,24 @@ int Condeq::getResult (Result::Ref &resref, const Request& request,
       int inx0 = child_res[0]->isDefined (spids[j], indices[0]);
       int inx1 = child_res[1]->isDefined (spids[j], indices[1]);
       if (inx1 >= 0) {
-	deriv = (child_res[1]->getPerturbedValueRW(inx1) - *values[1]) /
-	        child_res[1]->getPerturbation(inx1);
-	if (inx0 >= 0) {
-	  deriv -= (child_res[0]->getPerturbedValueRW(inx0) - *values[0]) /
-	           child_res[0]->getPerturbation(inx0);
-	}
+        deriv = (child_res[1]->getPerturbedValueRW(inx1) - *values[1]) /
+                child_res[1]->getPerturbation(inx1);
+        if (inx0 >= 0) {
+          deriv -= (child_res[0]->getPerturbedValueRW(inx0) - *values[0]) /
+                   child_res[0]->getPerturbation(inx0);
+        }
       } else if (inx0 >= 0) {
-	deriv -= (*values[0] - child_res[0]->getPerturbedValueRW(inx0)) /
-	         child_res[0]->getPerturbation(inx0);
+        deriv -= (*values[0] - child_res[0]->getPerturbedValueRW(inx0)) /
+                 child_res[0]->getPerturbation(inx0);
       } else {
-	deriv = Vells(0.);
+        deriv = Vells(0.);
       }
-      result.setPerturbedValue (j, deriv);
+      vellset.setPerturbedValue (j, deriv);
     }
-    result.setSpids (spids);
+    vellset.setSpids (spids);
   }
-  return flag;
+  // no dependencies introduced
+  return 0;
 }
 
 

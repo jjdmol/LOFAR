@@ -60,9 +60,12 @@ void Sink::setStateImpl (DataRecord &rec,bool initializing)
 }
 
 //##ModelId=3F9509770277
-int Sink::getResult (Result::Ref &resref,const Request &req,bool)
+int Sink::getResult (Result::Ref &ref, 
+                     const std::vector<Result::Ref> &childres,
+                     const Request &,bool)
 {
-  return getChild(0).execute(resref,req);
+  ref.copy(childres[0],DMI::PRESERVE_RW);
+  return 0;
 }
 
 template<class T,class U>

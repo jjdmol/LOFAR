@@ -24,6 +24,7 @@
 #include <MEQ/Request.h>
 #include <MEQ/VellSet.h>
 #include <MEQ/Cells.h>
+#include <MEQ/AID-Meq.h>
 #include <aips/Measures/MBaseline.h>
 #include <aips/Measures/MPosition.h>
 #include <aips/Measures/MEpoch.h>
@@ -32,6 +33,8 @@
 
 namespace Meq {
 
+const int num_children = 5;
+const HIID child_labels[] = { AidRA,AidDec,AidStX,AidStY,AidStZ };
 
 UVW::UVW()
 {
@@ -41,45 +44,44 @@ UVW::UVW()
 UVW::~UVW()
 {}
 
-int UVW::getResult (Result::Ref& resref, const Request& request, bool)
+int UVW::getResult (Result::Ref &resref, 
+                    const std::vector<Result::Ref> &childres,
+                    const Request &request,bool newreq)
 {
-  const Cells& cells = request.cells();
-  // Get RA and DEC of phase center.
-  Result::Ref ra, dec;
-  int flag = children()[0]->execute (ra, request);
-  flag |= children()[1]->execute (dec, request);
-  ra.persist();
-  dec.persist();
-  // Get station positions.
-  Result::Ref stx, sty, stz;
-  flag |= children()[2]->execute (stx, request);
-  flag |= children()[3]->execute (sty, request);
-  flag |= children()[4]->execute (stz, request);
-  stx.persist();
-  sty.persist();
-  stz.persist();
-  if (flag & Node::RES_WAIT) {
-    return flag;
+  // Check that child results are all OK (no fails, 1 vellset per child)
+  string fails;
+  for( int i=0; i<num_children; i++ )
+  {
+    int nvs = childres[i]->numVellSets();
+    if( nvs != 1 )
+      Debug::appendf(fails,"child %s: expecting single VellsSet, got %d;",
+          child_labels[i].toString().c_str(),nvs);
+    if( childres[i]->hasFails() )
+      Debug::appendf(fails,"child %s: has fails",child_labels[i].toString().c_str());
   }
-  // For the time being we only support scalars.
-  const Vells& vra  = ra().vellSet(0).getValue();
-  const Vells& vdec = dec().vellSet(0).getValue();
-  const Vells& vstx = stx().vellSet(0).getValue();
-  const Vells& vsty = sty().vellSet(0).getValue();
-  const Vells& vstz = stz().vellSet(0).getValue();
+  if( !fails.empty() )
+    NodeThrow1(fails);
+  // Get RA and DEC of phase center, and station positions
+  const Vells& vra  = childres[0]().vellSet(0).getValue();
+  const Vells& vdec = childres[1]().vellSet(0).getValue();
+  const Vells& vstx = childres[2]().vellSet(0).getValue();
+  const Vells& vsty = childres[3]().vellSet(0).getValue();
+  const Vells& vstz = childres[4]().vellSet(0).getValue();
+  // For the time being we only support scalars
   Assert (vra.nelements()==1 && vdec.nelements()==1
-	  && vstx.nelements()==1 && vsty.nelements()==1
-	  && vstz.nelements()==1);
-  // Allocate a 3-plane result
-  Result &res_set = resref <<= new Result(3);
+      	  && vstx.nelements()==1 && vsty.nelements()==1
+	        && vstz.nelements()==1);
+  const Cells& cells = request.cells();
+  // Allocate a 3-plane result for U, V, and W
+  Result &result = resref <<= new Result(3,request);
   // Get RA and DEC of phase center.
-  MVDirection phaseRef(vra.as<double>(), vdec.as<double>());
+  MVDirection phaseRef(vra.as<double>(),vdec.as<double>());
   // Set correct size of values.
   int nfreq = cells.nfreq();
   int ntime = cells.ntime();
-  LoMat_double& matU = res_set.setNewVellSet(0).setReal(nfreq,ntime);
-  LoMat_double& matV = res_set.setNewVellSet(1).setReal(nfreq,ntime);
-  LoMat_double& matW = res_set.setNewVellSet(2).setReal(nfreq,ntime);
+  LoMat_double& matU = result.setNewVellSet(0).setReal(nfreq,ntime);
+  LoMat_double& matV = result.setNewVellSet(1).setReal(nfreq,ntime);
+  LoMat_double& matW = result.setNewVellSet(2).setReal(nfreq,ntime);
   // Calculate the UVW coordinates using the AIPS++ code.
   MVPosition mvpos(vstx.as<double>(),vsty.as<double>(),vstz.as<double>());
   MVBaseline mvbl(mvpos);
@@ -105,7 +107,8 @@ int UVW::getResult (Result::Ref& resref, const Request& request, bool)
       matW(j,i) = xyz(2);
     }
   }
-  return 0;
+  // result depends on domain, is updated with new request
+  return RES_DEP_DOMAIN|(newreq?RES_UPDATED:0);
 }
 
 void UVW::checkChildren()
