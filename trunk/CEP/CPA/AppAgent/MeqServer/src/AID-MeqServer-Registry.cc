@@ -44,13 +44,17 @@ BlockableObject * __construct_MeqSpigot (int n) { return n>0 ? new Meq::Spigot [
         AtomicID::registerId(-1390,"load")+
         AtomicID::registerId(-1388,"forest")+
         AtomicID::registerId(-1392,"recursive")+
+        AtomicID::registerId(-1055,"publish")+
+        AtomicID::registerId(-1245,"results")+
+        AtomicID::registerId(-1406,"enable")+
+        AtomicID::registerId(-1070,"event")+
+        AtomicID::registerId(-1087,"id")+
         AtomicID::registerId(-1386,"addstate")+
         AtomicID::registerId(-1126,"station")+
         AtomicID::registerId(-1051,"index")+
         AtomicID::registerId(-1280,"tile")+
         AtomicID::registerId(-1293,"format")+
         AtomicID::registerId(-1329,"vishandlernode")+
-        AtomicID::registerId(-1087,"id")+
         AtomicID::registerId(-1177,"num")+
         AtomicID::registerId(-1147,"antenna")+
         AtomicID::registerId(-1092,"input")+

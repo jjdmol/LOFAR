@@ -113,7 +113,8 @@ private:
 		     const Vector<double>& solution);
 
     //##ModelId=400E53550257
-  vector<Condeq*> itsCondeqs;
+  int             itsNumCondeqs;
+  std::vector<bool> itsIsCondeq;
     //##ModelId=400E53550259
   DataRecord::Ref itsSolvableParms;
     //##ModelId=400E5355025A

@@ -1,4 +1,4 @@
-#  use_suspend  := T;
+# use_suspend  := T;
 # use_nostart  := T;
 # use_valgrind := T;
 use_valgrind_opts := [ "",
@@ -225,18 +225,21 @@ const freq_test := function ()
 const solver_test := function ()
 {
   global mqs;
-  mqs := meqserver(verbose=4,options="-d0 -nogw -meq:M:O:MeqServer",gui=F);
-  if( is_fail(mqs) )
+  if( !is_record(mqs) )
   {
-    print mqs;
-    fail;
+    mqs := meqserver(verbose=4,options="-d0 -nogw -meq:M:O:MeqServer",gui=F);
+    if( is_fail(mqs) )
+    {
+      print mqs;
+      fail;
+    }
   }
   # set verbose debugging messages
-  mqs.setdebug("MeqNode MeqForest MeqSink MeqSpigot",3);
-  mqs.setdebug("MeqNode MeqForest MeqSink MeqSpigot",3);
-  mqs.setdebug("MeqServ MeqVisHandler",3);
-  mqs.setdebug("MeqNode",5);
-  mqs.setdebug("Glish",10);
+  mqs.setdebug("MeqNode MeqForest MeqSink MeqSpigot",2);
+  mqs.setdebug("MeqNode MeqForest MeqSink MeqSpigot",2);
+  mqs.setdebug("MeqServ MeqVisHandler",2);
+  mqs.setdebug("MeqNode",2);
+  mqs.setdebug("Glish",0);
   mqs.setdebug("meqserver",1);
   # initialize meqserver
   mqs.init([output_col="PREDICT"],wait=T);
@@ -262,6 +265,8 @@ const solver_test := function ()
   global cells,request,res;
   cells := meqcells(meqdomain(1,4,-2,3),num_freq=4,times=[0.,1.,2.,3.],time_steps=[1.,1.,1.,1.]);
   request := meqrequest(cells,calc_deriv=T);
+  
+  res := mqs.meq('Node.Publish.Results',[name='condeq1'],T);
   res := mqs.meq('Node.Execute',[name='solver1',request=request],T);
   print res;
 }

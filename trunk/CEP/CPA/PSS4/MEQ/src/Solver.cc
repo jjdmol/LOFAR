@@ -60,16 +60,13 @@ TypeId Solver::objectType() const
 //##ModelId=400E53550265
 void Solver::checkChildren()
 {
-  // Copy all Condeq nodes to the vector.
-  // All other nodes are ignored.
-  itsCondeqs.reserve (numChildren());
-  for (int i=0; i<numChildren(); i++) {
-    Condeq* condeq = dynamic_cast<Condeq*>(&(getChild(i)));
-    if (condeq) {
-      itsCondeqs.push_back (condeq);
-    }
-  }
-  Assert (itsCondeqs.size() > 0);
+  // count the number of Condeq nodes
+  itsNumCondeqs = 0;
+  itsIsCondeq.resize(numChildren());
+  for (int i=0; i<numChildren(); i++) 
+    if( itsIsCondeq[i] = ( getChild(i).objectType() == TpMeqCondeq ) )
+      itsNumCondeqs++;
+  FailWhen(!itsNumCondeqs,"Solver node must have at least one Condeq child");
 }
 
 // do nothing here -- we'll do it manually in getResult()
@@ -103,14 +100,13 @@ int Solver::getResult (Result::Ref &resref,
   double mu;
   Matrix<double> covar;
   Vector<double> errors;
-  int nrch = itsCondeqs.size();
-  std::vector<Result::Ref> child_results(nrch);
-  // Copy the request and attach the solvable parms to it.
-  Request newReq = request;
+  std::vector<Result::Ref> child_results(numChildren());
   // normalize the request ID to make sure iteration counters, etc,
   // are part of it
   HIID rqid = makeNormalRequestId(request.id());
-  newReq.setId(rqid);
+  // Copy the request and attach the solvable parms to it.
+  Request::Ref reqref;
+  Request & newReq = reqref <<= new Request(request.cells(),true,rqid);
   
   if (state()[FSolvableParm].exists()) {
     if (! newReq[FNodeState].exists()) {
@@ -130,15 +126,19 @@ int Solver::getResult (Result::Ref &resref,
       return retcode;
     // else process 
     vector<VellSet*> chvellsets;
-    chvellsets.reserve(nrch * child_results[0]->numVellSets());
-    // Find the set of all spids from all results.
-    for (int i=0; i<nrch; i++) {
-      for (int iplane=0; iplane<child_results[i]->numVellSets(); iplane++) {
-        if (! child_results[i]().vellSet(iplane).isFail()) {
-          chvellsets.push_back (&(child_results[i]().vellSet(iplane)));
+    chvellsets.reserve(numChildren() * child_results[0]->numVellSets());
+    // Find the set of all spids from all condeq results.
+    for (uint i=0; i<child_results.size(); i++) 
+      if( itsIsCondeq[i] )
+      {
+        for (int iplane=0; iplane<child_results[i]->numVellSets(); iplane++) 
+        {
+          if (! child_results[i]().vellSet(iplane).isFail()) 
+          {
+            chvellsets.push_back (&(child_results[i]().vellSet(iplane)));
+          }
         }
       }
-    }
     spids = Function::findSpids (chvellsets);
     // Initialize solver.
     nspid = spids.size();
@@ -256,7 +256,7 @@ int Solver::getResult (Result::Ref &resref,
   vellset.setSpids(spids);
   // Distribute the last solution.
   // Do that in an empty request.
-  Request lastReq;
+  Request & lastReq = reqref <<= new Request;
   lastReq.setId(rqid);
   DataRecord& ldr1 = lastReq[FNodeState] <<= new DataRecord;
   DataRecord& ldr2 = ldr1[FSolvableParm] <<= new DataRecord;

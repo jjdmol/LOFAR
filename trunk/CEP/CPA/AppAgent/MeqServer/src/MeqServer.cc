@@ -40,10 +40,12 @@ MeqServer::MeqServer()
   command_map["Node.Execute"] = &MeqServer::nodeExecute;
   
   command_map["Node.Clear.Cache"] = &MeqServer::nodeClearCache;
+  command_map["Node.Publish.Results"] = &MeqServer::publishResults;
 
   command_map["Save.Forest"] = &MeqServer::saveForest;
   command_map["Load.Forest"] = &MeqServer::loadForest;
   command_map["Clear.Forest"] = &MeqServer::clearForest;
+  
 }
 
 //##ModelId=3F6196800325
@@ -77,10 +79,10 @@ void MeqServer::createNode (DataRecord::Ref &out,DataRecord::Ref::Xfer &initrec)
   const string & name = ref->name();
   string classname = ref->className();
   
-  out()[AidNodeIndex] = nodeindex;
-  out()[AidName] = name;
-  out()[AidClass] = classname;
-  out()[AidMessage] = ssprintf("created node %d:%s of class %s",
+  out[AidNodeIndex] = nodeindex;
+  out[AidName] = name;
+  out[AidClass] = classname;
+  out[AidMessage] = ssprintf("created node %d:%s of class %s",
                         nodeindex,name.c_str(),classname.c_str());
 }
 
@@ -102,7 +104,7 @@ void MeqServer::deleteNode (DataRecord::Ref &out,DataRecord::Ref::Xfer &in)
   data_mux.removeNode(noderef());
   // remove from forest
   forest.remove(nodeindex);
-  out()[AidMessage] = ssprintf("node %d (%s): deleted",nodeindex,name.c_str());
+  out[AidMessage] = ssprintf("node %d (%s): deleted",nodeindex,name.c_str());
 }
 
 void MeqServer::nodeGetState (DataRecord::Ref &out,DataRecord::Ref::Xfer &in)
@@ -120,7 +122,7 @@ void MeqServer::nodeSetState (DataRecord::Ref &out,DataRecord::Ref::Xfer &in)
   Node & node = resolveNode(*rec);
   cdebug(3)<<"setState for node "<<node.name()<<endl;
   rec.privatize(DMI::WRITE|DMI::DEEP);
-  node.setState(rec()[AidState].as_wr<DataRecord>());
+  node.setState(rec[AidState].as_wr<DataRecord>());
   out.attach(node.state(),DMI::READONLY|DMI::ANON);
 }
 
@@ -159,8 +161,7 @@ void MeqServer::nodeExecute (DataRecord::Ref &out,DataRecord::Ref::Xfer &in)
   Node & node = resolveNode(*rec);
   cdebug(2)<<"nodeExecute for node "<<node.name()<<endl;
   // take request object out of record
-  rec.privatize(DMI::WRITE|DMI::DEEP);
-  Request &req = rec()[AidRequest].as_wr<Request>();
+  Request &req = rec[AidRequest].as_wr<Request>();
   cdebug(3)<<"    request is "<<req.sdebug(DebugLevel-1,"    ")<<endl;
   Result::Ref resref;
   int flags = node.execute(resref,req);
@@ -178,10 +179,10 @@ void MeqServer::nodeExecute (DataRecord::Ref &out,DataRecord::Ref::Xfer &in)
       }
     }
   }
-  out()[AidResult|AidCode] = flags;
+  out[AidResult|AidCode] = flags;
   if( resref.valid() )
-    out()[AidResult] <<= resref;
-  out()[AidMessage] = ssprintf("node %d (%s): execute() returns %x",
+    out[AidResult] <<= resref;
+  out[AidMessage] = ssprintf("node %d (%s): execute() returns %x",
       node.nodeIndex(),node.name().c_str(),flags);
 }
 
@@ -194,7 +195,7 @@ void MeqServer::nodeClearCache (DataRecord::Ref &out,DataRecord::Ref::Xfer &in)
   bool recursive = (*rec)[FRecursive].as<bool>(false);
   cdebug(2)<<"nodeClearCache for node "<<node.name()<<", recursive: "<<recursive<<endl;
   node.clearCache(recursive);
-  out()[AidMessage] = ssprintf("node %d (%s): cache cleared%s",
+  out[AidMessage] = ssprintf("node %d (%s): cache cleared%s",
       node.nodeIndex(),node.name().c_str(),recursive?" recursively":"");
 }
 
@@ -214,7 +215,7 @@ void MeqServer::saveForest (DataRecord::Ref &out,DataRecord::Ref::Xfer &in)
       nsaved++;
     }
   cdebug(1)<<"saved "<<nsaved<<" nodes to file "<<filename<<endl;
-  out()[AidMessage] = ssprintf("saved %d nodes to file %s",
+  out[AidMessage] = ssprintf("saved %d nodes to file %s",
       nsaved,filename.c_str());
 }
 
@@ -243,7 +244,7 @@ void MeqServer::loadForest (DataRecord::Ref &out,DataRecord::Ref::Xfer &in)
       cdebug(3)<<"setting children for node "<<node.name()<<endl;
       node.relinkChildren();
     }
-  out()[AidMessage] = ssprintf("loaded %d nodes from file %s",
+  out[AidMessage] = ssprintf("loaded %d nodes from file %s",
       nloaded,filename.c_str());
 }
 
@@ -256,7 +257,37 @@ void MeqServer::clearForest (DataRecord::Ref &out,DataRecord::Ref::Xfer &)
 // **** added this to relinquish parm tables --- really ought to go away
   ParmTable::closeTables();
 // ****
-  out()[AidMessage] = "all nodes deleted";
+  out[AidMessage] = "all nodes deleted";
+}
+
+void MeqServer::publishResults (DataRecord::Ref &out,DataRecord::Ref::Xfer &in)
+{
+  DataRecord::Ref rec = in;
+  Node & node = resolveNode(*rec);
+  bool enable = rec[FEnable].as<bool>(true);
+  const HIID &evid = rec[FEventId].as<HIID>(EvNodeResult);
+  if( enable )
+  {
+    cdebug(2)<<"publishResults: enabling for node "<<node.name()<<endl;
+    node.addResultSubscriber(EventSlot(evid,this));
+    out[AidMessage] = ssprintf("node %d (%s): publishing results",
+        node.nodeIndex(),node.name().c_str());
+  }
+  else
+  {
+    cdebug(2)<<"publishResults: disabling for node "<<node.name()<<endl;
+    node.removeResultSubscriber(EventSlot(evid,this));
+    out[AidMessage] = ssprintf("node %d (%s): no longer publishing results",
+        node.nodeIndex(),node.name().c_str());
+  }
+  
+}
+
+int MeqServer::receiveEvent (const EventIdentifier &evid,const ObjRef::Xfer &evdata) 
+{
+  cdebug(4)<<"received event "<<evid.id()<<endl;
+  control().postEvent(evid.id(),evdata);
+  return 1;
 }
 
 //##ModelId=3F608106021C
@@ -350,9 +381,9 @@ void MeqServer::run ()
             reading_data = False;
             eventrec <<= new DataRecord;
             if( header.valid() )
-              eventrec()[AidHeader] <<= header.copy();
+              eventrec[AidHeader] <<= header.copy();
             if( ref.valid() )
-              eventrec()[AidFooter] <<= ref.copy();
+              eventrec[AidFooter] <<= ref.copy();
             output_event = DataSetFooter;
             output_message = ssprintf("received footer for dataset %s, %d tiles written",
                 id.toString().c_str(),ntiles);
@@ -401,8 +432,8 @@ void MeqServer::run ()
         if( error_str.length() )
         {
           DataRecord::Ref retval(DMI::ANONWR);
-          retval()[AidError] = error_str;
-          retval()[AidData|AidId] = id;
+          retval[AidError] = error_str;
+          retval[AidData|AidId] = id;
           control().postEvent(DataProcessingError,retval);
         }
       }
@@ -423,9 +454,8 @@ void MeqServer::run ()
         DataRecord::Ref retval(DMI::ANONWR);
         try
         {
-          cmddata.privatize(DMI::WRITE);
-          request_id = (*cmddata)[FRequestId].as<int>(0);
-          ObjRef ref = cmddata()[AidArgs].remove();
+          request_id = cmddata[FRequestId].as<int>(0);
+          ObjRef ref = cmddata[FArgs].remove();
           DataRecord::Ref args;
           if( ref.valid() )
           {
@@ -451,7 +481,7 @@ void MeqServer::run ()
         }
         // in case of error, insert error message into return value
         if( error_str.length() )
-          retval()[AidError] = error_str;
+          retval[AidError] = error_str;
         HIID reply_id = CommandResultPrefix|cmdid;
         if( request_id )
           reply_id |= request_id;
