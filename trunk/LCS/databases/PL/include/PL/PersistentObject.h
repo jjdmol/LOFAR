@@ -29,12 +29,12 @@
 //# Includes
 #include <PL/ObjectId.h>
 #include <Common/LofarTypes.h>
+#include <Common/lofar_iostream.h>
+#include <Common/lofar_map.h>
+#include <Common/lofar_string.h>
+#include <Common/lofar_vector.h>
 #include <boost/shared_ptr.hpp>
-#include <vector>
-#include <string>
 #include <climits>
-#include <map>
-#include <iostream>
 
 namespace LOFAR
 {
@@ -76,11 +76,11 @@ namespace LOFAR
 
       // This is the type of map we're gonna use for storing the relation
       // between our attributes and the table columns.
-      typedef std::map<std::string, std::string> attribmap_t;
+      typedef map<string, string> attribmap_t;
 
       // This is the type of container that will hold the shared pointers
       // to the PersistentObjects that we "own".
-      typedef std::vector<Pointer> POContainer;
+      typedef vector<Pointer> POContainer;
 
 
       // Remove this instance of PersistentObject from the database.
@@ -138,13 +138,13 @@ namespace LOFAR
       // PersistentObject.
       // \note This method is only provided as a convenience as you can also
       // get the table name directly using the metadata.
-      const std::string& tableName() const { return metaData().tableName(); }
+      const string& tableName() const { return metaData().tableName(); }
 
       // Set the database table name that is associated with this
       // PersistentObject.
       // \note This method is only provided as a convenience as you can also
       // set the table name directly using the metadata.
-      void tableName(const std::string& aName) {
+      void tableName(const string& aName) {
         metaData().tableName() = aName; 
       }
 
@@ -157,7 +157,7 @@ namespace LOFAR
       // retrieve of a complex object that is stored across several tables,
       // but it seems I can do without. Currently, I do not see other
       // situations where you might want to use this method.
-      std::string tableNames() const;
+      string tableNames() const;
 
       // Return a reference to the container of "owned" PersistentObjects.
       POContainer& ownedPOs() { return itsOwnedPOs; }
@@ -211,7 +211,7 @@ namespace LOFAR
           itsOid(new ObjectId()), 
           itsOwnerOid(theirNullOid),
           itsVersionNr(new uint(0)),
-          itsTableName(new std::string())
+          itsTableName(new string())
         {}
 
         // Clone the MetaData, i.e. make a deep copy.
@@ -239,19 +239,19 @@ namespace LOFAR
 
         // Return a reference to the string holding the database table name
         // for this PersistentObject.
-        std::string& tableName() { return *itsTableName; }
+        string& tableName() { return *itsTableName; }
 
         // Return a shared pointer to the "global" null object-id.
         static const boost::shared_ptr<ObjectId>& nullOid() { 
           return theirNullOid; 
         }
 
-        friend std::ostream& operator<<(std::ostream& os, const MetaData& md)
+        friend ostream& operator<<(ostream& os, const MetaData& md)
         {
-          os << std::endl << "itsOid       = " << md.itsOid->get()
-             << std::endl << "itsOwnerOid  = " << md.itsOwnerOid->get()
-             << std::endl << "itsVersionNr = " << *md.itsVersionNr
-             << std::endl << "itsTableName = " << *md.itsTableName;
+          os << endl << "itsOid       = " << md.itsOid->get()
+             << endl << "itsOwnerOid  = " << md.itsOwnerOid->get()
+             << endl << "itsVersionNr = " << *md.itsVersionNr
+             << endl << "itsTableName = " << *md.itsTableName;
           return os;
         }
 
@@ -307,7 +307,7 @@ namespace LOFAR
         // will be stored. It can be set by the user, although it will usually
         // be derived from the name in the map-file that is used by the genDB
         // tools.
-        boost::shared_ptr<std::string> itsTableName;
+        boost::shared_ptr<string> itsTableName;
 
         // @}
 

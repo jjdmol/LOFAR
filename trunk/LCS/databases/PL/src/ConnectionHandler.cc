@@ -22,9 +22,9 @@
 
 #include <PL/ConnectionHandler.h>
 #include <PL/Exception.h>
+#include <Common/lofar_sstream.h>
 #include <dtl/DBConnection.h>
 #include <dtl/DBException.h>
-#include <sstream>
 
 namespace LOFAR
 {
@@ -32,7 +32,6 @@ namespace LOFAR
   {
 
     using namespace dtl;
-    using namespace std;
 
     void ConnectionHandler::connect(const string& aDsn, 
                                     const string& aUid, 

@@ -27,8 +27,8 @@
 // A bag-like container class.
 
 //# Includes
-#include <list>
 #include <PL/Exception.h>
+#include <Common/lofar_list.h>
 
 namespace LOFAR
 {
@@ -46,7 +46,7 @@ namespace LOFAR
     public:
 
       // This is the type of container we're going to store our elements in.
-      typedef std::list<T> container_t;
+      typedef list<T> container_t;
 
       typedef typename container_t::const_iterator const_iterator;
       typedef typename container_t::iterator       iterator;

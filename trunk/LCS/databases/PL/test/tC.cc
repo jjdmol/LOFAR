@@ -20,16 +20,19 @@
 //#
 //#  $Id$
 
+//# Always #include <lofar_config.h> first!
+#include <lofar_config.h>
+
+//# Includes
 #include "C.h"
 #include "PO_C.h"
 #include <PL/TPersistentObject.h>
 #include <PL/PersistenceBroker.h>
 #include <PL/QueryObject.h>
 #include <PL/Attrib.h>
-#include <iostream>
-#include <sstream>
+#include <Common/lofar_iostream.h>
+#include <Common/lofar_sstream.h>
 
-using namespace std;
 using namespace LOFAR;
 using namespace LOFAR::PL;
 

@@ -20,12 +20,16 @@
 //#
 //#  $Id$
 
+//# Always #include <lofar_config.h> first!
+#include <lofar_config.h>
+
+//# Includes
 #include <PL/ObjectId.h>
-#include <iostream>
-#include <iomanip>
+#include <Common/lofar_iostream.h>
+#include <Common/lofar_iomanip.h>
 #include <sys/time.h>
 
-using namespace std;
+using namespace LOFAR;
 using namespace LOFAR::PL;
 
 int main()

@@ -20,12 +20,17 @@
 //#
 //#  $Id$
 
+//# Always #include <lofar_config.h> first!
+#include <lofar_config.h>
+
+//# Includes
 #include <PL/Query/Expr.h>
 #include <PL/Query/ColumnExprNode.h>
 #include <PL/Collection.h>
-#include <iostream>
-#include <sstream>
-#include <iomanip>
+#include <Common/lofar_iostream.h>
+#include <Common/lofar_iomanip.h>
+#include <Common/lofar_sstream.h>
+#include <Common/lofar_string.h>
 #include <stdexcept>
 
 #define WRITE(os, strm, width) \
@@ -99,7 +104,7 @@
   WRITE(cout, " : ", 0); \
   WRITELN(cout, SQL_BINARY(expr, oper, lhs, rhs), 0)
 
-using namespace std;
+using namespace LOFAR;
 using namespace LOFAR::PL;
 using namespace LOFAR::PL::Query;
 

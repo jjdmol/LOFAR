@@ -23,14 +23,12 @@
 #include <PL/TPersistentObject.h>
 #include <PL/Query/ColumnExprNode.h>
 #include <Common/LofarLogger.h>
-#include <iostream>
+#include <Common/lofar_iostream.h>
 
 namespace LOFAR
 {
   namespace PL
   {
-
-    using std::string;
 
     // Try to resolve the argument \a nm into a PersistentObject::Pointer. A
     // class type specifier \e must start with a '@' character; this is the
@@ -40,7 +38,7 @@ namespace LOFAR
     // names of in the list of owned POs. If a match is found, the pointer to
     // this PersistentObject is returned, else a null pointer is returned.
     PersistentObject::Pointer resolveClassType(const PersistentObject& po,
-                                               const std::string& nm)
+                                               const string& nm)
     {
       PersistentObject::Pointer p;
       if (nm.empty()) return p;
@@ -63,7 +61,7 @@ namespace LOFAR
 
 
     Query::ColumnExprNode* makeAttrib(const PersistentObject& po, 
-                                      const std::string& nm)
+                                      const string& nm)
     {
       const PersistentObject::attribmap_t& attrMap = po.attribMap();
       PersistentObject::attribmap_t::const_iterator it;

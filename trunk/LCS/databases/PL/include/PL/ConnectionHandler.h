@@ -27,7 +27,7 @@
 // Handles connection to the database.
 
 //# Includes
-#include <string>
+#include <Common/lofar_string.h>
 
 namespace LOFAR
 {
@@ -43,8 +43,8 @@ namespace LOFAR
     class ConnectionHandler
     {
     public:
-      static void connect(const std::string& aDsn, const std::string& aUid, 
-                          const std::string& aPwd);
+      static void connect(const string& aDsn, const string& aUid, 
+                          const string& aPwd);
     private:
       ConnectionHandler();
       ConnectionHandler(const ConnectionHandler&);

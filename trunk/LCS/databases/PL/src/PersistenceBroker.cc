@@ -24,18 +24,16 @@
 #include <PL/Exception.h>
 #include <PL/PersistenceBroker.h>
 #include <PL/PersistentObject.h>
-#include <iostream>
-
-using namespace std;
+#include <Common/lofar_iostream.h>
 
 namespace LOFAR
 {
   namespace PL
   {
 
-    void PersistenceBroker::connect(const std::string& aDsn, 
-                                    const std::string& aUid, 
-                                    const std::string& aPwd)
+    void PersistenceBroker::connect(const string& aDsn, 
+                                    const string& aUid, 
+                                    const string& aPwd)
     {
       ConnectionHandler::connect(aDsn, aUid, aPwd);
     }
