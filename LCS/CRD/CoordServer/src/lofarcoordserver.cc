@@ -25,6 +25,7 @@
 #include <Common/lofar_string.h>
 #include <Coord/CoordClient.h>
 #include <Coord/Endian.h>
+#include <Common/Debug.h>
 #include <measures/Measures/MDirection.h>
 #include <measures/Measures/MEpoch.h>
 #include <measures/Measures/MPosition.h>
@@ -89,14 +90,14 @@ void sendError (Socket& socket)
 {
   double buf[1];
   setNr (buf, 0);
-  socket.writeblock (buf, sizeof(buf));
+  socket.writeBlocking (buf, sizeof(buf));
 }
 
 // Convert J2000 coordinates to AZEL.
 void j2000ToAzel (Socket& socket, bool swap)
 {
   double buf[3];
-  if (socket.readblock (buf, 3*sizeof(double)) != 3*sizeof(double)) {
+  if (socket.readBlocking (buf, 3*sizeof(double)) != 3*sizeof(double)) {
     sendError (socket);
     return;
   }
@@ -106,7 +107,7 @@ void j2000ToAzel (Socket& socket, bool swap)
   int nrval = nrsky*nrpos*nrtime;
   int nrin = 2*nrsky + 3*nrpos + 2*nrtime;
   double* in = new double[nrin];
-  socket.readblock (in, nrin*sizeof(double));
+  socket.readBlocking (in, nrin*sizeof(double));
   if (swap) {
     Endian::swap (nrin, in);
   }
@@ -142,14 +143,14 @@ void j2000ToAzel (Socket& socket, bool swap)
       }
     }
   }
-  socket.writeblock (out, (1+2*nrval) * sizeof(double));
+  socket.writeBlocking (out, (1+2*nrval) * sizeof(double));
 }
 
 // Convert azimuth/elevation to J2000.
 void azelToJ2000 (Socket& socket, bool swap)
 {
   double buf[3];
-  if (socket.readblock (buf, 3*sizeof(double)) != 3*sizeof(double)) {
+  if (socket.readBlocking (buf, 3*sizeof(double)) != 3*sizeof(double)) {
     sendError (socket);
     return;
   }
@@ -168,7 +169,7 @@ void azelToJ2000 (Socket& socket, bool swap)
   int nrval = nrsky;
   int nrin = 2*nrsky + 3*nrpos + 2*nrtime;
   double* in = new double[nrin];
-  socket.readblock (in, nrin*sizeof(double));
+  socket.readBlocking (in, nrin*sizeof(double));
   if (swap) {
     Endian::swap (nrin, in);
   }
@@ -226,7 +227,7 @@ void azelToJ2000 (Socket& socket, bool swap)
       *outData++ = angles.getBaseValue()(1);
     }
   }
-  socket.writeblock (out, (1+2*nrval) * sizeof(double));
+  socket.writeBlocking (out, (1+2*nrval) * sizeof(double));
 }
 
 void handleConnection (Socket* socket)
@@ -248,19 +249,19 @@ void handleConnection (Socket* socket)
   Endian endian;
   double buf[2];
   // Read 2 doubles (for endian and version).
-  Assert (socket->readblock (buf, 2*sizeof(double)) == 2*sizeof(double));
+  Assert (socket->readBlocking (buf, 2*sizeof(double)) == 2*sizeof(double));
   // Determine if byte swapping is needed.
   bool swap = getEndian(buf) != endian.isLittleEndian();
   Assert (getVersion(buf, swap) == 1);
   // Send back the endian format and version of the server.
   setEndian (buf);
   setVersion (buf, 1);
-  socket->writeblock (buf, 2*sizeof(double));
+  socket->writeBlocking (buf, 2*sizeof(double));
 
   // Read commands as long as we are connected.
   while (socket->isConnected()) {
     // Read 1 double (for command).
-    if (socket->readblock (buf, sizeof(double)) == sizeof(double)) {
+    if (socket->readBlocking (buf, sizeof(double)) == sizeof(double)) {
       int cmd = CoordClient::getInt (buf, swap);
       switch (cmd) {
       case CoordClient::J2000ToAzel:
