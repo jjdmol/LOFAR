@@ -119,7 +119,7 @@ bool SI_WaterCal::execute(vector<string>& parmNames,
   return true;
 }
 
-void SI_WaterCal::useParms (const vector<string>& parmNames, 
+bool SI_WaterCal::useParms (const vector<string>& parmNames, 
 			    const vector<double>& parmValues, 
 			    const vector<int>& srcNumbers)
 {
@@ -153,4 +153,5 @@ void SI_WaterCal::useParms (const vector<string>& parmNames,
 	    << srcNumbers[i]);
   }
 
+  return true;
 }

@@ -82,18 +82,3 @@ bool Strategy::execute(vector<string>& parmNames,
   }
 }
 
-bool Strategy::useParms(const vector<string>& pNames,
-			const vector<double>& pValues,
-			const vector<int>& srcNumbers)
-{
-  if (itsImpl->getType() == "WaterCal")
-  {
-    itsImpl->useParms(pNames, pValues, srcNumbers);
-    return true;
-  }
-  else
-  {
-    TRACER1("Strategy does not support the useParms() method");
-    return false;
-  }
-}

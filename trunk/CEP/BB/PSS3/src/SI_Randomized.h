@@ -57,7 +57,7 @@ public:
 		       Quality& resultQuality,        // Fitness of solution
 		       int& resultIterNo);           // Source number of solution
 
-  void useParms (const vector<string>& parmNames,
+  bool useParms (const vector<string>& parmNames,
 		 const vector<double>& parmValues,
 		 const vector<int>& srcNumbers);     // Use these parameters
                                                      // in the predict
