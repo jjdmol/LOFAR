@@ -110,8 +110,8 @@ namespace AVT
         bool                                    connected;
         TLogicalDeviceState                     ldState;
       };
-      typedef std::vector<TStationReceptorConnection> TStationReceptorVector;
-      typedef TStationReceptorVector::iterator        TStationReceptorVectorIter;
+      typedef std::vector<TStationReceptorConnection>  TStationReceptorVector;
+      typedef TStationReceptorVector::iterator         TStationReceptorVectorIter;
       
       bool isStationReceptorClient(GCFPortInterface& port);
       bool setReceptorConnected(GCFPortInterface& port, bool connected);

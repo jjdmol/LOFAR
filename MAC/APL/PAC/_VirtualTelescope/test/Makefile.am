@@ -35,7 +35,7 @@ EXTRA_DIST = \
     $(top_builddir)/PAC/VirtualTelescope/src/LogicalDevice_Protocol.ph \
 	log4cplus.properties
 	
-%.properties: $(MAC_CONFIG)/%.properties
+%.properties: ../src/%.properties.in
 	cp $< $@
 	
 %.ns: %.ns.in

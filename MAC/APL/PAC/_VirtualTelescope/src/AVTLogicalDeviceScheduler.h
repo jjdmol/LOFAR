@@ -93,6 +93,7 @@ namespace AVT
         boost::shared_ptr<AVTLogicalDevice>     logicalDevice;
         unsigned long                           currentSchedule;
         boost::shared_ptr<APLInterTaskPort>     clientPort;
+        bool                                    permanent; // prevents releasing the LD when no more schedules exist
         map<string,LogicalDeviceInfoT>          children; // recursive
       };
 

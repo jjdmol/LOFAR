@@ -14,6 +14,7 @@ ARARegisterAccess_CPPFLAGS= \
 ARARegisterAccess_SOURCES 		= \
 	ARAMain.cc \
 	ARAAnswer.cc \
+	ARAPhysicalModel.cc \
 	ARARegisterAccessTask.cc
 	
 ARARegisterAccess_LDADD		= \
@@ -34,7 +35,7 @@ EXTRA_DIST = \
     ara.top \
     log4cplus.properties
 	
-%.properties: $(MAC_CONFIG)/%.properties
+%.properties: %.properties.in
 	cp $< $@
 	
 %.ns: %.ns.in

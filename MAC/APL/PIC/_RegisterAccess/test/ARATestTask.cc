@@ -488,6 +488,7 @@ GCFEvent::TResult ARATestTask::test6(GCFEvent& event, GCFPortInterface& /*p*/)
     {
       LOG_INFO("3.2.2.5: schedule maintenance of 1 antenna");
   
+      m_propAP1RCUmaintenanceStatus.subscribe();
       m_test_passCounter=0;
       // MAINTENANCE <scheduleid>,<resource>,<starttime>,<stoptime>
       string cmd("MAINTENANCE 1,");
@@ -551,6 +552,12 @@ GCFEvent::TResult ARATestTask::test6(GCFEvent& event, GCFPortInterface& /*p*/)
       break;
     }
     
+    case F_EXIT:
+    {
+      m_propAP1RCUmaintenanceStatus.unsubscribe();
+      break;
+    }
+      
     default:
       LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("ARATestTask(%s)::test6, default",getName().c_str()));
       status = GCFEvent::NOT_HANDLED;
@@ -575,7 +582,8 @@ GCFEvent::TResult ARATestTask::test7(GCFEvent& event, GCFPortInterface& /*p*/)
     case F_ENTRY:
     {
       LOG_INFO("3.2.2.6: schedule maintenance of entire station");
-
+      
+      m_propStationMaintenanceStatus.subscribe();
       m_test_passCounter=0;
       // MAINTENANCE <scheduleid>,<resource>,<starttime>,<stoptime>
       string cmd("MAINTENANCE 2,");
@@ -638,6 +646,12 @@ GCFEvent::TResult ARATestTask::test7(GCFEvent& event, GCFPortInterface& /*p*/)
       break;
     }
     
+    case F_EXIT:
+    {
+      m_propStationMaintenanceStatus.unsubscribe();
+      break;
+    }
+      
     default:
       LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("ARATestTask(%s)::test7, default",getName().c_str()));
       status = GCFEvent::NOT_HANDLED;

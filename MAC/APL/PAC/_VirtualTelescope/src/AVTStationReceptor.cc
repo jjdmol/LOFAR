@@ -256,14 +256,16 @@ void AVTStationReceptor::handleAPCAnswer(GCFEvent& answer)
   }  
 }
 
-void AVTStationReceptor::concreteClaim(GCFPortInterface& /*port*/)
+void AVTStationReceptor::concreteClaim(GCFPortInterface& port)
 {
   LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTStationReceptor(%s)::concreteClaim",getName().c_str()));
   // claim my own resources
   
+  LOGICALDEVICEClaimedEvent claimedEvent;
+  dispatch(claimedEvent,port);
 }
 
-void AVTStationReceptor::concretePrepare(GCFPortInterface& /*port*/,string& parameters)
+void AVTStationReceptor::concretePrepare(GCFPortInterface& port, string& parameters)
 {
   LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTStationReceptor(%s)::concretePrepare",getName().c_str()));
   // prepare my own resources
@@ -274,6 +276,8 @@ void AVTStationReceptor::concretePrepare(GCFPortInterface& /*port*/,string& para
   setStopTime(atoi(decodedParameters[1].c_str()));
   setFrequency(atof(decodedParameters[2].c_str()));
   
+  LOGICALDEVICEPreparedEvent preparedEvent;
+  dispatch(preparedEvent,port);
 }
 
 void AVTStationReceptor::concreteResume(GCFPortInterface& /*port*/)

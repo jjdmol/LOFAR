@@ -26,8 +26,8 @@
 #include "GCF/GCF_Defines.h"
 #include "GCF/GCF_PValue.h"
 
-const int N_RACKS               = 6;
-const int N_SUBRACKS_PER_RACK   = 4;
+const int N_RACKS               = 1; // 6
+const int N_SUBRACKS_PER_RACK   = 1; // 4
 const int N_BOARDS_PER_SUBRACK  = 1;
 const int N_APS_PER_BOARD       = 4;
 const int N_RCUS_PER_AP         = 2;
@@ -174,6 +174,7 @@ const TPropertySet PROPSET_APs[] =
 
 const TProperty PROPS_RCU[] =
 {
+  {PROPNAME_STATUS, GCFPValue::LPT_UNSIGNED, GCF_READABLE_PROP | GCF_WRITABLE_PROP, "0"},
   {PROPNAME_RCUHERR, GCFPValue::LPT_BOOL, GCF_READABLE_PROP | GCF_WRITABLE_PROP, "false"},
   {PROPNAME_RCUVERR, GCFPValue::LPT_BOOL, GCF_READABLE_PROP | GCF_WRITABLE_PROP, "false"},
   {PROPNAME_RINGERR, GCFPValue::LPT_BOOL, GCF_READABLE_PROP | GCF_WRITABLE_PROP, "false"},
@@ -182,8 +183,8 @@ const TProperty PROPS_RCU[] =
 
 const TPropertySet PROPSET_RCUs[] = 
 {
-  {4, "RCU1", PROPS_RCU},
-  {4, "RCU2", PROPS_RCU},
+  {5, "RCU1", PROPS_RCU},
+  {5, "RCU2", PROPS_RCU},
 };
 
 const TProperty PROPS_ADCStatistics[] =

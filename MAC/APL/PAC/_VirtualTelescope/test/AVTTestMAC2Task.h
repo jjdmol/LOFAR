@@ -54,6 +54,8 @@ typedef struct
 
 #define NEXTTEST(_iterator_) \
   { \
+    printf("press enter ..."); \
+    getchar(); \
     std::vector<TTranTarget>::iterator tempIt = _iterator_; \
     _iterator_++; \
     TESTTRAN(tempIt); \
@@ -113,8 +115,11 @@ namespace AVT
       GCFProperty     m_propAP1RCU1Status;
       GCFProperty     m_propAP2RCU1Status;
       GCFProperty     m_propAP2RCU2Status;
+      GCFProperty     m_propVT1Command;
       GCFProperty     m_propVT1Status;
+      GCFProperty     m_propVT2Command;
       GCFProperty     m_propVT2Status;
+      int             m_maintenanceChangedCounter;
   };  
 };
 

@@ -27,6 +27,7 @@
 #include "APLInterTaskPort.h"
 #include "APL_Defines.h"
 
+using namespace std;
 
 /**
  * ::APLInterTaskPort constructor
@@ -34,10 +35,8 @@
 APLInterTaskPort::APLInterTaskPort(GCFTask& slaveTask, GCFTask& task, string& name, TPortType type, int protocol) : 
     GCFRawPort(task, name, type, protocol), 
     m_slaveTask(slaveTask),
-    m_toClientBuffer(),
-    m_toServerBuffer(),
-    m_toClientTimerId(0),
-    m_toServerTimerId(0)
+    m_toClientTimerId(),
+    m_toServerTimerId()
 {
 }
 
@@ -108,10 +107,13 @@ ssize_t APLInterTaskPort::send(GCFEvent& e)
   if(returnValue!=-1)
   {
     // send event using a timer event to exit the sending tasks event loop
-    m_toClientBuffer.reset(new unsigned char[sizeof(e) + e.length]); // reset deletes current contents, if any
-    memcpy(m_toClientBuffer.get(),(const unsigned char*)&e, sizeof(e) + e.length);
-    m_toClientTimerId=setTimer(0, 0, 0, 0, (void*)m_toClientBuffer.get());
-    returnValue=m_toClientTimerId;
+    unsigned int requiredLength;
+    char* packedBuffer = (char*)e.pack(requiredLength);
+    char* pEventBuffer = new char[requiredLength]; // memory is freed in timer handler
+    memcpy(pEventBuffer, packedBuffer, requiredLength);
+    long timerId = setTimer(0, 0, 0, 0, (void*)pEventBuffer);
+    m_toClientTimerId.insert(timerId);
+    returnValue=timerId;
   }
   return returnValue;
 }
@@ -119,15 +121,18 @@ ssize_t APLInterTaskPort::send(GCFEvent& e)
 /**
  * ::sendBack
  */
-ssize_t APLInterTaskPort::sendBack(const GCFEvent& e)
+ssize_t APLInterTaskPort::sendBack(GCFEvent& e)
 {
   ssize_t returnValue(0);
   
   // send event using a timer event to exit the sending tasks event loop
-  m_toServerBuffer.reset(new unsigned char[sizeof(e) + e.length]); // reset deletes current contents, if any
-  memcpy(m_toServerBuffer.get(),(const unsigned char*)&e, sizeof(e) + e.length);
-  m_toServerTimerId=setTimer(0, 0, 0, 0, (void*)m_toServerBuffer.get());
-  returnValue=m_toServerTimerId;
+  unsigned int requiredLength;
+  char* packedBuffer = (char*)e.pack(requiredLength);
+  char* pEventBuffer = new char[requiredLength]; // memory is freed in timer handler
+  memcpy(pEventBuffer, packedBuffer, requiredLength);
+  long timerId = setTimer(0, 0, 0, 0, (void*)pEventBuffer);
+  m_toServerTimerId.insert(timerId);
+  returnValue=timerId;
 
   return returnValue;
 }
@@ -146,26 +151,39 @@ GCFEvent::TResult APLInterTaskPort::dispatch(GCFEvent& event)
   if(event.signal == F_TIMER)
   {
     GCFTimerEvent& timerEvent=static_cast<GCFTimerEvent&>(event);
-    if(timerEvent.id == m_toClientTimerId && m_toClientBuffer.get()!=0)
+
+    set<long>::iterator clientIt = m_toClientTimerId.find(timerEvent.id);
+    set<long>::iterator serverIt = m_toServerTimerId.find(timerEvent.id);
+    
+    if(clientIt != m_toClientTimerId.end() || serverIt != m_toServerTimerId.end())
     {
-      GCFEvent* pActualEvent = static_cast<GCFEvent*>((void*)m_toClientBuffer.get());
+      // allocate enough memory for the GCFEvent object and all member data
+      char* packedBuffer = (char*)timerEvent.arg;
+      unsigned short signal;
+      unsigned int length;
+      unsigned int gcfeventlen=sizeof(GCFEvent);
+      memcpy(&signal,packedBuffer,sizeof(signal));
+      memcpy(&length,packedBuffer+sizeof(signal),sizeof(length));
+      char *pEventObject = new char[gcfeventlen+length];
+      GCFEvent* pActualEvent = (GCFEvent*)pEventObject;
       if(pActualEvent!=0)
       {
-        GCFEvent& refActualEvent = static_cast<GCFEvent&>(*pActualEvent);
-        status = m_slaveTask.dispatch(refActualEvent, *this);
-        m_toClientBuffer.reset();
-        m_toClientTimerId = 0;
-      }
-    }
-    if(timerEvent.id == m_toServerTimerId && m_toServerBuffer.get()!=0)
-    {
-      GCFEvent* pActualEvent = static_cast<GCFEvent*>((void*)m_toServerBuffer.get());
-      if(pActualEvent!=0)
-      {
-        GCFEvent& refActualEvent = static_cast<GCFEvent&>(*pActualEvent);
-        status = _pTask->dispatch(refActualEvent, *this);
-        m_toServerBuffer.reset();
-        m_toServerTimerId  = 0;
+        pActualEvent->signal = signal;
+        pActualEvent->length = length;
+        memcpy(pEventObject+gcfeventlen,packedBuffer+sizeof(signal)+sizeof(length),length);
+        
+        if(clientIt != m_toClientTimerId.end())
+        {
+          status = m_slaveTask.dispatch(*pActualEvent, *this);
+          m_toClientTimerId.erase(timerEvent.id);
+        }
+        else if(serverIt != m_toServerTimerId.end())
+        {
+          status = _pTask->dispatch(*pActualEvent, *this);
+          m_toServerTimerId.erase(timerEvent.id);
+        }        
+        delete[] pEventObject;
+        delete[] packedBuffer;
       }
     }
   }

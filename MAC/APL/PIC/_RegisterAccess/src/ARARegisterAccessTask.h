@@ -31,6 +31,7 @@
 #include <map>
 
 #include "ARAAnswer.h"
+#include "ARAPhysicalModel.h"
 
 namespace ARA
 {
@@ -85,6 +86,11 @@ namespace ARA
        * Handle the update status event
        */
       GCFEvent::TResult handleUpdStatus(GCFEvent& e, GCFPortInterface& port);
+
+      /**
+       * Handle a change of the Maintenance status field
+       */
+      void handleMaintenance(string propName, const GCFPValue& value);
       
     private:
       // internal types
@@ -138,6 +144,7 @@ namespace ARA
       // ports
       static string     m_RSPserverName;
       GCFPort           m_RSPclient;
+      ARAPhysicalModel  m_physicalModel;
 
   };
 

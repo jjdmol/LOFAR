@@ -99,7 +99,7 @@ namespace AVT
       bool _isBeamFormerClient(GCFPortInterface& port);
       bool _isStationReceptorGroupClient(GCFPortInterface& port);
       
-      bool allInState(TLogicalDeviceState state);
+      bool allInState(GCFPortInterface& port, TLogicalDeviceState state);
 
 
       // The BeamFormer task    

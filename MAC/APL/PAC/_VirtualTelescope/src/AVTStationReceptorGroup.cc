@@ -53,7 +53,8 @@ AVTStationReceptorGroup::TStationReceptorConnection::TStationReceptorConnection(
   connected(_connected),
   ldState(_ldState)
 {
-  rcu->setClientInterTaskPort(clientPort.get());
+  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("TStationReceptorConnection(0x%x)::TStationReceptorConnection",this));
+  rcu->addClientInterTaskPort(clientPort.get());
 }
 
 AVTStationReceptorGroup::AVTStationReceptorGroup(string& taskName, 
@@ -76,14 +77,13 @@ AVTStationReceptorGroup::AVTStationReceptorGroup(string& taskName,
     
     string portName(ptr->getServerPortName());
     
-    TStationReceptorConnection src( ptr,
+    TStationReceptorConnection src(ptr,
                                     *this,
                                     portName, 
                                     GCFPortInterface::SAP,
                                     LOGICALDEVICE_PROTOCOL,
                                     false,
                                     LOGICALDEVICE_STATE_IDLE);
-                                    
     m_stationReceptors.push_back(src);
   }
 }
@@ -113,11 +113,12 @@ void AVTStationReceptorGroup::setFrequency(const double frequency)
 
 bool AVTStationReceptorGroup::isStationReceptorClient(GCFPortInterface& port)
 {
-  TStationReceptorVector::iterator it = m_stationReceptors.begin();
+  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTStationReceptorGroup(%s,0x%x)::isStationReceptorClient",getName().c_str(),this));
+  TStationReceptorVectorIter it = m_stationReceptors.begin();
   bool found=false;
   while(!found && it!=m_stationReceptors.end())
   {
-    found = (it->clientPort.get() == &port); // comparing two pointers. yuck?
+    found = ((*it).clientPort.get() == &port); // comparing two pointers. yuck?
     it++;
   }
   return found;
@@ -125,14 +126,15 @@ bool AVTStationReceptorGroup::isStationReceptorClient(GCFPortInterface& port)
 
 bool AVTStationReceptorGroup::setReceptorConnected(GCFPortInterface& port, bool connected)
 {
-  TStationReceptorVector::iterator it = m_stationReceptors.begin();
+  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTStationReceptorGroup(%s,0x%x)::%s(0x%x,%s)",getName().c_str(),this,__func__,&port,(connected?"true":"false")));
+  TStationReceptorVectorIter it = m_stationReceptors.begin();
   bool found=false;
   while(!found && it!=m_stationReceptors.end())
   {
-    if(it->clientPort.get() == &port) // comparing two pointers. yuck?
+    if((*it).clientPort.get() == &port) // comparing two pointers. yuck?
     {
       found = true;
-      it->connected = connected;
+      (*it).connected = connected;
     }
     else
     {
@@ -145,27 +147,32 @@ bool AVTStationReceptorGroup::setReceptorConnected(GCFPortInterface& port, bool 
 bool AVTStationReceptorGroup::allReceptorsConnected()
 {
   bool allConnected = true;
-  TStationReceptorVector::iterator it = m_stationReceptors.begin();
+  TStationReceptorVectorIter it = m_stationReceptors.begin();
   while(allConnected && it!=m_stationReceptors.end())
   {
-    allConnected = it->connected;
+    allConnected = (*it).connected;
     it++;
   }
+  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTStationReceptorGroup(%s,0x%x)::%s: %s",getName().c_str(),this,__func__,(allConnected?"true":"false")));
   return allConnected;
 }
 
 bool AVTStationReceptorGroup::setReceptorState(GCFPortInterface& port, TLogicalDeviceState state)
 {
-  TStationReceptorVector::iterator it = m_stationReceptors.begin();
+  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTStationReceptorGroup(%s,0x%x)::%s(0x%x,%d)",getName().c_str(),this,__func__,&port,state));
+  TStationReceptorVectorIter it = m_stationReceptors.begin();
   bool found=false;
   while(!found && it!=m_stationReceptors.end())
   {
-    found = (it->clientPort.get() == &port); // comparing two pointers. yuck?
-    it++;
-  }
-  if(found)
-  {
-    it->ldState = state;
+    if((*it).clientPort.get() == &port) // comparing two pointers. yuck?
+    {
+      found = true;
+      (*it).ldState = state;
+    }
+    else
+    {
+      it++;
+    }
   }
   return found;
 }
@@ -173,21 +180,23 @@ bool AVTStationReceptorGroup::setReceptorState(GCFPortInterface& port, TLogicalD
 bool AVTStationReceptorGroup::allReceptorsInState(TLogicalDeviceState state)
 {
   bool allInState = true;
-  TStationReceptorVector::iterator it = m_stationReceptors.begin();
+  TStationReceptorVectorIter it = m_stationReceptors.begin();
   while(allInState && it!=m_stationReceptors.end())
   {
-    allInState = (it->ldState==state);
+    allInState = ((*it).ldState==state);
     it++;
   }
+  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTStationReceptorGroup(%s,0x%x)::%s(%d): %s",getName().c_str(),this,__func__,state,(allInState?"true":"false")));
   return allInState;
 }
 
 void AVTStationReceptorGroup::sendToAllReceptors(GCFEvent& event)
 {
-  TStationReceptorVector::iterator it;
-  for(it=m_stationReceptors.begin();it!=m_stationReceptors.end();++it);
+  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTStationReceptorGroup(%s,0x%x)::sendToAllReceptors",getName().c_str(),this));
+  TStationReceptorVectorIter it;
+  for(it=m_stationReceptors.begin();it!=m_stationReceptors.end();++it)
   {
-    it->clientPort->send(event);
+    (*it).clientPort->send(event);
   }
 }
 
@@ -214,12 +223,12 @@ GCFEvent::TResult AVTStationReceptorGroup::concrete_initial_state(GCFEvent& even
     case F_ENTRY:
     {
       // open all ports
-      TStationReceptorVector::iterator it;
+      TStationReceptorVectorIter it;
       for(it = m_stationReceptors.begin();it!=m_stationReceptors.end();++it)
       {
-        if(!it->connected)
+        if(!(*it).connected)
         {
-          it->clientPort->open();
+          (*it).clientPort->open();
         }
       }
       break;
@@ -447,7 +456,7 @@ void AVTStationReceptorGroup::concreteClaim(GCFPortInterface& /*port*/)
   TStationReceptorVectorIter rIt;
   for(rIt = m_stationReceptors.begin();rIt != m_stationReceptors.end(); ++rIt)
   {
-    resourceManager->requestResource(getName(),rIt->rcu->getName());
+    resourceManager->requestResource(getName(),(*rIt).rcu->getName());
   }
   
   // send claim message to all receptors
