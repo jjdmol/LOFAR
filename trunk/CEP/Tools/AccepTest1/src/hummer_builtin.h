@@ -2,6 +2,8 @@
  * builtin interface to hummer^2 instructions for TOBEY
  */
 
+extern "builtin" {
+
 /* float, double loads */
 double _Complex __lfps (float * addr);
 double _Complex __lfxs (float * addr);
@@ -68,3 +70,5 @@ double _Complex __fprsqrte (double _Complex);
 
 /* alignment: like prefetchByStream */
 void __alignx (int, const void *);
+
+} // extern
