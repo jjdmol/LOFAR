@@ -30,53 +30,22 @@ namespace LOFAR
 {
 
 bool DH_Database::StoreInDatabase (int, int tag, char * buf, int size) {
-  /*
-  PO_DH_Database po_dh_db;
+  cout << "DH_Database::StoreInDatabase () has been called." << endl;
+  cout << "  This probably means that you have forgotten to" << endl;
+  cout << "  derive one or more of your DataHolder sub-classes" << endl;
+  cout << "  from DH_Database." << endl;
 
-  po_dh_db.setMessageTag (tag);
-  po_dh_db.setReservedData1 (1111);
-  po_dh_db.setReservedData2 (2222);
-  po_dh_db.setReservedData3 (3333);
-  po_dh_db.setReservedData4 (4444);
-
-  //  po_dh_db.setByteStringLength (getDataPacketSize ());
-  po_dh_db.setByteStringLength (size);
-
-  po_dh_db.CopyToByteString (buf, size);
-
-  po_dh_db.setTimeStamp (5555);
-
-  po_dh_db.setType (getType ());
-  po_dh_db.setName (getName ());
-
-  po_dh_db.setHumanReadableForm ("PODBRecUnkHRF");
-
-  po_dh_db.Store (wrSeqNo);
-
-  wrSeqNo ++;
-  */
-  cout << "DH_Database::StoreInDatabase () called." << endl;
-  // TODO: Extend the error message and make the user
-  // remember that he might have to redefine the method
-  // himself.
   return true; 
 }
 
 
 bool DH_Database::RetrieveFromDatabase (int, int tag, char * buf, int size) { 
-  /*
-  PO_DH_Database po_dh_db;
-
-  po_dh_db.setMessageTag (tag);
-  po_dh_db.setByteStringLength (getDataPacketSize ());
-
-  po_dh_db.Retrieve (rdSeqNo);
-
-  po_dh_db.CopyFromByteString (buf, size);
-
-  rdSeqNo ++;
-  */
   cout << "DH_Database::RetrieveFromDatabase () called." << endl;
+  cout << "  This probably means that you have forgotten to" << endl;
+  cout << "  derive one or more of your DataHolder sub-classes" << endl;
+  cout << "  from DH_Database." << endl;
+
+
   return true;
 }
 
