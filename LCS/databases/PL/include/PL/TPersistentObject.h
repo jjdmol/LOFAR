@@ -25,7 +25,6 @@
 
 //# Includes
 #include <PL/PersistentObject.h>
-// #include <PL/Exception.h>
 #include <loki/static_check.h>
 
 namespace LOFAR 
@@ -91,12 +90,12 @@ namespace LOFAR
       // existing PersistentObject. We will have at least one existing
       // TPersistentObject<T> anyway, because we can only add instances of
       // TPersistentObject<T> to our Collection.
-//       static Collection<TPersistentObject<T> > 
-//       retrieve(const Query& query, int maxObjects)
-//       {
-// 	return doRetrieve(query, maxObjects);
-//       }
-
+      static Collection<TPersistentObject<T> > 
+      retrieve(const Query& query, int maxObjects)
+      {
+  	STATIC_CHECK(0, _Use_Explicit_Member_Specialization_);
+      }
+      
 //       static TPersistentObject<T>
 //       retrieve(const ObjectId& oid)
 //       {
@@ -105,6 +104,11 @@ namespace LOFAR
 
     private:
       
+      // We need the using statement, otherwise the retrieve method in the
+      // base class PersistentObject will be hidden by the static retrieve
+      // method in this class.
+      using PersistentObject::retrieve;
+
       // @name Methods that must be implemented using template specialization
       // The implementation of the following methods will depend on the
       // class type \c T. Therefore, there is no default implementation 
@@ -167,13 +171,13 @@ namespace LOFAR
       // This method is responsible for actually retrieving the \e primitive
       // data members of \c T.
       // \throw NotImplemented
-      static Collection<TPersistentObject<T> > 
-      doRetrieve(const Query& query, int maxObjects)
-      {
-  	STATIC_CHECK(0, _Use_Explicit_Member_Specialization_);
-//   	THROW(NotImplemented, 
-//  	      "Method should be implemented using template specialization"); 
-      }
+//       static Collection<TPersistentObject<T> > 
+//       doRetrieve(const Query& query, int maxObjects)
+//       {
+//   	STATIC_CHECK(0, _Use_Explicit_Member_Specialization_);
+// //   	THROW(NotImplemented, 
+// //  	      "Method should be implemented using template specialization"); 
+//       }
 
       //@}
 
