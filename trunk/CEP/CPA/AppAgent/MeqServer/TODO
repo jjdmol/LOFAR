@@ -1,12 +1,17 @@
   * what to do about too many events? One idea: add a silent flag to
     each command: no reply if command is successful.
+    14/06/04: too many events either way make the system slow down.
+    still investigating.
 
   * add a create_or_link flag to initrecord: if the node already exists,
     throw away the init record and link to it.
+    14/06/04: done, link_or_create
     
   * add Node.Exists command to MeqServer
-
+    14/06/04: done, Get.NodeIndex
+    
   * allow initrec.children=F for no children
+    14/06/04: done
 
   * revise auto_resample to support resolution drivers, compute Result cells,
     revise getResult() to take a Cells argument

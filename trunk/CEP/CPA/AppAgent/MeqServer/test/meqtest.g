@@ -625,9 +625,9 @@ const stress_test := function (n=10000)
   mqs.setdebug('MeqServer',0);
   mqs.setdebug('meqserver',0);
   
-  mqs.setdebug('Glish',3);
-  mqs.setdebug('OctoEventSink',3);
-  mqs.setdebug('OctoEventMux',3);
+#  mqs.setdebug('Dsp',1);
+#  mqs.setdebug('OctoEventSink',3);
+#  mqs.setdebug('OctoEventMux',3);
   
   global domain,cells,req,cells,res;
   
@@ -641,13 +641,20 @@ const stress_test := function (n=10000)
   {
     print 'Creating tree ',i;
     rec.name := spaste('root',i);
+    rec.children.a.name := spaste('a',i);
+    rec.children.b.name := spaste('b',i);
+    rec.children.c.name := spaste('c',i);
+    rec.children.d.name := spaste('d',i);
     rec.children.a.children.a.name := 
       rec.children.b.children :=
       rec.children.c.children :=
       rec.children.d.children := spaste('const',i);
-    mqs.meq('Create.Node',rec,wait_reply=((i%100)==0),silent=T);
+    mqs.meq('Create.Node',rec,wait_reply=((i%10)==0),silent=T);
+    print 'Message sent';
   }
+  print 'getting node list'
   list := mqs.getnodelist();
+  print 'got it'
   for( i in 1:len(list) )
   {
     print list[i];
