@@ -1,4 +1,4 @@
-Ring Test 0 of 1  operational.
+Ring Test -1 of 1  operational.
 RingBuilder C'tor
 Build the RingSimul...
 1<--0
@@ -344,4 +344,4 @@ WH_FomRing Buffer  InBuffer[0] = 704
 WH_FomRing Buffer  InBuffer[0] = 0
 
 
-END OF SIMUL on node 0
+END OF SIMUL on node -1

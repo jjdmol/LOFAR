@@ -22,14 +22,14 @@ int main (int argc, char *argv[])
 
   // initialise MPI environment
   TRANSPORTER::init(argc,argv);
-  unsigned int rank = TRANSPORTER::getCurrentRank ();
+  int rank = TRANSPORTER::getCurrentRank ();
   unsigned int size = TRANSPORTER::getNumberOfNodes();
 
   cout << "Ring Test " << rank << " of " << size << "  operational." << flush << endl;
 
   // create the main Simul; Steps and Simuls will be added to this one
   WH_Empty wh;
-  Simul RingSim(wh,"RingSim",0); //Uses an empty workholder.
+  Simul RingSim(wh,"RingSim"); //Uses an empty workholder.
 
   Step *ToRingStep[10];
 
