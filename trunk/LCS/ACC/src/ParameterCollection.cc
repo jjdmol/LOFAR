@@ -244,6 +244,27 @@ string	ParameterCollection::getVersionNr() const
 }
 
 //#
+//#	getBool(key)
+//#
+bool ParameterCollection::getBool(const string& theKey) const
+{
+	const_iterator	iter = find (theKey);
+
+	if (iter == end()) {
+		THROW (Exception, formatString("Key %s unknown", theKey.c_str()));
+	}
+	char	firstChar = iter->second.c_str()[0];
+
+	if ((firstChar == 't') || (firstChar == 'T') || (firstChar == 1))
+		return (true);
+
+	if ((firstChar == 'f') || (firstChar == 'F') || (firstChar == 0))
+		return (false);
+
+	THROW (Exception, formatString("%s is not an boolean value", iter->second.c_str()));
+}
+
+//#
 //#	getInt(key)
 //#
 int ParameterCollection::getInt(const string& theKey) const
