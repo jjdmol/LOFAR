@@ -33,6 +33,7 @@
 
 //# Includes
 #include <sqltypes.h>
+#include <Common/LofarTypes.h>
 #include <Common/Debug.h>
 
 //
@@ -73,19 +74,19 @@ private:
   // #bits   18    4    5    5   6   6   20
   // \endverbatim
   //
-  typedef long long  TimeStampRep;
+  typedef int64  TimeStampRep;
 
   //
   // Offsets (in number of bits) of the date and time units in TimeStampRep.
   //
   struct Offset
   {
-    static const unsigned sec   = 20;
-    static const unsigned min   =  6 + sec;
-    static const unsigned hour  =  6 + min;
-    static const unsigned day   =  5 + hour;
-    static const unsigned month =  5 + day;
-    static const unsigned year  =  4 + month;
+    static const uint sec   = 20;
+    static const uint min   =  6 + sec;
+    static const uint hour  =  6 + min;
+    static const uint day   =  5 + hour;
+    static const uint month =  5 + day;
+    static const uint year  =  4 + month;
   };
 
   //
@@ -94,10 +95,9 @@ private:
   // \warning No check is done on validity of input data. Furthermore,
   // \c year should fit into an 18-bits signed integer!
   //
-  inline TimeStampRep toTimeStampRep(short year, unsigned short month, 
-				     unsigned short day, unsigned short hour, 
-				     unsigned short min, unsigned short sec,
-				     unsigned long usec);
+  inline TimeStampRep toTimeStampRep(short year, ushort month, ushort day, 
+                                     ushort hour, ushort min, ushort sec,
+				     ulong usec);
 
   //
   // Internal representation of the SQL TimeStamp.
@@ -114,21 +114,20 @@ inline bool operator<(const SQLTimeStamp& lhs, const SQLTimeStamp& rhs)
 
 
 inline SQLTimeStamp::TimeStampRep 
-SQLTimeStamp::toTimeStampRep(short year, unsigned short month, 
-			     unsigned short day, unsigned short hour, 
-			     unsigned short min, unsigned short sec,
-			     unsigned long usec)
+SQLTimeStamp::toTimeStampRep(short year, ushort month, ushort day, 
+                             ushort hour, ushort min, ushort sec, 
+                             ulong usec)
 {
   Assert( month < 13 && day < 32 && hour < 24 && min < 60 && 
 	  sec < 60 && usec < 1000000);
   return 
-    (static_cast<long long>(year)  << Offset::year)  + 
-    (static_cast<long long>(month) << Offset::month) +
-    (static_cast<long long>(day)   << Offset::day)   + 
-    (static_cast<long long>(hour)  << Offset::hour)  + 
-    (static_cast<long long>(min)   << Offset::min)   + 
-    (static_cast<long long>(sec)   << Offset::sec)   + 
-    (static_cast<long long>(usec));
+    (static_cast<int64>(year)  << Offset::year)  + 
+    (static_cast<int64>(month) << Offset::month) +
+    (static_cast<int64>(day)   << Offset::day)   + 
+    (static_cast<int64>(hour)  << Offset::hour)  + 
+    (static_cast<int64>(min)   << Offset::min)   + 
+    (static_cast<int64>(sec)   << Offset::sec)   + 
+    (static_cast<int64>(usec));
 }
 
 #endif
