@@ -33,6 +33,8 @@
 #include <WH_Correlate.h>
 #include <BlueGeneDefinitions.h>
 
+MPI_Datatype my_complex;
+
 namespace LOFAR
 {
 
@@ -41,6 +43,7 @@ WH_Correlate::WH_Correlate (const string& name,
   : WorkHolder    (channels, channels, name,"WH_Correlate")
 {
   char str[8];
+  
   // create the input dataholders
   for (unsigned int i=0; i<channels; i++) {
     sprintf (str, "%d", i);
@@ -71,16 +74,25 @@ WH_Correlate* WH_Correlate::make (const string& name)
 			   getDataManager().getInputs());
 }
 
+void WH_Correlate::preprocess() {
+
+#ifdef __BLRTS__ 
+  
+  MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
+  
+  /* Define a complex float datatype */
+  MPI_Type_contiguous(2, MPI_FLOAT, &my_complex);
+  MPI_Type_commit(&my_complex);
+
+#endif
+}
+
 void WH_Correlate::process()
 {
   
   TRACER4("WH_Correlate::Process()");
 
 #ifdef __BLRTS__
-
-  int myrank;
-  MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
-	 
   if (myrank == 0) {
     // I'm the master. Read signal cube from input, start the master process and
     // write the resulting matrix to the output.

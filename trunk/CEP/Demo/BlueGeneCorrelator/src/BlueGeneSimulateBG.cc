@@ -18,22 +18,24 @@ using namespace LOFAR;
 
 int main (int argc, const char** argv)
 {
-
-#ifdef __BLRTS__
-
   MPI_Init(&argc,(char***)&argv);
 
-  /* Define a complex float datatype */
-  MPI_Type_contiguous(2, MPI_FLOAT, &my_complex);
-  MPI_Type_commit(&my_complex);
 
   // Set trace level.
   Debug::initLevels (argc, argv);
 
+  BlueGeneCorrelator simulator;
+  simulator.setarg (argc, argv);
+
+#if 0
+    try {
+      LOFAR::SimulatorParse::parse(simulator);
+    } catch (LOFAR::SimulatorParseError x) {
+      cout << x.what() << endl;
+    }
+#else
   // The BlueGene 
   try {
-    BlueGeneCorrelator simulator(true);
-    simulator.setarg (argc, argv);
     
     simulator.baseDefine();
     simulator.basePrerun();
@@ -44,7 +46,7 @@ int main (int argc, const char** argv)
   } catch (...) {
     cout << "Unexpected exception" << endl;
   }
+#endif
   MPI_Finalize();
 
-#endif
 }

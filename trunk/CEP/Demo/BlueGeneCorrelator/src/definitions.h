@@ -1,7 +1,10 @@
 #ifndef BLUEGENE_CORRELATOR_DEFINITIONS_H
+#define BLUEGENE_CORRELATOR_DEFINITIONS_H
+
+#define __BLRTS__
 
 // the frontend ip 
-#define FRONTEND_IP  "10.0.0.22"
+#define FRONTEND_IP  "127.0.0.1"
 #define LOCALHOST_IP "127.0.0.1"
 #define BASEPORT     8900
 

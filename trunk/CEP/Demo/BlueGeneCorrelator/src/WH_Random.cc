@@ -108,9 +108,9 @@ void WH_Random::process()
   // keep track of the time channel
   if (itsIntegrationTime++ == TSIZE-1) itsIntegrationTime=0;
 
-  for (int i = 0; i < BFBW; i++) {
-    getDataManager().readyWithOutHolder(i);
-  }
+//   for (int i = 0; i < BFBW; i++) {
+//     getDataManager().readyWithOutHolder(i);
+//  }
 }
 
 void WH_Random::dump()
@@ -118,16 +118,16 @@ void WH_Random::dump()
   cout << "--------------------------------------------------------" << endl;
   cout << "Dump WH_Random " << getName() << endl;
    
-  for (int s=0; s<10; s++) {
-    cout << "out station=" << s << ":  ";
-    for (int t=0; t<10; t++) {
-      cout << *((DH_CorrCube*)getDataManager().getOutHolder(1))
-	->getBufferElement(s, 0, t) ;
+//   for (int s=0; s<10; s++) {
+//     cout << "out station=" << s << ":  ";
+//     for (int t=0; t<10; t++) {
+//       cout << *((DH_CorrCube*)getDataManager().getOutHolder(0))
+// 	->getBufferElement(s, 0, t) ;
 
-    }
-    cout << endl;
-  }
-  cout << "--------------------------------------------------------" << endl;
+//     }
+//     cout << endl;
+//   }
+//   cout << "--------------------------------------------------------" << endl;
 }
 
 }// namespace LOFAR

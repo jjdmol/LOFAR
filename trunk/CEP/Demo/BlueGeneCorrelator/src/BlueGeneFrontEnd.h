@@ -27,7 +27,7 @@
 
 //# includes
 #include <tinyCEP/WorkHolder.h>
-#include <tinyCEP/ApplicationHolder.h>
+#include <tinyCEP/TinyApplicationHolder.h>
 
 //# include defitions for simulation size.
 #include <BlueGeneCorrelator/definitions.h>
@@ -35,7 +35,7 @@
 namespace LOFAR
 {
 
-  class BlueGeneFrontEnd: public LOFAR::ApplicationHolder {
+  class BlueGeneFrontEnd: public LOFAR::TinyApplicationHolder {
 
   public:
     BlueGeneFrontEnd(bool input);
