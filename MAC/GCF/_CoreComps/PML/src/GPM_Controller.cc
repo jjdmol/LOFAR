@@ -175,7 +175,7 @@ TPMResult GPMController::unloadMyProperties(const string& scope)
       sprintf(buffer, "%03x%s", scope.size(), scope.c_str());
       e.length += bufLength;
       _isBusy = true;      
-      _propertyAgent.send(e, buffer, bufLength);
+      _propertyAgent.send(e, buffer, bufLength);s
       delete [] buffer;
     }
   }
@@ -256,11 +256,11 @@ void GPMController::valueGet(string& propName, GCFPValue& value)
   _supervisedTask.valueGet(propName, value);
 }
 
-void GPMController::propertiesLinked(unsigned int seqnr, list<string>& notLinkedProps)
+void GPMController::propertiesLinked(const string& scope, list<string>& notLinkedProps)
 {
   if (_propertyAgent.isConnected())
   {
-    PAPropertieslinkedEvent e(seqnr, PM_NO_ERROR, notLinkedProps.size());
+    PAPropertieslinkedEvent e(0, PM_NO_ERROR);
     string allPropNames;
     for (list<string>::iterator iter = notLinkedProps.begin(); 
          iter != notLinkedProps.end(); ++iter)
@@ -268,20 +268,21 @@ void GPMController::propertiesLinked(unsigned int seqnr, list<string>& notLinked
       allPropNames += *iter;
       allPropNames += '|';
     }
-    unsigned short bufLength(allPropNames.size() + 3);
+    unsigned short bufLength(scope.size() + allPropNames.size() + 6);
     char* buffer = new char[bufLength + 1];
-    sprintf(buffer, "%03x%s", allPropNames.size(), allPropNames.c_str());
+    sprintf(buffer, "%03x%s%03x%s", scope.size(), scope.c_str(), 
+                                    allPropNames.size(), allPropNames.c_str());
     e.length += bufLength;
     _propertyAgent.send(e, buffer, bufLength);
     delete [] buffer;
   }
 }
 
-void GPMController::propertiesUnlinked(unsigned int seqnr, list<string>& notUnlinkedProps)
+void GPMController::propertiesUnlinked(const string& scope, list<string>& notUnlinkedProps)
 {
   if (_propertyAgent.isConnected())
   {
-    PAPropertiesunlinkedEvent e(seqnr, PM_NO_ERROR, notUnlinkedProps.size());
+    PAPropertiesunlinkedEvent e(0, PM_NO_ERROR);
     string allPropNames;
     for (list<string>::iterator iter = notUnlinkedProps.begin(); 
          iter != notUnlinkedProps.end(); ++iter)
@@ -289,9 +290,10 @@ void GPMController::propertiesUnlinked(unsigned int seqnr, list<string>& notUnli
       allPropNames += *iter;
       allPropNames += '|';
     }
-    unsigned short bufLength(allPropNames.size() + 3);
+    unsigned short bufLength(scope.size() + allPropNames.size() + 6);
     char* buffer = new char[bufLength + 1];
-    sprintf(buffer, "%03x%s", allPropNames.size(), allPropNames.c_str());
+    sprintf(buffer, "%03x%s%03x%s", scope.size(), scope.c_str(), 
+                                    allPropNames.size(), allPropNames.c_str());
     e.length += bufLength;
     _propertyAgent.send(e, buffer, bufLength);
     delete [] buffer;
@@ -499,7 +501,22 @@ int GPMController::connected(GCFEvent& e, GCFPortInterface& /*p*/)
       }
       break;
     }
-
+    case F_TIMER_SIG:
+    {
+      GCFTimerEvent* pTimer = static_cast<GCFTimerEvent*>(&e);
+      if (pTimer->arg)
+      {
+        TGetData* pGetData = static_cast<TGetData*>pTimer->arg;
+        if (pGetData)
+        {
+          _supervisoryTask.valueGet(*pGetData->pPropName, *pGetData->pValue);
+          delete pGetData->pPropName;
+          delete pGetData->pValue;
+        }
+      }      
+      break;
+    }
+    
     default:
       status = GCFEvent::NOT_HANDLED;
       break;
