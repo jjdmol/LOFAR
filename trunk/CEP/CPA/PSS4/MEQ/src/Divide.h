@@ -1,4 +1,4 @@
-//# Add.cc: Add 2 or more nodes
+//# Divide.h: Divide 2 nodes
 //#
 //# Copyright (C) 2003
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,31 +20,30 @@
 //#
 //# $Id$
 
-#include <MEQ/Add.h>
+#ifndef MEQ_DIVIDE_H
+#define MEQ_DIVIDE_H
+    
+#include <MEQ/Function.h>
+
+#pragma aidgroup MEQ
+#pragma types #MEQ::Divide
 
 namespace MEQ {    
 
 
-Add::Add()
-{}
-
-Add::Add (Function* ch1, Function* ch2)
+class Divide : public Function
 {
-  children().push_back (ch1);
-  children().push_back (ch2);
-}
+public:
+  Divide();
 
-Add::~Add()
-{}
+  virtual ~Divide();
 
-void Add::evaluateVells (Vells& result, const Request&,
-			 const vector<Vells*>& values)
-{
-  result.init (0.);
-  for (unsigned int i=0; i<values.size(); i++) {
-    result += *(values[i]);
-  }
-}
+  // Evaluate the value for the given request.
+  virtual Vells evaluate (const Request&,
+			  const vector<Vells*>& values);
+};
 
 
 } // namespace MEQ
+
+#endif

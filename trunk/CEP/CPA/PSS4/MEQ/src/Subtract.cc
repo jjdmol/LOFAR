@@ -1,4 +1,4 @@
-//# Add.cc: Add 2 or more nodes
+//# Subtract.cc: Subtract 2 or more nodes
 //#
 //# Copyright (C) 2003
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,30 +20,23 @@
 //#
 //# $Id$
 
-#include <MEQ/Add.h>
+#include <MEQ/Subtract.h>
+#include <MEQ/VellsTmp.h>
 
 namespace MEQ {    
 
 
-Add::Add()
+Subtract::Subtract()
 {}
 
-Add::Add (Function* ch1, Function* ch2)
-{
-  children().push_back (ch1);
-  children().push_back (ch2);
-}
-
-Add::~Add()
+Subtract::~Subtract()
 {}
 
-void Add::evaluateVells (Vells& result, const Request&,
-			 const vector<Vells*>& values)
+Vells Subtract::evaluate (const Request&,
+			  const vector<Vells*>& values)
 {
-  result.init (0.);
-  for (unsigned int i=0; i<values.size(); i++) {
-    result += *(values[i]);
-  }
+  Assert (values.size() == 2);
+  return *(values[0]) - *(values[1]);
 }
 
 

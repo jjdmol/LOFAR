@@ -10,9 +10,18 @@
 
 #define DoForAllDynamicTypes_MEQ(Do,arg,separator) \
         Do(MEQAdd,arg) separator \
+        Do(MEQConj,arg) separator \
         Do(MEQCos,arg) separator \
+        Do(MEQDivide,arg) separator \
+        Do(MEQExp,arg) separator \
+        Do(MEQMultiply,arg) separator \
         Do(MEQNode,arg) separator \
-        Do(MEQParmPolcStored,arg)
+        Do(MEQParmPolcStored,arg) separator \
+        Do(MEQSin,arg) separator \
+        Do(MEQSqr,arg) separator \
+        Do(MEQSqrt,arg) separator \
+        Do(MEQSubtract,arg) separator \
+        Do(MEQToComplex,arg)
 
 #define DoForAllNumericTypes_MEQ(Do,arg,separator) \
         

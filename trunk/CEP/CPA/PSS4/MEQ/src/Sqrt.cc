@@ -1,4 +1,4 @@
-//# Add.cc: Add 2 or more nodes
+//# Sqrt.cc: Take square root of a node
 //#
 //# Copyright (C) 2003
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,31 +20,21 @@
 //#
 //# $Id$
 
-#include <MEQ/Add.h>
+#include <MEQ/Sqrt.h>
+#include <MEQ/VellsTmp.h>
 
 namespace MEQ {    
 
-
-Add::Add()
+Sqrt::Sqrt()
 {}
 
-Add::Add (Function* ch1, Function* ch2)
-{
-  children().push_back (ch1);
-  children().push_back (ch2);
-}
-
-Add::~Add()
+Sqrt::~Sqrt()
 {}
 
-void Add::evaluateVells (Vells& result, const Request&,
-			 const vector<Vells*>& values)
+Vells Sqrt::evaluate (const Request&,
+		      const vector<Vells*>& values)
 {
-  result.init (0.);
-  for (unsigned int i=0; i<values.size(); i++) {
-    result += *(values[i]);
-  }
+  return sqrt(*(values[0]));
 }
-
 
 } // namespace MEQ
