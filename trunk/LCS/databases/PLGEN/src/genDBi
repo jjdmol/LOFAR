@@ -1,0 +1,194 @@
+#!/usr/bin/ksh
+#
+# genDBi: Generate the preprocessed headerfile of your headerfiles.
+#
+# Copyright (C) 2003-2004
+# ASTRON (Netherlands Foundation for Research in Astronomy)
+# P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#
+# Generates DTL code for storing/saving an object to a database
+# Uses a .map file to lookup the references and a .fun file
+# for looking up the routines that should be generated
+#
+# Syntax: genDBi [-d destdir] [-b builddir] [-t target] [-f] headerfile(s)
+#
+# $Id$
+#
+VERSION="v1.0"
+DEBUGMODE=false
+
+#
+# cleanupWorkFiles
+#
+# Removes all temporary workfiles
+#
+cleanupWorkFiles()
+{
+	if [ "${DEBUGMODE}" != "true" ]; then
+		rm -f ${SOURCEDIR}/${TMPCCFILE} ${BUILDDIRWRKFILE}
+	else
+		echo "DEBUGMODE, NOT REMOVING TEMPFILES"
+	fi
+}
+
+# Fail msg
+#
+# Shows the message on stdout and exits
+Fail()
+{
+	echo "FAIL: $*"
+	cleanupWorkFiles
+	exit 1
+}
+
+
+# SyntaxError msg
+#
+# Shows the right syntax on stdout together with the given msg.
+# Exits afterwards.
+SyntaxError()
+{
+	Msg=$1
+
+	[ "X${Msg}" != "X" ] && echo "ERROR: ${Msg}"
+	echo "Syntax: $(basename $0) [-d destdir] [-b builddir] [-t target] [-f] headerfile(s)"
+	echo "    destdir	relative directory where .i file is placed, e.g. './generated'"
+	echo "    builddir	directory where .precomplie is done, e.g. 'gnu_opt'"
+	echo "    target	name of the .i file to create, e.g. 'myProject'"
+	echo "    -f    	Force removal of target if it already exists"
+	exit 1
+}
+
+#------------------------------- MAIN program ---------------------------------
+#
+# Check invocation syntax: 
+#	genDBi [-d destdir] [-b builddir] [-t target] [-f] headerfile(s)
+#
+# Initialize some constants
+SOURCEDIR=`pwd`
+TimeStamp=`date +%y%m%d%H%M%S`
+TMPCCFILE="tmp_${TimeStamp}.cc"
+PRECOMPFILE="tmp_${TimeStamp}.i"
+BUILDDIRWRKFILE="/tmp/BuildDir.LCS.$$"
+
+# Check option argument
+DESTDIR="."							# assume no destination directory
+BUILDDIR=""
+TARGET=""
+FORCE=false
+eval set argv=`getopt "d:b:t:f" $*`		# reformat arguments
+shift
+while [ "$1" != "--" ]
+do
+	case "$1" in
+		-d)	DESTDIR=$2
+			[ -d ${DESTDIR} ] || 
+					SyntaxError "Destination directory >${DESTDIR}< does not exist"
+			shift 2
+			;;
+		-b)	BUILDDIR=$2
+			shift 2
+			;;
+		-t)	TARGET=`echo $2 | sed "s/\.i$//"`		# strip off trailing .i
+			shift 2
+			;;
+		-f) FORCE=true
+			shift 1
+			;;
+	esac
+done
+shift								# remove --
+
+# Need at least one headerfile
+[ $# -ge 1 ] || SyntaxError "Need at least one headerfile."
+
+# All headerfiles must exist 
+for file in $*
+do
+	[ -s ${file} ] || SyntaxError "File ${file} doesn't exist"
+done
+
+# Check if target file already exist and let the user decide.
+if [ -f "${TARGET}.i" ]; then
+	if [ "${FORCE}" != "true" ]; then
+		ready=false
+		while [ "$ready" == "false" ]
+		do
+			echo -n "Targetfile ${TARGET}.i already exists, remove it (y/n)? "
+			read answer
+			case $answer in
+			y|Y|yes|Yes)	FORCE=true
+							ready=true
+							;;
+			n|N|no|No)		Fail "Target ${TARGET}.i may not be overwritten"
+							;;
+			esac
+		done
+	fi
+	rm -f ${TARGET}.i
+fi
+
+# All arguments seem ok, continue processing
+
+# Make sure there are no old workfiles left
+cleanupWorkFiles
+
+# Set trap handler before we create anything
+trap "cleanupWorkFiles ; exit" 1 2 3 6 9 13 15
+
+# Construct a .cc file containing include statements for the headerfiles.
+for File in $*
+do
+	echo	"#include \"${File}\""	>>${TMPCCFILE}
+done
+
+# Remember were we are.
+SOURCEDIR=`pwd`
+LeafDir=$(basename $SOURCEDIR)
+
+# Try to cd to the build directory
+cd ../build 2>/dev/null
+if [ $? -ne 0 ]; then
+	cd ../../build 2>/dev/null
+	[ $? -eq 0 ] || Fail "Cannot find the build directory in ../ or ../../"
+fi
+
+# We are in the build directory.
+# Try to cd to the same leaf directory
+if [ -n "${BUILDDIR}" ]; then
+	theBuildDir=${BUILDDIR}/${LeafDir}
+else
+	`ls -1d */src >${BUILDDIRWRKFILE}`
+	[ $? -eq 0 ] || Fail "Cannot find the directory <variant>/$LeafDir in `pwd`"
+	theBuildDir=`head -1 ${BUILDDIRWRKFILE}`
+fi
+
+cd ${theBuildDir} 2>/dev/null
+[ $? -eq 0 ] || Fail "Cannot go to the directory `pwd`/${theBuildDir}"
+
+echo "Building ${PRECOMPFILE} in `pwd`..."
+make ${PRECOMPFILE}
+[ -f ${PRECOMPFILE} ] || Fail "Build of ${PRECOMPFILE} file failed!"
+
+mv ${PRECOMPFILE} ${SOURCEDIR}/${DESTDIR}/
+cd ${SOURCEDIR}
+[ -n "${TARGET}" ] && mv ${PRECOMPFILE} ${TARGET}.i
+echo "Created file ${DESTDIR}/${TARGET}.i"
+
+# Finally cleanup our mess
+cleanupWorkFiles
+
