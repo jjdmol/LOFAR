@@ -97,7 +97,7 @@ class GPIPropertySet : public GCFPropertyProxy
     TScopeState _state;
 
   private:
-    static const unsigned int MAX_BUF_SIZE = 256;
+    static const unsigned int MAX_BUF_SIZE = 5000;
     unsigned int  _counter;
     TPIResult     _tmpPIResult;
     char          _buffer[MAX_BUF_SIZE];

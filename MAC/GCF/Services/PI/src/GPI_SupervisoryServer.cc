@@ -96,7 +96,7 @@ GCFEvent::TResult GPISupervisoryServer::operational(GCFEvent& e, GCFPortInterfac
     case F_CONNECTED_SIG:
       if (&p == &_propertyAgent)
       {
-        GCFEvent rse(PI_REGISTERSCOPE);
+        PARegisterscopeEvent rse(0);
         for (TScopeRegister::iterator iter = _scopeRegister.begin();
                iter != _scopeRegister.end(); ++iter)
         {

@@ -97,7 +97,7 @@ TPAResult GPAScopeManager::registerScope(const string& scope, GCFPortInterface& 
     _scopeList[scope].respond = true;    
     result = PA_NO_ERROR;
   }
-  
+
   return result;
 }
 
@@ -216,7 +216,7 @@ void GPAScopeManager::sendUnLinkEvents(GCFEvent& e)
   list<string>* pPropList;
   unsigned int oldEventLength(e.length);
   
-  static const unsigned int MAX_BUF_SIZE = 1000;
+  static const unsigned int MAX_BUF_SIZE = 5000;
   static char buffer[MAX_BUF_SIZE];
   
   for (TScopeListIter iter = _scopeList.begin(); 

@@ -85,7 +85,7 @@ class GPMRTController : public GCFTask
     unsigned int                  _counter;
     typedef map<string, GCFRTMyPropertySet*>  TPropertySets;
     TPropertySets                 _propertySets;
-    static const unsigned short   MAX_BUF_SIZE = 256;
+    static const unsigned short   MAX_BUF_SIZE = 5000;
     char                          _buffer[MAX_BUF_SIZE];
 };
 #endif

@@ -235,6 +235,9 @@ void GCFRTMyPropertySet::linkProperties(list<string>& properties)
       }
       else
       {
+        LOFAR_LOG_TRACE(PML_STDOUT_LOGGER, ( 
+          "Missing prop %s for linking",
+          (*iter).c_str()));
         missing++;
       }
     }
@@ -419,6 +422,13 @@ void GCFRTMyPropertySet::addProperty(const string& propName, GCFRTMyProperty& pr
   if (iter == _properties.end())
   {
     _properties[shortPropName] = &prop;
+  }
+  else
+  {
+    LOFAR_LOG_TRACE(PML_STDOUT_LOGGER, ( 
+      "Property %s already existing in scope '%s'",
+      shortPropName.c_str(),
+      _scope.c_str()));
   }
 }
 
