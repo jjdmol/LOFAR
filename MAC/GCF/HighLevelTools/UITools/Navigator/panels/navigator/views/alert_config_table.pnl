@@ -1,0 +1,428 @@
+V 10
+1
+LANG:1 8 (NoName)
+PANEL,299 138 879 398 N "_3DFace" 3
+"$AreaNr"
+"$configDatapoint"
+"$datapoint"
+"main()
+{
+  int i, k, j, nrOfRows, nrOfColumns;
+  dpGet($configDatapoint + \".1.nrOfRows:_online.._value\", nrOfRows);
+  dpGet($configDatapoint + \".1.nrOfColumns:_online.._value\", nrOfColumns);
+
+  for (i=0;i<nrOfRows ; i++)  
+  {
+    setValue(\"Table1\", \"appendLine\", \"Column0Titles\", \"\", \"Column1Titles\",\"\",\"Column2Titles\", \"\", \"Column3Titles\", \"\", \"Column4Titles\", \"\",
+                                            \"Column5Titles\", \"\", \"Column6Titles\", \"\", \"Column7Titles\", \"\", \"Column8Titles\", \"\", \"Column9Titles\", \"\", \"Column10Titles\", \"\",
+                                            \"Column11Titles\", \"\", \"Column12Titles\", \"\", \"Column13Titles\", \"\", \"Column14Titles\", \"\");
+  }
+  
+  setColumnConfig(1, nrOfColumns, 15, \"Config\");
+}
+
+
+ArrangeConfigTableContent(string dp1, dyn_string ColumnTitles,
+                          string dp2, dyn_string ColumndpNames)
+{
+  string ColumnTitle;
+  int i;
+  
+  getColumnTitle(dp2, ColumnTitle);
+  int nrOfRows, nrOfColumns, TableNumber;
+  
+  getTableNumber(dp1, TableNumber);
+  dpGet($configDatapoint + \".1.nrOfRows:_online.._value\", nrOfRows);
+  dpGet($configDatapoint + \".1.nrOfColumns:_online.._value\", nrOfColumns);
+  for (i=0; i< nrOfRows ;i++)
+  { 
+    // Fill the cell with the title if present
+    if (dynlen(ColumnTitles)>i) //Check or the dyn_string had this index
+    {
+      if (ColumnTitles[ConvIndex(i)] != \"\")  //If not empty fill with title
+      {
+        setValue (\"Table1\", \"cellValueRC\", i, ColumnTitle+\"Titles\" , ColumnTitles[ConvIndex(i)]);
+      }
+      else
+      {
+        setValue (\"Table1\", \"cellValueRC\", i, ColumnTitle+\"Titles\" , \"\");
+      }
+    }
+    // Change the backCOl of a cell when no DP is present
+    if (dynlen(ColumndpNames)>i) //Check or the dun_string had this index
+    {
+      if (ColumndpNames[ConvIndex(i)] == \"\")
+      {
+        setValue (\"Table1\", \"cellBackColRC\", i, ColumnTitle+\"Titles\", \"_3DFace\");
+      }
+      else if (!dpExists(ColumndpNames[ConvIndex(i)])) //Exists the configured datapoint? 
+      {
+        DebugN(\"DpDoesNotExist\");
+        setValue (\"Table\"+TableNumber, \"cellBackColRC\", i, ColumnTitle+\"Titles\", \"DpDoesNotExist\");
+      }
+      else
+      {
+        setValue (\"Table\"+TableNumber, \"cellBackColRC\", i, ColumnTitle+\"Titles\", \"white\");
+      }
+    }
+    else
+    {
+      setValue (\"Table1\", \"cellBackColRC\", i, ColumnTitle+\"Titles\", \"_3DFace\");
+    }
+  }
+
+  setValue(\"Table1\", \"lineVisible\", 0); // Set Row 0 as top-level Row
+}
+" 0
+EE E E 1 -1 -1 0  -180 -147
+"" 0 1
+EE 2
+"CBRef""1"
+"EClose"E
+""
+DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
+LAYER, 0 
+1
+LANG:1 6 Layer1
+2 9
+"Text4"
+""
+1 630 13 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+8 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 632 15 672 31
+0 2 0 "s" 0 0 0 192 0 0  632 15
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 6 AreaNr
+2 17
+"Text5"
+""
+1 10 313 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+16 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 12 315 26 331
+0 2 0 "s" 0 0 0 192 0 0  12 315
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 2 dp
+2 19
+"Text6"
+""
+1 10 343 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+18 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 12 345 62 361
+0 2 0 "s" 0 0 0 192 0 0  12 345
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 8 configDp
+2 22
+"Text7"
+""
+1 10 260 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+20 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 12 262 106 278
+0 2 0 "s" 0 0 0 192 0 0  12 262
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 17 Configured alert:
+14 10
+"TextField1"
+""
+1 682 10 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+9 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+680 8 774 35
+3 "s" 0 0 0 0 0 0 
+E
+"main()
+{
+setValue(\"\", \"text\", $AreaNr);
+}" 0
+
+E
+14 18
+"TextField4"
+""
+1 72 310 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+17 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+70 308 492 335
+3 "s" 0 0 0 0 0 0 
+E
+"main()
+{
+setValue(\"\", \"text\", $datapoint);
+}" 0
+
+E
+14 20
+"TextField5"
+""
+1 72 340 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+19 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+70 338 492 365
+3 "s" 0 0 0 0 0 0 
+E
+"main()
+{
+setValue(\"\", \"text\", $configDatapoint);
+}" 0
+
+E
+14 21
+"test"
+""
+1 110 260 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+19 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+108 258 682 285
+3 "s" 0 0 0 0 0 0 
+E
+E
+E
+25 24
+"Table1"
+""
+1 -181 -4097 E E E 1 E 1 E N "_WindowText" E N {255,255,255} E E
+ "main()
+{
+  int Row,Column;
+  dyn_string txt;
+  int iAnswer;
+//	bool bOK;
+	dyn_string ColumndpNames, ColumnTitles;
+	
+  	
+  txt = makeDynString(\"PUSH_BUTTON, Select watch, 2, 1\",
+                      \"PUSH_BUTTON, Disable watch, 1, 1\");
+ 
+  popupMenu(txt, iAnswer);
+  getValue(\"\", \"currentCell\", Row, Column);
+  DebugN(\"Row: \" + Row);
+		  
+//  getValue(\"\", \"currentCell\", Row, Column);
+//	setValue(\"txt_row\", \"text\", Row);
+//  setValue(\"txt_column\", \"text\", Column);
+//	setValue(\"out_row\", \"text\", Row);
+//  setValue(\"out_column\", \"text\", Column);
+
+  //########################################################
+  //
+  //	Compute the chosen option
+  //
+  //########################################################
+  	switch (iAnswer)
+  	{
+  	case 1:
+				setValue (\"Table1\", \"cellBackCol\", \"grey\");		//\"_3DFace\"
+        dpGet($configDatapoint + \".\" + $AreaNr + \".Column\" + Column + \"dpNames\", ColumndpNames); 
+        dpGet($configDatapoint + \".\" + $AreaNr + \".Column\" + Column + \"Titles\" , ColumnTitles); 
+        ColumndpNames[ConvIndex(Row)] = \"\";
+        ColumnTitles[ConvIndex(Row)] = \"\";
+        dpSet($configDatapoint + \".\" + $AreaNr + \".Column\" + Column + \"dpNames\", ColumndpNames); 
+        dpSet($configDatapoint + \".\" + $AreaNr + \".Column\" + Column + \"Titles\" , ColumnTitles); 
+      	break;
+  	case 2:
+				setValue (\"Table1\", \"cellBackCol\", \"white\");
+				ChildPanelOnCentral(\"navigator/views/alert_config_table_cell.pnl\",
+				                    \"Select DP\", makeDynString(\"$Row:\" + Row,
+				                                               \"$Column:\" + Column,
+				                                               \"$configDatapoint:\" + $configDatapoint,
+				                                               \"$datapoint:\" + $datapoint,
+				                                               \"$AreaNr:\" + $AreaNr));
+      	break;
+    default:
+    		break;
+    }
+}" 0
+ "main()
+{
+  int Row, Column;
+  dyn_string ColumndpNames;
+
+  getValue(\"\", \"currentCell\", Row, Column);
+  dpGet($configDatapoint + \".\" + $AreaNr + \".Column\" + Column + \"dpNames\", ColumndpNames); 
+  setValue(\"test\", \"text\", ColumndpNames[ConvIndex(Row)]);
+
+}
+" 0
+
+21 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+0
+1
+LANG:1 106 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,0,0,0,0,Arial
+0 ""
+8 38 832 252
+E E 0 0 1 15 1 "Column0Titles" 0 -1 -1 "s" 1
+LANG:1 1 0
+E1
+LANG:1 0 
+ 200 "Column1Titles" 0 1 -1 "s" 1
+LANG:1 1 1
+E1
+LANG:1 0 
+ 200 "Column2Titles" 0 1 -1 "s" 1
+LANG:1 1 2
+E1
+LANG:1 0 
+ 200 "Column3Titles" 0 1 -1 "s" 1
+LANG:1 1 3
+E1
+LANG:1 0 
+ 200 "Column4Titles" 0 1 -1 "s" 1
+LANG:1 1 4
+E1
+LANG:1 0 
+ 200 "Column5Titles" 0 1 -1 "s" 1
+LANG:1 1 5
+E1
+LANG:1 0 
+ 200 "Column6Titles" 0 1 -1 "s" 1
+LANG:1 1 6
+E1
+LANG:1 0 
+ 200 "Column7Titles" 0 1 -1 "s" 1
+LANG:1 1 7
+E1
+LANG:1 0 
+ 200 "Column8Titles" 0 1 -1 "s" 1
+LANG:1 1 8
+E1
+LANG:1 0 
+ 200 "Column9Titles" 0 1 -1 "s" 1
+LANG:1 1 9
+E1
+LANG:1 0 
+ 200 "Column10Titles" 0 1 -1 "s" 1
+LANG:1 2 10
+E1
+LANG:1 0 
+ 200 "Column11Titles" 0 1 -1 "s" 1
+LANG:1 2 11
+E1
+LANG:1 0 
+ 200 "Column12Titles" 0 1 -1 "s" 1
+LANG:1 2 13
+E1
+LANG:1 0 
+ 200 "Column13Titles" 0 1 -1 "s" 1
+LANG:1 2 13
+E1
+LANG:1 0 
+ 200 "Column14Titles" 0 1 -1 "s" 1
+LANG:1 2 14
+E1
+LANG:1 0 
+ 200 26 26 "" 1 1
+LANG:1 2 #1
+8 30 1
+LANG:1 106 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,0,0,0,0,Arial
+0 ""
+0 1 0 3 0
+1 0
+0
+LAYER, 1 
+1
+LANG:1 6 Layer2
+0
+LAYER, 2 
+1
+LANG:1 6 Layer3
+0
+LAYER, 3 
+1
+LANG:1 6 Layer4
+0
+LAYER, 4 
+1
+LANG:1 6 Layer5
+0
+LAYER, 5 
+1
+LANG:1 6 Layer6
+0
+LAYER, 6 
+1
+LANG:1 6 Layer7
+0
+LAYER, 7 
+1
+LANG:1 6 Layer8
+0
+0
