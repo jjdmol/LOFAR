@@ -23,8 +23,6 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include <DH_Postgresql.h>			// for class definition
-// TODO: lofar_strstream.h results in warning on lofar17:
-//#include <Common/lofar_strstream.h>		// for ostringstream
 #include <Common/lofar_iostream.h>		// for cout, cerr
 #include <Common/Stopwatch.h>			// for Stopwatch class
 #include <Common/Debug.h>			// for AssertStr
@@ -39,11 +37,15 @@ using namespace std;
 
 namespace LOFAR{
 
-// TODO: Convert all couts to debug trace statements
-
 
 ulong    DH_Postgresql::theirInstanceCount = 0L;
 PGconn * DH_Postgresql::theirConnection = NULL;
+
+string DH_Postgresql::theirDBHost = "10.87.2.49";
+string DH_Postgresql::theirDBName = "TransportHolder";
+string DH_Postgresql::theirUserName = "tanaka";
+
+
 
 DH_Postgresql::DH_Postgresql (const string& name, const string& type)
   : DH_Database (name, type) {
@@ -54,14 +56,14 @@ DH_Postgresql::DH_Postgresql (const string& name, const string& type)
 
   DH_Postgresql::theirInstanceCount ++;
 
-  cerr << DH_Postgresql::theirInstanceCount 
-    << ") DH_Postgresql constructed." << endl;
+  //  cerr << DH_Postgresql::theirInstanceCount 
+  //    << ") DH_Postgresql constructed." << endl;
 } 
 
 
 DH_Postgresql::~DH_Postgresql () {
-  cerr << DH_Postgresql::theirInstanceCount
-    << ") DH_Postgresql destroyed." << endl;
+  //  cerr << DH_Postgresql::theirInstanceCount
+  //    << ") DH_Postgresql destroyed." << endl;
 
   DH_Postgresql::theirInstanceCount --;
 
@@ -70,31 +72,30 @@ DH_Postgresql::~DH_Postgresql () {
   }
 }
 
+void DH_Postgresql::UseDatabase 
+  (char * dbHost, char * dbName, char * userName) {
+  DH_Postgresql::theirDBHost   = dbHost;
+  DH_Postgresql::theirDBName   = dbName;
+  DH_Postgresql::theirUserName = userName;
+}
+
+
 
 void DH_Postgresql::ConnectDatabase (void) {
-  // TODO: Make configurable database host and name.
-
-  cerr << "DH_Postgresql::ConnectDatabase (); Connecting to databse."
-       << endl;
-
   ostringstream ConnInfo;
 
-// NOTE: lofar3 cannot see dop49. Must use ip address.
+  if (DH_Postgresql::theirDBHost == "10.87.2.49") {
+    cerr << "***WARNING***: DH_Postgresql::ConnectDatabase (); DH_Postgresql "
+	 << "is trying to connect to a test database residing on "
+	 << "dop49. You probably have forgotten to call the DH_Postgresql "
+	 << "method UseDatabase (). See the comments in DH_Postgresql.h " 
+	 << "for more detaills. Continuing execution... " << endl;
+  }
 
-  ConnInfo << "host=" << "10.87.2.49" << " dbname=TransportHolder";
+  ConnInfo << "host=" << DH_Postgresql::theirDBHost 
+	   << " dbname=" << DH_Postgresql::theirDBName
+  	   << " user="<< DH_Postgresql::theirUserName;
   cerr << "  using: " << ConnInfo.str () << endl;
-
-  /*
-  nStore = 0;
-  nStoredBytes = 0;
-  dtStorage = 0;
-  dtInsert = 0;
- 
-  nRetrieve = 0;
-  nRetrievedBytes = 0;
-  dtQuery = 0;
-  dtUpdate = 0;
-  */
 
   DH_Postgresql::theirConnection = PQconnectdb (ConnInfo.str (). c_str ());
 
@@ -103,101 +104,17 @@ void DH_Postgresql::ConnectDatabase (void) {
 
   cerr << "DH_Postgresql::ConnectDatabase (): Succesfully connected "
        << "to database" << endl;
-
-//  // Delete all previous message from message table
-//  ExecuteCommand ("DROP TABLE message;");
-//  // TODO: error recovery
-//
-//  ExecuteCommand ("CREATE TABLE message (AppId int, Tag int, SeqNo int, Status text, Size int, TimeStamp text, Type text, Name text, Blob text, ByteString bytea);");
-//
-//  // log table
-//  ExecuteCommand ("DROP TABLE log;");
-//  // foutafhandeling
-//
-//  ExecuteCommand ("CREATE TABLE log (Time text, Entry text);");
-//  // foutafhandeling
-
-/*
-  ostringstream ostr;
-  char curhostname [80];
-  gethostname (curhostname, 80);
-  ostr << "Connected from " << curhostname << " to " << hostname;
-  LogEntry (ostr);
-
-  cerr << curhostname << " connecting to database." << endl;
-
-  LogEntry ("  (Dropped message table).");
-  LogEntry ("  (Re-created message table.)");
-  LogEntry ("  (Dropped log table.)");
-  LogEntry ("  (Re-created log table.)");
-*/
-#if defined (__GNUC__) && (__GNUC__) < 3
-    /*  
-  LogEntry ("WARNING: The client library (libpq) does not support writing");
-  LogEntry ("  and reading binary strings. This function will be disabled");
-  LogEntry ("  for this session.");
-    */
-#endif
 }
 
 
 void DH_Postgresql::DisconnectDatabase (void) {
-  /*
-  double avgStore, avgInsert, avgStorageThP,
-    avgRetrieve, avgQuery, avgUpdate, avgRetrievalThP;
-
-  // Calculate metrics
-  avgStore = dtStorage / nStore;
-  avgInsert = dtInsert / nStore;
-
-  avgStorageThP = nStoredBytes / dtStorage;
-
-  avgRetrieve = dtRetrieve / nRetrieve;
-  avgQuery = dtQuery / nRetrieve;
-  avgUpdate = dtUpdate / nRetrieve;
-
-  avgRetrievalThP = nRetrievedBytes / dtRetrieve;
-
-  // Display the metrics
-  // TODO: Perhaps move the metrics to log database.
-  cerr << "Average store time: " << avgStore 
-       << " sec." << endl;
-  cerr << "Average insert time: " << avgInsert
-       << " sec. (" << (avgInsert / avgStore) * 100 
-       << " %)" << endl;
-
-  cerr << "Average storage throughput: "
-       << avgStorageThP << " bytes/sec" << endl;;
-
-  cerr << "Average retrieve time: " << avgRetrieve
-       << " sec." << endl;
-  cerr << "Average query time: " << avgQuery
-       << " sec. (" << (avgQuery / avgRetrieve) * 100
-       << " %)" << endl;
-  cerr << "Average update time: " << avgUpdate 
-       << " sec. (" << (avgUpdate / avgRetrieve) * 100 
-       << " %)" << endl;
-
-  cerr << "Average retrieval throughput: "
-       << avgRetrievalThP << " bytes/sec" << endl;
-
-  LogEntry ("Disconnecting.");
-  */
-
-  cerr << "DH_Postgresql::Disconnect(); Disconnecting from database." << endl;
   PQfinish (theirConnection);
-
-  // TODO: Check if disconnect has succeeded.
+  cerr << "DH_Postgresql::Disconnect(); Disconnected from database." << endl;
 }
 
 #define MAX_BYTEA_SIZE (5*4096)
-// TODO: Do a check on max-bytea-size
 
 bool DH_Postgresql::StoreInDatabase (int, int tag, char * buf, int size) {
-  //  cerr << "DH_Postgresql::StoreInDatabase () called." << endl;
-
-  //  Stopwatch StorageTime;
-
   // First create blob:
   int i;
   ostringstream ostr;
@@ -223,21 +140,9 @@ bool DH_Postgresql::StoreInDatabase (int, int tag, char * buf, int size) {
     ByteString << "'byteaNotSupported'::bytea";
 #endif
 
-  // Create inseertion command
+  // Create insertion command
   ostringstream q;
-  /* ORIGINAL QUERY:
-  q << "INSERT INTO message VALUES ("
-    << 123 << ", "
-    << getMessageTag () << ", "
-    << wrseqno << ", "
-    << "'Pending', "  
-    << getByteStringLength () << ", "
-    << "'" << getTimeStamp ()<< "', "
-    << "'" << getType () << "', "
-    << "'" << getName () << "', "
-    << "'" << ostr.str() << "', "
-    << ByteString.str () << ");";
-  */
+
   q << "INSERT INTO message VALUES ("
     << 123 << ", "
     << tag << ", "
@@ -250,14 +155,7 @@ bool DH_Postgresql::StoreInDatabase (int, int tag, char * buf, int size) {
     << "'" << ostr.str() << "', "
     << ByteString.str () << ");";
 
-  //  Stopwatch InsertTime;
   ExecuteSQLCommand (q);
-  //  dtInsert += InsertTime.delta ().real ();
-
-  //  dtStorage += StorageTime.delta ().real ();
-
-  //  nStore ++;
-  //  nStoredBytes += getByteStringLength ();
 
   itsWriteSeqNo ++;
 
@@ -266,12 +164,9 @@ bool DH_Postgresql::StoreInDatabase (int, int tag, char * buf, int size) {
 
 
 bool DH_Postgresql::RetrieveFromDatabase (int,int tag, char * buf, int size) { 
-  //  cerr << "DH_Postgresql::RetrieveFromDatabase () called." << endl;
 
   int i;
   i = 0;
-
-  //  Stopwatch RetrieveTime;
 
   // Construct query
   ostringstream q;
@@ -283,16 +178,11 @@ bool DH_Postgresql::RetrieveFromDatabase (int,int tag, char * buf, int size) {
     << "seqno = " << itsReadSeqNo << " AND "
     << "appid = " << 123 << ";";
 
-  //  cout << "<<<QUERY: " << q.str () << endl;
-
   PGresult * res;
 
   // Block until a packet appears in the table
   do {
-    cerr << '.';
-    //    Stopwatch QueryTime;
     res = PQexec (DH_Postgresql::theirConnection, (q.str ()).c_str ());
-    //    dtQuery += QueryTime.delta ().real ();
   
     AssertStr (PQresultStatus (res) == PGRES_TUPLES_OK,
 	       "DH_Postgressql::Retrieve (); Select query failed.")
@@ -302,7 +192,7 @@ bool DH_Postgresql::RetrieveFromDatabase (int,int tag, char * buf, int size) {
   int nRows;
   nRows = PQntuples (res);
   AssertStr (nRows == 1, "DH_Postgresql::Retrieve ();"
-    << "ERROR: Found less or more than 1 message in database.")
+    << "ERROR: Message table may not have been cleaned up before starting program.")
   
     // TODO: What to do with these?:
   // Read the found tuple
@@ -313,7 +203,6 @@ bool DH_Postgresql::RetrieveFromDatabase (int,int tag, char * buf, int size) {
     //  setName             (PQgetvalue (res, 0, 7));
 
   // Copy the data packet
-
 #if defined (__GNUC__) && (__GNUC__) > 2
   unsigned char * ByteString;
   size_t sizeRes;
@@ -334,11 +223,6 @@ bool DH_Postgresql::RetrieveFromDatabase (int,int tag, char * buf, int size) {
     
   PQclear (res);
 
-//  dtRetrieve += RetrieveTime.delta ().real ();
-
-//  nRetrieve ++;
-//  nRetrievedBytes += getByteStringLength ();
-
   itsReadSeqNo ++;
   return true;
 }
@@ -353,8 +237,6 @@ bool DH_Postgresql::ExecuteSQLCommand (char * str) {
 bool DH_Postgresql::ExecuteSQLCommand (ostringstream & q) {
   PGresult * res;
 
-  //  cerr << ">>>QUERY: " << q.str () << endl;
-
   res = PQexec (DH_Postgresql::theirConnection, ((q.str ()).c_str ()));
 
   AssertStr (PQresultStatus (res) == PGRES_COMMAND_OK,
@@ -367,56 +249,6 @@ bool DH_Postgresql::ExecuteSQLCommand (ostringstream & q) {
   return true;
 }
 
-// Internal Functions
-/*
-bool LogEntry (char *);
-bool LogEntry (ostringstream & q);
-
-bool ExecuteCommand (char * str);
-bool ExecuteCommand (ostringstream & q);
-
-
-PGconn * pgconn;
-
-long nStore;
-long nStoredBytes;
-double dtStorage;
-double dtInsert;
-
-long nRetrieve;
-long nRetrievedBytes;
-double dtRetrieve;
-double dtQuery;
-double dtUpdate;
-*/
-
-
-/*
-bool LogEntry (char * str) {
-  ostringstream ostr;
-  time_t t = time (NULL);
-
-  ostr << "INSERT INTO log VALUES("
-       << "'" << ctime (& t) << "', "
-       << "'" << str << "');";
-
-  return ExecuteCommand (ostr);
-}
-
-bool LogEntry (ostringstream & q) {
-  ostringstream ostr;
-  time_t t = time (NULL);
-
-  ostr << "INSERT INTO log VALUES("
-       << "'" << ctime (& t) << "', "
-       << "'" << q.str () << "');";
-
-  return ExecuteCommand (ostr);
-}
-
-
-
-*/
 }
 
 

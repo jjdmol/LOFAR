@@ -37,8 +37,8 @@ public:
   explicit DH_Database (const string& name, const string& type)
     : DataHolder (name, type) { rdSeqNo = wrSeqNo = 0L; }
 
-  bool StoreInDatabase (int appId, int tag, char * buf, int size);
-  bool RetrieveFromDatabase (int appId, int tag, char * buf, int size);
+  virtual bool StoreInDatabase (int appId, int tag, char * buf, int size);
+  virtual bool RetrieveFromDatabase (int appId, int tag, char * buf, int size);
 
 protected:
   class DataPacket:

@@ -56,10 +56,26 @@ public:
   explicit DH_Postgresql (const string& name, const string& type);
   virtual ~DH_Postgresql ();
 
-  bool StoreInDatabase (int appId, int tag, char * buf, int size);
-  bool RetrieveFromDatabase (int appId, int tag, char * buf, int size);
+  virtual bool StoreInDatabase (int appId, int tag, char * buf, int size);
+  virtual bool RetrieveFromDatabase (int appId, int tag, char * buf, int size);
+
+  // Connect to the database named DBName, residing at host DBHost, using
+  // database account UserName. The following arguments will work for
+  // testing purposes: DBHost="10.87.2.50", DBName=<YourLogInName>,
+  // UserName="postgres". This method must be called before the first 
+  // send or receive event occurs in the TransportHolder. Calling this
+  // method right after connect (TH_Database::proto) is the best place
+  // to guarantiee this. Note: 10.87.2.50 is dop50 the database server.
+  // If you use the hostname dop50, you have to make sure that the
+  // client host is able to resolve dop50; this may not always be the
+  // case. lofar3 is an example of such a case. If this method is not
+  // called, the test database residing on dop49 is used as a default.
+  static void UseDatabase (char * dbHost, char * dbName, char * userName);
 
 protected:
+  bool ExecuteSQLCommand (char * str);
+  bool ExecuteSQLCommand (ostringstream & q);
+
   class DataPacket:
     public DH_Database::DataPacket
   {
@@ -69,14 +85,8 @@ protected:
 
 private:
 
-  bool Store (unsigned long wrseqno);
-  bool Retrieve (unsigned long rdweqno);
-
   void ConnectDatabase (void);
   void DisconnectDatabase (void);
-
-  bool ExecuteSQLCommand (char * str);
-  bool ExecuteSQLCommand (ostringstream & q);
 
   ulong itsReadSeqNo;
   ulong itsWriteSeqNo;
@@ -85,6 +95,10 @@ private:
 
   static ulong theirInstanceCount;
   static PGconn * theirConnection;
+
+  static string theirDBHost;
+  static string theirDBName;
+  static string theirUserName;
 
 };
 
