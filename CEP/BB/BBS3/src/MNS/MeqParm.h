@@ -85,6 +85,8 @@ public:
   // them in the argument.
   // If needed, polynomial coefficients are denormalized.
   virtual void getCurrentValue(MeqMatrix& value, bool denormalize) const = 0;
+  MeqMatrix getCoeffValues() const
+    { MeqMatrix tmp; getCurrentValue(tmp,false); return tmp; }
 
   // Update the parameter with the new values.
   virtual void update (const MeqMatrix& value) = 0;
