@@ -1,0 +1,12 @@
+#!/bin/sh
+
+#
+# Clean-up any IPC resources that have no attached processes anymore.
+#
+
+for id in `ipcs -m | fgrep "  0  " | cut -d\  -f2`;
+do
+	echo -n "shmid $id: "
+	ipcrm shm $id 2>&1
+done
+exit 0
