@@ -61,8 +61,8 @@ void MeqMatrixComplexArr::show (ostream& os) const
     if (i > 0) {
       os << ", ";
     }
-    os << '(' << setprecision(12) << itsValue[i].real()
-       << ',' << setprecision(12) << itsValue[i].imag() << ')';
+    os << '(' << std::setprecision(12) << itsValue[i].real()
+       << ',' << std::setprecision(12) << itsValue[i].imag() << ')';
   }
   os << ']';
 }
@@ -260,7 +260,7 @@ MeqMatrixRep* MeqMatrixComplexArr::mean()
   for (int i=0; i<n; i++) {
     sum += itsValue[i];
   }
-  return new MeqMatrixComplexSca (sum/n);
+  return new MeqMatrixComplexSca (sum/double(n));
 }
 MeqMatrixRep* MeqMatrixComplexArr::sum()
 {
