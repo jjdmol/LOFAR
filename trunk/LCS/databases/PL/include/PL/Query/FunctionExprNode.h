@@ -1,4 +1,4 @@
-//#  FunctionExprNode.h: one line description
+//#  FunctionExprNode.h: Function expression node.
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -22,6 +22,9 @@
 
 #ifndef LOFAR_PL_QUERY_FUNCTIONEXPRNODE_H
 #define LOFAR_PL_QUERY_FUNCTIONEXPRNODE_H
+
+// \file FunctionExprNode.h
+// Function expression node.
 
 //# Includes
 #include <lofar_config.h>

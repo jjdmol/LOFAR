@@ -23,6 +23,9 @@
 #ifndef LOFAR_PL_PERSISTENTOBJECT_H
 #define LOFAR_PL_PERSISTENTOBJECT_H
 
+// \file PersistentObject.h
+// Interface class for persistent objects.
+
 //# Includes
 #include <PL/ObjectId.h>
 #include <Common/LofarTypes.h>
@@ -37,6 +40,8 @@ namespace LOFAR
 {
   namespace PL
   {
+    // \addtogroup PL
+    // @{
 
     //# Forward Declarations
     class QueryObject;
@@ -252,13 +257,13 @@ namespace LOFAR
 
       private:
   
-        // @name Data members of MetaData
+        // \name Data members of MetaData
         // All data members of MetaData are using shared pointers. We want to
         // be able to safely copy MetaData classes. However, we do not want
         // multiple copies of the member data of MetaData, because that would
         // lead to potential inconsistencies in the metadata.
 
-        //@{
+        // @{
 
         // One "global" null object-id, which can be used to quickly
         // initialize object-ids.  
@@ -304,7 +309,7 @@ namespace LOFAR
         // tools.
         boost::shared_ptr<std::string> itsTableName;
 
-        //@}
+        // @}
 
       }; //# class MetaData
 
@@ -351,6 +356,8 @@ namespace LOFAR
     {
       return lhs.metaData().oid() == rhs.metaData().oid();
     }
+
+    // @}
 
   } // namespace PL
 

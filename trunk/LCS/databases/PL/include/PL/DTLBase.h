@@ -23,6 +23,9 @@
 #ifndef LOFAR_PL_DTLBASE_H
 #define LOFAR_PL_DTLBASE_H
 
+// \file DTLBase.h
+// Base classes and methods for use of DTL within PL.
+
 #include <lofar_config.h>
 
 #if !defined(HAVE_DTL)
@@ -37,6 +40,8 @@ namespace LOFAR
 {
   namespace PL
   {
+    // \addtogroup PL
+    // @{
 
     // The BCA template class is a helper class. It provides a generic
     // interface for operator() by defining a typedef for DBRepHolder<T>.
@@ -50,6 +55,8 @@ namespace LOFAR
         rowbuf.bindCols(cols);
       }
     };
+
+    // @}
 
   } // namespace PL
   

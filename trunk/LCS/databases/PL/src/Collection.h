@@ -1,4 +1,4 @@
-//#  Collection.h: one line description
+//#  Collection.h: A bag-like container class.
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -23,6 +23,9 @@
 #ifndef LOFAR_PL_COLLECTION_H
 #define LOFAR_PL_COLLECTION_H
 
+// \file Collection.h
+// A bag-like container class.
+
 //# Includes
 #include <list>
 #include <PL/Exception.h>
@@ -31,8 +34,11 @@ namespace LOFAR
 {
   namespace PL
   {
+    // \addtogroup PL
+    // @{
+
     //
-    // Collection is a bag-like container class.
+    // %Collection is a bag-like container class.
     //
     template<typename T>
     class Collection
@@ -74,6 +80,8 @@ namespace LOFAR
       container_t itsContainer;
 
     };
+
+    // @}
 
   } // namespace PL
 

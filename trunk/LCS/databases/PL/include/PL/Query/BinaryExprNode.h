@@ -1,4 +1,4 @@
-//#  BinaryExprNode.h: one line description
+//#  BinaryExprNode.h: Binary expression node.
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -23,6 +23,9 @@
 #ifndef LOFAR_PL_QUERY_BINARYEXPRNODE_H
 #define LOFAR_PL_QUERY_BINARYEXPRNODE_H
 
+// \file BinaryExprNode.h
+// Binary expression node.
+
 //# Includes
 #include <lofar_config.h>
 #include <PL/Query/Expr.h>
@@ -35,10 +38,12 @@ namespace LOFAR
   {
     namespace Query
     {
-      // @defgroup BinaryExprNode Binary Expression Nodes
-      // @ingroup ExprNode
+      // \ingroup QueryExpr
+      // \defgroup BinaryExprNode Binary Expression Nodes
+      // A binary expression is an expression that takes one operator and two
+      // operands.
+      // @{
 
-      // @ingroup BinaryExprNode
       // This class represents a binary expression node. A binary expression
       // is an expression that takes one operator and two operands, one
       // left-hand-side operand and one right-hand-side operand.
@@ -56,16 +61,18 @@ namespace LOFAR
 
       private:
 
-        // @name The operation
+        // \name The operation
         const std::string itsOperation;
 
-        // @name The operands
-        //@{
+        // \name The operands
+        // @{
         const Expr        itsLeft;
         const Expr        itsRight;
-        //@}
+        // @}
 
       };
+
+      // @}
 
     } // namespace Query
 

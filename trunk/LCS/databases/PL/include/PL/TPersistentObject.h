@@ -23,6 +23,9 @@
 #ifndef LOFAR_PL_TPERSISTENTOBJECT_H
 #define LOFAR_PL_TPERSISTENTOBJECT_H
 
+// \file TPersistentObject.h
+// Container class for making objects persistent.
+
 #include <lofar_config.h>
 
 #if !defined(HAVE_DTL)
@@ -39,6 +42,9 @@ namespace LOFAR
 {
   namespace PL
   {
+    // \addtogroup PL
+    // @{
+
     // This templated class acts as a surrogate container class for instances
     // of T. The container provides the functionality to make instances of T
     // persistent. 
@@ -190,6 +196,8 @@ namespace LOFAR
     void TPersistentObject<ObjectId>::toDBRep(DBRepHolder<ObjectId>& dest) const;
     template<>
     void TPersistentObject<ObjectId>::fromDBRep(const DBRepHolder<ObjectId>& src);
+
+    // @}
 
   } // namespace PL
 

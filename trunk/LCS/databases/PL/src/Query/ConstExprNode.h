@@ -1,4 +1,4 @@
-//#  ConstExprNode.h: one line description
+//#  ConstExprNode.h: Constant expression nodes.
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -23,6 +23,9 @@
 #ifndef LOFAR_PL_QUERY_CONSTEXPRNODE_H
 #define LOFAR_PL_QUERY_CONSTEXPRNODE_H
 
+// \file ConstExprNode.h
+// Constant expression nodes.
+
 //# Includes
 #include <lofar_config.h>
 #include <PL/Query/ExprNode.h>
@@ -34,19 +37,16 @@ namespace LOFAR
   {
     namespace Query
     {
-      //# Forward Declarations
+      // \ingroup QueryExpr
+      // \defgroup ConstExprNode Constant Expression Nodes
+      // A constant expression is an expression that can be evaluated at
+      // compile-time and has a primitive type like \c int, \c double or 
+      // \c string.
+      // @{
 
-      // @defgroup ConstExprNode Constant Expression Nodes
-      // @ingroup ExprNode
+      // This class represents an expression node for a null. This is the
+      // equivalent of an empty expression node.
       //
-      // These classes represent constant expression nodes. A constant
-      // expression is an expression that can be evaluated at compile-time and
-      // has a primitive type like int, double or string.
-
-      //@{
-
-      // This class represents a null expression node, i.e. an empty
-      // expression node.
       // \note The method isNull() is overridden only in this class.
       class NullExprNode : public ExprNode
       {
@@ -90,7 +90,7 @@ namespace LOFAR
         const std::string itsOperand;
       };
 
-      //@}
+      // @}
 
     } // namespace Query
 

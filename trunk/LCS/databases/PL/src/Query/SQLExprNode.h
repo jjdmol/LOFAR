@@ -23,6 +23,9 @@
 #ifndef LOFAR_PL_QUERY_SQLEXPRNODE_H
 #define LOFAR_PL_QUERY_SQLEXPRNODE_H
 
+// \file SQLExprNode.h
+// Expression nodes for SQL-like operators
+
 //# Includes
 #include <lofar_config.h>
 #include <PL/Query/Expr.h>
@@ -37,14 +40,13 @@ namespace LOFAR
     namespace Query
     {
 
-      // @defgroup SQLExprNode SQL-like Expression Nodes
-      // @ingroup ExprNode
+      // \ingroup QueryExpr
+      // \defgroup SQLExprNode SQL-like Expression Nodes
       //
-      // These classes represent SQL-like expression nodes. An SQL-like
-      // expression is an expression that represents an SQL specific operator,
-      // like BETWEEN, IN, and LIKE.
-
-      //@{
+      // A SQL-like expression is an expression that represents a SQL
+      // specific operator, like \c BETWEEN, \c IN, and \c LIKE.
+      //
+      // @{
 
       // This class represents a BETWEEN expression node. A BETWEEN expression
       // is an expression that takes one operator (BETWEEN or NOT BETWEEN) and
@@ -65,15 +67,15 @@ namespace LOFAR
 
       private:
 
-        // @name The operation
+        // \name The operation
         const std::string itsOperation;
 
-        // @name The operands
-        //@{
+        // \name The operands
+        // @{
         const Expr itsValue;
         const Expr itsLower;
         const Expr itsUpper;
-        //@}
+        // @}
 
       };
      
@@ -99,14 +101,14 @@ namespace LOFAR
 
      private:
  
-        // @name The operation
+        // \name The operation
         const std::string itsOperation;
 
-        // @name The operands
-        //@{
+        // \name The operands
+        // @{
         const Expr             itsLeft;
         const Collection<Expr> itsRight;
-        //@}
+        // @}
 
       };
 
@@ -149,18 +151,18 @@ namespace LOFAR
 
      private:
  
-        // @name The operation
+        // \name The operation
         const std::string itsOperation;
 
-        // @name The operands
-        //@{
+        // \name The operands
+        // @{
         const Expr        itsOperand;
         const std::string itsPattern;
-        //@}
+        // @}
 
       };
 
-      //@}
+      // @}
 
     } // namespace Query
     

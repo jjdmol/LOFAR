@@ -23,6 +23,9 @@
 #ifndef LOFAR_PL_QUERY_EXPRNODE_H
 #define LOFAR_PL_QUERY_EXPRNODE_H
 
+// \file ExprNode.h
+// The node of a query expression.
+
 //# Includes
 #include <lofar_config.h>
 #include <iosfwd>
@@ -36,11 +39,10 @@ namespace LOFAR
       //# Forward Declarations
       class Expr;
 
-      // @defgroup ExprNode Expression Nodes
+      // \addtogroup QueryExpr
+      // @{
 
-      //@{
-
-      // ExprNode is an abstract base class that represents the node of an
+      // %ExprNode is an abstract base class that represents the node of an
       // expression query. We will need to derive specific expression node
       // classes (e.g. BinaryExprNode) from it.
       class ExprNode
@@ -66,7 +68,7 @@ namespace LOFAR
 
       };
 
-      //@}
+      // @}
 
     } // namespace Query
 

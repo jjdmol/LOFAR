@@ -23,12 +23,18 @@
 #ifndef LOFAR_PL_PLFWD_H
 #define LOFAR_PL_PLFWD_H
 
+// \file PLfwd.h
+// Forward declarations of classes in the PL package.
+
 #include <lofar_config.h>
 
 namespace LOFAR
 {
   namespace PL
   {
+    // \addtogroup PL
+    // @{
+
     class PersistentObject;
     class QueryObject;
     template<typename T> class Collection;
@@ -41,6 +47,8 @@ namespace LOFAR
       class Expr;
       class ColumnExprNode;
     }
+
+    // @}
 
   } // namespace PL
 
