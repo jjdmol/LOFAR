@@ -92,10 +92,23 @@ GCFEvent::TResult SSRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
   Array<uint16, 1> subbands((uint16*)&ss.ch,
 			    shape(MEPHeader::N_BEAMLETS * MEPHeader::N_POL),
 			    neverDeleteData);
-  
-  // copy into the cache
-  Cache::getInstance().getBack().getSubbandSelection()()(global_blp, Range::all())
-    = subbands;
 
+  if (0 == GET_CONFIG("RSPDriver.LOOPBACK_MODE", i))
+  {
+    subbands -= Cache::getInstance().getBack().getSubbandSelection()()(global_blp, Range::all());
+    uint16 ssum = sum(subbands);
+
+    if (0 != ssum)
+    {
+      LOG_WARN(formatString("LOOPBACK CHECK FAILED: SSRead mismatch (blp=%d, error=%d)",
+			    global_blp, ssum));
+    }
+  }
+  else
+  {
+    // copy into the cache
+    Cache::getInstance().getBack().getSubbandSelection()()(global_blp, Range::all())
+      = subbands;
+  }
   return GCFEvent::HANDLED;
 }

@@ -38,7 +38,7 @@ using namespace EPA_Protocol;
 using namespace RSP_Protocol;
 
 WGRead::WGRead(GCFPortInterface& board_port, int board_id)
-  : SyncAction(board_port, board_id, GET_CONFIG("RS.N_BLPS", i) * 2)
+  : SyncAction(board_port, board_id, GET_CONFIG("RS.N_BLPS", i) * MEPHeader::N_POL)
 {
   memset(&m_hdr, 0, sizeof(MEPHeader));
 }
@@ -94,7 +94,21 @@ GCFEvent::TResult WGRead::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
 
   WGSettings& w = Cache::getInstance().getBack().getWGSettings();
 
-  memcpy(&(w()(global_rcu)), &wgsettings.freq, sizeof(WGSettings::WGRegisterType));
+  if (0 == GET_CONFIG("RSPDriver.LOOPBACK_MODE", i))
+  {
+    if (w()(global_rcu).freq != wgsettings.freq
+	|| w()(global_rcu).phase != wgsettings.phase
+	|| w()(global_rcu).ampl != wgsettings.ampl
+	|| w()(global_rcu).nof_samples != wgsettings.nof_samples
+	|| w()(global_rcu).mode != wgsettings.mode)
+    {
+      LOG_WARN(formatString("LOOPBACK CHECK FAILED: WGRead mismatch (rcu=%d)", global_rcu));
+    }
+  }
+  else
+  {
+    memcpy(&(w()(global_rcu)), &wgsettings.freq, sizeof(WGSettings::WGRegisterType));
+  }
 
   return GCFEvent::HANDLED;
 }

@@ -84,8 +84,21 @@ GCFEvent::TResult RCURead::handleack(GCFEvent& event, GCFPortInterface& /*port*/
   RCUSettings::RCURegisterType& x = Cache::getInstance().getBack().getRCUSettings()()((global_blp * 2));
   RCUSettings::RCURegisterType& y = Cache::getInstance().getBack().getRCUSettings()()((global_blp * 2) + 1);
 
-  memcpy(&x, &rcusettings.x, sizeof(uint8));
-  memcpy(&y, &rcusettings.y, sizeof(uint8));
+  if (0 == GET_CONFIG("RSPDriver.LOOPBACK_MODE", i))
+  {
+    if (x.value != rcusettings.x
+	|| y.value != rcusettings.y)
+    {
+      LOG_WARN(formatString("LOOPBACK CHECK FAILED: RCURead mismatch "
+			    "(blp=%d, cache.x:%d != board.:%d || cache.y:%d != board.y:%d)",
+			    global_blp, x.value, rcusettings.x, y.value, rcusettings.y));
+    }
+  }
+  else
+  {
+    x.value = rcusettings.x;
+    y.value = rcusettings.y;
+  }
 
   return GCFEvent::HANDLED;
 }
