@@ -124,9 +124,6 @@ void WH_Correlator::process() {
 	 0,
 	 itsNchannels*itsNelements*itsNelements*itsNpolarisations*itsNpolarisations*sizeof(DH_Vis::BufferType));
 
-#ifdef DO_TIMING
-  starttime = timer();
-#endif
 
 
   //
@@ -148,6 +145,9 @@ void WH_Correlator::process() {
   // Note that there is both a general correlator as well as a BlueGene specific
   // implementation.
   // 
+#ifdef DO_TIMING
+  starttime = timer();
+#endif
 
   for (int fchannel = 0; fchannel < itsNchannels; fchannel++) {
 #ifdef HAVE_MPE
@@ -157,7 +157,7 @@ void WH_Correlator::process() {
 
 #ifdef HAVE_BGL
       // complex<double> pointer to the output buffer
-      _Complex double * out_ptr = reinterpret_cast<_Complex double*> ( outDH->getBufferElement(0,0,fchannel,0) );
+      _Complex double * out_ptr = reinterpret_cast<_Complex double*> ( outDH->getBuffer() ) + fchannel*itsNelements*itsNelements*itsNpolarisations;
 #endif
 
       int sample_addr = itsNpolarisations*itsNelements*itsNsamples*fchannel+
@@ -248,7 +248,7 @@ void WH_Correlator::process() {
   // transient effects on the nodes, so the maximum performance is a reasonable estimate of the real 
   // performance of the application.
 
-  cmults = itsNsamples * itsNchannels * (itsNelements*itsNelements/2 + ceil(itsNelements/2.0));
+  cmults = itsNpolarisations * itsNsamples * itsNchannels * (itsNelements*itsNelements/2 + ceil(itsNelements/2.0));
   MPI_Reduce(&elapsed_time, &min_time, 1, MPI_DOUBLE, MPI_MIN, 0, MPI_COMM_WORLD);
   
   if ((TH_MPI::getCurrentRank() == 0) && (t_start.tv_sec != 0) && (t_start.tv_usec != 0)) {
