@@ -80,7 +80,7 @@ void UVPSpectrum::operator =(const UVPSpectrum &other)
 void UVPSpectrum::copy(const UVPSpectrum &other)
 {
 #if(DEBUG_MODE)
-  TRACER2(__FUNCTION__);
+  TRACERPF2("");
 #endif
   
   if(itsValues != 0) {
@@ -95,7 +95,7 @@ void UVPSpectrum::copy(const UVPSpectrum &other)
   copyFast(other.itsValues);
 
 #if(DEBUG_MODE)
-  TRACER2("End: " << __FUNCTION__);
+  TRACERPF2("End.");
 #endif
 }
 

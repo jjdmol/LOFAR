@@ -20,7 +20,7 @@
 //===============>>>  UVPUVCoverageArea::UVPUVCoverageArea  <<<===============
 
 UVPUVCoverageArea::UVPUVCoverageArea(QWidget*            parent,
-                                     const UVPImageCube* data=0)
+                                     const UVPImageCube* data)
   : UVPDisplayArea(parent),
     itsCurrentImage(data)
 {
@@ -40,7 +40,7 @@ UVPUVCoverageArea::~UVPUVCoverageArea()
 
 //====================>>>  UVPUVCoverageArea::setData  <<<====================
 
-void UVPUVCoverageArea::setData(const UVPImageCube* data=0)
+void UVPUVCoverageArea::setData(const UVPImageCube* data)
 {
   itsCurrentImage = data;
 }

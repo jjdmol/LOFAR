@@ -21,7 +21,7 @@ class UVPDataAtom
 {
  public:
 
-  typedef float_complex ComplexType;
+  typedef std::complex<float> ComplexType;
   
   //! Default constructor.
   /*!  The header is initialized with its default constructor, The data

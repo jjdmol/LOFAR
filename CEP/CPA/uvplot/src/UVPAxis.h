@@ -8,6 +8,9 @@
 // Includes
 #include <string>
 
+#if(DEBUG_MODE)
+#include <cassert>
+#endif
 
 
 //! Manages the properties of a coordinate axis of a dataset.
