@@ -136,12 +136,56 @@ void UVPDataAtom::setData(const ComplexType* data)
 
 
 
+//====================>>>  UVPDataAtom::setData  <<<====================
+
+void UVPDataAtom::setData(const LoVec_fcomplex& data)
+{
+#if(DEBUG_MODE)
+  assert(data.shape()[0] == int(itsData.size()));
+#endif
+  ComplexType*       i   = &(itsData.front());
+  for(LoVec_fcomplex::const_iterator iter = data.begin();
+      iter != data.end();
+      iter++){
+    *i++ = *iter;
+  }
+    
+}
+
+
+
+
+
+
+
 //====================>>>  UVPDataAtom::setFlags  <<<====================
 
 void UVPDataAtom::setFlags(const std::vector<bool>& flags)
 {
   itsFlags = flags;
 }
+
+
+
+
+
+
+
+
+
+//====================>>>  UVPDataAtom::setFlags  <<<====================
+
+void UVPDataAtom::setFlags(const LoVec_int& flags)
+{
+  std::vector<bool>::iterator fiter = itsFlags.begin();
+  for(LoVec_int::const_iterator iter = flags.begin();
+      iter != flags.end();
+      iter++){
+    *fiter++ = *iter;
+  }
+
+}
+
 
 
 

@@ -494,8 +494,16 @@ void UVPMainWindow::slot_vdmInput()
 {
   using namespace MSVisAgentVocabulary;
   using namespace std;
+
+  itsInputType     = VDM;
+  updateCaption();
   
   itsDataSet.clear();
+  itsMSColumnName = itsGraphSettingsWidget->getSettings().getColumnName();
+  int ant1        = int(itsGraphSettingsWidget->getSettings().getAntenna1());
+
+  ostringstream select_sstream;
+  select_sstream << "ANTENNA1 = " << ant1 << " || ANTENNA2 = " << ant1;
 
   // initialize parameter record
   DataRecord::Ref dataref;
@@ -505,30 +513,34 @@ void UVPMainWindow::slot_vdmInput()
   dataref.dewr()[MSVisInputAgent::FParams()] <<= args;
 
    
-  args[FMSName]         = "~/aips++/data/8C1435_1000.ms";
-  args[FDataColumnName] = "DATA";
+  args[FMSName]         = itsInputFilename;
+  args[FDataColumnName] = itsMSColumnName;
   args[FTileSize]       = 10;
 
     // setup selection
   DataRecord &select = *new DataRecord;
   args[FSelection] <<= select;
 
-  select[FDDID] = 0;
-  select[FFieldIndex] = 1;
+  select[FDDID]              = 0;
+  select[FFieldIndex]        = 1;
   select[FChannelStartIndex] = 0;
   select[FChannelEndIndex]   = 127;
-  select[FSelectionString] = "ANTENNA1=1 || ANTENNA2=1";
+  select[FSelectionString]   = select_sstream.str();
 
-  cout<<"=================== creating agent ============================\n";
+
+  itsNumberOfChannels = 128;
+  itsNumberOfTimeslots = 1000;
+
+  itsScrollView->removeChild(itsCanvas);
+  itsCanvas->setGeometry(0, 0, itsNumberOfChannels, itsNumberOfTimeslots);
+  itsScrollView->addChild(itsCanvas);
+  resizeEvent(0);
+
+
   // create agent
   MSVisInputAgent agent;
   
-  cout<<"=================== initializing agent ========================\n";
   bool res = agent.init(dataref);
-  cout<<"init(): "<<res<<endl;
-
-  cout<<"hasHeader(): "<<agent.hasHeader()<<endl;
-  cout<<"hasTile(): "<<agent.hasTile()<<endl;
 
   if( !res ){
     cout<<"init has failed, exiting...\n";
@@ -538,11 +550,13 @@ void UVPMainWindow::slot_vdmInput()
   cout<<"=================== getting header ============================\n";
   DataRecord::Ref header;
   cout<<"getHeader(): "<<agent.getHeader(header)<<endl;
+  cout << header.deref() <<endl;
 
   cout<<"=================== getting tiles =============================\n";
   VisTile::Ref tile;
 
   UVPDataAtomHeader uvp_header;
+  int draw_list = 0;
 
   for(int state = agent.getNextTile(tile);
       state > 0;
@@ -561,41 +575,42 @@ void UVPMainWindow::slot_vdmInput()
       uvp_header.itsExposureTime     = 0;
       uvp_header.itsFieldID          = 1;
       uvp_header.itsSpectralWindowID = 0;
+
       UVPDataAtom atom(nfreq, uvp_header);
       
-      std::cout << ": " << ncorr << ":" << nfreq << ":" << ntime << std::endl;
-      std::cout << ant1 << "-" << ant2 << endl;
+      //      std::cout << ": " << ncorr << ":" << nfreq << ":" << ntime << std::endl;
+      //      std::cout << ant1 << "-" << ant2 << endl;
       
       for(VisTile::const_iterator iter=tile.deref().begin();
 	  iter != tile.deref().end();
 	  iter.next()) {
 	uvp_header.itsTime           = iter.time();
-	std::cout << iter.time();
 	
 	for(int corr = 0; corr < ncorr; corr++) {
 	  uvp_header.itsCorrelationType = UVPDataAtomHeader::Correlation(corr+1);
 	  
 	  LoVec_fcomplex data(iter.f_data(corr));
 	  LoVec_int      flags(iter.f_flags(corr));
+
+
 	  atom.setHeader(uvp_header);
-	  atom.setData(data.data());
-	  const int* flag_ptr = flags.data();
-	  for(int i = 0; i < nfreq; i++) {
-	    atom.setFlag(i, bool(*flag_ptr++));
-	  }
+	  atom.setData(data);
+	  atom.setFlags(flags);
+
 	  itsDataSet[uvp_header] = atom;
 	} 
       }
-      drawDataSet();
+      if(draw_list % 30 == 0) {
+	drawDataSet();
+	std::cout << "Draw"<<std::endl;
+      }
+      draw_list++;
       qApp->processEvents();
     }
   }
   
-  cout<<"=================== end of run ================================\n";
-  cout<<"hasHeader(): "<<agent.hasHeader()<<endl;
-  cout<<"hasTile(): "<<agent.hasTile()<<endl;
-  
   agent.close();
+  drawDataSet();
 }
 
 
