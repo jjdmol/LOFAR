@@ -1,5 +1,6 @@
 #include "Parser.h"
 #include "parser/selfparse.h"
+#include "blackboard/debug.h"
 
 #include <sstream>
 #include <iostream>
@@ -9,6 +10,7 @@
 //##ModelId=3F4DE363005D
 void Parser::setText(const std::string & text)
 {
+  TRACE t("Parser::setText(const std::string &)");
   //lock the fields txt and nested
   std::string tmptxt(text);
 
@@ -19,27 +21,40 @@ void Parser::setText(const std::string & text)
 //##ModelId=3F4DE3900109
 const std::string &Parser::getText() const
 {
+  TRACE t("Parser::getText()");
   return txt;
 }
 
 //##ModelId=3F4DE3CF031C
 std::vector<Directive> &Parser::getNested()
 {
+  TRACE t("Parser::getNested()");
   return nested;
 }
 
 static std::string *scriptText = 0;
 static std::vector<Directive> *directives = 0;
+pthread_mutex_t parser_mutex = PTHREAD_MUTEX_INITIALIZER;
 
-void Parser::parse(std::string txt)
+void Parser::parse(const std::string& text)
 {
+  TRACE t("Parser::parse(std::string)");
   //start mutex
-
-  scriptText = &txt;
-
-  selfparseStream = new std::istringstream(txt);
+  pthread_mutex_lock(&parser_mutex);
+  if(directives)
+  {
+    delete directives;
+  }
+  directives = new std::vector<Directive>;
+  DEBUG("creating stream to parse");
+  selfparseStream = new std::istringstream(text);
+  DEBUG("start to parse");
   selfparseparse();
+  DEBUG("retrieving result");
+  this->txt = *scriptText;
+  this->nested = *directives;
   // <todo>empty scripts</todo>
+  pthread_mutex_unlock(&parser_mutex);
   //end mutex
 }
 
@@ -56,10 +71,9 @@ extern "C"
    int selfparseerror(char * s)
    {
       extern int selfparselineno;
-      std::cerr <<
-	//         scriptname << ":"<<
-         selfparselineno << ":" <<
-         s << std::endl;
+      std::ostringstream os;
+      os <<  selfparselineno << ":" << s;
+      DEBUG(os.str());
       return 0;
    }
 
@@ -73,12 +87,15 @@ extern "C"
     // we have to decide here what kind of directive to create:
     // "command" holds information on this and maybe also "block".
     // for now:
+    TRACE t(std::string("saveSubScript(") + bn + ",...)");
+    std::string newScript(std::string(bn) + " " +
+			  command + " " +
+			  (options ? options : "") +
+			  " " + //the only optional parameter (would have to be last to give it a default value)
+			  block);
     Directive *d = new Directive(std::string(bn),
-				 std::string(std::string(bn) + " " +
-					     command + " " +
-					     options + " " +
-					     block)
-			);
+				 newScript);
+    DEBUG("new directive created");
     directives->insert(directives->end(),
 		       *d
 		       );
