@@ -110,22 +110,18 @@ int main(char ** av, int ac)
       programCode->run();
 
    }
-   catch(std::exception &e)
-          //   catch(std::runtime_error &e)
+       //   catch(std::exception &e)
+       //   catch(std::runtime_error &e)
+   catch(NoSuchBlackBoardComponentException &e)
    {
       DEBUG("failed to create a program...");
       
       std::cerr << e.what() << std::endl;
-
-      std::exception *e2 = new std::exception();
-      DEBUG("standard exception: " << e2->what());
-      
    }
    catch(...)
    {
       DEBUG("unhandled");
    }
-   
 
    return 0;
 }
@@ -175,7 +171,7 @@ MPIProgramEntry *getObjectThatCanFulfill(const std::string &role)
    }
    else
    {
-      std::exception *ex = new NoSuchBlackBoardComponentException(role);
+      NoSuchBlackBoardComponentException *ex = new NoSuchBlackBoardComponentException(role);
       DEBUG("throwing a " << typeid(NoSuchBlackBoardComponentException).name());
       throw *ex;
       

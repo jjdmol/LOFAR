@@ -6,15 +6,20 @@ TopLevelStrategy::run()
 }
 
 //##ModelId=3F43290401D9
-TopLevelStrategy * TopLevelStrategy::instance = NULL;
+TopLevelStrategy * TopLevelStrategy::_instance = NULL;
 
 //##ModelId=3F43262B0291
-TopLevelStrategy &TopLevelStrategy::instance()
+TopLevelStrategy &TopLevelStrategy::Instance()
 {
 }
 
 //##ModelId=3F4326D20214
 TopLevelStrategy::TopLevelStrategy()
 {
+   if (_instance == 0) {
+      _instance = new Singleton;
+   }
+   return _instance;
 }
+
 
