@@ -20,8 +20,8 @@
 //
 //
 
-#ifndef DATAGEN_TRAJECTORY_H
-#define DATAGEN_TRAJECTORY_H
+#ifndef STATIONSIM_TRAJECTORY_H
+#define STATIONSIM_TRAJECTORY_H
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>

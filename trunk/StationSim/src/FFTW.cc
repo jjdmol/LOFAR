@@ -20,7 +20,7 @@
 //
 //
 
-#include <DataGen/FFTW.h>
+#include <StationSim/FFTW.h>
 
 using namespace blitz;
 

@@ -20,15 +20,15 @@
 //
 //
 
-#ifndef DATAGEN_WH_ADD_SIGNALS_H
-#define DATAGEN_WH_ADD_SIGNALS_H
+#ifndef STATIONSIM_WH_ADD_SIGNALS_H
+#define STATIONSIM_WH_ADD_SIGNALS_H
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
 
 #include <BaseSim/WorkHolder.h>
-#include <DataGen/DH_SampleC.h>
+#include <StationSim/DH_SampleC.h>
 
 
 class WH_AddSignals:public WorkHolder 

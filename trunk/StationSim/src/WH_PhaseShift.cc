@@ -20,7 +20,7 @@
 //
 
 #include <Common/Debug.h>
-#include <DataGen/WH_PhaseShift.h>
+#include <StationSim/WH_PhaseShift.h>
 
 using namespace blitz;
 

@@ -21,15 +21,15 @@
 //  $Id$
 //
 
-#ifndef DATAGEN_WH_READSIGNAL_H
-#define DATAGEN_WH_READSIGNAL_H
+#ifndef STATIONSIM_WH_READSIGNAL_H
+#define STATIONSIM_WH_READSIGNAL_H
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
 
 #include <BaseSim/WorkHolder.h>
-#include <DataGen/DH_SampleR.h>
+#include <StationSim/DH_SampleR.h>
 
 
 class WH_ReadSignal : public WorkHolder 

@@ -20,15 +20,15 @@
 //
 //
 
-#ifndef DATAGEN_WH_CREATE_SOURCE_H
-#define DATAGEN_WH_CREATE_SOURCE_H
+#ifndef STATIONSIM_WH_CREATE_SOURCE_H
+#define STATIONSIM_WH_CREATE_SOURCE_H
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
 
 #include <BaseSim/WorkHolder.h>
-#include <DataGen/DH_SampleR.h>
+#include <StationSim/DH_SampleR.h>
 
 
 class WH_CreateSource:public WorkHolder 

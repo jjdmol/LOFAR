@@ -19,7 +19,7 @@
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //
 
-#include <DataGen/Trajectory.h>
+#include <StationSim/Trajectory.h>
 
 
 Trajectory::Trajectory (string config_file, int fs, double length)

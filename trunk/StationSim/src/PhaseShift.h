@@ -20,13 +20,13 @@
 //
 //
 
-#ifndef DATAGEN_PHASESHIFT_H
-#define DATAGEN_PHASESHIFT_H 1
+#ifndef STATIONSIM_PHASESHIFT_H
+#define STATIONSIM_PHASESHIFT_H 1
 
 #include <Common/Debug.h>
 #include <Common/Lorrays.h>
-#include <DataGen/FFTW.h>
-#include <DataGen/DataGenConfig.h>
+#include <StationSim/FFTW.h>
+#include <StationSim/DataGenConfig.h>
 
 
 namespace PhaseShift 

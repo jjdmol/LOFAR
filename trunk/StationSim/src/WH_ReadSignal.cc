@@ -23,7 +23,7 @@
 
 #include <Common/Debug.h>
 #include <BaseSim/ParamBlock.h>
-#include <DataGen/WH_ReadSignal.h>
+#include <StationSim/WH_ReadSignal.h>
 #include <stdio.h>		// for sprintf
 
 

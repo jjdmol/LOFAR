@@ -19,7 +19,7 @@
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //
 
-#include <DataGen/WH_Modulate.h>
+#include <StationSim/WH_Modulate.h>
 #include <Common/Debug.h>
 
 
