@@ -30,7 +30,7 @@ if( has_field(lofar_software,'print_versions') &&
 
 _meqdefrec_map := F;
 
-const meqdefrec := function (classname)
+const meqdefrec := function (classname,name='',children='')
 {
   global _meqdefrec_map;
   # generate the map at first call
@@ -39,10 +39,6 @@ const meqdefrec := function (classname)
     # generate default record for base MeqNode class
     r := [=];
     r::description := 'abstract node class, base class for all nodes';
-    r.class := '';
-    r.class::description := 'class name goes here';
-    r.name := '';
-    r.name::description := 'node name goes here';
     r.children := '';
     r.children::description := 'list of child nodes. May be specified as a \
           string array of child names, or as an integer array of node indices. \
@@ -59,7 +55,14 @@ const meqdefrec := function (classname)
   }
   # lookup in map
   if( has_field(_meqdefrec_map,classname) )
-    return _meqdefrec_map[classname];
+    rec := _meqdefrec_map[classname];
   else # return default
-    return _meqdefrec_map.MeqNode;
+    rec := _meqdefrec_map.MeqNode;
+  rec.class := classname;
+  rec.class::description := 'node class';
+  rec.name := name;
+  rec.name::description := 'node name';
+  rec.children := children;
+  rec.children::description := _meqdefrec_map.MeqNode.children::description;
+  return rec;
 }
