@@ -433,27 +433,32 @@ int32 Socket::recv (char*		buf,
   //LOG_TRACE_FLOW(formatString("Read on %d:length = %ld\n", itsPortnr, itsBufferSize));
    if (len && itsConnected) {
       //# Try to read from the socket
-      newBytes = ::recv (itsSocketID,          // socket
-			 itsData,  // buffer ptr
-			 itsBufferSize,        // length
-			 flags);               // flags
-      //LOG_DEBUG(formatString("Read %ld bytes, errno = %d\n", newBytes, errno));
-      
-      //# Check for errors
-      if (!errno && (newBytes > 0)) {
-	//DbgAssertStr(len == newBytes,"did not read all data");
-	if (len != newBytes) cout << "did not read all data" << endl;
-	 //itsData[itsWptr] = '\0';	//# always terminate buf
-      }
-      else {
-	 // LOG_ERROR("error during read");
-	 itsConnected = false;
-	 newBytes = 0L;
-      }
+
+     while (newBytes < len) {
+
+       newBytes += ::recv (itsSocketID,          // socket
+			   itsData + newBytes,   // buffer ptr (with offset)
+			   len     - newBytes,   // remaining length
+			   flags);               // flags
+       //LOG_DEBUG(formatString("Read %ld bytes, errno = %d\n", newBytes, errno));
+     }      
+
+     //# Check for errors
+     // this should never be reached.
+     if (!errno && (newBytes > 0)) {
+       //DbgAssertStr(len == newBytes,"did not read all data");
+       if (len != newBytes) cout << "did not read all data" << endl;
+       //itsData[itsWptr] = '\0';	//# always terminate buf
+     }
+     else {
+       // LOG_ERROR("error during read");
+       itsConnected = false;
+       newBytes = 0L;
+     }
    }
    return (newBytes);
 }
-   
+
 
 //#
 //# Socket::poll(newMsg, msgLen, timer)
