@@ -51,7 +51,7 @@ namespace LOFAR
     stoptime.tv_usec = 0;
   
     bandwidth = 0.0;
-}
+  }
 
 
 
@@ -111,10 +111,9 @@ namespace LOFAR
 // 					     rval.real() * rval.imag() +
 // 					     rval.imag() * rval.real() 
 // 					     );
-	      acc += rval * rval;
-// 	      cout << acc << endl;
-	    }
 
+	      acc += rval * rval;
+	    }
 	  
 	    ((DH_CorrCube*)getDataManager().getOutHolder(0))->setBufferElement(channel, 
 									       sample,

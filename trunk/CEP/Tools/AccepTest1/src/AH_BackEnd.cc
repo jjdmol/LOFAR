@@ -94,19 +94,6 @@ void AH_BackEnd::run(int nsteps) {
   
   for (int s = 0; s < nsteps; s++) {
 
-//     if (starttime.tv_sec != 0 && starttime.tv_usec !=0) {
-//       gettimeofday(&stoptime, NULL);
-      
-//       cout << (stoptime.tv_sec + 1.0e-6*stoptime.tv_usec - starttime.tv_sec + 1.0e-6*starttime.tv_usec) << "      " ;
-      
-//       bandwidth = (itsNtargets*itsNchannels*itsNelements*itsNelements*itsNpolarisations*sizeof(DH_Vis::BufferType))/
-// 	(stoptime.tv_sec + 1.0e-6*stoptime.tv_usec -
-// 	 starttime.tv_sec + 1.0e-6*starttime.tv_usec);
-      
-//       cout << 8.0*bandwidth/(1024.0*1024.0) << " Mbit/sec    " ;
-//       cout << (800.0 * bandwidth)/(1024.0*1024.0*1024.0) << "% of theoretical peak (Gbit/sec)" << endl;
-//     }
-
     for (it = itsWHs.begin(); it != itsWHs.end(); it++) {
       (*it)->baseProcess();
       aggregate_bandwidth += reinterpret_cast<WH_Dump*> (*it)->getBandwidth();
@@ -118,11 +105,9 @@ void AH_BackEnd::run(int nsteps) {
 //     cout << itsNsamples  << " " ;
 //     cout << itsNchannels << " " ;
 //     cout << itsNpolarisations << " " ;
-
 //     cout << (8.0*aggregate_bandwidth)/(nsteps*1024.0*1024.0) << " Mbit/sec       ";
 //     cout << (800.0*aggregate_bandwidth)/(nsteps*1024.0*1024.0*1024.0) << "% of theoretical peak (Gbit/sec)" << endl;
 //   }
-  //     gettimeofday(&starttime, NULL);
 }
 
 void AH_BackEnd::dump() const {
