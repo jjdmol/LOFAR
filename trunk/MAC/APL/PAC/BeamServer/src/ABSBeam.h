@@ -31,6 +31,8 @@
 #include <set>
 #include <map>
 
+#include <blitz/array.h>
+
 namespace ABS
 {
 
@@ -40,12 +42,15 @@ namespace ABS
   class Beam
       {
       public:
+	  static const int TIMESTEP = 1; // in seconds
+	  static const int N_TIMESTEPS = 20; // number of timesteps to calculate ahead
+
 	  /**
-	   * Get a beam with the specified beam index.
-	   * @param beam The index of the beam to get.
-	   * 0 <= beam < ninstances.
+	   * Get the beam with the matching handle.
+	   * @return 0 on invalid handle. Beam must have
+	   * been allocated before.
 	   */
-	  static Beam* getInstance(int beam);
+	  static Beam* getFromHandle(int handle);
 
 	  /**
 	   * Set the number of beam instances that
@@ -64,12 +69,17 @@ namespace ABS
 	   * @param subbands Which set of subbands to allocate
 	   * (indices in the spectral window).
 	   */
-	  int allocate(SpectralWindow const & spw, std::set<int> subbands);
+	  static Beam* allocate(SpectralWindow const & spw, std::set<int> subbands);
 
 	  /**
 	   * Return allocation status of a beam.
 	   */
 	  bool allocated() const;
+
+	  /**
+	   * @return Opaque handle of the beam.
+	   */
+	  int handle() const;
 
 	  /**
 	   * Deallocate a beam.
@@ -108,12 +118,9 @@ namespace ABS
 	   * Get converted time-stamped coordinates from the queue.
 	   * This method is called by the Beamlet class to get a priority
 	   * queue of coordinates.
-	   * @param coord The priority queue to which to add the coordinates.
-	   * This method should NOT clear the queue before adding coordinates
-	   * to it. It is the intention that this method can be called to add
-	   * coordinates to the argument coords queue.
+	   * @return array with the coordinates for the next period.
 	   */
-	  int getCoordinates(std::priority_queue<Pointing>& coords) const;
+	  const blitz::Array<double,2>& getCoordinates() const;
 
 	  /**
 	   * Get the mapping from input subbands to
@@ -136,10 +143,20 @@ namespace ABS
 	  /** current direction of the beam */
 	  Pointing m_pointing;
 
+	  /** index of this beam */
+	  int m_index;
+
 	  /** queue of future pointings */
 	  std::priority_queue<Pointing> m_pointing_queue;
 
-	  /** current coordinate track */
+	  /**
+	   * Current coordinate track.
+	   * Two dimensional array for (l,m) coordinates
+	   * The first dimension is always 2 (for the two
+	   * coordinates) the second dimension is N_TIMESTEPS.
+	   */
+	  blitz::Array<double,2> m_track;
+	  struct timeval m_track_start;
 	  std::priority_queue<Pointing> m_coord_track;
 
 	  /**
@@ -150,6 +167,12 @@ namespace ABS
 	  std::set<Beamlet*> m_beamlets;
 
       private:
+	  /**
+	   * Get the next available beam.
+	   * @return 0 if there are no more beams available.
+	   */
+	  static Beam* getInstance();
+
 	  //@{
 	  /** singleton implementation members */
 	  static int   m_ninstances;
@@ -163,6 +186,9 @@ namespace ABS
 	  Beam (const Beam&); // not implemented
 	  Beam& operator= (const Beam&); // not implemented
       };
+
+  inline bool Beam::allocated() const { return m_allocated; }
+  inline int  Beam::handle()    const { return m_index;     }
 };
      
 #endif /* ABSBEAM_H_ */

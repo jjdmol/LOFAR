@@ -77,75 +77,6 @@ GCFEvent::TResult BeamServerTask::initial(GCFEvent& e, GCFPortInterface& port)
 	  SpectralWindow* spw = new SpectralWindow(0e6, 20e6/ABS_Protocol::N_BEAMLETS,
 						   ABS_Protocol::N_BEAMLETS);
 	  m_spws[0] = spw;
-
-#if 0
-	  // create subband set
-	  std::set<int> subbands;
-
-	  //
-	  // setup beam 0
-          //
-	  Beam* beam = Beam::getInstance(0);
-	  m_beams.insert(0);
-
-	  subbands.insert(0);
-	  subbands.insert(10);
-	  subbands.insert(20);
-	  
-	  if (beam->allocate(*m_spws[0], subbands) < 0)
-	  {
-	      LOG_ERROR("failed to allocate beam 0");
-	  }
-	  else
-	  {
-	      beam->getSubbandSelection(m_sbsel);
-	  }
-
-	  //
-	  // setup beam 1
-	  //
-	  beam = Beam::getInstance(1);
-	  m_beams.insert(1);
-
-	  subbands.clear();
-	  subbands.insert(30);
-	  subbands.insert(22);
-	  subbands.insert(44);
-	  subbands.insert(101);
-	  subbands.insert(121);
-	  subbands.insert(141);
-
-	  if (beam->allocate(*m_spws[0], subbands) < 0)
-	  {
-	      LOG_ERROR("failed to allocate beam 1");
-	  }
-	  else
-	  {
-	      beam->getSubbandSelection(m_sbsel);
-	  }
-
-	  beam = Beam::getInstance(2);
-	  m_beams.insert(2);
-	  if (beam->allocate(*m_spws[0], subbands) < 0)
-	  {
-	      LOG_ERROR("failed to allocate beam 2");
-	  }
-	  else
-	  {
-	      beam->getSubbandSelection(m_sbsel);
-	  }
-
-	  //
-	  // show total mapping for beam 0 and 1
-	  //
-	  for (map<int,int>::iterator sel = m_sbsel.begin();
-	       sel != m_sbsel.end(); ++sel)
-	  {
-	      LOG_DEBUG(formatString("(%d,%d)", sel->first, sel->second));
-	  }
-
-	  beam->deallocate();
-#endif
       }
       break;
 
@@ -297,10 +228,10 @@ GCFEvent::TResult BeamServerTask::enabled(GCFEvent& e, GCFPortInterface& port)
 	  LOG_DEBUG(formatString("port %s disconnected", port.getName().c_str()));
 
 	  // deallocate all beams
-	  for (set<int>::iterator bi = m_beams.begin();
+	  for (set<Beam*>::iterator bi = m_beams.begin();
 	       bi != m_beams.end(); ++bi)
 	  {
-	    Beam::getInstance(*bi)->deallocate();
+	      (*bi)->deallocate();
 	  }
 
 	  TRAN(BeamServerTask::initial);
@@ -320,30 +251,31 @@ void BeamServerTask::beamalloc_action(ABSBeamallocEvent* ba,
 {
   int   spwindex = 0;
   Beam* beam = 0;
-  ABSBeamalloc_AckEvent ack(ba->beam_index, SUCCESS);
+  ABSBeamalloc_AckEvent ack(-1, SUCCESS);
 
   // check parameters
-  if (!(beam = Beam::getInstance(ba->beam_index))
-      || ((spwindex = ba->spectral_window) != 0)
+  if (((spwindex = ba->spectral_window) != 0)
       || !(ba->n_subbands > 0 && ba->n_subbands < N_BEAMLETS))
   {
       ack.status = ERR_RANGE;
       port.send(ack);
       return;                         // RETURN
   }
-
+  
   set<int> subbands;
   for (int i = 0; i < ba->n_subbands; i++) subbands.insert(ba->subbands[i]);
 
   // allocate the beam
-  if (beam->allocate(*m_spws[spwindex], subbands) < 0)
+
+  if (0 == (beam = Beam::allocate(*m_spws[spwindex], subbands)))
   {
       ack.status = ERR_BEAMALLOC;
       port.send(ack);
   }
   else
   {
-      m_beams.insert(ba->beam_index);
+      ack.beam_index = beam->handle();
+      m_beams.insert(beam);
       update_sbselection();
       port.send(ack);
   }
@@ -355,7 +287,7 @@ void BeamServerTask::beamfree_action(ABSBeamfreeEvent* bf,
   ABSBeamfree_AckEvent ack(bf->beam_index, SUCCESS);
 
   Beam* beam = 0;
-  if (!(beam = Beam::getInstance(bf->beam_index)))
+  if (!(beam = Beam::getFromHandle(bf->beam_index)))
   {
       ack.status = ERR_RANGE;
       port.send(ack);
@@ -375,7 +307,7 @@ void BeamServerTask::beamfree_action(ABSBeamfreeEvent* bf,
 void BeamServerTask::beampointto_action(ABSBeampointtoEvent* pt,
 					GCFPortInterface& /*port*/)
 {
-  Beam* beam = Beam::getInstance(pt->beam_index);
+  Beam* beam = Beam::getFromHandle(pt->beam_index);
 
   if (beam)
   {
@@ -452,10 +384,10 @@ void BeamServerTask::compute_timeout_action()
   lasttime.tv_sec += 20;
   
   // iterate over all beams
-  for (set<int>::iterator bi = m_beams.begin();
+  for (set<Beam*>::iterator bi = m_beams.begin();
        bi != m_beams.end(); ++bi)
   {
-      Beam::getInstance(*bi)->convertPointings(fromtime, 20);
+      (*bi)->convertPointings(fromtime, 20);
   }
 
   calculate_weights();
@@ -507,10 +439,10 @@ void BeamServerTask::update_sbselection()
   // update subband selection to take
   // the new beamlets for this beam into account
   m_sbsel.clear();
-  for (set<int>::iterator bi = m_beams.begin();
+  for (set<Beam*>::iterator bi = m_beams.begin();
        bi != m_beams.end(); ++bi)
   {
-      Beam::getInstance(*bi)->getSubbandSelection(m_sbsel);
+      (*bi)->getSubbandSelection(m_sbsel);
   }
 
   send_sbselection();

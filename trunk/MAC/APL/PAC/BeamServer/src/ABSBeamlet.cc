@@ -26,6 +26,9 @@
 #include <iostream>
 #include <queue>
 
+#include <blitz/array.h>
+using namespace blitz;
+
 #undef PACKAGE
 #undef VERSION
 #include <lofar_config.h>
@@ -81,18 +84,19 @@ int Beamlet::setNInstances(int ninstances)
   return (m_beamlets ? 0 : -1);
 }
 
-int Beamlet::allocate(const Beam& beam, SpectralWindow const& spw, int subband)
+int Beamlet::allocate(const Beam& beam,
+		      SpectralWindow const& spw, int subband)
 {
   // don't allow second allocation
   if (m_beam) return -1;
 
   // check that the subband is within the spectral window
-  if (subband >= spw.nsubbands()) return -1;
+  if ((subband >= spw.nsubbands()) 
+      || (subband < 0) ) return -1;
 
   m_spw     = &spw;
   m_subband = subband;
   m_beam = &beam;
-  //m_beam_index = beam_index;
 
   return 0;
 }
@@ -116,6 +120,7 @@ const Beam* Beamlet::getBeam() const
 void Beamlet::calculate_weights()
 {
   priority_queue<Pointing> coords;
+  const Array<double,2>* track = 0;
 
   for (int i = 0; i < m_ninstances; i++)
   {
@@ -125,12 +130,15 @@ void Beamlet::calculate_weights()
 	  const Beam* beam = beamlet->getBeam();
 
 	  // get coordinates from beam
-	  beam->getCoordinates(coords);
+	  track = &beam->getCoordinates();
       }
   }
 
   // calculating weights for the following coordinates
   LOG_INFO(formatString("Calculating weights for %d beamlets: %d coordinates.",
 			m_ninstances, coords.size()));
+  LOG_INFO(formatString("Storing in Array<double,2> track(%d,%d)",
+			track->extent(firstDim),
+			track->extent(secondDim)));
 }
 

@@ -110,7 +110,7 @@ GCFEvent::TResult AVTStub::initial(GCFEvent& e, GCFPortInterface& port)
 GCFEvent::TResult AVTStub::test001(GCFEvent& e, GCFPortInterface& /*port*/)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
-  int timerid = 0;
+  static int timerid = 0;
 
   switch (e.signal)
   {
@@ -124,7 +124,6 @@ GCFEvent::TResult AVTStub::test001(GCFEvent& e, GCFPortInterface& /*port*/)
 
 	// start test by sending beam alloc
 	ABSBeamallocEvent alloc;
-	alloc.beam_index = 0;
 	alloc.spectral_window = 0;
 	alloc.n_subbands = 1;
 	memset(alloc.subbands, 0, sizeof(alloc.subbands));
@@ -137,11 +136,11 @@ GCFEvent::TResult AVTStub::test001(GCFEvent& e, GCFPortInterface& /*port*/)
       {
 	ABSBeamalloc_AckEvent* ack = static_cast<ABSBeamalloc_AckEvent*>(&e);
 	_test(SUCCESS == ack->status);
-	_test(0 == ack->beam_index);
+	_test(0 <= ack->beam_index);
 
 	// beam allocated, now free it
 	ABSBeamfreeEvent beamfree;
-	beamfree.beam_index = 0;
+	beamfree.beam_index = ack->beam_index;
 
 	_test(sizeof(beamfree) == beam_server.send(beamfree));
       }
@@ -151,7 +150,7 @@ GCFEvent::TResult AVTStub::test001(GCFEvent& e, GCFPortInterface& /*port*/)
       {
 	ABSBeamfree_AckEvent* ack = static_cast<ABSBeamfree_AckEvent*>(&e);
 	_test(SUCCESS == ack->status);
-	_test(0 == ack->beam_index);
+	_test(0 <= ack->beam_index);
 
 	// test completed, next test
 	TRAN(AVTStub::test002);
@@ -185,7 +184,7 @@ GCFEvent::TResult AVTStub::test001(GCFEvent& e, GCFPortInterface& /*port*/)
 GCFEvent::TResult AVTStub::test002(GCFEvent& e, GCFPortInterface& /*port*/)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
-  int timerid = 0;
+  static int timerid = 0;
   
   switch (e.signal)
   {
@@ -199,7 +198,6 @@ GCFEvent::TResult AVTStub::test002(GCFEvent& e, GCFPortInterface& /*port*/)
 
 	// start test by sending beam alloc
 	ABSBeamallocEvent alloc;
-	alloc.beam_index = 0;
 	alloc.spectral_window = 0;
 	alloc.n_subbands = 1;
 	memset(alloc.subbands, 0, sizeof(alloc.subbands));
@@ -270,7 +268,7 @@ GCFEvent::TResult AVTStub::test002(GCFEvent& e, GCFPortInterface& /*port*/)
 GCFEvent::TResult AVTStub::test003(GCFEvent& e, GCFPortInterface& /*port*/)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
-  int timerid = 0;
+  static int timerid = 0;
   
   switch (e.signal)
   {
@@ -292,7 +290,6 @@ GCFEvent::TResult AVTStub::test003(GCFEvent& e, GCFPortInterface& /*port*/)
 
 	// start test by sending beam alloc
 	ABSBeamallocEvent alloc;
-	alloc.beam_index = 0;
 	alloc.spectral_window = 0;
 	alloc.n_subbands = 1;
 	memset(alloc.subbands, 0, sizeof(alloc.subbands));
@@ -366,7 +363,7 @@ GCFEvent::TResult AVTStub::test003(GCFEvent& e, GCFPortInterface& /*port*/)
 GCFEvent::TResult AVTStub::test004(GCFEvent& e, GCFPortInterface& /*port*/)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
-  int timerid = 0;
+  static int timerid = 0;
   static int loop = 0;
   
   switch (e.signal)
@@ -381,7 +378,6 @@ GCFEvent::TResult AVTStub::test004(GCFEvent& e, GCFPortInterface& /*port*/)
 
 	// invalid n_subbands in beam alloc
 	ABSBeamallocEvent alloc;
-	alloc.beam_index = 0;
 	alloc.spectral_window = 0;
 	alloc.n_subbands = N_BEAMLETS+1;
 	memset(alloc.subbands, 0, sizeof(alloc.subbands));
@@ -393,65 +389,52 @@ GCFEvent::TResult AVTStub::test004(GCFEvent& e, GCFPortInterface& /*port*/)
       case ABS_BEAMALLOC_ACK:
       {
 	ABSBeamalloc_AckEvent* ack = static_cast<ABSBeamalloc_AckEvent*>(&e);
-	_test(ERR_RANGE == ack->status);
+	_test(SUCCESS != ack->status);
 
-	if (loop++ == 0)
-	{
-	  // send invalid beam_index
-	  ABSBeamallocEvent alloc;
-	  alloc.beam_index = -1;
-	  alloc.spectral_window = 0;
-	  alloc.n_subbands = 1;
-	  memset(alloc.subbands, 0, sizeof(alloc.subbands));
-
-	  _test(sizeof(alloc) == beam_server.send(alloc));
-	}
-	else if (loop++ == 1)
+	if (loop == 0)
 	{
 	  // send invalid spectral window index
 	  ABSBeamallocEvent alloc;
-	  alloc.beam_index = 0;
 	  alloc.spectral_window = -1;
 	  alloc.n_subbands = 1;
 	  memset(alloc.subbands, 0, sizeof(alloc.subbands));
 
 	  _test(sizeof(alloc) == beam_server.send(alloc));
-	}
-	else if (loop++ == 2)
-	{
-	  // send large beam index
-	  ABSBeamallocEvent alloc;
-	  alloc.beam_index = N_BEAMLETS+1;
-	  alloc.spectral_window = 0;
-	  alloc.n_subbands = 1;
-	  memset(alloc.subbands, 0, sizeof(alloc.subbands));
 
-	  _test(sizeof(alloc) == beam_server.send(alloc));
+	  loop++;
 	}
-	else if (loop++ == 3)
+	else if (loop == 1)
 	{
 	  // send invalid n_subbands (-1)
 	  ABSBeamallocEvent alloc;
-	  alloc.beam_index = 0;
 	  alloc.spectral_window = 0;
 	  alloc.n_subbands = -1;
 	  memset(alloc.subbands, 0, sizeof(alloc.subbands));
 
 	  _test(sizeof(alloc) == beam_server.send(alloc));
+
+	  loop++;
 	}
-	else if (loop++ == 4)
+	else if (loop == 2)
 	{
 	  // send invalid index in subbands array
 	  ABSBeamallocEvent alloc;
-	  alloc.beam_index = 0;
 	  alloc.spectral_window = 0;
 	  alloc.n_subbands = 1;
 	  memset(alloc.subbands, 0, sizeof(alloc.subbands));
 	  alloc.subbands[0] = -1;
 
 	  _test(sizeof(alloc) == beam_server.send(alloc));
+
+	  loop++;
 	}
-	else TRAN(AVTStub::done);
+	else
+	{
+	    // done => next test
+	    TRAN(AVTStub::test005);
+	}
+
+	LOG_INFO(formatString("loop=%d", loop));
       }
       break;
 
@@ -460,6 +443,79 @@ GCFEvent::TResult AVTStub::test004(GCFEvent& e, GCFPortInterface& /*port*/)
 	// abort test
 	beam_server.close();
 	_fail("timeout");
+	TRAN(AVTStub::done);
+      }
+      break;
+
+      case F_EXIT_SIG:
+      {
+	// before leaving, cancel the timer
+	beam_server.cancelTimer(timerid);
+      }
+      break;
+
+      default:
+	  status = GCFEvent::NOT_HANDLED;
+	  break;
+  }
+
+  return status;
+}
+
+GCFEvent::TResult AVTStub::test005(GCFEvent& e, GCFPortInterface& /*port*/)
+{
+  GCFEvent::TResult status = GCFEvent::HANDLED;
+  static int timerid = 0;
+  static int beam_index = -1;
+  
+  switch (e.signal)
+  {
+      case F_ENTRY_SIG:
+      {
+	LOG_INFO("running test005");
+
+	// invalid n_subbands in beam alloc
+	ABSBeamallocEvent alloc;
+	alloc.spectral_window = 0;
+	alloc.n_subbands = N_BEAMLETS;
+	memset(alloc.subbands, 0, sizeof(alloc.subbands));
+	for (int i = 0; i < N_BEAMLETS; i++)
+	{
+	    alloc.subbands[i] = i;
+	}
+
+	_test(sizeof(alloc) == beam_server.send(alloc));
+      }
+      break;
+
+      case ABS_BEAMALLOC_ACK:
+      {
+	ABSBeamalloc_AckEvent* ack = static_cast<ABSBeamalloc_AckEvent*>(&e);
+	_test(SUCCESS != ack->status);
+
+	beam_index = ack->beam_index;
+
+	// let the beamformer compute for 10 seconds
+	timerid = beam_server.setTimer((long)10);
+      }
+      break;
+
+      case F_TIMER_SIG:
+      {
+	  // done => send BEAMFREE
+	  ABSBeamfreeEvent beamfree;
+	  beamfree.beam_index = beam_index;
+
+      }
+      break;
+
+      case ABS_BEAMFREE_ACK:
+      {
+	ABSBeamfree_AckEvent* ack = static_cast<ABSBeamfree_AckEvent*>(&e);
+	_test(SUCCESS == ack->status);
+	_test(beam_index == ack->beam_index);
+
+	// test completed, next test
 	TRAN(AVTStub::done);
       }
       break;

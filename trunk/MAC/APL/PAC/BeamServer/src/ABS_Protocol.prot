@@ -50,10 +50,6 @@ event = {
       signal = BEAMALLOC;
       dir = IN;
       param = {
-	    name = "beam_index";
-	    type = "int";
-      };
-      param = {
             // index of the spectral window to use
 	    // 0 for now
 	    name = "spectral_window";
