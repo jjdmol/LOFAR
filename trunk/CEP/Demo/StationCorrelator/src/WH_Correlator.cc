@@ -97,12 +97,14 @@ void WH_Correlator::process() {
   DH_CorrCube *inDH  = (DH_CorrCube*)(getDataManager().getInHolder(0));
   DH_Vis      *outDH = (DH_Vis*)(getDataManager().getOutHolder(0));
 
+  const int inBufSize = inDH->getBufSize();
+
 #ifdef DO_TIMING
   if (t_start.tv_sec != 0 && t_start.tv_usec != 0) {
     gettimeofday(&t_stop, NULL);
     
     bandwidth = 8.0 *
-      ((inDH->getBufSize()*sizeof(DH_CorrCube::BufferType)) +
+      ((inBufSize*sizeof(DH_CorrCube::BufferType)) +
        (outDH->getBufSize()*sizeof(DH_Vis::BufferType))) /
       (t_stop.tv_sec + 1.0e-6*t_stop.tv_usec - 
        t_start.tv_sec + 1.0e-6*t_start.tv_usec);
@@ -131,8 +133,8 @@ void WH_Correlator::process() {
   // using builtin complex type
   // this will work for both GNU and IBM compilers. The Intel compiler only recognizes the older __complex__ type
   DH_CorrCube::BufferPrimitive* in_ptr = (DH_CorrCube::BufferPrimitive*) inDH->getBuffer();
-  _Complex float* in_buffer = new _Complex float[inDH->getBufSize()];
-  for ( unsigned int i = 0; i < inDH->getBufSize(); i++ ) {
+  _Complex float* in_buffer = new _Complex float[inBufSize];
+  for ( int i = 0; i < inBufSize; i++ ) {
     __real__ *(in_buffer+i) =  *(in_ptr+2*i);    
     __imag__ *(in_buffer+i) =  *(in_ptr+2*i+1);
   }
@@ -140,8 +142,8 @@ void WH_Correlator::process() {
   // using stl templated complex type
   DH_CorrCube::BufferType* in_ptr = (DH_CorrCube::BufferType*) inDH->getBuffer();
   // The float pointer is explicit, since DH_Vis is now complex<double>
-  complex<float>*  in_buffer = new complex<float>[inDH->getBufSize()];
-  for ( unsigned int i = 0; i < inDH->getBufSize(); i++ ) {
+  complex<float>*  in_buffer = new complex<float>[inBufSize];
+  for ( int i = 0; i < inBufSize; i++ ) {
     *(in_buffer+i) = *(in_ptr+i); 
   }
 #endif 
