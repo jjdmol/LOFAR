@@ -126,13 +126,14 @@ const HIID
     // Field names for status record
     //    Solution parameters subrecord 
     StSolutionParams     = AidSolution|AidParams,
-    StSolution	   	 = AidSolution,
-    // solution status sub-record
+    // solution 
+    StSolution           = AidSolution,
+    // solver control status sub-record
     StSolverControl      = AidSolver|AidControl,
       //    Iteration number 
-    StIterationNumber    = StSolverControl|AidSlash|FIterationNumber,
+    StIterationNumber    = StSolution|AidSlash|FIterationNumber,
     //    Convergence parameter
-    StConvergence        = StSolverControl|AidSlash|FConvergence,
+    StConvergence        = StSolution|AidSlash|FConvergence,
     //    Domain number
     StDomainNumber       = AidDomain|AidIndex,
     //    Ending message
@@ -345,9 +346,11 @@ class SolverControlAgent : public AppControlAgent
     //## inits various counters
     virtual bool init (const DataRecord &data);
   
+    //##ModelId=3EB242F400B5
     virtual int processCommand (const HIID &id,const DataRecord::Ref &data,
                                 const HIID &source);
 
+    //##ModelId=3EB242F402AB
     int pauseSolution (const string &msg);
   
     //##ModelId=3E56097E00FD
@@ -357,6 +360,7 @@ class SolverControlAgent : public AppControlAgent
     //## class's startSolution()
     void initSolution (const DataRecord::Ref &params);
 
+    //##ModelId=3EB242F40376
     //##Documentation
     //## Processes parameters from the control record
     void processControlRecord (const DataRecord &rec);
@@ -384,7 +388,9 @@ class SolverControlAgent : public AppControlAgent
     //##Documentation
     //## Current iteration number
     int iter_count_;
+    //##ModelId=3EB242F30312
     int iter_step_;
+    //##ModelId=3EB242F4001F
     int pause_at_iter_;
     //##ModelId=3E56097700E7
     //##Documentation

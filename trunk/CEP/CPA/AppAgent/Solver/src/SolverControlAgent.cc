@@ -88,7 +88,13 @@ int SolverControlAgent::endData (const HIID &event)
   dprintf(1)("end of data\n");
   postEvent(event);
   setStatus(StEndData,endOfData_ = True);
-  return checkState();
+  if( solve_queue_.empty() && stop_on_end_ )
+  {
+    dprintf(1)("end of data, stopping\n");
+    return setState(STOPPED);
+  }
+  else
+    return checkState();
 }
 
 //##ModelId=3E01F9A203A4
@@ -173,6 +179,7 @@ int SolverControlAgent::endIteration (double conv)
   return state();
 }
 
+//##ModelId=3EB242F402AB
 int SolverControlAgent::pauseSolution (const string &msg)
 {
   if( pause() == AppEvent::PAUSED ) // this ought to go into a separate function
@@ -272,6 +279,7 @@ void SolverControlAgent::initSolution (const DataRecord::Ref &params)
   postEvent(StartSolutionEvent);
 }
 
+//##ModelId=3EB242F400B5
 int SolverControlAgent::processCommand (const HIID &id,
                           const DataRecord::Ref &data,const HIID &source)
 {
@@ -313,6 +321,7 @@ int SolverControlAgent::processCommand (const HIID &id,
   return AppEvent::SUCCESS;    
 }
 
+//##ModelId=3EB242F40376
 void SolverControlAgent::processControlRecord (const DataRecord &rec)
 {
   // enable iteration stepping mode, if specified
