@@ -27,7 +27,9 @@
 #include <tables/Tables/ArrColDesc.h>
 #include <tables/Tables/ArrayColumn.h>
 #include <tables/Tables/ScalarColumn.h>
+#include <casa/Arrays/Matrix.h>
 
+using namespace casa;
 using namespace LOFAR;
 
 namespace MSVisAgent
