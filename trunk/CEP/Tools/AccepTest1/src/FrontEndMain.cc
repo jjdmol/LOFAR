@@ -24,6 +24,19 @@ using namespace LOFAR;
 
 int main (int argc, const char** argv) {
 
+  int fe_rank = -1;
+
+  if (argc != 2) {
+    cout << "Usage " << argv[0] << " <FrontEnd rank>" << endl;
+    cout << "For each targetgroup the user needs to start a FrontEnd" << endl;
+    cout << "with the corresponding rank. Errors herein will cause " << endl;
+    cout << "connections to fail due to mismatches in portnumbering" << endl;
+      
+    return -1;
+  } else {
+    fe_rank = atoi(argv[1]);
+    cout << "fe_rank = " << fe_rank << endl;
+  }
 
   KeyValueMap kvm;
   try {
@@ -45,11 +58,17 @@ int main (int argc, const char** argv) {
   const int polarisations = kvm.getInt("polarisations", 2);
   const int runs = kvm.getInt("runs", 10);
   const int targets = kvm.getInt("targets", 8);
+  const int targetgroups = kvm.getInt("targetgroups", 1);
 
 //   const std::string frontend_ip = kvm.getString("frontend_ip");
 //   const std::string backend_ip = kvm.getString("backend_ip");
   
   const std::string loggerfile = kvm.getString("loggerfile", "CorrelatorLogger.prop");
+
+  if (fe_rank >= targetgroups) {
+    cout << "FrontEnd not used with this rank/targetgroups combination. " << endl;
+    return 0;
+  }
 
   kvm.show(cout);
   INIT_LOGGER(loggerfile.c_str());
@@ -66,9 +85,23 @@ int main (int argc, const char** argv) {
 	AH_FrontEnd* frontend;
 
 	if ((samples+elements) % 2 == 0) {
-	  frontend = new AH_FrontEnd(port, elements, samples, channels, polarisations, runs, targets);
+	  frontend = new AH_FrontEnd(port + (targets/targetgroups)*fe_rank,
+				     elements, 
+				     samples, 
+				     channels, 
+				     polarisations, 
+				     runs, 
+				     targets, 
+				     targetgroups);
 	} else {
-	  frontend = new AH_FrontEnd(port+2*targets, elements, samples, channels, polarisations, runs, targets);
+	  frontend = new AH_FrontEnd((port+2*targets) + (targets/targetgroups)*fe_rank, 
+				     elements, 
+				     samples, 
+				     channels, 
+				     polarisations, 
+				     runs, 
+				     targets, 
+				     targetgroups);
 	}
 	
 

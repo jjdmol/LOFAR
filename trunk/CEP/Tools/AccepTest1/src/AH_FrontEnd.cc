@@ -27,14 +27,15 @@ using namespace LOFAR;
 
 AH_FrontEnd::AH_FrontEnd (int port, int elements, 
 			  int samples, int channels, int polarisations, 
-			  int runs, int targets):
+			  int runs, int targets, int targetgroups):
   itsPort     (port),
   itsNelements(elements),
   itsNsamples (samples),
   itsNchannels(channels),
   itsNpolarisations(polarisations),
   itsNruns    (runs),
-  itsNtargets (targets)
+  itsNtargets (targets),
+  itsNtgroups (targetgroups)
 {
 
   starttime.tv_sec = 0;
@@ -63,16 +64,8 @@ void AH_FrontEnd::define(const KeyValueMap& /*params*/) {
 			       itsNtargets
 			       );
 
-  KeyValueMap kvm;
-  try {
-    kvm = KeyParser::parseFile("TestRange");
-  } catch (std::exception& x) {
-    cout << x.what() << endl;
-  }
-  const int targetgroups = kvm.getInt("targetgroups", 1);
-
   char name[32];
-  for (int cn = 0; cn < itsNtargets/targetgroups; cn++) {
+  for (int cn = 0; cn < itsNtargets/itsNtgroups; cn++) {
     sprintf(name,"FE_node%i",cn);
     itsWHs.push_back((WorkHolder*) 
 		     new WH_Random(name,
@@ -80,7 +73,8 @@ void AH_FrontEnd::define(const KeyValueMap& /*params*/) {
 				   itsNsamples,
 				   itsNchannels, 
 				   itsNpolarisations));
-      
+    
+    
     itsWHs.back()->getDataManager().getOutHolder(0)->connectTo
       ( *myWHCorrelator.getDataManager().getInHolder(0),
 	TH_Socket(LOCALHOST_IP, LOCALHOST_IP, itsPort+cn, false, true) );
@@ -98,10 +92,11 @@ void AH_FrontEnd::undefine() {
 
 void AH_FrontEnd::init() {
   vector<WorkHolder*>::iterator it = itsWHs.begin();
+  int cn = 0;
   for (; it != itsWHs.end(); it++) {
-    cout << "init FE WH " << (*it)->getName() << endl;
+    cout << "init FE WH " << (*it)->getName() << " listening on port " << itsPort+cn << endl;
     (*it)->basePreprocess();
-    
+    cn++;
   }
 }
 
