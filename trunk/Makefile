@@ -459,3 +459,115 @@ release:
 	echo " DONE.";\
 	find $$testdir/LOFAR -name CVS | xargs rm -rf;\
 
+#
+# Create a new tag
+#
+DEFAULT_FILES_TO_TAG=Makefile Versions autoconf_share Common
+tag:
+	@trap "rm -f /tmp/inputrc.$$PPID; exit" SIGINT;\
+	echo "TAB: complete-filename" > /tmp/inputrc.$$PPID;\
+	echo "set expand-tilde On" >> /tmp/inputrc.$$PPID;\
+	INPUTRC=/tmp/inputrc.$$PPID;\
+	echo "About to create a new tag."; \
+	echo ;\
+	echo "You will be asked for a TAG name (e.g. profile_1)"; \
+	echo "and for a list of files/directories to be tagged, and for a"; \
+	echo "directory location where the tagged files should be tested. The tagged";\
+	echo "files will be checked out to that location for you to test the tagged files.";\
+	echo ;\
+	rem='empty';\
+	echo "** Tag name:";\
+	while test "x$$rem" != "x" -o "x$$tagname" = "x"; do\
+		rem='';\
+		read -e -p"=> " tagname rem;\
+		if test "x$$rem" != "x"; then\
+			echo "ERROR: tag name should not contain spaces or tabs.";\
+		else if test "x$$tagname" = "x"; then\
+			echo "ERROR: no tag name specified";\
+			rem='error';\
+		fi\
+		fi\
+	done;\
+	echo "Tag name set to: '$$tagname'"; \
+	echo ;\
+	rem='empty';\
+	echo "** Tagged files test directory:";\
+	while test "x$$rem" != "x" -o "x$$testdir" = "x"; do\
+		rem='';\
+		read -e -p"=> " testdir rem;\
+		if test "x$$rem" != "x"; then\
+			echo "ERROR: test dir should be single directory name.";\
+			rem='error';\
+		else if test ! -d $$testdir; then\
+			echo "INFO: creating directory $$testdir";\
+			rem='';\
+			mkdir $$testdir;\
+			if test ! -d $$testdir; then\
+				echo "ERROR: failed to create directory $$testdir";\
+				rem='error';\
+			fi;\
+		else if test -e $$testdir/LOFAR; then\
+			echo -n "ERROR: There is already a $$testdir/LOFAR file/directory. ";\
+			echo -e "Please remove it or specify a different directory.";\
+			rem='error';\
+		else if test "x$$testdir" = "x"; then\
+			echo "ERROR: no directory specified";\
+			rem='error';\
+		fi\
+		fi\
+		fi\
+		fi\
+	done;\
+	echo "Test directory set to: '$$testdir'";\
+	echo ;\
+	files='';\
+	echo -e "** Specify the files and directories to be tagged.";\
+	echo -e "   Each file/dir separated by a space.";\
+	echo -e "   These files and directories are always tagged:";\
+	echo -e "   Directories are tagged recursively.";\
+	echo -e "\t\"$(DEFAULT_FILES_TO_TAG)\"";\
+	while test "x$$files" = "x"; do\
+		read -e -p"=> " files;\
+		if test "x$$files" = "x"; then\
+			echo "ERROR: no files or directories specified.";\
+		fi;\
+		for f in $$files; do\
+			if test ! -f $$f -a ! -d $$f ; then\
+				echo "ERROR: file or directory '$$f' not found.";\
+				files='';\
+			fi\
+		done;\
+	done;\
+	echo ;\
+	echo -e "\tTag:       $$tagname";\
+	echo -e "\tTest dir:  $$testdir";\
+	for f in $$files; do\
+		if test -f $$f; then\
+			echo -e "\tFILE:      $$f";\
+		else\
+		if test -d $$f; then\
+			echo -e "\tDIRECTORY: $$f";\
+		else\
+			echo "ERROR: file or directory '$$f' not found.";\
+		fi\
+		fi\
+	done;\
+	rm -f /tmp/inputrc.$$PPID;\
+	echo ;\
+	echo -n "TAGGING (output to tag.log) ...";\
+	cvs tag $$tagname $(DEFAULT_FILES_TO_TAG) $$files > tag.log 2>&1 ;\
+	if test ! 0 -eq $$?; then\
+		echo "FAILURE: failed to tag, see tag.log for information.";\
+		exit;\
+	fi;\
+	echo " DONE.";\
+	lofardir=$(PWD);\
+	echo -n "CHECKOUT TO $$testdir (output to checkout.log) ...";\
+	cd $$testdir;\
+	cvs co -r $$tagname LOFAR > checkout.log 2>&1 ;\
+	echo " DONE.";\
+	echo -n "CREATING $$testdir/LOFAR/ChangeLog (output to cvs2cl.log) ...";\
+	$$lofardir/autoconf_share/cvs2cl.pl --stdout > LOFAR/ChangeLog 2> cvs2cl.log;\
+	echo " DONE.";\
+	find $$testdir/LOFAR -name CVS | xargs rm -rf;\
+
