@@ -1,4 +1,4 @@
-//# ExampleMemBL.cc: Test program for basic Transport classes
+//# ExampleMem.cc: Test program for basic Transport classes
 //#
 //# Copyright (C) 2004
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
