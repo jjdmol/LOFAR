@@ -155,7 +155,16 @@ GCFEvent::TResult ViewStats::enabled(GCFEvent& e, GCFPortInterface& port)
 
       substats.timestamp.setNow();
       substats.rcumask.reset();
-      substats.rcumask.set(m_rcu);
+      if (m_rcu >= 0)
+      {
+	substats.rcumask.set(m_rcu);
+      }
+      else
+      {
+	for (int i = 0; i < N_RSPBOARDS * N_BLPS; i++)
+	substats.rcumask.set(i);
+      }
+	
       substats.period = 1;
       substats.type = m_type;
       substats.reduction = SUM;
@@ -280,7 +289,7 @@ void ViewStats::plot_statistics(Array<complex<double>, 3>& stats)
     value += imag(stats(0, 0, Range::all())) * imag(stats(0, 0, Range::all()));
     value /= (1<<16);
     value /= (1<<16);
-    value -= 1;
+    value -= 1.0;
 
     gnuplot_set_xlabel(handle, "beamlet");
     gnuplot_set_ylabel(handle, "power");
@@ -349,10 +358,10 @@ int main(int argc, char** argv)
   }
 
   cout << "Which RCU? ";
-  int rcu = atoi(fgets(buf, 32, stdin));  
-  if (rcu < 0 || rcu >= N_RSPBOARDS * N_BLPS)
+  int rcu = atoi(fgets(buf, 32, stdin));
+  if (rcu < -1 || rcu >= N_RSPBOARDS * N_BLPS)
   {
-    LOG_FATAL(formatString("Invalid RCU index, should be >= 0 && < %d", N_RSPBOARDS * N_BLPS));
+    LOG_FATAL(formatString("Invalid RCU index, should be >= -1 && < %d; -1 indicates all RCU's", N_RSPBOARDS * N_BLPS));
     exit(EXIT_FAILURE);
   }
   

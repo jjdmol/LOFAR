@@ -95,6 +95,11 @@ namespace RSP
       CacheBuffer& getFront();
       CacheBuffer& getBack();
 
+      /**
+       * Update the statusus of all boards and all RCU's.
+       */
+      static void update_status(EPARspstatusEvent& ack, int boardid);
+
     private:
 
       /**

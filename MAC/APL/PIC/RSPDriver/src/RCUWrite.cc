@@ -82,16 +82,28 @@ void RCUWrite::sendrequest()
 
 void RCUWrite::sendrequest_status()
 {
+#if WRITE_ACK_VERREAD
+  // send version read request
+  EPAFwversionReadEvent versionread;
+  MEP_FWVERSION(versionread.hdr, MEPHeader::READ);
+
+  getBoardPort().send(versionread);
+#else
   // send read status request to check status of the write
   EPARspstatusReadEvent rspstatus;
   MEP_RSPSTATUS(rspstatus.hdr, MEPHeader::READ);
   
   getBoardPort().send(rspstatus);
+#endif
 }
 
 GCFEvent::TResult RCUWrite::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
 {
+#if WRITE_ACK_VERREAD
+  EPAFwversionEvent ack(event);
+#else
   EPARspstatusEvent ack(event);
+#endif
 
   return GCFEvent::HANDLED;
 }

@@ -45,7 +45,7 @@ VersionsRead::~VersionsRead()
 
 void VersionsRead::sendrequest()
 {
-  // send read status request to check status of the write
+  // send version read request
   EPAFwversionReadEvent versionread;
   MEP_FWVERSION(versionread.hdr, MEPHeader::READ);
 

@@ -91,18 +91,29 @@ void SSWrite::sendrequest_status()
 {
   LOG_DEBUG("sendrequest_status");
 
+#if WRITE_ACK_VERREAD
+  // send version read request
+  EPAFwversionReadEvent versionread;
+  MEP_FWVERSION(versionread.hdr, MEPHeader::READ);
+
+  getBoardPort().send(versionread);
+#else
   // send read status request to check status of the write
   EPARspstatusReadEvent rspstatus;
   MEP_RSPSTATUS(rspstatus.hdr, MEPHeader::READ);
 
   getBoardPort().send(rspstatus);
+#endif
 }
 
 GCFEvent::TResult SSWrite::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
 {
-  EPARspstatusEvent ack(event);
-
   LOG_DEBUG("handleack");
+
+#if WRITE_ACK_VERREAD
+  EPAFwversionEvent ack(event);
+#else
+  EPARspstatusEvent ack(event);
 
   if (ack.board.write.error ||
       ack.board.read.error)
@@ -112,6 +123,7 @@ GCFEvent::TResult SSWrite::handleack(GCFEvent& event, GCFPortInterface& /*port*/
 		      ? "write error"
 		      : "read error\n"));
   }
+#endif
 
   return GCFEvent::HANDLED;
 }
