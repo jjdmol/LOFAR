@@ -125,6 +125,7 @@ void DH_Postgresql::DisconnectDatabase (void) {
 #define MAX_BYTEA_SIZE (5*4096)
 
 bool DH_Postgresql::StoreInDatabase (int, int tag, char * buf, int size) {
+#ifdef HAVE_PSQL
   // First create blob:
   int i;
   ostringstream ostr;
@@ -168,6 +169,10 @@ bool DH_Postgresql::StoreInDatabase (int, int tag, char * buf, int size) {
   ExecuteSQLCommand (q);
 
   itsWriteSeqNo ++;
+
+#else
+  AssertStr (false, "PSQL is not configured in");
+#endif
 
   return true; 
 }
