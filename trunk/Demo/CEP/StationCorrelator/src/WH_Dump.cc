@@ -100,21 +100,35 @@ void WH_Dump::process() {
     recSize += dhp->getBufSize()*sizeof(DH_Vis::BufferType);
     for (int channel=0; channel<itsNchannels; channel++) {
       for (int el1=0; el1<itsNelements; el1++){
-	for (int el2=el1+1; el2<itsNelements; el2++){
-	  int offsetIm = el1 * (itsNelements * itsNpolarisations) + el2 * itsNpolarisations;
-	  int offsetRe = el2 * (itsNelements * itsNpolarisations) + el1 * itsNpolarisations;
+	for (int el2=0; el2<=el1; el2++){
+	  int offsetRe = el1 * (itsNelements * itsNpolarisations) + el2 * itsNpolarisations;
+	  int offsetIm = el2 * (itsNelements * itsNpolarisations) + el1 * itsNpolarisations;
 	  for (int pol=0; pol<itsNpolarisations; pol++){
 	    freqBlock[ offsetIm + pol ] = dhp->getBufferElement(el1, el2, channel, pol)->imag();
 	    freqBlock[ offsetRe + pol ] = dhp->getBufferElement(el1, el2, channel, pol)->real();
 	  }
 	}
       }
-    written = write(itsOutputFile, freqBlock, itsNelements * itsNelements * itsNpolarisations);
-    if (written == -1) {
-      cerr<<"Something went wrong during write!"<<endl;
-    }
-    totalWritten += written;
-    // there is no error checking yet
+      written = write(itsOutputFile, freqBlock, itsNelements * itsNelements * itsNpolarisations * sizeof(DH_Vis::BufferPrimitive));
+#define DUMP_NOT_DEFINED
+#ifdef DUMP
+      for (int el1=0; el1<itsNelements; el1++){
+	cout<<el1<<": ";
+	for (int el2=0; el2<itsNelements; el2++){
+	  int offset = el1 * (itsNelements * itsNpolarisations) + el2 * itsNpolarisations;
+	  for (int pol=0; pol<itsNpolarisations; pol++){
+	    cout<<freqBlock[offset+pol]<<" ";
+	  }
+	  cout<<"  ";
+	}
+	cout<<endl;
+      }
+#endif
+      
+      if (written == -1) {
+	cerr<<"Something went wrong during write!"<<endl;
+      }
+      totalWritten += written;
     }
   }
   recSize = recSize / 1024; // from now recSize is in kB
@@ -126,8 +140,8 @@ void WH_Dump::process() {
     cout << "Received " 
 	 << recSize << " kB (" 
 	 << itsBandwidth / elapsed << " kB/s), written " 
-	 << written << " kB (" 
-	 << written / elapsed <<" kB/s)"
+	 << totalWrittenKB << " kB (" 
+	 << totalWrittenKB / elapsed <<" kB/s)"
 	 << endl;    
   }
 
