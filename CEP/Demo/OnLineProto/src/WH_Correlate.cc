@@ -141,8 +141,6 @@ void WH_Correlate::correlator_core_unrolled(blitz::Array<complex<float>, 2>& s,
   int loop = 5;
   int x, y;
 
-  printf(".");fflush(stdout);
-
   for ( int time = 0; time < itsNitems; time++) {
   for ( x = 0; (x+loop) < itsNelements; x += loop ) {
     for ( y = 0; (y+loop) <= x; y += loop ) {
