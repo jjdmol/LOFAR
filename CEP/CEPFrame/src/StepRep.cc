@@ -104,10 +104,9 @@ void StepRep::setSeqNr (int seqNr)
 {
   itsSeqNr = seqNr;
   if (itsAddSuffix) {
-    ostrstream os;
+    ostringstream os;
     os << '_' << itsSeqNr << ends;
     itsName += os.str();
-    delete [] os.str();
   }
 }
 
