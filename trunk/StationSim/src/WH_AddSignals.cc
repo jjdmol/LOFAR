@@ -29,11 +29,13 @@
 WH_AddSignals::WH_AddSignals (const string& name, 
 							  unsigned int nin,
 							  unsigned int nout,
-							  unsigned int nrcu)
+							  unsigned int nrcu,
+							  bool tapstream)
 : WorkHolder    (nin, nout, name, "WH_AddSignals"),
   itsInHolders  (0),
   itsOutHolders (0),
-  itsNrcu       (nrcu)
+  itsNrcu       (nrcu),
+  itsTapStream  (tapstream)
 {
   // Allocate blocks to hold pointers to input and output DH-s.
   if (nin > 0) {
@@ -56,14 +58,11 @@ WH_AddSignals::WH_AddSignals (const string& name,
   for (unsigned int i = 0; i < nout; i++) {
     sprintf (str, "%d", i);
     itsOutHolders[i] = new DH_SampleC (string ("out_") + str, 1, 1);
-  }
 
-  // DEBUG
-  itsCount = 0;
-//   itsFileOutReal.open ("/home/alex/data/add_real.txt");
-//   itsFileOutComplex.open ("/home/alex/data/add_complex.txt");
-//   itsFileOutReal.precision(20);
-//   itsFileOutComplex.precision(20);
+	if (itsTapStream) {
+	  itsOutHolders [i]->setOutFile (string ("DG_") + str + string (".dat"));
+	}
+  }
 }
 
 WH_AddSignals::~WH_AddSignals ()
@@ -76,8 +75,6 @@ WH_AddSignals::~WH_AddSignals ()
     delete itsOutHolders[i];
   }
   delete[]itsOutHolders;
-//   itsFileOutReal.close ();
-//   itsFileOutComplex.close ();
 }
 
 WorkHolder* WH_AddSignals::construct (const string& name, 
@@ -85,12 +82,12 @@ WorkHolder* WH_AddSignals::construct (const string& name,
 									  int noutput, 
 									  const ParamBlock&)
 {
-  return new WH_AddSignals (name, ninput, noutput, 1);
+  return new WH_AddSignals (name, ninput, noutput, 1, false);
 }
 
 WH_AddSignals* WH_AddSignals::make (const string& name) const
 {
-  return new WH_AddSignals (name, getInputs (), getOutputs (), itsNrcu);
+  return new WH_AddSignals (name, getInputs (), getOutputs (), itsNrcu, itsTapStream);
 }
 
 void WH_AddSignals::process ()
@@ -105,16 +102,6 @@ void WH_AddSignals::process ()
 		itsOutHolders[j]->getBuffer ()[0] += itsInHolders[i]->getBuffer ()[j];
       }
     }
-	
-// 	// DEBUG
-//     for (int i = 0; i < itsNrcu && real (itsOutHolders[i]->getBuffer ()[0]) != 0; i++) {
-//       itsFileOutReal << itsOutHolders[i]->getBuffer ()[0] << " ";
-// 	  itsFileOutComplex << imag (itsOutHolders[i]->getBuffer ()[0]) << " ";
-// 	}
-//     itsFileOutReal << endl;
-//     itsFileOutComplex << endl;
-
-// 	cout << itsCount++ << endl;
   }
 }
 

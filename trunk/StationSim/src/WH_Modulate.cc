@@ -107,29 +107,29 @@ void WH_Modulate::process ()
   if (itsPos == 0) {
     // find out what modulationscheme has to be applied to the signal
     // modulate the signal
-    if (itsModType == "AMDSB") {
+    if (itsModType == "amdsb") {
       itsOutputBuffer = modulate::amdsb (itsInputBuffer, 
 										 itsCarrierFreq,
 										 itsSampFreq, 
 										 itsPhi) * itsAmp;
-	} else if (itsModType == "AMDSB_TC") {
+	} else if (itsModType == "amdsb-tc") {
       itsOutputBuffer = modulate::amdsb_tc (itsInputBuffer, 
 											itsCarrierFreq,
 											itsSampFreq, 
 											itsPhi, 
 											itsOpt) * itsAmp;
-    } else if (itsModType == "AMSSB") {
+    } else if (itsModType == "amssb") {
       itsOutputBuffer = modulate::amssb (itsInputBuffer, 
 										 itsCarrierFreq,
 										 itsSampFreq, 
 										 itsPhi) * itsAmp;
-	} else if (itsModType == "FM") {
+	} else if (itsModType == "fm") {
       itsOutputBuffer = modulate::fm (itsInputBuffer, 
 									  itsCarrierFreq, 
 									  itsSampFreq,
 									  itsOpt, 
 									  itsPhi) * itsAmp;
-	} else if (itsModType == "PM") {
+	} else if (itsModType == "pm") {
       itsOutputBuffer = modulate::pm (itsInputBuffer, 
 									  itsCarrierFreq, 
 									  itsSampFreq,

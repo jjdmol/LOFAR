@@ -30,6 +30,8 @@
 #include <BaseSim/ParamBlock.h>
 #include <Common/Debug.h>
 #include <Common/lofar_vector.h>
+#include <Math/LCSMath.h>
+
 
 using namespace blitz;
 
@@ -40,7 +42,7 @@ WH_BeamFormer::WH_BeamFormer (const string& name,
 							  unsigned int nbeam,
 							  unsigned int maxNtarget, 
 							  unsigned int maxNrfi,
-							  int delay)
+							  bool tapstream)
   : WorkHolder    (nin, nout, name,"WH_BeamFormer"),  // Check number of inputs and outputs
 	itsInHolders  (0),
 	itsOutHolders (0),
@@ -49,7 +51,8 @@ WH_BeamFormer::WH_BeamFormer (const string& name,
 	itsNbeam      (nbeam),
 	itsMaxNtarget (maxNtarget),
 	itsMaxNrfi    (maxNrfi),
-	sample        (nrcu)
+	sample        (nrcu),
+	itsTapStream  (tapstream)
 {
   char str[8];
   // the number of inputs is equal to the number of reveiving elements
@@ -58,7 +61,7 @@ WH_BeamFormer::WH_BeamFormer (const string& name,
   }
   for (unsigned int i = 0; i < nrcu; i++) {
     sprintf (str, "%d",i);
-    itsInHolders[i] = new DH_SampleC (string("in_") + str, 1, 1);
+    itsInHolders[i] = new DH_SampleC (string ("in_") + str, 1, 1);
   }
   // idem for the number of outputs
   if (nout > 0) {
@@ -66,17 +69,18 @@ WH_BeamFormer::WH_BeamFormer (const string& name,
   }
   for (unsigned int i = 0; i < nout; i++) {
     sprintf (str, "%d", i);
-    itsOutHolders[i] = new DH_SampleC (string("out_") + str, 1, 1);
+    itsOutHolders[i] = new DH_SampleC (string ("out_") + str, 1, 1);
+
+	if (itsTapStream) {
+	  itsOutHolders [i]->setOutFile (string ("BF_") + str + string (".dat"));
+	}
   }
 
   //DEBUG
-  itsFileOutReal.open ((string ("/home/alex/gerdes/BF_real_") + name + string (".txt")).c_str ());
-  itsFileOutComplex.open ((string ("/home/alex/gerdes/BF_complex_") + name + string (".txt")).c_str ());
 //   itsFileInput.open ("/home/alex/temp/test_vectorEssai.txt");
-  itsPos = 0;
 //   itsTestVector.resize(itsNrcu, 25445);
 //   itsFileInput >> itsTestVector;
-  itsDelay = delay;
+  handle = gnuplot_init ();
 }
 
 
@@ -91,9 +95,8 @@ WH_BeamFormer::~WH_BeamFormer()
   }
   delete [] itsOutHolders;
 
-  // DEBUG
-  itsFileOutReal.close ();
-  itsFileOutComplex.close ();
+  gnuplot_close (handle);
+//   DEBUG
 //   itsFileInput.close ();
 }
 
@@ -106,13 +109,13 @@ WorkHolder* WH_BeamFormer::construct (const string& name,
 							params.getInt ("nbeam", 10),
 							params.getInt ("maxntarget", 10),
 							params.getInt ("maxnrfi", 10),
-							10);
+							false);
 }
 
 WH_BeamFormer* WH_BeamFormer::make (const string& name) const
 {
   return new WH_BeamFormer (name, getInputs(), getOutputs(),
-							itsNrcu, itsNbeam, itsMaxNtarget, itsMaxNrfi, itsDelay);
+							itsNrcu, itsNbeam, itsMaxNtarget, itsMaxNrfi, itsTapStream);
 }
 
 
@@ -122,7 +125,6 @@ void WH_BeamFormer::process()
 	dcomplex temp;
 	for (int i = 0; i < itsNrcu; i++) {
 	  sample(i) = (dcomplex)itsInHolders[i]->getBuffer()[0]; 
-
 // 	  //DEBUG
 // 	  sample(i) = itsTestVector(i, itsPos);
 	}
@@ -138,16 +140,13 @@ void WH_BeamFormer::process()
       itsOutHolders[j]->getBuffer ()[0] = output;
     }
 
-	// DEBUG
-// 	if (itsDelay == 0) {
- 	  itsPos++;
-// 	  itsPos %= itsTestVector.cols();
-	  itsFileOutReal << real(output) << endl;
-	  itsFileOutComplex << imag (output) << endl;
-// 	} else {
-// 	  itsDelay--;
+// 	int t = itsInHolders[0]->getTimeStamp ();
+// 	string n = getName ();
+// 	if (t % 500 == 0 && n == "0") {
+// 	  gnuplot_resetplot (handle);
+// 	  LoVec_double w = LCSMath::absVec (weight);
+// 	  gnuplot_plot_x (handle, w.data (), w.size (), "Power spectrum.");
 // 	}
-	cout << itsPos << endl;
   }
 }
 

@@ -21,6 +21,8 @@
 
 
 #include <StationSim/Source.h>
+#include <algorithm>
+
 
 Source::Source (string config_file, string trajectory_file)
 {
@@ -36,25 +38,27 @@ Source::Source (string config_file, string trajectory_file)
   while (!configfile.eof ()) {
     s = "";
     configfile >> s;
+	transform (s.begin (), s.end (), s.begin (), tolower);
     if (s == "nsignals") {
       configfile >> s;
       if (s == ":") {
 		configfile >> itsNumberOfSignals;
       }
-    } else if (s == "SignalFilename") {
+    } else if (s == "signalfilename") {
       configfile >> s;
       if (s == ":") {
 		configfile >> filename;
       }
-    } else if (s.substr (0, 2) == "AM" || s == "FM" || s == "PM") {
+    } else if ((s.substr (0, 2) == "am" || s == "fm" || s == "pm") && s != "amplitude") {
       double cf;
       double amp;
       double opt;
       string mod = s;
+	  transform (mod.begin (), mod.end (), mod.begin (), tolower);
 
       configfile >> cf;
-      configfile >> amp;
-      configfile >> opt;
+	  configfile >> amp;
+	  configfile >> opt;
 	  
       itsSignals[i++] = new Signal (path + filename, mod, cf, amp, opt);
     }

@@ -20,6 +20,7 @@
 //
 
 #include <StationSim/DataGenConfig.h>
+#include <algorithm>
 
 
 DataGenerator::DataGenerator (string config_file)
@@ -34,6 +35,7 @@ DataGenerator::DataGenerator (string config_file)
   while (!configfile.eof ()) {	  
 	s = "";
 	configfile >> s;
+	transform (s.begin (), s.end (), s.begin (), tolower);
 	if (s == "nsources") {
 	  configfile >> s;
 	  if (s == ":") {
@@ -75,7 +77,7 @@ DataGenerator::DataGenerator (string config_file)
 		configfile >> s;
 	  }
 	  itsArray = new ArrayConfig (path + s);
-	} else if (s == "Source") {
+	} else if (s == "source") {
 	  string t;
 	  configfile >> s;
 	  if (s == ":") {

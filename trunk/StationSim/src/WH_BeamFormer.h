@@ -35,6 +35,7 @@
 #include <StationSim/DH_SampleC.h>
 #include <Common/lofar_vector.h>
 #include <Common/Lorrays.h>
+#include <StationSim/GnuPlotInterface.h>
 
 
 class WH_BeamFormer: public WorkHolder
@@ -46,8 +47,8 @@ public:
   /// The first WorkHolder should have nin=0.
   WH_BeamFormer (const string& name,
 				 unsigned int nin, unsigned int nout, unsigned int nrcu,
-				 unsigned int nbeam, unsigned int maxNtarget, unsigned int maxNrfi,
-				 int delay);
+				 unsigned int nbeam, unsigned int maxNtarget, 
+				 unsigned int maxNrfi, bool tapstream);
 		 
 
   virtual ~WH_BeamFormer();
@@ -88,16 +89,14 @@ private:
   int itsNbeam;      // Number of beams
   int itsMaxNtarget; // Maximum number of targets to track
   int itsMaxNrfi;    // Maximum number of RFI signals that can be detected
+  bool itsTapStream;
 
   LoVec_dcomplex sample; // current sample in Blitz format
 
   //DEBUG
-  int itsPos;
-  ofstream itsFileOutReal;
-  ofstream itsFileOutComplex;
   ifstream itsFileInput;
   LoMat_dcomplex itsTestVector;
-  int itsDelay;
+  gnuplot_ctrl* handle;
 };
 
 #endif
