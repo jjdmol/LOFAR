@@ -147,8 +147,8 @@ void WH_RSP::process()
       int uint16blocksize = itsNbeamlets * itsPolarisations;
       
       // copy stationID and blockID of first EPA-packet in OutDataholder
-      DH_StationData* myDH = getDataManager().getOutHolder(0);
-      myDaH->setStationID( ((int*)&rspdata[2])[0] );
+      DH_StationData* myDH = static_cast<DH_StationData*>(getDataManager().getOutHolder(0));
+      myDH->setStationID( ((int*)&rspdata[2])[0] );
       myDH->setBlockID( ((int*)&rspdata[10])[0] );
       myDH->setFlag( 0 );
       
@@ -182,7 +182,7 @@ void WH_RSP::process()
       //todo: create an appropriate dummy packet only once and re-use.
 
       // copy stationID and blockID of first EPA-packet in OutDataholder
-      DH_StationData* myDH = getDataManager().getOutHolder(0);
+      DH_StationData* myDH = static_cast<DH_StationData*>(getDataManager().getOutHolder(0));
       myDH->setStationID( 0 );
       myDH->setBlockID( 0 );
       myDH->setFlag( 1 );
