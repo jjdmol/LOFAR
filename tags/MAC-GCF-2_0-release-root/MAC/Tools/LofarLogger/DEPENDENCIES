@@ -1,0 +1,15 @@
+Compiler version:
+compat-2.96 (special compiler for the RedHat 8.0 distribution; almost the same as 2.95 but extended with STL)
+Because the 3.2 is already installed with RedHat 8.0 the gcc and g++ of the compat 
+installation must be renamed (to for instance gcc296 and g++296).
+
+EXTERNAL PACKAGES:
+		
+log4cplus-1.0
+	Prepare build:
+	> CC=gcc296 CXX=g++296 CXXFLAGS="-g -O2 -fno-rtti" sh ./configure --enable-threads=no
+	- set '#define HAVE_SSTREAM 1' to comment
+	- ignore compiler erros during compiling the 'test''s
+	- ignore compiler error during installing the 'test's
+
+LCS/Common
