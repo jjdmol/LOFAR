@@ -45,7 +45,7 @@ demo := function(solver=0,niter=10,fname='demo',sleep=F,sleeptime=2,wait=F)
     global annotator;
 
     setparms(fname);
-    setgsm(fname);
+    initgsm(fname);
     if (0 == solver)
     {
         annotator:=solve(fname=fname, niter=niter,
@@ -115,6 +115,120 @@ demo_2source_experiments := function(niter=10, offset=2)
 }
 
 
+
+init_gsm_ionosphere := function(fname='')
+{
+#1,0.5,0.3,0.1,0.05Jy
+    tg := gsm(spaste(fname,'.GSM'), T);
+    if (is_fail(tg)) fail;
+    
+    arcsec_per_radian := 180.0*3600.0/pi;
+    alpha0 := (10.0+26.0/60 + 36.3/3600)*15.0*pi/180;
+    delta0 := 26.0*pi/180.0;
+    print 'alpha0 = ', alpha0;
+
+    l   := 117.42/arcsec_per_radian;
+    m   := 28.38/arcsec_per_radian;
+    pos := lm_to_alpha_delta(l,m, alpha0, delta0);    
+    tg.addpointsource ('CP1', [0,1e20], [0,1e20],
+                       pos[1], pos[2], 1, 0, 0, 0);
+    print pos;
+
+
+    l   := -34.74/arcsec_per_radian;
+    m   := -30.33/arcsec_per_radian;
+    pos := lm_to_alpha_delta(l,m, alpha0, delta0);    
+    tg.addpointsource ('CP2', [0,1e20], [0,1e20],
+                       pos[1], pos[2], 0.5, 0, 0, 0);
+    print pos;
+
+    l   := -65.56/arcsec_per_radian;
+    m   := 66.54/arcsec_per_radian;
+    pos := lm_to_alpha_delta(l,m, alpha0, delta0);    
+    tg.addpointsource ('CP3', [0,1e20], [0,1e20],
+                       pos[1], pos[2], 0.3, 0, 0, 0);
+    print pos;
+
+    l   := -93.44/arcsec_per_radian;
+    m   := 65.07/arcsec_per_radian;
+    pos := lm_to_alpha_delta(l,m, alpha0, delta0);    
+    tg.addpointsource ('CP4', [0,1e20], [0,1e20],
+                       pos[1], pos[2], 0.1, 0, 0, 0);
+    print pos;
+
+    l   := 8.81/arcsec_per_radian;
+    m   := -56.26/arcsec_per_radian;
+    pos := lm_to_alpha_delta(l,m, alpha0, delta0);    
+    tg.addpointsource ('CP5', [0,1e20], [0,1e20],
+                       pos[1], pos[2], 0.05, 0, 0, 0);
+    print pos;
+
+
+
+    tg.done();
+    pt := parmtable(spaste(fname,'_gsm.MEP'), T);
+    pt.loadgsm (spaste(fname,'.GSM'));
+    pt.done();
+  
+}
+
+
+
+
+
+
+
+solve_no_ionosphere := function(solver=0,niter=50,fname='',sleep=F,
+                                sleeptime=2,wait=F)
+{
+    global annotator;
+
+    setparms(fname);
+    init_gsm_ionosphere(fname);
+    mssel := '';
+
+    mkimg(spaste(fname, '.MS'), spaste(fname, '.img'), msselect=mssel,
+          cellx='1arcsec', celly='1arcsec', npix=1000, type='observed');
+
+    if (0 == solver)
+    {
+        annotator:=solve(fname=fname, niter=niter,ant=[0:99],
+                         sleep=sleep, sleeptime=sleeptime, wait=wait,
+                         solve_fluxes=F);
+    }
+    else
+    {
+        annotator:=solvepos(fname=fname, niter=niter);
+    }
+}
+
+
+
+
+
+
+solve_ionosphere_simultaneous := function(niter=10, fname='')
+{
+    solverec := [];
+
+    sleep:=F;
+    sleeptime:=2;
+    wait:=F;
+    
+    init_gsm_ionosphere(fname);
+    setparms(fname);
+
+    
+    mssel:='';
+    mkimg(spaste(fname, '.MS'), spaste(fname, '.img'), msselect=mssel,
+          cellx='1arcsec', celly='1arcsec', npix=1000, type='observed');
+
+    solverec :=solveej(fname=fname, niter=niter, ant=[0:99],
+                       sleep=sleep, sleeptime=sleeptime, wait=wait);
+
+    mkimg(spaste(fname, '.MS'), spaste(fname, '.img-solved'), msselect=mssel,
+          cellx='1arcsec', celly='1arcsec', npix=1000, type='corrected');
+}
 
 
 testsolve := function()

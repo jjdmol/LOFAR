@@ -61,7 +61,8 @@ predict := function(fname='demo', ant=4*[0:20],
 #
 solve := function(fname='demo', ant=4*[0:20],
                   modeltype='LOFAR', calcuvw=F, 
-                  niter=1, sleep=F, sleeptime=2, wait=F)
+                  niter=1, sleep=F, sleeptime=2, wait=F,
+                  solve_fluxes=T)
 {
     annotator := imgannotator(spaste(fname, '.img'), 'raster');
     
@@ -115,9 +116,11 @@ solve := function(fname='demo', ant=4*[0:20],
     mc.settimeinterval(3600); # calibrate per 3600 seconds
     note('mc.clearsolvableparms()');
     mc.clearsolvableparms();
-    note('mc.setsolvableparms("StokesI.*")');    
-    mc.setsolvableparms("StokesI.*");
-    #mc.setsolvableparms("RA.* DEC.*");
+
+    if(solve_fluxes){
+        note('mc.setsolvableparms("StokesI.*")');    
+        mc.setsolvableparms("StokesI.*");
+    }
     note('mc.setsolvableparms("DEC.* RA.*")');
     mc.setsolvableparms("DEC.* RA.*");
     #mc.setsolvableparms("Leakage.{11,22}.*");
@@ -233,7 +236,7 @@ solveej := function(fname='demo', ant=4*[0:20],
 
     mc.settimeinterval(3600); # calibrate per 3600 seconds
     mc.clearsolvableparms();
-    mc.setsolvableparms("EJ11.imag*");
+    mc.setsolvableparms("EJ11.phase.*");
 #    mc.setsolvableparms("EJ11.SR{1,5,9,13,17,21,25,29,33,37}.*");
 #    print mc.getparmnames();
 
@@ -248,7 +251,7 @@ solveej := function(fname='demo', ant=4*[0:20],
             d := mc.getsolvedomain();
             print 'solvedomain = ', d;
 
-            parms := mc.getparms("EJ11.{real,imag}.SR{5,9}.*");
+            parms := mc.getparms("EJ11.{ampl,phase}.*.*");
             nrp := len(parms);
             if (nrp > 0) {
                 for (nm in field_names(parms)) {
@@ -262,7 +265,7 @@ solveej := function(fname='demo', ant=4*[0:20],
                 srec := mc.solve();
                 solverec[spaste("iter",i)] := srec;
                 
-                parms := mc.getparms("EJ11.{real,imag}.SR{5,9}.*");
+                parms := mc.getparms("EJ11.{ampl,phase}.*.*");
                 nrp := len(parms);
                 if (nrp > 0) {
                     for (nm in field_names(parms)) {
@@ -273,8 +276,8 @@ solveej := function(fname='demo', ant=4*[0:20],
                 sleep_cmd := spaste('sleep ', sleeptime);
                 if (sleep) shell(sleep_cmd);
             }
-            print mc.getstatistics()
-                mc.saveresidualdata();
+            print mc.getstatistics();
+            mc.saveresidualdata();
             mc.saveparms();
         }
     
@@ -285,8 +288,8 @@ solveej := function(fname='demo', ant=4*[0:20],
         ant +:=1;               # msselect adds 1 to ANTENNA1,2
         mssel := spaste('all([ANTENNA1,ANTENNA2] in ',substitutevar(ant), ')');
     }
-    mkimg(spaste(fname, '.MS'), spaste(fname, '.imgs', src[1]),
-          msselect=mssel, type='corrected');
+#    mkimg(spaste(fname, '.MS'), spaste(fname, '.imgs', src[1]),
+#          msselect=mssel, type='corrected');
 
     return solverec;    
 #    return ref annotator;
