@@ -48,14 +48,14 @@ namespace LOFAR
 
 /**
    This class defines the transport mechanism between data holders
-   that have been connected using the TH_Mem::proto prototype. This can
+   that have been connected using a TH_ShMem object. This can
    only be done when both data holder reside within the same address
    space.  It uses memcpy to transport the data.
   
    The match between send and receive is done using a map.  This map
    keeps track of all messages that have been sent through the
    TH_Mem::send function. The tag argument is mapped to the private Msg
-   class which keeps record fo the address of the buffer that should be
+   class which keeps record of the address of the buffer that should be
    sent, the number of bytes to send and the tag of the send.  The
    assumption of this implementation is that the tag is unique for
    communication between each pair of connected DataHolders and that
@@ -66,7 +66,9 @@ namespace LOFAR
 class TH_ShMem: public TransportHolder
 {
 public:
+  // Create an object to send data from source to destination.
   TH_ShMem();
+
   virtual ~TH_ShMem();
 
   /// method to make a TH_ShMem instance; used for prototype pattern
@@ -93,7 +95,7 @@ public:
   virtual string getType() const;
 
   // Get the type of BlobString needed from the transport holder.
-  virtual BlobStringType blobStringType();
+  virtual BlobStringType blobStringType() const;
 
   virtual bool connectionPossible(int srcRank, int dstRank) const;
 
@@ -192,7 +194,7 @@ public:
       shmem_cond_t itsSendReadyCondition;
       void*        itsBuf;
   };
-  
+
   bool      itsFirstCall;
   ShMemBuf* itsSendBuf;
   ShMemBuf* itsRecvBuf;
