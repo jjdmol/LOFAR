@@ -1,5 +1,13 @@
 SUBDIRS	= shmem .
 
+#
+# only compile LofarLogger if log4cplus is configured
+#
+if HAVE_LOG4CPLUS
+LOG4CPLUS_INSTHDRS = LofarLogger.h
+LOG4CPLUS_SOURCES  = LofarLogger.cc
+endif
+
 INSTHDRS = \
 Allocator.h BlobStringType.h BlobString.h BlobStringTraits.h \
 BlobHeader.h BlobArrayHeader.h BlobOStream.h BlobIStream.h BlobArray.h \
@@ -36,7 +44,8 @@ lofar_map.h					\
 lofar_stack.h					\
 lofar_iosfwd.h					\
 lofar_string.h					\
-Profiling/PerfProfile.h
+Profiling/PerfProfile.h \
+$(LOG4CPLUS_INSTHDRS)
 
 NOINSTHDRS =
 
@@ -67,7 +76,8 @@ StringUtil.cc \
 Net/Socket.cc \
 Thread/Thread.cc \
 Thread/SmartLock.cc \
-Profiling/PerfProfile.cc
+Profiling/PerfProfile.cc \
+$(LOG4CPLUS_SOURCES)
 
 AM_YFLAGS		= -d -p KeyParse
 AM_LFLAGS		= -PKeyTokenize
@@ -76,14 +86,6 @@ LEX_OUTPUT_ROOT		= lex.KeyTokenize
 libcommon_la_LIBADD	= shmem/libshmem.la
 
 bin_PROGRAMS		= LimitExec
-LimitExec_SOURCES	= LimitExec.c
-
-#
-# only compile LofarLogger if log4cplus is configured
-#
-if HAVE_LOG4CPLUS
-INSTHDRS += LofarLogger.h
-libcommon_la_SOURCES += LofarLogger.cc
-endif
+LimitExec_SOURCES	= LimitExec.cc
 
 include $(lofar_sharedir)/Makefile.common
