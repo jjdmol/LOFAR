@@ -20,8 +20,8 @@
 //
 //  $Id$
 
-//# No include guard is used, because it should always be used from
-//# LofarLogger.h (and from LofarLogCout.cc).
+//# No include guard is used, because it should only be included indirectly
+//# by LofarLogger.h (and by LofarLogCout.cc).
 
 #include <Common/lofar_iostream.h>
 #include <Common/lofar_sstream.h>
