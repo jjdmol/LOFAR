@@ -35,6 +35,9 @@
 
 #define PROPERTY_LDS_COMMAND          "LogicalDeviceScheduler_command"
 #define PROPERTY_LDS_STATUS           "LogicalDeviceScheduler_status"
+#define PROPERTY_LDS_WG_FREQUENCY     "LogicalDeviceScheduler_WaveFormGenerator_frequency"
+#define PROPERTY_LDS_WG_AMPLITUDE     "LogicalDeviceScheduler_WaveFormGenerator_amplitude"
+#define PROPERTY_LDS_WG_SAMPLEPERIOD  "LogicalDeviceScheduler_WaveFormGenerator_samplePeriod"
 #define PROPERTY_VT_COMMAND           "VT1_command"
 #define PROPERTY_VT_STATUS            "VT1_status"
 #define PROPERTY_SBF_COMMAND          "VT1_BF1_command"
@@ -49,7 +52,7 @@ const TProperty propertiesLDS[] =
 {
   {"command", GCFPValue::LPT_STRING, GCF_READWRITE_PROP, ""},
   {"status", GCFPValue::LPT_STRING, GCF_READWRITE_PROP, ""},
-  {"WaveFormGenerator_frequency", GCFPValue::LPT_DOUBLE, GCF_READWRITE_PROP, "1000000.0"},
+  {"WaveFormGenerator_frequency", GCFPValue::LPT_DOUBLE, GCF_READWRITE_PROP, "1500000.0"},
   {"WaveFormGenerator_amplitude", GCFPValue::LPT_UNSIGNED, GCF_READWRITE_PROP, "128"},
   {"WaveFormGenerator_samplePeriod", GCFPValue::LPT_UNSIGNED, GCF_READWRITE_PROP, "2"},
 };

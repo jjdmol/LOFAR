@@ -56,7 +56,7 @@ class AVTTestTask : public GCFTask
     
   private: 
     GCFEvent::TResult initial(GCFEvent& e, GCFPortInterface& p);
-    GCFEvent::TResult connected(GCFEvent& e, GCFPortInterface& p);
+    GCFEvent::TResult propertiesLoaded(GCFEvent& e, GCFPortInterface& p);
     GCFEvent::TResult test1(GCFEvent& e, GCFPortInterface& p);
     GCFEvent::TResult test2(GCFEvent& e, GCFPortInterface& p);
     GCFEvent::TResult test3(GCFEvent& e, GCFPortInterface& p);
@@ -79,12 +79,21 @@ class AVTTestTask : public GCFTask
 
     GCFProperty     m_propertyLDScommand;
     GCFProperty     m_propertyLDSstatus;
+    GCFProperty     m_propertyLDSWGFrequency;
+    GCFProperty     m_propertyLDSWGAmplitude;
+    GCFProperty     m_propertyLDSWGSamplePeriod;
     GCFProperty     m_propertySBFdirectionType;
     GCFProperty     m_propertySBFdirectionAngle1;
     GCFProperty     m_propertySBFdirectionAngle2;
     GCFProperty     m_propertySBFstatus;
 
     GCFMyPropertySet      m_beamServerProperties;
+    bool m_BEAMALLOC_received;
+    bool m_BEAMFREE_received;
+    bool m_BEAMPOINTTO_received;
+    bool m_WGSETTINGS_received;
+    bool m_WGENABLE_received;
+    bool m_WGDISABLE_received;
 };
 
 #endif

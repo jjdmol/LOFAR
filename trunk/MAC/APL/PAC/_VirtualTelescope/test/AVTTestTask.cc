@@ -21,6 +21,7 @@
 //#  $Id$
 
 #include <GCF/GCF_PValue.h>
+#include <GCF/GCF_PVUnsigned.h>
 #include <GCF/GCF_PVString.h>
 #include <GCF/GCF_PVDouble.h>
 #include "../../../APLCommon/src/APL_Defines.h"
@@ -45,11 +46,20 @@ AVTTestTask::AVTTestTask(AVTTest& tester) :
   m_beamserver(*this, gBSName, GCFPortInterface::SPP, ABS_PROTOCOL),
   m_propertyLDScommand(string(PROPERTY_LDS_COMMAND)),
   m_propertyLDSstatus(string(PROPERTY_LDS_STATUS)),
+  m_propertyLDSWGFrequency(string(PROPERTY_LDS_WG_FREQUENCY)),
+  m_propertyLDSWGAmplitude(string(PROPERTY_LDS_WG_AMPLITUDE)),
+  m_propertyLDSWGSamplePeriod(string(PROPERTY_LDS_WG_SAMPLEPERIOD)),
   m_propertySBFdirectionType(string(PROPERTY_SBF_DIRECTIONTYPE)),
   m_propertySBFdirectionAngle1(string(PROPERTY_SBF_DIRECTIONANGLE1)),
   m_propertySBFdirectionAngle2(string(PROPERTY_SBF_DIRECTIONANGLE2)),
   m_propertySBFstatus(string(PROPERTY_SBF_STATUS)),
-  m_beamServerProperties(propertySetBeamServer,&m_answer)
+  m_beamServerProperties(propertySetBeamServer,&m_answer),
+  m_BEAMALLOC_received(false),
+  m_BEAMFREE_received(false),
+  m_BEAMPOINTTO_received(false),
+  m_WGSETTINGS_received(false),
+  m_WGENABLE_received(false),
+  m_WGDISABLE_received(false)
 {
   registerProtocol(LOGICALDEVICE_PROTOCOL, LOGICALDEVICE_PROTOCOL_signalnames);
   registerProtocol(ABS_PROTOCOL, ABS_PROTOCOL_signalnames);
@@ -57,6 +67,9 @@ AVTTestTask::AVTTestTask(AVTTest& tester) :
   m_answer.setTask(this);
   m_propertyLDScommand.setAnswer(&m_answer);
   m_propertyLDSstatus.setAnswer(&m_answer);
+  m_propertyLDSWGFrequency.setAnswer(&m_answer);
+  m_propertyLDSWGAmplitude.setAnswer(&m_answer);
+  m_propertyLDSWGSamplePeriod.setAnswer(&m_answer);
   m_propertySBFdirectionType.setAnswer(&m_answer);
   m_propertySBFdirectionAngle1.setAnswer(&m_answer);
   m_propertySBFdirectionAngle2.setAnswer(&m_answer);
@@ -81,7 +94,7 @@ GCFEvent::TResult AVTTestTask::initial(GCFEvent& event, GCFPortInterface& /*p*/)
       m_beamServerProperties.load();
       m_beamserver.open(); // start listening
       break;
-      
+    
     case F_MYPLOADED_SIG:
       if(m_sBeamServerOnly)
       {
@@ -89,7 +102,7 @@ GCFEvent::TResult AVTTestTask::initial(GCFEvent& event, GCFPortInterface& /*p*/)
       }
       else
       {
-        TRAN(AVTTestTask::connected);
+        TRAN(AVTTestTask::propertiesLoaded);
       }
       break;
 
@@ -102,9 +115,9 @@ GCFEvent::TResult AVTTestTask::initial(GCFEvent& event, GCFPortInterface& /*p*/)
   return status;
 }
 
-GCFEvent::TResult AVTTestTask::connected(GCFEvent& event, GCFPortInterface& /*p*/)
+GCFEvent::TResult AVTTestTask::propertiesLoaded(GCFEvent& event, GCFPortInterface& /*p*/)
 {
-  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTTestTask(%s)::connected (%s)",getName().c_str(),evtstr(event)));
+  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTTestTask(%s)::propertiesLoaded (%s)",getName().c_str(),evtstr(event)));
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (event.signal)
@@ -112,14 +125,21 @@ GCFEvent::TResult AVTTestTask::connected(GCFEvent& event, GCFPortInterface& /*p*
     case F_INIT_SIG:
       break;
       
+    case F_TIMER_SIG: // intentional fall through
     case F_ENTRY_SIG:
-      m_propertyLDSstatus.subscribe();
-      m_propertySBFstatus.subscribe();
-      TRAN(AVTTestTask::test1);
+      if(GCF_PML_ERROR==m_propertyLDSstatus.subscribe())
+      {
+        LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTTestTask(%s): unable to subscribe to LogicalDeviceProperties",getName().c_str()));
+        m_beamserver.setTimer(1.0); // abuse the beamserver to set a timert
+      }
+      else
+      {
+        TRAN(AVTTestTask::test1);
+      }
       break;
 
     default:
-      LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTTestTask(%s)::connected, default",getName().c_str()));
+      LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTTestTask(%s)::propertiesLoaded, default",getName().c_str()));
       status = GCFEvent::NOT_HANDLED;
       break;
   }
@@ -156,36 +176,9 @@ GCFEvent::TResult AVTTestTask::test1(GCFEvent& event, GCFPortInterface& /*p*/)
 }
 
 /* 
- * Test case: initialize EPA waveform generator
- */
-GCFEvent::TResult AVTTestTask::test2(GCFEvent& event, GCFPortInterface& /*p*/)
-{
-  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTTestTask(%s)::test2 (%s)",getName().c_str(),evtstr(event)));
-  GCFEvent::TResult status = GCFEvent::HANDLED;
-
-  switch (event.signal)
-  {
-    case F_INIT_SIG:
-      break;
-
-    case F_ENTRY_SIG:
-      m_tester._avttest(true);
-      TRAN(AVTTestTask::test3);
-      break;
-
-    default:
-      LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTTestTask(%s)::test2, default",getName().c_str()));
-      status = GCFEvent::NOT_HANDLED;
-      break;
-  }
-
-  return status;
-}
-
-/* 
  * Test case: create virtual telescope
  */
-GCFEvent::TResult AVTTestTask::test3(GCFEvent& event, GCFPortInterface& p)
+GCFEvent::TResult AVTTestTask::test2(GCFEvent& event, GCFPortInterface& p)
 {
   LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTTestTask(%s)::test3 (%d)",getName().c_str(),event.signal));
   GCFEvent::TResult status = GCFEvent::HANDLED;
@@ -230,13 +223,13 @@ GCFEvent::TResult AVTTestTask::test3(GCFEvent& event, GCFPortInterface& p)
           if(statusValue == string("Resumed"))
           {
             m_tester._avttest(true);
-            TRAN(AVTTestTask::test4);
+            TRAN(AVTTestTask::test3);
           }
           else if(statusValue != string("Claimed") &&
                   statusValue != string("Prepared"))
           {
             m_tester._avttest(false);
-            TRAN(AVTTestTask::test4);
+            TRAN(AVTTestTask::test3);
           }
         }
         break;
@@ -251,6 +244,75 @@ GCFEvent::TResult AVTTestTask::test3(GCFEvent& event, GCFPortInterface& p)
               
       default:
         LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTTestTask(%s)::test3, default",getName().c_str()));
+        status = GCFEvent::NOT_HANDLED;
+        break;
+    }
+  }
+  return status;
+}
+
+/* 
+ * Test case: initialize EPA waveform generator
+ */
+GCFEvent::TResult AVTTestTask::test3(GCFEvent& event, GCFPortInterface& p)
+{
+  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTTestTask(%s)::test2 (%s)",getName().c_str(),evtstr(event)));
+  GCFEvent::TResult status = GCFEvent::HANDLED;
+
+  status=handleBeamServerEvents(event,p);
+  if(status!=GCFEvent::HANDLED)
+  {
+    status=GCFEvent::HANDLED;
+    switch (event.signal)
+    {
+      case F_INIT_SIG:
+        break;
+  
+      case F_ENTRY_SIG:
+      {
+        m_WGSETTINGS_received=false;
+        GCFPVDouble frequency(1000000.0);
+        GCFPVUnsigned amplitude(128);
+        GCFPVUnsigned samplePeriod(2);
+        if (m_propertyLDSWGFrequency.setValue(frequency) != GCF_NO_ERROR ||
+            m_propertyLDSWGAmplitude.setValue(amplitude) != GCF_NO_ERROR ||
+            m_propertyLDSWGSamplePeriod.setValue(samplePeriod) != GCF_NO_ERROR)
+        {
+          m_tester._avttest(false);
+          TRAN(AVTTestTask::test4);
+        }
+        else
+        {
+          // check if the beamserver receives the messages
+          m_beamserver.setTimer(1.0);
+        }
+        break;
+      }
+
+      case F_TIMER_SIG:
+      {
+        if(m_WGSETTINGS_received==true)
+        {
+          m_WGSETTINGS_received=false;
+          m_tester._avttest(true);
+          TRAN(AVTTestTask::test4);
+        }
+        else
+        {
+          m_beamserver.setTimer(1.0);
+        }
+        break;
+      }
+      
+      case F_DISCONNECTED_SIG:
+      {
+        m_tester._avttest(false);
+        TRAN(AVTTestTask::test4);
+        break;
+      }
+              
+      default:
+        LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTTestTask(%s)::test2, default",getName().c_str()));
         status = GCFEvent::NOT_HANDLED;
         break;
     }
@@ -302,6 +364,13 @@ GCFEvent::TResult AVTTestTask::test4(GCFEvent& event, GCFPortInterface& /*p*/)
       break;
     }
 
+    case F_DISCONNECTED_SIG:
+    {
+      m_tester._avttest(false);
+      TRAN(AVTTestTask::test5);
+      break;
+    }
+            
     default:
       LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTTestTask(%s)::test4, default",getName().c_str()));
       status = GCFEvent::NOT_HANDLED;
@@ -329,6 +398,13 @@ GCFEvent::TResult AVTTestTask::test5(GCFEvent& event, GCFPortInterface& /*p*/)
       TRAN(AVTTestTask::test6);
       break;
 
+      case F_DISCONNECTED_SIG:
+      {
+        m_tester._avttest(false);
+        TRAN(AVTTestTask::test6);
+        break;
+      }
+              
     default:
       LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTTestTask(%s)::test5, default",getName().c_str()));
       status = GCFEvent::NOT_HANDLED;
@@ -341,57 +417,65 @@ GCFEvent::TResult AVTTestTask::test5(GCFEvent& event, GCFPortInterface& /*p*/)
 /* 
  * Test case: set beam direction
  */
-GCFEvent::TResult AVTTestTask::test6(GCFEvent& event, GCFPortInterface& /*p*/)
+GCFEvent::TResult AVTTestTask::test6(GCFEvent& event, GCFPortInterface& p)
 {
   LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTTestTask(%s)::test6 (%s)",getName().c_str(),evtstr(event)));
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
-  switch (event.signal)
+  status=handleBeamServerEvents(event,p);
+  if(status!=GCFEvent::HANDLED)
   {
-    case F_INIT_SIG:
-      break;
-
-    case F_ENTRY_SIG:
+    status=GCFEvent::HANDLED;
+    switch (event.signal)
     {
-      GCFPVString directionType(string("AZEL"));
-      GCFPVDouble directionAngle1(45.0);
-      GCFPVDouble directionAngle2(45.0);
-      if(m_propertySBFdirectionType.setValue(directionType) != GCF_NO_ERROR ||
-         m_propertySBFdirectionAngle1.setValue(directionAngle1) != GCF_NO_ERROR ||
-         m_propertySBFdirectionAngle2.setValue(directionAngle2) != GCF_NO_ERROR)
+      case F_INIT_SIG:
+        break;
+  
+      case F_ENTRY_SIG:
       {
-        m_tester._avttest(false);
-        TRAN(AVTTestTask::test7);
-      }
-      break;
-    }
-    
-    case F_VCHANGEMSG_SIG:
-    {
-      GCFPropValueEvent* pResponse = static_cast<GCFPropValueEvent*>(&event);
-      assert(pResponse);
-      string expectedProperty=m_propertySBFstatus.getFullName();
-      if(strncmp(pResponse->pPropName, expectedProperty.c_str(), expectedProperty.length()) == 0)
-      {
-        if(((GCFPVString*)pResponse->pValue)->getValue() == string("OK"))
+        m_BEAMPOINTTO_received=false;
+        GCFPVString directionType(string("AZEL"));
+        GCFPVDouble directionAngle1(0.45);
+        GCFPVDouble directionAngle2(0.65);
+        if(m_propertySBFdirectionType.setValue(directionType) != GCF_NO_ERROR ||
+           m_propertySBFdirectionAngle1.setValue(directionAngle1) != GCF_NO_ERROR ||
+           m_propertySBFdirectionAngle2.setValue(directionAngle2) != GCF_NO_ERROR)
         {
-          m_tester._avttest(true);
+          m_tester._avttest(false);
+          TRAN(AVTTestTask::test7);
         }
         else
         {
-          m_tester._avttest(true);
+          // periodically check if the message has been received by the beamserver
+          m_beamserver.setTimer(1.0);
         }
-        TRAN(AVTTestTask::test7);
+        break;
       }
-      break;
+
+      case F_TIMER_SIG:
+      {
+        if(m_BEAMPOINTTO_received==true)
+        {
+          m_BEAMPOINTTO_received=false;
+          m_tester._avttest(true);
+          TRAN(AVTTestTask::test7);
+        }
+        break;
+      }
+      
+      case F_DISCONNECTED_SIG:
+      {
+        m_tester._avttest(false);
+        TRAN(AVTTestTask::test7);
+        break;
+      }
+              
+      default:
+        LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTTestTask(%s)::test6, default",getName().c_str()));
+        status = GCFEvent::NOT_HANDLED;
+        break;
     }
-
-    default:
-      LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTTestTask(%s)::test6, default",getName().c_str()));
-      status = GCFEvent::NOT_HANDLED;
-      break;
   }
-
   return status;
 }
 
@@ -413,6 +497,13 @@ GCFEvent::TResult AVTTestTask::test7(GCFEvent& event, GCFPortInterface& /*p*/)
       TRAN(AVTTestTask::test8);
       break;
 
+    case F_DISCONNECTED_SIG:
+    {
+      m_tester._avttest(false);
+      TRAN(AVTTestTask::test8);
+      break;
+    }
+            
     default:
       LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTTestTask(%s)::test7, default",getName().c_str()));
       status = GCFEvent::NOT_HANDLED;
@@ -440,6 +531,13 @@ GCFEvent::TResult AVTTestTask::test8(GCFEvent& event, GCFPortInterface& /*p*/)
       TRAN(AVTTestTask::test9);
       break;
 
+    case F_DISCONNECTED_SIG:
+    {
+      m_tester._avttest(false);
+      TRAN(AVTTestTask::test9);
+      break;
+    }
+            
     default:
       LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTTestTask(%s)::test8, default",getName().c_str()));
       status = GCFEvent::NOT_HANDLED;
@@ -452,25 +550,63 @@ GCFEvent::TResult AVTTestTask::test8(GCFEvent& event, GCFPortInterface& /*p*/)
 /* 
  * Test case: cleanup
  */
-GCFEvent::TResult AVTTestTask::test9(GCFEvent& event, GCFPortInterface& /*p*/)
+GCFEvent::TResult AVTTestTask::test9(GCFEvent& event, GCFPortInterface& p)
 {
   LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTTestTask(%s)::test9 (%s)",getName().c_str(),evtstr(event)));
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
-  switch (event.signal)
+  status = handleBeamServerEvents(event,p);
+  if(status!=GCFEvent::HANDLED)
   {
-    case F_INIT_SIG:
-      break;
+    status = GCFEvent::HANDLED;
+    switch (event.signal)
+    {
+      case F_INIT_SIG:
+        break;
+  
+      case F_ENTRY_SIG:
+      {
+        string cmd("RELEASE ");
+        string devices(string(VTNAME));
+        GCFPVString command(cmd+devices);
+        if (m_propertyLDScommand.setValue(command) != GCF_NO_ERROR)
+        {
+          m_tester._avttest(false);
+          TRAN(AVTTestTask::finished);
+        }
+        break;
+      }
+      
+      case F_VCHANGEMSG_SIG:
+      {
+        GCFPropValueEvent* pResponse = static_cast<GCFPropValueEvent*>(&event);
+        assert(pResponse);
+        string expectedProperty=m_propertyLDSstatus.getFullName();
+        if(strncmp(pResponse->pPropName, expectedProperty.c_str(), expectedProperty.length()) == 0)
+        {
+          string statusValue=((GCFPVString*)pResponse->pValue)->getValue();
+          LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTTestTask(%s)::test9 status changed (%s)",getName().c_str(),statusValue.c_str()));
+          if(statusValue == string("Released"))
+          {
+            m_tester._avttest(true);
+            TRAN(AVTTestTask::finished);
+          }
+        }
+        break;
+      }
 
-    case F_ENTRY_SIG:
-      m_tester._avttest(true);
-      TRAN(AVTTestTask::finished);
-      break;
-
-    default:
-      LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTTestTask(%s)::test9, default",getName().c_str()));
-      status = GCFEvent::NOT_HANDLED;
-      break;
+      case F_DISCONNECTED_SIG:
+      {
+        m_tester._avttest(false);
+        TRAN(AVTTestTask::finished);
+        break;
+      }
+              
+      default:
+        LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTTestTask(%s)::test9, default",getName().c_str()));
+        status = GCFEvent::NOT_HANDLED;
+        break;
+    }
   }
 
   return status;
@@ -491,7 +627,6 @@ GCFEvent::TResult AVTTestTask::finished(GCFEvent& event, GCFPortInterface& /*p*/
 
     case F_ENTRY_SIG:
       m_propertyLDSstatus.unsubscribe();
-      m_propertySBFstatus.unsubscribe();
       GCFTask::stop();
       break;
 
@@ -515,6 +650,7 @@ GCFEvent::TResult AVTTestTask::handleBeamServerEvents(GCFEvent& event, GCFPortIn
     {
       ABSBeamalloc_AckEvent ack(0, SUCCESS);
       p.send(ack);
+      m_BEAMALLOC_received=true;
       break;
     }
      
@@ -522,23 +658,28 @@ GCFEvent::TResult AVTTestTask::handleBeamServerEvents(GCFEvent& event, GCFPortIn
     {
       ABSBeamfree_AckEvent ack(0, SUCCESS);
       p.send(ack);
+      m_BEAMFREE_received=true;
       break;
     }
      
     case ABS_BEAMPOINTTO:
+      m_BEAMPOINTTO_received=true;
       break;
       
     case ABS_WGSETTINGS:
     {
       ABSWgsettings_AckEvent ack(SUCCESS);
       p.send(ack);
+      m_WGSETTINGS_received=true;
       break;
     }
     
     case ABS_WGENABLE:
+      m_WGENABLE_received=true;
       break;
       
     case ABS_WGDISABLE:
+      m_WGDISABLE_received=true;
       break;
 
     default:
