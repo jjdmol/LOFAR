@@ -1,16 +1,22 @@
-#include <time.h>
 #include <lofar_config.h>
-#include <Common/LofarLogger.h>
+
+#include <time.h>
+#include <libgen.h>			// basename
 #include <Common/hexdump.h>
-#include <Transport/TH_Socket.h>
+#include <Common/LofarLogger.h>
 #include <ACC/ProcControlComm.h>
+#include <ACC/ParameterSet.h>
+#include <Transport/TH_Socket.h>
 
 using namespace LOFAR;
 using namespace LOFAR::ACC;
 
 
 int main (int argc, char *argv[]) {
-	INIT_LOGGER ("default.log_prop");
+
+	INIT_LOGGER(basename(argv[0]));
+//	INIT_LOGGER("tPCClient");
+	LOG_INFO_STR("Starting up: " << argv[0]);
 
 	DH_ProcControl		DH_Client;
 	DH_ProcControl		DH_Server;
@@ -23,24 +29,33 @@ int main (int argc, char *argv[]) {
 	DH_Client.connectBidirectional(DH_Server, TCPto, TCPfrom, true);
 	DH_Client.init();
 
+	ParameterSet	myPS(argv[1]);
+	string			procID = myPS.getString("process.name");
+
 	sleep(2);			// simulate we are busy
 	DH_Client.setCommand (PCCmdStart);		// ready to receive data
-	DH_Client.setOptions (argv[0]);			// tell AC who we are.
+	DH_Client.setOptions (procID);			// tell AC who we are.
 	DH_Client.write();
 
 	// wait for a command
-	DH_Client.read();
-	hexdump (DH_Client.getDataPtr(), DH_Client.getDataSize());
+	PCCmd	command;
+	do {
+		DH_Client.read();		// sync client!
 
-	// tell after a while we are ready with this command
-	sleep (3);
-	DH_Client.setCommand(static_cast<PCCmd>(DH_Client.getCommand() ^ PCCmdResult));
-	DH_Client.setResult (PcCmdMaskOk);
-	DH_Client.write();
-#if 0
-	// stay alive a while.
-	sleep (10);
-#endif
+		command  		 = DH_Client.getCommand();
+		time_t	waitTime = DH_Client.getWaitTime();
+		string	options  = DH_Client.getOptions();
+		LOG_DEBUG_STR("Received command: " << command << " with waitTime= " 
+						<< waitTime << " and options: " << options);
+
+		// tell after a while we are ready with this command
+		sleep (3);
+		DH_Client.setCommand(static_cast<PCCmd>(DH_Client.getCommand() ^ PCCmdResult));
+		DH_Client.setResult (PcCmdMaskOk);
+		DH_Client.write();
+
+	} while (command != PCCmdQuit);
+
 	LOG_DEBUG("Disconnecting");
 
 }

@@ -17,15 +17,35 @@ int main (int argc, char *argv[]) {
 	LOG_DEBUG ("Connected to private AC server!");
 
 	// switch to async mode
+
+	// BOOT
+	LOG_DEBUG("Sending boot command over 5 seconds");
 	sleep (5);
 	LOG_DEBUG (formatString("Sending command boot went %s!", 
 				ACClient->boot(time(0L), "configID") ? "OK" : "WRONG"));
+	LOG_DEBUG("Waiting for result from boot command");
 	ACClient->processACmsgFromServer();
+	LOG_DEBUG("Parameter subset must have been made by now");
 
+	// DEFINE
+	LOG_DEBUG("Sending define command over 10 seconds");
+	sleep (10);
 	LOG_DEBUG (formatString("Sending command define went %s!", 
-				ACClient->define(0x22334455) ? "OK" : "WRONG"));
+				ACClient->define(time(0L)) ? "OK" : "WRONG"));
+	LOG_DEBUG("Waiting for result from define command");
 	ACClient->processACmsgFromServer();
+	LOG_DEBUG("Application processes must be running by now");
 
+	// QUIT
+	LOG_DEBUG("Sending quit command over 10 seconds");
+	sleep (30);
+	LOG_DEBUG (formatString("Sending command quit went %s!", 
+				ACClient->quit(0) ? "OK" : "WRONG"));
+	LOG_DEBUG("Waiting for result from quit command");
+	ACClient->processACmsgFromServer();
+	LOG_DEBUG("Application processes must be killed by now");
+
+#if 0
 	LOG_DEBUG (formatString("Sending command init went %s!", 
 				ACClient->init(time(0)+30) ? "OK" : "WRONG"));
 	ACClient->processACmsgFromServer();
@@ -53,9 +73,6 @@ int main (int argc, char *argv[]) {
 				ACClient->boot(0x25525775, "reinit configID") ? "OK" : "WRONG"));
 	ACClient->processACmsgFromServer();
 
-	LOG_DEBUG (formatString("Sending command quit went %s!", 
-				ACClient->quit(0x01020304) ? "OK" : "WRONG"));
-	ACClient->processACmsgFromServer();
 
 
 	LOG_DEBUG (formatString("Command askInfo returned \n[%s]", 
@@ -63,6 +80,9 @@ int main (int argc, char *argv[]) {
 	ACClient->processACmsgFromServer();
 
 	sleep (5);
+#endif
+	LOG_DEBUG ("Exiting over 15 seconds");
+	sleep (15);
 
 }
 
