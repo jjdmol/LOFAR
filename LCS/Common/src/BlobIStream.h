@@ -28,6 +28,7 @@
 
 #include <Common/LofarTypes.h>
 #include <Common/DataFormat.h>
+#include <Common/DataConvert.h>
 #include <Common/BlobIBuffer.h>
 #include <stack>
 #include <vector>
@@ -231,7 +232,7 @@ namespace LOFAR {
   template<typename T>
     inline BlobIStream& BlobIStream::operator>> (std::complex<T>& value)
     {
-      getBuf (values, sizeof(std::complex<T>));
+      getBuf (value, sizeof(std::complex<T>));
       if (itsMustConvert) {
 	LOFAR::dataConvert (itsDataFormat, &value, 1);
       }
