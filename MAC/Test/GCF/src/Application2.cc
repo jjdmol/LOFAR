@@ -1442,7 +1442,7 @@ GCFEvent::TResult Application::test306(GCFEvent& e, GCFPortInterface& p)
       if (pResponse->internal) break;
       if ((pResponse->pValue->getType() == GCFPValue::LPT_INTEGER) &&
           (strcmp(pResponse->pPropName, "A_K_P1") == 0) &&
-          (((GCFPVInteger*)pResponse->pValue)->getValue() == _counter) &&
+          ((unsigned int)((GCFPVInteger*)pResponse->pValue)->getValue() == _counter) &&
           (&p == &_supTask3.getPort()))
       {   
         nrOfSucceded++;
