@@ -42,7 +42,7 @@ namespace LOFAR
 
       void UnaryExprNode::print(std::ostream& os) 
       {
-        os << itsOperation << "(" << itsOperand << ")";
+        os << "(" << itsOperation << itsOperand << ")";
       }
 
     } // namespace Query

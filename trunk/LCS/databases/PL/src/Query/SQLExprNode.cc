@@ -67,18 +67,18 @@ namespace LOFAR
 
       void InExprNode::print(std::ostream& os)
       {
-        ostringstream oss;
-        Collection<Expr>::const_iterator it;
-        for (it = itsRight.begin(); it != itsRight.end(); ++it) {
-          oss << *it  << ",";
+        os << "(" << itsLeft;
+        if (!itsRight.empty()) {
+          ostringstream oss;
+          Collection<Expr>::const_iterator it;
+          for (it = itsRight.begin(); it != itsRight.end(); ++it) {
+            oss << *it  << ",";
+          }
+          string s(oss.str());    // convert oss to a string
+          s.erase(s.size()-1);    // strip trailing comma
+          os << itsOperation << "(" << s << ")";
         }
-        // Convert oss to a string; strip last comma if there is one
-        string s(oss.str());
-        string::size_type idx;
-        if ((idx = s.rfind(",")) != string::npos) {
-          s.erase(idx);
-        }
-        os << "(" << itsLeft << itsOperation << "(" << s << "))";
+        os << ")";
       }
 
 
@@ -95,17 +95,41 @@ namespace LOFAR
 
       void LikeExprNode::print(std::ostream& os)
       {
-        // Scan the pattern expression for occurrences of "*" and "?".
-        // We have to check whether these characters are escaped!
-        std::string s;
-        bool isEscaped = false;
-//         for(string::size_type idx = 0; idx < itsRight.size(); ++idx) {
-//           isEscaped = (itsRight[idx] == '\\');
-//           if (isEscaped) {
-            
-//           }
-//         }
+        ostringstream oss;
+        oss << itsRight;
+        string rhs(oss.str());
+        string pattern;
+
+        // Scan the pattern expression in itsRight for occurrences of wildcard
+        // characters and make the proper substitutions.
+        for(string::const_iterator it = rhs.begin(); it != rhs.end(); ++it) {
+          switch (*it) {
+          case '*':
+            pattern += "%";
+            break;
+          case '?':
+            pattern += "_";
+            break;
+          case '%':
+            pattern += "\\\\%";
+            break;
+          case '_':
+            pattern += "\\\\_";
+            break;
+          case '\\':
+            if (++it != rhs.end())
+              if (*it == '\\') pattern += "\\\\\\\\";
+              else pattern += *it;
+            break;
+          default:
+            pattern += *it;
+            break;
+          }
+        }
+
+        os << "(" << itsLeft << itsOperation << pattern << " ESCAPE '\\\\')";
       }
+
 
     } // namespace Query
 

@@ -39,8 +39,9 @@ namespace LOFAR
     {
       //# Forward Declarations
 
-      // @defgroup ConstExprNode
+      // @defgroup ConstExprNode Constant Expression Nodes
       // @ingroup ExprNode
+      //
       // These classes represent constant expression nodes. A constant
       // expression is an expression that can be evaluated compile-time and
       // has a primitive type like int, double or string.

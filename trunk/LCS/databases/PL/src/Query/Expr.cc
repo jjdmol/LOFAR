@@ -24,6 +24,7 @@
 #include <PL/Query/ConstExprNode.h>
 #include <PL/Query/UnaryExprNode.h>
 #include <PL/Query/BinaryExprNode.h>
+#include <PL/Query/SQLExprNode.h>
 #include <iostream>
 
 using std::ostream;
@@ -56,6 +57,11 @@ namespace LOFAR
         itsNode(new StringExprNode(value))
       {
       }
+      
+      Expr::Expr(const char* const value) :
+        itsNode(new StringExprNode(value))
+      {
+      }
 
       Expr::Expr(ExprNode* const node) : 
         itsNode(node)
@@ -79,7 +85,7 @@ namespace LOFAR
 
       Expr Expr::operator! () const
       {
-        return new UnaryExprNode("NOT", *this);
+        return new UnaryExprNode("NOT ", *this);
       }
 
 
@@ -149,12 +155,47 @@ namespace LOFAR
 
       Expr operator&& (const Expr& lhs, const Expr& rhs)
       {
-        return new BinaryExprNode("AND", lhs, rhs);
+        return new BinaryExprNode(" AND ", lhs, rhs);
       }
 
       Expr operator|| (const Expr& lhs, const Expr& rhs)
       {
-        return new BinaryExprNode("OR", lhs, rhs);
+        return new BinaryExprNode(" OR ", lhs, rhs);
+      }
+
+
+      ///////////////////////////////////////////////////////////////////
+      //                       SQL-like operators                      //
+      ///////////////////////////////////////////////////////////////////
+
+      Expr Expr::between (const Expr& lhs, const Expr& rhs) const
+      {
+        return new BetweenExprNode(" BETWEEN ", *this, lhs, rhs);
+      }
+
+      Expr Expr::notBetween (const Expr& lhs, const Expr& rhs) const
+      {
+        return new BetweenExprNode(" NOT BETWEEN ", *this, lhs, rhs);
+      }
+
+      Expr Expr::in (const Collection<Expr>& set) const
+      {
+        return new InExprNode(" IN ", *this, set);
+      }
+
+      Expr Expr::notIn (const Collection<Expr>& set) const
+      {
+        return new InExprNode(" NOT IN ", *this, set);
+      }
+
+      Expr Expr::like (const Expr& exp) const
+      {
+        return new LikeExprNode(" LIKE ", *this, exp);
+      }
+
+      Expr Expr::notLike (const Expr& exp) const
+      {
+        return new LikeExprNode(" NOT LIKE ", *this, exp);
       }
 
 

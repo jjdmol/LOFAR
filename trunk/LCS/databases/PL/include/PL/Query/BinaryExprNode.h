@@ -56,8 +56,8 @@ namespace LOFAR
 
       private:
 
-        // @name The operator
-        const std::string itsOperand;
+        // @name The operation
+        const std::string itsOperation;
 
         // @name The operands
         //@{

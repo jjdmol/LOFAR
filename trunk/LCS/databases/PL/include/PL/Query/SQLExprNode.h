@@ -83,6 +83,8 @@ namespace LOFAR
       // expression that takes one operator (IN or NOT IN) and two
       // operands. It is used to check whether the first operand is present in
       // the second operand.
+      // \note When \c rhs contains no elements only the \c lhs will be
+      // returned when you invoke print() on InExprNode.
       class InExprNode : public ExprNode
       {
       public:
@@ -116,7 +118,22 @@ namespace LOFAR
       // The user-supplied pattern can contain the wildcards "*" and "?",
       // where "*" means any number of characters, and "?" means exactly one
       // character. These wildcards will be translated to their
-      // SQL-equivalents "%" and "_" respectively.
+      // SQL-equivalents "%" and "_" respectively. 
+      //
+      // We will use the backslash character (\) as escape character in the
+      // LIKE clause. As the backslash character needs to be escaped itself,
+      // we always have to provide two backslash characters as the escape
+      // token.
+      //      
+      // Hence we get the following substitution scheme:
+      // \verbatim
+      //   '*'   -->  '%'
+      //   '?'   -->  '_'
+      //   '\*'  -->  '*'
+      //   '\?'  -->  '?'
+      //   '_'   -->  '\\_'
+      //   '%'   -->  '\\%'
+      // \endverbatim
       class LikeExprNode : public ExprNode
       {
       public:
