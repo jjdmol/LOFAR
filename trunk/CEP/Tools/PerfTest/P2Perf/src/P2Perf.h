@@ -22,6 +22,11 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.12  2002/05/08 14:28:37  wierenga
+//  DataHolder allocation moved from constructor to preprocess to be able to
+//  use TransportHolder::allocate.
+//  Bug fixes in P2Perf.cc for -mpi arguments.
+//
 //  Revision 1.11  2002/05/08 08:20:04  schaaf
 //  Modified includes for new build env
 //
@@ -107,6 +112,10 @@ public:
 
   /// Number of destination steps
     int itsDestSteps;
+
+  /// 0 = variable size packets, > 0 fixed size packets
+    int itsFixedSize;
+      
 };
 
 

@@ -22,6 +22,11 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.9  2002/05/08 14:28:37  wierenga
+//  DataHolder allocation moved from constructor to preprocess to be able to
+//  use TransportHolder::allocate.
+//  Bug fixes in P2Perf.cc for -mpi arguments.
+//
 //  Revision 1.8  2002/05/08 08:20:04  schaaf
 //  Modified includes for new build env
 //
@@ -77,6 +82,7 @@ public:
 	       unsigned int nout=1,     // nr of output channels
 	       unsigned int nbuffer=10, // default length of the
 	                                // buffer in DH_Growsize::DataPacket 
+	       bool sizeFixed=false,    // is the packet size fixed?
 	       bool destside=false);    // determine whether this is
                                         // the send or recieve side in
                                         // a connection to other
@@ -127,6 +133,9 @@ private:
   */
   bool itsIsDestSide;
 
+  /// Fixed size?
+  bool itsSizeFixed;
+
   /// Is this the first WorkHolder in the simulation chain?
   bool itsFirst;
 
@@ -142,6 +151,7 @@ private:
   int itsLastSize;
   int itsLastPerf;
   int itsReportPerf;
+
 };
 
 inline void WH_GrowSize::setReportPerformance(bool doreport){

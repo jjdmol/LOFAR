@@ -22,6 +22,11 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.9  2002/05/08 14:28:37  wierenga
+//  DataHolder allocation moved from constructor to preprocess to be able to
+//  use TransportHolder::allocate.
+//  Bug fixes in P2Perf.cc for -mpi arguments.
+//
 //  Revision 1.8  2002/05/08 08:20:04  schaaf
 //  Modified includes for new build env
 //
@@ -69,7 +74,7 @@ class DH_GrowSize: public DataHolder
 public:
   typedef int BufferType;
 
-  DH_GrowSize (const string& name, unsigned int nbuffer);
+  DH_GrowSize (const string& name, unsigned int nbuffer, bool sizeFixed);
 
   virtual ~DH_GrowSize();
 
@@ -122,6 +127,9 @@ private:
   // keep track of the reported sizes of the getCurDataPacketSize()
   // method. This value is increased in the increaseSize() method
   float reportedDataPacketSize;
+
+  /// fixed size?
+  bool itsSizeFixed;
 };
 
 inline void DH_GrowSize::setCounter (int counter)
@@ -155,7 +163,9 @@ inline int DH_GrowSize::getMaxDataPacketSize(void)
 { return DataHolder::getDataPacketSize(); }
 
 inline bool DH_GrowSize::setInitialDataPacketSize(int initialSize){
-  if (initialSize < this->DataHolder::getDataPacketSize()) {
+    cout << "initialSize = " << initialSize << endl;
+//  if (initialSize <= this->DataHolder::getMaxDataPacketSize()) {
+    if (1) {
     reportedDataPacketSize = initialSize;
     return true;
   }

@@ -1,4 +1,5 @@
 bin_PROGRAMS	= P2Perf
+P2Perf_CXXFLAGS	=
 
 DOCHDRS 	=				\
 DH_GrowSize.h					\

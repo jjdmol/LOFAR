@@ -22,6 +22,11 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.29  2002/06/19 10:49:11  wierenga
+//  %[BugId: 33]%
+//
+//  First version of buffered MPI transportholder.
+//
 //  Revision 1.28  2002/06/07 10:44:54  schaaf
 //
 //  %[BugId: 36]%
@@ -201,6 +206,9 @@ void P2Perf::define(const ParamBlock& params)
 
   itsSourceSteps = params.getInt("sources",1);  
   itsDestSteps   = params.getInt("destinations",1);
+  itsFixedSize   = params.getInt("fixedsize",0);
+
+  cout << "itsFixedSize = " << itsFixedSize << endl;
 
   bool  WithMPI=false;
 
@@ -226,11 +234,12 @@ void P2Perf::define(const ParamBlock& params)
     // Create the Source Step
     sprintf(name, "GrowSizeSource[%d]", iStep);
     Sworkholders[iStep] = new WH_GrowSize(name, 
-					  false, 
-					  1, // should be 0 
-					  itsDestSteps, 
-					  MAX_GROW_SIZE ,
-					  false); // flag for source side
+				  false, 
+				  1, // should be 0 
+				  itsDestSteps,
+				  (itsFixedSize?itsFixedSize:MAX_GROW_SIZE),
+				  false, // flag for source side
+				  itsFixedSize!=0);
     
       monitor = (iStep==0) ? true:false;
       Ssteps[iStep] = new Step(Sworkholders[iStep], 
@@ -251,11 +260,12 @@ void P2Perf::define(const ParamBlock& params)
     // Create the Destination Step
     sprintf(name, "GrowSizeDest[%d]", iStep);
     Dworkholders[iStep] = new WH_GrowSize(name, 
-					  false, 
-					  itsSourceSteps, 
-					  1, // should be 0 
-					  MAX_GROW_SIZE,
-					  true);
+				  false, 
+				  itsSourceSteps, 
+				  1, // should be 0 
+				  (itsFixedSize?itsFixedSize:MAX_GROW_SIZE),
+				  true,
+				  itsFixedSize!=0);
     
     Dsteps[iStep] = new Step(Dworkholders[iStep], "GrowSizeDestStep", iStep);
     // Determine the node and process to run in
