@@ -24,13 +24,52 @@
 #define LCS_PL_OBJECTID_H
 
 //# Includes
+#include <PL/Exception.h>
 
-//# Forward Declarations
+#include <string>
 
-// ObjectId is used to uniquely identify a persistent object.
-class ObjectId
+namespace LCS
 {
-};
+  namespace PL
+  {
 
+    //
+    // ObjectId is used to uniquely identify a persistent object.
+    //
+    class ObjectId
+    {
+    public:
+      // We will be using a 64-bit integer for our unique key
+      typedef unsigned long long ObjectIdType;
+
+      // Create a new unique identifier.
+      ObjectId() { 
+	THROW(NotImplemented,"No Object ID generator available yet"); 
+      }
+
+      // Return the stored unique key.
+      ObjectIdType& value() const;
+
+      // Return the object-id as a string
+      std::string asString() const;
+  
+    private:
+      // Here we keep the unique object-id.
+      ObjectIdType itsOid;
+
+      // Flag that indicates whether the ObjectId key generator was
+      // already initialized.
+      bool isInitialized;
+
+      // Initialize the ObjectId key generator
+      void init();
+
+    };
+
+
+
+  } // namespace PL
+
+} // namespace LCS
 
 #endif

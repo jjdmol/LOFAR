@@ -72,6 +72,12 @@ namespace LCS {
     // method for which a specialization is required.
     //
     EXCEPTION_CLASS(NotImplemented, LCS::PL::Exception);
+
+    //
+    // This exception is thrown when an error occurs within the 
+    // PersistenceBroker.
+    //
+    EXCEPTION_CLASS(BrokerException, LCS::PL::Exception);
   }
 
 }    

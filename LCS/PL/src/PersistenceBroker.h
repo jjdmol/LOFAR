@@ -1,4 +1,4 @@
-//#  PersistenceBroker.h: one line description
+//#  PersistenceBroker.h: handle save/retrieve of persistent objects.
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -59,23 +59,49 @@ namespace LCS
       // Erase the specified persistent object, i.e. delete it from the
       // database and erase it from volatile memory.
       // \throw LCS::PL::DeleteError
-      void erase(const PersistentObject& po);
+      template<typename T>
+      void erase(const TPersistentObject<T>& tpo) const;
 
       // Erase all persistent objects that match the specified query.
       // \throw LCS::PL::DeleteError
-      void erase(const Query& q);
+      void erase(const Query& q) const;
+
+      // Erase all the objects in the collection. All objects will be deleted
+      // from the database and erased from volatile memory.
+      // \throw LCS::PL::DeleteError
+      template<typename T>
+      void eraseCollection(const Collection<TPersistentObject<T> >& ctpo) const;
 
       // Get one object matching the specified query. If more than one object
       // matches the query, only the first match is returned.
-      template <typename T>
-      TPersistentObject<T> retrieve(const Query& q);
+      template<typename T>
+      TPersistentObject<T> retrieve(const Query& q) const;
 
       // Retrieve a collection of persistent objects, that match a specific
       // query.
       // \throw LCS::PL::QueryError
       template<typename T> 
-      Collection<TPersistentObject<T> >
-      retrieveCollection(const Query& q);
+      Collection<TPersistentObject<T> > 
+      retrieveCollection(const Query& q) const;
+
+      // Save the specified persistent object. A new object will be inserted
+      // into the database, an existing (already persistent) object will be 
+      // updated. By specifying INSERT or UPDATE as SaveMode this default
+      // behaviour can be overridden.
+      // \note TPersistententObject<T> is passed non-const, because the
+      // timestamp field will be modified to match the new timestamp in 
+      // the database.
+      template<typename T>
+      void save(TPersistentObject<T>& tpo, enum SaveMode sm=AUTOMATIC) const;
+
+      // Save a collection of persistent objects. New objects will be inserted
+      // into the database, existing objects will be updated. By specifying
+      // INSERT or UPDATE as SaveMode this default behaviour can be overridden.
+      template<typename T>
+      void save(const Collection<TPersistentObject<T> >& ctpo,
+		enum SaveMode sm=AUTOMATIC) const;
+
+      //############## Do we need these methods below ??? ##################
 
       // Return an iterator to a collection of persistent objects that match 
       // a specific query.
@@ -84,25 +110,21 @@ namespace LCS
       // only support collections??
       template<typename T> 
       typename Collection<TPersistentObject<T> >::iterator
-      retrieveIterator(const Query& q);
+      retrieveIterator(const Query& q) const;
 
       // Retrieve the object associated with the given object-id.
       // \todo Should we provide this method in PersistenceBroker?? This will
       // clearly expose the internals of how TPersistentObject keeps track
       // of object instances.
       template <typename T>
-      TPersistentObject<T> retrieve(const ObjectId& oid);
-
-      // Save the specified persistent object. A new object will be inserted
-      // into the database, an existing (already persistent) object will be 
-      // updated. By specifying INSERT or UPDATE as SaveMode this default
-      // behaviour can be overridden.
-      void save(const PersistentObject& po, enum SaveMode sm=AUTOMATIC);
+      TPersistentObject<T> retrieve(const ObjectId& oid) const;
 
     };
 
   } // namespace PL
 
 } // namespace LCS
+
+#include <PL/PersistenceBroker.tcc>
 
 #endif

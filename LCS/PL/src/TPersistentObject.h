@@ -26,7 +26,7 @@
 //# Includes
 #include <PL/PersistentObject.h>
 #include <PL/Exception.h>
-// #include <boost/shared_ptr.h>
+#include <loki/static_check.h>
 #include <loki/SmartPtr.h>
 #include <iostream>
 
@@ -65,13 +65,11 @@ namespace LCS
       
       // Dynamically create a new TPersistentObject. It will contain an 
       // instance of a default constructed object T.
-//       static TPersistentObject<T>* create()
       static TPersistentObject<T>& create()
       { 
 	T* anObject(new T());
 	TPersistentObject<T>* aTPO(new TPersistentObject<T>(*anObject));
 	aTPO->itsObjectSharedPtr(anObject);
-// 	return aTPO;
  	return *aTPO;
       }
 
@@ -86,37 +84,41 @@ namespace LCS
 
       // Implements PersistentObject::insert(PersistenceBroker*)
       // \throw NotImplemented
-      virtual void insert(PersistenceBroker*) {
- 	THROW(NotImplemented, 
-	      "Method should be implemented using template specialization"); 
-      }
+      virtual void insert(const PersistenceBroker* const b);//  {
+//  	THROW(NotImplemented, 
+// 	      "Method should be implemented using template specialization"); 
+//   	STATIC_CHECK(0,
+//  		     Method_Must_Be_Implemented_Using_Template_Specialization);
+//       }
 
       // Implements PersistentObject::update(PersistenceBroker*)
       // \throw NotImplemented
-      virtual void update(PersistenceBroker*) {
+      virtual void update(const PersistenceBroker* const b) {
  	THROW(NotImplemented, 
 	      "Method should be implemented using template specialization"); 
+//   	STATIC_CHECK(0,
+//  		     Method_Must_Be_Implemented_Using_Template_Specialization);
       }
 
       // Implements PersistentObject::save(PersistenceBroker*)
-      // \throw NotImplemented
-      virtual void save(PersistenceBroker*) {
- 	THROW(NotImplemented, 
-	      "Method should be implemented using template specialization"); 
-      }
+      virtual void save(const PersistenceBroker* const b);
 
       // Implements PersistentObject::retrieve(PersistenceBroker*)
       // \throw NotImplemented
-      virtual void retrieve(PersistenceBroker*) {
- 	THROW(NotImplemented, 
+      virtual void retrieve(const PersistenceBroker* const b) {
+  	THROW(NotImplemented, 
 	      "Method should be implemented using template specialization"); 
+//  	STATIC_CHECK(0,
+//  		     Method_Must_Be_Implemented_Using_Template_Specialization);
       }
 
       // Implements PersistentObject::erase(PersistenceBroker*)
       // \throw NotImplemented
-      virtual void erase(PersistenceBroker*)  {
+      virtual void erase(const PersistenceBroker* const b)  {
  	THROW(NotImplemented, 
 	      "Method should be implemented using template specialization"); 
+//   	STATIC_CHECK(0,
+//  		     Method_Must_Be_Implemented_Using_Template_Specialization);
       }
 
       //@}
@@ -142,17 +144,27 @@ namespace LCS
 
       //@{
  
-      // This method is responsible for actually saving the \e primitive
-      // data members of \c T.
-      virtual void save(const ObjectId& poid) { 
-	THROW(NotImplemented, 
+      // This method is responsible for actually erasing the \e primitive
+      // data member of \c T.
+      // \throw NotImplemented
+      virtual void erase(const ObjectId& poid) {
+ 	THROW(NotImplemented, 
 	      "Method should be implemented using template specialization"); 
       }
 
-      // This method is responsible for actually erasing the \e primitive
-      // data member of \c T.
-      virtual void erase(const ObjectId& poid) {
+      // This method is responsible for actually retrieving the \e primitive
+      // data members of \c T.
+      // \throw NotImplemented
+      virtual void retrieve(const ObjectId& poid) {
  	THROW(NotImplemented, 
+	      "Method should be implemented using template specialization"); 
+      }
+
+      // This method is responsible for actually saving the \e primitive
+      // data members of \c T.
+      // \throw NotImplemented
+      virtual void save(const ObjectId& poid) { 
+	THROW(NotImplemented, 
 	      "Method should be implemented using template specialization"); 
       }
 
@@ -176,8 +188,9 @@ namespace LCS
       // Obviously, we do not want this behaviour for instances of T that we
       // did not create ourselves. If we're not the creator, then we're not
       // the owner, hence we should never ever delete the object! Therefore,
-      // we will only transfer ownership of itsObjectPtr if we are the
-      // creator/owner of the object that itsObjectPtr points to.
+      // we will only transfer ownership of itsObjectPtr to the Loki::SmartPtr
+      // when \e we are the creator/owner of the object that itsObjectPtr
+      // points to.
       Loki::SmartPtr<T> itsObjectSharedPtr;
 
     };
@@ -185,5 +198,7 @@ namespace LCS
   }
 
 }
+
+#include <PL/TPersistentObject.tcc>
 
 #endif

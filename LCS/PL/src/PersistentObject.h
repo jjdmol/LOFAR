@@ -54,14 +54,14 @@ namespace LCS
       // \note insert() will \e always create a new stored object. This is
       // contrary to the behaviour of save() which will only create a \e new
       // stored object if it did not already exist in the database.
-      virtual void insert(PersistenceBroker*) = 0;
+      virtual void insert(const PersistenceBroker* const) = 0;
 
       // Update the PersistentObject into the database.
       // \note update() will \e always modify an existing stored object. 
       // Therefore, calling update() on a PersistentObject that is not
       // already present in the database is an error.
       // \throw LCS::PL::Exception
-      virtual void update(PersistenceBroker*) = 0;
+      virtual void update(const PersistenceBroker* const) = 0;
 
       // Store the PersistentObject into the database. This method will
       // typically be called by the PersistenceBroker, because at this level 
@@ -69,15 +69,15 @@ namespace LCS
       // save() will automatically figure out whether the PersistentObject is
       // new and thus needs to be \e inserted into the database, or is already
       // present in the database and thus needs to be \e updated.
-      virtual void save(PersistenceBroker*) = 0;
+      virtual void save(const PersistenceBroker* const) = 0;
 
       // This method will typically be used to refresh an instance of 
       // PersistentObject that already resides in memory. We will need it if
       // another process or thread changed the data in the database.
-      virtual void retrieve(PersistenceBroker*) = 0;
+      virtual void retrieve(const PersistenceBroker* const) = 0;
 
       // Remove this instance of PersistentObject from the database.
-      virtual void erase(PersistenceBroker*) = 0;
+      virtual void erase(const PersistenceBroker* const) = 0;
 
     protected:
       // ObjectId is used to uniquely identify every instance of a
