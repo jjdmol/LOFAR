@@ -35,7 +35,8 @@
 #include <Common/LofarLogger.h>
 
 #include <Transport/TH_MPI.h>
-#include <Transport/TH_Socket.h>
+//#include <Transport/TH_Socket.h>
+#include "TH_Socket.h"    // local Socket Transport Holder. This is a workaround for the BGL socket bugs.
 
 #include <tinyCEP/SimulatorParseClass.h>
 #include <tinyCEP/WorkHolder.h>
