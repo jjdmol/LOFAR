@@ -148,7 +148,7 @@ int  UVPDataTransferWP::receive(MessageRef &messageRef)
       DataHeader.itsFieldID         = itsHeader.itsFieldID;// record[FFieldIndex].as_int();
         
 
-      for(unsigned int ifr = 0; ifr < itsHeader.itsNumberOfBaselines; ifr++) {
+      for(int ifr = 0; ifr < itsHeader.itsNumberOfBaselines; ifr++) {
         DataHeader.itsAntenna1        = *AntennaIndexPointer++;
         DataHeader.itsAntenna2        = *AntennaIndexPointer++;
         DataHeader.itsUVW[0]          = *UVWPointer++;
