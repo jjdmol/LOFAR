@@ -33,13 +33,6 @@ MeqMatrixRep::~MeqMatrixRep()
   ndtor--;
 }
 
-void MeqMatrixRep::unlink (MeqMatrixRep* rep)
-{
-  if (rep != 0  &&  --rep->itsCount == 0) {
-    delete rep;
-  }
-}
-
 bool MeqMatrixRep::isDouble() const
 {
   return false;
