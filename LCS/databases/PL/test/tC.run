@@ -1,6 +1,19 @@
 #!/bin/sh
+
+# This file includes several other files, using the "\i <filename>" command.
+# These files must be in the current directory.
+cp ../../../test/PO_C_create_databases.sql .
+
+# The 'sed' command below will figure out which files we need to copy too.
+files=`sed -e '/\-\-.*/d' -e 's/^\\\\i *//' PO_C_create_databases.sql`
+for file in $files
+do
+  cp ../../../test/$file .
+done
+
+# Execute the commands from within the Postgres client.
 psql -h dop50.astron.nl -U postgres test <<_EOF_ > tC_tmp.psql_out 2>&1
-\i ../../../test/ABC.sql
+\i PO_C_create_databases.sql
 \q
 _EOF_
 
