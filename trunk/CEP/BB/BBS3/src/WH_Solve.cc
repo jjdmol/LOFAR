@@ -117,36 +117,21 @@ void WH_Solve::process()
   vector<double> resultParmValues;
   Quality resultQuality;
 
-  KeyValueMap msArgs;
-  vector<string> pNames;    // Parameter names
-  wo->getVarData(msArgs, pNames);
   int contrID = wo->getStrategyControllerID();
-  Solver* solver = getSolver(contrID, msArgs);
+  Solver* solver = getSolver(contrID);
+  DBGASSERTSTR(solver!=0, "The solver has not been created and initialized.");
 
-  if (wo->getInitialize())           // Initialize, next interval and solve
+  if (wo->getNewDomain())         // New domain
   {
-    solver->nextInterval(wo->getStartTime(), wo->getTimeInterval());
     readInputsAndSetParmData(solver);
-    solver->solve(wo->getUseSVD(), resultParmNames, resultParmValues,
-		     resultQuality);
-    solver->saveParms();
-  }
-  else if (wo->getNextInterval())         // Next interval and solve
-  {
-    ASSERTSTR(solver!=0, "The solver has not been created and initialized.");
-    solver->nextInterval(wo->getStartTime(), wo->getTimeInterval());
-    readInputsAndSetParmData(solver);
-    solver->solve(wo->getUseSVD(), resultParmNames, resultParmValues,
-		     resultQuality);
-    solver->saveParms();
   }
   else
-  {                                       // just solve
+  {
     readInputs(solver);
-    solver->solve(wo->getUseSVD(), resultParmNames, resultParmValues,
-		     resultQuality);
-    solver->saveParms();
   }
+  // Do the solve
+  solver->solve(wo->getUseSVD(), resultParmNames,
+		resultParmValues, resultQuality);
 
   // Write result
   // Get solution dataholder DH_Solution* sol;
@@ -172,7 +157,7 @@ void WH_Solve::dump()
   LOG_TRACE_RTTI("WH_Solve process()");
 }
 
-Solver* WH_Solve::getSolver(int id, const KeyValueMap& args)
+Solver* WH_Solve::getSolver(int id)
 {
   SolverMap::iterator iter;
   iter = itsSolvers.find(id);
@@ -183,15 +168,7 @@ Solver* WH_Solve::getSolver(int id, const KeyValueMap& args)
   else
   {
     // Create a new Prediffer object
-    string meqModel = args.getString("meqTableName", "meqmodel");
-    string skyModel = args.getString("skyTableName", "skymodel");
-    string dbType = args.getString("DBType", "postgres");
-    string dbName = args.getString("DBName", "test");
-    string dbHost = args.getString("DBHost", "dop50");
-    string dbPwd = args.getString("DBPwd", "");
-
-    Solver* slv = new Solver(meqModel, skyModel, dbType, 
-			     dbName, dbHost, dbPwd);
+    Solver* slv = new Solver();
     // add to map
     itsSolvers.insert(SolverMap::value_type(id, slv));
     return slv;

@@ -56,8 +56,10 @@ bool SC_Simple::execute()
   {
     itsFirstCall = false;
     nextInter = true;
-    itsWOPD->setInitialize(true);
-    itsWOSolve->setInitialize(true);
+    itsWOPD->setNewBaselines(true);
+    itsWOPD->setNewPeelSources(true);
+    itsWOPD->setSubtractSources(false);
+    itsWOSolve->setNewDomain(true);
     itsCurStartTime = itsArgs.getFloat ("startTime", 0);
   }
   else
@@ -65,8 +67,10 @@ bool SC_Simple::execute()
     // Read solution of previously issued workorders
     readSolution();
 
-    itsWOPD->setInitialize(false);
-    itsWOSolve->setInitialize(false);
+    itsWOPD->setNewBaselines(false);
+    itsWOPD->setNewPeelSources(false);
+    itsWOPD->setSubtractSources(false);
+    itsWOSolve->setNewDomain(false);
 
     // If solution for this interval is good enough, go to next. TBA
     // For now: if number of iterations reached: go to next interval.
@@ -80,11 +84,11 @@ bool SC_Simple::execute()
   // Set prediffer workorder data
   itsWOPD->setStatus(DH_WOPrediff::New);
   itsWOPD->setKSType("Prediff1");
-  itsWOPD->setFirstChannel (itsArgs.getInt ("startChan", 0));
-  itsWOPD->setLastChannel (itsArgs.getInt ("endChan", 0));
+  itsWOPD->setStartFreq (itsArgs.getInt ("startFreq", 0));
+  itsWOPD->setFreqLength (itsArgs.getInt ("freqLength", 0));
   itsWOPD->setStartTime (itsCurStartTime);
-  float timeInterval = itsArgs.getFloat ("timeInterval", 10);
-  itsWOPD->setTimeInterval (timeInterval);
+  float timeLength = itsArgs.getFloat ("timeLength", 10);
+  itsWOPD->setTimeLength (timeLength);
   itsWOPD->setDDID (itsArgs.getInt ("ddid", 0));
   itsWOPD->setModelType (itsArgs.getString ("modelType", "notfound"));
   itsWOPD->setCalcUVW (itsArgs.getBool ("calcUVW", false));
@@ -97,21 +101,18 @@ bool SC_Simple::execute()
 
   itsWOPD->setNewWorkOrderID();
   itsWOPD->setStrategyControllerID(getID());
-  itsWOPD->setNextInterval(nextInter);
+  itsWOPD->setNewDomain(nextInter);
 
   
   // Set solver workorder data  
   itsWOSolve->setStatus(DH_WOSolve::New);
   itsWOSolve->setKSType("Solver");
   itsWOSolve->setUseSVD (itsArgs.getBool ("useSVD", false));
-  itsWOSolve->setStartTime(itsCurStartTime);
-  itsWOSolve->setTimeInterval(timeInterval);
-  itsWOSolve->setVarData (msParams, pNames);
 
   itsWOSolve->setNewWorkOrderID();
-  itsPrevWOID = itsWOSolve->getWorkOrderID();
+  itsPrevWOID = itsWOSolve->getWorkOrderID();  // Remember the issued workorder id
   itsWOSolve->setStrategyControllerID(getID());
-  itsWOSolve->setNextInterval(nextInter);
+  itsWOSolve->setNewDomain(nextInter);
 
   // Temporarily show on cout
   cout << "!!!!!!! Sent workorders: " << endl;

@@ -82,28 +82,14 @@ public:
   string getKSType() const;
   void setKSType(const string& ksType);
 
-  bool getInitialize() const;
-  void setInitialize(bool doInitialize);
-
-  bool getNextInterval() const;
-  void setNextInterval(bool doNextInterval);
+  bool getNewDomain() const;
+  void setNewDomain(bool newDomain);
 
   bool getUseSVD() const;
   void setUseSVD(bool useSVD);
 
-  float getStartTime() const;
-  void setStartTime(float time);
-
-  float getTimeInterval() const;
-  void setTimeInterval(float time);
-
   bool getCleanUp() const;
   void setCleanUp(bool clean);
-
-  void setVarData(const KeyValueMap& msArgs,
-		  vector<string>& pNames);
-  bool getVarData(KeyValueMap& msArgs,
-		  vector<string>& pNames);
 
   void dump();
 
@@ -122,11 +108,8 @@ private:
   int*          itsSCID;                    // ID of sending StrategyController (SC)
   unsigned int* itsStatus;                  // Workorder status
   char*         itsKSType;                  // Knowledge Source type
-  unsigned int* itsInitialize;              // Do initialization?
-  unsigned int* itsNextInterval;            // Do nextInterval?
+  unsigned int* itsNewDomain;               // Solve on a new domain?
   unsigned int* itsUseSVD;                  // UseSVD in solver?
-  float*        itsStartTime;               // Start time of this interval (s)
-  float*        itsTimeInterval;            // Time interval size (s)
   unsigned int* itsCleanUp;                 // Clean up Solver when finished?
  
   PO_DH_WOSOLVE*    itsPODHWO; 
@@ -157,35 +140,17 @@ inline void DH_WOSolve::setStatus(unsigned int status)
 inline string DH_WOSolve::getKSType() const
 {  return string(itsKSType); }
 
-inline bool DH_WOSolve::getInitialize() const
-{ return ((*itsInitialize==0)?(false):(true)); }
+inline bool DH_WOSolve::getNewDomain() const
+{ return ((*itsNewDomain==0)?(false):(true)); }
 
-inline void DH_WOSolve::setInitialize(bool doInitialize)
-{ *itsInitialize = doInitialize; }
-
-inline bool DH_WOSolve::getNextInterval() const
-{ return ((*itsNextInterval==0)?(false):(true)); }
-
-inline void DH_WOSolve::setNextInterval(bool doNextInterval)
-{ *itsNextInterval = doNextInterval; }
+inline void DH_WOSolve::setNewDomain(bool doNewDomain)
+{ *itsNewDomain = doNewDomain; }
 
 inline bool DH_WOSolve::getUseSVD() const
 { return ((*itsUseSVD==0)?(false):(true)); }
 
 inline void DH_WOSolve::setUseSVD(bool useSVD)
 { *itsUseSVD = useSVD; }
-
-inline float DH_WOSolve::getStartTime() const
-{ return *itsStartTime; }
-
-inline void DH_WOSolve::setStartTime(float time)
-{ *itsStartTime = time; }
-
-inline float DH_WOSolve::getTimeInterval() const
-{ return *itsTimeInterval; }
-
-inline void DH_WOSolve::setTimeInterval(float time)
-{ *itsTimeInterval = time; }
 
 inline bool DH_WOSolve::getCleanUp() const
 { return *itsCleanUp; }
@@ -208,11 +173,8 @@ namespace PL {
       int          itsSCID;         // in order to facilitate debugging
       unsigned int itsStatus;
       string       itsKSType;
-      unsigned int itsInitialize;
-      unsigned int itsNextInterval;
+      unsigned int itsNewDomain;
       unsigned int itsUseSVD;
-      float        itsStartTime;
-      float        itsTimeInterval;
       unsigned int itsCleanUp;
     };   
                                                       

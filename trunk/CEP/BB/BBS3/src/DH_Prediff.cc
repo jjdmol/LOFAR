@@ -47,6 +47,7 @@ DH_Prediff::DH_Prediff (const string& name)
     itsDataPtr    (0)
 {
   LOG_TRACE_FLOW("DH_Prediff constructor");
+  setExtraBlob("Extra", 1);
 }
 
 DH_Prediff::DH_Prediff(const DH_Prediff& that)

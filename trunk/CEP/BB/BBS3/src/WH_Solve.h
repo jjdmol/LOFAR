@@ -67,7 +67,7 @@ class WH_Solve : public LOFAR::WorkHolder
   WH_Solve& operator= (const WH_Solve&);
 
   // Create a Solver object
-  Solver* getSolver(int id, const KeyValueMap& args);
+  Solver* getSolver(int id);
 
   // Read all Prediffer inputs
   void readInputs(Solver* solver);
@@ -76,7 +76,6 @@ class WH_Solve : public LOFAR::WorkHolder
   void readInputsAndSetParmData(Solver* solver);
 
   int         itsNPrediffers;// Number of Prediffer inputs
-  KeyValueMap itsArgs;       // Arguments
   SolverMap   itsSolvers;    // Map of Solver objects, each associated
                              // with a strategy (controller).
 };
