@@ -14,7 +14,7 @@
 # opt			--with-optimize
 # doxygen		--with-doxygen
 # mpich			--with-mpich
-# mpich_prof		--with-mpich --enable-mpi-profiler
+# mpich-prof		--with-mpich --enable-mpi-profiler
 # scampi		--with-scampi
 # corba			--with-vbroker
 # xml			--with-xerces
@@ -26,40 +26,23 @@
 # mpich_corba		--with-corba --with-mpich
 #
 
-#
-# Configuration and make options for each possible variant
-#
-debug.variant.conf		=
-opt.variant.conf		= --with-optimize
-mpich.variant.conf		= --with-mpich
-corba.variant.conf		= --with-vbroker
-mpich_corba.variant.conf	= --with-mpich --with-vbroker
-insure.variant.conf		= --with-insure
-insure.variant.make		= QA=insure
-scampi.variant.conf		= --with-scampi
-mpich_prof.variant.conf		= --with-mpich --enable-mpi-profiler
 
 #
-# List of variants that will be built and checked
+# Packages with a configure.in will be built (excluding the import stuff).
 #
-VARIANTS = \
-	debug.variant \
-	opt.variant \
-	mpich.variant \
-	corba.variant \
-	mpich_corba.variant \
-	scampi.variant \
-	mpich_prof.variant
-
+PACKAGES = $(shell find . \( -name import -prune \) -o \( -name "configure.in" -print \) | sed -e s%/configure.in%% -e s%^\./%% )
 #
-# List of packages for which the above variants will be built and checked
+# Find all variants to be built for this host.
+# There can be multiple lines (one for each compiler).
+# Prepend each variant with the compiler type and append .variant.
 #
-PACKAGES = \
-	BaseSim \
-	LOFARSim \
-	DMI \
-	CEP/Demo/Platform/RingSim \
-	CEP/Tools/PerfTest/P2Perf
+HOST = $(shell uname -n)
+VARLINES = $(shell egrep "^make\..*\.variants:" ../builds.$(HOST) | sed -e "s%^make\.%%" -e "s%.variants:%/%" -e "s/ \+//g")
+VARIANTS = $(shell for NM in $(VARLINES); do cmp=`echo $$NM | sed -e "s%/.*%%"`; vars=`echo $$NM | sed -e "s%.*/%%" -e "s%,% %g"`; for VAR in $$vars; do echo $${cmp}_$$VAR.variant; done; done)
+#
+# Keep the make directory (which is LOFAR).
+#
+LOFARDIR = $(shell pwd)
 
 #
 # Standard make options used for every invokation of make
@@ -102,30 +85,25 @@ bootstrap:
 # Rule to build variant
 #	- Remove previous variant build directory
 #	- Recreate variant build directory
-#	- Bootstrap package (twice!)
 #	- Configure package for variant
 #	- Compile variant
 #
 %.variant:
 	@date; \
 	variant=`basename $@ .variant`; \
-	variant_conf_options=$($@.conf); \
-	variant_make_options=$($@.make); \
-	for d in $(PACKAGES); do \
+	for pkg in $(PACKAGES); do \
 		( echo \
-		&& echo ":::::: BUILDING VARIANT $$variant FOR PACKAGE $$d" \
-		&& echo ":::::: variant_conf_options = $$variant_conf_options" \
-		&& echo ":::::: variant_make_options = $$variant_make_options" \
+		&& echo ":::::: BUILDING VARIANT $$variant FOR PACKAGE $$pkg" \
 		&& echo \
 		&& date \
-		&& $(RM) -rf $$d/build/$$variant \
-		&& mkdir -p $$d/build/$$variant \
-		&& cd $$d/build/$$variant \
-		&& ( ../../configure $$variant_conf_options \
-			&& make -k $(MAKE_OPTIONS) $$variant_make_options \
+		&& $(RM) -rf $$pkg/build/$$variant \
+		&& mkdir -p $$pkg/build/$$variant \
+		&& cd $$pkg/build/$$variant \
+		&& ( $(LOFARDIR)/autoconf_share/lofarconf \
+			&& make -k $(MAKE_OPTIONS) `cat makeoptions` \
 			|| echo ":::::: ERROR" ) \
 		&& echo \
-		&& echo ":::::: FINISHED BUILDING VARIANT $$variant FOR PACKAGE $$d" \
+		&& echo ":::::: FINISHED BUILDING VARIANT $$variant FOR PACKAGE $$pkg" \
 		&& echo ; ) \
 	done; \
 	date
@@ -137,20 +115,16 @@ bootstrap:
 %.variant_check:
 	@date; \
 	variant=`basename $@ .variant_check`; \
-	variant_conf_options=$($@.conf); \
-	variant_make_options=$($@.make); \
-	for d in $(PACKAGES); do \
+	for pkg in $(PACKAGES); do \
 		( echo \
-		&& echo ":::::: CHECKING VARIANT $$variant FOR PACKAGE $$d" \
-		&& echo ":::::: variant_conf_options = $$variant_conf_options" \
-		&& echo ":::::: variant_make_options = $$variant_make_options" \
+		&& echo ":::::: CHECKING VARIANT $$variant FOR PACKAGE $$pkg" \
 		&& echo \
 		&& date \
-		&& cd $$d/build/$$variant \
-		&& (make -k $(MAKE_OPTIONS) $$variant_make_options check \
+		&& cd $$pkg/build/$$variant \
+		&& (make -k $(MAKE_OPTIONS) `cat makeoptions` check \
 			|| echo ":::::: ERROR" )) \
 		&& echo \
-		&& echo ":::::: FINISHED CHECKING VARIANT $$variant FOR PACKAGE $$d" \
+		&& echo ":::::: FINISHED CHECKING VARIANT $$variant FOR PACKAGE $$pkg" \
 		&& echo ; \
 	done; \
 	date
@@ -160,4 +134,10 @@ bootstrap:
 # crontab is read from autoconf_share/crontab.builds
 #
 crontab:
-	crontab autoconf_share/crontab.builds	
+	@crontab -l > $$HOME/crontab_$$$$; \
+	if (diff $$HOME/crontab_$$$$ autoconf_share/crontab.builds > /dev/null); then \
+	  $(RM) $$HOME/crontab_$$$$; \
+	else \
+	  echo "New crontab will be created; existing saved in $$HOME/crontab_$$$$"; \
+	fi
+	#crontab autoconf_share/crontab.builds;
