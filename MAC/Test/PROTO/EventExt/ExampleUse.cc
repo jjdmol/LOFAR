@@ -1,6 +1,9 @@
 #include <string.h>
 #include <iostream>
 #include <GCF/GCF_Event.h>
+
+using namespace std;
+
 class TransObject : public GCFTransportable
 {
   public:
