@@ -21,6 +21,11 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.3  2003/09/29 15:44:08  smirnov
+//  %[ER: 16]%
+//  Based Debug (and Assert) errors off of LCS::Exception.
+//  Cleaned up Assert macros.
+//
 //  Revision 1.2  2003/09/19 13:23:45  loose
 //  %[ER: 19]%
 //  Changed check for HAVE___FUNCTION__ into check for both HAVE_PRETTY_FUNCTION
@@ -291,7 +296,10 @@ namespace Debug
 # define TRACERPFN_INTERNAL(objname,level,funcName,objPtr,stream)
 #endif
 
-#ifdef HAVE___FUNCTION__
+#if defined(HAVE_PRETTY_FUNCTION)
+# define TRACERPFN(objname,level,stream) \
+     TRACERPFN_INTERNAL(objname,level,__PRETTY_FUNCTION__,0,stream)
+#elif defined(HAVE_FUNCTION)
 # define TRACERPFN(objname,level,stream) \
      TRACERPFN_INTERNAL(objname,level,__FUNCTION__,0,stream)
 #else
