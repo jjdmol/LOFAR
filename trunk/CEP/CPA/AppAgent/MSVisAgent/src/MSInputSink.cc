@@ -119,6 +119,8 @@ void MSInputSink::openMS (DataRecord &header,const DataRecord &select)
   ms_ = MeasurementSet(msname_,Table::Old);
   dprintf(1)("opened MS %s, %d rows\n",msname_.c_str(),ms_.nrow());
   
+  dprintf(3)("selection record is %s\n",select.sdebug(4).c_str());
+  
   // get DDID and Field ID (default is 0)
   int ddid = select[FDDID].as<int>(0);        
   int fieldid = select[FFieldIndex].as<int>(0);        

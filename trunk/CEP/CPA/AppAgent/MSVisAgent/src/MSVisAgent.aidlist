@@ -31,3 +31,5 @@ Type                             1098       ; from /home/oms/LOFAR/autoconf_shar
 VDSID                            1121       ; from /home/oms/LOFAR/autoconf_share/../CEP/CPA/VisCube/src/VisCube.aidlist:83
 Vis                              1116       ; from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/VisAgent/src/VisAgent.aidlist:11
 Write                            1253       ; from /home/oms/LOFAR/autoconf_share/../CEP/CPA/AppAgent/MSVisAgent/src/MSVisAgent.aidlist:33
+start                            1043       ; from /home/oms/LOFAR/autoconf_share/../CEP/CPA/OCTOGlish/src/OCTOGlish.aidlist:6
+string                           48         ; from /home/oms/LOFAR/autoconf_share/../DMI/src/DMI.aidlist:45
