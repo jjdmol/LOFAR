@@ -26,7 +26,6 @@
 #include <CEPFrame/CompositeRep.h>
 #include <CEPFrame/Step.h>
 #include <CEPFrame/Composite.h>
-#include <tinyCEP/Profiler.h>
 #include <CEPFrame/WH_Empty.h>
 #include <CEPFrame/VirtualMachine.h>
 #include <Common/LofarLogger.h>
@@ -41,13 +40,6 @@
 
 namespace LOFAR
 {
-
-// Set static variables
-int CompositeRep::theirProcessProfilerState=0; 
-int CompositeRep::theirInReadProfilerState=0; 
-int CompositeRep::theirInWriteProfilerState=0; 
-int CompositeRep::theirOutReadProfilerState=0; 
-int CompositeRep::theirOutWriteProfilerState=0; 
 
 //////////////////////////////////////////////////////////////////////
 // Construction/Destruction
@@ -74,22 +66,6 @@ CompositeRep::CompositeRep (WorkHolder& worker,
 #else
     LOG_INFO("CORBA is not configured, so CorbaMonitor cannot be used in Composite ");
 #endif 
-  }
-
-  if (theirProcessProfilerState == 0) {
-    theirProcessProfilerState = Profiler::defineState("Composite_Process","grey");
-  }
-  if (theirInReadProfilerState == 0) {
-    theirInReadProfilerState = Profiler::defineState("Composite_InRead","pink");
-  }
-  if (theirInWriteProfilerState == 0) {
-    theirInWriteProfilerState = Profiler::defineState("Composite_InWrite","purple");
-  }
-  if (theirOutReadProfilerState == 0) {
-    theirOutReadProfilerState = Profiler::defineState("Composite_OutRead","purple");
-  }
-  if (theirOutWriteProfilerState == 0) {
-    theirOutWriteProfilerState = Profiler::defineState("Composite_OutWrite","red");
   }
 }
 
@@ -422,14 +398,10 @@ void CompositeRep::process()
     // Only read and write of the simul is on your own node
     for (int ch=0; ch < getWorker()->getDataManager().getInputs(); ch++) {
       // Read the source of inTransport
-      Profiler::enterState (theirInReadProfilerState);
       getWorker()->getDataManager().getInHolder(ch);
       getWorker()->getDataManager().readyWithInHolder(ch);
-      Profiler::leaveState (theirInReadProfilerState);
       // Write the InTransport to the first step of this simul
-      Profiler::enterState (theirInWriteProfilerState);
       (getWorker()->getDataManager().getInHolder(ch))->write();
-      Profiler::leaveState (theirInWriteProfilerState);
     }  
   }
 
@@ -447,13 +419,9 @@ void CompositeRep::process()
   if (onRightNode) {
     for (int ch=0; ch < getWorker()->getDataManager().getOutputs(); ch++) {
       // Fill the outdata buffer by reading from last step
-      Profiler::enterState (theirOutReadProfilerState);
       getWorker()->getDataManager().getOutHolder(ch)->read();
-      Profiler::leaveState (theirOutReadProfilerState);
       // Write the Outtransport
-      Profiler::enterState (theirOutWriteProfilerState);
       getWorker()->getDataManager().readyWithOutHolder(ch);
-      Profiler::leaveState (theirOutWriteProfilerState);
     }  
   }
 }

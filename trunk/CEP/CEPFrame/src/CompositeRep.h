@@ -200,13 +200,6 @@ private:
   /// Map of Step names of Step objects.
   nameMapType itsNameMap;
 
-  /// Profiling States
-  static int          theirProcessProfilerState; 
-  static int          theirInReadProfilerState; 
-  static int          theirInWriteProfilerState; 
-  static int          theirOutReadProfilerState; 
-  static int          theirOutWriteProfilerState; 
-
   /// The VirtualMachine object.
   VirtualMachine itsVM;
   /// pointer to the CorbaController/Monitor objects (can be 0).
