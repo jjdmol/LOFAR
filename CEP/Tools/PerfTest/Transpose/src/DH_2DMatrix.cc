@@ -21,11 +21,14 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.1.1.1  2002/05/06 11:49:20  schaaf
+//  initial version
+//
 //
 //////////////////////////////////////////////////////////////////////
 
 
-#include "DH_2DMatrix.h"
+#include "Transpose/DH_2DMatrix.h"
 
 DH_2DMatrix::DataPacket::DataPacket() {
 }

@@ -22,6 +22,9 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.2  2002/05/07 11:15:38  schaaf
+//  minor
+//
 //  Revision 1.1.1.1  2002/05/06 11:49:20  schaaf
 //  initial version
 //
@@ -30,24 +33,24 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include <stdio.h>
-#include <iostream.h>
+#include <Common/lofar_iostream.h>
 #include <stdlib.h>
-#include <string>
+#include <Common/lofar_string.h>
 
-#include "Debug.h"
-#include "Transport.h"
-#include "Step.h"
-#include "Transpose.h"
-#include "Simul.h"
-#include "Profiler.h"
-#include "WH_FillTFMatrix.h"
-#include "WH_Transpose.h"
-#include "WH_Empty.h"
+#include "Common/Debug.h"
+#include "BaseSim/Transport.h"
+#include "BaseSim/Step.h"
+#include "Transpose/Transpose.h"
+#include "BaseSim/Simul.h"
+#include "BaseSim/Profiler.h"
+#include "Transpose/WH_FillTFMatrix.h"
+#include "Transpose/WH_Transpose.h"
+#include "BaseSim/WH_Empty.h"
 #include TRANSPORTERINCLUDE
 
 #ifdef HAVE_CORBA
-#include "BS_Corba.h"
-#include "TH_Corba.h"
+#include "BaseSim/Corba/BS_Corba.h"
+#include "BaseSim/Corba/TH_Corba.h"
 #endif
 
 

@@ -21,6 +21,9 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.3  2002/05/07 14:59:16  schaaf
+//  optimised performance of process()
+//
 //  Revision 1.2  2002/05/07 11:15:38  schaaf
 //  minor
 //
@@ -34,10 +37,10 @@
 #include <stdio.h>             // for sprintf
 #include <math.h>
 
-#include "Step.h"
-#include "Debug.h"
+#include "BaseSim/Step.h"
+#include "Common/Debug.h"
 
-#include "WH_FillTFMatrix.h"
+#include "Transpose/WH_FillTFMatrix.h"
 
 WH_FillTFMatrix::WH_FillTFMatrix (const string& name, 
 				  int sourceID,
