@@ -43,11 +43,37 @@ struct Used
 // Define the map to hold the usage.
 typedef map<string,Used> UsedMap;
 
-// Write the dependency tree in ASCII format.
-void writeDep (const string& pkg, UsedMap& dep, const string& indent,
-	       int depth, int maxdepth)
+// Remove the basename part.
+string baseName(const string& name, bool strip)
 {
-  cout << indent << pkg << endl;
+  if (!strip) {
+    return name;
+  }
+  string::size_type pos = name.rfind('/');
+  if (pos == string::npos) {
+    return name;
+  }
+  return name.substr(pos+1);
+}
+
+// Replace slashes by underscores.
+string replaceSlash (const string& str)
+{
+  string out = str;
+  string::size_type idx = out.find('/');
+  while (idx != string::npos) {
+    out.replace (idx, 1, 1, '_');
+    idx = out.find('/');
+  }
+  return out;
+}
+
+// Write the dependency tree in ASCII format.
+void writeASCII (ostream& os, const string& pkg, UsedMap& dep,
+		 const string& indent,
+		 int depth, int maxdepth, bool strip)
+{
+  os << indent << baseName(pkg,strip) << endl;
   // write used packages if any and if maxdepth not reached.
   if (maxdepth < 0  ||  depth < maxdepth) {
     string newIndent = indent + ' ';
@@ -55,13 +81,13 @@ void writeDep (const string& pkg, UsedMap& dep, const string& indent,
     for (set<string>::const_iterator iter = uses.begin();
 	 iter != uses.end();
 	 ++iter) {
-      writeDep (*iter, dep, newIndent, depth+1, maxdepth);
+      writeASCII (os, *iter, dep, newIndent, depth+1, maxdepth, strip);
     }
   }
 }
 
 // Write JavaScript header.
-void writeHeader (const string& type)
+void writeJSHeader (const string& type)
 {
   cout << "<html>" << endl;
   cout << "<head>" << endl;
@@ -78,7 +104,7 @@ void writeHeader (const string& type)
 }
 
 // Write JavaScript footer.
-void writeFooter()
+void writeJSFooter()
 {
   cout << "  objTreeMenu_1.drawMenu();" << endl;
   cout << "  objTreeMenu_1.resetBranches();" << endl;
@@ -115,6 +141,44 @@ void writeJS (const string& pkg, UsedMap& dep, const string& parent,
   }
 }
 
+// Write the dependency tree in XHTML format.
+void writeXHTML (const string& pkg, UsedMap& dep, const string& parent,
+		 int depth, int maxdepth, int seqnr)
+{
+  // Form the name for this node.
+  ostringstream oss;
+  oss << parent << '_' << seqnr+1;
+  // Get children.
+  set<string> uses = dep[pkg].itsUses;
+  cout << "<p>";
+  for (int i=0; i<depth; ++i) {
+    cout << "<img src='ftv2vertline.png' alt='|' width=16 height=22 />";
+  }
+  if (uses.empty()) {
+    cout << "<img src='ftv2node.png' alt='o' width=16 height=22 />";
+    cout << "<img src='ftv2doc.png' alt='*' width=24 height=22 />";
+    cout << pkg << "</p>" << endl;
+  } else {
+    cout << "<img src='ftv2pnode.png' alt='o' width=16 height=22 onclick='toggleFolder(";
+    cout << '"' << "node" << oss.str() << '"';
+    cout << ", this)'/>";
+    cout << "<img src='ftv2folderclosed.png' alt='+' width=24 height=22 onclick='toggleFolder(";
+    cout << '"' << "node" << oss.str() << '"';
+    cout << ", this)'/>" << pkg << "</p>" << endl;
+    cout << "<div id='node" << oss.str() << "'>" << endl;
+    // Write used packages if any and if maxdepth not reached.
+    if (maxdepth < 0  ||  depth < maxdepth) {
+      int newSeqnr = 0;
+      for (set<string>::const_iterator iter = uses.begin();
+	   iter != uses.end();
+	   ++iter, ++newSeqnr) {
+	writeXHTML (*iter, dep, oss.str(), depth+1, maxdepth, newSeqnr);
+      }
+    }
+    cout << "</div>" << endl;
+  }
+}
+
 // Determine all dependencies.
 void findFlatDep (const string& pkg, UsedMap& dep, set<string>& flatUses)
 {
@@ -130,16 +194,41 @@ void findFlatDep (const string& pkg, UsedMap& dep, set<string>& flatUses)
 int main(int argc, const char* argv[])
 {
   if (argc < 2) {
-    cerr << "Use as:   pkgdep inputfile [flat|maxdepth=-1] [ascii]" << endl;
+    cerr << "Use as:   pkgdep inputfile [flat|maxdepth=-1] [ascii|xhtml|js]"
+	 << "[strip] [top] [split=ext]"
+	 << endl;
     return 1;
   }
+  enum OutType {ASCII,XHTML,JS};
   bool flat=false;
-  bool ascii=false;
+  OutType outtype = JS;
+  bool top=false;
+  bool strip=false;
+  bool split=false;
+  string ext="";
   int maxdepth=-1;
   for (int i=2; i<argc; ++i) {
-    if (string(argv[i]) == "ascii") {
-      ascii = true;
-    } else if (string(argv[i]) == "flat") {
+    string arg = argv[i];
+    string val;
+    string::size_type idx = arg.find('=');
+    if (idx != string::npos) {
+      val = arg.substr(idx+1);
+      arg = arg.substr(0, idx);
+    }
+    if (arg == "ascii") {
+      outtype = ASCII;
+    } else if (arg == "js") {
+      outtype = JS;
+    } else if (arg == "xhtml") {
+      outtype = XHTML;
+    } else if (arg == "top") {
+      top = true;
+    } else if (arg == "strip") {
+      strip = true;
+    } else if (arg == "split") {
+      split = true;
+      ext = val;
+    } else if (arg == "flat") {
       flat = true;
       maxdepth = 1;
     } else {
@@ -175,9 +264,9 @@ int main(int argc, const char* argv[])
     depPtr = &flatdep;
   }
 
-  if (!ascii) {
+  if (outtype == JS) {
     string name(argv[1]);
-    writeHeader(name.substr(name.find('.') + 1));
+    writeJSHeader(name.substr(name.find('.') + 1));
   }
   // Write the dependencies starting at all root packages
   // (i.e. packages not used by others).
@@ -185,15 +274,30 @@ int main(int argc, const char* argv[])
   for (UsedMap::const_iterator iter = depPtr->begin();
        iter != depPtr->end();
        ++iter, ++seqnr) {
-    //    if (iter->second.itsNused == 0) {
-      if (ascii) {
-	writeDep (iter->first, *depPtr, "", 0, maxdepth);
-      } else {
-	writeJS (iter->first, *depPtr, "", 0, maxdepth, seqnr);
+    if (!top  ||  iter->second.itsNused == 0) {
+      ostream* ptr = &cout;
+      if (split) {
+	string name = replaceSlash(iter->first) + ext;
+	cerr << name << endl;
+	ptr = new ofstream(name.c_str());
       }
-      //    }
+      switch (outtype) {
+      case ASCII:
+	writeASCII (*ptr, iter->first, *depPtr, "", 0, maxdepth, strip);
+	break;
+      case JS:
+	writeJS (iter->first, *depPtr, "", 0, maxdepth, seqnr);
+	break;
+      case XHTML:
+	writeXHTML (iter->first, *depPtr, "", 0, maxdepth, seqnr);
+	break;
+      }
+      if (ptr != &cout) {
+	delete ptr;
+      }
+    }
   }
-  if (!ascii) {
-    writeFooter();
+  if (outtype == JS) {
+    writeJSFooter();
   }
 }
