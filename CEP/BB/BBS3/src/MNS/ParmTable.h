@@ -24,8 +24,8 @@
 #define MNS_PARMTABLE_H
 
 //# Includes
-#include <PSS3/MNS/MeqPolc.h>
-#include <PSS3/MNS/MeqSourceList.h>
+#include <BBS3/MNS/MeqPolc.h>
+#include <BBS3/MNS/MeqSourceList.h>
 #include <Common/lofar_vector.h>
 
 //# Forward Declarations

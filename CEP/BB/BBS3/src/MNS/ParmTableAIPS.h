@@ -24,8 +24,8 @@
 #define MNS_PARMTABLEAIPS_H
 
 //# Includes
-#include <PSS3/MNS/ParmTable.h>
-#include <PSS3/MNS/MeqPolc.h>
+#include <BBS3/MNS/ParmTable.h>
+#include <BBS3/MNS/MeqPolc.h>
 #include <tables/Tables/Table.h>
 #include <tables/Tables/ColumnsIndex.h>
 #include <casa/Containers/RecordField.h>
