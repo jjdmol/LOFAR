@@ -1,7 +1,7 @@
 AUTOGEN = autogen
 SUFFIXES = .ph
 %.ph: %.prot
-	$(AUTOGEN) -L $(top_srcdir)/../../GCF/GCFCommon/autogen $< && \
+	$(AUTOGEN) -L $(top_srcdir)/../../MACCommon/autogen $< && \
 	chmod a+w $@
 
 libgcftest_la_DOCHDRS	=	\
@@ -19,10 +19,12 @@ noinst_LTLIBRARIES 	= libgcftest.la libgcfrttest.la
 libgcftest_la_SOURCES= $(libgcftest_la_DOCHDRS) \
 	SupervisedTask.cc \
  	PropertyProxy.cc \
- 	Answer.cc
+ 	Answer.cc \
+ 	TST_Protocol.cc
 
 libgcfrttest_la_SOURCES= $(libgcfrttest_la_DOCHDRS) \
- 	RTAnswer.cc
+ 	RTAnswer.cc \
+	Echo_Protocol.cc
 
 bin_PROGRAMS   		= Application1 Application2 RTEcho RTPing
   

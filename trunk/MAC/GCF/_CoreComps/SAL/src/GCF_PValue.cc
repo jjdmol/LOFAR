@@ -55,11 +55,11 @@ GCFPValue* GCFPValue::createMACTypeObject(TMACValueType type)
     case LPT_STRING:
       pResult = new GCFPVString();
       break;
-/*    case LPT_BIT32:
-      pResult = new GCFPVBit32();
-      break;
-    case LPT_REF:
+/*    case LPT_REF:
       pResult = new GCFPVRef();
+      break;
+    case LPT_BIT32:
+      pResult = new GCFPVBit32();
       break;
     case LPT_BLOB:
       pResult = new GCFPVBlob();
@@ -85,14 +85,13 @@ GCFPValue* GCFPValue::createMACTypeObject(TMACValueType type)
   return pResult;
 }
 
-GCFPValue* GCFPValue::unpackValue(const char* valBuf, unsigned int maxBufSize)
+GCFPValue* GCFPValue::unpackValue(const char* valBuf)
 {
-  assert(maxBufSize > 1);
   GCFPValue* pValue = createMACTypeObject((TMACValueType) *valBuf);
   if (pValue)
   {
-    unsigned int readLength = pValue->unpack(valBuf, maxBufSize);
-    if (maxBufSize != readLength)
+    unsigned int readLength = pValue->unpack(valBuf);
+    if (readLength == 0)
     {
       delete pValue;
       pValue = 0;
@@ -101,28 +100,19 @@ GCFPValue* GCFPValue::unpackValue(const char* valBuf, unsigned int maxBufSize)
   return pValue;
 }
 
-unsigned int GCFPValue::unpackBase(const char* valBuf, unsigned int maxBufSize)
+unsigned int GCFPValue::unpackBase(const char* valBuf)
 {
-  if (maxBufSize >= 1)
-  {
-    assert(_type == (TMACValueType) *valBuf);
-    return 1;
-  }
-  else 
-  {
-    return 0;
-  }
+  assert(_type == (TMACValueType) *valBuf);
+  // the type was already set, because it was set on construction of this class
+  // at this moment only the type will be unpacked, later maybe a timestamp can 
+  // be assigned to a value.
+  return 1;
 }
 
-unsigned int GCFPValue::packBase(char* valBuf, unsigned int maxBufSize) const
+unsigned int GCFPValue::packBase(char* valBuf) const
 {
-  if (maxBufSize >= 1)
-  {
-    valBuf[0] = _type;
-    return 1;
-  }
-  else 
-  {
-    return 0;
-  }
+  valBuf[0] = _type;
+  // at this moment only the type will be packed, later maybe a timestamp can 
+  // be assigned to a value.
+  return 1;
 }

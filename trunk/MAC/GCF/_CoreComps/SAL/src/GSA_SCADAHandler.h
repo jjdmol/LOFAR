@@ -42,8 +42,6 @@ class GSASCADAHandler : GCFHandler
     void workProc ();
     void stop ();
     TSAResult isOperational ();
-    void registerTask (GCFTask& task);
-    void unregisterTask (GCFTask& task);
 
   private:
     GSASCADAHandler ();
@@ -57,6 +55,5 @@ class GSASCADAHandler : GCFHandler
     
     GSAPvssApi      _pvssApi;
     bool            _running;
-    list<GCFTask*>  _registerdTasks;
 };
 #endif

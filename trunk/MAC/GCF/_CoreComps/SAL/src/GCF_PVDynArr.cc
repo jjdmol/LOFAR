@@ -41,11 +41,11 @@ GCFPVDynArr::~GCFPVDynArr()
   cleanup();
 }
 
-unsigned int GCFPVDynArr::unpack(const char* valBuf, unsigned int maxBufSize)
+unsigned int GCFPVDynArr::unpack(const char* valBuf)
 {
   unsigned int result(0);
-  unsigned int unpackedBytes = unpackBase(valBuf, maxBufSize);
-  if (maxBufSize >= unpackedBytes + sizeof(unsigned int))
+  unsigned int unpackedBytes = unpackBase(valBuf);
+  if (unpackedBytes > 0)
   {
     cleanup();
     unsigned int arraySize(0);
@@ -57,7 +57,7 @@ unsigned int GCFPVDynArr::unpack(const char* valBuf, unsigned int maxBufSize)
     {
       pNewValue = GCFPValue::createMACTypeObject((TMACValueType) (getType() | LPT_DYNARR));
       
-      curUnpackedBytes = pNewValue->unpack(valBuf + unpackedBytes, maxBufSize - unpackedBytes);
+      curUnpackedBytes = pNewValue->unpack(valBuf + unpackedBytes);
       if (curUnpackedBytes > 0)
       {
         unpackedBytes += curUnpackedBytes;
@@ -74,11 +74,11 @@ unsigned int GCFPVDynArr::unpack(const char* valBuf, unsigned int maxBufSize)
   return result;
 }
 
-unsigned int GCFPVDynArr::pack(char* valBuf, unsigned int maxBufSize) const
+unsigned int GCFPVDynArr::pack(char* valBuf) const
 {
   unsigned int result(0);  
-  unsigned int packedBytes = packBase(valBuf, maxBufSize);
-  if (maxBufSize >= packedBytes + sizeof(unsigned int))
+  unsigned int packedBytes = packBase(valBuf);
+  if (packedBytes > 0)
   {
     unsigned int arraySize(_values.size());
     memcpy(valBuf + packedBytes, (void *) &arraySize, sizeof(unsigned int));
@@ -87,7 +87,7 @@ unsigned int GCFPVDynArr::pack(char* valBuf, unsigned int maxBufSize) const
     for (GCFPValueArray::const_iterator iter = _values.begin();
          iter != _values.end(); ++iter)
     {
-      curPackedBytes = (*iter)->pack(valBuf + packedBytes, maxBufSize - packedBytes);
+      curPackedBytes = (*iter)->pack(valBuf + packedBytes);
       packedBytes += curPackedBytes;
       if (curPackedBytes == 0)
       {
@@ -98,6 +98,19 @@ unsigned int GCFPVDynArr::pack(char* valBuf, unsigned int maxBufSize) const
     result = packedBytes;
   }
   return result;
+}
+
+unsigned int GCFPVDynArr::getSize() const
+{
+  unsigned int totalSize(sizeof(unsigned int));
+
+  for (GCFPValueArray::const_iterator iter = _values.begin();
+       iter != _values.end(); ++iter)
+  {
+    totalSize += (*iter)->getSize();
+  }  
+  totalSize += getBaseSize();
+  return totalSize;
 }
 
 TGCFResult GCFPVDynArr::setValue(const string value)

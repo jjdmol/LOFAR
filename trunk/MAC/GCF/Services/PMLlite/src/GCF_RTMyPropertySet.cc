@@ -193,7 +193,7 @@ void GCFRTMyPropertySet::scopeRegistered (TGCFResult result)
         _scope.c_str()));
   }
 
-  dispatchAnswer(F_MYPLOADED_SIG, result);
+  dispatchAnswer(F_MYPLOADED, result);
 }
 
 void GCFRTMyPropertySet::scopeUnregistered (TGCFResult result)
@@ -208,7 +208,7 @@ void GCFRTMyPropertySet::scopeUnregistered (TGCFResult result)
       "PI-RESP: Scope %s unregistered",
       _scope.c_str()));
 
-  dispatchAnswer(F_MYPUNLOADED_SIG, result);
+  dispatchAnswer(F_MYPUNLOADED, result);
 }
 
 void GCFRTMyPropertySet::linkProperties(list<string>& properties)

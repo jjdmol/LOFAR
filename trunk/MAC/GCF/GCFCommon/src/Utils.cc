@@ -8,51 +8,24 @@ Utils::Utils()
 Utils::~Utils()
 {}
 
-unsigned int Utils::unpackString(char* pStringData, string& value)
+void Utils::getPropertyListString(string& propListString, 
+                                  const list<string>& propertyList)
 {
-  unsigned int stringLength(0);
-  memcpy((void *) &stringLength, pStringData, SLEN_FIELD_SIZE);
-  value.clear();
-  value.append(pStringData + SLEN_FIELD_SIZE, stringLength);
-  return stringLength + SLEN_FIELD_SIZE;
-}
-
-unsigned int Utils::packString(const string& value, char* buffer, unsigned int maxBufferSize)
-{
-  unsigned int neededBufLength = value.size() + SLEN_FIELD_SIZE;
-  assert(neededBufLength < maxBufferSize);
-  unsigned int stringLength(value.size());
-  memcpy(buffer, (void *) &stringLength, SLEN_FIELD_SIZE);
-  memcpy(buffer + SLEN_FIELD_SIZE, (void *) value.c_str(), value.size());
-  return neededBufLength;
-}
-
-unsigned short Utils::getStringDataLength(char* pStringData)
-{
-  unsigned int stringLength(0);
-  memcpy((void *) &stringLength, pStringData, SLEN_FIELD_SIZE);
-  return stringLength + SLEN_FIELD_SIZE;
-}
-
-unsigned int Utils::packPropertyList(list<string>& propertyList, char* buffer, unsigned int maxBufferSize)
-{
-  string allPropNames;
-  for (list<string>::iterator iter = propertyList.begin(); 
+  propListString.clear();
+  for (list<string>::const_iterator iter = propertyList.begin(); 
        iter != propertyList.end(); ++iter)
   {
-    allPropNames += *iter;
-    allPropNames += '|';
+    propListString += *iter;
+    propListString += '|';
   }
-  
-  return packString(allPropNames, buffer, maxBufferSize);
 }
 
-void Utils::unpackPropertyList(char* pListData, list<string>& propertyList)
+void Utils::getPropertyListFromString(list<string>& propertyList, 
+                                      const string& propListString)
 {
-  unsigned int dataLength;
-  memcpy((void *) &dataLength, pListData, SLEN_FIELD_SIZE);
+  unsigned int dataLength = propListString.length();
   char propertyData[dataLength + 1];
-  memcpy(propertyData, pListData + SLEN_FIELD_SIZE, dataLength);
+  memcpy(propertyData, propListString.c_str(), dataLength);
   propertyData[dataLength] = 0;
   propertyList.clear();
   if (dataLength > 0)

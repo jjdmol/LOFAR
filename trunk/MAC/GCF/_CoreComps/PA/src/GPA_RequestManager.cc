@@ -36,9 +36,8 @@ void GPARequestManager::registerRequest(GCFPortInterface& requestPort, const GCF
 {
   TRequest request;
   request.pRPort = &requestPort;
-  char* buffer = new char[e.length];
-  memcpy(buffer, (const char*) &e, e.length);
-  request.pEvent = (GCFEvent*) buffer;
+  request.pEvent = new char[sizeof(e) + e.length];
+  memcpy(request.pEvent, (const char*) &e, sizeof(e) + e.length);
 
   _requests.push_back(request);
 }
@@ -48,7 +47,7 @@ GCFEvent* GPARequestManager::getOldestRequest()
   if (_requests.size() > 0)
   {
     TRequest* pRequest = &_requests.front();
-    return pRequest->pEvent;
+    return (GCFEvent*) (pRequest->pEvent);
   }
   else
     return 0;  

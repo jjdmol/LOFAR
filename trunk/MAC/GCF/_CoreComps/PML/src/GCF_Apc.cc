@@ -169,7 +169,7 @@ void GCFApc::loaded (TGCFResult result)
       "PA-RESP: Apc %s loaded with scope %s",
       _name.c_str(), _scope.c_str()));
   
-  dispatchAnswer(F_APCLOADED_SIG, result);
+  dispatchAnswer(F_APCLOADED, result);
 }
 
 void GCFApc::unloaded(TGCFResult result)
@@ -187,7 +187,7 @@ void GCFApc::unloaded(TGCFResult result)
       "PA-RESP: Apc %s unloaded with scope %s",
       _name.c_str(), _scope.c_str()));
 
-  dispatchAnswer(F_APCUNLOADED_SIG, result);
+  dispatchAnswer(F_APCUNLOADED, result);
 }
 
 void GCFApc::reloaded(TGCFResult result)
@@ -201,7 +201,7 @@ void GCFApc::reloaded(TGCFResult result)
       "PA-RESP: Apc %s reloaded with scope %s",
       _name.c_str(), _scope.c_str()));
   
-  dispatchAnswer(F_APCRELOADED_SIG, result);
+  dispatchAnswer(F_APCRELOADED, result);
 }
 
 TGCFResult GCFApc::setName (const string name)

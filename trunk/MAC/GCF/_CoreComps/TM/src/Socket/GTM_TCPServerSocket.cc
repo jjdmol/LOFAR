@@ -93,7 +93,7 @@ void GTMTCPServerSocket::workProc()
 {
   if (_isProvider)
   {
-    GCFEvent acceptReqEvent(F_ACCEPT_REQ_SIG);
+    GCFEvent acceptReqEvent(F_ACCEPT_REQ);
     _port.dispatch(acceptReqEvent);
   }
   else
@@ -113,7 +113,7 @@ void GTMTCPServerSocket::workProc()
          
     if (_pTCPServerSocket->getFD() >= 0)
     {
-      GCFEvent connectedEvent(F_CONNECTED_SIG);
+      GCFEvent connectedEvent(F_CONNECTED);
       _port.dispatch(connectedEvent);
     }
     // else ignore further connect requests

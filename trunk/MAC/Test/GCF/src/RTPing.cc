@@ -22,16 +22,12 @@
 //  $Id$
 //
 
-// we want F_DEBUG_SIGNAL to show the signals
-#define DEBUG_SIGNAL
-
 #include "RTPing.h"
 #include "RTDefines.h"
 #include <GCF/GCF_PVInteger.h>
-#include <GCF/GCF_PVUnsigned.h>
+#include <GCF/GCF_PVDouble.h>
 #include <GCF/CmdLine.h>
 #include <stdio.h>
-#define DECLARE_SIGNAL_NAMES
 #include "Echo_Protocol.ph"
 
 /**
@@ -69,15 +65,15 @@ GCFEvent::TResult Ping::initial(GCFEvent& e, GCFPortInterface& /*p*/)
 
   switch (e.signal)
   {
-    case F_INIT_SIG:
+    case F_INIT:
       break;
 
-    case F_ENTRY_SIG:
+    case F_ENTRY:
       _echoPingPSET.load();
       _client.open();
       break;
 
-    case F_CONNECTED_SIG:
+    case F_CONNECTED:
       
       // start ping_timer
       // - after 1 second
@@ -88,15 +84,15 @@ GCFEvent::TResult Ping::initial(GCFEvent& e, GCFPortInterface& /*p*/)
       }
       break;
 
-    case F_DISCONNECTED_SIG:
+    case F_DISCONNECTED:
       _client.setTimer(1.0); // try connect again after 1 second
       break;
 
-    case F_TIMER_SIG:
+    case F_TIMER:
       _client.open();
       break;
 
-    case F_MYPLOADED_SIG:
+    case F_MYPLOADED:
     {
       if (_client.isConnected() && _echoPingPSET.isLoaded())
       {
@@ -104,7 +100,7 @@ GCFEvent::TResult Ping::initial(GCFEvent& e, GCFPortInterface& /*p*/)
       }
       break;
     }
-    case F_EXIT_SIG:
+    case F_EXIT:
       _pingTimer = _client.setTimer(1.0, 0.1);
       break;
     default:
@@ -124,7 +120,7 @@ GCFEvent::TResult Ping::connected(GCFEvent& e, GCFPortInterface& /*p*/)
   switch (e.signal)
   {
 
-    case F_ENTRY_SIG:
+    case F_ENTRY:
     {
       GCFPVInteger* pMaxSeqProp = static_cast<GCFPVInteger*>(_echoPingPSET["maxSeqNr"].getValue());
       assert(pMaxSeqProp);
@@ -132,7 +128,7 @@ GCFEvent::TResult Ping::connected(GCFEvent& e, GCFPortInterface& /*p*/)
       delete pMaxSeqProp; // was created by the first getValue() - clone of current value
       break;
     }
-    case F_VCHANGEMSG_SIG:
+    case F_VCHANGEMSG:
     {
       GCFPropValueEvent* pResponse = static_cast<GCFPropValueEvent*>(&e);
       assert(pResponse);
@@ -144,26 +140,32 @@ GCFEvent::TResult Ping::connected(GCFEvent& e, GCFPortInterface& /*p*/)
       }
       break;
     }
-    case F_TIMER_SIG:
+    case F_TIMER:
     {
 
       timeval pingTime;
 
       // create PingEvent
       gettimeofday(&pingTime, 0);
-      EchoPingEvent ping(seqnr++,
-                     pingTime);
+      EchoPingEvent ping;
+      ping.seqnr = seqnr++,
+      ping.pingTime = pingTime;
 
       // send the event
       _client.send(ping);
-      _echoPingPSET["seqNr"].setValue(GCFPVUnsigned(ping.seqnr));
+      char seqNrName[9];
+      for (unsigned int i = 0; i < 256; i++)
+      {
+        sprintf(seqNrName, "seqNr%03d", i);
+        _echoPingPSET[seqNrName].setValue(GCFPVDouble(ping.seqnr));
+      }
       if (seqnr >= maxSeqNr) seqnr = 0;
       printf("PING sent (seqnr=%d)\n", ping.seqnr);
 
       TRAN(Ping::awaiting_echo); // wait for the echo
       break;
     }
-    case F_DISCONNECTED_SIG:
+    case F_DISCONNECTED:
       (void)_client.cancelTimer(_pingTimer);
 
       seqnr = 0;
@@ -184,7 +186,7 @@ GCFEvent::TResult Ping::awaiting_echo(GCFEvent& e, GCFPortInterface& /*p*/)
 
   switch (e.signal)
   {
-    case F_TIMER_SIG:
+    case F_TIMER:
       printf("Missed echo dead-line.\n");
       break;
 
@@ -193,15 +195,15 @@ GCFEvent::TResult Ping::awaiting_echo(GCFEvent& e, GCFPortInterface& /*p*/)
       timeval echoTime;
       gettimeofday(&echoTime, 0);
 
-      EchoEchoEvent* echo = static_cast<EchoEchoEvent*>(&e);
+      EchoEchoEvent echo(e);
 
-      printf ("ECHO received (seqnr=%d): elapsed = %f sec.\n", echo->seqnr,
-           time_elapsed(&(echo->pingTime), &echoTime));
+      printf ("ECHO received (seqnr=%d): elapsed = %f sec.\n", echo.seqnr,
+           time_elapsed(&(echo.pingTime), &echoTime));
 
       TRAN(Ping::connected);
       break;
     }
-    case F_DISCONNECTED_SIG:
+    case F_DISCONNECTED:
       (void)_client.cancelTimer(_pingTimer);
       TRAN(Ping::initial);
       break;

@@ -1,7 +1,7 @@
 AUTOGEN = autogen
 SUFFIXES = .ph
 %.ph: $(top_srcdir)/Services/PI/src/%.prot
-	$(AUTOGEN) -L $(top_srcdir)/GCFCommon/autogen $< && \
+	$(AUTOGEN) -L $(top_srcdir)/../MACCommon/autogen $< && \
 	chmod a+w $@
 
 DOCHDRS	=	\
@@ -11,7 +11,8 @@ DOCHDRS	=	\
 noinst_LTLIBRARIES 	= libsupserver.la
 
 libsupserver_la_SOURCES= $(DOCHDRS) \
-  GSS_Controller.cc
+  GSS_Controller.cc \
+  PI_Protocol.cc
   
 libsupserver_la_CPPFLAGS= -I$(top_srcdir)/GCFCommon/src \
 	-I$(top_srcdir)/CoreComps/TM/src \

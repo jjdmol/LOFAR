@@ -22,9 +22,7 @@
 //  $Id$
 
 #include "Echo.h"
-#define DECLARE_SIGNAL_NAMES
 #include "Echo_Protocol.ph"
-
 
 Echo::Echo(string name) : GCFTask((State)&Echo::initial, name)
 {
@@ -41,22 +39,22 @@ GCFEvent::TResult Echo::initial(GCFEvent& e, GCFPortInterface& /*p*/)
 
   switch (e.signal)
     {
-    case F_INIT_SIG:
+    case F_INIT:
       break;
 
-    case F_ENTRY_SIG:
+    case F_ENTRY:
       server.open();
       break;
 
-    case F_CONNECTED_SIG:
+    case F_CONNECTED:
       TRAN(Echo::connected);
       break;
 
-    case F_DISCONNECTED_SIG:
+    case F_DISCONNECTED:
       server.setTimer(1.0); // try again after 1 second
       break;
 
-    case F_TIMER_SIG:
+    case F_TIMER:
       server.open(); // try again
       break;
 
@@ -73,44 +71,36 @@ GCFEvent::TResult Echo::connected(GCFEvent& e, GCFPortInterface& /*p*/)
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
   switch (e.signal)
-    {
-    case F_DISCONNECTED_SIG:
+  {
+    case F_DISCONNECTED:
       cout << "Lost connection to client" << endl;
       TRAN(Echo::initial);
       break;
 
     case ECHO_PING:
-      {
+    {
 
-#ifndef HUMAN_PORT
-
-	EchoPingEvent* ping = static_cast<EchoPingEvent*>(&e);
-
-	cout << "PING received (seqnr=" << ping->seqnr << ")" << endl;
-	
-	timeval echo_time;
-	gettimeofday(&echo_time, 0);
-	EchoEchoEvent echo(ping->seqnr,
-			   ping->ping_time,
-			   echo_time);
-
-#else
-	
-	cout << "PING received" << endl;
-
-	GCFEvent echo(ECHO_ECHO);
-
-#endif
-	server.send(echo);
-
-	cout << "ECHO sent" << endl;
-      }
+      EchoPingEvent ping(e);
+      
+      cout << "PING received (seqnr=" << ping.seqnr << ")" << endl;
+      
+      timeval echo_time;
+      gettimeofday(&echo_time, 0);
+      EchoEchoEvent echo;
+      echo.seqnr = ping.seqnr;
+      echo.ping_time = ping.ping_time;
+      echo.echo_time = echo_time;
+      
+      server.send(echo);
+      
+      cout << "ECHO sent" << endl;
       break;
+    }
 
     default:
       status = GCFEvent::NOT_HANDLED;
       break;
-    }
+  }
 
   return status;
 }

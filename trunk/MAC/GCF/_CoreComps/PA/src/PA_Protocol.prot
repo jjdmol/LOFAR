@@ -5,17 +5,10 @@ autogen definitions protocol;
 
 description = "Protocol for the PA server";
 prefix = "PA"; // for the signal names
+id = "(F_GCF_PROTOCOL + 1)";
 
 // specify extra include files
-// e.g.
-include = '<sys/time.h>';
-
-prelude = << PRELUDE_END
-enum {
-	PA_PROTOCOL = (F_GCF_PROTOCOL + 1)
-};
-#include <GPA_Defines.h>
-PRELUDE_END;
+include = '<GPA_Defines.h>';
 
 //
 // An "event" has a "signal" and a "dir" (direction)
@@ -24,7 +17,7 @@ PRELUDE_END;
 // A "param" has a "name" and a "type".
 //
 event = {
-	signal = LOADAPC;
+	signal = LOAD_APC;
 	dir = IN;
 	param = {
 		name = "seqnr";
@@ -34,143 +27,53 @@ event = {
 		name = "loadDefaults";
 		type = "bool";
 	};
-};
-
-event = {
-	signal = UNLOADAPC;
-	dir = IN;
 	param = {
-		name = "seqnr";
-		type = "unsigned int";
+		name = "scope";
+		type = "string";
+	};
+	param = {
+		name = "name";
+		type = "string";
 	};
 };
 
 event = {
-	signal = RELOADAPC;
-	dir = IN;
-	param = {
-		name = "seqnr";
-		type = "unsigned int";
-	};
-};
-
-event = {
-	signal = APCLOADED;
-	dir = OUT;
-	param = {
-		name = "seqnr";
-		type = "unsigned int";
-	};
-	param = {
-		name = "result";
-		type = "TPAResult";
-	};
-};
-
-event = {
-	signal = APCUNLOADED;
-	dir = OUT;
-	param = {
-		name = "seqnr";
-		type = "unsigned int";
-	};
-	param = {
-		name = "result";
-		type = "TPAResult";
-	};
-};
-
-event = {
-	signal = APCRELOADED;
-	dir = OUT;
-	param = {
-		name = "seqnr";
-		type = "unsigned int";
-	};
-	param = {
-		name = "result";
-		type = "TPAResult";
-	};
-};
-
-event = {
-	signal = REGISTERSCOPE;
-	dir = IN;
-	param = {
-		name = "seqnr";
-		type = "unsigned int";
-	};
-};
-
-event = {
-	signal = UNREGISTERSCOPE;
-	dir = IN;
-	param = {
-		name = "seqnr";
-		type = "unsigned int";
-	};
-};
-
-event = {
-	signal = SCOPEREGISTERED;
-	dir = OUT;
-	param = {
-		name = "seqnr";
-		type = "unsigned int";
-	};
-	param = {
-		name = "result";
-		type = "TPAResult";
-	};
-};
-
-event = {
-	signal = SCOPEUNREGISTERED;
-	dir = OUT;
-	param = {
-		name = "seqnr";
-		type = "unsigned int";
-	};
-	param = {
-		name = "result";
-		type = "TPAResult";
-	};
-};
-
-event = {
-	signal = LINKPROPERTIES;
-	dir = OUT;
-	param = {
-		name = "seqnr";
-		type = "unsigned int";
-	};
-};
-
-event = {
-	signal = UNLINKPROPERTIES;
-	dir = OUT;
-	param = {
-		name = "seqnr";
-		type = "unsigned int";
-	};
-};
-
-event = {
-	signal = PROPERTIESLINKED;
+	signal = UNLOAD_APC;
 	dir = IN;
 	param = {
 		name = "seqnr";
 		type = "unsigned int";
 	};
 	param = {
-		name = "result";
-		type = "TPAResult";
+		name = "scope";
+		type = "string";
+	};
+	param = {
+		name = "name";
+		type = "string";
 	};
 };
 
 event = {
-	signal = PROPERTIESUNLINKED;
+	signal = RELOAD_APC;
 	dir = IN;
+	param = {
+		name = "seqnr";
+		type = "unsigned int";
+	};
+	param = {
+		name = "scope";
+		type = "string";
+	};
+	param = {
+		name = "name";
+		type = "string";
+	};
+};
+
+event = {
+	signal = APC_LOADED;
+	dir = OUT;
 	param = {
 		name = "seqnr";
 		type = "unsigned int";
@@ -178,5 +81,127 @@ event = {
 	param = {
 		name = "result";
 		type = "TPAResult";
+	};
+};
+
+event = {
+	signal = APC_UNLOADED;
+	dir = OUT;
+	param = {
+		name = "seqnr";
+		type = "unsigned int";
+	};
+	param = {
+		name = "result";
+		type = "TPAResult";
+	};
+};
+
+event = {
+	signal = APC_RELOADED;
+	dir = OUT;
+	param = {
+		name = "seqnr";
+		type = "unsigned int";
+	};
+	param = {
+		name = "result";
+		type = "TPAResult";
+	};
+};
+
+event = {
+	signal = REGISTER_SCOPE;
+	dir = IN;
+	param = {
+		name = "scope";
+		type = "string";
+	};
+};
+
+event = {
+	signal = UNREGISTER_SCOPE;
+	dir = IN;
+	param = {
+		name = "scope";
+		type = "string";
+	};
+};
+
+event = {
+	signal = SCOPE_REGISTERED;
+	dir = OUT;
+	param = {
+		name = "result";
+		type = "TPAResult";
+	};
+	param = {
+		name = "scope";
+		type = "string";
+	};
+};
+
+event = {
+	signal = SCOPE_UNREGISTERED;
+	dir = OUT;
+	param = {
+		name = "result";
+		type = "TPAResult";
+	};
+	param = {
+		name = "scope";
+		type = "string";
+	};
+};
+
+event = {
+	signal = LINK_PROPERTIES;
+	dir = OUT;
+	param = {
+		name = "scope";
+		type = "string";
+	};
+	param = {
+		name = "propList";
+		type = "string";
+	};
+};
+
+event = {
+	signal = UNLINK_PROPERTIES;
+	dir = OUT;
+	param = {
+		name = "scope";
+		type = "string";
+	};
+	param = {
+		name = "propList";
+		type = "string";
+	};
+};
+
+event = {
+	signal = PROPERTIES_LINKED;
+	dir = IN;
+	param = {
+		name = "result";
+		type = "TPAResult";
+	};
+	param = {
+		name = "scope";
+		type = "string";
+	};
+};
+
+event = {
+	signal = PROPERTIES_UNLINKED;
+	dir = IN;
+	param = {
+		name = "result";
+		type = "TPAResult";
+	};
+	param = {
+		name = "scope";
+		type = "string";
 	};
 };

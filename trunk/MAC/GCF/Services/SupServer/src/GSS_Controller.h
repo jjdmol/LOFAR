@@ -52,23 +52,20 @@ class GSSController : public GCFTask
 		GCFEvent::TResult operational_state(GCFEvent& e, GCFPortInterface& p);
 
 	private: // private methods
-    bool findScope(char* pScopeData, string& scope);
-    void forwardMsgToPI(GCFEvent& e); 
-    void replyMsgToPI(GCFEvent& e, const string& scope);
-    bool forwardMsgToPMLlite(GCFEvent& e, char* pScopeData, string& scope, char* logMsg);
-    void replyMsgToPMLlite(GCFEvent& e, GCFPortInterface& p, char* pScopeData);
+    bool findScope(string& scope);
+    void sendMsgToPI(GCFEvent& e); 
+    bool forwardMsgToPMLlite(GCFEvent& e, string& scope, char* logMsg);
+    void replyMsgToPMLlite(GCFEvent& e, GCFPortInterface& p);
     
 
 	private: // data members
-		static const unsigned int MAX_NR_OF_CLIENTS = 64;
-    static const unsigned int MAX_BUF_SIZE = 5000;
+    static const unsigned int MAX_NR_OF_CLIENTS = 64;
 
 		GCFTCPPort* _supClientPorts[MAX_NR_OF_CLIENTS];
     typedef map<string /*scope*/, GCFPortInterface*> TScopeRegister;
     TScopeRegister    _scopeRegister;
     GCFTCPPort        _scPortProvider;
 		GCFTCPPort       _propertyInterface;
-    char              _buffer[MAX_BUF_SIZE];
 };
 
 #endif

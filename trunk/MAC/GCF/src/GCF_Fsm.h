@@ -51,30 +51,15 @@ class GCFDummyPort : public GCFPortInterface
     inline int close () {return 0;}
     inline int open () {return 0;}
 
-    inline ssize_t send (const GCFEvent& /*event*/, 
-                         void* /*buf*/ = 0, 
-                         size_t /*count*/ = 0)
+    inline ssize_t send (GCFEvent& /*event*/)
     {
       return 0;
     }
     
-    inline ssize_t sendv (const GCFEvent& /*event*/, 
-                          const iovec /*buffers*/[], 
-                          int /*n*/) 
-    {
-      return 0;
-    }
 
     inline ssize_t recv (void* /*buf*/, 
                          size_t /*count*/) 
     {
-      return 0;
-    }
-
-    inline ssize_t recvv (iovec /*buffers*/[], 
-                          int /*n*/) 
-    {
-
       return 0;
     }
 

@@ -75,16 +75,9 @@ class GCFPort : public GCFPortInterface
     /**
     * send/recv functions
     */
-    virtual ssize_t send (const GCFEvent& event, 
-                          void* buf = 0, 
-                          size_t count = 0);                          
-    virtual ssize_t sendv (const GCFEvent& event,
-                           const iovec buffers[], 
-                           int n);
+    virtual ssize_t send (GCFEvent& event);
     virtual ssize_t recv (void* buf, 
                           size_t count);
-    virtual ssize_t recvv (iovec buffers[], 
-                           int n);
     
     /**
     * Timer functions.

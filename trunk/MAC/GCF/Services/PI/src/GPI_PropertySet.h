@@ -24,6 +24,7 @@
 #define GPI_PROPERTYSET_H
 
 #include <PA_Protocol.ph>
+#include "PI_Protocol.ph"
 #include "GPI_Defines.h"
 
 #include <Common/lofar_list.h>
@@ -50,17 +51,17 @@ class GPIPropertySet : public GCFPropertyProxy
       _tmpPIResult(PI_NO_ERROR) {}
     virtual ~GPIPropertySet() {assert(_state == UNREGISTERING);}
 
-    void registerScope(GCFEvent& e);
+    void registerScope(PIRegisterScopeEvent& e);
     void registerCompleted(TPAResult result);
     
-    void unregisterScope(GCFEvent& e);
+    void unregisterScope(PIUnregisterScopeEvent& e);
     void unregisterCompleted(TPAResult result);
     
-    void linkProperties(PALinkpropertiesEvent& request);
+    void linkProperties(PALinkPropertiesEvent& requestIn);
     bool retrySubscriptions();
-    bool propertiesLinked(TPIResult result, char* pData);
-    void unlinkProperties(PAUnlinkpropertiesEvent& request);
-    void propertiesUnlinked(TPIResult result, char* pData);
+    bool propertiesLinked(PIPropertiesLinkedEvent& responseIn);
+    void unlinkProperties(PAUnlinkPropertiesEvent& requestIn);
+    void propertiesUnlinked(PIPropertiesUnlinkedEvent& responseIn);
     
   private:
     void propSubscribed(const string& propName);
@@ -69,8 +70,7 @@ class GPIPropertySet : public GCFPropertyProxy
     void propValueChanged(const string& propName, const GCFPValue& value);
   
   private: //helper methods
-    void forwardMsgToPA(GCFEvent& pae, GCFEvent& pie);
-    void replyMsgToSS(GCFEvent& e, char* pScopeData);
+    void forwardMsgToPA(GCFEvent& msg);
     
   private:
     GPIPropertySet();
@@ -97,10 +97,8 @@ class GPIPropertySet : public GCFPropertyProxy
     TScopeState _state;
 
   private:
-    static const unsigned int MAX_BUF_SIZE = 5000;
     unsigned int  _counter;
     TPIResult     _tmpPIResult;
-    char          _buffer[MAX_BUF_SIZE];
     list<string>  _tmpSubsList;
 };    
 #endif

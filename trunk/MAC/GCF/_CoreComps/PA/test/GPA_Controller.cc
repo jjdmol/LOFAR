@@ -60,19 +60,19 @@ int GPAController::initial(GCFEvent& e, GCFPortInterface& p)
 
   switch (e.signal)
   {
-    case F_INIT_SIG:
+    case F_INIT:
       break;
 
-    case F_ENTRY_SIG:
-    case F_TIMER_SIG:
+    case F_ENTRY:
+    case F_TIMER:
       _pmlPortProvider.open();
       break;
 
-    case F_CONNECTED_SIG:
+    case F_CONNECTED:
       TRAN(&GPAController::connected);
       break;
 
-    case F_DISCONNECTED_SIG:
+    case F_DISCONNECTED:
       if (&p == &_pmlPortProvider)
         _pmlPortProvider.setTimer(1.0); // try again after 1 second
       break;
@@ -91,7 +91,7 @@ int GPAController::connected(GCFEvent& e, GCFPortInterface& p)
 
   switch (e.signal)
   {
-    case F_DISCONNECTED_SIG:      
+    case F_DISCONNECTED:      
       if (&p == &_pmlPortProvider)
       {
         _scopeManager.deleteAllScopes();
@@ -126,7 +126,7 @@ int GPAController::connected(GCFEvent& e, GCFPortInterface& p)
       }
       break;
 
-    case F_CONNECTED_SIG:   
+    case F_CONNECTED:   
       _pmlPorts.push_back(&p);
       break;
 
@@ -182,7 +182,7 @@ int GPAController::connected(GCFEvent& e, GCFPortInterface& p)
       propertiesUnlinked((char*)response + sizeof(PAPropertiesunlinkedEvent));      
       break;
     }
-    case F_ACCEPT_REQ_SIG:
+    case F_ACCEPT_REQ:
     {
       GCFTCPPort* pNewPMLPort = new GCFTCPPort();
       pNewPMLPort->init(*this, "pa", GCFPortInterface::SPP, PA_PROTOCOL);
@@ -190,7 +190,7 @@ int GPAController::connected(GCFEvent& e, GCFPortInterface& p)
       break;
     }
     
-    case F_TIMER_SIG:
+    case F_TIMER:
     {
       if (&p == &_pmlPortProvider)
       {
@@ -234,7 +234,7 @@ void GPAController::allPropertiesDeletedByScope()
     
   if (pPort)
   {
-    if (pEvent->signal == F_DISCONNECTED_SIG)
+    if (pEvent->signal == F_DISCONNECTED)
     {
       _counter--;
       if (_counter == 0)

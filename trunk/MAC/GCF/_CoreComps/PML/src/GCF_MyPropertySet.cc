@@ -224,7 +224,7 @@ void GCFMyPropertySet::scopeRegistered (TGCFResult result)
         getScope().c_str()));
   }
 
-  dispatchAnswer(F_MYPLOADED_SIG, result);
+  dispatchAnswer(F_MYPLOADED, result);
 }
 
 void GCFMyPropertySet::scopeUnregistered (TGCFResult result)
@@ -239,7 +239,7 @@ void GCFMyPropertySet::scopeUnregistered (TGCFResult result)
       "PA-RESP: Scope %s unregistered",
       getScope().c_str()));
 
-  dispatchAnswer(F_MYPUNLOADED_SIG, result);
+  dispatchAnswer(F_MYPUNLOADED, result);
 }
 
 void GCFMyPropertySet::linkProperties(list<string>& properties)

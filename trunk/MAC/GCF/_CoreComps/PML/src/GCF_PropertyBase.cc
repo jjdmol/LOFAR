@@ -60,14 +60,14 @@ void GCFPropertyBase::dispatchAnswer(GCFEvent& answer)
 
 void GCFPropertyBase::subscribed ()
 {
-  GCFPropAnswerEvent e(F_SUBSCRIBED_SIG);
+  GCFPropAnswerEvent e(F_SUBSCRIBED);
   e.pPropName = _name.c_str();
   dispatchAnswer(e);
 }
 
 void GCFPropertyBase::valueChanged (const GCFPValue& value)
 {
-  GCFPropValueEvent e(F_VCHANGEMSG_SIG);
+  GCFPropValueEvent e(F_VCHANGEMSG);
   e.pValue = &value;
   e.pPropName = _name.c_str();
   e.internal = false;
@@ -76,7 +76,7 @@ void GCFPropertyBase::valueChanged (const GCFPValue& value)
 
 void GCFPropertyBase::valueGet (const GCFPValue& value)
 {
-  GCFPropValueEvent e(F_VGETRESP_SIG);
+  GCFPropValueEvent e(F_VGETRESP);
   e.pValue = &value;
   e.pPropName = _name.c_str();
   dispatchAnswer(e);

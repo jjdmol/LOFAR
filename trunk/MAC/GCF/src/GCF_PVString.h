@@ -32,7 +32,7 @@
 class GCFPVString : public GCFPValue
 {
   public:
-  	GCFPVString(string val = "") : GCFPValue(LPT_STRING), _value(val) {;}
+  	explicit GCFPVString(string val = "") : GCFPValue(LPT_STRING), _value(val) {;}
   	virtual ~GCFPVString() {;}
     
     /** Changes the value of this object */
@@ -47,10 +47,12 @@ class GCFPVString : public GCFPValue
     /** @see GCFPValue::copy() */
     virtual TGCFResult copy(const GCFPValue& value);
  
-    virtual unsigned int unpack(const char* valBuf, unsigned int bufLength);
+    virtual unsigned int unpack(const char* valBuf);
 
-    virtual unsigned int pack(char* valBuf, unsigned int maxBufSize) const;
+    virtual unsigned int pack(char* valBuf) const;
 
+    virtual unsigned int getSize() const { return sizeof(unsigned int) + _value.length() + getBaseSize(); }
+    
   private: // Private attributes
     /** The value*/
     string _value;

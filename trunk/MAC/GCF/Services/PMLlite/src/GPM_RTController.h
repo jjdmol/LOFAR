@@ -72,11 +72,7 @@ class GPMRTController : public GCFTask
     GCFEvent::TResult connected (GCFEvent& e, GCFPortInterface& p);
         
   private: // helper methods
-    void sendMyPropSetMsg (GCFEvent& e,
-                           const string& scope,
-                           list<string>& props);
-    void sendMyPropSetMsg (GCFEvent& e,
-                           const string& scope);
+    void sendMsgToPI (GCFEvent& e);
 
   private: // data members        
     GCFPort                       _supervisoryServer;
@@ -85,7 +81,5 @@ class GPMRTController : public GCFTask
     unsigned int                  _counter;
     typedef map<string, GCFRTMyPropertySet*>  TPropertySets;
     TPropertySets                 _propertySets;
-    static const unsigned short   MAX_BUF_SIZE = 5000;
-    char                          _buffer[MAX_BUF_SIZE];
 };
 #endif

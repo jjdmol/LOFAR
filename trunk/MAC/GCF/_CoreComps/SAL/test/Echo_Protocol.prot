@@ -5,16 +5,11 @@ autogen definitions protocol;
 
 description = "Protocol for the Echo server";
 prefix = "Echo"; // for the signal names
+id = "F_APL_PROTOCOL";
 
 // specify extra include files
 // e.g.
 include = '<sys/time.h>';
-
-prelude = << PRELUDE_END
-enum {
-	ECHO_PROTOCOL = F_APL_PROTOCOL
-};
-PRELUDE_END;
 
 //
 // An "event" has a "signal" and a "dir" (direction)

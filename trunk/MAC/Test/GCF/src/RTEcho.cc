@@ -21,12 +21,8 @@
 //
 //  $Id$
 
-// we want F_DEBUG_SIGNAL to show the signals
-#define DEBUG_SIGNAL
-
 #include "RTEcho.h"
 #include <stdio.h>
-#define DECLARE_SIGNAL_NAMES
 #include "Echo_Protocol.ph"
 
 Echo::Echo(string name) : GCFTask((State)&Echo::initial, name)
@@ -44,22 +40,22 @@ GCFEvent::TResult Echo::initial(GCFEvent& e, GCFPortInterface& /*p*/)
 
   switch (e.signal)
   {
-    case F_INIT_SIG:
+    case F_INIT:
       break;
 
-    case F_ENTRY_SIG:
+    case F_ENTRY:
       _server.open();
       break;
 
-    case F_CONNECTED_SIG:
+    case F_CONNECTED:
       TRAN(Echo::connected);
       break;
 
-    case F_DISCONNECTED_SIG:
+    case F_DISCONNECTED:
       _server.setTimer(1.0); // try again after 1 second
       break;
 
-    case F_TIMER_SIG:
+    case F_TIMER:
       _server.open(); // try again
       break;
 
@@ -78,7 +74,7 @@ GCFEvent::TResult Echo::connected(GCFEvent& e, GCFPortInterface& /*p*/)
   switch (e.signal)
   {
 
-    case F_DISCONNECTED_SIG:
+    case F_DISCONNECTED:
       printf("Lost connection to client\n");
       TRAN(Echo::initial);
       break;
@@ -86,15 +82,16 @@ GCFEvent::TResult Echo::connected(GCFEvent& e, GCFPortInterface& /*p*/)
     case ECHO_PING:
     {
 
-      EchoPingEvent* ping = static_cast<EchoPingEvent*>(&e);
+      EchoPingEvent ping(e);
       
-      printf("PING received (seqnr=%d)\n", ping->seqnr);
+      printf("PING received (seqnr=%d)\n", ping.seqnr);
       
       timeval echoTime;
       gettimeofday(&echoTime, 0);
-      EchoEchoEvent echo(ping->seqnr,
-       ping->pingTime,
-       echoTime);
+      EchoEchoEvent echo;
+      echo.seqnr = ping.seqnr;
+      echo.pingTime = ping.pingTime;
+      echo.echoTime = echoTime;
 
       _server.send(echo);
 

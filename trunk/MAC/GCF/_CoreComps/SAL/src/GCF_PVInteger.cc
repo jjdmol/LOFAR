@@ -23,11 +23,11 @@
 
 #include <GCF/GCF_PVInteger.h>
 
-unsigned int GCFPVInteger::unpack(const char* valBuf, unsigned int maxBufSize)
+unsigned int GCFPVInteger::unpack(const char* valBuf)
 {
   unsigned int result(0);
-  unsigned int unpackedBytes = unpackBase(valBuf, maxBufSize);
-  if (maxBufSize >= unpackedBytes + sizeof(int))
+  unsigned int unpackedBytes = unpackBase(valBuf);
+  if (unpackedBytes > 0)
   {
     memcpy((void*) &_value, valBuf + unpackedBytes, sizeof(int));
     result = sizeof(int) + unpackedBytes;
@@ -35,11 +35,11 @@ unsigned int GCFPVInteger::unpack(const char* valBuf, unsigned int maxBufSize)
   return result;
 }
 
-unsigned int GCFPVInteger::pack(char* valBuf, unsigned int maxBufSize) const
+unsigned int GCFPVInteger::pack(char* valBuf) const
 {
   unsigned int result(0);
-  unsigned int packedBytes = packBase(valBuf, maxBufSize);
-  if (maxBufSize >= packedBytes + sizeof(int))
+  unsigned int packedBytes = packBase(valBuf);
+  if (packedBytes > 0)
   {
     memcpy(valBuf + packedBytes, (void*) &_value, sizeof(int));
     result = sizeof(int) + packedBytes;

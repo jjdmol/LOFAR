@@ -53,7 +53,7 @@ class GPARequestManager
 		typedef struct 
 		{
 			GCFPortInterface* pRPort;
-			GCFEvent* pEvent;
+			char* pEvent;
 		} TRequest;
 		
 		list<TRequest> 	_requests;

@@ -36,8 +36,8 @@ typedef vector<GCFPValue*> GCFPValueArray;
 class GCFPVDynArr : public GCFPValue
 {
   public:
-  	GCFPVDynArr(TMACValueType itemType, const GCFPValueArray& val);
-    GCFPVDynArr(TMACValueType itemType);
+  	explicit GCFPVDynArr(TMACValueType itemType, const GCFPValueArray& val);
+    explicit GCFPVDynArr(TMACValueType itemType);
   	virtual ~GCFPVDynArr();
 
     /** Changes the value of this object */
@@ -60,10 +60,12 @@ class GCFPVDynArr : public GCFPValue
     /** @see GCFPValue::copy() */
     virtual TGCFResult copy(const GCFPValue& value);
   
-    virtual unsigned int unpack(const char* valBuf, unsigned int bufLength);
+    virtual unsigned int unpack(const char* valBuf);
 
-    virtual unsigned int pack(char* valBuf, unsigned int maxBufSize) const;
+    virtual unsigned int pack(char* valBuf) const;
 
+    virtual unsigned int getSize() const;
+    
   private: // help members
     /** cleanup the array item objects */
     void cleanup();

@@ -28,6 +28,7 @@
 #include <PortInterface/GTM_NameService.h>
 #include <PortInterface/GTM_TopologyService.h>
 #include <Socket/GTM_TCPServerSocket.h>
+#include <errno.h>
 
 GCFTCPPort::GCFTCPPort(GCFTask& task, 
                        string name, 
@@ -136,7 +137,7 @@ int GCFTCPPort::open()
   return result;
 }
 
-ssize_t GCFTCPPort::send(const GCFEvent& e, void* buf, size_t count)
+ssize_t GCFTCPPort::send(GCFEvent& e)
 {
   size_t written = 0;
 
@@ -145,66 +146,29 @@ ssize_t GCFTCPPort::send(const GCFEvent& e, void* buf, size_t count)
   if (MSPP == getType())  
     return 0; // no messages can be send by this type of port
 
-  iovec* newbufs(0);
-  if (F_RAW_SIG != e.signal)
-  { 
+ 
+  unsigned int packsize;
+  void* buf = e.pack(packsize);
+
+  if (!isSlave())
+  {
     LOFAR_LOG_TRACE(TM_STDOUT_LOGGER, (
-      "Sending event '%s' for task %s on port %s",
+      "Sending event '%s' for task %s on port '%s'",
       getTask()->evtstr(e),
       getTask()->getName().c_str(), 
       getName().c_str()));
-
-    iovec buffers[2];
-    buffers[0].iov_base = (void*)&e;
-    buffers[0].iov_len = e.length - count;
-    buffers[1].iov_base  = buf;
-    buffers[1].iov_len = count;
-    newbufs = buffers;
-    sendv(GCFEvent(F_RAW_SIG), buffers, (count > 0 ? 2 : 1));
   }
-  else
+  if ((written = _pSocket->send(buf, packsize)) != packsize)
   {
-    if ((written = _pSocket->send(buf, count)) != count)
-    {
-      LOFAR_LOG_DEBUG(TM_STDOUT_LOGGER, ("truncated send"));
-    }
+    LOFAR_LOG_DEBUG(TM_STDOUT_LOGGER, (
+        "truncated send: %s",
+        strerror(errno)));
+        
+    schedule_disconnected();
+    
+    written = 0;
   }
-
-  return written;
-}
-
-ssize_t GCFTCPPort::sendv(const GCFEvent& e, const iovec buffers[], int n)
-{
-  size_t written = 0;
-  size_t count = 0;
-  assert(_pSocket);
-  if (MSPP == getType())  
-    return 0; // no messages can be send by this type of port
-  
-
-  if (F_RAW_SIG != e.signal)
-  { 
-    LOFAR_LOG_TRACE(TM_STDOUT_LOGGER, (
-      "Sending event '%s' for task %s on port %s",
-      getTask()->evtstr(e),
-      getTask()->getName().c_str(), 
-      getName().c_str()));
-    count = e.length;
-    if ((written = _pSocket->send((void*)&e, e.length)) != count)
-    {
-      LOFAR_LOG_DEBUG(TM_STDOUT_LOGGER, ("truncated sendv"));
-    }
-  }
-
-  for (int i = 0; i < n; i++)
-  {
-    count += buffers[i].iov_len;
-    if ((written += _pSocket->send(buffers[i].iov_base, buffers[i].iov_len)) != count)
-    {
-      LOFAR_LOG_DEBUG(TM_STDOUT_LOGGER, ("truncated sendv"));
-    }
-  }
-
+ 
   return written;
 }
 
@@ -212,11 +176,6 @@ ssize_t GCFTCPPort::recv(void* buf, size_t count)
 {
   assert(_pSocket);
   return _pSocket->recv(buf, count);
-}
-
-ssize_t GCFTCPPort::recvv(iovec buffers[], int n)
-{
-  return 0;//_pSocket->recvv_n(buffers, n);
 }
 
 int GCFTCPPort::close()

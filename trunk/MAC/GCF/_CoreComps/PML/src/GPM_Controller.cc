@@ -25,7 +25,6 @@
 #include <GCF/GCF_Apc.h>
 #include <stdio.h>
 #include <Utils.h>
-#define DECLARE_SIGNAL_NAMES
 #include <PA_Protocol.ph>
 
 static string sPMLTaskName("PML");
@@ -42,7 +41,6 @@ GPMController::GPMController() :
 
   // initialize the port
   _propertyAgent.init(*this, "client", GCFPortInterface::SAP, PA_PROTOCOL);
-  memset(_buffer, '0', MAX_BUF_SIZE);
 }
 
 GPMController::~GPMController()
@@ -64,12 +62,23 @@ TPMResult GPMController::loadAPC(GCFApc& apc, bool loadDefaults)
 {
   TPMResult result(PM_NO_ERROR);
   
-  unsigned short seqnr = getFreeSeqnrForApcRequest();
-  _apcList[seqnr] = &apc; 
-  
-  PALoadapcEvent e(seqnr, loadDefaults);
-  sendAPCRequest(e, apc);
-
+  if (_propertyAgent.isConnected())
+  {
+    unsigned short seqnr = getFreeSeqnrForApcRequest();
+    _apcList[seqnr] = &apc; 
+    
+    PALoadApcEvent request;
+    request.seqnr = seqnr;
+    request.loadDefaults = loadDefaults;
+    request.name = apc.getName();
+    request.scope = apc.getScope();
+    
+    _propertyAgent.send(request);
+  }
+  else
+  {
+    result = PM_PA_NOTCONNECTED;
+  }
   return result;
 }
 
@@ -77,12 +86,22 @@ TPMResult GPMController::unloadAPC(GCFApc& apc)
 {
   TPMResult result(PM_NO_ERROR);
   
-  unsigned short seqnr = getFreeSeqnrForApcRequest();
-  _apcList[seqnr] = &apc; 
+  if (_propertyAgent.isConnected())
+  {
+    unsigned short seqnr = getFreeSeqnrForApcRequest();
+    _apcList[seqnr] = &apc; 
   
-  PAUnloadapcEvent e(seqnr);
-  sendAPCRequest(e, apc);
-
+    PAUnloadApcEvent request;
+    request.seqnr = seqnr;
+    request.name = apc.getName();
+    request.scope = apc.getScope();
+    
+    _propertyAgent.send(request);
+  }
+  else
+  {
+    result = PM_PA_NOTCONNECTED;
+  }
   return result;
 }
 
@@ -90,12 +109,22 @@ TPMResult GPMController::reloadAPC(GCFApc& apc)
 {
   TPMResult result(PM_NO_ERROR);
   
-  unsigned short seqnr = getFreeSeqnrForApcRequest();
-  _apcList[seqnr] = &apc; 
-  
-  PAReloadapcEvent e(seqnr);
-  sendAPCRequest(e, apc);
-
+  if (_propertyAgent.isConnected())
+  {
+    unsigned short seqnr = getFreeSeqnrForApcRequest();
+    _apcList[seqnr] = &apc; 
+    
+    PAReloadApcEvent request;
+    request.seqnr = seqnr;
+    request.name = apc.getName();
+    request.scope = apc.getScope();
+    
+    _propertyAgent.send(request);
+  }
+  else
+  {
+    result = PM_PA_NOTCONNECTED;
+  }
   return result;
 }
 
@@ -125,17 +154,6 @@ unsigned short GPMController::getFreeSeqnrForApcRequest() const
   return seqnr;
 }
 
-void GPMController::sendAPCRequest(GCFEvent& e, const GCFApc& apc)
-{
-  if (_propertyAgent.isConnected())
-  {
-    unsigned int dataLength = Utils::packString(apc.getName(), _buffer, MAX_BUF_SIZE);
-    dataLength += Utils::packString(apc.getScope(), _buffer + dataLength, MAX_BUF_SIZE - dataLength);
-    e.length += dataLength;
-    _propertyAgent.send(e, _buffer, dataLength);
-  }
-}
-
 TPMResult GPMController::registerScope(GCFMyPropertySet& propSet)
 {
   TPMResult result(PM_NO_ERROR);
@@ -148,8 +166,12 @@ TPMResult GPMController::registerScope(GCFMyPropertySet& propSet)
   {
     _propertySets[propSet.getScope()] = &propSet;
 
-    PARegisterscopeEvent e(0);
-    sendMyPropSetMsg(e, propSet.getScope());
+    if (_propertyAgent.isConnected())
+    {
+      PARegisterScopeEvent request;
+      request.scope = propSet.getScope();
+      _propertyAgent.send(request);
+    }
   }
   return result;
 }
@@ -161,10 +183,11 @@ TPMResult GPMController::unregisterScope(GCFMyPropertySet& propSet,
  
   // prop set could be unloaded in case of destruction of the propSet
   // calls this method
-  if (propSet.isLoaded())
+  if (propSet.isLoaded() && _propertyAgent.isConnected())
   {
-    PAUnregisterscopeEvent e(0);
-    sendMyPropSetMsg(e, propSet.getScope());
+    PAUnregisterScopeEvent request;
+    request.scope = propSet.getScope();
+    _propertyAgent.send(request);
   }
   if (permanent)
   {
@@ -179,23 +202,23 @@ void GPMController::propertiesLinked(const string& scope, TPAResult result)
   _counter--;
   LOFAR_LOG_DEBUG(PML_STDOUT_LOGGER, ( 
       "Link request %d counter", _counter));
-  PAPropertieslinkedEvent e(0, result);
-  sendMyPropSetMsg(e, scope);
+  if (_propertyAgent.isConnected())
+  {
+    PAPropertiesLinkedEvent response;
+    response.result = result;
+    response.scope = scope;
+    _propertyAgent.send(response);
+  }
 }
 
 void GPMController::propertiesUnlinked(const string& scope, TPAResult result)
 {
-  PAPropertiesunlinkedEvent e(0, result);
-  sendMyPropSetMsg(e, scope);
-}
-
-void GPMController::sendMyPropSetMsg(GCFEvent& e, const string& scope)
-{
   if (_propertyAgent.isConnected())
   {
-    unsigned int dataLength = Utils::packString(scope, _buffer, MAX_BUF_SIZE);
-    e.length += dataLength;
-    _propertyAgent.send(e, _buffer, dataLength);
+    PAPropertiesUnlinkedEvent response;
+    response.result = result;
+    response.scope = scope;
+    _propertyAgent.send(response);
   }
 }
 
@@ -205,19 +228,19 @@ GCFEvent::TResult GPMController::initial(GCFEvent& e, GCFPortInterface& /*p*/)
 
   switch (e.signal)
   {
-    case F_INIT_SIG:
+    case F_INIT:
       break;
 
-    case F_ENTRY_SIG:
-    case F_TIMER_SIG:
+    case F_ENTRY:
+    case F_TIMER:
       _propertyAgent.open();
       break;
 
-    case F_CONNECTED_SIG:
+    case F_CONNECTED:
       TRAN(GPMController::connected);
       break;
 
-    case F_DISCONNECTED_SIG:
+    case F_DISCONNECTED:
       _propertyAgent.setTimer(1.0); // try again after 1 second
       break;
 
@@ -233,55 +256,54 @@ GCFEvent::TResult GPMController::connected(GCFEvent& e, GCFPortInterface& /*p*/)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
   TGCFResult result;
-  static char* pData = 0;
-  static string scope = "";
 
   switch (e.signal)
   {
-    case F_DISCONNECTED_SIG:
+    case F_DISCONNECTED:
       LOFAR_LOG_WARN(PML_STDOUT_LOGGER, ( 
           "Connection lost to Property Agent"));
       TRAN(GPMController::initial);
       break;
 
-    case F_ENTRY_SIG:
+    case F_ENTRY:
     {
-      PARegisterscopeEvent rse(0);
+      PARegisterScopeEvent regRequest;
       for (TPropertySets::iterator iter = _propertySets.begin();
            iter != _propertySets.end(); ++iter)
       {
-        sendMyPropSetMsg(rse, iter->first);
+        regRequest.scope = iter->first;
+        _propertyAgent.send(regRequest);
       }
-      PALoadapcEvent lae(0, false);
+      PALoadApcEvent apcRequest;
+      apcRequest.loadDefaults = false;
       GCFApc* pApc;
       for (TApcList::iterator iter = _apcList.begin();
            iter != _apcList.end(); ++iter)
       {
         pApc = iter->second;
         assert(pApc);
-        lae.seqnr = iter->first;
-        lae.loadDefaults = pApc->mustLoadDefaults();
-        sendAPCRequest(lae, *pApc);
+        apcRequest.seqnr = iter->first;
+        apcRequest.loadDefaults = pApc->mustLoadDefaults();
+        apcRequest.name = pApc->getName();
+        apcRequest.scope = pApc->getScope();
+        _propertyAgent.send(apcRequest);
       }
       break;
     }  
-    case PA_SCOPEREGISTERED:
+    case PA_SCOPE_REGISTERED:
     {
-      PAScoperegisteredEvent* pResponse = static_cast<PAScoperegisteredEvent*>(&e);
-      assert(pResponse);
-      pData = (char*)(&e) + sizeof(PAScoperegisteredEvent);
-      Utils::unpackString(pData, scope);
-      if (pResponse->result == PA_SCOPE_ALREADY_REGISTERED)
+      PAScopeRegisteredEvent response(e);
+      if (response.result == PA_SCOPE_ALREADY_REGISTERED)
       {
         LOFAR_LOG_INFO(PML_STDOUT_LOGGER, ( 
             "A property set with scope %s already exists in the system",
-            scope.c_str()));        
+            response.scope.c_str()));        
       }
-      result = (pResponse->result == PA_NO_ERROR ? GCF_NO_ERROR : GCF_MYPROPSLOAD_ERROR);      
-      GCFMyPropertySet* pPropertySet = _propertySets[scope];
+      result = (response.result == PA_NO_ERROR ? GCF_NO_ERROR : GCF_MYPROPSLOAD_ERROR);      
+      GCFMyPropertySet* pPropertySet = _propertySets[response.scope];
       if (result != GCF_NO_ERROR)
       {
-        _propertySets.erase(scope);        
+        _propertySets.erase(response.scope);
       }
       if (pPropertySet)
       {
@@ -290,36 +312,30 @@ GCFEvent::TResult GPMController::connected(GCFEvent& e, GCFPortInterface& /*p*/)
       break;
     }
 
-    case PA_SCOPEUNREGISTERED:
+    case PA_SCOPE_UNREGISTERED:
     {
-      PAScopeunregisteredEvent* pResponse = static_cast<PAScopeunregisteredEvent*>(&e);
-      assert(pResponse);
-      pData = (char*)(&e) + sizeof(PAScopeunregisteredEvent);
-      Utils::unpackString(pData, scope);
-      GCFMyPropertySet* pPropertySet = _propertySets[scope];
-      result = (pResponse->result == PA_NO_ERROR ? GCF_NO_ERROR : GCF_MYPROPSUNLOAD_ERROR);
+      PAScopeUnregisteredEvent response(e);
+      GCFMyPropertySet* pPropertySet = _propertySets[response.scope];
+      result = (response.result == PA_NO_ERROR ? GCF_NO_ERROR : GCF_MYPROPSUNLOAD_ERROR);
       if (pPropertySet)
       {
-        _propertySets.erase(scope);
+        _propertySets.erase(response.scope);
         pPropertySet->scopeUnregistered(result);
       }
       break;
     }
 
-    case PA_LINKPROPERTIES:
+    case PA_LINK_PROPERTIES:
     {
-      pData = (char*)(&e) + sizeof(PALinkpropertiesEvent);
-      unsigned int scopeDataLength = Utils::unpackString(pData, scope);
-      string linkListData(pData + scopeDataLength + Utils::SLEN_FIELD_SIZE, 
-        e.length - sizeof(PALinkpropertiesEvent) - scopeDataLength - Utils::SLEN_FIELD_SIZE);
+      PALinkPropertiesEvent request(e);
       list<string> propertyList;
+      Utils::getPropertyListFromString(propertyList, request.propList);
       LOFAR_LOG_INFO(PML_STDOUT_LOGGER, ( 
         "PA-REQ: Link properties %s on scope %s",
-        linkListData.c_str(),
-        scope.c_str()));
+        request.propList.c_str(),
+        request.scope.c_str()));
         
-      Utils::unpackPropertyList(pData + scopeDataLength, propertyList);
-      GCFMyPropertySet* pPropertySet = _propertySets[scope];
+      GCFMyPropertySet* pPropertySet = _propertySets[request.scope];
       if (pPropertySet)
       {
         if (_counter == 0)
@@ -333,25 +349,24 @@ GCFEvent::TResult GPMController::connected(GCFEvent& e, GCFPortInterface& /*p*/)
       {
         LOFAR_LOG_TRACE(PML_STDOUT_LOGGER, ( 
             "Property set with scope %d was deleted in the meanwhile", 
-            scope.c_str()));
-        PAPropertieslinkedEvent e(0, PA_PROP_SET_GONE);
-        sendMyPropSetMsg(e, scope);
+            request.scope.c_str()));
+        PAPropertiesLinkedEvent response;
+        response.result = PA_PROP_SET_GONE;
+        response.scope = request.scope;
+        _propertyAgent.send(response);
       }
       break;
     }
-    case PA_UNLINKPROPERTIES:
+    case PA_UNLINK_PROPERTIES:
     {
-      pData = (char*)(&e) + sizeof(PAUnlinkpropertiesEvent);
-      unsigned int scopeDataLength = Utils::unpackString(pData, scope);
-      string unlinkListData(pData + scopeDataLength + Utils::SLEN_FIELD_SIZE, 
-        e.length - sizeof(PALinkpropertiesEvent) - scopeDataLength - Utils::SLEN_FIELD_SIZE);
+      PAUnlinkPropertiesEvent request(e);
+      list<string> propertyList;
+      Utils::getPropertyListFromString(propertyList, request.propList);
       LOFAR_LOG_INFO(PML_STDOUT_LOGGER, ( 
         "PA-REQ: Unlink properties %s on scope %s",
-        unlinkListData.c_str(), 
-        scope.c_str()));
-      list<string> propertyList;
-      Utils::unpackPropertyList(pData + scopeDataLength, propertyList);
-      GCFMyPropertySet* pPropertySet = _propertySets[scope];
+        request.propList.c_str(), 
+        request.scope.c_str()));
+      GCFMyPropertySet* pPropertySet = _propertySets[request.scope];
       if (pPropertySet)
       {
         pPropertySet->unlinkProperties(propertyList);
@@ -360,56 +375,54 @@ GCFEvent::TResult GPMController::connected(GCFEvent& e, GCFPortInterface& /*p*/)
       {
         LOFAR_LOG_TRACE(PML_STDOUT_LOGGER, ( 
             "Property set with scope %d was deleted in the meanwhile", 
-            scope.c_str()));
-        PAPropertiesunlinkedEvent e(0, PA_PROP_SET_GONE);
-        sendMyPropSetMsg(e, scope);
+            request.scope.c_str()));
+        PAPropertiesUnlinkedEvent response;
+        response.result = PA_PROP_SET_GONE;
+        response.scope = request.scope;
+        _propertyAgent.send(response);
       }
       break;
     }
-    case PA_APCLOADED:
+    case PA_APC_LOADED:
     {
-      PAApcloadedEvent* pResponse = static_cast<PAApcloadedEvent*>(&e);
-      assert(pResponse);
-      result = (pResponse->result == PA_NO_ERROR ? GCF_NO_ERROR : GCF_APCLOAD_ERROR);        
-      GCFApc* pApc = _apcList[pResponse->seqnr];
+      PAApcLoadedEvent response(e);
+      result = (response.result == PA_NO_ERROR ? GCF_NO_ERROR : GCF_APCLOAD_ERROR);        
+      GCFApc* pApc = _apcList[response.seqnr];
       if (pApc)
       {
-        logResult(pResponse->result, *pApc);
-        _apcList.erase(pResponse->seqnr);
+        logResult(response.result, *pApc);
+        _apcList.erase(response.seqnr);
         pApc->loaded(result);
       }
       break;
     }
-    case PA_APCUNLOADED:
+    case PA_APC_UNLOADED:
     {
-      PAApcunloadedEvent* pResponse = static_cast<PAApcunloadedEvent*>(&e);
-      assert(pResponse);
-      result = (pResponse->result == PA_NO_ERROR ? GCF_NO_ERROR : GCF_APCUNLOAD_ERROR);      
-      GCFApc* pApc = _apcList[pResponse->seqnr];
+      PAApcUnloadedEvent response(e);
+      result = (response.result == PA_NO_ERROR ? GCF_NO_ERROR : GCF_APCUNLOAD_ERROR);        
+      GCFApc* pApc = _apcList[response.seqnr];
       if (pApc)
       {
-        logResult(pResponse->result, *pApc);
-        _apcList.erase(pResponse->seqnr);
+        logResult(response.result, *pApc);
+        _apcList.erase(response.seqnr);
         pApc->unloaded(result);
       }
       break;
     }
-    case PA_APCRELOADED:
+    case PA_APC_RELOADED:
     {
-      PAApcreloadedEvent* pResponse = static_cast<PAApcreloadedEvent*>(&e);
-      assert(pResponse);
-      result = (pResponse->result == PA_NO_ERROR ? GCF_NO_ERROR : GCF_APCRELOAD_ERROR);
-      GCFApc* pApc = _apcList[pResponse->seqnr];
+      PAApcReloadedEvent response(e);
+      result = (response.result == PA_NO_ERROR ? GCF_NO_ERROR : GCF_APCRELOAD_ERROR);        
+      GCFApc* pApc = _apcList[response.seqnr];
       if (pApc)
       {
-        logResult(pResponse->result, *pApc);
-        _apcList.erase(pResponse->seqnr);
+        logResult(response.result, *pApc);
+        _apcList.erase(response.seqnr);
         pApc->reloaded(result);
       }
       break;
     }
-    case F_DISPATCHED_SIG:
-    case F_TIMER_SIG:
+    case F_TIMER:
       for (TPropertySets::iterator iter = _propertySets.begin();
            iter != _propertySets.end(); ++iter)
       {
