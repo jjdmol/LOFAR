@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,256 187 70 164 N "_3DFace" 3
+PANEL,483 137 70 164 N "_3DFace" 3
 "$APNr"
 "$RCUNr"
 "$datapoint"
@@ -16,7 +16,7 @@ LAYER, 0
 1
 LANG:1 6 Layer1
 7 13
-"Ellipse_LFA"
+"backGround"
 ""
 1 28 79 E E E 1 E 1 E N "_WindowText" E N {204,204,204} E E
  "main()
@@ -31,7 +31,7 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-"// SimpleCtrlScriptStart {invalid}
+"// valid
 main()
 {
   EP_setBackColor();
@@ -48,35 +48,14 @@ dyn_errClass err;
     return;
   }
 
-  dpConnect(\"EP_setBackColorCB\", 
+  dpConnect(\"setBackGroundColorAEM\", 
             $datapoint + \"_Board1_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\"_LFA_Maintenance.status:_online.._value\",
             $datapoint + \"_Board1_AP\"+ $APNr +\"_RCU\"+ $RCUNr +\"_LFA.status:_online.._value\");
   err = getLastError();
   if (dynlen(err) > 0)
     setValue(\"\", \"color\", \"_dpdoesnotexist\");
 
-}
-//////////////////////////////////////////////
-// Function: EP_setBackColorCB
-// Change the color of the LFA antenna
-//
-//////////////////////////////////////////////
-
-
-EP_setBackColorCB(string dpSource1, unsigned LFA_main,
-									string dpSource2, unsigned LFA_stat)
-{
-	setValue(\"icon_maintenance_LFA\", \"visible\", (LFA_main == 1));
-	//Set background color of rectangle [RCU]
-  if (LFA_main == 1)
-  	setValue(\"Ellipse_LFA\", \"backCol\", \"Lofar_maintenance\");
-  else if (LFA_stat==1)
-      setValue(\"Ellipse_LFA\", \"backCol\", \"Red\");
-  else
-    setValue(\"Ellipse_LFA\", \"backCol\", \"Lofar_device_active\");
-}
-// SimpleCtrlScriptEnd {EP_setBackColor}
-" 0
+}" 0
  E 0 1 1 0 1 E U  1 E 30 80 20 20
 4 23
 "Line2"
@@ -147,7 +126,7 @@ LANG:1 0
 "dashclr"N "_Transparent"
 E E 0 1 1 0 1 E U  1 E 26 68 34 73
 6 36
-"icon_maintenance_LFA"
+"icon_maintenance"
 ""
 1 10 99 E E E 1 E 0 E N "_Transparent" E N "_Transparent" E E
  "main()

@@ -1,17 +1,13 @@
 V 10
 1
 LANG:1 12 trend_config
-PANEL,317 121 879 700 N "_3DFace" 5
+PANEL,511 187 879 700 N "_3DFace" 5
 "$configDatapoint"
 "$datapoint"
 "$selectedElementDpType"
 "$selectedView"
 "$viewName"
-"main()
-{
-
-}" 0
-EE E E 1 -1 -1 0  20 20
+EEE E E 1 -1 -1 0  20 20
 "" 0 1
 E"//Include of ctl file
 #uses \"gcfnav_view.ctl\"
@@ -595,6 +591,8 @@ E E 0 1 1 0 1 E  72 471 10 471
 0
 1 227 37 "" 0
 0
+1 228 37 "" 4
+0
 1 228 37 "" 1
 0
 1 229 37 "" 2
@@ -1021,68 +1019,76 @@ LANG:1 6 Layer8
 "$datapoint""$datapoint"
 3 30 "Seconds"
 "objects\\Nav\\panel_ComboBox.pnl" 530 180 T 123 1 0 1  0 68  
-5
+6
 "$ElementName""Seconds"
 "$Maximum""59"
 "$Minimum""2"
 "$TrendNr""1"
 "$configDatapoint""$configDatapoint"
+"$datapoint""$datapoint"
 3 26 ""
 "objects\\Nav\\panel_ComboBox.pnl" 303 48 T 118 1 0 1  227 134  
-5
+6
 "$ElementName""Days"
 "$Maximum""31"
 "$Minimum""0"
 "$TrendNr""1"
 "$configDatapoint""$configDatapoint"
+"$datapoint""$datapoint"
 3 27 "Group29"
 "objects\\Nav\\panel_ComboBox.pnl" 530 136 T 119 1 0 1  0 68  
-5
+6
 "$ElementName""Hours"
 "$Maximum""23"
 "$Minimum""0"
 "$TrendNr""1"
 "$configDatapoint""$configDatapoint"
+"$datapoint""$datapoint"
 3 28 "Group31"
 "objects\\Nav\\panel_ComboBox.pnl" 530 158 T 120 1 0 1  0 68  
-5
+6
 "$ElementName""Minutes"
 "$Maximum""59"
 "$Minimum""0"
 "$TrendNr""1"
 "$configDatapoint""$configDatapoint"
+"$datapoint""$datapoint"
 3 32 "Group32"
 "objects\\Nav\\panel_ComboBox.pnl" 530 136 T 125 1 0 1  0 206  
-5
+6
 "$ElementName""Days"
 "$Maximum""31"
 "$Minimum""0"
 "$TrendNr""2"
 "$configDatapoint""$configDatapoint"
+"$datapoint""$datapoint"
 3 33 "Group33"
 "objects\\Nav\\panel_ComboBox.pnl" 530 158 T 126 1 0 1  0 206  
-5
+6
 "$ElementName""Hours"
 "$Maximum""23"
 "$Minimum""0"
 "$TrendNr""2"
 "$configDatapoint""$configDatapoint"
+"$datapoint""$datapoint"
 3 34 "Group34"
 "objects\\Nav\\panel_ComboBox.pnl" 530 180 T 127 1 0 1  0 206  
-5
+6
 "$ElementName""Minutes"
 "$Maximum""59"
 "$Minimum""0"
 "$TrendNr""2"
 "$configDatapoint""$configDatapoint"
+"$datapoint""$datapoint"
 3 31 "Group31"
 "objects\\Nav\\panel_ComboBox.pnl" 530 202 T 124 1 0 1  0 206  
-5
+6
 "$ElementName""Seconds"
 "$Maximum""59"
 "$Minimum""2"
 "$TrendNr""2"
 "$configDatapoint""$configDatapoint"
+"$datapoint""$datapoint"
 3 36 ""
 "navigator\\navigator_config_tab.pnl" 20 550 T 139 1 0 1  -1 -506  
 4
@@ -1096,12 +1102,14 @@ LANG:1 6 Layer8
 "$datapoint""$datapoint"
 3 24 ""
 "objects\\Nav\\trend_title.pnl" 153 89 T 105 1 0 1  -78 78  
-2
+3
 "$TrendNr""1"
 "$configDatapoint""$configDatapoint"
+"$datapoint""$datapoint"
 3 25 "Group27"
 "objects\\Nav\\trend_title.pnl" 75 83 T 106 1 0 1  0 244  
-2
+3
 "$TrendNr""2"
 "$configDatapoint""$configDatapoint"
+"$datapoint""$datapoint"
 0

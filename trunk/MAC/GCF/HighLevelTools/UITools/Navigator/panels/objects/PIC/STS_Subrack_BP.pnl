@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,258 108 328 89 N "_3DFace" 1
+PANEL,295 138 328 89 N "_3DFace" 1
 "$datapoint"
 "main()
 {
@@ -21,32 +21,12 @@ dyn_errClass err;
     return;
   }
 
-  dpConnect(\"EP_setBackColorCB\", $datapoint + \"_Board1_Maintenance.status:_online.._value\",
-					                       $datapoint + \"_Board1_BP.status:_online.._value\");
+  dpConnect(\"setBackGroundColorAEM\", $datapoint + \"_Board1_Maintenance.status:_online.._value\",
+					                           $datapoint + \"_Board1_BP.status:_online.._value\");
   err = getLastError();
   if (dynlen(err) > 0)
     setValue(\"\", \"color\", \"_dpdoesnotexist\");
-}
-
-
-EP_setBackColorCB(string dpSource1, unsigned BP_main,
-									string dpSource2, unsigned BP_stat)
-{
-//	string Color_green = \"{51,204,0}\";	//Color Green
-//	string Color_blue = \"{102,153,255}\";	//Color Blue
-
-	//Set visibility for Maintenance Sign if BP in Maintenance
-  setValue(\"icon_maintenance\", \"visible\", (BP_main == 1));
-//  setValue(\"Sign2\", \"visible\", (BP_main == 1));
-
-  if (BP_main == 1)
-      setValue(\"rect_BP\", \"backCol\", \"Lofar_maintenance\");
-  else if (BP_stat == 1)
-      setValue(\"rect_BP\", \"backCol\", \"Red\");
-  else
-     setValue(\"rect_BP\", \"backCol\", \"Lofar_device_active\");
-}
-" 0
+}" 0
 EE E E 1 -1 -1 0  20 60
 "" 0 1
 EE 2
@@ -58,7 +38,7 @@ LAYER, 0
 1
 LANG:1 6 Layer1
 6 0
-"rect_BP"
+"backGround"
 ""
 1 20 60 E E E 1 E 1 E N "_WindowText" E N {204,204,204} E "// SimpleCtrlScriptStart {valid}
 main(int iType)

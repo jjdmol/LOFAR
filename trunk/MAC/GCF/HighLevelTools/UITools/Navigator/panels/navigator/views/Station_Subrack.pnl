@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 7 Subrack
-PANEL,593 182 986 776 N "_3DFace" 1
+PANEL,532 200 986 776 N "_3DFace" 1
 "$datapoint"
 EEE E E 1 -1 -1 0  120 205
 "" 0 1

@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,585 441 95 62 N "_3DFace" 4
+PANEL,295 138 95 62 N "_3DFace" 4
 "$APNr"
 "$RCUNr"
 "$RackNr"
@@ -22,7 +22,7 @@ LANG:1 6 Layer1
 1 10 40 E E E 1 E 1 E N "_WindowText" E N "Lofar_device_active" E E
  "main()
 {
-  AntennaContextMenu(\"LFA\");
+  AntennaContextMenuMain(\"LFA\");
 }" 0
  E
 6 0 0 0 0 0
@@ -77,7 +77,7 @@ EP_setBackColorCB(string dpSource1, unsigned LFA_main,
 1 25 18 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  "main()
 {
-  AntennaContextMenu(\"LFA\");
+  AntennaContextMenuMain(\"LFA\");
 }" 0
  E
 3 0 0 0 0 0
@@ -94,7 +94,7 @@ E E 0 1 1 0 1 E  25 35 25 18
 1 18 29 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  "main()
 {
-  AntennaContextMenu(\"LFA\");
+  AntennaContextMenuMain(\"LFA\");
 }" 0
  E
 8 0 0 0 0 0
@@ -111,7 +111,7 @@ E E 0 1 1 0 1 E  18 30 24 18
 1 26 18 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  "main()
 {
-  AntennaContextMenu(\"LFA\");
+  AntennaContextMenuMain(\"LFA\");
 }" 0
  E
 11 0 0 0 0 0
@@ -167,7 +167,7 @@ E E 0 1 1 0 1 E  27 18 23 18
 1 23 18 E E E 1 E 1 E N "_WindowText" E N {0,0,0} E E
  "main()
 {
-  AntennaContextMenu(\"LFA\");
+  AntennaContextMenuMain(\"LFA\");
 }" 0
  E
 18 0 0 0 0 0

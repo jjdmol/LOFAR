@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 9 ConfigTab
-PANEL,343 200 946 43 N "_3DFace" 4
+PANEL,453 345 946 43 N "_3DFace" 4
 "$configDatapoint"
 "$selectedElementDpType"
 "$selectedView"
@@ -24,11 +24,24 @@ PANEL,343 200 946 43 N "_3DFace" 4
     }
     else
     {
-      if(nrOfSubViews[$selectedView] <= 1)
+      DebugN(\"nrOfSubViews: \" + nrOfSubViews);
+      DebugN(\"nrOfSubViews[$selectedView]: \" + nrOfSubViews[$selectedView]);
+      if(nrOfSubViews[$selectedView] > 1)
       {
-        btnRemove.enabled = false;
-        btnDefault.enabled = false;
+        btnRemove.enabled = TRUE;
+        btnDefault.enabled = TRUE;
       }
+      else if(nrOfSubViews[$selectedView] == 1)
+      {
+        btnRemove.enabled = TRUE;
+        btnDefault.enabled = FALSE;
+      }
+      else if(nrOfSubViews[$selectedView] < 1)
+      {
+        btnRemove.enabled = FALSE;
+        btnDefault.enabled = FALSE;
+      }
+
     }
   }
 }" 0
@@ -91,7 +104,7 @@ LANG:1 14 New subview...
 13 55
 "btnRemove"
 ""
-1 104 4 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+1 104 4 E E E 0 E 1 E N "_3DText" E N "_3DFace" E E
  E E
 64 0 0 0 0 0
 EE E
@@ -111,9 +124,11 @@ LANG:1 14 Remove subview
   int nrOfSubviews;
   if(ConfigTabRemoveSubViewClicked($viewName,$selectedView,$selectedElementDpType,$configDatapoint,nrOfSubviews))
   {
+    DebugN(\"nrOfSubviews:(del button): \" + nrOfSubviews);
     if(nrOfSubviews <= 1)
     {
       btnRemove.enabled = false;
+      btnDefault.enabled = false;
     }
   }
 }" 0
@@ -121,7 +136,7 @@ LANG:1 14 Remove subview
 13 58
 "btnDefault"
 ""
-1 208 4 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+1 208 4 E E E 0 E 1 E N "_3DText" E N "_3DFace" E E
  E E
 68 0 0 0 0 0
 EE E

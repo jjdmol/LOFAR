@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 9 ConfigTab
-PANEL,128 66 946 43 N "_3DFace" 7
+PANEL,511 187 946 43 N "_3DFace" 7
 "$configDatapoint"
 "$controlAttributes"
 "$controlNames"
@@ -11,11 +11,12 @@ PANEL,128 66 946 43 N "_3DFace" 7
 "$viewName"
 "main()
 {
-  DebugTN(\"ConfigTab: $selectedView,$configDatapoint,$selectedElementDpType,$controlNames,$controlAttributes,$elementNames:\",$selectedView,$configDatapoint,$selectedElementDpType,$controlNames,$controlAttributes,$elementNames);
+  //DebugTN(\"ConfigTab: $selectedView,$configDatapoint,$selectedElementDpType,$controlNames,$controlAttributes,$elementNames:\",$selectedView,$configDatapoint,$selectedElementDpType,$controlNames,$controlAttributes,$elementNames);
+  DebugTN(\"ConfigTab: $selectedView,$configDatapoint,$selectedElementDpType:\",$selectedView,$configDatapoint,$selectedElementDpType);
 }" 0
- E E E E 1 -1 -1 0  20 40
-""0  1
-E E 2
+EE E E 1 -1 -1 0  20 40
+"" 0 1
+EE 2
 "CBRef""1"
 "EClose"E
 ""
@@ -23,23 +24,34 @@ DISPLAY_LAYER, 1 0 1 0 1 0 1 0 1 0 1 0 1 0 1 0
 LAYER, 0 
 1
 LANG:1 6 Layer1
-13 54
-"btnNew"
+4 57
+"LINE1"
 ""
-1 4.000000000000001 4 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+1 1 39 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
  E E
-62 0 0 0 0 0
-E E E
+67 0 0 0 0 0
+EE E
 0
 1
 LANG:1 0 
-
+1
+"dashclr"N "_Transparent"
+E E 0 2 1 0 1 E  1 39 938 39
+13 54
+"btnNew"
+""
+1 4 4 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+62 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
 0
 1
 LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-100-75-75-*-*-iso8859-1
-0
-""  4.000000000000001 4 100 31
-
+0 ""
+4 4 100 31
 T 
 1
 LANG:1 14 New subview...
@@ -63,17 +75,15 @@ LANG:1 14 New subview...
 1 104 4 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
  E E
 64 0 0 0 0 0
-E E E
+EE E
 0
 1
 LANG:1 0 
-
 0
 1
 LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-100-75-75-*-*-iso8859-1
-0
-""  104 4 200 31
-
+0 ""
+104 4 200 31
 T 
 1
 LANG:1 14 Remove subview
@@ -98,17 +108,15 @@ LANG:1 14 Remove subview
 1 204 4 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
  E E
 66 0 0 0 0 0
-E E E
+EE E
 0
 1
 LANG:1 0 
-
 0
 1
 LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-100-75-75-*-*-iso8859-1
-0
-""  204 4 300 31
-
+0 ""
+204 4 300 31
 T 
 1
 LANG:1 13 Apply changes
@@ -133,20 +141,6 @@ LANG:1 13 Apply changes
   }
 }" 0
  E E E
-4 57
-"LINE1"
-""
-1 1 39 E E E 1 E 1 E N "_WindowText" E N "_3DFace" E E
- E E
-67 0 0 0 0 0
-E E E
-0
-1
-LANG:1 0 
-
-1
-"dashclr"N "_Transparent"
-E E 0 2 0 0 1 E  1 39 937.9999999999999 39
 0
 LAYER, 1 
 1

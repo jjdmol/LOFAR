@@ -1,4 +1,146 @@
 //////////////////////////////////////////////////////////////////////////////////
+// FunctionName: getPropertyNames
+//
+//  
+///////////////////////////////////////////////////////////////////////////////////
+getPropertyNames(string newSelectionQuery, int newSelectionAmount, dyn_string &propNames)
+{
+  dyn_dyn_anytype tab;
+
+  dpQuery("SELECT '_online.._value' FROM '" + newSelectionQuery + "' FIRST " + newSelectionAmount, tab);
+  for(int i=2 ; i<=dynlen(tab) ; i++)
+  {
+    string temp =tab[i][1];
+    temp = substr(temp, (strlen($datapoint)+1), strlen(temp));
+    TableProperties.appendLine("propertyName", temp ,"value", "");
+    if(((dynlen(strsplit(temp, "_")))==1) && ((dynlen(strsplit(temp, ".")))==1))
+    {
+      propNames[i-1] = $datapoint + "." + temp + ":_online.._value";
+    }
+    else
+    {
+      propNames[i-1] = $datapoint + "_" + temp + ":_online.._value";
+    }
+  }
+}
+
+
+
+//////////////////////////////////////////////////////////////////////////////////
+// FunctionName: clearListTable
+//
+//  Disconnects the List table and clears the content
+///////////////////////////////////////////////////////////////////////////////////
+void clearListTable(dyn_string &propNames)
+{
+  dpGet($configDatapoint + ".queryResult", propNames);
+  for(int i=1 ; i<=dynlen(propNames); i++)
+  {
+   dpDisconnect("connectActualValue", propNames[i],
+                                      $configDatapoint + ".queryResult");
+   DebugN("propNames["+i+"]: "+ propNames[i]);
+  }
+  TableProperties.deleteAllLines;
+  propNames="";
+}
+
+
+//////////////////////////////////////////////////////////////////////////////////
+// FunctionName: connectTable
+//
+//  
+///////////////////////////////////////////////////////////////////////////////////
+connectTable(dyn_string propNames)
+{
+  dpSet($configDatapoint + ".queryResult", propNames);
+  for(int i=1; i<=dynlen(propNames); i++)
+  {
+    dpConnect("connectActualValue", propNames[i],
+                                    $configDatapoint + ".queryResult");
+  }
+}
+
+
+//////////////////////////////////////////////////////////////////////////////////
+// FunctionName: connectActualValue
+//
+//  
+///////////////////////////////////////////////////////////////////////////////////
+connectActualValue(string dp1, anytype actualValue,
+                   string dp2, dyn_string queryResult)
+{
+  //DebugN("Found at: " + dynContains(queryResult,(dp1)));
+  if(elementTypeValid(dp1))
+  {
+    TableProperties.cellValueRC((dynContains(queryResult,(dp1))-1), "value", actualValue);
+  }
+  else
+  {
+    TableProperties.cellValueRC((dynContains(queryResult,(dp1))-1), "value", "Cannot display complex type");
+    TableProperties.cellBackColRC((dynContains(queryResult,(dp1))-1), "value", "_3DFace");
+  }
+  TableProperties.cellValueRC((dynContains(queryResult,(dp1))-1), "unit", dpGetUnit(dp1));
+}
+
+
+
+//////////////////////////////////////////////////////////////////////////////////
+// FunctionName: elementTypeValid
+//
+// returns TRUE is element is one of these types 
+///////////////////////////////////////////////////////////////////////////////////
+bool elementTypeValid(string element)
+{
+
+  if ((19==dpElementType(element)) || (20==dpElementType(element)) ||
+      (21==dpElementType(element)) || (22==dpElementType(element)) ||
+      (23==dpElementType(element)) || (24==dpElementType(element)) ||
+      (25==dpElementType(element)) || (26==dpElementType(element)) ||
+      (27==dpElementType(element)) || (41==dpElementType(element)) || (42==dpElementType(element)))
+  {
+    return TRUE;
+  }
+  else
+  {
+    return FALSE;
+  }
+
+}
+
+
+//////////////////////////////////////////////////////////////////////////////////
+// FunctionName: setBackGroundColorAEM
+//
+// 1. Colors the background color of the object named: BackGround 
+// 2. Set the visibility of the "icon_maintenance" 
+///////////////////////////////////////////////////////////////////////////////////
+setBackGroundColorAEM(string dp1, unsigned maintenance,
+                      string dp2, unsigned status)
+{
+	setValue("icon_maintenance", "visible", (maintenance == 1));
+
+  //Maintenance has priority above error status
+  if (maintenance == 1)
+  {
+  	setValue("backGround", "backCol", "Lofar_maintenance");
+  }
+  else if (status==1)    //object is in error status
+  {
+    setValue("backGround", "backCol", "Red");
+  }
+  else if (status==0)  //object has a correct status
+  {
+    setValue("backGround", "backCol", "Lofar_device_active");
+  }
+  else // if any other state => givce the color red
+  {
+    setValue("backGround", "backCol", "Red");
+  }
+	
+}
+
+
+//////////////////////////////////////////////////////////////////////////////////
 // FunctionName: jump2StationSubrack
 //
 // jumps/load the Station_Subrack.pnl
@@ -323,14 +465,14 @@ void BuildContextMenu(int status, int maintenance, int &Answer)
 // FunctionName: AntennaContextMenu
 //
 /////////////////////////////////////////////////////////////////////
-void AntennaContextMenu(string antenna)
+void AntennaContextMenuMain(string antenna)
 {
-	string txt_maintenance;
+  string txt_maintenance;
   int Answer, status, maintenance;
   bool bOK;				//Variable with value FALSE
 
-  dpGet($datapoint + "_Board1_AP"+ $APNr +"_RCU"+ $RCUNr +"_" + antenna + ".status:_original.._value", status);
-	dpGet($datapoint + "_Board1_AP"+ $APNr +"_RCU"+ $RCUNr +"_" + antenna + "_Maintenance.status:_original.._value", maintenance);
+  dpGet($datapoint + "_Rack"+ $RackNr + "_SubRack" +$SubrackNr + "_Board1_AP"+ $APNr +"_RCU"+ $RCUNr +"_" + antenna + ".status:_original.._value", status);
+  dpGet($datapoint + "_Rack"+ $RackNr + "_SubRack" +$SubrackNr + "_Board1_AP"+ $APNr +"_RCU"+ $RCUNr +"_" + antenna + "_Maintenance.status:_original.._value", maintenance);
 
   BuildContextMenu(status, maintenance, Answer);
   
@@ -341,23 +483,63 @@ void AntennaContextMenu(string antenna)
 	//########################################################
   	switch (Answer)
   	{
-		case 2:
-			  dpSetWait($datapoint + "_Board1_AP"+ $APNr +"_RCU"+ $RCUNr +"_" + antenna + ".status:_original.._value", 0);
-				break;
-		case 3:
-			  dpSetWait($datapoint + "_Board1_AP"+ $APNr +"_RCU"+ $RCUNr +"_" + antenna + ".status:_original.._value", 1);
-				break;
+	case 2:
+	  dpSetWait($datapoint + "_Rack"+ $RackNr + "_SubRack" +$SubrackNr +  "_Board1_AP"+ $APNr +"_RCU"+ $RCUNr +"_" + antenna + ".status:_original.._value", 0);
+	  break;
+	case 3:
+	  dpSetWait($datapoint + "_Rack"+ $RackNr + "_SubRack" +$SubrackNr +  "_Board1_AP"+ $APNr +"_RCU"+ $RCUNr +"_" + antenna + ".status:_original.._value", 1);
+	  break;
    	case 10:
-			  dpSetWait($datapoint + "_Board1_AP"+ $APNr +"_RCU"+ $RCUNr +"_" + antenna + "_Maintenance.status:_original.._value", 0);
-      	break;
+	  dpSetWait($datapoint + "_Rack"+ $RackNr + "_SubRack" +$SubrackNr +  "_Board1_AP"+ $APNr +"_RCU"+ $RCUNr +"_" + antenna + "_Maintenance.status:_original.._value", 0);
+      break;
    	case 11:
-			  dpSetWait($datapoint + "_Board1_AP"+ $APNr +"_RCU"+ $RCUNr +"_" + antenna + "_Maintenance.status:_original.._value", 1);
-     	break;
+	  dpSetWait($datapoint + "_Rack"+ $RackNr + "_SubRack" +$SubrackNr +  "_Board1_AP"+ $APNr +"_RCU"+ $RCUNr +"_" + antenna + "_Maintenance.status:_original.._value", 1);
+      break;
     default:
-    	break;
+      break;
   	}       
 }
 
+/////////////////////////////////////////////////////////////////////
+//
+// Function: Creates and handles the RMB menu for the antennas
+// FunctionName: AntennaContextMenu
+//
+/////////////////////////////////////////////////////////////////////
+void AntennaContextMenu(string antenna)
+{
+  string txt_maintenance;
+  int Answer, status, maintenance;
+  bool bOK;				//Variable with value FALSE
+
+  dpGet($datapoint + "_Board1_AP"+ $APNr +"_RCU"+ $RCUNr +"_" + antenna + ".status:_original.._value", status);
+  dpGet($datapoint + "_Board1_AP"+ $APNr +"_RCU"+ $RCUNr +"_" + antenna + "_Maintenance.status:_original.._value", maintenance);
+
+  BuildContextMenu(status, maintenance, Answer);
+  
+	//########################################################
+	//
+	//	Compute the chosen option
+	//
+	//########################################################
+  	switch (Answer)
+  	{
+	case 2:
+	  dpSetWait($datapoint + "_Board1_AP"+ $APNr +"_RCU"+ $RCUNr +"_" + antenna + ".status:_original.._value", 0);
+	  break;
+	case 3:
+	  dpSetWait($datapoint + "_Board1_AP"+ $APNr +"_RCU"+ $RCUNr +"_" + antenna + ".status:_original.._value", 1);
+	  break;
+   	case 10:
+	  dpSetWait($datapoint + "_Board1_AP"+ $APNr +"_RCU"+ $RCUNr +"_" + antenna + "_Maintenance.status:_original.._value", 0);
+      break;
+   	case 11:
+	  dpSetWait($datapoint + "_Board1_AP"+ $APNr +"_RCU"+ $RCUNr +"_" + antenna + "_Maintenance.status:_original.._value", 1);
+      break;
+    default:
+      break;
+  	}       
+}
 
 /////////////////////////////////////////////////////////////////////
 //
