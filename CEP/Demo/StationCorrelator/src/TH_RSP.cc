@@ -44,7 +44,8 @@
 
 #include <stdio.h>
 
-#define DH_HEADERSIZE 44
+//#define DH_HEADERSIZE 44
+#define DH_HEADERSIZE 40
 
 namespace LOFAR
 {
