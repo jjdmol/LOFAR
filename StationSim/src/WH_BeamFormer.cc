@@ -24,7 +24,7 @@
 /******************************************************************************/
 /* This Workholder implements the Beamformer. Be aware that that some of this */
 /* code will generate warnings with (at least) gcc 2.95.3 . As far as I'm     */
-/* these can be safely ignored.                                               */
+/* aware these can be safely ignored.                                         */
 /******************************************************************************/
 
 
@@ -130,23 +130,23 @@ void WH_BeamFormer::preprocess()
   // Assume the fifo is currently at least partially filled
   // so the last (itsBufferLength) elements are usefull data
 
-  for (int i = 0; i < itsNrcu; i++) {
-    sample(i) = *itsInHolders[i]->getBuffer();
-  }
-  itsOutFifo.resize(itsNrcu, itsBufferLength) ;
-  // place current sample at position (itsWritePos)
-  itsOutFifo(Range::all(), itsWritePos) = sample;
-  // update the rest of the fifo
-  itsOutFifo(Range::all(), Range(itsWritePos+1, toEnd)) = 
-     itsFifo(Range::all(), Range(itsWritePos, itsFifo.ubound(secondDim) - 1));
-  itsOutFifo(Range::all(), Range(itsOutFifo.lbound(secondDim), itsWritePos - 1)) =
-     itsFifo(Range::all(), Range(itsFifo.lbound(secondDim) + 1, itsWritePos));
-//   // Now update (itsWritePos) 
-  itsWritePos = (itsWritePos + 1) % itsFifoLength;
+//   for (int i = 0; i < itsNrcu; i++) {
+//     sample(i) = *itsInHolders[i]->getBuffer();
+//   }
+//   itsOutFifo.resize(itsNrcu, itsBufferLength) ;
+//   // place current sample at position (itsWritePos)
+//   itsOutFifo(Range::all(), itsWritePos) = sample;
+//   // update the rest of the fifo
+//   itsOutFifo(Range::all(), Range(itsWritePos+1, toEnd)) = 
+//      itsFifo(Range::all(), Range(itsWritePos, itsFifo.ubound(secondDim) - 1));
+//   itsOutFifo(Range::all(), Range(itsOutFifo.lbound(secondDim), itsWritePos - 1)) =
+//      itsFifo(Range::all(), Range(itsFifo.lbound(secondDim) + 1, itsWritePos));
+// //   // Now update (itsWritePos) 
+//   itsWritePos = (itsWritePos + 1) % itsFifoLength;
 
 
-  // Now assign the values in the outFifo to the outputs for the AWE
-  memcpy(itsSnapFifo.getBuffer(), itsOutFifo.data(), itsNrcu*itsBufferLength);
+//   // Now assign the values in the outFifo to the outputs for the AWE
+//   memcpy(itsSnapFifo.getBuffer(), itsOutFifo.data(), itsNrcu*itsBufferLength);
 }
 
 void WH_BeamFormer::process()
@@ -155,24 +155,26 @@ void WH_BeamFormer::process()
 
   if (getOutputs() > 0) {
 
-    DH_SampleC::BufferType* bufin  = itsInHolders[0]->getBuffer();
-    const DH_Weight::BufferType* weight = itsWeight.getBuffer();
-    DH_SampleC::BufferType* bufout = itsOutHolders[0]->getBuffer();
+//     DH_SampleC::BufferType* bufin  = itsInHolders[0]->getBuffer();
+//     const DH_Weight::BufferType* weight = itsWeight.getBuffer();
+//     DH_SampleC::BufferType* bufout = itsOutHolders[0]->getBuffer();
 
-    // element wise multiply the input with the weights
-    if (sample.size() == itsWeight.getBuffer()->size()) {
-      sample = sample * *itsWeight.getBuffer();
-     } else {
-       cout << "Someone screwed up.. Sample size and weight size differ" << endl;
-     }
+//     // element wise multiply the input with the weights
+//     if (sample.size() == itsWeight.getBuffer()->size()) {
+//       sample = sample * *itsWeight.getBuffer();
+//      } else {
+//        cout << "Someone screwed up.. Sample size and weight size differ" << endl;
+//     }
     // assign resulting snapshot to outHolders
     for (int i = 0; i < 1; i++) {
       // FIXME -- this is probably wrong - sample.data() is too large
       // Try to prevent overflow by using only one iteration
-      memcpy(itsOutHolders[i]->getBuffer(), sample.data(), 1);
+      //memcpy(itsOutHolders[i]->getBuffer(), sample.data(), 1);
+      memcpy(itsOutHolders[i]->getBuffer(), itsInHolders[i]->getBuffer(),sizeof(DH_SampleC::BufferType));
     }
   }
 }
+
 
 
 void WH_BeamFormer::dump() const
