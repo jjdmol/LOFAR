@@ -31,17 +31,34 @@ Add::Add()
 Add::~Add()
 {}
 
-void Add::evaluateVells (Vells& result, const Request&,
-			 const vector<Vells*>& values)
+Vells Add::evaluate (const Request&, const LoShape&,
+		     const vector<Vells*>& values)
 {
-  if( values.size() )
-  {
-    result = *(values[0]);
-    for (uint i=1; i<values.size(); i++) 
-      result += *(values[i]);
+  /*
+  if (values.empty()) {
+    return Vells(0.);
+  } else {
+    Vells result(values[0]->clone());
+    result.makeTemp (true);
+    for (uint i=1; i<values.size(); i++) {
+      // Note that result is a temporary Vells, so the addition is
+      // effectively += if the types and sizes match.
+      result = result + *(values[i]);
+    }
+    return result;
   }
-  else
-    result = Vells(0.);
+  */
+  Vells result(0.);
+  result.makeTemp (true);
+  for (uint i=0; i<values.size(); i++) {
+    if ((result.isComplex()  ||  values[i]->isReal())
+    &&  result.nx() >= values[i]->nx()  &&  result.ny() >= values[i]->ny()) {
+      result += *(values[i]);
+    } else {
+      result = result + *(values[i]);
+    }
+  }
+  return result;
 }
 
 
