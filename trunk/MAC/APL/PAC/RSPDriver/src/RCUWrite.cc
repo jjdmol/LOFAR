@@ -1,4 +1,4 @@
-//#  StatsSync.cc: implementation of the StatsSync class
+//#  RCUWrite.cc: implementation of the RCUWrite class
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,10 +20,11 @@
 //#
 //#  $Id$
 
-#include "StatsSync.h"
-#include "Statistics.h"
+#include "RCUWrite.h"
 #include "EPA_Protocol.ph"
 #include "Cache.h"
+
+#include <string.h>
 
 #undef PACKAGE
 #undef VERSION
@@ -42,42 +43,63 @@
 using namespace RSP;
 using namespace LOFAR;
 using namespace EPA_Protocol;
-using namespace RSP_Protocol;
-using namespace blitz;
 
-StatsSync::StatsSync(GCFPortInterface& board_port, int board_id)
+RCUWrite::RCUWrite(GCFPortInterface& board_port, int board_id)
   : SyncAction(board_port, board_id, N_BLP)
 {
 }
 
-StatsSync::~StatsSync()
+RCUWrite::~RCUWrite()
 {
   /* TODO: delete event? */
 }
 
-void StatsSync::sendrequest()
+void RCUWrite::sendrequest()
 {
-  EPAStstatsReadEvent statsread;
-  MEP_ST(statsread.hdr, MEPHeader::READ, getCurrentBLP(), MEPHeader::MEAN);
+  uint8 global_blp = (getBoardId() * N_BLP) + getCurrentBLP() * 2;
 
-  getBoardPort().send(statsread);
+  EPARcusettingsEvent rcusettings;
+  MEP_RCUSETTINGS(rcusettings.hdr, MEPHeader::WRITE, getCurrentBLP());
+
+  RCUSettings::RCURegisterType& x = Cache::getInstance().getBack().getRCUSettings()()(global_blp);
+  RCUSettings::RCURegisterType& y = Cache::getInstance().getBack().getRCUSettings()()(global_blp + 1);
+
+#ifdef TOGGLE_LEDS
+  if (x.filter_0)
+  {
+    x.filter_0 = 0;
+    x.filter_1 = 1;
+  }
+  else
+  {
+    x.filter_0 = 1;
+    x.filter_1 = 0;
+  }
+
+  RCUSettings::RCURegisterType& x1 = Cache::getInstance().getFront().getRCUSettings()()(global_blp);
+  RCUSettings::RCURegisterType& y1 = Cache::getInstance().getFront().getRCUSettings()()(global_blp + 1);
+  x1=x;
+  y1=y;
+#endif
+
+  memcpy(&rcusettings.x, &x, sizeof(uint8));
+  memcpy(&rcusettings.y, &y, sizeof(uint8));
+
+  getBoardPort().send(rcusettings);
 }
 
-void StatsSync::sendrequest_status()
+void RCUWrite::sendrequest_status()
 {
-  // intentionally left empty
+  // send read status request to check status of the write
+  EPARspstatusReadEvent rspstatus;
+  MEP_RSPSTATUS(rspstatus.hdr, MEPHeader::READ);
+  
+  getBoardPort().send(rspstatus);
 }
 
-GCFEvent::TResult StatsSync::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
+GCFEvent::TResult RCUWrite::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
 {
-  EPAStstatsEvent ack(event);
-
-  Statistics& stats = Cache::getInstance().getBack().getStatistics();
-
-  memcpy(stats()(MEPHeader::MEAN,
-		 (getBoardId() * N_BLP) + ack.hdr.m_fields.addr.dstid,
-		 Range::all()).data(),
-	 &ack.stat, MAX_N_BEAMLETS);
+  EPARspstatusEvent ack(event);
 
   return GCFEvent::HANDLED;
 }

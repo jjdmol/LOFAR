@@ -58,7 +58,7 @@ CacheBuffer::CacheBuffer()
   m_subbandselection().resize(GET_CONFIG("N_RCU", i), MAX_N_BEAMLETS);
   m_subbandselection() = 0;
   m_subbandselection.nrsubbands().resize(GET_CONFIG("N_RCU", i));
-  m_subbandselection.nrsubbands() = 0;
+  m_subbandselection.nrsubbands() = MAX_N_BEAMLETS; // all subbands
     
   m_rcusettings().resize(GET_CONFIG("N_RCU", i));
   m_rcusettings() = RCUSettings::RCURegisterType();

@@ -1,4 +1,4 @@
-//#  StatusSync.cc: implementation of the StatusSync class
+//#  VersionsRead.cc: implementation of the VersionsRead class
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,9 +20,8 @@
 //#
 //#  $Id$
 
-#include "StatusSync.h"
+#include "VersionsRead.h"
 #include "EPA_Protocol.ph"
-#include "RSP_Protocol.ph"
 #include "Cache.h"
 
 #undef PACKAGE
@@ -33,53 +32,39 @@
 using namespace RSP;
 using namespace LOFAR;
 using namespace EPA_Protocol;
-using namespace RSP_Protocol;
-using namespace blitz;
 
-StatusSync::StatusSync(GCFPortInterface& board_port, int board_id)
+VersionsRead::VersionsRead(GCFPortInterface& board_port, int board_id)
   : SyncAction(board_port, board_id, 1)
 {
 }
 
-StatusSync::~StatusSync()
+VersionsRead::~VersionsRead()
 {
   /* TODO: delete event? */
 }
 
-void StatusSync::sendrequest()
+void VersionsRead::sendrequest()
 {
   // send read status request to check status of the write
-  EPARspstatusReadEvent rspstatus;
-  MEP_RSPSTATUS(rspstatus.hdr, MEPHeader::READ);
+  EPAFwversionReadEvent versionread;
+  MEP_FWVERSION(versionread.hdr, MEPHeader::READ);
 
-  getBoardPort().send(rspstatus);
+  getBoardPort().send(versionread);
 }
 
-void StatusSync::sendrequest_status()
+void VersionsRead::sendrequest_status()
 {
   // intentionally left empty
 }
 
-GCFEvent::TResult StatusSync::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
+GCFEvent::TResult VersionsRead::handleack(GCFEvent& event, GCFPortInterface& port)
 {
-  EPARspstatusEvent ack(event);
+  EPAFwversionEvent ack(event);
 
-  SystemStatus& status = Cache::getInstance().getBack().getSystemStatus();
+  LOG_INFO(formatString("Firmware version on board '%s'=%d",
+			port.getName().c_str(), ack.version));
 
-  // copy board status
-  memcpy(&status.board()(getBoardId()),
-	 &ack.board,
-	 sizeof(BoardStatus));
-
-#if 0
-  // copy rcu status
-  for (int ap = 0; ap < N_BLP; ap++)
-  {
-    memcpy(&status.rcu()((getBoardId() * N_BLP) + ap),
-	   &ack.rcu[ap],
-	   sizeof(RCUStatus));
-  }
-#endif
+  Cache::getInstance().getBack().getVersions()()(getBoardId()) = ack.version;
 
   return GCFEvent::HANDLED;
 }

@@ -1,6 +1,6 @@
 //#  -*- mode: c++ -*-
 //#
-//#  WGSync.h: Synchronize rcu settings with RSP hardware.
+//#  VersionsRead.h: Synchronize system versions with RSP hardware.
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -22,28 +22,23 @@
 //#
 //#  $Id$
 
-#ifndef WGSYNC_H_
-#define WGSYNC_H_
+#ifndef VERSIONSREAD_H_
+#define VERSIONSREAD_H_
 
 #include "SyncAction.h"
 
 namespace RSP
 {
-  class WGSync : public SyncAction
+  class VersionsRead : public SyncAction
   {
     public:
       /**
-       * Constructors for a WGSync object.
+       * Constructors for a VersionsRead object.
        */
-      WGSync(GCFPortInterface& board_port, int board_id);
+      VersionsRead(GCFPortInterface& board_port, int board_id);
 	  
-      /* Destructor for WGSync. */
-      virtual ~WGSync();
-
-      /**
-       * Initial state handler.
-       */
-      GCFEvent::TResult initial_state(GCFEvent& event, GCFPortInterface& port);
+      /* Destructor for VersionsRead. */
+      virtual ~VersionsRead();
 
       /**
        * Send the write message.
@@ -64,4 +59,4 @@ namespace RSP
   };
 };
      
-#endif /* WGSYNC_H_ */
+#endif /* VERSIONSREAD_H_ */

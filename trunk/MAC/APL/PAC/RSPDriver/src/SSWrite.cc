@@ -1,4 +1,4 @@
-//#  SSSync.cc: implementation of the SSSync class
+//#  SSWrite.cc: implementation of the SSWrite class
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -23,7 +23,7 @@
 #include "RSP_Protocol.ph"
 #include "EPA_Protocol.ph"
 
-#include "SSSync.h"
+#include "SSWrite.h"
 #include "Cache.h"
 
 #include <blitz/array.h>
@@ -48,45 +48,57 @@ using namespace RSP;
 using namespace LOFAR;
 using namespace blitz;
 
-SSSync::SSSync(GCFPortInterface& board_port, int board_id)
-  : SyncAction(board_port, board_id, N_BLP)
+SSWrite::SSWrite(GCFPortInterface& board_port, int board_id)
+  : SyncAction(board_port, board_id, N_BLP * 2 /* for nrsubbands and subbands */)
 {
 }
 
-SSSync::~SSSync()
+SSWrite::~SSWrite()
 {
   /* TODO: delete event? */
 }
 
-void SSSync::sendrequest()
+void SSWrite::sendrequest()
 {
-  uint8 global_blp = (getBoardId() * N_BLP) + getCurrentBLP();
-  LOG_DEBUG(formatString(">>>> SSSync(%s) global_blp=%d",
-			 getBoardPort().getName().c_str(),
-			 global_blp));
-  
-  // send subband select message
-  EPASubbandselectEvent ss;
-  MEP_SUBBANDSELECT(ss.hdr, MEPHeader::WRITE, getCurrentBLP());
-  
-  // create array to contain the subband selection
-  uint16 nr_subbands = Cache::getInstance().getBack().getSubbandSelection().nrsubbands()(global_blp);
-  LOG_DEBUG(formatString("nr_subbands=%d", nr_subbands));
-  nr_subbands=256;
-  Array<uint16, 1> subbands(nr_subbands);
-  ss.ch    = subbands.data();
-  ss.chDim = nr_subbands;
+  if (0 == getCurrentBLP() % 2)
+  {
+    // send 'number of selected subbands'
+    uint8 global_blp = (getBoardId() * N_BLP) + (getCurrentBLP() / 2);
+    
+    // send subband select message
+    EPANrsubbandsEvent nrsubbands;
+    MEP_NRSUBBANDS(nrsubbands.hdr, MEPHeader::WRITE, getCurrentBLP() / 2);
 
-  subbands = 0; // init
-  
-  subbands = Cache::getInstance().getBack().getSubbandSelection()()(global_blp, Range(0, nr_subbands - 1));
+    nrsubbands.nof_subbands = Cache::getInstance().getBack().getSubbandSelection().nrsubbands()(global_blp);
+    
+    getBoardPort().send(nrsubbands);
+  }
+  else
+  {
+    uint8 global_blp = (getBoardId() * N_BLP) + (getCurrentBLP() / 2);
+    LOG_DEBUG(formatString(">>>> SSWrite(%s) global_blp=%d",
+			   getBoardPort().getName().c_str(),
+			   global_blp));
+    
+    // send subband select message
+    EPASubbandselectEvent ss;
+    MEP_SUBBANDSELECT(ss.hdr, MEPHeader::WRITE, getCurrentBLP() / 2);
+    
+    // create array to contain the subband selection
+    uint16 nr_subbands = Cache::getInstance().getBack().getSubbandSelection().nrsubbands()(global_blp);
+    LOG_DEBUG(formatString("nr_subbands=%d", nr_subbands));
 
-  getBoardPort().send(ss);
-
-  //subbands.free();
+    Array<uint16, 1> subbands(nr_subbands);
+    ss.ch    = subbands.data();
+    ss.chDim = nr_subbands;
+    
+    subbands = Cache::getInstance().getBack().getSubbandSelection()()(global_blp, Range(0, nr_subbands - 1));
+    
+    getBoardPort().send(ss);
+  }
 }
 
-void SSSync::sendrequest_status()
+void SSWrite::sendrequest_status()
 {
   LOG_DEBUG("sendrequest_status");
 
@@ -97,7 +109,7 @@ void SSSync::sendrequest_status()
   getBoardPort().send(rspstatus);
 }
 
-GCFEvent::TResult SSSync::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
+GCFEvent::TResult SSWrite::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
 {
   EPARspstatusEvent ack(event);
 

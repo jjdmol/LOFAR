@@ -1,6 +1,6 @@
 //#  -*- mode: c++ -*-
 //#
-//#  SSSync.h: Synchronize subbands selection settings with RSP hardware.
+//#  StatusRead.h: Synchronize system status with RSP hardware.
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -22,40 +22,41 @@
 //#
 //#  $Id$
 
-#ifndef SSSYNC_H_
-#define SSSYNC_H_
+#ifndef STATUSREAD_H_
+#define STATUSREAD_H_
 
 #include "SyncAction.h"
-#include <Common/LofarTypes.h>
 
 namespace RSP
 {
-  class SSSync : public SyncAction
+  class StatusRead : public SyncAction
   {
     public:
       /**
-       * Constructors for a SSSync object.
+       * Constructors for a StatusRead object.
        */
-      SSSync(GCFPortInterface& board_port, int board_id);
+      StatusRead(GCFPortInterface& board_port, int board_id);
 	  
-      /* Destructor for SSSync. */
-      virtual ~SSSync();
+      /* Destructor for StatusRead. */
+      virtual ~StatusRead();
 
       /**
-       * Write subband selection info.
+       * Send the read message.
        */
       virtual void sendrequest();
 
       /**
-       * Read the board status.
+       * This will be an empty implementation.
        */
       virtual void sendrequest_status();
 
       /**
-       * Handle the READRES message.
+       * Handle the read result.
        */
       virtual GCFEvent::TResult handleack(GCFEvent& event, GCFPortInterface& port);
+
+    private:
   };
 };
      
-#endif /* SSSYNC_H_ */
+#endif /* STATUSREAD_H_ */

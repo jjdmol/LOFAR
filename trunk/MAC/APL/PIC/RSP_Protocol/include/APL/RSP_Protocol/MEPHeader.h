@@ -54,8 +54,9 @@ namespace EPA_Protocol
       static const uint8 READ    = 0x01;
       static const uint8 WRITE   = 0x02;
       static const uint8 READRES = 0x03;
+      static const uint8 READERR = 0x04;
 
-      static const int MAX_TYPE = READRES; /* counting from 0 */
+      static const int MAX_TYPE = READERR; /* counting from 0 */
       /*@}*/
 
       /*@{*/
@@ -64,7 +65,7 @@ namespace EPA_Protocol
        * Destination ID
        */
       static const uint8 DST_BLPS = 0x00; /* BLP's are addressed starting from 0x00 */
-      static const uint8 DST_RSP  = 0x80; /* Destination id of the RSP board */
+      static const uint8 DST_RSP  = 0x00; /* will change to 0x80; Destination id of the RSP board */
       /*@}*/
 
       /*@{*/

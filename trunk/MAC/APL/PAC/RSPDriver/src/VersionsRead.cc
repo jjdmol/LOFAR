@@ -1,4 +1,4 @@
-//#  VersionsSync.cc: implementation of the VersionsSync class
+//#  VersionsRead.cc: implementation of the VersionsRead class
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,7 +20,7 @@
 //#
 //#  $Id$
 
-#include "VersionsSync.h"
+#include "VersionsRead.h"
 #include "EPA_Protocol.ph"
 #include "Cache.h"
 
@@ -33,17 +33,17 @@ using namespace RSP;
 using namespace LOFAR;
 using namespace EPA_Protocol;
 
-VersionsSync::VersionsSync(GCFPortInterface& board_port, int board_id)
+VersionsRead::VersionsRead(GCFPortInterface& board_port, int board_id)
   : SyncAction(board_port, board_id, 1)
 {
 }
 
-VersionsSync::~VersionsSync()
+VersionsRead::~VersionsRead()
 {
   /* TODO: delete event? */
 }
 
-void VersionsSync::sendrequest()
+void VersionsRead::sendrequest()
 {
   // send read status request to check status of the write
   EPAFwversionReadEvent versionread;
@@ -52,12 +52,12 @@ void VersionsSync::sendrequest()
   getBoardPort().send(versionread);
 }
 
-void VersionsSync::sendrequest_status()
+void VersionsRead::sendrequest_status()
 {
   // intentionally left empty
 }
 
-GCFEvent::TResult VersionsSync::handleack(GCFEvent& event, GCFPortInterface& port)
+GCFEvent::TResult VersionsRead::handleack(GCFEvent& event, GCFPortInterface& port)
 {
   EPAFwversionEvent ack(event);
 

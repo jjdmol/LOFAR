@@ -1,6 +1,6 @@
 //#  -*- mode: c++ -*-
 //#
-//#  RawDispatch.h: dispatch raw EPA events as GCF events.
+//#  RCURead.h: Synchronize rcu settings with RSP hardware.
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -22,19 +22,41 @@
 //#
 //#  $Id$
 
-#ifndef RAWDISPATCH_H_
-#define RAWDISPATCH_H_
+#ifndef RCUREAD_H_
+#define RCUREAD_H_
 
-#include <GCF/GCF_Control.h>
+#include "SyncAction.h"
 
-namespace EPA_Protocol
+namespace RSP
 {
-  class RawEvent
+  class RCURead : public SyncAction
   {
     public:
-      static GCFEvent::TResult dispatch(GCFTask& task,
-					GCFPortInterface& port);
+      /**
+       * Constructors for a RCURead object.
+       */
+      RCURead(GCFPortInterface& board_port, int board_id);
+
+      /* Destructor for RCURead. */
+      virtual ~RCURead();
+
+      /**
+       * Send the write message.
+       */
+      virtual void sendrequest();
+
+      /**
+       * Send the read request.
+       */
+      virtual void sendrequest_status();
+
+      /**
+       * Handle the read result.
+       */
+      virtual GCFEvent::TResult handleack(GCFEvent& event, GCFPortInterface& port);
+
+    private:
   };
 };
-
-#endif /* RAWDISPATCH_H_ */
+     
+#endif /* RCUREAD_H_ */

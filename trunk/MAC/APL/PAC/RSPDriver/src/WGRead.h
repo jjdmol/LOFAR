@@ -1,6 +1,6 @@
 //#  -*- mode: c++ -*-
 //#
-//#  StatusSync.h: Synchronize system status with RSP hardware.
+//#  WGRead.h: Synchronize rcu settings with RSP hardware.
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -22,31 +22,36 @@
 //#
 //#  $Id$
 
-#ifndef STATUSSYNC_H_
-#define STATUSSYNC_H_
+#ifndef WGREAD_H_
+#define WGREAD_H_
 
 #include "SyncAction.h"
 
 namespace RSP
 {
-  class StatusSync : public SyncAction
+  class WGRead : public SyncAction
   {
     public:
       /**
-       * Constructors for a StatusSync object.
+       * Constructors for a WGRead object.
        */
-      StatusSync(GCFPortInterface& board_port, int board_id);
+      WGRead(GCFPortInterface& board_port, int board_id);
 	  
-      /* Destructor for StatusSync. */
-      virtual ~StatusSync();
+      /* Destructor for WGRead. */
+      virtual ~WGRead();
 
       /**
-       * Send the read message.
+       * Initial state handler.
+       */
+      GCFEvent::TResult initial_state(GCFEvent& event, GCFPortInterface& port);
+
+      /**
+       * Send the write message.
        */
       virtual void sendrequest();
 
       /**
-       * This will be an empty implementation.
+       * Send the read request.
        */
       virtual void sendrequest_status();
 
@@ -59,4 +64,4 @@ namespace RSP
   };
 };
      
-#endif /* STATUSSYNC_H_ */
+#endif /* WGREAD_H_ */
