@@ -16,9 +16,10 @@ TH_File.cc			\
 TH_Mem.cc			\
 TH_MPI.cc			\
 TH_Mem_Bl.cc			\
-CyclicBuffer.cc			\
-TH_PL.cc			\
-DH_PL.cc			
+CyclicBuffer.cc			
+
+#TH_PL.cc			\
+#DH_PL.cc			
 
 EXTRA_DIST = assay
 
