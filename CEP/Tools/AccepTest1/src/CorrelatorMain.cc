@@ -14,8 +14,6 @@
 using namespace LOFAR;
 int main (int argc, const char** argv) {
 
-  INIT_LOGGER("CorrelatorLogger");
-
   KeyValueMap kvm;
   try {
     kvm = KeyParser::parseFile("TestRange");
@@ -42,9 +40,10 @@ int main (int argc, const char** argv) {
 
   std::string frontend_ip = kvm.getString("frontend_ip", "192.168.100.31");
   std::string backend_ip = kvm.getString("backend_ip", "192.168.100.32");
-  //std::string loggerfile = kvm.getString("loggerfile", "CorrelatorLogger.prop");
+  std::string loggerfile = kvm.getString("loggerfile", "CorrelatorLogger.prop");
   kvm.show(cout);
 
+  INIT_LOGGER(loggerfile);
 
   //ASSERTSTR(targetgroups == NRFE,"Code not unrolled for other than 4 target groups yet..." );
   std::string FE_ip[NRFE];
@@ -61,9 +60,6 @@ int main (int argc, const char** argv) {
   }
   sleep(4);
 
-
-
-  //INIT_LOGGER(loggerfile);
   
 #ifdef HAVE_MPI
   TH_MPI::init(argc, argv);
