@@ -37,7 +37,7 @@ class StationCorrelator: public LOFAR::ApplicationHolder
   virtual ~StationCorrelator();
   virtual void undefine();
   virtual void define  (const LOFAR::KeyValueMap&);
-  virtual void init    ();
+  virtual void prerun  ();
   virtual void run     (int nsteps);
   virtual void dump    () const;
   virtual void quit    ();

@@ -26,28 +26,32 @@
 //# Includes
 #include <WH_Transpose.h>
 #include <DH_CorrCube.h>
+#include <DH_StationData.h>
 
 using namespace LOFAR;
 
-WH_Transpose::WH_Transpose(const string& name,
-			   KeyValueMap kvm) 
+WH_Transpose::WH_Transpose(const string& name, KeyValueMap kvm) 
   : WorkHolder(kvm.getInt("NoWH_Correlator",7), 1, name, "WH_Transpose"),
     itsKVM (kvm)
 {
   char str[128];
   
-  int stations      = itsKVM.getInt("stations", 2);
-  int samples       = itsKVM.getInt("samples", 256000);
-  int channels      = itsKVM.getInt("channels", 46);
-  int polarisations = itsKVM.getInt("polarisations", 2);
+  int stations          = itsKVM.getInt("stations", 2);
+  int samples           = itsKVM.getInt("samples", 256000);
+  int channels          = itsKVM.getInt("channels", 46);
+  int polarisations     = itsKVM.getInt("polarisations", 2);
+  int beamletsinpacket  = kvm.getInt("NoRSPbeamlets", 92);
+  int packetsinframe    = kvm.getInt("NoPacketsInFrame", 8);
 
+  int bufsize = (beamletsinpacket / stations) * polarisations * packetsinframe;
+ 
   itsKVM.show(cout);
 
   itsNinputs = itsKVM.getInt("noWH_Correlator", 7);
   itsNoutputs = 1; // there is one connection to the corresponding WH_Correlator
 
   for (int i = 0; i < itsNinputs; i++) {
-//     getDataManager().addInDataHolder(i, new DH_StationData());
+    getDataManager().addInDataHolder(i, new DH_StationData(str, bufsize));
   }
   for (int i = 0; i < itsNoutputs; i++) {
     snprintf(str, 128, "output_%d_of _%d", i, itsNoutputs);
