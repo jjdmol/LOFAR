@@ -1,4 +1,4 @@
-//#  BWSync.h: Synchronize beamformer weights with RSP hardware.
+//#  BWCommand.h: Beamformer Weights settings command.
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,31 +20,45 @@
 //#
 //#  $Id$
 
-#ifndef BWSYNC_H_
-#define BWSYNC_H_
+#ifndef BWCOMMAND_H_
+#define BWCOMMAND_H_
 
-#include "SyncAction.h"
+#include "Command.h"
+#include "RSP_Protocol.ph"
+
+#include <Common/LofarTypes.h>
+#include <GCF/GCF_Control.h>
 
 namespace RSP
 {
-  class BWSync : public SyncAction
+  class BWCommand : public Command
       {
       public:
 	  /**
-	   * Constructors for a BWSync object.
+	   * Constructors for a BWCommand object.
+	   * Currently the tv_usec part is always set to 0 irrespective
+	   * of the value passed in.
 	   */
-	  BWSync();
+	  BWCommand(GCFEvent& event, GCFPortInterface& port, Operation oper);
 	  
-	  /* Destructor for BWSync. */
-	  virtual ~BWSync();
+	  /* Destructor for BWCommand. */
+	  virtual ~BWCommand();
 
 	  /**
-	   * Initial state handler.
+	   * Make necessary changes to the cache for the next synchronization.
+	   * Any changes will be sent to the RSP boards.
 	   */
-	  GCFEvent::TResult initial_state(GCFEvent& event, GCFPortInterface& port);
+	  virtual void apply();
+
+	  /**
+	   * get timestamp of the event
+	   */
+	  virtual const Timestamp& getTimestamp();
 
       private:
+	  BWCommand();
+	  RSPSetweightsEvent* m_event;
       };
 };
      
-#endif /* BWSYNC_H_ */
+#endif /* BWCOMMAND_H_ */

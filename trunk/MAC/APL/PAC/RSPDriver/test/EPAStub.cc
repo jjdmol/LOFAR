@@ -118,9 +118,9 @@ int main(int argc, char** argv)
 {
   GCFTask::init(argc, argv);
 
-  EPAStub abs("ABS");
+  EPAStub epastub("EPAStub");
 
-  abs.start(); // make initial transition
+  epastub.start(); // make initial transition
 
   GCFTask::run();
 

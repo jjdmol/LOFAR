@@ -27,6 +27,9 @@
 #include "EPA_Protocol.ph"
 
 #include "RSPDriverTask.h"
+#include "Command.h"
+#include "BWCommand.h"
+#include "BWSync.h"
 
 #undef PACKAGE
 #undef VERSION
@@ -40,13 +43,24 @@ using namespace std;
 using namespace LOFAR;
 
 RSPDriverTask::RSPDriverTask(string name)
-    : GCFTask((State)&RSPDriverTask::initial, name)
+    : GCFTask((State)&RSPDriverTask::initial, name), m_scheduler()
 {
   registerProtocol(RSP_PROTOCOL, RSP_PROTOCOL_signalnames);
   registerProtocol(EPA_PROTOCOL, EPA_PROTOCOL_signalnames);
 
   m_client.init(*this, "client", GCFPortInterface::SPP, RSP_PROTOCOL);
-  m_board.init(*this, "board", GCFPortInterface::SAP, EPA_PROTOCOL /*, true*/);
+//  m_board.init(*this, "board", GCFPortInterface::SAP, EPA_PROTOCOL /*, true*/);
+
+  /**
+   * Create synchronization action classes.
+   */
+  BWSync* bwsync = new BWSync;
+  bwsync->setPriority(1);
+
+  /**
+   * Add synchronization actions.
+   */
+  m_scheduler.addSyncAction(bwsync);
 }
 
 RSPDriverTask::~RSPDriverTask()
@@ -55,7 +69,7 @@ RSPDriverTask::~RSPDriverTask()
 
 bool RSPDriverTask::isEnabled()
 {
-  return m_client.isConnected() && m_board.isConnected();
+  return m_client.isConnected(); // && m_board.isConnected();
 }
 
 GCFEvent::TResult RSPDriverTask::initial(GCFEvent& event, GCFPortInterface& port)
@@ -73,7 +87,7 @@ GCFEvent::TResult RSPDriverTask::initial(GCFEvent& event, GCFPortInterface& port
       {
 	  if (!m_client.isConnected()) m_client.open(); // need this otherwise GTM_Sockethandler is not called
 	  //m_board.setAddr("eth0", "aa:bb:cc:dd:ee:ff");
-	  if (!m_board.isConnected()) m_board.open();
+	  //if (!m_board.isConnected()) m_board.open();
       }
       break;
 
@@ -130,68 +144,84 @@ GCFEvent::TResult RSPDriverTask::enabled(GCFEvent& event, GCFPortInterface& port
   static int period = 0;
 
   switch (event.signal)
-    {
+  {
 #if 0
-    case F_ACCEPT_REQ:
-      m_client.getPortProvider().accept();
-      break;
+      case F_ACCEPT_REQ:
+	  m_client.getPortProvider().accept();
+	  break;
 #endif
-    case F_ENTRY:
+      case F_ENTRY:
       {
-	/* Start the update timer */
-	m_board.setTimer((long)1); // update every second
+	  /* Start the update timer */
+	  m_board.setTimer((long)1); // update every second
       }
       break;
 
-    case F_TIMER:
+      case RSP_SETWEIGHTS:
       {
-	/* run the scheduler */
-	m_scheduler.run(event,port);
+	  /* enter the command in the scheduler's queue */
+	  BWCommand* command = new BWCommand(event, port, Command::WRITE);
+	  /* reply */
+	  RSPSetweightsackEvent swack;
 
-	GCFTimerEvent* timer = static_cast<GCFTimerEvent*>(&event);
+	  /* enter into the scheduler's queue */
+	  swack.timestamp = m_scheduler.enter(command);
 
-	LOG_DEBUG(formatString("timer=(%d,%d)", timer->sec, timer->usec));
+	  swack.status = SUCCESS;
 
-	if (0 == (period % SYNC_INTERVAL))
-	{
-	    period = 0;
-
-	    // perform sync
-	}
-
-	period++;
+	  m_client.send(swack);
       }
       break;
 
-    case F_DATAIN:
-      LOG_DEBUG("F_DATAIN");
-      break;
-
-    case F_DATAOUT:
-      LOG_DEBUG("F_DATAOUT");
-      break;
-
-    case F_DISCONNECTED:
+      case F_TIMER:
       {
-	LOG_DEBUG(formatString("port %s disconnected", port.getName().c_str()));
-	port.close();
+	  /* run the scheduler */
+	  m_scheduler.run(event,port);
 
-	TRAN(RSPDriverTask::initial);
+	  GCFTimerEvent* timer = static_cast<GCFTimerEvent*>(&event);
+
+	  LOG_DEBUG(formatString("timer=(%d,%d)", timer->sec, timer->usec));
+
+	  if (0 == (period % SYNC_INTERVAL))
+	  {
+	      period = 0;
+
+	      // perform sync
+	  }
+
+	  period++;
       }
       break;
 
-    case F_EXIT:
+      case F_DATAIN:
+	  LOG_DEBUG("F_DATAIN");
+	  break;
+
+      case F_DATAOUT:
+	  LOG_DEBUG("F_DATAOUT");
+	  break;
+
+      case F_DISCONNECTED:
       {
-	// cancel timers
-	m_client.cancelAllTimers();
-	m_board.cancelAllTimers();
+	  LOG_DEBUG(formatString("port %s disconnected", port.getName().c_str()));
+	  port.close();
+
+	  TRAN(RSPDriverTask::initial);
       }
       break;
 
-    default:
-      status = GCFEvent::NOT_HANDLED;
+      case F_EXIT:
+      {
+	  // cancel timers
+	  m_client.cancelAllTimers();
+	  m_board.cancelAllTimers();
+      }
       break;
-    }
+
+      default:
+	  status = GCFEvent::NOT_HANDLED;
+	  break;
+  }
 
   return status;
 }

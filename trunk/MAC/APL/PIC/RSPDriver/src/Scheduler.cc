@@ -21,6 +21,7 @@
 //#  $Id$
 
 #include "Scheduler.h"
+#include "SyncAction.h"
 
 #undef PACKAGE
 #undef VERSION
@@ -29,20 +30,103 @@
 
 using namespace RSP;
 using namespace LOFAR;
+using namespace RSP_Protocol;
 
 Scheduler::Scheduler()
 {}
 
 Scheduler::~Scheduler()
-{}
+{
+  /* clear the various queues */
+  while (!m_later_queue.empty())
+  {
+      Command* c = m_later_queue.top();
+      delete c;
+      m_later_queue.pop();
+  }
+  while (!m_now_queue.empty())
+  {
+      Command* c = m_now_queue.top();
+      delete c;
+      m_now_queue.pop();
+  }
+  while (!m_periodic_queue.empty())
+  {
+      Command* c = m_periodic_queue.top();
+      delete c;
+      m_periodic_queue.pop();
+  }
+  while (!m_done_queue.empty())
+  {
+      Command* c = m_done_queue.top();
+      delete c;
+      m_done_queue.pop();
+  }
+  while (!m_syncactions.empty())
+  {
+      SyncAction* sa = m_syncactions.top();
+      delete sa;
+      m_syncactions.pop();
+  }
+}
 
-void Scheduler::run(GCFEvent& event, GCFPortInterface& port)
+void Scheduler::run(const GCFEvent& event, GCFPortInterface& /*port*/)
+{
+  const GCFTimerEvent* timeout = static_cast<const GCFTimerEvent*>(&event);
+  
+  if (F_TIMER == event.signal)
+  {
+      /* adjust the current time */
+      struct timeval tv;
+      tv.tv_sec  = timeout->sec;
+      tv.tv_usec = 0;
+      m_current_time.set(tv);
+
+      while (!m_later_queue.empty())
+      {
+	  Command* command = m_later_queue.top();
+
+	  /**
+	   * Check later queue for events that need to be scheduled
+	   * to the now queue.
+	   */
+//	  if (timeout->sec + 1 == command->m_event
+      }
+
+  }
+  else
+  {
+      LOG_ERROR("received invalid event != F_TIMER");
+  }
+}
+
+void Scheduler::dispatch(const GCFEvent& event, GCFPortInterface& port)
 {
   //event = event;
   port = port;
 }
 
-void Scheduler::enter(Command& command)
+void Scheduler::addSyncAction(SyncAction* action)
 {
+  m_syncactions.push(action);
+}
+
+Timestamp Scheduler::enter(Command* command)
+{
+  m_later_queue.push(command);
   
+  Timestamp t = command->getTimestamp();
+
+  if (t.sec() < m_current_time.sec() + 10)
+  {
+#if 0
+      struct timeval tv;
+      m_current_time.get(&tv);
+      tv.sec += 10;
+      t.set(tv);
+#endif
+      t = m_current_time + 10;
+  }
+
+  return t;
 }

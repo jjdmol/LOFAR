@@ -36,7 +36,6 @@ BWSync::BWSync() : SyncAction((State)&BWSync::initial_state)
 
 BWSync::~BWSync()
 {
-  /* TODO: delete event? */
 }
 
 GCFEvent::TResult BWSync::initial_state(GCFEvent& event, GCFPortInterface& port)

@@ -33,7 +33,7 @@ namespace RSP
 	  /**
 	   * Constructors for a StatsSync object.
 	   */
-	  explicit StatsSync(State initial);
+	  StatsSync();
 	  
 	  /* Destructor for StatsSync. */
 	  virtual ~StatsSync();
@@ -42,9 +42,6 @@ namespace RSP
 	   * Initial state handler.
 	   */
 	  GCFEvent::TResult initial_state(GCFEvent& event, GCFPortInterface& port);
-
-      private:
-	  StatsSync();
 
       private:
       };

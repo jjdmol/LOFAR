@@ -27,6 +27,7 @@
 #include <GCF/GCF_Control.h>
 #include "Command.h"
 #include "SyncAction.h"
+#include "Timestamp.h"
 
 namespace RSP
 {
@@ -43,8 +44,29 @@ namespace RSP
 	  /* Destructor for Scheduler. */
 	  virtual ~Scheduler();
 
-	  void run(GCFEvent& event, GCFPortInterface& port);
-	  void enter(Command& command);
+	  /**
+	   * Run the scheduler in response to a timer event.
+	   */
+	  void run(const GCFEvent& event, GCFPortInterface& port);
+
+	  /**
+	   * Dispatch an event from the RSP board to the appropriate
+	   * synchronization action.
+	   */
+	  void dispatch(const GCFEvent& event, GCFPortInterface& port);
+
+	  /**
+	   * Add a synchronization action to be carried out
+	   * periodically with the specified period.
+	   */
+	  void addSyncAction(SyncAction* action);
+
+	  /**
+	   * Enter a new command into the scheduler in response
+	   * to receiving a command event from on of the RSPDriver
+	   * client processes.
+	   */
+	  RSP_Protocol::Timestamp enter(Command* command);
 
       private:
 	  std::priority_queue<Command*> m_later_queue;
@@ -53,6 +75,8 @@ namespace RSP
 	  std::priority_queue<Command*> m_done_queue;
 
 	  std::priority_queue<SyncAction*> m_syncactions;
+
+	  RSP_Protocol::Timestamp m_current_time;
       };
 };
      

@@ -41,6 +41,11 @@ namespace RSP_Protocol
 	  /* Destructor for BeamletWeights. */
 	  virtual ~BeamletWeights() {}
 
+	  static const int NDIM = 3;
+
+	  /* get reference to the weights array */
+	  blitz::Array<std::complex<double>, NDIM>& weights();
+
       public:
 	  /**
 	   * marshalling methods
@@ -54,9 +59,14 @@ namespace RSP_Protocol
       private:
 	  /**
 	   * The beamlet weights.
+	   * Dimension 1: n_timesteps
+	   * Dimension 2: count(rcumask)
+	   * Dimension 3: N_BEAMLETS
 	   */
-	  blitz::Array<std::complex<double>, 3> m_weights;
+	  blitz::Array<std::complex<double>, NDIM> m_weights;
       };
+
+  inline blitz::Array<std::complex<double>, RSP_Protocol::BeamletWeights::NDIM>& BeamletWeights::weights() { return m_weights; }
 };
      
 #endif /* BEAMLETWEIGHTS_H_ */

@@ -1,4 +1,4 @@
-//#  EPAStub.h: class definition for the EPA stub task
+//#  RSPTest.h: class definition for the EPA stub task
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,50 +20,57 @@
 //#
 //#  $Id$
 
-#ifndef EPASTUB_H_
-#define EPASTUB_H_
+#ifndef RSPTEST_H_
+#define RSPTEST_H_
 
-#include "EPA_Protocol.ph"
+#include "RSP_Protocol.ph"
 
 #include <GCF/GCF_Control.h>
 #include <GCF/GCF_ETHRawPort.h>
 
 namespace RSP_Test
 {
-  class EPAStub : public GCFTask
+  class RSPTest : public GCFTask, public Test
     {
     public:
       /**
-       * The constructor of the EPAStub task.
+       * The constructor of the RSPTest task.
        * @param name The name of the task. The name is used for looking
        * up connection establishment information using the GTMNameService and
        * GTMTopologyService classes.
        */
-      EPAStub(string name);
-      virtual ~EPAStub();
+      RSPTest(string name);
+      virtual ~RSPTest();
 
       // state methods
 
       /**
-       * The initial state. In this state the beam_server port
-       * is opened.
+       * The initial and final state.
        */
+      /*@{*/
       GCFEvent::TResult initial(GCFEvent& e, GCFPortInterface &p);
+      GCFEvent::TResult final(GCFEvent& e, GCFPortInterface &p);
+      /*@}*/
 
       /**
-       * The enabled state. This state is reached when the
+       * The test states. This state is reached when the
        * beam_server port is connected.
        */
-      GCFEvent::TResult enabled(GCFEvent& e, GCFPortInterface &p);
+      GCFEvent::TResult test001(GCFEvent& e, GCFPortInterface &p);
+
+      /**
+       * Run the tests.
+       */
+      void run();
 
     private:
       // member variables
 
     private:
       // ports
-      GCFPort m_client;
+      GCFPort m_server;
     };
 
 };
      
-#endif /* EPASTUB_H_ */
+#endif /* RSPTEST_H_ */

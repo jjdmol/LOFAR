@@ -23,6 +23,8 @@
 #ifndef COMMAND_H_
 #define COMMAND_H_
 
+#include "Timestamp.h"
+
 #include <Common/LofarTypes.h>
 #include <GCF/GCF_Control.h>
 
@@ -56,17 +58,7 @@ namespace RSP
 	  void setPeriod(int16 period);
 
 	  /**
-	   * Set the request event that contains the parameters for this command.
-	   */
-	  void setEvent(GCFEvent* event);
-	  
-	  /**
-	   * Set a pointer to the port on which the answer should be sent.
-	   */
-	  void setAnswerPort(GCFPortInterface* port);
-
-	  /**
-	   * Set the type of operation (READ/WRITE)
+	   * Set the type of operation READ/WRITE.
 	   */
 	  void setOperation(Operation oper);
 
@@ -74,7 +66,13 @@ namespace RSP
 	   * Make necessary changes to the cache for the next synchronization.
 	   * Any changes will be sent to the RSP boards.
 	   */
-	  void apply();
+	  virtual void apply() = 0;
+
+	  /**
+	   * Return the timestamp of the event that corresponds to
+	   * this command.
+	   */
+	  virtual const RSP_Protocol::Timestamp& getTimestamp() = 0;
 
       private:
 	  int16              m_period;
