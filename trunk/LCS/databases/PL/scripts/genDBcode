@@ -358,7 +358,7 @@ TPOaddAttributemap()
 		Member=`echo $line | cut -d"!" -f${SYMBNAMEFLD}`
 		RelType=`echo $line | cut -d"!" -f6`
 		if [ "${UseSymbNames}" == "true" ]; then
-			SubClass=`echo $line | cut -d'!' -f7`
+			SubClass=`echo $line | cut -d'!' -f3`
 		else
 			SubClass=${Member}
 		fi
@@ -430,7 +430,7 @@ initSrcfile()
 			# find their subclasses
 			grep "^${Class}!" ${MAPWRKFILE} | grep -v "!!" | while read m_line
 			do
-				SubClass=`echo $m_line | cut -d'!' -f7`
+				SubClass=`echo $m_line | cut -d'!' -f3`
 				# where is this sub class located? 
 				sl_line=`grep "${SubClass}!" ${CLASSLOCATIONWRKFILE}`
 				SubClassLocation=`echo $sl_line | cut -d"!" -f2`
