@@ -29,4 +29,18 @@ namespace LOFAR {
   {
     checkOverflow();
   }
+
+  void SyncStamp::checkOverflow() {
+    if (itsBlockId > MAX_BLOCK_ID) {
+      int newBlockId = itsBlockId % MAX_BLOCK_ID;
+      itsSeqId += itsBlockId / MAX_BLOCK_ID; 
+      itsBlockId = newBlockId; 
+    };
+  }
+
+
+  ostream& operator<<(ostream& os, const SyncStamp& ss){
+    os<<ss.itsSeqId<<"s:"<<ss.itsBlockId;
+    return os;
+  }
 }
