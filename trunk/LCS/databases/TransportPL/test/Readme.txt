@@ -1,6 +1,17 @@
 This file describes the tests in this directory (./LOFAR/LCS/databases/TransportPL/test/):
 
 
+*** Example ***
+ Demonstrates the simplest case: 
+ Data is transported from one DataHolder to another via TH_Mem.
+
+
+*** ExampleMem ***
+ Tests in-memory transport of fixed and variable size data.
+ Data with and without an extra (variable size) blob is transported from one DataHolder 
+ to another via TH_Mem.
+
+
 *** ExamplePL ***
  Tests transport of fixed and variable size data via a database (TH_PL).
 
