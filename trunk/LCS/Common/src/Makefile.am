@@ -1,50 +1,80 @@
 SUBDIRS	= shmem .
 
 INSTHDRS = \
-Allocator.h BlobStringType.h BlobString.h BlobStringTraits.h \
-BlobHeader.h BlobArrayHeader.h BlobOStream.h BlobIStream.h BlobArray.h \
-BlobIBuffer.h BlobIBufStream.h BlobOBuffer.h BlobOBufStream.h \
-BlobIBufChar.h BlobIBufVector.h BlobOBufChar.h BlobOBufVector.h \
-BlobOBufString.h BlobIBufString.h BlobOBufNull.h \
-BlobField.h BlobFieldSet.h BlobException.h \
-LofarTypedefs.h LofarTypes.h TypeNames.h DataFormat.h DataConvert.h \
-KeyValue.h KeyValueMap.h \
-KeyParser.h \
-Debug.h \
-Exception.h \
-Net/Socket.h \
-Thread.h \
-Thread/Thread.h \
-Thread/Key.h \
-Thread/Mutex.h \
-Thread/Condition.h \
-Thread/SmartLock.h \
-Stopwatch.h \
-StringUtil.h \
-hexdump.h \
-CheckConfig.h \
-Lorrays.h Lorrays-Blitz.h BlitzToAips.h Lonumerics.h \
-lofar_iostream.h				\
-lofar_fstream.h					\
-lofar_strstream.h				\
-lofar_algorithm.h				\
-lofar_deque.h					\
-lofar_list.h					\
-lofar_vector.h					\
-lofar_complex.h					\
-lofar_map.h					\
-lofar_stack.h					\
-lofar_iosfwd.h					\
-lofar_string.h					\
-lofar_global_symbol_warning.h   \
-Profiling/PerfProfile.h \
-LofarLogger.h LofarLog4Cplus.h LofarLogCout.h   \
-RunOnNode.h
+        Allocator.h \
+        BlitzToAips.h \
+        BlobArray.h \
+        BlobArrayHeader.h \
+        BlobException.h \
+        BlobField.h \
+        BlobFieldSet.h \
+        BlobHeader.h \
+        BlobIBufChar.h \
+        BlobIBuffer.h \
+        BlobIBufStream.h \
+        BlobIBufString.h \
+        BlobIBufVector.h \
+        BlobIStream.h \
+        BlobOBufChar.h \
+        BlobOBuffer.h \
+        BlobOBufNull.h \
+        BlobOBufStream.h \
+        BlobOBufString.h \
+        BlobOBufVector.h \
+        BlobOStream.h \
+        BlobString.h \
+        BlobStringTraits.h \
+        BlobStringType.h \
+        CheckConfig.h \
+        DataConvert.h \
+        DataFormat.h \
+        Debug.h \
+        Exception.h \
+        hexdump.h \
+        KeyParser.h \
+        KeyValue.h \
+        KeyValueMap.h \
+        lofar_algorithm.h \
+        lofar_complex.h \
+        lofar_deque.h \
+        lofar_fstream.h \
+        lofar_global_symbol_warning.h \
+        lofar_iosfwd.h \
+        lofar_iostream.h \
+        lofar_list.h \
+        LofarLog4Cplus.h \
+        LofarLogCout.h \
+        LofarLogger.h \
+        lofar_map.h \
+        lofar_sstream.h \
+        lofar_stack.h \
+        lofar_string.h \
+        lofar_strstream.h \
+        LofarTypedefs.h \
+        LofarTypes.h \
+        lofar_vector.h \
+        Lonumerics.h \
+        Lorrays-Blitz.h \
+        Lorrays.h \
+        RunOnNode.h \
+        Stopwatch.h \
+        StringUtil.h \
+        Thread.h \
+        TypeNames.h \
+        Net/Socket.h \
+        Profiling/PerfProfile.h \
+        Thread/Condition.h \
+        Thread/Key.h \
+        Thread/Mutex.h \
+        Thread/SmartLock.h \
+        Thread/Thread.h
 
 NOINSTHDRS =
 
 TCCHDRS = \
-BlobField.cc BlobArray.tcc TypeNames.tcc
+	BlobField.cc \
+	BlobArray.tcc \
+	TypeNames.tcc
 
 nobase_pkginclude_HEADERS = $(INSTHDRS) $(TCCHDRS)
 
@@ -55,25 +85,41 @@ DOCHDRS	= $(INSTHDRS) $(NOINSTHDRS)
 lib_LTLIBRARIES 	= libcommon.la
 
 libcommon_la_SOURCES 	= \
-Allocator.cc BlobStringType.cc BlobString.cc \
-BlobHeader.cc BlobOStream.cc BlobIStream.cc BlobArray.cc \
-BlobIBufStream.cc BlobOBufStream.cc BlobOBufString.cc BlobOBufNull.cc \
-BlobIBufChar.cc BlobOBufChar.cc \
-BlobField2.cc BlobFieldSet.cc \
-TypeNames.cc DataConvert.cc \
-KeyValue.cc KeyValueMap.cc \
-KeyParse.yy KeyTokenize.ll KeyParser.cc \
-Debug.cc \
-Exception.cc \
-Stopwatch.cc \
-StringUtil.cc \
-hexdump.cc \
-Net/Socket.cc \
-Thread/Thread.cc \
-Thread/SmartLock.cc \
-Profiling/PerfProfile.cc \
-LofarLogger.cc LofarLogCout.cc \
-RunOnNode.cc
+        Allocator.cc \
+        BlobArray.cc \
+        BlobField2.cc \
+        BlobField.cc \
+        BlobFieldSet.cc \
+        BlobHeader.cc \
+        BlobIBufChar.cc \
+        BlobIBufStream.cc \
+        BlobIStream.cc \
+        BlobOBufChar.cc \
+        BlobOBufNull.cc \
+        BlobOBufStream.cc \
+        BlobOBufString.cc \
+        BlobOStream.cc \
+        BlobString.cc \
+        BlobStringType.cc \
+        DataConvert.cc \
+        Debug.cc \
+        Exception.cc \
+        hexdump.cc \
+        KeyParser.cc \
+        KeyParse.yy \
+        KeyTokenize.ll \
+        KeyValue.cc \
+        KeyValueMap.cc \
+        LofarLogCout.cc \
+        LofarLogger.cc \
+        RunOnNode.cc \
+        Stopwatch.cc \
+        StringUtil.cc \
+        TypeNames.cc \
+        Net/Socket.cc \
+        Profiling/PerfProfile.cc \
+        Thread/SmartLock.cc \
+        Thread/Thread.cc
 
 AM_YFLAGS		= -d -p KeyParse
 AM_LFLAGS		= -PKeyTokenize
