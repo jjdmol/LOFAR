@@ -1,0 +1,6 @@
+BobOBufVector bobSize=134 vecSize=134 vecCap=134
+BobOBufVector bobSize=134 vecSize=134 vecCap=200
+BobOBufString bobSize=134 strSize=134
+BobOBufString bobSize=134 strSize=134
+BlobOBufChar::setPos - buffer cannot be expanded
+OK

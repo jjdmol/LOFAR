@@ -24,6 +24,7 @@
 #define COMMON_LOFARTYPEDEFS_H
 
 #include <complex>
+#include <unistd.h>
 
 namespace LOFAR {
 

@@ -21,6 +21,10 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.3  2003/10/29 13:54:38  smirnov
+//  %[ER: 16]%
+//  Cleaned up debug context definition macros
+//
 //  Revision 1.2  2003/09/29 15:44:09  smirnov
 //  %[ER: 16]%
 //  Based Debug (and Assert) errors off of LCS::Exception.
@@ -101,7 +105,7 @@ void f()
 int main()
 {
   // Use highest trace level.
-  getDebugContext().setLevel(4);
+  getDebugContext().setLevel(3);
   a();
   f();
 
