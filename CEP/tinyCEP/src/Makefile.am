@@ -24,7 +24,7 @@ lib_LTLIBRARIES 	= libtinyframe.la
 #			libcepframe.la
 
 libtinyframe_la_SOURCES = \
-WorkBlock.cc     \
+WorkHolder.cc \
 AppController.cc \
 MiniDataManager.cc
 
