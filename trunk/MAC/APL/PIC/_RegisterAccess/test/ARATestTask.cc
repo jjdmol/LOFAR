@@ -20,16 +20,26 @@
 //#
 //#  $Id$
 
-#define PROPERTY_STATUS                     "status"
-#define PROPERTY_COMMAND                    "command"
-#define PROPERTIES_BOARD1                   "PIC_Rack1_SubRack1_Board1"
-#define PROPERTIES_BOARD1_ALERT             "PIC_Rack1_SubRack1_Board1_Alert"
-#define PROPERTIES_AP1                      "PIC_Rack1_SubRack1_Board1_AP1"
-#define PROPERTIES_AP1_RCU1                 "PIC_Rack1_SubRack1_Board1_AP1_RCU1"
-#define PROPERTIES_AP1_RCU1_MAINTENANCE     "PIC_Rack1_SubRack1_Board1_AP1_RCU1_Maintenance"
-#define PROPERTIES_STATION_PIC              "PIC"
-#define PROPERTIES_STATION_PIC_MAINTENANCE  "PIC_Maintenance"
-#define PROPERTIES_STATION_PAC              "PAC"
+#ifdef GCF4
+// datapoint structs are supported in gcf4
+#define PROPERTY_BOARD1_STATUS                  "PIC_Rack1_SubRack1_Board1.status"
+#define PROPERTY_BOARD1_ALERT_STATUS            "PIC_Rack1_SubRack1_Board1_Alert.status"
+#define PROPERTY_AP1_STATUS                     "PIC_Rack1_SubRack1_Board1_AP1.status"
+#define PROPERTY_AP1_RCU1                       "PIC_Rack1_SubRack1_Board1_AP1_RCU1"
+#define PROPERTY_AP1_RCU1_MAINTENANCE_STATUS    "PIC_Rack1_SubRack1_Board1_AP1_RCU1_Maintenance.status"
+#define PROPERTY_STATION_PIC                    "PIC"
+#define PROPERTY_STATION_PIC_MAINTENANCE_STATUS "PIC_Maintenance.status"
+#define PROPERTY_STATION_PAC_LDS_COMMAND        "PAC_LogicalDeviceScheduler_command"
+#else
+#define PROPERTY_BOARD1_STATUS                  "PIC_Rack1_SubRack1_Board1_status"
+#define PROPERTY_BOARD1_ALERT_STATUS            "PIC_Rack1_SubRack1_Board1_Alert_status"
+#define PROPERTY_AP1_STATUS                     "PIC_Rack1_SubRack1_Board1_AP1_status"
+#define PROPERTY_AP1_RCU1                       "PIC_Rack1_SubRack1_Board1_AP1_RCU1"
+#define PROPERTY_AP1_RCU1_MAINTENANCE_STATUS    "PIC_Rack1_SubRack1_Board1_AP1_RCU1_Maintenance_status"
+#define PROPERTY_STATION_PIC                    "PIC"
+#define PROPERTY_STATION_PIC_MAINTENANCE_STATUS "PIC_Maintenance_status"
+#define PROPERTY_STATION_PAC_LDS_COMMAND        "PAC_LogicalDeviceScheduler_command"
+#endif
 
 #include <math.h>
 #include <GCF/GCF_PValue.h>
@@ -39,10 +49,11 @@
 #include "../../../APLCommon/src/APL_Defines.h"
 #include "ARATest.h"
 #include "ARATestTask.h"
-#include "PropertyDefines.h" 
 
+#undef PACKAGE
+#undef VERSION
 #define DECLARE_SIGNAL_NAMES
-#include "ARATest_Protocol.ph"
+#include "RSP_Protocol.ph"
 
 #include <stdio.h>
 
@@ -51,27 +62,37 @@
 #include <lofar_config.h>
 #include <Common/LofarLogger.h>
 
+#include <boost/date_time/posix_time/posix_time.hpp>
+
 using namespace LOFAR;
 using namespace ARA;
 using namespace std;
 
 string ARATestTask::m_taskName("ARATest");
-string ARATestTask::m_RATestServerName("RAtest");
 
 ARATestTask::ARATestTask(ARATest& tester) :
   GCFTask((State)&ARATestTask::initial, m_taskName),
   m_tester(tester),
   m_answer(),
-  m_RAtestPort(*this, m_RATestServerName, GCFPortInterface::SAP, ARATEST_PROTOCOL),
+  m_RSPserver(),
   m_test_passCounter(0),
-  m_psBP(string("ApcFPGAType"),string(PROPERTIES_AP1)),
-  m_psRCUmaintenance(string("ApcMaintenanceType"),string(PROPERTIES_AP1_RCU1_MAINTENANCE)),
-  m_psStationMaintenance(string("ApcMaintenanceType"),string(PROPERTIES_STATION_PIC_MAINTENANCE)),
-  m_psLDScommand(string("ApcLogicalDeviceScheduler"),string(PROPERTIES_STATION_PAC)),
-  m_psBoard1Alert(string("ApcAlertType"),string(PROPERTIES_BOARD1_ALERT)),
-  m_psBoard1(string("ApcBoardType"),string(PROPERTIES_BOARD1))
+  m_propAP1status(string(PROPERTY_AP1_STATUS)),
+  m_propAP1RCUmaintenanceStatus(string(PROPERTY_AP1_RCU1_MAINTENANCE_STATUS)),
+  m_propStationMaintenanceStatus(string(PROPERTY_STATION_PIC_MAINTENANCE_STATUS)),
+  m_propLDScommand(string(PROPERTY_STATION_PAC_LDS_COMMAND)),
+  m_propBoard1AlertStatus(string(PROPERTY_BOARD1_ALERT_STATUS))
 {
+  registerProtocol(RSP_PROTOCOL, RSP_PROTOCOL_signalnames);
   m_answer.setTask(this);
+
+  m_propAP1status.setAnswer(&m_answer);
+  m_propAP1RCUmaintenanceStatus.setAnswer(&m_answer);
+  m_propStationMaintenanceStatus.setAnswer(&m_answer);
+  m_propLDScommand.setAnswer(&m_answer);
+  m_propBoard1AlertStatus.setAnswer(&m_answer);
+  
+  m_RSPserver.init(*this, "ARAtestRSPserver", GCFPortInterface::SPP, RSP_PROTOCOL);
+  
 }
 
 ARATestTask::~ARATestTask()
@@ -80,7 +101,7 @@ ARATestTask::~ARATestTask()
 
 bool ARATestTask::isEnabled()
 {
-  return (m_RAtestPort.isConnected());
+  return (m_RSPserver.isConnected());
 }
 
 GCFEvent::TResult ARATestTask::initial(GCFEvent& event, GCFPortInterface& port)
@@ -94,9 +115,9 @@ GCFEvent::TResult ARATestTask::initial(GCFEvent& event, GCFPortInterface& port)
       break;
 
     case F_ENTRY:
-      if (!m_RAtestPort.isConnected()) 
+      if (!m_RSPserver.isConnected()) 
       {
-        m_RAtestPort.open();
+        m_RSPserver.open();
       }
       break;
     
@@ -128,7 +149,7 @@ GCFEvent::TResult ARATestTask::initial(GCFEvent& event, GCFPortInterface& port)
     case F_EXIT:
     {
       // cancel timers
-      m_RAtestPort.cancelAllTimers();
+      m_RSPserver.cancelAllTimers();
       break;
     }
       
@@ -156,7 +177,8 @@ GCFEvent::TResult ARATestTask::test1(GCFEvent& event, GCFPortInterface& /*p*/)
 
     case F_ENTRY:
     {
-      bool testOk = (GCF_NO_ERROR==m_psBP.requestValue(string(PROPERTY_STATUS)));
+      LOG_INFO("3.2.1.1: Monitor FPGA registers. Goal: load secondary properties");
+      bool testOk = (GCF_NO_ERROR==m_propAP1status.requestValue());
       m_tester._avttest(testOk);
       if(!testOk)
       {
@@ -170,9 +192,12 @@ GCFEvent::TResult ARATestTask::test1(GCFEvent& event, GCFPortInterface& /*p*/)
       // check which property changed
       GCFPropValueEvent* pPropAnswer = static_cast<GCFPropValueEvent*>(&event);
       assert(pPropAnswer);
-      bool testOk = (
-        strstr(pPropAnswer->pPropName,PROPERTIES_AP1)!=0 &&
-        strstr(pPropAnswer->pPropName,PROPERTY_STATUS)!=0 );
+      bool testOk = (strstr(pPropAnswer->pPropName,PROPERTY_AP1_STATUS)!=0);
+      // display the value:
+      GCFPVUnsigned status;
+      status.copy(*pPropAnswer->pValue);
+      LOG_INFO(formatString("Value of '%s': %d",pPropAnswer->pPropName,status.getValue()));
+
       m_tester._avttest(testOk);
       TRAN(ARATestTask::test2);
       break;
@@ -202,8 +227,10 @@ GCFEvent::TResult ARATestTask::test2(GCFEvent& event, GCFPortInterface& /*p*/)
 
     case F_ENTRY:
     {
+      LOG_INFO("3.2.2.1: put 1 antenna in maintenance");
+      m_propAP1RCUmaintenanceStatus.subscribe();
       GCFPVUnsigned inMaintenance(1);
-      bool testOk = (GCF_NO_ERROR==m_psRCUmaintenance.setValue(string(PROPERTY_STATUS),inMaintenance));
+      bool testOk = (GCF_NO_ERROR==m_propAP1RCUmaintenanceStatus.setValue(inMaintenance));
       m_tester._avttest(testOk);
       if(!testOk)
       {
@@ -217,16 +244,24 @@ GCFEvent::TResult ARATestTask::test2(GCFEvent& event, GCFPortInterface& /*p*/)
       // check which property changed
       GCFPropValueEvent* pPropAnswer = static_cast<GCFPropValueEvent*>(&event);
       assert(pPropAnswer);
-      const GCFPVUnsigned* pInMaintenance = static_cast<const GCFPVUnsigned*>(pPropAnswer->pValue);
+      GCFPVUnsigned inMaintenance;
+      inMaintenance.copy(*pPropAnswer->pValue);
+      LOG_INFO(formatString("Value of '%s': %d",pPropAnswer->pPropName,inMaintenance.getValue()));
       bool testOk = (
-        strstr(pPropAnswer->pPropName,PROPERTIES_AP1_RCU1_MAINTENANCE)!=0 &&
-        strstr(pPropAnswer->pPropName,PROPERTY_STATUS)!=0 &&
-        pInMaintenance->getValue()!=0 );
+        strstr(pPropAnswer->pPropName,PROPERTY_AP1_RCU1_MAINTENANCE_STATUS)!=0 &&
+        inMaintenance.getValue()!=0 );
+      // display the value:
       m_tester._avttest(testOk);
       TRAN(ARATestTask::test3);
       break;
     }
      
+    case F_EXIT:
+    {
+      m_propAP1RCUmaintenanceStatus.unsubscribe();
+      break;
+    }
+      
     default:
       LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("ARATestTask(%s)::test2, default",getName().c_str()));
       status = GCFEvent::NOT_HANDLED;
@@ -251,8 +286,10 @@ GCFEvent::TResult ARATestTask::test3(GCFEvent& event, GCFPortInterface& /*p*/)
 
     case F_ENTRY:
     {
+      LOG_INFO("3.2.2.2: put station in maintenance");
+      m_propStationMaintenanceStatus.subscribe();
       GCFPVUnsigned inMaintenance(1);
-      bool testOk = (GCF_NO_ERROR==m_psStationMaintenance.setValue(string(PROPERTY_STATUS),inMaintenance));
+      bool testOk = (GCF_NO_ERROR==m_propStationMaintenanceStatus.setValue(inMaintenance));
       m_tester._avttest(testOk);
       if(!testOk)
       {
@@ -266,16 +303,25 @@ GCFEvent::TResult ARATestTask::test3(GCFEvent& event, GCFPortInterface& /*p*/)
       // check which property changed
       GCFPropValueEvent* pPropAnswer = static_cast<GCFPropValueEvent*>(&event);
       assert(pPropAnswer);
-      const GCFPVUnsigned* pInMaintenance = static_cast<const GCFPVUnsigned*>(pPropAnswer->pValue);
+      GCFPVUnsigned inMaintenance;
+      inMaintenance.copy(*pPropAnswer->pValue);
+      LOG_INFO(formatString("Value of '%s': %d",pPropAnswer->pPropName,inMaintenance.getValue()));
       bool testOk = (
-        strstr(pPropAnswer->pPropName,PROPERTIES_STATION_PIC_MAINTENANCE)!=0 &&
-        strstr(pPropAnswer->pPropName,PROPERTY_STATUS)!=0 &&
-        pInMaintenance->getValue()!=0 );
+        strstr(pPropAnswer->pPropName,PROPERTY_STATION_PIC_MAINTENANCE_STATUS)!=0 &&
+        inMaintenance.getValue()!=0 );
+      // display the value:
+
       m_tester._avttest(testOk);
       TRAN(ARATestTask::test4);
       break;
     }
      
+    case F_EXIT:
+    {
+      m_propStationMaintenanceStatus.unsubscribe();
+      break;
+    }
+      
     default:
       LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("ARATestTask(%s)::test3, default",getName().c_str()));
       status = GCFEvent::NOT_HANDLED;
@@ -300,8 +346,10 @@ GCFEvent::TResult ARATestTask::test4(GCFEvent& event, GCFPortInterface& /*p*/)
 
     case F_ENTRY:
     {
+      LOG_INFO("3.2.2.3: put station out of maintenance");
+      m_propStationMaintenanceStatus.subscribe();
       GCFPVUnsigned inMaintenance(0);
-      bool testOk = (GCF_NO_ERROR==m_psStationMaintenance.setValue(string(PROPERTY_STATUS),inMaintenance));
+      bool testOk = (GCF_NO_ERROR==m_propStationMaintenanceStatus.setValue(inMaintenance));
       m_tester._avttest(testOk);
       if(!testOk)
       {
@@ -315,15 +363,16 @@ GCFEvent::TResult ARATestTask::test4(GCFEvent& event, GCFPortInterface& /*p*/)
       // check which property changed
       GCFPropValueEvent* pPropAnswer = static_cast<GCFPropValueEvent*>(&event);
       assert(pPropAnswer);
-      const GCFPVUnsigned* pInMaintenance = static_cast<const GCFPVUnsigned*>(pPropAnswer->pValue);
+      GCFPVUnsigned inMaintenance;
+      inMaintenance.copy(*pPropAnswer->pValue);
+      LOG_INFO(formatString("Value of '%s': %d",pPropAnswer->pPropName,inMaintenance.getValue()));
       bool testOk = (
-        strstr(pPropAnswer->pPropName,PROPERTIES_STATION_PIC_MAINTENANCE)!=0 &&
-        strstr(pPropAnswer->pPropName,PROPERTY_STATUS)!=0 &&
-        pInMaintenance->getValue()==0 );
+        strstr(pPropAnswer->pPropName,PROPERTY_STATION_PIC_MAINTENANCE_STATUS)!=0 &&
+        inMaintenance.getValue()==0 );
       m_tester._avttest(testOk);
       
       // check maintenance status of antenna
-      testOk = (GCF_NO_ERROR==m_psRCUmaintenance.requestValue(string(PROPERTY_STATUS)));
+      testOk = (GCF_NO_ERROR==m_propAP1RCUmaintenanceStatus.requestValue());
       m_tester._avttest(testOk);
       if(!testOk)
       {
@@ -337,16 +386,23 @@ GCFEvent::TResult ARATestTask::test4(GCFEvent& event, GCFPortInterface& /*p*/)
       // check which property changed
       GCFPropValueEvent* pPropAnswer = static_cast<GCFPropValueEvent*>(&event);
       assert(pPropAnswer);
-      const GCFPVUnsigned* pInMaintenance = static_cast<const GCFPVUnsigned*>(pPropAnswer->pValue);
+      GCFPVUnsigned inMaintenance;
+      inMaintenance.copy(*pPropAnswer->pValue);
+      LOG_INFO(formatString("Value of '%s': %d",pPropAnswer->pPropName,inMaintenance.getValue()));
       bool testOk = (
-        strstr(pPropAnswer->pPropName,PROPERTIES_AP1_RCU1_MAINTENANCE)!=0 &&
-        strstr(pPropAnswer->pPropName,PROPERTY_STATUS)!=0 &&
-        pInMaintenance->getValue()!=0 );
+        strstr(pPropAnswer->pPropName,PROPERTY_AP1_RCU1_MAINTENANCE_STATUS)!=0 &&
+        inMaintenance.getValue()!=0 );
       m_tester._avttest(testOk);
       TRAN(ARATestTask::test5);
       break;
     }
 
+    case F_EXIT:
+    {
+      m_propStationMaintenanceStatus.unsubscribe();
+      break;
+    }
+      
     default:
       LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("ARATestTask(%s)::test4, default",getName().c_str()));
       status = GCFEvent::NOT_HANDLED;
@@ -371,8 +427,10 @@ GCFEvent::TResult ARATestTask::test5(GCFEvent& event, GCFPortInterface& /*p*/)
 
     case F_ENTRY:
     {
+      LOG_INFO("3.2.2.4: put antenna out of maintenance");
+      m_propAP1RCUmaintenanceStatus.subscribe();
       GCFPVUnsigned inMaintenance(0);
-      bool testOk = (GCF_NO_ERROR==m_psRCUmaintenance.setValue(string(PROPERTY_STATUS),inMaintenance));
+      bool testOk = (GCF_NO_ERROR==m_propAP1RCUmaintenanceStatus.setValue(inMaintenance));
       m_tester._avttest(testOk);
       if(!testOk)
       {
@@ -386,16 +444,23 @@ GCFEvent::TResult ARATestTask::test5(GCFEvent& event, GCFPortInterface& /*p*/)
       // check which property changed
       GCFPropValueEvent* pPropAnswer = static_cast<GCFPropValueEvent*>(&event);
       assert(pPropAnswer);
-      const GCFPVUnsigned* pInMaintenance = static_cast<const GCFPVUnsigned*>(pPropAnswer->pValue);
+      GCFPVUnsigned inMaintenance;
+      inMaintenance.copy(*pPropAnswer->pValue);
+      LOG_INFO(formatString("Value of '%s': %d",pPropAnswer->pPropName,inMaintenance.getValue()));
       bool testOk = (
-        strstr(pPropAnswer->pPropName,PROPERTIES_AP1_RCU1_MAINTENANCE)!=0 &&
-        strstr(pPropAnswer->pPropName,PROPERTY_STATUS)!=0 &&
-        pInMaintenance->getValue()==0 );
+        strstr(pPropAnswer->pPropName,PROPERTY_AP1_RCU1_MAINTENANCE_STATUS)!=0 &&
+        inMaintenance.getValue()==0 );
       m_tester._avttest(testOk);
       TRAN(ARATestTask::test6);
       break;
     }
      
+    case F_EXIT:
+    {
+      m_propAP1RCUmaintenanceStatus.unsubscribe();
+      break;
+    }
+      
     default:
       LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("ARATestTask(%s)::test5, default",getName().c_str()));
       status = GCFEvent::NOT_HANDLED;
@@ -420,25 +485,27 @@ GCFEvent::TResult ARATestTask::test6(GCFEvent& event, GCFPortInterface& /*p*/)
 
     case F_ENTRY:
     {
+      LOG_INFO("3.2.2.5: schedule maintenance of 1 antenna");
+LOG_INFO("skip test 6 until maintenance scheduling in PAC is implemented");
+TRAN(ARATestTask::test7);
+  
       m_test_passCounter=0;
-      // SCHEDULE MAINTENANCE <resource>,<starttime>,<stoptime>
-      string cmd("SCHEDULE MAINTENANCE");
-      string resource(string(PROPERTIES_AP1_RCU1)+string(","));
-      time_t rawtime;
-      tm * starttm;
-      tm * stoptm;
-      time ( &rawtime );
-      starttm = gmtime(&rawtime);
-      starttm = gmtime(&rawtime);
-      starttm->tm_sec+=10; // 10 seconds in the future
-      stoptm->tm_sec+=20; // 20 seconds in the future
-      char startTime[100];
-      char stopTime[100];
-      sprintf(startTime,"%02d-%02d-%04d %02d:%02d:%02d",starttm->tm_mday,starttm->tm_mon+1,starttm->tm_year+1900,starttm->tm_hour,starttm->tm_min,starttm->tm_sec);
-      sprintf(stopTime,"%02d-%02d-%04d %02d:%02d:%02d",stoptm->tm_mday,stoptm->tm_mon+1,stoptm->tm_year+1900,stoptm->tm_hour,stoptm->tm_min,stoptm->tm_sec);
-      GCFPVString command(cmd+resource+string(startTime)+","+string(stopTime));
+      // MAINTENANCE <scheduleid>,<resource>,<starttime>,<stoptime>
+      string cmd("MAINTENANCE 1,");
+      string resource(string(PROPERTY_AP1_RCU1)+string(","));
+      
+      // create time 10 seconds from now
+      boost::posix_time::ptime startTime(boost::posix_time::second_clock::universal_time());
+      startTime += boost::posix_time::seconds(10); // UTC + 10 seconds
+      boost::posix_time::ptime stopTime(startTime);
+      stopTime += boost::posix_time::seconds(10); // starttime + 10 seconds
+      char timesString[100];
+      sprintf(timesString,"%d,%d",startTime.time_of_day().seconds(),stopTime.time_of_day().seconds());
+      
+      string times(timesString);
+      GCFPVString command(cmd+resource+times);
 
-      bool testOk = (GCF_NO_ERROR==m_psLDScommand.setValue(string(PROPERTY_COMMAND),command));
+      bool testOk = (GCF_NO_ERROR==m_propLDScommand.setValue(command));
       m_tester._avttest(testOk);
       if(!testOk)
       {
@@ -454,14 +521,15 @@ GCFEvent::TResult ARATestTask::test6(GCFEvent& event, GCFPortInterface& /*p*/)
       // check which property changed
       GCFPropValueEvent* pPropAnswer = static_cast<GCFPropValueEvent*>(&event);
       assert(pPropAnswer);
-      if(strstr(pPropAnswer->pPropName,PROPERTIES_AP1_RCU1_MAINTENANCE)!=0 &&
-        strstr(pPropAnswer->pPropName,PROPERTY_STATUS)!=0)
+      if(strstr(pPropAnswer->pPropName,PROPERTY_AP1_RCU1_MAINTENANCE_STATUS)!=0)
       {
-        const GCFPVUnsigned* pInMaintenance = static_cast<const GCFPVUnsigned*>(pPropAnswer->pValue);
+        GCFPVUnsigned inMaintenance;
+        inMaintenance.copy(*pPropAnswer->pValue);
+        LOG_INFO(formatString("Value of '%s': %d",pPropAnswer->pPropName,inMaintenance.getValue()));
         if(m_test_passCounter==0) // first pass: in maintenance
         {
           {
-            bool testOk = (pInMaintenance->getValue()!=0 );
+            bool testOk = (inMaintenance.getValue()!=0 );
             m_tester._avttest(testOk);
             if(!testOk)
             {
@@ -476,7 +544,7 @@ GCFEvent::TResult ARATestTask::test6(GCFEvent& event, GCFPortInterface& /*p*/)
         }
         else if(m_test_passCounter==1) // second pass: out of maintenance
         {
-          bool testOk = (pInMaintenance->getValue()==0 );
+          bool testOk = (inMaintenance.getValue()==0 );
           m_tester._avttest(testOk);
           TRAN(ARATestTask::test7);
         }
@@ -507,25 +575,26 @@ GCFEvent::TResult ARATestTask::test7(GCFEvent& event, GCFPortInterface& /*p*/)
 
     case F_ENTRY:
     {
-      m_test_passCounter=0;
-      // SCHEDULE MAINTENANCE <resource>,<starttime>,<stoptime>
-      string cmd("SCHEDULE MAINTENANCE");
-      string resource(string(PROPERTIES_STATION_PIC)+string(","));
-      time_t rawtime;
-      tm * starttm;
-      tm * stoptm;
-      time ( &rawtime );
-      starttm = gmtime(&rawtime);
-      starttm = gmtime(&rawtime);
-      starttm->tm_sec+=10; // 10 seconds in the future
-      stoptm->tm_sec+=20; // 20 seconds in the future
-      char startTime[100];
-      char stopTime[100];
-      sprintf(startTime,"%02d-%02d-%04d %02d:%02d:%02d",starttm->tm_mday,starttm->tm_mon+1,starttm->tm_year+1900,starttm->tm_hour,starttm->tm_min,starttm->tm_sec);
-      sprintf(stopTime,"%02d-%02d-%04d %02d:%02d:%02d",stoptm->tm_mday,stoptm->tm_mon+1,stoptm->tm_year+1900,stoptm->tm_hour,stoptm->tm_min,stoptm->tm_sec);
-      GCFPVString command(cmd+resource+string(startTime)+","+string(stopTime));
+      LOG_INFO("3.2.2.6: schedule maintenance of entire station");
+LOG_INFO("skip test 7 until maintenance scheduling in PAC is implemented");
+TRAN(ARATestTask::test8);
 
-      bool testOk = (GCF_NO_ERROR==m_psLDScommand.setValue(string(PROPERTY_COMMAND),command));
+      m_test_passCounter=0;
+      // MAINTENANCE <scheduleid>,<resource>,<starttime>,<stoptime>
+      string cmd("MAINTENANCE 2,");
+      string resource(string(PROPERTY_STATION_PIC)+string(","));
+      // create time 10 seconds from now
+      boost::posix_time::ptime startTime(boost::posix_time::second_clock::universal_time());
+      startTime += boost::posix_time::seconds(10); // UTC + 10 seconds
+      boost::posix_time::ptime stopTime(startTime);
+      stopTime += boost::posix_time::seconds(10); // starttime + 10 seconds
+      char timesString[100];
+      sprintf(timesString,"%d,%d",startTime.time_of_day().seconds(),stopTime.time_of_day().seconds());
+      
+      string times(timesString);
+      GCFPVString command(cmd+resource+times);
+
+      bool testOk = (GCF_NO_ERROR==m_propLDScommand.setValue(command));
       m_tester._avttest(testOk);
       if(!testOk)
       {
@@ -541,14 +610,15 @@ GCFEvent::TResult ARATestTask::test7(GCFEvent& event, GCFPortInterface& /*p*/)
       // check which property changed
       GCFPropValueEvent* pPropAnswer = static_cast<GCFPropValueEvent*>(&event);
       assert(pPropAnswer);
-      if(strstr(pPropAnswer->pPropName,PROPERTIES_STATION_PIC_MAINTENANCE)!=0 &&
-        strstr(pPropAnswer->pPropName,PROPERTY_STATUS)!=0)
+      if(strstr(pPropAnswer->pPropName,PROPERTY_STATION_PIC_MAINTENANCE_STATUS)!=0)
       {
-        const GCFPVUnsigned* pInMaintenance = static_cast<const GCFPVUnsigned*>(pPropAnswer->pValue);
+        GCFPVUnsigned inMaintenance;
+        inMaintenance.copy(*pPropAnswer->pValue);
+        LOG_INFO(formatString("Value of '%s': %d",pPropAnswer->pPropName,inMaintenance.getValue()));
         if(m_test_passCounter==0) // first pass: in maintenance
         {
           {
-            bool testOk = (pInMaintenance->getValue()!=0 );
+            bool testOk = (inMaintenance.getValue()!=0 );
             m_tester._avttest(testOk);
             if(!testOk)
             {
@@ -563,7 +633,7 @@ GCFEvent::TResult ARATestTask::test7(GCFEvent& event, GCFPortInterface& /*p*/)
         }
         else if(m_test_passCounter==1) // second pass: out of maintenance
         {
-          bool testOk = (pInMaintenance->getValue()==0 );
+          bool testOk = (inMaintenance.getValue()==0 );
           m_tester._avttest(testOk);
           TRAN(ARATestTask::test8);
         }
@@ -594,17 +664,18 @@ GCFEvent::TResult ARATestTask::test8(GCFEvent& event, GCFPortInterface& /*p*/)
 
     case F_ENTRY:
     {
-      m_psBoard1Alert.subscribe(string(PROPERTY_STATUS));
+      LOG_INFO("3.2.3.1: simulate board defect");
+      m_propBoard1AlertStatus.subscribe();
       
       // send write register message to RA test port
-      ARATESTWriteRegisterEvent wrEvent;
-      wrEvent.board = 1;
-      wrEvent.BP = 0; // not used
-      wrEvent.AP = 0; // not used
-      wrEvent.ETH = 0; // not used
-      wrEvent.RCU = 0; // not used
-      wrEvent.value = 1; // what is the status for erreur?
-      m_RAtestPort.send(wrEvent);
+      RSPUpdstatusEvent updStatusEvent;
+      struct timeval timeValNow;
+      time(&timeValNow.tv_sec);
+      timeValNow.tv_usec=0;
+      updStatusEvent.timestamp.set(timeValNow);
+      updStatusEvent.status=1;
+      updStatusEvent.handle=1;
+      m_RSPserver.send(updStatusEvent);
 
       // now wait for the alert status to change    
       break;
@@ -615,23 +686,25 @@ GCFEvent::TResult ARATestTask::test8(GCFEvent& event, GCFPortInterface& /*p*/)
       // check which property changed
       GCFPropValueEvent* pPropAnswer = static_cast<GCFPropValueEvent*>(&event);
       assert(pPropAnswer);
-      if(strstr(pPropAnswer->pPropName,PROPERTIES_BOARD1)!=0 &&
-         strstr(pPropAnswer->pPropName,PROPERTY_STATUS)!=0)
+      if(strstr(pPropAnswer->pPropName,PROPERTY_BOARD1_STATUS)!=0)
       {
-        const GCFPVUnsigned* pStatus = static_cast<const GCFPVUnsigned*>(pPropAnswer->pValue);
-        bool testOk = ( pStatus->getValue()!=0 );
+        GCFPVUnsigned status;
+        status.copy(*pPropAnswer->pValue);
+        LOG_INFO(formatString("Value of '%s': %d",pPropAnswer->pPropName,status.getValue()));
+        bool testOk = ( status.getValue()!=0 );
         m_tester._avttest(testOk);
         if(!testOk)
         {
           TRAN(ARATestTask::test9);
         }
       }
-      else if(strstr(pPropAnswer->pPropName,PROPERTIES_BOARD1_ALERT)!=0 &&
-         strstr(pPropAnswer->pPropName,PROPERTY_STATUS)!=0)
+      else if(strstr(pPropAnswer->pPropName,PROPERTY_BOARD1_ALERT_STATUS)!=0)
       {
         // check alert status
-        const GCFPVUnsigned* pStatus = static_cast<const GCFPVUnsigned*>(pPropAnswer->pValue);
-        bool testOk = ( pStatus->getValue()!=0 );
+        GCFPVUnsigned status;
+        status.copy(*pPropAnswer->pValue);
+        LOG_INFO(formatString("Value of '%s': %d",pPropAnswer->pPropName,status.getValue()));
+        bool testOk = ( status.getValue()!=0 );
         m_tester._avttest(testOk);
         TRAN(ARATestTask::test9);
       }
@@ -662,17 +735,18 @@ GCFEvent::TResult ARATestTask::test9(GCFEvent& event, GCFPortInterface& /*p*/)
 
     case F_ENTRY:
     {
+      LOG_INFO("3.2.3.2: simulate board defect fixed");
       // test8 already subscribed us to the alert status property
       
       // send write register message to RA test port
-      ARATESTWriteRegisterEvent wrEvent;
-      wrEvent.board = 1;
-      wrEvent.BP = 0; // not used
-      wrEvent.AP = 0; // not used
-      wrEvent.ETH = 0; // not used
-      wrEvent.RCU = 0; // not used
-      wrEvent.value = 0; // what is the status for ok?
-      m_RAtestPort.send(wrEvent);
+      RSPUpdstatusEvent updStatusEvent;
+      struct timeval timeValNow;
+      time(&timeValNow.tv_sec);
+      timeValNow.tv_usec=0;
+      updStatusEvent.timestamp.set(timeValNow);
+      updStatusEvent.status=0;
+      updStatusEvent.handle=1;
+      m_RSPserver.send(updStatusEvent);
 
       // now wait for the alert status to change    
       break;
@@ -683,28 +757,34 @@ GCFEvent::TResult ARATestTask::test9(GCFEvent& event, GCFPortInterface& /*p*/)
       // check which property changed
       GCFPropValueEvent* pPropAnswer = static_cast<GCFPropValueEvent*>(&event);
       assert(pPropAnswer);
-      if(strstr(pPropAnswer->pPropName,PROPERTIES_BOARD1)!=0 &&
-         strstr(pPropAnswer->pPropName,PROPERTY_STATUS)!=0)
+      if(strstr(pPropAnswer->pPropName,PROPERTY_BOARD1_STATUS)!=0)
       {
-        const GCFPVUnsigned* pStatus = static_cast<const GCFPVUnsigned*>(pPropAnswer->pValue);
-        bool testOk = ( pStatus->getValue()==0 );
+        GCFPVUnsigned status;
+        status.copy(*pPropAnswer->pValue);
+        LOG_INFO(formatString("Value of '%s': %d",pPropAnswer->pPropName,status.getValue()));
+        bool testOk = ( status.getValue()==0 );
         m_tester._avttest(testOk);
         if(!testOk)
         {
-          m_psBoard1Alert.unsubscribe(string(PROPERTY_STATUS));
           TRAN(ARATestTask::finished);
         }
       }
-      else if(strstr(pPropAnswer->pPropName,PROPERTIES_BOARD1_ALERT)!=0 &&
-         strstr(pPropAnswer->pPropName,PROPERTY_STATUS)!=0)
+      else if(strstr(pPropAnswer->pPropName,PROPERTY_BOARD1_ALERT_STATUS)!=0)
       {
         // check alert status
-        const GCFPVUnsigned* pStatus = static_cast<const GCFPVUnsigned*>(pPropAnswer->pValue);
-        bool testOk = ( pStatus->getValue()==0 );
+        GCFPVUnsigned status;
+        status.copy(*pPropAnswer->pValue);
+        LOG_INFO(formatString("Value of '%s': %d",pPropAnswer->pPropName,status.getValue()));
+        bool testOk = ( status.getValue()==0 );
         m_tester._avttest(testOk);
-        m_psBoard1Alert.unsubscribe(string(PROPERTY_STATUS));
         TRAN(ARATestTask::finished);
       }
+      break;
+    }
+    
+    case F_EXIT:
+    {
+      m_propBoard1AlertStatus.unsubscribe();
       break;
     }
      

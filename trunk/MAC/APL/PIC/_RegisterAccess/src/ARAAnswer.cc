@@ -1,4 +1,4 @@
-//#  ARATestMain.cc: Main entry for the Register Access test
+//#  ARAAnswer.cc: Implementation of the ARAAnswer object
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,12 +20,8 @@
 //#
 //#  $Id$
 
-#include <CmdLine.h>
+#include "ARAAnswer.h"
 #include <GCF/GCF_Task.h>
-#include "../../../APLCommon/src/suite.h"
-#include "ARATest.h"
-#include "ARATestDriverTask.h"
-#include <boost/shared_ptr.hpp>
 
 #undef PACKAGE
 #undef VERSION
@@ -34,43 +30,24 @@
 
 using namespace LOFAR;
 using namespace ARA;
-using namespace std;
 
-int main(int argc, char* argv[])
+ARAAnswer::ARAAnswer() : 
+  m_dummyPort(),
+  m_task(0)
 {
-  int retval=-1;
-  
-  LOG_INFO(formatString("Program %s has started", argv[0]));
-  
-  {
-    GCFTask::init(argc, argv);
-
-    CCmdLine cmdLine;
-
-    bool noTest=false;
-    // parse argc,argv 
-    if (cmdLine.SplitLine(argc, argv) > 0)
-    {
-      noTest = cmdLine.HasSwitch("-notest");
-    }
-    
-    // create test driver task. 
-    ARATestDriverTask testDriverTask;
-    testDriverTask.start(); // make initial transition
-    if(noTest)
-    {
-      GCFTask::run(); //is also called by the ARATest class
-    }
-    else
-    {
-      Suite s("MAC.APL.PIC RegisterAccess Test",&std::cout);
-    
-      boost::shared_ptr<ARATest> araTest(new ARATest);
-      s.addTest(araTest.get());
-      s.run();
-      retval=s.report();
-    }
-  }
-  return retval;
 }
 
+ARAAnswer::~ARAAnswer()
+{
+}
+
+void ARAAnswer::setTask(GCFTask* pTask)
+{
+  m_task=pTask;
+}
+
+void ARAAnswer::handleAnswer(GCFEvent& answer)
+{
+  if(m_task!=0)
+    m_task->dispatch(answer,m_dummyPort);
+}
