@@ -1008,7 +1008,7 @@ void RSPDriver::rsp_getversions(GCFEvent& event, GCFPortInterface& port)
   }
 }
 
-int main(int argc, char** argv)
+int main(int /*argc*/, char** argv)
 {
 #if 0
   char prop_path[PATH_MAX];
@@ -1022,13 +1022,11 @@ int main(int argc, char** argv)
   
   LOG_INFO(formatString("Program %s has started", argv[0]));
 
-  GCFTask::init(argc, argv);
-
   try
   {
     GCF::ParameterSet::instance()->adoptFile("RSPDriverPorts.conf");
     GCF::ParameterSet::instance()->adoptFile("RemoteStation.conf");
-    GCF::ParameterSet::instance()->adoptFile("RSPDriver.conf");
+//    GCF::ParameterSet::instance()->adoptFile("RSPDriver.conf");
   }
   catch (Exception e)
   {

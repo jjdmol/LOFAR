@@ -115,13 +115,13 @@ GCFEvent::TResult StatsRead::handleack(GCFEvent& event, GCFPortInterface& /*port
 
   uint16 offset = ack.hdr.m_fields.offset / MEPHeader::N_PHASE / sizeof(int32);
   
-  LOG_FATAL(formatString("StatsRead::handleack: global_blp=%d, offset=%d",
+  LOG_DEBUG(formatString("StatsRead::handleack: global_blp=%d, offset=%d",
 			 global_blp, offset));
 
   Range fragment_range(offset / MEPHeader::N_POL,
 		       (offset / MEPHeader::N_POL) + (N_STATS / MEPHeader::N_PHASEPOL) - 1);
 
-  LOG_FATAL_STR("fragment_range=" << fragment_range);
+  LOG_DEBUG_STR("fragment_range=" << fragment_range);
   
   switch (m_type)
   {
