@@ -190,7 +190,7 @@ int GTMETHSocket::open(const char* ifname,
 		   SOL_SOCKET, SO_ATTACH_FILTER,
 		   &filter, sizeof(struct sock_fprog)) < 0)
     {
-      LOFAR_LOG_ERROR(TM_STDOUT_LOGGER, ("setsockopt(SO_ATTACH_FILTER) failed"));
+      LOG_ERROR("setsockopt(SO_ATTACH_FILTER) failed");
       close();
       return -1;
     }

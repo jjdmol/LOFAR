@@ -23,7 +23,7 @@
 #ifndef GCF_DEVICEPORT_H
 #define GCF_DEVICEPORT_H
 
-#include <GCF/GCF_RawPort.h>
+#include <GCF/TM/GCF_RawPort.h>
 #include <Common/lofar_string.h>
 
 // forward declaration

@@ -22,11 +22,11 @@
 
 #include "GTM_Device.h"
 #include "GTM_SocketHandler.h"
-#include <GCF/GCF_DevicePort.h>
-#include <GCF/GCF_Task.h>
+#include <GCF/TM/GCF_DevicePort.h>
+#include <GCF/TM/GCF_Task.h>
 #include <GTM_Defines.h>
-#include <GCF/GCF_TMProtocols.h>
-#include <GCF/GCF_PeerAddr.h>
+#include <GCF/TM/GCF_Protocols.h>
+#include <GCF/TM/GCF_PeerAddr.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -69,7 +69,7 @@ int GTMDevice::open(GCFPeerAddr& addr)
     socketFD = ::open(devName, O_RDWR);
     if (socketFD < 0)
     {
-      LOFAR_LOG_FATAL(TM_STDOUT_LOGGER, (
+      LOG_FATAL(LOFAR::formatString (
           "Could not open device '%s' with following reason: %s",
           devName,
           strerror(errno)));
