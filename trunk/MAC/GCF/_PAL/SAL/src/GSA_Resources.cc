@@ -20,6 +20,8 @@
 //#
 //#  $Id$
 
+#define LOFARLOGGER_SUBPACKAGE "SAL"
+
 // GCF/SAL includes
 #include  <GSA_Resources.h>
 

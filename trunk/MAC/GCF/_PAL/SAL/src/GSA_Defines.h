@@ -23,11 +23,10 @@
 #ifndef GSA_DEFINES_H
 #define GSA_DEFINES_H
 
-//#define LOFARLOGGER_PACKAGE "MAC.GCF.PAL.SAL.Logger"
-
 #include <GCF/GCF_Defines.h>
 
-enum TSAResult {
+enum TSAResult 
+{
   SA_NO_ERROR, 
   SA_UNKNOWN_ERROR, 
   SA_PROPNAME_MISSING,

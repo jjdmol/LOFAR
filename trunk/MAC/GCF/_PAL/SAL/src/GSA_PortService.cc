@@ -20,7 +20,10 @@
 //#
 //#  $Id$
 
+#define LOFARLOGGER_SUBPACKAGE "SAL"
+
 #include "GSA_PortService.h"
+#include <GSA_Defines.h>
 #include <GCF/PAL/GCF_PVSSPort.h>
 #include <GCF/PAL/GCF_PVSSInfo.h>
 #include <GCF/GCF_PVBlob.h>

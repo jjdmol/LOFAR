@@ -23,7 +23,6 @@
 #ifndef GSA_PORTSERVICE_H
 #define GSA_PORTSERVICE_H
 
-#include <GSA_Defines.h>
 #include <GSA_Service.h>
 #include <GCF/GCF_PVString.h>
 

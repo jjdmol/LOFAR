@@ -34,6 +34,8 @@ PropertyInterface_DEPENDENCIES	= libpi.la \
 	$(top_builddir)/SAL/src/libsal.la \
 	$(LOFAR_DEPEND) 
 
+AM_CPPFLAGS = -DLOFARLOGGER_SUBPACKAGE=\"PI\"
+
 configfilesdir=$(bindir)
 configfiles_DATA= \
 	PropertyInterface.conf

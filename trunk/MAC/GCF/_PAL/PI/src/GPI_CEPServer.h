@@ -24,10 +24,8 @@
 #define GPI_CEPSERVER_H
 
 #include <GPI_PMLlightServer.h>
-#include <GPI_TH_Port.h>
 #include <GCF/Protocols/DH_PIProtocol.h>
 
-using LOFAR::GPITH_Port;
 using LOFAR::GCF::DH_PIProtocol;
 
 
@@ -70,8 +68,7 @@ class GPICEPServer: public GPIPMLlightServer
     // </group>
 
 	private: // data members
-    GPITH_Port      _thPort;
-    DH_PIProtocol   _dhProto;
+    DH_PIProtocol   _dhServer;
         
   private: // admin. data members
     char*         _valueBuf;

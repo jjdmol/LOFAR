@@ -25,6 +25,8 @@ libsal_la_SOURCES= $(DOCHDRS) \
 	GCF_PVSSInfo.cc
 
 libsal_la_CPPFLAGS= -I$(top_srcdir)/include
+
+AM_CPPFLAGS = -DLOFARLOGGER_SUBPACKAGE=\"SAL\"
 		
 include $(lofar_sharedir)/Makefile.common
 

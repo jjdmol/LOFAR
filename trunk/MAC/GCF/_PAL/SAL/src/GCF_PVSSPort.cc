@@ -21,6 +21,8 @@
 //#  $Id$
 
 
+#define LOFARLOGGER_SUBPACKAGE "SAL"
+
 #include <GCF/PAL/GCF_PVSSPort.h>
 #include <GCF/PAL/GCF_PVSSInfo.h>
 #include <GSA_Defines.h>

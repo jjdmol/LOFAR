@@ -28,6 +28,8 @@ PropertyAgent_DEPENDENCIES	= libpa.la $(LOFAR_DEPEND) \
 PropertyAgent_CPPFLAGS= -I$(top_srcdir)/include \
 	-I$(top_srcdir)/SAL/src
 
+AM_CPPFLAGS = -DLOFARLOGGER_SUBPACKAGE=\"PA\"
+
 #in case of make install these files will be copied to the bindir beside the test apps
 configfilesdir=$(bindir)
 configfiles_DATA= \

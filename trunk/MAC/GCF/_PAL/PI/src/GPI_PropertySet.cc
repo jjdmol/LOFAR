@@ -32,16 +32,20 @@ TPAResult convertPIToPAResult(TPIResult result);
 
 void GPIPropertySet::propSubscribed(const string& /*propName*/)
 {
-  assert(_state == S_LINKING);
+  assert(_state == S_LINKING || _state == S_DELAYED_DISABLING);
   
   _counter--;
+  LOG_DEBUG(formatString("%d subscriptions left", _counter));
   if (_counter == 0)
   {
-    PAPropSetLinkedEvent responseOut;
-    responseOut.result = convertPIToPAResult(_tmpPIResult);
-    responseOut.scope = _scope;
+    TState oldState(_state);
+    propSetLinkedInPI(convertPIToPAResult(_tmpPIResult));
     _state = S_LINKED;
-    sendMsgToPA(responseOut);
+    if (oldState == S_DELAYED_DISABLING)
+    {
+      PIUnregisterScopeEvent dummy;
+      disable(dummy);
+    }
   }
 }
 
@@ -178,9 +182,12 @@ void GPIPropertySet::disable(const PIUnregisterScopeEvent& requestIn)
       _savedSeqnr = 0;
       break;
 
-    case S_UNLINKING:
     case S_LINKING:
+      LOG_DEBUG(formatString("%d subscriptions left", _counter));
       assert(_counter > 0);
+      // intentional fall through
+    case S_UNLINKING:
+    case S_LINKING_IN_CLIENT:
       _state = S_DELAYED_DISABLING;
       _savedSeqnr = requestIn.seqnr;
       break;
@@ -239,7 +246,7 @@ void GPIPropertySet::linkPropSet(const PALinkPropSetEvent& requestIn)
     {
       PILinkPropSetEvent requestOut;
       requestOut.scope = requestIn.scope;
-      _state = S_LINKING;
+      _state = S_LINKING_IN_CLIENT;
       sendMsgToClient(requestOut);
       break;
     }
@@ -264,8 +271,9 @@ bool GPIPropertySet::propSetLinkedInClient(const PIPropSetLinkedEvent& responseI
 {
   switch (_state)
   {
-    case S_LINKING:
+    case S_LINKING_IN_CLIENT:
       assert(_counter == 0);
+      _state = S_LINKING;
       if (responseIn.result != PI_PS_GONE)
       {
         Utils::convStringToList(_propsSubscribed, responseIn.propList);
@@ -475,12 +483,13 @@ void GPIPropertySet::wrongState(const char* request)
   {
     "DISABLED",
     "DISABLING",
+    "DELAYED DISABLING",
     "ENABLING",
     "ENABLED",
     "LINKING",
+    "LINKING IN CLIENT"
     "LINKED",
-    "UNLINKING",
-    "DELAYED DISABLING"
+    "UNLINKING"
   };
   LOG_WARN(formatString ( 
         "Could not perform '%s' on property set '%s'. Wrong state: %s",

@@ -44,6 +44,8 @@ libpml_la_SOURCES= $(DOCHDRS) \
 
 libpml_la_CPPFLAGS= -I$(top_srcdir)/include \
 	-I$(top_srcdir)/SAL/src
+
+AM_CPPFLAGS = -DLOFARLOGGER_SUBPACKAGE=\"PML\"
 	
 configfilesdir=$(bindir)
 configfiles_DATA= \
