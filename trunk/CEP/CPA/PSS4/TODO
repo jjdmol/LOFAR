@@ -3,6 +3,11 @@ MEQ in general:
   * Think thorugh privatization issues of objects with shortcuts
     Calling validateContent() is not necessarily efficient -- makes things
     not-quite-a-noop
+    + answer: revalidateContent() provides some relief, but even better:
+  * Add option to PROTECT fields of a DataRecord from public access
+    (i.e. via hooks or anything like that). This will ensure that 
+    DR-derived objects can only be manipulated through the public methods
+    provided.
 
   * Add centralized reporting of FAILs via the forest
   
