@@ -19,7 +19,7 @@
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
 //#  Abstract:
-//#	 This class implements the client API for managing an Application 
+//#	 This class implements the client API for using an Application 
 //#  Controller. 
 //#
 //#  $Id$
@@ -40,7 +40,7 @@ namespace LOFAR {
 
 
 //# Description of class.
-// The ApplControl class implements the service the Application Controller
+// The ApplControl class implements the interface the Application Controller
 // will support.
 //
 class ApplControlClient : public ApplControl
@@ -53,7 +53,8 @@ public:
 	// machine) may decide that the AC should run on another node.
 	// The returned AC object knows who its AC is and is already connected to 
 	// it. Call serverInfo if you are interested in this information.
-	explicit ApplControlClient(const string&	hostIDFrontEnd);
+	ApplControlClient(const string&	hostIDFrontEnd,
+					  bool			syncClient);
 
 	// Destructor;
 	virtual ~ApplControlClient();
@@ -80,13 +81,14 @@ public:
 	// Call commandInfo to obtain extra info about the command condition.
 	bool	boot 	 (const time_t		scheduleTime,
 					  const string&		configID) 	  const;
-	bool	define 	 (const time_t		scheduleTime,
-					  const string&		configID) 	  const;
+	bool	define 	 (const time_t		scheduleTime) const;
 	bool	init  	 (const time_t		scheduleTime) const;
 	bool	run  	 (const time_t		scheduleTime) const;
 	bool	pause  	 (const time_t		scheduleTime,
+					  const time_t		maxWaitTime,
 					  const string&		condition)	  const;
-	bool	quit  	 () 							  const;
+	bool	quit  	 (const time_t		scheduleTime) const;
+	bool	shutdown (const time_t		scheduleTime) const;
 	bool	snapshot (const time_t		scheduleTime,
 					  const string&		destination)  const;
 	bool	recover  (const time_t		scheduleTime,
@@ -94,37 +96,26 @@ public:
 
 	bool	reinit	 (const time_t		scheduleTime,
 					  const string&		configID) 	  const;
+	bool	replace	 (const time_t		scheduleTime,
+					  const string&		processList,
+					  const string&		nodeList,
+					  const string&		configID) 	  const;
 
-	// Used by the (MAC) client to ask for a sign of life.
-	void	ping  	 () 							  const;
+	// -------------------- Async support --------------------
+	// Make it an ABC by defining a pure virtual function.
+	// Only the derived classes ACSyncClient and ACAsyncClient may be
+	// used as end-user class.
+	virtual bool isAsync() const = 0;
 
-	// ---------- support for asynchrone communication ----------
+	// To be implemented by the Async variant of the AC client
+	virtual string  supplyInfo            (const string& keyList) const;
+	virtual void    handleAckMessage      () const;
+	virtual void    handleAnswerMessage   (const string& answer) const;
+	virtual bool    processACmsgFromServer() const;
 
-	// When the client uses asynchrone communication is must supply three routines
-	// that may be called when calling 'processACmsgFromServer'.
-	typedef void 	(*handleAckFunc) 	();
-	typedef void 	(*handleAnswerFunc)	(const string& answer);
-	typedef string	(*supplyInfoFunc)	(const string& keyList);
-	bool	useAsyncMode (supplyInfoFunc	infoFunc, 
-						  handleAnswerFunc	answerFunc,
-						  handleAckFunc		ackFunc);
-
-	// Called in Async comm. to handle the (delayed) result of the command.
-	virtual void	handleAckMessage   () 				 		const;
-	virtual void	handleAnswerMessage(const string&	answer)	const;
-	virtual	string	supplyInfo		   (const string& 	keylist)const;
-
-	// Call this routine to handle incoming messages. It dispatches the
-	// received message to handleAck- or supplyInfo.
-	bool	processACmsgFromServer()					  const;
-
-private:
+protected:
 	// NOT default constructable;
 	ApplControlClient();
-
-	handleAckFunc		itsAckFunction;
-	handleAnswerFunc	itsAnswerFunction;
-	supplyInfoFunc		itsInfoFunction;
 };
 
 

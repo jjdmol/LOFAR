@@ -1,4 +1,4 @@
-//#  ApplControl.h: Implements the service I/F of the Application Controller.
+//#  ApplControl.h: Implements the I/F of the Application Controller.
 //#
 //#  Copyright (C) 2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -19,8 +19,8 @@
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
 //#  Abstract:
-//#	 This class implements the client API for managing an Application 
-//#  Controller. 
+//#	 This abstract base class implements the client API using the 
+//#  Application Controller
 //#
 //#  $Id$
 
@@ -35,34 +35,30 @@
 namespace LOFAR {
   namespace ACC {
 
-//# Forward Declarations
-//class forward;
-
 typedef enum { AcCmdMaskOk 	 	  = 0x0001,
 			   AcCmdMaskScheduled = 0x0002,
 			   AcCmdMaskOverruled = 0x0004,
 			   AcCmdMaskCommError = 0x8000 } CmdResultMask;
 
 //# Description of class.
-// The ApplControl class implements the service the Application Controller
+// The ApplControl class implements the interface the Application Controller
 // will support.
 //
 class ApplControl 
 {
 public:
-	// Note: default constructor is private
 	// With this call an ApplController is created. It is most likely the
 	// AC is created on the machine you passed as an argument but this is not
 	// guaranteed. The AC server who handles the request (and does run on this
 	// machine) may decide that the AC should run on another node.
 	// The returned AC object knows who its AC is and is already connected to 
 	// it. Call serverInfo if you are interested in this information.
-	ApplControl();
+	explicit ApplControl(bool	syncComm);
 
 	// Destructor;
 	virtual ~ApplControl();
 
-	// Copying is allowed.
+	// Copying is not allowed since sockets are involved.
 	ApplControl(const ApplControl& that);
 	ApplControl& 	operator=(const ApplControl& that);
 
@@ -81,13 +77,14 @@ public:
 	// Call commandInfo to obtain extra info about the command condition.
 	virtual bool	boot 	 (const time_t		scheduleTime,
 							  const string&		configID) 	  const = 0;
-	virtual bool	define 	 (const time_t		scheduleTime,
-							  const string&		configID) 	  const = 0;
+	virtual bool	define 	 (const time_t		scheduleTime) const = 0;
 	virtual bool	init 	 (const time_t		scheduleTime) const = 0;
 	virtual bool	run 	 (const time_t		scheduleTime) const = 0;
 	virtual bool	pause  	 (const time_t		scheduleTime,
+							  const time_t		waitTime,
 							  const	string&		condition) 	  const = 0;
-	virtual bool	quit  	 () 							  const = 0;
+	virtual bool	quit  	 (const time_t		scheduleTime) const = 0;
+	virtual bool	shutdown (const time_t		scheduleTime) const = 0;
 	virtual bool	snapshot (const time_t		scheduleTime,
 							  const string&		destination)  const = 0;
 	virtual bool	recover  (const time_t		scheduleTime,
@@ -95,18 +92,15 @@ public:
 
 	virtual bool	reinit	 (const time_t		scheduleTime,
 							  const string&		configID)	  const = 0;
-
-	// used by (MAC) client to ask for a sign of life
-	virtual void	ping  	 () 							  const = 0;
+	virtual bool	replace	 (const time_t		scheduleTime,
+							  const string&		processList,
+							  const string&		nodeList,
+							  const string&		configID)	  const = 0;
 
 	// ---------- support for asynchrone communication ----------
 
 	// Define a generic way to exchange info between client and server.
 	virtual string	askInfo   (const string& 	keylist) const = 0;
-	virtual string	supplyInfo(const string& 	keylist) const;
-
-	// Called in Async comm. to handle the (delayed) result of the command.
-	virtual void	handleAnswerMessage() const;
 
 	// Returns the Service Access Point of the communication (being a file-
 	// descriptor). The value may be used in a 'select' function when the
@@ -124,27 +118,31 @@ public:
 
 protected:
 	// Constructs a command and sends it to the other side.
-	void		sendCmd(const ACCmd			theCmd,
-					 	const time_t		theTime,
-						const string&		theOptions) const;
+	void	sendCmd(const ACCmd			theCmd,
+				 	const time_t		theTime,
+				 	const time_t		theWaitTime,
+					const string&		theOptions) const;
 
 	// Is called after a message is sent to the server. Returns true in async
 	// comm, does a read on the socket in sync comm. and returns the analysed
 	// result.
-	bool		waitForResponse() const;
+	bool	waitForResponse() const;
 
 	// Executes the given command: fills a dataholder, send it to the sender,
 	// and do a 'waitForResponse'.
-	bool		doRemoteCmd(const ACCmd			theCmd,
-						    const time_t		theTime,
-						    const string&		theOptions) const;
+	bool	doRemoteCmd(const ACCmd			theCmd,
+					    const time_t		theTime,
+					    const time_t		theWaitTime,
+					    const string&		theOptions) const;
 
 	DH_ApplControl*		getDataHolder() const;
 
 	//# datamembers
 	DH_ApplControl*		itsDataHolder;
 	bool				itsSyncComm;
-	
+
+	// Not default constructable
+	ApplControl() {}
 };
 
 inline DH_ApplControl*	ApplControl::getDataHolder() const

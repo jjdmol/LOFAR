@@ -45,13 +45,14 @@ namespace LOFAR {
 //class forward;
 
 // Make list of supported commands.
-enum ACCmd { CmdBoot = 1, CmdQuit, 
+enum ACCmd { CmdBoot = 1, CmdShutdown, CmdQuit, 
 				CmdDefine, CmdInit,
 				CmdPause, CmdRun, 
 				CmdSnapshot, CmdRecover, 
-				CmdReinit, CmdInfo, CmdAnswer,
-				CmdPing, CmdReport,
-				CmdResult = 99, CmdAsync
+				CmdReinit, CmdReplace,
+				CmdInfo, CmdAnswer,
+				CmdReport, CmdAsync,
+				CmdResult = 99
 };
 
 
@@ -77,11 +78,13 @@ public:
 
 	// The real data-accessor functions
 	void	setScheduleTime	(const time_t		theTime);
+	void	setWaitTime		(const time_t		theWaitTime);
 	void	setCommand		(const ACCmd		theCmd);
 	void	setOptions		(const string&		theOptions);
 	void	setResult		(const int	 		theResult);
 
 	time_t	getScheduleTime	() const;
+	time_t	getWaitTime		() const;
 	ACCmd	getCommand		() const;
 	string	getOptions		() ;
 	uint16	getResult		() const;
@@ -97,6 +100,7 @@ private:
 	uint16		*itsVersionNumber;
 	int16		*itsCommand;
 	time_t		*itsScheduleTime;
+	time_t		*itsWaitTime;
 	uint16		*itsResult;
 
 	// local administration
@@ -109,6 +113,11 @@ private:
 inline void	DH_ApplControl::setScheduleTime	(const time_t		theTime)
 {
 	*itsScheduleTime = theTime;
+}
+
+inline void	DH_ApplControl::setWaitTime	(const time_t		theWaitTime)
+{
+	*itsWaitTime = theWaitTime;
 }
 
 inline void	DH_ApplControl::setCommand		(const ACCmd		theCmd)
@@ -132,6 +141,12 @@ inline time_t	DH_ApplControl::getScheduleTime	() const
 {
 	// no version support necc. yet.
 	return (*itsScheduleTime);
+}
+
+inline time_t	DH_ApplControl::getWaitTime	() const
+{
+	// no version support necc. yet.
+	return (*itsWaitTime);
 }
 
 inline ACCmd	DH_ApplControl::getCommand		() const

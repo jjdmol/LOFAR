@@ -1,4 +1,4 @@
-//#  ApplControl.cc: Implements the service I/F of the Application Controller.
+//#  ApplControl.cc: Implements the I/F of the Application Controller.
 //#
 //#  Copyright (C) 2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -19,8 +19,8 @@
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
 //#  Abstract:
-//#	 This class implements the client API for managing an Application 
-//#  Controller. 
+//#	 This abstract base class implements the client API for using an 
+//#  Application Controller. 
 //#
 //#  $Id$
 
@@ -36,9 +36,9 @@ namespace LOFAR {
   namespace ACC {
 
 
-ApplControl::ApplControl() :
+ApplControl::ApplControl(bool	syncComm) :
 	itsDataHolder(0),
-	itsSyncComm(true)
+	itsSyncComm(syncComm)
 {
 }
 
@@ -76,28 +76,10 @@ int16		ApplControl::getServiceAccessPoint() const
 	return (static_cast<int16>(0));
 }
 
-
+//# Returns the result code from the last completed command.
 uint16	ApplControl::resultInfo	(void) const
 {
 	return (itsDataHolder->getResult());
-}
-
-//# Supply dummy implementation to avoid unneccesary work when implementing only
-//# an synchrone C/S.
-void ApplControl::handleAnswerMessage()  const
-{
-	cout << "*** ApplControl:handleAnswerMessage not implemented!!! ***\n";
-	cout << "This should be implemented when doing asynchrone communication\n";
-}
-
-//# Supply dummy implementation to avoid unneccesary work when implementing only
-//# an synchrone C/S.
-string ApplControl::supplyInfo(const string&	keyList)  const
-{
-	cout << "*** ApplControl:supplyInfo not implemented!!! ***\n";
-	cout << "This should be implemented when doing asynchrone communication\n";
-	
-	return("");
 }
 
 //# ---------- protected ----------
@@ -121,19 +103,22 @@ bool	ApplControl::waitForResponse() const
 
 void	ApplControl::sendCmd(const ACCmd		theCmd,
 						     const time_t		theTime,
+							 const time_t		theWaitTime,
 						     const string&		theOptions) const
 {
 	itsDataHolder->setCommand 	   (theCmd);
 	itsDataHolder->setScheduleTime (theTime);
+	itsDataHolder->setWaitTime 	   (theWaitTime);
 	itsDataHolder->setOptions	   (theOptions);
 	itsDataHolder->write();
 }
  
 bool	ApplControl::doRemoteCmd(const ACCmd		theCmd,
 							     const time_t		theTime,
+								 const time_t		theWaitTime,
 							     const string&		theOptions) const
 {
-	sendCmd(theCmd, theTime, theOptions);
+	sendCmd(theCmd, theTime, theWaitTime, theOptions);
 
 	return (waitForResponse());
 }
