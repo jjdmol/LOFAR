@@ -23,6 +23,9 @@
 #ifndef LOFAR_COMMON_EXCEPTION_H
 #define LOFAR_COMMON_EXCEPTION_H
 
+// \file Exception
+// LCS Exception base class.
+
 //# Includes
 #ifdef HAVE_CONFIG_H
 #include <lofar_config.h>
@@ -34,7 +37,8 @@
 
 
 namespace LOFAR {
-
+  // \addtogroup Common
+  // @{
   //
   // This is the base class for all LCS related exceptions.
   //
@@ -94,8 +98,8 @@ namespace LOFAR {
     return os << ex.message();
   }
 
-
-} // namespace LCS
+  // @}
+} // namespace LOFAR
 
 
 //

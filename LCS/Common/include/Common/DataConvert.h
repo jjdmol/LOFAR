@@ -20,8 +20,11 @@
 //#
 //# $Id$
 
-#ifndef COMMON_DATACONVERT_H
-#define COMMON_DATACONVERT_H
+#ifndef LOFAR_COMMON_DATACONVERT_H
+#define LOFAR_COMMON_DATACONVERT_H
+
+// \file DataConvert
+// Global functions to convert data values.
 
 #include <Common/LofarTypes.h>
 #include <Common/DataFormat.h>
@@ -29,19 +32,22 @@
 
 namespace LOFAR
 {
-// This file declares functions to convert data from one representation to
-// another, in particular from little endian to big endian (or vice-versa).
-//
-// The functions are defined in a general way for each standard data type,
-// so in principle every conceivable conversion could be done (for example,
-// from the old VAX format to IEEE format). However, currently byte swap
-// is the only conversion needed, so only that one is implemented.
-//
-// Furthermore it contains a function to convert bool values to bits
-// and vice-versa.
-// \defgroup DataConvert global conversion functions
-// <group>
+  // \addtogroup Common
+  // @{
 
+  // This file declares functions to convert data from one representation to
+  // another, in particular from little endian to big endian (or vice-versa).
+  //
+  // The functions are defined in a general way for each standard data type,
+  // so in principle every conceivable conversion could be done (for example,
+  // from the old VAX format to IEEE format). However, currently byte swap
+  // is the only conversion needed, so only that one is implemented.
+  //
+  // Furthermore it contains a function to convert bool values to bits
+  // and vice-versa.
+  // \defgroup DataConvert global conversion functions
+  // <group>
+  
   // Convert the possible native types.
   // These functions can be used in templates.
   // <group>
@@ -151,12 +157,15 @@ namespace LOFAR
   // It returns the number of bytes used.
   uint bitToBool (void* to, const void* from, uint nvalues);
 
-// </group>
+  // </group>
+  //@}
 } // end namespace LOFAR
 
 
 namespace LOFAR
 {
+  // \addtogroup Common
+  // @{
   inline void dataConvert (DataFormat, char*, uint)
     {}
   inline void dataConvert (DataFormat, uchar*, uint)
@@ -350,6 +359,7 @@ namespace LOFAR
     ((char*)(inout))[7] = v0;
   }
 
+  // @}
 } // end namespace LOFAR
 
 

@@ -23,6 +23,9 @@
 #ifndef LOFAR_COMMON_STRINGUTIL_H
 #define LOFAR_COMMON_STRINGUTIL_H
 
+// \fileStringUtil
+
+
 //#include <lofar_config.h>
 //#include <string>
 //#include <vector>
@@ -33,6 +36,8 @@
 namespace LOFAR
 {
 
+  // \addtogroup Common
+  // @{
   // This class contains useful string manipulation methods.
   class StringUtil
   {
@@ -114,6 +119,8 @@ inline void ltrim(string&		aString, const string&	whiteSpace = " 	")
 	aString = aString.erase(0, aString.find_first_not_of(whiteSpace));
 }
 
+
+// @}
 
 } // namespace LOFAR
 

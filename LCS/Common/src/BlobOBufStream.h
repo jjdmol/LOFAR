@@ -20,41 +20,46 @@
 //#
 //# $Id$
 
-#ifndef COMMON_BLOBOBUFSTREAM_H
-#define COMMON_BLOBOBUFSTREAM_H
+#ifndef LOFAR_COMMON_BLOBOBUFSTREAM_H
+#define LOFAR_COMMON_BLOBOBUFSTREAM_H
+
+// \file BlobOBufStream
+// Output buffer for a blob using an ostream.
 
 #include <Common/BlobOBuffer.h>
 #include <iosfwd>
 
 namespace LOFAR {
+  // \addtogroup Common
+  // @{
 
-// This class is the BlobOBuffer that makes use of an ostream object.
-// The ostream can be any type (ofstream, ostringstream, ...)
-
-class BlobOBufStream : public BlobOBuffer
-{
-public:
-  // Construct it with the underlying ostream object.
-  explicit BlobOBufStream (std::ostream&);
-
-  // Destructor.
-  virtual ~BlobOBufStream();
-
-  // Put the requested nr of bytes.
-  virtual uint put (const void* buffer, uint nbytes);
-
-  // Get the position in the stream.
-  // -1 is returned if the stream is not seekable.
-  virtual int64 tellPos() const;
-
-  // Set the position in the stream.
-  // It returns the new position which is -1 if the stream is not seekable.
-  virtual int64 setPos (int64 pos);
-
-private:
-  std::streambuf* itsStream;
-};
-
+  // This class is the BlobOBuffer that makes use of an ostream object.
+  // The ostream can be any type (ofstream, ostringstream, ...)
+  
+  class BlobOBufStream : public BlobOBuffer
+    {
+    public:
+      // Construct it with the underlying ostream object.
+      explicit BlobOBufStream (std::ostream&);
+      
+      // Destructor.
+      virtual ~BlobOBufStream();
+      
+      // Put the requested nr of bytes.
+      virtual uint put (const void* buffer, uint nbytes);
+      
+      // Get the position in the stream.
+      // -1 is returned if the stream is not seekable.
+      virtual int64 tellPos() const;
+      
+      // Set the position in the stream.
+      // It returns the new position which is -1 if the stream is not seekable.
+      virtual int64 setPos (int64 pos);
+      
+    private:
+      std::streambuf* itsStream;
+    };
+  // @}
 } // end namespace
 
 #endif

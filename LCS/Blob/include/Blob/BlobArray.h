@@ -20,8 +20,11 @@
 //#
 //# $Id$
 
-#ifndef COMMON_BLOBARRAY_H
-#define COMMON_BLOBARRAY_H
+#ifndef LOFAR_COMMON_BLOBARRAY_H
+#define LOFAR_COMMON_BLOBARRAY_H
+
+// \file BlobArray
+//Blob handling for arrays.
 
 #include <Common/BlobOStream.h>
 #include <Common/BlobIStream.h>
@@ -36,32 +39,34 @@
 
 namespace LOFAR
 {
+  // \addtogroup Common
+  // @{  
+  // Define functions to write N-dimensional arrays into a blob and to
+  // read them back from a blob.
+  // The arrays can be:
+  // <ul>
+  // <li> A plain N-dimensional C-array.
+  // <li> A blitz array in Fortran order (minor axis first) or in C order.
+  // <li> An AIPS++ array (which is in Fortran order).
+  // </ul>
+  // Special functions exist to read or write a vector (1-dimensional array).
+  // Because all array types are written in a standard way, it is possible
+  // to write, for example, a blitz array and read it back as an AIPS++ array.
+  // If the axes ordering is different, the axes are reversed.
+  //
+  // The write functions follow the same standard as the static array header
+  // defined in BlobArrayHeader.h, so it is possible to read a static array
+  // back in a dynamic way.
+  // \defgroup BlobArray global BlobArray functions
+  // <group>
+  
+  // The general function to write a data array.
+  // Usually it is used by the other functions, but it can be used on
+  // its own to write, say, a C-style array.
+  // A 1-dim C-style array can be written with putBlobVector.
+  // <group>
 
-// Define functions to write N-dimensional arrays into a blob and to
-// read them back from a blob.
-// The arrays can be:
-// <ul>
-// <li> A plain N-dimensional C-array.
-// <li> A blitz array in Fortran order (minor axis first) or in C order.
-// <li> An AIPS++ array (which is in Fortran order).
-// </ul>
-// Special functions exist to read or write a vector (1-dimensional array).
-// Because all array types are written in a standard way, it is possible
-// to write, for example, a blitz array and read it back as an AIPS++ array.
-// If the axes ordering is different, the axes are reversed.
-//
-// The write functions follow the same standard as the static array header
-// defined in BlobArrayHeader.h, so it is possible to read a static array
-// back in a dynamic way.
-// \defgroup BlobArray global BlobArray functions
-// <group>
-
-// The general function to write a data array.
-// Usually it is used by the other functions, but it can be used on
-// its own to write, say, a C-style array.
-// A 1-dim C-style array can be written with putBlobVector.
-// <group>
-template<typename T>
+  template<typename T>
 BlobOStream& putBlobArray (BlobOStream& bs, const T* data,
 			   const uint32* shape, uint16 ndim,
 			   bool fortranOrder);
@@ -265,7 +270,7 @@ BLOBARRAY_PUTGET_SPEC(fcomplex)
 BLOBARRAY_PUTGET_SPEC(dcomplex)
 BLOBARRAY_PUTGET_SPEC(std::string)
 
-
+     // @}
 } // end namespace LOFAR
 
 

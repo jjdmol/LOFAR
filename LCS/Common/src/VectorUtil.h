@@ -23,12 +23,18 @@
 #ifndef LOFAR_COMMON_VECTORUTIL_H
 #define LOFAR_COMMON_VECTORUTIL_H
 
+// \file VectorUtil
+// Utility functions on the std::vector class.
+
 #include <vector>
 #include <ostream>
 
 
 namespace LOFAR
 {
+  // \addtogroup Common
+  // @{
+
   // Write a vector to an ostream enclosed in square brackets and
   // using a comma as separator.
   template<class T>
@@ -48,7 +54,8 @@ namespace LOFAR
     }
     os << postfix;
   }
-
+  // @}
+  
 } // namespace LOFAR
 
 #endif

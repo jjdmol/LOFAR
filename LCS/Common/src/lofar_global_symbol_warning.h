@@ -20,8 +20,15 @@
 //#
 //#  $Id$
 
-#ifndef COMMON_LOFAR_GLOBAL_SYMBOL_WARNING_H
-#define COMMON_LOFAR_GLOBAL_SYMBOL_WARNING_H
+#ifndef LOFAR_COMMON_LOFAR_GLOBAL_SYMBOL_WARNING_H
+#define LOFAR_COMMON_LOFAR_GLOBAL_SYMBOL_WARNING_H
+
+// \file lofar_global_symbol_warning
+//
+
+// \addtogroup Common
+// @{
+// @}
 
 #ifdef __DEPRECATED
 #warning Making LOFAR symbols available in the global namespace is \

@@ -1,27 +1,30 @@
-//  Lorrays-Blitz.h: Define Blitz array types
-//
-//  Copyright (C) 2002
-//  ASTRON (Netherlands Foundation for Research in Astronomy)
-//  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
-//
-//  This program is free software; you can redistribute it and/or modify
-//  it under the terms of the GNU General Public License as published by
-//  the Free Software Foundation; either version 2 of the License, or
-//  (at your option) any later version.
-//
-//  This program is distributed in the hope that it will be useful,
-//  but WITHOUT ANY WARRANTY; without even the implied warranty of
-//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//  GNU General Public License for more details.
-//
-//  You should have received a copy of the GNU General Public License
-//  along with this program; if not, write to the Free Software
-//  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-//
-//  $Id$
+//#  Lorrays-Blitz.h: Define Blitz array types
+//#
+//#  Copyright (C) 2002
+//#  ASTRON (Netherlands Foundation for Research in Astronomy)
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+//#
+//#  This program is free software; you can redistribute it and/or modify
+//#  it under the terms of the GNU General Public License as published by
+//#  the Free Software Foundation; either version 2 of the License, or
+//#  (at your option) any later version.
+//#
+//#  This program is distributed in the hope that it will be useful,
+//#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//#  GNU General Public License for more details.
+//#
+//#  You should have received a copy of the GNU General Public License
+//#  along with this program; if not, write to the Free Software
+//#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+//#
+//#  $Id$
 
-#ifndef COMMON_LORRAYS_BLITZ_H
-#define COMMON_LORRAYS_BLITZ_H
+#ifndef LOFAR_COMMON_LORRAYS_BLITZ_H
+#define LOFAR_COMMON_LORRAYS_BLITZ_H
+
+// \file Lorrays-Blitz
+// Define Blitz array types
 
 // other code can use this symbol to check for blitz arrays
 #define LORRAYS_USE_BLITZ 1
@@ -115,6 +118,7 @@ const uint MaxLorrayRank = 5;
   Do(1,arg), Do(2,arg), Do(3,arg), Do(4,arg), Do(5,arg) 
 //  Do(6,arg), Do(7,arg), Do(8,arg), Do(9,arg), Do(10,arg), Do(11,arg)
   
+
 //
 // Array shapes are expressed via the shape types:
 //
@@ -379,5 +383,9 @@ typedef LoStrDomain3 LoCubeStrDomain;
 typedef blitz::StridedDomain<4> LoStrDomain4;
 typedef blitz::StridedDomain<5> LoStrDomain5;
 #define LoStrDomain(rank) LoStrDomain##rank
+
+// \addtogroup Common
+// @{
+// @}
 
 #endif

@@ -23,6 +23,9 @@
 #ifndef LOFAR_COMMON_CHECKCONFIG_H
 #define LOFAR_COMMON_CHECKCONFIG_H
 
+// \file CheckConfig
+// Macros for declaring a config-dependent data structure.
+
 // The CHECK_CONFIG macros should be used if and when you declare a
 // config-dependent data structure. These allow you to automatically insert
 // symbol references into your object files that will be checked for
@@ -48,5 +51,9 @@
 
 // Check Common/Thread.h and Common/Thread/Thread.cc for examples of how this 
 // works.
+
+// \addtogroup Common
+// @{
+// @}
 
 #endif

@@ -20,8 +20,11 @@
 //#
 //#  $Id$
 
-#ifndef COMMON_KEYVALUEMAP_H
-#define COMMON_KEYVALUEMAP_H
+#ifndef LOFAR_COMMON_KEYVALUEMAP_H
+#define LOFAR_COMMON_KEYVALUEMAP_H
+
+// \file KeyValueMap
+// Class to hold a collection of key name/value pairs.
 
 #include <Common/KeyValue.h>
 #include <Common/lofar_map.h>
@@ -29,56 +32,58 @@
 
 namespace LOFAR {
 
-// <summary> Class to hold a collection of key name/value pairs </summary>
+  // \addtogroup Common
+  // @{
+  // <summary> Class to hold a collection of key name/value pairs </summary>
+  
+  /**
+     The KeyValueMap class holds a collection of key name/value pairs.
+     It uses the STL map class to hold the pairs.
+  */
 
-/**
-   The KeyValueMap class holds a collection of key name/value pairs.
-   It uses the STL map class to hold the pairs.
-*/
+  class KeyValueMap: public map<string, KeyValue>
+    {
+    public:
+      typedef map<string,KeyValue>::const_iterator const_iterator;
+      typedef map<string,KeyValue>::iterator iterator;
 
-class KeyValueMap: public map<string, KeyValue>
-{
-public:
-  typedef map<string,KeyValue>::const_iterator const_iterator;
-  typedef map<string,KeyValue>::iterator iterator;
-
-  KeyValueMap();
-
-  /// Copy constructor (copy semantics)
-  KeyValueMap (const KeyValueMap& that);
-
-  ~KeyValueMap();
-
-  /// Assignment (copy semantics)
-  KeyValueMap& operator= (const KeyValueMap& that);
-
-  /// Is a key defined?
-  bool isDefined (const string& name) const
-    { return find(name) != end(); }
-
-  // Get the value of a key. Use the default if not existing.
-  // <group>
-  bool getBool (const string& name, bool defVal) const;
-  int getInt (const string& name, int defVal) const;
-  float getFloat (const string& name, float defVal) const;
-  double getDouble (const string& name, double defVal) const;
-  fcomplex getFComplex (const string& name, const fcomplex& defVal) const;
-  dcomplex getDComplex (const string& name, const dcomplex& defVal) const;
-  const string& getString (const string& name, const string& defVal) const;
-  // </group>
-
-  // Show the contents of the object.
-  // <group>
-  void show (ostream&) const;
-  friend ostream& operator<< (ostream&, const KeyValueMap&);
-  // </group>
-
-  // Turn the object into a blob.
-  friend BlobOStream& operator<< (BlobOStream&, const KeyValueMap&);
-  // Fill the object from a blob. It destroys the current contents.
-  friend BlobIStream& operator>> (BlobIStream&, KeyValueMap&);
-};
-
+      KeyValueMap();
+      
+      /// Copy constructor (copy semantics)
+      KeyValueMap (const KeyValueMap& that);
+      
+      ~KeyValueMap();
+      
+      /// Assignment (copy semantics)
+      KeyValueMap& operator= (const KeyValueMap& that);
+      
+      /// Is a key defined?
+      bool isDefined (const string& name) const
+	{ return find(name) != end(); }
+      
+      // Get the value of a key. Use the default if not existing.
+      // <group>
+      bool getBool (const string& name, bool defVal) const;
+      int getInt (const string& name, int defVal) const;
+      float getFloat (const string& name, float defVal) const;
+      double getDouble (const string& name, double defVal) const;
+      fcomplex getFComplex (const string& name, const fcomplex& defVal) const;
+      dcomplex getDComplex (const string& name, const dcomplex& defVal) const;
+      const string& getString (const string& name, const string& defVal) const;
+      // </group>
+      
+      // Show the contents of the object.
+      // <group>
+      void show (ostream&) const;
+      friend ostream& operator<< (ostream&, const KeyValueMap&);
+      // </group>
+      
+      // Turn the object into a blob.
+      friend BlobOStream& operator<< (BlobOStream&, const KeyValueMap&);
+      // Fill the object from a blob. It destroys the current contents.
+      friend BlobIStream& operator>> (BlobIStream&, KeyValueMap&);
+    };
+  // @}  
 } //end namespace
 
 #endif 

@@ -20,47 +20,53 @@
 //#
 //# $Id$
 
-#ifndef COMMON_BLOBOBUFNULL_H
-#define COMMON_BLOBOBUFNULL_H
+#ifndef LOFAR_COMMON_BLOBOBUFNULL_H
+#define LOFAR_COMMON_BLOBOBUFNULL_H
+
+// \file  BlobOBufNull
+// Output buffer for a blob using a plain pointer.
 
 #include <Common/BlobOBuffer.h>
 
 namespace LOFAR {
 
-// This class is the BlobOBuffer that makes use of a null buffer.
-// It can be used to determine the length of a blob.
+  // \addtogroup Common
+  // @{
+  
+  // This class is the BlobOBuffer that makes use of a null buffer.
+  // It can be used to determine the length of a blob.
+  
+  class BlobOBufNull : public BlobOBuffer
+    {
+    public:
+      // Construct a dynamic buffer with the given initial length.
+      BlobOBufNull();
+      
+      // Destructor.
+      virtual ~BlobOBufNull();
+      
+      // Put the requested nr of bytes.
+      virtual uint put (const void* buffer, uint nbytes);
+      
+      // Get the position in the buffer.
+      virtual int64 tellPos() const;
+      
+      // Set the position in the buffer.
+      virtual int64 setPos (int64 pos);
+      
+      // Get the size of the data in the buffer.
+      uint size() const;
+      
+    private:
+      uint itsSize;
+      uint itsPos;
+    };
 
-class BlobOBufNull : public BlobOBuffer
-{
-public:
-  // Construct a dynamic buffer with the given initial length.
-  BlobOBufNull();
-
-  // Destructor.
-  virtual ~BlobOBufNull();
-
-  // Put the requested nr of bytes.
-  virtual uint put (const void* buffer, uint nbytes);
-
-  // Get the position in the buffer.
-  virtual int64 tellPos() const;
-
-  // Set the position in the buffer.
-  virtual int64 setPos (int64 pos);
-
-  // Get the size of the data in the buffer.
-  uint size() const;
-
-private:
-  uint itsSize;
-  uint itsPos;
-};
-
-
-inline uint BlobOBufNull::size() const
-{
-  return itsSize;
-}
+  inline uint BlobOBufNull::size() const
+    {
+      return itsSize;
+    }
+  // @}
 
 } // end namespace
 

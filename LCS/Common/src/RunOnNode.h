@@ -1,4 +1,4 @@
-//#  filename.h: one line description
+//#  RunOnNode.h: one line description
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,8 +20,11 @@
 //#
 //#  $Id$
 
-#ifndef LCS_RUNONNODE_H
-#define LCS_RUNONNODE_H
+#ifndef LOFAR_LCS_RUNONNODE_H
+#define LOFAR_LCS_RUNONNODE_H
+
+// \file RunOnNode
+//
 
 #include <lofar_config.h>
 
@@ -30,7 +33,9 @@
 
 namespace LOFAR
 {
-  
+
+  // \addtogroup Common
+  // @{
   //# Forward Declarations
   //  class forward;
   
@@ -80,6 +85,7 @@ namespace LOFAR
 #define RUNINAPPL(applid)                if(itsRON.mustExecuteAppl(applid))
 #define RIA(applid)                      if(itsRON.mustExecuteAppl(applid))
 
+  // @}
 } // namespace LOFAR
 #endif
 

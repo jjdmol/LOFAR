@@ -20,8 +20,11 @@
 //#
 //# $Id$
 
-#ifndef COMMON_TYPENAMES_H
-#define COMMON_TYPENAMES_H
+#ifndef LOFAR_COMMON_TYPENAMES_H
+#define LOFAR_COMMON_TYPENAMES_H
+
+// \file TypeNames
+// Return a string giving the type name to be stored in blobs.
 
 //# Includes
 #include <Common/LofarTypes.h>
@@ -29,11 +32,16 @@
 
 namespace LOFAR
 {
-// These global functions return the name of the basic types.
-// They are meant to get the full id of a templated class when such an
-// object is stored in a blob.
-// \defgroup TypeNames global type name functions
-// <group>
+  
+  // \addtogroup Common
+  // @{
+
+
+  // These global functions return the name of the basic types.
+  // They are meant to get the full id of a templated class when such an
+  // object is stored in a blob.
+  // \defgroup TypeNames global type name functions
+  // <group>
 
   // Give the name of the basic types.
   // <group>
@@ -61,5 +69,5 @@ namespace LOFAR
 // Include templated implementations.
 #include <Common/TypeNames.tcc>
 
-
+// @}
 #endif
