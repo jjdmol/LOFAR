@@ -189,7 +189,7 @@ bool Scheduler::syncHasCompleted()
 void Scheduler::pqueue_remove_commands(pqueue& pq,
 				       GCFPortInterface& port,
 				       bool checkOwner,
-				       uint32 /*handle*/)
+				       uint32 handle)
 {
   // copy pq
   pqueue tmp = pq;
@@ -204,7 +204,7 @@ void Scheduler::pqueue_remove_commands(pqueue& pq,
     tmp.pop();
 
     // if port matches, delete c, else push back onto pq
-    if (c->getPort() == &port)
+    if ((c->getPort() == &port) && (0 == handle || (uint32)c == handle))
     {
       if (!checkOwner || c->isOwner()) delete c;
     }

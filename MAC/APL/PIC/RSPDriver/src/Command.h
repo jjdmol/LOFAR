@@ -27,13 +27,14 @@
 
 #include "Timestamp.h"
 #include "Cache.h"
+#include "RefCount.h"
 
 #include <Common/LofarTypes.h>
 #include <GCF/GCF_Control.h>
 
 namespace RSP
 {
-  class Command
+  class Command : public RefCount
   {
     public:
 
