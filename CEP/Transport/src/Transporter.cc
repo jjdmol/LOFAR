@@ -104,7 +104,7 @@ bool Transporter::connectTo (Transporter* that,
 			     TransportHolder& prototype)
 {
   bool result = itsConnection->connectTo(this, that, prototype); 
-  result |= init();
+  //  result |= init();
   return result;
 }
 
