@@ -5,12 +5,12 @@ mkdir tBBS2_tmp
 cd tBBS2_tmp
 ln -s ../../../../test/tBBS2.sh .
 ln -s ../../../../test/*.g .
-ln -s ../../../../test/tBBS2.test*[0-9] .
+ln -s ../../../../test/tBBS2.test* .
 ln -s ../../../../src/prepareBBD2 prepareBBD
 ln -s ../../../../src/clearBB .
 ln -s ../tBBS2 . 
 ln -s ../../../../test/generalinfo.sh .
-ln -s ../../../../test/cp2web .
+ln -s ../../../../test/cp2web.sh .
 
 rm -f demo{3,3p,10}-1.MS.{dat,des,uvw}
 ln -s /data/PSS3/diepen/BBS2/demo3/demo.dat demo3-1.MS.dat
