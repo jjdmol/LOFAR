@@ -16,6 +16,10 @@
 
 //#include <UVPUVCoverageArea.h>
 #include <UVPTimeFrequencyPlot.h>
+#include <UVPGraphSettingsWidget.h>
+
+#include <UVPDataSet.h>
+
 
 #if(DEBUG_MODE)
 #include <Common/Debug.h>
@@ -44,6 +48,19 @@ class UVPMainWindow:public QMainWindow
    UVPMainWindow();
   ~UVPMainWindow();
 
+  public slots:
+
+  void slot_setProgressTotalSteps(int steps);
+  void slot_setProgress(int steps);
+      
+  void slot_plotTimeFrequencyImage();
+
+  void slot_quitPlotting();
+
+  void slot_openFile();
+
+  void slot_readMeasurementSet(const std::string& msName);
+
  protected:                     /* Protected part */
   
   QMenuBar*       itsMenuBar;
@@ -60,21 +77,16 @@ class UVPMainWindow:public QMainWindow
   QLabel*         itsYPosLabel;
 
   UVPTimeFrequencyPlot*  itsCanvas;
+  UVPGraphSettingsWidget* itsGraphSettingsWidget;
   bool                   itsBusyPlotting;
+
+  UVPDataSet      itsDataSet;
   //  UVPUVCoverageArea* itsCanvas;      /* The drawing canvas */
   //  UVPImageCube*      itsCube;
 
+  std::vector< std::vector<UVPDataAtom> > itsTestMS;
 
   virtual void resizeEvent(QResizeEvent *event);
-
-  public slots:
-
-  void slot_setProgressTotalSteps(int steps);
-  void slot_setProgress(int steps);
-      
-  void slot_plotTimeFrequencyImage();
-
-  void slot_quitPlotting();
 
   protected slots:
     
