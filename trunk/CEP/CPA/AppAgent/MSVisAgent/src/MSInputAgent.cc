@@ -193,6 +193,7 @@ bool MSInputAgent::init (const DataRecord &data)
     tileiter_ = tiles_.end();
 
     setFileState(HEADER);
+    sink().raiseEventFlag();    // we are now generating events
     return True;
   }
   catch( std::exception &exc )
@@ -216,6 +217,7 @@ bool MSInputAgent::init (const DataRecord &data)
 //##ModelId=3DF9FECD0244
 void MSInputAgent::close ()
 {
+  sink().clearEventFlag();    // no more events from us
   FileInputAgent::close();
   // close & detach from everything
   initHeader();  // empties the header
@@ -234,9 +236,7 @@ int MSInputAgent::getNextTile (VisTile::Ref &tileref,int wait)
     int res = hasTile();
     if( res != SUCCESS )
     {
-      FailWhen( res == WAIT && wait != NOWAIT,
-          "can't wait here: would block indefinitely" );
-      return res;
+      return sink().waitOtherEvents(wait);
     }
 
   // any more tiles in cache? Return one
@@ -248,6 +248,7 @@ int MSInputAgent::getNextTile (VisTile::Ref &tileref,int wait)
       if( tileiter_ != tiles_.end() )
       {
         tileref = *tileiter_;
+        cdebug(3) << "returning tile " << tileref->tileId() << endl;
         if( Debug(5) )
         {
           const VisTile &tile = *tileref;
@@ -267,6 +268,7 @@ int MSInputAgent::getNextTile (VisTile::Ref &tileref,int wait)
     if( tableiter_.pastEnd() )
     {
       setFileState(ENDFILE);
+      sink().clearEventFlag(); // no more events from us
       return CLOSED;
     }
     const LoRange ALL = LoRange::all();
@@ -278,7 +280,7 @@ int MSInputAgent::getNextTile (VisTile::Ref &tileref,int wait)
       const Table &table = tableiter_.table();
       int nrows = table.nrow();
       FailWhen( !nrows,"unexpected empty table iteration");
-      dprintf(3)("Table iterator yields %d rows\n",table.nrow());
+      dprintf(4)("Table iterator yields %d rows\n",table.nrow());
       // get relevant table columns
       ROScalarColumn<Double> timeCol(table,"TIME");
       ROScalarColumn<Double> intCol(table,"INTERVAL");

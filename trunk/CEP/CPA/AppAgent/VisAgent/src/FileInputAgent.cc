@@ -43,8 +43,8 @@ DataRecord & FileInputAgent::initHeader ()
 int FileInputAgent::hasHeader ()
 {
   if( suspended() ) 
-    return WAIT;
-  if( fileState() == HEADER )
+    return sink().waitOtherEvents(NOWAIT);
+  else if( fileState() == HEADER )
     return SUCCESS;
   else if( fileState() == DATA )
     return OUTOFSEQ;
@@ -65,9 +65,7 @@ int FileInputAgent::getHeader (DataRecord::Ref &hdr,int wait)
   }
   else
   {
-    FailWhen( res == WAIT && wait != NOWAIT,
-        "can't wait here: would block indefinitely" );
-    return res;
+    return sink().waitOtherEvents(wait);
   }
 }
 
@@ -75,8 +73,8 @@ int FileInputAgent::getHeader (DataRecord::Ref &hdr,int wait)
 int FileInputAgent::hasTile   ()
 {
   if( suspended() )
-    return WAIT;
-  if( fileState() == HEADER )
+    return sink().waitOtherEvents(NOWAIT);
+  else if( fileState() == HEADER )
     return OUTOFSEQ;
   else if( fileState() == DATA )
     return SUCCESS;

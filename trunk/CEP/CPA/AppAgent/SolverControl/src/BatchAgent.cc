@@ -50,7 +50,7 @@ bool BatchAgent::init (const DataRecord &data)
     
     // get the sub-record of solution jobs
     int nparams = rec[FBatchControlJobs].size();
-    FailWhen( !nparams,"no job sun-records in in "+FBatchControlJobs.toString()+" field" );
+    FailWhen( !nparams,"no job sub-records in in "+FBatchControlJobs.toString()+" field" );
     // copy all solution jobs to the queue
     jobs_.resize(nparams);
     for( int i=0; i<nparams; i++ )
@@ -100,6 +100,7 @@ int BatchAgent::startDomain (const DataRecord::Ref &data)
 {
   SolverControlAgent::startDomain();
   current_job_ = 0;
+  sink().raiseEventFlag(); // start solution should be called
   setState(RUNNING);
   return state();
 }
