@@ -19,11 +19,10 @@
 //  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //
 //  $Id$
-//
-//////////////////////////////////////////////////////////////////////
 
-#include "CEPFrame/TH_Mem.h"
-#include "CEPFrame/StepRep.h"
+
+#include "BaseSim/TH_Mem.h"
+#include "BaseSim/StepRep.h"
 #include "Common/Debug.h"
 
 /**
@@ -41,7 +40,9 @@ map<int, TH_Mem::Msg> TH_Mem::messages;
  */
 TH_Mem TH_Mem::proto;
 
-TH_Mem::TH_Mem()
+TH_Mem::TH_Mem() :
+  itsFirstCall(true),
+  itsDataSource(0)
 {}
 
 TH_Mem::~TH_Mem()
@@ -59,11 +60,18 @@ string TH_Mem::getType() const
 
 bool TH_Mem::connectionPossible(int srcRank, int dstRank) const
 {
+  cdebug(3) << "TH_Mem::connectionPossible between "
+            << srcRank << " and "
+            << dstRank << "?" << endl;
+
   return srcRank == dstRank;
 }
 
 bool TH_Mem::recv(void* buf, int nbytes, int, int tag)
 { 
+  if (itsFirstCall) 
+  {
+
     Msg m;
     
     AssertStr(messages.end() != messages.find(tag), "no matching send for recv");
@@ -71,23 +79,36 @@ bool TH_Mem::recv(void* buf, int nbytes, int, int tag)
     m = messages[tag];
 
     if (   (m.isAvailable())
-	   && (nbytes == m.getNBytes()))
+           && (nbytes == m.getNBytes()))
     {
- 	/// do the memcpy
- 	memcpy(buf, m.getBuf(), m.getNBytes());
+      itsDataSource = m.getBuf();
+
+      /// do the memcpy
+      memcpy(buf, itsDataSource, m.getNBytes());
 	
- 	// erase the record
- 	messages.erase(tag);
+      // erase the record
+      messages.erase(tag);
     }
     else
     {
- 	// erase the record
- 	messages.erase(tag);
+      // erase the record
+      messages.erase(tag);
 	
-	Throw("No matching send for recv: ");
+      Throw("No matching send for recv: ");
     }
 
-    return true;
+    itsFirstCall = false;
+
+  }
+  else
+  {
+    AssertStr(itsDataSource != 0, "No matching send for recv");
+
+    memcpy(buf, itsDataSource, nbytes);
+
+  }
+
+  return true;
 }
 
 /**
@@ -95,13 +116,19 @@ bool TH_Mem::recv(void* buf, int nbytes, int, int tag)
  */
 bool TH_Mem::send(void* buf, int nbytes, int, int tag)
 {
-    Msg      m(buf, nbytes, tag);
 
-    AssertStr(messages.end() == messages.find(tag), "previous send not completed");
+  if (itsFirstCall)
+  { 
+
+    Msg      m(buf, nbytes, tag);
     
     messages[tag] = m;
-    
-    return true;
+
+    itsFirstCall = false;
+	
+  }
+
+  return true;
 }
 
 void TH_Mem::waitForBroadCast()
