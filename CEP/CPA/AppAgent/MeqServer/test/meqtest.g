@@ -1,9 +1,9 @@
-# use_suspend  := T;
+use_suspend  := T;
 # use_nostart  := T;
-use_valgrind := T;
+# use_valgrind := T;
 use_valgrind_opts := [ "",
 #  "--gdb-attach=yes",          # use either this...
-  "--logfile=vg.meqserver",       # ...or this, not both
+ "--logfile=vg.meqserver",       # ...or this, not both
 #  "--gdb-path=/home/oms/bin/valddd", 
   ""];
   
@@ -54,8 +54,8 @@ const meqserver_test := function ()
       x=cosrec,
       y=[ class='MeqParmPolcStored',name='p2',default=defval2 ] ] ];
       
-  print mqs.meq('Create.Node',addrec,T);
-  print mqs.meq('Resolve.Children',[name='add1_2'],T);
+  print mqs.meq('Create.Node',addrec,F);
+  print mqs.meq('Resolve.Children',[name='add1_2'],F);
   
   cells := meqcells(meqdomain(0,10,0,10),nfreq=20,times=[1.,2.,3.],timesteps=[1.,2.,3.]);
   request := meqrequest(cells);
@@ -66,7 +66,7 @@ const meqserver_test := function ()
 const meqsink_test := function ()
 {
   global mqs;
-  mqs := meqserver(verbose=4,options="-d0 -meq:M:M:MeqServer");
+  mqs := meqserver(verbose=4,options="-d0 -meq:M:O:MeqServer");
   # set verbose debugging messages
   mqs.setdebug("MeqNode MeqForest MeqSink MeqSpigot",1);
   mqs.setdebug("MeqNode MeqForest MeqSink MeqSpigot MeqNode",2);
@@ -99,11 +99,11 @@ const meqsink_test := function ()
   print mqs.meq('Create.Node',sinkrec);
   
   # resolve its children
-  print mqs.meq('Resolve.Children',[name='sink1'],T);
+  print mqs.meq('Resolve.Children',[name='sink1'],F);
   
   # activate input agent and watch the fireworks
   global inputrec;
-  inputrec := [ ms_name = 'test.ms',data_column_name = 'DATA',tile_size=10,
+  inputrec := [ ms_name = 'test.ms',data_column_name = 'DATA',tile_size=5,
                 selection = [=]  ];
   mqs.init(input=inputrec); 
 }
@@ -111,7 +111,7 @@ const meqsink_test := function ()
 const meqsel_test := function ()
 {
   global mqs;
-  mqs := meqserver(verbose=4,options="-d0 -meq:M:M:MeqServer");
+  mqs := meqserver(verbose=4,options="-d0 -meq:M:O:MeqServer");
   # set verbose debugging messages
   mqs.setdebug("MeqNode MeqForest MeqSink MeqSpigot",5);
   mqs.setdebug("MeqNode MeqForest MeqSink MeqSpigot",5);
@@ -127,17 +127,32 @@ const meqsel_test := function ()
   print mqs.meq('Create.Node',meqparm('parm1',defval1));
   print mqs.meq('Create.Node',meqparm('parm2',defval2));
   print mqs.meq('Create.Node',meqparm('parm3',defval3));
-  print mqs.meq('Create.Node',meqnode('MeqComposer','compose',children="parm1 parm2 parm3"));
-  rec := meqnode('MeqSelector','select',children="compose");
-  rec.index := [1,3];
+  print mqs.meq('Create.Node',meqparm('parm4',defval1));
+  print mqs.meq('Create.Node',meqparm('parm5',defval2));
+  print mqs.meq('Create.Node',meqparm('parm6',defval3));
+  print mqs.meq('Create.Node',meqnode('MeqComposer','compose1',children="parm1 parm2 parm3"));
+  print mqs.meq('Create.Node',meqnode('MeqComposer','compose2',children="parm4 parm5 parm6"));
+  rec := meqnode('MeqSelector','select1',children="compose1");
+  rec.index := [1,5];
+  print mqs.meq('Create.Node',rec);
+  rec := meqnode('MeqSelector','select2',children="compose2");
+  rec.index := [1,5];
+  print mqs.meq('Create.Node',rec);
+  print mqs.meq('Create.Node',meqnode('MeqComposer','compose3',children="select1 select2"));
+  rec := meqnode('MeqSelector','select3',children="compose3");
+  rec.index := [2,4];
   print mqs.meq('Create.Node',rec);
   
   # resolve children
-  print mqs.meq('Resolve.Children',[name='select'],T);
+  print mqs.meq('Resolve.Children',[name='select3']);
   
   global cells,request,res;
   cells := meqcells(meqdomain(0,10,0,10),nfreq=20,times=[1.,2.,3.],timesteps=[1.,2.,3.]);
   request := meqrequest(cells);
-  res := mqs.meq('Get.Result',[name='select',request=request],T);
+  res := mqs.meq('Get.Result',[name='select3',request=request],T);
   print res;
 }
+
+
+cells := meqcells(meqdomain(0,10,0,10),nfreq=20,times=[1.,2.,3.],timesteps=[1.,2.,3.]);
+request := meqrequest(cells,1);

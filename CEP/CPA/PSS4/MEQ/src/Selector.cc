@@ -54,8 +54,16 @@ int Selector::getResultImpl (ResultSet::Ref &resref, const Request& request, boo
 {
   ResultSet::Ref childref;
   int flag = getChild(0).getResult(childref,request);
-  if( flag == RES_FAIL || flag&RES_WAIT )
+  // if child returns a fail, pass it on up
+  if( flag == RES_FAIL )
+  {
+    resref = childref;
+    return RES_FAIL;
+  }
+  // return wait if child waits
+  if( flag&RES_WAIT )
     return flag;
+  // otherwise, select sub-results
   ResultSet &result = resref <<= new ResultSet(selection.size()),
             &childres = childref();
   // select results from child set
@@ -63,7 +71,12 @@ int Selector::getResultImpl (ResultSet::Ref &resref, const Request& request, boo
   {
     int isel = selection[i];
     if( isel<0 || isel>=childres.numResults() )
+    {
+      MakeFailResult(result,
+          Debug::ssprintf("selection index %d is out of range (%d results in set)",
+                          isel,childres.numResults()));
       return RES_FAIL;
+    }
     result.setResult(i,&(childres.result(isel)));
   }
   // copy cells from child set

@@ -113,7 +113,7 @@ int Sink::deliver (const Request &req,VisTile::Ref::Copy &tileref,
   FailWhen(resflag&RES_WAIT,"Meq::Sink can't cope with a WAIT result code yet");
   if( resflag == RES_FAIL )
   {
-    cdebug(3)<<"child result is FAIL, returning"<<endl;
+    cdebug(3)<<"child result is FAIL, ignoring"<<endl;
     return RES_FAIL;
   }
   int nres = resref->numResults();

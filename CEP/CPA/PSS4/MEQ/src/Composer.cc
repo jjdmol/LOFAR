@@ -39,7 +39,7 @@ int Composer::getResultImpl (ResultSet::Ref &resref, const Request& request, boo
 {
   ResultSet::Ref childref[numChildren()];
   int resflag=0,nres=0;
-  bool have_fail=False;
+  int have_fail=False;
   // collect results from children
   for( int i=0; i<numChildren(); i++ )
   {
@@ -55,10 +55,24 @@ int Composer::getResultImpl (ResultSet::Ref &resref, const Request& request, boo
   }
   // fail if a child has failed, wait if a child indicates wait
   if( have_fail )
+  {
+    ResultSet &result = resref <<= new ResultSet(-1); // -1 means a fail-set
+    // collect fails from failed children
+    for( int i=0; i<numChildren(); i++ )
+    {
+      const ResultSet &childres = *childref[i];
+      if( childres.isFail() )
+      {
+        for( int j=0; j<childres.numFails(); j++ )
+          result.addFail(&childres.getFail(j),DMI::READONLY);
+      }
+    }
     return RES_FAIL;
+  }
+  // return wait if some child has returned a wait
   if( resflag&RES_WAIT )
     return resflag;
-  // compose result
+  // otherwise, compose result
   ResultSet &result = resref <<= new ResultSet(nres);
   result.setCells(request.cells()); 
   int ires=0;
