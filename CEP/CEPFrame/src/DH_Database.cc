@@ -27,6 +27,7 @@
 #include <Common/lofar_iostream.h>
 
 bool DH_Database::StoreInDatabase (int, int tag, char * buf, int size) {
+  /*
   PO_DH_Database po_dh_db;
 
   po_dh_db.setMessageTag (tag);
@@ -50,12 +51,17 @@ bool DH_Database::StoreInDatabase (int, int tag, char * buf, int size) {
   po_dh_db.Store (wrSeqNo);
 
   wrSeqNo ++;
-
+  */
+  cout << "DH_Database::StoreInDatabase () called." << endl;
+  // TODO: Extend the error message and make the user
+  // remember that he might have to redefine the method
+  // himself.
   return true; 
 }
 
 
 bool DH_Database::RetrieveFromDatabase (int, int tag, char * buf, int size) { 
+  /*
   PO_DH_Database po_dh_db;
 
   po_dh_db.setMessageTag (tag);
@@ -66,7 +72,8 @@ bool DH_Database::RetrieveFromDatabase (int, int tag, char * buf, int size) {
   po_dh_db.CopyFromByteString (buf, size);
 
   rdSeqNo ++;
-
+  */
+  cout << "DH_Database::RetrieveFromDatabase () called." << endl;
   return true;
 }
 
