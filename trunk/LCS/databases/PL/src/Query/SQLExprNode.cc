@@ -21,6 +21,7 @@
 //#  $Id$
 
 #include <PL/Query/SQLExprNode.h>
+#include <PL/Exception.h>
 #include <iostream>
 #include <sstream>
 
@@ -41,6 +42,8 @@ namespace LOFAR
         itsValue(value),
         itsLower(lower), itsUpper(upper)
       {
+        if (value.isNull() || lower.isNull() || upper.isNull())
+          THROW(QueryError, "Null expression argument is not allowed");
       }
 
       BetweenExprNode::~BetweenExprNode()
@@ -49,7 +52,6 @@ namespace LOFAR
 
       void BetweenExprNode::print(std::ostream& os) const
       {
-        if (isNull()) return;
         os << "(";
         itsValue.print(os);
         os << itsOperation;
@@ -67,17 +69,20 @@ namespace LOFAR
           itsUpper.getConstraint();
       }
 
-      bool BetweenExprNode::isNull() const
-      {
-        return itsValue.isNull() || itsLower.isNull() || itsUpper.isNull();
-      }
-
 
       InExprNode::InExprNode(const std::string oper,
                              const Expr& lhs, const Collection<Expr>& rhs) :
         itsOperation(oper),
         itsLeft(lhs), itsRight(rhs)
       {
+        // Check if \a rhs contains only null expressions; this is not allowed.
+        Collection<Expr>::const_iterator it;
+        bool onlyNulls = true;
+        for(it = rhs.begin(); it != rhs.end() && onlyNulls; ++it) {
+          onlyNulls = it->isNull();
+        }
+        if (lhs.isNull() || onlyNulls) 
+          THROW(QueryError, "Null expression argument is not allowed");
       }
 
       InExprNode::~InExprNode()
@@ -86,23 +91,20 @@ namespace LOFAR
 
       void InExprNode::print(std::ostream& os) const
       {
-        if (isNull()) return;
         itsLeft.print(os);
-        if (!itsRight.empty()) {
-          ostringstream oss;
-          Collection<Expr>::const_iterator it;
-          for (it = itsRight.begin(); it != itsRight.end(); ++it) {
-            if (!it->isNull()) {
-              it->print(oss);
-              oss << ",";
-            }
+        ostringstream oss;
+        Collection<Expr>::const_iterator it;
+        for(it = itsRight.begin(); it != itsRight.end(); ++it) {
+          if (!it->isNull()) {
+            it->print(oss);
+            oss << ",";
           }
-          string s(oss.str());    // convert oss to a string
-          s.erase(s.size()-1);    // strip trailing comma
-          os << itsOperation << "(" << s << ")";
         }
+        string s(oss.str());                    // convert oss to a string
+        if (!s.empty()) s.erase(s.size()-1);    // strip trailing comma
+        os << itsOperation << "(" << s << ")";
       }
-
+      
       Expr InExprNode::getConstraint() const
       {
         Expr expr(itsLeft.getConstraint());
@@ -113,17 +115,14 @@ namespace LOFAR
         return expr;
       }
 
-      bool InExprNode::isNull() const
-      {
-        return itsLeft.isNull() || itsRight.empty();
-      }
-
 
       LikeExprNode::LikeExprNode(const std::string& oper,
                                  const Expr& lhs, const Expr& rhs) :
         itsOperation(oper),
         itsLeft(lhs), itsRight(rhs)
       {
+        if (lhs.isNull() || rhs.isNull())
+          THROW(QueryError, "Null expression argument is not allowed");
       }
 
       LikeExprNode::~LikeExprNode()
@@ -132,8 +131,6 @@ namespace LOFAR
 
       void LikeExprNode::print(std::ostream& os) const
       {
-        if (isNull()) return;
-
         // We must print the pattern expression in itsRight into an
         // ostringstream, because we need its contents as a string.
         ostringstream oss;
@@ -179,11 +176,6 @@ namespace LOFAR
       Expr LikeExprNode::getConstraint() const
       {
         return itsLeft.getConstraint() && itsRight.getConstraint();
-      }
-
-      bool LikeExprNode::isNull() const
-      {
-        return itsLeft.isNull();
       }
 
 

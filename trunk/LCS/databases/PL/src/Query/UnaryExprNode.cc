@@ -21,6 +21,7 @@
 //#  $Id$
 
 #include <PL/Query/UnaryExprNode.h>
+#include <PL/Exception.h>
 #include <iostream>
 
 namespace LOFAR
@@ -35,29 +36,23 @@ namespace LOFAR
         itsOperation(oper), 
         itsOperand(value)
       {
+        if (value.isNull())
+          THROW(QueryError, "Null expression argument is not allowed");
       }
-
+      
       UnaryExprNode::~UnaryExprNode()
       {
       }
 
       void UnaryExprNode::print(std::ostream& os) const
       {
-        if (isNull()) return;
-//         os << "(";
         os << itsOperation;
         itsOperand.print(os);
-//         os << ")";
       }
 
       Expr UnaryExprNode::getConstraint() const
       {
         return itsOperand.getConstraint();
-      }
-
-      bool UnaryExprNode::isNull() const
-      {
-        return itsOperand.isNull();
       }
 
     } // namespace Query

@@ -97,7 +97,7 @@ namespace LOFAR
 
       Expr Expr::operator+ () const
       {
-        return *this;
+        return new UnaryExprNode("+", *this);
       }
 
       Expr Expr::operator- () const
