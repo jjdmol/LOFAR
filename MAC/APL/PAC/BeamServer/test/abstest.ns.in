@@ -9,6 +9,11 @@ host=localhost
 client.type=TCP
 client.port=30230
 
+[EPATest]
+host=localhost
+beam_server.type=TCP
+# empty
+
 [EPAStub]
 host=localhost
 client.type=TCP

@@ -21,7 +21,8 @@ libunittest_la_SOURCES = \
 check_PROGRAMS = \
 	BeamServerTest \
 	AVTStub \
-	EPAStub
+	EPAStub \
+	EPATest
 
 BeamServerTest_SOURCES = \
 	BeamServerTest.cc
@@ -42,6 +43,15 @@ AVTStub_SOURCES = \
 	ABSAVTStub.cc
 
 AVTStub_LDADD = \
+	$(top_builddir)/src/libabs.la \
+	$(top_builddir)/test/libunittest.la \
+	 -ltm -lgcfcommon
+
+EPATest_SOURCES = \
+	ABSEPATest.h \
+	ABSEPATest.cc
+
+EPATest_LDADD = \
 	$(top_builddir)/src/libabs.la \
 	$(top_builddir)/test/libunittest.la \
 	 -ltm -lgcfcommon

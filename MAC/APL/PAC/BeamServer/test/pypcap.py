@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 
 import pcap
 import sys
@@ -127,11 +127,11 @@ def decode_epa_packet(s):
   return d
 
 def dumphex(s):
-#  bytes = map(lambda x: '%.2x' % x, map(ord, s))
-#  for i in xrange(0,len(bytes)/16):
-#    print '    %s' % string.join(bytes[i*16:(i+1)*16],' ')
-  for i in xrange(len(s)/16):
-    print s[i*16:(i+1)*16]
+  bytes = map(lambda x: '%.2x' % x, map(ord, s))
+  for i in xrange(0,len(bytes)/16):
+    print '    %s' % string.join(bytes[i*16:(i+1)*16],' ')
+#  for i in xrange(len(s)/16):
+#    print s[i*16:(i+1)*16]
 
 def print_packet(pktlen, data, timestamp):
   if not data:
@@ -175,7 +175,7 @@ if __name__=='__main__':
   #p.setnonblock(1)
   #try:
   while 1:
-    s.send('eth0', '112345678911234567891123456789')
+    #s.send('eth0', '112345678911234567891123456789')
     p.dispatch(1, print_packet)
 
     # specify 'None' to dump to dumpfile, assuming you have called

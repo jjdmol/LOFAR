@@ -294,7 +294,7 @@ GCFEvent::TResult AVTStub::test003(GCFEvent& e, GCFPortInterface& /*port*/)
 	// send wgenable
 	ABSWgsettingsEvent wgs;
 	wgs.frequency=1e6;
-	wgs.amplitude=128;
+	wgs.amplitude=0; // was 128
 	wgs.sample_period=2;
 
 	_test(sizeof(wgs) == beam_server.send(wgs));
