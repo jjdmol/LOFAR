@@ -21,6 +21,10 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.2  2002/06/07 11:42:43  schaaf
+//  %[BugId: 11]%
+//  Removed Asserts in C'tor
+//
 //  Revision 1.1  2002/05/23 15:40:44  schaaf
 //
 //  %[BugId: 11]%
@@ -141,7 +145,6 @@ void WH_Correlate::process()
       }
    }
    Profiler::leaveState (theirProcessProfilerState);
-   //dump();
 }
 
 void WH_Correlate::dump() const
