@@ -10,7 +10,7 @@
 #
 # $Id$
 #
-VERSION="v1.2"
+VERSION="v1.3"
 
 #---------------------------- Global routines ---------------------------------
 #
@@ -63,6 +63,7 @@ initSQLfile()
 # Allowed linesyntax of the mapfile:
 #	Class	<ClassName>
 #	Table	<TableName>
+#	File	<FileName>
 #	<Ctype>	<MemberName>	<ColumnName>	<DBtype>
 #	<Ctype>	<MemberName>	class			<ClassName>
 #
@@ -88,6 +89,9 @@ convertMapfile()
 			;;
 		Table|table|TABLE)				# Table keyword
 			CurTable=$name
+			;;
+		File|file|FILE)					# File keyword
+			CurFile=$name
 			;;
 		*)								# no keyword, assume fieldname
 			# label (=c_type) may be xxx::yyy, change it to xxx!yyy
