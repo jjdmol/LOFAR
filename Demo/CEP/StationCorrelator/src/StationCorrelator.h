@@ -23,7 +23,10 @@
 #ifndef STATIONCORRELATOR_H
 #define STATIONCORRELATOR_H
 
+#include <Common/KeyValueMap.h>
 #include <CEPFrame/ApplicationHolder.h>
+
+LOFAR::KeyValueMap kvm;
 
 namespace LOFAR {
 // Description of class.
