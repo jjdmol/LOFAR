@@ -91,6 +91,7 @@ void StationCorrelator::define(const KeyValueMap& /*kvm*/) {
   bool useRealRSP = itsKVM.getBool("useRealRSPBoard", false);
   WH_RSPBoard RSPBoard("WH_RSPBoard", itsKVM);
   Step StepRSPemulator(RSPBoard, "STEP_RSPBoard");
+  comp.addStep(StepRSPemulator);
   
   Step** itsRSPsteps = new Step*[itsNrsp];
   for (unsigned int i = 0; i < itsNrsp; i++) {
