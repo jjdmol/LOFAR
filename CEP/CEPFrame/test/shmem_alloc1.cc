@@ -73,9 +73,9 @@ int main(int argc, char** argv)
 
     iarray[i] = (int*)shmem_malloc(j*sizeof(int));
 
-    fprintf(stderr, "shmem_id = %d\nshmem_offset = %d\n",
+    fprintf(stderr, "shmem_id = %d\nshmem_offset = %ld\n",
 	    shmem_id(iarray[i]),
-	    shmem_offset(iarray[i]));
+	    (long) shmem_offset(iarray[i]));
 
     totalused += j*sizeof(int);
 
