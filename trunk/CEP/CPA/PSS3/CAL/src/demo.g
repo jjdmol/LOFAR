@@ -46,7 +46,7 @@ solve := function(fname='michiel.demo', niter=1)
 	fail
     }
 
-    mc.select('all([ANTENNA1,ANTENNA2] in 4*[0:20])');
+    mc.select('all([ANTENNA1,ANTENNA2] in 4*[0:20])', 0, 0);
 
     # Plot initial position
     parms := mc.getparms("GSM.*.RA GSM.*.DEC");
@@ -76,6 +76,7 @@ solve := function(fname='michiel.demo', niter=1)
 	print 'solvedomain = ', d;
 
 	for (i in [1:niter]) {
+	    print "iteration", i
 	    mc.solve('MODEL_DATA');
 
 	    parms := mc.getparms("GSM.*.RA GSM.*.DEC");
@@ -84,7 +85,7 @@ solve := function(fname='michiel.demo', niter=1)
 	        for (j in [1:nrpos]) {
 	            ra  := parms[spaste('GSM.',j,'.RA')].value[1];
 	            dec := parms[spaste('GSM.',j,'.DEC')].value[1];
-	            print 'src = ', j, ' ra = ', ra, ' dec = ', dec;
+	            print 'src =', j, ' ra =', ra, ' dec =', dec;
 
 	            annotator.add_marker(j, real(ra), real(dec), j==nrpos);
                 }
@@ -129,6 +130,7 @@ solvepos := function(fname='michiel.demo', niter=1)
 
     mc.settimeinterval(3600); # calibrate per 1 hour
     for (i in [1:niter]) {
+        print "iteration", i
         mc.clearsolvableparms();
 	print 'Solving for RA ...'
         mc.setsolvableparms("GSM.*.RA");
@@ -154,7 +156,7 @@ solvepos := function(fname='michiel.demo', niter=1)
 	        for (j in [1:nrpos]) {
 	            ra  := parms[spaste('GSM.',j,'.RA')].value[1];
 	            dec := parms[spaste('GSM.',j,'.DEC')].value[1];
-	            print 'src = ', j, ' ra = ', ra, ' dec = ', dec;
+	            print 'src =', j, ' ra =', ra, ' dec =', dec;
 
 	            annotator.add_marker(j, real(ra), real(dec), j==nrpos);
                 }

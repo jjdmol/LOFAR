@@ -108,12 +108,14 @@ const _define_meqcalibrater := function(ref agent, id) {
     }
     
     self.selectRec := [_method="select", _sequence=self.id._sequence]
-    public.select := function (where) {
+    public.select := function (where="", firstchan=0, lastchan=-1) {
     
         wider self;
         
         # argument assignment
         self.selectRec.where := where
+        self.selectRec.firstchan := firstchan
+        self.selectRec.lastchan := lastchan
 
         # return
         return defaultservers.run(self.agent, self.selectRec);

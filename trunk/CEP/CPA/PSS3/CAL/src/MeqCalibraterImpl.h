@@ -130,8 +130,10 @@ public:
 
   /*!
    * Make a selection of the MS to be used in the solve.
+   * The 'where' string selects the rows.
+   * itsLastChan<0 means until the last channel.
    */
-  Bool select(const String& where);
+  Bool select(const String& where, int itsFirstChan, int itsLastChan);
 
   /*!
    * Return some statistics (optionally detailed (i.e. per baseline)).
@@ -201,6 +203,8 @@ private:
 
   Vector<uInt>          itsCurRows;     //# Rows in the current iter step
   TableIterator         itsIter;        //# Iterator on selected part of MS
+  int                   itsFirstChan;   //# first channel selected
+  int                   itsLastChan;    //# last channel selected
 
   MDirection            itsPhaseRef;    //# Phase reference position in J2000
   MeqDomain             itsSolveDomain;
@@ -218,6 +222,7 @@ private:
 
   double itsStartFreq;
   double itsEndFreq;
+  double itsStepFreq;
   int    itsNrChan;
 
   LSQ          itsSolver;
