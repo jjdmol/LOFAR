@@ -1,4 +1,5 @@
-//# TH_Socket.h: POSIX Socket based transportat holder
+//# TH_Socket.h: Socket based TransportHolder
+//#              Based on the Socket wrapper class 
 //#
 //# Copyright (C) 2000, 2001
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -25,15 +26,6 @@
 
 #include <lofar_config.h>
 #include <Transport/TransportHolder.h>
-
-// The current (0417-4) version of ACC/Socket makes use of
-// log4cplus. Log4cplus is not yet fully implemented in the LOFAR build
-// tree. Because of this reason, ACC/Socket generates compiler errors. A
-// copy of ACC/Socket has been made, with the log4cplus calls
-// removed. This version of Socket has been checked in as
-// CEPFrame/src/Socket. After log4cplus is implemented correctly, the
-// CEPFrame/Socket class must be removed and ACC/Socket be used.
-
 #include <Transport/Socket.h>
 
 namespace LOFAR
@@ -45,6 +37,8 @@ namespace LOFAR
 	       const std::string &recvhost, 
 	       const int portno,
 	       const bool ServerAtSender=true); // determine who is the server
+                                                // this default is very usefull for CEPFrame
+                                               
     
     virtual ~TH_Socket();
     
