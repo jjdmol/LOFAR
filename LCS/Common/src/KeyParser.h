@@ -51,6 +51,13 @@ public:
   /// Parse the command in the given string and return the resulting map.
   static KeyValueMap parse (const std::string& command);
 
+  /// Parse the command in the given file and return the resulting map.
+  // Lines starting with # are comments and ignored.
+  // <group>
+  static KeyValueMap parseFile (const std::string& fileName);
+  static KeyValueMap parseFile (const char* fileName);
+  // </group>
+
   /// Give the next chunk of input for the scanner.
   static int input (char* buf, int max_size);
 

@@ -24,7 +24,9 @@
 #include <Common/KeyParser.h>
 #include <Common/KeyParse.h>
 #include <Common/lofar_iostream.h>
+#include <Common/Exception.h>
 #include <sstream>
+#include <fstream>
 #include <stdio.h>
 
 //# Define extern symbols in KeyTokenize.cc.
@@ -41,6 +43,29 @@ int KeyParser::theirPosition = 0;
 const char* KeyParser::theirCommand = 0;
 KeyValueMap* KeyParser::theirKeyMap = 0;
 
+
+KeyValueMap KeyParser::parseFile (const string& fileName)
+{
+  return parseFile (fileName.c_str());
+}
+
+KeyValueMap KeyParser::parseFile (const char* fileName)
+{
+  string command;
+  char buf[4096];
+  std::ifstream ifs(fileName);
+  if (!ifs) {
+    throw Exception("KeyValue file " + string(fileName) +
+		    " could not be opened");
+  }
+  while (ifs.getline(buf, sizeof(buf))) {
+    if (buf[0] != '#') {
+      command += buf;
+      command += '\n';
+    }
+  }
+  return parse(command);
+}
 
 KeyValueMap KeyParser::parse (const std::string& command)
 {
