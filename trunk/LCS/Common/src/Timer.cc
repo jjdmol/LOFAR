@@ -39,7 +39,7 @@ double NSTimer::CPU_speed_in_MHz = NSTimer::get_CPU_speed_in_MHz();
 
 double NSTimer::get_CPU_speed_in_MHz()
 {
-#if defined __linux__ && (defined __GNUC__ || defined __INTEL_COMPILER) && (defined __i386 || defined __x86_64)
+#if defined __linux__ && (defined __i386__ || defined __x86_64__ || defined __ia64__) && (defined __GNUC__ || defined __INTEL_COMPILER)
     // first a few sanity checks
     assert(sizeof(int) == 4);
     assert(sizeof(long long) == 8);
