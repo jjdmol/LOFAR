@@ -294,7 +294,7 @@ namespace ABS
 
   const TPropertySet BeamServerPSet = 
     {
-      2, "BeamServer", BeamServerProps
+	(sizeof(BeamServerProps)/sizeof(TProperty)), "BeamServer", BeamServerProps
     };
 
 };

@@ -60,7 +60,7 @@ using namespace boost::gregorian;
 
 #define SCALE (1<<(16-2))
 
-#define BEAMLETSTATS_INTEGRATION_COUNT 100
+#define BEAMLETSTATS_INTEGRATION_COUNT 5000
 
 static Array<std::complex<int16_t>, 4> zero_weights;
 
@@ -144,9 +144,16 @@ GCFEvent::TResult BeamServerTask::initial(GCFEvent& e, GCFPortInterface& port)
 
       case F_DISCONNECTED_SIG:
       {
-	  LOG_FATAL(formatString("port '%s' disconnected", port.getName().c_str()));
+	  port.setTimer((long)3); // try again in 3 seconds
+	  LOG_WARN(formatString("port '%s' disconnected, retry in 3 seconds...", port.getName().c_str()));
 	  port.close();
-	  exit(EXIT_FAILURE);
+      }
+      break;
+
+      case F_TIMER_SIG:
+      {
+	  LOG_INFO(formatString("port '%s' retry of open...", port.getName().c_str()));
+	  port.open();
       }
       break;
 
@@ -217,7 +224,7 @@ GCFEvent::TResult BeamServerTask::enabled(GCFEvent& e, GCFPortInterface& port)
 	    // compute new weights after sending weights
 	    compute_timeout_action(timer->sec);
 
-#if 1
+#if 0
 	    Array<unsigned int, 3> power_sum(N_BEAMLETS, N_POLARIZATIONS, 2);
 
 	    power_sum = 0;
@@ -259,11 +266,13 @@ GCFEvent::TResult BeamServerTask::enabled(GCFEvent& e, GCFPortInterface& port)
 	ABSBeamallocEvent* event = static_cast<ABSBeamallocEvent*>(&e);
 	beamalloc_action(event, port);
 
+#if 0
 	if (m_beams.size() == 1)
 	  {
 	    // enable on the first beam
 	    wgenable_action();
 	  }
+#endif
       }
       break;
 
@@ -272,11 +281,13 @@ GCFEvent::TResult BeamServerTask::enabled(GCFEvent& e, GCFPortInterface& port)
 	ABSBeamfreeEvent* event = static_cast<ABSBeamfreeEvent*>(&e);
 	beamfree_action(event, port);
 
+#if 0
 	if (m_beams.size() == 0)
 	  {
 	    // no more beams, disable WG
 	    wgdisable_action();
 	  }
+#endif
       }
       break;
 
@@ -318,9 +329,9 @@ GCFEvent::TResult BeamServerTask::enabled(GCFEvent& e, GCFPortInterface& port)
 	if (STATS_PACKET_SIZE == length)
 	{
 	    Array<unsigned int, 3> power_sum(statsdata,
-					     shape(N_BEAMLETS, N_POLARIZATIONS, 2),
+					     shape(N_BEAMLETS / 2, N_POLARIZATIONS, 2),
 					     neverDeleteData);
-	    //m_stats.update(power_sum, *seqnr);
+	    m_stats.update(power_sum, *seqnr);
 	}
       }
       break;
@@ -493,7 +504,7 @@ void BeamServerTask::wgenable_action()
   ee.command       = 2; // 2 == waveform enable
   ee.seqnr         = 0;
   ee.pktsize       = htons(WGENABLE_PACKET_SIZE);
-  ee.frequency     = htons((short)((m_wgsetting.frequency * 65535) / SYSTEM_CLOCK_FREQ));
+  ee.frequency     = htons((short)((m_wgsetting.frequency * (1 << 16))/ SYSTEM_CLOCK_FREQ));
   ee.reserved1     = 0;
   ee.amplitude     = m_wgsetting.amplitude;
   (void)memset(&ee.reserved2, 0, 3);
@@ -564,7 +575,7 @@ void BeamServerTask::compute_timeout_action(long current_seconds)
 
   //
   // need complex conjugate of the weights
-  // as 16bit signed interger to send to the board
+  // as 16bit signed integer to send to the board
   //
   m_weights16 = convert2complex_int16_t(conj(m_weights));
 
@@ -596,18 +607,18 @@ void BeamServerTask::send_weights(int period)
 
 	  if (pol == 0) {
 	    // only send x-polarization weights
-	    weights(all, Range(0,toEnd,2)) = complex<int16_t>(0,0);
+	    weights(all, Range(1,toEnd,2)) = complex<int16_t>(0,0);
 	  } else if (pol == 1) {
 	    // only send x-polarization weights (*i)
 	    weights *= complex<int16_t>(0,1);
-	    weights(all, Range(0,toEnd,2)) = complex<int16_t>(0,0);
+	    weights(all, Range(1,toEnd,2)) = complex<int16_t>(0,0);
 	  } else if (pol == 2) {
 	    // only send y-polarization weights
-	    weights(all, Range(1,toEnd,2)) = complex<int16_t>(0,0);
+	    weights(all, Range(0,toEnd,2)) = complex<int16_t>(0,0);
 	  } else if (pol == 3) {
 	    // only send y-polarization weights (*i)	    
 	    weights *= complex<int16_t>(0,1);
-	    weights(all, Range(1,toEnd,2)) = complex<int16_t>(0,0);
+	    weights(all, Range(0,toEnd,2)) = complex<int16_t>(0,0);
 	  }
 
 	  bc.phasepol = pol;
@@ -662,15 +673,15 @@ void BeamServerTask::send_sbselection()
 	      LOG_ERROR(formatString("invalid src index %d", sel->first));
 	      continue;
 	  }
-	  if (sel->second > 254)
+	  if (sel->second > N_BEAMLETS)
 	  {
 	      LOG_ERROR(formatString("invalid tgt index", sel->first));
 	      continue;
 	  }
 
 	  // same selection for x and y polarization
-	  ss.bands[sel->first*2]   = sel->second*2;
-	  ss.bands[sel->first*2+1] = sel->second*2;
+	  ss.bands[sel->first*2]   = sel->second * 2;
+	  ss.bands[sel->first*2+1] = sel->second * 2 + 1;
       }
 
       board.send(GCFEvent(F_RAW_SIG), &ss.command, SBSELECT_PACKET_HDR_SIZE + m_sbsel.size()*2);

@@ -78,13 +78,13 @@ void BeamletStats::update(Array<unsigned int,3>& power_sum, unsigned int seqnr)
       beamlet_offset = m_nbeamlets / 2;
   }
 
-  for (int i = beamlet_offset; i < beamlet_offset + m_nbeamlets / 2; i++)
+  for (int i = 0; i < m_nbeamlets / 2; i++)
   {
       // x-polarization
-      m_beamlet_power(i, 0) += power_sum(i, 0, 0) + power_sum(i, 0, 1);
+      m_beamlet_power(i + beamlet_offset, 0) += power_sum(i, 0, 0) + power_sum(i, 0, 1);
       
       // y-polarization
-      m_beamlet_power(i, 1) += power_sum(i, 1, 0) + power_sum(i, 1, 1);
+      m_beamlet_power(i + beamlet_offset, 1) += power_sum(i, 1, 0) + power_sum(i, 1, 1);
   }
 
   m_count++;
@@ -97,6 +97,8 @@ void BeamletStats::update(Array<unsigned int,3>& power_sum, unsigned int seqnr)
 
       LOG_DEBUG(formatString("Updating statistics properties: totalpower = %f",
 			     sum(m_beamlet_power)));
+
+      LOG_DEBUG_STR("m_beamlet_power=" << m_beamlet_power);
 
       char propnamex[64];
       char propnamey[64];
