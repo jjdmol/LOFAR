@@ -68,13 +68,18 @@ void DH_CorrectionMatrix::preprocess()
   createDataBlock();
   
   // initialise the blob field with values from C'tor
-  
 }
 
 void DH_CorrectionMatrix::postprocess()
 {
   itsBufferptr      = 0;
   itsElapsedTimeptr = 0;
+}
+
+void DH_CorrectionMatrix::fillDataPointers()
+{
+  // Fill in the buffer pointer.
+  itsBufferptr           = getData<complex<float> > ("Buffer");
 }
 
 }

@@ -53,7 +53,7 @@ WH_Transpose::WH_Transpose (const string& name,
   for (unsigned int i=0; i<nin; i++) {
     sprintf (str, "%d", i);
     getDataManager().addInDataHolder(i, 
-				     new DH_Beamlet (string("out_") + str, itsFBW));
+				     new DH_Beamlet (string("in_") + str, itsFBW));
   }
   // create the output dataholders
   for (unsigned int i=0; i<nout; i++) {

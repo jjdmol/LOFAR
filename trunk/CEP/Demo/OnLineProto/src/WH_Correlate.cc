@@ -50,7 +50,7 @@ WH_Correlate::WH_Correlate (const string& name,
   for (unsigned int i=0; i<channels; i++) {
     sprintf (str, "%d", i);
     getDataManager().addInDataHolder(i, 
-				     new DH_CorrCube (string("out_") + str, ps));
+				     new DH_CorrCube (string("in_") + str, ps));
   }
   // create the output dataholders
   for (unsigned int i=0; i<channels; i++) {

@@ -33,7 +33,7 @@
 
 // OnLineProto specific include
 #include <OnLineProto/WH_FringeControl.h>
-#include <OnLineProto/DH_Phase.h>
+#include <OnLineProto/DH_CorrectionMatrix.h>
 
 namespace LOFAR
 {
@@ -53,7 +53,7 @@ WH_FringeControl::WH_FringeControl (const string& name,
   // create the output dataholders
   for (int i = 0; i < nout; i++) {
     sprintf (str, "%d", i);
-    getDataManager().addOutDataHolder(i,new DH_Phase (string("FringeCtrlout_") + str, i));
+    getDataManager().addOutDataHolder(i,new DH_CorrectionMatrix (string("FringeCtrlout_") + str, ps.getInt("general.nstations"), ps.getInt("station.nchannels")));
   }
 }
 
@@ -78,7 +78,7 @@ void WH_FringeControl::process()
   TRACER4("WH_FringeControl::Process()");
    
    for (int s = 0; s < getDataManager().getOutputs(); s++) {
-      ((DH_Phase*)getDataManager().getOutHolder(s))->setPhaseAngle(0.0);
+     //      ((DH_CorrectionMatrix*)getDataManager().getOutHolder(s))->setPhaseAngle(0.0);
    }
 }
 
