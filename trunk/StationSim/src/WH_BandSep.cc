@@ -159,7 +159,6 @@ void WH_BandSep::process()
 	  }
 	  conv /= itsFilterLength;
 	}
-	cout << "***" << endl;
 	itsFFTserver.fft0 (itsFFTBuf, itsConv, False);
 	itsFFTBuf *= DH_SampleC::BufferType(1./itsNsubband);
 	// The FFT output has (n+2)/2 points, where first point is the
