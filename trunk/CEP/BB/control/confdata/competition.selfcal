@@ -1,6 +1,0 @@
-calibrate_observation {
-  competition {
-    part start.0
-    part start.1
-  }
-}

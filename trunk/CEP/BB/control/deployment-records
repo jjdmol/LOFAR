@@ -1,3 +1,0 @@
-insert into deploymentdata values (0, 'BlackBoard', -1);
-insert into deploymentdata values (1, 'Controller', 0);
-insert into deploymentdata values (2, 'Engine', 1);
