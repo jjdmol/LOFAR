@@ -1,9 +1,10 @@
 Compiler version:
-Default compiler of RedHat 8 (gcc3.x)
+Default compiler of RedHat 9 (gcc3.x)
 
 EXTERNAL PACKAGES (see for example in MAC/Test/GCF/configure.in):
 PVSS II 3.0.1 (see MAC/GCF)
-LCS/Common
+LCS/Common (CVS TAG: Common_v1-0)
+autoconf_share (CVS TAG: autoconf_v1-0)
 MAC/GCF/GCFCommon
 MAC/GCF/TM
 MAC/GCF/PAL
