@@ -3,6 +3,7 @@
 #include <VisCube/VisVocabulary.h>
 #include <MEQ/Request.h>
 #include <MEQ/VellSet.h>
+#include <MEQ/MeqVocabulary.h>
 
 namespace Meq {
 

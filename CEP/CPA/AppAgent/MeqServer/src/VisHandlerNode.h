@@ -19,7 +19,7 @@ const HIID  FStation1      = AidStation|1|AidIndex,
 
             FOutputColumn = AidOutput|AidCol,
             FInputColumn  = AidInput|AidCol,
-            FFlagMask     = AidFlag|AidMask,
+//            FFlagMask     already defined in MeqVocabulary
             FRowFlagMask  = AidRow|AidFlag|AidMask,
             FCorr         = AidCorr|AidIndex,
             FNext         = AidNext;

@@ -460,4 +460,68 @@ const flagger_test := function (verbose=4,gui=use_gui)
   return result;
 }
 
+# test resolution coupler 
+const rs_test := function (flags=[],flag_mask=-1,flag_bit=0,flag_density=.5)
+{
+  if( is_fail(mqsinit(verbose=verbose,gui=gui)) )
+  {
+    print mqs;
+    fail;
+  }
+  # mqs.setdebug('MeqParm',5);
+  global domain,cells,req,cells2,req2,cells3,req3,cells4,req4;
+  global res,res2,res3,res4;
+  
+  domain := meq.domain(-1,1,-1,1);
+  
+  # create polc for this domain
+  polc := meq.polc(array([1,.5,.5,0],2,2),domain=domain);
+  defrec := meq.parm('a',polc,groups='Parm');
+  defrec.solvable := T;
+  mqs.meq('Create.Node',defrec,T);
+  defrec := meq.node('MeqResampler','rs',children="a")
+  defrec.integrate := T;
+  defrec.flag_mask := flag_mask;
+  defrec.flag_bit := flag_bit;
+  defrec.flag_density := flag_density;
+  mqs.meq('Create.Node',defrec,T);
+  
+  # this rqid will be re-used for all requests. What we do is clear the
+  # cache of the Resampler node, then send up a request with the same ID
+  # but different cells. The parm returns the original (cached) result, and
+  # the Resampler integrates or extends it
+  rqid := meq.requestid(0,0,0);
+  # first, init the cache of the parm node
+  cells := meq.cells(domain,2,2);
+  req := meq.request(cells,request_id=rqid,calc_deriv=0);
+  res := mqs.execute('a',req);
+  # add flags to cache, if specified
+  if( len(flags) )
+  {
+    res := mqs.getnodestate('a').cache_result;
+    res.vellsets[1].flags := array(flags,2,2);
+    mqs.meq('Node.Set.State',[name='a',state=[cache_result=res]],T);
+  }
+  
+  res := mqs.execute('rs',req);
 
+  cells2 := meq.cells(domain,1,1);
+  req2 := meq.request(cells2,request_id=rqid,calc_deriv=2);
+  mqs.meq('Node.Clear.Cache',[name='rs'],T);
+  res2 := mqs.execute('rs',req2);
+
+  cells3 := meq.cells(domain,4,2);
+  req3 := meq.request(cells3,request_id=rqid,calc_deriv=2);
+  mqs.meq('Node.Clear.Cache',[name='rs'],T);
+  res3 := mqs.execute('rs',req3);
+  
+  cells4 := meq.cells(domain,1,4);
+  req4 := meq.request(cells3,request_id=rqid,calc_deriv=2);
+  mqs.meq('Node.Clear.Cache',[name='rs'],T);
+  res4 := mqs.execute('rs',req4);
+  
+  print res.result.vellsets[1];
+  print res2.result.vellsets[1];
+  print res3.result.vellsets[1];
+  print res4.result.vellsets[1];
+}

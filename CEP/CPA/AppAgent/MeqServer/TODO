@@ -1,5 +1,7 @@
 MEQ in general:
 
+  * Resolution coupler node
+
   * Update documentation! (never goes away, does it?)
   
   * Specify child labels in node constructor; check them in init().
@@ -75,7 +77,7 @@ MEQ in general:
           
 Solver:
 
-  * BUG: JEN has a problem after Clear.Polcs: execute returns a fail saying
+  ? BUG: JEN has a problem after Clear.Polcs: execute returns a fail saying
     "no cells in Meq::Request"
     
       [ Apply a gain factor to incremental value updates (perhaps both on the 
@@ -165,7 +167,7 @@ Request:
 
 Vells and VellSets and Results:
 
-  * think of extending the Vells amth functions: median, etc.
+  * think of extending the Vells math functions: median, etc.
 
     - double-differencing?
       02/02/04 done for VellSets, needs real testing
