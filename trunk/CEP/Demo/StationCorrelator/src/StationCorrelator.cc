@@ -79,6 +79,7 @@ void StationCorrelator::define(const KeyValueMap& /*kvm*/) {
   LOG_TRACE_FLOW_STR("Read KVM parameters");
   char H_name[128];
   int slow_rate = itsKVM.getInt("samples",256000)/itsKVM.getInt("NoPacketsInFrame",8);
+  int lastFreeNode = 0;
   cout<<"slow_rate: "<<slow_rate<<endl;
 
   LOG_TRACE_FLOW_STR("Create the top-level composite");
@@ -93,6 +94,11 @@ void StationCorrelator::define(const KeyValueMap& /*kvm*/) {
   WH_RSPBoard RSPBoard("WH_RSPBoard", itsKVM);
   Step StepRSPemulator(RSPBoard, "STEP_RSPBoard");
   comp.addStep(StepRSPemulator);
+  if (useRealRSP) {
+    StepRSPemulator.runOnNode(-1);
+  } else {
+    StepRSPemulator.runOnNode(lastFreeNode++);
+  }
   
   Step** itsRSPsteps = new Step*[itsNrsp];
   for (unsigned int i = 0; i < itsNrsp; i++) {
@@ -106,6 +112,9 @@ void StationCorrelator::define(const KeyValueMap& /*kvm*/) {
       whRSP = new WH_RSP(H_name, itsKVM, false);  // notsyncmaster
     }
     itsRSPsteps[i] = new Step(*whRSP, H_name, false);
+    comp.addStep(itsRSPsteps[i]); 
+
+    itsRSPsteps[i]->runOnNode(lastFreeNode++);
 
     if (useRealRSP) {
       string iface = itsKVM["interfaces"].getVecString()[i];
@@ -117,13 +126,10 @@ void StationCorrelator::define(const KeyValueMap& /*kvm*/) {
 								oMac.c_str(), 
 								0x000, 
 								true), true);
-      StepRSPemulator.runOnNode(-1);
     } else {
       // Use the WH_RSPBoard to emulate a real RSP Board
       connect(&StepRSPemulator, itsRSPsteps[i], i, 0);
     }
-
-    comp.addStep(itsRSPsteps[i]); 
 
     if (i != 0) {
       // we're a syncSlave. Connect the second input to an appropriate output.
@@ -141,11 +147,11 @@ void StationCorrelator::define(const KeyValueMap& /*kvm*/) {
 
     WH_Transpose whTranspose(H_name, itsKVM);
     itsTsteps[i] = new Step(whTranspose, H_name, false);
+    comp.addStep(itsTsteps[i]);
     // the transpose collects data to intergrate over, so only the input 
     // and process methods run fast
     itsTsteps[i]->setOutRate(slow_rate);
-
-    comp.addStep(itsTsteps[i]);
+    itsTsteps[i]->runOnNode(lastFreeNode++); // do not increase lastFreeNode here, it needs to run on the same node
 
     // connect the Transpose step just created to the correct RSP outputs
     for (unsigned int rsp = 0; rsp < itsNrsp; rsp++) {
@@ -159,10 +165,11 @@ void StationCorrelator::define(const KeyValueMap& /*kvm*/) {
 
     WH_Correlator whCorrelator(H_name, itsKVM);
     itsCsteps[i] = new Step(whCorrelator, H_name, false);
+    comp.addStep(itsCsteps[i]);
     itsCsteps[i]->setInRate(slow_rate);
     itsCsteps[i]->setProcessRate(slow_rate);
     itsCsteps[i]->setOutRate(slow_rate);
-    comp.addStep(itsCsteps[i]);
+    itsCsteps[i]->runOnNode(lastFreeNode++);
     
     connect(itsTsteps[i], itsCsteps[i], 0, 0);
   }
@@ -177,16 +184,21 @@ void StationCorrelator::define(const KeyValueMap& /*kvm*/) {
 
     WH_Dump whDump(H_name, itsKVM, oFile);
     Step dumpstep(whDump, H_name);
+    comp.addStep(dumpstep);
     dumpstep.setInRate(slow_rate);
     dumpstep.setProcessRate(slow_rate);
     dumpstep.setOutRate(slow_rate);
-    comp.addStep(dumpstep);
+    dumpstep.runOnNode(lastFreeNode++);
     
     for (unsigned int in = 0; in < (itsNcorrelator/itsNdump); in++) {
       connect(itsCsteps[c_index++], &dumpstep, 0, in);
     }
   }
   LOG_TRACE_FLOW_STR("Finished define()");
+
+#ifdef HAVE_MPI
+  ASSERTSTR (lastFreeNode == TH_MPI::getNumberOfNodes(), lastFreeNode << " nodes needed, "<<TH_MPI::getNumberOfNodes()<<" available");
+#endif
 }
 
 void StationCorrelator::prerun() {
@@ -199,6 +211,7 @@ void StationCorrelator::run(int steps) {
     LOG_TRACE_LOOP_STR("processing run " << i );
     getComposite().process();
   }
+  cout<<"ready with run on node "<<TH_MPI::getCurrentRank()<<endl;
   LOG_TRACE_FLOW_STR("Finished StationCorrelator::run() "  );
 }
 
@@ -213,17 +226,21 @@ void StationCorrelator::quit() {
 }
 
 void StationCorrelator::connect(Step* srcStep, Step* dstStep, int srcDH, int dstDH) {
+  //  cout<<"Connecting "<<srcStep->getName()<<" and "<<dstStep->getName()<<" ...";
 #ifdef HAVE_MPI
   int srcNode = srcStep->getNode();
   int dstNode = dstStep->getNode();
+  //  cout<<" from "<<srcNode<<" to "<<dstNode<<" ";
   if (srcNode == dstNode) {
-    dstStep->connect(srcStep, srcDH, dstDH, 1, TH_Mem(), false);  // true=blocking
+    //    cout<<srcStep->getName()<<" and "<<dstStep->getName()<<" on same node"<<endl;
+    dstStep->connect(srcStep, dstDH, srcDH, 1, TH_Mem(), false);  // true=blocking
   } else {
-    dstStep->connect(srcStep, srcDH, dstDH, 1, TH_MPI(srcNode, dstNode), true);  // true=blocking
+    dstStep->connect(srcStep, dstDH, srcDH, 1, TH_MPI(srcNode, dstNode), true);  // true=blocking
   }
 #else
-  dstStep->connect(srcStep, srcDH, dstDH, 1, TH_Mem(), false);  // true=blocking
+  dstStep->connect(srcStep, dstDH, srcDH, 1, TH_Mem(), false);  // true=blocking
 #endif
+  //  cout<<"ok"<<endl;
 }
 
 int main (int argc, const char** argv) {
@@ -231,15 +248,19 @@ int main (int argc, const char** argv) {
   INIT_LOGGER("StationCorrelator");
 
   try {
-    kvm = KeyParser::parseFile("TestRange");
-
-  } catch (std::exception& x) {
-    cerr << x.what() << endl;
-  }
-  
-  try {
+    kvm = KeyParser::parseFile("/home/zwart/TestRange");
     //    kvm.show(cout);
+  } catch(std::exception& x){
+  }
+  try {
 
+    if(kvm.getInt("runsteps", -1) == -1) {
+      int length;
+      char name[100];
+
+      MPI_Get_processor_name(name, &length);
+      cout<<"COULD NOT READ TESTRANGE FILE on "<<name<<endl;
+    }
     StationCorrelator correlator(kvm);
     correlator.setarg(argc, argv);
     correlator.baseDefine(kvm);
