@@ -346,6 +346,31 @@ void ParameterCollection::writeFile(const string&	theFilename) const
 	paramFile.close();
 }
 
+//#
+//# writeBuffer
+//#
+// Writes the Key-Values pair from the current ParameterCollection to the given 
+// string.
+//
+void ParameterCollection::writeBuffer(string&	aBuffer) const
+{
+	//# Write all the pairs to the file
+	const_iterator		curPair = begin();
+	while (curPair != end()) {
+		//# Key can always be written.
+		aBuffer += (curPair->first + "=");
+
+		//* value may begin or end in a space: use quotes
+		if (*(curPair->second.begin()) == ' ' || *(curPair->second.rbegin()) == ' ') {
+			aBuffer += ("\"" + curPair->second + "\"\n");
+		}
+		else {
+ 			aBuffer += (curPair->second + "\n");
+		}
+
+		curPair++;
+	}
+}
 //#-------------------------- global functions -----------------------------
 //#
 //# isValidVersionNr(versionNr)
@@ -371,6 +396,24 @@ bool isValidVersionNrRef(const string& versionNr)
 	return (isValidVersionNr(versionNr) || (versionNr == PC_QUAL_STABLE) || 
 		    (versionNr == PC_QUAL_DEVELOP));
 
+}
+
+//#
+//# isValidSeqNr(aString)
+//#
+//# Check is given string is a valid sequencenumber
+//#
+uint32	seqNr(const string& aString)
+{
+	int32	theNumber;
+
+	sscanf(aString.c_str(), "%d", &theNumber);
+
+	if (theNumber <= 0) {
+		return (0);
+	}
+
+	return (theNumber);
 }
 
 //#
@@ -407,6 +450,33 @@ string moduleName(const string& fullKeyName)
 	return (fullKeyName.substr(0, lastPoint - fullKeyName.c_str()));
 }
 
+//#
+//# keyPart(parameterline)
+//#
+//# Returns the key part of a parameter line.
+//#
+string	keyPart	  (const string& parameterLine)
+{
+	char*	firstEqual = strchr(parameterLine.c_str(), '=');
+
+	if (!firstEqual) {
+		return (parameterLine);
+	}
+
+	return (parameterLine.substr(0, firstEqual - parameterLine.c_str()));
+}
+
+// Returns the value of a parameterline
+string	valuePart   (const string& parameterLine)
+{
+	char*	firstEqual = strchr(parameterLine.c_str(), '=');
+
+	if (!firstEqual) {
+		return ("");
+	}
+
+	return (parameterLine.substr(firstEqual + 1 - parameterLine.c_str()));
+}
 
 } // namespace ACC
 } // namespace LOFAR
