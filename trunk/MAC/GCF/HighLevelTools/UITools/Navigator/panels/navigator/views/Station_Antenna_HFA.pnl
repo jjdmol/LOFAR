@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 12 HFA Antennas
-PANEL,406 182 994 514 N "_3DFace" 1
+PANEL,258 138 994 514 N "_3DFace" 1
 "$datapoint"
 EEE E E 1 -1 -1 0  28 10
 "" 0 1
@@ -4852,29 +4852,6 @@ LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-200-100-100-*-*-iso8859-
 0 ""
 1
 LANG:1 23 High Frequency Antennas
-14 1817
-"TextField1"
-""
-1 220 60 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
- E E
-267 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-0
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-218 58 502 85
-3 "s" 0 0 0 0 0 0 
-E
-"main()
-{
-setValue(\"\", \"text\", \"$datapoint: \" + $datapoint);
-}" 0
-
-E
 0
 LAYER, 1 
 1
@@ -4906,1346 +4883,1538 @@ LANG:1 6 Layer8
 0
 3 0 ""
 "objects\\PIC\\STS_Antenna_HFA.pnl" 116 141 T 1 1 0 1  -94 -1  
-4
+5
 "$APNr""1"
 "$RCUNr""1"
 "$RackNr""1"
 "$SubrackNr""1"
+"$datapoint""$datapoint"
 3 3 ""
 "objects\\PIC\\STS_Antenna_HFA.pnl" 149 176 T 4 1 0 1  -127 -6  
-4
+5
 "$APNr""1"
 "$RCUNr""2"
 "$RackNr""1"
 "$SubrackNr""1"
+"$datapoint""$datapoint"
 3 4 "Group7"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 160 60 T 5 1 0 1  -108 80  
-4
+5
 "$APNr""2"
 "$RCUNr""1"
 "$RackNr""1"
 "$SubrackNr""1"
+"$datapoint""$datapoint"
 3 5 "Group8"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 160 90 T 6 1 0 1  -108 80  
-4
+5
 "$APNr""2"
 "$RCUNr""2"
 "$RackNr""1"
 "$SubrackNr""1"
+"$datapoint""$datapoint"
 3 6 "Group11"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 190 60 T 7 1 0 1  -108 80  
-4
+5
 "$APNr""3"
 "$RCUNr""1"
 "$RackNr""1"
 "$SubrackNr""1"
+"$datapoint""$datapoint"
 3 7 "Group12"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 190 90 T 8 1 0 1  -108 80  
-4
+5
 "$APNr""3"
 "$RCUNr""2"
 "$RackNr""1"
 "$SubrackNr""1"
+"$datapoint""$datapoint"
 3 8 "Group15"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 220 60 T 9 1 0 1  -108 80  
-4
+5
 "$APNr""4"
 "$RCUNr""1"
 "$RackNr""1"
 "$SubrackNr""1"
+"$datapoint""$datapoint"
 3 9 "Group16"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 220 90 T 10 1 0 1  -108 80  
-4
+5
 "$APNr""4"
 "$RCUNr""2"
 "$RackNr""1"
 "$SubrackNr""1"
+"$datapoint""$datapoint"
 3 10 "Group25"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 160 60 T 24 1 0 1  -138 150  
-4
+5
 "$APNr""1"
 "$RCUNr""1"
 "$RackNr""1"
 "$SubrackNr""2"
+"$datapoint""$datapoint"
 3 11 "Group26"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 160 90 T 25 1 0 1  -138 150  
-4
+5
 "$APNr""1"
 "$RCUNr""2"
 "$RackNr""1"
 "$SubrackNr""2"
+"$datapoint""$datapoint"
 3 12 "Group27"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 190 60 T 26 1 0 1  -138 150  
-4
+5
 "$APNr""2"
 "$RCUNr""1"
 "$RackNr""1"
 "$SubrackNr""2"
+"$datapoint""$datapoint"
 3 13 "Group28"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 190 90 T 27 1 0 1  -138 150  
-4
+5
 "$APNr""2"
 "$RCUNr""2"
 "$RackNr""1"
 "$SubrackNr""2"
+"$datapoint""$datapoint"
 3 14 "Group29"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 220 60 T 28 1 0 1  -138 150  
-4
+5
 "$APNr""3"
 "$RCUNr""1"
 "$RackNr""1"
 "$SubrackNr""2"
+"$datapoint""$datapoint"
 3 15 "Group30"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 220 90 T 29 1 0 1  -138 150  
-4
+5
 "$APNr""3"
 "$RCUNr""2"
 "$RackNr""1"
 "$SubrackNr""2"
+"$datapoint""$datapoint"
 3 16 "2"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 250 60 T 30 1 0 1  -138 150  
-4
+5
 "$APNr""4"
 "$RCUNr""1"
 "$RackNr""1"
 "$SubrackNr""2"
+"$datapoint""$datapoint"
 3 17 "Group32"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 250 90 T 31 1 0 1  -138 150  
-4
+5
 "$APNr""4"
 "$RCUNr""2"
 "$RackNr""1"
 "$SubrackNr""2"
+"$datapoint""$datapoint"
 3 18 "Group41"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 160 130 T 32 1 0 1  -138 150  
-4
+5
 "$APNr""1"
 "$RCUNr""1"
 "$RackNr""1"
 "$SubrackNr""3"
+"$datapoint""$datapoint"
 3 19 "Group42"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 160 160 T 33 1 0 1  -138 150  
-4
+5
 "$APNr""1"
 "$RCUNr""2"
 "$RackNr""1"
 "$SubrackNr""3"
+"$datapoint""$datapoint"
 3 20 "Group43"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 190 130 T 34 1 0 1  -138 150  
-4
+5
 "$APNr""2"
 "$RCUNr""1"
 "$RackNr""1"
 "$SubrackNr""3"
+"$datapoint""$datapoint"
 3 21 "Group44"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 190 160 T 35 1 0 1  -138 150  
-4
+5
 "$APNr""2"
 "$RCUNr""2"
 "$RackNr""1"
 "$SubrackNr""3"
+"$datapoint""$datapoint"
 3 22 "Group45"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 220 130 T 36 1 0 1  -138 150  
-4
+5
 "$APNr""3"
 "$RCUNr""1"
 "$RackNr""1"
 "$SubrackNr""3"
+"$datapoint""$datapoint"
 3 23 "Group46"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 220 160 T 37 1 0 1  -138 150  
-4
+5
 "$APNr""3"
 "$RCUNr""2"
 "$RackNr""1"
 "$SubrackNr""3"
+"$datapoint""$datapoint"
 3 24 "Group47"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 250 130 T 38 1 0 1  -138 150  
-4
+5
 "$APNr""4"
 "$RCUNr""1"
 "$RackNr""1"
 "$SubrackNr""3"
+"$datapoint""$datapoint"
 3 25 "Group48"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 250 160 T 39 1 0 1  -138 150  
-4
+5
 "$APNr""4"
 "$RCUNr""2"
 "$RackNr""1"
 "$SubrackNr""3"
+"$datapoint""$datapoint"
 3 26 "Group57"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 160 200 T 40 1 0 1  -138 150  
-4
+5
 "$APNr""1"
 "$RCUNr""1"
 "$RackNr""1"
 "$SubrackNr""4"
+"$datapoint""$datapoint"
 3 27 "Group58"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 160 230 T 41 1 0 1  -138 150  
-4
+5
 "$APNr""1"
 "$RCUNr""2"
 "$RackNr""1"
 "$SubrackNr""4"
+"$datapoint""$datapoint"
 3 28 "Group59"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 190 200 T 42 1 0 1  -138 150  
-4
+5
 "$APNr""2"
 "$RCUNr""1"
 "$RackNr""1"
 "$SubrackNr""4"
+"$datapoint""$datapoint"
 3 29 "Group60"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 190 230 T 43 1 0 1  -138 150  
-4
+5
 "$APNr""2"
 "$RCUNr""2"
 "$RackNr""1"
 "$SubrackNr""4"
+"$datapoint""$datapoint"
 3 30 "Group61"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 220 200 T 44 1 0 1  -138 150  
-4
+5
 "$APNr""3"
 "$RCUNr""1"
 "$RackNr""1"
 "$SubrackNr""4"
+"$datapoint""$datapoint"
 3 31 "Group62"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 220 230 T 45 1 0 1  -138 150  
-4
+5
 "$APNr""3"
 "$RCUNr""2"
 "$RackNr""1"
 "$SubrackNr""4"
+"$datapoint""$datapoint"
 3 32 "Group63"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 250 200 T 46 1 0 1  -138 150  
-4
+5
 "$APNr""4"
 "$RCUNr""1"
 "$RackNr""1"
 "$SubrackNr""4"
+"$datapoint""$datapoint"
 3 33 "Group64"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 250 230 T 47 1 0 1  -138 150  
-4
+5
 "$APNr""4"
 "$RCUNr""2"
 "$RackNr""1"
 "$SubrackNr""4"
+"$datapoint""$datapoint"
 3 34 "Group97"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 160 60 T 48 1 0 1  -10 80  
-4
+5
 "$APNr""1"
 "$RCUNr""1"
 "$RackNr""2"
 "$SubrackNr""1"
+"$datapoint""$datapoint"
 3 35 "Group98"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 160 90 T 49 1 0 1  -10 80  
-4
+5
 "$APNr""1"
 "$RCUNr""2"
 "$RackNr""2"
 "$SubrackNr""1"
+"$datapoint""$datapoint"
 3 36 "Group99"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 190 60 T 50 1 0 1  -10 80  
-4
+5
 "$APNr""2"
 "$RCUNr""1"
 "$RackNr""2"
 "$SubrackNr""1"
+"$datapoint""$datapoint"
 3 37 "Group100"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 190 90 T 51 1 0 1  -10 80  
-4
+5
 "$APNr""2"
 "$RCUNr""2"
 "$RackNr""2"
 "$SubrackNr""1"
+"$datapoint""$datapoint"
 3 38 "Group101"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 220 60 T 52 1 0 1  -10 80  
-4
+5
 "$APNr""3"
 "$RCUNr""1"
 "$RackNr""2"
 "$SubrackNr""1"
+"$datapoint""$datapoint"
 3 39 "Group102"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 220 90 T 53 1 0 1  -10 80  
-4
+5
 "$APNr""3"
 "$RCUNr""2"
 "$RackNr""2"
 "$SubrackNr""1"
+"$datapoint""$datapoint"
 3 40 "Group103"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 250 60 T 54 1 0 1  -10 80  
-4
+5
 "$APNr""4"
 "$RCUNr""1"
 "$RackNr""2"
 "$SubrackNr""1"
+"$datapoint""$datapoint"
 3 41 "Group104"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 250 90 T 55 1 0 1  -10 80  
-4
+5
 "$APNr""4"
 "$RCUNr""2"
 "$RackNr""2"
 "$SubrackNr""1"
+"$datapoint""$datapoint"
 3 42 "Group105"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 160 130 T 56 1 0 1  -10 80  
-4
+5
 "$APNr""1"
 "$RCUNr""1"
 "$RackNr""2"
 "$SubrackNr""2"
+"$datapoint""$datapoint"
 3 43 "Group106"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 160 160 T 57 1 0 1  -10 80  
-4
+5
 "$APNr""1"
 "$RCUNr""2"
 "$RackNr""2"
 "$SubrackNr""2"
+"$datapoint""$datapoint"
 3 44 "Group107"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 190 130 T 58 1 0 1  -10 80  
-4
+5
 "$APNr""2"
 "$RCUNr""1"
 "$RackNr""2"
 "$SubrackNr""2"
+"$datapoint""$datapoint"
 3 45 "Group108"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 190 160 T 59 1 0 1  -10 80  
-4
+5
 "$APNr""2"
 "$RCUNr""2"
 "$RackNr""2"
 "$SubrackNr""2"
+"$datapoint""$datapoint"
 3 46 "Group109"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 220 130 T 60 1 0 1  -10 80  
-4
+5
 "$APNr""3"
 "$RCUNr""1"
 "$RackNr""2"
 "$SubrackNr""2"
+"$datapoint""$datapoint"
 3 47 "Group110"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 220 160 T 61 1 0 1  -10 80  
-4
+5
 "$APNr""3"
 "$RCUNr""2"
 "$RackNr""2"
 "$SubrackNr""2"
+"$datapoint""$datapoint"
 3 48 "Group111"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 250 130 T 62 1 0 1  -10 80  
-4
+5
 "$APNr""4"
 "$RCUNr""1"
 "$RackNr""2"
 "$SubrackNr""2"
+"$datapoint""$datapoint"
 3 49 "Group112"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 250 160 T 63 1 0 1  -10 80  
-4
+5
 "$APNr""4"
 "$RCUNr""2"
 "$RackNr""2"
 "$SubrackNr""2"
+"$datapoint""$datapoint"
 3 50 "Group113"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 160 200 T 64 1 0 1  -10 80  
-4
+5
 "$APNr""1"
 "$RCUNr""1"
 "$RackNr""2"
 "$SubrackNr""3"
+"$datapoint""$datapoint"
 3 51 "Group114"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 160 230 T 65 1 0 1  -10 80  
-4
+5
 "$APNr""1"
 "$RCUNr""2"
 "$RackNr""2"
 "$SubrackNr""3"
+"$datapoint""$datapoint"
 3 52 "Group115"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 190 200 T 66 1 0 1  -10 80  
-4
+5
 "$APNr""2"
 "$RCUNr""1"
 "$RackNr""2"
 "$SubrackNr""3"
+"$datapoint""$datapoint"
 3 53 "Group116"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 190 230 T 67 1 0 1  -10 80  
-4
+5
 "$APNr""2"
 "$RCUNr""2"
 "$RackNr""2"
 "$SubrackNr""3"
+"$datapoint""$datapoint"
 3 54 "Group117"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 220 200 T 68 1 0 1  -10 80  
-4
+5
 "$APNr""3"
 "$RCUNr""1"
 "$RackNr""2"
 "$SubrackNr""3"
+"$datapoint""$datapoint"
 3 55 "Group118"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 220 230 T 69 1 0 1  -10 80  
-4
+5
 "$APNr""3"
 "$RCUNr""2"
 "$RackNr""2"
 "$SubrackNr""3"
+"$datapoint""$datapoint"
 3 56 "Group119"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 250 200 T 70 1 0 1  -10 80  
-4
+5
 "$APNr""4"
 "$RCUNr""1"
 "$RackNr""2"
 "$SubrackNr""3"
+"$datapoint""$datapoint"
 3 57 "Group120"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 250 230 T 71 1 0 1  -10 80  
-4
+5
 "$APNr""4"
 "$RCUNr""2"
 "$RackNr""2"
 "$SubrackNr""3"
+"$datapoint""$datapoint"
 3 58 "Group121"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 160 270 T 72 1 0 1  -10 80  
-4
+5
 "$APNr""1"
 "$RCUNr""1"
 "$RackNr""2"
 "$SubrackNr""4"
+"$datapoint""$datapoint"
 3 59 "Group122"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 160 300 T 73 1 0 1  -10 80  
-4
+5
 "$APNr""1"
 "$RCUNr""2"
 "$RackNr""2"
 "$SubrackNr""4"
+"$datapoint""$datapoint"
 3 60 "Group123"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 190 270 T 74 1 0 1  -10 80  
-4
+5
 "$APNr""2"
 "$RCUNr""1"
 "$RackNr""2"
 "$SubrackNr""4"
+"$datapoint""$datapoint"
 3 61 "Group124"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 190 300 T 75 1 0 1  -10 80  
-4
+5
 "$APNr""2"
 "$RCUNr""2"
 "$RackNr""2"
 "$SubrackNr""4"
+"$datapoint""$datapoint"
 3 62 "Group125"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 220 270 T 76 1 0 1  -10 80  
-4
+5
 "$APNr""3"
 "$RCUNr""1"
 "$RackNr""2"
 "$SubrackNr""4"
+"$datapoint""$datapoint"
 3 63 "Group126"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 220 300 T 77 1 0 1  -10 80  
-4
+5
 "$APNr""3"
 "$RCUNr""2"
 "$RackNr""2"
 "$SubrackNr""4"
+"$datapoint""$datapoint"
 3 64 "Group127"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 250 270 T 78 1 0 1  -10 80  
-4
+5
 "$APNr""4"
 "$RCUNr""1"
 "$RackNr""2"
 "$SubrackNr""4"
+"$datapoint""$datapoint"
 3 65 "Group128"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 250 300 T 79 1 0 1  -10 80  
-4
+5
 "$APNr""4"
 "$RCUNr""2"
 "$RackNr""2"
 "$SubrackNr""4"
+"$datapoint""$datapoint"
 3 66 "Group161"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 160 60 T 80 1 0 1  120 80  
-4
+5
 "$APNr""1"
 "$RCUNr""1"
 "$RackNr""3"
 "$SubrackNr""1"
+"$datapoint""$datapoint"
 3 67 "Group162"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 160 90 T 81 1 0 1  120 80  
-4
+5
 "$APNr""1"
 "$RCUNr""2"
 "$RackNr""3"
 "$SubrackNr""1"
+"$datapoint""$datapoint"
 3 68 "Group163"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 190 60 T 82 1 0 1  120 80  
-4
+5
 "$APNr""2"
 "$RCUNr""1"
 "$RackNr""3"
 "$SubrackNr""1"
+"$datapoint""$datapoint"
 3 69 "Group164"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 190 90 T 83 1 0 1  120 80  
-4
+5
 "$APNr""2"
 "$RCUNr""2"
 "$RackNr""3"
 "$SubrackNr""1"
+"$datapoint""$datapoint"
 3 70 "Group165"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 220 60 T 84 1 0 1  120 80  
-4
+5
 "$APNr""3"
 "$RCUNr""1"
 "$RackNr""3"
 "$SubrackNr""1"
+"$datapoint""$datapoint"
 3 71 "Group166"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 220 90 T 85 1 0 1  120 80  
-4
+5
 "$APNr""3"
 "$RCUNr""2"
 "$RackNr""3"
 "$SubrackNr""1"
+"$datapoint""$datapoint"
 3 72 "Group167"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 250 60 T 86 1 0 1  120 80  
-4
+5
 "$APNr""4"
 "$RCUNr""1"
 "$RackNr""3"
 "$SubrackNr""1"
+"$datapoint""$datapoint"
 3 73 "Group168"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 250 90 T 87 1 0 1  120 80  
-4
+5
 "$APNr""4"
 "$RCUNr""2"
 "$RackNr""3"
 "$SubrackNr""1"
+"$datapoint""$datapoint"
 3 74 "Group169"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 160 130 T 88 1 0 1  120 80  
-4
+5
 "$APNr""1"
 "$RCUNr""1"
 "$RackNr""3"
 "$SubrackNr""2"
+"$datapoint""$datapoint"
 3 75 "Group170"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 160 160 T 89 1 0 1  120 80  
-4
+5
 "$APNr""1"
 "$RCUNr""2"
 "$RackNr""3"
 "$SubrackNr""2"
+"$datapoint""$datapoint"
 3 76 "Group171"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 190 130 T 90 1 0 1  120 80  
-4
+5
 "$APNr""2"
 "$RCUNr""1"
 "$RackNr""3"
 "$SubrackNr""2"
+"$datapoint""$datapoint"
 3 77 "Group172"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 190 160 T 91 1 0 1  120 80  
-4
+5
 "$APNr""2"
 "$RCUNr""2"
 "$RackNr""3"
 "$SubrackNr""2"
+"$datapoint""$datapoint"
 3 78 "Group173"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 220 130 T 92 1 0 1  120 80  
-4
+5
 "$APNr""3"
 "$RCUNr""1"
 "$RackNr""3"
 "$SubrackNr""2"
+"$datapoint""$datapoint"
 3 79 "Group174"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 220 160 T 93 1 0 1  120 80  
-4
+5
 "$APNr""3"
 "$RCUNr""2"
 "$RackNr""3"
 "$SubrackNr""2"
+"$datapoint""$datapoint"
 3 80 "Group175"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 250 130 T 94 1 0 1  120 80  
-4
+5
 "$APNr""4"
 "$RCUNr""1"
 "$RackNr""3"
 "$SubrackNr""2"
+"$datapoint""$datapoint"
 3 81 "Group176"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 250 160 T 95 1 0 1  120 80  
-4
+5
 "$APNr""4"
 "$RCUNr""2"
 "$RackNr""3"
 "$SubrackNr""2"
+"$datapoint""$datapoint"
 3 82 "Group177"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 160 200 T 96 1 0 1  120 80  
-4
+5
 "$APNr""1"
 "$RCUNr""1"
 "$RackNr""3"
 "$SubrackNr""3"
+"$datapoint""$datapoint"
 3 83 "Group178"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 160 230 T 97 1 0 1  120 80  
-4
+5
 "$APNr""1"
 "$RCUNr""2"
 "$RackNr""3"
 "$SubrackNr""3"
+"$datapoint""$datapoint"
 3 84 "Group179"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 190 200 T 98 1 0 1  120 80  
-4
+5
 "$APNr""2"
 "$RCUNr""1"
 "$RackNr""3"
 "$SubrackNr""3"
+"$datapoint""$datapoint"
 3 85 "Group180"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 190 230 T 99 1 0 1  120 80  
-4
+5
 "$APNr""2"
 "$RCUNr""2"
 "$RackNr""3"
 "$SubrackNr""3"
+"$datapoint""$datapoint"
 3 86 "Group181"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 220 200 T 100 1 0 1  120 80  
-4
+5
 "$APNr""3"
 "$RCUNr""1"
 "$RackNr""3"
 "$SubrackNr""3"
+"$datapoint""$datapoint"
 3 87 "Group182"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 220 230 T 101 1 0 1  120 80  
-4
+5
 "$APNr""3"
 "$RCUNr""2"
 "$RackNr""3"
 "$SubrackNr""3"
+"$datapoint""$datapoint"
 3 88 "Group183"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 250 200 T 102 1 0 1  120 80  
-4
+5
 "$APNr""4"
 "$RCUNr""1"
 "$RackNr""3"
 "$SubrackNr""3"
+"$datapoint""$datapoint"
 3 89 "Group184"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 250 230 T 103 1 0 1  120 80  
-4
+5
 "$APNr""4"
 "$RCUNr""2"
 "$RackNr""3"
 "$SubrackNr""3"
+"$datapoint""$datapoint"
 3 90 "Group185"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 160 270 T 104 1 0 1  120 80  
-4
+5
 "$APNr""1"
 "$RCUNr""1"
 "$RackNr""3"
 "$SubrackNr""4"
+"$datapoint""$datapoint"
 3 91 "Group186"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 160 300 T 105 1 0 1  120 80  
-4
+5
 "$APNr""1"
 "$RCUNr""2"
 "$RackNr""3"
 "$SubrackNr""4"
+"$datapoint""$datapoint"
 3 92 "Group187"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 190 270 T 106 1 0 1  120 80  
-4
+5
 "$APNr""2"
 "$RCUNr""1"
 "$RackNr""3"
 "$SubrackNr""4"
+"$datapoint""$datapoint"
 3 93 "Group188"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 190 300 T 107 1 0 1  120 80  
-4
+5
 "$APNr""2"
 "$RCUNr""2"
 "$RackNr""3"
 "$SubrackNr""4"
+"$datapoint""$datapoint"
 3 94 "Group189"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 220 270 T 108 1 0 1  120 80  
-4
+5
 "$APNr""3"
 "$RCUNr""1"
 "$RackNr""3"
 "$SubrackNr""4"
+"$datapoint""$datapoint"
 3 95 "Group190"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 220 300 T 109 1 0 1  120 80  
-4
+5
 "$APNr""3"
 "$RCUNr""2"
 "$RackNr""3"
 "$SubrackNr""4"
+"$datapoint""$datapoint"
 3 96 "Group191"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 250 270 T 110 1 0 1  120 80  
-4
+5
 "$APNr""4"
 "$RCUNr""1"
 "$RackNr""3"
 "$SubrackNr""4"
+"$datapoint""$datapoint"
 3 97 "Group192"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 250 300 T 111 1 0 1  120 80  
-4
+5
 "$APNr""4"
 "$RCUNr""2"
 "$RackNr""3"
 "$SubrackNr""4"
+"$datapoint""$datapoint"
 3 98 "Group225"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 420 60 T 112 1 0 1  -10 80  
-4
+5
 "$APNr""1"
 "$RCUNr""1"
 "$RackNr""4"
 "$SubrackNr""1"
+"$datapoint""$datapoint"
 3 99 "Group226"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 420 90 T 113 1 0 1  -10 80  
-4
+5
 "$APNr""1"
 "$RCUNr""2"
 "$RackNr""4"
 "$SubrackNr""1"
+"$datapoint""$datapoint"
 3 100 "Group227"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 450 60 T 114 1 0 1  -10 80  
-4
+5
 "$APNr""2"
 "$RCUNr""1"
 "$RackNr""4"
 "$SubrackNr""1"
+"$datapoint""$datapoint"
 3 101 "Group228"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 450 90 T 115 1 0 1  -10 80  
-4
+5
 "$APNr""2"
 "$RCUNr""2"
 "$RackNr""4"
 "$SubrackNr""1"
+"$datapoint""$datapoint"
 3 102 "Group229"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 480 60 T 116 1 0 1  -10 80  
-4
+5
 "$APNr""3"
 "$RCUNr""1"
 "$RackNr""4"
 "$SubrackNr""1"
+"$datapoint""$datapoint"
 3 103 "Group230"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 480 90 T 117 1 0 1  -10 80  
-4
+5
 "$APNr""3"
 "$RCUNr""2"
 "$RackNr""4"
 "$SubrackNr""1"
+"$datapoint""$datapoint"
 3 104 "Group231"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 510 60 T 118 1 0 1  -10 80  
-4
+5
 "$APNr""4"
 "$RCUNr""1"
 "$RackNr""4"
 "$SubrackNr""1"
+"$datapoint""$datapoint"
 3 105 "Group232"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 510 90 T 119 1 0 1  -10 80  
-4
+5
 "$APNr""4"
 "$RCUNr""2"
 "$RackNr""4"
 "$SubrackNr""1"
+"$datapoint""$datapoint"
 3 106 "Group233"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 420 130 T 120 1 0 1  -10 80  
-4
+5
 "$APNr""1"
 "$RCUNr""1"
 "$RackNr""4"
 "$SubrackNr""2"
+"$datapoint""$datapoint"
 3 107 "Group234"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 420 160 T 121 1 0 1  -10 80  
-4
+5
 "$APNr""1"
 "$RCUNr""2"
 "$RackNr""4"
 "$SubrackNr""2"
+"$datapoint""$datapoint"
 3 108 "Group235"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 450 130 T 122 1 0 1  -10 80  
-4
+5
 "$APNr""2"
 "$RCUNr""1"
 "$RackNr""4"
 "$SubrackNr""2"
+"$datapoint""$datapoint"
 3 109 "Group236"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 450 160 T 123 1 0 1  -10 80  
-4
+5
 "$APNr""2"
 "$RCUNr""2"
 "$RackNr""4"
 "$SubrackNr""2"
+"$datapoint""$datapoint"
 3 110 "Group237"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 480 130 T 124 1 0 1  -10 80  
-4
+5
 "$APNr""3"
 "$RCUNr""1"
 "$RackNr""4"
 "$SubrackNr""2"
+"$datapoint""$datapoint"
 3 111 "Group238"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 480 160 T 125 1 0 1  -10 80  
-4
+5
 "$APNr""3"
 "$RCUNr""2"
 "$RackNr""4"
 "$SubrackNr""2"
+"$datapoint""$datapoint"
 3 112 "Group239"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 510 130 T 126 1 0 1  -10 80  
-4
+5
 "$APNr""4"
 "$RCUNr""1"
 "$RackNr""4"
 "$SubrackNr""2"
+"$datapoint""$datapoint"
 3 113 "Group240"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 510 160 T 127 1 0 1  -10 80  
-4
+5
 "$APNr""4"
 "$RCUNr""2"
 "$RackNr""4"
 "$SubrackNr""2"
+"$datapoint""$datapoint"
 3 114 "Group241"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 420 200 T 128 1 0 1  -10 80  
-4
+5
 "$APNr""1"
 "$RCUNr""1"
 "$RackNr""4"
 "$SubrackNr""3"
+"$datapoint""$datapoint"
 3 115 "Group242"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 420 230 T 129 1 0 1  -10 80  
-4
+5
 "$APNr""1"
 "$RCUNr""2"
 "$RackNr""4"
 "$SubrackNr""3"
+"$datapoint""$datapoint"
 3 116 "Group243"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 450 200 T 130 1 0 1  -10 80  
-4
+5
 "$APNr""2"
 "$RCUNr""1"
 "$RackNr""4"
 "$SubrackNr""3"
+"$datapoint""$datapoint"
 3 117 "Group244"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 450 230 T 131 1 0 1  -10 80  
-4
+5
 "$APNr""2"
 "$RCUNr""2"
 "$RackNr""4"
 "$SubrackNr""3"
+"$datapoint""$datapoint"
 3 118 "Group245"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 480 200 T 132 1 0 1  -10 80  
-4
+5
 "$APNr""3"
 "$RCUNr""1"
 "$RackNr""4"
 "$SubrackNr""3"
+"$datapoint""$datapoint"
 3 119 "Group246"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 480 230 T 133 1 0 1  -10 80  
-4
+5
 "$APNr""3"
 "$RCUNr""2"
 "$RackNr""4"
 "$SubrackNr""3"
+"$datapoint""$datapoint"
 3 120 "Group247"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 510 200 T 134 1 0 1  -10 80  
-4
+5
 "$APNr""4"
 "$RCUNr""1"
 "$RackNr""4"
 "$SubrackNr""3"
+"$datapoint""$datapoint"
 3 121 "Group248"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 510 230 T 135 1 0 1  -10 80  
-4
+5
 "$APNr""4"
 "$RCUNr""2"
 "$RackNr""4"
 "$SubrackNr""3"
+"$datapoint""$datapoint"
 3 122 "Group249"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 420 270 T 136 1 0 1  -10 80  
-4
+5
 "$APNr""1"
 "$RCUNr""1"
 "$RackNr""4"
 "$SubrackNr""4"
+"$datapoint""$datapoint"
 3 123 "Group250"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 420 300 T 137 1 0 1  -10 80  
-4
+5
 "$APNr""1"
 "$RCUNr""2"
 "$RackNr""4"
 "$SubrackNr""4"
+"$datapoint""$datapoint"
 3 124 "Group251"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 450 270 T 138 1 0 1  -10 80  
-4
+5
 "$APNr""2"
 "$RCUNr""1"
 "$RackNr""4"
 "$SubrackNr""4"
+"$datapoint""$datapoint"
 3 125 "Group252"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 450 300 T 139 1 0 1  -10 80  
-4
+5
 "$APNr""2"
 "$RCUNr""2"
 "$RackNr""4"
 "$SubrackNr""4"
+"$datapoint""$datapoint"
 3 126 "Group253"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 480 270 T 140 1 0 1  -10 80  
-4
+5
 "$APNr""3"
 "$RCUNr""1"
 "$RackNr""4"
 "$SubrackNr""4"
+"$datapoint""$datapoint"
 3 127 "Group254"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 480 300 T 141 1 0 1  -10 80  
-4
+5
 "$APNr""3"
 "$RCUNr""2"
 "$RackNr""4"
 "$SubrackNr""4"
+"$datapoint""$datapoint"
 3 128 "Group255"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 510 270 T 142 1 0 1  -10 80  
-4
+5
 "$APNr""4"
 "$RCUNr""1"
 "$RackNr""4"
 "$SubrackNr""4"
+"$datapoint""$datapoint"
 3 129 "Group256"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 510 300 T 143 1 0 1  -10 80  
-4
+5
 "$APNr""4"
 "$RCUNr""2"
 "$RackNr""4"
 "$SubrackNr""4"
+"$datapoint""$datapoint"
 3 130 "Group289"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 550 60 T 144 1 0 1  -10 80  
-4
+5
 "$APNr""1"
 "$RCUNr""1"
 "$RackNr""5"
 "$SubrackNr""1"
+"$datapoint""$datapoint"
 3 131 "Group290"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 550 90 T 145 1 0 1  -10 80  
-4
+5
 "$APNr""1"
 "$RCUNr""2"
 "$RackNr""5"
 "$SubrackNr""1"
+"$datapoint""$datapoint"
 3 132 "Group291"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 580 60 T 146 1 0 1  -10 80  
-4
+5
 "$APNr""2"
 "$RCUNr""1"
 "$RackNr""5"
 "$SubrackNr""1"
+"$datapoint""$datapoint"
 3 133 "Group292"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 580 90 T 147 1 0 1  -10 80  
-4
+5
 "$APNr""2"
 "$RCUNr""2"
 "$RackNr""5"
 "$SubrackNr""1"
+"$datapoint""$datapoint"
 3 134 "Group293"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 610 60 T 148 1 0 1  -10 80  
-4
+5
 "$APNr""3"
 "$RCUNr""1"
 "$RackNr""5"
 "$SubrackNr""1"
+"$datapoint""$datapoint"
 3 135 "Group294"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 610 90 T 149 1 0 1  -10 80  
-4
+5
 "$APNr""3"
 "$RCUNr""2"
 "$RackNr""5"
 "$SubrackNr""1"
+"$datapoint""$datapoint"
 3 136 "Group295"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 640 60 T 150 1 0 1  -10 80  
-4
+5
 "$APNr""4"
 "$RCUNr""1"
 "$RackNr""5"
 "$SubrackNr""1"
+"$datapoint""$datapoint"
 3 137 "Group296"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 640 90 T 151 1 0 1  -10 80  
-4
+5
 "$APNr""4"
 "$RCUNr""2"
 "$RackNr""5"
 "$SubrackNr""1"
+"$datapoint""$datapoint"
 3 138 "Group297"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 550 130 T 152 1 0 1  -10 80  
-4
+5
 "$APNr""1"
 "$RCUNr""1"
 "$RackNr""5"
 "$SubrackNr""2"
+"$datapoint""$datapoint"
 3 139 "Group298"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 550 160 T 153 1 0 1  -10 80  
-4
+5
 "$APNr""1"
 "$RCUNr""2"
 "$RackNr""5"
 "$SubrackNr""2"
+"$datapoint""$datapoint"
 3 140 "Group299"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 580 130 T 154 1 0 1  -10 80  
-4
+5
 "$APNr""2"
 "$RCUNr""1"
 "$RackNr""5"
 "$SubrackNr""2"
+"$datapoint""$datapoint"
 3 141 "Group300"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 580 160 T 155 1 0 1  -10 80  
-4
+5
 "$APNr""2"
 "$RCUNr""2"
 "$RackNr""5"
 "$SubrackNr""2"
+"$datapoint""$datapoint"
 3 142 "Group301"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 610 130 T 156 1 0 1  -10 80  
-4
+5
 "$APNr""3"
 "$RCUNr""1"
 "$RackNr""5"
 "$SubrackNr""2"
+"$datapoint""$datapoint"
 3 143 "Group302"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 610 160 T 157 1 0 1  -10 80  
-4
+5
 "$APNr""3"
 "$RCUNr""2"
 "$RackNr""5"
 "$SubrackNr""2"
+"$datapoint""$datapoint"
 3 144 "Group303"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 640 130 T 158 1 0 1  -10 80  
-4
+5
 "$APNr""4"
 "$RCUNr""1"
 "$RackNr""5"
 "$SubrackNr""2"
+"$datapoint""$datapoint"
 3 145 "Group304"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 640 160 T 159 1 0 1  -10 80  
-4
+5
 "$APNr""4"
 "$RCUNr""2"
 "$RackNr""5"
 "$SubrackNr""2"
+"$datapoint""$datapoint"
 3 146 "Group305"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 550 200 T 160 1 0 1  -10 80  
-4
+5
 "$APNr""1"
 "$RCUNr""1"
 "$RackNr""5"
 "$SubrackNr""3"
+"$datapoint""$datapoint"
 3 147 "Group306"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 550 230 T 161 1 0 1  -10 80  
-4
+5
 "$APNr""1"
 "$RCUNr""2"
 "$RackNr""5"
 "$SubrackNr""3"
+"$datapoint""$datapoint"
 3 148 "Group307"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 580 200 T 162 1 0 1  -10 80  
-4
+5
 "$APNr""2"
 "$RCUNr""1"
 "$RackNr""5"
 "$SubrackNr""3"
+"$datapoint""$datapoint"
 3 149 "Group308"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 580 230 T 163 1 0 1  -10 80  
-4
+5
 "$APNr""2"
 "$RCUNr""2"
 "$RackNr""5"
 "$SubrackNr""3"
+"$datapoint""$datapoint"
 3 150 "Group309"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 610 200 T 164 1 0 1  -10 80  
-4
+5
 "$APNr""3"
 "$RCUNr""1"
 "$RackNr""5"
 "$SubrackNr""3"
+"$datapoint""$datapoint"
 3 151 "Group310"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 610 230 T 165 1 0 1  -10 80  
-4
+5
 "$APNr""3"
 "$RCUNr""2"
 "$RackNr""5"
 "$SubrackNr""3"
+"$datapoint""$datapoint"
 3 152 "Group311"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 640 200 T 166 1 0 1  -10 80  
-4
+5
 "$APNr""4"
 "$RCUNr""1"
 "$RackNr""5"
 "$SubrackNr""3"
+"$datapoint""$datapoint"
 3 153 "Group312"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 640 230 T 167 1 0 1  -10 80  
-4
+5
 "$APNr""4"
 "$RCUNr""2"
 "$RackNr""5"
 "$SubrackNr""3"
+"$datapoint""$datapoint"
 3 154 "Group313"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 550 270 T 168 1 0 1  -10 80  
-4
+5
 "$APNr""1"
 "$RCUNr""1"
 "$RackNr""5"
 "$SubrackNr""4"
+"$datapoint""$datapoint"
 3 155 "Group314"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 550 300 T 169 1 0 1  -10 80  
-4
+5
 "$APNr""1"
 "$RCUNr""2"
 "$RackNr""5"
 "$SubrackNr""4"
+"$datapoint""$datapoint"
 3 156 "Group315"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 580 270 T 170 1 0 1  -10 80  
-4
+5
 "$APNr""2"
 "$RCUNr""1"
 "$RackNr""5"
 "$SubrackNr""4"
+"$datapoint""$datapoint"
 3 157 "Group316"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 580 300 T 171 1 0 1  -10 80  
-4
+5
 "$APNr""2"
 "$RCUNr""2"
 "$RackNr""5"
 "$SubrackNr""4"
+"$datapoint""$datapoint"
 3 158 "Group317"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 610 270 T 172 1 0 1  -10 80  
-4
+5
 "$APNr""3"
 "$RCUNr""1"
 "$RackNr""5"
 "$SubrackNr""4"
+"$datapoint""$datapoint"
 3 159 "Group318"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 610 300 T 173 1 0 1  -10 80  
-4
+5
 "$APNr""3"
 "$RCUNr""2"
 "$RackNr""5"
 "$SubrackNr""4"
+"$datapoint""$datapoint"
 3 160 "Group319"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 640 270 T 174 1 0 1  -10 80  
-4
+5
 "$APNr""4"
 "$RCUNr""1"
 "$RackNr""5"
 "$SubrackNr""4"
+"$datapoint""$datapoint"
 3 161 "Group320"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 640 300 T 175 1 0 1  -10 80  
-4
+5
 "$APNr""4"
 "$RCUNr""2"
 "$RackNr""5"
 "$SubrackNr""4"
+"$datapoint""$datapoint"
 3 162 "Group353"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 680 60 T 176 1 0 1  -658 360  
-4
+5
 "$APNr""1"
 "$RCUNr""1"
 "$RackNr""6"
 "$SubrackNr""1"
+"$datapoint""$datapoint"
 3 163 "Group354"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 680 90 T 177 1 0 1  -658 360  
-4
+5
 "$APNr""1"
 "$RCUNr""2"
 "$RackNr""6"
 "$SubrackNr""1"
+"$datapoint""$datapoint"
 3 164 "Group355"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 710 60 T 178 1 0 1  -658 360  
-4
+5
 "$APNr""2"
 "$RCUNr""1"
 "$RackNr""6"
 "$SubrackNr""1"
+"$datapoint""$datapoint"
 3 165 "Group356"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 710 90 T 179 1 0 1  -658 360  
-4
+5
 "$APNr""2"
 "$RCUNr""2"
 "$RackNr""6"
 "$SubrackNr""1"
+"$datapoint""$datapoint"
 3 166 "Group357"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 740 60 T 180 1 0 1  -658 360  
-4
+5
 "$APNr""3"
 "$RCUNr""1"
 "$RackNr""6"
 "$SubrackNr""1"
+"$datapoint""$datapoint"
 3 167 "Group358"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 740 90 T 181 1 0 1  -658 360  
-4
+5
 "$APNr""3"
 "$RCUNr""2"
 "$RackNr""6"
 "$SubrackNr""1"
+"$datapoint""$datapoint"
 3 168 "Group359"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 770 60 T 182 1 0 1  -658 360  
-4
+5
 "$APNr""4"
 "$RCUNr""1"
 "$RackNr""6"
 "$SubrackNr""1"
+"$datapoint""$datapoint"
 3 169 "Group360"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 770 90 T 183 1 0 1  -658 360  
-4
+5
 "$APNr""4"
 "$RCUNr""2"
 "$RackNr""6"
 "$SubrackNr""1"
+"$datapoint""$datapoint"
 3 170 "Group361"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 680 130 T 184 1 0 1  -530 290  
-4
+5
 "$APNr""1"
 "$RCUNr""1"
 "$RackNr""6"
 "$SubrackNr""2"
+"$datapoint""$datapoint"
 3 171 "Group362"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 680 160 T 185 1 0 1  -530 290  
-4
+5
 "$APNr""1"
 "$RCUNr""2"
 "$RackNr""6"
 "$SubrackNr""2"
+"$datapoint""$datapoint"
 3 172 "Group363"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 710 130 T 186 1 0 1  -530 290  
-4
+5
 "$APNr""2"
 "$RCUNr""1"
 "$RackNr""6"
 "$SubrackNr""2"
+"$datapoint""$datapoint"
 3 173 "Group364"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 710 160 T 187 1 0 1  -530 290  
-4
+5
 "$APNr""2"
 "$RCUNr""2"
 "$RackNr""6"
 "$SubrackNr""2"
+"$datapoint""$datapoint"
 3 174 "Group365"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 740 130 T 188 1 0 1  -530 290  
-4
+5
 "$APNr""3"
 "$RCUNr""1"
 "$RackNr""6"
 "$SubrackNr""2"
+"$datapoint""$datapoint"
 3 175 "Group366"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 740 160 T 189 1 0 1  -530 290  
-4
+5
 "$APNr""3"
 "$RCUNr""2"
 "$RackNr""6"
 "$SubrackNr""2"
+"$datapoint""$datapoint"
 3 176 "Group367"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 770 130 T 190 1 0 1  -530 290  
-4
+5
 "$APNr""4"
 "$RCUNr""1"
 "$RackNr""6"
 "$SubrackNr""2"
+"$datapoint""$datapoint"
 3 177 "Group368"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 770 160 T 191 1 0 1  -530 290  
-4
+5
 "$APNr""4"
 "$RCUNr""2"
 "$RackNr""6"
 "$SubrackNr""2"
+"$datapoint""$datapoint"
 3 178 "Group369"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 680 200 T 192 1 0 1  -400 220  
-4
+5
 "$APNr""1"
 "$RCUNr""1"
 "$RackNr""6"
 "$SubrackNr""3"
+"$datapoint""$datapoint"
 3 179 "Group370"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 680 230 T 193 1 0 1  -400 220  
-4
+5
 "$APNr""1"
 "$RCUNr""2"
 "$RackNr""6"
 "$SubrackNr""3"
+"$datapoint""$datapoint"
 3 180 "Group371"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 710 200 T 194 1 0 1  -400 220  
-4
+5
 "$APNr""2"
 "$RCUNr""1"
 "$RackNr""6"
 "$SubrackNr""3"
+"$datapoint""$datapoint"
 3 181 "Group372"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 710 230 T 195 1 0 1  -400 220  
-4
+5
 "$APNr""2"
 "$RCUNr""2"
 "$RackNr""6"
 "$SubrackNr""3"
+"$datapoint""$datapoint"
 3 182 "Group373"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 740 200 T 196 1 0 1  -400 220  
-4
+5
 "$APNr""3"
 "$RCUNr""1"
 "$RackNr""6"
 "$SubrackNr""3"
+"$datapoint""$datapoint"
 3 183 "Group374"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 740 230 T 197 1 0 1  -400 220  
-4
+5
 "$APNr""3"
 "$RCUNr""2"
 "$RackNr""6"
 "$SubrackNr""3"
+"$datapoint""$datapoint"
 3 184 "Group375"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 770 200 T 198 1 0 1  -400 220  
-4
+5
 "$APNr""4"
 "$RCUNr""1"
 "$RackNr""6"
 "$SubrackNr""3"
+"$datapoint""$datapoint"
 3 185 "Group376"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 770 230 T 199 1 0 1  -400 220  
-4
+5
 "$APNr""4"
 "$RCUNr""2"
 "$RackNr""6"
 "$SubrackNr""3"
+"$datapoint""$datapoint"
 3 186 "Group377"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 680 270 T 200 1 0 1  -270 150  
-4
+5
 "$APNr""1"
 "$RCUNr""1"
 "$RackNr""6"
 "$SubrackNr""4"
+"$datapoint""$datapoint"
 3 187 "Group378"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 680 300 T 201 1 0 1  -270 150  
-4
+5
 "$APNr""1"
 "$RCUNr""2"
 "$RackNr""6"
 "$SubrackNr""4"
+"$datapoint""$datapoint"
 3 188 "Group379"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 710 270 T 202 1 0 1  -270 150  
-4
+5
 "$APNr""2"
 "$RCUNr""1"
 "$RackNr""6"
 "$SubrackNr""4"
+"$datapoint""$datapoint"
 3 189 "Group380"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 710 300 T 203 1 0 1  -270 150  
-4
+5
 "$APNr""2"
 "$RCUNr""2"
 "$RackNr""6"
 "$SubrackNr""4"
+"$datapoint""$datapoint"
 3 190 "Group381"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 740 270 T 204 1 0 1  -270 150  
-4
+5
 "$APNr""3"
 "$RCUNr""1"
 "$RackNr""6"
 "$SubrackNr""4"
+"$datapoint""$datapoint"
 3 191 "Group382"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 740 300 T 205 1 0 1  -270 150  
-4
+5
 "$APNr""3"
 "$RCUNr""2"
 "$RackNr""6"
 "$SubrackNr""4"
+"$datapoint""$datapoint"
 3 192 "Group383"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 770 270 T 206 1 0 1  -270 150  
-4
+5
 "$APNr""4"
 "$RCUNr""1"
 "$RackNr""6"
 "$SubrackNr""4"
+"$datapoint""$datapoint"
 3 193 "Group384"
 "objects\\PIC\\STS_Antenna_HFA.pnl" 770 300 T 207 1 0 1  -270 150  
-4
+5
 "$APNr""4"
 "$RCUNr""2"
 "$RackNr""6"
 "$SubrackNr""4"
+"$datapoint""$datapoint"
 0
