@@ -31,38 +31,41 @@
 #endif
 
 #include <Common/lofar_string.h>
-#include <stdio.h>
+#include <cstdio>
 
-/**
- *
- * The interface of the PerfProfile class is defined by the following functions and macros.
- *
- * -- Initialize the profiling functionality, this involves calling MPI_Init() if it had
- * -- not been called already
- * static void PerfProfile::init(int argc, char** argv);
- *
- * -- Finalize profiling functionality. This involves calling MPI_Finalize if it had not
- * -- been called already.
- * static void PerfProfile::finalize();
- *
- * -- Profile a region of code from the occurence of the macro call until the current
- * -- scope is exited. E.g.:
- * -- int test()
- * -- {
- * --     PERFPROFILE(__PRETTY_FUNCTION__);
- * --     // operations
- * -- }
- * -- Will time the duration of this function from beginning to when it exits its scope.
- *
- * #define PERFPROFILE(tag)
- *
- * The other methods are not to be used directly.
- *
- * When HAVE_MPICH and HAVE_MPI_PROFILER are not defined together the methods 'init'
- * and 'finalize' are no-ops and the macro PERFPROFILE(tag) evaluates to an empty string
- * thus disabling the profiling.
- *
- **/
+namespace LOFAR
+{
+
+  /**
+   *
+   * The interface of the PerfProfile class is defined by the following functions and macros.
+   *
+   * -- Initialize the profiling functionality, this involves calling MPI_Init() if it had
+   * -- not been called already
+   * static void PerfProfile::init(int argc, char** argv);
+   *
+   * -- Finalize profiling functionality. This involves calling MPI_Finalize if it had not
+   * -- been called already.
+   * static void PerfProfile::finalize();
+   *
+   * -- Profile a region of code from the occurence of the macro call until the current
+   * -- scope is exited. E.g.:
+   * -- int test()
+   * -- {
+   * --     PERFPROFILE(__PRETTY_FUNCTION__);
+   * --     // operations
+   * -- }
+   * -- Will time the duration of this function from beginning to when it exits its scope.
+   *
+   * #define PERFPROFILE(tag)
+   *
+   * The other methods are not to be used directly.
+   *
+   * When HAVE_MPICH and HAVE_MPI_PROFILER are not defined together the methods 'init'
+   * and 'finalize' are no-ops and the macro PERFPROFILE(tag) evaluates to an empty string
+   * thus disabling the profiling.
+   *
+   **/
 
 #define PP_LEVEL_0 (1 << 0)
 #define PP_LEVEL_1 (1 << 1)
@@ -73,68 +76,68 @@
 #define PP_LEVEL_6 (1 << 6)
 #define PP_LEVEL_7 (1 << 7)
 
-class PerfProfile
-{
-public:
-  static void init(int* argc, char*** argv, unsigned char debugMask);
-  static void finalize();
+  class PerfProfile
+  {
+  public:
+    static void init(int* argc, char*** argv, unsigned char debugMask);
+    static void finalize();
 
 #if defined(HAVE_MPICH) && defined(HAVE_MPI_PROFILER)
-  inline PerfProfile(int start, int stop) : m_stop(stop), m_debugLevel(PP_LEVEL_0)
-  {
-    if (m_debugLevel & debugMask)
+    inline PerfProfile(int start, int stop) : m_stop(stop), m_debugLevel(PP_LEVEL_0)
     {
-      MPE_Start_log();
-      MPE_Log_event(start, start, (char*)0);
-    }
-  }
-
-  inline PerfProfile(int start, int stop, unsigned char debugLevel)
-    : m_stop(stop), m_debugLevel(debugLevel)
-  {
-    if (m_debugLevel & debugMask)
-    {
-      MPE_Start_log();
-      MPE_Log_event(start, start, (char*)0);
-    }
-  }
-
-  inline ~PerfProfile()
-  {
-    if (m_debugLevel & debugMask)
-    {
-      MPE_Log_event(m_stop, m_stop, (char*)0);
-    }
-  }
-
-  static int get_second_event_number(int start, const char* tag, unsigned char debugLevel)
-  {
-    static int cur_color_index = 0;
-    int stop = 0;
-
-    if (debugLevel & debugMask)
-    {
-      stop = MPE_Log_get_event_number();
-      MPE_Describe_state(start, stop, (char*)tag,
-			 (char*)PerfProfile::m_colors[cur_color_index]);
-      cur_color_index = (cur_color_index + 1 ) % PerfProfile::m_nr_colors;
+      if (m_debugLevel & debugMask)
+      {
+        MPE_Start_log();
+        MPE_Log_event(start, start, (char*)0);
+      }
     }
 
-    return stop;
-  }
+    inline PerfProfile(int start, int stop, unsigned char debugLevel)
+      : m_stop(stop), m_debugLevel(debugLevel)
+    {
+      if (m_debugLevel & debugMask)
+      {
+        MPE_Start_log();
+        MPE_Log_event(start, start, (char*)0);
+      }
+    }
 
-private:
-  int m_stop;
-  string m_tag;
-  unsigned char m_debugLevel;
+    inline ~PerfProfile()
+    {
+      if (m_debugLevel & debugMask)
+      {
+        MPE_Log_event(m_stop, m_stop, (char*)0);
+      }
+    }
 
-  static const char* const m_colors[];
-  static int m_nr_colors;
-  static int iInitialized;
-  static int iStop;
-  static unsigned char debugMask;
+    static int get_second_event_number(int start, const char* tag, unsigned char debugLevel)
+    {
+      static int cur_color_index = 0;
+      int stop = 0;
+
+      if (debugLevel & debugMask)
+      {
+        stop = MPE_Log_get_event_number();
+        MPE_Describe_state(start, stop, (char*)tag,
+                           (char*)PerfProfile::m_colors[cur_color_index]);
+        cur_color_index = (cur_color_index + 1 ) % PerfProfile::m_nr_colors;
+      }
+
+      return stop;
+    }
+
+  private:
+    int m_stop;
+    string m_tag;
+    unsigned char m_debugLevel;
+
+    static const char* const m_colors[];
+    static int m_nr_colors;
+    static int iInitialized;
+    static int iStop;
+    static unsigned char debugMask;
 #endif
-};
+  };
 
 #if defined(HAVE_MPICH) && defined(HAVE_MPI_PROFILER)
 
@@ -152,5 +155,7 @@ private:
 #define PERFPROFILE(tag)
 #define PERFPROFILE_L(tag, level)
 #endif
+
+} // namespace LOFAR
 
 #endif
