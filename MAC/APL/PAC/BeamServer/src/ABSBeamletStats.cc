@@ -105,10 +105,16 @@ void BeamletStats::update(Array<unsigned int,3>& power_sum, unsigned int seqnr)
       LOG_DEBUG(formatString("Updating statistics properties: totalpower = %f",
 			     sum(m_beamlet_power)));
 
-      cout << "m_beamlet_power = ";
+      cout << "m_beamlet_power(x) = ";
       for (int i = 0; i < m_nbeamlets; i++)
       {
 	  cout << m_beamlet_power(i, 0) << ";";
+      }
+      cout << endl;
+      cout << "m_beamlet_power(y) = ";
+      for (int i = 0; i < m_nbeamlets; i++)
+      {
+	  cout << m_beamlet_power(i, 1) << ";";
       }
       cout << endl;
 
