@@ -62,6 +62,9 @@ public:
   // Destructor.
   virtual ~BlobOBufChar();
 
+  // Clear the buffer. I.e., set size and position to 0.
+  void clear();
+
   // Put the requested nr of bytes.
   virtual uint put (const void* buffer, uint nbytes);
 
