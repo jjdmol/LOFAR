@@ -193,8 +193,6 @@ inline int Transporter::getReadTag() const
 inline int Transporter::getWriteTag() const
   { return itsWriteTag; }
 
-inline TransportHolder* Transporter::getTransportHolder()
-  { return itsTransportHolder; }
 
 inline void Transporter::setStatus (Status s)
   { itsStatus = s; }

@@ -47,6 +47,7 @@ Transporter::Transporter (BaseDataHolder* dataHolderPtr)
     itsIsBlocking      (true)
 {
   itsConnection = new Connection();
+  itsBaseDataHolder->setTransporter( *( const_cast<Transporter*> (this)));
 }
 
 Transporter::Transporter(const Transporter& that)
@@ -64,6 +65,8 @@ Transporter::Transporter(const Transporter& that)
     itsIsBlocking      (that.itsIsBlocking)
 {
   itsConnection = new Connection();
+  itsBaseDataHolder->setTransporter( *(const_cast<Transporter*> (&that)));
+
   if (itsTransportHolder != 0) {
     itsTransportHolder = that.itsTransportHolder->make();
   }  
@@ -175,5 +178,9 @@ void Transporter::dump() const
   
 }
 
+inline TransportHolder* Transporter::getTransportHolder()
+  { 
+    return itsTransportHolder; 
+  }
 
 } // end namespace
