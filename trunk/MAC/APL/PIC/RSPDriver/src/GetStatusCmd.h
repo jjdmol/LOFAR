@@ -86,4 +86,4 @@ namespace RSP
   };
 };
      
-#endif /* GETWEIGHTSCMD_H_ */
+#endif /* GETSTATUSCMD_H_ */

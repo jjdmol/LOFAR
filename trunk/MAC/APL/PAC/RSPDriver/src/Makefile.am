@@ -105,6 +105,8 @@ RSPDriver_SOURCES = \
 	GetSubbandsCmd.cc \
 	GetStatusCmd.h \
 	GetStatusCmd.cc \
+	UpdStatusCmd.h \
+	UpdStatusCmd.cc \
 	SetRCUCmd.h \
 	SetRCUCmd.cc \
 	GetRCUCmd.h \

@@ -52,7 +52,7 @@ SetWeightsCmd::SetWeightsCmd(RSPSetweightsEvent& sw_event, GCFPortInterface& por
 
 SetWeightsCmd::~SetWeightsCmd()
 {
-  delete m_event;
+  if (isOwner()) delete m_event;
 }
 
 void SetWeightsCmd::setWeights(Array<complex<int16>, BeamletWeights::NDIM> weights)

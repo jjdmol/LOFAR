@@ -1,4 +1,4 @@
-//#  SetWeightsCmd.cc: implementation of the SetWeightsCmd class
+//#  UpdStatusCmd.cc: implementation of the UpdStatusCmd class
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -22,7 +22,7 @@
 
 #include "RSP_Protocol.ph"
 #include "RSPConfig.h"
-#include "SetWeightsCmd.h"
+#include "UpdStatusCmd.h"
 
 #include <blitz/array.h>
 
@@ -36,85 +36,100 @@ using namespace LOFAR;
 using namespace RSP_Protocol;
 using namespace blitz;
 
-SetWeightsCmd::SetWeightsCmd(RSPSetweightsEvent& sw_event, GCFPortInterface& port,
-			     Operation oper, int timestep)
+UpdStatusCmd::UpdStatusCmd(GCFEvent& event, GCFPortInterface& port, Operation oper)
 {
-  RSPSetweightsEvent* event = new RSPSetweightsEvent();
-  m_event = event;
-  
-  event->timestamp = sw_event.timestamp + timestep;
-  event->rcumask   = sw_event.rcumask;
+  m_event = new RSPSubstatusEvent(event);
 
   setOperation(oper);
   setPeriod(0);
   setPort(port);
 }
 
-SetWeightsCmd::~SetWeightsCmd()
+UpdStatusCmd::~UpdStatusCmd()
 {
   if (isOwner()) delete m_event;
 }
 
-void SetWeightsCmd::setWeights(Array<complex<int16>, BeamletWeights::NDIM> weights)
+void UpdStatusCmd::ack(CacheBuffer& /*cache*/)
 {
-  RSPSetweightsEvent* event = static_cast<RSPSetweightsEvent*>(m_event);
-  
-  event->weights().resize(BeamletWeights::SINGLE_TIMESTEP,
-			  event->rcumask.count(), weights.extent(thirdDim));
-  event->weights() = weights;
+  // intentionally left empty
 }
 
-void SetWeightsCmd::ack(CacheBuffer& /*cache*/)
+void UpdStatusCmd::apply(CacheBuffer& /*cache*/)
 {
-  RSPSetweightsackEvent ack;
+  // no-op
+}
+
+void UpdStatusCmd::complete(CacheBuffer& cache)
+{
+  RSPUpdstatusEvent ack;
 
   ack.timestamp = getTimestamp();
   ack.status = SUCCESS;
-  
-  getPort()->send(ack);
-}
+  ack.handle = 0;
 
-void SetWeightsCmd::apply(CacheBuffer& cache)
-{
-  int input_rcu = 0;
+  ack.sysstatus.board().resize(GET_CONFIG("N_RSPBOARDS", i));
+  ack.sysstatus.board() = cache.getSystemStatus().board();
+
+  ack.sysstatus.rcu().resize(m_event->rcumask.count());
+
+  int result_rcu = 0;
   for (int cache_rcu = 0; cache_rcu < GET_CONFIG("N_RCU", i); cache_rcu++)
   {
-    if (m_event->rcumask[cache_rcu])
+    if (m_event->rcumask[result_rcu])
     {
-      if (cache_rcu < GET_CONFIG("N_RCU", i))
+      if (result_rcu < GET_CONFIG("N_RCU", i))
       {
-	cache.getBeamletWeights()()(0, cache_rcu, Range::all())
-	  = m_event->weights()(0, input_rcu, Range::all());
+	ack.sysstatus.rcu()(result_rcu)
+	  = cache.getSystemStatus().rcu()(cache_rcu);
       }
       else
       {
 	LOG_WARN(formatString("invalid RCU index %d, there are only %d RCU's",
-			      cache_rcu, GET_CONFIG("N_RCU", i)));
+			      result_rcu, GET_CONFIG("N_RCU", i)));
       }
-
-      input_rcu++;
+      
+      result_rcu++;
     }
   }
+
+  getPort()->send(ack);
 }
 
-void SetWeightsCmd::complete(CacheBuffer& /*cache*/)
-{
-  LOG_INFO_STR("SetWeightsCmd completed at time=" << getTimestamp());
-}
-
-const Timestamp& SetWeightsCmd::getTimestamp() const
+const Timestamp& UpdStatusCmd::getTimestamp() const
 {
   return m_event->timestamp;
 }
 
-void SetWeightsCmd::setTimestamp(const Timestamp& timestamp)
+void UpdStatusCmd::setTimestamp(const Timestamp& timestamp)
 {
   m_event->timestamp = timestamp;
 }
 
-bool SetWeightsCmd::validate() const
+bool UpdStatusCmd::validate() const
 {
-  // validation is done in the caller (RSPDriverTask)
-  return true;
+  return (m_event->rcumask.count() <= (unsigned int)GET_CONFIG("N_RCU", i));
+}
+
+void UpdStatusCmd::ack_fail()
+{
+  RSPUpdstatusEvent ack;
+
+  ack.timestamp = Timestamp(0,0);
+  ack.status = FAILURE;
+
+  ack.sysstatus.board().resize(GET_CONFIG("N_RSPBOARDS", i));
+  ack.sysstatus.rcu().resize(GET_CONFIG("N_RCU", i));
+
+  BoardStatus boardinit;
+  RCUStatus rcuinit;
+
+  memset(&boardinit, 0, sizeof(BoardStatus));
+  memset(&rcuinit, 0, sizeof(RCUStatus));
+  
+  ack.sysstatus.board() = boardinit;
+  ack.sysstatus.rcu()   = rcuinit;
+
+  getPort()->send(ack);
 }
 

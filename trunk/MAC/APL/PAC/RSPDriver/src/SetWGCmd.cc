@@ -47,7 +47,7 @@ SetWGCmd::SetWGCmd(GCFEvent& event, GCFPortInterface& port, Operation oper)
 
 SetWGCmd::~SetWGCmd()
 {
-  delete m_event;
+  if (isOwner()) delete m_event;
 }
 
 void SetWGCmd::ack(CacheBuffer& /*cache*/)

@@ -116,11 +116,20 @@ namespace RSP
        */
       bool operator<(const Command& other);
 
+      /*@{*/
+      /**
+       * Set/get owner
+       */
+      void setOwner(bool owner);
+      bool isOwner() const;
+      /*@}*/
+
     private:
       int16              m_period;
       GCFEvent*          m_event;
       GCFPortInterface*  m_port;
       Operation          m_operation;
+      bool               m_owner;
   };
 
   /**

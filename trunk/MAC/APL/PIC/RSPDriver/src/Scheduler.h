@@ -37,6 +37,15 @@ namespace RSP
   {
     public:
       /**
+       * Types of queue.
+       */
+      enum QueueID
+      {
+	LATER = 1,
+	PERIODIC
+      };
+      
+      /**
        * Constructors for a Scheduler object.
        * Currently the tv_usec part is always set to 0 irrespective
        * of the value passed in.
@@ -77,7 +86,7 @@ namespace RSP
        * to receiving a command event from on of the RSPDriver
        * client processes.
        */
-      RSP_Protocol::Timestamp enter(Command* command);
+      RSP_Protocol::Timestamp enter(Command* command, QueueID queue = LATER);
 
       /*@{*/
       /**
@@ -92,6 +101,7 @@ namespace RSP
        * Private types.
        */
       typedef std::priority_queue<Command*, std::vector<Command*>, RSP::Command_greater> pqueue;
+      /*typedef std::priority_queue<Command> pqueue;*/
 
       /**
        * Private helper methods.

@@ -48,25 +48,25 @@ Scheduler::~Scheduler()
   while (!m_later_queue.empty())
   {
     Command* c = m_later_queue.top();
-    delete c;
+    if (c->isOwner()) delete c;
     m_later_queue.pop();
   }
   while (!m_now_queue.empty())
   {
     Command* c = m_now_queue.top();
-    delete c;
+    if (c->isOwner()) delete c;
     m_now_queue.pop();
   }
   while (!m_periodic_queue.empty())
   {
     Command* c = m_periodic_queue.top();
-    delete c;
+    if (c->isOwner()) delete c;
     m_periodic_queue.pop();
   }
   while (!m_done_queue.empty())
   {
     Command* c = m_done_queue.top();
-    delete c;
+    if (c->isOwner()) delete c;
     m_done_queue.pop();
   }
 
@@ -201,7 +201,7 @@ void Scheduler::pqueue_remove_port(pqueue& pq, GCFPortInterface& port)
     tmp.pop();
 
     // if port matches, delete c, else push back onto pq
-    if (c->getPort() == &port) delete c;
+    if (c->getPort() == &port) { if (c->isOwner()) delete c; }
     else pq.push(c);
   }
 }
@@ -222,9 +222,23 @@ void Scheduler::addSyncAction(SyncAction* action)
   m_syncactions[&(action->getBoardPort())].push_back(action);
 }
 
-Timestamp Scheduler::enter(Command* command)
+Timestamp Scheduler::enter(Command* command, QueueID queue)
 {
-  m_later_queue.push(command);
+  switch (queue)
+  {
+    case LATER:
+      m_later_queue.push(command);
+      break;
+
+    case PERIODIC:
+      m_periodic_queue.push(command);
+      break;
+
+    default:
+      LOG_FATAL("invalid QueueID");
+      exit(EXIT_FAILURE);
+      break;
+  }
   
   Timestamp scheduled_time = command->getTimestamp();
 
@@ -287,7 +301,7 @@ void Scheduler::scheduleCommands()
       LOG_WARN("discarding late command");
 
       m_later_queue.pop();
-      delete command;
+      if (command->isOwner()) delete command;
     }
     else if (command->getTimestamp() <= m_current_time + SYNC_INTERVAL_INT)
     {
@@ -299,20 +313,21 @@ void Scheduler::scheduleCommands()
     else break;
   }
 
-#if 0
-  /* copy period commands to the now queue */
-  while (!m_period_queue.empty())
+  /* copy periodic commands to the now queue */
+  pqueue pq = m_periodic_queue;
+  
+  while (!pq.empty())
   {
-    Command * command = m_period_queue.top();
+    Command* command = pq.top();
+    command->setOwner(false); // the command is not owner of associated classes
 
-    struct timeval now;
-    m_current_time.get(&now);
-    if (0 == (now.tv_sec + SYNC_INTERVAL_INT % command->getPeriod()))
+    if (command->getTimestamp() <= m_current_time + SYNC_INTERVAL_INT)
     {
-      /* copy the command and push on the now queue */
+      m_now_queue.push(command);
     }
+
+    pq.pop(); // next
   }
-#endif
 }
 
 void Scheduler::processCommands()
@@ -377,7 +392,7 @@ void Scheduler::completeCommands()
     command->complete(Cache::getInstance().getFront());
 
     m_done_queue.pop();
-    delete command;
+    if (command->isOwner()) delete command;
   }
 }
 

@@ -32,6 +32,7 @@
 #include "SetSubbandsCmd.h"
 #include "GetSubbandsCmd.h"
 #include "GetStatusCmd.h"
+#include "UpdStatusCmd.h"
 #include "SetRCUCmd.h"
 #include "GetRCUCmd.h"
 #include "SetWGCmd.h"
@@ -794,9 +795,28 @@ void RSPDriver::rsp_getwg(GCFEvent& event, GCFPortInterface& port)
   }
 }
 
-void RSPDriver::rsp_substatus(GCFEvent& /*event*/, GCFPortInterface& /*port*/)
+void RSPDriver::rsp_substatus(GCFEvent& event, GCFPortInterface& port)
 {
-  /* not implemented yet, ignore event */
+  // subscription is done by entering a getstatus command in the period queue
+  UpdStatusCmd* command = new UpdStatusCmd(event, port, Command::READ);
+
+  if (!command->validate())
+  {
+    command->ack_fail();
+    delete command;
+    return;
+  }
+
+  // if null timestamp get value from the cache and acknowledge immediately
+  if (Timestamp(0,0) == command->getTimestamp())
+  {
+    command->setTimestamp(Cache::getInstance().getFront().getTimestamp());
+    command->ack(Cache::getInstance().getFront());
+
+    // don't delete the command, it will be entered into the period queue
+  }
+
+  (void)m_scheduler.enter(command, Scheduler::PERIODIC);
 }
 
 void RSPDriver::rsp_unsubstatus(GCFEvent& /*event*/, GCFPortInterface& /*port*/)

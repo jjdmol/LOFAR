@@ -82,4 +82,4 @@ namespace RSP
   };
 };
      
-#endif /* SETSUBBANDSCMD_H_ */
+#endif /* SETRCUCMD_H_ */

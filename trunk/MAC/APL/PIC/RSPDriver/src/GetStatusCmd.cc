@@ -47,7 +47,7 @@ GetStatusCmd::GetStatusCmd(GCFEvent& event, GCFPortInterface& port, Operation op
 
 GetStatusCmd::~GetStatusCmd()
 {
-  delete m_event;
+  if (isOwner()) delete m_event;
 }
 
 void GetStatusCmd::ack(CacheBuffer& cache)

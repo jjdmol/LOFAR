@@ -47,7 +47,7 @@ GetWeightsCmd::GetWeightsCmd(GCFEvent& event, GCFPortInterface& port, Operation 
 
 GetWeightsCmd::~GetWeightsCmd()
 {
-  delete m_event;
+  if (isOwner()) delete m_event;
 }
 
 void GetWeightsCmd::ack(CacheBuffer& cache)
