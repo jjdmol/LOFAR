@@ -28,6 +28,11 @@ if __name__ == "__main__":
     bae.ext2 = "test"
     bae.ext2Dim = len(bae.ext2)
 
+    bae.obj1 = TransObject()
+    bae.value1 = 10
+    bae.value2 = 32.1
+    bae.value3 = "klaas jan"
+
     print bae
 
     

@@ -36,12 +36,14 @@
 %module pybind
 %include GCF/GCF_Event.h
 %include carrays.i
+%include TransObject.h
 %array_class(int, int_array)
 %array_class(char, char_array)
 %{
 #include "pybind.ph"
 #include <string.h> // needed for memcpy
 #include <GCF/GCF_TMProtocols.h>
+#include "TransObject.h"
 #include <iostream>
 #include <sstream>
 %}
@@ -110,6 +112,7 @@ namespace MY_Protocol
       
       int* ext1; unsigned int ext1Dim;
       char* ext2; unsigned int ext2Dim;
+      TransObject* obj1;
 
 #ifdef SWIG
     private:

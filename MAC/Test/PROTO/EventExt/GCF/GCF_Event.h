@@ -163,7 +163,7 @@ class GCFEventExt
 class GCFTransportable
 {
   public:
-    virtual ~GCFTransportable() {};
+    virtual ~GCFTransportable() {}
     virtual unsigned int pack(char* buffer) = 0;
     virtual unsigned int unpack(char* buffer) = 0;
     virtual unsigned int getSize() = 0;
