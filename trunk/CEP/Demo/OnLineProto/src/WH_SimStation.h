@@ -24,7 +24,7 @@
 #define ONLINEPROTO_WH_SIMSTATION_H
 
 #define NINPUT_BEAMLETS 128
-#define DATA_ITERATION 1000
+#define DATA_ITERATION TSIZE
 
 #include <lofar_config.h>
 
