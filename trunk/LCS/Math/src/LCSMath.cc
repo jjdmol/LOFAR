@@ -524,7 +524,7 @@ namespace LOFAR
       LoMat_dcomplex eye = diag(ones); // Identity matrix
       LoMat_dcomplex ACM(nant, nant);
 
-      ACM = (dcomplex) 0;
+      ACM = makedcomplex(0,0);
 
       // CB: merk op dat ik geen transpose doe aangezien dat (volgens mij) niet nodig is.
       for (int k = lb; k <= ub; k++) {
@@ -649,7 +649,8 @@ namespace LOFAR
     template <class T>
     T sum (const blitz::Array <T, 1>& aVector, int length)
     {
-      T s = (T) 0;
+      T s;
+      setZero (s);
       for (int i = 0; i < length; i++) {
         s += aVector (i);
       }
@@ -659,7 +660,8 @@ namespace LOFAR
     template <class T>
     T sum_square (const blitz::Array <T, 1>& aVector, int length)
     {
-      T s = (T) 0;
+      T s;
+      setZero (s);
       for (int i = 0; i < length; i++) {
         s += aVector (i) * aVector (i);
       }
@@ -669,7 +671,7 @@ namespace LOFAR
     template <class T>
     T mean (const blitz::Array <T, 1>& aVector, int length)
     {
-      return (sum (aVector, length) / (T) length);
+      return (sum (aVector, length) / length);
     }
 
     template <class T>
@@ -677,9 +679,9 @@ namespace LOFAR
     {
       T s  = sum (aVector, length);
       T s2 = sum_square (aVector, length);
-      T n  = (T) length;
+      double n = length;
 
-      return ((s2 - (s * s / n)) / (n - (T) 1));
+      return ((s2 - (s * s / n)) / (n - 1));
     }
 
     template <class T>
