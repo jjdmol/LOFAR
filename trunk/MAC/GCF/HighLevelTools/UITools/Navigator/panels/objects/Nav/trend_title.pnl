@@ -1,9 +1,9 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,496 593 438 25 N "_3DFace" 2
+PANEL,571 228 438 25 N "_3DFace" 2
 "$TrendNr"
-"$datapoint"
+"$configDatapoint"
 EEE E E 1 -1 -1 0  0 0
 "" 0 1
 EE 2
@@ -34,7 +34,7 @@ E
 "main()
 {
   string InsertedText;
-  dpGet(\"System1:__nav_\" + dpTypeName($datapoint) + \"_Trend.\" + $TrendNr + \".Title:_online.._value\", InsertedText);
+  dpGet($configDatapoint + \".\" + $TrendNr + \".Title:_online.._value\", InsertedText);
 	setValue(\"\", \"text\", InsertedText);
 }" 0
 
@@ -44,9 +44,7 @@ E
   string CombinedText;
   
   getValue(\"\", \"text\", InsertedText);
-//  CombinedText= $TraceNr + \".\" + InsertedText;
-//  DebugN(\"CombinedText: \"+CombinedText);
-  dpSet(\"System1:__nav_\"+dpTypeName($datapoint)+\"_Trend.\"+$TrendNr+\".Title\", InsertedText);
+  dpSet($configDatapoint + \".\"+$TrendNr+\".Title\", InsertedText);
  	DisplayText(\"txt_trend1_title\", \" Ok\", InsertedText);
 
 }" 0
