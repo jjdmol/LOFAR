@@ -21,6 +21,9 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.1  2001/08/09 15:48:48  wierenga
+//  Implemented first version of TH_Corba and test program
+//
 //
 //////////////////////////////////////////////////////////////////////////
 
@@ -32,6 +35,11 @@
 #include "WH_Empty.h"
 #include TRANSPORTERINCLUDE
 
+#ifdef CORBA_
+#include "BS_Corba.h"
+#endif
+
+#include "firewalls.h"
 #include <iostream.h>
 #include <stdlib.h>
 #include <string>
@@ -59,6 +67,13 @@ RingSim::~RingSim()
  */
 void RingSim::define()
 {
+#ifdef CORBA_
+  // Start Orb Environment
+  Firewall::Assert(BS_Corba::init(),
+		   __HERE__,
+		   "Could not initialise CORBA environment");
+#endif
+
   int    argc = 0;
   char** argv = NULL;
   int    divisor = -1;
