@@ -98,7 +98,7 @@ namespace UVD
 // Field names for Data Description subtable
     FDataDescriptionSubtable = AidData|AidDesc|AidSubtable,
     // FSPWIndex defined above
-    FPolarizationIndex = AidPolarization|AidIndex,
+    FPolarizationIndex = AidPolarization|AidIndex;
     
     
     
