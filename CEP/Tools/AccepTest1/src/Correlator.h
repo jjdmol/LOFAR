@@ -68,7 +68,7 @@ namespace LOFAR
   class Correlator: public LOFAR::TinyApplicationHolder {
 
   public:
-    Correlator(int elements, int samples, int channels, char* frontend_ip, int baseport);
+    Correlator(int elements, int samples, int channels, char* frontend_ip, int baseport, int targets);
     virtual ~Correlator();
     
     // overload methods form the ApplicationHolder base class
@@ -87,6 +87,7 @@ namespace LOFAR
     int   itsNchannels;
     char* itsIP;
     int   itsBaseport;
+    int   itsNtargets;
   };
 
 } // namespace LOFAR

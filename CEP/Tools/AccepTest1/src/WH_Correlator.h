@@ -40,7 +40,8 @@ class WH_Correlator: public WorkHolder
 			  unsigned int nout,
 			  const int    elements, 
 			  const int    samples,
-			  const int    channels);
+			  const int    channels, 
+			  const int    targets);
 
   virtual ~WH_Correlator();
 
@@ -49,7 +50,8 @@ class WH_Correlator: public WorkHolder
 				unsigned int nout, 
 				const int    elements, 
 				const int    samples, 
-				const int    channels);
+				const int    channels, 
+				const int    targets);
 
   virtual WH_Correlator* make (const string& name);
   
@@ -65,7 +67,8 @@ class WH_Correlator: public WorkHolder
   int itsNelements;
   int itsNsamples;
   int itsNchannels;
-  
+  int itsNtargets;
+
 };
 
 } // namespace LOFAR
