@@ -49,6 +49,13 @@ class UVPDataAtom
    */
   void            setChannels(unsigned int numberOfChannels);
   
+
+
+  //! Sets a new header
+  /*!
+   */
+  void            setHeader(const UVPDataAtomHeader& header);
+  
   //! Assigns one datapoint to a channel.
   /*!
     \param channel is a zero based channel index.

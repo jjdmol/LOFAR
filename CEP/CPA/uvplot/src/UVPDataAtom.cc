@@ -56,6 +56,18 @@ void UVPDataAtom::setChannels(unsigned int numberOfChannels)
 
 
 
+//====================>>>  UVPDataAtom::setHeader  <<<====================
+
+void UVPDataAtom::setHeader(const UVPDataAtomHeader& header)
+{
+  itsHeader = header;
+}
+
+
+
+
+
+
 //====================>>>  UVPDataAtom::setData  <<<====================
 
 void UVPDataAtom::setData(unsigned int       channel,
