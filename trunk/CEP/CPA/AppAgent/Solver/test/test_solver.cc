@@ -27,7 +27,7 @@
 #include <DMI/DataRecord.h>
 #include <DMI/DataArray.h>
 
-#include <AppAgent/BOIOSink.h>
+//#include <AppAgent/BOIOSink.h>
 #include <MSVisAgent/MSInputSink.h>
 #include <MSVisAgent/MSOutputSink.h>
 
@@ -200,6 +200,7 @@ int main (int argc, const char *argv[])
     // setup output agent parameters 
     DataRecord &outpargs = rec[AidOutput] <<= new DataRecord;    
       outpargs[FResidualsColumn] = "CORRECTED_DATA";
+      outpargs[FPredictColumn] = "PREDICTED_DATA";
 //      outpargs[AppEvent::FBOIOFile] = "solver.out.boio";
 //      outpargs[AppEvent::FBOIOMode] = "W";
         
@@ -219,6 +220,8 @@ int main (int argc, const char *argv[])
         solveargs[FBatchJobs][0][PredNrs] = vector<int>();
         solveargs[FBatchJobs][0][FWhenConverged] <<= new DataRecord;
         solveargs[FBatchJobs][0][FWhenMaxIter] <<= new DataRecord;
+	solveargs[FBatchJobs][0][FWhenMaxIter][SaveResiduals] = True;
+	solveargs[FBatchJobs][0][FWhenMaxIter][SaveParms] = True;
 
     cout<<"=================== creating agents ===========================\n";
     VisAgent::InputAgent::Ref inagent(

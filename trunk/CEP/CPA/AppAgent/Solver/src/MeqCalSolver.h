@@ -130,7 +130,7 @@ private:
     //##ModelId=3EC9F6EC0241
   void makeExpr();
     //##ModelId=3EC9F6EC0243
-  void makeStatExpr (int ant, bool wsrtModel);
+  void makeStatExpr (int ant, bool wsrtModel, bool asAP);
     //##ModelId=3EC9F6EC0248
   void makeBLExpr (bool wsrtModel);
     //##ModelId=3EC9F6EC024A
