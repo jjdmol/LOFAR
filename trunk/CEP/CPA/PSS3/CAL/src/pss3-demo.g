@@ -247,12 +247,26 @@ solveej := function(fname='demo', ant=4*[0:20],
     sleep_cmd := spaste('sleep ', sleeptime);
     if (sleep) shell(sleep_cmd);
 
-    mc.resetiterator()
-        while (mc.nextinterval())
-        {
-            d := mc.getsolvedomain();
-            print 'solvedomain = ', d;
-
+    mc.resetiterator();
+    while (mc.nextinterval())
+    {
+        d := mc.getsolvedomain();
+        print 'solvedomain = ', d;
+        
+        parms := mc.getparms("EJ11.{ampl,phase}.*.*");
+        nrp := len(parms);
+        if (nrp > 0) {
+            for (nm in field_names(parms)) {
+                print nm, '=', parms[nm].value;
+            }
+        }
+        
+        for (i in [1:niter]) {
+            print "iteration", i;
+            
+            srec := mc.solve();
+            solverec[spaste("iter",i)] := srec;
+            
             parms := mc.getparms("EJ11.{ampl,phase}.*.*");
             nrp := len(parms);
             if (nrp > 0) {
@@ -261,27 +275,13 @@ solveej := function(fname='demo', ant=4*[0:20],
                 }
             }
             
-            for (i in [1:niter]) {
-                print "iteration", i;
-
-                srec := mc.solve();
-                solverec[spaste("iter",i)] := srec;
-                
-                parms := mc.getparms("EJ11.{ampl,phase}.*.*");
-                nrp := len(parms);
-                if (nrp > 0) {
-                    for (nm in field_names(parms)) {
-                        print nm, '=', parms[nm].value;
-                    }
-                }
-                
-                sleep_cmd := spaste('sleep ', sleeptime);
-                if (sleep) shell(sleep_cmd);
-            }
-            print mc.getstatistics();
-            mc.saveresidualdata();
-            mc.saveparms();
+            sleep_cmd := spaste('sleep ', sleeptime);
+            if (sleep) shell(sleep_cmd);
         }
+        print mc.getstatistics();
+        mc.saveresidualdata();
+        mc.saveparms();
+    }
     
     mc.done();
 
@@ -723,13 +723,13 @@ setparms := function(fname='demo')
     pt.putinit ('gain.22', values=0);
     
     pt.putinit ('EJ11.ampl', values=1);
-    pt.putinit ('EJ11.phase', values=0);
-    pt.putinit ('EJ12.ampl', values=1);
-    pt.putinit ('EJ12.phase', values=0);
-    pt.putinit ('EJ21.ampl', values=1);
-    pt.putinit ('EJ21.phase', values=0);
-    pt.putinit ('EJ22.ampl', values=1);
-    pt.putinit ('EJ22.phase', values=0);
+    pt.putinit ('EJ11.phase', values=0, diff=1e-4, diffrelative=F);
+    pt.putinit ('EJ12.ampl', values=0);
+    pt.putinit ('EJ12.phase', values=0, diff=1e-4, diffrelative=F);
+    pt.putinit ('EJ21.ampl', values=0);
+    pt.putinit ('EJ21.phase', values=0, diff=1e-4, diffrelative=F);
+    pt.putinit ('EJ22.ampl', values=0);
+    pt.putinit ('EJ22.phase', values=0, diff=1e-4, diffrelative=F);
 
 #    pt.putinit ('EJ11.real', values=1);
 #    pt.putinit ('EJ12.real', values=0);
