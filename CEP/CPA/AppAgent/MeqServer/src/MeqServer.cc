@@ -144,6 +144,7 @@ void MeqServer::resolveChildren (DataRecord::Ref &out,DataRecord::Ref::Xfer &in)
   DataRecord &cmdrec = Node::Rider::getCmdRec_All(reqref,FAll);
   cmdrec[FResolveChildren] = true;
   cmdrec[FInitDepMask] = true;
+  reqref().validateRider();
   Result::Ref resref;
   int flags = node.execute(resref,*reqref);
   cdebug(2)<<"  execute() returns flags "<<flags<<" with result"<<endl;
