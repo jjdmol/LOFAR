@@ -24,9 +24,6 @@
 #define MNS_PARMTABLE_H
 
 //# Includes
-#include <aips/Tables/Table.h>
-#include <aips/Tables/ColumnsIndex.h>
-#include <aips/Containers/RecordField.h>
 #include <MNS/MeqPolc.h>
 #include <MNS/MeqSourceList.h>
 #include <Common/lofar_vector.h>
@@ -36,12 +33,54 @@ class MeqDomain;
 template<class T> class Vector;
 
 
+class ParmTableRep
+{
+public:
+  ParmTableRep()
+    {}
+
+  virtual ~ParmTableRep()
+    {}
+
+  // Get the parameter values for the given parameter and domain.
+  // The matchDomain argument is set telling if the found parameter
+  // matches the domain exactly.
+  // Note that the requested domain may contain multiple polcs.
+  virtual vector<MeqPolc> getPolcs (const string& parmName,
+				    int sourceNr, int station,
+				    const MeqDomain& domain) = 0;
+
+  // Get the initial polynomial coefficients for the given parameter.
+  virtual MeqPolc getInitCoeff (const string& parmName,
+				int sourceNr, int station) = 0;
+
+  // Put the polynomial coefficient for the given parameter and domain.
+  virtual void putCoeff (const string& parmName,
+			 int sourceNr, int station,
+			 const MeqPolc& polc) = 0;
+
+  // Get the names of all sources in the table.
+  virtual void getSources (vector<string>&, vector<int>&) = 0;
+
+  // Unlock the underlying table.
+  virtual void unlock() = 0;
+};
+
+
+
 class ParmTable
 {
 public:
-  explicit ParmTable (const string& tableName);
+  // Create the ParmTable object.
+  // The dbType argument gives the database type.
+  // It can be postgres or aips. If aips is given, an AIPS++ table is used,
+  // otherwise a database of the given type.
+  // For an AIPS++ table, the extension .MEP is added to the table name.
+  ParmTable (const string& dbType, const string& tableName,
+	     const string& dbName, const string& pwd);
 
-  ~ParmTable();
+  ~ParmTable()
+    { delete itsRep; }
 
   // Get the parameter values for the given parameter and domain.
   // The matchDomain argument is set telling if the found parameter
@@ -49,47 +88,42 @@ public:
   // Note that the requested domain may contain multiple polcs.
   vector<MeqPolc> getPolcs (const string& parmName,
 			    int sourceNr, int station,
-			    const MeqDomain& domain);
+			    const MeqDomain& domain)
+    { return itsRep->getPolcs (parmName, sourceNr, station, domain); }
 
   // Get the initial polynomial coefficients for the given parameter.
   MeqPolc getInitCoeff (const string& parmName,
-			int sourceNr, int station);
+			int sourceNr, int station)
+    { return itsRep->getInitCoeff (parmName, sourceNr, station); }
 
   // Put the polynomial coefficient for the given parameter and domain.
   void putCoeff (const string& parmName,
 		 int sourceNr, int station,
-		 const MeqPolc& polc);
+		 const MeqPolc& polc)
+    { itsRep->putCoeff (parmName, sourceNr, station, polc); }
 
   // Return point sources for the given source numbers.
   // An empty sourceNr vector means all sources.
   // In the 2nd version the pointers to the created MeqParm objects
   // are added to the vector of objects to be deleted.
+  // <group>
   MeqSourceList getPointSources (const Vector<int>& sourceNrs);
   MeqSourceList getPointSources (const Vector<int>& sourceNrs,
 				 vector<MeqExpr*>& exprDel);
+  // </group>
 
-  // Unlock the underlying AIPS++ table.
+  // Unlock the underlying table.
   void unlock()
-    { itsTable.unlock(); }
+    { itsRep->unlock(); }
 
 private:
-  // Find the table subset containing the parameter values for the
-  // requested domain.
-  Table find (const string& parmName, 
-	      int sourceNr, int station,
-	      const MeqDomain& domain);
+  // Forbid copy and assignment.
+  ParmTable (const ParmTable&);
+  ParmTable& operator= (const ParmTable&);
 
-  Table                  itsTable;
-  ColumnsIndex           itsIndex;
-  RecordFieldPtr<Int>    itsIndexSrcnr;
-  RecordFieldPtr<Int>    itsIndexStatnr;
-  RecordFieldPtr<String> itsIndexName;
-  Table                  itsInitTable;
-  ColumnsIndex*          itsInitIndex;
-  RecordFieldPtr<Int>    itsInitIndexSrcnr;
-  RecordFieldPtr<Int>    itsInitIndexStatnr;
-  RecordFieldPtr<String> itsInitIndexName;
+  ParmTableRep* itsRep;
 };
+
 
 
 #endif

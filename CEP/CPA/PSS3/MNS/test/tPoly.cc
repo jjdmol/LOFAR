@@ -43,10 +43,11 @@
 
 
 // Solve for a single 3rd-order polynomial.
-void doIt1 (const string& ptabName)
+void doIt1 (const string& dbtype, const string& dbname,
+	    const string& pw, const string& ptabName)
 {
   cout << endl << "test ParmPolc" << endl;
-  ParmTable ptab(ptabName);
+  ParmTable ptab(dbtype, ptabName, dbname, pw);
   MeqDomain domain(1, 2, 2, 4);
   MeqStoredParmPolc parm00("parmp", -1, -1, &ptab);
   int nrspid = 0;
@@ -145,49 +146,6 @@ void doIt2()
     cout << result << endl;
   }
   {
-    MeqParmPolc parm("parm2");
-    MeqPolc polc;
-    complex<double> coeff[2];
-    coeff[0] = complex<double>(2,3);
-    coeff[1] = complex<double>(3,4);
-    polc.setDomain (MeqDomain(2,4,0,2));
-    polc.setCoeff  (MeqMatrix(coeff, 2, 1));
-    parm.addPolc (polc);
-    polc.setDomain (MeqDomain(4,6,0,2));
-    polc.setCoeff  (MeqMatrix(coeff, 1, 2));
-    parm.addPolc (polc);
-    MeqDomain domain(2,6,0,2);
-    MeqRequest request(domain,8,2);
-    MeqResult result = parm.getResult (request);
-    cout << result << endl;
-  }
-  {
-    MeqParmPolc parm("parm3");
-    MeqPolc polc;
-    complex<double> coeff[1];
-    coeff[0] = complex<double>(2,3);
-    polc.setDomain (MeqDomain(0,2,2,4));
-    polc.setCoeff  (MeqMatrix(coeff, 1, 1));
-    parm.addPolc (polc);
-    complex<double> coeff2[9];
-    coeff2[0] = complex<double>(2,3);
-    coeff2[1] = complex<double>(2.4, 3.6);
-    coeff2[2] = complex<double>(-2, -3);
-    coeff2[3] = complex<double>(-1, 10);
-    coeff2[4] = complex<double>(-2, 5);
-    coeff2[5] = complex<double>(3, -0.5);
-    coeff2[6] = complex<double>(1.2, 1.3);
-    coeff2[7] = complex<double>(1.5, 3);
-    coeff2[8] = complex<double>(1.4, 2.3);
-    polc.setDomain (MeqDomain(0,2,4,7));
-    polc.setCoeff  (MeqMatrix(coeff2, 3, 3));
-    parm.addPolc (polc);
-    MeqDomain domain(0,2,2,7);
-    MeqRequest request(domain,4,10);
-    MeqResult result = parm.getResult (request);
-    cout << result << endl;
-  }
-  {
     MeqParmPolc parm("parm4");
     MeqPolc polc;
     double coeff[1] = {2};
@@ -238,17 +196,10 @@ void doIt2()
 
 int main (int argc, char** argv)
 {
-  if (argc <= 1) {
-    cout << "Run as:  tPoly parmtable_name" << endl;
-    return 0;
-  }
-  uInt nr = 100;
-  if (argc > 2) {
-    istrstream istr(argv[1]);
-    istr >> nr;
-  }
   try {
-    doIt1(argv[1]);
+    if (argc > 4) {
+      doIt1(argv[1], argv[2], argv[3], argv[4]);
+    }
     doIt2();
   } catch (AipsError& x) {
     cout << "Caught an AIPS++ exception: " << x.getMesg() << endl;
