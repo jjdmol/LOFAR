@@ -4,6 +4,7 @@
 # stations       = 2,	# the number of RSP boards
 # don't use channels, use NoRSPBeamlets instead
 # channels       = 46,	# the number of individual channels
+runsteps	 = 13,	# number of runs to perform
 useRealRSPBoard  = F,	# Use the real RSPBoard T or the WH_RSPBoard F
 interfaces       = ["eth2", "eth1"], # interface names for all TH_Ethernets
 oMacs            = ["FF:FF:FF:FF:FF:FF", "FF:FF:FF:FF:FF:FF"], # interface names for all TH_Ethernets
@@ -13,8 +14,8 @@ polarisations    = 2,
 SzEPAheader      = 14,	# Size (in bytes) of the header of an EPA-packet
 NoPacketsInFrame = 8,	# Number of EPA-packets in one RSP ethernet frame
 NoWH_RSP         = 2,	   
-NoWH_Correlator  = 1,	# This also defines the number of WH_Transpose as well as the number of Transpose inputs
-samples          = 100,	# number of samples to integrate 
+NoWH_Correlator  = 7,	# This also defines the number of WH_Transpose as well as the number of Transpose inputs
+samples          = 96,	# number of samples to integrate 
 NoWH_Dump        = 1,	
 outFileName      = ["/tmp/SC1.out", "/tmp/SC2.out"]	# Filename for dump outputfile
 
