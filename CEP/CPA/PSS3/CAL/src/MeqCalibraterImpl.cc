@@ -415,7 +415,7 @@ MeqCalibrater::MeqCalibrater(const String& msName,
   cdebug(1) << ddid << ", " << endl;
   cdebug(1) << itsCalcUVW << ")" << endl;
 
-  if (itsCalcUVW) {
+  if (!itsCalcUVW) {
     AssertStr (modelType=="LOFAR", "calcUVW=F only possible for WSRT model");
   }
   // Get phase reference (for field 0).
