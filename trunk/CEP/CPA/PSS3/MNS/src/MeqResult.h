@@ -42,7 +42,8 @@ public:
   MeqResultRep* link()
     { itsCount++; return this; }
 
-  static void unlink (MeqResultRep*);
+  static void unlink (MeqResultRep* rep)
+    { if (rep != 0  &&  --rep->itsCount == 0) delete rep; }
 
   // Get the value.
   const MeqMatrix& getValue() const

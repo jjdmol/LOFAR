@@ -45,13 +45,6 @@ MeqResultRep::~MeqResultRep()
   ndtor--;
 }
 
-void MeqResultRep::unlink (MeqResultRep* rep)
-{
-  if (rep != 0  &&  --rep->itsCount == 0) {
-    delete rep;
-  }
-}
-
 void MeqResultRep::setValue (const MeqMatrix& value)
 {
   itsValue = value;
