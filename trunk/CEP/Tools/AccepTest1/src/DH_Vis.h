@@ -68,32 +68,25 @@ inline DH_Vis::BufferType* DH_Vis::getBuffer()
 inline const DH_Vis::BufferType* DH_Vis::getBuffer() const
   { return itsBuffer; }
 
+#define VISADDRESS(station1, station2, channel, polarisation)          \
+                         (station1)*nstations*nchannels*npolarisations \
+                       + (station2)*nchannels*npolarisations           \
+                       + (channel)*npolarisations                      \
+                       + (polarisation) 
 
 inline DH_Vis::BufferType* DH_Vis::getBufferElement(int station1, int station2, int channel, int polarisation)
   { 
-    return itsBuffer +
-      station1*nstations*nchannels*npolarisations +
-      station2*nchannels*npolarisations +
-      channel*npolarisations +
-      polarisation;
+    return itsBuffer + VISADDRESS(station1, station2, channel, polarisation);
   }
  
 inline void DH_Vis::setBufferElement(int station1, int station2, int channel, int polarisation, BufferType* valueptr)
 {
-  *( itsBuffer + 
-     station1*nstations*nchannels*npolarisations +
-     station2*nchannels*npolarisations +
-     channel*npolarisations +
-     polarisation) = *valueptr;
+  *( itsBuffer + VISADDRESS(station1, station2, channel, polarisation)  ) = *valueptr;
 };
 
 inline void DH_Vis::addBufferElementVal(int station1, int station2, int channel, int polarisation, BufferType value)
 {
-  *( itsBuffer +
-     station1*nstations*nchannels*npolarisations +
-     station2*nchannels*npolarisations +
-     channel*npolarisations +
-     polarisation) += value;
+  *( itsBuffer + VISADDRESS(station1, station2, channel, polarisation) ) += value;
 };
 
 inline const int DH_Vis::getFBW() const
