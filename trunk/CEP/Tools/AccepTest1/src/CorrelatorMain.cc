@@ -90,7 +90,11 @@ int main (int argc, const char** argv) {
        	  char my_fe_ip[32];
        	  char my_be_ip[32];
 
+#ifdef HAVE_MPI
           int rank = TH_MPI::getCurrentRank();
+#else 
+	  int rank = 0;
+#endif
 
 	  // logic for NRFE == 4
 	  strcpy(my_fe_ip, FE_ip[0].c_str());
@@ -130,7 +134,9 @@ int main (int argc, const char** argv) {
 	 
 	  correlator->baseRun(runs);
 
+#ifdef HAVE_MPI
 	  TH_MPI::synchroniseAllProcesses();
+#endif
 
 	  correlator->basePostrun();
 	  // 	correlator.baseDump();
