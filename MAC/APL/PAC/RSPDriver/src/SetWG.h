@@ -26,8 +26,8 @@
 #define SETWG_H_
 
 #include <Suite/test.h>
-#include <GCF/GCF_Control.h>
-#include <GCF/GCF_ETHRawPort.h>
+#include <GCF/TM/GCF_Control.h>
+#include <GCF/TM/GCF_ETHRawPort.h>
 
 class SetWG : public GCFTask, public Test
 {

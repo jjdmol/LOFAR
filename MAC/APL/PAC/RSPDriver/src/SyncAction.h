@@ -25,7 +25,7 @@
 #ifndef SYNCACTION_H_
 #define SYNCACTION_H_
 
-#include <GCF/GCF_Control.h>
+#include <GCF/TM/GCF_Control.h>
 
 namespace RSP
 {

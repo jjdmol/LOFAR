@@ -165,7 +165,6 @@ RSPDriver_LDADD = \
 	$(top_builddir)/src/librsp.la \
 	$(top_builddir)/src/libepa.la \
 	$(top_builddir)/src/libaplconfig.la \
-	-lgcflite \
 	$(PVSS_LDADD)
 
 ViewStats_SOURCES = \
@@ -176,7 +175,7 @@ ViewStats_SOURCES = \
 
 ViewStats_LDADD = \
 	$(top_builddir)/src/librsp.la \
-	-lsuite -lgcflite
+	-lsuite
 
 SetWG_SOURCES = \
 	gnuplot_i.h \
@@ -186,6 +185,6 @@ SetWG_SOURCES = \
 
 SetWG_LDADD = \
 	$(top_builddir)/src/librsp.la \
-	-lsuite -lgcflite
+	-lsuite
 
 include $(lofar_sharedir)/Makefile.common

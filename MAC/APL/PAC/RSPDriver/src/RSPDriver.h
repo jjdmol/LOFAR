@@ -28,9 +28,9 @@
 #include "RSP_Protocol.ph"
 #include "EPA_Protocol.ph"
 
-#include <GCF/GCF_Control.h>
-#include <GCF/GCF_ETHRawPort.h>
-#include <GCF/GCF_DevicePort.h>
+#include <GCF/TM/GCF_Control.h>
+#include <GCF/TM/GCF_ETHRawPort.h>
+#include <GCF/TM/GCF_DevicePort.h>
 
 #include "Scheduler.h"
 
