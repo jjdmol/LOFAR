@@ -21,6 +21,12 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.6  2002/11/08 13:48:22  schaaf
+//
+//  %[BugId: 11]%
+//
+//  includes
+//
 //  Revision 1.5  2002/07/18 09:35:31  schaaf
 //  %[BugId: 11]%
 //  Modified time handling
@@ -49,7 +55,7 @@
 #endif
 
 #include "BaseSim/WorkHolder.h"
-#include "Pipeline/DH_2DMatrix.h"
+#include "Transpose/DH_2DMatrix.h"
 #include "BaseSim/DH_Empty.h"
 
 /**
