@@ -14,8 +14,8 @@ namespace LOFAR {
 
   namespace PL {
 
-    // The BCA<B> structure 'binds' the database columns
-    // to the members of the DBRep<B> class.
+    // bindCols() 'binds' the database columns represented by \a cols
+    // to the members of the DBRep<A> class.
     void DBRep<B>::bindCols(BoundIOs& cols)
     {
       cols["ItsBool"]   == itsBool;
@@ -24,23 +24,23 @@ namespace LOFAR {
       cols["ItsString"] == itsString;
     }
 
-    // toDBRep copies the fields of the B class to the DBRep<B> structure.
-    void DBRep<B>::toDBRep(const B& src)
+    // toDBRep copies the fields from the B class to the DBRep<B> structure.
+    void TPersistentObject<B>::toDBRep(DBRep<B>& dest) const
     {
-      itsBool = src.itsBool;
-      itsShort  = src.itsShort;
-      itsFloat  = src.itsFloat;
-      itsString  = src.itsString;
+      dest.itsBool  = data().itsBool;
+      dest.itsShort  = data().itsShort;
+      dest.itsFloat  = data().itsFloat;
+      dest.itsString  = data().itsString;
     }
 
 
-    // fromDBRep copies the fields of the DBRep<B> structure to the B class.
-    void DBRep<B>::fromDBRep(B& dest) const
+    // fromDBRep copies the fields from the DBRep<B> structure to the B class.
+    void TPersistentObject<B>::fromDBRep(const DBRep<B>& src)
     {
-      dest.itsBool  = itsBool;
-      dest.itsShort  = itsShort;
-      dest.itsFloat  = itsFloat;
-      dest.itsString  = itsString;
+      data().itsBool = src.itsBool;
+      data().itsShort  = src.itsShort;
+      data().itsFloat  = src.itsFloat;
+      data().itsString  = src.itsString;
     }
 
     // Initialize the internals of TPersistentObject<B>

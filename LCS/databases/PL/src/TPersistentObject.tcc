@@ -23,12 +23,15 @@
 #ifndef LOFAR_PL_TPERSISTENTOBJECT_TCC
 #define LOFAR_PL_TPERSISTENTOBJECT_TCC
 
+#include <PL/DBRepHolder.h>
 #include <PL/DTLBase.h>
 #include <PL/Exception.h>
 #include <PL/TPersistentObject.h>
 #include <PL/Query.h>
 #include <PL/Collection.h>
 #include <Common/Debug.h>
+#include <dtl/DBView.h>
+#include <dtl/select_iterator.h>
 #include <sstream>
 
 namespace LOFAR
@@ -88,11 +91,12 @@ namespace LOFAR
     {
       typedef dtl::DBView< DBRepHolder<ObjectId> > DBViewType;
       DBViewType view(tableName(), BCA<ObjectId>());
-      DBViewType::delete_iterator iter = view;
+      typename DBViewType::delete_iterator iter = view;
 
       // setup the selection parameters
       DBRepHolder<ObjectId> rec;
-      rec.rep().toDBRep(*metaData().oid());
+      rec.rep().itsOid = metaData().oid()->get();
+//       toDBRep(rec);
 
       // delete this record
       *iter = rec;
@@ -168,22 +172,34 @@ namespace LOFAR
       metaData().versionNr()++;
     }
 
-
     template<typename T>
     void TPersistentObject<T>::toDBRep(DBRepHolder<T>& dest) const
     {
-      dest.rep().toDBRepMeta(*this); 
-      dest.rep().toDBRep(*itsObjectPtr); 
+      toDBRepMeta(dest.repMeta());
+      toDBRep(dest.rep());
     }
 
-
+    // Convert the data from DBRep format to our persistent object.
     template<typename T>
-    void TPersistentObject<T>::fromDBRep(const DBRepHolder<T>& org)
+    void TPersistentObject<T>::fromDBRep(const DBRepHolder<T>& src)
     {
-      org.rep().fromDBRepMeta(*this);
-      org.rep().fromDBRep(*itsObjectPtr);
+      fromDBRepMeta(src.repMeta());
+      fromDBRep(src.rep());
     }
 
+    template<>
+    inline void 
+    TPersistentObject<ObjectId>::toDBRep(DBRepHolder<ObjectId>& dest) const
+    {
+      toDBRep(dest.rep());
+    }
+
+    template<>
+    inline void
+    TPersistentObject<ObjectId>::fromDBRep(const DBRepHolder<ObjectId>& src)
+    {
+      fromDBRep(src.rep());
+    }
 
   } // namespace PL
 

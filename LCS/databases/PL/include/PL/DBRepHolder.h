@@ -26,24 +26,75 @@
 #include <lofar_config.h>
 
 //# Includes
+#include <PL/DBRepMeta.h>
 #include <PL/DBRep.h>
+#include <dtl/BoundIO.h>
 
 namespace LOFAR
 {
   namespace PL
   {
-    //# Forward Declarations
-    template<typename T> class DBRep;
-
+    // This class combines the representation of the meta data of a persistent
+    // object (DBRepMeta) and the representation of the data in the
+    // user-defined class \c T (DBRep<T>).
     template <typename T>
-    class DBRepHolder
+    struct DBRepHolder
     {
     public:
-      DBRep<T>& rep() { return itsRep; }
-      const DBRep<T>& rep() const { return itsRep; }
+      // A convenience typedef, so that we can address the templated DBRep<T>
+      // using a "plain" data type.
+      typedef DBRep<T> DBRepType;
+
+      // Return a reference to the DBRepMeta part.
+      //@{
+      DBRepMeta& repMeta() { return itsRepMeta; }
+      const DBRepMeta& repMeta() const { return itsRepMeta; }
+      //@}
+
+      // Return a reference to the DBRepType part.
+      //@{
+      DBRepType& rep() { return itsRep; }
+      const DBRepType& rep() const { return itsRep; }
+      //@}
+
+      // This method 'binds' the database columns to the members of the
+      // user-defined class \c T and the meta data of the accompanying
+      // TPersistentObject<T>. DTL's BoundIOs class and the DBRepHolder<T>
+      // class are the glue.
+      void bindCols(dtl::BoundIOs& cols)
+      {
+        itsRepMeta.bindCols(cols);
+        itsRep.bindCols(cols);
+     }
+
     private:
-      DBRep<T> itsRep;
+
+      // Internal representation of the meta data of a persistent object.
+      DBRepMeta itsRepMeta;
+
+      // Internal representation of the data of a user-defined class \c T.
+      DBRepType itsRep;
     };
+
+
+    // @name Full class template specializations.
+    //@{
+
+    // ObjectId is part of the meta data of a persistent object. Hence, we
+    // must define a specialization.
+    template <>
+    struct DBRepHolder<ObjectId>
+    {
+    public:
+      typedef DBRep<ObjectId> DBRepType;
+      DBRepType& rep() { return itsRep; }
+      const DBRepType& rep() const { return itsRep; }
+      void bindCols(dtl::BoundIOs& cols) { itsRep.bindCols(cols); }
+    private:
+      DBRepType itsRep;
+    };
+
+    //@}
 
   } // namespace PL
 

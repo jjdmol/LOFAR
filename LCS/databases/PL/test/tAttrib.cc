@@ -1,4 +1,5 @@
 #include <PL/Attrib.h>
+#include <PL/DBRepHolder.h>
 
 using namespace LOFAR::PL;
 using namespace dtl;
@@ -11,12 +12,18 @@ namespace LOFAR {
 
   namespace PL {
 
-    template<> struct DBRep<X> : public DBRepMeta
+    template<> struct DBRep<X>
     {
-      void bindCols(dtl::BoundIOs& cols) {}
-      void toDBRep(const X& src) {}
-      void fromDBRep(X& dest) const {}
+      void bindCols(dtl::BoundIOs&) {}
     };
+    
+    template<> void TPersistentObject<X>::toDBRep(DBRep<X>& dest) const
+    {
+    }
+
+    template<> void TPersistentObject<X>::fromDBRep(const DBRep<X>& src)
+    {
+    }
 
     template<> void TPersistentObject<X>::init() 
     { 

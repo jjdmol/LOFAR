@@ -15,27 +15,27 @@ namespace LOFAR {
 
   namespace PL {
 
-    // The BCA<C> structure 'binds' the database columns
-    // to the members of the DBRep<C> class.
+    // bindCols() 'binds' the database columns represented by \a cols
+    // to the members of the DBRep<A> class.
     void DBRep<C>::bindCols(BoundIOs& cols)
     {
       cols["ITSBLOB"]  == itsBlob;
       cols["ITSSTRING"]  == itsString;
     }
 
-    // toDBRep copies the fields of the C class to the DBRep<C> structure.
-    void DBRep<C>::toDBRep(const C& src)
+    // toDBRep copies the fields from the C class to the DBRep<C> structure.
+    void TPersistentObject<C>::toDBRep(DBRep<C>& dest) const
     {
-      itsBlob  = src.itsBlob;
-      itsString  = src.itsString;
+      dest.itsBlob  = data().itsBlob;
+      dest.itsString  = data().itsString;
     }
 
 
-    // fromDBRep copies the fields of the DBRep<C> structure to the C class.
-    void DBRep<C>::fromDBRep(C& dest) const
+    // fromDBRep copies the fields from the DBRep<C> structure to the C class.
+    void TPersistentObject<C>::fromDBRep(const DBRep<C>& src)
     {
-      dest.itsBlob  = itsBlob;
-      dest.itsString  = itsString;
+      data().itsBlob  = src.itsBlob;
+      data().itsString  = src.itsString;
     }
 
     // Initialize the internals of TPersistentObject<C>

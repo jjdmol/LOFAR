@@ -21,7 +21,6 @@ public:
   {}
   friend std::ostream& operator<<(std::ostream& os, const A& a);
 private:
-  friend class    DBRep<A>;
   friend class    TPersistentObject<A>;
   int             itsInt;
   double          itsDouble;
