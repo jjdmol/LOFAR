@@ -43,10 +43,17 @@ Cmnd_Alias      MAC=/opt/lofar/bin/RSPDriver,\
 Defaults:wierenga       stay_setuid # only change euid to 0 (root)
 
 # User privilege specification
-wierenga localhost= NOPASSWD: MAC
+wierenga ALL=NOPASSWD: MAC
 -------%< cut here
 
 This allows user 'wierenga' to run RSPDriver and EPAStub as setuid-root without
 specifying a password like this:
 > sudo /opt/lofar/bin/RSPDriver
+or
+> cd /opt/lofar/bin
+> sudo ./RSPDriver
+or
+> PATH=$PATH:/opt/lofar/bin
+> sudo RSPDriver
+
 
