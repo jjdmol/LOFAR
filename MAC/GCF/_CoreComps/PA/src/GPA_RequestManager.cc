@@ -29,6 +29,7 @@ GPARequestManager::GPARequestManager()
 
 GPARequestManager::~GPARequestManager()
 {
+  deleteAllRequests();
 }
 
 void GPARequestManager::registerRequest(GCFPortInterface& requestPort, const GCFEvent& e)
@@ -44,9 +45,9 @@ void GPARequestManager::registerRequest(GCFPortInterface& requestPort, const GCF
 
 GCFEvent* GPARequestManager::getOldestRequest()
 {
-  TRequest* pRequest = &_requests.front();
-  if (pRequest)
+  if (_requests.size() > 0)
   {
+    TRequest* pRequest = &_requests.front();
     return pRequest->pEvent;
   }
   else
@@ -55,9 +56,9 @@ GCFEvent* GPARequestManager::getOldestRequest()
 
 GCFPortInterface* GPARequestManager::getOldestRequestPort()
 {
-  TRequest* pRequest = &_requests.front();
-  if (pRequest)
+  if (_requests.size() > 0)
   {
+    TRequest* pRequest = &_requests.front();
     return pRequest->pRPort;
   }
   else
@@ -66,10 +67,9 @@ GCFPortInterface* GPARequestManager::getOldestRequestPort()
 
 void GPARequestManager::deleteOldestRequest()
 {
-  TRequest* pRequest = &_requests.front();
-  
-  if (pRequest)
+  if (_requests.size() > 0)
   {
+    TRequest* pRequest = &_requests.front();
     if (pRequest->pEvent)
       delete pRequest->pEvent;
   }

@@ -23,8 +23,13 @@
 #include "GPA_UsecountManager.h"
 #include "GPA_Controller.h"
 #include "SAL/GCF_PValue.h"
+#include "SAL/GCF_PVBool.h"
+#include "SAL/GCF_PVDouble.h"
+#include <strings.h>
+#include <stdio.h>
 
 GPAUsecountManager::GPAUsecountManager(GPAController& controller) :
+  GSAService(),
   _controller(controller),
   _state(DECREMENT),
   _counter(0)
@@ -35,52 +40,87 @@ GPAUsecountManager::~GPAUsecountManager()
 {
 }
 
-TPAResult GPAUsecountManager::incrementUsecount(list<string>& propList)
+TPAResult GPAUsecountManager::incrementUsecount(const list<TAPCProperty>& propList)
 {
   TPAResult result(PA_NO_ERROR);
   TPropListIter iter;
   _counter = 0;
-  for (list<string>::iterator pPropName = propList.begin(); 
-       pPropName != propList.end(); ++pPropName)
+  for (list<TAPCProperty>::const_iterator pAPCProperty = propList.begin(); 
+       pAPCProperty != propList.end(); ++pAPCProperty)
   {
-    iter = _propList.find(*pPropName);
-    if (iter->first == *pPropName)
+    iter = _propList.find(pAPCProperty->name);
+    if (iter->first == pAPCProperty->name)
     {
       iter->second++;
     }
     else
     {      
-      if (createProp(*pPropName, "BOOL_VAL") == SA_NO_ERROR)
+      if (GSAService::createProp(pAPCProperty->macType, pAPCProperty->name) == SA_NO_ERROR)
       {
         _counter++;
       }
+      else
+        result = PA_SCADA_ERROR;
     }
   }
   return result;
 }
 
-TPAResult GPAUsecountManager::decrementUsecount(list<string>& propList)
+TPAResult GPAUsecountManager::decrementUsecount(const list<TAPCProperty>& propList)
 {
   TPAResult result(PA_NO_ERROR);
   TPropListIter iter;
   _counter = 0;
-  for (list<string>::iterator pPropName = propList.begin(); 
-       pPropName != propList.end(); ++pPropName)
+  for (list<TAPCProperty>::const_iterator pAPCProperty = propList.begin(); 
+       pAPCProperty != propList.end(); ++pAPCProperty)
   {
-    iter = _propList.find(*pPropName);
-    if (iter->first == *pPropName)
+    iter = _propList.find(pAPCProperty->name);
+    if (iter->first == pAPCProperty->name)
     {
       iter->second--;
       if (iter->second == 0)
       {
-        if (deleteProp(*pPropName) == SA_NO_ERROR)
+        if (GSAService::deleteProp(pAPCProperty->name) == SA_NO_ERROR)
         {
           _state = DECREMENT;
           _counter++;
         }
+        else 
+          result = PA_SCADA_ERROR;
       }
     }
   }  
+  return result;
+}
+
+TPAResult GPAUsecountManager::setDefaults(const list<TAPCProperty>& propList)
+{
+  TPAResult result(PA_NO_ERROR);
+
+  TPropListIter iter;
+  
+  for (list<TAPCProperty>::const_iterator pAPCProperty = propList.begin(); 
+       pAPCProperty != propList.end(); ++pAPCProperty)
+  {
+    iter = _propList.find(pAPCProperty->name);
+    if (iter->first == pAPCProperty->name)
+    {
+      if (pAPCProperty->defaultSet)
+      {
+        GCFPValue* pV(0);
+        result = createMACValueObject(pAPCProperty->macType, pAPCProperty->defaultValue, &pV);
+        if (result == PA_NO_ERROR && pV != 0)
+        {
+          if (GSAService::set(pAPCProperty->name, *pV) != SA_NO_ERROR)
+          {
+            result = PA_SCADA_ERROR;
+          }
+          delete pV;
+        }
+      }
+    }
+  }  
+  
   return result;
 }
 
@@ -140,6 +180,7 @@ void GPAUsecountManager::deleteAllProperties()
 void GPAUsecountManager::propCreated(string& propName)
 {
   _counter--;
+  _propList[propName] = 0; // adds a new usecounter for the just created property
   _tempPropList.push_back(propName);
   if (_counter == 0)
   {
@@ -174,4 +215,95 @@ void GPAUsecountManager::propDeleted(string& propName)
 bool GPAUsecountManager::waitForAsyncResponses()
 {
   return (_counter > 0);
+}
+
+TPAResult GPAUsecountManager::createMACValueObject(
+  const string& macType, 
+  const string& valueData, 
+  GCFPValue** pReturnValue)
+{
+  TPAResult result(PA_NO_ERROR);
+  *pReturnValue = 0;
+  
+  if (macType == "BOOL_VAL")
+  {
+    GCFPVBool* pValue = new GCFPVBool();
+    *pReturnValue = pValue;
+    if (valueData.length() > 0)
+    {
+      char* validPos(0);
+      long int value = strtol(valueData.c_str(), &validPos, 10);
+      if (*validPos == '\0')
+      {
+        pValue->setValue(value != 0);
+      }
+      else if (validPos == valueData.c_str())
+      {
+        if ((strncasecmp(valueData.c_str(), "false", 5) == 0) || 
+            (strncasecmp(valueData.c_str(), "no", 2) == 0) ||
+            (strncasecmp(valueData.c_str(), "off", 3) == 0))
+        {
+          pValue->setValue(false);          
+        }
+        else 
+        if ((strncasecmp(valueData.c_str(), "true", 5) == 0) || 
+            (strncasecmp(valueData.c_str(), "yes", 2) == 0) ||
+            (strncasecmp(valueData.c_str(), "on", 3) == 0))
+        {
+          pValue->setValue(true);
+        }
+      }
+    }
+  }
+/*  else if (macType == "BIT32_VAL")
+  {
+    *pMacValue = new GCFPVBit32(((Bit32Var *)&variable)->getValue());
+  }
+  else if (macType == "CHAR_VAL")
+  {
+    *pMacValue = new GCFPVChar(((CharVar *)&variable)->getValue());
+  }
+  else if (macType == "UNSIGNED_VAL")
+  {
+    *pMacValue = new GCFPVUnsigned(((UIntegerVar *)&variable)->getValue());
+  }
+  else if (macType == "INTEGER_VAL")
+  {
+    *pMacValue = new GCFVPInteger(((IntegerVar *)&variable)->getValue());
+  }*/
+  else if (macType == "FLOAT_VAL")
+  {
+    GCFPVDouble* pValue = new GCFPVDouble();
+    *pReturnValue = pValue;
+    if (valueData.length() > 0)
+    {
+      char* validPos(0);
+      double value = strtod(valueData.c_str(), &validPos);
+      if (*validPos == '\0')
+      {
+        pValue->setValue(value);
+      }
+    }
+  }
+/*  else if (macType == "STRING_VAL")
+  {
+    *pMacValue = new GCFPVString(((TextVar *)&variable)->getValue());
+  }
+  else if (macType == "REF_VAL")
+  {
+    *pMacValue = new GCFPVRef(((TextVar *)&variable)->getValue());
+  }
+  else if (macType == "BLOB_VAL")
+  {
+    *pMacValue = new GCFPVBlob(((BlobVar *)&variable)->getValue());
+  }
+  else if (macType == "DATETIME_VAL")
+  {
+    *pMacValue = new GCFPVDateTime(((TimeVar *)&variable)->getValue());
+  }*/
+  else 
+  {
+    result = PA_MACTYPE_UNKNOWN;
+  }
+  return result;
 }

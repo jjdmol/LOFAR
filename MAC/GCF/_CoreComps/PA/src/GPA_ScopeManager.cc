@@ -23,7 +23,6 @@
 #include "GPA_ScopeManager.h"
 #include "GPA_Controller.h"
 #include <stdio.h>
-#define DECLARE_SIGNAL_NAMES
 #include "PA_Protocol.ph"
 
 GPAScopeManager::GPAScopeManager(GPAController& controller) :
