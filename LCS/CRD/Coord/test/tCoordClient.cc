@@ -24,24 +24,28 @@
 #include <Coord/SkyCoord.h>
 #include <Coord/EarthCoord.h>
 #include <Coord/TimeCoord.h>
-#include <stdexcept>
+#include <Common/LofarLogger.h>
+#include <Common/Exception.h>
+
+using namespace LOFAR;
 
 int main (int argc, const char* argv[])
 {
+  INIT_LOGGER(argv[0]);
   try {
     SkyCoord sky(1,0.4);
-    Assert (sky.angle1() == 1);
-    Assert (sky.angle2() == 0.4);
+    ASSERT (sky.angle1() == 1);
+    ASSERT (sky.angle2() == 0.4);
     cout << sky << endl;
     EarthCoord pos(0.2, 1, 3);
-    Assert (pos.longitude() == 0.2);
-    Assert (pos.latitude() == 1);
-    Assert (pos.height() == 3);
+    ASSERT (pos.longitude() == 0.2);
+    ASSERT (pos.latitude() == 1);
+    ASSERT (pos.height() == 3);
     cout << pos << endl;
     EarthCoord dwl(0.111646531, 0.921760253, 25);
     cout << TimeCoord::getUTCDiff() << endl;
     TimeCoord time(10.5);
-    Assert (time.mjd() == 10.5);
+    ASSERT (time.mjd() == 10.5);
     TimeCoord timeNow;
     cout << timeNow.mjd() << endl;
     cout << timeNow << endl;
@@ -80,7 +84,7 @@ int main (int argc, const char* argv[])
       times[1] = timeNow2;
       times[2] = timeNow3;
       vector<SkyCoord> result = cc.j2000ToAzel (skies, poss, times);
-      Assert (result.size() == 4*2*3);
+      ASSERT (result.size() == 4*2*3);
       for (unsigned int i=0; i<4*2*3; i++) {
 	cout << result[i] << endl;
       }
@@ -100,7 +104,7 @@ int main (int argc, const char* argv[])
       }
     }
 
-  } catch (std::exception& x) {
+  } catch (Exception& x) {
     cout << "Exception: " << x.what() << endl;
     return 1;
   }
