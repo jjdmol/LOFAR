@@ -23,5 +23,23 @@
 #ifndef AVTDefines_H
 #define AVTDefines_H
 
+#define LD_COMMAND_SCHEDULE   "SCHEDULE"
+#define LD_COMMAND_RELEASE    "RELEASE"
+#define LD_COMMAND_PREPARE    "PREPARE"
+#define LD_COMMAND_SUSPEND    "SUSPEND"
+#define LD_COMMAND_RESUME     "RESUME"
+#define LD_COMMAND_PREPARE    "PREPARE"
+
+#define DIRECTIONTYPE_J2000   "J2000"
+#define DIRECTIONTYPE_AZEL    "AZEL"
+#define DIRECTIONTYPE_LMN     "LMN"
+
+#define PROPERTYNAME_COMMAND              "command"
+#define PROPERTYNAME_DIRECTIONTYPE        "directionType"
+#define PROPERTYNAME_DIRECTIONANGLE1      "directionAngle1"
+#define PROPERTYNAME_DIRECTIONANGLE2      "directionAngle2"
+#define PROPERTYNAME_WAVEGENFREQUENCY     "WaveFormGenerator_frequency"
+#define PROPERTYNAME_WAVEGENAMPLITUDE     "WaveFormGenerator_amplitude"
+#define PROPERTYNAME_WAVEGENSAMPLEPERIOD  "WaveFormGenerator_samplePeriod"
 
 #endif

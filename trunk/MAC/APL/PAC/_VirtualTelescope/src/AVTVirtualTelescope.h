@@ -99,11 +99,11 @@ class AVTVirtualTelescope : public AVTLogicalDevice
     AVTStationBeamformer& m_stationBeamformer;
     // The BeamFormer SAP
 //    GCFPort m_beamFormerClient;
-    APLInterTaskPort m_beamFormerClient;
-    
-    time_t m_startTime;
-    time_t m_stopTime;
-    double m_frequency;
+    APLInterTaskPort  m_beamFormerClient;
+    bool              m_beamFormerConnected;
+    time_t            m_startTime;
+    time_t            m_stopTime;
+    double            m_frequency;
     
 };
 #endif

@@ -51,6 +51,11 @@ event = {
 };
 
 event = {
+	signal = INITIALIZED;
+	dir = OUT;
+};
+
+event = {
 	signal = CLAIM;
 	dir = IN;
 };

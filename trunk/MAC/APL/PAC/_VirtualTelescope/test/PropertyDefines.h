@@ -49,11 +49,14 @@ const TProperty propertiesLDS[] =
 {
   {"command", GCFPValue::LPT_STRING, GCF_READWRITE_PROP, ""},
   {"status", GCFPValue::LPT_STRING, GCF_READWRITE_PROP, ""},
+  {"WaveFormGenerator_frequency", GCFPValue::LPT_DOUBLE, GCF_READWRITE_PROP, "1000000.0"},
+  {"WaveFormGenerator_amplitude", GCFPValue::LPT_UNSIGNED, GCF_READWRITE_PROP, "128"},
+  {"WaveFormGenerator_samplePeriod", GCFPValue::LPT_UNSIGNED, GCF_READWRITE_PROP, "2"},
 };
 
 const TPropertySet propertySetLDS = 
 {
-  2, "LogicalDeviceScheduler", propertiesLDS
+  5, "LogicalDeviceScheduler", propertiesLDS
 };
 
 const TProperty primaryPropertiesVT[] =

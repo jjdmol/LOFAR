@@ -31,6 +31,7 @@
 #include <boost/shared_ptr.hpp>
 
 //# GCF Includes
+#include <GCF/GCF_Port.h>
 #include <GCF/GCF_Task.h>
 #include <GCF/GCF_MyPropertySet.h>
 #include <GCF/GCF_Apc.h>
@@ -84,6 +85,10 @@ class AVTLogicalDeviceScheduler : public GCFTask,
     GCFMyPropertySet      m_properties;
     GCFApc                m_apcLDS;
     bool                  m_initialized;
+//    GCFPort               m_beamServer;
+    double                m_WGfrequency;
+    unsigned int          m_WGamplitude;
+    unsigned int          m_WGsamplePeriod;
     
     typedef struct LogicalDeviceInfoT
     {

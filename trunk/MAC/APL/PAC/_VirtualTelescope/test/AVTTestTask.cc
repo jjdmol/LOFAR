@@ -565,6 +565,9 @@ GCFEvent::TResult AVTTestTask::beamServer(GCFEvent& event, GCFPortInterface& p)
       case F_ENTRY_SIG:
         break;
       
+      case F_CONNECTED_SIG:
+        break;
+              
       case F_DISCONNECTED_SIG:
         p.close();
         break;

@@ -40,14 +40,13 @@ AVTLogicalDevice::AVTLogicalDevice(string& taskName,
   m_APC(APCName,APCScope,&m_APCAnswer),
   m_serverPortName(taskName+string("_server")),
   m_logicalDeviceServerPort(*this, m_serverPortName, GCFPortInterface::SPP, LOGICALDEVICE_PROTOCOL),
-  m_clientInterTaskPort(0)
+  m_clientInterTaskPort(0),
+  m_apcLoaded(false)
 {
   registerProtocol(LOGICALDEVICE_PROTOCOL, LOGICALDEVICE_PROTOCOL_signalnames);
   LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTLogicalDevice(%s)::AVTLogicalDevice",getName().c_str()));
   
   m_properties.load();
-  // open all ports
-  m_logicalDeviceServerPort.open();
 }
 
 
@@ -56,6 +55,7 @@ AVTLogicalDevice::~AVTLogicalDevice()
   LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTLogicalDevice(%s)::~AVTLogicalDevice",getName().c_str()));
   m_clientInterTaskPort=0;
   m_APC.unload();
+  m_properties.unload();
 }
 
 string& AVTLogicalDevice::getServerPortName()
@@ -75,6 +75,7 @@ bool AVTLogicalDevice::_isLogicalDeviceServerPort(GCFPortInterface& /*port*/)
    
 void AVTLogicalDevice::_disconnectedHandler(GCFPortInterface& port)
 {
+  port.close();
 /*
  *   if(_isLogicalDeviceServerPort(port))
   {
@@ -84,7 +85,16 @@ void AVTLogicalDevice::_disconnectedHandler(GCFPortInterface& port)
 */
     concreteDisconnected(port);
 //  }
-  port.close();
+}
+
+bool AVTLogicalDevice::isAPCLoaded() const
+{
+  return m_apcLoaded;
+}
+
+void AVTLogicalDevice::apcLoaded()
+{
+  m_apcLoaded=true;
 }
 
 GCFEvent::TResult AVTLogicalDevice::initial_state(GCFEvent& event, GCFPortInterface& port)
@@ -122,7 +132,7 @@ GCFEvent::TResult AVTLogicalDevice::initial_state(GCFEvent& event, GCFPortInterf
   // call the implementation of the derived class
   // transition to the idle state is done in the derived class
   status = concrete_initial_state(event,port);
-  
+
   return status;
 }
 
@@ -138,6 +148,14 @@ GCFEvent::TResult AVTLogicalDevice::idle_state(GCFEvent& event, GCFPortInterface
       
     case F_ENTRY_SIG:
     {
+      // open the server port to allow clients to connect
+      m_logicalDeviceServerPort.open();
+//      m_logicalDeviceServerPort.send(LOGICALDEVICE_INITIALIZED);
+      if(m_clientInterTaskPort!=0)
+      {
+        m_clientInterTaskPort->sendBack(LOGICALDEVICE_INITIALIZED);
+      }
+      
       GCFPVString status("Idle");
       m_properties.setValue("status",status);
       break;
