@@ -1,4 +1,4 @@
-//#  WH_AWE.cc:
+//#  WH_STA.cc:
 //#
 //#  Copyright (C) 2002
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -18,15 +18,14 @@
 //#  along with this program; if not, write to the Free Software
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
-//#  Chris Broekema, november 2002.
+//#  Chris Broekema, january 2003.
 //#
-//#  $Id$
 //#
 
 #include <stdio.h>             // for sprintf
 #include <blitz/blitz.h>
 
-#include <StationSim/WH_AWE.h>
+#include <StationSim/WH_STA.h>
 #include <StationSim/MDL.h>
 #include <BaseSim/ParamBlock.h>
 #include <Common/Debug.h>
@@ -34,14 +33,14 @@
 #include <Math/LCSMath.h>
 #include <blitz/blitz.h>
 
-WH_AWE::WH_AWE (const string& name, unsigned int nin, unsigned int nout,
-		unsigned int nant, unsigned int buflength, DataGenerator* dg_config)
-: WorkHolder    (nin, nout, name, "WH_AWE"),
+WH_STA::WH_STA (const string& name, unsigned int nin, unsigned int nout,
+		unsigned int nant, unsigned int maxnrfi, unsigned int buflength)
+: WorkHolder    (nin, nout, name, "WH_STA"),
   itsInHolders  (0),
   itsOutHolder  (0),
   itsNrcu       (nant),
-  itsBufLength  (buflength),
-  itsConfig     (dg_config)
+  itsMaxRFI     (maxnrfi),
+  itsBufLength  (buflength)
 {
   if (nin > 0) {
     itsInHolders = new DH_SampleC* [nin];
@@ -53,35 +52,29 @@ WH_AWE::WH_AWE (const string& name, unsigned int nin, unsigned int nout,
   }
   
   if (nout > 0) {
-    itsOutHolder = new DH_SampleC("out", itsNrcu, 1);
+    // Define a space large enough to contain the max number of 
+    // RFI sources. This should be implemented more elegantly.
+    itsOutHolder = new DH_SampleC("out", itsNrcu, itsMaxRFI);
   }
-  
-  px.resize(itsNrcu);
-  py.resize(itsNrcu);
-
-  px = itsConfig->itsArray->getPointX ();
-  py = itsConfig->itsArray->getPointY ();
 }
 
-WH_AWE::~WH_AWE()
+WH_STA::~WH_STA()
 {
 }
 
-WH_AWE* WH_AWE::make (const string& name) const
+WH_STA* WH_STA::make (const string& name) const
 {
-  return new WH_AWE (name, getInputs(), getOutputs(), itsNrcu, itsBufLength, itsConfig);
+  return new WH_STA (name, getInputs(), getOutputs(), itsNrcu, itsMaxRFI, itsBufLength);
 }
 
-void WH_AWE::preprocess()
+void WH_STA::preprocess()
 {
 }
 
 
-void WH_AWE::process()
+void WH_STA::process()
 {
   /// REMOVE ME!!
-  double phi = 0.33;
-  double theta = -0.67;
 
   // Find the snapshot array for the current AWE snapshot
   itsBuffer.resize(itsNrcu, itsBufLength);
@@ -122,7 +115,6 @@ void WH_AWE::process()
 //   dcomplex *w_ptr = w.data() ;
 
   LoVec_dcomplex d(itsNrcu);
-  d = steerv(phi, theta, px, py); 
   //  w = getWeights(B, d);
   
   // Now assign the calculated weight vector to the output
@@ -140,7 +132,7 @@ void WH_AWE::process()
  
 }
 
-void WH_AWE::dump() const
+void WH_STA::dump() const
 {
   using namespace blitz;
 
@@ -151,12 +143,12 @@ void WH_AWE::dump() const
 }
 
 
-DH_SampleC* WH_AWE::getInHolder (int channel)
+DH_SampleC* WH_STA::getInHolder (int channel)
 {
   return itsInHolders[channel];
 }
 
-DH_SampleC* WH_AWE::getOutHolder (int channel)
+DH_SampleC* WH_STA::getOutHolder (int channel)
 {
   AssertStr (channel < getOutputs(),
  	     "output channel too high");
@@ -164,43 +156,3 @@ DH_SampleC* WH_AWE::getOutHolder (int channel)
   return itsOutHolder;
 }
 
-LoVec_dcomplex WH_AWE::steerv (double phi, double theta, LoVec_double px, LoVec_double py) {
-  
-  FailWhen1( px.size() != py.size(),"vector size mismatch" );
-  LoVec_dcomplex res( px.size() );
-  dcomplex i = dcomplex (0,1);
-
-  res = i * -2*M_PI*( px*sin(theta)*cos(phi) + py*sin(theta)*sin(phi) );
-  
-  return res;
-}
-
-LoVec_dcomplex WH_AWE::getWeights (LoVec_dcomplex B, LoVec_dcomplex d) {
-  LoVec_dcomplex w (B.size());
-  
-  if (B.size() != d.size()) {
-    cout << "Error. WH_AWE::getWeights() encountered non equal size arrays" << endl;
-  } else {
-    LoVec_dcomplex temp(B.size());
-    
-	//    temp = LCSMath::matMult(B, 1/LCSMath::matMultReduce(B, B)) ;
-	//    w = d - LCSMath::matMult( LCSMath::matMult( B, temp ), d );
-  }
-  return w;
-}
-
-LoVec_dcomplex WH_AWE::getWeights (LoMat_dcomplex B, LoVec_dcomplex d) {
-  LoVec_dcomplex w (B.rows());
-  
-  if (B.rows() != d.size()) {
-    cout << "Error. WH_AWE::getWeights() encountered non equal size arrays" << endl;
-  } else {
-    LoMat_dcomplex temp(B.cols(),B.rows());
-
-//     temp = LCSMath::matMult(pow(LCSMath::matMult(B.transpose(firstDim, secondDim), B), -1), 
-// 				    B.transpose(firstDim,secondDim)) ;
-
-    //    w = d - LCSMath::matMult( LCSMath::matMult( B, temp ), d );
-  }
-  return w;
-}

@@ -137,7 +137,9 @@ void WH_PhaseShift::process ()
 
 void WH_PhaseShift::dump () const
 {
-
+  cout << itsCount << endl;
+  cout << "Phi   : "<<  itsConfig->itsSources[itsSource]->itsTraject->getPhi   (itsCount) << endl;  
+  cout << "Theta : "<<  itsConfig->itsSources[itsSource]->itsTraject->getTheta (itsCount) << endl;
 }
 
 DH_SampleR* WH_PhaseShift::getInHolder (int channel)

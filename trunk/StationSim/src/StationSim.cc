@@ -39,8 +39,13 @@
 #endif
 #include <BaseSim/Simul2XML.h>
 #include <StationSim/StationSim.h>
-#include <StationSim/WH_AWE.h>
+
+// Beamformer includes
 #include <StationSim/WH_BeamFormer.h>
+#include <StationSim/WH_STA.h>
+#include <StationSim/WH_WeightDetermination.h>
+#include <StationSim/WH_Projection.h>
+
 #include <StationSim/DataGenConfig.h>
 #include <StationSim/WH_AddSignals.h>
 #include <StationSim/WH_CreateSource.h>
@@ -211,23 +216,23 @@ void StationSim::define (const ParamBlock& params)
   }
 
   // Create the individual steps. Set the rate of the steps 
-  // The AWE object
+  // The Space Time Analysis object
   for (int i = 0; i < nsubband; ++i) {
     sprintf(suffix, "%d", i);
 
-    Step awe (WH_AWE("", nrcu, 1, nrcu, buflength, DG_Config), string ("awe_") + suffix, false);
+    Step sta (WH_STA("", nrcu, 1, nrcu, maxNrfi, buflength), string ("sta_") + suffix, false);
 
     for (int j = 0; j < nrcu; ++j) {
-      awe.getInData (j).setReadDelay (delayMod + delayPhase + delaySubFilt);
+      sta.getInData (j).setReadDelay (delayMod + delayPhase + delaySubFilt);
     }
-    awe.getOutData (0).setWriteDelay (1);
-    simul.addStep (awe);
+    sta.getOutData (0).setWriteDelay (1);
+    simul.addStep (sta);
   }
 
   // The beamformer object
   for (int i = 0; i < nsubband; ++i) {
 	sprintf (suffix, "%d", i);
-	Step beam (WH_BeamFormer("", nrcu + 1, nrcu, nrcu, nbeam, maxNtarget, maxNrfi), 
+	Step beam (WH_BeamFormer("bf", nrcu + 1, nrcu, nrcu, nbeam, maxNtarget, maxNrfi), 
 			   string("beam_former_") + suffix, false);
 	for (int j = 0; j < nrcu; ++j) {
 	  beam.getInData (j).setReadDelay (delayMod + delayPhase + delaySubFilt);
@@ -236,6 +241,25 @@ void StationSim::define (const ParamBlock& params)
 	simul.addStep (beam);
   } 
   
+  // the Weight Determination Object
+  for (int i = 0;i < nsubband; ++i) {
+    sprintf (suffix, "%d", i);
+    Step weight_det (WH_WeightDetermination("wd", 0, 1, nrcu), 
+		      string("weight_det_") + suffix, false);
+    simul.addStep(weight_det);
+  }
+	     
+  // the projection object
+  for (int i = 0; i < nsubband; i++) {
+    sprintf(suffix, "%d", i);
+    Step projection (WH_Projection("prj", 2, 1, nrcu, maxNrfi), 
+		     string("projection_") + suffix, false);
+    
+    simul.addStep(projection);
+    
+  }
+
+
 
   // Connect the steps.
   for (int i = 0; i < DG_Config->itsNumberOfSources; ++i) {
@@ -278,18 +302,29 @@ void StationSim::define (const ParamBlock& params)
 				   suffix, string ("subband_filter_") + suffix + string (".in"));
   }
 
-  // Connect the subband filterbank to the AWE
+  // Connect the Beamformer objects
+
   for (int s = 0; s < nsubband; ++s) {
+    sprintf(suffix2, "%d", s);
     for (int r = 0; r < nrcu; ++r) {
       sprintf(suffix, "%d", r);
-      sprintf(suffix2, "%d", s);
-      
+      // connect the subband filterbank to STA
       simul.connect (string ("subband_filter_") + suffix + string (".out1_") + suffix2,
-		     string ("awe_") + suffix2 + string (".in_") + suffix);
+		     string ("sta_") + suffix2 + string (".in_") + suffix);
     }
-    simul.connect (string ("awe_") + suffix2 + string (".out"),
- 		   string ("beam_former_") + suffix2 + string (".weights")); 
+    // connect STA to Projection
+    simul.connect (string ("sta_") + suffix2 + string (".out"),
+ 		   string ("projection_") + suffix2 + string (".in-sta")); 
+    // connect Weight Determination to Projection
+    simul.connect (string ("weight_det_") + suffix2 + string(".out"),
+		   string ("projection_") + suffix2 + string(".in-wd"));
+    // connect Projection to Beamformer
+    simul.connect (string ("projection_") + suffix2 + string(".out"),
+		   string ("beam_former_") + suffix2 + string(".weights"));
   }
+
+
+
 
 //   // Connect the data_reader to the subband filterbank  
 //   for (int i = 0; i < nrcu; ++i) { 
@@ -297,6 +332,10 @@ void StationSim::define (const ParamBlock& params)
 // 	simul.connect (string ("data_reader_") + suffix + string (".out_0"), 
 // 				   string ("subband_filter_") + suffix + string (".in"));
 //   }
+
+
+
+
 
   // Connect the subband filterbank with the beam former
   for (int s = 0; s < nsubband; ++s) {
