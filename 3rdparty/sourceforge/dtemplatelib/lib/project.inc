@@ -1,0 +1,1 @@
+# Written for GNU -*- makefile -*-.

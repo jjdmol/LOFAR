@@ -1,0 +1,46 @@
+
+<h3>Example: A customized ContainerFactory using a hashed IdxContainer type</h3>
+<pre><code><span class="codeComment">// ... classes as in <a href="IndexedDBViewExample.htm">IndexedDBView example</a> ....</span>
+typedef DBView&lt;Example, ParamObjExample&gt; ViewType;
+typedef CBFunctor1wRet&lt;const Example *, size_t&gt; IVHash;
+typedef CBFunctor2wRet&lt;const Example *, const Example *, bool&gt; IVCompare;
+typedef hash_multiset&lt;Example *, IVHash, IVCompare&gt; HashMultisetType; 
+typedef DBIndex&lt;ViewType. HashMultisetType, HASH&gt; HashIdxType;
+
+<span class="codeComment">// alternative hashing scheme on exampleStr
+size_t my_hash_strings(const Example *pData1)
+{
+   string str = pData1-&gt;GetExampleStr();
+
+   size_t sum = 0;
+
+   // sum all the per character hash values together
+   // a character c's hash value = 5*c + 13
+   for (size_t i = 0; i &lt; str.length(); i++)
+		sum += (5 * str[i] + 13);
+
+   return sum;
+}
+
+// "specialized" ContainerFactory() tells IndexedDBView to use a custom
+// container for indexing records
+// in this case, the container is a hash_multiset which uses an alternative hash
+// function for the Primary Index and normal for all other indices
+</span>
+template&lt;&gt; class dtl::ContainerFactory&lt;HashIdxType&gt;
+{
+public:
+	HashMultisetType operator()(HashIdxType *pDBIndex, HASH h) 
+	{
+		 <span class="codeComment">// for STRING_VALUE's, hash on exampleStr using alternative hash function</span>
+	
+		 if (pDBIndex-&gt;GetName() == "PrimaryIndex")
+			return HashMultisetType(MEDIUM_HASH_TABLE, cb_ptr_fun_w_ret(my_hash_strings),
+			                        cb_ptr_fun_w_ret(*pDBIndex, &amp;HashIdxType::eq));
+		 else <span class="codeComment">// for all other indices use generic hash and comparison</span>
+			return HashMultisetType(MEDIUM_HASH_TABLE, cb_ptr_fun_w_ret(*pDBIndex, &amp;HashIdxType::hash),
+			                        cb_ptr_fun_w_ret(*pDBIndex, &amp;HashIdxType::eq));
+	}
+};
+
+</code></pre>

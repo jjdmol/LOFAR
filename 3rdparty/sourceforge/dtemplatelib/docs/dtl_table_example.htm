@@ -1,0 +1,36 @@
+<pre><code><span class="codeComment">// Generate a simple structure to read data from a table called 'db_example' 
+// with three fields called 'int_value', 'double_value' and 'string_value'.
+// Note: the macro must be invoked at namespace scope because templates are 
+// not allowed  to take locally declared classes as template parameters.  
+// See [temp.arg.type] 14.3.1  in the C++ standard for details.</span>
+
+<a href="table.htm">DTL_TABLE5</a>(db_example,
+   int, int_value,
+   std::string, string_value,
+   double, double_value,
+   long, example_long,
+   jtime_c, example_date
+);
+
+<span class="codeComment">//Note that the field names in the table are the same as the member names in the structure</span>
+vector&lt;db_example_row&gt; ReadData()
+{
+   cout &lt;&lt; &quot;Read rows from the database: &quot; &lt;&lt; endl;
+   vector&lt;db_example_row&gt; results;
+
+   for (db_example_view::select_iterator read_it = db_example.begin();
+          read_it  != db_example.end(); ++read_it)
+   {
+       cout &lt;&lt; read_it-&gt;int_value &lt;&lt; &quot; &quot; 
+                 &lt;&lt; read_it-&gt;string_value &lt;&lt; &quot; &quot; 
+                 &lt;&lt; read_it-&gt;double_value &lt;&lt; &quot; &quot;
+                 &lt;&lt; read_it-&gt;example_long &lt;&lt; &quot; &quot; 
+                 &lt;&lt; read_it-&gt;example_date   
+                 &lt;&lt; endl;
+
+       results.push_back(*read_it);
+   }
+
+   return results;
+}
+</pre></code>

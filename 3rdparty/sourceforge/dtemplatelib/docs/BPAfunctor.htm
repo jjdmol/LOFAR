@@ -1,0 +1,15 @@
+<pre><code><span class="codeComment">//Function object to bind SQL parameters to a data object</span>
+
+class BPAExampleObj
+{
+public:
+	void operator()(BoundIOs &amp;boundIOs, ParamObjExample &amp;paramObj)
+	{
+	  boundIOs[0] &lt;&lt; paramObj.lowIntValue;
+	  boundIOs[1] &lt;&lt; paramObj.highIntValue;
+	  boundIOs[2] &lt;&lt; paramObj.strValue;
+	  boundIOs[3] &lt;&lt; paramObj.dateValue;
+	}
+
+};
+</code></pre>

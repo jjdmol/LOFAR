@@ -1,0 +1,75 @@
+<pre><code><span class="codeComment">// Example Code Using LoggingHandler on an IndexedDBView</span>
+
+const TIMESTAMP_STRUCT then = {2000, 12, 15, 0, 0, 0, 0};
+
+<span class="codeComment">// Example of using an IndexDBView to try to insert Example objects and print out
+// any errors that occurred</span>
+void IndexedViewExample()
+{
+	typedef DBView&lt;Example, ParamObjExample&gt; DBV;
+
+	DBV view(&quot;DB_EXAMPLE&quot;, DefaultBCA&lt;Example&gt;(), 
+	  &quot;WHERE INT_VALUE BETWEEN (?) AND (?) OR &quot;
+	  &quot;STRING_VALUE = (?) OR EXAMPLE_DATE &lt;= (?) ORDER BY EXAMPLE_LONG&quot;,
+	  BPAExampleObj());
+
+	view.set_io_handler(LoggingHandler&lt;Example, ParamObjExample&gt;());
+
+	IndexedDBView&lt;DBV&gt; indexed_view(view, &quot;PrimaryIndex; STRING_VALUE; UNIQUE AlternateIndex; EXAMPLE_LONG, 
+		EXAMPLE_DATE&quot;, BOUND, USE_ALL_FIELDS, cb_ptr_fun(SetParamsExample));
+   		
+
+	try
+	{
+
+	<span class="codeComment">// Insert new items into the container</span>
+	pair&lt;IndexedDBView&lt;DBV&gt;::iterator, bool&gt; ins_pr;
+
+	ins_pr = indexed_view.insert(Example(459, &quot;Unique String #1&quot;, 3.4, 1, date_criteria));
+
+	cout &lt;&lt; &quot;insertion succeded = &quot; &lt;&lt; (ins_pr.second == true ? &quot;true&quot;: &quot;false&quot;) &lt;&lt; endl;
+
+	ins_pr = indexed_view.insert(Example(311, &quot;&quot;, 3.99, 91, then)); <span class="codeComment">// should fail on InsValidate()</span>
+   
+	cout &lt;&lt; &quot;insertion succeded = &quot; &lt;&lt; (ins_pr.second == true ? &quot;true&quot;: &quot;false&quot;) &lt;&lt; endl;
+	
+	ins_pr = indexed_view.insert(Example(222, &quot;Positron&quot;, -34.77, 29, then)); <span class="codeComment">// should fail (ditto)</span>
+	
+	cout &lt;&lt; &quot;insertion succeded = &quot; &lt;&lt; (ins_pr.second == true ? &quot;true&quot;: &quot;false&quot;) &lt;&lt; endl;
+	}
+	
+	catch (...)
+	{
+	typedef LoggingHandler&lt;Example, ParamObjExample&gt;::LoggedTriple LoggedTriple;
+ 
+	<span class="codeComment">// retrieve the LoggingHandler object from the IndexedDBView</span>
+	LoggingHandler&lt;Example, ParamObjExample&gt; log_handler = 
+		indexed_view.get_io_handler((LoggingHandler&lt;Example, ParamObjExample&gt; *) NULL);
+
+	<span class="codeComment">// the log is a vector of (error message, DataObj, ParamObj) triples,
+	// (error message, Example object, ParamObjExample object) in this case
+	// the error itself along with the relevant DataObj and ParamObj that resulted with
+	// the error</span>
+	vector&lt;LoggedTriple&gt; error_log = log_handler.GetLog();
+
+	<span class="codeComment">// nothing to do if no errors occurred</span>
+	if (error_log.empty())
+		return;
+
+	cout &lt;&lt; &quot;*** Error Log in IndexedViewExample(): &quot; &lt;&lt; error_log.size() &lt;&lt; &quot; errors recorded! ***&quot;
+	     &lt;&lt; endl;
+
+	<span class="codeComment">// print out the errors</span>
+	for (vector&lt;LoggedTriple&gt;::const_iterator log_it = error_log.begin(); 
+		log_it != error_log.end(); log_it++)
+	{
+	   cout &lt;&lt; &quot;*** Error Log Entry ***&quot; &lt;&lt; endl;
+	   cout &lt;&lt; &quot;* error message *&quot; &lt;&lt; endl;
+	   cout &lt;&lt; (*log_it).errmsg &lt;&lt; endl;
+	   cout &lt;&lt; &quot;* relevant Example object *&quot; &lt;&lt; endl;
+	   cout &lt;&lt; (*log_it).dataObj &lt;&lt; endl;
+	}
+
+	}	
+}</pre></code>
+

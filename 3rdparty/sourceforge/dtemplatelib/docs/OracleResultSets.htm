@@ -1,0 +1,466 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<HTML><HEAD><TITLE>Enabling Result Sets (Programming)</TITLE>
+<META http-equiv=Content-Type content="text/html; charset=windows-1252"><LINK 
+media="" href="styles.css" rel=StyleSheet>
+<META content="MSHTML 5.50.4207.2601" name=GENERATOR></HEAD>
+<BODY><A name=a0f3566c></A>
+<H1><IMG height=32 alt=sqora00000000.gif src="" width=26 useMap=#map35 
+border=0><MAP name=map35><AREA shape=RECT coords=2,2,26,31 
+  href="file:///C:/TEMP/sqoraOracle8_ODBC_Driver00000068.htm"></MAP>Enabling 
+Result Sets (Programming) 
+<P></P></H1>Oracle reference cursors (Result Sets) allow an application to 
+retrieve data using stored procedures and stored functions. The following 
+information identifies how to use reference cursors to enable Result Sets 
+through ODBC. 
+<P></P>
+<UL>
+  <LI>The ODBC syntax for calling stored procedures must be used. Native PL/SQL 
+  is not supported through ODBC. The following identifies how to call the 
+  procedure or function without a package and within a package. The package name 
+  in this case is RSET. <BR>
+  <P></P></LI></UL>Procedure call: 
+<P></P>{CALL Example1(?)} 
+<P></P>{CALL RSET.Example1(?)} 
+<P></P>Function Call: 
+<P></P>{? = CALL Example1(?)} 
+<P></P>{? = CALL RSET.Example1(?)} 
+<P></P>
+<UL>
+  <LI>The PL/SQL reference cursor parameters may be omitted when calling the 
+  procedure, however, if one reference cursor parameter is specified, all must 
+  be specified. For example, assume procedure Example2 is defined to have four 
+  parameters. Parameters 1 and 3 are reference cursor parameters and parameters 
+  2 and 4 are character strings. The call can be specified in the following two 
+  ways: <BR>
+  <P></P></LI></UL>{CALL RSET.Example2("Literal 1", "Literal 2")} <BR>
+<P></P>In the following example, parameters 1 and 3 contain reference cursor 
+parameters. <BR>
+<P></P>{CALL RSET.Example2(?,"Literal 1", ?,"Literal 2")} 
+<P></P><B>Note:</B> In versions of the Oracle8 ODBC Driver previous to release 
+8.1.5.3.0, each reference cursor parameter for a procedure or function had to 
+contain parameter marker(s) on the call statement. The reference cursor 
+parameter(s) did not need to be bounded by the calling application. If the 
+calling application did bind the parameter, the Oracle8 ODBC Driver ignored it 
+and bound the reference cursor parameter(s) internally. 
+<P></P>The following example application shows how to return a Result Set using 
+the Oracle8 ODBC Driver: 
+<P></P>/* 
+<P></P>* Sample Application using Oracle reference cursors via ODBC 
+<P></P>* 
+<P></P>* Assumptions: 
+<P></P>* 
+<P></P>* 1) Oracle Sample database is present with data loaded for the EMP 
+table. 
+<P></P>* 
+<P></P>* 2) Two fields are referenced from the EMP table ename and mgr. 
+<P></P>* 
+<P></P>* 3) A data source has been setup to access the sample database. 
+<P></P>* 
+<P></P>* 
+<P></P>* Program Description: 
+<P></P>* 
+<P></P>* Abstract: 
+<P></P>* 
+<P></P>* This program demonstrates how to return result sets using 
+<P></P>* Oracle stored procedures 
+<P></P>* 
+<P></P>* Details: 
+<P></P>* 
+<P></P>* This program: 
+<P></P>* Creates an ODBC connection to the database. 
+<P></P>* Creates a Packaged Procedure containing two result sets. 
+<P></P>* Executes the procedure and retrieves the data from both result sets. 
+<P></P>* Displays the data to the user. 
+<P></P>* Deletes the package then logs the user out of the database. 
+<P></P>* 
+<P></P>* 
+<P></P>* The following is the actual PL/SQL this code generates to 
+<P></P>* create the stored procedures. 
+<P></P>* 
+<P></P>DROP PACKAGE ODBCRefCur; 
+<P></P>CREATE PACKAGE ODBCRefCur AS 
+<P></P>TYPE ename_cur IS REF CURSOR; 
+<P></P>TYPE mgr_cur IS REF CURSOR; 
+<P></P>PROCEDURE EmpCurs(Ename IN OUT ename_cur, Mgr IN OUT mgr_cur, pjob IN 
+VARCHAR2); 
+<P></P>
+<P></P>END; 
+<P></P>/ 
+<P></P>CREATE PACKAGE BODY ODBCRefCur AS 
+<P></P>PROCEDURE EmpCurs(Ename IN OUT ename_cur, Mgr IN OUT mgr_cur, pjob IN 
+VARCHAR2) 
+<P></P>AS 
+<P></P>BEGIN 
+<P></P>IF NOT Ename%ISOPEN 
+<P></P>THEN 
+<P></P>OPEN Ename for SELECT ename from emp; 
+<P></P>END IF; 
+<P></P>
+<P></P>IF NOT Mgr%ISOPEN 
+<P></P>THEN 
+<P></P>OPEN Mgr for SELECT mgr from emp where job = pjob; 
+<P></P>END IF; 
+<P></P>END; 
+<P></P>END; 
+<P></P>/ 
+<P></P>
+<P></P>* 
+<P></P>* End PL/SQL for Reference Cursor. 
+<P></P>*/ 
+<P></P>
+<P></P>/* 
+<P></P>* Include Files 
+<P></P>*/ 
+<P></P>#include &lt;windows.h&gt; 
+<P></P>#include &lt;stdio.h&gt; 
+<P></P>#include &lt;sql.h&gt; 
+<P></P>#include &lt;sqlext.h&gt; 
+<P></P>
+<P></P>/* 
+<P></P>* Defines 
+<P></P>*/ 
+<P></P>#define JOB_LEN 9 
+<P></P>#define DATA_LEN 100 
+<P></P>#define SQL_STMT_LEN 500 
+<P></P>
+<P></P>/* 
+<P></P>* Procedures 
+<P></P>*/ 
+<P></P>
+<UL>
+  <LI>oid DisplayError( SWORD HandleType, SQLHANDLE hHandle, char *Module ); 
+  <P></P></LI></UL>
+<P></P>/* 
+<P></P>* Main Program 
+<P></P>*/ 
+<P></P>int main() 
+<P></P>{ 
+<P></P>SQLHENV hEnv; 
+<P></P>SQLHDBC hDbc; 
+<P></P>SQLHSTMT hStmt; 
+<P></P>SQLRETURN rc; 
+<P></P>char *DefUserName ="scott"; 
+<P></P>char *DefPassWord ="tiger"; 
+<P></P>SQLCHAR ServerName[DATA_LEN]; 
+<P></P>SQLCHAR *pServerName=ServerName; 
+<P></P>SQLCHAR UserName[DATA_LEN]; 
+<P></P>SQLCHAR *pUserName=UserName; 
+<P></P>SQLCHAR PassWord[DATA_LEN]; 
+<P></P>SQLCHAR *pPassWord=PassWord; 
+<P></P>char Data[DATA_LEN]; 
+<P></P>SQLINTEGER DataLen; 
+<P></P>char error[DATA_LEN]; 
+<P></P>char *charptr; 
+<P></P>SQLCHAR SqlStmt[SQL_STMT_LEN]; 
+<P></P>SQLCHAR *pSqlStmt=SqlStmt; 
+<P></P>char *pSalesMan = "SALESMAN"; 
+<P></P>SQLINTEGER sqlnts=SQL_NTS; 
+<P></P>
+<P></P>/* 
+<P></P>* Allocate the Environment Handle 
+<P></P>*/ 
+<P></P>rc = SQLAllocHandle( SQL_HANDLE_ENV, SQL_NULL_HANDLE, &amp;hEnv ); 
+<P></P>if (rc != SQL_SUCCESS) 
+<P></P>{ 
+<P></P>printf( "Cannot Allocate Environment Handle\n"); 
+<P></P>printf( "\nHit Return to Exit\n"); 
+<P></P>charptr = gets ((char *)error); 
+<P></P>exit(1); 
+<P></P>} 
+<P></P>
+<P></P>/* 
+<P></P>* Set the ODBC Version 
+<P></P>*/ 
+<P></P>rc = SQLSetEnvAttr( hEnv, 
+<P></P>SQL_ATTR_ODBC_VERSION, 
+<P></P>(void *)SQL_OV_ODBC3, 
+<P></P>0); 
+<P></P>if (rc != SQL_SUCCESS) 
+<P></P>{ 
+<P></P>printf( "Cannot Set ODBC Version\n"); 
+<P></P>printf( "\nHit Return to Exit\n"); 
+<P></P>charptr = gets ((char *)error); 
+<P></P>exit(1); 
+<P></P>} 
+<P></P>
+<P></P>/* 
+<P></P>* Allocate the Connection handle 
+<P></P>*/ 
+<P></P>rc = SQLAllocHandle( SQL_HANDLE_DBC, hEnv, &amp;hDbc ); 
+<P></P>if (rc != SQL_SUCCESS) 
+<P></P>{ 
+<P></P>printf( "Cannot Allocate Connection Handle\n"); 
+<P></P>printf( "\nHit Return to Exit\n"); 
+<P></P>charptr = gets ((char *)error); 
+<P></P>exit(1); 
+<P></P>} 
+<P></P>
+<P></P>/* 
+<P></P>* Get User Information 
+<P></P>*/ 
+<P></P>lstrcpy( (char *) pUserName, DefUserName ); 
+<P></P>lstrcpy( (char *) pPassWord, DefPassWord ); 
+<P></P>
+<P></P>/* 
+<P></P>* Data Source name 
+<P></P>*/ 
+<P></P>printf( "\nEnter the ODBC Data Source Name\n" ); 
+<P></P>charptr = gets ((char *) ServerName); 
+<P></P>
+<P></P>/* 
+<P></P>* User Name 
+<P></P>*/ 
+<P></P>printf ( "\nEnter User Name Default [%s]\n", pUserName); 
+<P></P>charptr = gets ((char *) UserName); 
+<P></P>if (*charptr == '\0') 
+<P></P>{ 
+<P></P>lstrcpy( (char *) pUserName, (char *) DefUserName ); 
+<P></P>} 
+<P></P>
+<P></P>/* 
+<P></P>* Password 
+<P></P>*/ 
+<P></P>printf ( "\nEnter Password Default [%s]\n", pPassWord); 
+<P></P>charptr = gets ((char *)PassWord); 
+<P></P>if (*charptr == '\0') 
+<P></P>{ 
+<P></P>lstrcpy( (char *) pPassWord, (char *) DefPassWord ); 
+<P></P>} 
+<P></P>
+<P></P>/* 
+<P></P>* Connection to the database 
+<P></P>*/ 
+<P></P>rc = SQLConnect( hDbc, 
+<P></P>pServerName, 
+<P></P>(SQLSMALLINT) lstrlen((char *)pServerName), 
+<P></P>pUserName, 
+<P></P>(SQLSMALLINT) lstrlen((char *)pUserName), 
+<P></P>pPassWord, 
+<P></P>(SQLSMALLINT) lstrlen((char *)pPassWord)); 
+<P></P>if (rc != SQL_SUCCESS) 
+<P></P>{ 
+<P></P>DisplayError(SQL_HANDLE_DBC, hDbc, "SQLConnect"); 
+<P></P>} 
+<P></P>
+<P></P>/* 
+<P></P>* Allocate a Statement 
+<P></P>*/ 
+<P></P>rc = SQLAllocHandle( SQL_HANDLE_STMT, hDbc, &amp;hStmt ); 
+<P></P>if (rc != SQL_SUCCESS) 
+<P></P>{ 
+<P></P>printf( "Cannot Allocate Statement Handle\n"); 
+<P></P>printf( "\nHit Return to Exit\n"); 
+<P></P>charptr = gets ((char *)error); 
+<P></P>exit(1); 
+<P></P>} 
+<P></P>
+<P></P>/* 
+<P></P>* Drop the Package 
+<P></P>*/ 
+<P></P>lstrcpy( (char *) pSqlStmt, "DROP PACKAGE ODBCRefCur"); 
+<P></P>rc = SQLExecDirect(hStmt, pSqlStmt, lstrlen((char *)pSqlStmt)); 
+<P></P>
+<P></P>/* 
+<P></P>* Create the Package Header 
+<P></P>*/ 
+<P></P>lstrcpy( (char *) pSqlStmt, "CREATE PACKAGE ODBCRefCur AS\n"); 
+<P></P>lstrcat( (char *) pSqlStmt, " TYPE ename_cur IS REF CURSOR;\n"); 
+<P></P>lstrcat( (char *) pSqlStmt, " TYPE mgr_cur IS REF CURSOR;\n\n"); 
+<P></P>lstrcat( (char *) pSqlStmt, " PROCEDURE EmpCurs (Ename IN OUT 
+ename_cur,"); 
+<P></P>lstrcat( (char *) pSqlStmt, "Mgr IN OUT mgr_cur,pjob IN VARCHAR2);\n\n"); 
+
+<P></P>lstrcat( (char *) pSqlStmt, "END;\n"); 
+<P></P>rc = SQLExecDirect(hStmt, pSqlStmt, lstrlen((char *)pSqlStmt)); 
+<P></P>if (rc != SQL_SUCCESS) 
+<P></P>{ 
+<P></P>DisplayError(SQL_HANDLE_STMT, hStmt, "SQLExecDirect"); 
+<P></P>} 
+<P></P>
+<P></P>/* 
+<P></P>* Create the Package Body 
+<P></P>*/ 
+<P></P>lstrcpy( (char *) pSqlStmt, "CREATE PACKAGE BODY ODBCRefCur AS\n"); 
+<P></P>lstrcat( (char *) pSqlStmt, " PROCEDURE EmpCurs (Ename IN OUT 
+ename_cur,"); 
+<P></P>lstrcat( (char *) pSqlStmt, "Mgr IN OUT mgr_cur, pjob IN VARCHAR2)\n AS\n 
+BEGIN\n"); 
+<P></P>lstrcat( (char *) pSqlStmt, " IF NOT Ename%ISOPEN\n THEN\n"); 
+<P></P>lstrcat( (char *) pSqlStmt, " OPEN Ename for SELECT ename from emp;\n"); 
+<P></P>lstrcat( (char *) pSqlStmt, " END IF;\n\n"); 
+<P></P>lstrcat( (char *) pSqlStmt, " IF NOT Mgr%ISOPEN\n THEN\n"); 
+<P></P>lstrcat( (char *) pSqlStmt, " OPEN Mgr for SELECT mgr from emp where job 
+= pjob;\n"); 
+<P></P>lstrcat( (char *) pSqlStmt, " END IF;\n"); 
+<P></P>lstrcat( (char *) pSqlStmt, " END;\n"); 
+<P></P>lstrcat( (char *) pSqlStmt, "END;\n"); 
+<P></P>rc = SQLExecDirect(hStmt, pSqlStmt, lstrlen((char *)pSqlStmt)); 
+<P></P>if (rc != SQL_SUCCESS) 
+<P></P>{ 
+<P></P>DisplayError(SQL_HANDLE_STMT, hStmt, "SQLExecDirect"); 
+<P></P>} 
+<P></P>
+<P></P>/* 
+<P></P>* Bind the Parameter 
+<P></P>*/ 
+<P></P>rc = SQLBindParameter(hStmt, 
+<P></P>1, 
+<P></P>SQL_PARAM_INPUT, 
+<P></P>SQL_C_CHAR, 
+<P></P>SQL_CHAR, 
+<P></P>JOB_LEN, 
+<P></P>0, 
+<P></P>pSalesMan, 
+<P></P>0, 
+<P></P>&amp;sqlnts); 
+<P></P>
+<P></P>/* 
+<P></P>* Call the Store Procedure which executes the Result Sets 
+<P></P>*/ 
+<P></P>lstrcpy( (char *) pSqlStmt, "{CALL ODBCRefCur.EmpCurs(?)}"); 
+<P></P>rc = SQLExecDirect(hStmt, pSqlStmt, lstrlen((char *)pSqlStmt)); 
+<P></P>if (rc != SQL_SUCCESS) 
+<P></P>{ 
+<P></P>DisplayError(SQL_HANDLE_STMT, hStmt, "SQLExecDirect"); 
+<P></P>} 
+<P></P>
+<P></P>/* 
+<P></P>* Bind the Data 
+<P></P>*/ 
+<P></P>rc = SQLBindCol( hStmt, 
+<P></P>1, 
+<P></P>SQL_C_CHAR, 
+<P></P>Data, 
+<P></P>sizeof(Data), 
+<P></P>&amp;DataLen); 
+<P></P>if (rc != SQL_SUCCESS) 
+<P></P>{ 
+<P></P>DisplayError(SQL_HANDLE_STMT, hStmt, "SQLBindCol"); 
+<P></P>} 
+<P></P>
+<P></P>/* 
+<P></P>* Get the data for Result Set 1 
+<P></P>*/ 
+<P></P>printf( "\nEmployee Names\n\n"); 
+<P></P>while ( rc == SQL_SUCCESS ) 
+<P></P>{ 
+<P></P>rc = SQLFetch( hStmt ); 
+<P></P>if ( rc == SQL_SUCCESS ) 
+<P></P>{ 
+<P></P>printf("%s\n", Data); 
+<P></P>} 
+<P></P>else 
+<P></P>{ 
+<P></P>if (rc != SQL_NO_DATA) 
+<P></P>{ 
+<P></P>DisplayError(SQL_HANDLE_STMT, hStmt, "SQLFetch"); 
+<P></P>} 
+<P></P>} 
+<P></P>} 
+<P></P>
+<P></P>printf( "\nFirst Result Set - Hit Return to Continue\n"); 
+<P></P>charptr = gets ((char *)error); 
+<P></P>
+<P></P>/* 
+<P></P>* Get the Next Result Set 
+<P></P>*/ 
+<P></P>rc = SQLMoreResults( hStmt ); 
+<P></P>if (rc != SQL_SUCCESS) 
+<P></P>{ 
+<P></P>DisplayError(SQL_HANDLE_STMT, hStmt, "SQLMoreResults"); 
+<P></P>} 
+<P></P>
+<P></P>/* 
+<P></P>* Get the data for Result Set 2 
+<P></P>*/ 
+<P></P>printf( "\nManagers\n\n"); 
+<P></P>while ( rc == SQL_SUCCESS ) 
+<P></P>{ 
+<P></P>rc = SQLFetch( hStmt ); 
+<P></P>if ( rc == SQL_SUCCESS ) 
+<P></P>{ 
+<P></P>printf("%s\n", Data); 
+<P></P>} 
+<P></P>else 
+<P></P>{ 
+<P></P>if (rc != SQL_NO_DATA) 
+<P></P>{ 
+<P></P>DisplayError(SQL_HANDLE_STMT, hStmt, "SQLFetch"); 
+<P></P>} 
+<P></P>} 
+<P></P>} 
+<P></P>
+<P></P>printf( "\nSecond Result Set - Hit Return to Continue\n"); 
+<P></P>charptr = gets ((char *)error); 
+<P></P>
+<P></P>/* 
+<P></P>* Should Be No More Results Sets 
+<P></P>*/ 
+<P></P>rc = SQLMoreResults( hStmt ); 
+<P></P>if (rc != SQL_NO_DATA) 
+<P></P>{ 
+<P></P>DisplayError(SQL_HANDLE_STMT, hStmt, "SQLMoreResults"); 
+<P></P>} 
+<P></P>
+<P></P>/* 
+<P></P>* Drop the Package 
+<P></P>*/ 
+<P></P>lstrcpy( (char *) pSqlStmt, "DROP PACKAGE ODBCRefCur"); 
+<P></P>rc = SQLExecDirect(hStmt, pSqlStmt, lstrlen((char *)pSqlStmt)); 
+<P></P>
+<P></P>/* 
+<P></P>* Free handles close connections to the database 
+<P></P>*/ 
+<P></P>SQLFreeHandle( SQL_HANDLE_STMT, hStmt ); 
+<P></P>SQLDisconnect( hDbc ); 
+<P></P>SQLFreeHandle( SQL_HANDLE_DBC, hDbc ); 
+<P></P>SQLFreeHandle( SQL_HANDLE_ENV, hEnv ); 
+<P></P>
+<P></P>printf( "\nAll Done - Hit Return to Exit\n"); 
+<P></P>charptr = gets ((char *)error); 
+<P></P>return(0); 
+<P></P>} 
+<P></P>
+<P></P>/* 
+<P></P>* Display Error Messages 
+<P></P>*/ 
+<P></P>
+<UL>
+  <LI>oid DisplayError( SWORD HandleType, SQLHANDLE hHandle, char *Module ) 
+  <P></P></LI></UL>{ 
+<P></P>
+<P></P>SQLCHAR MessageText[255]; 
+<P></P>SQLCHAR SQLState[80]; 
+<P></P>SQLRETURN rc=SQL_SUCCESS; 
+<P></P>LONG NativeError; 
+<P></P>SWORD RetLen; 
+<P></P>SQLCHAR error[25]; 
+<P></P>char *charptr; 
+<P></P>
+<P></P>
+<P></P>rc = SQLGetDiagRec(HandleType, 
+<P></P>hHandle, 
+<P></P>1, 
+<P></P>SQLState, 
+<P></P>&amp;NativeError, 
+<P></P>MessageText, 
+<P></P>255, 
+<P></P>&amp;RetLen); 
+<P></P>
+<P></P>printf( "Failure Calling %s\n", Module ); 
+<P></P>if (rc == SQL_SUCCESS || rc == SQL_SUCCESS_WITH_INFO) 
+<P></P>{ 
+<P></P>printf( "\t\t\t State: %s\n", SQLState); 
+<P></P>printf( "\t\t\t Native Error: %d\n", NativeError ); 
+<P></P>printf( "\t\t\t Error Message: %s\n", MessageText ); 
+<P></P>} 
+<P></P>
+<P></P>printf( "\nHit Return to Exit\n"); 
+<P></P>charptr = gets ((char *)error); 
+<P></P>
+<P></P>exit(1); 
+<P></P>} 
+<P></P>
+<FORM><INPUT onclick="top.location='start.htm'" type=button value=Contents> <INPUT onclick="top.location='index.htm'" type=button value="   Index   "> <INPUT onclick="self.location='sqoraRowids_in_a_WHERE_Clause_Program.htm'" type=button value=" << "> 
+<INPUT onclick="self.location='sqoraEnabling_EXEC_Syntax_Programming.htm'" type=button value=" >> "> 
+</FORM></BODY></HTML>

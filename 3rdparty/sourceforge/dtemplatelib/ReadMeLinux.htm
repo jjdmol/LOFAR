@@ -1,0 +1,70 @@
+<html>
+
+<head>
+<title>Linux Read Me</title>
+</head>
+
+<body>
+<li><font size="2"><strong>Notes for Linux.</strong></font> 
+  <ol>
+    <li><font size="2">To compile the Database Template Library you will need 
+      gcc 3.0 or gcc 2.96-85 (with patch). You will not be able to compile under 
+      gcc 2.95 or gcc 2.96-54 as these versions do not support some C++ standard 
+      features that our code requires such as stringstreams. (Actually, we have
+      reports from users that you *can* compile under gcc 2.95.4, but you must use the STLport libraries
+      which have the necessary parts of the standard library that we need.) </font></li>
+    <li><font size="2">The makefiles for Linux are accessed via &quot;sh build.sh&quot; in the 
+      lib, example, and tests directories.</font></li>
+    <li><font size="2">If you compile with gcc 2.96-85 you will get an error message 
+      like "basstring.h line 343 cannot convert from const char * to const BYTE 
+      * in c_str() return". The problem is that 2.96-85 has a bug in basic_string<CharT>::c_str(). 
+      Our recommended fix here is to upgrade to gcc 3.0 where the problem has 
+      been fixed. Failing that, it is relatively easy to patch the library, the 
+      routine has a statement <font size="4"><strong><code>return "";</code></strong></font>. 
+      Simply change this to <font size="4"><strong><code> return (CharT *)"";</code></strong></font> 
+      </font></li>
+    <li><font size="2"><font size="2">The MySQL ODBC driver version 3.51
+              does not work correctly with bulk fetches or the RandomDBView container.
+              Current workaround is to enable the DTL_SINGLE_FETCH mode when compiling under Linux.
+              This causes the library not to use bulk fetches when reading data into the IndexedDBView containers.
+              If you are not using this driver, you may want to remove this flag from the config/linux-i686-gcc.inc file.</font></li>
+    <li><font size="2"><font size="2">MySQL 3.23.55 is case sensitive when specifying table names 
+              (unlike previous versions of MySQL).  For this reason we have enabled DTL_UC in the linux configuration file
+		  config/linux-i686-gcc.inc to force all queries to run in upper case. If you are not running
+		  versus MySQL in Linux you may want to remove this flag.
+              </font></li>
+    <li><font size="2"><font size="2">MySQL 3.23.33 does not support COMMIT or 
+      ROLLBACK. Therefore the &quot;range transaction&quot; examples will not 
+      work under this version of MySQL.</font></font></li>
+    <li><font size="2"><font size="2">When you run the executable for the first 
+      time under unixODBC you may get a message like &quot;error while loading 
+      shared libraries: libodbc.so.1: cannot open shared object file: No such 
+      file or directory&quot;. The problem in this case is not having your environment 
+      variables set up correctly for unixODBC.<br>
+      <br>
+      From: &quot;Nick Gorham&quot; &lt;nick AT lurcher DOT org&gt;<br>
+      To: &lt;cjoy@houston.rr.com&gt;<br>
+      Subject: unixODBC<br>
+      <br>
+      <br>
+      &gt; Hi,<br>
+      &gt; <br>
+      &gt; Your problem is not finding the lib at compile time, but at run time,<br>
+      &gt; either add /usr/local/lib to LD_LIBRARY_PATH<br>
+      &gt; <br>
+      &gt; LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib<br>
+      &gt; export LD_LIBRARY_PATH<br>
+      &gt; <br>
+      &gt; (the above assumes linux, if some other OS, it's much the same, mail 
+      me<br>
+      &gt; if you can't find the variable)<br>
+      &gt; <br>
+      &gt; Or in linux, as root you can add /usr/local/lib to /etc/ld.so.conf, 
+      and<br>
+      &gt; then run ldconfig (often in /sbin/ldconfig), to add it to all users 
+      lib<br>
+      &gt; search paths.</font><font size="2"
+                face="Courier New"><br>
+      </font></font></li>
+  </ol>
+</li>

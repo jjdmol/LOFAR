@@ -1,0 +1,35 @@
+
+<pre><code><span class="codeComment">// Using a DBView to insert rows into a database</span>
+
+
+<span class="codeComment">// ... Class definitions for Example and BCAExample as per our </span><a
+href="DBViewReadData.htm">ReadData</a> <span class="codeComment">example .....
+
+// Specialization of DefaultInsValidate for Example
+// This defines a business rule we wish to enforce for all 
+// Example objects before they are allowed to be inserted into the database</span>
+template&lt;&gt; class dtl::DefaultInsValidate&lt;Example&gt; 
+{
+public:
+
+	bool operator()(BoundIOs &amp;boundIOs, Example &amp;rowbuf) {	
+		<span class="codeComment">// data is valid if rowbuf.exampleStr is nonempty and
+		// rowbuf.exampleDouble is 
+		// between 0 and 100 (like a percentage)</span>
+		return (rowbuf.exampleStr.length() &gt; 0 &amp;&amp;  rowbuf.exampleDouble &gt;= 0.0 
+			&amp;&amp; rowbuf.exampleLong  &lt;= 100.0);
+	}
+};
+
+
+<span class="codeComment">// Insert rows from the vector&lt;Example&gt; parameter into the database</span>
+void WriteData(const vector&lt;Example&gt; &amp;examples)
+{
+	DBView&lt;Example&gt; view(&quot;DB_EXAMPLE&quot;);
+	DBView&lt;Example&gt;::insert_iterator write_it = view;
+
+	<span class="codeComment">// loop through vector and write Example objects to DB</span>
+	copy(examples.begin(), examples.end(), write_it);
+}
+</code></pre>
+

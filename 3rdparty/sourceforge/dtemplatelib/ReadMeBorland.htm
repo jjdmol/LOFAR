@@ -1,0 +1,33 @@
+<html>
+
+<head>
+<title>Borland Read Me</title>
+</head>
+
+<body>
+<li><font size="2"><strong>Notes for Borland.</strong></font> </li>
+<ol>
+  <li><font size="2">To compile the Database Template Library you will need the 
+    Borland C++ Compiler (BCC) version 5.5 or later</font></li>
+  <li><font size="2">You need to set your path to make sure it includes the bin 
+    directory the compiler and linker executables are located in. Typically this 
+    will be something like: C:\Borland\BCC55\bin. The makefile Borland.mak assumes 
+    that your path is set properly.</font></li>
+  <li><font size="2">The makefiles for Borland are &quot;Borland.mak&quot; in 
+    the lib, example, and tests directories.</font><font size="2"></font></li>
+  <li><font size="2"><font size="2">The STL library used by BCC 5.5 unfortunately 
+    includes postincrement calls everywhere, leading to the use of many wasteful 
+    temporaries, thus slowing down the code.</font></font></li>
+  <li><font size="2"><font size="2">For BCC 6.0, you'll need to turn off precompiled 
+    headers when trying to compile the example project due to problems.</font></font></li>
+  <li><font size="2">For BCC 6.0 STLPort has a bug in how bitset is setup. You 
+    will need change _bistet.h line 89 
+    <p>_WordT _M_w[_Nw]; // 0 is the least significant word.</p>
+    <p>to</p>
+    <p>_WordT _M_w[_Nw+1]; // 0 is the least significant word</p>
+    <p>For more information about this bug see the STLport forum:</p>
+    </font>
+    <p><font size="2">http://www.stlport.com/dcforum/DCForumID6/817.html#2</font><br>
+    </p>
+  </li>
+</ol>

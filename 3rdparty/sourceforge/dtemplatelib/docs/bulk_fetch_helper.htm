@@ -1,0 +1,16 @@
+
+<pre><code><span class="codeComment">// Read the contents of the DB_EXAMPLE table and return a vector of the resulting rows
+// Use DTL bulk fetch helper (to validate records along with the read)</span>
+vector&lt;Example&gt; ReadData() {
+	vector&lt;Example&gt; results;
+	typedef DBView&lt;Example&gt; DBV;
+ 	DBV view(DBV::Args().tables(&quot;DB_EXAMPLE&quot;)
+		.handler(BulkFetchHandler&lt;Example&gt;())
+   	);
+ 	<span class="codeComment">// bulk fetch *all* records into the results container 
+   	// use a buffer 128 rows long </span>
+   	bulk_fetch_helper(view.begin(), 128, back_inserter(results));
+   
+   return results;
+}
+</pre></code>

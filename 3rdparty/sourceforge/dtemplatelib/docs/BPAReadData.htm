@@ -1,0 +1,96 @@
+<pre><code><span class="codeComment">//BPA Functor to bind SQL parameters to a data object</span>
+
+<span class="codeComment">// &quot;Example&quot; class to hold rows from our database table</span>
+class Example
+{
+  public:                                <span class="codeComment">// tablename.columnname:</span>
+	int exampleInt;                 <span class="codeComment">// DB_EXAMPLE.INT_VALUE</span>
+	string exampleStr;              <span class="codeComment">// DB_EXAMPLE.STRING_VALUE</span>
+	double exampleDouble;           <span class="codeComment">// DB_EXAMPLE.DOUBLE_VALUE</span>
+	long exampleLong;               <span class="codeComment">// DB_EXAMPLE.EXAMPLE_LONG</span>
+	TIMESTAMP_STRUCT exampleDate;   <span class="codeComment">// DB_EXAMPLE.EXAMPLE_DATE</span>
+
+	Example(int exInt, const string &amp;exStr, double exDouble, long exLong,
+		const TIMESTAMP_STRUCT &amp;exDate) :
+	   exampleInt(exInt), exampleStr(exStr), exampleDouble(exDouble), exampleLong(exLong),
+	   exampleDate(exDate)
+	{ }
+
+};
+
+<span class="codeComment">// Create an association between table columns and fields in our object</span>
+class BCAExampleObj
+{
+public:
+	void operator()(BoundIOs &amp;cols, Example &amp;rowbuf)
+    	{
+	   cols[&quot;INT_VALUE&quot;] &gt;&gt; rowbuf.exampleInt;
+	   cols[&quot;STRING_VALUE&quot;] &gt;&gt; rowbuf.exampleStr;
+	   cols[&quot;DOUBLE_VALUE&quot;] &gt;&gt; rowbuf.exampleDouble;
+	   cols[&quot;EXAMPLE_LONG&quot;] &gt;&gt; rowbuf.exampleLong;
+	   cols[&quot;EXAMPLE_DATE&quot;] &gt;&gt; rowbuf.exampleDate;
+	}
+}
+
+class ExampleParamObj
+{
+    public:
+       	int lowIntValue;
+	int highIntValue;
+	string strValue;
+	TIMESTAMP_STRUCT dateValue;
+};
+
+class BPAParamObj
+{
+public:
+	void operator()(BoundIOs &amp;boundIOs, ExampleParamObj &amp;paramObj)
+	{
+	  boundIOs[0] &lt;&lt; paramObj.lowIntValue;
+	  boundIOs[1] &lt;&lt; paramObj.highIntValue;
+	  boundIOs[2] &lt;&lt; paramObj.strValue;
+	  boundIOs[3] &lt;&lt; paramObj.dateValue;
+	}
+
+};
+
+<span class="codeComment">// read some Example objects from the database and return a vector of</span>
+<span class="codeComment">// the results, use BPA to set join parameters</span>
+vector&lt;Example&gt; ReadData()
+{
+	vector&lt;Example&gt; results;
+
+	<span class="codeComment">// construct view</span>
+	
+	DBView&lt;Example, ExampleParamObj&gt;
+		view(&quot;DB_EXAMPLE&quot;, BCAExampleObj(),
+		&quot;WHERE INT_VALUE BETWEEN (?) AND (?) AND &quot;
+		&quot;STRING_VALUE = (?) OR EXAMPLE_DATE &lt; (?) ORDER BY EXAMPLE_LONG&quot;,
+		BPAParamObj());
+
+	<span class="codeComment">// loop through query results and add them to our vector</span>
+	<span class="codeComment">// in this loop, read_it.GetLastCount() records read from DB</span>
+
+	DBView&lt;Example, ExampleParamObj&gt;::select_iterator read_it = view.begin();
+
+	<span class="codeComment">// set parameter values for the WHERE clause in our SQL query</span>
+	read_it.Params().lowIntValue = 2;
+	read_it.Params().highIntValue = 8;
+	read_it.Params().strValue = &quot;Example&quot;;
+	
+	TIMESTAMP_STRUCT paramDate = {2000, 1, 1, 0, 0, 0, 0};
+	read_it.Params().dateValue = paramDate;
+
+	for ( ; read_it != view.end();  read_it++)
+	{
+		cout &lt;&lt; &quot;Reading element #&quot; &lt;&lt; read_it.GetLastCount() &lt;&lt; endl;
+		results.push_back(*read_it);
+
+		cout &lt;&lt; &quot;read_it-&gt;exampleInt = &quot; &lt;&lt; read_it-&gt;exampleInt &lt;&lt; endl;
+		cout &lt;&lt; &quot;read_it-&gt;exampleStr = &quot; &lt;&lt; read_it-&gt;exampleStr &lt;&lt; endl;
+		
+	}
+	
+	return results;
+}
+</code></pre>

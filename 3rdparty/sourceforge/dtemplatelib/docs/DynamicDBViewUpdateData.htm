@@ -1,0 +1,97 @@
+
+<pre><code><span class="codeComment">
+// Update objects in the database via an update_iterator
+// using a dynamic view
+</span>
+
+class BPAParamObj
+{
+public:
+	void operator()(BoundIOs &amp;boundIOs, variant_row &amp;paramObj)
+	{
+	  boundIOs[0] == paramObj._int();
+	  boundIOs[1] == paramObj._int();
+	  boundIOs[2] == paramObj._string();
+	  boundIOs[3] == paramObj._timestamp();
+	  boundIOs.BindVariantRow(paramObj);
+	}
+
+};
+
+
+<span class="codeComment">// update example rows (with new values) meeting a query in the database
+// using a dynamic view</span>
+void UpdateDynamicData()
+{ 
+	<span class="codeComment">// construct view</span>
+	DynamicDBView&ltvariant_row&gt;
+	   view(&quot;DB_EXAMPLE&quot;, &quot;*&quot;,
+	   &quot;WHERE INT_VALUE BETWEEN (?) AND (?) AND &quot;
+	   &quot;STRING_VALUE = (?) OR EXAMPLE_DATE = (?)&quot;, BPAParamObj());
+
+	<span class="codeComment">// build an updater for the view
+
+	// *** SQL Query Generated for this update_iterator:&quot; ***
+	// &quot;UPDATE DB_EXAMPLE SET DOUBLE_VALUE = (?), EXAMPLE_DATE = (?), EXAMPLE_LONG = (?), INT_VALUE = (?), &quot;
+	// &quot;STRING_VALUE = (?) WHERE INT_VALUE BETWEEN (?) AND (?) AND STRING_VALUE = (?) OR EXAMPLE_DATE = (?)&quot;
+	</span>
+	DynamicDBView&lt;variant_row&gt;::update_iterator exampleUpdater = view;
+
+	<span class="codeComment">// set data fields we want to update to their desired values</span>
+	variant_row updateMe(view.GetDataObj());
+
+	updateMe[&quot;STRING_VALUE&quot;] = string(&quot;Updated&quot;);
+	updateMe[&quot;EXAMPLE_LONG&quot;] = 25;
+
+	TIMESTAMP_STRUCT today = {2000, 9, 29, 0, 0, 0,0};
+
+	updateMe[&quot;EXAMPLE_DATE&quot] = today;
+	updateMe[&quot;INT_VALUE&quot;] = 2121;
+
+	updateMe[&quot;EXAMPLE_DOUBLE&quot;] = 99.99;
+
+	<span class="codeComment">// now set the parameters indicating which rows
+	// we want the update applied</span>
+	variant_row &amp;params = exampleUpdater.Params();
+	params[0] = 5;
+	params[1] = 13;
+	params[2] = string(&quot;Find Me&quot;);
+
+	TIMESTAMP_STRUCT paramDate = {1999, 11, 11, 0,0, 0, 0};
+	params[3] = paramDate;
+
+	<span class="codeComment">// execute the update</span>
+	*exampleUpdater = updateMe;
+	exampleUpdater++;
+
+	cout &lt;&lt; exampleUpdater.GetLastCount() &lt;&lt; &quot; rows updated!&quot; &lt;&lt; endl;
+
+	<span class="codeComment">// now can perform other updates using the same updater object
+	// make sure to put in your new values for both the data and parameter values
+	// for the update
+	// set data fields we want to update to their desired values
+	// exampleStr to &quot;Second Update&quot; and exampleLong to 66</span>
+	TIMESTAMP_STRUCT tomorrow = {2000, 9, 30, 0, 0,0, 0};
+	
+	updateMe[&quot;EXAMPLE_DATE&quot;] = tomorrow;
+	updateMe[&quot;INT_VALUE&quot;] = 2222;
+	updateMe[&quot;STRING_VALUE&quot;] = string(&quot;Second Update&quot;);
+	updateMe[&quot;EXAMPLE_DOUBLE&quot;] = 0.11111;
+	updateMe[&quot;EXAMPLE_LONG&quot;] = 66;
+	
+	<span class="codeComment">// now set the parameters indicating which rows</span>
+	we want the update applied
+	params[0] = 21;
+	params[1] = 30;
+	params[2] = string(&quot;To find&quot;);
+
+	TIMESTAMP_STRUCT otherParamDate = {2001, 10, 31,0, 0, 0, 0};
+	params[3] = otherParamDate;
+
+	<span class="codeComment">// execute the update</span>
+	*exampleUpdater = updateMe;
+	exampleUpdater++;
+
+	cout &lt;&lt; exampleUpdater.GetLastCount() &lt;&lt; &quot; rows updated!&quot; &lt;&lt; endl;
+}
+</code></pre>
