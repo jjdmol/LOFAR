@@ -1,14 +1,10 @@
-calibrate_observation {
+start.1.2.3.4 peeling {
   competition {
-    part start.0
-    part peeling [ source 2 + /* syntax error '+' instead of '-' */ 5 , 6 , 1 ] {
+    part peeling [ source (2 + 5) , 6 , 1 ] {
       collaboration {
-        part start.1.0  // some controversial comment
-/*
- some traditional comment
-*/
-        part devide [ time  0 , 2385789023 , 127638076 ] {
-// this should become part start.1.1
+        part devide [ frequency 20, 30, 40, 50 ] {
+        }
+        part devide [ time  1 , 239023 , 12076 ] {
         }
       }
     }
@@ -20,11 +16,14 @@ calibrate_observation {
                over three frequency ranges
             */
         }
-        part devide [ frequency 30-39.9 , 50-80 ] {
+        part devide [ frequency 30-39.9 , 50-80 ,160 +  /* syntax error '+' instead of '-' */ 20 ] {
             // another division
 
         }
       }
     }
-  }
+  }  // some controversial comment
 }
+/*
+ some traditional comment
+*/

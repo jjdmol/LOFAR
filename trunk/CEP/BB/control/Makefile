@@ -34,8 +34,8 @@ CC      = gcc
 COPT     = -pg -g
 
 BISONFLAGS = --defines --debug --locations --graph --token-table --report=all
-FLEXFLAGS  = --debug --verbose # --bison-bridge --bison-locations --trace --yylineno --nodefault
-CFLAGS     = -Wall -D_REENTRANT -I./ -I$(DTLINCLUDE) $(MPI_INCLUDES) $(MPI_CXX_INCLUDES) $(OPT) $(CC_MACH_FLAGS) 
+FLEXFLAGS  = # --bison-bridge --bison-locations --trace --yylineno --nodefault #--debug --verbose
+CFLAGS     = -Wall -D_REENTRANT -I./ -I$(DTLINCLUDE) $(MPI_INCLUDES) $(MPI_CXX_INCLUDES) $(COPT) $(CC_MACH_FLAGS) 
 
 %.o : %.cpp Makefile
 	$(CXX) -c $(CFLAGS) $< -o $@
@@ -55,25 +55,35 @@ bbdb:	blackboard/createdb.o
 	      -L$(MPI_HOME)/lib $(MPI_LDLIBS) $(MACH_LDFLAGS) -L$(DTLLIBDIR) $(DTLLIB) -lodbc
 
 clean:
-	rm -f $(OBJS) $(TARGET).o $(TARGET) core 
+	-@rm $(OBJS)
+	-@rm $(TARGET).o
+	-@rm $(TARGET)
+	-@rm core 
+	-@rm selfparse.tab.*
+	-@rm read_script
+	-@rm lex.selfparse.*
+	-@rm start.*.selfcal*
+	-@rm selfparse.output
+	-@rm selfparse.vcg
+	-@rm confdata/*.out
 
 new:
 	make clean
 	make
 
-lex.%.c:	%.l Makefile
+lex.%.c:	parser/%.l Makefile
 	$(FLEX) -P$* $(FLEXFLAGS) $<
 
 lex.%.cc:	%.l Makefile
 	$(FLEX) -+ -P$* $(FLEXFLAGS) $<
 
-%.tab.c:	%.y Makefile
-	$(BISON) -p$* $(BISONFLAGS) $*.y
+%.tab.c:	parser/%.y Makefile
+	$(BISON) -p$* $(BISONFLAGS) parser/$*.y
 
 read_script:	selfparse.tab.o lex.selfparse.o
 	$(CXX) $+ -o $@ -lfl -ly
 
-lex.lexer.o:	lex.selfparse.cc
+lex.selfparse.o:	lex.selfparse.c
 
 %.d:	confdata/%.selfcal read_script
 	./read_script $<
