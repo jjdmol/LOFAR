@@ -113,17 +113,23 @@ GCFEvent::TResult StatsRead::handleack(GCFEvent& event, GCFPortInterface& /*port
   uint8 global_blp = (getBoardId() * GET_CONFIG("RS.N_BLPS", i)) 
     + (getCurrentBLP() / m_nfragments);
 
-  uint16 itemoffset = (getCurrentBLP() % m_nfragments) * (MEPHeader::FRAGMENT_SIZE / sizeof(uint32));
+  uint16 offset = ack.hdr.m_fields.offset / MEPHeader::N_PHASE / sizeof(int32);
   
-  LOG_INFO(formatString("StatsRead::handleack: global_blp=%d, itemoffset=%d",
-			global_blp, itemoffset));
+  LOG_FATAL(formatString("StatsRead::handleack: global_blp=%d, offset=%d",
+			 global_blp, offset));
+
+  Range fragment_range(offset / MEPHeader::N_POL,
+		       (offset / MEPHeader::N_POL) + (N_STATS / MEPHeader::N_PHASEPOL) - 1);
+
+  LOG_FATAL_STR("fragment_range=" << fragment_range);
   
   switch (m_type)
   {
     case Statistics::SUBBAND_MEAN:
     {
       Array<complex<int32>, 2> stats((complex<int32>*)&ack.stat,
-				      shape(MEPHeader::N_SUBBANDS, MEPHeader::N_POL),
+				      shape(N_STATS / MEPHeader::N_PHASEPOL,
+					    MEPHeader::N_POL),
 				      neverDeleteData);
 
       if (m_type != ack.hdr.m_fields.addr.regid)
@@ -135,19 +141,18 @@ GCFEvent::TResult StatsRead::handleack(GCFEvent& event, GCFPortInterface& /*port
       Array<complex<double>, 3>& cache(Cache::getInstance().getBack().getSubbandStats()());
 
       // x-pol subband statistics: copy and convert to double
-      cache(m_type, global_blp * 2,     Range::all()) =
-	convert_int32_to_double(stats(Range::all(), 0));
+      cache(m_type, global_blp * 2,     fragment_range) = convert_int32_to_double(stats(Range::all(), 0));
 
       // y-pol subband statistics: copy and convert to double
-      cache(m_type, global_blp * 2 + 1, Range::all()) =
-	convert_int32_to_double(stats(Range::all(), 1));
+      cache(m_type, global_blp * 2 + 1, fragment_range) = convert_int32_to_double(stats(Range::all(), 1));
     }
     break;
       
     case Statistics::SUBBAND_POWER:
     {
       Array<complex<uint32>, 2> stats((complex<uint32>*)&ack.stat,
-				      shape(MEPHeader::N_SUBBANDS, MEPHeader::N_POL),
+				      shape(N_STATS / MEPHeader::N_PHASEPOL,
+					    MEPHeader::N_POL),
 				      neverDeleteData);
 
       if (m_type != ack.hdr.m_fields.addr.regid)
@@ -159,19 +164,18 @@ GCFEvent::TResult StatsRead::handleack(GCFEvent& event, GCFPortInterface& /*port
       Array<complex<double>, 3>& cache(Cache::getInstance().getBack().getSubbandStats()());
 
       // x-pol subband statistics: copy and convert to double
-      cache(m_type, global_blp * 2,     Range::all()) =
-	convert_uint32_to_double(stats(Range::all(), 0));
+      cache(m_type, global_blp * 2,     fragment_range) = convert_uint32_to_double(stats(Range::all(), 0));
 
       // y-pol subband statistics: copy and convert to double
-      cache(m_type, global_blp * 2 + 1, Range::all()) =
-	convert_uint32_to_double(stats(Range::all(), 1));
+      cache(m_type, global_blp * 2 + 1, fragment_range) = convert_uint32_to_double(stats(Range::all(), 1));
     }
     break;
 
     case Statistics::BEAMLET_MEAN:
     {
       Array<complex<int32>, 2> stats((complex<int32>*)&ack.stat,
-				      shape(MEPHeader::N_SUBBANDS, MEPHeader::N_POL),
+				      shape(N_STATS / MEPHeader::N_PHASEPOL,
+					    MEPHeader::N_POL),
 				      neverDeleteData);
 
       if ((m_type - Statistics::BEAMLET_MEAN) != ack.hdr.m_fields.addr.regid)
@@ -183,11 +187,11 @@ GCFEvent::TResult StatsRead::handleack(GCFEvent& event, GCFPortInterface& /*port
       Array<complex<double>, 3>& cache(Cache::getInstance().getBack().getBeamletStats()());
 
       // x-pol beamlet statistics: copy and convert to double
-      cache(m_type - Statistics::BEAMLET_MEAN, global_blp * 2,     Range::all()) =
+      cache(m_type - Statistics::BEAMLET_MEAN, global_blp * 2,     fragment_range) =
 	convert_int32_to_double(stats(Range::all(), 0));
 
       // y-pol beamlet statistics: copy and convert to double
-      cache(m_type - Statistics::BEAMLET_MEAN, global_blp * 2 + 1, Range::all()) =
+      cache(m_type - Statistics::BEAMLET_MEAN, global_blp * 2 + 1, fragment_range) =
 	convert_int32_to_double(stats(Range::all(), 1));
     }
     break;
@@ -195,7 +199,8 @@ GCFEvent::TResult StatsRead::handleack(GCFEvent& event, GCFPortInterface& /*port
     case Statistics::BEAMLET_POWER:
     {
       Array<complex<uint32>, 2> stats((complex<uint32>*)&ack.stat,
-				      shape(MEPHeader::N_SUBBANDS, MEPHeader::N_POL),
+				      shape(N_STATS / MEPHeader::N_PHASEPOL,
+					    MEPHeader::N_POL),
 				      neverDeleteData);
 
       if ((m_type - Statistics::BEAMLET_MEAN) != ack.hdr.m_fields.addr.regid)
@@ -207,11 +212,11 @@ GCFEvent::TResult StatsRead::handleack(GCFEvent& event, GCFPortInterface& /*port
       Array<complex<double>, 3>& cache(Cache::getInstance().getBack().getBeamletStats()());
 
       // x-pol beamlet statistics: copy and convert to double
-      cache(m_type - Statistics::BEAMLET_MEAN, global_blp * 2,     Range::all()) =
+      cache(m_type - Statistics::BEAMLET_MEAN, global_blp * 2,     fragment_range) =
 	convert_uint32_to_double(stats(Range::all(), 0));
 
       // y-pol beamlet statistics: copy and convert to double
-      cache(m_type - Statistics::BEAMLET_MEAN, global_blp * 2 + 1, Range::all()) =
+      cache(m_type - Statistics::BEAMLET_MEAN, global_blp * 2 + 1, fragment_range) =
 	convert_uint32_to_double(stats(Range::all(), 1));
     }
     break;
