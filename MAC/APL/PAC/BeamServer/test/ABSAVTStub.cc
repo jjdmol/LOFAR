@@ -142,13 +142,13 @@ GCFEvent::TResult AVTStub::test001(GCFEvent& e, GCFPortInterface& port)
 
       case ABS_BEAMALLOC_ACK:
       {
-	ABSBeamallocAckEvent* ack = static_cast<ABSBeamallocAckEvent*>(&e);
-	TESTC(SUCCESS == ack->status);
-	TESTC(0 <= ack->handle);
+	ABSBeamallocAckEvent ack(e);
+	TESTC(ABS_Protocol::SUCCESS == ack.status);
+	TESTC(0 <= ack.handle);
 
 	// beam allocated, now free it
 	ABSBeamfreeEvent beamfree;
-	beamfree.handle = ack->handle;
+	beamfree.handle = ack.handle;
 
 	TESTC(beam_server.send(beamfree));
       }
@@ -156,9 +156,9 @@ GCFEvent::TResult AVTStub::test001(GCFEvent& e, GCFPortInterface& port)
 
       case ABS_BEAMFREE_ACK:
       {
-	ABSBeamfreeAckEvent* ack = static_cast<ABSBeamfreeAckEvent*>(&e);
-	TESTC(SUCCESS == ack->status);
-	TESTC(0 <= ack->handle);
+	ABSBeamfreeAckEvent ack(e);
+	TESTC(ABS_Protocol::SUCCESS == ack.status);
+	TESTC(0 <= ack.handle);
 
 	// test completed, next test
 	TRAN(AVTStub::test002);
@@ -226,13 +226,13 @@ GCFEvent::TResult AVTStub::test002(GCFEvent& e, GCFPortInterface& port)
 
       case ABS_BEAMALLOC_ACK:
       {
-	ABSBeamallocAckEvent* ack = static_cast<ABSBeamallocAckEvent*>(&e);
-	TESTC(SUCCESS == ack->status);
-	TESTC(0 == ack->handle);
+	ABSBeamallocAckEvent ack(e);
+	TESTC(ABS_Protocol::SUCCESS == ack.status);
+	TESTC(0 == ack.handle);
 
 	// send pointto command
 	ABSBeampointtoEvent pointto;
-	pointto.handle = ack->handle;
+	pointto.handle = ack.handle;
 	pointto.time = time(0) + 15;
 	pointto.type=(int)Direction::LOFAR_LMN;
 	pointto.angle[0]=0.0;
@@ -242,7 +242,7 @@ GCFEvent::TResult AVTStub::test002(GCFEvent& e, GCFPortInterface& port)
 
 	// beam pointed, now free it
 	ABSBeamfreeEvent beamfree;
-	beamfree.handle = ack->handle;
+	beamfree.handle = ack.handle;
 
 	TESTC(beam_server.send(beamfree));
       }
@@ -250,9 +250,9 @@ GCFEvent::TResult AVTStub::test002(GCFEvent& e, GCFPortInterface& port)
 
       case ABS_BEAMFREE_ACK:
       {
-	ABSBeamfreeAckEvent* ack = static_cast<ABSBeamfreeAckEvent*>(&e);
-	TESTC(SUCCESS == ack->status);
-	TESTC(0 == ack->handle);
+	ABSBeamfreeAckEvent ack(e);
+	TESTC(ABS_Protocol::SUCCESS == ack.status);
+	TESTC(0 == ack.handle);
 
 	// test completed, next test
 	TRAN(AVTStub::test003);
@@ -311,8 +311,7 @@ GCFEvent::TResult AVTStub::test003(GCFEvent& e, GCFPortInterface& port)
 	// send wgenable
 	ABSWgsettingsEvent wgs;
 	wgs.frequency=1e6;
-	wgs.amplitude=0; // was 128
-	wgs.sample_period=2;
+	wgs.amplitude=0x8000;
 
 	TESTC(beam_server.send(wgs));
       }
@@ -321,8 +320,8 @@ GCFEvent::TResult AVTStub::test003(GCFEvent& e, GCFPortInterface& port)
       case ABS_WGSETTINGS_ACK:
       {
 	// check acknowledgement
-	ABSWgsettingsAckEvent* wgsa = static_cast<ABSWgsettingsAckEvent*>(&e);
-	TESTC(SUCCESS == wgsa->status);
+	ABSWgsettingsAckEvent wgsa(e);
+	TESTC(ABS_Protocol::SUCCESS == wgsa.status);
 
 	// send WGENABLE
 	ABSWgenableEvent wgenable;
@@ -340,13 +339,13 @@ GCFEvent::TResult AVTStub::test003(GCFEvent& e, GCFPortInterface& port)
 
       case ABS_BEAMALLOC_ACK:
       {
-	ABSBeamallocAckEvent* ack = static_cast<ABSBeamallocAckEvent*>(&e);
-	TESTC(SUCCESS == ack->status);
-	TESTC(0 == ack->handle);
+	ABSBeamallocAckEvent ack(e);
+	TESTC(ABS_Protocol::SUCCESS == ack.status);
+	TESTC(0 == ack.handle);
 
 	// send pointto command
 	ABSBeampointtoEvent pointto;
-	pointto.handle = ack->handle;
+	pointto.handle = ack.handle;
 	pointto.time = time(0) + 15;
 	pointto.type=(int)Direction::LOFAR_LMN;
 	pointto.angle[0]=0.0;
@@ -356,7 +355,7 @@ GCFEvent::TResult AVTStub::test003(GCFEvent& e, GCFPortInterface& port)
 
 	// beam pointed, now free it
 	ABSBeamfreeEvent beamfree;
-	beamfree.handle = ack->handle;
+	beamfree.handle = ack.handle;
 
 	TESTC(beam_server.send(beamfree));
       }
@@ -364,9 +363,9 @@ GCFEvent::TResult AVTStub::test003(GCFEvent& e, GCFPortInterface& port)
 
       case ABS_BEAMFREE_ACK:
       {
-	ABSBeamfreeAckEvent* ack = static_cast<ABSBeamfreeAckEvent*>(&e);
-	TESTC(SUCCESS == ack->status);
-	TESTC(0 == ack->handle);
+	ABSBeamfreeAckEvent ack(e);
+	TESTC(ABS_Protocol::SUCCESS == ack.status);
+	TESTC(0 == ack.handle);
 
 	// send wgdisable
 	ABSWgdisableEvent wgdisable;
@@ -439,8 +438,8 @@ GCFEvent::TResult AVTStub::test004(GCFEvent& e, GCFPortInterface& port)
 
       case ABS_BEAMALLOC_ACK:
       {
-	ABSBeamallocAckEvent* ack = static_cast<ABSBeamallocAckEvent*>(&e);
-	TESTC(SUCCESS != ack->status);
+	ABSBeamallocAckEvent ack(e);
+	TESTC(ABS_Protocol::SUCCESS != ack.status);
 
 	if (loop == 0)
 	{
@@ -551,15 +550,15 @@ GCFEvent::TResult AVTStub::test005(GCFEvent& e, GCFPortInterface& port)
 
       case ABS_BEAMALLOC_ACK:
       {
-	ABSBeamallocAckEvent* ack = static_cast<ABSBeamallocAckEvent*>(&e);
-	TESTC(SUCCESS == ack->status);
+	ABSBeamallocAckEvent ack(e);
+	TESTC(ABS_Protocol::SUCCESS == ack.status);
 
-	beam_handle = ack->handle;
+	beam_handle = ack.handle;
 	LOG_DEBUG(formatString("got beam_handle=%d", beam_handle));
 
 	// send pointto command (zenith)
 	ABSBeampointtoEvent pointto;
-	pointto.handle = ack->handle;
+	pointto.handle = ack.handle;
 	pointto.time = time(0) + 20;
 	pointto.type=(int)Direction::LOFAR_LMN;
 	pointto.angle[0]=0.0;
@@ -591,9 +590,9 @@ GCFEvent::TResult AVTStub::test005(GCFEvent& e, GCFPortInterface& port)
 
       case ABS_BEAMFREE_ACK:
       {
-	ABSBeamfreeAckEvent* ack = static_cast<ABSBeamfreeAckEvent*>(&e);
-	TESTC(SUCCESS == ack->status);
-	TESTC(beam_handle == ack->handle);
+	ABSBeamfreeAckEvent ack(e);
+	TESTC(ABS_Protocol::SUCCESS == ack.status);
+	TESTC(beam_handle == ack.handle);
 
 	// test completed, next test
 	TRAN(AVTStub::done);

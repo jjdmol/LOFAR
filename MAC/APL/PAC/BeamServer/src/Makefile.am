@@ -14,25 +14,32 @@ SUFFIXES = .ph
 	$(AUTOGEN) --writable -L $(top_srcdir)/../../../MACCommon/autogen $<
 
 BUILT_SOURCES = \
-	ABS_Protocol.ph \
-	EPA_Protocol.ph \
 	log4cplus.properties \
+	ABS_Protocol.ph \
 	abs.ns \
-	abs.top
+	abs.top \
+	pac.ns \
+	pac.top \
+	beamserver.conf
 
 EXTRA_DIST = \
 	ABS_Protocol.ph \
-	EPA_Protocol.ph \
-	log4cplus.properties \
 	abs.ns \
 	abs.top
 
-include_HEADERS = \
-	ABSConstants.h \
-	$(top_builddir)/src/ABS_Protocol.ph \
-	$(top_builddir)/src/EPA_Protocol.ph
+sysconf_DATA = \
+	log4cplus.properties \
+	pac.ns \
+	pac.top \
+	beamserver.conf
 
-%.properties: $(MAC_CONFIG)/%.properties
+include_HEADERS = \
+	$(top_builddir)/src/ABS_Protocol.ph
+
+%.properties: %.properties.in
+	cp $< $@
+
+%.conf: %.conf.in
 	cp $< $@
 
 %.ns: %.ns.in
@@ -59,8 +66,7 @@ libabs_la_SOURCES = \
 	ABSBeamletStatsPSet.h \
 	gnuplot_i.h \
 	gnuplot_i.cc \
-	$(top_builddir)/src/ABS_Protocol.cc \
-	$(top_builddir)/src/EPA_Protocol.cc
+	$(top_builddir)/src/ABS_Protocol.cc
 
 bin_PROGRAMS = BeamServer
 

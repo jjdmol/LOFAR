@@ -20,7 +20,7 @@
 //#
 //#  $Id$
 
-#include <ABSConstants.h>
+#include <RSP_Protocol.ph>
 #include <ABSBeamletStats.h>
 #include <ABSBeamletStatsPSet.h>
 #include <GCF/GCF_Defines.h>
@@ -66,8 +66,8 @@ BeamletStats::BeamletStats(int n_beamlets, int n_integrations) :
     m_count(0),
     m_seqnr(0),
     m_selected_beamlet(0),
-    m_beamlet_power(n_beamlets, N_POLARIZATIONS),
-    m_power_sum(n_beamlets / 2, N_POLARIZATIONS, 2),
+    m_beamlet_power(n_beamlets, N_POL),
+    m_power_sum(n_beamlets / 2, N_POL, 2),
     m_pset(BeamServerPSet, "BeamServer", this)
 {
   m_pset.load();
@@ -318,7 +318,7 @@ void BeamletStats::handleAnswer(GCFEvent& event)
       break;
 
       default:
-	  LOG_ERROR("unhandled event");
+	  LOG_ERROR("\nunhandled event\n");
 	  break;
   }
 }

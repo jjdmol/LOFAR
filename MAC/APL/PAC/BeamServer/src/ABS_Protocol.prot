@@ -10,7 +10,7 @@ id = "(F_APL_PROTOCOL+10)";
 // specify extra include files
 // e.g.
 include = '<sys/time.h>';
-include = '"ABSConstants.h"';
+include = '<RSP_Protocol.ph>';
 
 prelude = << PRELUDE_END
 
@@ -43,7 +43,7 @@ event = {
       };
       param = {
 	    name = "subbands";
-	    type = "int[ABS::N_BEAMLETS]";
+	    type = "int[N_BEAMLETS]";
       };
 };
 
@@ -113,9 +113,8 @@ event = {
       //
       // Default settings of the WG are
       // (if no WGSETTINGS event has been sent).
-      // frequency = 1e6 (1MHz)
-      // amplitude = 128
-      // sample_period = 2
+      // frequency = 1.5625e6 (1.5625MHz)
+      // amplitude = 1024
       //
       signal = WGSETTINGS;
       dir = IN;
@@ -127,14 +126,9 @@ event = {
       };
       param = {
 	    // applitude of the signal, values between
-	    // 0 and 128 scale the amplitude linearly
+	    // 0 and 65535 scale the amplitude linearly
 	    name = "amplitude";
-	    type = "unsigned char"; // allowed values 0..128
-      };
-      param = {
-	    // number of clock cycles for each sample
-	    name = "sample_period";
-	    type = "unsigned char";
+	    type = "unsigned short"; // allowed values 0..65535
       };
 };
 

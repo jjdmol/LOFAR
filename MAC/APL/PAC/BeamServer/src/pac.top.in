@@ -1,0 +1,24 @@
+[ABS]
+rspdriver=RSP:acceptor
+
+[RSP]
+#intentially left empty
+
+[EPATest]
+beam_server=ABS:client
+
+[SweepTest]
+beam_server=ABS:client
+
+[SetFreq]
+beam_server=ABS:client
+
+[EPAStub]
+#intenionally left empty
+
+[SS]
+client=PI:server
+
+[PMLlite]
+client=SS:server
+

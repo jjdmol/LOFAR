@@ -174,8 +174,7 @@ GCFEvent::TResult SetFreq::setfreq(GCFEvent& e, GCFPortInterface& port)
 	  // send wgenable
 	  ABSWgsettingsEvent wgs;
 	  wgs.frequency=m_freq;
-	  wgs.amplitude=128; // was 128
-	  wgs.sample_period=2;
+	  wgs.amplitude=0x8000;
 
 	  TESTC(beam_server.send(wgs));
       }
@@ -184,8 +183,8 @@ GCFEvent::TResult SetFreq::setfreq(GCFEvent& e, GCFPortInterface& port)
       case ABS_WGSETTINGS_ACK:
       {
 	  // check acknowledgement
-	  ABSWgsettingsAckEvent* wgsa = static_cast<ABSWgsettingsAckEvent*>(&e);
-	  TESTC(SUCCESS == wgsa->status);
+	  ABSWgsettingsAckEvent wgsa(e);
+	  TESTC(ABS_Protocol::SUCCESS == wgsa.status);
 	  
 	  // send WGENABLE
 	  ABSWgenableEvent wgenable;
