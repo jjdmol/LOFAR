@@ -1,6 +1,6 @@
-BobOBufVector bobSize=134 vecSize=134 vecCap=134
-BobOBufVector bobSize=134 vecSize=134 vecCap=200
-BobOBufString bobSize=134 strSize=134
-BobOBufString bobSize=134 strSize=134
-BlobOBufChar::setPos - buffer cannot be expanded
+BobOBufVector bobSize=3101 vecSize=3101 vecCap=3101
+BobOBufVector bobSize=3101 vecSize=3101 vecCap=3101
+BobOBufString bobSize=3101 strSize=3101
+BobOBufString bobSize=3101 strSize=3101
+BlobOStream::putBuf - 5 bytes asked, but only 0 could be written (pos=48)
 OK
