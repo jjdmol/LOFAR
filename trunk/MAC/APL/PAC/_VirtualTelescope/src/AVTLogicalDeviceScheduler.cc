@@ -972,7 +972,8 @@ void AVTLogicalDeviceScheduler::handlePropertySetAnswer(GCFEvent& answer)
             
             MaintenanceScheduleInfoT scheduleInfo;
             scheduleInfo.resource = parameters[1];
-            TPropertyInfo propInfo(scheduleInfo.resource+string(SCOPESEPARATOR)+string("Maintenance")+string(PROPERTYSEPARATOR)+string(PROPNAME_STATUS),LPT_UNSIGNED);
+            string propName(scheduleInfo.resource+string(SCOPESEPARATOR)+string("Maintenance")+string(PROPERTYSEPARATOR)+string(PROPNAME_STATUS));
+            TPropertyInfo propInfo(propName.c_str(),LPT_UNSIGNED);
             scheduleInfo.pMaintenanceProperty.reset(new GCFExtProperty(propInfo));
             scheduleInfo.startTime = rawStartTime;
             scheduleInfo.stopTime  = rawStopTime;
@@ -1081,81 +1082,97 @@ void AVTLogicalDeviceScheduler::getRequiredResources(list<TPropertyInfo>& requir
   char scopeString[300];
   
   {
-    TPropertyInfo propInfo(string(SCOPE_PIC)+string(PROPERTYSEPARATOR)+string(PROPNAME_STATUS), LPT_UNSIGNED);
+    string propName(string(SCOPE_PIC)+string(PROPERTYSEPARATOR)+string(PROPNAME_STATUS));
+    TPropertyInfo propInfo(propName.c_str(), LPT_UNSIGNED);
     requiredResources.push_back(propInfo);
   }  
   {
-    TPropertyInfo propInfo(string(SCOPE_PIC_Maintenance)+string(PROPERTYSEPARATOR)+string(PROPNAME_STATUS), LPT_UNSIGNED);
+    string propName(string(SCOPE_PIC_Maintenance)+string(PROPERTYSEPARATOR)+string(PROPNAME_STATUS));
+    TPropertyInfo propInfo(propName.c_str(), LPT_UNSIGNED);
     requiredResources.push_back(propInfo);
   }  
   {
     sprintf(scopeString,SCOPE_PIC_RackN,rack);
-    TPropertyInfo propInfo(string(scopeString)+string(PROPERTYSEPARATOR)+string(PROPNAME_STATUS), LPT_UNSIGNED);
+    string propName(string(scopeString)+string(PROPERTYSEPARATOR)+string(PROPNAME_STATUS));
+    TPropertyInfo propInfo(propName.c_str(), LPT_UNSIGNED);
     requiredResources.push_back(propInfo);
   }  
   {
     sprintf(scopeString,SCOPE_PIC_RackN_Maintenance,rack);
-    TPropertyInfo propInfo(string(scopeString)+string(PROPERTYSEPARATOR)+string(PROPNAME_STATUS), LPT_UNSIGNED);
+    string propName(string(scopeString)+string(PROPERTYSEPARATOR)+string(PROPNAME_STATUS));
+    TPropertyInfo propInfo(propName.c_str(), LPT_UNSIGNED);
     requiredResources.push_back(propInfo);
   }  
   {
     sprintf(scopeString,SCOPE_PIC_RackN_Alert,rack);
-    TPropertyInfo propInfo(string(scopeString)+string(PROPERTYSEPARATOR)+string(PROPNAME_STATUS), LPT_UNSIGNED);
+    string propName(string(scopeString)+string(PROPERTYSEPARATOR)+string(PROPNAME_STATUS));
+    TPropertyInfo propInfo(propName.c_str(), LPT_UNSIGNED);
     requiredResources.push_back(propInfo);
   }  
   {
     sprintf(scopeString,SCOPE_PIC_RackN_SubRackN,rack,subrack);
-    TPropertyInfo propInfo(string(scopeString)+string(PROPERTYSEPARATOR)+string(PROPNAME_STATUS), LPT_UNSIGNED);
+    string propName(string(scopeString)+string(PROPERTYSEPARATOR)+string(PROPNAME_STATUS));
+    TPropertyInfo propInfo(propName.c_str(), LPT_UNSIGNED);
     requiredResources.push_back(propInfo);
   }  
   {
     sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_Maintenance,rack,subrack);
-    TPropertyInfo propInfo(string(scopeString)+string(PROPERTYSEPARATOR)+string(PROPNAME_STATUS), LPT_UNSIGNED);
+    string propName(string(scopeString)+string(PROPERTYSEPARATOR)+string(PROPNAME_STATUS));
+    TPropertyInfo propInfo(propName.c_str(), LPT_UNSIGNED);
     requiredResources.push_back(propInfo);
   }  
   {
     sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_Alert,rack,subrack);
-    TPropertyInfo propInfo(string(scopeString)+string(PROPERTYSEPARATOR)+string(PROPNAME_STATUS), LPT_UNSIGNED);
+    string propName(string(scopeString)+string(PROPERTYSEPARATOR)+string(PROPNAME_STATUS));
+    TPropertyInfo propInfo(propName.c_str(), LPT_UNSIGNED);
     requiredResources.push_back(propInfo);
   }  
   {
     sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN,rack,subrack,board);
-    TPropertyInfo propInfo(string(scopeString)+string(PROPERTYSEPARATOR)+string(PROPNAME_STATUS), LPT_UNSIGNED);
+    string propName(string(scopeString)+string(PROPERTYSEPARATOR)+string(PROPNAME_STATUS));
+    TPropertyInfo propInfo(propName.c_str(), LPT_UNSIGNED);
     requiredResources.push_back(propInfo);
   }  
   {
     sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_Maintenance,rack,subrack,board);
-    TPropertyInfo propInfo(string(scopeString)+string(PROPERTYSEPARATOR)+string(PROPNAME_STATUS), LPT_UNSIGNED);
+    string propName(string(scopeString)+string(PROPERTYSEPARATOR)+string(PROPNAME_STATUS));
+    TPropertyInfo propInfo(propName.c_str(), LPT_UNSIGNED);
     requiredResources.push_back(propInfo);
   }  
   {
     sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_Alert,rack,subrack,board);
-    TPropertyInfo propInfo(string(scopeString)+string(PROPERTYSEPARATOR)+string(PROPNAME_STATUS), LPT_UNSIGNED);
+    string propName(string(scopeString)+string(PROPERTYSEPARATOR)+string(PROPNAME_STATUS));
+    TPropertyInfo propInfo(propName.c_str(), LPT_UNSIGNED);
     requiredResources.push_back(propInfo);
   }  
   {
     sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_ETH,rack,subrack,board);
-    TPropertyInfo propInfo(string(scopeString)+string(PROPERTYSEPARATOR)+string(PROPNAME_STATUS), LPT_UNSIGNED);
+    string propName(string(scopeString)+string(PROPERTYSEPARATOR)+string(PROPNAME_STATUS));
+    TPropertyInfo propInfo(propName.c_str(), LPT_UNSIGNED);
     requiredResources.push_back(propInfo);
   }  
   {
     sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_BP,rack,subrack,board);
-    TPropertyInfo propInfo(string(scopeString)+string(PROPERTYSEPARATOR)+string(PROPNAME_STATUS), LPT_UNSIGNED);
+    string propName(string(scopeString)+string(PROPERTYSEPARATOR)+string(PROPNAME_STATUS));
+    TPropertyInfo propInfo(propName.c_str(), LPT_UNSIGNED);
     requiredResources.push_back(propInfo);
   }  
   {
     sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN,rack,subrack,board,ap);
-    TPropertyInfo propInfo(string(scopeString)+string(PROPERTYSEPARATOR)+string(PROPNAME_STATUS), LPT_UNSIGNED);
+    string propName(string(scopeString)+string(PROPERTYSEPARATOR)+string(PROPNAME_STATUS));
+    TPropertyInfo propInfo(propName.c_str(), LPT_UNSIGNED);
     requiredResources.push_back(propInfo);
   }  
   {
     sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN,rack,subrack,board,ap,rcu);
-    TPropertyInfo propInfo(string(scopeString)+string(PROPERTYSEPARATOR)+string(PROPNAME_STATUS), LPT_UNSIGNED);
+    string propName(string(scopeString)+string(PROPERTYSEPARATOR)+string(PROPNAME_STATUS));
+    TPropertyInfo propInfo(propName.c_str(), LPT_UNSIGNED);
     requiredResources.push_back(propInfo);
   }  
   {
     sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN_Maintenance,rack,subrack,board,ap,rcu);
-    TPropertyInfo propInfo(string(scopeString)+string(PROPERTYSEPARATOR)+string(PROPNAME_STATUS), LPT_UNSIGNED);
+    string propName(string(scopeString)+string(PROPERTYSEPARATOR)+string(PROPNAME_STATUS));
+    TPropertyInfo propInfo(propName.c_str(), LPT_UNSIGNED);
     requiredResources.push_back(propInfo);
   }
 }
