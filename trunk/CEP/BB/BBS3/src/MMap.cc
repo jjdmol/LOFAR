@@ -32,7 +32,7 @@
 namespace LOFAR
 {
   
-MMap::MMap(const string& fileName, protection prot)
+MMap::MMap (const string& fileName, protection prot)
   : itsFileName  (fileName),
     itsNrBytes   (0),
     itsPageStart (0),
@@ -65,8 +65,9 @@ MMap::~MMap()
   close(itsFd);
 }
 
-void MMap::mapFile(long long startOffset, size_t nrBytes)
-{                                        // the actual mapped area will be a multiple of the page size
+void MMap::mapFile (int64 startOffset, size_t nrBytes)
+{
+  // The actual mapped area will be a multiple of the page size
   if (itsPtr != 0)
   {
     LOG_WARN("Previous region still mapped! Unmapping...");
@@ -75,7 +76,7 @@ void MMap::mapFile(long long startOffset, size_t nrBytes)
 
   int sz = getpagesize();
   // Calculate start of page on which startOffset is located.
-  long long pageStartOffset = (startOffset/sz) * sz;
+  int64 pageStartOffset = (startOffset/sz) * sz;
   // Add the difference to the nr of bytes to map.
   itsNrBytes = nrBytes + startOffset-pageStartOffset;
 

@@ -47,7 +47,9 @@ namespace LOFAR
 //----------------------------------------------------------------------
 Solver::Solver ()
 : itsSolver (1),
-  itsDoSet  (true)
+  itsDoSet  (true),
+  itsNUsed  (0),
+  itsNFlag  (0)
 {
   LOG_INFO_STR( "Solver constructor" );
 }
@@ -85,11 +87,17 @@ void Solver::solve (bool useSVD,
   // Note it is usually already done in setEquations.
   if (itsDoSet) {
     itsSolver.set (itsSolvableValues.size());
+    itsNUsed = 0;
+    itsNFlag = 0;
     itsDoSet = false;
   }
   // Solve the equation. 
   uint rank;
   double fit;
+  cout << "Nr of used data points:    " << itsNUsed << endl;
+  cout << "Nr of flagged data points: " << itsNFlag << endl;
+  LOG_INFO_STR( "Nr of used data points:    " << itsNUsed);
+  LOG_INFO_STR( "Nr of flagged data points: " << itsNFlag);
   LOG_INFO_STR( "Solution before: " << itsSolvableValues);
   bool solFlag = itsSolver.solveLoop (fit, rank, &(itsSolvableValues[0]),
 				      useSVD);
@@ -116,17 +124,21 @@ void Solver::solve (bool useSVD,
 
   timer.stop();
   cout << "BBSTest: solver     " << timer << endl;
+  itsNUsed = 0;
+  itsNFlag = 0;
   return;
 }
 
 
-void Solver::setEquations (const double* data, int nresult, int nrspid,
-			   int nval, int prediffer)
+void Solver::setEquations (const double* data, const char* flags,
+			   int nresult, int nrspid, int nval, int prediffer)
 {
   ASSERT (uint(prediffer) < itsIndices.size());
   // Initialize the solver (needed after a setSolvable).
   if (itsDoSet) {
     itsSolver.set (itsSolvableValues.size());
+    itsNUsed = 0;
+    itsNFlag = 0;
     itsDoSet = false;
   }
   vector<int>& predInx = itsIndices[prediffer];
@@ -136,24 +148,28 @@ void Solver::setEquations (const double* data, int nresult, int nrspid,
   double* derivs = &(derivVec[0]);
   // Each result is a 2d array of [nrval,nrspid+1] (nrval varies most rapidly).
   // The first value is the difference; the others the derivatives. 
-  const double* ddata = data;
   int nrval = nval;
   for (int i=0; i<nresult; ++i) {
     for (int j=0; j<nrval; ++j) {
-      // Each value result,time,freq gives an equation.
-      double diff = ddata[0];
-      const double* derivdata = ddata + nrval;
-      for (int k=0; k<nrspid; ++k) {
-	derivs[k] = derivdata[k*nrval];
+      // Each value result,freq gives an equation (unless flagged).
+      if (*flags++ == 0) {
+	double diff = data[0];
+	const double* derivdata = data + nrval;
+	for (int k=0; k<nrspid; ++k) {
+	  derivs[k] = derivdata[k*nrval];
+	}
+	itsSolver.makeNorm (predInx.size(), &(predInx[0]), &(derivVec[0]),
+			    1., diff);
+	itsNUsed++;
+      } else {
+	itsNFlag++;
       }
-      itsSolver.makeNorm (predInx.size(), &(predInx[0]), &(derivVec[0]),
-      			  1., diff);
       // Go to next time,freq value.
-      ddata++;
+      data++;
     }
-    // Go to next result (note that ddata has already been increment nrval
-    // time, so here we use nrspid instead of nrspid+1.
-    ddata += nrspid*nrval;
+    // Go to next result (note that data has already been incremented nrval
+    // times, so here we use nrspid instead of nrspid+1.
+    data += nrspid*nrval;
   }
 }
 
@@ -176,7 +192,7 @@ void Solver::setSolvableParmData (const std::vector<ParmData>& data,
     return;
   }
   itsDoSet = true;
-  // Usually the last entry has the highest spid; so use that to reserve to
+  // Usually the last entry has the highest spid; so use that in reserve to
   // avoid (hopefully) resizes.
   vector<int> predInx;
   predInx.reserve (data[data.size()-1].getLastSpid() + 1);

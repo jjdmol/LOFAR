@@ -42,6 +42,7 @@ DH_Prediff::DH_Prediff (const string& name)
   : DataHolder    (name, "DH_Prediff", 1),
     itsDataSize   (0),
     itsDataBuffer (0),
+    itsFlagBuffer (0),
     itsMoreData   (0),
     itsStartFreq  (0),
     itsEndFreq    (0),
@@ -56,6 +57,7 @@ DH_Prediff::DH_Prediff(const DH_Prediff& that)
   : DataHolder    (that),
     itsDataSize   (0),
     itsDataBuffer (0),
+    itsFlagBuffer (0),
     itsMoreData   (0),
     itsStartFreq  (0),
     itsEndFreq    (0),
@@ -86,7 +88,8 @@ void DH_Prediff::preprocess()
   addField ("EndFreq", BlobField<double>(1));
   addField ("StartTime", BlobField<double>(1));
   addField ("EndTime", BlobField<double>(1));
-  addField ("DataBuf", BlobField<double>(1, 0, 0, 0, false));
+  addField ("DataBuf", BlobField<double>(1, 0u, 0u, 0u, false));
+  addField ("FlagBuf", BlobField<char>(1, 0u, 0u, false));
 
   // Create the data blob (which calls fillPointers).
   createDataBlock();
@@ -104,6 +107,7 @@ void DH_Prediff::fillDataPointers()
   // Fill in the pointers.
   itsDataSize = getData<unsigned int> ("DataSize");
   itsDataBuffer = getData<double> ("DataBuf");
+  itsFlagBuffer = getData<char> ("FlagBuf");
   itsMoreData = getData<unsigned int> ("MoreData");
   itsStartFreq = getData<double> ("StartFreq");
   itsEndFreq = getData<double> ("EndFreq");
@@ -162,6 +166,10 @@ void DH_Prediff::setBufferSize(const vector<uint32>& shape)
   shp[1] = shape[1];
   shp[2] = shape[2];
   getDataField("DataBuf").setShape(shp);
+  vector<uint32> fshp(2);
+  fshp[0] = shp[0];
+  fshp[1] = shp[2];
+  getDataField("FlagBuf").setShape(fshp);
   createDataBlock();
 }
 

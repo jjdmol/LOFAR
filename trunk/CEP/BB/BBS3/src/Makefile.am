@@ -11,6 +11,7 @@ BlackBoardDemo.h                                \
 Quality.h                                       \
 SC_Simple.cc					\
 MMap.h						\
+FlagsMap.h					\
 Prediffer.h					\
 Solver.h					\
 ParmData.h					\
@@ -80,6 +81,7 @@ BlackBoardDemo.cc                                       \
 Quality.cc                                              \
 SC_Simple.cc						\
 MMap.cc							\
+FlagsMap.cc						\
 Prediffer.cc						\
 Solver.cc						\
 ParmData.cc						\

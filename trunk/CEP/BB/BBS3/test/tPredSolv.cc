@@ -84,6 +84,7 @@ void doSolve (Prediffer& pre1, const vector<string>& solv, bool toblob,
   uint nrloop = (totnreq + bufnreq - 1) / bufnreq;
   cout << "bufShape " << shape << endl;
   double* buffer = new double[nrval];
+  char* flags = new char[shape[0]*shape[2]];
     
   // Get the ParmData from the Prediffer and send it to the solver.
   // Optionally convert it to and from a blob to see if that works fine.
@@ -117,7 +118,7 @@ void doSolve (Prediffer& pre1, const vector<string>& solv, bool toblob,
     // Get the equations from the prediffer and give them to the solver.
     for (uint i=0; i<nrloop; i++) {
       int nres;
-      bool more = pre1.getEquations (buffer, shape, nres);
+      bool more = pre1.getEquations (buffer, flags, shape, nres);
       int nreq = bufnreq;
       if (i == nrloop-1) {
 	nreq = totnreq  - (nrloop-1)*bufnreq;
@@ -128,10 +129,10 @@ void doSolve (Prediffer& pre1, const vector<string>& solv, bool toblob,
       ASSERT (nres == nreq);
       ///cout << "*** buffer " << i << " ***" << endl;
       ///    hexdump(buffer, nrval);
-      solver.setEquations (buffer, nreq, shape[1]-1, shape[0], 0);
+      solver.setEquations (buffer, flags, nreq, shape[1]-1, shape[0], 0);
       // Define equations for a 2nd time to see if solution changes.
       if (toblob) {
-	solver.setEquations (buffer, nreq, shape[1]-1, shape[0], 0);
+	solver.setEquations (buffer, flags, nreq, shape[1]-1, shape[0], 0);
       }
     }
     // Do the solve.
@@ -143,6 +144,7 @@ void doSolve (Prediffer& pre1, const vector<string>& solv, bool toblob,
     pre1.updateSolvableParms (solver.getSolvableParmData());
   }
   delete [] buffer;
+  delete [] flags;
 }
 
 void doSolve1 (Prediffer& pre1, const vector<string>& solv, int niter)
@@ -160,6 +162,7 @@ void doSolve1 (Prediffer& pre1, const vector<string>& solv, int niter)
   uint nrloop = (totnreq + bufnreq - 1) / bufnreq;
   cout << "bufShape " << shape << endl;
   double* buffer = new double[nrval];
+  char* flags = new char[shape[0]*shape[2]];
     
   // Get the ParmData from the Prediffer and send it to the solver.
   // Optionally convert it to and from a blob to see if that works fine.
@@ -175,7 +178,7 @@ void doSolve1 (Prediffer& pre1, const vector<string>& solv, int niter)
     // Get the equations from the prediffer and give them to the solver.
     for (uint i=0; i<nrloop; i++) {
       int nres;
-      bool more = pre1.getEquations (buffer, shape, nres);
+      bool more = pre1.getEquations (buffer, flags, shape, nres);
       int nreq = bufnreq;
       if (i == nrloop-1) {
 	nreq = totnreq  - (nrloop-1)*bufnreq;
@@ -186,7 +189,7 @@ void doSolve1 (Prediffer& pre1, const vector<string>& solv, int niter)
       ASSERT (nres == nreq);
       ///cout << "*** buffer " << i << " ***" << endl;
       ///    hexdump(buffer, nrval);
-      solver.setEquations (buffer, nreq, shape[1]-1, shape[0], 0);
+      solver.setEquations (buffer, flags, nreq, shape[1]-1, shape[0], 0);
     }
     // Do the solve.
     Quality quality;
@@ -198,6 +201,7 @@ void doSolve1 (Prediffer& pre1, const vector<string>& solv, int niter)
     pre1.updateSolvableParms();
   }
   delete [] buffer;
+  delete [] flags;
 }
 
 void doSolve2 (Prediffer& pre1, Prediffer& pre2, const vector<string>& solv)
@@ -227,10 +231,11 @@ void doSolve2 (Prediffer& pre1, Prediffer& pre2, const vector<string>& solv)
     uint nrloop = (totnreq + bufnreq - 1) / bufnreq;
     cout << "bufShape-1 " << shape1 << endl;
     double* buffer = new double[nrval];
+    char* flags = new char[shape1[0]*shape1[2]];
     // Get the equations from the prediffer and give them to the solver.
     for (uint i=0; i<nrloop; i++) {
       int nres;
-      bool more = pre1.getEquations (buffer, shape1, nres);
+      bool more = pre1.getEquations (buffer, flags, shape1, nres);
       int nreq = bufnreq;
       if (i == nrloop-1) {
 	nreq = totnreq  - (nrloop-1)*bufnreq;
@@ -239,9 +244,10 @@ void doSolve2 (Prediffer& pre1, Prediffer& pre2, const vector<string>& solv)
 	ASSERT (more);
       }
       ASSERT (nres == nreq);
-      solver.setEquations (buffer, nreq, shape1[1]-1, shape1[0], 0);
+      solver.setEquations (buffer, flags, nreq, shape1[1]-1, shape1[0], 0);
     }
     delete [] buffer;
+    delete [] flags;
   }
   {
     uint nrval = shape2[0] * shape2[1] * shape2[2];
@@ -250,10 +256,11 @@ void doSolve2 (Prediffer& pre1, Prediffer& pre2, const vector<string>& solv)
     uint nrloop = (totnreq + bufnreq - 1) / bufnreq;
     cout << "bufShape-2 " << shape2 << endl;
     double* buffer = new double[nrval];
+    char* flags = new char[shape2[0]*shape2[2]];
     // Get the equations from the prediffer and give them to the solver.
     for (uint i=0; i<nrloop; i++) {
       int nres;
-      bool more = pre2.getEquations (buffer, shape2, nres);
+      bool more = pre2.getEquations (buffer, flags, shape2, nres);
       int nreq = bufnreq;
       if (i == nrloop-1) {
 	nreq = totnreq  - (nrloop-1)*bufnreq;
@@ -262,9 +269,10 @@ void doSolve2 (Prediffer& pre1, Prediffer& pre2, const vector<string>& solv)
 	ASSERT (more);
       }
       ASSERT (nres == nreq);
-      solver.setEquations (buffer, nreq, shape2[1]-1, shape2[0], 1);
+      solver.setEquations (buffer, flags, nreq, shape2[1]-1, shape2[0], 1);
     }
     delete [] buffer;
+    delete [] flags;
   }
 
   // Do the solve.
@@ -302,7 +310,8 @@ int main (int argc, const char* argv[])
       for (uint i=0; i<antVec2.size(); ++i) {
 	antVec2[i] = 4*i;
       }
-      pre1.select (antVec2, antVec2, false);    // no autocorrelations
+      vector<int> corr;
+      pre1.select (antVec2, antVec2, false, corr);    // no autocorrelations
       vector<string> solv(3);
       solv[0] = "RA.*";
       solv[1] = "DEC.*";
@@ -325,7 +334,8 @@ int main (int argc, const char* argv[])
       for (uint i=0; i<antVec2.size(); ++i) {
 	antVec2[i] = 4*i;
       }
-      pre1.select (antVec2, antVec2, false);    // no autocorrelations
+      vector<int> corr;
+      pre1.select (antVec2, antVec2, false, corr);    // no autocorrelations
       vector<string> solv(3);
       solv[0] = "RA.*";
       solv[1] = "DEC.*";
@@ -349,8 +359,9 @@ int main (int argc, const char* argv[])
       for (uint i=0; i<antVec2.size(); ++i) {
 	antVec2[i] = 4*i;
       }
-      pre1.select (antVec2, antVec2, false);    // no autocorrelations
-      pre2.select (antVec2, antVec2, false);    // no autocorrelations
+      vector<int> corr;
+      pre1.select (antVec2, antVec2, false, corr);    // no autocorrelations
+      pre2.select (antVec2, antVec2, false, corr);    // no autocorrelations
       vector<string> solv(3);
       solv[0] = "RA.*";
       solv[1] = "DEC.*";
@@ -367,7 +378,10 @@ int main (int argc, const char* argv[])
       }
       Prediffer pre1(argv[2], argv[3], argv[4], "aips", argv[1], "", "",
 		     antVec, "LOFAR.RI", false, true);
-      pre1.select (antVec, antVec, false);    // no autocorrelations
+      // Only use first correlation.
+      vector<int> corrVec(1, 0);
+      vector<int> antVec2;
+      pre1.select (antVec2, antVec2, false, corrVec);  // no autocorrelations
       vector<string> solv(3);
       solv[0] = "RA.*";
       solv[1] = "DEC.*";
@@ -390,7 +404,8 @@ int main (int argc, const char* argv[])
       for (uint i=0; i<antVec2.size(); ++i) {
 	antVec2[i] = 4*i;
       }
-      pre1.select (antVec2, antVec2, false);    // no autocorrelations
+      vector<int> corr;
+      pre1.select (antVec2, antVec2, false, corr);    // no autocorrelations
       vector<string> solv(3);
       solv[0] = "RA.*";
       solv[1] = "DEC.*";
