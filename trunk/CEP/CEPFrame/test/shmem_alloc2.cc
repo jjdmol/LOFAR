@@ -36,7 +36,7 @@ void server(void);
 
 void usage_exit(char* progname)
 {
-    fprintf(stderr, "usage: %s [-client | -server]", progname);
+    fprintf(stderr, "usage: %s [-client | -server]\n", progname);
     exit(1);
 }
 
