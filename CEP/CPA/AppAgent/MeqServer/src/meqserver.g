@@ -191,7 +191,7 @@ const meqaddstatelist := function (ref rec,node,state)
   return ref rec;
 }
 
-const meqrequest := function (cells,request_id=F,calc_deriv=F)
+const meqrequest := function (cells,request_id=F,calc_deriv=0)
 {
   global _meqdomain_id;
   # if no request ID supplied, generate one by incrementing the
@@ -199,8 +199,9 @@ const meqrequest := function (cells,request_id=F,calc_deriv=F)
   if( is_boolean(request_id) )
     request_id := meqrequestid(_meqdomain_id+:=1);
   else  # else, setup global domain ID from the one given in the request ID
-    _meqdomain_id := as_integer(request_id ~ s/\..*$//);
-  rec := [ cells=cells,request_id=hiid(request_id),calc_deriv=calc_deriv ];
+    _meqdomain_id := as_integer(as_string(request_id) ~ s/\..*$//);
+  rec := [ cells=cells,request_id=hiid(request_id),
+           calc_deriv=as_integer(calc_deriv) ];
   rec::dmi_actual_type := 'MeqRequest';
   
   const rec.addstate := function (group,node,state)

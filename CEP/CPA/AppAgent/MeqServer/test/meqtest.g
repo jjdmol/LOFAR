@@ -264,7 +264,7 @@ const solver_test := function ()
   
   global cells,request,res;
   cells := meqcells(meqdomain(1,4,-2,3),num_freq=4,times=[0.,1.,2.,3.],time_steps=[1.,1.,1.,1.]);
-  request := meqrequest(cells,calc_deriv=T);
+  request := meqrequest(cells,calc_deriv=1);
   
   res := mqs.meq('Node.Publish.Results',[name='condeq1'],T);
   res := mqs.meq('Node.Execute',[name='solver1',request=request],T);
