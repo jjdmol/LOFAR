@@ -28,8 +28,10 @@
 
 #include <MNS/MeqMatrix.h>
 #include <MNS/MeqMatrixTmp.h>
+#include <MNS/MeqResult.h>
 #include <aips/Arrays/Matrix.h>
 #include <aips/Arrays/ArrayMath.h>
+#include <aips/Mathematics/Complex.h>
 #include <aips/OS/Timer.h>
 #include <aips/Exceptions/Error.h>
 #include <aips/iostream.h>
@@ -54,6 +56,21 @@ void doIt()
   MeqMatrix v3(double(10));
   showDouble (v1 + v2);
   showDouble (v1 + v2 + v1 + v2 + v3 + v3);
+
+  DComplex dc1[6];
+  dc1[0] = DComplex(1,2);
+  dc1[1] = DComplex(3,4);
+  dc1[2] = DComplex(5,6);
+  dc1[3] = DComplex(7,8);
+  dc1[4] = DComplex(9,10);
+  dc1[5] = DComplex(11,12);
+  MeqMatrix vc1 (dc1, 2, 3);
+  MeqMatrix vc2 = v1 + v2 + vc1;
+  MeqMatrix vc3 = v1 + vc1 + v2;
+  MeqMatrix vc4 = vc1 + vc2;
+  MeqMatrix vc5 = (v1 - vc1) * vc2;
+  MeqMatrix vc6 = (vc2 - vc1) * v2;
+  MeqMatrix vc7 = (vc2 - vc1) * vc2;
 }
 
 void doIt2 (uInt length, uInt nr)
@@ -130,11 +147,19 @@ int main (int argc, char** argv)
       doIt2 (8, nr);
       doIt2 (128, nr);
       doIt2 (12800, nr/10);
+      MeqResult mr1;
+      MeqResult mr2(mr1);
+      MeqResult mr3;
+      mr3 = mr1;
     }
   } catch (AipsError x) {
     cout << "Caught an exception: " << x.getMesg() << endl;
     return 1;
   }
+  cout << "MeqMat " << MeqMatrixRep::nctor << ' ' << MeqMatrixRep::ndtor
+       << ' ' << MeqMatrixRep::nctor + MeqMatrixRep::ndtor << endl;
+  cout << "MeqRes " << MeqResultRep::nctor << ' ' << MeqResultRep::ndtor
+       << ' ' << MeqResultRep::nctor + MeqResultRep::ndtor << endl;
   cout << "OK" << endl;
   return 0;
 }

@@ -123,7 +123,7 @@ MeqMatrixRep* MeqMatrixComplexArr::NAME (MeqMatrixComplexSca& left, \
   for (int i=0; i<nelements(); i++) { \
     v->itsValue[i] = left.itsValue OP2 v->itsValue[i]; \
   } \
-  return &left; \
+  return v; \
 } \
 MeqMatrixRep* MeqMatrixComplexArr::NAME (MeqMatrixRealArr& left,  \
 					 bool rightTmp) \

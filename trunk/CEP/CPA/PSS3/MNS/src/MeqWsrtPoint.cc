@@ -45,6 +45,8 @@ void MeqWsrtPoint::calcResult (const MeqRequest& request)
   // We can only calculate for a single bin.
   const MeqDomain& domain = request.domain();
   Assert (request.nx() == 1  &&  request.ny() == 1);
+  // Let the DFT calculate the UVW only once.
+  itsDFT->calcUVW (request);
   // Find the maximum nr of cells needed.
   int ncellt = 0;
   int ncellf = 0;
@@ -62,6 +64,9 @@ void MeqWsrtPoint::calcResult (const MeqRequest& request)
   itsNcell.resize (2);
   itsNcell[0] = ncellt;
   itsNcell[1] = ncellf;
+  if (ncellf > 10) {
+    cout << "ncellf=" << ncellf << endl;
+  }
   
   // The domain is divided into the required number of cells.
   MeqRequest dftReq (domain, ncellt, ncellf, request.nspid());
@@ -75,6 +80,7 @@ void MeqWsrtPoint::calcResult (const MeqRequest& request)
   itsXY.setValue (MeqMatrix (value));
   itsYY.setValue (MeqMatrix (value));
   int srcnr = 0;
+  
   for (vector<MeqPointSource>::iterator iter = itsSources.begin();
        iter != itsSources.end();
        iter++) {
@@ -84,16 +90,15 @@ void MeqWsrtPoint::calcResult (const MeqRequest& request)
     MeqResult uk = iter->getU()->getResult (dftReq);
     MeqResult vk = iter->getV()->getResult (dftReq);
     MeqResult dft = itsDFT->getResult (dftReq);
-    ///    cout << "MeqWsrtPoint ik: " << ik.getValue() << endl;
-      ///    cout << "MeqWsrtPoint qk: " << qk.getValue() << endl;
-      ///    cout << "MeqWsrtPoint uk: " << uk.getValue() << endl;
-      ///    cout << "MeqWsrtPoint vk: " << vk.getValue() << endl;
-      ///    cout << "MeqWsrtPoint dft: " << dft.getValue() << endl;
-    MeqMatrixTmp ivk = tocomplex(0., vk.getValue());
+    MeqMatrix ivk = tocomplex(0., vk.getValue());
+    ///    cout << "MeqWsrtPoint iquvk,dft: " << ik.getValue() << ' '
+    ///	 << qk.getValue() << ' ' << uk.getValue() << ' ' << vk.getValue()
+      ///	 << ' ' << ivk << ' ' << dft.getValue() << endl;
     // Calculate XX, etc. Note that the values should be divided by 2.
     // That is done later in MeqWsrtInt, because that is less expensive.
     MeqMatrix xx = (ik.getValue() + qk.getValue()) * dft.getValue();
-    MeqMatrix yx = (uk.getValue() - MeqMatrix(ivk)) * dft.getValue();
+    ///cout << "MeqWsrtPoint abs(xx) " << abs(xx.getDComplex(0,0)) << endl;
+    MeqMatrix yx = (uk.getValue() - ivk) * dft.getValue();
     MeqMatrix xy = (uk.getValue() + ivk) * dft.getValue();
     MeqMatrix yy = (ik.getValue() - qk.getValue()) * dft.getValue();
     itsXX.getValueRW() += xx;

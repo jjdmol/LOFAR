@@ -24,8 +24,14 @@
 #include <aips/Exceptions/Error.h>
 
 
+int MeqMatrixRep::nctor = 0;
+int MeqMatrixRep::ndtor = 0;
+
+
 MeqMatrixRep::~MeqMatrixRep()
-{}
+{
+  ndtor--;
+}
 
 void MeqMatrixRep::unlink (MeqMatrixRep* rep)
 {

@@ -89,11 +89,13 @@ void MeqWsrtInt::calcResult (const MeqRequest& request)
       // The values also have to be divided by 2 as that is not
       // done in MeqWsrtPoint because it is cheaper to do it here.
       nc *= 2;
+      ///      cout << "Int: " << xx.getValue() << ' ' << xy.getValue() << ' '
+      ///	   << yx.getValue() << ' ' << yy.getValue() << endl;
       complex<double> sumxx = sum(xx.getValue()).getDComplex() / nc;
       complex<double> sumxy = sum(xy.getValue()).getDComplex() / nc;
       complex<double> sumyx = sum(yx.getValue()).getDComplex() / nc;
       complex<double> sumyy = sum(yy.getValue()).getDComplex() / nc;
-      ///      cout << "MeqWsrtInt sumxx: " << sumxx << endl;
+      ///      cout << "MeqWsrtInt abs(sum): " << abs(sumxx) << ' ' << abs(sumxy) << ' ' << abs(sumyx) << ' ' << abs(sumyy) << endl;
       // Now combine with the stations jones.
       complex<double> s11 = itsStat1->getResult11().getValue().getDComplex();
       complex<double> s12 = itsStat1->getResult12().getValue().getDComplex();

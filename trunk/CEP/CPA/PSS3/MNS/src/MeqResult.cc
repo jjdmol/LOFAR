@@ -24,12 +24,17 @@
 #include <MNS/MeqResult.h>
 #include <MNS/MeqMatrixTmp.h>
 
+int MeqResultRep::nctor = 0;
+int MeqResultRep::ndtor = 0;
+
 MeqResultRep::MeqResultRep (int nspid)
 : itsCount           (0),
   itsDefPert         (0.),
   itsPerturbedValues (nspid),
   itsPerturbation    (nspid)
-{}
+{
+  nctor++;
+}
 
 MeqResultRep::~MeqResultRep()
 {
@@ -37,6 +42,7 @@ MeqResultRep::~MeqResultRep()
     delete itsPerturbedValues[i];
     delete itsPerturbation[i];
   }
+  ndtor--;
 }
 
 void MeqResultRep::unlink (MeqResultRep* rep)

@@ -55,6 +55,15 @@ void MeqPolc::setCoeff (const MeqMatrix& values,
 
 MeqResult MeqPolc::getResult (const MeqRequest& request)
 {
+  if (itsCoeff.nelements() == 1) {
+    MeqResult result(0);
+    if (itsCoeff.isDouble()) {
+      result.setValue (MeqMatrix(itsCoeff.getDouble()));
+    } else {
+      result.setValue (MeqMatrix(itsCoeff.getDComplex()));
+    }
+    return result;
+  }
   const MeqDomain& domain = request.domain();
   Assert (domain.startX() >= itsDomain.startX());
   Assert (domain.startY() >= itsDomain.startY());
