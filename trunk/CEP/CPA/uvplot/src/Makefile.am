@@ -1,6 +1,7 @@
 bin_PROGRAMS   := uvplot
-uvplot_SOURCES := main.cc UVPMainWindow.cc UVPMainWindow.moc.cc \
-                  UVPDisplayArea.cc \
+uvplot_SOURCES := main.cc \
+                  UVPMainWindow.cc   UVPMainWindow.moc.cc  \
+                  UVPDisplayArea.cc  UVPDisplayArea.moc.cc \
                   UVPPixel.cc     \
                   UVPAxis.cc      \
                   UVPImageCube.cc \
