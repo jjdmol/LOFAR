@@ -1,8 +1,12 @@
-check_PROGRAMS			= tLCSMath
+check_PROGRAMS			= tLCSMath tIComplex
 
 tLCSMath_SOURCES		= tLCSMath.cc
 tLCSMath_LDADD			= ../src/libmath.la
 tLCSMath_DEPENDENCIES		= ../src/libmath.la $(LOFAR_DEPEND)
+
+tIComplex_SOURCES		= tIComplex.cc
+tIComplex_LDADD			= ../src/libmath.la
+tIComplex_DEPENDENCIES		= ../src/libmath.la $(LOFAR_DEPEND)
 
 TESTS_ENVIRONMENT		= lofar_sharedir=$(lofar_sharedir)
 
