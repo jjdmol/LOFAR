@@ -3,3 +3,9 @@ Using: Application<1|2> -num <num> -sfp test
 Precondition:
 - The PropertAgent of GCF is running (see README in GCF)
 - be sure log4cplus.properties, test.top and test.ns are in the same path as the test Applications
+
+Using: RTPing -sfp test
+Using: RTEcho -sfp test
+Precondition:
+- The PropertAgent, PropertyInterface and SupervisoryServer of GCF is running (see README in GCF)
+- be sure log4cplus.properties, test.top and test.ns are in the same path as the test applications
