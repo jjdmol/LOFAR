@@ -121,7 +121,7 @@ void GPIPropertySet::linkProperties(PALinkPropertiesEvent& e)
   }
   else
   {
-    LOFAR_LOG_TRACE(PI_STDOUT_LOGGER, ( 
+    LOFAR_LOG_DEBUG(PI_STDOUT_LOGGER, ( 
         "Property set with scope %d is deleting in the meanwhile", 
         _scope.c_str()));
   }
@@ -205,7 +205,7 @@ void GPIPropertySet::unlinkProperties(PAUnlinkPropertiesEvent& requestIn)
   }
   else
   {
-    LOFAR_LOG_TRACE(PI_STDOUT_LOGGER, ( 
+    LOFAR_LOG_DEBUG(PI_STDOUT_LOGGER, ( 
         "Property set with scope %d is deleting in the meanwhile", 
         _scope.c_str()));
   }

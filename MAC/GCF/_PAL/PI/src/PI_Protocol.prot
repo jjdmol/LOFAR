@@ -1,0 +1,159 @@
+//
+// Protocol definition for the Supervisory Server(ERTC)/Property Interface(MAC/GCF)
+//
+autogen definitions protocol;
+
+description = "Protocol definition for the Supervisory Server(ERTC)/Property Interface(MAC/GCF)";
+prefix = "PI"; // for the signal names
+id = "(F_GCF_PROTOCOL + 3)";
+// specify extra include files
+// e.g.
+//include = '<sys/time.h>';
+include = '<GPI_Defines.h>';
+include = '<GPI_PValue.h>';
+
+// An "event" has a "signal" and a "dir" (direction)
+// and zero or more "param"s.
+// "dir" can be one of "IN" or "OUT".
+// A "param" has a "name" and a "type".
+//
+
+event = {
+	signal = REGISTER_SCOPE;
+	dir = IN;
+	param = {
+		name = "seqnr";
+		type = "unsigned short";
+	};
+	param = {
+		name = "scope";
+		type = "string";
+	};
+	param = {
+		name = "type";
+		type = "string";
+	};
+	param = {
+		name = "isTemporary";
+		type = "bool";
+	};
+};
+
+event = {
+	signal = UNREGISTER_SCOPE;
+	dir = IN;
+	param = {
+		name = "seqnr";
+		type = "unsigned short";
+	};
+	param = {
+		name = "scope";
+		type = "string";
+	};
+};
+
+event = {
+	signal = SCOPE_REGISTERED;
+	dir = OUT;
+	param = {
+		name = "seqnr";
+		type = "unsigned short";
+	};
+	param = {
+		name = "result";
+		type = "TPIResult";
+	};	
+};
+
+event = {
+	signal = SCOPE_UNREGISTERED;
+	dir = OUT;
+	param = {
+		name = "result";
+		type = "TPIResult";
+	};
+	param = {
+		name = "seqnr";
+		type = "unsigned short";
+	};
+};
+
+event = {
+	signal = LINK_PROP_SET;
+	dir = OUT;
+	param = {
+		name = "scope";
+		type = "string";
+	};
+};
+
+event = {
+	signal = UNLINK_PROP_SET;
+	dir = OUT;
+	param = {
+		name = "scope";
+		type = "string";
+	};
+};
+
+event = {
+	signal = PROP_SET_LINKED;
+	dir = IN;
+	param = {
+		name = "result";
+		type = "TPIResult";
+	};
+	param = {
+		name = "scope";
+		type = "string";
+	};
+	param = {
+		name = "propList";
+		type = "string";
+	};
+};
+
+event = {
+	signal = PROP_SET_UNLINKED;
+	dir = IN;
+	param = {
+		name = "result";
+		type = "TPIResult";
+	};
+	param = {
+		name = "scope";
+		type = "string";
+	};
+};
+
+event = {
+	signal = VALUE_SET;
+	dir = IN;
+	param = {
+		name = "name";
+		type = "string";
+	};
+	param = {
+		name = "value";
+		type = "GPIPValue";
+		userdefined;
+	};
+};
+
+event = {
+	signal = VALUE_CHANGED;
+	dir = OUT;
+	param = {
+		name = "scopeLength";
+		type = "unsigned short";
+	};
+	param = {
+		name = "name";
+		type = "string";
+	};
+	param = {
+		name = "value";
+		type = "GPIPValue";
+		userdefined;
+	};
+};

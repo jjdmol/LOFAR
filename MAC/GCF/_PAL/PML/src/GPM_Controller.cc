@@ -484,6 +484,11 @@ void logResult(TPAResult result, GCFPropertySet& propSet)
           "Internal error in PA. (%s:%s)",
           propSet.getType(), propSet.getScope().c_str()));
       break;
+    case PA_PI_INTERNAL_ERROR:
+      LOG_FATAL(LOFAR::formatString ( 
+          "Internal error in PI. (%s:%s)",
+          propSet.getType(), propSet.getScope().c_str()));
+      break;
     case PA_APC_NOT_EXISTS:
       LOG_ERROR(LOFAR::formatString ( 
           "APC not exists. (%s:%s)",
