@@ -82,23 +82,29 @@ public:
   string getKSType() const;
   void setKSType(const string& ksType);
 
-  bool getInitialize() const;
-  void setInitialize(bool doInitialize);
+  bool getNewBaselines() const;
+  void setNewBaselines(bool newBaselines);
 
-  bool getNextInterval() const;
-  void setNextInterval(bool doNextInterval);
+  bool getNewDomain() const;
+  void setNewDomain(bool newDomain);
 
-  int getFirstChannel() const;
-  void setFirstChannel(int nr);
+  bool getNewPeelSources() const;
+  void setNewPeelSources(bool newSources);
 
-  int getLastChannel() const;
-  void setLastChannel(int nr);
+  bool getSubtractSources() const;
+  void setSubtractSources(bool subtract);
 
-  float getStartTime() const;
-  void setStartTime(float time);
+  double getStartFreq() const;
+  void setStartFreq(double fr);
 
-  float getTimeInterval() const;
-  void setTimeInterval(float time);
+  double getFreqLength() const;
+  void setFreqLength(double fr);
+
+  double getStartTime() const;
+  void setStartTime(double time);
+
+  double getTimeLength() const;
+  void setTimeLength(double time);
 
   int getDDID() const;
   void setDDID(int ddid);
@@ -141,12 +147,14 @@ private:
   int*          itsSCID;                    // ID of the sending StrategyController (SC)
   unsigned int* itsStatus;                  // Workorder status
   char*         itsKSType;                  // Knowledge Source type
-  unsigned int* itsInitialize;              // Do initialization?
-  unsigned int* itsNextInterval;            // Do nextInterval?
-  int*          itsFirstChan;               // First frequency channel
-  int*          itsLastChan;                // Last frequency channel
-  float*        itsStartTime;               // Start time of time interval
-  float*        itsTimeInterval;            // Time interval size (s)
+  unsigned int* itsNewBaselines;            // New baseline selection?
+  unsigned int* itsNewDomain;               // New domain selection?
+  unsigned int* itsNewPeelSources;          // New peel sources selection?
+  unsigned int* itsSubtractSources;         // Subtract peel sources?
+  double*       itsStartFreq;               // Start frequency
+  double*       itsFreqLength;              // Frequency interval size
+  double*       itsStartTime;               // Start time of time interval
+  double*       itsTimeLength;              // Time interval size (s)
   int*          itsDDID;
   char*         itsModelType;
   unsigned int* itsCalcUVW;
@@ -182,41 +190,53 @@ inline void DH_WOPrediff::setStatus(unsigned int status)
 inline string DH_WOPrediff::getKSType() const
 {  return string(itsKSType); }
 
-inline bool DH_WOPrediff::getInitialize() const
-{ return ((*itsInitialize==0)?(false):(true)); }
+inline bool DH_WOPrediff::getNewBaselines() const
+{ return ((*itsNewBaselines==0)?(false):(true)); }
 
-inline void DH_WOPrediff::setInitialize(bool doInitialize)
-{ *itsInitialize = doInitialize; }
+inline void DH_WOPrediff::setNewBaselines(bool newBaselines)
+{ *itsNewBaselines = newBaselines; }
 
-inline bool DH_WOPrediff::getNextInterval() const
-{ return ((*itsNextInterval==0)?(false):(true)); }
+inline bool DH_WOPrediff::getNewDomain() const
+{ return ((*itsNewDomain==0)?(false):(true)); }
 
-inline void DH_WOPrediff::setNextInterval(bool doNextInterval)
-{ *itsNextInterval = doNextInterval; }
+inline void DH_WOPrediff::setNewDomain(bool newDomain)
+{ *itsNewDomain = newDomain; }
 
-inline int DH_WOPrediff::getFirstChannel() const
-{ return *itsFirstChan; }
+inline bool DH_WOPrediff::getNewPeelSources() const
+{ return ((*itsNewPeelSources==0)?(false):(true)); }
 
-inline void DH_WOPrediff::setFirstChannel(int nr)
-{ *itsFirstChan = nr; }
+inline void DH_WOPrediff::setNewPeelSources(bool newSources)
+{ *itsNewPeelSources = newSources; }
 
-inline int DH_WOPrediff::getLastChannel() const
-{ return *itsLastChan; }
+inline bool DH_WOPrediff::getSubtractSources() const
+{ return ((*itsSubtractSources==0)?(false):(true)); }
 
-inline void DH_WOPrediff::setLastChannel(int nr)
-{ *itsLastChan = nr; }
+inline void DH_WOPrediff::setSubtractSources(bool subtract)
+{ *itsSubtractSources = subtract; }
 
-inline float DH_WOPrediff::getStartTime() const
+inline double DH_WOPrediff::getStartFreq() const
+{ return *itsStartFreq; }
+
+inline void DH_WOPrediff::setStartFreq(double fr)
+{ *itsStartFreq = fr; }
+
+inline double DH_WOPrediff::getFreqLength() const
+{ return *itsFreqLength; }
+
+inline void DH_WOPrediff::setFreqLength(double fr)
+{ *itsFreqLength = fr; }
+
+inline double DH_WOPrediff::getStartTime() const
 { return *itsStartTime; }
 
-inline void DH_WOPrediff::setStartTime(float time)
+inline void DH_WOPrediff::setStartTime(double time)
 { *itsStartTime = time; }
 
-inline float DH_WOPrediff::getTimeInterval() const
-{ return *itsTimeInterval; }
+inline double DH_WOPrediff::getTimeLength() const
+{ return *itsTimeLength; }
 
-inline void DH_WOPrediff::setTimeInterval(float time)
-{ *itsTimeInterval = time; }
+inline void DH_WOPrediff::setTimeLength(double time)
+{ *itsTimeLength = time; }
 
 inline int DH_WOPrediff::getDDID() const
 { return *itsDDID; }
@@ -256,12 +276,14 @@ namespace PL {
       int          itsSCID;                    // in order to facilitate debugging
       unsigned int itsStatus;
       string       itsKSType;
-      unsigned int itsInitialize;
-      int          itsNextInterval;
-      int          itsFirstChan;
-      int          itsLastChan;
-      float        itsStartTime;
-      float        itsTimeInterval;
+      unsigned int itsNewBaselines;
+      unsigned int itsNewDomain;
+      unsigned int itsNewPeelSources;
+      unsigned int itsSubtractSources;
+      double       itsStartFreq;
+      double       itsFreqLength;
+      double       itsStartTime;
+      double       itsTimeLength;
       unsigned int itsCleanUp;
     };   
                                                       

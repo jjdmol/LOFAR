@@ -46,12 +46,14 @@ DH_WOPrediff::DH_WOPrediff (const string& name)
     itsSCID            (0),
     itsStatus          (0),
     itsKSType          (0),
-    itsInitialize      (0),
-    itsNextInterval    (0),
-    itsFirstChan       (0),
-    itsLastChan        (0),
+    itsNewBaselines    (0),
+    itsNewDomain       (0),
+    itsNewPeelSources  (0),
+    itsSubtractSources (0),
+    itsStartFreq       (0),
+    itsFreqLength      (0),
     itsStartTime       (0),
-    itsTimeInterval    (0),
+    itsTimeLength      (0),
     itsDDID            (0),
     itsModelType       (0),
     itsCalcUVW         (0),
@@ -69,12 +71,14 @@ DH_WOPrediff::DH_WOPrediff(const DH_WOPrediff& that)
     itsSCID            (0),
     itsStatus          (0),
     itsKSType          (0),
-    itsInitialize      (0),
-    itsNextInterval    (0),
-    itsFirstChan       (0),
-    itsLastChan        (0),
+    itsNewBaselines    (0),
+    itsNewDomain       (0),
+    itsNewPeelSources  (0),
+    itsSubtractSources (0),
+    itsStartFreq       (0),
+    itsFreqLength      (0),
     itsStartTime       (0),
-    itsTimeInterval    (0),
+    itsTimeLength      (0),
     itsDDID            (0),
     itsModelType       (0),
     itsCalcUVW         (0),
@@ -115,12 +119,14 @@ void DH_WOPrediff::preprocess()
   addField ("SCID", BlobField<int>(1));
   addField ("Status", BlobField<unsigned int>(1));
   addField ("KSType", BlobField<char>(1, MaxKSTypeLength));
-  addField ("Initialize", BlobField<unsigned int>(1));
-  addField ("NextInterval", BlobField<unsigned int>(1));
-  addField ("FirstChan", BlobField<int>(1));
-  addField ("LastChan", BlobField<int>(1));
-  addField ("StartTime", BlobField<float>(1));
-  addField ("TimeInterval", BlobField<float>(1));
+  addField ("NewBaselines", BlobField<unsigned int>(1));
+  addField ("NewDomain", BlobField<unsigned int>(1));
+  addField ("NewPeelSources", BlobField<unsigned int>(1));
+  addField ("SubtractSources", BlobField<unsigned int>(1));
+  addField ("StartFreq", BlobField<double>(1));
+  addField ("FreqLength", BlobField<double>(1));
+  addField ("StartTime", BlobField<double>(1));
+  addField ("TimeLength", BlobField<double>(1));
   addField ("DDID", BlobField<int>(1));
   addField ("ModelType", BlobField<char>(1, MaxModelTypeLength));
   addField ("CalcUVW", BlobField<unsigned int>(1));
@@ -143,12 +149,14 @@ void DH_WOPrediff::preprocess()
   *itsWOID = 0;
   *itsSCID = -1;
   *itsStatus = DH_WOPrediff::New;
-  *itsInitialize = 0;
-  *itsNextInterval = 0;
-  *itsFirstChan = 0;
-  *itsLastChan = 0;
+  *itsNewBaselines = 0;
+  *itsNewDomain = 0;
+  *itsNewPeelSources = 0;
+  *itsSubtractSources = 0;
+  *itsStartFreq = 0;
+  *itsFreqLength = 0;
   *itsStartTime = 0;
-  *itsTimeInterval = 0;
+  *itsTimeLength = 0;
   *itsDDID = 0;
   *itsCalcUVW = 0;
   *itsLockMappedMem = 0;
@@ -162,12 +170,14 @@ void DH_WOPrediff::fillDataPointers()
   itsSCID = getData<int> ("SCID");
   itsStatus = getData<unsigned int> ("Status");
   itsKSType = getData<char> ("KSType");
-  itsInitialize = getData<unsigned int> ("Initialize");
-  itsNextInterval = getData<unsigned int> ("NextInterval");
-  itsFirstChan = getData<int> ("FirstChan");
-  itsLastChan = getData<int> ("LastChan");
-  itsStartTime = getData<float> ("StartTime");
-  itsTimeInterval = getData<float> ("TimeInterval");
+  itsNewBaselines = getData<unsigned int> ("NewBaselines");
+  itsNewDomain = getData<unsigned int> ("NewDomain");
+  itsNewPeelSources = getData<unsigned int> ("NewPeelSources");
+  itsSubtractSources = getData<unsigned int> ("SubtractSources");
+  itsStartFreq = getData<double> ("StartFreq");
+  itsFreqLength = getData<double> ("FreqLength");
+  itsStartTime = getData<double> ("StartTime");
+  itsTimeLength = getData<double> ("TimeLength");
   itsDDID = getData<int> ("DDID");
   itsModelType = getData<char> ("ModelType");
   itsCalcUVW = getData<unsigned int> ("CalcUVW");
@@ -181,12 +191,14 @@ void DH_WOPrediff::postprocess()
   itsSCID = 0;
   itsStatus = 0;
   itsKSType = 0;
-  itsInitialize = 0;
-  itsNextInterval = 0;
-  itsFirstChan = 0;
-  itsLastChan = 0;
+  itsNewBaselines = 0;
+  itsNewDomain = 0;
+  itsNewPeelSources = 0;
+  itsSubtractSources = 0;
+  itsStartFreq = 0;
+  itsFreqLength = 0;
   itsStartTime = 0;
-  itsTimeInterval = 0;
+  itsTimeLength = 0;
   itsDDID = 0;
   itsModelType = 0;
   itsCalcUVW = 0;
@@ -216,9 +228,9 @@ void DH_WOPrediff::setModelType(const string& type)
 }
 
 void DH_WOPrediff::setVarData(const KeyValueMap& predArgs,
-		  vector<int>& antNrs,
-		  vector<string>& pNames,
-		  vector<int>& peelSrcs)
+			      vector<int>& antNrs,
+			      vector<string>& pNames,
+			      vector<int>& peelSrcs)
 {
   BlobOStream& bos = createExtraBlob();
   // Put prediffer arguments into extra blob
@@ -322,12 +334,14 @@ void DH_WOPrediff::dump()
   cout << "Controller ID = " << getStrategyControllerID() << endl;
   cout << "Status = " << getStatus() << endl;
   cout << "KS Type = " << getKSType() << endl;
-  cout << "Initialize? = " << getInitialize() << endl;
-  cout << "NextInterval? = " << getNextInterval() << endl;
-  cout << "First channel = " << getFirstChannel() << endl;
-  cout << "Last channel = " << getLastChannel() << endl;
+  cout << "New baselines? = " << getNewBaselines() << endl;
+  cout << "New domain? = " << getNewDomain() << endl;
+  cout << "New peel sources? = " << getNewPeelSources() << endl;
+  cout << "Subtract peel sources? = " << getSubtractSources() << endl;
+  cout << "Start frequency = " << getStartFreq() << endl;
+  cout << "Frequency length = " << getFreqLength() << endl;
   cout << "Start time = " << getStartTime() << endl;
-  cout << "Time interval = " << getTimeInterval() << endl;
+  cout << "Time length = " << getTimeLength() << endl;
   cout << "DDID = " << getDDID() << endl;
   cout << "Model type = " << getModelType() << endl;
   cout << "Calc UVW = " << getCalcUVW() << endl;
@@ -384,12 +398,14 @@ void DH_WOPrediff::clearData()
   setStrategyControllerID(-1);
   setStatus(DH_WOPrediff::New);
   setKSType("");
-  setInitialize(true);
-  setNextInterval(true);
-  setFirstChannel(-1);
-  setLastChannel(-1);
+  setNewBaselines(true);
+  setNewDomain(true);
+  setNewPeelSources(true);
+  setSubtractSources(true);
+  setStartFreq(0);
+  setFreqLength(0);
   setStartTime(0);
-  setTimeInterval(0);
+  setTimeLength(0);
   setDDID(0);
   setModelType("");
   setCalcUVW(false);
@@ -406,12 +422,14 @@ void DBRep<DH_WOPrediff>::bindCols (dtl::BoundIOs& cols)
   cols["SCID"] == itsSCID;
   cols["STATUS"] == itsStatus;
   cols["KSTYPE"] == itsKSType;
-  cols["INITIALIZE"] == itsInitialize;
-  cols["NEXTINTERVAL"] == itsNextInterval;
-  cols["FIRSTCHAN"] == itsFirstChan;
-  cols["LASTCHAN"] == itsLastChan;
+  cols["NEWBASELINES"] == itsNewBaselines;
+  cols["NEWDOMAIN"] == itsNewDomain;
+  cols["NEWSOURCES"] == itsNewPeelSources;
+  cols["SUBTRACTSOURCES"] == itsSubtractSources;
+  cols["STARTFREQ"] == itsStartFreq;
+  cols["FREQLENGTH"] == itsFreqLength;
   cols["STARTTIME"] == itsStartTime;
-  cols["TIMEINTERVAL"] == itsTimeInterval;
+  cols["TIMELENGTH"] == itsTimeLength;
   cols["CLEANUP"] == itsCleanUp;
 }
 
@@ -422,12 +440,14 @@ void DBRep<DH_WOPrediff>::toDBRep (const DH_WOPrediff& obj)
   itsSCID = obj.getStrategyControllerID();
   itsStatus = obj.getStatus();
   itsKSType = obj.getKSType();
-  itsInitialize = obj.getInitialize();
-  itsNextInterval = obj.getNextInterval();
-  itsFirstChan = obj.getFirstChannel();
-  itsLastChan = obj.getLastChannel();
+  itsNewBaselines = obj.getNewBaselines();
+  itsNewDomain = obj.getNewDomain();
+  itsNewPeelSources = obj.getNewPeelSources();
+  itsSubtractSources = obj.getSubtractSources();
+  itsStartFreq = obj.getStartFreq();
+  itsFreqLength = obj.getFreqLength();
   itsStartTime = obj.getStartTime();
-  itsTimeInterval = obj.getTimeInterval();
+  itsTimeLength = obj.getTimeLength();
   itsCleanUp = obj.getCleanUp();
 }
 

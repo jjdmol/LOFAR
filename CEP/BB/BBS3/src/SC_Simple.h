@@ -59,7 +59,7 @@ public:
   KeyValueMap itsArgs;
   int         itsNrIterations;
   int         itsCurIter;
-  float       itsCurStartTime;
+  double      itsCurStartTime;
 };
 
 inline string SC_Simple::getType() const

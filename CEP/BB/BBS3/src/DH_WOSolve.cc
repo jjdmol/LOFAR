@@ -44,11 +44,8 @@ DH_WOSolve::DH_WOSolve (const string& name)
     itsSCID            (0),
     itsStatus          (0),
     itsKSType          (0),
-    itsInitialize      (0),
-    itsNextInterval    (0),
+    itsNewDomain       (0),
     itsUseSVD          (0),
-    itsStartTime       (0),
-    itsTimeInterval    (0),
     itsCleanUp         (0),
     itsPODHWO          (0)
 {
@@ -62,11 +59,8 @@ DH_WOSolve::DH_WOSolve(const DH_WOSolve& that)
     itsSCID            (0),
     itsStatus          (0),
     itsKSType          (0),
-    itsInitialize      (0),
-    itsNextInterval    (0),
+    itsNewDomain       (0),
     itsUseSVD          (0),
-    itsStartTime       (0),
-    itsTimeInterval    (0),
     itsCleanUp         (0),
     itsPODHWO          (0)
 {
@@ -103,11 +97,8 @@ void DH_WOSolve::preprocess()
   addField ("SCID", BlobField<int>(1));
   addField ("Status", BlobField<unsigned int>(1));
   addField ("KSType", BlobField<char>(1, MaxKSTypeLength));
-  addField ("Initialize", BlobField<unsigned int>(1));
-  addField ("NextInterval", BlobField<unsigned int>(1));
+  addField ("NewDomain", BlobField<unsigned int>(1));
   addField ("UseSVD", BlobField<unsigned int>(1));
-  addField ("StartTime", BlobField<float>(1));
-  addField ("TimeInterval", BlobField<float>(1));
   addField ("CleanUp", BlobField<unsigned int>(1));
 
   // Create the data blob (which calls fillPointers).
@@ -121,11 +112,8 @@ void DH_WOSolve::preprocess()
   *itsWOID = 0;
   *itsSCID = -1;
   *itsStatus = DH_WOSolve::New;
-  *itsInitialize = 0;
-  *itsNextInterval = 0;
+  *itsNewDomain = 0;
   *itsUseSVD = 0;
-  *itsStartTime = 0;
-  *itsTimeInterval = 0;
   *itsCleanUp = 0;
 }
 
@@ -136,11 +124,8 @@ void DH_WOSolve::fillDataPointers()
   itsSCID = getData<int> ("SCID");
   itsStatus = getData<unsigned int> ("Status");
   itsKSType = getData<char> ("KSType");
-  itsInitialize = getData<unsigned int> ("Initialize");
-  itsNextInterval = getData<unsigned int> ("NextInterval");
+  itsNewDomain = getData<unsigned int> ("NewDomain");
   itsUseSVD = getData<unsigned int> ("UseSVD");
-  itsStartTime = getData<float> ("StartTime");
-  itsTimeInterval = getData<float> ("TimeInterval");
   itsCleanUp = getData<unsigned int> ("CleanUp");
 }
 
@@ -150,11 +135,8 @@ void DH_WOSolve::postprocess()
   itsSCID = 0;
   itsStatus = 0;
   itsKSType = 0;
-  itsInitialize = 0;
-  itsNextInterval = 0;
+  itsNewDomain = 0;
   itsUseSVD = 0;
-  itsStartTime = 0;
-  itsTimeInterval = 0;
   itsCleanUp = 0;
 }
 
@@ -166,57 +148,6 @@ void DH_WOSolve::setKSType(const string& ksType)
   strcpy(ptr, ksType.c_str());
 }
 
-void DH_WOSolve::setVarData(const KeyValueMap& msArgs,
-			    vector<string>& pNames)
-{
-  BlobOStream& bos = createExtraBlob();
-  // Put strategy arguments into extra blob
-  bos << msArgs;
-
-  // Put parameter names into extra blob
-  bos.putStart("names", 1);
-  vector<string>::const_iterator iter;
-  int paramNo = pNames.size();
-  bos << paramNo;             // First write the number of parameters to follow
-  for (iter = pNames.begin(); iter != pNames.end(); iter++)
-  {
-    bos << *iter;
-  }
-
-  bos.putEnd();
-}
-
-bool DH_WOSolve::getVarData(KeyValueMap& msArgs,
-			    vector<string>& pNames)
-{
-  bool found;
-  int version;
-  BlobIStream& bis = getExtraBlob(found, version);
-  if (!found) {
-    return false;
-  }
-  else
-  {
-    // Get ms arguments
-    bis >> msArgs;
-
-    // Get parameter names.
-    bis.getStart("names");
-    pNames.clear();
-    unsigned int nr;
-    bis >> nr;
-    pNames.resize(nr);
-    for (unsigned int i=0; i < nr; i++)
-    {
-      bis >> pNames[i];
-    }
-    bis.getEnd();
-
-    return true;
-  }  
-
-}
-
 void DH_WOSolve::dump()
 {
   cout << "DH_WOSolve: " << endl;
@@ -224,40 +155,9 @@ void DH_WOSolve::dump()
   cout << "Controller ID = " << getStrategyControllerID() << endl;
   cout << "Status = " << getStatus() << endl;
   cout << "KS Type = " << getKSType() << endl;
-  cout << "Initialize? = " << getInitialize() << endl;
-  cout << "NextInterval? = " << getNextInterval() << endl;
+  cout << "NewDomain? = " << getNewDomain() << endl;
   cout << "UseSVD? = " << getUseSVD() << endl;
-  cout << "Start time = " << getStartTime() << endl;
-  cout << "Time interval = " << getTimeInterval() << endl;
   cout << "Clean up = " << getCleanUp() << endl;
-
-  KeyValueMap sArguments;
-  vector<string> pNames;
-  if (getVarData(sArguments, pNames))
-  { 
-    cout << "MS name = " << sArguments.getString ("MSName", "notfound") 
-	 << endl;
-    cout << "Database host = " << sArguments.getString ("DBHost", "notfound") 
-	 << endl;
-    cout << "Database type = " << sArguments.getString ("DBType", "notfound") 
-	 << endl;
-    cout << "Database name = " << sArguments.getString ("DBName", "notfound")
-	 << endl;
-    cout << "Database password = " << sArguments.getString ("DBPwd", "notfound")
-	 << endl;
-    cout << "Meq table name = " << sArguments.getString ("meqTableName", "notfound")
-	 << endl;
-    cout << "Sky table name = " << sArguments.getString ("skyTableName", "notfound")
-	 << endl;
-
-    cout << "Number of parameters = "  << pNames.size() << endl;
-    
-    cout << "Parameter names : " << endl;
-    for (unsigned int i = 0; i < pNames.size(); i++)
-    {
-      cout << pNames[i] << endl ;
-    }
-  }
 }
 
 void DH_WOSolve::clearData()
@@ -267,11 +167,8 @@ void DH_WOSolve::clearData()
   setStrategyControllerID(-1);
   setStatus(DH_WOSolve::New);
   setKSType("");
-  setInitialize(true);
-  setNextInterval(true);
+  setNewDomain(true);
   setUseSVD(false);
-  setStartTime(0);
-  setTimeInterval(0);
   setCleanUp(false);
 }
 
@@ -284,11 +181,8 @@ void DBRep<DH_WOSolve>::bindCols (dtl::BoundIOs& cols)
   cols["SCID"] == itsSCID;
   cols["STATUS"] == itsStatus;
   cols["KSTYPE"] == itsKSType;
-  cols["INITIALIZE"] == itsInitialize;
-  cols["NEXTINTERVAL"] == itsNextInterval;
+  cols["NEWDOMAIN"] == itsNewDomain;
   cols["USESVD"] == itsUseSVD;
-  cols["STARTTIME"] == itsStartTime;
-  cols["TIMEINTERVAL"] == itsTimeInterval;
   cols["CLEANUP"] == itsCleanUp;
 }
 
@@ -299,11 +193,8 @@ void DBRep<DH_WOSolve>::toDBRep (const DH_WOSolve& obj)
   itsSCID = obj.getStrategyControllerID();
   itsStatus = obj.getStatus();
   itsKSType = obj.getKSType();
-  itsInitialize = obj.getInitialize();
-  itsNextInterval = obj.getNextInterval();
+  itsNewDomain = obj.getNewDomain();
   itsUseSVD = obj.getUseSVD();
-  itsStartTime = obj.getStartTime();
-  itsTimeInterval = obj.getTimeInterval();
   itsCleanUp = obj.getCleanUp();
 }
 

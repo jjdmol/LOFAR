@@ -101,7 +101,7 @@ void WH_Prediff::process()
   wo->setStatus(DH_WOPrediff::Assigned);
   woPtr->updateDB();
 
-  DH_Prediff* dhRes = dynamic_cast<DH_Prediff*>(getDataManager().getOutHolder(0));
+  DH_Prediff* dhRes = dynamic_cast<DH_Prediff*>(getDataManager().getOutHolder(1));
   //  dhRes->clearData();
 
   KeyValueMap args;
@@ -113,35 +113,59 @@ void WH_Prediff::process()
   Prediffer* pred = getPrediffer(contrID, args, ant);
 
   // Execute workorder
-  if (wo->getInitialize())  // Initialize, nextInterval and getEquations (+send ParmData)
+  if (wo->getNewBaselines())
   {
-    pred->select(ant, ant, wo->getFirstChannel(), wo->getLastChannel());
+    pred->select(ant, ant);
+    pred->setDomain(wo->getStartFreq(), wo->getFreqLength(), 
+		    wo->getStartTime(), wo->getTimeLength());
+    vector<int> emptyS(0);
+    pred->setPeelSources(peelSrcs, emptyS);
     pred->clearSolvableParms();
     vector<string> emptyP(0);
     pred->setSolvableParms(pNames, emptyP, true);
+    pred->updateSolvableParms();
+    //>>    pred->getEquations();        // returns a std::list<MeqResult>
+    if (wo->getSubtractSources())
+    {
+      pred->subtractPeelSources(true);   // >>>For now: always write in new file 
+    }
+    dhRes->setParmData(pred->getSolvableParmData());    
+  }
+  else if (wo->getNewDomain())
+  {
+    pred->setDomain(wo->getStartFreq(), wo->getFreqLength(), 
+		    wo->getStartTime(), wo->getTimeLength());
     vector<int> emptyS(0);
-    pred->peel(peelSrcs, emptyS);
-    pred->nextInterval(wo->getStartTime(), wo->getTimeInterval());
-    pred->updateSolvableParms(); //????
-    //    pred->getEquations();        // returns a std::list<MeqResult>
-
-    //    dhRes->setParmData(pred->getSolvableParmData());
+    pred->setPeelSources(peelSrcs, emptyS);
+    pred->clearSolvableParms();
+    vector<string> emptyP(0);
+    pred->setSolvableParms(pNames, emptyP, true);
+    pred->updateSolvableParms();
+    //>>    pred->getEquations();        // returns a std::list<MeqResult>
+    dhRes->setParmData(pred->getSolvableParmData());
   }
-  else if (wo->getNextInterval())  // nextInterval and getEquations (+send ParmData)
+  else if (wo->getNewPeelSources())
   {
-    pred->nextInterval(wo->getStartTime(), wo->getTimeInterval());
-    pred->updateSolvableParms(); //????
-    //    pred->getEquations();
-
-    //    pred->getSolvableParmData();  // Returns a vector<ParmData>& -> set in dhRes
-  }
-  else                   // getEquations
+    vector<int> emptyS(0);
+    pred->setPeelSources(peelSrcs, emptyS);
+    pred->clearSolvableParms();
+    vector<string> emptyP(0);
+    pred->setSolvableParms(pNames, emptyP, true);
+    pred->updateSolvableParms();
+    //>>    pred->getEquations();        // returns a std::list<MeqResult>
+ }
+  else
   {
-    //    pred->updateSolvableParms(); //????
-    //    pred->getEquations();
+    pred->updateSolvableParms();
+    //>>    pred->getEquations();        // returns a std::list<MeqResult>
+  }
+  if (wo->getSubtractSources())
+  {
+    pred->subtractPeelSources(true);   // >>>For now: always write in new file 
   }
 
-  // write result
+  // send result to solver
+  // >> getDataManager().readyWithOutHolder(0);
 
   // Update workorder status
   wo->setStatus(DH_WOPrediff::Executed);
