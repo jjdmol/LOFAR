@@ -25,7 +25,7 @@
 #include "GPM_PropertySet.h"
 #include <stdio.h>
 #define DECLARE_SIGNAL_NAMES
-#include "PA_Protocol.ph"
+#include <PA/PA_Protocol.ph>
 
 static string sPMLTaskName("PML");
 
