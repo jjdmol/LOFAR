@@ -53,6 +53,11 @@ const int AidFlag_int = -1135;
 const AtomicID AidFlags(-1298);                   // from /home/oms/LOFAR/CEP/CPA/AppAgent/MSVisAgent/src/MSVisAgentVocabulary.h:35
 const int AidFlags_int = -1298;
 #endif
+#ifndef _defined_id_AidFlip
+#define _defined_id_AidFlip 1
+const AtomicID AidFlip(-1537);                    // from /home/oms/LOFAR/CEP/CPA/AppAgent/MSVisAgent/src/MSVisAgentVocabulary.h:37
+const int AidFlip_int = -1537;
+#endif
 #ifndef _defined_id_AidFormat
 #define _defined_id_AidFormat 1
 const AtomicID AidFormat(-1293);                  // from /home/oms/LOFAR/CEP/CPA/AppAgent/MSVisAgent/src/MSVisAgentVocabulary.h:34

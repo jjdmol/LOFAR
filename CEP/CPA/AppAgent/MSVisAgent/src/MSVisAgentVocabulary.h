@@ -34,7 +34,7 @@
 #pragma aid DDID VDSID Selection Tile String Column Size Format 
 #pragma aid Vis Input Output Params Start End Write Flags Flag Mask
 #pragma aid Time Data Predict Residuals Column Name Message Type
-#pragma aid Throw Error Domain start string Original Shape
+#pragma aid Throw Error Domain start string Original Shape Flip
 
 #pragma aid MS Raw Non Calibrated Predict Residuals Iteration
 
@@ -60,6 +60,7 @@ namespace MSVisAgent
        FTileSize          = AidTile|AidSize,
        FTileFormat        = AidTile|AidFormat,
        FOriginalDataShape = AidOriginal|AidData|AidShape,
+       FFlipFreq          = AidFlip|AidFreq,
 
        FOutputParams      = AidMS|AidOutput|AidParams,
                           

@@ -167,6 +167,8 @@ class MSOutputSink : public FileSink
     
     //##ModelId=3F5F43630379
     Array<Complex> null_cell_;
+    
+    bool flip_freq_;
 };
 
 

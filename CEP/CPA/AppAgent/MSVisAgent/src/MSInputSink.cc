@@ -112,14 +112,14 @@ void MSInputSink::fillHeader (DataRecord &hdr,const DataRecord &select)
     if( ch_freq(IPosition(1,0)) > ch_freq(IPosition(1,channels_[1]-channels_[0])) )
     {
       dprintf(2)("reversing frequency channel\n");
-      flip_freq_ = True;
+      hdr[FFlipFreq] = flip_freq_ = True;
       hdr[FChannelFreq] = refAipsToBlitz<double,1>(ch_freq).reverse(blitz::firstDim);
       hdr[FChannelWidth] = refAipsToBlitz<double,1>(ch_width).reverse(blitz::firstDim);
     }
     else
     {
       dprintf(2)("frequency channel is in normal order\n");
-      flip_freq_ = False;
+      hdr[FFlipFreq] = flip_freq_ = False;
       hdr[FChannelFreq]  = ch_freq;
       hdr[FChannelWidth] = ch_width;
     }
