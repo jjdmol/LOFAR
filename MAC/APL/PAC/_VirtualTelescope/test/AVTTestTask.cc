@@ -30,13 +30,24 @@
 #include "AVTTestTask.h"
 #include "PropertyDefines.h" 
 
+#undef PACKAGE
+#undef VERSION
 #define DECLARE_SIGNAL_NAMES
 #include "../src/LogicalDevice_Protocol.ph"
 #include "../src/ABS_Protocol.ph"
 
 #include <stdio.h>
 
-const double pi(asin(1)*2.0);
+#undef PACKAGE
+#undef VERSION
+#include <lofar_config.h>
+#include <Common/LofarLogger.h>
+
+using namespace LOFAR;
+using namespace AVT;
+using namespace std;
+
+const double pi(asin(1.0)*2.0);
 
 double generateWave(int subband,double angle1,double angle2)
 {
@@ -48,7 +59,7 @@ string AVTTestTask::m_taskName("AVTTest");
 bool   AVTTestTask::m_sBeamServerOnly(false);
 string gBSName(BSNAME);
 
-AVTTestTask::AVTTestTask(AVTTest& tester) :
+AVTTestTask::AVTTestTask(AVTTest<AVTTestTask>& tester) :
   GCFTask((State)&AVTTestTask::initial, m_taskName),
   m_tester(tester),
   m_answer(),
@@ -207,11 +218,11 @@ GCFEvent::TResult AVTTestTask::test2(GCFEvent& event, GCFPortInterface& p)
 
       case F_ENTRY:
       {
-        // SCHEDULE <vt_name>,<bf_name>,<srg_name>,<starttime>,<stoptime>,
+        // SCHEDULE <scheduleid>,<vt_name>,<bf_name>,<srg_name>,<starttime>,<stoptime>,
         //          <frequency>,<subbands>,<direction>
-        string cmd("SCHEDULE ");
+        string cmd("SCHEDULE 1,");
         string devices(string(VTNAME)+string(",")+string(SBFNAME)+string(",")+string(SRGNAME)+string(","));
-        string times("0,0,");
+        string times("0,0,"); // from now until forever
         string freq("110.0,");
         string subbands("0|1|2|3|4|5|6|7|8|9|10|11,");
         string direction("AZEL,0.0,0.0");
@@ -686,8 +697,8 @@ GCFEvent::TResult AVTTestTask::handleBeamServerEvents(GCFEvent& event, GCFPortIn
       ABSBeampointtoEvent* pPointToEvent=static_cast<ABSBeampointtoEvent*>(&event);
       if(pPointToEvent!=0)
       {
-        m_beamAngle1=pPointToEvent->angle1;
-        m_beamAngle2=pPointToEvent->angle2;
+        m_beamAngle1=pPointToEvent->angle[0];
+        m_beamAngle2=pPointToEvent->angle[1];
       }
       break;
     }
