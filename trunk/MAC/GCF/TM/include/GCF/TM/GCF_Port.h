@@ -46,13 +46,13 @@ class GCFPort : public GCFPortInterface
     * constructors
     * @param protocol NOT USED
     */
-    GCFPort (GCFTask& containertask, 
+    explicit GCFPort (GCFTask& containertask, 
              string& name, 
              TPortType type, 
              int protocol, 
              bool transportRawData = false);
     
-    GCFPort ();
+    explicit GCFPort ();
     
     /**
     * destructor

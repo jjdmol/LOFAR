@@ -1,7 +1,7 @@
 AUTOGEN = autogen
 SUFFIXES = .ph
-%.ph: $(top_srcdir)/Services/PI/src/%.prot
-	$(AUTOGEN) -L $(top_srcdir)/../MACCommon/autogen $< && \
+%.ph: $(top_srcdir)/../PAL/PI/src/%.prot
+	$(AUTOGEN) -L $(top_srcdir)/../../MACCommon/autogen $< && \
 	chmod a+w $@
 
 pkgincludedir = $(includedir)/GCF/PALlight
@@ -14,21 +14,17 @@ DOCHDRS	=	$(pkginclude_HEADERS) \
   GPM_RTController.h \
   GPM_RTDefines.h
         
-noinst_LTLIBRARIES 	= libpmllite.la
+noinst_LTLIBRARIES 	= libpmllight.la
 
-libpmllite_la_SOURCES= $(DOCHDRS) \
+libpmllight_la_SOURCES= $(DOCHDRS) \
   GCF_RTAnswer.cc \
   GCF_RTMyProperty.cc \
   GCF_RTMyPropertySet.cc \
   GPM_RTController.cc \
   PI_Protocol.cc
   
-libpmllite_la_CPPFLAGS= -I$(top_srcdir)/GCFCommon/src \
-	-I$(top_srcdir)/CoreComps/TM/src \
-	-I$(top_srcdir)/CoreComps/SAL/src \
-	-I$(top_srcdir)/Services/PI/src \
-	-I$(top_builddir)/Services/SupServer/src \
-	-I$(top_srcdir)/Services/PMLlite/src/GCF
+libpmllight_la_CPPFLAGS= -I$(top_srcdir)/include \
+	-I$(top_srcdir)/../PAL/PI/src
 
 
 lib_LTLIBRARIES 	= libgcfpallight.la

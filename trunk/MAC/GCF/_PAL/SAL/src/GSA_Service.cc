@@ -50,7 +50,9 @@
 GSAService::GSAService() : _pWFA(0)
 {
   _pWFA = new GSAWaitForAnswer(*this);
-  if (GSASCADAHandler::instance()->isOperational() == SA_SCADA_NOT_AVAILABLE)
+  _pSCADAHandler = GSASCADAHandler::instance();
+  assert(_pSCADAHandler);
+  if (_pSCADAHandler->isOperational() == SA_SCADA_NOT_AVAILABLE)
   {
     LOG_ERROR(LOFAR::formatString (
         "Error on creating a SCADA service"));
@@ -62,6 +64,9 @@ GSAService::~GSAService()
 {
   if (_pWFA)
     delete _pWFA;
+  assert(_pSCADAHandler);
+  GSASCADAHandler::release();
+  _pSCADAHandler = 0;
 }
 
 // Receive Signals.
@@ -236,8 +241,9 @@ TSAResult GSAService::dpCreate(const string& dpName,
   LOG_INFO(LOFAR::formatString (
       "Create DP '%s'", 
       dpName.c_str()));
-
-  if ((result = GSASCADAHandler::instance()->isOperational()) == SA_SCADA_NOT_AVAILABLE)
+  
+  assert(_pSCADAHandler);
+  if ((result = _pSCADAHandler->isOperational()) == SA_SCADA_NOT_AVAILABLE)
   {
     LOG_FATAL(LOFAR::formatString (
         "Unable to create DP: '%s'", 
@@ -305,7 +311,8 @@ TSAResult GSAService::dpDelete(const string& dpName)
       "Delete DP '%s'", 
       dpName.c_str()));
   
-  if ((result = GSASCADAHandler::instance()->isOperational()) != SA_NO_ERROR)
+  assert(_pSCADAHandler);
+  if ((result = _pSCADAHandler->isOperational()) != SA_NO_ERROR)
   {
     LOG_FATAL(LOFAR::formatString (
         "Unable to delete DP: '%s'", 
@@ -363,7 +370,8 @@ TSAResult GSAService::dpeSubscribe(const string& propName)
       "Subscribe on property '%s'", 
       propName.c_str()));
   
-  if ((result = GSASCADAHandler::instance()->isOperational()) != SA_NO_ERROR)
+  assert(_pSCADAHandler);
+  if ((result = _pSCADAHandler->isOperational()) != SA_NO_ERROR)
   {
     LOG_FATAL(LOFAR::formatString (
         "Unable to subscribe on property: '%s'", 
@@ -426,7 +434,8 @@ TSAResult GSAService::dpeUnsubscribe(const string& propName)
       "Unsubscribe from property '%s'", 
       propName.c_str()));
   
-  if ((result = GSASCADAHandler::instance()->isOperational()) != SA_NO_ERROR)
+  assert(_pSCADAHandler);
+  if ((result = _pSCADAHandler->isOperational()) != SA_NO_ERROR)
   {
     LOG_FATAL(LOFAR::formatString (
         "Unable to unsubscribe from property: '%s'", 
@@ -490,7 +499,8 @@ TSAResult GSAService::dpeGet(const string& propName)
       "Request value of property '%s'", 
       propName.c_str()));
   
-  if ((result = GSASCADAHandler::instance()->isOperational()) != SA_NO_ERROR)
+  assert(_pSCADAHandler);
+  if ((result = _pSCADAHandler->isOperational()) != SA_NO_ERROR)
   {
     LOG_FATAL(LOFAR::formatString (
         "Unable to request of property: '%s'", 
@@ -548,7 +558,8 @@ TSAResult GSAService::dpeSet(const string& propName, const GCFPValue& value)
       "Set value of property '%s'", 
       propName.c_str()));
   
-  if ((result = GSASCADAHandler::instance()->isOperational()) != SA_NO_ERROR)
+  assert(_pSCADAHandler);
+  if ((result = _pSCADAHandler->isOperational()) != SA_NO_ERROR)
   {
     LOG_FATAL(LOFAR::formatString (
         "Unable to set value of property: '%s'", 

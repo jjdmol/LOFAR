@@ -33,7 +33,7 @@ GCFMyPropertySet::GCFMyPropertySet(const char* name,
                                    TDefaultUse defaultUse) : 
   GCFPropertySet(name, typeInfo, pAnswerObj),
   _state(S_DISABLED),
-  _defaultUse(defaultUse),
+  _defaultUse((!isTemporary() ? defaultUse : USE_MY_DEFAULTS)),
   _counter(0),
   _missing(0)
 {
@@ -56,12 +56,11 @@ GCFMyPropertySet::~GCFMyPropertySet ()
 {
   if (_state != S_DISABLED)
   {
-    GPMController* pController = GPMController::instance();
-    assert(pController);
     // delete this set from the controller permanent
     // this means no response will be send to this object
     // on response of the PA
-    pController->unregisterScope(*this); 
+    assert(_pController);
+    _pController->unregisterScope(*this); 
   }
 }
 
@@ -74,6 +73,9 @@ TGCFResult GCFMyPropertySet::enable ()
 {
   TGCFResult result(GCF_NO_ERROR);
     
+  LOG_INFO(LOFAR::formatString ( 
+      "REQ: Enable property set '%s'",
+      getScope().c_str()));
   if (_state != S_DISABLED)
   {
     wrongState("enable");
@@ -81,12 +83,9 @@ TGCFResult GCFMyPropertySet::enable ()
   }
   else
   {
-    LOG_INFO(LOFAR::formatString ( 
-        "REQ: Register scope %s",
-        getScope().c_str()));
-    GPMController* pController = GPMController::instance();
-    assert(pController);
-    TPMResult pmResult = pController->registerScope(*this);
+    assert(_pController);
+    TPMResult pmResult = _pController->registerScope(*this);
+    
     if (pmResult == PM_NO_ERROR)
     {
       _state = S_ENABLING;
@@ -106,6 +105,9 @@ TGCFResult GCFMyPropertySet::disable ()
 {
   TGCFResult result(GCF_NO_ERROR);
   
+  LOG_INFO(LOFAR::formatString ( 
+      "REQ: Disable property set '%s'",
+      getScope().c_str()));
   switch (_state)
   {
     case S_LINKING:
@@ -127,15 +129,11 @@ TGCFResult GCFMyPropertySet::disable ()
       // intentional fall through
     case S_ENABLED:
     {
-      LOG_INFO(LOFAR::formatString ( 
-          "REQ: Unregister scope %s",
-          getScope().c_str()));
   
-      GPMController* pController = GPMController::instance();
-      assert(pController);
-  
-      TPMResult pmResult = pController->unregisterScope(*this);
+      assert(_pController);
+      TPMResult pmResult = _pController->unregisterScope(*this);
       assert(pmResult == PM_NO_ERROR);  
+      
       _state = S_DISABLING;
       
       break;
@@ -177,12 +175,13 @@ GCFPValue* GCFMyPropertySet::getOldValue (const string propName)
 void GCFMyPropertySet::scopeRegistered (TGCFResult result)
 {
   assert(_state == S_ENABLING);
+  LOG_INFO(LOFAR::formatString ( 
+      "PA-RESP: Property set '%s' is enabled%s",
+      getScope().c_str(), 
+      (result == GCF_NO_ERROR ? "" : " (with errors)")));
   if (result == GCF_NO_ERROR)
   {
     _state = S_ENABLED;
-    LOG_INFO(LOFAR::formatString ( 
-        "PA-RESP: Scope %s registered",
-        getScope().c_str()));
   }
   else
   {
@@ -197,8 +196,9 @@ void GCFMyPropertySet::scopeUnregistered (TGCFResult result)
   assert(_state == S_DISABLING);
    
   LOG_INFO(LOFAR::formatString ( 
-      "PA-RESP: Scope %s unregistered",
-      getScope().c_str()));
+      "Property set '%s' is disabled%s",
+      getScope().c_str(), 
+      (result == GCF_NO_ERROR ? "" : " (with errors)")));
 
   _state = S_DISABLED;
   dispatchAnswer(F_MYPS_DISABLED, result);
@@ -206,14 +206,13 @@ void GCFMyPropertySet::scopeUnregistered (TGCFResult result)
 
 bool GCFMyPropertySet::linkProperties()
 {
-  GPMController* pController = GPMController::instance();
-  assert(pController);
   bool successful(true);
+  assert(_pController);
   switch (_state)
   {
     case S_DISABLED:
     case S_DISABLING:
-      pController->propertiesLinked(getScope(), PA_PS_GONE);
+      _pController->propertiesLinked(getScope(), PA_PS_GONE);
       break;
     case S_ENABLED:
       assert(_counter == 0);
@@ -223,7 +222,7 @@ bool GCFMyPropertySet::linkProperties()
       break;
     default:
       wrongState("linkProperties");
-      pController->propertiesLinked(getScope(), PA_WRONG_STATE);
+      _pController->propertiesLinked(getScope(), PA_WRONG_STATE);
       break;
   }
   return successful;
@@ -231,19 +230,18 @@ bool GCFMyPropertySet::linkProperties()
 
 bool GCFMyPropertySet::tryLinking()
 {
-  GPMController* pController = GPMController::instance();
-  assert(pController);
   bool successful(true);
+  assert(_pController);
   switch (_state)
   {
     case S_DELAYED_DISABLING:
-      pController->propertiesLinked(getScope(), PA_PS_GONE);
+      _pController->propertiesLinked(getScope(), PA_PS_GONE);
       _state = S_ENABLED;
       disable();
       break;
     case S_DISABLED:
     case S_DISABLING:
-      pController->propertiesLinked(getScope(), PA_PS_GONE);
+      _pController->propertiesLinked(getScope(), PA_PS_GONE);
       break;
     case S_LINKING:
     {
@@ -287,72 +285,71 @@ bool GCFMyPropertySet::tryLinking()
         _state = S_LINKED;
         if (_missing > 0)
         {
-          pController->propertiesLinked(getScope(), PA_MISSING_PROPS);
+          _pController->propertiesLinked(getScope(), PA_MISSING_PROPS);
         }
         else
         {        
-          pController->propertiesLinked(getScope(), PA_NO_ERROR);
+          _pController->propertiesLinked(getScope(), PA_NO_ERROR);
         }
       }
       break;
     }
     default:
       wrongState("tryLinking");
-      pController->propertiesLinked(getScope(), PA_WRONG_STATE);
+      _pController->propertiesLinked(getScope(), PA_WRONG_STATE);
       break;
   }
+  
   return successful;
 }
 
 void GCFMyPropertySet::linked (GCFMyProperty& prop)
 {
-  GPMController* pController = GPMController::instance();
-  assert(pController);
   _counter--;
   if (_counter == 0)
   {
+    assert(_pController);
     switch (_state)
     {
       case S_DELAYED_DISABLING:
-        pController->propertiesLinked(getScope(), PA_PS_GONE);
+        _pController->propertiesLinked(getScope(), PA_PS_GONE);
         _state = S_LINKED;
         disable();
         break;
       case S_DISABLED:
       case S_DISABLING:
         prop.unlink();
-        pController->propertiesLinked(getScope(), PA_PS_GONE);
+        _pController->propertiesLinked(getScope(), PA_PS_GONE);
         break;
       case S_LINKING:
       {
         _state = S_LINKED;
         if (_missing > 0)
         {
-          pController->propertiesLinked(getScope(), PA_MISSING_PROPS);
+          _pController->propertiesLinked(getScope(), PA_MISSING_PROPS);
         }
         else
         {        
-          pController->propertiesLinked(getScope(), PA_NO_ERROR);
+          _pController->propertiesLinked(getScope(), PA_NO_ERROR);
         }
         break;
       }
       default:
         wrongState("linked");
         prop.unlink();
-        pController->propertiesLinked(getScope(), PA_WRONG_STATE);
+        _pController->propertiesLinked(getScope(), PA_WRONG_STATE);
         break;
     }
   }
   else if (_state == S_DISABLING)
   {
     prop.unlink();
-  }
+  }    
 }
 
 void GCFMyPropertySet::unlinkProperties()
 {
-  GPMController* pController = GPMController::instance();
-  assert(pController);
+  assert(_pController);
   switch (_state)
   {
     case S_ENABLING:
@@ -360,11 +357,11 @@ void GCFMyPropertySet::unlinkProperties()
     case S_ENABLED:
     case S_DELAYED_DISABLING:
       wrongState("unlinkProperties");
-      pController->propertiesUnlinked(getScope(), PA_WRONG_STATE);
+      _pController->propertiesUnlinked(getScope(), PA_WRONG_STATE);
       break;
     case S_DISABLED:
     case S_DISABLING:
-      pController->propertiesUnlinked(getScope(), PA_PS_GONE);
+      _pController->propertiesUnlinked(getScope(), PA_PS_GONE);
       break;
     case S_LINKED:
     {
@@ -376,7 +373,7 @@ void GCFMyPropertySet::unlinkProperties()
         pProperty = (GCFMyProperty*) iter->second;
         if (pProperty) pProperty->unlink();
       }  
-      pController->propertiesUnlinked(getScope(), PA_NO_ERROR);
+      _pController->propertiesUnlinked(getScope(), PA_NO_ERROR);
       break;
     }
   }

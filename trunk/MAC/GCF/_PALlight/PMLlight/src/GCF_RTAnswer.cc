@@ -20,7 +20,7 @@
 //#
 //#  $Id$
 
-#include "GCF_RTAnswer.h"
+#include <GCF/PALlight/GCF_RTAnswer.h>
 
 /**
  * F_PML_PROTOCOL signal names (lite)
@@ -29,6 +29,6 @@ const char* F_PML_PROTOCOL_signalnames[] =
 {
   "F_PML_PROTOCOL: invalid signal",
   "F_VCHANGEMSG (IN)",
-  "F_MYPLOADED (IN)",
-  "F_MYPUNLOADED (IN)",
+  "F_MYPS_ENABLED (IN)",
+  "F_MYPS_DISABLED (IN)",
 };

@@ -26,6 +26,7 @@
 
 #include <GCF/TM/GCF_Task.h>
 #include <GCF/TM/GCF_Port.h>
+#include <GCF/TM/GCF_Handler.h>
 #include "GPM_RTDefines.h"
 #include <GPI_Defines.h>
 #include <Common/lofar_map.h>
@@ -43,12 +44,14 @@ class GCFPValue;
 class GCFEvent;
 class GCFPortInterface;
 class GCFRTMyPropertySet;
+class GPMRTHandler;
 
 class GPMRTController : public GCFTask
 {
   public:
-    ~GPMRTController ();
-    static GPMRTController* instance();
+    virtual ~GPMRTController () {}
+    static GPMRTController* instance(bool temporary = false);
+    static void release();
 
   public: // member functions
     TPMResult registerScope (GCFRTMyPropertySet& propSet);
@@ -60,17 +63,18 @@ class GPMRTController : public GCFTask
     void propertiesUnlinked (const string& scope, 
                             TPIResult result);
     void valueSet(const string& propName, const GCFPValue& value);
-  
+    void deletePropSet(const GCFRTMyPropertySet& propSet);
+    
   private:
+    friend class GPMRTHandler;
     GPMRTController ();
-    static GPMRTController* _pInstance;
 
   private: // state methods
     GCFEvent::TResult initial   (GCFEvent& e, GCFPortInterface& p);
     GCFEvent::TResult connected (GCFEvent& e, GCFPortInterface& p);
         
   private: // helper methods
-    unsigned short registerAction (GCFPropertySet& propSet);
+    unsigned short registerAction (GCFRTMyPropertySet& propSet);
 
   private: // data members        
     GCFPort                       _propertyInterface;
@@ -79,7 +83,26 @@ class GPMRTController : public GCFTask
     unsigned int                  _counter;
     typedef map<string /* scope */, GCFRTMyPropertySet*>  TMyPropertySets;
     TMyPropertySets _myPropertySets;
-    typedef map<unsigned short /*seqnr*/, GCFRTPropertySet*>  TActionSeqList;
+    typedef map<unsigned short /*seqnr*/, GCFRTMyPropertySet*>  TActionSeqList;
     TActionSeqList _actionSeqList;    
+
+  private:
+};
+
+class GPMRTHandler : public GCFHandler
+{
+  public:
+    
+    ~GPMRTHandler() { _pInstance = 0; }
+    void workProc() {}
+    void stop () {}
+    
+  private:
+    friend class GPMRTController;
+    GPMRTHandler()
+    { GCFTask::registerHandler(*this);}
+
+    static GPMRTHandler* _pInstance;
+    GPMRTController _controller;
 };
 #endif

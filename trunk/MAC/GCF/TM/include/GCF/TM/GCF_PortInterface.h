@@ -54,7 +54,7 @@ class GCFPortInterface
     } TPortType;
     
     /** @param protocol NOT USED */
-    GCFPortInterface (GCFTask* pTask, 
+    explicit GCFPortInterface (GCFTask* pTask, 
                       string name, 
                       TPortType type, 
                       int protocol, 

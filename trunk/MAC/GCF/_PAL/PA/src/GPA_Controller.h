@@ -58,7 +58,8 @@ class GPAController : public GCFTask
     void doNextRequest();    
     GPAPropertySet* findPropSet(const string& scope) const;
     void acceptConnectRequest();
-    void closeConnection(GCFPortInterface& p);
+    void clientGone(GCFPortInterface& p);
+    void propSetClientGone(GCFPortInterface& p);
     
 	private: // data members
     typedef map<string /*scope*/, GPAPropertySet*> TPropertySets;
@@ -75,7 +76,6 @@ class GPAController : public GCFTask
     unsigned long                _deletePortTimId;
     unsigned int        _counter;  
     GPAPropertySet*     _pCurPropSet;
-    
 };
 
 #endif

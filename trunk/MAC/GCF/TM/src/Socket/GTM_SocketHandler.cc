@@ -31,9 +31,22 @@ GTMSocketHandler* GTMSocketHandler::instance()
   if (0 == _pInstance)
   {
     _pInstance = new GTMSocketHandler();
+    assert(!_pInstance->mayDeleted());
   }
-
+  _pInstance->use();
   return _pInstance;
+}
+
+void GTMSocketHandler::release()
+{
+  assert(_pInstance);
+  assert(!_pInstance->mayDeleted());
+  _pInstance->leave(); 
+  if (_pInstance->mayDeleted())
+  {
+    delete _pInstance;
+    assert(!_pInstance);
+  }
 }
 
 GTMSocketHandler::GTMSocketHandler() : _running(true)
@@ -58,7 +71,7 @@ void GTMSocketHandler::workProc()
 {
   int result;
   int fd;
-  map<int, GTMSocket*> testSockets;
+  TSockets testSockets;
 
   struct timeval select_timeout;
 

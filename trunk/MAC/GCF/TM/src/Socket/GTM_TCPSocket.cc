@@ -46,17 +46,69 @@ GTMTCPSocket::~GTMTCPSocket()
 ssize_t GTMTCPSocket::send(void* buf, size_t count)
 {
   if (_socketFD > -1) 
-    return ::write(_socketFD, buf, count);
+  {
+    ssize_t countLeft(count);
+    ssize_t written(0);
+    do
+    {
+      written = ::write(_socketFD, ((char*)buf) + (count - countLeft), countLeft);
+      if (written == -1)
+      {
+        if (errno != EINTR)
+        {
+          LOG_FATAL(LOFAR::formatString (
+              "send, error: %s",
+              strerror(errno)));
+          return -1;
+        }
+      }
+      else
+      {
+        countLeft -= written;
+      }      
+    } while (countLeft > 0);
+    
+    return count;
+  }
   else
-    return 0;
+  {
+    LOG_FATAL("send, error: Socket not opend");
+    return -1;
+  }
 }
 
 ssize_t GTMTCPSocket::recv(void* buf, size_t count)
 {
   if (_socketFD > -1) 
-    return ::read(_socketFD, buf, count);
+  {
+    ssize_t countLeft(count);
+    ssize_t received(0);
+    do
+    {
+      received = ::read(_socketFD, ((char*)buf) + (count - countLeft), countLeft);
+      if (received == -1)
+      {
+        if (errno != EINTR)
+        {
+          LOG_FATAL(LOFAR::formatString (
+              "recv, error: %s",
+              strerror(errno)));
+          return -1;
+        }
+      }
+      else
+      {
+        countLeft -= received;
+      }      
+    } while (countLeft > 0);
+    
+    return count;
+  }
   else
-    return 0;
+  {
+    LOG_FATAL("recv, error: Socket not opend");
+    return -1;
+  }
 }
 
 int GTMTCPSocket::open(GCFPeerAddr& /*addr*/)
@@ -85,9 +137,14 @@ int GTMTCPSocket::connect(GCFPeerAddr& serveraddr)
               (struct sockaddr *)&serverAddr, 
               sizeof(struct sockaddr_in));
     if (result < 0)
+    {
       close();
+    }
     else
-      GTMSocketHandler::instance()->registerSocket(*this);
+    {
+      assert(_pHandler);
+      _pHandler->registerSocket(*this);
+    }
   }
   return (result > -1 ? 0 : -1);
 } 

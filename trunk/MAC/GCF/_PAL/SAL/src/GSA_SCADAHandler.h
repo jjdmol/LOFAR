@@ -26,8 +26,8 @@
 
 #include <GCF/TM/GCF_Handler.h>
 #include <GSA_Defines.h>
-#include <GSA_PvssApi.h>
 #include <Common/lofar_list.h>
+#include <GSA_PvssApi.h>
 
 /**
  * This class implements the main loop part of message exchange handling, which 
@@ -38,14 +38,15 @@ class GSASCADAHandler : GCFHandler
 {
   public:
     static GSASCADAHandler* instance ();
-
+    static void release();
+    
     void workProc ();
     void stop ();
     TSAResult isOperational ();
 
   private:
     GSASCADAHandler ();
-    virtual ~GSASCADAHandler () {};
+    virtual ~GSASCADAHandler () { _pInstance = 0; }
     /**
      * Don't allow copying of the GSASCADAHandler object.
      */

@@ -37,8 +37,8 @@
 #include <stdlib.h>
 
 bool GCFTask::_doExit = false;
-vector<GCFHandler*> GCFTask::_handlers;
-map<unsigned short, const char**> GCFTask::_protocols;
+GCFTask::THandlers GCFTask::_handlers;
+GCFTask::TProtocols GCFTask::_protocols;
 int GCFTask::_argc = 0;
 char** GCFTask::_argv = 0;
 
@@ -115,9 +115,9 @@ void GCFTask::run()
 
   while (!_doExit)
   {
-    vector<GCFHandler*> tempHandlers(_handlers);
+    THandlers tempHandlers(_handlers);
 
-    for (THandlerIter iter = tempHandlers.begin() ;
+    for (THandlers::iterator iter = tempHandlers.begin() ;
           iter != tempHandlers.end() && !_doExit; 
           ++iter)
     {
@@ -136,17 +136,31 @@ void GCFTask::stop()
 {
   if (_doExit)
   {
-    vector<GCFHandler*> tempHandlers(_handlers);
-  
-    for (THandlerIter iter = tempHandlers.begin() ;
-          iter != tempHandlers.end() ; 
+    LOG_INFO("Application is stopped! Possible reasons: 'stop' called or terminated");
+    GCFHandler* pHandler;
+    for (THandlers::iterator iter = _handlers.begin() ;
+          iter != _handlers.end() ; 
           ++iter)
     {
-      (*iter)->stop();
+      pHandler = (*iter);
+      pHandler->leave();
+      if (pHandler->mayDeleted())
+      {
+        delete pHandler;
+      }
     } 
+    _handlers.clear();
   }
   else
   {
+    GCFHandler* pHandler;
+    for (THandlers::iterator iter = _handlers.begin() ;
+          iter != _handlers.end() ; 
+          ++iter)
+    {
+      pHandler = (*iter);
+      pHandler->stop();
+    } 
     _doExit = true;
   }     
 }
@@ -154,6 +168,7 @@ void GCFTask::stop()
 void GCFTask::registerHandler(GCFHandler& handler)
 {
   _handlers.push_back(&handler);
+  handler.use(); // released after stop
 }
 
 void GCFTask::registerProtocol(unsigned short protocolID,
@@ -166,9 +181,12 @@ void GCFTask::registerProtocol(unsigned short protocolID,
 const char* GCFTask::evtstr(const GCFEvent& e)  const
 {
   static const char* unknown = "unknown signal";
-  const char* signame;
-  
-  signame = _protocols[F_EVT_PROTOCOL(e)][F_EVT_SIGNAL(e)];
+  const char* signame(0);
+  TProtocols::const_iterator iter = _protocols.find(F_EVT_PROTOCOL(e));
+  if (iter != _protocols.end())
+  {
+    signame = (iter->second)[F_EVT_SIGNAL(e)];
+  }
 
   return (signame?signame:unknown);
 }

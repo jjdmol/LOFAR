@@ -53,6 +53,7 @@ GPAController::GPAController() :
 
 GPAController::~GPAController()
 {
+  LOG_INFO("Deleting PropertyAgent");
 }
 
 GCFEvent::TResult GPAController::initial(GCFEvent& e, GCFPortInterface& p)
@@ -108,7 +109,8 @@ GCFEvent::TResult GPAController::operational(GCFEvent& e, GCFPortInterface& p)
     case F_CLOSED:
     {
       QUEUE_REQUEST(p, e);
-      closeConnection(p);
+      // this starts the close port sequence
+      clientGone(p);
       break;
     }
 
@@ -182,6 +184,7 @@ GCFEvent::TResult GPAController::operational(GCFEvent& e, GCFPortInterface& p)
       else
       {
         pPropSet = new GPAPropertySet(*this, p);
+        assert(pPropSet);
         _propertySets[request.scope] = pPropSet;
         if (!pPropSet->enable(request))
         {
@@ -209,22 +212,6 @@ GCFEvent::TResult GPAController::operational(GCFEvent& e, GCFPortInterface& p)
       }
       break;
     }
-    /*case PA_PROP_SET_LINKED:
-    {
-      PAPropSetLinkedEvent response(e);
-      GPAPropertySet* pPropSet = findPropSet(response.scope);
-      assert(pPropSet);
-      pPropSet->linked(response); 
-      break;
-    }
-    case PA_PROP_SET_UNLINKED:
-    {
-      PAPropSetUnlinkedEvent response(e);
-      GPAPropertySet* pPropSet = findPropSet(response.scope);
-      assert(pPropSet);
-      pPropSet->unlinked(response); 
-      break;
-    }*/
     case PA_LINK_PROP_SET:
     {
       PALinkPropSetEvent* pRequest = (PALinkPropSetEvent*) (&e);
@@ -250,40 +237,57 @@ GCFEvent::TResult GPAController::operational(GCFEvent& e, GCFPortInterface& p)
       GCFTimerEvent* pTimer = (GCFTimerEvent*)(&e);
       if (&p == &_pmlPortProvider)
       {
+        // timeout of 0 timers used in the close port sequence (see F_CLOSED in 
+        // sendAndNext method)
+        GCFPortInterface* pPort(0);
         if (_deletePortTimId == pTimer->id)
         {
-          GCFPortInterface* pPort = (GCFPortInterface*)(pTimer->arg);
+          // timer which has the only port reference to be deleted as argument
+          pPort = (GCFPortInterface*)(pTimer->arg);
           if (pPort)
           {
-            _pmlPorts.remove(pPort);
             delete pPort;
-          }
-        }
-        else
-        {
-          GPAPropertySet* pPropSet = (GPAPropertySet*)(pTimer->arg);
-          if (pPropSet)
-          {
-            delete pPropSet;
-          }
-        }
-        _counter--;
-        if (_counter == 0)
-        {
-          GCFPortInterface* pPort = _requestManager.getOldestRequestPort();
+            // already removed from the port list
+          }          
+          // now the close port sequence is finished so the next request can be handled
+          _requestManager.deleteRequestsOfPort(*pPort);
+          pPort = _requestManager.getOldestRequestPort();
           GCFEvent* pEvent = _requestManager.getOldestRequest();
           _isBusy = false;
       
+          LOG_INFO("Closing sequence step 3: Port deleted");
+          LOG_INFO("----End of closing sequence");  
           if (pPort) // new request available?
           {
             _isRegistered = true;
             dispatch(*pEvent, *pPort);
           }
-          
+        }
+        else
+        {
+          // timer which has a prop. set reference to be deleted as argument                   
+          GPAPropertySet* pPropSet = (GPAPropertySet*)(pTimer->arg);
+          if (pPropSet)
+          {
+            delete pPropSet;
+            // already removed from the prop. set list
+          }
+          // counter set on F_CLOSED event in sendAndNext method
+          _counter--;
+          if (_counter == 0)
+          {
+            LOG_INFO("Closing sequence step 1: Involved prop. sets deleted. End of this step!");
+            // now the firt part of the close port sequence is finsihed
+            // move to the second part, which informs the involved prop. sets 
+            // about the gone client 
+            pPort = _requestManager.getOldestRequestPort();
+            propSetClientGone(*pPort);
+          }
         }
       }
       else
       {
+        // 0 timer used in disabling procedure
         GCFEvent* pEvent = _requestManager.getOldestRequest();
         PAUnregisterScopeEvent request(*pEvent);
         GPAPropertySet* pPropSet = findPropSet(request.scope);
@@ -292,13 +296,6 @@ GCFEvent::TResult GPAController::operational(GCFEvent& e, GCFPortInterface& p)
           delete pPropSet;
         }
         _propertySets.erase(request.scope);
-        PAScopeUnregisteredEvent response;
-        response.seqnr = request.seqnr;
-        response.result = (TPAResult) (unsigned int) (pTimer->arg);
-        if (p.isConnected())
-        {
-          p.send(response);
-        }
         doNextRequest();
       }
       
@@ -342,11 +339,11 @@ GCFEvent::TResult GPAController::linking(GCFEvent& e, GCFPortInterface& p)
       {
         // this closed event came from the port wherefrom a link response were expected
         // the response will not come anymore, so we can continue with an error
-        // it also registers this event for further handling (closeConnection)
+        // it also registers this event for further handling (close port sequence)
         TRAN(GPAController::operational);
+        _requestManager.registerRequest(p, e);
         PAPropSetLinkedEvent response;
         response.result = PA_SERVER_GONE;
-        _requestManager.registerRequest(p, e);
         assert(_pCurPropSet);
         _pCurPropSet->linked(response);
         break;
@@ -359,7 +356,7 @@ GCFEvent::TResult GPAController::linking(GCFEvent& e, GCFPortInterface& p)
     case PA_UNREGISTER_SCOPE:
     {
       QUEUE_REQUEST(p, e);
-      // should not passes the check because in this state it is always busy
+      // should always be queued because in this state the PA is always busy
       assert(0); 
       break;
     }
@@ -419,7 +416,7 @@ GCFEvent::TResult GPAController::unlinking(GCFEvent& e, GCFPortInterface& p)
       {
         // this closed event came from the port wherefrom a link response is expected
         // the response will not come anymore, so we can continue with an error
-        // it also registers this event for further handling (closeConnection)
+        // it also registers this event for further handling (close port sequence)
         TRAN(GPAController::operational);
         PAPropSetUnlinkedEvent response;
         response.result = PA_SERVER_GONE;
@@ -436,7 +433,7 @@ GCFEvent::TResult GPAController::unlinking(GCFEvent& e, GCFPortInterface& p)
     case PA_UNREGISTER_SCOPE:
     {
       QUEUE_REQUEST(p, e);
-      // should always be queued because in this state PA is always busy
+      // should always be queued because in this state the PA is always busy
       assert(0); 
       break;
     }
@@ -471,7 +468,10 @@ bool GPAController::mayContinue(GCFEvent& e, GCFPortInterface& p)
 {
   bool result(false);
   if (!_isRegistered)
+  {    
     _requestManager.registerRequest(p, e);
+    if (_isBusy) LOG_INFO("PA busy! Request is queued!");
+  }
   
   _isRegistered = false;
   if (!_isBusy)
@@ -480,72 +480,6 @@ bool GPAController::mayContinue(GCFEvent& e, GCFPortInterface& p)
     result = true;
   }
   return result;
-}
-
-void GPAController::sendAndNext(GCFEvent& e)
-{
-  GCFPortInterface* pPort = _requestManager.getOldestRequestPort();
-  assert(pPort);
-  GCFEvent* pEvent = _requestManager.getOldestRequest();
-  assert(pEvent);
-  if (pEvent->signal == F_CLOSED)
-  {
-    // all responses, which are the result of a closed port will handled here
-    assert (e.signal == PA_PROP_SET_UNLOADED || e.signal == PA_SCOPE_UNREGISTERED);
-    _counter--; // counter was set in operational method (signal F_CLOSED)
-    if (_counter == 0)
-    {
-      // all responses are received now
-      // the port and ass. prop. sets will be deleted from administration here
-      // and must then be destructed in a different context. 
-      // So 0 timers will be used to force a context switch
-      list<string> propSetsToDelete;
-      GPAPropertySet* pPropSet(0);
-      for (TPropertySets::iterator iter = _propertySets.begin();
-           iter != _propertySets.end(); ++iter)
-      {
-        pPropSet = iter->second;
-        assert(pPropSet);
-        if (pPropSet->mayDelete())
-        {
-          // reuses the counter for counting started timers
-          _counter++;
-          // add the scope of the prop. set to be deleted
-          propSetsToDelete.push_back(iter->first); 
-          _pmlPortProvider.setTimer(0, 0, 0, 0, (void*) (unsigned int) pPropSet);
-        }
-      }
-      for (list<string>::iterator iter = propSetsToDelete.begin();
-           iter != propSetsToDelete.end(); ++iter)
-      {
-        _propertySets.erase(*iter);
-      }
-      // id's of the above started timers always will be different to the following 
-      // received id because they are started in the same context
-      _requestManager.deleteRequestsOfPort(*pPort);
-      _deletePortTimId = _pmlPortProvider.setTimer(0, 0, 0, 0, (void*) pPort);
-      _pmlPorts.remove(pPort);
-      // reuses the counter for counting started timers
-      _counter++;
-    }
-  }
-  else if (e.signal == PA_SCOPE_UNREGISTERED)
-  {
-    // prop. set may be deleted now
-    // this is only possible after a context switch
-    // this can be forced by means of the 0 timer
-    PAScopeUnregisteredEvent* pE = (PAScopeUnregisteredEvent*) &e;    
-    pPort->setTimer(0,0,0,0, (void*) pE->result);
-  }
-  else
-  {
-    // normal use
-    if (pPort->isConnected())
-    {
-      pPort->send(e);
-    }
-    doNextRequest();
-  }
 }
 
 void GPAController::doNextRequest()
@@ -561,6 +495,84 @@ void GPAController::doNextRequest()
   }
 }
 
+void GPAController::sendAndNext(GCFEvent& e)
+{
+  GCFPortInterface* pPort = _requestManager.getOldestRequestPort();
+  assert(pPort);
+  GCFEvent* pEvent = _requestManager.getOldestRequest();
+  assert(pEvent);
+  if (pEvent->signal == F_CLOSED)
+  {
+    // this is part of the close port sequence
+    // all responses, which are the result of a closed port will handled here
+    if (e.signal == PA_SCOPE_UNREGISTERED)
+    {    
+      // responses of the first step of the close port sequence
+      _counter--; // counter was set in closeConnection method
+      if (_counter == 0)
+      {
+        // all responses are received now
+        // the port and ass. prop. sets will be deleted from administration here
+        // and must then be destructed in a different context. 
+        // So 0 timers will be used to force a context switch
+        list<string> propSetsToDelete;
+        GPAPropertySet* pPropSet(0);
+        for (TPropertySets::iterator iter = _propertySets.begin();
+             iter != _propertySets.end(); ++iter)
+        {
+          pPropSet = iter->second;
+          assert(pPropSet);
+          if (pPropSet->mayDelete())
+          {
+            // it is safe now to reuses the counter for counting started 0 timers
+            _counter++;
+            // add the scope of the prop. set to be deleted
+            propSetsToDelete.push_back(iter->first); 
+            _pmlPortProvider.setTimer(0, 0, 0, 0, (void*) pPropSet);
+          }
+        }
+        for (list<string>::iterator iter = propSetsToDelete.begin();
+             iter != propSetsToDelete.end(); ++iter)
+        {
+          _propertySets.erase(*iter);
+        }
+        LOG_INFO("Closing sequence step 1: Involved prop. sets are disabled. Delete them now.");
+      }
+    }
+    else if (e.signal == PA_PROP_SET_UNLOADED)
+    {
+      // responses of the second step of the close port sequence
+      PAPropSetUnloadedEvent* pEvent = (PAPropSetUnloadedEvent*)(&e);
+      assert(pEvent->seqnr == 0);
+      propSetClientGone(*pPort);      
+    }
+    else
+    {
+      assert(0);
+    }
+  }
+  else if (e.signal == PA_SCOPE_UNREGISTERED)
+  {
+    // prop. set is now disabled in a normal way and may be deleted
+    // this is only possible after a context switch
+    // this can be forced by means of the 0 timer
+    pPort->setTimer(0.0);
+    if (pPort->isConnected())
+    {
+      pPort->send(e);
+    }
+  }
+  else
+  {
+    // normal responses
+    if (pPort->isConnected())
+    {
+      pPort->send(e);
+    }
+    doNextRequest();
+  }
+}
+
 GPAPropertySet* GPAController::findPropSet(const string& scope) const
 {
   TPropertySets::const_iterator iter = _propertySets.find(scope);  
@@ -570,35 +582,100 @@ GPAPropertySet* GPAController::findPropSet(const string& scope) const
 void GPAController::acceptConnectRequest()
 {
   GCFTCPPort* pNewPMLPort = new GCFTCPPort();
+  assert(pNewPMLPort);
   pNewPMLPort->init(*this, "pa", GCFPortInterface::SPP, PA_PROTOCOL);
   _pmlPortProvider.accept(*pNewPMLPort);
 }
 
-void GPAController::closeConnection(GCFPortInterface& p)
+void GPAController::clientGone(GCFPortInterface& p)
 {
+  // first step of what must be done before the closed port can be deleted too
+  // - search all prop. sets, which are managed by the remote application 
+  //   connected via the closed port port (owner)
+  // - pretend that these prop. sets receives a unregister scope event from the
+  //   remote application
+  LOG_INFO("----A PA client is gone, so start the closing sequence!");  
   GPAPropertySet* pPropSet(0);
   _counter = 0;
+  _deletePortTimId = 0xFFFFFFFF;
+  list<string> propSetsToDelete;
   for (TPropertySets::iterator iter = _propertySets.begin();
        iter != _propertySets.end(); ++iter)
   {
     pPropSet = iter->second;
     assert(pPropSet);
-    if (pPropSet->isOwner(p) || pPropSet->knowsClient(p))
+    if (pPropSet->isOwner(p))
     {
-      // these property sets will be deleted after they will be unregistered
+      // these property sets will be deleted after they are unregistered/disabled
       // correctly
       _counter++;
+      propSetsToDelete.push_back(iter->first); 
     }
-    pPropSet->deleteClient(p);        
+  }
+  PAUnregisterScopeEvent request;  
+  request.seqnr = 0;
+  LOG_INFO("Closing sequence step 1: Start disabling involved prop. sets");  
+  
+  for (list<string>::iterator iter = propSetsToDelete.begin();
+       iter != propSetsToDelete.end(); ++iter)
+  {
+    pPropSet = findPropSet(*iter);
+    if (pPropSet)
+    {              
+      request.scope = *iter;
+      pPropSet->disable(request);
+      // response will be handled in the sendAndNext method (F_CLOSED event)
+    }   
   }
   if (_counter == 0)
   {
-    // nothing needed to be done for any prop. set 
-    // so the port can be deleted
+    LOG_INFO("Closing sequence step 1: Nothing to do. End of this step!");
+    // no prop. set needed to be disabled
+    // move to second step, which deletes the prop. set client (represented by 
+    // the port 'p') from the prop. set
+    propSetClientGone(p);
+  }
+}
+
+void GPAController::propSetClientGone(GCFPortInterface& p)
+{
+  // second step of what must be done before the closed port can be deleted too
+  // - find the first prop. set who knows the client port as prop. set client
+  // - delete the client port from prop. set, which results in an unload request
+  //   with sequence 0
+
+  LOG_INFO("Closing sequence step 2: Find (next) prop. set who knows port as client");
+  string nextPropSet;
+  GPAPropertySet* pPropSet(0);
+
+  for (TPropertySets::iterator iter = _propertySets.begin(); 
+       iter != _propertySets.end(); ++iter)
+  {
+    pPropSet = iter->second;
+    assert(pPropSet);            
+    if (pPropSet->knowsClient(p))
+    {
+      nextPropSet = iter->first;
+      break; 
+    }
+  }
+  if (nextPropSet.length() > 0)
+  {
+    pPropSet = findPropSet(nextPropSet);
+    if (pPropSet)
+    {              
+      pPropSet->clientGone(p);
+    }   
+  }
+  else 
+  {
+    LOG_INFO("Closing sequence step 2: No more prop. sets needed to be informed.");
+    LOG_INFO("Closing sequence step 3: Delete port");
+    // no more prop. set were involved in this action
+    // so the port 'p' can be deleted
     // this is only possible after a context switch
     // this can be forced by means of the 0 timer
-    _counter = 1;
-    _requestManager.deleteRequestsOfPort(p);
-    _deletePortTimId = _pmlPortProvider.setTimer(0, 0, 0, 0, (void*) &p);
+    _deletePortTimId = _pmlPortProvider.setTimer(0, 0, 0, 0, (void*) &p);   
+    _pmlPorts.remove(&p);
   }
 }

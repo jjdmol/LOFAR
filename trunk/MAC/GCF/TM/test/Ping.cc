@@ -52,6 +52,11 @@ Ping::Ping(string name)
   client.init(*this, "client", GCFPortInterface::SAP, ECHO_PROTOCOL);
 }
 
+Ping::~Ping()
+{
+  cout << "Ping stopped." << endl;
+}
+
 GCFEvent::TResult Ping::initial(GCFEvent& e, GCFPortInterface& /*port*/)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
@@ -70,7 +75,7 @@ GCFEvent::TResult Ping::initial(GCFEvent& e, GCFPortInterface& /*port*/)
       // start ping_timer
       // - after 1 second
       // - every 2 seconds
-      ping_timer = client.setTimer(1.0, 2.0);
+      ping_timer = client.setTimer(1.0, 0.5);
 
       TRAN(Ping::connected);
       break;
@@ -155,8 +160,14 @@ GCFEvent::TResult Ping::awaiting_echo(GCFEvent& e, GCFPortInterface& /*p*/)
     
     	cout << "ECHO received (seqnr=" << echo.seqnr << "): elapsed = "
     	     << time_elapsed(&(echo.ping_time), &echo_time) << " sec."<< endl;
-    
-    	TRAN(Ping::connected);
+      if (echo.seqnr == 100)
+      {
+        GCFTask::stop();
+      }
+      else
+      {
+    	  TRAN(Ping::connected);
+      }
       break;
     }
     case F_DISCONNECTED:

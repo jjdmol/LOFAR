@@ -65,19 +65,26 @@ class GCFTask;
 
 class GCFHandler
 {
+  public:
+    bool mayDeleted() { return (_usecount == 0);}
+    void use() { _usecount++;}
+    void leave() { _usecount--;}
+  
   protected:
-    GCFHandler() {;}
+    GCFHandler() : _usecount(0) {;}
     virtual ~GCFHandler() {;}
+
+    friend class GCFTask;
 
     virtual void workProc () = 0;
     virtual void stop () = 0;
-    friend class GCFTask;
 
   private:
     //@{ 
     /// Copy contructors. Don't allow copying this object.
     GCFHandler (const GCFHandler&);
     GCFHandler& operator= (const GCFHandler&);  
-    //@}
+    //@}    
+    unsigned int _usecount;
 };
 #endif

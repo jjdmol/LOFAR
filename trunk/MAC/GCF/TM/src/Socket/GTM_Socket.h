@@ -58,8 +58,9 @@ class GTMSocket
     virtual void workProc ();
     
   protected:
-    int           _socketFD;
-    GCFRawPort&   _port;    
+    int               _socketFD;
+    GCFRawPort&       _port;  
+    GTMSocketHandler* _pHandler;  
   
   private:
     /**

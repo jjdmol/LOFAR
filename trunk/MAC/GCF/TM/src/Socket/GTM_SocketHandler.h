@@ -39,7 +39,8 @@ class GTMSocketHandler : public GCFHandler
 {
   public:
     static GTMSocketHandler* instance ();
-    virtual ~GTMSocketHandler () {};
+    static void release ();
+    virtual ~GTMSocketHandler () { _pInstance = 0;};
   
     void workProc ();
     void stop ();
@@ -55,15 +56,14 @@ class GTMSocketHandler : public GCFHandler
     GTMSocketHandler& operator= (const GTMSocketHandler&);
     static GTMSocketHandler* _pInstance;
     
-    map<int, GTMSocket*> _sockets;
-    typedef map<int, GTMSocket*>::iterator TSocketIter;
+    typedef map<int, GTMSocket*> TSockets;
+    TSockets _sockets;
 
     
     fd_set _readFDs;
     fd_set _writeFDs;
     fd_set _errotFDs;
-    bool _running;
-    
+    bool _running;    
 };
 
 #endif

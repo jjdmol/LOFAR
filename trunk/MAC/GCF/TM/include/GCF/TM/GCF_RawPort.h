@@ -33,6 +33,7 @@
 // forward declaration
 class GCFPort;
 class GTMTimer;
+class GTMTimerHandler;
 
 /**
  * This is the abstract base class for all concrete port implementations (like 
@@ -45,13 +46,13 @@ class GCFRawPort : public GCFPortInterface
 {
   public:
     /** @param protocol NOT USED */
-    GCFRawPort (GCFTask& task, 
+    explicit GCFRawPort (GCFTask& task, 
                 string& name, 
                 TPortType type, 
                 int protocol, 
                 bool transportRawData = false);
   
-    GCFRawPort ();
+    explicit GCFRawPort ();
   
     virtual ~GCFRawPort ();
   
@@ -115,6 +116,7 @@ class GCFRawPort : public GCFPortInterface
     GCFPort* _pMaster;
 
     GCFEvent::TResult recvEvent();
+    GTMTimerHandler*  _pTimerHandler;
 };
 
 #endif

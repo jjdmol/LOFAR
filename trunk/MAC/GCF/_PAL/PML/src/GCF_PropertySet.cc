@@ -36,6 +36,7 @@ GCFPropertySet::GCFPropertySet (const char* name,
                                 const TPropertySet& typeInfo,
                                 GCFAnswer* pAnswerObj) : 
   _isBusy(false),
+  _pController(0),
   _pAnswerObj(pAnswerObj),
   _scope((name ? name : "")),
   _dummyProperty(dummyPropInfo, this),
@@ -48,16 +49,20 @@ GCFPropertySet::GCFPropertySet (const char* name,
         _scope.c_str()));
     _scope = "";
   }
+  _pController = GPMController::instance();
+  assert(_pController);
 }
 
 GCFPropertySet::~GCFPropertySet()
 {
   clearAllProperties();
   _dummyProperty.resetPropSetRef();
+
+  assert(_pController);
   
-  GPMController* pController = GPMController::instance();  
-  assert(pController);
-  pController->deletePropSet(*this); 
+  _pController->deletePropSet(*this); 
+  GPMController::release();  
+  _pController = 0;  
 }
 
 void GCFPropertySet::loadPropSetIntoRam()
@@ -172,14 +177,20 @@ void GCFPropertySet::configure(const string apcName)
       "REQ: Configure prop. set '%s' with apc '%s'",
       getScope().c_str(), 
       apcName.c_str()));
-  GPMController* pController = GPMController::instance();
-  assert(pController);
-  TPMResult pmResult = pController->configurePropSet(*this, apcName);
+
+  assert(_pController);
+
+  TPMResult pmResult = _pController->configurePropSet(*this, apcName);
   assert(pmResult == PM_NO_ERROR);
 }
 
 void GCFPropertySet::configured(TGCFResult result, const string& apcName)
 {
+  LOG_INFO(LOFAR::formatString ( 
+      "REQ: Prop. set '%s' with apc '%s' configured%s",
+      getScope().c_str(), 
+      (result == GCF_NO_ERROR ? "" : " (with errors)"), 
+      apcName.c_str()));
   if (_pAnswerObj != 0)
   {
     GCFConfAnswerEvent e;

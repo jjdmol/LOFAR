@@ -23,9 +23,7 @@
 #include <Timer/GTM_Timer.h>
 #include <GCF/TM/GCF_RawPort.h>
 #include <GCF/TM/GCF_Protocols.h>
-
-// for gettimeofday
-#include <sys/time.h>
+#include <GTM_Defines.h>
 
 GTMTimer::GTMTimer(GCFRawPort& port, 
 		   unsigned long id,
@@ -37,13 +35,16 @@ GTMTimer::GTMTimer(GCFRawPort& port,
   _intervalTime(intervalTime), 
   _arg(arg), _elapsed(false), _canceled(false)
 {
+  saveTime();
 }
  
-void GTMTimer::decreaseTime(unsigned long microSec)
+void GTMTimer::decreaseTime()
 {
-  if (_timeLeft > microSec)
+  unsigned long uSec = getElapsedTime();
+  
+  if (_timeLeft > uSec)
   {
-    _timeLeft -= microSec;
+    _timeLeft -= uSec;
   }
   else
   {
@@ -59,9 +60,45 @@ void GTMTimer::decreaseTime(unsigned long microSec)
     _port.dispatch(te);
     if (_intervalTime > 0)
     {
-      _timeLeft = _intervalTime;
+      unsigned long timeoverflow = uSec - _timeLeft;
+      
+      if (_intervalTime < timeoverflow)
+      {
+        LOG_ERROR(LOFAR::formatString(
+            "Timerinterval %fsec of timer %d is to small for performance reasons.",
+            ((double) _intervalTime) / 1000000.0,
+            _id));
+        do 
+        {
+          timeoverflow -= _intervalTime;
+        } while (_intervalTime < timeoverflow);        
+      }
+      _timeLeft = _intervalTime - timeoverflow;
     }
     else
+    {
       _elapsed = true;
+    }
   } 
+}
+
+void GTMTimer::saveTime()
+{
+  struct timezone timeZone;
+  gettimeofday(&_savedTime, &timeZone);
+}
+
+unsigned long GTMTimer::getElapsedTime()
+{
+  timeval oldTime(_savedTime);
+  unsigned long uSecDiff(0);
+  
+  saveTime();
+
+  uSecDiff = ((unsigned long) (_savedTime.tv_usec) + 
+                  (unsigned long) (_savedTime.tv_sec) * 1000000) - 
+                 ((unsigned long) (oldTime.tv_usec) +
+                  (unsigned long) (oldTime.tv_sec) * 1000000);
+
+  return uSecDiff;                 
 }

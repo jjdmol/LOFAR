@@ -5,7 +5,7 @@ autogen definitions protocol;
 
 description = "Protocol definition for the Supervisory Server(ERTC)/Property Interface(MAC/GCF)";
 prefix = "PI"; // for the signal names
-id = "(F_GCF_PROTOCOL + 3)";
+id = "(F_GCF_PROTOCOL + 1)";
 // specify extra include files
 // e.g.
 //include = '<sys/time.h>';

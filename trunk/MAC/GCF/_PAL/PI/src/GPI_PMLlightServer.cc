@@ -137,7 +137,7 @@ GCFEvent::TResult GPIPMLlightServer::operational(GCFEvent& e, GCFPortInterface& 
         for (TPropSetRegister::iterator iter = _propSetRegister.begin();
              iter != _propSetRegister.end(); ++iter)
         {
-          if (iter->second->trySubscribing())
+          if (!iter->second->trySubscribing())
           {
             retryAgain = true;
           }
@@ -249,7 +249,7 @@ GCFEvent::TResult GPIPMLlightServer::operational(GCFEvent& e, GCFPortInterface& 
       pPropertySet = findPropertySet(responseIn.scope);
       if (pPropertySet)
       {
-        bool mustRetry = pPropertySet->propSetLinkedInRTC(responseIn);
+        bool mustRetry = !pPropertySet->propSetLinkedInRTC(responseIn);
         if (mustRetry && timerID == -1)
         {
           timerID = _plsPort.setTimer(0.0);

@@ -22,18 +22,20 @@
 
 #include <GCF/PALlight/GCF_RTMyPropertySet.h>
 #include <GCF/PALlight/GCF_RTMyProperty.h>
-#include <GCF/PALlight/GPM_RTController.h>
+#include <GPM_RTController.h>
 #include <GCF/PALlight/GCF_RTAnswer.h>
 #include <GCF/Utils.h>
 
 GCFRTMyPropertySet::GCFRTMyPropertySet(const char* name,
-                                       const TPropertySet& propSet,
+                                       const TPropertySet& typeInfo,
                                        GCFRTAnswer* pAnswerObj) : 
   _scope(name),
-  _state(S_DISABLED),
   _pAnswerObj(pAnswerObj),
-  _propSet(propSet),
-  _dummyProperty(*this)
+  _state(S_DISABLED),
+  _propSetInfo(typeInfo),
+  _dummyProperty(*this),
+  _counter(0),
+  _missing(0)
 {
   GCFRTMyProperty* pProperty;
   const char* propName;
@@ -45,12 +47,12 @@ GCFRTMyPropertySet::GCFRTMyPropertySet(const char* name,
         _scope.c_str()));
     _scope = "";
   }
-  for (unsigned int i = 0; i < _propSet.nrOfProperties; i++)
+  for (unsigned int i = 0; i < _propSetInfo.nrOfProperties; i++)
   { 
-    propName = _propSet.properties[i].propName;
+    propName = _propSetInfo.properties[i].propName;
     if (Utils::isValidPropName(propName))
     {
-      pProperty = new GCFRTMyProperty(_propSet.properties[i], *this);
+      pProperty = new GCFRTMyProperty(_propSetInfo.properties[i], *this);
       addProperty(propName, *pProperty);
     }
     else
@@ -64,25 +66,31 @@ GCFRTMyPropertySet::GCFRTMyPropertySet(const char* name,
   {
     setAnswer(_pAnswerObj);
   }
+  _pController = GPMRTController::instance();  
+  assert(_pController);
 }  
 
 GCFRTMyPropertySet::~GCFRTMyPropertySet ()
 {
-  GPMRTController* pController = GPMRTController::instance();
-  assert(pController);
+  assert(_pController);
   // delete this set from the controller permanent
   // this means no response will be send to this object
   // on response of the PA
-  pController->unregisterScope(*this, true); 
+  _pController->unregisterScope(*this); 
   clearAllProperties();  
 
-  pController->deletePropSet(*this);   
+  _pController->deletePropSet(*this);  
+  GPMRTController::release(); 
+  _pController = 0;
 }
   
-TGCFResult GCFMyPropertySet::enable ()
+TGCFResult GCFRTMyPropertySet::enable ()
 {
   TGCFResult result(GCF_NO_ERROR);
     
+  LOG_INFO(LOFAR::formatString ( 
+      "REQ: Enable property set '%s'",
+      getScope().c_str()));
   if (_state != S_DISABLED)
   {
     wrongState("enable");
@@ -90,12 +98,8 @@ TGCFResult GCFMyPropertySet::enable ()
   }
   else
   {
-    LOG_INFO(LOFAR::formatString ( 
-        "REQ: Register scope %s",
-        getScope().c_str()));
-    GPMRTController* pController = GPMRTController::instance();
-    assert(pController);
-    TPMResult pmResult = pController->registerScope(*this);
+    assert(_pController);
+    TPMResult pmResult = _pController->registerScope(*this);
     if (pmResult == PM_NO_ERROR)
     {
       _state = S_ENABLING;
@@ -111,10 +115,13 @@ TGCFResult GCFMyPropertySet::enable ()
   return result;
 }
 
-TGCFResult GCFMyPropertySet::disable ()
+TGCFResult GCFRTMyPropertySet::disable ()
 {
   TGCFResult result(GCF_NO_ERROR);
   
+  LOG_INFO(LOFAR::formatString ( 
+      "REQ: Disable property set '%s'",
+      getScope().c_str()));
   switch (_state)
   {
     case S_LINKING:
@@ -136,14 +143,9 @@ TGCFResult GCFMyPropertySet::disable ()
       // intentional fall through
     case S_ENABLED:
     {
-      LOG_INFO(LOFAR::formatString ( 
-          "REQ: Unregister scope %s",
-          getScope().c_str()));
+      assert(_pController);
   
-      GPMRTController* pController = GPMRTController::instance();
-      assert(pController);
-  
-      TPMResult pmResult = pController->unregisterScope(*this);
+      TPMResult pmResult = _pController->unregisterScope(*this);
       assert(pmResult == PM_NO_ERROR);  
       _state = S_DISABLING;
       
@@ -160,12 +162,13 @@ TGCFResult GCFMyPropertySet::disable ()
 void GCFRTMyPropertySet::scopeRegistered (TGCFResult result)
 {
   assert(_state == S_ENABLING);
+  LOG_INFO(LOFAR::formatString ( 
+      "PA-RESP: Property set '%s' is enabled%s",
+      getScope().c_str(), 
+      (result == GCF_NO_ERROR ? "" : " (with errors)")));
   if (result == GCF_NO_ERROR)
   {
     _state = S_ENABLED;
-    LOG_INFO(LOFAR::formatString ( 
-        "PA-RESP: Scope %s registered",
-        getScope().c_str()));
   }
   else
   {
@@ -180,8 +183,9 @@ void GCFRTMyPropertySet::scopeUnregistered (TGCFResult result)
   assert(_state == S_DISABLING);
    
   LOG_INFO(LOFAR::formatString ( 
-      "PA-RESP: Scope %s unregistered",
-      getScope().c_str()));
+      "Property set '%s' is disabled%s",
+      getScope().c_str(), 
+      (result == GCF_NO_ERROR ? "" : " (with errors)")));
 
   _state = S_DISABLED;
   dispatchAnswer(F_MYPS_DISABLED, result);
@@ -189,8 +193,7 @@ void GCFRTMyPropertySet::scopeUnregistered (TGCFResult result)
 
 void GCFRTMyPropertySet::linkProperties()
 {
-  GPMRTController* pController = GPMController::instance();
-  assert(pController);
+  assert(_pController);
   list<string> propsToSubscribe;
   switch (_state)
   {
@@ -198,12 +201,11 @@ void GCFRTMyPropertySet::linkProperties()
     case S_LINKED:
     case S_LINKING:
       wrongState("linkProperties");
-      pController->propertiesLinked(getScope(), propsToSubscribe, PA_WRONG_STATE);
+      _pController->propertiesLinked(getScope(), propsToSubscribe, PI_WRONG_STATE);
       break;
     case S_ENABLED:
     {
       GCFRTMyProperty* pProperty(0);
-      TGCFResult result;
 
       assert(_counter == 0);
       _missing = 0;
@@ -221,26 +223,25 @@ void GCFRTMyPropertySet::linkProperties()
         }     
       }      
       _state = S_LINKED;
-      pController->propertiesLinked(getScope(), propsToSubscribe, PA_NO_ERROR);
+      _pController->propertiesLinked(getScope(), propsToSubscribe, PI_NO_ERROR);
       break;
     }
 
     case S_DELAYED_DISABLING:
-      pController->propertiesLinked(getScope(), propsToSubscribe, PA_PS_GONE);
+      _pController->propertiesLinked(getScope(), propsToSubscribe, PI_PS_GONE);
       _state = S_ENABLED;
       disable();
       break;
     case S_DISABLED:
     case S_DISABLING:
-      pController->propertiesLinked(getScope(), propsToSubscribe, PA_PS_GONE);
+      _pController->propertiesLinked(getScope(), propsToSubscribe, PI_PS_GONE);
       break;
   }
 }
 
-void GCFRTMyPropertySet::unlinkProperties(list<string>& properties)
+void GCFRTMyPropertySet::unlinkProperties()
 {
-  GPMRTController* pController = GPMController::instance();
-  assert(pController);
+  assert(_pController);
   switch (_state)
   {
     case S_ENABLING:
@@ -248,11 +249,11 @@ void GCFRTMyPropertySet::unlinkProperties(list<string>& properties)
     case S_ENABLED:
     case S_DELAYED_DISABLING:
       wrongState("unlinkProperties");
-      pController->propertiesUnlinked(getScope(), PA_WRONG_STATE);
+      _pController->propertiesUnlinked(getScope(), PI_WRONG_STATE);
       break;
     case S_DISABLED:
     case S_DISABLING:
-      pController->propertiesUnlinked(getScope(), PA_PS_GONE);
+      _pController->propertiesUnlinked(getScope(), PI_PS_GONE);
       break;
     case S_LINKED:
     {
@@ -264,7 +265,7 @@ void GCFRTMyPropertySet::unlinkProperties(list<string>& properties)
         pProperty = iter->second;
         if (pProperty) pProperty->unlink();
       }  
-      pController->propertiesUnlinked(getScope(), PA_NO_ERROR);
+      _pController->propertiesUnlinked(getScope(), PI_NO_ERROR);
       break;
     }
   }
@@ -372,9 +373,8 @@ bool GCFRTMyPropertySet::exists (const string propName) const
 
 void GCFRTMyPropertySet::valueSet(const string& propName, const GCFPValue& value) const
 {
-  GPMRTController* pController = GPMRTController::instance();
-  assert(pController);
-  pController->valueSet(propName, value);  
+  assert(_pController);
+  _pController->valueSet(propName, value);  
 }
 
 void GCFRTMyPropertySet::valueChanged(string propName, const GCFPValue& value)
@@ -388,7 +388,7 @@ void GCFRTMyPropertySet::dispatchAnswer(unsigned short sig, TGCFResult result)
 {
   if (_pAnswerObj != 0)
   {
-    GCFMYPropAnswerEvent e(sig);
+    GCFPropSetAnswerEvent e(sig);
     e.pScope = _scope.c_str();
     e.result = result;
     _pAnswerObj->handleAnswer(e);

@@ -26,6 +26,7 @@
 
 #include <GCF/TM/GCF_Task.h>
 #include <GCF/TM/GCF_Port.h>
+#include <GCF/TM/GCF_Handler.h>
 #include "GPM_Defines.h"
 #include <GPA_Defines.h>
 #include <Common/lofar_map.h>
@@ -45,12 +46,14 @@ class GCFPortInterface;
 class GCFPropertySet;
 class GCFMyPropertySet;
 class GCFExtPropertySet;
+class GPMHandler;
 
 class GPMController : public GCFTask
 {
   public:
     ~GPMController ();
-    static GPMController* instance();
+    static GPMController* instance(bool temporary = false);
+    static void release();
 
   public: // member functions
     TPMResult loadPropSet (GCFExtPropertySet& propSet);
@@ -65,8 +68,8 @@ class GPMController : public GCFTask
     void propertiesUnlinked (const string& scope, TPAResult result);
   
   private:
+    friend class GPMHandler;
     GPMController ();
-    static GPMController* _pInstance;
 
   private: // state methods
     GCFEvent::TResult initial   (GCFEvent& e, GCFPortInterface& p);
@@ -84,6 +87,24 @@ class GPMController : public GCFTask
     typedef map<unsigned short /*seqnr*/, GCFPropertySet*>  TActionSeqList;
     TActionSeqList _actionSeqList;    
 
-  private: // admin members
+  private: // admin members  
+
+};
+
+class GPMHandler : public GCFHandler
+{
+  public:
+    
+    ~GPMHandler() { _pInstance = 0; }
+    void workProc() {}
+    void stop () {}
+    
+  private:
+    friend class GPMController;
+    GPMHandler()
+    { GCFTask::registerHandler(*this);}
+
+    static GPMHandler* _pInstance;
+    GPMController _controller;
 };
 #endif

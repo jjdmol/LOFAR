@@ -1,15 +1,10 @@
-Using: PropertyAgent -num <num> -proj <projname>
-	'num' => unique number of application, which is required by the PVSS system (recommended is 1) 
+Using: PropertyAgent -num 1 -proj <projname>
 	'projname' => name of a running, for GCF prepared, PVSS project
-Using: PropertyInterface -num <num> -proj <projname>
-	'num' => unique number of application, which is required by the PVSS system (recommended is 2) 
+Using: PropertyInterface -num 2 -proj <projname>
 	'projname' => name of a running, for GCF prepared, PVSS project
-Using: SupervisoryServer
-	Only one instance of the SupervisoryServer may run on one PC-node
 
 Precondition:
 - a PVSS project is running which is configured for GCF (see DEPENDENCIES)
 - >export MAC_CONFIG=<lofarhome>/MAC/Config
-- be sure log4cplus.properties, mac.top and mac.ns are in the same path as the PA
 
-These applications does not quit by itself. This can be done by CTRL-C.
+These applications do not quit by itself. This can be done by CTRL-C.

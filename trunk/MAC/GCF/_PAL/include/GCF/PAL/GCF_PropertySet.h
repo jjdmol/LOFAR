@@ -93,8 +93,9 @@ class GCFPropertySet
     
   protected: // helper attributes
     typedef map<string /*propName*/, GCFProperty*> TPropertyList;
-    TPropertyList _properties;
-    bool _isBusy;
+    TPropertyList   _properties;
+    bool            _isBusy;
+    GPMController*  _pController;
 
   private: // methods called by GPMController
     friend class GPMController;

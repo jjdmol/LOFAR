@@ -44,6 +44,8 @@ class Echo : public GCFTask
    */
   Echo (string name);
 
+  virtual ~Echo();
+
   /**
    * The initial state handler. This handler is passed to the FTask constructor
    * to indicate that the F_INIT event which starts the state machine is handled

@@ -43,6 +43,7 @@ class Ping : public GCFTask
    */
   Ping (string name);
 
+  ~Ping();
   /**
    * Handler for the initial state. This handler is passed to the constructor
    * of the FTask class to indicate that it should be sent the F_INIT signal

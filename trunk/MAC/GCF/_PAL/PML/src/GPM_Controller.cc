@@ -29,7 +29,7 @@
 #include <stdio.h>
 
 static string sPMLTaskName("PML");
-GPMController* GPMController::_pInstance = 0;
+GPMHandler* GPMHandler::_pInstance = 0;
 
 extern void logResult(TPAResult result, GCFPropertySet& propSet);
 
@@ -47,15 +47,28 @@ GPMController::~GPMController()
 {
 }
 
-GPMController* GPMController::instance()
+GPMController* GPMController::instance(bool temporary)
 {
-  if (0 == _pInstance)
-  {
-    _pInstance = new GPMController();
-    _pInstance->start();
+  if (0 == GPMHandler::_pInstance)
+  {    
+    GPMHandler::_pInstance = new GPMHandler();
+    assert(!GPMHandler::_pInstance->mayDeleted());
+    GPMHandler::_pInstance->_controller.start();
   }
+  if (!temporary) GPMHandler::_pInstance->use();
+  return &GPMHandler::_pInstance->_controller;
+}
 
-  return _pInstance;
+void GPMController::release()
+{
+  assert(GPMHandler::_pInstance);
+  assert(!GPMHandler::_pInstance->mayDeleted());
+  GPMHandler::_pInstance->leave(); 
+  if (GPMHandler::_pInstance->mayDeleted())
+  {
+    delete GPMHandler::_pInstance;
+    assert(!GPMHandler::_pInstance);
+  }
 }
 
 TPMResult GPMController::loadPropSet(GCFExtPropertySet& propSet)
@@ -172,7 +185,7 @@ TPMResult GPMController::unregisterScope(GCFMyPropertySet& propSet)
 
 unsigned short GPMController::registerAction(GCFPropertySet& propSet)
 {
-  unsigned short seqnr(0);
+  unsigned short seqnr(1); // 0 is reserved for internal msg. in PA
   TActionSeqList::const_iterator iter;
   do   
   {

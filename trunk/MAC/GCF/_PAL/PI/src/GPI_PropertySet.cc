@@ -188,14 +188,8 @@ void GPIPropertySet::disable(PIUnregisterScopeEvent& requestIn)
            iter != _propsSubscribed.end(); ++iter)
       {
         string fullName;
-        if (_scope.length() > 0)
-        {
-          fullName = _scope + GCF_PROP_NAME_SEP + *iter;
-        }
-        else
-        {
-          fullName = *iter;
-        }
+        assert(_scope.length() > 0);
+        fullName = _scope + GCF_PROP_NAME_SEP + *iter;
         if (exists(fullName))
         {
           unsubscribeProp(fullName);          
@@ -221,10 +215,10 @@ void GPIPropertySet::disable(PIUnregisterScopeEvent& requestIn)
     default:
     {
       wrongState("disable");
-      PIScopeUnregisteredEvent response;
-      response.seqnr = _savedSeqnr;
-      response.result = PI_WRONG_STATE;
-      sendMsgToRTC(response);     
+      PIScopeUnregisteredEvent erResponse;
+      erResponse.seqnr = _savedSeqnr;
+      erResponse.result = PI_WRONG_STATE;
+      sendMsgToRTC(erResponse);     
       break;
     }
   }
@@ -254,8 +248,8 @@ void GPIPropertySet::disabled(TPAResult result)
 
 void GPIPropertySet::linkPropSet(PALinkPropSetEvent& requestIn)
 {
-  PAPropSetLinkedEvent response;
-  response.scope = _scope;
+  PAPropSetLinkedEvent erResponse;
+  erResponse.scope = _scope;
   switch (_state)
   {
     case S_ENABLED:
@@ -263,7 +257,7 @@ void GPIPropertySet::linkPropSet(PALinkPropSetEvent& requestIn)
       PILinkPropSetEvent requestOut;
       requestOut.scope = requestIn.scope;
       _state = S_LINKING;
-      sendMsgToRTC(response);
+      sendMsgToRTC(requestOut);
       break;
     }
     case S_DISABLED:
@@ -271,14 +265,14 @@ void GPIPropertySet::linkPropSet(PALinkPropSetEvent& requestIn)
       LOG_DEBUG(LOFAR::formatString ( 
           "Property set with scope %d is deleting in the meanwhile", 
           _scope.c_str()));
-      response.result = PA_PS_GONE;   
-      sendMsgToPA(response);
+      erResponse.result = PA_PS_GONE;   
+      sendMsgToPA(erResponse);
       break;
     default:
     {
       wrongState("linkProperties");
-      response.result = PA_WRONG_STATE;
-      sendMsgToPA(response);
+      erResponse.result = PA_WRONG_STATE;
+      sendMsgToPA(erResponse);
       break;
     }
   }
@@ -288,10 +282,10 @@ bool GPIPropertySet::propSetLinkedInRTC(PIPropSetLinkedEvent& responseIn)
 {
   if (_state == S_LINKING)
   {    
-    Utils::getPropertyListFromString(_propsSubscribed, responseIn.propList);
     assert(_counter == 0);
     if (responseIn.result != PI_PS_GONE)
     {
+      Utils::getPropertyListFromString(_propsSubscribed, responseIn.propList);
       _tmpPIResult = responseIn.result;
       return trySubscribing();
     }
@@ -328,14 +322,8 @@ bool GPIPropertySet::trySubscribing()
           iter != _propsSubscribed.end(); ++iter)
       {
         string fullName;
-        if (_scope.length() > 0)
-        {
-          fullName = _scope + GCF_PROP_NAME_SEP + *iter;
-        }
-        else
-        {
-          fullName = *iter;
-        }
+        assert(_scope.length() > 0);
+        fullName = _scope + GCF_PROP_NAME_SEP + *iter;
         if (exists(fullName))
         {   
           if (subscribeProp(fullName) == GCF_NO_ERROR)
@@ -378,10 +366,13 @@ bool GPIPropertySet::trySubscribing()
       break;
     }
     case S_DELAYED_DISABLING:
+    {
       propSetLinkedInPI(PA_PS_GONE);
       _state = S_ENABLED;
-      disable();
+      PIUnregisterScopeEvent dummy;
+      disable(dummy);
       break;
+    }
     case S_DISABLED:
     case S_DISABLING:
       propSetLinkedInPI(PA_PS_GONE);
@@ -442,11 +433,11 @@ void GPIPropertySet::unlinkPropSet(PAUnlinkPropSetEvent& requestIn)
       LOG_DEBUG(LOFAR::formatString ( 
           "Property set with scope %d is deleting in the meanwhile", 
           _scope.c_str()));
-      propSetUnLinkedInPI(PA_PS_GONE);
+      propSetUnlinkedInPI(PA_PS_GONE);
       break;
     default:
       wrongState("unlinkPropSet");
-      propSetUnLinkedInPI(PA_WRONG_STATE);
+      propSetUnlinkedInPI(PA_WRONG_STATE);
       break;
   }
 }

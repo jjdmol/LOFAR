@@ -26,6 +26,7 @@
 #include <GCF/GCF_Defines.h>
 
 #include <Common/lofar_list.h>
+#include <Common/lofar_map.h>
 #include <GCF/PALlight/GCF_RTMyProperty.h>
 
 class GPMRTController;
@@ -174,5 +175,8 @@ class GCFRTMyPropertySet
     TSTATE _state;
     const TPropertySet& _propSetInfo;
     GCFRTMyProperty     _dummyProperty;
+    unsigned int        _counter;
+    unsigned int        _missing;
+    GPMRTController*    _pController;
 };
 #endif

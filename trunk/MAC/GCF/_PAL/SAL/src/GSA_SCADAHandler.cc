@@ -38,32 +38,49 @@ GSASCADAHandler* GSASCADAHandler::instance()
     GSAResources::init(GCFTask::_argc, GCFTask::_argv);
         
     _pInstance = new GSASCADAHandler();
+    assert(!_pInstance->mayDeleted());
   }
 
+  _pInstance->use();
   return _pInstance;
 }
 
+void GSASCADAHandler::release()
+{
+  assert(_pInstance);
+  assert(!_pInstance->mayDeleted());
+  _pInstance->leave(); 
+  if (_pInstance->mayDeleted())
+  {
+    delete _pInstance;
+    assert(!_pInstance);
+  }
+}
+
 GSASCADAHandler::GSASCADAHandler() :
-  GCFHandler(), _running(true)
+  _running(true)
+  
 {  
   GCFTask::registerHandler(*this);
 }
 
 void GSASCADAHandler::stop()
 {
+ 
   _pvssApi.stop();
+
   _running = false;
 }
  
 void GSASCADAHandler::workProc()
-{
-  _pvssApi.workProc();
+{ 
+  if (_running) _pvssApi.workProc();
 }
 
 TSAResult GSASCADAHandler::isOperational()
-{
+{ 
+  TSAResult result(SA_SCADA_NOT_AVAILABLE);
   if (_pvssApi.getManagerState() == Manager::STATE_RUNNING && _running)
-    return SA_NO_ERROR;
-  else
-    return SA_SCADA_NOT_AVAILABLE;
+    result = SA_NO_ERROR;
+  return result;
 }

@@ -20,9 +20,9 @@
 //#
 //#  $Id$
 
-#include "GCF_RTMyProperty.h"
-#include "GCF_RTMyPropertySet.h"
-#include "GCF_RTAnswer.h"
+#include <GCF/PALlight/GCF_RTMyProperty.h>
+#include <GCF/PALlight/GCF_RTMyPropertySet.h>
+#include <GCF/PALlight/GCF_RTAnswer.h>
 
 GCFRTMyProperty::GCFRTMyProperty(const TProperty& propertyFields,
                              GCFRTMyPropertySet& propertySet) :
@@ -35,7 +35,7 @@ GCFRTMyProperty::GCFRTMyProperty(const TProperty& propertyFields,
   _isBusy(false),
   _pAnswerObj(0)  
 {
-  _pCurValue = GCFPValue::createMACTypeObject((GCFPValue::TMACValueType) propertyFields.type);
+  _pCurValue = GCFPValue::createMACTypeObject((TMACValueType) propertyFields.type);
   assert(_pCurValue);
   _pOldValue = _pCurValue->clone();
   if (propertyFields.defaultValue)

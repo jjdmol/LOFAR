@@ -54,11 +54,11 @@ class GCFETHRawPort : public GCFRawPort
 
     /// Construction methods
     /** @param protocol NOT USED */    
-    GCFETHRawPort (GCFTask& task,
+    explicit GCFETHRawPort (GCFTask& task,
                    string name,
                    TPortType type, 
                    bool transportRawData = false);
-    GCFETHRawPort();
+    explicit GCFETHRawPort();
 
     virtual ~GCFETHRawPort();
 

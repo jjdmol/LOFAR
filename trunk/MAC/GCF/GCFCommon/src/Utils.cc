@@ -8,6 +8,40 @@ Utils::Utils()
 Utils::~Utils()
 {}
 
+void Utils::getPropertyListString(string& propListString, 
+                                  const list<string>& propertyList)
+{
+  propListString.clear();
+  for (list<string>::const_iterator iter = propertyList.begin(); 
+       iter != propertyList.end(); ++iter)
+  {
+    propListString += *iter;
+    propListString += '|';
+  }
+}
+
+void Utils::getPropertyListFromString(list<string>& propertyList, 
+                                      const string& propListString)
+{
+  unsigned int dataLength = propListString.length();
+  char propertyData[dataLength + 1];
+  memcpy(propertyData, propListString.c_str(), dataLength);
+  propertyData[dataLength] = 0;
+  propertyList.clear();
+  if (dataLength > 0)
+  {
+    string propName;
+    char* pPropName = strtok(propertyData, "|");
+    while (pPropName && dataLength > 0)
+    {
+      propName = pPropName;      
+      pPropName = strtok(NULL, "|");
+      dataLength -= (propName.size() + 1);
+      propertyList.push_back(propName);
+    }
+  }
+}
+
 bool Utils::isValidPropName(const char* propName)
 {
   bool result(true);
