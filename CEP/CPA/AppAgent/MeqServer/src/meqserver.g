@@ -159,11 +159,11 @@ const meqdomain := function (startfreq,endfreq,starttime,endtime)
   return domain;
 }
 
-const meqcells := function (domain,nfreq,times,timesteps )
+const meqcells := function (domain,num_freq,times,time_steps )
 {
-  rec := [ domain=domain,num_freq=as_integer(nfreq),
+  rec := [ domain=domain,num_freq=as_integer(num_freq),
            times=as_double(times),
-           time_steps=as_double(timesteps) ];
+           time_steps=as_double(time_steps) ];
   rec::dmi_actual_type := 'MeqCells';
   return rec;
 }

@@ -113,7 +113,7 @@ const meqsel_test := function ()
   print mqs.meq('Resolve.Children',[name='select3']);
   
   global cells,request,res;
-  cells := meqcells(meqdomain(0,10,0,10),nfreq=20,times=[1.,2.,3.],timesteps=[1.,2.,3.]);
+  cells := meqcells(meqdomain(0,10,0,10),num_freq=20,times=[1.,2.,3.],time_steps=[1.,2.,3.]);
   request := meqrequest(cells);
   res := mqs.meq('Node.Execute',[name='select3',request=request],T);
   print res;
@@ -177,7 +177,7 @@ const state_test := function ()
   ni_sel2 := mqs.getnodestate('select2').nodeindex;
   
   global cells,request,res;
-  cells := meqcells(meqdomain(0,10,0,10),nfreq=20,times=[1.,2.,3.],timesteps=[1.,2.,3.]);
+  cells := meqcells(meqdomain(0,10,0,10),num_freq=20,times=[1.,2.,3.],time_steps=[1.,2.,3.]);
   request := meqrequest(cells);
   
   res1 := mqs.meq('Node.Execute',[name='compose3',request=request],T);
@@ -259,13 +259,13 @@ const solver_test := function ()
   print mqs.meq('Resolve.Children',[name='solver1']);
   
   global cells,request,res;
-  cells := meqcells(meqdomain(1,4,-2,3),nfreq=4,times=[0.,1.,2.,3.],timesteps=[1.,1.,1.,1.]);
+  cells := meqcells(meqdomain(1,4,-2,3),num_freq=4,times=[0.,1.,2.,3.],time_steps=[1.,1.,1.,1.]);
   request := meqrequest(cells,calc_deriv=T);
   res := mqs.meq('Node.Execute',[name='solver1',request=request],T);
   print res;
 }
 
 
-# cells := meqcells(meqdomain(0,10,0,10),nfreq=20,times=[1.,2.,3.],timesteps=[1.,2.,3.]);
+# cells := meqcells(meqdomain(0,10,0,10),num_freq=20,times=[1.,2.,3.],time_steps=[1.,2.,3.]);
 # request := meqrequest(cells,1);
 
