@@ -1,20 +1,20 @@
 #!/bin/sh
 
 \rm -rf /tmp/$USER.demo*
-ln -s /data/PSS3/diepen/BBS2/demo3 /tmp/$USER.demo
+ln -s /data/PSS3/diepen/BBS2/demo3_p1.MS /tmp/$USER.demo
 ln -s /data/PSS3/diepen/BBS2/demo3.MEP /tmp/$USER.demo.MEP
 ln -s /data/PSS3/diepen/BBS2/demo3_gsm.MEP /tmp/$USER.demo_gsm.MEP
 
-./tPerturbed $USER /tmp/$USER.demo/demo demo demo_gsm LOFAR.RI 'RA.*' 'DEC.*' 'StokesI.*'
+./tPerturbed $USER /tmp/$USER.demo demo demo_gsm LOFAR.RI 'RA.*' 'DEC.*' 'StokesI.*'
 status=$?
 
-./tPerturbed $USER /tmp/$USER.demo/demo demo demo_gsm LOFAR.AP 'RA.*' 'DEC.*' 'StokesI.*'
+./tPerturbed $USER /tmp/$USER.demo demo demo_gsm LOFAR.AP 'RA.*' 'DEC.*' 'StokesI.*'
 stat=$?
 if [ $stat != 0 ]; then
   status=$stat
 fi
 
-./tPerturbed $USER /tmp/$USER.demo/demo demo demo_gsm LOFAR.AP 'EJ*'
+./tPerturbed $USER /tmp/$USER.demo demo demo_gsm LOFAR.AP 'EJ*'
 stat=$?
 if [ $stat != 0 ]; then
   status=$stat

@@ -25,6 +25,7 @@
 #include <BBS3/MNS/MeqMatrix.h>
 #include <Common/VectorUtil.h>
 #include <Common/LofarLogger.h>
+#include <casa/BasicMath/Math.h>
 #include <stdexcept>
 #include <iostream>
 #include <iomanip>
@@ -96,7 +97,7 @@ void doTest (Prediffer& pre1, const vector<string>& solv)
       const dcomplex* resv2 = resm2->dcomplexStorage();
       for (int k=0; k<resm1->nelements(); ++k) {
 	//	cout <<
-	ASSERTSTR (resv1[k] == resv2[k],
+	ASSERTSTR (casa::near(resv1[k],resv2[k]),
 		   "res1=" << resv1[k] << " res2=" << resv2[k] << " rnr=" << k
 		   << " valnr=" << j << " spid=" << i);
 	//     << endl;
