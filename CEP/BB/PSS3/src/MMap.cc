@@ -111,7 +111,7 @@ void MMap::mapFile(long long startOffset, size_t nrBytes)
     
   // Do mmap
   itsPageStart = mmap ( 0, itsNrBytes, protect, MAP_SHARED, itsFd, pageStartOffset);
-  ASSERTSTR (itsPtr != MAP_FAILED, "mmap failed: " << strerror(errno) ); 
+  ASSERTSTR (itsPageStart != MAP_FAILED, "mmap failed: " << strerror(errno) ); 
   char* reqPtr = (char*)itsPageStart + startOffset - pageStartOffset;   // requested pointer
   itsPtr = reqPtr;
 }
@@ -125,6 +125,24 @@ void MMap::unmapFile()
     itsPageStart = 0;
     itsPtr = 0;
     itsNrBytes = 0;
+    unlockMappedMemory();
+  }
+}
+
+void MMap::lockMappedMemory()
+{
+  ASSERTSTR(itsPtr > 0, "No area has been mapped. ");
+  int res;
+  res = mlock(itsPageStart, itsNrBytes);
+  ASSERTSTR(res != 0, "mlock failed: " << strerror(errno) ); 
+}
+
+void MMap::unlockMappedMemory()
+{
+  if (itsPageStart != 0)
+  {
+    int res = munlock(itsPageStart, itsNrBytes);
+    ASSERTSTR (res == 0, "munlock failed: " << strerror(errno));
   }
 }
 

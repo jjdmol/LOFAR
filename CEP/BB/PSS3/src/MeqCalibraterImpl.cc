@@ -93,7 +93,8 @@ MeqCalibrater::MeqCalibrater(const String& msName,
 			           uInt    ddid,
 			     const vector<int>& ant,
 			     const String& modelType,
-			           bool    calcUVW)
+			           bool    calcUVW,
+			           bool    lockMappedMem)
   :
   itsMSName       (msName),
   itsMEPName      (meqModel),
@@ -107,7 +108,8 @@ MeqCalibrater::MeqCalibrater(const String& msName,
   itsSelAnt       (ant),
   itsTimeIndex    (0),
   itsNrTimes      (0),
-  itsDataMap      (0)
+  itsDataMap      (0),
+  itsLockMappedMem(lockMappedMem)
 {
   cdebug(1) << "MeqCalibrater constructor (";
   cdebug(1) << "'" << msName   << "', ";
@@ -713,7 +715,11 @@ bool MeqCalibrater::nextInterval(bool callReadPolcs)
   long long startOffset = (itsTimeIndex-itsNrTimes)*itsNrBl*itsNrChan*itsNPol*sizeof(fcomplex);
   size_t nrBytes = itsNrTimes*itsNrBl*itsNrChan*itsNPol*sizeof(fcomplex);
   // Map this time interval
-  itsDataMap->mapFile(startOffset, nrBytes); 
+  itsDataMap->mapFile(startOffset, nrBytes);
+  if (itsLockMappedMem)
+  {                                             // Make sure mapped data is resident in RAM
+    itsDataMap->lockMappedMemory();
+  }
 
   mapTimer.stop();
   cout << "BBSTest: file-mapping " << mapTimer << endl;
@@ -1737,6 +1743,10 @@ void MeqCalibrater::saveResidualData()
   long long startOffset = (itsTimeIndex-itsNrTimes)*itsNrBl*itsNrChan*itsNPol*sizeof(fcomplex);
   size_t nrBytes = itsNrTimes*itsNrBl*itsNrChan*itsNPol*sizeof(fcomplex);
   itsDataMap->mapFile(startOffset, nrBytes);
+  if (itsLockMappedMem)
+  {                                             // Make sure mapped data is resident in RAM
+    itsDataMap->lockMappedMemory();
+  }
 
   vector<int> src(itsPeelSourceNrs.nelements());
   cout << "Using peel sources ";
@@ -2130,6 +2140,11 @@ void MeqCalibrater::fillUVW()
   MMap* mapPtr = new MMap(itsMSName+".uvw", MMap::Read);
   mapPtr->mapFile(0, nrBytes);
   uvwDataPtr = (double*)mapPtr->getStart();
+  if (itsLockMappedMem)
+  {                                             // Make sure mapped data is resident in RAM
+    mapPtr->lockMappedMemory();
+  }
+
 
   // Step time by time through the MS.
   for (unsigned int tStep=0; tStep < itsTimes.nelements(); tStep++)
