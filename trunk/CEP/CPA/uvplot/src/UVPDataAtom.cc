@@ -103,7 +103,6 @@ void UVPDataAtom::setData(const std::vector<ComplexType>& data)
 void UVPDataAtom::setData(const ComplexType* data)
 {
   ComplexType*       i   = itsData.begin();
-  const ComplexType* end = itsData.end();
 
   memcpy(i, data, itsData.size()*sizeof(ComplexType));
 }
