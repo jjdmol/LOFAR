@@ -5,7 +5,6 @@ DH_Solution.h                                   \
 DH_WorkOrder.h                                  \
 WH_Evaluate.h                                   \
 WH_PSS3.h                                       \
-WH_Connection.h                                 \
 BlackBoardDemo.h                                \
 Quality.h                                       \
 Strategy.h                                      \
@@ -26,7 +25,6 @@ DH_Solution.cc                                          \
 DH_WorkOrder.cc                                         \
 WH_Evaluate.cc                                          \
 WH_PSS3.cc                                              \
-WH_Connection.cc                                        \
 BlackBoardDemo.cc                                       \
 Quality.cc                                              \
 Strategy.cc                                             \

@@ -69,11 +69,8 @@ public:
   void undefine();
 
 private:
-  LOFAR::Step** itsKSSteps;      // Pointer to array of Knowledge Source steps
-  LOFAR::Step** itsKSInSteps;    // Pointer to array of input steps to Knowledge Sources
-  LOFAR::Step** itsKSOutSteps;   // Pointer to array of output steps to Knowledge Sources
-
-  int itsNumberKS;       // Total number of Knowledge Sources
+  LOFAR::Step** itsKSSteps;  // Pointer to array of Knowledge Source steps
+  int itsNumberKS;           // Total number of Knowledge Sources
 };
 
 } // end namespace LOFAR

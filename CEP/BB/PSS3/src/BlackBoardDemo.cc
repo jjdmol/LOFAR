@@ -37,7 +37,6 @@
 #include <PSS3/BlackBoardDemo.h>
 #include <PSS3/WH_Evaluate.h>
 #include <PSS3/WH_PSS3.h>
-#include <PSS3/WH_Connection.h>
 #include TRANSPORTERINCLUDE
 
 namespace LOFAR
@@ -51,8 +50,6 @@ string i2string(int i) {
 
 BlackBoardDemo::BlackBoardDemo()
   : itsKSSteps(0),
-    itsKSInSteps(0),
-    itsKSOutSteps(0),
     itsNumberKS(0)
 {
   TRACER1(">>>>>>>> BlackBoardDemo constructor <<<<<<<<<<");
@@ -105,24 +102,10 @@ void BlackBoardDemo::define(const KeyValueMap& params)
   Step controlStep(controlWH, "controlStep");
   controlStep.runOnNode(0,0);
   topComposite.addStep(controlStep);
-  // Empty workholders and steps necessary for data transport to/from database
-  WH_Connection controlInWH("empty", 0, 2, WH_Connection::WorkOrder, 
-			    WH_Connection::Solution);
-  WH_Connection controlOutWH("empty", 2, 0, WH_Connection::WorkOrder, 
-			    WH_Connection::Solution); 
-  Step controlInStep(controlInWH, "CsourceStub");
-  Step controlOutStep(controlOutWH, "CsinkStub");
-  controlInStep.runOnNode(0,0);
-  controlOutStep.runOnNode(0,0);
-  topComposite.addStep(controlInStep);
-  topComposite.addStep(controlOutStep);
 
   // Create the Knowledge Sources
   itsKSSteps = new (Step*)[itsNumberKS];
-  itsKSInSteps = new (Step*)[itsNumberKS];
-  itsKSOutSteps = new (Step*)[itsNumberKS];
   string ksID;
-
   for (int ksNo=1; ksNo<=itsNumberKS; ksNo++)
   { 
     // Create the PSS3 Workholders and Steps
@@ -136,32 +119,15 @@ void BlackBoardDemo::define(const KeyValueMap& params)
     itsKSSteps[index] = new Step(ksWH, "knowledgeSource"+ksID);
     itsKSSteps[index]->runOnNode(ksNo,0);
     topComposite.addStep(itsKSSteps[index]);
-
-    // Empty workholders and steps necessary for data transport to/from database
-    WH_Connection ksInWH("ksIn"+ksID, 0, 2, WH_Connection::WorkOrder, 
-			 WH_Connection::Solution);
-    itsKSInSteps[index] = new Step(ksInWH, "KSsource"+ksID);
-    itsKSInSteps[index]->runOnNode(ksNo,0);
-    topComposite.addStep(itsKSInSteps[index]);
-
-    WH_Connection ksOutWH("ksOut"+ksID, 2, 0, WH_Connection::WorkOrder,
-			 WH_Connection::Solution);
-    itsKSOutSteps[index] = new Step(ksOutWH, "KSsink"+ksID);
-    itsKSOutSteps[index]->runOnNode(ksNo,0);
-    topComposite.addStep(itsKSOutSteps[index]);
-
   }
 
   // Share input and output DataHolders of Controller
   controlStep.setInBufferingProperties(0, true, false);
   controlStep.setInBufferingProperties(1, true, false);
   
-  // Create the cross connections between Steps
-  // Connections to the database.
-  controlStep.connect(&controlInStep, 0, 0, 1, TH_PL("BBWorkOrders"));
-  controlStep.connect(&controlInStep, 1, 1, 1, TH_PL("BBSolutions"));
-  controlOutStep.connect(&controlStep, 0, 0, 1, TH_PL("BBWorkOrders")); 
-  controlOutStep.connect(&controlStep, 1, 1, 1, TH_PL("BBSolutions")); 
+  // Create the connections to the database.
+  controlStep.connect(&controlStep, 0, 0, 1, TH_PL("BBWorkOrders"));
+  controlStep.connect(&controlStep, 1, 1, 1, TH_PL("BBSolutions"));
 
   for (int index = 0; index < itsNumberKS; index++)
   {
@@ -169,10 +135,9 @@ void BlackBoardDemo::define(const KeyValueMap& params)
     itsKSSteps[index]->setInBufferingProperties(0, true, false);
     itsKSSteps[index]->setInBufferingProperties(1, true, false);
 
-    itsKSSteps[index]->connect(itsKSInSteps[index], 0, 0, 1, TH_PL("BBWorkOrders"));
-    itsKSSteps[index]->connect(itsKSInSteps[index], 1, 1, 1, TH_PL("BBSolutions"));
-    itsKSOutSteps[index]->connect(itsKSSteps[index], 0, 0, 1, TH_PL("BBWorkOrders"));
-    itsKSOutSteps[index]->connect(itsKSSteps[index], 1, 1, 1, TH_PL("BBSolutions"));
+    // Create the connections to the database.
+    itsKSSteps[index]->connect(itsKSSteps[index], 0, 0, 1, TH_PL("BBWorkOrders"));
+    itsKSSteps[index]->connect(itsKSSteps[index], 1, 1, 1, TH_PL("BBSolutions"));
   }
 
 }  
@@ -213,17 +178,8 @@ void BlackBoardDemo::undefine() {
     for (int iStep = 0; iStep < itsNumberKS; iStep++) 
       delete itsKSSteps[iStep];
   delete [] itsKSSteps;
-  if (itsKSInSteps) 
-    for (int iStep = 0; iStep < itsNumberKS; iStep++) 
-      delete itsKSInSteps[iStep];
-  delete [] itsKSInSteps;
-  if (itsKSOutSteps) 
-    for (int iStep = 0; iStep < itsNumberKS; iStep++) 
-      delete itsKSOutSteps[iStep];
-  delete [] itsKSOutSteps;
 
   TRACER2("Leaving BlackBoardDemo::undefine");
-
 }
 
 
