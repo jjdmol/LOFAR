@@ -418,6 +418,7 @@ event = {
   param = {
     name = "sysstatus";
     type = "SystemStatus";
+    userdefined;
   };
 };
 
@@ -450,6 +451,7 @@ event = {
   param = {
     name = "sysstatus";
     type = "SystemStatus";
+    userdefined;
   };
 };    
 

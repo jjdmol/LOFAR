@@ -1,4 +1,4 @@
-//
+// -*- mode: c++ -*-//
 // Protocol definition for the EPA Demonstrator Board
 //
 autogen definitions protocol;
@@ -34,8 +34,9 @@ namespace EPA_Protocol
   static const int N_STATS       = MEPHeader::STSTATS_SIZE / sizeof(uint16);      /* should be 512 */
   /*@}*/
 
-  typedef struct RSPStatus
+  typedef class RSPStatus
   {
+    public:
       uint8 voltage_15;
       uint8 voltage_22;
       uint16 ffi;
@@ -68,6 +69,32 @@ namespace EPA_Protocol
   {
       uint16 status;
   };
+
+  /*@{*/
+  /**
+   * Output operators for the system status types.
+   */ 
+  inline std::ostream& operator<<(std::ostream& s, const EPA_Protocol::RSPStatus&  stat)
+  {
+    return s << "[" << int(stat.voltage_15) << ", " << int(stat.voltage_22) << "]";
+  }
+  
+  inline std::ostream& operator<<(std::ostream& s, const EPA_Protocol::MEPStatus&  stat)
+  {
+    return s << "[" << stat.seqnr << ", " << int(stat.error) << "]";  
+  }
+  
+  inline std::ostream& operator<<(std::ostream& s, const EPA_Protocol::FPGAStatus& stat)
+  {
+    return s << "[" << int(stat.status) << ", " << int(stat.temp) << "]";
+  }
+  
+  inline std::ostream& operator<<(std::ostream& s, const EPA_Protocol::RCUStatus&  stat)
+  {
+    return s << "[" << stat.status << "]";
+  }
+  /*@}*/
+     
 };
 
 PRELUDE_END;

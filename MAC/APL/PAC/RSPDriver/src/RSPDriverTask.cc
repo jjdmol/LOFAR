@@ -30,6 +30,7 @@
 #include "SetWeightsCmd.h"
 #include "GetWeightsCmd.h"
 #include "SetSubbandsCmd.h"
+#include "GetStatusCmd.h"
 #include "BWSync.h"
 #include "SSSync.h"
 #include <blitz/array.h>
@@ -426,10 +427,12 @@ void RSPDriverTask::rsp_getweights(GCFEvent& event, GCFPortInterface& port)
   }
 
   // if null timestamp get value from the cache and acknowledge immediately
-  if (Timestamp(0,0) == command->getTimestamp())
+  if ( (Timestamp(0,0) == command->getTimestamp())
+       && (true == command->readFromCache()))
   {
-    command->setTimestamp(m_scheduler.getCurrentTime() + -1);
+    command->setTimestamp(Cache::getInstance().getFront().getTimestamp());
     command->ack(Cache::getInstance().getFront());
+    delete command;
   }
   else
   {
@@ -491,9 +494,29 @@ void RSPDriverTask::rsp_unsubstatus(GCFEvent& /*event*/, GCFPortInterface& /*por
   /* not implemented yet, ignore event */
 }
 
-void RSPDriverTask::rsp_getstatus(GCFEvent& /*event*/, GCFPortInterface& /*port*/)
+void RSPDriverTask::rsp_getstatus(GCFEvent& event, GCFPortInterface& port)
 {
-  /* not implemented yet, ignore event */
+  GetStatusCmd* command = new GetStatusCmd(event, port, Command::READ);
+
+  if (!command->validate())
+  {
+    command->ack_fail();
+    delete command;
+    return;
+  }
+
+  // if null timestamp get value from the cache and acknowledge immediately
+  if (Timestamp(0,0) == command->getTimestamp())
+  {
+    command->setTimestamp(Cache::getInstance().getFront().getTimestamp());
+    command->ack(Cache::getInstance().getFront());
+
+    delete command;
+  }
+  else
+  {
+    (void)m_scheduler.enter(command);
+  }
 }
 
 void RSPDriverTask::rsp_substats(GCFEvent& /*event*/, GCFPortInterface& /*port*/)

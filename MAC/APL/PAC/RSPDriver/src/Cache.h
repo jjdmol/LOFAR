@@ -46,6 +46,7 @@ namespace RSP
       /**
        * Data access methods.
        */
+      RSP_Protocol::Timestamp         getTimestamp() const;
       RSP_Protocol::BeamletWeights&   getBeamletWeights();
       RSP_Protocol::SubbandSelection& getSubbandSelection();
       RSP_Protocol::RCUSettings&      getRCUSettings(int rcu);

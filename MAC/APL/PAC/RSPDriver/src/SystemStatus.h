@@ -27,6 +27,7 @@
 
 #include "EPA_Protocol.ph"
 
+#include <iostream>
 #include <complex>
 #include <blitz/array.h>
 #include <Common/LofarTypes.h>
@@ -45,6 +46,19 @@ namespace RSP_Protocol
 	  
       /* Destructor for SystemStatus. */
       virtual ~SystemStatus() {}
+
+
+      /*@{*/
+      /**
+       * Member accessor functions.
+       */
+      blitz::Array<EPA_Protocol::RSPStatus,  1>& rsp();
+      blitz::Array<EPA_Protocol::MEPStatus,  1>& read();
+      blitz::Array<EPA_Protocol::MEPStatus,  1>& write();
+      blitz::Array<EPA_Protocol::FPGAStatus, 1>& bp();
+      blitz::Array<EPA_Protocol::FPGAStatus, 1>& ap();
+      blitz::Array<EPA_Protocol::RCUStatus,  1>& rcu();
+      /*@}*/
 
     public:
       /*@{*/
@@ -77,6 +91,36 @@ namespace RSP_Protocol
       blitz::Array<EPA_Protocol::RCUStatus,  1> m_rcu_status;
       /*@}*/
   };
+
+  inline blitz::Array<EPA_Protocol::RSPStatus,  1>& SystemStatus::rsp() 
+  {
+    return m_rsp_status;
+  }
+  
+  inline blitz::Array<EPA_Protocol::MEPStatus,  1>& SystemStatus::read()
+  {
+    return m_read_status;
+  }
+  
+  inline blitz::Array<EPA_Protocol::MEPStatus,  1>& SystemStatus::write()
+  {
+    return m_write_status;
+  }
+  
+  inline blitz::Array<EPA_Protocol::FPGAStatus, 1>& SystemStatus::bp()
+  {
+    return m_bp_status;
+  }
+  
+  inline blitz::Array<EPA_Protocol::FPGAStatus, 1>& SystemStatus::ap()
+  {
+    return m_ap_status;
+  }
+  
+  inline blitz::Array<EPA_Protocol::RCUStatus,  1>& SystemStatus::rcu()
+  {
+    return m_rcu_status;
+  }
 };
-     
+
 #endif /* SYSTEMSTATUS_H_ */

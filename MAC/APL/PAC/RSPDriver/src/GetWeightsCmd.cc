@@ -40,17 +40,6 @@ GetWeightsCmd::GetWeightsCmd(GCFEvent& event, GCFPortInterface& port, Operation 
 {
   m_event = new RSPGetweightsEvent(event);
 
-  /**
-   * If null timestamp but the value should not be retrieved from
-   * the cache then set the timestamp and let the scheduler decide
-   * when is the earliest time to schedule the command.
-   */
-  if ((Timestamp(0,0) == m_event->timestamp)
-      && (false == m_event->cache))
-  {
-    m_event->timestamp.setNow();
-  }
-
   setOperation(oper);
   setPeriod(0);
   setPort(port);
@@ -120,3 +109,7 @@ bool GetWeightsCmd::validate() const
   return (m_event->rcumask.count() <= (unsigned int)GET_CONFIG(N_RCU));
 }
 
+bool GetWeightsCmd::readFromCache() const
+{
+  return m_event->cache;
+}

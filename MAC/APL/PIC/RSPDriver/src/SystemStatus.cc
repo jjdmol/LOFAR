@@ -38,7 +38,13 @@ using namespace blitz;
 
 unsigned int SystemStatus::getSize()
 {
-  return MEPHeader::RSPSTATUS_SIZE;
+  return
+      MSH_ARRAY_SIZE(m_rsp_status,   EPA_Protocol::RSPStatus)
+    + MSH_ARRAY_SIZE(m_read_status,  EPA_Protocol::MEPStatus)
+    + MSH_ARRAY_SIZE(m_write_status, EPA_Protocol::MEPStatus)
+    + MSH_ARRAY_SIZE(m_bp_status,    EPA_Protocol::FPGAStatus)
+    + MSH_ARRAY_SIZE(m_ap_status,    EPA_Protocol::FPGAStatus)
+    + MSH_ARRAY_SIZE(m_rcu_status,   EPA_Protocol::RCUStatus);
 }
 
 unsigned int SystemStatus::pack  (void* buffer)

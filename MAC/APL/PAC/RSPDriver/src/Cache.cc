@@ -65,6 +65,25 @@ CacheBuffer::CacheBuffer()
 			    MAX_N_BEAMLETS);
 
   m_beamletweights()(Range::all(), Range::all(), Range::all()) = complex<int16>(0,0);
+
+  m_systemstatus.rsp().resize(  GET_CONFIG(N_RSPBOARDS));
+  m_systemstatus.read().resize( GET_CONFIG(N_RSPBOARDS));
+  m_systemstatus.write().resize(GET_CONFIG(N_RSPBOARDS));
+  m_systemstatus.bp().resize(   GET_CONFIG(N_RSPBOARDS));
+  m_systemstatus.ap().resize(   GET_CONFIG(N_RCU) / 2);
+  m_systemstatus.rcu().resize(  GET_CONFIG(N_RCU));
+  
+  RSPStatus  rsp  = {0,0,0};
+  MEPStatus  mep  = {0,0,0};
+  FPGAStatus fpga = {0,0};
+  RCUStatus  rcu  = {0};
+  
+  m_systemstatus.rsp()   = rsp;
+  m_systemstatus.read()  = mep;
+  m_systemstatus.write() = mep;
+  m_systemstatus.bp()    = fpga;
+  m_systemstatus.ap()    = fpga;
+  m_systemstatus.rcu()   = rcu;
 }
 
 CacheBuffer::~CacheBuffer()
@@ -75,6 +94,17 @@ CacheBuffer::~CacheBuffer()
   m_wgsettings.free();
   m_statistics.free();
   m_beamletweights().free();
+  m_systemstatus.rsp().free();
+  m_systemstatus.read().free();
+  m_systemstatus.write().free();
+  m_systemstatus.bp().free();
+  m_systemstatus.ap().free();
+  m_systemstatus.rcu().free();
+}
+
+RSP_Protocol::Timestamp CacheBuffer::getTimestamp() const
+{
+  return m_timestamp;
 }
 
 BeamletWeights&   CacheBuffer::getBeamletWeights()
