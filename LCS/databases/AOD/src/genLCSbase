@@ -61,11 +61,9 @@ InitSrcfile()
 }
 
 #
-# ConvertToMapfile filename
+# StripComments filename
 #
-# Scans the header (and C++?) files to substract the class definitions
-#
-ConvertToMapfile()
+StripComments()
 {
 	cat $1 | awk '{ 				# first remove all commentparts
 		CommentPos=index($0,"//")
@@ -73,8 +71,62 @@ ConvertToMapfile()
 			print $0
 		else
 			print substr($0,1,CommentPos-1)
-	}' | sed "s/^[ 	]//g" | \
-	# process the remaining lines
+	}' | sed "s/^[ 	]//g" 			# strip leading spaces
+}
+
+#
+# StripNameSpaces
+#
+# Leaves out the lines which belong to the namespace begin and end
+#
+StripNameSpaces()
+{
+	awk ' 	
+	BEGIN { 
+		BraceLevel=0		# Level of nested braces
+		NSStackSize=0		# Nr of namespaces on stack
+	}
+	{ 
+		# skip empty and comment lines
+		if ((length($0) == 0) || (substr($0,1,1) == "#")) {
+			next
+		}
+
+		# When a begin of a namespace is found add the current BraceLevel
+		# to the namespace stack.
+		while (index($0,"namespace")) {
+			NameSpaceStack[NSStackSize++]=BraceLevel
+			while (index ($0, "{") == 0) {
+				getline
+			}
+			getline
+		}
+
+		# determine nesting level 'after' this line
+		BraceLevel+=(split($0, dummy, "{")-1)
+		BraceLevel-=(split($0, dummy, "}")-1)
+
+		# when deeper nested than inner namespace, print the line
+		if (BraceLevel > NameSpaceStack[NSStackSize-1]) {
+			print $0
+		}
+		else {
+			# Level of inner namespace reached, pop namespace of stack
+			while (BraceLevel <= NameSpaceStack[NSStackSize-1]) {
+				BraceLevel++;
+				NSStackSize--;
+			}
+		}
+	}'
+}
+
+#
+# ConvertToMapfile filename
+#
+# Scans the header (and C++?) files to substract the class definitions
+#
+ConvertToMapfile()
+{
 	awk -v TMPFILE="$TMPFILE" ' 	
 	BEGIN { 
 		# By counting the '{' and '}' we know how deep we are nested. We are
@@ -276,7 +328,7 @@ InitSrcfile  	> ${FUNFILE}
 # Scan the headerfiles and substract the class hierarchy
 for file in ${HEADERFILES}
 do
-	ConvertToMapfile $file >>${MAPFILE}
+	StripComments $file | StripNameSpaces | ConvertToMapfile >>${MAPFILE}
 done
 
 # TMPFILE contains the used classes now
