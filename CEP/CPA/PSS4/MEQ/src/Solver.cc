@@ -75,7 +75,9 @@ void Solver::init (DataRecord::Ref::Xfer &initrec, Forest* frst)
   defRec[FSavePolcs]    = itsDefSavePolcs;
   defRec[FEpsilon]      = itsDefEpsilon;
   defRec[FUseSVD]       = itsDefUseSVD;
-  defRec[FParmGroup]    = itsParmGroup;
+  // use default parm group if not set
+  if( itsParmGroup.empty() )
+    wstate()[FParmGroup] = itsParmGroup = AidParm;
 }
 
 //##ModelId=400E53550265
@@ -114,12 +116,12 @@ void Solver::processCommands (const DataRecord &rec,const Request &request)
   // Take care that these current values are used in getResult (if called).
   itsResetCur = false;
   cdebug(1)<<"Solver rider: "
-	   <<itsCurNumIter<<','
-	   <<itsCurEpsilon<<','
-	   <<itsCurUseSVD<<','
-	   <<clearGiven<<':'<<itsCurClearMatrix<<','
-	   <<invertGiven<<':'<<itsCurInvertMatrix<<','
-	   <<itsCurSavePolcs<<endl;
+           <<itsCurNumIter<<','
+           <<itsCurEpsilon<<','
+           <<itsCurUseSVD<<','
+           <<clearGiven<<':'<<itsCurClearMatrix<<','
+           <<invertGiven<<':'<<itsCurInvertMatrix<<','
+           <<itsCurSavePolcs<<endl;
   // Update wstate.
   setCurState();
   // getResult won't be called if the request has no cells.
@@ -135,7 +137,7 @@ void Solver::processCommands (const DataRecord &rec,const Request &request)
       std::vector<Result::Ref> child_results;
       Result::Ref resref;
       solve (solution, request, solRec, resref, child_results,
-	     false, true);
+             false, true);
     }
     // Take care that current gets reset to default if no
     // processCommands is called for the next getResult.
@@ -216,16 +218,16 @@ int Solver::getResult (Result::Ref &resref,
     // solver for the 2nd step and so.
     if (itsSpids.empty()) {
       AssertStr (nspid > 0,
-		 "No solvable parameters found in solver " << name());
+                 "No solvable parameters found in solver " << name());
       itsSolver.set (nspid, 1u, 0u);
       itsNrEquations = 0;
       itsSpids = spids;
     } else {
       AssertStr (itsSpids == spids,
-		 "Different spids while solver is not restarted");
+                 "Different spids while solver is not restarted");
       if (step > 0) {
-	itsSolver.set (nspid, 1u, 0u);
-	itsNrEquations = 0;
+        itsSolver.set (nspid, 1u, 0u);
+        itsNrEquations = 0;
       }
     }
     // Now feed the solver with equations from the results.
@@ -261,7 +263,7 @@ int Solver::getResult (Result::Ref &resref,
             }
           }
           itsSolver.makeNorm (&derivReal[0], 1., values+j);
-	  itsNrEquations++;
+          itsNrEquations++;
         }
       } else {
         const dcomplex* values = chresult.getValue().complexStorage();
@@ -288,10 +290,10 @@ int Solver::getResult (Result::Ref &resref,
           }
           val = values[j].real();
           itsSolver.makeNorm (&derivReal[0], 1., &val);
-	  itsNrEquations++;
+          itsNrEquations++;
           val = values[j].imag();
           itsSolver.makeNorm (&derivImag[0], 1., &val);
-	  itsNrEquations++;
+          itsNrEquations++;
         }
       }
     }
@@ -299,8 +301,8 @@ int Solver::getResult (Result::Ref &resref,
     // Fill it with zeroes and stop if no invert will be done.
     if (step == itsCurNumIter-1  &&  !itsCurInvertMatrix) {
       if (step == 0) {
-	allSolutions.resize (nspid);
-	allSolutions = 0.;
+        allSolutions.resize (nspid);
+        allSolutions = 0.;
       }
       break;
     }
@@ -312,7 +314,7 @@ int Solver::getResult (Result::Ref &resref,
     // Solve the equation.
     DataRecord& solRec = metricsRec[step] <<= new DataRecord;
     solve (solution, newReq, solRec, resref, child_results,
-	   false, step==itsCurNumIter-1);
+           false, step==itsCurNumIter-1);
     newReq.setId(nextIterationId(rqid));
     // Unlock all parm tables used.
     ParmTable::unlockTables();
@@ -327,16 +329,16 @@ int Solver::getResult (Result::Ref &resref,
 }
 
 void Solver::solve (Vector<double>& solution, const Request& request,
-		    DataRecord& solRec, Result::Ref& resref,
-		    std::vector<Result::Ref>& child_results,
-		    bool savePolcs, bool lastIter)
+                    DataRecord& solRec, Result::Ref& resref,
+                    std::vector<Result::Ref>& child_results,
+                    bool savePolcs, bool lastIter)
 {
   // Do some checks and initialize.
   int nspid = itsSpids.size();
   Assert (int(solution.nelements()) == nspid);
   AssertStr (itsNrEquations >= nspid, "Only " << itsNrEquations
-	     << " equations for "
-	     << nspid << " solvable parameters in solver " << name());
+             << " equations for "
+             << nspid << " solvable parameters in solver " << name());
   solution = 0;
   Request::Ref reqref;
   Request* req = const_cast<Request*>(&request);
@@ -365,7 +367,7 @@ void Solver::solve (Vector<double>& solution, const Request& request,
   // This is needed because the solver does in-place transformations.
   FitLSQ solver = itsSolver;
   bool solFlag = solver.solveLoop (fit, rank, solution,
-				   stddev, mu, itsCurUseSVD);
+                                   stddev, mu, itsCurUseSVD);
   cdebug(4) << "Solution after:  " << solution << endl;
   // Put the statistics in a record the result.
   solRec[FRank] = int(rank);
@@ -382,7 +384,7 @@ void Solver::solve (Vector<double>& solution, const Request& request,
   // will contain a DataRecord for each parm 
   DataRecord& dr1 = (*req)[FRider][itsParmGroup].replace() <<= new DataRecord;
   fillSolution (dr1[FCommandByNodeIndex] <<= new DataRecord, 
-		itsSpids, solution, savePolcs);
+                itsSpids, solution, savePolcs);
   // Lock all parm tables used.
   ParmTable::lockTables();
   // Update the parms.
@@ -425,6 +427,7 @@ void Solver::fillSolution (DataRecord& rec, const vector<int>& spids,
 void Solver::setStateImpl (DataRecord& newst,bool initializing)
 {
   Node::setStateImpl(newst,initializing);
+  getStateField(itsParmGroup,newst,FParmGroup);
   if( newst[FDefault].exists() )
   {
     const DataRecord &def = newst[FDefault];
@@ -435,7 +438,6 @@ void Solver::setStateImpl (DataRecord& newst,bool initializing)
     getStateField(itsDefSavePolcs,def,FSavePolcs);
     getStateField(itsDefEpsilon,def,FEpsilon);
     getStateField(itsDefUseSVD,def,FUseSVD);
-    getStateField(itsParmGroup,def,FParmGroup);
   }
 }
 
