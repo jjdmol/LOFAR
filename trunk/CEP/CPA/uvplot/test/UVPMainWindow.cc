@@ -24,13 +24,12 @@
 #include <OCTOPUSSY/Gateways.h>
 
 #include <UVPMainWindow.h>
-//***#include <uvplot/UVPDataTransferWP.h>    // Communications class
-//***#include <uvplot/UVPPVDInput.h>
 
 
 #include <qapplication.h>       // qApp
 #include <qmessagebox.h>
 #include <qfiledialog.h>
+#include <qinputdialog.h>
 #include <qlayout.h>
 
 #include <sstream>              // std::ostringstream
@@ -516,6 +515,8 @@ void UVPMainWindow::slot_vdmOpenMS()
     MeasurementSet ms(filename.latin1());
     MSAntenna      AntennaTable(ms.antenna());
     itsGraphSettingsWidget->setNumberOfAntennae(AntennaTable.nrow());
+    slot_vdmInit(HIID(""));
+
   }
 }
 
@@ -523,9 +524,28 @@ void UVPMainWindow::slot_vdmOpenMS()
 
 
 
+//==================>>>  UVPMainWindow::slot_vdmOpenPipe  <<<==================
+
+void UVPMainWindow::slot_vdmOpenPipe()
+{
+  bool ok;
+  QString text = QInputDialog::getText("Uvplot: VDM initialisation", 
+                                       "Enter HIID to subscribe to:",
+                                       QLineEdit::Normal,
+                                       QString::null, &ok, this );
+  if ( ok && !text.isEmpty() ) {
+    // user entered something and pressed OK
+    slot_vdmInit(HIID(text.str()));
+  } else {
+    // user entered nothing or pressed Cancel
+  }
+}
+
+
+
 //===============>>>  UVPMainWindow::slot_vdmInit  <<<===============
 
-void UVPMainWindow::slot_vdmInit()
+void UVPMainWindow::slot_vdmInit(const HIID& hiid)
 try
 {
   using namespace MSVisAgentVocabulary;
@@ -600,7 +620,6 @@ void UVPMainWindow::slot_vdmInput()
 try
 {
   using namespace std;
-  slot_vdmInit();
   
   if(!itsBusyPlotting) {
     itsBusyPlotting = true;

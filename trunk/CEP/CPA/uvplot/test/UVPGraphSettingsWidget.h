@@ -25,11 +25,23 @@
 
 #include <uvplot/UVPGraphSettings.h>
 
+#include <qwidget.h>
+class QLineEdit;
+class QLabel;
+class QSlider;
+class QPushButton;
+class QComboBox;
+class QVBoxLayout;
+class QHBoxLayout;
+
+/*
 #include <qlineedit.h>
 #include <qlabel.h>
 #include <qslider.h>
 #include <qpushbutton.h>
 #include <qcombobox.h>
+*/
+
 
 class UVPGraphSettingsWidget: public QWidget
 {
@@ -47,6 +59,8 @@ public:
 
   void setNumberOfAntennae(unsigned int numberOfAntennae);
 
+  void setNumberOfFields(unsigned int numberOfFields);
+
   const UVPGraphSettings &getSettings() const;
 
 public slots:
@@ -57,6 +71,8 @@ public slots:
   void slot_antenna2Changed(int antenna2);
   void slot_correlationChanged(int corr);
   void slot_columnChanged     (int column);
+  void slot_fieldChanged      ();
+  void slot_spectralWindowChanged();
 
 
 signals:
@@ -73,10 +89,20 @@ signals:
   void signalColumnChanged(const std::string& columnName);
   
   void signalLoadButtonClicked();
+
+  void signalFieldsChanged();
+
   
 protected:
 private:
   unsigned int     itsNumberOfAntennae;
+
+  QVBoxLayout*     itsVLayout;
+  QHBoxLayout*     itsFieldLayout;
+
+  QLabel*          itsFieldLabel;
+  std::vector<QCheckBox*> itsFieldSelections;
+ 
 
   QSlider*         itsAntenna1Slider;
   QLabel*          itsAntenna1Label;
