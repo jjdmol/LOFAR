@@ -51,12 +51,17 @@
 #include "ARAPropertyDefines.h"
 #include "ARAPhysicalModel.h"
 
-using namespace LOFAR;
 using namespace GCF;
-using namespace ARA;
 using namespace std;
 using namespace boost::posix_time;
 using namespace boost::gregorian;
+
+
+namespace LOFAR
+{
+
+namespace ARA
+{
 
 string RegisterAccessTask::m_RSPserverName("ARAtestRSPserver");
 
@@ -73,9 +78,7 @@ RegisterAccessTask::RegisterAccessTask(string name)
       m_physicalModel(),
       m_subStatusHandle(0),
       m_subStatsHandleSubbandPower(0),
-      m_subStatsHandleSubbandMean(0),
       m_subStatsHandleBeamletPower(0),
-      m_subStatsHandleBeamletMean(0),
       m_n_racks(1),
       m_n_subracks_per_rack(1),
       m_n_boards_per_subrack(1),
@@ -111,65 +114,67 @@ RegisterAccessTask::RegisterAccessTask(string name)
   m_stats_update_interval  = ParameterSet::instance()->getInt(PARAM_STATISTICS_UPDATE_INTERVAL);
   
   // fill MyPropertySets map
-  addMyPropertySet(SCOPE_PIC,TYPE_LCU_PIC,PROPS_Station);
-  addMyPropertySet(SCOPE_PIC_Maintenance, TYPE_LCU_PIC_Maintenance, PROPS_Maintenance);
+  addMyPropertySet(SCOPE_PIC, TYPE_LCU_PIC, PSCAT_LCU_PIC, PROPS_Station);
+  addMyPropertySet(SCOPE_PIC_Maintenance, TYPE_LCU_PIC_Maintenance, PSCAT_LCU_PIC_Maintenance, PROPS_Maintenance);
   for(rack=1;rack<=m_n_racks;rack++)
   {
     sprintf(scopeString,SCOPE_PIC_RackN,rack);
-    addMyPropertySet(scopeString,TYPE_LCU_PIC_Rack, PROPS_Rack);
+    addMyPropertySet(scopeString,TYPE_LCU_PIC_Rack, PSCAT_LCU_PIC_Rack, PROPS_Rack);
     sprintf(scopeString,SCOPE_PIC_RackN_Maintenance,rack);
-    addMyPropertySet(scopeString,TYPE_LCU_PIC_Maintenance, PROPS_Maintenance);
+    addMyPropertySet(scopeString,TYPE_LCU_PIC_Maintenance, PSCAT_LCU_PIC_Maintenance, PROPS_Maintenance);
     sprintf(scopeString,SCOPE_PIC_RackN_Alert,rack);
-    addMyPropertySet(scopeString,TYPE_LCU_PIC_Alert, PROPS_Alert);
+    addMyPropertySet(scopeString,TYPE_LCU_PIC_Alert, PSCAT_LCU_PIC_Alert, PROPS_Alert);
 
     for(subrack=1;subrack<=m_n_subracks_per_rack;subrack++)
     {
       sprintf(scopeString,SCOPE_PIC_RackN_SubRackN,rack,subrack);
-      addMyPropertySet(scopeString, TYPE_LCU_PIC_SubRack, PROPS_SubRack);
+      addMyPropertySet(scopeString, TYPE_LCU_PIC_SubRack, PSCAT_LCU_PIC_SubRack, PROPS_SubRack);
       sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_Maintenance,rack,subrack);
-      addMyPropertySet(scopeString, TYPE_LCU_PIC_Maintenance, PROPS_Maintenance);
+      addMyPropertySet(scopeString, TYPE_LCU_PIC_Maintenance, PSCAT_LCU_PIC_Maintenance, PROPS_Maintenance);
       sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_Alert,rack,subrack);
-      addMyPropertySet(scopeString, TYPE_LCU_PIC_Alert, PROPS_Alert);
+      addMyPropertySet(scopeString, TYPE_LCU_PIC_Alert, PSCAT_LCU_PIC_Alert, PROPS_Alert);
       
       for(board=1;board<=m_n_boards_per_subrack;board++)
       {
         sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN,rack,subrack,board);
-        addMyPropertySet(scopeString, TYPE_LCU_PIC_Board, PROPS_Board);
-        sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_MEPReadStatus,rack,subrack,board);
-        addMyPropertySet(scopeString, TYPE_LCU_PIC_MEPStatus, PROPS_MEPStatus);
-        sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_MEPWriteStatus,rack,subrack,board);
-        addMyPropertySet(scopeString, TYPE_LCU_PIC_MEPStatus, PROPS_MEPStatus);
-        sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_SYNCStatus,rack,subrack,board);
-        addMyPropertySet(scopeString, TYPE_LCU_PIC_SYNCStatus, PROPS_SYNCStatus);
+        addMyPropertySet(scopeString, TYPE_LCU_PIC_Board, PSCAT_LCU_PIC_Board, PROPS_Board);
+        sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_MEPStatus,rack,subrack,board);
+        addMyPropertySet(scopeString, TYPE_LCU_PIC_MEPStatus, PSCAT_LCU_PIC_MEPStatus, PROPS_MEPStatus);
+        sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_MEPStatus,rack,subrack,board);
+        addMyPropertySet(scopeString, TYPE_LCU_PIC_MEPStatus, PSCAT_LCU_PIC_MEPStatus, PROPS_MEPStatus);
         sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_Maintenance,rack,subrack,board);
-        addMyPropertySet(scopeString, TYPE_LCU_PIC_Maintenance, PROPS_Maintenance);
+        addMyPropertySet(scopeString, TYPE_LCU_PIC_Maintenance, PSCAT_LCU_PIC_Maintenance, PROPS_Maintenance);
         sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_Alert,rack,subrack,board);
-        addMyPropertySet(scopeString, TYPE_LCU_PIC_Alert, PROPS_Alert);
+        addMyPropertySet(scopeString, TYPE_LCU_PIC_Alert, PSCAT_LCU_PIC_Alert, PROPS_Alert);
         sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_ETH,rack,subrack,board);
-        addMyPropertySet(scopeString, TYPE_LCU_PIC_Ethernet, PROPS_Ethernet);
+        addMyPropertySet(scopeString, TYPE_LCU_PIC_Ethernet, PSCAT_LCU_PIC_Ethernet, PROPS_Ethernet);
         sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_BP,rack,subrack,board);
-        addMyPropertySet(scopeString, TYPE_LCU_PIC_FPGA, PROPS_FPGA);
+        addMyPropertySet(scopeString, TYPE_LCU_PIC_FPGA, PSCAT_LCU_PIC_FPGA, PROPS_FPGA);
     
         for(ap=1;ap<=m_n_aps_per_board;ap++)
         {
           sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN,rack,subrack,board,ap);
-          addMyPropertySet(scopeString, TYPE_LCU_PIC_FPGA, PROPS_FPGA);
+          addMyPropertySet(scopeString, TYPE_LCU_PIC_FPGA, PSCAT_LCU_PIC_FPGA, PROPS_FPGA);
+          sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_SYNCStatus,rack,subrack,board,ap);
+          addMyPropertySet(scopeString, TYPE_LCU_PIC_SYNCStatus, PSCAT_LCU_PIC_SYNCStatus, PROPS_SYNCStatus);
+          sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_BoardRCUStatus,rack,subrack,board,ap);
+          addMyPropertySet(scopeString, TYPE_LCU_PIC_BoardRCUStatus, PSCAT_LCU_PIC_BoardRCUStatus, PROPS_BoardRCUStatus);
           for(rcu=1;rcu<=m_n_rcus_per_ap;rcu++)
           {
             sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN,rack,subrack,board,ap,rcu);
-            addMyPropertySet(scopeString, TYPE_LCU_PIC_RCU, PROPS_RCU);
+            addMyPropertySet(scopeString, TYPE_LCU_PIC_RCU, PSCAT_LCU_PIC_RCU, PROPS_RCU);
             sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN_ADCStatistics,rack,subrack,board,ap,rcu);
-            addMyPropertySet(scopeString, TYPE_LCU_PIC_ADCStatistics, PROPS_ADCStatistics);
+            addMyPropertySet(scopeString, TYPE_LCU_PIC_ADCStatistics, PSCAT_LCU_PIC_ADCStatistics, PROPS_ADCStatistics);
             sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN_Maintenance,rack,subrack,board,ap,rcu);
-            addMyPropertySet(scopeString, TYPE_LCU_PIC_Maintenance, PROPS_Maintenance);
+            addMyPropertySet(scopeString, TYPE_LCU_PIC_Maintenance, PSCAT_LCU_PIC_Maintenance, PROPS_Maintenance);
             sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN_LFA,rack,subrack,board,ap,rcu);
-            addMyPropertySet(scopeString, TYPE_LCU_PIC_LFA, PROPS_LFA);
+            addMyPropertySet(scopeString, TYPE_LCU_PIC_LFA, PSCAT_LCU_PIC_LFA, PROPS_LFA);
             sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN_HFA,rack,subrack,board,ap,rcu);
-            addMyPropertySet(scopeString, TYPE_LCU_PIC_HFA, PROPS_HFA);
+            addMyPropertySet(scopeString, TYPE_LCU_PIC_HFA, PSCAT_LCU_PIC_HFA, PROPS_HFA);
             sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN_LFA_Maintenance,rack,subrack,board,ap,rcu);
-            addMyPropertySet(scopeString, TYPE_LCU_PIC_Maintenance, PROPS_Maintenance);
+            addMyPropertySet(scopeString, TYPE_LCU_PIC_Maintenance, PSCAT_LCU_PIC_Maintenance, PROPS_Maintenance);
             sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN_HFA_Maintenance,rack,subrack,board,ap,rcu);
-            addMyPropertySet(scopeString, TYPE_LCU_PIC_Maintenance, PROPS_Maintenance);
+            addMyPropertySet(scopeString, TYPE_LCU_PIC_Maintenance, PSCAT_LCU_PIC_Maintenance, PROPS_Maintenance);
           }
         }
       }
@@ -201,12 +206,10 @@ RegisterAccessTask::RegisterAccessTask(string name)
       {
         sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN,rack,subrack,board);
         addAPC(APC_Board, scopeString);
-        sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_MEPReadStatus,rack,subrack,board);
+        sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_MEPStatus,rack,subrack,board);
         addAPC(APC_MEPStatus, scopeString);
-        sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_MEPWriteStatus,rack,subrack,board);
+        sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_MEPStatus,rack,subrack,board);
         addAPC(APC_MEPStatus, scopeString);
-        sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_SYNCStatus,rack,subrack,board);
-        addAPC(APC_SYNCStatus, scopeString);
         sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_Maintenance,rack,subrack,board);
         addAPC(APC_Maintenance, scopeString);
         sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_Alert,rack,subrack,board);
@@ -219,6 +222,10 @@ RegisterAccessTask::RegisterAccessTask(string name)
         {
           sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN,rack,subrack,board,ap);
           addAPC(APC_FPGA, scopeString);
+          sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_SYNCStatus,rack,subrack,board,ap);
+          addAPC(APC_SYNCStatus, scopeString);
+          sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_BoardRCUStatus,rack,subrack,board,ap);
+          addAPC(APC_BoardRCUStatus, scopeString);
           for(rcu=1;rcu<=m_n_rcus_per_ap;rcu++)
           {
             sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_RCUN,rack,subrack,board,ap,rcu);
@@ -249,9 +256,9 @@ RegisterAccessTask::~RegisterAccessTask()
 {
 }
 
-void RegisterAccessTask::addMyPropertySet(const char* scope,const char* type, const TPropertyConfig propconfig[])
+void RegisterAccessTask::addMyPropertySet(const char* scope,const char* type, TPSCategory category, const TPropertyConfig propconfig[])
 {
-  boost::shared_ptr<GCFMyPropertySet> propsPtr(new GCFMyPropertySet(scope,type,false,&m_answer));
+  boost::shared_ptr<GCFMyPropertySet> propsPtr(new GCFMyPropertySet(scope,type,category,&m_answer));
   m_myPropertySetMap[scope]=propsPtr;
   
   propsPtr->initProperties(propconfig);
@@ -267,7 +274,7 @@ bool RegisterAccessTask::isConnected()
   return m_RSPclient.isConnected();
 }
 
-GCFEvent::TResult RegisterAccessTask::initial(GCFEvent& e, GCFPortInterface& port)
+GCFEvent::TResult RegisterAccessTask::initial(GCFEvent& e, GCFPortInterface& /*port*/)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
   
@@ -606,70 +613,6 @@ GCFEvent::TResult RegisterAccessTask::subscribingStatsSubbandPower(GCFEvent& e, 
         m_subStatsHandleSubbandPower = ack.handle;
       }
       
-      TRAN(RegisterAccessTask::subscribingStatsSubbandMean);
-      break;
-    }
-    
-    case F_DISCONNECTED:
-    {
-      LOG_DEBUG(formatString("port %s disconnected", port.getName().c_str()));
-      port.close();
-
-      TRAN(RegisterAccessTask::APCsLoaded);
-      break;
-    }
-
-    case F_EXIT:
-    {
-      break;
-    }
-
-    default:
-      status = GCFEvent::NOT_HANDLED;
-      break;
-  }
-
-  return status;
-}
-
-GCFEvent::TResult RegisterAccessTask::subscribingStatsSubbandMean(GCFEvent& e, GCFPortInterface &port)
-{
-  GCFEvent::TResult status = GCFEvent::HANDLED;
-
-  switch (e.signal)
-  {
-
-    case F_INIT:
-      break;
-      
-    case F_ENTRY:
-    {
-      // subscribe to status updates
-      RSPSubstatsEvent substats;
-      substats.timestamp.setNow();
-      substats.rcumask = std::bitset<MAX_N_RCUS>((1<<m_n_rcus)-1);
-      substats.period = m_stats_update_interval;
-      substats.type = RSP_Protocol::Statistics::SUBBAND_MEAN;
-      substats.reduction = RSP_Protocol::REPLACE;
-      m_RSPclient.send(substats);
-      
-      break;
-    }
-
-    case RSP_SUBSTATSACK:
-    {
-      LOG_INFO("RSP_SUBSTATSACK received");
-      RSPSubstatsackEvent ack(e);
-
-      if(ack.status != SUCCESS)
-      {
-        LOG_ERROR("RSP_SUBSTATS failure");
-      }
-      else
-      {
-        m_subStatsHandleSubbandMean = ack.handle;
-      }
-      
       TRAN(RegisterAccessTask::subscribingStatsBeamletPower);
       break;
     }
@@ -732,70 +675,6 @@ GCFEvent::TResult RegisterAccessTask::subscribingStatsBeamletPower(GCFEvent& e, 
       else
       {
         m_subStatsHandleBeamletPower = ack.handle;
-      }
-      
-      TRAN(RegisterAccessTask::subscribingStatsBeamletMean);
-      break;
-    }
-    
-    case F_DISCONNECTED:
-    {
-      LOG_DEBUG(formatString("port %s disconnected", port.getName().c_str()));
-      port.close();
-
-      TRAN(RegisterAccessTask::APCsLoaded);
-      break;
-    }
-
-    case F_EXIT:
-    {
-      break;
-    }
-
-    default:
-      status = GCFEvent::NOT_HANDLED;
-      break;
-  }
-
-  return status;
-}
-
-GCFEvent::TResult RegisterAccessTask::subscribingStatsBeamletMean(GCFEvent& e, GCFPortInterface &port)
-{
-  GCFEvent::TResult status = GCFEvent::HANDLED;
-
-  switch (e.signal)
-  {
-
-    case F_INIT:
-      break;
-      
-    case F_ENTRY:
-    {
-      // subscribe to status updates
-      RSPSubstatsEvent substats;
-      substats.timestamp.setNow();
-      substats.rcumask = std::bitset<MAX_N_RCUS>((1<<m_n_rcus)-1);
-      substats.period = m_stats_update_interval;
-      substats.type = RSP_Protocol::Statistics::BEAMLET_MEAN;
-      substats.reduction = RSP_Protocol::REPLACE;
-      m_RSPclient.send(substats);
-      
-      break;
-    }
-
-    case RSP_SUBSTATSACK:
-    {
-      LOG_INFO("RSP_SUBSTATSACK received");
-      RSPSubstatsackEvent ack(e);
-
-      if(ack.status != SUCCESS)
-      {
-        LOG_ERROR("RSP_SUBSTATS failure");
-      }
-      else
-      {
-        m_subStatsHandleBeamletMean = ack.handle;
       }
       
       TRAN(RegisterAccessTask::operational);
@@ -886,11 +765,7 @@ GCFEvent::TResult RegisterAccessTask::operational(GCFEvent& e, GCFPortInterface&
       RSPUnsubstatsEvent unsubStats;
       unsubStats.handle = m_subStatsHandleSubbandPower; // remove subscription with this handle
       m_RSPclient.send(unsubStats);
-      unsubStats.handle = m_subStatsHandleSubbandMean; // remove subscription with this handle
-      m_RSPclient.send(unsubStats);
       unsubStats.handle = m_subStatsHandleBeamletPower; // remove subscription with this handle
-      m_RSPclient.send(unsubStats);
-      unsubStats.handle = m_subStatsHandleBeamletMean; // remove subscription with this handle
       m_RSPclient.send(unsubStats);
       break;
     }
@@ -933,27 +808,45 @@ GCFEvent::TResult RegisterAccessTask::handleUpdStatus(GCFEvent& e, GCFPortInterf
       LOG_INFO(formatString("UpdStatus:Rack:%d:SubRack:%d:Board::%d\n",rackNr,subRackNr,relativeBoardNr));
       
       uint8   rspVoltage_15 = boardStatus(boardNr).rsp.voltage_15;
-      uint8   rspVoltage_22 = boardStatus(boardNr).rsp.voltage_22;
-      uint16  rspFfi        = boardStatus(boardNr).rsp.ffi;
-      LOG_INFO(formatString("UpdStatus:RSP voltage_15:%d:voltage_22:%d:ffi:%d",rspVoltage_15,rspVoltage_22,rspFfi));
+      uint8   rspVoltage_33 = boardStatus(boardNr).rsp.voltage_33;
+      uint8   rspFfi0       = boardStatus(boardNr).rsp.ffi0;
+      uint8   rspFfi1       = boardStatus(boardNr).rsp.ffi1;
+      LOG_INFO(formatString("UpdStatus:RSP voltage_15:%d:voltage_33:%d:ffi0:%d:ffi1:%d",rspVoltage_15,rspVoltage_33,rspFfi0,rspFfi1));
       sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN,rackNr,subRackNr,relativeBoardNr);
-      updateBoardProperties(scopeString,rspVoltage_15,rspVoltage_22,rspFfi);
+      updateBoardProperties(scopeString,rspVoltage_15,rspVoltage_33,rspFfi0,rspFfi1);
       
-      uint8   bpStatus  = boardStatus(boardNr).bp.status;
-      uint8   bpTemp    = boardStatus(boardNr).bp.temp;
+      uint8   bpStatus  = boardStatus(boardNr).fpga.bp_status;
+      uint8   bpTemp    = boardStatus(boardNr).fpga.bp_temp;
+      uint8   ap1Status = boardStatus(boardNr).fpga.ap1_status;
+      uint8   ap1Temp   = boardStatus(boardNr).fpga.ap1_temp;
+      uint8   ap2Status = boardStatus(boardNr).fpga.ap2_status;
+      uint8   ap2Temp   = boardStatus(boardNr).fpga.ap2_temp;
+      uint8   ap3Status = boardStatus(boardNr).fpga.ap3_status;
+      uint8   ap3Temp   = boardStatus(boardNr).fpga.ap3_temp;
+      uint8   ap4Status = boardStatus(boardNr).fpga.ap4_status;
+      uint8   ap4Temp   = boardStatus(boardNr).fpga.ap4_temp;
+      uint8   fpgaFfi0  = boardStatus(boardNr).fpga.ffi0;
+      uint8   fpgaFfi1  = boardStatus(boardNr).fpga.ffi1;
       LOG_INFO(formatString("UpdStatus:BP status:%d:temp:%d",bpStatus,bpTemp));
+      LOG_INFO(formatString("UpdStatus:AP1 status:%d:temp:%d",ap1Status,ap1Temp));
+      LOG_INFO(formatString("UpdStatus:AP2 status:%d:temp:%d",ap2Status,ap2Temp));
+      LOG_INFO(formatString("UpdStatus:AP3 status:%d:temp:%d",ap3Status,ap3Temp));
+      LOG_INFO(formatString("UpdStatus:AP4 status:%d:temp:%d",ap4Status,ap4Temp));
+      LOG_INFO(formatString("UpdStatus:ffi0:%d:ffi1:%d",fpgaFfi0,fpgaFfi1));
+      sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN,rackNr,subRackNr,relativeBoardNr);
+      updateFPGAboardProperties(scopeString,fpgaFfi0,fpgaFfi1);
+      
       sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_BP,rackNr,subRackNr,relativeBoardNr);
       updateFPGAproperties(scopeString,bpStatus,bpTemp);
+      sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN,rackNr,subRackNr,relativeBoardNr,1);
+      updateFPGAproperties(scopeString,ap1Status,ap1Temp);
+      sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN,rackNr,subRackNr,relativeBoardNr,2);
+      updateFPGAproperties(scopeString,ap2Status,ap2Temp);
+      sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN,rackNr,subRackNr,relativeBoardNr,3);
+      updateFPGAproperties(scopeString,ap3Status,ap3Temp);
+      sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN,rackNr,subRackNr,relativeBoardNr,4);
+      updateFPGAproperties(scopeString,ap4Status,ap4Temp);
 
-      for(int apNr=0; apNr < EPA_Protocol::N_AP; ++apNr)
-      {
-        uint8   apStatus  = boardStatus(boardNr).ap[apNr].status;
-        uint8   apTemp    = boardStatus(boardNr).ap[apNr].temp;
-        LOG_INFO(formatString("UpdStatus:AP[%d] status:%d:temp:%d",apNr,apStatus,apTemp));
-        sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN,rackNr,subRackNr,relativeBoardNr,apNr+1);
-        updateFPGAproperties(scopeString,apStatus,apTemp);
-      }      
-  
       uint32    ethFrames     = boardStatus(boardNr).eth.nof_frames;
       uint32    ethErrors     = boardStatus(boardNr).eth.nof_errors;
       uint8     ethLastError  = boardStatus(boardNr).eth.last_error;
@@ -964,26 +857,80 @@ GCFEvent::TResult RegisterAccessTask::handleUpdStatus(GCFEvent& e, GCFPortInterf
       sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_ETH,rackNr,subRackNr,relativeBoardNr);
       updateETHproperties(scopeString,ethFrames,ethErrors,ethLastError,ethFfi0,ethFfi1,ethFfi2);  
   
-      uint32    readSeqnr = boardStatus(boardNr).read.seqnr;
-      uint8     readError = boardStatus(boardNr).read.error;
-      uint8     readFfi   = boardStatus(boardNr).read.ffi;
-      LOG_INFO(formatString("UpdStatus:READ seqnr:%d:error:%d:ffi:%d",readSeqnr,readError,readFfi));
-      sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_MEPReadStatus,rackNr,subRackNr,relativeBoardNr);
-      updateMEPStatusProperties(scopeString,readSeqnr,readError,readFfi);  
+      uint32    mepSeqnr = boardStatus(boardNr).mep.seqnr;
+      uint8     mepError = boardStatus(boardNr).mep.error;
+      uint8     mepFfi0  = boardStatus(boardNr).mep.ffi0;
+      LOG_INFO(formatString("UpdStatus:MEP seqnr:%d:error:%d:ffi:%d",mepSeqnr,mepError,mepFfi0));
+      sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_MEPStatus,rackNr,subRackNr,relativeBoardNr);
+      updateMEPStatusProperties(scopeString,mepSeqnr,mepError,mepFfi0);  
       
-      uint32    writeSeqnr = boardStatus(boardNr).write.seqnr;
-      uint8     writeError = boardStatus(boardNr).write.error;
-      uint8     writeFfi   = boardStatus(boardNr).write.ffi;
-      LOG_INFO(formatString("UpdStatus:WRITE seqnr:%d:error:%d:ffi:%d",writeSeqnr,writeError,writeFfi));
-      sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_MEPWriteStatus,rackNr,subRackNr,relativeBoardNr);
-      updateMEPStatusProperties(scopeString,writeSeqnr,writeError,writeFfi);  
+      uint32    syncSample_count = boardStatus(boardNr).ap1_sync.sample_count;
+      uint32    syncSync_count   = boardStatus(boardNr).ap1_sync.sync_count;
+      uint32    syncError_count  = boardStatus(boardNr).ap1_sync.error_count;
+      LOG_INFO(formatString("SyncStatus ap1:clock_count:%d:count:%d:errors:%d",syncSample_count,syncSync_count,syncError_count));
+      sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_SYNCStatus,rackNr,subRackNr,relativeBoardNr,1);
+      updateSYNCStatusProperties(scopeString,syncSample_count,syncSync_count,syncError_count);  
 
-      uint32    syncClock_count = boardStatus(boardNr).sync.clock_count;
-      uint32    syncCount       = boardStatus(boardNr).sync.count;
-      uint32    syncErrors      = boardStatus(boardNr).sync.errors;
-      LOG_INFO(formatString("UpdStatus:clock_count:%d:count:%d:errors:%d",syncClock_count,syncCount,syncErrors));
-      sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_SYNCStatus,rackNr,subRackNr,relativeBoardNr);
-      updateSYNCStatusProperties(scopeString,syncClock_count,syncCount,syncErrors);  
+      syncSample_count = boardStatus(boardNr).ap2_sync.sample_count;
+      syncSync_count   = boardStatus(boardNr).ap2_sync.sync_count;
+      syncError_count  = boardStatus(boardNr).ap2_sync.error_count;
+      LOG_INFO(formatString("SyncStatus ap2:clock_count:%d:count:%d:errors:%d",syncSample_count,syncSync_count,syncError_count));
+      sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_SYNCStatus,rackNr,subRackNr,relativeBoardNr,2);
+      updateSYNCStatusProperties(scopeString,syncSample_count,syncSync_count,syncError_count);  
+
+      syncSample_count = boardStatus(boardNr).ap3_sync.sample_count;
+      syncSync_count   = boardStatus(boardNr).ap3_sync.sync_count;
+      syncError_count  = boardStatus(boardNr).ap3_sync.error_count;
+      LOG_INFO(formatString("SyncStatus ap3:clock_count:%d:count:%d:errors:%d",syncSample_count,syncSync_count,syncError_count));
+      sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_SYNCStatus,rackNr,subRackNr,relativeBoardNr,3);
+      updateSYNCStatusProperties(scopeString,syncSample_count,syncSync_count,syncError_count);  
+
+      syncSample_count = boardStatus(boardNr).ap4_sync.sample_count;
+      syncSync_count   = boardStatus(boardNr).ap4_sync.sync_count;
+      syncError_count  = boardStatus(boardNr).ap4_sync.error_count;
+      LOG_INFO(formatString("SyncStatus ap4:clock_count:%d:count:%d:errors:%d",syncSample_count,syncSync_count,syncError_count));
+      sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_SYNCStatus,rackNr,subRackNr,relativeBoardNr,4);
+      updateSYNCStatusProperties(scopeString,syncSample_count,syncSync_count,syncError_count);  
+
+      uint8     boardRCUstatusStatusX       = boardStatus(boardNr).ap1_rcu.statusx;
+      uint8     boardRCUstatusStatusY       = boardStatus(boardNr).ap1_rcu.statusy;
+      uint8     boardRCUstatusFFI0          = boardStatus(boardNr).ap1_rcu.ffi0;
+      uint8     boardRCUstatusFFI1          = boardStatus(boardNr).ap1_rcu.ffi1;
+      uint32    boardRCUstatusNofOverflowX  = boardStatus(boardNr).ap1_rcu.nof_overflowx;
+      uint32    boardRCUstatusNofOverflowY  = boardStatus(boardNr).ap1_rcu.nof_overflowy;
+      LOG_INFO(formatString("BoardRCUStatus ap1:statusX:%d:statusY:%d:ffi0:%d:ffi1:%d:nofOverflowX:%d:nofOverflowY:%d",boardRCUstatusStatusX,boardRCUstatusStatusY,boardRCUstatusFFI0,boardRCUstatusFFI1,boardRCUstatusNofOverflowX,boardRCUstatusNofOverflowY));
+      sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_BoardRCUStatus,rackNr,subRackNr,relativeBoardNr,1);
+      updateBoardRCUproperties(scopeString,boardRCUstatusStatusX,boardRCUstatusStatusY,boardRCUstatusFFI0,boardRCUstatusFFI1,boardRCUstatusNofOverflowX,boardRCUstatusNofOverflowY);
+
+      boardRCUstatusStatusX       = boardStatus(boardNr).ap2_rcu.statusx;
+      boardRCUstatusStatusY       = boardStatus(boardNr).ap2_rcu.statusy;
+      boardRCUstatusFFI0          = boardStatus(boardNr).ap2_rcu.ffi0;
+      boardRCUstatusFFI1          = boardStatus(boardNr).ap2_rcu.ffi1;
+      boardRCUstatusNofOverflowX  = boardStatus(boardNr).ap2_rcu.nof_overflowx;
+      boardRCUstatusNofOverflowY  = boardStatus(boardNr).ap2_rcu.nof_overflowy;
+      LOG_INFO(formatString("BoardRCUStatus ap2:statusX:%d:statusY:%d:ffi0:%d:ffi1:%d:nofOverflowX:%d:nofOverflowY:%d",boardRCUstatusStatusX,boardRCUstatusStatusY,boardRCUstatusFFI0,boardRCUstatusFFI1,boardRCUstatusNofOverflowX,boardRCUstatusNofOverflowY));
+      sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_BoardRCUStatus,rackNr,subRackNr,relativeBoardNr,2);
+      updateBoardRCUproperties(scopeString,boardRCUstatusStatusX,boardRCUstatusStatusY,boardRCUstatusFFI0,boardRCUstatusFFI1,boardRCUstatusNofOverflowX,boardRCUstatusNofOverflowY);
+
+      boardRCUstatusStatusX       = boardStatus(boardNr).ap3_rcu.statusx;
+      boardRCUstatusStatusY       = boardStatus(boardNr).ap3_rcu.statusy;
+      boardRCUstatusFFI0          = boardStatus(boardNr).ap3_rcu.ffi0;
+      boardRCUstatusFFI1          = boardStatus(boardNr).ap3_rcu.ffi1;
+      boardRCUstatusNofOverflowX  = boardStatus(boardNr).ap3_rcu.nof_overflowx;
+      boardRCUstatusNofOverflowY  = boardStatus(boardNr).ap3_rcu.nof_overflowy;
+      LOG_INFO(formatString("BoardRCUStatus ap3:statusX:%d:statusY:%d:ffi0:%d:ffi1:%d:nofOverflowX:%d:nofOverflowY:%d",boardRCUstatusStatusX,boardRCUstatusStatusY,boardRCUstatusFFI0,boardRCUstatusFFI1,boardRCUstatusNofOverflowX,boardRCUstatusNofOverflowY));
+      sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_BoardRCUStatus,rackNr,subRackNr,relativeBoardNr,3);
+      updateBoardRCUproperties(scopeString,boardRCUstatusStatusX,boardRCUstatusStatusY,boardRCUstatusFFI0,boardRCUstatusFFI1,boardRCUstatusNofOverflowX,boardRCUstatusNofOverflowY);
+
+      boardRCUstatusStatusX       = boardStatus(boardNr).ap4_rcu.statusx;
+      boardRCUstatusStatusY       = boardStatus(boardNr).ap4_rcu.statusy;
+      boardRCUstatusFFI0          = boardStatus(boardNr).ap4_rcu.ffi0;
+      boardRCUstatusFFI1          = boardStatus(boardNr).ap4_rcu.ffi1;
+      boardRCUstatusNofOverflowX  = boardStatus(boardNr).ap4_rcu.nof_overflowx;
+      boardRCUstatusNofOverflowY  = boardStatus(boardNr).ap4_rcu.nof_overflowy;
+      LOG_INFO(formatString("BoardRCUStatus ap4:statusX:%d:statusY:%d:ffi0:%d:ffi1:%d:nofOverflowX:%d:nofOverflowY:%d",boardRCUstatusStatusX,boardRCUstatusStatusY,boardRCUstatusFFI0,boardRCUstatusFFI1,boardRCUstatusNofOverflowX,boardRCUstatusNofOverflowY));
+      sprintf(scopeString,SCOPE_PIC_RackN_SubRackN_BoardN_APN_BoardRCUStatus,rackNr,subRackNr,relativeBoardNr,4);
+      updateBoardRCUproperties(scopeString,boardRCUstatusStatusX,boardRCUstatusStatusY,boardRCUstatusFFI0,boardRCUstatusFFI1,boardRCUstatusNofOverflowX,boardRCUstatusNofOverflowY);
     }
 
     for(int rcuNr=rcuStatus.lbound(blitz::firstDim); rcuNr <= rcuStatus.ubound(blitz::firstDim); ++rcuNr)
@@ -1015,13 +962,13 @@ GCFEvent::TResult RegisterAccessTask::handleUpdStats(GCFEvent& e, GCFPortInterfa
         updStatsEvent.status,
         updStatsEvent.handle));
 
-    blitz::Array<std::complex<double>, 3>& statistics = updStatsEvent.stats();
+    blitz::Array<double, 3>& statistics = updStatsEvent.stats();
     int maxRCUs     = statistics.ubound(blitz::secondDim) - statistics.lbound(blitz::secondDim) + 1;
     int maxBeamlets = statistics.ubound(blitz::thirdDim) - statistics.lbound(blitz::thirdDim) + 1;
 
     int type,rcu,beamlet;
     // type will always be 0. The subscription determines if the received array contains
-    // power or mean statistics
+    // beamlet or subband power statistics
     for(type=statistics.lbound(blitz::firstDim);type<=statistics.ubound(blitz::firstDim);type++)
     {
       GCFPValueArray valuePointerVector;
@@ -1035,34 +982,8 @@ GCFEvent::TResult RegisterAccessTask::handleUpdStats(GCFEvent& e, GCFPortInterfa
       {
         for(beamlet=statistics.lbound(blitz::thirdDim);beamlet<=statistics.ubound(blitz::thirdDim);beamlet++)
         {
-          std::complex<double> stat = statistics(type,rcu,beamlet);
-          double newStat;
-          if(updStatsEvent.handle == m_subStatsHandleSubbandPower ||
-             updStatsEvent.handle == m_subStatsHandleBeamletPower)
-          {
-            // power = 10 * log( (real + imag + 0.0001) / (1<<16))
-            newStat = real(stat) + imag(stat);
-            newStat += 0.00001; // prevent infinite values
-            newStat = log10( newStat / (double)(1<<16)) * 10.0;
-          }
-          else if(updStatsEvent.handle == m_subStatsHandleSubbandMean ||
-                  updStatsEvent.handle == m_subStatsHandleBeamletMean)
-          {
-            // mean = abs( z ) ^2 /1000000
-            newStat = real(stat) * real(stat) + imag(stat) * imag(stat);
-            newStat /= (1<<16);
-            newStat /= (1<<16);
-            newStat -= 1.0;
-          }
-          else
-          {
-            newStat = real(stat) * real(stat) + imag(stat) * imag(stat);
-            newStat /= (1<<16);
-            newStat /= (1<<16);
-            newStat -= 1.0;
-          }
-          
-          valuePointerVector.push_back(new GCFPVDouble(newStat));
+          double stat = statistics(type,rcu,beamlet);
+          valuePointerVector.push_back(new GCFPVDouble(stat));
         }
       }
 
@@ -1077,17 +998,9 @@ GCFEvent::TResult RegisterAccessTask::handleUpdStats(GCFEvent& e, GCFPortInterfa
         {
           propSetIt->second->setValue(string(PROPNAME_STATISTICSSUBBANDPOWER),dynamicArray);
         }
-        else if(updStatsEvent.handle == m_subStatsHandleSubbandMean)
-        {
-          propSetIt->second->setValue(string(PROPNAME_STATISTICSSUBBANDMEAN),dynamicArray);
-        }
         else if(updStatsEvent.handle == m_subStatsHandleBeamletPower)
         {
           propSetIt->second->setValue(string(PROPNAME_STATISTICSBEAMLETPOWER),dynamicArray);
-        }
-        else if(updStatsEvent.handle == m_subStatsHandleBeamletMean)
-        {
-          propSetIt->second->setValue(string(PROPNAME_STATISTICSBEAMLETMEAN),dynamicArray);
         }
       }
       
@@ -1106,8 +1019,9 @@ GCFEvent::TResult RegisterAccessTask::handleUpdStats(GCFEvent& e, GCFPortInterfa
 }
 void RegisterAccessTask::updateBoardProperties(string scope,
                                                uint8  voltage_15,
-                                               uint8  voltage_22,
-                                               uint8  ffi)
+                                               uint8  voltage_33,
+                                               uint8  ffi0,
+                                               uint8  ffi1)
 {
   TMyPropertySetMap::iterator it=m_myPropertySetMap.find(scope);
   if(it == m_myPropertySetMap.end())
@@ -1119,11 +1033,14 @@ void RegisterAccessTask::updateBoardProperties(string scope,
     GCFPVUnsigned pvTemp(voltage_15);
     it->second->setValue(string(PROPNAME_VOLTAGE15),pvTemp);
     
-    pvTemp.setValue(voltage_22);
-    it->second->setValue(string(PROPNAME_VOLTAGE22),pvTemp);
+    pvTemp.setValue(voltage_33);
+    it->second->setValue(string(PROPNAME_VOLTAGE33),pvTemp);
 
-    pvTemp.setValue(ffi);
-    it->second->setValue(string(PROPNAME_FFI),pvTemp);
+    pvTemp.setValue(ffi0);
+    it->second->setValue(string(PROPNAME_FFI0),pvTemp);
+
+    pvTemp.setValue(ffi1);
+    it->second->setValue(string(PROPNAME_FFI1),pvTemp);
   }
 }
 
@@ -1146,10 +1063,10 @@ void RegisterAccessTask::updateETHproperties(string scope,
   else
   {
     GCFPVUnsigned pvTemp(frames);
-    it->second->setValue(string(PROPNAME_PACKETSRECEIVED),pvTemp);
+    it->second->setValue(string(PROPNAME_FRAMESRECEIVED),pvTemp);
     
     pvTemp.setValue(errors);
-    it->second->setValue(string(PROPNAME_PACKETSERROR),pvTemp);
+    it->second->setValue(string(PROPNAME_FRAMESERROR),pvTemp);
 
     pvTemp.setValue(lastError);
     it->second->setValue(string(PROPNAME_LASTERROR),pvTemp);
@@ -1170,7 +1087,7 @@ void RegisterAccessTask::updateETHproperties(string scope,
  */
 void RegisterAccessTask::updateMEPStatusProperties(string scope,uint32 seqnr,
                                                                 uint8  error,
-                                                                uint8  ffi)
+                                                                uint8  ffi0)
 {
   TMyPropertySetMap::iterator it=m_myPropertySetMap.find(scope);
   if(it == m_myPropertySetMap.end())
@@ -1185,14 +1102,14 @@ void RegisterAccessTask::updateMEPStatusProperties(string scope,uint32 seqnr,
     pvTemp.setValue(error);
     it->second->setValue(string(PROPNAME_ERROR),pvTemp);
 
-    pvTemp.setValue(ffi);
-    it->second->setValue(string(PROPNAME_FFI),pvTemp);
+    pvTemp.setValue(ffi0);
+    it->second->setValue(string(PROPNAME_FFI0),pvTemp);
   }
 }
 
-void RegisterAccessTask::updateSYNCStatusProperties(string scope,uint32 clock_count,
-                                                                 uint32 count,
-                                                                 uint32 errors)
+void RegisterAccessTask::updateSYNCStatusProperties(string scope,uint32 sample_count,
+                                                                 uint32 sync_count,
+                                                                 uint32 error_count)
 {
   TMyPropertySetMap::iterator it=m_myPropertySetMap.find(scope);
   if(it == m_myPropertySetMap.end())
@@ -1201,18 +1118,37 @@ void RegisterAccessTask::updateSYNCStatusProperties(string scope,uint32 clock_co
   }
   else
   {
-    GCFPVUnsigned pvTemp(clock_count);
-    it->second->setValue(string(PROPNAME_CLOCKCOUNT),pvTemp);
+    GCFPVUnsigned pvTemp(sample_count);
+    it->second->setValue(string(PROPNAME_SAMPLECOUNT),pvTemp);
     
-    pvTemp.setValue(count);
-    it->second->setValue(string(PROPNAME_COUNT),pvTemp);
+    pvTemp.setValue(sync_count);
+    it->second->setValue(string(PROPNAME_SYNCCOUNT),pvTemp);
 
-    pvTemp.setValue(errors);
-    it->second->setValue(string(PROPNAME_ERRORS),pvTemp);
+    pvTemp.setValue(error_count);
+    it->second->setValue(string(PROPNAME_ERRORCOUNT),pvTemp);
   }
 }
                                              
-void RegisterAccessTask::updateFPGAproperties(string scope,uint8 status, uint8 temp)
+void RegisterAccessTask::updateFPGAboardProperties(string scope, uint8 ffi0, 
+                                                                 uint8 ffi1)
+{
+  TMyPropertySetMap::iterator it=m_myPropertySetMap.find(scope);
+  if(it == m_myPropertySetMap.end())
+  {
+    LOG_FATAL(formatString("PropertySet not found: %s",scope.c_str()));
+  }
+  else
+  {
+    GCFPVUnsigned pvUns(ffi0);
+    it->second->setValue(string(PROPNAME_FPGAFFI0),pvUns);
+
+    pvUns.setValue(ffi1);
+    it->second->setValue(string(PROPNAME_FPGAFFI1),pvUns);
+  }
+}
+
+void RegisterAccessTask::updateFPGAproperties(string scope, uint8 status, 
+                                                            uint8 temp)
 {
   // layout fpga status: 
   // 15..9 8       7........0       
@@ -1220,15 +1156,44 @@ void RegisterAccessTask::updateFPGAproperties(string scope,uint8 status, uint8 t
   TMyPropertySetMap::iterator it=m_myPropertySetMap.find(scope);
   if(it == m_myPropertySetMap.end())
   {
-  	LOG_FATAL(formatString("PropertySet not found: %s",scope.c_str()));
+    LOG_FATAL(formatString("PropertySet not found: %s",scope.c_str()));
   }
   else
   {
-    GCFPVBool pvBool(status & 0x01);
-    it->second->setValue(string(PROPNAME_ALIVE),pvBool);
+    GCFPVUnsigned pvUns(status);
+    it->second->setValue(string(PROPNAME_STATUS),pvUns);
     
     GCFPVDouble pvDouble(static_cast<double>(temp)/100.0);
     it->second->setValue(string(PROPNAME_TEMPERATURE),pvDouble);
+  }
+}
+
+void RegisterAccessTask::updateBoardRCUproperties(string scope,uint8  statusX,
+                                                               uint8  statusY,
+                                                               uint8  ffi0,
+                                                               uint8  ffi1,
+                                                               uint32 nof_overflowX,
+                                                               uint32 nof_overflowY)
+{
+  TMyPropertySetMap::iterator it=m_myPropertySetMap.find(scope);
+  if(it == m_myPropertySetMap.end())
+  {
+    LOG_FATAL(formatString("PropertySet not found: %s",scope.c_str()));
+  }
+  else
+  {
+    GCFPVUnsigned pvUns(statusX);
+    it->second->setValue(string(PROPNAME_STATUSX),pvUns);
+    pvUns.setValue(statusY);
+    it->second->setValue(string(PROPNAME_STATUSY),pvUns);
+    pvUns.setValue(ffi0);
+    it->second->setValue(string(PROPNAME_FFI0),pvUns);
+    pvUns.setValue(ffi1);
+    it->second->setValue(string(PROPNAME_FFI1),pvUns);
+    pvUns.setValue(nof_overflowX);
+    it->second->setValue(string(PROPNAME_NOFOVERFLOWX),pvUns);
+    pvUns.setValue(nof_overflowY);
+    it->second->setValue(string(PROPNAME_NOFOVERFLOWY),pvUns);
   }
 }
 
@@ -1321,3 +1286,9 @@ void RegisterAccessTask::getRCURelativeNumbers(int rcuNr,int& rackRelativeNr,int
   apRelativeNr      = ( rcuNr / (m_n_rcus_per_ap) ) % m_n_aps_per_board + 1;
   rcuRelativeNr     = ( rcuNr % m_n_rcus_per_ap) + 1;
 }
+
+} // namespace ARA
+
+
+} // namespace LOFAR
+

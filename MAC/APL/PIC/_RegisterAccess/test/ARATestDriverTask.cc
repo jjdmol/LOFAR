@@ -45,10 +45,14 @@
 #include <GCF/GCF_PVDouble.h>
 #include <GCF/ParameterSet.h>
 
-using namespace LOFAR;
 using namespace GCF;
-using namespace ARA;
 using namespace std;
+
+namespace LOFAR
+{
+
+namespace ARA
+{
 
 string ARATestDriverTask::m_taskName("ARATestDriver");
 
@@ -468,14 +472,14 @@ void ARATestDriverTask::updateETHstatus(string& propName,const GCFPValue* pvalue
   {
     // nothing to be done here
   }
-  else if(propName.find(string(PROPNAME_PACKETSRECEIVED),0) != string::npos)
+  else if(propName.find(string(PROPNAME_FRAMESRECEIVED),0) != string::npos)
   {
     if(ethStatus.nof_frames != pvUnsigned.getValue())
     {
       m_systemStatus.board()(board-1).eth.nof_frames = pvUnsigned.getValue();
     }
   }
-  else if(propName.find(string(PROPNAME_PACKETSERROR),0) != string::npos)
+  else if(propName.find(string(PROPNAME_FRAMESERROR),0) != string::npos)
   {
     if(ethStatus.nof_errors != pvUnsigned.getValue())
     {
@@ -534,7 +538,7 @@ void ARATestDriverTask::updateAPstatus(string& propName,const GCFPValue* pvalue)
   
   LOG_INFO(formatString("updateAPstatus hier?? %d (rack=%d,subrack=%d,board=%d,ap=%d)", ++testI,rack,subrack,board,ap));
 
-  EPA_Protocol::FPGAStatus apStatus = m_systemStatus.board()(board-1).ap[ap-1];
+  EPA_Protocol::FPGAStatus fpgaStatus = m_systemStatus.board()(board-1).fpga;
 
   // layout fpga status: 
   // 15..9 8       7........0       
@@ -545,14 +549,25 @@ void ARATestDriverTask::updateAPstatus(string& propName,const GCFPValue* pvalue)
   }
   else if(propName.find(string(PROPNAME_ALIVE),0) != string::npos)
   {
-    if(apStatus.status != pvUnsigned.getValue())
-    {
-      m_systemStatus.board()(board-1).ap[ap-1].status = pvUnsigned.getValue();
-    }
+    if(ap==1 && fpgaStatus.ap1_status != pvUnsigned.getValue())
+      m_systemStatus.board()(board-1).fpga.ap1_status = pvUnsigned.getValue();
+    else if(ap==2 && fpgaStatus.ap2_status != pvUnsigned.getValue())
+      m_systemStatus.board()(board-1).fpga.ap2_status = pvUnsigned.getValue();
+    else if(ap==3 && fpgaStatus.ap3_status != pvUnsigned.getValue())
+      m_systemStatus.board()(board-1).fpga.ap3_status = pvUnsigned.getValue();
+    else if(ap==4 && fpgaStatus.ap4_status != pvUnsigned.getValue())
+      m_systemStatus.board()(board-1).fpga.ap4_status = pvUnsigned.getValue();
   }
   else if(propName.find(string(PROPNAME_TEMPERATURE),0) != string::npos)
   {
-    m_systemStatus.board()(board-1).ap[ap-1].temp = (uint8)(pvDouble.getValue()*100);
+    if(ap==1)
+      m_systemStatus.board()(board-1).fpga.ap1_temp = (uint8)(pvDouble.getValue()*100);
+    else if(ap==2)
+      m_systemStatus.board()(board-1).fpga.ap2_temp = (uint8)(pvDouble.getValue()*100);
+    else if(ap==3)
+      m_systemStatus.board()(board-1).fpga.ap3_temp = (uint8)(pvDouble.getValue()*100);
+    else
+        m_systemStatus.board()(board-1).fpga.ap4_temp = (uint8)(pvDouble.getValue()*100);
   }
   if(propName.find(string(PROPNAME_VERSION),0) != string::npos)
   {
@@ -576,7 +591,7 @@ void ARATestDriverTask::updateBPstatus(string& propName,const GCFPValue* pvalue)
 //  int subrack	=	hardwareIndexes[1];
   int board		= hardwareIndexes[2];
 
-  EPA_Protocol::FPGAStatus bpStatus = m_systemStatus.board()(board-1).bp;
+  EPA_Protocol::FPGAStatus fpgaStatus = m_systemStatus.board()(board-1).fpga;
 
   // layout fpga status: 
   // 15..9 8       7........0       
@@ -587,14 +602,14 @@ void ARATestDriverTask::updateBPstatus(string& propName,const GCFPValue* pvalue)
   }
   else if(propName.find(string(PROPNAME_ALIVE),0) != string::npos)
   {
-    if(bpStatus.status != pvUnsigned.getValue())
+    if(fpgaStatus.bp_status != pvUnsigned.getValue())
     {
-      m_systemStatus.board()(board-1).bp.status = pvUnsigned.getValue();
+      m_systemStatus.board()(board-1).fpga.bp_status = pvUnsigned.getValue();
     }
   }
   else if(propName.find(string(PROPNAME_TEMPERATURE),0) != string::npos)
   {
-    m_systemStatus.board()(board-1).bp.temp = (uint8)(pvDouble.getValue()*100);
+    m_systemStatus.board()(board-1).fpga.bp_temp = (uint8)(pvDouble.getValue()*100);
   }
   if(propName.find(string(PROPNAME_VERSION),0) != string::npos)
   {
@@ -704,9 +719,9 @@ void ARATestDriverTask::updateStats()
     {
 		  double noise=(double)(rand()%1000)/500.0;
 		  if(k==10)
-      	m_stats()(i,j,k) = complex<double>(4000+noise*500,4000+noise*500.0);
+      	m_stats()(i,j,k) = 4000+noise*500.0;
 			else		  
-      	m_stats()(i,j,k) = complex<double>(noise,noise);
+      	m_stats()(i,j,k) = noise;
     }
   }
   
@@ -900,20 +915,10 @@ GCFEvent::TResult ARATestDriverTask::enabled(GCFEvent& event, GCFPortInterface& 
         m_updStatsHandleSP = 11;
         ack.handle = m_updStatsHandleSP;
       }
-      else if(substats.type == RSP_Protocol::Statistics::SUBBAND_MEAN)
-      {
-        m_updStatsHandleSM = 12;
-        ack.handle = m_updStatsHandleSM;
-      }
       else if(substats.type == RSP_Protocol::Statistics::BEAMLET_POWER)
       {
         m_updStatsHandleBP = 21;
         ack.handle = m_updStatsHandleBP;
-      }
-      else if(substats.type == RSP_Protocol::Statistics::BEAMLET_MEAN)
-      {
-        m_updStatsHandleBM = 22;
-        ack.handle = m_updStatsHandleBM;
       }
       else
       {
@@ -1094,3 +1099,9 @@ void ARATestDriverTask::getHardwareIndexes(const string& propName,const string& 
 		hardwareIndexes.push_back(indexes[i]);
 	}
 }
+
+} // namespace ARA
+
+
+} // namespace LOFAR
+

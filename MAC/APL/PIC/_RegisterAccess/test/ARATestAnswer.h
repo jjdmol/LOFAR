@@ -29,6 +29,9 @@
 class GCFEvent;
 class GCFTask;
 
+namespace LOFAR
+{
+
 namespace ARA
 {
   class ARATestAnswer : public GCFAnswer
@@ -46,5 +49,8 @@ namespace ARA
   };
   
 };
+
+
+} // namespace LOFAR
 
 #endif

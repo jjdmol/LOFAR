@@ -22,13 +22,13 @@ aratest_SOURCES 		= \
 	
 BUILT_SOURCES = \
 	aratest.conf \
-	log4cplus.properties
+	aratest.log_prop
 	
 EXTRA_DIST = \
 	aratest.conf \
-	log4cplus.properties
+	aratest.log_prop
 	
-%.properties: $(MAC_CONFIG)/%.properties
+%.log_prop: %.log_prop.in
 	cp $< $@
 	
 %.conf: %.conf.in

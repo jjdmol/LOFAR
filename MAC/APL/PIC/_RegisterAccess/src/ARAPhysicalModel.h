@@ -30,6 +30,9 @@
 #include <list>
 #include <boost/utility.hpp>
 
+namespace LOFAR
+{
+
 namespace ARA
 {
   class ARAPhysicalModel : boost::noncopyable // prohibits access to copy construction and assignment
@@ -53,4 +56,5 @@ namespace ARA
   };
 };
 
+} // namespace LOFAR
 #endif

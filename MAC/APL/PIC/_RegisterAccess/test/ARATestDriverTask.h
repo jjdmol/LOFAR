@@ -41,6 +41,10 @@ class GCFPVUnsigned;
 class GCFPVBool;
 class GCFPVDouble;
 
+
+namespace LOFAR
+{
+
 namespace ARA
 {
   class ARATestDriverTask : public GCFTask
@@ -97,5 +101,8 @@ namespace ARA
       int             n_rcus;
   };  
 };
+
+
+} // namespace LOFAR
 
 #endif

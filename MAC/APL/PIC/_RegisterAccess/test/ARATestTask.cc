@@ -87,9 +87,13 @@ const char SCOPE_PIC_Rack1_SubRack1_Board1_Alert[] = "PIC_Rack1_SubRack1_Board1_
 #include <bitset>
 #include <time.h>
 
-using namespace LOFAR;
-using namespace ARA;
 using namespace std;
+
+namespace LOFAR
+{
+
+namespace ARA
+{
 
 string ARATestTask::m_taskName("ARATest");
 
@@ -709,10 +713,10 @@ GCFEvent::TResult ARATestTask::test8(GCFEvent& event, GCFPortInterface& /*p*/)
       
       EPA_Protocol::BoardStatus boardStatus;
       memset(&boardStatus,0,sizeof(boardStatus));
-      boardStatus.ap[0].temp = 2850;
-      boardStatus.ap[1].temp = 2902;
-      boardStatus.ap[2].temp = 2953;
-      boardStatus.ap[3].temp = 3005;
+      boardStatus.fpga.ap1_temp = 2850;
+      boardStatus.fpga.ap2_temp = 2902;
+      boardStatus.fpga.ap3_temp = 2953;
+      boardStatus.fpga.ap4_temp = 3005;
 
       EPA_Protocol::RCUStatus rcuStatus;
       std::bitset<8> rcuBitStatus;
@@ -785,10 +789,10 @@ GCFEvent::TResult ARATestTask::test9(GCFEvent& event, GCFPortInterface& /*p*/)
 
       EPA_Protocol::BoardStatus boardStatus;
       memset(&boardStatus,0,sizeof(boardStatus));
-      boardStatus.ap[0].temp = 28;
-      boardStatus.ap[1].temp = 29;
-      boardStatus.ap[2].temp = 30;
-      boardStatus.ap[3].temp = 31;
+      boardStatus.fpga.ap1_temp = 28;
+      boardStatus.fpga.ap2_temp = 29;
+      boardStatus.fpga.ap3_temp = 30;
+      boardStatus.fpga.ap4_temp = 31;
 
       EPA_Protocol::RCUStatus rcuStatus;
       std::bitset<8> rcuBitStatus;
@@ -866,10 +870,10 @@ GCFEvent::TResult ARATestTask::test10(GCFEvent& event, GCFPortInterface& /*p*/)
 
       EPA_Protocol::BoardStatus boardStatus;
       memset(&boardStatus,0,sizeof(boardStatus));
-      boardStatus.ap[0].temp = 28;
-      boardStatus.ap[1].temp = 29;
-      boardStatus.ap[2].temp = 30;
-      boardStatus.ap[3].temp = 31;
+      boardStatus.fpga.ap1_temp = 28;
+      boardStatus.fpga.ap2_temp = 29;
+      boardStatus.fpga.ap3_temp = 30;
+      boardStatus.fpga.ap4_temp = 31;
 
       EPA_Protocol::RCUStatus rcuStatus;
       std::bitset<8> rcuBitStatus;
@@ -951,4 +955,10 @@ GCFEvent::TResult ARATestTask::finished(GCFEvent& event, GCFPortInterface& /*p*/
 
   return status;
 }
+
+
+} // namespace ARA
+
+
+} // namespace LOFAR
 

@@ -22,9 +22,9 @@ RegisterAccess_SOURCES 		= \
 configfilesdir=$(bindir)
 configfiles_DATA= \
 	RegisterAccess.conf \
-	log4cplus.properties
+	RegisterAccess.log_prop
 	
-%.properties: $(MAC_CONFIG)/%.properties
+%.log_prop: %.log_prop.in
 	cp $< $@
 	
 %.conf: %.conf.in

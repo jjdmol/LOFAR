@@ -28,10 +28,14 @@
 
 #include "ARARegisterAccessTask.h"
 
-using namespace LOFAR;
-using namespace ARA;
 using namespace std;
 
+
+namespace LOFAR
+{
+
+namespace ARA
+{
 
 int main(int argc, char* argv[])
 {
@@ -56,6 +60,12 @@ int main(int argc, char* argv[])
   GCFTask::run();
 
   LOG_INFO(formatString("Normal termination of program %s", argv[0]));
-
+  return 0;
 }
+
+
+} // namespace ARA
+
+
+} // namespace LOFAR
 
