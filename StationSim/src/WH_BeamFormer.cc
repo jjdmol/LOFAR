@@ -1,34 +1,31 @@
-//  WH_BeamFormer.cc:
-//
-//  Copyright (C) 2002
-//  ASTRON (Netherlands Foundation for Research in Astronomy)
-//  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
-//
-//  This program is free software; you can redistribute it and/or modify
-//  it under the terms of the GNU General Public License as published by
-//  the Free Software Foundation; either version 2 of the License, or
-//  (at your option) any later version.
-//
-//  This program is distributed in the hope that it will be useful,
-//  but WITHOUT ANY WARRANTY; without even the implied warranty of
-//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//  GNU General Public License for more details.
-//
-//  You should have received a copy of the GNU General Public License
-//  along with this program; if not, write to the Free Software
-//  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-//
-//  $Id$
-//
-//  $Log$
-//
-//////////////////////////////////////////////////////////////////////
+//#  WH_BeamFormer.cc:
+//#
+//#  Copyright (C) 2002
+//#  ASTRON (Netherlands Foundation for Research in Astronomy)
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+//#
+//#  This program is free software; you can redistribute it and/or modify
+//#  it under the terms of the GNU General Public License as published by
+//#  the Free Software Foundation; either version 2 of the License, or
+//#  (at your option) any later version.
+//#
+//#  This program is distributed in the hope that it will be useful,
+//#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//#  GNU General Public License for more details.
+//#
+//#  You should have received a copy of the GNU General Public License
+//#  along with this program; if not, write to the Free Software
+//#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+//#
+//#  $Id$
+//#
 
 #include <stdio.h>             // for sprintf
 
-#include "StationSim/WH_BeamFormer.h"
-#include "BaseSim/ParamBlock.h"
-#include "Common/Debug.h"
+#include <StationSim/WH_BeamFormer.h>
+#include <BaseSim/ParamBlock.h>
+#include <Common/Debug.h>
 #include <Common/lofar_vector.h>
 
 
@@ -52,14 +49,14 @@ WH_BeamFormer::WH_BeamFormer (const string& name,
   itsDipoleName (dipoleFileName)
 {
   // The first time the weights should not be read.
-  itsWeight.setRead (false);
+  itsWeight.setReadDelay (1);
   if (nout > 0) {
-    itsOutHolders = new DH_Sample* [nout];
+    itsOutHolders = new DH_SampleC* [nout];
   }
   char str[8];
   for (unsigned int i=0; i<nout; i++) {
     sprintf (str, "%d", i);
-    itsOutHolders[i] = new DH_Sample (string("out_") + str, nbeam, nsubband);
+    itsOutHolders[i] = new DH_SampleC (string("out_") + str, nbeam, nsubband);
   }
 }
 
@@ -112,22 +109,24 @@ void WH_BeamFormer::preprocess()
     }
     dipoleFile.close();
   }
-  // Do the standard preprocess as well.
-  WorkHolder::preprocess();
 }
 
 void WH_BeamFormer::process()
 {
   if (getOutputs() > 0) {
-    DH_Sample::BufferType* bufin = itsInHolder.getBuffer();
+    DH_SampleC::BufferType* bufin = itsInHolder.getBuffer();
     const DH_Weight::BufferType* weight = itsWeight.getBuffer();
-    DH_Sample::BufferType* bufout = itsOutHolders[0]->getBuffer();
+    DH_SampleC::BufferType* bufout = itsOutHolders[0]->getBuffer();
+    // As a test copy the data of the first RCU to all beams.
     for (int i=0; i<itsNbeam; i++) {
+      for (int j=0; j<itsNsubband; j++) {
+	*bufout++ = weight[i] * bufin[j*itsNrcu];
+      }
     }
     // Copy the output if multiple outputs are used.
     for (int i=1; i<getOutputs(); i++) {
       memcpy (itsOutHolders[i]->getBuffer(), bufout,
-	      itsNbeam * itsNsubband * sizeof(DH_Sample::BufferType));
+	      itsNbeam * itsNsubband * sizeof(DH_SampleC::BufferType));
     }
   }
 }
@@ -155,7 +154,7 @@ DataHolder* WH_BeamFormer::getInHolder (int channel)
   }
   return &itsRFI;
 }
-DH_Sample* WH_BeamFormer::getOutHolder (int channel)
+DH_SampleC* WH_BeamFormer::getOutHolder (int channel)
 {
   AssertStr (channel < getOutputs(),
 	     "output channel too high");

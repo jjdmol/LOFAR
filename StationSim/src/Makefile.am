@@ -3,8 +3,10 @@ DH_RCU.h					\
 WH_RCU.h					\
 WH_RCUAdd.h					\
 WH_Merge.h					\
-DH_Sample.h					\
-WH_Filter.h					\
+WH_RCUAll.h					\
+DH_SampleR.h					\
+DH_SampleC.h					\
+WH_BandSep.h					\
 DH_SubBandSel.h					\
 WH_SubBandSel.h					\
 WH_Selector.h					\
@@ -14,7 +16,8 @@ WH_TargetTrack.h				\
 DH_RFITrack.h					\
 WH_RFITrack.h					\
 WH_BeamFormer.h					\
-WH_AWE.h					
+WH_AWE.h					\
+WH_Analysis.h					
 
 lib_LTLIBRARIES 	= libstationsim.la
 
@@ -23,8 +26,10 @@ DH_RCU.cc					\
 WH_RCU.cc					\
 WH_RCUAdd.cc					\
 WH_Merge.cc					\
-DH_Sample.cc					\
-WH_Filter.cc					\
+WH_RCUAll.cc					\
+DH_SampleR.cc					\
+DH_SampleC.cc					\
+WH_BandSep.cc					\
 DH_SubBandSel.cc				\
 WH_SubBandSel.cc				\
 WH_Selector.cc					\
@@ -35,6 +40,7 @@ DH_RFITrack.cc					\
 WH_RFITrack.cc					\
 WH_BeamFormer.cc				\
 WH_AWE.cc					\
+WH_Analysis.cc					\
 StationSim.cc
 
 bin_PROGRAMS		= Simulate

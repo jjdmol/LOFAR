@@ -1,4 +1,4 @@
-//#  WH_RCUAdd.h:
+//#  WH_RcuAll.h:
 //#
 //#  Copyright (C) 2002
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -21,39 +21,39 @@
 //#  $Id$
 //#
 
-#ifndef STATIONSIM_WH_RCUADD_H
-#define STATIONSIM_WH_RCUADD_H
+#ifndef STATIONSIM_WH_RCUALL_H
+#define STATIONSIM_WH_RCUALL_H
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
 
 #include <BaseSim/WorkHolder.h>
-#include <StationSim/DH_RCU.h>
+#include <StationSim/DH_SampleR.h>
 
 
 /**
-   This WorkHolder adds n RCU signals.
+   This WorkHolder reads the data of all RCUs from a file.
 */
 
-class WH_RCUAdd: public WorkHolder
+class WH_RCUAll: public WorkHolder
 {
 public:
   /// Construct the work holder and give it a name.
   /// It is possible to specify how many input and output data holders
   /// are created and how many elements there are in the buffer.
   /// The first WorkHolder should have nin=0.
-  WH_RCUAdd (const string& name, unsigned int nin,
-	     unsigned int nout);
+  WH_RCUAll (const string& name, unsigned int nout,
+	     unsigned int nrcu, const string& fileName);
 
-  virtual ~WH_RCUAdd();
+  virtual ~WH_RCUAll();
 
   /// Static function to create an object.
   static WorkHolder* construct (const string& name, int ninput, int noutput,
 				const ParamBlock&);
 
   /// Make a fresh copy of the WH object.
-  virtual WH_RCUAdd* make (const string& name) const;
+  virtual WH_RCUAll* make (const string& name) const;
 
   /// Do a process step.
   virtual void process();
@@ -62,23 +62,24 @@ public:
   virtual void dump() const;
 
   /// Get a pointer to the i-th input DataHolder.
-  virtual DH_RCU* getInHolder (int channel);
+  virtual DataHolder* getInHolder (int channel);
 
   /// Get a pointer to the i-th output DataHolder.
-  virtual DH_RCU* getOutHolder (int channel);
+  virtual DH_SampleR* getOutHolder (int channel);
 
 private:
   /// Forbid copy constructor.
-  WH_RCUAdd (const WH_RCUAdd&);
+  WH_RCUAll (const WH_RCUAll&);
 
   /// Forbid assignment.
-  WH_RCUAdd& operator= (const WH_RCUAdd&);
+  WH_RCUAll& operator= (const WH_RCUAll&);
 
 
-  /// Pointer to the array of input DataHolders.
-  DH_RCU** itsInHolders;
   /// Pointer to the array of output DataHolders.
-  DH_RCU** itsOutHolders;
+  DH_SampleR** itsOutHolders;
+  unsigned int itsNrcu;
+  string       itsFileName;
+  ifstream     itsFile;
 };
 
 

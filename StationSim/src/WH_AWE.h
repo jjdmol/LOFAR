@@ -1,28 +1,25 @@
-//  WH_AWE.h:
-//
-//  Copyright (C) 2002
-//  ASTRON (Netherlands Foundation for Research in Astronomy)
-//  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
-//
-//  This program is free software; you can redistribute it and/or modify
-//  it under the terms of the GNU General Public License as published by
-//  the Free Software Foundation; either version 2 of the License, or
-//  (at your option) any later version.
-//
-//  This program is distributed in the hope that it will be useful,
-//  but WITHOUT ANY WARRANTY; without even the implied warranty of
-//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//  GNU General Public License for more details.
-//
-//  You should have received a copy of the GNU General Public License
-//  along with this program; if not, write to the Free Software
-//  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-//
-//  $Id$
-//
-//  $Log$
-//
-//////////////////////////////////////////////////////////////////////
+//#  WH_AWE.h:
+//#
+//#  Copyright (C) 2002
+//#  ASTRON (Netherlands Foundation for Research in Astronomy)
+//#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+//#
+//#  This program is free software; you can redistribute it and/or modify
+//#  it under the terms of the GNU General Public License as published by
+//#  the Free Software Foundation; either version 2 of the License, or
+//#  (at your option) any later version.
+//#
+//#  This program is distributed in the hope that it will be useful,
+//#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//#  GNU General Public License for more details.
+//#
+//#  You should have received a copy of the GNU General Public License
+//#  along with this program; if not, write to the Free Software
+//#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+//#
+//#  $Id$
+//#
 
 #ifndef STATIONSIM_WH_AWE_H
 #define STATIONSIM_WH_AWE_H
@@ -31,9 +28,9 @@
 #include <config.h>
 #endif
 
-#include "BaseSim/WorkHolder.h"
-#include "StationSim/DH_Sample.h"
-#include "StationSim/DH_Weight.h"
+#include <BaseSim/WorkHolder.h>
+#include <StationSim/DH_SampleC.h>
+#include <StationSim/DH_Weight.h>
 
 
 /**
@@ -72,7 +69,7 @@ public:
   /// Get a pointer to the i-th input DataHolder.
   /// The first one is the sampled data.
   /// The second one is the selected subbands.
-  virtual DH_Sample* getInHolder (int channel);
+  virtual DH_SampleC* getInHolder (int channel);
 
   /// Get a pointer to the i-th output DataHolder.
   virtual DH_Weight* getOutHolder (int channel);
@@ -85,7 +82,7 @@ private:
   WH_AWE& operator= (const WH_AWE&);
 
 
-  DH_Sample itsInHolder;
+  DH_SampleC  itsInHolder;
   /// Pointer to the array of output DataHolders.
   DH_Weight** itsOutHolders;
 

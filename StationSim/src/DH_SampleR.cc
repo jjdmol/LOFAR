@@ -1,4 +1,4 @@
-//#  DH_Weight.cc:
+//#  DH_SampleR.cc:
 //#
 //#  Copyright (C) 2002
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -21,27 +21,32 @@
 //#  $Id$
 //#
 
-#include <StationSim/DH_Weight.h>
+
+#include <StationSim/DH_SampleR.h>
+#include <BaseSim/Step.h>
 
 
-DH_Weight::DH_Weight (const string& name, unsigned int nbeam)
-: DataHolder    (name, "DH_Weight"),
+DH_SampleR::DH_SampleR (const string& name, unsigned int nx,
+			unsigned int ny)
+: DataHolder    (name, "DH_SampleR"),
   itsDataPacket (0),
   itsBuffer     (0),
-  itsNbeam      (nbeam)
+  itsNx         (nx),
+  itsNy         (ny)
 {}
 
-DH_Weight::~DH_Weight()
+DH_SampleR::~DH_SampleR()
 {
   deallocate (itsDataPacket);
 }
 
-void DH_Weight::preprocess()
+void DH_SampleR::preprocess()
 {
   // First delete possible buffers.
   postprocess();
   // Determine the number of bytes needed for DataPacket and buffer.
-  unsigned int size = sizeof(DataPacket) + itsNbeam * sizeof(BufferType);
+  unsigned int size = sizeof(DataPacket) +
+                      itsNx * itsNy * sizeof(BufferType);
   itsDataPacket = allocate(size);
   // Fill in the data packet pointer and initialize the memory.
   DataPacket* dpPtr = static_cast<DataPacket*>(itsDataPacket);
@@ -49,16 +54,26 @@ void DH_Weight::preprocess()
   // Fill in the buffer pointer and initialize the buffer.
   char* ptr = static_cast<char*>(itsDataPacket);
   itsBuffer = (BufferType*)(ptr + sizeof(DataPacket));
-  for (unsigned int i=0; i<itsNbeam; i++) {
-    itsBuffer[i] = 1;
-  }
   // Initialize base class.
   setDataPacket (dpPtr, size);
 }
 
-void DH_Weight::postprocess()
+void DH_SampleR::postprocess()
 {
   deallocate (itsDataPacket);
   itsBuffer = 0;
   setDefaultDataPacket();
+}
+
+bool DH_SampleR::doFsWrite (ofstream& oss) const
+{
+  oss << "*** Step " << Step::getEventCount() << " ***" << endl;
+  const BufferType* buf = itsBuffer;
+  for (int i=0; i<itsNx; i++) {
+    for (int j=0; j<itsNy; j++) {
+      oss << *buf++ << ' ' ;
+    }
+    oss << endl;
+  }
+  return true;
 }
