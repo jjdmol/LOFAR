@@ -9,4 +9,13 @@
   	<MACType> MACString  </MACType> 
   	<MACDefault> </MACDefault> 
  	</status>
+ 	
+  <srgName>      <!-- used by PVSS panels -->
+  	<MACType> MACString  </MACType> 
+  	<MACDefault> </MACDefault> 
+ 	</srgName>
+  <bfName>      <!-- used by PVSS panels -->
+  	<MACType> MACString  </MACType> 
+  	<MACDefault> </MACDefault> 
+ 	</bfName>
 </VirtualTelescope>
