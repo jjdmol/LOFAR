@@ -54,6 +54,7 @@ typedef struct _streamCoord {
 
 extern int			gNrStreamsInUse;
 extern streamCoord 	gStreamStack[STREAM_STACK_SIZE];
+extern int			maxWidth, maxHeight;
 
 //
 // Stream

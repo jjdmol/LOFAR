@@ -21,6 +21,7 @@
 //#  $Id$
 
 #include <iostream>
+#include <fstream>
 #include <iomanip>
 #include "Stream.h"
 #include "GPUEnvironment.h"
@@ -144,6 +145,29 @@ GPUEnvironment::~GPUEnvironment()
 }
 
 //
+// getProgramType
+//
+// Reads first chars from file to determine its type.
+//
+CGenum	GPUEnvironment::getProgramType	(const std::string	fileName) const
+{
+	ifstream	ifile;
+	char		buf[5];
+
+	ifile.open(fileName.c_str());			// try to open file
+	if (!ifile.is_open())					// assume Cg source code
+		return (CG_SOURCE);
+
+	ifile.get (buf, 5);						// read first few chars
+	ifile.close();
+
+	if (!strncmp (buf, "!!", 2))			// starting with !! ?
+		return (CG_OBJECT);					// already compiled
+
+	return (CG_SOURCE);						// probably Cg source
+}
+
+//
 // compileProgram
 //
 // Tries to compile a Cg vertex or fragmentfile.
@@ -160,7 +184,7 @@ CGprogram GPUEnvironment::compileProgram(const int		programType,
 
 		if (!fileName.empty()) {				// compile the program
 			theProgram = cgCreateProgramFromFile (itsCGContext,
-												  CG_SOURCE,
+												  getProgramType(fileName),
 												  fileName.c_str(),
 												  itsVertexProfile,
 												  mainRoutine.c_str(), 0);
@@ -178,7 +202,7 @@ CGprogram GPUEnvironment::compileProgram(const int		programType,
 
 	if (!fileName.empty()) {				// compile the program
 		theProgram = cgCreateProgramFromFile (itsCGContext,
-											  CG_SOURCE,
+											  getProgramType(fileName),
 											  fileName.c_str(),
 											  itsFragmentProfile,
 											  mainRoutine.c_str(), 0);
@@ -186,6 +210,7 @@ CGprogram GPUEnvironment::compileProgram(const int		programType,
 			cerr << "Can't compile fragmentprogram " << fileName << endl;
 			return (NULL);
 		}
+		cgGLLoadProgram(theProgram);		 // load the program on the card
 	}
 	return (theProgram);
 }
@@ -213,7 +238,6 @@ GPUEnvironment* getCurrentGPUEnv() {
 //
 void GPUEnvironment::useProgram(const CGprogram		theProgram) const {
 
-	cgGLLoadProgram(theProgram);		 // load the program on the card
 	cgGLBindProgram(theProgram);		 // Bind the program to the NVcontext
 }
 
@@ -224,7 +248,7 @@ void GPUEnvironment::useProgram(const CGprogram		theProgram) const {
 //
 // Shows some information about the GPU environment
 //
-void GPUEnvironment::info() {
+void GPUEnvironment::info(void) const {
 	int		glValue;
 	glGetIntegerv(GL_MAX_TEXTURE_SIZE, &glValue);
 	cout << "Max texture size    : " << glValue << endl;
@@ -241,7 +265,8 @@ void GPUEnvironment::info() {
 // Draws a triangle of the given size thereby calculating all the
 // enclosed pixels
 //
-void GPUEnvironment::executeFragmentTriangle(int	width, int	height) {
+void GPUEnvironment::executeFragmentTriangle(const int	width, 
+											 const int	height) const {
 	int				nrStreams = streamStackSize();
 	streamCoord*	texSize   = getStreamStack();
 
@@ -275,7 +300,8 @@ void GPUEnvironment::executeFragmentTriangle(int	width, int	height) {
 // Draws a square of the given size thereby calculating all the
 // enclosed pixels
 //
-void GPUEnvironment::executeFragmentSquare(int	width, int height) {
+void GPUEnvironment::executeFragmentSquare(const int	width, 
+										   const int	height) const {
 	int				nrStreams = streamStackSize();
 	streamCoord*	texSize   = getStreamStack();
 
@@ -309,3 +335,58 @@ void GPUEnvironment::executeFragmentSquare(int	width, int height) {
 	glFinish();
 }
 
+//
+// executeFragmentVLine
+//
+// Draws a verticle Line at the given H position thereby calculating all the
+// enclosed pixels
+//
+void GPUEnvironment::executeFragmentVLine(const int	hpos) const {
+	int				nrStreams = streamStackSize();
+	streamCoord*	texSize   = getStreamStack();
+
+	// Draw correlation matrix triangle
+	glViewport(0, 0, maxWidth, maxHeight);
+	glBegin(GL_LINES);
+		// bottom left
+		for (int i = 0; i < nrStreams; i++) {
+			glMultiTexCoord2fARB(GL_TEXTURE0_ARB+i, hpos, texSize[i].bottom);
+		}
+		glVertex2f(-1.0, -1.0);
+
+		// top left
+		for (int i = 0; i < nrStreams; i++) {
+			glMultiTexCoord2fARB(GL_TEXTURE0_ARB+i, hpos, texSize[i].top);
+		}
+		glVertex2f(-1.0,  1.0);
+	glEnd();
+	glFinish();
+}
+
+//
+// executeFragmentHLine
+//
+// Draws a horizontal Line at the given V position thereby calculating all the
+// enclosed pixels
+//
+void GPUEnvironment::executeFragmentHLine(const int	vpos) const {
+	int				nrStreams = streamStackSize();
+	streamCoord*	texSize   = getStreamStack();
+
+	// Draw correlation matrix triangle
+	glViewport(0, 0, maxWidth, maxHeight);
+	glBegin(GL_LINES);
+		// bottom left
+		for (int i = 0; i < nrStreams; i++) {
+			glMultiTexCoord2fARB(GL_TEXTURE0_ARB+i, texSize[i].left, vpos);
+		}
+		glVertex2f(-1.0, -1.0);
+
+		// top left
+		for (int i = 0; i < nrStreams; i++) {
+			glMultiTexCoord2fARB(GL_TEXTURE0_ARB+i, texSize[i].right, vpos);
+		}
+		glVertex2f( 1.0, -1.0);
+	glEnd();
+	glFinish();
+}
