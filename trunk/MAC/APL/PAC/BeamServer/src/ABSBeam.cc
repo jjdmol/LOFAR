@@ -288,7 +288,7 @@ int Beam::convertPointings(time_period period)
   //
   // m_lmns array will have unset values because
   // there are not necessarily pointings at each second
-  // these wholes are fixed up in this loop
+  // these holes are fixed up in this loop
   //
   time_iterator thetime(period.begin(), seconds(m_update_interval));
   for (int t=0; t < m_compute_interval; ++t, ++thetime)
