@@ -120,7 +120,7 @@ namespace LOFAR {
     const MeqDomain& domain = polc.domain();
 
     // right now: search on name only and add MPH with correct domain
-    MPHKey key(parmName, domain);
+    MPHKey key(parmName);
     MPHValue value;
     MeqDomain pdomain;
     Dbc* cursorp;
@@ -128,17 +128,16 @@ namespace LOFAR {
 
     int flags = DB_SET;
     while (cursorp->get(&key, &value, flags) == 0) {
-      flags = DB_NEXT;
+      flags = DB_NEXT_DUP; // this means it will only walk through the MPHs with the same key (=name)
       pdomain = value.getMPH().getPolc().domain();
-      if (parmName != value.getMPH().getName()) 
-	break;
       if (near(domain.startX(), pdomain.startX())  &&
 	  near(domain.endX(),   pdomain.endX())  &&
 	  near(domain.startY(), pdomain.startY())  &&
 	  near(domain.endY(),   pdomain.endY())) 
 	{
-	  // delete every MPH that has the same name and domain and then just add the right value
+	  // delete the MPH that has the same name and domain (because the combination should be unique) and then just add the right value
 	  cursorp->del(0);
+	  break;
 	}
     }
     cursorp->close();
@@ -170,7 +169,7 @@ namespace LOFAR {
     vector<MeqParmHolder> set;
 
     // right now: search on name only and add MPH with correct domain
-    MPHKey key(parmName, domain);
+    MPHKey key(parmName);
     MPHValue value;
     MeqDomain pdomain;
     Dbc* cursorp;
