@@ -69,8 +69,8 @@ void doIn (BlobIBuffer& bb, bool read2=false)
     std::vector<fcomplex> vecc;
     bs >> vecc;
     ASSERT (vecc.size() == 2);
-    ASSERT (vecc[0] == fcomplex(2,3));
-    ASSERT (vecc[1] == fcomplex(-1,1e10));
+    ASSERT (vecc[0] == makefcomplex(2,3));
+    ASSERT (vecc[1] == makefcomplex(-1,1e10));
   }
 }
 
@@ -101,8 +101,8 @@ int main()
       std::cout << "stringpos=" << cpos << std::endl;
       // Get a pointer to the complex vector in the buffer and fill the vector.
       fcomplex* ptr = bob.getPointer<fcomplex> (cpos);
-      ptr[0] = fcomplex(2,3);
-      ptr[1] = fcomplex(-1,1e10);
+      ptr[0] = makefcomplex(2,3);
+      ptr[1] = makefcomplex(-1,1e10);
       // Read the blob back from the string and check it.
       BlobIBufString bib(str);
       doIn (bib, true);
@@ -124,8 +124,8 @@ int main()
 	ASSERT (shape.size() == 1);
 	ASSERT (shape[0] == 2);
 	const fcomplex* ptr = bob2.getPointer<fcomplex> (cpos);
-	ASSERT (ptr[0] == fcomplex(2,3));
-	ASSERT (ptr[1] == fcomplex(-1,1e10));
+	ASSERT (ptr[0] == makefcomplex(2,3));
+	ASSERT (ptr[1] == makefcomplex(-1,1e10));
       }
     }
     {
@@ -140,8 +140,8 @@ int main()
       uint cpos = doOut (bob);
       std::cout << "stringpos=" << cpos << std::endl;
       fcomplex* ptr = bob.getPointer<fcomplex> (cpos);
-      ptr[0] = fcomplex(2,3);
-      ptr[1] = fcomplex(-1,1e10);
+      ptr[0] = makefcomplex(2,3);
+      ptr[1] = makefcomplex(-1,1e10);
       BlobIBufString bib(str);
       doIn (bib, true);
     }

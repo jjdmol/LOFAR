@@ -54,7 +54,7 @@ public:
   virtual bool isDouble() const;
   virtual const double* doubleStorage() const;
   virtual double getDouble (int x, int y) const;
-  virtual complex<double> getDComplex (int x, int y) const;
+  virtual dcomplex getDComplex (int x, int y) const;
 
   virtual MeqMatrixRep* add      (MeqMatrixRep& right, bool rightTmp);
   virtual MeqMatrixRep* subtract (MeqMatrixRep& right, bool rightTmp);

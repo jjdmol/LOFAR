@@ -35,7 +35,7 @@ MeqMatrixTmp::MeqMatrixTmp (double value, int nx, int ny, bool init)
     itsRep = v->link();
 }
 
-MeqMatrixTmp::MeqMatrixTmp (complex<double> value, int nx, int ny, bool init)
+MeqMatrixTmp::MeqMatrixTmp (dcomplex value, int nx, int ny, bool init)
 {
     MeqMatrixComplexArr* v = MeqMatrixComplexArr::poolNew (nx, ny);
     if (init) {

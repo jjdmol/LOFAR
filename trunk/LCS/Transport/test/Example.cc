@@ -49,8 +49,8 @@ int main()
   DH2.init();
     
   // fill the DataHolders with some initial data
-  DH1.getBufferElement(0) = fcomplex(17,-3.5);
-  DH2.getBufferElement(0) = 0;
+  DH1.getBufferElement(0) = makefcomplex(17,-3.5);
+  DH2.getBufferElement(0) = makefcomplex(0,0);
   DH1.setCounter(2);
   DH2.setCounter(0);
     

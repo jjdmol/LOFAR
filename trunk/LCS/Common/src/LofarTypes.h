@@ -27,6 +27,7 @@
 //
 
 #include <Common/LofarTypedefs.h>
+#include <Common/lofar_complex.h>
 #include <lofar_config.h>
 
 //# Make sure we include <sys/types.h> or <qglobal.h> if availabe. These files
@@ -55,8 +56,6 @@ namespace LOFAR
   using TYPES::longlong;
   using TYPES::ulonglong;
   using TYPES::ldouble;
-  using TYPES::fcomplex;
-  using TYPES::dcomplex;
  
   using TYPES::int8;
   using TYPES::uint8;
@@ -81,8 +80,6 @@ using LOFAR::ulong;
 using LOFAR::longlong;
 using LOFAR::ulonglong;
 using LOFAR::ldouble;
-using LOFAR::fcomplex;
-using LOFAR::dcomplex;
 
 using LOFAR::int8;
 using LOFAR::int16;

@@ -25,21 +25,25 @@
 #include <Math/LCSMath.h>
 #include <Common/LofarLogger.h>
 #include <Common/lofar_vector.h>
+#include <cmath>
 
 #ifdef HAVE_FFTW2
 # include <rfftw.h>
 # include <fftw.h>
 #endif
 
+using namespace std;
+
 namespace LOFAR
 {
+  using std::sqrt;
 
-  // Declare functions in lapack.
+// Declare functions in lapack.
 #ifdef HAVE_LAPACK
-#define zheev zheev_
-#define zgesvd zgesvd_
-#define zgetrf zgetrf_
-#define zgetri zgetri_
+# define zheev zheev_
+# define zgesvd zgesvd_
+# define zgetrf zgetrf_
+# define zgetri zgetri_
   extern "C"
   {
     int zheev (const char*, const char*, const int&,
@@ -101,15 +105,29 @@ namespace LOFAR
       return out;	    
     }
     
-    LoMat_dcomplex conj (const LoMat_dcomplex& aMatrix)
-    {
-      return LoMat_dcomplex (2. * real(aMatrix) - aMatrix);
-    }
+     LoMat_dcomplex conj (const LoMat_dcomplex& aMatrix)
+     {
+       // Make copy of matrix to be sure it is contiguous.
+       LoMat_dcomplex tmp(aMatrix.shape());
+       tmp = aMatrix;
+       dcomplex* vals = tmp.data();
+       for (int i=0; i<tmp.size(); ++i) {
+	 vals[i] = LOFAR::conj(vals[i]);
+       }
+       return tmp;
+     }
 
-    LoVec_dcomplex conj (const LoVec_dcomplex& aVector)
-    {
-      return LoVec_dcomplex (2. * real(aVector) - aVector);
-    }
+     LoVec_dcomplex conj (const LoVec_dcomplex& aVector)
+     {
+       // Make copy of vector to be sure it is contiguous.
+       LoVec_dcomplex tmp(aVector.shape());
+       tmp = aVector;
+       dcomplex* vals = tmp.data();
+       for (int i=0; i<tmp.size(); ++i) {
+	 vals[i] = LOFAR::conj(vals[i]);
+       }
+       return tmp;
+     }
 
 
     LoMat_dcomplex hermitianTranspose (const LoMat_dcomplex& aMatrix)
@@ -170,7 +188,7 @@ namespace LOFAR
     template<class T>
     blitz::Array<T,2> diag (const blitz::Array<T,1>& aVector, int k)
     {
-      int size = aVector.size() + abs(k);
+      int size = aVector.size() + std::abs(k);
       blitz::Array<T, 2> d(size, size);
       if (k > 0) {
         for (int i = 0; i < size; i++) {
@@ -502,7 +520,7 @@ namespace LOFAR
       double alpha = 1.0 / (double)a.cols(); // forgetting factor
 
       LoVec_dcomplex ones(nant);
-      ones = 1;
+      ones = makedcomplex(1,0);
       LoMat_dcomplex eye = diag(ones); // Identity matrix
       LoMat_dcomplex ACM(nant, nant);
 
@@ -525,7 +543,7 @@ namespace LOFAR
       int nc = B.cols();
     
       LoMat_dcomplex out(nr, nc);
-      out = 0;
+      out = makedcomplex(0,0);
     
       ASSERT (A.cols() == B.rows());
       for (int k = A.lbound(blitz::firstDim); k <= A.ubound(blitz::firstDim); k++) {
@@ -546,7 +564,7 @@ namespace LOFAR
       int nc = B.size();
     
       LoMat_dcomplex out(nr, nc);
-      out = 0;
+      out = makedcomplex(0,0);
       for (int k = A.lbound(blitz::firstDim); k <= A.ubound(blitz::firstDim); k++) {
         for (int l = B.lbound(blitz::firstDim); l <= B.ubound(blitz::firstDim); l++) {
           out(k,l) = A(k) * B(l);
@@ -614,7 +632,7 @@ namespace LOFAR
         LoVec_dcomplex work(lwork);
         zgetri(&m, out.data(), &lda, ipiv.data(), work.data(), &lwork, &info);
       } else if (info > 0) {
-        out = 0;
+        out = makedcomplex(0,0);
         cout <<  "A signular matrix can not be inversed!" << endl;
       } else {
         ASSERTSTR(info > 0, "Illegal argument to getrf!");

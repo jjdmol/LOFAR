@@ -34,6 +34,7 @@ echo "Doing tBBS2 tests in $cdir with niter=$niter and usernm=$usernm"
 rm -rf /tmp/$usernm.*
 
 for t in run.*; do
+#for t in run.testDefault; do
   # subtract run. to get the testnamen
   testName=${t#run.}
   echo ""

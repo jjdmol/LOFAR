@@ -30,7 +30,6 @@
 #include <Common/TypeNames.h>
 #include <Common/DataFormat.h>
 #include <vector>
-#include <typeinfo>
 
 namespace LOFAR {
 
@@ -130,7 +129,7 @@ namespace LOFAR {
       template<typename T> T* getData (BlobOBufChar& buf)
 	{
 #ifdef ENABLE_DBGASSERT
-	  return static_cast<T*> (getOData (typeid(T), buf));
+	  return static_cast<T*> (getOData (typeName((T*)0), buf));
 #else
 	  return static_cast<T*> (getOData (buf));
 #endif
@@ -143,7 +142,7 @@ namespace LOFAR {
       template<typename T> const T* getData (BlobIBufChar& buf) const
 	{
 #ifdef ENABLE_DBGASSERT
-	  return static_cast<const T*> (getIData (typeid(T), buf));
+	  return static_cast<const T*> (getIData (typeName((T*)0), buf));
 #else
 	  return static_cast<const T*> (getIData (buf));
 #endif
@@ -187,9 +186,9 @@ namespace LOFAR {
       virtual void getISpace (BlobIStream&) = 0;
       virtual void* getOData (BlobOBufChar&) const = 0;
       virtual const void* getIData (BlobIBufChar&) const = 0;
-      virtual void* getOData (const std::type_info&,
+      virtual void* getOData (const std::string&,
 			      BlobOBufChar&) const = 0;
-      virtual const void* getIData (const std::type_info&,
+      virtual const void* getIData (const std::string&,
 				    BlobIBufChar&) const = 0;
       // </group>
       
@@ -300,8 +299,8 @@ namespace LOFAR {
       // Get the pointer to the data in the buffer.
       // It checks if the data type is correct.
       // <group>
-      virtual void* getOData (const std::type_info&, BlobOBufChar&) const;
-      virtual const void* getIData (const std::type_info&, BlobIBufChar&) const;
+      virtual void* getOData (const std::string&, BlobOBufChar&) const;
+      virtual const void* getIData (const std::string&, BlobIBufChar&) const;
       // </group>
       
       // Convert this field in the buffer from the given to the local format.

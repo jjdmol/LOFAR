@@ -24,10 +24,7 @@
 #define LOFAR_COMMON_LOFARTYPEDEFS_H
 
 // \file LofarTypedefs.h
-//
 
-#include <complex>
-#include <unistd.h>
 
 namespace LOFAR {
 
@@ -46,8 +43,6 @@ namespace LOFAR {
     typedef long long            longlong;
     typedef unsigned long long   ulonglong;
     typedef long double          ldouble;
-    typedef std::complex<float>  fcomplex;
-    typedef std::complex<double> dcomplex;
  
     // Fixed data sizes.
     typedef char                int8;

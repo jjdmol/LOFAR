@@ -90,7 +90,7 @@ void MeqWsrtPoint::calcResult (const MeqRequest& request)
   resXY = MeqResult(request.nspid());
   resYX = MeqResult(request.nspid());
   resYY = MeqResult(request.nspid());
-  Matrix<complex<double> > value(ncellt, ncellf, complex<double>(0,0));
+  Matrix<dcomplex> value(ncellt, ncellf, makedcomplex(0,0));
   resXX.setValue (MeqMatrix (value));
   resXY.setValue (MeqMatrix (value));
   resYX.setValue (MeqMatrix (value));

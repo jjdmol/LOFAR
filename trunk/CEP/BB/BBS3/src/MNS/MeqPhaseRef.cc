@@ -44,8 +44,8 @@ MeqPhaseRef::MeqPhaseRef (const MDirection& phaseRef, double startTime)
   Quantum<Vector<double> > angles = itsDir.getAngle();
   itsRa  = angles.getBaseValue()(0);
   itsDec = angles.getBaseValue()(1);
-  itsSinDec = sin(itsDec);
-  itsCosDec = cos(itsDec);
+  itsSinDec = std::sin(itsDec);
+  itsCosDec = std::cos(itsDec);
 
   // Get hourangle for Greenwich meridian.
   // Put the position in a frame.

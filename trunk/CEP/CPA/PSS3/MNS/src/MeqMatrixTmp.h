@@ -38,7 +38,7 @@ public:
   // <group>
   MeqMatrixTmp (double value)
     : itsRep (new MeqMatrixRealSca(value)) { itsRep->link(); }
-  MeqMatrixTmp (complex<double> value)
+  MeqMatrixTmp (dcomplex value)
     : itsRep (new MeqMatrixComplexSca(value)) { itsRep->link(); }
   // <group>
 
@@ -47,7 +47,7 @@ public:
   // Otherwise the value only indicates the type of matrix to be created.
   // <group>
   MeqMatrixTmp (double, int nx, int ny, bool init=true);
-  MeqMatrixTmp (complex<double>, int nx, int ny, bool init=true);
+  MeqMatrixTmp (dcomplex, int nx, int ny, bool init=true);
   // <group>
 
   // Create a MeqMatrixTmp from a real one (copy semantics).
@@ -74,11 +74,11 @@ public:
   double* doubleStorage()
     { return (double*)(itsRep->doubleStorage()); }
 
-  const complex<double>* dcomplexStorage() const
-    { return (complex<double>*)(itsRep->dcomplexStorage()); }
+  const dcomplex* dcomplexStorage() const
+    { return (dcomplex*)(itsRep->dcomplexStorage()); }
 
-  complex<double>* dcomplexStorage()
-    { return (complex<double>*)(itsRep->dcomplexStorage()); }
+  dcomplex* dcomplexStorage()
+    { return (dcomplex*)(itsRep->dcomplexStorage()); }
 
   double getDouble (int x, int y) const
     { return itsRep->getDouble (x, y); }
@@ -86,10 +86,10 @@ public:
   double getDouble() const
     { return itsRep->getDouble (0, 0); }
 
-  complex<double> getDComplex (int x, int y) const
+  dcomplex getDComplex (int x, int y) const
     { return itsRep->getDComplex (x, y); }
 
-  complex<double> getDComplex() const
+  dcomplex getDComplex() const
     { return itsRep->getDComplex (0, 0); }
 
   int nx() const

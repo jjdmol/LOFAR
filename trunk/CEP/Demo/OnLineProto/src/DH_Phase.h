@@ -27,9 +27,10 @@
 #include <lofar_config.h>
 
 #include "Transport/DataHolder.h"
-#include <Common/lofar_complex.h>
+#include <complex>
 #include <Common/Debug.h>
 
+using std::complex;
 
 namespace LOFAR
 {
@@ -87,7 +88,7 @@ inline const float DH_Phase::getPhaseAngle() const
   { return *itsPhaseptr; }
 
 inline const complex<float> DH_Phase::getPhaseFactor() const
-  { return complex<float>(cos(*itsPhaseptr),sin(*itsPhaseptr)); }
+  { return complex<float>(std::cos(*itsPhaseptr),std::sin(*itsPhaseptr)); }
 
 inline float DH_Phase::getElapsedTime () const
   { DbgAssertStr(*itsElapsedTimeptr >= 0, "itsElapsedTime not initialised"); 

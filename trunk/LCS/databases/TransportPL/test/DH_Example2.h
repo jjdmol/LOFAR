@@ -44,7 +44,7 @@ class DH_Example2: public DH_PL
 {
 public:
   typedef PL::TPersistentObject<DH_Example2> PO_DH_EX;          //PL
-  typedef complex<float> BufferType;
+  typedef fcomplex BufferType;
 
   explicit DH_Example2 (const string& name="dh_example2",
 			unsigned int nbuffer = 10,

@@ -31,6 +31,7 @@
 #include <stack>
 #include <vector>
 #include <string>
+#include <complex>
 
 namespace LOFAR {
 
@@ -97,6 +98,12 @@ namespace LOFAR {
       
       // Put a single value.
       // A string will be stored as a length followed by the characters.
+      //# Note that a function is defined for the standard complex class
+      //# and for the types fcomplex, dcomplex, i16complex and u16complex.
+      //# This should be fine for the case where fcomplex is the builtin
+      //# complex type and the case where it is the standard class.
+      //# In the first case the fcomplex function is a separate function,
+      //# in the second case a specialisation of the templated function.
       // <group>
       BlobOStream& operator<< (const bool& value);
       BlobOStream& operator<< (const char& value);
@@ -109,6 +116,9 @@ namespace LOFAR {
       BlobOStream& operator<< (const uint64& value);
       BlobOStream& operator<< (const float& value);
       BlobOStream& operator<< (const double& value);
+      template<class T> BlobOStream& operator<< (const std::complex<T>& value);
+      BlobOStream& operator<< (const i16complex& value);
+      BlobOStream& operator<< (const u16complex& value);
       BlobOStream& operator<< (const fcomplex& value);
       BlobOStream& operator<< (const dcomplex& value);
       BlobOStream& operator<< (const std::string& value);
@@ -129,6 +139,9 @@ namespace LOFAR {
       void put (const uint64* values, uint nrval);
       void put (const float* values, uint nrval);
       void put (const double* values, uint nrval);
+      template<class T> void put (const std::complex<T>* values, uint nrval);
+      void put (const i16complex* values, uint nrval);
+      void put (const u16complex* values, uint nrval);
       void put (const fcomplex* values, uint nrval);
       void put (const dcomplex* values, uint nrval);
       void put (const std::string* values, uint nrval);
@@ -138,13 +151,14 @@ namespace LOFAR {
       // Specialise for bool because a vector of bools uses bits.
       // <group>
       void put (const std::vector<bool>& values);
-      template<typename T> void put (const std::vector<T>& values);
+      template<class T> void put (const std::vector<T>& values);
       // </group>
       
       // Put a vector of bools (without putting the size).
       void putBoolVec (const std::vector<bool>& values);
       
-      // Reserve the given amount of space (the opposite of BlobIStream::getSpace).
+      // Reserve the given amount of space (the opposite of
+      // BlobIStream::getSpace).
       // This is useful when creating a static blob in a dynamic way.
       // It returns the position of the skipped space in the stream.
       // It is meant for use with the BlobOBufString buffer. The function
@@ -166,7 +180,8 @@ namespace LOFAR {
       // Function to do the actual putStart.
       uint doPutStart (const char* objectType, uint nrc, int objectVersion);
       
-      // Write the buffer, increment itsCurLength, and check if everything written.
+      // Write the buffer, increment itsCurLength, and check
+      // if everything is written.
       void putBuf (const void* buf, uint sz);
       
       // Throw an exception if a put cannot be done.
@@ -209,7 +224,19 @@ namespace LOFAR {
   inline int64 BlobOStream::tellPos() const
     { return itsStream->tellPos(); }
   
-  template<typename T>
+  template<class T>
+    inline BlobOStream& BlobOStream::operator<< (const std::complex<T>& value)
+    {
+      putBuf (&value, sizeof(value));
+      return *this;
+    }
+  template<class T>
+    inline void BlobOStream::put (const std::complex<T>* values, uint nrval)
+    {
+      putBuf (values, nrval*sizeof(std::complex<T>));
+    }
+
+  template<class T>
     inline void BlobOStream::put (const std::vector<T>& vec)
     {
       operator<< (uint32(vec.size()));

@@ -302,7 +302,7 @@ private:
   vector<bool> itsIsParmSolvable;       //# is corresponding parmlist solvable?
   MeqMatrix    itsSolution;             //# Solution as complex numbers
   vector<double> itsFitME;
-  vector<complex<double> > itsDeriv;    //# derivatives of predict
+  vector<dcomplex> itsDeriv;            //# derivatives of predict
   
   Quality itsSol;                       //# Solution quality
 

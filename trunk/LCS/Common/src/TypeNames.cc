@@ -98,6 +98,18 @@ namespace LOFAR
       return str;
     }
 
+  const std::string& typeName (const i16complex*)
+    {
+      static std::string str ("i16complex");
+      return str;
+    }
+
+  const std::string& typeName (const u16complex*)
+    {
+      static std::string str ("u16complex");
+      return str;
+    }
+
   const std::string& typeName (const fcomplex*)
     {
       static std::string str ("fcomplex");

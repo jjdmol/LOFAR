@@ -83,7 +83,7 @@ void doOut (BlobFieldSet& fset, BlobOBufChar& bb)
   // Put data in the buffer.
   *pint = 3;
   for (uint i=0; i<fset[1].getNelem(); i++) {
-    pfcomplex[i] = fcomplex(i+1.,i+2.);
+    pfcomplex[i] = makefcomplex(i+1.,i+2.);
   }
   px[0] = XX(1,2);
   px[1] = XX(2,1);
@@ -114,7 +114,7 @@ void doIn (BlobFieldSet& fset, BlobIBufChar& bb)
   // Check if data matches as put in doOut.
   ASSERT (*pint == 3);
   for (uint i=0; i<fset[1].getNelem(); i++) {
-    ASSERT (pfcomplex[i] == fcomplex(i+1.,i+2.));
+    ASSERT (pfcomplex[i] == makefcomplex(i+1.,i+2.));
   }
   ASSERT (px[0] == XX(1,2));
   ASSERT (px[1] == XX(2,1));
@@ -155,7 +155,7 @@ void doIn2 (BlobFieldSet& fset, BlobIBufChar& bb)
     ASSERT (LOFAR::dataConvert (fmt, *pint) == 3);
     for (uint i=0; i<fset[1].getNelem(); i++) {
       LOFAR::dataConvertFloat (fmt, &valfc, pfcomplex+i, 2);
-      ASSERT (valfc == fcomplex(i+1.,i+2.));
+      ASSERT (valfc == makefcomplex(i+1.,i+2.));
     }
     memcpy (&valxx, px, sizeof(XX));
     LOFAR::dataConvert (fmt, &valxx, 1);
@@ -166,7 +166,7 @@ void doIn2 (BlobFieldSet& fset, BlobIBufChar& bb)
   } else {
     ASSERT (*pint == 3);
     for (uint i=0; i<fset[1].getNelem(); i++) {
-      ASSERT (pfcomplex[i] == fcomplex(i+1.,i+2.));
+      ASSERT (pfcomplex[i] == makefcomplex(i+1.,i+2.));
     }
     ASSERT (px[0] == XX(1,2));
     ASSERT (px[1] == XX(2,1));

@@ -39,9 +39,9 @@ using namespace LOFAR::PL;
 int main(int argc, const char* argv[])
 {
 
-  A a1(42, 3.14, "Hello", complex<double>(2.818, -2.818), 
+  A a1(42, 3.14, "Hello", makedcomplex(2.818, -2.818), 
        B(false, -14, -1.7320508, "Bubbles"));
-  A a2(84, 6.28, "Goodbye", complex<double>(5.636, -5.636),
+  A a2(84, 6.28, "Goodbye", makedcomplex(5.636, -5.636),
        B(true, 327, 1.4142135, "Bjorn again"));
   blob b1, b2;
   b1.assign((dtl::BYTE*)"ABCDEFG");

@@ -47,8 +47,8 @@ bool testMem()
   DH2.init();
     
   // fill the DataHolders with some initial data
-  DH1.getBuffer()[0] = fcomplex(17,-3.5);
-  DH2.getBuffer()[0] = 0;
+  DH1.getBuffer()[0] = makefcomplex(17,-3.5);
+  DH2.getBuffer()[0] = makefcomplex(0,0);
   DH1.setCounter(2);
   DH2.setCounter(0);
     
@@ -75,7 +75,7 @@ bool testMem()
   }
 
   // now we change the data somewhat and do the "backwards" transport
-  DH2.getBuffer()[0] += fcomplex(1,1);
+  DH2.getBuffer()[0] += makefcomplex(1,1);
   DH2.setCounter(3);
   DH2.write();
   DH1.read();
@@ -98,7 +98,7 @@ bool testMem()
 }
 
 
-int main(int argc, const char** argv)
+int main()
 {
   INIT_LOGGER("TestBidirectional.log_prop");
 

@@ -34,6 +34,7 @@
 #include "OnLineProto/DH_CorrectionMatrix.h"
 #include "OnLineProto/WH_PreProcess.h"
 
+
 namespace LOFAR
 {
 WH_PreProcess::WH_PreProcess (const string& name, 
@@ -117,13 +118,13 @@ void WH_PreProcess::process()
 	  // calculate time delay
 	  if (itsStationID == 0) 
 	    {
-	      t_i = (itsPS.getFloat(sID+"y") * sin(ha) * cos(itsPS.getFloat("observation.dec")) 
-		     + itsPS.getFloat(sID+"x") * cos(ha) * cos(itsPS.getFloat("observation.dec"))) 
+	      t_i = (itsPS.getFloat(sID+"y") * std::sin(ha) * std::cos(itsPS.getFloat("observation.dec")) 
+		     + itsPS.getFloat(sID+"x") * std::cos(ha) * std::cos(itsPS.getFloat("observation.dec"))) 
 		/ itsPS.getFloat("general.c");
 	    } 
 	  else 
 	    {
-	      t_i = (350000 * cos(ha) * cos(itsPS.getFloat("observation.dec"))) 
+	      t_i = (350000 * std::cos(ha) * std::cos(itsPS.getFloat("observation.dec"))) 
 	       / itsPS.getFloat("general.c");
 	    }
 	  

@@ -86,16 +86,16 @@ int main (int argc, char** argv) {
   }
  
   if (isReceiver) {
-    DH_Receiver.getBuffer()[0] = 0;
-    DH_Receiver.getBuffer()[1] = 0;
+    DH_Receiver.getBuffer()[0] = makefcomplex(0,0);
+    DH_Receiver.getBuffer()[1] = makefcomplex(0,0);
     DH_Receiver.setCounter(0);
     cout << "Before transport : " ;
 	cout << DH_Receiver.getBuffer()[1] << ' ' << DH_Receiver.getCounter() << endl;
   }
   else {
     // fill the DataHolders with some initial data
-    DH_Sender.getBuffer()[0] = fcomplex(17,-3.5);
-    DH_Sender.getBuffer()[1] = fcomplex(18,-2.5);
+    DH_Sender.getBuffer()[0] = makefcomplex(17,-3.5);
+    DH_Sender.getBuffer()[1] = makefcomplex(18,-2.5);
     DH_Sender.setCounter(2);
     cout << "Before transport : " ;
 	cout << DH_Sender.getBuffer()[1] << ' ' << DH_Sender.getCounter() << endl;

@@ -301,7 +301,7 @@ void Prediffer::fillStations (const vector<int>& antnrs)
     if (itsStations[ant] == 0) {
       // Store each position as a constant parameter.
       // Use the antenna name as the parameter name.
-      Vector<Double> antpos = itsAntPos.column(ant);
+      Vector<double> antpos = itsAntPos.column(ant);
       sprintf (str, "%d", ant+1);
       String name = string("SR") + str;
       MeqParmSingle* px = new MeqParmSingle ("AntPosX." + name,
@@ -478,7 +478,7 @@ void Prediffer::makeWSRTExpr()
 // Make the expression tree per baseline for the WSRT.
 //
 //----------------------------------------------------------------------
-void Prediffer::makeLOFARExpr(Bool asAP)
+void Prediffer::makeLOFARExpr(bool asAP)
 {
   // Get the sources from the ParmTable.
   itsSources = itsGSMMEP.getPointSources (&itsParmGroup, Vector<int>());
@@ -706,15 +706,16 @@ vector<uint32> Prediffer::setDomain (double fstart, double flength,
   ASSERT (itsNrTimes > 0);
   endTime = itsTimes[itsTimeIndex-1] + itsIntervals[itsTimeIndex-1]/2;
   
-  // Map the correct data subset (this time interval)
-  int64 startOffset = startIndex*itsNrBl*itsNrChan*itsNCorr*sizeof(fcomplex);
-  size_t nrBytes = itsNrTimes*itsNrBl*itsNrChan*itsNCorr*sizeof(fcomplex);
-  itsDataMap->mapFile(startOffset, nrBytes); 
+  // Map the correct data subset (this time interval).
+  int64 nr1 = itsNrChan*itsNCorr;
+  int64 nrb = itsNrBl;
+  int64 nr2 = nrb*itsNrTimes;
+  int64 nrValues = nr1*nr2;
+  nr2 = nrb*startIndex;
+  int64 startOffset = nr1*nr2
+  itsDataMap->mapFile(nr1*nr2*sizeof(fcomplex), nrValues*sizeof(fcomplex)); 
   // Map the correct flags subset (this time interval)
-  startOffset = startIndex*itsNrBl*itsNrChan*itsNCorr;
-  
-  nrBytes = itsNrTimes*itsNrBl*itsNrChan*itsNCorr;
-  itsFlagsMap->mapFile(startOffset, nrBytes); 
+  itsFlagsMap->mapFile(startOffset, nrValues); 
   if (itsLockMappedMem) {
     // Make sure mapped data is resident in RAM
     itsDataMap->lockMappedMemory();
@@ -1069,6 +1070,7 @@ vector<MeqResult> Prediffer::getResults (bool calcDeriv)
 //----------------------------------------------------------------------
 void Prediffer::subtractPeelSources (bool write)
 {
+  /*
   if (itsDataMap->getFileName() != itsMSName+".res")
   {
     // copy file <msname>.dat to <msname>.res
@@ -1192,7 +1194,7 @@ void Prediffer::subtractPeelSources (bool write)
 
   // Make sure file is updated
   itsDataMap->unmapFile();
-
+*/
 }
 
 
@@ -1377,7 +1379,7 @@ void Prediffer::fillUVW()
 // Define the source numbers to use in a peel step.
 //
 //----------------------------------------------------------------------
-Bool Prediffer::setPeelSources (const vector<int>& peelSources,
+bool Prediffer::setPeelSources (const vector<int>& peelSources,
 				const vector<int>& extraSources)
 {
   Vector<Int> peelSourceNrs(peelSources.size());

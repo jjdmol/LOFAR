@@ -37,6 +37,7 @@
 #include <sstream>
 
 using namespace casa;
+using namespace LOFAR;
 
 
 void showDouble (const MeqMatrixTmp& v)
@@ -50,21 +51,21 @@ void showDComplex (const MeqMatrixTmp& v)
 
 void doIt()
 {
-  Double d1[] = {1,2,3,4,5,6};
-  Double d2[] = {2,3,4,5,6,7};
+  double d1[] = {1,2,3,4,5,6};
+  double d2[] = {2,3,4,5,6,7};
   MeqMatrix v1 (d1, 2, 3);
   MeqMatrix v2(d2, 2, 3);
   MeqMatrix v3(double(10));
   showDouble (v1 + v2);
   showDouble (v1 + v2 + v1 + v2 + v3 + v3);
 
-  DComplex dc1[6];
-  dc1[0] = DComplex(1,2);
-  dc1[1] = DComplex(3,4);
-  dc1[2] = DComplex(5,6);
-  dc1[3] = DComplex(7,8);
-  dc1[4] = DComplex(9,10);
-  dc1[5] = DComplex(11,12);
+  dcomplex dc1[6];
+  dc1[0] = makedcomplex(1,2);
+  dc1[1] = makedcomplex(3,4);
+  dc1[2] = makedcomplex(5,6);
+  dc1[3] = makedcomplex(7,8);
+  dc1[4] = makedcomplex(9,10);
+  dc1[5] = makedcomplex(11,12);
   MeqMatrix vc1 (dc1, 2, 3);
   MeqMatrix vc2 = v1 + v2 + vc1;
   MeqMatrix vc3 = v1 + vc1 + v2;
@@ -78,14 +79,14 @@ void doIt2 (uInt length, uInt nr)
 {
   uInt i;
   {
-    Double* d1 = new Double[length];
-    Double* d2 = new Double[length];
-    Double* d3 = new Double[length];
-    Double* d4 = new Double[length];
-    Double* d5 = new Double[length];
-    Double* d6 = new Double[length];
-    Double* d7 = new Double[length];
-    Double* r  = new Double[length];
+    double* d1 = new double[length];
+    double* d2 = new double[length];
+    double* d3 = new double[length];
+    double* d4 = new double[length];
+    double* d5 = new double[length];
+    double* d6 = new double[length];
+    double* d7 = new double[length];
+    double* r  = new double[length];
     for (i=0; i<length; i++) {
       d1[i] = d2[i] = d3[i] = d4[i] = d5[i] = d6[i] = d7[i] = 1;
     }
@@ -108,7 +109,7 @@ void doIt2 (uInt length, uInt nr)
     delete [] r;
   }
   {
-    Double* d1 = new Double[length];
+    double* d1 = new double[length];
     for (i=0; i<length; i++) {
       d1[i] = 1;
     }
@@ -122,7 +123,7 @@ void doIt2 (uInt length, uInt nr)
     delete [] d1;
   }
   {
-    Array<Double> v1(IPosition(1,length));
+    Array<double> v1(IPosition(1,length));
     v1.set (1);
     double v3 = 10;
     Timer tim;

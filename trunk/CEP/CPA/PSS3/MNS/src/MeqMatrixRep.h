@@ -26,6 +26,7 @@
 
 //# Includes
 #include <Common/lofar_complex.h>
+using LOFAR::TYPES::dcomplex;
 
 //# Forward Declarations
 class MeqMatrixRealSca;
@@ -90,9 +91,9 @@ public:
 
   virtual bool isDouble() const;
   virtual const double* doubleStorage() const;
-  virtual const complex<double>* dcomplexStorage() const;
+  virtual const dcomplex* dcomplexStorage() const;
   virtual double getDouble (int x, int y) const = 0;
-  virtual complex<double> getDComplex (int x, int y) const = 0;
+  virtual dcomplex getDComplex (int x, int y) const = 0;
 
   virtual MeqMatrixRep* add      (MeqMatrixRep& right, bool rightTmp) = 0;
   virtual MeqMatrixRep* subtract (MeqMatrixRep& right, bool rightTmp) = 0;

@@ -27,8 +27,10 @@
 #include <lofar_config.h>
 
 #include <Transport/DataHolder.h>
-#include <Common/lofar_complex.h>
+#include <complex>
 #include <ACC/ParameterSet.h>
+
+using std::complex;
 
 namespace LOFAR
 {

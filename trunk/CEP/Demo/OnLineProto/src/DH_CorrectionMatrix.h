@@ -27,9 +27,10 @@
 #include <lofar_config.h>
 
 #include "Transport/DataHolder.h"
-#include <Common/lofar_complex.h>
+#include <complex>
 #include <Common/Debug.h>
 
+using std::complex;
 
 namespace LOFAR
 {

@@ -109,8 +109,74 @@ int main()
       ASSERT (v2[2] == v1[2]);
     }
     {
+      // Swap (possibly) builtin complex numbers.
+      // Double swapping should give the original.
+      u16complex v[2];
+      v[0] = makeu16complex(1, 3);
+      v[1] = makeu16complex(22, 44);
+      dataConvert (LittleEndian, v, 2);
+      dataConvert (LittleEndian, v, 2);
+      ASSERT (v[0] == makeu16complex(1, 3));
+      ASSERT (v[1] == makeu16complex(22, 44));
+    }
+    {
+      // Swap (possibly) builtin complex numbers.
+      // Double swapping should give the original.
+      fcomplex v[2];
+      v[0] = makefcomplex(-1.2, 3.4);
+      v[1] = makefcomplex(22.11, -44.33);
+      dataConvert (LittleEndian, v, 2);
+      dataConvert (LittleEndian, v, 2);
+      ASSERT (v[0] == makefcomplex(-1.2, 3.4));
+      ASSERT (v[1] == makefcomplex(22.11, -44.33));
+    }
+    {
+      // Swap (possibly) builtin complex numbers.
+      // Double swapping should give the original.
+      dcomplex v[2];
+      v[0] = makedcomplex(-1.2, 3.4);
+      v[1] = makedcomplex(22.11, -44.33);
+      dataConvert (LittleEndian, v, 2);
+      dataConvert (LittleEndian, v, 2);
+      ASSERT (v[0] == makedcomplex(-1.2, 3.4));
+      ASSERT (v[1] == makedcomplex(22.11, -44.33));
+    }
+    {
+      // Swap std complex numbers.
+      // Double swapping should give the original.
+      std::complex<uint16> v[2];
+      v[0] = std::complex<uint16>(1, 3);
+      v[1] = std::complex<uint16>(22, 44);
+      dataConvert (BigEndian, v, 2);
+      dataConvert (BigEndian, v, 2);
+      ASSERT (v[0] == std::complex<uint16>(1, 3));
+      ASSERT (v[1] == std::complex<uint16>(22, 44));
+    }
+    {
+      // Swap std complex numbers.
+      // Double swapping should give the original.
+      std::complex<float> v[2];
+      v[0] = std::complex<float>(-1.2, 3.4);
+      v[1] = std::complex<float>(22.11, -44.33);
+      dataConvert (BigEndian, v, 2);
+      dataConvert (BigEndian, v, 2);
+      ASSERT (v[0] == std::complex<float>(-1.2, 3.4));
+      ASSERT (v[1] == std::complex<float>(22.11, -44.33));
+    }
+    {
+      // Swap std complex numbers.
+      // Double swapping should give the original.
+      std::complex<double> v[2];
+      v[0] = std::complex<double>(-1.2, 3.4);
+      v[1] = std::complex<double>(22.11, -44.33);
+      dataConvert (BigEndian, v, 2);
+      dataConvert (BigEndian, v, 2);
+      ASSERT (v[0] == std::complex<double>(-1.2, 3.4));
+      ASSERT (v[1] == std::complex<double>(22.11, -44.33));
+    }
+    {
       bool bufb[50];
-      bool bufb2[51];
+      bool bufb2[100];
       uchar bufc[20];
       for (int i=0; i<20; i++) {
 	bufc[i] = 0;

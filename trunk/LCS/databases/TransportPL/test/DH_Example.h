@@ -37,7 +37,7 @@ namespace LOFAR
 class DH_Example: public DH_PL
 {
 public:
-  typedef complex<float> BufferType;
+  typedef fcomplex BufferType;
 
   explicit DH_Example (const string& name="dh_example",
 		       unsigned int initialNelements = 10,

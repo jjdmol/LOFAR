@@ -49,7 +49,7 @@ const double* MeqMatrixRep::doubleStorage() const
   throw (AipsError ("MeqMatrixRep::doubleStorage()"));
 }
 
-const complex<double>* MeqMatrixRep::dcomplexStorage() const
+const dcomplex* MeqMatrixRep::dcomplexStorage() const
 {
   throw (AipsError ("MeqMatrixRep::dcomplexStorage()"));
 }

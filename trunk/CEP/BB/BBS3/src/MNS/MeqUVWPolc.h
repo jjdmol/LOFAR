@@ -80,7 +80,7 @@ public:
 
 private:
   casa::Polynomial<casa::AutoDiff<double> > itsPoly;
-  casa::LinearFit<casa::Double> itsFitter;
+  casa::LinearFit<double> itsFitter;
   MeqParmPolc* itsUCoeff;
   MeqParmPolc* itsVCoeff;
   MeqParmPolc* itsWCoeff;

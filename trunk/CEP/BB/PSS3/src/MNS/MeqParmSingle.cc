@@ -84,16 +84,16 @@ void MeqParmSingle::getInitial (MeqMatrix& values) const
 {
   if (isSolvable()) {
     Assert (itsSolveIndex < values.nx());
-    values.dcomplexStorage()[itsSolveIndex] = complex<double>(itsCurValue,0);
+    values.dcomplexStorage()[itsSolveIndex] = makedcomplex(itsCurValue,0);
   }
 }
 
 void MeqParmSingle::getCurrentValue(MeqMatrix& value, bool) const
 {
-  value = MeqMatrix(complex<double>(), 1, 1);
+  value = MeqMatrix(makedcomplex(0,0), 1, 1);
 
   if (isSolvable()) {
-    value.dcomplexStorage()[0] = complex<double>(itsCurValue,0);
+    value.dcomplexStorage()[0] = makedcomplex(itsCurValue,0);
   }
 }
 
