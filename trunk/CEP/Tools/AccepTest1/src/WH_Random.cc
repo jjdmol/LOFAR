@@ -124,7 +124,7 @@ namespace LOFAR
 	}
       }
     }
-    cout << "REF[" << itsIndex++ << "]: " << acc << endl;
+//     cout << "REF[" << itsIndex++ << "]: " << acc << endl;
     gettimeofday(&starttime, NULL);
   }
 
