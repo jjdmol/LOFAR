@@ -348,17 +348,17 @@ void MeqCalSolver::addTileToDomain (VisTile::Ref &tileref)
       endDomain();
       return;
     }
-    else
-    {
-      control().setStatus(StDomainCurrent,tiletime);
-    }
   }
   // assume the domain size is a multiple of the tile size (in time),
   // so at this point the tile fully belongs to our domain
   // Xfer the tile to the internal container .
   itsVisTiles.push_back (tileref);
   ntiles++;
-  control().setStatus(StTileCount,ntiles);
+  if( !(ntiles%100) )
+  {
+    control().setStatus(StTileCount,ntiles);
+    control().setStatus(StDomainCurrent,tiletime);
+  }
   cdebug(3)<<"added tile #"<<ntiles<<" to domain"<<endl;
   if (ntiles%500 == 0) {
     cdebug(2) << "#tiles = " << ntiles << endl;
@@ -394,6 +394,7 @@ void MeqCalSolver::checkInputState (int instat)
 //##ModelId=3EC9F6EC026A
 void MeqCalSolver::endDomain ()
 {
+  control().setStatus(StTileCount,ntiles);
   if( in_domain )
   {
     control().endDomain();

@@ -68,11 +68,8 @@ mtest := function (dosolve=F,verbose=1,suspend=F)
   print "Starting repeater"
   rpt.enable();
   
-  if( dosolve )
-  {
-    print "Running solve";
-    solv.solve(solverec);
-  }
+  solv.solve(solverec,set_default=T);
+  solv.endsolve([save_params=F,save_residuals=T],set_default=T);
 }
 
 getcols := function ()
@@ -89,4 +86,4 @@ img := function ()
 }
 
 
-mtest(verbose=3)
+mtest(verbose=0)

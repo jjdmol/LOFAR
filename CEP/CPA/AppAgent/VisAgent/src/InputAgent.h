@@ -178,6 +178,8 @@ class InputAgent : public AppEventAgentBase
       
     //##ModelId=3EB2434D0301
       DefineRefTypes(InputAgent,Ref);
+      
+      LocalDebugContext;
 
   private:
     //##ModelId=3EB2434E0015

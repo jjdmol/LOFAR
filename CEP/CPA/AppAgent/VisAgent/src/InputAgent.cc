@@ -17,6 +17,9 @@ void VisAgent::datamap_VisAgent_init ()
 namespace VisAgent 
 {
 
+InitDebugContext(InputAgent,"VisAgentIn");
+ 
+  
 using namespace AppEvent;
   
 static int dum = aidRegistry_VisAgent();
