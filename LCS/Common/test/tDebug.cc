@@ -21,6 +21,10 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.6  2004/01/15 15:48:40  smirnov
+//  %[ER: 16]%
+//  Changed default definition of sdebug() to return the Debug context name
+//
 //  Revision 1.5  2003/12/01 12:48:25  loose
 //  %[ER: 61]%
 //  Moved Exception class from namespace LCS to namespace LOFAR.
@@ -54,6 +58,8 @@
 
 
 #include "Common/Debug.h"
+
+using namespace LOFAR;
 
 void a()
 {
