@@ -85,7 +85,11 @@ Spigot:
 
 Parm:
 
-  * take over from GvD; log any issues that result
+  * If a polc with the right domain is already specified in the init-record,
+    do not read the tables
+    
+        + take over from GvD; log any issues that result
+          06/02/04: done
     
         + Figure out how to specify default values (with, e.g., an infinite domain)
           28/01/04: emerged from discussions with JEN

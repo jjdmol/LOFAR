@@ -162,7 +162,7 @@ const meqpolc := function (coeff,freq0=0,freqsc=1,time0=0,timesc=1,pert=F,
   # set coeff  
   if( len(coeff) == 1 )
     rec.coeff := array(as_double(coeff),1,1);
-  else if( !has_field(coeff,'shape') || len(coeff::shape) != 2 )
+  else if( !has_field(coeff::,'shape') || len(coeff::shape) != 2 )
     fail 'meqpolc: coeff must be either scalar or a 2D array';
   else
     rec.coeff := as_double(coeff);
