@@ -1,13 +1,14 @@
 V 10
 1
 LANG:1 9 ConfigTab
-PANEL,128 66 806 43 N "_3DFace" 6
+PANEL,128 66 946 43 N "_3DFace" 7
 "$configDatapoint"
 "$controlAttributes"
 "$controlNames"
 "$elementNames"
 "$selectedElementDpType"
 "$selectedView"
+"$viewName"
 "main()
 {
   DebugTN(\"ConfigTab: $selectedView,$configDatapoint,$selectedElementDpType,$controlNames,$controlAttributes,$elementNames:\",$selectedView,$configDatapoint,$selectedElementDpType,$controlNames,$controlAttributes,$elementNames);
@@ -48,6 +49,7 @@ LANG:1 14 New subview...
     \"navigator/navigator_newsubview.pnl\",
     \"Add Sub-view\",
     makeDynString(\"$addView:TRUE\", 
+                  \"$viewName:\" + $viewName,
                   \"$selectedView:\" + $selectedView, 
                   \"$selectedElementDpType:\" + $selectedElementDpType, 
                   \"$configDatapoint:\" + $configDatapoint));
@@ -81,6 +83,7 @@ LANG:1 14 Remove subview
     \"navigator/navigator_newsubview.pnl\",
     \"Remove Sub-view\",
     makeDynString(\"$addView:FALSE\", 
+                  \"$viewName:\" + $viewName,
                   \"$selectedView:\" + $selectedView, 
                   \"$selectedElementDpType:\" + $selectedElementDpType, 
                   \"$configDatapoint:\" + $configDatapoint));
@@ -143,7 +146,7 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 2 0 0 1 E  1 39 801 39
+E E 0 2 0 0 1 E  1 39 937.9999999999999 39
 0
 LAYER, 1 
 1

@@ -35,6 +35,7 @@ global mapping g_subViewConfigs;
 global string  g_datapoint;
 global string  g_configPanelFileName;
 global int     g_selectedView;
+global string  g_selectedViewName;
 
 
 ///////////////////////////////////////////////////////////////////////////
@@ -52,16 +53,16 @@ void mappingClear(mapping &map)
 }
 
 ///////////////////////////////////////////////////////////////////////////
-//Function PanelInitialize
+//Function NavTabInitialize
 //  
 // initializes the panel
 // parameters:
 //   datapoint        : string representing the selected datapoint, including system name and (if applicable) element name
 //
 ///////////////////////////////////////////////////////////////////////////
-void PanelInitialize(string datapoint)
+void NavTabInitialize(string datapoint)
 {
-  LOG_DEBUG("PanelInitialize(datapoint): ",datapoint);
+  LOG_DEBUG("NavTabInitialize(datapoint): ",datapoint);
   
   
   dyn_errClass err;
@@ -73,6 +74,7 @@ void PanelInitialize(string datapoint)
   mappingClear(g_subViews);
   mappingClear(g_subViewConfigs);
   g_selectedView = 1;
+  g_selectedViewName = "";
   
   g_datapoint = datapoint;
   g_configPanelFileName = "";
@@ -121,6 +123,13 @@ void PanelInitialize(string datapoint)
   else
   {
     LOG_TRACE("dpGet:",g_selectedView,selectedSubView,views,nrOfSubViews,subViews,configs);
+
+    dpGet(views[g_selectedView] + ".caption",g_selectedViewName);
+    err = getLastError(); //test whether no errors
+    if(dynlen(err) > 0)
+    {
+      g_selectedViewName = "";
+    }
 
     // create the mapping
     int beginSubViews=1;
@@ -229,6 +238,7 @@ void ComboBoxViewsSelectionChanged()
     datapointTypeName = dpTypeName(g_datapoint);
   dyn_string configPanelParameters = makeDynString(
     "$selectedView:" + g_selectedView,
+    "$viewName:" + g_selectedViewName,
     "$selectedElementDpType:" + datapointTypeName,
     "$configDatapoint:"+g_subViewConfigs[selectedSubView]);
   LOG_TRACE("configPanel,configParameters: ",g_configPanelFileName,configPanelParameters);

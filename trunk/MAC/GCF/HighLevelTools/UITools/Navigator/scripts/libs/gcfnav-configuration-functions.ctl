@@ -1,4 +1,4 @@
-//# gcfnav-functions.ctl
+//# gcfnav-configuration-functions.ctl
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -21,132 +21,295 @@
 //#  $Id$
 
 //#
-//# global functions for the Navigator. All event handlers are implemented here
+//# configuration storage functions for the Navigator.
 //#
 
-#uses "gcfnav-pmlinterface.ctl"
 #uses "gcf-util.ctl"
-#uses "gcfnav-configuration-functions.ctl"
 
-global string   ACTIVEX_TREE_CTRL      = "NOT FlyTreeXCtrl.FlyTreeX";
-global string   ACTIVEX_TREE_CTRL_NAME = "FlyTreeXCtrl1";
-global string   LIST_TREE_CTRL_NAME    = "list";
-global string   TAB_VIEWS_CTRL_NAME    = "TabViews";
-global string   NAVIGATOR_TAB_FILENAME = "navigator/navigator_tab.pnl";
-global bool     ACTIVEX_SUPPORTED      = false;
-global int      NR_OF_VIEWS            = 10;
-global mapping  g_itemID2datapoint;
-global mapping  g_datapoint2itemID;
-global bool     g_initializing         = true;
-global int      g_curSelNode = 0;
+global string   DPNAME_NAVIGATOR                = "__navigator";
+global string   ELNAME_RESOURCEROOTS            = "resourceRoots";
+global string   ELNAME_IGNOREENABLEDROOTS       = "ignoreEnabledRoots";
+global string   ELNAME_SELECTEDELEMENT          = "selectedElement";
+global string   ELNAME_SELECTEDVIEWCAPTION      = "selectedViewCaption";
+global string   ELNAME_USECOUNT                 = "useCount";
+global string   ELNAME_VIEWSPATH                = "viewsPath";
+global string   ELNAME_VIEWS                    = "views";
+global string   ELNAME_CAPTION                  = "caption";
+global string   DPTYPENAME_NAVIGATOR_INSTANCE   = "GCFNavigatorInstance";
+global int      g_navigatorID = 0;
 
 ///////////////////////////////////////////////////////////////////////////
-//Function ActiveXSupported
+//Function navConfigGetNavigatorID
 //  
-// returns true if the panel contains the ActiveX tree control
-///////////////////////////////////////////////////////////////////////////
-bool ActiveXSupported() 
-{ 
-  return ACTIVEX_SUPPORTED;
-}
-
-
-///////////////////////////////////////////////////////////////////////////
-//Function setActiveXSupported
-//  
-// sets the global variable that indicates if activeX is supported
+// returns the navigator ID
 //
 ///////////////////////////////////////////////////////////////////////////
-void setActiveXSupported() 
+int navConfigGetNavigatorID()
 {
-  idispatch activeXctrl = 0;
-  if(isFunctionDefined("createComObject"))
-    activeXctrl = createComObject(ACTIVEX_TREE_CTRL);
-  if(activeXctrl==0)
+  return g_navigatorID;
+}
+
+///////////////////////////////////////////////////////////////////////////
+//Function navConfigSetNavigatorID
+//  
+// sets the navigator ID
+//
+///////////////////////////////////////////////////////////////////////////
+void navConfigSetNavigatorID(int newID)
+{
+  bool createConfiguration = false;
+  if(newID != 0)
   {
-    LOG_TRACE("I cannot create a COM object!? What the ....?? You must be running Linux or something.","");
-    ACTIVEX_SUPPORTED = false;
+    g_navigatorID = newID;
+    if(!dpExists(DPNAME_NAVIGATOR + g_navigatorID))
+    {
+      createConfiguration = true;
+    }
   }
   else
   {
-    LOG_TRACE("I can create a COM object! ",activeXctrl);
-    releaseComObject(activeXctrl);
-    ACTIVEX_SUPPORTED = true;
+    int id=1;
+    while(id<20 && !createConfiguration) // if no free config found, use config #20
+    {
+      if(!dpExists(DPNAME_NAVIGATOR + id))
+      {
+        g_navigatorID = id;
+        createConfiguration=true;
+      }
+      else
+      {
+        id++;
+      }
+    }
   }
+  if(createConfiguration)
+  {
+    dpCreate(DPNAME_NAVIGATOR + g_navigatorID, DPTYPENAME_NAVIGATOR_INSTANCE);
+  }
+  LOG_DEBUG("Using Navigator ID:",g_navigatorID);
+}
+  
+///////////////////////////////////////////////////////////////////////////
+//Function navConfigIncreaseUseCount
+//  
+// increases the usecount of the navigator
+//
+///////////////////////////////////////////////////////////////////////////
+void navConfigIncreaseUseCount()
+{
+  // increase usecount
+  int usecount=0;
+  dpGet(DPNAME_NAVIGATOR + g_navigatorID + "." + ELNAME_USECOUNT, usecount);
+  usecount++;
+  dpSet(DPNAME_NAVIGATOR + g_navigatorID + "." + ELNAME_USECOUNT, usecount);
 }
 
 ///////////////////////////////////////////////////////////////////////////
-//Function getTreeCtrlName
+//Function navConfigDecreaseUseCount
 //  
-// returns the name of the ActiveX tree control if activeX is supported, 
-// returns the name of the emulated tree control otherwise
+// decreases the usecount of the navigator
+//
 ///////////////////////////////////////////////////////////////////////////
-string getTreeCtrlName()
+void navConfigDecreaseUseCount()
 {
-  if(ActiveXSupported())
+  // lower usecount of this navigator
+  int usecount=0;
+  dpGet(DPNAME_NAVIGATOR + g_navigatorID + "." + ELNAME_USECOUNT, usecount);
+  usecount--;
+  if(usecount > 0)
   {
-    return ACTIVEX_TREE_CTRL_NAME;
+    dpSet(DPNAME_NAVIGATOR + g_navigatorID + "." + ELNAME_USECOUNT, usecount);
   }
   else
   {
-    return LIST_TREE_CTRL_NAME;
+    // if usecount == 0, remove datapoint  
+    dpDelete(DPNAME_NAVIGATOR + g_navigatorID);
   }
 }
 
 ///////////////////////////////////////////////////////////////////////////
-//Function getTreeCtrl
+//Function navConfigCheckEnabled
 //  
-// returns the ActiveX tree control shape if activeX is supported, 
-// returns the emulated tree control shape otherwise
+// returns the true if the datapoint is enabled or in the ignore list
+// returns false otherwise
+//
 ///////////////////////////////////////////////////////////////////////////
-shape getTreeCtrl()
+bool navConfigCheckEnabled(string datapointName)
 {
-  return getShape(getTreeCtrlName());
-}
-
-///////////////////////////////////////////////////////////////////////////
-//Function getTabCtrlName
-//  
-// returns the name of the tab control that contains the views
-///////////////////////////////////////////////////////////////////////////
-string getTabCtrlName()
-{
-  return TAB_VIEWS_CTRL_NAME;
-}
-
-///////////////////////////////////////////////////////////////////////////
-//Function getTabCtrl
-//  
-// returns the tab control shape
-///////////////////////////////////////////////////////////////////////////
-shape getTabCtrl()
-{
-  return getShape(getTabCtrlName());
-}
-
-///////////////////////////////////////////////////////////////////////////
-//Function getSelectedNode
-//  
-// returns the selected node in either the activex tree control or the 
-// emulated tree control
-// 0 = nothing selected. First element in the tree is node nr. 1
-///////////////////////////////////////////////////////////////////////////
-long getSelectedNode()
-{
-  shape treeCtrl = getTreeCtrl(); 
-  if(ActiveXSupported())
+  bool enabled = false;
+  if(dpExists(datapointName + "__enabled"))
   {
-    return treeCtrl.Selected; 
+    enabled = true;
   }
   else
   {
-    unsigned selectedPos;
-    fwTreeView_getSelectedPosition(selectedPos);
-    
-    selectedPos = fwTreeView_view2TreeIndex(selectedPos);
-    return selectedPos;
+    // check the ignoreEnabledRoots field
+    dyn_string ignoreEnabledDPs;
+    dyn_errClass err;
+    dpGet(DPNAME_NAVIGATOR + "." + ELNAME_IGNOREENABLEDROOTS,ignoreEnabledDPs);
+    if(dynlen(err) == 0)
+    {
+      for(int i=1;i<=dynlen(ignoreEnabledDPs) && !enabled;i++)
+      {
+        int pos = strpos(datapointName,ignoreEnabledDPs[i]);
+        if(pos >= 0)
+        {
+          enabled=true;
+        }
+      }
+    }
+  }
+  return enabled;
+}
+
+///////////////////////////////////////////////////////////////////////////
+//Function navConfigSetSelectedElement
+// 
+// write the selected element in the configuration
+///////////////////////////////////////////////////////////////////////////
+void navConfigSetSelectedElement(string datapointPath)
+{
+  string dpSelectedElementContainer = DPNAME_NAVIGATOR + g_navigatorID + "." + ELNAME_SELECTEDELEMENT;
+  string dpSelectedElement = datapointPath;
+  if(dpExists(dpSelectedElementContainer))
+  {
+    if(!dpExists(dpSelectedElement))
+    {
+      dpSelectedElement="";
+    }
+    dpSet(dpSelectedElementContainer,dpSelectedElement);
   }
 }
+
+///////////////////////////////////////////////////////////////////////////
+//Function navConfigGetViewsPath()
+// 
+// returns the relative path where the navigator views are stored
+///////////////////////////////////////////////////////////////////////////
+string navConfigGetViewsPath()
+{
+  string viewsPath = "navigator/views/";
+  dpGet(DPNAME_NAVIGATOR+ "." + ELNAME_VIEWSPATH,viewsPath);
+  return viewsPath;
+}
+
+///////////////////////////////////////////////////////////////////////////
+//Function navConfigGetSelectedView()
+// 
+// returns the caption of the currently selected view
+///////////////////////////////////////////////////////////////////////////
+string navConfigGetSelectedView()
+{
+  string selectedViewCaption = "List";
+  dpGet(DPNAME_NAVIGATOR + g_navigatorID + "." + ELNAME_SELECTEDVIEWCAPTION, selectedViewCaption);
+  return selectedViewCaption;
+}
+
+///////////////////////////////////////////////////////////////////////////
+//Function navConfigSetSelectedView()
+// 
+// sets the caption of the currently selected view
+///////////////////////////////////////////////////////////////////////////
+void navConfigSetSelectedView(string caption)
+{
+  dpSet(DPNAME_NAVIGATOR + g_navigatorID + "." + ELNAME_SELECTEDVIEWCAPTION, caption);
+}
+
+///////////////////////////////////////////////////////////////////////////
+//Function navConfigGetViews()
+// 
+// returns the views for the specified resource type
+///////////////////////////////////////////////////////////////////////////
+dyn_string navConfigGetViews(string dpViewConfig)
+{
+  dyn_string views;
+  // get the views references for this resource type
+  dpGet(dpViewConfig + "." + ELNAME_VIEWS, views);
+  return views;
+}
+
+///////////////////////////////////////////////////////////////////////////
+//Function navConfigGetViewCaption
+// 
+// returns the caption of the specified view
+///////////////////////////////////////////////////////////////////////////
+string navConfigGetViewCaption(string dpView)
+{
+  string caption;
+  dpGet(dpView + "." + ELNAME_CAPTION, caption);
+  return caption;
+}
+
+///////////////////////////////////////////////////////////////////////////
+//Function navConfigGetResources
+// 
+// returns the names of the resources that are added to the tree
+///////////////////////////////////////////////////////////////////////////
+string navConfigGetResources()
+{
+  dyn_string resources;
+  dyn_string resourceRoots;
+  
+  // read the roots from the configuration
+  dpGet(DPNAME_NAVIGATOR+"." + ELNAME_RESOURCEROOTS,resourceRoots);
+  err = getLastError();
+  if(dynlen(err)>0)
+  {
+    // if nothing specified, take the local PIC and PAC trees
+    resourceRoots = makeDynString("PIC","PAC");
+  }  
+  for(int i=1;i<=dynlen(resourceRoots);i++)
+  {
+    // query the database for all resources under the given root
+    dynAppend(resources,dpNames(resourceRoots[i]+"*"));
+  }
+  return resources;
+}
+
+///////////////////////////////////////////////////////////////////////////
+//Function navConfigGetViewConfig
+// 
+// returns the view config datapoint corresponding to the datapointpath
+///////////////////////////////////////////////////////////////////////////
+string navConfigGetViewConfig(string datapointPath)
+{
+  string datapointType;
+  string dpViewConfig = "";
+  
+  // check if a system root node is selected
+  string systemSub = dpSubStr(datapointPath,DPSUB_SYS);
+  if(systemSub == datapointPath)
+  {
+    // find __nav_<systemname>_viewconfig datapoint
+    dpViewConfig = "__nav_"+datapointPath+"_viewconfig";
+  }
+  else if(dpExists(datapointPath))
+  {
+    datapointType = dpTypeName(datapointPath);
+    // find __nav_<datapointType>_viewconfig datapoint
+    dpViewConfig = "__nav_"+datapointType+"_viewconfig";
+  }
+  if(!dpExists(dpViewConfig))
+  {
+    LOG_TRACE("navConfigGetViewConfig","DP does not exist, using default configuration",dpViewConfig);
+    dpViewConfig = "__nav_default_viewconfig";
+  }
+
+  LOG_TRACE(dpViewConfig);
+  return dpViewConfig;
+}
+
+
+
+
+
+
+
+
+
+
+
+
 
 ///////////////////////////////////////////////////////////////////////////
 //Function showView(string datapointPath)
@@ -156,34 +319,34 @@ long getSelectedNode()
 void showView(string dpViewConfig, string datapointPath)
 {
   shape tabCtrl = getTabCtrl();
-  string viewsPath = navConfigGetViewsPath();
-  int selectedViewTabId=1;
+  string viewsPath = "navigator/views/";
+  
+  dpGet(DPNAME_NAVIGATOR+".viewsPath",viewsPath);
 
-  navConfigSetSelectedElement(datapointPath);
   dyn_string panelParameters = makeDynString("$datapoint:" + datapointPath);
-  // get the selected tab
-  string selectedViewCaption = navConfigGetSelectedView();
 
   // get tab properties
-  dyn_string views = navConfigGetViews(dpViewConfig);
+  int selectedView;
+  dyn_anytype views;
+  int tabId=1;
+  // get the selected tab for this resource type
+  dpGet(dpViewConfig+".selectedView",selectedView);
   
-  for(int tabId=1;tabId<=dynlen(views);tabId++)
+  // get the views references for this resource type
+  dpGet(dpViewConfig+".views",views);
+
+  for(tabId=1;tabId<=dynlen(views);tabId++)
   {
     if(dpExists(views[tabId]))
     {
-      string caption = navConfigGetViewCaption(views[tabId]);
+      string caption;
+      dpGet(views[tabId]+".caption",caption);
       if(strlen(caption)>0)
       {
         LOG_TRACE("showView","making tab visible: ",tabId);
         tabCtrl.namedColumnHeader("tab"+tabId) = caption;
         tabCtrl.registerPanel(tabId-1,NAVIGATOR_TAB_FILENAME,panelParameters);
         tabCtrl.registerVisible(tabId-1)=TRUE;
-        
-        // check if this tab is currently selected
-        if(caption == selectedViewCaption)
-        {
-          selectedViewTabId = tabId;
-        }
       }
       else
       {
@@ -204,9 +367,57 @@ void showView(string dpViewConfig, string datapointPath)
     LOG_TRACE("showView","tab undefined; making tab invisible: ",i);
     tabCtrl.registerVisible(i-1)=FALSE;
   }
+  if(selectedView < 1 || selectedView > dynlen(views))
+    selectedView=1;
+  tabCtrl.activeRegister(selectedView-1);
+}
+
+///////////////////////////////////////////////////////////////////////////
+//Function setSelectedView(string strTabCtrl, string dpViewConfig)
+// 
+// sets the selected tab property in the database
+///////////////////////////////////////////////////////////////////////////
+void setSelectedView(string dpViewConfig)
+{
+  shape tabCtrl = getTabCtrl();
+  // get tab properties
+  int selectedView = tabCtrl.activeRegister + 1;
+  // set the selected tab for this resource type
+  LOG_TRACE("setSelectedView",dpViewConfig,selectedView);
+  dpSet(dpViewConfig+".selectedView",selectedView);
+}
+
+///////////////////////////////////////////////////////////////////////////
+//Function getViewConfig
+// 
+// returns the view config datapoint corresponding to the datapointpath
+///////////////////////////////////////////////////////////////////////////
+string getViewConfig(string datapointPath)
+{
+  string datapointType;
+  string dpViewConfig = "";
   
-  // make the currently selected view active
-  tabCtrl.activeRegister(selectedViewTabId-1);
+  // check if a system root node is selected
+  string systemSub = dpSubStr(datapointPath,DPSUB_SYS);
+  if(systemSub == datapointPath)
+  {
+    // find __nav_<systemname>_viewconfig datapoint
+    dpViewConfig = "__nav_"+datapointPath+"_viewconfig";
+  }
+  else if(dpExists(datapointPath))
+  {
+    datapointType = dpTypeName(datapointPath);
+    // find __nav_<datapointType>_viewconfig datapoint
+    dpViewConfig = "__nav_"+datapointType+"_viewconfig";
+  }
+  if(!dpExists(dpViewConfig))
+  {
+    LOG_TRACE("getViewConfig","DP does not exist, using default configuration",dpViewConfig);
+    dpViewConfig = "__nav_default_viewconfig";
+  }
+
+  LOG_TRACE(dpViewConfig);
+  return dpViewConfig;
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -284,7 +495,7 @@ void treeAddDatapoints(dyn_string names)
 	    datapointName = dpSubStr(names[namesIndex],DPSUB_DP);
 	    
 	    // only add ENABLED datapoints
-      if(navConfigCheckEnabled(datapointName))
+      if(checkEnabled(datapointName))
 	    {
 		    // split the datapoint path in elements
 		    dpPathElements = strsplit(datapointName,"_");
@@ -518,11 +729,43 @@ void Navigator_HandleEventInitialize()
   
   // first thing to do: get a new navigator ID
   // check the commandline parameter:
-  int navID=0;
+  bool createConfiguration = false;
   if(isDollarDefined("$ID"))
-    navID=$ID;
-  navConfigSetNavigatorID(navID);
-  navConfigIncreaseUseCount();
+  {
+    g_navigatorID = $ID;
+    if(!dpExists(DPNAME_NAVIGATOR + g_navigatorID))
+    {
+      createConfiguration = true;
+    }
+  }
+  else
+  {
+    int id=1;
+    while(id<20 && !createConfiguration) // if no free config found, use config #20
+    {
+      if(!dpExists(DPNAME_NAVIGATOR + id))
+      {
+        g_navigatorID = id;
+        createConfiguration=true;
+      }
+      else
+      {
+        id++;
+      }
+    }
+  }
+  if(createConfiguration)
+  {
+    dpCreate(DPNAME_NAVIGATOR + g_navigatorID, DPTYPENAME_NAVIGATOR_INSTANCE);
+  }
+  
+  // increase usecount
+  int usecount=0;
+  dpGet(DPNAME_NAVIGATOR + g_navigatorID + ".useCount",usecount);
+  usecount++;
+  dpSet(DPNAME_NAVIGATOR + g_navigatorID + ".useCount",usecount);
+    
+  LOG_DEBUG("Using Navigator ID:",g_navigatorID);
   
   navPMLinitialize();
   
@@ -530,6 +773,8 @@ void Navigator_HandleEventInitialize()
   g_itemID2datapoint = empty;
   g_datapoint2itemID = empty;
   LOG_TRACE("global stuff lengths:",mappinglen(g_itemID2datapoint),mappinglen(g_datapoint2itemID));
+  
+  g_ignoreEnabledDPs = makeDynString("PIC_SNMP"); 
   
   g_initializing=true;
   
@@ -584,8 +829,20 @@ void Navigator_HandleEventClose()
 
   navPMLterminate();
 
-  navConfigDecreaseUseCount();
-    
+  // lower usecount of this navigator
+  int usecount=0;
+  dpGet(DPNAME_NAVIGATOR + g_navigatorID + ".useCount",usecount);
+  usecount--;
+  if(usecount > 0)
+  {
+    dpSet(DPNAME_NAVIGATOR + g_navigatorID + ".useCount",usecount);
+  }
+  else
+  {
+    // if usecount == 0, remove datapoint  
+    dpDelete(DPNAME_NAVIGATOR + g_navigatorID);
+  }
+  
   PanelOff();
 }
 
@@ -635,20 +892,17 @@ void TabViews_HandleEventSelectionChanged()
   {
     LOG_DEBUG("TabViews_HandleEventSelectionChanged");
 
-    shape tabCtrl = getTabCtrl();
-    string selectedViewCaption = tabCtrl.namedActiveRegister;
-    navConfigSetSelectedView(selectedViewCaption);
-    
     long selectedNode = getSelectedNode();
     if(selectedNode != 0)
     {
       string datapointPath;
       buildPathFromNode(selectedNode, datapointPath);
-      string dpViewConfig = navConfigGetViewConfig(datapointPath);
+      string dpViewConfig = getViewConfig(datapointPath);
       if(selectedNode!=0 && dpExists(dpViewConfig))
       {
-        showView(dpViewConfig,datapointPath);
+        setSelectedView(dpViewConfig);
       }
+      showView(dpViewConfig,datapointPath);
     }
   }
 }
@@ -689,7 +943,22 @@ void InitializeTree()
     fwTreeView_watchDog(); // prevent memory leak when closing controlling window
   }
   
-  dyn_string resources = navConfigGetResources();
+  dyn_string resourceRoots;
+  dyn_string resources;
+  
+  // read the roots from the configuration
+  dpGet(DPNAME_NAVIGATOR+".resourceRoots",resourceRoots);
+  err = getLastError();
+  if(dynlen(err)>0)
+  {
+    // if nothing specified, take the local PIC and PAC trees
+    resourceRoots = makeDynString("PIC","PAC");
+  }  
+  for(int i=1;i<=dynlen(resourceRoots);i++)
+  {
+    // query the database for all resources under the given root
+    dynAppend(resources,dpNames(resourceRoots[i]+"*"));
+  }
   treeAddDatapoints(resources);
 
   if(ActiveXSupported())
@@ -724,7 +993,7 @@ void TreeCtrl_HandleEventOnSelChange(long Node)
 	    {
 	      string datapointPath;
 	      buildPathFromNode(Node, datapointPath);
-	      string dpViewConfig = navConfigGetViewConfig(datapointPath);
+	      string dpViewConfig = getViewConfig(datapointPath);
 	
 	      showView(dpViewConfig,datapointPath);
 	    }
@@ -803,7 +1072,7 @@ void ButtonMaximize_HandleEventClick()
   {
     string datapointPath;
     buildPathFromNode(Node, datapointPath);
-    string dpViewConfig = navConfigGetViewConfig(datapointPath);
+    string dpViewConfig = getViewConfig(datapointPath);
     LOG_TRACE("ButtonMaximize_HandleEventClick",Node,dpViewConfig);
     if(Node!=0 && dpExists(dpViewConfig))
     {

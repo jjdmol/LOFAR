@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 19 NavigatorGenericTab
-PANEL,58 76 818 528 N "_3DFace" 1
+PANEL,58 76 958 778 N "_3DFace" 1
 "$datapoint"
 "main()
 {
@@ -9,7 +9,7 @@ PANEL,58 76 818 528 N "_3DFace" 1
 // $datapoint        : string representing the selected datapoint, including system name and (if applicable) element name
 
   DebugTN(\"navigator_tab::Initialize. $datapoint=\",$datapoint);
-  PanelInitialize($datapoint);
+  NavTabInitialize($datapoint);
 }
 " 0
  E E E E 1 -1 -1 0  20 40
@@ -38,7 +38,7 @@ LANG:1 0
 1
 LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-100-75-75-*-*-iso8859-1
 0
-""  1 1 817 527
+""  1 1 957 777
 E2 "View" 1
 LANG:1 4 View
 0
@@ -49,7 +49,7 @@ LANG:1 6 Config
 22 1
 "ComboBoxViews"
 ""
-1 544 1 E E E 1 E 1 E N {0,0,0} E N "_Window" E E
+1 568 0 E E E 1 E 1 E N {0,0,0} E N "_Window" E E
  E E
 68 0 0 0 0 0
 E E E
@@ -61,7 +61,7 @@ LANG:1 0
 1
 LANG:1 62 -adobe-helvetica-medium-r-normal-*-*-100-100-100-*-*-iso8859-1
 0
-""  544 1 798 30
+""  568 0 957 29
 0
 
 E
