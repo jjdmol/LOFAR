@@ -9,6 +9,7 @@
 #include "DH_BeamBand.h"
 #include "DH_Corr.h"
 
+#include <stdio.h>
 #include <vector>
 
 
@@ -21,6 +22,11 @@ class WH_Corr:public WorkHolder
 
   virtual ~ WH_Corr ();
   void process ();
+
+  void openFile(char *filename);
+  void closeFile(void);
+  void writeFile(float y);
+
   void dump () const;
 
   short getInstanceCnt() const;
@@ -35,7 +41,7 @@ class WH_Corr:public WorkHolder
   /* Correlation coefficients from Num.Rec. */
   void pearsn(DataBufferType x[], 
 	      DataBufferType y[], 
-	      int n, 
+	      unsigned long n, 
 	      float *r);
     
   static unsigned int itsCurrentTimeStamp;
@@ -53,6 +59,9 @@ class WH_Corr:public WorkHolder
   static short itsInstanceCnt;
   short        myInstanceCnt;
   static int   itsProcessProfilerState; 
+
+  FILE* itsFile;
+  int   itsXOffset;
 };
 
 inline DH_BeamBand* WH_Corr::getInHolder (int channel)  { 

@@ -61,23 +61,23 @@ void WH_FFT::process ()
     for (input = 0; input < getInputs (); input++)
       {
 	// Copy input buffer in the right order to fft_data
-
-	//	cout << "fft input: "
-	//	     << itsInDataHolders[input]->getBuffer()[0] << endl;
-
 	for(int freq = 0; freq < (ANTSAMPLES); freq++) {
 	  fft_data[(2*freq)    ] = itsInDataHolders[input]->getBuffer()[freq].real();
 	  fft_data[((2*freq)+1)] = itsInDataHolders[input]->getBuffer()[freq].imag();
 	}
+
+
+#if 0
 	// Call 1D-fft function four1
 	four1(fft_data-1,(ANTSAMPLES),1);
+#endif
+
 	// Put fft-data back in output buffer
 	for(int freq =0; freq < FREQS; freq++) {
 	  itsOutDataHolders[input]->getBuffer()[freq] = 
 	    DataBufferType(fft_data[(2*(freq))],fft_data[(2*(freq))+1]);
 	}
       }
-
     for (int output = 0; output < getOutputs (); output++)
       { 
 	// mind the parentheses!

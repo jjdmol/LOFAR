@@ -11,6 +11,9 @@
 #define MPI_OPT
 #include "firewalls.h"
 
+// LAGS
+const int LAGS=64;
+
 // Number of stations
 const int STATIONS = 2;
 
@@ -20,14 +23,15 @@ const int DATAPROCESSORS = 1;
 
 // Number of antennas/ffts
 const int ELEMENTS = 1;     
-const int ANTSAMPLES = 128; 
-const int BEAMS = 1; //16;		//max=64 (power of 4)
-const int FREQS = 128; //128;		//64
-const int CORRFREQS = 128; //32;
+const int ANTSAMPLES = 2*LAGS;//128; 
+const int BEAMS = 1;		//max=64 (power of 4)
+const int FREQS = 2*LAGS;		//64
+const int CORRFREQS = 2*LAGS;
 const int FREQBANDWIDTH = CORRFREQS;
 const int FREQBANDS  = FREQS/CORRFREQS;
 const int FCORR = FREQBANDS;  // 64/16=4
 const int POLS = 1;
+
 
 // Node of the controller
 //const int CONTROLLER_NODE = 0;

@@ -95,10 +95,6 @@ void WH_Beam::process () {
     
     for (input = 0; input < getInputs (); input++) {
 	for (element = 0; element < ELEMENTS; element++) 	  {
-
-	  //	  cout << "bf input: "
-	  //	       << itsInDataHolders[input]->getBuffer()[element] << endl;
-
 	  signals_real[element] = itsInDataHolders[input]->getBuffer()[element].real ();
 	  signals_imag[element] = itsInDataHolders[input]->getBuffer()[element].imag ();
 	  weights[element] = 1.;
