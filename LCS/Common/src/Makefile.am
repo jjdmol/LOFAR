@@ -64,6 +64,7 @@ INSTHDRS = \
         StringUtil.h \
         Thread.h \
         TypeNames.h \
+	VectorUtil.h \
         Net/Socket.h \
         Profiling/PerfProfile.h \
         Thread/Condition.h \
