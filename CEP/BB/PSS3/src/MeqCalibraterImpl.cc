@@ -970,6 +970,11 @@ GlishRecord MeqCalibrater::solve(bool useSVD)
     if (foundDeriv) {
       // Get pointer to array storage; the data in it is contiguous.
       Complex* dataPtr = &(data(0,0));
+
+//       cout << "First data element for time=" << time
+// 	   << ", ant1=" << ant1 << ", ant2=" << ant2
+// 	   << " : " << *dataPtr << endl;
+
       vector<double> derivVec(2*itsNrScid);
       double* derivReal = &(derivVec[0]);
       double* derivImag = &(derivVec[itsNrScid]);
@@ -1180,7 +1185,7 @@ GlishRecord MeqCalibrater::solve(bool useSVD)
   rec.add ("diag", GlishArray(errors));
   rec.add ("covar", GlishArray(covar));
   rec.add ("mu", itsSolver.getWeightedSD());
-  rec.add ("stddev", itsSolver.getWeightedSD());
+  rec.add ("stddev", itsSolver.getSD());
   rec.add ("chi", itsSolver.getChi());
 
   itsMS.unlock();
