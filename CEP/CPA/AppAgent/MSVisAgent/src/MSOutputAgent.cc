@@ -176,7 +176,7 @@ int MSOutputAgent::putNextTile (VisTile::Ref &tileref)
   {
     const VisTile &tile = *tileref;
     tilecount_++;
-    cdebug(3)<<"putting tile "<<tile.vdsId()<<", "<<tile.nrow()<<" rows"<<endl;
+    cdebug(3)<<"putting tile "<<tile.tileId()<<", "<<tile.nrow()<<" rows"<<endl;
     cdebug(4)<<"  into table rows: "<<tile.seqnr()<<endl;
     cdebug(4)<<"  rowflags are: "<<tile.rowflag()<<endl;
     // iterate over rows of the tile

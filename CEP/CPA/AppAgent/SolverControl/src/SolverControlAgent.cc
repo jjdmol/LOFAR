@@ -79,6 +79,7 @@ void SolverControlAgent::close ()
   status_.detach();
   postEvent(SolverEndEvent);
   AppControlAgent::close();
+  sink().clearEventFlag(); // no more events 
 }
 
 //##ModelId=3DFF5B240397
@@ -87,6 +88,7 @@ void SolverControlAgent::stopSolution (const string &msg,int newstate,const HIID
   Thread::Mutex::Lock lock(mutex());
   dprintf(1)("stopping solution with state=%d (%s)\n",newstate,msg.c_str());
   setState(newstate);
+  sink().raiseEventFlag(); // we now have an event
   // place message into status and generate event
   if( msg.length() )
     status_()[FMessage] = msg;
@@ -105,6 +107,7 @@ void SolverControlAgent::initSolution (const DataRecord::Ref &params)
   status_()[FSolutionParams] <<= params.copy(DMI::READONLY);
   status_()[FDomainNumber] = domainNum();
   postEvent(StartSolutionEvent,status_);
+  sink().clearEventFlag(); // no events until solution converges
 }
 
 //##ModelId=3E00C8540129
