@@ -61,10 +61,12 @@ public:
 
   /// Get write access to the Buffer in the DataPacket.
   BufferType* getBuffer();
-  /// Get read access to the Buffer in the DataPacket.
+  /// Get access to the Buffer in the DataPacket.
   const BufferType* getBuffer() const;
   BufferType* getBufferElement(int station, int time, int freq);
-  const int         getFBW() const;
+  void setBufferElement(int station, int time, int freq, BufferType* value); 
+   
+   const int         getFBW() const;
 protected:
   // Definition of the DataPacket type.
   class DataPacket: public DataHolder::DataPacket
@@ -102,8 +104,18 @@ inline DH_CorrCube::BufferType* DH_CorrCube::getBufferElement(int station,
 							      int time, 
 							      int freq)
 { 
-  return itsBuffer+time*NSTATIONS*FSIZE+freq*NSTATIONS+station;
+  return itsBuffer+station*TSIZE*FSIZE+time*BFBW*NSTATIONS+freq;
 }
+   
+inline void DH_CorrCube::setBufferElement(int station, 
+			     int time, 
+			     int freq, 
+  			     DH_CorrCube::BufferType* valueptr) 
+{
+   DH_CorrCube::BufferType* ptr= itsBuffer+station*TSIZE*FSIZE+time*BFBW*NSTATIONS+freq;
+   *ptr = *valueptr;
+}
+   
 
 inline const int DH_CorrCube::getFBW() const
   { return itsFBW; }

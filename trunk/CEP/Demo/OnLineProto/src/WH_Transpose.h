@@ -72,6 +72,7 @@ private:
   
   int itsFBW; // frequency bandwidth of the DH_Beamlet 
 
+  int itsIntegrationTime;
 };
 
 }

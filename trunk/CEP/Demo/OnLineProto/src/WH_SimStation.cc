@@ -119,12 +119,14 @@ namespace LOFAR
   void WH_SimStation::dump()
   {
     cout << "WH_SimStation " << getName () << " Buffers:" << endl;
-    //   for (int i = 0; i < itsMac.getNumberOfBeamlets(); i++) {
-      for (int j = 0; j < itsMac.getBeamletSize(); j++) {
-	cout << *((DH_Beamlet*)getDataManager().getOutHolder(0))->getBufferElement(j) << ' ';
+
+    for (int i = 0; i < MIN(itsMac.getNumberOfBeamlets(), 1) ; i++) { 
+      for (int j = 0; j < MIN(itsMac.getBeamletSize(), 10) ; j++) { 
+	cout << *((DH_Beamlet*)getDataManager().getOutHolder(i))->getBufferElement(j) << ' ';
+
       }
       cout << endl;
-      //}
+    }
   }
 
   void WH_SimStation::ReadData ()
