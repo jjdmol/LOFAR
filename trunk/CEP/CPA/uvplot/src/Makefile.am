@@ -1,24 +1,28 @@
+lib_LTLIBRARIES      := libuvplot.la
+libuvplot_la_SOURCES := UVPGraphSettings.cc    \
+                        UVPPixel.cc            \
+                        UVPAxis.cc             \
+                        UVPImageCube.cc        \
+                        UVPSpectrum.cc         \
+                        UVPSpectrumVector.cc   \
+                        UVPDataHeader.cc       \
+                        UVPDataAtomHeader.cc   \
+                        UVPDataAtom.cc         \
+                        UVPDataCacheElement.cc \
+                        UVPDataTransferWP.cc   \
+	                     UVPMessagesToFileWP.cc \
+                        AID-uvplot-Registry.cc
+#                       UVPCorrelationDataCache.cc \
+#                       UVPBaselineDataCache.cc 
+
+
 bin_PROGRAMS   := uvplot
 uvplot_SOURCES := main.cc \
                   UVPMainWindow.cc   UVPMainWindow.moc.cc  \
                   UVPDisplayArea.cc  UVPDisplayArea.moc.cc \
-                  UVPGraphSettings.cc    \
                   UVPGraphSettingsWidget.cc UVPGraphSettingsWidget.moc.cc \
-                  UVPPixel.cc            \
-                  UVPAxis.cc             \
-                  UVPImageCube.cc        \
-                  UVPSpectrum.cc         \
-                  UVPSpectrumVector.cc   \
                   UVPTimeFrequencyPlot.cc UVPTimeFrequencyPlot.moc.cc \
-                  UVPUVCoverageArea.cc UVPUVCoverageArea.moc.cc \
-                  UVPDataTransferWP.cc   \
-                  UVPDataHeader.cc       \
-                  UVPDataAtomHeader.cc   \
-                  UVPDataAtom.cc         \
-                  UVPDataCacheElement.cc \
-#                  UVPCorrelationDataCache.cc \
-#                  UVPBaselineDataCache.cc    \
-                  AID-uvplot-Registry.cc
+                  UVPUVCoverageArea.cc UVPUVCoverageArea.moc.cc
 
 
 # Your package's subdirectory
