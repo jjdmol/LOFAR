@@ -220,11 +220,15 @@ string navConfigGetSelectedView()
 // 
 // sets the caption of the currently selected view
 ///////////////////////////////////////////////////////////////////////////
-void navConfigSetSelectedView(string caption, string datapoint, int viewid)
+void navConfigSetSelectedView(string datapoint, int viewid)
 {
-  dpSet(DPNAME_NAVIGATOR + g_navigatorID + "." + ELNAME_SELECTEDVIEWCAPTION, caption);
-
   string dpViewConfig = navConfigGetViewConfig(datapoint);
+  dyn_string views = navConfigGetViews(dpViewConfig);
+  if(viewid <= dynlen(views))
+  {
+    string caption = navConfigGetViewCaption(views[viewid]);
+    dpSet(DPNAME_NAVIGATOR + g_navigatorID + "." + ELNAME_SELECTEDVIEWCAPTION, caption);
+  }
   dpSet(dpViewConfig + "." + ELNAME_SELECTEDVIEW,viewid);
 }
 

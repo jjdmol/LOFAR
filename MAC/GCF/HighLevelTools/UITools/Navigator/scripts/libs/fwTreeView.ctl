@@ -373,44 +373,65 @@ fwTreeView_defaultSelect(unsigned pos)
 
 /** Updates the list panel where the tree is drawn.
  */
+/* Updated by blaakmeer. The old code deleted all items first and then began to build the tree from the ground up
+ * This version overwrites existing items, adds items if there are not enough existing items and removes items if there are too many.
+ * Pretty cool stuff!
+ */
 fwTreeView_draw(string referenceName = "")
 {
-	unsigned branchMarkLen = strlen(fwTreeView_BRANCH_MARK_COLLAPSED); //==strlen(expandeBranchMark)
-	int spaceCnt, i, imax;
-	string item;
+  unsigned branchMarkLen = strlen(fwTreeView_BRANCH_MARK_COLLAPSED); //==strlen(expandeBranchMark)
+  int spaceCnt, i, imax;
+  string item;
+  int existingNodes;
+  int visibleNodes=0;
 
-	// erase list:
-	setValue(referenceName + "list", "deleteAllItems");
-  
-	imax = fwTreeView_getNodeCount(referenceName);
-	for(i = 1; i <= imax ; i++)
-	{
-		if(!(fwTreeView_getNode(i, referenceName)[fwTreeView_STATE] & fwTreeView_HIDDEN))		
-		{
-			// the node is visible
-			spaceCnt = fwTreeView_INDENT * fwTreeView_getNode(i, referenceName)[fwTreeView_LEVEL];
-			item = strexpand("\\fill{ }", spaceCnt);
-			if((fwTreeView_getNode(i, referenceName)[fwTreeView_STATE] & fwTreeView_BRANCH) && (fwTreeView_getNode(i, referenceName)[fwTreeView_STATE] & fwTreeView_EXPANDED))
-			{
-				// this is an expanded branch
-				item += fwTreeView_BRANCH_MARK_EXPANDED;
-				//	DebugN("expanded",fwTreeView_getNode(i)[fwTreeView_STATE]);
-			}
-			else 
-				if(fwTreeView_getNode(i, referenceName)[fwTreeView_STATE] & fwTreeView_BRANCH)
-				{
-					// this is a collapsed branch
-					item += fwTreeView_BRANCH_MARK_COLLAPSED;
-					//	DebugN("collapsed", fwTreeView_getNode(i)[fwTreeView_STATE]);
-				}
-		else
-		{
-			// this is a leaf
-			item += strexpand("\\fill{ }", branchMarkLen);
-		}
-		item += fwTreeView_getNode(i, referenceName)[fwTreeView_NAME];
-		setValue(referenceName + "list", "appendItem", item);
-	}
+  // erase list:
+//	setValue(referenceName + "list", "deleteAllItems");
+
+  getValue(referenceName + "list","itemCount",existingNodes);
+
+  imax = fwTreeView_getNodeCount(referenceName);
+  for(i = 1; i <= imax ; i++)
+  {
+    if(!(fwTreeView_getNode(i, referenceName)[fwTreeView_STATE] & fwTreeView_HIDDEN))		
+    {
+      visibleNodes++;
+      // the node is visible
+      spaceCnt = fwTreeView_INDENT * fwTreeView_getNode(i, referenceName)[fwTreeView_LEVEL];
+      item = strexpand("\\fill{ }", spaceCnt);
+      if((fwTreeView_getNode(i, referenceName)[fwTreeView_STATE] & fwTreeView_BRANCH) && (fwTreeView_getNode(i, referenceName)[fwTreeView_STATE] & fwTreeView_EXPANDED))
+      {
+        // this is an expanded branch
+        item += fwTreeView_BRANCH_MARK_EXPANDED;
+        //	DebugN("expanded",fwTreeView_getNode(i)[fwTreeView_STATE]);
+      }
+      else 
+      {
+        if(fwTreeView_getNode(i, referenceName)[fwTreeView_STATE] & fwTreeView_BRANCH)
+        {
+          // this is a collapsed branch
+          item += fwTreeView_BRANCH_MARK_COLLAPSED;
+          //	DebugN("collapsed", fwTreeView_getNode(i)[fwTreeView_STATE]);
+        }
+        else
+        {
+          // this is a leaf
+          item += strexpand("\\fill{ }", branchMarkLen);
+        }
+      }
+      item += fwTreeView_getNode(i, referenceName)[fwTreeView_NAME];
+      if(visibleNodes<=existingNodes)
+        setValue(referenceName + "list", "replacePos", visibleNodes, item);
+      else
+        setValue(referenceName + "list", "appendItem", item);
+    }
+  }
+  // remove surplus items
+  int deletePos = visibleNodes+1;
+  while(deletePos <= existingNodes)
+  {
+    setValue(referenceName + "list","deletePos",deletePos);
+    getValue(referenceName + "list","itemCount",existingNodes);
   }
 }
 

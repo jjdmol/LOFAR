@@ -183,6 +183,47 @@ void refreshNavigator()
 }
 
 ///////////////////////////////////////////////////////////////////////////
+//Function showActiveView(string datapointPath)
+// 
+// shows the active tab identified by the datapoint
+///////////////////////////////////////////////////////////////////////////
+void showActiveView(string dpViewConfig, string datapointPath)
+{
+  LOG_DEBUG("showActiveView",dpViewConfig,datapointPath);
+  shape tabCtrl = getTabCtrl();
+  string viewsPath = navConfigGetViewsPath();
+  int selectedViewTabId=tabCtrl.activeRegister+1;
+  LOG_DEBUG("showActiveView, active view = ",selectedViewTabId);
+
+  navConfigSetSelectedElement(datapointPath);
+  dyn_string panelParameters = makeDynString("$datapoint:" + datapointPath);
+
+  // get tab properties
+  dyn_string views = navConfigGetViews(dpViewConfig);
+  
+  for(int tabId=1;tabId<=dynlen(views);tabId++)
+  {
+    if(tabId != selectedViewTabId)
+    {
+      // load empty panel in non-visible tabs to enhance performance
+      tabCtrl.registerPanel(selectedViewTabId-1,"",makeDynString(""));
+    }
+    else
+    {
+      if(dpExists(views[selectedViewTabId]))
+      {
+        tabCtrl.registerPanel(selectedViewTabId-1,NAVIGATOR_TAB_FILENAME,panelParameters);
+      }
+      else
+      {
+        LOG_TRACE("showActiveView","tab reference not found; making tab invisible: ",selectedViewTabId);
+        tabCtrl.registerVisible(selectedViewTabId-1)=FALSE;
+      }
+    }
+  }
+}
+
+///////////////////////////////////////////////////////////////////////////
 //Function showView(string datapointPath)
 // 
 // shows the tab identified by the datapoint
@@ -213,13 +254,14 @@ void showView(string dpViewConfig, string datapointPath)
       {
         LOG_DEBUG("showView","making tab visible: ",tabId,caption);
         tabCtrl.namedColumnHeader("tab"+tabId) = caption;
-        tabCtrl.registerPanel(tabId-1,NAVIGATOR_TAB_FILENAME,panelParameters);
         tabCtrl.registerVisible(tabId-1)=TRUE;
         
         // check if this tab is currently selected
         if(caption == selectedViewCaption)
         {
+          LOG_DEBUG("showView","caption=selectedViewCaption");
           selectedViewTabId = tabId;
+          tabCtrl.registerPanel(tabId-1,NAVIGATOR_TAB_FILENAME,panelParameters);
         }
       }
       else
@@ -234,6 +276,15 @@ void showView(string dpViewConfig, string datapointPath)
       tabCtrl.registerVisible(tabId-1)=FALSE;
     }
   }
+  // check if this tab is currently selected
+  if(selectedViewCaption == "")
+  {
+    LOG_DEBUG("showView","selectedViewCaption=\"\"");
+    selectedViewTabId = 1;
+    tabCtrl.registerPanel(0,NAVIGATOR_TAB_FILENAME,panelParameters);
+  }
+  tabCtrl.activeRegister = selectedViewTabId-1;
+  
   // make the rest of the views invisible
   int i;
   for(i=tabId;i<=NR_OF_VIEWS;i++)
@@ -651,7 +702,17 @@ void Navigator_HandleEventInitialize()
   
   g_initializing = false;
 
-  TabViews_HandleEventSelectionChanged();
+  // configure the tabs
+  long selectedNode = getSelectedNode();
+  if(selectedNode != 0)
+  {
+    string datapointPath = buildPathFromNode(selectedNode);
+    string dpViewConfig = navConfigGetViewConfig(datapointPath);
+    if(selectedNode!=0 && dpExists(dpViewConfig))
+    {
+      showView(dpViewConfig,datapointPath);
+    }
+  }    
   
   LOG_DEBUG("~Navigator_HandleEventInitialize()");
 }
@@ -739,17 +800,16 @@ void TabViews_HandleEventSelectionChanged()
     LOG_DEBUG("TabViews_HandleEventSelectionChanged");
 
     shape tabCtrl = getTabCtrl();
-    string selectedViewCaption = tabCtrl.namedActiveRegister;
     long selectedNode = getSelectedNode();
     if(selectedNode != 0)
     {
       string datapointPath = buildPathFromNode(selectedNode);
-      navConfigSetSelectedView(selectedViewCaption,datapointPath,tabCtrl.activeRegister+1);
+      navConfigSetSelectedView(datapointPath,tabCtrl.activeRegister+1);
     
       string dpViewConfig = navConfigGetViewConfig(datapointPath);
       if(selectedNode!=0 && dpExists(dpViewConfig))
       {
-        showView(dpViewConfig,datapointPath);
+        showActiveView(dpViewConfig,datapointPath);
       }
     }
   }
