@@ -30,4 +30,9 @@
 
 namespace LOFAR
 {
+
+DataHolder::DataHolder(const string& name, const string& type):
+  BaseDataHolder(name,type) 
+{}
+
 }
