@@ -21,6 +21,9 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.11  2001/10/31 11:34:18  wierenga
+//  LOFAR CVS Repository structure change and transition to autotools (autoconf, automake and libtool).
+//
 //  Revision 1.10  2001/10/26 10:06:28  wierenga
 //  Wide spread changes to convert from Makedefs to autoconf/automake/libtool build environment
 //
@@ -121,18 +124,25 @@ void P2Perf::define(const ParamBlock& params)
 
   getarg(&argc, &argv);
 
-  if (argc == 2)
+#ifdef HAVE_MPI
+  Firewall::Assert( size == 2,
+		    __HERE__,
+		    "number of processes must equal 2");
+  divisor = rank;
+#else
+  if (argc == 2 )
   {
     if (!strncmp(argv[1], "-odd", 4))
     {
       divisor = 1;
     }
-    else if (!strncmp(argv[1], "-even", 5))
+    else if (!strncmp(argv[1], "-even", 5) )
     {
       divisor = 0;
     }
-  }
 
+  }
+#endif
   cout << "P2Perf Processor " << rank << " of " << size << " operational."
        << flush << endl;
 
@@ -161,6 +171,7 @@ void P2Perf::define(const ParamBlock& params)
 
     if ( ((iStep % 2) == divisor) || (divisor < 0))
     {
+      cout << "Add step " << iStep << endl;
       simul.addStep(steps[iStep]);
     }
 
