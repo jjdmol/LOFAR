@@ -19,8 +19,8 @@ create table A (
 	ItsString	TEXT
 );
 
-CREATE TRIGGER A_update_versionnr BEFORE INSERT OR UPDATE ON A
-FOR EACH ROW EXECUTE PROCEDURE update_versionnr();
+CREATE TRIGGER A_UpdateVersionNr BEFORE INSERT OR UPDATE ON A
+FOR EACH ROW EXECUTE PROCEDURE UpdateVersionNr();
 
 drop table B;
 create table B (
@@ -33,8 +33,8 @@ create table B (
 	ItsString	TEXT
 );
 
-CREATE TRIGGER B_update_versionnr BEFORE INSERT OR UPDATE ON B
-FOR EACH ROW EXECUTE PROCEDURE update_versionnr();
+CREATE TRIGGER B_UpdateVersionNr BEFORE INSERT OR UPDATE ON B
+FOR EACH ROW EXECUTE PROCEDURE UpdateVersionNr();
 
 drop table C;
 create table C (
@@ -45,5 +45,5 @@ create table C (
         ItsString       TEXT
 );
 
-CREATE TRIGGER C_update_versionnr BEFORE INSERT OR UPDATE ON C
-FOR EACH ROW EXECUTE PROCEDURE update_versionnr();
+CREATE TRIGGER C_UpdateVersionNr BEFORE INSERT OR UPDATE ON C
+FOR EACH ROW EXECUTE PROCEDURE UpdateVersionNr();
