@@ -35,7 +35,7 @@ namespace RSP
       /**
        * Constructors for a SyncAction object.
        */
-      SyncAction(GCFPortInterface& board_port, int board_id, int n_iterations);
+      SyncAction(GCFPortInterface& board_port, int board_id, int n_blps);
 	  
       /* Destructor for SyncAction. */
       virtual ~SyncAction();
@@ -53,7 +53,7 @@ namespace RSP
       /**
        * Hooks to perform specific actions.
        */
-      virtual void sendrequest(int iteration) = 0;
+      virtual void sendrequest(int local_blp) = 0;
       virtual void sendrequest_status()   = 0;
       virtual GCFEvent::TResult handleack(GCFEvent& event, GCFPortInterface& port) = 0;
       /*@}*/
@@ -83,8 +83,8 @@ namespace RSP
       GCFPortInterface& m_board_port;
       int               m_board_id;
       bool              m_completed; /** indicates whether the state machine has reached its final state */
-      int               m_n_iterations;
-      int               m_current_iteration;
+      int               m_n_blps;
+      int               m_current_blp;
       int               m_retries;
   };
 };

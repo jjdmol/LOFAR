@@ -24,6 +24,7 @@
 #include "RawDispatch.h"
 #include "MEPHeader.h"
 #include "EPA_Protocol.ph"
+#include <GCF/GCF_ETHRawPort.h>
 
 #undef PACKAGE
 #undef VERSION
@@ -177,13 +178,25 @@ static unsigned short signal_lut[MEPHeader::MAX_PID + 1][MEPHeader::MAX_REGID + 
 
 GCFEvent::TResult RawEvent::dispatch(GCFTask& task, GCFPortInterface& port)
 {
+  static char buf[ETH_DATA_LEN]; // static packet buffer
+
   GCFEvent::TResult status = GCFEvent::NOT_HANDLED;
-  
-  //
-  // Receive the MEP header
-  //
+
   MEPHeader hdr;
-  port.recv(&hdr.m_fields, sizeof(hdr.m_fields));
+
+  //
+  // Receive the packet
+  // 
+  ssize_t size = port.recv(buf, ETH_DATA_LEN);
+  ssize_t offset = 0;
+
+  if (size < (ssize_t)sizeof(hdr.m_fields)) return GCFEvent::NOT_HANDLED;
+
+  //
+  // Copy the header
+  //
+  memcpy(&hdr.m_fields, buf + offset, sizeof(hdr.m_fields));
+  offset += sizeof(hdr.m_fields);
 
   LOG_DEBUG(formatString("F_DATAIN: type=0x%02x, addr=(0x%02x 0x%02x 0x%02x 0x%02x)",
 			 hdr.m_fields.type,
@@ -217,10 +230,22 @@ GCFEvent::TResult RawEvent::dispatch(GCFTask& task, GCFPortInterface& port)
     memcpy((char*)event + sizeof(GCFEvent), &hdr.m_fields, sizeof(hdr.m_fields));
     
     //
-    // Receive the MEP payload
+    // Copy the MEP payload
     //
+    if (size - offset >= hdr.m_fields.size)
+    {
+      memcpy((char*)event + sizeof(GCFEvent) + sizeof(hdr.m_fields), buf + offset, hdr.m_fields.size);
+      offset += hdr.m_fields.size;
+ #if 0
     port.recv((char*)event + sizeof(GCFEvent) + sizeof(hdr.m_fields),
 	      hdr.m_fields.size);
+#endif
+    }
+
+    if (size - offset > 0)
+    {
+      LOG_WARN(formatString("discarding %d bytes", size - offset));
+    }
 
     //
     // Print debuggin info

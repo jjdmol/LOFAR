@@ -21,6 +21,7 @@
 //#  $Id$
 
 #include "Statistics.h"
+#include "Marshalling.h"
 
 #undef PACKAGE
 #undef VERSION
@@ -30,20 +31,27 @@ using namespace LOFAR;
 
 using namespace RSP_Protocol;
 using namespace std;
+using namespace blitz;
 
 unsigned int Statistics::getSize()
 {
-  return sizeof(struct timeval);
+  return MSH_ARRAY_SIZE(m_statistics, uint16);
 }
 
 unsigned int Statistics::pack  (void* buffer)
 {
-  buffer = buffer;
-  return 0;
+  unsigned int offset = 0;
+
+  MSH_PACK_ARRAY(buffer, offset, m_statistics, uint16);
+
+  return offset;
 }
 
 unsigned int Statistics::unpack(void *buffer)
 {
-  buffer = buffer;
-  return 0;
+  unsigned int offset = 0;
+
+  MSH_UNPACK_ARRAY(buffer, offset, m_statistics, uint16, 3);
+
+  return offset;
 }

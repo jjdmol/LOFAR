@@ -22,6 +22,8 @@
 
 #include "WGSync.h"
 #include "EPA_Protocol.ph"
+#include "RSP_Protocol.ph"
+#include "Cache.h"
 
 #undef PACKAGE
 #undef VERSION
@@ -31,6 +33,7 @@
 using namespace RSP;
 using namespace LOFAR;
 using namespace EPA_Protocol;
+using namespace RSP_Protocol;
 
 WGSync::WGSync(GCFPortInterface& board_port, int board_id)
   : SyncAction(board_port, board_id, 1)
@@ -42,19 +45,27 @@ WGSync::~WGSync()
   /* TODO: delete event? */
 }
 
-
-void WGSync::sendrequest(int /*iteration*/)
+void WGSync::sendrequest(int local_blp)
 {
-  // send read status request to check status of the write
-  EPARspstatusReadEvent rspstatus;
-  MEP_RSPSTATUS(rspstatus.hdr, MEPHeader::READ);
+  uint8 global_blp = (getBoardId() * N_BLP) + local_blp * 2;
 
-  getBoardPort().send(rspstatus);
+  EPAWgsettingsEvent wgsettings;
+  MEP_WGSETTINGS(wgsettings.hdr, MEPHeader::WRITE, local_blp);
+
+  WGSettings& w = Cache::getInstance().getBack().getWGSettings();
+
+  memcpy(&wgsettings.freq, &(w()(global_blp)), sizeof(WGSettings::WGRegisterType));
+
+  getBoardPort().send(wgsettings);
 }
 
 void WGSync::sendrequest_status()
 {
-  // intentionally left empty
+  // send read status request to check status of the write
+  EPARspstatusReadEvent rspstatus;
+  MEP_RSPSTATUS(rspstatus.hdr, MEPHeader::READ);
+  
+  getBoardPort().send(rspstatus);
 }
 
 GCFEvent::TResult WGSync::handleack(GCFEvent& event, GCFPortInterface& /*port*/)

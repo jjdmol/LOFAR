@@ -22,6 +22,8 @@
 
 #include "StatusSync.h"
 #include "EPA_Protocol.ph"
+#include "RSP_Protocol.ph"
+#include "Cache.h"
 
 #undef PACKAGE
 #undef VERSION
@@ -31,6 +33,8 @@
 using namespace RSP;
 using namespace LOFAR;
 using namespace EPA_Protocol;
+using namespace RSP_Protocol;
+using namespace blitz;
 
 StatusSync::StatusSync(GCFPortInterface& board_port, int board_id)
   : SyncAction(board_port, board_id, 1)
@@ -42,7 +46,7 @@ StatusSync::~StatusSync()
   /* TODO: delete event? */
 }
 
-void StatusSync::sendrequest(int /*iteration*/)
+void StatusSync::sendrequest(int /*local_blp*/)
 {
   // send read status request to check status of the write
   EPARspstatusReadEvent rspstatus;
@@ -59,6 +63,21 @@ void StatusSync::sendrequest_status()
 GCFEvent::TResult StatusSync::handleack(GCFEvent& event, GCFPortInterface& /*port*/)
 {
   EPARspstatusEvent ack(event);
+
+  SystemStatus& status = Cache::getInstance().getBack().getSystemStatus();
+
+  // copy board status
+  memcpy(&status.board()(getBoardId()),
+	 &ack.board,
+	 sizeof(BoardStatus));
+
+  // copy rcu status
+  for (int ap = 0; ap < N_BLP; ap++)
+  {
+    memcpy(&status.rcu()((getBoardId() * N_BLP) + ap),
+	   &ack.rcu[ap],
+	   sizeof(RCUStatus));
+  }
 
   return GCFEvent::HANDLED;
 }

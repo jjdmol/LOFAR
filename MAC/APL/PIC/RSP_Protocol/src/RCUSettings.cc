@@ -21,6 +21,7 @@
 //#  $Id$
 
 #include "RCUSettings.h"
+#include "Marshalling.h"
 
 #undef PACKAGE
 #undef VERSION
@@ -30,20 +31,27 @@ using namespace LOFAR;
 
 using namespace RSP_Protocol;
 using namespace std;
+using namespace blitz;
 
 unsigned int RCUSettings::getSize()
 {
-  return sizeof(struct timeval);
+  return MSH_ARRAY_SIZE(m_registers, RCURegisterType);
 }
 
 unsigned int RCUSettings::pack  (void* buffer)
 {
-  buffer = buffer;
-  return 0;
+  unsigned int offset = 0;
+  
+  MSH_PACK_ARRAY(buffer, offset, m_registers, RCURegisterType);
+
+  return offset;
 }
 
 unsigned int RCUSettings::unpack(void *buffer)
 {
-  buffer = buffer;
-  return 0;
+  unsigned int offset = 0;
+
+  MSH_UNPACK_ARRAY(buffer, offset, m_registers, RCURegisterType, 1);
+
+  return offset;
 }

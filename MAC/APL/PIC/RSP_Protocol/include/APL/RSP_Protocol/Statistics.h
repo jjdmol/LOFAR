@@ -32,7 +32,7 @@
 namespace RSP_Protocol
 {
   typedef enum StatsReduction
-  {
+    {
       SUM = 1,
       REPLACE,
       MEAN,
@@ -41,43 +41,49 @@ namespace RSP_Protocol
       PRODUCT,
       MIN_INDEX,
       MAX_INDEX,
-  };
+    };
 
   class Statistics
-      {
-      public:
-	  /**
-	   * Constructors for a Statistics object.
-	   * Currently the tv_usec part is always set to 0 irrespective
-	   * of the value passed in.
-	   */
-	  Statistics() { }
+  {
+  public:
+
+    static const int N_STAT_TYPES = 2; // MEAN and POWER
+
+    /**
+     * Constructors for a Statistics object.
+     * Currently the tv_usec part is always set to 0 irrespective
+     * of the value passed in.
+     */
+    Statistics() { }
 	  
-	  /* Destructor for Statistics. */
-	  virtual ~Statistics() {}
+    /* Destructor for Statistics. */
+    virtual ~Statistics() {}
 
-      public:
-	  /*@{*/
-	  /**
-	   * marshalling methods
-	   */
-	  unsigned int getSize();
-	  unsigned int pack  (void* buffer);
-	  unsigned int unpack(void *buffer);
-	  /*@}*/
+    /* get reference to the weights array */
+    blitz::Array<uint16, 3>& operator()();
 
-      private:
-	  /**
-	   * Statistics
-	   * First dimension is the number of bits in
-	   * the rcumask.
-	   * 
-	   */
-	  blitz::Array<uint16, 2> m_ap_status;
-	  blitz::Array<uint16, 1> m_bp_status;
-	  blitz::Array<uint32, 1> m_eth_status;
-	  blitz::Array<uint16, 1> m_rcu_status;
-      };
+  public:
+    /*@{*/
+    /**
+     * marshalling methods
+     */
+    unsigned int getSize();
+    unsigned int pack  (void* buffer);
+    unsigned int unpack(void *buffer);
+    /*@}*/
+
+  private:
+    /**
+     * Statistics
+     * First dimension is the number of bits in
+     * the rcumask.
+     * 
+     */
+    blitz::Array<uint16, 3> m_statistics;
+  };
+  
+  inline blitz::Array<uint16, 3>& Statistics::operator()() { return m_statistics; }
+
 };
      
 #endif /* STATISTICS_H_ */

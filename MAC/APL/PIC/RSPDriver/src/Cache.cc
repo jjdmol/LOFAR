@@ -50,21 +50,26 @@ CacheBuffer::CacheBuffer()
   tv.tv_sec = 0; tv.tv_usec = 0;
   m_timestamp.set(tv);
 
-  m_subbandselection().resize(GET_CONFIG("N_RCU", i), MAX_N_BEAMLETS);
-  m_subbandselection.nrsubbands().resize(GET_CONFIG("N_RCU", i));
-
-  m_subbandselection() = 0;
-  m_subbandselection.nrsubbands() = 0;
-    
-  m_rcusettings.resize(GET_CONFIG("N_RCU", i));
-  m_wgsettings.resize(GET_CONFIG("N_RCU", i));
-  m_statistics.resize(GET_CONFIG("N_RCU", i));
-
   m_beamletweights().resize(BeamletWeights::SINGLE_TIMESTEP,
 			    GET_CONFIG("N_RCU", i),
 			    MAX_N_BEAMLETS);
-
   m_beamletweights()(Range::all(), Range::all(), Range::all()) = complex<int16>(0,0);
+
+  m_subbandselection().resize(GET_CONFIG("N_RCU", i), MAX_N_BEAMLETS);
+  m_subbandselection() = 0;
+  m_subbandselection.nrsubbands().resize(GET_CONFIG("N_RCU", i));
+  m_subbandselection.nrsubbands() = 0;
+    
+  m_rcusettings().resize(GET_CONFIG("N_RCU", i));
+  m_rcusettings() = RCUSettings::RCURegisterType();
+
+  m_wgsettings().resize(GET_CONFIG("N_RCU", i));
+  m_wgsettings() = WGSettings::WGRegisterType();
+
+  m_statistics().resize(Statistics::N_STAT_TYPES,
+			GET_CONFIG("N_RCU", i),
+			MAX_N_BEAMLETS);
+  m_statistics() = 0;
 
   m_systemstatus.board().resize(GET_CONFIG("N_RSPBOARDS", i));
   m_systemstatus.rcu().resize(GET_CONFIG("N_RCU", i));
@@ -84,16 +89,14 @@ CacheBuffer::CacheBuffer()
 
 CacheBuffer::~CacheBuffer()
 {
+  m_beamletweights().free();
   m_subbandselection().free();
   m_subbandselection.nrsubbands().free();
-  m_rcusettings.free();
-  m_wgsettings.free();
-  m_statistics.free();
-  m_beamletweights().free();
-
+  m_rcusettings().free();
+  m_wgsettings().free();
+  m_statistics().free();
   m_systemstatus.board().free();
   m_systemstatus.rcu().free();
-
   m_versions().free();
 }
 
@@ -112,14 +115,14 @@ SubbandSelection& CacheBuffer::getSubbandSelection()
   return m_subbandselection;
 }
 
-RCUSettings&      CacheBuffer::getRCUSettings(int rcu)
+RCUSettings&      CacheBuffer::getRCUSettings()
 {
-  return m_rcusettings(rcu);
+  return m_rcusettings;
 }
 
-WGSettings&       CacheBuffer::getWGSettings(int rcu)
+WGSettings&       CacheBuffer::getWGSettings()
 {
-  return m_wgsettings(rcu);
+  return m_wgsettings;
 }
 
 SystemStatus&     CacheBuffer::getSystemStatus()
@@ -127,9 +130,9 @@ SystemStatus&     CacheBuffer::getSystemStatus()
   return m_systemstatus;
 }
 
-Statistics&       CacheBuffer::getStatistics(int rcu)
+Statistics&       CacheBuffer::getStatistics()
 {
-  return m_statistics(rcu);
+  return m_statistics;
 }
 
 Versions&         CacheBuffer::getVersions()

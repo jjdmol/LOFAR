@@ -118,9 +118,9 @@ namespace RSP
 
     private:
       // ports
-      GCFDevicePort m_clock;    // clock pulse will arrive on this port
-      GCFTCPPort    m_acceptor; // listen for clients on this port
-      GCFTCPPort*   m_board;    // array of ports, one for each RSP board
+      GCFDevicePort  m_clock;    // clock pulse will arrive on this port
+      GCFTCPPort     m_acceptor; // listen for clients on this port
+      GCFETHRawPort* m_board;    // array of ports, one for each RSP board
       std::list<GCFPortInterface*> m_client_list;  // list of clients
       std::list<GCFPortInterface*> m_garbage_list; // list of clients to cleanup
 

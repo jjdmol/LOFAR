@@ -23,8 +23,6 @@
 #include "BeamletWeights.h"
 #include "Marshalling.h"
 
-#include <Common/LofarTypes.h>
-
 #undef PACKAGE
 #undef VERSION
 #include <lofar_config.h>

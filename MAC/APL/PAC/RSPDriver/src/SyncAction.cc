@@ -34,13 +34,13 @@ using namespace EPA_Protocol;
 
 #define N_RETRIES 2
 
-SyncAction::SyncAction(GCFPortInterface& board_port, int board_id, int n_iterations) 
+SyncAction::SyncAction(GCFPortInterface& board_port, int board_id, int n_blps) 
   : GCFFsm((State)&SyncAction::idle_state),
     m_board_port(board_port),
     m_board_id(board_id),
     m_completed(false),
-    m_n_iterations(n_iterations),
-    m_current_iteration(0),
+    m_n_blps(n_blps),
+    m_current_blp(0),
     m_retries(0)
 {
 }
@@ -63,8 +63,8 @@ GCFEvent::TResult SyncAction::idle_state(GCFEvent& event, GCFPortInterface& /*po
     case F_ENTRY:
     {
       // reset extended state variables on initialization
-      m_current_iteration   = 0;
-      m_retries             = 0;
+      m_current_blp = 0;
+      m_retries     = 0;
     }
     break;
     
@@ -92,7 +92,7 @@ GCFEvent::TResult SyncAction::sendrequest_state(GCFEvent& event, GCFPortInterfac
     case F_ENTRY:
     {
       // send next set of coefficients
-      sendrequest(m_current_iteration);
+      sendrequest(m_current_blp);
 
       TRAN(SyncAction::waitack_state);
     }
@@ -145,8 +145,8 @@ GCFEvent::TResult SyncAction::waitack_state(GCFEvent& event, GCFPortInterface& p
       // check status of previous write
       if (GCFEvent::HANDLED == status)
       {
-	// OK, move on to the next iteration
-	m_current_iteration++;
+	// OK, move on to the next BLP
+	m_current_blp++;
 	m_retries = 0;
       }
       else
@@ -159,7 +159,7 @@ GCFEvent::TResult SyncAction::waitack_state(GCFEvent& event, GCFPortInterface& p
 	}
       }
 
-      if (m_current_iteration < m_n_iterations)
+      if (m_current_blp < m_n_blps)
       {
 	// send next bit of data
 	TRAN(SyncAction::sendrequest_state);

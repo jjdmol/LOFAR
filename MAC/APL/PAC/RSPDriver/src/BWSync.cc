@@ -51,25 +51,24 @@ BWSync::~BWSync()
 {
 }
 
-void BWSync::sendrequest(int iteration)
+void BWSync::sendrequest(int local_blp)
 {
-  uint8 blp = (getBoardId() * N_BLP) + iteration;
+  uint8 global_blp = (getBoardId() * N_BLP) + local_blp;
 
   if (m_regid <= MEPHeader::BFXRE || m_regid > MEPHeader::BFYIM)
   {
     m_regid = MEPHeader::BFXRE; // HACK
   }
 
-  LOG_DEBUG(formatString(">>>> BWSync(%s) blp=%d, regid=%d",
+  LOG_DEBUG(formatString(">>>> BWSync(%s) global_blp=%d, regid=%d",
 			 getBoardPort().getName().c_str(),
-			 blp,
+			 global_blp,
 			 m_regid));
   
   // send next BF configure message
   EPABfcoefsEvent bfcoefs;
       
-  MEP_BF(bfcoefs.hdr, MEPHeader::WRITE, 0, m_regid);
-  bfcoefs.hdr.m_fields.addr.dstid = blp;
+  MEP_BF(bfcoefs.hdr, MEPHeader::WRITE, local_blp, m_regid);
 
   // copy weights from the cache to the message
   Array<int16, 1> weights((int16*)&bfcoefs.coef,
@@ -82,11 +81,11 @@ void BWSync::sendrequest(int iteration)
   //
   if (0 == (m_regid % 2))
   {
-    weights = real(Cache::getInstance().getBack().getBeamletWeights()()(0, blp, Range::all()));
+    weights = real(Cache::getInstance().getBack().getBeamletWeights()()(0, global_blp, Range::all()));
   }
   else
   {
-    weights = imag(Cache::getInstance().getBack().getBeamletWeights()()(0, blp, Range::all()));
+    weights = imag(Cache::getInstance().getBack().getBeamletWeights()()(0, global_blp, Range::all()));
   }
 
   getBoardPort().send(bfcoefs);
