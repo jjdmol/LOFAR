@@ -32,6 +32,15 @@
  *  $Id$
  *
  *  $Log$
+ *  Revision 1.2  2003/01/14 14:26:03  wierenga
+ *  %[BugId: 158]%
+ *
+ *  Now uses $HOME/.wrapexec.cfg instead of $HOME/.wrapexec
+ *
+ *  wrapexec script checks for existence of system or user configuration file.
+ *
+ *  Fixed problem with extracting inode from 'ls -iL' output.
+ *
  *  Revision 1.1  2003/01/08 10:03:56  wierenga
  *  %[BugId: 158]%
  *
@@ -219,7 +228,14 @@ int main(int argc, char* argv[])
   //
   string apppath;
   char *cwd = getcwd(NULL, 0);
-  apppath += string(cwd) + string("/") + string(argv[0]);
+  if ('/' == *argv[0])
+  {
+    apppath = string(argv[0]);
+  }
+  else
+  {
+    apppath = string(cwd) + string("/") + string(argv[0]);
+  }
   free(cwd);
 
   //
