@@ -29,7 +29,6 @@
 //# Includes
 #include <ACC/ApplControlComm.h>
 #include <Transport/TH_Socket.h>
-#include <ACC/DH_AC_Connect.h>
 #include <ACC/DH_ApplControl.h>
 
 namespace LOFAR {
