@@ -1477,17 +1477,17 @@
 				    default_color 	TRUE)
 				label      	(object ItemLabel
 				    Parent_View 	@45
-				    location   	(904, 1197)
+				    location   	(905, 1197)
 				    fill_color 	13434879
 				    nlines     	1
-				    max_width  	496
+				    max_width  	494
 				    justify    	0
 				    label      	"IntermediateLevelStrategy")
 				icon_style 	"Icon"
 				line_color 	3342489
 				fill_color 	13434879
 				quidu      	"3F3A4C6C01E4"
-				width      	514
+				width      	512
 				height     	126
 				annotation 	8
 				autoResize 	TRUE)
@@ -1655,14 +1655,14 @@
 				supplier   	@42
 				line_style 	0)
 			    (object AssociationViewNew "$UNNAMED$16" @55
-				location   	(1150, 874)
+				location   	(1150, 875)
 				stereotype 	TRUE
 				line_color 	3342489
 				quidu      	"3F3A4CA5034B"
 				roleview_list 	(list RoleViews
 				    (object RoleView "parent" @56
 					Parent_View 	@55
-					location   	(686, 346)
+					location   	(686, 347)
 					font       	(object Font
 					    size       	10
 					    face       	"Arial"
@@ -1701,7 +1701,7 @@
 					line_style 	0
 					label      	(object SegLabel @58
 					    Parent_View 	@56
-					    location   	(1183, 1119)
+					    location   	(1183, 1118)
 					    font       	(object Font
 						size       	10
 						face       	"Arial"
@@ -1722,7 +1722,7 @@
 					    orientation 	0))
 				    (object RoleView "children" @59
 					Parent_View 	@55
-					location   	(686, 346)
+					location   	(686, 347)
 					font       	(object Font
 					    size       	10
 					    face       	"Arial"
@@ -1759,7 +1759,7 @@
 					client     	@55
 					supplier   	@53
 					vertices   	(list Points
-					    (1150, 874)
+					    (1150, 875)
 					    (1150, 750)
 					    (1335, 751))
 					line_style 	0
@@ -1800,17 +1800,17 @@
 				    default_color 	TRUE)
 				label      	(object ItemLabel
 				    Parent_View 	@62
-				    location   	(1571, 1197)
+				    location   	(1566, 1197)
 				    fill_color 	13434879
 				    nlines     	1
-				    max_width  	346
+				    max_width  	356
 				    justify    	0
 				    label      	"LowLevelStrategy")
 				icon_style 	"Icon"
 				line_color 	3342489
 				fill_color 	13434879
 				quidu      	"3F3A4C8600AB"
-				width      	364
+				width      	374
 				height     	126
 				annotation 	8
 				autoResize 	TRUE)
@@ -1851,14 +1851,14 @@
 				annotation 	8
 				autoResize 	TRUE)
 			    (object AssociationViewNew "$UNNAMED$17" @65
-				location   	(2157, 1248)
+				location   	(2160, 1248)
 				stereotype 	TRUE
 				line_color 	3342489
 				quidu      	"3F3A4CBF01E4"
 				roleview_list 	(list RoleViews
 				    (object RoleView "controller " @66
 					Parent_View 	@65
-					location   	(445, 752)
+					location   	(448, 752)
 					font       	(object Font
 					    size       	10
 					    face       	"Arial"
@@ -1870,7 +1870,7 @@
 					    default_color 	TRUE)
 					label      	(object SegLabel @67
 					    Parent_View 	@66
-					    location   	(2058, 1224)
+					    location   	(2062, 1224)
 					    font       	(object Font
 						size       	10
 						face       	"Arial"
@@ -1897,7 +1897,7 @@
 					line_style 	0
 					label      	(object SegLabel @68
 					    Parent_View 	@66
-					    location   	(1950, 1302)
+					    location   	(1955, 1302)
 					    font       	(object Font
 						size       	10
 						face       	"Arial"
@@ -1918,7 +1918,7 @@
 					    orientation 	0))
 				    (object RoleView "drivers" @69
 					Parent_View 	@65
-					location   	(445, 752)
+					location   	(448, 752)
 					font       	(object Font
 					    size       	10
 					    face       	"Arial"
@@ -1957,7 +1957,7 @@
 					line_style 	0
 					label      	(object SegLabel @71
 					    Parent_View 	@69
-					    location   	(2322, 1285)
+					    location   	(2323, 1285)
 					    font       	(object Font
 						size       	10
 						face       	"Arial"
@@ -2200,7 +2200,7 @@
 				uid        	0)
 			    (object Operation "getParts"
 				quid       	"3F433C9E0159"
-				result     	"vector<Directive>"
+				result     	"std::vector<Directive> *"
 				concurrency 	"Sequential"
 				opExportControl 	"Public"
 				uid        	0))
@@ -2505,25 +2505,25 @@
 				quid       	"3F4DCC880271"
 				documentation 	
 |Initially it contains a full script. This is parsed as soon as getParts is called on the Directive. It is then replaced with only the outer nestting layer containing references to the directive data implementing the nested parts. i.e. record with id 0:
-|do calibration{
-| part do peeling{
+|calibrate_observation{
+| part peeling{
 |   sourcelist = {...}
 | }
-| part do montecarlo{
+| part montecarlo{
 |  ...
 | }
 |}
 |becomes record with id 0
-|do calibration{
+|calibrate_observation{
 | part 0.0
 | part 0.1
 |}
 |and record with id 0.0
-|do peeling{
+|peeling{
 | sourcelist = {...}
 |}
 |and record with id 0.1
-|do montecarlo{
+|montecarlo{
 | ...
 |}
 				
@@ -2598,28 +2598,60 @@
 				parameters 	(list Parameters
 				    (object Parameter "text"
 					quid       	"3F4DE3790109"
-					type       	"std::string"))
+					type       	"const std::string &"))
 				result     	"void"
 				concurrency 	"Sequential"
+				pre_condition 	(object Semantic_Info
+				    PDL        	"true")
+				post_condition 	(object Semantic_Info
+				    PDL        	
+|txt is filled
+|a vector<Directive> is in nested
+|txt contains no part directives that are not deligated
+				    )
+				semantics  	(object Semantic_Info
+				    PDL        	"give the parser a piece of text to work on.")
 				opExportControl 	"Public"
 				uid        	0)
 			    (object Operation "getText"
 				quid       	"3F4DE3900109"
-				result     	"std::string"
+				stereotype 	"const"
+				result     	"const std::string &"
 				concurrency 	"Sequential"
 				opExportControl 	"Public"
 				uid        	0)
 			    (object Operation "getNested"
 				quid       	"3F4DE3CF031C"
-				result     	"std::vector<Directive> *"
+				stereotype 	"const"
+				result     	"const std::vector<Directive> &"
+				concurrency 	"Sequential"
+				opExportControl 	"Public"
+				uid        	0)
+			    (object Operation "Parser"
+				attributes 	(list Attribute_Set
+				    (object Attribute
+					tool       	"Cplusplus"
+					name       	"Inline"
+					value      	TRUE))
+				quid       	"3F534BAA00CC"
+				concurrency 	"Sequential"
+				opExportControl 	"Public"
+				uid        	0)
+			    (object Operation "~Parser"
+				attributes 	(list Attribute_Set
+				    (object Attribute
+					tool       	"Cplusplus"
+					name       	"Inline"
+					value      	TRUE))
+				quid       	"3F534BAA00DA"
+				stereotype 	"virtual"
 				concurrency 	"Sequential"
 				opExportControl 	"Public"
 				uid        	0))
 			class_attributes 	(list class_attribute_list
 			    (object ClassAttribute "txt"
 				quid       	"3F53420E0177"
-				type       	"std::string"
-				exportControl 	"Protected")
+				type       	"std::string")
 			    (object ClassAttribute "nested"
 				quid       	"3F53423103C8"
 				type       	"std::vector<Directive>"))
@@ -2733,7 +2765,7 @@
 						dir        	"FromClientToSupplier"
 						sequence   	"5"
 						ordinal    	4
-						Operation  	"setText(std::string)"
+						Operation  	"setText(const std::string &)"
 						quidu      	"3F4DE363005D"
 						creation   	FALSE)
 					    (object Message "getNested"
@@ -4447,7 +4479,7 @@
 				    default_color 	TRUE)
 				label      	(object ItemLabel
 				    Parent_View 	@145
-				    location   	(595, 1019)
+				    location   	(595, 969)
 				    fill_color 	13434879
 				    nlines     	1
 				    max_width  	602
@@ -4459,7 +4491,7 @@
 				quidu      	"3F4DE33A0399"
 				compartment 	(object Compartment
 				    Parent_View 	@145
-				    location   	(595, 1080)
+				    location   	(595, 1030)
 				    font       	(object Font
 					size       	10
 					face       	"Arial"
@@ -4472,10 +4504,10 @@
 				    icon_style 	"Decoration"
 				    fill_color 	13434879
 				    anchor     	2
-				    nlines     	6
-				    max_width  	600)
+				    nlines     	8
+				    max_width  	609)
 				width      	620
-				height     	386
+				height     	486
 				annotation 	8
 				autoResize 	TRUE)))
 		    (object InteractionDiagram "creation"
@@ -5853,7 +5885,7 @@
 				origin     	(1332, 328)
 				terminus   	(1236, 262))
 			    (object MessView "" @216
-				location   	(1256, 336)
+				location   	(1256, 335)
 				font       	(object Font
 				    size       	10
 				    face       	"Arial"
@@ -5866,7 +5898,7 @@
 				line_color 	3342489
 				label      	(object SegLabel @217
 				    Parent_View 	@216
-				    location   	(1088, 310)
+				    location   	(1088, 309)
 				    font       	(object Font
 					size       	10
 					face       	"Arial"
@@ -5886,12 +5918,12 @@
 				    height     	74
 				    orientation 	0)
 				object_arc 	@211
-				pctDist    	0.714822
-				height     	122
+				pctDist    	0.715778
+				height     	121
 				orientation 	0
 				dir        	1
-				origin     	(1304, 369)
-				terminus   	(1208, 303))
+				origin     	(1304, 368)
+				terminus   	(1208, 302))
 			    (object LinkView "" @218
 				font       	(object Font
 				    size       	10
@@ -7625,7 +7657,7 @@
 			    fill_color 	16777215
 			    anchor     	2
 			    nlines     	3
-			    max_width  	453)
+			    max_width  	462)
 			width      	544
 			height     	372
 			annotation 	8
@@ -13032,7 +13064,7 @@
 			origin     	(862, 193)
 			terminus   	(982, 193))
 		    (object MessView "" @547
-			location   	(957, 268)
+			location   	(957, 269)
 			font       	(object Font
 			    size       	10
 			    face       	"Arial"
@@ -13045,7 +13077,7 @@
 			line_color 	3342489
 			label      	(object SegLabel @548
 			    Parent_View 	@547
-			    location   	(957, 224)
+			    location   	(957, 225)
 			    font       	(object Font
 				size       	10
 				face       	"Arial"
@@ -13065,12 +13097,12 @@
 			    height     	45
 			    orientation 	0)
 			object_arc 	@542
-			pctDist    	0.350000
-			height     	142
+			pctDist    	0.341667
+			height     	141
 			orientation 	0
 			dir        	1
-			origin     	(897, 268)
-			terminus   	(1017, 268))
+			origin     	(897, 269)
+			terminus   	(1017, 269))
 		    (object ObjectView "task[]" @549
 			location   	(1328, 400)
 			font       	(object Font
@@ -13636,8 +13668,8 @@
 |RDataIntegration.h,3f3b5cfe,A
 |UDataManipulation.cpp,3f3b5cfe,A
 |SDataManipulation.h,3f3b5cfe,A
-|NDirective.cpp,3f4e167b,A
-|LDirective.h,3f4e167b,A
+|NDirective.cpp,3f534b70,A
+|LDirective.h,3f534b70,A
 |RDirectiveData.cpp,3f4e02d4,A
 |PDirectiveData.h,3f4e2f53,A
 |THigherDirective.cpp,3f4e317d,A
@@ -13646,8 +13678,8 @@
 |JIterate.h,3f3b5cfe,A
 |ZParameterDistribution.cpp,3f3b5cfe,A
 |XParameterDistribution.h,3f3b5cfe,A
-|KParser.cpp,3f4e2f53,A
-|IParser.h,3f534027,A
+|KParser.cpp,3f534b70,A
+|IParser.h,3f534fe1,A
 |QPartitioning.cpp,3f4e2f53,A
 |OPartitioning.h,3f4e167b,A
 |eResponsibilityDistribution.cpp,3f3b5cfe,A
@@ -13683,16 +13715,16 @@
 |DataDistribution,t,G,3F3B433F038A,A,91,e9
 |DataIntegration,t,I,3F3B43EB0157,A,85,d2
 |DataManipulation,t,K,3F3B44060128,A,88,d7
-|Directive,t,M,3F3B37F70213,A,5b,10f
-|Directive::getParts,f,L,3F433C9E0159,A,18,5c
+|Directive,t,M,3F3B37F70213,A,6e,128
+|Directive::getParts,f,L,3F433C9E0159,A,18,b6
 |DirectiveData,t,O,3F4DC5270157,A,76,401
 |HigherDirective,t,Q,3F4E30E3033C,A,87,103
 |Iterate,t,S,3F3B51C50196,A,79,c2
 |ParameterDistribution,t,U,3F3B432E00FA,A,9b,f8
-|Parser,t,W,3F4DE33A0399,A,91,19a
-|Parser::getNested,f,V,3F4DE3CF031C,A,96,de
-|Parser::getText,f,V,3F4DE3900109,A,5a,94
-|Parser::setText,f,V,3F4DE363005D,Mstd::string,,15,58
+|Parser,t,W,3F4DE33A0399,A,91,2c3
+|Parser::getNested,f,V,3F4DE3CF031C,Fconst,17c,1e1
+|Parser::getText,f,V,3F4DE3900109,Fconst,125,17a
+|Parser::setText,f,V,3F4DE363005D,Tconst std::string&,,15,123
 |Partitioning,t,Y,3F432B7F02D0,A,80,d6
 |ResponsibilityDistribution,t,a,3F3B43890167,A,9c,f5
 |SelectScriptID,t,c,3F4DC73102EE,A,65,97

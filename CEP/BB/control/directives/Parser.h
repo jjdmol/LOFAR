@@ -10,6 +10,8 @@ class Parser
 {
  public:
   //##ModelId=3F4DE363005D
+    //##Documentation
+    //## Where does this documentation go?
   void setText(const std::string & text);
 
   //##ModelId=3F4DE3900109
@@ -18,7 +20,9 @@ class Parser
   //##ModelId=3F4DE3CF031C
   const std::vector<Directive> &getNested() const;
 
+    //##ModelId=3F534BAA00CC
   Parser():txt(""),nested(){};
+    //##ModelId=3F534BAA00DA
   virtual ~Parser(){};
 
  private:
