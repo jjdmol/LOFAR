@@ -2,17 +2,18 @@ bin_PROGRAMS   := uvplot
 uvplot_SOURCES := main.cc \
                   UVPMainWindow.cc   UVPMainWindow.moc.cc  \
                   UVPDisplayArea.cc  UVPDisplayArea.moc.cc \
-                  UVPPixel.cc          \
-                  UVPAxis.cc           \
-                  UVPImageCube.cc      \
-                  UVPSpectrum.cc       \
-                  UVPSpectrumVector.cc \
+                  UVPPixel.cc            \
+                  UVPAxis.cc             \
+                  UVPImageCube.cc        \
+                  UVPSpectrum.cc         \
+                  UVPSpectrumVector.cc   \
                   UVPTimeFrequencyPlot.cc UVPTimeFrequencyPlot.moc.cc \
                   UVPUVCoverageArea.cc UVPUVCoverageArea.moc.cc \
-                  UVPDataTransferWP.cc \
-                  UVPDataHeader.cc     \
-                  UVPDataAtomHeader.cc \
-                  UVPDataAtom.cc       \
+                  UVPDataTransferWP.cc   \
+                  UVPDataHeader.cc       \
+                  UVPDataAtomHeader.cc   \
+                  UVPDataAtom.cc         \
+                  UVPDataCacheElement.cc \
                   AID-uvplot-Registry.cc
 
 
