@@ -23,7 +23,6 @@ StringUtil.h \
 CheckConfig.h \
 Lorrays.h Lorrays-Blitz.h blitz_array-impl.h BlitzToAips.h \
 Lonumerics.h \
-LofarLogger.h	\
 lofar_iostream.h				\
 lofar_fstream.h					\
 lofar_strstream.h				\
@@ -59,7 +58,6 @@ BlobIBufChar.cc BlobOBufChar.cc \
 TypeNames.cc DataConvert.cc \
 KeyValue.cc KeyValueMap.cc \
 KeyParse.yy KeyTokenize.ll KeyParser.cc \
-LofarLogger.cc	\
 Debug.cc \
 Exception.cc \
 Stopwatch.cc \
