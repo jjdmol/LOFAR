@@ -20,19 +20,21 @@
 //
 // $Id: 
 
-#include <PSS3/MeqCalibraterImpl.h>
+#include <CAL/MeqCalibraterImpl.h>
 #include <Common/lofar_iostream.h>
-#include <PSS3/Calibrator.h>
+#include <Calibrator.h>
+
 
 const int DefaultAntennaCount = 21;
 
-Calibrator::Calibrator () {
+InitDebugContext(Calibrator,"Calibrator");
 
+Calibrator::Calibrator () {
   int i;
 
-  cout << "Initializing Calibrator." << endl;
-
   // Initialize default values for the PSS3 Calibrater object.
+  // These values are committed to itsMeqCalImpl when the Calibrator
+  // ::Initialize () is called.
 
   for (i = 0; i < DefaultAntennaCount; i ++) {
     itsPrimaryAntennae.push_back (4 * i);
@@ -56,6 +58,8 @@ Calibrator::Calibrator () {
   itsTimeInterval = 3600.0;
 
   itsPSS3CalibratorImpl = NULL;
+
+  TRACERF2 ("Calibrator constructed.");
 }
 
 
@@ -63,6 +67,8 @@ Calibrator::~Calibrator () {
   if (itsPSS3CalibratorImpl != NULL) {
     delete itsPSS3CalibratorImpl;
   }
+
+  TRACERF2 ("Calibrator destroyed.");
 }
 
 
@@ -81,6 +87,7 @@ void Calibrator::Initialize (void) {
 					     itsTblMeasurementSet,
 					     itsTblMeqModel,
 					     itsTblSkyModel,
+					     "postgres", "tanaka", "",
 					     itsDDID,
 					     ant1,
 					     ant2,
@@ -92,6 +99,148 @@ void Calibrator::Initialize (void) {
 
   itsPSS3CalibratorImpl -> setTimeInterval (itsTimeInterval);
 }
+
+
+void Calibrator::clearSolvableParms (void) {
+  itsSolvableParms.erase (itsSolvableParms.begin (), itsSolvableParms.end ());
+
+  TRACERF2 ("MeqCalImpl -> clearSolvableParms ()");
+  itsPSS3CalibratorImpl -> clearSolvableParms ();
+}
+
+
+void Calibrator::addSolvableParm (string parmName, int srcNo) {
+  AssertStr (parmName == "StokesI" || parmName == "RA" || parmName == "DEC",
+	     "parmName must be StokesI, RA or DEC.")
+
+  ostringstream parm;
+  parm << parmName << ".CP" << srcNo;
+
+  itsSolvableParms.push_back (parm.str ());
+}
+
+
+void Calibrator::commitSolvableParms (void) {
+  // Create AIPS data structures to hold params
+  Vector <String> pp (itsSolvableParms.size ());
+  Vector <String> ep (itsSolvableParms.size ());
+  ostringstream oss [itsSolvableParms.size ()];
+
+  vector<string> :: iterator i;
+  int idx = 0;
+
+  for (i = itsSolvableParms.begin (); i != itsSolvableParms.end (); ++ i) {
+    oss [idx] << *i;
+    pp [idx] = oss[idx].str ();
+    TRACERF4 (idx << " -> " << *i);
+    idx ++;
+  }
+
+  TRACERF2 ("MeqCalImpl -> setSolvableParms ()");  
+  itsPSS3CalibratorImpl -> setSolvableParms (pp, ep, true);
+}
+
+
+void Calibrator::resetTimeIntervalIterator (void) {
+  TRACERF2 ("MeqCalImpl -> resetIterator ()");
+  itsPSS3CalibratorImpl -> resetIterator();
+}
+
+
+bool Calibrator::advanceTimeIntervalIterator (void) {
+  TRACERF2 ("MeqCalImpl -> nextInterval ()");
+  cout << "Next interval" << endl;
+  return itsPSS3CalibratorImpl -> nextInterval ();
+}
+
+
+void Calibrator::clearPeelSources (void) {
+  itsPeelSources.erase (itsPeelSources.begin (), itsPeelSources.end ());
+}
+
+
+void Calibrator::clearPeelMasks (void) {
+  itsPeelMasks.erase (itsPeelMasks.begin (), itsPeelMasks.end ());
+}
+
+
+void Calibrator::addPeelSource (int srcNo) {
+  itsPeelSources.push_back (srcNo - 1);
+  // The peel sources list is 0-based, in contrast to the
+  // rest of the inputs for MeqCalImpl.
+}
+
+void Calibrator::addPeelMask (int srcNo) {
+  itsPeelMasks.push_back (srcNo - 1);
+  // The peel mask list is 0-based, in contrast to the
+  // rest of the inputs for MeqCalImpl.
+}
+
+
+void Calibrator::commitPeelSourcesAndMasks (void) {
+  // Create AIPS data structures to hold params
+  Vector <Int> srcList (itsPeelSources.size ());
+  Vector <Int> ignoreList (itsPeelMasks.size ());
+
+  vector<int> :: iterator i;
+  int idx = 0;
+
+  for (i = itsPeelSources.begin (); i != itsPeelSources.end (); ++ i) {
+    srcList [idx] = *i;
+    TRACERF4 ("source: " << idx << " -> " << *i);
+    idx ++;
+  }
+
+  idx = 0;
+
+  for (i = itsPeelMasks.begin (); i != itsPeelMasks.end (); ++ i) {
+    ignoreList [idx] = *i;
+    TRACERF4 ("ignore: " << idx << " -> " << *i);
+    idx ++;
+  }
+
+  TRACERF2 ("MeqCalImpl -> peel ()");  
+  itsPSS3CalibratorImpl -> peel (srcList, ignoreList);
+}
+
+
+void Calibrator::Run (void) {
+  itsPSS3CalibratorImpl -> solve (false);
+}
+
+void Calibrator::SubtractOptimizedSources (void) {
+  itsPSS3CalibratorImpl -> saveResidualData ();
+}
+
+void Calibrator::CommitOptimizedParameters (void) {
+  itsPSS3CalibratorImpl -> saveParms ();
+}
+
+void Calibrator::ExamplePSS3Run (void) {
+
+}
+
+
+void Calibrator::ExperimentalOptimizeSource (int src) {
+  cout << "Next iteration" << endl;
+  /*
+  Vector <Int> srcList (1);
+  Vector <Int> ignoreList (0);
+  srcList [0] = src - 1; // NB: GvD: 0-based!!
+  cout << "mc.peel ()..." << endl;
+  itsPSS3CalibratorImpl -> peel (srcList, ignoreList);
+  */
+  // Calculate the optimal value for parameter
+  itsPSS3CalibratorImpl -> solve(false);
+
+  // Subtract the found sources from MS:
+  itsPSS3CalibratorImpl -> saveResidualData();
+
+  // Save the data (?) and display output:
+  itsPSS3CalibratorImpl -> saveParms();
+
+}
+
 
 
 void Calibrator::OptimizeSource (int src, int nIterations) {
