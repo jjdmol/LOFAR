@@ -55,6 +55,7 @@ const String ColTime0         = "TIME0";
 const String ColFreqScale     = "FREQSCALE";
 const String ColTimeScale     = "TIMESCALE";
 const String ColPerturbation  = "PERT";
+const String ColWeight        = "WEIGHT";
 
 const String KeywordDefValues = "DEFAULTVALUES";
 
@@ -118,16 +119,12 @@ int ParmTable::getPolcs (vector<Polc::Ref> &polcs,
     ROScalarColumn<double> fsCol (sel, ColFreqScale);
     ROScalarColumn<double> tsCol (sel, ColTimeScale);
     ROScalarColumn<double> diffCol (sel, ColPerturbation);
+    ROScalarColumn<double> weightCol (sel, ColWeight);
     for( uint i=0; i<sel.nrow(); i++ )
     {
-      Polc & polc = polcs[i] <<= new Polc;
-      polc.setCoeff (fromParmMatrix(valCol(i)));
-      polc.setFreq0 (f0Col(i));
-      polc.setTime0 (t0Col(i));
-      polc.setFreqScale (fsCol(i));
-      polc.setTimeScale (tsCol(i));
-      polc.setDomain (Domain(stCol(i), etCol(i), sfCol(i), efCol(i)));
-      polc.setPerturbation (diffCol(i));
+      Polc &polc = polcs[i] <<= new Polc(fromParmMatrix(valCol(i)),
+          f0Col(i),fsCol(i),t0Col(i),tsCol(i),diffCol(i),weightCol(i));
+      polc.setDomain(Domain(stCol(i), etCol(i), sfCol(i), efCol(i)));
     }
   }
   return polcs.size();
@@ -154,20 +151,16 @@ int ParmTable::getInitCoeff (Polc::Ref &polcref,const string& parmName)
         Assert( rownrs.nelements() == 1 );
         Polc &result = polcref <<= new Polc;
         int row = rownrs(0);
-	TableLocker locker(itsInitTable, FileLocker::Read);
+        TableLocker locker(itsInitTable, FileLocker::Read);
         ROArrayColumn<Double> valCol (itsInitTable, ColValues);
         ROScalarColumn<double> f0Col (itsInitTable, ColFreq0);
         ROScalarColumn<double> t0Col (itsInitTable, ColTime0);
         ROScalarColumn<double> fsCol (itsInitTable, ColFreqScale);
         ROScalarColumn<double> tsCol (itsInitTable, ColTimeScale);
         ROScalarColumn<double> diffCol (itsInitTable, ColPerturbation);
-        result.setCoeff (fromParmMatrix(valCol(row)));
-        result.setFreq0 (f0Col(row));
-        result.setTime0 (t0Col(row));
-        result.setFreqScale (fsCol(row));
-        result.setTimeScale (tsCol(row));
-        result.setPerturbation (diffCol(row));
-        return result.ncoeff();
+        polcref <<= new Polc(fromParmMatrix(valCol(row)),
+                f0Col(row),fsCol(row),t0Col(row),tsCol(row),diffCol(row));
+        return polcref->ncoeff();
       }
       string::size_type idx = name.rfind ('.');
       // Exit loop if no more name parts.

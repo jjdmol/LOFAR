@@ -1,4 +1,4 @@
-### parmtable.g: Glish script to add parameters to the MEP table
+### meptable.g: Glish script to add parameters to the MEP table
 ###
 ### Copyright (C) 2002
 ### ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,12 +20,18 @@
 ###
 ### $Id$
 
-# pragma include once
-print 'include parmtable.g   d28jan2004';
+pragma include once
+
+# print software version
+if( has_field(lofar_software,'print_versions') &&
+    lofar_software.print_versions )
+{
+  print '$Id$';
+}
 
 include 'table.g'
 
-parmtable := function (name, create=F)
+const meptable := function (name, create=F)
 {
     self:=[=];
     public:=[=];
@@ -43,8 +49,9 @@ parmtable := function (name, create=F)
         d13:= tablecreatescalarcoldesc ('FREQSCALE', as_double(0));
         d14:= tablecreatescalarcoldesc ('TIMESCALE', as_double(0));
         d15:= tablecreatescalarcoldesc ('PERT', as_double(0));
+        d16:= tablecreatescalarcoldesc ('WEIGHT', as_double(0));
         td := tablecreatedesc (d1, d4, d5, d6, d7, d8,
-                               d11, d12, d13, d14, d15);
+                               d11, d12, d13, d14, d15, d16);
         self.tab := table (name, td);
         if (is_fail(self.tab)) {
             fail;
@@ -113,7 +120,7 @@ parmtable := function (name, create=F)
                                trace=T)
     {
         #----------------------------------------------------------------
-        funcname := paste('** parmtable.putdef(',parmname,'):');
+        funcname := paste('** meptable.putdef(',parmname,'):');
         input := [parmname=parmname, values=values, perturbation=perturbation, 
                   freq0=freq0, time0=time0, 
                   freqscale=freqscale, timescale=timescale];
@@ -150,16 +157,16 @@ parmtable := function (name, create=F)
 
     public.put := function (parmname,
                             freqrange=[1,1e20], timerange=[1,1e20], 
-                            values=1, perturbation=1e-6,
+                            values=1, perturbation=1e-6, weight=1,
                             freq0=0., time0=4.56e9, 
                             freqscale=1e6, timescale=1, 
                             trace=T)
     {
         #----------------------------------------------------------------
-        funcname := paste('** parmtable.put(',parmname,'):');
+        funcname := paste('** meptable.put(',parmname,'):');
         input := [parmname=parmname, values=values, solvable=solvable,
                   freqrange=freqrange, timerange=timerange, 
-                  perturbation=perturbation,
+                  perturbation=perturbation,weight=weight,
                   freq0=freq0, time0=time0,
                   freqscale=freqscale, timescale=timescale];
         if (trace) print funcname,' input=',input;
@@ -203,6 +210,7 @@ parmtable := function (name, create=F)
         self.tab.putcell ('TIMESCALE', rownr, timescale)
         self.tab.putcell ('VALUES', rownr, as_double(values));
         self.tab.putcell ('PERT', rownr, perturbation);
+        self.tab.putcell ('WEIGHT', rownr, weight);
         return T;
     }
 
@@ -230,7 +238,7 @@ parmtable := function (name, create=F)
                                 trace=F)
     {
         #----------------------------------------------------------------
-        funcname := paste('** parmtable.perturb(',where,'):');
+        funcname := paste('** meptable.perturb(',where,'):');
         input := [where=where,
                   perturbation=perturbation, pertrelative=pertrelative];
         if (trace) print funcname,' input=',input;
