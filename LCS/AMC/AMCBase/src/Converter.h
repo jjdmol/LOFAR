@@ -20,8 +20,8 @@
 //#
 //#  $Id$
 
-#ifndef AMC_AMCBASE_CONVERTER_H
-#define AMC_AMCBASE_CONVERTER_H
+#ifndef LOFAR_AMCBASE_CONVERTER_H
+#define LOFAR_AMCBASE_CONVERTER_H
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
@@ -32,6 +32,9 @@ namespace LOFAR
 {
   namespace AMC
   {
+    // \addtogroup AMCBase
+    // @{
+
     //# Forward Declarations
     class SkyCoord;
     class EarthCoord;

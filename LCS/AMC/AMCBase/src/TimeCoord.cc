@@ -157,7 +157,7 @@ namespace LOFAR
       int is = int(s);
       int us = int((s-is)*usecPerSec);
       char c(os.fill('0'));
-      os << yy << '-' << mm << '-' << dd << ' ' 
+      os << yy << '-' << setw(2) << mm << '-' << setw(2) << dd << ' ' 
          << setw(2) << h << ':' << setw(2) << m << ':' 
          << setw(2) << is << "." << setw(6) << us;
       os.fill(c);

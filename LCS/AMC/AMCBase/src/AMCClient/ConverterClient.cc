@@ -25,9 +25,11 @@
 
 //# Includes
 #include <AMCBase/AMCClient/ConverterClient.h>
+#include <AMCBase/AMCClient/ConverterCommand.h>
 #include <AMCBase/SkyCoord.h>
 #include <AMCBase/EarthCoord.h>
 #include <AMCBase/TimeCoord.h>
+#include <Common/macros.h>
 
 namespace LOFAR
 {
@@ -39,6 +41,10 @@ namespace LOFAR
     {
       // \todo A lot of code that handles setting up the connection with the
       // server, using the Transport library, in particular TH_Socket.
+
+      // Just a temporary hack to avoid the "unused parameter" warning.
+      UNUSED_ARG(server);
+      UNUSED_ARG(port);
     }
 
 
@@ -91,11 +97,11 @@ namespace LOFAR
                                   const vector<EarthCoord>& earthCoord,
                                   const vector<TimeCoord>& timeCoord)
     {
-      // Set the value of ConverterOperation equal to J2000->AZEL
-      ConverterOperation op; /* (to be done) */
+      // Set the value of ConverterCommand equal to J2000->AZEL
+      ConverterCommand cmd(ConverterCommand::J2000toAZEL);
                                 
       // Send the request to the server
-      itsRequest.send(op, skyCoord, earthCoord, timeCoord);
+      itsRequest.send(cmd, skyCoord, earthCoord, timeCoord);
 
       // Vectors to hold the conversion result.
       vector<SkyCoord> sc;
@@ -136,11 +142,11 @@ namespace LOFAR
                                   const vector<EarthCoord>& earthCoord,
                                   const vector<TimeCoord>& timeCoord)
     {
-      // Set the value of ConverterOperation equal to AZEL->J2000
-      ConverterOperation operation; /* (to be done) */
+      // Set the value of ConverterCommand equal to AZEL->J2000
+      ConverterCommand cmd(ConverterCommand::AZELtoJ2000);
                                 
       // Send the request to the server
-      itsRequest.send(operation, skyCoord, earthCoord, timeCoord);
+      itsRequest.send(cmd, skyCoord, earthCoord, timeCoord);
 
       // Vectors to hold the conversion result.
       vector<SkyCoord> sc;

@@ -26,6 +26,7 @@
 //# Includes
 #include <AMCBase/AMCClient/DH_Converter.h>
 #include <AMCBase/AMCClient/BlobIO.h>
+#include <AMCBase/AMCClient/ConverterCommand.h>
 #include <AMCBase/SkyCoord.h>
 #include <AMCBase/EarthCoord.h>
 #include <AMCBase/TimeCoord.h>
@@ -49,7 +50,7 @@ namespace LOFAR
       setExtraBlob("DH_Converter", theirVersionNr);
     }
 
-    void DH_Converter::send(ConverterOperation operation,
+    void DH_Converter::send(const ConverterCommand& cmd,
                             const vector<SkyCoord>& skyCoord,
                             const vector<EarthCoord>& earthCoord,
                             const vector<TimeCoord>& timeCoord)
@@ -63,7 +64,7 @@ namespace LOFAR
       // @@@ number is done by the blob itself (i.e. when the getExtraBlob()
       // @@@ method is called. I will talk about this issue with Ger.
       // bos << theirVersionNr;
-      bos << operation
+      bos << cmd
           << skyCoord
           << earthCoord
           << timeCoord;
@@ -92,9 +93,9 @@ namespace LOFAR
 //         bis >> aVersionNr;
 //         ASSERT(aVersionNr == theirVersionNr);
 
-        // We won't use the operation field, since we're not a server.
-        ConverterOperation dummyOperation;
-        bis >> dummyOperation;
+        // We won't use the command field, since we're not a server.
+        ConverterCommand dummyCmd;
+        bis >> dummyCmd;
         
         // Get the vector of sky coordinates
         bis >> skyCoord;

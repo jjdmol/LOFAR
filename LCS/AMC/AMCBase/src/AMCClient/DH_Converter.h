@@ -20,8 +20,8 @@
 //#
 //#  $Id$
 
-#ifndef AMCBASE_DH_CONVERTER_H
-#define AMCBASE_DH_CONVERTER_H
+#ifndef LOFAR_AMCBASE_AMCCLIENT_DH_CONVERTER_H
+#define LOFAR_AMCBASE_AMCCLIENT_DH_CONVERTER_H
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
@@ -37,10 +37,7 @@ namespace LOFAR
     class SkyCoord;
     class EarthCoord;
     class TimeCoord;
-
-    // \todo This should later become a "full blown" struct/union. For now,
-    // let's use a simple typedef.
-    typedef uint32 ConverterOperation;
+    class ConverterCommand;
 
     // This class contains the data that will be transferred back and forth
     // between the converter client and converter server. As both client and
@@ -55,15 +52,18 @@ namespace LOFAR
       virtual ~DH_Converter();
 
       // Make a deep copy.
-      // \note Must be implemented, because it's defined pure virtual in the
-      // base class; however we won't use it.
+      // \note Must be redefined, because it's defined pure virtual in the
+      // base class; however we won't implement it, because we won't use it.
       virtual DH_Converter* clone() const;
 
-      void send(ConverterOperation oper,
+      // Send a conversion command to the server. The input data are stored in
+      // three vectors.
+      void send(const ConverterCommand&,
                 const vector<SkyCoord>&,
                 const vector<EarthCoord>&,
                 const vector<TimeCoord>&);
       
+      // Receive the converted data from the server.
       void receive(vector<SkyCoord>&);
         
     private:

@@ -20,8 +20,8 @@
 //#
 //# $Id$
 
-#ifndef AMC_AMCBASE_EARTHCOORD_H
-#define AMC_AMCBASE_EARTHCOORD_H
+#ifndef LOFAR_AMCBASE_EARTHCOORD_H
+#define LOFAR_AMCBASE_EARTHCOORD_H
 
 //# Forward Declarations.
 #include <Common/lofar_iosfwd.h>

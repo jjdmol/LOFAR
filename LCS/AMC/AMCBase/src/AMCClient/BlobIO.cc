@@ -27,6 +27,7 @@
 #include <AMCBase/SkyCoord.h>
 #include <AMCBase/EarthCoord.h>
 #include <AMCBase/TimeCoord.h>
+#include <AMCBase/AMCClient/ConverterCommand.h>
 #include <Common/BlobOStream.h>
 #include <Common/BlobIStream.h>
 
@@ -57,6 +58,12 @@ namespace LOFAR
       return bos;
     }
 
+    BlobOStream& operator<<(BlobOStream& bos, const ConverterCommand& cc)
+    {
+      bos << cc.get();
+      return bos;
+    }
+
 
     BlobIStream& operator>>(BlobIStream& bis, SkyCoord& sc)
     {
@@ -79,6 +86,14 @@ namespace LOFAR
       double day, fraction;
       bis >> day >> fraction;
       tc = TimeCoord(day, fraction);
+      return bis;
+    }
+
+    BlobIStream& operator>>(BlobIStream& bis, ConverterCommand& cc)
+    {
+      int32 iCmd;
+      bis >> iCmd;
+      cc = ConverterCommand(iCmd);
       return bis;
     }
 

@@ -20,8 +20,8 @@
 //#
 //#  $Id$
 
-#ifndef AMCBASE_EXCEPTIONS_H
-#define AMCBASE_EXCEPTIONS_H
+#ifndef LOFAR_AMCBASE_EXCEPTIONS_H
+#define LOFAR_AMCBASE_EXCEPTIONS_H
 
 //# Never #include <config.h> or #include <lofar_config.h> in a header file!
 
