@@ -24,3 +24,14 @@ profile2:
 		$(MPIBIN)/mpirun -np 1 ./tCAL \
 		$(lofar_sharedir)/../data/test/CAL/10206365/10206365 0 0 LOFAR predict 5
 
+profile3:
+	$(lofar_sharedir)/profiletool tCAL \
+		./tCAL \
+		$(lofar_sharedir)/../data/test/CAL/10206365/10206365 0 0 LOFAR predict 5
+
+profile4:
+	$(lofar_sharedir)/profiletool tCAL \
+		./tCAL \
+		$(lofar_sharedir)/../data/test/CAL/10206365/10206365 0 0 LOFAR predict 1
+
+

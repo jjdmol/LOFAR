@@ -32,6 +32,7 @@
 #include <MNS/MeqWsrtInt.h>
 #include <MNS/MeqWsrtPoint.h>
 #include <MNS/MeqLofarPoint.h>
+#include <MNS/MeqMatrixComplexArr.h>
 
 #include <Common/Debug.h>
 
@@ -479,6 +480,11 @@ MeqCalibrater::MeqCalibrater(const String& msName,
   // By default select all rows and all channels.
   // This also sets up the iterator.
   select ("", 0, -1);
+
+  // initialize the ComplexArr pool with the most frequently used size
+  // itsNrChan is the numnber frequency channels
+  // 1 is the number of time steps. this code is limited to one timestep only
+  MeqMatrixComplexArr::poolActivate(itsNrChan * 1);
 }
 
 //----------------------------------------------------------------------
@@ -521,6 +527,9 @@ MeqCalibrater::~MeqCalibrater()
        iter++) {
     delete *iter;
   }
+
+  // clear up the matrix pool
+  MeqMatrixComplexArr::poolDeactivate();
 }
 
 //----------------------------------------------------------------------
