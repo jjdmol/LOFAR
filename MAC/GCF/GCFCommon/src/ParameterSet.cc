@@ -186,10 +186,10 @@ void ParameterSet::readBuffer(const	string&	theBuffer,
 //
 void ParameterSet::addStream(istream&	inputStream, bool	merge)
 {
-	char	paramLine[1024];
+	char	paramLine[2*1024];
 	char*	separator;
 	//# Read the file line by line and convert it to Key Value pairs.
-	while (inputStream.getline (paramLine, 1024)) {
+	while (inputStream.getline (paramLine, 2*1024)) {
 		LOG_TRACE_VAR(formatString("data:>%s<", paramLine));
 	
 		if (!paramLine[0] || paramLine[0] == '#') {		//# skip empty lines
