@@ -30,7 +30,7 @@
 #include <config.h>
 #endif
 
-#include "BaseSim/WorkHolder.h"
+#include "CEPFrame/WorkHolder.h"
 #include "Pipeline/DH_2DMatrix.h"
 #include "Pipeline/DH_Correlations.h"
 

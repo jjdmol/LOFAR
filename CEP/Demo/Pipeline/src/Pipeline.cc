@@ -28,21 +28,20 @@
 #include <stdlib.h>
 #include <Common/lofar_string.h>
 #include "Common/Debug.h"
-#include "BaseSim/Transport.h"
-#include "BaseSim/Step.h"
+#include "CEPFrame/Transport.h"
+#include "CEPFrame/Step.h"
 #include "Pipeline/Pipeline.h"
-#include "BaseSim/Simul.h"
-#include "BaseSim/Profiler.h"
+#include "CEPFrame/Simul.h"
+#include "CEPFrame/Profiler.h"
 #include "Pipeline/WH_FillTFMatrix.h"
-#include "Pipeline/WH_Delay.h"
 #include "Pipeline/WH_Transpose.h"
 #include "Pipeline/WH_PreCorrect.h"
 #include "Pipeline/WH_Correlate.h"
 #include "Pipeline/WH_Dump.h"
-#include "BaseSim/WH_Empty.h"
-#include "BaseSim/ShMem/TH_ShMem.h"
-#include "BaseSim/TH_Mem.h"
-#include "BaseSim/TH_File.h"
+#include "CEPFrame/WH_Empty.h"
+#include "CEPFrame/ShMem/TH_ShMem.h"
+#include "CEPFrame/TH_Mem.h"
+#include "CEPFrame/TH_File.h"
 #include TRANSPORTERINCLUDE
 
 string i2string(int i) {

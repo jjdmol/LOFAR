@@ -1,6 +1,11 @@
 #ifndef MYCOMPLEX_H
 #define MYCOMPLEX_H
 
+#define  COMPMULT real  = a.real*b.real - a.imag*b.imag;   imag  = a.imag*b.real + a.real*b.imag;
+#define CCOMPMULT real  = a.real*b.real + a.imag*b.imag;   imag  = a.imag*b.real - a.real*b.imag;
+#define  COMPMAC  real += a.real*b.real - a.imag*b.imag;   imag += a.imag*b.real + a.real*b.imag;
+#define CCOMPMAC  real += a.real*b.real + a.imag*b.imag;   imag += a.imag*b.real - a.real*b.imag;
+
 #include <iostream>
 
 class myComplex8 {
@@ -69,35 +74,12 @@ class myComplex32 {
 };
 
 
-inline void myComplex8::cmult(const myComplex8 &a, const myComplex8 &b) {
-  real = a.real*b.real + a.imag*b.imag;
-  imag = a.imag*b.real - a.real*b.imag;
-}
-
-inline void myComplex8::mult(const myComplex8 &a, const myComplex8 &b) {
-  real = a.real*b.real - a.imag*b.imag;
-  imag = a.imag*b.real + a.real*b.imag;
-}
-
-inline void myComplex16::cmult(const myComplex8 &a, const myComplex8 &b) {
-  real = a.real*b.real + a.imag*b.imag;
-  imag = a.imag*b.real - a.real*b.imag;
-}
-
-inline void myComplex16::mult(const myComplex8 &a, const myComplex8 &b) {
-  real = a.real*b.real - a.imag*b.imag;
-  imag = a.imag*b.real + a.real*b.imag;
-}
-
-inline void myComplex32::cmac(const myComplex8 &a, const myComplex8 &b) {
-  real += a.real*b.real + a.imag*b.imag;
-  imag += a.imag*b.real - a.real*b.imag;
-}
-
-inline void myComplex32::mac(const myComplex8 &a, const myComplex8 &b) {
-  real += a.real*b.real - a.imag*b.imag;
-  imag += a.imag*b.real + a.real*b.imag;
-}
+inline void myComplex8::cmult (const myComplex8 &a, const myComplex8 &b) { CCOMPMULT } 
+inline void myComplex8::mult  (const myComplex8 &a, const myComplex8 &b) {  COMPMULT }
+inline void myComplex16::cmult(const myComplex8 &a, const myComplex8 &b) { CCOMPMULT }
+inline void myComplex16::mult (const myComplex8 &a, const myComplex8 &b) {  COMPMULT }
+inline void myComplex32::cmac (const myComplex8 &a, const myComplex8 &b) { CCOMPMAC  }
+inline void myComplex32::mac  (const myComplex8 &a, const myComplex8 &b) {  COMPMAC  }
 
 
 #endif

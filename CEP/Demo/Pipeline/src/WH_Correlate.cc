@@ -26,8 +26,8 @@
 #include <unistd.h>
 #include <math.h>
 
-#include "BaseSim/Step.h"
-#include "BaseSim/Profiler.h"
+#include "CEPFrame/Step.h"
+#include "CEPFrame/Profiler.h"
 #include "Common/Debug.h"
 
 #include "Pipeline/WH_Correlate.h"
