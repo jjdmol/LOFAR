@@ -86,9 +86,12 @@ void WH_Dump::process() {
 
   // This will probably give some performance problems. If it does we can do the following improvements:
   // 1 Put the real and imaginairy values together and make the dimensions of the array dynamic. This way no
-  //   extra memory is used and we can read the complex numbers as one.
-  // 2 Make the format at the output of the correlator the same as in the file or vice versa. Then we read
+  //   extra memory is used and we can read the complex numbers as a whole.
+  // 2 Make the format at the output of the correlator the same as in the file or vice versa. Then we can read
   //   and write the data in very large blocks.
+
+  // We need some way to store metadata. Maybe in another file (or a piece of paper :)
+
   DH_Vis::BufferPrimitive freqBlock[itsNelements*itsNelements*itsNpolarisations];
   
   for (int i=0; i<itsNinputs; i++) {

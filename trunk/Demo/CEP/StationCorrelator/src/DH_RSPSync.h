@@ -13,14 +13,14 @@
 #include <lofar_config.h>
 
 #include <Transport/DataHolder.h>
-#include <Common/lofar_complex.h>
+#include <SyncStamp.h>
 
 namespace LOFAR
 {
   class DH_RSPSync: public DataHolder
 {
 public:
-  typedef long long syncStamp_t;
+  typedef SyncStamp syncStamp_t;
 
   explicit DH_RSPSync (const string& name);
 
@@ -39,6 +39,7 @@ public:
 
   /// Get the sync stamp
   const syncStamp_t getSyncStamp() const;
+  void incrementStamp(const int value);
 
 private:
   /// Forbid assignment.
@@ -55,5 +56,7 @@ inline void DH_RSPSync::setSyncStamp(const DH_RSPSync::syncStamp_t syncStamp)
 inline const DH_RSPSync::syncStamp_t DH_RSPSync::getSyncStamp() const
   { return *itsSyncStamp;}
 
+inline void DH_RSPSync::incrementStamp(const int value)
+  { itsSyncStamp->increment(value);}
 }
 #endif 
