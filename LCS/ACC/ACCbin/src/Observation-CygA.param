@@ -16,19 +16,22 @@ AC.timeout.quit         = 60
 AC.timeout.kill         = 60
 #
 AC.application=testAppl
-AC.resultfile = AC.result
+AC.resultfile =./AC_result.log
 #
 # Application structure parameters
 testAppl.versionnr=1.1.10
 #
-AC.process[0].count = 2
-AC.process[1].ID = tPCClient[1]
-AC.process[2].ID = tPCClient[2]
-AC.process[3].ID = tAnother[1]
+AC.process[0].count = 3
+AC.process[1].ID = tPCClient[1]			# tPCclient1
+AC.process[2].ID = tPCClient[2]			# tPCClient2
+AC.process[3].ID = tAnother[1]			# tAnother3
 #
 # metadata about a proces
 testAppl.tPCClient[0].startstoptype = cmdline
 testAppl.tPCClient[0].object = Cyg-A
+
+testAppl.tAnother[0].startstoptype = cmdline
+testAppl.tAnother[0].object = Cyg-A
 
 # Process related parameters
 testAppl.tPCClient[1].node		    = lofar17
@@ -39,3 +42,5 @@ testAppl.tPCClient[1].APsOwnParam   = myOwn
 testAppl.tPCClient[2].node		    = lofar4
 testAppl.tPCClient[2].versionnr	    = 1.0.3
 #
+testAppl.tAnother[0].node		    = lofar6
+

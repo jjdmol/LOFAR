@@ -17,8 +17,8 @@ log4cplus.appender.STDOUT.filters.3.AcceptOnMatch=false
 log4cplus.appender.STDOUT.filters.3.StringToMatch="TH_Socket"
 
 # Define TRC at level INFO
-log4cplus.logger.TRC=TRACE2
-#log4cplus.logger.TRC=INFO
+#log4cplus.logger.TRC=TRACE2
+log4cplus.logger.TRC=INFO
 
 log4cplus.logger.LCS.Common=FATAL
 

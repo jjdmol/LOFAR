@@ -75,22 +75,18 @@ void ACDaemon::doWork() throw (Exception)
 	int32	warnTime  = cleanTime / 2;
 
 	// Prepare a fd_set for select
-	fd_set		socketSet;
-	int32		highestSocket = 1 + MAX(itsListener->getSid(), 
-									    itsPingSocket->getSid());
-	FD_ZERO(&socketSet);
-	FD_SET (itsListener->getSid(),   &socketSet);
-	FD_SET (itsPingSocket->getSid(), &socketSet);
+	itsConnSet.add(itsListener->getSid());
+	itsConnSet.add(itsPingSocket->getSid());
 
 	LOG_DEBUG ("ACDaemon: entering main loop");
 
 	while (true) {
 		// wait for request or ping
-		fd_set	readSet = socketSet;
+		FdSet	readSet(itsConnSet);
 		struct timeval	tv;					// prepare select-timer
 		tv.tv_sec       = 60;				// this must be IN the while loop
 		tv.tv_usec      = 0;				// because select will change tv
-		int32 selResult = select(highestSocket, &readSet, 0, 0, &tv);
+		int32 selResult = select(readSet.highest()+1, readSet.getSet(), 0, 0, &tv);
 
 		// -1 may be an interrupt or a program-error.
 		if ((selResult == -1) && (errno != EINTR)) {
@@ -103,12 +99,12 @@ void ACDaemon::doWork() throw (Exception)
 		}
 
 		// Ping from an AC?
-		if (FD_ISSET(itsPingSocket->getSid(), &readSet)) {
+		if (readSet.isSet(itsPingSocket->getSid())) {
 			handlePingMessage();
 		}
 
 		// Request for new AC?
-		if (FD_ISSET(itsListener->getSid(), &readSet)) {
+		if (readSet.isSet(itsListener->getSid())) {
 			handleACRequest();
 		}
 
@@ -121,7 +117,7 @@ void ACDaemon::doWork() throw (Exception)
 }
 
 //
-// handlePingMessage
+// handlePingMessage (on UDP socket)
 //
 void ACDaemon::handlePingMessage()
 {
@@ -210,7 +206,7 @@ void ACDaemon::handleACRequest()
 	}
 
 	if (startAC) {
-		// Always construct try to launch the AC, if it is already running the
+		// Try to launch the AC, if it is already running the
 		// new one will fail and the user will reconnect on the old one.
 		constructACFile(&aRequest, "AC.param");
 		string	sysCommand = itsParamSet->getString("ACDaemon.command");
