@@ -231,9 +231,9 @@ void MeqCalSolver::run ()
         // where we'll change any fields
         domainheader.privatize(DMI::WRITE,0);
         // generate new dataset ID
-        HIID &vdsid = domainheader()[FVDSID];
-        vdsid[1] = control().domainNum() + 1;
-        vdsid[2] = dataset_seq_num_ = 0;
+	///        HIID &vdsid = domainheader()[FVDSID];
+	  ///vdsid[1] = control().domainNum() + 1;
+	  ///vdsid[2] = dataset_seq_num_ = 0;
         // put relevant info into domain header
         domainheader()[FDomainIndex] = control().domainNum();
         domainheader()[FDomainStartTime] = domain_start;
@@ -313,13 +313,13 @@ void MeqCalSolver::run ()
       output().close();
     }
   }
-  catch( std::exception &exc)
-  {
-    out = "exiting with exception: " + string(exc.what());
-  }
   catch( AipsError &err )
   {
     out = "exiting with AIPS++ exception: " + err.getMesg();
+  }
+  catch( std::exception &exc)
+  {
+    out = "exiting with exception: " + string(exc.what());
   }
   catch( ... )
   {
@@ -635,8 +635,8 @@ void MeqCalSolver::solve (bool useSVD, DataRecord::Ref& header)
   AssertMsg (itsNrScid > 0, "No parameters are set to solvable");
 
   // change the header to reflect an intermediate data set
-  HIID &vdsid = header()[FVDSID];
-  vdsid[2] = ++dataset_seq_num_;
+  ///  HIID &vdsid = header()[FVDSID];
+  ///  vdsid[2] = ++dataset_seq_num_;
   header()[FDataType] = DataType_Intermediate;
   header()[FSolveIterNum] = control().iterationNum();
   
@@ -661,7 +661,7 @@ void MeqCalSolver::solve (bool useSVD, DataRecord::Ref& header)
         visTile.changeFormat(tileformat_);
       
       // update the tile ID with the new dataset ID
-      visTile.setTileId(-1,-1,vdsid);
+      ///      visTile.setTileId(-1,-1,vdsid);
       
       cdebug(3) << "Tile: "<<visTile.sdebug(5)<<endl;
       
@@ -1039,7 +1039,7 @@ void MeqCalSolver::solve (bool useSVD, DataRecord::Ref& header)
   // write footer to output stream
   DataRecord::Ref footer(DMI::ANONWR);
   footer()[StSolution] <<= solution_.copy();
-  footer()[FVDSID] = vdsid;
+  ///  footer()[FVDSID] = vdsid;
   output().put(FOOTER,footer);
 
   // Update all parameters.
@@ -1120,8 +1120,8 @@ void MeqCalSolver::processHeader (const DataRecord& initrec,
   cdebug(2) << " gsmname:  " << initrec[FGSMName].as<string>() << endl;
   cdebug(2) << " calcuvw:  " << initrec[FCalcUVW].as<bool>() << endl;
   cdebug(2) << " modeltp:  " << initrec[FModelType].as<string>() << endl;
-  itsMEP = new ParmTable(initrec[FMEPName].as<string>());
-  itsGSMMEP = new ParmTable(initrec[FGSMName].as<string>());
+  itsMEP = new ParmTable("aips", initrec[FMEPName].as<string>(), "", "");
+  itsGSMMEP = new ParmTable("aips", initrec[FGSMName].as<string>(), "", "");
   // Initialize the solver.
   itsSolver = FitLSQ(1, LSQBase::REAL);
   itsCalcUVW = initrec[FCalcUVW];
@@ -1559,8 +1559,8 @@ void MeqCalSolver::saveResiduals (DataRecord::Ref& header,bool apply_peel)
   cdebug(1) << "saveResidualData" << endl;
 
   // generate new vdsid for the data set
-  HIID &vdsid = header()[FVDSID];
-  vdsid[2] = ++dataset_seq_num_;
+  ///  HIID &vdsid = header()[FVDSID];
+    ///vdsid[2] = ++dataset_seq_num_;
   // put relevant info into header
   header()[FDataType] = DataType_Final;
   header()[FSolveIterNum] = control().iterationNum();
@@ -1655,7 +1655,7 @@ void MeqCalSolver::saveResiduals (DataRecord::Ref& header,bool apply_peel)
   }
   // write footer to output stream
   DataRecord::Ref footer(DMI::ANONWR);
-  footer()[FVDSID] = vdsid;
+  ///  footer()[FVDSID] = vdsid;
   footer()[StSolution] <<= solution_.copy();
   output().put(FOOTER,footer);
 }
