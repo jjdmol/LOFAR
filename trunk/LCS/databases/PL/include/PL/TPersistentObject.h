@@ -64,7 +64,7 @@ namespace LOFAR
       // will create a default constructed object \c T on the free store,
       // which will be deleted when \c *this is destroyed.
       TPersistentObject() :
-        itsObjectPtr(new T()), itsObjectSharedPtr(itsObjectPtr)
+        itsObjPtr(new T()), itsObjShrPtr(itsObjPtr)
       {
 	init();
       }
@@ -76,7 +76,7 @@ namespace LOFAR
       // a pointer because a pointer can have a null value, whereas a
       // reference cannot.
       explicit TPersistentObject(T& t) : 
-	itsObjectPtr(&t)
+	itsObjPtr(&t)
       { 
 	init();
       }
@@ -86,10 +86,10 @@ namespace LOFAR
       }
       
       // Return a reference to the contained persistent object.
-      T& data() { return *itsObjectPtr; }
+      T& data() { return *itsObjPtr; }
 
       // Return a const reference to the contained persistent object.
-      const T& data() const { return *itsObjectPtr; }
+      const T& data() const { return *itsObjPtr; }
 
       // \todo Maybe this should be done completely different. It will depend
       // on how we can best iterate over the query result. We might e.g.
@@ -142,7 +142,7 @@ namespace LOFAR
       virtual void doUpdate() const;
 
       // Here we keep a pointer to the instance of T.
-      T* itsObjectPtr;
+      T* itsObjPtr;
 
       // The boost::shared_ptr will be used to keep track of instances of T
       // that we've created ourselves. Because copying a TPersistentObject
@@ -152,10 +152,10 @@ namespace LOFAR
       // Obviously, we do not want this behaviour for instances of T that we
       // did not create ourselves. If we're not the creator, then we're not
       // the owner, hence we should never ever delete the object! Therefore,
-      // we will only transfer ownership of itsObjectPtr to the
+      // we will only transfer ownership of \c itsObjPtr to the
       // boost::shared_ptr when \e we are the creator/owner of the object that
-      // itsObjectPtr points to.
-      boost::shared_ptr<T> itsObjectSharedPtr;
+      // \c itsObjPtr points to.
+      boost::shared_ptr<T> itsObjShrPtr;
 
       // This map describes the mapping of the attributes of \c T to the
       // columns in the database table. If an attribute of class \c T is of a
@@ -183,14 +183,6 @@ namespace LOFAR
       void fromDBRep(const DBRep<T>& src);
 
     };
-
-    template<>
-    void 
-    TPersistentObject<ObjectId>::toDBRep(DBRepHolder<ObjectId>& dest) const;
-
-    template<>
-    void 
-    TPersistentObject<ObjectId>::fromDBRep(const DBRepHolder<ObjectId>& src);
 
   } // namespace PL
 
