@@ -34,7 +34,7 @@ TimeCoord::TimeCoord()
   double sec = tp.tv_sec;
   sec /= 24*3600.;
   itsDay = floor(sec);
-  itsFrac = sec - itsDay + tp.tv_usec / (1000000 * 24 * 3600);
+  itsFrac = sec - itsDay + tp.tv_usec / 1000000. / (24*3600);
   if (itsFrac > 1) {
     itsDay++;
     itsFrac--;
