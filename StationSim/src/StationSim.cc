@@ -253,8 +253,7 @@ void StationSim::define (const ParamBlock& params)
   for (int i = 0;i < nsubband; ++i) {
     sprintf (suffix, "%d", i);
     Step weight_det (WH_WeightDetermination("wd", 0, 1, nrcu, bfDipoleFile), 
-		     string("weight_det_") + suffix, false);
-    
+		     string("weight_det_") + suffix, false);   
         
     weight_det.getOutData (0).setWriteDelay (delaySubFilt);
     weight_det.setRate(nsubband);

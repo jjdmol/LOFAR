@@ -115,7 +115,7 @@ void WH_BandSep::process()
 	  // Copy to other output buffers.
 	  for (int j = 0; j < itsNout; j++) {
 		for (int i = 0; i < itsNsubband; i++) {
-		  getOutHolder (i + j * itsNsubband)->getBuffer ()[0] = subbandSignals (i, 0);
+ 		  getOutHolder (i + j * itsNsubband)->getBuffer ()[0] = subbandSignals (i, 0);
 		}
 	  }
 	  	  

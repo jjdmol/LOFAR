@@ -82,7 +82,7 @@ void WH_Projection::process()
 
   itsWeight = steerv;
 
-  //  memcpy(itsOutHolder->getBuffer(), itsWeight.data(), itsNrcu * sizeof(DH_SampleC::BufferType));
+  memcpy(itsOutHolder->getBuffer(), itsWeight.data(), itsNrcu * sizeof(DH_SampleC::BufferType));
 }
 
 void WH_Projection::dump() const
