@@ -43,7 +43,7 @@ namespace LOFAR
 	itsNumberOfBeamlets = 128;
 
 	for (int i = 0; i < itsNumberOfStations; i++) {
-	  itsStations[i] = new Station (i, 0, 0, 0);
+	  itsStations[i] = (Station*)new Station (i, 0.0, 0.0, 0.0);
 	}
      }
 

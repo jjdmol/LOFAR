@@ -25,6 +25,14 @@
 
 namespace LOFAR
 {
+   Station::Station ()
+     {
+       itsX = 0.0;
+       itsY = 0.0;
+       itsZ = 0.0;  
+       itsID = 0;
+     }  
+  
    Station::Station (int ID, float x, float y, float z)
      {
        itsX = x;

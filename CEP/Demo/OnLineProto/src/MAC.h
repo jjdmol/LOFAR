@@ -82,7 +82,7 @@ public:
    int itsNumberOfBeamlets;
      
    // Station related parameters
-   Station itsStations[nstations];          // the stationpositions 
+   Station* itsStations[nstations];          // the stationpositions 
    int itsNumberOfStations;
 };
 
@@ -141,7 +141,7 @@ inline void MAC::setLOfrequency (float f_lo)
   { itsLOfrequency = f_lo; }
 
 inline Station* MAC::getStations ()
-  { return itsStations; }
+  { return itsStations[0]; }
 
 /* inline void MAC::setStations (Station* s) */
 /*   { itsStations = s; } */

@@ -30,6 +30,7 @@ namespace LOFAR
 class Station
 {
 public:
+  Station ();
    Station (int ID, float x, float y, float z);
    ~Station();
    Station (const Station& s); // copy constructor
