@@ -74,7 +74,7 @@ GCFEvent::TResult BWSync::initial_state(GCFEvent& event, GCFPortInterface& /*por
     
     case F_TIMER:
     {
-      TRAN(BWSync::senddata_state);
+      TRAN(BWSync::writedata_state);
     }
     break;
 
@@ -86,7 +86,7 @@ GCFEvent::TResult BWSync::initial_state(GCFEvent& event, GCFPortInterface& /*por
   return GCFEvent::HANDLED;
 }
 
-GCFEvent::TResult BWSync::senddata_state(GCFEvent& event, GCFPortInterface& /*port*/)
+GCFEvent::TResult BWSync::writedata_state(GCFEvent& event, GCFPortInterface& /*port*/)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
@@ -95,9 +95,9 @@ GCFEvent::TResult BWSync::senddata_state(GCFEvent& event, GCFPortInterface& /*po
     case F_ENTRY:
     {
       // send next set of coefficients
-      writecoef((getBoardId() * N_BLP) + m_current_blp);
+      writedata((getBoardId() * N_BLP) + m_current_blp);
 
-      TRAN(BWSync::waitstatus_state);
+      TRAN(BWSync::readstatus_state);
     }
     break;
 
@@ -117,7 +117,7 @@ GCFEvent::TResult BWSync::senddata_state(GCFEvent& event, GCFPortInterface& /*po
   return GCFEvent::HANDLED;
 }
 
-GCFEvent::TResult BWSync::waitstatus_state(GCFEvent& event, GCFPortInterface& /*port*/)
+GCFEvent::TResult BWSync::readstatus_state(GCFEvent& event, GCFPortInterface& /*port*/)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
 
@@ -127,7 +127,7 @@ GCFEvent::TResult BWSync::waitstatus_state(GCFEvent& event, GCFPortInterface& /*
     {
       readstatus();
 
-      // start timer to check for broken comms link
+      // TODO start timer to check for broken comms link
     }
     break;
 
@@ -162,7 +162,7 @@ GCFEvent::TResult BWSync::waitstatus_state(GCFEvent& event, GCFPortInterface& /*
       if (m_current_blp < N_BLP)
       {
 	// send next bit of data
-	TRAN(BWSync::senddata_state);
+	TRAN(BWSync::writedata_state);
       }
       else
       {
@@ -181,14 +181,14 @@ GCFEvent::TResult BWSync::waitstatus_state(GCFEvent& event, GCFPortInterface& /*
   return GCFEvent::HANDLED;
 }
 
-void BWSync::writecoef(uint8 blp)
+void BWSync::writedata(uint8 blp)
 {
   if (m_regid <= MEPHeader::BFXRE || m_regid > MEPHeader::BFYIM)
   {
     m_regid = MEPHeader::BFXRE; // HACK
   }
 
-  LOG_DEBUG(formatString(">>>> %s: blp=%d, regid=%d",
+  LOG_DEBUG(formatString(">>>> BWSync(%s) blp=%d, regid=%d",
 			 getBoardPort().getName().c_str(),
 			 blp,
 			 m_regid));
@@ -210,11 +210,13 @@ void BWSync::writecoef(uint8 blp)
   //
   if (0 == (m_regid % 2))
   {
-    weights = real(Cache::getInstance().getBack().getBeamletWeights().weights()(blp, Range::all()));
+    weights = real(Cache::getInstance().getBack().getBeamletWeights().\
+		   weights()(0, blp, Range::all()));
   }
   else
   {
-    weights = imag(Cache::getInstance().getBack().getBeamletWeights().weights()(blp, Range::all()));
+    weights = imag(Cache::getInstance().getBack().getBeamletWeights().\
+		   weights()(0, blp, Range::all()));
   }
 
   getBoardPort().send(bfcoefs);

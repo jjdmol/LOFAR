@@ -70,6 +70,11 @@ namespace RSP
       virtual void setTimestamp(const Timestamp& timestamp);
       /*@}*/
 
+      /**
+       * Range check the parameters of the event.
+       */
+      virtual bool validate() const;
+      
     private:
       GetWeightsCmd();
       RSPGetweightsEvent* m_event;

@@ -1,4 +1,4 @@
-//#  SetWeightsCmd.cc: implementation of the SetWeightsCmd class
+//#  SetSubbandsCmd.cc: implementation of the SetSubbandsCmd class
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -22,7 +22,7 @@
 
 #include "RSP_Protocol.ph"
 #include "RSPDriverTask.h"
-#include "SetWeightsCmd.h"
+#include "SetSubbandsCmd.h"
 
 #include <blitz/array.h>
 
@@ -36,37 +36,23 @@ using namespace LOFAR;
 using namespace RSP_Protocol;
 using namespace blitz;
 
-SetWeightsCmd::SetWeightsCmd(RSPSetweightsEvent& sw_event, GCFPortInterface& port,
-			     Operation oper, int timestep)
+SetSubbandsCmd::SetSubbandsCmd(GCFEvent& event, GCFPortInterface& port, Operation oper)
 {
-  RSPSetweightsEvent* event = new RSPSetweightsEvent();
-  m_event = event;
-  
-  event->timestamp = sw_event.timestamp + timestep;
-  event->rcumask   = sw_event.rcumask;
+  m_event = new RSPSetsubbandsEvent(event);
 
   setOperation(oper);
   setPeriod(0);
   setPort(port);
 }
 
-SetWeightsCmd::~SetWeightsCmd()
+SetSubbandsCmd::~SetSubbandsCmd()
 {
   delete m_event;
 }
 
-void SetWeightsCmd::setWeights(Array<complex<int16>, BeamletWeights::NDIM> weights)
+void SetSubbandsCmd::ack(CacheBuffer& /*cache*/)
 {
-  RSPSetweightsEvent* event = static_cast<RSPSetweightsEvent*>(m_event);
-  
-  event->weights.weights().resize(BeamletWeights::SINGLE_TIMESTEP,
-				  event->rcumask.count(), N_BEAMLETS);
-  event->weights.weights() = weights;
-}
-
-void SetWeightsCmd::ack(CacheBuffer& /*cache*/)
-{
-  RSPSetweightsackEvent ack;
+  RSPSetsubbandsackEvent ack;
 
   ack.timestamp = getTimestamp();
   ack.status = SUCCESS;
@@ -74,47 +60,41 @@ void SetWeightsCmd::ack(CacheBuffer& /*cache*/)
   getPort()->send(ack);
 }
 
-void SetWeightsCmd::apply(CacheBuffer& cache)
+void SetSubbandsCmd::apply(CacheBuffer& cache)
 {
   int input_rcu = 0;
+
   for (int cache_rcu = 0; cache_rcu < RSPDriverTask::N_RCU; cache_rcu++)
   {
     if (m_event->rcumask[cache_rcu])
     {
-      if (cache_rcu < RSPDriverTask::N_RCU)
-      {
-	cache.getBeamletWeights().weights()(0, cache_rcu, Range::all())
-	  = m_event->weights.weights()(0, input_rcu, Range::all());
-      }
-      else
-      {
-	LOG_WARN(formatString("invalid RCU index %d, there are only %d RCU's",
-			      cache_rcu, RSPDriverTask::N_RCU));
-      }
+      cache.getSubbandSelection(cache_rcu)()(Range::all())
+	= m_event->subbands()(Range(input_rcu, input_rcu), Range::all());
 
       input_rcu++;
     }
   }
 }
 
-void SetWeightsCmd::complete(CacheBuffer& /*cache*/)
+void SetSubbandsCmd::complete(CacheBuffer& /*cache*/)
 {
-  LOG_INFO_STR("SetWeightsCmd completed at time=" << getTimestamp());
+  LOG_INFO_STR("SetSubbandsCmd completed at time=" << getTimestamp());
 }
 
-const Timestamp& SetWeightsCmd::getTimestamp() const
+const Timestamp& SetSubbandsCmd::getTimestamp() const
 {
   return m_event->timestamp;
 }
 
-void SetWeightsCmd::setTimestamp(const Timestamp& timestamp)
+void SetSubbandsCmd::setTimestamp(const Timestamp& timestamp)
 {
   m_event->timestamp = timestamp;
 }
 
-bool SetWeightsCmd::validate() const
+bool SetSubbandsCmd::validate() const
 {
-  // validation is done in the caller (RSPDriverTask)
-  return true;
+  return ((m_event->rcumask.count() <= (unsigned int)RSPDriverTask::N_RCU)
+	  && (2 == m_event->subbands().dimensions())
+	  && (1 == m_event->subbands().extent(firstDim))
+	  && (m_event->rcumask.count() == (unsigned int)m_event->subbands().extent(secondDim)));
 }
-

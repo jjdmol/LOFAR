@@ -169,7 +169,7 @@ event = {
   };
   param = {
     name = "ch";
-    type = "uint8";
+    type = "uint8[]";
   };
 };
 

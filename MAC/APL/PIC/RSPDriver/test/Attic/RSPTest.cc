@@ -76,7 +76,7 @@ GCFEvent::TResult RSPTest::initial(GCFEvent& e, GCFPortInterface& port)
 
       case F_CONNECTED:
       {
-	  TRAN(RSPTest::test001);
+	  TRAN(RSPTest::test005);
       }
       break;
 
@@ -108,57 +108,57 @@ GCFEvent::TResult RSPTest::test001(GCFEvent& e, GCFPortInterface& port)
   
   switch (e.signal)
   {
-      case F_ENTRY:
-      {
-	  START_TEST("test001", "test SETWEIGHTS");
+    case F_ENTRY:
+    {
+      START_TEST("test001", "test SETWEIGHTS");
 
-	  /* start of the test sequence */
-	  RSPSetweightsEvent sw;
-	  sw.timestamp.setNow(10);
-	  cout << "sw.time=" << sw.timestamp << endl;
-	  sw.rcumask.reset();
-	  sw.weights.weights().resize(1, N_BEAMLETS);
+      /* start of the test sequence */
+      RSPSetweightsEvent sw;
+      sw.timestamp.setNow(10);
+      cout << "sw.time=" << sw.timestamp << endl;
+      sw.rcumask.reset();
+      sw.weights.weights().resize(1, 1, N_BEAMLETS);
 
-	  for (int i = 0; i < sw.weights.weights().extent(1); i++)
-	  {
-	    sw.weights.weights()(0, i) = 0xff + i;
-	  }
+      //for (int i = 0; i < sw.weights.weights().extent(2); i++)
+      //{
+      sw.weights.weights()(0, 0, Range::all()) = 0xbeaf;
+      //}
 	  
-	  sw.rcumask.set(0);
+      sw.rcumask.set(0);
 
-	  TESTC_ABORT(m_server.send(sw), RSPTest::final);
-      }
+      TESTC_ABORT(m_server.send(sw), RSPTest::final);
+    }
+    break;
+
+    case RSP_SETWEIGHTSACK:
+    {
+      RSPSetweightsackEvent ack(e);
+
+      TESTC_ABORT(ack.status == SUCCESS, RSPTest::final);
+      cout << "ack.time=" << ack.timestamp << endl;
+
+      TRAN(RSPTest::test002);
+    }
+    break;
+
+    case F_DISCONNECTED:
+    {
+      port.setTimer((long)1);
+      port.close();
+
+      TRAN(RSPTest::final);
+    }
+    break;
+
+    case F_EXIT:
+    {
+      STOP_TEST();
+    }
+    break;
+
+    default:
+      status = GCFEvent::NOT_HANDLED;
       break;
-
-      case RSP_SETWEIGHTSACK:
-      {
-	  RSPSetweightsackEvent ack(e);
-
-	  TESTC_ABORT(ack.status == SUCCESS, RSPTest::final);
-	  cout << "ack.time=" << ack.timestamp << endl;
-
-	  TRAN(RSPTest::test002);
-      }
-      break;
-
-      case F_DISCONNECTED:
-      {
-	  port.setTimer((long)1);
-	  port.close();
-
-	  TRAN(RSPTest::final);
-      }
-      break;
-
-      case F_EXIT:
-      {
-	  STOP_TEST();
-      }
-      break;
-
-      default:
-	  status = GCFEvent::NOT_HANDLED;
-	  break;
   }
 
   return status;
@@ -228,59 +228,185 @@ GCFEvent::TResult RSPTest::test003(GCFEvent& e, GCFPortInterface& port)
   
   switch (e.signal)
   {
-      case F_ENTRY:
-      {
-	  START_TEST("test003", "test SETWEIGHTS NOW!");
+    case F_ENTRY:
+    {
+      START_TEST("test003", "test SETWEIGHTS NOW!");
 
-	  /* start of the test sequence */
-	  RSPSetweightsEvent sw;
-	  sw.timestamp = Timestamp(0,0);
-	  cout << "sw.time=" << sw.timestamp << endl;
-	  sw.rcumask.reset();
-	  sw.weights.weights().resize(1, N_BEAMLETS);
+      /* start of the test sequence */
+      RSPSetweightsEvent sw;
+      sw.timestamp = Timestamp(0,0);
+      cout << "sw.time=" << sw.timestamp << endl;
+      sw.rcumask.reset();
+      sw.weights.weights().resize(1, 1, N_BEAMLETS);
 
-	  for (int i = 0; i < sw.weights.weights().extent(1); i++)
-	  {
-	    sw.weights.weights()(0, i) = 0xff + i;
-	  }
+      //for (int i = 0; i < sw.weights.weights().extent(1); i++)
+      //{
+      sw.weights.weights()(0, 0, Range::all()) = 0xbeaf;
+      //}
 	  
-	  sw.rcumask.set(0);
+      sw.rcumask.set(0);
 
-	  TESTC_ABORT(m_server.send(sw), RSPTest::final);
-      }
+      TESTC_ABORT(m_server.send(sw), RSPTest::final);
+    }
+    break;
+
+    case RSP_SETWEIGHTSACK:
+    {
+      RSPSetweightsackEvent ack(e);
+
+      TESTC_ABORT(ack.status == SUCCESS, RSPTest::final);
+      cout << "ack.time=" << ack.timestamp << endl;
+
+      TRAN(RSPTest::test004);
+    }
+    break;
+
+    case F_DISCONNECTED:
+    {
+      port.setTimer((long)1);
+      port.close();
+
+      TRAN(RSPTest::final);
+    }
+    break;
+
+    case F_EXIT:
+    {
+      STOP_TEST();
+    }
+    break;
+
+    default:
+      status = GCFEvent::NOT_HANDLED;
       break;
+  }
 
-      case RSP_SETWEIGHTSACK:
-      {
-	  RSPSetweightsackEvent ack(e);
+  return status;
+}
 
-	  TESTC_ABORT(ack.status == SUCCESS, RSPTest::final);
-	  cout << "ack.time=" << ack.timestamp << endl;
+GCFEvent::TResult RSPTest::test004(GCFEvent& e, GCFPortInterface& port)
+{
+  GCFEvent::TResult status = GCFEvent::HANDLED;
+  
+  switch (e.signal)
+  {
+    case F_ENTRY:
+    {
+      START_TEST("test004", "test SETWEIGHTS multiple timesteps");
 
-	  TRAN(RSPTest::final);
+      /* start of the test sequence */
+      RSPSetweightsEvent sw;
 
-	  port.close();
-      }
+      // 20 seconds from now
+      sw.timestamp.setNow(20);
+      cout << "sw.time=" << sw.timestamp << endl;
+      sw.rcumask.reset();
+
+      // send weights for 10 timesteps
+      sw.weights.weights().resize(10, 1, N_BEAMLETS);
+
+      //for (int i = 0; i < sw.weights.weights().extent(2); i++)
+      //{
+      sw.weights.weights()(Range::all(), 0, Range::all()) = 0xbeaf;
+      //}
+	  
+      sw.rcumask.set(0);
+
+      TESTC_ABORT(m_server.send(sw), RSPTest::final);
+    }
+    break;
+
+    case RSP_SETWEIGHTSACK:
+    {
+      RSPSetweightsackEvent ack(e);
+
+      TESTC_ABORT(ack.status == SUCCESS, RSPTest::final);
+      cout << "ack.time=" << ack.timestamp << endl;
+
+      TRAN(RSPTest::test005);
+    }
+    break;
+
+    case F_DISCONNECTED:
+    {
+      port.setTimer((long)1);
+      port.close();
+
+      TRAN(RSPTest::final);
+    }
+    break;
+
+    case F_EXIT:
+    {
+      STOP_TEST();
+    }
+    break;
+
+    default:
+      status = GCFEvent::NOT_HANDLED;
       break;
+  }
 
-      case F_DISCONNECTED:
-      {
-	  port.setTimer((long)1);
-	  port.close();
+  return status;
+}
 
-	  TRAN(RSPTest::final);
-      }
+GCFEvent::TResult RSPTest::test005(GCFEvent& e, GCFPortInterface& port)
+{
+  GCFEvent::TResult status = GCFEvent::HANDLED;
+  
+  switch (e.signal)
+  {
+    case F_ENTRY:
+    {
+      START_TEST("test005", "test SETSUBBANDS");
+
+      /* start of the test sequence */
+      RSPSetsubbandsEvent ss;
+
+      ss.timestamp.setNow(10);
+      ss.rcumask.reset();
+      ss.rcumask.set(0);
+      
+      ss.subbands().resize(1, 1);
+      
+      // set all values to 0x77
+      ss.subbands() = 0x77;
+      
+      TESTC_ABORT(m_server.send(ss), RSPTest::final);
+    }
+    break;
+
+    case RSP_SETSUBBANDSACK:
+    {
+      RSPSetsubbandsackEvent ack(e);
+
+      TESTC_ABORT(ack.status == SUCCESS, RSPTest::final);
+      cout << "ack.time=" << ack.timestamp << endl;
+
+      TRAN(RSPTest::final);
+
+      port.close();
+    }
+    break;
+
+    case F_DISCONNECTED:
+    {
+      port.setTimer((long)1);
+      port.close();
+
+      TRAN(RSPTest::final);
+    }
+    break;
+
+    case F_EXIT:
+    {
+      STOP_TEST();
+    }
+    break;
+
+    default:
+      status = GCFEvent::NOT_HANDLED;
       break;
-
-      case F_EXIT:
-      {
-	  STOP_TEST();
-      }
-      break;
-
-      default:
-	  status = GCFEvent::NOT_HANDLED;
-	  break;
   }
 
   return status;

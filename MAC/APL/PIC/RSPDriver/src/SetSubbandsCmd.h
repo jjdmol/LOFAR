@@ -1,6 +1,6 @@
 //#  -*- mode: c++ -*-
 //#
-//#  GetWeightsCmd.h: Beamformer Weights get command.
+//#  SetSubbandsCmd.h: Beamformer Weights settings command.
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -22,8 +22,8 @@
 //#
 //#  $Id$
 
-#ifndef GETWEIGHTSCMD_H_
-#define GETWEIGHTSCMD_H_
+#ifndef SETSUBBANDSCMD_H_
+#define SETSUBBANDSCMD_H_
 
 #include "Command.h"
 #include "RSP_Protocol.ph"
@@ -33,16 +33,16 @@
 
 namespace RSP
 {
-  class GetWeightsCmd : public Command
+  class SetSubbandsCmd : public Command
   {
     public:
       /**
-       * Constructors for a GetWeightsCmd object.
+       * Constructors for a SetSubbandsCmd object.
        */
-      GetWeightsCmd(GCFEvent& event, GCFPortInterface& port, Operation oper);
+      SetSubbandsCmd(GCFEvent& event, GCFPortInterface& port, Operation oper);
 	  
-      /* Destructor for GetWeightsCmd. */
-      virtual ~GetWeightsCmd();
+      /* Destructor for SetSubbandsCmd. */
+      virtual ~SetSubbandsCmd();
 
       /**
        * Acknowledge the command by sending the appropriate
@@ -71,14 +71,15 @@ namespace RSP
       /*@}*/
 
       /**
-       * Range check the parameters of the event.
+       * Validate the event that underlies the command.
        */
       virtual bool validate() const;
-      
+
     private:
-      GetWeightsCmd();
-      RSPGetweightsEvent* m_event;
+      SetSubbandsCmd();
+
+      RSPSetsubbandsEvent* m_event;
   };
 };
      
-#endif /* GETWEIGHTSCMD_H_ */
+#endif /* SETSUBBANDSCMD_H_ */

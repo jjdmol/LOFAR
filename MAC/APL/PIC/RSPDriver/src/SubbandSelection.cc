@@ -21,6 +21,7 @@
 //#  $Id$
 
 #include "SubbandSelection.h"
+#include <blitz/array.h>
 
 #undef PACKAGE
 #undef VERSION
@@ -30,20 +31,73 @@ using namespace LOFAR;
 
 using namespace RSP_Protocol;
 using namespace std;
+using namespace blitz;
 
 unsigned int SubbandSelection::getSize()
 {
-  return sizeof(struct timeval);
+  return
+    ((2 * sizeof(int32))
+     + (m_subbands.size() * sizeof(uint16)));
 }
 
 unsigned int SubbandSelection::pack  (void* buffer)
 {
-  buffer = buffer;
-  return 0;
+  char* bufptr = (char*)buffer;
+  unsigned int offset = 0;
+
+  for (int dim = firstDim; dim < firstDim + m_subbands.dimensions(); dim++)
+  {
+    int32 extent = m_subbands.extent(dim);
+    memcpy(bufptr + offset, &extent, sizeof(int32));
+    offset += sizeof(int32);
+  }
+
+  if (m_subbands.isStorageContiguous())
+  {
+    memcpy(bufptr + offset, m_subbands.data(), m_subbands.size() * sizeof(uint16));
+    offset += m_subbands.size() * sizeof(uint16);
+  }
+  else
+  {
+    cerr << "NON-CONTIGUOUS ARRAY STORAGE!" << endl;
+  }
+    
+  return offset;
 }
 
 unsigned int SubbandSelection::unpack(void *buffer)
 {
-  buffer = buffer;
-  return 0;
+  char* bufptr = (char*)buffer;
+  unsigned int offset = 0;
+  TinyVector<int, 2> extent;
+
+  for (int dim = firstDim; dim < firstDim + m_subbands.dimensions(); dim++)
+  {
+    int32 extenttmp = m_subbands.extent(dim);
+    memcpy(&extenttmp, bufptr + offset, sizeof(int32));
+    offset += sizeof(int32);
+    extent(dim - firstDim) = extenttmp;
+  }
+
+  // resize the array to the correct size
+  m_subbands.resize(extent);
+
+  if (m_subbands.isStorageContiguous())
+  {
+    memcpy(m_subbands.data(), bufptr+offset, m_subbands.size() * sizeof(uint16));
+    offset += m_subbands.size() * sizeof(uint16);
+  }
+  else
+  {
+    LOG_FATAL("NON-CONTIGUOUS ARRAY STORAGE!");
+    exit(EXIT_FAILURE);
+  }
+    
+  return offset;
 }
+
+Array<uint16,2>& SubbandSelection::operator()()
+{
+  return m_subbands;
+}
+

@@ -106,6 +106,12 @@ namespace RSP
       virtual void setTimestamp(const RSP_Protocol::Timestamp& timestamp) = 0;
 
       /**
+       * Validate the parameters of the event.
+       * @return true if they are ok.
+       */
+      virtual bool validate() const = 0;
+
+      /**
        * Compare operator to order commands in the queue
        */
       bool operator<(const Command& other);

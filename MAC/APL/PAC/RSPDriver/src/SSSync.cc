@@ -22,6 +22,9 @@
 
 #include "SSSync.h"
 
+#include "RSP_Protocol.ph"
+#include "EPA_Protocol.ph"
+
 #undef PACKAGE
 #undef VERSION
 #include <lofar_config.h>
@@ -30,8 +33,12 @@
 using namespace RSP;
 using namespace LOFAR;
 
+#define N_RETRIES 3
+
 SSSync::SSSync(GCFPortInterface& board_port, int board_id)
-  : SyncAction((State)&SSSync::initial_state, board_port, board_id)
+  : SyncAction((State)&SSSync::initial_state, board_port, board_id),
+    m_current_blp(0),
+    m_retries(0)
 {
 }
 
@@ -40,7 +47,182 @@ SSSync::~SSSync()
   /* TODO: delete event? */
 }
 
-GCFEvent::TResult SSSync::initial_state(GCFEvent& event, GCFPortInterface& port)
+GCFEvent::TResult SSSync::initial_state(GCFEvent& event, GCFPortInterface& /*port*/)
 {
+  GCFEvent::TResult status = GCFEvent::HANDLED;
+
+  switch (event.signal)
+  {
+    case F_INIT:
+    {
+    }
+    break;
+      
+    case F_ENTRY:
+    {
+      // reset extended state variables on initialization
+      m_current_blp   = 0;
+      m_retries       = 0;
+    }
+    break;
+    
+    case F_TIMER:
+    {
+      TRAN(SSSync::writedata_state);
+    }
+    break;
+
+    default:
+      status = GCFEvent::NOT_HANDLED;
+      break;
+  }
+
   return GCFEvent::HANDLED;
+}
+
+GCFEvent::TResult SSSync::writedata_state(GCFEvent& event, GCFPortInterface& /*port*/)
+{
+  GCFEvent::TResult status = GCFEvent::HANDLED;
+
+  switch (event.signal)
+  {
+    case F_ENTRY:
+    {
+      // send next set of coefficients
+      writedata((getBoardId() * N_BLP) + m_current_blp);
+
+      TRAN(SSSync::readstatus_state);
+    }
+    break;
+
+    case F_TIMER:
+    {
+      LOG_FATAL("missed real-time deadline");
+      exit(EXIT_FAILURE);
+    }
+    break;
+
+
+    default:
+      status = GCFEvent::NOT_HANDLED;
+      break;
+  }
+
+  return GCFEvent::HANDLED;
+}
+
+GCFEvent::TResult SSSync::readstatus_state(GCFEvent& event, GCFPortInterface& /*port*/)
+{
+  GCFEvent::TResult status = GCFEvent::HANDLED;
+
+  switch(event.signal)
+  {
+    case F_ENTRY:
+    {
+      readstatus();
+
+      // TODO: start timer to check for broken comms link
+    }
+    break;
+
+    case F_TIMER:
+    {
+      LOG_FATAL("missed real-time deadline");
+      //exit(EXIT_FAILURE);
+    }
+    break;
+      
+    case EPA_RSPSTATUS:
+    {
+      EPARspstatusEvent rspstatus(event);
+      
+      // check status of previous write
+      if (rspstatus.rsp == 0)
+      {
+	// OK, move on to the next BLP
+	m_current_blp++;
+	m_retries = 0;
+      }
+      else
+      {
+	if (m_retries++ > N_RETRIES)
+	{
+	  // abort
+	  LOG_FATAL("maximum retries reached!");
+	  exit(EXIT_FAILURE);
+	}
+      }
+
+      if (m_current_blp < N_BLP)
+      {
+	// send next bit of data
+	TRAN(SSSync::writedata_state);
+      }
+      else
+      {
+	// we've completed the update
+	setCompleted(true); // done with this statemachine
+	TRAN(SSSync::initial_state);
+      }
+    }
+    break;
+
+    default:
+      status = GCFEvent::NOT_HANDLED;
+      break;
+  }
+
+  return GCFEvent::HANDLED;
+}
+
+void SSSync::writedata(uint8 blp)
+{
+  LOG_DEBUG(formatString(">>>> SSSync(%s) blp=%d",
+			 getBoardPort().getName().c_str(),
+			 blp));
+  
+  // send subband select message
+  EPASubbandselectEvent ss;
+  MEP_SUBBANDSELECT(ss.hdr, MEPHeader::WRITE, 0);
+  ss.hdr.m_fields.addr.dstid = blp;
+  
+#if 0
+  // copy weights from the cache to the message
+  Array<int16, 1> weights((int16*)&ss.ch,
+			  shape(RSP_Protocol::N_BEAMLETS),
+			  neverDeleteData);
+  
+  //
+  // TODO
+  // Make sure we're actually sending the correct weights.
+  //
+  if (0 == (m_regid % 2))
+  {
+    weights = real(Cache::getInstance().getBack().getBeamletWeights().\
+		   weights()(0, blp, Range::all()));
+  }
+  else
+  {
+    weights = imag(Cache::getInstance().getBack().getBeamletWeights().\
+		   weights()(0, blp, Range::all()));
+  }
+#endif
+
+  getBoardPort().send(ss);
+}
+
+void SSSync::readstatus()
+{
+  // send read status request to check status of the write
+  EPARspstatusEvent rspstatus;
+  MEP_RSPSTATUS(rspstatus.hdr, MEPHeader::READ);
+
+  memset(&rspstatus.rsp, 0, MEPHeader::RSPSTATUS_SIZE);
+
+#if 0
+  // on the read request don't send the data
+  rspstatus.length -= RSPSTATUS_SIZE;
+#endif
+
+  getBoardPort().send(rspstatus);
 }

@@ -50,16 +50,15 @@ CacheBuffer::CacheBuffer()
   tv.tv_sec = 0; tv.tv_usec = 0;
   m_timestamp.set(tv);
 
-  //m_beamletweights;
   m_subbandselection.resize(RSPDriverTask::N_RCU);
   m_rcusettings.resize(RSPDriverTask::N_RCU);
   m_wgsettings.resize(RSPDriverTask::N_RCU);
-  //m_systemstatus;
   m_statistics.resize(RSPDriverTask::N_RCU);
-  //m_versions;
 
-  m_beamletweights.weights().resize(RSPDriverTask::N_RCU,
+  m_beamletweights.weights().resize(BeamletWeights::SINGLE_TIMESTEP,
+				    RSPDriverTask::N_RCU,
 				    N_BEAMLETS);
+  m_beamletweights.weights()(Range::all(), Range::all(), Range::all()) = complex<int16>(0,0);
 }
 
 CacheBuffer::~CacheBuffer()

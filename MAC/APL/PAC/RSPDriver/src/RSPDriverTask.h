@@ -80,15 +80,42 @@ namespace RSP
       GCFEvent::TResult initial(GCFEvent& event, GCFPortInterface &port);
 
       /**
+       * Delete the client ports on the m_garbage_list.
+       */
+      void RSPDriverTask::collect_garbage();
+
+      /**
        * The enabled state. In this state the task can receive
        * commands.
        */
       GCFEvent::TResult enabled(GCFEvent& event, GCFPortInterface &port);
-      
+
+      /*@{*/
       /**
-       * Delete the client ports on the m_garbage_list.
+       * Handlers for the different events.
        */
-      void RSPDriverTask::collect_garbage();
+      void rsp_setweights(GCFEvent& event, GCFPortInterface &port);
+      void rsp_getweights(GCFEvent& event, GCFPortInterface &port);
+
+      void rsp_setsubbands(GCFEvent& event, GCFPortInterface &port);
+      void rsp_getsubbands(GCFEvent& event, GCFPortInterface &port);
+
+      void rsp_setrcu(GCFEvent& event, GCFPortInterface &port);
+      void rsp_getrcu(GCFEvent& event, GCFPortInterface &port);
+
+      void rsp_setwg(GCFEvent& event, GCFPortInterface &port);
+      void rsp_getwg(GCFEvent& event, GCFPortInterface &port);
+
+      void rsp_substatus(GCFEvent& event, GCFPortInterface &port);
+      void rsp_unsubstatus(GCFEvent& event, GCFPortInterface &port);
+      void rsp_getstatus(GCFEvent& event, GCFPortInterface &port);
+
+      void rsp_substats(GCFEvent& event, GCFPortInterface &port);
+      void rsp_unsubstats(GCFEvent& event, GCFPortInterface &port);
+      void rsp_getstats(GCFEvent& event, GCFPortInterface &port);
+
+      void rsp_getversions(GCFEvent& event, GCFPortInterface &port);
+      /*@}*/
 
     private:
       // ports

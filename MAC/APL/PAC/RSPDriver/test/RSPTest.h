@@ -32,7 +32,7 @@
 namespace RSP_Test
 {
   class RSPTest : public GCFTask, public Test
-    {
+  {
     public:
       /**
        * The constructor of the RSPTest task.
@@ -60,6 +60,8 @@ namespace RSP_Test
       GCFEvent::TResult test001(GCFEvent& e, GCFPortInterface &p);
       GCFEvent::TResult test002(GCFEvent& e, GCFPortInterface &p);
       GCFEvent::TResult test003(GCFEvent& e, GCFPortInterface &p);
+      GCFEvent::TResult test004(GCFEvent& e, GCFPortInterface &p);
+      GCFEvent::TResult test005(GCFEvent& e, GCFPortInterface &p);
 
       /**
        * Run the tests.
@@ -72,7 +74,7 @@ namespace RSP_Test
     private:
       // ports
       GCFPort m_server;
-    };
+  };
 
 };
      

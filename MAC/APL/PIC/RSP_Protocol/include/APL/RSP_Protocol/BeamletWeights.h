@@ -35,6 +35,11 @@ namespace RSP_Protocol
   {
     public:
       /**
+       * Constants.
+       */
+      static const int SINGLE_TIMESTEP = 1;
+
+      /**
        * Constructors for a BeamletWeights object.
        * Currently the tv_usec part is always set to 0 irrespective
        * of the value passed in.
@@ -44,7 +49,7 @@ namespace RSP_Protocol
       /* Destructor for BeamletWeights. */
       virtual ~BeamletWeights() {}
 
-      static const int NDIM = 2;
+      static const int NDIM = 3;
 
       /* get reference to the weights array */
       blitz::Array<std::complex<int16>, NDIM>& weights();
@@ -62,8 +67,9 @@ namespace RSP_Protocol
     private:
       /**
        * The beamlet weights.
-       * Dimension 1: count(rcumask)
-       * Dimension 2: N_BEAMLETS
+       * Dimension 1: nr_timesteps (>1)
+       * Dimension 2: count(rcumask)
+       * Dimension 3: N_BEAMLETS
        */
       blitz::Array<std::complex<int16>, NDIM> m_weights;
   };
