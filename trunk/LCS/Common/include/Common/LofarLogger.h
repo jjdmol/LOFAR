@@ -56,17 +56,21 @@ void lofarLoggerInitNode(void);
 	LofarInitTracingModule \
 	log4cplus::PropertyConfigurator::doConfigure(filename);
 
-#define INIT_LOGGER_AND_WATCH(filename,watchinterval) \
-	LOFAR::lofarLoggerInitNode(); \
-	LofarInitTracingModule \
-	log4cplus::ConfigureAndWatchThread	tmpWatchThread(filename,watchinterval);
+#ifdef USE_THREADS
+# define INIT_LOGGER_AND_WATCH(filename,watchinterval) \
+	 LOFAR::lofarLoggerInitNode(); \
+	 LofarInitTracingModule \
+	 log4cplus::ConfigureAndWatchThread tmpWatchThread(filename,watchinterval);
+#else
+# define INIT_LOGGER_AND_WATCH(filename,watchinterval) INIT_LOGGER(filename)
+#endif
 
 //# -------------------- Log Levels for the Operator messages ------------------
 //#
 //# LOG_FATAL(_STR) (message | stream)
-//# LOG_ERROR(_STR)	(message | stream)
-//# LOG_WARN(_STR)	(message | stream)
-//# LOG_INFO(_STR)	(message | stream)
+//# LOG_ERROR(_STR) (message | stream)
+//# LOG_WARN(_STR)  (message | stream)
+//# LOG_INFO(_STR)  (message | stream)
 //#
 // The LofarLogger utility can log messages on six different levels:
 // FATAL - ERROR - WARN - INFO - DEBUG - TRACE
