@@ -78,7 +78,6 @@ bool	ACCmdImpl::pause (const time_t		scheduleTime,
 	LOG_DEBUG(formatString("pause(%s,%d,%s)", timeString(scheduleTime).c_str(),
 												waitTime, condition.c_str()));
 	APAdminPool::getInstance().writeToAll(PCCmdPause, scheduleTime, "");
-	// TODO: How to set the right stateLifeTIme?????
 	return (true);
 }
 

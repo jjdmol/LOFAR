@@ -91,26 +91,6 @@ ApplControlClient::~ApplControlClient()
 	}
 }
 
-#if 0
-// Copying is allowed.
-ApplControlClient::ApplControlClient(const ApplControlClient& that) :
-	ApplControl(that)
-{ 	return (new operator= (that));
-}
-
-ApplControlClient& 	ApplControlClient::operator=(const ApplControlClient& that)
-{
-	if (this != &that) {
-		ApplControl::operator= (that);
-		if (itsCommChan) {
-			delete itsCommChan;
-		}
-		itsCommChan(that.itsCommChan);
-	}
-
-	return (*this);
-}
-#endif
 bool	ApplControlClient::boot (const time_t		scheduleTime,
 							  	 const string&		configID) const
 {
@@ -198,7 +178,7 @@ void	ApplControlClient::handleAckMessage(ACCmd 			cmd,
 
 void	ApplControlClient::handleAnswerMessage(const string&	answer) const
 {
-	LOG_DEBUG("ApplControlClient:handleAsnwerMessage()");
+	LOG_DEBUG("ApplControlClient:handleAnswerMessage()");
 	LOG_DEBUG_STR("Answer=" << itsCommChan->getDataHolder()->getOptions());
 }
 

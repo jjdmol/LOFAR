@@ -80,6 +80,8 @@ public:
 	// return name of state
 	string stateStr(uint16	stateNr) const;
 
+	friend std::ostream& operator<< (std::ostream& os, 
+									 const StateEngine& anEngine);
 private:
 	uint16		itsSequence;
 	uint16		itsStepNr;
@@ -109,7 +111,8 @@ inline void StateEngine::ready()
 {
 //	LOG_TRACE_STAT ("StateEngine:ready");
 	LOG_DEBUG ("StateEngine:ready");
-	itsStateFinished = true;
+	itsStateFinished   = true;
+	itsStateExpireTime = 0;
 }
 
 inline bool StateEngine::isStateFinished()

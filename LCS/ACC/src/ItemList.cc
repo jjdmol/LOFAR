@@ -37,7 +37,16 @@ ItemList::ItemList(const ParameterSet&	aPS,
 	string	procName;
 	for (int32 p = 1; p <= nrProcs; p++) {
 		procName = aPS.getString(formatString("%s[%d].ID", prefix.c_str(), p));
-		push_back(procName);				// add to collection
+		int32	nrOfProcs = indexValue(procName, "()");
+		if (nrOfProcs == 0) {
+			push_back(procName);			// add to collection
+			continue;
+		}
+
+		rtrim(procName, "(0123456789)");
+		for (int32 idx = 1; idx <= nrOfProcs; ++idx) {
+			push_back(formatString("%s[%d]", procName.c_str(), idx));
+		}
 	}
 }
 

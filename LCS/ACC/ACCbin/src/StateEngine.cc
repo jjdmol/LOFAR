@@ -77,7 +77,8 @@ StateEngine::StateEngine() :
 	itsStateFinished  (false),
 	itsStateExpireTime(0)		
 {
-	StateLifeTime[StateInitController] = 900;	// should be long enough
+	// The state InitController runs before any timevalues are known.
+	StateLifeTime[StateInitController] = 900;
 }
 
 StateEngine::~StateEngine()
@@ -162,7 +163,7 @@ ACState StateEngine::nextState()
 							stateStr(stateNr).c_str(),
 							StateLifeTime[stateNr]));
 
-//	setStateLifeTime(StateLifeTime[stateNr]);	TODO: do this here?
+	setStateLifeTime(StateLifeTime[stateNr]);
 
 	return (stateNr);
 }
@@ -193,6 +194,24 @@ string StateEngine::stateStr(uint16	stateNr) const
 	}
 
 	return (stateNames[stateNr]);
+}
+
+//
+// operator<<
+//
+std::ostream&	operator<< (std::ostream& os, const StateEngine& anEngine)
+{
+	if (anEngine.itsStateExpireTime) {
+		os << "Timer  : " << timeString(anEngine.itsStateExpireTime) << endl;
+	    os << "State  : " << 
+			anEngine.stateStr(theirCmdSeqTable[anEngine.itsSequence].cmdSeq[anEngine.itsStepNr]) << endl;
+
+	}
+	else {
+		os << "Timer  : off" << endl;
+	}
+
+	return (os);
 }
 
   } // namespace ACC

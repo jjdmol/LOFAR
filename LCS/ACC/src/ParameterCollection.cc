@@ -657,5 +657,25 @@ string	valuePart   (const string& parameterLine)
 	return (parameterLine.substr(firstEqual + 1 - parameterLine.c_str()));
 }
 
+// Returns the value of the index if the string contains an index otherwise
+// 0 is returned. The second string contains the opening and closing chars
+// that are used to indicate the index. The index must be a literal value
+// not an expression.
+int32 	indexValue (const string&	label, char	indexMarker[2])
+{
+	uint32	start = label.find_last_of(indexMarker[0]);
+	if (start == string::npos) {
+		return (0);
+	}
+
+	uint32	end = label.find(indexMarker[1], start);
+	if (end == string::npos) {
+		return(0);
+	}
+
+	return (strtol(label.data()+start+1, 0 ,0));
+
+}
+
 } // namespace ACC
 } // namespace LOFAR
