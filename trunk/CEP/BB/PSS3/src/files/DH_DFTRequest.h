@@ -20,8 +20,8 @@
 //#
 //# $Id$
 
-#ifndef BB_DH_INDFT_H
-#define BB_DH_INDFT_H
+#ifndef BB_DH_DFTREQUEST_H
+#define BB_DH_DFTREQUEST_H
 
 
 #include <Common/LofarTypes.h>
