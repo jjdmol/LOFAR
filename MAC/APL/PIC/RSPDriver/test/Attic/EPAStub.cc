@@ -138,7 +138,7 @@ EPAStub::EPAStub(string name)
 		{
 		  for (uint32 i = 0; i < size / sizeof(uint32); i++)
 		  {
-		    *pu_32++ = (0 == blp % 2 ? i : ((uint32)-1) - i);
+		    *pu_32++ = blp * 4096 + (0 == i % 2 ? i : 4096 - i);
 		  }
 		}
 	      }
@@ -329,9 +329,6 @@ GCFEvent::TResult EPAStub::connected(GCFEvent& event, GCFPortInterface& port)
 	offset += write.hdr.m_fields.addr.dstid * m_reg[pid][regid].size;
 	ASSERT(offset + size <= m_reg[pid][regid].size * (int16)GET_CONFIG("RS.N_BLPS", i));
       }
-
-      cout << "sizeof(GCFEvent)=" << sizeof(GCFEvent) << endl;
-      cout << "sizeof(MEPHeader::FieldsType)=" << sizeof(MEPHeader::FieldsType) << endl;
 
       write.payload.setBuffer(m_reg[pid][regid].addr + offset, size); 
       write.payload.unpack((char*)&event
