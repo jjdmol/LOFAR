@@ -66,7 +66,7 @@ void WH_Dump::process() {
 
   // negative indices are invalid. This are results calculated from 
   // uninitialized values.
-  cout << "COR [" << itsIndex++ <<"]: "<< *((DH_Vis*)getDataManager().getInHolder(0))->getBufferElement(0,0,0,0) << endl;
+//   cout << "COR [" << itsIndex++ <<"]: "<< *((DH_Vis*)getDataManager().getInHolder(0))->getBufferElement(0,0,0,0) << endl;
   if (starttime.tv_sec != 0 && starttime.tv_usec != 0) {
     // determine the approximate bandwidth. This does include some overhead 
     // incurred by the framework, but earlier measurements put this in the 

@@ -8,12 +8,39 @@
 //#  $Id$
 
 #include <AH_Correlator.h>
-#include <TestRange.h>
+#include <Common/KeyParser.h>
+#include <Common/KeyValueMap.h>
 
 using namespace LOFAR;
 int main (int argc, const char** argv) {
 
-  INIT_LOGGER("CorrelatorLogger.prop");
+  KeyValueMap kvm;
+  try {
+    kvm = KeyParser::parseFile("TestRange");
+  } catch (std::exception& x) {
+    cout << x.what() << endl;
+  }
+  
+  const int min_elements = kvm.getInt("min_elements", 50);
+  const int max_elements = kvm.getInt("max_elements", 100);
+  const int stp_elements = kvm.getInt("stp_elements", 5);
+
+  const int min_samples = kvm.getInt("min_samples", 100);
+  const int max_samples = kvm.getInt("max_samples", 1000);
+  const int stp_samples = kvm.getInt("stp_samples", 100);
+  
+  const int port = kvm.getInt("port", 1100);
+  const int channels = kvm.getInt("channels", 1);
+  const int polarisations = kvm.getInt("polarisations", 2);
+  const int runs = kvm.getInt("runs", 10);
+  const int targets = kvm.getInt("targets", 8);
+
+  std::string frontend_ip = kvm.getString("frontend_ip", "192.168.100.31");
+  std::string backend_ip = kvm.getString("backend_ip", "192.168.100.32");
+  const std::string loggerfile = kvm.getString("loggerfile", "CorrelatorLogger.prop");
+
+
+  INIT_LOGGER(loggerfile);
 
 #ifdef HAVE_MPI
   TH_MPI::init(argc, argv);
@@ -38,9 +65,23 @@ int main (int argc, const char** argv) {
 	  AH_Correlator* correlator;
 
 	  if ((samples+elements) % 2 == 0) {
-	    correlator = new AH_Correlator(elements, samples, channels, polarisations, frontend_ip, backend_ip, port, targets);
+	    correlator = new AH_Correlator(elements, 
+					   samples, 
+					   channels, 
+					   polarisations, 
+					   const_cast<char*>(frontend_ip.c_str()), 
+					   const_cast<char*>(backend_ip.c_str()), 
+					   port, 
+					   targets);
 	  } else {
-	    correlator = new AH_Correlator(elements, samples, channels, polarisations, frontend_ip, backend_ip, port+2*targets, targets);
+	    correlator = new AH_Correlator(elements, 
+					   samples, 
+					   channels, 
+					   polarisations, 
+					   const_cast<char*>(frontend_ip.c_str()), 
+					   const_cast<char*>(backend_ip.c_str()), 
+					   port+2*targets, 
+					   targets);
 	  }
 	  
 	  /* Automatic run of the correlator */
@@ -56,7 +97,9 @@ int main (int argc, const char** argv) {
 
 	  delete correlator;
 
-	  sleep(4);
+#ifdef HAVE_MPI
+	  TH_MPI::synchroniseAllProcesses();
+#endif
 
 	} catch (LOFAR::Exception ex) {
 	  // catch known exceptions
@@ -68,7 +111,6 @@ int main (int argc, const char** argv) {
 	  cout << "Unexpected exception" << endl;
 	  
 	}
-	
       }
     }
   }

@@ -1,0 +1,22 @@
+#
+# This is a sample TestRange file for AccepTest1
+#
+# All possible keywords are included in this file. Keywords may be ommitted, 
+# a default value will be selected in such a case.
+#
+# key-value pairs must be seperated by a comma
+#
+min_elements  = 50,
+max_elements  = 60,
+stp_elements  = 1,
+min_samples   = 100,  
+max_samples   = 110,
+stp_samples   = 2,
+port          = 1100,
+channels      = 1,
+polarisations = 2,   
+runs          = 10,  
+targets       = 8,   
+frontend_ip   = "192.168.100.31",
+backend_ip    = "192.168.100.32",
+loggerfile    = "CorrelatorLogger.prop"

@@ -37,9 +37,6 @@ AH_Correlator::~AH_Correlator() {
 
 void AH_Correlator::define(const KeyValueMap& /*params*/) {
 
-  sleep(itsRank);
-
-
   // create the primary WorkHolder to do the actual work
   itsWH = (WorkHolder*) new WH_Correlator("noname",
 					  itsNelements, 
@@ -113,9 +110,9 @@ void AH_Correlator::run(int nsteps) {
     cout << itsNpolarisations << " " ;
     cout << ((itsNchannels*itsNelements*itsNsamples*itsNpolarisations*sizeof(DH_CorrCube::BufferType)) + 
 	     (itsNchannels*itsNelements*itsNelements*itsNpolarisations*sizeof(DH_Vis::BufferType)))/ (1024.0*1024.0) << " ";
-    cout << avg_bandwidth/((nsteps-1)*1024.0*1024.0) << " Mbps " ;
-    cout << (100.0*avg_bandwidth)/(nsteps*1024.0*1024.0*1024.0)<< "%" << " ";
-    cout <<  avg_corr_perf/(nsteps-1) << " Mcprod/sec" << endl;
+    cout << avg_bandwidth/((nsteps-1)*1024.0*1024.0) << " " ;
+    cout << (100.0*avg_bandwidth)/(nsteps*1024.0*1024.0*1024.0) << " ";
+    cout <<  avg_corr_perf/(nsteps-1) << " " << endl;
   }
 }
 
