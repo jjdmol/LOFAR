@@ -1,0 +1,28 @@
+#!/bin/sh
+
+# Load the spid module and re-create the char devices
+# Just loading the module could cause problems since
+# the device's major number is assigned dynamically 
+# at load time.
+
+module=spid
+device=spid
+group=users
+mode="664"
+
+# invoke insmod 
+/sbin/rmmod  $module
+/sbin/insmod /usr/local/lib/modules/`uname -r`/kernel/drivers/char/$module.o $* || exit 1
+
+# remove stale nodes
+rm -f /dev/${device}?
+
+# get the current major number of the module
+major=`cat /proc/devices | awk "\\$2==\"$module\" {print \\$1}"`
+
+# create the char device(s)
+mknod /dev/${device}0 c $major 0
+
+# give appropriate file permissions
+chgrp $group /dev/${device}?
+chmod $mode  /dev/${device}?
