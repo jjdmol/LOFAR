@@ -19,9 +19,9 @@
 //  A MeqSink must have exactly one child. The child may return a 
 //  multi-plane result.
 //field: station_1_index 0
-//  Index (1-based) of first station composing the interferometer
+//  Index (1-based) of first station comprising the interferometer
 //field: station_2_index 0
-//  Index (1-based) of second station composing the interferometer
+//  Index (1-based) of second station comprising the interferometer
 //field: output_col ''
 //  tile column to write results to: DATA, PREDICT or RESIDUALS.
 //  If empty, then no output is generated.
@@ -40,9 +40,6 @@ class Sink : public VisHandlerNode
     //##ModelId=3F98DAE60213
     virtual void init (DataRecord::Ref::Xfer &initrec, Forest* frst);
 
-    //##ModelId=3F98DAE6021B
-    virtual void setState (const DataRecord &rec);
-    
     //##ModelId=3F98DAE6021E
     virtual int deliver (const Request &req,VisTile::Ref::Copy &tileref,
                          VisTile::Format::Ref &outformat);
@@ -54,6 +51,10 @@ class Sink : public VisHandlerNode
   protected:
     //##ModelId=3F98DAE60217
     virtual int getResult (Result::Ref &resref, const Request &req,bool newreq);
+  
+    virtual void checkInitState (DataRecord &rec);
+    
+    virtual void setStateImpl (DataRecord &rec,bool initializing);
 
   private:
 //    //##ModelId=3F98DD7400A9

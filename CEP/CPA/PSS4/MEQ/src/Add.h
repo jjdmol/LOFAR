@@ -38,6 +38,9 @@ public:
 
   virtual ~Add();
 
+    virtual TypeId objectType() const
+    { return TpMeqAdd; }
+
   // Evaluate the value for the given request.
   virtual void evaluateVells (Vells& result, const Request&,
 			      const vector<Vells*>& values);

@@ -34,19 +34,11 @@ Selector::Selector()
 Selector::~Selector()
 {}
 
-void Selector::init (DataRecord::Ref::Xfer &initrec, Forest* frst)
+void Selector::setStateImpl (DataRecord &rec,bool initializing)
 {
-  selection = (*initrec)[FIndex].as_vector<int>();
-  Node::init(initrec,frst);
-  FailWhen(numChildren()!=1,"Selector node must have exactly one child");
-}
-
-void Selector::setState (const DataRecord &rec)
-{
+  Node::setStateImpl(rec,initializing);
   if( rec[FIndex].exists() )
-  {
-    wstate()[FIndex].replace() = selection = rec[FIndex].as_vector<int>();
-  }
+    selection = rec[FIndex].as_vector<int>();
 }
 
 int Selector::getResult (Result::Ref &resref, const Request& request, bool)

@@ -38,6 +38,9 @@ public:
 
   virtual ~Multiply();
 
+    virtual TypeId objectType() const
+    { return TpMeqMultiply; }
+
   // Evaluate the value for the given request.
   virtual void evaluateVells (Vells& result, const Request&,
 			      const vector<Vells*>& values);

@@ -6,8 +6,6 @@ namespace Meq {
 
 InitDebugContext(VisHandlerNode,"MeqVisHandler");
   
-const HIID FDataId      = AidData|AidId;
-
 //##ModelId=3F98DAE60319
 VisHandlerNode::VisHandlerNode ()
     : data_id(-1)
@@ -17,6 +15,23 @@ VisHandlerNode::VisHandlerNode ()
 void VisHandlerNode::setDataId (int id)    
 { 
   wstate()[FDataId] = data_id = id;
+}
+
+void VisHandlerNode::checkInitState (DataRecord &rec)
+{
+  requiresInitField(rec,FStation1);
+  requiresInitField(rec,FStation2);
+  Node::checkInitState(rec);
+}
+
+void VisHandlerNode::setStateImpl (DataRecord &rec,bool initializing)
+{
+  if( !initializing )
+  {
+    protectStateField(rec,FStation1);
+    protectStateField(rec,FStation2);
+  }
+  Node::setStateImpl(rec,initializing);
 }
 
 //##ModelId=3F9FF6970269

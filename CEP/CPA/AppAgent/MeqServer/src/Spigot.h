@@ -22,12 +22,11 @@
 //  a spigot must be created BEFORE its corresponding sink.
 //  A MeqSpigot can have no children.
 //field: station_1_index 0
-//  Index (1-based) of first station composing the interferometer
+//  Index (1-based) of first station comprising the interferometer
 //field: station_2_index 0
-//  Index (1-based) of second station composing the interferometer
-//field: input_col ''
-//  tile column to get result from: DATA, PREDICT or RESIDUALS. Default
-//  is DATA.
+//  Index (1-based) of second station comprising the interferometer
+//field: input_col 'DATA'
+//  tile column to get result from: DATA, PREDICT or RESIDUALS. 
 //defrec end
 
 namespace Meq {
@@ -39,9 +38,6 @@ class Spigot : public VisHandlerNode
     //##ModelId=3F98DAE6022D
     virtual void init (DataRecord::Ref::Xfer &initrec,Forest * frst);
 
-    //##ModelId=3F98DAE60235
-    virtual void setState (const DataRecord &rec);
-    
     //##ModelId=3F98DAE6023B
     virtual int deliver (const Request &req,VisTile::Ref::Copy &tileref,
                          VisTile::Format::Ref &outformat);
@@ -57,10 +53,11 @@ class Spigot : public VisHandlerNode
     //##ModelId=3F9FF6AA0300
     virtual int getResult (Result::Ref &resref, const Request &req,bool newreq);
   
+    virtual void checkInitState (DataRecord &rec);
+    
+    virtual void setStateImpl (DataRecord &rec,bool initializing);
+
   private:
-    //##ModelId=3F9FF6AA03D2
-    void setStateImpl (const DataRecord &rec);
-  
     //##ModelId=3F9FF6AA01A3
     int icolumn;
 //,icorr;

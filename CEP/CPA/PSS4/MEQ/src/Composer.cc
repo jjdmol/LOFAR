@@ -34,20 +34,16 @@ Composer::Composer()
 Composer::~Composer()
 {}
 
-
-void Composer::init (DataRecord::Ref::Xfer &initrec, Forest* frst)
+void Composer::checkInitState (DataRecord &rec)
 {
-  contagious_fail = (*initrec)[FContagiousFail].as<bool>(false);
-  Node::init(initrec,frst);
+  defaultInitField(rec,FContagiousFail,false);
 }
-
-void Composer::setState (const DataRecord &rec)
+    
+void Composer::setStateImpl (DataRecord &rec,bool initializing)
 {
+  Node::setStateImpl(rec,initializing);
   if( rec[FContagiousFail].exists() )
-  {
-    wstate()[FContagiousFail] = contagious_fail = 
-          rec[FContagiousFail].as<bool>();
-  }
+    contagious_fail = rec[FContagiousFail].as<bool>();
 }
 
 int Composer::getResult (Result::Ref &resref, const Request& request, bool)

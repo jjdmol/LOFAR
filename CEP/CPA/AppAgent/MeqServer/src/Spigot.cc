@@ -3,52 +3,40 @@
 #include <VisCube/VisVocabulary.h>
 #include <MEQ/Request.h>
 #include <MEQ/VellSet.h>
+#include <MEQ/MeqVocabulary.h>
 
 namespace Meq {
 
 InitDebugContext(Spigot,"MeqSpigot");
   
-const HIID FInputColumn = AidInput|AidCol,
-//           FCorr        = AidCorr|AidIndex,
-           FNext        = AidNext,
-           FRequestId   = AidRequest|AidId,
-           FResult      = AidResult;
-    
 //##ModelId=3F98DAE6022D
 void Spigot::init (DataRecord::Ref::Xfer &initrec,Forest * frst)
 {
-  // let the base class initialize itself
-  VisHandlerNode::init(initrec,frst);
   // default uses DATA column
   icolumn = VisTile::DATA;
-//  icorr = 0;
-  // setup stuff from state record
-  setStateImpl(state());
+  VisHandlerNode::init(initrec,frst);
 }
 
-//##ModelId=3F9FF6AA03D2
-void Spigot::setStateImpl (const DataRecord &rec)
+void Spigot::checkInitState (DataRecord &rec)
 {
-//  if( rec[FCorr].exists() )
-//  {
-//    wstate()[FCorr] = icorr = rec[FCorr].as<int>();
-//  }
+  VisHandlerNode::checkInitState(rec);
+  defaultInitField(rec,FInputColumn,"DATA");
+}
+
+void Spigot::setStateImpl (DataRecord &rec,bool initializing)
+{
+  VisHandlerNode::setStateImpl(rec,initializing);
   if( rec[FInputColumn].exists() )
   {
     string colname = struppercase( rec[FInputColumn].as<string>() );
     const VisTile::NameToIndexMap &colmap = VisTile::getNameToIndexMap();
     VisTile::NameToIndexMap::const_iterator iter = colmap.find(colname);
-    FailWhen(iter==colmap.end(),"unknown input column "+colname);
+    if( iter == colmap.end() ) {
+      NodeThrow(FailWithoutCleanup,"unknown input column "+colname);
+    }
     icolumn = iter->second;
     wstate()[FInputColumn] = colname;
   }
-}
-
-//##ModelId=3F98DAE60235
-void Spigot::setState (const DataRecord &rec)
-{
-  VisHandlerNode::setState(rec);
-  setStateImpl(rec);
 }
 
 //##ModelId=3F98DAE6023B

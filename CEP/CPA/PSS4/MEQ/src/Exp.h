@@ -38,6 +38,9 @@ public:
 
   virtual ~Exp();
 
+    virtual TypeId objectType() const
+    { return TpMeqExp; }
+
   // Evaluate the value for the given request.
   virtual Vells evaluate (const Request&,const LoShape &,
 			  const vector<Vells*>& values);

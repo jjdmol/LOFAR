@@ -46,11 +46,12 @@ TypeId Solver::objectType() const
   return TpMeqSolver;
 }
 
-void Solver::init (DataRecord::Ref::Xfer &initrec, Forest* frst)
-{
-  Node::init(initrec,frst);
-  setState (wstate());
-}
+// no need for now
+// void Solver::init (DataRecord::Ref::Xfer &initrec, Forest* frst)
+// {
+//   Node::init(initrec,frst);
+// }
+// 
 
 void Solver::checkChildren()
 {
@@ -201,19 +202,17 @@ int Solver::getResult (Result::Ref &resref, const Request& request,
   return flag;
 }
 
-void Solver::setState (const DataRecord& newst)
+void Solver::setStateImpl (DataRecord& newst,bool initializing)
 {
+  Node::setStateImpl(newst,initializing);
   if (newst[FNumSteps].exists()) {
     itsNumStep = newst[FNumSteps].as<int>();
-    wstate()[FNumSteps] = itsNumStep;
   }
   if (newst[FEpsilon].exists()) {
     itsEpsilon = newst[FEpsilon].as<double>();
-    wstate()[FEpsilon] = itsEpsilon;
   }
   if (newst[FUseSVD].exists()) {
     itsUseSVD = newst[FUseSVD].as<bool>();
-    wstate()[FUseSVD] = itsUseSVD;
   }
 }
 

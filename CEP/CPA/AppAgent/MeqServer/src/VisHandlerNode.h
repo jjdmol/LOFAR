@@ -3,12 +3,26 @@
     
 #include <MEQ/Node.h>
 #include <VisCube/VisTile.h>
+#include <MeqServer/AID-MeqServer.h>
 
 #pragma aid VisHandlerNode 
-#pragma aid Data Id
+#pragma aid Station Index Data Id Num Antenna Tile Format Input 
+#pragma aid Output Col Corr Next
     
 namespace Meq {
   
+const HIID  FStation1      = AidStation|1|AidIndex,
+            FStation2      = AidStation|2|AidIndex,
+            FNumStations   = AidNum|AidAntenna,
+            FTileFormat    = AidTile|AidFormat,
+            FDataId        = AidData|AidId,
+
+            FOutputColumn = AidOutput|AidCol,
+            FInputColumn  = AidInput|AidCol,
+            FCorr         = AidCorr|AidIndex,
+            FNext         = AidNext;
+    
+
 class Cells;
 
 //##ModelId=3F98DAE60009
@@ -43,6 +57,11 @@ class VisHandlerNode : public Node
     
     //##ModelId=3F98DAE602DA
     LocalDebugContext;
+    
+  protected:
+    virtual void checkInitState (DataRecord &rec);
+    
+    virtual void setStateImpl (DataRecord &rec,bool initializing);
     
   private:
     //##ModelId=3F98DAE602F6
