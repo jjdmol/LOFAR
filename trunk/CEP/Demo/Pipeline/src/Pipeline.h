@@ -21,19 +21,6 @@
 //
 //  $Id$
 //
-//  $Log$
-//  Revision 1.2  2002/11/20 11:05:43  schaaf
-//
-//  %[BugId: 117]%
-//
-//  working initial version for Scali
-//
-//  Revision 1.1.1.1  2002/11/13 15:58:06  schaaf
-//  %[BugId: 117]%
-//
-//  Initial working version
-//
-//
 //////////////////////////////////////////////////////////////////////////
 
 #ifndef PIPELINE_H
