@@ -127,6 +127,9 @@ void WH_STA::process()
 	  {
 		itsAcm = LCSMath::acm (itsBuffer);		              // calculate the ACM
 		LCSMath::eig (itsAcm, itsEvectors, itsEvalues);       // using the ACM, calc eigen vect/ values
+
+		// Use these functions to reverse a matrix or vector and not the blitz ones, due to memory
+		// incontiguous return values.
 		itsEvectors = ReverseMatrix (itsEvectors, firstDim);
 		itsEvalues = ReverseVector (itsEvalues);
 		break;
