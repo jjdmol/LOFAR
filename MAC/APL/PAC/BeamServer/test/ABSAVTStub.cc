@@ -115,7 +115,7 @@ GCFEvent::TResult AVTStub::initial(GCFEvent& e, GCFPortInterface& port)
   return status;
 }
 
-GCFEvent::TResult AVTStub::test001(GCFEvent& e, GCFPortInterface& /*port*/)
+GCFEvent::TResult AVTStub::test001(GCFEvent& e, GCFPortInterface& port)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
   static int timerid = 0;
@@ -199,7 +199,7 @@ GCFEvent::TResult AVTStub::test001(GCFEvent& e, GCFPortInterface& /*port*/)
   return status;
 }
 
-GCFEvent::TResult AVTStub::test002(GCFEvent& e, GCFPortInterface& /*port*/)
+GCFEvent::TResult AVTStub::test002(GCFEvent& e, GCFPortInterface& port)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
   static int timerid = 0;
@@ -293,7 +293,7 @@ GCFEvent::TResult AVTStub::test002(GCFEvent& e, GCFPortInterface& /*port*/)
   return status;
 }
 
-GCFEvent::TResult AVTStub::test003(GCFEvent& e, GCFPortInterface& /*port*/)
+GCFEvent::TResult AVTStub::test003(GCFEvent& e, GCFPortInterface& port)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
   static int timerid = 0;
@@ -409,7 +409,7 @@ GCFEvent::TResult AVTStub::test003(GCFEvent& e, GCFPortInterface& /*port*/)
   return status;
 }
 
-GCFEvent::TResult AVTStub::test004(GCFEvent& e, GCFPortInterface& /*port*/)
+GCFEvent::TResult AVTStub::test004(GCFEvent& e, GCFPortInterface& port)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
   static int timerid = 0;
@@ -521,7 +521,7 @@ GCFEvent::TResult AVTStub::test004(GCFEvent& e, GCFPortInterface& /*port*/)
   return status;
 }
 
-GCFEvent::TResult AVTStub::test005(GCFEvent& e, GCFPortInterface& /*port*/)
+GCFEvent::TResult AVTStub::test005(GCFEvent& e, GCFPortInterface& port)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
   static int timerid = 0;

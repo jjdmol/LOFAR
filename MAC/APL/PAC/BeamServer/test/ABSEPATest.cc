@@ -114,7 +114,7 @@ GCFEvent::TResult EPATest::initial(GCFEvent& e, GCFPortInterface& port)
   return status;
 }
 
-GCFEvent::TResult EPATest::test001(GCFEvent& e, GCFPortInterface& /*port*/)
+GCFEvent::TResult EPATest::test001(GCFEvent& e, GCFPortInterface& port)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
   static int timerid = 0;
@@ -128,8 +128,8 @@ GCFEvent::TResult EPATest::test001(GCFEvent& e, GCFPortInterface& /*port*/)
 
 	// send wgenable
 	ABSWgsettingsEvent wgs;
-	wgs.frequency=1e6;
-	wgs.amplitude=16; // was 128
+	wgs.frequency=1e6; // 1MHz
+	wgs.amplitude=128; // was 128
 	wgs.sample_period=2;
 
 	_test(sizeof(wgs) == beam_server.send(wgs));
@@ -154,8 +154,6 @@ GCFEvent::TResult EPATest::test001(GCFEvent& e, GCFPortInterface& /*port*/)
 	{
 	    alloc.subbands[i] = i;
 	}
-	alloc.subbands[0]   = 6;
-	alloc.subbands[127] = 6;
 
 	_test(sizeof(alloc) == beam_server.send(alloc));
       }
@@ -175,7 +173,7 @@ GCFEvent::TResult EPATest::test001(GCFEvent& e, GCFPortInterface& /*port*/)
 	pointto.time = time(0) + 20;
 	pointto.type=(int)Direction::LOFAR_LMN;
 	pointto.angle1=0.0;
-	pointto.angle2=1.0;
+	pointto.angle2=0.0;
 
 	_test(sizeof(pointto) == beam_server.send(pointto));
 
