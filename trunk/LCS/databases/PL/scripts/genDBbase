@@ -28,7 +28,7 @@
 #
 # $Id$
 #
-VERSION="v1.8"
+VERSION="v1.9"
 DEBUGMODE=false
 
 #---------------------------- Global routines ---------------------------------
@@ -161,17 +161,38 @@ analyseInfoFile()
 	#
 	# handleUsing 
 	#
-	# The second form is stored in the USING file
 	# A using-statement can have two forms:
 	# using namespace xxx;   or using xxx::yyy;
+	# The second form is stored in the USING file
 	#
-	function handleUsing(    theTD) {
-		theTD=getTillNext(";");					# find first ;
-		if (index(theTD, ":") != 0) {			# : char in using?
-			gsub ("using[ \t]*", "", theTD)				# remove double spaces
-			print theTD >> USINGFILE
+	function handleUsing(    theUD) {
+		theUD=getTillNext(";");					# find first ;
+		if (index(theUD, ":") != 0) {			# : char in using?
+			gsub ("using[ \t]*", "", theUD)		# remove double spaces
+			print theUD >> USINGFILE
 		}
 	}
+
+	#
+	# handleFriend 
+	#
+	# A friend-statement can have three forms:
+	# friend class xxx;
+	# friend xxx::yyy(arg1, argn);
+	# friend xxx::yyy(arg1, ..argn) { stmt1; stmt n; }
+	#
+	# We should skip all three forms.
+	#
+	function handleFriend(    theFD) {
+		theFD=getTillNext(";");					# find first ;
+		if (index(theFD, "{") != 0) {			# form 3?
+			theFD="{"
+			while (split(theFD, dummy, "{") > split(theFD, dummy, "}")) {
+				theFD=theFD getTillNext("}");
+			}
+		}
+	}
+
 	#
 	# handleFunction 
 	#
@@ -277,7 +298,7 @@ analyseInfoFile()
 						  $0=substr($0,1,bpos) "@@@" substr($0,epos)
 						}
 	/^using /			{ handleUsing() }
-	/^friend/			{ next }					# skip friend lines
+	/^friend/			{ handleFriend() }			# skip friend lines
 	/^public[ \t]*:/	{ Mode="publ" ; gsub("public[ \t]*:[ \t]*"   ,"") }
 	/^protected[ \t]*:/	{ Mode="prot" ; gsub("protected[ \t]*:[ \t]*","") }
 	/^private[ \t]*:/	{ Mode="priv" ; gsub("private[ \t]*:[ \t]*"  ,"") }
