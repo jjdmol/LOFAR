@@ -26,6 +26,16 @@ const text_frame := function (parent,disabled=T,
     whenever rec.text->xscroll do
         rec.hsb->view($value);
   }
+  
+  const rec.done := function ()
+  {
+    wider rec;
+    rec.text := F;
+    rec.pad := F;
+    rec.tf := F;
+    rec.bf := F;
+    rec := [=];
+  }
       
   const rec.settext := function (text)
   {
