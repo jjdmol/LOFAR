@@ -90,14 +90,16 @@ void WH_Correlate::process()
   blitz::Array<complex<float>, 2> signal (itsNelements, itsNitems);
   blitz::Array<complex<float>, 2> corr (itsNelements, itsNelements);
 
-  signal = *InDHptr->getBuffer();
+  // Enter data either by assignment or by memcpy. The first should be faster. 
+  //  signal = *InDHptr->getBuffer();
+  memcpy(signal.data(), InDHptr->getBuffer(), itsNelements*itsNitems*sizeof(DH_CorrCube::BufferType));
+
   corr = complex<float> (0,0);
 
   WH_Correlate::correlator_core_unrolled(signal, corr);
   
-  //  *OutDHptr->getBuffer() = corr.data();
-  
-  // ToDo: ...
+  // copy the correlation matrix to the output
+  memcpy(OutDHptr->getBuffer(), corr.data(), itsNelements*itsNelements*sizeof(DH_Vis::BufferType));
 }
 
 
