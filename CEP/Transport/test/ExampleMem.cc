@@ -114,7 +114,7 @@ bool test2()
     }
     int version;
     bool found;
-    BlobIStream& bis = DH2.openExtraBlob(found, version);
+    BlobIStream& bis = DH2.getExtraBlob(found, version);
     if (!found) {
       return false;
     }
@@ -140,7 +140,7 @@ bool test2()
     // Extra blob should be the same as the one before.
     int version;
     bool found;
-    BlobIStream& bis = DH2.openExtraBlob(found, version);
+    BlobIStream& bis = DH2.getExtraBlob(found, version);
     if (!found) {
       return false;
     }
@@ -167,7 +167,7 @@ bool test2()
     }
     int version;
     bool found;
-    DH2.openExtraBlob(found, version);
+    DH2.getExtraBlob(found, version);
     if (found) {
       return false;
     }
@@ -186,7 +186,7 @@ bool test2()
     }
     int version;
     bool found;
-    DH2.openExtraBlob(found, version);
+    DH2.getExtraBlob(found, version);
     if (found) {
       return false;
     }
@@ -209,7 +209,7 @@ bool test2()
     }
     int version;
     bool found;
-    BlobIStream& bis = DH2.openExtraBlob(found, version);
+    BlobIStream& bis = DH2.getExtraBlob(found, version);
     if (!found) {
       return false;
     }

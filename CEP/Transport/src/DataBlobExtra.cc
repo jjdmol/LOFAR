@@ -87,23 +87,12 @@ void DataBlobExtra::clearBlock()
   itsCreateDone = true;
 }
 
-BlobIStream& DataBlobExtra::openBlock (bool& found, int& version,
-				       const BlobString& data)
+void DataBlobExtra::openBlock (const BlobString& data)
 {
-  found = false;
   clearOut();
   BlobIBufChar bibc(data.data(), data.size());
   itsBufIn = itsDH->dataFieldSet().getExtraBlob (bibc);
-  if (itsIn == 0) {
-    itsIn = new BlobIStream(itsBufIn);
-  }
-  itsIn->clear();
-  if (itsBufIn.size() > 0) {
-    version = itsIn->getStart (itsName);
-    found   = true;
-  }
   itsLastDone = 2;
-  return *itsIn;
 }
 
 BlobIStream& DataBlobExtra::getBlock (bool& found, int& version)
@@ -114,9 +103,9 @@ BlobIStream& DataBlobExtra::getBlock (bool& found, int& version)
       // A create is done as the last operation; make an input buffer of it.
       found = true;
       itsBufIn = BlobIBufChar (itsBufOut.getBuffer(), itsBufOut.size());
-      if (itsIn == 0) {
-        itsIn = new BlobIStream(itsBufIn);
-      }
+    }
+    if (itsIn == 0) {
+      itsIn = new BlobIStream(itsBufIn);
     }
     if (itsBufIn.size() > 0) {
       // Make sure the input buffer is positioned at the beginning.

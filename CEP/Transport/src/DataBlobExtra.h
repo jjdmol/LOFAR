@@ -81,10 +81,9 @@ public:
   // Clear the extra output blob.
   void clearBlock();
 
-  // Get access to the extra input blob holding arbitrary fields.
-  // It fills the version of the extra data blob.
-  // found is set to false if there is no extra blob.
-  BlobIStream& openBlock (bool& found, int& version, const BlobString& data);
+  // Open the extra input blob holding arbitrary fields.
+  // It can be accessed using getExtraBlob.
+  void openBlock (const BlobString& data);
 
   // Write the extra block into the main block.
   void write();

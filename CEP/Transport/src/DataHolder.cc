@@ -176,6 +176,10 @@ void DataHolder::handleDataRead()
       itsDataFields.convertData (bib);
     }
   }
+  // Open the extra blob (if present).
+  if (itsExtraPtr != 0) {
+    itsExtraPtr->openBlock (*itsData);
+  }
 }
 
 void DataHolder::write()
@@ -312,12 +316,6 @@ BlobIStream& DataHolder::getExtraBlob (bool& found, int& version)
 {
   Assert (itsExtraPtr != 0);
   return itsExtraPtr->getBlock (found, version);
-}
-
-BlobIStream& DataHolder::openExtraBlob (bool& found, int& version)
-{
-  Assert (itsExtraPtr != 0);
-  return itsExtraPtr->openBlock (found, version, *itsData);
 }
 
 void DataHolder::writeExtra ()
