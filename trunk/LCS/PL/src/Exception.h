@@ -33,8 +33,45 @@ namespace LCS {
     //
     // This is the base exception class for the Persistence Layer.
     //
-    EXCEPTION_CLASS(Exception,LCS::Exception)
+    EXCEPTION_CLASS(Exception, LCS::Exception);
 
+
+    // 
+    // This exception is thrown when an error occurs during a delete
+    // operation on the database.
+    //
+    EXCEPTION_CLASS(DeleteError, LCS::PL::Exception);
+
+    //
+    // This exception is thrown when an error occurs during an insert
+    // operation on the database.
+    //
+    EXCEPTION_CLASS(InsertError, LCS::PL::Exception);
+
+    //
+    // This exception is thrown when an error occurs during a select
+    // operation on the database.
+    //
+    EXCEPTION_CLASS(SelectError, LCS::PL::Exception);
+
+    //
+    // This exception is thrown when an error occurs during an update
+    // operation on the database.
+    //
+    EXCEPTION_CLASS(UpdateError, LCS::PL::Exception);
+
+    //
+    // This exception is thrown when an error occurs during processing
+    // of an SQL query.
+    //
+    EXCEPTION_CLASS(QueryError, LCS::PL::Exception);
+
+    //
+    // This exception is thrown when a called method is not (yet) implemented.
+    // One common situation for this exception is the use of a template
+    // method for which a specialization is required.
+    //
+    EXCEPTION_CLASS(NotImplemented, LCS::PL::Exception);
   }
 
 }    
