@@ -4,15 +4,18 @@
 #include <iostream>
 #include <sstream>
 #include <iomanip>
+#include <stdexcept>
 
 #define WRITE(os, strm, width) \
-  do { \
+  try { \
     ostringstream oss; \
     oss << strm; \
     string s(oss.str()); \
     os << setw(width) << left << s; \
     if (0 < width && width < s.size()) os << endl << string(width, ' '); \
-  } while(0)
+  } catch (std::exception& e) { \
+    os << e.what(); \
+  }
 
 #define WRITELN(os, strm, width) \
   WRITE(os, strm, width); \
@@ -26,7 +29,8 @@
   
 #define UNARY_EXPR(oper, arg) \
   WRITE(cout, UNARY_STR(oper, arg), 50); \
-  WRITELN(cout, " : " << UNARY(oper, arg), 0)
+  WRITE(cout, " : ", 0); \
+  WRITELN(cout, UNARY(oper, arg), 0)
 
 #define BINARY(lhs, oper, rhs) \
   Expr(lhs) oper Expr(rhs)
@@ -36,7 +40,8 @@
 
 #define BINARY_EXPR(lhs, oper, rhs) \
   WRITE(cout, BINARY_STR(lhs, oper, rhs), 50); \
-  WRITELN(cout, " : " << (BINARY(lhs, oper, rhs)), 0)
+  WRITE(cout, " : ", 0); \
+  WRITELN(cout, (BINARY(lhs, oper, rhs)), 0)
 
 #define SQL_UNARY(expr, oper, arg) \
   Expr(expr).oper(arg)
@@ -46,7 +51,8 @@
 
 #define SQL_UNARY_EXPR(expr, oper, arg) \
   WRITE(cout, SQL_UNARY_STR(expr, oper, arg), 50); \
-  WRITELN(cout, " : " << SQL_UNARY(expr, oper, arg), 0)
+  WRITE(cout, " : ", 0); \
+  WRITELN(cout, SQL_UNARY(expr, oper, arg), 0)
 
 #define SQL_BINARY(expr, oper, lhs, rhs) \
   Expr(expr).oper(Expr(lhs),Expr(rhs))
@@ -57,7 +63,8 @@
 
 #define SQL_BINARY_EXPR(expr, oper, lhs, rhs) \
   WRITE(cout, SQL_BINARY_STR(expr, oper, lhs, rhs), 50); \
-  WRITELN(cout, " : " << SQL_BINARY(expr, oper, lhs, rhs), 0)
+  WRITE(cout, " : ", 0); \
+  WRITELN(cout, SQL_BINARY(expr, oper, lhs, rhs), 0)
 
 using namespace std;
 using namespace LOFAR::PL;
@@ -125,6 +132,7 @@ int main()
 
     cout << endl << "=== SQL IN expressions ===" << endl;
     Collection<Expr> c;
+    SQL_UNARY_EXPR(1,in,c);
     c.add(2);
     SQL_UNARY_EXPR(BINARY(4,+,3),in,c);
     c.add(3);
