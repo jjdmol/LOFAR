@@ -61,7 +61,7 @@ namespace Debug
 
 #ifdef USE_THREADS
   pthread_mutex_t levels_mutex = PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP;
-#define lockMutex(t) Thread::Mutex::Lock _##t##_lock(t##_mutex)
+#define lockMutex(t) ::LOFAR::Thread::Mutex::Lock _##t##_lock(t##_mutex)
 #else
 #define lockMutex(t) 
 #endif
@@ -81,7 +81,7 @@ namespace Debug
   void _delete_char_array (void *array)
   { delete [] static_cast<char*>(array); }
 
-  Thread::Key static_buf(_delete_char_array);
+  ::LOFAR::Thread::Key static_buf(_delete_char_array);
 #endif
 
   // returns a thread-specifc static buffer (for debug() calls)
