@@ -1,15 +1,15 @@
 -*- text -*-
 
 Herein the logical database model is described, as it is to be used by
-the blackboard patern for the SelfCal application of LOFAR. The idea
+the blackboard pattern for the SelfCal application of LOFAR. The idea
 is that several analysis threads can exist simultaneously. In each of
 these threads several processes are active. In our blackboard model we
-have the folowing KnowledgeSources
+have the folowing Knowledge-Sources
 
 + A SelfCalEngine. Which contains processes at several nodes. There
   are a solve process and an array of predict processes.
 
-+ A SelfCalController starts engines and forks new child-threads if oportune.
++ A SelfCalController starts engines and forks new child-threads if opportune.
 
 + A SelfCalWatcher that monitors threads and decides on what is or is
 not a dead end.

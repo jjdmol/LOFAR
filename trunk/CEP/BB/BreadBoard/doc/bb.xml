@@ -1,0 +1,106 @@
+<?xml version="1.0"?>
+<!DOCTYPE article PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
+ "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd" 
+ >
+
+<!-- $Id$ -->
+<!-- look at bottom for revision Log. -->
+<article lang="nl">
+ <artheader>
+  <title></title>
+  <author>
+   <firstname>Daan</firstname>
+   <surname>Hoogland</surname>
+  </author>
+  <releaseinfo>
+   <para>
+    $Id$
+   </para>
+  </releaseinfo>
+
+  <!-- makes a summary from the content -->
+  <abstract>
+   <para>
+
+    For the LOFAR project a self-calibration program shall be
+    written <xref linkend="LOFAR-ASTRON-ADD-006"/>. The idea is that this program will have the architectural
+    structure of a "BlackBoard". The applicability of this design
+    pattern will be investigated and a rapport hereof will be included
+    in this document.
+
+   </para>
+  </abstract>
+ </artheader>
+
+ <bibliography>
+  <title>References</title>
+
+  <bibliodiv><title>Books</title>
+
+   <biblioentry xreflabel="nii">
+    <abbrev>BBAnA</abbrev>
+    <authorgroup>
+     <author>
+      <firstname>Penny</firstname>
+      <surname>Nii</surname>
+     </author>
+    </authorgroup>
+    <copyright>
+     <year>1989</year>
+     <holder>Academic Press Inc.</holder>
+    </copyright>
+    <editor>
+     <firstname>B.</firstname>
+     <surname>Chandrasekaran</surname>
+    </editor>
+    <isbn>0-12-379940-6</isbn>
+    <publisher>
+     <publishername>Academic Press Inc.</publishername>
+    </publisher>
+    <title>Blackboard Architectures and Applications</title>
+    <subtitle>Introduction</subtitle>
+    <pagenums>xix-xxix</pagenums>
+   </biblioentry>
+
+  </bibliodiv>
+
+  <bibliodiv>
+   <title>LOFAR documentation</title>
+
+   <biblioentry  id="LOFAR-ASTRON-ADD-006" >
+    <title>LOFAR Architectural Design Document</title>
+    <author>
+     <surname>Schaaf</surname>
+     <firstname>Kjeld</firstname>
+     <othername>van der</othername>
+    </author>
+    <copyright>
+     <year>2002</year>
+     <holder>ASTRON</holder>
+    </copyright>
+   </biblioentry>
+
+   <biblioentry id="LOFAR-ASTRON-MEM-035" >
+    <title>CEP Requirements Analysis, Architectural Design and Description</title>
+    <author>
+     <surname>Schaaf</surname>
+     <firstname>Kjeld</firstname>
+     <othername>van der</othername>
+    </author>
+    <copyright>
+     <year>2002</year>
+     <holder>ASTRON</holder>
+    </copyright>
+   </biblioentry>
+
+  </bibliodiv>
+
+<!--
+  <bibliodiv><title>Periodicals</title>
+
+
+  </bibliodiv>
+-->
+
+ </bibliography>
+</article>
