@@ -13,3 +13,6 @@ PDFS=bb.pdf bb-hierarchy.pdf database.pdf demo.pdf LogicalDB.pdf
 	xsltproc --docbook ${HTML_XSL} $< > $@ 
 
 pdfs:	$(PDFS)
+
+clean:
+	rm *.pdf
