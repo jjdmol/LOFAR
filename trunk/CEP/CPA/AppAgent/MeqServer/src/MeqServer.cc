@@ -163,24 +163,17 @@ void MeqServer::resolveChildren (DataRecord::Ref &out,DataRecord::Ref::Xfer &in)
       node.nodeIndex(),node.name().c_str(),flags);
 }
 
-void MeqServer::getNodeList (DataRecord::Ref &out,DataRecord::Ref::Xfer &)
+void MeqServer::getNodeList (DataRecord::Ref &out,DataRecord::Ref::Xfer &in)
 {
   cdebug(2)<<"getNodeList: building list"<<endl;
   DataRecord &list = out <<= new DataRecord;
-  int count=0;
-  for( int i=1; i<=forest.maxNodeIndex(); i++ )
-  {
-    const Node::Ref & node = forest.getRef(i);
-    if( node.valid() ) // skip deleted nodes
-    {
-      DataRecord & rec = list[AtomicID(i)] <<= new DataRecord;
-      rec[AidName] = node->name();
-      rec[AidNodeIndex] = i;
-      rec[AidClass] = node->className();
-      count++;
-    }
-  }
-  cdebug(2)<<"getNodeList: built list of "<<count<<" nodes"<<endl;
+  int content = 
+    ( in[AidNodeIndex].as<bool>(true) ? Forest::NL_NODEINDEX : 0 ) | 
+    ( in[AidName].as<bool>(true) ? Forest::NL_NAME : 0 ) | 
+    ( in[AidClass].as<bool>(true) ? Forest::NL_CLASS : 0 ) | 
+    ( in[AidChildren].as<bool>(false) ? Forest::NL_CHILDREN : 0 );
+  int count = forest.getNodeList(list,content);
+  cdebug(2)<<"getNodeList: got list of "<<count<<" nodes"<<endl;
 }
 
 //##ModelId=400E5B6C015E
