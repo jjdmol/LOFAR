@@ -93,6 +93,7 @@ public:
 	string  getVersionNr     () const;
 
 	// Return the keyvalues as a C++ type.
+	bool	getBool  (const string& theKey) const;
 	int		getInt   (const string& theKey) const;
 	double	getDouble(const string& theKey) const;
 	float	getFloat (const string& theKey) const;
