@@ -35,12 +35,6 @@ namespace LOFAR
  */
 map<int, TH_Mem::Msg> TH_Mem::messages;
 
-/**
- * Prototype variable declaration. Can be
- * used in functions requiring a prototype
- * argument (for the prototype design patterns).
- */
-TH_Mem TH_Mem::proto;
 
 TH_Mem::TH_Mem() :
   itsFirstSendCall(true),
