@@ -64,7 +64,13 @@ public:
   /// Get read access to the Buffer in the DataPacket.
   const BufferType* getBuffer() const;
 
-private:
+  /// overload the getcursize method;
+  /// reported data size may be altered with setDataPacketSize() method
+  int  getCurDataSize() ;
+  void setCurDataSize(const int nbytes) ;
+     
+
+ private:
   /// Forbid assignment.
   DH_Example& operator= (const DH_Example&);
 
@@ -75,6 +81,7 @@ private:
   int*         itsCounter;
   BufferType*  itsBuffer;
   unsigned int itsBufSize;
+   int         itsCurDataPacketSize;
 };
 
 
@@ -86,11 +93,23 @@ inline int DH_Example::getCounter() const
 
 inline DH_Example::BufferType* DH_Example::getBuffer()
   { return itsBuffer; }
-
+   
 inline const DH_Example::BufferType* DH_Example::getBuffer() const
   { return itsBuffer; }
 
+   
+inline int DH_Example::getCurDataSize() 
+  { return itsCurDataPacketSize; }
+   
+inline void DH_Example::setCurDataSize(const int nbytes)
+  {  
+    //! DbgAssertStr(nbytes <= (int)itsBufSize); 
+    itsCurDataPacketSize = nbytes;
+    return ;
+  }
+   
+   
 }
 
-
 #endif 
+   
