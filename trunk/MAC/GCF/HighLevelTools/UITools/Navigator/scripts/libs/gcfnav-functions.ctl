@@ -39,7 +39,8 @@ global dyn_string  g_itemID2datapoint;
 global mapping  g_datapoint2itemID;
 global bool     g_initializing         = true;
 global int      g_curSelNode = 0;
-global int 			STARTUP_DELAY = 1;
+global int      STARTUP_DELAY = 1;
+global int      id;                    //needed for changing the selection in the tree (panel navigation, ER 218)
 
 ///////////////////////////////////////////////////////////////////////////
 //Function ActiveXSupported
@@ -206,7 +207,7 @@ void showActiveView(string dpViewConfig, string datapointPath)
     if(tabId != selectedViewTabId)
     {
       // load empty panel in non-visible tabs to enhance performance
-      tabCtrl.registerPanel(selectedViewTabId-1,"",makeDynString(""));
+//      tabCtrl.registerPanel(selectedViewTabId-1,"",makeDynString(""));
     }
     else
     {
@@ -751,7 +752,21 @@ void Navigator_HandleEventClose()
 ///////////////////////////////////////////////////////////////////////////
 void Navigator_HandleUpdateTrigger(string dpe,int trigger)
 {
+  string newDatapoint;
+  dpGet(DPNAME_NAVIGATOR + g_navigatorID + "." + ELNAME_NEWDATAPOINT, newDatapoint);
+  if ((newDatapoint !="") && dpExists(newDatapoint))
+  {
+  changeSelectedPosition(newDatapoint);
+  DebugN("start changeSelectedPosition");
+  dpSet(DPNAME_NAVIGATOR + g_navigatorID + "." + ELNAME_NEWDATAPOINT, "");
   refreshNavigator();
+  }
+  else
+  {
+  DebugN("only refreshNavigator");
+  refreshNavigator();
+  }
+  
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -1060,4 +1075,82 @@ TreeView_OnExpand(unsigned pos)
 
   // the last line of code of each fwTreeView event handler MUST be the following:
   id = -1; 
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// changeSelectedPostion
+// 
+// 
+///////////////////////////////////////////////////////////////////////////
+     
+void changeSelectedPosition(string newDatapoint)
+{
+//int id;
+  int i;
+  long nodeID;
+  setSelectedPosition2Expand(1);
+  dyn_string datapointPath = splitDatapointPath(newDatapoint);
+ 
+  setSelectedPosition2Expand(1); //Expand Toplevel
+  string temp = "";
+  for (i=1 ; i<=dynlen(datapointPath); i++)
+  {
+    if (i==1)
+    {
+      temp = datapointPath[i];
+    }
+    else
+    {
+      temp = temp + "_" + datapointPath[i];
+    }
+    nodeID = getNodeFromDatapoint(temp);
+    if (nodeID !=0)
+    {
+      setSelectedPosition2Expand(nodeID);
+    }
+  }
+  fwTreeView_draw(); 
+  g_curSelNode = nodeID; //update global info
+  fwTreeView_setSelectedPosition(fwTreeView_Tree2ViewIndex(nodeID));
+}
+
+///////////////////////////////////////////////////////////////////////////
+//Function SplitDatapointPath
+// 
+// returns the datapointPath in a dyn_string
+///////////////////////////////////////////////////////////////////////////
+dyn_string splitDatapointPath(string newDatapoint)
+{
+  int i;
+//  string dpe = "System1:PIC_Rack1_SubRack1_Board1_AP1_RCU1";
+  dyn_string datapointPath= strsplit(newDatapoint, "_");
+  string datapointName = datapointPath[1];
+  // cut system name myself. Necessary for datapoint parts that are not datapoints themselves
+  int sepPos = strpos(datapointName,":");
+  if(sepPos >= 0)
+  {
+    datapointName = substr(datapointName,sepPos+1);
+  }
+  datapointPath[1] = datapointName;
+//  DebugN(datapointPath);
+  return datapointPath;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+//Function setSelectedPosition2Expand
+// 
+// Expands a given position in the view
+///////////////////////////////////////////////////////////////////////////
+void setSelectedPosition2Expand(long pos)
+{
+//  int index = pos;
+  if(fwTreeView_getNode(pos)[fwTreeView_STATE] & fwTreeView_BRANCH)
+	{
+	// the folder is a branch => to expand
+	id = startThread("TreeView_OnExpand" == "" ? "fwTreeView_defaultExpand": "TreeView_OnExpand", pos);
+	while(id != -1)
+		delay(0,100);
+	}
 }
