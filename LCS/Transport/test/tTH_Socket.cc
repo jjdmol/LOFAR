@@ -96,14 +96,14 @@ int32 doTest()
 	DH_Dest.setID(2);
 
 	if (!bidirectional) {
-		TH_Socket	TCPproto1("localhost", "localhost", 8925, 
+		TH_Socket	TCPproto1("localhost", "localhost", 3850, 
 													listenerAtDest, blocking);
 		DH_Source.connectTo (DH_Dest, TCPproto1, blocking);
 	}
 	else {
-		TH_Socket	TCPproto1("localhost", "localhost", 8925, 
+		TH_Socket	TCPproto1("localhost", "localhost", 3850, 
 													!listenerAtDest, blocking);
-		TH_Socket	TCPproto2("localhost", "localhost", 8925, 
+		TH_Socket	TCPproto2("localhost", "localhost", 3850, 
 													listenerAtDest, blocking);
 		DH_Source.connectBidirectional(DH_Dest, TCPproto1, TCPproto2, blocking);
 	}
