@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE basesim SYSTEM "basesim.dtd">
+<basesim>
+  <simul name="mySimul">
+
+    <!-- WorkHolder definition; only one WH per Simul -->
+    <workholder name="wh1">
+      <dataholder name = "dh1" type="in"/>
+      <dataholder name = "dh2" type="in"/>
+      <dataholder name = "dh3" type="in"/>
+      <dataholder name = "dh4" type="out"/>
+      <dataholder name = "dh5" type="out"/>
+      <dataholder name = "dh6" type="out"/>
+    </workholder>
+
+
+    <exstep name="myExStep1" exname="mySimul" src="demo1.xml" node="1"/>
+    <exstep name="myExStep2" exname="mySimul" src="demo1.xml" node="1"/>
+    <exstep name="myExStep3" exname="mySimul" src="demo1.xml" node="1"/>
+    <exstep name="myExStep4" exname="mySimul" src="demo1.xml" node="2"/>
+    <exstep name="myExStep5" exname="mySimul" src="demo1.xml" node="2"/>
+    <exstep name="myExStep6" exname="mySimul" src="demo1.xml" node="2"/>
+
+    <connect src="myExStep1" dest="myExStep4"/>
+    <connect src="myExStep2" dest="myExStep5"/>
+    <connect src="myExStep3" dest="myExStep6"/>
+
+    <connect src=".dh1" dest="myExStep1.dh1"/>
+    <connect src=".dh2" dest="myExStep2.dh1"/>
+    <connect src=".dh3" dest="myExStep3.dh1"/>
+    <connect src="myExStep4.dh2" dest=".dh4"/>
+    <connect src="myExStep5.dh2" dest=".dh5"/>
+    <connect src="myExStep6.dh2" dest=".dh6"/>
+
+  </simul>
+</basesim>
