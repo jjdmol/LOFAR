@@ -57,7 +57,7 @@ lofar_CHECK_LONG_LONG
 lofar_QATOOLS
 lofar_DOCXX
 lofar_MPI(0)
-#lofar_EXTERNAL(log4cplus,0,log4cplus/logger.h,,)
+lofar_EXTERNAL(log4cplus,0,log4cplus/logger.h,,)
 
 dnl
 dnl Output Makefiles
