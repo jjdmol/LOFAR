@@ -28,6 +28,15 @@
 #include <stdio.h>
 #include <unistd.h>
 
+namespace LOFAR 
+{
+ namespace GCF 
+ {
+using namespace TM;
+using namespace Common;
+  namespace PAL 
+  {
+
 const char* PS_CAT_NAMES[] =
 {
   "temporary",
@@ -572,8 +581,13 @@ void GPAPropertySet::dpCreated(const string& dpName)
     {
       assert(dpName.find(_name + "__enabled") < dpName.length());
       
-      GCFPVString category(PS_CAT_NAMES[_category]);
-      dpeSet(_name + "__enabled", category);
+      string enabledDPContent = PS_CAT_NAMES[_category];
+      enabledDPContent += '|';
+      enabledDPContent += _type;
+      
+      GCFPVString pvEnabledDPContent(enabledDPContent);
+      
+      dpeSet(_name + "__enabled", pvEnabledDPContent);
       
       GCFPVString indication("e|" + _name);
       dpeSet("__pa_PSIndication", indication);
@@ -666,3 +680,6 @@ void GPAPropertySet::wrongState(const char* request)
         _name.c_str(),
         stateString[_state]));  
 }
+  } // namespace PAL
+ } // namespace GCF
+} // namespace LOFAR
