@@ -36,6 +36,7 @@ def ParamSet2list(paramset):
 def list2JobAssignment(lst):
   """ """
   num = len(lst);
+  workdef = {};
   workdef["length"] = num
   workdef["data"] = selfcal.bools(num);
   i = 0

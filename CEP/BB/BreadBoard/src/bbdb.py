@@ -3,6 +3,7 @@
 # $Id$
 #
 import pg
+import os
 
 db = pg.DB(dbname="bb");
 
@@ -5218,11 +5219,4 @@ print result["oid_comparisons"];
 
 # end of test code
 
-db.query("TRUNCATE TABLE blackboards");
-db.query("TRUNCATE TABLE watchers");
-db.query("TRUNCATE TABLE controllers");
-db.query("TRUNCATE TABLE threads");
-db.query("TRUNCATE TABLE engines");
-db.query("TRUNCATE TABLE comparisons");
-db.query("TRUNCATE TABLE forks");
-db.query("TRUNCATE TABLE workloads");
+os.execv("./truncdb.py",["./truncdb.py"]);

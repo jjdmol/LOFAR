@@ -36,17 +36,16 @@ class Thread(CompositeAssignment):
 
   def create_initial_workload(self,wl):
     iwl = Workload(wl);
-    self.root = self.current = wl;
-    self.workloads.append(wl);
+    self.root = self.current = iwl;
+    self.workloads.append(iwl);
 
   def addWorkload(self, wl):
-    self.current = wl;
-    Workload(wl);
+    nwl = Workload(wl)
+    self.current = nwl;
     self.workloads.append(self.current);
 
   def addEngine(self,eng):
-    wl = Workload(self.current);
-    wl.engine(eng);
+    self.current.engine(eng);
     
 
   def addAssignment(self, wl):

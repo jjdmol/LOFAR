@@ -15,7 +15,7 @@ def getRandom():
   return (100.0*Generator.random()) +1.0;
 
 def unsetRandom():
-  Generator.seed(1,1,1);
+  Generator.seed(1,2,3);
 
 def mkParamSet(num):
   """ """

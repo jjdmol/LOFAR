@@ -41,7 +41,7 @@ class BlackBoard(threading.Thread):
       i.start();
     while not self.stopevent.isSet():
       self.action();
-      self.stopevent.wait(0);
+      self.stopevent.wait(0.1);
 
   def join(self,timeout = None):
     for i in self.knowledgeSources.values():
