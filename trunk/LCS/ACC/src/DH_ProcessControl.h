@@ -1,4 +1,4 @@
-//#  DH_ProcessControl.h: Implements the Process Controller command protocol.
+//#  DH_ProcessControl.h: DataHolder for Process Control commands.
 //#
 //#  Copyright (C) 2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -18,11 +18,6 @@
 //#  along with this program; if not, write to the Free Software
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
-//#  Abstract:
-//#	 This class implements the command protocol between an application 
-//#  Controller and the Application processes. The division of the roles
-//#  (who is server, who is client) is done during runtime.
-//#
 //#  $Id$
 
 #ifndef ACC_DH_PROCESSCONTROL_H
@@ -33,7 +28,6 @@
 //# Includes
 #include <sys/time.h>
 #include <sys/socket.h>
-#include <netinet/in.h>
 #include <Common/BlobIStream.h>
 #include <Common/BlobOStream.h>
 #include <Transport/DataHolder.h>
@@ -47,27 +41,30 @@ namespace LOFAR {
 // Make list of supported commands.
 enum PCCmd { PCCmdNone = 0, 
 				PCCmdStart = 100, PCCmdQuit, 
-				PCCmdHalt, PCCmdResume, 
+				PCCmdDefine, PCCmdInit,
+				PCCmdHalt, PCCmdRun,
 				PCCmdSnapshot, PCCmdRecover, 
-				PCCmdDefine, PCCmdCheckParSet, PCCmdLoadParSet
+				PCCmdInfo, PCCmdAnswer,
+				PCCmdReport, PCCmdAsync,
+				PCCmdResult = 199
+//				PCCmdCheckParSet, PCCmdLoadParSet
 };
 
 
 //# Description of class.
-// The ProcessControl class implements the communication protocol between the
-// Application Controller and the Application processes.
+// The DH_ProcessControl class is responsible for packing and unpacking
+// Process Control commands.
 //
 class DH_ProcessControl : public DataHolder
 {
 public:
 	// Constructor
-	explicit DH_ProcessControl(const string	hostID);
+	DH_ProcessControl();
 
 	// Destructor
 	virtual ~DH_ProcessControl();
 
-	// Copying is allowed.
-	DH_ProcessControl(const DH_ProcessControl& that);
+	// Copying only by cloning
 	DH_ProcessControl*		clone() const;
 
 	// Redefines the preprocess function.
@@ -75,33 +72,125 @@ public:
 
 	// The real data-accessor functions
 	void	setCommand		(const PCCmd		theCmd);
-	void	setOptions		(const string		theOptions);
-	void	setResult		(const int32		theResult);
+	void	setScheduleTime	(const time_t		theTime);
+	void	setWaitTime	    (const time_t		theWaitTime);
+	void	setOptions		(const string&		theOptions);
+	void	setProcList		(const string&		theProcList);
+	void	setNodeList		(const string&		theNodeList);
+	void	setResult		(const uint16		theResult);
 
-	PCCmd	getCommand		();
-	string	getOptions		();
-	int32	getResult		();
+	PCCmd	getCommand		() const;
+	time_t	getScheduleTime () const;
+	time_t	getWaitTime     () const;
+	string	getOptions		() ;
+	string	getProcList		() ;
+	string	getNodeList		() ;
+	uint16	getResult		() const;
 
 private:
 	// forbit default construction and assignment operator
-	DH_ProcessControl();
 	DH_ProcessControl& 	operator=(const DH_ProcessControl& that);
+	DH_ProcessControl(const DH_ProcessControl& that);
 
 	// Implement the initialisation of the pointers
 	virtual void	fillDataPointers();
 
 	// fields transferred between the server and the client
-	int32		*itsVersionNumber;
-	PCCmd		*itsCommand;
-	string		*itsOptions;
-	int32		*itsResult;
-
-	// local administration
-	in_addr_t	itsServerIP;
-	in_port_t	itsServerPort;
-
+	uint16		*itsVersionNumber;
+	int16		*itsCommand;
+	time_t		*itsScheduleTime;
+	time_t		*itsWaitTime;
+	uint16		*itsResult;
 };
 
+// The real data-accessor functions
+inline void	DH_ProcessControl::setScheduleTime (const time_t theTime)
+{
+	*itsScheduleTime = theTime;
+}
+
+inline void	DH_ProcessControl::setWaitTime (const time_t theWaitTime)
+{
+	*itsWaitTime = theWaitTime;
+}
+
+inline void	DH_ProcessControl::setCommand (const PCCmd theCmd)
+{
+	*itsCommand = theCmd;
+}
+
+inline void	DH_ProcessControl::setOptions (const string& theOptions)
+{
+	BlobOStream&	bos = createExtraBlob();	// attached to dataholder
+	bos << theOptions;
+}
+
+inline void	DH_ProcessControl::setProcList (const string& theProcList)
+{
+	// TODO
+}
+
+inline void	DH_ProcessControl::setNodeList (const string& theNodeList)
+{
+	// TODO
+}
+
+inline void	DH_ProcessControl::setResult (const uint16 theResult)
+{
+	*itsResult = theResult;
+}
+
+
+inline time_t	DH_ProcessControl::getScheduleTime () const
+{
+	// no version support necc. yet.
+	return (*itsScheduleTime);
+}
+
+inline time_t	DH_ProcessControl::getWaitTime () const
+{
+	// no version support necc. yet.
+	return (*itsWaitTime);
+}
+
+inline PCCmd	DH_ProcessControl::getCommand () const
+{
+	// no version support necc. yet.
+	return static_cast<PCCmd>(*itsCommand);
+}
+
+inline string	DH_ProcessControl::getOptions ()
+{
+	// no version support necc. yet.
+	int32			version;
+	bool			found;
+	BlobIStream&	bis = getExtraBlob(found, version);
+	if (!found) {
+		return (string(""));
+	}
+
+	string	theOptions;
+	bis >> theOptions;
+	bis.getEnd();
+
+	return (theOptions);
+}
+
+inline string	DH_ProcessControl::getProcList ()
+{
+	return ("TODO: proclist");
+}
+
+inline string	DH_ProcessControl::getNodeList ()
+{
+	return ("TODO: nodelist");
+}
+
+inline uint16	DH_ProcessControl::getResult () const
+{
+	// no version support necc. yet.
+	return (*itsResult);
+}
 
 } // namespace ACC
 } // namespace LOFAR

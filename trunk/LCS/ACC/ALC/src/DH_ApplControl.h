@@ -1,4 +1,4 @@
-//#  DH_ApplControl.h: Implements the Application Controller command protocol.
+//#  DH_ApplControl.h: DataHolder for Application Control commands.
 //#
 //#  Copyright (C) 2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -17,11 +17,6 @@
 //#  You should have received a copy of the GNU General Public License
 //#  along with this program; if not, write to the Free Software
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-//#
-//#	 Abstract:
-//#	 This class implements the command protocol between an application manager
-//#	 (MAC for instance) and an Application Controller (=ACC package).
-//#	 The AM has the client role, the AC the server role.
 //#
 //#  $Id$
 
@@ -57,8 +52,8 @@ enum ACCmd { CmdBoot = 1, CmdShutdown, CmdQuit,
 
 
 //# Description of class.
-// The ApplControl class implements the C/S communication of the service the
-// the Application Controller supports.
+// The DH_ApplControl class is responsible for packing and unpacking
+// Application Control commands.
 //
 class DH_ApplControl : public DataHolder
 {
@@ -70,27 +65,31 @@ public:
 	virtual ~DH_ApplControl();
 
 	// Copying is allowed.
-	DH_ApplControl(const DH_ApplControl& that);
 	DH_ApplControl*		clone() const;
 
 	// Redefines the preprocess function.
 	virtual void 	preprocess();
 
 	// The real data-accessor functions
+	void	setCommand		(const ACCmd		theCmd);
 	void	setScheduleTime	(const time_t		theTime);
 	void	setWaitTime		(const time_t		theWaitTime);
-	void	setCommand		(const ACCmd		theCmd);
 	void	setOptions		(const string&		theOptions);
-	void	setResult		(const int	 		theResult);
+	void	setProcList		(const string&		theProcList);
+	void	setNodeList		(const string&		theNodeList);
+	void	setResult		(const uint16		theResult);
 
+	ACCmd	getCommand		() const;
 	time_t	getScheduleTime	() const;
 	time_t	getWaitTime		() const;
-	ACCmd	getCommand		() const;
 	string	getOptions		() ;
+	string	getProcList		() ;
+	string	getNodeList		() ;
 	uint16	getResult		() const;
 
 private:
 	// forbit default construction and assignment operator
+	DH_ApplControl(const DH_ApplControl& that);
 	DH_ApplControl& 	operator=(const DH_ApplControl& that);
 
 	// Implement the initialisation of the pointers
@@ -102,11 +101,6 @@ private:
 	time_t		*itsScheduleTime;
 	time_t		*itsWaitTime;
 	uint16		*itsResult;
-
-	// local administration
-	in_addr_t		itsServerIP;
-	in_port_t		itsServerPort;
-
 };
 
 // The real data-accessor functions
@@ -131,7 +125,17 @@ inline void	DH_ApplControl::setOptions		(const string&		theOptions)
 	bos << theOptions;
 }
 
-inline void	DH_ApplControl::setResult		(const int			theResult)
+inline void	DH_ApplControl::setProcList		(const string&		theProcList)
+{
+	// TODO
+}
+
+inline void	DH_ApplControl::setNodeList		(const string&		theNodeList)
+{
+	// TODO
+}
+
+inline void	DH_ApplControl::setResult		(const uint16			theResult)
 {
 	*itsResult = theResult;
 }
@@ -170,6 +174,16 @@ inline string	DH_ApplControl::getOptions		()
 	bis.getEnd();
 
 	return (theOptions);
+}
+
+inline string	DH_ApplControl::getProcList		()
+{
+	return ("TODO: proclist");
+}
+
+inline string	DH_ApplControl::getNodeList		()
+{
+	return ("TODO: nodelist");
 }
 
 inline uint16	DH_ApplControl::getResult		() const

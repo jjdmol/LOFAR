@@ -46,13 +46,13 @@ ApplControlClient::ApplControlClient(const string&	hostID,
 	DH_AC_Connect	DH_AC_Server(hostID);
 	DH_AC_Client.setID(1);
 	DH_AC_Server.setID(2);
-	TH_Socket		TCPto  (hostID, "", 5050, false);
-	TH_Socket		TCPfrom("", hostID, 5050, true);
+	TH_Socket		TCPto  (hostID, "", 3800, false);
+	TH_Socket		TCPfrom("", hostID, 3800, true);
 
-	//TODO define constant for 5050
+	//TODO define constant for 3800
 	
 	// try to make a connection with the generic AC master at the host.
-	LOG_DEBUG_STR("Trying to connect to master at " << hostID << ", " << 5050);
+	LOG_DEBUG_STR("Trying to connect to master at " << hostID << ", " << 3800);
 	DH_AC_Client.connectBidirectional(DH_AC_Server, TCPto, TCPfrom, true);
 	DH_AC_Client.init();
 
@@ -86,9 +86,8 @@ ApplControlClient::ApplControlClient(const string&	hostID,
 										true);	// blocking
 	DH_CtrlClient->init();
 
-	itsCommChan = new ApplControlComm;
+	itsCommChan = new ApplControlComm(syncClient);
 	itsCommChan->setDataHolder(DH_CtrlClient);
-	itsCommChan->setSync(syncClient);
 }
 
 // Destructor
@@ -99,20 +98,26 @@ ApplControlClient::~ApplControlClient()
 	}
 }
 
+#if 0
 // Copying is allowed.
 ApplControlClient::ApplControlClient(const ApplControlClient& that) :
-	ApplControl(*this)
-{ }
+	ApplControl(that)
+{ 	return (new operator= (that));
+}
 
 ApplControlClient& 	ApplControlClient::operator=(const ApplControlClient& that)
 {
 	if (this != &that) {
-		// TODO check this code!
+		ApplControl::operator= (that);
+		if (itsCommChan) {
+			delete itsCommChan;
+		}
+		itsCommChan(that.itsCommChan);
 	}
 
 	return (*this);
 }
-
+#endif
 bool	ApplControlClient::boot (const time_t		scheduleTime,
 							  	 const string&		configID) const
 {

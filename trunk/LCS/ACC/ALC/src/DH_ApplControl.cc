@@ -40,9 +40,7 @@ DH_ApplControl::DH_ApplControl() :
 	itsVersionNumber(0),
 	itsCommand(0),
 	itsScheduleTime(0),
-	itsResult(0),
-	itsServerIP(0),
-	itsServerPort(0)
+	itsResult(0)
 {
 	setExtraBlob ("Extra", 1);
 }
@@ -58,11 +56,8 @@ DH_ApplControl::DH_ApplControl(const DH_ApplControl& that) :
 	itsVersionNumber(that.itsVersionNumber),
 	itsCommand(that.itsCommand),
 	itsScheduleTime(that.itsScheduleTime),
-	itsResult(that.itsResult),
-	itsServerIP(that.itsServerIP),
-	itsServerPort(that.itsServerPort)
+	itsResult(that.itsResult)
 {
-//TODO
 }
 
 DH_ApplControl*		DH_ApplControl::clone() const
@@ -86,18 +81,13 @@ void 	DH_ApplControl::preprocess()
 
 
 //# ---------- private ----------
-// forbit assignment operator
-DH_ApplControl& 	DH_ApplControl::operator=(const DH_ApplControl& that) { 
-	// TODO implement
-	return (*this);
-}
 
 // Implement the initialisation of the pointers
 void	DH_ApplControl::fillDataPointers() {
 	itsVersionNumber = getData<uint16>("VersionNumber");
 	itsCommand 		 = getData<int16> ("Command");
-	itsScheduleTime  = &static_cast<time_t>(*(getData<int32> ("ScheduleTime")));
-	itsWaitTime		 = &static_cast<time_t>(*(getData<int32> ("WaitTime")));
+	itsScheduleTime  = &(static_cast<time_t>(*getData<int32> ("ScheduleTime")));
+	itsWaitTime		 = &(static_cast<time_t>(*getData<int32> ("WaitTime")));
 	itsResult 		 = getData<uint16>("Result");
 
 	*itsVersionNumber = 0x0100;		// TODO define a constant WriteVersion
