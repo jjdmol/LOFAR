@@ -7,11 +7,9 @@
 
 #if(DEBUG_MODE)
 #include <cassert>
-#endif
-
-#if(DEBUG_MODE)
 InitDebugContext(UVPSpectrumVector, "DEBUG_CONTEXT");
 #endif
+
 
 
 
@@ -23,6 +21,11 @@ UVPSpectrumVector::UVPSpectrumVector(unsigned int numberOfChannels)
     itsMinValue(0),
     itsMaxValue(0)
 {
+#if(DEBUG_MODE)
+  TRACER1("UVPSpectrumVector::UVPSpectrumVector");
+  TRACER2("itsNumberOfChannels: " << itsNumberOfChannels);
+  TRACER2("");
+#endif
 }
 
 
@@ -36,6 +39,8 @@ void UVPSpectrumVector::add(const UVPSpectrum &spectrum)
 {
 #if(DEBUG_MODE)
   TRACER1("UVPSpectrumVector::add");
+  TRACER2("itsNumberOfChannels: " << itsNumberOfChannels);
+  TRACER2("spectrum.getNumberOfChannels(): " << spectrum.getNumberOfChannels());
   assert(spectrum.getNumberOfChannels() == itsNumberOfChannels);
 #endif
 

@@ -52,6 +52,8 @@ void UVPTimeFrequencyPlot::slot_addSpectrum(const UVPSpectrum &spectrum)
 {
 #if(DEBUG_MODE)
   TRACER1("UVPTimeFrequencyPlot::slot_addSpectrum");
+  TRACER2("itsSpectrum.getNumberOfChannels(): " << itsSpectrum.getNumberOfChannels());
+  TRACER2("spectrum.getNumberOfChannels(): " <<  spectrum.getNumberOfChannels()); 
 #endif
 
   itsSpectrum.add(spectrum);
@@ -59,7 +61,7 @@ void UVPTimeFrequencyPlot::slot_addSpectrum(const UVPSpectrum &spectrum)
                                     itsSpectrum.max(),
                                     0,
                                     getNumberOfColors()-1);
-  drawView();
+  //  drawView();
 }
 
 

@@ -55,9 +55,9 @@ UVPMainWindow::UVPMainWindow():QMainWindow()
   const unsigned int Channels = 128;
   double     Values[Channels];
   UVPSpectrum   Spectrum(Channels);
-
+#if(DEBUG_MODE)
   TRACER1("itsCanvas = new UVPTimeFrequencyPlot(this, Channels);");
-
+#endif
   itsCanvas = new UVPTimeFrequencyPlot(this, Channels);
 
   for(unsigned int t = 0; t < 600; t++) {
