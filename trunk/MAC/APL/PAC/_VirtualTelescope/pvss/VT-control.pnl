@@ -1,11 +1,16 @@
 V 10
 1
 LANG:1 9 VTControl
-PANEL,114 67 699 587 N "_3DFace" 3
+PANEL,114 67 699 849 N "_3DFace" 3
 "$BFNAME"
 "$SRGNAME"
 "$VTNAME"
-E E E E E 1 -1 -1 0  10 80
+"main()
+{
+  addGlobal(\"currentSubband\", INT_VAR); // creation of the variable
+  currentSubband=0;
+}" 0
+ E E E E 1 -1 -1 0  10 80
 ""0  1
 E E 2
 "CBRef""1"
@@ -118,7 +123,7 @@ LANG:1 6 Status
 2 11
 "Text6"
 ""
-1 9 359 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+1 9 319 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
  E E
 12 0 0 0 0 0
 E E E
@@ -128,8 +133,8 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 9 406 72 421
-0 2 0 "s" 0 0 0 192 0 0  9 406 1
+E E 0 1 1 0 1 E U  0 E 12 489 75 504
+0 2 0 "s" 0 0 0 192 0 0  12 489 1
 1
 LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
 0
@@ -138,7 +143,7 @@ LANG:1 20 Activation time from
 2 13
 "Text7"
 ""
-1 244 352 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+1 244 312 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
  E E
 14 0 0 0 0 0
 E E E
@@ -148,8 +153,8 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 250 406 264 421
-0 2 0 "s" 0 0 0 192 0 0  250 406 1
+E E 0 1 1 0 1 E U  0 E 253 489 267 504
+0 2 0 "s" 0 0 0 192 0 0  253 489 1
 1
 LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
 0
@@ -158,7 +163,7 @@ LANG:1 2 to
 2 15
 "Text8"
 ""
-1 9 204 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+1 9 214 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
  E E
 16 0 0 0 0 0
 E E E
@@ -168,17 +173,17 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 9 251 107 266
-0 2 0 "s" 0 0 0 192 0 0  9 251 1
+E E 0 1 1 0 1 E U  0 E 10 260 108 275
+0 2 0 "s" 0 0 0 192 0 0  10 260 1
 1
 LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
 0
 "" 1
-LANG:1 14 Direction type
+LANG:1 9 Direction
 2 17
 "Text9"
 ""
-1 9 234 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+1 -29 236 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
  E E
 18 0 0 0 0 0
 E E E
@@ -188,17 +193,17 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 9 281 128 296
-0 2 0 "s" 0 0 0 192 0 0  9 281 1
+E E 0 1 1 0 1 E U  0 E 72 322 191 337
+0 2 0 "s" 0 0 0 192 0 0  72 322 1
 1
 LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
 0
 "" 1
-LANG:1 17 Direction angle 1
+LANG:1 7 Angle 1
 2 19
 "Text10"
 ""
-1 9 264 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+1 -29 266 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
  E E
 20 0 0 0 0 0
 E E E
@@ -208,17 +213,17 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 9 311 128 326
-0 2 0 "s" 0 0 0 192 0 0  9 311 1
+E E 0 1 1 0 1 E U  0 E 72 352 191 367
+0 2 0 "s" 0 0 0 192 0 0  72 352 1
 1
 LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
 0
 "" 1
-LANG:1 17 Direction angle 2
+LANG:1 7 Angle 2
 2 21
 "Text11"
 ""
-1 9 294 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+1 9 254 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
  E E
 22 0 0 0 0 0
 E E E
@@ -228,8 +233,8 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 9 341 72 356
-0 2 0 "s" 0 0 0 192 0 0  9 341 1
+E E 0 1 1 0 1 E U  0 E 12 424 75 439
+0 2 0 "s" 0 0 0 192 0 0  12 424 1
 1
 LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
 0
@@ -238,7 +243,7 @@ LANG:1 9 Frequency
 2 23
 "Text12"
 ""
-1 9 330 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+1 9 290 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
  E E
 24 0 0 0 0 0
 E E E
@@ -248,8 +253,8 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 10 376 129 391
-0 2 0 "s" 0 0 0 192 0 0  10 376 1
+E E 0 1 1 0 1 E U  0 E 13 459 132 474
+0 2 0 "s" 0 0 0 192 0 0  13 459 1
 1
 LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
 0
@@ -286,7 +291,7 @@ E E 0 2 1 0 1 E  680 170 10 170
 2 37
 "Text15"
 ""
-1 399 204 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+1 399 134 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
  E E
 38 0 0 0 0 0
 E E E
@@ -296,17 +301,17 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 399 251 553 266
-0 2 0 "s" 0 0 0 192 0 0  399 251 1
+E E 0 1 1 0 1 E U  0 E 532 285 686 300
+0 2 0 "s" 0 0 0 192 0 0  532 285 1
 1
 LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
 0
 "" 1
-LANG:1 22 Current direction type
+LANG:1 4 Type
 2 38
 "Text16"
 ""
-1 399 234 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+1 399 164 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
  E E
 39 0 0 0 0 0
 E E E
@@ -316,17 +321,17 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 399 281 574 296
-0 2 0 "s" 0 0 0 192 0 0  399 281 1
+E E 0 1 1 0 1 E U  0 E 532 315 707 330
+0 2 0 "s" 0 0 0 192 0 0  532 315 1
 1
 LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
 0
 "" 1
-LANG:1 25 Current direction angle 1
+LANG:1 7 Angle 1
 2 39
 "Text17"
 ""
-1 399 264 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+1 399 194 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
  E E
 40 0 0 0 0 0
 E E E
@@ -336,13 +341,13 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 399 311 574 326
-0 2 0 "s" 0 0 0 192 0 0  399 311 1
+E E 0 1 1 0 1 E U  0 E 532 345 707 360
+0 2 0 "s" 0 0 0 192 0 0  532 345 1
 1
 LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
 0
 "" 1
-LANG:1 25 Current direction angle 2
+LANG:1 7 Angle 2
 2 50
 "Text18"
 ""
@@ -456,7 +461,23 @@ LANG:1 0
 LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
 0
 ""  248 78 350 105
-2 "s" 0 0 0 0 0 -1  E E E
+2 "s" 0 0 0 0 0 -1  E "main()
+{
+dyn_errClass err;
+
+  if( dpSubStr(\"System1:\"+$VTNAME+\"_status.:_original.._value\", DPSUB_DP_EL ) != \"\" )
+  {
+    dpConnect(\"EP_VTStatusChanged\",\"System1:\"+$VTNAME+\"_status.:_original.._value\");
+  }
+}
+
+EP_VTStatusChanged(string dp, string sNewValue)
+{
+  setValue(\"TextFieldVTStatus\", \"text\", dpValToString(dp, sNewValue, FALSE) );
+}
+
+" 0
+ E
 14 9
 "TextFieldBFStatus"
 ""
@@ -473,7 +494,23 @@ LANG:1 0
 LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
 0
 ""  248 108 350 135
-2 "s" 0 0 0 0 0 -1  E E E
+2 "s" 0 0 0 0 0 -1  E "main()
+{
+dyn_errClass err;
+
+  if( dpSubStr(\"System1:\"+$VTNAME+\"_\"+$BFNAME+\"_status.:_original.._value\", DPSUB_DP_EL ) != \"\" )
+  {
+    dpConnect(\"EP_BFStatusChanged\",\"System1:\"+$VTNAME+\"_\"+$BFNAME+\"_status.:_original.._value\");
+  }
+}
+
+EP_BFStatusChanged(string dp, string sNewValue)
+{
+  setValue(\"TextFieldBFStatus\", \"text\", dpValToString(dp, sNewValue, FALSE) );
+}
+
+" 0
+ E
 14 10
 "TextFieldSRGStatus"
 ""
@@ -490,11 +527,27 @@ LANG:1 0
 LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
 0
 ""  248 138 350 165
-2 "s" 0 0 0 0 0 -1  E E E
+2 "s" 0 0 0 0 0 -1  E "main()
+{
+dyn_errClass err;
+
+  if( dpSubStr(\"System1:\"+$SRGNAME+\"_status.:_original.._value\", DPSUB_DP_EL ) != \"\" )
+  {
+    dpConnect(\"EP_SRGStatusChanged\",\"System1:\"+$SRGNAME+\"_status.:_original.._value\");
+  }
+}
+
+EP_SRGStatusChanged(string dp, string sNewValue)
+{
+  setValue(\"TextFieldSRGStatus\", \"text\", dpValToString(dp, sNewValue, FALSE) );
+}
+
+" 0
+ E
 14 12
 "TextFieldStartTime"
 ""
-1 151.1801242236025 402 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 154.1801242236025 485 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 13 0 0 0 0 0
 E E E
@@ -506,7 +559,7 @@ LANG:1 0
 1
 LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
 0
-""  150 400 245 427
+""  153 483 248 510
 3 "s" 0 0 0 0 0 -1  E "main()
 {
   TextFieldStartTime.text=\"0\";
@@ -515,7 +568,7 @@ LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
 14 14
 "TextFieldStopTime"
 ""
-1 281.3043478260869 402 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 264.3043478260869 485 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 15 0 0 0 0 0
 E E E
@@ -527,7 +580,7 @@ LANG:1 0
 1
 LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
 0
-""  280 400 385 427
+""  263 483 368 510
 3 "s" 0 0 0 0 0 -1  E "main()
 {
   TextFieldStopTime.text=\"0\";
@@ -536,7 +589,7 @@ LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
 14 18
 "TextFieldDirectionAngle1"
 ""
-1 151.304347826087 279 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 124.2422360248447 312 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 19 0 0 0 0 0
 E E E
@@ -548,7 +601,7 @@ LANG:1 0
 1
 LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
 0
-""  150 277 255 304
+""  123 310 223 337
 3 "s" 0 0 0 0 0 -1  E "main()
 {
   TextFieldDirectionAngle1.text=\"0.0\";
@@ -557,7 +610,7 @@ LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
 14 20
 "TextFieldDirectionAngle2"
 ""
-1 151.304347826087 309 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 124.2422360248447 342 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 21 0 0 0 0 0
 E E E
@@ -569,7 +622,7 @@ LANG:1 0
 1
 LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
 0
-""  150 307 255 334
+""  123 340 223 367
 3 "s" 0 0 0 0 0 -1  E "main()
 {
   TextFieldDirectionAngle2.text=\"0.0\";
@@ -578,7 +631,7 @@ LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
 14 22
 "TextFieldFrequency"
 ""
-1 151.304347826087 339 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 154.304347826087 422 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 23 0 0 0 0 0
 E E E
@@ -590,7 +643,7 @@ LANG:1 0
 1
 LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
 0
-""  150 337 255 364
+""  153 420 258 447
 3 "s" 0 0 0 0 0 -1  E "main()
 {
   TextFieldFrequency.text=\"0.0\";
@@ -802,7 +855,7 @@ dyn_errClass err;
 14 40
 "TextFieldCurrentDirectionType"
 ""
-1 586.1801242236025 249 E E E 1 E 1 E N "_WindowText" E N "_InputFieldBackground" E E
+1 586.1801242236025 282 E E E 1 E 1 E N "_WindowText" E N "_InputFieldBackground" E E
  E E
 41 0 0 0 0 0
 E E E
@@ -814,12 +867,28 @@ LANG:1 22 1=J2000, 2=AZEL, 3=LMN
 1
 LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
 0
-""  585 247 680 274
-2 "s" 0 0 0 0 0 -1  E E E
+""  585 280 680 307
+2 "s" 0 0 0 0 0 -1  E "main()
+{
+dyn_errClass err;
+
+  if( dpSubStr(\"System1:\"+$VTNAME+\"_\"+$BFNAME+\"_directionType.:_online.._value\", DPSUB_DP_EL ) != \"\" )
+  {
+    dpConnect(\"EP_DirectionTypeChanged\",\"System1:\"+$VTNAME+\"_\"+$BFNAME+\"_directionType.:_online.._value\");
+  }
+}
+
+EP_DirectionTypeChanged(string dp, string sNewValue)
+{
+  setValue(\"TextFieldCurrentDirectionType\", \"text\", dpValToString(dp, sNewValue, FALSE) );
+}
+
+" 0
+ E
 14 41
 "TextFieldCurrentDirectionAngle1"
 ""
-1 586.1801242236025 279 E E E 1 E 1 E N "_WindowText" E N "_InputFieldBackground" E E
+1 586.1801242236025 312 E E E 1 E 1 E N "_WindowText" E N "_InputFieldBackground" E E
  E E
 42 0 0 0 0 0
 E E E
@@ -831,12 +900,28 @@ LANG:1 0
 1
 LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
 0
-""  585 277 680 304
-2 "s" 0 0 0 0 0 -1  E E E
+""  585 310 680 337
+2 "s" 0 0 0 0 0 -1  E "main()
+{
+dyn_errClass err;
+
+  if( dpSubStr(\"System1:\"+$VTNAME+\"_\"+$BFNAME+\"_directionAngle1.:_online.._value\", DPSUB_DP_EL ) != \"\" )
+  {
+    dpConnect(\"EP_DirectionAngle1Changed\",\"System1:\"+$VTNAME+\"_\"+$BFNAME+\"_directionAngle1.:_online.._value\");
+  }
+}
+
+EP_DirectionAngle1Changed(string dp, string sNewValue)
+{
+  setValue(\"TextFieldCurrentDirectionAngle1\", \"text\", dpValToString(dp, sNewValue, FALSE) );
+}
+
+" 0
+ E
 14 42
 "TextFieldCurrentDirectionAngle2"
 ""
-1 586.1801242236025 309 E E E 1 E 1 E N "_WindowText" E N "_InputFieldBackground" E E
+1 586.1801242236025 342 E E E 1 E 1 E N "_WindowText" E N "_InputFieldBackground" E E
  E E
 43 0 0 0 0 0
 E E E
@@ -848,8 +933,24 @@ LANG:1 0
 1
 LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
 0
-""  585 307 680 334
-2 "s" 0 0 0 0 0 -1  E E E
+""  585 340 680 367
+2 "s" 0 0 0 0 0 -1  E "main()
+{
+dyn_errClass err;
+
+  if( dpSubStr(\"System1:\"+$VTNAME+\"_\"+$BFNAME+\"_directionAngle2.:_online.._value\", DPSUB_DP_EL ) != \"\" )
+  {
+    dpConnect(\"EP_DirectionAngle2Changed\",\"System1:\"+$VTNAME+\"_\"+$BFNAME+\"_directionAngle2.:_online.._value\");
+  }
+}
+
+EP_DirectionAngle2Changed(string dp, string sNewValue)
+{
+  setValue(\"TextFieldCurrentDirectionAngle2\", \"text\", dpValToString(dp, sNewValue, FALSE) );
+}
+
+" 0
+ E
 13 43
 "ButtonPrepareBF"
 ""
@@ -1052,7 +1153,7 @@ dyn_errClass err;
 22 52
 "ComboBoxDirectionType"
 ""
-1 150 247 E E E 1 E 1 E N {0,0,0} E N "_Window" E E
+1 123 250 E E E 1 E 1 E N {0,0,0} E N "_Window" E E
  E E
 68 0 0 0 0 0
 E E E
@@ -1064,7 +1165,7 @@ LANG:1 0
 1
 LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
 0
-""  150 247 255 274
+""  123 250 223 277
 3
 1
 LANG:1 5 J2000
@@ -1158,9 +1259,10 @@ EP_textFieldInCB(string dp, string sNewValue)
     dpConnect(\"EP_DirectionTypeChanged\",\"System1:\"+$VTNAME+\"_\"+$BFNAME+\"_directionType.:_online.._value\");
     dpConnect(\"EP_DirectionAngle1Changed\",\"System1:\"+$VTNAME+\"_\"+$BFNAME+\"_directionAngle1.:_online.._value\");
     dpConnect(\"EP_DirectionAngle2Changed\",\"System1:\"+$VTNAME+\"_\"+$BFNAME+\"_directionAngle2.:_online.._value\");
+    
   }
 }
-
+      
 EP_VTStatusChanged(string dp, string sNewValue)
 {
   setValue(\"TextFieldVTStatus\", \"text\", dpValToString(dp, sNewValue, FALSE) );
@@ -1196,7 +1298,7 @@ EP_DirectionAngle2Changed(string dp, string sNewValue)
 13 56
 "ButtonAdjustDirection"
 ""
-1 263.2978723404256 309 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+1 125.1276595744682 372 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
  E E
 60 0 0 0 0 0
 E E E
@@ -1208,11 +1310,11 @@ LANG:1 0
 1
 LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
 0
-""  261 307 369 333
+""  123 370 223 396
 
 T 
 1
-LANG:1 16 Adjust direction
+LANG:1 3 Set
 "main()
 {
 dyn_errClass err;
@@ -1296,7 +1398,7 @@ E E E E
 21 61
 "SpinButtonSubbandStart"
 ""
-1 150 370 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 153 453 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 69 0 0 0 0 0
 E E E
@@ -1306,9 +1408,9 @@ LANG:1 0
 
 0
 1
-LANG:1 70 -microsoft windows-arial-medium-r-normal-*-*-120-100-100-*-*-iso8859-1
+LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
 0
-""  150 370 210 396
+""  153 453 220 480
 0
 
 E
@@ -1319,7 +1421,7 @@ N 0 127 1 0 1 1
 21 62
 "SpinButtonSubbandEnd"
 ""
-1 250 370 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 243 453 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
 107 0 0 0 0 0
 E E E
@@ -1329,9 +1431,9 @@ LANG:1 0
 
 0
 1
-LANG:1 70 -microsoft windows-arial-medium-r-normal-*-*-120-100-100-*-*-iso8859-1
+LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
 0
-""  250 370 310 396
+""  243 453 300 480
 0
 
 E
@@ -1342,7 +1444,7 @@ N 0 127 1 127 1 1
 2 63
 "Text7"
 ""
-1 242 360 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+1 242 320 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
  E E
 72 0 0 0 0 0
 E E E
@@ -1352,8 +1454,8 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 220 376 234 391
-0 2 0 "s" 0 0 0 192 0 0  220 376 1
+E E 0 1 1 0 1 E U  0 E 223 459 237 474
+0 2 0 "s" 0 0 0 192 0 0  223 459 1
 1
 LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
 0
@@ -1362,7 +1464,7 @@ LANG:1 2 to
 4 66
 "Line1"
 ""
-1 10 441 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+1 10 520 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
  E E
 84 0 0 0 0 0
 E E E
@@ -1372,11 +1474,11 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 2 1 0 1 E  680 441 10 441
+E E 0 2 1 0 1 E  680 520 10 520
 2 67
 "Text12"
 ""
-1 -237 516 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+1 -237 476 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
  E E
 86 0 0 0 0 0
 E E E
@@ -1386,8 +1488,8 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 13 455 132 470
-0 2 0 "s" 0 0 0 192 0 0  13 455 1
+E E 0 1 1 0 1 E U  0 E 13 534 132 549
+0 2 0 "s" 0 0 0 192 0 0  13 534 1
 1
 LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
 0
@@ -1396,9 +1498,9 @@ LANG:1 22 Statistics for subband
 21 68
 "SpinButtonSubbandStatistics"
 ""
-1 150 449 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 150 528 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
-122 0 0 0 0 0
+281 0 0 0 0 0
 E E E
 0
 1
@@ -1406,22 +1508,250 @@ LANG:1 0
 
 0
 1
-LANG:1 70 -microsoft windows-arial-medium-r-normal-*-*-120-100-100-*-*-iso8859-1
+LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
 0
-""  150 449 210 475
+""  150 528 210 555
 0
 
-E
 "main()
 {
-  int subband;
+dyn_errClass err;
+
+  string scope;
+  string dpPowerX;
+  string dpPowerY;
+  time t;
+  bool stopInitCheck=false;
+
+  addGlobal(\"gDisconnectInitialHandlers\",BOOL_VAR);
+  gDisconnectInitialHandlers=false;
+  addGlobal(\"gCurrentSubband\", INT_VAR);
+
+  while(!stopInitCheck)
+  {  
+    // wait for last subband in database
+    getValue(\"\",\"sbMaximum\",gCurrentSubband);
+    sprintf(scope,\"power%03d\",gCurrentSubband);
+    dpPowerX=\"System1:BeamServer_\"+scope+\"_x.:_original.._value\";
+
+    if( dpSubStr( dpPowerX, DPSUB_DP_EL ) == \"\" )
+    {
+      delay(1);
+    }
+    else
+    {
+      stopInitCheck=true; 
+
+      getValue(\"\",\"sbMinimum\",gCurrentSubband);
+      sprintf(scope,\"power%03d\",gCurrentSubband);
+      dpPowerX=\"System1:BeamServer_\"+scope+\"_x.:_original.._value\";
+      dpPowerY=\"System1:BeamServer_\"+scope+\"_y.:_original.._value\";
+
+      dpConnect(\"EP_SubbandStatisticsPowerXChanged\",dpPowerX);
+      dpConnect(\"EP_SubbandStatisticsPowerYChanged\",dpPowerY);
+      dpConnect(\"EP_SubbandStatisticsLastBlockChanged\",\"System1:BeamServer_seqnr.:_original.._value\");
+
+      t=getCurrentTime();
+      TREND1.curveRemoveData(\"powerX\", t);
+      TREND1.curveRemoveData(\"powerY\", t);
+      TREND1.connectDirectly(\"powerX\", dpPowerX);
+      TREND1.connectDirectly(\"powerY\", dpPowerY);
+  
+      dpConnect(\"EP_DisplaySubbandsPowerX\", 
+        \"System1:BeamServer_power000_x.:_online.._value\",
+        \"System1:BeamServer_power001_x.:_online.._value\",
+        \"System1:BeamServer_power002_x.:_online.._value\",
+        \"System1:BeamServer_power003_x.:_online.._value\",
+        \"System1:BeamServer_power004_x.:_online.._value\",
+        \"System1:BeamServer_power005_x.:_online.._value\",
+        \"System1:BeamServer_power006_x.:_online.._value\",
+        \"System1:BeamServer_power007_x.:_online.._value\",
+        \"System1:BeamServer_power008_x.:_online.._value\",
+        \"System1:BeamServer_power009_x.:_online.._value\",
+        \"System1:BeamServer_power010_x.:_online.._value\",
+        \"System1:BeamServer_power011_x.:_online.._value\",
+        \"System1:BeamServer_power012_x.:_online.._value\",
+        \"System1:BeamServer_power013_x.:_online.._value\",
+        \"System1:BeamServer_power014_x.:_online.._value\",
+        \"System1:BeamServer_power015_x.:_online.._value\");
+      dpConnect(\"EP_DisplaySubbandsPowerY\", 
+        \"System1:BeamServer_power000_y.:_online.._value\",
+        \"System1:BeamServer_power001_y.:_online.._value\",
+        \"System1:BeamServer_power002_y.:_online.._value\",
+        \"System1:BeamServer_power003_y.:_online.._value\",
+        \"System1:BeamServer_power004_y.:_online.._value\",
+        \"System1:BeamServer_power005_y.:_online.._value\",
+        \"System1:BeamServer_power006_y.:_online.._value\",
+        \"System1:BeamServer_power007_y.:_online.._value\",
+        \"System1:BeamServer_power008_y.:_online.._value\",
+        \"System1:BeamServer_power009_y.:_online.._value\",
+        \"System1:BeamServer_power010_y.:_online.._value\",
+        \"System1:BeamServer_power011_y.:_online.._value\",
+        \"System1:BeamServer_power012_y.:_online.._value\",
+        \"System1:BeamServer_power013_y.:_online.._value\",
+        \"System1:BeamServer_power014_y.:_online.._value\",
+        \"System1:BeamServer_power015_y.:_online.._value\");
+    }  
+  }
+}
+
+EP_SubbandStatisticsPowerXChanged(string dp, string sNewValue)
+{
+  if(gDisconnectInitialHandlers)
+  {
+    string scope;
+    string dpPowerX;
+    // disconnect the current handlers
+    sprintf(scope,\"power%03d\",currentSubband);
+    dpPowerX=\"System1:BeamServer_\"+scope+\"_x.:_original.._value\";
+    dpDisconnect(\"EP_SubbandStatisticsPowerXChanged\",dpPowerX);
+  }
+  else
+  {
+    setValue(\"TextFieldSubbandStatisticsPowerX\", \"text\", dpValToString(dp, sNewValue, FALSE) );
+  }
+}
+
+EP_SubbandStatisticsPowerYChanged(string dp, string sNewValue)
+{
+  if(gDisconnectInitialHandlers)
+  {
+    string scope;
+    string dpPowerY;
+    // disconnect the current handlers
+    sprintf(scope,\"power%03d\",currentSubband);
+    dpPowerY=\"System1:BeamServer_\"+scope+\"_y.:_original.._value\";
+    dpDisconnect(\"EP_SubbandStatisticsPowerYChanged\",dpPowerY);
+  }
+  else
+  {
+    setValue(\"TextFieldSubbandStatisticsPowerY\", \"text\", dpValToString(dp, sNewValue, FALSE) );
+  }
+}
+
+EP_SubbandStatisticsLastBlockChanged(string dp, string sNewValue)
+{
+  if(gDisconnectInitialHandlers)
+  {
+    // disconnect the current handlers
+    dpDisconnect(\"EP_SubbandStatisticsLastBlockChanged\",\"System1:BeamServer_seqnr.:_original.._value\");
+  }
+  else
+  {
+    setValue(\"TextFieldSubbandStatisticsLastBlock\", \"text\", dpValToString(dp, sNewValue, FALSE) );
+  }
+}
+
+EP_DisplaySubbandsPowerX(
+  string dpx0, float powerx0,
+  string dpx1, float powerx1,
+  string dpx2, float powerx2,
+  string dpx3, float powerx3,
+  string dpx4, float powerx4,
+  string dpx5, float powerx5,
+  string dpx6, float powerx6,
+  string dpx7, float powerx7,
+  string dpx8, float powerx8,
+  string dpx9, float powerx9,
+  string dpx10, float powerx10,
+  string dpx11, float powerx11,
+  string dpx12, float powerx12,
+  string dpx13, float powerx13,
+  string dpx14, float powerx14,
+  string dpx15, float powerx15  )
+{
+  dyn_float df;
+  
+  df=makeDynFloat(
+    powerx0,
+    powerx1,
+    powerx2,
+    powerx3,
+    powerx4,
+    powerx5,
+    powerx6,
+    powerx7,
+    powerx8,
+    powerx9,
+    powerx10,
+    powerx11,
+    powerx12,
+    powerx13,
+    powerx14,
+    powerx15);
+
+  setValue( \"BarTrendPowerX\", \"yRange\", dynMax(df));  
+  setValue( \"BarTrendPowerX\", \"yStep\", dynMax(df)/10);  
+  setValue( \"BarTrendPowerX\", \"data\", df);
+  setValue( \"BarTrendPowerX\", \"flush\" );    
+}
+
+EP_DisplaySubbandsPowerY(
+  string dpy0, float powery0,
+  string dpy1, float powery1,
+  string dpy2, float powery2,
+  string dpy3, float powery3,
+  string dpy4, float powery4,
+  string dpy5, float powery5,
+  string dpy6, float powery6,
+  string dpy7, float powery7,
+  string dpy8, float powery8,
+  string dpy9, float powery9,
+  string dpy10, float powery10,
+  string dpy11, float powery11,
+  string dpy12, float powery12,
+  string dpy13, float powery13,
+  string dpy14, float powery14,
+  string dpy15, float powery15  )
+{
+  dyn_float df;
+  
+  df=makeDynFloat(
+    powery0,
+    powery1,
+    powery2,
+    powery3,
+    powery4,
+    powery5,
+    powery6,
+    powery7,
+    powery8,
+    powery9,
+    powery10,
+    powery11,
+    powery12,
+    powery13,
+    powery14,
+    powery15);
+
+  setValue( \"BarTrendPowerY\", \"yRange\", dynMax(df));  
+  setValue( \"BarTrendPowerY\", \"yStep\", dynMax(df)/10);  
+  setValue( \"BarTrendPowerY\", \"data\", df);
+  setValue( \"BarTrendPowerY\", \"flush\" );    
+}
+
+" 0
+
+"main()
+{
   string scope;
   string dpPowerX;
   string dpPowerY;
   time t;
 
-  getValue(\"\",\"text\",subband);
-  sprintf(scope,\"power%03d\",subband);
+  // disconnect the current handlers
+  gDisconnectInitialHandlers=true;
+  
+  sprintf(scope,\"power%03d\",gCurrentSubband);
+  dpPowerX=\"System1:BeamServer_\"+scope+\"_x.:_original.._value\";
+  dpPowerY=\"System1:BeamServer_\"+scope+\"_y.:_original.._value\";
+
+  dpDisconnect(\"EP_SubbandStatisticsPowerXChanged\",dpPowerX);
+  dpDisconnect(\"EP_SubbandStatisticsPowerYChanged\",dpPowerY);
+  dpDisconnect(\"EP_SubbandStatisticsLastBlockChanged\",\"System1:BeamServer_seqnr.:_original.._value\");
+  
+  getValue(\"\",\"text\",gCurrentSubband);
+  sprintf(scope,\"power%03d\",gCurrentSubband);
   dpPowerX=\"System1:BeamServer_\"+scope+\"_x.:_original.._value\";
   dpPowerY=\"System1:BeamServer_\"+scope+\"_y.:_original.._value\";
 
@@ -1459,7 +1789,7 @@ N 0 127 1 0 1 1
 2 69
 "Text9"
 ""
-1 -460 375 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+1 -460 335 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
  E E
 92 0 0 0 0 0
 E E E
@@ -1469,8 +1799,8 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 42 486 161 501
-0 2 0 "s" 0 0 0 192 0 0  42 486 1
+E E 0 1 1 0 1 E U  0 E 42 565 161 580
+0 2 0 "s" 0 0 0 192 0 0  42 565 1
 1
 LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
 0
@@ -1479,7 +1809,7 @@ LANG:1 7 Power X
 14 70
 "TextFieldSubbandStatisticsPowerX"
 ""
-1 107.304347826087 482 E E E 1 E 1 E N "_WindowText" E N "_InputFieldBackground" E E
+1 107.304347826087 561 E E E 1 E 1 E N "_WindowText" E N "_InputFieldBackground" E E
  E E
 94 0 0 0 0 0
 E E E
@@ -1491,16 +1821,12 @@ LANG:1 0
 1
 LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
 0
-""  106 480 211 507
-2 "s" 0 0 0 0 0 -1  E "main()
-{
-  TextFieldDirectionAngle1.text=\"0.0\";
-}" 0
- E
+""  106 559 211 586
+2 "s" 0 0 0 0 0 -1  E E E
 2 71
 "Text10"
 ""
-1 -460 405 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+1 -460 365 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
  E E
 96 0 0 0 0 0
 E E E
@@ -1510,8 +1836,8 @@ LANG:1 0
 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 42 516 161 531
-0 2 0 "s" 0 0 0 192 0 0  42 516 1
+E E 0 1 1 0 1 E U  0 E 42 595 161 610
+0 2 0 "s" 0 0 0 192 0 0  42 595 1
 1
 LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
 0
@@ -1520,7 +1846,7 @@ LANG:1 7 Power Y
 14 72
 "TextFieldSubbandStatisticsPowerY"
 ""
-1 107.304347826087 512 E E E 1 E 1 E N "_WindowText" E N "_InputFieldBackground" E E
+1 107.304347826087 591 E E E 1 E 1 E N "_WindowText" E N "_InputFieldBackground" E E
  E E
 98 0 0 0 0 0
 E E E
@@ -1532,55 +1858,14 @@ LANG:1 0
 1
 LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
 0
-""  106 510 211 537
-2 "s" 0 0 0 0 0 -1  E "main()
-{
-  TextFieldDirectionAngle2.text=\"0.0\";
-}" 0
- E
-2 73
-"Text11"
-""
-1 -460 435 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
- E E
-100 0 0 0 0 0
-E E E
-0
-1
-LANG:1 0 
-
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 42 546 105 561
-0 2 0 "s" 0 0 0 192 0 0  42 546 1
-1
-LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
-0
-"" 1
-LANG:1 10 Last block
-14 74
-"TextFieldSubbandStatisticsLastBlock"
-""
-1 107.304347826087 542 E E E 1 E 1 E N "_WindowText" E N "_InputFieldBackground" E E
- E E
-102 0 0 0 0 0
-E E E
-0
-1
-LANG:1 0 
-
-0
-1
-LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
-0
-""  106 540 211 567
+""  106 589 211 616
 2 "s" 0 0 0 0 0 -1  E E E
 23 76
 "TREND1"
 ""
-1 220 450 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+1 220 529 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
  E E
-143 0 0 0 0 0
+352 0 0 0 0 0
 E E E
 0
 1
@@ -1588,18 +1873,18 @@ LANG:1 0
 
 0
 1
-LANG:1 70 -microsoft windows-arial-medium-r-normal-*-*-120-100-100-*-*-iso8859-1
+LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
 0
-""  220 450 640 576
-5 E E E 1 92 N {0,0,0} 0 0 1 0 1 0 2 0 "powerX" "System1:BeamServer_power000_x." 0 2 0 0 1 "3 2 0.000000" "%x" 1 1 2 0 E
+""  220 529 640 670
+5 E E E 1 107 N {0,0,0} 0 0 1 0 1 0 2 0 "powerX" "System1:BeamServer_power000_x." 0 2 0 0 1 "3 2 0.000000" "%x" 1 1 2 0 E
 E
 1 0 0 3 2
 1
 LANG:1 1 X
 1
 LANG:1 1 ?
-1 "" ""  0 0 1 0 0 1 0 1 N {0,0,255}
-1 5 0 0.2 0 0 0 0
+1 "" ""  1 0 0 1 0 1 N {0,0,255}
+0 0 0 0 0 0 0 0
 0 "powerY" "System1:BeamServer_power000_y." 0 2 0 0 0 E
 E
 1 0 0 3 2
@@ -1607,18 +1892,18 @@ E
 LANG:1 1 Y
 1
 LANG:1 1 ?
-1 "" ""  0 0 1 0 0 1 0 1 N {255,0,0}
+1 "" ""  1 0 0 1 0 1 N {255,0,0}
 0 0 0 0 0 0 0 0
 0 
-E 1 0 0 0 50 1 20 300
+E 1 0 0 0 10 1 20 300
 1
-LANG:1 70 -microsoft windows-arial-medium-r-normal-*-*-120-100-100-*-*-iso8859-1
+LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
 0
 ""  1
-LANG:1 70 -microsoft windows-arial-medium-r-normal-*-*-120-100-100-*-*-iso8859-1
+LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
 0
 ""  1
-LANG:1 70 -microsoft windows-arial-medium-r-normal-*-*-120-100-100-*-*-iso8859-1
+LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
 0
 ""  100 
 N {0,0,0} 0 0 1 0 1 150 1 5 5 1 2
@@ -1626,7 +1911,7 @@ N {0,0,0} 0 0 1 0 1 150 1 5 5 1 2
 13 77
 "ButtonOpenTrendForm"
 ""
-1 650 550 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+1 650 580 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
  E E
 123 0 0 0 0 0
 E E E
@@ -1638,7 +1923,7 @@ LANG:1 0
 1
 LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
 0
-""  650 550 690 574
+""  650 580 690 604
 
 T 
 1
@@ -1650,12 +1935,565 @@ LANG:1 4 Zoom
 
 EP_childPanelOn()
 {
-  ChildPanelOnCentral(\"StatisticsTrend.pnl\",\"PanelSubbandStatistics\",
-    makeDynString(\"$SUBBANDSTART:\" + SpinButtonSubbandStatistics.sbMinimum, 
-                                \"$SUBBANDEND:\" + SpinButtonSubbandStatistics.sbMaximum));
+  ChildPanelOnCentral(\"StatisticsTrend.pnl\",\"Subband statistics for \"+$VTNAME+\"_\"+$BFNAME,
+    makeDynString(\"$BFNAME:\" + $BFNAME, 
+                                \"$SRGNAME:\" + $SRGNAME, 
+                                \"$VTNAME:\" + $VTNAME, 
+                                \"$SUBBANDSTART:\" + SpinButtonSubbandStatistics.sbMinimum, 
+                                \"$SUBBANDEND:\" + SpinButtonSubbandStatistics.sbMaximum,
+                                \"$SUBBANDCURRENT:\" + SpinButtonSubbandStatistics.text));
+
+
 }
 " 0
  E E E
+2 78
+"Text15"
+""
+1 399 134 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ E E
+145 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 532 262 686 277
+0 2 0 "s" 0 0 0 192 0 0  532 262 1
+1
+LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
+0
+"" 1
+LANG:1 17 Current direction
+14 81
+"TextFieldDirectionAngle1To"
+""
+1 231.2422360248448 312 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+151 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
+0
+""  230 310 330 337
+3 "s" 0 0 0 0 0 -1  E "main()
+{
+  setValue(\"\",\"text\",\"0.0\");
+}" 0
+ E
+14 83
+"TextFieldDirectionAngle2To"
+""
+1 231.2422360248448 342 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+155 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
+0
+""  230 340 330 367
+3 "s" 0 0 0 0 0 -1  E "main()
+{
+  setValue(\"\",\"text\",\"0.0\");
+}" 0
+ E
+2 84
+"Text9"
+""
+1 27 232 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ E E
+157 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 180 290 299 305
+0 2 0 "s" 0 0 0 192 0 0  180 290 1
+1
+LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
+0
+"" 1
+LANG:1 6 (From)
+2 86
+"Text9"
+""
+1 -21 224 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ E E
+161 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 230 290 349 305
+0 2 0 "s" 0 0 0 192 0 0  230 290 1
+1
+LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
+0
+"" 1
+LANG:1 2 To
+2 87
+"Text15"
+""
+1 389 204 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ E E
+163 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 70 260 224 275
+0 2 0 "s" 0 0 0 192 0 0  70 260 1
+1
+LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
+0
+"" 1
+LANG:1 4 Type
+14 88
+"TextFieldDirectionSweepTime"
+""
+1 321.8819875776398 262 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+165 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
+0
+""  321 260 392 287
+3 "s" 0 0 0 0 0 -1  E "main()
+{
+  setValue(\"\",\"text\",\"60.0\");
+}" 0
+ E
+2 89
+"Text9"
+""
+1 40 184 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ E E
+167 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 325 246 444 261
+0 2 0 "s" 0 0 0 192 0 0  325 246 1
+1
+LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
+0
+"" 1
+LANG:1 14 Sweep time (s)
+4 90
+"Line1"
+""
+1 10 410 E E E 1 E 1 E N {0,0,0} E N {255,255,255} E E
+ E E
+169 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E  680 410 10 410
+2 92
+"Text11"
+""
+1 -460 396 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ E E
+204 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 42 626 105 641
+0 2 0 "s" 0 0 0 192 0 0  42 626 1
+1
+LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
+0
+"" 1
+LANG:1 10 Last block
+14 93
+"TextFieldSubbandStatisticsLastBlock"
+""
+1 107.304347826087 622 E E E 1 E 1 E N "_WindowText" E N "_InputFieldBackground" E E
+ E E
+206 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
+0
+""  106 620 211 647
+2 "s" 0 0 0 0 0 -1  E E E
+27 94
+"BarTrendPowerX"
+""
+1 10 680 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+361 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 70 -microsoft windows-arial-medium-r-normal-*-*-120-100-100-*-*-iso8859-1
+0
+""  10 680 340 810
+2 -0.5 16 1 0 "%H:%M" 0 1
+LANG:1 70 -microsoft windows-arial-medium-r-normal-*-*-120-100-100-*-*-iso8859-1
+0
+""  0 3 0 1 0 1 N {0,0,0}
+0 0 10000 1000 2 "%H:%M" 0 1
+LANG:1 70 -microsoft windows-arial-medium-r-normal-*-*-120-100-100-*-*-iso8859-1
+0
+""  0 3 0 1 0 1 N {0,0,0}
+1 0 0 20 1
+LANG:1 70 -microsoft windows-arial-medium-r-normal-*-*-120-100-100-*-*-iso8859-1
+0
+""  3 0 1 0 1 N {0,0,0}
+0 0 1 0 1 N {0,0,0} 2 5 1 0 20 20 N {0,0,255} N {0,0,255} N {0,0,255} 1 -0.5 1
+E
+27 95
+"BarTrendPowerY"
+""
+1 360 680 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+306 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 70 -microsoft windows-arial-medium-r-normal-*-*-120-100-100-*-*-iso8859-1
+0
+""  360 680 690 810
+2 -0.5 16 1 0 "%H:%M" 0 1
+LANG:1 70 -microsoft windows-arial-medium-r-normal-*-*-120-100-100-*-*-iso8859-1
+0
+""  0 3 0 1 0 1 N {0,0,0}
+0 0 10000 1000 2 "%H:%M" 0 1
+LANG:1 70 -microsoft windows-arial-medium-r-normal-*-*-120-100-100-*-*-iso8859-1
+0
+""  0 3 0 1 0 1 N {0,0,0}
+1 0 0 20 1
+LANG:1 70 -microsoft windows-arial-medium-r-normal-*-*-120-100-100-*-*-iso8859-1
+0
+""  3 0 1 0 1 N {0,0,0}
+0 0 1 0 1 N {0,0,0} 2 5 1 0 20 0 N {0,0,255} N {0,0,255} N {0,0,255} 1 -0.5 1
+E
+2 96
+"Text8"
+""
+1 21 776 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ E E
+242 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 22 822 120 837
+0 2 0 "s" 0 0 0 192 0 0  22 822 1
+1
+LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
+0
+"" 1
+LANG:1 36 Power per subband in the X-direction
+2 97
+"Text8"
+""
+1 359 214 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ E E
+244 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 372 822 470 837
+0 2 0 "s" 0 0 0 192 0 0  372 822 1
+1
+LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
+0
+"" 1
+LANG:1 36 Power per subband in the Y-direction
+19 98
+"RadioBoxSweep"
+""
+1 340 300 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
+ E E
+338 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
+0
+""  340 300 448 404
+4
+T 
+1
+LANG:1 5 Fixed
+
+1 
+1
+LANG:1 0 
+E E
+0 0 0 0 0
+T 
+1
+LANG:1 14 Straight sweep
+
+0 
+1
+LANG:1 0 
+E E
+0 0 0 0 0
+T 
+1
+LANG:1 10 Sine sweep
+
+0 
+1
+LANG:1 0 
+E E
+0 0 0 0 0
+T 
+1
+LANG:1 12 Cosine sweep
+
+0 
+1
+LANG:1 0 
+E E
+0 0 0 0 0
+1
+"main()
+{
+dyn_errClass err;
+
+  while(true)
+  {
+    double angle1From=TextFieldDirectionAngle1.text;
+    double angle2From=TextFieldDirectionAngle2.text;
+    double angle1To=TextFieldDirectionAngle1To.text;
+    double angle2To=TextFieldDirectionAngle2To.text;
+    double sweepTime=TextFieldDirectionSweepTime.text;
+    double updateRate=TextFieldDirectionSweepUpdateRate.text;
+    double currentAngle1=angle1From;
+    double currentAngle2=angle2From;
+    double currentRad1=0.0;
+    double currentRad2=0.0;
+    double sweepDirectionAngle1=1.0;
+    double sweepDirectionAngle2=1.0;
+    double incrementAngle1;
+    double incrementAngle2;
+    bool stopSweep=false;
+    int selectedSweep=RadioBoxSweep.number();
+    double delayCounter=0.0;
+    
+    if(updateRate < 1.0)
+    {
+      updateRate=1.0;
+    }
+    
+    if(selectedSweep==0)
+    {
+      delay(1); // sleep one second
+    }
+    else
+    {
+      if(angle1From>angle1To)
+      {
+        double tempAngle=angle1From;
+        angle1From=angle1To;
+        angle1To=tempAngle;
+      }
+    
+      if(angle2From>angle2To)
+      {
+        double tempAngle=angle2From;
+        angle2From=angle2To;
+        angle2To=tempAngle;
+      }      
+      incrementAngle1=(angle1To-angle1From)  / (sweepTime/updateRate);
+      incrementAngle2=(angle2To-angle2From)  / (sweepTime/updateRate);
+      if(selectedSweep==2 || selectedSweep==3) // sine or cosine
+      {
+        incrementAngle1=4*asin(1)  / (sweepTime/updateRate);
+        incrementAngle2=4*asin(1)  / (sweepTime/updateRate);
+      }
+      
+      dpSetWait(\"System1:\"+$VTNAME+\"_\"+$BFNAME+\"_directionType.:_original.._value\",ComboBoxDirectionType.text);
+//      dpSetWait(\"System1:VT1_BF1_directionType.:_original.._value\",ComboBoxDirectionType.text);
+      err = getLastError();
+      if (dynlen(err) > 0)
+      {
+        stopSweep=true;
+        RadioBoxSweep.number(0);
+        errorDialog(err);
+      }
+   
+      while(!stopSweep)
+      {
+        double tempAngle1=calcNewAngle(selectedSweep,currentAngle1,sweepDirectionAngle1,incrementAngle1,angle1From,angle1To,currentRad1);
+        double tempAngle2=calcNewAngle(selectedSweep,currentAngle2,sweepDirectionAngle2,incrementAngle2,angle2From,angle2To,currentRad2);
+        if(tempAngle1>=angle1To || tempAngle1<=angle1From)
+        {
+          sweepDirectionAngle1=sweepDirectionAngle1*(-1.0);
+          tempAngle1=calcNewAngle(selectedSweep,currentAngle1,sweepDirectionAngle1,incrementAngle1,angle1From,angle1To,currentRad1);
+        }
+        if(tempAngle2>=angle2To || tempAngle2<=angle2From)
+        {
+          sweepDirectionAngle2=sweepDirectionAngle2*(-1.0);
+          tempAngle2=calcNewAngle(selectedSweep,currentAngle2,sweepDirectionAngle2,incrementAngle2,angle2From,angle2To,currentRad2);
+        }
+        currentAngle1=tempAngle1;
+        currentAngle2=tempAngle2;
+        currentRad1=currentRad1+sweepDirectionAngle1*incrementAngle1;
+        currentRad2=currentRad2+sweepDirectionAngle2*incrementAngle2;
+      
+        dpSetWait(\"System1:\"+$VTNAME+\"_\"+$BFNAME+\"_directionAngle1.:_original.._value\",currentAngle1);
+//        dpSetWait(\"System1:VT1_BF1_directionAngle1.:_original.._value\",currentAngle1);
+        err = getLastError();
+        if (dynlen(err) > 0)
+        {
+          stopSweep=true;
+          RadioBoxSweep.number(0);
+          errorDialog(err);
+        }  
+ 
+        dpSetWait(\"System1:\"+$VTNAME+\"_\"+$BFNAME+\"_directionAngle2.:_original.._value\",currentAngle2);
+//        dpSetWait(\"System1:VT1_BF1_directionAngle2.:_original.._value\",currentAngle2);
+        err = getLastError();
+        if (dynlen(err) > 0)
+        { 
+          stopSweep=true;
+          RadioBoxSweep.number(0);
+          errorDialog(err);
+        }
+
+        if(!stopSweep)
+        {
+          delayCounter=0.0;
+          while((delayCounter < updateRate) && !stopSweep)
+          {
+            delay(1);
+            delayCounter = delayCounter + 1.0;
+            stopSweep=(RadioBoxSweep.number() != selectedSweep);
+          }
+        }
+      }
+    }
+  }
+}
+
+double calcNewAngle(int sweep, double currentAngle,double direction,double increment, double angleFrom, double angleTo, double currentRad)
+{
+  double tempAngle=currentAngle;
+  if(sweep==1) // straight
+  {
+    tempAngle=currentAngle+direction*increment;
+  }
+  else if(sweep==2) // sine
+  {
+    tempAngle=((angleTo-angleFrom)/2)*sin(currentRad+direction*increment)+angleFrom+(angleTo-angleFrom)/2;
+  }
+  else if(sweep==3) // cosine
+  {
+    tempAngle=((angleTo-angleFrom)/2)*cos(currentRad+direction*increment)+angleFrom+(angleTo-angleFrom)/2;
+  }
+  return tempAngle;
+}
+" 0
+ E14 99
+"TextFieldDirectionSweepUpdateRate"
+""
+1 421.8944099378882 262 E E E 1 E 1 E N "_WindowText" E N "_Window" E E
+ E E
+354 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+0
+1
+LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
+0
+""  421 260 493 287
+3 "s" 0 0 0 0 0 -1  E "main()
+{
+  setValue(\"\",\"text\",\"20.0\");
+}" 0
+ E
+2 100
+"Text9"
+""
+1 39 175 E E E 1 E 1 E N {0,0,0} E N "_Transparent" E E
+ E E
+356 0 0 0 0 0
+E E E
+0
+1
+LANG:1 0 
+
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 424 246 543 261
+0 2 0 "s" 0 0 0 192 0 0  424 246 1
+1
+LANG:1 60 -adobe-helvetica-medium-r-normal-*-*-120-75-75-*-*-iso8859-1
+0
+"" 1
+LANG:1 12 Update every
 0
 LAYER, 1 
 1
