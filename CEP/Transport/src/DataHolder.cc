@@ -34,7 +34,8 @@ namespace LOFAR
 {
 
 DataHolder::DataHolder(const string& name, const string& type, int version)
-  : itsDataFields     (type),
+  : itsTimeStampPtr   (0),
+    itsDataFields     (type),
     itsData           (0),
     itsDataBlob       (0),
     itsTransporter    (this),
@@ -50,7 +51,8 @@ DataHolder::DataHolder(const string& name, const string& type, int version)
 }
 
 DataHolder::DataHolder(const DataHolder& that)
-  : itsDataFields     (that.itsType),
+  : itsTimeStampPtr   (0),
+    itsDataFields     (that.itsType),
     itsData           (0),
     itsDataBlob       (0),
     itsTransporter    (that.itsTransporter, this),
@@ -118,7 +120,7 @@ void DataHolder::basePostprocess()
   itsDataBlob = 0;
   delete itsExtraPtr;
   itsExtraPtr = 0;
-  // Make sure only the DataPacket is part of the data fields.
+  // Make sure only the timestamp is part of the data fields.
   initDataFields();
 }
 
@@ -212,11 +214,11 @@ bool DataHolder::connectTo (DataHolder& thatDH,
 }
 
 
-int DataHolder::DataPacket::compareTimeStamp (const DataPacket& that) const
+int DataHolder::compareTimeStamp (const DataHolder& that) const
 {
-  if (itsTimeStamp == that.itsTimeStamp) {
+  if (*itsTimeStampPtr == *(that.itsTimeStampPtr)) {
     return 0;
-  } else if (itsTimeStamp < that.itsTimeStamp) {
+  } else if (*itsTimeStampPtr < *(that.itsTimeStampPtr)) {
     return -1;
   }
   return 1;
@@ -229,9 +231,9 @@ bool DataHolder::isValid() const
 
 void DataHolder::initDataFields()
 {
-  // Make sure only the DataPacket (version 1) is part of the data fields.
+  // Make sure only the timestamp (version 1) is part of the data fields.
   BlobFieldSet fset(itsType);
-  fset.add (BlobField<DataPacket>(1));
+  fset.add (BlobField<unsigned long>(1));
   itsDataFields = fset;
 }
 
@@ -359,4 +361,4 @@ void DataHolder::fillDataPointers()
 
 // Instantiate the template.
 #include <Common/BlobField.cc>
-template class LOFAR::BlobField<LOFAR::DataHolder::DataPacket>;
+
