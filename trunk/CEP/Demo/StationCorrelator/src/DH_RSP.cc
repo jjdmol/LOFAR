@@ -35,7 +35,7 @@ DH_RSP::DH_RSP (const string& name,
   itsNoBeamlets = kvm.getInt("NoRSPBeamlets", 92) ;
   itsNoPolarisations = kvm.getInt("polarisations", 2);
   itsBufSize = kvm.getInt("NoPacketsInFrame", 8) * 
-    (itsEPAheaderSize + itsNoBeamlets * itsNoPolarisations * sizeof(complex<uint16>));
+    (itsEPAheaderSize + itsNoBeamlets * itsNoPolarisations * sizeof(complex<int16>));
 }
 
 DH_RSP::DH_RSP(const DH_RSP& that)

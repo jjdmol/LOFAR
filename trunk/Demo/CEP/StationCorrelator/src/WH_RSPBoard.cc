@@ -79,7 +79,7 @@ void WH_RSPBoard::process()
     outDH->setBlockID(itsStamp.getBlockId());    
     for (int ep=0; ep<noEP; ep++) {
       for (int bl=0; bl<noBeamlet; bl++) {
-	outDH->setBufferElement(ep, bl, 0, complex<uint16>(100*i+bl, 0));
+	outDH->setBufferElement(ep, bl, 0, complex<int16>(100*i+bl, 0));
       }
     }
   }

@@ -26,7 +26,7 @@ namespace LOFAR
 class DH_CorrCube: public DataHolder
 {
 public:
-  typedef uint16 BufferPrimitive;
+  typedef int16 BufferPrimitive;
   typedef complex<BufferPrimitive> BufferType;
 
   explicit DH_CorrCube (const string& name, 
