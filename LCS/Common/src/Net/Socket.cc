@@ -1036,7 +1036,9 @@ int32 Socket::setDefaults ()
 
 	setBlocking(itsIsBlocking);				// be sure blocking mode is right.
 
-#ifndef HAVE_BGL
+#ifdef HAVE_BGL
+	return (setErrno(SK_OK));
+#else
 	uint32 			val = 1;
 	struct linger 	lin = { 1, 1 };
 
@@ -1059,9 +1061,9 @@ int32 Socket::setDefaults ()
 															sizeof(lin)) < 0) {
 		return (setErrno(SOCKOPT));
 	}
-#endif  // HAVE_BGL
 
 	return (SK_OK);
+#endif  // HAVE_BGL
 }
 
 } // namespace LOFAR
