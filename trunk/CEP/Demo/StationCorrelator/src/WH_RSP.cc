@@ -135,6 +135,7 @@ void WH_RSP::process()
     
     if (*thisStamp == itsNextStamp) {
 
+      LOG_TRACE_COND_STR("Package has correct timestamp");
       // this is the right packet, so send it
       inSync = true;
 
@@ -146,14 +147,16 @@ void WH_RSP::process()
       int uint16blocksize = itsNbeamlets * itsPolarisations;
       
       // copy stationID and blockID of first EPA-packet in OutDataholder
-      ((DH_StationData*)getDataManager().getOutHolder(0))->setStationID( ((int*)&rspdata[2])[0] );
-      ((DH_StationData*)getDataManager().getOutHolder(0))->setBlockID( ((int*)&rspdata[10])[0] );
-      ((DH_StationData*)getDataManager().getOutHolder(0))->setFlag( 0 );
+      DH_StationData* myDH = getDataManager().getOutHolder(0);
+      myDaH->setStationID( ((int*)&rspdata[2])[0] );
+      myDH->setBlockID( ((int*)&rspdata[10])[0] );
+      myDH->setFlag( 0 );
       
       // copy the beamlets from all EPA-packets in OutDataholder
       // implement code for if frames are missing later !!!
       for (int i=0;i<itsNpackets;i++) {
 	for (int j=0;j<itsNCorrOutputs;j++) {
+	  // todo: cache the outholder adresses for the Npackets loop
 	  memcpy( &((DH_StationData*)getDataManager().getOutHolder(j))->getBuffer()[i * uint16blocksize], 
 		  &rspdata[(i * itsSzEPApacket)+ itsSzEPAheader + (j * charblocksize)], 
 		  charblocksize );
@@ -165,19 +168,24 @@ void WH_RSP::process()
       getDataManager().readyWithInHolder(0);  
 
     } else if (*thisStamp > itsNextStamp) {
-
+      LOG_TRACE_COND_STR("Package has been missed, insert dummy package");
       // we missed some packets, 
       // send a dummy and do NOT read again 
       // so this packet will be read again in the next process step
+      
+      // todo: insert the correct number of packets in one go
 
       // determine blocksizes of char-based InHolder and complex<uint16-based> OutHolder
       int charblocksize   = itsNbeamlets * itsPolarisations * sizeof(complex<uint16>); 
       int uint16blocksize = itsNbeamlets * itsPolarisations;
       
+      //todo: create an appropriate dummy packet only once and re-use.
+
       // copy stationID and blockID of first EPA-packet in OutDataholder
-      ((DH_StationData*)getDataManager().getOutHolder(0))->setStationID( 0 );
-      ((DH_StationData*)getDataManager().getOutHolder(0))->setBlockID( 0 );
-      ((DH_StationData*)getDataManager().getOutHolder(0))->setFlag( 1 );
+      DH_StationData* myDH = getDataManager().getOutHolder(0);
+      myDH->setStationID( 0 );
+      myDH->setBlockID( 0 );
+      myDH->setFlag( 1 );
       
       // copy the beamlets from all EPA-packets in OutDataholder
       for (int i=0;i<itsNpackets;i++) {
@@ -194,6 +202,7 @@ void WH_RSP::process()
 
       // this packets time stamp is too old, it should have been sent already
       // so do nothing and read again
+      LOG_TRACE_COND_STR("Package too old; skip");
       getDataManager().readyWithInHolder(0);  
     }
   }

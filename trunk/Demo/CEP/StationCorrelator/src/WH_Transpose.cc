@@ -78,21 +78,22 @@ void WH_Transpose::process() {
 
   int offset = 0;
 
+  DH_CorrCube* myDH  = static_cast<DH_CorrCube*> (getDataManager().getOutHolder(0);
   for (int sample = 0; sample < itsNpacketsinframe; sample++) {
     offset += itsNpolarisations + itsNbeamletsinpacket;
     for (int channel = 0; channel < itsNchannels; channel++) {
       offset += itsNpolarisations;
       for (int polarisation = 0; polarisation < itsNpolarisations; polarisation++) {
-	static_cast<DH_CorrCube*> (getDataManager().getOutHolder(0))->setBufferElement(channel, 
-										       sample, 
-										       0,
-										       polarisation,
-										       val_ptr_0+offset);
-	static_cast<DH_CorrCube*> (getDataManager().getOutHolder(0))->setBufferElement(channel, 
-										       sample, 
-										       1,
-										       polarisation,
-										       val_ptr_1+offset);
+	myDH->setBufferElement(channel, 
+			       sample, 
+			       0,
+			       polarisation,
+			       val_ptr_0+offset);
+	myDH->setBufferElement(channel, 
+			       sample, 
+			       1,
+			       polarisation,
+			       val_ptr_1+offset);
 	offset++;
       }
     }
