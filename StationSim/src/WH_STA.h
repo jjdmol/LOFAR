@@ -118,6 +118,6 @@ private:
   ofstream itsResults;
   LoMat_dcomplex itsTestVector; 
   int itsCount;
-
+  int itsUbound;
 };
 #endif

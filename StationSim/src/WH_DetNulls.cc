@@ -127,7 +127,7 @@ LoVec_dcomplex WH_DetNulls::steerv (double phi, double theta, LoVec_double px, L
   LoVec_dcomplex res( px.size() );
   dcomplex i = dcomplex (0,1);
 
-  res = exp( i * -2*M_PI*( px*sin(theta)*cos(phi) + py*sin(theta)*sin(phi) ) );
+  res = exp(-2*M_PI*i*( px*sin(theta)*cos(phi) + py*sin(theta)*sin(phi) ) );
   return res;
 }
 

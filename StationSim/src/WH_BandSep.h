@@ -34,6 +34,7 @@
 #include <StationSim/DH_SampleC.h>
 #include <StationSim/FilterBank.h>
 #include <StationSim/GnuPlotInterface.h>         // for gnuplot plotting capabilities
+#include <StationSim/QMinterface.h>
 
 const int itsOverlapSamples = 0;
 const int isReal = 1;
@@ -52,7 +53,7 @@ public:
   /// are created and how many elements there are in the buffer.
   /// The first WorkHolder should have nin=0.
   WH_BandSep (const string& name, unsigned int nsubband,
-			  const string& coeffFileName, int nout, bool tapstream);
+	      const string& coeffFileName, int nout, bool tapstream, int qms);
 
   virtual ~WH_BandSep();
 
@@ -77,7 +78,10 @@ public:
   /// Get a pointer to the i-th output DataHolder.
   virtual DH_SampleC* getOutHolder(int channel);
 
+  //  void spectrumplot (gnuplot_ctrl* handle, const LoMat_dcomplex& buffer, const int pos);
+
 private:
+  void WH_BandSep::plot_freq_spectrum(const LoMat_dcomplex& sb_signals, const int pos) ;
   /// Forbid copy constructor.
   WH_BandSep(const WH_BandSep&);
 
@@ -98,6 +102,19 @@ private:
   FilterBank <dcomplex> * itsFilterbank;
   LoVec_dcomplex itsBuffer;
   bool itsTapStream;
+
+  int itsQms;
+  LoVec_bool qm; // Quality measure array;
+  
+  bool plot;
+  gnuplot_ctrl* handle;
+  LoMat_dcomplex buffer; // buffer for the output signals
+  int buffersize ;       // size of the buffer
+  int buffer_pos;        // current position in the buffer
+
+  int Count;
+  int itsSpecPos;
+  int itsTickCount;
 };
 
 

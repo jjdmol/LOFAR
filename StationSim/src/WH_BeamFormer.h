@@ -85,8 +85,8 @@ private:
   void beamplot (gnuplot_ctrl* handle, const LoVec_dcomplex& w, 
 		 const int ncru);
 
-  void spectrumplot (gnuplot_ctrl* handle, const LoMat_dcomplex& buffer, 
-				    const LoVec_dcomplex& w);
+  void spectrumplot (gnuplot_ctrl* handle, const LoVec_dcomplex& look_buf, 
+		     const LoVec_dcomplex& null_buf, const int pos);
 
   void ml_trans_edge (const LoVec_dcomplex& w, LoMat_double& ref, const int time, 
 		      const int nrcu, const int N);
@@ -96,6 +96,7 @@ private:
   DH_SampleC** itsInHolders;
   DH_SampleC** itsOutHolders;
   DH_SampleC   itsWeight; 
+  //  DH_SampleC   itsLookDir; 
  
   int itsNrcu;       // Number of (active) antennas
   int itsNbeam;      // Number of beams
@@ -117,11 +118,12 @@ private:
   LoVec_dcomplex sample; // current sample in Blitz format
   LoMat_dcomplex itsBuffer;
   LoVec_dcomplex itsBeamBuffer;
+  LoVec_dcomplex itsLookBuffer;
 
   int itsPos;
   int itsQms;
   LoVec_bool qm;         // Quality measure array
-
+  ofstream ofWeights;
 };
 
 #endif

@@ -47,6 +47,7 @@ WH_Projection::WH_Projection (const string& name, unsigned int nin, unsigned int
   itsDetectedRFIs  (nin - 3),
   itsDetNulls      (ndetnull),
   itsWeight        (itsNrcu),
+  itsSteerv        (itsNrcu),
   itsV             (0,0),
   itsA             (itsNrcu),
   itsTapStream     (tapstream),
@@ -61,7 +62,7 @@ WH_Projection::WH_Projection (const string& name, unsigned int nin, unsigned int
   }
     
   for (unsigned int i = 0; i < nin - 2; i++) { // The weight vector from the Weight Determination
-    sprintf (str, "%d",i);
+    sprintf (str, "%d",i);                     // And the deterministic nulls
     if (i == 1) {
       // make the inholder large enough to contain all the deterministic nulls 
       itsInHolders[i] = new DH_SampleC(string("in_") + str, itsNrcu, itsDetNulls);
@@ -73,13 +74,14 @@ WH_Projection::WH_Projection (const string& name, unsigned int nin, unsigned int
     itsOutHolders = new DH_SampleC* [nout];
   }
   for (unsigned int i = 0; i < nout; i++) {  // The resulting Weight vector
-    sprintf (str, "%d",i);                      
-    itsOutHolders[i] = new DH_SampleC (string("out_") + str, itsNrcu, 1);
+    sprintf (str, "%d",i);                   // And the steervector for spectrum plot
+    itsOutHolders[i] = new DH_SampleC (string("out_") + str, itsNrcu, 2);
 
     if (itsTapStream) {
       itsOutHolders[i]->setOutFile (string ("Proj_") + str + string(".dat"));
     }
   }
+  int Count = 0;
 }
 
 WH_Projection::~WH_Projection()
@@ -108,7 +110,10 @@ void WH_Projection::process()
   if (getOutputs() > 0) {
     double phi_det;
     double theta_det;
+    Count++;
     LoVec_dcomplex Vvec(itsNrcu);
+    LoMat_dcomplex jVec(itsNrcu, 2); // concatenate the weightvector and the steervector to save connections
+    
 
 	if (itsRFISources.doHandle ()) {  
 
@@ -128,9 +133,9 @@ void WH_Projection::process()
 	  LoMat_dcomplex V (itsRFISources.getBuffer(), shape (itsNrcu, NumberOfEigenVectors), duplicateData);
 	  itsV.resize(V.shape());
 	  itsV = V;
-
+	  
   	  if (itsDetNulls != 0 && itsInHolders[1]->doHandle()) {
-  	    LoMat_dcomplex detnulls (itsInHolders[1]->getBuffer(), shape (itsNrcu, itsDetNulls), duplicateData);
+	    LoMat_dcomplex detnulls (itsInHolders[1]->getBuffer(), shape (itsNrcu, itsDetNulls), duplicateData);
 	  //	  itsV.transposeSelf(secondDim, firstDim);
 	  // 	  cout << itsV(9,Range::all()) << endl;
 
@@ -153,6 +158,7 @@ void WH_Projection::process()
 	  // Get the steering vector from the weight determination comp. assume that only one will be put in.
 	  LoVec_dcomplex steerv (itsInHolders[0]->getBuffer(), itsNrcu, duplicateData);
 	  itsA = steerv;
+	  itsSteerv = steerv;
 	}
 	
 	if (itsOutHolders[0]->doHandle ()) {  
@@ -167,10 +173,12 @@ void WH_Projection::process()
 	    itsWeight = itsA;
 	  }
 	}
+
+	// Assign the weightvector and steervector to a matrix for transport
+	jVec(Range::all(), 0) = itsWeight;
+	jVec(Range::all(), 1) = itsSteerv;
 	// Copy output to the next step
-	for (int i = 0; i < getOutputs(); i++) {
-	  memcpy(itsOutHolders[i]->getBuffer(), itsWeight.data(), itsNrcu * sizeof(DH_SampleC::BufferType));
-	}
+	memcpy(itsOutHolders[0]->getBuffer(), jVec.data(), itsNrcu * 2 * sizeof(DH_SampleC::BufferType));
   }
 }
 
@@ -207,7 +215,7 @@ LoVec_dcomplex WH_Projection::getWeights (LoVec_dcomplex V, LoVec_dcomplex a)
   LoMat_dcomplex I = LCSMath::diag(w);        // Create Identity matrix
   LoVec_dcomplex temp (V.size());
 
-  dcomplex VHV = 1 / sum((2 * real(V) - V) * V);
+  dcomplex VHV = (dcomplex)1 / sum((2 * real(V) - V) * V);
   temp = VHV * (2 * real(V) - V);
   Pv = LCSMath::matMult(V, temp);
   Pv = I - Pv;
@@ -306,6 +314,6 @@ LoVec_dcomplex WH_Projection::steerv (double phi, double theta, LoVec_double px,
   LoVec_dcomplex res( px.size() );
   dcomplex i = dcomplex (0,1);
 
-  res = exp( i * -2*M_PI*( px*sin(theta)*cos(phi) + py*sin(theta)*sin(phi) ) );
+  res = exp( -2*M_PI*i*( px*sin(theta)*cos(phi) + py*sin(theta)*sin(phi) ) );
   return res;
 }

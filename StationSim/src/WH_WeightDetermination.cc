@@ -36,8 +36,8 @@ WH_WeightDetermination::WH_WeightDetermination(const string& name, unsigned int 
     itsOutHolders  (0),
     itsNrcu        (nant),
     itsArray       (s),
-	itsBeamTraject (beamtrajectoryfile),
-	itsCount       (0)
+    itsBeamTraject (beamtrajectoryfile),
+    itsCount       (0)
 {
   char str[8];
   if (nout > 0) {
@@ -67,13 +67,13 @@ void WH_WeightDetermination::preprocess()
 void WH_WeightDetermination::process()
 {
   if (getOutputs() > 0) {
-	LoVec_dcomplex d = steerv(itsBeamTraject.getPhi (itsCount), 
-							  itsBeamTraject.getTheta (itsCount++), 
-							  itsArray.getPointX (), itsArray.getPointY ());
-	
-	for (int i = 0; i < getOutputs(); i++) {
-	  memcpy(itsOutHolders[i]->getBuffer(), d.data(), itsNrcu * sizeof(DH_SampleC::BufferType));
-	}
+    LoVec_dcomplex d = steerv(itsBeamTraject.getPhi (itsCount), 
+			      itsBeamTraject.getTheta (itsCount++), 
+			      itsArray.getPointX (), itsArray.getPointY ());
+    
+    for (int i = 0; i < getOutputs(); i++) {
+      memcpy(itsOutHolders[i]->getBuffer(), d.data(), itsNrcu * sizeof(DH_SampleC::BufferType));
+    }
   }
 }
 
@@ -107,6 +107,6 @@ LoVec_dcomplex WH_WeightDetermination::steerv (double phi, double theta, LoVec_d
   LoVec_dcomplex res( px.size() );
   dcomplex i = dcomplex (0,1);
 
-  res = exp( i * -2*M_PI*( px*sin(theta)*cos(phi) + py*sin(theta)*sin(phi) ) );
+  res = exp( -2*M_PI*i*( px*sin(theta)*cos(phi) + py*sin(theta)*sin(phi) ) );
   return res;
 }

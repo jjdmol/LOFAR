@@ -92,13 +92,16 @@ private:
   /// Length of buffers.
   unsigned int itsNrcu;
   unsigned int itsMaxRFI;
-  unsigned int itsDetNulls;
   int itsDetectedRFIs;
+  unsigned int itsDetNulls;
   LoVec_dcomplex itsWeight;
+  LoVec_dcomplex itsSteerv;
   LoMat_dcomplex itsV;
   LoVec_dcomplex itsA;
   bool           itsTapStream;
   ArrayConfig    itsArray;
+
+  int Count;
 
   LoVec_dcomplex WH_Projection::getWeights (LoVec_dcomplex B, LoVec_dcomplex d) ;
   LoVec_dcomplex WH_Projection::getWeights (LoMat_dcomplex V, LoVec_dcomplex a) ;
