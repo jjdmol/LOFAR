@@ -60,6 +60,8 @@ WH_Correlator::WH_Correlator(const string& name,
 
   bandwidth=0.0;
   agg_bandwidth=0.0;
+
+  corr_perf=0.0;
 }
 
 WH_Correlator::~WH_Correlator() {
@@ -228,6 +230,8 @@ void WH_Correlator::process() {
 #ifdef DO_TIMING
   stoptime = timer();
 #endif
+  
+  delete[](in_buffer);
 
 #ifdef DO_TIMING
 #ifdef HAVE_MPI
