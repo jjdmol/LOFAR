@@ -126,10 +126,11 @@ public:
   // Normally this is not needed, but for TH_ShMem transports it is useful,
   // because a buffer in TH_ShMem cannot grow. For other TransportHolders
   // it is not necessary, but can be useful in some cases.
-  // <br>nbytes=0 means no maximum.
-  // <br>isAddMax=false means that the maximum data size is the size of the
-  // data blob plus nbytes. This can be useful if the data in the blob
+  // It should be used (with TH_ShMem) if the data in the blob
   // is variable sized and/or if an extra blob is added.
+  // <br>nbytes=0 means no maximum.
+  // <br>isAddMax=true means that the given size (nbytes) is additive,
+  // so the maximum data size is the size of the main data blob plus nbytes.
   // <br>The default maximum data size is 0, but for TransportHolders not
   // supporting growable data, it is the size of all data fields.
   void setMaxDataSize (uint nbytes, bool isAddMax=false);
