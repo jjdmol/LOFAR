@@ -23,21 +23,36 @@ int main (int argc, char** argv)
 
 #ifdef HAVE_MPI
   MPI_Init(&argc, &argv);
+#else
+//          cout << endl;
+//  	cout << "  * Type 'define;' to define the simulation" << endl;
+//  	cout <<	"  * Type 'run;'    to run the simulation" << endl;
+//  	cout <<	"  * Type 'dump;'   to dump the simulators data" << endl;
+//  	cout <<	"  * Type 'quit'    to quit" << endl;
+//  	cout << endl;
 #endif
-
-  Debug::initLevels (argc, (const char* [])argv);
-
-  try {
-    P2Perf simulator;
-    simulator.setarg (argc, argv);
-
-    simulator.baseDefine();
-    //simulator.baseRun(5000);
-    simulator.baseRun(3651);
-    simulator.baseDump();
-    simulator.baseQuit();
-    
-  } catch (...) {
-    cout << "Unexpected exception" << endl;
-  }
+	try {
+	  P2Perf simulator;
+	  simulator.setarg (argc, argv);
+	  
+	  Debug::initLevels (argc, (const char* [])argv);
+	  try {
+	    SimulatorParse::parse (simulator);
+	  } catch (SimulatorParseError x) {
+	    
+	    //cout << x.getMesg() << endl;
+	    cout << x.what() << endl;
+	    
+	    
+	    //      P2Perf simulator;
+	    //      simulator.setarg (argc, argv);
+	    //      simulator.baseDefine();
+	    //      //simulator.baseRun(5000);
+	    //      simulator.baseRun(3651);
+	    //      Simulator.baseDump();
+	    //      simulator.baseQuit();
+	  }
+	} catch (...) {
+	  cout << "Unexpected exception in Simulate" << endl;
+	}
 }

@@ -22,6 +22,10 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.27  2002/05/23 08:50:50  wierenga
+//  %[BugId: 4]%
+//  Adapt to new location of shmem_alloc.
+//
 //  Revision 1.26  2002/05/15 15:04:49  wierenga
 //  Use static class prototypes.
 //
@@ -153,9 +157,6 @@ P2Perf::~P2Perf()
  */
 void P2Perf::define(const ParamBlock& params)
 {
-  // keep compiler happy
-  ParamBlock paramsdummy = params;
-
 #ifdef HAVE_CORBA
   // Start Orb Environment
   AssertStr (BS_Corba::init(), "Could not initialise CORBA environment");
@@ -168,8 +169,6 @@ void P2Perf::define(const ParamBlock& params)
 #endif
   
   char name[20];  // name used during Step/WH creation
-  int    argc = 0;
-  char** argv = NULL;
   
   int rank = TRANSPORTER::getCurrentRank();
   unsigned int size = TRANSPORTER::getNumberOfNodes();
@@ -184,71 +183,19 @@ void P2Perf::define(const ParamBlock& params)
   Simul simul(empty, 
 	      "P2Perf",
 	      true, 
-	      true,  // controllable
+	      true,  // controllable	      
 	      true); // monitor
   setSimul(simul);
   simul.runOnNode(0);
+  simul.setCurAppl(0);
 
+  itsSourceSteps = params.getInt("sources",1);  
+  itsDestSteps   = params.getInt("destinations",1);  
+  bool  WithMPI=false;
 
-  getarg(&argc, &argv);
-  AssertStr (argc >= 3,"Need nr of inputs and nr of outputs as argument"); 
-  // start looking at the command line arguments;
-  // first two arguments are nr of inputs/outputs
-  // -odd and -even are used to have all Sources in one application 
-  //                and all destinations in the other
-
-
-  // determine the number of source/destination steps
-  
-  bool RunInOneAppl = false;
-  bool SplitInTwoApps = false;
-  bool OddSide=false;
-  bool UseMPIRanks = true;
-  if ((argc >= 4 )
-      && (((!strncmp(argv[3], "-odd", 4))) ||  ((!strncmp(argv[3], "-odd", 4)))) ){
-    itsSourceSteps = atoi(argv[1]);
-    itsDestSteps   = atoi(argv[2]);
-
-    TRACER4("Split in Two Apps");
-    if ((!strncmp(argv[3], "-odd", 4))) {
-      SplitInTwoApps = true;
-      OddSide = true;
-      simul.setCurAppl(0);
-    } else if (!strncmp(argv[3], "-even", 5) ) {
-      SplitInTwoApps = true;
-      OddSide = false;
-      simul.setCurAppl(1);
-    } 
-  } else if ((!strncmp(argv[3], "-one", 4))){
-    itsSourceSteps = atoi(argv[1]);
-    itsDestSteps   = atoi(argv[2]);
-    TRACER4("Run in One Appl");
-    simul.setCurAppl(0);
-    RunInOneAppl = true;
-  } else  if (!strncmp(argv[3], "-mpi", 4)){
-    itsSourceSteps = atoi(argv[1]);
-    itsDestSteps   = atoi(argv[2]);
-    TRACER4("Split in MPI applications");
-    simul.setCurAppl(0);
 #ifdef HAVE_MPI    
-    UseMPIRanks = true;
-    simul.setCurAppl(0);
-#else
-    AssertStr (false,"Need MPI for -mpi flag"); 
+  WithMPI = true;
 #endif
-  } else {
-    TRACER1("Default settings");
-    simul.setCurAppl(0);
-    RunInOneAppl = true;
-    simul.setCurAppl(0);
-    itsSourceSteps = 2;
-    itsDestSteps   = 2;
-    TRACER1("Use default number of Source      Steps: " << itsSourceSteps);
-    TRACER1("Use default number of Destination Steps: " << itsDestSteps);
-#ifdef HAVE_MPI    
-    UseMPIRanks = true;
-#endif
-  }
 
   // Create the Workholders and Steps
   Sworkholders = new (WH_GrowSize*)[itsSourceSteps];
@@ -256,7 +203,7 @@ void P2Perf::define(const ParamBlock& params)
   Dworkholders = new (WH_GrowSize*)[itsDestSteps];
   Dsteps       = new (Step*)[itsDestSteps];
   
-
+  
   // now go and create the source and destination steps
   // the two loops do duplicate quite some code, so a private method  
   // should be made later...
@@ -279,28 +226,17 @@ void P2Perf::define(const ParamBlock& params)
 			       "GrowSizeSourceStep", 
 			       iStep,
 			       monitor);
-
-    //Ssteps[iStep]->connectInput(NULL);
-
-
-    // Determine the node and process to run in
-    // ... sory, this should go in a private method later
-    //Ssteps[iStep]->runOnNode(0); // MPI 1 process
-    if (SplitInTwoApps) {
+      
+      // Determine the node and process to run in
       Ssteps[iStep]->runOnNode(iStep  ,0); // run in App 0
-    } else if (RunInOneAppl) {
-      Ssteps[iStep]->runOnNode(iStep  ,0); // run in App 0
-    } else if (UseMPIRanks) {
-      TRACER2("Source MPI runonnode (" << iStep << ")");
-      Ssteps[iStep]->runOnNode(iStep  ,0); // run in App 0
-    }    
   }
+  
   // Report performance of the first source Step
   ((WH_GrowSize*)Ssteps[0]->getWorker())->setReportPerformance(true);
-    
+  
   // Create the destination steps
   for (int iStep = 0; iStep < itsDestSteps; iStep++) {
-
+    
     // Create the Destination Step
     sprintf(name, "GrowSizeDest[%d]", iStep);
     Dworkholders[iStep] = new WH_GrowSize(name, 
@@ -312,18 +248,16 @@ void P2Perf::define(const ParamBlock& params)
     
     Dsteps[iStep] = new Step(Dworkholders[iStep], "GrowSizeDestStep", iStep);
     // Determine the node and process to run in
-    // ... sory, this should go in a private method later
-    //Ssteps[iStep]->runOnNode(0); // MPI 1 process
-    if (SplitInTwoApps) {
-      Dsteps[iStep]->runOnNode(iStep+1,1); // run in App 1
-    } else if (RunInOneAppl) {
-      Dsteps[iStep]->runOnNode(iStep+1,0); // run in App 0
-    } else if (UseMPIRanks) {
+    if (WithMPI) {
       TRACER2("Dest MPI runonnode (" << iStep << ")");
       Dsteps[iStep]->runOnNode(iStep+itsSourceSteps,0); // run in App 0
-    }    
+    } else if (params.getInt("destside",0) != 0) {
+      simul.setCurAppl(1);
+      Dsteps[iStep]->runOnNode(iStep+1,1); // run in App 1
+    } else {
+      Dsteps[iStep]->runOnNode(iStep+1,0); // run in App 0
+    }
   }
-  
 
   // Now Add the steps to the simul;
   // first ALL the sources....
