@@ -1,0 +1,22 @@
+mac.ns.MACScheduler.MACScheduler_SAS_server.type=TCP
+mac.ns.MACScheduler.MACScheduler_VIparent_server.type=TCP
+mac.ns.CCU0_VIC_VIStartDaemon_server.type=TCP
+mac.ns.CCU0_VIC_VIStartDaemon_server.host=ccu0
+mac.ns.CCU1_VIC_VIStartDaemon_server.type=TCP
+mac.ns.CCU1_VIC_VIStartDaemon_server.host=ccu1
+
+mac.top.MACScheduler.CCU0_VIC_VIStartDaemon_server.remoteservice=StartDaemon:StartDaemon_server
+mac.top.MACScheduler.CCU1_VIC_VIStartDaemon_server.remoteservice=StartDaemon:StartDaemon_server
+
+#mac.apl.ams.OTDBhostname=
+#mac.apl.ams.OTDBdatabasename=
+#mac.apl.ams.OTDBpassword=
+mac.apl.ams.shareLocation=/home/lofar/MACTransport/mnt/
+mac.apl.ams.numberOfVIStartDaemons=2
+
+mac.apl.ams.CCU0.startDaemonPort=CCU0_VIC_VIStartDaemon_server
+mac.apl.ams.CCU0.startDaemonTask=StartDaemon
+mac.apl.ams.CCU1.startDaemonPort=CCU1_VIC_VIStartDaemon_server
+mac.apl.ams.CCU1.startDaemonTask=StartDaemon
+
+mac.MACScheduler.pvss.cmdline=-proj MAC
