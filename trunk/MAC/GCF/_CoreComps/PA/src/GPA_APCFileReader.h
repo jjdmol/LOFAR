@@ -29,6 +29,7 @@
 #include <xercesc/util/XMLString.hpp>
 #include <xercesc/dom/DOMBuilder.hpp>
 #include <Common/lofar_list.h>
+#include <Common/lofar_iostream.h>
 
 /**
   This is a helper class for loading XML files with APC into RAM

@@ -70,9 +70,3 @@ PVSSboolean  GSAResources::readSection()
   // So the loop will stop at the end of the file
   return cfgState != CFG_EOF;
 }
-
-/** No descriptions */
-void GSAResources::setProjectName(const char* projName)
-{
-  projectName = projName; // will be set in data member of base class
-}

@@ -34,8 +34,6 @@ class GSAResources : public Resources
 
     // Read the config section
     static PVSSboolean readSection ();        
-
-    static void setProjectName (const char *projName);
 };
 
 #endif

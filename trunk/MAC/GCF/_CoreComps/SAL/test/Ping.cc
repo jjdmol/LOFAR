@@ -24,7 +24,7 @@
 
 #include "Ping.h"
 #include "Echo_Protocol.ph"
-
+#include <Common/lofar_iostream.h>
 
 /**
  * Function to calculate the elapsed time between two tiemval's.
