@@ -20,6 +20,7 @@
 //#
 //#  $Id$
 
+#include <Common/LofarTypes.h>
 #include <Common/StringUtil.h>
 #include <iostream>
 #include <stdarg.h>
@@ -47,7 +48,8 @@ namespace LOFAR
 //
 // formatString(format, ...) --> string
 //
-// Define a global function the accepts printf like arguments and returns a string.
+// Define a global function the accepts printf like arguments and returns 
+// a string.
 //
 const std::string formatString(const	char* format, ...) {
 	char		tmp_cstring[10240];
@@ -63,16 +65,60 @@ const std::string formatString(const	char* format, ...) {
 //
 // timeString(aTime [,format]) --> string
 //
-// Define a global function that convert a timestamp into a humanreadable format.
+// Define a global function that convert a timestamp into a humanreadable 
+// format.
 //
 const std::string timeString(time_t		aTime, 
 							 bool		gmt,
 							 char* 		format)
 {
 	char	theTimeString [256];
-	strftime(theTimeString, 256, format, gmt ? gmtime(&aTime) : localtime(&aTime));
+	strftime(theTimeString, 256, format, gmt ? gmtime(&aTime) 
+														: localtime(&aTime));
 
 	return (theTimeString);
 }
+
+//
+// rtrim(char* CString [,len=0])
+//
+// Skip trailing spaces. If len of string is already known at invocation
+// it may be given thus avoiding a relative expensive strlen call.
+//
+// NOTE: original string is truncated!
+//
+int32 rtrim(char*	aCstring, int32		len)
+{
+	if (!aCstring || !(*aCstring)) {		// aCstring must be valid
+		return (0);
+	}
+
+	if (!len || aCstring[len] != '\0') {	// len unknown or wrong?
+		len = strlen(aCstring);				// recalculate it.
+	}
+	--len;									// set on last char
+
+	while ((len >= 0) && ((aCstring[len]==' ') || (aCstring[len]=='\t'))) {
+		aCstring[len--] = '\0';
+	}
+
+	return (len+1);
+}
+
+//
+// char* ltrim(char*	Cstring)
+//
+// skip leading spaces. A pointer to the first non-whitespace char is
+// returned.
+char*	ltrim(char*	aCstring)
+{
+	while ((*aCstring == ' ') || (*aCstring == '\t')) {
+		aCstring++;
+	}
+
+	return (aCstring);
+}
+
+
 
 } // namespace LOFAR

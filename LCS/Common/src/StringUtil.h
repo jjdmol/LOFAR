@@ -23,9 +23,12 @@
 #ifndef LOFAR_COMMON_STRINGUTIL_H
 #define LOFAR_COMMON_STRINGUTIL_H
 
-#include <lofar_config.h>
-#include <string>
-#include <vector>
+//#include <lofar_config.h>
+//#include <string>
+//#include <vector>
+#include <Common/LofarTypes.h>
+#include <Common/lofar_string.h>
+#include <Common/lofar_vector.h>
 
 namespace LOFAR
 {
@@ -61,16 +64,56 @@ namespace LOFAR
 // formatted std::string. It can be used e.g. in cout constructions:
 // cout << formatString("Opening connection with host %%s", hostName);
 //# In real life this must be %s ofcourse but doxygen need a double %%.
-const std::string formatString(const	char* format, ...);
+const string formatString(const	char* format, ...);
 
 //
 // timeString(aTime [, gmt, format]) --> string
 //
 // The function timeString format the given timestamp into a human-readable
 // format. The default format is yyyy-mm-dd hh:mm:ss
-const std::string timeString(time_t     aTime, 
-							 bool       gmt = true,
-							 char*      format = "%F %T");
+const string timeString(time_t     aTime, 
+						bool       gmt = true,
+						char*      format = "%F %T");
+
+//
+// rtrim(char* CString [,len])
+//
+// Skip trailing spaces. If len of string is already known at invocation
+// it may be given thus avoiding a relative expensive strlen call.
+//
+// Returns the length of the new string
+//
+// NOTE: original string is truncated!
+//
+int32 	rtrim(char*	aCstring, int32		len = 0);
+
+//
+// char* ltrim(char*	Cstring)
+//
+// Skip leading spaces. A pointer to the first non-whitespace char is
+// returned. (points into original string)
+char*	ltrim(char*	aCstring);
+
+//
+// rtrim(aString)
+//
+// Removes trailing whitespace from the string.
+//
+inline void rtrim(string&		aString)
+{
+	aString = aString.erase(aString.find_last_not_of(" 	")+1);
+}
+
+//
+// ltrim(aString)
+//
+// Removes leading whitespace from the string.
+//
+inline void ltrim(string&		aString)
+{
+	aString = aString.erase(0, aString.find_first_not_of(" 	"));
+}
+
 
 } // namespace LOFAR
 
