@@ -14,9 +14,9 @@ set output "$0.ps"
 
 set title "$0"
 set multiplot
-plot "$0.out" using 2:3 notitle w p pt 1 
-plot "$0.out" using 2:5 notitle w p pt 2
-plot "$0.out" using 2:7 notitle w p pt 3 
+plot [][$1:$2] "$0.out" using 2:3 notitle w p pt 1 
+plot [][$1:$2] "$0.out" using 2:5 notitle w p pt 2
+plot [][$1:$2] "$0.out" using 2:7 notitle w p pt 3 
 set nomultiplot
 
 #Now, make a sceen plot
@@ -24,7 +24,7 @@ set nomultiplot
 set terminal x11
 set output
 set multiplot
-plot "$0.out" using 2:3 notitle w p pt 1 
-plot "$0.out" using 2:5 notitle w p pt 2
-plot "$0.out" using 2:7 notitle w p pt 3
+plot [][$1:$2] "$0.out" using 2:3 notitle w p pt 1 
+plot [][$1:$2] "$0.out" using 2:5 notitle w p pt 2
+plot [][$1:$2] "$0.out" using 2:7 notitle w p pt 3
 set nomultiplot
