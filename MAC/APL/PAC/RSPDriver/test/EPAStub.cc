@@ -113,7 +113,7 @@ EPAStub::EPAStub(string name)
     m_reg[MEPHeader::CDO][MEPHeader::CDO_SETTINGS].size  = MEPHeader::CDO_SETTINGS_SIZE;
 
     //
-    // initialize registers to some test pattern
+    // initialize registers to some sensible test pattern
     //
     for (int pid = 0; pid <= MEPHeader::MAX_PID; pid++)
       for (int regid = 0; regid <= MEPHeader::MAX_REGID; regid++)
@@ -134,7 +134,31 @@ EPAStub::EPAStub(string name)
 	      break;
 	  }
 
-	  for (int i = 0; i < size; i++) m_reg[pid][regid].addr[i] = i;
+	  int16  *i_16 = 0;
+	  int32  *i_32 = 0;
+	  uint32 *u_32 = 0;
+	  
+	  if (MEPHeader::SS == pid || MEPHeader::BF == pid)
+	  {
+	    i_16 = (int16*)m_reg[pid][regid].addr;
+	    for (uint32 i = 0; i < size / sizeof(int16); i++) *i_16++ = i;
+	  }
+	  else if ( (MEPHeader::BST == pid && MEPHeader::BST_MEAN == regid)
+		    || (MEPHeader::SST == pid && MEPHeader::SST_MEAN == regid))
+	  {
+	    i_32 = (int32*)m_reg[pid][regid].addr;
+	    for (uint32 i = 0; i < size / sizeof(int32); i++) *i_32++ = i;
+	  }
+	  else if ( (MEPHeader::BST == pid && MEPHeader::BST_POWER == regid)
+		    || (MEPHeader::SST == pid && MEPHeader::SST_POWER == regid))
+	  {
+	    u_32 = (uint32*)m_reg[pid][regid].addr;
+	    for (uint32 i = 0; i < size / sizeof(uint32); i++) *u_32++ = i;
+	  }
+	  else
+	  {
+	    for (uint32 i = 0; i < size; i++) m_reg[pid][regid].addr[i] = i;
+	  }
 	}
       }
   }

@@ -74,13 +74,13 @@ RSPDriver.IDENTITY_WEIGHTS=1
 # The order of these config variables does not
 # alter the order the update actions are performed.
 #
-RSPDriver.READ_STATUS=0
-RSPDriver.WRITE_BF=0
-RSPDriver.WRITE_SS=0
-RSPDriver.WRITE_RCU=0
-RSPDriver.READ_ST=0
-RSPDriver.WRITE_WG=0
-RSPDriver.READ_VERSION=0
+RSPDriver.READ_STATUS=1
+RSPDriver.WRITE_BF=1
+RSPDriver.WRITE_SS=1
+RSPDriver.WRITE_RCU=1
+RSPDriver.READ_ST=1
+RSPDriver.WRITE_WG=1
+RSPDriver.READ_VERSION=1
 
 #
 # Optionally read back settings that
