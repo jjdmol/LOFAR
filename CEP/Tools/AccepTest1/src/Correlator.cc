@@ -68,11 +68,11 @@ void Correlator::define(const KeyValueMap& /*params*/) {
   // now connect to the dummy workholders. 
   myWHRandom.getDataManager().getOutHolder(0)->connectTo 
     ( *itsWH->getDataManager().getInHolder(0), 
-      TH_Socket(itsIP, itsIP, itsBaseport+TH_MPI::getCurrentRank(), false) );
+      TH_Socket(itsIP, itsIP, itsBaseport+TH_MPI::getCurrentRank(), true) );
   
-//   itsWH->getDataManager().getOutHolder(0)->connectTo
-//     ( *myWHDump.getDataManager().getInHolder(0), 
-//       TH_Socket(itsIP, itsIP, itsBaseport+TH_MPI::getNumberOfNodes()+TH_MPI::getCurrentRank(), true, true));
+  itsWH->getDataManager().getOutHolder(0)->connectTo
+    ( *myWHDump.getDataManager().getInHolder(0), 
+      TH_Socket(itsIP, itsIP, itsBaseport+TH_MPI::getNumberOfNodes()+TH_MPI::getCurrentRank(), false));
 }
 
 void Correlator::undefine() {
