@@ -27,7 +27,7 @@
 #include <Common/lofar_iostream.h>		// for cout
 #include <Common/Stopwatch.h>			// for Stopwatch class
 
-#include <pgsql/libpq-fe.h>			// for direct postgres xs
+#include <libpq-fe.h>				// for direct postgres xs
 
 #include <sstream>				// for ostrstream
 #include <sys/time.h>				// for ctime (), time ()
