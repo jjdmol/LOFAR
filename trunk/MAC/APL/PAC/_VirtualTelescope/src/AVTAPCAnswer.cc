@@ -20,19 +20,22 @@
 //#
 //#  $Id$
 
+#include "../../../APLCommon/src/APL_Defines.h"
 #include "AVTAPCAnswer.h"
-#include "AVTLogicalDevice.h"
+#include "AVTAPCAnswerHandlerInterface.h"
 
-AVTAPCAnswer::AVTAPCAnswer(AVTLogicalDevice& ld) :
-  m_logicalDevice(ld)
+AVTAPCAnswer::AVTAPCAnswer(AVTAPCAnswerHandlerInterface& handler) :
+  m_handler(handler)
 {
+  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTAPCAnswer::AVTAPCAnswer"));
 }
 
 AVTAPCAnswer::~AVTAPCAnswer()
 {
+  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTAPCAnswer::~AVTAPCAnswer"));
 }
 
 void AVTAPCAnswer::handleAnswer(GCFEvent& answer)
 {
-  m_logicalDevice.handleAPCAnswer(answer);
+  m_handler.handleAPCAnswer(answer);
 }

@@ -32,12 +32,12 @@
 // forward declaration
 
 class GCFEvent;
-class AVTLogicalDevice;
+class AVTPropertySetAnswerHandlerInterface;
 
 class AVTPropertySetAnswer : public GCFAnswer
 {
   public:
-    explicit AVTPropertySetAnswer(AVTLogicalDevice& ld);
+    explicit AVTPropertySetAnswer(AVTPropertySetAnswerHandlerInterface& handler);
     virtual ~AVTPropertySetAnswer();
 
     virtual void handleAnswer(GCFEvent& answer);
@@ -51,6 +51,6 @@ class AVTPropertySetAnswer : public GCFAnswer
     AVTPropertySetAnswer& operator=(const AVTPropertySetAnswer&);
 
   private:    
-    AVTLogicalDevice& m_logicalDevice;
+    AVTPropertySetAnswerHandlerInterface& m_handler;
 };
 #endif

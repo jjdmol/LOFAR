@@ -20,19 +20,22 @@
 //#
 //#  $Id$
 
+#include "../../../APLCommon/src/APL_Defines.h"
 #include "AVTPropertySetAnswer.h"
-#include "AVTLogicalDevice.h"
+#include "AVTPropertySetAnswerHandlerInterface.h"
 
-AVTPropertySetAnswer::AVTPropertySetAnswer(AVTLogicalDevice& ld) :
-  m_logicalDevice(ld)
+AVTPropertySetAnswer::AVTPropertySetAnswer(AVTPropertySetAnswerHandlerInterface& handler) :
+  m_handler(handler)
 {
+  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTPropertySetAnswer::AVTPropertySetAnswer"));
 }
 
 AVTPropertySetAnswer::~AVTPropertySetAnswer()
 {
+  LOFAR_LOG_TRACE(VT_STDOUT_LOGGER,("AVTPropertySetAnswer::~AVTPropertySetAnswer"));
 }
 
 void AVTPropertySetAnswer::handleAnswer(GCFEvent& answer)
 {
-  m_logicalDevice.handlePropertySetAnswer(answer);
+  m_handler.handlePropertySetAnswer(answer);
 }

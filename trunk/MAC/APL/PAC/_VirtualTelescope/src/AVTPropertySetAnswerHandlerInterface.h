@@ -1,4 +1,4 @@
-//#  AVTTestMain.cc: Main entry for the Virtual Telescope test
+//#  AVTPropertySetAnswerHandlerInterface.h: interface for the propertyset answer handler.
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,25 +20,37 @@
 //#
 //#  $Id$
 
-#include <GCF/GCF_Task.h>
-#include "../../../APLCommon/src/suite.h"
-#include "AVTTest.h"
-#include <boost/shared_ptr.hpp>
+#ifndef AVTPropertySetAnswerHandlerInterface_H
+#define AVTPropertySetAnswerHandlerInterface_H
 
-int main(int argc, char* argv[])
+//# Includes
+//# Common Includes
+//# GCF Includes
+#include <GCF/GCF_Event.h>
+
+//# local includes
+
+// forward declaration
+
+class AVTPropertySetAnswerHandlerInterface
 {
-  int retval=-1;
-  
-  {
-    GCFTask::init(argc, argv);
-    
-    Suite s("MAC.APL.PAC VirtualTelescope Test",&cout);
-  
-    boost::shared_ptr<AVTTest> avtTest(new AVTTest);
-    s.addTest(avtTest.get());
-    s.run();
-    retval=s.report();
-  }
-  return retval;
-}
+  public:
 
+    AVTPropertySetAnswerHandlerInterface() {}; 
+    virtual ~AVTPropertySetAnswerHandlerInterface() {};
+
+    /**
+     * PropertySet answer handling is implemented in the derived classes. 
+     */
+    virtual void handlePropertySetAnswer(GCFEvent& answer)=0;
+
+  protected:
+    // protected copy constructor
+    AVTPropertySetAnswerHandlerInterface(const AVTPropertySetAnswerHandlerInterface&);
+    // protected assignment operator
+    AVTPropertySetAnswerHandlerInterface& operator=(const AVTPropertySetAnswerHandlerInterface&);
+
+  private:
+  
+};
+#endif
