@@ -119,12 +119,19 @@ void WH_BeamFormer::process()
 {
   for (int i = 0; i < itsNrcu; i++) {
     sample(i) = *itsInHolders[i]->getBuffer();
+    
   }
 
   // the weights are calculated in WH_AWE
   if (getOutputs() > 0) {
-    LoVec_dcomplex weight(itsWeight->getBuffer(), itsNrcu, duplicateData);
+    
+    LoVec_dcomplex weight(itsWeight->getBuffer(), itsNrcu, duplicateData);    
     sample *= weight;
+
+    for (int j = 0; j < itsNrcu; j++) {
+      // copy the sample to the outHolders
+      itsOutHolders[j]->getBuffer ()[0] = sample(j);
+    }
   }
 }
 
@@ -133,16 +140,14 @@ void WH_BeamFormer::process()
 void WH_BeamFormer::dump() const
 {
   cout << "WH_BeamFormer " << getName() << " Buffers:" << endl;
+  dcomplex sum = 0;
   if (getOutputs() > 0) {
     for (int i=0; i < itsNrcu; i++) {
-      cout << itsOutHolders[i]->getBuffer() << '.' << endl  ;
+      sum = sum + itsOutHolders[i]->getBuffer()[0];
+      //      cout << itsOutHolders[i]->getBuffer()[0] << '.' << endl ;
     }
+    cout << "Sum of beamformer outputs: "<< sum.real() << endl;
   }
-  // This in case of extreme debugging
-  // Dump the entire fifo to screen
-  // This might take a while.
-
-  // cout << itsOutFifo << endl;
 }
 
 
