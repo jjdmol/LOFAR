@@ -313,7 +313,7 @@ ssize_t GCFPort::recvv(iovec buffers[], int n)
  */
 long GCFPort::setTimer(long delay_sec,    long delay_usec,
 		     long interval_sec, long interval_usec,
-		     const void* arg)
+		     void* arg)
 {
   if (!_pSlave) return -1;
   return _pSlave->setTimer(delay_sec, delay_usec,
@@ -326,7 +326,7 @@ long GCFPort::setTimer(long delay_sec,    long delay_usec,
  */
 long GCFPort::setTimer(double delay_seconds, 
 		     double interval_seconds,
-		     const void* arg)
+		     void* arg)
 {
   if (!_pSlave) return -1;
   return _pSlave->setTimer(delay_seconds,
@@ -337,7 +337,7 @@ long GCFPort::setTimer(double delay_seconds,
 /**
  * ::cancelTimer
  */
-int GCFPort::cancelTimer(long timerid, const void **arg)
+int GCFPort::cancelTimer(long timerid, void **arg)
 {
   if (!_pSlave) return -1;
   return _pSlave->cancelTimer(timerid, arg);
