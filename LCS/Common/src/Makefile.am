@@ -39,6 +39,7 @@ INSTHDRS = \
         lofar_deque.h \
         lofar_fstream.h \
         lofar_global_symbol_warning.h \
+	lofar_iomanip.h \
         lofar_iosfwd.h \
         lofar_iostream.h \
         lofar_list.h \
