@@ -52,7 +52,7 @@ namespace RSP
       /**
        * Send the write message.
        */
-      virtual void sendrequest(uint8 blp);
+      virtual void sendrequest(int iteration);
 
       /**
        * Send the read request.

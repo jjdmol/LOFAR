@@ -33,7 +33,7 @@ using namespace LOFAR;
 using namespace EPA_Protocol;
 
 StatsSync::StatsSync(GCFPortInterface& board_port, int board_id)
-  : SyncAction(board_port, board_id)
+  : SyncAction(board_port, board_id, 1)
 {
 }
 
@@ -42,25 +42,18 @@ StatsSync::~StatsSync()
   /* TODO: delete event? */
 }
 
-void StatsSync::sendrequest(uint8 /*blp*/)
+void StatsSync::sendrequest(int /*iteration*/)
 {
+  // send read status request to check status of the write
+  EPARspstatusReadEvent rspstatus;
+  MEP_RSPSTATUS(rspstatus.hdr, MEPHeader::READ);
+
+  getBoardPort().send(rspstatus);
 }
 
 void StatsSync::sendrequest_status()
 {
-  // send read status request to check status of the write
-  EPARspstatusEvent rspstatus;
-  MEP_RSPSTATUS(rspstatus.hdr, MEPHeader::READ);
-  
-  // clear from first field onwards
-  memset(&rspstatus.board, 0, MEPHeader::RSPSTATUS_SIZE);
-
-#if 0
-  // on the read request don't send the data
-  rspstatus.length -= RSPSTATUS_SIZE;
-#endif
-
-  getBoardPort().send(rspstatus);
+  // intentionally left empty
 }
 
 GCFEvent::TResult StatsSync::handleack(GCFEvent& event, GCFPortInterface& /*port*/)

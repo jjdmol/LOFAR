@@ -84,6 +84,7 @@ namespace EPA_Protocol
        * Register IDs
        */
       static const uint8 RSPSTATUS     = 0x00;
+      static const uint8 FWVERSION     = 0x01;
 
       static const uint8 SELFTEST      = 0x00;
 
@@ -120,6 +121,7 @@ namespace EPA_Protocol
        * Read/write sizes in octets (= bytes)
        */
       static const uint16 RSPSTATUS_SIZE     = 44;
+      static const uint16 FWVERSION_SIZE     = 2;
 
       static const uint16 SELFTEST_SIZE      = 1;
 
@@ -189,6 +191,8 @@ namespace EPA_Protocol
 
 #define MEP_RSPSTATUS(hdr, oper) \
   (hdr).set(oper,         CTX(DST_RSP),              CTX(STATUS), CTX(RSPSTATUS),     (CTX(READ) == oper?0:CTX(RSPSTATUS_SIZE)))
+#define MEP_FWVERSION(hdr, oper) \
+  (hdr).set(oper,         CTX(DST_RSP),              CTX(STATUS), CTX(FWVERSION),     (CTX(READ) == oper?0:CTX(FWVERSION_SIZE)))
 #define MEP_SELFTEST(hdr) \
   (hdr).set(CTX(WRITE),   CTX(DST_RSP),              CTX(TST),    CTX(SELFTEST),      CTX(SELFTEST_SIZE))
 #define MEP_RESET(hdr) \

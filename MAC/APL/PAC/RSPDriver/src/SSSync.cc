@@ -40,7 +40,7 @@ using namespace blitz;
 #define N_RETRIES 3
 
 SSSync::SSSync(GCFPortInterface& board_port, int board_id)
-  : SyncAction(board_port, board_id)
+  : SyncAction(board_port, board_id, N_BLP)
 {
 }
 
@@ -49,8 +49,9 @@ SSSync::~SSSync()
   /* TODO: delete event? */
 }
 
-void SSSync::sendrequest(uint8 blp)
+void SSSync::sendrequest(int iteration)
 {
+  uint8 blp = (getBoardId() * N_BLP) + iteration;
   LOG_DEBUG(formatString(">>>> SSSync(%s) blp=%d",
 			 getBoardPort().getName().c_str(),
 			 blp));
@@ -78,16 +79,8 @@ void SSSync::sendrequest(uint8 blp)
 void SSSync::sendrequest_status()
 {
   // send read status request to check status of the write
-  EPARspstatusEvent rspstatus;
+  EPARspstatusReadEvent rspstatus;
   MEP_RSPSTATUS(rspstatus.hdr, MEPHeader::READ);
-  
-  // clear from first field onwards
-  memset(&rspstatus.board, 0, MEPHeader::RSPSTATUS_SIZE);
-
-#if 0
-  // on the read request don't send the data
-  rspstatus.length -= RSPSTATUS_SIZE;
-#endif
 
   getBoardPort().send(rspstatus);
 }

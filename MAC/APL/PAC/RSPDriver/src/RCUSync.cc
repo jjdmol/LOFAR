@@ -22,6 +22,9 @@
 
 #include "RCUSync.h"
 #include "EPA_Protocol.ph"
+#include "Cache.h"
+
+#include <string.h>
 
 #undef PACKAGE
 #undef VERSION
@@ -33,7 +36,7 @@ using namespace LOFAR;
 using namespace EPA_Protocol;
 
 RCUSync::RCUSync(GCFPortInterface& board_port, int board_id)
-  : SyncAction(board_port, board_id)
+  : SyncAction(board_port, board_id, N_BLP / 2)
 {
 }
 
@@ -42,24 +45,28 @@ RCUSync::~RCUSync()
   /* TODO: delete event? */
 }
 
-void RCUSync::sendrequest(uint8 /*blp*/)
+void RCUSync::sendrequest(int iteration)
 {
+  uint8 blp = (getBoardId() * N_BLP) + iteration * 2;
+
+  EPARcusettingsEvent rcusettings;
+  MEP_RCUSETTINGS(rcusettings.hdr, MEPHeader::WRITE, 0);
+  rcusettings.hdr.m_fields.addr.dstid = blp;
+
+  RCUSettings x = Cache::getInstance().getBack().getRCUSettings(blp);
+  RCUSettings y = Cache::getInstance().getBack().getRCUSettings(blp + 1);
+  memcpy(&rcusettings.x, &x, sizeof(uint8));
+  memcpy(&rcusettings.y, &y, sizeof(uint8));
+
+  getBoardPort().send(rcusettings);
 }
 
 void RCUSync::sendrequest_status()
 {
   // send read status request to check status of the write
-  EPARspstatusEvent rspstatus;
+  EPARspstatusReadEvent rspstatus;
   MEP_RSPSTATUS(rspstatus.hdr, MEPHeader::READ);
   
-  // clear from first field onwards
-  memset(&rspstatus.board, 0, MEPHeader::RSPSTATUS_SIZE);
-
-#if 0
-  // on the read request don't send the data
-  rspstatus.length -= RSPSTATUS_SIZE;
-#endif
-
   getBoardPort().send(rspstatus);
 }
 

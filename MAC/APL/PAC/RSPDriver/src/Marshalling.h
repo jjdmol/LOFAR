@@ -25,6 +25,8 @@
 #ifndef MARSHALLING_H_
 #define MARSHALLING_H_
 
+#include <blitz/array.h>
+
 #define MSH_ARRAY_SIZE(array, datatype)					     \
 (((array).dimensions()*sizeof(int32)) + ((array).size() * sizeof(datatype)))
 

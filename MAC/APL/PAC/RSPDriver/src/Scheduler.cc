@@ -91,6 +91,22 @@ GCFEvent::TResult Scheduler::run(GCFEvent& event, GCFPortInterface& /*port*/)
   {
     LOG_INFO("Scheduler::run");
 
+    if (!syncHasCompleted())
+    {
+      LOG_WARN("previous sync has not yet completed!, skipping sync");
+      for (map< GCFPortInterface*, bool >::iterator it = m_sync_completed.begin();
+	   it != m_sync_completed.end();
+	   it++)
+      {
+	if (!(*it).second)
+	{
+	  LOG_INFO(formatString("port %s has not yet completed sync", (*it).first->getName().c_str()));
+	}
+      }
+
+      return GCFEvent::NOT_HANDLED;
+    }
+
     setCurrentTime(timeout->sec, 0);
 
     scheduleCommands();
@@ -168,6 +184,14 @@ bool Scheduler::syncHasCompleted()
   }
 
   return result;
+}
+
+void Scheduler::cancel(GCFPortInterface& /*port*/)
+{
+  // cancel all commands related to this port
+  
+  // TODO: need to remove commands from the priority queue
+  // how can we remove things from a std::priority_queue?
 }
 
 void Scheduler::addSyncAction(SyncAction* action)

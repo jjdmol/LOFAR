@@ -21,6 +21,7 @@
 //#  $Id$
 
 #include "Versions.h"
+#include "Marshalling.h"
 
 #undef PACKAGE
 #undef VERSION
@@ -30,20 +31,27 @@ using namespace LOFAR;
 
 using namespace RSP_Protocol;
 using namespace std;
+using namespace blitz;
 
 unsigned int Versions::getSize()
 {
-  return sizeof(struct timeval);
+  return MSH_ARRAY_SIZE(m_versions, uint16);
 }
 
 unsigned int Versions::pack  (void* buffer)
 {
-  buffer = buffer;
-  return 0;
+  unsigned int offset = 0;
+
+  MSH_PACK_ARRAY(buffer, offset, m_versions, uint16);
+
+  return offset;
 }
 
 unsigned int Versions::unpack(void *buffer)
 {
-  buffer = buffer;
-  return 0;
+  unsigned int offset = 0;
+
+  MSH_UNPACK_ARRAY(buffer, offset, m_versions, uint16, 1);
+
+  return offset;
 }

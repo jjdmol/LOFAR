@@ -126,8 +126,18 @@ PRELUDE_END;
 //
 
 event = {
+  signal = RSPSTATUS_READ;
+  dir = IN;
+  param = {
+    name = "hdr";
+    type = "EPA_Protocol::MEPHeader";
+    userdefined;
+  };
+};
+
+event = {
   signal = RSPSTATUS;
-  dir = INOUT;
+  dir = OUT;
   param = {
     name = "hdr";
     type = "EPA_Protocol::MEPHeader";
@@ -147,6 +157,31 @@ event = {
   };
 };
 
+event = {
+  signal = FWVERSION_READ;
+  dir = IN;
+  param = {
+    name = "hdr";
+    type = "EPA_Protocol::MEPHeader";
+    userdefined;
+  };
+};
+
+event = {
+  signal = FWVERSION;
+  dir = OUT;
+  param = {
+    name = "hdr";
+    type = "EPA_Protocol::MEPHeader";
+    userdefined;
+  };
+  param = {
+    name = "version";
+    type = "uint16";
+  };
+};
+
+/*
 event = {
   signal = SELFTEST;
   dir = INOUT;
@@ -180,10 +215,21 @@ event = {
     userdefined;
   };
 };
+*/
+
+event = {
+  signal = WGSETTINGS_READ;
+  dir = IN;
+  param = {
+    name = "hdr";
+    type = "EPA_Protocol::MEPHeader";
+    userdefined;
+  };
+};
 
 event = {
   signal = WGSETTINGS;
-  dir = INOUT;
+  dir = OUT;
   param = {
     name = "hdr";
     type = "EPA_Protocol::MEPHeader";
@@ -209,7 +255,7 @@ event = {
 
 event = {
   signal = WGUSER;
-  dir = INOUT;
+  dir = OUT;
   param = {
     name = "hdr";
     type = "EPA_Protocol::MEPHeader";
@@ -218,6 +264,25 @@ event = {
   param = {
     name = "sample";
     type = "int16[N_USERSAMPLES]";
+  };
+};
+event = {
+  signal = WGUSER_READ;
+  dir = IN;
+  param = {
+    name = "hdr";
+    type = "EPA_Protocol::MEPHeader";
+    userdefined;
+  };
+};
+
+event = {
+  signal = NRSUBBANDS_READ;
+  dir = INOUT;
+  param = {
+    name = "hdr";
+    type = "EPA_Protocol::MEPHeader";
+    userdefined;
   };
 };
 
@@ -236,6 +301,16 @@ event = {
 };
 
 event = {
+  signal = SUBBANDSELECT_READ;
+  dir = IN;
+  param = {
+    name = "hdr";
+    type = "EPA_Protocol::MEPHeader";
+    userdefined;
+  };
+};
+
+event = {
   signal = SUBBANDSELECT;
   dir = INOUT;
   param = {
@@ -246,6 +321,16 @@ event = {
   param = {
     name = "ch";
     type = "uint16[]";
+  };
+};
+
+event = {
+  signal = BFCOEFS_READ;
+  dir = IN;
+  param = {
+    name = "hdr";
+    type = "EPA_Protocol::MEPHeader";
+    userdefined;
   };
 };
 
@@ -264,6 +349,16 @@ event = {
 };
 
 event = {
+  signal = STSTATS_READ;
+  dir = IN;
+  param = {
+    name = "hdr";
+    type = "EPA_Protocol::MEPHeader";
+    userdefined;
+  };
+};
+
+event = {
   signal = STSTATS;
   dir = INOUT;
   param = {
@@ -274,6 +369,16 @@ event = {
   param = {
     name = "stat";
     type = "int16[N_STATS]";
+  };
+};
+
+event = {
+  signal = RCUSETTINGS_READ;
+  dir = INOUT;
+  param = {
+    name = "hdr";
+    type = "EPA_Protocol::MEPHeader";
+    userdefined;
   };
 };
 
@@ -296,7 +401,7 @@ event = {
 };
 
 event = {
-  signal = READRES;
+  signal = READERR;
   dir = OUT;
   param = {
     name = "dummy";
