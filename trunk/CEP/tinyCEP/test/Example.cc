@@ -21,75 +21,42 @@
 //# $Id$
 
 #include <iostream>
-
-#include <Transport/Transporter.h>
-#include <Transport/TH_Mem.h>
-#include <tinyCEP/ApplicationHolder.h>
+#include <Transport/DataHolder.h>
 #include <tinyCEP/DH_Example.h>
+#include <tinyCEP/MyExample.h>
+#include <tinyCEP/SimulatorParseClass.h>
+
+#include <Common/KeyValueMap.h>
 
 using namespace LOFAR;
 
-int main()
+int main(int argc, const char** argv)
 {
-    
-  cout << "tinyCEPFrame Example test program" << endl;
-    
-  DH_Example DH1("dh1", 1);
-  DH_Example DH2("dh2", 1);
-    
-  // Assign an ID for each transporter by hand for now
-  // This will be done by the framework later on
-  Transporter& TR1 = DH1.getTransporter();
-  Transporter& TR2 = DH2.getTransporter();
-  TR1.setItsID(1);
-  TR2.setItsID(2);
-
-  // TH_Mem doesn't implement a blocking send
-  TR1.setIsBlocking(false);
-  TR2.setIsBlocking(false);
-
-  TR1.setSourceAddr(&DH1);
-  TR2.setSourceAddr(&DH2);
-  //  TR2.setSourceAddr(15);
   
-  // connect DH1 to DH2
-  TR2.connectTo(&TR1, TH_Mem::proto);
-    
-  // initialize the DataHolders
-  TR1.init();
-  TR2.init();
-    
-  // fill the DataHolders with some initial data
-  DH1.getBuffer()[0] = fcomplex(17,-3.5);
-  DH2.getBuffer()[0] = 0;
-  DH1.setCounter(2);
-  DH2.setCounter(0);
-    
-  cout << "Before transport : " 
-       << DH1.getBuffer()[0] << ' ' << DH1.getCounter()
-       << " -- " 
-       << DH2.getBuffer()[0] << ' ' << DH2.getCounter()
-       << endl;
-    
-  // do the data transport
-  DH1.write();
-  DH2.read();
-  // note that transport is bi-directional.
-  // so this will also work:
-  //   DH2.write();
-  //   DH1.read();
-  // 
-  
-  cout << "After transport  : " 
-       << DH1.getBuffer()[0] << ' ' << DH1.getCounter()
-       << " -- " 
-       << DH2.getBuffer()[0] << ' ' << DH2.getCounter()
-       << endl;
+#ifdef HAVE_MPI
+  MPI_Init(&argc, (char***)&argv);
+#endif
 
-  if (DH1.getBuffer()[0] == DH2.getBuffer()[0]
-  &&  DH1.getCounter() == DH2.getCounter()) {
-    return 0;
+  // set trace levels
+  Debug::initLevels(argc, argv);
+
+  MyExample EX1(1, 1);
+  EX1.setarg(argc, argv);
+
+#if 0
+  try {
+    //    LOFAR::SimulatorParse::parse(EX1);
+  } catch (LOFAR::SimulatorParseError x) {
+    //    cout << x.getMesg() << endl;
+    cout << x.what() << endl;
   }
-  cout << "Data in receiving DataHolder is incorrect" << endl;
-  return 1;
+#else
+   
+  EX1.baseDefine();
+  EX1.baseRun(10);
+  EX1.baseDump();
+  EX1.baseQuit();
+#endif
+  
+  return 0;
 }
