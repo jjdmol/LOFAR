@@ -2,9 +2,9 @@
 #define TINYONLINEPROTO_DEFINITIONS_H
 
 #define FSIZE 1
-#define NSTATIONS 100
+#define NSTATIONS 20
 
-#define TSIZE 1
+#define TSIZE 100
 #define NBEAMLETS 1
 #define BFBW 256
 #define NVis (BFBW/FSIZE)

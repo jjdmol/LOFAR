@@ -85,7 +85,7 @@ DataHolder* DH_Beamlet::clone() const
 
 void DH_Beamlet::preprocess()
 {
-  addField("Buffer", BlobField<BufferType>(1,itsNumberOfChannels));
+  addField("Buffer", BlobField<BufferType>(1,itsBufSize));
 
   createDataBlock();
   for (unsigned int i=0; i<itsBufSize; i++){ 

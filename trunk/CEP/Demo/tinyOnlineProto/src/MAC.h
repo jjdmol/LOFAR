@@ -26,7 +26,6 @@
 #define pi 3.1415926535897932384626433832795028841972
 
 #include <lofar_config.h>
-#include <Common/Lorrays.h>
 #include <tinyOnlineProto/Station.h>
 //#include <iostream>
 

@@ -1,4 +1,4 @@
-bin_PROGRAMS	= tinyOnlineProto
+bin_PROGRAMS	= BlueGeneDemo tinyOnlineProto
 
 DOCHDRS 	=				\
 DH_Beamlet.h					\
@@ -16,8 +16,9 @@ GnuPlotInterface.h				\
 WH_FringeControl.h				\
 DH_Phase.h					\
 tinyOnlineProto.h				\
-Simulate.h
-
+Simulate.h					\
+WH_Random.h					\
+BlueGeneDemo.h	
 
 tinyOnlineProto_SOURCES  = $(DOCHDRS)		\
 DH_Beamlet.cc					\
@@ -37,6 +38,19 @@ DH_Phase.cc					\
 tinyOnlineProto.cc				\
 Simulate.cc					
 
+BlueGeneDemo_SOURCES = $(DOCHDRS)		\
+DH_Empty.cc					\
+DH_CorrCube.cc					\
+DH_Vis.cc					\
+WH_Random.cc					\
+WH_Correlate.cc					\
+WH_Dump.cc					\
+BlueGeneSimulate.cc				\
+BlueGeneDemo.cc
+
+
+
 tinyOnlineProto_DEPENDENCIES = $(LOFAR_DEPEND)
+BlueGeneDemo_DEPENDENCIES = $(LOFAR_DEPEND)
 
 include $(lofar_sharedir)/Makefile.common

@@ -48,8 +48,6 @@ WH_Dump::WH_Dump (const string& name,
   : WorkHolder    (nin, 1, name,"WH_Dump"),
     itsIndex   (1),
     itsCounter (0),
-    itsBuffer  (0),
-    handle     (0),
     itsRank    (rank)
 {
   char str[8];
@@ -61,23 +59,17 @@ WH_Dump::WH_Dump (const string& name,
   }
 
   // create the dummy output dataholder
-    sprintf (str, "%d", 1);
-    getDataManager().addOutDataHolder(0, 
-				      new DH_Empty (string("out_") + str));
-
-    itsBuffer.resize(PLOTSIZE);
-    itsBuffer = complex<float> (0,0);
-
-    if ( (2 == itsRank)  && (handle == 0) ) {
-      handle = gnuplot_init();
-    }
+  sprintf (str, "%d", 1);
+  getDataManager().addOutDataHolder(0, 
+				    new DH_Empty (string("out_") + str));
+  
+  //  itsBuffer.resize(PLOTSIZE);
+  //  itsBuffer = complex<float> (0,0);
 }
 
 
 WH_Dump::~WH_Dump()
 {
-  gnuplot_close(handle);
-  itsOutputFile.close();
 }
 
 WorkHolder* WH_Dump::construct (const string& name, 
@@ -94,69 +86,29 @@ WH_Dump* WH_Dump::make (const string& name)
 
 void WH_Dump::process()
 {
-  blitz::Array<complex<float>, 2> corr(NSTATIONS, NSTATIONS);
-  blitz::Array<float, 1> plotBuffer (PLOTSIZE) ;
-  corr = complex<float> (0,0);
+  complex<float> corr[NSTATIONS][NSTATIONS];
+  //  corr = complex<float> (0,0);
 
-  TRACER4("WH_Dump::Process()");
+//   TRACER4("WH_Dump::Process()");
   
   itsCounter++;
   DH_Vis *InDHptr = (DH_Vis*)getDataManager().getInHolder(0);
-
+  
   if (( itsCounter % INTERVAL == 0 ) && ( 2 == itsRank )) {
 
-    memcpy (corr.data(), 
+    memcpy (corr, 
 	    InDHptr->getBuffer(), 
 	    NSTATIONS*NSTATIONS*sizeof(DH_Vis::BufferType));
-
-    if (itsIndex % 50 == 0) {
-      cout << itsIndex << endl;
-      cout << corr(blitz::Range(0,4), blitz::Range(0,4)) << endl;
+    for (int i=0; i<5; i++) {
+      for (int j=0; j<5; j++) {
+	cout << corr[i][j] / (complex<float>)TSIZE;
+      }
+      cout << endl;
     }
-    itsBuffer(itsIndex % PLOTSIZE) = corr (1,0);
-    
-    if (0 == itsIndex % PLOTSIZE) {
-
-      // the buffer is filled, we can plot the resulting graph
-      
-      
-//       plotBuffer = sqrt ( sqr ( imag ( itsBuffer ) ) + 
-// 			  sqr ( real ( itsBuffer ) ) );
-
-//       gnuplot_plot_x ( handle, 
-// 		       plotBuffer.data(),
-// 		       itsBuffer.size(),
-// 		       "Power of correlation between station 0 and 99 over time" );
-
-//      gnuplot_close(handle);usleep(50);
-      handle = gnuplot_init();
-
-      plotBuffer = imag ( itsBuffer ) ;
-
-      gnuplot_plot_x ( handle, 
-		       plotBuffer.data(),
-		       itsBuffer.size(), 
-		       "Imag part of correlation between station 0 and 1 over time" );
-
-      plotBuffer = real ( itsBuffer ) ;
-
-      gnuplot_plot_x ( handle, 
-		       plotBuffer.data(),
-		       itsBuffer.size(), 
-		       "Real part of correlation between station 0 and 1 over time" );
-
-      plotBuffer = sqrt ( sqr ( real ( itsBuffer ) ) +
-			  sqr ( imag ( itsBuffer ) ) );
-
-      gnuplot_plot_x ( handle, 
-		       plotBuffer.data(),
-		       itsBuffer.size(), 
-		       "Power part of correlation between station 0 and 1 over time" );
-    }
-    itsIndex++;
+    cout << endl;
   }
+  getDataManager().readyWithInHolder(0);
 }
-
 void WH_Dump::dump()
 {
 }
