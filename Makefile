@@ -59,6 +59,12 @@ LOFARDIR = $(shell pwd)
 MAKE_OPTIONS = -j2
 
 #
+# Define defaults for crontab variables.
+#
+CRONMAILTO = schaaf@astron.nl
+CRONROOT = $$HOME
+
+#
 # all: Target to compile the specified variants of all packages
 #
 all: build
@@ -262,10 +268,21 @@ configure: $(VARIANTS:.variant=.variant_configure)
 # crontab is read from autoconf_share/crontab.builds
 #
 crontab:
-	@crontab -l > $$HOME/crontab_$$$$; \
-	if (diff $$HOME/crontab_$$$$ autoconf_share/crontab.builds > /dev/null); then \
-	  $(RM) $$HOME/crontab_$$$$; \
+	@pidnr=$$$$; \
+	if [ -d $(CRONROOT)/weekly -o -d $(CRONROOT)/daily ]; then \
+	  echo "Error: LOFAR build directories daily and weekly will be used,"; \
+	  echo "       but one or both already exist in $(CRONROOT)"; \
+	  echo " Delete them and redo 'make crontab' if you really want to"; \
+	  exit 2; \
+	fi; \
+	crontab -l > $$HOME/crontab-$$pidnr-old; \
+	sed -e "s%LOFAR_CRONMAILTO%$(CRONMAILTO)%" -e "s%LOFAR_CRONROOT%$(CRONROOT)%" autoconf_share/crontab.builds > $$HOME/crontab-$$pidnr-new; \
+	if (diff $$HOME/crontab-$$pidnr-old $$HOME/crontab-$$pidnr-new > /dev/null); then \
+	  $(RM) $$HOME/crontab-$$pidnr-old; \
 	else \
-	  echo "New crontab will be created; existing saved in $$HOME/crontab_$$$$"; \
-	fi
-	crontab autoconf_share/crontab.builds;
+	  echo "New crontab will be created; root=$(CRONROOT)"; \
+	  echo " its output is sent to $(CRONMAILTO)"; \
+	  echo " existing crontab is saved in $$HOME/crontab-$$pidnr-old"; \
+	fi; \
+	crontab $$HOME/crontab-$$pidnr-new; \
+	$(RM) $$HOME/crontab-$$pidnr-new;
