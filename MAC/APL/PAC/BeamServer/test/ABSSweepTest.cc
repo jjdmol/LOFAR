@@ -161,7 +161,7 @@ GCFEvent::TResult SweepTest::enabled(GCFEvent& e, GCFPortInterface& port)
 	//
 	// keep allocating beams until we have N_BEAMLETS beams
 	//
-	if (++beam_count < N_BEAMLETS)
+	if (++beam_count < MEPHeader::N_BEAMLETS)
 	{
 	  ABSBeamallocEvent alloc;
 	  alloc.spectral_window = 0;
@@ -182,12 +182,12 @@ GCFEvent::TResult SweepTest::enabled(GCFEvent& e, GCFPortInterface& port)
 	    time_t now = time(0);
 
 	    // this sends N_BEAMLETS pointto messages, one for each beam
-	    for (int beam = 0; beam < N_BEAMLETS; beam++)
+	    for (int beam = 0; beam < MEPHeader::N_BEAMLETS; beam++)
 	    {
 		pointto.handle = beam;
 		pointto.time = now + 20;
 		pointto.angle[0]=0.0;
-		pointto.angle[1]=cos(((double)beam/N_BEAMLETS)*M_PI);
+		pointto.angle[1]=cos(((double)beam/MEPHeader::N_BEAMLETS)*M_PI);
 		
 		TESTC(beam_server.send(pointto));
 	    }
@@ -281,9 +281,9 @@ int main(int argc, char** argv)
   cout << "Subband index to plot: ";
   char buf[32];
   int subband = atoi(fgets(buf, 32, stdin));
-  if (subband < 0 || subband > N_BEAMLETS)
+  if (subband < 0 || subband > MEPHeader::N_BEAMLETS)
   {
-      LOG_FATAL(formatString("Invalid subband index, should >= 0 && < %d", N_BEAMLETS));
+      LOG_FATAL(formatString("Invalid subband index, should >= 0 && < %d", MEPHeader::N_BEAMLETS));
       exit(EXIT_FAILURE);
   }
 

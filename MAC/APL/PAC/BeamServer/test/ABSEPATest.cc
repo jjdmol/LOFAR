@@ -150,7 +150,7 @@ GCFEvent::TResult EPATest::test001(GCFEvent& e, GCFPortInterface& port)
 	alloc.spectral_window = 0;
 //	alloc.n_subbands = N_BEAMLETS;
 	memset(alloc.subbands, 0, sizeof(alloc.subbands));
-	for (int i = 0; i < N_BEAMLETS; i++)
+	for (int i = 0; i < MEPHeader::N_BEAMLETS; i++)
 	{
 	    alloc.subbands[i] = i;
 	}

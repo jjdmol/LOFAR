@@ -73,9 +73,9 @@ using namespace RSP_Protocol;
 
 BeamServerTask::BeamServerTask(string name)
     : GCFTask((State)&BeamServerTask::initial, name),
-      m_pos(GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i), N_POL, N_DIM),
-      m_weights(COMPUTE_INTERVAL, GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i), N_BEAMLETS, N_POL),
-      m_weights16(COMPUTE_INTERVAL, GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i), N_BEAMLETS, N_POL),
+      m_pos(GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i), MEPHeader::N_POL, N_DIM),
+      m_weights(COMPUTE_INTERVAL, GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i), MEPHeader::N_BEAMLETS, MEPHeader::N_POL),
+      m_weights16(COMPUTE_INTERVAL, GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i), MEPHeader::N_BEAMLETS, MEPHeader::N_POL),
       m_subbands_modified(false)
 {
   registerProtocol(ABS_PROTOCOL, ABS_PROTOCOL_signalnames);
@@ -84,8 +84,8 @@ BeamServerTask::BeamServerTask(string name)
   m_acceptor.init(*this, "acceptor", GCFPortInterface::MSPP, ABS_PROTOCOL);
   m_rspdriver.init(*this, "rspdriver", GCFPortInterface::SAP, RSP_PROTOCOL);
 
-  (void)Beam::init(N_BEAMLETS, UPDATE_INTERVAL, COMPUTE_INTERVAL);
-  (void)Beamlet::init(N_BEAMLETS);
+  (void)Beam::init(MEPHeader::N_BEAMLETS, UPDATE_INTERVAL, COMPUTE_INTERVAL);
+  (void)Beamlet::init(MEPHeader::N_BEAMLETS);
 
   m_wgsetting.frequency     = 1.5625e6; // 1.5625 MHz
   m_wgsetting.amplitude     = 0x8000 / 256;
@@ -133,7 +133,7 @@ GCFEvent::TResult BeamServerTask::initial(GCFEvent& e, GCFPortInterface& port)
     {
       // create a default spectral window from 0MHz to 20MHz
       // steps of 156.25 kHz
-      SpectralWindow* spw = new SpectralWindow(0.0, 20.0e6/N_SUBBANDS, N_SUBBANDS);
+      SpectralWindow* spw = new SpectralWindow(0.0, 20.0e6/MEPHeader::N_SUBBANDS, MEPHeader::N_SUBBANDS);
       m_spws[0] = spw;
     }
     break;
@@ -406,7 +406,7 @@ void BeamServerTask::beamalloc_action(ABSBeamallocEvent& ba,
       return;                         // RETURN
   }
 
-  if (ba.n_subbands< 0 || ba.n_subbands > N_BEAMLETS)
+  if (ba.n_subbands< 0 || ba.n_subbands > MEPHeader::N_BEAMLETS)
   {
     LOG_ERROR("BEAMALLOC: n_subbands parameter out of range");
 
@@ -546,7 +546,7 @@ void BeamServerTask::wgenable_action()
   // scale and convert to uint16
   wg.settings()(0).freq = (uint16)(((m_wgsetting.frequency * (1 << 16)) / SYSTEM_CLOCK_FREQ) + 0.5);
   wg.settings()(0).ampl = m_wgsetting.amplitude;
-  wg.settings()(0).nof_usersamples = 0;
+  wg.settings()(0).nof_samples = 0;
   wg.settings()(0).mode = WGSettings::MODE_SINE;
   wg.settings()(0)._pad = 0; /* stop valgrind complaining */
 
@@ -563,7 +563,7 @@ void BeamServerTask::wgdisable_action()
   wg.settings().resize(1);
   wg.settings()(0).freq = 0;
   wg.settings()(0).ampl = 0;
-  wg.settings()(0).nof_usersamples = 0;
+  wg.settings()(0).nof_samples = 0;
   wg.settings()(0).mode = WGSettings::MODE_OFF;
   wg.settings()(0)._pad = 0; /* stop valgrind complaining */
 
@@ -632,8 +632,8 @@ void BeamServerTask::compute_weights(long current_seconds)
 #else
   for (int i = 0; i < COMPUTE_INTERVAL; i++)
     for (int j = 0; j < GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i); j++)
-      for (int k = 0; k < N_BEAMLETS; k++)
-	for (int l = 0; l < N_POL; l++)
+      for (int k = 0; k < MEPHeader::N_BEAMLETS; k++)
+	for (int l = 0; l < MEPHeader::N_POL; l++)
 	  {
 	      //
 	      // -1 * imaginary part to take complex conjugate of the weight
@@ -658,7 +658,7 @@ void BeamServerTask::send_weights()
   sw.blpmask.reset();
   for (int i = 0; i < GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i); i++) sw.blpmask.set(i);
 
-  sw.weights().resize(COMPUTE_INTERVAL, GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i), N_BEAMLETS, N_POL);
+  sw.weights().resize(COMPUTE_INTERVAL, GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i), MEPHeader::N_BEAMLETS, MEPHeader::N_POL);
   sw.weights() = m_weights16;
 
   m_rspdriver.send(sw);
@@ -697,7 +697,7 @@ void BeamServerTask::send_sbselection()
   // beam 1, then beam 0 is deallocated, thus there is a hole
   // of 64 beamlets before the beamlets of beam 1.
   //
-  ss.subbands().resize(1, N_BEAMLETS * 2);
+  ss.subbands().resize(1, MEPHeader::N_BEAMLETS * 2);
   ss.subbands() = 0;
 
   int nrsubbands = m_sbsel.size() <= 0 ? 0 : m_sbsel.size() * 2;
@@ -709,13 +709,13 @@ void BeamServerTask::send_sbselection()
   {
     LOG_DEBUG(formatString("(%d,%d)", sel->first, sel->second));
 
-    if (sel->first >= N_BEAMLETS)
+    if (sel->first >= MEPHeader::N_BEAMLETS)
     {
       LOG_ERROR(formatString("SBSELECTION: invalid src index", sel->first));
       continue;
     }
       
-    if (sel->second >= N_SUBBANDS)
+    if (sel->second >= MEPHeader::N_SUBBANDS)
     {
       LOG_ERROR(formatString("SBSELECTION: invalid tgt index", sel->second));
       continue;
