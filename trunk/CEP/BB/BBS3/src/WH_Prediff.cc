@@ -46,7 +46,6 @@ WH_Prediff::WH_Prediff(const string& name, int id)
   // switch input and output channel trigger off
   getDataManager().setAutoTriggerIn(0, false);
   getDataManager().setAutoTriggerOut(0, false);
-  getDataManager().setAutoTriggerOut(1, false);
 }
 
 WH_Prediff::~WH_Prediff()
