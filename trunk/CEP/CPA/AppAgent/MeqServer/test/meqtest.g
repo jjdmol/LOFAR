@@ -1,13 +1,14 @@
 # use_suspend  := T;
 # use_nostart  := T;
 # use_valgrind := T;
+# "--skin=helgrind --logfile=hg.meqserver";
 use_valgrind_opts := [ "",
 #  "--gdb-attach=yes",          # use either this...
- "--logfile=vg.meqserver",       # ...or this, not both
+  "--logfile=vg.meqserver",       # ...or this, not both
 #  "--gdb-path=/home/oms/bin/valddd", 
   ""];
   
-include '../../src/meqserver.g'
+include 'meq/meqserver.g'
 
 const meqserver_test := function ()
 {
@@ -169,19 +170,23 @@ const meqsel_test := function ()
   print res;
 }
 
-const state_test := function ()
+const state_test_init := function ()
 {
   global mqs;
-  mqs := meqserver(verbose=4,options="-d0 -meq:M:O:MeqServer",gui=F);
-  if( is_fail(mqs) )
+  if( !is_record(mqs) )
   {
-    print mqs;
-    fail;
+    mqs := meqserver(verbose=4,options="-d0 -meq:M:O:MeqServer",gui=F);
+    if( is_fail(mqs) )
+    {
+      print mqs;
+      fail;
+    }
   }
   # set verbose debugging messages
   mqs.setdebug("MeqNode MeqForest MeqSink MeqSpigot",5);
   mqs.setdebug("MeqNode MeqForest MeqSink MeqSpigot",5);
   mqs.setdebug("MeqServ MeqVisHandler",5);
+  mqs.setdebug("Glish",3);
   mqs.setdebug("meqserver",1);
   # initialize meqserver
   mqs.init([output_col="PREDICT"],wait=T);
@@ -200,16 +205,23 @@ const state_test := function ()
   print mqs.meq('Create.Node',meqnode('MeqComposer','compose2',children="parm4 parm5 parm6"));
   rec := meqnode('MeqSelector','select1',children="compose1");
   rec.index := 1;
-  rec.config_groups := hiid('a');
+  rec.config_groups := hiid("a b");
   print mqs.meq('Create.Node',rec);
   rec := meqnode('MeqSelector','select2',children="compose2");
   rec.index := 1;
-  rec.config_groups := hiid('a');
+  rec.config_groups := hiid("a b");
   print mqs.meq('Create.Node',rec);
   print mqs.meq('Create.Node',meqnode('MeqComposer','compose3',children="select1 select2"));
   
   # resolve children
   print mqs.meq('Resolve.Children',[name='compose3']);
+}
+
+const state_test := function ()
+{
+  global mqs;
+  if( !is_record(mqs) )
+    state_test_init();
   
   # get indices
   ni_sel1 := mqs.getnodestate('select1').nodeindex;
@@ -220,29 +232,33 @@ const state_test := function ()
   request := meqrequest(cells);
   
   res1 := mqs.meq('Node.Execute',[name='compose3',request=request],T);
+  req1 := request;
   print res1;
   
   request := meqrequest(cells);
   request.addstate('a','select1',[index=2]);
-  request.addstate('b','select2',[index=3]);
+  request.addstate('b',ni_sel2,[index=3]);
   res2 := mqs.meq('Node.Execute',[name='compose3',request=request],T);
+  req2 := request;
   print res2;
   
   request := meqrequest(cells);
   request.addstate('a',"select1 select2",[index=3]);
   res3 := mqs.meq('Node.Execute',[name='compose3',request=request],T);
+  req3 := request;
   print res3;
   
   request := meqrequest(cells);
   request.addstate('b','select1',[index=2]);
   request.addstate('b','*',[index=1]);
   res4 := mqs.meq('Node.Execute',[name='compose3',request=request],T);
+  req4 := request;
   print res4;
   
-  print 'Expecting 1,1: ',res1;
-  print 'Expecting 2,3: ',res2;
-  print 'Expecting 3,3: ',res3;
-  print 'Expecting 2,1: ',res4;
+  print 'Expecting 1,1: ',res1,req1;
+  print 'Expecting 2,3: ',res2,req2;
+  print 'Expecting 3,3: ',res3,req3;
+  print 'Expecting 2,1: ',res4,req4;
 }
 
 

@@ -139,9 +139,12 @@ void MeqServer::getNodeList (DataRecord::Ref &out,DataRecord::Ref::Xfer &)
 //##ModelId=3F98D91B0064
 void MeqServer::getNodeResult (DataRecord::Ref &out,DataRecord::Ref::Xfer &in)
 {
-  Node & node = resolveNode(*in);
+  DataRecord::Ref rec = in;
+  Node & node = resolveNode(*rec);
   cdebug(2)<<"getNodeResult for node "<<node.name()<<endl;
-  const Request & req = (*in)[AidRequest].as<Request>();
+  // take request object out of record
+  rec.privatize(DMI::WRITE|DMI::DEEP);
+  Request &req = rec()[AidRequest].as_wr<Request>();
   cdebug(3)<<"    request is "<<req.sdebug(DebugLevel-1,"    ")<<endl;
   Result::Ref resref;
   int flags = node.execute(resref,req);

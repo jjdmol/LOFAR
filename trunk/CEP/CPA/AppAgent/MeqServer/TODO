@@ -1,35 +1,34 @@
 MEQ in general:
 
-    - Store nodeindex in node, provide accessor.
-
-    - rearrange init() and setState() to make use of DataRecord::merge().
-    
-  * re-work execute(). Make it possible to send up "empty" (command or
-    state-only) requests.  
- 
-  * cache failed Results too (along with result_code and such)
-        
-  * map node_state to setState(), via configuration classes and such.
-    Implement and document the three types of lookups.
-    
-  * do processRider()
-  
   * Specify child labels in node constructor; check them in init().
     Process named children properly.
   
   * Delete.All.Nodes command
   
+  * Document the two types of node_state lookups
+  
+  * Document pollChildren()
+  
   * Persistent nodes
-    
-    + Rename Result to VellSet and ResultSet to Result
-      08/12/03
+        + re-work execute(). Make it possible to send up "empty" (command or
+          state-only) requests.  
+        + cache failed Results too (along with result_code and such)
+        + do processRider()
+        + map node_state to setState(), via configuration classes and such.
+          Implement and document the two types of lookups.
+          12/12/03
 
-    + Rename getResult() to execute(), and getResultImpl to getResult.
-      08/12/03
-      
-    + think through writability & privatization issues. Perhaps finally
-      implement simple copy-on-write as the default policy in DMI?
-      27/11/03: good to go for now. Still thinking about COW.
+        + Store nodeindex in node, provide accessor.
+        + rearrange init() and setState() to make use of DataRecord::merge().
+          12/12/03
+
+        + Rename Result to VellSet and ResultSet to Result
+        + Rename getResult() to execute(), and getResultImpl to getResult.
+          08/12/03
+
+        + think through writability & privatization issues. Perhaps finally
+          implement simple copy-on-write as the default policy in DMI?
+          27/11/03: good to go for now. Still thinking about COW.
       
   * Keep thinking about COWs. 
 
@@ -41,8 +40,8 @@ Spigot:
 
   * Allow string specification for correlations
   
-  * In devliver, use some function like "Node::setCache" to store the result in
-    cache, so as to unify the cache format
+  * In deliver, just stick the result in the cache and let the caching code
+    take over.
 
 Parm:
 
@@ -60,26 +59,69 @@ Vells:
     
 Function:
   
-  * Allow cases where a Result has 1 plane and another has N planes: treat
-    the single-plane result as a scalar
+        + Allow cases where a Result has 1 plane and another has N planes: treat
+          the single-plane result as a scalar
+          12/12/03
 
 General:
   
   * GlishUtil: interpret record field name "#nnn" as AtomicID(atoi("nnn"))
-  
-  * DataField: check how type mismatches are reported; clean up
 
   * Check how a zero-length string or hiid array from Glish shows up in
     AppAgent -- because it looked like a 1-element DataField when 
     processing child specs.
     
   * Ditto for zero-length arrays ('[]'), i.e., uninitialized domain, etc.
+
+  * Figure out why state_test() (meqtest.g) causes Requests to be fail to
+    unpack upon the first invocation. Possibly related to problem below.
+    See report 1 below.
     
   * Figure out why the hell it freezes on a single-CPU machine sometimes. A
     race condition somewhere? NB: a sure way to do it (on zeppelin) seems to
     enable wait_reply=T in the Resolve.Children calls in meqtest.g.
 
+        + GlishUtil: interpret record field name "#nnn" as AtomicID(atoi("nnn"))
+        + DataField: check how type mismatches are reported; clean up
+          12/12/03
         + DataRecord: add a merge method
           8/12/03: done
           
+          
+------------------------------------------
+report 1:
+
+Running state_test() the first time round sometimes results in error. 
+Node.Execute returns .e.g:
+
+  error=[DataRecord/40a15538 RW 4 fields / refs R:0 WR:0] validate of Request
+  record failed: [DataRecord/40a155c0 RW 4 fields / refs R:1 WR:1] can't access
+  datarecord in scalar mode (id: (null), type meqcells)
+
+The request looks like:
+
+  Failed request: DataRecord/40a15538 RW 4 fields / refs R:0 WR:0
+   cells: DataRecord/40a155c0 RW 4 fields / refs R:1 WR:1
+             refs: <-R/409152b0>40a155c0 AW--L p/- n/-
+             times: DataArray/40a185d8 RW Array(double,1)  3
+             domain: DataField/40a182c8 RO double:4 / refs R:1 WR:1
+                       refs: <-R/409153b8>40a182c8 AW--L p/- n/-
+             num.freq: DataArray/40a18410 RW Array(int,1)  1
+             time.steps: DataArray/40a19370 RW Array(double,1)  3
+   node.state: DataRecord/40a19718 RW 1 fields / refs R:1 WR:1
+             refs: <-R/409154c0>40a19718 AW--L p/- n/-
+             b: DataRecord/40a19770 RW 1 fields / refs R:1 WR:1
+                       refs: <-R/409159d0>40a19770 AW--L p/- n/-
+                       by.list: DataField/40a197c8 RW datarecord:2 / refs R:1 WR:1
+                                 refs: <-R/40915a80>40a197c8 AW--L p/- n/-
+                                   0: uninitialized
+                                   1: uninitialized
+   calc.deriv: DataArray/40a19d30 RW Array(bool,1)  1
+   request.id: DataField/40a19e70 RW hiid:1 / refs R:1 WR:1
+
+Note that 40a155c0 (the exception originator) is the Cells object, and it is
+being accessed as TpMeqCells in scalar mode. This can only occur if the
+(*this)[FCells].as_p<Cells>() call in Request::validateContent() for
+some reason fails to recognize the Cells as such, treats it as a DataRecord,
+and tries to index _into_ it.
 
