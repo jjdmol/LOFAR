@@ -27,7 +27,7 @@ using namespace LOFAR;
 using namespace LOFAR::ACC;
 
 int main(int argc, char * argv[]) {
-	INIT_LOGGER("ACCdemo.log_prop");
+	INIT_LOGGER("tParameterSet");
 
 	cout << "\nReading in parameterfile 'tParameterSet.ps'\n";
 	ParameterSet		myPS("tParameterSet.ps");
@@ -50,6 +50,10 @@ int main(int argc, char * argv[]) {
 	cout.precision(20);
 	cout << "a.b.double="		<< myPS.getDouble("a.b.double") << endl;
 	cout << "a.b.lange_naam="	<< myPS.getString("a.b.lange_naam") << endl;
+
+	cout << "a.b.time1="        << myPS.getTime("a.b.time1") << endl;
+	cout << "a.b.time2="        << myPS.getTime("a.b.time2") << endl;
+	cout << "a.b.time3="        << myPS.getTime("a.b.time3") << endl;
 
 	cout << "\nThe main ParameterSet contains:\n";
 	cout << myPS;
