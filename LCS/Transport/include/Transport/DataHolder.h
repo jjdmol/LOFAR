@@ -72,11 +72,10 @@ public:
   // Make a copy
   virtual DataHolder* clone() const = 0;
 
-  // The preprocess method is called before process is done, thus
+  // The preprocess method is called during init, thus
   // before any read or write is done.
   // It can be used to initialize the DataHolder.
   // The default implementation does nothing.
-  void basePreprocess();
   virtual void preprocess();
 
   // The postprocess method is called after process is done.
@@ -93,7 +92,7 @@ public:
   virtual bool read();
 
   // Write the packet data.
-  virtual void write();
+  virtual bool write();
 
   // Is the Transporter of this DataHolder valid?
   bool isValid() const;
@@ -111,7 +110,7 @@ public:
 			    bool blockingComm = true);
 
   // Initialization (must be called after connect).
-  void init();   
+  bool init();   
 
   // Getting, setting and comparing of a timestamp.
   void setTimeStamp (unsigned long aTimeStamp);

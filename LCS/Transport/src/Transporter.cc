@@ -83,8 +83,7 @@ bool Transporter::init()
   { return false; }
   else
   {
-    itsTransportHolder->init();
-    return true;
+    return itsTransportHolder->init();
   }
 }
 
@@ -195,35 +194,37 @@ bool Transporter::read (bool fixedSized)
 
 }
 
-void Transporter::write (bool fixedSized)
+bool Transporter::write (bool fixedSized)
 {
   LOG_TRACE_FLOW("Transporter write()");
+  bool result = false;
   if (getTransportHolder() && getWriteTag() >= 0) {
     LOG_TRACE_COND_STR("Transport::write; call send(" << getDataPtr() 
 		       << "," << getDataSize() << ", " << getWriteTag() << ")");
     if (fixedSized) {
       if (isBlocking()) {
-	getTransportHolder()->sendBlocking(getDataPtr(),
-					   getDataSize(),
-					   getWriteTag());
+	result = getTransportHolder()->sendBlocking(getDataPtr(),
+						 getDataSize(),
+						 getWriteTag());
       } else {
-	getTransportHolder()->sendNonBlocking(getDataPtr(),
-					      getDataSize(),
-					      getWriteTag());
+	result = getTransportHolder()->sendNonBlocking(getDataPtr(),
+						    getDataSize(),
+						    getWriteTag());
       }
     } else {
       if (isBlocking()) {
-	getTransportHolder()->sendVarBlocking(getDataPtr(),
-					      getDataSize(),
-					      getWriteTag());
+	result = getTransportHolder()->sendVarBlocking(getDataPtr(),
+						    getDataSize(),
+						    getWriteTag());
       } else {
-	getTransportHolder()->sendVarNonBlocking(getDataPtr(),
-						 getDataSize(),
-						 getWriteTag());
+	result = getTransportHolder()->sendVarNonBlocking(getDataPtr(),
+						       getDataSize(),
+						       getWriteTag());
       }
     }
     setStatus(Transporter::Dirty);
   }
+  return result;
 }
 
 void Transporter::dump() const 
