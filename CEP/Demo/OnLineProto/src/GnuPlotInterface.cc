@@ -412,10 +412,12 @@ void gnuplot_plot_x(
     }
 
     /* Open temporary file for output   */
-	sprintf(name, "%s/gnuplot-i-XXXXXX", P_tmpdir);
+    sprintf(name, "%s/gnuplot-i-XXXXXX", P_tmpdir);
+    cout << name << endl;
     if ((tmpfd=mkstemp(name))==-1) {
-        fprintf(stderr,"cannot create temporary file: exiting plot") ;
-        return ;
+      fprintf(stderr,"cannot create temporary file: exiting plot") ;
+      perror("gnuplot_plot_x");
+      return ;
     }
 
     /* Store file name in array for future deletion */
