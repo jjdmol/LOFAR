@@ -22,7 +22,7 @@
 
 #include <PSS3/MNS/ParmTableAIPS.h>
 #include <PSS3/MNS/MeqDomain.h>
-#include <Common/Debug.h>
+#include <Common/LofarLogger.h>
 #include <tables/Tables/ExprNode.h>
 #include <tables/Tables/ExprNodeSet.h>
 #include <tables/Tables/ScalarColumn.h>
@@ -124,7 +124,7 @@ MeqPolc ParmTableAIPS::getInitCoeff (const string& parmName,
 	  *itsInitIndexName   = name;
 	  Vector<uInt> rownrs = itsInitIndex->getRowNumbers();
 	  if (rownrs.nelements() > 0) {
-	    Assert (rownrs.nelements() == 1);
+	    ASSERT (rownrs.nelements() == 1);
 	    int row = rownrs(0);
 	    ROArrayColumn<bool> maskCol (itsInitTable, "SOLVABLE");
 	    ROArrayColumn<Double> valCol (itsInitTable, "VALUES");
@@ -172,12 +172,12 @@ void ParmTableAIPS::putCoeff (const string& parmName,
 {
   itsTable.reopenRW();
   const MeqDomain& domain = polc.domain();
-  const MeqMatrix& values = polc.getCoeff();
-  const MeqMatrix& simvalues = polc.getSimCoeff();
-  const MeqMatrix& pertsimvalues = polc.getPertSimCoeff();
+  //const MeqMatrix& values = polc.getCoeff();
+  //const MeqMatrix& simvalues = polc.getSimCoeff();
+  //const MeqMatrix& pertsimvalues = polc.getPertSimCoeff();
   Table sel = find (parmName, srcnr, statnr, domain);
   if (sel.nrow() > 0) {
-    AssertMsg (sel.nrow()==1, "Parameter " << parmName <<
+    ASSERTSTR (sel.nrow()==1, "Parameter " << parmName <<
 		 " has multiple entries for time "
 		 << domain.startX() << ':' << domain.endX() << " and freq "
 		 << domain.startY() << ':' << domain.endY());
@@ -185,7 +185,7 @@ void ParmTableAIPS::putCoeff (const string& parmName,
     ROScalarColumn<double> etCol (sel, "ENDTIME");
     ROScalarColumn<double> sfCol (sel, "STARTFREQ");
     ROScalarColumn<double> efCol (sel, "ENDFREQ");
-    AssertMsg (near(domain.startX(), stCol(0))  &&
+    ASSERTSTR (near(domain.startX(), stCol(0))  &&
 	       near(domain.endX(), etCol(0))  &&
 	       near(domain.startY(), sfCol(0))  &&
 	       near(domain.endY(), efCol(0)),
@@ -196,41 +196,92 @@ void ParmTableAIPS::putCoeff (const string& parmName,
     ArrayColumn<double> valCol (sel, "VALUES");
     ArrayColumn<double> simvalCol (sel, "SIM_VALUES");
     ArrayColumn<double> simpertCol (sel, "SIM_PERT");
-    valCol.put (0, values.getDoubleMatrix());
+    valCol.put (0, polc.getCoeff().getDoubleMatrix());
   } else {
-    uInt rownr = itsTable.nrow();
-    itsTable.addRow();
-    ScalarColumn<String> namCol (itsTable, "NAME");
-    ScalarColumn<int> srcCol   (itsTable, "SRCNR");
-    ScalarColumn<int> statCol  (itsTable, "STATNR");
-    ScalarColumn<double> stCol (itsTable, "STARTTIME");
-    ScalarColumn<double> etCol (itsTable, "ENDTIME");
-    ScalarColumn<double> sfCol (itsTable, "STARTFREQ");
-    ScalarColumn<double> efCol (itsTable, "ENDFREQ");
-    ScalarColumn<double> t0Col (itsTable, "TIME0");
-    ScalarColumn<double> f0Col (itsTable, "FREQ0");
-    ScalarColumn<bool> normCol (itsTable, "NORMALIZED");
-    ScalarColumn<double> diffCol (itsTable, "DIFF");
-    ScalarColumn<bool> drelCol (itsTable, "DIFF_REL");
+    putNewCoeff(parmName, srcnr, statnr, polc);
+  }
+}
+
+void ParmTableAIPS::putNewCoeff( const string& parmName, 
+				  int srcnr,
+				  int statnr,
+				  const MeqPolc& polc)
+{
+  itsTable.reopenRW();
+  uInt rownr = itsTable.nrow();
+  itsTable.addRow();
+  ScalarColumn<String> namCol (itsTable, "NAME");
+  ScalarColumn<int> srcCol   (itsTable, "SRCNR");
+  ScalarColumn<int> statCol  (itsTable, "STATNR");
+  ScalarColumn<double> stCol (itsTable, "STARTTIME");
+  ScalarColumn<double> etCol (itsTable, "ENDTIME");
+  ScalarColumn<double> sfCol (itsTable, "STARTFREQ");
+  ScalarColumn<double> efCol (itsTable, "ENDFREQ");
+  ScalarColumn<double> t0Col (itsTable, "TIME0");
+  ScalarColumn<double> f0Col (itsTable, "FREQ0");
+  ScalarColumn<bool> normCol (itsTable, "NORMALIZED");
+  ScalarColumn<double> diffCol (itsTable, "DIFF");
+  ScalarColumn<bool> drelCol (itsTable, "DIFF_REL");
+  namCol.put (rownr, parmName);
+  srcCol.put (rownr, srcnr);
+  statCol.put (rownr, statnr);
+  stCol.put (rownr, polc.domain().startX());
+  etCol.put (rownr, polc.domain().endX());
+  sfCol.put (rownr, polc.domain().startY());
+  efCol.put (rownr, polc.domain().endY());
+  ArrayColumn<double> valCol (itsTable, "VALUES");
+  ArrayColumn<double> simvalCol (itsTable, "SIM_VALUES");
+  ArrayColumn<double> simpertCol (itsTable, "SIM_PERT");
+  valCol.put (rownr, polc.getCoeff().getDoubleMatrix());
+  simvalCol.put (rownr, polc.getSimCoeff().getDoubleMatrix());
+  simpertCol.put (rownr, polc.getPertSimCoeff().getDoubleMatrix());
+  t0Col.put   (rownr, polc.getX0());
+  f0Col.put   (rownr, polc.getY0());
+  normCol.put (rownr, polc.isNormalized());
+  diffCol.put (rownr, polc.getPerturbation());
+  drelCol.put (rownr, polc.isRelativePerturbation());
+}
+
+
+void ParmTableAIPS::putNewDefCoeff( const string& parmName, 
+				  int srcnr,
+				  int statnr,
+				  const MeqPolc& polc)
+{
+  itsTable.reopenRW();
+
+    uInt rownr = itsInitTable.nrow();
+    itsInitTable.addRow();
+    ScalarColumn<String> namCol (itsInitTable, "NAME");
+    ScalarColumn<int> srcCol   (itsInitTable, "SRCNR");
+    ScalarColumn<int> statCol  (itsInitTable, "STATNR");
+    //    ScalarColumn<double> stCol (itsInitTable, "STARTTIME");
+    //    ScalarColumn<double> etCol (itsInitTable, "ENDTIME");
+    //    ScalarColumn<double> sfCol (itsInitTable, "STARTFREQ");
+    //    ScalarColumn<double> efCol (itsInitTable, "ENDFREQ");
+    ScalarColumn<double> t0Col (itsInitTable, "TIME0");
+    ScalarColumn<double> f0Col (itsInitTable, "FREQ0");
+    ScalarColumn<bool> normCol (itsInitTable, "NORMALIZED");
+    ScalarColumn<double> diffCol (itsInitTable, "DIFF");
+    ScalarColumn<bool> drelCol (itsInitTable, "DIFF_REL");
     namCol.put (rownr, parmName);
     srcCol.put (rownr, srcnr);
     statCol.put (rownr, statnr);
-    stCol.put (rownr, domain.startX());
-    etCol.put (rownr, domain.endX());
-    sfCol.put (rownr, domain.startY());
-    efCol.put (rownr, domain.endY());
-    ArrayColumn<double> valCol (itsTable, "VALUES");
-    ArrayColumn<double> simvalCol (itsTable, "SIM_VALUES");
-    ArrayColumn<double> simpertCol (itsTable, "SIM_PERT");
-    valCol.put (rownr, values.getDoubleMatrix());
-    simvalCol.put (rownr, simvalues.getDoubleMatrix());
-    simpertCol.put (rownr, pertsimvalues.getDoubleMatrix());
+    //stCol.put (rownr, polc.domain.startX());
+    //    etCol.put (rownr, polc.domain.endX());
+    //    sfCol.put (rownr, polc.domain.startY());
+    //    efCol.put (rownr, polc.domain.endY());
+    ArrayColumn<double> valCol (itsInitTable, "VALUES");
+    ArrayColumn<double> simvalCol (itsInitTable, "SIM_VALUES");
+    ArrayColumn<double> simpertCol (itsInitTable, "SIM_PERT");
+    valCol.put (rownr, polc.getCoeff().getDoubleMatrix());
+    simvalCol.put (rownr, polc.getSimCoeff().getDoubleMatrix());
+    simpertCol.put (rownr, polc.getPertSimCoeff().getDoubleMatrix());
     t0Col.put   (rownr, polc.getX0());
     f0Col.put   (rownr, polc.getY0());
     normCol.put (rownr, polc.isNormalized());
     diffCol.put (rownr, polc.getPerturbation());
     drelCol.put (rownr, polc.isRelativePerturbation());
-  }
 }
 
 Table ParmTableAIPS::find (const string& parmName,
@@ -282,6 +333,8 @@ vector<string> ParmTableAIPS::getSources()
     }
     tab = itsTable;
   }
+  LOG_TRACE_STAT_STR("Finished retreiving "<<nams.size()<<" sources");
+  //cout<<"Finished retreiving "<<nams.size()<<" sources"<<endl;
   return nams;
 }
 

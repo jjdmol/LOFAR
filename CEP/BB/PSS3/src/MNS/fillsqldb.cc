@@ -32,6 +32,7 @@
 #include <MNS/ParmTablePGSQL.h>
 #include <MNS/ParmTableMySQL.h>
 #include <MNS/ParmTableMonet.h>
+#include <MNS/ParmTableAIPS.h>
 
 using namespace LOFAR;
 using std::cout;
@@ -200,6 +201,8 @@ void doIt()
 	  PTR = new ParmTableMySQL (dbHost, dbUser, tableName+"def");
 	} else if (dbType=="monet") {
 	  PTR = new ParmTableMonet (dbHost, dbUser, tableName+"def", true);
+	} else if (dbType=="aips") {
+	  PTR = new ParmTableAIPS (tableName);
 	} else {
 	  cerr<<"Unknown database type: '"<<dbType<<"'"<<endl;
 	  exit(1);

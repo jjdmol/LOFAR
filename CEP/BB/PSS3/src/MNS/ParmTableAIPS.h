@@ -25,6 +25,7 @@
 
 //# Includes
 #include <PSS3/MNS/ParmTable.h>
+#include <PSS3/MNS/ParmTableFiller.h>
 #include <PSS3/MNS/MeqPolc.h>
 #include <tables/Tables/Table.h>
 #include <tables/Tables/ColumnsIndex.h>
@@ -33,7 +34,7 @@
 
 namespace LOFAR {
 
-class ParmTableAIPS : public ParmTableRep
+class ParmTableAIPS : public ParmTableRep, public ParmTableFiller
 {
 public:
   // Create the ParmTableAIPS object.
@@ -58,6 +59,18 @@ public:
   virtual void putCoeff (const string& parmName,
 			 int sourceNr, int station,
 			 const MeqPolc& polc);
+
+  // Insert new coefficients
+  void putNewCoeff( const string& parmName, 
+		    int srcnr,
+		    int statnr,
+		    const MeqPolc& polc);
+
+  // Insert new default coefficients
+  void putNewDefCoeff( const string& parmName, 
+		       int srcnr,
+		       int statnr,
+		       const MeqPolc& polc);
 
   // Get the names of all sources in the table.
   virtual vector<string> getSources();
