@@ -21,6 +21,9 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.17  2002/03/26 11:58:52  schaaf
+//  Use controllable Simul
+//
 //  Revision 1.16  2002/03/18 11:06:08  schaaf
 //  moved cout into TRACER2()
 //
@@ -73,6 +76,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include <stdio.h>
+#include "Debug.h"
 #include "Transport.h"
 #include "Step.h"
 #include "P2Perf.h"
