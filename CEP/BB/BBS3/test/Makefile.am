@@ -16,6 +16,6 @@ TESTS_ENVIRONMENT		= lofar_sharedir=$(lofar_sharedir) \
 				  MPIBIN=$(MPIBIN)
 
 # TESTS = tBBS3_test.sh
-TESTS = tPredSolv.sh tPerturbed_test.sh
+TESTS = tPredSolv.sh tPerturbed.sh
 
 include $(lofar_sharedir)/Makefile.common
