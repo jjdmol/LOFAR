@@ -19,6 +19,7 @@ WH_ReadSignal.h					\
 WH_BandSep.h					\
 GnuPlotInterface.h				\
 WH_BeamFormer.h					\
+WH_AWE.h					\
 WH_DataReader.h
 
 
@@ -45,6 +46,7 @@ WH_ReadSignal.cc				\
 WH_BandSep.cc					\
 GnuPlotInterface.cc				\
 WH_BeamFormer.cc				\
+WH_AWE.cc					\
 WH_DataReader.cc				
 
 bin_PROGRAMS		= Simulate

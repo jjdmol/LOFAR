@@ -27,27 +27,32 @@
 #include <stdio.h>                        // for sprintf
 
 
-WH_BandSep::WH_BandSep (const string& name,
-						unsigned int nsubband,
-						const string& coeffFileName)
-: WorkHolder   (1, nsubband, name, "WH_BandSep"),
+WH_BandSep::WH_BandSep (const string& name, unsigned int nsubband,
+			const string& coeffFileName, int nout)
+: WorkHolder   (1, nsubband * nout, name, "WH_BandSep"),
   itsInHolder  ("in", 1, 1),
   itsOutHolders(0),
   itsNsubband  (nsubband),
   itsCoeffName (coeffFileName),
-  itsPos       (0)
+  itsPos       (0),
+  itsNout      (nout)
 {
   // Allocate blocks to hold pointers to input and output DH-s.
   if (nsubband > 0) {
-    itsOutHolders = new DH_SampleC *[nsubband];
+    itsOutHolders = new DH_SampleC *[nsubband * nout];
   }
   // Create the input DH-s.
   char str[8];
+  char str2[8];
 
   // Create the output DH-s.
-  for (unsigned int i = 0; i < nsubband; i++) {
-    sprintf (str, "%d", i);
-    itsOutHolders[i] = new DH_SampleC (string ("out_") + str, 1, 1);
+  for (unsigned int j = 0; j < nout; j++) {
+    for (unsigned int i = 0; i < nsubband; i++) {
+      sprintf (str, "%d", i);
+      sprintf (str2, "%d", j);
+      itsOutHolders[i + j * nsubband] = new DH_SampleC (string ("out") + 
+							str2 + string("_") + str, 1, 1);
+    }
   }
 
   // DEBUG
@@ -70,18 +75,15 @@ WH_BandSep::~WH_BandSep()
   itsFileOutComplex.close ();
 }
 
-WorkHolder* WH_BandSep::construct(const string& name, 
-								  int noutput,
-								  const ParamBlock& params)
+WorkHolder* WH_BandSep::construct(const string& name, int ninput, int noutput, const ParamBlock& params)
 {
-  return new WH_BandSep(name, 
-						params.getInt("nsubband", 10), 
-						params.getString("coeffname", "filter.coeff"));
+  return new WH_BandSep(name, params.getInt("nsubband", 10), 
+			params.getString("coeffname", "filter.coeff"), ninput);
 }
 
 WH_BandSep* WH_BandSep::make(const string& name) const
 {
-  return new WH_BandSep (name, itsNsubband, itsCoeffName);
+  return new WH_BandSep (name, itsNsubband, itsCoeffName, itsNout);
 }
 
 void WH_BandSep::preprocess()
@@ -108,11 +110,13 @@ void WH_BandSep::process()
 
 	// filter the signal
 	if (itsPos == 0) {
-      subbandSignals = itsFilterbank->filter(itsBuffer);
-
+	  subbandSignals = itsFilterbank->filter(itsBuffer);
+	  
 	  // Copy to other output buffers.
-	  for (int i = 0; i < itsNsubband; i++) {
-		getOutHolder (i)->getBuffer ()[0] = subbandSignals (i, 0);
+	  for (int j = 0; j < itsNout; j++) {
+	    for (int i = 0; i < itsNsubband; i++) {
+	      getOutHolder (i + j * itsNsubband)->getBuffer ()[0] = subbandSignals (i, 0);
+	    }
 	  }
 
 	  // DEBUG

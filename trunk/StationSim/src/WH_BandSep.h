@@ -51,16 +51,13 @@ public:
   /// It is possible to specify how many input and output data holders
   /// are created and how many elements there are in the buffer.
   /// The first WorkHolder should have nin=0.
-  WH_BandSep (const string& name,
-			  unsigned int nsubband,
-			  const string& coeffFileName);
+  WH_BandSep (const string& name, unsigned int nsubband,
+	      const string& coeffFileName, int nout);
 
   virtual ~WH_BandSep();
 
   /// Static function to create an object.
-  static WorkHolder* construct(const string& name, 
-							   int noutput,
-							   const ParamBlock&);
+  static WorkHolder* construct(const string& name, int ninput, int noutput, const ParamBlock&);
 
   /// Make a fresh copy of the WH object.
   virtual WH_BandSep* make(const string& name) const;
@@ -96,6 +93,7 @@ private:
   int itsNsubband;
   string itsCoeffName;
   int itsPos;
+  int itsNout;
   int itsFilterLength;
   FilterBank <dcomplex> * itsFilterbank;
   LoVec_dcomplex itsBuffer;

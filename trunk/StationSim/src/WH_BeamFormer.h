@@ -30,7 +30,6 @@
 
 #include <BaseSim/WorkHolder.h>
 #include <StationSim/DH_SampleC.h>
-#include <StationSim/DH_Weight.h>
 #include <Common/lofar_vector.h>
 #include <Common/Lorrays.h>
 
@@ -78,7 +77,7 @@ private:
   WH_BeamFormer& operator= (const WH_BeamFormer&);
 
   DH_SampleC** itsInHolders;
-/*   DH_SampleC*  itsWeight; */
+  DH_SampleC*  itsWeight; 
   DH_SampleC** itsOutHolders;
  
   int itsNrcu;       // Number of (active) antennas
