@@ -25,6 +25,11 @@
    <para>
     $Id$
    </para>
+   <para>
+
+    This is a preliminary version, a concept.
+
+   </para>
   </releaseinfo>
 
   <!-- makes a summary from the content -->
@@ -771,6 +776,9 @@
 </article>
 <!--
 $Log$
+Revision 1.4  2003/06/24 17:35:36  daan
+rough scetch
+
 Revision 1.3  2003/06/19 17:42:55  daan
 some syntax
 
