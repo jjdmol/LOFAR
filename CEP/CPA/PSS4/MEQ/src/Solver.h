@@ -31,6 +31,36 @@
 #pragma types #Meq::Solver
 
 
+// The comments below are used to automatically generate a default
+// init-record for the class 
+
+//defrec begin MeqSolver
+//  Represents a solver,
+//  A MeqSolver can have an arbitrary number of children.
+//  Only the results from the children that are a MeqCondeq are used.
+//  The other children can be other solvers that wait for this solver
+//  to finish.
+//field: num_step 1  
+//  number of iterations to do in a solve
+//field: epsilon 0
+//  convergence criterium; not used at the moment
+//field: useSVD false
+//  Use singular value decomposition in solver?
+//field: solvable_parm
+//  Record describing the solvable parms with field
+//  field: by_list
+//    a data field consisting of data records, one for each solvable group.
+//    Each record contains:
+//    field: name 
+//      the name of the parm to set to (un)solvable. It can be a vector.
+//    field: state
+//      a data record consisting of a single field
+//      field: solvable
+//        boolean value defining if the named parms have to be set to
+//        solvable or unsolvable.
+//defrec end
+
+
 namespace Meq {
 
 class Request;
