@@ -24,7 +24,7 @@
 #define MEQ_CONDEQ_H
     
 #include <MEQ/Node.h>
-#include <MEQ/Result.h>
+#include <MEQ/VellSet.h>
 
 #pragma types #Meq::Condeq
 
@@ -42,7 +42,7 @@ public:
   virtual ~Condeq();
 
   // Get the result for the given request.
-  virtual int getResultImpl (ResultSet::Ref &resref, const Request&,
+  virtual int getResult (Result::Ref &resref, const Request&,
 			     bool newReq);
 
   // Returns the class TypeId

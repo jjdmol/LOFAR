@@ -22,7 +22,7 @@
 
 #include "Selector.h"
 #include "Request.h"
-#include "Result.h"
+#include "VellSet.h"
 #include "Cells.h"
 #include "MeqVocabulary.h"
 
@@ -49,10 +49,10 @@ void Selector::setState (const DataRecord &rec)
   }
 }
 
-int Selector::getResultImpl (ResultSet::Ref &resref, const Request& request, bool)
+int Selector::getResult (Result::Ref &resref, const Request& request, bool)
 {
-  ResultSet::Ref childref;
-  int flag = getChild(0).getResult(childref,request);
+  Result::Ref childref;
+  int flag = getChild(0).execute(childref,request);
   // if child returns a fail, pass it on up
   if( flag == RES_FAIL )
   {
@@ -63,22 +63,22 @@ int Selector::getResultImpl (ResultSet::Ref &resref, const Request& request, boo
   if( flag&RES_WAIT )
     return flag;
   // otherwise, select sub-results
-  ResultSet &resset = resref <<= new ResultSet(selection.size(),request),
+  Result &resset = resref <<= new Result(selection.size(),request),
             &childres = childref();
   // select results from child set
   for( uint i=0; i<selection.size(); i++ )
   {
     int isel = selection[i];
-    if( isel<0 || isel>=childres.numResults() )
+    if( isel<0 || isel>=childres.numVellSets() )
     {
-      Result &res = resset.setNewResult(i);
-      MakeFailResult(res,
+      VellSet &res = resset.setNewVellSet(i);
+      MakeFailVellSet(res,
           Debug::ssprintf("selection index %d is out of range (%d results in set)",
-                        isel,childres.numResults()));
+                        isel,childres.numVellSets()));
     }
     else
     {
-      resset.setResult(i,&(childres.result(isel)));
+      resset.setVellSet(i,&(childres.vellSet(isel)));
     }
   }
   return flag;

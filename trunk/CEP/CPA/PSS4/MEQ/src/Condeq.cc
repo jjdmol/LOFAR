@@ -43,16 +43,16 @@ void Condeq::checkChildren()
   Assert (numChildren() == 2);
 }
 
-int Condeq::getResultImpl (ResultSet::Ref &resref, const Request& request,
+int Condeq::getResult (Result::Ref &resref, const Request& request,
 			   bool)
 {
   int nrch = numChildren();
   FailWhen (nrch!=2, "no 2 children");
-  vector<ResultSet::Ref> child_results(nrch);
+  vector<Result::Ref> child_results(nrch);
   // collect child_results from children
   int flag = 0;
   for (int i=0; i<nrch; i++) {
-    flag |= getChild(i).getResult (child_results[i], request);
+    flag |= getChild(i).execute (child_results[i], request);
     child_results[i].persist();
   }
   // return flag is at least one child wants to wait
@@ -60,15 +60,15 @@ int Condeq::getResultImpl (ResultSet::Ref &resref, const Request& request,
     return flag;
   }
   // Check that number of child planes is the same
-  int nplanes = child_results[0]->numResults();
+  int nplanes = child_results[0]->numVellSets();
   for( int i=1; i<nrch; i++ )
   {
-    FailWhen(child_results[i]->numResults()!=nplanes,
+    FailWhen(child_results[i]->numVellSets()!=nplanes,
         "mismatch in sizes of child result sets");
   }
   // Create result object and attach to the ref that was passed in
-  ResultSet & resultset = resref <<= new ResultSet(nplanes);
-  vector<Result*> child_res(nrch);
+  Result & resultset = resref <<= new Result(nplanes);
+  vector<VellSet*> child_res(nrch);
   for( int iplane=0; iplane<nplanes; iplane++ )
   {
     // collect vector of pointers to children, and vector
@@ -76,13 +76,13 @@ int Condeq::getResultImpl (ResultSet::Ref &resref, const Request& request,
     vector<Vells*> values(nrch);
     for( int i=0; i<nrch; i++ )
     {
-      child_res[i] = &(child_results[i]().result(iplane));
+      child_res[i] = &(child_results[i]().vellSet(iplane));
       values[i] = &(child_res[i]->getValueRW());
     }
     // Find all spids from the children.
     vector<int> spids = Function::findSpids(child_res);
     // allocate new result object with given number of spids, add to set
-    Result &result = resultset.setNewResult(spids.size());
+    VellSet &result = resultset.setNewVellSet(spids.size());
     // The main value is measured-predicted.
     result.setValue (*values[0] - *values[1]);
     // Evaluate all perturbed values.

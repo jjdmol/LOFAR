@@ -22,7 +22,7 @@
 
 #include <MEQ/Freq.h>
 #include <MEQ/Request.h>
-#include <MEQ/Result.h>
+#include <MEQ/VellSet.h>
 #include <MEQ/Cells.h>
 
 namespace Meq {    
@@ -40,15 +40,15 @@ void Freq::init (DataRecord::Ref::Xfer &initrec, Forest* frst)
   FailWhen(numChildren(),"Freq node cannot have children");
 }
 
-int Freq::getResultImpl (ResultSet::Ref &resref, const Request& request, bool)
+int Freq::getResult (Result::Ref &resref, const Request& request, bool)
 {
   // Get cells.
   const Cells& cells = request.cells();
   int nfreq = cells.nfreq();
   int ntime = cells.ntime();
   // Create result object and attach to the ref that was passed in.
-  resref <<= new ResultSet(1);                // 1 plane
-  Result& result = resref().setNewResult(0);  // create new object for plane 0
+  resref <<= new Result(1);                // 1 plane
+  VellSet& result = resref().setNewVellSet(0);  // create new object for plane 0
   LoMat_double& arr = result.setReal (nfreq,ntime);
   // Evaluate the main value.
   for (int i=0; i<ntime; i++) {

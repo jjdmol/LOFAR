@@ -58,7 +58,7 @@ class Composer : public Node
     { return TpMeqComposer; }
     
   protected:
-    int getResultImpl (ResultSet::Ref &resref, const Request& request, bool newReq);
+    int getResult (Result::Ref &resref, const Request& request, bool newReq);
   
   private:
     bool contagious_fail;
