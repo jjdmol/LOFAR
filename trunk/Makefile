@@ -190,7 +190,7 @@ configure: $(VARIANTNAMES:.variant=.variant_configure)
 		&& (( $(RM) -rf $$pkg/build/$$variant \
 		&& mkdir -p $$pkg/build/$$variant \
 		&& cd $$pkg/build/$$variant \
-		&& $(LOFARDIR)/autoconf_share/lofarconf --prefix=/opt/LOFAR/$$inst_var ) \
+		&& $(LOFARDIR)/autoconf_share/lofarconf --prefix=/data/LOFAR/installed/$$inst_var ) \
 			|| echo ":::::: ERROR" ) \
 		&& echo \
 		&& echo ":::::: FINISHED CONFIGURING VARIANT $$variant FOR PACKAGE $$pkg" \
@@ -333,7 +333,7 @@ configure: $(VARIANTNAMES:.variant=.variant_configure)
 
 # Rules for building documentation using doxygen or doc++.
 # Default output directory is docxxhtml.
-DOCDIR := /data/LOFAR/docxxhtml
+DOCDIR := /data/LOFAR/installed/docxxhtml
 DOXYGEN := /usr/bin/doxygen
 
 docxx:
