@@ -69,7 +69,10 @@ RegisterAccessTask::RegisterAccessTask(string name)
       m_RSPclient(*this, m_RSPserverName, GCFPortInterface::SAP, RSP_PROTOCOL),
       m_physicalModel(),
       m_subStatusHandle(0),
-      m_subStatsHandle(0)
+      m_subStatsHandleSubbandPower(0),
+      m_subStatsHandleSubbandMean(0),
+      m_subStatsHandleBeamletPower(0),
+      m_subStatsHandleBeamletMean(0)
 {
   registerProtocol(RSP_PROTOCOL, RSP_PROTOCOL_signalnames);
   m_answer.setTask(this);
@@ -414,20 +417,6 @@ GCFEvent::TResult RegisterAccessTask::connected(GCFEvent& e, GCFPortInterface& p
       getversion.cache = true;
       m_RSPclient.send(getversion);
       
-      // subscribe to status updates
-      RSPSubstatusEvent substatus;
-      substatus.timestamp.setNow();
-      substatus.rcumask = std::bitset<MAX_N_RCUS>(N_RCUS);
-      substatus.period = 4;
-      m_RSPclient.send(substatus);
-      
-      // subscribe to status updates
-      RSPSubstatsEvent substats;
-      substats.timestamp.setNow();
-      substats.rcumask = std::bitset<MAX_N_RCUS>(N_RCUS);
-      substats.period = 10;
-      m_RSPclient.send(substats);
-
       break;
     }
 
@@ -474,6 +463,14 @@ GCFEvent::TResult RegisterAccessTask::connected(GCFEvent& e, GCFPortInterface& p
           }
         }
       }
+      
+      // subscribe to status updates
+      RSPSubstatusEvent substatus;
+      substatus.timestamp.setNow();
+      substatus.rcumask = std::bitset<MAX_N_RCUS>((1<<N_RCUS)-1);
+      substatus.period = 4;
+      m_RSPclient.send(substatus);
+      
       break;
     }
     
@@ -490,9 +487,58 @@ GCFEvent::TResult RegisterAccessTask::connected(GCFEvent& e, GCFPortInterface& p
       {
         m_subStatusHandle = ack.handle;
       }
+      
+      TRAN(RegisterAccessTask::subscribingStatsSubbandPower);
+      
       break;
     }
     
+    case F_DISCONNECTED:
+    {
+    	LOG_DEBUG(formatString("port %s disconnected", port.getName().c_str()));
+    	port.close();
+
+    	TRAN(RegisterAccessTask::APCsLoaded);
+      break;
+    }
+
+    case F_EXIT:
+    {
+      break;
+    }
+
+    default:
+      status = GCFEvent::NOT_HANDLED;
+      break;
+  }
+
+  return status;
+}
+
+GCFEvent::TResult RegisterAccessTask::subscribingStatsSubbandPower(GCFEvent& e, GCFPortInterface &port)
+{
+  GCFEvent::TResult status = GCFEvent::HANDLED;
+
+  switch (e.signal)
+  {
+
+    case F_INIT:
+      break;
+      
+    case F_ENTRY:
+    {
+      // subscribe to status updates
+      RSPSubstatsEvent substats;
+      substats.timestamp.setNow();
+      substats.rcumask = std::bitset<MAX_N_RCUS>((1<<N_RCUS)-1);
+      substats.period = 10;
+      substats.type = RSP_Protocol::Statistics::SUBBAND_POWER;
+      substats.reduction = RSP_Protocol::REPLACE;
+      m_RSPclient.send(substats);
+      
+      break;
+    }
+
     case RSP_SUBSTATSACK:
     {
       LOG_INFO("RSP_SUBSTATSACK received");
@@ -504,11 +550,242 @@ GCFEvent::TResult RegisterAccessTask::connected(GCFEvent& e, GCFPortInterface& p
       }
       else
       {
-        m_subStatsHandle = ack.handle;
+        m_subStatsHandleSubbandPower = ack.handle;
       }
+      
+      TRAN(RegisterAccessTask::subscribingStatsSubbandMean);
       break;
     }
     
+    case F_DISCONNECTED:
+    {
+      LOG_DEBUG(formatString("port %s disconnected", port.getName().c_str()));
+      port.close();
+
+      TRAN(RegisterAccessTask::APCsLoaded);
+      break;
+    }
+
+    case F_EXIT:
+    {
+      break;
+    }
+
+    default:
+      status = GCFEvent::NOT_HANDLED;
+      break;
+  }
+
+  return status;
+}
+
+GCFEvent::TResult RegisterAccessTask::subscribingStatsSubbandMean(GCFEvent& e, GCFPortInterface &port)
+{
+  GCFEvent::TResult status = GCFEvent::HANDLED;
+
+  switch (e.signal)
+  {
+
+    case F_INIT:
+      break;
+      
+    case F_ENTRY:
+    {
+      // subscribe to status updates
+      RSPSubstatsEvent substats;
+      substats.timestamp.setNow();
+      substats.rcumask = std::bitset<MAX_N_RCUS>((1<<N_RCUS)-1);
+      substats.period = 10;
+      substats.type = RSP_Protocol::Statistics::SUBBAND_MEAN;
+      substats.reduction = RSP_Protocol::REPLACE;
+      m_RSPclient.send(substats);
+      
+      break;
+    }
+
+    case RSP_SUBSTATSACK:
+    {
+      LOG_INFO("RSP_SUBSTATSACK received");
+      RSPSubstatsackEvent ack(e);
+
+      if(ack.status != SUCCESS)
+      {
+        LOG_ERROR("RSP_SUBSTATS failure");
+      }
+      else
+      {
+        m_subStatsHandleSubbandMean = ack.handle;
+      }
+      
+      TRAN(RegisterAccessTask::subscribingStatsBeamletPower);
+      break;
+    }
+    
+    case F_DISCONNECTED:
+    {
+      LOG_DEBUG(formatString("port %s disconnected", port.getName().c_str()));
+      port.close();
+
+      TRAN(RegisterAccessTask::APCsLoaded);
+      break;
+    }
+
+    case F_EXIT:
+    {
+      break;
+    }
+
+    default:
+      status = GCFEvent::NOT_HANDLED;
+      break;
+  }
+
+  return status;
+}
+
+GCFEvent::TResult RegisterAccessTask::subscribingStatsBeamletPower(GCFEvent& e, GCFPortInterface &port)
+{
+  GCFEvent::TResult status = GCFEvent::HANDLED;
+
+  switch (e.signal)
+  {
+
+    case F_INIT:
+      break;
+      
+    case F_ENTRY:
+    {
+      // subscribe to status updates
+      RSPSubstatsEvent substats;
+      substats.timestamp.setNow();
+      substats.rcumask = std::bitset<MAX_N_RCUS>((1<<N_RCUS)-1);
+      substats.period = 10;
+      substats.type = RSP_Protocol::Statistics::BEAMLET_POWER;
+      substats.reduction = RSP_Protocol::REPLACE;
+      m_RSPclient.send(substats);
+      
+      break;
+    }
+
+    case RSP_SUBSTATSACK:
+    {
+      LOG_INFO("RSP_SUBSTATSACK received");
+      RSPSubstatsackEvent ack(e);
+
+      if(ack.status != SUCCESS)
+      {
+        LOG_ERROR("RSP_SUBSTATS failure");
+      }
+      else
+      {
+        m_subStatsHandleBeamletPower = ack.handle;
+      }
+      
+      TRAN(RegisterAccessTask::subscribingStatsBeamletMean);
+      break;
+    }
+    
+    case F_DISCONNECTED:
+    {
+      LOG_DEBUG(formatString("port %s disconnected", port.getName().c_str()));
+      port.close();
+
+      TRAN(RegisterAccessTask::APCsLoaded);
+      break;
+    }
+
+    case F_EXIT:
+    {
+      break;
+    }
+
+    default:
+      status = GCFEvent::NOT_HANDLED;
+      break;
+  }
+
+  return status;
+}
+
+GCFEvent::TResult RegisterAccessTask::subscribingStatsBeamletMean(GCFEvent& e, GCFPortInterface &port)
+{
+  GCFEvent::TResult status = GCFEvent::HANDLED;
+
+  switch (e.signal)
+  {
+
+    case F_INIT:
+      break;
+      
+    case F_ENTRY:
+    {
+      // subscribe to status updates
+      RSPSubstatsEvent substats;
+      substats.timestamp.setNow();
+      substats.rcumask = std::bitset<MAX_N_RCUS>((1<<N_RCUS)-1);
+      substats.period = 10;
+      substats.type = RSP_Protocol::Statistics::BEAMLET_MEAN;
+      substats.reduction = RSP_Protocol::REPLACE;
+      m_RSPclient.send(substats);
+      
+      break;
+    }
+
+    case RSP_SUBSTATSACK:
+    {
+      LOG_INFO("RSP_SUBSTATSACK received");
+      RSPSubstatsackEvent ack(e);
+
+      if(ack.status != SUCCESS)
+      {
+        LOG_ERROR("RSP_SUBSTATS failure");
+      }
+      else
+      {
+        m_subStatsHandleBeamletMean = ack.handle;
+      }
+      
+      TRAN(RegisterAccessTask::operational);
+      break;
+    }
+    
+    case F_DISCONNECTED:
+    {
+      LOG_DEBUG(formatString("port %s disconnected", port.getName().c_str()));
+      port.close();
+
+      TRAN(RegisterAccessTask::APCsLoaded);
+      break;
+    }
+
+    case F_EXIT:
+    {
+      break;
+    }
+
+    default:
+      status = GCFEvent::NOT_HANDLED;
+      break;
+  }
+
+  return status;
+}
+
+GCFEvent::TResult RegisterAccessTask::operational(GCFEvent& e, GCFPortInterface& port)
+{
+  GCFEvent::TResult status = GCFEvent::HANDLED;
+
+  switch (e.signal)
+  {
+
+    case F_INIT:
+      break;
+      
+    case F_ENTRY:
+    {
+      break;
+    }
+
     case RSP_UPDSTATUS:
     {
       LOG_INFO("RSP_UPDSTATUS received");
@@ -525,10 +802,10 @@ GCFEvent::TResult RegisterAccessTask::connected(GCFEvent& e, GCFPortInterface& p
     
     case F_DISCONNECTED:
     {
-    	LOG_DEBUG(formatString("port %s disconnected", port.getName().c_str()));
-    	port.close();
+      LOG_DEBUG(formatString("port %s disconnected", port.getName().c_str()));
+      port.close();
 
-    	TRAN(RegisterAccessTask::APCsLoaded);
+      TRAN(RegisterAccessTask::APCsLoaded);
       break;
     }
 
@@ -555,7 +832,13 @@ GCFEvent::TResult RegisterAccessTask::connected(GCFEvent& e, GCFPortInterface& p
 
       // unsubscribe from status updates
       RSPUnsubstatsEvent unsubStats;
-      unsubStats.handle = m_subStatsHandle; // remove subscription with this handle
+      unsubStats.handle = m_subStatsHandleSubbandPower; // remove subscription with this handle
+      m_RSPclient.send(unsubStats);
+      unsubStats.handle = m_subStatsHandleSubbandMean; // remove subscription with this handle
+      m_RSPclient.send(unsubStats);
+      unsubStats.handle = m_subStatsHandleBeamletPower; // remove subscription with this handle
+      m_RSPclient.send(unsubStats);
+      unsubStats.handle = m_subStatsHandleBeamletMean; // remove subscription with this handle
       m_RSPclient.send(unsubStats);
       break;
     }
@@ -670,44 +953,75 @@ GCFEvent::TResult RegisterAccessTask::handleUpdStats(GCFEvent& e, GCFPortInterfa
         updStatsEvent.status,
         updStatsEvent.handle));
 
-    blitz::Array<uint16, 3>& statistics = updStatsEvent.stats();
-//    int maxTypes    = statistics.ubound(blitz::firstDim) - statistics.lbound(blitz::firstDim);
+    blitz::Array<std::complex<double>, 3>& statistics = updStatsEvent.stats();
     int maxRCUs     = statistics.ubound(blitz::secondDim) - statistics.lbound(blitz::secondDim) + 1;
     int maxBeamlets = statistics.ubound(blitz::thirdDim) - statistics.lbound(blitz::thirdDim) + 1;
 
     int type,rcu,beamlet;
+    // type will always be 0. The subscription determines if the received array contains
+    // power or mean statistics
     for(type=statistics.lbound(blitz::firstDim);type<=statistics.ubound(blitz::firstDim);type++)
     {
       GCFPValueArray valuePointerVector;
       
       // first elements indicate the length of the array
-      valuePointerVector.push_back(new GCFPVUnsigned(maxRCUs));
-      valuePointerVector.push_back(new GCFPVUnsigned(maxBeamlets));
+      valuePointerVector.push_back(new GCFPVDouble(maxRCUs));
+      valuePointerVector.push_back(new GCFPVDouble(maxBeamlets));
       
-      // then for each rcu, the statistics of the beamlets
+      // then for each rcu, the statistics of the beamlets or subbands
       for(rcu=statistics.lbound(blitz::secondDim);rcu<=statistics.ubound(blitz::secondDim);rcu++)
       {
         for(beamlet=statistics.lbound(blitz::thirdDim);beamlet<=statistics.ubound(blitz::thirdDim);beamlet++)
         {
-          unsigned int stat = statistics(type,rcu,beamlet);
-          valuePointerVector.push_back(new GCFPVUnsigned(stat));
+          std::complex<double> stat = statistics(type,rcu,beamlet);
+          double newStat;
+          if(updStatsEvent.handle == m_subStatsHandleSubbandPower ||
+             updStatsEvent.handle == m_subStatsHandleBeamletPower)
+          {
+            // power = 10 * log( (real + imag + 0.0001) / (1<<16))
+            newStat = real(stat) + imag(stat);
+            newStat += 0.00001; // prevent infinite values
+            newStat = log10( newStat / (double)(1<<16)) * 10.0;
+          }
+          else if(updStatsEvent.handle == m_subStatsHandleSubbandMean ||
+                  updStatsEvent.handle == m_subStatsHandleBeamletMean)
+          {
+            // mean = abs( z ) ^2 /1000000
+            newStat = real(stat) * real(stat) + imag(stat) * imag(stat);
+            newStat = newStat / 1000000.0;
+          }
+          else
+          {
+            newStat = real(stat) * real(stat) + imag(stat) * imag(stat);
+            newStat = newStat / 1000000.0;
+          }
+          
+          valuePointerVector.push_back(new GCFPVDouble(newStat));
         }
       }
 
       // convert the vector of unsigned values to a dynamic array
-      GCFPVDynArr dynamicArray(GCFPValue::LPT_UNSIGNED,valuePointerVector);
+      GCFPVDynArr dynamicArray(GCFPValue::LPT_DOUBLE,valuePointerVector);
       
       // set the property
       TMyPropertySetMap::iterator propSetIt=m_myPropertySetMap.find(string(SCOPE_PIC));
       if(propSetIt != m_myPropertySetMap.end())
       {
-        if(type == MEPHeader::MEAN)
+        if(updStatsEvent.handle == m_subStatsHandleSubbandPower)
         {
-          propSetIt->second->setValue(string(PROPNAME_STATISTICSMEAN),dynamicArray);
+          propSetIt->second->setValue(string(PROPNAME_STATISTICSSUBBANDPOWER),dynamicArray);
         }
-        else if(type == MEPHeader::POWER)
+        else if(updStatsEvent.handle == m_subStatsHandleSubbandMean)
         {
-          propSetIt->second->setValue(string(PROPNAME_STATISTICSPOWER),dynamicArray);
+          propSetIt->second->setValue(string(PROPNAME_STATISTICSSUBBANDMEAN),dynamicArray);
+        }
+        else if(updStatsEvent.handle == m_subStatsHandleBeamletPower)
+        {
+          propSetIt->second->setValue(string(PROPNAME_STATISTICSBEAMLETPOWER),dynamicArray);
+        }
+        else if(updStatsEvent.handle == m_subStatsHandleBeamletMean)
+        {
+          propSetIt->second->setValue(string(PROPNAME_STATISTICSBEAMLETMEAN),dynamicArray);
         }
       }
       
@@ -719,9 +1033,7 @@ GCFEvent::TResult RegisterAccessTask::handleUpdStats(GCFEvent& e, GCFPortInterfa
         valuePointerVector.erase(it);
         it=valuePointerVector.begin();
       }
-
     }
-    
   }
   
   return status;
