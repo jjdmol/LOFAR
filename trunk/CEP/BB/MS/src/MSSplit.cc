@@ -156,6 +156,7 @@ void doIt (const string& in, const string& out)
     bos << ra << dec << npol << nfreq << startFreq << endFreq << stepFreq;
     bos << a1 << a2;
     bos << tim2;
+    bos << ROScalarColumn<double>(tab, "INTERVAL").getColumn();
     bos.putEnd();
   }
   cout << "Wrote " << npol << " polarizations" << endl;
