@@ -138,7 +138,7 @@ bin_PROGRAMS		= LimitExec pkgdep
 LimitExec_SOURCES	= LimitExec.cc
 pkgdep_SOURCES		= pkgdep.cc
 
-scriptsdir = $(bindir)
-dist_scripts_SCRIPTS = finddep
+scriptdir = $(bindir)
+dist_script_SCRIPTS =
 
 include $(lofar_sharedir)/Makefile.common
