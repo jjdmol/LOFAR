@@ -89,9 +89,24 @@ inline DH_CorrCube::BufferType* DH_CorrCube::getBuffer()
 inline const DH_CorrCube::BufferType* DH_CorrCube::getBuffer() const
   { return itsBuffer; }
 
-inline const int DH_CorrCube::getFBW() const
-  { return itsFBW; }
-
+inline DH_CorrCube::BufferType* DH_CorrCube::getBufferElement(int sample, 
+							      int channel,
+							      int station 
+							      ) 
+  {
+    return itsBuffer + nstations*nchannels*sample + nstations*channel + station;
+  }
+ 
+ inline void DH_CorrCube::setBufferElement(int sample, 
+					   int channel, 
+					   int station, 
+					   DH_CorrCube::BufferType* valueptr) {
+   *(itsBuffer + nstations*nchannels*sample + nstations*channel + station) = *valueptr;
+ }
+ 
+ inline const int DH_CorrCube::getFBW() const
+   { return itsFBW; }
+ 
 }
 
 #endif 
