@@ -84,19 +84,19 @@ public:
   ~Prediffer();
 
   // Make a selection of the MS to be used in the domain iteration.
-  void select (const vector<int>& ant1, const vector<int>& ant2,
-	       int itsFirstChan, int itsLastChan);
+  void select (const vector<int>& ant1, const vector<int>& ant2);
 
-  // Start another time interval.
+  // Set the domain (in frequency and time).
   // Hereafter getSolvableParmData can be called.
-  // It returns false if the start value is outside the observation domain.
+  // It returns false if the domain is outside the observation domain.
   // Length is trimmed if beyond end of observation.
-  bool nextInterval (double start, double length, bool callReadPolcs = true);
+  bool setDomain (double startFreq, double lengthFreq,
+		  double startTime, double lengthTime);
 
   // Update the solvable parm values (reread from table).
   void updateSolvableParms();
 
-  // It returns the solvable parms.
+  // Return the solvable parms.
   // The parms are in ascending order of spidnr.
   const vector<ParmData>& getSolvableParmData() const
     { return itsParmData; }
@@ -111,16 +111,15 @@ public:
 			 bool isSolvable);
 
   // Get the equations for all selected baselines.
-  std::list<MeqResult> getEquations ();
-
-  // Save residual data in the itsResColName column.
-  // It does a predict for the sources to be peeled off and subtracts
-  // the results from the itsSolveColName column.
-  void saveResidualData();
+  std::list<MeqResult> getEquations();
 
   // Set the source numbers to use in this peel step.
-  bool peel (const vector<int>& peelSources,
-	     const vector<int>& extraSources);
+  bool setPeelSources (const vector<int>& peelSources,
+		       const vector<int>& extraSources);
+
+  // Subtract the peel source(s) from the data.
+  // If write=true, the data are written into a new file.
+  void subtractPeelSources (bool write=false);
 
   // Set the names and values of all solvable parms for the current domain.
   // The double version can only be used if all parms are 0th-order
@@ -141,10 +140,6 @@ public:
   void setParmValues (const vector<string>& names,
 		      const vector<MeqMatrix>& values);
   // </group>
-
-  // Get nr of channels.
-  int getNrChan() const
-    { return itsNrChan; }
 
   // Show the settings of the Prediffer.
   void showSettings() const;
