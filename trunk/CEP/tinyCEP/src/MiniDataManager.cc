@@ -84,6 +84,7 @@ namespace LOFAR
     for (int i = 0; i < itsNinputs; i++) {
       itsInDHs[i]->preprocess();
     }
+    
 
     for (int i = 0; i < itsNoutputs; i++) {
       itsOutDHs[i]->preprocess();
@@ -107,9 +108,21 @@ namespace LOFAR
   }
   
   void MiniDataManager::readyWithInHolder(int channel) {
+    // iterate over all InHolders and write data.
+    // The user has to call the ready with InHolder method 
+    // in his own WorkHolder
+    
+    itsInDHs[channel]->read();
+
   }
   
   void MiniDataManager::readyWithOutHolder(int channel) {
+    // iterate over all OutHolders and read data.
+    // The user has to call the ready with InHolder method 
+    // in his own WorkHolder
+
+    itsOutDHs[channel]->write();
+
   }
   
 } // namespace LOFAR
