@@ -21,7 +21,6 @@
 //#  $Id$
 
 #include <PL/ObjectId.h>
-#include <Common/Trace.h>
 
 /****************************************************************************
  * The methods get_random_fd() and get_random_bytes() were taken from       *
@@ -117,7 +116,7 @@ namespace LCS
     }
 
 
-    const ObjectId::oid_t& ObjectId::get()
+    const ObjectId::oid_t& ObjectId::get() const
     {
       if (!itsIsInitialized) {
 	init();
@@ -134,7 +133,7 @@ namespace LCS
     }
 
 
-    void ObjectId::init()
+    void ObjectId::init() const
     {
       get_random_bytes(&itsOid, sizeof(itsOid));
     }
