@@ -9,7 +9,7 @@
 #include <vector>
 #include <complex>
 
-
+#include <UVPDataAtomHeader.h>
 
 //! Manages a vector of visibilities recorded for one correlation, on
 //! one baseline at a given time.
@@ -20,24 +20,22 @@
 class UVPDataAtom
 {
  public:
+
+  typedef double_complex ComplexType;
   
   //! Default constructor.
-  /*!  UVW coordinates are initialized to 0, The data array initially
-    has zero length, time is 0.
+  /*!  The header is initialized with its default constructor, The data
+       array initially has zero length.
    */
   UVPDataAtom();
 
   //! Constructor.
   /*!
     \param numberOfChannels must be >= 0.
-    \param time is the time in seconds. The user is responsible for
-    defining the exact zeropoint.
-    \param uvw is a vector of length 3 specifying the u (0), v (1) and
-    w (2) coordinates of the visibility spectrum in meters. 
-   */
-  UVPDataAtom(unsigned int             numberOfChannels,
-              double                     time,
-              const std::vector<double> &uvw);
+    \param header contains additional data like antenna numbers, int. time etc.
+  */
+  UVPDataAtom(unsigned int               numberOfChannels,
+              const UVPDataAtomHeader&   header);
 
   //! Sets a new number of channels.
   /*! setChannels destroys the previous contents of itsData and
@@ -50,8 +48,8 @@ class UVPDataAtom
     \param channel is a zero based channel index.
     \param data  is the visibility that is to be set.
    */
-  void            setData(unsigned int     channel,
-                          const double_complex& data);
+  void            setData(unsigned int          channel,
+                          const ComplexType& data);
   
   //! Assigns a complete vector of visibilities to itsData
   /*! setData overwrites itsData with the contents of data.
@@ -60,14 +58,7 @@ class UVPDataAtom
        to itsData. It must have the exact same size as the current
        number of channels.
    */
-  void            setData(const std::vector<double_complex>& data);
-
-  //! Sets new UVW coordinates.
-  /*!
-    \param uvw must be an array of length 3. u is at index 0, v at 1
-    and w at index 2.
-   */
-  void            setUVW(const std::vector<double> &uvw);
+  void            setData(const std::vector<ComplexType>& data);
 
 
   //! \returns the number of channels.
@@ -77,14 +68,17 @@ class UVPDataAtom
   /*!
       \param channel is a zero based channel index. 
    */
-  const double_complex *getData(unsigned int channel) const;
+  const ComplexType *getData(unsigned int channel) const;
+
+
+  //! \returns const ref to itsHeader.
+  const UVPDataAtomHeader &getHeader() const;
 
  protected:
  private:
-  
-  std::vector<double_complex> itsData;
-  double                   itsTime;
-  std::vector<double>      itsUVW;
+
+  UVPDataAtomHeader        itsHeader;
+  std::vector<ComplexType> itsData;
 };
 
 #endif // UVPDATAATOM_H
