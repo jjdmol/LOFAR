@@ -54,7 +54,7 @@ void MeqWsrtPoint::calcResult (const MeqRequest& request)
 
   // We can only calculate for a single time bin.
   const MeqDomain& domain = request.domain();
-  ASSERT (request.nx() == 1);
+  ASSERT (request.ny() == 1);
   // Find the maximum nr of cells needed.
   int ncellt = 1;
   int ncellf = 1;
@@ -79,9 +79,9 @@ void MeqWsrtPoint::calcResult (const MeqRequest& request)
   
   itsCelltHist->update (ncellt);
   itsCellfHist->update (ncellf);
-  ncellf *= request.ny();
+  ncellf *= request.nx();
   // The domain is divided into the required number of cells.
-  MeqRequest dftReq (domain, ncellt, ncellf, request.nspid());
+  MeqRequest dftReq (domain, ncellf, ncellt, request.nspid());
   MeqResult& resXX = result11();
   MeqResult& resXY = result12();
   MeqResult& resYX = result21();

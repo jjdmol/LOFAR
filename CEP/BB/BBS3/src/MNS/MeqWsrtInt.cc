@@ -53,7 +53,7 @@ void MeqWsrtInt::calcResult (const MeqRequest& request)
 
   // We can handle only 1 time at a time (for PSS-1 at least).
   // It makes life much easier.
-  ASSERT (request.nx() == 1);
+  ASSERT (request.ny() == 1);
   // Create the result objects.
   setResult11 (MeqResult(request.nspid()));
   setResult12 (MeqResult(request.nspid()));
@@ -83,7 +83,7 @@ void MeqWsrtInt::calcResult (const MeqRequest& request)
   // Integrate and normalize the results by adding the values and
   // dividing by the number of subcells used to predict a single cell.
   // The nr of subcells is the same for each cell.
-  double nsubc = xx.getValue().nelements() / request.ny();
+  double nsubc = xx.getValue().nelements() / request.nx();
   if (MeqPointDFT::doshow) {
     cout << "Int: " << xx.getValue() << ' ' << xy.getValue() << ' '
 	 << yx.getValue() << ' ' << yy.getValue() << endl;
@@ -103,65 +103,43 @@ void MeqWsrtInt::calcResult (const MeqRequest& request)
     const complex<double>* xyc = xy.getValue().dcomplexStorage();
     const complex<double>* yxc = yx.getValue().dcomplexStorage();
     const complex<double>* yyc = yy.getValue().dcomplexStorage();
-    xxres = MeqMatrix(complex<double>(), 1, request.ny(), false);
-    xyres = MeqMatrix(complex<double>(), 1, request.ny(), false);
-    yxres = MeqMatrix(complex<double>(), 1, request.ny(), false);
-    yyres = MeqMatrix(complex<double>(), 1, request.ny(), false);
+    xxres = MeqMatrix(complex<double>(), request.nx(), 1, false);
+    xyres = MeqMatrix(complex<double>(), request.nx(), 1, false);
+    yxres = MeqMatrix(complex<double>(), request.nx(), 1, false);
+    yyres = MeqMatrix(complex<double>(), request.nx(), 1, false);
     complex<double>* xxr = xxres.dcomplexStorage();
     complex<double>* xyr = xyres.dcomplexStorage();
     complex<double>* yxr = yxres.dcomplexStorage();
     complex<double>* yyr = yyres.dcomplexStorage();
-#if 0
-    for (int i=0; i<request.ny(); i++) {
-      complex<double> sumxx;
-      complex<double> sumxy;
-      complex<double> sumyx;
-      complex<double> sumyy;
-      for (int j=0; j<nsubc; j++) {
-	sumxx += *xxc++;
-	sumxy += *xyc++;
-	sumyx += *yxc++;
-	sumyy += *yyc++;
-      }
-      xxr[i] = sumxx * fact;
-      xyr[i] = sumxy * fact;
-      yxr[i] = sumyx * fact;
-      yyr[i] = sumyy * fact;
-      if (MeqPointDFT::doshow) {
-	cout << "MeqWsrtInt abs(sum): " << abs(sumxx) << ' ' << abs(sumxy) << ' ' << abs(sumyx) << ' ' << abs(sumyy) << endl;
-      }
-    }
-#else
     int i,j;
-    for (i=0; i<request.ny(); i++) {
+    for (i=0; i<request.nx(); i++) {
       complex<double> sumxx;
       for (j=0; j<nsubc; j++) {
 	sumxx += *xxc++;
       }
       xxr[i] = sumxx * fact;
     }
-    for (i=0; i<request.ny(); i++) {
+    for (i=0; i<request.nx(); i++) {
       complex<double> sumxy;
       for (j=0; j<nsubc; j++) {
 	sumxy += *xyc++;
       }
       xyr[i] = sumxy * fact;
     }
-    for (i=0; i<request.ny(); i++) {
+    for (i=0; i<request.nx(); i++) {
       complex<double> sumyx;
       for (j=0; j<nsubc; j++) {
 	sumyx += *yxc++;
       }
       yxr[i] = sumyx * fact;
     }
-    for (i=0; i<request.ny(); i++) {
+    for (i=0; i<request.nx(); i++) {
       complex<double> sumyy;
       for (j=0; j<nsubc; j++) {
 	sumyy += *yyc++;
       }
       yyr[i] = sumyy * fact;
     }
-#endif
   }
   // Now combine with the stations jones.
   MeqMatrix s11 = itsStat1->getResult11().getValue();
@@ -316,9 +294,9 @@ void MeqWsrtInt::calcResult (const MeqRequest& request)
 	} else {
 	  const complex<double>* dc =
 	    xx.getPerturbedValue(spinx).dcomplexStorage();
-	  pxxres = MeqMatrix(complex<double>(), 1, request.ny(), false);
+	  pxxres = MeqMatrix(complex<double>(), request.nx(), 1, false);
 	  complex<double>* dr = pxxres.dcomplexStorage();
-	  for (int i=0; i<request.ny(); i++) {
+	  for (int i=0; i<request.nx(); i++) {
 	    complex<double> dsum;
 	    for (int j=0; j<nsubc; j++) {
 	      dsum += *dc++;
@@ -333,9 +311,9 @@ void MeqWsrtInt::calcResult (const MeqRequest& request)
 	} else {
 	  const complex<double>* dc =
 	    xy.getPerturbedValue(spinx).dcomplexStorage();
-	  pxyres = MeqMatrix(complex<double>(), 1, request.ny(), false);
+	  pxyres = MeqMatrix(complex<double>(), request.nx(), 1, false);
 	  complex<double>* dr = pxyres.dcomplexStorage();
-	  for (int i=0; i<request.ny(); i++) {
+	  for (int i=0; i<request.nx(); i++) {
 	    complex<double> dsum;
 	    for (int j=0; j<nsubc; j++) {
 	      dsum += *dc++;
@@ -350,9 +328,9 @@ void MeqWsrtInt::calcResult (const MeqRequest& request)
 	} else {
 	  const complex<double>* dc =
 	    yx.getPerturbedValue(spinx).dcomplexStorage();
-	  pyxres = MeqMatrix(complex<double>(), 1, request.ny(), false);
+	  pyxres = MeqMatrix(complex<double>(), request.nx(), 1, false);
 	  complex<double>* dr = pyxres.dcomplexStorage();
-	  for (int i=0; i<request.ny(); i++) {
+	  for (int i=0; i<request.nx(); i++) {
 	    complex<double> dsum;
 	    for (int j=0; j<nsubc; j++) {
 	      dsum += *dc++;
@@ -367,9 +345,9 @@ void MeqWsrtInt::calcResult (const MeqRequest& request)
 	} else {
 	  const complex<double>* dc =
 	    yy.getPerturbedValue(spinx).dcomplexStorage();
-	  pyyres = MeqMatrix(complex<double>(), 1, request.ny(), false);
+	  pyyres = MeqMatrix(complex<double>(), request.nx(), 1, false);
 	  complex<double>* dr = pyyres.dcomplexStorage();
-	  for (int i=0; i<request.ny(); i++) {
+	  for (int i=0; i<request.nx(); i++) {
 	    complex<double> dsum;
 	    for (int j=0; j<nsubc; j++) {
 	      dsum += *dc++;

@@ -49,11 +49,11 @@ void MeqStatSources::calculate (const MeqRequest& request)
   // The exponent and its frequency delta are calculated.
   // However, the delta is only calculated if there are multiple channels.
   itsResults.resize (itsSources->size());
-  bool calcDelta = request.ny() > 1;
+  bool calcDelta = request.nx() > 1;
   // Calculate 2pi/wavelength, where wavelength=c/freq.
   // Calculate it for the frequency step if needed.
-  double df = request.stepY();
-  double f0 = domain.startY() + df/2;
+  double df = request.stepX();
+  double f0 = domain.startX() + df/2;
   MeqMatrix wavel0 (C::_2pi * f0 / C::c);
   MeqMatrix dwavel;
   if (calcDelta) {
@@ -143,7 +143,7 @@ void MeqStatSources::calculate (const MeqRequest& request)
 double MeqStatSources::getExponent (int sourceNr,
 				    const MeqRequest& request)
 {
-  DBGASSERT (request.nx() == 1);
+  DBGASSERT (request.ny() == 1);
   double u = itsUVW->getU(request).getValue().getDouble();
   double v = itsUVW->getV(request).getValue().getDouble();
   double w = itsUVW->getW(request).getValue().getDouble();
