@@ -26,13 +26,14 @@ namespace LOFAR
     void run(int nsteps);
     void run_once();
     void quit();
+    void dump() const;
 
   private:
     int    itsArgv;
     char** itsArgc;
 
     DataHolder* itsProto;
-    MiniDataManager* itsDataManager;
+    //    MiniDataManager* itsDataManager;
 
     WH_Example* itsWorkHolder;
     DH_Example* dhptr;

@@ -26,7 +26,8 @@ namespace LOFAR
 {
 
   MiniDataManager::MiniDataManager(int ninputs, int noutputs):
-    itsNinputs(ninputs), itsNoutputs(noutputs) {
+    itsNinputs(ninputs), 
+    itsNoutputs(noutputs) {
     
     itsInDHs = new DataHolder* [ninputs];
     itsOutDHs = new DataHolder* [noutputs];
@@ -38,6 +39,16 @@ namespace LOFAR
   DataHolder* MiniDataManager::getInHolder(int channel) {
     assertChannel(channel, true);
     return itsInDHs[channel];
+  }
+
+
+  MiniDataManager::MiniDataManager(const MiniDataManager& that):
+    itsNinputs  (that.itsNinputs),
+    itsNoutputs (that.itsNoutputs){
+    
+    itsInDHs = new DataHolder* [itsNinputs];
+    itsOutDHs = new DataHolder* [itsNoutputs];
+
   }
 
   DataHolder* MiniDataManager::getOutHolder(int channel) {
@@ -66,6 +77,13 @@ namespace LOFAR
   }
 
   void MiniDataManager::preprocess() {
+    for (int i = 0; i < itsNinputs; i++) {
+      itsInDHs[i]->preprocess();
+    }
+
+    for (int i = 0; i < itsNoutputs; i++) {
+      itsOutDHs[i]->preprocess();
+    }
   }
 
   void MiniDataManager::postprocess() {

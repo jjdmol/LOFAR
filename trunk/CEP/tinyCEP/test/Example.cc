@@ -53,6 +53,8 @@ int main(int argc, const char** argv)
 #else
    
   EX1.baseDefine();
+  EX1.basePrerun();
+  EX1.baseDump();
   EX1.baseRun(10);
   EX1.baseDump();
   EX1.baseQuit();

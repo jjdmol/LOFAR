@@ -52,7 +52,7 @@ WorkHolder::WorkHolder (int inputs, int outputs,
   itsType             (type),
   itsFirstProcessCall (true)
 {
-  TRACER2("WorkHolder constructor");
+//   TRACER2("WorkHolder constructor");
   itsDataManager = new MiniDataManager(inputs, outputs);
 }
 

@@ -11,14 +11,14 @@ namespace LOFAR
       itsNinputs(ninput),
       itsNoutputs(noutput) {
    
-    itsDataManager = new MiniDataManager(ninput, noutput);
+//     itsDataManager = new MiniDataManager(ninput, noutput);
     
-    for (int i=0; i < itsNinputs; i++) {
-      itsDataManager->addInDataHolder(i, dhptr);
-    }
-    for (int i=0; i < itsNoutputs; i++){
-      itsDataManager->addOutDataHolder(i, dhptr);
-    }
+//     for (int i=0; i < itsNinputs; i++) {
+//       itsDataManager->addInDataHolder(i, dhptr);
+//     }
+//     for (int i=0; i < itsNoutputs; i++){
+//       itsDataManager->addOutDataHolder(i, dhptr);
+//     }
 
   }
 
@@ -48,6 +48,10 @@ namespace LOFAR
 
   void MyExample::quit(){
     itsWorkHolder->postprocess();
+  }
+
+  void MyExample::dump() const {
+    itsWorkHolder->dump();
   }
 
 } // namespace LOFAR

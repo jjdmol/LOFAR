@@ -74,6 +74,8 @@ namespace LOFAR
     int getOutputs() const;
 
   private:
+    MiniDataManager (const MiniDataManager&);
+    
     int itsNinputs;
     int itsNoutputs; 
     

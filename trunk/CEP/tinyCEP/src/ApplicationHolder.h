@@ -39,7 +39,7 @@ namespace LOFAR
   class ApplicationHolder
   {
   public:
-    //    ApplicationHolder(int ninput, int noutput, DataHolder* dhptr);
+    //ApplicationHolder(int ninput, int noutput, DataHolder* dhptr);
     // default constructor does nothing.
     ApplicationHolder();
     virtual ~ApplicationHolder();
@@ -93,14 +93,14 @@ namespace LOFAR
     // Forbid assignment
     ApplicationHolder& operator= (const ApplicationHolder&);
 
+    // pointer to the application dataManager
+/*     MiniDataManager* itsDataManager; */
   private:
     int    itsArgc;
     const char** itsArgv;
 
     // DataHolder prototype for the application
     DataHolder* itsProto;
-    // pointer to the application dataManager
-    MiniDataManager* itsDataManager;
 
   };
 
