@@ -34,19 +34,28 @@
 
 #ifndef [+ protocol_name +]_H
 #define [+ protocol_name +]_H
+
 #ifdef SWIG
 %module [+ (base-name) +]
+%include GCF/GCF_Event.h
+%include carrays.i
+%include std_string.i
+[+ FOR include "" +]
+%include [+ (get "include") +][+ ENDFOR +]
+%array_class(int, int_array)
+%array_class(char, char_array)
 %{
 #include "[+ (base-name) +].ph"
-#include <string.h> // needed for memcpy
-#include <GCF/GCF_TMProtocols.h>
-%}
-#endif
-#include <string.h> // needed for memcpy
-#include <GCF/GCF_TMProtocols.h>
 [+ FOR include "" +]
 #include [+ (get "include") +][+ ENDFOR +]
-[+ (get "prelude") +]
+#include <GCF/GCF_TMProtocols.h>
+%}
+#else
+#include "[+ (base-name) +].ph"
+[+ FOR include "" +]
+#include [+ (get "include") +][+ ENDFOR +]
+#include <GCF/GCF_TMProtocols.h>
+#endif
 
 namespace [+ (base-name) +]
 {
@@ -89,14 +98,17 @@ namespace [+ (base-name) +]
   class [+ eventext_class_decl +]
   {
     public:
-      [+ eventext_class_name +]([+ event_class_name +]& be, bool doUnpack = false) 
+      [+ eventext_class_name +]([+ event_class_name +]& be, ACTION action = SENDING) 
       : base(be)[+ IF (< 0 (count "sequence")) +],[+ FOR sequence "," +]
         [+ (get "name") +]Dim(0), [+ (get "name") +](0)[+ ENDFOR +][+ ENDIF +][+ IF (< 0 (count "object")) +],[+ FOR object "," +][+ IF (not (== (get "type") "string")) +]
         [+ object_name +](0)[+ ELSE +]
         [+ (get "name") +]()[+ ENDIF +][+ ENDFOR +][+ ENDIF +]
       {        
-	      if (doUnpack) unpack();
-	      _unpackDone = doUnpack;
+	      if (action == RECEIVED) 
+	      {
+	      	unpack();	      
+		      _unpackDone = true;
+		    }
       }
       
       virtual ~[+ eventext_class_name +]() 
@@ -115,12 +127,14 @@ namespace [+ (base-name) +]
 #endif
       GCFEvent& getEvent() { return base; }
 
-      // sequence parameters[+ FOR sequence ";" +]
+			// IMPORTANT: User may only free the member data if he also constructed it.
+      // sequence parameters
+      [+ FOR sequence ";" +]
       [+ eventext_class_member +][+ ENDFOR +];
       
       // parameters of userdefined types (incl. string)[+ FOR object "" +][+ IF (not (== (get "type") "string")) +]      
       GCFTransportable* [+ object_name +];[+ ELSE +]
-      [+ (get "type") +] [+ (get "name") +];[+ ENDIF +][+ ENDFOR +]
+      std::string [+ (get "name") +];[+ ENDIF +][+ ENDFOR +]
       
       void* pack(unsigned int& packsize)
       {
@@ -134,10 +148,10 @@ namespace [+ (base-name) +]
         resizeBuf(requiredSize);
         unsigned int offset = 0;
         // pack sequence members[+ FOR sequence "" +]
-        offset += packMember([+ (get "name") +], [+ (get "name") +]Dim,  sizeof([+ (get "type") +]), offset);[+ ENDFOR +]
+        offset += packMember(offset, [+ (get "name") +], [+ (get "name") +]Dim,  sizeof([+ (get "type") +]));[+ ENDFOR +]
         
         // pack members of user defined types (incl. "string")[+ FOR object "" +][+ IF (== (get "type") "string") +]
-        offset += packMember([+ (get "name") +].c_str(), [+ (get "name") +].length(),  sizeof(char), offset);[+ ELSE +]
+        offset += packMember(offset, [+ (get "name") +].c_str(), [+ (get "name") +].length(),  sizeof(char));[+ ELSE +]
         offset += [+ object_name +]->pack(_buffer + offset);[+ ENDIF +][+ ENDFOR +]
         
         packsize = offset;
@@ -153,9 +167,9 @@ namespace [+ (base-name) +]
         {
           char* data = (char*) &base;
           // unpack sequence members[+ FOR sequence "" +]
-          [+ (get "name") +] = ([+ (get "type") +]*) unpackMember(data, [+ (get "name") +]Dim,  sizeof([+ (get "type") +]), offset);[+ ENDFOR +]
+          [+ (get "name") +] = ([+ (get "type") +]*) unpackMember(data, offset, [+ (get "name") +]Dim,  sizeof([+ (get "type") +]));[+ ENDFOR +]
 	        // unpack members of user defined types (incl. "string")[+ FOR object "" +][+ IF (== (get "type") "string") +]
-				  unpackStringMember(data, [+ (get "name") +], offset);[+ ELSE +]          
+				  offset += GCFEventExt::unpackString([+ (get "name") +], data + offset);[+ ELSE +]          
 	        [+ object_name +] = new [+ (get "type")+]();
 	        offset += [+ object_name +]->unpack(data + offset);[+ ENDIF +][+ ENDFOR +]
         }

@@ -10,12 +10,10 @@
 
 #include <GCF/GCF_Event.h>
 
-using namespace std;
-
 class TransObject : public GCFTransportable
 {
   public:
-    TransObject(int aValue1, float aValue2, string aValue3) :
+    TransObject(int aValue1, float aValue2, std::string aValue3) :
       value1(aValue1),
       value2(aValue2),
       value3(aValue3)
@@ -42,7 +40,7 @@ class TransObject : public GCFTransportable
       offset += sizeof(value1);
       memcpy(buffer + offset, &value2, sizeof(value2));
       offset += sizeof(value2);
-      offset += packString(buffer + offset, value3);
+      offset += GCFEventExt::packString(buffer + offset, value3);
       return offset;
     }
     unsigned int unpack(char* buffer)
@@ -52,7 +50,7 @@ class TransObject : public GCFTransportable
       offset += sizeof(value1);
       memcpy(&value2, buffer + offset, sizeof(value2));
       offset += sizeof(value2);
-      offset += unpackString(value3, buffer + offset);
+      offset += GCFEventExt::unpackString(value3, buffer + offset);
       return offset;
     }
     unsigned int getSize()
@@ -66,7 +64,7 @@ class TransObject : public GCFTransportable
   
     int value1;
     float value2;
-    string value3;  
+    std::string value3;  
 }; 
 
 #endif

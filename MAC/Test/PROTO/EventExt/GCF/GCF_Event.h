@@ -34,8 +34,6 @@
 %}
 #endif
 
-using namespace std;
-
 /**
  * This struct is the base event data container to exchange messages between two 
  * tasks. 
@@ -102,10 +100,30 @@ class GCFEventExt
 {
   public:
 
+    enum ACTION {RECEIVED, SENDING};
+
 #ifndef SWIG
     virtual void* pack(unsigned int& packsize) = 0;
     virtual GCFEvent& getEvent() = 0;
 #endif
+
+    static unsigned int unpackString(std::string& value, char* buffer)
+    {
+      unsigned int stringLength(0);
+      memcpy((void *) &stringLength, buffer,  + sizeof(unsigned int));
+      value.clear();
+      value.append(buffer + sizeof(unsigned int), stringLength);
+      return stringLength + sizeof(unsigned int);
+    }
+    
+    static unsigned int packString(char* buffer, const std::string& value)
+    {
+      unsigned int neededBufLength = value.size() + sizeof(unsigned int);
+      unsigned int stringLength(value.size());
+      memcpy(buffer, (void *) &stringLength,  + sizeof(unsigned int));
+      memcpy(buffer + sizeof(unsigned int), (void *) value.c_str(), value.size());
+      return neededBufLength;
+    }  
 
   protected:
     char* _buffer;
@@ -130,7 +148,7 @@ class GCFEventExt
         _upperbound = requiredSize;
       }
     }
-    void* unpackMember(char* data, unsigned int& memberDim, unsigned int sizeofMemberType, unsigned int& offset)
+    void* unpackMember(char* data, unsigned int& offset, unsigned int& memberDim, unsigned int sizeofMemberType)
     {
       void* seqPtr(0);
       memcpy(&memberDim, data + offset, sizeof(unsigned int));
@@ -138,22 +156,13 @@ class GCFEventExt
       offset += sizeof(unsigned int) + memberDim * sizeofMemberType;
       return seqPtr;
     }
-    unsigned int packMember(const void* member, unsigned int memberDim, unsigned int sizeofMemberType, unsigned int offset)
+    unsigned int packMember(unsigned int offset, const void* member, unsigned int memberDim, unsigned int sizeofMemberType)
     {
       assert(_buffer);
       memcpy(_buffer + offset, &memberDim, sizeof(memberDim));
       offset += sizeof(memberDim);
       memcpy(_buffer + offset, member, memberDim * sizeofMemberType);
       return (memberDim * sizeofMemberType) + sizeof(memberDim);
-    }
-    void unpackStringMember(char* data, string& value, unsigned int& offset)
-    {
-      unsigned int stringLength(0);
-      memcpy((void *) &stringLength, data + offset, sizeof(unsigned int));
-      offset += sizeof(unsigned int);
-      value.clear();
-      value.append(data + offset, stringLength);
-      offset += stringLength;
     }
 
   private:
@@ -167,25 +176,6 @@ class GCFTransportable
     virtual unsigned int pack(char* buffer) = 0;
     virtual unsigned int unpack(char* buffer) = 0;
     virtual unsigned int getSize() = 0;
-
-  protected:
-    unsigned int unpackString(string& value, char* buffer)
-    {
-      unsigned int stringLength(0);
-      memcpy((void *) &stringLength, buffer,  + sizeof(unsigned int));
-      value.clear();
-      value.append(buffer + sizeof(unsigned int), stringLength);
-      return stringLength + sizeof(unsigned int);
-    }
-  
-    unsigned int packString(char* buffer, const string& value)
-    {
-      unsigned int neededBufLength = value.size() + sizeof(unsigned int);
-      unsigned int stringLength(value.size());
-      memcpy(buffer, (void *) &stringLength,  + sizeof(unsigned int));
-      memcpy(buffer + sizeof(unsigned int), (void *) value.c_str(), value.size());
-      return neededBufLength;
-    }  
 };
 
 /**
