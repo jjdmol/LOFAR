@@ -57,7 +57,7 @@ namespace [+ (base-name) +]
 	length = sizeof([+ struct_name +]);
 
         [+ FOR param "" +]
-	[+ IF (exist? "dim") +]memcpy([+ (get "name") +], [+ (get "name") +]_arg, [+ (get "dim") +]);[+ ENDIF +][+ ENDFOR +]
+	[+ IF (exist? "dim") +]memcpy([+ (get "name") +], [+ (get "name") +]_arg, [+ (get "dim") +] * sizeof([+ (get "type") +]));[+ ENDIF +][+ ENDFOR +]
     }
 
     [+ struct_name +]() : GCFEvent([+ signal_name +])[+ FOR param "" +][+ param_init +][+ ENDFOR +]
