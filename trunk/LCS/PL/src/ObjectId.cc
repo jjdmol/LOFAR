@@ -57,11 +57,6 @@ namespace LCS
     //                                                               //
     ///////////////////////////////////////////////////////////////////
 
-    ObjectId::ObjectId(bool doGenerate) : 
-      itsOid(NullId), itsOidIsSet(!doGenerate) 
-    {
-    }
-
     const ObjectId::oid_t& ObjectId::get() const
     {
       if (!itsOidIsSet) {
@@ -71,6 +66,12 @@ namespace LCS
       return itsOid;
     }
     
+    void ObjectId::reset()
+    {
+      itsOid = NullId;
+      itsOidIsSet = false;
+    }
+
     void ObjectId::set(const ObjectId::oid_t& aOid) 
     {
       itsOid = aOid;
