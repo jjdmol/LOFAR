@@ -33,19 +33,18 @@ parmtable := function (name, create=F)
     if (create) {
 	# Create the main table.
 	d1 := tablecreatescalarcoldesc ('NAME', '');
-	d4 := tablecreatescalarcoldesc ('STARTTIME', as_double(0));
-	d5 := tablecreatescalarcoldesc ('ENDTIME', as_double(0));
-	d6 := tablecreatescalarcoldesc ('STARTFREQ', as_double(0));
-	d7 := tablecreatescalarcoldesc ('ENDFREQ', as_double(0));
+	d4 := tablecreatescalarcoldesc ('STARTFREQ', as_double(0));
+	d5 := tablecreatescalarcoldesc ('ENDFREQ', as_double(0));
+	d6 := tablecreatescalarcoldesc ('STARTTIME', as_double(0));
+	d7 := tablecreatescalarcoldesc ('ENDTIME', as_double(0));
 	d8 := tablecreatearraycoldesc  ('VALUES', as_double(0));
-	d11:= tablecreatescalarcoldesc ('TIME0', as_double(0));
-	d12:= tablecreatescalarcoldesc ('FREQ0', as_double(0));
-	d13:= tablecreatescalarcoldesc ('NORMALIZED', T);
-	d14:= tablecreatearraycoldesc  ('SOLVABLE', T);
-	d15:= tablecreatescalarcoldesc ('DIFF', as_double(0));
-	d16:= tablecreatescalarcoldesc ('DIFF_REL', T);
+	d11:= tablecreatescalarcoldesc ('FREQ0', as_double(0));
+	d12:= tablecreatescalarcoldesc ('TIME0', as_double(0));
+	d13:= tablecreatescalarcoldesc ('FREQSCALE', as_double(0));
+	d14:= tablecreatescalarcoldesc ('TIMESCALE', as_double(0));
+	d15:= tablecreatescalarcoldesc ('PERTURBATION', as_double(0));
 	td := tablecreatedesc (d1, d4, d5, d6, d7, d8,
-			       d11, d12, d13, d14, d15, d16);
+			       d11, d12, d13, d14, d15);
 	self.tab := table (name, td);
 	if (is_fail(self.tab)) {
 	    fail;
@@ -57,7 +56,7 @@ parmtable := function (name, create=F)
 	
 	# Create the table with default values.
 	dtabname := spaste(name,'/DEFAULTVALUES');
-	td := tablecreatedesc (d1, d8, d11, d12, d13, d14, d15, d16);
+	td := tablecreatedesc (d1, d8, d11, d12, d13, d14, d15);
 	self.dtab := table (dtabname, td);
 	if (is_fail(self.dtab)) {
 	    fail;
@@ -95,16 +94,29 @@ parmtable := function (name, create=F)
 	return T;
     }
 
-    public.putdef := function (parmname='parmXXX',
-			       values=0, solvable=unset, normalize=unset,
-			       diff=1e-6, diffrelative=T,
-			       time0=0., freq0=0., trace=T)
+    public.putdef1 := function (parmname,
+				value, nfreq, ntime, perturbation=1e-6, 
+				freq0=0., time0=4.56e9, 
+				freqscale=1e6, timescale=1., 
+				trace=T)
+    {
+	vals := array(as_double(0), nfreq, ntime);
+	vals[1,1] := value;
+	public.putdef (parmname, vals, perturbation, freq0, time0,
+		       freqscale, timescale, trace);
+    }
+
+    public.putdef := function (parmname,
+			       values=1, perturbation=1e-6, 
+			       freq0=0., time0=4.56e9, 
+			       freqscale=1e6, timescale=1., 
+			       trace=T)
     {
 	#----------------------------------------------------------------
 	funcname := paste('** parmtable.putdef(',parmname,'):');
-	input := [parmname=parmname, values=values, solvable=solvable,
-		  diff=diff, diffrelative=diffrelative,
-		  time0=time0, freq0=freq0];
+	input := [parmname=parmname, values=values, perturbation=perturbation, 
+		  freq0=freq0, time0=time0, 
+		  freqscale=freqscale, timescale=timescale];
 	if (trace) print funcname,' input=',input;
 	#----------------------------------------------------------------
 
@@ -124,62 +136,47 @@ parmtable := function (name, create=F)
 	if (length(shape(values)) != 2  ||  !is_numeric(values)) {
 	    fail paste('values should be a 2-dim numerical array');
 	}
-	if (!is_unset(solvable)) {
-  	  if (length(shape(solvable)) == 1  &&  length(solvable) == 1) {
-	    solvable := array (solvable, 1, 1);
-	  }
-          if (!is_boolean(solvable) || length(shape(solvable)) != 2) {
-	    fail paste('solvable should be unset or a 2-dim boolean array');
-          }
-	}
 	self.dtab.addrows(1);
 	rownr := self.dtab.nrows();
 	self.dtab.putcell ('NAME', rownr, parmname);
-	nm := T;
-	if (is_boolean(solvable)) {
-	    self.dtab.putcell ('SOLVABLE', rownr, solvable);
-	    nm := all(solvable);
-	}
-	if (is_boolean(normalize)) {
-	    nm := normalize;
-	}
-	self.dtab.putcell ('TIME0', rownr, time0)
 	self.dtab.putcell ('FREQ0', rownr, freq0)
-	self.dtab.putcell ('NORMALIZED', rownr, nm);
-	vals := as_double(values);
-	self.dtab.putcell ('VALUES', rownr, vals);
-	self.dtab.putcell ('DIFF', rownr, diff);
-	self.dtab.putcell ('DIFF_REL', rownr, diffrelative);
+	self.dtab.putcell ('TIME0', rownr, time0)
+	self.dtab.putcell ('FREQSCALE', rownr, freqscale)
+	self.dtab.putcell ('TIMESCALE', rownr, timescale)
+	self.dtab.putcell ('VALUES', rownr, as_double(values));
+	self.dtab.putcell ('PERTURBATION', rownr, perturbation);
 	return T;
     }
 
-    public.put := function (parmname='parmYYY',
-			    timerange=[1,1e20], freqrange=[1,1e20], 
-			    values=0, solvable=unset, normalize=unset,
-                            diff=1e-6, diffrelative=T,
-			    time0=0., freq0=0., trace=T)
+    public.put := function (parmname,
+			    freqrange=[1,1e20], timerange=[1,1e20], 
+			    values=1, perturbation=1e-6,
+			    freq0=0., time0=4.56e9, 
+			    freqscale=1e6, timescale=1, 
+			    trace=T)
     {
 	#----------------------------------------------------------------
 	funcname := paste('** parmtable.put(',parmname,'):');
 	input := [parmname=parmname, values=values, solvable=solvable,
-		  timerange=timerange, freqrange=freqrange,
-		  diff=diff, diffrelative=diffrelative,
-		  time0=time0, freq0=freq0];
+		  freqrange=freqrange, timerange=timerange, 
+		  perturbation=perturbation,
+		  freq0=freq0, time0=time0,
+		  freqscale=freqscale, timescale=timescale];
 	if (trace) print funcname,' input=',input;
 	#----------------------------------------------------------------
 
 
-	if (length(timerange) != 2) {
-	    fail 'timerange should be a vector of 2 elements (start,end)';
-	}
 	if (length(freqrange) != 2) {
 	    fail 'freqrange should be a vector of 2 elements (start,end)';
 	}
+	if (length(timerange) != 2) {
+	    fail 'timerange should be a vector of 2 elements (start,end)';
+	}
 	t1 := self.tab.query (spaste('NAME=="',parmname,'" ',
-				     '&& near(STARTTIME,', timerange[1],') ',
-				     '&& near(ENDTIME,'  , timerange[2],') ',
 				     '&& near(STARTFREQ,', freqrange[1],') ',
-				     '&& near(ENDFREQ,'  , freqrange[2],') '));
+				     '&& near(ENDFREQ,'  , freqrange[2],') ',
+				     '&& near(STARTTIME,', timerange[1],') ',
+			             '&& near(ENDTIME,'  , timerange[2],') '));
 	nr := t1.nrows();
 	t1.close();
 	if (nr != 0) {
@@ -193,76 +190,23 @@ parmtable := function (name, create=F)
 	if (length(shape(values)) != 2  ||  !is_numeric(values)) {
 	    fail paste('values should be a 2-dim numerical array');
 	}
-	if (!is_unset(solvable)  &&  (!is_boolean(solvable) || length(shape(solvable)) != 2)) {
-	    fail paste('solvable should be unset or a 2-dim boolean array');
-	}
 	self.tab.addrows(1);
 	rownr := self.tab.nrows();
 	self.tab.putcell ('NAME', rownr, parmname);
-	self.tab.putcell ('STARTTIME', rownr, timerange[1]);
-	self.tab.putcell ('ENDTIME', rownr, timerange[2]);
 	self.tab.putcell ('STARTFREQ', rownr, freqrange[1]);
 	self.tab.putcell ('ENDFREQ', rownr, freqrange[2]);
-	nm := T;
-	if (is_boolean(solvable)) {
-	    self.tab.putcell ('SOLVABLE', rownr, solvable);
-	    nm := all(solvable);
-	}
-	if (is_boolean(normalize)) {
-	    nm := normalize;
-	}
-	self.tab.putcell ('TIME0', rownr, time0)
+	self.tab.putcell ('STARTTIME', rownr, timerange[1]);
+	self.tab.putcell ('ENDTIME', rownr, timerange[2]);
 	self.tab.putcell ('FREQ0', rownr, freq0)
-	self.tab.putcell ('NORMALIZED', rownr, nm);
-	vals := as_double(values);
-	self.tab.putcell ('VALUES', rownr, vals);
-	self.tab.putcell ('DIFF', rownr, diff);
-	self.tab.putcell ('DIFF_REL', rownr, diffrelative);
+	self.tab.putcell ('TIME0', rownr, time0)
+	self.tab.putcell ('FREQSCALE', rownr, freqscale)
+	self.tab.putcell ('TIMESCALE', rownr, timescale)
+	self.tab.putcell ('VALUES', rownr, as_double(values));
+	self.tab.putcell ('PERTURBATION', rownr, perturbation);
 	return T;
     }
 
-    public.loadgsm := function(gsmname, where='', time0=0., freq0=0.)
-    {
-	t := table(gsmname);
-	if (is_fail(t)) fail;
-	tab := t.query (where, sortlist='NUMBER');
-	fnd := tab.nrows() > 0;
-	if (fnd) {
-	    for (row in [1:tab.nrows()]) {
-		src := tab.getcell ('NUMBER', row);
-		name := tab.getcell('NAME', row);
-		public.putdef (spaste('RA.', name),
-			       values=tab.getcell ('RAPARMS', row),
-			       diff=1e-7, diffrelative=F,
-			       time0=time0, freq0=freq0);
-		public.putdef (spaste('DEC.', name),
-			       values=tab.getcell ('DECPARMS', row),
-			       diff=1e-7, diffrelative=F,
-			       time0=time0, freq0=freq0);
-		public.putdef (spaste('StokesI.', name),
-			       values=tab.getcell ('IPARMS', row),
-			       time0=time0, freq0=freq0);
-		public.putdef (spaste('StokesQ.', name),
-			       values=tab.getcell ('QPARMS', row),
-			       time0=time0, freq0=freq0);
-		public.putdef (spaste('StokesU.', name),
-			       values=tab.getcell ('UPARMS', row),
-			       time0=time0, freq0=freq0);
-		public.putdef (spaste('StokesV.', name),
-			       values=tab.getcell ('VPARMS', row),
-			       time0=time0, freq0=freq0);
-	    }
-	}
-	print 'Wrote',tab.nrows(),'sources into MEP';
-	tab.done();
-	t.done();
-	if (!fnd) {
-	    fail 'no sources found in the gsm';
-	}
-	return T;
-    }
-
-    self.perturb := function (tab, where, perturbation, pertrelative)
+    self.perturb := function (tab, where, perturbation)
     {
 	t1 := ref tab;
 	if (where != '') {
@@ -272,12 +216,7 @@ parmtable := function (name, create=F)
 	if (t1.nrows() > 0) {
 	    for (row in [1:t1.nrows()]) {
 		vals := t1.getcell ('VALUES', row);
-		if (pertrelative) {
-		    valp := vals * perturbation;
-		    valp[abs(vals)<1e-10] := vals + perturbation;
-		} else {
-		    valp := vals + perturbation;
-		}
+		valp := vals + perturbation;
 		t1.putcell ('VALUES', row, valp);
 	    }
 	}
@@ -287,8 +226,7 @@ parmtable := function (name, create=F)
 	return T;
     }
 
-    public.perturb := function (where='',
-				perturbation=1e-6, pertrelative=T,
+    public.perturb := function (where='', perturbation=1e-6,
 				trace=F)
     {
 	#----------------------------------------------------------------
