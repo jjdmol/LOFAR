@@ -208,7 +208,7 @@ Prediffer* WH_Prediff::getPrediffer(int id, const KeyValueMap& args,
     string skyModel = args.getString("skyTableName", "skymodel");
     string dbType = args.getString("DBType", "postgres");
     string dbName = args.getString("DBName", "test");
-    string dbHost = args.getString("DBHost", "dop50");
+    string dbHost = args.getString("DBHost", "dop50.astron.nl");
     string dbPwd = args.getString("DBPwd", "");
 
     string modelType = args.getString("modelType", "LOFAR.RI");

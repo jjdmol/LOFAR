@@ -28,8 +28,8 @@
 # -user    User
 
 DBTYPE="mysql"
-HOST="lofar6"
-BBHOST="dop50"
+HOST="lofar6.astron.nl"
+BBHOST="dop50.astron.nl"
 USER=`whoami`
 
 while [ 1 = 1 ]
