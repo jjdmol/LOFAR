@@ -109,6 +109,25 @@ void WH_BandSep::process()
 	// filter the signal
 	if (itsOutHolders[0]->doHandle()) {
 	  subbandSignals = itsFilterbank->filter(itsBuffer);
+
+	  // DEBUG
+//  	  itsNsubband = 4;
+//  	  subbandSignals.resize(itsNsubband, 1);
+//  	  subbandSignals = 1, 2, 3, 4; 
+//  	  cout << subbandSignals << endl;
+	  // !DEBUG
+
+	  //AG: Do a fftshift, put the DC component in the middle of the band
+	  int nfft = itsNsubband;	  
+	  LoMat_dcomplex temp (itsNsubband, 1);
+	  LoMat_dcomplex cdata(itsNsubband, 1);
+	  cdata = subbandSignals;
+
+	  temp = cdata (Range (nfft / 2, nfft - 1));
+	  cdata (Range (nfft / 2, nfft - 1)) = cdata (Range (0, nfft / 2 - 1));
+	  cdata (Range (0, nfft / 2 - 1)) = temp;
+	  
+	  subbandSignals=cdata;
 	  
 	  // Copy to other output buffers.
 	  for (int j = 0; j < itsNout; j++) {

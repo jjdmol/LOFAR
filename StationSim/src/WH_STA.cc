@@ -30,16 +30,21 @@
 #include <Common/Lorrays.h>
 #include <Math/LCSMath.h>
 #include <blitz/blitz.h>
-#include <StationSim/PASTd.h>
 
+#ifndef STATIONSIM_PASTD_H
+#include <StationSim/PASTd.h>
+#endif
 
 WH_STA::WH_STA (const string& name,  int nin,  int nout,
-				int nant,  int maxnrfi,  int buflength, int alg)
+		int nant,  int maxnrfi,  int buflength, 
+		int alg, int pdinit, int pdupdate, 
+		int pdinterval, double pdbeta, int detNrfi)
 : WorkHolder      (nin, nout, name, "WH_STA"),
   itsInHolders    (0),
   itsOutHolders   (0),
   itsNumberOfRFIs ("out_mdl", 1, 1),
   itsNrcu         (nant),
+  itsDetRFI       (detNrfi),
   itsMaxRFI       (maxnrfi),
   itsBufLength    (buflength),
   itsBuffer       (nant, buflength),
@@ -48,8 +53,10 @@ WH_STA::WH_STA (const string& name,  int nin,  int nout,
   itsEvalues      (nant),
   itsAcm          (nant, nant),
   itsAlg          (alg),
-  itsPASTdInterval(50),
-  itsPASTdBeta    (0.95)  
+  itsPASTdInterval(pdinterval),
+  itsPASTdBeta    (pdbeta),
+  itsPASTdInit    (pdinit),
+  itsUpdateRate   (pdupdate)
 {
   char str[8];
   if (nant > 0) {
@@ -68,11 +75,14 @@ WH_STA::WH_STA (const string& name,  int nin,  int nout,
     // RFI sources. This should be implemented more elegantly.
     itsOutHolders[i] = new DH_SampleC (string("out_") + str, itsNrcu, itsMaxRFI);    
   }
-//   //DEBUG
-//   itsTestVector.resize(itsNrcu, 300);
-//   itsFileInput.open ("/home/alex/temp/test_vectorSTA_sin.txt");
-//   itsFileInput >> itsTestVector;
-//   itsCount = 0;
+  //DEBUG
+//    itsTestVector.resize(itsNrcu, 300);
+//    itsFileInput.open ("/home/chris/PASTD-validation/test_vectorSTA.txt");
+//    itsFileInput >> itsTestVector;
+
+  itsBuffer = 0;
+  itsRFI = 0;
+  itsCount = 0;
 }
 
 WH_STA::~WH_STA()
@@ -87,13 +97,15 @@ WH_STA::~WH_STA()
  }
  delete [] itsOutHolders;
 
-//  // DEBUG
-//  itsFileInput.close ();
+ // DEBUG
+ // itsFileInput.close ();
 }
 
 WH_STA* WH_STA::make (const string& name) const
 {
-  return new WH_STA (name, getInputs(), getOutputs(), itsNrcu, itsMaxRFI, itsBufLength, itsAlg);
+  return new WH_STA (name, getInputs(), getOutputs(), itsNrcu, itsMaxRFI, 
+		     itsBufLength, itsAlg, itsPASTdInit, itsUpdateRate, itsPASTdInterval,
+		     itsPASTdBeta, itsDetRFI);
 }
 
 void WH_STA::preprocess()
@@ -105,73 +117,133 @@ void WH_STA::preprocess()
 void WH_STA::process()
 {
   using namespace blitz;
+  double RFI;
 
   // Place the next incoming sample vector in the snapshot buffer 
   // Keep a cylic buffer for the input snapshots
   for (int i = 0; i < itsNrcu; i++) {
- 	itsBuffer(i, itsPos) = itsInHolders[i]->getBuffer()[0];
-// 	// DEBUG
-// 	itsBuffer(i, itsPos) = itsTestVector(i, itsCount);
+    itsBuffer(i, itsPos) = itsInHolders[i]->getBuffer()[0];
+    
+    // 	// DEBUG
+    //    itsBuffer.resize(itsNrcu,300);
+    //    itsBuffer = itsTestVector;
+    //itsBuffer(i, itsPos) = itsTestVector(i, itsCount);
   }
   itsPos = (itsPos + 1) % itsBuffer.cols();
-//   // DEBUG
-//   itsCount = (itsCount + 1) % itsTestVector.cols();
+  // DEBUG
+  //  itsCount = (itsCount + 1) % itsTestVector.cols();
 
   if (getOutHolder(0)->doHandle ()) {
 	// Create contigeous buffer
-	itsBuffer = CreateContigeousBuffer (itsBuffer, itsPos);
-	itsPos = 0; // Set cyclic buffer pointer to the first entry because it is ordered now
-	
-	switch (itsAlg) {
-	case 0 : // ACM and EVD
+    itsBuffer = CreateContigeousBuffer (itsBuffer, itsPos);
+    itsPos = 0; // Set cyclic buffer pointer to the first entry because it is ordered now
+    
+    switch (itsAlg) {
+        case -1 : // Skip the adaptive beamforming 
 	  {
-		itsAcm = LCSMath::acm (itsBuffer);		              // calculate the ACM
-		LCSMath::eig (itsAcm, itsEvectors, itsEvalues);       // using the ACM, calc eigen vect/ values
+	    itsEvectors = 0;
+	    itsEvalues  = 0;
+	    break;
+	  }
 
-		// Use these functions to reverse a matrix or vector and not the blitz ones, due to memory
-		// incontiguous return values.
-		itsEvectors = ReverseMatrix (itsEvectors, firstDim);
-		itsEvalues = ReverseVector (itsEvalues);
-		break;
+        case 0 : // ACM and EVD
+	  {
+	    // DEBUG
+
+//          itsBuffer.resize(itsNrcu, 100);
+//  	    itsBuffer = itsTestVector(Range::all(), Range(0, 99)) ;
+
+	    itsAcm = LCSMath::acm(itsBuffer);
+	    LCSMath::eig(itsAcm, itsEvectors, itsEvalues);
+	    itsEvectors = LCSMath::hermitianTranspose(itsEvectors);
+	    itsEvectors = ReverseMatrix (itsEvectors, secondDim);
+  	    itsEvalues = ReverseVector(itsEvalues);
+	    itsCount = (itsCount + 1);
+
+	    break;
 	  }
 	case 1 : // SVD
 	  {
-		LoMat_dcomplex dummy (itsBuffer.extent(blitz::secondDim), itsBuffer.extent(blitz::secondDim));
- 		LCSMath::svd (itsBuffer, itsEvectors, dummy, itsEvalues);
-		//itsEvalues = sqr(itsEvalues) - 1;
-		break;
+	    LoMat_dcomplex dummy (itsBuffer.extent(blitz::secondDim), itsBuffer.extent(blitz::secondDim));
+	    LCSMath::svd (itsBuffer, itsEvectors, dummy, itsEvalues);
+	    //itsEvalues = sqr(itsEvalues) - 1;
+	    itsCount = (itsCount + 1);
+	    break;
 	  }
-	case 2 : // PASTd
+	case 2 : // PASTd -- INIT
 	  {
-		// Do an SVD or EVD to initialize PASTd
-		itsAcm = LCSMath::acm (itsBuffer);		              // calculate the ACM
-		LCSMath::eig (itsAcm, itsEvectors, itsEvalues);       // using the ACM, calc eigen vect/ values
-		itsEvectors = ReverseMatrix (itsEvectors, firstDim);
-		itsEvalues = ReverseVector (itsEvalues);
-		break;
-	  }
+  	    if (itsPASTdInit == 0 && itsCount == 0) {
+	      itsAcm = LCSMath::acm (itsBuffer);		    // calculate the ACM
+     	      LCSMath::eig (itsAcm, itsEvectors, itsEvalues);       // using the ACM, calc eigen vect/ values
+	      // EVD places the signal eigenvectors last
+	      // Post process to get them in front
+      	      itsEvectors = LCSMath::hermitianTranspose(itsEvectors);
+	      itsEvectors = ReverseMatrix (itsEvectors, firstDim);
+     	      itsEvalues = ReverseVector (itsEvalues);
+	      itsCount = (itsCount + 1) % itsUpdateRate;
+	    } else if (itsPASTdInit == 1 && itsCount == 0) {
+	      // Do an SVD to initialize PASTd
+	      LoMat_dcomplex dummy (itsBuffer.extent(blitz::secondDim), itsBuffer.extent(blitz::secondDim));
+	      LCSMath::svd (itsBuffer, itsEvectors, dummy, itsEvalues);
+	      itsCount = (itsCount + 1) % itsUpdateRate;
+	    } else if (itsCount > 0) {
+	    // PASTd step
+	      pastd(itsBuffer, itsBufLength, itsPASTdInterval, itsPASTdBeta, itsEvalues, itsEvectors);
+	      itsCount = (itsCount + 1) % itsUpdateRate;
+	    }
+	    break;
+	  }      
 	default :
 	  itsAlg = 0;
 	  break;
 	} 
+	// Detect the number of sources in the signal
+	// make sure the number of sources detected does not exceed the 
+	// maximum number of sources that can be handled by the
+	// algorithm. If no adaptive beamforming is done, assume 0
+        // interfering sources.
+        if (itsAlg != -1) {
+	  if (itsDetRFI == 0) {
+	    // No number of RFI given by the user
+	    RFI = (double) mdl (itsEvalues, itsNrcu, itsBufLength);
+	  } else {
+	    // The user provided a number of RFI's detected. This overrides 
+	    // the detected number of RFI's
+	    RFI = itsDetRFI;
+	  }
 
-	// Determine the number of sources in the signal
-	double RFI = (double) mdl (itsEvalues, itsNrcu, itsBufLength);
-	if (RFI > itsMaxRFI) RFI = itsMaxRFI;
+	  // Now check if the number of RFI's is sane
+	  if (RFI > itsMaxRFI) RFI = itsMaxRFI;
+	  // maxNRFI for PASTd is sqrt(N)
+	  // all other eigen vectors may result in NaN
+	  if (RFI > ceil(sqrt(itsNrcu)) && itsAlg == 2) RFI = ceil(sqrt(itsNrcu));
+	  // maxNRFI for EVD and SVD are N
+	  // this check should not be needed
+	  if (RFI > itsNrcu) RFI = itsNrcu;
 
-	// Find the appropriate Eigen vectors
-	LoMat_dcomplex B (itsNrcu, RFI);
-	B = itsEvectors (Range::all (), Range(itsEvectors.lbound(firstDim), RFI - 1));
-
+	  itsRFI = RFI;
+	  //	cout << "RFI's detected : "<< itsRFI << endl;
+	} else {
+	  // no adaptive algorithm used
+	  itsRFI = 0;
+	}
+   
+	cout << "Number of detected RFI sources: " << itsRFI << endl;
+	// Select the appropriate Eigen vectors corresponding to the detected sources
+	LoMat_dcomplex B (itsNrcu, itsRFI);
+	B = itsEvectors (Range::all (), Range(itsEvectors.lbound(firstDim), itsRFI - 1));
+	
 	// Now assign the Eigen vectors to the output
 	for (int i = 0; i < getOutputs() - 1; i++) {
 	  memcpy(itsOutHolders[i]->getBuffer(), B.data(), 
-			 itsNrcu * (int)RFI * sizeof(DH_SampleC::BufferType));
+			 itsNrcu * (int)itsRFI * sizeof(DH_SampleC::BufferType));
 	}
-	memcpy(itsNumberOfRFIs.getBuffer(), &RFI, sizeof(DH_SampleR::BufferType));
-  } else if (itsAlg == 2) {
-	// do PASTd step
-	//pastd (itsBuffer, itsBufLength, itsPASTdInterval, itsPASTdBeta, itsEvalues, itsEvectors);
+	memcpy(itsNumberOfRFIs.getBuffer(), &itsRFI, sizeof(DH_SampleR::BufferType));
+  } else {
+    // The STA is now dormant. Do nothing.
+    if (itsCount != 0 && itsAlg == 2) {
+      itsCount = (itsCount + 1) % itsUpdateRate;
+    }
   }
 }
 

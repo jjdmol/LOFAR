@@ -32,11 +32,12 @@
 #endif
 
 #include <BaseSim/WorkHolder.h>
-#include <StationSim/DH_SampleC.h>
 #include <Common/lofar_vector.h>
 #include <Common/Lorrays.h>
+#include <StationSim/DH_SampleC.h>
 #include <StationSim/GnuPlotInterface.h>
-
+#include <StationSim/ArrayConfig.h>
+#include <StationSim/QMinterface.h>
 
 class WH_BeamFormer: public WorkHolder
 {
@@ -48,7 +49,7 @@ public:
   WH_BeamFormer (const string& name,
 				 unsigned int nin, unsigned int nout, unsigned int nrcu,
 				 unsigned int nbeam, unsigned int maxNtarget, 
-				 unsigned int maxNrfi, bool tapstream);
+				 unsigned int maxNrfi, bool tapstream, string arraycfg, int qms);
 		 
 
   virtual ~WH_BeamFormer();
@@ -82,11 +83,15 @@ private:
   WH_BeamFormer& operator= (const WH_BeamFormer&);
 
   void beamplot (gnuplot_ctrl* handle, const LoVec_dcomplex& w, 
-				 const LoMat_dcomplex& skyScan, const int nrcu, 
-				 const int seconds);
+		 const int ncru);
 
   void spectrumplot (gnuplot_ctrl* handle, const LoMat_dcomplex& buffer, 
 				    const LoVec_dcomplex& w);
+
+  void ml_trans_edge (const LoVec_dcomplex& w, LoMat_double& ref, const int time, 
+		      const int nrcu, const int N);
+
+  LoMat_double beam_pattern (const LoVec_dcomplex& w, const int nrcu, const int N);
 
   DH_SampleC** itsInHolders;
   DH_SampleC** itsOutHolders;
@@ -98,17 +103,24 @@ private:
   int itsMaxNrfi;    // Maximum number of RFI signals that can be detected
   bool itsTapStream;
 
-  LoVec_dcomplex sample; // current sample in Blitz format
 
   //DEBUG
   ifstream itsFileInput;
   LoMat_dcomplex itsTestVector;
-  gnuplot_ctrl* handle;
+  gnuplot_ctrl* handle_bp;
+  gnuplot_ctrl* handle_sp;
   int iCount;
+  int plotCount;
 
   // EXPERIMENT TOOLS
+  ArrayConfig itsArray;
+  LoVec_dcomplex sample; // current sample in Blitz format
   LoMat_dcomplex itsBuffer;
+  LoVec_dcomplex itsBeamBuffer;
+
   int itsPos;
+  int itsQms;
+  LoVec_bool qm;         // Quality measure array
 
 };
 

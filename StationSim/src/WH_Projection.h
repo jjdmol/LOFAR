@@ -45,11 +45,13 @@ public:
   /// are created and how many elements there are in the buffer.
   /// The first WorkHolder should have nin=0.
   WH_Projection (const string& name,
-				 unsigned int nin, 
-				 unsigned int nout,
-				 unsigned int nant,
-				 unsigned int maxnrfi,
-		                 bool tapstream);
+		 unsigned int nin, 
+		 unsigned int nout,
+		 unsigned int nant,
+		 unsigned int maxnrfi,
+		 unsigned int ndetnull,
+		 bool tapstream, 
+		 string arraycfg);
   
   virtual ~WH_Projection();
 
@@ -90,15 +92,21 @@ private:
   /// Length of buffers.
   unsigned int itsNrcu;
   unsigned int itsMaxRFI;
+  unsigned int itsDetNulls;
   int itsDetectedRFIs;
   LoVec_dcomplex itsWeight;
   LoMat_dcomplex itsV;
   LoVec_dcomplex itsA;
-  bool itsTapStream;
+  bool           itsTapStream;
+  ArrayConfig    itsArray;
 
   LoVec_dcomplex WH_Projection::getWeights (LoVec_dcomplex B, LoVec_dcomplex d) ;
   LoVec_dcomplex WH_Projection::getWeights (LoMat_dcomplex V, LoVec_dcomplex a) ;
   LoVec_dcomplex WH_Projection::mv_mult(LoMat_dcomplex A, LoVec_dcomplex B);
   LoVec_dcomplex WH_Projection::vm_mult (const LoVec_dcomplex& A, const LoMat_dcomplex& B); 
+
+  // QM procedures
+  void WH_Projection::qm_find_doa(const LoVec_dcomplex& evec, const double accuracy, double& phi, double& theta);
+  LoVec_dcomplex WH_Projection::steerv (double phi, double theta, LoVec_double px, LoVec_double py);
 };
 #endif
