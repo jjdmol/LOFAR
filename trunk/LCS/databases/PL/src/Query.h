@@ -24,6 +24,7 @@
 #define LOFAR_PL_QUERY_H
 
 //# Includes
+#include <PL/Query/Expr.h>
 
 //# Forward Declarations
 
@@ -45,27 +46,32 @@ namespace LOFAR
     // because we do not want to couple the Query class with any class
     // or method in our relational mapping library (e.g. DTL).
     //
-    class Query
+    class QueryObject
     {
     public:
       // Default constructor. Creates an empty query object.
-      Query() {}
+      QueryObject() {}
 
       // Constructor that takes an SQL string. 
       // \todo Do we want to do some sanity checking on \c aString ?
-      explicit Query(const std::string& aString) : 
-	itsSqlString(aString) 
-      {}
+//       explicit QueryObject(const std::string& aString) : 
+// 	itsSqlString(aString) 
+//       {}
+
+      // Constructor that takes a Query Expression.
+      explicit QueryObject(const Query::Expr& aExpr) : 
+        itsQueryExpr(aExpr) {}
 
       // Return the composed query as an SQL string.
       // \todo In a future version, we will probably not store the query
       // as plain SQL; at least not to begin with. So, getSql() will then
       // have to generate (and cache) the SQL string based on the information
       // stored in this object.
-      std::string getSql() const { return itsSqlString; }
+      std::string getSql() const;
 
     private:
-      std::string itsSqlString;
+      Query::Expr itsQueryExpr;
+//       std::string itsSqlString;
 
     };
 

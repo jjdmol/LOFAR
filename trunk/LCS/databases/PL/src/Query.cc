@@ -1,6 +1,6 @@
-//#  PersistenceBroker.tcc: inline implementation of persistence broker class.
+//#  Query.cc: one line description
 //#
-//#  Copyright (C) 2002-2003
+//#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
 //#  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
 //#
@@ -20,37 +20,24 @@
 //#
 //#  $Id$
 
-#ifndef LOFAR_PL_PERSISTENCEBROKER_TCC
-#define LOFAR_PL_PERSISTENCEBROKER_TCC
-
-#include <PL/Exception.h>
-#include <PL/TPersistentObject.h>
-#include <PL/Collection.h>
+#include <PL/Query.h>
+#include <sstream>
+#include <iostream>
 
 namespace LOFAR
 {
   namespace PL
   {
 
-    template<typename T>
-    Collection<TPersistentObject<T> >
-    PersistenceBroker::retrieve(const QueryObject& query, int maxObjects)
+    std::string QueryObject::getSql() const 
     {
-      TPersistentObject<T> tpo;
-      return tpo.retrieve(query, maxObjects);
-    }
-
-    template <typename T>
-    TPersistentObject<T> 
-    PersistenceBroker::retrieve(const ObjectId& oid) const
-    {
-      TPersistentObject<T> tpo;
-      tpo.retrieve(oid);
-      return tpo;
+      std::ostringstream oss;
+      oss << "WHERE " << itsQueryExpr;
+      std::cout << __PRETTY_FUNCTION__ << ": return value : " << oss.str() 
+                << std::endl;
+      return oss.str();
     }
 
   } // namespace PL
 
 } // namespace LOFAR
-
-#endif
