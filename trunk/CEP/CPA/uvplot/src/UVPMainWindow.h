@@ -47,6 +47,8 @@ class UVPMainWindow:public QMainWindow
   void drawDataSet();
 
   public slots:
+  
+  void slot_redraw();
 
   void slot_setProgressTotalSteps(int steps);
   void slot_setProgress(int steps);
