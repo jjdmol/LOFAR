@@ -304,7 +304,6 @@ TPOaddInitRoutine()
 	# generate initialization code for all classes and base classes.
 	grep ^$Class ${MAPWRKFILE} | grep -v "!!" | while read line
 	do
-		Table=`echo $line | cut -d'!' -f2`
 		RelClass=`echo $line | cut -d'!' -f3`
 		Member=`echo $line | cut -d'!' -f4`
 		Relation=`echo $line | cut -d'!' -f6`
@@ -323,6 +322,8 @@ TPOaddInitRoutine()
 		echo "	}"
 	done
 
+	grep ^$Class ${MAPWRKFILE} | head -1 | read line
+	Table=`echo $line | cut -d'!' -f2`
 	echo "	// set the correct database table name"
 	echo "	tableName(\"${Table}\");"
 	echo "}"
