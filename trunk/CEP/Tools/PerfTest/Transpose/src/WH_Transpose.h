@@ -21,6 +21,9 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.3  2002/05/15 07:23:27  schaaf
+//  Added profiler state
+//
 //  Revision 1.2  2002/05/14 11:39:41  gvd
 //  Changed for new build environment
 //
