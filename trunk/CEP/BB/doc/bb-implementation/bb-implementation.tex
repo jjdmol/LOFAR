@@ -29,7 +29,7 @@
 
     For the LOFAR project a self-calibration program shall be
     written. The idea is that this program will have the architectural
-    structure of a "BlackBoard". The design and implementation details
+    structure of a ``BlackBoard''. The design and implementation details
     of this application, are described here.
    
   \end{abstract}
@@ -247,12 +247,19 @@
         \hypertarget{req:data-access-rights}{}
       \end{requirement}
 
-      \subsubsection{blackboard api}
+      \subsubsection{the BlackBoard API}
 
         Components that access the blackboard will own tables or areas
         on the blackboard. These are identified, and so are entries in
         these areas. Also types of components are identified to be
         able to determine how to interpret the data in an area.
+
+        This results in three implicit fields. that are created on
+        definition of a knowledge source. If no explicit definition of
+        a quality field is given, a boolean field (good/no good) will
+        be created for this knowledge source. Also there will be field
+        pointing to a previous workload, and a status field telling
+        whether this entry is ``new'', ``work in progress'' or ``done''.
 
         Regular insert statements will be available. Update will be
         available for specific knowledge sources on specific fields. A
@@ -625,15 +632,15 @@
 
         \item 
 
-          "self" is the id of this blackboard.
+          ``self'' is the id of this blackboard.
 
         \item 
 
-          "parent\_id" is the obvious.
+          ``parent\_id'' is the obvious.
 
         \item 
 
-          "range" is the set of values that defines the dataset used
+          ``range'' is the set of values that defines the dataset used
           for solving parameters.
 
       \end{itemize}
@@ -646,7 +653,7 @@
 
 	\item 
 
-          "time" is a time range this blackboard is concerned with.
+          ``time'' is a time range this blackboard is concerned with.
           \begin{requirement}
             It must be possible to handle time-gaps in a measurement set.
             \caption{time gaps\label{req:time-gaps}}
@@ -654,7 +661,7 @@
 
 	\item 
 
-          "frequency" is the frequency range or band this blackboard
+          ``frequency'' is the frequency range or band this blackboard
           is concerned with.
 
           \begin{requirement}
@@ -665,12 +672,12 @@
 
 	\item 
 
-          "interferometers" is the set of baselines that this
+          ``interferometers'' is the set of baselines that this
           BlackBoard is responsible for.
 
 	\item 
 
-          "directions" is a range of points in the sky that function
+          ``directions'' is a range of points in the sky that function
           as field-centers.
 
       \end{itemize}
@@ -682,7 +689,7 @@
 
       \{child-id\}1, \{self\}1, \{range\}1
 
-      For all of "time" through "objects" goes that they are a subset
+      For all of ``time'' through ``objects'' goes that they are a subset
       of the parents fields with the same name.
 
     \subsection{Workload level}
