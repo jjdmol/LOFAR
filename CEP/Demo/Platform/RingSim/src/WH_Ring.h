@@ -177,12 +177,15 @@ itsLastBufferSent(true)
   
   itsInDataHolders.push_back(new DH_Ring<T>()); // input
   
-  DH_Ring<DH_Test>* aDH = new DH_Ring<T>();
-  itsInDataHolders.push_back(aDH); // Slot
+  DH_Ring<DH_Test>* aDH1 = new DH_Ring<T>();
+  DH_Ring<DH_Test>* aDH2 = new DH_Ring<T>();
+  itsInDataHolders.push_back(aDH1); // Slot1
+  itsInDataHolders.push_back(aDH2); // Slot2
   
   itsOutDataHolders.push_back(new DH_Ring<T>()); // output
 
-  itsOutDataHolders.push_back(aDH); // Slot
+  itsOutDataHolders.push_back(aDH1); // Slot1
+  itsOutDataHolders.push_back(aDH2); // Slot2
   
   myInstanceCnt = itsInstanceCnt++;
   Firewall::Assert(myInstanceCnt != NOTADDRESSED
@@ -203,7 +206,6 @@ inline WH_Ring<T>::~WH_Ring ()
 template <class T>
 inline void WH_Ring<T>::process ()
 {
-
   TRACER(monitor,"RingNode " << getInstanceCnt() << " Ring INDATA:  destination " 
 	 << itsInDataHolders[1]->getPacket()->destination << "  "
 	 << itsInDataHolders[1]->getBuffer()[0] << endl
@@ -211,7 +213,6 @@ inline void WH_Ring<T>::process ()
 	 << itsInDataHolders[0]->getPacket()->destination << "  "
 	 << itsInDataHolders[0]->getBuffer()[0]);
 
- 
   if (getInHolder(0)->doHandle()) {    
     Firewall::Assert(itsLastBufferSent,
 		     __HERE__,
@@ -220,8 +221,6 @@ inline void WH_Ring<T>::process ()
     if (!inputIsEmpty())itsLastBufferSent = false;
   }
 
-  // make both outholders invallid
-  
   markOutputEmpty();
   receiveFromRing();
   putInputToRing();
