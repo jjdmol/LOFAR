@@ -1,4 +1,4 @@
-# use_suspend  := T;
+ use_suspend  := T;
 # use_nostart  := T;
 # use_valgrind := T;
 # "--skin=helgrind --logfile=hg.meqserver";
@@ -180,7 +180,7 @@ const state_test := function ()
   cells := meqcells(meqdomain(0,10,0,10),num_freq=20,times=[1.,2.,3.],time_steps=[1.,2.,3.]);
   request := meqrequest(cells);
   
-  mqs.setdebug("DMI Glish MeqServer glishclientwp meqserver Dsp",5);
+#  mqs.setdebug("DMI Glish MeqServer glishclientwp meqserver Dsp",5);
   res1 := mqs.meq('Node.Execute',[name='compose3',request=request],T);
   req1 := request;
   print res1;
@@ -264,6 +264,30 @@ const solver_test := function ()
   request := meqrequest(cells,calc_deriv=T);
   res := mqs.meq('Node.Execute',[name='solver1',request=request],T);
   print res;
+}
+
+const save_test := function (clear=F)
+{
+  print 'saving forest';
+  print mqs.meq('Save.Forest',[file_name='forest.sav'],T);
+}
+
+const load_test := function ()
+{
+  global mqs;
+  if( !is_record(mqs) )
+  {
+    mqs := meqserver(verbose=4,options="-d0 -nogw -meq:M:O:MeqServer",gui=F);
+    mqs.init([output_col="PREDICT"],wait=T);
+    mqs.setdebug("MeqNode MeqForest MeqSink MeqSpigot",3);
+    mqs.setdebug("MeqNode MeqForest MeqSink MeqSpigot",3);
+    mqs.setdebug("MeqServ MeqVisHandler",3);
+    mqs.setdebug("MeqNode MeqServer",5);
+    mqs.setdebug("meqserver",3);
+  }
+  print 'loading forest';
+  print mqs.meq('Load.Forest',[file_name='forest.sav'],T);
+  print mqs.meq('Get.Node.List',[=],T);
 }
 
 

@@ -3,12 +3,15 @@ MEQ in general:
     - Specify child labels in node constructor; check them in init().
       Process named children properly.
       01/01/04: done, need to test w/glish (glish not working on my laptop)
-  
-    - Persistent nodes: Save.Forest, Load.Forest, Clear.Cache commands
-      01/01/04: done, need to test w/glish (glish not working on my laptop)
-      
+      16/01/04: tested with default tests; now need to make some nodes
+                with child labels
     - Clear.Forest command 
       04/01/04: done, need to test w/glish (glish not working on my laptop)
+  
+  * Persistent nodes: Save.Forest, Load.Forest, Clear.Cache commands
+    01/01/04: done, need to test w/glish (glish not working on my laptop)
+    16/01/04: MeqParm refuses to reload itself after a solve. Needs work.
+      
   
   * reconsider order or events in execute(): should cache be checked
     only after node_state and rider have been processed? Note that for
@@ -83,6 +86,9 @@ Vells:
 
   * Vells(DataArray*) constructor: if rank<2 but nelements==1, reform the 
     array (otherwise, won't instantiate from scalars!)
+    
+        + Problem with in-place operators (+= etc.) and type promotion
+          15/01/04 fixed
     
 Function:
   

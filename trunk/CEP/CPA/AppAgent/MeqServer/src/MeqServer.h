@@ -10,11 +10,14 @@
 #pragma aid Node Name NodeIndex MeqServer
 #pragma aid Create Delete Get Set State Request Resolve Child Children List
 #pragma aid App Command Args Result Data Processing Error Message Code
-#pragma aid Execute
+#pragma aid Execute Clear Cache Save Load Forest Recursive
 #pragma aid addstate
     
 namespace Meq
 {
+  const HIID  
+    FRecursive       = AidRecursive, 
+    FFileName        = AidFile|AidName;
 
 //##ModelId=3F5F195E013B
 //##Documentation
@@ -33,15 +36,19 @@ class MeqServer : public VisRepeater
     //##ModelId=3F61920F01FA
     void deleteNode (DataRecord::Ref &out,DataRecord::Ref::Xfer &in);
     //##ModelId=3F61920F024E
-    void getNodeState (DataRecord::Ref &out,DataRecord::Ref::Xfer &in);
+    void nodeGetState (DataRecord::Ref &out,DataRecord::Ref::Xfer &in);
     //##ModelId=3F61920F02A4
-    void setNodeState (DataRecord::Ref &out,DataRecord::Ref::Xfer &in);
+    void nodeSetState (DataRecord::Ref &out,DataRecord::Ref::Xfer &in);
     //##ModelId=3F98D91A03B9
     void resolveChildren (DataRecord::Ref &out,DataRecord::Ref::Xfer &in);
     //##ModelId=3F98D91B0064
     void getNodeList (DataRecord::Ref &out,DataRecord::Ref::Xfer &in);
     
-    void getNodeResult (DataRecord::Ref &out,DataRecord::Ref::Xfer &in);
+    void nodeExecute (DataRecord::Ref &out,DataRecord::Ref::Xfer &in);
+    void nodeClearCache (DataRecord::Ref &out,DataRecord::Ref::Xfer &in);
+    void saveForest (DataRecord::Ref &out,DataRecord::Ref::Xfer &in);
+    void loadForest (DataRecord::Ref &out,DataRecord::Ref::Xfer &in);
+    void clearForest (DataRecord::Ref &out,DataRecord::Ref::Xfer &in);
       
     //##ModelId=3F5F195E0156
     virtual string sdebug(int detail = 1, const string &prefix = "", const char *name = 0) const;

@@ -11,7 +11,7 @@ bin_PROGRAMS   		=
 # glishwriter_LDADD		      = ../src/libsolver.la -lglish -lsos -lnpd
 # glishwriter_DEPENDENCIES	= ../src/libsolver.la $(LOFAR_DEPEND)
 
-TESTS				=  
+TESTS				=  solver_test.sh
 
 EXTRA_DIST			=
 
