@@ -24,6 +24,7 @@
 #define COMMON_LOFAR_LOGGER_H
 
 #include <lofar_config.h>
+#include <Common/StringUtil.h>
 
 //# Dependent of the availability of the log4Cplus package one set of macro's
 //# or the other set of macro's is included.
