@@ -24,7 +24,7 @@
 
 #include <Common/Lorrays.h>
 #include <BaseSim/WorkHolder.h>
-#include <DataGen/DH_SampleR.h>
+#include <StationSim/DH_SampleR.h>
 #include <StationSim/DH_SampleC.h>
 #include <StationSim/DataGenConfig.h>
 #include <StationSim/PhaseShift.h>

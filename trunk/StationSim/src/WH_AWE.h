@@ -33,7 +33,6 @@
 #include <BaseSim/WorkHolder.h>
 #include <StationSim/DH_SampleC.h>
 #include <StationSim/DH_Weight.h>
-#include <StationSim/DH_Fifo.h>
 
 /**
    This workholder contains the main AWE procedure.
