@@ -1,0 +1,6 @@
+#!/bin/sh
+\ln -s $srcdir/../src gsm 
+\ln -s $srcdir/../data/gsm.tab .
+glish -l $srcdir/test_gsm.g
+\rm -fr lsm.tab lsm_mep.tab
+\rm -f gsm gsm.tab
