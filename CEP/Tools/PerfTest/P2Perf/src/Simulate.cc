@@ -1,6 +1,7 @@
 #include "P2Perf.h"
 #include "SimulatorParseClass.h"
 #include <iostream>
+#include "Debug.h"
 
 
 #ifdef HAVE_CORBA
@@ -12,6 +13,9 @@ int atexit(void (*function)(void))
 
 int main (int argc, char** argv)
 {
+  // Set trace level.
+  Debug::initLevels (argc, (const char* [])argv);
+
   try {
     P2Perf simulator;
     simulator.setarg (argc, argv);
