@@ -40,9 +40,16 @@
 */
 /** 
 
+Steps to undertake before building and running:
+
  1. In BlackBoardDemo.cc change 'databaseName' to your own database name.
 
- 2. Get the correct Measurement Sets.
+ 2. In ./build/gnu3_debug script file change 'meijeren' to your own database 
+    name and run the script.
+
+ 3. Set the correct path the your Measurement Sets in WH_PSS3 constructor
+    in BlackBoardDemo::define.
+
 */
 namespace LOFAR
 {
