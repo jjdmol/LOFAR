@@ -72,12 +72,15 @@ public:
   int getID();
   void setID(int id);
   const string& getParam1Name();
+  void setParam1Name(const string& name);
   float getParam1Value();
   void setParam1Value(float val);
   const string& getParam2Name();
+  void setParam2Name(const string& name);
   float getParam2Value();
   void setParam2Value(float val);
   const string& getParam3Name();
+  void setParam3Name(const string& name);
   float getParam3Value();
   void setParam3Value(float val);
 
@@ -146,6 +149,9 @@ inline void DH_WorkOrder::setID(int id)
 inline const string& DH_WorkOrder::getParam1Name()
 { return itsDataPacket.itsParam1Name;}
 
+inline void DH_WorkOrder::setParam1Name(const string& name)
+{ itsDataPacket.itsParam1Name = name;}
+
 inline float DH_WorkOrder::getParam1Value()
 { return itsDataPacket.itsParam1Value; }
 
@@ -155,6 +161,9 @@ inline void DH_WorkOrder::setParam1Value(float val)
 inline const string& DH_WorkOrder::getParam2Name()
 { return itsDataPacket.itsParam2Name;}
 
+inline void DH_WorkOrder::setParam2Name(const string& name)
+{ itsDataPacket.itsParam2Name = name;}
+
 inline float DH_WorkOrder::getParam2Value()
 { return itsDataPacket.itsParam2Value; }
 
@@ -163,6 +172,9 @@ inline void DH_WorkOrder::setParam2Value(float val)
 
 inline const string& DH_WorkOrder::getParam3Name()
 { return itsDataPacket.itsParam3Name;}
+
+inline void DH_WorkOrder::setParam3Name(const string& name)
+{ itsDataPacket.itsParam3Name = name;}
 
 inline float DH_WorkOrder::getParam3Value()
 { return itsDataPacket.itsParam3Value; }

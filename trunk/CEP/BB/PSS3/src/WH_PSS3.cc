@@ -42,7 +42,7 @@ WH_PSS3::WH_PSS3 (const string& name, const String & msName,
 		  const Vector<int>& ant2, const String& modelType, 
 		  bool calcUVW, const String& dataColName, 
 		  const String& residualColName)
-  : WorkHolder        (1, 0, name, "WH_PSS3"),
+  : WorkHolder        (1, 1, name, "WH_PSS3"),
     itsCal            (0),
     itsMSName         (msName),
     itsMeqModel       (meqModel),
@@ -57,10 +57,9 @@ WH_PSS3::WH_PSS3 (const string& name, const String & msName,
 
 {
   TRACER4("WH_PSS3 construction");
-  getDataManager().addInDataHolder(0, new DH_WorkOrder("in_0", "KS"),
-				   true); 
- //  getDataManager().addOutDataHolder(0, new DH_WorkOrder("out_0", "KS"),
-// 				    true);
+  getDataManager().addInDataHolder(0, new DH_WorkOrder("in_0", "KS")); 
+  getDataManager().addOutDataHolder(0, new DH_WorkOrder("out_0", "KS"),
+   				    true);
 }
 
 WH_PSS3::~WH_PSS3()
@@ -82,7 +81,7 @@ WH_PSS3* WH_PSS3::make (const string& name)
 void WH_PSS3::preprocess()
 {
   TRACER4("WH_PSS3 preprocess()");
-  itsCal = new Calibrator();
+   itsCal = new Calibrator();
 //   itsCal = new Calibrator(itsMSName, itsMeqModel, itsSkyModel, itsDDID, itsAnt1, 
 // 			    itsAnt2, itsModelType, itsCalcUVW, itsDataColName, 
 // 			    itsResidualColName);
@@ -93,8 +92,8 @@ void WH_PSS3::process()
   TRACER4("WH_PSS3 process()");
   DH_WorkOrder* inp = (DH_WorkOrder*)getDataManager().getInHolder(0);
   cout << "Strategy number: " << inp->getStrategyNo() << endl;
-  Strategy strat(inp->getStrategyNo(), itsCal, inp->getArgSize(), 
-		 inp->getVarArgsPtr());
+ Strategy strat(inp->getStrategyNo(), itsCal, inp->getArgSize(), 
+		inp->getVarArgsPtr());
   cout << "Parameter names: " << inp->getParam1Name() << ", " 
        << inp->getParam2Name() << ", " 
        << inp->getParam3Name() << endl;
@@ -112,13 +111,15 @@ void WH_PSS3::process()
     cout << "Executed strategy" << endl;
   }
 
-//   DH_WorkOrder* outp = (DH_WorkOrder*)getDataManager().getOutHolder(0);
-//   outp->setID(inp->getID());
-//   outp->setStatus(DH_WorkOrder::Executed);
-//   outp->setParam1Value(11);   // Temporary 
-//   outp->setParam2Value(22);
-//   outp->setParam3Value(33);
-//   outp->getSolution()->itsMu = 0.99;
+  DH_WorkOrder* outp = (DH_WorkOrder*)getDataManager().getOutHolder(0);
+  outp->setID(inp->getID());
+  outp->setID(0);
+  outp->setStatus(DH_WorkOrder::Executed);
+  outp->setParam1Value(11);   // Temporary 
+  outp->setParam2Value(22);
+  outp->setParam3Value(33);
+  outp->getSolution()->itsMu = 0.99;
+  outp->setStatus(DH_WorkOrder::Executed);
 }
 
 void WH_PSS3::dump()

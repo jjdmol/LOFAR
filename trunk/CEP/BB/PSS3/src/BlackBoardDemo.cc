@@ -83,7 +83,12 @@ void BlackBoardDemo::define(const ParamBlock& params)
   simul.setCurAppl(0);
 
   // Optional: Get any extra params from input
-  // Example:    noOfSourceSteps = params.getInt("sources",1);
+  int controlRead = params.getInt("cRead", 0);  // If 1 Controller reads from 
+                                                // database
+  int ksRead = params.getInt("ksRead", 0);      // If 1 Knowledge Source reads
+                                                // from database
+  int ksWrite = params.getInt("ksWrite", 0);    // If 1 Knowledge Source writes
+                                                // to database
   String msName = "demo.MS";
   String meqModel = "demo";
   String skyModel = "demo_gsm";
@@ -104,44 +109,56 @@ void BlackBoardDemo::define(const ParamBlock& params)
   // Create the WorkHolder(s)
   WH_Evaluate controlWH("control");
   WH_PSS3 ksWH("KS", msName, meqModel, skyModel, ddID, ant1, ant2, modelType,
-	       calcUVW, dataColName, residualColName);
+		calcUVW, dataColName, residualColName);
 
   // Empty workholders necessary for data transport to/from database
-//   WH_Connection controlInWH("empty", 0, 1, WH_Connection::WorkOrder);
+  WH_Connection controlInWH("empty", 0, 1, WH_Connection::WorkOrder);
   WH_Connection controlOutWH("empty", 1, 0, WH_Connection::WorkOrder); 
   WH_Connection ksInWH("empty", 0, 1, WH_Connection::WorkOrder);
-//   WH_Connection ksOutWH("empty", 1, 0, WH_Connection::WorkOrder);
+  WH_Connection ksOutWH("empty", 1, 0, WH_Connection::WorkOrder);
 
   // Create the Step(s)
   Step controlStep(controlWH, "controlStep");
   Step knowledgeSourceStep(ksWH, "knowledgeSource");
 
   // Empty steps necessary for data transport to database
-//   Step controlInStep(controlInWH, "CsourceStub");
+  Step controlInStep(controlInWH, "CsourceStub");
   Step controlOutStep(controlOutWH, "CsinkStub");
   Step ksInStep(ksInWH, "KSsourceStub");
-//   Step ksOutStep(ksOutWH, "KSsinkStub");
+  Step ksOutStep(ksOutWH, "KSsinkStub");
 
   // Determine the node and process for each step to run in
-    controlStep.runOnNode(0,0);
-    controlOutStep.runOnNode(0,0);
-    ksInStep.runOnNode(1,0);
-    knowledgeSourceStep.runOnNode(1,0);
+  controlInStep.runOnNode(0,0);
+  controlStep.runOnNode(0,0);
+  controlOutStep.runOnNode(0,0);
+  ksInStep.runOnNode(1,0);
+  knowledgeSourceStep.runOnNode(1,0);
+  ksOutStep.runOnNode(1,0);
   
   // Add all Step(s) to Simul
+  simul.addStep(controlInStep);
   simul.addStep(controlStep);
   simul.addStep(controlOutStep);
   simul.addStep(ksInStep);
   simul.addStep(knowledgeSourceStep);
+  simul.addStep(ksOutStep);
 
   // Create the cross connections between Steps
   // Connections to the database. The steps are not really connected to 
   // each other, but to the database
-//   controlStep.connect(&controlInStep, 0, 0, 1, TH_Database::proto); 
+  if (controlRead)     // Controller reads from database
+  {
+    controlStep.connect(&controlInStep, 0, 0, 1, TH_Database::proto);
+  } 
   controlOutStep.connect(&controlStep, 0, 0, 1, TH_Database::proto); 
-  knowledgeSourceStep.connect(&ksInStep, 0, 0, 1, TH_Database::proto);
-//   ksOutStep.connect(&knowledgeSourceStep, 0, 0, 1, TH_Database::proto);
-
+  if (ksRead)
+  {
+    knowledgeSourceStep.connect(&ksInStep, 0, 0, 1, TH_Database::proto);
+  }
+  if (ksWrite)
+  {
+    ksOutStep.connect(&knowledgeSourceStep, 0, 0, 1, TH_Database::proto);
+  }
 }
   
 

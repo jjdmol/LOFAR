@@ -35,10 +35,10 @@
 using namespace LOFAR;
 
 WH_Evaluate::WH_Evaluate (const string& name)
-: WorkHolder    (0, 1, name,"WH_Evaluate")
+: WorkHolder    (1, 1, name,"WH_Evaluate")
 {
-//   getDataManager().addInDataHolder(0, new DH_WorkOrder("in_0", "Control"), 
-// 				   true); // 
+  getDataManager().addInDataHolder(0, new DH_WorkOrder("in_0", "Control"), 
+ 				   true); 
   getDataManager().addOutDataHolder(0, new DH_WorkOrder("out_0", "Control"), 
 				    true);
 }
@@ -55,7 +55,11 @@ WH_Evaluate* WH_Evaluate::make (const string& name)
 void WH_Evaluate::process()
 {
   TRACER3("WH_Evaluate process()");
-  //  DH_WorkOrder* inp = (DH_WorkOrder*)getDataManager().getInHolder(0);
+  DH_WorkOrder* inp = (DH_WorkOrder*)getDataManager().getInHolder(0);
+  cout << "Controller reads results : [" 
+       << inp->getParam1Value() <<", "
+       << inp->getParam2Value() <<", "
+       << inp->getParam3Value() << "]" << endl;
   DH_WorkOrder* outp = (DH_WorkOrder*)getDataManager().getOutHolder(0);
   // Define new work order
   outp->setStatus(DH_WorkOrder::New);
@@ -66,8 +70,8 @@ void WH_Evaluate::process()
   outp->setArgSize(size);
   SI_Peeling::Peeling_data* data = 
     (SI_Peeling::Peeling_data*)outp->getVarArgsPtr();
-  data->nIter = 20;
-  data->nSources = 3;
+  data->nIter = 1;
+  data->nSources = 1;
   data->timeInterval = 3600.;
   // Set parameter names
 }
