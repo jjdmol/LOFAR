@@ -57,12 +57,13 @@ void UVPTimeFrequencyPlot::slot_addSpectrum(const UVPSpectrum &spectrum)
 {
   itsSpectrum.add(spectrum);
 
-  if(itsSpectrum.min() != itsSpectrum.max()) {
+  /*  if(itsSpectrum.min() != itsSpectrum.max()) {
     itsValueAxis.calcTransferFunction(itsSpectrum.min(),
                                       itsSpectrum.max(),
                                       0,
                                       getNumberOfColors()-1);
   }
+  */
 }
 
 
@@ -78,8 +79,12 @@ void UVPTimeFrequencyPlot::slot_addDataAtom(const UVPDataAtom* atom)
   itsComplexSpectrum.add(atom);
 
   if(itsComplexSpectrum.min() != itsComplexSpectrum.max()) {
-    itsValueAxis.calcTransferFunction(itsComplexSpectrum.min(),
-                                      itsComplexSpectrum.max(),
+    double absmin = fabs(itsComplexSpectrum.min());
+    double absmax = fabs(itsComplexSpectrum.max());
+    double maxabs = (absmin > absmax? absmin: absmax);
+
+    itsValueAxis.calcTransferFunction(-maxabs,
+                                      maxabs,
                                       0,
                                       getNumberOfColors()-1);
   }
@@ -102,6 +107,7 @@ void UVPTimeFrequencyPlot::drawView()
   
   BufferPainter.begin(&itsBuffer);
   
+  /*
   const unsigned int N(itsSpectrum.size());
   const unsigned int Nch(itsSpectrum.getNumberOfChannels());
 
@@ -125,6 +131,32 @@ void UVPTimeFrequencyPlot::drawView()
       }
     }
   }
+  
+  */
+  const unsigned int N(itsComplexSpectrum.size());
+  unsigned int Nch(0);
+  if(N>0) {
+    Nch = itsComplexSpectrum[0]->getNumberOfChannels();
+  }
+
+  if(itsComplexSpectrum.min() != itsComplexSpectrum.max()) {
+    for(unsigned int i = 0; i < N; i++) {
+      
+      const UVPDataAtom::ComplexType*  spectrum(itsComplexSpectrum[i]->getData(0));
+      unsigned int                     j(0);
+      
+      while(j < Nch ) {
+        int colre = int(itsValueAxis.worldToAxis(spectrum->real()));
+        int colim = int(itsValueAxis.worldToAxis(spectrum->imag()));
+        spectrum++;
+        BufferPainter.setPen(itsComplexColormap[itsRealIndex[colre]+itsImagIndex[colim]]);
+        BufferPainter.drawPoint(j, i);
+        j++;
+      }
+    }
+  }
+  
+  
   BufferPainter.end();
 
   bitBlt(this, 0, 0, &itsBuffer);
