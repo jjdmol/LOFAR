@@ -29,7 +29,7 @@
 namespace LOFAR
 {
 
-bool DH_Database::StoreInDatabase (int, int tag, char * buf, int size) {
+bool DH_Database::StoreInDatabase (int, int, char *, int) {
   cout << "DH_Database::StoreInDatabase () has been called." << endl;
   cout << "  This probably means that you have forgotten to" << endl;
   cout << "  derive one or more of your DataHolder sub-classes" << endl;
@@ -39,7 +39,7 @@ bool DH_Database::StoreInDatabase (int, int tag, char * buf, int size) {
 }
 
 
-bool DH_Database::RetrieveFromDatabase (int, int tag, char * buf, int size) { 
+bool DH_Database::RetrieveFromDatabase (int, int, char *, int) { 
   cout << "DH_Database::RetrieveFromDatabase () called." << endl;
   cout << "  This probably means that you have forgotten to" << endl;
   cout << "  derive one or more of your DataHolder sub-classes" << endl;
