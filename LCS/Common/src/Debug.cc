@@ -35,4 +35,9 @@
 // Debug
 #include "Debug.h"
 
+namespace Debug
+{
+  using namespace std;
+}
+
 #include <Common/backward/Debug.cc>
