@@ -29,6 +29,8 @@
 #include <Common/Debug.h>
 #include <aips/Arrays/Matrix.h>
 
+#include <MNS/MeqPointDFT.h>
+
 
 MeqWsrtInt::MeqWsrtInt (MeqWsrtPoint* expr, MeqJonesExpr* station1,
 			MeqJonesExpr* station2)
@@ -78,7 +80,10 @@ void MeqWsrtInt::calcResult (const MeqRequest& request)
       const MeqResult& xy = itsExpr->getResultXY();
       const MeqResult& yx = itsExpr->getResultYX();
       const MeqResult& yy = itsExpr->getResultYY();
-      ///      cout << "MeqWsrtInt xx: " << xx.getValue() << endl;
+      if (MeqPointDFT::doshow) {
+	cout << stx << ' ' << request.stepX() << ' ' << sty << ' ' << request.stepY() << ' ' << request.nx() <<  ' ' << request.ny() << endl;
+      cout << "MeqWsrtInt xx: " << xx.getValue() << endl;
+      }
       // Integrate and normalize the results by adding the values
       // and dividing by the number of cells.
       //// with the surface of the x,y cells and adding them thereafter.
@@ -89,13 +94,17 @@ void MeqWsrtInt::calcResult (const MeqRequest& request)
       // The values also have to be divided by 2 as that is not
       // done in MeqWsrtPoint because it is cheaper to do it here.
       nc *= 2;
-      ///      cout << "Int: " << xx.getValue() << ' ' << xy.getValue() << ' '
-      ///	   << yx.getValue() << ' ' << yy.getValue() << endl;
+      ///      if (MeqPointDFT::doshow) {
+	///      cout << "Int: " << xx.getValue() << ' ' << xy.getValue() << ' '
+	///      	   << yx.getValue() << ' ' << yy.getValue() << endl;
+	///      }
       complex<double> sumxx = sum(xx.getValue()).getDComplex() / nc;
       complex<double> sumxy = sum(xy.getValue()).getDComplex() / nc;
       complex<double> sumyx = sum(yx.getValue()).getDComplex() / nc;
       complex<double> sumyy = sum(yy.getValue()).getDComplex() / nc;
-      ///      cout << "MeqWsrtInt abs(sum): " << abs(sumxx) << ' ' << abs(sumxy) << ' ' << abs(sumyx) << ' ' << abs(sumyy) << endl;
+      if (MeqPointDFT::doshow) {
+      cout << "MeqWsrtInt abs(sum): " << abs(sumxx) << ' ' << abs(sumxy) << ' ' << abs(sumyx) << ' ' << abs(sumyy) << endl;
+      }
       // Now combine with the stations jones.
       complex<double> s11 = itsStat1->getResult11().getValue().getDComplex();
       complex<double> s12 = itsStat1->getResult12().getValue().getDComplex();
@@ -272,21 +281,21 @@ void MeqWsrtInt::calcResult (const MeqRequest& request)
 	      ps12 * pconj11 * psumyx +
 	      ps12 * pconj12 * psumyy;
 	  }
-	  if (evalxx[spinx]) {
+	  if (evalxy[spinx]) {
 	    result12().getPerturbedValueRW(spinx).dcomplexStorage()[inx] =
 	      ps11 * pconj21 * psumxx +
 	      ps11 * pconj22 * psumxy +
 	      ps12 * pconj21 * psumyx +
 	      ps12 * pconj22 * psumyy;
 	  }
-	  if (evalxx[spinx]) {
+	  if (evalyx[spinx]) {
 	    result21().getPerturbedValueRW(spinx).dcomplexStorage()[inx] =
 	      ps21 * pconj11 * psumxx +
 	      ps21 * pconj12 * psumxy +
 	      ps22 * pconj11 * psumyx +
 	      ps22 * pconj12 * psumyy;
 	  }
-	  if (evalxx[spinx]) {
+	  if (evalyy[spinx]) {
 	    result22().getPerturbedValueRW(spinx).dcomplexStorage()[inx] =
 	      ps21 * pconj21 * psumxx +
 	      ps21 * pconj22 * psumxy +

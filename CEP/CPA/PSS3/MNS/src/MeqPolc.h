@@ -83,6 +83,10 @@ public:
   // It returns the number of spids in this polc.
   int makeSolvable (int spidIndex);
 
+  // Get the current values of the solvable parameter and store them
+  // in the argument.
+  void getInitial (MeqMatrix& values) const;
+
   // Update the solvable parameters with the new values.
   void update (const MeqMatrix& value);
 

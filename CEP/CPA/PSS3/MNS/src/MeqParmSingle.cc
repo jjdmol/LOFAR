@@ -23,7 +23,9 @@
 #include <MNS/MeqParmSingle.h>
 #include <MNS/MeqRequest.h>
 #include <Common/Debug.h>
+#include <Common/lofar_vector.h>
 #include <aips/Utilities/BinarySearch.h>
+
 
 MeqParmSingle::MeqParmSingle (const string& name, double value)
 : MeqParm         (name),
@@ -75,6 +77,14 @@ MeqResult MeqParmSingle::getResult (const MeqRequest& request)
     result.setPerturbation (itsSolveIndex, perturbation);
   }
   return result;
+}
+
+void MeqParmSingle::getInitial (MeqMatrix& values) const
+{
+  if (itsIsSolvable) {
+    Assert (itsSolveIndex < values.nx());
+    values.dcomplexStorage()[itsSolveIndex] = complex<double>(itsCurValue,0);
+  }
 }
 
 void MeqParmSingle::update (const MeqMatrix& value)

@@ -30,6 +30,8 @@
 #include <aips/Measures/MDirection.h>
 #include <aips/Mathematics/Constants.h>
 
+bool MeqPointDFT::doshow = false;
+
 
 MeqPointDFT::MeqPointDFT (const vector<MeqPointSource>& sources,
 			  const MDirection& phaseRef,
@@ -72,6 +74,9 @@ vector<int> MeqPointDFT::ncells (MeqPointSource& src,
     //  double stphi = 2 * tmpphi * domain.startY() / C::c;
     //  double endphi = 2 * tmpphi * domain.endY() / C::c;
     //  ncell[1] = 10 * (1 + int(abs(endphi - stphi)));
+  if (doshow) {
+    cout << "MeqPointDFT: " << u << ' ' << v << ' ' << w << ' ' << rak << ' ' << deck << ' ' << ncell[0] << ' ' << ncell[1] << endl;
+  }
   return ncell;
 }
 

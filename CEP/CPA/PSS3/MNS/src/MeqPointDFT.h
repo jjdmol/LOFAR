@@ -56,6 +56,7 @@ public:
   // Find nr of cells to use for the given source and domain.
   vector<int> ncells (MeqPointSource&, const MeqDomain&);
 
+  static bool doshow;
 private:
   double itsRefRa;
   double itsRefDec;

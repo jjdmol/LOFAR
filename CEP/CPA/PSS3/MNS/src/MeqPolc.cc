@@ -350,6 +350,28 @@ void MeqPolc::clearSolvable()
   itsPerturbation = MeqMatrix();
 }
 
+void MeqPolc::getInitial (MeqMatrix& values) const
+{
+  complex<double>* data = values.dcomplexStorage();
+  if (itsCoeff.isDouble()) {
+    const double* coeff = itsCoeff.doubleStorage();
+    for (unsigned int i=0; i<itsSpidInx.size(); i++) {
+      if (itsSpidInx[i] >= 0) {
+	Assert (itsSpidInx[i] < values.nx());
+	data[itsSpidInx[i]] = complex<double>(coeff[i], 0);
+      }
+    }
+  } else {
+    const complex<double>* coeff = itsCoeff.dcomplexStorage();
+    for (unsigned int i=0; i<itsSpidInx.size(); i++) {
+      if (itsSpidInx[i] >= 0) {
+	Assert (itsSpidInx[i] < values.nx());
+	data[itsSpidInx[i]] = coeff[i];
+      }
+    }
+  }
+}
+
 void MeqPolc::update (const MeqMatrix& value)
 {
   if (itsCoeff.isDouble()) {

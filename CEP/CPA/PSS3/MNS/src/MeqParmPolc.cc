@@ -247,6 +247,13 @@ MeqResult MeqParmPolc::getResult (const MeqRequest& request)
   return result;
 }
 
+void MeqParmPolc::getInitial (MeqMatrix& values) const
+{
+  for (unsigned int i=0; i<itsPolcs.size(); i++) {
+    itsPolcs[i].getInitial (values);
+  }
+}
+
 void MeqParmPolc::update (const MeqMatrix& value)
 {
   for (unsigned int i=0; i<itsPolcs.size(); i++) {

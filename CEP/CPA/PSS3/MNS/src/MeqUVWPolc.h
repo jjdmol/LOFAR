@@ -43,7 +43,8 @@ public:
 
   // Calculate the polynomial coefficients by fitting to the given values.
   // It results in a polynomial for the given times and all frequencies.
-  void calcCoeff (const Vector<double>& times, const Matrix<double>& uvws);
+  void calcCoeff (const Vector<double>& times, const Matrix<double>& uvws,
+		  bool addPolc = true);
 
   // Calculate the UVW for the given domain.
   void calcUVW (const MeqRequest&);
@@ -55,6 +56,13 @@ public:
     { return itsV; }
   const MeqResult& getW() const
     { return itsW; }
+
+  const MeqParmPolc& getUCoeff() const
+    { return itsUCoeff; }
+  const MeqParmPolc& getVCoeff() const
+    { return itsVCoeff; }
+  const MeqParmPolc& getWCoeff() const
+    { return itsWCoeff; }
 
 private:
   Polynomial<AutoDiff<double> > itsPoly;
