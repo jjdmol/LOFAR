@@ -21,6 +21,9 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.8  2002/03/27 09:48:00  schaaf
+//  Use get{Cur/Max}DataPacketSize
+//
 //  Revision 1.7  2002/03/19 16:19:08  schaaf
 //  increased max growsize
 //
@@ -76,8 +79,10 @@ public:
   void undefine();
 
  private:
-  WH_GrowSize **workholders;
-  Step        **steps;
+  WH_GrowSize **Sworkholders;
+  WH_GrowSize **Dworkholders;
+  Step        **Ssteps;
+  Step        **Dsteps;
 };
 
 

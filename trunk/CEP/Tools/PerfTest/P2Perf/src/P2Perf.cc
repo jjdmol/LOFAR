@@ -21,6 +21,9 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.18  2002/04/09 13:32:40  wierenga
+//  include Debug.h
+//
 //  Revision 1.17  2002/03/26 11:58:52  schaaf
 //  Use controllable Simul
 //
@@ -97,7 +100,7 @@
 #include <stdlib.h>
 #include <string>
 
-#define NR_OF_STEPS 2
+#define NR_OF_STEPS 6
 
 /**
    This class is an example of a concrete Simulator.
@@ -105,8 +108,10 @@
 
 P2Perf::P2Perf()
 {
-  workholders = NULL;
-  steps       = NULL;
+  Sworkholders = NULL;
+  Ssteps       = NULL;
+  Dworkholders = NULL;
+  Dsteps       = NULL;
 }
 
 P2Perf::~P2Perf()
@@ -120,15 +125,16 @@ P2Perf::~P2Perf()
  */
 void P2Perf::define(const ParamBlock& params)
 {
+  AssertStr (NR_OF_STEPS%2 == 0, "Need even number of steps");
 #ifdef HAVE_CORBA
   // Start Orb Environment
   AssertStr (BS_Corba::init(), "Could not initialise CORBA environment");
 #endif
+  
 
   int    argc = 0;
   char** argv = NULL;
-  int    divisor = -1;
-
+  
 #ifdef HAVE_CORBA
   TH_Corba corbaProto;
 #endif
@@ -139,80 +145,143 @@ void P2Perf::define(const ParamBlock& params)
   // free any memory previously allocated
   undefine();
 
-  getarg(&argc, &argv);
-
-#ifdef HAVE_MPI
-  if (size == 2) {
-    cout << "Divide in two" << endl;
-    divisor = rank;
-  }
-#else
-  if (argc == 2 )
-  {
-    if (!strncmp(argv[1], "-odd", 4))
-    {
-      divisor = 1;
-    }
-    else if (!strncmp(argv[1], "-even", 5) )
-    {
-      divisor = 0;
-    }
-
-  }
-#endif
   cout << "P2Perf Processor " << rank << " of " << size << " operational."
        << flush << endl;
 
-  WH_Empty empty;
-  Simul simul(empty, "P2Perf",true,true);
+   WH_Empty empty;
+
+#ifdef HAVE_CORBA
+  Simul simul(empty, "P2Perf",true,false);
+#else
+  Simul simul(empty, "P2Perf",true,false);
+#endif
   setSimul(simul);
   simul.runOnNode(0);
 
-  workholders = new (WH_GrowSize*)[NR_OF_STEPS];
-  steps       = new (Step*)[NR_OF_STEPS];
 
-  for (int iStep = 0; iStep < NR_OF_STEPS; iStep++)
-  {
+  getarg(&argc, &argv);
 
-    char name[20];
-    sprintf(name, "GrowSize[%d]", iStep);
-    workholders[iStep] = new WH_GrowSize(name, 
-					 false, 
-					 1, 
-					 1, 
-					 MAX_GROW_SIZE);
-
-    steps[iStep] = new Step(workholders[iStep], "GrowSizeStep", iStep);
-
-    //steps[iStep]->runOnNode(0); // MPI 1 process
-    steps[iStep]->runOnNode(iStep);
-
-    if ( ((iStep % 2) == divisor) || (divisor < 0))
-    {
-      cout << "Add step " << iStep << endl;
-      simul.addStep(steps[iStep]);
-    }
-
-    if (iStep > 0)
-    {
-#ifdef HAVE_CORBA
-      steps[iStep]->connectInput(steps[iStep-1], corbaProto);
+  // start looking at the command line arguments;
+  // -odd and -even are used to have all Sources in one application 
+  //                and all destinations in the other
+  bool RunInOneAppl = false;
+  bool SplitInTwoApps = false;
+  bool OddSide=false;
+  bool UseMPIRanks = true;
+  if ((argc == 2 )
+      && (((!strncmp(argv[1], "-odd", 4))) ||  ((!strncmp(argv[1], "-odd", 4)))) ){
+    cout << "Split in Two Apps" << endl;
+    if ((!strncmp(argv[1], "-odd", 4))) {
+      SplitInTwoApps = true;
+      OddSide = true;
+      simul.setCurAppl(0);
+    } else if (!strncmp(argv[1], "-even", 5) ) {
+      SplitInTwoApps = true;
+      OddSide = false;
+      simul.setCurAppl(1);
+    } 
+  } else if ((argc == 2 )
+	     && ((!strncmp(argv[1], "-one", 4))) ){
+    cout << "Run in One Appl" << endl;
+    simul.setCurAppl(0);
+    RunInOneAppl = true;
+  } else  if ((argc == 2 )
+	      && ((!strncmp(argv[1], "-mpi", 4))) ){
+    cout << "Split in MPI applications" << endl;
+#ifdef HAVE_MPI    
+    UseMPIRanks = true;
+    simul.setCurAppl(rank);
 #else
-      // steps[iStep]->runOnNode(0); //MPI 1 process
-      steps[iStep]->runOnNode(iStep);
-      steps[iStep]->connectInput(steps[iStep-1]);
+    AssertStr (false,"Need MPI for -mpi flag"); 
+#endif
+  } else {
+    simul.setCurAppl(0);
+  }
+
+
+
+  // determine the number of source/destination steps
+  int SourceSteps = NR_OF_STEPS/2;
+  int DestSteps   = SourceSteps;
+
+  // Create the Workholders and Steps
+  Sworkholders = new (WH_GrowSize*)[SourceSteps];
+  Ssteps       = new (Step*)[SourceSteps];
+  Dworkholders = new (WH_GrowSize*)[DestSteps];
+  Dsteps       = new (Step*)[DestSteps];
+  
+  AssertStr (SourceSteps == DestSteps, 
+	     "Number of Source Steps must be equal to number of Destinations");
+  for (int iStep = 0; iStep < SourceSteps; iStep++) {
+    
+    char name[20];
+
+    // Create the Source Step
+    sprintf(name, "GrowSizeSource[%d]", iStep);
+    Sworkholders[iStep] = new WH_GrowSize(name, 
+					  false, 
+					  1, // should be 0 
+					  DestSteps, 
+					  MAX_GROW_SIZE ,
+					  false); // flag for source side
+    
+    Ssteps[iStep] = new Step(Sworkholders[iStep], "GrowSizeSourceStep", iStep);
+    //Ssteps[iStep]->connectInput(NULL);
+    
+    // Create the Destination Step
+    sprintf(name, "GrowSizeDest[%d]", iStep);
+    Dworkholders[iStep] = new WH_GrowSize(name, 
+					  false, 
+					  SourceSteps, 
+					  1, // should be 0 
+					  MAX_GROW_SIZE,
+					  true);
+    
+    Dsteps[iStep] = new Step(Dworkholders[iStep], "GrowSizeDestStep", iStep);
+      
+    // Determine the node and process to run in
+    //Ssteps[iStep]->runOnNode(0); // MPI 1 process
+    if (SplitInTwoApps) {
+      Ssteps[iStep]->runOnNode(iStep  ,0); // run in App 0
+      Dsteps[iStep]->runOnNode(iStep+1,1); // run in App 1
+    } else if (RunInOneAppl) {
+      Ssteps[iStep]->runOnNode(iStep  ,0); // run in App 0
+      Dsteps[iStep]->runOnNode(iStep+1,0); // run in App 0
+    } else if (UseMPIRanks) {
+      Ssteps[iStep]->runOnNode(iStep  ,iStep); // run in App 0
+      Dsteps[iStep]->runOnNode(iStep+1,iStep); // run in App 0
+    }    
+    
+  }
+
+  // Now Add the steps;
+  // first ALL the sources....
+  for (int iStep = 0; iStep < SourceSteps; iStep++) {
+    cout << "Add Source step " << iStep << endl;
+    simul.addStep(Ssteps[iStep]);
+  }
+  // ...then the destinations
+  for (int iStep = 0; iStep < DestSteps; iStep++) {
+    cout << "Add Dest step " << iStep << endl;
+    simul.addStep(Dsteps[iStep]);
+  }
+  
+  for (int DStep = 0; DStep < SourceSteps; DStep++) {
+    for (int DStepCh = 0; DStepCh < SourceSteps; DStepCh++) {
+      // Set up the connections
+      // Correlator Style
+#ifdef HAVE_CORBA
+      Dsteps[DStep]->connect(Ssteps[DStepCh],DStepCh,DStep,1,corbaProto);
+#else
+      Dsteps[DStep]->connectInput(Ssteps[DStep]);
+      //Dsteps[DStep]->connect(Ssteps[DStepCh],DStepCh,DStep,1);
 #endif
     }
   }
-  
-  //steps[0]->connectInput(NULL);
-#if 0
-  simul.connectOutputToArray(&steps[NR_OF_STEPS-1], 1);
-#endif
 }
 
 void doIt (Simul& simul, const std::string& name, int nsteps)
-{
+  {
 #if 0
   simul.resolveComm();
 #endif
@@ -260,22 +329,41 @@ void P2Perf::quit()
 
 void P2Perf::undefine()
 {
-  if (workholders)
+  if (Sworkholders)
   {
     for (int iStep = 0; iStep < NR_OF_STEPS; iStep++)
     {
-      delete workholders[iStep];
+      delete Sworkholders[iStep];
     }
   }
 
-  if (steps)
+  if (Ssteps)
   {
     for (int iStep = 0; iStep < NR_OF_STEPS; iStep++)
     {
-      delete steps[iStep];
+      delete Ssteps[iStep];
     }
   }
 
-  delete [] workholders;
-  delete [] steps;
+  delete [] Sworkholders;
+  delete [] Ssteps;
+
+  if (Dworkholders)
+  {
+    for (int iStep = 0; iStep < NR_OF_STEPS; iStep++)
+    {
+      delete Dworkholders[iStep];
+    }
+  }
+
+  if (Dsteps)
+  {
+    for (int iStep = 0; iStep < NR_OF_STEPS; iStep++)
+    {
+      delete Dsteps[iStep];
+    }
+  }
+
+  delete [] Dworkholders;
+  delete [] Dsteps;
 }
