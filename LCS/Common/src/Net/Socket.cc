@@ -84,7 +84,10 @@ Socket::Socket (const string&	socketname,
 	itsIsBlocking	(false)
 {
 	sigpipeCounter = &defaultSigpipeCounter;
-	initServer (service, protocol, backlog);
+        if (initServer(service, protocol, backlog) != SK_OK) {
+          THROW (Exception, formatString("Server socket creation failed: %s", 
+                                         errstr().c_str()));
+        }
 }
 
 //
@@ -109,7 +112,10 @@ Socket::Socket (const string&	socketname,
 	itsIsBlocking	(false)
 {
 	sigpipeCounter = &defaultSigpipeCounter;
-	initClient (hostname, service, protocol);
+        if (initClient (hostname, service, protocol) != SK_OK) {
+          THROW (Exception, formatString("Client socket creation failed: %s",
+                                         errstr().c_str()));
+        }
 }
 
 //
