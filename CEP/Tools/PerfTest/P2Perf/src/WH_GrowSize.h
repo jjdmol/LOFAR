@@ -21,6 +21,9 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.4  2001/12/17 16:30:00  schaaf
+//  new logic in process() measurements counting
+//
 //  Revision 1.3  2001/10/26 10:06:28  wierenga
 //  Wide spread changes to convert from Makedefs to autoconf/automake/libtool build environment
 //
@@ -61,10 +64,12 @@ public:
   /// The argument first tells if this is the first WorkHolder in
   /// the simulation chain.
   WH_GrowSize (const string& name="WH_GrowSize",
-	      bool first = false,
-	      unsigned int nin=1, unsigned int nout=1,
-	      unsigned int nbuffer=10);
-
+	       bool first = false,
+	       unsigned int nin=1, 
+	       unsigned int nout=1,
+	       unsigned int nbuffer=10,
+	       bool destside=false);
+  
   virtual ~WH_GrowSize();
 
   virtual WorkHolder* make(const string& name) const;
@@ -96,6 +101,10 @@ private:
 
   /// Length of DH_GrowSize buffers.
   int itsBufLength;
+
+  /// indicate destination side WH in order to manage the increasesize call correctly
+  bool itsIsDestSide;
+
   /// Is this the first WorkHolder in the simulation chain?
   bool itsFirst;
 

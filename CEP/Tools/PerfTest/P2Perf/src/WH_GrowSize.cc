@@ -21,6 +21,9 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.12  2002/03/27 09:47:47  schaaf
+//  Use get{Cur/Max}DataPacketSize
+//
 //  Revision 1.11  2002/03/18 12:18:56  schaaf
 //  Uncommented performance output....
 //
@@ -74,19 +77,21 @@ WH_GrowSize::WH_GrowSize (const string& name,
 			  bool first,
 			  unsigned int nin, 
 			  unsigned int nout,
-			  unsigned int nbuffer)
+			  unsigned int nbuffer,
+			  bool destside)
 : WorkHolder    (nin, nout, name),
   itsInHolders  (0),
   itsOutHolders (0),
   itsBufLength  (nbuffer),
+  itsIsDestSide (destside),
   itsFirst      (first),
   itsIteration(itsMeasurements),
   itsTime(0)
 {
   AssertStr (nin > 0,     "0 input DH_IntArray is not possible");
   AssertStr (nout > 0,    "0 output DH_IntArray is not possible");
-  AssertStr (nout == nin, "number of inputs and outputs must match");
-
+  //   AssertStr (nout == nin, "number of inputs and outputs must match");
+  
   itsInHolders  = new DH_GrowSize* [nin];
   itsOutHolders = new DH_GrowSize* [nout];
   char str[8];
@@ -99,13 +104,14 @@ WH_GrowSize::WH_GrowSize (const string& name,
     itsOutHolders[i] = new DH_GrowSize (std::string("out_") + str, nbuffer);
   }
 
-  for (int i=0; i<getInputs(); i++)
-    {
-      (void)itsInHolders[i]->increaseSize(1.0);
-      (void)itsOutHolders[i]->increaseSize(1.0);
+  for (int i=0; i<getInputs() ; i++) {
+      if (getInputs()  > 0) (void)itsInHolders[i]->increaseSize(1.0);
+    }
+  for (int i=0; i<getOutputs() ; i++) {
+    if (getOutputs() > 0) (void)itsOutHolders[i]->increaseSize(1.0);
     }
 
-  if (!strncmp("GrowSize[1]", name.c_str(), 11)) {
+  if (itsIsDestSide) {
     itsIteration --;
   }
 }
@@ -125,41 +131,43 @@ WH_GrowSize::~WH_GrowSize()
 
 WorkHolder* WH_GrowSize::make(const string& name) const
 {
-  return new WH_GrowSize(name, itsFirst, getInputs(), getOutputs(), itsBufLength);
+  return new WH_GrowSize(name, itsFirst, getInputs(), getOutputs(), itsBufLength, itsIsDestSide);
 }
 
 void WH_GrowSize::process()
 {
 
   itsOutHolders[0]->setTimeStamp(itsTime++);
-  if (!strncmp("GrowSize[1]", getName().c_str(), 11))
-    {
-      if (!itsFirstcall)
-	{
-	  watch.stop();
-	  if (itsIteration == 0)
+  if (!strncmp("GrowSizeSource[1]", getName().c_str(), 11)){
+    if (!itsFirstcall)
+      {
+	watch.stop();
+	if (itsIteration == 0)
 	    {
 	      // first measurement; print packet sizes etc.
 	      cout << endl;
 	      cout << itsInHolders[0]->getDataPacketSize() << " "
 		   << log10(itsInHolders[0]->getDataPacketSize()) << " ";
 	    }
-	  cout << (itsInHolders[0]->getDataPacketSize() / (1024. * 1024. *watch.elapsed())) 
-	       << "  "
-	       << watch.elapsed()
-	       << "  ";
-	}
-      watch.start();
-    }
+	cout << (itsOutHolders[0]->getDataPacketSize()*getOutputs()/(1024.*1024.*watch.elapsed())) 
+	     << "  "
+	     << watch.elapsed()
+	     << "  ";
+      }
+    watch.start();
+  }
   itsFirstcall = false;
   {
     // perform every measurement Measurements times
     if (itsIteration-- == 0 )
       {
 	itsIteration = itsMeasurements;
-      for (int i=0; i<getInputs(); i++)
-	{
+	for (int i=0; i<getInputs(); i++) {
+	  TRACER3("Increase size of " << getName() << " input " << i);
 	  (void)itsInHolders[i]->increaseSize(exp(log(MAX_GROW_SIZE)/1000));
+	}
+	for (int i=0; i<getOutputs(); i++) {
+	  TRACER3("Increase size of " << getName() << " output " << i);
 	  (void)itsOutHolders[i]->increaseSize(exp(log(MAX_GROW_SIZE)/1000));
 	}
       }
