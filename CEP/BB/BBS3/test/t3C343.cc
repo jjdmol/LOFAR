@@ -36,7 +36,8 @@ using namespace std;
 // Note:
 // 3C343/10008336.MS contains 64 frequency channels of 156250 Hz with
 // center frequencies of 1.18-1.17015625 GHz.
-// There are 1437 time stamps of 30 sec in it.
+// There are 1437 time slots of 30 sec in it, but the first one is 20 seconds.
+// timeStart is 4.47203e+09-4260-10 and timeLast is timeStart+43075+25
 
 void writeParms (const vector<ParmData>& pData, const MeqDomain& domain)
 {
@@ -55,8 +56,9 @@ void writeParms (const vector<ParmData>& pData, const MeqDomain& domain)
   }
 }
 
-void doSolve (Prediffer& pre1, const vector<string>& solv,
-	      int niter)
+// Solve for the entire time domain.
+void doSolveAll (Prediffer& pre1, const vector<string>& solv,
+		 int niter)
 {
   // Set the solvable parameters.
   pre1.clearSolvableParms();
@@ -108,6 +110,70 @@ void doSolve (Prediffer& pre1, const vector<string>& solv,
   delete [] flags;
 }
 
+// Solve for steps in time.
+void doSolveStep (Prediffer& pre1, const vector<string>& solv,
+		  vector<string>& solvexc, double timeStep,
+		  int niter)
+{
+  // Set the solvable parameters.
+  pre1.clearSolvableParms();
+  pre1.setSolvableParms (solv, solvexc, true);
+  // Set start time (take 10 sec into account for first time stamp of 20).
+  double timeStart = 4.47203e+09-4260-10;
+  double timeLast = timeStart + 43075+25;
+  ///  timeLast = timeStart + 120;
+  timeStart -=  30-20;
+  // Loop through all time domains.
+  while (timeStart < timeLast) {
+    // Set a domain. Use middle 56 channels and 2 times per step.
+    vector<uint32> shape = pre1.setDomain (1.18e9-59.5*156250, 56*156250,
+					   timeStart, timeStep);
+    uint nrval = shape[0] * shape[1] * shape[2];
+    uint bufnreq = shape[2];
+    uint totnreq = shape[3];
+    uint nrloop = (totnreq + bufnreq - 1) / bufnreq;
+    cout << "bufShape " << shape << endl;
+    double* buffer = new double[nrval];
+    char* flags = new char[shape[0]*shape[2]];
+    
+    // Get the ParmData from the Prediffer and send it to the solver.
+    Solver solver;
+    solver.initSolvableParmData (1);
+    solver.setSolvableParmData (pre1.getSolvableParmData(), 0);
+    vector<ParmData> pData = pre1.getSolvableParmData();
+    pre1.showSettings();
+    streamsize prec = cout.precision();
+    cout << "Before: " << setprecision(15) << solver.getSolvableValues() << endl;
+
+    for (int it=0; it<niter; ++it) {
+      // Get the equations from the prediffer and give them to the solver.
+      for (uint i=0; i<nrloop; i++) {
+	int nres;
+	bool more = pre1.getEquations (buffer, flags, shape, nres);
+	int nreq = bufnreq;
+	if (i == nrloop-1) {
+	  nreq = totnreq  - (nrloop-1)*bufnreq;
+	  ASSERT (!more);
+	} else {
+	  ASSERT (more);
+	}
+	ASSERT (nres == nreq);
+	solver.setEquations (buffer, flags, nreq, shape[1]-1, shape[0], 0);
+      }
+      // Do the solve.
+      Quality quality;
+      solver.solve (false, quality);
+      cout << "iter" << it << ":  " << setprecision(15)
+	   << solver.getSolvableValues() << endl;
+      cout.precision (prec);
+      pre1.updateSolvableParms (solver.getSolvableParmData());
+    }
+    delete [] buffer;
+    delete [] flags;
+    timeStart += timeStep;
+  }
+}
+
 
 int main (int argc, const char* argv[])
 {
@@ -129,23 +195,38 @@ int main (int argc, const char* argv[])
       istringstream iss(argv[6]);
       iss >> calcuvw;
     }
-    // Do a solve for StokesI.
+    // Do a solve.
     {
       vector<int> antVec(14);
       for (int i=0; i<14; i++) {
 	antVec[i] = i;
       }
+      vector<vector<int> > srcgrp;
+      vector<int> grp1;
+      grp1.push_back (1);
+      grp1.push_back (2);
+      srcgrp.push_back (grp1);
       Prediffer pre1(argv[2], argv[3], argv[4], "aips", argv[1], "", "",
-		     antVec, "LOFAR.AP", calcuvw, true);
-      // Do a further selection; only XX and no autocorrelations.
-      vector<int> corr(1,0);
+		     antVec, "LOFAR.AP", srcgrp, calcuvw, true);
+      // Do a further selection; only XX,YY and no autocorrelations.
+      vector<int> corr(2,0);
+      corr[1] = 3;
       vector<int> antVec2;
       pre1.select (antVec2, antVec2, false, corr);
       vector<string> solv(1);
       solv[0] = "StokesI.*";
       //      solv[1] = "RA.*";
       //      solv[2] = "DEC.*";
-      doSolve (pre1, solv, nriter);
+      //doSolveAll (pre1, solv, nriter);
+      vector<string> solv2(2);
+      vector<string> solv2exc(4);
+      solv2[0] = "EJ11.phase.*";
+      solv2[1] = "EJ22.phase.*";
+      solv2exc[0] = "EJ11.phase.SR1.SG1";
+      solv2exc[1] = "EJ11.phase.SR1";
+      solv2exc[2] = "EJ22.phase.SR1.SG1";
+      solv2exc[3] = "EJ22.phase.SR1";
+      doSolveStep (pre1, solv2, solv2exc, 60, nriter);
     }
   } catch (std::exception& x) {
     cerr << "Unexpected exception: " << x.what() << endl;
