@@ -144,7 +144,7 @@ void BlackBoardDemo::define(const KeyValueMap& params)
     // Create the connection to the database.
     itsPDSteps[index]->connect(itsPDSteps[index], 0, 0, 1, TH_PL("BBS3WOPrediffer"));
     // Create the connection to the Solver
-    solverStep.connect(itsPDSteps[index], index+2, 1, 1, TH_Mem());
+    solverStep.connect(itsPDSteps[index], index+2, 1, 1, TH_Mem(), false);
   }
 
 }  
