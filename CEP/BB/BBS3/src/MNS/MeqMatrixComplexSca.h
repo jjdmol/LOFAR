@@ -33,7 +33,7 @@
 namespace LOFAR {
 
 // \ingroup BBS3
-// \addtogroup MSN
+// \addtogroup MNS
 // @{
 
 class MeqMatrixComplexSca : public MeqMatrixRep
