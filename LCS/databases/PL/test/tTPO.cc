@@ -32,6 +32,10 @@ namespace LOFAR {
     {
       ObjectId::oid_t  itsOid;
       ObjectId::oid_t  itsOwnerOid;
+
+
+      ObjectId::oid_t getOid() const
+        { return itsOid; }
     };
 
     template<>
@@ -64,6 +68,10 @@ namespace LOFAR {
     {
       ObjectId::oid_t  itsOid;
       ObjectId::oid_t  itsOwnerOid;
+
+
+      ObjectId::oid_t getOid() const
+        { return itsOid; }
     };
 
     template<>
