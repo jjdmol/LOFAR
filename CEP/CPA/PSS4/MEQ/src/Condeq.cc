@@ -80,22 +80,25 @@ int Condeq::getResult (Result::Ref &resref,
     {
       int inx0 = child_res[0]->isDefined (spids[j], indices[0]);
       int inx1 = child_res[1]->isDefined (spids[j], indices[1]);
+      double pert = 0;
       if (inx1 >= 0) {
         deriv = (child_res[1]->getPerturbedValueRW(inx1) - *values[1]) /
-                child_res[1]->getPerturbation(inx1);
+                ( pert = child_res[1]->getPerturbation(inx1) );
         if (inx0 >= 0) {
           deriv -= (child_res[0]->getPerturbedValueRW(inx0) - *values[0]) /
                    child_res[0]->getPerturbation(inx0);
         }
       } else if (inx0 >= 0) {
         deriv = (*values[0] - child_res[0]->getPerturbedValueRW(inx0)) /
-                 child_res[0]->getPerturbation(inx0);
+                 ( pert = child_res[0]->getPerturbation(inx0) );
       } else {
         deriv = Vells(0.);
       }
       vellset.setPerturbedValue (j, deriv);
+      vellset.setPerturbation(j,pert);
     }
     vellset.setSpids (spids);
+    
   }
   // no dependencies introduced
   return 0;
