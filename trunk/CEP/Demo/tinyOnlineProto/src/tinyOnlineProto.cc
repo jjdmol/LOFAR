@@ -217,7 +217,7 @@ void tinyOnlineProto::init() {
 
   for (int wh = 0; wh < itsWHcount; wh++) {
     
-    itsWHs[wh]->preprocess();
+    itsWHs[wh]->basePreprocess();
     
   }
 }

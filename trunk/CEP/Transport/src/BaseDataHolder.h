@@ -221,6 +221,16 @@ protected:
   template<typename T> T* getData (const std::string& fieldName);
   // </group>
 
+/*   /\** Set the pointer to the data packet and set the packet's size. */
+/*       This function has to be called by the constructor of derived */
+/*       DataHolder classes. */
+/*   *\/ */
+/*   void setDataPacket (DataPacket* ptr, int size); */
+
+/*   /// Set the data packet to the default data packet.. */
+/*   void setDefaultDataPacket(); */
+
+
 public:
   // Get access to the data blob.
   // <group>
@@ -245,7 +255,9 @@ private:
   BlobFieldSet    itsDataFields;
   BlobString*     itsData;
   BlobOBufString* itsDataBlob;
+/*   DataPacket   itsDefaultPacket; */
   DataPacket*  itsDataPacketPtr;
+  //  int          itsDataPacketSize; 
   Transporter  itsTransporter;
   string       itsName;
   string       itsType;
@@ -369,6 +381,18 @@ inline void dataConvert (DataFormat fmt,
     dataConvertDouble (fmt, &(buf[i].itsTimeStamp));
   }
 }
+
+/* inline void BaseDataHolder::setDefaultDataPacket() */
+/* { */
+/*   setDataPacket (&itsDefaultPacket, sizeof(DataPacket)); */
+/* } */
+
+/* inline void BaseDataHolder::setDataPacket (DataPacket* ptr, int size) */
+/* { */
+/*   itsDataPacketPtr = ptr; */
+/*   itsDataPacketSize = size; */
+/* } */
+
 
 } // end namespace
 

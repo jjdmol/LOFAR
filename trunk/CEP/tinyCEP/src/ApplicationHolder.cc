@@ -92,36 +92,12 @@ namespace LOFAR
   }
 
   void ApplicationHolder::define(const KeyValueMap& map) {
-    
   }
   
   void ApplicationHolder::init() {
-    // connect the DataHolders 1-1
-
-    // tinyCEP has as requirements:
-    // * number of inputs is equal to number of outputs
-    // * inputs and outputs map 1 on 1
-    // * DataHolder prototype is equal for input and output
-
-//     for (int i = 0; i < itsNinputs; i++) {
-//       Transporter& TR1 = itsDataManager->getInHolder(i)->getTransporter();
-//       Transporter& TR2 = itsDataManager->getOutHolder(i)->getTransporter();
-
-//       TR1.setItsID(i);
-//       TR2.setItsID(itsNinputs+i);
-      
-//       TR1.setSourceAddr(itsDataManager->getOutHolder(i));
-//       TR2.setSourceAddr(itsDataManager->getInHolder(i));
-
-//       TR2.connectTo(TR1, *itsProto->getTransporter().getTransportHolder());
-
-//       TR1.init();
-//       TR2.init();
-//     }
   }
   
   void ApplicationHolder::run(int nsteps) {
-    
   }
   
   void ApplicationHolder::run_once() {
