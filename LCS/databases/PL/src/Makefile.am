@@ -29,7 +29,7 @@ TCCHDRS = \
 	PersistenceBroker.tcc \
 	TPersistentObject.tcc
 
-pkginclude_HEADERS = $(INSTHDRS) $(TCCHDRS)
+nobase_pkginclude_HEADERS = $(INSTHDRS) $(TCCHDRS)
 
 noinst_HEADERS = $(NOINSTHDRS)
 

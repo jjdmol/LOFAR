@@ -45,7 +45,7 @@ NOINSTHDRS =
 TCCHDRS = \
 BlobField.cc BlobArray.tcc TypeNames.tcc
 
-pkginclude_HEADERS = $(INSTHDRS) $(TCCHDRS)
+nobase_pkginclude_HEADERS = $(INSTHDRS) $(TCCHDRS)
 
 noinst_HEADERS = $(NOINSTHDRS)
 
