@@ -57,6 +57,7 @@ void UVPAxis::calcTransferFunction(double worldMin,
 {
   #if(DEBUG_MODE)
   assert(axisMin != axisMax);
+  assert(worldMin != worldMax);
   #endif
 
   itsScale  = (worldMax-worldMin)/(axisMax-axisMin);
