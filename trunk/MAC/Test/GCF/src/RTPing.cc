@@ -42,11 +42,11 @@ static double time_elapsed(timeval* start, timeval* stop)
     + (stop->tv_usec-start->tv_usec)/(double)1e6; 
 }
 
-Ping::Ping(string name, string scope, string type, bool isTemporary)
+Ping::Ping(string name, string scope, string type, TPSCategory category)
   : GCFTask((State)&Ping::initial, name), 
   _pingTimer(-1), 
   _answerHandler(*this),
-  _echoPingPSET(scope.c_str(), type.c_str(), isTemporary, &_answerHandler)
+  _echoPingPSET(scope.c_str(), type.c_str(), category, &_answerHandler)
 {
   // register the port for debug tracing
   registerProtocol(ECHO_PROTOCOL, ECHO_PROTOCOL_signalnames);
@@ -274,18 +274,18 @@ int main(int argc, char** argv)
   }
 
   string type;
-  bool isTemporary;
+  TPSCategory category;
   if (brdnr == "1")
   {
     type = "TTypeF";
-    isTemporary = false;
+    category = PS_CAT_PERMANENT;
   }
   else
   {
     type = "TTypeG";
-    isTemporary = true;
+    category = PS_CAT_TEMPORARY;
   }
-  Ping pingTask(string("RTPING") + brdnr, string("B_A_BRD") + brdnr, type, isTemporary);
+  Ping pingTask(string("RTPING") + brdnr, string("B_A_BRD") + brdnr, type, category);
 
   pingTask.start(); // make initial transition
 

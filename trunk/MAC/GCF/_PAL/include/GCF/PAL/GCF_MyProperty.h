@@ -29,59 +29,60 @@
 
 class GCFMyPropertySet;
 
-/**
- * This is the owned property itself. It manages an old value and the current 
- * value. The current value is (if linked) synchronised with the value in the 
- * SCADA DB. The old value becomes the current value if the value is the SCADA 
- * DB was changed. The old value is introduced because the owner of the property 
- * will only be notified about the changed (current) value and is not able to 
- * decide about whether or not changing the (current) value. At this way it is 
- * possible to compare the changed value with the original value of a property 
- * (Note that changed values can be equal to the original current value). The 
- * name of the property only consists of alphanumeric characters and the '_'. 
- * This last character will be used as separator between different levels in a 
- * virtual tree. The name should always be relative to the scope, which is 
- * managed by its property set container (GCFMyPropertySet). 
- * Furthermore this class handles the access rights based on the accessMode 
- * (see Terms). Note that only the GCFMyPropertySet class is able to create 
- * instances of this class. 
- * All value-changed indications can be handled by using a specialisation of the 
- * GCFAnswer class. No actions of this class results in responses. Because the 
- * current value is always synchronised with the SCADA property (if linked) 
- * the get(Old)Value methods are simply synchronous actions.
- */
+// This is the owned property itself. It manages an old value and the current 
+// value. The current value is (if linked) synchronised with the value in the 
+// SCADA DB. The old value becomes the current value if the value is the SCADA 
+// DB was changed. The old value is introduced because the owner of the property 
+// will only be notified about the changed (current) value and is not able to 
+// decide about whether or not changing the (current) value. At this way it is 
+// possible to compare the changed value with the original value of a property 
+// (Note that changed values can be equal to the original current value). The 
+// name of the property only consists of alphanumeric characters and the '_'. 
+// This last character will be used as separator between different levels in a 
+// virtual tree. The name should always be relative to the scope, which is 
+// managed by its property set container (GCFMyPropertySet). 
+// Furthermore this class handles the access rights based on the accessMode 
+// (see Terms). Note that only the GCFMyPropertySet class is able to create 
+// instances of this class. 
+// All value-changed indications can be handled by using a specialisation of the 
+// GCFAnswer class. No actions of this class results in responses. Because the 
+// current value is always synchronised with the SCADA property (if linked) 
+// the get(Old)Value methods are simply synchronous actions.
 
 class GCFMyProperty : public GCFProperty
 {
   public:
+    // returns pointer to a clone of the (old) value
+    // <group>    
     GCFPValue* getValue () const;
     GCFPValue* getOldValue () const;
+    // </group>    
    
-    //@{
-    /** They both first copys the current local (owned) value
-     * to the old value followed by setting the changing the current
-     * with the parameter 'value'. In case the property is linked
-     * and the property is readable then the value in SCADA DB will be 
-     * updated too.
-     * @return can be GCF_PROP_WRONG_TYPE, GCF_PROP_NOT_VALID
-     */
+    // They both first copys the current local (owned) value
+    // to the old value followed by setting the changing the current
+    // with the parameter 'value'. In case the property is linked
+    // and the property is readable then the value in SCADA DB will be 
+    // updated too.
+    // @return can be GCF_PROP_WRONG_TYPE, GCF_PROP_NOT_VALID
+    // <group>
     TGCFResult setValue (const string value);
     TGCFResult setValue (const GCFPValue& value);        
-    //@}
-    inline bool isLinked () const {return _isLinked && !_isBusy;}
-    //@{
-    /** Access mode can be: GCF_READABLE_PROP and/or GCF_WRITABLE_PROP
-     * NOTE: If both modes are set and the property is linked, the setValue 
-     * method call results immediate in a F_VCHANGEMSG_SIG answer event. This 
-     * on its turn copies the current to the old value and the changed value to
-     * current value. This means that the current value from before the setValue 
-     * will not be available after the answer event is received (old value is 
-     * then the same as the new value). On the other hand this construction can 
-     * been seen as a asynchronous 'set' action.
-     */ 
+    // </group>
+    
+    bool isMonitoringOn () const {return _isLinked && !_isBusy;}
+    
+    // Access mode can be: GCF_READABLE_PROP and/or GCF_WRITABLE_PROP
+    // NOTE: If both modes are set and the property is linked, the setValue 
+    // method call results immediate in a F_VCHANGEMSG_SIG answer event. This 
+    // on its turn copies the current to the old value and the changed value to
+    // current value. This means that the current value from before the setValue 
+    // will not be available after the answer event is received (old value is 
+    // then the same as the new value). On the other hand this construction can 
+    // been seen as a asynchronous 'set' action.
+    // <group>
     void setAccessMode (TAccessMode mode, bool on);
     bool testAccessMode (TAccessMode mode) const;   
-    //@}
+    // </group>
     
   private:
     friend class GCFMyPropertySet;
@@ -90,36 +91,38 @@ class GCFMyProperty : public GCFProperty
                    GCFMyPropertySet& propertySet);
     virtual ~GCFMyProperty ();
     
-    /// @param setDefault true => use my defaults (set value), false => use DB defaults (get value)
-    /// @return true if is an asynchronous action, false if not
+    // @param setDefault true => use my defaults (set value), false => use DB defaults (get value)
+    // @return true if is an asynchronous action, false if not
     bool link (bool setDefault, TGCFResult& result); 
+    
     void unlink ();    
     
   private: // overrides base class methods
     void subscribed ();
     void subscriptionLost ();
 
-    /** 
-     * normally this method should never appear
-     * but if so (in case of calling the method requestValue method of the base 
-     * class GCFPropertyBase) it acts as the valueChanged method
-     */
+    // normally this method should never appear
+    // but if so (in case of calling the method requestValue method of the base 
+    // class GCFPropertyBase) it acts as the valueChanged method
     void valueGet (const GCFPValue& value);
+
     void valueChanged (const GCFPValue& value);
            
   private: 
-    //@{ 
-    /// Copy contructors. Don't allow copying this object.
+    // Don't allow copying this object.
+    // <group>
     GCFMyProperty (const GCFMyProperty&);
     GCFMyProperty& operator= (const GCFMyProperty&);  
-    //@}
+    // </group>
 
-  private:
+  private: // data members
     TAccessMode       _accessMode;
-    bool              _changingAccessMode;
     GCFPValue*        _pCurValue;
     GCFPValue*        _pOldValue;
     bool              _isLinked;
     GCFMyPropertySet& _propertySet;
+    
+  private: // adminstrative members
+    bool              _changingAccessMode;
 };
 #endif

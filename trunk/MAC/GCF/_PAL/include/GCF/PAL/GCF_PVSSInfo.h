@@ -28,13 +28,12 @@
 #include <Common/lofar_string.h>
 #include <Common/lofar_list.h>
 
+// forward declaration
+
 class GSAService;
 class GCFPropertySet;
 
-// forward declaration
-
-/**
- */
+// By means of this class information from the PVSS system can be retreived
 class GCFPVSSInfo
 {
   public:
@@ -54,16 +53,17 @@ class GCFPVSSInfo
     static string _projName;
     static unsigned int _lastSysNr;
   
-    /// Construction methods
+    // Construction methods
+    // Don't allow to (con/de)struct an instance of this class
     GCFPVSSInfo ();
   
     virtual ~GCFPVSSInfo ();
 
-    /**
-     * Don't allow copying this object.
-     */
+    // Don't allow copying this object.
+    // <group>
     GCFPVSSInfo (const GCFPVSSInfo&);
     GCFPVSSInfo& operator= (const GCFPVSSInfo&);
+    // </group>
 
   private:
     friend class GCFPropertySet;

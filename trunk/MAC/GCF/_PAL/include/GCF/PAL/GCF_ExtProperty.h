@@ -28,57 +28,49 @@
 
 class GCFExtPropertySet;
 
-/**
- * This class represents an external property, which are normally owned by an 
- * opposite Application than this representation is created. (Note that owned 
- * properties can also be represented by this class in the same Application). 
- * The name of the property only consists of alphanumeric characters and the 
- * '_'. This last character will be used as separator between different levels 
- * in a virtual tree. The name can be (but not necessarily) relative to a scope, 
- * which then is managed by a property set container. In that case the 
- * GCFExtPropertySet manages the property instance too. Otherwise the property 
- * instance exists independent and must therefore be managed by the APL. 
- * All responses of the possible actions or value-changed indications can be 
- * handled by using a specialisation of the GCFAnswer class.
- */
+// This class represents an external property, which are normally owned by an 
+// opposite Application than this representation is created. (Note that owned 
+// properties can also be represented by this class in the same Application). 
+// The name of the property only consists of alphanumeric characters and the 
+// '_'. This last character will be used as separator between different levels 
+// in a virtual tree. The name can be (but not necessarily) relative to a scope, 
+// which then is managed by a property set container. In that case the 
+// GCFExtPropertySet manages the property instance too. Otherwise the property 
+// instance exists independent and must therefore be managed by the APL. 
+// All responses of the possible actions or value-changed indications can be 
+// handled by using a specialisation of the GCFAnswer class.
+
 class GCFExtProperty : public GCFProperty
 {
   public:
-    /**
-     * Creates an instance of the property class, which can be used independent
-     * of a GCFExtPropertySet object.
-     * @param propName it only can mapped to a property in the SCADA DB if the
-     *                 scope is included 
-     */
+    // Creates an instance of the property class, which can be used independent
+    // of a GCFExtPropertySet object.
+    // @param propName it only can mapped to a property in the SCADA DB if the
+    //                 scope is included 
     GCFExtProperty (const TPropertyInfo& propInfo);
     virtual ~GCFExtProperty () {}
 
     inline bool isSubscribed () const {return _isSubscribed;}
-    /**
-     * Asynchronous action
-     * @return GCF_NO_ERROR, GCF_BUSY, GCF_ALREADY_SUBSCRIBED, GCF_PML_ERROR
-     */
+
+    // Asynchronous action
+    // @return GCF_NO_ERROR, GCF_BUSY, GCF_ALREADY_SUBSCRIBED, GCF_PML_ERROR
     TGCFResult subscribe();
-    /**
-     * Synchronous (!) action
-     * @return GCF_NO_ERROR, GCF_BUSY, GCF_NOT_SUBSCRIBED, GCF_PML_ERROR
-     */
+
+    // Synchronous (!) action
+    // @return GCF_NO_ERROR, GCF_BUSY, GCF_NOT_SUBSCRIBED, GCF_PML_ERROR
     TGCFResult unsubscribe();
 
-    /**
-     * Checks whether the property exists in the SCADA DB or not
-     * Note that in case the property does not exists the property will
-     * be marked as "not subscribed".
-     */
+    // Checks whether the property exists in the SCADA DB or not
+    // Note that in case the property does not exists the property will
+    // be marked as "not subscribed".
     bool exists();
 
   private:
     friend class GCFExtPropertySet;
     GCFExtProperty();
-    /**
-     * Creates an instance of the property class, which only can exists in 
-     * combination with a GCFExtPropertySet object.
-     */
+
+    // Creates an instance of the property class, which only can exists in 
+    // combination with a GCFExtPropertySet object.
     GCFExtProperty (const TPropertyInfo& propInfo, 
                     GCFExtPropertySet& pPropertySet);
     
@@ -87,11 +79,11 @@ class GCFExtProperty : public GCFProperty
     void subscriptionLost ();
 
   private:
-    //@{ 
-    /// Copy contructors. Don't allow copying this object.
+    // Don't allow copying this object.
+    // <group>
     GCFExtProperty (const GCFExtProperty&);
     GCFExtProperty& operator= (const GCFExtProperty&);  
-    //@}
+    // </group>
 
   private: // data members
     bool _isSubscribed;           

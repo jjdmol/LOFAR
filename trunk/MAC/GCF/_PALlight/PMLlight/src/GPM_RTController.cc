@@ -97,7 +97,7 @@ TPMResult GPMRTController::registerScope(GCFRTMyPropertySet& propSet)
       request.seqnr = registerAction(propSet);
       request.scope = propSet.getScope();
       request.type = propSet.getType();
-      request.isTemporary = propSet.isTemporary();
+      request.category = propSet.getCategory();
       _propertyInterface.send(request);
     }
   }
@@ -228,7 +228,7 @@ GCFEvent::TResult GPMRTController::connected(GCFEvent& e, GCFPortInterface& /*p*
         regRequest.seqnr = registerAction(*pPropertySet);
         regRequest.scope = iter->first;
         regRequest.type = pPropertySet->getType();
-        regRequest.isTemporary = pPropertySet->isTemporary();
+        regRequest.category = pPropertySet->getCategory();
         _propertyInterface.send(regRequest);
       }
       break;
@@ -369,7 +369,7 @@ void logResult(TPIResult result, GCFRTMyPropertySet& propSet)
           "Prop. set does not exists. (%s:%s)",
           propSet.getType().c_str(), propSet.getScope().c_str()));
       break;
-    case PI_PROP_SET_ALLREADY_EXISTS:
+    case PI_PROP_SET_ALREADY_EXISTS:
       LOG_INFO(formatString ( 
           "Prop. set allready exists. (%s:%s)",
           propSet.getType().c_str(), propSet.getScope().c_str()));

@@ -89,11 +89,11 @@ TMACValueType macValueTypes[] =
 
 GCFRTMyPropertySet::GCFRTMyPropertySet(const char* name,
                                        const char* type,
-                                       bool isTemporary,
+                                       TPSCategory category,
                                        GCFRTAnswer* pAnswerObj) : 
   _scope(name),
   _type(type),
-  _isTemporary(isTemporary),
+  _category(category),
   _pAnswerObj(pAnswerObj),
   _state(S_DISABLED),
   _dummyProperty(*this),
@@ -249,11 +249,6 @@ void GCFRTMyPropertySet::linkProperties()
   list<string> propsToSubscribe;
   switch (_state)
   {
-    case S_ENABLING:
-    case S_LINKED:
-      wrongState("linkProperties");
-      _pController->propertiesLinked(getScope(), propsToSubscribe, PI_WRONG_STATE);
-      break;
     case S_ENABLED:
     {
       GCFRTMyProperty* pProperty(0);
@@ -279,14 +274,14 @@ void GCFRTMyPropertySet::linkProperties()
       break;
     }
 
-    case S_DELAYED_DISABLING:
-      _pController->propertiesLinked(getScope(), propsToSubscribe, PI_PS_GONE);
-      _state = S_ENABLED;
-      disable();
-      break;
     case S_DISABLED:
     case S_DISABLING:
       _pController->propertiesLinked(getScope(), propsToSubscribe, PI_PS_GONE);
+      break;
+
+    default:
+      wrongState("linkProperties");
+      _pController->propertiesLinked(getScope(), propsToSubscribe, PI_WRONG_STATE);
       break;
   }
 }
@@ -296,16 +291,11 @@ void GCFRTMyPropertySet::unlinkProperties()
   assert(_pController);
   switch (_state)
   {
-    case S_ENABLING:
-    case S_ENABLED:
-    case S_DELAYED_DISABLING:
-      wrongState("unlinkProperties");
-      _pController->propertiesUnlinked(getScope(), PI_WRONG_STATE);
-      break;
     case S_DISABLED:
     case S_DISABLING:
       _pController->propertiesUnlinked(getScope(), PI_PS_GONE);
       break;
+
     case S_LINKED:
     {
       _state = S_ENABLED;
@@ -319,6 +309,10 @@ void GCFRTMyPropertySet::unlinkProperties()
       _pController->propertiesUnlinked(getScope(), PI_NO_ERROR);
       break;
     }
+    default:
+      wrongState("unlinkProperties");
+      _pController->propertiesUnlinked(getScope(), PI_WRONG_STATE);
+      break;
   }
 }
 
@@ -534,7 +528,6 @@ void GCFRTMyPropertySet::wrongState(const char* request)
     "ENABLING",
     "ENABLED",
     "LINKED",
-    "DELAYED_DISABLING"
   };
   LOG_WARN(formatString ( 
         "Could not perform '%s' on property set '%s'. Wrong state: %s",

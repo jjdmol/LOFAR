@@ -40,7 +40,10 @@ class GPIPropertySet : public GCFPropertyProxy
 {
   public:
     GPIPropertySet(GPIPMLlightServer& server) : 
-      _server(server), 
+      _server(server),       
+      _scope(""),
+      _type(""),
+      _category(PS_CAT_TEMPORARY),
       _state(S_DISABLED),
       _counter(0),
       _missing(0),
@@ -107,14 +110,14 @@ class GPIPropertySet : public GCFPropertyProxy
     GPIPMLlightServer& _server;
     string _scope;
     string _type;
-    bool _isTemporary;
-    unsigned long _savedSeqnr;
+    TPSCategory _category;
     
     typedef enum TState {S_DISABLED, S_DISABLING, S_ENABLING, S_ENABLED, 
                          S_LINKING, S_LINKED, S_UNLINKING, S_DELAYED_DISABLING};
     TState _state;
     
   private: // adminstrative members
+    unsigned long _savedSeqnr;
     unsigned int  _counter;
     unsigned int  _missing;
     TPIResult     _tmpPIResult;

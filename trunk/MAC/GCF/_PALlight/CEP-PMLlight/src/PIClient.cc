@@ -412,7 +412,7 @@ void PIClient::processOutstandingActions()
         if (iter->eventID == DH_PIProtocol::REGISTER_SCOPE)
         {
           blob << pPropSet->getType();
-          blob << pPropSet->isTemporary();
+          blob << (char) pPropSet->getCategory();
         }
         break;
       case DH_PIProtocol::PROPSET_LINKED:
@@ -461,7 +461,7 @@ void logResult(TPIResult result, CEPPropertySet& propSet)
           "Prop. set does not exists. (%s:%s)",
           propSet.getType().c_str(), propSet.getScope().c_str()));
       break;
-    case PI_PROP_SET_ALLREADY_EXISTS:
+    case PI_PROP_SET_ALREADY_EXISTS:
       LOG_INFO(formatString ( 
           "Prop. set allready exists. (%s:%s)",
           propSet.getType().c_str(), propSet.getScope().c_str()));

@@ -138,4 +138,18 @@ struct TPropertyInfo
     }
   }; 
 };
+
+// PropertySet category
+typedef enum TPSCategory
+{
+  // corresponding DP does not exists
+  // will be created on the first load request
+  PS_CAT_TEMPORARY, 
+  // corresponding DP must exists
+  // only the usecount will be increased on load 
+  PS_CAT_PERMANENT, 
+  // corresponding DP must exists 
+  // will be loaded automatically right after handled enable request in the PA
+  PS_CAT_PERM_AUTOLOAD,  
+};
 #endif

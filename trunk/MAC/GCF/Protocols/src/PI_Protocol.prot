@@ -10,6 +10,7 @@ id = "(F_GCF_PROTOCOL + 1)";
 // e.g.
 //include = '<sys/time.h>';
 include = '<GCF/GCF_PValue.h>';
+include = '<GCF/GCF_Defines.h>';
 
 prelude = << PRELUDE_END
 
@@ -21,7 +22,7 @@ enum TPIResult
   PI_PS_GONE,
   PI_MISSING_PROPS,
   PI_PROP_SET_NOT_EXISTS,
-  PI_PROP_SET_ALLREADY_EXISTS,
+  PI_PROP_SET_ALREADY_EXISTS,
   PI_DPTYPE_UNKNOWN,
   PI_INTERNAL_ERROR,
   PI_PA_INTERNAL_ERROR,
@@ -89,8 +90,8 @@ event = {
 		type = "string";
 	};
 	param = {
-		name = "isTemporary";
-		type = "bool";
+		name = "category";
+		type = "TPSCategory";
 	};
 };
 

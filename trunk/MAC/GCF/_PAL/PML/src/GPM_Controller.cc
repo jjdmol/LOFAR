@@ -228,7 +228,7 @@ TPMResult GPMController::registerScope(GCFMyPropertySet& propSet)
       _myPropertySets[propSet.getScope()] = &propSet;
       request.scope = propSet.getScope();
       request.type = propSet.getType();
-      request.isTemporary = propSet.isTemporary();
+      request.category = propSet.getCategory();
       _propertyAgent.send(request);
     }
   }
@@ -304,8 +304,14 @@ GCFEvent::TResult GPMController::initial(GCFEvent& e, GCFPortInterface& p)
       break;
 
     case F_ENTRY:
-      _propertyAgent.open();
-      _distPropertyAgent.open();
+      if (_propertyAgent.isConnected())
+      {
+        _propertyAgent.open();
+      }
+      if (_distPropertyAgent.isConnected())
+      {
+        _distPropertyAgent.open();
+      }
       break;
     
     case F_TIMER:
@@ -331,7 +337,7 @@ GCFEvent::TResult GPMController::initial(GCFEvent& e, GCFPortInterface& p)
   return status;
 }
 
-GCFEvent::TResult GPMController::connected(GCFEvent& e, GCFPortInterface& /*p*/)
+GCFEvent::TResult GPMController::connected(GCFEvent& e, GCFPortInterface& p)
 {
   GCFEvent::TResult status = GCFEvent::HANDLED;
   TGCFResult result;
@@ -342,9 +348,13 @@ GCFEvent::TResult GPMController::connected(GCFEvent& e, GCFPortInterface& /*p*/)
     case F_DISCONNECTED:
       LOG_WARN(LOFAR::formatString ( 
           "Connection lost to Property Agent"));
+      p.close();
+      break;
+      
+    case F_CLOSED:
       TRAN(GPMController::initial);
       break;
-
+      
     case F_ENTRY:
     {
       TAction* pAction(0);
@@ -579,7 +589,7 @@ void logResult(TPAResult result, GCFPropertySet& propSet)
           "Prop. set does not exists. (%s:%s)",
           propSet.getType().c_str(), propSet.getScope().c_str()));
       break;
-    case PA_PROP_SET_ALLREADY_EXISTS:
+    case PA_PROP_SET_ALREADY_EXISTS:
       LOG_INFO(LOFAR::formatString ( 
           "Prop. set allready exists. (%s:%s)",
           propSet.getType().c_str(), propSet.getScope().c_str()));

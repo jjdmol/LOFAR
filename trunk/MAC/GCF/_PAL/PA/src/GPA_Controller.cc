@@ -190,7 +190,7 @@ GCFEvent::TResult GPAController::operational(GCFEvent& e, GCFPortInterface& p)
       {
         PAScopeRegisteredEvent response;
         response.seqnr = request.seqnr;
-        response.result = PA_PROP_SET_ALLREADY_EXISTS;
+        response.result = PA_PROP_SET_ALREADY_EXISTS;
         sendAndNext(response);        
       }
       else
@@ -506,8 +506,7 @@ void GPAController::sendAndNext(GCFEvent& e)
     else
     {
       assert(0);
-    }
-    
+    }    
   }
   else
   {

@@ -86,7 +86,7 @@ class GPAPropertySet : public GSAService
     GCFPortInterface& _serverPort;
     typedef list<TPSClient> TPSClients;
     TPSClients        _psClients;
-    bool              _isTemporary;
+    TPSCategory       _category;
     
   private: // admin. data members
     typedef enum TSTATE {S_ENABLED, S_ENABLING, S_DISABLED, S_DISABLING, S_LINKING, S_LINKED, S_UNLINKING};
