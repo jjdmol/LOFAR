@@ -19,7 +19,7 @@ const fill_uvw := function (msname,mepname,ddid=0,name="%s.%d",create=T)
   # fill in zero for station 0
   for( j in 1:3 )
   {
-    parmname := sprintf(name,parmnames[j],0);
+    parmname := sprintf(name,parmnames[j],1);
     mep.put(parmname,values=0);
   }
   # loop over entries to generate polcs for UVWs
@@ -30,7 +30,7 @@ const fill_uvw := function (msname,mepname,ddid=0,name="%s.%d",create=T)
       trange := time[i] + [-int[i],int[i]]/2;
       for( j in 1:3 )
       {
-        parmname := sprintf(name,parmnames[j],ant2[i]);
+        parmname := sprintf(name,parmnames[j],ant2[i]+1);
         mep.put(parmname,values=uvw[j,i],timerange=trange);
       }
     }

@@ -95,9 +95,8 @@ const make_shared_nodes := function (stokesi=1,dra=0,ddec=0)
   ra0  := ms_phasedir[1];  # phase center
   dec0 := ms_phasedir[2];
   # setup source parameters and subtrees
-  sti  := 1;
-  ra   := ra0*(1+dra);
-  dec  := dec0*(1+ddec);
+  ra   := ra0 + dra;
+  dec  := dec0 + ddec;
   create_source_subtrees(stokesi,ra,dec,ra0,dec0);
   # setup zero position
   global ms_antpos;
@@ -154,7 +153,7 @@ const make_subtract_tree := function (st1,st2)
 
 
 # builds a solve tree for stations st1, st2
-const make_solve_tree := function (st1,st2)
+const make_solve_tree := function (st1,st2,subtract=F)
 {
   sinkname := fq_name('sink',st1,st2);
   predtree := ifr_predict_tree(st1,st2);
@@ -174,8 +173,11 @@ const make_solve_tree := function (st1,st2)
     ))
   );
   # create subtract sub-tree
-  mqs.createnode(meq.node('MeqSubtract',fq_name('sub',st1,st2),
-                    children=[fq_name('xx',st1,st2),predname]));
+  if( subtract )
+    mqs.createnode(meq.node('MeqSubtract',subname:=fq_name('sub',st1,st2),
+                      children=[fq_name('xx',st1,st2),predname]));
+  else
+    subname := fq_name('spigot',st1,st2);
   
   
   # create root tree (plugs into solver & subtract)     
@@ -185,7 +187,7 @@ const make_solve_tree := function (st1,st2)
                                   station_2_index = st2,
                                   corr_index      = [1] ],children=meq.list(
       meq.node('MeqReqSeq',fq_name('seq',st1,st2),[result_index=2],
-        children=['solver',fq_name('sub',st1,st2)])
+        children=['solver',subname])
    ))
  );
 
@@ -277,7 +279,8 @@ use_initcol := T;       # initialize output column with zeroes
 
 # predict=T:  predict tree only (writes predict to output column)
 # subtract=T: predict+subtract trees (writes residual to output column)
-# solve=T:    solve+subtract trees (writes residual to output column)
+# solve=T,subtract=T: solve+subtract trees (writes residual to output column)
+# solve=T,subtract=F: solve but no subtract
 #
 # run=F: build trees and stop, run=T: run over the measurement set
 const do_test := function (predict=F,subtract=F,solve=F,run=T,
@@ -331,7 +334,10 @@ const do_test := function (predict=F,subtract=F,solve=F,run=T,
   else # else build trees
   {  
     # create common nodes (source parms and such)
-    make_shared_nodes(1,0,.05);
+    dra :=  2 * pi/(180*60*60); # perturb position by # seconds
+    ddec := 2 * pi/(180*60*60);
+#    dra := ddec := 0;
+    make_shared_nodes(1.1,dra,ddec);
 
     # make a solver node (since it's only one)
     if( solve )
@@ -344,14 +350,17 @@ const do_test := function (predict=F,subtract=F,solve=F,run=T,
       # note that child names will be resolved later
       rec := meq.node('MeqSolver','solver',[
           parm_group = hiid("a"),
-          default    = [ num_iter=3,save_polcs=F,last_update=T ],
-          solvable   = meq.solvable_list("stokes_i dec") ],
+          default    = [ num_iter=10,save_polcs=F,last_update=F ],
+          solvable   = meq.solvable_list("stokes_i ra dec") ],
         children=condeqs);
       mqs.createnode(rec);
     }
-    if( publish>2 )
+    if( publish>0 )
+    {
+      mqs.meq('Node.Publish.Results',[name="ra"]);
       mqs.meq('Node.Publish.Results',[name="dec"]);
-
+      mqs.meq('Node.Publish.Results',[name="stokes_i"]);
+    }
     rootnodes := [];
     # make predict/condeq trees
     for( st1 in st1set )
@@ -360,7 +369,7 @@ const do_test := function (predict=F,subtract=F,solve=F,run=T,
         {
           if( solve )
           {
-            rootnodes := [rootnodes,make_solve_tree(st1,st2)];
+            rootnodes := [rootnodes,make_solve_tree(st1,st2,subtract=subtract)];
             if( publish>1 )
               mqs.meq('Node.Publish.Results',[name=fq_name('ce',st1,st2)]);
           }
@@ -403,11 +412,12 @@ mepuvw := T;
 filluvw := F;
 
 # fill UVW parms from MS if requested
-if( mepuvw && filluvw )
+if( mepuvw )
 {
   include 'meq/msuvw_to_mep.g'
   mepuvw := msname ~ s/.ms/.mep/;
-  fill_uvw(msname,mepuvw);
+  if( filluvw )
+    fill_uvw(msname,mepuvw);
 }
 else
   mepuvw := F;
@@ -418,7 +428,9 @@ outputrec := [ write_flags=F,predict_column=outcol ];
 
 #do_test(predict=T,run=T,st1set=1,st2set=2,publish=2);
 # do_test(solve=T,run=T,st1set=1,st2set=1,publish=2);
-do_test(msname=msname,solve=T,run=T,st1set=1:3,st2set=1:3,publish=3,mepuvw=mepuvw,msuvw=msuvw);
+do_test(msname=msname,solve=T,subtract=F,run=T,
+  st1set=1:2,st2set=1:100,
+  publish=1,mepuvw=mepuvw,msuvw=msuvw);
 #do_test(solve=T,run=T,publish=2,load='solve-100.forest');
 
 print 'errors reported:',mqs.num_errors();
