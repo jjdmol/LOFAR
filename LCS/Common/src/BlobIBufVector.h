@@ -28,11 +28,8 @@
 
 namespace LOFAR {
 
-// The buffer can be static or dynamic. A static buffer has a fixed
-// length and cannot grow. A dynamic buffer can grow as needed.
-//
-// The class is meant to be used as BlobIBuffer<uchar> to be able to
-// read a blob from a vector<uchar> for use in the PL classes and DTL.
+// This class can be used to read a blob from a vector of characters
+// (signed or unsigned).
 
 template<typename T>
 class BlobIBufVector : public BlobIBufChar

@@ -25,8 +25,16 @@
 
 #include <unistd.h>
 
-namespace LOFAR
-{
+namespace LOFAR {
+
+// This class abstracts the way in which memory is allocated and
+// deallocated. In this way it is possible to use different memory models
+// in a transparant way.
+// A virtual function mechanism is used because it must be possible
+// to make the choice at run-time.
+//
+// The normal allocation is on the heap, which is done by the concrete
+// class HeapAllocator.
 
 class Allocator
 {
@@ -47,6 +55,9 @@ public:
 };
 
 
+
+// This class is a concrete allocation of an Allocator.
+// It allocates and deallocates memory on the heap.
 
 class HeapAllocator: public Allocator
 {

@@ -27,6 +27,12 @@
 #include <unistd.h>
 
 namespace LOFAR {
+
+  // Define shorthands for various data types and define integer data
+  // types with a guaranteed length.
+  // The types are in a namespace to prevent pollution of the global
+  // namespace.
+
   namespace TYPES {
 
     // Convenience shortcuts.

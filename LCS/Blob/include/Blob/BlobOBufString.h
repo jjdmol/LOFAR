@@ -29,20 +29,18 @@
 
 namespace LOFAR {
 
-// This class is the BlobOBuffer that makes use of a string object.
+// This class is the BlobOBuffer that makes use of a BlobString object.
 // The string can be static or dynamic. A static string has a fixed
 // length and cannot grow. A dynamic string can grow as needed.
-//
-// The class is templated. However, the template parameter can only be
-// a char or unsigned char. The constructor checks if sizeof(T)==1.
-// The class is meant to be used as BlobOBufString<uchar> to be able to
-// generate a blob in a string<uchar> for use in the PL classes and DTL.
 
 class BlobOBufString : public BlobOBufChar
 {
 public:
   // Construct from a buffer with the given string.
   // If expandSize==0, the string is static and cannot grow.
+  // The argument start can be used to append to an existing string.
+  // It keeps a pointer to the given BlobString object, so that should
+  // not be deleted before this object.
   explicit BlobOBufString (BlobString& buffer,
 			   uint expandSize=1024, uint start=0)
     : BlobOBufChar (buffer.data(), buffer.capacity(),
@@ -54,13 +52,6 @@ public:
 
   // Destructor.
   virtual ~BlobOBufString();
-
-  // Get a typed pointer to an area in the string.
-  template<typename U> U* getPointer (uint position)
-    {
-      DbgAssert(position < itsString->size());
-      return (U*)(itsString->data() + position);
-    }
 
 private:
   // Expand the capacity of the buffer to the given size.

@@ -26,6 +26,9 @@
 #include <Common/LofarTypes.h>
 #include <Common/DataFormat.h>
 
+
+namespace LOFAR
+{
 // This file declares functions to convert data from one representation to
 // another, in particular from little endian to big endian (or vice-versa).
 //
@@ -33,9 +36,12 @@
 // so in principle every conceivable conversion could be done (for example,
 // from the old VAX format to IEEE format). However, currently byte swap
 // is the only conversion needed, so only that one is implemented.
+//
+// Furthermore it contains a function to convert bool values to bits
+// and vice-versa.
+// \defgroup DataConvert global conversion functions
+// <group>
 
-namespace LOFAR
-{
   // Convert 16 bit integers.
   // <group>
   int16 dataConvert (DataFormat, int16 in);
@@ -120,6 +126,7 @@ namespace LOFAR
   // It returns the number of bytes used.
   uint bitToBool (void* to, const void* from, uint nvalues);
 
+// </group>
 } // end namespace LOFAR
 
 

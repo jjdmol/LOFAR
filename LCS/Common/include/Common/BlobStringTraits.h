@@ -24,9 +24,9 @@
 #define COMMON_BLOBSTRINGTRAITS_H
 
 // This file implements the char_traits<unsigned char> specialisation.
-// It is only needed for the higher GCC version 3 and higher.
+// It is only needed for the GCC version 3 and higher.
 // It is taken from the DTL implementation.
-// It should not be done if DTL is used.
+// It is not implemented if DTL is used since that has its own implementation.
 
 #include <lofar_config.h>
 

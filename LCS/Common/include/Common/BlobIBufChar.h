@@ -45,10 +45,11 @@ public:
   // Get the position in the buffer.
   virtual int64 tellPos() const;
 
-  // Set the position in the buffer.
+  // Set the position in the buffer and return the new position.
   virtual int64 setPos (int64 pos);
 
-  // Get a typed pointer to an area in the string.
+  // Get a typed pointer to an area in the buffer.
+  // It is meant to be used in combination with BlobIStream::getSpace.
   template<typename U> const U* getPointer (uint position) const
     {
       DbgAssert(position < itsSize);

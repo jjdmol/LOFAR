@@ -35,8 +35,6 @@ namespace LOFAR {
 //
 // The class is templated. However, the template parameter can only be
 // a char or unsigned char. The constructor checks if sizeof(T)==1.
-// The class is meant to be used as BlobOBuffer<uchar> to be able to
-// generate a blob in a vector<uchar> for use in the PL classes and DTL.
 
 template<typename T>
 class BlobOBufVector : public BlobOBufChar
@@ -44,6 +42,9 @@ class BlobOBufVector : public BlobOBufChar
 public:
   // Construct from a buffer with the given vector.
   // If expandSize==0, the vector is static and cannot grow.
+  // The argument start can be used to append to an existing string.
+  // It keeps a pointer to the given vector object, so that should
+  // not be deleted before this object.
   explicit BlobOBufVector (std::vector<T>& buffer,
 			   uint expandSize=1024, uint start=0)
     : BlobOBufChar(&buffer[0], buffer.capacity(),
