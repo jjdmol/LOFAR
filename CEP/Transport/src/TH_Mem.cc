@@ -72,7 +72,7 @@ bool TH_Mem::connectionPossible(int srcRank, int dstRank) const
   return srcRank == dstRank;
 }
 
-bool TH_Mem::recvBlocking(void* buf, int nbytes, int, int tag)
+bool TH_Mem::recvNonBlocking(void* buf, int nbytes, int, int tag)
 { 
   if (itsFirstRecvCall) 
   {
