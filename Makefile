@@ -40,6 +40,7 @@ PACKAGE = \
          BaseSim \
          LOFARSim \
          StationSim \
+	 CEP/CEPFrame \
          CEP/Tools/PerfTest/P2Perf \
          CEP/CPA/OCTOPUSSY \
          CEP/CPA/OCTOGlish \
