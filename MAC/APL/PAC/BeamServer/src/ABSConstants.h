@@ -47,7 +47,7 @@ namespace ABS
    * The number of antenna elements, an
    * element can have one or two polarizations.
    */
-  static int const N_ELEMENTS      = 2;
+  static int const N_ELEMENTS      = 1;
 
   /**
    * Number of polarizations for each element.
