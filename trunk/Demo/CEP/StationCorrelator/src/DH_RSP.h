@@ -28,6 +28,7 @@
 #include <lofar_config.h>
 #include <Transport/DataHolder.h>
 #include <Common/lofar_complex.h>
+#include <Common/KeyValueMap.h>
 
 namespace LOFAR
 {
@@ -38,7 +39,7 @@ public:
   typedef char BufferType;
 
   explicit DH_RSP (const string& name,
-		   const unsigned int bufsize);
+		   const KeyValueMap& kvm);
 
   DH_RSP(const DH_RSP&);
 
@@ -81,6 +82,12 @@ public:
 
   /// Reset the buffer
   void resetBuffer();
+
+  /// set an element of the buffer
+  void setBufferElement(const int EPApacket, 
+			const int beamlet,
+			const int polarisation,
+			const complex<uint16>& value);
   
  private:
   /// Forbid assignment.
@@ -90,6 +97,9 @@ public:
   virtual void fillDataPointers();
 
   BufferType*  itsBuffer;
+  int itsEPAheaderSize;
+  int itsNoBeamlets;
+  int itsNoPolarisations;
   unsigned int itsBufSize;
 };
 
@@ -119,6 +129,20 @@ inline void  DH_RSP::setBlockID(int blockid)
 
 inline void DH_RSP:: resetBuffer()
   { memset(itsBuffer, 0, itsBufSize); }
+
+#define GETADDRESS(ePacket, beamlet, polarisation) \
+  (ePacket + 1)* itsEPAheaderSize \
+  + ((ePacket * itsNoBeamlets + beamlet) \
+  * itsNoPolarisations + polarisation) \
+  * sizeof(complex<uint16>)
+
+inline void DH_RSP::setBufferElement(const int EPApacket, 
+				     const int beamlet,
+				     const int polarisation,
+				     const complex<uint16>& value)
+{
+  *((complex<uint16>*)&itsBuffer[GETADDRESS(EPApacket, beamlet, polarisation)]) = value;
+}
 
 
 }

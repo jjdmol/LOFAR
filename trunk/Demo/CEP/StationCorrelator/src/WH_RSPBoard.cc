@@ -45,14 +45,9 @@ WH_RSPBoard::WH_RSPBoard(const string& name,
 {
   char str[32];
 
-  int DHSize = kvm.getInt("NoPacketsInFrame", 8)       // number of EPA-packets in RSP-ethernetframe
-               * (kvm.getInt("SzEPAheader", 14)        // headersize in bytes
-                  + (kvm.getInt("polarisations",2)     // number of polarisations
-		     * kvm.getInt("NoRSPBeamlets", 92) // number of beamlets per packet
-		     * sizeof(complex<uint16>)));
   for (int i=0; i<itsNoutputs; i++) {
     sprintf(str, "DH_Boardout_%d2", i);
-    getDataManager().addOutDataHolder(i, new DH_RSP(str, DHSize)); // buffer of char
+    getDataManager().addOutDataHolder(i, new DH_RSP(str, itsKVM)); // buffer of char
   }  
 }
 
@@ -71,13 +66,22 @@ WH_RSPBoard* WH_RSPBoard::make(const string& name)
 }
 
 void WH_RSPBoard::process() 
-{ 
+{
+//   cout<<"Stamp: "<<itsStamp<<endl;
+  int noEP = itsKVM.getInt("NoPacketsInFrame", 8);
+  int noBeamlet = itsKVM.getInt("NoRSPBeamlets", 92);
   for (int i=0; i<itsNoutputs; i++) {
     DH_RSP* outDH = (DH_RSP*) getDataManager().getOutHolder(i);
     outDH->resetBuffer();
+    // These should be done per EPApacket not per frame
     outDH->setStationID(i);
     outDH->setSeqID(itsStamp.getSeqId());
     outDH->setBlockID(itsStamp.getBlockId());    
+    for (int ep=0; ep<noEP; ep++) {
+      for (int bl=0; bl<noBeamlet; bl++) {
+	outDH->setBufferElement(ep, bl, 0, complex<uint16>(bl, 0));
+      }
+    }
   }
 
   itsStamp++;
