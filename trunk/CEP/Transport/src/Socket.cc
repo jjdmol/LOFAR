@@ -23,6 +23,7 @@
 #include <Socket.h>
 #include <Common/lofar_fstream.h>
 
+#include <iostream.h>
 #include <unistd.h>
 #include <errno.h>
 #include <sys/poll.h>
@@ -42,24 +43,31 @@ Socket::Socket() :
 	itsRptr(0),
 	itsWptr(0),
 	itsData(0),
-	itsConnected(false)
+	itsConnected(false),
+        itsIsMyBuffer(false),
+	itsIsAllocated(false)
+
 { }
 
 Socket::~Socket()
 {
-	if (itsData) {
-		delete [] itsData;
-	}
+  if (itsIsMyBuffer && itsIsAllocated) {
+    if (itsData) {
+      //! delete [] itsData;
+    }
+  }
 }
 
 Socket::Socket(const Socket&	that) :
 	itsHostname		(that.itsHostname),
 	itsPortnr		(that.itsPortnr),
 	itsSocketID		(that.itsSocketID),
+        itsIsMyBuffer(false),
 	itsRptr			(that.itsRptr),
 	itsWptr			(that.itsWptr),
 	itsData			(0),
-	itsConnected    (that.itsConnected)
+	itsConnected    (that.itsConnected),
+	itsIsAllocated  (that.itsIsAllocated)
 { 
 	//# alloc databuffer and copy data
 	allocBuffer(that.itsBufferSize);
@@ -78,6 +86,7 @@ Socket& Socket::operator=(const Socket& that)
 		itsRptr 		= that.itsRptr;
 		itsWptr			= that.itsWptr;
 		itsConnected 	= that.itsConnected;
+		itsIsAllocated  = that.itsIsAllocated;
 
 		//# alloc databuffer and copy data
 		allocBuffer(that.itsBufferSize);
@@ -105,8 +114,8 @@ bool Socket::connect (const string&			hostname,
 	struct hostent		*host_ent;
 	if ((IPaddr = inet_addr (hostname.c_str())) == -1) {	//# try digit quartet
 		if (!(host_ent = gethostbyname (hostname.c_str()))) {	//# try hostname
-		    //LOG_DEBUG(formatString("Unknown hostname (%s)\n", hostname.c_str()));
-			return (false);
+		  //LOG_DEBUG(formatString("Unknown hostname (%s)\n", hostname.c_str()));
+		  return (false);
 		}
 		//# copy ip_address to host-entity struct.
 		memcpy (&IPaddr, host_ent->h_addr, sizeof (IPaddr));
@@ -119,35 +128,36 @@ bool Socket::connect (const string&			hostname,
 	int		sock;
 	if ((sock = ::socket (AF_INET, SOCK_STREAM, 0)) <0) {
 		//LOG_DEBUG(formatString("Can't connect to %s at %d, err=%d\n", 
-	  //									hostname.c_str(), portnr, errno));
+	  //				hostname.c_str(), portnr, errno));
 		return (false);
 	}
 
 	//# Initialize socket address data structure
 	struct sockaddr_in		sockAddr;
 	memset ((char *) &sockAddr, 0, sizeof (sockAddr));	//# clear it
-	memcpy ((char *) &sockAddr.sin_addr.s_addr, (char *) &IPaddr,
-													sizeof (IPaddr));
+	memcpy ((char *) &sockAddr.sin_addr.s_addr, 
+		(char *) &IPaddr,
+		sizeof (IPaddr));
 	sockAddr.sin_family = AF_INET;
 	sockAddr.sin_port   = portno;
 
 	//# Open socket connection to server (connect does the bind for us)
 	if ((::connect (sock, (struct sockaddr *) &sockAddr,
-												sizeof(sockAddr))) < 0) {
+			sizeof(sockAddr))) < 0) {
 		//LOG_DEBUG(formatString("Connection error [%d]\n", errno));
 		close (sock);
 		return (false);
 	}
 
 	//# OK, the socket is opened, allocate a databuffer if not already done.
-	allocBuffer(1024);		//# TODO: get bufferSize value somewhere
+	//allocBuffer(1024);
 	itsConnected = true;
 	itsHostname  = hostname;
 	itsPortnr	 = portnr;
 	itsSocketID	 = sock;
 
 	//LOG_DEBUG(formatString("Connection to %s at %d succesfull\n",
-	//												itsHostname.c_str(), itsPortnr));
+	//		  	  itsHostname.c_str(), itsPortnr));
 
 	return (itsConnected);
 }
@@ -170,7 +180,7 @@ bool Socket::openListener (const int16		portnr)
 	int16		sock;
 	if ((sock = ::socket (AF_INET, SOCK_STREAM, 0)) <0) {
 		//LOG_DEBUG(formatString("Can't open listener at %d, err=%d\n", 
-	  //														portnr, errno));
+	  //		 		  portnr, errno));
 		return (itsConnected);
 	}
 
@@ -200,7 +210,7 @@ bool Socket::openListener (const int16		portnr)
 	itsConnected = true;
 	itsPortnr	 = portnr;
 
-	::listen (sock, 5);				//# startup the listener.
+	::listen (sock, 5);		//# startup the listener.
 
 	//LOG_DEBUG(formatString("Started listener at port %d\n", itsPortnr));
 
@@ -219,21 +229,24 @@ bool Socket::openListener (const int16		portnr)
 //#	In:		--
 //#	Out:	--
 //#	Return:				Socket of the new connection
-Socket	 Socket::accept()
+
+Socket	 Socket::accept(int   buffersize, 
+			char* bufferptr)
 {
-	struct sockaddr_in		sockAddr;
-	socklen_t				len = sizeof (sockAddr);
-	int16					hostSock;
+	struct sockaddr_in  sockAddr;
+	socklen_t	    len = sizeof (sockAddr);
+	int16		    hostSock;
 	do {
-		//# wait for an incomming connection request
+	  //# wait for an incomming connection request
 	  //		LOG_TRACE_LOOP_STR("accept-call on sid:" << itsSocketID);
 		hostSock = ::accept (itsSocketID, 
-								(struct sockaddr *) &sockAddr, &len);
+				     (struct sockaddr *) &sockAddr, 
+				     &len);
 
 		//# if new sock < 0 then serious error or just an interrrupt
 		if ((hostSock < 0) && (errno != EINTR)) {
 			//LOG_TRACE_COND(formatString("Accept error %d on port %d\n", 
-		  //									errno, itsPortnr));
+		  //					errno, itsPortnr));
 			Socket dummySocket;
 			return (dummySocket);
 		}
@@ -241,7 +254,16 @@ Socket	 Socket::accept()
 
 	//# create the new data socket
 	Socket		dataSocket;
-	dataSocket.allocBuffer(4096);	// TODO: get the bufferSize somewhere
+	
+	// set or create output buffer 
+	if (bufferptr != NULL) {
+	   cout << "accept: reuse buffer  " << endl;
+	   dataSocket.itsData = bufferptr;
+	  dataSocket.itsBufferSize = buffersize;
+	} else {
+	  cout << "accept: create new buffer" << endl;
+	  dataSocket.allocBuffer(buffersize);
+	}
 	dataSocket.itsSocketID 	= hostSock;
 	dataSocket.itsConnected = true;
 
@@ -284,8 +306,9 @@ void Socket::disconnect()
 void Socket::allocBuffer (int32	bufferSize)
 {
 	freeBuffer();
-	
+	itsIsAllocated=true;
 	itsData = new char[bufferSize];
+	itsIsMyBuffer = true;
 	itsBufferSize = bufferSize;
 
 }
@@ -300,11 +323,14 @@ void Socket::allocBuffer (int32	bufferSize)
 //#	Return:	--
 void Socket::freeBuffer() 
 {
-	if (itsData) {
-		delete [] itsData;
-	}
-	itsData = 0;
+  if (itsIsMyBuffer) {
+    if (itsData) {
+      delete [] itsData;
+    }
+  } 
+  itsData = 0;
 }
+
 //--------------------------- exchanging data -------------------------------
 //#
 //# Socket::send(message, messageLength)
@@ -317,7 +343,7 @@ void Socket::freeBuffer()
 //#	Out:	--
 //#	Return:	Number of bytes written on success, or 0 on failure.
 int32 Socket::send(const char*		message,
-			   	   const int32		messageLength)
+		   const int32		messageLength)
 {
 	//# Anything to send?
 	if (!messageLength) {
@@ -332,59 +358,88 @@ int32 Socket::send(const char*		message,
 	//	LOG_DEBUG(formatString("Writing %ld bytes to port %d\n", 
 	//											messageLength, itsPortnr));
 
-	//# write the data	to the socket.
+	//# write the data to the socket.
 	int32		wLen;
-	if ((wLen = ::write (itsSocketID, message, messageLength)) != messageLength) {
-		//LOG_DEBUG(formatString(
-		//			"Write of message fails on port %d, wlen = %ld, err = %d\n", 
-		//			itsPortnr, wLen, errno));
-		return (0);
+	int flags = 0;
+	if ((wLen = ::send (itsSocketID, 
+			    message, 
+			    messageLength, 
+			    flags)	     ) != messageLength) {
+	  //LOG_DEBUG(formatString(
+	  //			"Write of message fails on port %d, wlen = %ld, err = %d\n", 
+	  //			itsPortnr, wLen, errno));
+	  return (0);
 	}
 
-	return (messageLength);
+	//cout << "Socket::send  sent " << wLen << "/" << messageLength <<endl;
+   return (messageLength);
 }
 
 
 //#
-//#	Socket::read()
-//# (private)
+//#	Socket::recv()
+//# 
 //#
 //#	Pulls all the available bytes from the TCPIP socket and stores them
 //#	in the connection buffer. Returns the number of bytes read.
 //#
-//#	In:		--
+//#	In:	buffer -- the memory address to store the data
+//#             len    -- message length to be read
 //#	Out:	--
 //#	Return:	Number of bytes read from the socket
-int32 Socket::read ()
+int32 Socket::recv (char*		buf,
+		    const int32		len)
 {
-	//# flush buffer first
-	itsRptr = 0;
-	itsWptr = 0;
-	itsData[0] = '\0';
+  // DbgAssert(len > 0)
 
-	//# Setup variables for the read
-	int32	space  = itsBufferSize;
-	int32	newBytes = 0;
-	errno  = 0;
-	//LOG_TRACE_FLOW(formatString("Read on %d:space = %ld\n", itsPortnr, space));
-	if (space && itsConnected) {
-		//# Try to read from the socket
-		newBytes = ::read (itsSocketID, &(itsData[itsWptr]), space - 1);
-		//LOG_DEBUG(formatString("Read %ld bytes, errno = %d\n", newBytes, errno));
-
-		//# Check for errors
-		if (!errno && (newBytes > 0)) {
-			itsWptr += newBytes;
-			itsData[itsWptr] = '\0';	//# always terminate buf
-		}
-		else {
-			itsConnected = false;
-			newBytes = 0L;
-		}
-	}
-	
-	return (newBytes);
+  if (!itsConnected && !connect(itsHostname, itsPortnr)) {
+    //LOG_DEBUG(formatString("Write:no connection on %s:%d\n",
+    //							itsHostname.c_str(), itsPortnr));
+  }
+  //# flush buffer first
+  itsRptr = 0;
+  itsWptr = 0;
+  if (itsData == 0) {
+    // LOG_ERROR("itsData buffer not initialised");
+    return 0;
+  }
+  buf[0] = '\0';
+  
+  //# Setup variables for the read
+  
+  if ((buf != NULL) && (len>0)) {
+    // probably new values are supplied for the buffer address and length
+    itsData = buf;
+    //DbgAssertStr(len <= itsBufferSize,"Socket initialised with too small buffer size");
+    itsBufferSize = len;
+  } 
+  // 
+  int32	newBytes = 0;
+  int flags = MSG_WAITALL;
+  errno  = 0;
+  //LOG_TRACE_FLOW(formatString("Read on %d:length = %ld\n", itsPortnr, itsBufferSize));
+   if (len && itsConnected) {
+      //# Try to read from the socket
+      newBytes = ::recv (itsSocketID,          // socket
+			 itsData,  // buffer ptr
+			 itsBufferSize,        // length
+			 flags);               // flags
+      //LOG_DEBUG(formatString("Read %ld bytes, errno = %d\n", newBytes, errno));
+      
+      //# Check for errors
+      if (!errno && (newBytes > 0)) {
+	 //DbgAssertStr(len == newBytes,"did not read all data");
+	 //itsData[itsWptr] = '\0';	//# always terminate buf
+      }
+      else {
+	 // LOG_ERROR("error during read");
+	 itsConnected = false;
+	 newBytes = 0L;
+      }
+   }
+   return (newBytes);
 }
+   
 
 //#
 //# Socket::poll(newMsg, msgLen, timer)
@@ -397,9 +452,9 @@ int32 Socket::read ()
 //#			msglen	Pointer to long containing the length of the received msg
 //#	Return:	>=0 	Number of bytes read from the socket
 //#			-1		Connection closed by peer.
-int32 Socket::poll (char			**message,
-			   		int32			*messageLength,
-			   		const int32		timeout)
+   int32 Socket::poll (char			**message,
+		       int32			*messageLength,
+		       const int32		timeout)
 {
 	//# reset write-pointer
 	itsWptr = 0;
@@ -424,7 +479,7 @@ int32 Socket::poll (char			**message,
 	}
 
 	//# any bytes received?
-	int32	newBytes = read();
+	int32	newBytes = recv();
 
 	//# disconnected by peer?
 	if (!itsConnected) {
