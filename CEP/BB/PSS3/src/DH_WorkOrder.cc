@@ -198,7 +198,7 @@ bool DH_WorkOrder::getVarData(char* stratArgs,
 {
   bool found;
   int version;
-  BlobIStream& bis = openExtraBlob(found, version);
+  BlobIStream& bis = getExtraBlob(found, version);
   if (!found) {
     return false;
   }
