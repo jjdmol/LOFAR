@@ -341,3 +341,103 @@ help:
 	@echo "crontab:   create a cron job for daily and weekly system"
 	@echo "show:      show the important variables"
 	@echo ""
+
+#
+# Create a new release
+#
+DEFAULT_FILES_TO_TAG=Makefile Versions autoconf_share Common
+release:
+	@trap "rm -f /tmp/inputrc.$$PPID; exit" SIGINT;\
+	echo "TAB: complete-filename" > /tmp/inputrc.$$PPID;\
+	echo "set expand-tilde On" >> /tmp/inputrc.$$PPID;\
+	INPUTRC=/tmp/inputrc.$$PPID;\
+	echo "About to create a new release branch."; \
+	echo ;\
+	echo "You will be asked for a TAG name for the release (e.g. PSS_1_0)"; \
+	echo "and for a list of files/directories to be tagged, and for a"; \
+	echo "directory location where the release should be tested. The tagged";\
+	echo "files will be checked out to that location for you to test the release.";\
+	echo ;\
+	rem='empty';\
+	echo "** Release branch tag name:";\
+	while test "x$$rem" != "x"; do\
+		rem='';\
+		read -e -p"=> " tagname rem;\
+		if test "x$$rem" != "x"; then\
+			echo "ERROR: branch tag name should not contain spaces or tabs.";\
+		fi\
+	done;\
+	echo "Release branch tag name set to: '$$tagname'"; \
+	echo ;\
+	rem='empty';\
+	echo "** Release test directory:";\
+	while test "x$$rem" != "x"; do\
+		rem='';\
+		read -e -p"=> " testdir rem;\
+		if test "x$$rem" != "x"; then\
+			echo "ERROR: test dir should be single directory name.";\
+			rem='error';\
+		else if test ! -d $$testdir; then\
+			echo "INFO: creating directory $$testdir";\
+			mkdir $$testdir;\
+			rem='';\
+		else if test -e $$testdir/LOFAR; then\
+			echo -n "ERROR: There is already a $$testdir/LOFAR file/directory. ";\
+			echo -e "Please remove it or specify a different directory.";\
+			rem='error';\
+		fi\
+		fi\
+		fi\
+	done;\
+	echo "Test directory set to: '$$testdir'";\
+	echo ;\
+	files='';\
+	echo -e "** Specify the files and directories to be included in the release.";\
+	echo -e "   Each file separated by a space.";\
+	echo -e "   These files and directories are always tagged:";\
+	echo -e "\t\"$(DEFAULT_FILES_TO_TAG)\"";\
+	while test "x$$files" = "x"; do\
+		read -e -p"=> " files;\
+		if test "x$$files" = "x"; then\
+			echo "ERROR: no files or directories specified.";\
+		fi;\
+		for f in $$files; do\
+			if test ! -f $$f -a ! -d $$f ; then\
+				echo "ERROR: file or directory '$$f' not found.";\
+				files='';\
+			fi\
+		done;\
+	done;\
+	echo ;\
+	echo -e "\tTag:       $$tagname";\
+	echo -e "\tTest dir:  $$testdir";\
+	for f in $$files; do\
+		if test -f $$f; then\
+			echo -e "\tFILE:      $$f";\
+		else\
+		if test -d $$f; then\
+			echo -e "\tDIRECTORY: $$f";\
+		else\
+			echo "ERROR: file or directory '$$f' not found.";\
+		fi\
+		fi\
+	done;\
+	rm -f /tmp/inputrc.$$PPID;\
+	echo ;\
+	echo -n "TAGGING (output to tag.log) ...";\
+	cvs tag -bf $$tagname $(DEFAULT_FILES_TO_TAG) $$files > tag.log 2>&1 ;\
+	if test ! 0 -eq $$?; then\
+		echo "FAILURE: failed to tag, see tag.log for information.";\
+		exit;\
+	fi;\
+	echo " DONE.";\
+	lofardir=$(PWD);\
+	echo -n "EXPORT TO $$testdir (output to export.log) ...";\
+	cd $$testdir;\
+	cvs co -r $$tagname LOFAR > export.log 2>&1 ;\
+	echo " DONE.";\
+	echo -n "CREATING $$testdir/LOFAR/ChangeLog (output to cvs2cl.log) ...";\
+	$$lofardir/autoconf_share/cvs2cl.pl --stdout > LOFAR/ChangeLog 2> cvs2cl.log;\
+	echo " DONE.";\
+	find $$testdir/LOFAR -name CVS | xargs rm -rf;\
+
