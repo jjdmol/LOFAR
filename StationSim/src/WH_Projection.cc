@@ -33,13 +33,16 @@
 #include <Math/LCSMath.h>
 #include <blitz/blitz.h>
 
+using namespace blitz;
+
 WH_Projection::WH_Projection (const string& name, unsigned int nin, unsigned int nout,
 			      unsigned int nant, unsigned int maxnrfi)
 : WorkHolder    (nin, nout, name, "WH_Projection"),
   itsInHolders  (0),
   itsOutHolder  (0),
   itsNrcu       (nant),
-  itsMaxRFI     (maxnrfi)
+  itsMaxRFI     (maxnrfi),
+  itsWeight     ()
 {
   if (nin > 0) {
     itsInHolders = new DH_SampleC* [nin];
@@ -74,7 +77,13 @@ void WH_Projection::preprocess()
 
 void WH_Projection::process()
 {
+  LoVec_dcomplex steerv (itsInHolders[1]->getBuffer(), itsNrcu, duplicateData);
+  itsWeight.resize(itsNrcu);
 
+  itsWeight = steerv;
+
+  memcpy(itsOutHolder->getBuffer(), itsWeight.data(), 
+	 itsNrcu * sizeof(DH_SampleC::BufferType));
 }
 
 void WH_Projection::dump() const

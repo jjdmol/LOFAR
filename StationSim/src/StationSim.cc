@@ -99,6 +99,7 @@ void StationSim::define (const ParamBlock& params)
   const int delayMod              = modulationWindowSize - 1;
   const int delayPhase            = nfft_phaseshift - 1;
   const int delaySubFilt          = nrcu * (nsubband - 1);
+  const int delayBeamForm         = 2;
 
   // Read in the configuration for the sources
   DataGenerator* DG_Config = new DataGenerator (datagenFileName);
@@ -215,7 +216,21 @@ void StationSim::define (const ParamBlock& params)
 	simul.addStep (subband_filter);	
   }
 
-  // Create the individual steps. Set the rate of the steps 
+  // The beamformer object
+  for (int i = 0; i < nsubband; ++i) {
+    sprintf (suffix, "%d", i);
+    Step beam (WH_BeamFormer("bf", nrcu + 1, nrcu, nrcu, nbeam, maxNtarget, maxNrfi), 
+	       string("beam_former_") + suffix, false);
+    for (int j = 0; j < nrcu; ++j) {
+      beam.getInData (j).setReadDelay (delayMod + delayPhase + delaySubFilt); 
+    }
+    beam.getInData (nrcu).setReadDelay (delayMod + delayPhase + delaySubFilt + delayBeamForm); 
+    for (int j = 0; j < nrcu; ++j) {
+      beam.getOutData (j).setWriteDelay (delayMod + delayPhase + delaySubFilt + delayBeamForm);
+    }
+    simul.addStep (beam);
+  } 
+
   // The Space Time Analysis object
   for (int i = 0; i < nsubband; ++i) {
     sprintf(suffix, "%d", i);
@@ -225,29 +240,20 @@ void StationSim::define (const ParamBlock& params)
     for (int j = 0; j < nrcu; ++j) {
       sta.getInData (j).setReadDelay (delayMod + delayPhase + delaySubFilt);
     }
-    sta.getOutData (0).setWriteDelay (1);
+    sta.getOutData (0).setWriteDelay (delayMod + delayPhase + delaySubFilt);
     simul.addStep (sta);
   }
 
-  // The beamformer object
-  for (int i = 0; i < nsubband; ++i) {
-	sprintf (suffix, "%d", i);
-	Step beam (WH_BeamFormer("bf", nrcu + 1, nrcu, nrcu, nbeam, maxNtarget, maxNrfi), 
-			   string("beam_former_") + suffix, false);
-	for (int j = 0; j < nrcu; ++j) {
-	  beam.getInData (j).setReadDelay (delayMod + delayPhase + delaySubFilt);
-	  beam.getOutData (j).setWriteDelay (delayMod + delayPhase + delaySubFilt);
-	}
-	simul.addStep (beam);
-  } 
-  
-  // the Weight Determination Object
-  for (int i = 0;i < nsubband; ++i) {
-    sprintf (suffix, "%d", i);
-    Step weight_det (WH_WeightDetermination("wd", 0, 1, nrcu), 
-		      string("weight_det_") + suffix, false);
-    simul.addStep(weight_det);
-  }
+//   // the Weight Determination Object
+//   for (int i = 0;i < nsubband; ++i) {
+//     sprintf (suffix, "%d", i);
+//     Step weight_det (WH_WeightDetermination("wd", 0, 1, nrcu), 
+// 		      string("weight_det_") + suffix, false);
+    
+//     weight_det.getOutData (0).setWriteDelay (delayMod + delayPhase + delaySubFilt);
+    
+//     simul.addStep(weight_det);
+//  }
 	     
   // the projection object
   for (int i = 0; i < nsubband; i++) {
@@ -255,12 +261,16 @@ void StationSim::define (const ParamBlock& params)
     Step projection (WH_Projection("prj", 2, 1, nrcu, maxNrfi), 
 		     string("projection_") + suffix, false);
     
+    projection.getInData (0).setReadDelay (delayMod + delayPhase + delaySubFilt);
+    projection.getInData (1).setReadDelay (delayMod + delayPhase + delaySubFilt);
+    projection.getOutData (0).setWriteDelay (delayMod + delayPhase + delaySubFilt);
+
     simul.addStep(projection);
     
   }
 
 
-
+  
   // Connect the steps.
   for (int i = 0; i < DG_Config->itsNumberOfSources; ++i) {
     sprintf (suffix2, "%d", i);
@@ -308,25 +318,32 @@ void StationSim::define (const ParamBlock& params)
     sprintf(suffix2, "%d", s);
     for (int r = 0; r < nrcu; ++r) {
       sprintf(suffix, "%d", r);
+
+      // connect the subband filterbank to the Beamformer
+      simul.connect (string ("subband_filter_") + suffix + string (".out0_") + suffix2,
+		     string ("beam_former_") + suffix2 + string(".in_") + suffix);
+
       // connect the subband filterbank to STA
       simul.connect (string ("subband_filter_") + suffix + string (".out1_") + suffix2,
-		     string ("sta_") + suffix2 + string (".in_") + suffix);
+ 		     string ("sta_") + suffix2 + string (".in_") + suffix);
     }
-    // connect STA to Projection
+
+    // connect the STA to Projection
     simul.connect (string ("sta_") + suffix2 + string (".out"),
- 		   string ("projection_") + suffix2 + string (".in-sta")); 
-    // connect Weight Determination to Projection
-    simul.connect (string ("weight_det_") + suffix2 + string(".out"),
-		   string ("projection_") + suffix2 + string(".in-wd"));
+		   string ("projection_") + suffix2 + string (".in-sta"));
+
     // connect Projection to Beamformer
-    simul.connect (string ("projection_") + suffix2 + string(".out"),
-		   string ("beam_former_") + suffix2 + string(".weights"));
+    simul.connect (string ("projection_") + suffix2 + string (".out"),
+		   string ("beam_former_") + suffix2 + string (".weights"));
+    
+//     // connect the Weight determinator to Projection
+//     simul.connect (string ("weight_det_") + suffix2 + string (".out"),
+// 		   string ("projection_") + suffix2 + string (".in-wd"));
   }
 
 
 
-
-//   // Connect the data_reader to the subband filterbank  
+  // Connect the data_reader to the subband filterbank  
 //   for (int i = 0; i < nrcu; ++i) { 
 // 	sprintf (suffix, "%d", i);
 // 	simul.connect (string ("data_reader_") + suffix + string (".out_0"), 
@@ -336,17 +353,6 @@ void StationSim::define (const ParamBlock& params)
 
 
 
-
-  // Connect the subband filterbank with the beam former
-  for (int s = 0; s < nsubband; ++s) {
-    for (int r = 0; r < nrcu; ++r) { 
-      sprintf (suffix, "%d", r);
-      sprintf (suffix2, "%d", s);
-
-      simul.connect (string ("subband_filter_") + suffix + string (".out0_") + suffix2,
-		     string ("beam_former_") + suffix2 + string (".in_") + suffix);
-    }
-  }
 
   // end of dataprocessor definition
   simul.checkConnections();

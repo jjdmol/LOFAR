@@ -36,14 +36,26 @@ WH_WeightDetermination::WH_WeightDetermination(const string& name, unsigned int 
     itsOutHolder (0),
     itsNrcu      (0)
 {
+  itsNrcu = nant;
+
   if (nout > 0) {
     itsOutHolder = new DH_SampleC("out", itsNrcu, 1);
   }
+
+  string config_file = "/home/chris/experiment-data/array.txt";
+  ifstream s (config_file.c_str (), ifstream::in);
+
+  int n;
+
+  s >> n;
+  
+  AssertStr (n = itsNrcu, "ArrayConfig file and input size don't match.");
+
   px.resize(itsNrcu);
   py.resize(itsNrcu);
 
-  //  px = itsConfig->itsArray->getPointX ();
-  //  py = itsConfig->itsArray->getPointY ();
+  s >> px;
+  s >> py;
 }
 
 WH_WeightDetermination::~WH_WeightDetermination()
@@ -66,22 +78,21 @@ void WH_WeightDetermination::process()
   double phi = 0.33;
   double theta = -0.67;
 
+  
   LoVec_dcomplex d(itsNrcu);
   d = steerv(phi, theta, px, py); 
-
+  
   memcpy(itsOutHolder->getBuffer(), d.data(), itsNrcu * sizeof(DH_SampleC::BufferType));
-  
-  
 }
 
 void WH_WeightDetermination::dump() const
 {
   using namespace blitz;
 
-//   LoVec_dcomplex weight(itsOutHolder->getBuffer(), itsNrcu, duplicateData);    
+  LoVec_dcomplex weight(itsOutHolder->getBuffer(), itsNrcu, duplicateData);    
 
-//   cout << "Weight vector Buffer: " << endl;
-//   cout << weight<< endl;
+   cout << "Weight vector Buffer: " << endl;
+   cout << weight<< endl;
 }
 
 
@@ -106,6 +117,5 @@ LoVec_dcomplex WH_WeightDetermination::steerv (double phi, double theta, LoVec_d
   dcomplex i = dcomplex (0,1);
 
   res = i * -2*M_PI*( px*sin(theta)*cos(phi) + py*sin(theta)*sin(phi) );
-  
   return res;
 }

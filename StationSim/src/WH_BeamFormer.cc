@@ -67,7 +67,6 @@ WH_BeamFormer::WH_BeamFormer (const string& name,
 
   // The first time the weights should not be read.
   itsWeight = new DH_SampleC("weights", itsNrcu, 1);
-  itsWeight->setReadDelay (1);
 
 
   // idem for the number of outputs
