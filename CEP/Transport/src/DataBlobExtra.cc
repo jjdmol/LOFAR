@@ -103,5 +103,30 @@ BlobIStream& DataBlobExtra::openBlock (bool& found, int& version,
   return *itsIn;
 }
 
+BlobIStream& DataBlobExtra::getCreatedBlock (bool& found, int& version)
+{
+  if (itsBufOut.size() == 0) {
+    found = false;
+  } else {
+    found = true;
+    itsBufIn = BlobIBufChar (itsBufOut.getBuffer(), itsBufOut.size());
+    if (itsIn == 0) {
+      itsIn = new BlobIStream(itsBufIn);
+    }
+    itsIn->clear();
+    version = itsIn->getStart (itsName);
+  }
+  return *itsIn;
+}
+
+BlobIStream& DataBlobExtra::getCreatedBlock()
+{
+  bool found;
+  int version;
+  BlobIStream& bis = getCreatedBlock (found, version);
+  Assert (found);
+  return bis;
+}
+
 
 } // namespace LOFAR

@@ -99,6 +99,12 @@ public:
   void clearOut()
     { itsCreateDone = false; }
 
+  // Get read access to the blob just created.
+  // The first version assures that there is a blob.
+  // <group>
+  BlobIStream& getCreatedBlock();
+  BlobIStream& getCreatedBlock (bool& found, int& version);
+  // <group>
 
 private:
   // Forbid copy constructor.

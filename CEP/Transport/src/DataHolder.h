@@ -255,6 +255,11 @@ public:
   // Clear the extra blob output buffer.
   // This is needed, because an extra blob is kept until overwritten.
   void clearExtraBlob();
+  // Get read access to the extra blob created.
+  // <group>
+  BlobIStream& getCreatedExtraBlob();
+  BlobIStream& getCreatedExtraBlob (bool& found, int& version);
+  // </group>
   // Get access to the extra input blob holding arbitrary fields.
   // It is meant for DataHolders reading data.
   // It fills the version of the extra data blob.
