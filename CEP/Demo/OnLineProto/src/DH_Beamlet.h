@@ -44,6 +44,9 @@ public:
 		       float Hourangle,
 		       int nchan);
 
+  explicit DH_Beamlet (const string& name, 
+		       int nchan);
+
   DH_Beamlet(const DH_Beamlet&);
 
   virtual ~DH_Beamlet();

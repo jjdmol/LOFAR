@@ -42,6 +42,18 @@ namespace LOFAR
 {
 }
 
+  DH_Beamlet::DH_Beamlet (const string& name, 
+			  const int nchan)
+: DataHolder            (name, "DH_Beamlet"),
+  itsDataPacket         (0),
+  itsBuffer             (0),
+  itsStationID          (-1),
+  itsFrequencies        (-1),
+  itsHourangle          (-1),
+  itsNumberOfChannels   (nchan)
+{
+}
+
 DH_Beamlet::DH_Beamlet(const DH_Beamlet& that)
   : DataHolder     (that),
      itsDataPacket  (0),
