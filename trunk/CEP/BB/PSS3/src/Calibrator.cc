@@ -22,77 +22,43 @@
 
 #include <PSS3/MeqCalibraterImpl.h>
 #include <Common/lofar_iostream.h>
-#include "PSS3/Calibrator.h"
+#include <aips/Tables/Table.h>
+#include <aips/Tables/ScalarColumn.h>
+#include <aips/Tables/TableParse.h>
+#include <aips/Arrays/Vector.h>
+#include <aips/Arrays/ArrayUtil.h>
+#include <aips/Exceptions/Error.h>
+#include "Calibrator.h"
 
 
-const int DefaultAntennaCount = 21;
+// RMME: const int DefaultAntennaCount = 21;
 
 InitDebugContext(Calibrator,"Calibrator");
 
-// Calibrator::Calibrator () {
-//   int i;
+Calibrator::Calibrator () {
+  // Initialize default values for the PSS3 Calibrater object.
+  // These values are committed to itsMeqCalImpl when the Calibrator
+  // ::Initialize () is called.
 
-//   // Initialize default values for the PSS3 Calibrater object.
-//   // These values are committed to itsMeqCalImpl when the Calibrator
-//   // ::Initialize () is called.
-//   for (i = 0; i < DefaultAntennaCount; i ++) {
-//     itsPrimaryAntennae.push_back (4 * i);
-//     itsSecondaryAntennae.push_back (4 * i);
-//   }
+  itsMSName              = "demo";		// MS  (glish table)
+  itsMEPName             = "meqmodel";		// MEQ (PL table)
+  itsGSMName             = "skymodel";		// GSM (PL table)
+  itsDBType              = "postgres";		// Database type
+  itsDBName              = "tanaka";		// Database account
+  itsDBPasswd            = "";
+  itsModelType           = "LOFAR.RI";
+  itsDDID                = 0; // TODO: GvD What is this?
+  itsScenario            = "solve";
+  itsSolvParms           = "{RA,DEC,StokesI}.*";
+  itsStChan              = 0;
+  itsEndChan             = 0;
+  itsSelStr              = "all([ANTENNA1,ANTENNA2] in 4*[0:20])";
+  itsCalcUVW             = false;
+  itsTimeInterval        = 3600.0;
+  itsDataColumn          = "CORRECTED_DATA";
+  itsCorrectedDataColumn = "CORRECTED_DATA";
 
-//   itsNrOfIterations = 10;
-
-//   itsTblMeasurementSet = "demo.MS";		// AIPS table
-//   itsTblMeqModel = "meqmodel";			// PL table (demo.MEP)
-//   itsTblSkyModel = "skymodel";			// PL table (demo_gsm.MEP)
-
-//   itsDDID = 0;
-//   itsModelType = "LOFAR.RI";
-
-//   itsCalcUVW = false;
-
-//   itsDataColumn = "CORRECTED_DATA";
-//   itsCorrectedDataColumn = "CORRECTED_DATA";
-
-//   itsTimeInterval = 3600.0;
-
-//   itsPSS3CalibratorImpl = NULL;
-
-//   TRACERF2 ("Calibrator constructed.");
-// }
-
-Calibrator::Calibrator (const string& msName,
-			const string& meqModel,
-			const string& skyModel,
-			const string& dbType,
-			const string& dbName,
-			const string& dbPwd,
-			unsigned int ddid,
-			const vector<int>& ant1,
-			const vector<int>& ant2,
-			const string& modelType,
-			bool calcUVW,
-			const string& dataColName,
-			const string& residualColName)
-  :  itsTblMeasurementSet(msName),
-     itsTblMeqModel(meqModel),
-     itsTblSkyModel(skyModel),
-     itsDbType(dbType),
-     itsDbName(dbName),
-     itsDbPwd(dbPwd),
-     itsDDID(ddid),
-     itsPrimaryAntennae(ant1),
-     itsSecondaryAntennae(ant2),
-     itsModelType(modelType),
-     itsCalcUVW(calcUVW),
-     itsDataColumn(dataColName),
-     itsCorrectedDataColumn(residualColName)
-{
-  itsTimeInterval = 3600.0;
-
-  itsPSS3CalibratorImpl = NULL;
-
-  TRACERF2 ("Calibrator constructed.");
+  itsPSS3CalibratorImpl  = NULL;
 }
 
 
@@ -100,44 +66,95 @@ Calibrator::~Calibrator () {
   if (itsPSS3CalibratorImpl != NULL) {
     delete itsPSS3CalibratorImpl;
   }
+}
 
-  TRACERF2 ("Calibrator destroyed.");
+
+void Calibrator::setTimeInterval (double secs) {
+  itsTimeInterval = secs;
 }
 
 
 void Calibrator::Initialize (void) {
-  Vector<int> ant1 (itsPrimaryAntennae.size ());
-  Vector<int> ant2 (itsSecondaryAntennae.size ());
-  unsigned int i;
-cout << "Cal.Initialize.1" << endl;
-  for (i = 0; i < itsPrimaryAntennae.size (); i ++) 
-    ant1 [i] = itsPrimaryAntennae [i];
-cout << "Cal.Initialize.2" << endl;
+  // Set up antennae
+  Vector<Int> ant1, ant2;
+  {
+    Table tab;
+    if (itsSelStr.empty()) {
+	tab = Table(itsMSName+".MS");
+    } else {
+	tab = tableCommand("SELECT FROM " + itsMSName + 
+			   ".MS WHERE " + itsSelStr);
+    }
+    Table sortab = tab.sort ("ANTENNA1", Sort::Ascending,
+			       Sort::QuickSort | Sort::NoDuplicates);
+    ant1 = ROScalarColumn<Int>(sortab, "ANTENNA1").getColumn();
+    sortab = tab.sort ("ANTENNA2", Sort::Ascending,
+			 Sort::QuickSort | Sort::NoDuplicates);
+    ant2 = ROScalarColumn<Int>(sortab, "ANTENNA2").getColumn();
+  }
 
-  for (i = 0; i < itsSecondaryAntennae.size (); i ++) 
-    ant2 [i] = itsSecondaryAntennae [i];
-cout << "Cal.Initialize.3" << endl;
+  // Check if the database members have been initialized correctly.
+  if (itsDBName == "tanaka") {
+    cerr << "Calibrator::Initialize (); WARNING: You have possibly forgotten "
+	 << "to initialize the database type, name and password. Using "
+	 << "default values 'postgres', 'tanaka' and '' respectively. The "
+	 << "program you are running may exhibit unpredictable behaviour "
+	 << "this way." << endl;
+  }
+
+  // Instantiate PSS3 calibration engine
 
   if (itsPSS3CalibratorImpl != NULL)
     delete itsPSS3CalibratorImpl;
 
-  itsPSS3CalibratorImpl = new MeqCalibrater (
-					     itsTblMeasurementSet,
-					     itsTblMeqModel,
-					     itsTblSkyModel,
-					     "postgres", "meijeren", "",
-					     itsDDID,
-					     ant1,
-					     ant2,
-					     itsModelType,
+  itsPSS3CalibratorImpl = new MeqCalibrater (itsMSName+".MS", 
+					     itsMEPName, 
+					     itsGSMName, 
+					     itsDBType, 
+					     itsDBName, 
+					     itsDBPasswd,
+					     itsDDID, 
+					     ant1, 
+					     ant2, 
+					     itsModelType, 
 					     itsCalcUVW,
-					     itsDataColumn,
-					     itsCorrectedDataColumn
-  );
-  cout << "Cal.Initialize.4" << endl;
+					     itsDataColumn, 
+					     itsCorrectedDataColumn);
 
+
+  if (itsStChan >= 0  || itsEndChan >= 0  ||  !itsSelStr.empty()) {
+    if (itsStChan < 0) {
+	itsStChan = 0;
+    }
+    if (itsEndChan < 0) {
+	itsEndChan = itsPSS3CalibratorImpl -> getNrChan() - 1;
+	cout << " endchan (modified): " << itsEndChan << endl;
+    }
+    itsPSS3CalibratorImpl -> select (itsSelStr, itsStChan, itsEndChan);
+  }
+
+  // Choose domain
   itsPSS3CalibratorImpl -> setTimeInterval (itsTimeInterval);
-  cout << "Cal.Initialize.5" << endl;
+
+  // In the MeqCalImpl object, initialize the set of solvable parms to zero.
+  itsPSS3CalibratorImpl -> clearSolvableParms ();
+}
+
+
+void Calibrator::ShowSettings (void) {
+    cout << "Calibrator settings:" << endl;
+    cout << "  msname:    " << itsMSName << endl;
+    cout << "  mepname:   " << itsMEPName << endl;
+    cout << "  gsmname:   " << itsGSMName << endl;
+    cout << "  dbtype:    " << itsDBType << endl;
+    cout << "  dbname:    " << itsDBName << endl;
+    cout << "  modeltype: " << itsModelType << endl;
+    cout << "  scenario:  " << itsScenario << endl;
+    cout << "  solvparms: " << itsSolvParms << endl;
+    cout << "  stchan:    " << itsStChan << endl;
+    cout << "  endchan:   " << itsEndChan << endl;
+    cout << "  selection: " << itsSelStr << endl;
+    cout << "  calcuvw  : " << itsCalcUVW << endl;
 }
 
 
@@ -160,6 +177,11 @@ void Calibrator::addSolvableParm (string parmName, int srcNo) {
 }
 
 
+void Calibrator::addSolvableParm (string parmNames) {
+  itsSolvableParms.push_back (parmNames);
+}
+
+
 void Calibrator::commitSolvableParms (void) {
   // Create AIPS data structures to hold params
   Vector <String> pp (itsSolvableParms.size ());
@@ -172,7 +194,6 @@ void Calibrator::commitSolvableParms (void) {
   for (i = itsSolvableParms.begin (); i != itsSolvableParms.end (); ++ i) {
     oss [idx] << *i;
     pp [idx] = oss[idx].str ();
-    TRACERF4 (idx << " -> " << *i);
     idx ++;
   }
 
@@ -189,7 +210,6 @@ void Calibrator::resetTimeIntervalIterator (void) {
 
 bool Calibrator::advanceTimeIntervalIterator (void) {
   TRACERF2 ("MeqCalImpl -> nextInterval ()");
-  cout << "Next interval" << endl;
   return itsPSS3CalibratorImpl -> nextInterval ();
 }
 
@@ -227,7 +247,6 @@ void Calibrator::commitPeelSourcesAndMasks (void) {
 
   for (i = itsPeelSources.begin (); i != itsPeelSources.end (); ++ i) {
     srcList [idx] = *i;
-    TRACERF4 ("source: " << idx << " -> " << *i);
     idx ++;
   }
 
@@ -244,11 +263,8 @@ void Calibrator::commitPeelSourcesAndMasks (void) {
 }
 
 
-void Calibrator::Run (vector<string>& resultParmNames,
-		      vector<double>& resultParmValues,
-		      Quality& resultQuality) {
-  itsPSS3CalibratorImpl -> solve (false, resultParmNames, resultParmValues, 
-				  resultQuality);
+void Calibrator::Run (void) {
+  itsPSS3CalibratorImpl -> solve (true);
 }
 
 void Calibrator::SubtractOptimizedSources (void) {
@@ -259,108 +275,8 @@ void Calibrator::CommitOptimizedParameters (void) {
   itsPSS3CalibratorImpl -> saveParms ();
 }
 
-void Calibrator::ExamplePSS3Run (void) {
-
-}
 
 
-void Calibrator::ExperimentalOptimizeSource (int) {
-  cout << "Next iteration" << endl;
-  /*
-  Vector <Int> srcList (1);
-  Vector <Int> ignoreList (0);
-  srcList [0] = src - 1; // NB: GvD: 0-based!!
-  cout << "mc.peel ()..." << endl;
-  itsPSS3CalibratorImpl -> peel (srcList, ignoreList);
-  */
-  // Calculate the optimal value for parameter
-  itsPSS3CalibratorImpl -> solve(false);
-
-  // Subtract the found sources from MS:
-  itsPSS3CalibratorImpl -> saveResidualData();
-
-  // Save the data (?) and display output:
-  itsPSS3CalibratorImpl -> saveParms();
-
-}
-
-
-
-void Calibrator::OptimizeSource (int src, int nIterations) {
-
-  Vector <String> pp (3);
-  Vector <String> ep (3);
-  ostringstream oss[3];
-
-  oss[0] << "StokesI.CP" << src;        pp[0] = oss[0].str();
-  oss[1] << "RA.CP"      << src;        pp[1] = oss[1].str();
-  oss[2] << "DEC.CP"     << src;        pp[2] = oss[2].str();
-
-  itsPSS3CalibratorImpl -> setSolvableParms (pp, ep, true);
-    
-  itsPSS3CalibratorImpl -> resetIterator();
-  while (itsPSS3CalibratorImpl -> nextInterval ()) {
-    cout << "Next interval" << endl;
-    for (int i = 0; i < nIterations; i ++) {
-      cout << "Next iteration" << endl;
-
-      Vector <Int> srcList (1);
-      Vector <Int> ignoreList (0);
-      srcList [0] = src - 1; // NB: GvD: 0-based!!
-      cout << "mc.peel ()..." << endl;
-      itsPSS3CalibratorImpl -> peel (srcList, ignoreList);
-
-      // Calculate the optimal value for parameter
-      itsPSS3CalibratorImpl -> solve(false);
-
-      // Subtract the found sources from MS:
-      itsPSS3CalibratorImpl -> saveResidualData();
-
-      // Save the data (?) and display output:
-      itsPSS3CalibratorImpl -> saveParms();
-
-      cerr << "(" << i << ") ";
-    }
-  }
-}
-
-void Calibrator::OptimizeSourceWOSaveRes (int src, int nIterations) {
-
-  Vector <String> pp (3);
-  Vector <String> ep (3);
-  ostringstream oss[3];
-
-  oss[0] << "StokesI.CP" << src;        pp[0] = oss[0].str();
-  oss[1] << "RA.CP"      << src;        pp[1] = oss[1].str();
-  oss[2] << "DEC.CP"     << src;        pp[2] = oss[2].str();
-
-  itsPSS3CalibratorImpl -> setSolvableParms (pp, ep, true);
-    
-  itsPSS3CalibratorImpl -> resetIterator();
-  while (itsPSS3CalibratorImpl -> nextInterval ()) {
-    cout << "Next interval" << endl;
-    for (int i = 0; i < nIterations; i ++) {
-      cout << "Next iteration" << endl;
-
-      Vector <Int> srcList (1);
-      Vector <Int> ignoreList (0);
-      srcList [0] = src - 1; // NB: GvD: 0-based!!
-      cout << "mc.peel ()..." << endl;
-      itsPSS3CalibratorImpl -> peel (srcList, ignoreList);
-
-      // Calculate the optimal value for parameter
-      itsPSS3CalibratorImpl -> solve(false);
-
-      // No subtraction of  the found sources from MS:
-      // OFF!  itsPSS3CalibratorImpl -> saveResidualData();
-
-      // Save the data (?) and display output:
-      itsPSS3CalibratorImpl -> saveParms();
-
-      cerr << "[" << i << "] ";
-    }
-  }
-}
 
 
 
