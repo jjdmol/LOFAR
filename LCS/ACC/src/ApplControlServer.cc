@@ -27,8 +27,9 @@
 #include <lofar_config.h>
 
 //# Includes
-#include <ACC/ApplControlServer.h>
+#include <Common/StringUtil.h>
 #include <Transport/TH_Socket.h>
+#include <ACC/ApplControlServer.h>
 
 namespace LOFAR {
   namespace ACC {
@@ -51,7 +52,7 @@ ApplControlServer::ApplControlServer(const uint16			portnr,
 								false);	// blocking
 	DH_AC_Server->init();
 
-	itsCommChan = new ApplControlComm;
+	itsCommChan = new ApplControlComm(false);		// async
 	itsCommChan->setDataHolder(DH_AC_Server);
 }
 
@@ -90,22 +91,31 @@ string		ApplControlServer::askInfo(const string&	keylist) const
 	return (itsCommChan->getDataHolder()->getOptions());
 }
 
-DH_ApplControl*		ApplControlServer::pollForMessage() const
+bool	ApplControlServer::pollForMessage() const
 {
 	LOG_TRACE_FLOW("ApplControlServer:pollForMessage");
 
-	DH_ApplControl*		DHPtr = itsCommChan->getDataHolder();
-
-	return (DHPtr->read() ? DHPtr : 0);
+	return (itsCommChan->getDataHolder()->read());
 }
 
 bool ApplControlServer::handleMessage(DH_ApplControl*	theMsg) 
 {
-	ACCmd	cmdType 	 = theMsg->getCommand();
-	time_t	scheduleTime = theMsg->getScheduleTime();
-	time_t	waitTime     = theMsg->getWaitTime();
-	string	options		 = theMsg->getOptions();
-	LOG_DEBUG_STR("cmd=" << cmdType << ", time=" << scheduleTime 
+	ACCommand	ACCmd(static_cast<int16>(theMsg->getCommand()),
+					  theMsg->getScheduleTime(),
+					  theMsg->getWaitTime(),
+					  theMsg->getOptions(),
+					  "processList",
+					  "nodeList");
+	return (handleMessage(&ACCmd));
+}
+
+bool ApplControlServer::handleMessage(ACCommand*	theMsg) 
+{
+	int16	cmdType 	 = theMsg->itsCommand;
+	time_t	scheduleTime = theMsg->itsScheduleTime;
+	time_t	waitTime     = theMsg->itsWaitTime;
+	string	options		 = theMsg->itsOptions;
+	LOG_DEBUG_STR("cmd=" << cmdType << ", time=" << timeString(scheduleTime) 
 						 << ", waittime=" << waitTime 
 				  		 << ", options=[" << options << "]" << endl);
 
@@ -161,8 +171,7 @@ bool ApplControlServer::handleMessage(DH_ApplControl*	theMsg)
 	}
 
 	if (sendAnswer) {
-		theMsg->setResult(result ? AcCmdMaskOk : 0);
-		itsCommChan->sendCmd (CmdAnswer, 0, 0, newOptions);
+		sendResult(result ? AcCmdMaskOk : 0);
 	}
 
 	return (true);
@@ -180,6 +189,11 @@ void	ApplControlServer::handleAckMessage(void)
 //	handleAckMessage();
 }
 
+void ApplControlServer::sendResult(uint16	aResult) 
+{
+	itsCommChan->getDataHolder()->setResult(aResult);
+	itsCommChan->sendCmd (CmdResult, 0, 0, "");
+}
 
 } // namespace ACC
 } // namespace LOFAR

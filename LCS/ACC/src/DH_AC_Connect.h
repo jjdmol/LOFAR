@@ -30,6 +30,9 @@
 
 //# Includes
 #include <sys/time.h>
+#if defined (__APPLE__)
+# include <sys/param.h>
+#endif
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <rpc/types.h>

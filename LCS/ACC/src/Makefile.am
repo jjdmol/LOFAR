@@ -3,7 +3,7 @@ INSTHDRS = \
 	ParameterTemplate.h \
 	ParameterUnion.h \
 	TemplateUnion.h \
-	ParameterSet.h
+	ParameterSet.h 
 
 NOINSTHDRS =
 
@@ -22,12 +22,31 @@ libacc_la_SOURCES = \
 					ParameterTemplate.cc \
 					TemplateUnion.cc \
 					ParameterUnion.cc \
-					ParameterSet.cc 
+					ParameterSet.cc \
+					ApplControlComm.cc \
+					ApplControlClient.cc \
+					ACSyncClient.cc  \
+					ACAsyncClient.cc \
+					DH_ApplControl.cc \
+					DH_AC_Connect.cc  \
+					ApplControlServer.cc 
+#					ParCollRecord.cc 
+#					ConfigurationMgr.cc 
 
-#					ApplControl.cc DH_ApplControl.cc \
-#					DH_AC_Connect.cc \
-#					ApplControlClient.cc \
-#					ApplControlServer.cc 
+bin_PROGRAMS = ApplController
+
+### ApplController ###
+ApplController_SOURCES      = ACCmdImpl.cc \
+							  DataHolderSelector.cc \
+							  ACCommand.cc \
+							  CmdStack.cc \
+							  DH_ProcessControl.cc  \
+							  ApplController.cc
+# ApplProcess.cc 
+# ApplProcessPool.cc 
+
+ApplController_DEPENDENCIES = $(LOFAR_DEPEND) libacc.la
+ApplController_LDADD        = libacc.la
 
 include $(lofar_sharedir)/Makefile.common
 

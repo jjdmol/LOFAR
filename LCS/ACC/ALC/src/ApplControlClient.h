@@ -60,10 +60,6 @@ public:
 	// Destructor;
 	virtual ~ApplControlClient();
 
-	// Copying is allowed.
-	ApplControlClient(const ApplControlClient& that);
-	ApplControlClient& 	operator=(const ApplControlClient& that);
-
 	// Define a generic way to exchange info between client and server.
 	string	askInfo   (const string& 	keylist) const;
 
@@ -121,6 +117,10 @@ protected:
 	// Communication with other side.
 	ApplControlComm*	itsCommChan;
 
+private:
+	// Copying is not allowed.
+	ApplControlClient(const ApplControlClient& that);
+	ApplControlClient& 	operator=(const ApplControlClient& that);
 };
 
 

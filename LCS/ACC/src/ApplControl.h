@@ -1,4 +1,4 @@
-//#  ApplControl.h: Implements the I/F of the Application Controller.
+//#  ApplControl.h: Defines the I/F of the Application Controller.
 //#
 //#  Copyright (C) 2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -18,10 +18,6 @@
 //#  along with this program; if not, write to the Free Software
 //#  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //#
-//#  Abstract:
-//#	 This abstract base class implements the client API using the 
-//#  Application Controller
-//#
 //#  $Id$
 
 #ifndef ACC_APPLCONTROL_H
@@ -36,18 +32,15 @@ namespace LOFAR {
   namespace ACC {
 
 //# Description of class.
-// The ApplControl class implements the interface the Application Controller
-// will support.
+// The ApplControl class defines the interface the Application Controller
+// will support. All functions in this class are abstract and need to be
+// implemented on both the client- and the server-side.
 //
 class ApplControl 
 {
 public:
 	// Destructor;
 	virtual ~ApplControl() { };
-
-	// Copying is not allowed since sockets are involved.
-	ApplControl(const ApplControl& that) { operator= (that); };
-	ApplControl& 	operator=(const ApplControl& that) { return (*this); };
 
 	// Commands to control the application
 	// The scheduleTime parameter used in all commands may be set to 0 to 
@@ -84,18 +77,19 @@ public:
 							  const string&		nodeList,
 							  const string&		configID)	  const = 0;
 
-	// ---------- support for asynchrone communication ----------
-
 	// Define a generic way to exchange info between client and server.
 	virtual string	askInfo   (const string& 	keylist) const = 0;
 
 protected:
 	// Not default constructable
 	ApplControl() {};
+	// Copying is also not allowed
+	ApplControl(const ApplControl& that) { operator= (that); };
+	ApplControl& 	operator=(const ApplControl& that) { return (*this); };
 };
 
 
-} // namespace ACC
+  } // namespace ACC
 } // namespace LOFAR
 
 #endif
