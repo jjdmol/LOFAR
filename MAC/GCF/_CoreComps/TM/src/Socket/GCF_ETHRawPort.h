@@ -26,7 +26,7 @@
 #include <GCF/GCF_Defines.h>
 #include <GCF/GCF_RawPort.h>
 #include <GCF/GCF_PeerAddr.h>
-#include "GTM_ETHSocket.h"
+class GTMETHSocket; // #include "GTM_ETHSocket.h"
 
 #include <linux/if_packet.h>
 #include <linux/if_ether.h>
@@ -98,13 +98,13 @@ class GCFETHRawPort : public GCFRawPort
   	       const char* dest_mac);
   
   protected:
-    friend class GTMSocket;
-    friend class GTMETHSocket;
+//    friend class GTMSocket;
+//    friend class GTMETHSocket;
 
   private:    
     char* _ifname;
     char* _destMacStr;
-    GTMETHSocket _socket;
+    GTMETHSocket* _pSocket;
 };
 
 #endif /* GCF_ETHRAWPORT_H */

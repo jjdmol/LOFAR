@@ -25,6 +25,7 @@
 #include <GCF/GCF_RawPort.h>
 #include <GCF/GCF_Task.h>
 #include <GCF/GCF_TMProtocols.h>
+#include "GTM_ETHSocket.h"
 #include <GTM_Defines.h>
 #include <errno.h>
 
@@ -36,16 +37,18 @@ GCFETHRawPort::GCFETHRawPort(GCFTask& task,
    GCFRawPort(task, name, type, 0, transportRawData), 
    _ifname(0), 
    _destMacStr(0), 
-   _socket(*this)
+   _pSocket(0)
 {
   assert(MSPP != getType());
+
+  _pSocket = new GTMETHSocket(*this);
 }
 
 GCFETHRawPort::GCFETHRawPort() : 
   GCFRawPort(),       
   _ifname(0), 
   _destMacStr(0), 
-  _socket(*this)
+  _pSocket(0)
 {
   assert(MSPP != getType());
 }
@@ -54,6 +57,7 @@ GCFETHRawPort::~GCFETHRawPort()
 {
   if (_ifname) free(_ifname);
   if (_destMacStr) free(_destMacStr);
+  if (_pSocket) delete _pSocket;
 }
 
 int GCFETHRawPort::close()
@@ -86,7 +90,13 @@ int GCFETHRawPort::open()
     return -1;
   }
 
-  if (_socket.open(_ifname, _destMacStr) < 0)
+  if (!_pSocket)
+  {
+      LOFAR_LOG_ERROR(TM_STDOUT_LOGGER, (
+			  "ERROR: Port %s is not initialised.",
+			  _name.c_str()));
+      retval = -1;
+  } else if (_pSocket->open(_ifname, _destMacStr) < 0)
   {
     _isConnected = false;
     if (SAP == getType())
@@ -125,7 +135,7 @@ ssize_t GCFETHRawPort::send(const GCFEvent& e, void* buf, size_t count)
   }
   else
   {
-    if ((written = _socket.send(buf, count)) != count)
+    if ((written = _pSocket->send(buf, count)) != count)
     {
       LOFAR_LOG_DEBUG(TM_STDOUT_LOGGER, (
           "truncated send: %s",
@@ -150,7 +160,7 @@ ssize_t GCFETHRawPort::sendv(const GCFEvent& e, const iovec buffers[], int n)
   if (F_RAW_SIG != e.signal)
   { 
     count = e.length;
-    if ((written = _socket.send((void*)&e, e.length)) != count)
+    if ((written = _pSocket->send((void*)&e, e.length)) != count)
     {
       LOFAR_LOG_DEBUG(TM_STDOUT_LOGGER, (
           "truncated send: %s",
@@ -161,7 +171,7 @@ ssize_t GCFETHRawPort::sendv(const GCFEvent& e, const iovec buffers[], int n)
   for (int i = 0; i < n; i++)
   {
     count += buffers[i].iov_len;
-    if ((written += _socket.send(buffers[i].iov_base, buffers[i].iov_len)) != count)
+    if ((written += _pSocket->send(buffers[i].iov_base, buffers[i].iov_len)) != count)
     {
       LOFAR_LOG_DEBUG(TM_STDOUT_LOGGER, (
           "truncated send: %s",
@@ -174,7 +184,7 @@ ssize_t GCFETHRawPort::sendv(const GCFEvent& e, const iovec buffers[], int n)
 
 ssize_t GCFETHRawPort::recv(void* buf, size_t count)
 {
-  return _socket.recv(buf, count);
+  return _pSocket->recv(buf, count);
 }
 
 ssize_t GCFETHRawPort::recvv(iovec /*buffers*/[], int /*n*/)
