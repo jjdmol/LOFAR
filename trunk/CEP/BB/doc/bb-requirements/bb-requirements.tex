@@ -1,0 +1,638 @@
+% ----------------------- Preamble
+\documentclass[]{lofar}
+\usepackage{layout}
+
+\include{definitions} %local definitions
+
+%\usepackage{amsmath,amsthm, amsfonts, amssymb, amsxtra,amsopn}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{times}
+\usepackage{fancybox}
+%\usepackage{algorithmic}
+\usepackage[dvips]{hyperref}
+\DeclareGraphicsExtensions{.eps}
+% ------------------------  End of Preamble.
+
+\begin{document}
+
+  \maketitle
+
+  \begin{abstract}
+
+    For the LOFAR project a self-calibration program shall be written
+    \hyperlink{LOFAR-ASTRON-ADD-006}{[LOFAR-ASTRON-ADD-006]}. The idea
+    is that this program will have the architectural structure of a
+    "BlackBoard". Such a pattern caught in a framework will have
+    broader use then just the self-calibration. The applicability of a
+    framework following this design pattern will be investigated and a
+    rapport hereof will be included in this document.
+
+  \end{abstract}
+
+  \section{the blackboard architectural pattern}
+  \label{id2719941}\hypertarget{id2719941}{}%
+
+    The Blackboard pattern as shown in literature has many
+    applications. They differ greatly in nature. The main feature of
+    each and every one of those is that they work on (parts of) a
+    problem by letting pieces of software (knowledge sources) take
+    data from a central place (the blackboard), do with it whatever
+    they can to get nearer to the solution, and put the results back
+    to that central place.
+
+    As described in \hyperlink{bib-Design-Alternatives}{[Design Alternatives]}, there are
+    several levels at which to implement parallel Blackboard
+    systems. In \hyperlink{PDR-CEP-Software}{[PDR-CEP-Software]} it is
+    described how this applies to the imaging applications in the
+    LOFAR Central Processor.
+
+    In the case of the selfcal program, there is only one really
+    important step that one takes in getting to the solution
+    (calibrated data or measurement set). This is the predict-solve
+    step. Though many of those steps shall be taken. Next to that, in
+    the so called peeling strategy one can do a shift of the
+    data-center in the UV data. And then there are some algorithms to
+    decide if the present strategy is leading somewhere.
+
+    \begin{em}
+
+      It is assumed that the quality of a preliminary result can be
+      measured.
+
+    \end{em}
+
+    When paralleling the algorithm, it becomes very important that
+    predict-solve steps or series thereof can be performed
+    independently. Such loose coupling of steps that lead to a final
+    solution is a distinct quality of the blackboard architectural
+    pattern.
+
+    \begin{em}
+
+      It is required for the Blackboard to be useful in the
+      self-calibration context that the self-calibration algorithm can
+      be partitioned over the dimensions of the dataset.
+
+    \end{em}
+
+  \section{LOFAR requirements on the selfcal control system}
+  \label{section-LOFAR-requirements}\hypertarget{section-LOFAR-requirements}{}%
+
+    LOFAR is a one-of system. There has never been anything build like
+    it. The self-calibration solutions that instrumentalists and
+    astronomers are thinking of are not yet developed. Several methods
+    to perform a predict-solve step may be created for
+    experimentation. Also several high level algorithms may be
+    tried. The flexible architecture of the BlackBoard pattern is very
+    well suited to insert both new low-level operations (the knowledge
+    sources) as well as high level strategies (by configuring the
+    controller(s)).
+
+    \begin{em}\large{Note: }
+
+      It must be possible to add new knowledge sources to the system.
+
+      It must be possible to configure controllers to react in a
+      certain way to a certain state of the system.
+
+    \end{em}
+
+    The Blackboard system to be build is going to allow the programmer
+    to define a workload structure and a knowledge source that will
+    react on such a workload. Finally (s)he will define a partial
+    solution structure that results from the work. A controller will
+    then recognize such a workload and assign it to a fitting
+    knowledge source. It will be notified that a result is produced
+    and think of what next step to take.
+
+    Information on what type of knowledge source can take on what kind
+    of workload will be stored in a database.
+
+    It is expected that even in operational state the self-calibration
+    will be under development. It might also put different demands on
+    different observations. For this a library of control-strategies
+    will be convenient. On top of that it will necessary to change or
+    add control-strategies and low-level algorithms as we go.
+
+    \begin{em}\large{Note: }
+
+      It would be nice to have a library of strategies that would
+      include "conditions" and "actions to take".
+
+    \end{em}
+
+    The blackboard architectural pattern facilitates this tweaking of
+    different algorithms by its loose coupling. The different
+    protocols between components in the system need to be very well
+    specified for this.
+
+    A knowledge source it's result definition must include an
+    interpreter object that can return a quality of the result. For a
+    controller it must be clear in what kind of new workload the
+    result results.
+
+    As a controller object one would want to assign a workload to an
+    knowledge source as soon as the decision that such work is needed
+    is made. Overhead caused by waiting for the resource to become
+    available or for the process to start and initialize should be
+    avoided.
+
+    For fast invocation of calibration engines it might be a good
+    idea to have them implemented as servers. This can for instance be
+    done by running them as unix-demons on nodes that might be used as
+    hosts to the predict/solve knowledge
+    sources. \hyperlink{bib-Efficiency}{[Efficiency]} describes the
+    usefulness of this principle. However it is not to be expected
+    that this will greatly enhance the execution speed as suggested in
+    this paper, as our knowledge-sources will have longer execution
+    times and less invocations.
+
+    For unattended invocation of calibration engines a message queue
+    can be created that will contain workloads in order of precedence
+    or priority. This can help if the current workload is not
+    necissarily the only cause for a new workload for a certain
+    engine.
+
+  \section{selfcal use of the blackboard pattern}
+  \label{id2712500}\hypertarget{id2712500}{}%
+  \begin{figure}
+    \includegraphics[]{../figures/blackboard-use_concept.eps}
+    \label{figure-blackboard-use}\hypertarget{figure-blackboard-use}{}
+    \caption{the way the BlackBoard will be used to monitor several
+    solution threads}
+  \end{figure}
+
+    \subsection{a demo use-case}
+    \label{id2719741}\hypertarget{id2719741}{}%
+      \subsubsection{logical structure}
+      \label{id2719712}\hypertarget{id2719712}{}%
+      \begin{figure}
+        \epsfig{file=../figures/demo.usecase.eps}
+        \label{figure-demo-usecase}\hypertarget{demo-usecase}{}
+        \caption{the basic use-case for the self-calibration application}
+      \end{figure}
+
+      This use-case is intended to demonstrate the use of the
+      blackboard based architecture for the implementation of the
+      selfcal controller.
+
+      It will show that concurrent solution threads as shown in
+      \hyperlink{figure-blackboard-use}{Figure
+      \ref{figure-blackboard-use}} are feasible to implement.
+
+      The demo starts with the selection of a strategy, which
+      currently is hand-/hard-coded in a python script. The strategy
+      defines how the total processing job is split in subtasks that
+      are controlled through their own BlackBoards. Also the strategy
+      defines the subset of parameters that each Thread will solve
+      for.
+
+      The strategy chosen for this demo is as follows; The data set
+      responsibility is split in two over time. After that the second
+      part is split in three over frequency. As there is no real
+      dataset involved we only let one BlackBoard control 'real'
+      actions. the first child at top level is the lucky one. It
+      starts three Thread/Controller instantiations with a quite
+      similar set of parameters to solve. Each Thread gets the same
+      parameters to work on. They all get responsibility over a
+      distinct parameter. Also two of the Threads get a shared
+      responsibility over a parameter. An extended demo could involve
+      a Watcher that merges parameters at certain points in time. That
+      is, the Watcher would feed back the (half-)solved parameters of
+      the one Thread to the other.
+
+      Now that the strategy is selected, the calibration can be
+      performed.  As defined in our strategy, the calibration is
+      controlled by a hierarchy of six BlackBoard instantiations. The
+      dataset is split over these BlackBoards, and now the
+      responsibility over parameters is split as well.
+
+      Termination strategies can be of the form \[for ( 0 < i < n ) :
+      action\], or \[while (\Delta > x): action\]. This second
+      approach can be dangerous, if the calibration process is not
+      strictly convergent. For now the results are classified as good
+      enough by the user terminating the program.
+
+      After solving we can decide that our results are good enough. Or
+      otherwise we continue solving with a modified selection of
+      parameters per thread. This we will have to hard-code in the top
+      level strategy. In this way we can demonstrate that we can solve
+      for dependent parameters.
+
+      \begin{table}[hbt]
+        \begin{center}%
+          \hypertarget{parametertable}{}%
+          \caption{parameters used}
+          \begin{tabular}{|c|c|c|c|c|c|}
+            \hline 
+            parameter & assigned to 1 & to 2 & to 3 & modelled value & result\tabularnewline
+            \hline 
+            4.38187736305 & yes & no & no & 4 & 3.35925626755 \tabularnewline
+            \hline 
+            78.754188756 & no & yes & no & 8 & 8.45443058014 \tabularnewline
+            \hline 
+            6.27352461391 & no & no & yes & 12 & 12.0457830429 \tabularnewline
+            \hline 
+            75.4624074405 & yes & yes & no & 16 & 19.0403251648 \tabularnewline
+            \hline 
+            & & & & & 17.905040741 \tabularnewline
+            \hline 
+            & & & & & 17.5622787476 \tabularnewline
+            \hline 
+            50.036219115 & yes & no & yes & 20 & 20.7736625671 \tabularnewline
+            \hline
+            & & & & & 20.750919342 \tabularnewline
+            \hline
+            & & & & & 20.4077949524 \tabularnewline
+            \hline
+            99.2854373037 & no & yes & yes & 24 & 30.6347846985 \tabularnewline
+            \hline 
+            & & & & & 27.5158157349 \tabularnewline
+            \hline
+            & & & & & 26.8203983307 \tabularnewline
+            \hline
+          \end{tabular}
+          \label{parametertable}
+        \end{center}
+      \end{table}
+
+      \begin{em}\large{Note: }
+
+        the responsibility over last three parameters is shared
+        between two solution-threads and rotating over the three
+        available threads. This is done to get an idea on how
+        solution-threads can influence each other.
+     
+      \end{em}
+
+      In \hyperlink{parametertable}{Table \ref{parametertable}} the
+      column ``model value'' stands for ``value according to global
+      sky- or instrument model''
+
+      The predict solve step is simulated by a simple formula that
+      puts some inter-dependency in the parameters.
+
+    \subsection{implementation}
+    \label{id2721359}\hypertarget{id2721359}{}%
+
+      \subsubsection{demo prerequisites}
+      \label{id2721362}\hypertarget{id2721362}{}%
+
+        For the breadboard implementation python 2.3b1 was used.  As
+        well as postgresql 7.3.3.  At compile-time swig-1.3.19 is used.
+
+      \subsubsection{The strategy}
+      \label{id2721371}\hypertarget{id2721371}{}%
+        A high level script
+
+        The implementation of the strategy is a python script using
+        the components defined in the selfcal framework. In the final
+        (c++-)implementation of selfcal. The high level control object
+        is a process with an embedded python interpreter. It reads the
+        script when started and in an advanced enterprise-pro-gold
+        version it might supply a GUI to interrupt and/or change the
+        strategy on the fly. The database used supplies the
+        possibility to watch progress on-line and intervene if needed.
+
+      \subsubsection{the solver}
+      \label{id2721390}\hypertarget{id2721390}{}%
+        A c++ stub
+
+        The code that makes parameters converge is:
+
+\begin{Verbatim}[]
+outparams[i] = itsParamValues[i] = 0.8*(itsParamValues[i] + i + 1) +
+                                   0.01*(itsParamValues[(i+1)%itsLen]);
+\end{Verbatim}
+
+        As can see neighbouring parameters are taken into account to
+        emulate interdependencies. The full code can be found in
+        \hyperlink{stub-code}{Appendix {\ref*{stub-code}}}
+
+    \subsection{results}
+    \label{id2721411}\hypertarget{id2721411}{}%
+
+      \subsubsection{resulting graphs}
+
+      \begin{figure}
+        \includegraphics[]{../figures/results.eps}
+        \label{results}\hypertarget{results}{}%
+        \caption{the full set of results evolving through time}
+      \end{figure}
+
+      In \hyperlink{results}{figure \ref{results}} several parameters
+      can be seen that are not being solved for.
+
+      \begin{figure}
+        \includegraphics[]{../figures/1st.eps}
+        \label{1st}\hypertarget{1st}{}%
+        \caption{the results of the first engine evolving through time}
+      \end{figure}
+
+      \begin{figure}
+        \includegraphics[]{../figures/2nd.eps}
+        \label{2nd}\hypertarget{2nd}{}%
+        \caption{the results of the second evolving through time}
+      \end{figure}
+
+      \begin{figure}
+        \includegraphics[]{../figures/3rd.eps}
+        \label{3rd}\hypertarget{3rd}{}%
+        \caption{the results of the third evolving through time}
+      \end{figure}
+
+      \begin{figure}
+        \includegraphics[]{../figures/param1.eps}
+        \label{param1}\hypertarget{param1}{}%
+        \caption{the results on parameter number one for the three engines evolving through time}
+      \end{figure}
+
+      \begin{figure}
+        \includegraphics[]{../figures/param3.eps}
+        \label{param3}\hypertarget{param3}{}%
+        \caption{the results on parameter number one for the three engines evolving through time}
+      \end{figure}
+
+    \subsection{evaluation}
+    \label{subsection-evaluation}\hypertarget{subsection-evaluation}{}%
+
+
+
+\newcommand{\dbappendix}[1]{\section{#1}}%
+
+  \appendix
+
+  \dbappendix{strategy}
+  \label{start script}\hypertarget{start script}{}%
+
+\begin{Verbatim}[]
+#!/usr/bin/env python
+
+"""
+The blackboard package
+
+$Id$
+
+"""
+from bb.BlackBoard import BlackBoard;
+from bb.Thread import Thread;
+from bb.Controller import Controller;
+from bb.Engine import Engine;
+from util import paramset;
+import util.pglist;
+
+#import bb;
+
+
+blb = BlackBoard();
+blbEarlyChild = None;
+blbLateChild = None;
+
+# first get the list of children and the assign them, as can be seen
+# at the sublevel this order can be reversed.
+
+topLevelChildren = blb.split_over_time(2);
+blbEarlyChild = topLevelChildren[0];
+blbLateChild = topLevelChildren[1];
+
+# Adjust the range for the second half of the observation.
+
+blbLateChild.frequency(20,200);
+
+# Initialize the children at the sublevel.
+
+blbLateChildLowChild = None;
+blbLateChildMiddleChild = None;
+blbLateChildHighChild = None;
+
+# Here we first put the children in the list and then assign them all
+# at once. The catch is that you might assign (to) a list with the wrong length.
+
+subLevelChildren = [blbLateChildLowChild, blbLateChildMiddleChild, blbLateChildHighChild];
+subLevelChildren = blbLateChild.split_frequency(3);
+
+# Now forget about all of this and work with one of the BlackBoards.
+# make a set of assumptions for the parameters. These can be different
+# in size for both engines.
+
+numOfParams = 4;
+
+# still fiddling with random in pyton.
+
+paramset.unsetRandom();
+
+ps = util.pglist.list2pgArray(paramset.mkParamSet(numOfParams));
+
+# make the assignments:
+
+ja1 = util.pglist.list2pgArray([True, False, False, False]);
+ja2 = util.pglist.list2pgArray([False, True, True, False]);
+ja3 = util.pglist.list2pgArray([False, False, True, True]);
+
+# initialize the workloads
+
+wl1 = {};
+wl2 = {};
+wl3 = {};
+
+wl1["parameterset"] = ps
+wl1["jobassignment"] = ja1;
+wl1["status"] = "new";
+
+wl2["parameterset"] = ps 
+wl2["jobassignment"] = ja2;
+wl2["status"] = "new";
+
+wl3["parameterset"] = ps 
+wl3["jobassignment"] = ja3;
+wl3["status"] = "new";
+
+# create thread (starts)
+
+thr1 = Thread(wl1);
+thr2 = Thread(wl2);
+thr3 = Thread(wl3);
+
+# create controllers for those threads:
+
+thr1cntrl = Controller(thr1);
+thr2cntrl = Controller(thr2);
+thr3cntrl = Controller(thr3);
+
+# create the engines to work with:
+
+eng1 = Engine();
+eng2 = Engine();
+eng3 = Engine();
+
+# assign the engines to the threads:
+
+thr1cntrl.addEngine(eng1);
+thr2cntrl.addEngine(eng2);
+thr3cntrl.addEngine(eng3);
+
+# register the knowledge sources for (execution)thread control.
+
+blbEarlyChild.register(thr1cntrl);
+blbEarlyChild.register(thr2cntrl);
+blbEarlyChild.register(thr3cntrl);
+blbEarlyChild.register(eng1);
+blbEarlyChild.register(eng2);
+blbEarlyChild.register(eng3);
+
+# all done start the calibration
+
+blbEarlyChild.start();
+
+# the program may not be ended as this gets to the screen. Then again
+# it might.
+import time;
+time.sleep(10)
+
+print "this is the end"
+\end{Verbatim}
+
+  \dbappendix{solver\ stub\ code}
+  \label{stub-code}\hypertarget{stub-code}{}%
+
+\begin{Verbatim}[]
+//  SelfcalEngineStub.h: one line description
+//
+//  Copyright (C) 2002
+//  ASTRON (Netherlands Foundation for Research in Astronomy)
+//  P.O.Box 2, 7990 AA Dwingeloo, The Netherlands, seg@astron.nl
+//
+//  This program is free software; you can redistribute it and/or modify
+//  it under the terms of the GNU General Public License as published by
+//  the Free Software Foundation; either version 2 of the License, or
+//  (at your option) any later version.
+//
+//  This program is distributed in the hope that it will be useful,
+//  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//  GNU General Public License for more details.
+//
+//  You should have received a copy of the GNU General Public License
+//  along with this program; if not, write to the Free Software
+//  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+//
+//  $Id$
+
+#include "SelfcalEngineStub.h"
+
+#include <unistd.h>
+#include <iostream>
+#include <ostream>
+
+
+SelfcalEngineStub::SelfcalEngineStub():itsParamValues(NULL) {
+  std::cout << "SelfcalEngineStub Constructor " << std::endl;
+}
+
+SelfcalEngineStub::~SelfcalEngineStub() {
+  std::cout << "SelfcalEngineStub Destructor " << std::endl;
+  if (itsParamValues != NULL) delete[] itsParamValues;
+}
+
+void SelfcalEngineStub::init(int len,
+			     float parameters[]) {
+  if (itsParamValues != NULL) delete[] itsParamValues;
+  itsLen = len;
+
+  itsParamValues = new float[len];
+  for (int i=0; i<len; i++) {
+    itsParamValues[i] = parameters[i];
+  }
+}
+
+float * SelfcalEngineStub::Solve(bool    *workdef, 
+                                  float   outparams[]) {
+
+  std::cout << "start Solving" << std::flush;
+  for (int i=0; i<itsLen; i++) {
+    //sleep(1);
+    std::cout << "." << std::flush;
+
+    if (workdef[i] == true) {
+      outparams[i] = itsParamValues[i] = 0.8*(itsParamValues[i] + i + 1) + 0.01*(itsParamValues[(i+1)%itsLen]);
+      std::cout << i << " " << outparams[i] << "  ";
+    }
+  }
+  std::cout << "OK" << std::endl;;
+  
+  return outparams;
+  
+}
+
+
+void SelfcalEngineStub::dump() {
+  for (int i=0; i<itsLen; i++) {
+    std::cout << itsParamValues[i] << " ";
+  }
+  std::cout << std::endl;
+\end{Verbatim}
+
+  \dbappendix{revision log}
+  \label{revisionLog}\hypertarget{revisionLog}{}%
+
+    Hand copy log entries from the cvs log, or make up your own.
+
+    \begin{itemize}
+
+      \item 
+
+        Revision 1.1 2003/06/18 12:06:25 daan
+
+        frame and appendix for revision entries
+
+    \end{itemize}
+
+  \bibliography{}
+  \begin{thebibliography}{WIDELABEL}
+
+    \bibitem[nii]{nii}
+      \emph{Blackboard Architectures and Applications} ,
+      Penny Nii,
+      Copyright \copyright{} 1989 Academic Press Inc.,
+      B. Chandrasekaran,
+      0-12-379940-6,
+      Academic Press Inc.,
+      xix-xxix.
+      \label{bib-nii}
+
+    \bibitem[Design Alternatives]{Design Alternatives}
+      \emph{Design Alternatives for Paralel and Distributed Blackboard Systems} ,
+      Daniel Corkill.
+      \label{bib-Design-Alternatives}
+
+    \bibitem[Efficiency]{Efficiency}
+      \emph{EFFICIENCY MECHANISMS FOR A CLASS OF BLOACKBOARD SYSTEMS} ,
+      Ratikorn Hewett and Micheal Hewett.
+      \label{bib-Efficiency}
+
+    \bibitem[LOFAR-ASTRON-ADD-006]{LOFAR-ASTRON-ADD-006}
+      \emph{LOFAR Architectural Design Document} ,
+      Kjeld van der Schaaf,
+      Copyright \copyright{} 2002 ASTRON.
+      \label{LOFAR-ASTRON-ADD-006}
+
+    \bibitem[LOFAR-ASTRON-MEM-035]{LOFAR-ASTRON-MEM-035}
+      \emph{CEP Requirements Analysis, Architectural Design and
+      Description} ,
+      Kjeld van der Schaaf,
+      Copyright \copyright{} 2002 ASTRON.
+      \label{LOFAR-ASTRON-MEM-035}
+
+    \bibitem[PDR-CEP-Software]{PDR-CEP-Software}
+      \emph{CEP Software implementations} ,
+      Kjeld van der Schaaf,
+      Copyright \copyright{} 2003 ASTRON.
+      \label{PDR-CEP-Software}
+
+  \end{thebibliography}
+
+% --------------------------------------------
+% End of document
+% --------------------------------------------
+\end{document}
