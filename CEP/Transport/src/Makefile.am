@@ -4,28 +4,52 @@ else
 SUBDIRS                 = ShMem .
 endif
 
-DOCHDRS		 	= 			
+
+INSTHDRS = \
+BaseDataHolder.h \
+BaseSim.h \
+Connection.h \
+CyclicBuffer.h \
+DataHolder.h \
+DH_PL.h \
+ParamHolder.h \
+PO_DH_PL.h \
+TH_File.h \
+TH_Mem_Bl.h \
+TH_Mem.h \
+TH_MPI.h \
+TH_PL.h \
+Transporter.h \
+TransportHolder.h 
+
+NOINSTHDRS =
+
+TCCHDRS = 
+
+pkginclude_HEADERS = $(INSTHDRS) $(TCCHDRS)
+
+noinst_HEADERS = $(NOINSTHDRS)
+
+DOCHDRS	= $(INSTHDRS) $(NOINSTHDRS)
 
 lib_LTLIBRARIES 	= libtransport.la 
 
-libtransport_la_SOURCES = 	\
-$(DOCHDRS)			\
-Transporter.cc			\
-BaseDataHolder.cc		\
-ParamHolder.cc			\
-DataHolder.cc			\
-TransportHolder.cc		\
-Connection.cc			\
-TH_File.cc			\
-TH_Mem.cc			\
-TH_MPI.cc			\
-TH_Mem_Bl.cc			\
-CyclicBuffer.cc			
+libtransport_la_SOURCES = \
+BaseDataHolder.cc \
+Connection.cc \
+CyclicBuffer.cc \
+DataHolder.cc \
+DH_PL.cc \
+ParamHolder.cc \
+PO_DH_PL.cc \
+TH_File.cc \
+TH_Mem_Bl.cc \
+TH_Mem.cc \
+TH_MPI.cc \
+TH_PL.cc \
+Transporter.cc \
+TransportHolder.cc 
 
-#TH_PL.cc			\
-#DH_PL.cc			
-
-EXTRA_DIST = assay
 
 AM_YFLAGS               = -d -p AppControllerParse
 AM_LFLAGS               = -PAppControllerTokenize

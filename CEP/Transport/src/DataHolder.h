@@ -27,9 +27,6 @@
 
 //# Includes
 #include <Common/lofar_string.h>
-#include <Common/lofar_fstream.h>
-
-#include <libTransport/BaseSim.h>
 #include <libTransport/BaseDataHolder.h>
 
 namespace LOFAR
@@ -70,9 +67,6 @@ public:
   /// Construct a DataHolder with a default name
   DataHolder (const string& name="aDataHolder",
 	      const string& type="DH");
-  
-  string       itsName;
-  string       itsType;
 };
 
 

@@ -27,9 +27,8 @@
 
 #include <libTransport/DataHolder.h>		// for super-class definition
 #include <Common/LofarTypes.h>			// for ulong
-#include <PL/PersistentObject.h>
+#include <PL/PLfwd.h>
 
-class DH_PL_PO;
 
 namespace LOFAR {
 
@@ -40,26 +39,46 @@ namespace LOFAR {
 class DH_PL : public DataHolder {
 
 public:
+  typedef PL::TPersistentObject<DH_PL> PO_DH_PL;
 
-  explicit DH_PL (const string& name, const string& type);
+  explicit DH_PL (const string& name="DH_PL", const string& type="DH_PL");
+
   virtual ~DH_PL ();
 
-  // get a reference to the PersistentObject.
+  virtual DH_PL* clone() const;
+
+  // Get a reference to the PersistentObject.
   PL::PersistentObject& getPO() const;		       
 
-  // pass the seqnr and get a reference to the PersistentObject.
-  PL::PersistentObject& preparePO(int SeqNo);		       
+  // Pass the seqnr and get a reference to the PersistentObject.
+  PL::PersistentObject& preparePO (int seqnr);		       
   
-private:
-   
-  int AppId;
-  int Tag;
-  int SeqNo;
-  string Status;
-  int Size;
-  string TimeStamp;
+  // Let the Transporter initialize the object.
+  void initPO (int tag, int id);
 
-  DH_PL_PO *itsPODHPL;
+  // Get the variable values.
+  // <group>
+  int getId() const
+    { return itsAppId; }
+  int getTag() const
+    { return itsTag; }
+  int getSeqNr() const
+    { return itsSeqNr; }
+  // </group>
+
+protected:
+  // Copy constructor.
+  DH_PL (const DH_PL&);
+
+private:
+  // Forbid assignment.
+  DH_PL& operator= (const DH_PL&);
+  
+  int itsAppId;
+  int itsTag;
+  int itsSeqNr;
+
+  PO_DH_PL* itsPODHPL;
 };
  
  
