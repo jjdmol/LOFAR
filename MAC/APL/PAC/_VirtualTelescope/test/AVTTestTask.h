@@ -31,6 +31,7 @@
 #include <GCF/GCF_Port.h>
 #include <GCF/GCF_MyPropertySet.h>
 #include <GCF/GCF_Apc.h>
+#include <boost/shared_ptr.hpp>
 
 //# VirtualTelescope Includes
 #include "../src/AVTVirtualTelescope.h"
@@ -66,8 +67,8 @@ class AVTTestTask : public GCFTask
     GCFEvent::TResult test9(GCFEvent& e, GCFPortInterface& p);
     GCFEvent::TResult finished(GCFEvent& e, GCFPortInterface& p);
     
-    AVTStationBeamformer m_beamformer;
-    AVTVirtualTelescope  m_virtualTelescope;
+    boost::shared_ptr<AVTStationBeamformer> m_beamformer;
+    boost::shared_ptr<AVTVirtualTelescope>  m_virtualTelescope;
     GCFPort              m_BFPort;
     GCFPort              m_VTPort;
     

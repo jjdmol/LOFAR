@@ -34,12 +34,16 @@
 #include <GCF/GCF_Apc.h>
 
 //# local includes
+#include "AVTPropertySetAnswerHandlerInterface.h"
+#include "AVTAPCAnswerHandlerInterface.h"
 #include "AVTPropertySetAnswer.h"
 #include "AVTAPCAnswer.h"
 
 // forward declaration
 
-class AVTLogicalDevice : public GCFTask
+class AVTLogicalDevice : public GCFTask, 
+                                AVTPropertySetAnswerHandlerInterface,
+                                AVTAPCAnswerHandlerInterface
 {
   public:
 
@@ -90,14 +94,6 @@ class AVTLogicalDevice : public GCFTask
      * The releasing state handler. 
      */
     GCFEvent::TResult releasing_state(GCFEvent& e, GCFPortInterface& p);
-    /**
-     * PropertySet answer handling is implemented in the derived classes. 
-     */
-    virtual void handlePropertySetAnswer(GCFEvent& answer)=0;
-    /**
-     * APC answer handling is implemented in the derived classes. 
-     */
-    virtual void handleAPCAnswer(GCFEvent& answer)=0;
 
   protected:
     // protected default constructor

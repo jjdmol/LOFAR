@@ -1,4 +1,4 @@
-//#  AVTTestMain.cc: Main entry for the Virtual Telescope test
+//#  AVTPropertySetAnswerHandlerInterface.h: interface for the APC answer handler.
 //#
 //#  Copyright (C) 2002-2004
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,25 +20,37 @@
 //#
 //#  $Id$
 
-#include <GCF/GCF_Task.h>
-#include "../../../APLCommon/src/suite.h"
-#include "AVTTest.h"
-#include <boost/shared_ptr.hpp>
+#ifndef AVTAPCAnswerHandlerInterface_H
+#define AVTAPCAnswerHandlerInterface_H
 
-int main(int argc, char* argv[])
+//# Includes
+//# Common Includes
+//# GCF Includes
+#include <GCF/GCF_Event.h>
+
+//# local includes
+
+// forward declaration
+
+class AVTAPCAnswerHandlerInterface
 {
-  int retval=-1;
-  
-  {
-    GCFTask::init(argc, argv);
-    
-    Suite s("MAC.APL.PAC VirtualTelescope Test",&cout);
-  
-    boost::shared_ptr<AVTTest> avtTest(new AVTTest);
-    s.addTest(avtTest.get());
-    s.run();
-    retval=s.report();
-  }
-  return retval;
-}
+  public:
 
+    AVTAPCAnswerHandlerInterface() {};  
+    virtual ~AVTAPCAnswerHandlerInterface() {};
+
+    /**
+     * APC answer handling is implemented in the derived classes. 
+     */
+    virtual void handleAPCAnswer(GCFEvent& answer)=0;
+
+  protected:
+    // protected copy constructor
+    AVTAPCAnswerHandlerInterface(const AVTAPCAnswerHandlerInterface&);
+    // protected assignment operator
+    AVTAPCAnswerHandlerInterface& operator=(const AVTAPCAnswerHandlerInterface&);
+
+  private:
+  
+};
+#endif

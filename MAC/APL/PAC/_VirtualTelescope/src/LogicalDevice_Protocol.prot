@@ -22,7 +22,7 @@
 autogen definitions protocol;
 
 description = "Protocol for LogicalDevice servers";
-prefix = "LogicalDevice"; // for the signal names
+prefix = "LOGICALDEVICE"; // for the signal names
 
 // specify extra include files
 // e.g.
@@ -30,7 +30,7 @@ include = '<sys/time.h>';
 
 prelude = << PRELUDE_END
 enum {
-	LOGICALDEVICE_PROTOCOL = F_APL_PROTOCOL
+	LOGICALDEVICE_PROTOCOL = (F_APL_PROTOCOL+100)
 };
 PRELUDE_END;
 
@@ -43,14 +43,11 @@ PRELUDE_END;
 event = {
 	signal = SCHEDULE;
 	dir = IN;
-//	param = {
-//		name = "seqnr";
-//		type = "unsigned int";
-//	};
-//	param = {
-//		name = "ping_time";
-//		type = "timeval";
-//	};
+	param = {
+		name = "name";
+		type = "char";
+		dim = "50";
+	};
 };
 
 event = {
