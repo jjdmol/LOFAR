@@ -33,57 +33,57 @@ namespace LOFAR {
     //
     // This is the base exception class for the Persistence Layer.
     //
-    EXCEPTION_CLASS(PLException, LOFAR::Exception);
+    EXCEPTION_CLASS(Exception, LOFAR::Exception);
 
 
     // 
     // This exception is thrown when an error occurs during a delete
     // operation on the database.
     //
-    EXCEPTION_CLASS(EraseError, PLException);
+    EXCEPTION_CLASS(EraseError, Exception);
 
     //
     // This exception is thrown when an error occurs during an insert
     // operation on the database.
     //
-    EXCEPTION_CLASS(InsertError, PLException);
+    EXCEPTION_CLASS(InsertError, Exception);
 
     //
     // This exception is thrown when an error occurs during a select
     // operation on the database.
     //
-    EXCEPTION_CLASS(RetrieveError, PLException);
+    EXCEPTION_CLASS(RetrieveError, Exception);
 
     //
     // This exception is thrown when an error occurs during an update
     // operation on the database.
     //
-    EXCEPTION_CLASS(UpdateError, PLException);
+    EXCEPTION_CLASS(UpdateError, Exception);
 
     //
     // This exception is thrown when an error occurs during processing
     // of an SQL query.
     //
-    EXCEPTION_CLASS(QueryError, PLException);
+    EXCEPTION_CLASS(QueryError, Exception);
 
     //
     // This exception is thrown when a called method is not (yet) implemented.
     // One common situation for this exception is the use of a template
     // method for which a specialization is required.
     //
-    EXCEPTION_CLASS(NotImplemented, PLException);
+    EXCEPTION_CLASS(NotImplemented, Exception);
 
     //
     // This exception is thrown when an error occurs within the 
     // PersistenceBroker class.
     //
-    EXCEPTION_CLASS(BrokerException, PLException);
+    EXCEPTION_CLASS(BrokerException, Exception);
 
     //
     // This exception is thrown when an error occurs within the 
     // Collection class.
     //
-    EXCEPTION_CLASS(CollectionException, PLException);
+    EXCEPTION_CLASS(CollectionException, Exception);
 
   }
 
