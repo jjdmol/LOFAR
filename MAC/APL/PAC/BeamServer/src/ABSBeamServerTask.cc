@@ -32,7 +32,7 @@
 #include "ABSBeamlet.h"
 
 #include <iostream>
-#include <strstream>
+#include <sstream>
 #include <time.h>
 #include <string.h>
 
@@ -40,7 +40,7 @@
 
 #include <boost/date_time/posix_time/posix_time.hpp>
 
-#include <APLConfig.h>
+#include <PSAccess.h>
 
 #ifndef ABS_SYSCONF
 #define ABS_SYSCONF "."
@@ -73,9 +73,9 @@ using namespace RSP_Protocol;
 
 BeamServerTask::BeamServerTask(string name)
     : GCFTask((State)&BeamServerTask::initial, name),
-      m_pos(GET_CONFIG("N_RSPBOARDS", i) * GET_CONFIG("N_BLPS", i), N_POL, N_DIM),
-      m_weights(COMPUTE_INTERVAL, GET_CONFIG("N_RSPBOARDS", i) * GET_CONFIG("N_BLPS", i), N_BEAMLETS, N_POL),
-      m_weights16(COMPUTE_INTERVAL, GET_CONFIG("N_RSPBOARDS", i) * GET_CONFIG("N_BLPS", i), N_BEAMLETS, N_POL),
+      m_pos(GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i), N_POL, N_DIM),
+      m_weights(COMPUTE_INTERVAL, GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i), N_BEAMLETS, N_POL),
+      m_weights16(COMPUTE_INTERVAL, GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i), N_BEAMLETS, N_POL),
       m_subbands_modified(false)
 {
   registerProtocol(ABS_PROTOCOL, ABS_PROTOCOL_signalnames);
@@ -103,7 +103,7 @@ BeamServerTask::BeamServerTask(string name)
 
   LOG_DEBUG_STR(m_pos);
 #else
-  istrstream config_positions(GET_CONFIG_STRING("ANTENNA_POSITIONS"));
+  istringstream config_positions(GET_CONFIG_STRING("RS.ANTENNA_POSITIONS"));
   config_positions >> m_pos;
 
   LOG_INFO_STR("ANTENNA_POSITIONS = " << m_pos);
@@ -541,7 +541,7 @@ void BeamServerTask::wgenable_action()
   
   wg.timestamp.setNow();
   wg.blpmask.reset();
-  for (int i = 0; i < GET_CONFIG("N_RSPBOARDS", i) * GET_CONFIG("N_BLPS", i); i++) wg.blpmask.set(i);
+  for (int i = 0; i < GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i); i++) wg.blpmask.set(i);
   wg.settings().resize(1);
   // scale and convert to uint16
   wg.settings()(0).freq = (uint16)(((m_wgsetting.frequency * (1 << 16)) / SYSTEM_CLOCK_FREQ) + 0.5);
@@ -559,7 +559,7 @@ void BeamServerTask::wgdisable_action()
   
   wg.timestamp.setNow();
   wg.blpmask.reset();
-  for (int i = 0; i < GET_CONFIG("N_RSPBOARDS", i) * GET_CONFIG("N_BLPS", i); i++) wg.blpmask.set(i);
+  for (int i = 0; i < GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i); i++) wg.blpmask.set(i);
   wg.settings().resize(1);
   wg.settings()(0).freq = 0;
   wg.settings()(0).ampl = 0;
@@ -631,7 +631,7 @@ void BeamServerTask::compute_weights(long current_seconds)
   m_weights16 = convert2complex_int16_t(conj(m_weights));
 #else
   for (int i = 0; i < COMPUTE_INTERVAL; i++)
-    for (int j = 0; j < GET_CONFIG("N_RSPBOARDS", i) * GET_CONFIG("N_BLPS", i); j++)
+    for (int j = 0; j < GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i); j++)
       for (int k = 0; k < N_BEAMLETS; k++)
 	for (int l = 0; l < N_POL; l++)
 	  {
@@ -656,9 +656,9 @@ void BeamServerTask::send_weights()
 
   // select all BLPS, no subarraying
   sw.blpmask.reset();
-  for (int i = 0; i < GET_CONFIG("N_RSPBOARDS", i) * GET_CONFIG("N_BLPS", i); i++) sw.blpmask.set(i);
+  for (int i = 0; i < GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i); i++) sw.blpmask.set(i);
 
-  sw.weights().resize(COMPUTE_INTERVAL, GET_CONFIG("N_RSPBOARDS", i) * GET_CONFIG("N_BLPS", i), N_BEAMLETS, N_POL);
+  sw.weights().resize(COMPUTE_INTERVAL, GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i), N_BEAMLETS, N_POL);
   sw.weights() = m_weights16;
 
   m_rspdriver.send(sw);
@@ -686,7 +686,7 @@ void BeamServerTask::send_sbselection()
 
   // select all BLPS, no subarraying
   ss.blpmask.reset();
-  for (int i = 0; i < GET_CONFIG("N_RSPBOARDS", i) * GET_CONFIG("N_BLPS", i); i++) ss.blpmask.set(i);
+  for (int i = 0; i < GET_CONFIG("RS.N_RSPBOARDS", i) * GET_CONFIG("RS.N_BLPS", i); i++) ss.blpmask.set(i);
 
   //
   // Always allocate the array as if all beamlets were
@@ -777,15 +777,33 @@ int main(int argc, char** argv)
 
   LOG_INFO(formatString("Program %s has started", argv[0]));
 
-  APLConfig::getInstance().load("BEAMSERVER", ABS_SYSCONF "/beamserver.conf");
-
+  try 
+  {
+    GCF::ParameterSet::instance()->adoptFile("BeamServerPorts.conf");
+    GCF::ParameterSet::instance()->adoptFile("RemoteStation.conf");
+    GCF::ParameterSet::instance()->adoptFile("BeamServer.conf");
+  }
+  catch (Exception e)
+  {
+    cerr << "Failed to load configuration files: " << e.text() << endl;
+    exit(EXIT_FAILURE);
+  }
+  
   GCFTask::init(argc, argv);
 
-  BeamServerTask abs("ABS");
+  BeamServerTask abs("BeamServer");
 
   abs.start(); // make initial transition
 
-  GCFTask::run();
+  try
+  {
+    GCFTask::run();
+  }
+  catch (Exception e)
+  {
+    cerr << "Exception: " << e.text() << endl;
+    exit(EXIT_FAILURE);
+  }
 
   LOG_INFO("Normal termination of program");
 

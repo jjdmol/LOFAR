@@ -20,7 +20,9 @@ BUILT_SOURCES = \
 	abs.top \
 	pac.ns \
 	pac.top \
-	beamserver.conf
+	beamserver.conf \
+	BeamServerPorts.conf \
+	BeamServer.conf
 
 EXTRA_DIST = \
 	ABS_Protocol.ph \
@@ -31,7 +33,9 @@ sysconf_DATA = \
 	log4cplus.properties \
 	pac.ns \
 	pac.top \
-	beamserver.conf
+	beamserver.conf \
+	BeamServerPorts.conf \
+	BeamServer.conf
 
 include_HEADERS = \
 	$(top_builddir)/src/ABS_Protocol.ph
