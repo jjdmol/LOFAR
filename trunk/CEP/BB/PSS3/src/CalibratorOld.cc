@@ -216,9 +216,9 @@ void CalibratorOld::resetTimeIntervalIterator (void) {
 }
 
 
-bool CalibratorOld::advanceTimeIntervalIterator (bool callInitParms) {
+bool CalibratorOld::advanceTimeIntervalIterator (bool callReadPolcs) {
   TRACERF2 ("MeqCalImpl -> nextInterval ()");
-  return itsPSS3CalibratorImpl -> nextInterval (callInitParms);
+  return itsPSS3CalibratorImpl -> nextInterval (callReadPolcs);
 }
 
 
