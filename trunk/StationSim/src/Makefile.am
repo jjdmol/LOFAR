@@ -11,6 +11,7 @@ Signal.h					\
 Source.h					\
 StationSim.h					\
 Trajectory.h					\
+MDL.h						\
 WH_AddSignals.h					\
 WH_CreateSource.h				\
 WH_Modulate.h					\
@@ -39,6 +40,7 @@ Signal.cc					\
 Source.cc					\
 StationSim.cc					\
 Trajectory.cc					\
+MDL.cc						\
 WH_AddSignals.cc				\
 WH_CreateSource.cc				\
 WH_Modulate.cc					\
