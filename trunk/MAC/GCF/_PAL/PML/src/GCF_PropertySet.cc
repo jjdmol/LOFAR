@@ -23,23 +23,29 @@
 #include <GCF/PAL/GCF_PropertySet.h>
 #include <GCF/PAL/GCF_ExtPropertySet.h>
 #include <GCF/PAL/GCF_Property.h>
+#include <GCF/PAL/GCF_Answer.h>
+#include <GCF/GCF_PValue.h>
 #include <GCF/Utils.h>
 #include <GPM_Defines.h>
+#include <GPM_Controller.h>
+
+const TProperty dummyPropInfo =
+  {"DUMMY", LPT_BOOL, 0, "FALSE"};
 
 GCFPropertySet::GCFPropertySet (const char* name,
                                 const TPropertySet& typeInfo,
                                 GCFAnswer* pAnswerObj) : 
+  _isBusy(false),
   _pAnswerObj(pAnswerObj),
-  _scope(name),
-  _propSetInfo(typeInfo),
-  _dummyProperty("", this)
-  _isBusy(false),  
+  _scope((name ? name : "")),
+  _dummyProperty(dummyPropInfo, this),
+  _propSetInfo(typeInfo)
 {
-  if (!Utils::isValidPropName(scope.c_str()))
+  if (!Utils::isValidPropName(_scope.c_str()))
   {
-    LOFAR_LOG_WARN(PML_STDOUT_LOGGER, ( 
+    LOG_WARN(LOFAR::formatString ( 
         "Scope %s meets not the name convention! Set to \"\"",
-        scope.c_str()));
+        _scope.c_str()));
     _scope = "";
   }
 }
@@ -48,9 +54,13 @@ GCFPropertySet::~GCFPropertySet()
 {
   clearAllProperties();
   _dummyProperty.resetPropSetRef();
+  
+  GPMController* pController = GPMController::instance();  
+  assert(pController);
+  pController->deletePropSet(*this); 
 }
 
-void GCFMyPropertySet::loadPropSetIntoRam()
+void GCFPropertySet::loadPropSetIntoRam()
 {
   GCFProperty* pProperty;
   const char* propName;
@@ -115,6 +125,20 @@ TGCFResult GCFPropertySet::setValue (const string propName,
     return GCF_PROP_NOT_IN_SET;
   }
 }
+
+TGCFResult GCFPropertySet::setValue (const string propName, 
+                                         const string value)
+{
+  GCFProperty* pProperty = getProperty(propName);
+  if (pProperty)
+  {
+    return pProperty->setValue(value);    
+  }
+  else 
+  {
+    return GCF_PROP_NOT_IN_SET;
+  }
+}
                              
 void GCFPropertySet::setAnswer (GCFAnswer* pAnswerObj)
 {
@@ -158,7 +182,7 @@ void GCFPropertySet::configured(TGCFResult result, const string& apcName)
 {
   if (_pAnswerObj != 0)
   {
-    GCFConfAnswerEvent e(sig);
+    GCFConfAnswerEvent e;
     e.pScope = getScope().c_str();
     e.pApcName = apcName.c_str();
     e.result = result;
@@ -215,6 +239,19 @@ void GCFPropertySet::dispatchAnswer(unsigned short sig, TGCFResult result)
     e.pScope = getScope().c_str();
     e.result = result;
     _pAnswerObj->handleAnswer(e);
+  }
+}
+
+void GCFPropertySet::setDefaults()
+{
+  const TProperty* pPropertyFields;
+  for (unsigned int i = 0; i < _propSetInfo.nrOfProperties; i++)
+  {
+    pPropertyFields = &_propSetInfo.properties[i];
+    if (pPropertyFields->defaultValue)
+    {
+      setValue(pPropertyFields->propName, pPropertyFields->defaultValue);
+    }
   }
 }
 

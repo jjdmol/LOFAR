@@ -24,7 +24,7 @@
 #ifndef _PING_H_
 #define _PING_H_
 
-#include <GCF/GCF_Control.h>
+#include <GCF/TM/GCF_Control.h>
 #include <sys/time.h>
 
 /**

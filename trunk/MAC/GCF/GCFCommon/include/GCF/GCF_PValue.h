@@ -41,13 +41,7 @@ class GCFPValue
      * In case a dynamic array will be used the type ID enumeration starts on 
      * 0x80.
      */
-    enum TMACValueType {NO_LPT, LPT_BOOL, LPT_CHAR, LPT_UNSIGNED, LPT_INTEGER, 
-                    LPT_BIT32, LPT_BLOB, LPT_REF, LPT_DOUBLE, LPT_DATETIME,
-                    LPT_STRING, LPT_DYNARR = 0x80,
-                    LPT_DYNBOOL, LPT_DYNCHAR, LPT_DYNUNSIGNED, LPT_DYNINTEGER, 
-                    LPT_DYNBIT32, LPT_DYNBLOB, LPT_DYNREF, LPT_DYNDOUBLE, LPT_DYNDATETIME,
-                    LPT_DYNSTRING };
-    /**
+   /**
      * The constructor
      * Sets the type ID for each subclassed property value type class
      * @param type MAC property type ID

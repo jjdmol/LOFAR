@@ -86,7 +86,9 @@ void GCFTask::init(int argc, char** argv)
     serviceFilesPath += '/';
   
   serviceFilesPrefix = serviceFilesPath + serviceFilesPrefix;
-    
+
+  INIT_LOGGER(serviceFilesPath + "log4cplus.properties");   
+
   if (GTMNameService::instance()->init(serviceFilesPrefix.c_str()) < 0)
   {
     LOG_ERROR(LOFAR::formatString ( 

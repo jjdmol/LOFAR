@@ -29,6 +29,7 @@
 #include <Common/lofar_map.h>
 class GCFAnswer;
 class GCFPValue;
+class GPMController;
 
 /** 
  * This class is the base class for the 2 types of property set containers. It 
@@ -69,8 +70,11 @@ class GCFPropertySet
      * @param propName with or without the scope
      * @returns 0 if not in this property set
      */
-    virtual TGCFResult setValue (const string propName, 
+    TGCFResult setValue (const string propName, 
                                  const GCFPValue& value);
+
+    TGCFResult setValue (const string propName, ///< can be specified with or without the scope
+                         const string value);
 
     virtual void setAnswer (GCFAnswer* pAnswerObj);          
 
@@ -83,9 +87,10 @@ class GCFPropertySet
                     GCFAnswer* pAnswerObj);
     
   protected: // helper methods
-    virtual GCFProperty* createPropObject(TProperty& propInfo) = 0;
-    void loadPropSetIntoRam();
+    virtual GCFProperty* createPropObject(const TProperty& propInfo) = 0;
     void dispatchAnswer (unsigned short sig, TGCFResult result);
+    void setDefaults();
+    void loadPropSetIntoRam();
     
   protected: // helper attributes
     typedef map<string /*propName*/, GCFProperty*> TPropertyList;

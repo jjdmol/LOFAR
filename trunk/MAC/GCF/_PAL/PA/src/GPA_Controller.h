@@ -47,14 +47,18 @@ class GPAController : public GCFTask
   
 	private: // state methods
 		GCFEvent::TResult initial(GCFEvent& e, GCFPortInterface& p);
-		GCFEvent::TResult connected(GCFEvent& e, GCFPortInterface& p);
+		GCFEvent::TResult operational(GCFEvent& e, GCFPortInterface& p);
+    GCFEvent::TResult linking(GCFEvent& e, GCFPortInterface& p);
+    GCFEvent::TResult unlinking(GCFEvent& e, GCFPortInterface& p);
 
   private: // helper methods
     friend class GPAPropertySet;
     bool mayContinue(GCFEvent& e, GCFPortInterface& p);
     void sendAndNext(GCFEvent& e);
-    void doNextRequest();
+    void doNextRequest();    
     GPAPropertySet* findPropSet(const string& scope) const;
+    void acceptConnectRequest();
+    void closeConnection(GCFPortInterface& p);
     
 	private: // data members
     typedef map<string /*scope*/, GPAPropertySet*> TPropertySets;
@@ -68,8 +72,9 @@ class GPAController : public GCFTask
   private: // admin. data members
     bool                _isBusy;
     bool                _isRegistered;
-    long                _deletePortTimId;
+    unsigned long                _deletePortTimId;
     unsigned int        _counter;  
+    GPAPropertySet*     _pCurPropSet;
     
 };
 

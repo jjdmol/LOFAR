@@ -161,7 +161,7 @@ ssize_t GCFTCPPort::send(GCFEvent& e)
   if ((written = _pSocket->send(buf, packsize)) != packsize)
   {
     LOG_DEBUG(LOFAR::formatString (
-        "truncated send: %s",
+        "truncated send, error: %s",
         strerror(errno)));
         
     schedule_disconnected();

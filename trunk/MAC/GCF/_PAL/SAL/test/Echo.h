@@ -25,7 +25,7 @@
 #ifndef _ECHO_H_
 #define _ECHO_H_
 
-#include <GCF/GCF_Control.h>
+#include <GCF/TM/GCF_Control.h>
 #include "Service.h"
 #include <Common/lofar_string.h>
 

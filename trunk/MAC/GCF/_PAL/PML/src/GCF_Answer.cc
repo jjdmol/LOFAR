@@ -37,4 +37,5 @@ const char* F_PML_PROTOCOL_signalnames[] =
   "F_PS_CONFIGURED (IN)",
   "F_MYPS_ENABLED (IN)",
   "F_MYPS_DISABLED (IN)",
+  "F_SERVER_GONE (IN)",
 };

@@ -47,18 +47,18 @@ const string GCFProperty::getFullName () const
 {
   if (_pPropertySet == 0)
   {
-    return _name;
+    return _propInfo.propName;
   }
   else
   {
     string scope = _pPropertySet->getScope();
     if (scope.length() == 0)
     {
-      return _name;
+      return _propInfo.propName;
     }
     else
     {
-      string fullName = scope + GCF_PROP_NAME_SEP + _name;
+      string fullName = scope + GCF_PROP_NAME_SEP + _propInfo.propName;
       return fullName;
     }
   }
@@ -73,6 +73,21 @@ TGCFResult GCFProperty::setValue(const GCFPValue& value)
 { 
   assert(_pPropService);
   return _pPropService->setPropValue(getFullName(), value); 
+}
+
+TGCFResult GCFProperty::setValue(const string& value)
+{ 
+  assert(_pPropService);
+  GCFPValue* pValue = GCFPValue::createMACTypeObject(_propInfo.type);
+  if (pValue) 
+  { 
+    pValue->setValue(value);
+    return _pPropService->setPropValue(getFullName(), *pValue); 
+  }
+  else 
+  {
+    return GCF_PROP_WRONG_TYPE;
+  }
 }
 
 bool GCFProperty::exists () 
@@ -104,7 +119,7 @@ void GCFProperty::dispatchAnswer(GCFEvent& answer)
 void GCFProperty::subscribed ()
 {
   GCFPropAnswerEvent e(F_SUBSCRIBED);
-  e.pPropName = _name.c_str();
+  e.pPropName = _propInfo.propName;
   dispatchAnswer(e);
 }
 
@@ -112,7 +127,7 @@ void GCFProperty::valueChanged (const GCFPValue& value)
 {
   GCFPropValueEvent e(F_VCHANGEMSG);
   e.pValue = &value;
-  e.pPropName = _name.c_str();
+  e.pPropName = _propInfo.propName;
   e.internal = false;
   dispatchAnswer(e);
 }
@@ -121,6 +136,6 @@ void GCFProperty::valueGet (const GCFPValue& value)
 {
   GCFPropValueEvent e(F_VGETRESP);
   e.pValue = &value;
-  e.pPropName = _name.c_str();
+  e.pPropName = _propInfo.propName;
   dispatchAnswer(e);
 }

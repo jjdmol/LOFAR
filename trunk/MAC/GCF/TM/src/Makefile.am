@@ -26,9 +26,9 @@ DOCHDRS = $(pkginclude_HEADERS) \
   Socket/GTM_SocketHandler.h \
   Socket/GTM_ETHSocket.h
     
-lib_LTLIBRARIES 	= libtm.la
+lib_LTLIBRARIES 	= libgcftm.la
 
-libtm_la_SOURCES= $(DOCHDRS) \
+libgcftm_la_SOURCES= $(DOCHDRS) \
   GCF_Fsm.cc \
   GCF_Protocols.cc \
   GCF_Task.cc \
@@ -49,7 +49,7 @@ libtm_la_SOURCES= $(DOCHDRS) \
   Socket/GTM_ETHSocket.cc \
   Socket/GCF_ETHRawPort.cc
 
-libtm_la_CPPFLAGS=-I$(top_srcdir)/include
+libgcftm_la_CPPFLAGS=-I$(top_srcdir)/include
 
 include $(lofar_sharedir)/Makefile.common
 

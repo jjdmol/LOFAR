@@ -14,7 +14,7 @@ libgcfrttest_la_DOCHDRS	=	\
   RTAnswer.h \
   RTDefines.h
 
-noinst_LTLIBRARIES 	= libgcftest.la libgcfrttest.la
+noinst_LTLIBRARIES 	= libgcftest.la #libgcfrttest.la
 
 libgcftest_la_SOURCES= $(libgcftest_la_DOCHDRS) \
 	SupervisedTask.cc \
@@ -26,7 +26,7 @@ libgcfrttest_la_SOURCES= $(libgcfrttest_la_DOCHDRS) \
  	RTAnswer.cc \
 	Echo_Protocol.cc
 
-bin_PROGRAMS   		= Application1 Application2 RTEcho RTPing
+bin_PROGRAMS   		= Application1 Application2 #RTEcho RTPing
   
 Application1_SOURCES		    = Application1.cc
 Application1_LDADD		      = libgcftest.la 
@@ -62,8 +62,7 @@ EXTRA_DIST = \
 configfilesdir=$(bindir)
 configfiles_DATA= \
 	test.ns \
-	test.top \
-	log4cplus.properties
+	test.top
 	
 %.properties: $(MAC_CONFIG)/%.properties
 	cp $< $@

@@ -115,6 +115,36 @@ class GCFAnswer
     //@}
 };
 
+enum {
+  F_PML_PROTOCOL = F_GCF_PROTOCOL + 2,
+};
+/**
+ * F_PML_PROTOCOL signals
+ */
+enum {
+  F_SUBSCRIBED_ID = 1,                                 
+  F_UNSUBSCRIBED_ID,      
+  F_VCHANGEMSG_ID,               
+  F_VGETRESP_ID,        
+  F_EXTPS_LOADED_ID,
+  F_EXTPS_UNLOADED_ID,
+  F_PS_CONFIGURED_ID,
+  F_MYPS_ENABLED_ID,
+  F_MYPS_DISABLED_ID,
+  F_SERVER_GONE_ID,
+};
+
+#define F_SUBSCRIBED      F_SIGNAL(F_PML_PROTOCOL, F_SUBSCRIBED_ID,    F_IN)
+#define F_UNSUBSCRIBED    F_SIGNAL(F_PML_PROTOCOL, F_UNSUBSCRIBED_ID,  F_IN)
+#define F_VCHANGEMSG      F_SIGNAL(F_PML_PROTOCOL, F_VCHANGEMSG_ID,    F_IN)
+#define F_VGETRESP        F_SIGNAL(F_PML_PROTOCOL, F_VGETRESP_ID,      F_IN)
+#define F_EXTPS_LOADED    F_SIGNAL(F_PML_PROTOCOL, F_EXTPS_LOADED_ID,  F_IN)
+#define F_EXTPS_UNLOADED  F_SIGNAL(F_PML_PROTOCOL, F_EXTPS_UNLOADED_ID,F_IN)
+#define F_PS_CONFIGURED   F_SIGNAL(F_PML_PROTOCOL, F_PS_CONFIGURED_ID, F_IN)
+#define F_MYPS_ENABLED    F_SIGNAL(F_PML_PROTOCOL, F_MYPS_ENABLED_ID,  F_IN)
+#define F_MYPS_DISABLED   F_SIGNAL(F_PML_PROTOCOL, F_MYPS_DISABLED_ID, F_IN)
+#define F_SERVER_GONE     F_SIGNAL(F_PML_PROTOCOL, F_SERVER_GONE_ID,   F_IN)
+
 /// NOTE: These structs cannot be used to send messages by real port 
 /// implementations like TCP. 
 struct GCFPropValueEvent : public GCFEvent
@@ -157,40 +187,13 @@ struct GCFPropSetAnswerEvent : public GCFEvent
 struct GCFConfAnswerEvent : public GCFPropSetAnswerEvent
 {
   /// @param sig can only be F_PS_CONFIGURED
-  GCFConfAnswerEvent(unsigned short sig) : GCFPropSetAnswerEvent(sig)
+  GCFConfAnswerEvent() : GCFPropSetAnswerEvent(F_PS_CONFIGURED)
   {
       length = sizeof(GCFConfAnswerEvent);
   }
   const char* pApcName; ///< Pointer to the name string of the APC (excl. path and extension)
 };
 
-enum {
-  F_PML_PROTOCOL = F_GCF_PROTOCOL + 2,
-};
-/**
- * F_PML_PROTOCOL signals
- */
-enum {
-  F_SUBSCRIBED_ID = 1,                                 
-  F_UNSUBSCRIBED_ID,      
-  F_VCHANGEMSG_ID,               
-  F_VGETRESP_ID,        
-  F_EXTPS_LOADED_ID,
-  F_EXTPS_UNLOADED_ID,
-  F_PS_CONFIGURED_ID,
-  F_MYPS_ENABLED_ID,
-  F_MYPS_DISABLED_ID,
-};
-
-#define F_SUBSCRIBED      F_SIGNAL(F_PML_PROTOCOL, F_SUBSCRIBED_ID,    F_IN)
-#define F_UNSUBSCRIBED    F_SIGNAL(F_PML_PROTOCOL, F_UNSUBSCRIBED_ID,  F_IN)
-#define F_VCHANGEMSG      F_SIGNAL(F_PML_PROTOCOL, F_VCHANGEMSG_ID,    F_IN)
-#define F_VGETRESP        F_SIGNAL(F_PML_PROTOCOL, F_VGETRESP_ID,      F_IN)
-#define F_EXTPS_LOADED    F_SIGNAL(F_PML_PROTOCOL, F_EXTPS_LOADED_ID,  F_IN)
-#define F_EXTPS_UNLOADED  F_SIGNAL(F_PML_PROTOCOL, F_EXTPS_UNLOADED_ID,F_IN)
-#define F_PS_CONFIGURED   F_SIGNAL(F_PML_PROTOCOL, F_PS_CONFIGURED_ID, F_IN)
-#define F_MYPS_ENABLED    F_SIGNAL(F_PML_PROTOCOL, F_MYPS_ENABLED_ID,  F_IN)
-#define F_MYPS_DISABLED   F_SIGNAL(F_PML_PROTOCOL, F_MYPS_DISABLED_ID, F_IN)
 
 extern const char* F_PML_PROTOCOL_signalnames[];
 

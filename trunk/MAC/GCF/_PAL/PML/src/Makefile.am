@@ -6,14 +6,14 @@ SUFFIXES = .ph
 
 pkgincludedir = $(includedir)/GCF/PAL
 pkginclude_HEADERS = \
-	../include/GCF/PAL/GCF_ExtProperty.h \
-	../include/GCF/PAL/GCF_Property.h \
-	../include/GCF/PAL/GCF_MyProperty.h \
-	../include/GCF/PAL/GCF_ExtPropertySet.h \
-	../include/GCF/PAL/GCF_PropertySet.h \
-	../include/GCF/PAL/GCF_MyPropertySet.h \
-	../include/GCF/PAL/GCF_Answer.h \
-	../include/GCF/PAL/GCF_PropertyProxy.h
+	../../include/GCF/PAL/GCF_ExtProperty.h \
+	../../include/GCF/PAL/GCF_Property.h \
+	../../include/GCF/PAL/GCF_MyProperty.h \
+	../../include/GCF/PAL/GCF_ExtPropertySet.h \
+	../../include/GCF/PAL/GCF_PropertySet.h \
+	../../include/GCF/PAL/GCF_MyPropertySet.h \
+	../../include/GCF/PAL/GCF_Answer.h \
+	../../include/GCF/PAL/GCF_PropertyProxy.h
 	
 DOCHDRS	=	$(pkginclude_HEADERS) \
 	GPM_Controller.h \

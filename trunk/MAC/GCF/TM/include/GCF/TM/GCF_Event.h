@@ -34,6 +34,7 @@
 %}
 #endif
 
+
 /**
  * This struct is the base event data container to exchange messages between two 
  * tasks. 
@@ -53,6 +54,9 @@
  * file and the nested key-value pairs from the specification file. This header 
  * file contains definitions of GCFEvent sub classes, one for each event. 
  */
+
+#define SIZEOF_EVENT(e) ((ssize_t) (sizeof((e).signal) + sizeof((e).length) + (e).length))
+
 class GCFEvent
 {
   public:

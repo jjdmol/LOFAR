@@ -1,4 +1,4 @@
-cppflags = -I$(top_srcdir)/CoreComps/SAL/src
+cppflags = -I$(top_srcdir)/SAL/src
 
 check_PROGRAMS 		= echoapp ping
 

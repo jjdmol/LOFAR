@@ -80,8 +80,8 @@ GCFEvent::TResult Echo::connected(GCFEvent& e, GCFPortInterface& /*p*/)
   switch (e.signal)
   {
     case F_DISCONNECTED:
-      service.deleteProp(propName);
-      service.deleteProp(propName + "_test");
+      service.dpDelete(propName);
+      service.dpDelete(propName + "_test");
       cout << "Lost connection to client" << endl;
       TRAN(Echo::initial);
       break;
@@ -93,66 +93,66 @@ GCFEvent::TResult Echo::connected(GCFEvent& e, GCFPortInterface& /*p*/)
       switch (ping.seqnr % 13)
       {
         case 0:
-          service.createProp(propName, GCFPValue::LPT_BOOL);
+          service.dpCreate(propName, "LPT_BOOL");
           break;
         case 1:
-          service.createProp(propName + "_test", GCFPValue::LPT_CHAR);
+          service.dpCreate(propName + "_test", "LPT_CHAR");
           break;
         case 2:
-          service.subscribe(propName);
+          service.dpeSubscribe(propName);
           break;
         case 3:
-          service.subscribe(propName + "_test");
+          service.dpeSubscribe(propName + "_test");
           break;
         case 4:
-          service.get(propName);
+          service.dpeGet(propName);
           break;
         case 5:
         {
           GCFPVBool wrongTestVal(true);
-          service.set(propName + "_test", wrongTestVal);
+          service.dpeSet(propName + "_test", wrongTestVal);
           GCFPVChar goodTestVal('A');
-          service.set(propName + "_test", goodTestVal);
+          service.dpeSet(propName + "_test", goodTestVal);
           break;
         }
         case 6:
-          service.unsubscribe(propName + "_test1");
-          service.unsubscribe(propName + "_test");
-          service.unsubscribe(propName);
+          service.dpeUnsubscribe(propName + "_test1");
+          service.dpeUnsubscribe(propName + "_test");
+          service.dpeUnsubscribe(propName);
           break;
         case 7:
         {
           GCFPVChar testVal('B');
-          service.set(propName + "_test", testVal);
+          service.dpeSet(propName + "_test", testVal);
           break;
         }
         case 8:
         {
-          service.subscribe(propName);
-          service.unsubscribe(propName);
+          service.dpeSubscribe(propName);
+          service.dpeUnsubscribe(propName);
           GCFPVBool testVal(true);
-          service.set(propName, testVal);
+          service.dpeSet(propName, testVal);
           break;
         }
         case 9:
-          service.subscribe(propName);
+          service.dpeSubscribe(propName);
           break;
         case 10:
-          service.get(propName);
-          service.unsubscribe(propName);
+          service.dpeGet(propName);
+          service.dpeUnsubscribe(propName);
           break;
         case 11:
         {
-          service.subscribe(propName);
-          service.unsubscribe(propName);
-          service.subscribe(propName);
+          service.dpeSubscribe(propName);
+          service.dpeUnsubscribe(propName);
+          service.dpeSubscribe(propName);
           GCFPVBool testVal(false);
-          service.set(propName, testVal);
+          service.dpeSet(propName, testVal);
           break;
         }
         case 12:
-          service.deleteProp(propName);
-          service.deleteProp(propName + "_test");
+          service.dpDelete(propName);
+          service.dpDelete(propName + "_test");
           break;
       }
       

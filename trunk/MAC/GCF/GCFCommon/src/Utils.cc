@@ -1,4 +1,4 @@
-#include "Utils.h"
+#include <GCF/Utils.h>
 #include <stdio.h>
 #include <assert.h>
 #include <GCF/GCF_Defines.h>
@@ -66,5 +66,5 @@ bool Utils::isValidPropName(const char* propName)
       }
     }
   }
-  return result;
+  return true;// TODO: use regular expression to find out the name meets the convention
 }

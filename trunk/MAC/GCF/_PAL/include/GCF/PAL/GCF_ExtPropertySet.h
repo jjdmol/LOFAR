@@ -26,6 +26,8 @@
 #include <GCF/GCF_Defines.h>
 #include <GCF/PAL/GCF_PropertySet.h>
 
+class GPMController;
+
 /**
  * This class represents a property set of properties specified in an APC. It 
  * gives the Application the possibility to access properties of for instance a 
@@ -48,7 +50,7 @@ class GCFExtPropertySet : public GCFPropertySet
     GCFExtPropertySet (const char* name,
                       const TPropertySet& propSet, 
                       GCFAnswer* pAnswerObj = 0);
-    virtual ~GCFExtPropertySet () {}
+    virtual ~GCFExtPropertySet ();
 
     /**
      * Asynchronous method
@@ -95,7 +97,16 @@ class GCFExtPropertySet : public GCFPropertySet
      *         GCF_PML_ERROR (see for more info in the logging of the SAL of GCF)
      */
     TGCFResult unsubscribeProp (const string propName) const;
-
+    
+    bool isLoaded() const { return _isLoaded;} 
+    
+  private:
+    friend class GPMController;
+    void loaded(TGCFResult result);
+    
+    void unloaded(TGCFResult result);
+    void GCFExtPropertySet::serverIsGone();
+    
   private:
     GCFExtPropertySet();
     //@{ 
@@ -105,7 +116,7 @@ class GCFExtPropertySet : public GCFPropertySet
     //@}
     
   private: // helper methods
-    GCFProperty* createPropObject(TProperty& propInfo);
+    GCFProperty* createPropObject(const TProperty& propInfo);
       
   private: // data members
     bool _isLoaded;

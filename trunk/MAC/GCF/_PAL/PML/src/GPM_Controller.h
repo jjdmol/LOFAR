@@ -42,7 +42,9 @@
 class GCFPValue;
 class GCFEvent;
 class GCFPortInterface;
+class GCFPropertySet;
 class GCFMyPropertySet;
+class GCFExtPropertySet;
 
 class GPMController : public GCFTask
 {
@@ -51,14 +53,13 @@ class GPMController : public GCFTask
     static GPMController* instance();
 
   public: // member functions
-    TPMResult loadPropSet (GCFPropertySet& propSet);
-    TPMResult unloadPropSet (GCFPropertySet& propSet);
+    TPMResult loadPropSet (GCFExtPropertySet& propSet);
+    TPMResult unloadPropSet (GCFExtPropertySet& propSet);
     TPMResult configurePropSet (GCFPropertySet& propSet, const string& apcName);
     void deletePropSet (const GCFPropertySet& propSet);
     
-    TPMResult registerScope (GCFMyPropertySet& propSet, bool loadDefaults);
-    TPMResult unregisterScope (GCFMyPropertySet& propSet, 
-                               bool permanent = false);
+    TPMResult registerScope (GCFMyPropertySet& propSet);
+    TPMResult unregisterScope (GCFMyPropertySet& propSet);
        
     void propertiesLinked (const string& scope, TPAResult result);
     void propertiesUnlinked (const string& scope, TPAResult result);
@@ -72,16 +73,17 @@ class GPMController : public GCFTask
     GCFEvent::TResult connected (GCFEvent& e, GCFPortInterface& p);
         
   private: // helper methods
-    unsigned short getFreeSeqnrForPSRequest ()  const;
+    unsigned short registerAction (GCFPropertySet& propSet);
 
   private: // data members        
     GCFPort                       _propertyAgent;
-    typedef map<string /* scope */, GCFPropertySet*>  TPropertySets;
-    TPropertySets _propertySets;
+    typedef map<string /* scope */, GCFMyPropertySet*>  TMyPropertySets;
+    TMyPropertySets _myPropertySets;
+    typedef list<GCFExtPropertySet*>  TExtPropertySets;
+    TExtPropertySets _extPropertySets;
     typedef map<unsigned short /*seqnr*/, GCFPropertySet*>  TActionSeqList;
     TActionSeqList _actionSeqList;    
 
   private: // admin members
-    unsigned int                  _counter;
 };
 #endif
