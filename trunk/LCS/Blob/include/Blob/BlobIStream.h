@@ -63,11 +63,12 @@ public:
   // It is the counterpart of BlobOStream::putStart.
   // <br>
   // After all values (inclusing nested objects) of the object have
-  // been obtained (using operato, a call to getEnd has to be done.
-  // It returns the blob version.
+  // been obtained (using operator>>), a call to getEnd has to be done.
+  //
+  // The getStart function returns the blob version.
   // <group>
   int getStart (const std::string& objectType);
-  int getStart (const char* objectType);
+  int getStart (const char* objectType = "");
   // </group>
 
   // End getting an object. It returns the object length (including

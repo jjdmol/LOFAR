@@ -1,4 +1,4 @@
-//# BlobHeader.cc: Standard header for a blob
+//# BlobHeader.tcc: Standard header for a blob
 //#
 //# Copyright (C) 2003
 //# ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,4 +20,26 @@
 //#
 //# $Id$
 
-#include <Common/BlobHeader.tcc>
+
+#include <Common/BlobHeader.h>
+#include <Common/DataFormat.h>
+#include <Common/LofarLogger.h>
+
+
+LOFAR::BlobHeader::BlobHeader (int version, uint level)
+: itsMagicValue     (bobMagicValue()),
+  itsLength         (0),
+  itsVersion        (version),
+  itsDataFormat     (LOFAR::dataFormat()),
+  itsLevel          (level),
+  itsNameLength     (0)
+{
+  ASSERT (version > -128  &&  version < 128);
+  ASSERT (level < 256);
+}
+    
+void LOFAR::BlobHeader::setLocalDataFormat()
+{
+  itsLength     = LOFAR::dataConvert (getDataFormat(), itsLength);
+  itsDataFormat = LOFAR::dataFormat();
+}

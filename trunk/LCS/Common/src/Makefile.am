@@ -42,7 +42,7 @@ LofarLogger.h
 NOINSTHDRS =
 
 TCCHDRS = \
-BlobHeader.tcc BlobArray.tcc TypeNames.tcc
+BlobArray.tcc TypeNames.tcc
 
 pkginclude_HEADERS = $(INSTHDRS) $(TCCHDRS)
 
@@ -54,7 +54,7 @@ lib_LTLIBRARIES 	= libcommon.la
 
 libcommon_la_SOURCES 	= \
 Allocator.cc BlobStringType.cc BlobString.cc \
-BlobOStream.cc BlobIStream.cc BlobArray.cc \
+BlobHeader.cc BlobOStream.cc BlobIStream.cc BlobArray.cc \
 BlobIBufStream.cc BlobOBufStream.cc BlobOBufString.cc BlobOBufNull.cc \
 BlobIBufChar.cc BlobOBufChar.cc \
 BlobField.cc BlobFieldSet.cc \

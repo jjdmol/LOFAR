@@ -24,6 +24,7 @@
 #include <Common/BlobHeader.h>
 #include <Common/DataConvert.h>
 #include <Common/BlobException.h>
+#include <Common/LofarLogger.h>
 
 namespace LOFAR {
 
@@ -60,8 +61,8 @@ const std::string& BlobIStream::getNextType()
     return itsObjectType;
   }
   // Read header and check the magic value and the level.
-  BlobHeaderBase hdr;
-  itsStream->get ((char*)(&hdr), hdr.plainSize());
+  BlobHeader hdr;
+  itsStream->get ((char*)(&hdr), sizeof(hdr));
   ASSERT (hdr.checkMagicValue());
   ASSERT (itsLevel == hdr.itsLevel);
   // Determine if data has to be converted (in case data format mismatches).
@@ -78,11 +79,9 @@ const std::string& BlobIStream::getNextType()
   itsVersion = hdr.getVersion();
   itsObjectType.resize (hdr.itsNameLength); // resize string adding trailing 0
   char* ptr = &(itsObjectType[0]);
-  itsCurLength = hdr.plainSize();    // length read
-  getBuf (ptr, hdr.itsNameLength);
-  if (hdr.itsReservedLength > hdr.itsNameLength) {
-    char buf[256];
-    getBuf (buf, hdr.itsReservedLength - hdr.itsNameLength);
+  itsCurLength = sizeof(hdr);               // length read
+  if (hdr.itsNameLength > 0) {
+    getBuf (ptr, hdr.itsNameLength);        // read objecttype
   }
   itsHasCachedType = true;
   return itsObjectType;
@@ -92,9 +91,9 @@ int BlobIStream::getStart (const std::string& type)
 {
   // Read the header and check if the type matches.
   if (type != getNextType()) {
-    THROW(BlobException,
-	  "BlobIStream::getStart: found object type " <<
-	  getNextType() << ", expected " << type);
+    THROW (BlobException,
+	   "BlobIStream::getStart: found object type " <<
+	   getNextType() << ", expected " << type);
   }
   itsHasCachedType = false;               // type is not cached anymore
   return itsVersion;
@@ -105,9 +104,9 @@ uint BlobIStream::getEnd()
   ASSERT (itsLevel > 0);
   uint32 eob;
   *this >> eob;
-  if (eob != BlobHeaderBase::eobMagicValue()) {
-    THROW(BlobException,
-	  "BlobIStream::getEnd - no end-of-blob value found");
+  if (eob != BlobHeader::eobMagicValue()) {
+    THROW (BlobException,
+	   "BlobIStream::getEnd - no end-of-blob value found");
   }
   uint32 toRead = itsObjTLN.top();
   uint32 len    = itsCurLength;
@@ -116,8 +115,8 @@ uint BlobIStream::getEnd()
   itsObjLen.pop();
   if (itsLevel > 0) {
     if (!(len == toRead  ||  toRead == 0)) {
-      THROW(BlobException,
-	    "BlobIStream::getEnd: part of object not read");
+      THROW (BlobException,
+	     "BlobIStream::getEnd: part of object not read");
     }
   }
   if (--itsLevel > 0) {
@@ -131,9 +130,9 @@ void BlobIStream::getBuf (void* buf, uint sz)
   checkGet();
   uint sz1 = itsStream->get (static_cast<char*>(buf), sz);
   if (sz1 != sz) {
-      THROW(BlobException,
-	    "BlobIStream::getBuf - " << sz << " bytes asked, but only "
-	    << sz1 << " could be read (pos=" << tellPos() << ")");
+      THROW (BlobException,
+	     "BlobIStream::getBuf - " << sz << " bytes asked, but only "
+	     << sz1 << " could be read (pos=" << tellPos() << ")");
   }
   itsCurLength += sz1;
 }
@@ -364,9 +363,9 @@ int64 BlobIStream::getSpace (uint nbytes)
   checkGet();
   int64 pos = tellPos();
   if (pos == -1) {
-    THROW(BlobException,
-	  "BlobIStream::getSpace cannot be done; "
-	  "its BlobIBuffer is not seekable");
+    THROW (BlobException,
+	   "BlobIStream::getSpace cannot be done; "
+	   "its BlobIBuffer is not seekable");
   }
   itsStream->setPos (pos+nbytes);
   itsCurLength += nbytes;
@@ -388,9 +387,9 @@ uint BlobIStream::align (uint n)
     for (uint i=0; i<nfill; i++) {
       uint sz1 = itsStream->get (&fill, 1);
       if (sz1 != 1) {
-	THROW(BlobException,
-	      "BlobIStream::align - could not read fill (pos="
-	      << tellPos() << ")");
+	THROW (BlobException,
+	       "BlobIStream::align - could not read fill (pos="
+	       << tellPos() << ")");
       }
       itsCurLength++;
     }
@@ -400,7 +399,7 @@ uint BlobIStream::align (uint n)
 
 void BlobIStream::throwGet() const
 {
-  throw Exception("BlobIStream: getStart should be done first");
+  THROW (BlobException, "BlobIStream: getStart should be done first");
 }
 
 

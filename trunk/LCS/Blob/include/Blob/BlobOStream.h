@@ -67,20 +67,17 @@ public:
   // <br>
   // After all values (including nested objects) of the object have
   // been put, a call to putEnd has to be done.
-  // It returns the nesting level.
   //
-  // If align>1, the header is extended as needed with filler bytes to
-  // make sure the data thereafter is aligned properly. E.g. align=4 extends
-  // the header such that the blob length gets a multiple of 4. It is useful
-  // in combination with function setSpace. Alignment can only be done for
-  // seekable buffers.
-  // Note that the filler bytes in the header are transparant for the reader,
-  // while when using function align, the reader has to ensure it uses
-  // align in the same way.
+  // If no or an empty objecttype is given, the header is
+  // written without the objecttype and the associated length fields.
+  // In that case the function getStart in BlobIStream should also be
+  // called that way.
+  //
+  // The function returns the nesting level.
   // <group>
-  uint putStart (const std::string& objectType, int objectVersion,
-		 uint align=0);
-  uint putStart (const char* objectType, int objectVersion, uint align=0);
+  uint putStart (int objectVersion);
+  uint putStart (const std::string& objectType, int objectVersion);
+  uint putStart (const char* objectType, int objectVersion);
   // </group>
 
   // End putting an object. It returns the object length (including
@@ -156,8 +153,7 @@ public:
 
 private:
   // Function to do the actual putStart.
-  uint doPutStart (const char* objectType, uint nrc, int objectVersion,
-		   uint align);
+  uint doPutStart (const char* objectType, uint nrc, int objectVersion);
 
   // Write the buffer, increment itsCurLength, and check if everything written.
   void putBuf (const void* buf, uint sz);
@@ -181,14 +177,16 @@ private:
 };
 
 
+inline uint BlobOStream::putStart (int objectVersion)
+  { return doPutStart ("", 0, objectVersion); }
+
 inline uint BlobOStream::putStart (const std::string& objectType,
-				   int objectVersion, uint align)
-  { return doPutStart (objectType.data(), objectType.size(), objectVersion,
-		       align); }
+				   int objectVersion)
+  { return doPutStart (objectType.data(), objectType.size(), objectVersion); }
 
 inline uint BlobOStream::putStart (const char* objectType,
-				   int objectVersion, uint align)
-  { return doPutStart (objectType, strlen(objectType), objectVersion, align); }
+				   int objectVersion)
+  { return doPutStart (objectType, strlen(objectType), objectVersion); }
 
 inline int64 BlobOStream::tellPos() const
   { return itsStream->tellPos(); }
