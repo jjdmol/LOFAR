@@ -64,16 +64,16 @@ int client(void)
     int*   mem = NULL;
     int    i;
     int    id;
-    size_t offset;
+    long   offset;
     pid_t  server_pid;
     int    result = 0;
     
     shmem_init();
 
     // read shmid and offset from stdin
-    scanf("%d %d %d", &id, &offset, &server_pid);
+    scanf("%d %ld %d", &id, &offset, &server_pid);
 
-    mem = (int*)shmem_connect(id, offset);
+    mem = (int*)shmem_connect(id, (size_t) offset);
 
     if (NULL == mem)
     {
@@ -120,7 +120,7 @@ void server(void)
 	mem[i] = i;
     }
     
-    printf("%d %d %d\n", shmem_id(mem), shmem_offset(mem), getpid());
+    printf("%d %ld %d\n", shmem_id(mem), (long) shmem_offset(mem), getpid());
     fflush(stdout);
     
     // suspend myself
