@@ -27,7 +27,10 @@
 
 #include <Transport/TransportHolder.h>
 #include <Common/lofar_map.h>
+
+#ifdef USE_THREADS
 #include <pthread.h>
+#endif
 
 namespace LOFAR
 {
@@ -131,12 +134,14 @@ public:
    */
   static map<int, DataHolder*> theSources;
 
+#ifdef USE_THREADS
   // Maps which hold condition variables.
   static map<int, pthread_cond_t> dataAvailable;
   static map<int, pthread_cond_t> dataReceived;  
 
   // Mutex for access to messages map
   static pthread_mutex_t theirMapLock;
+#endif
 
   bool        itsFirstSendCall;
   bool        itsFirstRecvCall;
