@@ -22,6 +22,11 @@
 //  $Id$
 //
 //  $Log$
+//  Revision 1.7  2002/05/08 14:28:37  wierenga
+//  DataHolder allocation moved from constructor to preprocess to be able to
+//  use TransportHolder::allocate.
+//  Bug fixes in P2Perf.cc for -mpi arguments.
+//
 //  Revision 1.6  2002/05/08 08:20:04  schaaf
 //  Modified includes for new build env
 //
@@ -66,8 +71,6 @@ DH_GrowSize::~DH_GrowSize()
 
 void DH_GrowSize::preprocess()
 {
-  cout << "DH_GrowSize::preprocess @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@" << endl;
-
   // Create the DataPacket AND its buffer in contiguous memory
 
   // Determine the number of bytes needed for DataPacket and buffer.
@@ -97,8 +100,6 @@ void DH_GrowSize::preprocess()
 
 void DH_GrowSize::postprocess()
 {
-  cout << "DH_GrowSize::postprocess @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@" << endl;
-
   // delete the allocated memmory for the DataPacket object, 
   // including the buffer
   deallocate((void*)itsDataPacket);
