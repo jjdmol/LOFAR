@@ -160,7 +160,7 @@ int main (int, char *argv[]) {
 	// You normally do this by editing your propertyfile.
 	log4cplus::Logger::getInstance("TRC").setLogLevel(TRACE_LEVEL_VAR);
 #else
-	getDebugContext().setLevel(TRACE_LEVEL_VAR);
+	getLFDebugContext().setLevel(TRACE_LEVEL_VAR);
 #endif // HAVE_LOG4CPLUS
 
 	for (int i = 0; i < 5; ++i) {
