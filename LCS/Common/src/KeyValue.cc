@@ -398,7 +398,7 @@ const string& KeyValue::getString() const
   case DTString:
     return *(string*)itsValuePtr;
   default:
-    throw std::runtime_error("KeyValue::getDComplex - invalid data type");
+    throw std::runtime_error("KeyValue::getString - invalid data type");
   }
   return getString();               // to satisfy compiler
 }
@@ -408,6 +408,15 @@ vector<bool> KeyValue::getVecBool() const
   switch (itsDataType) {
   case DTVecBool:
     return *(vector<bool>*)itsValuePtr;
+  case DTValueVector:
+  {
+    const vector<KeyValue>& kvvec = *(const vector<KeyValue>*)itsValuePtr;
+    vector<bool> vec(kvvec.size());
+    for (uint i=0; i<vec.size(); i++) {
+      vec[i] = kvvec[i].getBool();
+    }
+    return vec;
+  }
   default:
     {
       vector<bool> vec(1);
@@ -422,6 +431,15 @@ vector<int32> KeyValue::getVecInt() const
   switch (itsDataType) {
   case DTVecInt:
     return *(vector<int32>*)itsValuePtr;
+  case DTValueVector:
+  {
+    const vector<KeyValue>& kvvec = *(const vector<KeyValue>*)itsValuePtr;
+    vector<int32> vec(kvvec.size());
+    for (uint i=0; i<vec.size(); i++) {
+      vec[i] = kvvec[i].getInt();
+    }
+    return vec;
+  }
   default:
     {
       vector<int32> vec(1);
@@ -445,6 +463,15 @@ vector<float> KeyValue::getVecFloat() const
     }
   case DTVecFloat:
     return *(vector<float>*)itsValuePtr;
+  case DTValueVector:
+  {
+    const vector<KeyValue>& kvvec = *(const vector<KeyValue>*)itsValuePtr;
+    vector<float> vec(kvvec.size());
+    for (uint i=0; i<vec.size(); i++) {
+      vec[i] = kvvec[i].getFloat();
+    }
+    return vec;
+  }
   default:
     {
       vector<float> vec(1);
@@ -477,6 +504,15 @@ vector<double> KeyValue::getVecDouble() const
     }
   case DTVecDouble:
     return *(vector<double>*)itsValuePtr;
+  case DTValueVector:
+  {
+    const vector<KeyValue>& kvvec = *(const vector<KeyValue>*)itsValuePtr;
+    vector<double> vec(kvvec.size());
+    for (uint i=0; i<vec.size(); i++) {
+      vec[i] = kvvec[i].getDouble();
+    }
+    return vec;
+  }
   default:
     {
       vector<double> vec(1);
@@ -509,6 +545,15 @@ vector<fcomplex> KeyValue::getVecFComplex() const
     }
   case DTVecFComplex:
     return *(vector<fcomplex>*)itsValuePtr;
+  case DTValueVector:
+  {
+    const vector<KeyValue>& kvvec = *(const vector<KeyValue>*)itsValuePtr;
+    vector<fcomplex> vec(kvvec.size());
+    for (uint i=0; i<vec.size(); i++) {
+      vec[i] = kvvec[i].getFComplex();
+    }
+    return vec;
+  }
   default:
     {
       vector<fcomplex> vec(1);
@@ -559,6 +604,15 @@ vector<dcomplex> KeyValue::getVecDComplex() const
     }
   case DTVecDComplex:
     return *(vector<dcomplex>*)itsValuePtr;
+  case DTValueVector:
+  {
+    const vector<KeyValue>& kvvec = *(const vector<KeyValue>*)itsValuePtr;
+    vector<dcomplex> vec(kvvec.size());
+    for (uint i=0; i<vec.size(); i++) {
+      vec[i] = kvvec[i].getDComplex();
+    }
+    return vec;
+  }
   default:
     {
       vector<dcomplex> vec(1);
@@ -573,6 +627,15 @@ vector<string> KeyValue::getVecString() const
   switch (itsDataType) {
   case DTVecString:
     return *(vector<string>*)itsValuePtr;
+  case DTValueVector:
+  {
+    const vector<KeyValue>& kvvec = *(const vector<KeyValue>*)itsValuePtr;
+    vector<string> vec(kvvec.size());
+    for (uint i=0; i<vec.size(); i++) {
+      vec[i] = kvvec[i].getString();
+    }
+    return vec;
+  }
   default:
     {
       vector<string> vec(1);
