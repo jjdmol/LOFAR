@@ -287,6 +287,16 @@ void treeAddDatapoints(dyn_string names)
 	    int parentId;
 	    // remove the System part from the datapoint name
 	    datapointName = dpSubStr(names[namesIndex],DPSUB_DP);
+      if(datapointName == "")
+      {
+        datapointName = names[namesIndex];
+        // cut system name myself. Necessary for datapoint parts that are not datapoints themselves
+        int sepPos = strpos(datapointName,":");
+        if(sepPos >= 0)
+        {
+          datapointName = substr(datapointName,sepPos+1);
+        }
+      }
 	    
 	    // only add ENABLED datapoints
       if(navConfigCheckEnabled(datapointName))
@@ -589,7 +599,7 @@ void Navigator_HandleEventInitialize()
   InitializeTabViews();
 //  InitializeTree(); cannot do it here because tree will not be visible initially, only after double click. Strange but true
   
-//  delay(1); // wait for the tree control to complete initialization
+  delay(1); // wait for the tree control to complete initialization
   
   g_initializing = false;
 
@@ -733,7 +743,7 @@ void InitializeTree()
   
   // get top level resources. "" means no parent, 1 means: 1 level deep
   dyn_string resources = navConfigGetResources("",1);
-  LOG_TRACE("adding resources: ",resources);
+  LOG_DEBUG("adding resources: ",LOG_DYN(resources));
   treeAddDatapoints(resources);
 
   if(ActiveXSupported())
@@ -795,7 +805,7 @@ void TreeCtrl_HandleEventOnExpand(long Node)
  
       // get top level resources. "" means no parent, 1 means: 1 level deep
       dyn_string resources = navConfigGetResources(datapointPath,1);
-      LOG_TRACE("adding resources: ",LOG_DYN(resources));
+      LOG_DEBUG("adding resources: ",LOG_DYN(resources));
       treeAddDatapoints(resources);
     }
   }

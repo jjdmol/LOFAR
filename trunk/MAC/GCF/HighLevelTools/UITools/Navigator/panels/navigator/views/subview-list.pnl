@@ -9,7 +9,7 @@ PANEL,286 70 950 740 N "_3DFace" 2
   DebugTN(\"ListView: $datapoint,$configDatapoint:\",$datapoint,$configDatapoint);
   if(isDollarDefined(\"$datapoint\") && strlen($datapoint) > 0)
   {
-    navPMLloadPropertySet($datapoint);
+    //navPMLloadPropertySet($datapoint);
 
     string datapoint = dpSubStr($datapoint,DPSUB_DP_EL);
     string systemName = strrtrim(dpSubStr($datapoint,DPSUB_SYS),\":\");
@@ -82,7 +82,7 @@ int UpdateTextFields(string ident,dyn_dyn_anytype table)
 " 0
  "main()
 {
-  navPMLunloadPropertySet($datapoint);
+  //navPMLunloadPropertySet($datapoint);
 }
 
 " 0
