@@ -45,7 +45,7 @@ public:
 
 protected:
   // Evaluate the value for the given request.
-  int getResultImpl (ResultSet::Ref &resref, const Request& request, bool newReq);
+  int getResult (Result::Ref &resref, const Request& request, bool newReq);
 
 };
 

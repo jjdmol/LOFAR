@@ -39,7 +39,7 @@ public:
   virtual ~UVW();
 
   // Get the result for the given request.
-  virtual int getResultImpl (ResultSet::Ref &resref, const Request&, bool newReq);
+  virtual int getResult (Result::Ref &resref, const Request&, bool newReq);
 
   // Check and convert the children.
   void checkChildren();

@@ -24,7 +24,7 @@
 #define MEQ_SOLVER_H
     
 #include <MEQ/Node.h>
-#include <MEQ/Result.h>
+#include <MEQ/VellSet.h>
 #include <aips/Fitting/FitLSQ.h>
 
 
@@ -44,7 +44,7 @@ public:
   virtual ~Solver();
 
   // Get the result for the given request.
-  virtual int getResultImpl (ResultSet::Ref &resref, const Request&,
+  virtual int getResult (Result::Ref &resref, const Request&,
 			     bool newReq);
 
   // Returns the class TypeId

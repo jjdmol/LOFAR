@@ -66,12 +66,12 @@ void Solver::checkChildren()
   Assert (itsCondeqs.size() > 0);
 }
 
-int Solver::getResultImpl (ResultSet::Ref &resref, const Request& request,
+int Solver::getResult (Result::Ref &resref, const Request& request,
 			   bool)
 {
   // The result has 1 plane.
-  ResultSet& resultset = resref <<= new ResultSet(request,1);
-  Result& result = resultset.result(0);
+  Result& resultset = resref <<= new Result(request,1);
+  VellSet& result = resultset.vellSet(0);
   // Allocate variables needed for the solution.
   uInt rank;
   double fit;
@@ -81,7 +81,7 @@ int Solver::getResultImpl (ResultSet::Ref &resref, const Request& request,
   Vector<double> errors;
   // Allocate results.
   int nrch = itsCondeqs.size();
-  vector<ResultSet::Ref> child_results(nrch);
+  vector<Result::Ref> child_results(nrch);
   // Copy the request and attach the solvable parms to it.
   Request newReq = request;
   if (state()[FSolvableParm].exists()) {
@@ -97,20 +97,20 @@ int Solver::getResultImpl (ResultSet::Ref &resref, const Request& request,
     flag = 0;
     // collect child_results from children
     for (int i=0; i<nrch; i++) {
-      flag |= getChild(i).getResult (child_results[i], newReq);
+      flag |= getChild(i).execute (child_results[i], newReq);
       child_results[i].persist();
     }
     // return flag if at least one child wants to wait
     if (flag & Node::RES_WAIT) {
       return flag;
     }
-    vector<Result*> chresults;
-    chresults.reserve (nrch * child_results[0]->numResults());
+    vector<VellSet*> chresults;
+    chresults.reserve (nrch * child_results[0]->numVellSets());
     // Find the set of all spids from all results.
     for (int i=0; i<nrch; i++) {
-      for (int iplane=0; iplane<child_results[i]->numResults(); iplane++) {
-	if (! child_results[i]().result(iplane).isFail()) {
-	  chresults.push_back (&(child_results[i]().result(iplane)));
+      for (int iplane=0; iplane<child_results[i]->numVellSets(); iplane++) {
+	if (! child_results[i]().vellSet(iplane).isFail()) {
+	  chresults.push_back (&(child_results[i]().vellSet(iplane)));
 	}
       }
     }
@@ -124,7 +124,7 @@ int Solver::getResultImpl (ResultSet::Ref &resref, const Request& request,
     vector<double> derivImag(nspid);
     // Loop through all results and fill the deriv vectors.
     for (uint i=0; i<chresults.size(); i++) {
-      Result& chresult = *chresults[i];
+      VellSet& chresult = *chresults[i];
       bool isReal = chresult.getValue().isReal();
       // Get nr of elements in the values.
       int nrval = chresult.getValue().nelements();

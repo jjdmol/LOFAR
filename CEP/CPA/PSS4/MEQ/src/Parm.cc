@@ -22,7 +22,7 @@
 
 #include "Parm.h"
 #include "Request.h"
-#include "Result.h"
+#include "VellSet.h"
 #include "Cells.h"
 #include "MeqVocabulary.h"
 #include <Common/Debug.h>
@@ -138,20 +138,20 @@ int Parm::initDomain (const Domain& domain)
   return nr;
 }
 
-int Parm::getResultImpl (ResultSet::Ref& resultset, const Request& request, bool)
+int Parm::getResult (Result::Ref& resultset, const Request& request, bool)
 {
   initDomain (request.cells().domain());
   // Create result object and attach to the ref that was passed in
-  resultset <<= new ResultSet(1); // resulting set is always 1 plane
+  resultset <<= new Result(1); // resulting set is always 1 plane
   const Cells& cells = request.cells();
   resultset().setCells(cells);
   // *** NB: Should pass in the proper # of spids here, because
-  // Result does not allow for changing it later!
-  Result & res = resultset().setNewResult(0);
+  // VellSet does not allow for changing it later!
+  VellSet & res = resultset().setNewVellSet(0);
   // A single polc can be evaluated immediately.
   if (itsPolcs.size() == 1) 
   {
-    itsPolcs[0].getResult (res, request);
+    itsPolcs[0].evaluate (res, request);
     return 0;
   }
   // Get the domain, etc.
@@ -196,7 +196,7 @@ int Parm::getResultImpl (ResultSet::Ref& resultset, const Request& request, bool
       // If the overlap is full, only this polynomial needs to be evaluated.
       if (stFreq == 0  &&  nrFreq == ndFreq
       &&  stTime == 0  &&  nrTime == ndTime) {
-	polc.getResult (res, request);
+	polc.evaluate (res, request);
 	return 0;
       }
       // Form the domain and request for the overlapping part
@@ -214,8 +214,8 @@ int Parm::getResultImpl (ResultSet::Ref& resultset, const Request& request, bool
       }
       Cells partCells (partDom, nrFreq, partStartTime, partEndTime);
       Request partReq(partCells);
-      Result partRes;
-      polc.getResult (partRes, partReq);
+      VellSet partRes;
+      polc.evaluate (partRes, partReq);
       // Create the result matrix if it is the first Time.
       // Now it is initialized with zeroes (to see possible errors).
       // In the future the outcommnented statement can be used

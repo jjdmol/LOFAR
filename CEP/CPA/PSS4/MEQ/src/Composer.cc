@@ -22,7 +22,7 @@
 
 #include "Composer.h"
 #include "Request.h"
-#include "Result.h"
+#include "VellSet.h"
 #include "Cells.h"
 #include "MeqVocabulary.h"
 
@@ -50,9 +50,9 @@ void Composer::setState (const DataRecord &rec)
   }
 }
 
-int Composer::getResultImpl (ResultSet::Ref &resref, const Request& request, bool)
+int Composer::getResult (Result::Ref &resref, const Request& request, bool)
 {
-  std::vector<ResultSet::Ref> childref;
+  std::vector<Result::Ref> childref;
   // get results from children
   int resflag = getChildResults(childref,request);
   // return wait if some child has returned a wait
@@ -62,22 +62,22 @@ int Composer::getResultImpl (ResultSet::Ref &resref, const Request& request, boo
   int nres = 0, nfails = 0;
   for( uint i=0; i<childref.size(); i++ )
   {
-    nres += childref[i]->numResults();
+    nres += childref[i]->numVellSets();
     nfails += childref[i]->numFails();
   }
   // if fail is contagious, generate a fully failed result
   if( nfails && ( contagious_fail || nres == nfails ) )
   {
-    ResultSet &result = resref <<= new ResultSet(nfails,request);
+    Result &result = resref <<= new Result(nfails,request);
     int ires = 0;
     for( uint i=0; i<childref.size(); i++ )
     {
-      ResultSet &childres = childref[i]();
-      for( int j=0; j<childres.numResults(); j++ )
+      Result &childres = childref[i]();
+      for( int j=0; j<childres.numVellSets(); j++ )
       {
-        Result &res = childres.result(j);
+        VellSet &res = childres.vellSet(j);
         if( res.isFail() )
-          result.setResult(ires++,&res);
+          result.setVellSet(ires++,&res);
       }
     }
     return RES_FAIL;
@@ -85,14 +85,14 @@ int Composer::getResultImpl (ResultSet::Ref &resref, const Request& request, boo
   // otherwise, compose normal result
   else
   {
-    ResultSet &result = resref <<= new ResultSet(nres,request);
+    Result &result = resref <<= new Result(nres,request);
     result.setCells(request.cells()); 
     int ires=0;
     for( int i=0; i<numChildren(); i++ )
     {
-      ResultSet &childres = childref[i]();
-      for( int j=0; j<childres.numResults(); j++ )
-        result.setResult(ires++,&(childres.result(j)));
+      Result &childres = childref[i]();
+      for( int j=0; j<childres.numVellSets(); j++ )
+        result.setVellSet(ires++,&(childres.vellSet(j)));
       childref[i].detach();
     }
     return resflag;

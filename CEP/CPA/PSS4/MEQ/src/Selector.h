@@ -55,7 +55,7 @@ class Selector : public Node
     { return TpMeqSelector; }
     
   protected:
-    int getResultImpl (ResultSet::Ref &resref, const Request& request, bool newReq);
+    int getResult (Result::Ref &resref, const Request& request, bool newReq);
   
   private:
     vector<int> selection;

@@ -25,7 +25,7 @@
 #include <MEQ/Cells.h>
 #include <MEQ/Vells.h>
 #include <MEQ/Request.h>
-#include <MEQ/Result.h>
+#include <MEQ/VellSet.h>
 #include <MEQ/ParmTable.h>
 #include <aips/Arrays/Vector.h>
 #include <aips/Arrays/Matrix.h>
@@ -269,17 +269,17 @@ void checkUVW (const string& msName, const string& mepName, double threshold)
     Meq::Domain domain(1, 2, times(0)-step/2, times(nrtim-1)+step/2);
     Meq::Cells cells(domain, 1, nrtim);
     Meq::Request request(cells, false);
-    Meq::ResultSet::Ref resset1,resset2;
-    const Meq::Result *res1,*res2;
+    Meq::Result::Ref resset1,resset2;
+    const Meq::VellSet *res1,*res2;
     {
       snprintf (parmName, 32, "U[s=%d]", ant1);
       Meq::Parm pu1(parmName, &ptab);
       snprintf (parmName, 32, "U[s=%d]", ant2);
       Meq::Parm pu2(parmName, &ptab);
-      pu1.getResultImpl (resset1, request, true);
-      pu2.getResultImpl (resset2, request, true);
-      res1 = &(resset1->resultConst(0));
-      res2 = &(resset2->resultConst(0));
+      pu1.getResult (resset1, request, true);
+      pu2.getResult (resset2, request, true);
+      res1 = &(resset1->vellSetConst(0));
+      res2 = &(resset2->vellSetConst(0));
       LoMat_double diff(LoMatShape(1,nrtim));
       diff = res2->getValue().getRealArray() - res1->getValue().getRealArray();
       Vector<double> vec (IPosition(1,nrtim), diff.data(), SHARE);
@@ -295,10 +295,10 @@ void checkUVW (const string& msName, const string& mepName, double threshold)
       Meq::Parm pu1(parmName, &ptab);
       snprintf (parmName, 32, "V[s=%d]", ant2);
       Meq::Parm pu2(parmName, &ptab);
-      pu1.getResultImpl (resset1, request, true);
-      pu2.getResultImpl (resset2, request, true);
-      res1 = &(resset1->resultConst(0));
-      res2 = &(resset2->resultConst(0));
+      pu1.getResult (resset1, request, true);
+      pu2.getResult (resset2, request, true);
+      res1 = &(resset1->vellSetConst(0));
+      res2 = &(resset2->vellSetConst(0));
       LoMat_double diff(LoMatShape(1,nrtim));
       diff = res2->getValue().getRealArray() - res1->getValue().getRealArray();
       Vector<double> vec (IPosition(1,nrtim), diff.data(), SHARE);
@@ -314,10 +314,10 @@ void checkUVW (const string& msName, const string& mepName, double threshold)
       Meq::Parm pu1(parmName, &ptab);
       snprintf (parmName, 32, "W[s=%d]", ant2);
       Meq::Parm pu2(parmName, &ptab);
-      pu1.getResultImpl (resset1, request, true);
-      pu2.getResultImpl (resset2, request, true);
-      res1 = &(resset1->resultConst(0));
-      res2 = &(resset2->resultConst(0));
+      pu1.getResult (resset1, request, true);
+      pu2.getResult (resset2, request, true);
+      res1 = &(resset1->vellSetConst(0));
+      res2 = &(resset2->vellSetConst(0));
       LoMat_double diff(LoMatShape(1,nrtim));
       diff = res2->getValue().getRealArray() - res1->getValue().getRealArray();
       Vector<double> vec (IPosition(1,nrtim), diff.data(), SHARE);

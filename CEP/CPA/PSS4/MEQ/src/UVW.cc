@@ -22,7 +22,7 @@
 
 #include <MEQ/UVW.h>
 #include <MEQ/Request.h>
-#include <MEQ/Result.h>
+#include <MEQ/VellSet.h>
 #include <MEQ/Cells.h>
 #include <aips/Measures/MBaseline.h>
 #include <aips/Measures/MPosition.h>
@@ -41,20 +41,20 @@ UVW::UVW()
 UVW::~UVW()
 {}
 
-int UVW::getResultImpl (ResultSet::Ref& resref, const Request& request, bool)
+int UVW::getResult (Result::Ref& resref, const Request& request, bool)
 {
   const Cells& cells = request.cells();
   // Get RA and DEC of phase center.
-  ResultSet::Ref ra, dec;
-  int flag = children()[0]->getResult (ra, request);
-  flag |= children()[1]->getResult (dec, request);
+  Result::Ref ra, dec;
+  int flag = children()[0]->execute (ra, request);
+  flag |= children()[1]->execute (dec, request);
   ra.persist();
   dec.persist();
   // Get station positions.
-  ResultSet::Ref stx, sty, stz;
-  flag |= children()[2]->getResult (stx, request);
-  flag |= children()[3]->getResult (sty, request);
-  flag |= children()[4]->getResult (stz, request);
+  Result::Ref stx, sty, stz;
+  flag |= children()[2]->execute (stx, request);
+  flag |= children()[3]->execute (sty, request);
+  flag |= children()[4]->execute (stz, request);
   stx.persist();
   sty.persist();
   stz.persist();
@@ -62,24 +62,24 @@ int UVW::getResultImpl (ResultSet::Ref& resref, const Request& request, bool)
     return flag;
   }
   // For the time being we only support scalars.
-  const Vells& vra  = ra().result(0).getValue();
-  const Vells& vdec = dec().result(0).getValue();
-  const Vells& vstx = stx().result(0).getValue();
-  const Vells& vsty = sty().result(0).getValue();
-  const Vells& vstz = stz().result(0).getValue();
+  const Vells& vra  = ra().vellSet(0).getValue();
+  const Vells& vdec = dec().vellSet(0).getValue();
+  const Vells& vstx = stx().vellSet(0).getValue();
+  const Vells& vsty = sty().vellSet(0).getValue();
+  const Vells& vstz = stz().vellSet(0).getValue();
   Assert (vra.nelements()==1 && vdec.nelements()==1
 	  && vstx.nelements()==1 && vsty.nelements()==1
 	  && vstz.nelements()==1);
   // Allocate a 3-plane result
-  ResultSet &res_set = resref <<= new ResultSet(3);
+  Result &res_set = resref <<= new Result(3);
   // Get RA and DEC of phase center.
   MVDirection phaseRef(vra.as<double>(), vdec.as<double>());
   // Set correct size of values.
   int nfreq = cells.nfreq();
   int ntime = cells.ntime();
-  LoMat_double& matU = res_set.setNewResult(0).setReal(nfreq,ntime);
-  LoMat_double& matV = res_set.setNewResult(1).setReal(nfreq,ntime);
-  LoMat_double& matW = res_set.setNewResult(2).setReal(nfreq,ntime);
+  LoMat_double& matU = res_set.setNewVellSet(0).setReal(nfreq,ntime);
+  LoMat_double& matV = res_set.setNewVellSet(1).setReal(nfreq,ntime);
+  LoMat_double& matW = res_set.setNewVellSet(2).setReal(nfreq,ntime);
   // Calculate the UVW coordinates using the AIPS++ code.
   MVPosition mvpos(vstx.as<double>(),vsty.as<double>(),vstz.as<double>());
   MVBaseline mvbl(mvpos);
