@@ -41,7 +41,8 @@ void MeqSourceList::setSelected (const vector<int>& sel)
     }
   } else {
     for (unsigned int i=0; i<sel.size(); i++) {
-      Assert (sel[i] >= 0  &&  sel[i] < int(itsSources.size()));
+      Assert (sel[i] >= 0);
+      Assert (sel[i] < int(itsSources.size()));
     }
     itsSelected = sel;
   }
