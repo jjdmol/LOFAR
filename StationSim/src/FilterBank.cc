@@ -59,6 +59,7 @@ template<class Type>
 Array<complex<double>, 2> FilterBank<Type>::filter(Array<Type, 1> Input)
 {
   Array<complex<double>, 2> FilterBankOutput(itsNumberOfBands, 1);
+  Array<complex<double>, 1> Temp(itsNumberOfBands / 2);
 
   if (itsOverlapSamples > 0)
   {

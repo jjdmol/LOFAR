@@ -82,7 +82,8 @@ private:
 
   // DEBUG
   int itsCount;
-  ofstream itsFileOut;
+  ofstream itsFileOutReal;
+  ofstream itsFileOutComplex;
 };
 
 
