@@ -4,7 +4,7 @@ DOCHDRS         =                               \
 WH_DFTServer.h                                  \
 DFTServer_ClientStub.h				\
 DFTServer_ServerStub.h				\
-DFTServer.h	                                \
+DFTServer.h	                                
 
 
 DFTServer_SOURCES          = $(DOCHDRS)                \
