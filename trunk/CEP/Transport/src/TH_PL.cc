@@ -25,15 +25,20 @@
 
 #include <libTransport/TH_PL.h>
 #include <libTransport/Transporter.h>
-#include <Common/lofar_iostream.h>
+#include <PL/PersistenceBroker.h>
+#include <PL/TPersistentObject.h>
+#include <PL/DBRepHolder.h>    // needed to see ObjectId specialization
+#include <PL/Collection.h>
 #include <PL/Query.h>
+#include <Common/lofar_iostream.h>
+#include <sstream>
 
 namespace LOFAR
 {
 
 // Default data source and account names for PL. You should override them
 // with a call to UseDatabase () in main ().
-string TH_PL::theirDSN = "test";
+string TH_PL::theirDSN = "_XXX_";
 string TH_PL::theirUserName = "postgres";
 
 int TH_PL::theirInstanceCount=0;   
@@ -42,13 +47,31 @@ int TH_PL::theirInstanceCount=0;
 // PersistenceBroker is used to optimally use resources.
 PL::PersistenceBroker TH_PL::theirPersistenceBroker;
 
-
+// The prototype TH_PL object.
+// It uses table defaultTable in the database.
 TH_PL TH_PL::proto;
+
 
 TH_PL::TH_PL (const string& tableName)
   : itsTableName  (tableName),
     itsWriteSeqNo (0),
     itsReadSeqNo  (0)
+{}
+
+TH_PL::~TH_PL()
+{
+  // If this was the last instance of DH_PL, disconnect from the database. 
+  if (--TH_PL::theirInstanceCount == 0L) {
+    disconnectDatabase ();
+  }
+}
+
+TH_PL* TH_PL::make() const
+{
+  return new TH_PL(itsTableName);
+}
+
+bool TH_PL::init()
 {
   // Do a dynamic cast of the BaseDataHolder to a DH_PL.
   // and check if it is correct.
@@ -65,19 +88,7 @@ TH_PL::TH_PL (const string& tableName)
     connectDatabase ();
   }
   TH_PL::theirInstanceCount++;
-}
-
-TH_PL::~TH_PL()
-{
-  // If this was the last instance of DH_PL, disconnect from the database. 
-  if (--TH_PL::theirInstanceCount == 0L) {
-    disconnectDatabase ();
-  }
-}
-
-TH_PL* TH_PL::make() const
-{
-  return new TH_PL(itsTableName);
+  return true;
 }
 
 void TH_PL::useDatabase (const string& dbDSN, const string& userName)
@@ -88,12 +99,12 @@ void TH_PL::useDatabase (const string& dbDSN, const string& userName)
 
 void TH_PL::connectDatabase()
 {
-  if (TH_PL::theirDSN == "test") {
+  if (TH_PL::theirDSN == "_XXX_") {
     cerr << "***WARNING***: TH_PL::ConnectDatabase (); TH_PL "
 	 << "is trying to connect to a test database residing on "
 	 << "dop50. You probably have forgotten to call the TH_PL "
 	 << "method UseDatabase (). See the comments in TH_PL.h " 
-	 << "for more detaills. Continuing execution... " << endl;
+	 << "for more details. Continuing execution... " << endl;
   }
   theirPersistenceBroker.connect (TH_PL::theirDSN, TH_PL::theirUserName);
 }
@@ -130,14 +141,18 @@ bool TH_PL::recvBlocking(void* buf, int nbytes, int source , int tag)
   // PL is based on query objects to identify records in database
   // tables. A query object is now prepared to retrieve the record with
   // the correct tag and sequence number.
-  char q[200]; 
-  sprintf (q, "tag='%d' AND seqnr='%ld' AND source='%d'",
-	   tag, itsReadSeqNo++, source);
-    
+  std::ostringstream q;
+  q << "tag=" << tag << " AND seqnr=" << itsReadSeqNo << " AND id=" << source;
+  itsReadSeqNo++;
   // Perform the actual query and obtain the record.
   // Check that only 1 is found.
-  int result;
-  // ToDo: result = aPO.retrieve(theirPersistenceBroker, PL::QueryObject(q));
+  ///  PL::TPersistentObject<PL::ObjectId> tpoid;
+    ///tpoid.tableName (aPO.tableName());
+    ///  PL::Collection<PL::TPersistentObject <PL::ObjectId> > result =
+    ///tpoid.retrieve (PL::QueryObject(q.str()));
+    ///Assert (result.size() == 1);
+    ///aPO.retrieve (result.begin()->data());
+  int result = aPO.retrieveInPlace(PL::QueryObject(q.str()));
   Assert (result == 1);
   // ToDo: DbgAssertStr(itsReadSeqnNo == ... ,"");
   

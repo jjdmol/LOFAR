@@ -23,9 +23,10 @@
 #ifndef LIBTRANSPORT_TH_PL_H
 #define LIBTRANSPORT_TH_PL_H
 
-#include <TransportHolder.h>
-#include <DH_PL.h>
+#include <libTransport/TransportHolder.h>
+#include <libTransport/DH_PL.h>
 #include <PL/PersistenceBroker.h>		// for PersistenceBroker
+#include <Common/LofarTypes.h>                  // for int64
 
 
 namespace LOFAR
@@ -34,10 +35,12 @@ namespace LOFAR
 class TH_PL: public TransportHolder
 {
 public:
-  TH_PL (const string& tableName = "defaultTable");
+  explicit TH_PL (const string& tableName = "defaultTable");
   virtual ~TH_PL ();
 
   virtual TH_PL* make () const;
+
+  virtual bool init();
 
   virtual bool recvBlocking (void* buf, int nbytes, int source, int tag);
   virtual bool sendBlocking (void* buf, int nbytes, int destination, int tag);
@@ -60,6 +63,11 @@ public:
   static int  getNumberOfNodes ();
   static void synchroniseAllProcesses ();
 
+  // Specify the data source name and account for PL. Usually dbDSN =
+  // <YourName> and userName="postgres".
+  static void useDatabase (const string& dbDSN,
+			   const string& userName="postgres");
+  
 protected:
    static PL::PersistenceBroker theirPersistenceBroker;
    static int theirInstanceCount;
@@ -67,17 +75,14 @@ private:
   // methods to manage the connection to the dbms
   void connectDatabase();
   void disconnectDatabase();
-  // Specify the data source name and account for PL. Usually dbDSN =
-  // <YourName> and userName="postgres".
-  static void useDatabase (const string& dbDSN, const string& userName);
-  
+
   /// Strings containing the name specs describing the ODBC connection.
   static string theirDSN;
   static string theirUserName;
   string        itsTableName;
     
-  long itsWriteSeqNo;
-  long itsReadSeqNo;
+  int64  itsWriteSeqNo;
+  int64  itsReadSeqNo;
   DH_PL* itsDHPL;
 };
  

@@ -113,7 +113,8 @@ bool Transporter::connectFrom (Transporter* that,
 			       TransportHolder& prototype) 
 { 
   bool result = itsConnection->connectFrom(that, this, prototype);
-  result  |= init();
+  // Init should not be done in the connection but seperate.
+  //  result  |= init();
   return result;
 } 
 
