@@ -10,7 +10,7 @@
 #
 # $Id$
 #
-VERSION="v1.1"
+VERSION="v1.2"
 
 #---------------------------- Global routines ---------------------------------
 #
@@ -90,14 +90,16 @@ convertMapfile()
 			CurTable=$name
 			;;
 		*)								# no keyword, assume fieldname
+			# label (=c_type) may be xxx::yyy, change it to xxx!yyy
+			ctype=`echo $label | sed "s/::/!/"`
 			typeset -l SubClass=`echo $dbname | cut -d" " -f1`
 			# what kind of field is this?
-			if [ "${SubClass}" == "class" ]; then
+			if [ "${SubClass}" == "class" -o "${SubClass}" == "baseclass" ]; then
 				# it's a (sub)class, get its name.
 				SubClassName=`echo $fldtype | cut -d" " -f1`
-			echo "$CurClass:$CurTable:$label:$name:$dbname:$SubClassName:BIGINT"
+				echo "$CurClass:$CurTable:$ctype:$name:$dbname:$SubClassName:BIGINT"
 			else
-				echo "$CurClass:$CurTable:$label:$name:$dbname::$fldtype"
+				echo "$CurClass:$CurTable:$ctype:$name:$dbname::$fldtype"
 			fi
 			;;
 		esac

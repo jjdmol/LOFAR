@@ -10,7 +10,7 @@
 #
 # $Id$
 #
-VERSION="v2.1"
+VERSION="v2.2"
 
 #
 # RECaddBCA class
@@ -140,7 +140,7 @@ TPOaddDTLstruct()
 	# add all 'basic' members of the DataObj
 	grep ^$Class ${MAPWRKFILE} | grep "::" | while read line
 	do
-		MemType=`echo $line | cut -d":" -f3`
+		MemType=`echo $line | cut -d":" -f3 | sed "s/!/::/"`
 		Member=`echo $line | cut -d":" -f4`
 		echo "	${MemType}			${Member};"
 	done
@@ -428,14 +428,16 @@ convertMapfile()
 			CurTable=$name
 			;;
 		*)								# no keyword, assume fieldname
+			# label (=c_type) may be xxx::yyy, change it to xxx!yyy
+			ctype=`echo $label | sed "s/::/!/"`
 			typeset -l SubClass=`echo $dbname | cut -d" " -f1`
 			# what kind of field is this?
 			if [ "${SubClass}" == "class" -o "${SubClass}" == "baseclass" ]; then
 				# it's a (sub)class, get its name.
 				SubClassName=`echo $fldtype | cut -d" " -f1`
-				echo "$CurClass:$CurTable:$label:$name:$dbname:$SubClassName:BIGINT"
+				echo "$CurClass:$CurTable:$ctype:$name:$dbname:$SubClassName:BIGINT"
 			else
-				echo "$CurClass:$CurTable:$label:$name:$dbname::$fldtype"
+				echo "$CurClass:$CurTable:$ctype:$name:$dbname::$fldtype"
 			fi
 			;;
 		esac
