@@ -199,8 +199,8 @@ void WH_Correlator::process() {
 	    // - if this is too slow, we should consider rewriting the correlator using the C complex.h header
 
 	    // here we do the loading into the FPU inside the intrinsics (as sugested by Mark Mendell)
- 	    *out_ptr = __fxcpmadd( *out_ptr, __lfps((float*) s1_val_0), __lfps(&__real__ *s2_val_0));
-	    *out_ptr = __fxcxnpma( *out_ptr, __lfps((float*) s1_val_0), __lfps(&__imag__ *s2_val_0));
+ 	    *out_ptr = __fxcpmadd( *out_ptr, *s1_val_0, __real__ *s2_val_0);
+	    *out_ptr = __fxcxnpma( *out_ptr, *s1_val_0, __imag__ *s2_val_0);
 	    out_ptr++;
 
 	    // note that the output buffer is assumed to be contiguous
@@ -209,12 +209,12 @@ void WH_Correlator::process() {
 	    // just overwrite the resulting value. According to Mike Mendell this is a double add, so I removed the +=.
 
 	    // now do the same thing for polarisation 1
-	    __lfps((float*) s1_val_1);
- 	    __lfps(&__real__ *s2_val_1);
+// 	    __lfps((float*) s1_val_1);
+//  	    __lfps(&__real__ *s2_val_1);
 
 	    // note that this may very well result in bogus answers. This is lots 'o hacks to get the intrinsics to compile
- 	    *out_ptr = __fxcpmadd( *out_ptr, __lfps((float*) s1_val_1), __lfps(&__real__ *s2_val_1)) ;
- 	    *out_ptr = __fxcxnpma( *out_ptr, __lfps((float*) s1_val_1), __lfps(&__imag__ *s2_val_1)) ;
+ 	    *out_ptr = __fxcpmadd( *out_ptr, *s1_val_1, __real__ *s2_val_1) ;
+ 	    *out_ptr = __fxcxnpma( *out_ptr, *s1_val_1, __imag__ *s2_val_1) ;
 	    out_ptr++;
 #else 
 	    s2_val_0 = reinterpret_cast<complex<float>*>(in_buffer + s2_addr);
