@@ -19,7 +19,7 @@ uvplot_SOURCES := main.cc \
 UVPLOT_DIR := $(top_srcdir)/src
 
 
-CXXFLAGS += -DDEBUG_MODE -O3
+CXXFLAGS += -DDEBUG_MODE -pg
 
 
 
