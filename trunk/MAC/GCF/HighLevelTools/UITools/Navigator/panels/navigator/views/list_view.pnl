@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 17 NavigatorListView
-PANEL,544 182 950 740 N "_3DFace" 2
+PANEL,384 169 950 740 N "_3DFace" 2
 "$configDatapoint"
 "$datapoint"
 "main()
@@ -15,10 +15,12 @@ PANEL,544 182 950 740 N "_3DFace" 2
     setValue (\"TextDatapointName\", \"text\", $datapoint);
     setValue (\"txt_amountRetrieved\", \"visible\", TRUE);
     setValue (\"label_amountRetrieved\", \"visible\", TRUE);
+    setValue (\"label_datapoint\", \"visible\", TRUE);
     setValue (\"label_datapoint\", \"text\", \"Selection query: \" + $datapoint);
     dpConnect(\"loadTable\", $configDatapoint + \".customList\",
 	                         $configDatapoint + \".selectionQuery\",
-	                         $configDatapoint + \".trigger\");
+	                         $configDatapoint + \".trigger\",
+	                         $configDatapoint + \".Title\");
 	}  
 }
 
@@ -29,13 +31,15 @@ PANEL,544 182 950 740 N "_3DFace" 2
 ///////////////////////////////////////////////////////////////////////////////////
 loadTable(string dp1, bool customList,
           string dp2, string selectionQuery,
-          string dp3, int trigger)
+          string dp3, int trigger,
+          string dp4, string title)
 {
   dyn_string propNames;
   dyn_dyn_anytype tab;
   string newSelectionQuery;
   int newSelectionAmount;
   
+  setValue(\"txt_title\", \"text\", title);
   clearListTable(propNames);
   ///////////////////////////////////////////////////////////////////////
   
@@ -223,7 +227,7 @@ LANG:1 17 Selection amount:
 2 68
 "TextDatapointName"
 ""
-1 100 10 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 100 0 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 83 0 0 0 0 0
 EE E
@@ -232,8 +236,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 102 12 936 28
-0 2 0 "s" 0 0 0 64 0 0  102 12
+E E 0 1 1 0 1 E U  0 E 102 2 936 18
+0 2 0 "s" 0 0 0 64 0 0  102 2
  1
 1
 LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
@@ -243,7 +247,7 @@ LANG:1 0
 2 69
 "Text2"
 ""
-1 10 10 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 10 0 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
  E E
 84 0 0 0 0 0
 EE E
@@ -252,8 +256,8 @@ EE E
 LANG:1 0 
 1
 "dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 12 12 94 28
-0 2 0 "s" 0 0 0 64 0 0  12 12
+E E 0 1 1 0 1 E U  0 E 12 2 94 18
+0 2 0 "s" 0 0 0 64 0 0  12 2
  1
 1
 LANG:1 105 -microsoft windows-Arial-bold-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,700,0,0,0,0,3,2,1,34,Arial
@@ -303,7 +307,7 @@ LANG:1 25 Amount results retrieved:
 2 75
 "label_datapoint"
 ""
-1 350 681 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+1 350 681 E E E 1 E 0 E N "_WindowText" E N "_Transparent" E E
  E E
 88 0 0 0 0 0
 EE E
@@ -320,6 +324,46 @@ LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-
 0 ""
 1
 LANG:1 16 Selection query:
+2 76
+"Text3"
+""
+1 12 20 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+89 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 14 22 93 38
+0 2 0 "s" 0 0 0 66 0 0  14 22
+ 1
+1
+LANG:1 105 -microsoft windows-Arial-bold-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,700,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 6 Title:
+2 77
+"txt_title"
+""
+1 100 20 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
+ E E
+90 0 0 0 0 0
+EE E
+0
+1
+LANG:1 0 
+1
+"dashclr"N "_Transparent"
+E E 0 1 1 0 1 E U  0 E 102 22 936 38
+0 2 0 "s" 0 0 0 64 0 0  102 22
+ 1
+1
+LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
+0 ""
+1
+LANG:1 0 
 25 53
 "TableProperties"
 ""
@@ -341,35 +385,39 @@ E "main(int row, string column, string value)
   anytype newValue;
   string currentDp;
 //  DebugTN(\"TableProperties_EventColumnCommand()\",row,column,value);
-  dpGet($configDatapoint + \".queryResult\", queryResult);
-  DebugN(queryResult);
-  
-  currentDp = substr(queryResult[ConvIndex(row)], 0, strlen(queryResult[ConvIndex(row)]) - strlen(\":_online.._value\"));
-  dpSet(currentDp, value);
-  dpGet(currentDp, newValue);
-  
+  if(column==\"value\")
+  {
+
+ 
 //  DebugN(\"dpSet: \" + currentDp);
 //  DebugN(\"value: \" + value + \"   |newValue:\" + newValue);
-  if(elementTypeValid(currentDp))
-  {
-    if (value == newValue) // if the set 
+    if(elementTypeValid(currentDp))
     {
-      TableProperties.cellValueRC(row, \"value\", \"Ok\");
-      delay(0,600);
-      TableProperties.cellValueRC(row, \"value\", newValue);
+      dpGet($configDatapoint + \".queryResult\", queryResult);
+      //DebugN(queryResult);
+      currentDp = substr(queryResult[ConvIndex(row)], 0, strlen(queryResult[ConvIndex(row)]) - strlen(\":_online.._value\"));
+      dpSet(currentDp, value);
+      dpGet(currentDp, newValue);
+    
+      if (value == newValue) // if the set is OK
+      {
+        TableProperties.cellValueRC(row, \"value\", \"Ok\");
+        delay(0,600);
+        TableProperties.cellValueRC(row, \"value\", newValue);
+      }
+      else
+      {
+        TableProperties.cellValueRC(row, \"value\", \"Error\");
+        delay(0,600);
+        TableProperties.cellValueRC(row, \"value\", newValue);
+      }
     }
     else
     {
-      TableProperties.cellValueRC(row, \"value\", \"Error\");
+      TableProperties.cellValueRC(row, \"value\", \"Value cannot be changed\");
       delay(0,600);
-      TableProperties.cellValueRC(row, \"value\", newValue);
+      TableProperties.cellValueRC(row, \"value\", \"Cannot display complex type\");
     }
-  }
-  else
-  {
-    TableProperties.cellValueRC(row, \"value\", \"Value cannot be changed\");
-    delay(0,600);
-    TableProperties.cellValueRC(row, \"value\", \"Cannot display complex type\");
   }
 
   

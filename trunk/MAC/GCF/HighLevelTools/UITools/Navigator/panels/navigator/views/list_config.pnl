@@ -1,7 +1,7 @@
 V 10
 1
 LANG:1 8 (NoName)
-PANEL,295 138 917 684 N "_3DFace" 5
+PANEL,398 346 917 684 N "_3DFace" 5
 "$configDatapoint"
 "$datapoint"
 "$selectedElementDpType"
@@ -127,26 +127,6 @@ LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-
 0 ""
 1
 LANG:1 16 Selection query:
-2 29
-"Text5"
-""
-1 250 380 E E E 1 E 1 E N "_WindowText" E N "_Transparent" E E
- E E
-20 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-1
-"dashclr"N "_Transparent"
-E E 0 1 1 0 1 E U  0 E 252 382 348 398
-0 2 0 "s" 0 0 0 64 0 0  252 382
- 1
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-1
-LANG:1 6 result
 2 30
 "Text6"
 ""
@@ -337,7 +317,16 @@ LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-
 238 321 322 348
 3 "s" 0 0 0 0 0 0 
 E
-E
+"main()
+{
+  setValue (\"\", \"editable\", FALSE);
+	if (dpGetElementName($datapoint)!=\"\")
+  {
+    setValue (\"\", \"enabled\", FALSE);
+  }
+
+}" 0
+
 E
 1 27 4 "" 0
 0
@@ -365,9 +354,11 @@ LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-
 	// This includes that this control is only suitable for DP-Types
   dyn_string content = makeDynString(\"10\",\"20\",\"30\",\"40\",\"50\",\"75\",\"100\",\"150\",\"200\");
   
-  if(!dpExists($datapoint))
+
+	if (!dpExists($configDatapoint + \".maxAmountToRetrieve\"))
   {
     ComboBox.backCol = \"DpDoesNotExist\";  
+    ComboBox.editable = FALSE;
   }
 	else if (dpGetElementName($datapoint)!=\"\")
   {
@@ -396,49 +387,8 @@ LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-
 
 E
  0 0
-13 42
-"Button1"
-""
-1 400 390 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
- E E
-33 0 0 0 0 0
-EE E
-0
-1
-LANG:1 0 
-0
-1
-LANG:1 107 -microsoft windows-Arial-normal-r-normal-*-*-120-100-100-*-*-iso8859-1|-13,0,0,0,400,0,0,0,0,3,2,1,34,Arial
-0 ""
-398 388 542 432
-T 
-1
-LANG:1 7 Button1
-"main()
-{
-  dyn_dyn_anytype tab;
-
-  dpQuery(\"SELECT 'COUNT(_online.._value)' FROM 'System1:PIC_*' \", tab);
-  DebugN(tab[2][2]);
-/*  for(int i=2 ; i<=dynlen(tab) ; i++)
-  {
-    string temp =tab[i][1];
-    temp = substr(temp, (strlen($datapoint)+1), strlen(temp));
-    TableProperties.appendLine(\"propertyName\", temp ,\"value\", \"\");
-    if(((dynlen(strsplit(temp, \"_\")))==1) && ((dynlen(strsplit(temp, \".\")))==1))
-    {
-      propNames[i-1] = $datapoint + \".\" + temp + \":_online.._value\";
-    }
-    else
-    {
-      propNames[i-1] = $datapoint + \"_\" + temp + \":_online.._value\";
-    }
-  }
-  */
-}" 0
- E E E
 13 43
-"Button3"
+"btn_test"
 ""
 1 12 324 E E E 1 E 1 E N "_3DText" E N "_3DFace" E E
  E E
@@ -475,7 +425,20 @@ LANG:1 14 Test selection
   }
 
 }" 0
- E E E
+ E E "main()
+{
+
+	if (!dpExists($configDatapoint + \".maxAmountToRetrieve\"))
+  {
+    setValue(\"btn_test\", \"enabled\", FALSE);
+  }
+  else if (dpGetElementName($datapoint)!=\"\")
+  {
+    setValue (\"\", \"enabled\", FALSE);
+  }
+
+}" 0
+
 0
 LAYER, 1 
 1

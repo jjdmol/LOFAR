@@ -557,3 +557,20 @@ void navConfigTriggerNavigatorRefresh()
 {
   dpSet(DPNAME_NAVIGATOR + g_navigatorID + "." + ELNAME_TRIGGERUPDATE,0);
 }
+
+
+///////////////////////////////////////////////////////////////////////////
+//Function navConfigTriggerNavigatorRefreshWithDP
+// 
+// 1. writes a new datapoint name to the navigator configuration with must be
+// new displayed dp in the tree view. 
+// 2.writes a dummy value to the navigator configuration 
+// the navigator will refresh its views, for the new selected datapoint
+// This function is used to trigger a refresh of the entire navigator from
+// a subview.
+///////////////////////////////////////////////////////////////////////////
+void navConfigTriggerNavigatorRefreshWithDP(string newDatapoint)
+{
+  dpSet(DPNAME_NAVIGATOR + g_navigatorID + "." + ELNAME_NEWDATAPOINT,newDatapoint);
+  dpSet(DPNAME_NAVIGATOR + g_navigatorID + "." + ELNAME_TRIGGERUPDATE,0);
+}
