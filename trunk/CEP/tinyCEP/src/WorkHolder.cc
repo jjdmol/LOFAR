@@ -54,9 +54,9 @@ WorkHolder::WorkHolder (int inputs, int outputs,
   :   itsProcessStep      (1),
       itsNinputs          (inputs), 
       itsNoutputs         (outputs),
+      itsFirstProcessCall (true),
       itsName             (name),
       itsType             (type),
-      itsFirstProcessCall (true),
       itsNode             (0),
       itsAppl             (0)
 
@@ -81,9 +81,9 @@ WorkHolder::WorkHolder (const WorkHolder& that)
   itsProcessStep      (that.itsProcessStep),
   itsNinputs          (that.itsNinputs), 
   itsNoutputs         (that.itsNoutputs),
+  itsFirstProcessCall (that.itsFirstProcessCall),
   itsName             (that.itsName),
   itsType             (that.itsType),
-  itsFirstProcessCall (that.itsFirstProcessCall),
   itsNode             (that.itsNode),
   itsAppl             (that.itsAppl)
 {}
