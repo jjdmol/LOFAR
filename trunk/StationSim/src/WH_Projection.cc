@@ -51,8 +51,9 @@ WH_Projection::WH_Projection (const string& name, unsigned int nin, unsigned int
     // Define a space large enough to contain the max number of 
     // RFI sources. This should be implemented more elegantly.
     itsInHolders[0]= new DH_SampleC("in-sta", itsNrcu, itsMaxRFI);
+    itsInHolders[1]= new DH_SampleC("in-mdl", 1, 1);
     // The weight vector from the Weight Determination
-    itsInHolders[1]= new DH_SampleC("in-wd", itsNrcu, 1);
+    itsInHolders[2]= new DH_SampleC("in-wd", itsNrcu, 1);
   }
   
   if (nout > 0) {
@@ -77,13 +78,16 @@ void WH_Projection::preprocess()
 
 void WH_Projection::process()
 {
-  LoVec_dcomplex steerv (itsInHolders[1]->getBuffer(), itsNrcu, duplicateData);
+  // could be allocated earlier
+  LoMat_dcomplex rfis (itsInHolders[0]->getBuffer(), 
+		       shape(itsNrcu, itsMaxRFI), duplicateData);
+  dcomplex detectedRFIs =  *itsInHolders[1]->getBuffer();
+  LoVec_dcomplex steerv (itsInHolders[2]->getBuffer(), itsNrcu, duplicateData);
 
   itsWeight.resize(itsNrcu);
-
   itsWeight = steerv;
-
   memcpy(itsOutHolder->getBuffer(), itsWeight.data(), itsNrcu * sizeof(DH_SampleC::BufferType));
+
 }
 
 void WH_Projection::dump() const
@@ -113,9 +117,11 @@ LoVec_dcomplex WH_Projection::getWeights (LoVec_dcomplex B, LoVec_dcomplex d) {
     cout << "Error. WH_Projection::getWeights() encountered non equal size arrays" << endl;
   } else {
     LoVec_dcomplex temp(B.size());
-    
-	//    temp = LCSMath::matMult(B, 1/LCSMath::matMultReduce(B, B)) ;
-	//    w = d - LCSMath::matMult( LCSMath::matMult( B, temp ), d );
+
+    // temp = (1/sum(B*B)) * B;
+    temp = (1/sum(B*(2 * real(B) - B))) * (2*real(B) - B) ;
+    w = d - ( sum(d*temp) * B );
+    AssertStr(0>1, "Temp stop");
   }
   return w;
 }
@@ -127,11 +133,24 @@ LoVec_dcomplex WH_Projection::getWeights (LoMat_dcomplex B, LoVec_dcomplex d) {
     cout << "Error. WH_Projection::getWeights() encountered non equal size arrays" << endl;
   } else {
     LoMat_dcomplex temp(B.cols(),B.rows());
-
-//     temp = LCSMath::matMult(pow(LCSMath::matMult(B.transpose(firstDim, secondDim), B), -1), 
-// 				    B.transpose(firstDim,secondDim)) ;
-
-    //    w = d - LCSMath::matMult( LCSMath::matMult( B, temp ), d );
+    temp = LCSMath::hermitianTranspose(B);
+    // a inverse misses here
+    temp = LCSMath::matMult(LCSMath::matMult(temp, B), temp);
+    w = d - mv_mult(B, mv_mult(temp, d));
+    AssertStr(0>1, "Temp stop");
   }
   return w;
+}
+
+LoVec_dcomplex WH_Projection::mv_mult (LoMat_dcomplex A, LoVec_dcomplex B) {
+  LoVec_dcomplex tmp(A.rows());
+  for (int i=0; i < A.rows(); i++) {
+    dcomplex res = 0;
+    for (int j=0; j < A.cols(); j++) {
+      res = res + A(i,j)* B(j);
+      
+    }
+    tmp(i)=res;
+  }
+  return tmp;
 }

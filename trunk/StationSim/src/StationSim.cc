@@ -239,12 +239,14 @@ void StationSim::define (const ParamBlock& params)
   for (int i = 0; i < nsubband; ++i) {
     sprintf(suffix, "%d", i);
 
-    Step sta (WH_STA("", nrcu, 1, nrcu, maxNrfi, buflength), string ("sta_") + suffix, false);
+    Step sta (WH_STA("", nrcu, 2, nrcu, maxNrfi, buflength), string ("sta_") + suffix, false);
 
     for (int j = 0; j < nrcu; ++j) {
       sta.getInData (j).setReadDelay (delaySubFilt);
     }
     sta.getOutData (0).setWriteDelay (delaySubFilt);
+	sta.setRate(nsubband);
+    sta.getOutData (1).setWriteDelay (delaySubFilt);
 	sta.setRate(nsubband);
     simul.addStep (sta);
   }
@@ -263,13 +265,14 @@ void StationSim::define (const ParamBlock& params)
   // the projection object
   for (int i = 0; i < nsubband; i++) {
     sprintf(suffix, "%d", i);
-    Step projection (WH_Projection("prj", 2, 1, nrcu, maxNrfi), 
+    Step projection (WH_Projection("prj", 3, 1, nrcu, maxNrfi), 
 		     string("projection_") + suffix, false);
     
 
 
     projection.getInData (0).setReadDelay (delaySubFilt);
     projection.getInData (1).setReadDelay (delaySubFilt);
+    projection.getInData (2).setReadDelay (delaySubFilt);
     projection.getOutData (0).setWriteDelay (delaySubFilt);
     projection.setRate(nsubband);
     simul.addStep(projection); 
@@ -335,6 +338,8 @@ void StationSim::define (const ParamBlock& params)
     // connect the STA to Projection
     simul.connect (string ("sta_") + suffix2 + string (".out"),
 		   string ("projection_") + suffix2 + string (".in-sta"));
+//     simul.connect (string ("sta_") + suffix2 + string (".mdl"), 
+// 		   string ("projection_") + suffix2 + string (".in-mdl"));
 
     // connect Projection to Beamformer
     simul.connect (string ("projection_") + suffix2 + string (".out"),

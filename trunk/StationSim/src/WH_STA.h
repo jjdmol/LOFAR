@@ -83,7 +83,7 @@ private:
 
   /// In- and OutHolders
   DH_SampleC** itsInHolders;
-  DH_SampleC* itsOutHolder; 
+  DH_SampleC** itsOutHolders; 
 
   /// Length of buffers.
   unsigned int itsNrcu;
