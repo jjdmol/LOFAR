@@ -62,8 +62,8 @@ DataHolder::DataHolder(const DataHolder& that)
 {
   initDataFields();
   if (that.itsExtraPtr != 0) {
-    itsExtraPtr = new DataBlobExtra (itsExtraPtr->getName(),
-				     itsExtraPtr->getVersion(),
+    itsExtraPtr = new DataBlobExtra (that.itsExtraPtr->getName(),
+				     that.itsExtraPtr->getVersion(),
 				     this);
   }
   // Copying is always done before preprocess is called, so there is
