@@ -35,6 +35,13 @@
 #include <xercesc/dom/DOMAttr.hpp>
 #include <xercesc/dom/DOMText.hpp>
 
+#include <SAL/GCF_PVBool.h>
+#include <SAL/GCF_PVDouble.h>
+#include <SAL/GCF_PVUnsigned.h>
+#include <SAL/GCF_PVInteger.h>
+#include <SAL/GCF_PVChar.h>
+#include <SAL/GCF_PVString.h>
+
 static void Trim_White_Spaces(string & string_to_trim)
 {
   // Trim leading white spaces    
@@ -107,6 +114,12 @@ TPAResult GPAAPC::load(const string apcName, const string scope)
   _pXmlParser->setErrorHandler(&errorHandler);
 
   _scope = scope;
+  for (list<TAPCProperty>::iterator iter = _properties.begin();
+       iter != _properties.end(); ++iter)
+  {
+    if (iter->pValue)
+      delete iter->pValue;
+  }
   _properties.clear();
   Trim_White_Spaces(_scope);
   
@@ -237,14 +250,17 @@ TPAResult GPAAPC::makePropList(DOMNode* pN, string path)
         {
           property.name = _scope;
         }
-        property.macType = macType;
-        if (macDefaultSet)
+        GCFPValue* pV(0);
+        if ((result = createMACValueObject(macType, 
+                                           macDefault, 
+                                           macDefaultSet, 
+                                           &pV)) 
+                                           == PA_NO_ERROR)
         {
-          Trim_White_Spaces(macDefault);
-          property.defaultValue = macDefault;
+          property.pValue = pV;
+          property.defaultSet = macDefaultSet;
+          _properties.push_back(property);
         }
-        property.defaultSet = macDefaultSet;
-        _properties.push_back(property);
         propertyEntered = false;
         macDefaultSet = false;
       }
@@ -282,6 +298,136 @@ TPAResult GPAAPC::getValue(DOMNode* pN, string& value)
   }
   return result;  
 }
+
+TPAResult GPAAPC::createMACValueObject(
+  const string& macType, 
+  const string& valueData, 
+  bool defaultSet,
+  GCFPValue** pReturnValue)
+{
+  TPAResult result(PA_NO_ERROR);
+  *pReturnValue = 0;
+  
+  if (macType == "MACBool")
+  {
+    GCFPVBool* pValue = new GCFPVBool();
+    *pReturnValue = pValue;
+    if (!defaultSet) return result;
+    if (valueData.length() > 0)
+    {
+      char* validPos(0);
+      long int value = strtol(valueData.c_str(), &validPos, 10);
+      if (*validPos == '\0')
+      {
+        pValue->setValue(value != 0);
+      }
+      else if (validPos == valueData.c_str())
+      {
+        if ((strncasecmp(valueData.c_str(), "false", 5) == 0) || 
+            (strncasecmp(valueData.c_str(), "no", 2) == 0) ||
+            (strncasecmp(valueData.c_str(), "off", 3) == 0))
+        {
+          pValue->setValue(false);          
+        }
+        else 
+        if ((strncasecmp(valueData.c_str(), "true", 5) == 0) || 
+            (strncasecmp(valueData.c_str(), "yes", 2) == 0) ||
+            (strncasecmp(valueData.c_str(), "on", 3) == 0))
+        {
+          pValue->setValue(true);
+        }
+      }
+    }
+  }
+  else if (macType == "MACChar")
+  {
+    GCFPVChar* pValue = new GCFPVChar();
+    *pReturnValue = pValue;
+    if (!defaultSet)  return result;
+    if (valueData.length() == 1)
+    {
+      pValue->setValue(valueData[0]);
+    }
+  }
+  else if (macType == "MACUnsigned")
+  {
+    GCFPVUnsigned* pValue = new GCFPVUnsigned();
+    *pReturnValue = pValue;
+    if (!defaultSet)  return result;
+    if (valueData.length() == 1)
+    {
+      char* validPos(0);
+      long int value = strtol(valueData.c_str(), &validPos, 10);
+      if (*validPos == '\0')
+      {
+        if (value >= 0)
+          pValue->setValue(value);
+      }
+    }
+  }
+  else if (macType == "MACInteger")
+  {
+    GCFPVInteger* pValue = new GCFPVInteger();
+    *pReturnValue = pValue;
+    if (!defaultSet)  return result;
+    if (valueData.length() == 1)
+    {
+      char* validPos(0);
+      long int value = strtol(valueData.c_str(), &validPos, 10);
+      if (*validPos == '\0')
+      {
+        pValue->setValue(value);
+      }
+    }
+  }
+  else if (macType == "MACDouble")
+  {
+    GCFPVDouble* pValue = new GCFPVDouble();
+    *pReturnValue = pValue;
+    if (!defaultSet)  return result;    
+    if (valueData.length() > 0)
+    {
+      char* validPos(0);
+      double value = strtod(valueData.c_str(), &validPos);
+      if (*validPos == '\0')
+      {
+        pValue->setValue(value);
+      }
+    }
+  }
+  else if (macType == "MACString")
+  {
+    GCFPVString* pValue = new GCFPVString();
+    *pReturnValue = pValue;
+    if (!defaultSet)  return result;    
+    if (valueData.length() > 0)
+    {
+      pValue->setValue(valueData);
+    }
+  }
+/*  else if (macType == "BIT32_VAL")
+  {
+    *pMacValue = new GCFPVBit32(((Bit32Var *)&variable)->getValue());
+  }
+  else if (macType == "REF_VAL")
+  {
+    *pMacValue = new GCFPVRef(((TextVar *)&variable)->getValue());
+  }
+  else if (macType == "BLOB_VAL")
+  {
+    *pMacValue = new GCFPVBlob(((BlobVar *)&variable)->getValue());
+  }
+  else if (macType == "DATETIME_VAL")
+  {
+    *pMacValue = new GCFPVDateTime(((TimeVar *)&variable)->getValue());
+  }*/
+  else 
+  {
+    result = PA_MACTYPE_UNKNOWN;
+  }
+  return result;
+}
+
 
 DOMCountErrorHandler::DOMCountErrorHandler() :
   _sawErrors(false)

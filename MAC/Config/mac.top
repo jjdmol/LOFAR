@@ -23,5 +23,8 @@
 [PML]
 client=PA:server
 
+[SS]
+client=PA:server
+
 [PA]
 # has no SAP's

@@ -107,7 +107,7 @@ TPAResult GPAScopeManager::registerScope(const string& scope, GCFPortInterface& 
 {
   TPAResult result(PA_NO_ERROR);
   TScopeListIter iter = _scopeList.find(scope);
-  if (iter->first != scope)
+  if (iter == _scopeList.end())
   {
     // creates a new scope entry
     _scopeList[scope].pPort = &port;
@@ -123,7 +123,7 @@ TPAResult GPAScopeManager::unregisterScope(const string& scope)
 {
   TPAResult result(PA_NO_ERROR);
   TScopeListIter iter = _scopeList.find(scope);
-  if (iter->first == scope)
+  if (iter != _scopeList.end())
   {
     _scopeList.erase(scope);
   }

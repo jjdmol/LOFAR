@@ -61,6 +61,7 @@ lofar_PACKAGE(MAC/GCF/GCFCommon)
 lofar_PACKAGE(MAC/GCF/CoreComps/TM)
 lofar_PACKAGE(MAC/GCF/CoreComps/PA)
 lofar_PACKAGE(MAC/GCF/CoreComps/SAL)
+lofar_PACKAGE(MAC/GCF/CoreComps/PML)
 lofar_PACKAGE(MAC/Tools/LofarLogger)
 lofar_EXTERNAL(log4cplus,1,log4cplus/logger.h,log4cplus,)
 

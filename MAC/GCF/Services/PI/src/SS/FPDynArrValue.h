@@ -1,4 +1,4 @@
-//#  GPM_Service.h: 
+//#  FPDynArrValue.h: 
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,33 +20,38 @@
 //#
 //#  $Id$
 
-#ifndef GPM_SERVICE_H
-#define GPM_SERVICE_H
+#ifndef FPDYNARRVALUE_H
+#define FPDYNARRVALUE_H
 
-#include <SAL/GSA_Service.h>
+#include "FPValue.h"
+#include <vector>
 
-class GPMController;
+typedef vector<FPValue*> FPValueArray;
 
-class GPMService : public GSAService
+class FPDynArrValue : public FPValue
 {
   public:
-    GPMService(GPMController& controller) : _controller(controller) {;}
-    virtual ~GPMService() {;}
-
-    TSAResult get(const string& propName);
-    TSAResult set(const string& propName, const GCFPValue& value);
-    bool exists(const string& propName);
-
-  protected:
-    inline void propCreated(const string& /*propName*/) {};
-    inline void propDeleted(const string& /*propName*/) {};
-    inline void propSubscribed(const string& /*propName*/) {};
-    inline void propUnsubscribed(const string& /*propName*/) {};
-    void propValueGet(const string& propName, const GCFPValue& value);
-    inline void propValueChanged(const string& /*propName*/, const GCFPValue& /*value*/) {};
+  	FPDynArrValue(ValueType itemType, const FPValueArray& val);
+    FPDynArrValue(ValueType itemType);
+  	virtual ~FPDynArrValue();
+    /** Write property of vector value. */
+    virtual void setValue(const FPValueArray& newVal);
+    /** Read property of vector value. */
+    virtual inline const FPValueArray& getValue() const {return values_;}
+    /** No descriptions */
+    virtual FPValue* clone() const;
+    /** No descriptions */
+    virtual void copy(const FPValue& value);
+    /** No descriptions */
+    virtual uint unpack(const char* valBuf);
+    /** No descriptions */
+    virtual uint pack(char* valBuf) const;
   
-  private:
-    GPMController& _controller;
+  private: // helper methods
+    void cleanup();
+    
+  private: // Private attributes
+    /**  */
+    FPValueArray values_;
 };
-
 #endif

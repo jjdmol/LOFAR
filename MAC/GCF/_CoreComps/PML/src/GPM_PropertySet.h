@@ -39,12 +39,12 @@ class GPMPropertySet : public GSAService
     virtual ~GPMPropertySet();
     
   protected:
-    void propCreated(string& propName) {};
-    void propDeleted(string& propName) {};
-    void propValueGet(string& propName, GCFPValue& value) {};
-    void propSubscribed(string& propName);
-    void propUnsubscribed(string& propName);
-    void propValueChanged(string& propName, GCFPValue& value);
+    void propCreated(const string& /*propName*/) {};
+    void propDeleted(const string& /*propName*/) {};
+    void propValueGet(const string& /*propName*/, const GCFPValue& /*value*/) {};
+    void propSubscribed(const string& propName);
+    void propUnsubscribed(const string& propName);
+    void propValueChanged(const string& propName, const GCFPValue& value);
   
   private: // methods for GPMController
     friend class GPMController;  

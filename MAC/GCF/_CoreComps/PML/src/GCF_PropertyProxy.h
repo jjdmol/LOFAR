@@ -42,10 +42,10 @@ class GCFPropertyProxy
 
   protected:
     friend class GPMPropertyProxy;
-    virtual void propSubscribed(string& propName) = 0;
-    virtual void propUnsubscribed(string& propName) = 0;
-    virtual void propValueGet(string& propName, GCFPValue& value) = 0;
-    virtual void propValueChanged(string& propName, GCFPValue& value) = 0;
+    virtual void propSubscribed(const string& propName) = 0;
+    virtual void propUnsubscribed(const string& propName) = 0;
+    virtual void propValueGet(const string& propName, const GCFPValue& value) = 0;
+    virtual void propValueChanged(const string& propName, const GCFPValue& value) = 0;
   
   private:
     GPMPropertyProxy* _pPMProxy;

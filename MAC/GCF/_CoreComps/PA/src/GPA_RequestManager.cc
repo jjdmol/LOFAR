@@ -79,16 +79,20 @@ void GPARequestManager::deleteOldestRequest()
 
 void GPARequestManager::deleteRequestsOfPort(const GCFPortInterface& requestPort)
 {
-  list<TRequest> tempRequests = _requests;
-  for (list<TRequest>::iterator pRequest = tempRequests.begin();
-       pRequest != tempRequests.end(); ++pRequest)
+  TRequest* pRequest;
+  for (list<TRequest>::iterator iter = _requests.begin();
+       iter != _requests.end(); ++iter)
   {
-    if (pRequest->pRPort == &requestPort)
+    pRequest = &(*iter);
+    if (pRequest)
     {
-      if (pRequest->pEvent)
-        delete pRequest->pEvent;
-      _requests.erase(pRequest);
-    }    
+      if (pRequest->pRPort == &requestPort)
+      {
+        if (pRequest->pEvent)
+          delete pRequest->pEvent;
+        iter = _requests.erase(iter);
+      }
+    }
   }
 }
 

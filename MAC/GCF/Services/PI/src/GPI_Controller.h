@@ -24,8 +24,9 @@
 #define GPI_CONTROLLER_H
 
 #include <GPI_Defines.h>
-#include <PML/GCF_SupervisedTask.h>
+#include <PML/GCF_SupTask.h>
 #include <TM/Socket/GCF_TCPPort.h>
+#include <Common/lofar_list.h>
 
 class GCFEvent;
 class GPISupervisoryServer;
@@ -35,7 +36,7 @@ class GPIController : public GCFTask
 	public:
 		GPIController();
 		virtual ~GPIController();
-    inline GCFTCPPort* getPortProvider() {return _ssPortProvider;}
+    inline GCFTCPPort& getPortProvider() {return _ssPortProvider;}
     
     void close(GPISupervisoryServer& ss);
 
@@ -49,7 +50,8 @@ class GPIController : public GCFTask
     int closing(GCFEvent& e, GCFPortInterface& p);
 
 	private: // data members
-    list<GPISupervisoryServer*> _supervisoryServers;
+    typedef list<GPISupervisoryServer*> TSupervisoryServers;
+    TSupervisoryServers _supervisoryServers;
 		GCFTCPPort                  _ssPortProvider;
     
   private: // admin. data members

@@ -1,4 +1,4 @@
-//#  GPM_Service.h: 
+//#  FPIntegerValue.cc: 
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,33 +20,40 @@
 //#
 //#  $Id$
 
-#ifndef GPM_SERVICE_H
-#define GPM_SERVICE_H
+#include "FPIntegerValue.h"
+#include <string.h>
 
-#include <SAL/GSA_Service.h>
-
-class GPMController;
-
-class GPMService : public GSAService
+/** No descriptions */
+uint FPIntegerValue::unpack(const char* valBuf)
 {
-  public:
-    GPMService(GPMController& controller) : _controller(controller) {;}
-    virtual ~GPMService() {;}
+  uint result(0);
+  uint unpackedBytes = unpackBase(valBuf);
+  if (unpackedBytes > 0)
+  {
+    memcpy((void*) &value_, valBuf + unpackedBytes, sizeof(int));
+    result = sizeof(int) + unpackedBytes;
+  }
+  return result;
+}
 
-    TSAResult get(const string& propName);
-    TSAResult set(const string& propName, const GCFPValue& value);
-    bool exists(const string& propName);
+/** No descriptions */
+uint FPIntegerValue::pack(char* valBuf) const
+{
+  uint packedBytes = packBase(valBuf);
+  memcpy(valBuf + packedBytes, (void*) &value_, sizeof(int));
+  return sizeof(int) + packedBytes;
+}
 
-  protected:
-    inline void propCreated(const string& /*propName*/) {};
-    inline void propDeleted(const string& /*propName*/) {};
-    inline void propSubscribed(const string& /*propName*/) {};
-    inline void propUnsubscribed(const string& /*propName*/) {};
-    void propValueGet(const string& propName, const GCFPValue& value);
-    inline void propValueChanged(const string& /*propName*/, const GCFPValue& /*value*/) {};
-  
-  private:
-    GPMController& _controller;
-};
+/** No descriptions */
+FPValue* FPIntegerValue::clone() const
+{
+  FPValue* pNewValue = new FPIntegerValue(value_);
+  return pNewValue;
+}
 
-#endif
+/** No descriptions */
+void FPIntegerValue::copy(const FPValue& newVal)
+{
+  if (newVal.getType() == getType())
+    value_ = ((FPIntegerValue *)&newVal)->getValue();
+}

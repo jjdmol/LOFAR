@@ -22,9 +22,6 @@
 
 #include "GPA_UsecountManager.h"
 #include "GPA_Controller.h"
-#include "SAL/GCF_PValue.h"
-#include "SAL/GCF_PVBool.h"
-#include "SAL/GCF_PVDouble.h"
 #include <strings.h>
 #include <stdio.h>
 
@@ -55,7 +52,9 @@ TPAResult GPAUsecountManager::incrementUsecount(const list<TAPCProperty>& propLi
     }
     else
     {      
-      if (GSAService::createProp(pAPCProperty->macType, pAPCProperty->name) == SA_NO_ERROR)
+      if (GSAService::createProp(pAPCProperty->name, 
+                      pAPCProperty->pValue->getType()) 
+                      == SA_NO_ERROR)
       {
         _counter++;
       }
@@ -105,17 +104,11 @@ TPAResult GPAUsecountManager::setDefaults(const list<TAPCProperty>& propList)
     iter = _propList.find(pAPCProperty->name);
     if (iter->first == pAPCProperty->name)
     {
-      if (pAPCProperty->defaultSet)
+      if (pAPCProperty->defaultSet && pAPCProperty->pValue != 0)
       {
-        GCFPValue* pV(0);
-        result = createMACValueObject(pAPCProperty->macType, pAPCProperty->defaultValue, &pV);
-        if (result == PA_NO_ERROR && pV != 0)
+        if (GSAService::set(pAPCProperty->name, *pAPCProperty->pValue) != SA_NO_ERROR)
         {
-          if (GSAService::set(pAPCProperty->name, *pV) != SA_NO_ERROR)
-          {
-            result = PA_SCADA_ERROR;
-          }
-          delete pV;
+          result = PA_SCADA_ERROR;
         }
       }
     }
@@ -177,7 +170,7 @@ void GPAUsecountManager::deleteAllProperties()
   }
 }
 
-void GPAUsecountManager::propCreated(string& propName)
+void GPAUsecountManager::propCreated(const string& propName)
 {
   _counter--;
   _propList[propName] = 0; // adds a new usecounter for the just created property
@@ -189,7 +182,7 @@ void GPAUsecountManager::propCreated(string& propName)
   }
 }
 
-void GPAUsecountManager::propDeleted(string& propName)
+void GPAUsecountManager::propDeleted(const string& propName)
 {
   _counter--;
   _propList.erase(propName);
@@ -217,93 +210,3 @@ bool GPAUsecountManager::waitForAsyncResponses()
   return (_counter > 0);
 }
 
-TPAResult GPAUsecountManager::createMACValueObject(
-  const string& macType, 
-  const string& valueData, 
-  GCFPValue** pReturnValue)
-{
-  TPAResult result(PA_NO_ERROR);
-  *pReturnValue = 0;
-  
-  if (macType == "BOOL_VAL")
-  {
-    GCFPVBool* pValue = new GCFPVBool();
-    *pReturnValue = pValue;
-    if (valueData.length() > 0)
-    {
-      char* validPos(0);
-      long int value = strtol(valueData.c_str(), &validPos, 10);
-      if (*validPos == '\0')
-      {
-        pValue->setValue(value != 0);
-      }
-      else if (validPos == valueData.c_str())
-      {
-        if ((strncasecmp(valueData.c_str(), "false", 5) == 0) || 
-            (strncasecmp(valueData.c_str(), "no", 2) == 0) ||
-            (strncasecmp(valueData.c_str(), "off", 3) == 0))
-        {
-          pValue->setValue(false);          
-        }
-        else 
-        if ((strncasecmp(valueData.c_str(), "true", 5) == 0) || 
-            (strncasecmp(valueData.c_str(), "yes", 2) == 0) ||
-            (strncasecmp(valueData.c_str(), "on", 3) == 0))
-        {
-          pValue->setValue(true);
-        }
-      }
-    }
-  }
-/*  else if (macType == "BIT32_VAL")
-  {
-    *pMacValue = new GCFPVBit32(((Bit32Var *)&variable)->getValue());
-  }
-  else if (macType == "CHAR_VAL")
-  {
-    *pMacValue = new GCFPVChar(((CharVar *)&variable)->getValue());
-  }
-  else if (macType == "UNSIGNED_VAL")
-  {
-    *pMacValue = new GCFPVUnsigned(((UIntegerVar *)&variable)->getValue());
-  }
-  else if (macType == "INTEGER_VAL")
-  {
-    *pMacValue = new GCFVPInteger(((IntegerVar *)&variable)->getValue());
-  }*/
-  else if (macType == "FLOAT_VAL")
-  {
-    GCFPVDouble* pValue = new GCFPVDouble();
-    *pReturnValue = pValue;
-    if (valueData.length() > 0)
-    {
-      char* validPos(0);
-      double value = strtod(valueData.c_str(), &validPos);
-      if (*validPos == '\0')
-      {
-        pValue->setValue(value);
-      }
-    }
-  }
-/*  else if (macType == "STRING_VAL")
-  {
-    *pMacValue = new GCFPVString(((TextVar *)&variable)->getValue());
-  }
-  else if (macType == "REF_VAL")
-  {
-    *pMacValue = new GCFPVRef(((TextVar *)&variable)->getValue());
-  }
-  else if (macType == "BLOB_VAL")
-  {
-    *pMacValue = new GCFPVBlob(((BlobVar *)&variable)->getValue());
-  }
-  else if (macType == "DATETIME_VAL")
-  {
-    *pMacValue = new GCFPVDateTime(((TimeVar *)&variable)->getValue());
-  }*/
-  else 
-  {
-    result = PA_MACTYPE_UNKNOWN;
-  }
-  return result;
-}

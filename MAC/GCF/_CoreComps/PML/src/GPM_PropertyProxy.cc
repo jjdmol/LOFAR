@@ -21,3 +21,61 @@
 //#  $Id$
 
 #include "GPM_PropertyProxy.h"
+#include "GCF_PropertyProxy.h"
+
+GPMPropertyProxy::GPMPropertyProxy(GCFPropertyProxy& gcfProxy) : 
+  _gcfProxy(gcfProxy) 
+{}
+
+GPMPropertyProxy::~GPMPropertyProxy() 
+{}
+
+TPMResult GPMPropertyProxy::subscribePM(const string& propName)
+{
+  return (GSAService::subscribe(propName) == SA_NO_ERROR ? PM_NO_ERROR : PM_SCADA_ERROR);
+}
+
+TPMResult GPMPropertyProxy::unsubscribePM(const string& propName)
+{
+  return (GSAService::unsubscribe(propName) == SA_NO_ERROR ? PM_NO_ERROR : PM_SCADA_ERROR);
+}
+
+TPMResult GPMPropertyProxy::getPM(const string& propName)
+{
+  return (GSAService::get(propName) == SA_NO_ERROR ? PM_NO_ERROR : PM_SCADA_ERROR);
+}
+
+TPMResult GPMPropertyProxy::setPM(const string& propName, const GCFPValue& value)
+{
+  return (GSAService::set(propName, value) == SA_NO_ERROR ? PM_NO_ERROR : PM_SCADA_ERROR);
+}
+
+bool GPMPropertyProxy::existsPM(const string& propName)
+{
+  return GSAService::exists(propName);
+}
+
+void GPMPropertyProxy::propSubscribed(const string& propName)
+{
+  _gcfProxy.propSubscribed(propName);
+}
+
+void GPMPropertyProxy::propUnsubscribed(const string& propName)
+{
+  _gcfProxy.propUnsubscribed(propName);
+}
+
+void GPMPropertyProxy::propValueGet(const string& propName, const GCFPValue& value)
+{
+  _gcfProxy.propValueGet(propName, value);
+}
+
+void GPMPropertyProxy::propValueChanged(const string& propName, const GCFPValue& value)
+{
+  _gcfProxy.propValueChanged(propName, value);
+}
+
+void GPMPropertyProxy::propCreated(const string& /*propName*/) 
+{ }
+void GPMPropertyProxy::propDeleted(const string& /*propName*/) 
+{ }

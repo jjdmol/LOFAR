@@ -23,14 +23,20 @@
 #ifndef GPM_PROPERTYPROXY_H
 #define GPM_PROPERTYPROXY_H
 
+#include "GPM_Defines.h"
 #include <SAL/GSA_Service.h>
-#include "GCF_PropertyProxy.h"
+//#include "GCF_PropertyProxy.h"
+
+class GCFPropertyProxy;
 
 class GPMPropertyProxy : public GSAService
 {
   public:
-    GPMPropertyProxy(GCFPropertyProxy& gcfProxy) : _gcfProxy(gcfProxy) {};
-    virtual ~GPMPropertyProxy();
+    GPMPropertyProxy(GCFPropertyProxy& gcfProxy);
+    ~GPMPropertyProxy();
+
+/*    GPMPropertyProxy(GCFPropertyProxy& gcfProxy) : _gcfProxy(gcfProxy) {;}
+    virtual ~GPMPropertyProxy() {;}
 
     inline TSAResult subscribe(const string& propName)
     {
@@ -52,10 +58,16 @@ class GPMPropertyProxy : public GSAService
     {
       return GSAService::exists(propName);
     }
+*/
+    TPMResult subscribePM(const string& propName);
+    TPMResult unsubscribePM(const string& propName);
+    TPMResult getPM(const string& propName);
+    TPMResult setPM(const string& propName, const GCFPValue& value);
+    bool existsPM(const string& propName);
 
   protected:
-    void propCreated(string& propName) {};
-    void propDeleted(string& propName) {};
+/*    inline void propCreated(string& propName) {};
+    inline void propDeleted(string& propName) {};
     inline void propSubscribed(string& propName)
     {
       _gcfProxy.propSubscribed(propName);
@@ -72,7 +84,14 @@ class GPMPropertyProxy : public GSAService
     {
       _gcfProxy.propValueChanged(propName, value);
     }
-  
+*/
+    void propCreated(const string& propName);
+    void propDeleted(const string& propName);
+    void propSubscribed(const string& propName);
+    void propUnsubscribed(const string& propName);
+    void propValueGet(const string& propName, const GCFPValue& value);
+    void propValueChanged(const string& propName, const GCFPValue& value);
+
   private:
     GCFPropertyProxy& _gcfProxy;
 };

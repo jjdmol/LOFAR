@@ -1,4 +1,4 @@
-//#  GPM_Service.h: 
+//#  FPDoubleValue.cc: 
 //#
 //#  Copyright (C) 2002-2003
 //#  ASTRON (Netherlands Foundation for Research in Astronomy)
@@ -20,33 +20,41 @@
 //#
 //#  $Id$
 
-#ifndef GPM_SERVICE_H
-#define GPM_SERVICE_H
+#include "FPDoubleValue.h"
+#include <string.h>
 
-#include <SAL/GSA_Service.h>
-
-class GPMController;
-
-class GPMService : public GSAService
+/** No descriptions */
+uint FPDoubleValue::unpack(const char* valBuf)
 {
-  public:
-    GPMService(GPMController& controller) : _controller(controller) {;}
-    virtual ~GPMService() {;}
+  uint result(0);
+  uint unpackedBytes = unpackBase(valBuf);
+  if (unpackedBytes > 0)
+  {
+    memcpy((void *) &value_, valBuf + unpackedBytes, sizeof(double));
+    result = sizeof(double) + unpackedBytes;
+  }
+  return result;
+}
 
-    TSAResult get(const string& propName);
-    TSAResult set(const string& propName, const GCFPValue& value);
-    bool exists(const string& propName);
+/** No descriptions */
+uint FPDoubleValue::pack(char* valBuf) const
+{
+  uint packedBytes = packBase(valBuf);
+  memcpy(valBuf + packedBytes, (void *) &value_, sizeof(double));
 
-  protected:
-    inline void propCreated(const string& /*propName*/) {};
-    inline void propDeleted(const string& /*propName*/) {};
-    inline void propSubscribed(const string& /*propName*/) {};
-    inline void propUnsubscribed(const string& /*propName*/) {};
-    void propValueGet(const string& propName, const GCFPValue& value);
-    inline void propValueChanged(const string& /*propName*/, const GCFPValue& /*value*/) {};
-  
-  private:
-    GPMController& _controller;
-};
+  return sizeof(double) + packedBytes;
+}
 
-#endif
+/** No descriptions */
+FPValue* FPDoubleValue::clone() const
+{
+  FPValue* pNewValue = new FPDoubleValue(value_);
+  return pNewValue;
+}
+
+/** No descriptions */
+void FPDoubleValue::copy(const FPValue& newVal)
+{
+  if (newVal.getType() == getType())
+    value_ = ((FPDoubleValue *)&newVal)->getValue();
+}

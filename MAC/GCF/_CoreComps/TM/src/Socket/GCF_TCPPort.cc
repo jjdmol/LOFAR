@@ -53,6 +53,8 @@ GCFTCPPort::GCFTCPPort()
 
 GCFTCPPort::~GCFTCPPort()
 {
+  if (_pSocket)
+    delete _pSocket;
 }
 
 
@@ -123,7 +125,9 @@ int GCFTCPPort::open()
       }
       else
         schedule_connected();
-    }
+    } 
+    else if (MSPP == getType())
+      schedule_connected();
   }
   return result;
 }
@@ -218,7 +222,16 @@ int GCFTCPPort::accept(GCFTCPPort& port)
   if (MSPP == getType() && SPP == port.getType())
   {
     GTMServerSocket* pProvider = static_cast<GTMServerSocket*>(_pSocket);
-    return pProvider->accept(*port._pSocket);
+    if (pProvider)
+    {
+      if (port._pSocket == 0)
+      {
+        port._pSocket = new GTMSocket(port);
+      }
+      if (pProvider->accept(*port._pSocket) >= 0)
+        port.schedule_connected();
+      return 0;
+    }    
   }
   return -1;
 }

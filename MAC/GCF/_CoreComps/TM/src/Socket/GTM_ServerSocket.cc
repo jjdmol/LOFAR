@@ -120,7 +120,7 @@ void GTMServerSocket::workProc()
 int GTMServerSocket::accept(GTMSocket& newSocket)
 {
   int result(-2);
-  if (!_isProvider && _pServerSocket != 0)
+  if (_isProvider && _pServerSocket == 0)
   {
     struct sockaddr_in clientAddress;
     socklen_t clAddrLen = sizeof(clientAddress);

@@ -217,13 +217,15 @@ void GSAService::handleHotLink(const DpHLGroup& group)
   }
 }
 
-TSAResult GSAService::createProp(const string& macType, const string& propName)
+TSAResult GSAService::createProp(const string& propName, 
+                                 GCFPValue::TMACValueType macType)
 {
   TSAResult result(SA_NO_ERROR);
   
   DpTypeId dpTypeId;
   LangText dpNameLang(propName.c_str());
   GSAWaitForAnswer *pWFA = new GSAWaitForAnswer(*this);
+  CharString pvssTypeName;
 
   LOFAR_LOG_TRACE(SAL_STDOUT_LOGGER, (
       "Create property '%s'", 
@@ -242,7 +244,14 @@ TSAResult GSAService::createProp(const string& macType, const string& propName)
         propName.c_str()));
     result = SA_PROP_ALREADY_EXIST;    
   }
-  else if (Manager::getTypeId(macType.c_str(), dpTypeId) == PVSS_FALSE)
+  else if (!getPVSSType(macType, pvssTypeName))
+  {
+    LOFAR_LOG_ERROR(SAL_STDOUT_LOGGER, (
+        "Property: '%s' already exists", 
+        propName.c_str()));
+    result = SA_MACTYPE_UNKNOWN;
+  }
+  else if (Manager::getTypeId(pvssTypeName, dpTypeId) == PVSS_FALSE)
   {
     ErrHdl::error(ErrClass::PRIO_SEVERE,      // It is a severe error
                   ErrClass::ERR_PARAM,        // wrong name: blame others
@@ -250,12 +259,12 @@ TSAResult GSAService::createProp(const string& macType, const string& propName)
                   "GSAService",              // our file name
                   "createProp",                      // our function name
                   CharString("DatapointType ") + 
-                    macType.c_str() + 
+                    pvssTypeName + 
                     CharString(" missing"));
 
     LOFAR_LOG_ERROR(SAL_STDOUT_LOGGER, (
         "PVSS: DatapointType '%s' unknown", 
-        macType.c_str()));
+        (const char*) pvssTypeName));
 
     result = SA_MACTYPE_UNKNOWN;
             
@@ -656,28 +665,28 @@ TSAResult GSAService::convertPVSSToMAC(const Variable& variable,
     {
       GCFPValueArray arrayTo;
       GCFPValue* pItemValue(0);
-      GCFPValue::TMACValueType type(GCFPValue::DYNARR_VAL);
+      GCFPValue::TMACValueType type(GCFPValue::NO_VAL);
       // the type for the new FPValue must be determined 
       // separate, because the array could be empty
       switch (DynVar::getItemType(pDynVar->isA()))
       {
         case BIT_VAR:
-          type = (GCFPValue::TMACValueType) (type | GCFPValue::BOOL_VAL);
+          type = GCFPValue::DYNBOOL_VAL;
           break;
         case CHAR_VAR:
-          type = (GCFPValue::TMACValueType) (type | GCFPValue::CHAR_VAL);
+          type = GCFPValue::DYNCHAR_VAL;
           break;
         case INTEGER_VAR:
-          type = (GCFPValue::TMACValueType) (type | GCFPValue::INTEGER_VAL);
+          type = GCFPValue::DYNINTEGER_VAL;
           break;
         case UINTEGER_VAR:
-          type = (GCFPValue::TMACValueType) (type | GCFPValue::UNSIGNED_VAL);
+          type = GCFPValue::DYNUNSIGNED_VAL;
           break;
         case FLOAT_VAR:
-          type = (GCFPValue::TMACValueType) (type | GCFPValue::DOUBLE_VAL);
+          type = GCFPValue::DYNDOUBLE_VAL;
           break;
         case TEXT_VAR:
-          type = (GCFPValue::TMACValueType) (type | GCFPValue::STRING_VAL);
+          type = GCFPValue::DYNSTRING_VAL;
           break;
       }
       for (Variable* pVar = pDynVar->getFirst();
@@ -770,30 +779,30 @@ TSAResult GSAService::convertMACToPVSS(const GCFPValue& macValue,
       break;*/
     default:
       if (macValue.getType() > GCFPValue::DYNARR_VAL && 
-          macValue.getType() <= (GCFPValue::DYNARR_VAL & GCFPValue::STRING_VAL))
+          macValue.getType() <= GCFPValue::DYNSTRING_VAL)
       {        
         Variable* pItemValue;
         VariableType type(NOTYPE_VAR);
         // the type for the new FPValue must be determined 
         // separat, because the array could be empty
-        switch (macValue.getType() & ~GCFPValue::DYNARR_VAL)
+        switch (macValue.getType())
         {
-          case GCFPValue::BOOL_VAL:
+          case GCFPValue::DYNBOOL_VAL:
             type = BIT_VAR;
             break;
-          case GCFPValue::CHAR_VAL:
+          case GCFPValue::DYNCHAR_VAL:
             type = CHAR_VAR;
             break;
-          case GCFPValue::INTEGER_VAL:
+          case GCFPValue::DYNINTEGER_VAL:
             type = INTEGER_VAR;
             break;
-          case GCFPValue::UNSIGNED_VAL:
+          case GCFPValue::DYNUNSIGNED_VAL:
             type = UINTEGER_VAR;
             break;
-          case GCFPValue::DOUBLE_VAL:
+          case GCFPValue::DYNDOUBLE_VAL:
             type = FLOAT_VAR;
             break;
-          case GCFPValue::STRING_VAL:
+          case GCFPValue::DYNSTRING_VAL:
             type = TEXT_VAR;
             break;
         }
@@ -835,6 +844,54 @@ TSAResult GSAService::convertMACToPVSS(const GCFPValue& macValue,
   }  
   
   return result;
+}
+
+bool GSAService::getPVSSType(GCFPValue::TMACValueType macType, 
+                             CharString& pvssTypeName) const
+{
+  switch (macType)
+  {
+    case GCFPValue::BOOL_VAL:
+      pvssTypeName = "BOOL_VAL";
+      break;
+    case GCFPValue::CHAR_VAL:
+      pvssTypeName = "CHAR_VAL";
+      break;
+    case GCFPValue::UNSIGNED_VAL:
+      pvssTypeName = "UNSIGNED_VAL";
+      break;
+    case GCFPValue::INTEGER_VAL:
+      pvssTypeName = "INTEGER_VAL";
+      break;
+    case GCFPValue::DOUBLE_VAL:
+      pvssTypeName = "DOUBLE_VAL";
+      break;
+    case GCFPValue::STRING_VAL:
+      pvssTypeName = "STRING_VAL";
+      break;
+    case GCFPValue::DYNBOOL_VAL:
+      pvssTypeName = "DYNBOOL_VAL";
+      break;
+    case GCFPValue::DYNCHAR_VAL:
+      pvssTypeName = "DYNCHAR_VAL";
+      break;
+    case GCFPValue::DYNUNSIGNED_VAL:
+      pvssTypeName = "DYNUNSIGNED_VAL";
+      break;
+    case GCFPValue::DYNINTEGER_VAL:
+      pvssTypeName = "DYNINTEGER_VAL";
+      break;
+    case GCFPValue::DYNDOUBLE_VAL:
+      pvssTypeName = "DYNDOUBLE_VAL";
+      break;
+    case GCFPValue::DYNSTRING_VAL:
+      pvssTypeName = "DYNSTRING_VAL";
+      break;
+    default:
+      return false;
+  }  
+  
+  return true;
 }
 
 TSAResult GSAService::getDpId(const string& dpName, DpIdentifier& dpId) const

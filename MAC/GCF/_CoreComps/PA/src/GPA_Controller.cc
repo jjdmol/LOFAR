@@ -122,6 +122,7 @@ int GPAController::connected(GCFEvent& e, GCFPortInterface& p)
         if (deletedScopes.size() == 0 || _counter == 0)
         {
           _requestManager.deleteRequestsOfPort(p);
+          _pmlPortProvider.setTimer(0, 0, 0, 0, (void*) (&p));
         }
       }
       break;
@@ -155,7 +156,10 @@ int GPAController::connected(GCFEvent& e, GCFPortInterface& p)
     {
       PARegisterscopeEvent* request = static_cast<PARegisterscopeEvent*>(&e);
       char* scopeData((char*)request + sizeof(PARegisterscopeEvent));
-      TPAResult result = _scopeManager.registerScope(scopeData, p);
+      unsigned int scopeNameLength(0);
+      sscanf(scopeData, "%03x", &scopeNameLength);
+      string scope(scopeData + 3, scopeNameLength);
+      TPAResult result = _scopeManager.registerScope(scope, p);
       PAScoperegisteredEvent response(request->seqnr, result);
       unsigned int scopeDataLength(0);
       scopeDataLength = request->length - sizeof(PARegisterscopeEvent);

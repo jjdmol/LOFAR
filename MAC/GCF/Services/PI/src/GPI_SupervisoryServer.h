@@ -27,6 +27,7 @@
 #include <GPI_PropertyProxy.h>
 #include <TM/GCF_Task.h>
 #include <TM/Socket/GCF_TCPPort.h>
+#include <Common/lofar_list.h>
 
 class GCFEvent;
 class GPIController;
@@ -37,17 +38,21 @@ class GPISupervisoryServer : public GCFTask
 	public:
 		GPISupervisoryServer(GPIController& controller);
 		virtual ~GPISupervisoryServer();
-
+      
   public: // call back methods for the GPIPropertyProxy
-    void propSubscribed(string& propName);
-    void propUnsubscribed(string& propName);
-    void propValueChanged(string& propName, GCFPValue& value);
+    void propSubscribed(const string& propName);
+    void propUnsubscribed(const string& propName);
+    void propValueChanged(const string& propName, const GCFPValue& value);
     
 	private: // helper methods
     void registerScope(const string& scope);
     void subscribe(char* data, bool onOff);
-    void unpackPropertyList(char* pListData, list<string>& propertyList);
+    void unpackPropertyList(
+        char* pListData, 
+        unsigned int listDataLength,
+        list<string>& propertyList);
     TPIResult unLinkProperties(list<string>& properties, bool onOff);
+    void localValueChanged(GCFEvent& e);
     
 	private: // state methods
 		int initial(GCFEvent& e, GCFPortInterface& p);
@@ -58,7 +63,7 @@ class GPISupervisoryServer : public GCFTask
 	private: // data members
 		GCFTCPPort        _ssPort;
     GCFTCPPort        _propertyAgent;
-    GPIController     _controller;
+    GPIController&     _controller;
     GPIPropertyProxy  _propProxy;
     string            _name;
     

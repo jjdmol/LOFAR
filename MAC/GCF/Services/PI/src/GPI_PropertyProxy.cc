@@ -21,19 +21,19 @@
 //#  $Id$
 
 #include "GPI_PropertyProxy.h"
+#include "GPI_SupervisoryServer.h"
 
-void GPIPropertyProxy::propSubscribed(string& propName)
+void GPIPropertyProxy::propSubscribed(const string& propName)
 {
   _ss.propSubscribed(propName);
 }
 
-void GPIPropertyProxy::propUnsubscribed(string& propName)
+void GPIPropertyProxy::propUnsubscribed(const string& propName)
 {
   _ss.propUnsubscribed(propName);
 }
 
-void GPIPropertyProxy::propValueChanged(string& propName, GCFPValue& value)
+void GPIPropertyProxy::propValueChanged(const string& propName, const GCFPValue& value)
 {
   _ss.propValueChanged(propName, value);
 }
-
