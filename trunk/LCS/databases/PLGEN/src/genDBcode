@@ -24,17 +24,19 @@
 # Uses a .map file to lookup the references and a .fun file
 # for looking up the routines that should be generated
 #
-# Syntax: genDBcode P mapfile [class]
+# Syntax: genDBcode [-d destdir] [-S] [-f] P mapfile [class]
 # or
-# Syntax: genDBcode R mapfile functionfile [class]
+# Syntax: genDBcode [-d destdir] [-f] R mapfile functionfile [class]
 #
 # $Id$
 #
-VERSION="v2.8"
+VERSION="v2.9"
 DEBUGMODE=false
 
 #
 # RECaddBCA class
+#
+# Add code that constructs a BCA class for the DTL layer.
 #
 RECaddBCA()
 {
@@ -57,7 +59,38 @@ RECaddBCA()
 }
 
 #
+# RECaddFunctionPrototype class functname action clause-length
+#
+# Add the prototype of a function
+#
+RECaddFunctionPrototype()
+{
+ 	Class=$1
+	Function=$2
+	Action=$3
+	ClauseLen=$4
+
+	case ${Action} in
+	I|D) echo "void ${FunctName}(const ${Class}&	theRecord);"	;;
+	U)   if [ "${ClauseLen}" == "0" ]; then
+			echo "void ${FunctName}(const ${Class}&	theRecord);"
+		 else
+			echo "void ${FunctName}(const ${Class}&	theRecord, const std::string whereClause);"
+		 fi
+		 ;;
+	S)   if [ "${ClauseLen}" == "0" ]; then
+			echo "vector< ${Class} > ${FunctName}();"
+		 else
+			echo "vector< ${Class} > ${FunctName}(const std::string whereClause);"
+		 fi
+		 ;;
+	esac
+}
+
+#
 # RECaddInsertRoutine class functionname
+#
+# Add code that will insert the current object in the database.
 #
 RECaddInsertRoutine()
 {
@@ -68,16 +101,18 @@ RECaddInsertRoutine()
 	echo "//"
 	echo "// Routine for insert this ${Class} object in the database."
 	echo "//"
-	echo "void ${FunctName}(${Class}&	insRec) {"
+	echo "void ${FunctName}(const ${Class}&	insRec) {"
 	echo "	DBView< ${Class} >	insView(\"${Table}\", ${Class}_BCA());"
 	echo "	DBView< ${Class} >::insert_iterator	insIter = insView;\n"
 
-	echo "	*insIter = *insRec;"
+	echo "	*insIter = insRec;"
 	echo "}\n"
 }
 
 #
 # RECaddDeleteRoutine class functionname clause
+#
+# Add code that will delete the current object from the database
 #
 RECaddDeleteRoutine()
 {
@@ -89,12 +124,12 @@ RECaddDeleteRoutine()
 	echo "//"
 	echo "// Routine for deleting this ${Class} object from the database."
 	echo "//"
-	echo "void ${FunctName}(${Class}&	delRec) {"
+	echo "void ${FunctName}(const ${Class}&	delRec) {"
 	echo "	DBView< ${Class} >	delView(\"${Table}\", ${Class}_BCA());"
 	echo "	DBView< ${Class} >::delete_iterator	delIter = delView;\n"
 	echo "	${Class}		delCondition;"
 	echo ""
-	echo "	delCondition = @@@;"
+	echo "	delCondition = delRec;		// @@@ Modify to meet your requirements!"
 	echo ""
 	echo "	*delIter = delCondition;"
 	echo "}\n"
@@ -103,6 +138,7 @@ RECaddDeleteRoutine()
 #
 # RECaddSearchRoutine class functionname clause
 #
+# Add code for a search routine. 
 RECaddSearchRoutine()
 {
 	Class=$1
@@ -110,6 +146,8 @@ RECaddSearchRoutine()
 	Clause=`echo $3 | cut -d"#" -f1`
 	Table=`grep ^$Class ${MAPWRKFILE} | head -1 | cut -d"!" -f2`
 
+	# When the user did not specify a where-clause in the functionfile a function
+	# with a where-clause parameter is created.
 	if [ ${#Clause} == 0 ]; then
 		echo "vector< ${Class} > ${FunctName}(string whereClause) {"
 		echo "	vector< ${Class} > 		results;"
@@ -132,6 +170,8 @@ RECaddSearchRoutine()
 #
 # RECaddUpdateRoutine class functionname clause
 #
+# Add code to update an object to the database.
+#
 RECaddUpdateRoutine()
 {
 	Class=$1
@@ -142,44 +182,25 @@ RECaddUpdateRoutine()
 	echo "//"
 	echo "// Routine for updating this ${Class} object in the database."
 	echo "//"
+	# When the user did not specify a where-clause in the functionfile a function
+	# with a where-clause parameter is created.
 	if [ ${#Clause} == 0 ]; then
-		echo "void ${FunctName}(${Class}&	theRecord, string whereClause) {"
+		echo "void ${FunctName}(const ${Class}&	theRecord, string whereClause) {"
 		echo "	DBView< ${Class} >			view(\"${Table}\", ${Class}_BCA(),"
 		echo "								whereClause);"
 	else
-		echo "void ${FunctName}(${Class}&	theRecord) {"
+		echo "void ${FunctName}(const ${Class}&	theRecord) {"
 		echo "	DBView< ${Class} >			view(\"${Table}\", ${Class}_BCA(),"
 		echo "								\"${Clause}\");"
 	fi
 	echo "	DBView< ${Class} >::update_iterator	updIter = view;"
 	echo ""
 	echo "	// update the database"
-	echo "	*updIter=*theRecord;"
+	echo "	*updIter=theRecord;"
 	echo "}\n"
 }
 
 #---------------------- Persistency layer routines ----------------------------
-
-#
-# TPOopenNamespace
-#
-TPOopenNamespace()
-{
-	echo "namespace LOFAR {"
-	echo "	namespace PL {"
-	echo ""
-}
-
-#
-# TPOcloseNamespace
-#
-TPOcloseNamespace()
-{
-	echo "	} // close namespace PL"
-	echo "}	// close namespace LOFAR"
-	echo ""
-}
-
 #
 # TPOaddDTLstruct class
 #
@@ -413,7 +434,7 @@ initSrcfile()
 	if [ "${FileType}" == "cc" ]; then
 		if [ "${LAYER}" == "R" ]; then
 			echo "#include <dtl/DTL.h>"
-			echo ""
+			echo "#include \"${FILEPREFIX}${File}.h\""
 			return
 		fi
 
@@ -451,7 +472,9 @@ initSrcfile()
 
 		# And include our own header file also ofcourse.
 		echo "#include \"${FILEPREFIX}${File}.h\""
-		echo "#include <PL/TPersistentObject.h>"
+		if [ "${LAYER}" == "P" ]; then
+			echo "#include <PL/TPersistentObject.h>"
+		fi
 		echo ""
 	else	# its a headerfile
 		TimeStamp=`date +%y%m%d%H%M%S`
@@ -461,7 +484,11 @@ initSrcfile()
 		echo "#define ${FileLabel}"
 		echo ""
 		echo "#include \"${File}.h\""
-		echo "#include <PL/DBRep.h>"
+		if [ "${LAYER}" == "P" ]; then
+			echo "#include <PL/DBRep.h>"
+		else
+			echo "#include <vector.h>"
+		fi
 		echo ""
 	fi
 }
@@ -475,9 +502,40 @@ closeHeaderfile()
 {
 	Class=$1
 
-	echo "#include \"${FILEPREFIX}${Class}.tcc\"	// Include template code"
-	echo ""
+	if [ "${LAYER}" == "P" ]; then
+		echo "#include \"${FILEPREFIX}${Class}.tcc\"	// Include template code"
+		echo ""
+	fi
 	echo "#endif"
+}
+
+#
+# openNamespace
+#
+openNamespace()
+{
+	echo "namespace LOFAR {"
+	if [ "${LAYER}" == "P" ]; then
+		echo "	namespace PL {"
+	else
+		echo "  namespace REC {"
+	fi
+	echo ""
+}
+
+#
+# closeNamespace
+#
+closeNamespace()
+{
+	echo ""
+	if [ "${LAYER}" == "P" ]; then
+		echo "	} // close namespace PL"
+	else
+		echo "	} // close namespace REC"
+	fi
+	echo "}	// close namespace LOFAR"
+	echo ""
 }
 
 #
@@ -568,6 +626,53 @@ convertMapfile()
 	done
 }
 
+#
+# ControlledFilesetDeletion FileName
+#
+# Asks the user if the file may be removed. If not the program is terminated.
+# When the FORCE option is on the file is removed without interference of the user.
+# Note: this routine is slightly different from the routines in the other genDBxxx
+#	scripts because it checks for 2 files, the .h and .tcc file.
+ControlledFilesetDeletion()
+{
+	FileName=$1
+
+	# Does file exist
+	if [ ! -f "${FileName}.h" -a ! -f "${FileName}.${FILEPOSTFIX}" ]; then
+		return
+	fi
+
+	# If FORCE option is off let the user decide.
+	if [ "${FORCE}" != "true" ]; then
+		ready=false
+		while [ "$ready" == "false" ]
+		do
+			echo -n "Targetfile(s) ${FileName}.?? already exists, remove it (y/n)? "
+			read answer
+			case $answer in
+			y|Y|yes|Yes)	ready=true
+							;;
+			n|N|no|No)		Fail "Targetfile(s) ${FileName}.?? may not be overwritten"
+							;;
+			esac
+		done
+	fi
+	echo "Removing file ${FileName}.h"
+	echo "Removing file ${FileName}.${FILEPOSTFIX}"
+	rm -f ${FileName}.h ${FileName}.${FILEPOSTFIX}
+}
+
+
+# Fail msg
+#
+# Shows the message on stdout and exits
+Fail()
+{
+	echo "FAIL: $*"
+	cleanupWorkFiles
+	exit 1
+}
+
 # Warning msg
 #
 # Stores the warning in the WARNINGSFILE and shows it in stdout
@@ -589,26 +694,28 @@ SyntaxError()
 	Msg=$1
 
 	[ -z "${Msg}" ] || echo "ERROR: ${Msg}"
-	echo "Syntax: $(basename $0) [-d destdir] [-S] P mapfile [class]"
+	echo "Syntax: $(basename $0) [-d destdir] [-S] [-f] P mapfile [class]"
 	echo "or"
-	echo "Syntax: $(basename $0) [-d destdir] [-S] R mapfile functionfile [class]"
-	echo "  -S	Do *NOT* use symbolic names in the generated code."
+	echo "Syntax: $(basename $0) [-d destdir] [-f] R mapfile functionfile [class]"
+	echo "  -S	Do *NOT* use symbolic names in the generated code (P-layer)."
+	echo "  -f	Force removal of target(s) if it already exists"
 	echo ""
 	exit 1
 }
 
 #------------------------------- MAIN program ---------------------------------
 #
-# Check invocation syntax: genDBcode [-d destdir] [-S] P mapfile [class]
-# Check invocation syntax: genDBcode [-d destdir] [-S] R mapfile funfile [class]
+# Check invocation syntax: genDBcode [-d destdir] [-S] [-f] P mapfile [class]
+# Check invocation syntax: genDBcode [-d destdir] [-f] R mapfile funfile [class]
 #
 
 # Check option argument
 DESTDIR="."							# assume no destination directory
 SYMBNAMEFLD=5						# assume use of symbolic names
-UseSymbNames=true
-COMMAND=$(basename $0)
-eval set argv=`getopt "d:S" $*`		# reformat arguments
+UseSymbNames=true					# need a test later on in the code
+FORCE=false							# assume the user wants to decide
+COMMAND=$(basename $0)				# reconstruction of the commandline
+eval set argv=`getopt "d:fS" $*`	# reformat arguments
 shift
 while [ "$1" != "--" ]
 do
@@ -618,6 +725,10 @@ do
 					SyntaxError "Destination directory >${DESTDIR}< does not exist"
 			shift 2
 			COMMAND="${COMMAND} -d ${DESTDIR}"
+			;;
+		-f)	FORCE=true
+			shift 1
+			COMMAND="${COMMAND} -f"
 			;;
 		-S)	SYMBNAMEFLD=4
 			UseSymbNames=false
@@ -680,14 +791,12 @@ esac
 									SyntaxError "File ${FUNFILE} doesn't exist"
 
 # All arguments seem ok, continue processing
-
 # Initialize some variables
-#
-MAPWRKFILE=/tmp/mapinfo.LCS.$$
-ALLFILESWRKFILE=/tmp/created.LCS.$$
-CLASSLOCATIONWRKFILE=/tmp/classloc.LCS.$$
-INCLUDEWRKFILE=/tmp/include.LCS.$$
-WARNINGFILE=/tmp/warning.LCS.$$
+ALLFILESWRKFILE=/tmp/created.LCS.$$				# List of all created files
+CLASSLOCATIONWRKFILE=/tmp/classloc.LCS.$$		# which class is defined in which file
+INCLUDEWRKFILE=/tmp/include.LCS.$$				# which hdr files to include in a src.
+MAPWRKFILE=/tmp/mapinfo.LCS.$$					# converted mapfile for easy access
+WARNINGFILE=/tmp/warning.LCS.$$					# contains all occured warnings
 
 # Make sure there are no old workfiles left
 cleanupWorkFiles
@@ -701,38 +810,48 @@ echo "Analysing mapfile"
 initTmpfile					> ${MAPWRKFILE}
 convertMapfile ${MAPFILE}	>>${MAPWRKFILE}
 
-# We use the mapfile as primairy input
+# Now the converted mapfile exists we can check for file duplicates.
+# If targets exist, let the user or the FORCE option decide what to do
+# Note: we have to do this a bit clumsy because ControlledFileDeletion
+#	does a 'read' and 'read's may not be nested.
+echo "Checking existing targetfiles"
+cleanlist ${MAPWRKFILE} | cut -d'!' -f9 | sed "s/\.h$//" >>${ALLFILESWRKFILE}
+while [ -s ${ALLFILESWRKFILE} ]
+do
+	File=`head -1 ${ALLFILESWRKFILE}`
+	ControlledFilesetDeletion ${DESTDIR}/${FILEPREFIX}${File}
+	sed "1,1D" ${ALLFILESWRKFILE} >>${ALLFILESWRKFILE}2		# cut off 1st line
+	mv ${ALLFILESWRKFILE}2 ${ALLFILESWRKFILE}
+done
+
+# Finally we're gonna do the real work. All duplicate files are removed and the
+# user mapfile is converted into something more convenient. We use the mapfile 
+# as primairy input for creating the right glue-code.
 PrevClass="Unknown"
-PrevFile="Unknown"
 eval "cleanlist $MAPWRKFILE $GREPMASK" | \
 while read line
 do
 	# Where is this line about?
 	Class=`echo $line | cut -d'!' -f1`
 	File=`echo $line | cut -d'!' -f9 | sed "s/\.h$//"`
-	
-	if [ "${PrevFile}" != "${File}" ]; then
-		SOURCEFILE=${DESTDIR}/${FILEPREFIX}${File}.${FILEPOSTFIX}
-		HEADERFILE=${DESTDIR}/${FILEPREFIX}${File}.h
+	SOURCEFILE=${DESTDIR}/${FILEPREFIX}${File}.${FILEPOSTFIX}
+	HEADERFILE=${DESTDIR}/${FILEPREFIX}${File}.h
 
-		# Brand new file or already created?
-		grep ${File} ${ALLFILESWRKFILE} >/dev/null 2>&1
-		if [ $? -ne 0 ]; then
-			initSrcfile "cc"		${File}		> ${SOURCEFILE}
-			TPOopenNamespace					>>${SOURCEFILE}
-			if [ "${LAYER}" == "P" ]; then
-				initSrcfile "h"		${File} 	> ${HEADERFILE}
-				TPOopenNamespace				>>${HEADERFILE}
-			fi
-			echo ${File}						>>${ALLFILESWRKFILE}
-		fi
-		PrevFile=${File}
+	# Brand new file or already created?
+	grep ${File} ${ALLFILESWRKFILE} >/dev/null 2>&1
+	if [ $? -ne 0 ]; then
+		initSrcfile "cc"	${File}		> ${SOURCEFILE}
+		openNamespace					>>${SOURCEFILE}
+		initSrcfile "h"		${File} 	> ${HEADERFILE}
+		openNamespace					>>${HEADERFILE}
+		echo ${File}					>>${ALLFILESWRKFILE}
 	fi
 
 	if [ "${PrevClass}" != "${Class}" ]; then
 		echo "Creating code for class ${Class}"
 		case ${LAYER} in
 		R)	RECaddBCA 				${Class}	>>${SOURCEFILE}
+			# look in function file for the definitions of the functions to create.
 			eval "grep \"^"${Class}"\" $FUNFILE $GREPMASK" | \
 			while read class action functname clause
 			do
@@ -746,6 +865,7 @@ do
 				*) echo "ERROR:Unknown function >$action< for class >$class< in file >$FUNFILE<"
 				   ;;
 				esac
+				RECaddFunctionPrototype $class $functname $action ${#clause} >>${HEADERFILE}
 			done
 			;;
 		P)	TPOaddBCA 						${Class} 	>>${SOURCEFILE}
@@ -765,11 +885,9 @@ cat ${ALLFILESWRKFILE} | while read File
 do
 	SOURCEFILE=${DESTDIR}/${FILEPREFIX}${File}.${FILEPOSTFIX}
 	HEADERFILE=${DESTDIR}/${FILEPREFIX}${File}.h
-	if [ "${LAYER}" == "P" ]; then
-		TPOcloseNamespace			>>${HEADERFILE}
-		closeHeaderfile		${File}	>>${HEADERFILE}
-	fi
-	TPOcloseNamespace 			>>${SOURCEFILE}
+	closeNamespace 			>>${SOURCEFILE}
+	closeNamespace			>>${HEADERFILE}
+	closeHeaderfile	${File}	>>${HEADERFILE}
 done
 
 [ -s "${WARNINGFILE}" ] && cat ${WARNINGFILE}
