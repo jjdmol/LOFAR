@@ -3,10 +3,8 @@ dmi_dir = $(lofar_sharedir)/../DMI
 lib_LTLIBRARIES = liboctoagent.la
 
 liboctoagent_la_SOURCES = AID-OctoAgent-Registry.cc \
-  OctoAgent.cc \
-  OctoVisInputAgent.cc \
-  OctoVisOutputAgent.cc \
-  OctoMultiplexer.cc
+  EventSink.cc \
+  EventMultiplexer.cc
 
 # script used to generate AID maps
 MAPBUILDER = $(dmi_dir)/src/build_aid_maps.pl 
